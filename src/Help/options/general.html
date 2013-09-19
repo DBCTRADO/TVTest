@@ -1,0 +1,65 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="ja">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=Shift_JIS">
+	<link rel="stylesheet" href="../default.css" type="text/css">
+	<title>一般</title>
+</head>
+<body>
+<h2>一般</h2>
+
+<h3>常駐する</h3>
+<p class="descript">常駐モードにします。<br>
+常駐モードにすると、タスクトレイにアイコンが表示され、ウィンドウを閉じることによって待機状態に入ります。その際、負荷を下げるために、録画中でなければチューナーが閉じられます。待機状態から復帰すると、再びチューナーが開かれます。<br>
+待機状態から復帰するには、トレイアイコンを左クリックするか、右クリックメニューから [表示] を選択します。または、リモコンの電源ボタンを押します。</p>
+
+<h3>複数起動を禁止する</h3>
+<p class="descript">TVTest の複数起動を禁止します。</p>
+
+<h3>BonDriver検索フォルダ</h3>
+<p class="descript">BonDriver を検索するフォルダを指定します。<br>
+ここで指定されたフォルダにある BonDriver はメニューなどで選択できるようになります。<br>
+空欄にするとプログラムのファイルのあるフォルダになります。<br>
+プログラムのあるフォルダからの相対パスを指定することもできます。<br>
+この設定は次回起動時に反映されます。</p>
+
+<h3>デフォルトのBonDriver</h3>
+<p class="descript">起動時にデフォルトで読み込む BonDriver を指定します。<br>
+コマンドラインで指定されている場合は、そちらが優先されます。<br>
+[なし] に設定すると何の BonDriver も読み込まずに起動します。</p>
+
+<h3>デコーダ</h3>
+<p class="descript">MPEG-2 のデコーダを選択します。<br>
+「自動」を選択すると、利用可能なデコーダを検索して使用します。<br>
+リストにあっても実際には使用できないものもあります。
+以下のデコーダは動作が確認されています。<br>
+<table class="info">
+<tr><th>名前</th><th>特記事項</th></tr>
+<tr><td>MPV Decoder Filter<br>MPC - MPEG-2 Video Decoder<br>Mpeg2Dec Filter</td><td>Media Player Classic のデコーダとその派生デコーダ</td></tr>
+<tr><td>Microsoft MPEG-2 Video Decoder<br>Microsoft DTV-DVD Video Decoder</td><td>Windows Vista 以降に付属しているデコーダ<br>Windows 8 では MPEG-2 のデコードは有料オプション</td></tr>
+<tr><td>ATI MPEG Decoder</td><td>インターレース解除漏れが気になる場合、CCC で設定する<br>CS の一部でノイズが出る場合がある</td></tr>
+<tr><td>CyberLink Video/SP Decoder</td><td>デフォルトレンダラとの組み合わせで、NHK 教育などでアスペクト比がおかしくなる問題あり</td></tr>
+<tr><td>ffdshow Video Decoder</td><td>チャンネル切り替え時にノイズが出るなどの問題が出ることがある</td></tr>
+</table>
+</p>
+
+<h3>レンダラ</h3>
+<p class="descript">ビデオレンダラを選択します。<br>
+レンダラによって画質やパフォーマンスに影響を与えます。<br>
+よく分からない場合はデフォルト、キャプチャを(安定して)行いたい場合は、VMR9 Renderless を選択してください。<br>
+Vista/7 の場合は EVR がいいと思います(ただしキャプチャの画質に問題あり)。<br>
+<table class="info">
+<tr><th>名前</th><th>説明</th></tr>
+<tr><td>デフォルト</td><td>システムのデフォルトレンダラ。</td></tr>
+<tr><td>VMR7</td><td>DirectDraw 7 を使用したレンダラ。<br>XP のデフォルト。</td></tr>
+<tr><td>VMR9</td><td>Direct3D 9 を使用したレンダラ。</td></tr>
+<tr><td>VMR7 Renderless</td><td>特に意味無し。</td></tr>
+<tr><td>VMR9 Renderless</td><td>カスタム アロケータ プレゼンタを使用したVMR9。<br>キャプチャが好きな人向け。</td></tr>
+<tr><td>EVR</td><td>Vista/7 用のレンダラ。<br>環境によってはハードウェア再生支援が使えるかも。</td></tr>
+<tr><td>Overlay Mixer</td><td>オーバーレイを使用した古いレンダラ。<br>Vista/7 で使用すると Aero が解除されます。</td></tr>
+<tr><td>madVR</td><td>分かる人だけ選択してください。<br>v0.24 以降でないとフリーズします。</td></tr>
+</table>
+</p>
+
+</body>
+</html>

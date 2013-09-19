@@ -1,0 +1,9 @@
+LIBRARY HDUSRemocon_KeyHook
+
+SECTIONS
+	.SHARE READ WRITE SHARED
+
+EXPORTS
+	BeginHook
+	EndHook
+	SetWindow

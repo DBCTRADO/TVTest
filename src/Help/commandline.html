@@ -1,0 +1,97 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="ja">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=Shift_JIS">
+	<link rel="stylesheet" href="default.css" type="text/css">
+	<title>コマンドライン</title>
+</head>
+<body>
+
+<h2>コマンドライン</h2>
+
+<p>
+以下のコマンドラインオプションが使用できます。
+</p>
+<p>
+※複数あるものはどちらでも可。/ の代わりに - でも可。
+</p>
+
+<table class="info">
+<tr><th colspan="2">動作一般</th></tr>
+<tr><td>/ini</td><td>INI ファイル名の指定 (e.g. /ini TVTest2.ini)</td></tr>
+<tr><td>/init</td><td><a href="initialsettings.html">初期設定ダイアログ</a>を表示する</td></tr>
+<tr><td>/inikey</td><td>INI ファイルの設定値を上書きする<br>
+[セクション]名前=値 の形式で指定します。セクションを省略すると [Settings] が指定されたとみなされます。<br>
+(e.g. /inikey [Settings]AlwaysOnTop=yes)<br>
+(e.g. /inikey "Mpeg2Decoder=Hoge MPEG-2 Decoder")</td></tr>
+<tr><td>/log</td><td>終了時にログを保存する</td></tr>
+<tr><td>/silent</td><td>エラー時にダイアログを表示しない</td></tr>
+<tr><td>/s</td><td>TVTest が既に起動している場合、複数起動しない</td></tr>
+<tr><td>/standby</td><td>待機状態で起動する</td></tr>
+<tr><td>/nd</td><td>スクランブル解除しない</td></tr>
+<tr><td>/plugindir</td><td>プラグインの読み込み元フォルダ (e.g. /plugindir Plugins2)</td></tr>
+<tr><td>/noplugin</td><td>プラグインを読み込まない</td></tr>
+<tr><td>/plugin-</td><td>指定されたプラグインを読み込まない (e.g. /plugin- Equalizer.tvtp)</td></tr>
+<tr><td>/home</td><td>ホーム画面を表示する</td></tr>
+<tr><td>/chdisplay</td><td>チャンネル選択画面を表示する</td></tr>
+<tr><th colspan="2">チューナー</th></tr>
+<tr><td>/d</td><td>BonDriver の指定 (e.g. /d BonDriver.dll)</td></tr>
+<tr><td>/nodriver</td><td>BonDriver を読み込まない</td></tr>
+<tr><td>/ch</td><td>チャンネルの指定(物理チャンネル番号) (e.g. /ch 13)</td></tr>
+<tr><td>/rch</td><td>チャンネルの指定(リモコンチャンネル番号) (e.g. /rch 3)</td></tr>
+<tr><td>/chspace</td><td>チューニング空間の指定(BonDriver でのインデックス) (e.g. /chspace 1)</td></tr>
+<tr><td>/sid</td><td>サービスIDの指定 (e.g. /sid 1024)</td></tr>
+<tr><td>/nid</td><td>ネットワークIDの指定 (e.g. /nid 32736)</td></tr>
+<tr><td>/tsid</td><td>トランスポートストリームIDの指定 (e.g. /tsid 32736)</td></tr>
+<tr><td>/nr</td><td>ネットワークリモコンを使用する</td></tr>
+<tr><td>/port /p</td><td>BonDriver_UDP/TCP のポート番号 (e.g. /port 1234)</td></tr>
+<tr><th colspan="2">ウィンドウ</th></tr>
+<tr><td>/fullscreen /f</td><td>全画面表示</td></tr>
+<tr><td>/min</td><td>最小化状態で起動する</td></tr>
+<tr><td>/max</td><td>最大化状態で起動する</td></tr>
+<tr><td>/tray</td><td>タスクトレイに格納した状態で起動する</td></tr>
+<tr><td>/posx</td><td>ウィンドウの左位置の指定 (e.g. /posx 100)</td></tr>
+<tr><td>/posy</td><td>ウィンドウの上位置の指定 (e.g. /posy 80)</td></tr>
+<tr><td>/width</td><td>ウィンドウの幅の指定 (e.g. /width 1920)</td></tr>
+<tr><td>/height</td><td>ウィンドウの高さの指定 (e.g. /height 480)</td></tr>
+<tr><th colspan="2">再生</th></tr>
+<tr><td>/noview</td><td>起動時画面表示オフ</td></tr>
+<tr><td>/nodshow</td><td>起動時に DirectShow を初期化しない<br>
+視聴せずに録画のみ行う場合に指定すると、メモリ使用量がなかり減ります。<br>
+メニューの[再生オフ]のチェックを外せば、途中から視聴することも可能です。</td></tr>
+<tr><td>/volume</td><td>音量を指定する(0から100まで) (e.g. /volume 50)</td></tr>
+<tr><td>/mute</td><td>消音にする</td></tr>
+<tr><th colspan="2">録画</th></tr>
+<tr><td>/rec</td><td>起動時録画開始</td></tr>
+<tr><td>/reccurservice</td><td>現在のサービスのみ録画する</td></tr>
+<tr><td>/recstarttime</td><td>録画開始日時<br>
+年/月/日-時:分:秒 の形式で指定します。<br>
+日付のみ、または時刻のみを指定することもできます。<br>
+年、月、秒は省略できます。時間は24以上の値を指定できます。<br>
+(e.g. /recstarttime 2011/2/1-3:30:00)<br>
+(e.g. /recstarttime 25:30)</td></tr>
+<tr><td>/recdelay</td><td>録画開始までの時間(秒単位) (e.g. /recdelay 60)<br>
+h/m/s で 時間/分/秒 を指定することも可能です。詳細は /recduration の説明を参照してください。</td></tr>
+<tr><td>/recduration</td><td>録画時間(秒単位) (e.g. /recduration 1800)<br>
+数字の後に h/m/s があるとそれぞれ 時間/分/秒 の指定になります。<br>
+その際複数指定することもできますが、途中でスペースなどは入れずに連続して記述してください。<br>
+(e.g. /recduration 30m) (e.g. /recduration 1h20m30s)</td></tr>
+<tr><td>/recexit</td><td>録画終了時にプログラムを終了</td></tr>
+<tr><td>/recfile</td><td>録画ファイル名 (e.g. /recfile "C:\ReocrdFiles\Record.ts")</td></tr>
+<tr><td>/recstop</td><td>録画停止</td></tr>
+<tr><th colspan="2">EPG</th></tr>
+<tr><td>/noepg</td><td>EPG 情報の取得を行わない<br>
+番組表などは表示できなくなります。</td></tr>
+<tr><td>/epg</td><td>EPG 番組表を表示する</td></tr>
+<tr><td>/epgonly</td><td>EPG 番組表のみ表示する<br>
+番組表を閉じると終了します(視聴や録画を行っている場合を除く)。</td></tr>
+<tr><td>/epgtuner</td><td>EPG 番組表のデフォルトの BonDriver の指定 (e.g. /epgtuner BonDriver_Hoge.dll)<br>
+favorites にするとお気に入りチャンネルの番組表</td></tr>
+<tr><td>/epgspace</td><td>EPG 番組表のデフォルトチューニング空間の指定 (e.g. /epgspace 1)</td></tr>
+</table>
+
+<h3>おまけ</h3>
+<p class="descript">udp://@:1234 のようなポート指定も有効です(なぜかこう指定すると思っている人が多いので)。</p>
+
+</body>
+</html>

@@ -1,0 +1,38 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="ja">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=Shift_JIS">
+	<link rel="stylesheet" href="../default.css" type="text/css">
+	<title>Tips</title>
+</head>
+<body>
+
+<h2>Tips</h2>
+
+<h3>他の BinDriver のチャンネルに直接切り替える</h3>
+<p class="descript">
+ステータスバーの一番左(デフォルトの場合)にある [地デジ] などと表示されている部分を右クリックすると、直接他の BonDriver のチャンネルに切り替えられます。<br>
+</p>
+
+<h3>多ボタンマウスのボタンに機能を割り当てる</h3>
+<p class="descript">設定の [<a href="../options/accelerator.html">キー割り当て</a>] で、左のリストから割り当てたい機能を選択してからボタンを押します。<br>
+マウスユーティリティなどの設定によっては割り当てできません。</p>
+
+<h3>タイトルバーを普通のものにする</h3>
+<p class="descript">メニューの [バー/枠] -&gt; [独自タイトルバーを使用] のチェックを外します。</p>
+
+<h3>ウィンドウの枠を細くする</h3>
+<p class="descript">メニューの [バー/枠] -&gt; [ウィンドウ枠 : 細くする] をチェックすると、幅1ドット(デフォルトの場合)の細い枠になります。<br>
+また、[映像表示部の枠] のチェックを外すと、映像の周囲の窪みも無くなってよりシンプルになります。<br>
+ウィンドウ枠を細くした場合の幅は、設定ファイル(TVTest.ini)の [Settings] に ThinFrameWidth=x の形で設定できます。</p>
+
+<h3>ステータスバーやタイトルバーを非表示にした時、マウスオーバーで自動表示されないようにする</h3>
+<p class="descript">ステータスバーやタイトルバーを非表示にした際は、ウィンドウの上下にカーソルを持っていくと一時的に表示されますが、それを抑止したい場合は設定ファイル(TVTest.ini)の [Settings] に以下の設定を追加してください。<br>
+; ステータスバーの自動表示を抑止<br>
+PopupStatusBar=no<br>
+; タイトルバーの自動表示を抑止<br>
+PopupTitleBar=no<br>
+これらの設定は全画面表示時には適用されません。</p>
+
+</body>
+</html>

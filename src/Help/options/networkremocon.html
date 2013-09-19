@@ -1,0 +1,33 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="ja">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=Shift_JIS">
+	<link rel="stylesheet" href="../default.css" type="text/css">
+	<title>ネットワークリモコン</title>
+</head>
+<body>
+<h2>ネットワークリモコン</h2>
+
+<p>ネットワークリモコン機能を使用すると、EpgDataCap_Bon から呼び出して使用した際に、TVTest からチャンネルの変更ができるようになります。</p>
+
+<h3>ネットワークリモコン機能を利用する</h3>
+<p class="descript">ネットワークリモコン機能を有効にします。コマンドラインの /nr でも可です。</p>
+
+<h3>IPアドレス</h3>
+<p class="descript">リモコンの送信先のIPアドレスです。<br>
+127.0.0.1 のように指定します。</p>
+
+<h3>ポート番号</h3>
+<p class="descript">リモコンの送信先のポート番号です。<br>
+EpgDataCap_Bon と設定を合わせてください。</p>
+
+<h3>チャンネルファイル</h3>
+<p class="descript">EpgDataCap_Bon のチャンネルファイルを指定します。<br>
+空欄にすると、自動的にチャンネルファイルを検索して使用しますので、通常は指定する必要はありません。<br>
+チャンネルファイルを明示的に指定したい場合は、ファイル名を入力します。フォルダ名を省略すると、My Documents\EpgTimerBon にあると仮定します。<br>
+ここで選択したチャンネルファイルに対応した BonDriver のチャンネル設定ファイル(*.ch2 及び *.ch)が存在する場合、そこからリモコン番号の設定を読み込みます。<br>
+例えば、"BonDriver_HDUS(HDUS).ChSet.txt" ファイルが選択されている場合、"BonDriver_HDUS.ch2" ファイルが存在すれば、そこから設定を読み込みます。
+</p>
+
+</body>
+</html>

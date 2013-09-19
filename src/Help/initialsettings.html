@@ -1,0 +1,67 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="ja">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=Shift_JIS">
+	<link rel="stylesheet" href="default.css" type="text/css">
+	<title>初期設定ダイアログ</title>
+</head>
+<body>
+
+<h2>初期設定ダイアログ</h2>
+
+<p>
+初期設定ダイアログでは、TVTest の初期設定を行います。<br>
+ここでの設定は、<a href="options.html">設定ダイアログ</a>の<a href="options/general.html">一般</a>で後から変更することができます。
+</p>
+
+<p>
+初期設定ダイアログは、TVTest を最初に起動した際に表示されますが、<a href="commandline.html">コマンドライン</a>で /init を指定することによっても表示させることができます。<br>
+正常に起動しなくなった場合など、起動させることができずに設定の変更が行えないような場合に使用します。
+</p>
+
+<p>
+各設定項目の内容は以下の通りです。
+</p>
+
+<h3>BonDriver</h3>
+<p class="descript">使用する BonDriver のファイル名です。<br>
+複数の BonDriver を使う場合、BonDriver の変更はメニューなどから簡単にできますので、ここでは適当に一つ選んでください。</p>
+
+<h3>デコーダ</h3>
+<p class="descript">MPEG-2 デコーダを選択します。<br>
+「自動」を選択すると、利用可能なデコーダを検索して使用します。<br>
+リストにあっても実際には使用できないものもあります。<br>
+以下のデコーダは動作が確認されています。<br>
+<table class="info">
+<tr><th>名前</th><th>特記事項</th></tr>
+<tr><td>MPV Decoder Filter<br>MPC - MPEG-2 Video Decoder<br>Mpeg2Dec Filter</td><td>Media Player Classic のデコーダとその派生デコーダ</td></tr>
+<tr><td>Microsoft MPEG-2 Video Decoder<br>Microsoft DTV-DVD Video Decoder</td><td>Windows Vista 以降に付属しているデコーダ<br>Windows 8 では MPEG-2 のデコードは有料オプション</td></tr>
+<tr><td>ATI MPEG Decoder</td><td>インターレース解除漏れが気になる場合、CCC で設定する<br>CS の一部でノイズが出る場合がある</td></tr>
+<tr><td>CyberLink Video/SP Decoder</td><td>デフォルトレンダラとの組み合わせで、NHK 教育などでアスペクト比がおかしくなる問題あり</td></tr>
+<tr><td>ffdshow Video Decoder</td><td>チャンネル切り替え時にノイズが出るなどの問題が出ることがある</td></tr>
+</table>
+</p>
+
+<h3>レンダラ</h3>
+<p class="descript">ビデオレンダラを選択します。<br>
+レンダラによって画質やパフォーマンスに影響を与えます。<br>
+よく分からない場合はデフォルト、キャプチャを(安定して)行いたい場合は、VMR9 Renderless を選択してください。<br>
+Vista/7 の場合は EVR がいいと思います(ただしキャプチャの画質に問題あり)。<br>
+<table class="info">
+<tr><th>名前</th><th>説明</th></tr>
+<tr><td>デフォルト</td><td>システムのデフォルトレンダラ。</td></tr>
+<tr><td>VMR7</td><td>DirectDraw 7 を使用したレンダラ。<br>XP のデフォルト。</td></tr>
+<tr><td>VMR9</td><td>Direct3D 9 を使用したレンダラ。</td></tr>
+<tr><td>VMR7 Renderless</td><td>特に意味無し。</td></tr>
+<tr><td>VMR9 Renderless</td><td>カスタム アロケータ プレゼンタを使用したVMR9。<br>キャプチャが好きな人向け。</td></tr>
+<tr><td>EVR</td><td>Vista/7 用のレンダラ。<br>環境によってはハードウェア再生支援が使えるかも。</td></tr>
+<tr><td>Overlay Mixer</td><td>オーバーレイを使用した古いレンダラ。<br>Vista で使用すると Aero が解除されます。</td></tr>
+<tr><td>madVR</td><td>分かる人だけ選択してください。<br>v0.24 以降でないとフリーズします。</td></tr>
+</table>
+</p>
+
+<h3>録画ファイルの保存先フォルダ</h3>
+<p class="descript">録画したファイルを保存するフォルダを指定します。</p>
+
+</body>
+</html>

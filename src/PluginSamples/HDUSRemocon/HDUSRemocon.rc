@@ -1,0 +1,6 @@
+#include "afxres.h"
+#include "resource.h"
+
+
+IDB_CONTROLLER	BITMAP DISCARDABLE "HDUSController.bmp"
+IDB_SELBUTTONS	BITMAP DISCARDABLE "HDUSController_Sel.bmp"

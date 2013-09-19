@@ -1,0 +1,110 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="ja">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=Shift_JIS">
+	<link rel="stylesheet" href="default.css" type="text/css">
+	<title>FAQ (よくある質問)</title>
+</head>
+<body>
+
+<h2>FAQ (よくある質問)</h2>
+
+<h3>音声だけ出て映像が出ない</h3>
+<p class="descript">映像の再生には MPEG-2 のデコーダ・フィルタが必要です。<br>
+また、デコーダによっては動作しないものもありますので注意してください。<br>
+以下のデコーダで動作が確認されています。</p>
+<ul>
+	<li>MPV Decoder Filter / MPC - MPEG-2 Video Decoder / Mpeg2Dec Filter</li>
+	<li>Microsoft MPEG-2 Video Decoder / Microsoft DTV-DVD Video Decoder</li>
+	<li>ATI MPEG Video Decoder</li>
+	<li>CyberLink Video/SP Decoder</li>
+	<li>ffdshow Video Decoder</li>
+</ul>
+<p class="descript">デコーダが入っているのに映像が出ない場合は、レンダラを変えてみてください。<br>
+デコーダとレンダラは環境依存性が強く、組み合わせの相性もあるので色々と試してみてください。</p>
+
+<h3>映像に縞々が入る/映像が波打つ</h3>
+<p class="descript">放送はインターレース方式で行われているために、インターレースを解除する必要があります。<br>
+デコーダによってはプロパティにインターレース解除の設定がありますので、右クリックメニューから [フィルタのプロパティ] -&gt; [映像デコーダ] で設定します。<br>
+ATI のデコーダは CCC で設定できます。<br>
+デコーダで設定できない場合、レンダラを VMR9 や EVR にしてみるといいでしょう。</p>
+
+<h3>録画した番組を再生すると違う番組が再生される</h3>
+<p class="descript">デジタル放送では、一つのストリームで複数の番組を同時に放送することができます。<br>
+そのため、再生時に意図しない番組が再生されてしまうことがあります。<br>
+<a href="options/record.html">録画の設定</a>で「現在のサービスのみ保存する」のチェックを入れるか、TsSplitterで分離するなどしてください。</p>
+
+<h3>録画した番組を再生すると音声(映像)が出ない/途中で出なくなる</h3>
+<p class="descript">放送では音声や映像の形式が切り替わることがありますが、再生ソフトが対応していないと音が出なくなったり映像が出なくなったりします(多くのプレイヤーが対応していないのが現状です)。<br>
+再生ソフトを変えるか、音声や映像の切り替わり点でファイルをカットするなどしてください。<br>
+BonDriver_File+TVTestPlugin や TvtPlay といったプラグインを使用して、TVTest でファイルの再生を行うこともできます。</p>
+
+<h3>「BonDriverの初期化ができません」と表示される</h3>
+<p class="descript">BonDriver からエラーが返ってきたためです。<br>
+具体的にどのようなエラーが起こったのかを、呼び出し元のプログラムから知る方法はありません。<br>
+デバイスが認識されていないか既に使用中の場合が多いと思われます。</p>
+
+<h3>音量を最大にしても音が小さい</h3>
+<p class="descript">右クリックメニューから [音量] -&gt; [音量増幅] を選択してください。<br>
+Viata/7 の場合は音量ミキサで TVTest の音量を上げてください。</p>
+
+<h3>かくつく・音ずれする</h3>
+<p class="descript">映像がかくつく場合、以下を試してみてください。</p>
+<ul>
+	<li><a href="options.html">設定</a>の [<a href="options/osd.html">OSD</a>] で [映像と合成する] のチェックを外す。</li>
+	<li>Radeon の場合、Catalyst Control Center (CCC) で [Avivo ビデオ] -&gt; [すべての設定] にある [強制的になめらかなビデオ再生を実行する] のチェックを外す。</li>
+</ul>
+<p class="descript"><a href="options.html">設定</a>の [<a href="options/playback.html">再生</a>] で各種設定を変更すると改善する場合もあります。<br>
+一時的におかしくなった場合、右クリックメニューから [リセット] -&gt; [ビューアリセット] か [リセット] で直ることがあります。</p>
+
+<h3>マルチディスプレイ環境でセカンダリモニタで映らない/不正終了する</h3>
+<p class="descript">レンダラを VMR-9 や EVR にしてみる、またデコーダを変えてみてください。<br>
+場合によっては DxVA を切ったりレジストリを書き換えたりする必要があります。</p>
+
+<h3>NHK Eテレ/放送大学などで映像が正方形に表示される</h3>
+<p class="descript">CyberLink のデコーダとデフォルトレンダラの組み合わせで、1080x1080(4:3) の映像を表示すると起こるようです。<br>
+レンダラをデフォルト以外にしてみてください。</p>
+
+<h3>F1 中継や放送大学で 16:9 の映像がサイドカットされる</h3>
+<p class="descript">なぜか MPEG-2 のヘッダにサイドカットして表示するという情報が設定されているためです。<br>
+ver.0.6.0 から表示できる領域があればサイドカットしない仕様になりましたが、4:3 として扱われるために表示倍率の変更時や全画面表示時に問題が出ます。<br>
+手動で比率を指定するか<a href="options.html">設定</a>の<a href="options/view.html">表示</a>で [拡張ヘッダのディスプレイサイズを無視する] をチェックしてください。</p>
+
+<h3>キャプチャで一瞬止まる</h3>
+<p class="descript">レンダラに VMR9 Renderless を使用してください。<br>
+また、ちゃんとしたキャプチャをしたい場合は TSMemory を使用してください。</p>
+
+<h3>チャンネルを切り替えた時に E や S の値が増える</h3>
+<p class="descript">正常な動作です。<br>
+E がカウントされるのは、チューナーによって選局時にゴミデータが送られて来るためです。<br>
+S がカウントされるのは、スクランブル解除に必要な鍵のデータを受信する前に来たデータは、スクランブル解除できないためです。<br>
+</p>
+
+<h3>起動時にアンチウィルスソフトが反応する</h3>
+<p class="descript">アクティブでない時もリモコンを使えるようにするためにキーボードフックを使用していますが、これはキーロガー等にも使われるためにアンチウィルスソフトが反応してしまうことがあります。<br>
+リモコンを使用しないのであれば HDUSRemocon.tvtp と HDUSRemocon_KeyHook.dll を削除しても問題ありません。<br>
+リモコンを使用する場合、アンチウィルスソフトで除外設定するか、<a href="options/controller.html">リモコンの設定</a>でアクティブ時のみ有効にしてください。</p>
+
+<h3>ウィンドウのサイズが変更できない/ウィンドウの挙動がおかしい</h3>
+<p class="descript">TVTest ではウィンドウのスナップ処理などを行っている関係で、ぴたすちお等同様の機能を提供するプログラムと相性が悪いです。<br>
+TVTest.exe を除外指定してください。</p>
+
+<h3>メモリ使用量が多い</h3>
+<p class="descript">メモリを使っているのは DirectShow の部分(主に MPEG-2 デコーダ)ですので、私にはどうしようもありません。<br>
+MPEG-2 デコーダで DxVA を使用するとメモリ使用量が増えるので、(使用量を減らすことを優先する場合)オフにするか、DxVA を使用しないデコーダにしてみてください。<br>
+録画のみ行う場合は、<a href="commandline.html">コマンドラインオプション</a>で /nodshow を指定すると、メモリ使用量がかなり少なくなります。</p>
+
+<h3>ネットワークリモコンが使えない/リモコンの番号がおかしい</h3>
+<p class="descript"><a href="options/networkremocon.html">ネットワークリモコンの設定</a>で、EpgDataCap_Bon のチャンネルファイルのパスを正しく設定します。<br>
+ファイアウォールにブロックされている可能性もあるので確認します。<br>
+TVTest とリモコンのチャンネル番号を揃えたい場合は、対応する BonDriver のチャンネル設定ファイルが存在している必要があります。詳しくは<a href="options/networkremocon.html">ネットワークリモコンの設定</a>を参照してください。
+</p>
+
+<h3>ブルースクリーンが出る</h3>
+<p class="descript">Windows 2000/XP/Vista/7 でブルースクリーンが出るのは、ほとんどの場合ハードかドライバの問題です。</p>
+
+<h3>起動する度にセキュリティ警告のダイアログが表示される</h3>
+<p class="descript">TVTest.exe を右クリック -&gt; [プロパティ] -&gt; [ブロックの解除]</p>
+
+</body>
+</html>
