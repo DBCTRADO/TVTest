@@ -33,8 +33,11 @@ bool FillGradient(HDC hdc,const RECT *pRect,COLORREF Color1,COLORREF Color2,
 				  FillDirection Direction)
 {
 	if (hdc==NULL || pRect==NULL
-			|| pRect->left>pRect->right || pRect->top>pRect->bottom)
+			|| pRect->left>=pRect->right || pRect->top>=pRect->bottom)
 		return false;
+
+	if (pRect->right-pRect->left==1 || pRect->bottom-pRect->top==1)
+		return Fill(hdc,pRect,MixColor(Color1,Color2));
 
 	if (Direction==DIRECTION_HORZMIRROR || Direction==DIRECTION_VERTMIRROR) {
 		RECT rc;
@@ -80,11 +83,19 @@ bool FillGradient(HDC hdc,const RECT *pRect,COLORREF Color1,COLORREF Color2,
 }
 
 
+static BYTE BlendAlpha(int Alpha1,int Alpha2,int Pos,int Max)
+{
+	if (Max<=0)
+		return static_cast<BYTE>((Alpha1+Alpha2)/2);
+	return static_cast<BYTE>((Alpha1*(Max-Pos)+Alpha2*Pos)/Max);
+}
+
+
 bool FillGradient(HDC hdc,const RECT *pRect,const RGBA &Color1,const RGBA &Color2,
 				  FillDirection Direction)
 {
 	if (hdc==NULL || pRect==NULL
-			|| pRect->left>pRect->right || pRect->top>pRect->bottom)
+			|| pRect->left>=pRect->right || pRect->top>=pRect->bottom)
 		return false;
 
 	if (Direction==DIRECTION_HORZMIRROR || Direction==DIRECTION_VERTMIRROR) {
@@ -126,7 +137,7 @@ bool FillGradient(HDC hdc,const RECT *pRect,const RGBA &Color1,const RGBA &Color
 	if (Direction==DIRECTION_HORZ) {
 		for (int x=0;x<Width;x++) {
 			BlendFunc.SourceConstantAlpha=
-				(BYTE)(((Width-1-x)*Color1.Alpha+x*Color2.Alpha)/(Width-1));
+				BlendAlpha(Color1.Alpha,Color2.Alpha,x,Width-1);
 			if (BlendFunc.SourceConstantAlpha!=0) {
 				::GdiAlphaBlend(hdc,x+pRect->left,pRect->top,1,Height,
 								hdcMem,x,0,1,Height,
@@ -136,7 +147,7 @@ bool FillGradient(HDC hdc,const RECT *pRect,const RGBA &Color1,const RGBA &Color
 	} else {
 		for (int y=0;y<Height;y++) {
 			BlendFunc.SourceConstantAlpha=
-				(BYTE)(((Height-1-y)*Color1.Alpha+y*Color2.Alpha)/(Height-1));
+				BlendAlpha(Color1.Alpha,Color2.Alpha,y,Height-1);
 			if (BlendFunc.SourceConstantAlpha!=0) {
 				::GdiAlphaBlend(hdc,pRect->left,y+pRect->top,Width,1,
 								hdcMem,0,y,Width,1,
@@ -281,12 +292,11 @@ bool GlossOverlay(HDC hdc,const RECT *pRect,
 	int x,y;
 	BYTE *p=static_cast<BYTE*>(pBits);
 	for (y=0;y<Center;y++) {
-		::FillMemory(p,RowBytes,
-					 (BYTE)(((y*Highlight2)+(Center-1-y)*Highlight1)/(Center-1)));
+		::FillMemory(p,RowBytes,BlendAlpha(Highlight1,Highlight2,y,Center-1));
 		p+=RowBytes;
 	}
 	for (;y<Height;y++) {
-		BYTE Alpha=(BYTE)(((y-Center)*Shadow2+(Height-1-y)*Shadow1)/(Height-Center-1));
+		const BYTE Alpha=BlendAlpha(Shadow1,Shadow2,y-Center,Height-Center-1);
 		::ZeroMemory(p,RowBytes);
 		for (x=0;x<Width;x++) {
 			p[x*4+3]=Alpha;
