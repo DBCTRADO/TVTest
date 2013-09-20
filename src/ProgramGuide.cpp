@@ -2142,7 +2142,8 @@ void CProgramGuide::Draw(HDC hdc,const RECT &PaintRect)
 		rc.left=rcGuide.left;
 		rc.top=rcGuide.top;
 		rc.right=rcGuide.right;
-		rc.bottom=min(rc.top+HEADER_SHADOW_HEIGHT,rcGuide.bottom);
+		//rc.bottom=min(rc.top+HEADER_SHADOW_HEIGHT,rcGuide.bottom);
+		rc.bottom=rc.top+HEADER_SHADOW_HEIGHT;
 		DrawUtil::FillGradient(hdc,&rc,DrawUtil::RGBA(0,0,0,80),DrawUtil::RGBA(0,0,0,0),
 							   DrawUtil::DIRECTION_VERT);
 		rc.top=rcGuide.top;
