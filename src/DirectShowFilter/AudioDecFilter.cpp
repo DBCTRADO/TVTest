@@ -31,7 +31,7 @@ static const long NUM_SAMPLE_BUFFERS = 4;
 static const REFERENCE_TIME MAX_JITTER = REFERENCE_TIME_SECOND / 5LL;
 
 
-inline short ClampSample16(short v)
+inline short ClampSample16(int v)
 {
 	return v > SHORT_MAX ? SHORT_MAX : v < SHORT_MIN ? SHORT_MIN : v;
 }
