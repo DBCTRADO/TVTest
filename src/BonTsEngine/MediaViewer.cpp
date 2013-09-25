@@ -24,6 +24,9 @@ static const DWORD LOCK_TIMEOUT = 2000;
 
 static HRESULT SetVideoMediaType(CMediaType *pMediaType, int Width, int Height)
 {
+	static const REFERENCE_TIME TIME_PER_FRAME =
+		static_cast<REFERENCE_TIME>(10000000.0 / 29.97 + 0.5);
+
 #ifndef BONTSENGINE_H264_SUPPORT
 	// MPEG-2
 
@@ -44,12 +47,12 @@ static HRESULT SetVideoMediaType(CMediaType *pMediaType, int Width, int Height)
 	// ビデオヘッダ設定
 	VIDEOINFOHEADER2 &VideoHeader = pVideoInfo->hdr;
 	//::SetRect(&VideoHeader.rcSource, 0, 0, Width, Height);
+	VideoHeader.AvgTimePerFrame = TIME_PER_FRAME;
 	VideoHeader.bmiHeader.biSize = sizeof(BITMAPINFOHEADER); 
 	VideoHeader.bmiHeader.biWidth = Width;
 	VideoHeader.bmiHeader.biHeight = Height;
 #else
 	// H.264
-	// (適当でおk)
 	pMediaType->InitMediaType();
 	pMediaType->SetType(&MEDIATYPE_Video);
 	pMediaType->SetSubtype(&MEDIASUBTYPE_H264);
@@ -63,7 +66,7 @@ static HRESULT SetVideoMediaType(CMediaType *pMediaType, int Width, int Height)
 		return E_OUTOFMEMORY;
 	::ZeroMemory(pVideoInfo, sizeof(VIDEOINFOHEADER));
 	pVideoInfo->dwBitRate = 32000000;
-	pVideoInfo->AvgTimePerFrame = 10000000LL * 1001LL / 30000LL;
+	pVideoInfo->AvgTimePerFrame = TIME_PER_FRAME;
 	pVideoInfo->bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
 	pVideoInfo->bmiHeader.biWidth = Width;
 	pVideoInfo->bmiHeader.biHeight = Height;
