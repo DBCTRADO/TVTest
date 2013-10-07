@@ -789,8 +789,8 @@ HRESULT CAudioDecFilter::ProcessSpdif(FrameSampleInfo *pSampleInfo)
 		return E_FAIL;
 
 	const int FrameSize = FrameInfo.FrameSize;
-	int DataBurstSize = PREAMBLE_SIZE + FrameSize;
-	static const int PacketSize = FrameInfo.SamplesPerFrame * 4;
+	const int DataBurstSize = PREAMBLE_SIZE + FrameSize;
+	const int PacketSize = FrameInfo.SamplesPerFrame * 4;
 	if (DataBurstSize > PacketSize) {
 		OutputLog(TEXT("S/PDIFビットレートが不正です。(Frame size %d / Data-burst size %d / Packet size %d)\r\n"),
 				  FrameSize, DataBurstSize, PacketSize);
@@ -866,6 +866,7 @@ HRESULT CAudioDecFilter::ProcessSpdif(FrameSampleInfo *pSampleInfo)
 		return E_FAIL;
 	}
 	// Stuffing
+	PayloadSize += PREAMBLE_SIZE;
 	if (PayloadSize < PacketSize)
 		::ZeroMemory(&pOutBuff[PayloadSize], PacketSize - PayloadSize);
 
