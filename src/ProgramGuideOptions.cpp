@@ -141,9 +141,9 @@ bool CProgramGuideOptions::LoadSettings(CSettings &Settings)
 
 		int Width,Height;
 		m_pProgramGuide->GetInfoPopupSize(&Width,&Height);
-		if (Settings.Read(TEXT("InfoPopupWidth"),&Width)
-				|| Settings.Read(TEXT("InfoPopupHeight"),&Height))
-			m_pProgramGuide->SetInfoPopupSize(Width,Height);
+		Settings.Read(TEXT("InfoPopupWidth"),&Width);
+		Settings.Read(TEXT("InfoPopupHeight"),&Height);
+		m_pProgramGuide->SetInfoPopupSize(Width,Height);
 
 		// ŒŸõ—š—ğ
 		int NumSearchKeywords;
