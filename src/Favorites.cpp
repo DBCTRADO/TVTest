@@ -1579,8 +1579,10 @@ namespace TVTest
 						CFavoriteItem *pItem=GetItem(pnmh->hwndFrom,hItem);
 						if (pItem!=nullptr) {
 							TreeView_SelectItem(pnmh->hwndFrom,hItem);
-							CFavoritePropertiesDialog Dialog(static_cast<CFavoriteChannel*>(pItem));
-							Dialog.Show(hDlg);
+							if (pItem->GetType()==CFavoriteItem::ITEM_CHANNEL) {
+								CFavoritePropertiesDialog Dialog(static_cast<CFavoriteChannel*>(pItem));
+								Dialog.Show(hDlg);
+							}
 						}
 					}
 				}
