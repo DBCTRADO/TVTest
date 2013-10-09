@@ -601,10 +601,10 @@ bool CChannelManager::SaveChannelSettings(LPCTSTR pszFileName,LPCTSTR pszDriverN
 
 
 CChannelSpec::CChannelSpec()
+	: m_Space(CChannelManager::SPACE_INVALID)
+	, m_Channel(-1)
+	, m_ServiceID(-1)
 {
-	m_Space=-1;
-	m_Channel=-1;
-	m_ServiceID=-1;
 }
 
 

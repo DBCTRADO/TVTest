@@ -95,7 +95,7 @@ public:
 	int GetChannel() const { return m_Channel; }
 	bool SetServiceID(int ServiceID);
 	int GetServiceID() const { return m_ServiceID; }
-	bool IsValid() const { return m_Space>=0 && m_Channel>=0; }
+	bool IsValid() const { return m_Space>CChannelManager::SPACE_INVALID && m_Channel>=0; }
 };
 
 
