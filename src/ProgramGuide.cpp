@@ -499,7 +499,7 @@ public:
 	CServiceInfo(const CChannelInfo &ChannelInfo,const CEpgServiceInfo &Info,LPCTSTR pszBonDriver);
 	~CServiceInfo();
 	const CChannelInfo &GetChannelInfo() const { return m_ChannelInfo; }
-	const CServiceInfoData *GetServiceInfoData() const { return &m_ServiceData; }
+	const CServiceInfoData &GetServiceInfoData() const { return m_ServiceData; }
 	WORD GetNetworkID() const { return m_ServiceData.m_NetworkID; }
 	WORD GetTSID() const { return m_ServiceData.m_TSID; }
 	WORD GetServiceID() const { return m_ServiceData.m_ServiceID; }
@@ -1362,7 +1362,7 @@ bool CProgramGuide::UpdateList(bool fUpdateList)
 	if (m_ListMode==LIST_WEEK) {
 		ProgramGuide::CServiceInfo *pCurService=m_ServiceList.GetItem(m_WeekListService);
 		if (pCurService!=NULL)
-			CurServiceInfo=*pCurService->GetServiceInfoData();
+			CurServiceInfo=pCurService->GetServiceInfoData();
 		m_WeekListService=-1;
 	}
 
@@ -1413,7 +1413,7 @@ bool CProgramGuide::UpdateList(bool fUpdateList)
 		if (hbmLogo!=NULL)
 			pService->SetLogo(hbmLogo);
 
-		if (m_ListMode==LIST_WEEK && pServiceInfo->m_ServiceData==CurServiceInfo)
+		if (m_ListMode==LIST_WEEK && pService->GetServiceInfoData()==CurServiceInfo)
 			m_WeekListService=(int)m_ServiceList.NumServices();
 
 		m_ServiceList.Add(pService);
@@ -3587,7 +3587,7 @@ LRESULT CProgramGuide::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam
 								if (pServiceInfo!=NULL) {
 									m_pEventHandler->OnServiceTitleLButtonDown(
 										pServiceInfo->GetBonDriverFileName(),
-										pServiceInfo->GetServiceInfoData());
+										&pServiceInfo->GetServiceInfoData());
 								}
 							}
 						} else if (x%HeaderWidth>=HeaderWidth-(CHEVRON_WIDTH+HEADER_MARGIN_RIGHT)) {
