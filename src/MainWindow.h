@@ -134,16 +134,25 @@ public:
 	enum { COMMAND_FROM_MOUSE=8 };
 
 	struct ResumeInfo {
+		enum {
+			VIEWERSUSPEND_MINIMIZE	=0x0001U,
+			VIEWERSUSPEND_STANDBY	=0x0002U,
+			VIEWERSUSPEND_SUSPEND	=0x0004U,
+			VIEWERSUSPEND_EPGUPDATE	=0x0008U
+		};
+
 		CChannelSpec Channel;
 		bool fOpenTuner;
 		bool fSetChannel;
-		bool fPlay;
+		bool fEnableViewer;
+		unsigned int ViewerSuspendFlags;
 		bool fFullscreen;
 
 		ResumeInfo()
 			: fOpenTuner(false)
 			, fSetChannel(false)
-			, fPlay(false)
+			, fEnableViewer(false)
+			, ViewerSuspendFlags(0)
 			, fFullscreen(false)
 		{
 		}
@@ -394,7 +403,11 @@ private:
 	void ShowAudioOSD();
 	void SetWindowVisible();
 	void ShowFloatingWindows(bool fShow);
+	void StoreTunerResumeInfo();
 	bool ResumeTuner();
+	void ResumeChannel();
+	void SuspendViewer(unsigned int Flags);
+	void ResumeViewer(unsigned int Flags);
 	bool SetEpgUpdateNextChannel();
 	void RefreshChannelPanel();
 	void HookWindows(HWND hwnd);

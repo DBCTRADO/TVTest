@@ -4149,7 +4149,6 @@ class CMyProgramGuideEventHandler : public CProgramGuide::CEventHandler
 		CMainWindow::ResumeInfo &ResumeInfo=MainWindow.GetResumeInfo();
 		ResumeInfo.fSetChannel=false;
 		ResumeInfo.fOpenTuner=!fSetBonDriver;
-		ResumeInfo.fPlay=true;
 
 		MainWindow.SendCommand(CM_SHOW);
 
@@ -6751,12 +6750,10 @@ LRESULT CMainWindow::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 			Logger.AddLog(TEXT("サスペンドへの移行通知を受けました。"));
 			if (m_fProgramGuideUpdating) {
 				EndProgramGuideUpdate(0);
-			} else {
-				m_Resume.Channel.Store(&ChannelManager);
-				m_Resume.fSetChannel=m_Resume.Channel.IsValid();
-				m_Resume.fOpenTuner=CoreEngine.IsTunerOpen();
+			} else if (!m_pCore->GetStandby()) {
+				StoreTunerResumeInfo();
 			}
-			m_Resume.fPlay=IsViewerEnabled();
+			SuspendViewer(ResumeInfo::VIEWERSUSPEND_SUSPEND);
 			AppMain.CloseTuner();
 			FinalizeViewer();
 		} else if (wParam==PBT_APMRESUMESUSPEND) {
@@ -6764,9 +6761,8 @@ LRESULT CMainWindow::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 			if (!m_pCore->GetStandby()) {
 				// 遅延させた方がいいかも?
 				ResumeTuner();
-				if (m_Resume.fPlay)
-					m_pCore->EnableViewer(true);
 			}
+			ResumeViewer(ResumeInfo::VIEWERSUSPEND_SUSPEND);
 		}
 		break;
 
@@ -7367,10 +7363,7 @@ void CMainWindow::OnSizeChanged(UINT State,int Width,int Height)
 		ResidentManager.SetStatus(CResidentManager::STATUS_MINIMIZED,
 								  CResidentManager::STATUS_MINIMIZED);
 		if (ViewOptions.GetDisablePreviewWhenMinimized()) {
-			if (IsViewerEnabled()) {
-				m_pCore->EnableViewer(false);
-				m_Resume.fPlay=true;
-			}
+			SuspendViewer(ResumeInfo::VIEWERSUSPEND_MINIMIZE);
 		}
 	} else if ((ResidentManager.GetStatus()&CResidentManager::STATUS_MINIMIZED)!=0) {
 		SetWindowVisible();
@@ -10421,7 +10414,7 @@ LRESULT CALLBACK CMainWindow::ChildHookProc(HWND hwnd,UINT uMsg,WPARAM wParam,LP
 
 void CMainWindow::SetWindowVisible()
 {
-	bool fRestore=false;
+	bool fRestore=false,fShow=false;
 
 	if ((ResidentManager.GetStatus()&CResidentManager::STATUS_MINIMIZED)!=0) {
 		ResidentManager.SetStatus(0,CResidentManager::STATUS_MINIMIZED);
@@ -10432,12 +10425,13 @@ void CMainWindow::SetWindowVisible()
 		SetVisible(true);
 		ForegroundWindow(m_hwnd);
 		Update();
-		fRestore=true;
-	} else if (::IsIconic(m_hwnd)) {
+		fShow=true;
+	}
+	if (::IsIconic(m_hwnd)) {
 		::ShowWindow(m_hwnd,SW_RESTORE);
 		Update();
 		fRestore=true;
-	} else {
+	} else if (!fShow) {
 		ForegroundWindow(m_hwnd);
 	}
 	if (m_fMinimizeInit) {
@@ -10445,9 +10439,8 @@ void CMainWindow::SetWindowVisible()
 		ShowFloatingWindows(true);
 		m_fMinimizeInit=false;
 	}
-	if (fRestore && !m_pCore->GetStandby()) {
-		if (m_Resume.fPlay)
-			m_pCore->EnableViewer(true);
+	if (fRestore) {
+		ResumeViewer(ResumeInfo::VIEWERSUSPEND_MINIMIZE);
 	}
 }
 
@@ -10474,8 +10467,7 @@ bool CMainWindow::OnStandbyChange(bool fStandby)
 		if (m_fStandbyInit)
 			return true;
 		Logger.AddLog(TEXT("待機状態に移行します。"));
-		m_Resume.fPlay=IsViewerEnabled();
-		m_pCore->EnableViewer(false);
+		SuspendViewer(ResumeInfo::VIEWERSUSPEND_STANDBY);
 		//FinalizeViewer();
 		m_Resume.fFullscreen=m_pCore->GetFullscreen();
 		if (m_Resume.fFullscreen)
@@ -10485,26 +10477,27 @@ bool CMainWindow::OnStandbyChange(bool fStandby)
 		PluginManager.SendStandbyEvent(true);
 
 		if (!m_fProgramGuideUpdating) {
-			m_Resume.Channel.Store(&ChannelManager);
-			m_Resume.fSetChannel=m_Resume.Channel.IsValid();
-			m_Resume.fOpenTuner=CoreEngine.IsTunerOpen();
+			StoreTunerResumeInfo();
+
+			if (EpgOptions.GetUpdateWhenStandby()
+					&& CoreEngine.IsTunerOpen()
+					&& !RecordManager.IsRecording()
+					&& !CoreEngine.IsNetworkDriver()
+					&& !CmdLineOptions.m_fNoEpg)
+				BeginProgramGuideUpdate(NULL,NULL,true);
+
+			if (!RecordManager.IsRecording() && !m_fProgramGuideUpdating)
+				AppMain.CloseTuner();
 		}
-
-		if (EpgOptions.GetUpdateWhenStandby()
-				&& CoreEngine.IsTunerOpen()
-				&& !RecordManager.IsRecording()
-				&& !CoreEngine.IsNetworkDriver()
-				&& !CmdLineOptions.m_fNoEpg)
-			BeginProgramGuideUpdate(NULL,NULL,true);
-
-		if (!RecordManager.IsRecording() && !m_fProgramGuideUpdating)
-			AppMain.CloseTuner();
 	} else {
 		Logger.AddLog(TEXT("待機状態から復帰します。"));
 		SetWindowVisible();
 		Util::CWaitCursor WaitCursor;
 		if (m_fStandbyInit) {
+			bool fSetChannel=m_Resume.fSetChannel;
+			m_Resume.fSetChannel=false;
 			ResumeTuner();
+			m_Resume.fSetChannel=fSetChannel;
 			AppMain.InitializeChannel();
 			CoreEngine.m_DtvEngine.SetTracer(&StatusView);
 			InitializeViewer();
@@ -10520,8 +10513,7 @@ bool CMainWindow::OnStandbyChange(bool fStandby)
 		ForegroundWindow(m_hwnd);
 		PluginManager.SendStandbyEvent(false);
 		ResumeTuner();
-		if (m_Resume.fPlay)
-			m_pCore->EnableViewer(true);
+		ResumeViewer(ResumeInfo::VIEWERSUSPEND_STANDBY);
 	}
 
 	return true;
@@ -10530,8 +10522,11 @@ bool CMainWindow::OnStandbyChange(bool fStandby)
 
 bool CMainWindow::InitStandby()
 {
-	m_Resume.fPlay=!CmdLineOptions.m_fNoDirectShow && !CmdLineOptions.m_fNoView
-		&& (!PlaybackOptions.GetRestorePlayStatus() || fEnablePlay);
+	if (!CmdLineOptions.m_fNoDirectShow && !CmdLineOptions.m_fNoView
+			&& (!PlaybackOptions.GetRestorePlayStatus() || fEnablePlay)) {
+		m_Resume.fEnableViewer=true;
+		m_Resume.ViewerSuspendFlags=ResumeInfo::VIEWERSUSPEND_STANDBY;
+	}
 	m_Resume.fFullscreen=CmdLineOptions.m_fFullscreen;
 
 	if (CoreEngine.IsDriverSpecified())
@@ -10563,8 +10558,11 @@ bool CMainWindow::InitStandby()
 
 bool CMainWindow::InitMinimize()
 {
-	m_Resume.fPlay=!CmdLineOptions.m_fNoDirectShow && !CmdLineOptions.m_fNoView
-		&& (!PlaybackOptions.GetRestorePlayStatus() || fEnablePlay);
+	if (!CmdLineOptions.m_fNoDirectShow && !CmdLineOptions.m_fNoView
+			&& (!PlaybackOptions.GetRestorePlayStatus() || fEnablePlay)) {
+		m_Resume.fEnableViewer=true;
+		m_Resume.ViewerSuspendFlags=ResumeInfo::VIEWERSUSPEND_MINIMIZE;
+	}
 
 	ResidentManager.SetStatus(CResidentManager::STATUS_MINIMIZED,
 							  CResidentManager::STATUS_MINIMIZED);
@@ -10584,6 +10582,14 @@ bool CMainWindow::IsMinimizeToTray() const
 }
 
 
+void CMainWindow::StoreTunerResumeInfo()
+{
+	m_Resume.Channel.Store(&ChannelManager);
+	m_Resume.fSetChannel=m_Resume.Channel.IsValid();
+	m_Resume.fOpenTuner=CoreEngine.IsTunerOpen();
+}
+
+
 bool CMainWindow::ResumeTuner()
 {
 	if (m_fProgramGuideUpdating)
@@ -10591,19 +10597,55 @@ bool CMainWindow::ResumeTuner()
 
 	if (m_Resume.fOpenTuner) {
 		m_Resume.fOpenTuner=false;
-		if (!AppMain.OpenTuner())
+		if (!AppMain.OpenTuner()) {
+			m_Resume.fSetChannel=false;
 			return false;
+		}
 	}
 
-	if (m_Resume.fSetChannel
-			&& CoreEngine.IsTunerOpen()
-			&& !RecordManager.IsRecording()) {
-		AppMain.SetChannel(m_Resume.Channel.GetSpace(),
-						   m_Resume.Channel.GetChannel(),
-						   m_Resume.Channel.GetServiceID());
-	}
+	ResumeChannel();
 
 	return true;
+}
+
+
+void CMainWindow::ResumeChannel()
+{
+	if (m_Resume.fSetChannel) {
+		if (CoreEngine.IsTunerOpen()
+				&& !RecordManager.IsRecording()) {
+			AppMain.SetChannel(m_Resume.Channel.GetSpace(),
+							   m_Resume.Channel.GetChannel(),
+							   m_Resume.Channel.GetServiceID());
+		}
+		m_Resume.fSetChannel=false;
+	}
+}
+
+
+void CMainWindow::SuspendViewer(unsigned int Flags)
+{
+	if (IsViewerEnabled()) {
+		TRACE(TEXT("Suspend viewer\n"));
+		m_pCore->EnableViewer(false);
+		m_Resume.fEnableViewer=true;
+	}
+	m_Resume.ViewerSuspendFlags|=Flags;
+}
+
+
+void CMainWindow::ResumeViewer(unsigned int Flags)
+{
+	if ((m_Resume.ViewerSuspendFlags & Flags)!=0) {
+		m_Resume.ViewerSuspendFlags&=~Flags;
+		if (m_Resume.ViewerSuspendFlags==0) {
+			if (m_Resume.fEnableViewer) {
+				TRACE(TEXT("Resume viewer\n"));
+				m_pCore->EnableViewer(true);
+				m_Resume.fEnableViewer=false;
+			}
+		}
+	}
 }
 
 
@@ -10871,6 +10913,8 @@ bool CMainWindow::BeginProgramGuideUpdate(LPCTSTR pszBonDriver,const CChannelLis
 			return false;
 		}
 
+		const bool fTunerOpen=CoreEngine.IsTunerOpen();
+
 		if (!IsStringEmpty(pszBonDriver)) {
 			if (!AppMain.OpenTuner(pszBonDriver))
 				return false;
@@ -10878,8 +10922,11 @@ bool CMainWindow::BeginProgramGuideUpdate(LPCTSTR pszBonDriver,const CChannelLis
 
 		if (pChannelList==NULL) {
 			pChannelList=ChannelManager.GetCurrentRealChannelList();
-			if (pChannelList==NULL)
+			if (pChannelList==NULL) {
+				if (!fTunerOpen)
+					AppMain.CloseTuner();
 				return false;
+			}
 		}
 		m_EpgUpdateChannelList.clear();
 		for (int i=0;i<pChannelList->NumChannels();i++) {
@@ -10908,25 +10955,27 @@ bool CMainWindow::BeginProgramGuideUpdate(LPCTSTR pszBonDriver,const CChannelLis
 				itr->ChannelList.AddChannel(*pChInfo);
 			}
 		}
-		if (m_EpgUpdateChannelList.empty())
+		if (m_EpgUpdateChannelList.empty()) {
+			if (!fTunerOpen)
+				AppMain.CloseTuner();
 			return false;
+		}
 
 		if (m_pCore->GetStandby()) {
-			if (!ResumeTuner())
+			if (!AppMain.OpenTuner())
 				return false;
 		} else {
 			if (!CoreEngine.IsTunerOpen())
 				return false;
+			if (!fStandby) {
+				StoreTunerResumeInfo();
+				m_Resume.fOpenTuner=fTunerOpen;
+			}
 		}
 
 		Logger.AddLog(TEXT("番組表の取得を開始します。"));
 		m_fProgramGuideUpdating=true;
-		if (!fStandby) {
-			m_Resume.Channel.Store(&ChannelManager);
-			m_Resume.fSetChannel=m_Resume.Channel.IsValid();
-			m_Resume.fPlay=IsViewerEnabled();
-			m_pCore->EnableViewer(false);
-		}
+		SuspendViewer(ResumeInfo::VIEWERSUSPEND_EPGUPDATE);
 		m_EpgUpdateCurChannel=-1;
 		SetEpgUpdateNextChannel();
 	}
@@ -10961,17 +11010,12 @@ void CMainWindow::OnProgramGuideUpdateEnd(unsigned int Flags)
 				AppMain.CloseTuner();
 		} else {
 			::SetCursor(::LoadCursor(NULL,IDC_ARROW));
-			if ((Flags&EPG_UPDATE_END_RESUME)!=0
-					&& m_Resume.fSetChannel) {
-				AppMain.SetChannel(m_Resume.Channel.GetSpace(),
-								   m_Resume.Channel.GetChannel(),
-								   m_Resume.Channel.GetServiceID());
-			}
-			if (m_Resume.fPlay)
-				m_pCore->EnableViewer(true);
+			if ((Flags&EPG_UPDATE_END_RESUME)!=0)
+				ResumeChannel();
 			if (fShowPanelWindow && PanelForm.GetCurPageID()==PANEL_ID_CHANNEL)
 				ChannelPanel.UpdateAllChannels(false);
 		}
+		ResumeViewer(ResumeInfo::VIEWERSUSPEND_EPGUPDATE);
 	}
 }
 
@@ -10980,7 +11024,7 @@ void CMainWindow::EndProgramGuideUpdate(unsigned int Flags)
 {
 	OnProgramGuideUpdateEnd(Flags);
 
-	if (g_ProgramGuide.GetVisible())
+	if (g_ProgramGuide.IsCreated())
 		g_ProgramGuide.SendMessage(WM_COMMAND,CM_PROGRAMGUIDE_ENDUPDATE,0);
 }
 
