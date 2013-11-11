@@ -6439,6 +6439,13 @@ LRESULT CMainWindow::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 		OSDManager.OnParentMove();
 		return 0;
 
+	case WM_SHOWWINDOW:
+		if (!wParam) {
+			OSDManager.ClearOSD();
+			OSDManager.Reset();
+		}
+		break;
+
 	case WM_RBUTTONDOWN:
 		if (m_pCore->GetFullscreen()) {
 			m_Fullscreen.OnRButtonDown();
@@ -7360,6 +7367,8 @@ void CMainWindow::OnSizeChanged(UINT State,int Width,int Height)
 	const bool fMaximized=State==SIZE_MAXIMIZED;
 
 	if (fMinimized) {
+		OSDManager.ClearOSD();
+		OSDManager.Reset();
 		ResidentManager.SetStatus(CResidentManager::STATUS_MINIMIZED,
 								  CResidentManager::STATUS_MINIMIZED);
 		if (ViewOptions.GetDisablePreviewWhenMinimized()) {
