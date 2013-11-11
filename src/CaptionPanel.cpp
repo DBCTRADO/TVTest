@@ -188,6 +188,7 @@ LRESULT CCaptionPanel::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam
 			m_hwndEdit=CreateWindowEx(0,TEXT("EDIT"),TEXT(""),
 				WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_VSCROLL | ES_MULTILINE | ES_READONLY | ES_AUTOVSCROLL,
 				0,0,0,0,hwnd,(HMENU)IDC_EDIT,m_hinst,NULL);
+			Edit_LimitText(m_hwndEdit,8*1024*1024);
 			SetWindowFont(m_hwndEdit,m_Font.GetHandle(),FALSE);
 			::SetProp(m_hwndEdit,m_pszPropName,this);
 			m_pOldEditProc=SubclassWindow(m_hwndEdit,EditWndProc);
