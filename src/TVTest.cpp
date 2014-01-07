@@ -4132,7 +4132,8 @@ class CMyProgramGuideEventHandler : public CProgramGuide::CEventHandler
 			const CChannelInfo *pChannelInfo=pChannelList->GetChannelInfo(i);
 
 			if (pChannelInfo->GetTransportStreamID()==pServiceInfo->m_TSID
-					&& pChannelInfo->GetServiceID()==pServiceInfo->m_ServiceID)
+					&& pChannelInfo->GetServiceID()==pServiceInfo->m_ServiceID
+					&& pChannelInfo->IsEnabled())
 				return i;
 		}
 		return -1;
