@@ -8622,12 +8622,24 @@ void CMainWindow::OnCommand(HWND hwnd,int id,HWND hwndCtl,UINT codeNotify)
 				if (pList==NULL)
 					return;
 
-				int Index;
+				int Index = -1;
 
 				if (pList->HasRemoteControlKeyID()) {
-					Index=pList->FindChannelNo(No+1);
-					if (Index<0)
+					//チャンネルリストから、要求されているチャンネルNo(リモコンキー番号)が設定されていてenabledなチャンネルのindex値を取得
+					for (int i=0;i<pList->NumChannels();i++) {
+						const CChannelInfo *pChInfo=pList->GetChannelInfo(i);
+						if (pChInfo->IsEnabled() && pChInfo->GetChannelNo()==No+1) {
+							Index=i;
+							break;
+						}
+					}
+
+					if (Index<0) {
+						Logger.AddLog(TEXT("有効なチャンネルが見つかりません。チャンネルの設定を確認して下さい。"));
+						MainWindow.ShowMessage(TEXT("有効なチャンネルが見つかりません。\n設定のチャンネルスキャンでチャンネルのチェックボックスの状態とリモコンキー番号を確認して下さい。"),
+							TEXT("お知らせ"),MB_OK | MB_ICONINFORMATION);
 						return;
+					}
 				} else {
 					Index=No;
 				}
