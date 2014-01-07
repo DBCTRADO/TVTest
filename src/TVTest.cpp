@@ -8634,6 +8634,18 @@ void CMainWindow::OnCommand(HWND hwnd,int id,HWND hwndCtl,UINT codeNotify)
 						}
 					}
 
+					const CChannelInfo *pCurrentChInfo=ChannelManager.GetCurrentRealChannelInfo();
+					if (pCurrentChInfo!=NULL && pCurrentChInfo->GetChannelNo()==No+1) {
+						//チャンネルリストの現在位置より後ろのチャンネルを検索して、同一チャンネルNoのチャンネルがあれば取得
+						for (int i=ChannelManager.GetCurrentChannel()+1;i<pList->NumChannels();i++) {
+							const CChannelInfo *pChInfo=pList->GetChannelInfo(i);
+							if (pChInfo->IsEnabled() && pChInfo->GetChannelNo()==No+1) {
+								Index=i;
+								break;
+							}
+						}
+					}
+
 					if (Index<0) {
 						Logger.AddLog(TEXT("有効なチャンネルが見つかりません。チャンネルの設定を確認して下さい。"));
 						MainWindow.ShowMessage(TEXT("有効なチャンネルが見つかりません。\n設定のチャンネルスキャンでチャンネルのチェックボックスの状態とリモコンキー番号を確認して下さい。"),
