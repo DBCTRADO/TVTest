@@ -387,8 +387,13 @@ int CSplitter::GetPaneSize(int ID)
 		return false;
 	if (Index==0)
 		return m_BarPos;
-	int Width=(m_Position.right-m_Position.left)-m_BarPos-m_BarWidth;
-	return max(Width,0);
+	int Size;
+	if ((m_Style&STYLE_VERT)==0)
+		Size=m_Position.right-m_Position.left;
+	else
+		Size=m_Position.bottom-m_Position.top;
+	Size-=m_BarPos+m_BarWidth;
+	return max(Size,0);
 }
 
 
@@ -657,6 +662,10 @@ LRESULT CLayoutBase::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 					pContainer->OnMouseMove(x,y);
 			}
 		}
+		return 0;
+
+	case WM_CAPTURECHANGED:
+		m_pFocusContainer=NULL;
 		return 0;
 
 	case WM_COMMAND:
