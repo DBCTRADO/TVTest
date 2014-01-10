@@ -905,10 +905,8 @@ bool CAppMain::SelectChannel(const ChannelSelectInfo &SelInfo)
 				}
 			}
 			if (Index>=0) {
-				if (RecordManager.IsRecording()) {
-					if (!RecordOptions.ConfirmChannelChange(m_UICore.GetSkin()->GetVideoHostWindow()))
-						return false;
-				}
+				if (!m_UICore.ConfirmChannelChange())
+					return false;
 				return SetChannel(Space,Index);
 			}
 		}
@@ -1115,10 +1113,8 @@ bool CAppMain::OpenTunerAndSetChannel(LPCTSTR pszDriverFileName,const CChannelIn
 	if (IsStringEmpty(pszDriverFileName) || pChannelInfo==NULL)
 		return false;
 
-	if (RecordManager.IsRecording()) {
-		if (!RecordOptions.ConfirmChannelChange(m_UICore.GetSkin()->GetVideoHostWindow()))
-			return false;
-	}
+	if (!m_UICore.ConfirmChannelChange())
+		return false;
 
 	if (!OpenTuner(pszDriverFileName))
 		return false;
@@ -2252,6 +2248,13 @@ HWND CUICore::GetMainWindow() const
 	return m_pSkin->GetMainWindow();
 }
 
+HWND CUICore::GetDialogOwner() const
+{
+	if (m_pSkin==NULL)
+		return NULL;
+	return m_pSkin->GetVideoHostWindow();
+}
+
 bool CUICore::InitializeViewer()
 {
 	if (m_pSkin==NULL)
@@ -2978,15 +2981,18 @@ bool CUICore::DoCommand(LPCTSTR pszCommand)
 	return DoCommand(Command);
 }
 
+bool CUICore::ConfirmChannelChange()
+{
+	if (RecordManager.IsRecording()) {
+		if (!RecordOptions.ConfirmChannelChange(GetDialogOwner()))
+			return false;
+	}
+	return true;
+}
+
 bool CUICore::ConfirmStopRecording()
 {
-	HWND hwnd;
-
-	if (m_pSkin!=NULL)
-		hwnd=m_pSkin->GetVideoHostWindow();
-	else
-		hwnd=NULL;
-	return RecordOptions.ConfirmStatusBarStop(hwnd);
+	return RecordOptions.ConfirmStatusBarStop(GetDialogOwner());
 }
 
 bool CUICore::UpdateIcon()
@@ -4141,10 +4147,8 @@ class CMyProgramGuideEventHandler : public CProgramGuide::CEventHandler
 
 	void OnServiceTitleLButtonDown(LPCTSTR pszDriverFileName,const CServiceInfoData *pServiceInfo) override
 	{
-		if (RecordManager.IsRecording()) {
-			if (!RecordOptions.ConfirmChannelChange(MainWindow.GetVideoHostWindow()))
-				return;
-		}
+		if (!AppMain.GetUICore()->ConfirmChannelChange())
+			return;
 
 		const bool fSetBonDriver=!IsStringEmpty(pszDriverFileName);
 		CMainWindow::ResumeInfo &ResumeInfo=MainWindow.GetResumeInfo();
@@ -4899,10 +4903,9 @@ class CMyChannelDisplayEventHandler : public CChannelDisplay::CEventHandler
 				&& IsEqualFileName(CoreEngine.GetDriverFileName(),pszDriverFileName)) {
 			MainWindow.SendCommand(CM_CHANNELDISPLAY);
 		} else {
-			if (RecordManager.IsRecording()) {
-				if (!RecordOptions.ConfirmChannelChange(MainWindow.GetVideoHostWindow()))
-					return;
-			}
+			if (!AppMain.GetUICore()->ConfirmChannelChange())
+				return;
+
 			if (AppMain.OpenTuner(pszDriverFileName)) {
 				if (TuningSpace!=SPACE_NOTSPECIFIED) {
 					MainWindow.SendCommand(CM_SPACE_FIRST+TuningSpace);
@@ -4919,10 +4922,9 @@ class CMyChannelDisplayEventHandler : public CChannelDisplay::CEventHandler
 
 	void OnChannelSelect(LPCTSTR pszDriverFileName,const CChannelInfo *pChannelInfo)
 	{
-		if (RecordManager.IsRecording()) {
-			if (!RecordOptions.ConfirmChannelChange(MainWindow.GetVideoHostWindow()))
-				return;
-		}
+		if (!AppMain.GetUICore()->ConfirmChannelChange())
+			return;
+
 		if (AppMain.OpenTuner(pszDriverFileName)) {
 			int Space;
 			if (RestoreChannelInfo.fAllChannels)
@@ -8605,10 +8607,8 @@ void CMainWindow::OnCommand(HWND hwnd,int id,HWND hwndCtl,UINT codeNotify)
 
 #ifdef NETWORK_REMOCON_SUPPORT
 			if (pNetworkRemocon!=NULL) {
-				if (RecordManager.IsRecording()) {
-					if (!RecordOptions.ConfirmChannelChange(GetVideoHostWindow()))
-						return;
-				}
+				if (!m_pCore->ConfirmChannelChange())
+					return;
 				pNetworkRemocon->SetChannel(No);
 				ChannelManager.SetNetworkRemoconCurrentChannel(
 					ChannelManager.GetCurrentChannelList()->FindChannelNo(No+1));
@@ -8644,10 +8644,8 @@ void CMainWindow::OnCommand(HWND hwnd,int id,HWND hwndCtl,UINT codeNotify)
 			const CChannelInfo *pChInfo=pChList->GetChannelInfo(Channel);
 			if (pChInfo==NULL)
 				return;
-			if (RecordManager.IsRecording()) {
-				if (!RecordOptions.ConfirmChannelChange(GetVideoHostWindow()))
-					return;
-			}
+			if (!m_pCore->ConfirmChannelChange())
+				return;
 			AppMain.SetChannel(ChannelManager.GetCurrentSpace(),Channel);
 			return;
 		}
@@ -8702,10 +8700,8 @@ void CMainWindow::OnCommand(HWND hwnd,int id,HWND hwndCtl,UINT codeNotify)
 		}
 
 		if (id>=CM_SPACE_CHANNEL_FIRST && id<=CM_SPACE_CHANNEL_LAST) {
-			if (RecordManager.IsRecording()) {
-				if (!RecordOptions.ConfirmChannelChange(GetVideoHostWindow()))
-					return;
-			}
+			if (!m_pCore->ConfirmChannelChange())
+				return;
 			m_pCore->ProcessTunerMenu(id);
 			return;
 		}

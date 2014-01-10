@@ -37,6 +37,7 @@ public:
 	bool SetSkin(CUISkin *pSkin);
 	CUISkin *GetSkin() const { return m_pSkin; }
 	HWND GetMainWindow() const;
+	HWND GetDialogOwner() const;
 
 	bool InitializeViewer();
 	bool IsViewerInitializeError() const { return m_fViewerInitializeError; }
@@ -88,6 +89,7 @@ public:
 	bool DoCommand(int Command);
 	bool DoCommand(LPCTSTR pszCommand);
 
+	bool ConfirmChannelChange();
 	bool ConfirmStopRecording();
 
 	bool UpdateIcon();
