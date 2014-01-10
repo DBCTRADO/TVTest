@@ -310,10 +310,12 @@ int CChannelList::FindPhysicalChannel(int Channel) const
 }
 
 
-int CChannelList::FindChannelNo(int No) const
+int CChannelList::FindChannelNo(int No,bool fEnabledOnly) const
 {
 	for (size_t i=0;i<m_ChannelList.size();i++) {
-		if (m_ChannelList[i]->GetChannelNo()==No)
+		const CChannelInfo *pChInfo=m_ChannelList[i];
+		if (pChInfo->GetChannelNo()==No
+				&& (!fEnabledOnly || pChInfo->IsEnabled()))
 			return (int)i;
 	}
 	return -1;

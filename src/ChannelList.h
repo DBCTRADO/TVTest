@@ -94,7 +94,7 @@ public:
 	int Find(const CChannelInfo *pInfo) const;
 	int Find(int Space,int ChannelIndex,int ServiceID=-1) const;
 	int FindPhysicalChannel(int Channel) const;
-	int FindChannelNo(int No) const;
+	int FindChannelNo(int No,bool fEnabledOnly=true) const;
 	int FindServiceID(WORD ServiceID) const;
 	int FindByIDs(WORD NetworkID,WORD TransportStreamID,WORD ServiceID) const;
 	int FindByName(LPCTSTR pszName) const;
