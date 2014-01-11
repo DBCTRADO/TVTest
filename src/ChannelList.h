@@ -98,8 +98,8 @@ public:
 	int FindServiceID(WORD ServiceID) const;
 	int FindByIDs(WORD NetworkID,WORD TransportStreamID,WORD ServiceID) const;
 	int FindByName(LPCTSTR pszName) const;
-	int GetNextChannelNo(int ChannelNo,bool fWrap=false) const;
-	int GetPrevChannelNo(int ChannelNo,bool fWrap=false) const;
+	int GetNextChannel(int Index,bool fWrap=false) const;
+	int GetPrevChannel(int Index,bool fWrap=false) const;
 	int GetMaxChannelNo() const;
 	enum SortType {
 		SORT_SPACE,

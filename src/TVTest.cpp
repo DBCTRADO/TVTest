@@ -8272,18 +8272,10 @@ void CMainWindow::OnCommand(HWND hwnd,int id,HWND hwndCtl,UINT codeNotify)
 	case CM_CHANNEL_UP:
 	case CM_CHANNEL_DOWN:
 		{
-			const CChannelInfo *pInfo=ChannelManager.GetNextChannelInfo(id==CM_CHANNEL_UP);
+			int Channel=ChannelManager.GetNextChannel(id==CM_CHANNEL_UP);
 
-			if (pInfo!=NULL) {
-				const CChannelList *pList=ChannelManager.GetCurrentChannelList();
-
-				if (pList->HasRemoteControlKeyID() && pInfo->GetChannelNo()!=0)
-					SendCommand(CM_CHANNELNO_FIRST+pInfo->GetChannelNo()-1);
-				else
-					SendCommand(CM_CHANNEL_FIRST+pInfo->GetChannelIndex());
-			} else {
-				SendCommand(CM_CHANNEL_FIRST);
-			}
+			if (Channel>=0)
+				AppMain.SwitchChannel(Channel);
 		}
 		return;
 
@@ -9765,15 +9757,15 @@ void CMainWindow::OnMouseWheel(WPARAM wParam,LPARAM lParam,bool fHorz)
 				fUp=Delta>0;
 			else
 				fUp=Delta<0;
-			const CChannelInfo *pInfo=ChannelManager.GetNextChannelInfo(fUp);
-			if (pInfo!=NULL) {
+			int Channel=ChannelManager.GetNextChannel(fUp);
+			if (Channel>=0) {
 				if (m_fWheelChannelChanging
 						&& m_WheelCount<5
 						&& TickTimeSpan(m_PrevWheelTime,CurTime)<(5UL-m_WheelCount)*100UL) {
 					break;
 				}
 				SetWheelChannelChanging(true,OperationOptions.GetWheelChannelDelay());
-				ChannelManager.SetChangingChannel(ChannelManager.FindChannelInfo(pInfo));
+				ChannelManager.SetChangingChannel(Channel);
 				StatusView.UpdateItem(STATUS_ITEM_CHANNEL);
 				if (OSDOptions.IsOSDEnabled(COSDOptions::OSD_CHANNEL))
 					ShowChannelOSD();
