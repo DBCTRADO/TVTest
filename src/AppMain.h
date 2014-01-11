@@ -80,6 +80,8 @@ public:
 	bool SetChannel(int Space,int Channel,int ServiceID=-1);
 	bool SetChannelByIndex(int Space,int Channel,int ServiceID=-1);
 	bool SelectChannel(const ChannelSelectInfo &SelInfo);
+	bool SwitchChannel(int Channel);
+	bool SwitchChannelByNo(int ChannelNo,bool fSwitchService);
 	bool FollowChannelChange(WORD TransportStreamID,WORD ServiceID);
 	bool SetServiceByIndex(int Service);
 	bool SetServiceByID(WORD ServiceID);

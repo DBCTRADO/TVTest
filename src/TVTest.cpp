@@ -918,6 +918,76 @@ bool CAppMain::SelectChannel(const ChannelSelectInfo &SelInfo)
 }
 
 
+bool CAppMain::SwitchChannel(int Channel)
+{
+	const CChannelList *pChList=ChannelManager.GetCurrentRealChannelList();
+	if (pChList==NULL)
+		return false;
+	const CChannelInfo *pChInfo=pChList->GetChannelInfo(Channel);
+	if (pChInfo==NULL)
+		return false;
+
+	if (!m_UICore.ConfirmChannelChange())
+		return false;
+
+	return SetChannel(ChannelManager.GetCurrentSpace(),Channel);
+}
+
+
+bool CAppMain::SwitchChannelByNo(int ChannelNo,bool fSwitchService)
+{
+	if (ChannelNo<1)
+		return false;
+
+#ifdef NETWORK_REMOCON_SUPPORT
+	if (pNetworkRemocon!=NULL) {
+		if (!m_UICore.ConfirmChannelChange())
+			return false;
+		pNetworkRemocon->SetChannel(ChannelNo-1);
+		ChannelManager.SetNetworkRemoconCurrentChannel(
+			ChannelManager.GetCurrentChannelList()->FindChannelNo(ChannelNo));
+		m_UICore.OnChannelChanged(0);
+		PluginManager.SendChannelChangeEvent();
+		return true;
+	}
+#endif
+
+	const CChannelList *pList=ChannelManager.GetCurrentChannelList();
+	if (pList==NULL)
+		return false;
+
+	int Index;
+
+	if (pList->HasRemoteControlKeyID()) {
+		Index=pList->FindChannelNo(ChannelNo);
+
+		if (fSwitchService) {
+			const CChannelInfo *pCurChInfo=ChannelManager.GetCurrentChannelInfo();
+
+			if (pCurChInfo!=NULL && pCurChInfo->GetChannelNo()==ChannelNo) {
+				const int NumChannels=pList->NumChannels();
+
+				for (int i=ChannelManager.GetCurrentChannel()+1;i<NumChannels;i++) {
+					const CChannelInfo *pChInfo=pList->GetChannelInfo(i);
+
+					if (pChInfo->IsEnabled() && pChInfo->GetChannelNo()==ChannelNo) {
+						Index=i;
+						break;
+					}
+				}
+			}
+		}
+
+		if (Index<0)
+			return false;
+	} else {
+		Index=ChannelNo-1;
+	}
+
+	return SwitchChannel(Index);
+}
+
+
 bool CAppMain::FollowChannelChange(WORD TransportStreamID,WORD ServiceID)
 {
 	const CChannelList *pChannelList;
@@ -6508,12 +6578,12 @@ LRESULT CMainWindow::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 			break;
 	case WM_KEYDOWN:
 		{
-			int Command;
+			int Channel;
 
 			if (wParam>=VK_F1 && wParam<=VK_F12) {
 				if (!Accelerator.IsFunctionKeyChannelChange())
 					break;
-				Command=CM_CHANNELNO_FIRST+((int)wParam-VK_F1);
+				Channel=((int)wParam-VK_F1)+1;
 			} else if (wParam>=VK_NUMPAD0 && wParam<=VK_NUMPAD9) {
 				if (m_ChannelNoInput.fInputting) {
 					OnChannelNoInput((int)wParam-VK_NUMPAD0);
@@ -6522,9 +6592,9 @@ LRESULT CMainWindow::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 				if (!Accelerator.IsNumPadChannelChange())
 					break;
 				if (wParam==VK_NUMPAD0)
-					Command=CM_CHANNELNO_FIRST+9;
+					Channel=10;
 				else
-					Command=CM_CHANNELNO_FIRST+((int)wParam-VK_NUMPAD1);
+					Channel=(int)wParam-VK_NUMPAD0;
 			} else if (wParam>='0' && wParam<='9') {
 				if (m_ChannelNoInput.fInputting) {
 					OnChannelNoInput((int)wParam-'0');
@@ -6533,9 +6603,9 @@ LRESULT CMainWindow::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 				if (!Accelerator.IsDigitKeyChannelChange())
 					break;
 				if (wParam=='0')
-					Command=CM_CHANNELNO_FIRST+9;
+					Channel=10;
 				else
-					Command=CM_CHANNELNO_FIRST+((int)wParam-'1');
+					Channel=(int)wParam-'0';
 			} else if (wParam>=VK_F13 && wParam<=VK_F24
 					&& !ControllerManager.IsControllerEnabled(TEXT("HDUS Remocon"))
 					&& (::GetKeyState(VK_SHIFT)<0 || ::GetKeyState(VK_CONTROL)<0)) {
@@ -6545,7 +6615,8 @@ LRESULT CMainWindow::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 			} else {
 				break;
 			}
-			SendCommand(Command);
+
+			AppMain.SwitchChannelByNo(Channel,true);
 		}
 		return 0;
 
@@ -8603,50 +8674,12 @@ void CMainWindow::OnCommand(HWND hwnd,int id,HWND hwndCtl,UINT codeNotify)
 		}
 
 		if (id>=CM_CHANNELNO_FIRST && id<=CM_CHANNELNO_LAST) {
-			int No=id-CM_CHANNELNO_FIRST;
-
-#ifdef NETWORK_REMOCON_SUPPORT
-			if (pNetworkRemocon!=NULL) {
-				if (!m_pCore->ConfirmChannelChange())
-					return;
-				pNetworkRemocon->SetChannel(No);
-				ChannelManager.SetNetworkRemoconCurrentChannel(
-					ChannelManager.GetCurrentChannelList()->FindChannelNo(No+1));
-				OnChannelChanged(0);
-				PluginManager.SendChannelChangeEvent();
-				return;
-			} else
-#endif
-			{
-				const CChannelList *pList=ChannelManager.GetCurrentChannelList();
-				if (pList==NULL)
-					return;
-
-				int Index;
-
-				if (pList->HasRemoteControlKeyID()) {
-					Index=pList->FindChannelNo(No+1);
-					if (Index<0)
-						return;
-				} else {
-					Index=No;
-				}
-				id=CM_CHANNEL_FIRST+Index;
-			}
+			AppMain.SwitchChannelByNo((id-CM_CHANNELNO_FIRST)+1,true);
+			return;
 		}
-		// 上から続いているため、ここに別なコードを入れてはいけないので注意
-		if (id>=CM_CHANNEL_FIRST && id<=CM_CHANNEL_LAST) {
-			int Channel=id-CM_CHANNEL_FIRST;
 
-			const CChannelList *pChList=ChannelManager.GetCurrentRealChannelList();
-			if (pChList==NULL)
-				return;
-			const CChannelInfo *pChInfo=pChList->GetChannelInfo(Channel);
-			if (pChInfo==NULL)
-				return;
-			if (!m_pCore->ConfirmChannelChange())
-				return;
-			AppMain.SetChannel(ChannelManager.GetCurrentSpace(),Channel);
+		if (id>=CM_CHANNEL_FIRST && id<=CM_CHANNEL_LAST) {
+			AppMain.SwitchChannel(id-CM_CHANNEL_FIRST);
 			return;
 		}
 
@@ -10702,8 +10735,7 @@ static bool SetCommandLineChannel(const CCommandLineOptions *pCmdLine)
 		if (pCmdLine->m_ControllerChannel==0)
 			return false;
 		if (ChannelManager.GetCurrentChannelList()->FindChannelNo(pCmdLine->m_ControllerChannel)>=0) {
-			MainWindow.SendCommand(CM_CHANNELNO_FIRST+pCmdLine->m_ControllerChannel-1);
-			return true;
+			return AppMain.SwitchChannelByNo(pCmdLine->m_ControllerChannel,false);
 		}
 		return false;
 	}
