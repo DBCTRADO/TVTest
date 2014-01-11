@@ -9005,18 +9005,12 @@ void CMainWindow::OnTimer(HWND hwnd,UINT id)
 	case TIMER_ID_WHEELCHANNELCHANGE:
 		// ホイールでのチャンネル変更
 		{
-			const CChannelInfo *pInfo=ChannelManager.GetChangingChannelInfo();
+			const int Channel=ChannelManager.GetChangingChannel();
 
 			SetWheelChannelChanging(false);
 			ChannelManager.SetChangingChannel(-1);
-			if (pInfo!=NULL) {
-				const CChannelList *pList=ChannelManager.GetCurrentChannelList();
-
-				if (pList->HasRemoteControlKeyID())
-					SendCommand(CM_CHANNELNO_FIRST+pInfo->GetChannelNo()-1);
-				else
-					SendCommand(CM_CHANNELNO_FIRST+pInfo->GetChannelIndex());
-			}
+			if (Channel>=0)
+				AppMain.SwitchChannel(Channel);
 		}
 		break;
 
