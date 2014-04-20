@@ -203,7 +203,13 @@ static void InitServiceListView(
 		GROUP_ID_CS
 	};
 	LVGROUP lvg;
-	lvg.cbSize=LVGROUP_V5_SIZE;
+	// LVGROUP_V5_SIZE ‚Í x64 ‚ÅŠÔˆá‚Á‚½’l‚É‚È‚Á‚Ä‚¢‚é
+	//lvg.cbSize=LVGROUP_V5_SIZE;
+#if _WIN32_WINNT>=0x0600
+	lvg.cbSize=offsetof(LVGROUP,pszSubtitle);
+#else
+	lvg.cbSize=sizeof(LVGROUP);
+#endif
 	lvg.mask=LVGF_HEADER | LVGF_GROUPID;
 	if (Util::OS::IsWindowsVistaOrLater()) {
 		lvg.mask|=LVGF_STATE;
