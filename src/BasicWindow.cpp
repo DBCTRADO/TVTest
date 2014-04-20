@@ -430,6 +430,7 @@ LRESULT CALLBACK CCustomWindow::WndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM
 			pThis->m_hwnd=NULL;
 			return FALSE;
 		}
+		return TRUE;
 	} else {
 		pThis=static_cast<CCustomWindow*>(GetBasicWindow(hwnd));
 		if (pThis==NULL)
