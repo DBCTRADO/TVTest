@@ -3,7 +3,7 @@
 #include "libpng/png.h"
 #include "zlib/zlib.h"
 #include "TVTest_Image.h"
-#include "PNG.h"
+#include "Codec_PNG.h"
 #include "ImageUtil.h"
 
 

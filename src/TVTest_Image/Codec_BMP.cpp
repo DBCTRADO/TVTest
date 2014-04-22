@@ -1,8 +1,7 @@
 #include <windows.h>
 #include <tchar.h>
 #include "TVTest_Image.h"
-#include "ImageUtil.h"
-#include "BMP.h"
+#include "Codec_BMP.h"
 #include "ImageUtil.h"
 
 

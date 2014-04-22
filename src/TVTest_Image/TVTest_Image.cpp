@@ -1,9 +1,9 @@
 #include <windows.h>
 #include <tchar.h>
 #include "TVTest_Image.h"
-#include "BMP.h"
-#include "JPEG.h"
-#include "PNG.h"
+#include "Codec_BMP.h"
+#include "Codec_JPEG.h"
+#include "Codec_PNG.h"
 
 
 static HINSTANCE hInst;

@@ -2,12 +2,10 @@
 #include <setjmp.h>
 #include <windows.h>
 #include <tchar.h>
-extern "C" {
-#include "libjpeg\jpeglib.h"
-#include "libjpeg\jerror.h"
-}
+#include "libjpeg/jpeglib.h"
+#include "libjpeg/jerror.h"
 #include "TVTest_Image.h"
-#include "JPEG.h"
+#include "Codec_JPEG.h"
 #include "ImageUtil.h"
 
 
