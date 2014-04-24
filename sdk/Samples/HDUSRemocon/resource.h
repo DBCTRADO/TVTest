@@ -1,0 +1,2 @@
+#define IDB_CONTROLLER	20
+#define IDB_SELBUTTONS	21
