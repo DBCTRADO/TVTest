@@ -197,6 +197,8 @@ void CEventSearchSettings::Clear()
 	fRegExp=false;
 	fIgnoreCase=true;
 	fIgnoreWidth=true;
+	fEventName=true;
+	fEventText=true;
 	fGenre=false;
 	Genre1=0x0000;
 	::ZeroMemory(Genre2,sizeof(Genre2));
@@ -240,6 +242,10 @@ bool CEventSearchSettings::ToString(TVTest::String *pString) const
 		Flags|=FLAG_IGNORE_CASE;
 	if (fIgnoreWidth)
 		Flags|=FLAG_IGNORE_WIDTH;
+	if (fEventName)
+		Flags|=FLAG_EVENT_NAME;
+	if (fEventText)
+		Flags|=FLAG_EVENT_TEXT;
 	if (fGenre)
 		Flags|=FLAG_GENRE;
 	if (fDayOfWeek)
@@ -318,6 +324,8 @@ bool CEventSearchSettings::FromString(LPCTSTR pszString)
 				fRegExp=(Flags&FLAG_REG_EXP)!=0;
 				fIgnoreCase=(Flags&FLAG_IGNORE_CASE)!=0;
 				fIgnoreWidth=(Flags&FLAG_IGNORE_WIDTH)!=0;
+				fEventName=(Flags&FLAG_EVENT_NAME)!=0;
+				fEventText=(Flags&FLAG_EVENT_TEXT)!=0;
 				fGenre=(Flags&FLAG_GENRE)!=0;
 				fDayOfWeek=(Flags&FLAG_DAY_OF_WEEK)!=0;
 				fTime=(Flags&FLAG_TIME)!=0;
@@ -757,9 +765,12 @@ bool CEventSearcher::MatchKeyword(const CEventInfoData *pEventInfo,LPCTSTR pszKe
 			fOr=false;
 		}
 		if (i>0) {
-			if (FindKeyword(pEventInfo->GetEventName(),szWord,i)>=0
-					|| FindKeyword(pEventInfo->GetEventText(),szWord,i)>=0
-					|| FindKeyword(pEventInfo->GetEventExtText(),szWord,i)>=0) {
+			if ((m_Settings.fEventName
+						&& FindKeyword(pEventInfo->GetEventName(),szWord,i)>=0)
+					|| (m_Settings.fEventText
+						&& FindKeyword(pEventInfo->GetEventText(),szWord,i)>=0)
+					|| (m_Settings.fEventText
+						&& FindKeyword(pEventInfo->GetEventExtText(),szWord,i)>=0)) {
 				if (fMinus)
 					return false;
 				fMatch=true;
@@ -783,11 +794,14 @@ bool CEventSearcher::MatchKeyword(const CEventInfoData *pEventInfo,LPCTSTR pszKe
 
 bool CEventSearcher::MatchRegExp(const CEventInfoData *pEventInfo)
 {
-	return (!IsStringEmpty(pEventInfo->GetEventName())
+	return (m_Settings.fEventName
+			&& !IsStringEmpty(pEventInfo->GetEventName())
 			&& m_RegExp.Match(pEventInfo->GetEventName()))
-		|| (!IsStringEmpty(pEventInfo->GetEventText())
+		|| (m_Settings.fEventText
+			&& !IsStringEmpty(pEventInfo->GetEventText())
 			&& m_RegExp.Match(pEventInfo->GetEventText()))
-		|| (!IsStringEmpty(pEventInfo->GetEventExtText())
+		|| (m_Settings.fEventText
+			&& !IsStringEmpty(pEventInfo->GetEventExtText())
 			&& m_RegExp.Match(pEventInfo->GetEventExtText()));
 }
 
@@ -1028,6 +1042,21 @@ bool CEventSearchSettingsDialog::GetSettings(CEventSearchSettings *pSettings) co
 		pSettings->fRegExp=
 			DlgCheckBox_IsChecked(m_hDlg,IDC_EVENTSEARCH_REGEXP);
 
+		switch (DlgComboBox_GetCurSel(m_hDlg,IDC_EVENTSEARCH_KEYWORDTARGET)) {
+		case KEYWORDTARGET_EVENTNAME_AND_EVENTTEXT:
+			pSettings->fEventName=true;
+			pSettings->fEventText=true;
+			break;
+		case KEYWORDTARGET_EVENTNAME:
+			pSettings->fEventName=true;
+			pSettings->fEventText=false;
+			break;
+		case KEYWORDTARGET_EVENTTEXT:
+			pSettings->fEventName=false;
+			pSettings->fEventText=true;
+			break;
+		}
+
 		GetGenreSettings(pSettings);
 
 		pSettings->fDayOfWeek=
@@ -1079,6 +1108,16 @@ void CEventSearchSettingsDialog::SetSettings(const CEventSearchSettings &Setting
 		::SetDlgItemText(m_hDlg,IDC_EVENTSEARCH_KEYWORD,Settings.Keyword.c_str());
 		DlgCheckBox_Check(m_hDlg,IDC_EVENTSEARCH_CASESENSITIVE,!Settings.fIgnoreCase);
 		DlgCheckBox_Check(m_hDlg,IDC_EVENTSEARCH_REGEXP,Settings.fRegExp);
+
+		// キーワード検索対象
+		int KeywordTarget=KEYWORDTARGET_EVENTNAME_AND_EVENTTEXT;
+		if (Settings.fEventName!=Settings.fEventText) {
+			if (Settings.fEventName)
+				KeywordTarget=KEYWORDTARGET_EVENTNAME;
+			else
+				KeywordTarget=KEYWORDTARGET_EVENTTEXT;
+		}
+		DlgComboBox_SetCurSel(m_hDlg,IDC_EVENTSEARCH_KEYWORDTARGET,KeywordTarget);
 
 		// ジャンル
 		HWND hwndGenre=::GetDlgItem(m_hDlg,IDC_EVENTSEARCH_GENRE);
@@ -1226,8 +1265,6 @@ INT_PTR CEventSearchSettingsDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LP
 	switch (uMsg) {
 	case WM_INITDIALOG:
 		AddControl(IDC_EVENTSEARCH_KEYWORD,ALIGN_HORZ);
-		AddControl(IDC_EVENTSEARCH_CASESENSITIVE,ALIGN_RIGHT);
-		AddControl(IDC_EVENTSEARCH_REGEXP,ALIGN_RIGHT);
 		AddControl(IDC_EVENTSEARCH_SETTINGSLIST,ALIGN_HORZ);
 		AddControl(IDC_EVENTSEARCH_SETTINGSLIST_SAVE,ALIGN_RIGHT);
 		AddControl(IDC_EVENTSEARCH_SETTINGSLIST_DELETE,ALIGN_RIGHT);
@@ -1246,6 +1283,18 @@ INT_PTR CEventSearchSettingsDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LP
 			::GetComboBoxInfo(::GetDlgItem(hDlg,IDC_EVENTSEARCH_KEYWORD),&cbi);
 			m_pOldEditProc=SubclassWindow(cbi.hwndItem,EditProc);
 			::SetProp(cbi.hwndItem,m_pszPropName,m_pOldEditProc);
+		}
+
+		// キーワード検索対象
+		{
+			static const LPCTSTR KeywordTargetList[] = {
+				TEXT("番組名と番組情報"),
+				TEXT("番組名"),
+				TEXT("番組情報"),
+			};
+
+			for (int i=0;i<lengthof(KeywordTargetList);i++)
+				DlgComboBox_AddString(hDlg,IDC_EVENTSEARCH_KEYWORDTARGET,KeywordTargetList[i]);
 		}
 
 		// ジャンル
@@ -2107,11 +2156,22 @@ int CProgramSearchDialog::FormatEventInfoText(const CEventInfoData *pEventInfo,L
 
 void CProgramSearchDialog::HighlightKeyword()
 {
-	if (m_SearchSettings.Keyword.empty())
+	if (m_SearchSettings.Keyword.empty()
+			|| (!m_SearchSettings.fEventName && !m_SearchSettings.fEventText))
 		return;
 
 	const HWND hwndInfo=::GetDlgItem(m_hDlg,IDC_PROGRAMSEARCH_INFO);
-	const int LineCount=(int)::SendMessage(hwndInfo,EM_GETLINECOUNT,0,0);
+
+	int FirstLine,LastLine;
+	if (m_SearchSettings.fEventName)
+		FirstLine=1;
+	else
+		FirstLine=3;
+	if (m_SearchSettings.fEventText)
+		LastLine=(int)::SendMessage(hwndInfo,EM_GETLINECOUNT,0,0)-1;
+	else
+		LastLine=1;
+
 	CHARFORMAT2 cfHighlight;
 	CRichEditUtil::CharFormatToCharFormat2(&m_InfoTextFormat,&cfHighlight);
 	cfHighlight.dwMask|=CFM_BOLD | CFM_BACKCOLOR;
@@ -2121,13 +2181,13 @@ void CProgramSearchDialog::HighlightKeyword()
 
 	::SendMessage(hwndInfo,EM_EXGETSEL,0,reinterpret_cast<LPARAM>(&crOld));
 
-	for (int i=1;i<LineCount;) {
+	for (int i=FirstLine;i<=LastLine;) {
 		const int LineIndex=(int)::SendMessage(hwndInfo,EM_LINEINDEX,i,0);
 		TCHAR szText[2048],*q;
 		int TotalLength=0,Length;
 
 		q=szText;
-		while (i<LineCount) {
+		while (i<=LastLine) {
 #ifdef UNICODE
 			q[0]=(WORD)(lengthof(szText)-2-TotalLength);
 #else
