@@ -1121,9 +1121,11 @@ bool CAppMain::GetCurrentStreamChannelInfo(CChannelInfo *pInfo) const
 			&& pCurChInfo->GetServiceID()==IDInfo.ServiceID) {
 		*pInfo=*pCurChInfo;
 	} else {
-		pInfo->SetNetworkID(IDInfo.NetworkID);
-		pInfo->SetTransportStreamID(IDInfo.TransportStreamID);
-		pInfo->SetServiceID(IDInfo.ServiceID);
+		CChannelInfo ChInfo;
+		ChInfo.SetNetworkID(IDInfo.NetworkID);
+		ChInfo.SetTransportStreamID(IDInfo.TransportStreamID);
+		ChInfo.SetServiceID(IDInfo.ServiceID);
+		*pInfo=ChInfo;
 	}
 
 	return true;
