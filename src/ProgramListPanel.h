@@ -5,6 +5,7 @@
 #include "PanelForm.h"
 #include "EpgProgramList.h"
 #include "EpgUtil.h"
+#include "ChannelList.h"
 #include "Theme.h"
 #include "DrawUtil.h"
 #include "EventInfoPopup.h"
@@ -51,7 +52,7 @@ public:
 	bool Create(HWND hwndParent,DWORD Style,DWORD ExStyle=0,int ID=0) override;
 // CProgramListPanel
 	void SetEpgProgramList(CEpgProgramList *pList) { m_pProgramList=pList; }
-	bool UpdateProgramList(WORD NetworkID,WORD TransportStreamID,WORD ServiceID);
+	bool UpdateProgramList(const CChannelInfo *pChannelInfo);
 	bool OnProgramListChanged();
 	void ClearProgramList();
 	void SetCurrentEventID(int EventID);
@@ -74,6 +75,7 @@ private:
 	UINT m_VisibleEventIcons;
 	int m_TotalLines;
 	CProgramItemList m_ItemList;
+	CChannelInfo m_CurChannel;
 	int m_CurEventID;
 	int m_ScrollPos;
 	//HWND m_hwndToolTip;
@@ -85,7 +87,7 @@ private:
 	public:
 		CEventInfoPopupHandler(CProgramListPanel *pPanel);
 		bool HitTest(int x,int y,LPARAM *pParam);
-		bool GetEventInfo(LPARAM Param,const CEventInfoData **ppInfo);
+		bool ShowPopup(LPARAM Param,CEventInfoPopup *pPopup);
 	};
 	CEventInfoPopupHandler m_EventInfoPopupHandler;
 	bool m_fShowRetrievingMessage;
@@ -94,7 +96,7 @@ private:
 	static HINSTANCE m_hinst;
 
 	void DrawProgramList(HDC hdc,const RECT *prcPaint);
-	bool UpdateListInfo(WORD NetworkID,WORD TransportStreamID,WORD ServiceID);
+	bool UpdateListInfo(const CChannelInfo *pChannelInfo);
 	void CalcDimensions();
 	void SetScrollPos(int Pos);
 	void SetScrollBar();

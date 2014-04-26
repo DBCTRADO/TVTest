@@ -1082,6 +1082,54 @@ bool CAppMain::SetServiceByID(WORD ServiceID)
 }
 
 
+bool CAppMain::GetCurrentStreamIDInfo(StreamIDInfo *pInfo) const
+{
+	if (pInfo==NULL)
+		return false;
+
+	pInfo->NetworkID=
+		CoreEngine.m_DtvEngine.m_TsAnalyzer.GetNetworkID();
+	pInfo->TransportStreamID=
+		CoreEngine.m_DtvEngine.m_TsAnalyzer.GetTransportStreamID();
+	WORD ServiceID;
+	if (!CoreEngine.m_DtvEngine.GetServiceID(&ServiceID)) {
+		int CurServiceID=ChannelManager.GetCurrentServiceID();
+		if (CurServiceID>0)
+			ServiceID=(WORD)CurServiceID;
+		else
+			ServiceID=0;
+	}
+	pInfo->ServiceID=ServiceID;
+
+	return true;
+}
+
+
+bool CAppMain::GetCurrentStreamChannelInfo(CChannelInfo *pInfo) const
+{
+	if (pInfo==NULL)
+		return false;
+
+	StreamIDInfo IDInfo;
+	if (!GetCurrentStreamIDInfo(&IDInfo))
+		return false;
+
+	const CChannelInfo *pCurChInfo=ChannelManager.GetCurrentChannelInfo();
+	if (pCurChInfo!=NULL
+			&& pCurChInfo->GetNetworkID()==IDInfo.NetworkID
+			&& pCurChInfo->GetTransportStreamID()==IDInfo.TransportStreamID
+			&& pCurChInfo->GetServiceID()==IDInfo.ServiceID) {
+		*pInfo=*pCurChInfo;
+	} else {
+		pInfo->SetNetworkID(IDInfo.NetworkID);
+		pInfo->SetTransportStreamID(IDInfo.TransportStreamID);
+		pInfo->SetServiceID(IDInfo.ServiceID);
+	}
+
+	return true;
+}
+
+
 bool CAppMain::GetCurrentServiceName(LPTSTR pszName,int MaxLength,bool fUseChannelName)
 {
 	if (pszName==NULL || MaxLength<1)
@@ -9035,29 +9083,31 @@ void CMainWindow::OnTimer(HWND hwnd,UINT id)
 		// EPGî•ñ‚Ì“¯Šú
 		if (!EpgOptions.IsEpgFileLoading()
 				&& !EpgOptions.IsEDCBDataLoading()) {
-			WORD NetworkID=CoreEngine.m_DtvEngine.m_TsAnalyzer.GetNetworkID();
-			WORD TransportStreamID=CoreEngine.m_DtvEngine.m_TsAnalyzer.GetTransportStreamID();
+			CChannelInfo ChInfo;
 
-			if (fShowPanelWindow && PanelForm.GetCurPageID()==PANEL_ID_PROGRAMLIST) {
-				int ServiceID=ChannelManager.GetCurrentServiceID();
-				if (ServiceID<=0) {
-					WORD SID;
-					if (CoreEngine.m_DtvEngine.GetServiceID(&SID))
-						ServiceID=SID;
+			if (fShowPanelWindow
+					&& AppMain.GetCurrentStreamChannelInfo(&ChInfo)) {
+				if (PanelForm.GetCurPageID()==PANEL_ID_PROGRAMLIST) {
+					if (ChInfo.GetServiceID()!=0) {
+						const HANDLE hThread=::GetCurrentThread();
+						const int OldPriority=::GetThreadPriority(hThread);
+						::SetThreadPriority(hThread,THREAD_PRIORITY_BELOW_NORMAL);
+
+						EpgProgramList.UpdateService(
+							ChInfo.GetNetworkID(),
+							ChInfo.GetTransportStreamID(),
+							ChInfo.GetServiceID());
+						ProgramListPanel.UpdateProgramList(&ChInfo);
+
+						::SetThreadPriority(hThread,OldPriority);
+					}
+				} else if (PanelForm.GetCurPageID()==PANEL_ID_CHANNEL) {
+					ChannelPanel.UpdateChannels(
+						ChInfo.GetNetworkID(),
+						ChInfo.GetTransportStreamID());
 				}
-				if (ServiceID>0) {
-					const HANDLE hThread=::GetCurrentThread();
-					const int OldPriority=::GetThreadPriority(hThread);
-					::SetThreadPriority(hThread,THREAD_PRIORITY_BELOW_NORMAL);
-
-					EpgProgramList.UpdateService(NetworkID,TransportStreamID,(WORD)ServiceID);
-					ProgramListPanel.UpdateProgramList(NetworkID,TransportStreamID,(WORD)ServiceID);
-
-					::SetThreadPriority(hThread,OldPriority);
-				}
-			} else if (fShowPanelWindow && PanelForm.GetCurPageID()==PANEL_ID_CHANNEL) {
-				ChannelPanel.UpdateChannels(NetworkID,TransportStreamID);
 			}
+
 			m_ProgramListUpdateTimerCount++;
 			// XV•p“x‚ð‰º‚°‚é
 			if (m_ProgramListUpdateTimerCount>=6 && m_ProgramListUpdateTimerCount<=10)
@@ -11107,19 +11157,14 @@ void CMainWindow::UpdatePanel()
 
 	case PANEL_ID_PROGRAMLIST:
 		if (m_ProgramListUpdateTimerCount>0) {
-			int ServiceID=ChannelManager.GetCurrentServiceID();
-
-			if (ServiceID<=0) {
-				WORD SID;
-				if (CoreEngine.m_DtvEngine.GetServiceID(&SID))
-					ServiceID=SID;
-			}
-			if (ServiceID>0) {
-				WORD NetworkID=CoreEngine.m_DtvEngine.m_TsAnalyzer.GetNetworkID();
-				WORD TransportStreamID=CoreEngine.m_DtvEngine.m_TsAnalyzer.GetTransportStreamID();
-
-				EpgProgramList.UpdateService(NetworkID,TransportStreamID,(WORD)ServiceID);
-				ProgramListPanel.UpdateProgramList(NetworkID,TransportStreamID,(WORD)ServiceID);
+			CChannelInfo ChInfo;
+			if (AppMain.GetCurrentStreamChannelInfo(&ChInfo)
+					&& ChInfo.GetServiceID()!=0) {
+				EpgProgramList.UpdateService(
+					ChInfo.GetNetworkID(),
+					ChInfo.GetTransportStreamID(),
+					ChInfo.GetServiceID());
+				ProgramListPanel.UpdateProgramList(&ChInfo);
 			}
 		}
 		break;

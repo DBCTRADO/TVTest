@@ -1,6 +1,8 @@
 #include "stdafx.h"
 #include "TVTest.h"
 #include "ProgramListPanel.h"
+#include "AppMain.h"
+#include "LogoManager.h"
 #include "DrawUtil.h"
 
 #ifdef _DEBUG
@@ -335,7 +337,7 @@ bool CProgramListPanel::Create(HWND hwndParent,DWORD Style,DWORD ExStyle,int ID)
 }
 
 
-bool CProgramListPanel::UpdateProgramList(WORD NetworkID,WORD TransportStreamID,WORD ServiceID)
+bool CProgramListPanel::UpdateProgramList(const CChannelInfo *pChannelInfo)
 {
 	if (m_pProgramList==NULL)
 		return false;
@@ -343,7 +345,7 @@ bool CProgramListPanel::UpdateProgramList(WORD NetworkID,WORD TransportStreamID,
 		const bool fRetrieving=m_fShowRetrievingMessage;
 
 		m_fShowRetrievingMessage=false;
-		if (UpdateListInfo(NetworkID,TransportStreamID,ServiceID)) {
+		if (UpdateListInfo(pChannelInfo)) {
 			CalcDimensions();
 			SetScrollBar();
 			//SetToolTip();
@@ -360,7 +362,7 @@ bool CProgramListPanel::OnProgramListChanged()
 {
 	/*
 	if (m_hwnd!=NULL) {
-		if (UpdateListInfo(ServiceID)) {
+		if (UpdateListInfo(&m_CurChannel)) {
 			CalcDimensions();
 			SetScrollBar();
 			Invalidate();
@@ -371,9 +373,9 @@ bool CProgramListPanel::OnProgramListChanged()
 }
 
 
-bool CProgramListPanel::UpdateListInfo(WORD NetworkID,WORD TransportStreamID,WORD ServiceID)
+bool CProgramListPanel::UpdateListInfo(const CChannelInfo *pChannelInfo)
 {
-	if (m_pProgramList==NULL)
+	if (m_pProgramList==NULL || pChannelInfo==NULL)
 		return false;
 
 	CEpgServiceInfo *pServiceInfo;
@@ -384,7 +386,12 @@ bool CProgramListPanel::UpdateListInfo(WORD NetworkID,WORD TransportStreamID,WOR
 	SYSTEMTIME stFirst,stLast;
 	bool fChanged;
 
-	pServiceInfo=m_pProgramList->GetServiceInfo(NetworkID,TransportStreamID,ServiceID);
+	m_CurChannel=*pChannelInfo;
+
+	pServiceInfo=m_pProgramList->GetServiceInfo(
+		pChannelInfo->GetNetworkID(),
+		pChannelInfo->GetTransportStreamID(),
+		pChannelInfo->GetServiceID());
 	if (pServiceInfo==NULL)
 		return false;
 	NumEvents=(int)pServiceInfo->m_EventList.EventDataMap.size();
@@ -993,11 +1000,25 @@ bool CProgramListPanel::CEventInfoPopupHandler::HitTest(int x,int y,LPARAM *pPar
 }
 
 
-bool CProgramListPanel::CEventInfoPopupHandler::GetEventInfo(LPARAM Param,const CEventInfoData **ppInfo)
+bool CProgramListPanel::CEventInfoPopupHandler::ShowPopup(LPARAM Param,CEventInfoPopup *pPopup)
 {
 	const CProgramItemInfo *pItem=m_pPanel->m_ItemList.GetItem((int)Param);
 	if (pItem==NULL)
 		return false;
-	*ppInfo=&pItem->GetEventInfo();
+
+	int IconWidth,IconHeight;
+	pPopup->GetPreferredIconSize(&IconWidth,&IconHeight);
+	HICON hIcon=GetAppClass().GetLogoManager()->CreateLogoIcon(
+		m_pPanel->m_CurChannel.GetNetworkID(),
+		m_pPanel->m_CurChannel.GetServiceID(),
+		IconWidth,IconHeight);
+
+	if (!pPopup->Show(&pItem->GetEventInfo(),NULL,
+					  hIcon,m_pPanel->m_CurChannel.GetName())) {
+		if (hIcon!=NULL)
+			::DestroyIcon(hIcon);
+		return false;
+	}
+
 	return true;
 }

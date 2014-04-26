@@ -432,8 +432,7 @@ private:
 		CProgramGuide *m_pProgramGuide;
 	// CEventInfoPopupManager::CEventHandler
 		bool HitTest(int x,int y,LPARAM *pParam);
-		bool GetEventInfo(LPARAM Param,const CEventInfoData **ppInfo);
-		bool OnShow(const CEventInfoData *pInfo);
+		bool ShowPopup(LPARAM Param,CEventInfoPopup *pPopup);
 	// CEventInfoPopup::CEventHandler
 		bool OnMenuPopup(HMENU hmenu);
 		void OnMenuSelected(int Command);

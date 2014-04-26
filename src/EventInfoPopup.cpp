@@ -2,6 +2,7 @@
 #include "TVTest.h"
 #include "EventInfoPopup.h"
 #include "EpgUtil.h"
+#include "Aero.h"
 
 #ifdef _DEBUG
 #undef THIS_FILE
@@ -43,13 +44,14 @@ CEventInfoPopup::CEventInfoPopup()
 	: m_hwndEdit(NULL)
 	, m_BackColor(::GetSysColor(COLOR_WINDOW))
 	, m_TextColor(::GetSysColor(COLOR_WINDOWTEXT))
-	, m_TitleBackGradient(Theme::GRADIENT_NORMAL,Theme::DIRECTION_VERT,
-						  RGB(255,255,255),RGB(228,228,240))
+	, m_TitleBackColor(RGB(228,228,240))
 	, m_TitleTextColor(RGB(80,80,80))
-	, m_TitleLineMargin(1)
 	, m_TitleHeight(0)
+	, m_TitleLeftMargin(2)
+	, m_TitleIconTextMargin(4)
 	, m_ButtonSize(14)
 	, m_ButtonMargin(3)
+	, m_hTitleIcon(NULL)
 	, m_pEventHandler(NULL)
 	, m_fDetailInfo(
 #ifdef _DEBUG
@@ -61,12 +63,6 @@ CEventInfoPopup::CEventInfoPopup()
 {
 	m_WindowPosition.Width=320;
 	m_WindowPosition.Height=320;
-
-	LOGFONT lf;
-	DrawUtil::GetSystemFont(DrawUtil::FONT_MESSAGE,&lf);
-	m_Font.Create(&lf);
-	lf.lfWeight=FW_BOLD;
-	m_TitleFont.Create(&lf);
 }
 
 
@@ -91,15 +87,49 @@ void CEventInfoPopup::SetEventInfo(const CEventInfoData *pEventInfo)
 
 	m_EventInfo=*pEventInfo;
 
+	LOGFONT lf;
+	CHARFORMAT cf;
+	HDC hdc=::GetDC(m_hwndEdit);
+	m_Font.GetLogFont(&lf);
+	CRichEditUtil::LogFontToCharFormat(hdc,&lf,&cf);
+	cf.dwMask|=CFM_COLOR;
+	cf.crTextColor=m_TextColor;
+	::ReleaseDC(m_hwndEdit,hdc);
+	::SendMessage(m_hwndEdit,WM_SETREDRAW,FALSE,0);
+	::SetWindowText(m_hwndEdit,NULL);
+
 	TCHAR szText[4096];
 	CStaticStringFormatter Formatter(szText,lengthof(szText));
+
+	{
+		TCHAR szBuf[EpgUtil::MAX_EVENT_TIME_LENGTH];
+		if (EpgUtil::FormatEventTime(pEventInfo,szBuf,lengthof(szBuf),
+									 EpgUtil::EVENT_TIME_DATE | EpgUtil::EVENT_TIME_YEAR)>0) {
+			Formatter.Append(szBuf);
+			Formatter.Append(TEXT("\r\n"));
+		}
+	}
+
+	if (!IsStringEmpty(m_EventInfo.GetEventName())) {
+		Formatter.Append(m_EventInfo.GetEventName());
+		Formatter.Append(TEXT("\r\n"));
+	}
+
+	if (!Formatter.IsEmpty()) {
+		Formatter.Append(TEXT("\r\n"));
+		CHARFORMAT cfBold=cf;
+		cfBold.dwMask|=CFM_BOLD;
+		cfBold.dwEffects|=CFE_BOLD;
+		CRichEditUtil::AppendText(m_hwndEdit,Formatter.GetString(),&cfBold);
+		Formatter.Clear();
+	}
 
 	if (!IsStringEmpty(m_EventInfo.GetEventText())) {
 		Formatter.Append(m_EventInfo.GetEventText());
 		Formatter.RemoveTrailingWhitespace();
 	}
 	if (!IsStringEmpty(m_EventInfo.GetEventExtText())) {
-		if (!Formatter.IsEmpty())
+		if (!IsStringEmpty(m_EventInfo.GetEventText()))
 			Formatter.Append(TEXT("\r\n\r\n"));
 		Formatter.Append(m_EventInfo.GetEventExtText());
 		Formatter.RemoveTrailingWhitespace();
@@ -159,19 +189,10 @@ void CEventInfoPopup::SetEventInfo(const CEventInfoData *pEventInfo)
 								   m_EventInfo.m_CommonEventInfo.EventID);
 	}
 
-	LOGFONT lf;
-	CHARFORMAT cf;
-	HDC hdc=::GetDC(m_hwndEdit);
-	m_Font.GetLogFont(&lf);
-	CRichEditUtil::LogFontToCharFormat(hdc,&lf,&cf);
-	cf.dwMask|=CFM_COLOR;
-	cf.crTextColor=m_TextColor;
-	::ReleaseDC(m_hwndEdit,hdc);
-	::SendMessage(m_hwndEdit,WM_SETREDRAW,FALSE,0);
-	::SetWindowText(m_hwndEdit,NULL);
 	CRichEditUtil::AppendText(m_hwndEdit,
 		SkipLeadingWhitespace(Formatter.GetString()),&cf);
 	CRichEditUtil::DetectURL(m_hwndEdit,&cf);
+
 	POINT pt={0,0};
 	::SendMessage(m_hwndEdit,EM_SETSCROLLPOS,0,reinterpret_cast<LPARAM>(&pt));
 	::SendMessage(m_hwndEdit,WM_SETREDRAW,TRUE,0);
@@ -234,26 +255,27 @@ void CEventInfoPopup::FormatAudioInfo(
 
 void CEventInfoPopup::CalcTitleHeight()
 {
-	TEXTMETRIC tm;
-	RECT rc;
-
+	int FontHeight=0;
 	HDC hdc=::GetDC(m_hwnd);
-	if (hdc==NULL)
-		return;
-	HFONT hfontOld=DrawUtil::SelectObject(hdc,m_TitleFont);
-	::GetTextMetrics(hdc,&tm);
-	//FontHeight=tm.tmHeight-tm.tmInternalLeading;
-	int FontHeight=tm.tmHeight;
-	m_TitleLineHeight=FontHeight+m_TitleLineMargin;
-	GetClientRect(&rc);
-	rc.right-=m_ButtonSize+m_ButtonMargin*2;
-	m_TitleHeight=(DrawUtil::CalcWrapTextLines(hdc,m_EventInfo.GetEventName(),rc.right)+1)*m_TitleLineHeight;
-	::SelectObject(hdc,hfontOld);
-	::ReleaseDC(m_hwnd,hdc);
+	if (hdc!=NULL) {
+		HFONT hfontOld=DrawUtil::SelectObject(hdc,m_TitleFont);
+		TEXTMETRIC tm;
+		::GetTextMetrics(hdc,&tm);
+		FontHeight=tm.tmHeight;
+		::SelectObject(hdc,hfontOld);
+		::ReleaseDC(m_hwnd,hdc);
+	}
+
+	int IconHeight=::GetSystemMetrics(SM_CYSMICON)+2;
+	int ButtonHeight=m_ButtonSize+m_ButtonMargin*2;
+
+	m_TitleHeight=max(IconHeight,ButtonHeight);
+	m_TitleHeight=max(m_TitleHeight,FontHeight+2);
 }
 
 
-bool CEventInfoPopup::Show(const CEventInfoData *pEventInfo,const RECT *pPos)
+bool CEventInfoPopup::Show(const CEventInfoData *pEventInfo,const RECT *pPos,
+						   HICON hIcon,LPCTSTR pszTitle)
 {
 	if (pEventInfo==NULL)
 		return false;
@@ -293,8 +315,20 @@ bool CEventInfoPopup::Show(const CEventInfoData *pEventInfo,const RECT *pPos)
 		::SetWindowPos(m_hwnd,HWND_TOPMOST,pt.x,pt.y,Width,Height,
 					   SWP_NOACTIVATE);
 	}
+
 	SetEventInfo(pEventInfo);
+
+	if (pszTitle!=NULL)
+		m_TitleText=pszTitle;
+	else
+		m_TitleText.clear();
+
+	if (m_hTitleIcon!=NULL)
+		::DestroyIcon(m_hTitleIcon);
+	m_hTitleIcon=hIcon;
+
 	::ShowWindow(m_hwnd,SW_SHOWNA);
+
 	return true;
 }
 
@@ -356,9 +390,9 @@ void CEventInfoPopup::SetColor(COLORREF BackColor,COLORREF TextColor)
 }
 
 
-void CEventInfoPopup::SetTitleColor(Theme::GradientInfo *pBackGradient,COLORREF TextColor)
+void CEventInfoPopup::SetTitleColor(COLORREF BackColor,COLORREF TextColor)
 {
-	m_TitleBackGradient=*pBackGradient;
+	m_TitleBackColor=BackColor;
 	m_TitleTextColor=TextColor;
 	if (m_hwnd!=NULL) {
 		RECT rc;
@@ -412,10 +446,27 @@ LPTSTR CEventInfoPopup::GetSelectedText() const
 }
 
 
+void CEventInfoPopup::GetPreferredIconSize(int *pWidth,int *pHeight) const
+{
+	if (pWidth!=NULL)
+		*pWidth=::GetSystemMetrics(SM_CXSMICON);
+	if (pHeight!=NULL)
+		*pHeight=::GetSystemMetrics(SM_CYSMICON);
+}
+
+
 LRESULT CEventInfoPopup::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 {
 	switch (uMsg) {
 	case WM_CREATE:
+		if (!m_Font.IsCreated()) {
+			LOGFONT lf;
+			DrawUtil::GetSystemFont(DrawUtil::FONT_MESSAGE,&lf);
+			m_Font.Create(&lf);
+			lf.lfWeight=FW_BOLD;
+			m_TitleFont.Create(&lf);
+		}
+
 		m_RichEditUtil.LoadRichEditLib();
 		m_hwndEdit=::CreateWindowEx(0,m_RichEditUtil.GetWindowClassName(),TEXT(""),
 			WS_CHILD | WS_VISIBLE | WS_VSCROLL | ES_MULTILINE | ES_READONLY | ES_AUTOVSCROLL | ES_NOHIDESEL,
@@ -423,6 +474,8 @@ LRESULT CEventInfoPopup::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lPar
 		SetWindowFont(m_hwndEdit,m_Font.GetHandle(),FALSE);
 		::SendMessage(m_hwndEdit,EM_SETEVENTMASK,0,ENM_MOUSEEVENTS | ENM_LINK);
 		::SendMessage(m_hwndEdit,EM_SETBKGNDCOLOR,0,m_BackColor);
+
+		SetNcRendering();
 		return 0;
 
 	case WM_SIZE:
@@ -435,30 +488,42 @@ LRESULT CEventInfoPopup::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lPar
 		{
 			PAINTSTRUCT ps;
 			RECT rc;
-			HFONT hfontOld;
-			int OldBkMode;
-			COLORREF OldTextColor;
 
 			::BeginPaint(hwnd,&ps);
+
 			::GetClientRect(hwnd,&rc);
 			rc.bottom=m_TitleHeight;
-			Theme::FillGradient(ps.hdc,&rc,&m_TitleBackGradient);
-			hfontOld=DrawUtil::SelectObject(ps.hdc,m_TitleFont);
-			OldBkMode=::SetBkMode(ps.hdc,TRANSPARENT);
-			OldTextColor=::SetTextColor(ps.hdc,m_TitleTextColor);
-			TCHAR szText[EpgUtil::MAX_EVENT_TIME_LENGTH];
-			int Length=EpgUtil::FormatEventTime(&m_EventInfo,szText,lengthof(szText),
-												EpgUtil::EVENT_TIME_DATE | EpgUtil::EVENT_TIME_YEAR);
-			if (Length>0)
-				::TextOut(ps.hdc,0,0,szText,Length);
-			rc.top+=m_TitleLineHeight;
-			rc.right-=m_ButtonSize+m_ButtonMargin*2;
-			DrawUtil::DrawWrapText(ps.hdc,m_EventInfo.GetEventName(),&rc,m_TitleLineHeight);
-			::SelectObject(ps.hdc,hfontOld);
-			::SetBkMode(ps.hdc,OldBkMode);
-			::SetTextColor(ps.hdc,OldTextColor);
+			DrawUtil::Fill(ps.hdc,&rc,m_TitleBackColor);
+
+			rc.left+=m_TitleLeftMargin;
+
+			if (m_hTitleIcon!=NULL) {
+				int IconWidth=::GetSystemMetrics(SM_CXSMICON);
+				int IconHeight=::GetSystemMetrics(SM_CYSMICON);
+
+				::DrawIconEx(ps.hdc,
+					rc.left,rc.top+(m_TitleHeight-IconHeight)/2,
+					m_hTitleIcon,IconWidth,IconHeight,0,NULL,DI_NORMAL);
+				rc.left+=IconWidth+m_TitleIconTextMargin;
+			}
+
+			if (!m_TitleText.empty()) {
+				rc.right-=m_ButtonSize+m_ButtonMargin*2;
+				if (rc.left<rc.right) {
+					HFONT hfontOld=DrawUtil::SelectObject(ps.hdc,m_TitleFont);
+					int OldBkMode=::SetBkMode(ps.hdc,TRANSPARENT);
+					COLORREF OldTextColor=::SetTextColor(ps.hdc,m_TitleTextColor);
+					::DrawText(ps.hdc,m_TitleText.data(),(int)m_TitleText.length(),&rc,
+							   DT_LEFT | DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX | DT_END_ELLIPSIS);
+					::SelectObject(ps.hdc,hfontOld);
+					::SetBkMode(ps.hdc,OldBkMode);
+					::SetTextColor(ps.hdc,OldTextColor);
+				}
+			}
+
 			GetCloseButtonRect(&rc);
 			::DrawFrameControl(ps.hdc,&rc,DFC_CAPTION,DFCS_CAPTIONCLOSE | DFCS_MONO);
+
 			::EndPaint(hwnd,&ps);
 		}
 		return 0;
@@ -543,6 +608,38 @@ LRESULT CEventInfoPopup::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lPar
 		}
 		return 0;
 
+	case WM_NCACTIVATE:
+		return TRUE;
+
+	case WM_NCPAINT:
+		{
+			HDC hdc=::GetWindowDC(hwnd);
+			RECT rcWindow,rcClient;
+
+			::GetWindowRect(hwnd,&rcWindow);
+			::GetClientRect(hwnd,&rcClient);
+			MapWindowRect(hwnd,NULL,&rcClient);
+			::OffsetRect(&rcClient,-rcWindow.left,-rcWindow.top);
+			::OffsetRect(&rcWindow,-rcWindow.left,-rcWindow.top);
+			HBRUSH hbr=::CreateSolidBrush(m_TitleBackColor);
+			DrawUtil::FillBorder(hdc,&rcWindow,&rcClient,&rcWindow,hbr);
+			::DeleteObject(hbr);
+			HPEN hpen=::CreatePen(PS_SOLID,1,MixColor(m_TitleBackColor,RGB(0,0,0),192));
+			HGDIOBJ hOldPen=::SelectObject(hdc,hpen);
+			HGDIOBJ hOldBrush=::SelectObject(hdc,::GetStockObject(NULL_BRUSH));
+			::Rectangle(hdc,rcWindow.left,rcWindow.top,rcWindow.right,rcWindow.bottom);
+			::Rectangle(hdc,rcClient.left-1,rcClient.top-1,rcClient.right+1,rcClient.bottom+1);
+			::SelectObject(hdc,hOldBrush);
+			::SelectObject(hdc,hOldPen);
+			::DeleteObject(hpen);
+			::ReleaseDC(hwnd,hdc);
+		}
+		return 0;
+
+	case WM_DWMCOMPOSITIONCHANGED:
+		SetNcRendering();
+		return 0;
+
 	case WM_NOTIFY:
 		switch (((LPNMHDR)lParam)->code) {
 		case EN_MSGFILTER:
@@ -594,6 +691,13 @@ LRESULT CEventInfoPopup::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lPar
 	case WM_CLOSE:
 		Hide();
 		return 0;
+
+	case WM_DESTROY:
+		if (m_hTitleIcon!=NULL) {
+			::DestroyIcon(m_hTitleIcon);
+			m_hTitleIcon=NULL;
+		}
+		return 0;
 	}
 
 	return ::DefWindowProc(hwnd,uMsg,wParam,lParam);
@@ -610,6 +714,15 @@ void CEventInfoPopup::GetCloseButtonRect(RECT *pRect) const
 	rc.top=m_ButtonMargin;
 	rc.bottom=rc.top+m_ButtonSize;
 	*pRect=rc;
+}
+
+
+void CEventInfoPopup::SetNcRendering()
+{
+	CAeroGlass Aero;
+
+	if (Aero.IsEnabled())
+		Aero.EnableNcRendering(m_hwnd,false);
 }
 
 
@@ -694,11 +807,7 @@ bool CEventInfoPopupManager::Popup(int x,int y)
 		return false;
 	m_HitTestParam=-1;
 	if (m_pEventHandler->HitTest(x,y,&m_HitTestParam)) {
-		const CEventInfoData *pEventInfo;
-
-		if (m_pEventHandler->GetEventInfo(m_HitTestParam,&pEventInfo)
-				&& m_pEventHandler->OnShow(pEventInfo)) {
-			m_pPopup->Show(pEventInfo);
+		if (m_pEventHandler->ShowPopup(m_HitTestParam,m_pPopup)) {
 			return true;
 		}
 	}
@@ -728,12 +837,8 @@ LRESULT CALLBACK CEventInfoPopupManager::HookWndProc(HWND hwnd,UINT uMsg,WPARAM 
 			LPARAM Param;
 			if (pThis->m_pEventHandler->HitTest(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam),&Param)) {
 				if (Param!=pThis->m_HitTestParam) {
-					const CEventInfoData *pEventInfo;
-
 					pThis->m_HitTestParam=Param;
-					if (pThis->m_pEventHandler->GetEventInfo(pThis->m_HitTestParam,&pEventInfo)
-							&& pThis->m_pEventHandler->OnShow(pEventInfo))
-						pThis->m_pPopup->Show(pEventInfo);
+					pThis->m_pEventHandler->ShowPopup(pThis->m_HitTestParam,pThis->m_pPopup);
 				}
 			} else {
 				pThis->m_pPopup->Hide();
@@ -780,11 +885,7 @@ LRESULT CALLBACK CEventInfoPopupManager::HookWndProc(HWND hwnd,UINT uMsg,WPARAM 
 			bool fHit=false;
 			pThis->m_HitTestParam=-1;
 			if (pThis->m_pEventHandler->HitTest(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam),&pThis->m_HitTestParam)) {
-				const CEventInfoData *pEventInfo;
-
-				if (pThis->m_pEventHandler->GetEventInfo(pThis->m_HitTestParam,&pEventInfo)
-						&& pThis->m_pEventHandler->OnShow(pEventInfo)) {
-					pThis->m_pPopup->Show(pEventInfo);
+				if (pThis->m_pEventHandler->ShowPopup(pThis->m_HitTestParam,pThis->m_pPopup)) {
 					fHit=true;
 				}
 			}

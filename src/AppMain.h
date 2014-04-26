@@ -45,6 +45,12 @@ public:
 		bool fUseCurTuner;
 	};
 
+	struct StreamIDInfo {
+		WORD NetworkID;
+		WORD TransportStreamID;
+		WORD ServiceID;
+	};
+
 	CAppMain();
 	bool Initialize();
 	bool Finalize();
@@ -85,6 +91,8 @@ public:
 	bool FollowChannelChange(WORD TransportStreamID,WORD ServiceID);
 	bool SetServiceByIndex(int Service);
 	bool SetServiceByID(WORD ServiceID);
+	bool GetCurrentStreamIDInfo(StreamIDInfo *pInfo) const;
+	bool GetCurrentStreamChannelInfo(CChannelInfo *pInfo) const;
 	bool GetCurrentServiceName(LPTSTR pszName,int MaxLength,bool fUseChannelName=true);
 	bool OpenTuner(LPCTSTR pszFileName);
 	bool OpenTunerAndSetChannel(LPCTSTR pszDriverFileName,const CChannelInfo *pChannelInfo);

@@ -142,7 +142,7 @@ private:
 	public:
 		CEventInfoPopupHandler(CChannelPanel *pChannelPanel);
 		bool HitTest(int x,int y,LPARAM *pParam);
-		bool GetEventInfo(LPARAM Param,const CEventInfoData **ppInfo);
+		bool ShowPopup(LPARAM Param,CEventInfoPopup *pPopup);
 	};
 	CEventInfoPopupHandler m_EventInfoPopupHandler;
 	CLogoManager *m_pLogoManager;
@@ -169,7 +169,7 @@ private:
 	bool CreateTooltip();
 	void SetTooltips(bool fRectOnly=false);
 	bool EventInfoPopupHitTest(int x,int y,LPARAM *pParam);
-	bool GetEventInfoPopupEventInfo(LPARAM Param,const CEventInfoData **ppInfo);
+	bool ShowEventInfoPopup(LPARAM Param,CEventInfoPopup *pPopup);
 
 // CCustomWindow
 	LRESULT OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam) override;

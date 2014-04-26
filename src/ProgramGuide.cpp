@@ -4290,7 +4290,7 @@ bool CProgramGuide::CEventInfoPopupHandler::HitTest(int x,int y,LPARAM *pParam)
 }
 
 
-bool CProgramGuide::CEventInfoPopupHandler::GetEventInfo(LPARAM Param,const CEventInfoData **ppInfo)
+bool CProgramGuide::CEventInfoPopupHandler::ShowPopup(LPARAM Param,CEventInfoPopup *pPopup)
 {
 	int List=LOWORD(Param),Event=HIWORD(Param);
 	const ProgramGuide::CEventLayout *pLayout=m_pProgramGuide->m_EventLayoutList[List];
@@ -4312,41 +4312,39 @@ bool CProgramGuide::CEventInfoPopupHandler::GetEventInfo(LPARAM Param,const CEve
 					pEventInfo=&pCommonItem->GetEventInfo();
 			}
 			*/
-			*ppInfo=pEventInfo;
+
+			int Genre=-1;
+			for (int i=0;i<pEventInfo->m_ContentNibble.NibbleCount;i++) {
+				if (pEventInfo->m_ContentNibble.NibbleList[i].ContentNibbleLevel1!=0xE) {
+					Genre=pEventInfo->m_ContentNibble.NibbleList[i].ContentNibbleLevel1;
+					break;
+				}
+			}
+			COLORREF Color;
+			if (Genre>=0 && Genre<=CEventInfoData::CONTENT_LAST)
+				Color=m_pProgramGuide->m_ColorList[COLOR_CONTENT_FIRST+Genre];
+			else
+				Color=m_pProgramGuide->m_ColorList[COLOR_CONTENT_OTHER];
+			pPopup->SetTitleColor(Color,m_pProgramGuide->m_ColorList[COLOR_EVENTTITLE]);
+
+			const ProgramGuide::CServiceInfo *pServiceInfo=pLayout->GetServiceInfo();
+			int IconWidth,IconHeight;
+			pPopup->GetPreferredIconSize(&IconWidth,&IconHeight);
+			HICON hIcon=GetAppClass().GetLogoManager()->CreateLogoIcon(
+				pServiceInfo->GetNetworkID(),pServiceInfo->GetServiceID(),
+				IconWidth,IconHeight);
+
+			if (!pPopup->Show(pEventInfo,NULL,hIcon,pServiceInfo->GetServiceName())) {
+				if (hIcon!=NULL)
+					::DestroyIcon(hIcon);
+				return false;
+			}
+
 			return true;
 		}
 	}
+
 	return false;
-}
-
-
-bool CProgramGuide::CEventInfoPopupHandler::OnShow(const CEventInfoData *pInfo)
-{
-	int Genre=-1;
-	for (int i=0;i<pInfo->m_ContentNibble.NibbleCount;i++) {
-		if (pInfo->m_ContentNibble.NibbleList[i].ContentNibbleLevel1!=0xE) {
-			Genre=pInfo->m_ContentNibble.NibbleList[i].ContentNibbleLevel1;
-			break;
-		}
-	}
-
-	COLORREF Color;
-	int Red,Green,Blue;
-	Theme::GradientInfo BackGradient;
-
-	if (Genre>=0 && Genre<=CEventInfoData::CONTENT_LAST)
-		Color=m_pProgramGuide->m_ColorList[COLOR_CONTENT_FIRST+Genre];
-	else
-		Color=m_pProgramGuide->m_ColorList[COLOR_CONTENT_OTHER];
-	BackGradient.Type=Theme::GRADIENT_NORMAL;
-	BackGradient.Direction=Theme::DIRECTION_VERT;
-	Red=GetRValue(Color);
-	Green=GetGValue(Color);
-	Blue=GetBValue(Color);
-	BackGradient.Color1=RGB(Red+(255-Red)/2,Green+(255-Green)/2,Blue+(255-Blue)/2);
-	BackGradient.Color2=Color;
-	CEventInfoPopupManager::CEventHandler::m_pPopup->SetTitleColor(&BackGradient,m_pProgramGuide->m_ColorList[COLOR_EVENTTITLE]);
-	return true;
 }
 
 
