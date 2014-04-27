@@ -7180,6 +7180,10 @@ LRESULT CMainWindow::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 		ShowFloatingWindows(false);
 		break;
 
+	case WM_ENDSESSION:
+		if (!wParam)
+			break;
+		AppMain.SetSilent(true);
 	case WM_DESTROY:
 		HtmlHelpClass.Finalize();
 		m_pCore->PreventDisplaySave(false);
@@ -7259,6 +7263,7 @@ LRESULT CMainWindow::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 		if (TaskbarManager.HandleMessage(uMsg,wParam,lParam))
 			return 0;
 	}
+
 	return ::DefWindowProc(hwnd,uMsg,wParam,lParam);
 }
 
