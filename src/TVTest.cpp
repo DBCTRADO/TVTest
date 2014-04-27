@@ -5516,6 +5516,14 @@ bool CFullscreen::SetPanelWidth(int Width)
 }
 
 
+void CFullscreen::HideAllBars()
+{
+	ShowTitleBar(false);
+	ShowSideBar(false);
+	ShowStatusView(false);
+}
+
+
 void CFullscreen::OnMouseCommand(int Command)
 {
 	if (Command==0)
@@ -11300,6 +11308,9 @@ bool CMainWindow::CDisplayBaseEventHandler::OnVisibleChange(bool fVisible)
 {
 	if (!m_pMainWindow->IsViewerEnabled()) {
 		m_pMainWindow->m_Viewer.GetVideoContainer().SetVisible(fVisible);
+	}
+	if (fVisible && m_pMainWindow->m_pCore->GetFullscreen()) {
+		m_pMainWindow->m_Fullscreen.HideAllBars();
 	}
 	return true;
 }

@@ -118,6 +118,7 @@ public:
 	bool IsPanelVisible() const { return m_fShowPanel; }
 	bool SetPanelWidth(int Width);
 	int GetPanelWidth() const { return m_PanelWidth; }
+	void HideAllBars();
 	void OnRButtonDown();
 	void OnMButtonDown();
 	void OnMouseMove();
