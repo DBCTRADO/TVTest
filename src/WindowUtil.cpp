@@ -277,3 +277,84 @@ bool CMouseLeaveTrack::IsCursorInWindow() const
 	::GetWindowRect(m_hwnd,&rc);
 	return ::PtInRect(&rc,pt)!=FALSE;
 }
+
+
+CMouseWheelHandler::CMouseWheelHandler()
+{
+	Reset();
+}
+
+void CMouseWheelHandler::Reset()
+{
+	m_DeltaSum=0;
+	m_LastDelta=0;
+	m_LastTime=0;
+}
+
+void CMouseWheelHandler::ResetDelta()
+{
+	m_DeltaSum=0;
+	m_LastDelta=0;
+}
+
+int CMouseWheelHandler::OnWheel(int Delta)
+{
+	DWORD CurTime=::GetTickCount();
+
+	if ((DWORD)(CurTime-m_LastTime)>500
+			|| (Delta>0)!=(m_LastDelta>0)) {
+		m_DeltaSum=0;
+	}
+
+	m_DeltaSum+=Delta;
+	m_LastDelta=Delta;
+	m_LastTime=CurTime;
+
+	return m_DeltaSum;
+}
+
+int CMouseWheelHandler::OnMouseWheel(WPARAM wParam,int ScrollLines)
+{
+	int Delta=OnWheel(GET_WHEEL_DELTA_WPARAM(wParam));
+	if (abs(Delta)<WHEEL_DELTA)
+		return 0;
+
+	if (ScrollLines==0)
+		ScrollLines=GetDefaultScrollLines();
+
+	ResetDelta();
+
+	return ::MulDiv(Delta,ScrollLines,WHEEL_DELTA);
+}
+
+int CMouseWheelHandler::OnMouseHWheel(WPARAM wParam,int ScrollChars)
+{
+	int Delta=OnWheel(GET_WHEEL_DELTA_WPARAM(wParam));
+	if (abs(Delta)<WHEEL_DELTA)
+		return 0;
+
+	if (ScrollChars==0)
+		ScrollChars=GetDefaultScrollChars();
+
+	ResetDelta();
+
+	return ::MulDiv(Delta,ScrollChars,WHEEL_DELTA);
+}
+
+int CMouseWheelHandler::GetDefaultScrollLines() const
+{
+	UINT Lines;
+
+	if (::SystemParametersInfo(SPI_GETWHEELSCROLLLINES,0,&Lines,0))
+		return Lines;
+	return 2;
+}
+
+int CMouseWheelHandler::GetDefaultScrollChars() const
+{
+	UINT Chars;
+
+	if (::SystemParametersInfo(SPI_GETWHEELSCROLLCHARS,0,&Chars,0))
+		return Chars;
+	return 3;
+}

@@ -9790,9 +9790,10 @@ void CMainWindow::OnMouseWheel(WPARAM wParam,LPARAM lParam,bool fHorz)
 		}
 	}
 
-	const bool fReverse=OperationOptions.IsWheelModeReverse(Mode);
-	int Delta=GET_WHEEL_DELTA_WPARAM(wParam);
-	if (fReverse)
+	int Delta=m_WheelHandler.OnMouseWheel(wParam,1);
+	if (Delta==0)
+		return;
+	if (OperationOptions.IsWheelModeReverse(Mode))
 		Delta=-Delta;
 	const DWORD CurTime=::GetTickCount();
 	bool fProcessed=false;
@@ -9804,7 +9805,7 @@ void CMainWindow::OnMouseWheel(WPARAM wParam,LPARAM lParam,bool fHorz)
 
 	switch (Mode) {
 	case COperationOptions::WHEEL_MODE_VOLUME:
-		SendCommand(Delta>=0?CM_VOLUME_UP:CM_VOLUME_DOWN);
+		SendCommand(Delta>0?CM_VOLUME_UP:CM_VOLUME_DOWN);
 		fProcessed=true;
 		break;
 
@@ -9846,7 +9847,7 @@ void CMainWindow::OnMouseWheel(WPARAM wParam,LPARAM lParam,bool fHorz)
 				int Zoom;
 
 				Zoom=GetZoomPercentage();
-				if (Delta>=0)
+				if (Delta>0)
 					Zoom+=OperationOptions.GetWheelZoomStep();
 				else
 					Zoom-=OperationOptions.GetWheelZoomStep();

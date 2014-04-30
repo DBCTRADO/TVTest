@@ -14,6 +14,7 @@
 #include "Tooltip.h"
 #include "StatusView.h"
 #include "Settings.h"
+#include "WindowUtil.h"
 
 
 namespace ProgramGuide
@@ -420,6 +421,8 @@ private:
 		POINT StartCursorPos;
 		POINT StartScrollPos;
 	} m_DragInfo;
+	CMouseWheelHandler m_VertWheel;
+	CMouseWheelHandler m_HorzWheel;
 	DrawUtil::CMonoColorBitmap m_Chevron;
 	CEpgIcons m_EpgIcons;
 	UINT m_VisibleEventIcons;

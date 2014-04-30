@@ -12,6 +12,7 @@
 #include "LogoManager.h"
 #include "Tooltip.h"
 #include "Settings.h"
+#include "WindowUtil.h"
 
 
 class CChannelPanel
@@ -128,6 +129,7 @@ private:
 	int m_ExpandAdditionalEvents;
 	int m_ExpandEvents;
 	int m_ScrollPos;
+	CMouseWheelHandler m_MouseWheel;
 	bool m_fScrollToCurChannel;
 	std::vector<CChannelEventInfo*> m_ChannelList;
 	int m_CurChannel;

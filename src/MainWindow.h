@@ -12,6 +12,7 @@
 #include "NotificationBar.h"
 #include "Panel.h"
 #include "OSDManager.h"
+#include "WindowUtil.h"
 
 
 #define MAIN_WINDOW_CLASS		APP_NAME TEXT(" Window")
@@ -286,6 +287,7 @@ private:
 	RECT m_rcDragStart;
 	bool m_fClosing;
 
+	CMouseWheelHandler m_WheelHandler;
 	int m_WheelCount;
 	int m_PrevWheelMode;
 	DWORD m_PrevWheelTime;

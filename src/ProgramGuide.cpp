@@ -3506,19 +3506,7 @@ LRESULT CProgramGuide::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam
 				default:	return 0;
 				}
 			} else {
-				int Lines;
-
-				if (m_WheelScrollLines==0) {
-					UINT SysLines;
-
-					if (::SystemParametersInfo(SPI_GETWHEELSCROLLLINES,0,&SysLines,0))
-						Lines=SysLines;
-					else
-						Lines=2;
-				} else {
-					Lines=m_WheelScrollLines;
-				}
-				Pos-=GET_WHEEL_DELTA_WPARAM(wParam)*Lines/WHEEL_DELTA;
+				Pos-=m_VertWheel.OnMouseWheel(wParam,m_WheelScrollLines);
 			}
 			if (Pos<0)
 				Pos=0;
@@ -3551,7 +3539,7 @@ LRESULT CProgramGuide::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam
 				default:	return 0;
 				}
 			} else {
-				Pos+=GET_WHEEL_DELTA_WPARAM(wParam)*m_FontHeight/WHEEL_DELTA;
+				Pos+=m_HorzWheel.OnMouseHWheel(wParam,m_FontHeight);
 			}
 			if (Pos<0)
 				Pos=0;

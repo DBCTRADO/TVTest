@@ -750,8 +750,13 @@ LRESULT CProgramListPanel::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lP
 		return 0;
 
 	case WM_MOUSEWHEEL:
-		SetScrollPos(m_ScrollPos-
-			GET_WHEEL_DELTA_WPARAM(wParam)*(m_FontHeight+m_LineMargin)/WHEEL_DELTA);
+		{
+			int Delta=m_MouseWheel.OnMouseWheel(wParam,
+				(m_FontHeight+m_LineMargin)*m_MouseWheel.GetDefaultScrollLines());
+
+			if (Delta!=0)
+				SetScrollPos(m_ScrollPos-Delta);
+		}
 		return 0;
 
 	case WM_VSCROLL:

@@ -1436,9 +1436,10 @@ bool CHomeDisplay::IsMessageNeed(const MSG *pMsg) const
 bool CHomeDisplay::OnMouseWheel(UINT Msg,WPARAM wParam,LPARAM lParam)
 {
 	if (Msg==WM_MOUSEWHEEL && m_hwnd!=NULL) {
-		int Delta=GET_WHEEL_DELTA_WPARAM(wParam)<=0?1:-1;
-
-		SetScrollPos(m_ScrollPos+(Delta*m_Style.FontHeight),true);
+		int Delta=m_MouseWheel.OnMouseWheel(wParam,
+			m_Style.FontHeight*m_MouseWheel.GetDefaultScrollLines());
+		if (Delta!=0)
+			SetScrollPos(m_ScrollPos-Delta,true);
 		return true;
 	}
 

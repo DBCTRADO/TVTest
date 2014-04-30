@@ -9,6 +9,7 @@
 #include "Theme.h"
 #include "DrawUtil.h"
 #include "EventInfoPopup.h"
+#include "WindowUtil.h"
 
 
 class CProgramItemInfo;
@@ -78,6 +79,7 @@ private:
 	CChannelInfo m_CurChannel;
 	int m_CurEventID;
 	int m_ScrollPos;
+	CMouseWheelHandler m_MouseWheel;
 	//HWND m_hwndToolTip;
 	CEventInfoPopup m_EventInfoPopup;
 	CEventInfoPopupManager m_EventInfoPopupManager;
