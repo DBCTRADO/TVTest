@@ -184,7 +184,9 @@ static void InitServiceListView(
 	const CChannelList &ServiceList,
 	const CEventSearchServiceList &SearchServiceList)
 {
-	if (Util::OS::IsWindowsVistaOrLater())
+	const bool fVista=Util::OS::IsWindowsVistaOrLater();
+
+	if (fVista)
 		::SetWindowTheme(hwndList,L"explorer",NULL);
 	ListView_SetExtendedListViewStyle(hwndList,
 		LVS_EX_CHECKBOXES | LVS_EX_FULLROWSELECT | LVS_EX_INFOTIP);
@@ -206,15 +208,22 @@ static void InitServiceListView(
 	// LVGROUP_V5_SIZE は x64 で間違った値になっている
 	//lvg.cbSize=LVGROUP_V5_SIZE;
 #if _WIN32_WINNT>=0x0600
-	lvg.cbSize=offsetof(LVGROUP,pszSubtitle);
+	if (fVista)
+		lvg.cbSize=sizeof(LVGROUP);
+	else
+		lvg.cbSize=offsetof(LVGROUP,pszSubtitle);
 #else
 	lvg.cbSize=sizeof(LVGROUP);
 #endif
 	lvg.mask=LVGF_HEADER | LVGF_GROUPID;
-	if (Util::OS::IsWindowsVistaOrLater()) {
+	if (fVista) {
 		lvg.mask|=LVGF_STATE;
 		lvg.stateMask=~0U;
 		lvg.state=LVGS_COLLAPSIBLE;
+#if _WIN32_WINNT>=0x0600
+		lvg.mask|=LVGF_TASK;
+		lvg.pszTask=TEXT("選択");
+#endif
 	}
 	lvg.pszHeader=TEXT("地上");
 	lvg.iGroupId=GROUP_ID_TERRESTRIAL;
@@ -299,6 +308,69 @@ static BOOL ServiceListViewGetInfoTip(
 
 	return TRUE;
 }
+
+
+#if _WIN32_WINNT>=0x0600
+
+static BOOL ServiceListViewOnLinkClick(HWND hDlg,NMLVLINK *pLink)
+{
+	HWND hwndList=pLink->hdr.hwndFrom;
+	RECT rc;
+	if (!ListView_GetGroupRect(hwndList,pLink->iSubItem,LVGGR_HEADER,&rc))
+		return FALSE;
+
+	enum {
+		COMMAND_CHECKALL=1,
+		COMMAND_UNCHECKALL,
+		COMMAND_INVERTCHECK
+	};
+	static const struct {
+		int ID;
+		LPCTSTR pszText;
+	} CommandList[] = {
+		{COMMAND_CHECKALL,		TEXT("すべて選択")},
+		{COMMAND_UNCHECKALL,	TEXT("すべて解除")},
+		{COMMAND_INVERTCHECK,	TEXT("選択の反転")},
+	};
+
+	HMENU hmenu=::CreatePopupMenu();
+	for (int i=0;i<lengthof(CommandList);i++) {
+		::AppendMenu(hmenu,MF_STRING | MF_ENABLED,CommandList[i].ID,CommandList[i].pszText);
+	}
+
+	POINT pt;
+	pt.x=rc.right;
+	pt.y=rc.bottom;
+	::ClientToScreen(hwndList,&pt);
+	int Command=::TrackPopupMenu(hmenu,TPM_RIGHTALIGN | TPM_RIGHTBUTTON | TPM_RETURNCMD,
+								 pt.x,pt.y,0,hDlg,NULL);
+	::DestroyMenu(hmenu);
+	if (Command>0) {
+		const int ItemCount=ListView_GetItemCount(hwndList);
+		bool fCheck=Command==COMMAND_CHECKALL;
+
+		for (int i=0;i<ItemCount;i++) {
+			LVITEM lvi;
+
+			lvi.mask=LVIF_GROUPID;
+			lvi.iItem=i;
+			lvi.iSubItem=0;
+			ListView_GetItem(hwndList,&lvi);
+
+			if (lvi.iGroupId==pLink->iSubItem) {
+				if (Command==COMMAND_INVERTCHECK) {
+					fCheck=!ListView_GetCheckState(hwndList,i);
+				}
+
+				ListView_SetCheckState(hwndList,i,fCheck);
+			}
+		}
+	}
+
+	return TRUE;
+}
+
+#endif	// _WIN32_WINNT>=0x0600
 
 
 
@@ -451,6 +523,15 @@ INT_PTR CFeaturedEventsSearchDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,L
 						reinterpret_cast<NMLVGETINFOTIP*>(lParam),m_ServiceList);
 				}
 				break;
+
+#if _WIN32_WINNT>=0x0600
+			case LVN_LINKCLICK:
+				if (pnmh->idFrom==IDC_FEATUREDEVENTSSEARCH_SERVICELIST) {
+					return ServiceListViewOnLinkClick(
+						hDlg,reinterpret_cast<NMLVLINK*>(lParam));
+				}
+				break;
+#endif
 			}
 		}
 		break;
@@ -765,6 +846,15 @@ INT_PTR CFeaturedEventsDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM 
 						reinterpret_cast<NMLVGETINFOTIP*>(lParam),m_ServiceList);
 				}
 				break;
+
+#if _WIN32_WINNT>=0x0600
+			case LVN_LINKCLICK:
+				if (pnmh->idFrom==IDC_FEATUREDEVENTS_SERVICELIST) {
+					return ServiceListViewOnLinkClick(
+						hDlg,reinterpret_cast<NMLVLINK*>(lParam));
+				}
+				break;
+#endif
 
 			case LVN_ITEMCHANGED:
 				if (pnmh->idFrom==IDC_FEATUREDEVENTS_SEARCHSETTINGSLIST) {
