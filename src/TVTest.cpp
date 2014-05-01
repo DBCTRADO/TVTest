@@ -7456,8 +7456,9 @@ bool CMainWindow::OnCreate(const CREATESTRUCT *pcs)
 	MainMenu.CheckItem(CM_PANEL,fShowPanelWindow);
 
 	HMENU hSysMenu=::GetSystemMenu(m_hwnd,FALSE);
-	::AppendMenu(hSysMenu,MF_SEPARATOR,0,NULL);
-	::AppendMenu(hSysMenu,MF_STRING | MF_ENABLED,SC_ABOUT,TEXT("バージョン情報(&A)"));
+	::InsertMenu(hSysMenu,0,MF_BYPOSITION | MF_STRING | MF_ENABLED,
+				 SC_ABOUT,TEXT("バージョン情報(&A)"));
+	::InsertMenu(hSysMenu,1,MF_BYPOSITION | MF_SEPARATOR,0,NULL);
 
 	static const CIconMenu::ItemInfo AspectRatioMenuItems[] = {
 		{CM_ASPECTRATIO_DEFAULT,	0},
