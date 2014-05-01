@@ -11,21 +11,13 @@ static char THIS_FILE[]=__FILE__;
 
 LONGLONG StringToInt64(LPCTSTR pszString)
 {
-	return _ttoi64(pszString);
+	return _tcstoi64(pszString,nullptr,0);
 }
 
 
 ULONGLONG StringToUInt64(LPCTSTR pszString)
 {
-	ULONGLONG Value=0;
-	LPCTSTR p;
-
-	p=pszString;
-	while (*p>=_T('0') && *p<=_T('9')) {
-		Value=Value*10+(*p-_T('0'));
-		p++;
-	}
-	return Value;
+	return _tcstoui64(pszString,nullptr,0);
 }
 
 
