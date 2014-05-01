@@ -168,10 +168,17 @@ namespace TVTest
 				Str.clear();
 				return 0;
 			}
-			LPWSTR pszBuffer=new WCHAR[Length+1];
-			int Result=::_vsnwprintf_s(pszBuffer,Length+1,_TRUNCATE,pszFormat,Args);
-			Str=pszBuffer;
-			delete [] pszBuffer;
+			static const int BUFFER_LENGTH=256;
+			if (Length<BUFFER_LENGTH) {
+				WCHAR szBuffer[BUFFER_LENGTH];
+				::_vsnwprintf_s(szBuffer,BUFFER_LENGTH,_TRUNCATE,pszFormat,Args);
+				Str=szBuffer;
+			} else {
+				LPWSTR pszBuffer=new WCHAR[Length+1];
+				::_vsnwprintf_s(pszBuffer,Length+1,_TRUNCATE,pszFormat,Args);
+				Str=pszBuffer;
+				delete [] pszBuffer;
+			}
 
 			return (int)Str.length();
 		}
