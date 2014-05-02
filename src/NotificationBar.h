@@ -8,7 +8,7 @@
 #include "DrawUtil.h"
 
 
-class CNotificationBar : public CBasicWindow
+class CNotificationBar : public CCustomWindow
 {
 public:
 	enum MessageType {
@@ -19,7 +19,11 @@ public:
 
 	CNotificationBar();
 	~CNotificationBar();
-	bool Create(HWND hwndParent,DWORD Style,DWORD ExStyle=0,int ID=0);
+
+// CBasicWindow
+	bool Create(HWND hwndParent,DWORD Style,DWORD ExStyle=0,int ID=0) override;
+
+// CNotificationBar
 	bool Show(LPCTSTR pszText,MessageType Type,DWORD Timeout=0);
 	bool Hide();
 	bool SetColors(const Theme::GradientInfo *pBackGradient,
@@ -45,11 +49,11 @@ private:
 	bool m_fAnimate;
 	std::deque<MessageInfo> m_MessageQueue;
 
-	void CalcBarHeight();
-
 	static HINSTANCE m_hinst;
-	static CNotificationBar *GetThis(HWND hwnd);
-	static LRESULT CALLBACK WndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam);
+
+	void CalcBarHeight();
+// CCustomWindow
+	LRESULT OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
 };
 
 

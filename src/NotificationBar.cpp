@@ -57,11 +57,6 @@ CNotificationBar::CNotificationBar()
 	m_TextColor[MESSAGE_INFO]=RGB(224,224,224);
 	m_TextColor[MESSAGE_WARNING]=RGB(255,160,64);
 	m_TextColor[MESSAGE_ERROR]=RGB(224,64,64);
-
-	LOGFONT lf;
-	DrawUtil::GetSystemFont(DrawUtil::FONT_MESSAGE,&lf);
-	lf.lfHeight=-14;
-	SetFont(&lf);
 }
 
 
@@ -184,34 +179,32 @@ void CNotificationBar::CalcBarHeight()
 }
 
 
-CNotificationBar *CNotificationBar::GetThis(HWND hwnd)
-{
-	return static_cast<CNotificationBar*>(GetBasicWindow(hwnd));
-}
-
-
-LRESULT CALLBACK CNotificationBar::WndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
+LRESULT CNotificationBar::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 {
 	switch (uMsg) {
 	case WM_CREATE:
 		{
-			CNotificationBar *pThis=static_cast<CNotificationBar*>(OnCreate(hwnd,lParam));
+			if (!m_Font.IsCreated()) {
+				LOGFONT lf;
+				DrawUtil::GetSystemFont(DrawUtil::FONT_MESSAGE,&lf);
+				lf.lfHeight=-14;
+				m_Font.Create(&lf);
+			}
 
-			pThis->CalcBarHeight();
+			CalcBarHeight();
 		}
 		return 0;
 
 	case WM_PAINT:
 		{
-			CNotificationBar *pThis=GetThis(hwnd);
 			PAINTSTRUCT ps;
 			RECT rc;
 
 			::BeginPaint(hwnd,&ps);
 			::GetClientRect(hwnd,&rc);
-			Theme::FillGradient(ps.hdc,&rc,&pThis->m_BackGradient);
-			if (!pThis->m_MessageQueue.empty()) {
-				const MessageInfo &Info=pThis->m_MessageQueue.front();
+			Theme::FillGradient(ps.hdc,&rc,&m_BackGradient);
+			if (!m_MessageQueue.empty()) {
+				const MessageInfo &Info=m_MessageQueue.front();
 
 				rc.left+=BAR_MARGIN;
 				rc.right-=BAR_MARGIN;
@@ -225,7 +218,7 @@ LRESULT CALLBACK CNotificationBar::WndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPA
 					}
 					DrawUtil::DrawText(ps.hdc,Info.Text.Get(),rc,
 						DT_SINGLELINE | DT_LEFT | DT_VCENTER | DT_NOPREFIX | DT_END_ELLIPSIS,
-						&pThis->m_Font,pThis->m_TextColor[Info.Type]);
+						&m_Font,m_TextColor[Info.Type]);
 				}
 			}
 			::EndPaint(hwnd,&ps);
@@ -234,16 +227,14 @@ LRESULT CALLBACK CNotificationBar::WndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPA
 
 	case WM_TIMER:
 		{
-			CNotificationBar *pThis=GetThis(hwnd);
-
-			if (!pThis->m_MessageQueue.empty())
-				pThis->m_MessageQueue.pop_front();
-			if (pThis->m_MessageQueue.empty()) {
+			if (!m_MessageQueue.empty())
+				m_MessageQueue.pop_front();
+			if (m_MessageQueue.empty()) {
 				::KillTimer(hwnd,TIMER_ID_HIDE);
-				pThis->Hide();
+				Hide();
 			} else {
-				pThis->Redraw();
-				DWORD Timeout=pThis->m_MessageQueue.front().Timeout;
+				Redraw();
+				DWORD Timeout=m_MessageQueue.front().Timeout;
 				if (Timeout>0)
 					::SetTimer(hwnd,TIMER_ID_HIDE,Timeout,NULL);
 				else
@@ -271,14 +262,7 @@ LRESULT CALLBACK CNotificationBar::WndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPA
 			::MapWindowPoints(hwnd,hwndParent,&pt,1);
 			return ::SendMessage(hwndParent,uMsg,wParam,MAKELPARAM(pt.x,pt.y));
 		}
-
-	case WM_DESTROY:
-		{
-			CNotificationBar *pThis=GetThis(hwnd);
-
-			pThis->OnDestroy();
-		}
-		return 0;
 	}
-	return ::DefWindowProc(hwnd,uMsg,wParam,lParam);
+
+	return CCustomWindow::OnMessage(hwnd,uMsg,wParam,lParam);
 }
