@@ -47,5 +47,20 @@ protected:
 	DWORD m_LastTime;
 };
 
+class CWindowTimerManager
+{
+public:
+	CWindowTimerManager();
+	void InitializeTimer(HWND hwnd);
+	bool BeginTimer(unsigned int ID,DWORD Interval);
+	void EndTimer(unsigned int ID);
+	void EndAllTimers();
+	bool IsTimerEnabled(unsigned int ID) const;
+
+protected:
+	HWND m_hwndTimer;
+	unsigned int m_TimerIDs;
+};
+
 
 #endif

@@ -358,3 +358,53 @@ int CMouseWheelHandler::GetDefaultScrollChars() const
 		return Chars;
 	return 3;
 }
+
+
+CWindowTimerManager::CWindowTimerManager()
+	: m_hwndTimer(NULL)
+	, m_TimerIDs(0)
+{
+}
+
+
+void CWindowTimerManager::InitializeTimer(HWND hwnd)
+{
+	m_hwndTimer=hwnd;
+	m_TimerIDs=0;
+}
+
+
+bool CWindowTimerManager::BeginTimer(unsigned int ID,DWORD Interval)
+{
+	if (m_hwndTimer==NULL
+			|| ::SetTimer(m_hwndTimer,ID,Interval,NULL)==0)
+		return false;
+	m_TimerIDs|=ID;
+	return true;
+}
+
+
+void CWindowTimerManager::EndTimer(unsigned int ID)
+{
+	if ((m_TimerIDs & ID)!=0) {
+		::KillTimer(m_hwndTimer,ID);
+		m_TimerIDs&=~ID;
+	}
+}
+
+
+void CWindowTimerManager::EndAllTimers()
+{
+	unsigned int Flags=m_TimerIDs;
+	for (int i=0;Flags!=0;i++,Flags>>=1) {
+		unsigned int ID=m_TimerIDs&(1U<<i);
+		if (ID!=0)
+			EndTimer(ID);
+	}
+}
+
+
+bool CWindowTimerManager::IsTimerEnabled(unsigned int ID) const
+{
+	return (m_TimerIDs & ID)==ID;
+}

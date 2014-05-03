@@ -6137,10 +6137,13 @@ HWND CMainWindow::GetVideoHostWindow() const
 
 
 void CMainWindow::ShowNotificationBar(LPCTSTR pszText,
-									  CNotificationBar::MessageType Type,DWORD Duration)
+									  CNotificationBar::MessageType Type,
+									  DWORD Duration,bool fSkippable)
 {
 	NotificationBar.SetFont(OSDOptions.GetNotificationBarFont());
-	NotificationBar.Show(pszText,Type,max((DWORD)OSDOptions.GetNotificationBarDuration(),Duration));
+	NotificationBar.Show(pszText,Type,
+						 max((DWORD)OSDOptions.GetNotificationBarDuration(),Duration),
+						 fSkippable);
 }
 
 
@@ -8892,7 +8895,7 @@ void CMainWindow::OnTimer(HWND hwnd,UINT id)
 								szBarText[Length++]=_T(' ');
 						}
 						::lstrcpy(szBarText+Length,szEventName);
-						ShowNotificationBar(szBarText);
+						ShowNotificationBar(szBarText,CNotificationBar::MESSAGE_INFO,0,true);
 					}
 				}
 

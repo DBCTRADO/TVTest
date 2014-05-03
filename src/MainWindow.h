@@ -167,7 +167,7 @@ public:
 	void CreatePanel();
 	void ShowNotificationBar(LPCTSTR pszText,
 							 CNotificationBar::MessageType Type=CNotificationBar::MESSAGE_INFO,
-							 DWORD Duration=0);
+							 DWORD Duration=0,bool fSkippable=false);
 	void AdjustWindowSize(int Width,int Height);
 	bool ReadSettings(CSettings &Settings);
 	bool WriteSettings(CSettings &Settings);

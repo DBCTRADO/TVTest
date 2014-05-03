@@ -15,8 +15,6 @@ static char THIS_FILE[]=__FILE__;
 #define BAR_MARGIN			4
 #define ICON_TEXT_MARGIN	4
 
-#define TIMER_ID_HIDE 1
-
 
 
 
@@ -49,6 +47,7 @@ bool CNotificationBar::Initialize(HINSTANCE hinst)
 CNotificationBar::CNotificationBar()
 	: m_fAnimate(true)
 	, m_BarHeight(0)
+	, m_TimerCount(0)
 {
 	m_BackGradient.Type=Theme::GRADIENT_NORMAL;
 	m_BackGradient.Direction=Theme::DIRECTION_VERT;
@@ -72,7 +71,7 @@ bool CNotificationBar::Create(HWND hwndParent,DWORD Style,DWORD ExStyle,int ID)
 }
 
 
-bool CNotificationBar::Show(LPCTSTR pszText,MessageType Type,DWORD Timeout)
+bool CNotificationBar::Show(LPCTSTR pszText,MessageType Type,DWORD Timeout,bool fSkippable)
 {
 	if (m_hwnd==NULL || pszText==NULL)
 		return false;
@@ -91,32 +90,46 @@ bool CNotificationBar::Show(LPCTSTR pszText,MessageType Type,DWORD Timeout)
 		Info.hIcon=NULL;
 	}
 	Info.Timeout=Timeout;
+	Info.fSkippable=fSkippable;
 	m_MessageQueue.push_back(Info);
 
-	if (!GetVisible()) {
-		RECT rc;
+	EndTimer(TIMER_ID_SHOWANIMATION);
+	EndTimer(TIMER_ID_FADEANIMATION);
 
-		::GetClientRect(::GetParent(m_hwnd),&rc);
+	RECT rc;
+	GetBarPosition(&rc);
+
+	if (!GetVisible()) {
+		while (m_MessageQueue.size()>1)
+			m_MessageQueue.pop_front();
 		::BringWindowToTop(m_hwnd);
+		if (m_fAnimate)
+			GetAnimatedBarPosition(&rc,0,SHOW_ANIMATION_COUNT);
+		SetPosition(&rc);
+		SetVisible(true);
+		Update();
 		if (m_fAnimate) {
-			for (int i=0;i<4;i++) {
-				rc.bottom=(i+1)*m_BarHeight/4;
-				SetPosition(&rc);
-				if (i==0)
-					SetVisible(true);
-				Update();
-				if (i<3)
-					::Sleep(50);
-			}
-		} else {
-			rc.bottom=m_BarHeight;
-			SetPosition(&rc);
-			SetVisible(true);
-			Update();
+			m_TimerCount=0;
+			BeginTimer(TIMER_ID_SHOWANIMATION,SHOW_ANIMATION_INTERVAL);
+		} else if (Timeout!=0) {
+			BeginTimer(TIMER_ID_HIDE,Timeout);
 		}
-		if (Timeout!=0)
-			::SetTimer(m_hwnd,TIMER_ID_HIDE,Timeout,NULL);
+	} else {
+		if (m_MessageQueue.size()>1) {
+			auto itr=m_MessageQueue.begin()+(m_MessageQueue.size()-2);
+			if (itr->fSkippable) {
+				m_MessageQueue.erase(itr);
+				if (m_MessageQueue.size()==1)
+					EndTimer(TIMER_ID_HIDE);
+			}
+		}
+		SetPosition(&rc);
+		Redraw();
+		Timeout=m_MessageQueue.front().Timeout;
+		if (Timeout!=0 && !IsTimerEnabled(TIMER_ID_HIDE))
+			BeginTimer(TIMER_ID_HIDE,Timeout);
 	}
+
 	return true;
 }
 
@@ -126,17 +139,19 @@ bool CNotificationBar::Hide()
 	if (m_hwnd==NULL)
 		return false;
 
-	RECT rc;
+	EndAllTimers();
 
-	GetPosition(&rc);
 	if (m_fAnimate) {
-		for (int i=0;i<3;i++) {
-			rc.bottom=(3-i)*m_BarHeight/4;
-			SetPosition(&rc);
-			Update();
-			::Sleep(50);
-		}
+		RECT rc;
+
+		GetAnimatedBarPosition(&rc,FADE_ANIMATION_COUNT-1,FADE_ANIMATION_COUNT);
+		SetPosition(&rc);
+		Redraw();
+		m_TimerCount=0;
+		if (BeginTimer(TIMER_ID_FADEANIMATION,FADE_ANIMATION_INTERVAL))
+			return true;
 	}
+
 	SetVisible(false);
 	m_MessageQueue.clear();
 
@@ -179,6 +194,32 @@ void CNotificationBar::CalcBarHeight()
 }
 
 
+void CNotificationBar::GetBarPosition(RECT *pRect) const
+{
+	::GetClientRect(::GetParent(m_hwnd),pRect);
+	pRect->bottom=m_BarHeight;
+}
+
+
+void CNotificationBar::GetAnimatedBarPosition(RECT *pRect,int Frame,int NumFrames) const
+{
+	GetBarPosition(pRect);
+	pRect->bottom=(Frame+1)*m_BarHeight/NumFrames;
+}
+
+
+void CNotificationBar::SetHideTimer()
+{
+	if (!m_MessageQueue.empty()) {
+		DWORD Timeout=m_MessageQueue.front().Timeout;
+		if (Timeout!=0)
+			BeginTimer(TIMER_ID_HIDE,Timeout);
+		else
+			EndTimer(TIMER_ID_HIDE);
+	}
+}
+
+
 LRESULT CNotificationBar::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 {
 	switch (uMsg) {
@@ -192,6 +233,9 @@ LRESULT CNotificationBar::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lPa
 			}
 
 			CalcBarHeight();
+
+			InitializeTimer(hwnd);
+			m_TimerCount=0;
 		}
 		return 0;
 
@@ -226,20 +270,51 @@ LRESULT CNotificationBar::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lPa
 		return 0;
 
 	case WM_TIMER:
-		{
+		switch (wParam) {
+		case TIMER_ID_SHOWANIMATION:
+			{
+				RECT rc;
+
+				GetAnimatedBarPosition(&rc,m_TimerCount+1,SHOW_ANIMATION_COUNT);
+				SetPosition(&rc);
+				Update();
+				if (m_TimerCount<SHOW_ANIMATION_COUNT-2) {
+					m_TimerCount++;
+				} else {
+					EndTimer(TIMER_ID_SHOWANIMATION);
+					m_TimerCount=0;
+					SetHideTimer();
+				}
+			}
+			break;
+
+		case TIMER_ID_FADEANIMATION:
+			if (m_TimerCount<FADE_ANIMATION_COUNT-1) {
+				RECT rc;
+
+				GetAnimatedBarPosition(&rc,
+					FADE_ANIMATION_COUNT-2-m_TimerCount,FADE_ANIMATION_COUNT);
+				SetPosition(&rc);
+				Update();
+				m_TimerCount++;
+			} else {
+				SetVisible(false);
+				EndTimer(TIMER_ID_FADEANIMATION);
+				m_TimerCount=0;
+				m_MessageQueue.clear();
+			}
+			break;
+
+		case TIMER_ID_HIDE:
 			if (!m_MessageQueue.empty())
 				m_MessageQueue.pop_front();
 			if (m_MessageQueue.empty()) {
-				::KillTimer(hwnd,TIMER_ID_HIDE);
 				Hide();
 			} else {
 				Redraw();
-				DWORD Timeout=m_MessageQueue.front().Timeout;
-				if (Timeout>0)
-					::SetTimer(hwnd,TIMER_ID_HIDE,Timeout,NULL);
-				else
-					::KillTimer(hwnd,TIMER_ID_HIDE);
+				SetHideTimer();
 			}
+			break;
 		}
 		return 0;
 
