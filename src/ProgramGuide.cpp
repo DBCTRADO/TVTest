@@ -1063,6 +1063,29 @@ bool CProgramGuideBaseChannelProvider::GetGroupName(size_t Group,LPTSTR pszName,
 }
 
 
+bool CProgramGuideBaseChannelProvider::GetGroupID(size_t Group,TVTest::String *pID) const
+{
+	if (Group>=GetGroupCount() || pID==NULL)
+		return false;
+
+	TVTest::StringUtility::Format(*pID,TEXT("%u"),static_cast<unsigned int>(Group));
+
+	return true;
+}
+
+
+int CProgramGuideBaseChannelProvider::ParseGroupID(LPCTSTR pszID) const
+{
+	if (IsStringEmpty(pszID))
+		return -1;
+
+	int Group=::StrToInt(pszID);
+	if (Group<0 || static_cast<size_t>(Group)>=GetGroupCount())
+		return -1;
+	return Group;
+}
+
+
 size_t CProgramGuideBaseChannelProvider::GetChannelCount(size_t Group) const
 {
 	if (Group>=GetGroupCount())
@@ -2539,6 +2562,28 @@ bool CProgramGuide::SetCurrentChannelProvider(int Provider,int Group)
 }
 
 
+bool CProgramGuide::SetCurrentChannelProvider(int Provider,LPCTSTR pszGroupID)
+{
+	if (m_pChannelProviderManager==NULL
+			|| Provider<-1 || (size_t)Provider>=m_pChannelProviderManager->GetChannelProviderCount())
+		return false;
+
+	if (Provider>=0) {
+		m_pChannelProvider=m_pChannelProviderManager->GetChannelProvider(Provider);
+		if (m_pChannelProvider==NULL)
+			return false;
+		m_pChannelProvider->Update();
+		m_CurrentChannelProvider=Provider;
+		m_CurrentChannelGroup=-1;
+		SetCurrentChannelGroup(m_pChannelProvider->ParseGroupID(pszGroupID));
+	} else {
+		Clear();
+	}
+
+	return true;
+}
+
+
 int CProgramGuide::GetChannelGroupCount() const
 {
 	if (m_pChannelProvider==NULL)
@@ -2552,6 +2597,14 @@ bool CProgramGuide::GetChannelGroupName(int Group,LPTSTR pszName,int MaxName) co
 	if (m_pChannelProvider==NULL)
 		return false;
 	return m_pChannelProvider->GetGroupName(Group,pszName,MaxName);
+}
+
+
+int CProgramGuide::ParseChannelGroupID(LPCTSTR pszGroupID) const
+{
+	if (m_pChannelProvider==NULL)
+		return false;
+	return m_pChannelProvider->ParseGroupID(pszGroupID);
 }
 
 
@@ -3892,7 +3945,7 @@ void CProgramGuide::OnCommand(int id)
 
 			m_pChannelProvider->GetName(szText,lengthof(szText));
 			Info.Name=szText;
-			Info.Group=m_CurrentChannelGroup;
+			m_pChannelProvider->GetGroupID(m_CurrentChannelGroup,&Info.GroupID);
 			m_pChannelProvider->GetGroupName(m_CurrentChannelGroup,szText,lengthof(szText));
 			Info.Label=szText;
 			Info.SetDefaultColors();
@@ -4010,7 +4063,7 @@ void CProgramGuide::OnCommand(int id)
 				for (int i=0;EnumChannelProvider(i,szName,lengthof(szName));i++) {
 					if (::lstrcmpi(szName,pInfo->Name.c_str())==0) {
 						StoreTimePos();
-						if (SetCurrentChannelProvider(i,pInfo->Group))
+						if (SetCurrentChannelProvider(i,pInfo->GroupID.c_str()))
 							UpdateServiceList();
 						return;
 					}
@@ -5196,19 +5249,23 @@ void CFavoritesToolbar::OnSpaceChanged()
 	if (CurChannelProvider>=0
 			&& m_pProgramGuide->EnumChannelProvider(CurChannelProvider,szName,lengthof(szName))) {
 		const int CurChannelGroup=m_pProgramGuide->GetCurrentChannelGroup();
-		const CProgramGuideFavorites *pFavorites=m_pProgramGuide->GetFavorites();
-		const int ButtonCount=(int)::SendMessage(m_hwnd,TB_BUTTONCOUNT,0,0);
 
-		for (int i=0;i<ButtonCount;i++) {
-			TBBUTTON tbb;
+		if (CurChannelGroup>=0) {
+			const CProgramGuideFavorites *pFavorites=m_pProgramGuide->GetFavorites();
+			const int ButtonCount=(int)::SendMessage(m_hwnd,TB_BUTTONCOUNT,0,0);
 
-			if (::SendMessage(m_hwnd,TB_GETBUTTON,i,reinterpret_cast<LPARAM>(&tbb))) {
-				const CProgramGuideFavorites::FavoriteInfo *pInfo=pFavorites->Get(tbb.dwData);
+			for (int i=0;i<ButtonCount;i++) {
+				TBBUTTON tbb;
 
-				if (pInfo!=NULL && ::lstrcmpi(pInfo->Name.c_str(),szName)==0
-						&& pInfo->Group==CurChannelGroup) {
-					SelButton=tbb.idCommand;
-					break;
+				if (::SendMessage(m_hwnd,TB_GETBUTTON,i,reinterpret_cast<LPARAM>(&tbb))) {
+					const CProgramGuideFavorites::FavoriteInfo *pInfo=pFavorites->Get(tbb.dwData);
+
+					if (pInfo!=NULL
+							&& ::lstrcmpi(pInfo->Name.c_str(),szName)==0
+							&& m_pProgramGuide->ParseChannelGroupID(pInfo->GroupID.c_str())==CurChannelGroup) {
+						SelButton=tbb.idCommand;
+						break;
+					}
 				}
 			}
 		}

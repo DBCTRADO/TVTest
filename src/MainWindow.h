@@ -231,7 +231,7 @@ public:
 	};
 	struct ProgramGuideSpaceInfo {
 		LPCTSTR pszTuner;
-		int Space;
+		LPCTSTR pszSpace;
 	};
 	bool ShowProgramGuide(bool fShow,unsigned int Flags=0,const ProgramGuideSpaceInfo *pSpaceInfo=NULL);
 

@@ -4020,13 +4020,27 @@ private:
 	class CFavoritesChannelProvider : public CProgramGuideBaseChannelProvider
 	{
 	public:
+		~CFavoritesChannelProvider();
 		bool Update() override;
 		bool GetName(LPTSTR pszName,int MaxName) const override;
+		bool GetGroupID(size_t Group,TVTest::String *pID) const override;
+		int ParseGroupID(LPCTSTR pszID) const override;
 		bool GetBonDriver(LPTSTR pszFileName,int MaxLength) const override;
 		bool GetBonDriverFileName(size_t Group,size_t Channel,LPTSTR pszFileName,int MaxLength) const override;
+
 	private:
-		void AddFavoritesChannels(const CFavoriteFolder &Folder);
-		std::vector<CFavoriteChannel> m_ChannelList;
+		struct GroupInfo
+		{
+			TVTest::String Name;
+			TVTest::String ID;
+			std::vector<CFavoriteChannel> ChannelList;
+		};
+
+		std::vector<GroupInfo*> m_GroupList;
+
+		void ClearGroupList();
+		void AddFavoritesChannels(const CFavoriteFolder &Folder,const TVTest::String &Path);
+		void AddSubItems(GroupInfo *pGroup,const CFavoriteFolder &Folder);
 	};
 
 	std::vector<CProgramGuideChannelProvider*> m_ChannelProviderList;
@@ -4134,7 +4148,35 @@ bool CMyProgramGuideChannelProviderManager::CBonDriverChannelProvider::Update()
 }
 
 
-bool CMyProgramGuideChannelProviderManager::CFavoritesChannelProvider::GetName(LPTSTR pszName,int MaxName) const
+CMyProgramGuideChannelProviderManager::CFavoritesChannelProvider::~CFavoritesChannelProvider()
+{
+	ClearGroupList();
+}
+
+bool CMyProgramGuideChannelProviderManager::CFavoritesChannelProvider::Update()
+{
+	ClearGroupList();
+	AddFavoritesChannels(FavoritesManager.GetRootFolder(),TVTest::String());
+	m_GroupList.front()->Name=TEXT("お気に入り");
+
+	const int NumSpaces=static_cast<int>(m_GroupList.size());
+	m_TuningSpaceList.Clear();
+	m_TuningSpaceList.Reserve(NumSpaces);
+	for (int i=0;i<NumSpaces;i++) {
+		const GroupInfo *pGroup=m_GroupList[i];
+		CTuningSpaceInfo *pTuningSpace=m_TuningSpaceList.GetTuningSpaceInfo(i);
+		pTuningSpace->SetName(pGroup->Name.c_str());
+		CChannelList *pChannelList=pTuningSpace->GetChannelList();
+		for (auto itr=pGroup->ChannelList.begin();itr!=pGroup->ChannelList.end();++itr) {
+			pChannelList->AddChannel(itr->GetChannelInfo());
+		}
+	}
+
+	return true;
+}
+
+bool CMyProgramGuideChannelProviderManager::CFavoritesChannelProvider::GetName(
+	LPTSTR pszName,int MaxName) const
 {
 	if (pszName==NULL || MaxName<1)
 		return false;
@@ -4144,46 +4186,52 @@ bool CMyProgramGuideChannelProviderManager::CFavoritesChannelProvider::GetName(L
 	return true;
 }
 
-bool CMyProgramGuideChannelProviderManager::CFavoritesChannelProvider::Update()
+bool CMyProgramGuideChannelProviderManager::CFavoritesChannelProvider::GetGroupID(
+	size_t Group,TVTest::String *pID) const
 {
-	m_TuningSpaceList.Clear();
-	m_TuningSpaceList.Reserve(1);
-	m_TuningSpaceList.GetTuningSpaceInfo(0)->SetName(TEXT("お気に入り"));
-
-	m_ChannelList.clear();
-
-	AddFavoritesChannels(FavoritesManager.GetRootFolder());
-
+	if (Group>=m_GroupList.size() || pID==NULL)
+		return false;
+	*pID=m_GroupList[Group]->ID;
 	return true;
 }
 
-void CMyProgramGuideChannelProviderManager::CFavoritesChannelProvider::AddFavoritesChannels(const CFavoriteFolder &Folder)
+int CMyProgramGuideChannelProviderManager::CFavoritesChannelProvider::ParseGroupID(
+	LPCTSTR pszID) const
 {
-	for (size_t i=0;i<Folder.GetItemCount();i++) {
-		const CFavoriteItem *pItem=Folder.GetItem(i);
+	if (IsStringEmpty(pszID))
+		return -1;
 
-		if (pItem->GetType()==CFavoriteItem::ITEM_FOLDER) {
-			AddFavoritesChannels(*static_cast<const CFavoriteFolder*>(pItem));
-		} else if (pItem->GetType()==CFavoriteItem::ITEM_CHANNEL) {
-			const CFavoriteChannel *pChannel=static_cast<const CFavoriteChannel*>(pItem);
-			m_TuningSpaceList.GetChannelList(0)->AddChannel(pChannel->GetChannelInfo());
-			m_ChannelList.push_back(*pChannel);
-		}
+	for (size_t i=0;i<m_GroupList.size();i++) {
+		if (m_GroupList[i]->ID.compare(pszID)==0)
+			return static_cast<int>(i);
 	}
+
+	// 以前のバージョンとの互換用
+	if (::lstrcmp(pszID,TEXT("0"))==0)
+		return 0;
+
+	return -1;
 }
 
-bool CMyProgramGuideChannelProviderManager::CFavoritesChannelProvider::GetBonDriver(LPTSTR pszFileName,int MaxLength) const
+bool CMyProgramGuideChannelProviderManager::CFavoritesChannelProvider::GetBonDriver(
+	LPTSTR pszFileName,int MaxLength) const
 {
-	if (pszFileName==NULL || MaxLength<1 || m_ChannelList.empty())
+	if (pszFileName==NULL || MaxLength<1
+			|| m_GroupList.empty()
+			|| m_GroupList.front()->ChannelList.empty())
 		return false;
 
-	LPCTSTR pszBonDriver=m_ChannelList[0].GetBonDriverFileName();
+	LPCTSTR pszBonDriver=m_GroupList.front()->ChannelList.front().GetBonDriverFileName();
 	if (IsStringEmpty(pszBonDriver))
 		return false;
 
-	for (size_t i=1;i<m_ChannelList.size();i++) {
-		if (!IsEqualFileName(m_ChannelList[i].GetBonDriverFileName(),pszBonDriver))
-			return false;
+	for (size_t i=0;i<m_GroupList.size();i++) {
+		const GroupInfo *pGroup=m_GroupList[i];
+		for (auto itr=pGroup->ChannelList.begin();
+				itr!=pGroup->ChannelList.end();++itr) {
+			if (!IsEqualFileName(itr->GetBonDriverFileName(),pszBonDriver))
+				return false;
+		}
 	}
 
 	::lstrcpyn(pszFileName,pszBonDriver,MaxLength);
@@ -4191,13 +4239,15 @@ bool CMyProgramGuideChannelProviderManager::CFavoritesChannelProvider::GetBonDri
 	return false;
 }
 
-bool CMyProgramGuideChannelProviderManager::CFavoritesChannelProvider::GetBonDriverFileName(size_t Group,size_t Channel,LPTSTR pszFileName,int MaxLength) const
+bool CMyProgramGuideChannelProviderManager::CFavoritesChannelProvider::GetBonDriverFileName(
+	size_t Group,size_t Channel,LPTSTR pszFileName,int MaxLength) const
 {
-	if (Group!=0 || Channel>=m_ChannelList.size()
+	if (Group>=m_GroupList.size()
+			|| Channel>=m_GroupList[Group]->ChannelList.size()
 			|| pszFileName==NULL || MaxLength<1)
 		return false;
 
-	const CFavoriteChannel &FavoriteChannel=m_ChannelList[Channel];
+	const CFavoriteChannel &FavoriteChannel=m_GroupList[Group]->ChannelList[Channel];
 	const CChannelInfo &ChannelInfo=FavoriteChannel.GetChannelInfo();
 
 	if (!FavoriteChannel.GetForceBonDriverChange()
@@ -4228,6 +4278,59 @@ bool CMyProgramGuideChannelProviderManager::CFavoritesChannelProvider::GetBonDri
 	::lstrcpyn(pszFileName,FavoriteChannel.GetBonDriverFileName(),MaxLength);
 
 	return true;
+}
+
+void CMyProgramGuideChannelProviderManager::CFavoritesChannelProvider::ClearGroupList()
+{
+	if (!m_GroupList.empty()) {
+		for (auto itr=m_GroupList.begin();itr!=m_GroupList.end();++itr)
+			delete *itr;
+		m_GroupList.clear();
+	}
+}
+
+void CMyProgramGuideChannelProviderManager::CFavoritesChannelProvider::AddFavoritesChannels(
+	const CFavoriteFolder &Folder,const TVTest::String &Path)
+{
+	GroupInfo *pGroup=new GroupInfo;
+	pGroup->Name=Folder.GetName();
+	if (Path.empty())
+		pGroup->ID=TEXT("\\");
+	else
+		pGroup->ID=Path;
+	m_GroupList.push_back(pGroup);
+
+	for (size_t i=0;i<Folder.GetItemCount();i++) {
+		const CFavoriteItem *pItem=Folder.GetItem(i);
+
+		if (pItem->GetType()==CFavoriteItem::ITEM_FOLDER) {
+			const CFavoriteFolder *pFolder=static_cast<const CFavoriteFolder*>(pItem);
+			TVTest::String FolderPath,Name;
+			TVTest::StringUtility::Encode(pItem->GetName(),&Name);
+			FolderPath=Path;
+			FolderPath+=_T('\\');
+			FolderPath+=Name;
+			AddSubItems(pGroup,*pFolder);
+			AddFavoritesChannels(*pFolder,FolderPath);
+		} else if (pItem->GetType()==CFavoriteItem::ITEM_CHANNEL) {
+			const CFavoriteChannel *pChannel=static_cast<const CFavoriteChannel*>(pItem);
+			pGroup->ChannelList.push_back(*pChannel);
+		}
+	}
+}
+
+void CMyProgramGuideChannelProviderManager::CFavoritesChannelProvider::AddSubItems(
+	GroupInfo *pGroup,const CFavoriteFolder &Folder)
+{
+	for (size_t i=0;i<Folder.GetItemCount();i++) {
+		const CFavoriteItem *pItem=Folder.GetItem(i);
+
+		if (pItem->GetType()==CFavoriteItem::ITEM_FOLDER) {
+			AddSubItems(pGroup,*static_cast<const CFavoriteFolder*>(pItem));
+		} else if (pItem->GetType()==CFavoriteItem::ITEM_CHANNEL) {
+			pGroup->ChannelList.push_back(*static_cast<const CFavoriteChannel*>(pItem));
+		}
+	}
 }
 
 
@@ -10290,20 +10393,28 @@ bool CMainWindow::ShowProgramGuide(bool fShow,unsigned int Flags,const ProgramGu
 		int Provider=ProgramGuideChannelProviderManager.GetCurChannelProvider();
 		int Space;
 		if (Provider>=0) {
-			if (pSpaceInfo!=NULL && pSpaceInfo->Space>=-1)
-				Space=pSpaceInfo->Space;
-			else
+			CProgramGuideChannelProvider *pChannelProvider=
+				ProgramGuideChannelProviderManager.GetChannelProvider(Provider);
+			bool fGroupID=false;
+			if (pSpaceInfo!=NULL && pSpaceInfo->pszSpace!=NULL) {
+				if (StringIsDigit(pSpaceInfo->pszSpace)) {
+					Space=::StrToInt(pSpaceInfo->pszSpace);
+				} else {
+					Space=pChannelProvider->ParseGroupID(pSpaceInfo->pszSpace);
+					fGroupID=true;
+				}
+			} else {
 				Space=ChannelManager.GetCurrentSpace();
+			}
 			if (Space<0) {
 				Space=0;
-			} else {
-				CProgramGuideBaseChannelProvider *pChannelProvider=
-					dynamic_cast<CProgramGuideBaseChannelProvider*>(
-						ProgramGuideChannelProviderManager.GetChannelProvider(Provider));
-				if (pChannelProvider!=NULL) {
-					if (pChannelProvider->HasAllChannelGroup())
+			} else if (!fGroupID) {
+				CProgramGuideBaseChannelProvider *pBaseChannelProvider=
+					dynamic_cast<CProgramGuideBaseChannelProvider*>(pChannelProvider);
+				if (pBaseChannelProvider!=NULL) {
+					if (pBaseChannelProvider->HasAllChannelGroup())
 						Space++;
-					if ((size_t)Space>=pChannelProvider->GetGroupCount())
+					if ((size_t)Space>=pBaseChannelProvider->GetGroupCount())
 						Space=0;
 				}
 			}
@@ -11809,7 +11920,10 @@ static int ApplicationMain(HINSTANCE hInstance,LPCTSTR pszCmdLine,int nCmdShow)
 			SpaceInfo.pszTuner=CmdLineOptions.m_ProgramGuideTuner.Get();
 		else
 			SpaceInfo.pszTuner=NULL;
-		SpaceInfo.Space=CmdLineOptions.m_ProgramGuideSpace;
+		if (!CmdLineOptions.m_ProgramGuideSpace.IsEmpty())
+			SpaceInfo.pszSpace=CmdLineOptions.m_ProgramGuideSpace.Get();
+		else
+			SpaceInfo.pszSpace=NULL;
 
 		MainWindow.ShowProgramGuide(true,
 			AppMain.GetUICore()->GetFullscreen()?0:CMainWindow::PROGRAMGUIDE_SHOW_POPUP,

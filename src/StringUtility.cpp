@@ -33,6 +33,27 @@ bool UInt64ToString(ULONGLONG Value,LPTSTR pszString,int MaxLength,int Radix)
 }
 
 
+bool StringIsDigit(LPCTSTR pszString)
+{
+	if (IsStringEmpty(pszString))
+		return false;
+
+	LPCTSTR p=pszString;
+	if (*p==_T('-') || *p==_T('+'))
+		p++;
+	if (*p<_T('0') || *p>_T('9'))
+		return false;
+	p++;
+	while (*p!=_T('\0')) {
+		if (*p<_T('0') || *p>_T('9'))
+			return false;
+		p++;
+	}
+
+	return true;
+}
+
+
 __declspec(restrict) LPSTR DuplicateString(LPCSTR pszString)
 {
 	if (pszString==NULL)

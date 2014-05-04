@@ -67,7 +67,7 @@ public:
 	bool m_fShowProgramGuide;
 	bool m_fProgramGuideOnly;
 	CDynamicString m_ProgramGuideTuner;
-	int m_ProgramGuideSpace;
+	CDynamicString m_ProgramGuideSpace;
 
 	bool m_fHomeDisplay;
 	bool m_fChannelDisplay;

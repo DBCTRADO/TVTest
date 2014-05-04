@@ -66,6 +66,8 @@ public:
 	virtual bool GetName(LPTSTR pszName,int MaxName) const = 0;
 	virtual size_t GetGroupCount() const = 0;
 	virtual bool GetGroupName(size_t Group,LPTSTR pszName,int MaxName) const = 0;
+	virtual bool GetGroupID(size_t Group,TVTest::String *pID) const = 0;
+	virtual int ParseGroupID(LPCTSTR pszID) const = 0;
 	virtual size_t GetChannelCount(size_t Group) const = 0;
 	virtual const CChannelInfo *GetChannelInfo(size_t Group,size_t Channel) const = 0;
 	virtual bool GetBonDriver(LPTSTR pszFileName,int MaxLength) const = 0;
@@ -82,6 +84,8 @@ public:
 	virtual bool GetName(LPTSTR pszName,int MaxName) const override;
 	virtual size_t GetGroupCount() const override;
 	virtual bool GetGroupName(size_t Group,LPTSTR pszName,int MaxName) const override;
+	virtual bool GetGroupID(size_t Group,TVTest::String *pID) const override;
+	virtual int ParseGroupID(LPCTSTR pszID) const override;
 	virtual size_t GetChannelCount(size_t Group) const override;
 	virtual const CChannelInfo *GetChannelInfo(size_t Group,size_t Channel) const override;
 	virtual bool GetBonDriver(LPTSTR pszFileName,int MaxLength) const override;
@@ -318,9 +322,11 @@ public:
 	bool SetChannelProviderManager(CProgramGuideChannelProviderManager *pManager);
 	bool EnumChannelProvider(int Index,LPTSTR pszName,int MaxName) const;
 	bool SetCurrentChannelProvider(int Provider,int Group);
+	bool SetCurrentChannelProvider(int Provider,LPCTSTR pszGroupID);
 	int GetCurrentChannelProvider() const { return m_CurrentChannelProvider; }
 	int GetChannelGroupCount() const;
 	bool GetChannelGroupName(int Group,LPTSTR pszName,int MaxName) const;
+	int ParseChannelGroupID(LPCTSTR pszGroupID) const;
 	bool SetCurrentChannelGroup(int Group);
 	int GetCurrentChannelGroup() const { return m_CurrentChannelGroup; }
 	bool GetChannelList(CChannelList *pList,bool fVisibleOnly) const;
