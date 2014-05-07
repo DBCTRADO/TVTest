@@ -96,16 +96,9 @@
 	#define _SECURE_SCL 0
 #endif
 
-// ÉRÉìÉpÉCÉâï ê›íË
-#if _MSC_VER < 1400
-	#define __restrict
-#endif
-#if _MSC_VER >= 1600	// VC2010
-	#undef NULL
-	#define NULL nullptr
-	#define MOVE_SEMANTICS_SUPPORTED
-#else
-	#define nullptr NULL
+#ifndef NO_NULLPTR
+#undef NULL
+#define NULL nullptr
 #endif
 
 

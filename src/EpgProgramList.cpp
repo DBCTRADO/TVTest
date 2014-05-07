@@ -3,9 +3,7 @@
 #include "AppMain.h"
 #include "EpgProgramList.h"
 #include "HelperClass/NFile.h"
-#ifdef MOVE_SEMANTICS_SUPPORTED
 #include <utility>
-#endif
 
 #ifdef _DEBUG
 #undef THIS_FILE
@@ -78,12 +76,10 @@ CEventInfoData::CEventInfoData(const CEventInfoData &Info)
 }
 
 
-#ifdef MOVE_SEMANTICS_SUPPORTED
 CEventInfoData::CEventInfoData(CEventInfoData &&Info)
 {
 	*this=std::move(Info);
 }
-#endif
 
 
 CEventInfoData::CEventInfoData(const CEventManager::CEventInfo &Info)
@@ -126,7 +122,6 @@ CEventInfoData &CEventInfoData::operator=(const CEventInfoData &Info)
 }
 
 
-#ifdef MOVE_SEMANTICS_SUPPORTED
 CEventInfoData &CEventInfoData::operator=(CEventInfoData &&Info)
 {
 	if (&Info!=this) {
@@ -154,7 +149,6 @@ CEventInfoData &CEventInfoData::operator=(CEventInfoData &&Info)
 	}
 	return *this;
 }
-#endif
 
 
 CEventInfoData &CEventInfoData::operator=(const CEventManager::CEventInfo &Info)

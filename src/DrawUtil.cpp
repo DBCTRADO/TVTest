@@ -1487,8 +1487,8 @@ bool COffscreen::CopyTo(HDC hdc,const RECT *pDstRect)
 
 
 // GDI+のヘッダで整数型の引数にNULLを渡しているので
-// #define NULL nullptr するとエラーが出る…
-#if _MSC_VER >= 1600	// VC2010
+// #define NULL nullptr にするとエラーが出る
+#ifndef NO_NULLPTR
 #undef NULL
 #define NULL 0
 #endif

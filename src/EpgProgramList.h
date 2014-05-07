@@ -101,15 +101,11 @@ public:
 
 	CEventInfoData();
 	CEventInfoData(const CEventInfoData &Info);
-#ifdef MOVE_SEMANTICS_SUPPORTED
 	CEventInfoData(CEventInfoData &&Info);
-#endif
 	CEventInfoData(const CEventManager::CEventInfo &Info);
 	~CEventInfoData();
 	CEventInfoData &operator=(const CEventInfoData &Info);
-#ifdef MOVE_SEMANTICS_SUPPORTED
 	CEventInfoData &operator=(CEventInfoData &&Info);
-#endif
 	CEventInfoData &operator=(const CEventManager::CEventInfo &Info);
 	bool operator==(const CEventInfoData &Info) const;
 	bool operator!=(const CEventInfoData &Info) const { return !(*this==Info); }

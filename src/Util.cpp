@@ -831,13 +831,11 @@ CDynamicString::CDynamicString(const CDynamicString &String)
 }
 
 
-#ifdef MOVE_SEMANTICS_SUPPORTED
 CDynamicString::CDynamicString(CDynamicString &&String)
 	: m_pszString(String.m_pszString)
 {
 	String.m_pszString=NULL;
 }
-#endif
 
 
 CDynamicString::CDynamicString(LPCTSTR pszString)
@@ -862,7 +860,6 @@ CDynamicString &CDynamicString::operator=(const CDynamicString &String)
 }
 
 
-#ifdef MOVE_SEMANTICS_SUPPORTED
 CDynamicString &CDynamicString::operator=(CDynamicString &&String)
 {
 	if (&String!=this) {
@@ -872,7 +869,6 @@ CDynamicString &CDynamicString::operator=(CDynamicString &&String)
 	}
 	return *this;
 }
-#endif
 
 
 CDynamicString &CDynamicString::operator+=(const CDynamicString &String)
