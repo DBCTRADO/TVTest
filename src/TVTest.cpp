@@ -11975,19 +11975,8 @@ static int ApplicationMain(HINSTANCE hInstance,LPCTSTR pszCmdLine,int nCmdShow)
 int APIENTRY _tWinMain(HINSTANCE hInstance,HINSTANCE /*hPrevInstance*/,
 					   LPTSTR pszCmdLine,int nCmdShow)
 {
-	// 一応例の脆弱性対策をしておく
-#ifdef WINDOWS2000_SUPPORT
-	HMODULE hKernel=GetModuleHandle(TEXT("kernel32.dll"));
-	if (hKernel!=NULL) {
-		typedef BOOL (WINAPI *SetDllDirectoryFunc)(LPCWSTR);
-		SetDllDirectoryFunc pSetDllDirectory=
-			reinterpret_cast<SetDllDirectoryFunc>(GetProcAddress(hKernel,"SetDllDirectoryW"));
-		if (pSetDllDirectory!=NULL)
-			pSetDllDirectory(L"");
-	}
-#else
+	// DLLハイジャック対策
 	SetDllDirectory(TEXT(""));
-#endif
 
 #ifdef _DEBUG
 	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF/* | _CRTDBG_CHECK_ALWAYS_DF*/);

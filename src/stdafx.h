@@ -106,9 +106,6 @@
 	#define MOVE_SEMANTICS_SUPPORTED
 #else
 	#define nullptr NULL
-	#ifndef _WIN64
-	#define WINDOWS2000_SUPPORT	// Windows 2000 ‘Î‰ž
-	#endif
 #endif
 
 

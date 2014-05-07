@@ -1495,9 +1495,6 @@ bool COffscreen::CopyTo(HDC hdc,const RECT *pDstRect)
 #include <gdiplus.h>
 
 #pragma comment(lib, "gdiplus.lib")
-#ifdef WINDOWS2000_SUPPORT
-//#pragma comment(linker, "/DELAYLOAD:gdiplus.dll")
-#endif
 
 
 class CGdiPlusInitializer
@@ -1519,15 +1516,6 @@ public:
 	bool Initialize()
 	{
 		if (!m_fInitialized) {
-#ifdef WINDOWS2000_SUPPORT
-			// GDI+ の DLL がロードできるか調べる
-			// (gdiplus.dllが無くても起動するように遅延ロードの指定をしている)
-			HMODULE hLib=::LoadLibrary(TEXT("gdiplus.dll"));
-			if (hLib==NULL)
-				return false;
-			::FreeLibrary(hLib);
-#endif
-
 			Gdiplus::GdiplusStartupInput si;
 			si.GdiplusVersion=1;
 			si.DebugEventCallback=NULL;
@@ -1870,39 +1858,20 @@ bool CGdiPlus::CCanvas::Clear(BYTE r,BYTE g,BYTE b,BYTE a)
 
 
 #pragma comment(lib, "uxtheme.lib")
-#ifdef WINDOWS2000_SUPPORT
-//#pragma comment(linker, "/DELAYLOAD:uxtheme.dll")
-#endif
 
 
 CUxTheme::CUxTheme()
 	: m_hTheme(NULL)
-#ifdef WINDOWS2000_SUPPORT
-	, m_hLib(NULL)
-#endif
 {
 }
 
 CUxTheme::~CUxTheme()
 {
 	Close();
-#ifdef WINDOWS2000_SUPPORT
-	if (m_hLib!=NULL)
-		::FreeLibrary(m_hLib);
-#endif
 }
 
 bool CUxTheme::Initialize()
 {
-#ifdef WINDOWS2000_SUPPORT
-	if (m_hLib==NULL) {
-		// uxtheme.dll がロードできるか調べる
-		// (uxtheme.dllが無くても起動するように遅延ロードの指定をしている)
-		m_hLib=::LoadLibrary(TEXT("uxtheme.dll"));
-		if (m_hLib==NULL)
-			return false;
-	}
-#endif
 	return true;
 }
 
@@ -1932,10 +1901,6 @@ bool CUxTheme::IsOpen() const
 
 bool CUxTheme::IsActive()
 {
-#ifdef WINDOWS2000_SUPPORT
-	if (m_hLib==NULL)
-		return false;
-#endif
 	return ::IsThemeActive()!=FALSE;
 }
 
