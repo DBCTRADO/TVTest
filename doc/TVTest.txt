@@ -24,20 +24,43 @@
   ・Windows XP SP2 以降 / Vista / 7
 
 
+◆ ビルド
+
+  Visual Studio 2010 のプロジェクトファイルが付属しています。
+  C++11 の機能を利用しているため、2010 より前の Visual Studio ではビルドできませ
+  ん。Express Edition でもビルドできると思いますが、確認はしていません。
+  TVTest のビルドには以下の SDK/ライブラリが必要になります。
+
+  ・Microsoft Windows SDK v7.0 以上
+  ・FAAD2        http://www.audiocoding.com/faad2.html
+  ・libjpeg (*)  http://www.ijg.org/
+  ・libpng (*)   http://libpng.org/
+  ・zlib (*)     http://zlib.net/
+
+  (*) TVTest_Image.dll のビルドに必要
+
+  DirectShow の BaseClasses ライブラリ(Windows SDK の Samples\Multimedia\
+  DirectShow\BaseClasses)のファイルを src/BaseClasses にコピーしてください。
+  BaseClasses 以外のライブラリは TVTest のリポジトリに含まれています。
+
+  なお、デコーダによっては、(恐らくリバースエンジニアリング対策で)デバッグ実行時
+  に接続できなかったり不正終了させられたりします。
+
+
 ◆ ファイル構成
 
-  ・TVTest.exe          本体
-  ・TVTest.txt          このファイル
-  ・TVTest.chm          ヘルプファイル
-  ・TVTest_Image.dll    画像保存用 DLL
-  ・TVTest_Logo.bmp     ロゴ画像
-  ・Preset_BS.ch2       BS 用チャンネルプリセット
-  ・Preset_CS.ch2       CS 用チャンネルプリセット
-  ・DRCSMap.sample.ini  DRCS 用設定のサンプル
-  ・Plugins\            プラグインフォルダ
-                        (SDK にあるサンプルがいくつか入っています)
-  ・Themes\             テーマ設定フォルダ
-                        (テーマのプリセットがいくつか入っています)
+  TVTest 実行時には、以下のようにファイルを配置します。
+
+  .\TVTest.exe          本体
+  .\TVTest.chm          ヘルプファイル
+  .\TVTest_Image.dll    画像保存用 DLL
+  .\TVTest_Logo.bmp     ロゴ画像
+  .\Preset_BS.ch2       BS 用チャンネルプリセット
+  .\Preset_CS.ch2       CS 用チャンネルプリセット
+  .\Plugins\*.tvtp      プラグインフォルダ
+                        (プラグインファイル *.tvtp を配置する)
+  .\Themes\*.httheme    テーマ設定フォルダ
+                        (テーマファイル *.httheme を配置する)
 
   TVTest.exe を実行すると、本体のあるフォルダに以下のファイルが作成されます。
 
@@ -50,37 +73,7 @@
    (*) 設定により違うフォルダに作成したり、作成しないようにすることも可能です。
 
 
-◆ ビルド
-
-  Visual Studio 2010 のプロジェクトファイルが付属しています。
-  C++11 の機能を利用しているため、2010 より前の Visual Studio ではビルドできませ
-  ん。Express Edition でもビルドできると思いますが、確認はしていません。
-  TVTest のビルドには以下の SDK/ライブラリが別途必要になります。
-
-  ・Microsoft Windows SDK v7.0 以上
-  ・Microsoft DirectX SDK
-  ・FAAD2        http://www.audiocoding.com/faad2.html
-  ・libjpeg (*)  http://www.ijg.org/
-  ・libpng (*)   http://libpng.org/
-  ・zlib (*)     http://zlib.net/
-
-  (*) TVTest_Image.dll のビルドに必要
-
-  予め DirectShow の BaseClasses ライブラリ(Windows SDK の Samples\Multimedia\
-  DirectShow\BaseClasses)と、FAAD2 ライブラリをビルドして用意してください。
-
-  なお、デコーダによっては、(恐らくリバースエンジニアリング対策で)デバッグ実行時
-  に接続できなかったり不正終了させられたりします。
-
-
 ◆ 試験準備
-
-  試験には Visual C++ 2005 SP1 (ATL のセキュリティ更新) のランタイムが必要ですの
-  で、もしお使いのシステムに入っていない場合は事前にインストールしてください。
-  以下のページからダウンロードできます。
-  http://www.microsoft.com/downloads/details.aspx?familyid=766a6af7-ec73-40ff-b072-9112bab119c2&displaylang=ja
-  このページから TVTest が x86 版の場合は vcredist_x86.exe を、x64 版の場合は
-  vcredist_x64.exe をダウンロードしてください。
 
   TVTest で視聴試験を行うには別途 MPEG-2 のデコーダが必要です。
   (Windows Vista/7 では Microsoft のデコーダがデフォルトで入っています。
@@ -492,19 +485,16 @@
   ・このプログラムの使用及び使用不能によって生じたいかなる損害も補償しません。
   ・このプログラムは FAAD2 を使用しています。
       Code from FAAD2 is copyright (c) Nero AG, www.nero.com
-  ・このプログラムの x86 版は宮坂賢氏の作成された libjpeg の SIMD 対応版を使用し
-    ています。また、x64 版は libjpeg を使用しています。
-      libjpeg 6b  Copyright (C) 1991-1998, Thomas G. Lane.
+  ・このプログラムは libjpeg を使用しています。
+      libjpeg 9a  Copyright (C) 1991-2014, Thomas G. Lane, Guido Vollbeding
         This software is based in part on the work of the Independent JPEG Group.
-      Independent JPEG Group's JPEG software release 6b
-        with x86 SIMD extension for IJG JPEG library version 1.02
   ・このプログラムは libpng を使用しています。
-      libpng 1.5.4 - July 7, 2011
-        Copyright (c) 1998-2011 Glenn Randers-Pehrson
+      libpng 1.6.10 - March 6, 2014
+        Copyright (c) 1998-2014 Glenn Randers-Pehrson
         Copyright (c) 1996-1997 Andreas Dilger
         Copyright (c) 1995-1996 Guy Eric Schalnat, Group 42, Inc.
   ・このプログラムは zlib を使用しています。
-      zlib version 1.2.5 Copyright (C) 1995-2010 Jean-loup Gailly and Mark Adler
+      zlib version 1.2.8 Copyright (C) 1995-2013 Jean-loup Gailly and Mark Adler
 
 
 ◆ 謝辞
@@ -517,6 +507,24 @@
 
 
 ◆ 更新履歴
+
+  ver.0.8.2 2014/5/10
+    ・番組表でお気に入りチャンネルのフォルダを選択できるようにした
+    ・番組表の検索キーワードの検索対象を選択できるようにした
+    ・リモコン番号でチャンネルを選択した際、同じ番号のサービスで巡回するようにした(thanks to noobchan)
+    ・番組情報ポップアップのスタイルを変更した
+    ・注目の番組の検索対象チャンネルをグループごとに全てチェック/解除できるようにした
+    ・マウスホイールの処理を改修した
+    ・ver.0.8.1 で、音量増幅でオーバーフローする不具合を修正
+    ・ver.0.8.1 で、S/PDIF パススルーが正常に行えない不具合を修正
+    ・番組表の一週間表示時に最新の情報に更新すると不正終了する不具合を修正
+    ・番組表を非常に小さくした場合などに不正終了することがある不具合を修正(thanks to xtne6f)
+    ・番組表からのチャンネル変更時に無効なチャンネルが選択されることがある不具合を修正(thanks to noobchan)
+    ・全画面表示時に番組表などを画面内に表示する際に、バー類が表示されたままになる不具合を修正
+    ・表示状態と選局状態の復帰が正常に行われないことがある不具合を修正
+    ・OSD 表示された状態で最小化すると復帰時に OSD が消え残る不具合を修正
+    ・字幕パネルで32K文字までしか追加されない不具合を修正
+    ・その他細かい修正など
 
   ver.0.8.1 2013/9/19
     ・OSD のフォントを設定できるようにした
