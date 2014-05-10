@@ -50,16 +50,27 @@
 			<param name="Local" value="menu.html">
 			</OBJECT>
 		<LI> <OBJECT type="text/sitemap">
-			<param name="Name" value="EPG番組表">
-			<param name="Local" value="programguide.html">
-			</OBJECT>
-		<LI> <OBJECT type="text/sitemap">
 			<param name="Name" value="録画">
 			<param name="Local" value="record.html">
 			</OBJECT>
 		<LI> <OBJECT type="text/sitemap">
 			<param name="Name" value="コマンドライン">
 			<param name="Local" value="commandline.html">
+			</OBJECT>
+	</UL>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="EPG番組表">
+		<param name="Local" value="programguide/programguide.html">
+		<param name="ImageNumber" value="1">
+		</OBJECT>
+	<UL>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="EPG番組表の検索">
+			<param name="Local" value="programguide/search.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="お気に入り">
+			<param name="Local" value="programguide/favorites.html">
 			</OBJECT>
 	</UL>
 	<LI> <OBJECT type="text/sitemap">

@@ -5,12 +5,15 @@ body{
 }
 .nowrap{white-space:nowrap;}
 h1{
+	font-size:x-large;
 	color:#eeeeee;
 	background-color:#666666;
 }
 h2{
-	color:#eeeeee;
-	background-color:#666666;
+	font-size:large;
+}
+h3{
+	font-size:medium;
 }
 div.group{
 	margin-left:1em;
