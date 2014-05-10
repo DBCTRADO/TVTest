@@ -10,10 +10,10 @@
 
 #define VERSION_MAJOR		0
 #define VERSION_MINOR		8
-#define VERSION_BUILD		1
+#define VERSION_BUILD		2
 #define VERSION_REVISION	0
 
-#define VERSION_TEXT_A	"0.8.1"
+#define VERSION_TEXT_A	"0.8.2"
 
 #ifdef TVH264
 // ÉèÉìÉZÉOå¸ÇØ
