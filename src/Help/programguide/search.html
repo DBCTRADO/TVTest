@@ -1,0 +1,59 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="ja">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=Shift_JIS">
+	<link rel="stylesheet" href="../default.css" type="text/css">
+	<title>EPG番組表の検索</title>
+</head>
+<body>
+
+<h1>EPG番組表の検索</h1>
+
+<p>
+番組表の右クリックメニューから [番組の検索] を選択すると、キーワードなどを指定して番組の検索が行えます。<br>
+キーワードのアルファベットの半角と全角は同一視されます。[大/小文字区別] のチェックが入っていなければ、大文字と小文字も同一視されます。<br>
+</p>
+
+<h2>キーワード検索</h2>
+<p>
+キーワードは半角スペースで区切って複数指定することができ、その場合は全てのキーワードに一致する番組が検索されます。<br>
+キーワードを | で区切ると、いずれかに一致する番組が検索されます。<br>
+半角スペースを含むキーワードを指定する場合は " で囲います。<br>
+キーワードの前に - を付けると、そのキーワードを含む番組が検索結果から除外されます。
+</p>
+<table class="info">
+	<caption>検索例</caption>
+	<tr><td>ドラマ 殺人</td><td>"ドラマ" と "殺人" の両方を含む番組</td></tr>
+	<tr><td>ニュース | スポーツ</td><td>"ニュース" と "スポーツ" のいずれか又は両方を含む番組</td></tr>
+	<tr><td>中継 巨人 | 阪神</td><td>"中継" を含んで、かつ "巨人" と "阪神" のいずれか又は両方も含む番組</td></tr>
+	<tr><td>徹子 -部屋</td><td>"徹子" を含んで "部屋" を含まない番組</td></tr>
+</table>
+
+<h2>正規表現検索</h2>
+<p>
+[正規表現] にチェックを入れると、正規表現を使用した検索が行えます。<br>
+以下の2つのいずれかの正規表現エンジンが使用できます。<br>
+</p>
+<div class="group">
+<h3>ECMAScript(JavaScript)互換</h3>
+<p>
+ECMAScript(JavaScript)と互換性のある正規表現です。こちらがデフォルトになっています。<br>
+詳しくは JavaScript の正規表現の解説を参照してください。<br>
+<a href="https://developer.mozilla.org/ja/docs/Web/JavaScript/Guide/Regular_Expressions">https://developer.mozilla.org/ja/docs/Web/JavaScript/Guide/Regular_Expressions</a>
+</p>
+<h3>bregonig.dll</h3>
+<p>
+K.Takata 氏によって開発されている Perl 互換の正規表現ライブラリです。ver.2 以降に対応しています。<br>
+bregonig.dll をプログラムと同じフォルダに入れると利用できます。<br>
+<a href="http://homepage3.nifty.com/k-takata/mysoft/bregonig.html">http://homepage3.nifty.com/k-takata/mysoft/bregonig.html</a>
+</p>
+</div>
+
+<h2>ジャンル検索</h2>
+<p>
+ツリーの中から検索結果に含めたいジャンルをチェックします。<br>
+大ジャンルがチェックされていて、その小ジャンルがいずれもチェックされていない場合、大ジャンルに該当する全ての番組が検索されます。<br>
+</p>
+
+</body>
+</html>

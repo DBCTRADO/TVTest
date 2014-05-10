@@ -1,0 +1,6 @@
+#include "resource.h"
+
+
+IDB_BASE BITMAP "Controller_Base.bmp"
+IDB_PUSH BITMAP "Controller_Push.bmp"
+IDB_OVER BITMAP "Controller_Over.bmp"

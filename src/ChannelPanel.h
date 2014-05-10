@@ -12,6 +12,7 @@
 #include "LogoManager.h"
 #include "Tooltip.h"
 #include "Settings.h"
+#include "WindowUtil.h"
 
 
 class CChannelPanel
@@ -128,6 +129,7 @@ private:
 	int m_ExpandAdditionalEvents;
 	int m_ExpandEvents;
 	int m_ScrollPos;
+	CMouseWheelHandler m_MouseWheel;
 	bool m_fScrollToCurChannel;
 	std::vector<CChannelEventInfo*> m_ChannelList;
 	int m_CurChannel;
@@ -142,7 +144,7 @@ private:
 	public:
 		CEventInfoPopupHandler(CChannelPanel *pChannelPanel);
 		bool HitTest(int x,int y,LPARAM *pParam);
-		bool GetEventInfo(LPARAM Param,const CEventInfoData **ppInfo);
+		bool ShowPopup(LPARAM Param,CEventInfoPopup *pPopup);
 	};
 	CEventInfoPopupHandler m_EventInfoPopupHandler;
 	CLogoManager *m_pLogoManager;
@@ -169,7 +171,7 @@ private:
 	bool CreateTooltip();
 	void SetTooltips(bool fRectOnly=false);
 	bool EventInfoPopupHitTest(int x,int y,LPARAM *pParam);
-	bool GetEventInfoPopupEventInfo(LPARAM Param,const CEventInfoData **ppInfo);
+	bool ShowEventInfoPopup(LPARAM Param,CEventInfoPopup *pPopup);
 
 // CCustomWindow
 	LRESULT OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam) override;

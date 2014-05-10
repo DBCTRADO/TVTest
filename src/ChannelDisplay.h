@@ -9,6 +9,7 @@
 #include "LogoManager.h"
 #include "DrawUtil.h"
 #include "Theme.h"
+#include "WindowUtil.h"
 
 
 class CChannelDisplay : public CDisplayView
@@ -123,6 +124,7 @@ private:
 	int m_ChannelScrollPos;
 	HWND m_hwndTunerScroll;
 	HWND m_hwndChannelScroll;
+	CMouseWheelHandler m_MouseWheel;
 	SYSTEMTIME m_EpgBaseTime;
 	SYSTEMTIME m_ClockTime;
 	enum { TIMER_CLOCK=1 };

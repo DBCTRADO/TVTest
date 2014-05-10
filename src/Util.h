@@ -72,15 +72,11 @@ protected:
 public:
 	CDynamicString();
 	CDynamicString(const CDynamicString &String);
-#ifdef MOVE_SEMANTICS_SUPPORTED
 	CDynamicString(CDynamicString &&String);
-#endif
 	explicit CDynamicString(LPCTSTR pszString);
 	virtual ~CDynamicString();
 	CDynamicString &operator=(const CDynamicString &String);
-#ifdef MOVE_SEMANTICS_SUPPORTED
 	CDynamicString &operator=(CDynamicString &&String);
-#endif
 	CDynamicString &operator+=(const CDynamicString &String);
 	CDynamicString &operator=(LPCTSTR pszString);
 	CDynamicString &operator+=(LPCTSTR pszString);

@@ -12,6 +12,7 @@
 #include "NotificationBar.h"
 #include "Panel.h"
 #include "OSDManager.h"
+#include "WindowUtil.h"
 
 
 #define MAIN_WINDOW_CLASS		APP_NAME TEXT(" Window")
@@ -118,6 +119,7 @@ public:
 	bool IsPanelVisible() const { return m_fShowPanel; }
 	bool SetPanelWidth(int Width);
 	int GetPanelWidth() const { return m_PanelWidth; }
+	void HideAllBars();
 	void OnRButtonDown();
 	void OnMButtonDown();
 	void OnMouseMove();
@@ -165,7 +167,7 @@ public:
 	void CreatePanel();
 	void ShowNotificationBar(LPCTSTR pszText,
 							 CNotificationBar::MessageType Type=CNotificationBar::MESSAGE_INFO,
-							 DWORD Duration=0);
+							 DWORD Duration=0,bool fSkippable=false);
 	void AdjustWindowSize(int Width,int Height);
 	bool ReadSettings(CSettings &Settings);
 	bool WriteSettings(CSettings &Settings);
@@ -229,7 +231,7 @@ public:
 	};
 	struct ProgramGuideSpaceInfo {
 		LPCTSTR pszTuner;
-		int Space;
+		LPCTSTR pszSpace;
 	};
 	bool ShowProgramGuide(bool fShow,unsigned int Flags=0,const ProgramGuideSpaceInfo *pSpaceInfo=NULL);
 
@@ -285,6 +287,7 @@ private:
 	RECT m_rcDragStart;
 	bool m_fClosing;
 
+	CMouseWheelHandler m_WheelHandler;
 	int m_WheelCount;
 	int m_PrevWheelMode;
 	DWORD m_PrevWheelTime;

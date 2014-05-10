@@ -4,7 +4,6 @@
 
 #include "BasicWindow.h"
 #include "EpgProgramList.h"
-#include "Theme.h"
 #include "DrawUtil.h"
 #include "RichEditUtil.h"
 
@@ -28,18 +27,20 @@ public:
 
 	CEventInfoPopup();
 	~CEventInfoPopup();
-	bool Show(const CEventInfoData *pEventInfo,const RECT *pPos=NULL);
+	bool Show(const CEventInfoData *pEventInfo,const RECT *pPos=NULL,
+			  HICON hIcon=NULL,LPCTSTR pszTitle=NULL);
 	bool Hide();
 	bool IsVisible();
 	bool IsOwnWindow(HWND hwnd) const;
 	void GetSize(int *pWidth,int *pHeight);
 	bool SetSize(int Width,int Height);
 	void SetColor(COLORREF BackColor,COLORREF TextColor);
-	void SetTitleColor(Theme::GradientInfo *pBackGradient,COLORREF TextColor);
+	void SetTitleColor(COLORREF BackColor,COLORREF TextColor);
 	bool SetFont(const LOGFONT *pFont);
 	void SetEventHandler(CEventHandler *pEventHandler);
 	bool IsSelected() const;
 	LPTSTR GetSelectedText() const;
+	void GetPreferredIconSize(int *pWidth,int *pHeight) const;
 
 	static bool Initialize(HINSTANCE hinst);
 
@@ -49,16 +50,18 @@ private:
 	CRichEditUtil m_RichEditUtil;
 	COLORREF m_BackColor;
 	COLORREF m_TextColor;
-	Theme::GradientInfo m_TitleBackGradient;
+	COLORREF m_TitleBackColor;
 	COLORREF m_TitleTextColor;
 	DrawUtil::CFont m_Font;
 	DrawUtil::CFont m_TitleFont;
-	int m_TitleLineMargin;
-	int m_TitleLineHeight;
 	int m_TitleHeight;
+	int m_TitleLeftMargin;
+	int m_TitleIconTextMargin;
 	int m_ButtonSize;
 	int m_ButtonMargin;
 	bool m_fDetailInfo;
+	TVTest::String m_TitleText;
+	HICON m_hTitleIcon;
 	CEventHandler *m_pEventHandler;
 
 	static const LPCTSTR m_pszWindowClass;
@@ -73,6 +76,7 @@ private:
 						 LPTSTR pszText,int MaxLength) const;
 	void CalcTitleHeight();
 	void GetCloseButtonRect(RECT *pRect) const;
+	void SetNcRendering();
 };
 
 class CEventInfoPopupManager
@@ -86,8 +90,7 @@ public:
 		CEventHandler();
 		virtual ~CEventHandler();
 		virtual bool HitTest(int x,int y,LPARAM *pParam)=0;
-		virtual bool GetEventInfo(LPARAM Param,const CEventInfoData **ppInfo)=0;
-		virtual bool OnShow(const CEventInfoData *pInfo) { return true; }
+		virtual bool ShowPopup(LPARAM Param,CEventInfoPopup *pPopup)=0;
 		friend class CEventInfoPopupManager;
 	};
 

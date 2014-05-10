@@ -119,14 +119,17 @@ bool CChannelDisplay::IsMessageNeed(const MSG *pMsg) const
 bool CChannelDisplay::OnMouseWheel(UINT Msg,WPARAM wParam,LPARAM lParam)
 {
 	if (Msg==WM_MOUSEWHEEL && m_hwnd!=NULL) {
-		int Delta=GET_WHEEL_DELTA_WPARAM(wParam)<=0?1:-1;
-		POINT pt={GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam)};
-		::ScreenToClient(m_hwnd,&pt);
+		int Delta=m_MouseWheel.OnMouseWheel(wParam,1);
 
-		if (TunerItemHitTest(pt.x,pt.y)>=0) {
-			SetTunerScrollPos(m_TunerScrollPos+Delta,true);
-		} else if (ChannelItemHitTest(pt.x,pt.y)>=0) {
-			SetChannelScrollPos(m_ChannelScrollPos+Delta,true);
+		if (Delta!=0) {
+			POINT pt={GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam)};
+			::ScreenToClient(m_hwnd,&pt);
+
+			if (TunerItemHitTest(pt.x,pt.y)>=0) {
+				SetTunerScrollPos(m_TunerScrollPos-Delta,true);
+			} else if (ChannelItemHitTest(pt.x,pt.y)>=0) {
+				SetChannelScrollPos(m_ChannelScrollPos-Delta,true);
+			}
 		}
 		return true;
 	}

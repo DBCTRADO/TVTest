@@ -426,16 +426,29 @@ LRESULT CALLBACK CCustomWindow::WndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM
 
 	if (uMsg==WM_NCCREATE) {
 		pThis=static_cast<CCustomWindow*>(OnCreate(hwnd,lParam));
+		if (!pThis->OnMessage(hwnd,uMsg,wParam,lParam)) {
+			pThis->m_hwnd=NULL;
+			return FALSE;
+		}
+		return TRUE;
 	} else {
 		pThis=static_cast<CCustomWindow*>(GetBasicWindow(hwnd));
 		if (pThis==NULL)
 			return ::DefWindowProc(hwnd,uMsg,wParam,lParam);
+		if (uMsg==WM_CREATE) {
+			if (pThis->OnMessage(hwnd,uMsg,wParam,lParam)<0) {
+				pThis->m_hwnd=NULL;
+				return -1;
+			}
+			return 0;
+		}
 		if (uMsg==WM_DESTROY) {
 			pThis->OnMessage(hwnd,uMsg,wParam,lParam);
 			pThis->OnDestroy();
 			return 0;
 		}
 	}
+
 	return pThis->OnMessage(hwnd,uMsg,wParam,lParam);
 }
 

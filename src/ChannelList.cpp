@@ -310,10 +310,12 @@ int CChannelList::FindPhysicalChannel(int Channel) const
 }
 
 
-int CChannelList::FindChannelNo(int No) const
+int CChannelList::FindChannelNo(int No,bool fEnabledOnly) const
 {
 	for (size_t i=0;i<m_ChannelList.size();i++) {
-		if (m_ChannelList[i]->GetChannelNo()==No)
+		const CChannelInfo *pChInfo=m_ChannelList[i];
+		if (pChInfo->GetChannelNo()==No
+				&& (!fEnabledOnly || pChInfo->IsEnabled()))
 			return (int)i;
 	}
 	return -1;
@@ -355,13 +357,17 @@ int CChannelList::FindByName(LPCTSTR pszName) const
 }
 
 
-int CChannelList::GetNextChannelNo(int ChannelNo,bool fWrap) const
+int CChannelList::GetNextChannel(int Index,bool fWrap) const
 {
+	if (Index<0 || (size_t)Index>=m_ChannelList.size())
+		return -1;
+
+	const int ChannelNo=GetChannelNo(Index);
 	int Channel,Min,No;
 
 	Channel=INT_MAX;
 	Min=INT_MAX;
-	for (auto i=m_ChannelList.begin();i!=m_ChannelList.end();i++) {
+	for (auto i=m_ChannelList.begin();i!=m_ChannelList.end();++i) {
 		const CChannelInfo *pChInfo=*i;
 
 		if (pChInfo->IsEnabled()) {
@@ -376,20 +382,24 @@ int CChannelList::GetNextChannelNo(int ChannelNo,bool fWrap) const
 	}
 	if (Channel==INT_MAX) {
 		if (Min==INT_MAX || !fWrap)
-			return 0;
-		return Min;
+			return -1;
+		return FindChannelNo(Min);
 	}
-	return Channel;
+	return FindChannelNo(Channel);
 }
 
 
-int CChannelList::GetPrevChannelNo(int ChannelNo,bool fWrap) const
+int CChannelList::GetPrevChannel(int Index,bool fWrap) const
 {
+	if (Index<0 || (size_t)Index>=m_ChannelList.size())
+		return -1;
+
+	const int ChannelNo=GetChannelNo(Index);
 	int Channel,Max,No;
 
 	Channel=0;
 	Max=0;
-	for (auto i=m_ChannelList.begin();i!=m_ChannelList.end();i++) {
+	for (auto i=m_ChannelList.begin();i!=m_ChannelList.end();++i) {
 		const CChannelInfo *pChInfo=*i;
 
 		if (pChInfo->IsEnabled()) {
@@ -404,10 +414,10 @@ int CChannelList::GetPrevChannelNo(int ChannelNo,bool fWrap) const
 	}
 	if (Channel==0) {
 		if (fWrap)
-			return Max;
-		return 0;
+			return FindChannelNo(Max);
+		return -1;
 	}
-	return Channel;
+	return FindChannelNo(Channel);
 }
 
 

@@ -239,68 +239,73 @@ const CChannelInfo *CChannelManager::GetChangingChannelInfo() const
 }
 
 
-const CChannelInfo *CChannelManager::GetNextChannelInfo(bool fNext) const
+int CChannelManager::GetNextChannel(bool fNext) const
 {
-	int Channel=-1,No;
-	const CChannelInfo *pInfo;
+	const CChannelList *pList=GetCurrentChannelList();
+	if (pList==NULL)
+		return -1;
+
+	int Channel=-1;
 
 	if (m_ChangingChannel>=0)
 		Channel=m_ChangingChannel;
+
 #ifdef NETWORK_REMOCON_SUPPORT
 	if (m_fNetworkRemocon) {
 		if (Channel<0) {
 			if (m_NetworkRemoconCurrentChannel<0)
-				return NULL;
+				return -1;
 			Channel=m_NetworkRemoconCurrentChannel;
 		}
-		No=m_pNetworkRemoconChannelList->GetChannelNo(Channel);
 		if (fNext)
-			No=m_pNetworkRemoconChannelList->GetNextChannelNo(No,true);
+			Channel=pList->GetNextChannel(Channel,true);
 		else
-			No=m_pNetworkRemoconChannelList->GetPrevChannelNo(No,true);
-		pInfo=m_pNetworkRemoconChannelList->GetChannelInfo(
-							m_pNetworkRemoconChannelList->FindChannelNo(No));
+			Channel=pList->GetPrevChannel(Channel,true);
 	} else
 #endif
 	{
-		const CChannelList *pList=GetCurrentChannelList();
-		int i;
-
-		if (pList==NULL)
-			return NULL;
 		if (Channel<0) {
 			if (m_CurrentChannel<0)
-				return NULL;
+				return -1;
 			Channel=m_CurrentChannel;
 		}
 		//if (pList->HasRemoteControlKeyID()) {
-		if ((No=pList->GetChannelNo(Channel))>0) {
+		if (pList->GetChannelNo(Channel)>0) {
 			if (fNext)
-				No=pList->GetNextChannelNo(No,true);
+				Channel=pList->GetNextChannel(Channel,true);
 			else
-				No=pList->GetPrevChannelNo(No,true);
-			pInfo=pList->GetChannelInfo(pList->FindChannelNo(No));
+				Channel=pList->GetPrevChannel(Channel,true);
 		} else {
-			No=Channel;
+			int i;
+
 			for (i=pList->NumChannels();i>0;i--) {
 				if (fNext) {
-					No++;
-					if (No>=pList->NumChannels())
-						No=0;
+					Channel++;
+					if (Channel>=pList->NumChannels())
+						Channel=0;
 				} else {
-					No--;
-					if (No<0)
-						No=pList->NumChannels()-1;
+					Channel--;
+					if (Channel<0)
+						Channel=pList->NumChannels()-1;
 				}
-				pInfo=pList->GetChannelInfo(No);
-				if (pInfo->IsEnabled())
+				if (pList->IsEnabled(Channel))
 					break;
 			}
 			if (i==0)
-				return NULL;
+				return -1;
 		}
 	}
-	return pInfo;
+
+	return Channel;
+}
+
+
+const CChannelInfo *CChannelManager::GetNextChannelInfo(bool fNext) const
+{
+	int Channel=GetNextChannel(fNext);
+	if (Channel<0)
+		return NULL;
+	return GetCurrentChannelList()->GetChannelInfo(Channel);
 }
 
 

@@ -575,7 +575,13 @@ LRESULT CChannelPanel::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam
 		return 0;
 
 	case WM_MOUSEWHEEL:
-		SetScrollPos(m_ScrollPos-GET_WHEEL_DELTA_WPARAM(wParam)*m_FontHeight/WHEEL_DELTA);
+		{
+			int Delta=m_MouseWheel.OnMouseWheel(wParam,
+				m_FontHeight*m_MouseWheel.GetDefaultScrollLines());
+
+			if (Delta!=0)
+				SetScrollPos(m_ScrollPos-Delta);
+		}
 		return 0;
 
 	case WM_VSCROLL:
@@ -974,14 +980,33 @@ bool CChannelPanel::EventInfoPopupHitTest(int x,int y,LPARAM *pParam)
 }
 
 
-bool CChannelPanel::GetEventInfoPopupEventInfo(LPARAM Param,const CEventInfoData **ppInfo)
+bool CChannelPanel::ShowEventInfoPopup(LPARAM Param,CEventInfoPopup *pPopup)
 {
 	int Channel=LOWORD(Param),Event=HIWORD(Param);
 
-	if (Channel<0 || (size_t)Channel>=m_ChannelList.size()
-			|| !m_ChannelList[Channel]->IsEventEnabled(Event))
+	if (Channel<0 || (size_t)Channel>=m_ChannelList.size())
 		return false;
-	*ppInfo=&m_ChannelList[Channel]->GetEventInfo(Event);
+	const CChannelEventInfo *pChEventInfo=m_ChannelList[Channel];
+	if (!pChEventInfo->IsEventEnabled(Event))
+		return false;
+
+	HICON hIcon=NULL;
+	if (m_pLogoManager!=NULL) {
+		int IconWidth,IconHeight;
+		pPopup->GetPreferredIconSize(&IconWidth,&IconHeight);
+		hIcon=m_pLogoManager->CreateLogoIcon(
+			pChEventInfo->GetNetworkID(),
+			pChEventInfo->GetServiceID(),
+			IconWidth,IconHeight);
+	}
+
+	if (!pPopup->Show(&pChEventInfo->GetEventInfo(Event),NULL,
+					  hIcon,pChEventInfo->GetChannelInfo().GetName())) {
+		if (hIcon!=NULL)
+			::DestroyIcon(hIcon);
+		return false;
+	}
+
 	return true;
 }
 
@@ -998,9 +1023,9 @@ bool CChannelPanel::CEventInfoPopupHandler::HitTest(int x,int y,LPARAM *pParam)
 }
 
 
-bool CChannelPanel::CEventInfoPopupHandler::GetEventInfo(LPARAM Param,const CEventInfoData **ppInfo)
+bool CChannelPanel::CEventInfoPopupHandler::ShowPopup(LPARAM Param,CEventInfoPopup *pPopup)
 {
-	return m_pChannelPanel->GetEventInfoPopupEventInfo(Param,ppInfo);
+	return m_pChannelPanel->ShowEventInfoPopup(Param,pPopup);
 }
 
 

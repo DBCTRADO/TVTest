@@ -1063,6 +1063,29 @@ bool CProgramGuideBaseChannelProvider::GetGroupName(size_t Group,LPTSTR pszName,
 }
 
 
+bool CProgramGuideBaseChannelProvider::GetGroupID(size_t Group,TVTest::String *pID) const
+{
+	if (Group>=GetGroupCount() || pID==NULL)
+		return false;
+
+	TVTest::StringUtility::Format(*pID,TEXT("%u"),static_cast<unsigned int>(Group));
+
+	return true;
+}
+
+
+int CProgramGuideBaseChannelProvider::ParseGroupID(LPCTSTR pszID) const
+{
+	if (IsStringEmpty(pszID))
+		return -1;
+
+	int Group=::StrToInt(pszID);
+	if (Group<0 || static_cast<size_t>(Group)>=GetGroupCount())
+		return -1;
+	return Group;
+}
+
+
 size_t CProgramGuideBaseChannelProvider::GetChannelCount(size_t Group) const
 {
 	if (Group>=GetGroupCount())
@@ -2539,6 +2562,28 @@ bool CProgramGuide::SetCurrentChannelProvider(int Provider,int Group)
 }
 
 
+bool CProgramGuide::SetCurrentChannelProvider(int Provider,LPCTSTR pszGroupID)
+{
+	if (m_pChannelProviderManager==NULL
+			|| Provider<-1 || (size_t)Provider>=m_pChannelProviderManager->GetChannelProviderCount())
+		return false;
+
+	if (Provider>=0) {
+		m_pChannelProvider=m_pChannelProviderManager->GetChannelProvider(Provider);
+		if (m_pChannelProvider==NULL)
+			return false;
+		m_pChannelProvider->Update();
+		m_CurrentChannelProvider=Provider;
+		m_CurrentChannelGroup=-1;
+		SetCurrentChannelGroup(m_pChannelProvider->ParseGroupID(pszGroupID));
+	} else {
+		Clear();
+	}
+
+	return true;
+}
+
+
 int CProgramGuide::GetChannelGroupCount() const
 {
 	if (m_pChannelProvider==NULL)
@@ -2552,6 +2597,14 @@ bool CProgramGuide::GetChannelGroupName(int Group,LPTSTR pszName,int MaxName) co
 	if (m_pChannelProvider==NULL)
 		return false;
 	return m_pChannelProvider->GetGroupName(Group,pszName,MaxName);
+}
+
+
+int CProgramGuide::ParseChannelGroupID(LPCTSTR pszGroupID) const
+{
+	if (m_pChannelProvider==NULL)
+		return false;
+	return m_pChannelProvider->ParseGroupID(pszGroupID);
 }
 
 
@@ -3506,19 +3559,7 @@ LRESULT CProgramGuide::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam
 				default:	return 0;
 				}
 			} else {
-				int Lines;
-
-				if (m_WheelScrollLines==0) {
-					UINT SysLines;
-
-					if (::SystemParametersInfo(SPI_GETWHEELSCROLLLINES,0,&SysLines,0))
-						Lines=SysLines;
-					else
-						Lines=2;
-				} else {
-					Lines=m_WheelScrollLines;
-				}
-				Pos-=GET_WHEEL_DELTA_WPARAM(wParam)*Lines/WHEEL_DELTA;
+				Pos-=m_VertWheel.OnMouseWheel(wParam,m_WheelScrollLines);
 			}
 			if (Pos<0)
 				Pos=0;
@@ -3551,7 +3592,7 @@ LRESULT CProgramGuide::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam
 				default:	return 0;
 				}
 			} else {
-				Pos+=GET_WHEEL_DELTA_WPARAM(wParam)*m_FontHeight/WHEEL_DELTA;
+				Pos+=m_HorzWheel.OnMouseHWheel(wParam,m_FontHeight);
 			}
 			if (Pos<0)
 				Pos=0;
@@ -3904,7 +3945,7 @@ void CProgramGuide::OnCommand(int id)
 
 			m_pChannelProvider->GetName(szText,lengthof(szText));
 			Info.Name=szText;
-			Info.Group=m_CurrentChannelGroup;
+			m_pChannelProvider->GetGroupID(m_CurrentChannelGroup,&Info.GroupID);
 			m_pChannelProvider->GetGroupName(m_CurrentChannelGroup,szText,lengthof(szText));
 			Info.Label=szText;
 			Info.SetDefaultColors();
@@ -4022,7 +4063,7 @@ void CProgramGuide::OnCommand(int id)
 				for (int i=0;EnumChannelProvider(i,szName,lengthof(szName));i++) {
 					if (::lstrcmpi(szName,pInfo->Name.c_str())==0) {
 						StoreTimePos();
-						if (SetCurrentChannelProvider(i,pInfo->Group))
+						if (SetCurrentChannelProvider(i,pInfo->GroupID.c_str()))
 							UpdateServiceList();
 						return;
 					}
@@ -4290,7 +4331,7 @@ bool CProgramGuide::CEventInfoPopupHandler::HitTest(int x,int y,LPARAM *pParam)
 }
 
 
-bool CProgramGuide::CEventInfoPopupHandler::GetEventInfo(LPARAM Param,const CEventInfoData **ppInfo)
+bool CProgramGuide::CEventInfoPopupHandler::ShowPopup(LPARAM Param,CEventInfoPopup *pPopup)
 {
 	int List=LOWORD(Param),Event=HIWORD(Param);
 	const ProgramGuide::CEventLayout *pLayout=m_pProgramGuide->m_EventLayoutList[List];
@@ -4312,41 +4353,39 @@ bool CProgramGuide::CEventInfoPopupHandler::GetEventInfo(LPARAM Param,const CEve
 					pEventInfo=&pCommonItem->GetEventInfo();
 			}
 			*/
-			*ppInfo=pEventInfo;
+
+			int Genre=-1;
+			for (int i=0;i<pEventInfo->m_ContentNibble.NibbleCount;i++) {
+				if (pEventInfo->m_ContentNibble.NibbleList[i].ContentNibbleLevel1!=0xE) {
+					Genre=pEventInfo->m_ContentNibble.NibbleList[i].ContentNibbleLevel1;
+					break;
+				}
+			}
+			COLORREF Color;
+			if (Genre>=0 && Genre<=CEventInfoData::CONTENT_LAST)
+				Color=m_pProgramGuide->m_ColorList[COLOR_CONTENT_FIRST+Genre];
+			else
+				Color=m_pProgramGuide->m_ColorList[COLOR_CONTENT_OTHER];
+			pPopup->SetTitleColor(Color,m_pProgramGuide->m_ColorList[COLOR_EVENTTITLE]);
+
+			const ProgramGuide::CServiceInfo *pServiceInfo=pLayout->GetServiceInfo();
+			int IconWidth,IconHeight;
+			pPopup->GetPreferredIconSize(&IconWidth,&IconHeight);
+			HICON hIcon=GetAppClass().GetLogoManager()->CreateLogoIcon(
+				pServiceInfo->GetNetworkID(),pServiceInfo->GetServiceID(),
+				IconWidth,IconHeight);
+
+			if (!pPopup->Show(pEventInfo,NULL,hIcon,pServiceInfo->GetServiceName())) {
+				if (hIcon!=NULL)
+					::DestroyIcon(hIcon);
+				return false;
+			}
+
 			return true;
 		}
 	}
+
 	return false;
-}
-
-
-bool CProgramGuide::CEventInfoPopupHandler::OnShow(const CEventInfoData *pInfo)
-{
-	int Genre=-1;
-	for (int i=0;i<pInfo->m_ContentNibble.NibbleCount;i++) {
-		if (pInfo->m_ContentNibble.NibbleList[i].ContentNibbleLevel1!=0xE) {
-			Genre=pInfo->m_ContentNibble.NibbleList[i].ContentNibbleLevel1;
-			break;
-		}
-	}
-
-	COLORREF Color;
-	int Red,Green,Blue;
-	Theme::GradientInfo BackGradient;
-
-	if (Genre>=0 && Genre<=CEventInfoData::CONTENT_LAST)
-		Color=m_pProgramGuide->m_ColorList[COLOR_CONTENT_FIRST+Genre];
-	else
-		Color=m_pProgramGuide->m_ColorList[COLOR_CONTENT_OTHER];
-	BackGradient.Type=Theme::GRADIENT_NORMAL;
-	BackGradient.Direction=Theme::DIRECTION_VERT;
-	Red=GetRValue(Color);
-	Green=GetGValue(Color);
-	Blue=GetBValue(Color);
-	BackGradient.Color1=RGB(Red+(255-Red)/2,Green+(255-Green)/2,Blue+(255-Blue)/2);
-	BackGradient.Color2=Color;
-	CEventInfoPopupManager::CEventHandler::m_pPopup->SetTitleColor(&BackGradient,m_pProgramGuide->m_ColorList[COLOR_EVENTTITLE]);
-	return true;
 }
 
 
@@ -5210,19 +5249,23 @@ void CFavoritesToolbar::OnSpaceChanged()
 	if (CurChannelProvider>=0
 			&& m_pProgramGuide->EnumChannelProvider(CurChannelProvider,szName,lengthof(szName))) {
 		const int CurChannelGroup=m_pProgramGuide->GetCurrentChannelGroup();
-		const CProgramGuideFavorites *pFavorites=m_pProgramGuide->GetFavorites();
-		const int ButtonCount=(int)::SendMessage(m_hwnd,TB_BUTTONCOUNT,0,0);
 
-		for (int i=0;i<ButtonCount;i++) {
-			TBBUTTON tbb;
+		if (CurChannelGroup>=0) {
+			const CProgramGuideFavorites *pFavorites=m_pProgramGuide->GetFavorites();
+			const int ButtonCount=(int)::SendMessage(m_hwnd,TB_BUTTONCOUNT,0,0);
 
-			if (::SendMessage(m_hwnd,TB_GETBUTTON,i,reinterpret_cast<LPARAM>(&tbb))) {
-				const CProgramGuideFavorites::FavoriteInfo *pInfo=pFavorites->Get(tbb.dwData);
+			for (int i=0;i<ButtonCount;i++) {
+				TBBUTTON tbb;
 
-				if (pInfo!=NULL && ::lstrcmpi(pInfo->Name.c_str(),szName)==0
-						&& pInfo->Group==CurChannelGroup) {
-					SelButton=tbb.idCommand;
-					break;
+				if (::SendMessage(m_hwnd,TB_GETBUTTON,i,reinterpret_cast<LPARAM>(&tbb))) {
+					const CProgramGuideFavorites::FavoriteInfo *pInfo=pFavorites->Get(tbb.dwData);
+
+					if (pInfo!=NULL
+							&& ::lstrcmpi(pInfo->Name.c_str(),szName)==0
+							&& m_pProgramGuide->ParseChannelGroupID(pInfo->GroupID.c_str())==CurChannelGroup) {
+						SelButton=tbb.idCommand;
+						break;
+					}
 				}
 			}
 		}

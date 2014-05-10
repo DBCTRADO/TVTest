@@ -88,6 +88,8 @@ public:
 	bool fRegExp;
 	bool fIgnoreCase;
 	bool fIgnoreWidth;
+	bool fEventName;
+	bool fEventText;
 	bool fGenre;
 	WORD Genre1;
 	WORD Genre2[16];
@@ -123,7 +125,9 @@ private:
 		FLAG_CA           = 0x00000080U,
 		FLAG_VIDEO        = 0x00000100U,
 		FLAG_SERVICE_LIST = 0x00000200U,
-		FLAG_DISABLED     = 0x00000400U
+		FLAG_DISABLED     = 0x00000400U,
+		FLAG_EVENT_NAME   = 0x00000800U,
+		FLAG_EVENT_TEXT   = 0x00001000U
 	};
 
 	static void ParseTime(LPCWSTR pszString,TimeInfo *pTime);
@@ -239,6 +243,12 @@ private:
 
 	static LRESULT CALLBACK EditProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam);
 	static const LPCTSTR m_pszPropName;
+
+	enum {
+		KEYWORDTARGET_EVENTNAME_AND_EVENTTEXT,
+		KEYWORDTARGET_EVENTNAME,
+		KEYWORDTARGET_EVENTTEXT,
+	};
 
 	CEventSearchSettings m_SearchSettings;
 	CEventHandler *m_pEventHandler;

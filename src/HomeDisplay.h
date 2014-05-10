@@ -9,6 +9,7 @@
 #include "Theme.h"
 #include "Aero.h"
 #include "ProgramSearch.h"
+#include "WindowUtil.h"
 
 
 class CHomeDisplay
@@ -126,6 +127,7 @@ private:
 	int m_CurCategory;
 	HWND m_hwndScroll;
 	int m_ScrollPos;
+	CMouseWheelHandler m_MouseWheel;
 	POINT m_LButtonDownPos;
 	bool m_fHitCloseButton;
 	PartType m_CursorPart;

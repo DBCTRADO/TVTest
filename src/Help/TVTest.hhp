@@ -22,7 +22,6 @@ sidebar.html
 statusbar.html
 menu.html
 panel.html
-programguide.html
 record.html
 commandline.html
 options.html
@@ -52,6 +51,9 @@ hint.html
 appendix\channelfile.html
 appendix\logo.html
 appendix\tips.html
+programguide\favorites.html
+programguide\programguide.html
+programguide\search.html
 
 [ALIAS]
 HELP_ID_OPTIONS_ACCELERATOR=options\accelerator.html

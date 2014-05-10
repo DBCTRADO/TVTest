@@ -45,9 +45,11 @@ public:
 	int GetCurrentServiceID() const { return m_CurrentServiceID; }
 	bool SetCurrentServiceID(int ServiceID);
 	bool SetChangingChannel(int Channel);
+	int GetChangingChannel() const { return m_ChangingChannel; }
 	const CChannelInfo *GetCurrentChannelInfo() const;
 	const CChannelInfo *GetCurrentRealChannelInfo() const;
 	const CChannelInfo *GetChangingChannelInfo() const;
+	int GetNextChannel(bool fNext) const;
 	const CChannelInfo *GetNextChannelInfo(bool fNext) const;
 	const CChannelList *GetCurrentChannelList() const;
 	const CChannelList *GetCurrentRealChannelList() const;

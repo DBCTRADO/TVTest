@@ -10,6 +10,7 @@ LONGLONG StringToInt64(LPCTSTR pszString);
 ULONGLONG StringToUInt64(LPCTSTR pszString);
 bool Int64ToString(LONGLONG Value,LPTSTR pszString,int MaxLength,int Radix=10);
 bool UInt64ToString(ULONGLONG Value,LPTSTR pszString,int MaxLength,int Radix=10);
+bool StringIsDigit(LPCTSTR pszString);
 
 __declspec(restrict) LPSTR DuplicateString(LPCSTR pszString);
 __declspec(restrict) LPWSTR DuplicateString(LPCWSTR pszString);

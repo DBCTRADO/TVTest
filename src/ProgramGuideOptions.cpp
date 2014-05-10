@@ -259,7 +259,7 @@ bool CProgramGuideOptions::LoadSettings(CSettings &Settings)
 							|| FavoriteInfo.Name.empty())
 						break;
 					::wsprintf(szName,TEXT("Favorite%d_Group"),i);
-					if (!Settings.Read(szName,&FavoriteInfo.Group))
+					if (!Settings.Read(szName,&FavoriteInfo.GroupID))
 						break;
 					::wsprintf(szName,TEXT("Favorite%d_Label"),i);
 					if (!Settings.Read(szName,&FavoriteInfo.Label))
@@ -283,7 +283,7 @@ bool CProgramGuideOptions::LoadSettings(CSettings &Settings)
 		CProgramGuideFavorites::FavoriteInfo FavoriteInfo;
 
 		FavoriteInfo.Name=TEXT("お気に入りチャンネル");
-		FavoriteInfo.Group=0;
+		FavoriteInfo.GroupID=TEXT("\\");
 		FavoriteInfo.Label=TEXT("お気に入り");
 		FavoriteInfo.SetDefaultColors();
 		pFavorites->Add(FavoriteInfo);
@@ -403,7 +403,7 @@ bool CProgramGuideOptions::SaveSettings(CSettings &Settings)
 			::wsprintf(szName,TEXT("Favorite%d_Name"),i);
 			Settings.Write(szName,pFavoriteInfo->Name);
 			::wsprintf(szName,TEXT("Favorite%d_Group"),i);
-			Settings.Write(szName,pFavoriteInfo->Group);
+			Settings.Write(szName,pFavoriteInfo->GroupID);
 			::wsprintf(szName,TEXT("Favorite%d_Label"),i);
 			Settings.Write(szName,pFavoriteInfo->Label);
 			::wsprintf(szName,TEXT("Favorite%d_BackColor"),i);

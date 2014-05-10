@@ -11,21 +11,13 @@ static char THIS_FILE[]=__FILE__;
 
 LONGLONG StringToInt64(LPCTSTR pszString)
 {
-	return _ttoi64(pszString);
+	return _tcstoi64(pszString,nullptr,0);
 }
 
 
 ULONGLONG StringToUInt64(LPCTSTR pszString)
 {
-	ULONGLONG Value=0;
-	LPCTSTR p;
-
-	p=pszString;
-	while (*p>=_T('0') && *p<=_T('9')) {
-		Value=Value*10+(*p-_T('0'));
-		p++;
-	}
-	return Value;
+	return _tcstoui64(pszString,nullptr,0);
 }
 
 
@@ -38,6 +30,27 @@ bool Int64ToString(LONGLONG Value,LPTSTR pszString,int MaxLength,int Radix)
 bool UInt64ToString(ULONGLONG Value,LPTSTR pszString,int MaxLength,int Radix)
 {
 	return _ui64tot_s(Value,pszString,MaxLength,Radix)==0;
+}
+
+
+bool StringIsDigit(LPCTSTR pszString)
+{
+	if (IsStringEmpty(pszString))
+		return false;
+
+	LPCTSTR p=pszString;
+	if (*p==_T('-') || *p==_T('+'))
+		p++;
+	if (*p<_T('0') || *p>_T('9'))
+		return false;
+	p++;
+	while (*p!=_T('\0')) {
+		if (*p<_T('0') || *p>_T('9'))
+			return false;
+		p++;
+	}
+
+	return true;
 }
 
 
@@ -168,10 +181,17 @@ namespace TVTest
 				Str.clear();
 				return 0;
 			}
-			LPWSTR pszBuffer=new WCHAR[Length+1];
-			int Result=::_vsnwprintf_s(pszBuffer,Length+1,_TRUNCATE,pszFormat,Args);
-			Str=pszBuffer;
-			delete [] pszBuffer;
+			static const int BUFFER_LENGTH=256;
+			if (Length<BUFFER_LENGTH) {
+				WCHAR szBuffer[BUFFER_LENGTH];
+				::_vsnwprintf_s(szBuffer,BUFFER_LENGTH,_TRUNCATE,pszFormat,Args);
+				Str=szBuffer;
+			} else {
+				LPWSTR pszBuffer=new WCHAR[Length+1];
+				::_vsnwprintf_s(pszBuffer,Length+1,_TRUNCATE,pszFormat,Args);
+				Str=pszBuffer;
+				delete [] pszBuffer;
+			}
 
 			return (int)Str.length();
 		}

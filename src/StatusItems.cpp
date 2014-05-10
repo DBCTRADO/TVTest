@@ -723,21 +723,36 @@ void CProgramInfoStatusItem::ShowPopupInfo()
 	if (m_EventInfoPopup.IsVisible())
 		return;
 
-	CCoreEngine &CoreEngine=*GetAppClass().GetCoreEngine();
-	WORD ServiceID;
-	if (CoreEngine.m_DtvEngine.GetServiceID(&ServiceID)) {
+	CAppMain &AppMain=GetAppClass();
+	CChannelInfo ChInfo;
+
+	if (AppMain.GetCurrentStreamChannelInfo(&ChInfo)
+			&& ChInfo.GetServiceID()!=0) {
 		CEventInfoData EventInfo;
 
-		if (CoreEngine.GetCurrentEventInfo(&EventInfo,ServiceID,m_fNext)) {
+		if (AppMain.GetCoreEngine()->GetCurrentEventInfo(
+				&EventInfo,ChInfo.GetServiceID(),m_fNext)) {
 			RECT rc;
 			POINT pt;
+			int Width,Height;
 
 			GetRect(&rc);
 			pt.x=rc.left;
 			pt.y=rc.top;
 			::ClientToScreen(m_pStatus->GetHandle(),&pt);
-			::SetRect(&rc,pt.x,pt.y-300,pt.x+300,pt.y);
-			m_EventInfoPopup.Show(&EventInfo,&rc);
+			m_EventInfoPopup.GetSize(&Width,&Height);
+			::SetRect(&rc,pt.x,pt.y-Height,pt.x+Width,pt.y);
+
+			int IconWidth,IconHeight;
+			m_EventInfoPopup.GetPreferredIconSize(&IconWidth,&IconHeight);
+			HICON hIcon=AppMain.GetLogoManager()->CreateLogoIcon(
+				ChInfo.GetNetworkID(),ChInfo.GetServiceID(),
+				IconWidth,IconHeight);
+
+			if (!m_EventInfoPopup.Show(&EventInfo,&rc,hIcon,ChInfo.GetName())) {
+				if (hIcon!=NULL)
+					::DestroyIcon(hIcon);
+			}
 		}
 	}
 }

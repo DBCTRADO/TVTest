@@ -12,7 +12,7 @@ public:
 	struct FavoriteInfo
 	{
 		TVTest::String Name;
-		int Group;
+		TVTest::String GroupID;
 		TVTest::String Label;
 		COLORREF BackColor;
 		COLORREF TextColor;

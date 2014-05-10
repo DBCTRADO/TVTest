@@ -11,10 +11,16 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="jaricom.c">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
     <ClCompile Include="jcapimin.c">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
     <ClCompile Include="jcapistd.c">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="jcarith.c">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
     <ClCompile Include="jccoefct.c">
@@ -47,9 +53,6 @@
     <ClCompile Include="jcparam.c">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="jcphuff.c">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
     <ClCompile Include="jcprepct.c">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
@@ -63,6 +66,9 @@
       <Filter>ソース ファイル</Filter>
     </ClCompile>
     <ClCompile Include="jdapistd.c">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="jdarith.c">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
     <ClCompile Include="jdatadst.c">
@@ -98,9 +104,6 @@
     <ClCompile Include="jdmerge.c">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="jdphuff.c">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
     <ClCompile Include="jdpostct.c">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
@@ -131,13 +134,13 @@
     <ClCompile Include="jidctint.c">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="jidctred.c">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
     <ClCompile Include="jmemmgr.c">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
     <ClCompile Include="jmemnobs.c">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="jpegtran.c">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
     <ClCompile Include="jquant1.c">
@@ -149,60 +152,9 @@
     <ClCompile Include="jutils.c">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="rdbmp.c">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="rdcolmap.c">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="rdgif.c">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="rdppm.c">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="rdrle.c">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="rdswitch.c">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="rdtarga.c">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="transupp.c">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="wrbmp.c">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="wrgif.c">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="wrppm.c">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="wrrle.c">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="wrtarga.c">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="cderror.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="cdjpeg.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="jchuff.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
     <ClInclude Include="jdct.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="jdhuff.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="jerror.h">
@@ -226,7 +178,7 @@
     <ClInclude Include="jversion.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="transupp.h">
+    <ClInclude Include="jconfig.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
   </ItemGroup>

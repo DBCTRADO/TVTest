@@ -6,9 +6,12 @@
 #include "BasicWindow.h"
 #include "Theme.h"
 #include "DrawUtil.h"
+#include "WindowUtil.h"
 
 
-class CNotificationBar : public CBasicWindow
+class CNotificationBar
+	: public CCustomWindow
+	, protected CWindowTimerManager
 {
 public:
 	enum MessageType {
@@ -19,8 +22,12 @@ public:
 
 	CNotificationBar();
 	~CNotificationBar();
-	bool Create(HWND hwndParent,DWORD Style,DWORD ExStyle=0,int ID=0);
-	bool Show(LPCTSTR pszText,MessageType Type,DWORD Timeout=0);
+
+// CBasicWindow
+	bool Create(HWND hwndParent,DWORD Style,DWORD ExStyle=0,int ID=0) override;
+
+// CNotificationBar
+	bool Show(LPCTSTR pszText,MessageType Type,DWORD Timeout,bool fSkippable);
 	bool Hide();
 	bool SetColors(const Theme::GradientInfo *pBackGradient,
 				   COLORREF crTextColor,COLORREF crWarningTextColor,COLORREF crErrorTextColor);
@@ -36,7 +43,19 @@ private:
 		MessageType Type;
 		HICON hIcon;
 		DWORD Timeout;
+		bool fSkippable;
 	};
+
+	enum {
+		TIMER_ID_SHOWANIMATION	= 0x0001U,
+		TIMER_ID_FADEANIMATION	= 0x0002U,
+		TIMER_ID_HIDE			= 0x0004U
+	};
+
+	static const int SHOW_ANIMATION_COUNT=4;
+	static const DWORD SHOW_ANIMATION_INTERVAL=50;
+	static const int FADE_ANIMATION_COUNT=4;
+	static const DWORD FADE_ANIMATION_INTERVAL=50;
 
 	Theme::GradientInfo m_BackGradient;
 	COLORREF m_TextColor[3];
@@ -44,12 +63,16 @@ private:
 	int m_BarHeight;
 	bool m_fAnimate;
 	std::deque<MessageInfo> m_MessageQueue;
-
-	void CalcBarHeight();
+	int m_TimerCount;
 
 	static HINSTANCE m_hinst;
-	static CNotificationBar *GetThis(HWND hwnd);
-	static LRESULT CALLBACK WndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam);
+
+	void CalcBarHeight();
+	void GetBarPosition(RECT *pRect) const;
+	void GetAnimatedBarPosition(RECT *pRect,int Frame,int NumFrames) const;
+	void SetHideTimer();
+// CCustomWindow
+	LRESULT OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
 };
 
 

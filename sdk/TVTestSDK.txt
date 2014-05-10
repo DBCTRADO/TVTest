@@ -1,0 +1,25 @@
+
+
+    TVTest プラグイン SDK
+
+
+◆ はじめに
+
+  TVTest 用のプラグインを作成するためのヘッダとサンプルです。
+  ヘッダがドキュメント代わりになっていますので、プラグインの仕様については
+  TVTestPlugin.h ファイルを参照してください。
+
+  サンプルのソリューション(Samples.sln)とプロジェクトは Visual Studio 2010 用
+  です。
+
+
+◆ ライセンス
+
+  ・ヘッダ及びサンプルは自由に利用・改変・再配布できます。
+  ・サンプルの著作権は主張しません。
+  ・Samples\SpectrumAnalyzer にある fft4g.c は大浦拓哉氏に著作権があります。
+    ライセンスも大浦氏の定めたものに従ってください。
+    Copyright Takuya OOURA, 1996-2001
+    http://www.kurims.kyoto-u.ac.jp/~ooura/fft-j.html
+
+

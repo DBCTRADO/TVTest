@@ -414,7 +414,6 @@ CCommandLineOptions::CCommandLineOptions()
 
 	, m_fShowProgramGuide(false)
 	, m_fProgramGuideOnly(false)
-	, m_ProgramGuideSpace(-2)
 
 	, m_fHomeDisplay(false)
 	, m_fChannelDisplay(false)

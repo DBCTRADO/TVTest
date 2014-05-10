@@ -15,8 +15,6 @@ static char THIS_FILE[]=__FILE__;
 #define BAR_MARGIN			4
 #define ICON_TEXT_MARGIN	4
 
-#define TIMER_ID_HIDE 1
-
 
 
 
@@ -49,6 +47,7 @@ bool CNotificationBar::Initialize(HINSTANCE hinst)
 CNotificationBar::CNotificationBar()
 	: m_fAnimate(true)
 	, m_BarHeight(0)
+	, m_TimerCount(0)
 {
 	m_BackGradient.Type=Theme::GRADIENT_NORMAL;
 	m_BackGradient.Direction=Theme::DIRECTION_VERT;
@@ -57,11 +56,6 @@ CNotificationBar::CNotificationBar()
 	m_TextColor[MESSAGE_INFO]=RGB(224,224,224);
 	m_TextColor[MESSAGE_WARNING]=RGB(255,160,64);
 	m_TextColor[MESSAGE_ERROR]=RGB(224,64,64);
-
-	LOGFONT lf;
-	DrawUtil::GetSystemFont(DrawUtil::FONT_MESSAGE,&lf);
-	lf.lfHeight=-14;
-	SetFont(&lf);
 }
 
 
@@ -77,7 +71,7 @@ bool CNotificationBar::Create(HWND hwndParent,DWORD Style,DWORD ExStyle,int ID)
 }
 
 
-bool CNotificationBar::Show(LPCTSTR pszText,MessageType Type,DWORD Timeout)
+bool CNotificationBar::Show(LPCTSTR pszText,MessageType Type,DWORD Timeout,bool fSkippable)
 {
 	if (m_hwnd==NULL || pszText==NULL)
 		return false;
@@ -96,32 +90,46 @@ bool CNotificationBar::Show(LPCTSTR pszText,MessageType Type,DWORD Timeout)
 		Info.hIcon=NULL;
 	}
 	Info.Timeout=Timeout;
+	Info.fSkippable=fSkippable;
 	m_MessageQueue.push_back(Info);
 
-	if (!GetVisible()) {
-		RECT rc;
+	EndTimer(TIMER_ID_SHOWANIMATION);
+	EndTimer(TIMER_ID_FADEANIMATION);
 
-		::GetClientRect(::GetParent(m_hwnd),&rc);
+	RECT rc;
+	GetBarPosition(&rc);
+
+	if (!GetVisible()) {
+		while (m_MessageQueue.size()>1)
+			m_MessageQueue.pop_front();
 		::BringWindowToTop(m_hwnd);
+		if (m_fAnimate)
+			GetAnimatedBarPosition(&rc,0,SHOW_ANIMATION_COUNT);
+		SetPosition(&rc);
+		SetVisible(true);
+		Update();
 		if (m_fAnimate) {
-			for (int i=0;i<4;i++) {
-				rc.bottom=(i+1)*m_BarHeight/4;
-				SetPosition(&rc);
-				if (i==0)
-					SetVisible(true);
-				Update();
-				if (i<3)
-					::Sleep(50);
-			}
-		} else {
-			rc.bottom=m_BarHeight;
-			SetPosition(&rc);
-			SetVisible(true);
-			Update();
+			m_TimerCount=0;
+			BeginTimer(TIMER_ID_SHOWANIMATION,SHOW_ANIMATION_INTERVAL);
+		} else if (Timeout!=0) {
+			BeginTimer(TIMER_ID_HIDE,Timeout);
 		}
-		if (Timeout!=0)
-			::SetTimer(m_hwnd,TIMER_ID_HIDE,Timeout,NULL);
+	} else {
+		if (m_MessageQueue.size()>1) {
+			auto itr=m_MessageQueue.begin()+(m_MessageQueue.size()-2);
+			if (itr->fSkippable) {
+				m_MessageQueue.erase(itr);
+				if (m_MessageQueue.size()==1)
+					EndTimer(TIMER_ID_HIDE);
+			}
+		}
+		SetPosition(&rc);
+		Redraw();
+		Timeout=m_MessageQueue.front().Timeout;
+		if (Timeout!=0 && !IsTimerEnabled(TIMER_ID_HIDE))
+			BeginTimer(TIMER_ID_HIDE,Timeout);
 	}
+
 	return true;
 }
 
@@ -131,17 +139,19 @@ bool CNotificationBar::Hide()
 	if (m_hwnd==NULL)
 		return false;
 
-	RECT rc;
+	EndAllTimers();
 
-	GetPosition(&rc);
 	if (m_fAnimate) {
-		for (int i=0;i<3;i++) {
-			rc.bottom=(3-i)*m_BarHeight/4;
-			SetPosition(&rc);
-			Update();
-			::Sleep(50);
-		}
+		RECT rc;
+
+		GetAnimatedBarPosition(&rc,FADE_ANIMATION_COUNT-1,FADE_ANIMATION_COUNT);
+		SetPosition(&rc);
+		Redraw();
+		m_TimerCount=0;
+		if (BeginTimer(TIMER_ID_FADEANIMATION,FADE_ANIMATION_INTERVAL))
+			return true;
 	}
+
 	SetVisible(false);
 	m_MessageQueue.clear();
 
@@ -184,34 +194,61 @@ void CNotificationBar::CalcBarHeight()
 }
 
 
-CNotificationBar *CNotificationBar::GetThis(HWND hwnd)
+void CNotificationBar::GetBarPosition(RECT *pRect) const
 {
-	return static_cast<CNotificationBar*>(GetBasicWindow(hwnd));
+	::GetClientRect(::GetParent(m_hwnd),pRect);
+	pRect->bottom=m_BarHeight;
 }
 
 
-LRESULT CALLBACK CNotificationBar::WndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
+void CNotificationBar::GetAnimatedBarPosition(RECT *pRect,int Frame,int NumFrames) const
+{
+	GetBarPosition(pRect);
+	pRect->bottom=(Frame+1)*m_BarHeight/NumFrames;
+}
+
+
+void CNotificationBar::SetHideTimer()
+{
+	if (!m_MessageQueue.empty()) {
+		DWORD Timeout=m_MessageQueue.front().Timeout;
+		if (Timeout!=0)
+			BeginTimer(TIMER_ID_HIDE,Timeout);
+		else
+			EndTimer(TIMER_ID_HIDE);
+	}
+}
+
+
+LRESULT CNotificationBar::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 {
 	switch (uMsg) {
 	case WM_CREATE:
 		{
-			CNotificationBar *pThis=static_cast<CNotificationBar*>(OnCreate(hwnd,lParam));
+			if (!m_Font.IsCreated()) {
+				LOGFONT lf;
+				DrawUtil::GetSystemFont(DrawUtil::FONT_MESSAGE,&lf);
+				lf.lfHeight=-14;
+				m_Font.Create(&lf);
+			}
 
-			pThis->CalcBarHeight();
+			CalcBarHeight();
+
+			InitializeTimer(hwnd);
+			m_TimerCount=0;
 		}
 		return 0;
 
 	case WM_PAINT:
 		{
-			CNotificationBar *pThis=GetThis(hwnd);
 			PAINTSTRUCT ps;
 			RECT rc;
 
 			::BeginPaint(hwnd,&ps);
 			::GetClientRect(hwnd,&rc);
-			Theme::FillGradient(ps.hdc,&rc,&pThis->m_BackGradient);
-			if (!pThis->m_MessageQueue.empty()) {
-				const MessageInfo &Info=pThis->m_MessageQueue.front();
+			Theme::FillGradient(ps.hdc,&rc,&m_BackGradient);
+			if (!m_MessageQueue.empty()) {
+				const MessageInfo &Info=m_MessageQueue.front();
 
 				rc.left+=BAR_MARGIN;
 				rc.right-=BAR_MARGIN;
@@ -225,7 +262,7 @@ LRESULT CALLBACK CNotificationBar::WndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPA
 					}
 					DrawUtil::DrawText(ps.hdc,Info.Text.Get(),rc,
 						DT_SINGLELINE | DT_LEFT | DT_VCENTER | DT_NOPREFIX | DT_END_ELLIPSIS,
-						&pThis->m_Font,pThis->m_TextColor[Info.Type]);
+						&m_Font,m_TextColor[Info.Type]);
 				}
 			}
 			::EndPaint(hwnd,&ps);
@@ -233,22 +270,51 @@ LRESULT CALLBACK CNotificationBar::WndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPA
 		return 0;
 
 	case WM_TIMER:
-		{
-			CNotificationBar *pThis=GetThis(hwnd);
+		switch (wParam) {
+		case TIMER_ID_SHOWANIMATION:
+			{
+				RECT rc;
 
-			if (!pThis->m_MessageQueue.empty())
-				pThis->m_MessageQueue.pop_front();
-			if (pThis->m_MessageQueue.empty()) {
-				::KillTimer(hwnd,TIMER_ID_HIDE);
-				pThis->Hide();
-			} else {
-				pThis->Redraw();
-				DWORD Timeout=pThis->m_MessageQueue.front().Timeout;
-				if (Timeout>0)
-					::SetTimer(hwnd,TIMER_ID_HIDE,Timeout,NULL);
-				else
-					::KillTimer(hwnd,TIMER_ID_HIDE);
+				GetAnimatedBarPosition(&rc,m_TimerCount+1,SHOW_ANIMATION_COUNT);
+				SetPosition(&rc);
+				Update();
+				if (m_TimerCount<SHOW_ANIMATION_COUNT-2) {
+					m_TimerCount++;
+				} else {
+					EndTimer(TIMER_ID_SHOWANIMATION);
+					m_TimerCount=0;
+					SetHideTimer();
+				}
 			}
+			break;
+
+		case TIMER_ID_FADEANIMATION:
+			if (m_TimerCount<FADE_ANIMATION_COUNT-1) {
+				RECT rc;
+
+				GetAnimatedBarPosition(&rc,
+					FADE_ANIMATION_COUNT-2-m_TimerCount,FADE_ANIMATION_COUNT);
+				SetPosition(&rc);
+				Update();
+				m_TimerCount++;
+			} else {
+				SetVisible(false);
+				EndTimer(TIMER_ID_FADEANIMATION);
+				m_TimerCount=0;
+				m_MessageQueue.clear();
+			}
+			break;
+
+		case TIMER_ID_HIDE:
+			if (!m_MessageQueue.empty())
+				m_MessageQueue.pop_front();
+			if (m_MessageQueue.empty()) {
+				Hide();
+			} else {
+				Redraw();
+				SetHideTimer();
+			}
+			break;
 		}
 		return 0;
 
@@ -271,14 +337,7 @@ LRESULT CALLBACK CNotificationBar::WndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPA
 			::MapWindowPoints(hwnd,hwndParent,&pt,1);
 			return ::SendMessage(hwndParent,uMsg,wParam,MAKELPARAM(pt.x,pt.y));
 		}
-
-	case WM_DESTROY:
-		{
-			CNotificationBar *pThis=GetThis(hwnd);
-
-			pThis->OnDestroy();
-		}
-		return 0;
 	}
-	return ::DefWindowProc(hwnd,uMsg,wParam,lParam);
+
+	return CCustomWindow::OnMessage(hwnd,uMsg,wParam,lParam);
 }

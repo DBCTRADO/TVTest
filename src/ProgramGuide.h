@@ -14,6 +14,7 @@
 #include "Tooltip.h"
 #include "StatusView.h"
 #include "Settings.h"
+#include "WindowUtil.h"
 
 
 namespace ProgramGuide
@@ -65,6 +66,8 @@ public:
 	virtual bool GetName(LPTSTR pszName,int MaxName) const = 0;
 	virtual size_t GetGroupCount() const = 0;
 	virtual bool GetGroupName(size_t Group,LPTSTR pszName,int MaxName) const = 0;
+	virtual bool GetGroupID(size_t Group,TVTest::String *pID) const = 0;
+	virtual int ParseGroupID(LPCTSTR pszID) const = 0;
 	virtual size_t GetChannelCount(size_t Group) const = 0;
 	virtual const CChannelInfo *GetChannelInfo(size_t Group,size_t Channel) const = 0;
 	virtual bool GetBonDriver(LPTSTR pszFileName,int MaxLength) const = 0;
@@ -81,6 +84,8 @@ public:
 	virtual bool GetName(LPTSTR pszName,int MaxName) const override;
 	virtual size_t GetGroupCount() const override;
 	virtual bool GetGroupName(size_t Group,LPTSTR pszName,int MaxName) const override;
+	virtual bool GetGroupID(size_t Group,TVTest::String *pID) const override;
+	virtual int ParseGroupID(LPCTSTR pszID) const override;
 	virtual size_t GetChannelCount(size_t Group) const override;
 	virtual const CChannelInfo *GetChannelInfo(size_t Group,size_t Channel) const override;
 	virtual bool GetBonDriver(LPTSTR pszFileName,int MaxLength) const override;
@@ -317,9 +322,11 @@ public:
 	bool SetChannelProviderManager(CProgramGuideChannelProviderManager *pManager);
 	bool EnumChannelProvider(int Index,LPTSTR pszName,int MaxName) const;
 	bool SetCurrentChannelProvider(int Provider,int Group);
+	bool SetCurrentChannelProvider(int Provider,LPCTSTR pszGroupID);
 	int GetCurrentChannelProvider() const { return m_CurrentChannelProvider; }
 	int GetChannelGroupCount() const;
 	bool GetChannelGroupName(int Group,LPTSTR pszName,int MaxName) const;
+	int ParseChannelGroupID(LPCTSTR pszGroupID) const;
 	bool SetCurrentChannelGroup(int Group);
 	int GetCurrentChannelGroup() const { return m_CurrentChannelGroup; }
 	bool GetChannelList(CChannelList *pList,bool fVisibleOnly) const;
@@ -420,6 +427,8 @@ private:
 		POINT StartCursorPos;
 		POINT StartScrollPos;
 	} m_DragInfo;
+	CMouseWheelHandler m_VertWheel;
+	CMouseWheelHandler m_HorzWheel;
 	DrawUtil::CMonoColorBitmap m_Chevron;
 	CEpgIcons m_EpgIcons;
 	UINT m_VisibleEventIcons;
@@ -432,8 +441,7 @@ private:
 		CProgramGuide *m_pProgramGuide;
 	// CEventInfoPopupManager::CEventHandler
 		bool HitTest(int x,int y,LPARAM *pParam);
-		bool GetEventInfo(LPARAM Param,const CEventInfoData **ppInfo);
-		bool OnShow(const CEventInfoData *pInfo);
+		bool ShowPopup(LPARAM Param,CEventInfoPopup *pPopup);
 	// CEventInfoPopup::CEventHandler
 		bool OnMenuPopup(HMENU hmenu);
 		void OnMenuSelected(int Command);
