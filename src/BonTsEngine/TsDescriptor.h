@@ -18,21 +18,19 @@ class CBaseDesc
 {
 public:
 	CBaseDesc();
-	CBaseDesc(const CBaseDesc &Operand);
 	virtual ~CBaseDesc();
-	CBaseDesc & operator = (const CBaseDesc &Operand);
 
 	virtual void CopyDesc(const CBaseDesc *pOperand);
-	const bool ParseDesc(const BYTE *pHexData, const WORD wDataLength);
+	bool ParseDesc(const BYTE *pHexData, const WORD wDataLength);
 
-	const bool IsValid(void) const;
-	const BYTE GetTag(void) const;
-	const BYTE GetLength(void) const;
+	bool IsValid() const;
+	BYTE GetTag() const;
+	BYTE GetLength() const;
 
-	virtual void Reset(void);
+	virtual void Reset();
 
 protected:
-	virtual const bool StoreContents(const BYTE *pPayload);
+	virtual bool StoreContents(const BYTE *pPayload);
 
 	BYTE m_byDescTag;	// 記述子タグ
 	BYTE m_byDescLen;	// 記述子長
@@ -41,29 +39,48 @@ protected:
 
 
 /////////////////////////////////////////////////////////////////////////////
+// 記述子のテンプレートクラス
+/////////////////////////////////////////////////////////////////////////////
+
+template<typename T, BYTE Tag> class CDescTemplate : public CBaseDesc
+{
+public:
+	enum {DESC_TAG = Tag};
+
+	void CopyDesc(const CBaseDesc *pOperand) override
+	{
+		if (pOperand != this) {
+			const T *pSrcDesc = dynamic_cast<const T *>(pOperand);
+
+			if (pSrcDesc) {
+				*static_cast<T*>(this) = *pSrcDesc;
+			} else {
+				CBaseDesc::CopyDesc(pOperand);
+			}
+		}
+	}
+};
+
+
+/////////////////////////////////////////////////////////////////////////////
 // [0x09] Conditional Access Method 記述子抽象化クラス
 /////////////////////////////////////////////////////////////////////////////
 
-class CCaMethodDesc : public CBaseDesc
+class CCaMethodDesc : public CDescTemplate<CCaMethodDesc, 0x09>
 {
 public:
-	enum {DESC_TAG = 0x09U};
-
 	CCaMethodDesc();
-	CCaMethodDesc(const CCaMethodDesc &Operand);
-	CCaMethodDesc & operator = (const CCaMethodDesc &Operand);
 
 // CBaseDesc
-	virtual void CopyDesc(const CBaseDesc *pOperand);
-	virtual void Reset(void);
+	void Reset() override;
 
 // CCaMethodDesc
-	const WORD GetCaMethodID(void) const;
-	const WORD GetCaPID(void) const;
-	const CMediaData * GetPrivateData(void) const;
+	WORD GetCaMethodID() const;
+	WORD GetCaPID() const;
+	const CMediaData * GetPrivateData() const;
 
 protected:
-	virtual const bool StoreContents(const BYTE *pPayload);
+	bool StoreContents(const BYTE *pPayload) override;
 
 	WORD m_wCaMethodID;			// Conditional Access Method ID
 	WORD m_wCaPID;				// Conditional Access PID
@@ -75,26 +92,23 @@ protected:
 // [0x48] Service 記述子抽象化クラス
 /////////////////////////////////////////////////////////////////////////////
 
-class CServiceDesc : public CBaseDesc
+class CServiceDesc : public CDescTemplate<CServiceDesc, 0x48>
 {
 public:
-	enum {DESC_TAG = 0x48U};
-
 	CServiceDesc();
 	CServiceDesc(const CServiceDesc &Operand);
 	CServiceDesc & operator = (const CServiceDesc &Operand);
-	
+
 // CBaseDesc
-	virtual void CopyDesc(const CBaseDesc *pOperand);
-	virtual void Reset(void);
+	void Reset() override;
 
 // CServiceDesc
-	const BYTE GetServiceType(void) const;
-	const DWORD GetProviderName(LPTSTR lpszDst, int MaxLength) const;
-	const DWORD GetServiceName(LPTSTR lpszDst, int MaxLength) const;
+	BYTE GetServiceType() const;
+	DWORD GetProviderName(LPTSTR lpszDst, int MaxLength) const;
+	DWORD GetServiceName(LPTSTR lpszDst, int MaxLength) const;
 
 protected:
-	virtual const bool StoreContents(const BYTE *pPayload);
+	bool StoreContents(const BYTE *pPayload) override;
 
 	BYTE m_byServiceType;			// Service Type
 	TCHAR m_szProviderName[256];	// Service Provider Name
@@ -106,26 +120,23 @@ protected:
 // [0x4D] Short Event 記述子抽象化クラス
 /////////////////////////////////////////////////////////////////////////////
 
-class CShortEventDesc : public CBaseDesc
+class CShortEventDesc : public CDescTemplate<CShortEventDesc, 0x4D>
 {
 public:
-	enum {DESC_TAG = 0x4DU};
-
 	CShortEventDesc();
 	CShortEventDesc(const CShortEventDesc &Operand);
 	CShortEventDesc & operator = (const CShortEventDesc &Operand);
 
 // CBaseDesc
-	virtual void CopyDesc(const CBaseDesc *pOperand);
-	virtual void Reset(void);
+	void Reset() override;
 
 // CShortEventDesc
-	const DWORD GetLanguageCode(void) const;
-	const DWORD GetEventName(LPTSTR lpszDst, int MaxLength) const;
-	const DWORD GetEventDesc(LPTSTR lpszDst, int MaxLength) const;
+	DWORD GetLanguageCode() const;
+	DWORD GetEventName(LPTSTR lpszDst, int MaxLength) const;
+	DWORD GetEventDesc(LPTSTR lpszDst, int MaxLength) const;
 
 protected:
-	virtual const bool StoreContents(const BYTE *pPayload);
+	bool StoreContents(const BYTE *pPayload) override;
 
 	DWORD m_dwLanguageCode;			// ISO639  Language Code
 	TCHAR m_szEventName[256];		// Event Name
@@ -137,18 +148,13 @@ protected:
 // [0x4E] Extended Event 記述子抽象化クラス
 /////////////////////////////////////////////////////////////////////////////
 
-class CExtendedEventDesc : public CBaseDesc
+class CExtendedEventDesc : public CDescTemplate<CExtendedEventDesc, 0x4E>
 {
 public:
-	enum {DESC_TAG = 0x4EU};
-
 	CExtendedEventDesc();
-	CExtendedEventDesc(const CExtendedEventDesc &Operand);
-	CExtendedEventDesc & operator = (const CExtendedEventDesc &Operand);
 
 // CBaseDesc
-	virtual void CopyDesc(const CBaseDesc *pOperand);
-	virtual void Reset(void);
+	void Reset() override;
 
 // CExtendedEventDesc
 	enum {
@@ -167,7 +173,7 @@ public:
 	const ItemInfo * GetItem(int Index) const;
 
 protected:
-	virtual const bool StoreContents(const BYTE *pPayload);
+	bool StoreContents(const BYTE *pPayload) override;
 
 	BYTE m_DescriptorNumber;
 	BYTE m_LastDescriptorNumber;
@@ -180,24 +186,19 @@ protected:
 // [0x52] Stream Identifier 記述子抽象化クラス
 /////////////////////////////////////////////////////////////////////////////
 
-class CStreamIdDesc : public CBaseDesc
+class CStreamIdDesc : public CDescTemplate<CStreamIdDesc, 0x52>
 {
 public:
-	enum {DESC_TAG = 0x52U};
-
 	CStreamIdDesc();
-	CStreamIdDesc(const CStreamIdDesc &Operand);
-	CStreamIdDesc & operator = (const CStreamIdDesc &Operand);
 
 // CBaseDesc
-	virtual void CopyDesc(const CBaseDesc *pOperand);
-	virtual void Reset(void);
+	void Reset() override;
 
 // CStreamIdDesc
-	const BYTE GetComponentTag(void) const;
+	BYTE GetComponentTag(void) const;
 
 protected:
-	virtual const bool StoreContents(const BYTE *pPayload);
+	bool StoreContents(const BYTE *pPayload) override;
 
 	BYTE m_byComponentTag;		// Component Tag
 };
@@ -207,24 +208,21 @@ protected:
 // [0x40] Network Name 記述子抽象化クラス
 /////////////////////////////////////////////////////////////////////////////
 
-class CNetworkNameDesc : public CBaseDesc
+class CNetworkNameDesc : public CDescTemplate<CNetworkNameDesc, 0x40>
 {
 public:
-	enum {DESC_TAG = 0x40U};
-
 	CNetworkNameDesc();
 	CNetworkNameDesc(const CNetworkNameDesc &Operand);
 	CNetworkNameDesc & operator = (const CNetworkNameDesc &Operand);
 
 // CBaseDesc
-	virtual void CopyDesc(const CBaseDesc *pOperand);
-	virtual void Reset(void);
+	void Reset() override;
 
 // CNetworkNameDesc
-	const DWORD GetNetworkName(LPTSTR pszName, int MaxLength) const;
+	DWORD GetNetworkName(LPTSTR pszName, int MaxLength) const;
 
 protected:
-	virtual const bool StoreContents(const BYTE *pPayload);
+	bool StoreContents(const BYTE *pPayload) override;
 
 	TCHAR m_szNetworkName[32];
 };
@@ -234,18 +232,13 @@ protected:
 // [0x41] Service List 記述子抽象化クラス
 /////////////////////////////////////////////////////////////////////////////
 
-class CServiceListDesc : public CBaseDesc
+class CServiceListDesc : public CDescTemplate<CServiceListDesc, 0x41>
 {
 public:
-	enum {DESC_TAG = 0x41U};
-
 	CServiceListDesc();
-	CServiceListDesc(const CServiceListDesc &Operand);
-	CServiceListDesc & operator = (const CServiceListDesc &Operand);
 
 // CBaseDesc
-	virtual void CopyDesc(const CBaseDesc *pOperand);
-	virtual void Reset(void);
+	void Reset() override;
 
 // CServiceListDesc
 	struct ServiceInfo {
@@ -253,13 +246,13 @@ public:
 		BYTE ServiceType;
 	};
 
-	const int GetServiceNum() const;
-	const int GetServiceIndexByID(const WORD ServiceID) const;
-	const BYTE GetServiceTypeByID(const WORD ServiceID) const;
-	const bool GetServiceInfo(const int Index, ServiceInfo *pInfo) const;
+	int GetServiceNum() const;
+	int GetServiceIndexByID(const WORD ServiceID) const;
+	BYTE GetServiceTypeByID(const WORD ServiceID) const;
+	bool GetServiceInfo(const int Index, ServiceInfo *pInfo) const;
 
 protected:
-	virtual const bool StoreContents(const BYTE *pPayload);
+	bool StoreContents(const BYTE *pPayload) override;
 
 	std::vector<ServiceInfo> m_ServiceList;
 };
@@ -269,30 +262,25 @@ protected:
 // [0x43] Satellite Delivery System 記述子抽象化クラス
 /////////////////////////////////////////////////////////////////////////////
 
-class CSatelliteDeliverySystemDesc : public CBaseDesc
+class CSatelliteDeliverySystemDesc : public CDescTemplate<CSatelliteDeliverySystemDesc, 0x43>
 {
 public:
-	enum {DESC_TAG = 0x43U};
-
 	CSatelliteDeliverySystemDesc();
-	CSatelliteDeliverySystemDesc(const CSatelliteDeliverySystemDesc &Operand);
-	CSatelliteDeliverySystemDesc & operator = (const CSatelliteDeliverySystemDesc &Operand);
 
 // CBaseDesc
-	virtual void CopyDesc(const CBaseDesc *pOperand);
-	virtual void Reset(void);
+	void Reset() override;
 
 // CSatelliteDeliverySystemDesc
-	const DWORD GetFrequency() const;
-	const WORD GetOrbitalPosition() const;
-	const bool GetWestEastFlag() const;
-	const BYTE GetPolarization() const;
-	const BYTE GetModulation() const;
-	const DWORD GetSymbolRate() const;
-	const BYTE GetFECInner() const;
+	DWORD GetFrequency() const;
+	WORD GetOrbitalPosition() const;
+	bool GetWestEastFlag() const;
+	BYTE GetPolarization() const;
+	BYTE GetModulation() const;
+	DWORD GetSymbolRate() const;
+	BYTE GetFECInner() const;
 
 protected:
-	virtual const bool StoreContents(const BYTE *pPayload);
+	bool StoreContents(const BYTE *pPayload) override;
 
 	DWORD m_Frequency;
 	WORD m_OrbitalPosition;
@@ -308,28 +296,23 @@ protected:
 // [0xFA] Terrestrial Delivery System 記述子抽象化クラス
 /////////////////////////////////////////////////////////////////////////////
 
-class CTerrestrialDeliverySystemDesc : public CBaseDesc
+class CTerrestrialDeliverySystemDesc : public CDescTemplate<CTerrestrialDeliverySystemDesc, 0xFA>
 {
 public:
-	enum {DESC_TAG = 0xFAU};
-
 	CTerrestrialDeliverySystemDesc();
-	CTerrestrialDeliverySystemDesc(const CTerrestrialDeliverySystemDesc &Operand);
-	CTerrestrialDeliverySystemDesc & operator = (const CTerrestrialDeliverySystemDesc &Operand);
 
 // CBaseDesc
-	virtual void CopyDesc(const CBaseDesc *pOperand);
-	virtual void Reset(void);
+	void Reset() override;
 
 // CTerrestrialDeliverySystemDesc
-	const WORD GetAreaCode() const;
-	const BYTE GetGuardInterval() const;
-	const BYTE GetTransmissionMode() const;
-	const int GetFrequencyNum() const;
-	const WORD GetFrequency(const int Index) const;
+	WORD GetAreaCode() const;
+	BYTE GetGuardInterval() const;
+	BYTE GetTransmissionMode() const;
+	int GetFrequencyNum() const;
+	WORD GetFrequency(const int Index) const;
 
 protected:
-	virtual const bool StoreContents(const BYTE *pPayload);
+	bool StoreContents(const BYTE *pPayload) override;
 
 	WORD m_AreaCode;
 	BYTE m_GuardInterval;
@@ -342,26 +325,21 @@ protected:
 // [0xFE] System Management 記述子抽象化クラス
 /////////////////////////////////////////////////////////////////////////////
 
-class CSystemManageDesc : public CBaseDesc
+class CSystemManageDesc : public CDescTemplate<CSystemManageDesc, 0xFE>
 {
 public:
-	enum {DESC_TAG = 0xFEU};
-
 	CSystemManageDesc();
-	CSystemManageDesc(const CSystemManageDesc &Operand);
-	CSystemManageDesc & operator = (const CSystemManageDesc &Operand);
 
 // CBaseDesc
-	virtual void CopyDesc(const CBaseDesc *pOperand);
-	virtual void Reset(void);
+	void Reset() override;
 
 // CServiceDesc
-	const BYTE GetBroadcastingFlag(void) const;
-	const BYTE GetBroadcastingID(void) const;
-	const BYTE GetAdditionalBroadcastingID(void) const;
+	BYTE GetBroadcastingFlag() const;
+	BYTE GetBroadcastingID() const;
+	BYTE GetAdditionalBroadcastingID() const;
 
 protected:
-	virtual const bool StoreContents(const BYTE *pPayload);
+	bool StoreContents(const BYTE *pPayload) override;
 
 	BYTE m_byBroadcastingFlag;
 	BYTE m_byBroadcastingID;
@@ -373,25 +351,22 @@ protected:
 // [0xCD] TS Information 記述子抽象化クラス
 /////////////////////////////////////////////////////////////////////////////
 
-class CTSInfoDesc : public CBaseDesc
+class CTSInfoDesc : public CDescTemplate<CTSInfoDesc, 0xCD>
 {
 public:
-	enum {DESC_TAG = 0xCDU};
-
 	CTSInfoDesc();
 	CTSInfoDesc(const CTSInfoDesc &Operand);
 	CTSInfoDesc & operator = (const CTSInfoDesc &Operand);
 
 // CBaseDesc
-	virtual void CopyDesc(const CBaseDesc *pOperand);
-	virtual void Reset(void);
+	void Reset() override;
 
 // CTSInfoDesc
-	const BYTE GetRemoteControlKeyID(void) const;
-	const DWORD GetTSName(LPTSTR pszName, int MaxLength) const;
+	BYTE GetRemoteControlKeyID() const;
+	DWORD GetTSName(LPTSTR pszName, int MaxLength) const;
 
 protected:
-	virtual const bool StoreContents(const BYTE *pPayload);
+	bool StoreContents(const BYTE *pPayload) override;
 
 	BYTE m_byRemoteControlKeyID;
 	TCHAR m_szTSName[32];
@@ -402,28 +377,25 @@ protected:
 // [0x50] Component 記述子抽象化クラス
 /////////////////////////////////////////////////////////////////////////////
 
-class CComponentDesc : public CBaseDesc
+class CComponentDesc : public CDescTemplate<CComponentDesc, 0x50>
 {
 public:
-	enum {DESC_TAG = 0x50U};
-
 	CComponentDesc();
 	CComponentDesc(const CComponentDesc &Operand);
 	CComponentDesc & operator = (const CComponentDesc &Operand);
 
 // CBaseDesc
-	virtual void CopyDesc(const CBaseDesc *pOperand);
-	virtual void Reset(void);
+	void Reset() override;
 
 // CComponentDesc
-	const BYTE GetStreamContent(void) const;
-	const BYTE GetComponentType(void) const;
-	const BYTE GetComponentTag(void) const;
-	const DWORD GetLanguageCode(void) const;
-	const DWORD GetText(LPTSTR pszText, int MaxLength) const;
+	BYTE GetStreamContent() const;
+	BYTE GetComponentType() const;
+	BYTE GetComponentTag() const;
+	DWORD GetLanguageCode() const;
+	DWORD GetText(LPTSTR pszText, int MaxLength) const;
 
 protected:
-	virtual const bool StoreContents(const BYTE *pPayload);
+	bool StoreContents(const BYTE *pPayload) override;
 
 	BYTE m_StreamContent;
 	BYTE m_ComponentType;
@@ -437,34 +409,31 @@ protected:
 // [0xC4] Audio Component 記述子抽象化クラス
 /////////////////////////////////////////////////////////////////////////////
 
-class CAudioComponentDesc : public CBaseDesc
+class CAudioComponentDesc : public CDescTemplate<CAudioComponentDesc, 0xC4>
 {
 public:
-	enum {DESC_TAG = 0xC4U};
-
 	CAudioComponentDesc();
 	CAudioComponentDesc(const CAudioComponentDesc &Operand);
 	CAudioComponentDesc & operator = (const CAudioComponentDesc &Operand);
 
 // CBaseDesc
-	virtual void CopyDesc(const CBaseDesc *pOperand);
-	virtual void Reset(void);
+	void Reset() override;
 
 // CAudioComponentDesc
-	const BYTE GetStreamContent(void) const;
-	const BYTE GetComponentType(void) const;
-	const BYTE GetComponentTag(void) const;
-	const BYTE GetSimulcastGroupTag(void) const;
-	const bool GetESMultiLingualFlag(void) const;
-	const bool GetMainComponentFlag(void) const;
-	const BYTE GetQualityIndicator(void) const;
-	const BYTE GetSamplingRate(void) const;
-	const DWORD GetLanguageCode(void) const;
-	const DWORD GetLanguageCode2(void) const;
-	const DWORD GetText(LPTSTR pszText, int MaxLength) const;
+	BYTE GetStreamContent() const;
+	BYTE GetComponentType() const;
+	BYTE GetComponentTag() const;
+	BYTE GetSimulcastGroupTag() const;
+	bool GetESMultiLingualFlag() const;
+	bool GetMainComponentFlag() const;
+	BYTE GetQualityIndicator() const;
+	BYTE GetSamplingRate() const;
+	DWORD GetLanguageCode() const;
+	DWORD GetLanguageCode2() const;
+	DWORD GetText(LPTSTR pszText, int MaxLength) const;
 
 protected:
-	virtual const bool StoreContents(const BYTE *pPayload);
+	bool StoreContents(const BYTE *pPayload) override;
 
 	BYTE m_StreamContent;
 	BYTE m_ComponentType;
@@ -485,18 +454,13 @@ protected:
 // [0x54] Content 記述子抽象化クラス
 /////////////////////////////////////////////////////////////////////////////
 
-class CContentDesc : public CBaseDesc
+class CContentDesc : public CDescTemplate<CContentDesc, 0x54>
 {
 public:
-	enum {DESC_TAG = 0x54U};
-
 	CContentDesc();
-	CContentDesc(const CContentDesc &Operand);
-	CContentDesc & operator = (const CContentDesc &Operand);
 
 // CBaseDesc
-	virtual void CopyDesc(const CBaseDesc *pOperand);
-	virtual void Reset(void);
+	void Reset() override;
 
 // CContentDesc
 	struct Nibble {
@@ -518,7 +482,7 @@ public:
 	bool GetNibble(int Index, Nibble *pNibble) const;
 
 protected:
-	virtual const bool StoreContents(const BYTE *pPayload);
+	bool StoreContents(const BYTE *pPayload) override;
 
 	int m_NibbleCount;
 	Nibble m_NibbleList[7];
@@ -529,18 +493,13 @@ protected:
 // [0xCF] Logo Transmission 記述子抽象化クラス
 /////////////////////////////////////////////////////////////////////////////
 
-class CLogoTransmissionDesc : public CBaseDesc
+class CLogoTransmissionDesc : public CDescTemplate<CLogoTransmissionDesc, 0xCF>
 {
 public:
-	enum {DESC_TAG = 0xCFU};
-
 	CLogoTransmissionDesc();
-	CLogoTransmissionDesc(const CLogoTransmissionDesc &Operand);
-	CLogoTransmissionDesc & operator = (const CLogoTransmissionDesc &Operand);
 
 // CBaseDesc
-	virtual void CopyDesc(const CBaseDesc *pOperand);
-	virtual void Reset(void);
+	void Reset() override;
 
 // CLogoTransmissionDesc
 	// logo_transmission_type
@@ -564,7 +523,7 @@ public:
 	int GetLogoChar(char *pChar, int MaxLength) const;
 
 protected:
-	virtual const bool StoreContents(const BYTE *pPayload);
+	bool StoreContents(const BYTE *pPayload) override;
 
 	BYTE m_LogoTransmissionType;	// logo_transmission_type
 	WORD m_LogoID;					// logo_id
@@ -578,18 +537,15 @@ protected:
 // [0xD5] Series 記述子抽象化クラス
 /////////////////////////////////////////////////////////////////////////////
 
-class CSeriesDesc : public CBaseDesc
+class CSeriesDesc : public CDescTemplate<CSeriesDesc, 0xD5>
 {
 public:
-	enum {DESC_TAG = 0xD5U};
-
 	CSeriesDesc();
 	CSeriesDesc(const CSeriesDesc &Operand);
 	CSeriesDesc & operator = (const CSeriesDesc &Operand);
 
 // CBaseDesc
-	virtual void CopyDesc(const CBaseDesc *pOperand);
-	virtual void Reset(void);
+	void Reset() override;
 
 // CSeriesDesc
 	enum {
@@ -616,7 +572,7 @@ public:
 	int GetSeriesName(LPTSTR pszName, int MaxName) const;
 
 protected:
-	virtual const bool StoreContents(const BYTE *pPayload);
+	bool StoreContents(const BYTE *pPayload) override;
 
 	WORD m_SeriesID;
 	BYTE m_RepeatLabel;
@@ -633,18 +589,13 @@ protected:
 // [0xD6] Event Group 記述子抽象化クラス
 /////////////////////////////////////////////////////////////////////////////
 
-class CEventGroupDesc : public CBaseDesc
+class CEventGroupDesc : public CDescTemplate<CEventGroupDesc, 0xD6>
 {
 public:
-	enum {DESC_TAG = 0xD6U};
-
 	CEventGroupDesc();
-	CEventGroupDesc(const CEventGroupDesc &Operand);
-	CEventGroupDesc & operator = (const CEventGroupDesc &Operand);
 
 // CBaseDesc
-	virtual void CopyDesc(const CBaseDesc *pOperand);
-	virtual void Reset(void);
+	void Reset() override;
 
 // CEventGroupDesc
 	enum {
@@ -681,7 +632,7 @@ public:
 	bool GetEventInfo(int Index, EventInfo *pInfo) const;
 
 protected:
-	virtual const bool StoreContents(const BYTE *pPayload);
+	bool StoreContents(const BYTE *pPayload) override;
 
 	BYTE m_GroupType;
 	std::vector<EventInfo> m_EventList;
@@ -692,18 +643,13 @@ protected:
 // [0x58] Local Time Offset 記述子抽象化クラス
 /////////////////////////////////////////////////////////////////////////////
 
-class CLocalTimeOffsetDesc : public CBaseDesc
+class CLocalTimeOffsetDesc : public CDescTemplate<CLocalTimeOffsetDesc, 0x58>
 {
 public:
-	enum {DESC_TAG = 0x58U};
-
 	CLocalTimeOffsetDesc();
-	CLocalTimeOffsetDesc(const CLocalTimeOffsetDesc &Operand);
-	CLocalTimeOffsetDesc & operator = (const CLocalTimeOffsetDesc &Operand);
 
 // CBaseDesc
-	virtual void CopyDesc(const CBaseDesc *pOperand);
-	virtual void Reset(void);
+	void Reset() override;
 
 // CLocalTimeOffsetDesc
 	enum {
@@ -719,7 +665,7 @@ public:
 	int GetNextTimeOffset() const;
 
 protected:
-	virtual const bool StoreContents(const BYTE *pPayload);
+	bool StoreContents(const BYTE *pPayload) override;
 
 	struct TimeOffsetInfo {
 		bool bValid;
@@ -738,18 +684,15 @@ protected:
 // [0xC9] Download Content 記述子抽象化クラス
 /////////////////////////////////////////////////////////////////////////////
 
-class CDownloadContentDesc : public CBaseDesc
+class CDownloadContentDesc : public CDescTemplate<CDownloadContentDesc, 0xC9>
 {
 public:
 	enum {DESC_TAG = 0xC9U};
 
 	CDownloadContentDesc();
-	CDownloadContentDesc(const CDownloadContentDesc &Operand);
-	CDownloadContentDesc & operator = (const CDownloadContentDesc &Operand);
 
 // CBaseDesc
-	virtual void CopyDesc(const CBaseDesc *pOperand);
-	virtual void Reset(void);
+	void Reset() override;
 
 // CDownloadContentDesc
 	bool GetReboot() const;
@@ -761,7 +704,7 @@ public:
 	BYTE GetComponentTag() const;
 
 protected:
-	virtual const bool StoreContents(const BYTE *pPayload);
+	bool StoreContents(const BYTE *pPayload) override;
 
 	struct DownloadContentInfo
 	{
@@ -785,18 +728,15 @@ protected:
 // [0xCB] CA Contract Info 記述子抽象化クラス
 /////////////////////////////////////////////////////////////////////////////
 
-class CCaContractInfoDesc : public CBaseDesc
+class CCaContractInfoDesc : public CDescTemplate<CCaContractInfoDesc, 0xCB>
 {
 public:
-	enum {DESC_TAG = 0xCBU};
-
 	CCaContractInfoDesc();
 	CCaContractInfoDesc(const CCaContractInfoDesc &Operand);
 	CCaContractInfoDesc & operator = (const CCaContractInfoDesc &Operand);
 
 // CBaseDesc
-	virtual void CopyDesc(const CBaseDesc *pOperand);
-	virtual void Reset(void);
+	void Reset() override;
 
 // CCAContractInfoDesc
 	enum {
@@ -814,7 +754,7 @@ public:
 	int GetFeeName(LPTSTR pszName, int MaxName) const;
 
 protected:
-	virtual const bool StoreContents(const BYTE *pPayload);
+	bool StoreContents(const BYTE *pPayload) override;
 
 	WORD m_CaSystemID;
 	BYTE m_CaUnitID;
@@ -823,6 +763,30 @@ protected:
 	BYTE m_ContractVerificationInfoLength;
 	BYTE m_ContractVerificationInfo[MAX_VERIFICATION_INFO_LENGTH];
 	TCHAR m_szFeeName[MAX_FEE_NAME];
+};
+
+
+/////////////////////////////////////////////////////////////////////////////
+// [0xFB] 部分受信記述子抽象化クラス
+/////////////////////////////////////////////////////////////////////////////
+
+class CPartialReceptionDesc : public CDescTemplate<CPartialReceptionDesc, 0xFB>
+{
+public:
+	CPartialReceptionDesc();
+
+// CBaseDesc
+	void Reset() override;
+
+// CPartialReceptionDesc
+	BYTE GetServiceNum() const;
+	WORD GetServiceID(const BYTE Index) const;
+
+protected:
+	bool StoreContents(const BYTE *pPayload) override;
+
+	BYTE m_ServiceNum;
+	WORD m_ServiceList[3];
 };
 
 
@@ -838,12 +802,12 @@ public:
 	~CDescBlock();
 	CDescBlock & operator = (const CDescBlock &Operand);
 
-	const WORD ParseBlock(const BYTE *pHexData, const WORD wDataLength);
+	WORD ParseBlock(const BYTE *pHexData, const WORD wDataLength);
 	const CBaseDesc * ParseBlock(const BYTE *pHexData, const WORD wDataLength, const BYTE byTag);
 
-	virtual void Reset(void);
+	virtual void Reset();
 
-	const WORD GetDescNum(void) const;
+	WORD GetDescNum() const;
 	const CBaseDesc * GetDescByIndex(const WORD wIndex = 0U) const;
 	const CBaseDesc * GetDescByTag(const BYTE byTag) const;
 

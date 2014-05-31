@@ -19,22 +19,24 @@
 #define FULLSCREEN_WINDOW_CLASS	APP_NAME TEXT(" Fullscreen")
 
 // (*) が付いたものは、変えると異なるバージョン間での互換性が無くなるので注意
-#define WM_APP_SERVICEUPDATE	(WM_APP+0)
-#define WM_APP_CHANNELCHANGE	(WM_APP+1)
-#define WM_APP_IMAGESAVE		(WM_APP+2)
-#define WM_APP_TRAYICON			(WM_APP+3)
-#define WM_APP_EXECUTE			(WM_APP+4)
-#define WM_APP_QUERYPORT		(WM_APP+5)	// (*)
-#define WM_APP_FILEWRITEERROR	(WM_APP+6)
-#define WM_APP_VIDEOSIZECHANGED	(WM_APP+7)
-#define WM_APP_EMMPROCESSED		(WM_APP+8)
-#define WM_APP_ECMERROR			(WM_APP+9)
-#define WM_APP_ECMREFUSED		(WM_APP+10)
-#define WM_APP_CONTROLLERFOCUS	(WM_APP+11)	// (*)
-#define WM_APP_EPGLOADED		(WM_APP+12)
-#define WM_APP_PLUGINMESSAGE	(WM_APP+13)
-#define WM_APP_CARDREADERHUNG	(WM_APP+14)
-#define WM_APP_SERVICECHANGED	(WM_APP+15)
+#define WM_APP_SERVICEUPDATE			(WM_APP+0)
+#define WM_APP_CHANNELCHANGE			(WM_APP+1)
+#define WM_APP_IMAGESAVE				(WM_APP+2)
+#define WM_APP_TRAYICON					(WM_APP+3)
+#define WM_APP_EXECUTE					(WM_APP+4)
+#define WM_APP_QUERYPORT				(WM_APP+5)	// (*)
+#define WM_APP_FILEWRITEERROR			(WM_APP+6)
+#define WM_APP_VIDEOSIZECHANGED			(WM_APP+7)
+#define WM_APP_EMMPROCESSED				(WM_APP+8)
+#define WM_APP_ECMERROR					(WM_APP+9)
+#define WM_APP_ECMREFUSED				(WM_APP+10)
+#define WM_APP_CONTROLLERFOCUS			(WM_APP+11)	// (*)
+#define WM_APP_EPGLOADED				(WM_APP+12)
+#define WM_APP_PLUGINMESSAGE			(WM_APP+13)
+#define WM_APP_CARDREADERHUNG			(WM_APP+14)
+#define WM_APP_SERVICECHANGED			(WM_APP+15)
+#define WM_APP_VIDEOSTREAMTYPECHANGED	(WM_APP+16)
+#define WM_APP_CHANGECASLIBRARY			(WM_APP+17)
 
 enum {
 	CONTAINER_ID_VIEW=1,
@@ -63,7 +65,7 @@ public:
 	bool Create(HWND hwndParent,int ViewID,int ContainerID,HWND hwndMessage);
 	bool EnableViewer(bool fEnable);
 	bool IsViewerEnabled() const { return m_fEnabled; }
-	bool BuildViewer();
+	bool BuildViewer(BYTE VideoStreamType=0);
 	bool CloseViewer();
 	CViewWindow &GetViewWindow() { return m_ViewWindow; }
 	const CViewWindow &GetViewWindow() const { return m_ViewWindow; }
@@ -168,7 +170,7 @@ public:
 	void ShowNotificationBar(LPCTSTR pszText,
 							 CNotificationBar::MessageType Type=CNotificationBar::MESSAGE_INFO,
 							 DWORD Duration=0,bool fSkippable=false);
-	void AdjustWindowSize(int Width,int Height);
+	void AdjustWindowSize(int Width,int Height,bool fScreenSize=true);
 	bool ReadSettings(CSettings &Settings);
 	bool WriteSettings(CSettings &Settings);
 	void SetStatusBarVisible(bool fVisible);
@@ -187,6 +189,10 @@ public:
 	int GetPanelPaneIndex() const;
 	bool IsFullscreenPanelVisible() const { return m_Fullscreen.IsPanelVisible(); }
 	int GetAspectRatioType() const { return m_AspectRatioType; }
+
+	bool EnablePlayback(bool fEnable);
+	bool IsPlaybackEnabled() const { return m_fEnablePlayback; }
+
 	bool InitStandby();
 	bool InitMinimize();
 	ResumeInfo &GetResumeInfo() { return m_Resume; }
@@ -266,9 +272,30 @@ private:
 	};
 	bool m_fViewWindowEdge;
 
+	bool m_fEnablePlayback;
+
 	bool m_fStandbyInit;
 	bool m_fMinimizeInit;
 	ResumeInfo m_Resume;
+
+	enum WindowSizeMode {
+		WINDOW_SIZE_HD,
+		WINDOW_SIZE_1SEG
+	};
+	struct WindowSize {
+		int Width;
+		int Height;
+		WindowSize() : Width(0), Height(0) {}
+		WindowSize &operator=(const RECT &rc) {
+			Width=rc.right-rc.left;
+			Height=rc.bottom-rc.top;
+			return *this;
+		}
+		bool IsValid() const { return Width>0 && Height>0; }
+	};
+	WindowSizeMode m_WindowSizeMode;
+	WindowSize m_HDWindowSize;
+	WindowSize m_1SegWindowSize;
 
 	struct EpgChannelGroup {
 		int Space;
@@ -360,7 +387,7 @@ private:
 
 // CUISkin
 	HWND GetMainWindow() const override { return m_hwnd; }
-	bool InitializeViewer() override;
+	bool InitializeViewer(BYTE VideoStreamType=0) override;
 	bool FinalizeViewer() override;
 	bool EnableViewer(bool fEnable) override;
 	bool IsViewerEnabled() const override;
@@ -384,6 +411,7 @@ private:
 	void OnServiceChanged() override;
 	void OnRecordingStarted() override;
 	void OnRecordingStopped() override;
+	void On1SegModeChanged(bool f1SegMode) override;
 
 // COSDManager::CEventHandler
 	bool GetOSDWindow(HWND *phwndParent,RECT *pRect,bool *pfForcePseudoOSD) override;
@@ -392,6 +420,7 @@ private:
 // CMainWindow
 	LRESULT OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam);
 	bool OnCreate(const CREATESTRUCT *pcs);
+	void OnDestroy();
 	void OnSizeChanged(UINT State,int Width,int Height);
 	bool OnSizeChanging(UINT Edge,RECT *pRect);
 	void OnMouseMove(int x,int y);

@@ -16,6 +16,7 @@ namespace EpgUtil
 	};
 
 	VideoType GetVideoType(BYTE ComponentType);
+	LPCTSTR GetComponentTypeText(BYTE StreamContent,BYTE ComponentType);
 	LPCTSTR GetVideoComponentTypeText(BYTE ComponentType);
 	LPCTSTR GetAudioComponentTypeText(BYTE ComponentType);
 
@@ -40,8 +41,13 @@ namespace EpgUtil
 		LANGUAGE_TEXT_SIMPLE,
 		LANGUAGE_TEXT_SHORT
 	};
+	enum {
+		MAX_LANGUAGE_TEXT_LENGTH = 16
+	};
 
-	LPCTSTR GetLanguageText(DWORD LanguageCode,LanguageTextType Type=LANGUAGE_TEXT_LONG);
+	bool GetLanguageText(DWORD LanguageCode,
+						 LPTSTR pszText,int MaxText,
+						 LanguageTextType Type=LANGUAGE_TEXT_LONG);
 
 }
 

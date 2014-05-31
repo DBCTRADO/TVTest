@@ -16,7 +16,7 @@ static char THIS_FILE[]=__FILE__;
 #define MAX_ZOOM_TEXT 64
 
 
-#ifdef TVH264_FOR_1SEG
+#ifdef TVTEST_FOR_1SEG
 #define f1Seg true
 #define BASE_WIDTH 320
 #define BASE_HEIGHT 180

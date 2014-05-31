@@ -17,8 +17,9 @@ public:
 	bool IsDataAvailable();
 	bool IsBufferFull();
 	void Reset();
-	bool EnableSync(bool bEnable);
+	bool EnableSync(bool bEnable,bool b1Seg=false);
 	bool IsSyncEnabled() const { return m_bEnableSync; }
+	bool IsSyncFor1Seg() const { return m_bSyncFor1Seg; }
 	void SetVideoPID(WORD PID);
 	void SetAudioPID(WORD PID);
 
@@ -32,6 +33,7 @@ private:
 	DWORD m_BufferPos;
 
 	bool m_bEnableSync;
+	bool m_bSyncFor1Seg;
 	LONGLONG m_VideoPTS;
 	LONGLONG m_VideoPTSPrev;
 	LONGLONG m_AudioPTS;

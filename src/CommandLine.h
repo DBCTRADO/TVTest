@@ -21,10 +21,14 @@ public:
 	bool m_fStandby;
 	bool m_fNoView;
 	bool m_fNoDirectShow;
+	bool m_fMpeg2;
+	bool m_fH264;
+	bool m_fH265;
 	bool m_fSilent;
 	bool m_fInitialSettings;
 	bool m_fSaveLog;
 	bool m_fNoEpg;
+	bool m_f1Seg;
 	int m_TvRockDID;
 
 	int m_Channel;

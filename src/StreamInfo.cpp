@@ -3,6 +3,7 @@
 #include "AppMain.h"
 #include "StreamInfo.h"
 #include "DialogUtil.h"
+#include "BonTsEngine/TsInformation.h"
 #include "resource.h"
 
 #ifdef _DEBUG
@@ -179,76 +180,17 @@ INT_PTR CStreamInfo::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 }
 
 
-static LPCTSTR GetStreamTypeText(BYTE StreamType)
+static void FormatEsInfo(LPCTSTR pszName,int Index,const CTsAnalyzer::EsInfo &Es,
+						 LPTSTR pszText,int MaxText)
 {
-	switch (StreamType) {
-	case STREAM_TYPE_MPEG1:	return TEXT("MPEG-1");
-	case STREAM_TYPE_MPEG2:	return TEXT("MPEG-2");
-	case STREAM_TYPE_AAC:	return TEXT("AAC");
-	case STREAM_TYPE_H264:	return TEXT("H.264");
-	}
-	return TEXT("Unknown");
-}
-
-static LPCTSTR GetAreaText(WORD AreaCode)
-{
-	switch (AreaCode) {
-	// 広域符号
-	case 0x5A5:	return TEXT("関東広域圏");
-	case 0x72A:	return TEXT("中京広域圏");
-	case 0x8D5:	return TEXT("近畿広域圏");
-	case 0x699:	return TEXT("鳥取・島根圏");
-	case 0x553:	return TEXT("岡山・香川圏");
-	// 県域符号
-	case 0x16B:	return TEXT("北海道");
-	case 0x467:	return TEXT("青森");
-	case 0x5D4:	return TEXT("岩手");
-	case 0x758:	return TEXT("宮城");
-	case 0xAC6:	return TEXT("秋田");
-	case 0xE4C:	return TEXT("山形");
-	case 0x1AE:	return TEXT("福島");
-	case 0xC69:	return TEXT("茨城");
-	case 0xE38:	return TEXT("栃木");
-	case 0x98B:	return TEXT("群馬");
-	case 0x64B:	return TEXT("埼玉");
-	case 0x1C7:	return TEXT("千葉");
-	case 0xAAC:	return TEXT("東京");
-	case 0x56C:	return TEXT("神奈川");
-	case 0x4CE:	return TEXT("新潟");
-	case 0x539:	return TEXT("富山");
-	case 0x6A6:	return TEXT("石川");
-	case 0x92D:	return TEXT("福井");
-	case 0xD4A:	return TEXT("山梨");
-	case 0x9D2:	return TEXT("長野");
-	case 0xA65:	return TEXT("岐阜");
-	case 0xA5A:	return TEXT("静岡");
-	case 0x966:	return TEXT("愛知");
-	case 0x2DC:	return TEXT("三重");
-	case 0xCE4:	return TEXT("滋賀");
-	case 0x59A:	return TEXT("京都");
-	case 0xCB2:	return TEXT("大阪");
-	case 0x674:	return TEXT("兵庫");
-	case 0xA93:	return TEXT("奈良");
-	case 0x396:	return TEXT("和歌山");
-	case 0xD23:	return TEXT("鳥取");
-	case 0x31B:	return TEXT("島根");
-	case 0x2B5:	return TEXT("岡山");
-	case 0xB31:	return TEXT("広島");
-	case 0xB98:	return TEXT("山口");
-	case 0xE62:	return TEXT("徳島");
-	case 0x9B4:	return TEXT("香川");
-	case 0x19D:	return TEXT("愛媛");
-	case 0x2E3:	return TEXT("高知");
-	case 0x62D:	return TEXT("福岡");
-	case 0x959:	return TEXT("佐賀");
-	case 0xA2B:	return TEXT("長崎");
-	case 0x8A7:	return TEXT("熊本");
-	case 0xC8D:	return TEXT("大分");
-	case 0xD1C:	return TEXT("宮崎");
-	case 0xD45:	return TEXT("鹿児島");
-	case 0x372:	return TEXT("沖縄");
-	}
-	return TEXT("?");
+	LPCTSTR pszStreamType=TsEngine::GetStreamTypeText(Es.StreamType);
+	StdUtil::snprintf(pszText,MaxText,
+		TEXT("%s%d : PID 0x%04x (%d) / stream type 0x%02x (%s) / component tag 0x%02x"),
+		pszName,Index+1,
+		Es.PID,Es.PID,
+		Es.StreamType,
+		pszStreamType!=NULL?pszStreamType:TEXT("?"),
+		Es.ComponentTag);
 }
 
 void CStreamInfo::SetService()
@@ -301,9 +243,7 @@ void CStreamInfo::SetService()
 	tvis.item.cChildren=!ServiceList.empty()?1:0;
 	hItem=TreeView_InsertItem(hwndTree,&tvis);
 	if (hItem!=NULL) {
-		int i,j;
-
-		for (i=0;i<(int)ServiceList.size();i++) {
+		for (int i=0;i<(int)ServiceList.size();i++) {
 			const CTsAnalyzer::ServiceInfo &ServiceInfo=ServiceList[i];
 			WORD ServiceID,PID;
 
@@ -317,7 +257,7 @@ void CStreamInfo::SetService()
 			ServiceID=ServiceInfo.ServiceID;
 			Length+=StdUtil::snprintf(szText+Length,lengthof(szText)-Length,
 									  TEXT(" : SID 0x%04x (%d)"),ServiceID,ServiceID);
-			if (ServiceInfo.ServiceType!=0xFF) {
+			if (ServiceInfo.ServiceType!=SERVICE_TYPE_INVALID) {
 				StdUtil::snprintf(szText+Length,lengthof(szText)-Length,
 								  TEXT(" / Type 0x%02x"),ServiceInfo.ServiceType);
 			}
@@ -329,40 +269,42 @@ void CStreamInfo::SetService()
 			StdUtil::snprintf(szText,lengthof(szText),TEXT("PMT : PID 0x%04x (%d)"),PID,PID);
 			TreeView_InsertItem(hwndTree,&tvis);
 
-			PID=ServiceInfo.VideoEs.PID;
-			if (PID!=CTsAnalyzer::PID_INVALID) {
-				BYTE StreamType=ServiceInfo.VideoStreamType;
-				StdUtil::snprintf(szText,lengthof(szText),
-					TEXT("映像 : PID 0x%04x (%d) / Type 0x%02x (%s) / Component tag 0x%02x"),
-					PID,PID,StreamType,GetStreamTypeText(StreamType),
-					ServiceInfo.VideoEs.ComponentTag);
+			int NumVideoStreams=(int)ServiceInfo.VideoEsList.size();
+			for (int j=0;j<NumVideoStreams;j++) {
+				FormatEsInfo(TEXT("映像"),j,ServiceInfo.VideoEsList[j],
+							 szText,lengthof(szText));
 				TreeView_InsertItem(hwndTree,&tvis);
 			}
 
 			int NumAudioStreams=(int)ServiceInfo.AudioEsList.size();
-			for (j=0;j<NumAudioStreams;j++) {
-				PID=ServiceInfo.AudioEsList[j].PID;
-				StdUtil::snprintf(szText,lengthof(szText),
-								  TEXT("音声%d : PID 0x%04x (%d) / Component tag 0x%02x"),
-								  j+1,PID,PID,ServiceInfo.AudioEsList[j].ComponentTag);
+			for (int j=0;j<NumAudioStreams;j++) {
+				FormatEsInfo(TEXT("音声"),j,ServiceInfo.AudioEsList[j],
+							 szText,lengthof(szText));
 				TreeView_InsertItem(hwndTree,&tvis);
 			}
 
 			int NumCaptionStreams=(int)ServiceInfo.CaptionEsList.size();
-			for (j=0;j<NumCaptionStreams;j++) {
+			for (int j=0;j<NumCaptionStreams;j++) {
 				PID=ServiceInfo.CaptionEsList[j].PID;
 				StdUtil::snprintf(szText,lengthof(szText),
-								  TEXT("字幕%d : PID 0x%04x (%d) / Component tag 0x%02x"),
+								  TEXT("字幕%d : PID 0x%04x (%d) / component tag 0x%02x"),
 								  j+1,PID,PID,ServiceInfo.CaptionEsList[j].ComponentTag);
 				TreeView_InsertItem(hwndTree,&tvis);
 			}
 
 			int NumDataStreams=(int)ServiceInfo.DataCarrouselEsList.size();
-			for (j=0;j<NumDataStreams;j++) {
+			for (int j=0;j<NumDataStreams;j++) {
 				PID=ServiceInfo.DataCarrouselEsList[j].PID;
 				StdUtil::snprintf(szText,lengthof(szText),
-								  TEXT("データ%d : PID 0x%04x (%d) / Component tag 0x%02x"),
+								  TEXT("データ%d : PID 0x%04x (%d) / component tag 0x%02x"),
 								  j+1,PID,PID,ServiceInfo.DataCarrouselEsList[j].ComponentTag);
+				TreeView_InsertItem(hwndTree,&tvis);
+			}
+
+			int NumOtherStreams=(int)ServiceInfo.OtherEsList.size();
+			for (int j=0;j<NumOtherStreams;j++) {
+				FormatEsInfo(TEXT("その他"),j,ServiceInfo.OtherEsList[j],
+							 szText,lengthof(szText));
 				TreeView_InsertItem(hwndTree,&tvis);
 			}
 
@@ -373,7 +315,7 @@ void CStreamInfo::SetService()
 			}
 
 			int NumEcmStreams=(int)ServiceInfo.EcmList.size();
-			for (j=0;j<NumEcmStreams;j++) {
+			for (int j=0;j<NumEcmStreams;j++) {
 				PID=ServiceInfo.EcmList[j].PID;
 				StdUtil::snprintf(szText,lengthof(szText),
 								  TEXT("ECM%d : PID 0x%04x (%d) / CA system ID 0x%02x"),
@@ -516,12 +458,13 @@ void CStreamInfo::SetService()
 		if (hItem!=NULL) {
 			for (int i=0;i<(int)TerrestrialList.size();i++) {
 				const CTsAnalyzer::TerrestrialDeliverySystemInfo &Info=TerrestrialList[i];
+				LPCTSTR pszArea=TsEngine::GetAreaText(Info.AreaCode);
 
 				StdUtil::snprintf(szText,lengthof(szText),
 					TEXT("TSID 0x%04x (%d) / エリア %s / ガードインターバル %s / 伝送モード %s"),
 					Info.TransportStreamID,
 					Info.TransportStreamID,
-					GetAreaText(Info.AreaCode),
+					pszArea!=NULL?pszArea:TEXT("?"),
 					Info.GuardInterval==0?TEXT("1/32"):
 					Info.GuardInterval==1?TEXT("1/16"):
 					Info.GuardInterval==2?TEXT("1/8"):

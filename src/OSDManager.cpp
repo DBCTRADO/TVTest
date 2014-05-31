@@ -164,7 +164,7 @@ bool COSDManager::ShowChannelOSD(const CChannelInfo *pInfo,bool fChanging)
 		hbmLogo=App.GetLogoManager()->GetAssociatedLogoBitmap(
 			pInfo->GetNetworkID(),pInfo->GetServiceID(),CLogoManager::LOGOTYPE_BIG);
 		if (hbmLogo!=NULL) {
-#ifndef TVH264_FOR_1SEG
+#ifndef TVTEST_FOR_1SEG
 			LogoHeight=36;
 #else
 			LogoHeight=18;

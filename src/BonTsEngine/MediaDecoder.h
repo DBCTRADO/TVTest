@@ -27,19 +27,19 @@ public:
 	CMediaDecoder(IEventHandler *pEventHandler = NULL, const DWORD dwInputNum = 1UL, const DWORD dwOutputNum = 1UL);
 	virtual ~CMediaDecoder() = 0;
 
-	virtual void Reset(void);
-	virtual void ResetGraph(void);
+	virtual void Reset();
+	virtual void ResetGraph();
 
-	virtual const DWORD GetInputNum(void) const;
-	virtual const DWORD GetOutputNum(void) const;
+	virtual DWORD GetInputNum() const;
+	virtual DWORD GetOutputNum() const;
 
-	const bool SetOutputDecoder(CMediaDecoder *pDecoder, const DWORD dwOutputIndex = 0UL, const DWORD dwInputIndex = 0UL);
+	bool SetOutputDecoder(CMediaDecoder *pDecoder, const DWORD dwOutputIndex = 0UL, const DWORD dwInputIndex = 0UL);
 	virtual const bool InputMedia(CMediaData *pMediaData, const DWORD dwInputIndex = 0UL);
 
 protected:
-	const bool OutputMedia(CMediaData *pMediaData, const DWORD dwOutptIndex = 0UL);
-	void ResetDownstreamDecoder(void);
-	const DWORD SendDecoderEvent(const DWORD dwEventID, PVOID pParam = NULL);
+	bool OutputMedia(CMediaData *pMediaData, const DWORD dwOutptIndex = 0UL);
+	void ResetDownstreamDecoder();
+	DWORD SendDecoderEvent(const DWORD dwEventID, PVOID pParam = NULL);
 
 	// 出力ピンデータベース
 	struct TAG_OUTPUTDECODER

@@ -83,15 +83,15 @@ const DWORD CAribString::AribToString(TCHAR *lpszDst, const DWORD dwDstLen, cons
 }
 
 const DWORD CAribString::CaptionToString(TCHAR *lpszDst, const DWORD dwDstLen, const BYTE *pSrcData, const DWORD dwSrcLen,
-										 FormatList *pFormatList, IDRCSMap *pDRCSMap)
+										 const bool b1Seg, FormatList *pFormatList, IDRCSMap *pDRCSMap)
 {
 	CAribString WorkObject;
 
-	return WorkObject.AribToStringInternal(lpszDst, dwDstLen, pSrcData, dwSrcLen, true, pFormatList, pDRCSMap);
+	return WorkObject.AribToStringInternal(lpszDst, dwDstLen, pSrcData, dwSrcLen, true, b1Seg, pFormatList, pDRCSMap);
 }
 
 const DWORD CAribString::AribToStringInternal(TCHAR *lpszDst, const DWORD dwDstLen, const BYTE *pSrcData, const DWORD dwSrcLen,
-	bool bCaption, FormatList *pFormatList, IDRCSMap *pDRCSMap)
+	const bool bCaption, const bool b1Seg, FormatList *pFormatList, IDRCSMap *pDRCSMap)
 {
 	if (pSrcData == NULL || lpszDst == NULL || dwDstLen == 0)
 		return 0UL;
@@ -107,13 +107,11 @@ const DWORD CAribString::AribToStringInternal(TCHAR *lpszDst, const DWORD dwDstL
 
 	m_pLockingGL = &m_CodeG[0];
 	m_pLockingGR = &m_CodeG[2];
-#ifdef BONTSENGINE_1SEG_SUPPORT
-	if (bCaption) {
+	if (bCaption && b1Seg) {
 		m_CodeG[1] = CODE_DRCS_1;
 		m_pLockingGL = &m_CodeG[1];
 		m_pLockingGR = &m_CodeG[0];
 	}
-#endif
 
 	m_CharSize = SIZE_NORMAL;
 	if (bCaption) {

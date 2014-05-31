@@ -14,7 +14,6 @@
 #include "MediaTee.h"
 //#include "FileWriter.h"
 #include "BufferedFileWriter.h"
-//#include "FileReader.h"
 #include "MediaBuffer.h"
 #include "MediaGrabber.h"
 #include "TsSelector.h"
@@ -34,6 +33,7 @@ class CDtvEngine : protected CMediaDecoder::IEventHandler, public CBonBaseClass
 public:
 	enum {
 		SID_INVALID     = 0xFFFF,
+		SID_DEFAULT     = 0xFFFF,
 		SERVICE_INVALID = 0xFFFF,
 		SERVICE_DEFAULT = 0xFFFF
 	};
@@ -49,6 +49,7 @@ public:
 		virtual void OnServiceInfoUpdated(CTsAnalyzer *pTsAnalyzer) {}
 		virtual void OnServiceChanged(WORD ServiceID) {}
 		virtual void OnFileWriteError(CBufferedFileWriter *pFileWriter) {}
+		virtual void OnVideoStreamTypeChanged(BYTE StreamType) {}
 		virtual void OnVideoSizeChanged(CMediaViewer *pMediaViewer) {}
 		virtual void OnEmmProcessed() {}
 		virtual void OnEmmError(LPCTSTR pszText) {}
@@ -57,64 +58,83 @@ public:
 		virtual void OnCardReaderHung() {}
 	};
 
+	struct ServiceSelectInfo
+	{
+		WORD ServiceID;
+		bool bFollowViewableService;
+		bool bPrefer1Seg;
+		WORD PreferredServiceIndex;
+
+		ServiceSelectInfo()
+			: ServiceID(SID_DEFAULT)
+			, bFollowViewableService(false)
+			, bPrefer1Seg(false)
+			, PreferredServiceIndex(SERVICE_INVALID)
+		{
+		}
+
+		void Reset() { *this = ServiceSelectInfo(); }
+	};
+
 	CDtvEngine(void);
 	~CDtvEngine(void);
 
-	const bool BuildEngine(CEventHandler *pEventHandler,
-						   bool bDescramble = true,
-						   bool bBuffering = false,
-						   bool bEventManager = true);
-	const bool IsEngineBuild() const { return m_bBuiled; };
-	const bool IsBuildComplete() const;
-	const bool CloseEngine(void);
-	const bool ResetEngine(void);
+	bool BuildEngine(CEventHandler *pEventHandler,
+					 bool bDescramble = true,
+					 bool bBuffering = false,
+					 bool bEventManager = true);
+	bool IsEngineBuild() const { return m_bBuiled; };
+	bool IsBuildComplete() const;
+	bool CloseEngine(void);
+	bool ResetEngine(void);
 
-	const bool OpenBonDriver(LPCTSTR pszFileName);
-	const bool ReleaseSrcFilter();
-	const bool IsSrcFilterOpen() const;
+	bool OpenBonDriver(LPCTSTR pszFileName);
+	bool ReleaseSrcFilter();
+	bool IsSrcFilterOpen() const;
 
-	const bool EnablePreview(const bool bEnable = true);
-	const bool SetViewSize(const int x,const int y);
-	const bool SetVolume(const float fVolume);
-	const bool GetVideoSize(WORD *pwWidth,WORD *pwHeight);
-	const bool GetVideoAspectRatio(BYTE *pbyAspectRateX,BYTE *pbyAspectRateY);
-	const BYTE GetAudioChannelNum();
-	const int GetAudioStreamNum(const int Service = -1);
-	const bool SetAudioStream(int StreamIndex);
-	const int GetAudioStream() const;
-	const BYTE GetAudioComponentType(const int AudioIndex = -1);
-	const int GetAudioComponentText(LPTSTR pszText, int MaxLength, const int AudioIndex = -1);
-	const bool SetStereoMode(int iMode);
-	const WORD GetEventID(bool bNext = false);
-	const int GetEventName(LPTSTR pszName, int MaxLength, bool bNext = false);
-	const int GetEventText(LPTSTR pszText, int MaxLength, bool bNext = false);
-	const int GetEventExtendedText(LPTSTR pszText, int MaxLength, bool bNext = false);
-	const bool GetEventTime(SYSTEMTIME *pStartTime, DWORD *pDuration, bool bNext = false);
-	const bool GetEventSeriesInfo(CTsAnalyzer::EventSeriesInfo *pInfo, bool bNext = false);
-	const bool GetEventInfo(CTsAnalyzer::EventInfo *pInfo, bool bNext = false);
-	const bool GetEventAudioInfo(CTsAnalyzer::EventAudioInfo *pInfo, const int AudioIndex = -1, bool bNext = false);
-	const bool GetVideoDecoderName(LPWSTR lpName,int iBufLen);
+	bool SetChannel(const BYTE byTuningSpace, const WORD wChannel,
+					const ServiceSelectInfo *pServiceSelInfo = NULL);
+	bool SetService(const ServiceSelectInfo *pServiceSelInfo, const bool bReserve = true);
+	bool SetServiceByID(const WORD ServiceID, const bool bReserve = true);
+	bool SetServiceByIndex(const WORD Service);
+	bool GetServiceID(WORD *pServiceID);
 
-	const bool SetChannel(const BYTE byTuningSpace, const WORD wChannel, const WORD ServiceID = SID_INVALID, const bool bFollowViewableService = false);
-	const bool SetServiceByID(const WORD ServiceID, const bool bReserve = true);
-	const bool SetServiceByIndex(const WORD Service);
-	const bool GetServiceID(WORD *pServiceID);
+	WORD GetEventID(bool bNext = false);
+	int GetEventName(LPTSTR pszName, int MaxLength, bool bNext = false);
+	int GetEventText(LPTSTR pszText, int MaxLength, bool bNext = false);
+	int GetEventExtendedText(LPTSTR pszText, int MaxLength, bool bNext = false);
+	bool GetEventTime(SYSTEMTIME *pStartTime, DWORD *pDuration, bool bNext = false);
+	bool GetEventSeriesInfo(CTsAnalyzer::EventSeriesInfo *pInfo, bool bNext = false);
+	bool GetEventInfo(CTsAnalyzer::EventInfo *pInfo, bool bNext = false);
+	bool GetEventAudioInfo(CTsAnalyzer::EventAudioInfo *pInfo, const int AudioIndex = -1, bool bNext = false);
 
-	const unsigned __int64 GetPcrTimeStamp();
+	unsigned __int64 GetPcrTimeStamp();
 
 	bool BuildMediaViewer(HWND hwndHost,HWND hwndMessage,
-		CVideoRenderer::RendererType VideoRenderer=CVideoRenderer::RENDERER_DEFAULT,
-		LPCWSTR pszMpeg2Decoder=NULL,LPCWSTR pszAudioDevice=NULL);
+		CVideoRenderer::RendererType VideoRenderer = CVideoRenderer::RENDERER_DEFAULT,
+		BYTE VideoStreamType = STREAM_TYPE_INVALID,
+		LPCWSTR pszVideoDecoder = NULL,
+		LPCWSTR pszAudioDevice = NULL);
 	bool RebuildMediaViewer(HWND hwndHost,HWND hwndMessage,
-		CVideoRenderer::RendererType VideoRenderer=CVideoRenderer::RENDERER_DEFAULT,
-		LPCWSTR pszMpeg2Decoder=NULL,LPCWSTR pszAudioDevice=NULL);
+		CVideoRenderer::RendererType VideoRenderer = CVideoRenderer::RENDERER_DEFAULT,
+		BYTE VideoStreamType = STREAM_TYPE_INVALID,
+		LPCWSTR pszVideoDecoder = NULL,
+		LPCWSTR pszAudioDevice = NULL);
 	bool CloseMediaViewer();
 	bool ResetMediaViewer();
+	bool EnableMediaViewer(const bool bEnable = true);
+	BYTE GetVideoStreamType() const;
+	BYTE GetAudioChannelNum();
+	int GetAudioStreamNum(const int Service = -1);
+	bool SetAudioStream(const int StreamIndex);
+	int GetAudioStream() const;
+	BYTE GetAudioComponentType(const int AudioIndex = -1);
+	int GetAudioComponentText(LPTSTR pszText, int MaxLength, const int AudioIndex = -1);
+
 	bool OpenCasCard(int Device, LPCTSTR pszReaderName = NULL);
 	bool CloseCasCard();
 	bool SetDescramble(bool bDescramble);
 	bool ResetBuffer();
-	bool GetOriginalVideoSize(WORD *pWidth,WORD *pHeight);
 	bool SetDescrambleService(WORD ServiceID);
 	bool SetDescrambleCurServiceOnly(bool bOnly);
 	bool GetDescrambleCurServiceOnly() const { return m_bDescrambleCurServiceOnly; }
@@ -137,7 +157,6 @@ public:
 	CMediaTee m_MediaTee;					// メディアティー
 	//CFileWriter m_FileWriter;				// ファイルライター
 	CBufferedFileWriter m_FileWriter;
-	//CFileReader m_FileReader;				// ファイルリーダー
 	CMediaBuffer m_MediaBuffer;
 	CMediaGrabber m_MediaGrabber;
 	CTsSelector m_TsSelector;
@@ -148,7 +167,7 @@ public:
 protected:
 	virtual const DWORD OnDecoderEvent(CMediaDecoder *pDecoder, const DWORD dwEventID, PVOID pParam);
 
-	bool SelectService(const WORD wService);
+	bool SelectService(WORD ServiceID);
 
 	CCriticalLock m_EngineLock;
 	CEventHandler *m_pEventHandler;
@@ -156,8 +175,8 @@ protected:
 	WORD m_wCurTransportStream;
 	WORD m_CurServiceIndex;
 	WORD m_CurServiceID;
-	WORD m_SpecServiceID;
-	bool m_bFollowViewableService;
+	ServiceSelectInfo m_ServiceSel;
+	BYTE m_VideoStreamType;
 	int m_CurAudioStream;
 
 	bool m_bBuiled;

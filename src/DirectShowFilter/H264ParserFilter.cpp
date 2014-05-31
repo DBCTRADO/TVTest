@@ -59,7 +59,6 @@ CH264ParserFilter::CH264ParserFilter(LPUNKNOWN pUnk, HRESULT *phr)
 #endif
 	  )
 	, m_bAdjustFrameRate(true)
-	, m_bAttachMediaType(false)
 {
 	TRACE(TEXT("CH264ParserFilter::CH264ParserFilter() %p\n"),this);
 
@@ -212,7 +211,7 @@ HRESULT CH264ParserFilter::StopStreaming()
 
 HRESULT CH264ParserFilter::BeginFlush()
 {
-	HRESULT hr = __super::BeginFlush();
+	HRESULT hr = CTransformFilter::BeginFlush();
 
 	CAutoLock Lock(&m_ParserLock);
 
@@ -393,14 +392,6 @@ bool CH264ParserFilter::SetAdjustFrameRate(bool bAdjust)
 }
 
 
-void CH264ParserFilter::SetAttachMediaType(bool bAttach)
-{
-	CAutoLock Lock(&m_ParserLock);
-
-	m_bAttachMediaType = bAttach;
-}
-
-
 void CH264ParserFilter::Reset()
 {
 	m_H264Parser.Reset();
@@ -483,24 +474,9 @@ void CH264ParserFilter::OnAccessUnit(const CH264Parser *pParser, const CH264Acce
 
 	WORD SarX = 0, SarY = 0;
 	if (pAccessUnit->GetSAR(&SarX, &SarY) && SarX != 0 && SarY != 0) {
-		DWORD Width = OrigWidth * SarX, Height = OrigHeight * SarY;
-
-		// ‚Æ‚è‚ ‚¦‚¸ 16:9 ‚Æ 4:3 ‚¾‚¯
-		if (Width * 9 == Height * 16) {
-			AspectX = 16;
-			AspectY = 9;
-		} else if (Width * 3 == Height * 4) {
-			AspectX = 4;
-			AspectY = 3;
-		}
+		SARToDAR(SarX, SarY, OrigWidth, OrigHeight, &AspectX, &AspectY);
 	} else {
-		if (OrigWidth * 9 == OrigHeight * 16) {
-			AspectX = 16;
-			AspectY = 9;
-		} else if (OrigWidth * 3 == OrigHeight * 4) {
-			AspectX = 4;
-			AspectY = 3;
-		}
+		SARToDAR(1, 1, OrigWidth, OrigHeight, &AspectX, &AspectY);
 	}
 
 	CVideoParser::VideoInfo Info(OrigWidth, OrigHeight, DisplayWidth, DisplayHeight, AspectX, AspectY);

@@ -194,6 +194,19 @@ private:
 
 
 /////////////////////////////////////////////////////////////////////////////
+// 映像ストリーム解析クラス
+/////////////////////////////////////////////////////////////////////////////
+
+class CVideoStreamParser : public CPesParser::IPacketHandler
+{
+public:
+	bool StorePacket(const CPesPacket *pPacket);
+	virtual bool StoreEs(const BYTE *pData, const DWORD dwSize) = 0;
+	virtual void Reset() = 0;
+};
+
+
+/////////////////////////////////////////////////////////////////////////////
 // ISO/IEC 13818-2 H.262(MPEG2-ES)シーケンス抽象化クラス
 /////////////////////////////////////////////////////////////////////////////
 
@@ -201,28 +214,25 @@ class CMpeg2Sequence : public CMediaData
 {
 public:
 	CMpeg2Sequence();
-	CMpeg2Sequence(const CMpeg2Sequence &Operand);
 
-	CMpeg2Sequence & operator = (const CMpeg2Sequence &Operand);
+	bool ParseHeader();
+	void Reset();
 
-	const bool ParseHeader(void);
-	void Reset(void);
+	WORD GetHorizontalSize() const;
+	WORD GetVerticalSize() const;
+	BYTE GetAspectRatioInfo() const;
+	bool GetAspectRatio(BYTE *pAspectX, BYTE *pAspectY) const;
+	BYTE GetFrameRateCode() const;
+	bool GetFrameRate(DWORD *pNum, DWORD *pDenom) const;
+	DWORD GetBitRate() const;
+	bool IsMarkerBit() const;
+	DWORD GetVbvBufferSize() const;
+	bool IsConstrainedParamFlag() const;
+	bool IsLoadIntraQuantiserMatrix() const;
 
-	const WORD GetHorizontalSize(void) const;
-	const WORD GetVerticalSize(void) const;
-	const BYTE GetAspectRatioInfo(void) const;
-	const bool GetAspectRatio(BYTE *pAspectX, BYTE *pAspectY) const;
-	const BYTE GetFrameRateCode(void) const;
-	const bool GetFrameRate(DWORD *pNum, DWORD *pDenom) const;
-	const DWORD GetBitRate(void) const;
-	const bool IsMarkerBit(void) const;
-	const DWORD GetVbvBufferSize(void) const;
-	const bool IsConstrainedParamFlag(void) const;
-	const bool IsLoadIntraQuantiserMatrix(void) const;
-
-	const bool GetExtendDisplayInfo() const;
-	const WORD GetExtendDisplayHorizontalSize(void) const;
-	const WORD GetExtendDisplayVerticalSize(void) const;
+	bool GetExtendDisplayInfo() const;
+	WORD GetExtendDisplayHorizontalSize() const;
+	WORD GetExtendDisplayVerticalSize() const;
 
 	void SetFixSquareDisplay(bool bFix);
 
@@ -272,26 +282,27 @@ protected:
 // ISO/IEC 13818-2 H.262フレーム抽出クラス
 /////////////////////////////////////////////////////////////////////////////
 
-class CMpeg2Parser : public CPesParser::IPacketHandler
+class CMpeg2Parser : public CVideoStreamParser
 {
 public:
-	class __declspec(novtable) ISequenceHandler
+	class ABSTRACT_CLASS_DECL ISequenceHandler
 	{
 	public:
 		virtual void OnMpeg2Sequence(const CMpeg2Parser *pMpeg2Parser, const CMpeg2Sequence *pSequence) = 0;
 	};
 
 	CMpeg2Parser(ISequenceHandler *pSequenceHandler);
-	CMpeg2Parser(const CMpeg2Parser &Operand);
-	CMpeg2Parser & operator = (const CMpeg2Parser &Operand);
 
-	const bool StorePacket(const CPesPacket *pPacket);
-	const bool StoreEs(const BYTE *pData, const DWORD dwSize);
-	void Reset(void);
+// CVideoStreamParser
+	bool StoreEs(const BYTE *pData, const DWORD dwSize) override;
+	void Reset() override;
+
 	void SetFixSquareDisplay(bool bFix);
 
 protected:
-	virtual void OnPesPacket(const CPesParser *pPesParser, const CPesPacket *pPacket);
+// CPesParser::IPacketHandler
+	void OnPesPacket(const CPesParser *pPesParser, const CPesPacket *pPacket) override;
+
 	virtual void OnMpeg2Sequence(const CMpeg2Sequence *pSequence) const;
 
 	ISequenceHandler *m_pSequenceHandler;
@@ -313,26 +324,26 @@ class CH264AccessUnit : public CMediaData
 {
 public:
 	CH264AccessUnit();
-	CH264AccessUnit(const CH264AccessUnit &Operand);
 
-	CH264AccessUnit & operator = (const CH264AccessUnit &Operand);
+	bool ParseHeader();
+	void Reset();
 
-	const bool ParseHeader(void);
-	void Reset(void);
-
-	const WORD GetHorizontalSize() const;
-	const WORD GetVerticalSize() const;
-	const bool GetSAR(WORD *pHorz, WORD *pVert) const;
+	WORD GetHorizontalSize() const;
+	WORD GetVerticalSize() const;
+	bool GetSAR(WORD *pHorz, WORD *pVert) const;
 	struct TimingInfo {
 		DWORD NumUnitsInTick;
 		DWORD TimeScale;
 		bool bFixedFrameRateFlag;
 	};
-	const bool GetTimingInfo(TimingInfo *pInfo) const;
+	bool GetTimingInfo(TimingInfo *pInfo) const;
 
 protected:
+	int GetSubWidthC() const;
+	int GetSubHeightC() const;
+
 	bool m_bFoundSPS;
-	struct TAG_H264ACCESSUNIT {
+	struct {
 		// AUD (Access Unit Delimiter)
 		struct {
 			BYTE PrimaryPicType;
@@ -406,29 +417,211 @@ protected:
 // ISO/IEC 14496-10Video H.264 アクセスユニット抽出クラス
 /////////////////////////////////////////////////////////////////////////////
 
-class CH264Parser : public CPesParser::IPacketHandler
+class CH264Parser : public CVideoStreamParser
 {
 public:
-	class __declspec(novtable) IAccessUnitHandler
+	class ABSTRACT_CLASS_DECL IAccessUnitHandler
 	{
 	public:
 		virtual void OnAccessUnit(const CH264Parser *pParser, const CH264AccessUnit *pAccessUnit) = 0;
 	};
 
 	CH264Parser(IAccessUnitHandler *pAccessUnitHandler);
-	CH264Parser(const CH264Parser &Operand);
-	CH264Parser & operator = (const CH264Parser &Operand);
 
-	const bool StorePacket(const CPesPacket *pPacket);
-	const bool StoreEs(const BYTE *pData, const DWORD dwSize);
-	void Reset(void);
+// CVideoStreamParser
+	bool StoreEs(const BYTE *pData, const DWORD dwSize) override;
+	void Reset() override;
 
 protected:
-	virtual void OnPesPacket(const CPesParser *pPesParser, const CPesPacket *pPacket);
+// CPesParser::IPacketHandler
+	void OnPesPacket(const CPesParser *pPesParser, const CPesPacket *pPacket) override;
+
 	virtual void OnAccessUnit(const CH264AccessUnit *pAccessUnit) const;
 
 	IAccessUnitHandler *m_pAccessUnitHandler;
 	CH264AccessUnit m_AccessUnit;
+
+private:
+	DWORD m_dwSyncState;
+};
+
+
+/////////////////////////////////////////////////////////////////////////////
+// ISO/IEC 23008-2 H.265 アクセスユニット抽象化クラス
+/////////////////////////////////////////////////////////////////////////////
+
+class CH265AccessUnit : public CMediaData
+{
+public:
+	CH265AccessUnit();
+
+	bool ParseHeader();
+	void Reset();
+
+	WORD GetHorizontalSize() const;
+	WORD GetVerticalSize() const;
+	bool GetSAR(WORD *pHorz, WORD *pVert) const;
+	struct TimingInfo {
+		DWORD NumUnitsInTick;
+		DWORD TimeScale;
+	};
+	bool GetTimingInfo(TimingInfo *pInfo) const;
+
+protected:
+	int GetSubWidthC() const;
+	int GetSubHeightC() const;
+
+	bool m_bFoundSPS;
+	struct {
+		// AUD (Access Unit Delimiter)
+		struct {
+			BYTE PicType;
+		} AUD;
+		// SPS (Sequence Parameter Set)
+		struct {
+			BYTE SpsVideoParameterSetId;
+			BYTE SpsMaxSubLayersMinus1;
+			bool bSpsTemporalIdNestingFlag;
+			// profile_tier_level
+			struct {
+				BYTE GeneralProfileSpace;
+				bool bGeneralTierFlag;
+				BYTE GeneralProfileIdc;
+				bool bGeneralProfileCompatibilityFlag[32];
+				bool bGeneralProgressiveSourceFlag;
+				bool bGeneralInterlacedSourceFlag;
+				bool bGeneralNonPackedConstraintFlag;
+				bool bGeneralFrameOnlyConstraintFlag;
+				BYTE GeneralLevelIdc;
+				struct {
+					bool bSubLayerProfilePresentFlag;
+					bool bSubLayerLevelPresentFlag;
+					BYTE SubLayerProfileSpace;
+					bool bSubLayerTierFlag;
+					BYTE SubLayerProfileIdc;
+					bool bSubLayerProfileCompatibilityFlag[32];
+					bool bSubLayerProgressiveSourceFlag;
+					bool bSubLayerInterlacedSourceFlag;
+					bool bSubLayerNonPackedConstraintFlag;
+					bool bSubLayerFrameOnlyConstraintFlag;
+					BYTE SubLayerLevelIdc;
+				} SubLayer[7];
+			} PTL;
+			BYTE SpsSeqParameterSetId;
+			BYTE ChromaFormatIdc;
+			bool bSeparateColourPlaneFlag;
+			WORD PicWidthInLumaSamples;
+			WORD PicHeightInLumaSamples;
+			bool bConformanceWindowFlag;
+			BYTE ConfWinLeftOffset;
+			BYTE ConfWinRightOffset;
+			BYTE ConfWinTopOffset;
+			BYTE ConfWinBottomOffset;
+			BYTE BitDepthLumaMinus8;
+			BYTE BitDepthChromaMinus8;
+			BYTE Log2MaxPicOrderCntLsbMinus4;
+			bool bSpsSubLayerOrderingInfoPresentFlag;
+			struct {
+				BYTE SpsMaxDecPicBufferingMinus1;
+				BYTE SpsMaxNumReorderPics;
+				BYTE SpsMaxLatencyIncreasePlus1;
+			} SubLayerOrderingInfo[8];
+			BYTE Log2MinLumaCodingBlockSizeMinus3;
+			BYTE Log2DiffMaxMinLumaCodingBlockSize;
+			BYTE Log2MinTransformBlockSizeMinus2;
+			BYTE Log2DiffMaxMinTransformBlockSize;
+			BYTE MaxTransformHierarchyDepthInter;
+			BYTE MaxTransformHierarchyDepthIntra;
+			bool bScalingListEnabledFlag;
+			bool bSpsScalingListDataPresentFlag;
+			bool bAmpEnabledFlag;
+			bool bSampleAdaptiveOffsetEnabledFlag;
+			bool bPcmEnabledFlag;
+			BYTE PcmSampleBitDepthLumaMinus1;
+			BYTE PcmSampleBitDepthChromaMinus1;
+			BYTE Log2MinPcmLumaCodingBlockSizeMinus3;
+			BYTE Log2DiffMaxMinPcmLumaCodingBlockSize;
+			bool bPcmLoopFilterDisabledFlag;
+			BYTE NumShortTermRefPicSets;
+			bool bLongTermRefPicsPresentFlag;
+			BYTE NumLongTermRefPicsSps;
+			bool bSpsTemporalMvpEnabledFlag;
+			bool bStrongIntraSmoothingEnabledFlag;
+			bool bVuiParametersPresentFlag;
+			// VUI (Video Usability Information)
+			struct {
+				bool bAspectRatioInfoPresentFlag;
+				BYTE AspectRatioIdc;
+				WORD SarWidth;
+				WORD SarHeight;
+				bool bOverscanInfoPresentFlag;
+				bool bOverscanAppropriateFlag;
+				bool bVideoSignalTypePresentFlag;
+				BYTE VideoFormat;
+				bool bVideoFullRangeFlag;
+				bool bColourDescriptionPresentFlag;
+				BYTE ColourPrimaries;
+				BYTE TransferCharacteristics;
+				BYTE MatrixCoeffs;
+				bool bChromaLocInfoPresentFlag;
+				BYTE ChromaSampleLocTypeTopField;
+				BYTE ChromaSampleLocTypeBottomField;
+				bool bNeutralChromaIndicationFlag;
+				bool bFieldSeqFlag;
+				bool bFrameFieldInfoPresentFlag;
+				bool bDefaultDisplayWindowFlag;
+				BYTE DefDispWinLeftOffset;
+				BYTE DefDispWinRightOffset;
+				BYTE DefDispWinTopOffset;
+				BYTE DefDispWinBottomOffset;
+				bool bVuiTimingInfoPresentFlag;
+				DWORD VuiNumUnitsInTick;
+				DWORD VuiTimeScale;
+				bool bVuiPocProportionalToTimingFlag;
+				BYTE VuiNumTicksPocDiffOneMinus1;
+				bool bVuiHrdParametersPresentFlag;
+				bool bBitstreamRestrictionFlag;
+				bool bTilesFixedStructureFlag;
+				bool bMotionVectorsOverPicBoundariesFlag;
+				bool bRestrictedRefPicListsFlag;
+				BYTE MinSpatialSegmentationIdc;
+				BYTE MaxBytesPerPicDenom;
+				BYTE MaxBitsPerMinCuDenom;
+				BYTE Log2MaxMvLengthHorizontal;
+				BYTE Log2MaxMvLengthVertical;
+			} VUI;
+		} SPS;
+	} m_Header;
+};
+
+
+/////////////////////////////////////////////////////////////////////////////
+// ISO/IEC 23008-2 H.265 アクセスユニット抽出クラス
+/////////////////////////////////////////////////////////////////////////////
+
+class CH265Parser : public CVideoStreamParser
+{
+public:
+	class ABSTRACT_CLASS_DECL IAccessUnitHandler
+	{
+	public:
+		virtual void OnAccessUnit(const CH265Parser *pParser, const CH265AccessUnit *pAccessUnit) = 0;
+	};
+
+	CH265Parser(IAccessUnitHandler *pAccessUnitHandler);
+
+// CVideoStreamParser
+	bool StoreEs(const BYTE *pData, const DWORD dwSize) override;
+	void Reset() override;
+
+protected:
+// CPesParser::IPacketHandler
+	void OnPesPacket(const CPesParser *pPesParser, const CPesPacket *pPacket) override;
+
+	virtual void OnAccessUnit(const CH265AccessUnit *pAccessUnit) const;
+
+	IAccessUnitHandler *m_pAccessUnitHandler;
+	CH265AccessUnit m_AccessUnit;
 
 private:
 	DWORD m_dwSyncState;

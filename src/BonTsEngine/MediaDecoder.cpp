@@ -33,7 +33,7 @@ void CMediaDecoder::Reset()
 {
 }
 
-void CMediaDecoder::ResetGraph(void)
+void CMediaDecoder::ResetGraph()
 {
 	CBlockLock Lock(&m_DecoderLock);
 
@@ -41,19 +41,19 @@ void CMediaDecoder::ResetGraph(void)
 	ResetDownstreamDecoder();
 }
 
-const DWORD CMediaDecoder::GetInputNum(void) const
+DWORD CMediaDecoder::GetInputNum() const
 {
 	// 入力数を返す
 	return m_dwInputNum;
 }
 
-const DWORD CMediaDecoder::GetOutputNum(void) const
+DWORD CMediaDecoder::GetOutputNum() const
 {
 	// 出力数を返す
 	return m_dwOutputNum;
 }
 
-const bool CMediaDecoder::SetOutputDecoder(CMediaDecoder *pDecoder, const DWORD dwOutputIndex, const DWORD dwInputIndex)
+bool CMediaDecoder::SetOutputDecoder(CMediaDecoder *pDecoder, const DWORD dwOutputIndex, const DWORD dwInputIndex)
 {
 	CBlockLock Lock(&m_DecoderLock);
 
@@ -74,7 +74,7 @@ const bool CMediaDecoder::InputMedia(CMediaData *pMediaData, const DWORD dwInput
 	return true;
 }
 
-const bool CMediaDecoder::OutputMedia(CMediaData *pMediaData, const DWORD dwOutptIndex)
+bool CMediaDecoder::OutputMedia(CMediaData *pMediaData, const DWORD dwOutptIndex)
 {
 	// 出力処理
 	if (dwOutptIndex >= m_dwOutputNum)
@@ -87,7 +87,7 @@ const bool CMediaDecoder::OutputMedia(CMediaData *pMediaData, const DWORD dwOutp
 	return false;
 }
 
-void CMediaDecoder::ResetDownstreamDecoder(void)
+void CMediaDecoder::ResetDownstreamDecoder()
 {
 	// 次のフィルタをリセットする
 	for (DWORD dwOutputIndex = 0UL ; dwOutputIndex < m_dwOutputNum ; dwOutputIndex++) {
@@ -96,7 +96,7 @@ void CMediaDecoder::ResetDownstreamDecoder(void)
 	}
 }
 
-const DWORD CMediaDecoder::SendDecoderEvent(const DWORD dwEventID, PVOID pParam)
+DWORD CMediaDecoder::SendDecoderEvent(const DWORD dwEventID, PVOID pParam)
 {
 	// イベントを通知する
 	if (m_pEventHandler==NULL)

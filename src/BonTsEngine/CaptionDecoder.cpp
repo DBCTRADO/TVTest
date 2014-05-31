@@ -24,6 +24,7 @@ class CCaptionStream : public CTsPidMapTarget
 	CCaptionParser m_CaptionParser;
 
 public:
+	CCaptionStream(bool b1Seg) : m_CaptionParser(b1Seg) {}
 	void SetCaptionHandler(CCaptionParser::ICaptionHandler *pHandler) {
 		m_CaptionParser.SetCaptionHandler(pHandler);
 	}
@@ -174,14 +175,14 @@ bool CCaptionDecoder::GetLanguageCode(int LanguageTag, char *pCode)
 void CCaptionDecoder::OnLanguageUpdate(CCaptionParser *pParser)
 {
 	if (m_pCaptionHandler)
-		m_pCaptionHandler->OnLanguageUpdate(this);
+		m_pCaptionHandler->OnLanguageUpdate(this, pParser);
 }
 
 
 void CCaptionDecoder::OnCaption(CCaptionParser *pParser, BYTE Language, LPCTSTR pszText, const CAribString::FormatList *pFormatList)
 {
 	if (m_pCaptionHandler)
-		m_pCaptionHandler->OnCaption(this, Language, pszText, pFormatList);
+		m_pCaptionHandler->OnCaption(this, pParser, Language, pszText, pFormatList);
 }
 
 
@@ -264,7 +265,7 @@ void CALLBACK CCaptionDecoder::OnPmtUpdated(const WORD wPID, CTsPidMapTarget *pM
 			}
 			Info.CaptionEsList.push_back(CaptionInfo);
 
-			CCaptionStream *pStream = new CCaptionStream;
+			CCaptionStream *pStream = new CCaptionStream(Is1SegPmtPid(wPID));
 			if (Info.ServiceID == pThis->m_TargetServiceID
 					&& ((pThis->m_TargetComponentTag == 0xFF && Info.CaptionEsList.size() == 1)
 						|| (pThis->m_TargetComponentTag != 0xFF 

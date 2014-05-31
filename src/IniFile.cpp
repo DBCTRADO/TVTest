@@ -352,7 +352,7 @@ namespace TVTest
 		return true;
 	}
 
-	bool CIniFile::GetSectionEntries(LPCWSTR pszSection,std::vector<CEntry> *pEntries)
+	bool CIniFile::GetSectionEntries(LPCWSTR pszSection,EntryArray *pEntries)
 	{
 		if (pEntries==nullptr)
 			return false;
@@ -376,7 +376,7 @@ namespace TVTest
 		return true;
 	}
 
-	bool CIniFile::GetEntries(std::vector<CEntry> *pEntries)
+	bool CIniFile::GetEntries(EntryArray *pEntries)
 	{
 		if (m_Section.empty())
 			return false;

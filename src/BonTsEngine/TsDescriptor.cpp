@@ -6,6 +6,7 @@
 #include "Common.h"
 #include "TsDescriptor.h"
 #include "TsEncode.h"
+#include "../HelperClass/StdUtil.h"
 
 #ifdef _DEBUG
 #undef THIS_FILE
@@ -29,34 +30,17 @@ CBaseDesc::CBaseDesc()
 	Reset();
 }
 
-CBaseDesc::CBaseDesc(const CBaseDesc &Operand)
-{
-	// コピーコンストラクタ
-	CopyDesc(&Operand);
-}
-
 CBaseDesc::~CBaseDesc()
 {
-
-}
-
-CBaseDesc & CBaseDesc::operator = (const CBaseDesc &Operand)
-{
-	// 代入演算子
-	CopyDesc(&Operand);
-
-	return *this;
 }
 
 void CBaseDesc::CopyDesc(const CBaseDesc *pOperand)
 {
 	// インスタンスのコピー
-	m_byDescTag = pOperand->m_byDescTag;
-	m_byDescLen = pOperand->m_byDescLen;
-	m_bIsValid = pOperand->m_bIsValid;
+	*this = *pOperand;
 }
 
-const bool CBaseDesc::ParseDesc(const BYTE *pHexData, const WORD wDataLength)
+bool CBaseDesc::ParseDesc(const BYTE *pHexData, const WORD wDataLength)
 {
 	Reset();
 
@@ -76,25 +60,25 @@ const bool CBaseDesc::ParseDesc(const BYTE *pHexData, const WORD wDataLength)
 	return m_bIsValid;
 }
 
-const bool CBaseDesc::IsValid(void) const
+bool CBaseDesc::IsValid() const
 {
 	// データが有効(解析済)かどうかを返す
 	return m_bIsValid;
 }
 
-const BYTE CBaseDesc::GetTag(void) const
+BYTE CBaseDesc::GetTag() const
 {
 	// 記述子タグを返す
 	return m_byDescTag;
 }
 
-const BYTE CBaseDesc::GetLength(void) const
+BYTE CBaseDesc::GetLength() const
 {
 	// 記述子長を返す
 	return m_byDescLen;
 }
 
-void CBaseDesc::Reset(void)
+void CBaseDesc::Reset()
 {
 	// 状態をクリアする
 	m_byDescTag = 0x00U;
@@ -102,7 +86,7 @@ void CBaseDesc::Reset(void)
 	m_bIsValid = false;
 }
 
-const bool CBaseDesc::StoreContents(const BYTE *pPayload)
+bool CBaseDesc::StoreContents(const BYTE *pPayload)
 {
 	// デフォルトの実装では何もしない
 	return true;
@@ -114,38 +98,11 @@ const bool CBaseDesc::StoreContents(const BYTE *pPayload)
 /////////////////////////////////////////////////////////////////////////////
 
 CCaMethodDesc::CCaMethodDesc()
-	: CBaseDesc()
 {
 	Reset();
 }
 
-CCaMethodDesc::CCaMethodDesc(const CCaMethodDesc &Operand)
-{
-	CopyDesc(&Operand);
-}
-
-CCaMethodDesc & CCaMethodDesc::operator = (const CCaMethodDesc &Operand)
-{
-	CopyDesc(&Operand);
-
-	return *this;
-}
-
-void CCaMethodDesc::CopyDesc(const CBaseDesc *pOperand)
-{
-	// インスタンスのコピー
-	CBaseDesc::CopyDesc(pOperand);
-
-	const CCaMethodDesc *pSrcDesc = dynamic_cast<const CCaMethodDesc *>(pOperand);
-
-	if (pSrcDesc && pSrcDesc != this) {
-		m_wCaMethodID = pSrcDesc->m_wCaMethodID;
-		m_wCaPID = pSrcDesc->m_wCaPID;
-		m_PrivateData = pSrcDesc->m_PrivateData;
-	}
-}
-
-void CCaMethodDesc::Reset(void)
+void CCaMethodDesc::Reset()
 {
 	CBaseDesc::Reset();
 
@@ -154,25 +111,25 @@ void CCaMethodDesc::Reset(void)
 	m_PrivateData.ClearSize();		// Private Data
 }
 
-const WORD CCaMethodDesc::GetCaMethodID(void) const
+WORD CCaMethodDesc::GetCaMethodID() const
 {
 	// Conditional Access Method ID を返す
 	return m_wCaMethodID;
 }
 
-const WORD CCaMethodDesc::GetCaPID(void) const
+WORD CCaMethodDesc::GetCaPID() const
 {
 	// Conditional Access PID
 	return m_wCaPID;
 }
 
-const CMediaData * CCaMethodDesc::GetPrivateData(void) const
+const CMediaData * CCaMethodDesc::GetPrivateData() const
 {
 	// Private Data を返す
 	return &m_PrivateData;
 }
 
-const bool CCaMethodDesc::StoreContents(const BYTE *pPayload)
+bool CCaMethodDesc::StoreContents(const BYTE *pPayload)
 {
 	// フォーマットをチェック
 	if(m_byDescTag != DESC_TAG)return false;							// タグが不正
@@ -193,38 +150,29 @@ const bool CCaMethodDesc::StoreContents(const BYTE *pPayload)
 /////////////////////////////////////////////////////////////////////////////
 
 CServiceDesc::CServiceDesc()
-	: CBaseDesc()
 {
 	Reset();
 }
 
 CServiceDesc::CServiceDesc(const CServiceDesc &Operand)
 {
-	CopyDesc(&Operand);
+	*this = Operand;
 }
 
 CServiceDesc & CServiceDesc::operator = (const CServiceDesc &Operand)
 {
-	CopyDesc(&Operand);
+	if (&Operand != this) {
+		CBaseDesc::CopyDesc(&Operand);
+
+		m_byServiceType = Operand.m_byServiceType;
+		StdUtil::strncpy(m_szProviderName, _countof(m_szProviderName), Operand.m_szProviderName);
+		StdUtil::strncpy(m_szServiceName, _countof(m_szServiceName), Operand.m_szServiceName);
+	}
 
 	return *this;
 }
 
-void CServiceDesc::CopyDesc(const CBaseDesc *pOperand)
-{
-	// インスタンスのコピー
-	CBaseDesc::CopyDesc(pOperand);
-
-	const CServiceDesc *pSrcDesc = dynamic_cast<const CServiceDesc *>(pOperand);
-	
-	if (pSrcDesc && pSrcDesc != this) {
-		m_byServiceType = pSrcDesc->m_byServiceType;
-		::lstrcpy(m_szProviderName, pSrcDesc->m_szProviderName);
-		::lstrcpy(m_szServiceName, pSrcDesc->m_szServiceName);
-	}
-}
-
-void CServiceDesc::Reset(void)
+void CServiceDesc::Reset()
 {
 	CBaseDesc::Reset();
 
@@ -233,13 +181,13 @@ void CServiceDesc::Reset(void)
 	m_szServiceName[0] = TEXT('\0');	// Service Name
 }
 
-const BYTE CServiceDesc::GetServiceType(void) const
+BYTE CServiceDesc::GetServiceType() const
 {
 	// Service Typeを返す
 	return m_byServiceType;
 }
 
-const DWORD CServiceDesc::GetProviderName(LPTSTR lpszDst, int MaxLength) const
+DWORD CServiceDesc::GetProviderName(LPTSTR lpszDst, int MaxLength) const
 {
 	// Service Provider Nameを返す
 	if (lpszDst && MaxLength > 0)
@@ -248,7 +196,7 @@ const DWORD CServiceDesc::GetProviderName(LPTSTR lpszDst, int MaxLength) const
 	return ::lstrlen(m_szProviderName);
 }
 
-const DWORD CServiceDesc::GetServiceName(LPTSTR lpszDst, int MaxLength) const
+DWORD CServiceDesc::GetServiceName(LPTSTR lpszDst, int MaxLength) const
 {
 	// Service Provider Nameを返す
 	if (lpszDst && MaxLength > 0)
@@ -257,7 +205,7 @@ const DWORD CServiceDesc::GetServiceName(LPTSTR lpszDst, int MaxLength) const
 	return ::lstrlen(m_szServiceName);
 }
 
-const bool CServiceDesc::StoreContents(const BYTE *pPayload)
+bool CServiceDesc::StoreContents(const BYTE *pPayload)
 {
 	// フォーマットをチェック
 	if(m_byDescTag != DESC_TAG)return false;	// タグが不正
@@ -274,7 +222,7 @@ const bool CServiceDesc::StoreContents(const BYTE *pPayload)
 	if (Length > 0) {
 		if (Pos + Length >= m_byDescLen)
 			return false;
-		CAribString::AribToString(m_szProviderName, sizeof(m_szProviderName) / sizeof(TCHAR), &pPayload[Pos], Length);
+		CAribString::AribToString(m_szProviderName, _countof(m_szProviderName), &pPayload[Pos], Length);
 		Pos += Length;
 	}
 
@@ -284,7 +232,7 @@ const bool CServiceDesc::StoreContents(const BYTE *pPayload)
 	if (Length > 0) {
 		if (Pos + Length > m_byDescLen)
 			return false;
-		CAribString::AribToString(m_szServiceName, sizeof(m_szServiceName) / sizeof(TCHAR), &pPayload[Pos], Length);
+		CAribString::AribToString(m_szServiceName, _countof(m_szServiceName), &pPayload[Pos], Length);
 	}
 
 	return true;
@@ -296,38 +244,29 @@ const bool CServiceDesc::StoreContents(const BYTE *pPayload)
 /////////////////////////////////////////////////////////////////////////////
 
 CShortEventDesc::CShortEventDesc()
-	: CBaseDesc()
 {
 	Reset();
 }
 
 CShortEventDesc::CShortEventDesc(const CShortEventDesc &Operand)
 {
-	CopyDesc(&Operand);
+	*this = Operand;
 }
 
 CShortEventDesc & CShortEventDesc::operator = (const CShortEventDesc &Operand)
 {
-	CopyDesc(&Operand);
+	if (&Operand != this) {
+		CBaseDesc::CopyDesc(&Operand);
+
+		m_dwLanguageCode = Operand.m_dwLanguageCode;
+		StdUtil::strncpy(m_szEventName, _countof(m_szEventName), Operand.m_szEventName);
+		StdUtil::strncpy(m_szEventDesc, _countof(m_szEventDesc), Operand.m_szEventDesc);
+	}
 
 	return *this;
 }
 
-void CShortEventDesc::CopyDesc(const CBaseDesc *pOperand)
-{
-	// インスタンスのコピー
-	CBaseDesc::CopyDesc(pOperand);
-
-	const CShortEventDesc *pSrcDesc = dynamic_cast<const CShortEventDesc *>(pOperand);
-
-	if (pSrcDesc && pSrcDesc != this) {
-		m_dwLanguageCode = pSrcDesc->m_dwLanguageCode;
-		::lstrcpy(m_szEventName, pSrcDesc->m_szEventName);
-		::lstrcpy(m_szEventDesc, pSrcDesc->m_szEventDesc);
-	}
-}
-
-void CShortEventDesc::Reset(void)
+void CShortEventDesc::Reset()
 {
 	CBaseDesc::Reset();
 
@@ -336,13 +275,13 @@ void CShortEventDesc::Reset(void)
 	m_szEventDesc[0] = TEXT('\0');	// Event Description
 }
 
-const DWORD CShortEventDesc::GetLanguageCode(void) const
+DWORD CShortEventDesc::GetLanguageCode() const
 {
 	// Language Codeを返す
 	return m_dwLanguageCode;
 }
 
-const DWORD CShortEventDesc::GetEventName(LPTSTR lpszDst, int MaxLength) const
+DWORD CShortEventDesc::GetEventName(LPTSTR lpszDst, int MaxLength) const
 {
 	// Event Nameを返す
 	if (lpszDst && MaxLength > 0)
@@ -351,7 +290,7 @@ const DWORD CShortEventDesc::GetEventName(LPTSTR lpszDst, int MaxLength) const
 	return ::lstrlen(m_szEventName);
 }
 
-const DWORD CShortEventDesc::GetEventDesc(LPTSTR lpszDst, int MaxLength) const
+DWORD CShortEventDesc::GetEventDesc(LPTSTR lpszDst, int MaxLength) const
 {
 	// Event Descriptionを返す
 	if (lpszDst && MaxLength > 0)
@@ -360,7 +299,7 @@ const DWORD CShortEventDesc::GetEventDesc(LPTSTR lpszDst, int MaxLength) const
 	return ::lstrlen(m_szEventDesc);
 }
 
-const bool CShortEventDesc::StoreContents(const BYTE *pPayload)
+bool CShortEventDesc::StoreContents(const BYTE *pPayload)
 {
 	// フォーマットをチェック
 	if(m_byDescTag != DESC_TAG)return false;	// タグが不正
@@ -377,7 +316,7 @@ const bool CShortEventDesc::StoreContents(const BYTE *pPayload)
 	if (Length > 0) {
 		if (Pos + Length >= m_byDescLen)
 			return false;
-		CAribString::AribToString(m_szEventName, sizeof(m_szEventName) / sizeof(TCHAR), &pPayload[Pos], Length);
+		CAribString::AribToString(m_szEventName, _countof(m_szEventName), &pPayload[Pos], Length);
 		Pos += Length;
 	}
 
@@ -387,7 +326,7 @@ const bool CShortEventDesc::StoreContents(const BYTE *pPayload)
 	if (Length > 0) {
 		if (Pos + Length > m_byDescLen)
 			return false;
-		CAribString::AribToString(m_szEventDesc, sizeof(m_szEventDesc) / sizeof(TCHAR), &pPayload[Pos], Length);
+		CAribString::AribToString(m_szEventDesc, _countof(m_szEventDesc), &pPayload[Pos], Length);
 	}
 
 	return true;
@@ -399,39 +338,11 @@ const bool CShortEventDesc::StoreContents(const BYTE *pPayload)
 /////////////////////////////////////////////////////////////////////////////
 
 CExtendedEventDesc::CExtendedEventDesc()
-	: CBaseDesc()
 {
 	Reset();
 }
 
-CExtendedEventDesc::CExtendedEventDesc(const CExtendedEventDesc &Operand)
-{
-	CopyDesc(&Operand);
-}
-
-CExtendedEventDesc & CExtendedEventDesc::operator = (const CExtendedEventDesc &Operand)
-{
-	CopyDesc(&Operand);
-
-	return *this;
-}
-
-void CExtendedEventDesc::CopyDesc(const CBaseDesc *pOperand)
-{
-	// インスタンスのコピー
-	CBaseDesc::CopyDesc(pOperand);
-
-	const CExtendedEventDesc *pSrcDesc = dynamic_cast<const CExtendedEventDesc *>(pOperand);
-
-	if (pSrcDesc && pSrcDesc != this) {
-		m_DescriptorNumber = pSrcDesc->m_DescriptorNumber;
-		m_LastDescriptorNumber = pSrcDesc->m_LastDescriptorNumber;
-		m_LanguageCode = pSrcDesc->m_LanguageCode;
-		m_ItemList = pSrcDesc->m_ItemList;
-	}
-}
-
-void CExtendedEventDesc::Reset(void)
+void CExtendedEventDesc::Reset()
 {
 	CBaseDesc::Reset();
 
@@ -451,7 +362,7 @@ BYTE CExtendedEventDesc::GetLastDescriptorNumber() const
 	return m_LastDescriptorNumber;
 }
 
-DWORD CExtendedEventDesc::GetLanguageCode(void) const
+DWORD CExtendedEventDesc::GetLanguageCode() const
 {
 	return m_LanguageCode;
 }
@@ -468,7 +379,7 @@ const CExtendedEventDesc::ItemInfo * CExtendedEventDesc::GetItem(int Index) cons
 	return &m_ItemList[Index];
 }
 
-const bool CExtendedEventDesc::StoreContents(const BYTE *pPayload)
+bool CExtendedEventDesc::StoreContents(const BYTE *pPayload)
 {
 	if (m_byDescTag != DESC_TAG || m_byDescLen < 5)
 		return false;
@@ -511,49 +422,24 @@ const bool CExtendedEventDesc::StoreContents(const BYTE *pPayload)
 /////////////////////////////////////////////////////////////////////////////
 
 CStreamIdDesc::CStreamIdDesc()
-	: CBaseDesc()
 {
 	Reset();
 }
 
-CStreamIdDesc::CStreamIdDesc(const CStreamIdDesc &Operand)
-{
-	CopyDesc(&Operand);
-}
-
-CStreamIdDesc & CStreamIdDesc::operator = (const CStreamIdDesc &Operand)
-{
-	CopyDesc(&Operand);
-
-	return *this;
-}
-
-void CStreamIdDesc::CopyDesc(const CBaseDesc *pOperand)
-{
-	// インスタンスのコピー
-	CBaseDesc::CopyDesc(pOperand);
-
-	const CStreamIdDesc *pSrcDesc = dynamic_cast<const CStreamIdDesc *>(pOperand);
-
-	if (pSrcDesc) {
-		m_byComponentTag = pSrcDesc->m_byComponentTag;
-	}
-}
-
-void CStreamIdDesc::Reset(void)
+void CStreamIdDesc::Reset()
 {
 	CBaseDesc::Reset();
 
 	m_byComponentTag = 0x00U;	// Component Tag
 }
 
-const BYTE CStreamIdDesc::GetComponentTag(void) const
+BYTE CStreamIdDesc::GetComponentTag() const
 {
 	// Component Tag を返す
 	return m_byComponentTag;
 }
 
-const bool CStreamIdDesc::StoreContents(const BYTE *pPayload)
+bool CStreamIdDesc::StoreContents(const BYTE *pPayload)
 {
 	// フォーマットをチェック
 	if(m_byDescTag != DESC_TAG)return false;	// タグが不正
@@ -571,54 +457,46 @@ const bool CStreamIdDesc::StoreContents(const BYTE *pPayload)
 /////////////////////////////////////////////////////////////////////////////
 
 CNetworkNameDesc::CNetworkNameDesc()
-	: CBaseDesc()
 {
 	Reset();
 }
 
 CNetworkNameDesc::CNetworkNameDesc(const CNetworkNameDesc &Operand)
 {
-	CopyDesc(&Operand);
+	*this = Operand;
 }
 
 CNetworkNameDesc & CNetworkNameDesc::operator = (const CNetworkNameDesc &Operand)
 {
-	CopyDesc(&Operand);
+	if (&Operand != this) {
+		CBaseDesc::CopyDesc(&Operand);
+
+		StdUtil::strncpy(m_szNetworkName, _countof(m_szNetworkName), Operand.m_szNetworkName);
+	}
 
 	return *this;
 }
 
-void CNetworkNameDesc::CopyDesc(const CBaseDesc *pOperand)
-{
-	CBaseDesc::CopyDesc(pOperand);
-
-	const CNetworkNameDesc *pSrcDesc = dynamic_cast<const CNetworkNameDesc *>(pOperand);
-
-	if (pSrcDesc && pSrcDesc != this) {
-		::lstrcpy(m_szNetworkName, pSrcDesc->m_szNetworkName);
-	}
-}
-
-void CNetworkNameDesc::Reset(void)
+void CNetworkNameDesc::Reset()
 {
 	CBaseDesc::Reset();
 	m_szNetworkName[0] = '\0';
 }
 
-const DWORD CNetworkNameDesc::GetNetworkName(LPTSTR pszName, int MaxLength) const
+DWORD CNetworkNameDesc::GetNetworkName(LPTSTR pszName, int MaxLength) const
 {
 	if (pszName && MaxLength > 0)
 		::lstrcpyn(pszName, m_szNetworkName, MaxLength);
 	return ::lstrlen(m_szNetworkName);
 }
 
-const bool CNetworkNameDesc::StoreContents(const BYTE *pPayload)
+bool CNetworkNameDesc::StoreContents(const BYTE *pPayload)
 {
 	if (m_byDescTag != DESC_TAG)
 		return false;
 
 	m_szNetworkName[0] = '\0';
-	CAribString::AribToString(m_szNetworkName, sizeof(m_szNetworkName) / sizeof(TCHAR), &pPayload[0], m_byDescLen);
+	CAribString::AribToString(m_szNetworkName, _countof(m_szNetworkName), &pPayload[0], m_byDescLen);
 
 	return true;
 }
@@ -629,46 +507,23 @@ const bool CNetworkNameDesc::StoreContents(const BYTE *pPayload)
 /////////////////////////////////////////////////////////////////////////////
 
 CServiceListDesc::CServiceListDesc()
-	: CBaseDesc()
 {
 	Reset();
 }
 
-CServiceListDesc::CServiceListDesc(const CServiceListDesc &Operand)
-{
-	CopyDesc(&Operand);
-}
-
-CServiceListDesc & CServiceListDesc::operator = (const CServiceListDesc &Operand)
-{
-	CopyDesc(&Operand);
-
-	return *this;
-}
-
-void CServiceListDesc::CopyDesc(const CBaseDesc *pOperand)
-{
-	CBaseDesc::CopyDesc(pOperand);
-
-	const CServiceListDesc *pSrcDesc = dynamic_cast<const CServiceListDesc *>(pOperand);
-
-	if (pSrcDesc && pSrcDesc != this) {
-		m_ServiceList = pSrcDesc->m_ServiceList;
-	}
-}
-
-void CServiceListDesc::Reset(void)
+void CServiceListDesc::Reset()
 {
 	CBaseDesc::Reset();
+
 	m_ServiceList.clear();
 }
 
-const int CServiceListDesc::GetServiceNum() const
+int CServiceListDesc::GetServiceNum() const
 {
 	return (int)m_ServiceList.size();
 }
 
-const int CServiceListDesc::GetServiceIndexByID(const WORD ServiceID) const
+int CServiceListDesc::GetServiceIndexByID(const WORD ServiceID) const
 {
 	for (size_t i = 0; i < m_ServiceList.size(); i++) {
 		if (m_ServiceList[i].ServiceID == ServiceID)
@@ -677,7 +532,7 @@ const int CServiceListDesc::GetServiceIndexByID(const WORD ServiceID) const
 	return -1;
 }
 
-const BYTE CServiceListDesc::GetServiceTypeByID(const WORD ServiceID) const
+BYTE CServiceListDesc::GetServiceTypeByID(const WORD ServiceID) const
 {
 	int Index = GetServiceIndexByID(ServiceID);
 	if (Index >= 0)
@@ -685,7 +540,7 @@ const BYTE CServiceListDesc::GetServiceTypeByID(const WORD ServiceID) const
 	return SERVICE_TYPE_INVALID;
 }
 
-const bool CServiceListDesc::GetServiceInfo(const int Index, ServiceInfo *pInfo) const
+bool CServiceListDesc::GetServiceInfo(const int Index, ServiceInfo *pInfo) const
 {
 	if (!pInfo || Index < 0 || (size_t)Index >= m_ServiceList.size())
 		return false;
@@ -695,7 +550,7 @@ const bool CServiceListDesc::GetServiceInfo(const int Index, ServiceInfo *pInfo)
 	return true;
 }
 
-const bool CServiceListDesc::StoreContents(const BYTE *pPayload)
+bool CServiceListDesc::StoreContents(const BYTE *pPayload)
 {
 	if (m_byDescTag != DESC_TAG)
 		return false;
@@ -721,41 +576,11 @@ const bool CServiceListDesc::StoreContents(const BYTE *pPayload)
 /////////////////////////////////////////////////////////////////////////////
 
 CSatelliteDeliverySystemDesc::CSatelliteDeliverySystemDesc()
-	: CBaseDesc()
 {
 	Reset();
 }
 
-CSatelliteDeliverySystemDesc::CSatelliteDeliverySystemDesc(const CSatelliteDeliverySystemDesc &Operand)
-{
-	CopyDesc(&Operand);
-}
-
-CSatelliteDeliverySystemDesc & CSatelliteDeliverySystemDesc::operator = (const CSatelliteDeliverySystemDesc &Operand)
-{
-	CopyDesc(&Operand);
-
-	return *this;
-}
-
-void CSatelliteDeliverySystemDesc::CopyDesc(const CBaseDesc *pOperand)
-{
-	CBaseDesc::CopyDesc(pOperand);
-
-	const CSatelliteDeliverySystemDesc *pSrcDesc = dynamic_cast<const CSatelliteDeliverySystemDesc *>(pOperand);
-
-	if (pSrcDesc && pSrcDesc != this) {
-		m_Frequency = pSrcDesc->m_Frequency;
-		m_OrbitalPosition = pSrcDesc->m_OrbitalPosition;
-		m_bWestEastFlag = pSrcDesc->m_bWestEastFlag;
-		m_Polarization = pSrcDesc->m_Polarization;
-		m_Modulation = pSrcDesc->m_Modulation;
-		m_SymbolRate = pSrcDesc->m_SymbolRate;
-		m_FECInner = pSrcDesc->m_FECInner;
-	}
-}
-
-void CSatelliteDeliverySystemDesc::Reset(void)
+void CSatelliteDeliverySystemDesc::Reset()
 {
 	CBaseDesc::Reset();
 
@@ -768,42 +593,42 @@ void CSatelliteDeliverySystemDesc::Reset(void)
 	m_FECInner = 0;
 }
 
-const DWORD CSatelliteDeliverySystemDesc::GetFrequency() const
+DWORD CSatelliteDeliverySystemDesc::GetFrequency() const
 {
 	return m_Frequency;
 }
 
-const WORD CSatelliteDeliverySystemDesc::GetOrbitalPosition() const
+WORD CSatelliteDeliverySystemDesc::GetOrbitalPosition() const
 {
 	return m_OrbitalPosition;
 }
 
-const bool CSatelliteDeliverySystemDesc::GetWestEastFlag() const
+bool CSatelliteDeliverySystemDesc::GetWestEastFlag() const
 {
 	return m_bWestEastFlag;
 }
 
-const BYTE CSatelliteDeliverySystemDesc::GetPolarization() const
+BYTE CSatelliteDeliverySystemDesc::GetPolarization() const
 {
 	return m_Polarization;
 }
 
-const BYTE CSatelliteDeliverySystemDesc::GetModulation() const
+BYTE CSatelliteDeliverySystemDesc::GetModulation() const
 {
 	return m_Modulation;
 }
 
-const DWORD CSatelliteDeliverySystemDesc::GetSymbolRate() const
+DWORD CSatelliteDeliverySystemDesc::GetSymbolRate() const
 {
 	return m_SymbolRate;
 }
 
-const BYTE CSatelliteDeliverySystemDesc::GetFECInner() const
+BYTE CSatelliteDeliverySystemDesc::GetFECInner() const
 {
 	return m_FECInner;
 }
 
-static const DWORD GetBCD(const BYTE *pData, const int Length)
+static DWORD GetBCD(const BYTE *pData, const int Length)
 {
 	DWORD Value = 0;
 	for (int i = 0; i < Length; i++) {
@@ -816,7 +641,7 @@ static const DWORD GetBCD(const BYTE *pData, const int Length)
 	return Value;
 }
 
-const bool CSatelliteDeliverySystemDesc::StoreContents(const BYTE *pPayload)
+bool CSatelliteDeliverySystemDesc::StoreContents(const BYTE *pPayload)
 {
 	if (m_byDescTag != DESC_TAG || m_byDescLen != 11)
 		return false;
@@ -838,38 +663,11 @@ const bool CSatelliteDeliverySystemDesc::StoreContents(const BYTE *pPayload)
 /////////////////////////////////////////////////////////////////////////////
 
 CTerrestrialDeliverySystemDesc::CTerrestrialDeliverySystemDesc()
-	: CBaseDesc()
 {
 	Reset();
 }
 
-CTerrestrialDeliverySystemDesc::CTerrestrialDeliverySystemDesc(const CTerrestrialDeliverySystemDesc &Operand)
-{
-	CopyDesc(&Operand);
-}
-
-CTerrestrialDeliverySystemDesc & CTerrestrialDeliverySystemDesc::operator = (const CTerrestrialDeliverySystemDesc &Operand)
-{
-	CopyDesc(&Operand);
-
-	return *this;
-}
-
-void CTerrestrialDeliverySystemDesc::CopyDesc(const CBaseDesc *pOperand)
-{
-	CBaseDesc::CopyDesc(pOperand);
-
-	const CTerrestrialDeliverySystemDesc *pSrcDesc = dynamic_cast<const CTerrestrialDeliverySystemDesc *>(pOperand);
-
-	if (pSrcDesc && pSrcDesc != this) {
-		m_AreaCode = pSrcDesc->m_AreaCode;
-		m_GuardInterval = pSrcDesc->m_GuardInterval;
-		m_TransmissionMode = pSrcDesc->m_TransmissionMode;
-		m_Frequency = pSrcDesc->m_Frequency;
-	}
-}
-
-void CTerrestrialDeliverySystemDesc::Reset(void)
+void CTerrestrialDeliverySystemDesc::Reset()
 {
 	CBaseDesc::Reset();
 
@@ -879,34 +677,34 @@ void CTerrestrialDeliverySystemDesc::Reset(void)
 	m_Frequency.clear();
 }
 
-const WORD CTerrestrialDeliverySystemDesc::GetAreaCode() const
+WORD CTerrestrialDeliverySystemDesc::GetAreaCode() const
 {
 	return m_AreaCode;
 }
 
-const BYTE CTerrestrialDeliverySystemDesc::GetGuardInterval() const
+BYTE CTerrestrialDeliverySystemDesc::GetGuardInterval() const
 {
 	return m_GuardInterval;
 }
 
-const BYTE CTerrestrialDeliverySystemDesc::GetTransmissionMode() const
+BYTE CTerrestrialDeliverySystemDesc::GetTransmissionMode() const
 {
 	return m_TransmissionMode;
 }
 
-const int CTerrestrialDeliverySystemDesc::GetFrequencyNum() const
+int CTerrestrialDeliverySystemDesc::GetFrequencyNum() const
 {
 	return (int)m_Frequency.size();
 }
 
-const WORD CTerrestrialDeliverySystemDesc::GetFrequency(const int Index) const
+WORD CTerrestrialDeliverySystemDesc::GetFrequency(const int Index) const
 {
 	if (Index < 0 || (size_t)Index >= m_Frequency.size())
 		return 0;
 	return m_Frequency[Index];
 }
 
-const bool CTerrestrialDeliverySystemDesc::StoreContents(const BYTE *pPayload)
+bool CTerrestrialDeliverySystemDesc::StoreContents(const BYTE *pPayload)
 {
 	if (m_byDescTag != DESC_TAG || m_byDescLen < 4)
 		return false;
@@ -931,60 +729,35 @@ const bool CTerrestrialDeliverySystemDesc::StoreContents(const BYTE *pPayload)
 /////////////////////////////////////////////////////////////////////////////
 
 CSystemManageDesc::CSystemManageDesc()
-	: CBaseDesc()
 {
 	Reset();
 }
 
-CSystemManageDesc::CSystemManageDesc(const CSystemManageDesc &Operand)
-{
-	CopyDesc(&Operand);
-}
-
-CSystemManageDesc & CSystemManageDesc::operator = (const CSystemManageDesc &Operand)
-{
-	CopyDesc(&Operand);
-
-	return *this;
-}
-
-void CSystemManageDesc::CopyDesc(const CBaseDesc *pOperand)
-{
-	CBaseDesc::CopyDesc(pOperand);
-
-	const CSystemManageDesc *pSrcDesc = dynamic_cast<const CSystemManageDesc *>(pOperand);
-
-	if (pSrcDesc) {
-		m_byBroadcastingFlag = pSrcDesc->m_byBroadcastingFlag;
-		m_byBroadcastingID = pSrcDesc->m_byBroadcastingID;
-		m_byAdditionalBroadcastingID = pSrcDesc->m_byAdditionalBroadcastingID;
-	}
-}
-
-void CSystemManageDesc::Reset(void)
+void CSystemManageDesc::Reset()
 {
 	CBaseDesc::Reset();
+
 	m_byBroadcastingFlag = 0;
 	m_byBroadcastingID = 0;
 	m_byAdditionalBroadcastingID = 0;
 }
 
-const BYTE CSystemManageDesc::GetBroadcastingFlag(void) const
+BYTE CSystemManageDesc::GetBroadcastingFlag() const
 {
 	return m_byBroadcastingFlag;
 }
 
-const BYTE CSystemManageDesc::GetBroadcastingID(void) const
+BYTE CSystemManageDesc::GetBroadcastingID() const
 {
 	return m_byBroadcastingID;
 }
 
-const BYTE CSystemManageDesc::GetAdditionalBroadcastingID(void) const
+BYTE CSystemManageDesc::GetAdditionalBroadcastingID() const
 {
 	return m_byAdditionalBroadcastingID;
 }
 
-const bool CSystemManageDesc::StoreContents(const BYTE *pPayload)
+bool CSystemManageDesc::StoreContents(const BYTE *pPayload)
 {
 	if (m_byDescTag != DESC_TAG || m_byDescLen < 2)
 		return false;
@@ -1002,55 +775,48 @@ const bool CSystemManageDesc::StoreContents(const BYTE *pPayload)
 /////////////////////////////////////////////////////////////////////////////
 
 CTSInfoDesc::CTSInfoDesc()
-	: CBaseDesc()
 {
 	Reset();
 }
 
 CTSInfoDesc::CTSInfoDesc(const CTSInfoDesc &Operand)
 {
-	CopyDesc(&Operand);
+	*this = Operand;
 }
 
 CTSInfoDesc & CTSInfoDesc::operator = (const CTSInfoDesc &Operand)
 {
-	CopyDesc(&Operand);
+	if (&Operand != this) {
+		CBaseDesc::CopyDesc(&Operand);
+
+		m_byRemoteControlKeyID = Operand.m_byRemoteControlKeyID;
+		StdUtil::strncpy(m_szTSName, _countof(m_szTSName), Operand.m_szTSName);
+	}
 
 	return *this;
 }
 
-void CTSInfoDesc::CopyDesc(const CBaseDesc *pOperand)
-{
-	CBaseDesc::CopyDesc(pOperand);
-
-	const CTSInfoDesc *pSrcDesc = dynamic_cast<const CTSInfoDesc *>(pOperand);
-
-	if (pSrcDesc && pSrcDesc != this) {
-		m_byRemoteControlKeyID = pSrcDesc->m_byRemoteControlKeyID;
-		::lstrcpy(m_szTSName, pSrcDesc->m_szTSName);
-	}
-}
-
-void CTSInfoDesc::Reset(void)
+void CTSInfoDesc::Reset()
 {
 	CBaseDesc::Reset();
+
 	m_byRemoteControlKeyID = 0;
 	m_szTSName[0] = '\0';
 }
 
-const BYTE CTSInfoDesc::GetRemoteControlKeyID(void) const
+BYTE CTSInfoDesc::GetRemoteControlKeyID() const
 {
 	return m_byRemoteControlKeyID;
 }
 
-const DWORD CTSInfoDesc::GetTSName(LPTSTR pszName, int MaxLength) const
+DWORD CTSInfoDesc::GetTSName(LPTSTR pszName, int MaxLength) const
 {
 	if (pszName && MaxLength > 0)
 		::lstrcpyn(pszName, m_szTSName, MaxLength);
 	return ::lstrlen(m_szTSName);
 }
 
-const bool CTSInfoDesc::StoreContents(const BYTE *pPayload)
+bool CTSInfoDesc::StoreContents(const BYTE *pPayload)
 {
 	if (m_byDescTag != DESC_TAG || m_byDescLen < 2)
 		return false;
@@ -1062,7 +828,7 @@ const bool CTSInfoDesc::StoreContents(const BYTE *pPayload)
 		return false;
 
 	m_szTSName[0] = '\0';
-	CAribString::AribToString(m_szTSName, sizeof(m_szTSName) / sizeof(TCHAR), &pPayload[2], Length);
+	CAribString::AribToString(m_szTSName, _countof(m_szTSName), &pPayload[2], Length);
 
 	return true;
 }
@@ -1073,39 +839,31 @@ const bool CTSInfoDesc::StoreContents(const BYTE *pPayload)
 /////////////////////////////////////////////////////////////////////////////
 
 CComponentDesc::CComponentDesc()
-	: CBaseDesc()
 {
 	Reset();
 }
 
 CComponentDesc::CComponentDesc(const CComponentDesc &Operand)
 {
-	CopyDesc(&Operand);
+	*this = Operand;
 }
 
 CComponentDesc & CComponentDesc::operator = (const CComponentDesc &Operand)
 {
-	CopyDesc(&Operand);
+	if (&Operand != this) {
+		CBaseDesc::CopyDesc(&Operand);
+
+		m_StreamContent = Operand.m_StreamContent;
+		m_ComponentType = Operand.m_ComponentType;
+		m_ComponentTag = Operand.m_ComponentTag;
+		m_LanguageCode = Operand.m_LanguageCode;
+		StdUtil::strncpy(m_szText, _countof(m_szText), Operand.m_szText);
+	}
 
 	return *this;
 }
 
-void CComponentDesc::CopyDesc(const CBaseDesc *pOperand)
-{
-	CBaseDesc::CopyDesc(pOperand);
-
-	const CComponentDesc *pSrcDesc = dynamic_cast<const CComponentDesc *>(pOperand);
-
-	if (pSrcDesc && pSrcDesc != this) {
-		m_StreamContent = pSrcDesc->m_StreamContent;
-		m_ComponentType = pSrcDesc->m_ComponentType;
-		m_ComponentTag = pSrcDesc->m_ComponentTag;
-		m_LanguageCode = pSrcDesc->m_LanguageCode;
-		::lstrcpy(m_szText, pSrcDesc->m_szText);
-	}
-}
-
-void CComponentDesc::Reset(void)
+void CComponentDesc::Reset()
 {
 	CBaseDesc::Reset();
 
@@ -1116,34 +874,34 @@ void CComponentDesc::Reset(void)
 	m_szText[0] = '\0';
 }
 
-const BYTE CComponentDesc::GetStreamContent(void) const
+BYTE CComponentDesc::GetStreamContent() const
 {
 	return m_StreamContent;
 }
 
-const BYTE CComponentDesc::GetComponentType(void) const
+BYTE CComponentDesc::GetComponentType() const
 {
 	return m_ComponentType;
 }
 
-const BYTE CComponentDesc::GetComponentTag(void) const
+BYTE CComponentDesc::GetComponentTag() const
 {
 	return m_ComponentTag;
 }
 
-const DWORD CComponentDesc::GetLanguageCode(void) const
+DWORD CComponentDesc::GetLanguageCode() const
 {
 	return m_LanguageCode;
 }
 
-const DWORD CComponentDesc::GetText(LPTSTR pszText, int MaxLength) const
+DWORD CComponentDesc::GetText(LPTSTR pszText, int MaxLength) const
 {
 	if (pszText && MaxLength > 0)
 		::lstrcpyn(pszText, m_szText, MaxLength);
 	return ::lstrlen(m_szText);
 }
 
-const bool CComponentDesc::StoreContents(const BYTE *pPayload)
+bool CComponentDesc::StoreContents(const BYTE *pPayload)
 {
 	if (m_byDescTag != DESC_TAG || m_byDescLen < 6)
 		return false;
@@ -1156,7 +914,7 @@ const bool CComponentDesc::StoreContents(const BYTE *pPayload)
 	m_LanguageCode = (pPayload[3] << 16) | (pPayload[4] << 8) | pPayload[5];
 	m_szText[0]='\0';
 	if (m_byDescLen > 6)
-		CAribString::AribToString(m_szText, sizeof(m_szText) / sizeof(TCHAR), &pPayload[6], min(m_byDescLen - 6, 16));
+		CAribString::AribToString(m_szText, _countof(m_szText), &pPayload[6], min(m_byDescLen - 6, 16));
 	return true;
 }
 
@@ -1166,46 +924,38 @@ const bool CComponentDesc::StoreContents(const BYTE *pPayload)
 /////////////////////////////////////////////////////////////////////////////
 
 CAudioComponentDesc::CAudioComponentDesc()
-	: CBaseDesc()
 {
 	Reset();
 }
 
 CAudioComponentDesc::CAudioComponentDesc(const CAudioComponentDesc &Operand)
 {
-	CopyDesc(&Operand);
+	*this = Operand;
 }
 
 CAudioComponentDesc & CAudioComponentDesc::operator = (const CAudioComponentDesc &Operand)
 {
-	CopyDesc(&Operand);
+	if (&Operand != this) {
+		CBaseDesc::CopyDesc(&Operand);
+
+		m_StreamContent = Operand.m_StreamContent;
+		m_ComponentType = Operand.m_ComponentType;
+		m_ComponentTag = Operand.m_ComponentTag;
+		m_StreamType = Operand.m_StreamType;
+		m_SimulcastGroupTag = Operand.m_SimulcastGroupTag;
+		m_bESMultiLingualFlag = Operand.m_bESMultiLingualFlag;
+		m_bMainComponentFlag = Operand.m_bMainComponentFlag;
+		m_QualityIndicator = Operand.m_QualityIndicator;
+		m_SamplingRate = Operand.m_SamplingRate;
+		m_LanguageCode = Operand.m_LanguageCode;
+		m_LanguageCode2 = Operand.m_LanguageCode2;
+		StdUtil::strncpy(m_szText, _countof(m_szText), Operand.m_szText);
+	}
 
 	return *this;
 }
 
-void CAudioComponentDesc::CopyDesc(const CBaseDesc *pOperand)
-{
-	CBaseDesc::CopyDesc(pOperand);
-
-	const CAudioComponentDesc *pSrcDesc = dynamic_cast<const CAudioComponentDesc *>(pOperand);
-
-	if (pSrcDesc && pSrcDesc != this) {
-		m_StreamContent = pSrcDesc->m_StreamContent;
-		m_ComponentType = pSrcDesc->m_ComponentType;
-		m_ComponentTag = pSrcDesc->m_ComponentTag;
-		m_StreamType = pSrcDesc->m_StreamType;
-		m_SimulcastGroupTag = pSrcDesc->m_SimulcastGroupTag;
-		m_bESMultiLingualFlag = pSrcDesc->m_bESMultiLingualFlag;
-		m_bMainComponentFlag = pSrcDesc->m_bMainComponentFlag;
-		m_QualityIndicator = pSrcDesc->m_QualityIndicator;
-		m_SamplingRate = pSrcDesc->m_SamplingRate;
-		m_LanguageCode = pSrcDesc->m_LanguageCode;
-		m_LanguageCode2 = pSrcDesc->m_LanguageCode2;
-		::lstrcpy(m_szText, pSrcDesc->m_szText);
-	}
-}
-
-void CAudioComponentDesc::Reset(void)
+void CAudioComponentDesc::Reset()
 {
 	CBaseDesc::Reset();
 
@@ -1223,64 +973,64 @@ void CAudioComponentDesc::Reset(void)
 	m_szText[0] = '\0';
 }
 
-const BYTE CAudioComponentDesc::GetStreamContent(void) const
+BYTE CAudioComponentDesc::GetStreamContent() const
 {
 	return m_StreamContent;
 }
 
-const BYTE CAudioComponentDesc::GetComponentType(void) const
+BYTE CAudioComponentDesc::GetComponentType() const
 {
 	return m_ComponentType;
 }
 
-const BYTE CAudioComponentDesc::GetComponentTag(void) const
+BYTE CAudioComponentDesc::GetComponentTag() const
 {
 	return m_ComponentTag;
 }
 
-const BYTE CAudioComponentDesc::GetSimulcastGroupTag(void) const
+BYTE CAudioComponentDesc::GetSimulcastGroupTag() const
 {
 	return m_SimulcastGroupTag;
 }
 
-const bool CAudioComponentDesc::GetESMultiLingualFlag(void) const
+bool CAudioComponentDesc::GetESMultiLingualFlag() const
 {
 	return m_bESMultiLingualFlag;
 }
 
-const bool CAudioComponentDesc::GetMainComponentFlag(void) const
+bool CAudioComponentDesc::GetMainComponentFlag() const
 {
 	return m_bMainComponentFlag;
 }
 
-const BYTE CAudioComponentDesc::GetQualityIndicator(void) const
+BYTE CAudioComponentDesc::GetQualityIndicator() const
 {
 	return m_QualityIndicator;
 }
 
-const BYTE CAudioComponentDesc::GetSamplingRate(void) const
+BYTE CAudioComponentDesc::GetSamplingRate() const
 {
 	return m_SamplingRate;
 }
 
-const DWORD CAudioComponentDesc::GetLanguageCode(void) const
+DWORD CAudioComponentDesc::GetLanguageCode() const
 {
 	return m_LanguageCode;
 }
 
-const DWORD CAudioComponentDesc::GetLanguageCode2(void) const
+DWORD CAudioComponentDesc::GetLanguageCode2() const
 {
 	return m_LanguageCode2;
 }
 
-const DWORD CAudioComponentDesc::GetText(LPTSTR pszText, int MaxLength) const
+DWORD CAudioComponentDesc::GetText(LPTSTR pszText, int MaxLength) const
 {
 	if (pszText && MaxLength > 0)
 		::lstrcpyn(pszText, m_szText, MaxLength);
 	return ::lstrlen(m_szText);
 }
 
-const bool CAudioComponentDesc::StoreContents(const BYTE *pPayload)
+bool CAudioComponentDesc::StoreContents(const BYTE *pPayload)
 {
 	if (m_byDescTag != DESC_TAG || m_byDescLen < 9)
 		return false;
@@ -1306,7 +1056,7 @@ const bool CAudioComponentDesc::StoreContents(const BYTE *pPayload)
 	}
 	m_szText[0]='\0';
 	if (Pos < m_byDescLen)
-		CAribString::AribToString(m_szText, sizeof(m_szText) / sizeof(TCHAR), &pPayload[Pos], min(m_byDescLen - Pos, 33));
+		CAribString::AribToString(m_szText, _countof(m_szText), &pPayload[Pos], min(m_byDescLen - Pos, 33));
 	return true;
 }
 
@@ -1316,36 +1066,11 @@ const bool CAudioComponentDesc::StoreContents(const BYTE *pPayload)
 /////////////////////////////////////////////////////////////////////////////
 
 CContentDesc::CContentDesc()
-	: CBaseDesc()
 {
 	Reset();
 }
 
-CContentDesc::CContentDesc(const CContentDesc &Operand)
-{
-	CopyDesc(&Operand);
-}
-
-CContentDesc & CContentDesc::operator = (const CContentDesc &Operand)
-{
-	CopyDesc(&Operand);
-
-	return *this;
-}
-
-void CContentDesc::CopyDesc(const CBaseDesc *pOperand)
-{
-	CBaseDesc::CopyDesc(pOperand);
-
-	const CContentDesc *pSrcDesc = dynamic_cast<const CContentDesc *>(pOperand);
-
-	if (pSrcDesc && pSrcDesc != this) {
-		m_NibbleCount = pSrcDesc->m_NibbleCount;
-		::CopyMemory(m_NibbleList, pSrcDesc->m_NibbleList, pSrcDesc->m_NibbleCount * sizeof(Nibble));
-	}
-}
-
-void CContentDesc::Reset(void)
+void CContentDesc::Reset()
 {
 	CBaseDesc::Reset();
 
@@ -1365,7 +1090,7 @@ bool CContentDesc::GetNibble(int Index, Nibble *pNibble) const
 	return true;
 }
 
-const bool CContentDesc::StoreContents(const BYTE *pPayload)
+bool CContentDesc::StoreContents(const BYTE *pPayload)
 {
 	if (m_byDescTag != DESC_TAG || m_byDescLen > 14)
 		return false;
@@ -1386,39 +1111,11 @@ const bool CContentDesc::StoreContents(const BYTE *pPayload)
 /////////////////////////////////////////////////////////////////////////////
 
 CLogoTransmissionDesc::CLogoTransmissionDesc()
-	: CBaseDesc()
 {
 	Reset();
 }
 
-CLogoTransmissionDesc::CLogoTransmissionDesc(const CLogoTransmissionDesc &Operand)
-{
-	CopyDesc(&Operand);
-}
-
-CLogoTransmissionDesc & CLogoTransmissionDesc::operator = (const CLogoTransmissionDesc &Operand)
-{
-	CopyDesc(&Operand);
-
-	return *this;
-}
-
-void CLogoTransmissionDesc::CopyDesc(const CBaseDesc *pOperand)
-{
-	CBaseDesc::CopyDesc(pOperand);
-
-	const CLogoTransmissionDesc *pSrcDesc = dynamic_cast<const CLogoTransmissionDesc *>(pOperand);
-
-	if (pSrcDesc && pSrcDesc != this) {
-		m_LogoTransmissionType = pSrcDesc->m_LogoTransmissionType;
-		m_LogoID = pSrcDesc->m_LogoID;
-		m_LogoVersion = pSrcDesc->m_LogoVersion;
-		m_DownloadDataID = pSrcDesc->m_DownloadDataID;
-		::lstrcpyA(m_LogoChar, pSrcDesc->m_LogoChar);
-	}
-}
-
-void CLogoTransmissionDesc::Reset(void)
+void CLogoTransmissionDesc::Reset()
 {
 	CBaseDesc::Reset();
 
@@ -1457,7 +1154,7 @@ int CLogoTransmissionDesc::GetLogoChar(char *pChar, int MaxLength) const
 	return ::lstrlenA(m_LogoChar);
 }
 
-const bool CLogoTransmissionDesc::StoreContents(const BYTE *pPayload)
+bool CLogoTransmissionDesc::StoreContents(const BYTE *pPayload)
 {
 	if (m_byDescTag != DESC_TAG || m_byDescLen < 1)
 		return false;
@@ -1496,42 +1193,34 @@ const bool CLogoTransmissionDesc::StoreContents(const BYTE *pPayload)
 /////////////////////////////////////////////////////////////////////////////
 
 CSeriesDesc::CSeriesDesc()
-	: CBaseDesc()
 {
 	Reset();
 }
 
 CSeriesDesc::CSeriesDesc(const CSeriesDesc &Operand)
 {
-	CopyDesc(&Operand);
+	*this = Operand;
 }
 
 CSeriesDesc & CSeriesDesc::operator = (const CSeriesDesc &Operand)
 {
-	CopyDesc(&Operand);
+	if (&Operand != this) {
+		CBaseDesc::CopyDesc(&Operand);
+
+		m_SeriesID = Operand.m_SeriesID;
+		m_RepeatLabel = Operand.m_RepeatLabel;
+		m_ProgramPattern = Operand.m_ProgramPattern;
+		m_bExpireDateValidFlag = Operand.m_bExpireDateValidFlag;
+		m_ExpireDate = Operand.m_ExpireDate;
+		m_EpisodeNumber = Operand.m_EpisodeNumber;
+		m_LastEpisodeNumber = Operand.m_LastEpisodeNumber;
+		StdUtil::strncpy(m_szSeriesName, _countof(m_szSeriesName), Operand.m_szSeriesName);
+	}
 
 	return *this;
 }
 
-void CSeriesDesc::CopyDesc(const CBaseDesc *pOperand)
-{
-	CBaseDesc::CopyDesc(pOperand);
-
-	const CSeriesDesc *pSrcDesc = dynamic_cast<const CSeriesDesc *>(pOperand);
-
-	if (pSrcDesc && pSrcDesc != this) {
-		m_SeriesID = pSrcDesc->m_SeriesID;
-		m_RepeatLabel = pSrcDesc->m_RepeatLabel;
-		m_ProgramPattern = pSrcDesc->m_ProgramPattern;
-		m_bExpireDateValidFlag = pSrcDesc->m_bExpireDateValidFlag;
-		m_ExpireDate = pSrcDesc->m_ExpireDate;
-		m_EpisodeNumber = pSrcDesc->m_EpisodeNumber;
-		m_LastEpisodeNumber = pSrcDesc->m_LastEpisodeNumber;
-		::lstrcpy(m_szSeriesName, pSrcDesc->m_szSeriesName);
-	}
-}
-
-void CSeriesDesc::Reset(void)
+void CSeriesDesc::Reset()
 {
 	CBaseDesc::Reset();
 
@@ -1590,7 +1279,7 @@ int CSeriesDesc::GetSeriesName(LPTSTR pszName, int MaxName) const
 	return ::lstrlen(m_szSeriesName);
 }
 
-const bool CSeriesDesc::StoreContents(const BYTE *pPayload)
+bool CSeriesDesc::StoreContents(const BYTE *pPayload)
 {
 	if (m_byDescTag != DESC_TAG || m_byDescLen < 8)
 		return false;
@@ -1605,7 +1294,7 @@ const bool CSeriesDesc::StoreContents(const BYTE *pPayload)
 	m_LastEpisodeNumber = ((WORD)(pPayload[6] & 0x0F) << 8) | (WORD)pPayload[7];
 	m_szSeriesName[0] = '\0';
 	if (m_byDescLen > 8)
-		CAribString::AribToString(m_szSeriesName, MAX_SERIES_NAME, &pPayload[8], m_byDescLen - 8);
+		CAribString::AribToString(m_szSeriesName, _countof(m_szSeriesName), &pPayload[8], m_byDescLen - 8);
 	return true;
 }
 
@@ -1615,36 +1304,11 @@ const bool CSeriesDesc::StoreContents(const BYTE *pPayload)
 /////////////////////////////////////////////////////////////////////////////
 
 CEventGroupDesc::CEventGroupDesc()
-	: CBaseDesc()
 {
 	Reset();
 }
 
-CEventGroupDesc::CEventGroupDesc(const CEventGroupDesc &Operand)
-{
-	CopyDesc(&Operand);
-}
-
-CEventGroupDesc & CEventGroupDesc::operator = (const CEventGroupDesc &Operand)
-{
-	CopyDesc(&Operand);
-
-	return *this;
-}
-
-void CEventGroupDesc::CopyDesc(const CBaseDesc *pOperand)
-{
-	CBaseDesc::CopyDesc(pOperand);
-
-	const CEventGroupDesc *pSrcDesc = dynamic_cast<const CEventGroupDesc *>(pOperand);
-
-	if (pSrcDesc && pSrcDesc != this) {
-		m_GroupType = pSrcDesc->m_GroupType;
-		m_EventList = pSrcDesc->m_EventList;
-	}
-}
-
-void CEventGroupDesc::Reset(void)
+void CEventGroupDesc::Reset()
 {
 	CBaseDesc::Reset();
 
@@ -1670,7 +1334,7 @@ bool CEventGroupDesc::GetEventInfo(int Index, EventInfo *pInfo) const
 	return true;
 }
 
-const bool CEventGroupDesc::StoreContents(const BYTE *pPayload)
+bool CEventGroupDesc::StoreContents(const BYTE *pPayload)
 {
 	if (m_byDescTag != DESC_TAG || m_byDescLen < 1)
 		return false;
@@ -1718,30 +1382,7 @@ CLocalTimeOffsetDesc::CLocalTimeOffsetDesc()
 	Reset();
 }
 
-CLocalTimeOffsetDesc::CLocalTimeOffsetDesc(const CLocalTimeOffsetDesc &Operand)
-{
-	CopyDesc(&Operand);
-}
-
-CLocalTimeOffsetDesc & CLocalTimeOffsetDesc::operator = (const CLocalTimeOffsetDesc &Operand)
-{
-	CopyDesc(&Operand);
-
-	return *this;
-}
-
-void CLocalTimeOffsetDesc::CopyDesc(const CBaseDesc *pOperand)
-{
-	CBaseDesc::CopyDesc(pOperand);
-
-	const CLocalTimeOffsetDesc *pSrcDesc = dynamic_cast<const CLocalTimeOffsetDesc *>(pOperand);
-
-	if (pSrcDesc && pSrcDesc != this) {
-		m_Info = pSrcDesc->m_Info;
-	}
-}
-
-void CLocalTimeOffsetDesc::Reset(void)
+void CLocalTimeOffsetDesc::Reset()
 {
 	CBaseDesc::Reset();
 
@@ -1783,7 +1424,7 @@ int CLocalTimeOffsetDesc::GetNextTimeOffset() const
 	return m_Info.LocalTimeOffsetPolarity == 0 ? m_Info.NextTimeOffset : -(int)m_Info.NextTimeOffset;
 }
 
-const bool CLocalTimeOffsetDesc::StoreContents(const BYTE *pPayload)
+bool CLocalTimeOffsetDesc::StoreContents(const BYTE *pPayload)
 {
 	if (m_byDescTag != DESC_TAG || m_byDescLen < 13)
 		return false;
@@ -1808,30 +1449,7 @@ CDownloadContentDesc::CDownloadContentDesc()
 	Reset();
 }
 
-CDownloadContentDesc::CDownloadContentDesc(const CDownloadContentDesc &Operand)
-{
-	CopyDesc(&Operand);
-}
-
-CDownloadContentDesc & CDownloadContentDesc::operator = (const CDownloadContentDesc &Operand)
-{
-	CopyDesc(&Operand);
-
-	return *this;
-}
-
-void CDownloadContentDesc::CopyDesc(const CBaseDesc *pOperand)
-{
-	CBaseDesc::CopyDesc(pOperand);
-
-	const CDownloadContentDesc *pSrcDesc = dynamic_cast<const CDownloadContentDesc *>(pOperand);
-
-	if (pSrcDesc && pSrcDesc != this) {
-		m_Info = pSrcDesc->m_Info;
-	}
-}
-
-void CDownloadContentDesc::Reset(void)
+void CDownloadContentDesc::Reset()
 {
 	CBaseDesc::Reset();
 
@@ -1873,7 +1491,7 @@ BYTE CDownloadContentDesc::GetComponentTag() const
 	return m_Info.ComponentTag;
 }
 
-const bool CDownloadContentDesc::StoreContents(const BYTE *pPayload)
+bool CDownloadContentDesc::StoreContents(const BYTE *pPayload)
 {
 	if (m_byDescTag != DESC_TAG || m_byDescLen < 18)
 		return false;
@@ -1919,34 +1537,27 @@ CCaContractInfoDesc::CCaContractInfoDesc()
 
 CCaContractInfoDesc::CCaContractInfoDesc(const CCaContractInfoDesc &Operand)
 {
-	CopyDesc(&Operand);
+	*this = Operand;
 }
 
 CCaContractInfoDesc & CCaContractInfoDesc::operator = (const CCaContractInfoDesc &Operand)
 {
-	CopyDesc(&Operand);
+	if (&Operand != this) {
+		CBaseDesc::CopyDesc(&Operand);
+
+		m_CaUnitID = Operand.m_CaUnitID;
+		m_NumOfComponent = Operand.m_NumOfComponent;
+		::CopyMemory(m_ComponentTag, Operand.m_ComponentTag, Operand.m_NumOfComponent);
+		m_ContractVerificationInfoLength = Operand.m_ContractVerificationInfoLength;
+		::CopyMemory(m_ContractVerificationInfo, Operand.m_ContractVerificationInfo,
+					 Operand.m_ContractVerificationInfoLength);
+		StdUtil::strncpy(m_szFeeName, _countof(m_szFeeName), Operand.m_szFeeName);
+	}
 
 	return *this;
 }
 
-void CCaContractInfoDesc::CopyDesc(const CBaseDesc *pOperand)
-{
-	CBaseDesc::CopyDesc(pOperand);
-
-	const CCaContractInfoDesc *pSrcDesc = dynamic_cast<const CCaContractInfoDesc *>(pOperand);
-
-	if (pSrcDesc && pSrcDesc != this) {
-		m_CaUnitID = pSrcDesc->m_CaUnitID;
-		m_NumOfComponent = pSrcDesc->m_NumOfComponent;
-		::CopyMemory(m_ComponentTag, pSrcDesc->m_ComponentTag, pSrcDesc->m_NumOfComponent);
-		m_ContractVerificationInfoLength = pSrcDesc->m_ContractVerificationInfoLength;
-		::CopyMemory(m_ContractVerificationInfo, pSrcDesc->m_ContractVerificationInfo,
-					 pSrcDesc->m_ContractVerificationInfoLength);
-		::lstrcpyn(m_szFeeName, pSrcDesc->m_szFeeName, MAX_FEE_NAME);
-	}
-}
-
-void CCaContractInfoDesc::Reset(void)
+void CCaContractInfoDesc::Reset()
 {
 	CBaseDesc::Reset();
 
@@ -2002,7 +1613,7 @@ int CCaContractInfoDesc::GetFeeName(LPTSTR pszName, int MaxName) const
 	return ::lstrlen(m_szFeeName);
 }
 
-const bool CCaContractInfoDesc::StoreContents(const BYTE *pPayload)
+bool CCaContractInfoDesc::StoreContents(const BYTE *pPayload)
 {
 	if (m_byDescTag != DESC_TAG || m_byDescLen < 7)
 		return false;
@@ -2044,8 +1655,52 @@ const bool CCaContractInfoDesc::StoreContents(const BYTE *pPayload)
 			Reset();
 			return false;
 		}
-		CAribString::AribToString(m_szFeeName, MAX_FEE_NAME, &pPayload[Pos], FeeNameLength);
+		CAribString::AribToString(m_szFeeName, _countof(m_szFeeName), &pPayload[Pos], FeeNameLength);
 	}
+
+	return true;
+}
+
+
+/////////////////////////////////////////////////////////////////////////////
+// [0xFB] 部分受信記述子抽象化クラス
+/////////////////////////////////////////////////////////////////////////////
+
+CPartialReceptionDesc::CPartialReceptionDesc()
+{
+	Reset();
+}
+
+void CPartialReceptionDesc::Reset()
+{
+	CBaseDesc::Reset();
+
+	m_ServiceNum = 0;
+}
+
+BYTE CPartialReceptionDesc::GetServiceNum() const
+{
+	return m_ServiceNum;
+}
+
+WORD CPartialReceptionDesc::GetServiceID(const BYTE Index) const
+{
+	if (Index >= m_ServiceNum)
+		return 0;
+	return m_ServiceList[Index];
+}
+
+bool CPartialReceptionDesc::StoreContents(const BYTE *pPayload)
+{
+	if (m_byDescTag != DESC_TAG)
+		return false;
+
+	BYTE ServiceNum = m_byDescLen / 2;
+	if (ServiceNum > 3)
+		ServiceNum = 3;
+	m_ServiceNum = ServiceNum;
+	for (BYTE i = 0; i < ServiceNum; i++)
+		m_ServiceList[i] = (pPayload[i * 2] << 8) | (pPayload[i * 2 + 1]);
 
 	return true;
 }
@@ -2087,7 +1742,7 @@ CDescBlock & CDescBlock::operator = (const CDescBlock &Operand)
 	return *this;
 }
 
-const WORD CDescBlock::ParseBlock(const BYTE *pHexData, const WORD wDataLength)
+WORD CDescBlock::ParseBlock(const BYTE *pHexData, const WORD wDataLength)
 {
 	if (!pHexData || wDataLength < 2U)
 		return 0U;
@@ -2121,7 +1776,7 @@ const CBaseDesc * CDescBlock::ParseBlock(const BYTE *pHexData, const WORD wDataL
 	return (ParseBlock(pHexData, wDataLength))? GetDescByTag(byTag) : NULL;
 }
 
-void CDescBlock::Reset(void)
+void CDescBlock::Reset()
 {
 	// 全てのインスタンスを開放する
 	for (size_t Index = 0 ; Index < m_DescArray.size() ; Index++) {
@@ -2131,7 +1786,7 @@ void CDescBlock::Reset(void)
 	m_DescArray.clear();
 }
 
-const WORD CDescBlock::GetDescNum(void) const
+WORD CDescBlock::GetDescNum() const
 {
 	// 記述子の数を返す
 	return (WORD)m_DescArray.size();
@@ -2201,6 +1856,7 @@ CBaseDesc * CDescBlock::CreateDescInstance(const BYTE byTag)
 	case CLocalTimeOffsetDesc::DESC_TAG				: return new CLocalTimeOffsetDesc;
 	case CDownloadContentDesc::DESC_TAG				: return new CDownloadContentDesc;
 	case CCaContractInfoDesc::DESC_TAG				: return new CCaContractInfoDesc;
+	case CPartialReceptionDesc::DESC_TAG			: return new CPartialReceptionDesc;
 	default											: return new CBaseDesc;
 	}
 }

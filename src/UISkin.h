@@ -42,7 +42,7 @@ protected:
 	CUICore *m_pCore;
 	bool m_fWheelChannelChanging;
 
-	virtual bool InitializeViewer() = 0;
+	virtual bool InitializeViewer(BYTE VideoStreamType=0) = 0;
 	virtual bool FinalizeViewer() = 0;
 	virtual bool EnableViewer(bool fEnable) = 0;
 	virtual bool IsViewerEnabled() const = 0;
@@ -66,6 +66,7 @@ protected:
 	virtual void OnServiceChanged() {}
 	virtual void OnRecordingStarted() {}
 	virtual void OnRecordingStopped() {}
+	virtual void On1SegModeChanged(bool f1SegMode) {}
 
 	void SetWheelChannelChanging(bool fChanging,DWORD Delay=0);
 

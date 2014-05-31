@@ -19,17 +19,17 @@ public:
 	virtual ~CBufferedFileWriter();
 
 // IMediaDecoder
-	virtual void Reset(void);
-	virtual const bool InputMedia(CMediaData *pMediaData, const DWORD dwInputIndex = 0UL);
+	void Reset() override;
+	const bool InputMedia(CMediaData *pMediaData, const DWORD dwInputIndex = 0UL) override;
 
 // CBufferedFileWriter
-	const bool OpenFile(LPCTSTR pszFileName, UINT Flags = 0);
-	const bool RelayFile(LPCTSTR pszFileName, UINT Flags = 0);
-	void CloseFile(void);
-	const bool IsOpen() const;
+	bool OpenFile(LPCTSTR pszFileName, UINT Flags = 0);
+	bool RelayFile(LPCTSTR pszFileName, UINT Flags = 0);
+	void CloseFile();
+	bool IsOpen() const;
 
-	const LONGLONG GetWriteSize(void) const;
-	const LONGLONG GetWriteCount(void) const;
+	LONGLONG GetWriteSize() const;
+	LONGLONG GetWriteCount() const;
 
 	bool SetBufferSize(DWORD Size);
 	DWORD GetBufferSize() const { return m_BufferSize; }

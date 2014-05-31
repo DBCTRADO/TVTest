@@ -53,9 +53,7 @@ CCaptionPanel::CCaptionPanel()
 	, m_pOldEditProc(NULL)
 	, m_fEnable(true)
 	, m_fAutoScroll(true)
-#ifndef TVH264
 	, m_fIgnoreSmall(true)
-#endif
 	, m_Language(0)
 {
 }
@@ -278,13 +276,11 @@ LRESULT CCaptionPanel::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam
 			m_fAutoScroll=!m_fAutoScroll;
 			break;
 
-#ifndef TVH264_FOR_1SEG
 		case CM_CAPTIONPANEL_IGNORESMALL:
 			m_Lock.Lock();
 			m_fIgnoreSmall=!m_fIgnoreSmall;
 			m_Lock.Unlock();
 			break;
-#endif
 		}
 		return 0;
 
@@ -318,13 +314,11 @@ LRESULT CALLBACK CCaptionPanel::EditWndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LP
 			HMENU hmenu=::LoadMenu(GetAppClass().GetResourceInstance(),MAKEINTRESOURCE(IDM_CAPTIONPANEL));
 
 			::CheckMenuItem(hmenu,CM_CAPTIONPANEL_ENABLE,
-							MF_BYCOMMAND | (pThis->m_fEnable?MFS_CHECKED:MFS_UNCHECKED));
+							MF_BYCOMMAND | (pThis->m_fEnable?MF_CHECKED:MF_UNCHECKED));
 			::CheckMenuItem(hmenu,CM_CAPTIONPANEL_AUTOSCROLL,
-							MF_BYCOMMAND | (pThis->m_fAutoScroll?MFS_CHECKED:MFS_UNCHECKED));
-#ifndef TVH264
+							MF_BYCOMMAND | (pThis->m_fAutoScroll?MF_CHECKED:MF_UNCHECKED));
 			::CheckMenuItem(hmenu,CM_CAPTIONPANEL_IGNORESMALL,
-							MF_BYCOMMAND | (pThis->m_fIgnoreSmall?MFS_CHECKED:MFS_UNCHECKED));
-#endif
+							MF_BYCOMMAND | (pThis->m_fIgnoreSmall?MF_CHECKED:MF_UNCHECKED));
 			POINT pt;
 			::GetCursorPos(&pt);
 			::TrackPopupMenu(::GetSubMenu(hmenu,0),TPM_RIGHTBUTTON,pt.x,pt.y,0,pThis->m_hwnd,NULL);
@@ -346,12 +340,14 @@ LRESULT CALLBACK CCaptionPanel::EditWndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LP
 }
 
 
-void CCaptionPanel::OnLanguageUpdate(CCaptionDecoder *pDecoder)
+void CCaptionPanel::OnLanguageUpdate(CCaptionDecoder *pDecoder,CCaptionParser *pParser)
 {
 }
 
 
-void CCaptionPanel::OnCaption(CCaptionDecoder *pDecoder,BYTE Language, LPCTSTR pszText,const CAribString::FormatList *pFormatList)
+void CCaptionPanel::OnCaption(CCaptionDecoder *pDecoder,CCaptionParser *pParser,
+							  BYTE Language, LPCTSTR pszText,
+							  const CAribString::FormatList *pFormatList)
 {
 	CBlockLock Lock(&m_Lock);
 
@@ -379,8 +375,7 @@ void CCaptionPanel::OnCaption(CCaptionDecoder *pDecoder,BYTE Language, LPCTSTR p
 			::lstrcpy(pszBuff,pszText);
 			DWORD DstLength=Length;
 
-#ifndef TVH264
-			if (m_fIgnoreSmall) {
+			if (m_fIgnoreSmall && !pParser->Is1Seg()) {
 				for (int i=(int)pFormatList->size()-1;i>=0;i--) {
 					if ((*pFormatList)[i].Size==CAribString::SIZE_SMALL) {
 						DWORD Pos=(*pFormatList)[i].Pos;
@@ -403,7 +398,6 @@ void CCaptionPanel::OnCaption(CCaptionDecoder *pDecoder,BYTE Language, LPCTSTR p
 					}
 				}
 			}
-#endif
 
 			for (DWORD i=0;i<DstLength;i++) {
 				if (pszBuff[i]=='\f') {

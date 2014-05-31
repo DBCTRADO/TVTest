@@ -136,10 +136,10 @@ void CBonSrcFilter::Flush()
 }
 
 
-bool CBonSrcFilter::EnableSync(bool bEnable)
+bool CBonSrcFilter::EnableSync(bool bEnable,bool b1Seg)
 {
 	if (m_pSrcPin)
-		return m_pSrcPin->EnableSync(bEnable);
+		return m_pSrcPin->EnableSync(bEnable,b1Seg);
 	return false;
 }
 

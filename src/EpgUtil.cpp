@@ -18,13 +18,36 @@ namespace EpgUtil
 
 	VideoType GetVideoType(BYTE ComponentType)
 	{
-		if (ComponentType>=0xB1
-				&& ComponentType<=0xB4)
-			return VIDEO_TYPE_HD;
-		if (ComponentType>=0x01
-				&& ComponentType<=0x04)
-			return VIDEO_TYPE_SD;
+		if ((ComponentType&0x0F)>=1 && (ComponentType&0x0F)<=4) {
+			switch (ComponentType>>4) {
+			case 0x0:
+			case 0xA:
+			case 0xD:
+			case 0xF:
+				return VIDEO_TYPE_SD;
+			case 0x9:
+			case 0xB:
+			case 0xC:
+			case 0xE:
+				return VIDEO_TYPE_HD;
+			}
+		}
 		return VIDEO_TYPE_UNKNOWN;
+	}
+
+
+	LPCTSTR GetComponentTypeText(BYTE StreamContent,BYTE ComponentType)
+	{
+		switch (StreamContent) {
+		case 0x01:
+		case 0x05:
+			return GetVideoComponentTypeText(ComponentType);
+
+		case 0x02:
+			return GetAudioComponentTypeText(ComponentType);
+		}
+
+		return NULL;
 	}
 
 
@@ -35,20 +58,37 @@ namespace EpgUtil
 			LPCTSTR pszText;
 		} VideoComponentTypeList[] = {
 			{0x01,TEXT("480i[4:3]")},
-			{0x03,TEXT("480i[16:9]")},
+			{0x02,TEXT("480i[16:9]")},	// パンベクトルあり
+			{0x03,TEXT("480i[16:9]")},	// パンベクトルなし
 			{0x04,TEXT("480i[>16:9]")},
+			{0x91,TEXT("2160p[4:3]")},
+			{0x92,TEXT("2160p[16:9]")},	// パンベクトルあり
+			{0x93,TEXT("2160p[16:9]")},	// パンベクトルなし
+			{0x94,TEXT("2160p[>16:9]")},
 			{0xA1,TEXT("480p[4:3]")},
-			{0xA3,TEXT("480p[16:9]")},
+			{0xA2,TEXT("480p[16:9]")},	// パンベクトルあり
+			{0xA3,TEXT("480p[16:9]")},	// パンベクトルなし
 			{0xA4,TEXT("480p[>16:9]")},
 			{0xB1,TEXT("1080i[4:3]")},
-			{0xB3,TEXT("1080i[16:9]")},
+			{0xB2,TEXT("1080i[16:9]")},	// パンベクトルあり
+			{0xB3,TEXT("1080i[16:9]")},	// パンベクトルなし
 			{0xB4,TEXT("1080i[>16:9]")},
 			{0xC1,TEXT("720p[4:3]")},
-			{0xC3,TEXT("720p[16:9]")},
+			{0xC2,TEXT("720p[16:9]")},	// パンベクトルあり
+			{0xC3,TEXT("720p[16:9]")},	// パンベクトルなし
 			{0xC4,TEXT("720p[>16:9]")},
 			{0xD1,TEXT("240p[4:3]")},
-			{0xD3,TEXT("240p[16:9]")},
+			{0xD2,TEXT("240p[16:9]")},	// パンベクトルあり
+			{0xD3,TEXT("240p[16:9]")},	// パンベクトルなし
 			{0xD4,TEXT("240p[>16:9]")},
+			{0xE1,TEXT("1080p[4:3]")},
+			{0xE2,TEXT("1080p[16:9]")},	// パンベクトルあり
+			{0xE3,TEXT("1080p[16:9]")},	// パンベクトルなし
+			{0xE4,TEXT("1080p[>16:9]")},
+			{0xF1,TEXT("180p[4:3]")},
+			{0xF2,TEXT("180p[16:9]")},	// パンベクトルあり
+			{0xF3,TEXT("180p[16:9]")},	// パンベクトルなし
+			{0xF4,TEXT("180p[>16:9]")},
 		};
 
 		for (int i=0;i<lengthof(VideoComponentTypeList);i++) {
@@ -66,12 +106,25 @@ namespace EpgUtil
 			BYTE ComponentType;
 			LPCTSTR pszText;
 		} AudioComponentTypeList[] = {
-			{0x01,TEXT("Mono")},
-			{0x02,TEXT("Dual mono")},
-			{0x03,TEXT("Stereo")},
-			{0x07,TEXT("3+1")},
-			{0x08,TEXT("3+2")},
-			{0x09,TEXT("5.1ch")},
+			{0x01,TEXT("Mono")},					// 1/0
+			{0x02,TEXT("Dual mono")},				// 1/0 + 1/0
+			{0x03,TEXT("Stereo")},					// 2/0
+			{0x04,TEXT("3ch[2/1]")},
+			{0x05,TEXT("3ch[3/0]")},
+			{0x06,TEXT("4ch[2/2]")},
+			{0x07,TEXT("4ch[3/1]")},
+			{0x08,TEXT("5ch")},						// 3/2
+			{0x09,TEXT("5.1ch")},					// 3/2.1
+			{0x0A,TEXT("6.1ch[3/3.1]")},
+			{0x0B,TEXT("6.1ch[2/0/0-2/0/2-0.1]")},
+			{0x0C,TEXT("7.1ch[5/2.1]")},
+			{0x0D,TEXT("7.1ch[3/2/2.1]")},
+			{0x0E,TEXT("7.1ch[2/0/0-3/0/2-0.1]")},
+			{0x0F,TEXT("7.1ch[0/2/0-3/0/2-0.1]")},
+			{0x10,TEXT("10.2ch")},					// 2/0/0-3/2/3-0.2
+			{0x11,TEXT("22.2ch")},					// 3/3/3-5/2/3-3/0/0.2
+			{0x40,TEXT("視覚障害者用音声解説")},
+			{0x41,TEXT("聴覚障害者用音声")},
 		};
 
 		for (int i=0;i<lengthof(AudioComponentTypeList);i++) {
@@ -152,7 +205,7 @@ namespace EpgUtil
 	}
 
 
-	LPCTSTR GetLanguageText(DWORD LanguageCode,LanguageTextType Type)
+	bool GetLanguageText(DWORD LanguageCode,LPTSTR pszText,int MaxText,LanguageTextType Type)
 	{
 		static const struct {
 			DWORD LanguageCode;
@@ -172,17 +225,35 @@ namespace EpgUtil
 			{LANGUAGE_CODE_ETC,	TEXT("外国語"),		TEXT("外国語"),	TEXT("外")},
 		};
 
-		int i;
-		for (i=0;i<lengthof(LanguageList)-1;i++) {
-			if (LanguageList[i].LanguageCode==LanguageCode)
-				break;
+		if (pszText==NULL || MaxText<1)
+			return false;
+
+		for (int i=0;i<lengthof(LanguageList)-1;i++) {
+			if (LanguageList[i].LanguageCode==LanguageCode) {
+				LPCTSTR pszLang;
+
+				switch (Type) {
+				default:
+				case LANGUAGE_TEXT_LONG:	pszLang=LanguageList[i].pszLongText;	break;
+				case LANGUAGE_TEXT_SIMPLE:	pszLang=LanguageList[i].pszSimpleText;	break;
+				case LANGUAGE_TEXT_SHORT:	pszLang=LanguageList[i].pszShortText;	break;
+				}
+
+				::lstrcpyn(pszText,pszLang,MaxText);
+
+				return true;
+			}
 		}
-		switch (Type) {
-		case LANGUAGE_TEXT_LONG:	return LanguageList[i].pszLongText;
-		case LANGUAGE_TEXT_SIMPLE:	return LanguageList[i].pszSimpleText;
-		case LANGUAGE_TEXT_SHORT:	return LanguageList[i].pszShortText;
-		}
-		return TEXT("");
+
+		TCHAR szLang[4];
+		szLang[0]=static_cast<TCHAR>((LanguageCode>>16)&0xFF);
+		szLang[1]=static_cast<TCHAR>((LanguageCode>>8)&0xFF);
+		szLang[2]=static_cast<TCHAR>(LanguageCode&0xFF);
+		szLang[3]=_T('\0');
+		::CharUpperBuff(szLang,3);
+		::lstrcpyn(pszText,szLang,MaxText);
+
+		return true;
 	}
 
 }

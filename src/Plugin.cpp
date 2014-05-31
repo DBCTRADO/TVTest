@@ -921,7 +921,8 @@ LRESULT CALLBACK CPlugin::Callback(TVTest::PluginParam *pParam,UINT Message,LPAR
 					|| !pTsAnalyzer->GetServiceInfo(pTsAnalyzer->GetServiceIndexByID(ServiceID),&Info))
 				return FALSE;
 			pServiceInfo->ServiceID=ServiceID;
-			pServiceInfo->VideoPID=Info.VideoEs.PID;
+			pServiceInfo->VideoPID=
+				Info.VideoEsList.empty()?CTsAnalyzer::PID_INVALID:Info.VideoEsList[0].PID;
 			pServiceInfo->NumAudioPIDs=(int)Info.AudioEsList.size();
 			for (size_t i=0;i<Info.AudioEsList.size();i++)
 				pServiceInfo->AudioPID[i]=Info.AudioEsList[i].PID;
@@ -1029,13 +1030,13 @@ LRESULT CALLBACK CPlugin::Callback(TVTest::PluginParam *pParam,UINT Message,LPAR
 								&& pInfo->Size!=TVTest::STATUSINFO_SIZE_V1))
 				return FALSE;
 			const CCoreEngine *pCoreEngine=GetAppClass().GetCoreEngine();
-			DWORD DropCount=pCoreEngine->GetContinuityErrorPacketCount();
+			ULONGLONG DropCount=pCoreEngine->GetContinuityErrorPacketCount();
 			pInfo->SignalLevel=pCoreEngine->GetSignalLevel();
 			pInfo->BitRate=pCoreEngine->GetBitRate();
-			pInfo->ErrorPacketCount=pCoreEngine->GetErrorPacketCount()+DropCount;
-			pInfo->ScramblePacketCount=pCoreEngine->GetScramblePacketCount();
+			pInfo->ErrorPacketCount=(DWORD)(pCoreEngine->GetErrorPacketCount()+DropCount);
+			pInfo->ScramblePacketCount=(DWORD)pCoreEngine->GetScramblePacketCount();
 			if (pInfo->Size==sizeof(TVTest::StatusInfo)) {
-				pInfo->DropPacketCount=DropCount;
+				pInfo->DropPacketCount=(DWORD)DropCount;
 				if (pCoreEngine->GetDescramble()
 						&& pCoreEngine->GetCasDevice()>=0) {
 					if (pCoreEngine->m_DtvEngine.m_CasProcessor.IsCasCardOpen()) {
@@ -1842,7 +1843,7 @@ LRESULT CPlugin::OnPluginMessage(WPARAM wParam,LPARAM lParam)
 			int Space=(int)pParam->lParam1;
 
 			if (pParam->pPlugin->m_Version<TVTEST_PLUGIN_VERSION_(0,0,8))
-				return AppMain.SetChannel(Space,(int)pParam->lParam2);
+				return AppMain.SetChannel(Space,(int)pParam->lParam2,-1);
 
 			WORD ServiceID=HIWORD(pParam->lParam2);
 			return AppMain.SetChannel(Space,(SHORT)LOWORD(pParam->lParam2),
@@ -1852,8 +1853,8 @@ LRESULT CPlugin::OnPluginMessage(WPARAM wParam,LPARAM lParam)
 	case TVTest::MESSAGE_SETSERVICE:
 		{
 			if (pParam->lParam2==0)
-				return GetAppClass().SetServiceByIndex((int)pParam->lParam1);
-			return GetAppClass().SetServiceByID((WORD)pParam->lParam1);
+				return GetAppClass().SetServiceByIndex((int)pParam->lParam1,CAppMain::SET_SERVICE_STRICT_ID);
+			return GetAppClass().SetServiceByID((WORD)pParam->lParam1,CAppMain::SET_SERVICE_STRICT_ID);
 		}
 
 	case TVTest::MESSAGE_GETTUNINGSPACENAME:

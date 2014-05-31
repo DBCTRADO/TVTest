@@ -80,6 +80,8 @@ bool CGeneralOptions::ReadSettings(CSettings &Settings)
 	Settings.Read(TEXT("Driver"),&m_LastBonDriverName);
 
 	Settings.Read(TEXT("Mpeg2Decoder"),&m_Mpeg2DecoderName);
+	Settings.Read(TEXT("H264Decoder"),&m_H264DecoderName);
+	Settings.Read(TEXT("H265Decoder"),&m_H265DecoderName);
 
 	TCHAR szRenderer[16];
 	if (Settings.Read(TEXT("Renderer"),szRenderer,lengthof(szRenderer))) {
@@ -131,6 +133,8 @@ bool CGeneralOptions::WriteSettings(CSettings &Settings)
 	Settings.Write(TEXT("DefaultDriver"),m_DefaultBonDriverName);
 	Settings.Write(TEXT("Driver"),GetAppClass().GetCoreEngine()->GetDriverFileName());
 	Settings.Write(TEXT("Mpeg2Decoder"),m_Mpeg2DecoderName);
+	Settings.Write(TEXT("H264Decoder"),m_H264DecoderName);
+	Settings.Write(TEXT("H265Decoder"),m_H265DecoderName);
 	Settings.Write(TEXT("Renderer"),
 				   CVideoRenderer::EnumRendererName((int)m_VideoRendererType));
 	Settings.Write(TEXT("CasDevice"),m_CasDeviceName);
@@ -211,6 +215,38 @@ bool CGeneralOptions::SetMpeg2DecoderName(LPCTSTR pszDecoderName)
 		m_Mpeg2DecoderName.clear();
 	else
 		m_Mpeg2DecoderName=pszDecoderName;
+	return true;
+}
+
+
+LPCTSTR CGeneralOptions::GetH264DecoderName() const
+{
+	return m_H264DecoderName.c_str();
+}
+
+
+bool CGeneralOptions::SetH264DecoderName(LPCTSTR pszDecoderName)
+{
+	if (pszDecoderName==NULL)
+		m_H264DecoderName.clear();
+	else
+		m_H264DecoderName=pszDecoderName;
+	return true;
+}
+
+
+LPCTSTR CGeneralOptions::GetH265DecoderName() const
+{
+	return m_H265DecoderName.c_str();
+}
+
+
+bool CGeneralOptions::SetH265DecoderName(LPCTSTR pszDecoderName)
+{
+	if (pszDecoderName==NULL)
+		m_H265DecoderName.clear();
+	else
+		m_H265DecoderName=pszDecoderName;
 	return true;
 }
 
@@ -320,44 +356,21 @@ INT_PTR CGeneralOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam
 			}
 			::SetDlgItemText(hDlg,IDC_OPTIONS_DEFAULTDRIVER,m_DefaultBonDriverName.c_str());
 
-			// MPEG-2 (H.264) デコーダ
-			CDirectShowFilterFinder FilterFinder;
-			int Count=0;
-			if (FilterFinder.FindFilter(&MEDIATYPE_Video,
-#ifndef TVH264
-										&MEDIASUBTYPE_MPEG2_VIDEO
-#else
-										&MEDIASUBTYPE_H264
-#endif
-					)) {
-				for (int i=0;i<FilterFinder.GetFilterCount();i++) {
-					WCHAR szFilterName[MAX_MPEG2_DECODER_NAME];
-
-					if (FilterFinder.GetFilterInfo(i,NULL,szFilterName,lengthof(szFilterName))) {
-						DlgComboBox_AddString(hDlg,IDC_OPTIONS_DECODER,szFilterName);
-						Count++;
-					}
-				}
-			}
-			int Sel=0;
-			if (Count==0) {
-				DlgComboBox_AddString(hDlg,IDC_OPTIONS_DECODER,TEXT("<デコーダが見付かりません>"));
-			} else {
-				CMediaViewer &MediaViewer=GetAppClass().GetCoreEngine()->m_DtvEngine.m_MediaViewer;
-				TCHAR szText[32+MAX_MPEG2_DECODER_NAME];
-
-				::lstrcpy(szText,TEXT("自動"));
-				if (!m_Mpeg2DecoderName.empty()) {
-					Sel=(int)DlgComboBox_FindStringExact(hDlg,IDC_OPTIONS_DECODER,-1,
-														 m_Mpeg2DecoderName.c_str())+1;
-				} else if (MediaViewer.IsOpen()) {
-					::lstrcat(szText,TEXT(" ("));
-					MediaViewer.GetVideoDecoderName(szText+::lstrlen(szText),MAX_MPEG2_DECODER_NAME);
-					::lstrcat(szText,TEXT(")"));
-				}
-				DlgComboBox_InsertString(hDlg,IDC_OPTIONS_DECODER,0,szText);
-			}
-			DlgComboBox_SetCurSel(hDlg,IDC_OPTIONS_DECODER,Sel);
+			// MPEG-2 デコーダ
+			SetVideoDecoderList(IDC_OPTIONS_MPEG2DECODER,
+								MEDIASUBTYPE_MPEG2_VIDEO,
+								STREAM_TYPE_MPEG2_VIDEO,
+								m_Mpeg2DecoderName);
+			// H.264 デコーダ
+			SetVideoDecoderList(IDC_OPTIONS_H264DECODER,
+								MEDIASUBTYPE_H264,
+								STREAM_TYPE_H264,
+								m_H264DecoderName);
+			// H.265 デコーダ
+			SetVideoDecoderList(IDC_OPTIONS_H265DECODER,
+								MEDIASUBTYPE_HEVC,
+								STREAM_TYPE_H265,
+								m_H265DecoderName);
 
 			// 映像レンダラ
 			LPCTSTR pszRenderer;
@@ -370,9 +383,14 @@ INT_PTR CGeneralOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam
 			{
 				CCoreEngine *pCoreEngine=AppMain.GetCoreEngine();
 				CCasProcessor &CasProcessor=pCoreEngine->m_DtvEngine.m_CasProcessor;
+				if (!CasProcessor.IsCasLibraryLoaded()) {
+					if (AppMain.HasDefaultCasLibrary())
+						AppMain.LoadCasLibrary(AppMain.GetDefaultCasLibrary());
+				}
+				m_fEnableCasSettings=CasProcessor.IsCasLibraryLoaded();
+
 				CCoreEngine::CasDeviceList CasDevList;
 				int Sel=0;
-
 				pCoreEngine->GetCasDeviceList(&CasDevList);
 				for (size_t i=0;i<CasDevList.size();i++) {
 					DlgComboBox_AddString(hDlg,IDC_OPTIONS_CARDREADER,
@@ -384,23 +402,32 @@ INT_PTR CGeneralOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam
 				}
 				DlgComboBox_SetCurSel(hDlg,IDC_OPTIONS_CARDREADER,
 									  m_fTemporaryNoDescramble?0:Sel);
+				if (!m_fEnableCasSettings)
+					EnableDlgItem(hDlg,IDC_OPTIONS_CARDREADER,false);
 
-				const UINT AvailableInstructions=CasProcessor.GetAvailableInstructions();
-				TCHAR szName[64];
-				for (int i=0;CasProcessor.GetInstructionName(i,szName,lengthof(szName))>0;i++) {
-					if ((AvailableInstructions&(1U<<i))!=0) {
-						LRESULT Index=DlgComboBox_AddString(hDlg,IDC_OPTIONS_DESCRAMBLEINSTRUCTION,szName);
-						DlgComboBox_SetItemData(hDlg,IDC_OPTIONS_DESCRAMBLEINSTRUCTION,Index,i);
-					}
+				DlgCheckBox_Check(hDlg,IDC_OPTIONS_DESCRAMBLECURSERVICEONLY,m_fDescrambleCurServiceOnly);
+				DlgCheckBox_Check(hDlg,IDC_OPTIONS_ENABLEEMMPROCESS,m_fEnableEmmProcess);
+				if (!m_fEnableCasSettings || m_CasDevice<0) {
+					EnableDlgItems(hDlg,IDC_OPTIONS_DESCRAMBLE_FIRST,
+										IDC_OPTIONS_DESCRAMBLE_LAST,false);
 				}
-				DlgComboBox_SetCurSel(hDlg,IDC_OPTIONS_DESCRAMBLEINSTRUCTION,m_DescrambleInstruction);
-			}
 
-			DlgCheckBox_Check(hDlg,IDC_OPTIONS_DESCRAMBLECURSERVICEONLY,m_fDescrambleCurServiceOnly);
-			DlgCheckBox_Check(hDlg,IDC_OPTIONS_ENABLEEMMPROCESS,m_fEnableEmmProcess);
-			if (m_CasDevice<0) {
-				EnableDlgItems(hDlg,IDC_OPTIONS_DESCRAMBLE_FIRST,
-									IDC_OPTIONS_DESCRAMBLE_LAST,false);
+				if (m_fEnableCasSettings) {
+					const UINT AvailableInstructions=CasProcessor.GetAvailableInstructions();
+					TCHAR szName[64];
+					for (int i=0;CasProcessor.GetInstructionName(i,szName,lengthof(szName))>0;i++) {
+						if ((AvailableInstructions&(1U<<i))!=0) {
+							LRESULT Index=DlgComboBox_AddString(hDlg,IDC_OPTIONS_DESCRAMBLEINSTRUCTION,szName);
+							DlgComboBox_SetItemData(hDlg,IDC_OPTIONS_DESCRAMBLEINSTRUCTION,Index,i);
+						}
+					}
+					DlgComboBox_SetCurSel(hDlg,IDC_OPTIONS_DESCRAMBLEINSTRUCTION,m_DescrambleInstruction);
+				} else {
+					EnableDlgItems(hDlg,
+								   IDC_OPTIONS_DESCRAMBLEINSTRUCTION_LABEL,
+								   IDC_OPTIONS_DESCRAMBLEBENCHMARK,
+								   false);
+				}
 			}
 
 			DlgCheckBox_Check(hDlg,IDC_OPTIONS_RESIDENT,m_fResident);
@@ -467,7 +494,8 @@ INT_PTR CGeneralOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam
 			return TRUE;
 
 		case IDC_OPTIONS_CARDREADER:
-			if (HIWORD(wParam)==CBN_SELCHANGE) {
+			if (HIWORD(wParam)==CBN_SELCHANGE
+					&& m_fEnableCasSettings) {
 				EnableDlgItems(hDlg,
 					IDC_OPTIONS_DESCRAMBLE_FIRST,
 					IDC_OPTIONS_DESCRAMBLE_LAST,
@@ -521,43 +549,43 @@ INT_PTR CGeneralOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam
 								 szDefaultBonDriver,lengthof(szDefaultBonDriver));
 				m_DefaultBonDriverName=szDefaultBonDriver;
 
-				TCHAR szDecoder[MAX_MPEG2_DECODER_NAME];
-				int Sel=(int)DlgComboBox_GetCurSel(hDlg,IDC_OPTIONS_DECODER);
-				if (Sel>0)
-					DlgComboBox_GetLBString(hDlg,IDC_OPTIONS_DECODER,Sel,szDecoder);
-				else
-					szDecoder[0]='\0';
-				if (::lstrcmpi(szDecoder,m_Mpeg2DecoderName.c_str())!=0) {
-					m_Mpeg2DecoderName=szDecoder;
-					SetUpdateFlag(UPDATE_DECODER);
-					SetGeneralUpdateFlag(UPDATE_GENERAL_BUILDMEDIAVIEWER);
-				}
+				GetVideoDecoderSetting(IDC_OPTIONS_MPEG2DECODER,
+									   STREAM_TYPE_MPEG2_VIDEO,
+									   &m_Mpeg2DecoderName);
+				GetVideoDecoderSetting(IDC_OPTIONS_H264DECODER,
+									   STREAM_TYPE_H264,
+									   &m_H264DecoderName);
+				GetVideoDecoderSetting(IDC_OPTIONS_H265DECODER,
+									   STREAM_TYPE_H265,
+									   &m_H265DecoderName);
 
-				Sel=(int)DlgComboBox_GetCurSel(hDlg,IDC_OPTIONS_CARDREADER);
-				int CasDevice=(int)DlgComboBox_GetItemData(hDlg,IDC_OPTIONS_CARDREADER,Sel);
-				if ((m_fTemporaryNoDescramble && Sel>0)
-						|| (!m_fTemporaryNoDescramble && CasDevice!=m_CasDevice)) {
-					SetCasDevice(CasDevice);
-					m_fTemporaryNoDescramble=false;
-					SetUpdateFlag(UPDATE_CARDREADER);
-				}
+				if (m_fEnableCasSettings) {
+					int Sel=(int)DlgComboBox_GetCurSel(hDlg,IDC_OPTIONS_CARDREADER);
+					int CasDevice=(int)DlgComboBox_GetItemData(hDlg,IDC_OPTIONS_CARDREADER,Sel);
+					if ((m_fTemporaryNoDescramble && Sel>0)
+							|| (!m_fTemporaryNoDescramble && CasDevice!=m_CasDevice)) {
+						SetCasDevice(CasDevice);
+						m_fTemporaryNoDescramble=false;
+						SetUpdateFlag(UPDATE_CARDREADER);
+					}
 
-				Sel=(int)DlgComboBox_GetCurSel(hDlg,IDC_OPTIONS_DESCRAMBLEINSTRUCTION);
-				if (Sel>=0) {
-					m_DescrambleInstruction=
-						(int)DlgComboBox_GetItemData(hDlg,IDC_OPTIONS_DESCRAMBLEINSTRUCTION,Sel);
-				}
+					Sel=(int)DlgComboBox_GetCurSel(hDlg,IDC_OPTIONS_DESCRAMBLEINSTRUCTION);
+					if (Sel>=0) {
+						m_DescrambleInstruction=
+							(int)DlgComboBox_GetItemData(hDlg,IDC_OPTIONS_DESCRAMBLEINSTRUCTION,Sel);
+					}
 
-				bool fCurOnly=DlgCheckBox_IsChecked(hDlg,IDC_OPTIONS_DESCRAMBLECURSERVICEONLY);
-				if (fCurOnly!=m_fDescrambleCurServiceOnly) {
-					m_fDescrambleCurServiceOnly=fCurOnly;
-					SetUpdateFlag(UPDATE_DESCRAMBLECURONLY);
-				}
+					bool fCurOnly=DlgCheckBox_IsChecked(hDlg,IDC_OPTIONS_DESCRAMBLECURSERVICEONLY);
+					if (fCurOnly!=m_fDescrambleCurServiceOnly) {
+						m_fDescrambleCurServiceOnly=fCurOnly;
+						SetUpdateFlag(UPDATE_DESCRAMBLECURONLY);
+					}
 
-				bool fEmm=DlgCheckBox_IsChecked(hDlg,IDC_OPTIONS_ENABLEEMMPROCESS);
-				if (fEmm!=m_fEnableEmmProcess) {
-					m_fEnableEmmProcess=fEmm;
-					SetUpdateFlag(UPDATE_ENABLEEMMPROCESS);
+					bool fEmm=DlgCheckBox_IsChecked(hDlg,IDC_OPTIONS_ENABLEEMMPROCESS);
+					if (fEmm!=m_fEnableEmmProcess) {
+						m_fEnableEmmProcess=fEmm;
+						SetUpdateFlag(UPDATE_ENABLEEMMPROCESS);
+					}
 				}
 
 				bool fResident=DlgCheckBox_IsChecked(hDlg,IDC_OPTIONS_RESIDENT);
@@ -577,6 +605,61 @@ INT_PTR CGeneralOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam
 	}
 
 	return FALSE;
+}
+
+
+void CGeneralOptions::SetVideoDecoderList(
+	int ID,const GUID &SubType,BYTE StreamType,const TVTest::String &DecoderName)
+{
+	CDirectShowFilterFinder FilterFinder;
+	int Count=0;
+	if (FilterFinder.FindFilter(&MEDIATYPE_Video,&SubType)) {
+		for (int i=0;i<FilterFinder.GetFilterCount();i++) {
+			WCHAR szFilterName[MAX_VIDEO_DECODER_NAME];
+
+			if (FilterFinder.GetFilterInfo(i,NULL,szFilterName,lengthof(szFilterName))) {
+				DlgComboBox_AddString(m_hDlg,ID,szFilterName);
+				Count++;
+			}
+		}
+	}
+	int Sel=0;
+	if (Count==0) {
+		DlgComboBox_AddString(m_hDlg,ID,TEXT("<デコーダが見付かりません>"));
+	} else {
+		CMediaViewer &MediaViewer=GetAppClass().GetCoreEngine()->m_DtvEngine.m_MediaViewer;
+		TCHAR szText[32+MAX_VIDEO_DECODER_NAME];
+
+		::lstrcpy(szText,TEXT("自動"));
+		if (!DecoderName.empty()) {
+			Sel=(int)DlgComboBox_FindStringExact(m_hDlg,ID,-1,DecoderName.c_str())+1;
+		} else if (MediaViewer.IsOpen()
+				&& StreamType==MediaViewer.GetVideoStreamType()) {
+			::lstrcat(szText,TEXT(" ("));
+			MediaViewer.GetVideoDecoderName(szText+::lstrlen(szText),MAX_VIDEO_DECODER_NAME);
+			::lstrcat(szText,TEXT(")"));
+		}
+		DlgComboBox_InsertString(m_hDlg,ID,0,szText);
+	}
+	DlgComboBox_SetCurSel(m_hDlg,ID,Sel);
+}
+
+
+void CGeneralOptions::GetVideoDecoderSetting(
+	int ID,BYTE StreamType,TVTest::String *pDecoderName)
+{
+	TCHAR szDecoder[MAX_VIDEO_DECODER_NAME];
+	int Sel=(int)DlgComboBox_GetCurSel(m_hDlg,ID);
+	if (Sel>0)
+		DlgComboBox_GetLBString(m_hDlg,ID,Sel,szDecoder);
+	else
+		szDecoder[0]='\0';
+	if (::lstrcmpi(szDecoder,pDecoderName->c_str())!=0) {
+		*pDecoderName=szDecoder;
+		SetUpdateFlag(UPDATE_DECODER);
+		if (StreamType==GetAppClass().GetCoreEngine()->m_DtvEngine.m_MediaViewer.GetVideoStreamType())
+			SetGeneralUpdateFlag(UPDATE_GENERAL_BUILDMEDIAVIEWER);
+	}
 }
 
 

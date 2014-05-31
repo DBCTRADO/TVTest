@@ -50,7 +50,8 @@ public:
 	};
 
 	static const DWORD AribToString(TCHAR *lpszDst, const DWORD dwDstLen, const BYTE *pSrcData, const DWORD dwSrcLen);
-	static const DWORD CaptionToString(TCHAR *lpszDst, const DWORD dwDstLen, const BYTE *pSrcData, const DWORD dwSrcLen, FormatList *pFormatList = NULL, IDRCSMap *pDRCSMap = NULL);
+	static const DWORD CaptionToString(TCHAR *lpszDst, const DWORD dwDstLen, const BYTE *pSrcData, const DWORD dwSrcLen,
+									   const bool b1Seg = false, FormatList *pFormatList = NULL, IDRCSMap *pDRCSMap = NULL);
 
 private:
 	enum CODE_SET
@@ -111,7 +112,7 @@ private:
 	bool m_bCaption;
 
 	const DWORD AribToStringInternal(TCHAR *lpszDst, const DWORD dwDstLen, const BYTE *pSrcData, const DWORD dwSrcLen,
-		const bool bCaption = false, FormatList *pFormatList = NULL, IDRCSMap *pDRCSMap = NULL);
+		const bool bCaption = false, const bool b1Seg = false, FormatList *pFormatList = NULL, IDRCSMap *pDRCSMap = NULL);
 	const DWORD ProcessString(TCHAR *lpszDst, const DWORD dwDstLen, const BYTE *pSrcData, const DWORD dwSrcLen);
 	inline const int ProcessCharCode(TCHAR *lpszDst, const DWORD dwDstLen, const WORD wCode, const CODE_SET CodeSet);
 

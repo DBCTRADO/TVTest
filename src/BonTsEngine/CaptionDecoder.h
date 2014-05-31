@@ -10,11 +10,13 @@
 class CCaptionDecoder : public CMediaDecoder, protected CCaptionParser::ICaptionHandler
 {
 public:
-	class __declspec(novtable) IHandler {
+	class ABSTRACT_CLASS_DECL IHandler {
 	public:
 		virtual ~IHandler() = 0;
-		virtual void OnLanguageUpdate(CCaptionDecoder *pDecoder) {}
-		virtual void OnCaption(CCaptionDecoder *pDecoder, BYTE Language, LPCTSTR pszText, const CAribString::FormatList *pFormatList) {}
+		virtual void OnLanguageUpdate(CCaptionDecoder *pDecoder, CCaptionParser *pParser) {}
+		virtual void OnCaption(CCaptionDecoder *pDecoder, CCaptionParser *pParser,
+							   BYTE Language, LPCTSTR pszText,
+							   const CAribString::FormatList *pFormatList) {}
 	};
 
 	typedef CCaptionParser::IDRCSMap IDRCSMap;
@@ -23,8 +25,8 @@ public:
 	virtual ~CCaptionDecoder();
 
 // CMediaDecoder
-	virtual void Reset();
-	virtual const bool InputMedia(CMediaData *pMediaData, const DWORD dwInputIndex = 0UL);
+	void Reset() override;
+	const bool InputMedia(CMediaData *pMediaData, const DWORD dwInputIndex = 0UL) override;
 
 	bool SetTargetStream(WORD ServiceID, BYTE ComponentTag = 0xFF);
 	void SetCaptionHandler(IHandler *pHandler);

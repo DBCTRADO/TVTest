@@ -22,8 +22,7 @@ CDtvEngine::CDtvEngine(void)
 	, m_wCurTransportStream(0U)
 	, m_CurServiceIndex(SERVICE_INVALID)
 	, m_CurServiceID(SID_INVALID)
-	, m_SpecServiceID(SID_INVALID)
-	, m_bFollowViewableService(false)
+	, m_VideoStreamType(STREAM_TYPE_UNINITIALIZED)
 	, m_CurAudioStream(0)
 
 	, m_BonSrcDecoder(this)
@@ -33,7 +32,6 @@ CDtvEngine::CDtvEngine(void)
 	, m_MediaViewer(this)
 	, m_MediaTee(this)
 	, m_FileWriter(this)
-	//, m_FileReader(this)
 	, m_MediaBuffer(this)
 	, m_MediaGrabber(this)
 	, m_TsSelector(this)
@@ -59,8 +57,8 @@ CDtvEngine::~CDtvEngine(void)
 }
 
 
-const bool CDtvEngine::BuildEngine(CEventHandler *pEventHandler,
-								   bool bDescramble, bool bBuffering, bool bEventManager)
+bool CDtvEngine::BuildEngine(CEventHandler *pEventHandler,
+							 bool bDescramble, bool bBuffering, bool bEventManager)
 {
 	// 完全に暫定
 	if (m_bBuiled)
@@ -125,14 +123,14 @@ const bool CDtvEngine::BuildEngine(CEventHandler *pEventHandler,
 }
 
 
-const bool CDtvEngine::IsBuildComplete() const
+bool CDtvEngine::IsBuildComplete() const
 {
 	return m_bBuiled && IsSrcFilterOpen() && m_MediaViewer.IsOpen()
 		&& (!m_bDescramble || m_CasProcessor.IsCasCardOpen());
 }
 
 
-const bool CDtvEngine::CloseEngine(void)
+bool CDtvEngine::CloseEngine(void)
 {
 	//if (!m_bBuiled)
 	//	return true;
@@ -163,7 +161,7 @@ const bool CDtvEngine::CloseEngine(void)
 }
 
 
-const bool CDtvEngine::ResetEngine(void)
+bool CDtvEngine::ResetEngine(void)
 {
 	if (!m_bBuiled)
 		return false;
@@ -176,7 +174,7 @@ const bool CDtvEngine::ResetEngine(void)
 }
 
 
-const bool CDtvEngine::OpenBonDriver(LPCTSTR pszFileName)
+bool CDtvEngine::OpenBonDriver(LPCTSTR pszFileName)
 {
 	ReleaseSrcFilter();
 
@@ -208,7 +206,7 @@ const bool CDtvEngine::OpenBonDriver(LPCTSTR pszFileName)
 }
 
 
-const bool CDtvEngine::ReleaseSrcFilter()
+bool CDtvEngine::ReleaseSrcFilter()
 {
 	// ソースフィルタを開放する
 	if (m_BonSrcDecoder.IsBonDriverLoaded()) {
@@ -221,188 +219,32 @@ const bool CDtvEngine::ReleaseSrcFilter()
 }
 
 
-const bool CDtvEngine::IsSrcFilterOpen() const
+bool CDtvEngine::IsSrcFilterOpen() const
 {
 	return m_BonSrcDecoder.IsOpen();
 }
 
 
-const bool CDtvEngine::EnablePreview(const bool bEnable)
-{
-	if (!m_MediaViewer.IsOpen())
-		return false;
-
-	bool bOK;
-
-	if (bEnable) {
-		// プレビュー有効
-		bOK = m_MediaViewer.Play();
-	} else {
-		// プレビュー無効
-		bOK = m_MediaViewer.Stop();
-	}
-
-	return bOK;
-}
-
-
-const bool CDtvEngine::SetViewSize(const int x,const int y)
-{
-	// ウィンドウサイズを設定する
-	return m_MediaViewer.SetViewSize(x,y);
-}
-
-
-const bool CDtvEngine::SetVolume(const float fVolume)
-{
-	// オーディオボリュームを設定する( -100.0(無音) < fVolume < 0(最大) )
-	return m_MediaViewer.SetVolume(fVolume);
-}
-
-
-const bool CDtvEngine::GetVideoSize(WORD *pwWidth,WORD *pwHeight)
-{
-	return m_MediaViewer.GetVideoSize(pwWidth,pwHeight);
-}
-
-
-const bool CDtvEngine::GetVideoAspectRatio(BYTE *pbyAspectRateX,BYTE *pbyAspectRateY)
-{
-	return m_MediaViewer.GetVideoAspectRatio(pbyAspectRateX,pbyAspectRateY);
-}
-
-
-const BYTE CDtvEngine::GetAudioChannelNum()
-{
-	return m_MediaViewer.GetAudioChannelNum();
-}
-
-
-const int CDtvEngine::GetAudioStreamNum(const int Service)
-{
-	WORD ServiceID;
-	if (Service<0) {
-		if (!GetServiceID(&ServiceID))
-			return 0;
-	} else {
-		if (!m_TsAnalyzer.GetViewableServiceID(Service, &ServiceID))
-			return 0;
-	}
-	return m_TsAnalyzer.GetAudioEsNum(m_TsAnalyzer.GetServiceIndexByID(ServiceID));
-}
-
-
-const bool CDtvEngine::SetAudioStream(int StreamIndex)
-{
-	WORD AudioPID;
-
-	if (!m_TsAnalyzer.GetAudioEsPID(m_CurServiceIndex, StreamIndex, &AudioPID))
-		return false;
-
-	if (!m_MediaViewer.SetAudioPID(AudioPID))
-		return false;
-
-	m_CurAudioStream = StreamIndex;
-
-	return true;
-}
-
-
-const int CDtvEngine::GetAudioStream() const
-{
-	return m_CurAudioStream;
-}
-
-
-const BYTE CDtvEngine::GetAudioComponentType(const int AudioIndex)
-{
-	return m_TsAnalyzer.GetAudioComponentType(m_CurServiceIndex, AudioIndex < 0 ? m_CurAudioStream : AudioIndex);
-}
-
-
-const int CDtvEngine::GetAudioComponentText(LPTSTR pszText, int MaxLength, const int AudioIndex)
-{
-	return m_TsAnalyzer.GetAudioComponentText(m_CurServiceIndex, AudioIndex < 0 ? m_CurAudioStream : AudioIndex, pszText, MaxLength);
-}
-
-
-const bool CDtvEngine::SetStereoMode(int iMode)
-{
-	return m_MediaViewer.SetStereoMode(iMode);
-}
-
-
-const WORD CDtvEngine::GetEventID(bool bNext)
-{
-	return m_TsAnalyzer.GetEventID(m_CurServiceIndex, bNext);
-}
-
-
-const int CDtvEngine::GetEventName(LPTSTR pszName, int MaxLength, bool bNext)
-{
-	return m_TsAnalyzer.GetEventName(m_CurServiceIndex, pszName, MaxLength, bNext);
-}
-
-
-const int CDtvEngine::GetEventText(LPTSTR pszText, int MaxLength, bool bNext)
-{
-	return m_TsAnalyzer.GetEventText(m_CurServiceIndex, pszText, MaxLength, bNext);
-}
-
-
-const int CDtvEngine::GetEventExtendedText(LPTSTR pszText, int MaxLength, bool bNext)
-{
-	return m_TsAnalyzer.GetEventExtendedText(m_CurServiceIndex, pszText, MaxLength, true, bNext);
-}
-
-
-const bool CDtvEngine::GetEventTime(SYSTEMTIME *pStartTime, DWORD *pDuration, bool bNext)
-{
-	return m_TsAnalyzer.GetEventTime(m_CurServiceIndex, pStartTime, pDuration, bNext);
-}
-
-
-const bool CDtvEngine::GetEventSeriesInfo(CTsAnalyzer::EventSeriesInfo *pInfo, bool bNext)
-{
-	return m_TsAnalyzer.GetEventSeriesInfo(m_CurServiceIndex, pInfo, bNext);
-}
-
-
-const bool CDtvEngine::GetEventInfo(CTsAnalyzer::EventInfo *pInfo, bool bNext)
-{
-	return m_TsAnalyzer.GetEventInfo(m_CurServiceIndex, pInfo, true, bNext);
-}
-
-
-const bool CDtvEngine::GetEventAudioInfo(CTsAnalyzer::EventAudioInfo *pInfo, const int AudioIndex, bool bNext)
-{
-	return m_TsAnalyzer.GetEventAudioInfo(m_CurServiceIndex, AudioIndex < 0 ? m_CurAudioStream : AudioIndex, pInfo, bNext);
-}
-
-const bool CDtvEngine::GetVideoDecoderName(LPWSTR lpName,int iBufLen)
-{
-	return m_MediaViewer.GetVideoDecoderName(lpName, iBufLen);
-}
-
-
-const bool CDtvEngine::SetChannel(const BYTE byTuningSpace, const WORD wChannel, const WORD ServiceID, const bool bFollowViewableService)
+bool CDtvEngine::SetChannel(const BYTE byTuningSpace, const WORD wChannel,
+							const ServiceSelectInfo *pServiceSelInfo)
 {
 	TRACE(TEXT("CDtvEngine::SetChannel(%d, %d, %04x)\n"),
-		  byTuningSpace, wChannel, ServiceID);
+		  byTuningSpace, wChannel,
+		  pServiceSelInfo ? pServiceSelInfo->ServiceID : 0);
 
 	CBlockLock Lock(&m_EngineLock);
 
 	// サービスはPATが来るまで保留
-	const WORD PrevSpecServiceID = m_SpecServiceID;
-	m_SpecServiceID = ServiceID;
-
-	const bool bPrevFollowViewableService = m_bFollowViewableService;
-	m_bFollowViewableService = bFollowViewableService || ServiceID == SID_INVALID;
+	ServiceSelectInfo OldServiceSel = m_ServiceSel;
+	if (pServiceSelInfo) {
+		m_ServiceSel = *pServiceSelInfo;
+	} else {
+		m_ServiceSel.Reset();
+	}
 
 	// チャンネル変更
-	if (!m_BonSrcDecoder.SetChannelAndPlay((DWORD)byTuningSpace, (DWORD)wChannel)) {
-		m_SpecServiceID = PrevSpecServiceID;
-		m_bFollowViewableService = bPrevFollowViewableService;
+	if (!m_BonSrcDecoder.SetChannelAndPlay(byTuningSpace, wChannel)) {
+		m_ServiceSel = OldServiceSel;
 
 		SetError(m_BonSrcDecoder.GetLastErrorException());
 		return false;
@@ -414,106 +256,214 @@ const bool CDtvEngine::SetChannel(const BYTE byTuningSpace, const WORD wChannel,
 }
 
 
-const bool CDtvEngine::SetServiceByID(const WORD ServiceID, const bool bReserve)
+bool CDtvEngine::SetService(const ServiceSelectInfo *pServiceSelInfo, const bool bReserve)
 {
+	if (!pServiceSelInfo)
+		return false;
+
+	WORD ServiceID = pServiceSelInfo->ServiceID;
+
+	TRACE(TEXT("CDtvEngine::SetService() : ServiceID %04x\n"), ServiceID);
+
 	CBlockLock Lock(&m_EngineLock);
 
 	// bReserve == true の場合、まだPATが来ていなくてもエラーにしない
 
-	int Index = m_TsAnalyzer.GetViewableServiceIndexByID(ServiceID);
-	if (Index < 0) {
-		if (!bReserve || m_wCurTransportStream != 0)
-			return false;
-	} else {
-		SelectService(Index);
+	bool bSetService = true, b1Seg = false;
+
+	if (pServiceSelInfo->bPrefer1Seg) {
+		// ワンセグ指定
+		WORD SID;
+		if (pServiceSelInfo->PreferredServiceIndex != SERVICE_INVALID
+				&& m_TsAnalyzer.Get1SegServiceIDByIndex(
+					pServiceSelInfo->PreferredServiceIndex, &SID)) {
+			b1Seg = true;
+			ServiceID = SID;
+		} else if (m_TsAnalyzer.GetFirst1SegServiceID(&SID)) {
+			b1Seg = true;
+			ServiceID = SID;
+		}
 	}
 
-	m_SpecServiceID = ServiceID;
+	if (!b1Seg && ServiceID != SID_DEFAULT) {
+		int Index = m_TsAnalyzer.GetViewableServiceIndexByID(ServiceID);
+		if (Index < 0) {
+			if (!bReserve || m_wCurTransportStream != 0)
+				return false;
+			bSetService = false;
+		}
+	}
+
+	if (bSetService)
+		SelectService(ServiceID);
+
+	m_ServiceSel = *pServiceSelInfo;
 
 	return true;
 }
 
 
-const bool CDtvEngine::SetServiceByIndex(const WORD Service)
+bool CDtvEngine::SetServiceByID(const WORD ServiceID, const bool bReserve)
+{
+	TRACE(TEXT("CDtvEngine::SetServiceByID(%04x, %d)\n"), ServiceID, bReserve);
+
+	ServiceSelectInfo ServiceSel;
+
+	ServiceSel.ServiceID = ServiceID;
+	ServiceSel.bFollowViewableService = m_ServiceSel.bFollowViewableService;
+
+	return SetService(&ServiceSel, bReserve);
+}
+
+
+bool CDtvEngine::SetServiceByIndex(const WORD Service)
 {
 	CBlockLock Lock(&m_EngineLock);
 
-	if (!SelectService(Service))
+	WORD ServiceID;
+
+	if (Service == SERVICE_DEFAULT) {
+		ServiceID = SID_DEFAULT;
+	} else {
+		if (!m_TsAnalyzer.GetViewableServiceID(Service, &ServiceID))
+			return false;
+	}
+
+	if (!SelectService(ServiceID))
 		return false;
 
-	m_SpecServiceID = m_CurServiceID;
+	m_ServiceSel.ServiceID = m_CurServiceID;
+	m_ServiceSel.bPrefer1Seg = false;
 
 	return true;
 }
 
 
-bool CDtvEngine::SelectService(const WORD wService)
+bool CDtvEngine::SelectService(WORD ServiceID)
 {
+	TRACE(TEXT("CDtvEngine::SelectService(%04x)\n"), ServiceID);
+
 	CBlockLock Lock(&m_EngineLock);
 
-	// サービス変更(wService==SERVICE_DEFAULTならPAT先頭サービス)
+	// サービス変更(ServiceID==SID_DEFAULTならPAT先頭サービス)
 
-	if (wService == SERVICE_DEFAULT || wService < m_TsAnalyzer.GetViewableServiceNum()) {
-		WORD wServiceID;
-
-		if (wService == SERVICE_DEFAULT) {
-			TRACE(TEXT("Select default service\n"));
-			// 先頭PMTが到着するまで失敗にする
-			if (!m_TsAnalyzer.GetFirstViewableServiceID(&wServiceID)) {
-				TRACE(TEXT("No viewable service\n"));
-				return false;
-			}
-		} else {
-			if (!m_TsAnalyzer.GetViewableServiceID(wService, &wServiceID)) {
-				TRACE(TEXT("Service #%d not found\n"), wService);
-				return false;
-			}
+	if (ServiceID == SID_DEFAULT) {
+		TRACE(TEXT("Select default service\n"));
+		// 先頭PMTが到着するまで失敗にする
+		if (!m_TsAnalyzer.GetFirstViewableServiceID(&ServiceID)) {
+			TRACE(TEXT("No viewable service\n"));
+			return false;
 		}
-		m_CurServiceIndex = m_TsAnalyzer.GetServiceIndexByID(wServiceID);
-		m_CurServiceID = wServiceID;
-
-		WORD wVideoPID = CMediaViewer::PID_INVALID;
-		WORD wAudioPID = CMediaViewer::PID_INVALID;
-
-		m_TsAnalyzer.GetVideoEsPID(m_CurServiceIndex, &wVideoPID);
-		if (!m_TsAnalyzer.GetAudioEsPID(m_CurServiceIndex, m_CurAudioStream, &wAudioPID)
-				&& m_CurAudioStream != 0) {
-			m_TsAnalyzer.GetAudioEsPID(m_CurServiceIndex, 0, &wAudioPID);
-			m_CurAudioStream = 0;
+	} else {
+		if (m_TsAnalyzer.GetViewableServiceIndexByID(ServiceID) < 0) {
+			TRACE(TEXT("Service %04x not found\n"), ServiceID);
+			return false;
 		}
-
-		TRACE(TEXT("------- Service Select -------\n"));
-		TRACE(TEXT("%d (ServiceID = %04X)\n"), m_CurServiceIndex, wServiceID);
-
-		m_MediaViewer.SetVideoPID(wVideoPID);
-		m_MediaViewer.SetAudioPID(wAudioPID);
-
-		if (m_bDescrambleCurServiceOnly)
-			SetDescrambleService(wServiceID);
-
-		if (m_bWriteCurServiceOnly)
-			SetWriteStream(wServiceID, m_WriteStream);
-
-		m_CaptionDecoder.SetTargetStream(wServiceID);
-
-		if (m_pEventHandler)
-			m_pEventHandler->OnServiceChanged(wServiceID);
-
-		return true;
 	}
 
-	return false;
+	const WORD OldServiceID = m_CurServiceID;
+
+	m_CurServiceIndex = m_TsAnalyzer.GetServiceIndexByID(ServiceID);
+	m_CurServiceID = ServiceID;
+
+	WORD VideoPID = CMediaViewer::PID_INVALID;
+	WORD AudioPID = CMediaViewer::PID_INVALID;
+	BYTE VideoStreamType = STREAM_TYPE_INVALID;
+
+	m_TsAnalyzer.GetVideoEsPID(m_CurServiceIndex, 0, &VideoPID);
+	m_TsAnalyzer.GetVideoStreamType(m_CurServiceIndex, 0, &VideoStreamType);
+	if (!m_TsAnalyzer.GetAudioEsPID(m_CurServiceIndex, m_CurAudioStream, &AudioPID)
+			&& m_CurAudioStream != 0) {
+		m_TsAnalyzer.GetAudioEsPID(m_CurServiceIndex, 0, &AudioPID);
+		m_CurAudioStream = 0;
+	}
+
+	TRACE(TEXT("------- Service Select -------\n"));
+	TRACE(TEXT("%d (ServiceID = %04X)\n"), m_CurServiceIndex, ServiceID);
+
+	if (m_VideoStreamType != VideoStreamType) {
+		TRACE(TEXT("Video stream_type changed (%02x -> %02x)\n"),
+			  m_VideoStreamType, VideoStreamType);
+		m_VideoStreamType = VideoStreamType;
+		if (m_pEventHandler!=NULL)
+			m_pEventHandler->OnVideoStreamTypeChanged(VideoStreamType);
+	}
+
+	m_MediaViewer.Set1SegMode(m_TsAnalyzer.Is1SegService(m_CurServiceIndex));
+	m_MediaViewer.SetVideoPID(VideoPID);
+	m_MediaViewer.SetAudioPID(AudioPID);
+
+	if (m_bDescrambleCurServiceOnly)
+		SetDescrambleService(ServiceID);
+
+	if (m_bWriteCurServiceOnly)
+		SetWriteStream(ServiceID, m_WriteStream);
+
+	m_CaptionDecoder.SetTargetStream(ServiceID);
+
+	if (m_pEventHandler && m_CurServiceID != OldServiceID)
+		m_pEventHandler->OnServiceChanged(ServiceID);
+
+	return true;
 }
 
 
-const bool CDtvEngine::GetServiceID(WORD *pServiceID)
+bool CDtvEngine::GetServiceID(WORD *pServiceID)
 {
 	// サービスID取得
 	return m_TsAnalyzer.GetServiceID(m_CurServiceIndex, pServiceID);
 }
 
 
-const unsigned __int64 CDtvEngine::GetPcrTimeStamp()
+WORD CDtvEngine::GetEventID(bool bNext)
+{
+	return m_TsAnalyzer.GetEventID(m_CurServiceIndex, bNext);
+}
+
+
+int CDtvEngine::GetEventName(LPTSTR pszName, int MaxLength, bool bNext)
+{
+	return m_TsAnalyzer.GetEventName(m_CurServiceIndex, pszName, MaxLength, bNext);
+}
+
+
+int CDtvEngine::GetEventText(LPTSTR pszText, int MaxLength, bool bNext)
+{
+	return m_TsAnalyzer.GetEventText(m_CurServiceIndex, pszText, MaxLength, bNext);
+}
+
+
+int CDtvEngine::GetEventExtendedText(LPTSTR pszText, int MaxLength, bool bNext)
+{
+	return m_TsAnalyzer.GetEventExtendedText(m_CurServiceIndex, pszText, MaxLength, true, bNext);
+}
+
+
+bool CDtvEngine::GetEventTime(SYSTEMTIME *pStartTime, DWORD *pDuration, bool bNext)
+{
+	return m_TsAnalyzer.GetEventTime(m_CurServiceIndex, pStartTime, pDuration, bNext);
+}
+
+
+bool CDtvEngine::GetEventSeriesInfo(CTsAnalyzer::EventSeriesInfo *pInfo, bool bNext)
+{
+	return m_TsAnalyzer.GetEventSeriesInfo(m_CurServiceIndex, pInfo, bNext);
+}
+
+
+bool CDtvEngine::GetEventInfo(CTsAnalyzer::EventInfo *pInfo, bool bNext)
+{
+	return m_TsAnalyzer.GetEventInfo(m_CurServiceIndex, pInfo, true, bNext);
+}
+
+
+bool CDtvEngine::GetEventAudioInfo(CTsAnalyzer::EventAudioInfo *pInfo, const int AudioIndex, bool bNext)
+{
+	return m_TsAnalyzer.GetEventAudioInfo(m_CurServiceIndex, AudioIndex < 0 ? m_CurAudioStream : AudioIndex, pInfo, bNext);
+}
+
+
+unsigned __int64 CDtvEngine::GetPcrTimeStamp()
 {
 	// PCRタイムスタンプ取得
 	unsigned __int64 TimeStamp;
@@ -546,26 +496,29 @@ const DWORD CDtvEngine::OnDecoderEvent(CMediaDecoder *pDecoder, const DWORD dwEv
 					m_wCurTransportStream = wTransportStream;
 
 					bool bSetService = true;
-					WORD Service = SERVICE_DEFAULT;
+					WORD ServiceID = SID_DEFAULT;
 
-					if (m_SpecServiceID != SID_INVALID) {
+					if (m_ServiceSel.bPrefer1Seg) {
+						// ワンセグ指定
+						// この段階ではまだ保留
+						bSetService = false;
+					} else if (m_ServiceSel.ServiceID != SID_INVALID) {
 						// サービスが指定されている
-						const int ServiceIndex = m_TsAnalyzer.GetServiceIndexByID(m_SpecServiceID);
+						const int ServiceIndex = m_TsAnalyzer.GetServiceIndexByID(m_ServiceSel.ServiceID);
 						if (ServiceIndex < 0) {
 							// サービスがPATにない
-							TRACE(TEXT("Specified service ID %04x not found in PAT\n"), m_SpecServiceID);
+							TRACE(TEXT("Specified service ID %04x not found in PAT\n"), m_ServiceSel.ServiceID);
 							bSetService = false;
 						} else {
-							const int ViewServiceIndex = m_TsAnalyzer.GetViewableServiceIndexByID(m_SpecServiceID);
-							if (ViewServiceIndex >= 0) {
-								Service = (WORD)ViewServiceIndex;
+							if (m_TsAnalyzer.GetViewableServiceIndexByID(m_ServiceSel.ServiceID) >= 0) {
+								ServiceID = m_ServiceSel.ServiceID;
 							} else {
 								bSetService = false;
 							}
 						}
 					}
 
-					if (!bSetService || !SelectService(Service)) {
+					if (!bSetService || !SelectService(ServiceID)) {
 						m_MediaViewer.SetVideoPID(CMediaViewer::PID_INVALID);
 						m_MediaViewer.SetAudioPID(CMediaViewer::PID_INVALID);
 					}
@@ -573,22 +526,44 @@ const DWORD CDtvEngine::OnDecoderEvent(CMediaDecoder *pDecoder, const DWORD dwEv
 					// ストリームIDは同じだが、構成ESのPIDが変わった可能性がある
 					TRACE(TEXT("CDtvEngine ■Stream Updated!! %04X\n"), wTransportStream);
 
-					bool bSetService = true;
-					WORD Service = SERVICE_DEFAULT;
+					bool bSetService = true, b1Seg = false;
+					WORD ServiceID = SID_DEFAULT;
 
-					if (m_SpecServiceID != SID_INVALID) {
-						const int ServiceIndex = m_TsAnalyzer.GetServiceIndexByID(m_SpecServiceID);
+					if (m_ServiceSel.bPrefer1Seg) {
+						// ワンセグ指定
+						WORD SID;
+						if (m_ServiceSel.PreferredServiceIndex != SERVICE_INVALID) {
+							if (m_TsAnalyzer.Get1SegServiceIDByIndex(
+									m_ServiceSel.PreferredServiceIndex, &SID)) {
+								b1Seg = true;
+								if (m_TsAnalyzer.IsServiceUpdated(m_TsAnalyzer.GetServiceIndexByID(SID))) {
+									ServiceID = SID;
+								}
+							}
+						}
+						if (ServiceID == SID_DEFAULT
+								&& m_TsAnalyzer.GetFirst1SegServiceID(&SID)) {
+							b1Seg = true;
+							if (m_TsAnalyzer.IsServiceUpdated(m_TsAnalyzer.GetServiceIndexByID(SID))) {
+								ServiceID = SID;
+							} else {
+								bSetService = false;
+							}
+						}
+					}
+
+					if (!b1Seg && m_ServiceSel.ServiceID != SID_INVALID) {
+						const int ServiceIndex = m_TsAnalyzer.GetServiceIndexByID(m_ServiceSel.ServiceID);
 						if (ServiceIndex < 0) {
-							TRACE(TEXT("Specified service ID %04x not found in PAT\n"), m_SpecServiceID);
-							if ((m_CurServiceID == SID_INVALID && !m_bFollowViewableService)
+							TRACE(TEXT("Specified service ID %04x not found in PAT\n"), m_ServiceSel.ServiceID);
+							if ((m_CurServiceID == SID_INVALID && !m_ServiceSel.bFollowViewableService)
 									|| m_TsAnalyzer.GetViewableServiceNum() == 0) {
 								bSetService = false;
 							}
 						} else {
-							const int ViewServiceIndex = m_TsAnalyzer.GetViewableServiceIndexByID(m_SpecServiceID);
-							if (ViewServiceIndex >= 0) {
-								Service = (WORD)ViewServiceIndex;
-							} else if ((m_CurServiceID == SID_INVALID && !m_bFollowViewableService)
+							if (m_TsAnalyzer.GetViewableServiceIndexByID(m_ServiceSel.ServiceID) >= 0) {
+								ServiceID = m_ServiceSel.ServiceID;
+							} else if ((m_CurServiceID == SID_INVALID && !m_ServiceSel.bFollowViewableService)
 									|| !m_TsAnalyzer.IsServiceUpdated(ServiceIndex)) {
 								// サービスはPATにあるが、まだPMTが来ていない
 								bSetService = false;
@@ -596,12 +571,12 @@ const DWORD CDtvEngine::OnDecoderEvent(CMediaDecoder *pDecoder, const DWORD dwEv
 						}
 					}
 
-					if (bSetService && Service == SERVICE_DEFAULT && m_CurServiceID != SID_INVALID) {
+					if (bSetService && ServiceID == SID_DEFAULT && m_CurServiceID != SID_INVALID) {
 						const int ServiceIndex = m_TsAnalyzer.GetServiceIndexByID(m_CurServiceID);
 						if (ServiceIndex < 0) {
 							// サービスがPATにない
 							TRACE(TEXT("Current service ID %04x not found in PAT\n"), m_CurServiceID);
-							if (m_bFollowViewableService
+							if (m_ServiceSel.bFollowViewableService
 									&& m_TsAnalyzer.GetViewableServiceNum() > 0) {
 								m_CurServiceID = SID_INVALID;
 							} else {
@@ -609,10 +584,9 @@ const DWORD CDtvEngine::OnDecoderEvent(CMediaDecoder *pDecoder, const DWORD dwEv
 								bSetService = false;
 							}
 						} else {
-							const int ViewServiceIndex = m_TsAnalyzer.GetViewableServiceIndexByID(m_CurServiceID);
-							if (ViewServiceIndex >= 0) {
-								Service = (WORD)ViewServiceIndex;
-							} else if (!m_bFollowViewableService
+							if (m_TsAnalyzer.GetViewableServiceIndexByID(m_CurServiceID) >= 0) {
+								ServiceID = m_CurServiceID;
+							} else if (!m_ServiceSel.bFollowViewableService
 									|| !m_TsAnalyzer.IsServiceUpdated(ServiceIndex)) {
 								bSetService = false;
 							}
@@ -620,7 +594,7 @@ const DWORD CDtvEngine::OnDecoderEvent(CMediaDecoder *pDecoder, const DWORD dwEv
 					}
 
 					if (bSetService)
-						SelectService(Service);
+						SelectService(ServiceID);
 				}
 
 				if (m_pEventHandler)
@@ -698,11 +672,14 @@ const DWORD CDtvEngine::OnDecoderEvent(CMediaDecoder *pDecoder, const DWORD dwEv
 }
 
 
-bool CDtvEngine::BuildMediaViewer(HWND hwndHost,HWND hwndMessage,
-	CVideoRenderer::RendererType VideoRenderer,LPCWSTR pszMpeg2Decoder,LPCWSTR pszAudioDevice)
+bool CDtvEngine::BuildMediaViewer(HWND hwndHost, HWND hwndMessage,
+	CVideoRenderer::RendererType VideoRenderer,
+	BYTE VideoStreamType, LPCWSTR pszVideoDecoder,
+	LPCWSTR pszAudioDevice)
 {
-	if (!m_MediaViewer.OpenViewer(hwndHost,hwndMessage,VideoRenderer,
-								  pszMpeg2Decoder,pszAudioDevice)) {
+	if (!m_MediaViewer.OpenViewer(hwndHost, hwndMessage, VideoRenderer,
+								  VideoStreamType, pszVideoDecoder,
+								  pszAudioDevice)) {
 		SetError(m_MediaViewer.GetLastErrorException());
 		return false;
 	}
@@ -710,16 +687,19 @@ bool CDtvEngine::BuildMediaViewer(HWND hwndHost,HWND hwndMessage,
 }
 
 
-bool CDtvEngine::RebuildMediaViewer(HWND hwndHost,HWND hwndMessage,
-	CVideoRenderer::RendererType VideoRenderer,LPCWSTR pszMpeg2Decoder,LPCWSTR pszAudioDevice)
+bool CDtvEngine::RebuildMediaViewer(HWND hwndHost, HWND hwndMessage,
+	CVideoRenderer::RendererType VideoRenderer,
+	BYTE VideoStreamType, LPCWSTR pszVideoDecoder,
+	LPCWSTR pszAudioDevice)
 {
 	bool bOK;
 
-	EnablePreview(false);
+	EnableMediaViewer(false);
 	m_MediaBuffer.SetOutputDecoder(NULL);
 	m_MediaViewer.CloseViewer();
-	bOK=m_MediaViewer.OpenViewer(hwndHost,hwndMessage,VideoRenderer,
-								 pszMpeg2Decoder,pszAudioDevice);
+	bOK=m_MediaViewer.OpenViewer(hwndHost, hwndMessage, VideoRenderer,
+								 VideoStreamType, pszVideoDecoder,
+								 pszAudioDevice);
 	if (!bOK) {
 		SetError(m_MediaViewer.GetLastErrorException());
 	}
@@ -751,12 +731,91 @@ bool CDtvEngine::ResetMediaViewer()
 
 	WORD VideoPID = CMediaViewer::PID_INVALID;
 	WORD AudioPID = CMediaViewer::PID_INVALID;
-	if (m_TsAnalyzer.GetVideoEsPID(m_CurServiceIndex, &VideoPID))
+	if (m_TsAnalyzer.GetVideoEsPID(m_CurServiceIndex, 0, &VideoPID))
 		m_MediaViewer.SetVideoPID(VideoPID);
 	if (m_TsAnalyzer.GetAudioEsPID(m_CurServiceIndex, m_CurAudioStream, &AudioPID))
 		m_MediaViewer.SetAudioPID(AudioPID);
 
 	return true;
+}
+
+
+bool CDtvEngine::EnableMediaViewer(const bool bEnable)
+{
+	if (!m_MediaViewer.IsOpen())
+		return false;
+
+	bool bOK;
+
+	if (bEnable) {
+		// ビューア有効
+		bOK = m_MediaViewer.Play();
+	} else {
+		// ビューア無効
+		bOK = m_MediaViewer.Stop();
+	}
+
+	return bOK;
+}
+
+
+BYTE CDtvEngine::GetVideoStreamType() const
+{
+	return m_VideoStreamType;
+}
+
+
+BYTE CDtvEngine::GetAudioChannelNum()
+{
+	return m_MediaViewer.GetAudioChannelNum();
+}
+
+
+int CDtvEngine::GetAudioStreamNum(const int Service)
+{
+	WORD ServiceID;
+	if (Service<0) {
+		if (!GetServiceID(&ServiceID))
+			return 0;
+	} else {
+		if (!m_TsAnalyzer.GetViewableServiceID(Service, &ServiceID))
+			return 0;
+	}
+	return m_TsAnalyzer.GetAudioEsNum(m_TsAnalyzer.GetServiceIndexByID(ServiceID));
+}
+
+
+bool CDtvEngine::SetAudioStream(const int StreamIndex)
+{
+	WORD AudioPID;
+
+	if (!m_TsAnalyzer.GetAudioEsPID(m_CurServiceIndex, StreamIndex, &AudioPID))
+		return false;
+
+	if (!m_MediaViewer.SetAudioPID(AudioPID))
+		return false;
+
+	m_CurAudioStream = StreamIndex;
+
+	return true;
+}
+
+
+int CDtvEngine::GetAudioStream() const
+{
+	return m_CurAudioStream;
+}
+
+
+BYTE CDtvEngine::GetAudioComponentType(const int AudioIndex)
+{
+	return m_TsAnalyzer.GetAudioComponentType(m_CurServiceIndex, AudioIndex < 0 ? m_CurAudioStream : AudioIndex);
+}
+
+
+int CDtvEngine::GetAudioComponentText(LPTSTR pszText, int MaxLength, const int AudioIndex)
+{
+	return m_TsAnalyzer.GetAudioComponentText(m_CurServiceIndex, AudioIndex < 0 ? m_CurAudioStream : AudioIndex, pszText, MaxLength);
 }
 
 
@@ -811,12 +870,6 @@ bool CDtvEngine::ResetBuffer()
 {
 	m_MediaBuffer.ResetBuffer();
 	return true;
-}
-
-
-bool CDtvEngine::GetOriginalVideoSize(WORD *pWidth,WORD *pHeight)
-{
-	return m_MediaViewer.GetOriginalVideoSize(pWidth,pHeight);
 }
 
 

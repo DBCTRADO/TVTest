@@ -39,7 +39,7 @@ public:
 	HWND GetMainWindow() const;
 	HWND GetDialogOwner() const;
 
-	bool InitializeViewer();
+	bool InitializeViewer(BYTE VideoStreamType=0);
 	bool IsViewerInitializeError() const { return m_fViewerInitializeError; }
 	bool FinalizeViewer();
 	bool IsViewerEnabled() const;
@@ -107,6 +107,7 @@ public:
 	void OnServiceChanged();
 	void OnRecordingStarted();
 	void OnRecordingStopped();
+	void On1SegModeChanged(bool f1SegMode);
 
 private:
 	CUISkin *m_pSkin;

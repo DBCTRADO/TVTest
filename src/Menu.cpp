@@ -488,7 +488,6 @@ CChannelMenu::CChannelMenu(CEpgProgramList *pProgramList,CLogoManager *pLogoMana
 	, m_hmenu(NULL)
 	, m_pProgramList(pProgramList)
 	, m_pLogoManager(pLogoManager)
-	, m_pChannelList(NULL)
 	, m_TextHeight(0)
 	, m_ChannelNameWidth(0)
 	, m_EventNameWidth(0)
@@ -510,10 +509,13 @@ bool CChannelMenu::Create(const CChannelList *pChannelList,int CurChannel,UINT C
 {
 	Destroy();
 
-	m_pChannelList=pChannelList;
+	if (pChannelList==NULL)
+		return false;
+
+	m_ChannelList=*pChannelList;
 	m_CurChannel=CurChannel;
 	m_FirstCommand=Command;
-	m_LastCommand=Command+pChannelList->NumChannels()-1;
+	m_LastCommand=Command+m_ChannelList.NumChannels()-1;
 	m_Flags=Flags;
 	m_hwnd=hwnd;
 
@@ -544,8 +546,8 @@ bool CChannelMenu::Create(const CChannelList *pChannelList,int CurChannel,UINT C
 	mii.cbSize=sizeof(MENUITEMINFO);
 	mii.fMask=MIIM_FTYPE | MIIM_STATE | MIIM_ID | MIIM_DATA;
 	int PrevSpace=-1;
-	for (int i=0,j=0;i<pChannelList->NumChannels();i++) {
-		const CChannelInfo *pChInfo=pChannelList->GetChannelInfo(i);
+	for (int i=0,j=0;i<m_ChannelList.NumChannels();i++) {
+		const CChannelInfo *pChInfo=m_ChannelList.GetChannelInfo(i);
 		if (!pChInfo->IsEnabled())
 			continue;
 
@@ -636,6 +638,7 @@ void CChannelMenu::Destroy()
 			ClearMenu(m_hmenu);
 		m_hmenu=NULL;
 	}
+	m_ChannelList.Clear();
 	m_MenuPainter.Finalize();
 	m_Tooltip.Destroy();
 	m_hwnd=NULL;

@@ -112,29 +112,21 @@ static bool ParsePanAndScanInfo(CUICore::PanAndScanInfo *pInfo,LPTSTR pszText)
 }
 
 
-#ifndef TVH264
 // ê›íËÉTÉìÉvÉã
 static const CPanAndScanOptions::PanAndScanInfo DefaultPresetList[] = {
 	{1350, 0, 8650, 8650, HORZ_FACTOR, VERT_FACTOR, 16, 9, TEXT("Léö MX"), 1},
 	{1500, 0, 8500, 8500, HORZ_FACTOR, VERT_FACTOR, 16, 9, TEXT("Léö TX"), 1},
 };
-#endif
 
 
 CPanAndScanOptions::CPanAndScanOptions()
 	: CSettingsBase(TEXT("PanAndScan"))
 	, CCommandCustomizer(CM_PANANDSCAN_PRESET_FIRST,CM_PANANDSCAN_PRESET_LAST)
 	, m_fStateChanging(false)
-#ifndef TVH264
 	, m_PresetID(lengthof(DefaultPresetList)+1)
-#else
-	, m_PresetID(1)
-#endif
 {
-#ifndef TVH264
 	for (size_t i=0;i<lengthof(DefaultPresetList);i++)
 		m_PresetList.push_back(DefaultPresetList[i]);
-#endif
 }
 
 

@@ -12,10 +12,8 @@ class CPlaybackOptions : public COptions
 		UPDATE_ADJUSTAUDIOSTREAMTIME	= 0x00000001UL,
 		UPDATE_PTSSYNC					= 0x00000002UL,
 		UPDATE_PACKETBUFFERING			= 0x00000004UL,
-		UPDATE_STREAMTHREADPRIORITY		= 0x00000008UL
-#ifdef TVH264
-		, UPDATE_ADJUSTFRAMERATE		= 0x00000010UL
-#endif
+		UPDATE_STREAMTHREADPRIORITY		= 0x00000008UL,
+		UPDATE_ADJUSTFRAMERATE			= 0x00000010UL
 	};
 	enum {
 		MAX_AUDIO_DEVICE_NAME = 128,
@@ -44,9 +42,7 @@ class CPlaybackOptions : public COptions
 	int m_PacketBufferPoolPercentage;
 	int m_StreamThreadPriority;
 
-#ifdef TVH264
-	bool m_fAdjustFrameRate;
-#endif
+	bool m_fAdjust1SegFrameRate;
 
 // CBasicDialog
 	INT_PTR DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam) override;

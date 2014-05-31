@@ -38,10 +38,11 @@ public:
 	bool BuildDtvEngine(CDtvEngine::CEventHandler *pEventHandler);
 	bool IsBuildComplete() const;
 	bool BuildMediaViewer(HWND hwndHost,HWND hwndMessage,
-		CVideoRenderer::RendererType VideoRenderer=CVideoRenderer::RENDERER_DEFAULT,
-		LPCWSTR pszMpeg2Decoder=NULL,LPCWSTR pszAudioDevice=NULL);
+		CVideoRenderer::RendererType VideoRenderer,
+		BYTE VideoStreamType,LPCWSTR pszVideoDecoder=NULL,
+		LPCWSTR pszAudioDevice=NULL);
 	bool CloseMediaViewer();
-	bool EnablePreview(bool fPreview);
+	bool EnableMediaViewer(bool fEnable);
 
 	LPCTSTR GetDriverDirectory() const { return m_szDriverDirectory; }
 	bool GetDriverDirectory(LPTSTR pszDirectory,int MaxLength) const;
@@ -60,6 +61,7 @@ public:
 	static bool IsNetworkDriverFileName(LPCTSTR pszFileName);
 
 	bool LoadCasLibrary();
+	bool IsCasLibraryLoaded() const;
 	LPCTSTR GetCasLibraryName() const { return m_CasLibraryName.c_str(); }
 	bool SetCasLibraryName(LPCTSTR pszName);
 	bool FindCasLibraries(LPCTSTR pszDirectory,std::vector<TVTest::String> *pList) const;
@@ -119,9 +121,9 @@ public:
 		STATISTIC_PACKETBUFFERRATE				=0x00000040UL
 	};
 	DWORD UpdateStatistics();
-	DWORD GetErrorPacketCount() const { return m_ErrorPacketCount; }
-	DWORD GetContinuityErrorPacketCount() const { return m_ContinuityErrorPacketCount; }
-	DWORD GetScramblePacketCount() const { return m_ScramblePacketCount; }
+	ULONGLONG GetErrorPacketCount() const { return m_ErrorPacketCount; }
+	ULONGLONG GetContinuityErrorPacketCount() const { return m_ContinuityErrorPacketCount; }
+	ULONGLONG GetScramblePacketCount() const { return m_ScramblePacketCount; }
 	void ResetErrorCount();
 	float GetSignalLevel() const { return m_SignalLevel; }
 	int GetSignalLevelText(LPTSTR pszText,int MaxLength) const;
@@ -170,9 +172,9 @@ private:
 	CAudioDecFilter::SpdifOptions m_SpdifOptions;
 	bool m_fSpdifPassthrough;
 	WORD m_EventID;
-	DWORD m_ErrorPacketCount;
-	DWORD m_ContinuityErrorPacketCount;
-	DWORD m_ScramblePacketCount;
+	ULONGLONG m_ErrorPacketCount;
+	ULONGLONG m_ContinuityErrorPacketCount;
+	ULONGLONG m_ScramblePacketCount;
 	float m_SignalLevel;
 	DWORD m_BitRate;
 	DWORD m_StreamRemain;

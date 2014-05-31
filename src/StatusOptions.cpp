@@ -14,7 +14,7 @@ static char THIS_FILE[]=__FILE__;
 
 
 static const bool IS_HD=
-#ifndef TVH264_FOR_1SEG
+#ifndef TVTEST_FOR_1SEG
 	true
 #else
 	false

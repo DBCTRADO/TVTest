@@ -52,7 +52,7 @@ CCaptureOptions::CCaptureOptions()
 	, m_fSetComment(false)
 	, m_CaptureSizeType(SIZE_TYPE_ORIGINAL)
 	, m_CaptureSize(
-#ifndef TVH264_FOR_1SEG
+#ifndef TVTEST_FOR_1SEG
 		SIZE_1920x1080
 #else
 		SIZE_320x180

@@ -42,7 +42,30 @@ bool CBasicWindow::SetPosition(int Left,int Top,int Width,int Height)
 	if (Width<0 || Height<0)
 		return false;
 	if (m_hwnd!=NULL) {
-		::MoveWindow(m_hwnd,Left,Top,Width,Height,TRUE);
+		if ((GetWindowStyle(m_hwnd) & WS_CHILD)!=0
+				|| (!::IsZoomed(m_hwnd) && !::IsIconic(m_hwnd))) {
+			::MoveWindow(m_hwnd,Left,Top,Width,Height,TRUE);
+		} else {
+			WINDOWPLACEMENT wp;
+
+			wp.length=sizeof(WINDOWPLACEMENT);
+			::GetWindowPlacement(m_hwnd,&wp);
+			wp.rcNormalPosition.left=Left;
+			wp.rcNormalPosition.top=Top;
+			wp.rcNormalPosition.right=Left+Width;
+			wp.rcNormalPosition.bottom=Top+Height;
+			if ((GetWindowExStyle(m_hwnd) & WS_EX_TOOLWINDOW)==0) {
+				HMONITOR hMonitor=::MonitorFromRect(&wp.rcNormalPosition,MONITOR_DEFAULTTONEAREST);
+				MONITORINFO mi;
+
+				mi.cbSize=sizeof(MONITORINFO);
+				::GetMonitorInfo(hMonitor,&mi);
+				::OffsetRect(&wp.rcNormalPosition,
+							 mi.rcMonitor.left-mi.rcWork.left,
+							 mi.rcMonitor.top-mi.rcWork.top);
+			}
+			::SetWindowPlacement(m_hwnd,&wp);
+		}
 	} else {
 		m_WindowPosition.Left=Left;
 		m_WindowPosition.Top=Top;
@@ -78,11 +101,11 @@ void CBasicWindow::GetPosition(int *pLeft,int *pTop,int *pWidth,int *pHeight) co
 			if (pHeight)
 				*pHeight=rc.bottom-rc.top;
 		} else {
-			WINDOWPLACEMENT wc;
+			WINDOWPLACEMENT wp;
 
-			wc.length=sizeof(WINDOWPLACEMENT);
-			::GetWindowPlacement(m_hwnd,&wc);
-			if (wc.showCmd==SW_SHOWNORMAL) {
+			wp.length=sizeof(WINDOWPLACEMENT);
+			::GetWindowPlacement(m_hwnd,&wp);
+			if (wp.showCmd==SW_SHOWNORMAL) {
 				// ’Êí•\Ž¦Žž‚ÍGetWindowRect‚Ì•û‚ªÀ•W•ÏŠ·‚Ì–â‘è‚ª‚È‚¢‚Ì‚ÅŠmŽÀ
 				::GetWindowRect(m_hwnd,&rc);
 			} else {
@@ -101,11 +124,11 @@ void CBasicWindow::GetPosition(int *pLeft,int *pTop,int *pWidth,int *pHeight) co
 
 					mi.cbSize=sizeof(MONITORINFO);
 					::GetMonitorInfo(hMonitor,&mi);
-					::OffsetRect(&wc.rcNormalPosition,
+					::OffsetRect(&wp.rcNormalPosition,
 								 mi.rcWork.left-mi.rcMonitor.left,
 								 mi.rcWork.top-mi.rcMonitor.top);
 				}
-				rc=wc.rcNormalPosition;
+				rc=wp.rcNormalPosition;
 			}
 			if (pLeft)
 				*pLeft=rc.left;

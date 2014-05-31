@@ -29,7 +29,7 @@ public:
 
 	void Reset();
 	void Flush();
-	bool EnableSync(bool bEnable);
+	bool EnableSync(bool bEnable,bool b1Seg=false);
 	bool IsSyncEnabled() const;
 	void SetVideoPID(WORD PID);
 	void SetAudioPID(WORD PID);

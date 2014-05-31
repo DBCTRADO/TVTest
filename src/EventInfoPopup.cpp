@@ -137,7 +137,9 @@ void CEventInfoPopup::SetEventInfo(const CEventInfoData *pEventInfo)
 
 	Formatter.Append(TEXT("\r\n"));
 
-	LPCTSTR pszVideo=EpgUtil::GetVideoComponentTypeText(m_EventInfo.m_VideoInfo.ComponentType);
+	LPCTSTR pszVideo=EpgUtil::GetComponentTypeText(
+		m_EventInfo.m_VideoInfo.StreamContent,
+		m_EventInfo.m_VideoInfo.ComponentType);
 	if (pszVideo!=NULL) {
 		Formatter.AppendFormat(TEXT("\r\n¡ ‰f‘œF %s"),pszVideo);
 	}
@@ -218,7 +220,8 @@ void CEventInfoPopup::FormatAudioInfo(
 		pszAudio=TEXT("Mono “ñƒJ‘Œê");
 		fBilingual=true;
 	} else {
-		pszAudio=EpgUtil::GetAudioComponentTypeText(pAudioInfo->ComponentType);
+		pszAudio=EpgUtil::GetComponentTypeText(
+			pAudioInfo->StreamContent,pAudioInfo->ComponentType);
 	}
 
 	LPCTSTR p=pAudioInfo->szText;
@@ -241,10 +244,12 @@ void CEventInfoPopup::FormatAudioInfo(
 		szAudioComponent[i+0]=_T(']');
 		szAudioComponent[i+1]=_T('\0');
 	} else if (fBilingual) {
+		TCHAR szLang1[EpgUtil::MAX_LANGUAGE_TEXT_LENGTH];
+		TCHAR szLang2[EpgUtil::MAX_LANGUAGE_TEXT_LENGTH];
+		EpgUtil::GetLanguageText(pAudioInfo->LanguageCode,szLang1,lengthof(szLang1));
+		EpgUtil::GetLanguageText(pAudioInfo->LanguageCode2,szLang2,lengthof(szLang2));
 		StdUtil::snprintf(szAudioComponent,lengthof(szAudioComponent),
-						  TEXT(" [%s/%s]"),
-						  EpgUtil::GetLanguageText(pAudioInfo->LanguageCode),
-						  EpgUtil::GetLanguageText(pAudioInfo->LanguageCode2));
+						  TEXT(" [%s/%s]"),szLang1,szLang2);
 	}
 
 	StdUtil::snprintf(pszText,MaxLength,TEXT("%s%s"),

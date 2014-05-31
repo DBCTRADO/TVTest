@@ -23,6 +23,13 @@ namespace TVTest
 
 class CAppMain
 {
+	struct CasLibraryNetworkInfo
+	{
+		WORD NetworkID;
+		WORD TSID;
+		TVTest::String FileName;
+	};
+
 	CUICore m_UICore;
 	bool m_fSilent;
 	TCHAR m_szIniFileName[MAX_PATH];
@@ -31,7 +38,15 @@ class CAppMain
 	CSettings m_Settings;
 	bool m_fFirstExecute;
 
+	TVTest::String m_DefaultCasLibrary;
+	std::vector<CasLibraryNetworkInfo> m_CasLibraryNetworkMap;
+	bool m_fCasCardOpenError;
+
+	bool m_f1SegMode;
+
+	int GetCorresponding1SegService(int Space,WORD NetworkID,WORD TSID,WORD ServiceID) const;
 	bool GenerateRecordFileName(LPTSTR pszFileName,int MaxFileName) const;
+	const TVTest::String &GetCasLibraryFileName(WORD NetworkID,WORD TSID) const;
 	void OutCasCardInfo();
 
 	// ÉRÉsÅ[ã÷é~
@@ -83,28 +98,44 @@ public:
 	bool UpdateCurrentChannelList(const CTuningSpaceList *pList);
 	bool UpdateChannelList(LPCTSTR pszBonDriverName,const CTuningSpaceList *pList);
 	const CChannelInfo *GetCurrentChannelInfo() const;
-	bool SetChannel(int Space,int Channel,int ServiceID=-1);
+	bool SetChannel(int Space,int Channel,int ServiceID=-1,bool fStrictService=false);
 	bool SetChannelByIndex(int Space,int Channel,int ServiceID=-1);
 	bool SelectChannel(const ChannelSelectInfo &SelInfo);
 	bool SwitchChannel(int Channel);
 	bool SwitchChannelByNo(int ChannelNo,bool fSwitchService);
 	bool FollowChannelChange(WORD TransportStreamID,WORD ServiceID);
-	bool SetServiceByIndex(int Service);
-	bool SetServiceByID(WORD ServiceID);
+	enum {
+		SET_SERVICE_STRICT_ID					= 0x0001U,
+		SET_SERVICE_NO_CHANGE_CUR_SERVICE_ID	= 0x0002U
+	};
+	bool SetServiceByID(WORD ServiceID,unsigned int Flags=0);
+	bool SetServiceByIndex(int Service,unsigned int Flags=0);
 	bool GetCurrentStreamIDInfo(StreamIDInfo *pInfo) const;
 	bool GetCurrentStreamChannelInfo(CChannelInfo *pInfo) const;
 	bool GetCurrentServiceName(LPTSTR pszName,int MaxLength,bool fUseChannelName=true);
 	bool OpenTuner(LPCTSTR pszFileName);
 	bool OpenTunerAndSetChannel(LPCTSTR pszDriverFileName,const CChannelInfo *pChannelInfo);
 	bool OpenTuner();
-	bool OpenAndInitializeTuner();
+	bool OpenAndInitializeTuner(unsigned int OpenCasCardFlags=0);
 	bool CloseTuner();
+
+	bool Set1SegMode(bool f1Seg,bool fServiceChange);
+	bool Is1SegMode() const { return m_f1SegMode; }
+
 	enum {
-		OPEN_CAS_CARD_RETRY = 0x0001U,
-		OPEN_CAS_CARD_NO_UI = 0x0002U
+		OPEN_CAS_CARD_RETRY        = 0x0001U,
+		OPEN_CAS_CARD_NO_UI        = 0x0002U,
+		OPEN_CAS_CARD_NOTIFY_ERROR = 0x0004U
 	};
 	bool OpenCasCard(unsigned int Flags=0);
 	bool ChangeCasCard(int Device,LPCTSTR pszName=NULL);
+	bool LoadCasLibrary(LPCTSTR pszFileName);
+	bool LoadCasLibrary();
+	void SetDefaultCasLibrary(LPCTSTR pszFileName);
+	LPCTSTR GetDefaultCasLibrary() const { return m_DefaultCasLibrary.c_str(); }
+	bool HasDefaultCasLibrary() const { return !m_DefaultCasLibrary.empty(); }
+	bool HasCasLibraryNetworkMap() const { return !m_CasLibraryNetworkMap.empty(); }
+
 	void ApplyBonDriverOptions();
 
 	bool StartRecord(LPCTSTR pszFileName=NULL,

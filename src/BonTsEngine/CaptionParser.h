@@ -36,7 +36,7 @@ public:
 		virtual bool SetDRCS(WORD Code, const DRCSBitmap *pBitmap) = 0;
 	};
 
-	CCaptionParser();
+	CCaptionParser(bool b1Seg = false);
 	~CCaptionParser();
 	void Reset();
 	bool StorePacket(const CTsPacket *pPacket);
@@ -44,11 +44,13 @@ public:
 	void SetDRCSMap(IDRCSMap *pDRCSMap);
 	int GetLanguageNum() const;
 	bool GetLanguageCode(int LanguageTag, char *pCode) const;
+	bool Is1Seg() const { return m_b1Seg; }
 
 private:
 	CPesParser m_PesParser;
 	ICaptionHandler *m_pHandler;
 	IDRCSMap *m_pDRCSMap;
+	bool m_b1Seg;
 	struct LanguageInfo {
 		BYTE LanguageTag;
 		BYTE DMF;

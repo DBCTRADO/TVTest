@@ -94,7 +94,7 @@ void CVideoSizeStatusItem::Draw(HDC hdc,const RECT *pRect)
 void CVideoSizeStatusItem::DrawPreview(HDC hdc,const RECT *pRect)
 {
 	DrawText(hdc,pRect,
-#ifndef TVH264_FOR_1SEG
+#ifndef TVTEST_FOR_1SEG
 			 TEXT("1920 x 1080 (100 %)")
 #else
 			 TEXT("320 x 180 (100 %)")
@@ -481,7 +481,7 @@ void CErrorStatusItem::Draw(HDC hdc,const RECT *pRect)
 	const CCoreEngine &CoreEngine=*GetAppClass().GetCoreEngine();
 	TCHAR szText[64];
 
-	StdUtil::snprintf(szText,lengthof(szText),TEXT("D %u / E %u / S %u"),
+	StdUtil::snprintf(szText,lengthof(szText),TEXT("D %llu / E %llu / S %llu"),
 					  CoreEngine.GetContinuityErrorPacketCount(),
 					  CoreEngine.GetErrorPacketCount(),
 					  CoreEngine.GetScramblePacketCount());

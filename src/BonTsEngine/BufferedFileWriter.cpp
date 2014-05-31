@@ -32,7 +32,7 @@ CBufferedFileWriter::~CBufferedFileWriter()
 }
 
 
-void CBufferedFileWriter::Reset(void)
+void CBufferedFileWriter::Reset()
 {
 	CBlockLock Lock(&m_DecoderLock);
 
@@ -74,7 +74,7 @@ CNCachedFile *CBufferedFileWriter::CreateNewFile(LPCTSTR pszFileName, UINT Flags
 }
 
 
-const bool CBufferedFileWriter::OpenFile(LPCTSTR pszFileName, UINT Flags)
+bool CBufferedFileWriter::OpenFile(LPCTSTR pszFileName, UINT Flags)
 {
 	if (!pszFileName) {
 		SetError(TEXT("引数が不正です。"));
@@ -111,7 +111,7 @@ const bool CBufferedFileWriter::OpenFile(LPCTSTR pszFileName, UINT Flags)
 }
 
 
-const bool CBufferedFileWriter::RelayFile(LPCTSTR pszFileName, UINT Flags)
+bool CBufferedFileWriter::RelayFile(LPCTSTR pszFileName, UINT Flags)
 {
 	if (!pszFileName) {
 		SetError(TEXT("引数が不正です。"));
@@ -138,7 +138,7 @@ const bool CBufferedFileWriter::RelayFile(LPCTSTR pszFileName, UINT Flags)
 }
 
 
-void CBufferedFileWriter::CloseFile(void)
+void CBufferedFileWriter::CloseFile()
 {
 	CBlockLock Lock(&m_DecoderLock);
 
@@ -182,20 +182,20 @@ void CBufferedFileWriter::CloseFile(void)
 }
 
 
-const bool CBufferedFileWriter::IsOpen() const
+bool CBufferedFileWriter::IsOpen() const
 {
 	return m_pOutFile != NULL;
 }
 
 
-const LONGLONG CBufferedFileWriter::GetWriteSize(void) const
+LONGLONG CBufferedFileWriter::GetWriteSize() const
 {
 	// 書き出し済みサイズを返す
 	return m_llWriteSize;
 }
 
 
-const LONGLONG CBufferedFileWriter::GetWriteCount(void) const
+LONGLONG CBufferedFileWriter::GetWriteCount() const
 {
 	// 書き出し回数を返す
 	return m_llWriteCount;

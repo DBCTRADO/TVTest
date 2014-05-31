@@ -34,11 +34,7 @@ COSDOptions::COSDOptions()
 
 	, m_fEnableNotificationBar(true)
 	, m_NotificationBarDuration(3000)
-	, m_NotificationBarFlags(NOTIFY_EVENTNAME
-#ifndef TVH264_FOR_1SEG
-		 | NOTIFY_ECMERROR
-#endif
-		)
+	, m_NotificationBarFlags(NOTIFY_EVENTNAME | NOTIFY_ECMERROR)
 	, m_fDisplayFontAutoSize(false)
 {
 	if (Util::OS::IsWindowsVistaOrLater()) {
@@ -54,7 +50,7 @@ COSDOptions::COSDOptions()
 
 	m_NotificationBarFont=lf;
 	m_NotificationBarFont.lfHeight=
-#ifndef TVH264_FOR_1SEG
+#ifndef TVTEST_FOR_1SEG
 		-14;
 #else
 		-12;

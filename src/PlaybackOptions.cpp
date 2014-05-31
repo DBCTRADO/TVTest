@@ -29,15 +29,7 @@ CPlaybackOptions::CPlaybackOptions()
 	, m_PacketBufferLength(40000)
 	, m_PacketBufferPoolPercentage(50)
 	, m_StreamThreadPriority(THREAD_PRIORITY_NORMAL)
-#ifdef TVH264
-	, m_fAdjustFrameRate(
-#ifdef TVH264_FOR_1SEG
-		true
-#else
-		false
-#endif
-		)
-#endif
+	, m_fAdjust1SegFrameRate(true)
 {
 }
 
@@ -73,11 +65,9 @@ bool CPlaybackOptions::Apply(DWORD Flags)
 		pCoreEngine->m_DtvEngine.m_BonSrcDecoder.SetStreamThreadPriority(m_StreamThreadPriority);
 	}
 
-#ifdef TVH264
 	if ((Flags&UPDATE_ADJUSTFRAMERATE)!=0) {
-		pCoreEngine->m_DtvEngine.m_MediaViewer.SetAdjustVideoSampleTime(m_fAdjustFrameRate);
+		pCoreEngine->m_DtvEngine.m_MediaViewer.SetAdjust1SegVideoSampleTime(m_fAdjust1SegFrameRate);
 	}
-#endif
 
 	return true;
 }
@@ -112,9 +102,8 @@ bool CPlaybackOptions::ReadSettings(CSettings &Settings)
 		m_PacketBufferPoolPercentage=CLAMP(m_PacketBufferPoolPercentage,0,100);
 	if (Settings.Read(TEXT("StreamThreadPriority"),&m_StreamThreadPriority))
 		m_StreamThreadPriority=CLAMP(m_StreamThreadPriority,THREAD_PRIORITY_NORMAL,THREAD_PRIORITY_HIGHEST);
-#ifdef TVH264
-	Settings.Read(TEXT("AdjustFrameRate"),&m_fAdjustFrameRate);
-#endif
+	Settings.Read(TEXT("AdjustFrameRate"),&m_fAdjust1SegFrameRate);
+
 	return true;
 }
 
@@ -137,9 +126,8 @@ bool CPlaybackOptions::WriteSettings(CSettings &Settings)
 	Settings.Write(TEXT("PacketBufferLength"),(unsigned int)m_PacketBufferLength);
 	Settings.Write(TEXT("PacketBufferPoolPercentage"),m_PacketBufferPoolPercentage);
 	Settings.Write(TEXT("StreamThreadPriority"),m_StreamThreadPriority);
-#ifdef TVH264
-	Settings.Write(TEXT("AdjustFrameRate"),m_fAdjustFrameRate);
-#endif
+	Settings.Write(TEXT("AdjustFrameRate"),m_fAdjust1SegFrameRate);
+
 	return true;
 }
 
@@ -268,10 +256,8 @@ INT_PTR CPlaybackOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPara
 				DlgComboBox_AddString(hDlg,IDC_OPTIONS_STREAMTHREADPRIORITY,ThreadPriorityList[i]);
 			DlgComboBox_SetCurSel(hDlg,IDC_OPTIONS_STREAMTHREADPRIORITY,m_StreamThreadPriority);
 
-#ifdef TVH264
 			DlgCheckBox_Check(hDlg,IDC_OPTIONS_ADJUSTFRAMERATE,
-							  m_fAdjustFrameRate);
-#endif
+							  m_fAdjust1SegFrameRate);
 		}
 		return TRUE;
 
@@ -392,13 +378,11 @@ INT_PTR CPlaybackOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPara
 					SetUpdateFlag(UPDATE_STREAMTHREADPRIORITY);
 				}
 
-#ifdef TVH264
 				f=DlgCheckBox_IsChecked(hDlg,IDC_OPTIONS_ADJUSTFRAMERATE);
-				if (f!=m_fAdjustFrameRate) {
-					m_fAdjustFrameRate=f;
+				if (f!=m_fAdjust1SegFrameRate) {
+					m_fAdjust1SegFrameRate=f;
 					SetUpdateFlag(UPDATE_ADJUSTFRAMERATE);
 				}
-#endif
 
 				m_fChanged=true;
 			}

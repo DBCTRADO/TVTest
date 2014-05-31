@@ -27,9 +27,7 @@ CTsPacketParser::CTsPacketParser(IEventHandler *pEventHandler)
 	, m_OutputPacketCount(0)
 	, m_ErrorPacketCount(0)
 	, m_ContinuityErrorPacketCount(0)
-#ifdef BONTSENGINE_1SEG_SUPPORT
 	, m_bGeneratePAT(true)
-#endif
 {
 	// パケット連続性カウンタを初期化する
 	::FillMemory(m_abyContCounter, sizeof(m_abyContCounter), 0x10UL);
@@ -39,7 +37,7 @@ CTsPacketParser::~CTsPacketParser()
 {
 }
 
-void CTsPacketParser::Reset(void)
+void CTsPacketParser::Reset()
 {
 	CBlockLock Lock(&m_DecoderLock);
 
@@ -55,9 +53,7 @@ void CTsPacketParser::Reset(void)
 	// 状態をリセットする
 	m_TsPacket.ClearSize();
 
-#ifdef BONTSENGINE_1SEG_SUPPORT
 	m_PATGenerator.Reset();
-#endif
 }
 
 const bool CTsPacketParser::InputMedia(CMediaData *pMediaData, const DWORD dwInputIndex)
@@ -81,31 +77,31 @@ void CTsPacketParser::SetOutputNullPacket(const bool bEnable)
 	m_bOutputNullPacket = bEnable;
 }
 
-const DWORD CTsPacketParser::GetInputPacketCount(void) const
+ULONGLONG CTsPacketParser::GetInputPacketCount() const
 {
 	// 入力パケット数を返す
-	return (DWORD)m_InputPacketCount;
+	return m_InputPacketCount;
 }
 
-const DWORD CTsPacketParser::GetOutputPacketCount(void) const
+ULONGLONG CTsPacketParser::GetOutputPacketCount() const
 {
 	// 出力パケット数を返す
-	return (DWORD)m_OutputPacketCount;
+	return m_OutputPacketCount;
 }
 
-const DWORD CTsPacketParser::GetErrorPacketCount(void) const
+ULONGLONG CTsPacketParser::GetErrorPacketCount() const
 {
 	// エラーパケット数を返す
-	return (DWORD)m_ErrorPacketCount;
+	return m_ErrorPacketCount;
 }
 
-const DWORD CTsPacketParser::GetContinuityErrorPacketCount(void) const
+ULONGLONG CTsPacketParser::GetContinuityErrorPacketCount() const
 {
 	// 連続性エラーパケット数を返す
-	return (DWORD)m_ContinuityErrorPacketCount;
+	return m_ContinuityErrorPacketCount;
 }
 
-void CTsPacketParser::ResetErrorPacketCount(void)
+void CTsPacketParser::ResetErrorPacketCount()
 {
 	m_ErrorPacketCount=0;
 	m_ContinuityErrorPacketCount=0;
@@ -159,7 +155,7 @@ void inline CTsPacketParser::SyncPacket(const BYTE *pData, const DWORD dwSize)
 	}
 }
 
-bool inline CTsPacketParser::ParsePacket(void)
+bool inline CTsPacketParser::ParsePacket()
 {
 	bool bOK;
 
@@ -172,20 +168,18 @@ bool inline CTsPacketParser::ParsePacket(void)
 		m_ContinuityErrorPacketCount++;
 	case CTsPacket::EC_VALID:
 		{
-#ifdef BONTSENGINE_1SEG_SUPPORT
-			/*
+#if 0
 			// PAT の無い状態をシミュレート
-			if (m_TsPacket.GetPID() == 0) {
+			if (m_TsPacket.GetPID() == PID_PAT) {
 				bOK = true;
 				break;
 			}
-			*/
+#endif
 			if (m_PATGenerator.StorePacket(&m_TsPacket) && m_bGeneratePAT) {
 				if (m_PATGenerator.GetPAT(&m_PATPacket)) {
 					OutputMedia(&m_PATPacket);
 				}
 			}
-#endif
 
 			// 次のデコーダにデータを渡す
 			if (m_bOutputNullPacket || m_TsPacket.GetPID() != 0x1FFFU) {
@@ -212,8 +206,6 @@ bool inline CTsPacketParser::ParsePacket(void)
 }
 
 
-#ifdef BONTSENGINE_1SEG_SUPPORT
-
 bool CTsPacketParser::EnablePATGeneration(bool bEnable)
 {
 	m_bGeneratePAT = bEnable;
@@ -225,5 +217,3 @@ bool CTsPacketParser::SetTransportStreamID(WORD TransportStreamID)
 {
 	return m_PATGenerator.SetTransportStreamID(TransportStreamID);
 }
-
-#endif

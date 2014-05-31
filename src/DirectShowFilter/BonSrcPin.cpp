@@ -203,9 +203,9 @@ void CBonSrcPin::Flush()
 }
 
 
-bool CBonSrcPin::EnableSync(bool bEnable)
+bool CBonSrcPin::EnableSync(bool bEnable,bool b1Seg)
 {
-	return m_SrcStream.EnableSync(bEnable);
+	return m_SrcStream.EnableSync(bEnable,b1Seg);
 }
 
 

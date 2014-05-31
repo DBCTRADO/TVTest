@@ -7,9 +7,7 @@
 
 #include "MediaDecoder.h"
 #include "TsStream.h"
-#ifdef BONTSENGINE_1SEG_SUPPORT
 #include "PATGenerator.h"
-#endif
 
 
 /////////////////////////////////////////////////////////////////////////////
@@ -26,27 +24,24 @@ public:
 	virtual ~CTsPacketParser();
 
 // IMediaDecoder
-	virtual void Reset(void);
-	virtual const bool InputMedia(CMediaData *pMediaData, const DWORD dwInputIndex = 0UL);
+	void Reset() override;
+	const bool InputMedia(CMediaData *pMediaData, const DWORD dwInputIndex = 0UL) override;
 
 // CTsPacketParser
 	void SetOutputNullPacket(const bool bEnable = true);
-	const DWORD GetInputPacketCount(void) const;
-	const DWORD GetOutputPacketCount(void) const;
-	const DWORD GetErrorPacketCount(void) const;
-	const DWORD GetContinuityErrorPacketCount(void) const;
-	void ResetErrorPacketCount(void);
+	ULONGLONG GetInputPacketCount() const;
+	ULONGLONG GetOutputPacketCount() const;
+	ULONGLONG GetErrorPacketCount() const;
+	ULONGLONG GetContinuityErrorPacketCount() const;
+	void ResetErrorPacketCount();
 
-	// Append by HDUSTestÇÃíÜÇÃêl
-#ifdef BONTSENGINE_1SEG_SUPPORT
 	bool EnablePATGeneration(bool bEnable);
 	bool IsPATGenerationEnabled() const { return m_bGeneratePAT; }
 	bool SetTransportStreamID(WORD TransportStreamID);
-#endif
 
 private:
 	void inline SyncPacket(const BYTE *pData, const DWORD dwSize);
-	bool inline ParsePacket(void);
+	bool inline ParsePacket();
 
 	CTsPacket m_TsPacket;
 
@@ -58,9 +53,7 @@ private:
 	ULONGLONG m_ContinuityErrorPacketCount;
 	BYTE m_abyContCounter[0x1FFF];
 
-#ifdef BONTSENGINE_1SEG_SUPPORT
 	CPATGenerator m_PATGenerator;
 	bool m_bGeneratePAT;
 	CTsPacket m_PATPacket;
-#endif
 };

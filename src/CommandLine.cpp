@@ -373,10 +373,14 @@ CCommandLineOptions::CCommandLineOptions()
 	, m_fStandby(false)
 	, m_fNoView(false)
 	, m_fNoDirectShow(false)
+	, m_fMpeg2(false)
+	, m_fH264(false)
+	, m_fH265(false)
 	, m_fSilent(false)
 	, m_fInitialSettings(false)
 	, m_fSaveLog(false)
 	, m_fNoEpg(false)
+	, m_f1Seg(false)
 	, m_TvRockDID(-1)
 
 	, m_Channel(0)
@@ -446,6 +450,10 @@ CCommandLineOptions::CCommandLineOptions()
 	/nodshow		DirectShowの初期化をしない
 	/noplugin		プラグインを読み込まない
 	/noview			プレビュー無効
+	/mpeg2			MPEG-2を有効
+	/h264			H.264を有効
+	/h265			H.265を有効
+	/1seg			ワンセグモード
 	/nr				ネットワークリモコンを使用する
 	/p /port		UDP のポート番号 (e.g. /p 1234)
 	/plugin-		指定されたプラグインを読み込まない
@@ -482,7 +490,8 @@ void CCommandLineOptions::Parse(LPCWSTR pszCmdLine)
 		return;
 	do {
 		if (Args.IsSwitch()) {
-			if (!Args.GetOption(TEXT("ch"),&m_Channel)
+			if (!Args.GetOption(TEXT("1seg"),&m_f1Seg)
+					&& !Args.GetOption(TEXT("ch"),&m_Channel)
 					&& !Args.GetOption(TEXT("chdisplay"),&m_fChannelDisplay)
 					&& !Args.GetOption(TEXT("chspace"),&m_TuningSpace)
 					&& !Args.GetOption(TEXT("d"),&m_DriverName)
@@ -492,6 +501,8 @@ void CCommandLineOptions::Parse(LPCWSTR pszCmdLine)
 					&& !Args.GetOption(TEXT("epgtuner"),&m_ProgramGuideTuner)
 					&& !Args.GetOption(TEXT("f"),&m_fFullscreen)
 					&& !Args.GetOption(TEXT("fullscreen"),&m_fFullscreen)
+					&& !Args.GetOption(TEXT("h264"),&m_fH264)
+					&& !Args.GetOption(TEXT("h265"),&m_fH265)
 					&& !Args.GetOption(TEXT("height"),&m_WindowHeight)
 					&& !Args.GetOption(TEXT("home"),&m_fHomeDisplay)
 					&& !Args.GetOption(TEXT("ini"),&m_IniFileName)
@@ -499,6 +510,7 @@ void CCommandLineOptions::Parse(LPCWSTR pszCmdLine)
 					&& !Args.GetOption(TEXT("log"),&m_fSaveLog)
 					&& !Args.GetOption(TEXT("max"),&m_fMaximize)
 					&& !Args.GetOption(TEXT("min"),&m_fMinimize)
+					&& !Args.GetOption(TEXT("mpeg2"),&m_fMpeg2)
 					&& !Args.GetOption(TEXT("mute"),&m_fMute)
 					&& !Args.GetOption(TEXT("nd"),&m_fNoDescramble)
 					&& !Args.GetOption(TEXT("nodriver"),&m_fNoDriver)

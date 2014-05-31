@@ -24,7 +24,6 @@ CInitialSettings::CInitialSettings(const CDriverManager *pDriverManager)
 	, m_CasDevice(-1)
 {
 	m_szDriverFileName[0]='\0';
-	m_szMpeg2DecoderName[0]='\0';
 #if 0
 	// VistaではビデオレンダラのデフォルトをEVRにする
 	// ...と問題が出る環境もあるみたい
@@ -56,15 +55,6 @@ bool CInitialSettings::GetDriverFileName(LPTSTR pszFileName,int MaxLength) const
 	if (::lstrlen(m_szDriverFileName)>=MaxLength)
 		return false;
 	::lstrcpy(pszFileName,m_szDriverFileName);
-	return true;
-}
-
-
-bool CInitialSettings::GetMpeg2DecoderName(LPTSTR pszDecoderName,int MaxLength) const
-{
-	if (::lstrlen(m_szMpeg2DecoderName)>=MaxLength)
-		return false;
-	::lstrcpy(pszDecoderName,m_szMpeg2DecoderName);
 	return true;
 }
 
@@ -117,32 +107,16 @@ INT_PTR CInitialSettings::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPara
 				}
 			}
 
-			// MPEG-2 or H.264 decoder
-			{
-				CDirectShowFilterFinder FilterFinder;
-				WCHAR szFilterName[MAX_DECODER_NAME];
-				int Sel=0,Count=0;
-
-				if (FilterFinder.FindFilter(&MEDIATYPE_Video,
-#ifndef TVH264
-											&MEDIASUBTYPE_MPEG2_VIDEO
-#else
-											&MEDIASUBTYPE_H264
-#endif
-											)) {
-					for (int i=0;i<FilterFinder.GetFilterCount();i++) {
-						if (FilterFinder.GetFilterInfo(i,NULL,szFilterName,lengthof(szFilterName))) {
-							int Index=(int)DlgComboBox_AddString(hDlg,IDC_INITIALSETTINGS_MPEG2DECODER,szFilterName);
-							if (::lstrcmpi(szFilterName,m_szMpeg2DecoderName)==0)
-								Sel=Index;
-							Count++;
-						}
-					}
-				}
-				DlgComboBox_InsertString(hDlg,IDC_INITIALSETTINGS_MPEG2DECODER,
-					0,Count>0?TEXT("自動"):TEXT("<デコーダが見付かりません>"));
-				DlgComboBox_SetCurSel(hDlg,IDC_INITIALSETTINGS_MPEG2DECODER,Sel);
-			}
+			// 映像デコーダ
+			InitDecoderList(IDC_INITIALSETTINGS_MPEG2DECODER,
+							MEDIASUBTYPE_MPEG2_VIDEO,
+							m_Mpeg2DecoderName.c_str());
+			InitDecoderList(IDC_INITIALSETTINGS_H264DECODER,
+							MEDIASUBTYPE_H264,
+							m_H264DecoderName.c_str());
+			InitDecoderList(IDC_INITIALSETTINGS_H265DECODER,
+							MEDIASUBTYPE_HEVC,
+							m_H265DecoderName.c_str());
 
 			// Video renderer
 			{
@@ -263,25 +237,45 @@ INT_PTR CInitialSettings::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPara
 
 		case IDOK:
 			{
-				TCHAR szMpeg2Decoder[MAX_DECODER_NAME];
-				CVideoRenderer::RendererType VideoRenderer;
-
-				int SelDecoder=(int)DlgComboBox_GetCurSel(hDlg,IDC_INITIALSETTINGS_MPEG2DECODER);
-				if (SelDecoder>0) {
-					DlgComboBox_GetLBString(hDlg,IDC_INITIALSETTINGS_MPEG2DECODER,SelDecoder,szMpeg2Decoder);
-				} else if (DlgComboBox_GetCount(hDlg,IDC_INITIALSETTINGS_MPEG2DECODER)>1) {
-					DlgComboBox_GetLBString(hDlg,IDC_INITIALSETTINGS_MPEG2DECODER,1,szMpeg2Decoder);
-				} else {
-					::MessageBox(hDlg,
-						TEXT("デコーダが見付からないため、再生を行うことができません。\n")
+				bool fMpeg2Decoder=
+					DlgComboBox_GetCount(hDlg,IDC_INITIALSETTINGS_MPEG2DECODER)>1;
+				bool fH264Decoder=
+					DlgComboBox_GetCount(hDlg,IDC_INITIALSETTINGS_H264DECODER)>1;
+				bool fH265Decoder=
+					DlgComboBox_GetCount(hDlg,IDC_INITIALSETTINGS_H265DECODER)>1;
+				if (!fMpeg2Decoder || !fH264Decoder || !fH265Decoder) {
+					TCHAR szCodecs[64],szMessage[256];
+					szCodecs[0]=_T('\0');
+					if (!fMpeg2Decoder)
+						::lstrcat(szCodecs,TEXT("MPEG-2"));
+					if (!fH264Decoder) {
+						if (szCodecs[0]!=_T('\0'))
+							::lstrcat(szCodecs,TEXT("/"));
+						::lstrcat(szCodecs,TEXT("H.264(AVC)"));
+					}
+					if (!fH265Decoder) {
+						if (szCodecs[0]!=_T('\0'))
+							::lstrcat(szCodecs,TEXT("/"));
+						::lstrcat(szCodecs,TEXT("H.265(HEVC)"));
+					}
+					StdUtil::snprintf(szMessage,lengthof(szMessage),
+						TEXT("%s のデコーダが見付からないため、%s の映像は再生できません。\n")
 						TEXT("映像を再生するにはデコーダをインストールしてください。"),
-						TEXT("お知らせ"),
-						MB_OK | MB_ICONINFORMATION);
-					szMpeg2Decoder[0]='\0';
+						szCodecs,szCodecs);
+					::MessageBox(hDlg,szMessage,TEXT("お知らせ"),MB_OK | MB_ICONINFORMATION);
 				}
-				VideoRenderer=(CVideoRenderer::RendererType)
+
+				TVTest::String Mpeg2DecoderName,H264DecoderName,H265DecoderName;
+				if (fMpeg2Decoder)
+					GetDecoderSetting(IDC_INITIALSETTINGS_MPEG2DECODER,&Mpeg2DecoderName);
+				if (fH264Decoder)
+					GetDecoderSetting(IDC_INITIALSETTINGS_H264DECODER,&H264DecoderName);
+				if (fH265Decoder)
+					GetDecoderSetting(IDC_INITIALSETTINGS_H265DECODER,&H265DecoderName);
+
+				CVideoRenderer::RendererType VideoRenderer=(CVideoRenderer::RendererType)
 					DlgComboBox_GetCurSel(hDlg,IDC_INITIALSETTINGS_VIDEORENDERER);
-#ifndef TVH264
+
 				// 相性の悪い組み合わせに対して注意を表示する
 				static const struct {
 					LPCTSTR pszDecoder;
@@ -295,16 +289,18 @@ INT_PTR CInitialSettings::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPara
 						TEXT("現在の設定を変更しますか?")},
 				};
 				for (int i=0;i<lengthof(ConflictList);i++) {
-					if (::StrCmpNI(szMpeg2Decoder,ConflictList[i].pszDecoder,::lstrlen(ConflictList[i].pszDecoder))==0
-							&& VideoRenderer==ConflictList[i].Renderer) {
-
+					int Length=::lstrlen(ConflictList[i].pszDecoder);
+					if (VideoRenderer==ConflictList[i].Renderer
+							&& (::StrCmpNI(Mpeg2DecoderName.c_str(),ConflictList[i].pszDecoder,Length)==0
+								|| ::StrCmpNI(H264DecoderName.c_str(),ConflictList[i].pszDecoder,Length)==0)
+								|| ::StrCmpNI(H265DecoderName.c_str(),ConflictList[i].pszDecoder,Length)==0) {
 						if (::MessageBox(hDlg,ConflictList[i].pszMessage,TEXT("注意"),
 										 MB_YESNO | MB_ICONINFORMATION)==IDYES)
 							return TRUE;
 						break;
 					}
 				}
-#endif
+
 				if (!CVideoRenderer::IsAvailable(VideoRenderer)) {
 					::MessageBox(hDlg,TEXT("選択されたレンダラはこの環境で利用可能になっていません。"),
 								 NULL,MB_OK | MB_ICONEXCLAMATION);
@@ -313,10 +309,10 @@ INT_PTR CInitialSettings::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPara
 
 				::GetDlgItemText(hDlg,IDC_INITIALSETTINGS_DRIVER,
 								 m_szDriverFileName,MAX_PATH);
-				if (SelDecoder>0)
-					::lstrcpy(m_szMpeg2DecoderName,szMpeg2Decoder);
-				else
-					m_szMpeg2DecoderName[0]='\0';
+
+				m_Mpeg2DecoderName=Mpeg2DecoderName;
+				m_H264DecoderName=H264DecoderName;
+				m_H265DecoderName=H265DecoderName;
 
 				m_VideoRenderer=VideoRenderer;
 
@@ -401,5 +397,43 @@ INT_PTR CInitialSettings::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPara
 		}
 		return TRUE;
 	}
+
 	return FALSE;
+}
+
+
+void CInitialSettings::InitDecoderList(int ID,const GUID &SubType,LPCTSTR pszDecoderName)
+{
+	CDirectShowFilterFinder FilterFinder;
+	int Sel=0,Count=0;
+
+	if (FilterFinder.FindFilter(&MEDIATYPE_Video,&SubType)) {
+		for (int i=0;i<FilterFinder.GetFilterCount();i++) {
+			WCHAR szFilterName[MAX_DECODER_NAME];
+
+			if (FilterFinder.GetFilterInfo(i,NULL,szFilterName,lengthof(szFilterName))) {
+				int Index=(int)DlgComboBox_AddString(m_hDlg,ID,szFilterName);
+				if (::lstrcmpi(szFilterName,pszDecoderName)==0)
+					Sel=Index;
+				Count++;
+			}
+		}
+	}
+
+	DlgComboBox_InsertString(m_hDlg,ID,
+		0,Count>0?TEXT("自動"):TEXT("<デコーダが見付かりません>"));
+	DlgComboBox_SetCurSel(m_hDlg,ID,Sel);
+}
+
+
+void CInitialSettings::GetDecoderSetting(int ID,TVTest::String *pDecoderName) const
+{
+	int Sel=(int)DlgComboBox_GetCurSel(m_hDlg,ID);
+	if (Sel>0) {
+		TCHAR szDecoder[MAX_DECODER_NAME];
+		DlgComboBox_GetLBString(m_hDlg,ID,Sel,szDecoder);
+		*pDecoderName=szDecoder;
+	} else {
+		pDecoderName->clear();
+	}
 }

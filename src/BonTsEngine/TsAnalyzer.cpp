@@ -19,10 +19,32 @@ static char THIS_FILE[]=__FILE__;
 #endif
 
 
+const CTsAnalyzer::StreamTypeMap CTsAnalyzer::m_VideoStreamTypeMap[] =
+{
+	{VIDEO_STREAM_MPEG1,	STREAM_TYPE_MPEG1_VIDEO},
+	{VIDEO_STREAM_MPEG2,	STREAM_TYPE_MPEG2_VIDEO},
+	{VIDEO_STREAM_MPEG4,	STREAM_TYPE_MPEG4_VISUAL},
+	{VIDEO_STREAM_H264,		STREAM_TYPE_H264},
+	{VIDEO_STREAM_H265,		STREAM_TYPE_H265},
+};
 
 
 CTsAnalyzer::CTsAnalyzer(IEventHandler *pEventHandler)
 	: CMediaDecoder(pEventHandler, 1, 1)
+
+	, m_ViewableVideoStreamTypes(
+		0
+#ifdef BONTSENGINE_MPEG2_SUPPORT
+		| VIDEO_STREAM_MPEG2
+#endif
+#ifdef BONTSENGINE_H264_SUPPORT
+		| VIDEO_STREAM_H264
+#endif
+#ifdef BONTSENGINE_H265_SUPPORT
+		| VIDEO_STREAM_H265
+#endif
+		)
+	, m_bRadioSupport(true)
 {
 	Reset();
 }
@@ -110,13 +132,10 @@ void CTsAnalyzer::Reset()
 	m_PidMapManager.MapTarget(PID_PAT, new CPatTable(TABLE_DEBUG), OnPatUpdated, this);
 
 	// NITテーブルPIDマップ追加
-	m_PidMapManager.MapTarget(PID_NIT, new CNitTable, OnNitUpdated, this);
+	m_PidMapManager.MapTarget(PID_NIT, new CNitMultiTable, OnNitUpdated, this);
 
 	// SDTテーブルPIDマップ追加
-	CPsiTableSet *pSdtTableSet = new CPsiTableSet;
-	pSdtTableSet->MapTable(CSdtTable::TABLE_ID_ACTUAL, new CSdtTable(CSdtTable::TABLE_ID_ACTUAL));
-	pSdtTableSet->MapTable(CSdtTable::TABLE_ID_OTHER, new CSdtOtherTable());
-	m_PidMapManager.MapTarget(PID_SDT, pSdtTableSet, OnSdtUpdated, this);
+	m_PidMapManager.MapTarget(PID_SDT, new CSdtTableSet, OnSdtUpdated, this);
 
 #ifdef TS_ANALYZER_EIT_SUPPORT
 	// H-EITテーブルPIDマップ追加
@@ -133,7 +152,7 @@ void CTsAnalyzer::Reset()
 }
 
 
-WORD CTsAnalyzer::GetServiceNum()
+WORD CTsAnalyzer::GetServiceNum() const
 {
 	CBlockLock Lock(&m_DecoderLock);
 
@@ -142,7 +161,7 @@ WORD CTsAnalyzer::GetServiceNum()
 }
 
 
-bool CTsAnalyzer::GetServiceID(const int Index, WORD *pServiceID)
+bool CTsAnalyzer::GetServiceID(const int Index, WORD *pServiceID) const
 {
 	if (pServiceID == NULL)
 		return false;
@@ -151,24 +170,24 @@ bool CTsAnalyzer::GetServiceID(const int Index, WORD *pServiceID)
 
 	// サービスIDを取得する
 	if (Index < 0) {
-#ifndef BONTSENGINE_1SEG_SUPPORT
-		if (m_ServiceList.size() == 0 || !m_ServiceList[0].bIsUpdated)
-			return false;
-		*pServiceID = m_ServiceList[0].ServiceID;
-#else
-		WORD MinPID = 0xFFFF;
-		size_t MinIndex;
-		for (size_t i = 0; i < m_ServiceList.size(); i++) {
-			if (m_ServiceList[i].PmtPID >= 0x1FC8 && m_ServiceList[i].PmtPID <= 0x1FCF
-					&& m_ServiceList[i].PmtPID < MinPID) {
-				MinPID = m_ServiceList[i].PmtPID;
-				MinIndex = i;
+		if (Is1SegStream()) {
+			WORD MinPID = 0xFFFF;
+			size_t MinIndex;
+			for (size_t i = 0; i < m_ServiceList.size(); i++) {
+				if (Is1SegPmtPid(m_ServiceList[i].PmtPID)
+						&& m_ServiceList[i].PmtPID < MinPID) {
+					MinPID = m_ServiceList[i].PmtPID;
+					MinIndex = i;
+				}
 			}
+			if (MinPID == 0xFFFF || !m_ServiceList[MinIndex].bIsUpdated)
+				return false;
+			*pServiceID = m_ServiceList[MinIndex].ServiceID;
+		} else {
+			if (m_ServiceList.empty() || !m_ServiceList[0].bIsUpdated)
+				return false;
+			*pServiceID = m_ServiceList[0].ServiceID;
 		}
-		if (MinPID == 0xFFFF || !m_ServiceList[MinIndex].bIsUpdated)
-			return false;
-		*pServiceID = m_ServiceList[MinIndex].ServiceID;
-#endif
 	} else if (Index >= 0 && (size_t)Index < m_ServiceList.size()) {
 		*pServiceID = m_ServiceList[Index].ServiceID;
 	} else {
@@ -178,7 +197,7 @@ bool CTsAnalyzer::GetServiceID(const int Index, WORD *pServiceID)
 }
 
 
-int CTsAnalyzer::GetServiceIndexByID(const WORD ServiceID)
+int CTsAnalyzer::GetServiceIndexByID(const WORD ServiceID) const
 {
 	CBlockLock Lock(&m_DecoderLock);
 
@@ -193,31 +212,33 @@ int CTsAnalyzer::GetServiceIndexByID(const WORD ServiceID)
 }
 
 
-bool CTsAnalyzer::IsViewableService(const int Index)
+bool CTsAnalyzer::IsViewableService(const int Index) const
 {
 	CBlockLock Lock(&m_DecoderLock);
 
 	if (Index < 0 || (size_t)Index >= m_ServiceList.size())
 		return false;
 
-	return
-#if defined(BONTSENGINE_MPEG2_SUPPORT) && defined(BONTSENGINE_H264_SUPPORT)
-		   m_ServiceList[Index].VideoStreamType == STREAM_TYPE_MPEG2
-		|| m_ServiceList[Index].VideoStreamType == STREAM_TYPE_H264
-#elif defined(BONTSENGINE_MPEG2_SUPPORT)
-		   m_ServiceList[Index].VideoStreamType == STREAM_TYPE_MPEG2
-#elif defined(BONTSENGINE_H264_SUPPORT)
-		   m_ServiceList[Index].VideoStreamType == STREAM_TYPE_H264
-#endif
-#ifdef BONTSENGINE_RADIO_SUPPORT
-		|| (m_ServiceList[Index].VideoStreamType == 0xFF
-			&& m_ServiceList[Index].AudioEsList.size() > 0)
-#endif
-		;
+	const ServiceInfo &Service=m_ServiceList[Index];
+
+	if (!Service.VideoEsList.empty()) {
+		for (int i = 0; i < _countof(m_VideoStreamTypeMap); i++) {
+			if (Service.VideoEsList[0].StreamType == m_VideoStreamTypeMap[i].StreamType
+					&& (m_ViewableVideoStreamTypes & m_VideoStreamTypeMap[i].Flag) != 0) {
+				return true;
+			}
+		}
+	} else {
+		if (m_bRadioSupport
+				&& !Service.AudioEsList.empty())
+			return true;
+	}
+
+	return false;
 }
 
 
-WORD CTsAnalyzer::GetViewableServiceNum()
+WORD CTsAnalyzer::GetViewableServiceNum() const
 {
 	CBlockLock Lock(&m_DecoderLock);
 	WORD Count = 0;
@@ -230,7 +251,7 @@ WORD CTsAnalyzer::GetViewableServiceNum()
 }
 
 
-bool CTsAnalyzer::GetViewableServiceID(const int Index, WORD *pServiceID)
+bool CTsAnalyzer::GetViewableServiceID(const int Index, WORD *pServiceID) const
 {
 	if (pServiceID == NULL)
 		return false;
@@ -251,13 +272,15 @@ bool CTsAnalyzer::GetViewableServiceID(const int Index, WORD *pServiceID)
 }
 
 
-bool CTsAnalyzer::GetFirstViewableServiceID(WORD *pServiceID)
+bool CTsAnalyzer::GetFirstViewableServiceID(WORD *pServiceID) const
 {
 	if (pServiceID == NULL)
 		return false;
 
-#ifndef BONTSENGINE_1SEG_SUPPORT
 	CBlockLock Lock(&m_DecoderLock);
+
+	if (Is1SegStream())
+		return GetServiceID(-1, pServiceID);
 
 	for (size_t i = 0; i < m_ServiceList.size(); i++) {
 		if (!m_ServiceList[i].bIsUpdated)
@@ -267,14 +290,12 @@ bool CTsAnalyzer::GetFirstViewableServiceID(WORD *pServiceID)
 			return true;
 		}
 	}
+
 	return false;
-#else
-	return GetServiceID(-1, pServiceID);
-#endif
 }
 
 
-int CTsAnalyzer::GetViewableServiceIndexByID(const WORD ServiceID)
+int CTsAnalyzer::GetViewableServiceIndexByID(const WORD ServiceID) const
 {
 	CBlockLock Lock(&m_DecoderLock);
 
@@ -290,7 +311,7 @@ int CTsAnalyzer::GetViewableServiceIndexByID(const WORD ServiceID)
 }
 
 
-bool CTsAnalyzer::GetServiceInfo(const int Index, ServiceInfo *pInfo)
+bool CTsAnalyzer::GetServiceInfo(const int Index, ServiceInfo *pInfo) const
 {
 	CBlockLock Lock(&m_DecoderLock);
 
@@ -302,7 +323,7 @@ bool CTsAnalyzer::GetServiceInfo(const int Index, ServiceInfo *pInfo)
 }
 
 
-bool CTsAnalyzer::IsServiceUpdated(const int Index)
+bool CTsAnalyzer::IsServiceUpdated(const int Index) const
 {
 	CBlockLock Lock(&m_DecoderLock);
 
@@ -313,7 +334,18 @@ bool CTsAnalyzer::IsServiceUpdated(const int Index)
 }
 
 
-bool CTsAnalyzer::GetPmtPID(const int Index, WORD *pPmtPID)
+bool CTsAnalyzer::Is1SegService(const int Index) const
+{
+	CBlockLock Lock(&m_DecoderLock);
+
+	if (Index >= 0 && (size_t)Index < m_ServiceList.size()) {
+		return Is1SegPmtPid(m_ServiceList[Index].PmtPID);
+	}
+	return false;
+}
+
+
+bool CTsAnalyzer::GetPmtPID(const int Index, WORD *pPmtPID) const
 {
 	CBlockLock Lock(&m_DecoderLock);
 
@@ -325,42 +357,62 @@ bool CTsAnalyzer::GetPmtPID(const int Index, WORD *pPmtPID)
 }
 
 
-bool CTsAnalyzer::GetVideoEsPID(const int Index, WORD *pVideoPID)
+bool CTsAnalyzer::GetVideoEsInfo(const int Index, const int VideoIndex, EsInfo *pEsInfo) const
 {
+	if (Index < 0 || VideoIndex < 0 || pEsInfo == NULL)
+		return false;
+
 	CBlockLock Lock(&m_DecoderLock);
 
-	if (pVideoPID != NULL && Index >= 0 && (size_t)Index < m_ServiceList.size()
-			&& m_ServiceList[Index].VideoEs.PID != PID_INVALID) {
-		*pVideoPID = m_ServiceList[Index].VideoEs.PID;
+	if ((size_t)Index < m_ServiceList.size()
+			&& (size_t)VideoIndex < m_ServiceList[Index].VideoEsList.size()) {
+		*pEsInfo = m_ServiceList[Index].VideoEsList[VideoIndex];
 		return true;
 	}
 	return false;
 }
 
 
-bool CTsAnalyzer::GetVideoStreamType(const int Index, BYTE *pStreamType)
+bool CTsAnalyzer::GetVideoEsPID(const int Index, const int VideoIndex, WORD *pVideoPID) const
 {
 	CBlockLock Lock(&m_DecoderLock);
 
-	if (pStreamType != NULL && Index >= 0 && (size_t)Index < m_ServiceList.size()) {
-		*pStreamType = m_ServiceList[Index].VideoStreamType;
+	if (pVideoPID != NULL
+			&& Index >= 0 && (size_t)Index < m_ServiceList.size()
+			&& VideoIndex >= 0 && (size_t)VideoIndex < m_ServiceList[Index].VideoEsList.size()) {
+		*pVideoPID = m_ServiceList[Index].VideoEsList[VideoIndex].PID;
 		return true;
 	}
 	return false;
 }
 
 
-BYTE CTsAnalyzer::GetVideoComponentTag(const int Index)
+bool CTsAnalyzer::GetVideoStreamType(const int Index, const int VideoIndex, BYTE *pStreamType) const
 {
 	CBlockLock Lock(&m_DecoderLock);
 
-	if (Index >= 0 && (size_t)Index < m_ServiceList.size())
-		return m_ServiceList[Index].VideoEs.ComponentTag;
+	if (pStreamType != NULL
+			&& Index >= 0 && (size_t)Index < m_ServiceList.size()
+			&& VideoIndex >= 0 && (size_t)VideoIndex < m_ServiceList[Index].VideoEsList.size()) {
+		*pStreamType = m_ServiceList[Index].VideoEsList[VideoIndex].StreamType;
+		return true;
+	}
+	return false;
+}
+
+
+BYTE CTsAnalyzer::GetVideoComponentTag(const int Index, const int VideoIndex) const
+{
+	CBlockLock Lock(&m_DecoderLock);
+
+	if (Index >= 0 && (size_t)Index < m_ServiceList.size()
+			&& VideoIndex >= 0 && (size_t)VideoIndex < m_ServiceList[Index].VideoEsList.size())
+		return m_ServiceList[Index].VideoEsList[VideoIndex].ComponentTag;
 	return COMPONENTTAG_INVALID;
 }
 
 
-WORD CTsAnalyzer::GetAudioEsNum(const int Index)
+WORD CTsAnalyzer::GetAudioEsNum(const int Index) const
 {
 	CBlockLock Lock(&m_DecoderLock);
 
@@ -370,7 +422,23 @@ WORD CTsAnalyzer::GetAudioEsNum(const int Index)
 }
 
 
-bool CTsAnalyzer::GetAudioEsPID(const int Index, const int AudioIndex, WORD *pAudioPID)
+bool CTsAnalyzer::GetAudioEsInfo(const int Index, const int AudioIndex, EsInfo *pEsInfo) const
+{
+	if (Index < 0 || AudioIndex < 0 || pEsInfo == NULL)
+		return false;
+
+	CBlockLock Lock(&m_DecoderLock);
+
+	if ((size_t)Index < m_ServiceList.size()
+			&& (size_t)AudioIndex < m_ServiceList[Index].AudioEsList.size()) {
+		*pEsInfo = m_ServiceList[Index].AudioEsList[AudioIndex];
+		return true;
+	}
+	return false;
+}
+
+
+bool CTsAnalyzer::GetAudioEsPID(const int Index, const int AudioIndex, WORD *pAudioPID) const
 {
 	if (pAudioPID == NULL)
 		return false;
@@ -386,7 +454,23 @@ bool CTsAnalyzer::GetAudioEsPID(const int Index, const int AudioIndex, WORD *pAu
 }
 
 
-BYTE CTsAnalyzer::GetAudioComponentTag(const int Index, const int AudioIndex)
+bool CTsAnalyzer::GetAudioStreamType(const int Index, const int AudioIndex, BYTE *pStreamType) const
+{
+	if (pStreamType == NULL)
+		return false;
+
+	CBlockLock Lock(&m_DecoderLock);
+
+	if (Index >= 0 && (size_t)Index < m_ServiceList.size()
+			&& AudioIndex >= 0 && (size_t)AudioIndex < m_ServiceList[Index].AudioEsList.size()) {
+		*pStreamType = m_ServiceList[Index].AudioEsList[AudioIndex].StreamType;
+		return true;
+	}
+	return false;
+}
+
+
+BYTE CTsAnalyzer::GetAudioComponentTag(const int Index, const int AudioIndex) const
 {
 	CBlockLock Lock(&m_DecoderLock);
 
@@ -400,7 +484,7 @@ BYTE CTsAnalyzer::GetAudioComponentTag(const int Index, const int AudioIndex)
 
 #ifdef TS_ANALYZER_EIT_SUPPORT
 
-BYTE CTsAnalyzer::GetVideoComponentType(const int Index)
+BYTE CTsAnalyzer::GetVideoComponentType(const int Index) const
 {
 	CBlockLock Lock(&m_DecoderLock);
 
@@ -418,7 +502,7 @@ BYTE CTsAnalyzer::GetVideoComponentType(const int Index)
 }
 
 
-int CTsAnalyzer::GetAudioIndexByComponentTag(const int Index, const BYTE ComponentTag)
+int CTsAnalyzer::GetAudioIndexByComponentTag(const int Index, const BYTE ComponentTag) const
 {
 	CBlockLock Lock(&m_DecoderLock);
 
@@ -447,7 +531,7 @@ int CTsAnalyzer::GetAudioIndexByComponentTag(const int Index, const BYTE Compone
 }
 
 
-BYTE CTsAnalyzer::GetAudioComponentType(const int Index, const int AudioIndex)
+BYTE CTsAnalyzer::GetAudioComponentType(const int Index, const int AudioIndex) const
 {
 	CBlockLock Lock(&m_DecoderLock);
 
@@ -466,7 +550,7 @@ BYTE CTsAnalyzer::GetAudioComponentType(const int Index, const int AudioIndex)
 }
 
 
-int CTsAnalyzer::GetAudioComponentText(const int Index, const int AudioIndex, LPTSTR pszText, int MaxLength)
+int CTsAnalyzer::GetAudioComponentText(const int Index, const int AudioIndex, LPTSTR pszText, int MaxLength) const
 {
 	if (pszText == NULL || MaxLength < 1)
 		return 0;
@@ -492,7 +576,7 @@ int CTsAnalyzer::GetAudioComponentText(const int Index, const int AudioIndex, LP
 #endif	// TS_ANALYZER_EIT_SUPPORT
 
 
-WORD CTsAnalyzer::GetCaptionEsNum(const int Index)
+WORD CTsAnalyzer::GetCaptionEsNum(const int Index) const
 {
 	CBlockLock Lock(&m_DecoderLock);
 
@@ -502,7 +586,7 @@ WORD CTsAnalyzer::GetCaptionEsNum(const int Index)
 }
 
 
-bool CTsAnalyzer::GetCaptionEsPID(const int Index, const WORD CaptionIndex, WORD *pCaptionPID)
+bool CTsAnalyzer::GetCaptionEsPID(const int Index, const WORD CaptionIndex, WORD *pCaptionPID) const
 {
 	if (pCaptionPID == NULL)
 		return false;
@@ -518,7 +602,7 @@ bool CTsAnalyzer::GetCaptionEsPID(const int Index, const WORD CaptionIndex, WORD
 }
 
 
-WORD CTsAnalyzer::GetDataCarrouselEsNum(const int Index)
+WORD CTsAnalyzer::GetDataCarrouselEsNum(const int Index) const
 {
 	CBlockLock Lock(&m_DecoderLock);
 
@@ -528,7 +612,7 @@ WORD CTsAnalyzer::GetDataCarrouselEsNum(const int Index)
 }
 
 
-bool CTsAnalyzer::GetDataCarrouselEsPID(const int Index, const WORD DataCarrouselIndex, WORD *pDataCarrouselPID)
+bool CTsAnalyzer::GetDataCarrouselEsPID(const int Index, const WORD DataCarrouselIndex, WORD *pDataCarrouselPID) const
 {
 	if (pDataCarrouselPID == NULL)
 		return false;
@@ -544,7 +628,7 @@ bool CTsAnalyzer::GetDataCarrouselEsPID(const int Index, const WORD DataCarrouse
 }
 
 
-bool CTsAnalyzer::GetPcrPID(const int Index, WORD *pPcrPID)
+bool CTsAnalyzer::GetPcrPID(const int Index, WORD *pPcrPID) const
 {
 	if (pPcrPID == NULL)
 		return false;
@@ -560,7 +644,7 @@ bool CTsAnalyzer::GetPcrPID(const int Index, WORD *pPcrPID)
 }
 
 
-bool CTsAnalyzer::GetPcrTimeStamp(const int Index, ULONGLONG *pTimeStamp)
+bool CTsAnalyzer::GetPcrTimeStamp(const int Index, ULONGLONG *pTimeStamp) const
 {
 	if (pTimeStamp == NULL)
 		return false;
@@ -576,7 +660,7 @@ bool CTsAnalyzer::GetPcrTimeStamp(const int Index, ULONGLONG *pTimeStamp)
 }
 
 
-int CTsAnalyzer::GetServiceName(const int Index, LPTSTR pszName, const int MaxLength)
+int CTsAnalyzer::GetServiceName(const int Index, LPTSTR pszName, const int MaxLength) const
 {
 	CBlockLock Lock(&m_DecoderLock);
 
@@ -590,7 +674,7 @@ int CTsAnalyzer::GetServiceName(const int Index, LPTSTR pszName, const int MaxLe
 }
 
 
-BYTE CTsAnalyzer::GetServiceType(const int Index)
+BYTE CTsAnalyzer::GetServiceType(const int Index) const
 {
 	CBlockLock Lock(&m_DecoderLock);
 
@@ -600,17 +684,17 @@ BYTE CTsAnalyzer::GetServiceType(const int Index)
 }
 
 
-WORD CTsAnalyzer::GetLogoID(const int Index)
+WORD CTsAnalyzer::GetLogoID(const int Index) const
 {
 	CBlockLock Lock(&m_DecoderLock);
 
 	if (Index >= 0 && (size_t)Index < m_ServiceList.size())
 		return m_ServiceList[Index].LogoID;
-	return 0xFFFF;
+	return LOGOID_INVALID;
 }
 
 
-bool CTsAnalyzer::GetServiceList(ServiceList *pList)
+bool CTsAnalyzer::GetServiceList(ServiceList *pList) const
 {
 	if (!pList)
 		return false;
@@ -622,7 +706,7 @@ bool CTsAnalyzer::GetServiceList(ServiceList *pList)
 }
 
 
-bool CTsAnalyzer::GetViewableServiceList(ServiceList *pList)
+bool CTsAnalyzer::GetViewableServiceList(ServiceList *pList) const
 {
 	if (!pList)
 		return false;
@@ -656,7 +740,7 @@ BYTE CTsAnalyzer::GetBroadcastingID() const
 }
 
 
-int CTsAnalyzer::GetNetworkName(LPTSTR pszName, int MaxLength)
+int CTsAnalyzer::GetNetworkName(LPTSTR pszName, int MaxLength) const
 {
 	CBlockLock Lock(&m_DecoderLock);
 
@@ -672,7 +756,7 @@ BYTE CTsAnalyzer::GetRemoteControlKeyID() const
 }
 
 
-int CTsAnalyzer::GetTsName(LPTSTR pszName,int MaxLength)
+int CTsAnalyzer::GetTsName(LPTSTR pszName,int MaxLength) const
 {
 	CBlockLock Lock(&m_DecoderLock);
 
@@ -682,7 +766,7 @@ int CTsAnalyzer::GetTsName(LPTSTR pszName,int MaxLength)
 }
 
 
-bool CTsAnalyzer::GetSdtServiceList(SdtServiceList *pList)
+bool CTsAnalyzer::GetSdtServiceList(SdtServiceList *pList) const
 {
 	if (!pList)
 		return false;
@@ -694,7 +778,7 @@ bool CTsAnalyzer::GetSdtServiceList(SdtServiceList *pList)
 }
 
 
-bool CTsAnalyzer::GetSdtTsList(SdtTsList *pList)
+bool CTsAnalyzer::GetSdtTsList(SdtTsList *pList) const
 {
 	if (!pList)
 		return false;
@@ -703,14 +787,14 @@ bool CTsAnalyzer::GetSdtTsList(SdtTsList *pList)
 
 	CBlockLock Lock(&m_DecoderLock);
 
-	for (SdtTsMap::iterator i = m_SdtTsMap.begin(); i != m_SdtTsMap.end(); i++)
+	for (auto i = m_SdtTsMap.begin(); i != m_SdtTsMap.end(); i++)
 		pList->push_back(i->second);
 
 	return true;
 }
 
 
-bool CTsAnalyzer::GetNetworkTsList(NetworkTsList *pList)
+bool CTsAnalyzer::GetNetworkTsList(NetworkTsList *pList) const
 {
 	if (!pList)
 		return false;
@@ -751,10 +835,138 @@ bool CTsAnalyzer::IsSdtComplete() const
 }
 
 
+bool CTsAnalyzer::Is1SegStream() const
+{
+	CBlockLock Lock(&m_DecoderLock);
+
+	if (m_ServiceList.empty())
+		return false;
+
+	for (size_t i = 0; i < m_ServiceList.size(); i++) {
+		if (!Is1SegPmtPid(m_ServiceList[i].PmtPID))
+			return false;
+	}
+
+	return true;
+}
+
+
+bool CTsAnalyzer::SetVideoStreamTypeViewable(const BYTE StreamType, const bool bViewable)
+{
+	CBlockLock Lock(&m_DecoderLock);
+
+	for (int i = 0; i < _countof(m_VideoStreamTypeMap); i++) {
+		if (m_VideoStreamTypeMap[i].StreamType == StreamType) {
+			if (bViewable)
+				m_ViewableVideoStreamTypes |= m_VideoStreamTypeMap[i].Flag;
+			else
+				m_ViewableVideoStreamTypes &= ~m_VideoStreamTypeMap[i].Flag;
+			return true;
+		}
+	}
+
+	return false;
+}
+
+
+bool CTsAnalyzer::IsVideoStreamTypeViewable(const BYTE StreamType) const
+{
+	CBlockLock Lock(&m_DecoderLock);
+
+	for (int i = 0; i < _countof(m_VideoStreamTypeMap); i++) {
+		if (m_VideoStreamTypeMap[i].StreamType == StreamType) {
+			return (m_ViewableVideoStreamTypes & m_VideoStreamTypeMap[i].Flag) != 0;
+		}
+	}
+
+	return false;
+}
+
+
+void CTsAnalyzer::SetRadioSupport(const bool bRadioSupport)
+{
+	CBlockLock Lock(&m_DecoderLock);
+
+	m_bRadioSupport = bRadioSupport;
+}
+
+
+bool CTsAnalyzer::IsRadioSupport() const
+{
+	return m_bRadioSupport;
+}
+
+
+bool CTsAnalyzer::Has1SegService() const
+{
+	CBlockLock Lock(&m_DecoderLock);
+
+	for (size_t i = 0; i < m_ServiceList.size(); i++) {
+		if (Is1SegPmtPid(m_ServiceList[i].PmtPID))
+			return true;
+	}
+
+	return false;
+}
+
+
+bool CTsAnalyzer::GetFirst1SegServiceID(WORD *pServiceID) const
+{
+	if (pServiceID == NULL)
+		return false;
+
+	CBlockLock Lock(&m_DecoderLock);
+
+	WORD MinPID = 0xFFFF;
+	size_t MinIndex;
+	for (size_t i = 0; i < m_ServiceList.size(); i++) {
+		if (Is1SegPmtPid(m_ServiceList[i].PmtPID)
+				&& m_ServiceList[i].PmtPID < MinPID) {
+			MinPID = m_ServiceList[i].PmtPID;
+			MinIndex = i;
+		}
+	}
+	if (MinPID == 0xFFFF)
+		return false;
+	*pServiceID = m_ServiceList[MinIndex].ServiceID;
+
+	return true;
+}
+
+
+bool CTsAnalyzer::Get1SegServiceIDByIndex(const int Index, WORD *pServiceID) const
+{
+	if (Index < 0 || Index >= ONESEG_PMT_PID_NUM || pServiceID == NULL)
+		return false;
+
+	CBlockLock Lock(&m_DecoderLock);
+
+	WORD ServiceList[ONESEG_PMT_PID_NUM] = {0};
+
+	for (size_t i = 0; i < m_ServiceList.size(); i++) {
+		if (Is1SegPmtPid(m_ServiceList[i].PmtPID))
+			ServiceList[m_ServiceList[i].PmtPID - ONESEG_PMT_PID_FIRST] = m_ServiceList[i].ServiceID;
+	}
+
+	int ServiceCount = 0;
+	for (int i = 0; i < ONESEG_PMT_PID_NUM; i++) {
+		if (ServiceList[i] != 0) {
+			if (ServiceCount == Index) {
+				*pServiceID = ServiceList[i];
+				return true;
+			}
+			ServiceCount++;
+		}
+	}
+
+	return false;
+}
+
+
 #ifdef TS_ANALYZER_EIT_SUPPORT
 
 
-WORD CTsAnalyzer::GetEventID(const int ServiceIndex, const bool bNext)
+WORD CTsAnalyzer::GetEventID(const int ServiceIndex, const bool bNext) const
 {
 	CBlockLock Lock(&m_DecoderLock);
 
@@ -769,7 +981,7 @@ WORD CTsAnalyzer::GetEventID(const int ServiceIndex, const bool bNext)
 }
 
 
-bool CTsAnalyzer::GetEventStartTime(const int ServiceIndex, SYSTEMTIME *pSystemTime, const bool bNext)
+bool CTsAnalyzer::GetEventStartTime(const int ServiceIndex, SYSTEMTIME *pSystemTime, const bool bNext) const
 {
 	if (pSystemTime == NULL)
 		return false;
@@ -792,7 +1004,7 @@ bool CTsAnalyzer::GetEventStartTime(const int ServiceIndex, SYSTEMTIME *pSystemT
 }
 
 
-DWORD CTsAnalyzer::GetEventDuration(const int ServiceIndex, const bool bNext)
+DWORD CTsAnalyzer::GetEventDuration(const int ServiceIndex, const bool bNext) const
 {
 	CBlockLock Lock(&m_DecoderLock);
 
@@ -808,7 +1020,7 @@ DWORD CTsAnalyzer::GetEventDuration(const int ServiceIndex, const bool bNext)
 }
 
 
-bool CTsAnalyzer::GetEventTime(const int ServiceIndex, SYSTEMTIME *pTime, DWORD *pDuration, const bool bNext)
+bool CTsAnalyzer::GetEventTime(const int ServiceIndex, SYSTEMTIME *pTime, DWORD *pDuration, const bool bNext) const
 {
 	CBlockLock Lock(&m_DecoderLock);
 
@@ -831,7 +1043,7 @@ bool CTsAnalyzer::GetEventTime(const int ServiceIndex, SYSTEMTIME *pTime, DWORD 
 }
 
 
-int CTsAnalyzer::GetEventName(const int ServiceIndex, LPTSTR pszName, int MaxLength, const bool bNext)
+int CTsAnalyzer::GetEventName(const int ServiceIndex, LPTSTR pszName, int MaxLength, const bool bNext) const
 {
 	CBlockLock Lock(&m_DecoderLock);
 
@@ -856,7 +1068,7 @@ int CTsAnalyzer::GetEventName(const int ServiceIndex, LPTSTR pszName, int MaxLen
 }
 
 
-int CTsAnalyzer::GetEventText(const int ServiceIndex, LPTSTR pszText, int MaxLength, const bool bNext)
+int CTsAnalyzer::GetEventText(const int ServiceIndex, LPTSTR pszText, int MaxLength, const bool bNext) const
 {
 	CBlockLock Lock(&m_DecoderLock);
 
@@ -881,7 +1093,7 @@ int CTsAnalyzer::GetEventText(const int ServiceIndex, LPTSTR pszText, int MaxLen
 }
 
 
-bool CTsAnalyzer::GetEventVideoInfo(const int ServiceIndex, EventVideoInfo *pInfo, const bool bNext)
+bool CTsAnalyzer::GetEventVideoInfo(const int ServiceIndex, EventVideoInfo *pInfo, const bool bNext) const
 {
 	if (pInfo == NULL)
 		return false;
@@ -918,7 +1130,7 @@ static void AudioComponentDescToAudioInfo(const CAudioComponentDesc *pAudioDesc,
 	pAudioDesc->GetText(pInfo->szText, CTsAnalyzer::EventAudioInfo::MAX_TEXT);
 }
 
-bool CTsAnalyzer::GetEventAudioInfo(const int ServiceIndex, const int AudioIndex, EventAudioInfo *pInfo, bool bNext)
+bool CTsAnalyzer::GetEventAudioInfo(const int ServiceIndex, const int AudioIndex, EventAudioInfo *pInfo, bool bNext) const
 {
 	if (pInfo == NULL)
 		return false;
@@ -942,7 +1154,7 @@ bool CTsAnalyzer::GetEventAudioInfo(const int ServiceIndex, const int AudioIndex
 }
 
 
-bool CTsAnalyzer::GetEventAudioList(const int ServiceIndex, EventAudioList *pList, const bool bNext)
+bool CTsAnalyzer::GetEventAudioList(const int ServiceIndex, EventAudioList *pList, const bool bNext) const
 {
 	if (pList == NULL)
 		return false;
@@ -970,7 +1182,7 @@ bool CTsAnalyzer::GetEventAudioList(const int ServiceIndex, EventAudioList *pLis
 }
 
 
-bool CTsAnalyzer::GetEventContentNibble(const int ServiceIndex, EventContentNibble *pInfo, const bool bNext)
+bool CTsAnalyzer::GetEventContentNibble(const int ServiceIndex, EventContentNibble *pInfo, const bool bNext) const
 {
 	if (pInfo == NULL)
 		return false;
@@ -992,7 +1204,7 @@ bool CTsAnalyzer::GetEventContentNibble(const int ServiceIndex, EventContentNibb
 }
 
 
-int CTsAnalyzer::GetEventExtendedText(const int ServiceIndex, LPTSTR pszText, int MaxLength, const bool bUseEventGroup, const bool bNext)
+int CTsAnalyzer::GetEventExtendedText(const int ServiceIndex, LPTSTR pszText, int MaxLength, const bool bUseEventGroup, const bool bNext) const
 {
 	if (pszText == NULL || MaxLength < 1)
 		return 0;
@@ -1146,7 +1358,7 @@ int CTsAnalyzer::GetEventExtendedText(const int ServiceIndex, LPTSTR pszText, in
 }
 
 
-bool CTsAnalyzer::GetEventSeriesInfo(const int ServiceIndex, EventSeriesInfo *pInfo, const bool bNext)
+bool CTsAnalyzer::GetEventSeriesInfo(const int ServiceIndex, EventSeriesInfo *pInfo, const bool bNext) const
 {
 	if (pInfo == NULL)
 		return false;
@@ -1173,7 +1385,7 @@ bool CTsAnalyzer::GetEventSeriesInfo(const int ServiceIndex, EventSeriesInfo *pI
 }
 
 
-bool CTsAnalyzer::GetEventInfo(const int ServiceIndex, EventInfo *pInfo, const bool bUseEventGroup, const bool bNext)
+bool CTsAnalyzer::GetEventInfo(const int ServiceIndex, EventInfo *pInfo, const bool bUseEventGroup, const bool bNext) const
 {
 	if (pInfo == NULL)
 		return false;
@@ -1183,16 +1395,10 @@ bool CTsAnalyzer::GetEventInfo(const int ServiceIndex, EventInfo *pInfo, const b
 	if (ServiceIndex < 0 || (size_t)ServiceIndex >= m_ServiceList.size())
 		return false;
 
-	const CEitPfTable *pEitTable = dynamic_cast<const CEitPfTable*>(m_PidMapManager.GetMapTarget(PID_HEIT));
-#ifdef TS_ANALYZER_L_EIT_SUPPORT
+	int Service;
+	const CEitPfTable *pEitTable =
+		GetEitPfTableByServiceID(m_ServiceList[ServiceIndex].ServiceID, &Service);
 	if (pEitTable == NULL)
-		pEitTable = dynamic_cast<const CEitPfTable*>(m_PidMapManager.GetMapTarget(PID_LEIT));
-#endif
-	if (pEitTable == NULL)
-		return false;
-
-	const int Service = pEitTable->GetServiceIndexByID(m_ServiceList[ServiceIndex].ServiceID);
-	if (Service < 0)
 		return false;
 
 	const DWORD EventIndex = bNext ? 1 : 0;
@@ -1292,7 +1498,7 @@ const CDescBlock *CTsAnalyzer::GetLEitItemDesc(const int ServiceIndex, const boo
 #endif
 
 
-const CAudioComponentDesc *CTsAnalyzer::GetAudioComponentDescByComponentTag(const CDescBlock *pDescBlock, const BYTE ComponentTag)
+const CAudioComponentDesc *CTsAnalyzer::GetAudioComponentDescByComponentTag(const CDescBlock *pDescBlock, const BYTE ComponentTag) const
 {
 	if (pDescBlock != NULL) {
 		for (WORD i = 0; i < pDescBlock->GetDescNum(); i++) {
@@ -1314,7 +1520,7 @@ const CAudioComponentDesc *CTsAnalyzer::GetAudioComponentDescByComponentTag(cons
 #endif	// TS_ANALYZER_EIT_SUPPORT
 
 
-bool CTsAnalyzer::GetTotTime(SYSTEMTIME *pTime)
+bool CTsAnalyzer::GetTotTime(SYSTEMTIME *pTime) const
 {
 	if (pTime == NULL)
 		return false;
@@ -1328,7 +1534,7 @@ bool CTsAnalyzer::GetTotTime(SYSTEMTIME *pTime)
 }
 
 
-bool CTsAnalyzer::GetSatelliteDeliverySystemList(SatelliteDeliverySystemList *pList)
+bool CTsAnalyzer::GetSatelliteDeliverySystemList(SatelliteDeliverySystemList *pList) const
 {
 	if (pList == NULL)
 		return false;
@@ -1337,36 +1543,44 @@ bool CTsAnalyzer::GetSatelliteDeliverySystemList(SatelliteDeliverySystemList *pL
 
 	pList->clear();
 
-	const CNitTable *pNitTable = dynamic_cast<const CNitTable*>(m_PidMapManager.GetMapTarget(PID_NIT));
-	if (pNitTable == NULL)
+	const CNitMultiTable *pNitMultiTable =
+		dynamic_cast<const CNitMultiTable*>(m_PidMapManager.GetMapTarget(PID_NIT));
+	if (pNitMultiTable == NULL || !pNitMultiTable->IsNitComplete())
 		return false;
 
-	for (WORD i = 0; i < pNitTable->GetTransportStreamNum(); i++) {
-		const CDescBlock *pDescBlock = pNitTable->GetItemDesc(i);
-		if (pDescBlock) {
-			const CSatelliteDeliverySystemDesc *pSatelliteDesc =
-				dynamic_cast<const CSatelliteDeliverySystemDesc *>(pDescBlock->GetDescByTag(CSatelliteDeliverySystemDesc::DESC_TAG));
-			if (pSatelliteDesc) {
-				SatelliteDeliverySystemInfo Info;
+	for (WORD SectionNo = 0; SectionNo < pNitMultiTable->GetNitSectionNum(); SectionNo++) {
+		const CNitTable *pNitTable = pNitMultiTable->GetNitTable(SectionNo);
+		if (pNitTable == NULL)
+			continue;
 
-				Info.TransportStreamID = pNitTable->GetTransportStreamID(i);
-				Info.Frequency = pSatelliteDesc->GetFrequency();
-				Info.OrbitalPosition = pSatelliteDesc->GetOrbitalPosition();
-				Info.bWestEastFlag = pSatelliteDesc->GetWestEastFlag();
-				Info.Polarization = pSatelliteDesc->GetPolarization();
-				Info.Modulation = pSatelliteDesc->GetModulation();
-				Info.SymbolRate = pSatelliteDesc->GetSymbolRate();
-				Info.FECInner = pSatelliteDesc->GetFECInner();
-				pList->push_back(Info);
+		for (WORD i = 0; i < pNitTable->GetTransportStreamNum(); i++) {
+			const CDescBlock *pDescBlock = pNitTable->GetItemDesc(i);
+			if (pDescBlock) {
+				const CSatelliteDeliverySystemDesc *pSatelliteDesc =
+					dynamic_cast<const CSatelliteDeliverySystemDesc *>(
+						pDescBlock->GetDescByTag(CSatelliteDeliverySystemDesc::DESC_TAG));
+				if (pSatelliteDesc) {
+					SatelliteDeliverySystemInfo Info;
+
+					Info.TransportStreamID = pNitTable->GetTransportStreamID(i);
+					Info.Frequency = pSatelliteDesc->GetFrequency();
+					Info.OrbitalPosition = pSatelliteDesc->GetOrbitalPosition();
+					Info.bWestEastFlag = pSatelliteDesc->GetWestEastFlag();
+					Info.Polarization = pSatelliteDesc->GetPolarization();
+					Info.Modulation = pSatelliteDesc->GetModulation();
+					Info.SymbolRate = pSatelliteDesc->GetSymbolRate();
+					Info.FECInner = pSatelliteDesc->GetFECInner();
+					pList->push_back(Info);
+				}
 			}
 		}
 	}
 
-	return pList->size() > 0;
+	return !pList->empty();
 }
 
 
-bool CTsAnalyzer::GetTerrestrialDeliverySystemList(TerrestrialDeliverySystemList *pList)
+bool CTsAnalyzer::GetTerrestrialDeliverySystemList(TerrestrialDeliverySystemList *pList) const
 {
 	if (pList == NULL)
 		return false;
@@ -1375,31 +1589,39 @@ bool CTsAnalyzer::GetTerrestrialDeliverySystemList(TerrestrialDeliverySystemList
 
 	pList->clear();
 
-	const CNitTable *pNitTable = dynamic_cast<const CNitTable*>(m_PidMapManager.GetMapTarget(PID_NIT));
-	if (pNitTable == NULL)
+	const CNitMultiTable *pNitMultiTable =
+		dynamic_cast<const CNitMultiTable*>(m_PidMapManager.GetMapTarget(PID_NIT));
+	if (pNitMultiTable == NULL || !pNitMultiTable->IsNitComplete())
 		return false;
 
-	for (WORD i = 0; i < pNitTable->GetTransportStreamNum(); i++) {
-		const CDescBlock *pDescBlock = pNitTable->GetItemDesc(i);
-		if (pDescBlock) {
-			const CTerrestrialDeliverySystemDesc *pTerrestrialDesc =
-				dynamic_cast<const CTerrestrialDeliverySystemDesc *>(pDescBlock->GetDescByTag(CTerrestrialDeliverySystemDesc::DESC_TAG));
-			if (pTerrestrialDesc) {
-				TerrestrialDeliverySystemInfo Info;
+	for (WORD SectionNo = 0; SectionNo < pNitMultiTable->GetNitSectionNum(); SectionNo++) {
+		const CNitTable *pNitTable = pNitMultiTable->GetNitTable(SectionNo);
+		if (pNitTable == NULL)
+			continue;
 
-				Info.TransportStreamID = pNitTable->GetTransportStreamID(i);
-				Info.AreaCode = pTerrestrialDesc->GetAreaCode();
-				Info.GuardInterval = pTerrestrialDesc->GetGuardInterval();
-				Info.TransmissionMode = pTerrestrialDesc->GetTransmissionMode();
-				Info.Frequency.resize(pTerrestrialDesc->GetFrequencyNum());
-				for (int j = 0; j < (int)Info.Frequency.size(); j++)
-					Info.Frequency[j] = pTerrestrialDesc->GetFrequency(j);
-				pList->push_back(Info);
+		for (WORD i = 0; i < pNitTable->GetTransportStreamNum(); i++) {
+			const CDescBlock *pDescBlock = pNitTable->GetItemDesc(i);
+			if (pDescBlock) {
+				const CTerrestrialDeliverySystemDesc *pTerrestrialDesc =
+					dynamic_cast<const CTerrestrialDeliverySystemDesc *>(
+						pDescBlock->GetDescByTag(CTerrestrialDeliverySystemDesc::DESC_TAG));
+				if (pTerrestrialDesc) {
+					TerrestrialDeliverySystemInfo Info;
+
+					Info.TransportStreamID = pNitTable->GetTransportStreamID(i);
+					Info.AreaCode = pTerrestrialDesc->GetAreaCode();
+					Info.GuardInterval = pTerrestrialDesc->GetGuardInterval();
+					Info.TransmissionMode = pTerrestrialDesc->GetTransmissionMode();
+					Info.Frequency.resize(pTerrestrialDesc->GetFrequencyNum());
+					for (int j = 0; j < (int)Info.Frequency.size(); j++)
+						Info.Frequency[j] = pTerrestrialDesc->GetFrequency(j);
+					pList->push_back(Info);
+				}
 			}
 		}
 	}
 
-	return pList->size() > 0;
+	return !pList->empty();
 }
 
 
@@ -1482,12 +1704,11 @@ void CALLBACK CTsAnalyzer::OnPatUpdated(const WORD wPID, CTsPidMapTarget *pMapTa
 		pThis->m_ServiceList[Index].bIsUpdated = false;
 		pThis->m_ServiceList[Index].ServiceID = pPatTable->GetProgramID((WORD)Index);
 		pThis->m_ServiceList[Index].PmtPID = pPatTable->GetPmtPID((WORD)Index);
-		pThis->m_ServiceList[Index].VideoStreamType = STREAM_TYPE_INVALID;
-		pThis->m_ServiceList[Index].VideoEs.PID = PID_INVALID;
-		pThis->m_ServiceList[Index].VideoEs.ComponentTag = COMPONENTTAG_INVALID;
+		pThis->m_ServiceList[Index].VideoEsList.clear();
 		pThis->m_ServiceList[Index].AudioEsList.clear();
 		pThis->m_ServiceList[Index].CaptionEsList.clear();
 		pThis->m_ServiceList[Index].DataCarrouselEsList.clear();
+		pThis->m_ServiceList[Index].OtherEsList.clear();
 		pThis->m_ServiceList[Index].PcrPID = PID_INVALID;
 		pThis->m_ServiceList[Index].EcmList.clear();
 		pThis->m_ServiceList[Index].RunningStatus = 0xFF;
@@ -1551,12 +1772,12 @@ void CALLBACK CTsAnalyzer::OnPmtUpdated(const WORD wPID, CTsPidMapTarget *pMapTa
 	ServiceInfo &Info = pThis->m_ServiceList[ServiceIndex];
 
 	// ESのPIDをストア
-	Info.VideoStreamType = 0xFF;
-	Info.VideoEs.PID = PID_INVALID;
-	Info.VideoEs.ComponentTag = COMPONENTTAG_INVALID;
+	Info.VideoEsList.clear();
 	Info.AudioEsList.clear();
 	Info.CaptionEsList.clear();
 	Info.DataCarrouselEsList.clear();
+	Info.OtherEsList.clear();
+
 	for (WORD EsIndex = 0; EsIndex < pPmtTable->GetEsInfoNum(); EsIndex++) {
 		const BYTE StreamType = pPmtTable->GetStreamTypeID(EsIndex);
 		const WORD EsPID = pPmtTable->GetEsPID(EsIndex);
@@ -1570,38 +1791,31 @@ void CALLBACK CTsAnalyzer::OnPmtUpdated(const WORD wPID, CTsPidMapTarget *pMapTa
 				ComponentTag = pStreamIdDesc->GetComponentTag();
 		}
 
+		EsInfo Es(EsPID, StreamType, ComponentTag);
+
 		switch (StreamType) {
-		case STREAM_TYPE_MPEG2:
-			// ITU-T Rec. H.262 | ISO/IEC 13818-2 Video or ISO/IEC 11172-2
-			if (Info.VideoEs.PID == PID_INVALID
-					|| Info.VideoStreamType != 0x02) {
-				Info.VideoStreamType = StreamType;
-				Info.VideoEs.PID = EsPID;
-				Info.VideoEs.ComponentTag = ComponentTag;
-			}
-			break;
-
-		case STREAM_TYPE_CAPTION:
-			// ITU-T Rec.H.222 | ISO/IEC 13818-1
-			Info.CaptionEsList.push_back(EsInfo(EsPID, ComponentTag));
-			break;
-
-		case STREAM_TYPE_DATACARROUSEL:
-			Info.DataCarrouselEsList.push_back(EsInfo(EsPID, ComponentTag));
+		case STREAM_TYPE_MPEG1_VIDEO:
+		case STREAM_TYPE_MPEG2_VIDEO:
+		case STREAM_TYPE_MPEG4_VISUAL:
+		case STREAM_TYPE_H264:
+		case STREAM_TYPE_H265:
+			Info.VideoEsList.push_back(Es);
 			break;
 
 		case STREAM_TYPE_AAC:
-			// ISO/IEC 13818-7 Audio (ADTS Transport Syntax)
-			Info.AudioEsList.push_back(EsInfo(EsPID, ComponentTag));
+			Info.AudioEsList.push_back(Es);
 			break;
 
-		case STREAM_TYPE_H264:
-			// ITU-T Rec.H.264 | ISO/IEC 14496-10Video
-			if (Info.VideoEs.PID == PID_INVALID) {
-				Info.VideoStreamType = StreamType;
-				Info.VideoEs.PID = EsPID;
-				Info.VideoEs.ComponentTag = ComponentTag;
-			}
+		case STREAM_TYPE_CAPTION:
+			Info.CaptionEsList.push_back(Es);
+			break;
+
+		case STREAM_TYPE_DATACARROUSEL:
+			Info.DataCarrouselEsList.push_back(Es);
+			break;
+
+		default:
+			Info.OtherEsList.push_back(Es);
 			break;
 		}
 	}
@@ -1648,9 +1862,9 @@ void CALLBACK CTsAnalyzer::OnPmtUpdated(const WORD wPID, CTsPidMapTarget *pMapTa
 	Info.bIsUpdated = true;
 
 	// SDTからサービス情報を取得
-	CPsiTableSet *pSdtTableSet = dynamic_cast<CPsiTableSet *>(pMapManager->GetMapTarget(PID_SDT));
+	CSdtTableSet *pSdtTableSet = dynamic_cast<CSdtTableSet *>(pMapManager->GetMapTarget(PID_SDT));
 	if (pSdtTableSet) {
-		CSdtTable *pSdtTable = dynamic_cast<CSdtTable *>(pSdtTableSet->GetTableByID(CSdtTable::TABLE_ID_ACTUAL));
+		CSdtTable *pSdtTable = pSdtTableSet->GetActualSdtTable();
 		if (pSdtTable) {
 			WORD SdtIndex = pSdtTable->GetServiceIndexByID(Info.ServiceID);
 			if (SdtIndex != 0xFFFF)
@@ -1708,7 +1922,7 @@ void CALLBACK CTsAnalyzer::OnSdtUpdated(const WORD wPID, CTsPidMapTarget *pMapTa
 	TRACE(TEXT("CTsAnalyzer::OnSdtUpdated()\n"));
 
 	CTsAnalyzer *pThis = static_cast<CTsAnalyzer *>(pParam);
-	CPsiTableSet *pTableSet = dynamic_cast<CPsiTableSet *>(pMapTarget);
+	CSdtTableSet *pTableSet = dynamic_cast<CSdtTableSet *>(pMapTarget);
 	if (pTableSet == NULL)
 		return;
 
@@ -1716,7 +1930,7 @@ void CALLBACK CTsAnalyzer::OnSdtUpdated(const WORD wPID, CTsPidMapTarget *pMapTa
 
 	if (TableID == CSdtTable::TABLE_ID_ACTUAL) {
 		// 現在のTSのSDT
-		const CSdtTable *pSdtTable = dynamic_cast<CSdtTable *>(pTableSet->GetTableByID(TableID));
+		const CSdtTable *pSdtTable = pTableSet->GetActualSdtTable();
 		if (pSdtTable == NULL)
 			return;
 
@@ -1740,7 +1954,7 @@ void CALLBACK CTsAnalyzer::OnSdtUpdated(const WORD wPID, CTsPidMapTarget *pMapTa
 		pThis->CallEventHandler(EVENT_SDT_UPDATED);
 	} else if (TableID == CSdtTable::TABLE_ID_OTHER) {
 		// 他のTSのSDT
-		const CSdtOtherTable *pSdtOtherTable = dynamic_cast<CSdtOtherTable *>(pTableSet->GetTableByID(TableID));
+		const CSdtOtherTable *pSdtOtherTable = pTableSet->GetOtherSdtTable();
 		if (pSdtOtherTable == NULL)
 			return;
 
@@ -1765,7 +1979,11 @@ void CALLBACK CTsAnalyzer::OnNitUpdated(const WORD wPID, CTsPidMapTarget *pMapTa
 	TRACE(TEXT("CTsAnalyzer::OnNitUpdated()\n"));
 
 	CTsAnalyzer *pThis = static_cast<CTsAnalyzer*>(pParam);
-	CNitTable *pNitTable = dynamic_cast<CNitTable*>(pMapTarget);
+	CNitMultiTable *pNitMultiTable = dynamic_cast<CNitMultiTable*>(pMapTarget);
+	if (pNitMultiTable == NULL || !pNitMultiTable->IsNitComplete())
+		return;
+
+	const CNitTable *pNitTable = pNitMultiTable->GetNitTable(0);
 	if (pNitTable == NULL)
 		return;
 
@@ -1796,40 +2014,48 @@ void CALLBACK CTsAnalyzer::OnNitUpdated(const WORD wPID, CTsPidMapTarget *pMapTa
 	// TSリスト取得
 	pThis->m_NetworkTsList.clear();
 
-	for (WORD i = 0; i < pNitTable->GetTransportStreamNum(); i++) {
-		pDescBlock = pNitTable->GetItemDesc(i);
-		if (pDescBlock) {
-			pThis->m_NetworkTsList.push_back(NetworkTsInfo());
-			NetworkTsInfo &TsInfo = pThis->m_NetworkTsList.back();
-			TsInfo.TransportStreamID = pNitTable->GetTransportStreamID(i);
-			TsInfo.OriginalNetworkID = pNitTable->GetOriginalNetworkID(i);
+	for (WORD SectionNo = 0; SectionNo < pNitMultiTable->GetNitSectionNum(); SectionNo++) {
+		if (SectionNo > 0) {
+			pNitTable = pNitMultiTable->GetNitTable(SectionNo);
+			if (pNitTable == NULL)
+				break;
+		}
 
-			// サービスリスト取得
-			const CServiceListDesc *pServiceListDesc =
-				dynamic_cast<const CServiceListDesc*>(pDescBlock->GetDescByTag(CServiceListDesc::DESC_TAG));
-			if (pServiceListDesc) {
-				for (int j = 0; j < pServiceListDesc->GetServiceNum(); j++) {
-					CServiceListDesc::ServiceInfo Info;
-					if (pServiceListDesc->GetServiceInfo(j, &Info)) {
-						TsInfo.ServiceList.push_back(Info);
+		for (WORD i = 0; i < pNitTable->GetTransportStreamNum(); i++) {
+			pDescBlock = pNitTable->GetItemDesc(i);
+			if (pDescBlock) {
+				pThis->m_NetworkTsList.push_back(NetworkTsInfo());
+				NetworkTsInfo &TsInfo = pThis->m_NetworkTsList.back();
+				TsInfo.TransportStreamID = pNitTable->GetTransportStreamID(i);
+				TsInfo.OriginalNetworkID = pNitTable->GetOriginalNetworkID(i);
 
-						int Index = pThis->GetServiceIndexByID(Info.ServiceID);
-						if (Index >= 0) {
-							ServiceInfo &Service = pThis->m_ServiceList[Index];
-							if (Service.ServiceType == SERVICE_TYPE_INVALID)
-								Service.ServiceType = Info.ServiceType;
+				// サービスリスト取得
+				const CServiceListDesc *pServiceListDesc =
+					dynamic_cast<const CServiceListDesc*>(pDescBlock->GetDescByTag(CServiceListDesc::DESC_TAG));
+				if (pServiceListDesc) {
+					for (int j = 0; j < pServiceListDesc->GetServiceNum(); j++) {
+						CServiceListDesc::ServiceInfo Info;
+						if (pServiceListDesc->GetServiceInfo(j, &Info)) {
+							TsInfo.ServiceList.push_back(Info);
+
+							int Index = pThis->GetServiceIndexByID(Info.ServiceID);
+							if (Index >= 0) {
+								ServiceInfo &Service = pThis->m_ServiceList[Index];
+								if (Service.ServiceType == SERVICE_TYPE_INVALID)
+									Service.ServiceType = Info.ServiceType;
+							}
 						}
 					}
 				}
-			}
 
-			if (i == 0) {
-				const CTSInfoDesc *pTsInfoDesc =
-					dynamic_cast<const CTSInfoDesc *>(pDescBlock->GetDescByTag(CTSInfoDesc::DESC_TAG));
-				if (pTsInfoDesc) {
-					pTsInfoDesc->GetTSName(pThis->m_NitInfo.szTSName,
-										   sizeof(pThis->m_NitInfo.szTSName) / sizeof(TCHAR));
-					pThis->m_NitInfo.RemoteControlKeyID = pTsInfoDesc->GetRemoteControlKeyID();
+				if (SectionNo == 0 && i == 0) {
+					const CTSInfoDesc *pTsInfoDesc =
+						dynamic_cast<const CTSInfoDesc *>(pDescBlock->GetDescByTag(CTSInfoDesc::DESC_TAG));
+					if (pTsInfoDesc) {
+						pTsInfoDesc->GetTSName(pThis->m_NitInfo.szTSName,
+											   sizeof(pThis->m_NitInfo.szTSName) / sizeof(TCHAR));
+						pThis->m_NitInfo.RemoteControlKeyID = pTsInfoDesc->GetRemoteControlKeyID();
+					}
 				}
 			}
 		}

@@ -41,6 +41,7 @@ public:
 	bool GetNearCornerResizeOrigin() const { return m_fNearCornerResizeOrigin; }
 	bool GetZoomKeepAspectRatio() const { return m_fZoomKeepAspectRatio; }
 	AdjustWindowMode GetPanScanAdjustWindowMode() const { return m_PanScanAdjustWindowMode; }
+	bool GetRemember1SegWindowSize() const { return m_fRemember1SegWindowSize; }
 	bool GetMinimizeToTray() const { return m_fMinimizeToTray; }
 	bool GetDisablePreviewWhenMinimized() const { return m_fDisablePreviewWhenMinimized; }
 	bool GetUseLogoIcon() const { return m_fUseLogoIcon; }
@@ -66,6 +67,7 @@ private:
 	bool m_fNearCornerResizeOrigin;
 	bool m_fZoomKeepAspectRatio;
 	AdjustWindowMode m_PanScanAdjustWindowMode;
+	bool m_fRemember1SegWindowSize;
 	bool m_fMinimizeToTray;
 	bool m_fDisablePreviewWhenMinimized;
 	bool m_fUseLogoIcon;

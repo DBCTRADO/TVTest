@@ -25,6 +25,7 @@ CTsSrcStream::CTsSrcStream(DWORD BufferLength)
 	: m_pBuffer(NULL)
 	, m_BufferLength(BufferLength)
 	, m_bEnableSync(false)
+	, m_bSyncFor1Seg(false)
 	, m_VideoPID(PID_INVALID)
 	, m_AudioPID(PID_INVALID)
 	, m_Allocator(sizeof(PacketData),2048)
@@ -87,97 +88,93 @@ bool CTsSrcStream::InputMedia(const CMediaData *pMediaData)
 		}
 	}
 
-#ifdef BONTSENGINE_1SEG_SUPPORT
-
-	LONGLONG AudioPTS=m_AudioPTS;
-	if (m_AudioPTSPrev>=0) {
-		if (AudioPTS<m_AudioPTSPrev)
-			AudioPTS+=0x200000000LL;
-		if (AudioPTS>=m_AudioPTSPrev+ERR_PTS_DIFF) {
-			TRACE(TEXT("Reset Audio PTS : Adj=%X%08X Cur=%X%08X Prev=%X%08X\n"),
-				(DWORD)(AudioPTS>>32),(DWORD)AudioPTS,
-				(DWORD)(m_AudioPTS>>32),(DWORD)m_AudioPTS,
-				(DWORD)(m_AudioPTSPrev>>32),(DWORD)m_AudioPTSPrev);
-			AddPoolPackets();
-			ResetSync();
-			AudioPTS=-1;
+	if (m_bSyncFor1Seg) {
+		LONGLONG AudioPTS=m_AudioPTS;
+		if (m_AudioPTSPrev>=0) {
+			if (AudioPTS<m_AudioPTSPrev)
+				AudioPTS+=0x200000000LL;
+			if (AudioPTS>=m_AudioPTSPrev+ERR_PTS_DIFF) {
+				TRACE(TEXT("Reset Audio PTS : Adj=%X%08X Cur=%X%08X Prev=%X%08X\n"),
+					(DWORD)(AudioPTS>>32),(DWORD)AudioPTS,
+					(DWORD)(m_AudioPTS>>32),(DWORD)m_AudioPTS,
+					(DWORD)(m_AudioPTSPrev>>32),(DWORD)m_AudioPTSPrev);
+				AddPoolPackets();
+				ResetSync();
+				AudioPTS=-1;
+			}
 		}
-	}
 
-	if (PID == m_VideoPID) {
-		if (m_VideoPTS>=0) {
-			PacketData *pData=(PacketData*)m_Allocator.Allocate();
-			if (pData!=NULL) {
-				::CopyMemory(pData->m_Data,pMediaData->GetData(),TS_PACKET_SIZE);
-				pData->m_PTS=m_VideoPTS;
-				m_PoolPacketList.push_back(pData);
+		if (PID == m_VideoPID) {
+			if (m_VideoPTS>=0) {
+				PacketData *pData=(PacketData*)m_Allocator.Allocate();
+				if (pData!=NULL) {
+					::CopyMemory(pData->m_Data,pMediaData->GetData(),TS_PACKET_SIZE);
+					pData->m_PTS=m_VideoPTS;
+					m_PoolPacketList.push_back(pData);
+				}
+			} else {
+				AddData(pMediaData);
 			}
 		} else {
 			AddData(pMediaData);
 		}
+
+		while (!m_PoolPacketList.empty() && m_BufferUsed<m_BufferLength) {
+			PacketData *pData=m_PoolPacketList.front();
+			if (AudioPTS<0
+					|| pData->m_PTS<=AudioPTS+MAX_AUDIO_DELAY
+					|| pData->m_PTS>=AudioPTS+ERR_PTS_DIFF) {
+				AddPacket(pData);
+				m_Allocator.Free(pData);
+				m_PoolPacketList.erase(m_PoolPacketList.begin());
+			} else {
+				break;
+			}
+		}
 	} else {
-		AddData(pMediaData);
-	}
-
-	while (!m_PoolPacketList.empty() && m_BufferUsed<m_BufferLength) {
-		PacketData *pData=m_PoolPacketList.front();
-		if (AudioPTS<0
-				|| pData->m_PTS<=AudioPTS+MAX_AUDIO_DELAY
-				|| pData->m_PTS>=AudioPTS+ERR_PTS_DIFF) {
-			AddPacket(pData);
-			m_Allocator.Free(pData);
-			m_PoolPacketList.erase(m_PoolPacketList.begin());
-		} else {
-			break;
+		LONGLONG VideoPTS=m_VideoPTS;
+		if (m_VideoPTSPrev>=0 && _abs64(VideoPTS-m_VideoPTSPrev)>=ERR_PTS_DIFF) {
+			if (VideoPTS<m_VideoPTSPrev)
+				VideoPTS+=0x200000000LL;
+			if (VideoPTS>=m_VideoPTSPrev+ERR_PTS_DIFF) {
+				TRACE(TEXT("Reset Video PTS : Adj=%X%08X Cur=%X%08X Prev=%X%08X\n"),
+					(DWORD)(VideoPTS>>32),(DWORD)VideoPTS,
+					(DWORD)(m_VideoPTS>>32),(DWORD)m_VideoPTS,
+					(DWORD)(m_VideoPTSPrev>>32),(DWORD)m_VideoPTSPrev);
+				AddPoolPackets();
+				ResetSync();
+				VideoPTS=-1;
+			}
 		}
-	}
 
-#else	// BONTSENGINE_1SEG_SUPPORT
-
-	LONGLONG VideoPTS=m_VideoPTS;
-	if (m_VideoPTSPrev>=0 && _abs64(VideoPTS-m_VideoPTSPrev)>=ERR_PTS_DIFF) {
-		if (VideoPTS<m_VideoPTSPrev)
-			VideoPTS+=0x200000000LL;
-		if (VideoPTS>=m_VideoPTSPrev+ERR_PTS_DIFF) {
-			TRACE(TEXT("Reset Video PTS : Adj=%X%08X Cur=%X%08X Prev=%X%08X\n"),
-				(DWORD)(VideoPTS>>32),(DWORD)VideoPTS,
-				(DWORD)(m_VideoPTS>>32),(DWORD)m_VideoPTS,
-				(DWORD)(m_VideoPTSPrev>>32),(DWORD)m_VideoPTSPrev);
-			AddPoolPackets();
-			ResetSync();
-			VideoPTS=-1;
-		}
-	}
-
-	if (PID == m_AudioPID) {
-		if (m_AudioPTS>=0) {
-			PacketData *pData=(PacketData*)m_Allocator.Allocate();
-			if (pData!=NULL) {
-				::CopyMemory(pData->m_Data,pMediaData->GetData(),TS_PACKET_SIZE);
-				pData->m_PTS=m_AudioPTS;
-				m_PoolPacketList.push_back(pData);
+		if (PID == m_AudioPID) {
+			if (m_AudioPTS>=0) {
+				PacketData *pData=(PacketData*)m_Allocator.Allocate();
+				if (pData!=NULL) {
+					::CopyMemory(pData->m_Data,pMediaData->GetData(),TS_PACKET_SIZE);
+					pData->m_PTS=m_AudioPTS;
+					m_PoolPacketList.push_back(pData);
+				}
+			} else {
+				AddData(pMediaData);
 			}
 		} else {
 			AddData(pMediaData);
 		}
-	} else {
-		AddData(pMediaData);
-	}
 
-	while (!m_PoolPacketList.empty() && m_BufferUsed<m_BufferLength) {
-		PacketData *pData=m_PoolPacketList.front();
-		if (VideoPTS<0
-				|| pData->m_PTS+MIN_AUDIO_DELAY<=VideoPTS
-				|| pData->m_PTS>=VideoPTS+ERR_PTS_DIFF) {
-			AddPacket(pData);
-			m_Allocator.Free(pData);
-			m_PoolPacketList.erase(m_PoolPacketList.begin());
-		} else {
-			break;
+		while (!m_PoolPacketList.empty() && m_BufferUsed<m_BufferLength) {
+			PacketData *pData=m_PoolPacketList.front();
+			if (VideoPTS<0
+					|| pData->m_PTS+MIN_AUDIO_DELAY<=VideoPTS
+					|| pData->m_PTS>=VideoPTS+ERR_PTS_DIFF) {
+				AddPacket(pData);
+				m_Allocator.Free(pData);
+				m_PoolPacketList.erase(m_PoolPacketList.begin());
+			} else {
+				break;
+			}
 		}
 	}
-
-#endif	// ndef BONTSENGINE_1SEG_SUPPORT
 
 #ifdef _DEBUG
 	/*
@@ -292,14 +289,15 @@ void CTsSrcStream::ResetSync()
 }
 
 
-bool CTsSrcStream::EnableSync(bool bEnable)
+bool CTsSrcStream::EnableSync(bool bEnable,bool b1Seg)
 {
 	CBlockLock Lock(&m_Lock);
 
-	if (m_bEnableSync!=bEnable) {
-		TRACE(TEXT("CTsSrcStream::EnableSync(%s)\n"),bEnable?TEXT("true"):TEXT("false"));
+	if (m_bEnableSync!=bEnable || m_bSyncFor1Seg!=b1Seg) {
+		TRACE(TEXT("CTsSrcStream::EnableSync(%d,%d)\n"),bEnable,b1Seg);
 		ResetSync();
 		m_bEnableSync=bEnable;
+		m_bSyncFor1Seg=b1Seg;
 	}
 	return true;
 }

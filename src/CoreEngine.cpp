@@ -85,26 +85,30 @@ bool CCoreEngine::IsBuildComplete() const
 
 
 bool CCoreEngine::BuildMediaViewer(HWND hwndHost,HWND hwndMessage,
-		CVideoRenderer::RendererType VideoRenderer,LPCWSTR pszMpeg2Decoder,LPCWSTR pszAudioDevice)
+	CVideoRenderer::RendererType VideoRenderer,
+	BYTE VideoStreamType,LPCWSTR pszVideoDecoder,
+	LPCWSTR pszAudioDevice)
 {
 	if (!m_DtvEngine.m_MediaViewer.IsOpen()) {
 		if (!m_DtvEngine.BuildMediaViewer(hwndHost,hwndMessage,VideoRenderer,
-										  pszMpeg2Decoder,pszAudioDevice)) {
+										  VideoStreamType,pszVideoDecoder,
+										  pszAudioDevice)) {
 			SetError(m_DtvEngine.GetLastErrorException());
 			return false;
 		}
 	} else {
 		if (!m_DtvEngine.RebuildMediaViewer(hwndHost,hwndMessage,VideoRenderer,
-											pszMpeg2Decoder,pszAudioDevice)) {
+											VideoStreamType,pszVideoDecoder,
+											pszAudioDevice)) {
 			SetError(m_DtvEngine.GetLastErrorException());
 			return false;
 		}
 	}
-	m_DtvEngine.SetVolume(m_fMute?-100.0f:LevelToDeciBel(m_Volume));
+	m_DtvEngine.m_MediaViewer.SetVolume(m_fMute?-100.0f:LevelToDeciBel(m_Volume));
 	m_DtvEngine.m_MediaViewer.SetAudioGainControl(
 		m_AudioGain!=100 || m_SurroundAudioGain!=100,
 		(float)m_AudioGain/100.0f,(float)m_SurroundAudioGain/100.0f);
-	m_DtvEngine.SetStereoMode(m_StereoMode);
+	m_DtvEngine.m_MediaViewer.SetStereoMode(m_StereoMode);
 	m_DtvEngine.m_MediaViewer.SetAutoStereoMode(m_AutoStereoMode);
 	m_DtvEngine.m_MediaViewer.SetDownMixSurround(m_fDownMixSurround);
 	m_DtvEngine.m_MediaViewer.SetSpdifOptions(&m_SpdifOptions);
@@ -118,12 +122,12 @@ bool CCoreEngine::CloseMediaViewer()
 }
 
 
-bool CCoreEngine::EnablePreview(bool fPreview)
+bool CCoreEngine::EnableMediaViewer(bool fEnable)
 {
-	if (!m_DtvEngine.EnablePreview(fPreview))
+	if (!m_DtvEngine.EnableMediaViewer(fEnable))
 		return false;
-	if (fPreview)
-		m_DtvEngine.SetVolume(m_fMute?-100.0f:LevelToDeciBel(m_Volume));
+	if (fEnable)
+		m_DtvEngine.m_MediaViewer.SetVolume(m_fMute?-100.0f:LevelToDeciBel(m_Volume));
 	return true;
 }
 
@@ -279,6 +283,12 @@ bool CCoreEngine::LoadCasLibrary()
 		return false;
 	}
 	return true;
+}
+
+
+bool CCoreEngine::IsCasLibraryLoaded() const
+{
+	return m_DtvEngine.m_CasProcessor.IsCasLibraryLoaded();
 }
 
 
@@ -458,7 +468,7 @@ bool CCoreEngine::SetVolume(int Volume)
 {
 	if (Volume<0 || Volume>MAX_VOLUME)
 		return false;
-	m_DtvEngine.SetVolume(LevelToDeciBel(Volume));
+	m_DtvEngine.m_MediaViewer.SetVolume(LevelToDeciBel(Volume));
 	m_Volume=Volume;
 	m_fMute=false;
 	return true;
@@ -468,7 +478,7 @@ bool CCoreEngine::SetVolume(int Volume)
 bool CCoreEngine::SetMute(bool fMute)
 {
 	if (fMute!=m_fMute) {
-		m_DtvEngine.SetVolume(fMute?-100.0f:LevelToDeciBel(m_Volume));
+		m_DtvEngine.m_MediaViewer.SetVolume(fMute?-100.0f:LevelToDeciBel(m_Volume));
 		m_fMute=fMute;
 	}
 	return true;
@@ -505,7 +515,7 @@ bool CCoreEngine::SetStereoMode(int Mode)
 	if (Mode<0 || Mode>2)
 		return false;
 	/*if (Mode!=m_StereoMode)*/ {
-		m_DtvEngine.SetStereoMode(Mode);
+		m_DtvEngine.m_MediaViewer.SetStereoMode(Mode);
 		m_StereoMode=Mode;
 	}
 	return true;
@@ -616,17 +626,17 @@ DWORD CCoreEngine::UpdateStatistics()
 {
 	DWORD Updated=0;
 
-	DWORD ErrorCount=m_DtvEngine.m_TsPacketParser.GetErrorPacketCount();
+	ULONGLONG ErrorCount=m_DtvEngine.m_TsPacketParser.GetErrorPacketCount();
 	if (ErrorCount!=m_ErrorPacketCount) {
 		m_ErrorPacketCount=ErrorCount;
 		Updated|=STATISTIC_ERRORPACKETCOUNT;
 	}
-	DWORD ContinuityErrorCount=m_DtvEngine.m_TsPacketParser.GetContinuityErrorPacketCount();
+	ULONGLONG ContinuityErrorCount=m_DtvEngine.m_TsPacketParser.GetContinuityErrorPacketCount();
 	if (ContinuityErrorCount!=m_ContinuityErrorPacketCount) {
 		m_ContinuityErrorPacketCount=ContinuityErrorCount;
 		Updated|=STATISTIC_CONTINUITYERRORPACKETCOUNT;
 	}
-	DWORD ScrambleCount=(DWORD)m_DtvEngine.m_CasProcessor.GetScramblePacketCount();
+	ULONGLONG ScrambleCount=m_DtvEngine.m_CasProcessor.GetScramblePacketCount();
 	if (ScrambleCount!=m_ScramblePacketCount) {
 		m_ScramblePacketCount=ScrambleCount;
 		Updated|=STATISTIC_SCRAMBLEPACKETCOUNT;
@@ -721,7 +731,7 @@ bool CCoreEngine::GetCurrentEventInfo(CEventInfoData *pInfo,WORD ServiceID,bool 
 
 	pInfo->m_NetworkID=m_DtvEngine.m_TsAnalyzer.GetNetworkID();
 	pInfo->m_TSID=m_DtvEngine.m_TsAnalyzer.GetTransportStreamID();
-	m_DtvEngine.GetServiceID(&pInfo->m_ServiceID);
+	pInfo->m_ServiceID=ServiceID;
 	pInfo->m_EventID=EventInfo.EventID;
 	pInfo->m_fValidStartTime=EventInfo.bValidStartTime;
 	if (EventInfo.bValidStartTime)

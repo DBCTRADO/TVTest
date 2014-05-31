@@ -2,11 +2,12 @@
 #define BON_BASE_CLASS_H
 
 
+#include "Common.h"
 #include "Exception.h"
 #include "TsUtilClass.h"
 
 
-class __declspec(novtable) CBonBaseClass : public CBonErrorHandler
+class ABSTRACT_CLASS_DECL CBonBaseClass : public CBonErrorHandler
 {
 	CTracer *m_pTracer;
 public:

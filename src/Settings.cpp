@@ -87,6 +87,12 @@ bool CSettings::SetSection(LPCTSTR pszSection)
 }
 
 
+bool CSettings::GetEntries(EntryList *pEntries)
+{
+	return m_IniFile.GetEntries(pEntries);
+}
+
+
 bool CSettings::Read(LPCTSTR pszValueName,int *pData)
 {
 	TCHAR szValue[16];

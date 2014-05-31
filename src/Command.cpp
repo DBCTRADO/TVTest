@@ -48,11 +48,9 @@ static const struct {
 	{TEXT("SuperFrame"),				CM_ASPECTRATIO_SUPERFRAME},
 	{TEXT("SideCut"),					CM_ASPECTRATIO_SIDECUT},
 	{TEXT("Aspect4x3"),					CM_ASPECTRATIO_4x3},
-#ifndef TVH264_FOR_1SEG
 	{TEXT("Aspect32x9"),				CM_ASPECTRATIO_32x9},
 	{TEXT("Aspect16x9Left"),			CM_ASPECTRATIO_16x9_LEFT},
 	{TEXT("Aspect16x9Right"),			CM_ASPECTRATIO_16x9_RIGHT},
-#endif
 	{TEXT("PanAndScan1"),				CM_PANANDSCAN_PRESET_FIRST+0},
 	{TEXT("PanAndScan2"),				CM_PANANDSCAN_PRESET_FIRST+1},
 	{TEXT("PanAndScan3"),				CM_PANANDSCAN_PRESET_FIRST+2},
@@ -124,6 +122,7 @@ static const struct {
 	{TEXT("Activate"),					CM_ACTIVATE},
 	{TEXT("Minimize"),					CM_MINIMIZE},
 	{TEXT("Maximize"),					CM_MAXIMIZE},
+	{TEXT("OneSegMode"),				CM_1SEGMODE},
 	{TEXT("HomeDisplay"),				CM_HOMEDISPLAY},
 	{TEXT("ChannelDisplayMenu"),		CM_CHANNELDISPLAY},
 	{TEXT("Buffering"),					CM_ENABLEBUFFERING},

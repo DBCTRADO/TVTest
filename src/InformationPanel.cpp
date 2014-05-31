@@ -852,12 +852,12 @@ void CInformationPanel::Draw(HDC hdc,const RECT &PaintRect)
 		const CCoreEngine *pCoreEngine=GetAppClass().GetCoreEngine();
 		int Length;
 
-		Length=StdUtil::snprintf(szText,lengthof(szText),TEXT("D %u / E %u"),
+		Length=StdUtil::snprintf(szText,lengthof(szText),TEXT("D %llu / E %llu"),
 								 pCoreEngine->GetContinuityErrorPacketCount(),
 								 pCoreEngine->GetErrorPacketCount());
 		if (pCoreEngine->GetDescramble()
 				&& pCoreEngine->GetCasDevice()>=0)
-			StdUtil::snprintf(szText+Length,lengthof(szText)-Length,TEXT(" / S %u"),
+			StdUtil::snprintf(szText+Length,lengthof(szText)-Length,TEXT(" / S %llu"),
 							  pCoreEngine->GetScramblePacketCount());
 		DrawItem(hdc,szText,rc);
 	}

@@ -8,10 +8,8 @@
 
 // EIT の解析を行う
 #define TS_ANALYZER_EIT_SUPPORT
-#ifdef BONTSENGINE_1SEG_SUPPORT
 // L-EIT[p/f] の解析を行う
 #define TS_ANALYZER_L_EIT_SUPPORT
-#endif
 
 
 // TS 解析クラス
@@ -28,9 +26,20 @@ public:
 
 	struct EsInfo {
 		WORD PID;
+		BYTE StreamType;
 		BYTE ComponentTag;
-		EsInfo() : PID(PID_INVALID), ComponentTag(COMPONENTTAG_INVALID) {}
-		EsInfo(WORD pid, BYTE Tag) : PID(pid), ComponentTag(Tag) {}
+		EsInfo()
+			: PID(PID_INVALID)
+			, StreamType(STREAM_TYPE_INVALID)
+			, ComponentTag(COMPONENTTAG_INVALID)
+		{
+		}
+		EsInfo(WORD pid, BYTE stream_type, BYTE component_tag)
+			: PID(pid)
+			, StreamType(stream_type)
+			, ComponentTag(component_tag)
+		{
+		}
 	};
 
 	struct EcmInfo {
@@ -42,11 +51,11 @@ public:
 		bool bIsUpdated;
 		WORD ServiceID;
 		WORD PmtPID;
-		BYTE VideoStreamType;
-		EsInfo VideoEs;
+		std::vector<EsInfo> VideoEsList;
 		std::vector<EsInfo> AudioEsList;
 		std::vector<EsInfo> CaptionEsList;
 		std::vector<EsInfo> DataCarrouselEsList;
+		std::vector<EsInfo> OtherEsList;
 		WORD PcrPID;
 		ULONGLONG PcrTimeStamp;
 		std::vector<EcmInfo> EcmList;
@@ -95,57 +104,71 @@ public:
 	virtual ~CTsAnalyzer();
 
 // CMediaDecoder
-	virtual void Reset();
-	virtual const bool InputMedia(CMediaData *pMediaData, const DWORD dwInputIndex = 0UL);
+	void Reset() override;
+	const bool InputMedia(CMediaData *pMediaData, const DWORD dwInputIndex = 0UL) override;
 
 // CTsAnalyzer
-	WORD GetServiceNum();
-	bool GetServiceID(const int Index, WORD *pServiceID);
-	int GetServiceIndexByID(const WORD ServiceID);
-	bool IsViewableService(const int Index);
-	WORD GetViewableServiceNum();
-	bool GetViewableServiceID(const int Index, WORD *pServiceID);
-	bool GetFirstViewableServiceID(WORD *pServiceID);
-	int GetViewableServiceIndexByID(const WORD ServiceID);
-	bool GetServiceInfo(const int Index, ServiceInfo *pInfo);
-	bool IsServiceUpdated(const int Index);
-	bool GetPmtPID(const int Index, WORD *pPmtPID);
-	bool GetVideoEsPID(const int Index, WORD *pVideoPID);
-	bool GetVideoStreamType(const int Index, BYTE *pStreamType);
-	BYTE GetVideoComponentTag(const int Index);
-	WORD GetAudioEsNum(const int Index);
-	bool GetAudioEsPID(const int Index, const int AudioIndex, WORD *pAudioPID);
-	BYTE GetAudioComponentTag(const int Index, const int AudioIndex);
+	WORD GetServiceNum() const;
+	bool GetServiceID(const int Index, WORD *pServiceID) const;
+	int GetServiceIndexByID(const WORD ServiceID) const;
+	bool IsViewableService(const int Index) const;
+	WORD GetViewableServiceNum() const;
+	bool GetViewableServiceID(const int Index, WORD *pServiceID) const;
+	bool GetFirstViewableServiceID(WORD *pServiceID) const;
+	int GetViewableServiceIndexByID(const WORD ServiceID) const;
+	bool GetServiceInfo(const int Index, ServiceInfo *pInfo) const;
+	bool IsServiceUpdated(const int Index) const;
+	bool Is1SegService(const int Index) const;
+	bool GetPmtPID(const int Index, WORD *pPmtPID) const;
+	bool GetVideoEsInfo(const int Index, const int VideoIndex, EsInfo *pEsInfo) const;
+	bool GetVideoEsPID(const int Index, const int VideoIndex, WORD *pVideoPID) const;
+	bool GetVideoStreamType(const int Index, const int VideoIndex, BYTE *pStreamType) const;
+	BYTE GetVideoComponentTag(const int Index, const int VideoIndex) const;
+	WORD GetAudioEsNum(const int Index) const;
+	bool GetAudioEsInfo(const int Index, const int AudioIndex, EsInfo *pEsInfo) const;
+	bool GetAudioStreamType(const int Index, const int AudioIndex, BYTE *pStreamType) const;
+	bool GetAudioEsPID(const int Index, const int AudioIndex, WORD *pAudioPID) const;
+	BYTE GetAudioComponentTag(const int Index, const int AudioIndex) const;
 #ifdef TS_ANALYZER_EIT_SUPPORT
-	BYTE GetVideoComponentType(const int Index);
-	int GetAudioIndexByComponentTag(const int Index, const BYTE ComponentTag);
-	BYTE GetAudioComponentType(const int Index, const int AudioIndex);
-	int GetAudioComponentText(const int Index, const int AudioIndex, LPTSTR pszText, int MaxLength);
+	BYTE GetVideoComponentType(const int Index) const;
+	int GetAudioIndexByComponentTag(const int Index, const BYTE ComponentTag) const;
+	BYTE GetAudioComponentType(const int Index, const int AudioIndex) const;
+	int GetAudioComponentText(const int Index, const int AudioIndex, LPTSTR pszText, int MaxLength) const;
 #endif
-	WORD GetCaptionEsNum(const int Index);
-	bool GetCaptionEsPID(const int Index, const WORD CaptionIndex, WORD *pCaptionPID);
-	WORD GetDataCarrouselEsNum(const int Index);
-	bool GetDataCarrouselEsPID(const int Index, const WORD DataCarrouselIndex, WORD *pDataCarrouselPID);
-	bool GetPcrPID(const int Index, WORD *pPcrPID);
-	bool GetPcrTimeStamp(const int Index, ULONGLONG *pTimeStamp);
-	int GetServiceName(const int Index, LPTSTR pszName, const int MaxLength);
-	BYTE GetServiceType(const int Index);
-	WORD GetLogoID(const int Index);
+	WORD GetCaptionEsNum(const int Index) const;
+	bool GetCaptionEsPID(const int Index, const WORD CaptionIndex, WORD *pCaptionPID) const;
+	WORD GetDataCarrouselEsNum(const int Index) const;
+	bool GetDataCarrouselEsPID(const int Index, const WORD DataCarrouselIndex, WORD *pDataCarrouselPID) const;
+	bool GetPcrPID(const int Index, WORD *pPcrPID) const;
+	bool GetPcrTimeStamp(const int Index, ULONGLONG *pTimeStamp) const;
+	int GetServiceName(const int Index, LPTSTR pszName, const int MaxLength) const;
+	BYTE GetServiceType(const int Index) const;
+	WORD GetLogoID(const int Index) const;
 
-	bool GetServiceList(ServiceList *pList);
-	bool GetViewableServiceList(ServiceList *pList);
+	bool GetServiceList(ServiceList *pList) const;
+	bool GetViewableServiceList(ServiceList *pList) const;
 	WORD GetTransportStreamID() const;
 	WORD GetNetworkID() const;
 	BYTE GetBroadcastingID() const;
-	int GetNetworkName(LPTSTR pszName, int MaxLength);
+	int GetNetworkName(LPTSTR pszName, int MaxLength) const;
 	BYTE GetRemoteControlKeyID() const;
-	int GetTsName(LPTSTR pszName, int MaxLength);
-	bool GetSdtServiceList(SdtServiceList *pList);
-	bool GetSdtTsList(SdtTsList *pList);
-	bool GetNetworkTsList(NetworkTsList *pList);
+	int GetTsName(LPTSTR pszName, int MaxLength) const;
+	bool GetSdtServiceList(SdtServiceList *pList) const;
+	bool GetSdtTsList(SdtTsList *pList) const;
+	bool GetNetworkTsList(NetworkTsList *pList) const;
 	bool IsSdtUpdated() const;
 	bool IsNitUpdated() const;
 	bool IsSdtComplete() const;
+
+	bool SetVideoStreamTypeViewable(const BYTE StreamType, const bool bViewable);
+	bool IsVideoStreamTypeViewable(const BYTE StreamType) const;
+	void SetRadioSupport(const bool bRadioSupport);
+	bool IsRadioSupport() const;
+
+	bool Is1SegStream() const;
+	bool Has1SegService() const;
+	bool GetFirst1SegServiceID(WORD *pServiceID) const;
+	bool Get1SegServiceIDByIndex(const int Index, WORD *pServiceID) const;
 
 #ifdef TS_ANALYZER_EIT_SUPPORT
 	struct EventSeriesInfo {
@@ -208,22 +231,22 @@ public:
 		EventContentNibble ContentNibble;
 	};
 
-	WORD GetEventID(const int ServiceIndex, const bool bNext = false);
-	bool GetEventStartTime(const int ServiceIndex, SYSTEMTIME *pSystemTime, const bool bNext = false);
-	DWORD GetEventDuration(const int ServiceIndex, const bool bNext = false);
-	bool GetEventTime(const int ServiceIndex, SYSTEMTIME *pTime, DWORD *pDuration, const bool bNext = false);
-	int GetEventName(const int ServiceIndex, LPTSTR pszName, int MaxLength, const bool bNext = false);
-	int GetEventText(const int ServiceIndex, LPTSTR pszText, int MaxLength, const bool bNext = false);
-	int GetEventExtendedText(const int ServiceIndex, LPTSTR pszText, int MaxLength, const bool bUseEventGroup = true, const bool bNext = false);
-	bool GetEventSeriesInfo(const int ServiceIndex, EventSeriesInfo *pInfo, const bool bNext = false);
-	bool GetEventVideoInfo(const int ServiceIndex, EventVideoInfo *pInfo, const bool bNext = false);
-	bool GetEventAudioInfo(const int ServiceIndex, const int AudioIndex, EventAudioInfo *pInfo, bool bNext = false);
-	bool GetEventAudioList(const int ServiceIndex, EventAudioList *pList, const bool bNext = false);
-	bool GetEventContentNibble(const int ServiceIndex, EventContentNibble *pInfo, const bool bNext = false);
-	bool GetEventInfo(const int ServiceIndex, EventInfo *pInfo, const bool bUseEventGroup = true, const bool bNext = false);
+	WORD GetEventID(const int ServiceIndex, const bool bNext = false) const;
+	bool GetEventStartTime(const int ServiceIndex, SYSTEMTIME *pSystemTime, const bool bNext = false) const;
+	DWORD GetEventDuration(const int ServiceIndex, const bool bNext = false) const;
+	bool GetEventTime(const int ServiceIndex, SYSTEMTIME *pTime, DWORD *pDuration, const bool bNext = false) const;
+	int GetEventName(const int ServiceIndex, LPTSTR pszName, int MaxLength, const bool bNext = false) const;
+	int GetEventText(const int ServiceIndex, LPTSTR pszText, int MaxLength, const bool bNext = false) const;
+	int GetEventExtendedText(const int ServiceIndex, LPTSTR pszText, int MaxLength, const bool bUseEventGroup = true, const bool bNext = false) const;
+	bool GetEventSeriesInfo(const int ServiceIndex, EventSeriesInfo *pInfo, const bool bNext = false) const;
+	bool GetEventVideoInfo(const int ServiceIndex, EventVideoInfo *pInfo, const bool bNext = false) const;
+	bool GetEventAudioInfo(const int ServiceIndex, const int AudioIndex, EventAudioInfo *pInfo, bool bNext = false) const;
+	bool GetEventAudioList(const int ServiceIndex, EventAudioList *pList, const bool bNext = false) const;
+	bool GetEventContentNibble(const int ServiceIndex, EventContentNibble *pInfo, const bool bNext = false) const;
+	bool GetEventInfo(const int ServiceIndex, EventInfo *pInfo, const bool bUseEventGroup = true, const bool bNext = false) const;
 #endif	// TS_ANALYZER_EIT_SUPPORT
 
-	bool GetTotTime(SYSTEMTIME *pTime);
+	bool GetTotTime(SYSTEMTIME *pTime) const;
 
 	struct SatelliteDeliverySystemInfo {
 		WORD TransportStreamID;
@@ -247,8 +270,8 @@ public:
 	typedef std::vector<SatelliteDeliverySystemInfo> SatelliteDeliverySystemList;
 	typedef std::vector<TerrestrialDeliverySystemInfo> TerrestrialDeliverySystemList;
 
-	bool GetSatelliteDeliverySystemList(SatelliteDeliverySystemList *pList);
-	bool GetTerrestrialDeliverySystemList(TerrestrialDeliverySystemList *pList);
+	bool GetSatelliteDeliverySystemList(SatelliteDeliverySystemList *pList) const;
+	bool GetTerrestrialDeliverySystemList(TerrestrialDeliverySystemList *pList) const;
 
 	enum EventType {
 		EVENT_PAT_UPDATED,
@@ -283,7 +306,7 @@ protected:
 #ifdef TS_ANALYZER_L_EIT_SUPPORT
 	const CDescBlock *GetLEitItemDesc(const int ServiceIndex, const bool bNext = false) const;
 #endif
-	const CAudioComponentDesc *GetAudioComponentDescByComponentTag(const CDescBlock *pDescBlock, const BYTE ComponentTag);
+	const CAudioComponentDesc *GetAudioComponentDescByComponentTag(const CDescBlock *pDescBlock, const BYTE ComponentTag) const;
 #endif
 
 	CTsPidMapManager m_PidMapManager;
@@ -312,6 +335,23 @@ protected:
 
 	std::vector<IAnalyzerEventHandler*> m_EventHandlerList;
 	EventType m_DecoderEvent;
+
+	enum {
+		VIDEO_STREAM_MPEG1	= 0x0001U,
+		VIDEO_STREAM_MPEG2	= 0x0002U,
+		VIDEO_STREAM_MPEG4	= 0x0004U,
+		VIDEO_STREAM_H264	= 0x0008U,
+		VIDEO_STREAM_H265	= 0x0010U
+	};
+
+	unsigned int m_ViewableVideoStreamTypes;
+	bool m_bRadioSupport;
+
+	struct StreamTypeMap {
+		unsigned int Flag;
+		BYTE StreamType;
+	};
+	static const StreamTypeMap m_VideoStreamTypeMap[];
 
 private:
 	static void CALLBACK OnPatUpdated(const WORD wPID, CTsPidMapTarget *pMapTarget, CTsPidMapManager *pMapManager, const PVOID pParam);

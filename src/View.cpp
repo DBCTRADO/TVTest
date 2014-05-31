@@ -97,7 +97,7 @@ LRESULT CVideoContainerWindow::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARA
 		{
 			int Width=LOWORD(lParam),Height=HIWORD(lParam);
 
-			m_pDtvEngine->SetViewSize(Width,Height);
+			m_pDtvEngine->m_MediaViewer.SetViewSize(Width,Height);
 			if (m_pDisplayBase!=NULL)
 				m_pDisplayBase->AdjustPosition();
 			if (uMsg==WM_SIZE

@@ -12,7 +12,7 @@ static char THIS_FILE[]=__FILE__;
 #endif
 
 
-#define ZOOM_ICON_FIRST		36
+#define ZOOM_ICON_FIRST		37
 
 static const CSideBar::SideBarItem ItemList[] = {
 	{CM_ZOOM_20,				ZOOM_ICON_FIRST+0},
@@ -60,28 +60,29 @@ static const CSideBar::SideBarItem ItemList[] = {
 	{CM_SPDIF_TOGGLE,			21},
 	{CM_HOMEDISPLAY,			22},
 	{CM_CHANNELDISPLAY,			23},
-	{CM_CHANNELNO_1,			24},
-	{CM_CHANNELNO_2,			25},
-	{CM_CHANNELNO_3,			26},
-	{CM_CHANNELNO_4,			27},
-	{CM_CHANNELNO_5,			28},
-	{CM_CHANNELNO_6,			29},
-	{CM_CHANNELNO_7,			30},
-	{CM_CHANNELNO_8,			31},
-	{CM_CHANNELNO_9,			32},
-	{CM_CHANNELNO_10,			33},
-	{CM_CHANNELNO_11,			34},
-	{CM_CHANNELNO_12,			35},
+	{CM_1SEGMODE,				24},
+	{CM_CHANNELNO_1,			25},
+	{CM_CHANNELNO_2,			26},
+	{CM_CHANNELNO_3,			27},
+	{CM_CHANNELNO_4,			28},
+	{CM_CHANNELNO_5,			29},
+	{CM_CHANNELNO_6,			30},
+	{CM_CHANNELNO_7,			31},
+	{CM_CHANNELNO_8,			32},
+	{CM_CHANNELNO_9,			33},
+	{CM_CHANNELNO_10,			34},
+	{CM_CHANNELNO_11,			35},
+	{CM_CHANNELNO_12,			36},
 };
 
 static const int DefaultItemList[] = {
-#ifndef TVH264_FOR_1SEG
+#ifndef TVTEST_FOR_1SEG
 	CM_ZOOM_25,
 	CM_ZOOM_33,
 #endif
 	CM_ZOOM_50,
 	CM_ZOOM_100,
-#ifdef TVH264_FOR_1SEG
+#ifdef TVTEST_FOR_1SEG
 	CM_ZOOM_150,
 	CM_ZOOM_200,
 #endif

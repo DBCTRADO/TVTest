@@ -22,6 +22,7 @@ CViewOptions::CViewOptions()
 	, m_fNearCornerResizeOrigin(false)
 	, m_fZoomKeepAspectRatio(false)
 	, m_PanScanAdjustWindowMode(ADJUSTWINDOW_WIDTH)
+	, m_fRemember1SegWindowSize(true)
 	, m_fMinimizeToTray(false)
 	, m_fDisablePreviewWhenMinimized(false)
 	, m_fUseLogoIcon(false)
@@ -87,6 +88,7 @@ bool CViewOptions::ReadSettings(CSettings &Settings)
 		if (Settings.Read(TEXT("PanScanNoResizeWindow"),&f))
 			m_PanScanAdjustWindowMode=f?ADJUSTWINDOW_WIDTH:ADJUSTWINDOW_FIT;
 	}
+	Settings.Read(TEXT("Remember1SegWindowSize"),&m_fRemember1SegWindowSize);
 	Settings.Read(TEXT("MinimizeToTray"),&m_fMinimizeToTray);
 	Settings.Read(TEXT("DisablePreviewWhenMinimized"),&m_fDisablePreviewWhenMinimized);
 	Settings.Read(TEXT("UseLogoIcon"),&m_fUseLogoIcon);
@@ -117,6 +119,7 @@ bool CViewOptions::WriteSettings(CSettings &Settings)
 	Settings.Write(TEXT("NearCornerResizeOrigin"),m_fNearCornerResizeOrigin);
 	Settings.Write(TEXT("ZoomKeepAspectRatio"),m_fZoomKeepAspectRatio);
 	Settings.Write(TEXT("PanScanAdjustWindow"),(int)m_PanScanAdjustWindowMode);
+	Settings.Write(TEXT("Remember1SegWindowSize"),m_fRemember1SegWindowSize);
 	Settings.Write(TEXT("MinimizeToTray"),m_fMinimizeToTray);
 	Settings.Write(TEXT("DisablePreviewWhenMinimized"),m_fDisablePreviewWhenMinimized);
 	Settings.Write(TEXT("UseLogoIcon"),m_fUseLogoIcon);
@@ -169,6 +172,7 @@ INT_PTR CViewOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 				DlgComboBox_SetCurSel(hDlg,IDC_OPTIONS_PANSCANADJUSTWINDOW,
 									  m_PanScanAdjustWindowMode);
 			}
+			DlgCheckBox_Check(hDlg,IDC_OPTIONS_REMEMBER1SEGWINDOWSIZE,m_fRemember1SegWindowSize);
 			DlgCheckBox_Check(hDlg,IDC_OPTIONS_MINIMIZETOTRAY,m_fMinimizeToTray);
 			DlgCheckBox_Check(hDlg,IDC_OPTIONS_MINIMIZEDISABLEPREVIEW,
 							  m_fDisablePreviewWhenMinimized);
@@ -263,6 +267,8 @@ INT_PTR CViewOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 					DlgCheckBox_IsChecked(hDlg,IDC_OPTIONS_ZOOMKEEPASPECTRATIO);
 				m_PanScanAdjustWindowMode=(AdjustWindowMode)
 					DlgComboBox_GetCurSel(hDlg,IDC_OPTIONS_PANSCANADJUSTWINDOW);
+				m_fRemember1SegWindowSize=
+					DlgCheckBox_IsChecked(hDlg,IDC_OPTIONS_REMEMBER1SEGWINDOWSIZE);
 				m_fMinimizeToTray=
 					DlgCheckBox_IsChecked(hDlg,IDC_OPTIONS_MINIMIZETOTRAY);
 				m_fDisablePreviewWhenMinimized=

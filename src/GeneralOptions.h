@@ -16,7 +16,7 @@ public:
 		DEFAULT_DRIVER_CUSTOM
 	};
 	enum {
-		MAX_MPEG2_DECODER_NAME=128
+		MAX_VIDEO_DECODER_NAME=128
 	};
 
 	CGeneralOptions();
@@ -39,6 +39,10 @@ public:
 	bool GetFirstDriverName(LPTSTR pszDriverName) const;
 	LPCTSTR GetMpeg2DecoderName() const;
 	bool SetMpeg2DecoderName(LPCTSTR pszDecoderName);
+	LPCTSTR GetH264DecoderName() const;
+	bool SetH264DecoderName(LPCTSTR pszDecoderName);
+	LPCTSTR GetH265DecoderName() const;
+	bool SetH265DecoderName(LPCTSTR pszDecoderName);
 	CVideoRenderer::RendererType GetVideoRendererType() const;
 	bool SetVideoRendererType(CVideoRenderer::RendererType Renderer);
 	int GetCasDevice(bool fUseName);
@@ -54,6 +58,9 @@ private:
 // CBasicDialog
 	INT_PTR DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
 
+	void SetVideoDecoderList(
+		int ID,const GUID &SubType,BYTE StreamType,const TVTest::String &DecoderName);
+	void GetVideoDecoderSetting(int ID,BYTE StreamType,TVTest::String *pDecoderName);
 	void DescrambleBenchmarkTest(HWND hwndOwner);
 
 	enum {
@@ -70,6 +77,8 @@ private:
 	TVTest::String m_DefaultBonDriverName;
 	TVTest::String m_LastBonDriverName;
 	TVTest::String m_Mpeg2DecoderName;
+	TVTest::String m_H264DecoderName;
+	TVTest::String m_H265DecoderName;
 	CVideoRenderer::RendererType m_VideoRendererType;
 	TVTest::String m_CasDeviceName;
 	int m_CasDevice;
@@ -79,6 +88,8 @@ private:
 	int m_DescrambleInstruction;
 	bool m_fDescrambleCurServiceOnly;
 	bool m_fEnableEmmProcess;
+
+	bool m_fEnableCasSettings;
 };
 
 

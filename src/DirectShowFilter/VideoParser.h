@@ -81,12 +81,19 @@ public:
 
 	DWORD GetBitRate() const;
 
+	void SetAttachMediaType(bool bAttach);
+	virtual bool SetAdjustTime(bool bAdjust) { return false; }
+	virtual bool SetAdjustFrameRate(bool bAdjust) { return false; }
+
 protected:
 	void NotifyVideoInfo() const;
+	static bool SARToDAR(WORD SarX, WORD SarY, WORD Width, WORD Height,
+						 BYTE *pDarX, BYTE *pDarY);
 
 	VideoInfo m_VideoInfo;
 	VideoInfoCallback m_pVideoInfoCallback;
 	PVOID m_pCallbackParam;
 	mutable CCritSec m_ParserLock;
 	CBitRateCalculator m_BitRateCalculator;
+	bool m_bAttachMediaType;
 };

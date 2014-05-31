@@ -30,12 +30,12 @@ public:
 		SUBMENU_SPACE			= 7,
 		SUBMENU_FAVORITES		= 8,
 		SUBMENU_CHANNELHISTORY	= 9,
-		SUBMENU_VOLUME			= 11,
-		SUBMENU_AUDIO			= 12,
-		SUBMENU_RESET			= 22,
-		SUBMENU_BAR				= 26,
-		SUBMENU_PLUGIN			= 27,
-		SUBMENU_FILTERPROPERTY	= 29
+		SUBMENU_VOLUME			= 12,
+		SUBMENU_AUDIO			= 13,
+		SUBMENU_RESET			= 23,
+		SUBMENU_BAR				= 27,
+		SUBMENU_PLUGIN			= 28,
+		SUBMENU_FILTERPROPERTY	= 30
 	};
 
 	CMainMenu();
@@ -87,7 +87,7 @@ class CChannelMenu
 	HMENU m_hmenu;
 	CEpgProgramList *m_pProgramList;
 	CLogoManager *m_pLogoManager;
-	const CChannelList *m_pChannelList;
+	CChannelList m_ChannelList;
 	int m_CurChannel;
 	UINT m_FirstCommand;
 	UINT m_LastCommand;

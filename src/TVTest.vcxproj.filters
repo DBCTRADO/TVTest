@@ -473,6 +473,18 @@
     <ClCompile Include="DirectShowFilter\VideoParser.cpp">
       <Filter>DirectShowFilter\Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="DirectShowFilter\H264ParserFilter.cpp">
+      <Filter>DirectShowFilter\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="BonTsEngine\PATGenerator.cpp">
+      <Filter>BonTsEngine\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="BonTsEngine\TsInformation.cpp">
+      <Filter>BonTsEngine\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="DirectShowFilter\H265ParserFilter.cpp">
+      <Filter>DirectShowFilter\Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="BonTsEngine\Bitstream.h">
@@ -920,6 +932,18 @@
       <Filter>DirectShowFilter\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="DirectShowFilter\VideoParser.h">
+      <Filter>DirectShowFilter\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="DirectShowFilter\H264ParserFilter.h">
+      <Filter>DirectShowFilter\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="BonTsEngine\PATGenerator.h">
+      <Filter>BonTsEngine\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="BonTsEngine\TsInformation.h">
+      <Filter>BonTsEngine\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="DirectShowFilter\H265ParserFilter.h">
       <Filter>DirectShowFilter\Header Files</Filter>
     </ClInclude>
   </ItemGroup>
