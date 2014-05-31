@@ -7982,6 +7982,8 @@ void CMainWindow::OnDestroy()
 	if (FavoritesManager.GetModified())
 		FavoritesManager.Save(AppMain.GetFavoritesFileName());
 
+	CBasicWindow::OnDestroy();
+
 	// Finalize()ではエラー時にダイアログを出すことがあるので、
 	// 終了監視の外に出す必要がある
 	AppMain.Finalize();
@@ -10933,7 +10935,6 @@ LRESULT CALLBACK CMainWindow::WndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM l
 
 	if (uMsg==WM_DESTROY) {
 		pThis->OnMessage(hwnd,uMsg,wParam,lParam);
-		pThis->OnDestroy();
 		::PostQuitMessage(0);
 		return 0;
 	}
