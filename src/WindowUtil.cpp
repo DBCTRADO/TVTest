@@ -184,6 +184,22 @@ void SnapWindow(HWND hwnd,RECT *prc,int Margin,HWND hwndExclude)
 }
 
 
+bool IsMessageInQueue(HWND hwnd,UINT Message)
+{
+	MSG msg;
+
+	if (::PeekMessage(&msg,hwnd,Message,Message,PM_NOREMOVE)) {
+		if (msg.message==WM_QUIT) {
+			::PostQuitMessage(static_cast<int>(msg.wParam));
+		} else {
+			return true;
+		}
+	}
+
+	return false;
+}
+
+
 
 
 CMouseLeaveTrack::CMouseLeaveTrack()

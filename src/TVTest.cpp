@@ -7429,8 +7429,10 @@ LRESULT CMainWindow::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 
 	case WM_APP_CHANGECASLIBRARY:
 		TRACE(TEXT("WM_APP_CHANGECASLIBRARY\n"));
-		if (AppMain.LoadCasLibrary())
-			AppMain.OpenCasCard(CAppMain::OPEN_CAS_CARD_NOTIFY_ERROR);
+		if (!IsMessageInQueue(hwnd,WM_APP_CHANGECASLIBRARY)) {
+			if (AppMain.LoadCasLibrary())
+				AppMain.OpenCasCard(CAppMain::OPEN_CAS_CARD_NOTIFY_ERROR);
+		}
 		return 0;
 
 #ifdef NETWORK_REMOCON_SUPPORT
@@ -7523,10 +7525,8 @@ LRESULT CMainWindow::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 	case WM_APP_VIDEOSTREAMTYPECHANGED:
 		// ‰f‘œstream_type‚ª•Ï‚í‚Á‚½
 		TRACE(TEXT("WM_APP_VIDEOSTREAMTYPECHANGED\n"));
-		{
-			if (!m_fEnablePlayback)
-				return 0;
-
+		if (m_fEnablePlayback
+				&& !IsMessageInQueue(hwnd,WM_APP_VIDEOSTREAMTYPECHANGED)) {
 			BYTE StreamType=static_cast<BYTE>(wParam);
 
 			if (StreamType==CoreEngine.m_DtvEngine.GetVideoStreamType())

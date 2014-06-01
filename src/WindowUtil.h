@@ -3,6 +3,7 @@
 
 
 void SnapWindow(HWND hwnd,RECT *prc,int Margin,HWND hwndExclude=NULL);
+bool IsMessageInQueue(HWND hwnd,UINT Message);
 
 
 class CMouseLeaveTrack
