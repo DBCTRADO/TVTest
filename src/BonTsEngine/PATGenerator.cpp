@@ -49,13 +49,14 @@ bool CPATGenerator::StorePacket(const CTsPacket *pPacket)
 		m_bHasPAT = true;
 	} else if (PID == PID_NIT || Is1SegPmtPid(PID)) {
 		if (m_PidMapManager.StorePacket(pPacket)) {
-			if (PID != PID_NIT) {
-				int Index = PID - ONESEG_PMT_PID_FIRST;
-				if (!m_bHasPAT && !m_bGeneratePAT) {
-					// PMT‚ª4‰ñ—ˆ‚éŠÔ‚ÉPAT‚ª—ˆ‚È‚¯‚ê‚ÎPAT‚ª–³‚¢‚Æ‚Ý‚È‚·
-					if (m_PmtCount[Index] < 4) {
+			if (PID != PID_NIT && !m_bHasPAT) {
+				if (!m_bGeneratePAT) {
+					// PMT‚ªPAT_GEN_PMT_COUNT‰ñ—ˆ‚éŠÔ‚ÉPAT‚ª—ˆ‚È‚¯‚ê‚ÎPAT‚ª–³‚¢‚Æ‚Ý‚È‚·
+					static const DWORD PAT_GEN_PMT_COUNT = 5;
+					int Index = PID - ONESEG_PMT_PID_FIRST;
+					if (m_PmtCount[Index] < PAT_GEN_PMT_COUNT) {
 						m_PmtCount[Index]++;
-						if (m_PmtCount[Index] == 4) {
+						if (m_PmtCount[Index] == PAT_GEN_PMT_COUNT) {
 							m_bGeneratePAT = true;
 							TRACE(TEXT("CPATGenerator : Generate 1Seg PAT\n"));
 						}
