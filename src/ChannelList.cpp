@@ -286,12 +286,13 @@ int CChannelList::Find(const CChannelInfo *pInfo) const
 }
 
 
-int CChannelList::Find(int Space,int ChannelIndex,int ServiceID) const
+int CChannelList::FindByIndex(int Space,int ChannelIndex,int ServiceID,bool fEnabledOnly) const
 {
 	for (size_t i=0;i<m_ChannelList.size();i++) {
 		const CChannelInfo *pChInfo=m_ChannelList[i];
 
-		if ((Space<0 || pChInfo->GetSpace()==Space)
+		if ((!fEnabledOnly || pChInfo->IsEnabled())
+				&& (Space<0 || pChInfo->GetSpace()==Space)
 				&& (ChannelIndex<0 || pChInfo->GetChannelIndex()==ChannelIndex)
 				&& (ServiceID<=0 || pChInfo->GetServiceID()==ServiceID))
 			return (int)i;
@@ -332,11 +333,12 @@ int CChannelList::FindServiceID(WORD ServiceID) const
 }
 
 
-int CChannelList::FindByIDs(WORD NetworkID,WORD TransportStreamID,WORD ServiceID) const
+int CChannelList::FindByIDs(WORD NetworkID,WORD TransportStreamID,WORD ServiceID,bool fEnabledOnly) const
 {
 	for (size_t i=0;i<m_ChannelList.size();i++) {
 		const CChannelInfo *pChannelInfo=m_ChannelList[i];
-		if ((NetworkID==0 || pChannelInfo->GetNetworkID()==NetworkID)
+		if ((!fEnabledOnly || pChannelInfo->IsEnabled())
+				&& (NetworkID==0 || pChannelInfo->GetNetworkID()==NetworkID)
 				&& (TransportStreamID==0 || pChannelInfo->GetTransportStreamID()==TransportStreamID)
 				&& (ServiceID==0 || pChannelInfo->GetServiceID()==ServiceID))
 			return (int)i;

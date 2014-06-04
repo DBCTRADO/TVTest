@@ -356,7 +356,7 @@ bool CChannelScan::AutoUpdateChannelList(CTuningSpaceList *pTuningSpaceList,std:
 				CChannelList *pChannelList=pTuningSpaceList->GetChannelList(i);
 
 				if (pChannelList!=NULL) {
-					if (pChannelList->FindByIDs(TsInfo.OriginalNetworkID,0,ServiceInfo.ServiceID)>=0) {
+					if (pChannelList->FindByIDs(TsInfo.OriginalNetworkID,0,ServiceInfo.ServiceID,false)>=0) {
 						fFound=true;
 						break;
 					}
@@ -371,7 +371,7 @@ bool CChannelScan::AutoUpdateChannelList(CTuningSpaceList *pTuningSpaceList,std:
 					CChannelList *pChannelList=pTuningSpaceList->GetChannelList(Space);
 
 					if (pChannelList!=NULL) {
-						int Index=pChannelList->FindByIDs(TsInfo.OriginalNetworkID,TsInfo.TransportStreamID,0);
+						int Index=pChannelList->FindByIDs(TsInfo.OriginalNetworkID,TsInfo.TransportStreamID,0,false);
 						if (Index>=0) {
 							CChannelInfo ChannelInfo(*pChannelList->GetChannelInfo(Index));
 
@@ -446,7 +446,7 @@ bool CChannelScan::AutoUpdateChannelList(CTuningSpaceList *pTuningSpaceList,std:
 
 								if (TsInfo.TransportStreamID!=pChannelInfo->GetTransportStreamID()) {
 									// TSˆÚ“®
-									int Index=pChannelList->FindByIDs(TsInfo.OriginalNetworkID,TsInfo.TransportStreamID,0);
+									int Index=pChannelList->FindByIDs(TsInfo.OriginalNetworkID,TsInfo.TransportStreamID,0,false);
 									if (Index>=0) {
 										const CChannelInfo *pMoveChInfo=pChannelList->GetChannelInfo(Index);
 										CChannelInfo ChannelInfo(*pChannelInfo);
@@ -882,7 +882,7 @@ INT_PTR CChannelScan::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 							std::vector<const CChannelInfo*> MissingChannels;
 							for (int i=0;i<pChannelList->NumChannels();i++) {
 								const CChannelInfo *pOldChannel=pChannelList->GetChannelInfo(i);
-								if (m_ScanningChannelList.FindByIDs(pOldChannel->GetNetworkID(),0,pOldChannel->GetServiceID())<0
+								if (m_ScanningChannelList.FindByIDs(pOldChannel->GetNetworkID(),0,pOldChannel->GetServiceID(),false)<0
 										&& m_ScanningChannelList.FindByName(pOldChannel->GetName())<0)
 									MissingChannels.push_back(pOldChannel);
 							}
@@ -1204,7 +1204,7 @@ INT_PTR CChannelScan::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 
 			// Œ³‚Ì—LŒø/–³Œøó‘Ô‚ð”½‰f
 			const CChannelList *pOldChList=m_TuningSpaceList.GetChannelList(m_ScanSpace);
-			int OldChIndex=pOldChList->FindByIDs(pChInfo->GetNetworkID(),0,pChInfo->GetServiceID());
+			int OldChIndex=pOldChList->FindByIDs(pChInfo->GetNetworkID(),0,pChInfo->GetServiceID(),false);
 			if (OldChIndex>=0)
 				pChInfo->Enable(pOldChList->IsEnabled(OldChIndex));
 

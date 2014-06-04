@@ -63,7 +63,8 @@ public:
 	const CTuningSpaceList *GetDriverTuningSpaceList() const { return &m_DriverTuningSpaceList; }
 	LPCTSTR GetTuningSpaceName(int Space) const;
 	int FindChannelInfo(const CChannelInfo *pInfo) const;
-	int FindChannelByIDs(int Space,WORD NetworkID,WORD TransportStreamID,WORD ServiceID) const;
+	int FindChannelByIDs(int Space,WORD NetworkID,WORD TransportStreamID,WORD ServiceID,
+						 bool fEnabledOnly=true) const;
 	int NumSpaces() const;
 	bool GetChannelFileName(LPTSTR pszFileName,int MaxLength) const;
 

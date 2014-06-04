@@ -92,11 +92,11 @@ public:
 	bool DeleteChannel(int Index);
 	void Clear();
 	int Find(const CChannelInfo *pInfo) const;
-	int Find(int Space,int ChannelIndex,int ServiceID=-1) const;
+	int FindByIndex(int Space,int ChannelIndex,int ServiceID=-1,bool fEnabledOnly=true) const;
 	int FindPhysicalChannel(int Channel) const;
 	int FindChannelNo(int No,bool fEnabledOnly=true) const;
 	int FindServiceID(WORD ServiceID) const;
-	int FindByIDs(WORD NetworkID,WORD TransportStreamID,WORD ServiceID) const;
+	int FindByIDs(WORD NetworkID,WORD TransportStreamID,WORD ServiceID,bool fEnabledOnly=true) const;
 	int FindByName(LPCTSTR pszName) const;
 	int GetNextChannel(int Index,bool fWrap=false) const;
 	int GetPrevChannel(int Index,bool fWrap=false) const;

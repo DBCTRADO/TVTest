@@ -224,9 +224,9 @@ bool CChannelDisplay::SetSelect(LPCTSTR pszDriverFileName,const CChannelInfo *pC
 				for (int j=0;j<pTuner->NumSpaces();j++) {
 					const CChannelList *pChannelList=pTuner->GetTuningSpaceInfo(j)->GetChannelList();
 					if (pChannelList!=NULL) {
-						Channel=pChannelList->Find(pChannelInfo->GetSpace(),
-												   pChannelInfo->GetChannelIndex(),
-												   pChannelInfo->GetServiceID());
+						Channel=pChannelList->FindByIndex(pChannelInfo->GetSpace(),
+														  pChannelInfo->GetChannelIndex(),
+														  pChannelInfo->GetServiceID());
 						if (Channel>=0) {
 							Space=j;
 							break;

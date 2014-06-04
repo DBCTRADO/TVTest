@@ -655,9 +655,9 @@ bool CAppMain::RestoreChannel()
 		int Space=RestoreChannelInfo.fAllChannels?CChannelManager::SPACE_ALL:RestoreChannelInfo.Space;
 		const CChannelList *pList=ChannelManager.GetChannelList(Space);
 		if (pList!=NULL) {
-			int Index=pList->Find(RestoreChannelInfo.Space,
-								  RestoreChannelInfo.Channel,
-								  RestoreChannelInfo.ServiceID);
+			int Index=pList->FindByIndex(RestoreChannelInfo.Space,
+										 RestoreChannelInfo.Channel,
+										 RestoreChannelInfo.ServiceID);
 			if (Index<0) {
 				if (RestoreChannelInfo.TransportStreamID>0 && RestoreChannelInfo.ServiceID>0) {
 					Index=pList->FindByIDs(0,
@@ -665,8 +665,8 @@ bool CAppMain::RestoreChannel()
 										   (WORD)RestoreChannelInfo.ServiceID);
 				}
 				if (Index<0 && RestoreChannelInfo.ServiceID>0) {
-					Index=pList->Find(RestoreChannelInfo.Space,
-									  RestoreChannelInfo.Channel);
+					Index=pList->FindByIndex(RestoreChannelInfo.Space,
+											 RestoreChannelInfo.Channel);
 				}
 			}
 			if (Index>=0)
@@ -753,7 +753,8 @@ bool CAppMain::UpdateChannelList(LPCTSTR pszBonDriverName,const CTuningSpaceList
 					if (pChannelList->FindByIDs(
 							ChannelInfo.GetNetworkID(),
 							ChannelInfo.GetTransportStreamID(),
-							ChannelInfo.GetServiceID())<0) {
+							ChannelInfo.GetServiceID(),
+							false)<0) {
 						const int ChannelCount=pChannelList->NumChannels();
 						const NetworkType ChannelNetworkType=GetNetworkType(ChannelInfo.GetNetworkID());
 
@@ -830,8 +831,19 @@ bool CAppMain::SetChannel(int Space,int Channel,int ServiceID/*=-1*/,bool fStric
 	if (pPrevChInfo==NULL
 			|| pChInfo->GetSpace()!=pPrevChInfo->GetSpace()
 			|| pChInfo->GetChannelIndex()!=pPrevChInfo->GetChannelIndex()) {
-		if (ServiceID<=0 && pChInfo->GetServiceID()>0)
-			ServiceID=pChInfo->GetServiceID();
+		if (ServiceID>0) {
+			const CChannelList *pChList=ChannelManager.GetCurrentRealChannelList();
+			int Index=pChList->FindByIndex(pChInfo->GetSpace(),
+										   pChInfo->GetChannelIndex(),
+										   ServiceID);
+			if (Index>=0) {
+				ChannelManager.SetCurrentChannel(Space,Index);
+				pChInfo=pChList->GetChannelInfo(Index);
+			}
+		} else {
+			if (pChInfo->GetServiceID()>0)
+				ServiceID=pChInfo->GetServiceID();
+		}
 
 		LPCTSTR pszTuningSpace=ChannelManager.GetDriverTuningSpaceList()->GetTuningSpaceName(pChInfo->GetSpace());
 		AddLog(TEXT("BonDriverにチャンネル変更を要求します。(チューニング空間 %d[%s] / Ch %d[%s] / Sv %d)"),
@@ -864,6 +876,7 @@ bool CAppMain::SetChannel(int Space,int Channel,int ServiceID/*=-1*/,bool fStric
 		}
 
 		ChannelManager.SetCurrentServiceID(ServiceID);
+		m_UICore.OnChannelChanged(Space!=OldSpace ? CUICore::CHANNEL_CHANGED_STATUS_SPACE_CHANGED : 0);
 		PluginManager.SendChannelChangeEvent();
 	} else {
 		if (ServiceID<=0) {
@@ -872,10 +885,9 @@ bool CAppMain::SetChannel(int Space,int Channel,int ServiceID/*=-1*/,bool fStric
 			else
 				return false;
 		}
-		SetServiceByID(ServiceID,fStrictService?SET_SERVICE_STRICT_ID:0);
+		if (!SetServiceByID(ServiceID,fStrictService?SET_SERVICE_STRICT_ID:0))
+			return false;
 	}
-
-	m_UICore.OnChannelChanged(Space!=OldSpace ? CUICore::CHANNEL_CHANGED_STATUS_SPACE_CHANGED : 0);
 
 	return true;
 }
@@ -887,10 +899,10 @@ bool CAppMain::SetChannelByIndex(int Space,int Channel,int ServiceID)
 	if (pChannelList==NULL)
 		return false;
 
-	int ListChannel=pChannelList->Find(Space,Channel,ServiceID);
+	int ListChannel=pChannelList->FindByIndex(Space,Channel,ServiceID);
 	if (ListChannel<0) {
 		if (ServiceID>0)
-			ListChannel=pChannelList->Find(Space,Channel);
+			ListChannel=pChannelList->FindByIndex(Space,Channel);
 		if (ListChannel<0)
 			return false;
 	}
@@ -1031,14 +1043,11 @@ bool CAppMain::FollowChannelChange(WORD TransportStreamID,WORD ServiceID)
 		return false;
 
 	const CChannelInfo *pCurChInfo=ChannelManager.GetCurrentRealChannelInfo();
-	if (pCurChInfo!=NULL) {
-		if (pChannelInfo->GetSpace()==pCurChInfo->GetSpace()
-				&& pChannelInfo->GetChannelIndex()==pCurChInfo->GetChannelIndex())
-			return true;
+	if (pCurChInfo==NULL
+			|| pCurChInfo->GetTransportStreamID()!=TransportStreamID) {
+		Logger.AddLog(TEXT("ストリームの変化を検知しました。(TSID %d / SID %d)"),
+					  TransportStreamID,ServiceID);
 	}
-
-	Logger.AddLog(TEXT("ストリームの変化を検知しました。(TSID %d / SID %d)"),
-				  TransportStreamID,ServiceID);
 	const bool fSpaceChanged=Space!=ChannelManager.GetCurrentSpace();
 	if (!ChannelManager.SetCurrentChannel(Space,Channel))
 		return false;
@@ -1126,7 +1135,23 @@ bool CAppMain::SetServiceByID(WORD ServiceID,unsigned int Flags)
 		Set1SegMode(false,false);
 	}
 
-	m_UICore.OnServiceChanged();
+	bool fChannelChanged=false;
+
+	if (!m_f1SegMode && ServiceID!=0 && pCurChInfo!=NULL) {
+		const CChannelList *pChList=ChannelManager.GetCurrentRealChannelList();
+		int Index=pChList->FindByIndex(pCurChInfo->GetSpace(),
+									   pCurChInfo->GetChannelIndex(),
+									   ServiceID);
+		if (Index>=0) {
+			ChannelManager.SetCurrentChannel(ChannelManager.GetCurrentSpace(),Index);
+			m_UICore.OnChannelChanged(0);
+			PluginManager.SendChannelChangeEvent();
+			fChannelChanged=true;
+		}
+	}
+
+	if (!fChannelChanged)
+		m_UICore.OnServiceChanged();
 
 	return true;
 }
@@ -1301,8 +1326,9 @@ bool CAppMain::OpenTunerAndSetChannel(LPCTSTR pszDriverFileName,const CChannelIn
 	const CChannelList *pList=ChannelManager.GetChannelList(pChannelInfo->GetSpace());
 	if (pList==NULL)
 		return false;
-	int Index=pList->Find(-1,pChannelInfo->GetChannelIndex(),
-						  pChannelInfo->GetServiceID());
+	int Index=pList->FindByIndex(-1,
+								 pChannelInfo->GetChannelIndex(),
+								 pChannelInfo->GetServiceID());
 	if (Index<0) {
 		if (pChannelInfo->GetServiceID()!=0
 				&& pChannelInfo->GetTransportStreamID()!=0) {
@@ -1451,7 +1477,7 @@ int CAppMain::GetCorresponding1SegService(
 	int ServiceIndex=0;
 
 	for (WORD SID=ServiceID-1;SID>0;SID--) {
-		if (ChannelManager.FindChannelByIDs(Space,NetworkID,TSID,SID)<0)
+		if (ChannelManager.FindChannelByIDs(Space,NetworkID,TSID,SID,false)<0)
 			break;
 		ServiceIndex=ServiceID-SID;
 	}
@@ -4183,12 +4209,12 @@ class CMyChannelPanelEventHandler : public CChannelPanel::CEventHandler
 			} else
 #endif
 			{
-				int Index=pList->Find(pChannelInfo->GetSpace(),
-									  pChannelInfo->GetChannelIndex(),
-									  pChannelInfo->GetServiceID());
+				int Index=pList->FindByIndex(pChannelInfo->GetSpace(),
+											 pChannelInfo->GetChannelIndex(),
+											 pChannelInfo->GetServiceID());
 				if (Index<0 && pChannelInfo->GetServiceID()>0)
-					Index=pList->Find(pChannelInfo->GetSpace(),
-									  pChannelInfo->GetChannelIndex());
+					Index=pList->FindByIndex(pChannelInfo->GetSpace(),
+											 pChannelInfo->GetChannelIndex());
 				if (Index>=0)
 					MainWindow.PostCommand(CM_CHANNEL_FIRST+Index);
 			}
@@ -5412,16 +5438,17 @@ class CMyChannelDisplayEventHandler : public CChannelDisplay::CEventHandler
 				Space=pChannelInfo->GetSpace();
 			const CChannelList *pList=ChannelManager.GetChannelList(Space);
 			if (pList!=NULL) {
-				int Index=pList->Find(pChannelInfo->GetSpace(),
-									  pChannelInfo->GetChannelIndex(),
-									  pChannelInfo->GetServiceID());
+				int Index=pList->FindByIndex(pChannelInfo->GetSpace(),
+											 pChannelInfo->GetChannelIndex(),
+											 pChannelInfo->GetServiceID());
 
 				if (Index<0 && Space==CChannelManager::SPACE_ALL) {
 					Space=pChannelInfo->GetSpace();
 					pList=ChannelManager.GetChannelList(Space);
 					if (pList!=NULL)
-						Index=pList->Find(-1,pChannelInfo->GetChannelIndex(),
-										  pChannelInfo->GetServiceID());
+						Index=pList->FindByIndex(-1,
+												 pChannelInfo->GetChannelIndex(),
+												 pChannelInfo->GetServiceID());
 				}
 				if (Index>=0)
 					AppMain.SetChannel(Space,Index);
@@ -11201,9 +11228,9 @@ bool CMainWindow::InitStandby()
 		int Space=RestoreChannelInfo.fAllChannels?CChannelManager::SPACE_ALL:RestoreChannelInfo.Space;
 		const CChannelList *pList=ChannelManager.GetChannelList(Space);
 		if (pList!=NULL) {
-			int Index=pList->Find(RestoreChannelInfo.Space,
-								  RestoreChannelInfo.Channel,
-								  RestoreChannelInfo.ServiceID);
+			int Index=pList->FindByIndex(RestoreChannelInfo.Space,
+										 RestoreChannelInfo.Channel,
+										 RestoreChannelInfo.ServiceID);
 			if (Index>=0) {
 				m_Resume.Channel.SetSpace(Space);
 				m_Resume.Channel.SetChannel(Index);
@@ -12367,7 +12394,7 @@ static int ApplicationMain(HINSTANCE hInstance,LPCTSTR pszCmdLine,int nCmdShow)
 		} else {
 			// 初期チャンネルに設定する
 			const CChannelList *pList=ChannelManager.GetCurrentChannelList();
-			int i=pList->Find(
+			int i=pList->FindByIndex(
 				CoreEngine.m_DtvEngine.m_BonSrcDecoder.GetCurSpace(),
 				CoreEngine.m_DtvEngine.m_BonSrcDecoder.GetCurChannel());
 

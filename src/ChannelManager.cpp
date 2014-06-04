@@ -402,7 +402,8 @@ int CChannelManager::FindChannelInfo(const CChannelInfo *pInfo) const
 }
 
 
-int CChannelManager::FindChannelByIDs(int Space,WORD NetworkID,WORD TransportStreamID,WORD ServiceID) const
+int CChannelManager::FindChannelByIDs(int Space,WORD NetworkID,WORD TransportStreamID,WORD ServiceID,
+									  bool fEnabledOnly) const
 {
 	const CChannelList *pChannelList;
 
@@ -413,7 +414,7 @@ int CChannelManager::FindChannelByIDs(int Space,WORD NetworkID,WORD TransportStr
 	if (pChannelList==nullptr)
 		return -1;
 
-	return pChannelList->FindByIDs(NetworkID,TransportStreamID,ServiceID);
+	return pChannelList->FindByIDs(NetworkID,TransportStreamID,ServiceID,fEnabledOnly);
 }
 
 
