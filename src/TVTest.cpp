@@ -12360,12 +12360,10 @@ static int ApplicationMain(HINSTANCE hInstance,LPCTSTR pszCmdLine,int nCmdShow)
 
 	ApplyEventInfoFont();
 
-	if (CoreEngine.m_DtvEngine.IsSrcFilterOpen()) {
-		if (CoreEngine.IsBuildComplete()) {
-			if (CmdLineOptions.m_fFullscreen)
-				AppMain.GetUICore()->SetFullscreen(true);
-		}
+	if (CmdLineOptions.m_fFullscreen)
+		AppMain.GetUICore()->SetFullscreen(true);
 
+	if (CoreEngine.m_DtvEngine.IsSrcFilterOpen()) {
 		if (CoreEngine.IsNetworkDriver()) {
 			const int FirstPort=CoreEngine.IsUDPDriver()?1234:2230;
 			int Port=FirstPort;
