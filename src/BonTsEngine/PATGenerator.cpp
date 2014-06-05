@@ -178,9 +178,7 @@ void CALLBACK CPATGenerator::OnNitUpdated(const WORD wPID, CTsPidMapTarget *pMap
 			const CDescBlock *pDescBlock = pNitTable->GetItemDesc(0);
 
 			if (pDescBlock != NULL) {
-				const CPartialReceptionDesc *pPartialReceptionDesc =
-					dynamic_cast<const CPartialReceptionDesc*>(
-						pDescBlock->GetDescByTag(CPartialReceptionDesc::DESC_TAG));
+				const CPartialReceptionDesc *pPartialReceptionDesc = pDescBlock->GetDesc<CPartialReceptionDesc>();
 				if (pPartialReceptionDesc != NULL
 						&& pPartialReceptionDesc->GetServiceNum() > 0) {
 					TransportStreamID = pNitTable->GetTransportStreamID(0);

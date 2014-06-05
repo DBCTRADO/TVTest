@@ -837,8 +837,7 @@ void CEventManager::OnSection(CPsiStreamTable *pTable, const CPsiSection *pSecti
 			int Length;
 			TCHAR szText[2048];
 
-			const CShortEventDesc *pShortEvent =
-				dynamic_cast<const CShortEventDesc*>(pDescBlock->GetDescByTag(CShortEventDesc::DESC_TAG));
+			const CShortEventDesc *pShortEvent = pDescBlock->GetDesc<CShortEventDesc>();
 			if (pShortEvent) {
 				Length = (int)pShortEvent->GetEventName(szText, _countof(szText));
 				if (Length > 0)
@@ -852,8 +851,7 @@ void CEventManager::OnSection(CPsiStreamTable *pTable, const CPsiSection *pSecti
 			if (Length > 0)
 				pEvent->SetEventExtendedText(szText);
 
-			const CComponentDesc *pComponentDesc =
-				dynamic_cast<const CComponentDesc*>(pDescBlock->GetDescByTag(CComponentDesc::DESC_TAG));
+			const CComponentDesc *pComponentDesc = pDescBlock->GetDesc<CComponentDesc>();
 			if (pComponentDesc) {
 				pEvent->m_VideoInfo.StreamContent = pComponentDesc->GetStreamContent();
 				pEvent->m_VideoInfo.ComponentType = pComponentDesc->GetComponentType();
@@ -891,8 +889,7 @@ void CEventManager::OnSection(CPsiStreamTable *pTable, const CPsiSection *pSecti
 				}
 			}
 
-			const CContentDesc *pContentDesc =
-				dynamic_cast<const CContentDesc *>(pDescBlock->GetDescByTag(CContentDesc::DESC_TAG));
+			const CContentDesc *pContentDesc = pDescBlock->GetDesc<CContentDesc>();
 			if (pContentDesc) {
 				int NibbleCount = pContentDesc->GetNibbleCount();
 				if (NibbleCount > 7)
@@ -902,8 +899,7 @@ void CEventManager::OnSection(CPsiStreamTable *pTable, const CPsiSection *pSecti
 					pContentDesc->GetNibble(i, &pEvent->m_ContentNibble.NibbleList[i]);
 			}
 
-			const CEventGroupDesc *pGroupDesc =
-				dynamic_cast<const CEventGroupDesc*>(pDescBlock->GetDescByTag(CEventGroupDesc::DESC_TAG));
+			const CEventGroupDesc *pGroupDesc = pDescBlock->GetDesc<CEventGroupDesc>();
 			if (pGroupDesc) {
 				pEvent->m_EventGroupList.resize(1);
 				CEventInfo::EventGroupInfo &GroupInfo = pEvent->m_EventGroupList[0];

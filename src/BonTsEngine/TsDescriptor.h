@@ -810,6 +810,9 @@ public:
 	WORD GetDescNum() const;
 	const CBaseDesc * GetDescByIndex(const WORD wIndex = 0U) const;
 	const CBaseDesc * GetDescByTag(const BYTE byTag) const;
+	template<typename T> const T * GetDesc() const {
+		return dynamic_cast<const T *>(GetDescByTag(T::DESC_TAG));
+	}
 
 protected:
 	CBaseDesc * ParseDesc(const BYTE *pHexData, const WORD wDataLength);

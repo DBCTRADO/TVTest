@@ -492,7 +492,7 @@ BYTE CTsAnalyzer::GetVideoComponentType(const int Index) const
 		const CDescBlock *pDescBlock = GetHEitItemDesc(Index);
 
 		if (pDescBlock) {
-			const CComponentDesc *pComponentDesc = dynamic_cast<const CComponentDesc*>(pDescBlock->GetDescByTag(CComponentDesc::DESC_TAG));
+			const CComponentDesc *pComponentDesc = pDescBlock->GetDesc<CComponentDesc>();
 
 			if (pComponentDesc != NULL)
 				return pComponentDesc->GetComponentType();
@@ -1049,7 +1049,7 @@ int CTsAnalyzer::GetEventName(const int ServiceIndex, LPTSTR pszName, int MaxLen
 
 	const CDescBlock *pDescBlock = GetHEitItemDesc(ServiceIndex, bNext);
 	if (pDescBlock) {
-		const CShortEventDesc *pShortEvent = dynamic_cast<const CShortEventDesc *>(pDescBlock->GetDescByTag(CShortEventDesc::DESC_TAG));
+		const CShortEventDesc *pShortEvent = pDescBlock->GetDesc<CShortEventDesc>();
 
 		if (pShortEvent)
 			return pShortEvent->GetEventName(pszName, MaxLength);
@@ -1058,7 +1058,7 @@ int CTsAnalyzer::GetEventName(const int ServiceIndex, LPTSTR pszName, int MaxLen
 #ifdef TS_ANALYZER_L_EIT_SUPPORT
 	pDescBlock = GetLEitItemDesc(ServiceIndex, bNext);
 	if (pDescBlock) {
-		const CShortEventDesc *pShortEvent = dynamic_cast<const CShortEventDesc *>(pDescBlock->GetDescByTag(CShortEventDesc::DESC_TAG));
+		const CShortEventDesc *pShortEvent = pDescBlock->GetDesc<CShortEventDesc>();
 
 		if (pShortEvent)
 			return pShortEvent->GetEventName(pszName, MaxLength);
@@ -1074,7 +1074,7 @@ int CTsAnalyzer::GetEventText(const int ServiceIndex, LPTSTR pszText, int MaxLen
 
 	const CDescBlock *pDescBlock = GetHEitItemDesc(ServiceIndex, bNext);
 	if (pDescBlock) {
-		const CShortEventDesc *pShortEvent = dynamic_cast<const CShortEventDesc *>(pDescBlock->GetDescByTag(CShortEventDesc::DESC_TAG));
+		const CShortEventDesc *pShortEvent = pDescBlock->GetDesc<CShortEventDesc>();
 
 		if (pShortEvent)
 			return pShortEvent->GetEventDesc(pszText, MaxLength);
@@ -1083,7 +1083,7 @@ int CTsAnalyzer::GetEventText(const int ServiceIndex, LPTSTR pszText, int MaxLen
 #ifdef TS_ANALYZER_L_EIT_SUPPORT
 	pDescBlock = GetLEitItemDesc(ServiceIndex, bNext);
 	if (pDescBlock) {
-		const CShortEventDesc *pShortEvent = dynamic_cast<const CShortEventDesc *>(pDescBlock->GetDescByTag(CShortEventDesc::DESC_TAG));
+		const CShortEventDesc *pShortEvent = pDescBlock->GetDesc<CShortEventDesc>();
 
 		if (pShortEvent)
 			return pShortEvent->GetEventDesc(pszText, MaxLength);
@@ -1100,7 +1100,7 @@ bool CTsAnalyzer::GetEventVideoInfo(const int ServiceIndex, EventVideoInfo *pInf
 
 	const CDescBlock *pDescBlock = GetHEitItemDesc(ServiceIndex, bNext);
 	if (pDescBlock) {
-		const CComponentDesc *pComponentDesc = dynamic_cast<const CComponentDesc *>(pDescBlock->GetDescByTag(CComponentDesc::DESC_TAG));
+		const CComponentDesc *pComponentDesc = pDescBlock->GetDesc<CComponentDesc>();
 
 		if (pComponentDesc) {
 			pInfo->StreamContent = pComponentDesc->GetStreamContent();
@@ -1191,7 +1191,7 @@ bool CTsAnalyzer::GetEventContentNibble(const int ServiceIndex, EventContentNibb
 
 	const CDescBlock *pDescBlock = GetHEitItemDesc(ServiceIndex, bNext);
 	if (pDescBlock != NULL) {
-		const CContentDesc *pContentDesc = dynamic_cast<const CContentDesc *>(pDescBlock->GetDescByTag(CContentDesc::DESC_TAG));
+		const CContentDesc *pContentDesc = pDescBlock->GetDesc<CContentDesc>();
 
 		if (pContentDesc) {
 			pInfo->NibbleCount = pContentDesc->GetNibbleCount();
@@ -1221,7 +1221,7 @@ int CTsAnalyzer::GetEventExtendedText(const int ServiceIndex, LPTSTR pszText, in
 			return 0;
 
 		// イベント共有の参照先から情報を取得する
-		const CEventGroupDesc *pEventGroup = dynamic_cast<const CEventGroupDesc*>(pDescBlock->GetDescByTag(CEventGroupDesc::DESC_TAG));
+		const CEventGroupDesc *pEventGroup = pDescBlock->GetDesc<CEventGroupDesc>();
 		if (pEventGroup == NULL
 				|| pEventGroup->GetGroupType() != CEventGroupDesc::GROUPTYPE_COMMON
 				|| pEventGroup->GetEventNum() < 1)
@@ -1367,7 +1367,7 @@ bool CTsAnalyzer::GetEventSeriesInfo(const int ServiceIndex, EventSeriesInfo *pI
 
 	const CDescBlock *pDescBlock = GetHEitItemDesc(ServiceIndex, bNext);
 	if (pDescBlock != NULL) {
-		const CSeriesDesc *pSeriesDesc = dynamic_cast<const CSeriesDesc *>(pDescBlock->GetDescByTag(CSeriesDesc::DESC_TAG));
+		const CSeriesDesc *pSeriesDesc = pDescBlock->GetDesc<CSeriesDesc>();
 
 		if (pSeriesDesc) {
 			pInfo->SeriesID = pSeriesDesc->GetSeriesID();
@@ -1557,8 +1557,7 @@ bool CTsAnalyzer::GetSatelliteDeliverySystemList(SatelliteDeliverySystemList *pL
 			const CDescBlock *pDescBlock = pNitTable->GetItemDesc(i);
 			if (pDescBlock) {
 				const CSatelliteDeliverySystemDesc *pSatelliteDesc =
-					dynamic_cast<const CSatelliteDeliverySystemDesc *>(
-						pDescBlock->GetDescByTag(CSatelliteDeliverySystemDesc::DESC_TAG));
+					pDescBlock->GetDesc<CSatelliteDeliverySystemDesc>();
 				if (pSatelliteDesc) {
 					SatelliteDeliverySystemInfo Info;
 
@@ -1603,8 +1602,7 @@ bool CTsAnalyzer::GetTerrestrialDeliverySystemList(TerrestrialDeliverySystemList
 			const CDescBlock *pDescBlock = pNitTable->GetItemDesc(i);
 			if (pDescBlock) {
 				const CTerrestrialDeliverySystemDesc *pTerrestrialDesc =
-					dynamic_cast<const CTerrestrialDeliverySystemDesc *>(
-						pDescBlock->GetDescByTag(CTerrestrialDeliverySystemDesc::DESC_TAG));
+					pDescBlock->GetDesc<CTerrestrialDeliverySystemDesc>();
 				if (pTerrestrialDesc) {
 					TerrestrialDeliverySystemInfo Info;
 
@@ -1739,14 +1737,14 @@ static void GetSdtServiceInfo(CTsAnalyzer::ServiceInfo *pServiceInfo, const CSdt
 	// サービス名更新
 	pServiceInfo->szServiceName[0] = '\0';
 	pServiceInfo->ServiceType = SERVICE_TYPE_INVALID;
-	const CServiceDesc *pServiceDesc = dynamic_cast<const CServiceDesc *>(pDescBlock->GetDescByTag(CServiceDesc::DESC_TAG));
+	const CServiceDesc *pServiceDesc = pDescBlock->GetDesc<CServiceDesc>();
 	if (pServiceDesc) {
 		pServiceDesc->GetServiceName(pServiceInfo->szServiceName, CTsAnalyzer::MAX_SERVICE_NAME);
 		pServiceInfo->ServiceType = pServiceDesc->GetServiceType();
 	}
 
 	// ロゴID更新
-	const CLogoTransmissionDesc *pLogoDesc = dynamic_cast<const CLogoTransmissionDesc*>(pDescBlock->GetDescByTag(CLogoTransmissionDesc::DESC_TAG));
+	const CLogoTransmissionDesc *pLogoDesc = pDescBlock->GetDesc<CLogoTransmissionDesc>();
 	if (pLogoDesc) {
 		pServiceInfo->LogoID = pLogoDesc->GetLogoID();
 	} else {
@@ -1785,7 +1783,7 @@ void CALLBACK CTsAnalyzer::OnPmtUpdated(const WORD wPID, CTsPidMapTarget *pMapTa
 		BYTE ComponentTag = COMPONENTTAG_INVALID;
 		const CDescBlock *pDescBlock = pPmtTable->GetItemDesc(EsIndex);
 		if (pDescBlock) {
-			const CStreamIdDesc *pStreamIdDesc = dynamic_cast<const CStreamIdDesc*>(pDescBlock->GetDescByTag(CStreamIdDesc::DESC_TAG));
+			const CStreamIdDesc *pStreamIdDesc = pDescBlock->GetDesc<CStreamIdDesc>();
 
 			if (pStreamIdDesc)
 				ComponentTag = pStreamIdDesc->GetComponentTag();
@@ -1892,7 +1890,7 @@ static void UpdateSdtServiceList(const CSdtTable *pSdtTable, CTsAnalyzer::SdtSer
 		Service.ServiceType = SERVICE_TYPE_INVALID;
 
 		const CDescBlock *pDescBlock = pSdtTable->GetItemDesc(SdtIndex);
-		const CServiceDesc *pServiceDesc = dynamic_cast<const CServiceDesc *>(pDescBlock->GetDescByTag(CServiceDesc::DESC_TAG));
+		const CServiceDesc *pServiceDesc = pDescBlock->GetDesc<CServiceDesc>();
 		if (pServiceDesc) {
 			pServiceDesc->GetServiceName(Service.szServiceName, CTsAnalyzer::MAX_SERVICE_NAME);
 			Service.ServiceType = pServiceDesc->GetServiceType();
@@ -1996,15 +1994,13 @@ void CALLBACK CTsAnalyzer::OnNitUpdated(const WORD wPID, CTsPidMapTarget *pMapTa
 	// ネットワーク情報取得
 	pDescBlock = pNitTable->GetNetworkDesc();
 	if (pDescBlock) {
-		const CNetworkNameDesc *pNetworkDesc =
-			dynamic_cast<const CNetworkNameDesc *>(pDescBlock->GetDescByTag(CNetworkNameDesc::DESC_TAG));
+		const CNetworkNameDesc *pNetworkDesc = pDescBlock->GetDesc<CNetworkNameDesc>();
 		if(pNetworkDesc) {
 			pNetworkDesc->GetNetworkName(pThis->m_NitInfo.szNetworkName,
 										 sizeof(pThis->m_NitInfo.szNetworkName) / sizeof(TCHAR));
 		}
 
-		const CSystemManageDesc *pSysManageDesc =
-			dynamic_cast<const CSystemManageDesc *>(pDescBlock->GetDescByTag(CSystemManageDesc::DESC_TAG));
+		const CSystemManageDesc *pSysManageDesc = pDescBlock->GetDesc<CSystemManageDesc>();
 		if (pSysManageDesc) {
 			pThis->m_NitInfo.BroadcastingFlag = pSysManageDesc->GetBroadcastingFlag();
 			pThis->m_NitInfo.BroadcastingID = pSysManageDesc->GetBroadcastingID();
@@ -2030,8 +2026,7 @@ void CALLBACK CTsAnalyzer::OnNitUpdated(const WORD wPID, CTsPidMapTarget *pMapTa
 				TsInfo.OriginalNetworkID = pNitTable->GetOriginalNetworkID(i);
 
 				// サービスリスト取得
-				const CServiceListDesc *pServiceListDesc =
-					dynamic_cast<const CServiceListDesc*>(pDescBlock->GetDescByTag(CServiceListDesc::DESC_TAG));
+				const CServiceListDesc *pServiceListDesc = pDescBlock->GetDesc<CServiceListDesc>();
 				if (pServiceListDesc) {
 					for (int j = 0; j < pServiceListDesc->GetServiceNum(); j++) {
 						CServiceListDesc::ServiceInfo Info;
@@ -2049,8 +2044,7 @@ void CALLBACK CTsAnalyzer::OnNitUpdated(const WORD wPID, CTsPidMapTarget *pMapTa
 				}
 
 				if (SectionNo == 0 && i == 0) {
-					const CTSInfoDesc *pTsInfoDesc =
-						dynamic_cast<const CTSInfoDesc *>(pDescBlock->GetDescByTag(CTSInfoDesc::DESC_TAG));
+					const CTSInfoDesc *pTsInfoDesc = pDescBlock->GetDesc<CTSInfoDesc>();
 					if (pTsInfoDesc) {
 						pTsInfoDesc->GetTSName(pThis->m_NitInfo.szTSName,
 											   sizeof(pThis->m_NitInfo.szTSName) / sizeof(TCHAR));

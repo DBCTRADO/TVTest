@@ -258,7 +258,7 @@ void CALLBACK CCaptionDecoder::OnPmtUpdated(const WORD wPID, CTsPidMapTarget *pM
 			CaptionInfo.ComponentTag = 0xFF;
 			const CDescBlock *pDescBlock = pPmtTable->GetItemDesc(EsIndex);
 			if (pDescBlock) {
-				const CStreamIdDesc *pStreamIdDesc = dynamic_cast<const CStreamIdDesc*>(pDescBlock->GetDescByTag(CStreamIdDesc::DESC_TAG));
+				const CStreamIdDesc *pStreamIdDesc = pDescBlock->GetDesc<CStreamIdDesc>();
 
 				if (pStreamIdDesc)
 					CaptionInfo.ComponentTag = pStreamIdDesc->GetComponentTag();

@@ -595,7 +595,7 @@ const CCaMethodDesc * CCatTable::GetCaDescBySystemID(const WORD SystemID) const
 
 WORD CCatTable::GetEmmPID() const
 {
-	const CCaMethodDesc *pCaDesc = dynamic_cast<const CCaMethodDesc*>(m_DescBlock.GetDescByTag(CCaMethodDesc::DESC_TAG));
+	const CCaMethodDesc *pCaDesc = m_DescBlock.GetDesc<CCaMethodDesc>();
 
 	if (pCaDesc != NULL)
 		return pCaDesc->GetCaPID();
@@ -690,7 +690,7 @@ const CDescBlock * CPmtTable::GetTableDesc() const
 const WORD CPmtTable::GetEcmPID() const
 {
 	// ECMのPIDを返す
-	const CCaMethodDesc *pCaMethodDesc = dynamic_cast<const CCaMethodDesc *>(m_TableDescBlock.GetDescByTag(CCaMethodDesc::DESC_TAG));
+	const CCaMethodDesc *pCaMethodDesc = m_TableDescBlock.GetDesc<CCaMethodDesc>();
 
 	return (pCaMethodDesc)? pCaMethodDesc->GetCaPID() : 0xFFFFU;
 }
@@ -762,7 +762,7 @@ const bool CPmtTable::OnTableUpdate(const CPsiSection *pCurSection, const CPsiSe
 #ifdef _DEBUG
 	if (m_bDebugTrace)
 		TRACE(TEXT("\n------- PMT Table -------\nProgram Number ID = %04X(%d)\nPCR PID = %04X\nECM PID = %04X\n"),
-			pCurSection->GetTableIdExtension(), pCurSection->GetTableIdExtension(), m_wPcrPID , (m_TableDescBlock.GetDescByTag(CCaMethodDesc::DESC_TAG))? dynamic_cast<const CCaMethodDesc *>(m_TableDescBlock.GetDescByTag(CCaMethodDesc::DESC_TAG))->GetCaPID() : 0xFFFFU);
+			pCurSection->GetTableIdExtension(), pCurSection->GetTableIdExtension(), m_wPcrPID , m_TableDescBlock.GetDesc<CCaMethodDesc>() ? m_TableDescBlock.GetDesc<CCaMethodDesc>()->GetCaPID() : 0xFFFFU);
 #endif
 
 	// ストリーム情報を解析
@@ -950,7 +950,7 @@ const bool CSdtTable::OnTableUpdate(const CPsiSection *pCurSection, const CPsiSe
 
 #ifdef _DEBUG
 		// デバッグ用ここから
-		const CServiceDesc *pServiceDesc = dynamic_cast<const CServiceDesc *>(SdtItem.DescBlock.GetDescByTag(CServiceDesc::DESC_TAG));
+		const CServiceDesc *pServiceDesc = SdtItem.DescBlock.GetDesc<CServiceDesc>();
 		if (pServiceDesc) {
 			TCHAR szServiceName[1024] = {TEXT('\0')};
 			pServiceDesc->GetServiceName(szServiceName,1024);
@@ -1333,7 +1333,7 @@ const bool CTotTable::GetDateTime(SYSTEMTIME *pTime) const
 
 const int CTotTable::GetLocalTimeOffset() const
 {
-	const CLocalTimeOffsetDesc *pLocalTimeOffset = dynamic_cast<const CLocalTimeOffsetDesc*>(m_DescBlock.GetDescByTag(CLocalTimeOffsetDesc::DESC_TAG));
+	const CLocalTimeOffsetDesc *pLocalTimeOffset = m_DescBlock.GetDesc<CLocalTimeOffsetDesc>();
 
 	if (pLocalTimeOffset && pLocalTimeOffset->IsValid()) {
 		return pLocalTimeOffset->GetLocalTimeOffset();

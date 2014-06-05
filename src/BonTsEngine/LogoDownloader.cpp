@@ -474,7 +474,7 @@ void CALLBACK CLogoDownloader::OnPmtUpdated(const WORD wPID, CTsPidMapTarget *pM
 		if (pPmtTable->GetStreamTypeID(EsIndex) == STREAM_TYPE_DATACARROUSEL) {
 			const CDescBlock *pDescBlock = pPmtTable->GetItemDesc(EsIndex);
 			if (pDescBlock) {
-				const CStreamIdDesc *pStreamIdDesc = dynamic_cast<const CStreamIdDesc*>(pDescBlock->GetDescByTag(CStreamIdDesc::DESC_TAG));
+				const CStreamIdDesc *pStreamIdDesc = pDescBlock->GetDesc<CStreamIdDesc>();
 
 				if (pStreamIdDesc
 						&& (pStreamIdDesc->GetComponentTag() == 0x79
@@ -508,8 +508,7 @@ void CALLBACK CLogoDownloader::OnNitUpdated(const WORD wPID, CTsPidMapTarget *pM
 				const CDescBlock *pDescBlock = pNitTable->GetItemDesc(i);
 
 				if (pDescBlock) {
-					const CServiceListDesc *pServiceListDesc =
-						dynamic_cast<const CServiceListDesc*>(pDescBlock->GetDescByTag(CServiceListDesc::DESC_TAG));
+					const CServiceListDesc *pServiceListDesc = pDescBlock->GetDesc<CServiceListDesc>();
 					if (pServiceListDesc) {
 						for (int j = 0; j < pServiceListDesc->GetServiceNum(); j++) {
 							CServiceListDesc::ServiceInfo Info;
