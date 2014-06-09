@@ -1,1 +1,0 @@
-#define IDB_CONTROLLER	10
