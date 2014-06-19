@@ -124,18 +124,6 @@ private:
 		void OnRButtonDown(int x,int y);
 	};
 
-	/*
-	class CContinuousStatusItem : public CStatusItem {
-		DrawUtil::CMonoColorBitmap &m_IconBitmap;
-	public:
-		CContinuousStatusItem(DrawUtil::CMonoColorBitmap &IconBitmap);
-		LPCTSTR GetName() const { return TEXT("˜AŽÊ"); }
-		void Draw(HDC hdc,const RECT *pRect);
-		void OnLButtonDown(int x,int y);
-		void OnRButtonDown(int x,int y);
-	};
-	*/
-
 	class CSaveStatusItem : public CStatusItem {
 		CCaptureWindow *m_pCaptureWindow;
 		DrawUtil::CMonoColorBitmap &m_IconBitmap;

@@ -40,7 +40,7 @@ bool CCardReaderErrorDialog::SetMessage(LPCTSTR pszMessage)
 
 static bool SearchReaders(HWND hDlg)
 {
-	CCasProcessor &CasProcessor=GetAppClass().GetCoreEngine()->m_DtvEngine.m_CasProcessor;
+	CCasProcessor &CasProcessor=GetAppClass().CoreEngine.m_DtvEngine.m_CasProcessor;
 	const int DeviceCount=CasProcessor.GetCasDeviceCount();
 	bool fFound=false;
 
@@ -106,7 +106,7 @@ INT_PTR CCardReaderErrorDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM
 				if (fFound) {
 					DlgListBox_SetCurSel(hDlg,IDC_CARDREADER_READERLIST,0);
 				} else {
-					CCasProcessor &CasProcessor=GetAppClass().GetCoreEngine()->m_DtvEngine.m_CasProcessor;
+					CCasProcessor &CasProcessor=GetAppClass().CoreEngine.m_DtvEngine.m_CasProcessor;
 					TCHAR szMessage[1024],szText[256];
 
 					::lstrcpy(szMessage,TEXT("カードリーダが見付かりません。"));

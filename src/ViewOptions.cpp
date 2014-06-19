@@ -2,7 +2,6 @@
 #include "TVTest.h"
 #include "ViewOptions.h"
 #include "AppMain.h"
-#include "MainWindow.h"
 #include "DialogUtil.h"
 #include "resource.h"
 
@@ -51,20 +50,18 @@ CViewOptions::~CViewOptions()
 
 bool CViewOptions::Apply(DWORD Flags)
 {
-	CAppMain &AppMain=GetAppClass();
+	CAppMain &App=GetAppClass();
 
 	if ((Flags&UPDATE_MASKCUTAREA)!=0) {
-		AppMain.GetCoreEngine()->m_DtvEngine.m_MediaViewer.SetNoMaskSideCut(m_fNoMaskSideCut);
+		App.CoreEngine.m_DtvEngine.m_MediaViewer.SetNoMaskSideCut(m_fNoMaskSideCut);
 	}
 
 	if ((Flags&UPDATE_IGNOREDISPLAYEXTENSION)!=0) {
-		AppMain.GetCoreEngine()->m_DtvEngine.m_MediaViewer.SetIgnoreDisplayExtension(m_fIgnoreDisplayExtension);
+		App.CoreEngine.m_DtvEngine.m_MediaViewer.SetIgnoreDisplayExtension(m_fIgnoreDisplayExtension);
 	}
 
 	if ((Flags&UPDATE_LOGO)!=0) {
-		CMainWindow *pMainWindow=dynamic_cast<CMainWindow*>(AppMain.GetUICore()->GetSkin());
-		if (pMainWindow!=NULL)
-			pMainWindow->SetLogo(m_fShowLogo?m_szLogoFileName:NULL);
+		App.UICore.SetLogo(m_fShowLogo?m_szLogoFileName:NULL);
 	}
 
 	return true;
@@ -254,7 +251,7 @@ INT_PTR CViewOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 		switch (((LPNMHDR)lParam)->code) {
 		case PSN_APPLY:
 			{
-				CAppMain &AppMain=GetAppClass();
+				CAppMain &App=GetAppClass();
 				bool f;
 
 				m_fSnapAtWindowEdge=
@@ -276,12 +273,12 @@ INT_PTR CViewOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 				f=DlgCheckBox_IsChecked(hDlg,IDC_OPTIONS_USELOGOICON);
 				if (m_fUseLogoIcon!=f) {
 					m_fUseLogoIcon=f;
-					GetAppClass().GetUICore()->UpdateIcon();
+					App.UICore.UpdateIcon();
 				}
 				f=DlgCheckBox_IsChecked(hDlg,IDC_OPTIONS_SHOWTITLEEVENTTIME);
 				if (m_fShowTitleEventTime!=f) {
 					m_fShowTitleEventTime=f;
-					GetAppClass().GetUICore()->UpdateTitle();
+					App.UICore.UpdateTitle();
 				}
 				{
 					bool fLogo=DlgCheckBox_IsChecked(hDlg,IDC_OPTIONS_SHOWLOGO);
@@ -306,13 +303,13 @@ INT_PTR CViewOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 				m_FullscreenStretchMode=
 					DlgCheckBox_IsChecked(hDlg,IDC_OPTIONS_FULLSCREENCUTFRAME)?
 					CMediaViewer::STRETCH_CUTFRAME:CMediaViewer::STRETCH_KEEPASPECTRATIO;
-				if (AppMain.GetUICore()->GetFullscreen())
-					AppMain.GetCoreEngine()->m_DtvEngine.m_MediaViewer.SetViewStretchMode(m_FullscreenStretchMode);
+				if (App.UICore.GetFullscreen())
+					App.CoreEngine.m_DtvEngine.m_MediaViewer.SetViewStretchMode(m_FullscreenStretchMode);
 				m_MaximizeStretchMode=
 					DlgCheckBox_IsChecked(hDlg,IDC_OPTIONS_MAXIMIZECUTFRAME)?
 					CMediaViewer::STRETCH_CUTFRAME:CMediaViewer::STRETCH_KEEPASPECTRATIO;
-				if (::IsZoomed(AppMain.GetUICore()->GetMainWindow()))
-					AppMain.GetCoreEngine()->m_DtvEngine.m_MediaViewer.SetViewStretchMode(m_MaximizeStretchMode);
+				if (::IsZoomed(App.UICore.GetMainWindow()))
+					App.CoreEngine.m_DtvEngine.m_MediaViewer.SetViewStretchMode(m_MaximizeStretchMode);
 				f=DlgCheckBox_IsChecked(hDlg,IDC_OPTIONS_IGNOREDISPLAYSIZE);
 				if (m_fIgnoreDisplayExtension!=f) {
 					m_fIgnoreDisplayExtension=f;
@@ -325,7 +322,7 @@ INT_PTR CViewOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 					DlgCheckBox_IsChecked(hDlg,IDC_OPTIONS_NOMONITORLOWPOWER);
 				m_fNoMonitorLowPowerActiveOnly=
 					DlgCheckBox_IsChecked(hDlg,IDC_OPTIONS_NOMONITORLOWPOWERACTIVEONLY);
-				AppMain.GetUICore()->PreventDisplaySave(true);
+				App.UICore.PreventDisplaySave(true);
 
 				m_fChanged=true;
 			}

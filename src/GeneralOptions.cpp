@@ -38,24 +38,24 @@ CGeneralOptions::~CGeneralOptions()
 
 bool CGeneralOptions::Apply(DWORD Flags)
 {
-	CAppMain &AppMain=GetAppClass();
-	CCoreEngine *pCoreEngine=AppMain.GetCoreEngine();
+	CAppMain &App=GetAppClass();
+	CCoreEngine &CoreEngine=App.CoreEngine;
 
 	if ((Flags&UPDATE_CARDREADER)!=0) {
-		AppMain.ChangeCasCard(m_CasDevice);
+		App.Core.ChangeCasCard(m_CasDevice);
 	}
 
 	if ((Flags&UPDATE_RESIDENT)!=0) {
-		AppMain.GetUICore()->SetResident(m_fResident);
+		App.UICore.SetResident(m_fResident);
 	}
 
 	if ((Flags&UPDATE_DESCRAMBLECURONLY)!=0) {
-		if (!AppMain.GetRecordManager()->IsRecording())
-			pCoreEngine->m_DtvEngine.SetDescrambleCurServiceOnly(m_fDescrambleCurServiceOnly);
+		if (!App.RecordManager.IsRecording())
+			CoreEngine.m_DtvEngine.SetDescrambleCurServiceOnly(m_fDescrambleCurServiceOnly);
 	}
 
 	if ((Flags&UPDATE_ENABLEEMMPROCESS)!=0) {
-		pCoreEngine->m_DtvEngine.m_CasProcessor.EnableContract(m_fEnableEmmProcess);
+		CoreEngine.m_DtvEngine.m_CasProcessor.EnableContract(m_fEnableEmmProcess);
 	}
 
 	return true;
@@ -70,7 +70,7 @@ bool CGeneralOptions::ReadSettings(CSettings &Settings)
 	if (Settings.Read(TEXT("DriverDirectory"),szDirectory,lengthof(szDirectory))
 			&& szDirectory[0]!='\0') {
 		m_BonDriverDirectory=szDirectory;
-		GetAppClass().GetCoreEngine()->SetDriverDirectory(szDirectory);
+		GetAppClass().CoreEngine.SetDriverDirectory(szDirectory);
 	}
 
 	if (Settings.Read(TEXT("DefaultDriverType"),&Value)
@@ -131,7 +131,7 @@ bool CGeneralOptions::WriteSettings(CSettings &Settings)
 	Settings.Write(TEXT("DriverDirectory"),m_BonDriverDirectory);
 	Settings.Write(TEXT("DefaultDriverType"),(int)m_DefaultDriverType);
 	Settings.Write(TEXT("DefaultDriver"),m_DefaultBonDriverName);
-	Settings.Write(TEXT("Driver"),GetAppClass().GetCoreEngine()->GetDriverFileName());
+	Settings.Write(TEXT("Driver"),GetAppClass().CoreEngine.GetDriverFileName());
 	Settings.Write(TEXT("Mpeg2Decoder"),m_Mpeg2DecoderName);
 	Settings.Write(TEXT("H264Decoder"),m_H264DecoderName);
 	Settings.Write(TEXT("H265Decoder"),m_H265DecoderName);
@@ -270,7 +270,7 @@ int CGeneralOptions::GetCasDevice(bool fUseName)
 {
 	if (fUseName) {
 		if (!m_CasDeviceName.empty()) {
-			m_CasDevice=GetAppClass().GetCoreEngine()->m_DtvEngine.m_CasProcessor.GetCasDeviceByName(m_CasDeviceName.c_str());
+			m_CasDevice=GetAppClass().CoreEngine.m_DtvEngine.m_CasProcessor.GetCasDeviceByName(m_CasDeviceName.c_str());
 		} else {
 			m_CasDevice=-1;
 		}
@@ -285,7 +285,7 @@ bool CGeneralOptions::SetCasDevice(int Device)
 	if (Device>=0) {
 		CCasProcessor::CasDeviceInfo DeviceInfo;
 
-		if (!GetAppClass().GetCoreEngine()->m_DtvEngine.m_CasProcessor.GetCasDeviceInfo(Device,&DeviceInfo))
+		if (!GetAppClass().CoreEngine.m_DtvEngine.m_CasProcessor.GetCasDeviceInfo(Device,&DeviceInfo))
 			return false;
 		m_CasDeviceName=DeviceInfo.Name;
 	} else {
@@ -335,7 +335,7 @@ INT_PTR CGeneralOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam
 	switch (uMsg) {
 	case WM_INITDIALOG:
 		{
-			CAppMain &AppMain=GetAppClass();
+			CAppMain &App=GetAppClass();
 
 			::SendDlgItemMessage(hDlg,IDC_OPTIONS_DRIVERDIRECTORY,EM_LIMITTEXT,MAX_PATH-1,0);
 			::SetDlgItemText(hDlg,IDC_OPTIONS_DRIVERDIRECTORY,m_BonDriverDirectory.c_str());
@@ -348,11 +348,11 @@ INT_PTR CGeneralOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam
 								IDC_OPTIONS_DEFAULTDRIVER_BROWSE,
 						   m_DefaultDriverType==DEFAULT_DRIVER_CUSTOM);
 
-			const CDriverManager *pDriverManager=AppMain.GetDriverManager();
+			const CDriverManager &DriverManager=App.DriverManager;
 			DlgComboBox_LimitText(hDlg,IDC_OPTIONS_DEFAULTDRIVER,MAX_PATH-1);
-			for (int i=0;i<pDriverManager->NumDrivers();i++) {
+			for (int i=0;i<DriverManager.NumDrivers();i++) {
 				DlgComboBox_AddString(hDlg,IDC_OPTIONS_DEFAULTDRIVER,
-									  pDriverManager->GetDriverInfo(i)->GetFileName());
+									  DriverManager.GetDriverInfo(i)->GetFileName());
 			}
 			::SetDlgItemText(hDlg,IDC_OPTIONS_DEFAULTDRIVER,m_DefaultBonDriverName.c_str());
 
@@ -381,17 +381,15 @@ INT_PTR CGeneralOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam
 
 			// カードリーダー
 			{
-				CCoreEngine *pCoreEngine=AppMain.GetCoreEngine();
-				CCasProcessor &CasProcessor=pCoreEngine->m_DtvEngine.m_CasProcessor;
-				if (!CasProcessor.IsCasLibraryLoaded()) {
-					if (AppMain.HasDefaultCasLibrary())
-						AppMain.LoadCasLibrary(AppMain.GetDefaultCasLibrary());
-				}
+				CCoreEngine &CoreEngine=App.CoreEngine;
+				CCasProcessor &CasProcessor=CoreEngine.m_DtvEngine.m_CasProcessor;
+				if (!CasProcessor.IsCasLibraryLoaded())
+					App.Core.LoadCasLibrary(NULL);
 				m_fEnableCasSettings=CasProcessor.IsCasLibraryLoaded();
 
 				CCoreEngine::CasDeviceList CasDevList;
 				int Sel=0;
-				pCoreEngine->GetCasDeviceList(&CasDevList);
+				CoreEngine.GetCasDeviceList(&CasDevList);
 				for (size_t i=0;i<CasDevList.size();i++) {
 					DlgComboBox_AddString(hDlg,IDC_OPTIONS_CARDREADER,
 										  CasDevList[i].Text.c_str());
@@ -627,7 +625,7 @@ void CGeneralOptions::SetVideoDecoderList(
 	if (Count==0) {
 		DlgComboBox_AddString(m_hDlg,ID,TEXT("<デコーダが見付かりません>"));
 	} else {
-		CMediaViewer &MediaViewer=GetAppClass().GetCoreEngine()->m_DtvEngine.m_MediaViewer;
+		CMediaViewer &MediaViewer=GetAppClass().CoreEngine.m_DtvEngine.m_MediaViewer;
 		TCHAR szText[32+MAX_VIDEO_DECODER_NAME];
 
 		::lstrcpy(szText,TEXT("自動"));
@@ -657,7 +655,7 @@ void CGeneralOptions::GetVideoDecoderSetting(
 	if (::lstrcmpi(szDecoder,pDecoderName->c_str())!=0) {
 		*pDecoderName=szDecoder;
 		SetUpdateFlag(UPDATE_DECODER);
-		if (StreamType==GetAppClass().GetCoreEngine()->m_DtvEngine.m_MediaViewer.GetVideoStreamType())
+		if (StreamType==GetAppClass().CoreEngine.m_DtvEngine.m_MediaViewer.GetVideoStreamType())
 			SetGeneralUpdateFlag(UPDATE_GENERAL_BUILDMEDIAVIEWER);
 	}
 }
@@ -666,7 +664,7 @@ void CGeneralOptions::GetVideoDecoderSetting(
 // ベンチマークテスト
 void CGeneralOptions::DescrambleBenchmarkTest(HWND hwndOwner)
 {
-	CCasProcessor &CasProcessor=GetAppClass().GetCoreEngine()->m_DtvEngine.m_CasProcessor;
+	CCasProcessor &CasProcessor=GetAppClass().CoreEngine.m_DtvEngine.m_CasProcessor;
 	const UINT AvailableInstructions=CasProcessor.GetAvailableInstructions();
 	if (AvailableInstructions==0)
 		return;

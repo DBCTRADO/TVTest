@@ -609,69 +609,20 @@ void CCaptureWindow::CCaptureStatusItem::Draw(HDC hdc,const RECT *pRect)
 
 void CCaptureWindow::CCaptureStatusItem::OnLButtonDown(int x,int y)
 {
-	GetAppClass().GetUICore()->DoCommand(CM_CAPTURE);
+	GetAppClass().UICore.DoCommand(CM_CAPTURE);
 }
 
 void CCaptureWindow::CCaptureStatusItem::OnRButtonDown(int x,int y)
 {
 	/*
-	HMENU hmenu;
 	POINT pt;
+	UINT Flags;
 
-	hmenu=LoadMenu(hInst,MAKEINTRESOURCE(IDM_CAPTURE));
-	CheckMenuRadioItem(hmenu,CM_CAPTURESIZE_FIRST,CM_CAPTURESIZE_LAST,
-		CM_CAPTURESIZE_FIRST+CaptureOptions.GetPresetCaptureSize(),MF_BYCOMMAND);
-	if (fShowCapturePreview)
-		CheckMenuItem(hmenu,CM_CAPTUREPREVIEW,MF_BYCOMMAND | MFS_CHECKED);
-	Accelerator.SetMenuAccel(GetSubMenu(hmenu,0));
-	GetMenuPos(&pt);
-	TrackPopupMenu(GetSubMenu(hmenu,0),TPM_RIGHTBUTTON,pt.x,pt.y,0,
-												MainWindow.GetHandle(),NULL);
-	DestroyMenu(hmenu);
+	GetMenuPos(&pt,&Flags);
+	GetAppClass().UICore.ShowSpecialMenu(CUICore::MENU_CAPTURE,
+										 &pt,Flags | TPM_RIGHTBUTTON);
 	*/
 }
-
-
-// その昔に連写機能を付けようとした名残…
-#if 0
-
-CCaptureWindow::CContinuousStatusItem::CContinuousStatusItem(DrawUtil::CMonoColorBitmap &IconBitmap)
-	: CStatusItem(STATUS_ITEM_CONTINUOUS,16)
-	, m_IconBitmap(IconBitmap)
-{
-	m_MinWidth=16;
-}
-
-void CCaptureWindow::CContinuousStatusItem::Draw(HDC hdc,const RECT *pRect)
-{
-	DrawIcon(hdc,pRect,m_IconBitmap,16);
-}
-
-void CCaptureWindow::CContinuousStatusItem::OnLButtonDown(int x,int y)
-{
-	GetAppClass().GetMainWindow()->SendCommand(CM_CONTINUOUSSHOOTING);
-}
-
-void CCaptureWindow::CContinuousStatusItem::OnRButtonDown(int x,int y)
-{
-	/*
-	HMENU hmenu;
-	POINT pt;
-
-	hmenu=LoadMenu(hInst,MAKEINTRESOURCE(IDM_CAPTURE));
-	CheckMenuRadioItem(hmenu,CM_CAPTURESIZE_FIRST,CM_CAPTURESIZE_LAST,
-		CM_CAPTURESIZE_FIRST+CaptureOptions.GetPresetCaptureSize(),MF_BYCOMMAND);
-	if (fShowCapturePreview)
-		CheckMenuItem(hmenu,CM_CAPTUREPREVIEW,MF_BYCOMMAND | MFS_CHECKED);
-	Accelerator.SetMenuAccel(GetSubMenu(hmenu,0));
-	GetMenuPos(&pt);
-	TrackPopupMenu(GetSubMenu(hmenu,0),TPM_RIGHTBUTTON,pt.x,pt.y,0,
-												MainWindow.GetHandle(),NULL);
-	DestroyMenu(hmenu);
-	*/
-}
-
-#endif
 
 
 CCaptureWindow::CSaveStatusItem::CSaveStatusItem(CCaptureWindow *pCaptureWindow,

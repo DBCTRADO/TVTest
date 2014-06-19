@@ -839,7 +839,7 @@ namespace TVTest
 
 	void CFavoritesMenu::SetFolderMenu(HMENU hmenu,int MenuPos,HDC hdc,UINT *pCommand,const CFavoriteFolder *pFolder)
 	{
-		CEpgProgramList *pProgramList=GetAppClass().GetEpgProgramList();
+		CEpgProgramList &ProgramList=GetAppClass().EpgProgramList;
 
 		int ChannelNameWidth=0;
 		RECT rc;
@@ -913,7 +913,7 @@ namespace TVTest
 						MenuPos++;
 
 						if ((m_Flags&FLAG_SHOWEVENTINFO)!=0) {
-							const CEventInfoData *pEventInfo=pMenuItem->GetEventInfo(pProgramList,0,&m_BaseTime);
+							const CEventInfoData *pEventInfo=pMenuItem->GetEventInfo(&ProgramList,0,&m_BaseTime);
 							if (pEventInfo!=NULL) {
 								TCHAR szText[256];
 								GetEventText(pEventInfo,szText,lengthof(szText));
@@ -1032,7 +1032,7 @@ namespace TVTest
 
 			if ((m_Flags&FLAG_SHOWLOGO)!=0) {
 				const CChannelInfo &ChInfo=pItem->GetChannelInfo();
-				HBITMAP hbmLogo=GetAppClass().GetLogoManager()->GetAssociatedLogoBitmap(
+				HBITMAP hbmLogo=GetAppClass().LogoManager.GetAssociatedLogoBitmap(
 					ChInfo.GetNetworkID(),ChInfo.GetServiceID(),CLogoManager::LOGOTYPE_SMALL);
 				if (hbmLogo!=NULL) {
 					DrawUtil::CMemoryDC MemoryDC(pdis->hDC);
@@ -1124,7 +1124,7 @@ namespace TVTest
 				const CEventInfoData *pEventInfo1,*pEventInfo2;
 				pEventInfo1=pItem->GetEventInfo(0);
 				if (pEventInfo1==NULL) {
-					pEventInfo1=pItem->GetEventInfo(GetAppClass().GetEpgProgramList(),0);
+					pEventInfo1=pItem->GetEventInfo(&GetAppClass().EpgProgramList,0);
 				}
 				if (pEventInfo1!=NULL) {
 					TCHAR szText[256*2+1];
@@ -1132,7 +1132,7 @@ namespace TVTest
 					POINT pt;
 
 					Length=GetEventText(pEventInfo1,szText,lengthof(szText)/2);
-					pEventInfo2=pItem->GetEventInfo(GetAppClass().GetEpgProgramList(),1);
+					pEventInfo2=pItem->GetEventInfo(&GetAppClass().EpgProgramList,1);
 					if (pEventInfo2!=NULL) {
 						szText[Length++]=_T('\r');
 						szText[Length++]=_T('\n');
@@ -1240,9 +1240,9 @@ namespace TVTest
 
 				::SetDlgItemText(hDlg,IDC_FAVORITEPROP_NAME,m_pChannel->GetName());
 
-				const CDriverManager *pDriverManager=GetAppClass().GetDriverManager();
-				for (int i=0;i<pDriverManager->NumDrivers();i++) {
-					const CDriverInfo *pDriverInfo=pDriverManager->GetDriverInfo(i);
+				const CDriverManager &DriverManager=GetAppClass().DriverManager;
+				for (int i=0;i<DriverManager.NumDrivers();i++) {
+					const CDriverInfo *pDriverInfo=DriverManager.GetDriverInfo(i);
 					DlgComboBox_AddString(hDlg,IDC_INITIALSETTINGS_DRIVER,pDriverInfo->GetFileName());
 				}
 				::SetDlgItemText(hDlg,IDC_FAVORITEPROP_BONDRIVER,m_pChannel->GetBonDriverFileName());
@@ -1703,7 +1703,7 @@ namespace TVTest
 
 						const CChannelInfo &ChannelInfo=pChannel->GetChannelInfo();
 						if (ChannelInfo.GetNetworkID()!=0 && ChannelInfo.GetServiceID()!=0) {
-							HICON hico=GetAppClass().GetLogoManager()->CreateLogoIcon(
+							HICON hico=GetAppClass().LogoManager.CreateLogoIcon(
 								ChannelInfo.GetNetworkID(),ChannelInfo.GetServiceID(),16,16);
 							if (hico!=nullptr) {
 								tvis.item.iImage=ImageList_AddIcon(

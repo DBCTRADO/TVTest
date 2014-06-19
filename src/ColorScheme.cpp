@@ -1057,7 +1057,7 @@ const LPCTSTR CColorSchemeOptions::m_pszExtension=TEXT(".httheme");
 CColorSchemeOptions::CColorSchemeOptions()
 	: m_pColorScheme(new CColorScheme)
 	, m_pPreviewColorScheme(NULL)
-	, m_pApplyFunc(NULL)
+	, m_pEventHandler(NULL)
 {
 }
 
@@ -1089,9 +1089,9 @@ bool CColorSchemeOptions::Create(HWND hwndOwner)
 }
 
 
-bool CColorSchemeOptions::SetApplyCallback(ApplyFunc pCallback)
+bool CColorSchemeOptions::SetEventHandler(CEventHandler *pEventHandler)
 {
-	m_pApplyFunc=pCallback;
+	m_pEventHandler=pEventHandler;
 	return true;
 }
 
@@ -1104,9 +1104,9 @@ bool CColorSchemeOptions::ApplyColorScheme() const
 
 bool CColorSchemeOptions::Apply(const CColorScheme *pColorScheme) const
 {
-	if (m_pApplyFunc==NULL)
+	if (m_pEventHandler==NULL)
 		return false;
-	return m_pApplyFunc(pColorScheme);
+	return m_pEventHandler->ApplyColorScheme(pColorScheme);
 }
 
 

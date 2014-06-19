@@ -385,7 +385,11 @@ private:
 class CColorSchemeOptions : public COptions
 {
 public:
-	typedef bool (*ApplyFunc)(const CColorScheme *pColorScheme);
+	class ABSTRACT_CLASS(CEventHandler)
+	{
+	public:
+		virtual bool ApplyColorScheme(const CColorScheme *pColorScheme) = 0;
+	};
 
 	CColorSchemeOptions();
 	~CColorSchemeOptions();
@@ -395,7 +399,7 @@ public:
 // CBasicDialog
 	bool Create(HWND hwndOwner) override;
 // CColorSchemeOptions
-	bool SetApplyCallback(ApplyFunc pCallback);
+	bool SetEventHandler(CEventHandler *pEventHandler);
 	bool ApplyColorScheme() const;
 	const CColorScheme *GetColorScheme() const { return m_pColorScheme; }
 	COLORREF GetColor(int Type) const;
@@ -409,7 +413,7 @@ private:
 	Theme::BorderType m_BorderList[CColorScheme::NUM_BORDERS];
 	CColorScheme *m_pPreviewColorScheme;
 	bool m_fPreview;
-	ApplyFunc m_pApplyFunc;
+	CEventHandler *m_pEventHandler;
 	CColorPalette m_ColorPalette;
 
 // CBasicDialog

@@ -1140,14 +1140,14 @@ static bool WriteCRC(CNFile *pFile,const CCrc32 *pCrc)
 bool CEpgProgramList::LoadFromFile(LPCTSTR pszFileName)
 {
 	CBlockLock Lock(&m_Lock);
-	CAppMain &AppMain=GetAppClass();
+	CAppMain &App=GetAppClass();
 	CNFile File;
 
 	if (!File.Open(pszFileName,
 				   CNFile::CNF_READ | CNFile::CNF_SHAREREAD |
 				   CNFile::CNF_SEQUENTIALREAD | CNFile::CNF_PRIORITY_LOW)) {
-		AppMain.AddLog(TEXT("EPGファイルを開けません。(エラーコード 0x%lu)"),
-					   File.GetLastError());
+		App.AddLog(TEXT("EPGファイルを開けません。(エラーコード 0x%lu)"),
+				   File.GetLastError());
 		return false;
 	}
 
@@ -1159,12 +1159,12 @@ bool CEpgProgramList::LoadFromFile(LPCTSTR pszFileName)
 		return false;
 #ifndef EPG_FILE_V0_SUPPORT
 	if (FileHeader.Version==0) {
-		AppMain.AddLog(TEXT("EPGファイルが古い形式のため読み込めません。"));
+		App.AddLog(TEXT("EPGファイルが古い形式のため読み込めません。"));
 		return false;
 	}
 #endif
 	if (FileHeader.Version>EPGLISTFILEHEADER_VERSION) {
-		AppMain.AddLog(TEXT("EPGファイルが未知の形式のため読み込めません。"));
+		App.AddLog(TEXT("EPGファイルが未知の形式のため読み込めません。"));
 		return false;
 	}
 
@@ -1195,7 +1195,7 @@ bool CEpgProgramList::LoadFromFile(LPCTSTR pszFileName)
 				goto OnError;
 			if (ServiceHeader2.CRC!=CCrcCalculator::CalcCrc32((const BYTE*)&ServiceHeader2,
 															  sizeof(ServiceInfoHeader2)-sizeof(DWORD))) {
-				AppMain.AddLog(TEXT("EPGファイルの破損が検出されました。"));
+				App.AddLog(TEXT("EPGファイルの破損が検出されました。"));
 				goto OnError;
 			}
 		}
@@ -1445,7 +1445,7 @@ bool CEpgProgramList::LoadFromFile(LPCTSTR pszFileName)
 				if (CRC32!=CRC.GetCrc()) {
 					// 2回続けてCRCエラーの場合は読み込み中止
 					if (fCRCError) {
-						AppMain.AddLog(TEXT("EPGファイルの破損が検出されました。"));
+						App.AddLog(TEXT("EPGファイルの破損が検出されました。"));
 						goto OnError;
 					}
 					fCRCError=true;
@@ -1461,7 +1461,7 @@ bool CEpgProgramList::LoadFromFile(LPCTSTR pszFileName)
 	return true;
 
 OnError:
-	AppMain.AddLog(TEXT("EPGファイルの読み込みエラーが発生しました。"));
+	App.AddLog(TEXT("EPGファイルの読み込みエラーが発生しました。"));
 	Clear();
 	return false;
 }
@@ -1470,7 +1470,7 @@ OnError:
 bool CEpgProgramList::SaveToFile(LPCTSTR pszFileName)
 {
 	CBlockLock Lock(&m_Lock);
-	CAppMain &AppMain=GetAppClass();
+	CAppMain &App=GetAppClass();
 
 	TCHAR szName[MAX_PATH+8];
 	::lstrcpy(szName,pszFileName);
@@ -1483,7 +1483,7 @@ bool CEpgProgramList::SaveToFile(LPCTSTR pszFileName)
 	CGlobalLock GlobalLock;
 	if (GlobalLock.Create(szName)) {
 		if (!GlobalLock.Wait(10000)) {
-			AppMain.AddLog(TEXT("EPGファイルがロックされているため保存できません。"));
+			App.AddLog(TEXT("EPGファイルがロックされているため保存できません。"));
 			return false;
 		}
 	}
@@ -1507,8 +1507,8 @@ bool CEpgProgramList::SaveToFile(LPCTSTR pszFileName)
 
 	if (!File.Open(pszFileName,CNFile::CNF_WRITE | CNFile::CNF_NEW)) {
 		GlobalLock.Release();
-		AppMain.AddLog(TEXT("EPGファイルが開けません。(エラーコード 0x%lx)"),
-					   File.GetLastError());
+		App.AddLog(TEXT("EPGファイルが開けません。(エラーコード 0x%lx)"),
+				   File.GetLastError());
 		return false;
 	}
 
@@ -1685,8 +1685,8 @@ bool CEpgProgramList::SaveToFile(LPCTSTR pszFileName)
 	return true;
 
 OnError:
-	AppMain.AddLog(TEXT("EPGファイルの書き出しエラーが発生しました。(エラーコード 0x%lx)"),
-				   File.GetLastError());
+	App.AddLog(TEXT("EPGファイルの書き出しエラーが発生しました。(エラーコード 0x%lx)"),
+			   File.GetLastError());
 	delete [] pNumEvents;
 	File.Close();
 	::DeleteFile(pszFileName);

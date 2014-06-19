@@ -6,6 +6,7 @@
 #include "UISkin.h"
 
 
+class CAppMain;
 class CBasicDialog;
 
 class CUICore
@@ -28,12 +29,25 @@ public:
 	typedef CUISkin::PanAndScanInfo PanAndScanInfo;
 
 	enum {
+		PANANDSCAN_DEFAULT,
+		PANANDSCAN_16x9,
+		PANANDSCAN_LETTERBOX,
+		PANANDSCAN_SUPERFRAME,
+		PANANDSCAN_SIDECUT,
+		PANANDSCAN_4x3,
+		PANANDSCAN_32x9,
+		PANANDSCAN_16x9_LEFT,
+		PANANDSCAN_16x9_RIGHT,
+		PANANDSCAN_CUSTOM
+	};
+
+	enum {
 		CHANNEL_CHANGED_STATUS_SPACE_CHANGED = 0x0001U,
 		CHANNEL_CHANGED_STATUS_DETECTED      = 0x0002U
 	};
 
-	CUICore();
-	virtual ~CUICore();
+	CUICore(CAppMain &App);
+	~CUICore();
 	bool SetSkin(CUISkin *pSkin);
 	CUISkin *GetSkin() const { return m_pSkin; }
 	HWND GetMainWindow() const;
@@ -88,12 +102,15 @@ public:
 
 	bool DoCommand(int Command);
 	bool DoCommand(LPCTSTR pszCommand);
+	bool DoCommandAsync(int Command);
+	bool DoCommandAsync(LPCTSTR pszCommand);
 
 	bool ConfirmChannelChange();
 	bool ConfirmStopRecording();
 
 	bool UpdateIcon();
 	bool UpdateTitle();
+	bool SetLogo(LPCTSTR pszFileName);
 
 	bool RegisterModelessDialog(CBasicDialog *pDialog);
 	bool UnregisterModelessDialog(CBasicDialog *pDialog);
@@ -110,6 +127,7 @@ public:
 	void On1SegModeChanged(bool f1SegMode);
 
 private:
+	CAppMain &m_App;
 	CUISkin *m_pSkin;
 	bool m_fStandby;
 	bool m_fFullscreen;

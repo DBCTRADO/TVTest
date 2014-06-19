@@ -1013,7 +1013,7 @@ bool CProgramListPanel::CEventInfoPopupHandler::ShowPopup(LPARAM Param,CEventInf
 
 	int IconWidth,IconHeight;
 	pPopup->GetPreferredIconSize(&IconWidth,&IconHeight);
-	HICON hIcon=GetAppClass().GetLogoManager()->CreateLogoIcon(
+	HICON hIcon=GetAppClass().LogoManager.CreateLogoIcon(
 		m_pPanel->m_CurChannel.GetNetworkID(),
 		m_pPanel->m_CurChannel.GetServiceID(),
 		IconWidth,IconHeight);

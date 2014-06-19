@@ -3,7 +3,6 @@
 
 
 #include <vector>
-#include "AppMain.h"
 #include "View.h"
 #include "DrawUtil.h"
 #include "Theme.h"

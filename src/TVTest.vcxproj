@@ -453,6 +453,7 @@
   <ItemGroup>
     <ClCompile Include="Accelerator.cpp" />
     <ClCompile Include="Aero.cpp" />
+    <ClCompile Include="AppCore.cpp" />
     <ClCompile Include="AppUtil.cpp" />
     <ClCompile Include="BasicWindow.cpp" />
     <ClCompile Include="BonTsEngine\Bitstream.cpp" />
@@ -489,6 +490,7 @@
     <ClCompile Include="Capture.cpp" />
     <ClCompile Include="CaptureOptions.cpp" />
     <ClCompile Include="CardReaderDialog.cpp" />
+    <ClCompile Include="CasLibraryManager.cpp" />
     <ClCompile Include="ChannelHistory.cpp" />
     <ClCompile Include="ChannelList.cpp" />
     <ClCompile Include="ChannelManager.cpp" />
@@ -546,6 +548,7 @@
     <ClCompile Include="Layout.cpp" />
     <ClCompile Include="Logger.cpp" />
     <ClCompile Include="LogoManager.cpp" />
+    <ClCompile Include="MainWindow.cpp" />
     <ClCompile Include="Menu.cpp" />
     <ClCompile Include="MenuOptions.cpp" />
     <ClCompile Include="MessageDialog.cpp" />
@@ -592,6 +595,8 @@
     <ClCompile Include="TitleBar.cpp" />
     <ClCompile Include="Tooltip.cpp" />
     <ClCompile Include="TVTest.cpp" />
+    <ClCompile Include="AppMain.cpp" />
+    <ClCompile Include="UICore.cpp" />
     <ClCompile Include="UISkin.cpp" />
     <ClCompile Include="Util.cpp" />
     <ClCompile Include="View.cpp" />
@@ -602,7 +607,7 @@
   <ItemGroup>
     <ClInclude Include="Accelerator.h" />
     <ClInclude Include="Aero.h" />
-    <ClInclude Include="AppMain.h" />
+    <ClInclude Include="AppCore.h" />
     <ClInclude Include="AppUtil.h" />
     <ClInclude Include="BasicWindow.h" />
     <ClInclude Include="BonTsEngine\Bitstream.h" />
@@ -641,6 +646,7 @@
     <ClInclude Include="Capture.h" />
     <ClInclude Include="CaptureOptions.h" />
     <ClInclude Include="CardReaderDialog.h" />
+    <ClInclude Include="CasLibraryManager.h" />
     <ClInclude Include="ChannelHistory.h" />
     <ClInclude Include="ChannelList.h" />
     <ClInclude Include="ChannelManager.h" />
@@ -745,6 +751,7 @@
     <ClInclude Include="TitleBar.h" />
     <ClInclude Include="Tooltip.h" />
     <ClInclude Include="TVTest.h" />
+    <ClInclude Include="AppMain.h" />
     <ClInclude Include="TVTestPlugin.h" />
     <ClInclude Include="UICore.h" />
     <ClInclude Include="UISkin.h" />

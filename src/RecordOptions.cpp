@@ -71,10 +71,10 @@ CRecordOptions::~CRecordOptions()
 
 bool CRecordOptions::Apply(DWORD Flags)
 {
-	CDtvEngine &DtvEngine=GetAppClass().GetCoreEngine()->m_DtvEngine;
+	CDtvEngine &DtvEngine=GetAppClass().CoreEngine.m_DtvEngine;
 
 	if ((Flags&UPDATE_RECORDSTREAM)!=0
-			&& !GetAppClass().GetRecordManager()->IsRecording()) {
+			&& !GetAppClass().RecordManager.IsRecording()) {
 		DWORD Stream=CTsSelector::STREAM_ALL;
 		if (!m_fSaveSubtitle)
 			Stream^=CTsSelector::STREAM_CAPTION;
@@ -153,7 +153,7 @@ bool CRecordOptions::ReadSettings(CSettings &Settings)
 	TCHAR szCommand[CCommandList::MAX_COMMAND_TEXT];
 	if (Settings.Read(TEXT("StatusBarRecordCommand"),szCommand,lengthof(szCommand))) {
 		if (szCommand[0]!=_T('\0')) {
-			int Command=GetAppClass().GetCommandList()->ParseText(szCommand);
+			int Command=GetAppClass().CommandList.ParseText(szCommand);
 			if (Command!=0)
 				m_StatusBarRecordCommand=Command;
 		} else {
@@ -184,7 +184,7 @@ bool CRecordOptions::WriteSettings(CSettings &Settings)
 	Settings.Write(TEXT("RecMaxPendingSize"),m_MaxPendingSize);
 	Settings.Write(TEXT("ShowRecordRemainTime"),m_fShowRemainTime);
 	if (m_StatusBarRecordCommand!=0) {
-		LPCTSTR pszCommand=GetAppClass().GetCommandList()->GetCommandTextByID(m_StatusBarRecordCommand);
+		LPCTSTR pszCommand=GetAppClass().CommandList.GetCommandTextByID(m_StatusBarRecordCommand);
 		if (pszCommand!=NULL)
 			Settings.Write(TEXT("StatusBarRecordCommand"),pszCommand);
 	} else {
@@ -327,7 +327,7 @@ bool CRecordOptions::ConfirmExit(HWND hwndOwner,const CRecordManager *pRecordMan
 bool CRecordOptions::EnableTimeShiftRecording(bool fEnable)
 {
 	if (m_fEnableTimeShiftRecording!=fEnable) {
-		if (!GetAppClass().GetCoreEngine()->m_DtvEngine.m_FileWriter.EnableQueueing(fEnable))
+		if (!GetAppClass().CoreEngine.m_DtvEngine.m_FileWriter.EnableQueueing(fEnable))
 			return false;
 		m_fEnableTimeShiftRecording=fEnable;
 	}
@@ -391,13 +391,13 @@ INT_PTR CRecordOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 								IDC_RECORDOPTIONS_LOWFREESPACETHRESHOLD_UNIT,
 						   m_fAlertLowFreeSpace);
 
-			const CCommandList *pCommandList=GetAppClass().GetCommandList();
+			const CCommandList &CommandList=GetAppClass().CommandList;
 			for (int i=0;i<lengthof(StatusBarCommandList);i++) {
 				const int Command=StatusBarCommandList[i];
 				TCHAR szText[CCommandList::MAX_COMMAND_NAME];
 
 				if (Command!=0)
-					pCommandList->GetCommandNameByID(Command,szText,lengthof(szText));
+					CommandList.GetCommandNameByID(Command,szText,lengthof(szText));
 				else
 					::lstrcpy(szText,TEXT("‰½‚à‚µ‚È‚¢"));
 				DlgComboBox_AddString(hDlg,IDC_RECORDOPTIONS_STATUSBARCOMMAND,szText);
@@ -444,7 +444,7 @@ INT_PTR CRecordOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 					CRecordManager::EventInfo EventInfo;
 
 					CRecordManager::GetEventInfoSample(&EventInfo);
-					if (!GetAppClass().GetRecordManager()->GenerateFileName(
+					if (!GetAppClass().RecordManager.GenerateFileName(
 							szFileName,lengthof(szFileName),&EventInfo,szFormat))
 						szFileName[0]='\0';
 				}

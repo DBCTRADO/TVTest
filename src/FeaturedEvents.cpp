@@ -126,10 +126,10 @@ bool CFeaturedEvents::Update()
 		}
 	}
 
-	CEpgProgramList *pEpgProgramList=GetAppClass().GetEpgProgramList();
+	CEpgProgramList &EpgProgramList=GetAppClass().EpgProgramList;
 
 	for (auto itService=ServiceIDList.Begin();itService!=ServiceIDList.End();++itService) {
-		const CEpgServiceInfo *pServiceInfo=pEpgProgramList->GetServiceInfo(
+		const CEpgServiceInfo *pServiceInfo=EpgProgramList.GetServiceInfo(
 			CEventSearchServiceList::ServiceKey_GetNetworkID(*itService),
 			CEventSearchServiceList::ServiceKey_GetTransportStreamID(*itService),
 			CEventSearchServiceList::ServiceKey_GetServiceID(*itService));
@@ -197,7 +197,7 @@ static void InitServiceListView(
 									   ServiceList.NumChannels()+1,100);
 	ImageList_AddIcon(himl,CreateEmptyIcon(IconWidth,IconHeight));
 	ListView_SetImageList(hwndList,himl,LVSIL_SMALL);
-	CLogoManager *pLogoManager=GetAppClass().GetLogoManager();
+	CLogoManager &LogoManager=GetAppClass().LogoManager;
 
 	enum {
 		GROUP_ID_TERRESTRIAL=1,
@@ -252,7 +252,7 @@ static void InitServiceListView(
 		lvi.iItem=i;
 		lvi.pszText=const_cast<LPTSTR>(pChannelInfo->GetName());
 
-		HICON hico=pLogoManager->CreateLogoIcon(
+		HICON hico=LogoManager.CreateLogoIcon(
 			pChannelInfo->GetNetworkID(),
 			pChannelInfo->GetServiceID(),
 			IconWidth,IconHeight);
@@ -593,7 +593,7 @@ INT_PTR CFeaturedEventsDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM 
 		AddControl(IDOK,ALIGN_BOTTOM_RIGHT);
 		AddControl(IDCANCEL,ALIGN_BOTTOM_RIGHT);
 
-		GetAppClass().GetDriverManager()->GetAllServiceList(&m_ServiceList);
+		GetAppClass().DriverManager.GetAllServiceList(&m_ServiceList);
 		InitServiceListView(::GetDlgItem(hDlg,IDC_FEATUREDEVENTS_SERVICELIST),
 							m_ServiceList,m_Settings.GetDefaultServiceList());
 

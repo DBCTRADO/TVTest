@@ -42,31 +42,31 @@ CPlaybackOptions::~CPlaybackOptions()
 
 bool CPlaybackOptions::Apply(DWORD Flags)
 {
-	CCoreEngine *pCoreEngine=GetAppClass().GetCoreEngine();
+	CCoreEngine &CoreEngine=GetAppClass().CoreEngine;
 
 	if ((Flags&UPDATE_ADJUSTAUDIOSTREAMTIME)!=0) {
-		pCoreEngine->m_DtvEngine.m_MediaViewer.SetAdjustAudioStreamTime(m_fAdjustAudioStreamTime);
+		CoreEngine.m_DtvEngine.m_MediaViewer.SetAdjustAudioStreamTime(m_fAdjustAudioStreamTime);
 	}
 
 	if ((Flags&UPDATE_PTSSYNC)!=0) {
-		pCoreEngine->m_DtvEngine.m_MediaViewer.EnablePTSSync(m_fEnablePTSSync);
+		CoreEngine.m_DtvEngine.m_MediaViewer.EnablePTSSync(m_fEnablePTSSync);
 	}
 
 	if ((Flags&UPDATE_PACKETBUFFERING)!=0) {
 		if (!m_fPacketBuffering)
-			pCoreEngine->SetPacketBuffering(false);
-		pCoreEngine->SetPacketBufferLength(m_PacketBufferLength);
-		pCoreEngine->SetPacketBufferPoolPercentage(m_PacketBufferPoolPercentage);
+			CoreEngine.SetPacketBuffering(false);
+		CoreEngine.SetPacketBufferLength(m_PacketBufferLength);
+		CoreEngine.SetPacketBufferPoolPercentage(m_PacketBufferPoolPercentage);
 		if (m_fPacketBuffering)
-			pCoreEngine->SetPacketBuffering(true);
+			CoreEngine.SetPacketBuffering(true);
 	}
 
 	if ((Flags&UPDATE_STREAMTHREADPRIORITY)!=0) {
-		pCoreEngine->m_DtvEngine.m_BonSrcDecoder.SetStreamThreadPriority(m_StreamThreadPriority);
+		CoreEngine.m_DtvEngine.m_BonSrcDecoder.SetStreamThreadPriority(m_StreamThreadPriority);
 	}
 
 	if ((Flags&UPDATE_ADJUSTFRAMERATE)!=0) {
-		pCoreEngine->m_DtvEngine.m_MediaViewer.SetAdjust1SegVideoSampleTime(m_fAdjust1SegFrameRate);
+		CoreEngine.m_DtvEngine.m_MediaViewer.SetAdjust1SegVideoSampleTime(m_fAdjust1SegFrameRate);
 	}
 
 	return true;
@@ -116,7 +116,7 @@ bool CPlaybackOptions::WriteSettings(CSettings &Settings)
 	Settings.Write(TEXT("SpdifChannels"),m_SpdifOptions.PassthroughChannels);
 	Settings.Write(TEXT("DownMixSurround"),m_fDownMixSurround);
 	Settings.Write(TEXT("RestoreMute"),m_fRestoreMute);
-	Settings.Write(TEXT("Mute"),GetAppClass().GetCoreEngine()->GetMute());
+	Settings.Write(TEXT("Mute"),GetAppClass().CoreEngine.GetMute());
 	Settings.Write(TEXT("RestorePlayStatus"),m_fRestorePlayStatus);
 	Settings.Write(TEXT("UseAudioRendererClock"),m_fUseAudioRendererClock);
 	Settings.Write(TEXT("PTSSync"),m_fEnablePTSSync);
@@ -321,12 +321,12 @@ INT_PTR CPlaybackOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPara
 					SpdifOptions.PassthroughChannels|=CAudioDecFilter::SPDIF_CHANNELS_SURROUND;
 				if (SpdifOptions!=m_SpdifOptions) {
 					m_SpdifOptions=SpdifOptions;
-					GetAppClass().GetCoreEngine()->SetSpdifOptions(m_SpdifOptions);
+					GetAppClass().CoreEngine.SetSpdifOptions(m_SpdifOptions);
 				}
 
 				m_fDownMixSurround=
 					DlgCheckBox_IsChecked(hDlg,IDC_OPTIONS_DOWNMIXSURROUND);
-				GetAppClass().GetCoreEngine()->SetDownMixSurround(m_fDownMixSurround);
+				GetAppClass().CoreEngine.SetDownMixSurround(m_fDownMixSurround);
 				m_fRestoreMute=
 					DlgCheckBox_IsChecked(hDlg,IDC_OPTIONS_RESTOREMUTE);
 				m_fRestorePlayStatus=
@@ -335,8 +335,8 @@ INT_PTR CPlaybackOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPara
 				bool f=DlgCheckBox_IsChecked(hDlg,IDC_OPTIONS_MINTIMERRESOLUTION);
 				if (f!=m_fMinTimerResolution) {
 					m_fMinTimerResolution=f;
-					if (GetAppClass().GetUICore()->IsViewerEnabled())
-						GetAppClass().GetCoreEngine()->SetMinTimerResolution(f);
+					if (GetAppClass().UICore.IsViewerEnabled())
+						GetAppClass().CoreEngine.SetMinTimerResolution(f);
 				}
 
 				f=DlgCheckBox_IsChecked(hDlg,IDC_OPTIONS_ADJUSTAUDIOSTREAMTIME);
@@ -354,7 +354,7 @@ INT_PTR CPlaybackOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPara
 				f=!DlgCheckBox_IsChecked(hDlg,IDC_OPTIONS_USEDEMUXERCLOCK);
 				if (f!=m_fUseAudioRendererClock) {
 					m_fUseAudioRendererClock=f;
-					GetAppClass().GetCoreEngine()->m_DtvEngine.m_MediaViewer.SetUseAudioRendererClock(f);
+					GetAppClass().CoreEngine.m_DtvEngine.m_MediaViewer.SetUseAudioRendererClock(f);
 					SetGeneralUpdateFlag(UPDATE_GENERAL_BUILDMEDIAVIEWER);
 				}
 

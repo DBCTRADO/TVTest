@@ -40,7 +40,7 @@ void COSDManager::Reset()
 
 void COSDManager::ClearOSD()
 {
-	GetAppClass().GetCoreEngine()->m_DtvEngine.m_MediaViewer.ClearOSD();
+	GetAppClass().CoreEngine.m_DtvEngine.m_MediaViewer.ClearOSD();
 	m_OSD.Hide();
 	m_VolumeOSD.Hide();
 }
@@ -59,7 +59,7 @@ bool COSDManager::ShowOSD(LPCTSTR pszText,unsigned int Flags)
 		return false;
 
 	CAppMain &App=GetAppClass();
-	CCoreEngine &CoreEngine=*App.GetCoreEngine();
+	CCoreEngine &CoreEngine=App.CoreEngine;
 
 	HWND hwnd;
 	RECT rc;
@@ -88,7 +88,7 @@ bool COSDManager::ShowOSD(LPCTSTR pszText,unsigned int Flags)
 			lf.lfQuality=NONANTIALIASED_QUALITY;
 			hfont=::CreateFontIndirect(&lf);
 			int Rate,Factor;
-			if (!App.GetUICore()->GetZoomRate(&Rate,&Factor)) {
+			if (!App.UICore.GetZoomRate(&Rate,&Factor)) {
 				if ((rc.right-rc.left)/(rcSrc.right-rcSrc.left)<
 						(rc.bottom-rc.top)/(rcSrc.bottom-rcSrc.top)) {
 					Rate=rc.right-rc.left;
@@ -147,7 +147,7 @@ bool COSDManager::ShowChannelOSD(const CChannelInfo *pInfo,bool fChanging)
 		return false;
 
 	CAppMain &App=GetAppClass();
-	CCoreEngine &CoreEngine=*App.GetCoreEngine();
+	CCoreEngine &CoreEngine=App.CoreEngine;
 
 	HWND hwnd;
 	RECT rc;
@@ -161,7 +161,7 @@ bool COSDManager::ShowChannelOSD(const CChannelInfo *pInfo,bool fChanging)
 	int LogoWidth=0,LogoHeight=0;
 	unsigned int ImageEffect=0;
 	if (ChangeType!=COSDOptions::CHANNELCHANGE_TEXTONLY) {
-		hbmLogo=App.GetLogoManager()->GetAssociatedLogoBitmap(
+		hbmLogo=App.LogoManager.GetAssociatedLogoBitmap(
 			pInfo->GetNetworkID(),pInfo->GetServiceID(),CLogoManager::LOGOTYPE_BIG);
 		if (hbmLogo!=NULL) {
 #ifndef TVTEST_FOR_1SEG
@@ -214,7 +214,7 @@ bool COSDManager::ShowChannelOSD(const CChannelInfo *pInfo,bool fChanging)
 				lf.lfQuality=NONANTIALIASED_QUALITY;
 				hfont=::CreateFontIndirect(&lf);
 				int Rate,Factor;
-				if (!App.GetUICore()->GetZoomRate(&Rate,&Factor)) {
+				if (!App.UICore.GetZoomRate(&Rate,&Factor)) {
 					if ((rc.right-rc.left)/(rcSrc.right-rcSrc.left)<
 							(rc.bottom-rc.top)/(rcSrc.bottom-rcSrc.top)) {
 						Rate=rc.right-rc.left;
@@ -283,7 +283,7 @@ bool COSDManager::ShowVolumeOSD(int Volume)
 		return false;
 
 	CAppMain &App=GetAppClass();
-	CCoreEngine &CoreEngine=*App.GetCoreEngine();
+	CCoreEngine &CoreEngine=App.CoreEngine;
 
 	HWND hwnd;
 	RECT rc;

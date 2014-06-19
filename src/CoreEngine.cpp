@@ -15,7 +15,6 @@ CCoreEngine::CCoreEngine()
 	: m_DriverType(DRIVER_UNKNOWN)
 
 	, m_fDescramble(true)
-	, m_CasDevice(-1)
 
 	, m_fPacketBuffering(false)
 	, m_PacketBufferLength(m_DtvEngine.m_MediaBuffer.GetBufferLength())
@@ -70,8 +69,7 @@ void CCoreEngine::Close()
 bool CCoreEngine::BuildDtvEngine(CDtvEngine::CEventHandler *pEventHandler)
 {
 	if (!m_DtvEngine.BuildEngine(pEventHandler,
-			m_fDescramble?m_CasDevice>=0:false,
-			true/*m_fPacketBuffering*/,!m_fNoEpg)) {
+			m_fDescramble,true/*m_fPacketBuffering*/,!m_fNoEpg)) {
 		return false;
 	}
 	return true;
@@ -302,47 +300,13 @@ bool CCoreEngine::SetCasLibraryName(LPCTSTR pszName)
 }
 
 
-bool CCoreEngine::FindCasLibraries(LPCTSTR pszDirectory,std::vector<TVTest::String> *pList) const
-{
-	if (IsStringEmpty(pszDirectory) || pList==NULL)
-		return false;
-
-	pList->clear();
-
-	TCHAR szMask[MAX_PATH];
-	WIN32_FIND_DATA fd;
-
-	if (::PathCombine(szMask,pszDirectory,TEXT("*.tvcas"))==NULL)
-		return false;
-	HANDLE hFind=::FindFirstFile(szMask,&fd);
-	if (hFind==INVALID_HANDLE_VALUE)
-		return false;
-	do {
-		if ((fd.dwFileAttributes&FILE_ATTRIBUTE_DIRECTORY)==0)
-			pList->push_back(TVTest::String(fd.cFileName));
-	} while (::FindNextFile(hFind,&fd));
-	::FindClose(hFind);
-
-	return true;
-}
-
-
 bool CCoreEngine::OpenCasCard(int Device,LPCTSTR pszName)
 {
+	if (!SetDescramble(Device>=0))
+		return false;
 	if (!m_DtvEngine.OpenCasCard(Device,pszName)) {
 		SetError(m_DtvEngine.GetLastErrorException());
 		return false;
-	}
-
-	return true;
-}
-
-
-bool CCoreEngine::OpenCasCard()
-{
-	if (m_fDescramble) {
-		if (!OpenCasCard(m_CasDevice))
-			return false;
 	}
 	return true;
 }
@@ -369,23 +333,6 @@ bool CCoreEngine::SetDescramble(bool fDescramble)
 		}
 	}
 	m_fDescramble=fDescramble;
-	return true;
-}
-
-
-bool CCoreEngine::SetCasDevice(int Device,LPCTSTR pszName)
-{
-	if (Device<-1)
-		return false;
-	if (m_DtvEngine.IsEngineBuild()) {
-		if (!SetDescramble(Device>=0))
-			return false;
-		if (!OpenCasCard(Device,pszName)) {
-			m_CasDevice=-1;
-			return false;
-		}
-	}
-	m_CasDevice=Device;
 	return true;
 }
 

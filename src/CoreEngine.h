@@ -64,14 +64,11 @@ public:
 	bool IsCasLibraryLoaded() const;
 	LPCTSTR GetCasLibraryName() const { return m_CasLibraryName.c_str(); }
 	bool SetCasLibraryName(LPCTSTR pszName);
-	bool FindCasLibraries(LPCTSTR pszDirectory,std::vector<TVTest::String> *pList) const;
-	bool OpenCasCard();
+	bool OpenCasCard(int Device,LPCTSTR pszName=NULL);
 	bool CloseCasCard();
 	bool IsCasCardOpen() const;
 	bool SetDescramble(bool fDescramble);
 	bool GetDescramble() const { return m_fDescramble; }
-	bool SetCasDevice(int Device,LPCTSTR pszName=NULL);
-	int GetCasDevice() const { return m_CasDevice; }
 	bool GetCasDeviceList(CasDeviceList *pList);
 
 	bool SetPacketBuffering(bool fBuffering);
@@ -149,7 +146,6 @@ private:
 
 	TVTest::String m_CasLibraryName;
 	bool m_fDescramble;
-	int m_CasDevice;
 
 	bool m_fPacketBuffering;
 	DWORD m_PacketBufferLength;
@@ -181,8 +177,6 @@ private:
 	DWORD m_PacketBufferUsedCount;
 	UINT m_TimerResolution;
 	bool m_fNoEpg;
-
-	bool OpenCasCard(int Device,LPCTSTR pszName=NULL);
 };
 
 

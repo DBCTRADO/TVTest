@@ -93,7 +93,7 @@ INT_PTR CStreamInfo::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 				*p++=_T('\n');
 				GetTreeViewText(hwndTree,TreeView_GetChild(hwndTree,TreeView_GetRoot(hwndTree)),true,
 								p,Length-(int)(p-pszText));
-				CopyTextToClipboard(GetAppClass().GetUICore()->GetMainWindow(),pszText);
+				CopyTextToClipboard(GetAppClass().UICore.GetMainWindow(),pszText);
 				delete [] pszText;
 			}
 			return TRUE;
@@ -107,7 +107,7 @@ INT_PTR CStreamInfo::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 					LRESULT Data=DlgComboBox_GetItemData(hDlg,IDC_STREAMINFO_CONTRACT_SERVICE,Sel);
 					SYSTEMTIME st;
 					CCasProcessor::ContractStatus Status=
-						GetAppClass().GetCoreEngine()->m_DtvEngine.m_CasProcessor.GetContractPeriod(
+						GetAppClass().CoreEngine.m_DtvEngine.m_CasProcessor.GetContractPeriod(
 							LOWORD(Data),HIWORD(Data),&st);
 					TCHAR szText[256];
 
@@ -165,7 +165,7 @@ INT_PTR CStreamInfo::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 							LPTSTR pszText=new TCHAR[Length];
 
 							if (GetTreeViewText(pnmhdr->hwndFrom,hItem,false,pszText,Length)>0)
-								CopyTextToClipboard(GetAppClass().GetUICore()->GetMainWindow(),pszText);
+								CopyTextToClipboard(GetAppClass().UICore.GetMainWindow(),pszText);
 							delete [] pszText;
 						}
 						break;
@@ -195,7 +195,7 @@ static void FormatEsInfo(LPCTSTR pszName,int Index,const CTsAnalyzer::EsInfo &Es
 
 void CStreamInfo::SetService()
 {
-	CDtvEngine &DtvEngine=GetAppClass().GetCoreEngine()->m_DtvEngine;
+	CDtvEngine &DtvEngine=GetAppClass().CoreEngine.m_DtvEngine;
 	CTsAnalyzer *pAnalyzer=&DtvEngine.m_TsAnalyzer;
 	TCHAR szText[1024];
 	int Length;
@@ -326,7 +326,7 @@ void CStreamInfo::SetService()
 	}
 
 	// チャンネルファイル用フォーマット一覧
-	const CChannelInfo *pChannelInfo=GetAppClass().GetChannelManager()->GetCurrentChannelInfo();
+	const CChannelInfo *pChannelInfo=GetAppClass().ChannelManager.GetCurrentChannelInfo();
 	if (pChannelInfo!=NULL) {
 		tvis.hParent=TVI_ROOT;
 		tvis.hInsertAfter=TVI_LAST;

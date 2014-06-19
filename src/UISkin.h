@@ -2,6 +2,7 @@
 #define UI_SKIN_H
 
 
+#include "NotificationBar.h"
 #include "BonTsEngine/Exception.h"
 
 
@@ -51,6 +52,7 @@ protected:
 	virtual bool GetZoomRate(int *pRate,int *pFactor) = 0;
 	virtual bool SetPanAndScan(const PanAndScanInfo &Info) = 0;
 	virtual bool GetPanAndScan(PanAndScanInfo *pInfo) const = 0;
+	virtual bool SetLogo(HBITMAP hbm) = 0;
 	virtual void OnVolumeChanged(bool fOSD) {}
 	virtual void OnMuteChanged() {}
 	virtual void OnStereoModeChanged() {}
@@ -80,6 +82,9 @@ public:
 	virtual void ShowErrorMessage(LPCTSTR pszText) const;
 	virtual void ShowErrorMessage(const CBonErrorHandler *pErrorHandler,
 								  LPCTSTR pszTitle=NULL) const;
+	virtual void ShowNotificationBar(LPCTSTR pszText,
+		CNotificationBar::MessageType Type=CNotificationBar::MESSAGE_INFO,
+		DWORD Duration=0,bool fSkippable=false) = 0;
 	bool IsWheelChannelChanging() const { return m_fWheelChannelChanging; }
 
 	friend CUICore;

@@ -1,6 +1,5 @@
 #include "stdafx.h"
 #include "TVTest.h"
-#include "AppMain.h"
 #include "Panel.h"
 #include "DrawUtil.h"
 #include "resource.h"

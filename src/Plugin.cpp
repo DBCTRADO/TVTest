@@ -92,7 +92,7 @@ CControllerPlugin::CControllerPlugin(CPlugin *pPlugin,const TVTest::ControllerIn
 	, m_pTranslateMessage(pInfo->pTranslateMessage)
 	, m_pClientData(pInfo->pClientData)
 {
-	const CCommandList *pCommandList=GetAppClass().GetCommandList();
+	const CCommandList &CommandList=GetAppClass().CommandList;
 
 	int Length=m_NumButtons+1;
 	for (int i=0;i<m_NumButtons;i++)
@@ -107,7 +107,7 @@ CControllerPlugin::CControllerPlugin(CPlugin *pPlugin,const TVTest::ControllerIn
 		::lstrcpy(pszName,ButtonInfo.pszName);
 		m_pButtonList[i].pszName=pszName;
 		m_pButtonList[i].DefaultCommand=ButtonInfo.pszDefaultCommand!=NULL?
-					pCommandList->ParseText(ButtonInfo.pszDefaultCommand):0;
+					CommandList.ParseText(ButtonInfo.pszDefaultCommand):0;
 		m_pButtonList[i].ImageButtonRect.Left=ButtonInfo.ButtonRect.Left;
 		m_pButtonList[i].ImageButtonRect.Top=ButtonInfo.ButtonRect.Top;
 		m_pButtonList[i].ImageButtonRect.Width=ButtonInfo.ButtonRect.Width;
@@ -595,7 +595,7 @@ bool CPlugin::Load(LPCTSTR pszFileName)
 	m_Flags=PluginInfo.Flags;
 	m_fEnabled=(m_Flags&TVTest::PLUGIN_FLAG_ENABLEDEFAULT)!=0;
 	m_PluginParam.Callback=Callback;
-	m_PluginParam.hwndApp=GetAppClass().GetUICore()->GetMainWindow();
+	m_PluginParam.hwndApp=GetAppClass().UICore.GetMainWindow();
 	m_PluginParam.pClientData=NULL;
 	m_PluginParam.pInternalData=this;
 	if (!pInitialize(&m_PluginParam)) {
@@ -624,10 +624,10 @@ void CPlugin::Free()
 			if (i->m_pPlugin==this)
 				i=m_GrabberList.erase(i);
 			else
-				i++;
+				++i;
 		}
 		if (m_GrabberList.empty()) {
-			App.GetCoreEngine()->m_DtvEngine.m_MediaGrabber.SetMediaGrabCallback(NULL);
+			App.CoreEngine.m_DtvEngine.m_MediaGrabber.SetMediaGrabCallback(NULL);
 			m_fSetGrabber=false;
 		}
 	}
@@ -647,7 +647,7 @@ void CPlugin::Free()
 	m_ProgramGuideCommandList.clear();
 
 	for (size_t i=0;i<m_ControllerList.size();i++)
-		App.GetControllerManager()->DeleteController(m_ControllerList[i].Get());
+		App.ControllerManager.DeleteController(m_ControllerList[i].Get());
 	m_ControllerList.clear();
 
 	if (m_hLib!=NULL) {
@@ -691,7 +691,7 @@ bool CPlugin::Enable(bool fEnable)
 		m_fEnabled=fEnable;
 		if (fEnable) {
 			for (size_t i=0;i<m_ControllerList.size();i++)
-				GetAppClass().GetControllerManager()->LoadControllerSettings(m_ControllerList[i].Get());
+				GetAppClass().ControllerManager.LoadControllerSettings(m_ControllerList[i].Get());
 		}
 	}
 	return true;
@@ -889,15 +889,15 @@ LRESULT CALLBACK CPlugin::Callback(TVTest::PluginParam *pParam,UINT Message,LPAR
 
 	case TVTest::MESSAGE_GETSERVICE:
 		{
-			CDtvEngine *pDtvEngine=&GetAppClass().GetCoreEngine()->m_DtvEngine;
+			CDtvEngine &DtvEngine=GetAppClass().CoreEngine.m_DtvEngine;
 			int *pNumServices=reinterpret_cast<int*>(lParam1);
 			WORD ServiceID;
 
 			if (pNumServices)
-				*pNumServices=pDtvEngine->m_TsAnalyzer.GetViewableServiceNum();
-			if (!pDtvEngine->GetServiceID(&ServiceID))
+				*pNumServices=DtvEngine.m_TsAnalyzer.GetViewableServiceNum();
+			if (!DtvEngine.GetServiceID(&ServiceID))
 				return -1;
-			return pDtvEngine->m_TsAnalyzer.GetViewableServiceIndexByID(ServiceID);;
+			return DtvEngine.m_TsAnalyzer.GetViewableServiceIndexByID(ServiceID);;
 		}
 
 	case TVTest::MESSAGE_SETSERVICE:
@@ -914,7 +914,7 @@ LRESULT CALLBACK CPlugin::Callback(TVTest::PluginParam *pParam,UINT Message,LPAR
 					|| (pServiceInfo->Size!=sizeof(TVTest::ServiceInfo)
 						&& pServiceInfo->Size!=TVTest::SERVICEINFO_SIZE_V1))
 				return FALSE;
-			CTsAnalyzer *pTsAnalyzer=&GetAppClass().GetCoreEngine()->m_DtvEngine.m_TsAnalyzer;
+			CTsAnalyzer *pTsAnalyzer=&GetAppClass().CoreEngine.m_DtvEngine.m_TsAnalyzer;
 			WORD ServiceID;
 			CTsAnalyzer::ServiceInfo Info;
 			if (!pTsAnalyzer->GetViewableServiceID(Index,&ServiceID)
@@ -963,7 +963,7 @@ LRESULT CALLBACK CPlugin::Callback(TVTest::PluginParam *pParam,UINT Message,LPAR
 				return FALSE;
 
 			CUICore::PanAndScanInfo PanScan;
-			if (!GetAppClass().GetUICore()->GetPanAndScan(&PanScan))
+			if (!GetAppClass().UICore.GetPanAndScan(&PanScan))
 				return FALSE;
 
 			pInfo->Type=TVTest::PANSCAN_NONE;
@@ -984,7 +984,7 @@ LRESULT CALLBACK CPlugin::Callback(TVTest::PluginParam *pParam,UINT Message,LPAR
 
 			if (pInfo==NULL || pInfo->Size!=sizeof(TVTest::PanScanInfo))
 				return FALSE;
-			const CMediaViewer *pMediaViewer=&GetAppClass().GetCoreEngine()->m_DtvEngine.m_MediaViewer;
+			const CMediaViewer *pMediaViewer=&GetAppClass().CoreEngine.m_DtvEngine.m_MediaViewer;
 			int Command;
 			switch (pInfo->Type) {
 			case TVTest::PANSCAN_NONE:
@@ -1018,7 +1018,7 @@ LRESULT CALLBACK CPlugin::Callback(TVTest::PluginParam *pParam,UINT Message,LPAR
 			default:
 				return FALSE;
 			}
-			GetAppClass().GetUICore()->DoCommand(Command);
+			GetAppClass().UICore.DoCommand(Command);
 		}
 		return TRUE;
 
@@ -1029,7 +1029,7 @@ LRESULT CALLBACK CPlugin::Callback(TVTest::PluginParam *pParam,UINT Message,LPAR
 			if (pInfo==NULL || (pInfo->Size!=sizeof(TVTest::StatusInfo)
 								&& pInfo->Size!=TVTest::STATUSINFO_SIZE_V1))
 				return FALSE;
-			const CCoreEngine *pCoreEngine=GetAppClass().GetCoreEngine();
+			const CCoreEngine *pCoreEngine=&GetAppClass().CoreEngine;
 			ULONGLONG DropCount=pCoreEngine->GetContinuityErrorPacketCount();
 			pInfo->SignalLevel=pCoreEngine->GetSignalLevel();
 			pInfo->BitRate=pCoreEngine->GetBitRate();
@@ -1037,15 +1037,10 @@ LRESULT CALLBACK CPlugin::Callback(TVTest::PluginParam *pParam,UINT Message,LPAR
 			pInfo->ScramblePacketCount=(DWORD)pCoreEngine->GetScramblePacketCount();
 			if (pInfo->Size==sizeof(TVTest::StatusInfo)) {
 				pInfo->DropPacketCount=(DWORD)DropCount;
-				if (pCoreEngine->GetDescramble()
-						&& pCoreEngine->GetCasDevice()>=0) {
-					if (pCoreEngine->m_DtvEngine.m_CasProcessor.IsCasCardOpen()) {
-						pInfo->BcasCardStatus=TVTest::BCAS_STATUS_OK;
-					} else {
-						// Žæ‚è‚ ‚¦‚¸...
-						pInfo->BcasCardStatus=TVTest::BCAS_STATUS_OPENERROR;
-					}
+				if (pCoreEngine->IsCasCardOpen()) {
+					pInfo->BcasCardStatus=TVTest::BCAS_STATUS_OK;
 				} else {
+					// Žæ‚è‚ ‚¦‚¸...
 					pInfo->BcasCardStatus=TVTest::BCAS_STATUS_NOTOPEN;
 				}
 			}
@@ -1064,7 +1059,7 @@ LRESULT CALLBACK CPlugin::Callback(TVTest::PluginParam *pParam,UINT Message,LPAR
 
 			if (pVideoInfo==NULL || pVideoInfo->Size!=sizeof(TVTest::VideoInfo))
 				return FALSE;
-			pMediaViewer=&GetAppClass().GetCoreEngine()->m_DtvEngine.m_MediaViewer;
+			pMediaViewer=&GetAppClass().CoreEngine.m_DtvEngine.m_MediaViewer;
 			if (pMediaViewer->GetOriginalVideoSize(&VideoWidth,&VideoHeight)
 					&& pMediaViewer->GetVideoAspectRatio(&XAspect,&YAspect)
 					&& pMediaViewer->GetSourceRect(&pVideoInfo->SourceRect)) {
@@ -1079,9 +1074,9 @@ LRESULT CALLBACK CPlugin::Callback(TVTest::PluginParam *pParam,UINT Message,LPAR
 
 	case TVTest::MESSAGE_GETVOLUME:
 		{
-			const CUICore *pUICore=GetAppClass().GetUICore();
-			int Volume=pUICore->GetVolume();
-			bool fMute=pUICore->GetMute();
+			const CUICore &UICore=GetAppClass().UICore;
+			int Volume=UICore.GetVolume();
+			bool fMute=UICore.GetMute();
 
 			return MAKELONG(Volume,fMute);
 		}
@@ -1090,38 +1085,38 @@ LRESULT CALLBACK CPlugin::Callback(TVTest::PluginParam *pParam,UINT Message,LPAR
 		return SendPluginMessage(pParam,Message,lParam1,lParam2);
 
 	case TVTest::MESSAGE_GETSTEREOMODE:
-		return GetAppClass().GetUICore()->GetStereoMode();
+		return GetAppClass().UICore.GetStereoMode();
 
 	case TVTest::MESSAGE_SETSTEREOMODE:
 		return SendPluginMessage(pParam,Message,lParam1,lParam2);
 
 	case TVTest::MESSAGE_GETFULLSCREEN:
-		return GetAppClass().GetUICore()->GetFullscreen();
+		return GetAppClass().UICore.GetFullscreen();
 
 	case TVTest::MESSAGE_SETFULLSCREEN:
 		return SendPluginMessage(pParam,Message,lParam1,lParam2);
 
 	case TVTest::MESSAGE_GETPREVIEW:
-		return GetAppClass().GetUICore()->IsViewerEnabled();
+		return GetAppClass().UICore.IsViewerEnabled();
 
 	case TVTest::MESSAGE_SETPREVIEW:
 		return SendPluginMessage(pParam,Message,lParam1,lParam2);
 
 	case TVTest::MESSAGE_GETSTANDBY:
-		return GetAppClass().GetUICore()->GetStandby();
+		return GetAppClass().UICore.GetStandby();
 
 	case TVTest::MESSAGE_SETSTANDBY:
 		return SendPluginMessage(pParam,Message,lParam1,lParam2);
 
 	case TVTest::MESSAGE_GETALWAYSONTOP:
-		return GetAppClass().GetUICore()->GetAlwaysOnTop();
+		return GetAppClass().UICore.GetAlwaysOnTop();
 
 	case TVTest::MESSAGE_SETALWAYSONTOP:
 		return SendPluginMessage(pParam,Message,lParam1,lParam2);
 
 	case TVTest::MESSAGE_CAPTUREIMAGE:
 		{
-			void *pBuffer=GetAppClass().GetCoreEngine()->GetCurrentImage();
+			void *pBuffer=GetAppClass().CoreEngine.GetCurrentImage();
 
 			if (pBuffer!=NULL) {
 				SIZE_T Size=CalcDIBSize(static_cast<BITMAPINFOHEADER*>(pBuffer));
@@ -1137,7 +1132,7 @@ LRESULT CALLBACK CPlugin::Callback(TVTest::PluginParam *pParam,UINT Message,LPAR
 		return (LRESULT)(LPVOID)NULL;
 
 	case TVTest::MESSAGE_SAVEIMAGE:
-		GetAppClass().GetUICore()->DoCommand(CM_SAVEIMAGE);
+		GetAppClass().UICore.DoCommand(CM_SAVEIMAGE);
 		return TRUE;
 
 	case TVTest::MESSAGE_RESET:
@@ -1145,16 +1140,16 @@ LRESULT CALLBACK CPlugin::Callback(TVTest::PluginParam *pParam,UINT Message,LPAR
 			DWORD Flags=(DWORD)lParam1;
 
 			if (Flags==TVTest::RESET_ALL)
-				GetAppClass().GetUICore()->DoCommand(CM_RESET);
+				GetAppClass().UICore.DoCommand(CM_RESET);
 			else if (Flags==TVTest::RESET_VIEWER)
-				GetAppClass().GetUICore()->DoCommand(CM_RESETVIEWER);
+				GetAppClass().UICore.DoCommand(CM_RESETVIEWER);
 			else
 				return FALSE;
 		}
 		return TRUE;
 
 	case TVTest::MESSAGE_CLOSE:
-		::PostMessage(GetAppClass().GetUICore()->GetMainWindow(),
+		::PostMessage(GetAppClass().UICore.GetMainWindow(),
 					  WM_COMMAND,
 					  (lParam1&TVTest::CLOSE_EXIT)!=0?CM_EXIT:CM_CLOSE,0);
 		return TRUE;
@@ -1174,7 +1169,7 @@ LRESULT CALLBACK CPlugin::Callback(TVTest::PluginParam *pParam,UINT Message,LPAR
 
 			if ((pInfo->Flags&TVTest::STREAM_CALLBACK_REMOVE)==0) {
 				if (!m_fSetGrabber) {
-					CMediaGrabber &MediaGrabber=GetAppClass().GetCoreEngine()->m_DtvEngine.m_MediaGrabber;
+					CMediaGrabber &MediaGrabber=GetAppClass().CoreEngine.m_DtvEngine.m_MediaGrabber;
 
 					MediaGrabber.SetMediaGrabCallback(GrabMediaCallback,&m_GrabberList);
 					m_fSetGrabber=true;
@@ -1209,7 +1204,7 @@ LRESULT CALLBACK CPlugin::Callback(TVTest::PluginParam *pParam,UINT Message,LPAR
 
 			if (pszName==NULL)
 				return CLR_INVALID;
-			return GetAppClass().GetColor(pszName);
+			return GetAppClass().Core.GetColor(pszName);
 		}
 
 	case TVTest::MESSAGE_DECODEARIBSTRING:
@@ -1236,7 +1231,7 @@ LRESULT CALLBACK CPlugin::Callback(TVTest::PluginParam *pParam,UINT Message,LPAR
 				return FALSE;
 
 			const bool fNext=lParam2!=0;
-			CDtvEngine *pDtvEngine=&GetAppClass().GetCoreEngine()->m_DtvEngine;
+			CDtvEngine *pDtvEngine=&GetAppClass().CoreEngine.m_DtvEngine;
 
 			pProgramInfo->ServiceID=0;
 			pDtvEngine->GetServiceID(&pProgramInfo->ServiceID);
@@ -1279,11 +1274,11 @@ LRESULT CALLBACK CPlugin::Callback(TVTest::PluginParam *pParam,UINT Message,LPAR
 		return SendPluginMessage(pParam,Message,lParam1,lParam2,-1);
 
 	case TVTest::MESSAGE_SETNEXTCHANNEL:
-		GetAppClass().GetUICore()->DoCommand((lParam1&1)!=0?CM_CHANNEL_UP:CM_CHANNEL_DOWN);
+		GetAppClass().UICore.DoCommand((lParam1&1)!=0?CM_CHANNEL_UP:CM_CHANNEL_DOWN);
 		return TRUE;
 
 	case TVTest::MESSAGE_GETAUDIOSTREAM:
-		return GetAppClass().GetUICore()->GetAudioStream();
+		return GetAppClass().UICore.GetAudioStream();
 
 	case TVTest::MESSAGE_SETAUDIOSTREAM:
 		return SendPluginMessage(pParam,Message,lParam1,lParam2);
@@ -1330,7 +1325,7 @@ LRESULT CALLBACK CPlugin::Callback(TVTest::PluginParam *pParam,UINT Message,LPAR
 		return TRUE;
 
 	case TVTest::MESSAGE_RESETSTATUS:
-		GetAppClass().GetUICore()->DoCommand(CM_RESETERRORCOUNT);
+		GetAppClass().UICore.DoCommand(CM_RESETERRORCOUNT);
 		return TRUE;
 
 	case TVTest::MESSAGE_SETAUDIOCALLBACK:
@@ -1344,7 +1339,7 @@ LRESULT CALLBACK CPlugin::Callback(TVTest::PluginParam *pParam,UINT Message,LPAR
 			m_AudioStreamLock.Lock();
 			if (pCallback!=NULL) {
 				if (m_AudioStreamCallbackList.empty()) {
-					GetAppClass().GetCoreEngine()->m_DtvEngine.m_MediaViewer.SetAudioStreamCallback(AudioStreamCallback);
+					GetAppClass().CoreEngine.m_DtvEngine.m_MediaViewer.SetAudioStreamCallback(AudioStreamCallback);
 				} else {
 					for (std::vector<CAudioStreamCallbackInfo>::iterator i=m_AudioStreamCallbackList.begin();
 							i!=m_AudioStreamCallbackList.end();i++) {
@@ -1370,7 +1365,7 @@ LRESULT CALLBACK CPlugin::Callback(TVTest::PluginParam *pParam,UINT Message,LPAR
 				if (!fFound)
 					return FALSE;
 				if (m_AudioStreamCallbackList.empty())
-					GetAppClass().GetCoreEngine()->m_DtvEngine.m_MediaViewer.SetAudioStreamCallback(NULL);
+					GetAppClass().CoreEngine.m_DtvEngine.m_MediaViewer.SetAudioStreamCallback(NULL);
 			}
 		}
 		return TRUE;
@@ -1381,7 +1376,7 @@ LRESULT CALLBACK CPlugin::Callback(TVTest::PluginParam *pParam,UINT Message,LPAR
 
 			if (pszCommand==NULL || pszCommand[0]==L'\0')
 				return FALSE;
-			return GetAppClass().GetUICore()->DoCommand(pszCommand);
+			return GetAppClass().UICore.DoCommand(pszCommand);
 		}
 
 	case TVTest::MESSAGE_GETBCASINFO:
@@ -1392,7 +1387,7 @@ LRESULT CALLBACK CPlugin::Callback(TVTest::PluginParam *pParam,UINT Message,LPAR
 				return FALSE;
 
 			CCasProcessor::CasCardInfo CardInfo;
-			if (!GetAppClass().GetCoreEngine()->m_DtvEngine.m_CasProcessor.GetCasCardInfo(&CardInfo))
+			if (!GetAppClass().CoreEngine.m_DtvEngine.m_CasProcessor.GetCasCardInfo(&CardInfo))
 				return FALSE;
 			pBCasInfo->CASystemID=CardInfo.CASystemID;
 			::CopyMemory(pBCasInfo->CardID,CardInfo.CardID,6);
@@ -1421,7 +1416,7 @@ LRESULT CALLBACK CPlugin::Callback(TVTest::PluginParam *pParam,UINT Message,LPAR
 					|| pBCasCommand->pReceiveData==NULL)
 				return FALSE;
 
-			return GetAppClass().GetCoreEngine()->m_DtvEngine.m_CasProcessor.SendCasCommand(
+			return GetAppClass().CoreEngine.m_DtvEngine.m_CasProcessor.SendCasCommand(
 				pBCasCommand->pSendData, pBCasCommand->SendSize,
 				pBCasCommand->pReceiveData, &pBCasCommand->ReceiveSize);
 		}
@@ -1451,7 +1446,7 @@ LRESULT CALLBACK CPlugin::Callback(TVTest::PluginParam *pParam,UINT Message,LPAR
 				if (pSetting->Type!=TVTest::SETTING_TYPE_STRING)
 					return FALSE;
 				TCHAR szDirectory[MAX_PATH];
-				GetAppClass().GetDriverDirectory(szDirectory,lengthof(szDirectory));
+				GetAppClass().Core.GetDriverDirectory(szDirectory,lengthof(szDirectory));
 				if (pSetting->Value.pszString!=NULL)
 					::lstrcpyn(pSetting->Value.pszString,szDirectory,pSetting->ValueSize);
 				else
@@ -1467,7 +1462,7 @@ LRESULT CALLBACK CPlugin::Callback(TVTest::PluginParam *pParam,UINT Message,LPAR
 			} else if (::lstrcmpi(pSetting->pszName,TEXT("RecordFolder"))==0) {
 				if (pSetting->Type!=TVTest::SETTING_TYPE_STRING)
 					return FALSE;
-				LPCTSTR pszFolder=GetAppClass().GetDefaultRecordFolder();
+				LPCTSTR pszFolder=GetAppClass().Core.GetDefaultRecordFolder();
 				if (pSetting->Value.pszString!=NULL)
 					::lstrcpyn(pSetting->Value.pszString,pszFolder,pSetting->ValueSize);
 				else
@@ -1488,8 +1483,7 @@ LRESULT CALLBACK CPlugin::Callback(TVTest::PluginParam *pParam,UINT Message,LPAR
 		{
 			const WORD NetworkID=LOWORD(lParam1),ServiceID=HIWORD(lParam1);
 			const BYTE LogoType=(BYTE)(lParam2&0xFF);
-			CLogoManager *pLogoManager=GetAppClass().GetLogoManager();
-			HBITMAP hbm=pLogoManager->GetAssociatedLogoBitmap(NetworkID,ServiceID,LogoType);
+			HBITMAP hbm=GetAppClass().LogoManager.GetAssociatedLogoBitmap(NetworkID,ServiceID,LogoType);
 			if (hbm!=NULL) {
 				return reinterpret_cast<LRESULT>(::CopyImage(hbm,IMAGE_BITMAP,0,0,LR_CREATEDIBSECTION));
 			}
@@ -1499,9 +1493,8 @@ LRESULT CALLBACK CPlugin::Callback(TVTest::PluginParam *pParam,UINT Message,LPAR
 	case TVTest::MESSAGE_GETAVAILABLELOGOTYPE:
 		{
 			const WORD NetworkID=LOWORD(lParam1),ServiceID=HIWORD(lParam1);
-			CLogoManager *pLogoManager=GetAppClass().GetLogoManager();
 
-			return pLogoManager->GetAvailableLogoType(NetworkID,ServiceID);
+			return GetAppClass().LogoManager.GetAvailableLogoType(NetworkID,ServiceID);
 		}
 
 	case TVTest::MESSAGE_RELAYRECORD:
@@ -1510,9 +1503,9 @@ LRESULT CALLBACK CPlugin::Callback(TVTest::PluginParam *pParam,UINT Message,LPAR
 	case TVTest::MESSAGE_SILENTMODE:
 		{
 			if (lParam1==TVTest::SILENTMODE_GET) {
-				return GetAppClass().IsSilent();
+				return GetAppClass().Core.IsSilent();
 			} else if (lParam1==TVTest::SILENTMODE_SET) {
-				GetAppClass().SetSilent(lParam2!=0);
+				GetAppClass().Core.SetSilent(lParam2!=0);
 				return TRUE;
 			}
 		}
@@ -1537,7 +1530,7 @@ LRESULT CALLBACK CPlugin::Callback(TVTest::PluginParam *pParam,UINT Message,LPAR
 					|| pInfo->pButtonList==NULL)
 				return FALSE;
 			CControllerPlugin *pController=new CControllerPlugin(pThis,pInfo);
-			CControllerManager *pControllerManager=GetAppClass().GetControllerManager();
+			CControllerManager *pControllerManager=&GetAppClass().ControllerManager;
 			if (!pControllerManager->AddController(pController)) {
 				delete pController;
 				return FALSE;
@@ -1549,7 +1542,7 @@ LRESULT CALLBACK CPlugin::Callback(TVTest::PluginParam *pParam,UINT Message,LPAR
 		return TRUE;
 
 	case TVTest::MESSAGE_ONCONTROLLERBUTTONDOWN:
-		return GetAppClass().GetControllerManager()->OnButtonDown(
+		return GetAppClass().ControllerManager.OnButtonDown(
 			reinterpret_cast<LPCWSTR>(lParam1),(int)lParam2);
 
 	case TVTest::MESSAGE_GETCONTROLLERSETTINGS:
@@ -1562,7 +1555,7 @@ LRESULT CALLBACK CPlugin::Callback(TVTest::PluginParam *pParam,UINT Message,LPAR
 					|| (pSettings->Mask|ValidMask)!=ValidMask)
 				return FALSE;
 			const CControllerManager::ControllerSettings *pControllerSettings=
-				GetAppClass().GetControllerManager()->GetControllerSettings(pszName);
+				GetAppClass().ControllerManager.GetControllerSettings(pszName);
 			if (pControllerSettings==NULL)
 				return FALSE;
 			if ((pSettings->Mask&TVTest::CONTROLLER_SETTINGS_MASK_FLAGS)!=0) {
@@ -1580,7 +1573,7 @@ LRESULT CALLBACK CPlugin::Callback(TVTest::PluginParam *pParam,UINT Message,LPAR
 			if (pQueryInfo==NULL)
 				return reinterpret_cast<LRESULT>((TVTest::EpgEventInfo*)NULL);
 
-			CEpgProgramList *pEpgProgramList=GetAppClass().GetEpgProgramList();
+			CEpgProgramList *pEpgProgramList=&GetAppClass().EpgProgramList;
 			CEventInfoData EventData;
 			if (pQueryInfo->Type==TVTest::EPG_EVENT_QUERY_EVENTID) {
 				if (!pEpgProgramList->GetEventInfo(pQueryInfo->NetworkID,
@@ -1627,7 +1620,7 @@ LRESULT CALLBACK CPlugin::Callback(TVTest::PluginParam *pParam,UINT Message,LPAR
 			pEventList->NumEvents=0;
 			pEventList->EventList=NULL;
 
-			CEpgProgramList *pEpgProgramList=GetAppClass().GetEpgProgramList();
+			CEpgProgramList *pEpgProgramList=&GetAppClass().EpgProgramList;
 			pEpgProgramList->UpdateService(pEventList->NetworkID,
 										   pEventList->TransportStreamID,
 										   pEventList->ServiceID);
@@ -1664,7 +1657,7 @@ LRESULT CALLBACK CPlugin::Callback(TVTest::PluginParam *pParam,UINT Message,LPAR
 			const int Index=LOWORD(lParam2);
 			const int MaxLength=HIWORD(lParam2);
 
-			const CDriverManager *pDriverManager=GetAppClass().GetDriverManager();
+			const CDriverManager *pDriverManager=&GetAppClass().DriverManager;
 			const CDriverInfo *pDriverInfo=pDriverManager->GetDriverInfo(Index);
 			if (pDriverInfo!=NULL) {
 				if (pszFileName!=NULL)
@@ -1820,11 +1813,11 @@ LRESULT CPlugin::OnPluginMessage(WPARAM wParam,LPARAM lParam)
 						&& pChannelInfo->Size!=TVTest::CHANNELINFO_SIZE_V1
 						&& pChannelInfo->Size!=TVTest::CHANNELINFO_SIZE_V2))
 				return FALSE;
-			const CChannelInfo *pChInfo=GetAppClass().GetCurrentChannelInfo();
+			const CChannelInfo *pChInfo=GetAppClass().Core.GetCurrentChannelInfo();
 			if (pChInfo==NULL)
 				return FALSE;
 			ConvertChannelInfo(pChInfo,pChannelInfo);
-			CTsAnalyzer *pTsAnalyzer=&GetAppClass().GetCoreEngine()->m_DtvEngine.m_TsAnalyzer;
+			CTsAnalyzer *pTsAnalyzer=&GetAppClass().CoreEngine.m_DtvEngine.m_TsAnalyzer;
 			if (!pTsAnalyzer->GetNetworkName(pChannelInfo->szNetworkName,
 											 lengthof(pChannelInfo->szNetworkName)))
 				pChannelInfo->szNetworkName[0]='\0';
@@ -1836,25 +1829,25 @@ LRESULT CPlugin::OnPluginMessage(WPARAM wParam,LPARAM lParam)
 
 	case TVTest::MESSAGE_SETCHANNEL:
 		{
-			CAppMain &AppMain=GetAppClass();
+			CAppMain &App=GetAppClass();
 
-			AppMain.OpenTuner();
+			App.Core.OpenTuner();
 
 			int Space=(int)pParam->lParam1;
 
 			if (pParam->pPlugin->m_Version<TVTEST_PLUGIN_VERSION_(0,0,8))
-				return AppMain.SetChannel(Space,(int)pParam->lParam2,-1);
+				return App.Core.SetChannel(Space,(int)pParam->lParam2,-1);
 
 			WORD ServiceID=HIWORD(pParam->lParam2);
-			return AppMain.SetChannel(Space,(SHORT)LOWORD(pParam->lParam2),
-									  ServiceID!=0?(int)ServiceID:-1);
+			return App.Core.SetChannel(Space,(SHORT)LOWORD(pParam->lParam2),
+									   ServiceID!=0?(int)ServiceID:-1);
 		}
 
 	case TVTest::MESSAGE_SETSERVICE:
 		{
 			if (pParam->lParam2==0)
-				return GetAppClass().SetServiceByIndex((int)pParam->lParam1,CAppMain::SET_SERVICE_STRICT_ID);
-			return GetAppClass().SetServiceByID((WORD)pParam->lParam1,CAppMain::SET_SERVICE_STRICT_ID);
+				return GetAppClass().Core.SetServiceByIndex((int)pParam->lParam1,CAppCore::SET_SERVICE_STRICT_ID);
+			return GetAppClass().Core.SetServiceByID((WORD)pParam->lParam1,CAppCore::SET_SERVICE_STRICT_ID);
 		}
 
 	case TVTest::MESSAGE_GETTUNINGSPACENAME:
@@ -1862,7 +1855,7 @@ LRESULT CPlugin::OnPluginMessage(WPARAM wParam,LPARAM lParam)
 			LPWSTR pszName=reinterpret_cast<LPWSTR>(pParam->lParam1);
 			int Index=LOWORD(pParam->lParam2);
 			int MaxLength=HIWORD(pParam->lParam2);
-			const CTuningSpaceList *pTuningSpaceList=GetAppClass().GetChannelManager()->GetDriverTuningSpaceList();
+			const CTuningSpaceList *pTuningSpaceList=GetAppClass().ChannelManager.GetDriverTuningSpaceList();
 			LPCTSTR pszTuningSpaceName=pTuningSpaceList->GetTuningSpaceName(Index);
 
 			if (pszTuningSpaceName==NULL)
@@ -1885,7 +1878,7 @@ LRESULT CPlugin::OnPluginMessage(WPARAM wParam,LPARAM lParam)
 					|| Space<0 || Channel<0)
 				return FALSE;
 
-			const CChannelManager *pChannelManager=GetAppClass().GetChannelManager();
+			const CChannelManager *pChannelManager=&GetAppClass().ChannelManager;
 			const CChannelList *pChannelList=pChannelManager->GetChannelList(Space);
 			if (pChannelList==NULL)
 				return FALSE;
@@ -1900,7 +1893,7 @@ LRESULT CPlugin::OnPluginMessage(WPARAM wParam,LPARAM lParam)
 		{
 			LPWSTR pszName=reinterpret_cast<LPWSTR>(pParam->lParam1);
 			int MaxLength=(int)pParam->lParam2;
-			LPCTSTR pszDriverName=GetAppClass().GetCoreEngine()->GetDriverFileName();
+			LPCTSTR pszDriverName=GetAppClass().CoreEngine.GetDriverFileName();
 
 			if (pszName!=NULL && MaxLength>0)
 				::lstrcpyn(pszName,pszDriverName,MaxLength);
@@ -1913,7 +1906,7 @@ LRESULT CPlugin::OnPluginMessage(WPARAM wParam,LPARAM lParam)
 
 			if (pszDriverName==NULL)
 				return FALSE;
-			return GetAppClass().OpenTuner(pszDriverName);
+			return GetAppClass().Core.OpenTuner(pszDriverName);
 		}
 
 	case TVTest::MESSAGE_STARTRECORD:
@@ -1923,7 +1916,7 @@ LRESULT CPlugin::OnPluginMessage(WPARAM wParam,LPARAM lParam)
 			CRecordManager::TimeSpecInfo StartTime,StopTime;
 
 			if (pRecInfo==NULL)
-				return App.StartRecord(NULL,NULL,NULL,CRecordManager::CLIENT_PLUGIN);
+				return App.Core.StartRecord(NULL,NULL,NULL,CRecordManager::CLIENT_PLUGIN);
 			if (pRecInfo->Size!=sizeof(TVTest::RecordInfo))
 				return FALSE;
 			StartTime.Type=CRecordManager::TIME_NOTSPECIFIED;
@@ -1960,26 +1953,26 @@ LRESULT CPlugin::OnPluginMessage(WPARAM wParam,LPARAM lParam)
 					return FALSE;
 				}
 			}
-			return App.StartRecord(
+			return App.Core.StartRecord(
 				(pRecInfo->Mask&TVTest::RECORD_MASK_FILENAME)!=0?pRecInfo->pszFileName:NULL,
 				&StartTime,&StopTime,
 				CRecordManager::CLIENT_PLUGIN);
 		}
 
 	case TVTest::MESSAGE_STOPRECORD:
-		return GetAppClass().StopRecord();
+		return GetAppClass().Core.StopRecord();
 
 	case TVTest::MESSAGE_PAUSERECORD:
 		{
 			CAppMain &App=GetAppClass();
-			const CRecordManager *pRecordManager=App.GetRecordManager();
+			const CRecordManager *pRecordManager=&App.RecordManager;
 			bool fPause=pParam->lParam1!=0;
 
 			if (!pRecordManager->IsRecording())
 				return FALSE;
 			if (fPause==pRecordManager->IsPaused())
 				return FALSE;
-			App.GetUICore()->DoCommand(CM_RECORD_PAUSE);
+			App.UICore.DoCommand(CM_RECORD_PAUSE);
 		}
 		return TRUE;
 
@@ -1989,7 +1982,7 @@ LRESULT CPlugin::OnPluginMessage(WPARAM wParam,LPARAM lParam)
 
 			if (pRecInfo==NULL || pRecInfo->Size!=sizeof(TVTest::RecordInfo))
 				return FALSE;
-			const CRecordManager *pRecordManager=GetAppClass().GetRecordManager();
+			const CRecordManager *pRecordManager=&GetAppClass().RecordManager;
 			if ((pRecInfo->Mask&TVTest::RECORD_MASK_FILENAME)!=0
 					&& pRecInfo->pszFileName!=NULL && pRecInfo->MaxFileName>0) {
 				if (pRecordManager->GetFileName()!=NULL)
@@ -2050,7 +2043,7 @@ LRESULT CPlugin::OnPluginMessage(WPARAM wParam,LPARAM lParam)
 				return false;
 			if ((pRecInfo->Mask&TVTest::RECORD_MASK_FLAGS)!=0) {
 				if ((pRecInfo->Flags&TVTest::RECORD_FLAG_CANCEL)!=0)
-					return App.CancelReservedRecord();
+					return App.Core.CancelReservedRecord();
 			}
 			if ((pRecInfo->Mask&TVTest::RECORD_MASK_STARTTIME)!=0) {
 				switch (pRecInfo->StartTimeSpec) {
@@ -2086,7 +2079,7 @@ LRESULT CPlugin::OnPluginMessage(WPARAM wParam,LPARAM lParam)
 					return FALSE;
 				}
 			}
-			return App.ModifyRecord(
+			return App.Core.ModifyRecord(
 				(pRecInfo->Mask&TVTest::RECORD_MASK_FILENAME)!=0?pRecInfo->pszFileName:NULL,
 				(pRecInfo->Mask&TVTest::RECORD_MASK_STARTTIME)!=0?&StartTime:NULL,
 				(pRecInfo->Mask&TVTest::RECORD_MASK_STOPTIME)!=0?&StopTime:NULL,
@@ -2094,15 +2087,15 @@ LRESULT CPlugin::OnPluginMessage(WPARAM wParam,LPARAM lParam)
 		}
 
 	case TVTest::MESSAGE_GETZOOM:
-		return GetAppClass().GetUICore()->GetZoomPercentage();
+		return GetAppClass().UICore.GetZoomPercentage();
 
 	case TVTest::MESSAGE_SETZOOM:
-		return GetAppClass().GetUICore()->SetZoomRate((int)pParam->lParam1,(int)pParam->lParam2);
+		return GetAppClass().UICore.SetZoomRate((int)pParam->lParam1,(int)pParam->lParam2);
 
 	case TVTest::MESSAGE_GETRECORDSTATUS:
 		{
 			TVTest::RecordStatusInfo *pInfo=reinterpret_cast<TVTest::RecordStatusInfo*>(pParam->lParam1);
-			const CRecordManager *pRecordManager=GetAppClass().GetRecordManager();
+			const CRecordManager *pRecordManager=&GetAppClass().RecordManager;
 
 			if (pInfo==NULL
 					|| (pInfo->Size!=sizeof(TVTest::RecordStatusInfo)
@@ -2142,7 +2135,7 @@ LRESULT CPlugin::OnPluginMessage(WPARAM wParam,LPARAM lParam)
 
 	case TVTest::MESSAGE_SETVOLUME:
 		{
-			CUICore *pUICore=GetAppClass().GetUICore();
+			CUICore *pUICore=&GetAppClass().UICore;
 			int Volume=(int)pParam->lParam1;
 
 			if (Volume<0)
@@ -2151,24 +2144,24 @@ LRESULT CPlugin::OnPluginMessage(WPARAM wParam,LPARAM lParam)
 		}
 
 	case TVTest::MESSAGE_SETSTEREOMODE:
-		return GetAppClass().GetUICore()->SetStereoMode((int)pParam->lParam1);
+		return GetAppClass().UICore.SetStereoMode((int)pParam->lParam1);
 
 	case TVTest::MESSAGE_SETFULLSCREEN:
-		return GetAppClass().GetUICore()->SetFullscreen(pParam->lParam1!=0);
+		return GetAppClass().UICore.SetFullscreen(pParam->lParam1!=0);
 
 	case TVTest::MESSAGE_SETPREVIEW:
-		return GetAppClass().GetUICore()->EnableViewer(pParam->lParam1!=0);
+		return GetAppClass().UICore.EnableViewer(pParam->lParam1!=0);
 
 	case TVTest::MESSAGE_SETSTANDBY:
-		return GetAppClass().GetUICore()->SetStandby(pParam->lParam1!=0);
+		return GetAppClass().UICore.SetStandby(pParam->lParam1!=0);
 
 	case TVTest::MESSAGE_SETALWAYSONTOP:
-		GetAppClass().GetUICore()->SetAlwaysOnTop(pParam->lParam1!=0);
+		GetAppClass().UICore.SetAlwaysOnTop(pParam->lParam1!=0);
 		return TRUE;
 
 	case TVTest::MESSAGE_GETTUNINGSPACE:
 		{
-			const CChannelManager *pChannelManager=GetAppClass().GetChannelManager();
+			const CChannelManager *pChannelManager=&GetAppClass().ChannelManager;
 			int *pNumSpaces=reinterpret_cast<int*>(pParam->lParam1);
 			int CurSpace;
 
@@ -2196,7 +2189,7 @@ LRESULT CPlugin::OnPluginMessage(WPARAM wParam,LPARAM lParam)
 			if (pInfo==NULL || pInfo->Size!=sizeof(TVTest::TuningSpaceInfo))
 				return FALSE;
 
-			const CTuningSpaceList *pTuningSpaceList=GetAppClass().GetChannelManager()->GetDriverTuningSpaceList();
+			const CTuningSpaceList *pTuningSpaceList=GetAppClass().ChannelManager.GetDriverTuningSpaceList();
 			LPCTSTR pszTuningSpaceName=pTuningSpaceList->GetTuningSpaceName(Index);
 
 			if (pszTuningSpaceName==NULL)
@@ -2208,7 +2201,7 @@ LRESULT CPlugin::OnPluginMessage(WPARAM wParam,LPARAM lParam)
 
 	case TVTest::MESSAGE_SETAUDIOSTREAM:
 		{
-			CUICore *pUICore=GetAppClass().GetUICore();
+			CUICore *pUICore=&GetAppClass().UICore;
 			int Index=(int)pParam->lParam1;
 
 			if (Index<0 || Index>=pUICore->GetNumAudioStreams()
@@ -2223,7 +2216,7 @@ LRESULT CPlugin::OnPluginMessage(WPARAM wParam,LPARAM lParam)
 			int MaxLength=(int)pParam->lParam2;
 			TCHAR szFileName[MAX_PATH];
 
-			if (!GetAppClass().GetCoreEngine()->GetDriverPath(szFileName,lengthof(szFileName)))
+			if (!GetAppClass().CoreEngine.GetDriverPath(szFileName,lengthof(szFileName)))
 				return 0;
 			if (pszPath!=NULL && MaxLength>0)
 				::lstrcpyn(pszPath,szFileName,MaxLength);
@@ -2234,7 +2227,7 @@ LRESULT CPlugin::OnPluginMessage(WPARAM wParam,LPARAM lParam)
 		{
 			LPCWSTR pszFileName=reinterpret_cast<LPCWSTR>(pParam->lParam1);
 
-			return GetAppClass().RelayRecord(pszFileName);
+			return GetAppClass().Core.RelayRecord(pszFileName);
 		}
 
 	case TVTest::MESSAGE_SETWINDOWMESSAGECALLBACK:
@@ -2610,7 +2603,7 @@ bool CPluginManager::SendServiceUpdateEvent()
 
 bool CPluginManager::SendRecordStatusChangeEvent()
 {
-	const CRecordManager *pRecordManager=GetAppClass().GetRecordManager();
+	const CRecordManager *pRecordManager=&GetAppClass().RecordManager;
 	int Status;
 
 	if (pRecordManager->IsRecording()) {

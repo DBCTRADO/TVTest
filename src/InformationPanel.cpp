@@ -822,15 +822,15 @@ void CInformationPanel::Draw(HDC hdc,const RECT &PaintRect)
 	}
 
 	if (GetDrawItemRect(ITEM_SIGNALLEVEL,&rc,PaintRect)) {
-		const CCoreEngine *pCoreEngine=GetAppClass().GetCoreEngine();
+		const CCoreEngine &CoreEngine=GetAppClass().CoreEngine;
 		int Length=0;
 		if (m_fSignalLevel) {
 			TCHAR szSignalLevel[32];
-			pCoreEngine->GetSignalLevelText(szSignalLevel,lengthof(szSignalLevel));
+			CoreEngine.GetSignalLevelText(szSignalLevel,lengthof(szSignalLevel));
 			Length=StdUtil::snprintf(szText,lengthof(szText),
 									 TEXT("%s / "),szSignalLevel);
 		}
-		pCoreEngine->GetBitRateText(szText+Length,lengthof(szText)-Length);
+		CoreEngine.GetBitRateText(szText+Length,lengthof(szText)-Length);
 		DrawItem(hdc,szText,rc);
 	}
 
@@ -849,16 +849,15 @@ void CInformationPanel::Draw(HDC hdc,const RECT &PaintRect)
 	}
 
 	if (GetDrawItemRect(ITEM_ERROR,&rc,PaintRect)) {
-		const CCoreEngine *pCoreEngine=GetAppClass().GetCoreEngine();
+		const CCoreEngine &CoreEngine=GetAppClass().CoreEngine;
 		int Length;
 
 		Length=StdUtil::snprintf(szText,lengthof(szText),TEXT("D %llu / E %llu"),
-								 pCoreEngine->GetContinuityErrorPacketCount(),
-								 pCoreEngine->GetErrorPacketCount());
-		if (pCoreEngine->GetDescramble()
-				&& pCoreEngine->GetCasDevice()>=0)
+								 CoreEngine.GetContinuityErrorPacketCount(),
+								 CoreEngine.GetErrorPacketCount());
+		if (CoreEngine.GetDescramble())
 			StdUtil::snprintf(szText+Length,lengthof(szText)-Length,TEXT(" / S %llu"),
-							  pCoreEngine->GetScramblePacketCount());
+							  CoreEngine.GetScramblePacketCount());
 		DrawItem(hdc,szText,rc);
 	}
 

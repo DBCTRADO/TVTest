@@ -131,12 +131,12 @@ INT_PTR CInitialSettings::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPara
 
 			// カードリーダー
 			{
-				CCoreEngine *pCoreEngine=GetAppClass().GetCoreEngine();
+				CCoreEngine &CoreEngine=GetAppClass().CoreEngine;
 				CCoreEngine::CasDeviceList CasDevList;
-				const int DefaultDevice=pCoreEngine->m_DtvEngine.m_CasProcessor.GetDefaultCasDevice();
+				const int DefaultDevice=CoreEngine.m_DtvEngine.m_CasProcessor.GetDefaultCasDevice();
 				int Sel=0;
 
-				pCoreEngine->GetCasDeviceList(&CasDevList);
+				CoreEngine.GetCasDeviceList(&CasDevList);
 				for (size_t i=0;i<CasDevList.size();i++) {
 					DlgComboBox_AddString(hDlg,IDC_INITIALSETTINGS_CASDEVICE,
 										  CasDevList[i].Text.c_str());
@@ -189,7 +189,7 @@ INT_PTR CInitialSettings::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPara
 
 		case IDC_INITIALSETTINGS_SEARCHCARDREADER:
 			{
-				CCasProcessor &CasProcessor=GetAppClass().GetCoreEngine()->m_DtvEngine.m_CasProcessor;
+				CCasProcessor &CasProcessor=GetAppClass().CoreEngine.m_DtvEngine.m_CasProcessor;
 				int Device=-1;
 				TCHAR szText[1024];
 				CStaticStringFormatter Formatter(szText,lengthof(szText));
@@ -232,7 +232,7 @@ INT_PTR CInitialSettings::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPara
 			return TRUE;
 
 		case IDC_INITIALSETTINGS_HELP:
-			GetAppClass().ShowHelpContent(HELP_ID_INITIALSETTINGS);
+			GetAppClass().Core.ShowHelpContent(HELP_ID_INITIALSETTINGS);
 			return TRUE;
 
 		case IDOK:

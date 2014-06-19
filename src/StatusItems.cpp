@@ -22,12 +22,12 @@ CChannelStatusItem::CChannelStatusItem()
 
 void CChannelStatusItem::Draw(HDC hdc,const RECT *pRect)
 {
-	CAppMain &AppMain=GetAppClass();
-	const CChannelManager &ChannelManager=*AppMain.GetChannelManager();
+	CAppMain &App=GetAppClass();
+	const CChannelManager &ChannelManager=App.ChannelManager;
 	const CChannelInfo *pInfo;
 	TCHAR szText[4+MAX_CHANNEL_NAME];
 
-	if (AppMain.GetUICore()->GetSkin()->IsWheelChannelChanging()) {
+	if (App.UICore.GetSkin()->IsWheelChannelChanging()) {
 		COLORREF crText,crBack;
 
 		crText=::GetTextColor(hdc);
@@ -40,7 +40,7 @@ void CChannelStatusItem::Draw(HDC hdc,const RECT *pRect)
 		TCHAR szService[MAX_CHANNEL_NAME];
 		StdUtil::snprintf(szText,lengthof(szText),TEXT("%d: %s"),
 			pInfo->GetChannelNo(),
-			AppMain.GetCurrentServiceName(szService,lengthof(szService))?szService:pInfo->GetName());
+			App.Core.GetCurrentServiceName(szService,lengthof(szService))?szService:pInfo->GetName());
 	} else {
 		::lstrcpy(szText,TEXT("<ƒ`ƒƒƒ“ƒlƒ‹>"));
 	}
@@ -58,8 +58,8 @@ void CChannelStatusItem::OnLButtonDown(int x,int y)
 	UINT Flags;
 
 	GetMenuPos(&pt,&Flags);
-	GetAppClass().GetUICore()->PopupSubMenu(CMainMenu::SUBMENU_CHANNEL,
-											&pt,Flags | TPM_RIGHTBUTTON);
+	GetAppClass().UICore.PopupSubMenu(CMainMenu::SUBMENU_CHANNEL,
+									  &pt,Flags | TPM_RIGHTBUTTON);
 }
 
 void CChannelStatusItem::OnRButtonDown(int x,int y)
@@ -68,8 +68,8 @@ void CChannelStatusItem::OnRButtonDown(int x,int y)
 	UINT Flags;
 
 	GetMenuPos(&pt,&Flags);
-	GetAppClass().GetUICore()->PopupSubMenu(CMainMenu::SUBMENU_SERVICE,
-											&pt,Flags | TPM_RIGHTBUTTON);
+	GetAppClass().UICore.PopupSubMenu(CMainMenu::SUBMENU_SERVICE,
+									  &pt,Flags | TPM_RIGHTBUTTON);
 }
 
 
@@ -80,14 +80,14 @@ CVideoSizeStatusItem::CVideoSizeStatusItem()
 
 void CVideoSizeStatusItem::Draw(HDC hdc,const RECT *pRect)
 {
-	CAppMain &AppMain=GetAppClass();
-	const CCoreEngine &CoreEngine=*AppMain.GetCoreEngine();
+	CAppMain &App=GetAppClass();
+	const CCoreEngine &CoreEngine=App.CoreEngine;
 	TCHAR szText[64];
 
 	StdUtil::snprintf(szText,lengthof(szText),TEXT("%d x %d (%d %%)"),
 					  CoreEngine.GetOriginalVideoWidth(),
 					  CoreEngine.GetOriginalVideoHeight(),
-					  AppMain.GetUICore()->GetZoomPercentage());
+					  App.UICore.GetZoomPercentage());
 	DrawText(hdc,pRect,szText);
 }
 
@@ -108,8 +108,8 @@ void CVideoSizeStatusItem::OnLButtonDown(int x,int y)
 	UINT Flags;
 
 	GetMenuPos(&pt,&Flags);
-	GetAppClass().GetUICore()->PopupSubMenu(CMainMenu::SUBMENU_ZOOM,
-											&pt,Flags | TPM_RIGHTBUTTON);
+	GetAppClass().UICore.PopupSubMenu(CMainMenu::SUBMENU_ZOOM,
+									  &pt,Flags | TPM_RIGHTBUTTON);
 }
 
 void CVideoSizeStatusItem::OnRButtonDown(int x,int y)
@@ -118,8 +118,8 @@ void CVideoSizeStatusItem::OnRButtonDown(int x,int y)
 	UINT Flags;
 
 	GetMenuPos(&pt,&Flags);
-	GetAppClass().GetUICore()->PopupSubMenu(CMainMenu::SUBMENU_ASPECTRATIO,
-											&pt,Flags | TPM_RIGHTBUTTON);
+	GetAppClass().UICore.PopupSubMenu(CMainMenu::SUBMENU_ASPECTRATIO,
+									  &pt,Flags | TPM_RIGHTBUTTON);
 }
 
 
@@ -130,7 +130,7 @@ CVolumeStatusItem::CVolumeStatusItem()
 
 void CVolumeStatusItem::Draw(HDC hdc,const RECT *pRect)
 {
-	CUICore *pUICore=GetAppClass().GetUICore();
+	CUICore *pUICore=&GetAppClass().UICore;
 	HPEN hpen,hpenOld;
 	HBRUSH hbr,hbrOld;
 	RECT rc;
@@ -174,16 +174,16 @@ void CVolumeStatusItem::OnRButtonDown(int x,int y)
 	UINT Flags;
 
 	GetMenuPos(&pt,&Flags);
-	GetAppClass().GetUICore()->PopupSubMenu(CMainMenu::SUBMENU_VOLUME,
-											&pt,Flags | TPM_RIGHTBUTTON);
+	GetAppClass().UICore.PopupSubMenu(CMainMenu::SUBMENU_VOLUME,
+									  &pt,Flags | TPM_RIGHTBUTTON);
 	*/
-	CUICore *pUICore=GetAppClass().GetUICore();
+	CUICore *pUICore=&GetAppClass().UICore;
 	pUICore->SetMute(!pUICore->GetMute());
 }
 
 void CVolumeStatusItem::OnMouseMove(int x,int y)
 {
-	CUICore *pUICore=GetAppClass().GetUICore();
+	CUICore *pUICore=&GetAppClass().UICore;
 	RECT rc;
 	int Volume;
 
@@ -208,7 +208,7 @@ void CAudioChannelStatusItem::Draw(HDC hdc,const RECT *pRect)
 	CAppMain &App=GetAppClass();
 	RECT rc=*pRect;
 
-	if (App.GetCoreEngine()->m_DtvEngine.m_MediaViewer.IsSpdifPassthrough()) {
+	if (App.CoreEngine.m_DtvEngine.m_MediaViewer.IsSpdifPassthrough()) {
 		if (!m_Icons.IsCreated())
 			m_Icons.Load(App.GetResourceInstance(),IDB_PASSTHROUGH);
 		m_Icons.Draw(hdc,rc.left,rc.top+((rc.bottom-rc.top)-16)/2,
@@ -217,7 +217,7 @@ void CAudioChannelStatusItem::Draw(HDC hdc,const RECT *pRect)
 	}
 
 	TCHAR szText[64];
-	if (App.GetUICore()->FormatCurrentAudioText(szText,lengthof(szText))<=0)
+	if (App.UICore.FormatCurrentAudioText(szText,lengthof(szText))<=0)
 		::lstrcpy(szText,TEXT("<‰¹º>"));
 	DrawText(hdc,&rc,szText);
 }
@@ -229,7 +229,7 @@ void CAudioChannelStatusItem::DrawPreview(HDC hdc,const RECT *pRect)
 
 void CAudioChannelStatusItem::OnLButtonDown(int x,int y)
 {
-	if (!GetAppClass().GetUICore()->SwitchAudio())
+	if (!GetAppClass().UICore.SwitchAudio())
 		OnRButtonDown(x,y);
 }
 
@@ -239,8 +239,8 @@ void CAudioChannelStatusItem::OnRButtonDown(int x,int y)
 	UINT Flags;
 
 	GetMenuPos(&pt,&Flags);
-	GetAppClass().GetUICore()->PopupSubMenu(CMainMenu::SUBMENU_AUDIO,
-											&pt,Flags | TPM_RIGHTBUTTON);
+	GetAppClass().UICore.PopupSubMenu(CMainMenu::SUBMENU_AUDIO,
+									  &pt,Flags | TPM_RIGHTBUTTON);
 }
 
 
@@ -253,7 +253,7 @@ CRecordStatusItem::CRecordStatusItem()
 
 void CRecordStatusItem::Draw(HDC hdc,const RECT *pRect)
 {
-	const CRecordManager &RecordManager=*GetAppClass().GetRecordManager();
+	const CRecordManager &RecordManager=GetAppClass().RecordManager;
 	const int FontHeight=m_pStatus->GetFontHeight();
 	RECT rc;
 	TCHAR szText[32],*pszText;
@@ -328,9 +328,9 @@ void CRecordStatusItem::DrawPreview(HDC hdc,const RECT *pRect)
 
 void CRecordStatusItem::OnLButtonDown(int x,int y)
 {
-	CAppMain &AppMain=GetAppClass();
-	const CRecordManager &RecordManager=*AppMain.GetRecordManager();
-	CUICore &UICore=*AppMain.GetUICore();
+	CAppMain &App=GetAppClass();
+	const CRecordManager &RecordManager=App.RecordManager;
+	CUICore &UICore=App.UICore;
 	bool fRecording=RecordManager.IsRecording();
 
 	if (fRecording && !RecordManager.IsPaused()) {
@@ -347,13 +347,13 @@ void CRecordStatusItem::OnRButtonDown(int x,int y)
 	UINT Flags;
 
 	GetMenuPos(&pt,&Flags);
-	GetAppClass().GetUICore()->ShowSpecialMenu(CUICore::MENU_RECORD,
-											   &pt,Flags | TPM_RIGHTBUTTON);
+	GetAppClass().UICore.ShowSpecialMenu(CUICore::MENU_RECORD,
+										 &pt,Flags | TPM_RIGHTBUTTON);
 }
 
 bool CRecordStatusItem::OnMouseHover(int x,int y)
 {
-	const CRecordManager &RecordManager=*GetAppClass().GetRecordManager();
+	const CRecordManager &RecordManager=GetAppClass().RecordManager;
 
 	if (RecordManager.IsRecording()) {
 		const HWND hwndStatus=m_pStatus->GetHandle();
@@ -375,7 +375,7 @@ bool CRecordStatusItem::OnMouseHover(int x,int y)
 
 int CRecordStatusItem::GetTipText(LPTSTR pszText,int MaxLength)
 {
-	const CRecordManager &RecordManager=*GetAppClass().GetRecordManager();
+	const CRecordManager &RecordManager=GetAppClass().RecordManager;
 
 	if (RecordManager.IsRecording()) {
 		const CRecordTask *pRecordTask=RecordManager.GetRecordTask();
@@ -457,7 +457,7 @@ void CCaptureStatusItem::Draw(HDC hdc,const RECT *pRect)
 
 void CCaptureStatusItem::OnLButtonDown(int x,int y)
 {
-	GetAppClass().GetUICore()->DoCommand(CM_CAPTURE);
+	GetAppClass().UICore.DoCommand(CM_CAPTURE);
 }
 
 void CCaptureStatusItem::OnRButtonDown(int x,int y)
@@ -466,8 +466,8 @@ void CCaptureStatusItem::OnRButtonDown(int x,int y)
 	UINT Flags;
 
 	GetMenuPos(&pt,&Flags);
-	GetAppClass().GetUICore()->ShowSpecialMenu(CUICore::MENU_CAPTURE,
-											   &pt,Flags | TPM_RIGHTBUTTON);
+	GetAppClass().UICore.ShowSpecialMenu(CUICore::MENU_CAPTURE,
+										 &pt,Flags | TPM_RIGHTBUTTON);
 }
 
 
@@ -478,7 +478,7 @@ CErrorStatusItem::CErrorStatusItem()
 
 void CErrorStatusItem::Draw(HDC hdc,const RECT *pRect)
 {
-	const CCoreEngine &CoreEngine=*GetAppClass().GetCoreEngine();
+	const CCoreEngine &CoreEngine=GetAppClass().CoreEngine;
 	TCHAR szText[64];
 
 	StdUtil::snprintf(szText,lengthof(szText),TEXT("D %llu / E %llu / S %llu"),
@@ -495,7 +495,7 @@ void CErrorStatusItem::DrawPreview(HDC hdc,const RECT *pRect)
 
 void CErrorStatusItem::OnLButtonDown(int x,int y)
 {
-	GetAppClass().GetUICore()->DoCommand(CM_RESETERRORCOUNT);
+	GetAppClass().UICore.DoCommand(CM_RESETERRORCOUNT);
 }
 
 void CErrorStatusItem::OnRButtonDown(int x,int y)
@@ -504,8 +504,8 @@ void CErrorStatusItem::OnRButtonDown(int x,int y)
 	UINT Flags;
 
 	GetMenuPos(&pt,&Flags);
-	GetAppClass().GetUICore()->ShowSpecialMenu(CUICore::MENU_STREAMERROR,
-											   &pt,Flags | TPM_RIGHTBUTTON);
+	GetAppClass().UICore.ShowSpecialMenu(CUICore::MENU_STREAMERROR,
+										 &pt,Flags | TPM_RIGHTBUTTON);
 }
 
 
@@ -517,7 +517,7 @@ CSignalLevelStatusItem::CSignalLevelStatusItem()
 
 void CSignalLevelStatusItem::Draw(HDC hdc,const RECT *pRect)
 {
-	const CCoreEngine *pCoreEngine=GetAppClass().GetCoreEngine();
+	const CCoreEngine *pCoreEngine=&GetAppClass().CoreEngine;
 	TCHAR szText[64],szSignalLevel[32];
 	int Length=0;
 
@@ -532,7 +532,7 @@ void CSignalLevelStatusItem::Draw(HDC hdc,const RECT *pRect)
 
 void CSignalLevelStatusItem::DrawPreview(HDC hdc,const RECT *pRect)
 {
-	const CCoreEngine *pCoreEngine=GetAppClass().GetCoreEngine();
+	const CCoreEngine *pCoreEngine=&GetAppClass().CoreEngine;
 	TCHAR szText[64],szSignalLevel[32],szBitRate[32];
 
 	pCoreEngine->GetSignalLevelText(24.52f,szSignalLevel,lengthof(szSignalLevel));
@@ -562,7 +562,7 @@ void CClockStatusItem::Draw(HDC hdc,const RECT *pRect)
 	TCHAR szText[64];
 
 	if (m_fTOT) {
-		if (!GetAppClass().GetCoreEngine()->m_DtvEngine.m_TsAnalyzer.GetTotTime(&st))
+		if (!GetAppClass().CoreEngine.m_DtvEngine.m_TsAnalyzer.GetTotTime(&st))
 			return;
 		StdUtil::snprintf(szText,lengthof(szText),TEXT("TOT: %d/%d/%d %d:%02d:%02d"),
 						  st.wYear,st.wMonth,st.wDay,st.wHour,st.wMinute,st.wSecond);
@@ -585,7 +585,7 @@ void CClockStatusItem::DrawPreview(HDC hdc,const RECT *pRect)
 
 void CClockStatusItem::OnLButtonDown(int x,int y)
 {
-	GetAppClass().GetUICore()->DoCommand(CM_SHOWTOTTIME);
+	GetAppClass().UICore.DoCommand(CM_SHOWTOTTIME);
 }
 
 void CClockStatusItem::OnRButtonDown(int x,int y)
@@ -594,8 +594,8 @@ void CClockStatusItem::OnRButtonDown(int x,int y)
 	UINT Flags;
 
 	GetMenuPos(&pt,&Flags);
-	GetAppClass().GetUICore()->ShowSpecialMenu(CUICore::MENU_CLOCK,
-											   &pt,Flags | TPM_RIGHTBUTTON);
+	GetAppClass().UICore.ShowSpecialMenu(CUICore::MENU_CLOCK,
+										 &pt,Flags | TPM_RIGHTBUTTON);
 }
 
 void CClockStatusItem::SetTOT(bool fTOT)
@@ -648,8 +648,8 @@ void CProgramInfoStatusItem::OnRButtonDown(int x,int y)
 	UINT Flags;
 
 	GetMenuPos(&pt,&Flags);
-	GetAppClass().GetUICore()->ShowSpecialMenu(CUICore::MENU_PROGRAMINFO,
-											   &pt,Flags | TPM_RIGHTBUTTON);
+	GetAppClass().UICore.ShowSpecialMenu(CUICore::MENU_PROGRAMINFO,
+										 &pt,Flags | TPM_RIGHTBUTTON);
 }
 
 void CProgramInfoStatusItem::OnLButtonDoubleClick(int x,int y)
@@ -695,7 +695,7 @@ void CProgramInfoStatusItem::EnablePopupInfo(bool fEnable)
 
 bool CProgramInfoStatusItem::UpdateContent()
 {
-	CCoreEngine &CoreEngine=*GetAppClass().GetCoreEngine();
+	CCoreEngine &CoreEngine=GetAppClass().CoreEngine;
 	TCHAR szText[256],szEventName[256];
 	CStaticStringFormatter Formatter(szText,lengthof(szText));
 	SYSTEMTIME StartTime;
@@ -723,14 +723,14 @@ void CProgramInfoStatusItem::ShowPopupInfo()
 	if (m_EventInfoPopup.IsVisible())
 		return;
 
-	CAppMain &AppMain=GetAppClass();
+	CAppMain &App=GetAppClass();
 	CChannelInfo ChInfo;
 
-	if (AppMain.GetCurrentStreamChannelInfo(&ChInfo)
+	if (App.Core.GetCurrentStreamChannelInfo(&ChInfo)
 			&& ChInfo.GetServiceID()!=0) {
 		CEventInfoData EventInfo;
 
-		if (AppMain.GetCoreEngine()->GetCurrentEventInfo(
+		if (App.CoreEngine.GetCurrentEventInfo(
 				&EventInfo,ChInfo.GetServiceID(),m_fNext)) {
 			RECT rc;
 			POINT pt;
@@ -745,7 +745,7 @@ void CProgramInfoStatusItem::ShowPopupInfo()
 
 			int IconWidth,IconHeight;
 			m_EventInfoPopup.GetPreferredIconSize(&IconWidth,&IconHeight);
-			HICON hIcon=AppMain.GetLogoManager()->CreateLogoIcon(
+			HICON hIcon=App.LogoManager.CreateLogoIcon(
 				ChInfo.GetNetworkID(),ChInfo.GetServiceID(),
 				IconWidth,IconHeight);
 
@@ -765,7 +765,7 @@ CBufferingStatusItem::CBufferingStatusItem()
 
 void CBufferingStatusItem::Draw(HDC hdc,const RECT *pRect)
 {
-	CCoreEngine &CoreEngine=*GetAppClass().GetCoreEngine();
+	CCoreEngine &CoreEngine=GetAppClass().CoreEngine;
 	TCHAR szText[32];
 
 	StdUtil::snprintf(szText,lengthof(szText),TEXT("R %lu / B %d%%"),
@@ -784,8 +784,8 @@ void CBufferingStatusItem::OnLButtonDown(int x,int y)
 	UINT Flags;
 
 	GetMenuPos(&pt,&Flags);
-	GetAppClass().GetUICore()->ShowSpecialMenu(CUICore::MENU_BUFFERING,
-											   &pt,Flags | TPM_RIGHTBUTTON);
+	GetAppClass().UICore.ShowSpecialMenu(CUICore::MENU_BUFFERING,
+										 &pt,Flags | TPM_RIGHTBUTTON);
 }
 
 
@@ -796,7 +796,7 @@ CTunerStatusItem::CTunerStatusItem()
 
 void CTunerStatusItem::Draw(HDC hdc,const RECT *pRect)
 {
-	const CChannelManager &ChannelManager=*GetAppClass().GetChannelManager();
+	const CChannelManager &ChannelManager=GetAppClass().ChannelManager;
 	const CChannelInfo *pChInfo=ChannelManager.GetCurrentRealChannelInfo();
 	LPCTSTR pszText;
 
@@ -825,8 +825,8 @@ void CTunerStatusItem::OnLButtonDown(int x,int y)
 	UINT Flags;
 
 	GetMenuPos(&pt,&Flags);
-	GetAppClass().GetUICore()->PopupSubMenu(CMainMenu::SUBMENU_SPACE,
-											&pt,Flags | TPM_RIGHTBUTTON);
+	GetAppClass().UICore.PopupSubMenu(CMainMenu::SUBMENU_SPACE,
+									  &pt,Flags | TPM_RIGHTBUTTON);
 }
 
 void CTunerStatusItem::OnRButtonDown(int x,int y)
@@ -835,8 +835,8 @@ void CTunerStatusItem::OnRButtonDown(int x,int y)
 	UINT Flags;
 
 	GetMenuPos(&pt,&Flags);
-	GetAppClass().GetUICore()->ShowSpecialMenu(CUICore::MENU_TUNERSELECT,
-											   &pt,Flags | TPM_RIGHTBUTTON);
+	GetAppClass().UICore.ShowSpecialMenu(CUICore::MENU_TUNERSELECT,
+										 &pt,Flags | TPM_RIGHTBUTTON);
 }
 
 
@@ -847,7 +847,7 @@ CMediaBitRateStatusItem::CMediaBitRateStatusItem()
 
 void CMediaBitRateStatusItem::Draw(HDC hdc,const RECT *pRect)
 {
-	CCoreEngine &CoreEngine=*GetAppClass().GetCoreEngine();
+	CCoreEngine &CoreEngine=GetAppClass().CoreEngine;
 	TCHAR szText[64];
 
 	StdUtil::snprintf(szText,lengthof(szText),TEXT("V %u Kbps / A %u Kbps"),
@@ -881,11 +881,11 @@ void CFavoritesStatusItem::OnLButtonDown(int x,int y)
 	UINT Flags;
 
 	GetMenuPos(&pt,&Flags);
-	GetAppClass().GetUICore()->PopupSubMenu(CMainMenu::SUBMENU_FAVORITES,
-											&pt,Flags | TPM_RIGHTBUTTON);
+	GetAppClass().UICore.PopupSubMenu(CMainMenu::SUBMENU_FAVORITES,
+									  &pt,Flags | TPM_RIGHTBUTTON);
 }
 
 void CFavoritesStatusItem::OnRButtonDown(int x,int y)
 {
-	GetAppClass().GetUICore()->DoCommand(CM_ADDTOFAVORITES);
+	GetAppClass().UICore.DoCommand(CM_ADDTOFAVORITES);
 }

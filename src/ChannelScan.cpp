@@ -263,15 +263,15 @@ CChannelScan::~CChannelScan()
 
 bool CChannelScan::Apply(DWORD Flags)
 {
-	CAppMain &AppMain=GetAppClass();
+	CAppMain &App=GetAppClass();
 
 	if ((Flags&UPDATE_CHANNELLIST)!=0) {
-		AppMain.UpdateCurrentChannelList(&m_TuningSpaceList);
+		App.Core.UpdateCurrentChannelList(&m_TuningSpaceList);
 	}
 
 	if ((Flags&UPDATE_PREVIEW)!=0) {
 		if (m_fRestorePreview)
-			AppMain.GetUICore()->EnableViewer(true);
+			App.UICore.EnableViewer(true);
 	}
 
 	return true;
@@ -329,7 +329,7 @@ bool CChannelScan::AutoUpdateChannelList(CTuningSpaceList *pTuningSpaceList,std:
 	if (pTuningSpaceList==NULL)
 		return false;
 
-	CTsAnalyzer *pTsAnalyzer=&GetAppClass().GetCoreEngine()->m_DtvEngine.m_TsAnalyzer;
+	CTsAnalyzer *pTsAnalyzer=&GetAppClass().CoreEngine.m_DtvEngine.m_TsAnalyzer;
 	CTsAnalyzer::SdtTsList TsList;
 
 	if (!pTsAnalyzer->IsSdtComplete()
@@ -557,7 +557,7 @@ void CChannelScan::InsertChannelInfo(int Index,const CChannelInfo *pChInfo,bool 
 	ListView_SetItem(hwndList,&lvi);
 
 	lvi.iSubItem=COLUMN_CHANNELNAME;
-	LPCTSTR pszChannelName=GetAppClass().GetCoreEngine()->m_DtvEngine.m_BonSrcDecoder.GetChannelName(pChInfo->GetSpace(),pChInfo->GetChannelIndex());
+	LPCTSTR pszChannelName=GetAppClass().CoreEngine.m_DtvEngine.m_BonSrcDecoder.GetChannelName(pChInfo->GetSpace(),pChInfo->GetChannelIndex());
 	::lstrcpyn(szText,!IsStringEmpty(pszChannelName)?pszChannelName:TEXT("\?\?\?"),lengthof(szText));
 	ListView_SetItem(hwndList,&lvi);
 
@@ -629,7 +629,7 @@ bool CChannelScan::LoadPreset(LPCTSTR pszFileName,CChannelList *pChannelList,int
 	if (!PresetList.LoadFromFile(szPresetFileName))
 		return false;
 
-	CBonSrcDecoder &BonSrcDecoder=GetAppClass().GetCoreEngine()->m_DtvEngine.m_BonSrcDecoder;
+	CBonSrcDecoder &BonSrcDecoder=GetAppClass().CoreEngine.m_DtvEngine.m_BonSrcDecoder;
 	std::vector<CDynamicString> BonDriverChannelList;
 	LPCTSTR pszName;
 	for (int i=0;(pszName=BonSrcDecoder.GetChannelName(Space,i))!=NULL;i++) {
@@ -685,7 +685,7 @@ bool CChannelScan::LoadPreset(LPCTSTR pszFileName,CChannelList *pChannelList,int
 
 bool CChannelScan::SetPreset(bool fAuto)
 {
-	LPCTSTR pszName=GetAppClass().GetCoreEngine()->m_DtvEngine.m_BonSrcDecoder.GetSpaceName(m_ScanSpace);
+	LPCTSTR pszName=GetAppClass().CoreEngine.m_DtvEngine.m_BonSrcDecoder.GetSpaceName(m_ScanSpace);
 	if (pszName==NULL)
 		return false;
 
@@ -739,8 +739,8 @@ INT_PTR CChannelScan::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 	switch (uMsg) {
 	case WM_INITDIALOG:
 		{
-			CAppMain &AppMain=GetAppClass();
-			CCoreEngine *pCoreEngine=AppMain.GetCoreEngine();
+			CAppMain &App=GetAppClass();
+			CCoreEngine *pCoreEngine=&App.CoreEngine;
 			int NumSpaces;
 			LPCTSTR pszName;
 
@@ -749,7 +749,7 @@ INT_PTR CChannelScan::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 				DlgComboBox_AddString(hDlg,IDC_CHANNELSCAN_SPACE,pszName);
 			}
 			if (NumSpaces>0) {
-				const CChannelInfo *pCurChannel=AppMain.GetChannelManager()->GetCurrentRealChannelInfo();
+				const CChannelInfo *pCurChannel=App.ChannelManager.GetCurrentRealChannelInfo();
 				if (pCurChannel!=NULL && pCurChannel->GetSpace()<NumSpaces)
 					m_ScanSpace=pCurChannel->GetSpace();
 				else
@@ -818,7 +818,7 @@ INT_PTR CChannelScan::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 					return TRUE;
 
 				m_ScanSpace=Space;
-				LPCTSTR pszName=GetAppClass().GetCoreEngine()->m_DtvEngine.m_BonSrcDecoder.GetSpaceName(Space);
+				LPCTSTR pszName=GetAppClass().CoreEngine.m_DtvEngine.m_BonSrcDecoder.GetSpaceName(Space);
 				bool fBS=false,fCS=false;
 				if (pszName!=NULL) {
 					fBS=::StrStrI(pszName,TEXT("BS"))!=NULL;
@@ -860,8 +860,8 @@ INT_PTR CChannelScan::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 				if (Space>=0) {
 					HWND hwndList=::GetDlgItem(hDlg,IDC_CHANNELSCAN_CHANNELLIST);
 
-					if (GetAppClass().GetUICore()->IsViewerEnabled()) {
-						GetAppClass().GetUICore()->EnableViewer(false);
+					if (GetAppClass().UICore.IsViewerEnabled()) {
+						GetAppClass().UICore.EnableViewer(false);
 						m_fRestorePreview=true;
 					}
 					m_ScanSpace=Space;
@@ -931,7 +931,7 @@ INT_PTR CChannelScan::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 							ListSort.UpdateChannelList(hwndList,m_TuningSpaceList.GetChannelList(Space));
 							if (IsStringEmpty(m_TuningSpaceList.GetTuningSpaceName(Space))) {
 								m_TuningSpaceList.GetTuningSpaceInfo(Space)->SetName(
-									GetAppClass().GetCoreEngine()->m_DtvEngine.m_BonSrcDecoder.GetSpaceName(Space));
+									GetAppClass().CoreEngine.m_DtvEngine.m_BonSrcDecoder.GetSpaceName(Space));
 							}
 							m_SortColumn=SortColumn;
 							m_fSortDescending=false;
@@ -1110,25 +1110,25 @@ INT_PTR CChannelScan::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 
 		case PSN_APPLY:
 			{
-				CAppMain &AppMain=GetAppClass();
+				CAppMain &App=GetAppClass();
 
 				if (m_fUpdated) {
 					m_TuningSpaceList.MakeAllChannelList();
 					TCHAR szFileName[MAX_PATH];
-					if (!GetAppClass().GetChannelManager()->GetChannelFileName(szFileName,lengthof(szFileName))
+					if (!App.ChannelManager.GetChannelFileName(szFileName,lengthof(szFileName))
 							|| ::lstrcmpi(::PathFindExtension(szFileName),CHANNEL_FILE_EXTENSION)!=0
 							|| !::PathFileExists(szFileName)) {
-						GetAppClass().GetCoreEngine()->GetDriverPath(szFileName,lengthof(szFileName));
+						App.CoreEngine.GetDriverPath(szFileName,lengthof(szFileName));
 						::PathRenameExtension(szFileName,CHANNEL_FILE_EXTENSION);
 					}
 					bool fOK=m_TuningSpaceList.SaveToFile(szFileName);
 					if (fOK) {
-						AppMain.AddLog(TEXT("チャンネルファイルを \"%s\" に保存しました。"),szFileName);
+						App.AddLog(TEXT("チャンネルファイルを \"%s\" に保存しました。"),szFileName);
 					} else {
 						TCHAR szText[32+MAX_PATH];
 						StdUtil::snprintf(szText,lengthof(szText),
 										  TEXT("チャンネルファイル \"%s\" を保存できません。"),szFileName);
-						AppMain.AddLog(TEXT("%s"),szText);
+						App.AddLog(TEXT("%s"),szText);
 						::MessageBox(hDlg,szText,NULL,MB_OK | MB_ICONEXCLAMATION);
 					}
 					SetUpdateFlag(UPDATE_CHANNELLIST);
@@ -1162,13 +1162,13 @@ INT_PTR CChannelScan::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 											::PathRenameExtension(szFileName,CHANNEL_FILE_EXTENSION);
 											*pSequence=_T('0')+i;
 											if (m_TuningSpaceList.SaveToFile(szFileName)) {
-												AppMain.AddLog(TEXT("チャンネルファイルを \"%s\" に保存しました。"),szFileName);
+												App.AddLog(TEXT("チャンネルファイルを \"%s\" に保存しました。"),szFileName);
 												::PathRenameExtension(szFileName,TEXT(".dll"));
-												AppMain.UpdateChannelList(szFileName,&m_TuningSpaceList);
+												App.Core.UpdateChannelList(szFileName,&m_TuningSpaceList);
 											} else {
 												StdUtil::snprintf(szText,lengthof(szText),
 																  TEXT("チャンネルファイル \"%s\" を保存できません。"),szFileName);
-												AppMain.AddLog(TEXT("%s"),szText);
+												App.AddLog(TEXT("%s"),szText);
 												if (::MessageBox(hDlg,szText,NULL,MB_OKCANCEL | MB_ICONEXCLAMATION)!=IDOK)
 													break;
 											}
@@ -1193,7 +1193,7 @@ INT_PTR CChannelScan::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 		case PSN_RESET:
 			if (m_fRestorePreview)
 				//SetUpdateFlag(UPDATE_PREVIEW);
-				GetAppClass().GetUICore()->EnableViewer(true);
+				GetAppClass().UICore.EnableViewer(true);
 			return TRUE;
 		}
 		break;
@@ -1254,7 +1254,7 @@ INT_PTR CChannelScan::ScanDlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPara
 	switch (uMsg) {
 	case WM_INITDIALOG:
 		{
-			CBonSrcDecoder &BonSrcDecoder=GetAppClass().GetCoreEngine()->m_DtvEngine.m_BonSrcDecoder;
+			CBonSrcDecoder &BonSrcDecoder=GetAppClass().CoreEngine.m_DtvEngine.m_BonSrcDecoder;
 			m_BonDriverChannelList.clear();
 			if (m_ScanChannel>0)
 				m_BonDriverChannelList.resize(m_ScanChannel);
@@ -1271,7 +1271,7 @@ INT_PTR CChannelScan::ScanDlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPara
 			::SendDlgItemMessage(hDlg,IDC_CHANNELSCAN_PROGRESS,PBM_SETPOS,
 								 m_ScanChannel,0);
 
-			GetAppClass().BeginChannelScan(m_ScanSpace);
+			GetAppClass().Core.BeginChannelScan(m_ScanSpace);
 
 			m_fCancelled=false;
 			m_hCancelEvent=::CreateEvent(NULL,FALSE,FALSE,NULL);
@@ -1298,11 +1298,11 @@ INT_PTR CChannelScan::ScanDlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPara
 
 	case WM_TIMER:
 		if (wParam==TIMER_ID_STATISTICS) {
-			const CCoreEngine *pCoreEngine=GetAppClass().GetCoreEngine();
+			const CCoreEngine &CoreEngine=GetAppClass().CoreEngine;
 			TCHAR szText[64],szSignalLevel[32],szBitRate[32];
 
-			pCoreEngine->GetSignalLevelText(szSignalLevel,lengthof(szSignalLevel));
-			pCoreEngine->GetBitRateText(szBitRate,lengthof(szBitRate));
+			CoreEngine.GetSignalLevelText(szSignalLevel,lengthof(szSignalLevel));
+			CoreEngine.GetBitRateText(szBitRate,lengthof(szBitRate));
 			StdUtil::snprintf(szText,lengthof(szText),
 							  TEXT("%s / %s"),szSignalLevel,szBitRate);
 			::SetDlgItemText(hDlg,IDC_CHANNELSCAN_LEVEL,szText);
@@ -1374,7 +1374,7 @@ INT_PTR CChannelScan::ScanDlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPara
 			::SetDlgItemText(hDlg,IDC_CHANNELSCAN_INFO,szText);
 			::SetDlgItemText(hDlg,IDC_CHANNELSCAN_CHANNEL,m_BonDriverChannelList[CurChannel].c_str());
 			::SendDlgItemMessage(hDlg,IDC_CHANNELSCAN_PROGRESS,PBM_SETPOS,wParam,0);
-			GetAppClass().SetProgress(CurChannel,NumChannels);
+			GetAppClass().Core.SetProgress(CurChannel,NumChannels);
 		}
 		return TRUE;
 
@@ -1402,8 +1402,8 @@ INT_PTR CChannelScan::ScanDlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPara
 
 			::WaitForSingleObject(m_hScanThread,INFINITE);
 
-			//GetAppClass().EndChannelScan();
-			GetAppClass().EndProgress();
+			//GetAppClass().Core.EndChannelScan();
+			GetAppClass().Core.EndProgress();
 
 			if (m_fCancelled) {
 				::EndDialog(hDlg,IDCANCEL);
@@ -1469,7 +1469,7 @@ unsigned int __stdcall CChannelScan::ScanProc(LPVOID lpParameter)
 
 void CChannelScan::Scan()
 {
-	CDtvEngine *pDtvEngine=&GetAppClass().GetCoreEngine()->m_DtvEngine;
+	CDtvEngine *pDtvEngine=&GetAppClass().CoreEngine.m_DtvEngine;
 	CTsAnalyzer *pTsAnalyzer=&pDtvEngine->m_TsAnalyzer;
 
 	ScanResult Result=SCAN_RESULT_CANCELLED;
@@ -1719,7 +1719,7 @@ End:
 
 float CChannelScan::GetSignalLevel()
 {
-	CBonSrcDecoder *pBonSrcDecoder=&GetAppClass().GetCoreEngine()->m_DtvEngine.m_BonSrcDecoder;
+	CBonSrcDecoder *pBonSrcDecoder=&GetAppClass().CoreEngine.m_DtvEngine.m_BonSrcDecoder;
 
 	float SignalLevel=pBonSrcDecoder->GetSignalLevel();
 	if (SignalLevel>m_MaxSignalLevel)

@@ -85,7 +85,7 @@ bool CMenuOptions::ReadSettings(CSettings &Settings)
 
 	int ItemCount;
 	if (Settings.Read(TEXT("ItemCount"),&ItemCount) && ItemCount>0) {
-		const CCommandList *pCommandList=GetAppClass().GetCommandList();
+		const CCommandList &CommandList=GetAppClass().CommandList;
 		std::vector<MenuItemInfo> ItemList;
 
 		for (int i=0;i<ItemCount;i++) {
@@ -104,7 +104,7 @@ bool CMenuOptions::ReadSettings(CSettings &Settings)
 					Item.ID=MENU_ID_SEPARATOR;
 					ItemList.push_back(Item);
 				} else {
-					int Command=pCommandList->ParseText(szText);
+					int Command=CommandList.ParseText(szText);
 					if (Command>0) {
 						int ID=CommandToID(Command);
 						if (ID>=0) {
@@ -165,7 +165,7 @@ bool CMenuOptions::WriteSettings(CSettings &Settings)
 	}
 	if (!fDefault) {
 		Settings.Write(TEXT("ItemCount"),(int)m_MenuItemList.size());
-		const CCommandList *pCommandList=GetAppClass().GetCommandList();
+		const CCommandList &CommandList=GetAppClass().CommandList;
 		for (size_t i=0;i<m_MenuItemList.size();i++) {
 			TCHAR szName[32];
 
@@ -173,7 +173,7 @@ bool CMenuOptions::WriteSettings(CSettings &Settings)
 			if (m_MenuItemList[i].ID==MENU_ID_SEPARATOR) {
 				Settings.Write(szName,TEXT(""));
 			} else {
-				Settings.Write(szName,pCommandList->GetCommandTextByID(IDToCommand(m_MenuItemList[i].ID)));
+				Settings.Write(szName,CommandList.GetCommandTextByID(IDToCommand(m_MenuItemList[i].ID)));
 			}
 			::wsprintf(szName,TEXT("Item%d_State"),i);
 			Settings.Write(szName,m_MenuItemList[i].fVisible?ITEM_STATE_VISIBLE:0);

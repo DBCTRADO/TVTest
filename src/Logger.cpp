@@ -319,7 +319,7 @@ INT_PTR CLogger::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 			return TRUE;
 
 		case IDC_LOG_COPY:
-			CopyToClipboard(GetAppClass().GetUICore()->GetMainWindow());
+			CopyToClipboard(GetAppClass().UICore.GetMainWindow());
 			return TRUE;
 
 		case IDC_LOG_SAVE:

@@ -97,7 +97,7 @@ bool CZoomOptions::ReadSettings(CSettings &Settings)
 
 	int ListCount;
 	if (Settings.Read(TEXT("ZoomListCount"),&ListCount) && ListCount>0) {
-		const CCommandList *pCommandList=GetAppClass().GetCommandList();
+		const CCommandList *pCommandList=&GetAppClass().CommandList;
 
 		if (ListCount>NUM_ZOOM_COMMANDS)
 			ListCount=NUM_ZOOM_COMMANDS;
@@ -163,7 +163,7 @@ bool CZoomOptions::WriteSettings(CSettings &Settings)
 	}
 
 	Settings.Write(TEXT("ZoomListCount"),NUM_ZOOM_COMMANDS);
-	const CCommandList *pCommandList=GetAppClass().GetCommandList();
+	const CCommandList *pCommandList=&GetAppClass().CommandList;
 	for (int i=0;i<NUM_ZOOM_COMMANDS;i++) {
 		const int Index=m_Order[i];
 		const ZoomInfo &Info=m_ZoomList[Index];
@@ -435,7 +435,7 @@ INT_PTR CZoomOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 
 		case IDC_ZOOMOPTIONS_GETCURSIZE:
 			{
-				HWND hwndViewer=GetAppClass().GetUICore()->GetViewerWindow();
+				HWND hwndViewer=GetAppClass().UICore.GetViewerWindow();
 
 				if (hwndViewer!=NULL) {
 					RECT rc;

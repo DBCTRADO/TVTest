@@ -2,7 +2,6 @@
 #include <htmlhelp.h>
 #include <shlwapi.h>
 #include "TVTest.h"
-#include "AppMain.h"
 #include "Help.h"
 
 

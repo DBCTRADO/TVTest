@@ -1431,7 +1431,7 @@ bool CProgramGuide::UpdateList(bool fUpdateList)
 			pService=new ProgramGuide::CServiceInfo(*pChannelInfo,szBonDriver);
 		}
 
-		HBITMAP hbmLogo=GetAppClass().GetLogoManager()->GetAssociatedLogoBitmap(
+		HBITMAP hbmLogo=GetAppClass().LogoManager.GetAssociatedLogoBitmap(
 			pService->GetNetworkID(),pService->GetServiceID(),CLogoManager::LOGOTYPE_SMALL);
 		if (hbmLogo!=NULL)
 			pService->SetLogo(hbmLogo);
@@ -3241,13 +3241,13 @@ bool CProgramGuide::ShowProgramSearch(bool fShow)
 				m_ProgramSearch.SetPosition(pt.x,pt.y,0,0);
 			}
 			m_ProgramSearch.Create(m_hwnd);
-			GetAppClass().GetUICore()->RegisterModelessDialog(&m_ProgramSearch);
+			GetAppClass().UICore.RegisterModelessDialog(&m_ProgramSearch);
 		}
 		if (!m_ProgramSearch.IsVisible())
 			m_ProgramSearch.SetVisible(true);
 	} else {
 		if (m_ProgramSearch.IsCreated()) {
-			GetAppClass().GetUICore()->UnregisterModelessDialog(&m_ProgramSearch);
+			GetAppClass().UICore.UnregisterModelessDialog(&m_ProgramSearch);
 			m_ProgramSearch.Destroy();
 		}
 	}
@@ -4371,7 +4371,7 @@ bool CProgramGuide::CEventInfoPopupHandler::ShowPopup(LPARAM Param,CEventInfoPop
 			const ProgramGuide::CServiceInfo *pServiceInfo=pLayout->GetServiceInfo();
 			int IconWidth,IconHeight;
 			pPopup->GetPreferredIconSize(&IconWidth,&IconHeight);
-			HICON hIcon=GetAppClass().GetLogoManager()->CreateLogoIcon(
+			HICON hIcon=GetAppClass().LogoManager.CreateLogoIcon(
 				pServiceInfo->GetNetworkID(),pServiceInfo->GetServiceID(),
 				IconWidth,IconHeight);
 
@@ -4538,6 +4538,9 @@ void CProgramGuide::CProgramSearchEventHandler::DoCommand(
 
 
 #include "Menu.h"
+
+namespace ProgramGuideBar
+{
 
 enum {
 	STATUS_ITEM_TUNER,
@@ -4808,10 +4811,6 @@ public:
 };
 
 
-
-
-namespace ProgramGuideBar
-{
 
 
 CProgramGuideBar::CProgramGuideBar(CProgramGuide *pProgramGuide)
@@ -6672,7 +6671,7 @@ INT_PTR CALLBACK CProgramGuideTool::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LP
 			return TRUE;
 
 		case IDC_PROGRAMGUIDETOOL_HELP:
-			GetAppClass().ShowHelpContent(HELP_ID_PROGRAMGUIDETOOL);
+			GetAppClass().Core.ShowHelpContent(HELP_ID_PROGRAMGUIDETOOL);
 			return TRUE;
 
 		case IDOK:

@@ -194,7 +194,7 @@ LRESULT CCaptionPanel::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam
 			m_fClearLast=true;
 			m_fContinue=false;
 
-			CCaptionDecoder *pCaptionDecoder=&GetAppClass().GetCoreEngine()->m_DtvEngine.m_CaptionDecoder;
+			CCaptionDecoder *pCaptionDecoder=&GetAppClass().CoreEngine.m_DtvEngine.m_CaptionDecoder;
 			pCaptionDecoder->SetCaptionHandler(this);
 			pCaptionDecoder->SetDRCSMap(&m_DRCSMap);
 		}
@@ -286,9 +286,9 @@ LRESULT CCaptionPanel::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam
 
 	case WM_DESTROY:
 		{
-			CCaptionDecoder *pCaptionDecoder=&GetAppClass().GetCoreEngine()->m_DtvEngine.m_CaptionDecoder;
-			pCaptionDecoder->SetCaptionHandler(NULL);
-			pCaptionDecoder->SetDRCSMap(NULL);
+			CCaptionDecoder &CaptionDecoder=GetAppClass().CoreEngine.m_DtvEngine.m_CaptionDecoder;
+			CaptionDecoder.SetCaptionHandler(NULL);
+			CaptionDecoder.SetDRCSMap(NULL);
 
 			ClearCaptionList();
 			m_hwndEdit=NULL;

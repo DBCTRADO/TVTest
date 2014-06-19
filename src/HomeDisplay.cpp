@@ -3,6 +3,7 @@
 #include <algorithm>
 #include "TVTest.h"
 #include "HomeDisplay.h"
+#include "AppMain.h"
 #include "Favorites.h"
 #include "EpgProgramList.h"
 #include "EpgUtil.h"
@@ -287,8 +288,8 @@ void CChannelListCategoryBase::Clear()
 
 void CChannelListCategoryBase::UpdateChannelInfo()
 {
-	CEpgProgramList *pEpgProgramList=GetAppClass().GetEpgProgramList();
-	CLogoManager *pLogoManager=GetAppClass().GetLogoManager();
+	CEpgProgramList &EpgProgramList=GetAppClass().EpgProgramList;
+	CLogoManager &LogoManager=GetAppClass().LogoManager;
 	SYSTEMTIME stCurTime;
 
 	GetCurrentJST(&stCurTime);
@@ -297,7 +298,7 @@ void CChannelListCategoryBase::UpdateChannelInfo()
 		CChannelItemBase *pItem=m_ItemList[i];
 		CEventInfoData EventInfo;
 
-		if (pEpgProgramList->GetEventInfo(
+		if (EpgProgramList.GetEventInfo(
 				pItem->GetNetworkID(),
 				pItem->GetTransportStreamID(),
 				pItem->GetServiceID(),
@@ -307,7 +308,7 @@ void CChannelListCategoryBase::UpdateChannelInfo()
 			if (EventInfo.m_fValidStartTime
 					&& EventInfo.m_DurationSec>0
 					&& EventInfo.GetEndTime(&st)
-					&& pEpgProgramList->GetEventInfo(
+					&& EpgProgramList.GetEventInfo(
 						pItem->GetNetworkID(),
 						pItem->GetTransportStreamID(),
 						pItem->GetServiceID(),
@@ -318,7 +319,7 @@ void CChannelListCategoryBase::UpdateChannelInfo()
 			}
 		} else {
 			pItem->SetEvent(0,NULL);
-			if (pEpgProgramList->GetNextEventInfo(
+			if (EpgProgramList.GetNextEventInfo(
 						pItem->GetNetworkID(),
 						pItem->GetTransportStreamID(),
 						pItem->GetServiceID(),
@@ -330,11 +331,11 @@ void CChannelListCategoryBase::UpdateChannelInfo()
 			}
 		}
 
-		HBITMAP hbmLogo=pLogoManager->GetAssociatedLogoBitmap(
+		HBITMAP hbmLogo=LogoManager.GetAssociatedLogoBitmap(
 			pItem->GetNetworkID(),pItem->GetServiceID(),CLogoManager::LOGOTYPE_SMALL);
 		if (hbmLogo!=NULL)
 			pItem->SetSmallLogo(hbmLogo);
-		hbmLogo=pLogoManager->GetAssociatedLogoBitmap(
+		hbmLogo=LogoManager.GetAssociatedLogoBitmap(
 			pItem->GetNetworkID(),pItem->GetServiceID(),CLogoManager::LOGOTYPE_BIG);
 		if (hbmLogo!=NULL)
 			pItem->SetBigLogo(hbmLogo);
@@ -514,11 +515,11 @@ bool CFavoritesCategory::Create()
 		}
 	};
 
-	TVTest::CFavoritesManager *pFavoritesManager=GetAppClass().GetFavoritesManager();
+	TVTest::CFavoritesManager &FavoritesManager=GetAppClass().FavoritesManager;
 	CItemEnumerator ItemEnumerator(m_ItemList);
 
 	Clear();
-	ItemEnumerator.EnumItems(pFavoritesManager->GetRootFolder());
+	ItemEnumerator.EnumItems(FavoritesManager.GetRootFolder());
 
 	UpdateChannelInfo();
 
@@ -530,13 +531,13 @@ bool CFavoritesCategory::OnDecide()
 {
 	if (m_HotItem>=0) {
 		const CChannelItem *pItem=static_cast<CChannelItem*>(m_ItemList[m_HotItem]);
-		CAppMain::ChannelSelectInfo ChSelInfo;
+		CAppCore::ChannelSelectInfo ChSelInfo;
 
 		ChSelInfo.Channel=*static_cast<const CChannelInfo*>(pItem);
 		ChSelInfo.TunerName=pItem->GetBonDriverFileName();
 		ChSelInfo.fUseCurTuner=!pItem->GetForceBonDriverChange();
 
-		return GetAppClass().SelectChannel(ChSelInfo);
+		return GetAppClass().Core.SelectChannel(ChSelInfo);
 	}
 
 	return false;
@@ -589,12 +590,12 @@ bool CRecentChannelsCategory::Create()
 {
 	Clear();
 
-	CRecentChannelList *pRecentChannelList=GetAppClass().GetRecentChannelList();
-	int NumChannels=pRecentChannelList->NumChannels();
+	CRecentChannelList &RecentChannelList=GetAppClass().RecentChannelList;
+	int NumChannels=RecentChannelList.NumChannels();
 	if (NumChannels>m_MaxChannels)
 		NumChannels=m_MaxChannels;
 	for (int i=0;i<NumChannels;i++) {
-		m_ItemList.push_back(new CChannelItem(pRecentChannelList->GetChannelInfo(i)));
+		m_ItemList.push_back(new CChannelItem(RecentChannelList.GetChannelInfo(i)));
 	}
 
 	UpdateChannelInfo();
@@ -617,13 +618,13 @@ bool CRecentChannelsCategory::OnDecide()
 {
 	if (m_HotItem>=0) {
 		const CChannelItem *pItem=static_cast<CChannelItem*>(m_ItemList[m_HotItem]);
-		CAppMain::ChannelSelectInfo ChSelInfo;
+		CAppCore::ChannelSelectInfo ChSelInfo;
 
 		ChSelInfo.Channel=*static_cast<const CChannelInfo*>(pItem);
 		ChSelInfo.TunerName=pItem->GetBonDriverFileName();
 		ChSelInfo.fUseCurTuner=false;
 
-		return GetAppClass().SelectChannel(ChSelInfo);
+		return GetAppClass().Core.SelectChannel(ChSelInfo);
 	}
 
 	return false;
@@ -728,7 +729,7 @@ bool CFeaturedEventsCategory::Create()
 	Clear();
 
 	CChannelList ServiceList;
-	GetAppClass().GetDriverManager()->GetAllServiceList(&ServiceList);
+	GetAppClass().DriverManager.GetAllServiceList(&ServiceList);
 
 	CFeaturedEvents FeaturedEvents(m_Settings);
 	FeaturedEvents.Update();
@@ -772,7 +773,7 @@ void CFeaturedEventsCategory::LayOut(const CHomeDisplay::StyleInfo &Style,HDC hd
 
 	m_LogoHeight=min(Style.FontHeight,36);
 	m_LogoWidth=(m_LogoHeight*16+4)/9;
-	CLogoManager *pLogoManager=GetAppClass().GetLogoManager();
+	CLogoManager &LogoManager=GetAppClass().LogoManager;
 
 	const int EventTextWidth=(ContentRect.right-ContentRect.left)-
 		(Style.ItemMargins.left+Style.ItemMargins.top)-Style.FontHeight;
@@ -787,7 +788,7 @@ void CFeaturedEventsCategory::LayOut(const CHomeDisplay::StyleInfo &Style,HDC hd
 				&& sz.cx>m_ChannelNameWidth)
 			m_ChannelNameWidth=sz.cx;
 
-		pItem->SetLogo(pLogoManager->GetAssociatedLogoBitmap(
+		pItem->SetLogo(LogoManager.GetAssociatedLogoBitmap(
 			pItem->GetChannelInfo().GetNetworkID(),
 			pItem->GetChannelInfo().GetServiceID(),
 			m_LogoHeight<=14?CLogoManager::LOGOTYPE_SMALL:CLogoManager::LOGOTYPE_BIG));

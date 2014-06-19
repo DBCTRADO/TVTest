@@ -50,7 +50,7 @@ bool CDriverInfo::LoadTuningSpaceList(LoadTuningSpaceListMode Mode)
 	if (!m_fChannelFileLoaded) {
 		TCHAR szChannelFileName[MAX_PATH];
 
-		App.GetChannelFileName(pszFileName,szChannelFileName,lengthof(szChannelFileName));
+		App.Core.GetChannelFileName(pszFileName,szChannelFileName,lengthof(szChannelFileName));
 		if (m_TuningSpaceList.LoadFromFile(szChannelFileName)) {
 #if 0
 			if (fUseDriver && Mode==LOADTUNINGSPACE_DEFAULT) {
@@ -80,7 +80,7 @@ bool CDriverInfo::LoadTuningSpaceList(LoadTuningSpaceListMode Mode)
 
 		if (::PathIsRelative(pszFileName)) {
 			TCHAR szTemp[MAX_PATH];
-			GetAppClass().GetDriverDirectory(szTemp,lengthof(szTemp));
+			App.Core.GetDriverDirectory(szTemp,lengthof(szTemp));
 			::PathAppend(szTemp,pszFileName);
 			::PathCanonicalize(szFilePath,szTemp);
 		} else {
@@ -91,9 +91,9 @@ bool CDriverInfo::LoadTuningSpaceList(LoadTuningSpaceListMode Mode)
 		if (hLib!=NULL) {
 			TCHAR szCurDriverPath[MAX_PATH];
 
-			if (App.GetCoreEngine()->GetDriverPath(szCurDriverPath,lengthof(szCurDriverPath))
+			if (App.CoreEngine.GetDriverPath(szCurDriverPath,lengthof(szCurDriverPath))
 					&& IsEqualFileName(szFilePath,szCurDriverPath)) {
-				m_DriverSpaceList=*App.GetChannelManager()->GetDriverTuningSpaceList();
+				m_DriverSpaceList=*App.ChannelManager.GetDriverTuningSpaceList();
 				m_fDriverSpaceLoaded=true;
 			}
 		} else if ((hLib=::LoadLibrary(szFilePath))!=NULL) {

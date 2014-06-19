@@ -555,11 +555,11 @@ INT_PTR CPanAndScanOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPa
 				PanAndScanInfo Info;
 
 				if (GetSettings(&Info)) {
-					CUICore *pUICore=GetAppClass().GetUICore();
+					CUICore &UICore=GetAppClass().UICore;
 					CUICore::PanAndScanInfo OldInfo;
 
-					pUICore->GetPanAndScan(&OldInfo);
-					pUICore->SetPanAndScan(Info.Info);
+					UICore.GetPanAndScan(&OldInfo);
+					UICore.SetPanAndScan(Info.Info);
 					m_fTested=true;
 					m_OldPanAndScanInfo=OldInfo;
 				}
@@ -582,7 +582,7 @@ INT_PTR CPanAndScanOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPa
 			}
 		case IDCANCEL:
 			if (m_fTested)
-				GetAppClass().GetUICore()->SetPanAndScan(m_OldPanAndScanInfo);
+				GetAppClass().UICore.SetPanAndScan(m_OldPanAndScanInfo);
 
 			::EndDialog(hDlg,LOWORD(wParam));
 			return TRUE;

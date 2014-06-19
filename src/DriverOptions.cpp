@@ -475,13 +475,13 @@ void CDriverOptions::InitDlgItem(int Driver)
 							  IDC_DRIVEROPTIONS_INITCHANNEL_CHANNEL,
 					InitChannelType==CDriverSettings::INITIALCHANNEL_CUSTOM);
 		bool fCur=IsEqualFileName(pszFileName,
-			::PathFindFileName(GetAppClass().GetCoreEngine()->GetDriverFileName()));
+			::PathFindFileName(GetAppClass().CoreEngine.GetDriverFileName()));
 		if (fCur || pDriverInfo->LoadTuningSpaceList(CDriverInfo::LOADTUNINGSPACE_USEDRIVER_NOOPEN)) {
 			const CTuningSpaceList *pTuningSpaceList;
 			int NumSpaces,i;
 
 			if (fCur) {
-				pTuningSpaceList=GetAppClass().GetChannelManager()->GetDriverTuningSpaceList();
+				pTuningSpaceList=GetAppClass().ChannelManager.GetDriverTuningSpaceList();
 				NumSpaces=pTuningSpaceList->NumSpaces();
 			} else {
 				pTuningSpaceList=pDriverInfo->GetTuningSpaceList();
@@ -566,7 +566,7 @@ void CDriverOptions::SetChannelList(int Driver)
 		return;
 	bool fCur=IsEqualFileName(
 		pSettings->GetFileName(),
-		::PathFindFileName(GetAppClass().GetCoreEngine()->GetDriverFileName()));
+		::PathFindFileName(GetAppClass().CoreEngine.GetDriverFileName()));
 	const CDriverInfo *pDriverInfo;
 	int i;
 
@@ -579,7 +579,7 @@ void CDriverOptions::SetChannelList(int Driver)
 			const CChannelList *pChannelList;
 
 			if (fCur)
-				pChannelList=GetAppClass().GetChannelManager()->GetFileChannelList(i);
+				pChannelList=GetAppClass().ChannelManager.GetFileChannelList(i);
 			else
 				pChannelList=pDriverInfo->GetChannelList(i);
 			if (pChannelList==NULL)
@@ -592,7 +592,7 @@ void CDriverOptions::SetChannelList(int Driver)
 			const CChannelList *pChannelList;
 
 			if (fCur)
-				pChannelList=GetAppClass().GetChannelManager()->GetChannelList(i);
+				pChannelList=GetAppClass().ChannelManager.GetChannelList(i);
 			else
 				pChannelList=pDriverInfo->GetChannelList(i);
 			if (pChannelList!=NULL) {
@@ -653,7 +653,7 @@ INT_PTR CDriverOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 					}
 					DlgComboBox_SetItemData(hDlg,IDC_DRIVEROPTIONS_DRIVERLIST,i,(LPARAM)pSettings);
 				}
-				LPCTSTR pszCurDriverName=GetAppClass().GetCoreEngine()->GetDriverFileName();
+				LPCTSTR pszCurDriverName=GetAppClass().CoreEngine.GetDriverFileName();
 				if (pszCurDriverName[0]!='\0') {
 					CurDriver=(int)DlgComboBox_FindStringExact(hDlg,IDC_DRIVEROPTIONS_DRIVERLIST,
 						-1,::PathFindFileName(pszCurDriverName));
@@ -816,7 +816,7 @@ INT_PTR CDriverOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 		switch (((LPNMHDR)lParam)->code) {
 		case PSN_APPLY:
 			m_SettingList=m_CurSettingList;
-			GetAppClass().ApplyBonDriverOptions();
+			GetAppClass().Core.ApplyBonDriverOptions();
 			m_fChanged=true;
 			break;
 		}
@@ -847,7 +847,7 @@ CDriverOptions::BonDriverOptions::BonDriverOptions()
 
 CDriverOptions::BonDriverOptions::BonDriverOptions(LPCTSTR pszBonDriverName)
 	: fNoDescramble(false)
-	, fNoSignalLevel(GetAppClass().GetCoreEngine()->IsNetworkDriverFileName(pszBonDriverName))
+	, fNoSignalLevel(GetAppClass().CoreEngine.IsNetworkDriverFileName(pszBonDriverName))
 	, fIgnoreInitialStream(!IsBonDriverSpinel(pszBonDriverName))
 	, fPurgeStreamOnChannelChange(true)
 	, fResetChannelChangeErrorCount(true)

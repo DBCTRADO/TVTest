@@ -25,7 +25,7 @@ void CTunerControlItem::CalcSize(int Width,SIZE *pSize)
 
 void CTunerControlItem::Draw(HDC hdc,const RECT &Rect)
 {
-	const CChannelManager &ChannelManager=*GetAppClass().GetChannelManager();
+	const CChannelManager &ChannelManager=GetAppClass().ChannelManager;
 	const CChannelInfo *pChInfo=ChannelManager.GetCurrentRealChannelInfo();
 	LPCTSTR pszText;
 
@@ -52,8 +52,7 @@ void CTunerControlItem::OnLButtonDown(int x,int y)
 	POINT pt;
 
 	GetMenuPos(&pt);
-	GetAppClass().GetUICore()->PopupSubMenu(CMainMenu::SUBMENU_SPACE,
-											&pt,TPM_RIGHTBUTTON);
+	GetAppClass().UICore.PopupSubMenu(CMainMenu::SUBMENU_SPACE,&pt,TPM_RIGHTBUTTON);
 }
 
 void CTunerControlItem::OnRButtonDown(int x,int y)
@@ -61,8 +60,7 @@ void CTunerControlItem::OnRButtonDown(int x,int y)
 	POINT pt;
 
 	GetMenuPos(&pt);
-	GetAppClass().GetUICore()->ShowSpecialMenu(CUICore::MENU_TUNERSELECT,
-											   &pt,TPM_RIGHTBUTTON);
+	GetAppClass().UICore.ShowSpecialMenu(CUICore::MENU_TUNERSELECT,&pt,TPM_RIGHTBUTTON);
 }
 
 
@@ -74,12 +72,12 @@ void CChannelControlItem::CalcSize(int Width,SIZE *pSize)
 
 void CChannelControlItem::Draw(HDC hdc,const RECT &Rect)
 {
-	CAppMain &AppMain=GetAppClass();
-	const CChannelManager &ChannelManager=*AppMain.GetChannelManager();
+	CAppMain &App=GetAppClass();
+	const CChannelManager &ChannelManager=App.ChannelManager;
 	const CChannelInfo *pInfo;
 	TCHAR szText[4+MAX_CHANNEL_NAME];
 
-	if (AppMain.GetUICore()->GetSkin()->IsWheelChannelChanging()) {
+	if (App.UICore.GetSkin()->IsWheelChannelChanging()) {
 		COLORREF crText,crBack;
 
 		crText=::GetTextColor(hdc);
@@ -104,8 +102,7 @@ void CChannelControlItem::OnLButtonDown(int x,int y)
 	POINT pt;
 
 	GetMenuPos(&pt);
-	GetAppClass().GetUICore()->PopupSubMenu(CMainMenu::SUBMENU_CHANNEL,
-											&pt,TPM_RIGHTBUTTON);
+	GetAppClass().UICore.PopupSubMenu(CMainMenu::SUBMENU_CHANNEL,&pt,TPM_RIGHTBUTTON);
 }
 
 void CChannelControlItem::OnRButtonDown(int x,int y)
@@ -113,8 +110,7 @@ void CChannelControlItem::OnRButtonDown(int x,int y)
 	POINT pt;
 
 	GetMenuPos(&pt);
-	GetAppClass().GetUICore()->PopupSubMenu(CMainMenu::SUBMENU_SERVICE,
-											&pt,TPM_RIGHTBUTTON);
+	GetAppClass().UICore.PopupSubMenu(CMainMenu::SUBMENU_SERVICE,&pt,TPM_RIGHTBUTTON);
 }
 
 
@@ -126,14 +122,14 @@ void CVideoControlItem::CalcSize(int Width,SIZE *pSize)
 
 void CVideoControlItem::Draw(HDC hdc,const RECT &Rect)
 {
-	CAppMain &AppMain=GetAppClass();
-	const CCoreEngine &CoreEngine=*AppMain.GetCoreEngine();
+	CAppMain &App=GetAppClass();
+	const CCoreEngine &CoreEngine=App.CoreEngine;
 	TCHAR szText[32];
 
 	::wsprintf(szText,TEXT("%d x %d (%d %%)"),
 			   CoreEngine.GetOriginalVideoWidth(),
 			   CoreEngine.GetOriginalVideoHeight(),
-			   AppMain.GetUICore()->GetZoomPercentage());
+			   App.UICore.GetZoomPercentage());
 	RECT rc=Rect;
 	rc.left+=TEXT_MARGIN;
 	rc.right-=TEXT_MARGIN;
@@ -146,8 +142,7 @@ void CVideoControlItem::OnLButtonDown(int x,int y)
 	POINT pt;
 
 	GetMenuPos(&pt);
-	GetAppClass().GetUICore()->PopupSubMenu(CMainMenu::SUBMENU_ZOOM,
-											&pt,TPM_RIGHTBUTTON);
+	GetAppClass().UICore.PopupSubMenu(CMainMenu::SUBMENU_ZOOM,&pt,TPM_RIGHTBUTTON);
 }
 
 void CVideoControlItem::OnRButtonDown(int x,int y)
@@ -155,8 +150,7 @@ void CVideoControlItem::OnRButtonDown(int x,int y)
 	POINT pt;
 
 	GetMenuPos(&pt);
-	GetAppClass().GetUICore()->PopupSubMenu(CMainMenu::SUBMENU_ASPECTRATIO,
-											&pt,TPM_RIGHTBUTTON);
+	GetAppClass().UICore.PopupSubMenu(CMainMenu::SUBMENU_ASPECTRATIO,&pt,TPM_RIGHTBUTTON);
 }
 
 
@@ -170,7 +164,7 @@ CVolumeControlItem::CVolumeControlItem()
 
 void CVolumeControlItem::Draw(HDC hdc,const RECT &Rect)
 {
-	CUICore *pUICore=GetAppClass().GetUICore();
+	CUICore &UICore=GetAppClass().UICore;
 	COLORREF TextColor=::GetTextColor(hdc),BarColor;
 	HPEN hpen,hpenOld;
 	HBRUSH hbr,hbrOld;
@@ -188,14 +182,14 @@ void CVolumeControlItem::Draw(HDC hdc,const RECT &Rect)
 	SelectBrush(hdc,hbrOld);
 	SelectPen(hdc,hpenOld);
 	::DeleteObject(hpen);
-	if (!pUICore->GetMute())
+	if (!UICore.GetMute())
 		BarColor=TextColor;
 	else
 		BarColor=MixColor(TextColor,::GetBkColor(hdc));
 	hbr=::CreateSolidBrush(BarColor);
 	rc.left+=2;
 	rc.top+=2;
-	rc.right=rc.left+(rc.right-2-rc.left)*pUICore->GetVolume()/CCoreEngine::MAX_VOLUME;
+	rc.right=rc.left+(rc.right-2-rc.left)*UICore.GetVolume()/CCoreEngine::MAX_VOLUME;
 	rc.bottom-=2;
 	::FillRect(hdc,&rc,hbr);
 	::DeleteObject(hbr);
@@ -209,13 +203,13 @@ void CVolumeControlItem::OnLButtonDown(int x,int y)
 
 void CVolumeControlItem::OnRButtonDown(int x,int y)
 {
-	CUICore *pUICore=GetAppClass().GetUICore();
-	pUICore->SetMute(!pUICore->GetMute());
+	CUICore &UICore=GetAppClass().UICore;
+	UICore.SetMute(!UICore.GetMute());
 }
 
 void CVolumeControlItem::OnMouseMove(int x,int y)
 {
-	CUICore *pUICore=GetAppClass().GetUICore();
+	CUICore &UICore=GetAppClass().UICore;
 	int Volume;
 
 	Volume=(x-(m_Margin+2))*CCoreEngine::MAX_VOLUME/((m_Position.right-m_Position.left)-(m_Margin+2)*2-1);
@@ -223,8 +217,8 @@ void CVolumeControlItem::OnMouseMove(int x,int y)
 		Volume=0;
 	else if (Volume>CCoreEngine::MAX_VOLUME)
 		Volume=CCoreEngine::MAX_VOLUME;
-	if (pUICore->GetMute() || Volume!=pUICore->GetVolume())
-		pUICore->SetVolume(Volume,false);
+	if (UICore.GetMute() || Volume!=UICore.GetVolume())
+		UICore.SetVolume(Volume,false);
 }
 
 
@@ -243,7 +237,7 @@ void CAudioControlItem::Draw(HDC hdc,const RECT &Rect)
 	rc.left+=TEXT_MARGIN;
 	rc.right-=TEXT_MARGIN;
 
-	if (App.GetCoreEngine()->m_DtvEngine.m_MediaViewer.IsSpdifPassthrough()) {
+	if (App.CoreEngine.m_DtvEngine.m_MediaViewer.IsSpdifPassthrough()) {
 		if (!m_Icons.IsCreated())
 			m_Icons.Load(App.GetResourceInstance(),IDB_PASSTHROUGH);
 		m_Icons.Draw(hdc,rc.left,rc.top+((rc.bottom-rc.top)-16)/2,
@@ -252,7 +246,7 @@ void CAudioControlItem::Draw(HDC hdc,const RECT &Rect)
 	}
 
 	TCHAR szText[64];
-	if (App.GetUICore()->FormatCurrentAudioText(szText,lengthof(szText))<=0)
+	if (App.UICore.FormatCurrentAudioText(szText,lengthof(szText))<=0)
 		::lstrcpy(szText,TEXT("<‰¹º>"));
 	::DrawText(hdc,szText,-1,&rc,
 			   DT_LEFT | DT_SINGLELINE | DT_VCENTER | DT_NOPREFIX | DT_END_ELLIPSIS);
@@ -260,7 +254,7 @@ void CAudioControlItem::Draw(HDC hdc,const RECT &Rect)
 
 void CAudioControlItem::OnLButtonDown(int x,int y)
 {
-	if (!GetAppClass().GetUICore()->SwitchAudio())
+	if (!GetAppClass().UICore.SwitchAudio())
 		OnRButtonDown(x,y);
 }
 
@@ -269,8 +263,7 @@ void CAudioControlItem::OnRButtonDown(int x,int y)
 	POINT pt;
 
 	GetMenuPos(&pt);
-	GetAppClass().GetUICore()->PopupSubMenu(CMainMenu::SUBMENU_AUDIO,
-											&pt,TPM_RIGHTBUTTON);
+	GetAppClass().UICore.PopupSubMenu(CMainMenu::SUBMENU_AUDIO,&pt,TPM_RIGHTBUTTON);
 }
 
 
