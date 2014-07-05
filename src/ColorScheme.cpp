@@ -1807,6 +1807,7 @@ INT_PTR CColorSchemeOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lP
 		{
 			HMENU hmenu=::CreatePopupMenu();
 			::AppendMenu(hmenu,MF_STRING | MF_ENABLED,1,TEXT("配色コードをコピー(&C)"));
+			::AppendMenu(hmenu,MF_STRING | MF_ENABLED,2,TEXT("ボーダー設定をコピー(&B)"));
 
 			POINT pt={GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam)};
 			::ClientToScreen(hDlg,&pt);
@@ -1823,6 +1824,31 @@ INT_PTR CColorSchemeOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lP
 										  TEXT("HEXRGB(0x%02X%02X%02X)\r\n"),
 										  GetRValue(cr),GetGValue(cr),GetBValue(cr));
 						Buffer+=szColor;
+					}
+
+					CopyTextToClipboard(hDlg,Buffer.c_str());
+				}
+				break;
+
+			case 2:
+				{
+					TVTest::String Buffer;
+
+					for (int i=0;i<CColorScheme::NUM_BORDERS;i++) {
+						switch (m_BorderList[i]) {
+						case Theme::BORDER_NONE:
+							Buffer+=TEXT("Theme::BORDER_NONE,\r\n");
+							break;
+						case Theme::BORDER_SOLID:
+							Buffer+=TEXT("Theme::BORDER_SOLID,\r\n");
+							break;
+						case Theme::BORDER_SUNKEN:
+							Buffer+=TEXT("Theme::BORDER_SUNKEN,\r\n");
+							break;
+						case Theme::BORDER_RAISED:
+							Buffer+=TEXT("Theme::BORDER_RAISED,\r\n");
+							break;
+						}
 					}
 
 					CopyTextToClipboard(hDlg,Buffer.c_str());
