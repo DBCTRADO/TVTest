@@ -189,12 +189,13 @@ void CVolumeStatusItem::OnRButtonDown(int x,int y)
 void CVolumeStatusItem::OnMouseMove(int x,int y)
 {
 	CUICore *pUICore=&GetAppClass().UICore;
-	RECT rc;
+	RECT rcItem,rcClient;
 	int Volume;
 
-	GetClientRect(&rc);
-	TVTest::Style::Subtract(&rc,m_BarPadding);
-	Volume=(x-rc.left)*CCoreEngine::MAX_VOLUME/((rc.right-rc.left)-1);
+	GetRect(&rcItem);
+	GetClientRect(&rcClient);
+	TVTest::Style::Subtract(&rcClient,m_BarPadding);
+	Volume=(x-(rcClient.left-rcItem.left))*CCoreEngine::MAX_VOLUME/((rcClient.right-rcClient.left)-1);
 	if (Volume<0)
 		Volume=0;
 	else if (Volume>CCoreEngine::MAX_VOLUME)
