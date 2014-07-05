@@ -360,6 +360,7 @@ private:
 	static const ColorInfo m_ColorInfoList[NUM_COLORS];
 	static const GradientInfo m_GradientInfoList[NUM_GRADIENTS];
 	static const BorderInfo m_BorderInfoList[NUM_BORDERS];
+	static const Theme::BorderType m_CustomDefaultBorderList[NUM_BORDERS];
 	static const StyleInfo m_StyleList[NUM_STYLES];
 };
 
