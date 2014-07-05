@@ -3,11 +3,14 @@
 
 
 #include "BasicWindow.h"
+#include "UIBase.h"
 #include "DtvEngine.h"
 #include "Theme.h"
 
 
-class ABSTRACT_CLASS(CDisplayView) : public CCustomWindow
+class ABSTRACT_CLASS(CDisplayView)
+	: public CCustomWindow
+	, public TVTest::CUIBase
 {
 public:
 	CDisplayView();
@@ -18,6 +21,10 @@ public:
 
 // CBasicWindow
 	void SetVisible(bool fVisible) override;
+	void NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager) override;
+
+// CUIBase
+	void SetStyle(const TVTest::Style::CStyleManager *pStyleManager) override;
 
 protected:
 	enum ItemType {
@@ -34,7 +41,19 @@ protected:
 		BACKGROUND_STYLE_CATEGORIES
 	};
 
+	struct DisplayViewStyle
+	{
+		TVTest::Style::IntValue TextSizeRatioHorz;
+		TVTest::Style::IntValue TextSizeRatioVert;
+		TVTest::Style::IntValue TextSizeMin;
+
+		DisplayViewStyle();
+		void SetStyle(const TVTest::Style::CStyleManager *pStyleManager);
+		void NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager);
+	};
+
 	class CDisplayBase *m_pDisplayBase;
+	DisplayViewStyle m_Style;
 
 	virtual bool OnVisibleChange(bool fVisible);
 	virtual bool GetCloseButtonRect(RECT *pRect) const;

@@ -18,6 +18,7 @@ static const size_t MAX_INFO_TEXT=256;
 
 
 CAboutDialog::CAboutDialog()
+	: m_fDrawLogo(false)
 {
 }
 
@@ -25,9 +26,6 @@ CAboutDialog::CAboutDialog()
 CAboutDialog::~CAboutDialog()
 {
 	Destroy();
-
-	m_LogoImage.Free();
-	m_GdiPlus.Finalize();
 }
 
 
@@ -106,7 +104,7 @@ INT_PTR CAboutDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 
 			::SetRect(&rcLogo,rcLogo.right-rcLogo.left,0,0,0);
 			if (m_AeroGlass.ApplyAeroGlass(hDlg,&rcLogo)) {
-				m_GdiPlus.Initialize();
+				m_fDrawLogo=true;
 				m_LogoImage.LoadFromResource(GetAppClass().GetResourceInstance(),
 					MAKEINTRESOURCE(IDB_LOGO32),TEXT("PNG"));
 				::ShowWindow(hwndLogo,SW_HIDE);
@@ -174,25 +172,25 @@ INT_PTR CAboutDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 			::GetClientRect(hDlg,&rcClient);
 			rcClient.left=rcLogo.right;
 
-			if (m_GdiPlus.IsInitialized()) {
-				CGdiPlus::CCanvas Canvas(ps.hdc);
+			if (m_fDrawLogo) {
+				TVTest::Graphics::CCanvas Canvas(ps.hdc);
 
 				Canvas.Clear(0,0,0,0);
-				m_GdiPlus.DrawImage(&Canvas,&m_LogoImage,
-									(rcLogo.right-m_LogoImage.GetWidth())/2,
-									(rcLogo.bottom-m_LogoImage.GetHeight())/2);
+				Canvas.DrawImage(&m_LogoImage,
+								 (rcLogo.right-m_LogoImage.GetWidth())/2,
+								 (rcLogo.bottom-m_LogoImage.GetHeight())/2);
 				rc=rcClient;
 				rc.bottom=rcHeader.bottom;
-				m_GdiPlus.FillGradient(&Canvas,Colors.Header1,Colors.Header2,
-									   rc,CGdiPlus::GRADIENT_DIRECTION_VERT);
+				Canvas.FillGradient(Colors.Header1,Colors.Header2,rc,
+									TVTest::Graphics::GRADIENT_DIRECTION_VERT);
 				rc.top=rc.bottom;
 				rc.bottom=rc.top+8;
-				m_GdiPlus.FillGradient(&Canvas,Colors.HeaderShadow,Colors.Info1,
-									   rc,CGdiPlus::GRADIENT_DIRECTION_VERT);
+				Canvas.FillGradient(Colors.HeaderShadow,Colors.Info1,rc,
+									TVTest::Graphics::GRADIENT_DIRECTION_VERT);
 				rc.top=rc.bottom;
 				rc.bottom=rcClient.bottom;
-				m_GdiPlus.FillGradient(&Canvas,Colors.Info1,Colors.Info2,
-									   rc,CGdiPlus::GRADIENT_DIRECTION_VERT);
+				Canvas.FillGradient(Colors.Info1,Colors.Info2,rc,
+									TVTest::Graphics::GRADIENT_DIRECTION_VERT);
 			} else {
 				rc=rcClient;
 				rc.bottom=rcHeader.bottom;
@@ -221,7 +219,6 @@ INT_PTR CAboutDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 				::DeleteObject(hbm);
 			} else {
 				m_LogoImage.Free();
-				m_GdiPlus.Finalize();
 			}
 
 			m_Font.Destroy();

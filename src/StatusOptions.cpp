@@ -300,7 +300,7 @@ INT_PTR CStatusOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 					SelectPen(pdis->hDC,hpenOld);
 					::DeleteObject(hpen);
 					HFONT hfont=::CreateFontIndirect(&m_CurSettingFont);
-					m_pStatusView->DrawItemPreview(pItem,pdis->hDC,&rc,false,hfont);
+					m_pStatusView->DrawItemPreview(pItem,pdis->hDC,rc,false,hfont);
 					::DeleteObject(hfont);
 					::SetBkMode(pdis->hDC,OldBkMode);
 					::SetTextColor(pdis->hDC,crOldTextColor);
@@ -337,14 +337,13 @@ INT_PTR CStatusOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 				if (ChooseFontDialog(hDlg,&lf)
 						&& !CompareLogFont(&m_CurSettingFont,&lf)) {
 					DrawUtil::CFont Font(lf);
-					RECT rc;
+					TVTest::Style::Margins Padding=m_pStatusView->GetItemPadding();
 
 					m_CurSettingFont=lf;
 					SetFontInfo(hDlg,&lf);
-					m_pStatusView->GetItemMargin(&rc);
 					HWND hwndList=::GetDlgItem(hDlg,IDC_STATUSOPTIONS_ITEMLIST);
 					HDC hdc=::GetDC(hwndList);
-					m_ItemHeight=(Font.GetHeight(hdc,false)+rc.top+rc.bottom)+(1+ITEM_MARGIN)*2;
+					m_ItemHeight=(Font.GetHeight(hdc,false)+Padding.Top+Padding.Bottom)+(1+ITEM_MARGIN)*2;
 					::ReleaseDC(hwndList,hdc);
 					DlgListBox_SetItemHeight(hDlg,IDC_STATUSOPTIONS_ITEMLIST,0,m_ItemHeight);
 					::InvalidateRect(hwndList,NULL,TRUE);

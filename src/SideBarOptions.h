@@ -43,6 +43,12 @@ public:
 
 protected:
 	enum { ITEM_SEPARATOR=0 };
+
+	enum IconSizeType {
+		ICON_SIZE_SMALL,
+		ICON_SIZE_BIG
+	};
+
 	CSideBar *m_pSideBar;
 	const CZoomOptions *m_pZoomOptions;
 	std::vector<int> m_ItemList;
@@ -56,7 +62,7 @@ protected:
 // CBasicDialog
 	INT_PTR DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
 
-	HBITMAP CreateImage();
+	HBITMAP CreateImage(IconSizeType SizeType,SIZE *pIconSize);
 	void ApplyItemList() const;
 	void SetItemList(HWND hwndList,const int *pList,int NumItems);
 };

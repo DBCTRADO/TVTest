@@ -481,6 +481,7 @@ CCommandLineOptions::CCommandLineOptions()
 	/epgspace		EPG番組表のデフォルトチューニング空間
 	/home			ホーム画面表示
 	/chdisplay		チャンネル選択画面表示
+	/style			スタイルファイル名
 */
 void CCommandLineOptions::Parse(LPCWSTR pszCmdLine)
 {
@@ -540,6 +541,7 @@ void CCommandLineOptions::Parse(LPCWSTR pszCmdLine)
 					&& !Args.GetOption(TEXT("sid"),&m_ServiceID)
 					&& !Args.GetOption(TEXT("silent"),&m_fSilent)
 					&& !Args.GetOption(TEXT("standby"),&m_fStandby)
+					&& !Args.GetOption(TEXT("style"),&m_StyleFileName)
 					&& !Args.GetOption(TEXT("tray"),&m_fTray)
 					&& !Args.GetOption(TEXT("tsid"),&m_TransportStreamID)
 					&& !Args.GetOption(TEXT("tvcas"),&m_CasLibraryName)

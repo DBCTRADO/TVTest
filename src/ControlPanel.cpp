@@ -40,8 +40,7 @@ bool CControlPanel::Initialize(HINSTANCE hinst)
 
 
 CControlPanel::CControlPanel()
-	: m_MarginSize(2)
-	, m_hwndMessage(NULL)
+	: m_hwndMessage(NULL)
 	, m_HotItem(-1)
 {
 	LOGFONT lf;
@@ -77,6 +76,24 @@ bool CControlPanel::Create(HWND hwndParent,DWORD Style,DWORD ExStyle,int ID)
 {
 	return CreateBasicWindow(hwndParent,Style,ExStyle,ID,
 							 m_pszClassName,TEXT("‘€ì"),m_hinst);
+}
+
+
+void CControlPanel::SetStyle(const TVTest::Style::CStyleManager *pStyleManager)
+{
+	m_Style.SetStyle(pStyleManager);
+
+	for (auto itr=m_ItemList.begin();itr!=m_ItemList.end();++itr)
+		(*itr)->SetStyle(pStyleManager);
+}
+
+
+void CControlPanel::NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager)
+{
+	m_Style.NormalizeStyle(pStyleManager);
+
+	for (auto itr=m_ItemList.begin();itr!=m_ItemList.end();++itr)
+		(*itr)->NormalizeStyle(pStyleManager);
 }
 
 
@@ -127,16 +144,17 @@ void CControlPanel::UpdateLayout()
 	int MaxHeight;
 
 	GetClientRect(&rc);
-	Width=(rc.right-rc.left)-m_MarginSize*2;
-	x=m_MarginSize;
-	y=m_MarginSize;
+	Width=(rc.right-rc.left)-(m_Style.Padding.Left+m_Style.Padding.Right);
+	x=m_Style.Padding.Left;
+	y=m_Style.Padding.Top;
+
 	for (size_t i=0;i<m_ItemList.size();i++) {
 		CControlPanelItem *pItem=m_ItemList[i];
 
 		if (!pItem->GetVisible())
 			continue;
 		if (pItem->GetBreak()) {
-			x=m_MarginSize;
+			x=m_Style.Padding.Left;
 			if (i>0)
 				y+=MaxHeight;
 			MaxHeight=0;
@@ -214,6 +232,12 @@ bool CControlPanel::CheckRadioItem(int FirstID,int LastID,int CheckID)
 }
 
 
+const TVTest::Style::Margins &CControlPanel::GetItemPadding() const
+{
+	return m_Style.ItemPadding;
+}
+
+
 bool CControlPanel::CalcTextSize(LPCTSTR pszText,SIZE *pSize)
 {
 	pSize->cx=0;
@@ -237,7 +261,7 @@ void CControlPanel::Draw(HDC hdc,const RECT &PaintRect)
 {
 	RECT rcClient;
 	GetClientRect(&rcClient);
-	int Width=(rcClient.right-rcClient.left)-m_MarginSize*2;
+	int Width=(rcClient.right-rcClient.left)-(m_Style.Padding.Left+m_Style.Padding.Right);
 
 	int MaxHeight;
 	MaxHeight=0;
@@ -267,13 +291,17 @@ void CControlPanel::Draw(HDC hdc,const RECT &PaintRect)
 	RECT rc,rcOffscreen,rcDest;
 
 	rc=rcClient;
-	::InflateRect(&rc,-m_MarginSize,-m_MarginSize);
+	rc.left+=m_Style.Padding.Left;
+	rc.top+=m_Style.Padding.Top;
+	rc.right-=m_Style.Padding.Right;
+	rc.bottom-=m_Style.Padding.Bottom;
 	DrawUtil::FillBorder(hdc,&rcClient,&rc,&PaintRect,hbrMargin);
 	hfontOld=DrawUtil::SelectObject(hdcOffscreen,m_Font);
 	crOldTextColor=::GetTextColor(hdcOffscreen);
 	OldBkMode=::SetBkMode(hdcOffscreen,TRANSPARENT);
 	::SetRect(&rcOffscreen,0,0,Width,MaxHeight);
-	::SetRect(&rcDest,m_MarginSize,-1,m_MarginSize+Width,0);
+	::SetRect(&rcDest,m_Style.Padding.Left,-1,m_Style.Padding.Left+Width,0);
+
 	for (int i=0;i<(int)m_ItemList.size();i++) {
 		CControlPanelItem *pItem=m_ItemList[i];
 
@@ -292,7 +320,7 @@ void CControlPanel::Draw(HDC hdc,const RECT &PaintRect)
 			}
 			if (rcDest.bottom<rc.bottom)
 				rcDest.bottom=rc.bottom;
-			::OffsetRect(&rc,-m_MarginSize,-rc.top);
+			::OffsetRect(&rc,-m_Style.Padding.Left,-rc.top);
 			if (i==m_HotItem) {
 				crText=m_Theme.OverItemStyle.TextColor;
 				crBack=MixColor(m_Theme.OverItemStyle.Gradient.Color1,
@@ -323,7 +351,7 @@ void CControlPanel::Draw(HDC hdc,const RECT &PaintRect)
 		m_Offscreen.CopyTo(hdc,&rcDest);
 		rc.top=rcDest.bottom;
 	} else {
-		rc.top=m_MarginSize;
+		rc.top=m_Style.Padding.Top;
 	}
 	if (rc.top<PaintRect.bottom) {
 		rc.left=PaintRect.left;
@@ -342,6 +370,8 @@ LRESULT CControlPanel::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam
 {
 	switch (uMsg) {
 	case WM_CREATE:
+		InitializeUI();
+
 		m_HotItem=-1;
 		m_fTrackMouseEvent=false;
 		m_fOnButtonDown=false;
@@ -480,7 +510,31 @@ LRESULT CControlPanel::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam
 		m_Offscreen.Destroy();
 		return 0;
 	}
-	return ::DefWindowProc(hwnd,uMsg,wParam,lParam);
+
+	return CCustomWindow::OnMessage(hwnd,uMsg,wParam,lParam);
+}
+
+
+
+
+CControlPanel::ControlPanelStyle::ControlPanelStyle()
+	: Padding(2)
+	, ItemPadding(4)
+{
+}
+
+
+void CControlPanel::ControlPanelStyle::SetStyle(const TVTest::Style::CStyleManager *pStyleManager)
+{
+	pStyleManager->Get(TEXT("control-panel.padding"),&Padding);
+	pStyleManager->Get(TEXT("control-panel.item.padding"),&ItemPadding);
+}
+
+
+void CControlPanel::ControlPanelStyle::NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager)
+{
+	pStyleManager->ToPixels(&Padding);
+	pStyleManager->ToPixels(&ItemPadding);
 }
 
 

@@ -111,7 +111,7 @@ CChannelListCategoryBase::~CChannelListCategoryBase()
 
 void CChannelListCategoryBase::LayOut(const CHomeDisplay::StyleInfo &Style,HDC hdc,const RECT &ContentRect)
 {
-	m_ItemHeight=Style.FontHeight*2+Style.ItemMargins.top+Style.ItemMargins.bottom;
+	m_ItemHeight=Style.FontHeight*2+Style.ItemMargins.Vert();
 	m_Height=(int)m_ItemList.size()*m_ItemHeight;
 	m_Rect=ContentRect;
 
@@ -149,10 +149,10 @@ void CChannelListCategoryBase::Draw(HDC hdc,const CHomeDisplay::StyleInfo &Style
 		Theme::DrawStyleBackground(hdc,&rcItem,pItemStyle);
 		::SetTextColor(hdc,pItemStyle->TextColor);
 		rc=rcItem;
-		rc.left+=Style.ItemMargins.left;
-		rc.top+=Style.ItemMargins.top;
+		rc.left+=Style.ItemMargins.Left;
+		rc.top+=Style.ItemMargins.Top;
 		rc.right=rc.left+m_ChannelNameWidth;
-		rc.bottom-=Style.ItemMargins.bottom;
+		rc.bottom-=Style.ItemMargins.Bottom;
 		HBITMAP hbmLogo=pItem->GetStretchedLogo(m_LogoWidth,m_LogoHeight);
 		if (hbmLogo!=NULL) {
 			DrawUtil::DrawBitmap(hdc,rc.left,rc.top+(Style.FontHeight-m_LogoHeight)/2,
@@ -164,8 +164,8 @@ void CChannelListCategoryBase::Draw(HDC hdc,const CHomeDisplay::StyleInfo &Style
 			DT_LEFT | DT_SINGLELINE | DT_VCENTER | DT_NOPREFIX | DT_END_ELLIPSIS);
 
 		rc.left=rc.right+8;
-		rc.top=rcItem.top+Style.ItemMargins.top;
-		rc.right=rcItem.right-Style.ItemMargins.right;
+		rc.top=rcItem.top+Style.ItemMargins.Top;
+		rc.right=rcItem.right-Style.ItemMargins.Right;
 		rc.bottom=rc.top+Style.FontHeight;
 
 		for (int j=0;j<2;j++) {
@@ -764,7 +764,7 @@ void CFeaturedEventsCategory::WriteSettings(CSettings &Settings)
 
 void CFeaturedEventsCategory::LayOut(const CHomeDisplay::StyleInfo &Style,HDC hdc,const RECT &ContentRect)
 {
-	int ItemBaseHeight=2*Style.FontHeight+Style.ItemMargins.top+Style.ItemMargins.bottom;
+	int ItemBaseHeight=2*Style.FontHeight+Style.ItemMargins.Vert();
 	m_ItemHeight=ItemBaseHeight;
 	if (m_Settings.GetShowEventText())
 		m_ItemHeight+=m_Settings.GetEventTextLines()*Style.FontHeight;
@@ -776,7 +776,7 @@ void CFeaturedEventsCategory::LayOut(const CHomeDisplay::StyleInfo &Style,HDC hd
 	CLogoManager &LogoManager=GetAppClass().LogoManager;
 
 	const int EventTextWidth=(ContentRect.right-ContentRect.left)-
-		(Style.ItemMargins.left+Style.ItemMargins.top)-Style.FontHeight;
+		Style.ItemMargins.Horz()-Style.FontHeight;
 	TVTest::String Text;
 	m_ChannelNameWidth=0;
 	for (size_t i=0;i<m_ItemList.size();i++) {
@@ -819,10 +819,7 @@ void CFeaturedEventsCategory::Draw(HDC hdc,const CHomeDisplay::StyleInfo &Style,
 			pszText=TEXT("ŒŸõ‚³‚ê‚½”Ô‘g‚Í‚ ‚è‚Ü‚¹‚ñB");
 		}
 		RECT rc=ContentRect;
-		rc.left+=Style.ItemMargins.left;
-		rc.top+=Style.ItemMargins.top;
-		rc.right-=Style.ItemMargins.right;
-		rc.bottom-=Style.ItemMargins.bottom;
+		TVTest::Style::Subtract(&rc,Style.ItemMargins);
 		::SetTextColor(hdc,Style.BannerTextColor);
 		::DrawText(hdc,pszText,-1,&rc,DT_LEFT | DT_NOPREFIX | DT_WORDBREAK);
 		return;
@@ -851,8 +848,8 @@ void CFeaturedEventsCategory::Draw(HDC hdc,const CHomeDisplay::StyleInfo &Style,
 		Theme::DrawStyleBackground(hdc,&rcItem,pItemStyle);
 		::SetTextColor(hdc,pItemStyle->TextColor);
 		rc=rcItem;
-		rc.left+=Style.ItemMargins.left;
-		rc.top+=Style.ItemMargins.top;
+		rc.left+=Style.ItemMargins.Left;
+		rc.top+=Style.ItemMargins.Top;
 		rc.bottom=rc.top+Style.FontHeight;
 		HBITMAP hbmLogo=pItem->GetStretchedLogo(m_LogoWidth,m_LogoHeight);
 		if (hbmLogo!=NULL) {
@@ -860,13 +857,13 @@ void CFeaturedEventsCategory::Draw(HDC hdc,const CHomeDisplay::StyleInfo &Style,
 								 m_LogoWidth,m_LogoHeight,hbmLogo,NULL,
 								 i==m_HotItem?255:224);
 		}
-		rc.left+=m_LogoWidth+Style.ItemMargins.left;
+		rc.left+=m_LogoWidth+Style.ItemMargins.Left;
 		rc.right=rc.left+m_ChannelNameWidth;
 		::DrawText(hdc,ChannelInfo.GetName(),-1,&rc,
 			DT_LEFT | DT_SINGLELINE | DT_VCENTER | DT_NOPREFIX | DT_END_ELLIPSIS);
 
 		rc.left=rc.right+Style.FontHeight;
-		rc.right=rcItem.right-Style.ItemMargins.right;
+		rc.right=rcItem.right-Style.ItemMargins.Right;
 
 		const CEventInfoData &EventInfo=pItem->GetEventInfo();
 		TCHAR szText[1024];
@@ -876,7 +873,7 @@ void CFeaturedEventsCategory::Draw(HDC hdc,const CHomeDisplay::StyleInfo &Style,
 			::DrawText(hdc,szText,Length,&rc,
 				DT_LEFT | DT_SINGLELINE | DT_VCENTER | DT_NOPREFIX | DT_END_ELLIPSIS);
 		}
-		rc.left=rcItem.left+Style.ItemMargins.left;
+		rc.left=rcItem.left+Style.ItemMargins.Left;
 		rc.top=rc.bottom;
 		rc.bottom=rc.top+Style.FontHeight;
 		if (!IsStringEmpty(EventInfo.GetEventName())) {
@@ -890,9 +887,9 @@ void CFeaturedEventsCategory::Draw(HDC hdc,const CHomeDisplay::StyleInfo &Style,
 			TVTest::String Text;
 
 			if (pItem->GetEventText(&Text)) {
-				rc.left=rcItem.left+Style.ItemMargins.left+Style.FontHeight;
+				rc.left=rcItem.left+Style.ItemMargins.Left+Style.FontHeight;
 				rc.top=rc.bottom;
-				rc.bottom=rcItem.bottom-Style.ItemMargins.bottom;
+				rc.bottom=rcItem.bottom-Style.ItemMargins.Bottom;
 				DrawUtil::DrawWrapText(hdc,Text.c_str(),&rc,Style.FontHeight,
 									   DrawUtil::DRAW_TEXT_ELLIPSIS);
 			}
@@ -1363,23 +1360,23 @@ CHomeDisplay::CHomeDisplay(CEventSearchOptions &EventSearchOptions)
 	GetItemStyle(ITEM_STYLE_HOT,&m_Style.ItemHotStyle);
 	m_Style.BannerTextColor=RGB(255,255,255);
 
-	m_Style.ContentMargins.left=16;
-	m_Style.ContentMargins.top=16;
-	m_Style.ContentMargins.right=32;
-	m_Style.ContentMargins.bottom=16;
-	m_Style.ItemMargins.left=4;
-	m_Style.ItemMargins.top=2;
-	m_Style.ItemMargins.right=4;
-	m_Style.ItemMargins.bottom=2;
-	m_Style.CategoryItemMargins.left=4;
-	m_Style.CategoryItemMargins.top=4;
-	m_Style.CategoryItemMargins.right=6;
-	m_Style.CategoryItemMargins.bottom=4;
+	m_Style.ContentMargins.Left=16;
+	m_Style.ContentMargins.Top=16;
+	m_Style.ContentMargins.Right=32;
+	m_Style.ContentMargins.Bottom=16;
+	m_Style.ItemMargins.Left=4;
+	m_Style.ItemMargins.Top=2;
+	m_Style.ItemMargins.Right=4;
+	m_Style.ItemMargins.Bottom=2;
+	m_Style.CategoryItemMargins.Left=4;
+	m_Style.CategoryItemMargins.Top=4;
+	m_Style.CategoryItemMargins.Right=6;
+	m_Style.CategoryItemMargins.Bottom=4;
 	m_Style.CategoryIconMargin=6;
-	m_Style.CategoriesMargins.left=8;
-	m_Style.CategoriesMargins.top=16;
-	m_Style.CategoriesMargins.right=8;
-	m_Style.CategoriesMargins.bottom=16;
+	m_Style.CategoriesMargins.Left=8;
+	m_Style.CategoriesMargins.Top=16;
+	m_Style.CategoriesMargins.Right=8;
+	m_Style.CategoriesMargins.Bottom=16;
 
 	m_CategoryList.reserve(3);
 	m_CategoryList.push_back(new CFavoritesCategory(this));
@@ -1672,6 +1669,7 @@ LRESULT CHomeDisplay::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 {
 	switch (uMsg) {
 	case WM_CREATE:
+		InitializeUI();
 		if (!m_Font.IsCreated())
 			m_Font.Create(DrawUtil::FONT_MESSAGE);
 		m_hwndScroll=::CreateWindowEx(0,TEXT("SCROLLBAR"),TEXT(""),
@@ -1961,9 +1959,9 @@ void CHomeDisplay::Draw(HDC hdc,const RECT &PaintRect)
 		Theme::FillGradient(hdc,&rcCategories,&m_Style.CategoriesBackGradient);
 
 		RECT rcItem;
-		rcItem.left=rcCategories.left+m_Style.CategoriesMargins.left;
+		rcItem.left=rcCategories.left+m_Style.CategoriesMargins.Left;
 		rcItem.right=rcItem.left+m_CategoryItemWidth;
-		rcItem.top=rcCategories.top+m_Style.CategoriesMargins.top;
+		rcItem.top=rcCategories.top+m_Style.CategoriesMargins.Top;
 
 		for (size_t i=0;i<m_CategoryList.size();i++) {
 			const CCategory *pCategory=m_CategoryList[i];
@@ -1975,10 +1973,7 @@ void CHomeDisplay::Draw(HDC hdc,const RECT &PaintRect)
 			rcItem.bottom=rcItem.top+m_CategoryItemHeight;
 			Theme::DrawStyleBackground(hdc,&rcItem,pStyle);
 			RECT rc=rcItem;
-			rc.left+=m_Style.CategoryItemMargins.left;
-			rc.top+=m_Style.CategoryItemMargins.top;
-			rc.right-=m_Style.CategoryItemMargins.right;
-			rc.bottom-=m_Style.CategoryItemMargins.bottom;
+			TVTest::Style::Subtract(&rc,m_Style.CategoryItemMargins);
 			::ImageList_Draw(m_himlIcons,pCategory->GetIconIndex(),
 							 hdc,rc.left,rc.top+((rc.bottom-rc.top)-CATEGORY_ICON_HEIGHT)/2,ILD_TRANSPARENT);
 			rc.left+=CATEGORY_ICON_WIDTH+m_Style.CategoryIconMargin;
@@ -1994,11 +1989,7 @@ void CHomeDisplay::Draw(HDC hdc,const RECT &PaintRect)
 		Theme::FillGradient(hdc,&rcContent,&m_Style.ContentBackGradient);
 
 		if (pCategory!=NULL) {
-			rcContent.left+=m_Style.ContentMargins.left;
-			rcContent.top+=m_Style.ContentMargins.top;
-			rcContent.right-=m_Style.ContentMargins.right;
-			rcContent.bottom-=m_Style.ContentMargins.bottom;
-
+			TVTest::Style::Subtract(&rcContent,m_Style.ContentMargins);
 			if (rcContent.left<rcContent.right) {
 				HRGN hrgn=::CreateRectRgnIndirect(&rcContent);
 				::SelectClipRgn(hdc,hrgn);
@@ -2046,17 +2037,14 @@ void CHomeDisplay::LayOut()
 			CategoryTextWidth=rc.right;
 	}
 	m_CategoryItemWidth=CategoryTextWidth+CATEGORY_ICON_WIDTH+m_Style.CategoryIconMargin+
-		m_Style.CategoryItemMargins.left+m_Style.CategoryItemMargins.right;
+		m_Style.CategoryItemMargins.Horz();
 	m_CategoryItemHeight=max(m_Style.FontHeight,CATEGORY_ICON_HEIGHT)+
-		m_Style.CategoryItemMargins.top+m_Style.CategoryItemMargins.bottom;
-	m_CategoriesAreaWidth=m_CategoryItemWidth+
-		m_Style.CategoriesMargins.left+m_Style.CategoriesMargins.right;
+		m_Style.CategoryItemMargins.Vert();
+	m_CategoriesAreaWidth=m_CategoryItemWidth+m_Style.CategoriesMargins.Horz();
 
 	RECT rcContent=rcClient;
-	rcContent.left+=m_CategoriesAreaWidth+m_Style.ContentMargins.left;
-	rcContent.top+=m_Style.ContentMargins.top;
-	rcContent.right-=m_Style.ContentMargins.right;
-	rcContent.bottom-=m_Style.ContentMargins.bottom;
+	TVTest::Style::Subtract(&rcContent,m_Style.ContentMargins);
+	rcContent.left+=m_CategoriesAreaWidth;
 
 	CCategory *pCategory=m_CategoryList[m_CurCategory];
 	pCategory->LayOut(m_Style,hdc,rcContent);
@@ -2102,10 +2090,8 @@ void CHomeDisplay::SetScrollBar()
 void CHomeDisplay::GetContentAreaRect(RECT *pRect) const
 {
 	GetClientRect(pRect);
-	pRect->left+=m_CategoriesAreaWidth+m_Style.ContentMargins.left;
-	pRect->top+=m_Style.ContentMargins.top;
-	pRect->right-=m_Style.ContentMargins.right;
-	pRect->bottom-=m_Style.ContentMargins.bottom;
+	TVTest::Style::Subtract(pRect,m_Style.ContentMargins);
+	pRect->left+=m_CategoriesAreaWidth;
 	if (pRect->right<pRect->left)
 		pRect->right=pRect->left;
 	if (pRect->bottom<pRect->top)
@@ -2118,8 +2104,8 @@ CHomeDisplay::PartType CHomeDisplay::HitTest(int x,int y,int *pCategoryIndex) co
 	POINT pt={x,y};
 
 	RECT rcCategories;
-	rcCategories.left=m_Style.CategoriesMargins.left;
-	rcCategories.top=m_Style.CategoriesMargins.top;
+	rcCategories.left=m_Style.CategoriesMargins.Left;
+	rcCategories.top=m_Style.CategoriesMargins.Top;
 	rcCategories.right=rcCategories.left+m_CategoriesAreaWidth;
 	rcCategories.bottom=rcCategories.top+m_CategoryItemHeight*(int)m_CategoryList.size();
 	if (::PtInRect(&rcCategories,pt)) {
@@ -2169,8 +2155,8 @@ bool CHomeDisplay::GetCategoryItemRect(int Category,RECT *pRect) const
 	if (Category<0 || (size_t)Category>=m_CategoryList.size())
 		return false;
 
-	pRect->left=m_Style.CategoriesMargins.left;
-	pRect->top=m_Style.CategoriesMargins.top+(Category*m_CategoryItemHeight);
+	pRect->left=m_Style.CategoriesMargins.Left;
+	pRect->top=m_Style.CategoriesMargins.Top+(Category*m_CategoryItemHeight);
 	pRect->right=pRect->left+m_CategoryItemWidth;
 	pRect->bottom=pRect->top+m_CategoryItemHeight;
 

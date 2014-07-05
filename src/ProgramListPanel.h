@@ -3,6 +3,7 @@
 
 
 #include "PanelForm.h"
+#include "UIBase.h"
 #include "EpgProgramList.h"
 #include "EpgUtil.h"
 #include "ChannelList.h"
@@ -34,7 +35,9 @@ public:
 	void Attach(CProgramItemList *pList);
 };
 
-class CProgramListPanel : public CPanelForm::CPage
+class CProgramListPanel
+	: public CPanelForm::CPage
+	, public TVTest::CUIBase
 {
 public:
 	struct ThemeInfo {
@@ -49,8 +52,14 @@ public:
 
 	CProgramListPanel();
 	~CProgramListPanel();
+
 // CBasicWindow
 	bool Create(HWND hwndParent,DWORD Style,DWORD ExStyle=0,int ID=0) override;
+
+// CUIBase
+	void SetStyle(const TVTest::Style::CStyleManager *pStyleManager) override;
+	void NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager) override;
+
 // CProgramListPanel
 	void SetEpgProgramList(CEpgProgramList *pList) { m_pProgramList=pList; }
 	bool UpdateProgramList(const CChannelInfo *pChannelInfo);
@@ -65,12 +74,23 @@ public:
 	void SetVisibleEventIcons(UINT VisibleIcons);
 
 private:
+	struct ProgramListPanelStyle
+	{
+		TVTest::Style::Margins TitlePadding;
+		TVTest::Style::Size IconSize;
+		TVTest::Style::Margins IconMargin;
+		TVTest::Style::IntValue LineSpacing;
+
+		ProgramListPanelStyle();
+		void SetStyle(const TVTest::Style::CStyleManager *pStyleManager);
+		void NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager);
+	};
+
 	CEpgProgramList *m_pProgramList;
 	DrawUtil::CFont m_Font;
 	DrawUtil::CFont m_TitleFont;
 	int m_FontHeight;
-	int m_LineMargin;
-	int m_TitleMargin;
+	ProgramListPanelStyle m_Style;
 	ThemeInfo m_Theme;
 	CEpgIcons m_EpgIcons;
 	UINT m_VisibleEventIcons;
@@ -103,6 +123,7 @@ private:
 	void SetScrollPos(int Pos);
 	void SetScrollBar();
 	void CalcFontHeight();
+	int GetTextLeftMargin() const;
 	int HitTest(int x,int y) const;
 	//void SetToolTip();
 // CCustomWindow

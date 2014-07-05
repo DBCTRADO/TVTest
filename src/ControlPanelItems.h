@@ -60,14 +60,18 @@ class CVolumeControlItem : public CControlPanelItem
 public:
 	CVolumeControlItem();
 // CControlPanelItem
+	void CalcSize(int Width,SIZE *pSize);
 	void Draw(HDC hdc,const RECT &Rect);
 	void OnLButtonDown(int x,int y);
 	void OnRButtonDown(int x,int y);
 	void OnMouseMove(int x,int y);
+	void SetStyle(const TVTest::Style::CStyleManager *pStyleManager);
+	void NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager);
 
 private:
-	static const int m_BarHeight;
-	static const int m_Margin;
+	TVTest::Style::IntValue m_BarHeight;
+	TVTest::Style::Margins m_BarPadding;
+	TVTest::Style::IntValue m_BarBorderWidth;
 };
 
 class CAudioControlItem : public CControlPanelItem
@@ -80,7 +84,7 @@ public:
 	void OnRButtonDown(int x,int y);
 
 private:
-	DrawUtil::CMonoColorBitmap m_Icons;
+	DrawUtil::CMonoColorIconList m_Icons;
 };
 
 class CControlPanelButton : public CControlPanelItem

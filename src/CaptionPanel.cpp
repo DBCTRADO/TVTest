@@ -178,6 +178,8 @@ LRESULT CCaptionPanel::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam
 	switch (uMsg) {
 	case WM_CREATE:
 		{
+			InitializeUI();
+
 			if (!m_BackBrush.IsCreated())
 				m_BackBrush.Create(m_BackColor);
 			if (!m_Font.IsCreated())

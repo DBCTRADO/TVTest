@@ -3,13 +3,16 @@
 
 
 #include "BasicWindow.h"
+#include "UIBase.h"
 #include "Theme.h"
 #include "DrawUtil.h"
 #include "Tooltip.h"
 #include "WindowUtil.h"
 
 
-class CTitleBar : public CCustomWindow
+class CTitleBar
+	: public CCustomWindow
+	, public TVTest::CUIBase
 {
 public:
 	struct ThemeInfo {
@@ -42,10 +45,19 @@ public:
 
 	CTitleBar();
 	~CTitleBar();
+
 // CBasicWindow
 	bool Create(HWND hwndParent,DWORD Style,DWORD ExStyle=0,int ID=0) override;
 	void SetVisible(bool fVisible) override;
+
+// CUIBase
+	void SetStyle(const TVTest::Style::CStyleManager *pStyleManager) override;
+	void NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager) override;
+
 // CTitleBar
+	int CalcHeight() const;
+	int GetButtonWidth() const;
+	int GetButtonHeight() const;
 	bool SetLabel(LPCTSTR pszLabel);
 	LPCTSTR GetLabel() const { return m_Label.Get(); }
 	void SetMaximizeMode(bool fMaximize);
@@ -66,9 +78,27 @@ private:
 		ITEM_BUTTON_FIRST=ITEM_MINIMIZE,
 		ITEM_LAST=ITEM_CLOSE
 	};
+
+	struct TitleBarStyle
+	{
+		TVTest::Style::Margins Padding;
+		TVTest::Style::Margins LabelMargin;
+		TVTest::Style::IntValue LabelExtraHeight;
+		TVTest::Style::Size IconSize;
+		TVTest::Style::Margins IconMargin;
+		TVTest::Style::Size ButtonIconSize;
+		TVTest::Style::Margins ButtonPadding;
+
+		TitleBarStyle();
+		void SetStyle(const TVTest::Style::CStyleManager *pStyleManager);
+		void NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager);
+	};
+
+	TitleBarStyle m_Style;
 	DrawUtil::CFont m_Font;
 	int m_FontHeight;
 	ThemeInfo m_Theme;
+	DrawUtil::CMonoColorIconList m_ButtonIcons;
 	HBITMAP m_hbmIcons;
 	CTooltip m_Tooltip;
 	CDynamicString m_Label;
@@ -80,11 +110,14 @@ private:
 	bool m_fFullscreen;
 	CEventHandler *m_pEventHandler;
 
+	static const LPCTSTR CLASS_NAME;
 	static HINSTANCE m_hinst;
 
+	int CalcFontHeight() const;
 	bool GetItemRect(int Item,RECT *pRect) const;
 	bool UpdateItem(int Item);
 	int HitTest(int x,int y) const;
+	bool PtInIcon(int x,int y) const;
 	void UpdateTooltipsRect();
 	void Draw(HDC hdc,const RECT &PaintRect);
 

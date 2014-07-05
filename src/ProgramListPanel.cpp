@@ -12,13 +12,6 @@ static char THIS_FILE[]=__FILE__;
 #endif
 
 
-#define ICON_MARGIN_LEFT	1
-#define ICON_MARGIN_RIGHT	0
-#define ICON_MARGIN_TOP		1
-#define ICON_MARGIN			1
-#define TEXT_LEFT_MARGIN (CEpgIcons::ICON_WIDTH+ICON_MARGIN_LEFT+ICON_MARGIN_RIGHT)
-
-
 
 
 class CProgramItemInfo
@@ -298,8 +291,6 @@ CProgramListPanel::CProgramListPanel()
 	, m_EventInfoPopupHandler(this)
 	, m_pProgramList(NULL)
 	, m_FontHeight(0)
-	, m_LineMargin(1)
-	, m_TitleMargin(2)
 	, m_VisibleEventIcons(((1<<(CEpgIcons::ICON_LAST+1))-1)^CEpgIcons::IconFlag(CEpgIcons::ICON_PAY))
 	, m_CurEventID(-1)
 	, m_ScrollPos(0)
@@ -334,6 +325,18 @@ bool CProgramListPanel::Create(HWND hwndParent,DWORD Style,DWORD ExStyle,int ID)
 {
 	return CreateBasicWindow(hwndParent,Style,ExStyle,ID,
 							 m_pszClassName,TEXT("番組表"),m_hinst);
+}
+
+
+void CProgramListPanel::SetStyle(const TVTest::Style::CStyleManager *pStyleManager)
+{
+	m_Style.SetStyle(pStyleManager);
+}
+
+
+void CProgramListPanel::NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager)
+{
+	m_Style.NormalizeStyle(pStyleManager);
 }
 
 
@@ -482,7 +485,7 @@ void CProgramListPanel::CalcDimensions()
 		DrawUtil::SelectObject(hdc,m_TitleFont);
 		m_TotalLines+=pItem->CalcTitleLines(hdc,rc.right);
 		DrawUtil::SelectObject(hdc,m_Font);
-		m_TotalLines+=pItem->CalcTextLines(hdc,rc.right-TEXT_LEFT_MARGIN);
+		m_TotalLines+=pItem->CalcTextLines(hdc,rc.right-GetTextLeftMargin());
 	}
 	::SelectObject(hdc,hfontOld);
 	::ReleaseDC(m_hwnd,hdc);
@@ -497,8 +500,8 @@ void CProgramListPanel::SetScrollPos(int Pos)
 	if (Pos<0) {
 		Pos=0;
 	} else {
-		int Max=m_TotalLines*(m_FontHeight+m_LineMargin)+
-				m_ItemList.NumItems()*(m_TitleMargin*2-m_LineMargin)-rc.bottom;
+		int Max=m_TotalLines*(m_FontHeight+m_Style.LineSpacing)+
+				m_ItemList.NumItems()*(m_Style.TitlePadding.Top+m_Style.TitlePadding.Bottom-m_Style.LineSpacing)-rc.bottom;
 		if (Max<0)
 			Max=0;
 		if (Pos>Max)
@@ -532,8 +535,9 @@ void CProgramListPanel::SetScrollBar()
 	si.cbSize=sizeof(SCROLLINFO);
 	si.fMask=SIF_PAGE | SIF_RANGE | SIF_POS | SIF_DISABLENOSCROLL;
 	si.nMin=0;
-	si.nMax=m_TotalLines<1?0:m_TotalLines*(m_FontHeight+m_LineMargin)+
-						m_ItemList.NumItems()*(m_TitleMargin*2-m_LineMargin);
+	si.nMax=m_TotalLines<1?0:
+		m_TotalLines*(m_FontHeight+m_Style.LineSpacing)+
+			m_ItemList.NumItems()*(m_Style.TitlePadding.Top+m_Style.TitlePadding.Bottom-m_Style.LineSpacing);
 	GetClientRect(&rc);
 	si.nPage=rc.bottom;
 	si.nPos=m_ScrollPos;
@@ -621,6 +625,12 @@ void CProgramListPanel::CalcFontHeight()
 }
 
 
+int CProgramListPanel::GetTextLeftMargin() const
+{
+	return m_Style.IconSize.Width+m_Style.IconMargin.Left+m_Style.IconMargin.Right;
+}
+
+
 void CProgramListPanel::ShowRetrievingMessage(bool fShow)
 {
 	if (m_fShowRetrievingMessage!=fShow) {
@@ -655,8 +665,8 @@ int CProgramListPanel::HitTest(int x,int y) const
 	for (int i=0;i<m_ItemList.NumItems();i++) {
 		const CProgramItemInfo *pItem=m_ItemList.GetItem(i);
 
-		rc.bottom=rc.top+(pItem->GetTitleLines()+pItem->GetTextLines())*(m_FontHeight+m_LineMargin)+
-			(m_TitleMargin*2-m_LineMargin);
+		rc.bottom=rc.top+(pItem->GetTitleLines()+pItem->GetTextLines())*(m_FontHeight+m_Style.LineSpacing)+
+			(m_Style.TitlePadding.Top+m_Style.TitlePadding.Bottom-m_Style.LineSpacing);
 		if (::PtInRect(&rc,pt))
 			return i;
 		rc.top=rc.bottom;
@@ -697,8 +707,8 @@ void CProgramListPanel::SetToolTip()
 		for (int i=0;i<NumItems;i++) {
 			const CProgramItemInfo *pItem=m_ItemList.GetItem(i);
 
-			ti.rect.bottom=ti.rect.top+(pItem->GetTitleLines()+pItem->GetTextLines())*(m_FontHeight+m_LineMargin)+
-				(m_TitleMargin*2-m_LineMargin);
+			ti.rect.bottom=ti.rect.top+(pItem->GetTitleLines()+pItem->GetTextLines())*(m_FontHeight+m_Style.LineSpacing)+
+				(m_Style.TitlePadding.Top+m_Style.TitlePadding.Bottom-m_Style.LineSpacing);
 			::SendMessage(m_hwndToolTip,TTM_NEWTOOLRECT,0,(LPARAM)&ti);
 			ti.uId++;
 			ti.rect.top=ti.rect.bottom;
@@ -713,6 +723,8 @@ LRESULT CProgramListPanel::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lP
 	switch (uMsg) {
 	case WM_CREATE:
 		{
+			InitializeUI();
+
 			if (!m_Font.IsCreated()) {
 				LOGFONT lf;
 				GetDefaultFont(&lf);
@@ -752,7 +764,7 @@ LRESULT CProgramListPanel::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lP
 	case WM_MOUSEWHEEL:
 		{
 			int Delta=m_MouseWheel.OnMouseWheel(wParam,
-				(m_FontHeight+m_LineMargin)*m_MouseWheel.GetDefaultScrollLines());
+				(m_FontHeight+m_Style.LineSpacing)*m_MouseWheel.GetDefaultScrollLines());
 
 			if (Delta!=0)
 				SetScrollPos(m_ScrollPos-Delta);
@@ -761,7 +773,7 @@ LRESULT CProgramListPanel::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lP
 
 	case WM_VSCROLL:
 		{
-			const int LineHeight=m_FontHeight+m_LineMargin;
+			const int LineHeight=m_FontHeight+m_Style.LineSpacing;
 			int Pos,Page,Max;
 			RECT rc;
 
@@ -769,7 +781,7 @@ LRESULT CProgramListPanel::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lP
 			GetClientRect(&rc);
 			Page=rc.bottom;
 			Max=m_TotalLines*LineHeight+
-				m_ItemList.NumItems()*(m_TitleMargin*2-m_LineMargin)-Page;
+				m_ItemList.NumItems()*(m_Style.TitlePadding.Top+m_Style.TitlePadding.Bottom-m_Style.LineSpacing)-Page;
 			if (Max<0)
 				Max=0;
 			switch (LOWORD(wParam)) {
@@ -878,7 +890,7 @@ LRESULT CProgramListPanel::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lP
 
 void CProgramListPanel::DrawProgramList(HDC hdc,const RECT *prcPaint)
 {
-	const int LineHeight=m_FontHeight+m_LineMargin;
+	const int LineHeight=m_FontHeight+m_Style.LineSpacing;
 	RECT rc,rcMargin;
 
 	HBRUSH hbr=::CreateSolidBrush(m_Theme.MarginColor);
@@ -895,7 +907,7 @@ void CProgramListPanel::DrawProgramList(HDC hdc,const RECT *prcPaint)
 		::FillRect(hdc,prcPaint,hbr);
 		DrawUtil::SelectObject(hdc,m_Font);
 		::SetTextColor(hdc,m_Theme.EventTextStyle.TextColor);
-		::InflateRect(&rc,-m_TitleMargin,-m_TitleMargin);
+		TVTest::Style::Subtract(&rc,m_Style.TitlePadding);
 		DrawUtil::DrawWrapText(hdc,TEXT("番組表の取得中です..."),&rc,LineHeight);
 	} else {
 		rc.top=-m_ScrollPos;
@@ -904,7 +916,7 @@ void CProgramListPanel::DrawProgramList(HDC hdc,const RECT *prcPaint)
 			bool fCur=pItem->GetEventID()==m_CurEventID;
 
 			rc.bottom=rc.top+pItem->GetTitleLines()*LineHeight+
-													(m_TitleMargin*2-m_LineMargin);
+				(m_Style.TitlePadding.Top+m_Style.TitlePadding.Bottom-m_Style.LineSpacing);
 			if (rc.bottom>prcPaint->top) {
 				const Theme::Style &Style=
 					fCur?m_Theme.CurEventNameStyle:m_Theme.EventNameStyle;
@@ -914,8 +926,7 @@ void CProgramListPanel::DrawProgramList(HDC hdc,const RECT *prcPaint)
 				rc.left=0;
 				Theme::DrawStyleBackground(hdc,&rc,&Style);
 				RECT rcTitle=rc;
-				rcTitle.top+=m_TitleMargin;
-				rcTitle.bottom-=m_TitleMargin;
+				TVTest::Style::Subtract(&rcTitle,m_Style.TitlePadding);
 				pItem->DrawTitle(hdc,&rcTitle,LineHeight);
 			}
 
@@ -925,38 +936,27 @@ void CProgramListPanel::DrawProgramList(HDC hdc,const RECT *prcPaint)
 				const Theme::Style &Style=
 					fCur?m_Theme.CurEventTextStyle:m_Theme.EventTextStyle;
 
-				/*
-				rc.left=TEXT_LEFT_MARGIN;
-				if (prcPaint->left<rc.left) {
-					rcMargin.left=prcPaint->left;
-					rcMargin.top=rc.top;
-					rcMargin.right=min(rc.left,prcPaint->right);
-					rcMargin.bottom=rc.bottom;
-					::FillRect(hdc,&rcMargin,hbr);
-				}
-				*/
 				DrawUtil::SelectObject(hdc,m_Font);
 				::SetTextColor(hdc,Style.TextColor);
 				rc.left=0;
 				Theme::DrawStyleBackground(hdc,&rc,&Style);
-				rc.left=TEXT_LEFT_MARGIN;
+				rc.left=GetTextLeftMargin();
 				pItem->DrawText(hdc,&rc,LineHeight);
 
 				const unsigned int ShowIcons=
 					CEpgIcons::GetEventIcons(&pItem->GetEventInfo()) & m_VisibleEventIcons;
 				if (ShowIcons!=0) {
-					int y=rc.top+ICON_MARGIN_TOP;
+					rc.left=0;
+					int y=rc.top+m_Style.IconMargin.Top;
 					int Icon=0;
 					for (unsigned int Flag=ShowIcons;Flag!=0;Flag>>=1) {
 						if (y>=rc.bottom)
 							break;
 						if ((Flag&1)!=0) {
-							CEpgIcons::Draw(hdc,ICON_MARGIN_LEFT,y,
-											hdcIcons,Icon,
-											CEpgIcons::ICON_WIDTH,
-											min(CEpgIcons::ICON_HEIGHT,rc.bottom-y),
-											192);
-							y+=CEpgIcons::ICON_HEIGHT+ICON_MARGIN;
+							CEpgIcons::Draw(hdc,m_Style.IconMargin.Left,y,
+											m_Style.IconSize.Width,m_Style.IconSize.Height,
+											hdcIcons,Icon,192,&rc);
+							y+=m_Style.IconSize.Height+m_Style.IconMargin.Bottom;
 						}
 						Icon++;
 					}
@@ -1026,4 +1026,33 @@ bool CProgramListPanel::CEventInfoPopupHandler::ShowPopup(LPARAM Param,CEventInf
 	}
 
 	return true;
+}
+
+
+
+
+CProgramListPanel::ProgramListPanelStyle::ProgramListPanelStyle()
+	: TitlePadding(2)
+	, IconSize(CEpgIcons::ICON_WIDTH,CEpgIcons::ICON_HEIGHT)
+	, IconMargin(1)
+	, LineSpacing(1)
+{
+}
+
+
+void CProgramListPanel::ProgramListPanelStyle::SetStyle(const TVTest::Style::CStyleManager *pStyleManager)
+{
+	pStyleManager->Get(TEXT("program-list-panel.title.padding"),&TitlePadding);
+	pStyleManager->Get(TEXT("program-list-panel.icon"),&IconSize);
+	pStyleManager->Get(TEXT("program-list-panel.icon.margin"),&IconMargin);
+	pStyleManager->Get(TEXT("program-list-panel.line-spacing"),&LineSpacing);
+}
+
+
+void CProgramListPanel::ProgramListPanelStyle::NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager)
+{
+	pStyleManager->ToPixels(&TitlePadding);
+	pStyleManager->ToPixels(&IconSize);
+	pStyleManager->ToPixels(&IconMargin);
+	pStyleManager->ToPixels(&LineSpacing);
 }

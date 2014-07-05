@@ -1546,10 +1546,6 @@ bool CMainWindow::OnCreate(const CREATESTRUCT *pcs)
 	m_TitleBar.SetIcon(::LoadIcon(m_App.GetInstance(),MAKEINTRESOURCE(IDI_ICON)));
 	m_TitleBar.SetMaximizeMode((pcs->style&WS_MAXIMIZE)!=0);
 
-	m_App.StatusView.Create(m_LayoutBase.GetHandle(),
-		//WS_CHILD | (m_fShowStatusBar?WS_VISIBLE:0) | WS_CLIPSIBLINGS,
-		WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS,0,IDC_STATUS);
-	m_App.StatusView.SetEventHandler(&m_StatusViewEventHandler);
 	m_App.StatusView.AddItem(new CChannelStatusItem);
 	m_App.StatusView.AddItem(new CVideoSizeStatusItem);
 	m_App.StatusView.AddItem(new CVolumeStatusItem);
@@ -1570,6 +1566,10 @@ bool CMainWindow::OnCreate(const CREATESTRUCT *pcs)
 	m_App.StatusView.AddItem(new CTunerStatusItem);
 	m_App.StatusView.AddItem(new CMediaBitRateStatusItem);
 	m_App.StatusView.AddItem(new CFavoritesStatusItem);
+	m_App.StatusView.Create(m_LayoutBase.GetHandle(),
+		//WS_CHILD | (m_fShowStatusBar?WS_VISIBLE:0) | WS_CLIPSIBLINGS,
+		WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS,0,IDC_STATUS);
+	m_App.StatusView.SetEventHandler(&m_StatusViewEventHandler);
 	m_App.StatusOptions.ApplyOptions();
 
 	m_NotificationBar.Create(m_Viewer.GetVideoContainer().GetHandle(),
@@ -1581,6 +1581,7 @@ bool CMainWindow::OnCreate(const CREATESTRUCT *pcs)
 	m_App.SideBar.Create(m_LayoutBase.GetHandle(),
 						 WS_CHILD | WS_CLIPSIBLINGS | (m_fShowSideBar?WS_VISIBLE:0),
 						 0,IDC_SIDEBAR);
+	m_App.SideBarOptions.SetSideBarImage();
 
 	Layout::CWindowContainer *pWindowContainer;
 	Layout::CSplitter *pSideBarSplitter=new Layout::CSplitter(CONTAINER_ID_SIDEBARSPLITTER);
@@ -1664,6 +1665,7 @@ bool CMainWindow::OnCreate(const CREATESTRUCT *pcs)
 	}
 	m_App.StatusView.SetSingleText(TEXT("‹N“®’†..."));
 
+	m_App.OSDManager.Initialize();
 	m_App.OSDManager.SetEventHandler(this);
 
 	if (m_fCustomFrame) {
@@ -5564,7 +5566,8 @@ bool CMainWindow::GetOSDWindow(HWND *phwndParent,RECT *pRect,bool *pfForcePseudo
 	}
 	::GetClientRect(*phwndParent,pRect);
 	pRect->top+=m_NotificationBar.GetBarHeight();
-	pRect->bottom-=m_App.StatusView.GetHeight();
+	if (!m_fShowStatusBar && m_fPopupStatusBar)
+		pRect->bottom-=m_App.StatusView.GetHeight();
 	return true;
 }
 
@@ -6434,7 +6437,7 @@ bool CMainWindow::CSideBarManager::DrawIcon(
 			if (hbmLogo!=nullptr) {
 				const int Width=ItemRect.right-ItemRect.left;
 				const int Height=ItemRect.bottom-ItemRect.top;
-				const int IconHeight=Height*11/16;	// –{—ˆ‚Ì”ä—¦‚æ‚èc’·‚É‚µ‚Ä‚¢‚é(Œ©‰h‚¦‚Ì‚½‚ß)
+				const int IconHeight=Height*10/16;	// –{—ˆ‚Ì”ä—¦‚æ‚èc’·‚É‚µ‚Ä‚¢‚é(Œ©‰h‚¦‚Ì‚½‚ß)
 				HBITMAP hbmOld=SelectBitmap(hdcBuffer,hbmLogo);
 				int OldStretchMode=::SetStretchBltMode(hdc,STRETCH_HALFTONE);
 				BITMAP bm;

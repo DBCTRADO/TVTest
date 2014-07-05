@@ -22,6 +22,7 @@ CInitialSettings::CInitialSettings(const CDriverManager *pDriverManager)
 	: m_pDriverManager(pDriverManager)
 	, m_VideoRenderer(CVideoRenderer::RENDERER_DEFAULT)
 	, m_CasDevice(-1)
+	, m_fDrawLogo(false)
 {
 	m_szDriverFileName[0]='\0';
 #if 0
@@ -71,7 +72,7 @@ INT_PTR CInitialSettings::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPara
 				::GetWindowRect(hwndLogo,&rc);
 				::SetRect(&rc,rc.right-rc.left,0,0,0);
 				if (m_AeroGlass.ApplyAeroGlass(hDlg,&rc)) {
-					m_GdiPlus.Initialize();
+					m_fDrawLogo=true;
 					m_LogoImage.LoadFromResource(GetAppClass().GetResourceInstance(),
 						MAKEINTRESOURCE(IDB_LOGO32),TEXT("PNG"));
 					::ShowWindow(hwndLogo,SW_HIDE);
@@ -354,13 +355,13 @@ INT_PTR CInitialSettings::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPara
 		return TRUE;
 
 	case WM_PAINT:
-		if (m_GdiPlus.IsInitialized()) {
+		if (m_fDrawLogo) {
 			PAINTSTRUCT ps;
 
 			::BeginPaint(hDlg,&ps);
 			{
-				CGdiPlus::CCanvas Canvas(ps.hdc);
-				CGdiPlus::CBrush Brush(::GetSysColor(COLOR_3DFACE));
+				TVTest::Graphics::CCanvas Canvas(ps.hdc);
+				TVTest::Graphics::CBrush Brush(::GetSysColor(COLOR_3DFACE));
 				RECT rc,rcClient;
 
 				::GetWindowRect(::GetDlgItem(hDlg,IDC_INITIALSETTINGS_LOGO),&rc);
@@ -368,8 +369,8 @@ INT_PTR CInitialSettings::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPara
 				Canvas.Clear(0,0,0,0);
 				::GetClientRect(hDlg,&rcClient);
 				rcClient.left=rc.right;
-				m_GdiPlus.FillRect(&Canvas,&Brush,&rcClient);
-				m_GdiPlus.DrawImage(&Canvas,&m_LogoImage,
+				Canvas.FillRect(&Brush,rcClient);
+				Canvas.DrawImage(&m_LogoImage,
 					(rc.right-m_LogoImage.GetWidth())/2,
 					(rc.bottom-m_LogoImage.GetHeight())/2);
 			}
@@ -392,7 +393,6 @@ INT_PTR CInitialSettings::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPara
 				::DeleteObject(hbm);
 			} else {
 				m_LogoImage.Free();
-				m_GdiPlus.Finalize();
 			}
 		}
 		return TRUE;

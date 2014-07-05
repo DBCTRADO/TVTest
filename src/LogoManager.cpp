@@ -426,7 +426,7 @@ HBITMAP CLogoManager::GetAssociatedLogoBitmap(WORD NetworkID,WORD ServiceID,BYTE
 }
 
 
-const CGdiPlus::CImage *CLogoManager::GetLogoImage(WORD NetworkID,WORD LogoID,BYTE LogoType)
+const TVTest::Graphics::CImage *CLogoManager::GetLogoImage(WORD NetworkID,WORD LogoID,BYTE LogoType)
 {
 	CBlockLock Lock(&m_Lock);
 	ULONGLONG Key=GetMapKey(NetworkID,LogoID,LogoType);
@@ -437,7 +437,7 @@ const CGdiPlus::CImage *CLogoManager::GetLogoImage(WORD NetworkID,WORD LogoID,BY
 }
 
 
-const CGdiPlus::CImage *CLogoManager::GetAssociatedLogoImage(WORD NetworkID,WORD ServiceID,BYTE LogoType)
+const TVTest::Graphics::CImage *CLogoManager::GetAssociatedLogoImage(WORD NetworkID,WORD ServiceID,BYTE LogoType)
 {
 	CBlockLock Lock(&m_Lock);
 	LogoIDMap::iterator itr=m_LogoIDMap.find(GetIDMapKey(NetworkID,ServiceID));
@@ -730,7 +730,7 @@ HBITMAP CLogoManager::CLogoData::GetBitmap(CImageCodec *pCodec)
 }
 
 
-const CGdiPlus::CImage *CLogoManager::CLogoData::GetImage(CImageCodec *pCodec)
+const TVTest::Graphics::CImage *CLogoManager::CLogoData::GetImage(CImageCodec *pCodec)
 {
 	if (!m_Image.IsCreated()) {
 		HGLOBAL hDIB=pCodec->LoadAribPngFromMemory(m_pData,m_DataSize);

@@ -103,8 +103,8 @@ public:
 	static UINT IconFlag(int Icon) { return 1<<Icon; }
 
 	bool Load();
-	static bool Draw(HDC hdcDst,int DstX,int DstY,
-					 HDC hdcSrc,int Icon,int Width,int Height,BYTE Opacity=255);
+	static bool Draw(HDC hdcDst,int DstX,int DstY,int Width,int Height,
+					 HDC hdcSrc,int Icon,BYTE Opacity=255,const RECT *pClipping=nullptr);
 	static unsigned int GetEventIcons(const CEventInfoData *pEventInfo);
 };
 

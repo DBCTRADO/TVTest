@@ -36,7 +36,7 @@ bool CChannelPanel::Initialize(HINSTANCE hinst)
 		wc.hbrBackground=NULL;
 		wc.lpszMenuName=NULL;
 		wc.lpszClassName=m_pszClassName;
-		if (RegisterClass(&wc)==0)
+		if (::RegisterClass(&wc)==0)
 			return false;
 		m_hinst=hinst;
 	}
@@ -50,9 +50,6 @@ CChannelPanel::CChannelPanel()
 	, m_pProgramList(NULL)
 	, m_FontHeight(0)
 	, m_EventNameLines(2)
-	, m_ChannelNameMargins(2,2,2,2)
-	, m_EventNameMargins(8,1,2,1)
-	, m_ChannelChevronMargin(12)
 	, m_ChannelNameHeight(0)
 	, m_EventNameHeight(0)
 	, m_ItemHeight(0)
@@ -107,6 +104,18 @@ bool CChannelPanel::Create(HWND hwndParent,DWORD Style,DWORD ExStyle,int ID)
 {
 	return CreateBasicWindow(hwndParent,Style,ExStyle,ID,
 							 m_pszClassName,TEXT("チャンネル"),m_hinst);
+}
+
+
+void CChannelPanel::SetStyle(const TVTest::Style::CStyleManager *pStyleManager)
+{
+	m_Style.SetStyle(pStyleManager);
+}
+
+
+void CChannelPanel::NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager)
+{
+	m_Style.NormalizeStyle(pStyleManager);
 }
 
 
@@ -539,13 +548,15 @@ LRESULT CChannelPanel::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam
 	switch (uMsg) {
 	case WM_CREATE:
 		{
+			InitializeUI();
+
 			CalcItemHeight();
 			m_ScrollPos=0;
 			if (m_fDetailToolTip)
 				m_EventInfoPopupManager.Initialize(hwnd,&m_EventInfoPopupHandler);
 			else
 				CreateTooltip();
-			m_Chevron.Load(m_hinst,IDB_CHEVRON);
+			m_Chevron.Load(m_hinst,IDB_CHEVRON,CHEVRON_WIDTH,CHEVRON_HEIGHT);
 		}
 		return 0;
 
@@ -732,15 +743,17 @@ void CChannelPanel::Draw(HDC hdc,const RECT *prcPaint)
 			rc.left=0;
 			rc.right=rcClient.right;
 			Theme::DrawStyleBackground(hdc,&rc,&Style);
-			rc.left=m_ChannelNameMargins.left;
-			rc.right-=m_ChannelChevronMargin+CHEVRON_WIDTH+m_ChannelNameMargins.right;
-			pChannelInfo->DrawChannelName(hdc,&rc);
+			RECT rcName=rc;
+			TVTest::Style::Subtract(&rcName,m_Style.ChannelNameMargin);
+			rcName.right-=m_Style.ChannelChevronMargin+m_Style.ChannelChevronSize.Width;
+			pChannelInfo->DrawChannelName(hdc,&rcName,m_Style.ChannelLogoMargin);
 			m_Chevron.Draw(hdc,
-						   rc.right+m_ChannelChevronMargin,
-						   rc.top+((rc.bottom-rc.top)-CHEVRON_HEIGHT)/2,
-						   Style.TextColor,
-						   pChannelInfo->IsExpanded()?CHEVRON_WIDTH:0,0,
-						   CHEVRON_WIDTH,CHEVRON_HEIGHT);
+						   rcName.right+m_Style.ChannelChevronMargin,
+						   rcName.top+((rcName.bottom-rcName.top)-m_Style.ChannelChevronSize.Height)/2,
+						   m_Style.ChannelChevronSize.Width,
+						   m_Style.ChannelChevronSize.Height,
+						   pChannelInfo->IsExpanded()?1:0,
+						   Style.TextColor);
 		}
 
 		int NumEvents=pChannelInfo->IsExpanded()?m_ExpandEvents:m_EventsPerChannel;
@@ -756,11 +769,8 @@ void CChannelPanel::Draw(HDC hdc,const RECT *prcPaint)
 				DrawUtil::SelectObject(hdc,m_Font);
 				::SetTextColor(hdc,Style.TextColor);
 				Theme::DrawStyleBackground(hdc,&rc,&Style);
-				RECT rcText;
-				rcText.left=rc.left+m_EventNameMargins.left;
-				rcText.top=rc.top+m_EventNameMargins.top;
-				rcText.right=rc.right-m_EventNameMargins.right;
-				rcText.bottom=rc.bottom-m_EventNameMargins.bottom;
+				RECT rcText=rc;
+				TVTest::Style::Subtract(&rcText,m_Style.EventNameMargin);
 				pChannelInfo->DrawEventName(hdc,&rcText,j);
 			}
 		}
@@ -835,9 +845,10 @@ void CChannelPanel::CalcItemHeight()
 	if (hdc==NULL)
 		return;
 	m_FontHeight=m_Font.GetHeight(hdc);
-	m_ChannelNameHeight=m_FontHeight+m_ChannelNameMargins.top+m_ChannelNameMargins.bottom;
+	m_ChannelNameHeight=max(m_FontHeight,m_Style.ChannelChevronSize.Height)+
+		m_Style.ChannelNameMargin.Top+m_Style.ChannelNameMargin.Bottom;
 	m_EventNameHeight=m_FontHeight*m_EventNameLines+
-		m_EventNameMargins.top+m_EventNameMargins.bottom;
+		m_Style.EventNameMargin.Top+m_Style.EventNameMargin.Bottom;
 	m_ItemHeight=m_ChannelNameHeight+m_EventNameHeight*m_EventsPerChannel;
 	m_ExpandedItemHeight=m_ChannelNameHeight+m_EventNameHeight*m_ExpandEvents;
 	::ReleaseDC(m_hwnd,hdc);
@@ -886,9 +897,9 @@ int CChannelPanel::HitTest(int x,int y,HitType *pType) const
 		rc.bottom=rc.top+m_ChannelNameHeight;
 		if (::PtInRect(&rc,pt)) {
 			if (pType!=NULL) {
-				if (x<rc.right-(m_ChannelChevronMargin+CHEVRON_WIDTH+m_ChannelNameMargins.right))
+				if (x<rc.right-(m_Style.ChannelChevronMargin+m_Style.ChannelChevronSize.Width+m_Style.ChannelNameMargin.Right))
 					*pType=HIT_CHANNELNAME;
-				else if (x>=rc.right-(CHEVRON_WIDTH+m_ChannelNameMargins.right))
+				else if (x>=rc.right-(m_Style.ChannelChevronSize.Width+m_Style.ChannelNameMargin.Right))
 					*pType=HIT_CHEVRON;
 				else
 					*pType=HIT_MARGIN;
@@ -1103,29 +1114,33 @@ int CChannelPanel::CChannelEventInfo::FormatEventText(LPTSTR pszText,int MaxLeng
 }
 
 
-void CChannelPanel::CChannelEventInfo::DrawChannelName(HDC hdc,const RECT *pRect)
+void CChannelPanel::CChannelEventInfo::DrawChannelName(
+	HDC hdc,const RECT *pRect,const TVTest::Style::Margins &LogoMargins)
 {
 	RECT rc=*pRect;
 
 	if (m_hbmLogo!=NULL) {
 		int LogoWidth,LogoHeight;
 
-		LogoHeight=rc.bottom-rc.top-4;
-		LogoWidth=LogoHeight*16/9;
-		// AlphaBlendでリサイズすると汚いので、予めリサイズした画像を作成しておく
-		if (m_StretchedLogo.IsCreated()) {
-			if (m_StretchedLogo.GetWidth()!=LogoWidth || m_StretchedLogo.GetHeight()!=LogoHeight)
-				m_StretchedLogo.Destroy();
+		LogoHeight=(rc.bottom-rc.top)-(LogoMargins.Top+LogoMargins.Bottom);
+		if (LogoHeight>0) {
+			LogoWidth=LogoHeight*16/9;
+			// AlphaBlendでリサイズすると汚いので、予めリサイズした画像を作成しておく
+			if (m_StretchedLogo.IsCreated()) {
+				if (m_StretchedLogo.GetWidth()!=LogoWidth || m_StretchedLogo.GetHeight()!=LogoHeight)
+					m_StretchedLogo.Destroy();
+			}
+			if (!m_StretchedLogo.IsCreated()) {
+				HBITMAP hbm=DrawUtil::ResizeBitmap(m_hbmLogo,LogoWidth,LogoHeight);
+				if (hbm!=NULL)
+					m_StretchedLogo.Attach(hbm);
+			}
+			rc.left+=LogoMargins.Left;
+			DrawUtil::DrawBitmap(hdc,rc.left,rc.top+LogoMargins.Top,
+								 LogoWidth,LogoHeight,
+								 m_StretchedLogo.IsCreated()?m_StretchedLogo.GetHandle():m_hbmLogo,NULL,192);
+			rc.left+=LogoWidth+LogoMargins.Right;
 		}
-		if (!m_StretchedLogo.IsCreated()) {
-			HBITMAP hbm=DrawUtil::ResizeBitmap(m_hbmLogo,LogoWidth,LogoHeight);
-			if (hbm!=NULL)
-				m_StretchedLogo.Attach(hbm);
-		}
-		DrawUtil::DrawBitmap(hdc,rc.left,rc.top+(rc.bottom-rc.top-LogoHeight)/2,
-							 LogoWidth,LogoHeight,
-							 m_StretchedLogo.IsCreated()?m_StretchedLogo.GetHandle():m_hbmLogo,NULL,192);
-		rc.left+=LogoWidth+3;
 	}
 
 	TCHAR szText[MAX_CHANNEL_NAME+16];
@@ -1153,4 +1168,36 @@ void CChannelPanel::CChannelEventInfo::DrawEventName(HDC hdc,const RECT *pRect,i
 		::DrawText(hdc,szText,-1,&rc,
 				   DT_WORDBREAK | DT_NOPREFIX | DT_END_ELLIPSIS);
 	}
+}
+
+
+
+
+CChannelPanel::ChannelPanelStyle::ChannelPanelStyle()
+	: ChannelNameMargin(2,2,2,2)
+	, ChannelLogoMargin(0,0,3,0)
+	, EventNameMargin(8,1,2,1)
+	, ChannelChevronSize(CHEVRON_WIDTH,CHEVRON_HEIGHT)
+	, ChannelChevronMargin(12)
+{
+}
+
+
+void CChannelPanel::ChannelPanelStyle::SetStyle(const TVTest::Style::CStyleManager *pStyleManager)
+{
+	pStyleManager->Get(TEXT("channel-list-panel.channel-name.margin"),&ChannelNameMargin);
+	pStyleManager->Get(TEXT("channel-list-panel.channel-name.logo.margin"),&ChannelLogoMargin);
+	pStyleManager->Get(TEXT("channel-list-panel.channel-name.chevron"),&ChannelChevronSize);
+	pStyleManager->Get(TEXT("channel-list-panel.channel-name.chevron.margin"),&ChannelChevronMargin);
+	pStyleManager->Get(TEXT("channel-list-panel.event-name.margin"),&EventNameMargin);
+}
+
+
+void CChannelPanel::ChannelPanelStyle::NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager)
+{
+	pStyleManager->ToPixels(&ChannelNameMargin);
+	pStyleManager->ToPixels(&ChannelLogoMargin);
+	pStyleManager->ToPixels(&ChannelChevronSize);
+	pStyleManager->ToPixels(&ChannelChevronMargin);
+	pStyleManager->ToPixels(&EventNameMargin);
 }

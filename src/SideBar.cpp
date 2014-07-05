@@ -10,11 +10,11 @@ static char THIS_FILE[]=__FILE__;
 #endif
 
 
-#define SIDE_BAR_CLASS APP_NAME TEXT(" Side Bar")
 
 
-
-
+const int CSideBar::ICON_WIDTH=16;
+const int CSideBar::ICON_HEIGHT=16;
+const LPCTSTR CSideBar::CLASS_NAME=APP_NAME TEXT(" Side Bar");
 HINSTANCE CSideBar::m_hinst=NULL;
 
 
@@ -29,11 +29,11 @@ bool CSideBar::Initialize(HINSTANCE hinst)
 		wc.cbWndExtra=0;
 		wc.hInstance=hinst;
 		wc.hIcon=NULL;
-		wc.hCursor=LoadCursor(NULL,IDC_ARROW);
+		wc.hCursor=::LoadCursor(NULL,IDC_ARROW);
 		wc.hbrBackground=NULL;
 		wc.lpszMenuName=NULL;
-		wc.lpszClassName=SIDE_BAR_CLASS;
-		if (RegisterClass(&wc)==0)
+		wc.lpszClassName=CLASS_NAME;
+		if (::RegisterClass(&wc)==0)
 			return false;
 		m_hinst=hinst;
 	}
@@ -44,9 +44,6 @@ bool CSideBar::Initialize(HINSTANCE hinst)
 CSideBar::CSideBar(const CCommandList *pCommandList)
 	: m_fShowTooltips(true)
 	, m_fVertical(true)
-	, m_IconWidth(16)
-	, m_IconHeight(16)
-	, m_SeparatorWidth(8)
 	, m_HotItem(-1)
 	, m_ClickItem(-1)
 	, m_pEventHandler(NULL)
@@ -69,11 +66,6 @@ CSideBar::CSideBar(const CCommandList *pCommandList)
 	m_Theme.CheckItemStyle.Border.Color=RGB(192,192,192);
 	m_Theme.Border.Type=Theme::BORDER_RAISED;
 	m_Theme.Border.Color=RGB(192,192,192);
-
-	m_ItemMargin.left=3;
-	m_ItemMargin.top=3;
-	m_ItemMargin.right=3;
-	m_ItemMargin.bottom=3;
 }
 
 
@@ -88,7 +80,19 @@ CSideBar::~CSideBar()
 bool CSideBar::Create(HWND hwndParent,DWORD Style,DWORD ExStyle,int ID)
 {
 	return CreateBasicWindow(hwndParent,Style,ExStyle,ID,
-							 SIDE_BAR_CLASS,NULL,m_hinst);
+							 CLASS_NAME,NULL,m_hinst);
+}
+
+
+void CSideBar::SetStyle(const TVTest::Style::CStyleManager *pStyleManager)
+{
+	m_Style.SetStyle(pStyleManager);
+}
+
+
+void CSideBar::NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager)
+{
+	m_Style.NormalizeStyle(pStyleManager);
 }
 
 
@@ -98,19 +102,19 @@ int CSideBar::GetBarWidth() const
 	Theme::GetBorderWidths(&m_Theme.Border,&rc);
 	int Width;
 	if (m_fVertical) {
-		Width=m_IconWidth+m_ItemMargin.left+m_ItemMargin.right+rc.left+rc.right;
+		Width=m_Style.IconSize.Width+m_Style.ItemPadding.Horz()+rc.left+rc.right;
 	} else {
-		Width=m_IconHeight+m_ItemMargin.top+m_ItemMargin.bottom+rc.top+rc.bottom;
+		Width=m_Style.IconSize.Height+m_Style.ItemPadding.Vert()+rc.top+rc.bottom;
 	}
 	return Width;
 }
 
 
-bool CSideBar::SetIconImage(HBITMAP hbm)
+bool CSideBar::SetIconImage(HBITMAP hbm,int Width,int Height)
 {
 	if (hbm==NULL)
 		return false;
-	if (!m_IconBitmap.Create(hbm))
+	if (!m_Icons.Create(hbm,Width,Height))
 		return false;
 	if (m_hwnd!=NULL)
 		Invalidate();
@@ -275,11 +279,19 @@ void CSideBar::SetEventHandler(CEventHandler *pHandler)
 }
 
 
+TVTest::Style::Size CSideBar::GetIconDrawSize() const
+{
+	return m_Style.IconSize;
+}
+
+
 LRESULT CSideBar::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 {
 	switch (uMsg) {
 	case WM_CREATE:
 		{
+			InitializeUI();
+
 			LPCREATESTRUCT pcs=reinterpret_cast<LPCREATESTRUCT>(lParam);
 
 			m_Tooltip.Create(hwnd);
@@ -459,19 +471,20 @@ LRESULT CSideBar::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 		m_Tooltip.Destroy();
 		return 0;
 	}
-	return ::DefWindowProc(hwnd,uMsg,wParam,lParam);
+
+	return CCustomWindow::OnMessage(hwnd,uMsg,wParam,lParam);
 }
 
 
 void CSideBar::GetItemRect(int Item,RECT *pRect) const
 {
-	const int ItemWidth=m_IconWidth+m_ItemMargin.left+m_ItemMargin.right;
-	const int ItemHeight=m_IconHeight+m_ItemMargin.top+m_ItemMargin.bottom;
+	const int ItemWidth=m_Style.IconSize.Width+m_Style.ItemPadding.Horz();
+	const int ItemHeight=m_Style.IconSize.Height+m_Style.ItemPadding.Vert();
 	int Offset=0;
 
 	for (int i=0;i<Item;i++) {
 		if (m_ItemList[i].Command==ITEM_SEPARATOR) {
-			Offset+=m_SeparatorWidth;
+			Offset+=m_Style.SeparatorWidth;
 		} else {
 			if (m_fVertical)
 				Offset+=ItemHeight;
@@ -485,12 +498,12 @@ void CSideBar::GetItemRect(int Item,RECT *pRect) const
 		pRect->left=rcBorder.left;
 		pRect->right=rcBorder.left+ItemWidth;
 		pRect->top=rcBorder.top+Offset;
-		pRect->bottom=pRect->top+(m_ItemList[Item].Command==ITEM_SEPARATOR?m_SeparatorWidth:ItemHeight);
+		pRect->bottom=pRect->top+(m_ItemList[Item].Command==ITEM_SEPARATOR?m_Style.SeparatorWidth:ItemHeight);
 	} else {
 		pRect->top=rcBorder.top;
 		pRect->bottom=rcBorder.top+ItemHeight;
 		pRect->left=rcBorder.left+Offset;
-		pRect->right=pRect->left+(m_ItemList[Item].Command==ITEM_SEPARATOR?m_SeparatorWidth:ItemWidth);
+		pRect->right=pRect->left+(m_ItemList[Item].Command==ITEM_SEPARATOR?m_Style.SeparatorWidth:ItemWidth);
 	}
 }
 
@@ -571,6 +584,7 @@ void CSideBar::Draw(HDC hdc,const RECT &PaintRect)
 				&& rc.left<PaintRect.right && rc.right>PaintRect.left
 				&& rc.top<PaintRect.bottom && rc.bottom>PaintRect.top) {
 			COLORREF ForeColor;
+			BYTE Opacity=255;
 			RECT rcItem;
 
 			if (m_HotItem==i) {
@@ -591,21 +605,25 @@ void CSideBar::Draw(HDC hdc,const RECT &PaintRect)
 				} else {
 					ForeColor=m_Theme.ItemStyle.TextColor;
 				}
-				if ((m_ItemList[i].Flags&ITEM_FLAG_DISABLED)!=0)
+				if ((m_ItemList[i].Flags&ITEM_FLAG_DISABLED)!=0) {
+#if 0
 					ForeColor=MixColor(ForeColor,
 									   MixColor(m_Theme.ItemStyle.Gradient.Color1,
 												m_Theme.ItemStyle.Gradient.Color2));
+#else
+					Opacity=128;
+#endif
+				}
 			}
-			rcItem.left=rc.left+m_ItemMargin.left;
-			rcItem.top=rc.top+m_ItemMargin.top;
-			rcItem.right=rcItem.left+m_IconWidth;
-			rcItem.bottom=rcItem.top+m_IconHeight;
+			rcItem.left=rc.left+m_Style.ItemPadding.Left;
+			rcItem.top=rc.top+m_Style.ItemPadding.Top;
+			rcItem.right=rcItem.left+m_Style.IconSize.Width;
+			rcItem.bottom=rcItem.top+m_Style.IconSize.Height;
 			if (m_pEventHandler==NULL
 					|| !m_pEventHandler->DrawIcon(m_ItemList[i].Command,hdc,rcItem,ForeColor,hdcMemory)) {
-				m_IconBitmap.Draw(hdc,rcItem.left,rcItem.top,
-								  ForeColor,
-								  m_ItemList[i].Icon*m_IconWidth,0,
-								  m_IconWidth,m_IconHeight);
+				m_Icons.Draw(hdc,rcItem.left,rcItem.top,
+							 m_Style.IconSize.Width,m_Style.IconSize.Height,
+							 m_ItemList[i].Icon,ForeColor,Opacity);
 			}
 		}
 	}
@@ -644,4 +662,30 @@ CSideBar::CEventHandler::~CEventHandler()
 {
 	if (m_pSideBar!=NULL)
 		m_pSideBar->SetEventHandler(NULL);
+}
+
+
+
+
+CSideBar::SideBarStyle::SideBarStyle()
+	: IconSize(ICON_WIDTH,ICON_HEIGHT)
+	, ItemPadding(3)
+	, SeparatorWidth(8)
+{
+}
+
+
+void CSideBar::SideBarStyle::SetStyle(const TVTest::Style::CStyleManager *pStyleManager)
+{
+	pStyleManager->Get(TEXT("side-bar.item.icon"),&IconSize);
+	pStyleManager->Get(TEXT("side-bar.item.padding"),&ItemPadding);
+	pStyleManager->Get(TEXT("side-bar.separator.width"),&SeparatorWidth);
+}
+
+
+void CSideBar::SideBarStyle::NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager)
+{
+	pStyleManager->ToPixels(&IconSize);
+	pStyleManager->ToPixels(&ItemPadding);
+	pStyleManager->ToPixels(&SeparatorWidth);
 }

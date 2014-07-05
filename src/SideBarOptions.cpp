@@ -196,15 +196,56 @@ bool CSideBarOptions::Create(HWND hwndOwner)
 }
 
 
-HBITMAP CSideBarOptions::CreateImage()
+HBITMAP CSideBarOptions::CreateImage(IconSizeType SizeType,SIZE *pIconSize)
 {
+	LPCTSTR pszImageName,pszZoomImageName;
+	int IconWidth,IconHeight;
+	int NumWidth1,NumWidth2,NumWidth3,NumHeight3;
+	int NumMargin1,NumMargin2,NumMargin3;
+	int PercentWidth1,PercentWidth2;
+
+	if (SizeType==ICON_SIZE_SMALL) {
+		pszImageName=MAKEINTRESOURCE(IDB_SIDEBAR);
+		pszZoomImageName=MAKEINTRESOURCE(IDB_SIDEBARZOOM);
+		IconWidth=16;
+		IconHeight=16;
+		NumWidth1=4;
+		NumWidth2=3;
+		NumWidth3=3;
+		NumHeight3=8;
+		NumMargin1=1;
+		NumMargin2=1;
+		NumMargin3=1;
+		PercentWidth1=6;
+		PercentWidth2=4;
+	} else {
+		pszImageName=MAKEINTRESOURCE(IDB_SIDEBAR32);
+		pszZoomImageName=MAKEINTRESOURCE(IDB_SIDEBARZOOM32);
+		IconWidth=32;
+		IconHeight=32;
+		NumWidth1=8;
+		NumWidth2=6;
+		NumWidth3=6;
+		NumHeight3=16;
+		NumMargin1=2;
+		NumMargin2=2;
+		NumMargin3=2;
+		PercentWidth1=12;
+		PercentWidth2=8;
+	}
+
+	if (pIconSize!=NULL) {
+		pIconSize->cx=IconWidth;
+		pIconSize->cy=IconHeight;
+	}
+
 	HINSTANCE hinst=GetAppClass().GetResourceInstance();
-	HBITMAP hbm=(HBITMAP)::LoadImage(hinst,MAKEINTRESOURCE(IDB_SIDEBAR),
+	HBITMAP hbm=(HBITMAP)::LoadImage(hinst,pszImageName,
 									 IMAGE_BITMAP,0,0,LR_CREATEDIBSECTION);
 
 	if (hbm!=NULL) {
 		// •\Ž¦”{—¦‚ÌƒAƒCƒRƒ“‚ð•`‰æ‚·‚é
-		HBITMAP hbmZoom=(HBITMAP)::LoadImage(hinst,MAKEINTRESOURCE(IDB_SIDEBARZOOM),
+		HBITMAP hbmZoom=(HBITMAP)::LoadImage(hinst,pszZoomImageName,
 											 IMAGE_BITMAP,0,0,LR_CREATEDIBSECTION);
 
 		if (hbmZoom!=NULL) {
@@ -212,36 +253,43 @@ HBITMAP CSideBarOptions::CreateImage()
 			HBITMAP hbmDstOld=static_cast<HBITMAP>(::SelectObject(hdcDst,hbm));
 			HDC hdcSrc=::CreateCompatibleDC(NULL);
 			HBITMAP hbmSrcOld=static_cast<HBITMAP>(::SelectObject(hdcSrc,hbmZoom));
+
 			for (int i=0;i<CZoomOptions::NUM_ZOOM_COMMANDS;i++) {
 				CZoomOptions::ZoomInfo Zoom;
 				if (m_pZoomOptions->GetZoomInfoByCommand(ItemList[i].Command,&Zoom)) {
 					RECT rc;
-					rc.left=(ZOOM_ICON_FIRST+i)*16;
+					rc.left=(ZOOM_ICON_FIRST+i)*IconWidth;
 					rc.top=0;
-					rc.right=rc.left+16;
-					rc.bottom=16;
+					rc.right=rc.left+IconWidth;
+					rc.bottom=IconHeight;
 					if (Zoom.Type==CZoomOptions::ZOOM_RATE) {
 						int Percentage=Zoom.Rate.GetPercentage();
 						if (Percentage<1000) {
 							::FillRect(hdcDst,&rc,static_cast<HBRUSH>(::GetStockObject(BLACK_BRUSH)));
 							if (Percentage<100) {
 								if (Percentage>=10)
-									::BitBlt(hdcDst,rc.left,0,4,16,
-											 hdcSrc,(Percentage/10)*4,0,SRCCOPY);
-								::BitBlt(hdcDst,rc.left+5,0,4,16,
-										 hdcSrc,(Percentage%10)*4,0,SRCCOPY);
+									::BitBlt(hdcDst,rc.left,0,NumWidth1,IconHeight,
+											 hdcSrc,(Percentage/10)*NumWidth1,0,SRCCOPY);
+								::BitBlt(hdcDst,rc.left+NumWidth1+NumMargin1,0,NumWidth1,IconHeight,
+										 hdcSrc,(Percentage%10)*NumWidth1,0,SRCCOPY);
 								// %
-								::BitBlt(hdcDst,(ZOOM_ICON_FIRST+i)*16+10,0,6,16,
-										 hdcSrc,40,0,SRCCOPY);
+								::BitBlt(hdcDst,
+										 (ZOOM_ICON_FIRST+i)*IconWidth+(NumWidth1+NumMargin1)*2,0,
+										 PercentWidth1,IconHeight,
+										 hdcSrc,NumWidth1*10,0,SRCCOPY);
 							} else {
 								for (int j=0;j<3;j++) {
-									::BitBlt(hdcDst,rc.left+(2-j)*4,0,3,16,
-											 hdcSrc,(Percentage%10)*3,16,SRCCOPY);
+									::BitBlt(hdcDst,
+											 rc.left+(2-j)*(NumWidth2+NumMargin2),0,
+											 NumWidth2,IconHeight,
+											 hdcSrc,(Percentage%10)*NumWidth2,IconHeight,SRCCOPY);
 									Percentage/=10;
 								}
 								// %
-								::BitBlt(hdcDst,rc.left+12,0,4,16,
-										 hdcSrc,30,16,SRCCOPY);
+								::BitBlt(hdcDst,
+										 rc.left+(NumWidth2+NumMargin2)*3,0,
+										 PercentWidth2,IconHeight,
+										 hdcSrc,NumWidth2*10,IconHeight,SRCCOPY);
 							}
 						}
 					} else if (Zoom.Type==CZoomOptions::ZOOM_SIZE) {
@@ -250,8 +298,10 @@ HBITMAP CSideBarOptions::CreateImage()
 							for (int j=0;j<2;j++) {
 								int Size=j==0?Zoom.Size.Width:Zoom.Size.Height;
 								for (int k=0;k<4 && Size!=0;k++) {
-									::BitBlt(hdcDst,rc.left+(3-k)*4,j*8,3,8,
-											 hdcSrc,(Size%10)*3,32,SRCCOPY);
+									::BitBlt(hdcDst,
+											 rc.left+(3-k)*(NumWidth3+NumMargin3),j*IconHeight/2,
+											 NumWidth3,NumHeight3,
+											 hdcSrc,(Size%10)*NumWidth3,IconHeight*2,SRCCOPY);
 									Size/=10;
 								}
 							}
@@ -259,6 +309,7 @@ HBITMAP CSideBarOptions::CreateImage()
 					}
 				}
 			}
+
 			::SelectObject(hdcSrc,hbmSrcOld);
 			::DeleteDC(hdcSrc);
 			::SelectObject(hdcDst,hbmDstOld);
@@ -273,7 +324,6 @@ HBITMAP CSideBarOptions::CreateImage()
 
 bool CSideBarOptions::ApplySideBarOptions()
 {
-	SetSideBarImage();
 	ApplyItemList();
 	m_pSideBar->ShowToolTips(m_fShowToolTips);
 	m_pSideBar->SetVertical(m_Place==PLACE_LEFT || m_Place==PLACE_RIGHT);
@@ -283,10 +333,14 @@ bool CSideBarOptions::ApplySideBarOptions()
 
 bool CSideBarOptions::SetSideBarImage()
 {
-	HBITMAP hbm=CreateImage();
+	TVTest::Style::Size IconSize=m_pSideBar->GetIconDrawSize();
+	SIZE sz;
+	HBITMAP hbm=CreateImage(
+		IconSize.Width<=16 && IconSize.Height<=16?ICON_SIZE_SMALL:ICON_SIZE_BIG,
+		&sz);
 	if (hbm==NULL)
 		return false;
-	bool fResult=m_pSideBar->SetIconImage(hbm);
+	bool fResult=m_pSideBar->SetIconImage(hbm,sz.cx,sz.cy);
 	::DeleteObject(hbm);
 	return fResult;
 }
@@ -338,11 +392,12 @@ INT_PTR CSideBarOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam
 			DlgCheckBox_Check(hDlg,IDC_SIDEBAR_SHOWTOOLTIPS,m_fShowToolTips);
 			DlgCheckBox_Check(hDlg,IDC_SIDEBAR_SHOWCHANNELLOGO,m_fShowChannelLogo);
 
-			HBITMAP hbmIcons=CreateImage();
+			SIZE sz;
+			HBITMAP hbmIcons=CreateImage(ICON_SIZE_SMALL,&sz);
 			DrawUtil::CMonoColorBitmap Bitmap;
 			Bitmap.Create(hbmIcons);
 			::DeleteObject(hbmIcons);
-			m_himlIcons=Bitmap.CreateImageList(16,::GetSysColor(COLOR_WINDOWTEXT));
+			m_himlIcons=Bitmap.CreateImageList(sz.cx,::GetSysColor(COLOR_WINDOWTEXT));
 			Bitmap.Destroy();
 
 			HWND hwndList=::GetDlgItem(hDlg,IDC_SIDEBAR_ITEMLIST);

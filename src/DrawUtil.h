@@ -153,15 +153,45 @@ public:
 	void Destroy();
 	HBITMAP GetHandle() const { return m_hbm; }
 	bool IsCreated() const { return m_hbm!=NULL; }
-	bool Draw(HDC hdc,int DstX,int DstY,COLORREF Color,int SrcX=0,int SrcY=0,int Width=0,int Height=0);
+	bool Draw(HDC hdc,
+			  int DstX,int DstY,int DstWidth,int DstHeight,
+			  int SrcX,int SrcY,int SrcWidth,int SrcHeight,
+			  COLORREF Color,BYTE Opacity=255);
+	bool Draw(HDC hdc,int DstX,int DstY,COLORREF Color,BYTE Opacity=255,
+			  int SrcX=0,int SrcY=0,int Width=0,int Height=0);
 	HIMAGELIST CreateImageList(int IconWidth,COLORREF Color);
+	HBITMAP ExtractBitmap(int x,int y,int Width,int Height,COLORREF Color);
+	HICON ExtractIcon(int x,int y,int Width,int Height,COLORREF Color);
 
 private:
 	void SetColor(COLORREF Color);
 
 	HBITMAP m_hbm;
+	HBITMAP m_hbmPremultiplied;
 	COLORREF m_Color;
 	bool m_fColorImage;
+};
+
+class CMonoColorIconList
+{
+public:
+	CMonoColorIconList();
+	bool Load(HINSTANCE hinst,LPCTSTR pszName,int Width,int Height);
+	bool Load(HINSTANCE hinst,int ID,int Width,int Height) {
+		return Load(hinst,MAKEINTRESOURCE(ID),Width,Height);
+	}
+	bool Create(HBITMAP hbm,int Width,int Height);
+	void Destroy();
+	bool IsCreated() const;
+	bool Draw(HDC hdc,int DstX,int DstY,int DstWidth,int DstHeight,
+			  int IconIndex,COLORREF Color,BYTE Opacity=255);
+	int GetIconWidth() const { return m_IconWidth; }
+	int GetIconHeight() const { return m_IconHeight; }
+
+private:
+	CMonoColorBitmap m_Bitmap;
+	int m_IconWidth;
+	int m_IconHeight;
 };
 
 class CMemoryDC
@@ -206,81 +236,6 @@ public:
 };
 
 }	// namespace DrawUtil
-
-
-namespace Gdiplus {
-class Graphics;
-class Bitmap;
-class SolidBrush;
-}
-
-class CGdiPlus
-{
-public:
-	class CImage {
-		Gdiplus::Bitmap *m_pBitmap;
-	public:
-		CImage();
-		CImage(const CImage &Src);
-		~CImage();
-		CImage &operator=(const CImage &Src);
-		void Free();
-		bool LoadFromFile(LPCWSTR pszFileName);
-		bool LoadFromResource(HINSTANCE hinst,LPCWSTR pszName);
-		bool LoadFromResource(HINSTANCE hinst,LPCTSTR pszName,LPCTSTR pszType);
-		bool Create(int Width,int Height,int BitsPerPixel);
-		bool CreateFromBitmap(HBITMAP hbm,HPALETTE hpal=NULL);
-		bool CreateFromDIB(const BITMAPINFO *pbmi,const void *pBits);
-		bool IsCreated() const;
-		int GetWidth() const;
-		int GetHeight() const;
-		void Clear();
-		friend CGdiPlus;
-		friend class CCanvas;
-	};
-
-	class CBrush {
-		Gdiplus::SolidBrush *m_pBrush;
-	public:
-		CBrush();
-		CBrush(BYTE r,BYTE g,BYTE b,BYTE a=255);
-		CBrush(COLORREF Color);
-		~CBrush();
-		void Free();
-		bool CreateSolidBrush(BYTE r,BYTE g,BYTE b,BYTE a=255);
-		friend CGdiPlus;
-	};
-
-	class CCanvas {
-		Gdiplus::Graphics *m_pGraphics;
-	public:
-		CCanvas(HDC hdc);
-		CCanvas(CImage *pImage);
-		~CCanvas();
-		bool Clear(BYTE r,BYTE g,BYTE b,BYTE a=255);
-		friend CGdiPlus;
-	};
-
-	enum GradientDirection {
-		GRADIENT_DIRECTION_HORZ,
-		GRADIENT_DIRECTION_VERT
-	};
-
-	CGdiPlus();
-	~CGdiPlus();
-	bool Initialize();
-	void Finalize();
-	bool IsInitialized() const { return m_fInitialized; }
-	bool DrawImage(CCanvas *pCanvas,CImage *pImage,int x,int y);
-	bool DrawImage(CCanvas *pCanvas,int DstX,int DstY,int DstWidth,int DstHeight,
-				   CImage *pImage,int SrcX,int SrcY,int SrcWidth,int SrcHeight,float Opacity=1.0f);
-	bool FillRect(CCanvas *pCanvas,CBrush *pBrush,const RECT *pRect);
-	bool FillGradient(CCanvas *pCanvas,COLORREF Color1,COLORREF Color2,
-					  const RECT &Rect,GradientDirection Direction);
-
-private:
-	bool m_fInitialized;
-};
 
 
 #include <uxtheme.h>

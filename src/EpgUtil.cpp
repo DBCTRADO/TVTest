@@ -531,21 +531,53 @@ bool CEpgIcons::Load()
 }
 
 
-bool CEpgIcons::Draw(HDC hdcDst,int DstX,int DstY,
-					 HDC hdcSrc,int Icon,int Width,int Height,BYTE Opacity)
+bool CEpgIcons::Draw(HDC hdcDst,int DstX,int DstY,int Width,int Height,
+					 HDC hdcSrc,int Icon,BYTE Opacity,const RECT *pClipping)
 {
-	if (hdcDst==NULL || hdcSrc==NULL || Icon<0 || Icon>ICON_LAST
-			|| Width<=0 || Height<=0)
+	if (hdcDst==NULL || hdcSrc==NULL
+			|| Width<=0 || Height<=0
+			|| Icon<0 || Icon>ICON_LAST)
 		return false;
+
+	RECT rcDraw,rcDst;
+
+	if (pClipping!=NULL) {
+		::SetRect(&rcDst,DstX,DstY,DstX+Width,DstY+Height);
+		if (!::IntersectRect(&rcDraw,&rcDst,pClipping))
+			return true;
+	} else {
+		::SetRect(&rcDraw,DstX,DstY,DstX+Width,DstY+Height);
+	}
+
+	int DstWidth=rcDraw.right-rcDraw.left;
+	int DstHeight=rcDraw.bottom-rcDraw.top;
+	int SrcX=(ICON_WIDTH*(rcDraw.left-DstX)+Width/2)/Width;
+	int SrcY=(ICON_HEIGHT*(rcDraw.top-DstY)+Height/2)/Height;
+	int SrcWidth=(ICON_WIDTH*(rcDraw.right-DstX)+Width/2)/Width-SrcX;
+	if (SrcWidth<1)
+		SrcWidth=1;
+	int SrcHeight=(ICON_HEIGHT*(rcDraw.bottom-DstY)+Height/2)/Height-SrcY;
+	if (SrcHeight<1)
+		SrcHeight=1;
+
 	if (Opacity==255) {
-		::BitBlt(hdcDst,DstX,DstY,Width,Height,
-				 hdcSrc,Icon*ICON_WIDTH,0,SRCCOPY);
+		if (DstWidth==SrcWidth && DstHeight==SrcHeight) {
+			::BitBlt(hdcDst,rcDraw.left,rcDraw.top,DstWidth,DstHeight,
+					 hdcSrc,Icon*ICON_WIDTH+SrcX,SrcY,SRCCOPY);
+		} else {
+			int OldStretchMode=::SetStretchBltMode(hdcDst,STRETCH_HALFTONE);
+			::StretchBlt(hdcDst,rcDraw.left,rcDraw.top,DstWidth,DstHeight,
+						 hdcSrc,Icon*ICON_WIDTH+SrcX,SrcY,SrcWidth,SrcHeight,
+						 SRCCOPY);
+			::SetStretchBltMode(hdcDst,OldStretchMode);
+		}
 	} else {
 		BLENDFUNCTION bf={AC_SRC_OVER,0,Opacity,0};
-		::GdiAlphaBlend(hdcDst,DstX,DstY,Width,Height,
-						hdcSrc,Icon*ICON_WIDTH,0,Width,Height,
+		::GdiAlphaBlend(hdcDst,rcDraw.left,rcDraw.top,DstWidth,DstHeight,
+						hdcSrc,Icon*ICON_WIDTH+SrcX,SrcY,SrcWidth,SrcHeight,
 						bf);
 	}
+
 	return true;
 }
 

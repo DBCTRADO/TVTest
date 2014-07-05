@@ -76,6 +76,8 @@ public:
 	bool m_fHomeDisplay;
 	bool m_fChannelDisplay;
 
+	CDynamicString m_StyleFileName;
+
 	struct IniEntry {
 		CDynamicString Section;
 		CDynamicString Name;

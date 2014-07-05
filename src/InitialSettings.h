@@ -6,7 +6,7 @@
 #include "CoreEngine.h"
 #include "Dialog.h"
 #include "Aero.h"
-#include "DrawUtil.h"
+#include "Graphics.h"
 
 
 class CInitialSettings : public CBasicDialog
@@ -39,8 +39,8 @@ private:
 	int m_CasDevice;
 	TCHAR m_szRecordFolder[MAX_PATH];
 	CAeroGlass m_AeroGlass;
-	CGdiPlus m_GdiPlus;
-	CGdiPlus::CImage m_LogoImage;
+	TVTest::Graphics::CImage m_LogoImage;
+	bool m_fDrawLogo;
 
 // CBasicDialog
 	INT_PTR DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam) override;

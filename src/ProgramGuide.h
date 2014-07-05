@@ -6,6 +6,7 @@
 #include "EpgProgramList.h"
 #include "EpgUtil.h"
 #include "ChannelList.h"
+#include "UIBase.h"
 #include "Theme.h"
 #include "DrawUtil.h"
 #include "ProgramSearch.h"
@@ -154,7 +155,10 @@ public:
 	size_t NumTools() const { return m_ToolList.size(); }
 };
 
-class CProgramGuide : public CCustomWindow, protected CDoubleBufferingDraw
+class CProgramGuide
+	: public CCustomWindow
+	, public TVTest::CUIBase
+	, protected CDoubleBufferingDraw
 {
 public:
 	enum ListMode {
@@ -315,6 +319,10 @@ public:
 // CBasicWindow
 	bool Create(HWND hwndParent,DWORD Style,DWORD ExStyle=0,int ID=0) override;
 
+// CUIBase
+	void SetStyle(const TVTest::Style::CStyleManager *pStyleManager) override;
+	void NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager) override;
+
 // CProgramGuide
 	bool SetEpgProgramList(CEpgProgramList *pList);
 	void Clear();
@@ -384,6 +392,7 @@ public:
 	UINT GetVisibleEventIcons() const { return m_VisibleEventIcons; }
 	bool GetKeepTimePos() const { return m_fKeepTimePos; }
 	void SetKeepTimePos(bool fKeep);
+	const TVTest::Style::Margins &GetToolbarItemPadding() const;
 
 	void GetInfoPopupSize(int *pWidth,int *pHeight) { m_EventInfoPopup.GetSize(pWidth,pHeight); }
 	bool SetInfoPopupSize(int Width,int Height) { return m_EventInfoPopup.SetSize(Width,Height); }
@@ -401,9 +410,33 @@ public:
 	void OnShowFrame(bool fShow);
 
 private:
+	struct ProgramGuideStyle
+	{
+		TVTest::Style::IntValue ColumnMargin;
+		TVTest::Style::Margins HeaderPadding;
+		TVTest::Style::Margins HeaderChannelNameMargin;
+		TVTest::Style::Margins HeaderIconMargin;
+		TVTest::Style::Size HeaderChevronSize;
+		TVTest::Style::Margins HeaderChevronMargin;
+		TVTest::Style::IntValue HeaderShadowHeight;
+		TVTest::Style::Size EventIconSize;
+		TVTest::Style::Margins EventIconMargin;
+		TVTest::Style::Margins HighlightBorder;
+		TVTest::Style::Margins SelectedBorder;
+		TVTest::Style::Margins TimeBarPadding;
+		TVTest::Style::IntValue TimeBarShadowWidth;
+		TVTest::Style::IntValue CurTimeLineWidth;
+		TVTest::Style::Margins ToolbarItemPadding;
+
+		ProgramGuideStyle();
+		void SetStyle(const TVTest::Style::CStyleManager *pStyleManager);
+		void NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager);
+	};
+
 	CEpgProgramList *m_pProgramList;
 	ProgramGuide::CServiceList m_ServiceList;
 	ProgramGuide::CEventLayoutList m_EventLayoutList;
+	ProgramGuideStyle m_Style;
 	ListMode m_ListMode;
 	int m_WeekListService;
 	int m_LinesPerHour;
@@ -413,7 +446,6 @@ private:
 	int m_FontHeight;
 	int m_LineMargin;
 	int m_ItemWidth;
-	int m_ItemMargin;
 	int m_TextLeftMargin;
 	int m_HeaderHeight;
 	int m_TimeBarWidth;
@@ -429,7 +461,7 @@ private:
 	} m_DragInfo;
 	CMouseWheelHandler m_VertWheel;
 	CMouseWheelHandler m_HorzWheel;
-	DrawUtil::CMonoColorBitmap m_Chevron;
+	DrawUtil::CMonoColorIconList m_Chevron;
 	CEpgIcons m_EpgIcons;
 	UINT m_VisibleEventIcons;
 	bool m_fBarShadow;
@@ -534,6 +566,7 @@ private:
 	void DrawTimeBar(HDC hdc,const RECT &Rect,bool fRight);
 	void Draw(HDC hdc,const RECT &PaintRect);
 	void DrawMessage(HDC hdc,const RECT &ClientRect) const;
+	int CalcHeaderHeight() const;
 	int GetCurTimeLinePos() const;
 	void GetProgramGuideRect(RECT *pRect) const;
 	void GetProgramGuideSize(SIZE *pSize) const;

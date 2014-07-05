@@ -4,6 +4,8 @@
 
 #include "AppCore.h"
 #include "UICore.h"
+#include "Graphics.h"
+#include "Style.h"
 #include "MainWindow.h"
 #include "Menu.h"
 #include "ResidentManager.h"
@@ -377,6 +379,8 @@ public:
 	CCoreEngine CoreEngine;
 	CUICore UICore;
 	CLogger Logger;
+	TVTest::Graphics::CGraphicsCore GraphicsCore;
+	TVTest::Style::CStyleManager StyleManager;
 	CMainMenu MainMenu;
 	CCommandList CommandList;
 	CCommandLineOptions CmdLineOptions;
@@ -566,6 +570,7 @@ private:
 
 	bool IsNoAcceleratorMessage(const MSG *pmsg);
 	void ApplyEventInfoFont();
+	bool GetAbsolutePath(LPCTSTR pszPath,LPTSTR pszAbsolutePath) const;
 	static BOOL CALLBACK ControllerFocusCallback(HWND hwnd,LPARAM Param);
 };
 

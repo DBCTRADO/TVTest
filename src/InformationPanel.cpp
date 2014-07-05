@@ -15,8 +15,6 @@ static char THIS_FILE[]=__FILE__;
 #define IDC_PROGRAMINFOPREV	1001
 #define IDC_PROGRAMINFONEXT	1002
 
-#define PROGRAMINFO_BUTTON_SIZE	16
-
 #define ITEM_FLAG(item) (1<<(item))
 
 static const LPCTSTR SUBCLASS_PROP_NAME=APP_NAME TEXT("This");
@@ -79,7 +77,6 @@ CInformationPanel::CInformationPanel()
 	, m_crProgramInfoBackColor(RGB(0,0,0))
 	, m_crProgramInfoTextColor(RGB(255,255,255))
 	, m_FontHeight(0)
-	, m_LineMargin(1)
 	, m_ItemVisibility(ITEM_FLAG(ITEM_VIDEO)
 					 | ITEM_FLAG(ITEM_DECODER)
 					 | ITEM_FLAG(ITEM_VIDEORENDERER)
@@ -114,6 +111,18 @@ bool CInformationPanel::Create(HWND hwndParent,DWORD Style,DWORD ExStyle,int ID)
 {
 	return CreateBasicWindow(hwndParent,Style,ExStyle,ID,
 							 m_pszClassName,TEXT("î•ñ"),m_hinst);
+}
+
+
+void CInformationPanel::SetStyle(const TVTest::Style::CStyleManager *pStyleManager)
+{
+	m_Style.SetStyle(pStyleManager);
+}
+
+
+void CInformationPanel::NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager)
+{
+	m_Style.NormalizeStyle(pStyleManager);
 }
 
 
@@ -404,6 +413,8 @@ LRESULT CInformationPanel::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lP
 	switch (uMsg) {
 	case WM_CREATE:
 		{
+			InitializeUI();
+
 			if (!m_Font.IsCreated())
 				CreateDefaultFont(&m_Font);
 			m_BackBrush.Create(m_crBackColor);
@@ -432,11 +443,11 @@ LRESULT CInformationPanel::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lP
 			MoveWindow(m_hwndProgramInfo,rc.left,rc.top,
 						rc.right-rc.left,rc.bottom-rc.top,TRUE);
 			MoveWindow(m_hwndProgramInfoPrev,
-						rc.right-PROGRAMINFO_BUTTON_SIZE*2,rc.bottom,
-						PROGRAMINFO_BUTTON_SIZE,PROGRAMINFO_BUTTON_SIZE,TRUE);
+						rc.right-m_Style.ButtonSize.Width*2,rc.bottom,
+						m_Style.ButtonSize.Width,m_Style.ButtonSize.Height,TRUE);
 			MoveWindow(m_hwndProgramInfoNext,
-						rc.right-PROGRAMINFO_BUTTON_SIZE,rc.bottom,
-						PROGRAMINFO_BUTTON_SIZE,PROGRAMINFO_BUTTON_SIZE,TRUE);
+						rc.right-m_Style.ButtonSize.Width,rc.bottom,
+						m_Style.ButtonSize.Width,m_Style.ButtonSize.Height,TRUE);
 		}
 		return 0;
 
@@ -726,12 +737,12 @@ void CInformationPanel::GetItemRect(int Item,RECT *pRect) const
 		if ((m_ItemVisibility&ITEM_FLAG(i))!=0)
 			VisibleItemCount++;
 	}
-	pRect->top=(m_FontHeight+m_LineMargin)*VisibleItemCount;
+	pRect->top=(m_FontHeight+m_Style.LineSpacing)*VisibleItemCount;
 	if ((m_ItemVisibility&ITEM_FLAG(Item))==0) {
 		pRect->bottom=pRect->top;
 	} else {
 		if (Item==ITEM_PROGRAMINFO)
-			pRect->bottom-=PROGRAMINFO_BUTTON_SIZE;
+			pRect->bottom-=m_Style.ButtonSize.Height;
 		if (Item!=ITEM_PROGRAMINFO || pRect->top>=pRect->bottom)
 			pRect->bottom=pRect->top+m_FontHeight;
 	}
@@ -790,8 +801,8 @@ void CInformationPanel::Draw(HDC hdc,const RECT &PaintRect)
 
 	GetClientRect(&rc);
 	if (rc.right>m_Offscreen.GetWidth()
-			|| m_FontHeight+m_LineMargin>m_Offscreen.GetHeight())
-		m_Offscreen.Create(rc.right,m_FontHeight+m_LineMargin);
+			|| m_FontHeight+m_Style.LineSpacing>m_Offscreen.GetHeight())
+		m_Offscreen.Create(rc.right,m_FontHeight+m_Style.LineSpacing);
 	hdcDst=m_Offscreen.GetDC();
 	if (hdcDst==NULL)
 		hdcDst=hdc;
@@ -899,7 +910,7 @@ bool CInformationPanel::GetDrawItemRect(int Item,RECT *pRect,const RECT &PaintRe
 	if (!IsItemVisible(Item))
 		return false;
 	GetItemRect(Item,pRect);
-	pRect->bottom+=m_LineMargin;
+	pRect->bottom+=m_Style.LineSpacing;
 	return ::IsRectIntersect(&PaintRect,pRect)!=FALSE;
 }
 
@@ -941,4 +952,27 @@ bool CInformationPanel::WriteSettings(CSettings &Settings)
 	for (int i=0;i<lengthof(m_pszItemNameList);i++)
 		Settings.Write(m_pszItemNameList[i],IsItemVisible(i));
 	return true;
+}
+
+
+
+
+CInformationPanel::InformationPanelStyle::InformationPanelStyle()
+	: ButtonSize(16,16)
+	, LineSpacing(1)
+{
+}
+
+
+void CInformationPanel::InformationPanelStyle::SetStyle(const TVTest::Style::CStyleManager *pStyleManager)
+{
+	pStyleManager->Get(TEXT("info-panel.button"),&ButtonSize);
+	pStyleManager->Get(TEXT("info-panel.line-spacing"),&LineSpacing);
+}
+
+
+void CInformationPanel::InformationPanelStyle::NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager)
+{
+	pStyleManager->ToPixels(&ButtonSize);
+	pStyleManager->ToPixels(&LineSpacing);
 }

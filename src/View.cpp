@@ -472,6 +472,18 @@ void CDisplayView::SetVisible(bool fVisible)
 }
 
 
+void CDisplayView::SetStyle(const TVTest::Style::CStyleManager *pStyleManager)
+{
+	m_Style.SetStyle(pStyleManager);
+}
+
+
+void CDisplayView::NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager)
+{
+	m_Style.NormalizeStyle(pStyleManager);
+}
+
+
 void CDisplayView::SetDisplayVisible(bool fVisible)
 {
 	/*if (GetVisible()!=fVisible)*/ {
@@ -603,8 +615,34 @@ bool CDisplayView::GetBackgroundStyle(BackgroundType Type,Theme::GradientInfo *p
 
 int CDisplayView::GetDefaultFontSize(int Width,int Height) const
 {
-	int Size=min(Width/40,Height/24);
-	return max(Size,12);
+	int Size=min(Width/m_Style.TextSizeRatioHorz,Height/m_Style.TextSizeRatioVert);
+	return max(Size,m_Style.TextSizeMin);
+}
+
+
+CDisplayView::DisplayViewStyle::DisplayViewStyle()
+	: TextSizeRatioHorz(40)
+	, TextSizeRatioVert(24)
+	, TextSizeMin(12)
+{
+}
+
+
+void CDisplayView::DisplayViewStyle::SetStyle(const TVTest::Style::CStyleManager *pStyleManager)
+{
+	TVTest::Style::IntValue Value;
+
+	if (pStyleManager->Get(TEXT("display.text-size-ratio.horz"),&Value) && Value.Value>0)
+		TextSizeRatioHorz=Value;
+	if (pStyleManager->Get(TEXT("display.text-size-ratio.vert"),&Value) && Value.Value>0)
+		TextSizeRatioVert=Value;
+	pStyleManager->Get(TEXT("display.text-size-min"),&TextSizeMin);
+}
+
+
+void CDisplayView::DisplayViewStyle::NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager)
+{
+	pStyleManager->ToPixels(&TextSizeMin);
 }
 
 

@@ -32,11 +32,11 @@ class CChannelStatusItem : public CStatusItem
 public:
 	CChannelStatusItem();
 // CStatusItem
-	LPCTSTR GetName() const { return TEXT("チャンネル"); }
-	void Draw(HDC hdc,const RECT *pRect);
-	void DrawPreview(HDC hdc,const RECT *pRect);
-	void OnLButtonDown(int x,int y);
-	void OnRButtonDown(int x,int y);
+	LPCTSTR GetName() const override { return TEXT("チャンネル"); }
+	void Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect) override;
+	void DrawPreview(HDC hdc,const RECT &ItemRect,const RECT &DrawRect) override;
+	void OnLButtonDown(int x,int y) override;
+	void OnRButtonDown(int x,int y) override;
 };
 
 class CVideoSizeStatusItem : public CStatusItem
@@ -44,11 +44,11 @@ class CVideoSizeStatusItem : public CStatusItem
 public:
 	CVideoSizeStatusItem();
 // CStatusItem
-	LPCTSTR GetName() const { return TEXT("映像サイズ"); }
-	void Draw(HDC hdc,const RECT *pRect);
-	void DrawPreview(HDC hdc,const RECT *pRect);
-	void OnLButtonDown(int x,int y);
-	void OnRButtonDown(int x,int y);
+	LPCTSTR GetName() const override { return TEXT("映像サイズ"); }
+	void Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect) override;
+	void DrawPreview(HDC hdc,const RECT &ItemRect,const RECT &DrawRect) override;
+	void OnLButtonDown(int x,int y) override;
+	void OnRButtonDown(int x,int y) override;
 };
 
 class CVolumeStatusItem : public CStatusItem
@@ -56,11 +56,18 @@ class CVolumeStatusItem : public CStatusItem
 public:
 	CVolumeStatusItem();
 // CStatusItem
-	LPCTSTR GetName() const { return TEXT("音量"); }
-	void Draw(HDC hdc,const RECT *pRect);
-	void OnLButtonDown(int x,int y);
-	void OnRButtonDown(int x,int y);
-	void OnMouseMove(int x,int y);
+	LPCTSTR GetName() const override { return TEXT("音量"); }
+	void Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect) override;
+	void OnLButtonDown(int x,int y) override;
+	void OnRButtonDown(int x,int y) override;
+	void OnMouseMove(int x,int y) override;
+	void SetStyle(const TVTest::Style::CStyleManager *pStyleManager) override;
+	void NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager) override;
+
+private:
+	TVTest::Style::IntValue m_BarHeight;
+	TVTest::Style::Margins m_BarPadding;
+	TVTest::Style::IntValue m_BarBorderWidth;
 };
 
 class CAudioChannelStatusItem : public CStatusItem
@@ -68,14 +75,14 @@ class CAudioChannelStatusItem : public CStatusItem
 public:
 	CAudioChannelStatusItem();
 // CStatusItem
-	LPCTSTR GetName() const { return TEXT("音声"); }
-	void Draw(HDC hdc,const RECT *pRect);
-	void DrawPreview(HDC hdc,const RECT *pRect);
-	void OnLButtonDown(int x,int y);
-	void OnRButtonDown(int x,int y);
+	LPCTSTR GetName() const override { return TEXT("音声"); }
+	void Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect) override;
+	void DrawPreview(HDC hdc,const RECT &ItemRect,const RECT &DrawRect) override;
+	void OnLButtonDown(int x,int y) override;
+	void OnRButtonDown(int x,int y) override;
 
 private:
-	DrawUtil::CMonoColorBitmap m_Icons;
+	DrawUtil::CMonoColorIconList m_Icons;
 };
 
 class CRecordStatusItem : public CStatusItem
@@ -89,31 +96,31 @@ class CRecordStatusItem : public CStatusItem
 public:
 	CRecordStatusItem();
 // CStatusItem
-	LPCTSTR GetName() const { return TEXT("録画"); }
-	void Draw(HDC hdc,const RECT *pRect);
-	void DrawPreview(HDC hdc,const RECT *pRect);
-	void OnLButtonDown(int x,int y);
-	void OnRButtonDown(int x,int y);
-	bool OnMouseHover(int x,int y);
-	void OnFocus(bool fFocus);
-	LRESULT OnNotifyMessage(LPNMHDR pnmh);
+	LPCTSTR GetName() const override { return TEXT("録画"); }
+	void Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect) override;
+	void DrawPreview(HDC hdc,const RECT &ItemRect,const RECT &DrawRect) override;
+	void OnLButtonDown(int x,int y) override;
+	void OnRButtonDown(int x,int y) override;
+	bool OnMouseHover(int x,int y) override;
+	void OnFocus(bool fFocus) override;
+	LRESULT OnNotifyMessage(LPNMHDR pnmh) override;
 // CRecordStatusItem
 	void ShowRemainTime(bool fRemain);
 	void SetCircleColor(COLORREF Color);
 };
 
-class CCaptureStatusItem : public CStatusItem
+class CCaptureStatusItem : public CIconStatusItem
 {
 public:
 	CCaptureStatusItem();
 // CStatusItem
-	LPCTSTR GetName() const { return TEXT("キャプチャ"); }
-	void Draw(HDC hdc,const RECT *pRect);
-	void OnLButtonDown(int x,int y);
-	void OnRButtonDown(int x,int y);
+	LPCTSTR GetName() const override { return TEXT("キャプチャ"); }
+	void Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect) override;
+	void OnLButtonDown(int x,int y) override;
+	void OnRButtonDown(int x,int y) override;
 
 private:
-	DrawUtil::CMonoColorBitmap m_Icons;
+	DrawUtil::CMonoColorIconList m_Icons;
 };
 
 class CErrorStatusItem : public CStatusItem
@@ -121,11 +128,11 @@ class CErrorStatusItem : public CStatusItem
 public:
 	CErrorStatusItem();
 // CStatusItem
-	LPCTSTR GetName() const { return TEXT("エラー"); }
-	void Draw(HDC hdc,const RECT *pRect);
-	void DrawPreview(HDC hdc,const RECT *pRect);
-	void OnLButtonDown(int x,int y);
-	void OnRButtonDown(int x,int y);
+	LPCTSTR GetName() const override { return TEXT("エラー"); }
+	void Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect) override;
+	void DrawPreview(HDC hdc,const RECT &ItemRect,const RECT &DrawRect) override;
+	void OnLButtonDown(int x,int y) override;
+	void OnRButtonDown(int x,int y) override;
 };
 
 class CSignalLevelStatusItem : public CStatusItem
@@ -135,9 +142,9 @@ class CSignalLevelStatusItem : public CStatusItem
 public:
 	CSignalLevelStatusItem();
 // CStatusItem
-	LPCTSTR GetName() const { return TEXT("信号レベル"); }
-	void Draw(HDC hdc,const RECT *pRect);
-	void DrawPreview(HDC hdc,const RECT *pRect);
+	LPCTSTR GetName() const override { return TEXT("信号レベル"); }
+	void Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect) override;
+	void DrawPreview(HDC hdc,const RECT &ItemRect,const RECT &DrawRect) override;
 // CSignalLevelStatusItem
 	void ShowSignalLevel(bool fShow);
 };
@@ -149,11 +156,11 @@ class CClockStatusItem : public CStatusItem
 public:
 	CClockStatusItem();
 // CStatusItem
-	LPCTSTR GetName() const { return TEXT("時計"); }
-	void Draw(HDC hdc,const RECT *pRect);
-	void DrawPreview(HDC hdc,const RECT *pRect);
-	void OnLButtonDown(int x,int y);
-	void OnRButtonDown(int x,int y);
+	LPCTSTR GetName() const override { return TEXT("時計"); }
+	void Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect) override;
+	void DrawPreview(HDC hdc,const RECT &ItemRect,const RECT &DrawRect) override;
+	void OnLButtonDown(int x,int y) override;
+	void OnRButtonDown(int x,int y) override;
 // CClockStatusItem
 	void SetTOT(bool fTOT);
 	bool IsTOT() const { return m_fTOT; }
@@ -171,14 +178,14 @@ class CProgramInfoStatusItem : public CStatusItem
 public:
 	CProgramInfoStatusItem();
 // CStatusItem
-	LPCTSTR GetName() const { return TEXT("番組情報"); }
-	void Draw(HDC hdc,const RECT *pRect);
-	void DrawPreview(HDC hdc,const RECT *pRect);
-	void OnLButtonDown(int x,int y);
-	void OnRButtonDown(int x,int y);
-	void OnLButtonDoubleClick(int x,int y);
-	void OnFocus(bool fFocus);
-	bool OnMouseHover(int x,int y);
+	LPCTSTR GetName() const override { return TEXT("番組情報"); }
+	void Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect) override;
+	void DrawPreview(HDC hdc,const RECT &ItemRect,const RECT &DrawRect) override;
+	void OnLButtonDown(int x,int y) override;
+	void OnRButtonDown(int x,int y) override;
+	void OnLButtonDoubleClick(int x,int y) override;
+	void OnFocus(bool fFocus) override;
+	bool OnMouseHover(int x,int y) override;
 // CProgramInfoStatusItem
 	void EnablePopupInfo(bool fEnable);
 	bool UpdateContent();
@@ -192,10 +199,10 @@ class CBufferingStatusItem : public CStatusItem
 public:
 	CBufferingStatusItem();
 // CStatusItem
-	LPCTSTR GetName() const { return TEXT("バッファリング"); }
-	void Draw(HDC hdc,const RECT *pRect);
-	void DrawPreview(HDC hdc,const RECT *pRect);
-	void OnLButtonDown(int x,int y);
+	LPCTSTR GetName() const override { return TEXT("バッファリング"); }
+	void Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect) override;
+	void DrawPreview(HDC hdc,const RECT &ItemRect,const RECT &DrawRect) override;
+	void OnLButtonDown(int x,int y) override;
 };
 
 class CTunerStatusItem : public CStatusItem
@@ -203,11 +210,11 @@ class CTunerStatusItem : public CStatusItem
 public:
 	CTunerStatusItem();
 // CStatusItem
-	LPCTSTR GetName() const { return TEXT("チューナー"); }
-	void Draw(HDC hdc,const RECT *pRect);
-	void DrawPreview(HDC hdc,const RECT *pRect);
-	void OnLButtonDown(int x,int y);
-	void OnRButtonDown(int x,int y);
+	LPCTSTR GetName() const override { return TEXT("チューナー"); }
+	void Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect) override;
+	void DrawPreview(HDC hdc,const RECT &ItemRect,const RECT &DrawRect) override;
+	void OnLButtonDown(int x,int y) override;
+	void OnRButtonDown(int x,int y) override;
 };
 
 class CMediaBitRateStatusItem : public CStatusItem
@@ -215,23 +222,23 @@ class CMediaBitRateStatusItem : public CStatusItem
 public:
 	CMediaBitRateStatusItem();
 // CStatusItem
-	LPCTSTR GetName() const { return TEXT("ビットレート"); }
-	void Draw(HDC hdc,const RECT *pRect);
-	void DrawPreview(HDC hdc,const RECT *pRect);
+	LPCTSTR GetName() const override { return TEXT("ビットレート"); }
+	void Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect) override;
+	void DrawPreview(HDC hdc,const RECT &ItemRect,const RECT &DrawRect) override;
 };
 
-class CFavoritesStatusItem : public CStatusItem
+class CFavoritesStatusItem : public CIconStatusItem
 {
 public:
 	CFavoritesStatusItem();
 // CStatusItem
-	LPCTSTR GetName() const { return TEXT("お気に入り"); }
-	void Draw(HDC hdc,const RECT *pRect);
-	void OnLButtonDown(int x,int y);
-	void OnRButtonDown(int x,int y);
+	LPCTSTR GetName() const override { return TEXT("お気に入り"); }
+	void Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect) override;
+	void OnLButtonDown(int x,int y) override;
+	void OnRButtonDown(int x,int y) override;
 
 private:
-	DrawUtil::CMonoColorBitmap m_IconBitmap;
+	DrawUtil::CMonoColorIconList m_Icons;
 };
 
 

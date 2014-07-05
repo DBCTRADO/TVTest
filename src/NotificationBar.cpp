@@ -12,9 +12,6 @@ static char THIS_FILE[]=__FILE__;
 
 #define NOTIFICATION_BAR_WINDOW_CLASS APP_NAME TEXT(" Notification Bar")
 
-#define BAR_MARGIN			4
-#define ICON_TEXT_MARGIN	4
-
 
 
 
@@ -68,6 +65,18 @@ bool CNotificationBar::Create(HWND hwndParent,DWORD Style,DWORD ExStyle,int ID)
 {
 	return CreateBasicWindow(hwndParent,Style,ExStyle,ID,
 							 NOTIFICATION_BAR_WINDOW_CLASS,NULL,m_hinst);
+}
+
+
+void CNotificationBar::SetStyle(const TVTest::Style::CStyleManager *pStyleManager)
+{
+	m_Style.SetStyle(pStyleManager);
+}
+
+
+void CNotificationBar::NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager)
+{
+	m_Style.NormalizeStyle(pStyleManager);
 }
 
 
@@ -185,12 +194,13 @@ bool CNotificationBar::SetFont(const LOGFONT *pFont)
 void CNotificationBar::CalcBarHeight()
 {
 	HDC hdc=::GetDC(m_hwnd);
-
-	m_BarHeight=m_Font.GetHeight(hdc,false)+BAR_MARGIN*2;
+	int FontHeight=m_Font.GetHeight(hdc,false);
 	::ReleaseDC(m_hwnd,hdc);
-	int IconHeight=::GetSystemMetrics(SM_CYSMICON);
-	if (m_BarHeight<IconHeight+2)
-		m_BarHeight=IconHeight+2;
+
+	int IconHeight=m_Style.IconSize.Height+m_Style.IconMargin.Vert();
+	int TextHeight=FontHeight+m_Style.TextExtraHeight+m_Style.TextMargin.Vert();
+
+	m_BarHeight=max(IconHeight,TextHeight)+m_Style.Padding.Vert();
 }
 
 
@@ -225,10 +235,12 @@ LRESULT CNotificationBar::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lPa
 	switch (uMsg) {
 	case WM_CREATE:
 		{
+			InitializeUI();
+
 			if (!m_Font.IsCreated()) {
 				LOGFONT lf;
 				DrawUtil::GetSystemFont(DrawUtil::FONT_MESSAGE,&lf);
-				lf.lfHeight=-14;
+				lf.lfHeight=lf.lfHeight*12/10;
 				m_Font.Create(&lf);
 			}
 
@@ -245,26 +257,34 @@ LRESULT CNotificationBar::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lPa
 			RECT rc;
 
 			::BeginPaint(hwnd,&ps);
+
 			::GetClientRect(hwnd,&rc);
 			Theme::FillGradient(ps.hdc,&rc,&m_BackGradient);
+
 			if (!m_MessageQueue.empty()) {
 				const MessageInfo &Info=m_MessageQueue.front();
 
-				rc.left+=BAR_MARGIN;
-				rc.right-=BAR_MARGIN;
+				TVTest::Style::Subtract(&rc,m_Style.Padding);
 				if (rc.left<rc.right) {
 					if (Info.hIcon!=NULL) {
-						int IconWidth=::GetSystemMetrics(SM_CXSMICON);
-						int IconHeight=::GetSystemMetrics(SM_CYSMICON);
-						::DrawIconEx(ps.hdc,rc.left,(rc.bottom-IconHeight)/2,
-									 Info.hIcon,IconWidth,IconHeight,0,NULL,DI_NORMAL);
-						rc.left+=IconWidth+ICON_TEXT_MARGIN;
+						rc.left+=m_Style.IconMargin.Left;
+						::DrawIconEx(
+							ps.hdc,
+							rc.left,
+							rc.top+m_Style.IconMargin.Top+
+								((rc.bottom-rc.top)-m_Style.IconMargin.Vert()-m_Style.IconSize.Height)/2,
+							Info.hIcon,
+							m_Style.IconSize.Width,m_Style.IconSize.Height,
+							0,NULL,DI_NORMAL);
+						rc.left+=m_Style.IconSize.Width+m_Style.IconMargin.Right;
 					}
+					TVTest::Style::Subtract(&rc,m_Style.TextMargin);
 					DrawUtil::DrawText(ps.hdc,Info.Text.Get(),rc,
 						DT_SINGLELINE | DT_LEFT | DT_VCENTER | DT_NOPREFIX | DT_END_ELLIPSIS,
 						&m_Font,m_TextColor[Info.Type]);
 				}
 			}
+
 			::EndPaint(hwnd,&ps);
 		}
 		return 0;
@@ -340,4 +360,36 @@ LRESULT CNotificationBar::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lPa
 	}
 
 	return CCustomWindow::OnMessage(hwnd,uMsg,wParam,lParam);
+}
+
+
+
+
+CNotificationBar::NotificationBarStyle::NotificationBarStyle()
+	: Padding(4,2,4,2)
+	, IconSize(::GetSystemMetrics(SM_CXSMICON),::GetSystemMetrics(SM_CYSMICON))
+	, IconMargin(0,0,4,0)
+	, TextMargin(0)
+	, TextExtraHeight(4)
+{
+}
+
+
+void CNotificationBar::NotificationBarStyle::SetStyle(const TVTest::Style::CStyleManager *pStyleManager)
+{
+	pStyleManager->Get(TEXT("notification-bar.padding"),&Padding);
+	pStyleManager->Get(TEXT("notification-bar.icon"),&IconSize);
+	pStyleManager->Get(TEXT("notification-bar.icon.margin"),&IconMargin);
+	pStyleManager->Get(TEXT("notification-bar.text.margin"),&TextMargin);
+	pStyleManager->Get(TEXT("notification-bar.text.extra-height"),&TextExtraHeight);
+}
+
+
+void CNotificationBar::NotificationBarStyle::NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager)
+{
+	pStyleManager->ToPixels(&Padding);
+	pStyleManager->ToPixels(&IconSize);
+	pStyleManager->ToPixels(&IconMargin);
+	pStyleManager->ToPixels(&TextMargin);
+	pStyleManager->ToPixels(&TextExtraHeight);
 }

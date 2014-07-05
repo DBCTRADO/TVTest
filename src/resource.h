@@ -18,13 +18,15 @@
 #define IDB_PANSCAN				18
 #define IDB_SIDEBAR				19
 #define IDB_SIDEBARZOOM			20
-#define IDB_OPTIONS				21
-#define IDB_THUMBBAR			22
-#define IDB_CHEVRON				23
-#define IDB_PROGRAMGUIDEICONS	24
-#define IDB_PASSTHROUGH			25
-#define IDB_FAVORITES			26
-#define IDB_HOME				27
+#define IDB_SIDEBAR32			21
+#define IDB_SIDEBARZOOM32		22
+#define IDB_OPTIONS				23
+#define IDB_THUMBBAR			24
+#define IDB_CHEVRON				25
+#define IDB_PROGRAMGUIDEICONS	26
+#define IDB_PASSTHROUGH			27
+#define IDB_FAVORITES			28
+#define IDB_HOME				29
 
 #define IDM_MENU				30
 #define IDM_RECORD				31

@@ -5,6 +5,7 @@
 #include "Dialog.h"
 #include "Aero.h"
 #include "DrawUtil.h"
+#include "Graphics.h"
 
 
 class CAboutDialog : public CBasicDialog
@@ -16,8 +17,8 @@ public:
 
 private:
 	CAeroGlass m_AeroGlass;
-	CGdiPlus m_GdiPlus;
-	CGdiPlus::CImage m_LogoImage;
+	TVTest::Graphics::CImage m_LogoImage;
+	bool m_fDrawLogo;
 	DrawUtil::CFont m_Font;
 
 	INT_PTR DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam) override;

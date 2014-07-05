@@ -37,6 +37,12 @@ namespace Theme {
 			, Color2(color2)
 		{
 		}
+		bool operator==(const GradientInfo &Op) const
+		{
+			return Type==Op.Type && Direction==Op.Direction
+				&& Color1==Op.Color1 && Color2==Op.Color2;
+		}
+		bool operator!=(const GradientInfo &Op) const { return !(*this==Op); }
 	};
 
 	bool FillGradient(HDC hdc,const RECT *pRect,const GradientInfo *pInfo);
@@ -51,14 +57,13 @@ namespace Theme {
 	struct BorderInfo {
 		BorderType Type;
 		COLORREF Color;
+
 		BorderInfo() : Type(BORDER_NONE), Color(RGB(0,0,0)) {}
 		BorderInfo(BorderType type,COLORREF color) : Type(type), Color(color) {}
 		bool operator==(const BorderInfo &Info) const {
 			return Type==Info.Type && Color==Info.Color;
 		}
-		bool operator!=(const BorderInfo &Info) const {
-			return !(*this==Info);
-		}
+		bool operator!=(const BorderInfo &Info) const { return !(*this==Info); }
 	};
 
 	bool DrawBorder(HDC hdc,const RECT &Rect,BorderType Type);
@@ -72,6 +77,14 @@ namespace Theme {
 		GradientInfo Gradient;
 		BorderInfo Border;
 		COLORREF TextColor;
+
+		bool operator==(const Style &Op) const
+		{
+			return Gradient==Op.Gradient
+				&& Border==Op.Border
+				&& TextColor==Op.TextColor;
+		}
+		bool operator!=(const Style &Op) const { return !(*this==Op); }
 	};
 
 	bool DrawStyleBackground(HDC hdc,const RECT *pRect,const Style *pStyle);

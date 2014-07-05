@@ -6,6 +6,7 @@
 #include <map>
 #include "BonTsEngine/CaptionDecoder.h"
 #include "PanelForm.h"
+#include "UIBase.h"
 #include "DrawUtil.h"
 
 
@@ -42,8 +43,28 @@ public:
 	bool Load(LPCTSTR pszFileName);
 };
 
-class CCaptionPanel : public CPanelForm::CPage, protected CCaptionDecoder::IHandler
+class CCaptionPanel
+	: public CPanelForm::CPage
+	, public TVTest::CUIBase
+	, protected CCaptionDecoder::IHandler
 {
+public:
+	CCaptionPanel();
+	~CCaptionPanel();
+
+// CBasicWindow
+	bool Create(HWND hwndParent,DWORD Style,DWORD ExStyle=0,int ID=0) override;
+	void SetVisible(bool fVisible) override;
+
+// CCaptionPanel
+	void SetColor(COLORREF BackColor,COLORREF TextColor);
+	bool SetFont(const LOGFONT *pFont);
+	void Clear();
+	bool LoadDRCSMap(LPCTSTR pszFileName);
+
+	static bool Initialize(HINSTANCE hinst);
+
+private:
 	COLORREF m_BackColor;
 	COLORREF m_TextColor;
 	DrawUtil::CBrush m_BackBrush;
@@ -79,20 +100,6 @@ class CCaptionPanel : public CPanelForm::CPage, protected CCaptionDecoder::IHand
 
 // CCustomWindow
 	LRESULT OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
-
-public:
-	CCaptionPanel();
-	~CCaptionPanel();
-// CBasicWindow
-	bool Create(HWND hwndParent,DWORD Style,DWORD ExStyle=0,int ID=0) override;
-	void SetVisible(bool fVisible) override;
-// CCaptionPanel
-	void SetColor(COLORREF BackColor,COLORREF TextColor);
-	bool SetFont(const LOGFONT *pFont);
-	void Clear();
-	bool LoadDRCSMap(LPCTSTR pszFileName);
-
-	static bool Initialize(HINSTANCE hinst);
 };
 
 

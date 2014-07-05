@@ -3,12 +3,16 @@
 
 
 #include "PanelForm.h"
+#include "UIBase.h"
 #include "Settings.h"
 #include "DrawUtil.h"
 #include "RichEditUtil.h"
 
 
-class CInformationPanel : public CPanelForm::CPage, public CSettingsBase
+class CInformationPanel
+	: public CPanelForm::CPage
+	, public TVTest::CUIBase
+	, public CSettingsBase
 {
 public:
 	class ABSTRACT_CLASS(CEventHandler) {
@@ -37,6 +41,10 @@ public:
 
 // CBasicWindow
 	bool Create(HWND hwndParent,DWORD Style,DWORD ExStyle=0,int ID=0) override;
+
+// CUIBase
+	void SetStyle(const TVTest::Style::CStyleManager *pStyleManager) override;
+	void NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager) override;
 
 // CSettingsBase
 	bool ReadSettings(CSettings &Settings) override;
@@ -67,6 +75,16 @@ public:
 	bool SetEventHandler(CEventHandler *pHandler);
 
 private:
+	struct InformationPanelStyle
+	{
+		TVTest::Style::Size ButtonSize;
+		TVTest::Style::IntValue LineSpacing;
+
+		InformationPanelStyle();
+		void SetStyle(const TVTest::Style::CStyleManager *pStyleManager);
+		void NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager);
+	};
+
 	static const LPCTSTR m_pszClassName;
 	static HINSTANCE m_hinst;
 
@@ -78,6 +96,7 @@ private:
 	CRichEditUtil m_RichEditUtil;
 	bool m_fUseRichEdit;
 
+	InformationPanelStyle m_Style;
 	COLORREF m_crBackColor;
 	COLORREF m_crTextColor;
 	COLORREF m_crProgramInfoBackColor;
@@ -86,7 +105,6 @@ private:
 	DrawUtil::CBrush m_ProgramInfoBackBrush;
 	DrawUtil::CFont m_Font;
 	int m_FontHeight;
-	int m_LineMargin;
 	DrawUtil::COffscreen m_Offscreen;
 	unsigned int m_ItemVisibility;
 

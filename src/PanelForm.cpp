@@ -41,10 +41,9 @@ bool CPanelForm::Initialize(HINSTANCE hinst)
 CPanelForm::CPanelForm()
 	: m_NumWindows(0)
 	, m_Font(DrawUtil::FONT_DEFAULT)
-	, m_TabHeight(TAB_MARGIN*2)
-	, m_TabWidth(8+TAB_MARGIN*2)
+	, m_TabHeight(0)
+	, m_TabWidth(0)
 	, m_fFitTabWidth(true)
-	, m_ClientMargin(4)
 	, m_CurTab(-1)
 	, m_pEventHandler(NULL)
 {
@@ -94,6 +93,18 @@ void CPanelForm::SetVisible(bool fVisible)
 }
 
 
+void CPanelForm::SetStyle(const TVTest::Style::CStyleManager *pStyleManager)
+{
+	m_Style.SetStyle(pStyleManager);
+}
+
+
+void CPanelForm::NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager)
+{
+	m_Style.NormalizeStyle(pStyleManager);
+}
+
+
 bool CPanelForm::AddWindow(CPage *pWindow,int ID,LPCTSTR pszTitle)
 {
 	if (m_NumWindows==MAX_WINDOWS)
@@ -138,9 +149,9 @@ bool CPanelForm::SetCurTab(int Index)
 			RECT rc;
 
 			GetClientRect(&rc);
-			m_pWindowList[Index]->m_pWindow->SetPosition(
-				m_ClientMargin,m_TabHeight+m_ClientMargin,
-				rc.right-m_ClientMargin*2,rc.bottom-m_TabHeight-m_ClientMargin*2);
+			rc.top=m_TabHeight;
+			TVTest::Style::Subtract(&rc,m_Style.ClientMargin);
+			m_pWindowList[Index]->m_pWindow->SetPosition(&rc);
 			m_pWindowList[Index]->m_pWindow->SetVisible(true);
 			//SetFocus(m_pWindowList[Index]->m_pWindow->GetHandle());
 		}
@@ -289,6 +300,7 @@ LRESULT CPanelForm::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 {
 	switch (uMsg) {
 	case WM_CREATE:
+		InitializeUI();
 		CalcTabSize();
 		return 0;
 
@@ -309,10 +321,10 @@ LRESULT CPanelForm::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 			::InvalidateRect(hwnd,&rc,FALSE);
 		}
 		if (m_CurTab>=0) {
-			m_pWindowList[m_CurTab]->m_pWindow->SetPosition(
-				m_ClientMargin,m_TabHeight+m_ClientMargin,
-				LOWORD(lParam)-m_ClientMargin*2,
-				HIWORD(lParam)-m_TabHeight-m_ClientMargin*2);
+			RECT rc;
+			::SetRect(&rc,0,m_TabHeight,LOWORD(lParam),HIWORD(lParam));
+			TVTest::Style::Subtract(&rc,m_Style.ClientMargin);
+			m_pWindowList[m_CurTab]->m_pWindow->SetPosition(&rc);
 		}
 		return 0;
 
@@ -378,7 +390,7 @@ void CPanelForm::CalcTabSize()
 	SIZE sz;
 
 	hdc=::GetDC(m_hwnd);
-	m_TabHeight=m_Font.GetHeight(hdc)+TAB_MARGIN*2;
+	m_TabHeight=m_Font.GetHeight(hdc)+m_Style.TabPadding.Top+m_Style.TabPadding.Bottom;
 	hfontOld=DrawUtil::SelectObject(hdc,m_Font);
 	MaxWidth=0;
 	for (int i=0;i<m_NumWindows;i++) {
@@ -391,7 +403,7 @@ void CPanelForm::CalcTabSize()
 	}
 	SelectFont(hdc,hfontOld);
 	::ReleaseDC(m_hwnd,hdc);
-	m_TabWidth=MaxWidth+TAB_MARGIN*2;
+	m_TabWidth=MaxWidth+m_Style.TabPadding.Left+m_Style.TabPadding.Right;
 }
 
 
@@ -406,7 +418,7 @@ int CPanelForm::GetRealTabWidth() const
 		RECT rc;
 		GetClientRect(&rc);
 		if (NumVisibleTabs*m_TabWidth>rc.right)
-			return max(rc.right/NumVisibleTabs,16+TAB_MARGIN*2);
+			return max(rc.right/NumVisibleTabs,16+m_Style.TabPadding.Left+m_Style.TabPadding.Right);
 	}
 	return m_TabWidth;
 }
@@ -478,10 +490,8 @@ void CPanelForm::Draw(HDC hdc,const RECT &PaintRect)
 				::LineTo(hdc,rc.right,rc.bottom-1);
 			}
 			::SetTextColor(hdc,Style.TextColor);
-			rcText.left=rc.left+TAB_MARGIN;
-			rcText.top=rc.top+TAB_MARGIN;
-			rcText.right=rc.right-TAB_MARGIN;
-			rcText.bottom=rc.bottom-TAB_MARGIN;
+			rcText=rc;
+			TVTest::Style::Subtract(&rcText,m_Style.TabPadding);
 			::DrawText(hdc,pWindow->m_Title.Get(),-1,&rcText,
 				DT_CENTER | DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX | DT_END_ELLIPSIS);
 			rc.left=rc.right;
@@ -565,4 +575,27 @@ bool CPanelForm::CPage::CreateDefaultFont(DrawUtil::CFont *pFont)
 	if (!GetDefaultFont(&lf))
 		return false;
 	return pFont->Create(&lf);
+}
+
+
+
+
+CPanelForm::PanelFormStyle::PanelFormStyle()
+	: TabPadding(3)
+	, ClientMargin(4)
+{
+}
+
+
+void CPanelForm::PanelFormStyle::SetStyle(const TVTest::Style::CStyleManager *pStyleManager)
+{
+	pStyleManager->Get(TEXT("panel.tab.padding"),&TabPadding);
+	pStyleManager->Get(TEXT("panel.client.margin"),&ClientMargin);
+}
+
+
+void CPanelForm::PanelFormStyle::NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager)
+{
+	pStyleManager->ToPixels(&TabPadding);
+	pStyleManager->ToPixels(&ClientMargin);
 }

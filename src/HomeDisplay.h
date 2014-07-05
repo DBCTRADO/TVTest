@@ -26,12 +26,12 @@ public:
 		Theme::Style ItemStyle[2];
 		Theme::Style ItemHotStyle;
 		COLORREF BannerTextColor;
-		RECT ContentMargins;
+		TVTest::Style::Margins ContentMargins;
 		int FontHeight;
-		RECT ItemMargins;
-		RECT CategoryItemMargins;
-		int CategoryIconMargin;
-		RECT CategoriesMargins;
+		TVTest::Style::Margins ItemMargins;
+		TVTest::Style::Margins CategoryItemMargins;
+		TVTest::Style::IntValue CategoryIconMargin;
+		TVTest::Style::Margins CategoriesMargins;
 	};
 
 	class ABSTRACT_CLASS(CEventHandler)

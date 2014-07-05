@@ -114,34 +114,34 @@ private:
 		STATUS_ITEM_COPY
 	};
 
-	class CCaptureStatusItem : public CStatusItem {
-		DrawUtil::CMonoColorBitmap &m_IconBitmap;
+	class CCaptureStatusItem : public CIconStatusItem {
+		DrawUtil::CMonoColorIconList &m_Icons;
 	public:
-		CCaptureStatusItem(DrawUtil::CMonoColorBitmap &IconBitmap);
-		LPCTSTR GetName() const { return TEXT("キャプチャ"); }
-		void Draw(HDC hdc,const RECT *pRect);
-		void OnLButtonDown(int x,int y);
-		void OnRButtonDown(int x,int y);
+		CCaptureStatusItem(DrawUtil::CMonoColorIconList &Icons);
+		LPCTSTR GetName() const override { return TEXT("キャプチャ"); }
+		void Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect) override;
+		void OnLButtonDown(int x,int y) override;
+		void OnRButtonDown(int x,int y) override;
 	};
 
-	class CSaveStatusItem : public CStatusItem {
+	class CSaveStatusItem : public CIconStatusItem {
 		CCaptureWindow *m_pCaptureWindow;
-		DrawUtil::CMonoColorBitmap &m_IconBitmap;
+		DrawUtil::CMonoColorIconList &m_Icons;
 	public:
-		CSaveStatusItem(CCaptureWindow *pCaptureWindow,DrawUtil::CMonoColorBitmap &IconBitmap);
-		LPCTSTR GetName() const { return TEXT("保存"); }
-		void Draw(HDC hdc,const RECT *pRect);
-		void OnLButtonDown(int x,int y);
+		CSaveStatusItem(CCaptureWindow *pCaptureWindow,DrawUtil::CMonoColorIconList &Icons);
+		LPCTSTR GetName() const override { return TEXT("保存"); }
+		void Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect) override;
+		void OnLButtonDown(int x,int y) override;
 	};
 
-	class CCopyStatusItem : public CStatusItem {
+	class CCopyStatusItem : public CIconStatusItem {
 		CCaptureWindow *m_pCaptureWindow;
-		DrawUtil::CMonoColorBitmap &m_IconBitmap;
+		DrawUtil::CMonoColorIconList &m_Icons;
 	public:
-		CCopyStatusItem(CCaptureWindow *pCaptureWindow,DrawUtil::CMonoColorBitmap &IconBitmap);
-		LPCTSTR GetName() const { return TEXT("コピー"); }
-		void Draw(HDC hdc,const RECT *pRect);
-		void OnLButtonDown(int x,int y);
+		CCopyStatusItem(CCaptureWindow *pCaptureWindow,DrawUtil::CMonoColorIconList &Icons);
+		LPCTSTR GetName() const override { return TEXT("コピー"); }
+		void Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect) override;
+		void OnLButtonDown(int x,int y) override;
 	};
 
 	static HINSTANCE m_hinst;
@@ -150,7 +150,7 @@ private:
 	CPreviewEventHandler m_PreviewEventHandler;
 	CStatusView m_Status;
 	bool m_fShowStatusBar;
-	DrawUtil::CMonoColorBitmap m_StatusIcons;
+	DrawUtil::CMonoColorIconList m_StatusIcons;
 	CCaptureImage *m_pImage;
 	CEventHandler *m_pEventHandler;
 	bool m_fCreateFirst;

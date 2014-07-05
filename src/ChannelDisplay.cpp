@@ -920,6 +920,7 @@ LRESULT CChannelDisplay::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lPar
 	switch (uMsg) {
 	case WM_CREATE:
 		{
+			InitializeUI();
 			if (!m_Font.IsCreated())
 				m_Font.Create(/*DrawUtil::FONT_DEFAULT*/DrawUtil::FONT_MESSAGE);
 			m_hwndTunerScroll=::CreateWindowEx(0,TEXT("SCROLLBAR"),TEXT(""),

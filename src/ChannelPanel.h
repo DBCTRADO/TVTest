@@ -4,6 +4,7 @@
 
 #include <vector>
 #include "PanelForm.h"
+#include "UIBase.h"
 #include "EpgProgramList.h"
 #include "ChannelList.h"
 #include "Theme.h"
@@ -17,6 +18,7 @@
 
 class CChannelPanel
 	: public CPanelForm::CPage
+	, public TVTest::CUIBase
 	, public CSettingsBase
 {
 public:
@@ -45,6 +47,10 @@ public:
 
 // CBasicWindow
 	bool Create(HWND hwndParent,DWORD Style,DWORD ExStyle=0,int ID=0) override;
+
+// CUIBase
+	void SetStyle(const TVTest::Style::CStyleManager *pStyleManager) override;
+	void NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager) override;
 
 // CSettingsBase
 	bool ReadSettings(CSettings &Settings) override;
@@ -102,7 +108,7 @@ private:
 		WORD GetTransportStreamID() const { return m_ChannelInfo.GetTransportStreamID(); }
 		WORD GetServiceID() const { return m_ChannelInfo.GetServiceID(); }
 		int FormatEventText(LPTSTR pszText,int MaxLength,int Index) const;
-		void DrawChannelName(HDC hdc,const RECT *pRect);
+		void DrawChannelName(HDC hdc,const RECT *pRect,const TVTest::Style::Margins &LogoMargins);
 		void DrawEventName(HDC hdc,const RECT *pRect,int Index);
 		int GetOriginalChannelIndex() const { return m_OriginalChannelIndex; }
 		HBITMAP GetLogo() const { return m_hbmLogo; }
@@ -111,12 +117,24 @@ private:
 		void Expand(bool fExpand) { m_fExpanded=fExpand; }
 	};
 
+	struct ChannelPanelStyle
+	{
+		TVTest::Style::Margins ChannelNameMargin;
+		TVTest::Style::Margins ChannelLogoMargin;
+		TVTest::Style::Margins EventNameMargin;
+		TVTest::Style::Size ChannelChevronSize;
+		TVTest::Style::IntValue ChannelChevronMargin;
+
+		ChannelPanelStyle();
+		void SetStyle(const TVTest::Style::CStyleManager *pStyleManager);
+		void NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager);
+	};
+
 	CEpgProgramList *m_pProgramList;
+	ChannelPanelStyle m_Style;
 	DrawUtil::CFont m_Font;
 	DrawUtil::CFont m_ChannelFont;
 	int m_FontHeight;
-	Util::CRect m_ChannelNameMargins;
-	Util::CRect m_EventNameMargins;
 	int m_ChannelChevronMargin;
 	int m_EventNameLines;
 	int m_ChannelNameHeight;
@@ -124,7 +142,7 @@ private:
 	int m_ItemHeight;
 	int m_ExpandedItemHeight;
 	ThemeInfo m_Theme;
-	DrawUtil::CMonoColorBitmap m_Chevron;
+	DrawUtil::CMonoColorIconList m_Chevron;
 	int m_EventsPerChannel;
 	int m_ExpandAdditionalEvents;
 	int m_ExpandEvents;

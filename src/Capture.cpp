@@ -18,6 +18,12 @@ static char THIS_FILE[]=__FILE__;
 #define CAPTURE_PREVIEW_WINDOW_CLASS	APP_NAME TEXT(" Capture Preview")
 #define CAPTURE_TITLE_TEXT TEXT("ƒLƒƒƒvƒ`ƒƒ")
 
+enum {
+	CAPTURE_ICON_CAPTURE,
+	CAPTURE_ICON_SAVE,
+	CAPTURE_ICON_COPY
+};
+
 
 
 
@@ -492,7 +498,7 @@ LRESULT CCaptureWindow::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lPara
 		//m_Status.SetEventHandler(pThis);
 		if (m_Status.NumItems()==0) {
 			if (!m_StatusIcons.IsCreated()) {
-				m_StatusIcons.Load(GetAppClass().GetResourceInstance(),IDB_CAPTURE);
+				m_StatusIcons.Load(GetAppClass().GetResourceInstance(),IDB_CAPTURE,16,16);
 			}
 			m_Status.AddItem(new CCaptureStatusItem(m_StatusIcons));
 			//m_Status.AddItem(new CContinuousStatusItem(m_StatusIcons));
@@ -595,16 +601,15 @@ bool CCaptureWindow::CPreviewEventHandler::OnKeyDown(UINT KeyCode,UINT Flags)
 
 
 
-CCaptureWindow::CCaptureStatusItem::CCaptureStatusItem(DrawUtil::CMonoColorBitmap &IconBitmap)
-	: CStatusItem(STATUS_ITEM_CAPTURE,16)
-	, m_IconBitmap(IconBitmap)
+CCaptureWindow::CCaptureStatusItem::CCaptureStatusItem(DrawUtil::CMonoColorIconList &Icons)
+	: CIconStatusItem(STATUS_ITEM_CAPTURE,16)
+	, m_Icons(Icons)
 {
-	m_MinWidth=16;
 }
 
-void CCaptureWindow::CCaptureStatusItem::Draw(HDC hdc,const RECT *pRect)
+void CCaptureWindow::CCaptureStatusItem::Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect)
 {
-	DrawIcon(hdc,pRect,m_IconBitmap);
+	DrawIcon(hdc,DrawRect,m_Icons,CAPTURE_ICON_CAPTURE);
 }
 
 void CCaptureWindow::CCaptureStatusItem::OnLButtonDown(int x,int y)
@@ -626,17 +631,16 @@ void CCaptureWindow::CCaptureStatusItem::OnRButtonDown(int x,int y)
 
 
 CCaptureWindow::CSaveStatusItem::CSaveStatusItem(CCaptureWindow *pCaptureWindow,
-												 DrawUtil::CMonoColorBitmap &IconBitmap)
-	: CStatusItem(STATUS_ITEM_SAVE,16)
+												 DrawUtil::CMonoColorIconList &Icons)
+	: CIconStatusItem(STATUS_ITEM_SAVE,16)
 	, m_pCaptureWindow(pCaptureWindow)
-	, m_IconBitmap(IconBitmap)
+	, m_Icons(Icons)
 {
-	m_MinWidth=16;
 }
 
-void CCaptureWindow::CSaveStatusItem::Draw(HDC hdc,const RECT *pRect)
+void CCaptureWindow::CSaveStatusItem::Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect)
 {
-	DrawIcon(hdc,pRect,m_IconBitmap,32);
+	DrawIcon(hdc,DrawRect,m_Icons,CAPTURE_ICON_SAVE);
 }
 
 void CCaptureWindow::CSaveStatusItem::OnLButtonDown(int x,int y)
@@ -646,17 +650,16 @@ void CCaptureWindow::CSaveStatusItem::OnLButtonDown(int x,int y)
 
 
 CCaptureWindow::CCopyStatusItem::CCopyStatusItem(CCaptureWindow *pCaptureWindow,
-												 DrawUtil::CMonoColorBitmap &IconBitmap)
-	: CStatusItem(STATUS_ITEM_COPY,16)
+												 DrawUtil::CMonoColorIconList &Icons)
+	: CIconStatusItem(STATUS_ITEM_COPY,16)
 	, m_pCaptureWindow(pCaptureWindow)
-	, m_IconBitmap(IconBitmap)
+	, m_Icons(Icons)
 {
-	m_MinWidth=16;
 }
 
-void CCaptureWindow::CCopyStatusItem::Draw(HDC hdc,const RECT *pRect)
+void CCaptureWindow::CCopyStatusItem::Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect)
 {
-	DrawIcon(hdc,pRect,m_IconBitmap,48);
+	DrawIcon(hdc,DrawRect,m_Icons,CAPTURE_ICON_COPY);
 }
 
 void CCaptureWindow::CCopyStatusItem::OnLButtonDown(int x,int y)

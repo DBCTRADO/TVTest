@@ -754,6 +754,23 @@ int CAppMain::Main(HINSTANCE hInstance,LPCTSTR pszCmdLine,int nCmdShow)
 
 	GeneralOptions.SetTemporaryNoDescramble(CmdLineOptions.m_fNoDescramble);
 
+	GraphicsCore.Initialize();
+
+	// スタイル設定の読み込み
+	{
+		TCHAR szStyleFileName[MAX_PATH];
+		if (!CmdLineOptions.m_StyleFileName.IsEmpty()) {
+			GetAbsolutePath(CmdLineOptions.m_StyleFileName.Get(),szStyleFileName);
+		} else {
+			::GetModuleFileName(nullptr,szStyleFileName,lengthof(szStyleFileName));
+			::PathRenameExtension(szStyleFileName,TEXT(".style.ini"));
+		}
+		if (::PathFileExists(szStyleFileName)) {
+			AddLog(TEXT("スタイル設定を \"%s\" から読み込みます..."),szStyleFileName);
+			StyleManager.Load(szStyleFileName);
+		}
+	}
+
 	ColorSchemeOptions.SetEventHandler(this);
 	ColorSchemeOptions.ApplyColorScheme();
 
@@ -867,17 +884,10 @@ int CAppMain::Main(HINSTANCE hInstance,LPCTSTR pszCmdLine,int nCmdShow)
 
 		CPlugin::SetMessageWindow(MainWindow.GetHandle(),WM_APP_PLUGINMESSAGE);
 		StatusView.SetSingleText(TEXT("プラグインを読み込んでいます..."));
-		GetAppDirectory(szPluginDir);
 		if (!CmdLineOptions.m_PluginsDirectory.IsEmpty()) {
-			LPCTSTR pszDir=CmdLineOptions.m_PluginsDirectory.Get();
-			if (::PathIsRelative(pszDir)) {
-				TCHAR szTemp[MAX_PATH];
-				::PathCombine(szTemp,szPluginDir,pszDir);
-				::PathCanonicalize(szPluginDir,szTemp);
-			} else {
-				::lstrcpy(szPluginDir,pszDir);
-			}
+			GetAbsolutePath(CmdLineOptions.m_PluginsDirectory.Get(),szPluginDir);
 		} else {
+			GetAppDirectory(szPluginDir);
 			::PathAppend(szPluginDir,TEXT("Plugins"));
 		}
 		Logger.AddLog(TEXT("プラグインを \"%s\" から読み込みます..."),szPluginDir);
@@ -1237,6 +1247,32 @@ void CAppMain::ApplyEventInfoFont()
 	CProgramInfoStatusItem *pProgramInfo=dynamic_cast<CProgramInfoStatusItem*>(StatusView.GetItemByID(STATUS_ITEM_PROGRAMINFO));
 	if (pProgramInfo!=nullptr)
 		pProgramInfo->SetEventInfoFont(EpgOptions.GetEventInfoFont());
+}
+
+
+bool CAppMain::GetAbsolutePath(LPCTSTR pszPath,LPTSTR pszAbsolutePath) const
+{
+	if (pszAbsolutePath==nullptr)
+		return false;
+
+	pszAbsolutePath[0]=_T('\0');
+
+	if (IsStringEmpty(pszPath))
+		return false;
+
+	if (::PathIsRelative(pszPath)) {
+		TCHAR szDir[MAX_PATH],szTemp[MAX_PATH];
+		GetAppDirectory(szDir);
+		if (::PathCombine(szTemp,szDir,pszPath)==nullptr
+				|| !::PathCanonicalize(pszAbsolutePath,szTemp))
+			return false;
+	} else {
+		if (::lstrlen(pszPath)>=MAX_PATH)
+			return false;
+		::lstrcpy(pszAbsolutePath,pszPath);
+	}
+
+	return true;
 }
 
 

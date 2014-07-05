@@ -3,11 +3,14 @@
 
 
 #include "Layout.h"
+#include "UIBase.h"
 #include "DrawUtil.h"
 #include "Theme.h"
 
 
-class CPanel : public CCustomWindow
+class CPanel
+	: public CCustomWindow
+	, public TVTest::CUIBase
 {
 public:
 	class ABSTRACT_CLASS(CEventHandler) {
@@ -31,8 +34,14 @@ public:
 
 	CPanel();
 	~CPanel();
+
 // CBasicWindow
 	bool Create(HWND hwndParent,DWORD Style,DWORD ExStyle=0,int ID=0) override;
+
+// CUIBase
+	void SetStyle(const TVTest::Style::CStyleManager *pStyleManager) override;
+	void NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager) override;
+
 // CPanel
 	bool SetWindow(CBasicWindow *pWindow,LPCTSTR pszTitle);
 	void ShowTitle(bool fShow);
@@ -45,14 +54,23 @@ public:
 	bool GetContentRect(RECT *pRect) const;
 
 private:
-	int m_TitleMargin;
-	int m_ButtonSize;
+	struct PanelStyle
+	{
+		TVTest::Style::Margins TitlePadding;
+		TVTest::Style::Size TitleButtonSize;
+
+		PanelStyle();
+		void SetStyle(const TVTest::Style::CStyleManager *pStyleManager);
+		void NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager);
+	};
+
 	DrawUtil::CFont m_Font;
 	int m_TitleHeight;
 	CBasicWindow *m_pWindow;
 	CDynamicString m_Title;
 	bool m_fShowTitle;
 	bool m_fEnableFloating;
+	PanelStyle m_Style;
 	ThemeInfo m_Theme;
 	CEventHandler *m_pEventHandler;
 	bool m_fCloseButtonPushed;

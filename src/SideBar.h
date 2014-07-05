@@ -4,6 +4,7 @@
 
 #include <vector>
 #include "BasicWindow.h"
+#include "UIBase.h"
 #include "Command.h"
 #include "DrawUtil.h"
 #include "Theme.h"
@@ -11,7 +12,9 @@
 #include "WindowUtil.h"
 
 
-class CSideBar : public CCustomWindow
+class CSideBar
+	: public CCustomWindow
+	, public TVTest::CUIBase
 {
 public:
 	enum {
@@ -53,11 +56,17 @@ public:
 
 	CSideBar(const CCommandList *pCommandList);
 	~CSideBar();
+
 // CBasicWindow
 	bool Create(HWND hwndParent,DWORD Style,DWORD ExStyle=0,int ID=0) override;
+
+// CUIBase
+	void SetStyle(const TVTest::Style::CStyleManager *pStyleManager) override;
+	void NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager) override;
+
 // CSideBar
 	int GetBarWidth() const;
-	bool SetIconImage(HBITMAP hbm);
+	bool SetIconImage(HBITMAP hbm,int Width,int Height);
 	void DeleteAllItems();
 	bool AddItem(const SideBarItem *pItem);
 	bool AddItems(const SideBarItem *pItemList,int NumItems);
@@ -73,17 +82,26 @@ public:
 	void SetVertical(bool fVertical);
 	void SetEventHandler(CEventHandler *pHandler);
 	const CCommandList *GetCommandList() const { return m_pCommandList; }
+	TVTest::Style::Size GetIconDrawSize() const;
 
 protected:
+	struct SideBarStyle
+	{
+		TVTest::Style::Size IconSize;
+		TVTest::Style::Margins ItemPadding;
+		TVTest::Style::IntValue SeparatorWidth;
+
+		SideBarStyle();
+		void SetStyle(const TVTest::Style::CStyleManager *pStyleManager);
+		void NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager);
+	};
+
+	SideBarStyle m_Style;
 	CTooltip m_Tooltip;
 	bool m_fShowTooltips;
-	DrawUtil::CMonoColorBitmap m_IconBitmap;
+	DrawUtil::CMonoColorIconList m_Icons;
 	bool m_fVertical;
 	ThemeInfo m_Theme;
-	RECT m_ItemMargin;
-	int m_IconWidth;
-	int m_IconHeight;
-	int m_SeparatorWidth;
 	std::vector<SideBarItem> m_ItemList;
 	int m_HotItem;
 	int m_ClickItem;
@@ -91,6 +109,9 @@ protected:
 	CEventHandler *m_pEventHandler;
 	const CCommandList *m_pCommandList;
 
+	static const int ICON_WIDTH;
+	static const int ICON_HEIGHT;
+	static const LPCTSTR CLASS_NAME;
 	static HINSTANCE m_hinst;
 
 	void GetItemRect(int Item,RECT *pRect) const;

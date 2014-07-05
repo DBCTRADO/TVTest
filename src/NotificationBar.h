@@ -4,6 +4,7 @@
 
 #include <deque>
 #include "BasicWindow.h"
+#include "UIBase.h"
 #include "Theme.h"
 #include "DrawUtil.h"
 #include "WindowUtil.h"
@@ -11,6 +12,7 @@
 
 class CNotificationBar
 	: public CCustomWindow
+	, public TVTest::CUIBase
 	, protected CWindowTimerManager
 {
 public:
@@ -25,6 +27,10 @@ public:
 
 // CBasicWindow
 	bool Create(HWND hwndParent,DWORD Style,DWORD ExStyle=0,int ID=0) override;
+
+// CUIBase
+	void SetStyle(const TVTest::Style::CStyleManager *pStyleManager) override;
+	void NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager) override;
 
 // CNotificationBar
 	bool Show(LPCTSTR pszText,MessageType Type,DWORD Timeout,bool fSkippable);
@@ -46,6 +52,18 @@ private:
 		bool fSkippable;
 	};
 
+	struct NotificationBarStyle {
+		TVTest::Style::Margins Padding;
+		TVTest::Style::Size IconSize;
+		TVTest::Style::Margins IconMargin;
+		TVTest::Style::Margins TextMargin;
+		TVTest::Style::IntValue TextExtraHeight;
+
+		NotificationBarStyle();
+		void SetStyle(const TVTest::Style::CStyleManager *pStyleManager);
+		void NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager);
+	};
+
 	enum {
 		TIMER_ID_SHOWANIMATION	= 0x0001U,
 		TIMER_ID_FADEANIMATION	= 0x0002U,
@@ -57,6 +75,7 @@ private:
 	static const int FADE_ANIMATION_COUNT=4;
 	static const DWORD FADE_ANIMATION_INTERVAL=50;
 
+	NotificationBarStyle m_Style;
 	Theme::GradientInfo m_BackGradient;
 	COLORREF m_TextColor[3];
 	DrawUtil::CFont m_Font;

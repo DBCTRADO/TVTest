@@ -4,7 +4,7 @@
 
 #include <map>
 #include "BonTsEngine/LogoDownloader.h"
-#include "DrawUtil.h"
+#include "Graphics.h"
 #include "Image.h"
 
 
@@ -29,8 +29,8 @@ public:
 	bool IsLogoIDMapUpdated() const { return m_fLogoIDMapUpdated; }
 	HBITMAP GetLogoBitmap(WORD NetworkID,WORD LogoID,BYTE LogoType);
 	HBITMAP GetAssociatedLogoBitmap(WORD NetworkID,WORD ServiceID,BYTE LogoType);
-	const CGdiPlus::CImage *GetLogoImage(WORD NetworkID,WORD LogoID,BYTE LogoType);
-	const CGdiPlus::CImage *GetAssociatedLogoImage(WORD NetworkID,WORD ServiceID,BYTE LogoType);
+	const TVTest::Graphics::CImage *GetLogoImage(WORD NetworkID,WORD LogoID,BYTE LogoType);
+	const TVTest::Graphics::CImage *GetAssociatedLogoImage(WORD NetworkID,WORD ServiceID,BYTE LogoType);
 	HICON CreateLogoIcon(WORD NetworkID,WORD ServiceID,int Width,int Height);
 	bool IsLogoAvailable(WORD NetworkID,WORD ServiceID,BYTE LogoType);
 	DWORD GetAvailableLogoType(WORD NetworkID,WORD ServiceID);
@@ -51,7 +51,7 @@ private:
 		BYTE *m_pData;
 		SYSTEMTIME m_Time;
 		HBITMAP m_hbm;
-		CGdiPlus::CImage m_Image;
+		TVTest::Graphics::CImage m_Image;
 
 	public:
 		CLogoData(const CLogoDownloader::LogoData *pData);
@@ -67,7 +67,7 @@ private:
 		const BYTE *GetData() const { return m_pData; }
 		const SYSTEMTIME &GetTime() const { return m_Time; }
 		HBITMAP GetBitmap(CImageCodec *pCodec);
-		const CGdiPlus::CImage *GetImage(CImageCodec *pCodec);
+		const TVTest::Graphics::CImage *GetImage(CImageCodec *pCodec);
 		bool SaveToFile(LPCTSTR pszFileName) const;
 		bool SaveBmpToFile(CImageCodec *pCodec,LPCTSTR pszFileName) const;
 	};

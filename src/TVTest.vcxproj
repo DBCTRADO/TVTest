@@ -536,6 +536,7 @@
     <ClCompile Include="Favorites.cpp" />
     <ClCompile Include="FeaturedEvents.cpp" />
     <ClCompile Include="GeneralOptions.cpp" />
+    <ClCompile Include="Graphics.cpp" />
     <ClCompile Include="Help.cpp" />
     <ClCompile Include="HelperClass\NCachedFile.cpp" />
     <ClCompile Include="HelperClass\NFile.cpp" />
@@ -590,12 +591,14 @@
     </ClCompile>
     <ClCompile Include="StreamInfo.cpp" />
     <ClCompile Include="StringUtility.cpp" />
+    <ClCompile Include="Style.cpp" />
     <ClCompile Include="Taskbar.cpp" />
     <ClCompile Include="Theme.cpp" />
     <ClCompile Include="TitleBar.cpp" />
     <ClCompile Include="Tooltip.cpp" />
     <ClCompile Include="TVTest.cpp" />
     <ClCompile Include="AppMain.cpp" />
+    <ClCompile Include="UIBase.cpp" />
     <ClCompile Include="UICore.cpp" />
     <ClCompile Include="UISkin.cpp" />
     <ClCompile Include="Util.cpp" />
@@ -693,6 +696,7 @@
     <ClInclude Include="Favorites.h" />
     <ClInclude Include="FeaturedEvents.h" />
     <ClInclude Include="GeneralOptions.h" />
+    <ClInclude Include="Graphics.h" />
     <ClInclude Include="Help.h" />
     <ClInclude Include="HelperClass\NCachedFile.h" />
     <ClInclude Include="HelperClass\NFile.h" />
@@ -746,6 +750,7 @@
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="StreamInfo.h" />
     <ClInclude Include="StringUtility.h" />
+    <ClInclude Include="Style.h" />
     <ClInclude Include="Taskbar.h" />
     <ClInclude Include="Theme.h" />
     <ClInclude Include="TitleBar.h" />
@@ -753,6 +758,7 @@
     <ClInclude Include="TVTest.h" />
     <ClInclude Include="AppMain.h" />
     <ClInclude Include="TVTestPlugin.h" />
+    <ClInclude Include="UIBase.h" />
     <ClInclude Include="UICore.h" />
     <ClInclude Include="UISkin.h" />
     <ClInclude Include="Util.h" />
