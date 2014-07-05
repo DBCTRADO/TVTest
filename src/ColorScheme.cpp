@@ -1801,6 +1801,38 @@ INT_PTR CColorSchemeOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lP
 		}
 		break;
 
+// 開発用機能
+#ifdef _DEBUG
+	case WM_RBUTTONDOWN:
+		{
+			HMENU hmenu=::CreatePopupMenu();
+			::AppendMenu(hmenu,MF_STRING | MF_ENABLED,1,TEXT("配色コードをコピー(&C)"));
+
+			POINT pt={GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam)};
+			::ClientToScreen(hDlg,&pt);
+
+			switch (::TrackPopupMenu(hmenu,TPM_RETURNCMD | TPM_RIGHTBUTTON,pt.x,pt.y,0,hDlg,NULL)) {
+			case 1:
+				{
+					TVTest::String Buffer;
+
+					for (int i=0;i<CColorScheme::NUM_COLORS;i++) {
+						COLORREF cr=(COLORREF)DlgListBox_GetItemData(hDlg,IDC_COLORSCHEME_LIST,i);
+						TCHAR szColor[32];
+						StdUtil::snprintf(szColor,lengthof(szColor),
+										  TEXT("HEXRGB(0x%02X%02X%02X)\r\n"),
+										  GetRValue(cr),GetGValue(cr),GetBValue(cr));
+						Buffer+=szColor;
+					}
+
+					CopyTextToClipboard(hDlg,Buffer.c_str());
+				}
+				break;
+			}
+		}
+		return TRUE;
+#endif
+
 	case WM_DESTROY:
 		SAFE_DELETE(m_pPreviewColorScheme);
 		m_PresetList.Clear();
