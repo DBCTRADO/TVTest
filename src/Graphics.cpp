@@ -507,7 +507,7 @@ bool CCanvas::DrawText(
 
 	CFont Font(lf);
 
-	Gdiplus::StringFormat Format((Flags & TEXT_FORMAT_NO_WRAP)!=0?Gdiplus::StringFormatFlagsNoWrap:0);
+	Gdiplus::StringFormat Format;
 	SetStringFormat(&Format,Flags);
 
 	SetTextRenderingHint(Flags);
@@ -612,7 +612,7 @@ bool CCanvas::DrawOutlineText(
 
 	CFont Font(lf);
 
-	Gdiplus::StringFormat Format((Flags & TEXT_FORMAT_NO_WRAP)!=0?Gdiplus::StringFormatFlagsNoWrap:0);
+	Gdiplus::StringFormat Format;
 	SetStringFormat(&Format,Flags);
 
 	SetTextRenderingHint(Flags);
@@ -694,6 +694,13 @@ bool CCanvas::GetOutlineTextSize(
 
 void CCanvas::SetStringFormat(Gdiplus::StringFormat *pFormat,UINT Flags)
 {
+	INT FormatFlags=pFormat->GetFormatFlags();
+	if ((Flags & TEXT_FORMAT_NO_WRAP)!=0)
+		FormatFlags|=Gdiplus::StringFormatFlagsNoWrap;
+	if ((Flags & TEXT_FORMAT_NO_CLIP)!=0)
+		FormatFlags|=Gdiplus::StringFormatFlagsNoClip;
+	pFormat->SetFormatFlags(FormatFlags);
+
 	switch (Flags & TEXT_FORMAT_HORZ_ALIGN_MASK) {
 	case TEXT_FORMAT_LEFT:			pFormat->SetAlignment(Gdiplus::StringAlignmentNear);	break;
 	case TEXT_FORMAT_RIGHT:			pFormat->SetAlignment(Gdiplus::StringAlignmentFar);		break;
@@ -707,9 +714,10 @@ void CCanvas::SetStringFormat(Gdiplus::StringFormat *pFormat,UINT Flags)
 	}
 
 	pFormat->SetTrimming(
-		(Flags & TEXT_FORMAT_END_ELLIPSIS)!=0?Gdiplus::StringTrimmingEllipsisCharacter:
+		(Flags & TEXT_FORMAT_END_ELLIPSIS )!=0?Gdiplus::StringTrimmingEllipsisCharacter:
 		(Flags & TEXT_FORMAT_WORD_ELLIPSIS)!=0?Gdiplus::StringTrimmingEllipsisWord:
-		Gdiplus::StringTrimmingCharacter);
+		(Flags & TEXT_FORMAT_TRIM_CHAR    )!=0?Gdiplus::StringTrimmingCharacter:
+		Gdiplus::StringTrimmingNone);
 }
 
 
