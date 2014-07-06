@@ -282,7 +282,7 @@ bool COSDManager::ShowVolumeOSD(int Volume)
 		m_VolumeOSD.CalcTextSize(&sz);
 		m_VolumeOSD.SetPosition(rc.left+m_Style.VolumeMargin.Left,
 								rc.bottom-sz.cy-m_Style.VolumeMargin.Bottom,
-								sz.cx,sz.cy);
+								sz.cx+FontSize/4,sz.cy);
 		m_VolumeOSD.SetTextStyle(
 			CPseudoOSD::TEXT_STYLE_LEFT | CPseudoOSD::TEXT_STYLE_VERT_CENTER |
 			CPseudoOSD::TEXT_STYLE_FILL_BACKGROUND);
