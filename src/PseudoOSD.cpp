@@ -348,10 +348,6 @@ bool CPseudoOSD::CalcTextSize(SIZE *pSize)
 			pSize->cy=rc.bottom-rc.top;
 		}
 		::SelectObject(hdc,hfontOld);
-		if (m_hwnd!=NULL)
-			::ReleaseDC(m_hwnd,hdc);
-		else
-			::DeleteDC(hdc);
 	} else {
 		TVTest::Graphics::CCanvas Canvas(hdc);
 		LOGFONT lf;
@@ -368,6 +364,11 @@ bool CPseudoOSD::CalcTextSize(SIZE *pSize)
 				pSize);
 		}
 	}
+
+	if (m_hwnd!=NULL)
+		::ReleaseDC(m_hwnd,hdc);
+	else
+		::DeleteDC(hdc);
 
 	return fResult;
 }
