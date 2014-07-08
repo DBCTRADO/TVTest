@@ -770,6 +770,11 @@ void CMainWindow::SetSideBarVisible(bool fVisible)
 
 bool CMainWindow::OnBarMouseLeave(HWND hwnd)
 {
+	if (m_pCore->GetFullscreen()) {
+		m_Fullscreen.OnMouseMove();
+		return true;
+	}
+
 	POINT pt;
 
 	::GetCursorPos(&pt);
@@ -6226,7 +6231,7 @@ bool CMainWindow::CTitleBarManager::OnFullscreen()
 
 void CMainWindow::CTitleBarManager::OnMouseLeave()
 {
-	if (m_fMainWindow && !m_fFixed)
+	if (!m_fFixed)
 		m_pMainWindow->OnBarMouseLeave(m_pTitleBar->GetHandle());
 }
 
@@ -6397,7 +6402,7 @@ void CMainWindow::CSideBarManager::OnRButtonDown(int x,int y)
 
 void CMainWindow::CSideBarManager::OnMouseLeave()
 {
-	if (!m_fFixed && !m_pMainWindow->m_pCore->GetFullscreen())
+	if (!m_fFixed)
 		m_pMainWindow->OnBarMouseLeave(m_pSideBar->GetHandle());
 }
 
@@ -6461,8 +6466,7 @@ CMainWindow::CStatusViewEventHandler::CStatusViewEventHandler(CMainWindow *pMain
 
 void CMainWindow::CStatusViewEventHandler::OnMouseLeave()
 {
-	if (!m_pMainWindow->m_pCore->GetFullscreen())
-		m_pMainWindow->OnBarMouseLeave(m_pStatusView->GetHandle());
+	m_pMainWindow->OnBarMouseLeave(m_pStatusView->GetHandle());
 }
 
 void CMainWindow::CStatusViewEventHandler::OnHeightChanged(int Height)
