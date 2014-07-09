@@ -393,8 +393,7 @@ bool CDtvEngine::SelectService(WORD ServiceID)
 	m_MediaViewer.SetVideoPID(VideoPID);
 	m_MediaViewer.SetAudioPID(AudioPID);
 
-	if (m_bDescrambleCurServiceOnly)
-		SetDescrambleService(ServiceID);
+	SetDescrambleService(m_bDescrambleCurServiceOnly ? ServiceID : 0);
 
 	if (m_bWriteCurServiceOnly)
 		SetWriteStream(ServiceID, m_WriteStream);
@@ -836,6 +835,11 @@ bool CDtvEngine::OpenCasCard(int Device, LPCTSTR pszReaderName)
 					 m_CasProcessor.GetLastErrorSystemMessage());
 			return false;
 		}
+
+		WORD ServiceID = 0;
+		if (m_bDescrambleCurServiceOnly && m_CurServiceID != SID_INVALID)
+			ServiceID = m_CurServiceID;
+		SetDescrambleService(ServiceID);
 	} else if (m_CasProcessor.IsCasCardOpen()) {
 		m_CasProcessor.CloseCasCard();
 	}
@@ -885,8 +889,8 @@ bool CDtvEngine::SetDescrambleCurServiceOnly(bool bOnly)
 		WORD ServiceID = 0;
 
 		m_bDescrambleCurServiceOnly = bOnly;
-		if (bOnly)
-			GetServiceID(&ServiceID);
+		if (bOnly && m_CurServiceID != SID_INVALID)
+			ServiceID = m_CurServiceID;
 		SetDescrambleService(ServiceID);
 	}
 	return true;
