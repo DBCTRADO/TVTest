@@ -32,6 +32,7 @@ class CDriverOptions : public COptions
 	CDriverManager *m_pDriverManager;
 	CDriverSettingList m_SettingList;
 	CDriverSettingList m_CurSettingList;
+	CChannelList m_InitChannelList;
 
 // CBasicDialog
 	INT_PTR DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
