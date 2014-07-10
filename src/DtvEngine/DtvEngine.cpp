@@ -73,10 +73,10 @@ bool CDtvEngine::BuildEngine(CEventHandler *pEventHandler,
 	    ↓
 	CTsAnalyzer
 	    ↓
-	CMediaTee──────┐
-	    ↓               ↓
-	CEventManager    CCasProcessor
-	    ↓               ↓
+	CMediaTee──────┬──┐
+	    ↓               │    ↓
+	CEventManager        │CCasProcessor
+	    ↓               ↓    ↓
 	CLogoDownloader  CCaptionDecoder
 	    ↓               ↓
 	CTsSelector      CMediaGrabber
@@ -97,7 +97,7 @@ bool CDtvEngine::BuildEngine(CEventHandler *pEventHandler,
 	} else {
 		m_MediaTee.SetOutputDecoder(&m_LogoDownloader, 0);
 	}
-	m_MediaTee.SetOutputDecoder(&m_CasProcessor, 1);
+	m_MediaTee.SetOutputDecoder(&m_CaptionDecoder, 1);
 	m_LogoDownloader.SetOutputDecoder(&m_TsSelector);
 	m_TsSelector.SetOutputDecoder(&m_FileWriter);
 	m_CasProcessor.SetOutputDecoder(&m_CaptionDecoder);
@@ -818,6 +818,19 @@ int CDtvEngine::GetAudioComponentText(LPTSTR pszText, int MaxLength, const int A
 }
 
 
+bool CDtvEngine::LoadCasLibrary(LPCTSTR pszFileName)
+{
+	DisconnectCasProcessor();
+
+	if (!m_CasProcessor.LoadCasLibrary(pszFileName)) {
+		SetError(m_CasProcessor.GetLastErrorException());
+		return false;
+	}
+
+	return true;
+}
+
+
 bool CDtvEngine::OpenCasCard(int Device, LPCTSTR pszReaderName)
 {
 	// CASカードを開く
@@ -835,6 +848,8 @@ bool CDtvEngine::OpenCasCard(int Device, LPCTSTR pszReaderName)
 					 m_CasProcessor.GetLastErrorSystemMessage());
 			return false;
 		}
+
+		ConnectCasProcessor();
 
 		WORD ServiceID = 0;
 		if (m_bDescrambleCurServiceOnly && m_CurServiceID != SID_INVALID)
@@ -949,4 +964,16 @@ void CDtvEngine::ResetStatus()
 	m_wCurTransportStream = 0;
 	m_CurServiceIndex = SERVICE_INVALID;
 	m_CurServiceID = SID_INVALID;
+}
+
+
+void CDtvEngine::ConnectCasProcessor()
+{
+	m_MediaTee.SetOutputDecoder(&m_CasProcessor, 1);
+}
+
+
+void CDtvEngine::DisconnectCasProcessor()
+{
+	m_MediaTee.SetOutputDecoder(&m_CaptionDecoder, 1);
 }

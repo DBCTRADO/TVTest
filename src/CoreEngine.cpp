@@ -276,8 +276,8 @@ bool CCoreEngine::IsNetworkDriverFileName(LPCTSTR pszFileName)
 
 bool CCoreEngine::LoadCasLibrary()
 {
-	if (!m_DtvEngine.m_CasProcessor.LoadCasLibrary(m_CasLibraryName.c_str())) {
-		SetError(m_DtvEngine.m_CasProcessor.GetLastErrorException());
+	if (!m_DtvEngine.LoadCasLibrary(m_CasLibraryName.c_str())) {
+		SetError(m_DtvEngine.GetLastErrorException());
 		return false;
 	}
 	return true;

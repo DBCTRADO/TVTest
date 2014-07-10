@@ -131,6 +131,7 @@ public:
 	BYTE GetAudioComponentType(const int AudioIndex = -1);
 	int GetAudioComponentText(LPTSTR pszText, int MaxLength, const int AudioIndex = -1);
 
+	bool LoadCasLibrary(LPCTSTR pszFileName);
 	bool OpenCasCard(int Device, LPCTSTR pszReaderName = NULL);
 	bool CloseCasCard();
 	bool SetDescramble(bool bDescramble);
@@ -168,6 +169,8 @@ protected:
 	virtual const DWORD OnDecoderEvent(CMediaDecoder *pDecoder, const DWORD dwEventID, PVOID pParam);
 
 	bool SelectService(WORD ServiceID);
+	void ConnectCasProcessor();
+	void DisconnectCasProcessor();
 
 	CCriticalLock m_EngineLock;
 	CEventHandler *m_pEventHandler;
