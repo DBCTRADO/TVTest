@@ -17,6 +17,7 @@ static char THIS_FILE[]=__FILE__;
 COperationOptions::COperationOptions()
 	: m_pCommandList(NULL)
 	, m_fDisplayDragMove(true)
+	, m_fHideCursor(false)
 	, m_VolumeStep(5)
 	, m_WheelMode(WHEEL_MODE_VOLUME)
 	, m_WheelShiftMode(WHEEL_MODE_CHANNEL)
@@ -45,6 +46,7 @@ bool COperationOptions::ReadSettings(CSettings &Settings)
 	int Value;
 
 	Settings.Read(TEXT("DisplayDragMove"),&m_fDisplayDragMove);
+	Settings.Read(TEXT("HideCursor"),&m_fHideCursor);
 	Settings.Read(TEXT("VolumeStep"),&m_VolumeStep);
 
 	if (Settings.Read(TEXT("WheelMode"),&Value)
@@ -98,6 +100,7 @@ static LPCTSTR GetCommandText(const CCommandList *pCommandList,int Command)
 bool COperationOptions::WriteSettings(CSettings &Settings)
 {
 	Settings.Write(TEXT("DisplayDragMove"),m_fDisplayDragMove);
+	Settings.Write(TEXT("HideCursor"),m_fHideCursor);
 	Settings.Write(TEXT("VolumeStep"),m_VolumeStep);
 	Settings.Write(TEXT("WheelMode"),(int)m_WheelMode);
 	Settings.Write(TEXT("WheelShiftMode"),(int)m_WheelShiftMode);
@@ -153,6 +156,7 @@ INT_PTR COperationOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPar
 	case WM_INITDIALOG:
 		{
 			DlgCheckBox_Check(hDlg,IDC_OPTIONS_DISPLAYDRAGMOVE,m_fDisplayDragMove);
+			DlgCheckBox_Check(hDlg,IDC_OPTIONS_HIDECURSOR,m_fHideCursor);
 
 			InitWheelSettings(IDC_OPTIONS_WHEELMODE,m_WheelMode);
 			InitWheelSettings(IDC_OPTIONS_WHEELSHIFTMODE,m_WheelShiftMode);
@@ -201,6 +205,8 @@ INT_PTR COperationOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPar
 			{
 				m_fDisplayDragMove=
 					DlgCheckBox_IsChecked(hDlg,IDC_OPTIONS_DISPLAYDRAGMOVE);
+				m_fHideCursor=
+					DlgCheckBox_IsChecked(hDlg,IDC_OPTIONS_HIDECURSOR);
 
 				m_WheelMode=(WheelMode)DlgComboBox_GetCurSel(hDlg,IDC_OPTIONS_WHEELMODE);
 				m_WheelShiftMode=(WheelMode)DlgComboBox_GetCurSel(hDlg,IDC_OPTIONS_WHEELSHIFTMODE);

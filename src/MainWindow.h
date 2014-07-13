@@ -84,6 +84,7 @@ class CMainWindow
 {
 public:
 	enum { COMMAND_FROM_MOUSE=8 };
+	static const DWORD HIDE_CURSOR_DELAY=1000UL;
 
 	struct ResumeInfo {
 		enum {
@@ -295,12 +296,6 @@ private:
 		bool m_fShowPanel;
 		int m_PanelWidth;
 		POINT m_LastCursorMovePos;
-		enum {
-			TIMER_ID_HIDECURSOR=1
-		};
-		enum {
-			HIDE_CURSOR_DELAY=1000UL
-		};
 
 		bool OnCreate();
 		void OnMouseCommand(int Command);
@@ -417,6 +412,9 @@ private:
 	std::vector<EpgChannelGroup> m_EpgUpdateChannelList;
 	Util::CClock m_EpgAccumulateClock;
 	bool m_fEpgUpdateChannelChange;
+
+	bool m_fShowCursor;
+	bool m_fNoHideCursor;
 
 	POINT m_ptDragStartPos;
 	RECT m_rcDragStart;
@@ -543,6 +541,7 @@ private:
 	void OnSizeChanged(UINT State,int Width,int Height);
 	bool OnSizeChanging(UINT Edge,RECT *pRect);
 	void OnMouseMove(int x,int y);
+	bool OnSetCursor(HWND hwndCursor,int HitTestCode,int MouseMessage);
 	void OnCommand(HWND hwnd,int id,HWND hwndCtl,UINT codeNotify);
 	void OnTimer(HWND hwnd,UINT id);
 	bool OnInitMenuPopup(HMENU hmenu);
@@ -551,6 +550,7 @@ private:
 	int GetZoomPercentage();
 	bool AutoFitWindowToVideo();
 	bool SetPanAndScan(int Command);
+	void ShowCursor(bool fShow);
 	void ShowChannelOSD();
 	void ShowAudioOSD();
 	void SetWindowVisible();

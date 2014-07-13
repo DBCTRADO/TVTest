@@ -34,6 +34,7 @@ public:
 // COperationOptions
 	bool Initialize(CSettings &Settings,const CCommandList *pCommandList);
 	bool GetDisplayDragMove() const { return m_fDisplayDragMove; }
+	bool GetHideCursor() const { return m_fHideCursor; }
 	int GetVolumeStep() const { return m_VolumeStep; }
 	WheelMode GetWheelMode() const { return m_WheelMode; }
 	WheelMode GetWheelShiftMode() const { return m_WheelShiftMode; }
@@ -50,6 +51,7 @@ public:
 private:
 	const CCommandList *m_pCommandList;
 	bool m_fDisplayDragMove;
+	bool m_fHideCursor;
 	int m_VolumeStep;
 	WheelMode m_WheelMode;
 	WheelMode m_WheelShiftMode;

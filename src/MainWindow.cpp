@@ -222,6 +222,9 @@ CMainWindow::CMainWindow(CAppMain &App)
 	, m_fProgramGuideUpdating(false)
 	, m_fEpgUpdateChannelChange(false)
 
+	, m_fShowCursor(true)
+	, m_fNoHideCursor(false)
+
 	, m_fClosing(false)
 
 	, m_WheelCount(0)
@@ -925,6 +928,11 @@ LRESULT CMainWindow::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 			MAKEWPARAM(m_App.OperationOptions.GetLeftDoubleClickCommand(),COMMAND_FROM_MOUSE),0);
 		return 0;
 
+	case WM_SETCURSOR:
+		if (OnSetCursor(reinterpret_cast<HWND>(wParam),LOWORD(lParam),HIWORD(lParam)))
+			return TRUE;
+		break;
+
 	case WM_SYSKEYDOWN:
 		if (wParam!=VK_F10)
 			break;
@@ -1098,6 +1106,14 @@ LRESULT CMainWindow::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 		if (m_App.FavoritesMenu.OnMenuSelect(hwnd,wParam,lParam))
 			return 0;
 		break;
+
+	case WM_ENTERMENULOOP:
+		m_fNoHideCursor=true;
+		return 0;
+
+	case WM_EXITMENULOOP:
+		m_fNoHideCursor=false;
+		return 0;
 
 	case WM_SYSCOMMAND:
 		switch ((wParam&0xFFFFFFF0UL)) {
@@ -1748,6 +1764,10 @@ bool CMainWindow::OnCreate(const CREATESTRUCT *pcs)
 
 	::SetTimer(m_hwnd,TIMER_ID_UPDATE,UPDATE_TIMER_INTERVAL,nullptr);
 
+	m_fShowCursor=true;
+	if (m_App.OperationOptions.GetHideCursor())
+		::SetTimer(m_hwnd,TIMER_ID_HIDECURSOR,HIDE_CURSOR_DELAY,nullptr);
+
 	return true;
 }
 
@@ -1999,9 +2019,31 @@ void CMainWindow::OnMouseMove(int x,int y)
 		} else if (!m_fShowSideBar && m_App.SideBar.GetVisible()) {
 			m_App.SideBar.SetVisible(false);
 		}
+
+		if (!m_fShowCursor)
+			ShowCursor(true);
+		if (m_App.OperationOptions.GetHideCursor())
+			::SetTimer(m_hwnd,TIMER_ID_HIDECURSOR,HIDE_CURSOR_DELAY,nullptr);
 	} else {
 		m_Fullscreen.OnMouseMove();
 	}
+}
+
+
+bool CMainWindow::OnSetCursor(HWND hwndCursor,int HitTestCode,int MouseMessage)
+{
+	if (HitTestCode==HTCLIENT) {
+		if (hwndCursor==m_hwnd
+				|| hwndCursor==m_Viewer.GetVideoContainer().GetHandle()
+				|| hwndCursor==m_Viewer.GetViewWindow().GetHandle()
+				|| hwndCursor==m_NotificationBar.GetHandle()
+				|| CPseudoOSD::IsPseudoOSD(hwndCursor)) {
+			::SetCursor(m_fShowCursor?::LoadCursor(nullptr,IDC_ARROW):nullptr);
+			return true;
+		}
+	}
+
+	return false;
 }
 
 
@@ -3537,6 +3579,22 @@ void CMainWindow::OnTimer(HWND hwnd,UINT id)
 		// É`ÉÉÉìÉlÉãî‘çÜì¸óÕÇÃéûä‘êÿÇÍ
 		EndChannelNoInput();
 		return;
+
+	case TIMER_ID_HIDECURSOR:
+		if (m_App.OperationOptions.GetHideCursor()) {
+			if (!m_fNoHideCursor) {
+				POINT pt;
+				RECT rc;
+				::GetCursorPos(&pt);
+				m_Viewer.GetViewWindow().GetScreenPosition(&rc);
+				if (::PtInRect(&rc,pt)) {
+					ShowCursor(false);
+					::SetCursor(nullptr);
+				}
+			}
+		}
+		::KillTimer(hwnd,TIMER_ID_HIDECURSOR);
+		break;
 	}
 }
 
@@ -3978,6 +4036,14 @@ void CMainWindow::OnChannelChanged(unsigned int Status)
 	m_CurEventStereoMode=-1;
 	*/
 	m_fForceResetPanAndScan=true;
+}
+
+
+void CMainWindow::ShowCursor(bool fShow)
+{
+	m_App.CoreEngine.m_DtvEngine.m_MediaViewer.HideCursor(!fShow);
+	m_Viewer.GetViewWindow().ShowCursor(fShow);
+	m_fShowCursor=fShow;
 }
 
 
