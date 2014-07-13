@@ -718,12 +718,12 @@ INT_PTR CDriverOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 				if (pSettings!=NULL) {
 					int Space=(int)DlgComboBox_GetCurSel(hDlg,IDC_DRIVEROPTIONS_INITCHANNEL_SPACE)-1;
 
-					SetChannelList((int)DlgComboBox_GetCurSel(hDlg,IDC_DRIVEROPTIONS_DRIVERLIST));
-					DlgComboBox_SetCurSel(hDlg,IDC_DRIVEROPTIONS_INITCHANNEL_CHANNEL,0);
 					pSettings->SetInitialSpace(Space);
+					pSettings->SetAllChannels(Space<0);
 					pSettings->SetInitialChannel(-1);
 					pSettings->SetInitialServiceID(-1);
-					pSettings->SetAllChannels(Space<0);
+					SetChannelList((int)DlgComboBox_GetCurSel(hDlg,IDC_DRIVEROPTIONS_DRIVERLIST));
+					DlgComboBox_SetCurSel(hDlg,IDC_DRIVEROPTIONS_INITCHANNEL_CHANNEL,0);
 				}
 			}
 			return TRUE;
