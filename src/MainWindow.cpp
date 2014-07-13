@@ -3730,43 +3730,43 @@ bool CMainWindow::OnInitMenuPopup(HMENU hmenu)
 	} else if (hmenu==m_App.MainMenu.GetSubMenu(CMainMenu::SUBMENU_CHANNEL)) {
 		m_pCore->InitChannelMenu(hmenu);
 	} else if (hmenu==m_App.MainMenu.GetSubMenu(CMainMenu::SUBMENU_SERVICE)) {
-		CTsAnalyzer::ServiceList ServiceList;
-		WORD CurServiceID;
-		int CurService=-1;
-		CChannelList ChList;
-
-		m_App.CoreEngine.m_DtvEngine.m_TsAnalyzer.GetViewableServiceList(&ServiceList);
-		const WORD NetworkID=m_App.CoreEngine.m_DtvEngine.m_TsAnalyzer.GetNetworkID();
-		const WORD TSID=m_App.CoreEngine.m_DtvEngine.m_TsAnalyzer.GetTransportStreamID();
-		if (!m_App.CoreEngine.m_DtvEngine.GetServiceID(&CurServiceID))
-			CurServiceID=0;
-
 		m_App.ChannelMenu.Destroy();
 		ClearMenu(hmenu);
 
-		for (int i=0;i<static_cast<int>(ServiceList.size());i++) {
-			const CTsAnalyzer::ServiceInfo &ServiceInfo=ServiceList[i];
-			CChannelInfo *pChInfo=new CChannelInfo;
+		CAppCore::StreamIDInfo StreamID;
 
-			pChInfo->SetChannelNo(i+1);
-			if (ServiceInfo.szServiceName[0]!='\0') {
-				pChInfo->SetName(ServiceInfo.szServiceName);
-			} else {
-				TCHAR szName[32];
-				StdUtil::snprintf(szName,lengthof(szName),TEXT("サービス%d"),i+1);
-				pChInfo->SetName(szName);
+		if (m_App.Core.GetCurrentStreamIDInfo(&StreamID)) {
+			CTsAnalyzer::ServiceList ServiceList;
+			CChannelList ChList;
+			int CurService=-1;
+
+			m_App.CoreEngine.m_DtvEngine.m_TsAnalyzer.GetViewableServiceList(&ServiceList);
+
+			for (int i=0;i<static_cast<int>(ServiceList.size());i++) {
+				const CTsAnalyzer::ServiceInfo &ServiceInfo=ServiceList[i];
+				CChannelInfo *pChInfo=new CChannelInfo;
+
+				pChInfo->SetChannelNo(i+1);
+				if (ServiceInfo.szServiceName[0]!='\0') {
+					pChInfo->SetName(ServiceInfo.szServiceName);
+				} else {
+					TCHAR szName[32];
+					StdUtil::snprintf(szName,lengthof(szName),TEXT("サービス%d"),i+1);
+					pChInfo->SetName(szName);
+				}
+				pChInfo->SetServiceID(ServiceInfo.ServiceID);
+				pChInfo->SetNetworkID(StreamID.NetworkID);
+				pChInfo->SetTransportStreamID(StreamID.TransportStreamID);
+				ChList.AddChannel(pChInfo);
+				if (ServiceInfo.ServiceID==StreamID.ServiceID)
+					CurService=i;
 			}
-			pChInfo->SetServiceID(ServiceInfo.ServiceID);
-			pChInfo->SetNetworkID(NetworkID);
-			pChInfo->SetTransportStreamID(TSID);
-			ChList.AddChannel(pChInfo);
-			if (ServiceInfo.ServiceID==CurServiceID)
-				CurService=i;
-		}
 
-		m_App.ChannelMenu.Create(&ChList,CurService,CM_SERVICE_FIRST,hmenu,m_hwnd,
-								 CChannelMenu::FLAG_SHOWLOGO |
-								 CChannelMenu::FLAG_SHOWEVENTINFO);
+			m_App.ChannelMenu.Create(&ChList,CurService,CM_SERVICE_FIRST,hmenu,m_hwnd,
+									 CChannelMenu::FLAG_SHOWLOGO |
+									 CChannelMenu::FLAG_SHOWEVENTINFO |
+									 CChannelMenu::FLAG_CURSERVICES);
+		}
 	} else if (hmenu==m_App.MainMenu.GetSubMenu(CMainMenu::SUBMENU_AUDIO)) {
 		CPopupMenu Menu(hmenu);
 		Menu.Clear();

@@ -464,13 +464,34 @@ const CEventInfoData *CChannelMenuItem::GetEventInfo(CEpgProgramList *pProgramLi
 			if (!m_EventList[Index-1].EventInfo.GetEndTime(&st))
 				return NULL;
 		}
-		if (!pProgramList->GetEventInfo(m_pChannelInfo->GetNetworkID(),
-										m_pChannelInfo->GetTransportStreamID(),
-										m_pChannelInfo->GetServiceID(),
-										&st,&m_EventList[Index].EventInfo))
-			return NULL;
+
+		bool fCurrent=false;
+		if (pCurTime==NULL && Index<=1) {
+			CAppMain &App=GetAppClass();
+			CAppCore::StreamIDInfo StreamID;
+
+			if (App.Core.GetCurrentStreamIDInfo(&StreamID)
+					&& m_pChannelInfo->GetNetworkID()==StreamID.NetworkID
+					&& m_pChannelInfo->GetTransportStreamID()==StreamID.TransportStreamID) {
+				if (!App.CoreEngine.GetCurrentEventInfo(&m_EventList[Index].EventInfo,
+														m_pChannelInfo->GetServiceID(),
+														Index>0))
+					return NULL;
+				fCurrent=true;
+			}
+		}
+
+		if (!fCurrent) {
+			if (!pProgramList->GetEventInfo(m_pChannelInfo->GetNetworkID(),
+											m_pChannelInfo->GetTransportStreamID(),
+											m_pChannelInfo->GetServiceID(),
+											&st,&m_EventList[Index].EventInfo))
+				return NULL;
+		}
+
 		m_EventList[Index].fValid=true;
 	}
+
 	return &m_EventList[Index].EventInfo;
 }
 
@@ -531,8 +552,10 @@ bool CChannelMenu::Create(const CChannelList *pChannelList,int CurChannel,UINT C
 	CreateFont(hdc);
 	HFONT hfontOld=DrawUtil::SelectObject(hdc,m_Font);
 
+	const bool fCurServices=(Flags & FLAG_CURSERVICES)!=0;
 	SYSTEMTIME st;
-	GetBaseTime(&st);
+	if (!fCurServices)
+		GetBaseTime(&st);
 	m_ChannelNameWidth=0;
 	m_EventNameWidth=0;
 	if (hmenu==NULL) {
@@ -579,7 +602,7 @@ bool CChannelMenu::Create(const CChannelList *pChannelList,int CurChannel,UINT C
 		CChannelMenuItem *pItem=new CChannelMenuItem(pChInfo);
 		mii.dwItemData=reinterpret_cast<ULONG_PTR>(pItem);
 		if ((Flags&FLAG_SHOWEVENTINFO)!=0) {
-			const CEventInfoData *pEventInfo=pItem->GetEventInfo(m_pProgramList,0,&st);
+			const CEventInfoData *pEventInfo=pItem->GetEventInfo(m_pProgramList,0,fCurServices?NULL:&st);
 
 			if (pEventInfo!=NULL) {
 				GetEventText(pEventInfo,szText,lengthof(szText));
