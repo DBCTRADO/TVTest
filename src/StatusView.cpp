@@ -203,7 +203,8 @@ bool CStatusView::Initialize(HINSTANCE hinst)
 
 
 CStatusView::CStatusView()
-	: m_FontHeight(0)
+	: m_Font(/*DrawUtil::FONT_STATUS*/DrawUtil::FONT_DEFAULT)
+	, m_FontHeight(0)
 	, m_ItemHeight(0)
 	, m_fMultiRow(false)
 	, m_MaxRows(2)
@@ -340,8 +341,6 @@ LRESULT CStatusView::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 		{
 			InitializeUI();
 
-			if (!m_Font.IsCreated())
-				m_Font.Create(/*DrawUtil::FONT_STATUS*/DrawUtil::FONT_DEFAULT);
 			m_FontHeight=CalcFontHeight();
 			m_ItemHeight=CalcItemHeight();
 
