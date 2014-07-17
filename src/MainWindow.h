@@ -119,6 +119,7 @@ public:
 	void AdjustWindowSize(int Width,int Height,bool fScreenSize=true);
 	bool ReadSettings(CSettings &Settings);
 	bool WriteSettings(CSettings &Settings);
+	void ShowPanel(bool fShow);
 	void SetStatusBarVisible(bool fVisible);
 	bool GetStatusBarVisible() const { return m_fShowStatusBar; }
 	void SetTitleBarVisible(bool fVisible);
@@ -401,6 +402,8 @@ private:
 	WindowSize m_HDWindowSize;
 	WindowSize m_1SegWindowSize;
 
+	bool m_fLockLayout;
+
 	struct EpgChannelGroup {
 		int Space;
 		int Channel;
@@ -550,6 +553,8 @@ private:
 	int GetZoomPercentage();
 	bool AutoFitWindowToVideo();
 	bool SetPanAndScan(int Command);
+	void LockLayout();
+	void UpdateLayout();
 	void ShowCursor(bool fShow);
 	void ShowChannelOSD();
 	void ShowAudioOSD();

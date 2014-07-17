@@ -219,6 +219,8 @@ CMainWindow::CMainWindow(CAppMain &App)
 
 	, m_WindowSizeMode(WINDOW_SIZE_HD)
 
+	, m_fLockLayout(false)
+
 	, m_fProgramGuideUpdating(false)
 	, m_fEpgUpdateChannelChange(false)
 
@@ -590,21 +592,88 @@ bool CMainWindow::SetAlwaysOnTop(bool fTop)
 }
 
 
+void CMainWindow::ShowPanel(bool fShow)
+{
+	if (m_App.Panel.fShowPanelWindow==fShow)
+		return;
+
+	m_App.Panel.fShowPanelWindow=fShow;
+
+	LockLayout();
+
+	m_App.Panel.Frame.SetPanelVisible(fShow);
+
+	if (!fShow) {
+		m_App.Panel.InfoPanel.ResetStatistics();
+		//m_App.Panel.ProgramListPanel.ClearProgramList();
+		m_App.Panel.ChannelPanel.ClearChannelList();
+	}
+
+	if (!m_App.Panel.IsFloating()) {
+		// パネルの幅に合わせてウィンドウサイズを拡縮
+		Layout::CSplitter *pSplitter=
+			dynamic_cast<Layout::CSplitter*>(m_LayoutBase.GetContainerByID(CONTAINER_ID_PANELSPLITTER));
+		const int Width=m_App.Panel.Frame.GetDockingWidth()+pSplitter->GetBarWidth();
+		RECT rc;
+
+		GetPosition(&rc);
+		if (pSplitter->GetPane(0)->GetID()==CONTAINER_ID_PANEL) {
+			if (fShow)
+				rc.left-=Width;
+			else
+				rc.left+=Width;
+		} else {
+			if (fShow)
+				rc.right+=Width;
+			else
+				rc.right-=Width;
+		}
+		SetPosition(&rc);
+		if (!fShow)
+			::SetFocus(m_hwnd);
+	}
+
+	UpdateLayout();
+
+	if (fShow)
+		UpdatePanel();
+
+	m_App.MainMenu.CheckItem(CM_PANEL,fShow);
+	m_App.SideBar.CheckItem(CM_PANEL,fShow);
+}
+
+
 void CMainWindow::SetStatusBarVisible(bool fVisible)
 {
 	if (m_fShowStatusBar!=fVisible) {
 		if (!m_pCore->GetFullscreen()) {
 			m_fShowStatusBar=fVisible;
-			m_LayoutBase.SetContainerVisible(CONTAINER_ID_STATUS,fVisible);
-			RECT rc;
-			GetPosition(&rc);
-			if (fVisible)
-				rc.bottom+=m_App.StatusView.GetHeight();
-			else
-				rc.bottom-=m_App.StatusView.GetHeight();
-			SetPosition(&rc);
-			//m_App.MainMenu.CheckItem(CM_STATUSBAR,fVisible);
-			m_App.SideBar.CheckItem(CM_STATUSBAR,fVisible);
+			if (m_hwnd!=nullptr) {
+				LockLayout();
+
+				RECT rc;
+
+				if (fVisible) {
+					// 一瞬変な位置に出ないように見えない位置に移動
+					RECT rcClient;
+					::GetClientRect(m_App.StatusView.GetParent(),&rcClient);
+					m_App.StatusView.GetPosition(&rc);
+					m_App.StatusView.SetPosition(0,rcClient.bottom,rc.right-rc.left,rc.bottom-rc.top);
+				}
+				m_LayoutBase.SetContainerVisible(CONTAINER_ID_STATUS,fVisible);
+
+				GetPosition(&rc);
+				if (fVisible)
+					rc.bottom+=m_App.StatusView.GetHeight();
+				else
+					rc.bottom-=m_App.StatusView.GetHeight();
+				SetPosition(&rc);
+
+				UpdateLayout();
+
+				//m_App.MainMenu.CheckItem(CM_STATUSBAR,fVisible);
+				m_App.SideBar.CheckItem(CM_STATUSBAR,fVisible);
+			}
 		}
 	}
 }
@@ -617,6 +686,8 @@ void CMainWindow::SetTitleBarVisible(bool fVisible)
 		if (m_hwnd!=nullptr) {
 			bool fMaximize=GetMaximize();
 			RECT rc;
+
+			LockLayout();
 
 			if (!fMaximize)
 				GetPosition(&rc);
@@ -641,6 +712,9 @@ void CMainWindow::SetTitleBarVisible(bool fVisible)
 			}
 			if (m_fCustomTitleBar && fVisible)
 				m_LayoutBase.SetContainerVisible(CONTAINER_ID_TITLEBAR,true);
+
+			UpdateLayout();
+
 			//m_App.MainMenu.CheckItem(CM_TITLEBAR,fVisible);
 		}
 	}
@@ -749,10 +823,19 @@ void CMainWindow::SetSideBarVisible(bool fVisible)
 	if (m_fShowSideBar!=fVisible) {
 		m_fShowSideBar=fVisible;
 		if (m_hwnd!=nullptr) {
-			if (!fVisible)
-				m_LayoutBase.SetContainerVisible(CONTAINER_ID_SIDEBAR,false);
+			LockLayout();
 
 			RECT rc;
+
+			if (fVisible) {
+				// 一瞬変な位置に出ないように見えない位置に移動
+				RECT rcClient;
+				::GetClientRect(m_App.SideBar.GetParent(),&rcClient);
+				m_App.SideBar.GetPosition(&rc);
+				m_App.SideBar.SetPosition(0,rcClient.bottom,rc.right-rc.left,rc.bottom-rc.top);
+			}
+			m_LayoutBase.SetContainerVisible(CONTAINER_ID_SIDEBAR,fVisible);
+
 			GetPosition(&rc);
 			RECT rcArea=rc;
 			if (fVisible)
@@ -763,8 +846,8 @@ void CMainWindow::SetSideBarVisible(bool fVisible)
 			rc.bottom=rc.top+(rcArea.bottom-rcArea.top);
 			SetPosition(&rc);
 
-			if (fVisible)
-				m_LayoutBase.SetContainerVisible(CONTAINER_ID_SIDEBAR,true);
+			UpdateLayout();
+
 			//m_App.MainMenu.CheckItem(CM_SIDEBAR,fVisible);
 		}
 	}
@@ -1828,7 +1911,7 @@ void CMainWindow::OnSizeChanged(UINT State,int Width,int Height)
 	}
 	m_TitleBar.SetMaximizeMode(fMaximized);
 
-	if (fMinimized)
+	if (m_fLockLayout || fMinimized)
 		return;
 
 	m_LayoutBase.SetPosition(0,0,Width,Height);
@@ -2504,44 +2587,9 @@ void CMainWindow::OnCommand(HWND hwnd,int id,HWND hwndCtl,UINT codeNotify)
 	case CM_PANEL:
 		if (m_pCore->GetFullscreen()) {
 			m_Fullscreen.ShowPanel(!m_Fullscreen.IsPanelVisible());
-			return;
-		}
-		m_App.Panel.fShowPanelWindow=!m_App.Panel.fShowPanelWindow;
-		if (m_App.Panel.fShowPanelWindow) {
-			m_App.Panel.Frame.SetPanelVisible(true);
 		} else {
-			m_App.Panel.Frame.SetPanelVisible(false);
-			m_App.Panel.InfoPanel.ResetStatistics();
-			//m_App.Panel.ProgramListPanel.ClearProgramList();
-			m_App.Panel.ChannelPanel.ClearChannelList();
+			ShowPanel(!m_App.Panel.fShowPanelWindow);
 		}
-		if (!m_App.Panel.IsFloating()) {
-			// パネルの幅に合わせてウィンドウサイズを拡縮
-			Layout::CSplitter *pSplitter=
-				dynamic_cast<Layout::CSplitter*>(m_LayoutBase.GetContainerByID(CONTAINER_ID_PANELSPLITTER));
-			const int Width=m_App.Panel.Frame.GetDockingWidth()+pSplitter->GetBarWidth();
-			RECT rc;
-
-			GetPosition(&rc);
-			if (pSplitter->GetPane(0)->GetID()==CONTAINER_ID_PANEL) {
-				if (m_App.Panel.fShowPanelWindow)
-					rc.left-=Width;
-				else
-					rc.left+=Width;
-			} else {
-				if (m_App.Panel.fShowPanelWindow)
-					rc.right+=Width;
-				else
-					rc.right-=Width;
-			}
-			SetPosition(&rc);
-			if (!m_App.Panel.fShowPanelWindow)
-				::SetFocus(hwnd);
-		}
-		if (m_App.Panel.fShowPanelWindow)
-			UpdatePanel();
-		m_App.MainMenu.CheckItem(CM_PANEL,m_App.Panel.fShowPanelWindow);
-		m_App.SideBar.CheckItem(CM_PANEL,m_App.Panel.fShowPanelWindow);
 		return;
 
 	case CM_PROGRAMGUIDE:
@@ -4036,6 +4084,28 @@ void CMainWindow::OnChannelChanged(unsigned int Status)
 	m_CurEventStereoMode=-1;
 	*/
 	m_fForceResetPanAndScan=true;
+}
+
+
+void CMainWindow::LockLayout()
+{
+	if (!::IsIconic(m_hwnd) && !::IsZoomed(m_hwnd)) {
+		m_fLockLayout=true;
+		m_LayoutBase.LockLayout();
+	}
+}
+
+
+void CMainWindow::UpdateLayout()
+{
+	if (m_fLockLayout) {
+		m_fLockLayout=false;
+
+		SIZE sz;
+		GetClientSize(&sz);
+		OnSizeChanged(SIZE_RESTORED,sz.cx,sz.cy);
+		m_LayoutBase.UnlockLayout();
+	}
 }
 
 

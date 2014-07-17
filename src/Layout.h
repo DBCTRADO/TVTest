@@ -133,6 +133,9 @@ public:
 	bool GetContainerVisible(int ID) const;
 	void GetMinSize(SIZE *pSize) const;
 	void Adjust();
+	void LockLayout();
+	void UnlockLayout(bool fAdjust=true);
+	bool IsLayoutLocked() const { return m_fLockLayout; }
 	void SetEventHandler(CEventHandler *pHandler);
 	bool SetBackColor(COLORREF Color);
 	COLORREF GetBackColor() const { return m_BackColor; }
@@ -146,6 +149,7 @@ protected:
 	CContainer *m_pFocusContainer;
 	COLORREF m_BackColor;
 	DrawUtil::CBrush m_BackBrush;
+	bool m_fLockLayout;
 
 	LRESULT OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
 

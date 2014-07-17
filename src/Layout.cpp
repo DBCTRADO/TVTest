@@ -578,6 +578,7 @@ CLayoutBase::CLayoutBase()
 	, m_pContainer(NULL)
 	, m_pFocusContainer(NULL)
 	, m_BackColor(::GetSysColor(COLOR_3DFACE))
+	, m_fLockLayout(false)
 {
 }
 
@@ -808,11 +809,28 @@ void CLayoutBase::GetMinSize(SIZE *pSize) const
 
 void CLayoutBase::Adjust()
 {
-	if (m_pContainer!=NULL && m_hwnd!=NULL) {
+	if (m_pContainer!=NULL && m_hwnd!=NULL && !m_fLockLayout) {
 		RECT rc;
 
 		GetClientRect(&rc);
 		m_pContainer->SetPosition(rc);
+	}
+}
+
+
+void CLayoutBase::LockLayout()
+{
+	m_fLockLayout=true;
+}
+
+
+void CLayoutBase::UnlockLayout(bool fAdjust)
+{
+	if (m_fLockLayout) {
+		m_fLockLayout=false;
+
+		if (fAdjust)
+			Adjust();
 	}
 }
 
