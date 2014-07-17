@@ -227,6 +227,8 @@ CMainWindow::CMainWindow(CAppMain &App)
 	, m_fShowCursor(true)
 	, m_fNoHideCursor(false)
 
+	, m_fDragging(false)
+
 	, m_fClosing(false)
 
 	, m_WheelCount(0)
@@ -981,6 +983,7 @@ LRESULT CMainWindow::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 		ForegroundWindow(hwnd);
 	case WM_LBUTTONDOWN:
 		if (uMsg==WM_NCLBUTTONDOWN || m_App.OperationOptions.GetDisplayDragMove()) {
+			m_fDragging=true;
 			/*
 			m_ptDragStartPos.x=GET_X_LPARAM(lParam);
 			m_ptDragStartPos.y=GET_Y_LPARAM(lParam);
@@ -989,6 +992,8 @@ LRESULT CMainWindow::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 			::GetCursorPos(&m_ptDragStartPos);
 			::GetWindowRect(hwnd,&m_rcDragStart);
 			::SetCapture(hwnd);
+			::KillTimer(hwnd,TIMER_ID_HIDECURSOR);
+			::SetCursor(::LoadCursor(nullptr,IDC_ARROW));
 		}
 		return 0;
 
@@ -999,7 +1004,12 @@ LRESULT CMainWindow::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 		return 0;
 
 	case WM_CAPTURECHANGED:
-		m_TitleBarManager.EndDrag();
+		if (m_fDragging) {
+			m_fDragging=false;
+			m_TitleBarManager.EndDrag();
+			if (m_App.OperationOptions.GetHideCursor())
+				::SetTimer(m_hwnd,TIMER_ID_HIDECURSOR,HIDE_CURSOR_DELAY,nullptr);
+		}
 		return 0;
 
 	case WM_MOUSEMOVE:
@@ -1998,7 +2008,7 @@ SizingEnd:
 
 void CMainWindow::OnMouseMove(int x,int y)
 {
-	if (::GetCapture()==m_hwnd) {
+	if (m_fDragging) {
 		// ウィンドウ移動中
 		POINT pt;
 		RECT rcOld,rc;

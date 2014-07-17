@@ -419,6 +419,7 @@ private:
 	bool m_fShowCursor;
 	bool m_fNoHideCursor;
 
+	bool m_fDragging;
 	POINT m_ptDragStartPos;
 	RECT m_rcDragStart;
 	bool m_fClosing;
