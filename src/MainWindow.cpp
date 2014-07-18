@@ -5664,9 +5664,9 @@ void CMainWindow::UpdateControlPanel()
 
 void CMainWindow::ApplyColorScheme(const CColorScheme *pColorScheme)
 {
-	Theme::BorderInfo Border;
-
 	m_LayoutBase.SetBackColor(pColorScheme->GetColor(CColorScheme::COLOR_SPLITTER));
+
+	Theme::BorderInfo Border;
 	pColorScheme->GetBorderInfo(CColorScheme::BORDER_SCREEN,&Border);
 	if (!m_fViewWindowEdge)
 		Border.Type=Theme::BORDER_NONE;
@@ -5690,6 +5690,8 @@ void CMainWindow::ApplyColorScheme(const CColorScheme *pColorScheme)
 		pColorScheme->GetColor(CColorScheme::COLOR_NOTIFICATIONBARTEXT),
 		pColorScheme->GetColor(CColorScheme::COLOR_NOTIFICATIONBARWARNINGTEXT),
 		pColorScheme->GetColor(CColorScheme::COLOR_NOTIFICATIONBARERRORTEXT));
+
+	m_Fullscreen.ApplyColorScheme(pColorScheme);
 }
 
 
@@ -6088,6 +6090,12 @@ void CMainWindow::CFullscreen::HideAllBars()
 	ShowTitleBar(false);
 	ShowSideBar(false);
 	ShowStatusView(false);
+}
+
+
+void CMainWindow::CFullscreen::ApplyColorScheme(const CColorScheme *pColorScheme)
+{
+	m_LayoutBase.SetBackColor(pColorScheme->GetColor(CColorScheme::COLOR_SPLITTER));
 }
 
 

@@ -265,6 +265,7 @@ private:
 		bool SetPanelWidth(int Width);
 		int GetPanelWidth() const { return m_PanelWidth; }
 		void HideAllBars();
+		void ApplyColorScheme(const class CColorScheme *pColorScheme);
 		void OnRButtonDown();
 		void OnMButtonDown();
 		void OnMouseMove();
