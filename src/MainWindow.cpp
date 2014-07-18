@@ -919,6 +919,12 @@ int CMainWindow::GetPanelPaneIndex() const
 }
 
 
+bool CMainWindow::IsPanelVisible() const
+{
+	return m_pCore->GetFullscreen()?IsFullscreenPanelVisible():m_App.Panel.fShowPanelWindow;
+}
+
+
 LRESULT CMainWindow::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 {
 	switch (uMsg) {
@@ -1559,7 +1565,7 @@ LRESULT CMainWindow::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 	case WM_APP_EPGLOADED:
 		// EPGファイルが読み込まれた
 		TRACE(TEXT("WM_APP_EPGLOADED\n"));
-		if (m_App.Panel.fShowPanelWindow
+		if (IsPanelVisible()
 				&& (m_App.Panel.Form.GetCurPageID()==PANEL_ID_PROGRAMLIST
 				 || m_App.Panel.Form.GetCurPageID()==PANEL_ID_CHANNEL)) {
 			UpdatePanel();
@@ -3280,7 +3286,7 @@ void CMainWindow::OnTimer(HWND hwnd,UINT id)
 					}
 				}
 
-				if (m_App.Panel.fShowPanelWindow && m_App.Panel.Form.GetVisible()
+				if (IsPanelVisible()
 						&& m_App.Panel.Form.GetCurPageID()==PANEL_ID_INFORMATION)
 					UpdateProgramInfo();
 
@@ -3366,7 +3372,7 @@ void CMainWindow::OnTimer(HWND hwnd,UINT id)
 
 			m_App.StatusView.UpdateItem(STATUS_ITEM_MEDIABITRATE);
 
-			if (m_App.Panel.fShowPanelWindow && m_App.Panel.Form.GetVisible()) {
+			if (IsPanelVisible()) {
 				// パネルの更新
 				if (m_App.Panel.Form.GetCurPageID()==PANEL_ID_INFORMATION) {
 					// 情報タブ更新
@@ -3478,7 +3484,7 @@ void CMainWindow::OnTimer(HWND hwnd,UINT id)
 				&& !m_App.EpgOptions.IsEDCBDataLoading()) {
 			CChannelInfo ChInfo;
 
-			if (m_App.Panel.fShowPanelWindow
+			if (IsPanelVisible()
 					&& m_App.Core.GetCurrentStreamChannelInfo(&ChInfo)) {
 				if (m_App.Panel.Form.GetCurPageID()==PANEL_ID_PROGRAMLIST) {
 					if (ChInfo.GetServiceID()!=0) {
@@ -3714,13 +3720,11 @@ bool CMainWindow::UpdateProgramInfo()
 bool CMainWindow::OnInitMenuPopup(HMENU hmenu)
 {
 	if (m_App.MainMenu.IsMainMenu(hmenu)) {
-		bool fFullscreen=m_pCore->GetFullscreen();
 		bool fView=IsViewerEnabled();
 
 		m_App.MainMenu.EnableItem(CM_COPY,fView);
 		m_App.MainMenu.EnableItem(CM_SAVEIMAGE,fView);
-		m_App.MainMenu.CheckItem(CM_PANEL,
-			fFullscreen?m_Fullscreen.IsPanelVisible():m_App.Panel.fShowPanelWindow);
+		m_App.MainMenu.CheckItem(CM_PANEL,IsPanelVisible());
 	} else if (hmenu==m_App.MainMenu.GetSubMenu(CMainMenu::SUBMENU_ZOOM)) {
 		CZoomOptions::ZoomInfo Zoom;
 
@@ -3974,7 +3978,7 @@ void CMainWindow::OnTunerChanged()
 	if (pItem!=nullptr)
 		pItem->ShowSignalLevel(!fNoSignalLevel);
 	/*
-	if (m_App.Panel.fShowPanelWindow && m_App.Panel.Form.GetCurPageID()==PANEL_ID_CHANNEL) {
+	if (IsPanelVisible() && m_App.Panel.Form.GetCurPageID()==PANEL_ID_CHANNEL) {
 		m_App.Panel.ChannelPanel.SetChannelList(
 			m_App.ChannelManager.GetCurrentChannelList(),
 			!m_App.EpgOptions.IsEpgFileLoading());
@@ -4008,7 +4012,7 @@ void CMainWindow::OnTunerClosed()
 
 void CMainWindow::OnChannelListChanged()
 {
-	if (m_App.Panel.fShowPanelWindow && m_App.Panel.Form.GetCurPageID()==PANEL_ID_CHANNEL) {
+	if (IsPanelVisible() && m_App.Panel.Form.GetCurPageID()==PANEL_ID_CHANNEL) {
 		m_App.Panel.ChannelPanel.SetChannelList(m_App.ChannelManager.GetCurrentChannelList());
 		m_App.Panel.ChannelPanel.SetCurrentChannel(m_App.ChannelManager.GetCurrentChannel());
 	} else {
@@ -4047,7 +4051,7 @@ void CMainWindow::OnChannelChanged(unsigned int Status)
 	m_App.Panel.InfoPanel.ResetStatistics();
 	m_App.Panel.ProgramListPanel.ShowRetrievingMessage(true);
 	if (fSpaceChanged) {
-		if (m_App.Panel.fShowPanelWindow && m_App.Panel.Form.GetCurPageID()==PANEL_ID_CHANNEL) {
+		if (IsPanelVisible() && m_App.Panel.Form.GetCurPageID()==PANEL_ID_CHANNEL) {
 			m_App.Panel.ChannelPanel.SetChannelList(
 				m_App.ChannelManager.GetCurrentChannelList(),
 				!m_App.EpgOptions.IsEpgFileLoading());
@@ -4057,7 +4061,7 @@ void CMainWindow::OnChannelChanged(unsigned int Status)
 			m_App.Panel.ChannelPanel.ClearChannelList();
 		}
 	} else {
-		if (m_App.Panel.fShowPanelWindow && m_App.Panel.Form.GetCurPageID()==PANEL_ID_CHANNEL)
+		if (IsPanelVisible() && m_App.Panel.Form.GetCurPageID()==PANEL_ID_CHANNEL)
 			m_App.Panel.ChannelPanel.SetCurrentChannel(m_App.ChannelManager.GetCurrentChannel());
 	}
 	if (pCurChannel!=nullptr) {
@@ -5506,7 +5510,7 @@ void CMainWindow::OnProgramGuideUpdateEnd(unsigned int Flags)
 			::SetCursor(::LoadCursor(nullptr,IDC_ARROW));
 			if ((Flags&EPG_UPDATE_END_RESUME)!=0)
 				ResumeChannel();
-			if (m_App.Panel.fShowPanelWindow && m_App.Panel.Form.GetCurPageID()==PANEL_ID_CHANNEL)
+			if (IsPanelVisible() && m_App.Panel.Form.GetCurPageID()==PANEL_ID_CHANNEL)
 				m_App.Panel.ChannelPanel.UpdateAllChannels(false);
 		}
 		ResumeViewer(ResumeInfo::VIEWERSUSPEND_EPGUPDATE);
