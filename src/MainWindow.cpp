@@ -3646,7 +3646,7 @@ void CMainWindow::OnTimer(HWND hwnd,UINT id)
 
 	case TIMER_ID_HIDECURSOR:
 		if (m_App.OperationOptions.GetHideCursor()) {
-			if (!m_fNoHideCursor) {
+			if (!m_fNoHideCursor && !m_Viewer.GetDisplayBase().IsVisible()) {
 				POINT pt;
 				RECT rc;
 				::GetCursorPos(&pt);
@@ -5812,7 +5812,7 @@ LRESULT CMainWindow::CFullscreen::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LP
 
 	case WM_TIMER:
 		if (wParam==TIMER_ID_HIDECURSOR) {
-			if (!m_fMenu) {
+			if (!m_fMenu && !m_pViewer->GetDisplayBase().IsVisible()) {
 				POINT pt;
 				RECT rc;
 				::GetCursorPos(&pt);
