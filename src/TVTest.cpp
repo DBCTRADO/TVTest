@@ -819,6 +819,19 @@ void CMainPanel::CChannelPanelEventHandler::OnRButtonDown()
 
 
 
+void CDisplayEventHandlerBase::RelayMouseMessage(CDisplayView *pView,UINT Message,int x,int y)
+{
+	if (pView==nullptr)
+		return;
+	HWND hwndParent=pView->GetParent();
+	POINT pt={x,y};
+	::MapWindowPoints(pView->GetHandle(),hwndParent,&pt,1);
+	::SendMessage(hwndParent,Message,0,MAKELPARAM(pt.x,pt.y));
+}
+
+
+
+
 CEpg::CEpg(CEpgProgramList &EpgProgramList,CEventSearchOptions &EventSearchOptions)
 	: ProgramGuide(EventSearchOptions)
 	, ProgramGuideFrame(&ProgramGuide,&ProgramGuideFrameSettings)
@@ -1298,24 +1311,9 @@ bool CEpg::CProgramGuideDisplayEventHandler::GetAlwaysOnTop() const
 }
 
 
-void CEpg::CProgramGuideDisplayEventHandler::OnRButtonDown(int x,int y)
+void CEpg::CProgramGuideDisplayEventHandler::OnMouseMessage(UINT Msg,int x,int y)
 {
-	RelayMouseMessage(WM_RBUTTONDOWN,x,y);
-}
-
-
-void CEpg::CProgramGuideDisplayEventHandler::OnLButtonDoubleClick(int x,int y)
-{
-	RelayMouseMessage(WM_LBUTTONDBLCLK,x,y);
-}
-
-
-void CEpg::CProgramGuideDisplayEventHandler::RelayMouseMessage(UINT Message,int x,int y)
-{
-	HWND hwndParent=m_pProgramGuideDisplay->GetParent();
-	POINT pt={x,y};
-	::MapWindowPoints(m_pProgramGuideDisplay->GetHandle(),hwndParent,&pt,1);
-	::SendMessage(hwndParent,Message,0,MAKELPARAM(pt.x,pt.y));
+	RelayMouseMessage(m_pProgramGuideDisplay,Msg,x,y);
 }
 
 
@@ -1449,24 +1447,9 @@ void CHomeDisplayEventHandler::OnClose()
 }
 
 
-void CHomeDisplayEventHandler::OnRButtonDown(int x,int y)
+void CHomeDisplayEventHandler::OnMouseMessage(UINT Msg,int x,int y)
 {
-	RelayMouseMessage(WM_RBUTTONDOWN,x,y);
-}
-
-
-void CHomeDisplayEventHandler::OnLButtonDoubleClick(int x,int y)
-{
-	RelayMouseMessage(WM_LBUTTONDBLCLK,x,y);
-}
-
-
-void CHomeDisplayEventHandler::RelayMouseMessage(UINT Message,int x,int y)
-{
-	HWND hwndParent=m_pHomeDisplay->GetParent();
-	POINT pt={x,y};
-	::MapWindowPoints(m_pHomeDisplay->GetHandle(),hwndParent,&pt,1);
-	::SendMessage(hwndParent,Message,0,MAKELPARAM(pt.x,pt.y));
+	RelayMouseMessage(m_pHomeDisplay,Msg,x,y);
 }
 
 
@@ -1535,24 +1518,9 @@ void CChannelDisplayEventHandler::OnClose()
 }
 
 
-void CChannelDisplayEventHandler::OnRButtonDown(int x,int y)
+void CChannelDisplayEventHandler::OnMouseMessage(UINT Msg,int x,int y)
 {
-	RelayMouseMessage(WM_RBUTTONDOWN,x,y);
-}
-
-
-void CChannelDisplayEventHandler::OnLButtonDoubleClick(int x,int y)
-{
-	RelayMouseMessage(WM_LBUTTONDBLCLK,x,y);
-}
-
-
-void CChannelDisplayEventHandler::RelayMouseMessage(UINT Message,int x,int y)
-{
-	HWND hwndParent=m_pChannelDisplay->GetParent();
-	POINT pt={x,y};
-	::MapWindowPoints(m_pChannelDisplay->GetHandle(),hwndParent,&pt,1);
-	::SendMessage(hwndParent,Message,0,MAKELPARAM(pt.x,pt.y));
+	RelayMouseMessage(m_pChannelDisplay,Msg,x,y);
 }
 
 

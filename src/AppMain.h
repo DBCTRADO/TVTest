@@ -178,6 +178,12 @@ private:
 	CChannelPanelEventHandler m_ChannelPanelEventHandler;
 };
 
+class CDisplayEventHandlerBase
+{
+protected:
+	void RelayMouseMessage(CDisplayView *pView,UINT Message,int x,int y);
+};
+
 class CEpg
 {
 public:
@@ -256,17 +262,15 @@ private:
 		int FindChannel(const CChannelList *pChannelList,const CServiceInfoData *pServiceInfo);
 	};
 
-	class CProgramGuideDisplayEventHandler : public CProgramGuideDisplay::CEventHandler
+	class CProgramGuideDisplayEventHandler
+		: public CProgramGuideDisplay::CProgramGuideDisplayEventHandler
+		, protected CDisplayEventHandlerBase
 	{
-	// CProgramGuideDisplay::CEventHandler
+	// CProgramGuideDisplay::CProgramGuideDisplayEventHandler
 		bool OnHide() override;
 		bool SetAlwaysOnTop(bool fTop) override;
 		bool GetAlwaysOnTop() const override;
-		void OnRButtonDown(int x,int y) override;
-		void OnLButtonDoubleClick(int x,int y) override;
-
-	// CProgramGuideDisplayEventHandler
-		void RelayMouseMessage(UINT Message,int x,int y);
+		void OnMouseMessage(UINT Msg,int x,int y) override;
 	};
 
 	class CProgramGuideProgramCustomizer : public CProgramGuide::CProgramCustomizer
@@ -308,22 +312,22 @@ class CSideBarOptionsEventHandler : public CSideBarOptions::CEventHandler
 	void OnItemChanged() override;
 };
 
-class CHomeDisplayEventHandler : public CHomeDisplay::CEventHandler
+class CHomeDisplayEventHandler
+	: public CHomeDisplay::CHomeDisplayEventHandler
+	, protected CDisplayEventHandlerBase
 {
 	void OnClose() override;
-	void OnRButtonDown(int x,int y) override;
-	void OnLButtonDoubleClick(int x,int y) override;
-	void RelayMouseMessage(UINT Message,int x,int y);
+	void OnMouseMessage(UINT Msg,int x,int y) override;
 };
 
-class CChannelDisplayEventHandler : public CChannelDisplay::CEventHandler
+class CChannelDisplayEventHandler
+	: public CChannelDisplay::CChannelDisplayEventHandler
+	, protected CDisplayEventHandlerBase
 {
 	void OnTunerSelect(LPCTSTR pszDriverFileName,int TuningSpace) override;
 	void OnChannelSelect(LPCTSTR pszDriverFileName,const CChannelInfo *pChannelInfo) override;
 	void OnClose() override;
-	void OnRButtonDown(int x,int y) override;
-	void OnLButtonDoubleClick(int x,int y) override;
-	void RelayMouseMessage(UINT Message,int x,int y);
+	void OnMouseMessage(UINT Msg,int x,int y) override;
 };
 
 class CServiceUpdateInfo

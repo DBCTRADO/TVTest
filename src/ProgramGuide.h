@@ -739,17 +739,15 @@ private:
 class CProgramGuideDisplay : public CProgramGuideFrameBase, public CDisplayView
 {
 public:
-	class ABSTRACT_CLASS(CEventHandler) {
+	class ABSTRACT_CLASS(CProgramGuideDisplayEventHandler) : public CDisplayView::CEventHandler
+	{
 	protected:
 		class CProgramGuideDisplay *m_pProgramGuideDisplay;
 	public:
-		CEventHandler();
-		virtual ~CEventHandler() = 0;
+		CProgramGuideDisplayEventHandler();
 		virtual bool OnHide() { return true; }
 		virtual bool SetAlwaysOnTop(bool fTop) = 0;
 		virtual bool GetAlwaysOnTop() const = 0;
-		virtual void OnRButtonDown(int x,int y) {}
-		virtual void OnLButtonDoubleClick(int x,int y) {}
 		friend class CProgramGuideDisplay;
 	};
 
@@ -760,10 +758,10 @@ public:
 // CBasicWindow
 	bool Create(HWND hwndParent,DWORD Style,DWORD ExStyle=0,int ID=0) override;
 // CProgramGuideDisplay
-	void SetEventHandler(CEventHandler *pHandler);
+	void SetEventHandler(CProgramGuideDisplayEventHandler *pHandler);
 
 private:
-	CEventHandler *m_pEventHandler;
+	CProgramGuideDisplayEventHandler *m_pProgramGuideDisplayEventHandler;
 
 	static const LPCTSTR m_pszWindowClass;
 	static HINSTANCE m_hinst;

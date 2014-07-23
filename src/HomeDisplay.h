@@ -34,14 +34,11 @@ public:
 		TVTest::Style::Margins CategoriesMargins;
 	};
 
-	class ABSTRACT_CLASS(CEventHandler)
+	class ABSTRACT_CLASS(CHomeDisplayEventHandler) : public CDisplayView::CEventHandler
 	{
 	public:
-		CEventHandler();
-		virtual ~CEventHandler();
+		CHomeDisplayEventHandler();
 		virtual void OnClose() = 0;
-		virtual void OnRButtonDown(int x,int y) {}
-		virtual void OnLButtonDoubleClick(int x,int y) {}
 
 		friend class CHomeDisplay;
 
@@ -96,7 +93,7 @@ public:
 // CHomeDisplay
 	void Clear();
 	bool UpdateContents();
-	void SetEventHandler(CEventHandler *pEventHandler);
+	void SetEventHandler(CHomeDisplayEventHandler *pEventHandler);
 	bool SetFont(const LOGFONT *pFont,bool fAutoSize);
 	int GetScrollPos() const { return m_ScrollPos; }
 	bool SetScrollPos(int Pos,bool fScroll=true);
@@ -122,7 +119,7 @@ private:
 	int m_ContentHeight;
 
 	std::vector<CCategory*> m_CategoryList;
-	CEventHandler *m_pEventHandler;
+	CHomeDisplayEventHandler *m_pHomeDisplayEventHandler;
 	int m_CurCategory;
 	HWND m_hwndScroll;
 	int m_ScrollPos;

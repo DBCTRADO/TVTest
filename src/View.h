@@ -13,6 +13,13 @@ class ABSTRACT_CLASS(CDisplayView)
 	, public TVTest::CUIBase
 {
 public:
+	class ABSTRACT_CLASS(CEventHandler)
+	{
+	public:
+		virtual ~CEventHandler() = 0;
+		virtual void OnMouseMessage(UINT Msg,int x,int y) {}
+	};
+
 	CDisplayView();
 	virtual ~CDisplayView() = 0;
 	virtual bool Close() = 0;
@@ -54,6 +61,7 @@ protected:
 
 	class CDisplayBase *m_pDisplayBase;
 	DisplayViewStyle m_Style;
+	CEventHandler *m_pEventHandler;
 
 	virtual bool OnVisibleChange(bool fVisible);
 	virtual bool GetCloseButtonRect(RECT *pRect) const;
@@ -62,6 +70,11 @@ protected:
 	bool GetItemStyle(ItemType Type,Theme::Style *pStyle) const;
 	bool GetBackgroundStyle(BackgroundType Type,Theme::GradientInfo *pGradient) const;
 	int GetDefaultFontSize(int Width,int Height) const;
+	void SetEventHandler(CEventHandler *pEventHandler);
+	bool HandleMessage(HWND hwnd,UINT Msg,WPARAM wParam,LPARAM lParam,LRESULT *pResult);
+
+// CCustomWindow
+	LRESULT OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
 
 private:
 	void SetDisplayVisible(bool fVisible);

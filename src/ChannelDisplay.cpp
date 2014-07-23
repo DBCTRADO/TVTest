@@ -50,7 +50,7 @@ CChannelDisplay::CChannelDisplay(CEpgProgramList *pEpgProgramList)
 	, m_CurChannel(-1)
 	, m_pEpgProgramList(pEpgProgramList)
 	, m_pLogoManager(NULL)
-	, m_pEventHandler(NULL)
+	, m_pChannelDisplayEventHandler(NULL)
 {
 	GetBackgroundStyle(BACKGROUND_STYLE_CATEGORIES,&m_TunerAreaBackGradient);
 	GetBackgroundStyle(BACKGROUND_STYLE_CONTENT,&m_ChannelAreaBackGradient);
@@ -85,8 +85,8 @@ bool CChannelDisplay::Create(HWND hwndParent,DWORD Style,DWORD ExStyle,int ID)
 
 bool CChannelDisplay::Close()
 {
-	if (m_pEventHandler!=NULL) {
-		m_pEventHandler->OnClose();
+	if (m_pChannelDisplayEventHandler!=NULL) {
+		m_pChannelDisplayEventHandler->OnClose();
 		return true;
 	}
 	return false;
@@ -203,13 +203,14 @@ void CChannelDisplay::SetLogoManager(CLogoManager *pLogoManager)
 }
 
 
-void CChannelDisplay::SetEventHandler(CEventHandler *pEventHandler)
+void CChannelDisplay::SetEventHandler(CChannelDisplayEventHandler *pEventHandler)
 {
-	if (m_pEventHandler!=NULL)
-		m_pEventHandler->m_pChannelDisplay=NULL;
+	if (m_pChannelDisplayEventHandler!=NULL)
+		m_pChannelDisplayEventHandler->m_pChannelDisplay=NULL;
 	if (pEventHandler!=NULL)
 		pEventHandler->m_pChannelDisplay=this;
-	m_pEventHandler=pEventHandler;
+	m_pChannelDisplayEventHandler=pEventHandler;
+	CDisplayView::SetEventHandler(pEventHandler);
 }
 
 
@@ -891,15 +892,15 @@ void CChannelDisplay::NotifyTunerSelect() const
 				Space=ChannelSpace;
 			} else {
 				if (Space!=ChannelSpace) {
-					Space=CEventHandler::SPACE_ALL;
+					Space=CChannelDisplayEventHandler::SPACE_ALL;
 					break;
 				}
 			}
 		}
 	} else {
-		Space=CEventHandler::SPACE_NOTSPECIFIED;
+		Space=CChannelDisplayEventHandler::SPACE_NOTSPECIFIED;
 	}
-	m_pEventHandler->OnTunerSelect(pTuner->GetDriverFileName(),Space);
+	m_pChannelDisplayEventHandler->OnTunerSelect(pTuner->GetDriverFileName(),Space);
 }
 
 
@@ -910,7 +911,7 @@ void CChannelDisplay::NotifyChannelSelect() const
 		return;
 	const CTuningSpaceInfo *pTuningSpace=GetTuningSpaceInfo(m_CurTuner);
 
-	m_pEventHandler->OnChannelSelect(pTuner->GetDriverFileName(),
+	m_pChannelDisplayEventHandler->OnChannelSelect(pTuner->GetDriverFileName(),
 		pTuningSpace->GetChannelList()->GetChannelInfo(m_CurChannel));
 }
 
@@ -997,7 +998,7 @@ LRESULT CChannelDisplay::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lPar
 
 	case WM_LBUTTONDOWN:
 		::SetFocus(hwnd);
-		if (m_pEventHandler!=NULL) {
+		if (m_pChannelDisplayEventHandler!=NULL) {
 			int x=GET_X_LPARAM(lParam),y=GET_Y_LPARAM(lParam);
 
 			if (CloseButtonHitTest(x,y)) {
@@ -1016,16 +1017,6 @@ LRESULT CChannelDisplay::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lPar
 				}
 			}
 		}
-		return 0;
-
-	case WM_RBUTTONDOWN:
-		if (m_pEventHandler!=NULL)
-			m_pEventHandler->OnRButtonDown(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam));
-		return 0;
-
-	case WM_LBUTTONDBLCLK:
-		if (m_pEventHandler!=NULL)
-			m_pEventHandler->OnLButtonDoubleClick(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam));
 		return 0;
 
 	case WM_MOUSEMOVE:
@@ -1179,7 +1170,8 @@ LRESULT CChannelDisplay::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lPar
 		}
 		return 0;
 	}
-	return ::DefWindowProc(hwnd,uMsg,wParam,lParam);
+
+	return CDisplayView::OnMessage(hwnd,uMsg,wParam,lParam);
 }
 
 

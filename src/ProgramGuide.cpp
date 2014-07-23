@@ -6308,7 +6308,7 @@ bool CProgramGuideDisplay::Initialize(HINSTANCE hinst)
 
 CProgramGuideDisplay::CProgramGuideDisplay(CProgramGuide *pProgramGuide,CProgramGuideFrameSettings *pSettings)
 	: CProgramGuideFrameBase(pProgramGuide,pSettings)
-	, m_pEventHandler(NULL)
+	, m_pProgramGuideDisplayEventHandler(NULL)
 {
 	m_ToolbarMargin.left=6;
 	m_ToolbarMargin.top=m_ToolbarMargin.bottom;
@@ -6328,13 +6328,14 @@ bool CProgramGuideDisplay::Create(HWND hwndParent,DWORD Style,DWORD ExStyle,int 
 }
 
 
-void CProgramGuideDisplay::SetEventHandler(CEventHandler *pHandler)
+void CProgramGuideDisplay::SetEventHandler(CProgramGuideDisplayEventHandler *pHandler)
 {
-	if (m_pEventHandler!=NULL)
-		m_pEventHandler->m_pProgramGuideDisplay=NULL;
+	if (m_pProgramGuideDisplayEventHandler!=NULL)
+		m_pProgramGuideDisplayEventHandler->m_pProgramGuideDisplay=NULL;
 	if (pHandler!=NULL)
 		pHandler->m_pProgramGuideDisplay=this;
-	m_pEventHandler=pHandler;
+	m_pProgramGuideDisplayEventHandler=pHandler;
+	CDisplayView::SetEventHandler(pHandler);
 }
 
 
@@ -6347,25 +6348,25 @@ bool CProgramGuideDisplay::Close()
 
 bool CProgramGuideDisplay::OnVisibleChange(bool fVisible)
 {
-	if (!fVisible && m_pEventHandler!=NULL)
-		return m_pEventHandler->OnHide();
+	if (!fVisible && m_pProgramGuideDisplayEventHandler!=NULL)
+		return m_pProgramGuideDisplayEventHandler->OnHide();
 	return true;
 }
 
 
 bool CProgramGuideDisplay::SetAlwaysOnTop(bool fTop)
 {
-	if (m_pEventHandler==NULL)
+	if (m_pProgramGuideDisplayEventHandler==NULL)
 		return false;
-	return m_pEventHandler->SetAlwaysOnTop(fTop);
+	return m_pProgramGuideDisplayEventHandler->SetAlwaysOnTop(fTop);
 }
 
 
 bool CProgramGuideDisplay::GetAlwaysOnTop() const
 {
-	if (m_pEventHandler==NULL)
+	if (m_pProgramGuideDisplayEventHandler==NULL)
 		return false;
-	return m_pEventHandler->GetAlwaysOnTop();
+	return m_pProgramGuideDisplayEventHandler->GetAlwaysOnTop();
 }
 
 
@@ -6413,22 +6414,18 @@ LRESULT CProgramGuideDisplay::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM
 		}
 		return 0;
 
-	case WM_LBUTTONDBLCLK:
-		if (m_pEventHandler!=NULL)
-			m_pEventHandler->OnLButtonDoubleClick(
-				GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam));
-		return 0;
-
-	case WM_RBUTTONDOWN:
-		if (m_pEventHandler!=NULL)
-			m_pEventHandler->OnRButtonDown(
-				GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam));
-		return 0;
-
 	case WM_KEYDOWN:
 		if (wParam==VK_ESCAPE) {
 			Close();
 			return 0;
+		}
+		break;
+
+	default:
+		{
+			LRESULT Result;
+			if (HandleMessage(hwnd,uMsg,wParam,lParam,&Result))
+				return Result;
 		}
 		break;
 	}
@@ -6437,13 +6434,8 @@ LRESULT CProgramGuideDisplay::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM
 }
 
 
-CProgramGuideDisplay::CEventHandler::CEventHandler()
+CProgramGuideDisplay::CProgramGuideDisplayEventHandler::CProgramGuideDisplayEventHandler()
 	: m_pProgramGuideDisplay(NULL)
-{
-}
-
-
-CProgramGuideDisplay::CEventHandler::~CEventHandler()
 {
 }
 

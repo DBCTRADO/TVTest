@@ -450,6 +450,7 @@ CViewWindow::CEventHandler::~CEventHandler()
 
 CDisplayView::CDisplayView()
 	: m_pDisplayBase(NULL)
+	, m_pEventHandler(NULL)
 {
 }
 
@@ -617,6 +618,46 @@ int CDisplayView::GetDefaultFontSize(int Width,int Height) const
 {
 	int Size=min(Width/m_Style.TextSizeRatioHorz,Height/m_Style.TextSizeRatioVert);
 	return max(Size,m_Style.TextSizeMin);
+}
+
+
+void CDisplayView::SetEventHandler(CEventHandler *pEventHandler)
+{
+	m_pEventHandler=pEventHandler;
+}
+
+
+bool CDisplayView::HandleMessage(HWND hwnd,UINT Msg,WPARAM wParam,LPARAM lParam,LRESULT *pResult)
+{
+	*pResult=0;
+
+	if (m_pEventHandler==NULL)
+		return false;
+
+	switch (Msg) {
+	case WM_RBUTTONDOWN:
+	case WM_MBUTTONDOWN:
+	case WM_LBUTTONDBLCLK:
+		m_pEventHandler->OnMouseMessage(Msg,GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam));
+		return true;
+	}
+
+	return false;
+}
+
+
+LRESULT CDisplayView::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
+{
+	LRESULT Result;
+	if (HandleMessage(hwnd,uMsg,wParam,lParam,&Result))
+		return Result;
+
+	return CCustomWindow::OnMessage(hwnd,uMsg,wParam,lParam);
+}
+
+
+CDisplayView::CEventHandler::~CEventHandler()
+{
 }
 
 

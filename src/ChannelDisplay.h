@@ -15,7 +15,7 @@
 class CChannelDisplay : public CDisplayView
 {
 public:
-	class ABSTRACT_CLASS(CEventHandler)
+	class ABSTRACT_CLASS(CChannelDisplayEventHandler) : public CDisplayView::CEventHandler
 	{
 	protected:
 		class CChannelDisplay *m_pChannelDisplay;
@@ -24,13 +24,10 @@ public:
 			SPACE_NOTSPECIFIED	=-2,
 			SPACE_ALL			=-1
 		};
-		CEventHandler() : m_pChannelDisplay(NULL) {}
-		virtual ~CEventHandler() {}
+		CChannelDisplayEventHandler() : m_pChannelDisplay(NULL) {}
 		virtual void OnTunerSelect(LPCTSTR pszDriverFileName,int TuningSpace)=0;
 		virtual void OnChannelSelect(LPCTSTR pszDriverFileName,const CChannelInfo *pChannelInfo)=0;
 		virtual void OnClose()=0;
-		virtual void OnRButtonDown(int x,int y) {}
-		virtual void OnLButtonDoubleClick(int x,int y) {}
 		friend class CChannelDisplay;
 	};
 
@@ -49,7 +46,7 @@ public:
 	void Clear();
 	bool SetDriverManager(CDriverManager *pDriverManager);
 	void SetLogoManager(CLogoManager *pLogoManager);
-	void SetEventHandler(CEventHandler *pEventHandler);
+	void SetEventHandler(CChannelDisplayEventHandler *pEventHandler);
 	bool SetSelect(LPCTSTR pszDriverFileName,const CChannelInfo *pChannelInfo);
 	bool SetFont(const LOGFONT *pFont,bool fAutoSize);
 
@@ -135,7 +132,7 @@ private:
 	int m_CurChannel;
 	CEpgProgramList *m_pEpgProgramList;
 	CLogoManager *m_pLogoManager;
-	CEventHandler *m_pEventHandler;
+	CChannelDisplayEventHandler *m_pChannelDisplayEventHandler;
 	POINT m_LastCursorPos;
 
 	struct TunerInfo {

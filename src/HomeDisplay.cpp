@@ -1344,7 +1344,7 @@ bool CHomeDisplay::Initialize(HINSTANCE hinst)
 CHomeDisplay::CHomeDisplay(CEventSearchOptions &EventSearchOptions)
 	: m_fAutoFontSize(true)
 	, m_ContentHeight(0)
-	, m_pEventHandler(NULL)
+	, m_pHomeDisplayEventHandler(NULL)
 	, m_CurCategory(0)
 	, m_hwndScroll(NULL)
 	, m_ScrollPos(0)
@@ -1400,8 +1400,8 @@ bool CHomeDisplay::Create(HWND hwndParent,DWORD Style,DWORD ExStyle,int ID)
 
 bool CHomeDisplay::Close()
 {
-	if (m_pEventHandler!=NULL) {
-		m_pEventHandler->OnClose();
+	if (m_pHomeDisplayEventHandler!=NULL) {
+		m_pHomeDisplayEventHandler->OnClose();
 		return true;
 	}
 	return false;
@@ -1550,13 +1550,14 @@ bool CHomeDisplay::UpdateContents()
 }
 
 
-void CHomeDisplay::SetEventHandler(CEventHandler *pEventHandler)
+void CHomeDisplay::SetEventHandler(CHomeDisplayEventHandler *pEventHandler)
 {
-	if (m_pEventHandler!=NULL)
-		m_pEventHandler->m_pHomeDisplay=NULL;
+	if (m_pHomeDisplayEventHandler!=NULL)
+		m_pHomeDisplayEventHandler->m_pHomeDisplay=NULL;
 	if (pEventHandler!=NULL)
 		pEventHandler->m_pHomeDisplay=this;
-	m_pEventHandler=pEventHandler;
+	m_pHomeDisplayEventHandler=pEventHandler;
+	CDisplayView::SetEventHandler(pEventHandler);
 }
 
 
@@ -1778,21 +1779,13 @@ LRESULT CHomeDisplay::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 			RECT rc;
 
 			GetContentAreaRect(&rc);
-			if (m_CurCategory<0
-					|| !::PtInRect(&rc,pt)
-					|| !m_CategoryList[m_CurCategory]->OnRButtonDown(pt.x,pt.y)) {
-				if (m_pEventHandler!=NULL) {
-					m_pEventHandler->OnRButtonDown(pt.x,pt.y);
-				}
+			if (m_CurCategory>=0
+					&& ::PtInRect(&rc,pt)
+					&& m_CategoryList[m_CurCategory]->OnRButtonDown(pt.x,pt.y)) {
+				return 0;
 			}
 		}
-		return 0;
-
-	case WM_LBUTTONDBLCLK:
-		if (m_pEventHandler!=NULL) {
-			m_pEventHandler->OnLButtonDoubleClick(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam));
-		}
-		return 0;
+		break;
 
 	case WM_SETCURSOR:
 		if (reinterpret_cast<HWND>(wParam)==hwnd
@@ -1936,7 +1929,7 @@ LRESULT CHomeDisplay::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 		return 0;
 	}
 
-	return ::DefWindowProc(hwnd,uMsg,wParam,lParam);
+	return CDisplayView::OnMessage(hwnd,uMsg,wParam,lParam);
 }
 
 
@@ -2177,13 +2170,8 @@ bool CHomeDisplay::RedrawCategoryItem(int Category)
 
 
 
-CHomeDisplay::CEventHandler::CEventHandler()
+CHomeDisplay::CHomeDisplayEventHandler::CHomeDisplayEventHandler()
 	: m_pHomeDisplay(NULL)
-{
-}
-
-
-CHomeDisplay::CEventHandler::~CEventHandler()
 {
 }
 
