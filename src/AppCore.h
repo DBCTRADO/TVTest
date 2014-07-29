@@ -129,6 +129,7 @@ private:
 
 	int GetCorresponding1SegService(int Space,WORD NetworkID,WORD TSID,WORD ServiceID) const;
 	bool GenerateRecordFileName(LPTSTR pszFileName,int MaxFileName) const;
+	bool OpenCasCardDefaultReader(int Device);
 	void OutCasCardInfo();
 
 	// ÉRÉsÅ[ã÷é~

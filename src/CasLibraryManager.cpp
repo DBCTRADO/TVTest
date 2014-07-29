@@ -11,6 +11,9 @@ static char THIS_FILE[]=__FILE__;
 #endif
 
 
+static const TVTest::String NullString;
+
+
 
 
 bool CCasLibraryManager::LoadSettings(CSettings &Settings)
@@ -34,6 +37,32 @@ bool CCasLibraryManager::LoadSettings(CSettings &Settings)
 				Info.FileName=Entries[i].Value;
 
 				m_CasLibraryNetworkMap.push_back(std::move(Info));
+			}
+		}
+	}
+
+	if (Settings.SetSection(TEXT("TunerCasMap"))) {
+		CSettings::EntryList Entries;
+
+		if (Settings.GetEntries(&Entries)) {
+			m_TunerCasMap.reserve(Entries.size());
+
+			for (size_t i=0;i<Entries.size();i++) {
+				// BonDriver=[Device][|Reader]
+				TunerCasInfo Info;
+
+				Info.TunerName=Entries[i].Name;
+				TVTest::String::size_type Delim=Entries[i].Value.find(_T('|'));
+				if (Delim!=TVTest::String::npos) {
+					if (Delim>0)
+						Info.DeviceName=Entries[i].Value.substr(0,Delim);
+					if (Entries[i].Value.length()>Delim+1)
+						Info.ReaderName=Entries[i].Value.substr(Delim+1);
+				} else {
+					Info.DeviceName=Entries[i].Value;
+				}
+
+				m_TunerCasMap.push_back(std::move(Info));
 			}
 		}
 	}
@@ -114,4 +143,50 @@ const TVTest::String &CCasLibraryManager::GetCasLibraryFileName(WORD NetworkID,W
 		return pInfo->FileName;
 
 	return m_DefaultCasLibrary;
+}
+
+
+const TVTest::String &CCasLibraryManager::GetCasDeviceNameByTunerName(LPCTSTR pszTunerName) const
+{
+	auto itr=FindTunerCasMap(pszTunerName);
+
+	if (itr==m_TunerCasMap.end())
+		return NullString;
+
+	return itr->DeviceName;
+}
+
+
+const TVTest::String &CCasLibraryManager::GetCasReaderNameByTunerName(LPCTSTR pszTunerName) const
+{
+	auto itr=FindTunerCasMap(pszTunerName);
+
+	if (itr==m_TunerCasMap.end())
+		return NullString;
+
+	return itr->ReaderName;
+}
+
+
+std::vector<CCasLibraryManager::TunerCasInfo>::const_iterator CCasLibraryManager::FindTunerCasMap(LPCTSTR pszTunerName) const
+{
+	if (IsStringEmpty(pszTunerName))
+		return m_TunerCasMap.end();
+
+	for (auto itr=m_TunerCasMap.begin();itr!=m_TunerCasMap.end();++itr) {
+		if (::PathMatchSpec(pszTunerName,itr->TunerName.c_str())) {
+			return itr;
+		}
+	}
+
+	LPCTSTR pszName=::PathFindFileName(pszTunerName);
+	if (pszName!=pszTunerName) {
+		for (auto itr=m_TunerCasMap.begin();itr!=m_TunerCasMap.end();++itr) {
+			if (::PathMatchSpec(pszName,itr->TunerName.c_str())) {
+				return itr;
+			}
+		}
+	}
+
+	return m_TunerCasMap.end();
 }
