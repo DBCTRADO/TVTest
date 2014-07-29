@@ -254,6 +254,18 @@ private:
 		bool DrawIcon(int Command,HDC hdc,const RECT &ItemRect,COLORREF ForeColor,HDC hdcBuffer) override;
 	};
 
+	class CShowCursorManager
+	{
+	public:
+		CShowCursorManager();
+		void Reset(int Delta=1);
+		bool OnCursorMove(int x,int y);
+
+	private:
+		int m_MoveDelta;
+		POINT m_LastMovePos;
+	};
+
 	class CFullscreen : public CCustomWindow
 	{
 	public:
@@ -298,7 +310,7 @@ private:
 		bool m_fShowSideBar;
 		bool m_fShowPanel;
 		int m_PanelWidth;
-		POINT m_LastCursorMovePos;
+		CShowCursorManager m_ShowCursorManager;
 
 		bool OnCreate();
 		void OnMouseCommand(int Command);
@@ -420,6 +432,7 @@ private:
 
 	bool m_fShowCursor;
 	bool m_fNoHideCursor;
+	CShowCursorManager m_ShowCursorManager;
 
 	bool m_fDragging;
 	POINT m_ptDragStartPos;

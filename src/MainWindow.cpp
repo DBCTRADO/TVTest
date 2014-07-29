@@ -1864,6 +1864,7 @@ bool CMainWindow::OnCreate(const CREATESTRUCT *pcs)
 	::SetTimer(m_hwnd,TIMER_ID_UPDATE,UPDATE_TIMER_INTERVAL,nullptr);
 
 	m_fShowCursor=true;
+	m_ShowCursorManager.Reset();
 	if (m_App.OperationOptions.GetHideCursor())
 		::SetTimer(m_hwnd,TIMER_ID_HIDECURSOR,HIDE_CURSOR_DELAY,nullptr);
 
@@ -2119,8 +2120,10 @@ void CMainWindow::OnMouseMove(int x,int y)
 			m_App.SideBar.SetVisible(false);
 		}
 
-		if (!m_fShowCursor)
-			ShowCursor(true);
+		if (m_ShowCursorManager.OnCursorMove(x,y)) {
+			if (!m_fShowCursor)
+				ShowCursor(true);
+		}
 		if (m_App.OperationOptions.GetHideCursor())
 			::SetTimer(m_hwnd,TIMER_ID_HIDECURSOR,HIDE_CURSOR_DELAY,nullptr);
 	} else {
@@ -6028,8 +6031,7 @@ bool CMainWindow::CFullscreen::OnCreate()
 	m_fShowSideBar=false;
 	m_fShowPanel=false;
 
-	m_LastCursorMovePos.x=LONG_MAX/2;
-	m_LastCursorMovePos.y=LONG_MAX/2;
+	m_ShowCursorManager.Reset(4);
 	::SetTimer(m_hwnd,TIMER_ID_HIDECURSOR,HIDE_CURSOR_DELAY,nullptr);
 
 	return true;
@@ -6194,8 +6196,7 @@ void CMainWindow::CFullscreen::OnMouseMove()
 		return;
 	}
 
-	if (abs(m_LastCursorMovePos.x-pt.x)>=4 || abs(m_LastCursorMovePos.y-pt.y)>=4) {
-		m_LastCursorMovePos=pt;
+	if (m_ShowCursorManager.OnCursorMove(pt.x,pt.y)) {
 		if (!m_fShowCursor) {
 			::SetCursor(::LoadCursor(nullptr,IDC_ARROW));
 			ShowCursor(true);
@@ -6711,4 +6712,28 @@ bool CMainWindow::CDisplayBaseEventHandler::OnVisibleChange(bool fVisible)
 		m_pMainWindow->m_Fullscreen.HideAllBars();
 	}
 	return true;
+}
+
+
+CMainWindow::CShowCursorManager::CShowCursorManager()
+{
+	Reset();
+}
+
+void CMainWindow::CShowCursorManager::Reset(int Delta)
+{
+	m_MoveDelta=Delta;
+	m_LastMovePos.x=LONG_MAX/2;
+	m_LastMovePos.y=LONG_MAX/2;
+}
+
+bool CMainWindow::CShowCursorManager::OnCursorMove(int x,int y)
+{
+	if (abs(m_LastMovePos.x-x)>=m_MoveDelta || abs(m_LastMovePos.y-y)>=m_MoveDelta) {
+		m_LastMovePos.x=x;
+		m_LastMovePos.y=y;
+		return true;
+	}
+
+	return false;
 }
