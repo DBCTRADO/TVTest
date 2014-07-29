@@ -47,6 +47,7 @@ private:
 		TVTest::Style::IntValue CompositeTextSizeRatio;
 		TVTest::Style::Size LogoSize;
 		TVTest::String LogoEffect;
+		bool fChannelAnimation;
 		TVTest::Style::Margins VolumeMargin;
 		TVTest::Style::IntValue VolumeTextSizeMin;
 

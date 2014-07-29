@@ -132,6 +132,7 @@ bool COSDManager::ShowChannelOSD(const CChannelInfo *pInfo,bool fChanging)
 		return false;
 
 	COSDOptions::ChannelChangeType ChangeType=m_pOptions->GetChannelChangeType();
+	const bool fAnimation=m_Style.fChannelAnimation && !fChanging;
 
 	HBITMAP hbmLogo=NULL;
 	unsigned int ImageEffect=0;
@@ -151,7 +152,7 @@ bool COSDManager::ShowChannelOSD(const CChannelInfo *pInfo,bool fChanging)
 			m_OSD.SetPosition(rc.left+m_Style.Margin.Left,rc.top+m_Style.Margin.Top,
 							  m_Style.LogoSize.Width,m_Style.LogoSize.Height);
 			m_OSD.Show(m_pOptions->GetFadeTime(),
-					   !fChanging && !m_OSD.IsVisible());
+					   fAnimation && !m_OSD.IsVisible());
 			return true;
 		}
 	}
@@ -170,7 +171,7 @@ bool COSDManager::ShowChannelOSD(const CChannelInfo *pInfo,bool fChanging)
 			m_OSD.SetPosition(rc.left+m_Style.Margin.Left,rc.top+m_Style.Margin.Top,
 							  m_Style.LogoSize.Width,m_Style.LogoSize.Height);
 			m_OSD.Show(m_pOptions->GetFadeTime(),
-					   !fChanging && !m_OSD.IsVisible());
+					   fAnimation && !m_OSD.IsVisible());
 		}
 
 		if (ChangeType!=COSDOptions::CHANNELCHANGE_LOGOONLY) {
@@ -202,7 +203,7 @@ bool COSDManager::ShowChannelOSD(const CChannelInfo *pInfo,bool fChanging)
 			cr=m_pOptions->GetTextColor();
 		m_OSD.SetTextColor(cr);
 		m_OSD.Show(m_pOptions->GetFadeTime(),
-				   !fChanging && !m_OSD.IsVisible());
+				   fAnimation && !m_OSD.IsVisible());
 	}
 
 	return true;
@@ -368,6 +369,7 @@ COSDManager::OSDStyle::OSDStyle()
 	, CompositeTextSizeRatio(20)
 	, LogoSize(64,36)
 	, LogoEffect(TEXT("gloss"))
+	, fChannelAnimation(true)
 	, VolumeMargin(16)
 	, VolumeTextSizeMin(10)
 {
@@ -385,6 +387,7 @@ void COSDManager::OSDStyle::SetStyle(const TVTest::Style::CStyleManager *pStyleM
 		CompositeTextSizeRatio=Value;
 	pStyleManager->Get(TEXT("channel-osd.logo"),&LogoSize);
 	pStyleManager->Get(TEXT("channel-osd.logo.effect"),&LogoEffect);
+	pStyleManager->Get(TEXT("channel-osd.animation"),&fChannelAnimation);
 	pStyleManager->Get(TEXT("volume-osd.margin"),&VolumeMargin);
 	pStyleManager->Get(TEXT("volume-osd.text-size-min"),&VolumeTextSizeMin);
 }
