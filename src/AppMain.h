@@ -51,6 +51,7 @@
 #include "ZoomOptions.h"
 #include "PanAndScanOptions.h"
 #include "LogoManager.h"
+#include "KeywordSearch.h"
 #ifndef _DEBUG
 #include "DebugHelper.h"
 #endif
@@ -454,6 +455,7 @@ public:
 	CChannelHistory ChannelHistory;
 	TVTest::CFavoritesManager FavoritesManager;
 	TVTest::CFavoritesMenu FavoritesMenu;
+	TVTest::CKeywordSearch KeywordSearch;
 
 	struct {
 		int Space;

@@ -533,6 +533,7 @@
     <ClCompile Include="EpgProgramList.cpp" />
     <ClCompile Include="EpgUtil.cpp" />
     <ClCompile Include="EventInfoPopup.cpp" />
+    <ClCompile Include="EventInfoUtil.cpp" />
     <ClCompile Include="Favorites.cpp" />
     <ClCompile Include="FeaturedEvents.cpp" />
     <ClCompile Include="GeneralOptions.cpp" />
@@ -546,6 +547,7 @@
     <ClCompile Include="InformationPanel.cpp" />
     <ClCompile Include="IniFile.cpp" />
     <ClCompile Include="InitialSettings.cpp" />
+    <ClCompile Include="KeywordSearch.cpp" />
     <ClCompile Include="Layout.cpp" />
     <ClCompile Include="Logger.cpp" />
     <ClCompile Include="LogoManager.cpp" />
@@ -693,6 +695,7 @@
     <ClInclude Include="EpgProgramList.h" />
     <ClInclude Include="EpgUtil.h" />
     <ClInclude Include="EventInfoPopup.h" />
+    <ClInclude Include="EventInfoUtil.h" />
     <ClInclude Include="Favorites.h" />
     <ClInclude Include="FeaturedEvents.h" />
     <ClInclude Include="GeneralOptions.h" />
@@ -707,6 +710,7 @@
     <ClInclude Include="InformationPanel.h" />
     <ClInclude Include="IniFile.h" />
     <ClInclude Include="InitialSettings.h" />
+    <ClInclude Include="KeywordSearch.h" />
     <ClInclude Include="Layout.h" />
     <ClInclude Include="Logger.h" />
     <ClInclude Include="LogoManager.h" />

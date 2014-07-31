@@ -991,6 +991,17 @@ int CAppMain::Main(HINSTANCE hInstance,LPCTSTR pszCmdLine,int nCmdShow)
 		}
 	}
 
+	{
+		TCHAR szSearchFileName[MAX_PATH];
+
+		::GetModuleFileName(nullptr,szSearchFileName,lengthof(szSearchFileName));
+		::PathRenameExtension(szSearchFileName,TEXT(".search.ini"));
+		if (::PathFileExists(szSearchFileName)) {
+			StatusView.SetSingleText(TEXT("キーワード検索設定を読み込んでいます..."));
+			KeywordSearch.Load(szSearchFileName);
+		}
+	}
+
 	CoreEngine.m_DtvEngine.SetTracer(nullptr);
 	if (!MainWindow.GetStatusBarVisible())
 		StatusView.SetVisible(false);

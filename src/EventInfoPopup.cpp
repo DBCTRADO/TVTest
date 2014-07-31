@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "TVTest.h"
+#include "AppMain.h"
 #include "EventInfoPopup.h"
 #include "EpgUtil.h"
 #include "Aero.h"
@@ -649,34 +650,59 @@ LRESULT CEventInfoPopup::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lPar
 		switch (((LPNMHDR)lParam)->code) {
 		case EN_MSGFILTER:
 			if (reinterpret_cast<MSGFILTER*>(lParam)->msg==WM_RBUTTONDOWN) {
+				enum {
+					COMMAND_COPY=1,
+					COMMAND_SELECTALL,
+					COMMAND_COPYEVENTNAME,
+					COMMAND_SEARCH
+				};
 				HMENU hmenu=::CreatePopupMenu();
 
-				::AppendMenu(hmenu,MF_STRING | MF_ENABLED,1,TEXT("コピー(&C)"));
-				::AppendMenu(hmenu,MF_STRING | MF_ENABLED,2,TEXT("すべて選択(&A)"));
-				::AppendMenu(hmenu,MF_STRING | MF_ENABLED,3,TEXT("番組名をコピー(&E)"));
+				::AppendMenu(hmenu,MF_STRING | MF_ENABLED,COMMAND_COPY,TEXT("コピー(&C)"));
+				::AppendMenu(hmenu,MF_STRING | MF_ENABLED,COMMAND_SELECTALL,TEXT("すべて選択(&A)"));
+				::AppendMenu(hmenu,MF_STRING | MF_ENABLED,COMMAND_COPYEVENTNAME,TEXT("番組名をコピー(&E)"));
 				if (m_pEventHandler!=NULL)
 					m_pEventHandler->OnMenuPopup(hmenu);
+				if (CRichEditUtil::IsSelected(m_hwndEdit)) {
+					const TVTest::CKeywordSearch &KeywordSearch=GetAppClass().KeywordSearch;
+					if (KeywordSearch.GetSearchEngineCount()>0) {
+						::AppendMenu(hmenu,MF_SEPARATOR,0,NULL);
+						KeywordSearch.InitializeMenu(hmenu,COMMAND_SEARCH,CEventHandler::COMMAND_FIRST-COMMAND_SEARCH);
+					}
+				}
+
 				POINT pt;
 				::GetCursorPos(&pt);
 				int Command=::TrackPopupMenu(hmenu,TPM_RIGHTBUTTON | TPM_RETURNCMD,pt.x,pt.y,0,hwnd,NULL);
 				::DestroyMenu(hmenu);
+
 				switch (Command) {
-				case 1:
+				case COMMAND_COPY:
 					if (::SendMessage(m_hwndEdit,EM_SELECTIONTYPE,0,0)==SEL_EMPTY) {
 						CRichEditUtil::CopyAllText(m_hwndEdit);
 					} else {
 						::SendMessage(m_hwndEdit,WM_COPY,0,0);
 					}
 					break;
-				case 2:
+
+				case COMMAND_SELECTALL:
 					CRichEditUtil::SelectAll(m_hwndEdit);
 					break;
-				case 3:
+
+				case COMMAND_COPYEVENTNAME:
 					CopyTextToClipboard(hwnd,m_EventInfo.GetEventName());
 					break;
+
 				default:
-					if (Command>=CEventHandler::COMMAND_FIRST)
+					if (Command>=CEventHandler::COMMAND_FIRST) {
 						m_pEventHandler->OnMenuSelected(Command);
+					} else if (Command>=COMMAND_SEARCH) {
+						LPTSTR pszKeyword=CRichEditUtil::GetSelectedText(m_hwndEdit);
+						if (pszKeyword!=NULL) {
+							GetAppClass().KeywordSearch.Search(Command-COMMAND_SEARCH,pszKeyword);
+							delete [] pszKeyword;
+						}
+					}
 					break;
 				}
 			}

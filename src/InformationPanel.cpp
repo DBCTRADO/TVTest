@@ -2,6 +2,7 @@
 #include "TVTest.h"
 #include "AppMain.h"
 #include "InformationPanel.h"
+#include "EventInfoUtil.h"
 #include "resource.h"
 
 #ifdef _DEBUG
@@ -589,28 +590,7 @@ LRESULT CInformationPanel::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lP
 
 				switch (pMsgFilter->msg) {
 				case WM_RBUTTONDOWN:
-					{
-						HMENU hmenu=::CreatePopupMenu();
-
-						::AppendMenu(hmenu,MF_STRING | MF_ENABLED,1,TEXT("コピー(&C)"));
-						::AppendMenu(hmenu,MF_STRING | MF_ENABLED,2,TEXT("すべて選択(&A)"));
-						POINT pt;
-						::GetCursorPos(&pt);
-						int Command=::TrackPopupMenu(hmenu,TPM_RIGHTBUTTON | TPM_RETURNCMD,pt.x,pt.y,0,hwnd,NULL);
-						::DestroyMenu(hmenu);
-						switch (Command) {
-						case 1:
-							if (::SendMessage(m_hwndProgramInfo,EM_SELECTIONTYPE,0,0)==SEL_EMPTY) {
-								CRichEditUtil::CopyAllText(m_hwndProgramInfo);
-							} else {
-								::SendMessage(m_hwndProgramInfo,WM_COPY,0,0);
-							}
-							break;
-						case 2:
-							CRichEditUtil::SelectAll(m_hwndProgramInfo);
-							break;
-						}
-					}
+					TVTest::EventInfoUtil::EventInfoContextMenu(hwnd,m_hwndProgramInfo);
 					break;
 
 				case WM_LBUTTONDOWN:

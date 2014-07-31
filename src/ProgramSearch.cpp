@@ -4,6 +4,7 @@
 #include "ProgramSearch.h"
 #include "DialogUtil.h"
 #include "EpgUtil.h"
+#include "EventInfoUtil.h"
 #include "resource.h"
 
 #ifdef _DEBUG
@@ -1953,26 +1954,7 @@ INT_PTR CProgramSearchDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM l
 
 		case EN_MSGFILTER:
 			if (reinterpret_cast<MSGFILTER*>(lParam)->msg==WM_RBUTTONDOWN) {
-				HWND hwndInfo=::GetDlgItem(hDlg,IDC_PROGRAMSEARCH_INFO);
-				HMENU hmenu=::CreatePopupMenu();
-				POINT pt;
-
-				::AppendMenu(hmenu,MFT_STRING | MFS_ENABLED,1,TEXT("コピー(&C)"));
-				::AppendMenu(hmenu,MFT_STRING | MFS_ENABLED,2,TEXT("すべて選択(&A)"));
-				::GetCursorPos(&pt);
-				switch (::TrackPopupMenu(hmenu,TPM_RIGHTBUTTON | TPM_RETURNCMD,pt.x,pt.y,0,hDlg,NULL)) {
-				case 1:
-					if (::SendMessage(hwndInfo,EM_SELECTIONTYPE,0,0)==SEL_EMPTY) {
-						CRichEditUtil::CopyAllText(hwndInfo);
-					} else {
-						::SendMessage(hwndInfo,WM_COPY,0,0);
-					}
-					break;
-				case 2:
-					CRichEditUtil::SelectAll(hwndInfo);
-					break;
-				}
-				::DestroyMenu(hmenu);
+				TVTest::EventInfoUtil::EventInfoContextMenu(hDlg,::GetDlgItem(hDlg,IDC_PROGRAMSEARCH_INFO));
 			}
 			return TRUE;
 
