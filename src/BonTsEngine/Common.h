@@ -74,7 +74,7 @@
 #define SERVICE_TYPE_ENGINEERING			0xA4	// エンジニアリングサービス
 #define SERVICE_TYPE_PROMOTIONVIDEO			0xA5	// プロモーション映像サービス
 #define SERVICE_TYPE_PROMOTIONAUDIO			0xA6	// プロモーション音声サービス
-#define SERVICE_TYEP_PROMOTIONDATA			0xA7	// プロモーションデータサービス
+#define SERVICE_TYPE_PROMOTIONDATA			0xA7	// プロモーションデータサービス
 #define SERVICE_TYPE_ACCUMULATIONDATA		0xA8	// 事前蓄積用データサービス
 #define SERVICE_TYPE_ACCUMULATIONONLYDATA	0xA9	// 蓄積専用データサービス
 #define SERVICE_TYPE_BOOKMARKLISTDATA		0xAA	// ブックマーク一覧データサービス
