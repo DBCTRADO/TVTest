@@ -38,6 +38,36 @@ public:
 		SERVICE_DEFAULT = 0xFFFF
 	};
 
+	enum DecoderID {
+		DECODER_ID_BonSrcDecoder=1,
+		DECODER_ID_TsPacketParser,
+		DECODER_ID_TsAnalyzer,
+		DECODER_ID_CasProcessor,
+		DECODER_ID_MediaViewer,
+		DECODER_ID_MediaTee,
+		DECODER_ID_FileWriter,
+		DECODER_ID_MediaBuffer,
+		DECODER_ID_MediaGrabber,
+		DECODER_ID_TsSelector,
+		DECODER_ID_EventManager,
+		DECODER_ID_CaptionDecoder,
+		DECODER_ID_LogoDownloader
+	};
+
+	struct DecoderConnectionInfo
+	{
+		DecoderID OutputDecoder;
+		DecoderID InputDecoder;
+		int OutputIndex;
+
+		DecoderConnectionInfo(DecoderID Out, DecoderID In, int OutIndex = 0)
+			: OutputDecoder(Out)
+			, InputDecoder(In)
+			, OutputIndex(OutIndex)
+		{
+		}
+	};
+
 	class ABSTRACT_CLASS_DECL CEventHandler
 	{
 		friend CDtvEngine;
@@ -79,10 +109,10 @@ public:
 	CDtvEngine(void);
 	~CDtvEngine(void);
 
-	bool BuildEngine(CEventHandler *pEventHandler,
-					 bool bDescramble = true,
-					 bool bBuffering = false,
-					 bool bEventManager = true);
+	bool BuildEngine(const DecoderConnectionInfo *pDecoderConnectionList,
+					 int DecoderConnectionCount,
+					 CEventHandler *pEventHandler,
+					 bool bDescramble = true, bool bBuffering = true);
 	bool IsEngineBuild() const { return m_bBuiled; };
 	bool IsBuildComplete() const;
 	bool CloseEngine(void);
@@ -169,11 +199,15 @@ protected:
 	virtual const DWORD OnDecoderEvent(CMediaDecoder *pDecoder, const DWORD dwEventID, PVOID pParam);
 
 	bool SelectService(WORD ServiceID);
-	void ConnectCasProcessor();
-	void DisconnectCasProcessor();
+	CMediaDecoder *GetDecoderByID(DecoderID ID);
+	const DecoderConnectionInfo *GetInputConnectionInfo(DecoderID ID) const;
+	const DecoderConnectionInfo *GetOutputConnectionInfo(DecoderID ID) const;
+	void ConnectDecoder(DecoderID ID);
+	void DisconnectDecoder(DecoderID ID);
 
 	CCriticalLock m_EngineLock;
 	CEventHandler *m_pEventHandler;
+	std::vector<DecoderConnectionInfo> m_DecoderConnectionList;
 
 	WORD m_wCurTransportStream;
 	WORD m_CurServiceIndex;

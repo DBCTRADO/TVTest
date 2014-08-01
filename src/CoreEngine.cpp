@@ -68,10 +68,76 @@ void CCoreEngine::Close()
 
 bool CCoreEngine::BuildDtvEngine(CDtvEngine::CEventHandler *pEventHandler)
 {
-	if (!m_DtvEngine.BuildEngine(pEventHandler,
-			m_fDescramble,true/*m_fPacketBuffering*/,!m_fNoEpg)) {
+	/*
+	ÉOÉâÉtç\ê¨ê}
+
+	CBonSrcDecoder
+	    Å´
+	CTsPacketParser
+	    Å´
+	CTsAnalyzer
+	    Å´
+	CMediaTeeÑüÑüÑüÑüÑüÑüÑ¢
+	    Å´               Ñ†
+	(CEventManager)  CCasProcessor
+	    Å´               Å´
+	CLogoDownloader  CCaptionDecoder
+	    Å´               Å´
+	CTsSelector      CMediaGrabber
+	    Å´               Å´
+	CFileWriter      CMediaBuffer
+	                     Å´
+	                 CMediaViewer
+	*/
+
+	struct {
+		std::vector<CDtvEngine::DecoderConnectionInfo> List;
+
+		void Add(CDtvEngine::DecoderID OutputDecoder,
+				 CDtvEngine::DecoderID InputDecoder,
+				 int OutputIndex=0)
+		{
+			List.push_back(CDtvEngine::DecoderConnectionInfo(OutputDecoder,InputDecoder,OutputIndex));
+		}
+	} ConnectionList;
+
+	ConnectionList.Add(CDtvEngine::DECODER_ID_BonSrcDecoder,
+					   CDtvEngine::DECODER_ID_TsPacketParser);
+	ConnectionList.Add(CDtvEngine::DECODER_ID_TsPacketParser,
+					   CDtvEngine::DECODER_ID_TsAnalyzer);
+	ConnectionList.Add(CDtvEngine::DECODER_ID_TsAnalyzer,
+					   CDtvEngine::DECODER_ID_MediaTee);
+	if (!m_fNoEpg) {
+		ConnectionList.Add(CDtvEngine::DECODER_ID_MediaTee,
+						   CDtvEngine::DECODER_ID_EventManager,0);
+		ConnectionList.Add(CDtvEngine::DECODER_ID_EventManager,
+						   CDtvEngine::DECODER_ID_LogoDownloader);
+	} else {
+		ConnectionList.Add(CDtvEngine::DECODER_ID_MediaTee,
+						   CDtvEngine::DECODER_ID_LogoDownloader,0);
+	}
+	ConnectionList.Add(CDtvEngine::DECODER_ID_MediaTee,
+					   CDtvEngine::DECODER_ID_CasProcessor,1);
+	ConnectionList.Add(CDtvEngine::DECODER_ID_LogoDownloader,
+					   CDtvEngine::DECODER_ID_TsSelector);
+	ConnectionList.Add(CDtvEngine::DECODER_ID_TsSelector,
+					   CDtvEngine::DECODER_ID_FileWriter);
+	ConnectionList.Add(CDtvEngine::DECODER_ID_CasProcessor,
+					   CDtvEngine::DECODER_ID_CaptionDecoder);
+	ConnectionList.Add(CDtvEngine::DECODER_ID_CaptionDecoder,
+					   CDtvEngine::DECODER_ID_MediaGrabber);
+	ConnectionList.Add(CDtvEngine::DECODER_ID_MediaGrabber,
+					   CDtvEngine::DECODER_ID_MediaBuffer);
+	ConnectionList.Add(CDtvEngine::DECODER_ID_MediaBuffer,
+					   CDtvEngine::DECODER_ID_MediaViewer);
+
+	if (!m_DtvEngine.BuildEngine(
+			ConnectionList.List.data(),static_cast<int>(ConnectionList.List.size()),
+			pEventHandler,
+			m_fDescramble,true/*m_fPacketBuffering*/)) {
 		return false;
 	}
+
 	return true;
 }
 
