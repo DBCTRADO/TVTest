@@ -29,6 +29,11 @@ namespace TVTest
 	}
 
 
+	void CUIBase::SetTheme(const Theme::CThemeManager *pThemeManager)
+	{
+	}
+
+
 	void CUIBase::InitializeUI()
 	{
 		UpdateStyle();

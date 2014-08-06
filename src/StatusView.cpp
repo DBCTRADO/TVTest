@@ -216,20 +216,18 @@ CStatusView::CStatusView()
 	, m_fBufferedPaint(false)
 	, m_fAdjustSize(true)
 {
-	m_Theme.ItemStyle.Gradient.Type=Theme::GRADIENT_NORMAL;
-	m_Theme.ItemStyle.Gradient.Direction=Theme::DIRECTION_VERT;
-	m_Theme.ItemStyle.Gradient.Color1=RGB(192,192,192);
-	m_Theme.ItemStyle.Gradient.Color2=RGB(192,192,192);
-	m_Theme.ItemStyle.Border.Type=Theme::BORDER_NONE;
-	m_Theme.ItemStyle.TextColor=RGB(0,0,0);
-	m_Theme.HighlightItemStyle.Gradient.Type=Theme::GRADIENT_NORMAL;
-	m_Theme.HighlightItemStyle.Gradient.Direction=Theme::DIRECTION_VERT;
-	m_Theme.HighlightItemStyle.Gradient.Color1=RGB(128,128,128);
-	m_Theme.HighlightItemStyle.Gradient.Color2=RGB(128,128,128);
-	m_Theme.HighlightItemStyle.Border.Type=Theme::BORDER_NONE;
-	m_Theme.HighlightItemStyle.TextColor=RGB(255,255,255);
-	m_Theme.Border.Type=Theme::BORDER_RAISED;
-	m_Theme.Border.Color=RGB(192,192,192);
+	m_Theme.ItemStyle.Back.Fill.Type=TVTest::Theme::FILL_SOLID;
+	m_Theme.ItemStyle.Back.Fill.Solid.Color.Set(192,192,192);
+	m_Theme.ItemStyle.Back.Border.Type=TVTest::Theme::BORDER_NONE;
+	m_Theme.ItemStyle.Fore.Fill.Type=TVTest::Theme::FILL_SOLID;
+	m_Theme.ItemStyle.Fore.Fill.Solid.Color.Set(0,0,0);
+	m_Theme.HighlightItemStyle.Back.Fill.Type=TVTest::Theme::FILL_SOLID;
+	m_Theme.HighlightItemStyle.Back.Fill.Solid.Color.Set(128,128,128);
+	m_Theme.HighlightItemStyle.Back.Border.Type=TVTest::Theme::BORDER_NONE;
+	m_Theme.HighlightItemStyle.Fore.Fill.Type=TVTest::Theme::FILL_SOLID;
+	m_Theme.HighlightItemStyle.Fore.Fill.Solid.Color.Set(255,255,255);
+	m_Theme.Border.Type=TVTest::Theme::BORDER_RAISED;
+	m_Theme.Border.Color.Set(192,192,192);
 }
 
 
@@ -267,6 +265,17 @@ void CStatusView::NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManag
 
 	for (auto itr=m_ItemList.begin();itr!=m_ItemList.end();++itr)
 		(*itr)->NormalizeStyle(pStyleManager);
+}
+
+
+void CStatusView::SetTheme(const TVTest::Theme::CThemeManager *pThemeManager)
+{
+	StatusViewTheme Theme;
+	GetStatusViewThemeFromThemeManager(pThemeManager,&Theme);
+	SetStatusViewTheme(Theme);
+
+	for (auto itr=m_ItemList.begin();itr!=m_ItemList.end();++itr)
+		(*itr)->SetTheme(pThemeManager);
 }
 
 
@@ -349,7 +358,7 @@ LRESULT CStatusView::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 
 			::SetRectEmpty(&rc);
 			rc.bottom=m_ItemHeight;
-			Theme::AddBorderRect(&m_Theme.Border,&rc);
+			TVTest::Theme::AddBorderRect(m_Theme.Border,&rc);
 			::AdjustWindowRectEx(&rc,pcs->style,FALSE,pcs->dwExStyle);
 			::SetWindowPos(hwnd,NULL,0,0,pcs->cx,rc.bottom-rc.top,
 						   SWP_NOZORDER | SWP_NOMOVE);
@@ -562,7 +571,7 @@ bool CStatusView::GetItemRectByIndex(int Index,RECT *pRect) const
 
 	RECT rc;
 	GetClientRect(&rc);
-	Theme::SubtractBorderRect(&m_Theme.Border,&rc);
+	TVTest::Theme::SubtractBorderRect(m_Theme.Border,&rc);
 	if (m_fMultiRow)
 		rc.bottom=rc.top+m_ItemHeight;
 	const int HorzMargin=m_Style.ItemPadding.Horz();
@@ -610,7 +619,7 @@ int CStatusView::GetItemHeight() const
 	if (m_fMultiRow)
 		return m_ItemHeight;
 	GetClientRect(&rc);
-	Theme::SubtractBorderRect(&m_Theme.Border,&rc);
+	TVTest::Theme::SubtractBorderRect(m_Theme.Border,&rc);
 	return rc.bottom-rc.top;
 }
 
@@ -637,7 +646,7 @@ int CStatusView::GetIntegralWidth() const
 			Width+=m_ItemList[i]->GetWidth()+m_Style.ItemPadding.Horz();
 	}
 	RECT rc;
-	Theme::GetBorderWidths(&m_Theme.Border,&rc);
+	TVTest::Theme::GetBorderWidths(m_Theme.Border,&rc);
 	return Width+rc.left+rc.right;
 }
 
@@ -669,11 +678,28 @@ void CStatusView::SetSingleText(LPCTSTR pszText)
 }
 
 
-bool CStatusView::SetTheme(const ThemeInfo *pTheme)
+bool CStatusView::GetStatusViewThemeFromThemeManager(
+	const TVTest::Theme::CThemeManager *pThemeManager,StatusViewTheme *pTheme)
 {
-	if (pTheme==NULL)
+	if (pThemeManager==NULL || pTheme==NULL)
 		return false;
-	m_Theme=*pTheme;
+
+	pThemeManager->GetStyle(TVTest::Theme::CThemeManager::STYLE_STATUSBAR_ITEM,
+							&pTheme->ItemStyle);
+	pThemeManager->GetStyle(TVTest::Theme::CThemeManager::STYLE_STATUSBAR_BOTTOMITEM,
+							&pTheme->BottomItemStyle);
+	pThemeManager->GetStyle(TVTest::Theme::CThemeManager::STYLE_STATUSBAR_ITEM_HOT,
+							&pTheme->HighlightItemStyle);
+	pThemeManager->GetBorderStyle(TVTest::Theme::CThemeManager::STYLE_STATUSBAR,
+								  &pTheme->Border);
+
+	return true;
+}
+
+
+bool CStatusView::SetStatusViewTheme(const StatusViewTheme &Theme)
+{
+	m_Theme=Theme;
 	if (m_hwnd!=NULL) {
 		AdjustSize();
 		Invalidate();
@@ -682,7 +708,7 @@ bool CStatusView::SetTheme(const ThemeInfo *pTheme)
 }
 
 
-bool CStatusView::GetTheme(ThemeInfo *pTheme) const
+bool CStatusView::GetStatusViewTheme(StatusViewTheme *pTheme) const
 {
 	if (pTheme==NULL)
 		return false;
@@ -746,7 +772,7 @@ bool CStatusView::SetMaxRows(int MaxRows)
 int CStatusView::CalcHeight(int Width) const
 {
 	RECT rcBorder;
-	Theme::GetBorderWidths(&m_Theme.Border,&rcBorder);
+	TVTest::Theme::GetBorderWidths(m_Theme.Border,&rcBorder);
 
 	int Rows=1;
 
@@ -823,7 +849,7 @@ bool CStatusView::DrawItemPreview(CStatusItem *pItem,HDC hdc,const RECT &ItemRec
 	HFONT hfontOld;
 	int OldBkMode;
 	COLORREF crOldTextColor,crOldBkColor;
-	const Theme::Style &Style=
+	const TVTest::Theme::Style &Style=
 		fHighlight?m_Theme.HighlightItemStyle:m_Theme.ItemStyle;
 
 	if (hfont!=NULL)
@@ -831,9 +857,9 @@ bool CStatusView::DrawItemPreview(CStatusItem *pItem,HDC hdc,const RECT &ItemRec
 	else
 		hfontOld=DrawUtil::SelectObject(hdc,m_Font);
 	OldBkMode=::SetBkMode(hdc,TRANSPARENT);
-	crOldTextColor=::SetTextColor(hdc,Style.TextColor);
-	crOldBkColor=::SetBkColor(hdc,MixColor(Style.Gradient.Color1,Style.Gradient.Color2,128));
-	Theme::DrawStyleBackground(hdc,&ItemRect,&Style);
+	crOldTextColor=::SetTextColor(hdc,Style.Fore.Fill.GetSolidColor());
+	crOldBkColor=::SetBkColor(hdc,Style.Back.Fill.GetSolidColor());
+	TVTest::Theme::Draw(hdc,ItemRect,Style.Back);
 	RECT rcDraw=ItemRect;
 	TVTest::Style::Subtract(&rcDraw,m_Style.ItemPadding);
 	pItem->DrawPreview(hdc,ItemRect,rcDraw);
@@ -908,7 +934,7 @@ void CStatusView::Draw(HDC hdc,const RECT *pPaintRect)
 
 	GetClientRect(&rcClient);
 	rc=rcClient;
-	Theme::SubtractBorderRect(&m_Theme.Border,&rc);
+	TVTest::Theme::SubtractBorderRect(m_Theme.Border,&rc);
 	const int ItemHeight=m_fMultiRow?m_ItemHeight:rc.bottom-rc.top;
 
 	if (!m_fSingleMode) {
@@ -940,17 +966,16 @@ void CStatusView::Draw(HDC hdc,const RECT *pPaintRect)
 		RECT rcRow=rc;
 
 		for (int i=0;i<m_Rows;i++) {
-			const Theme::Style &Style=i==0?m_Theme.ItemStyle:m_Theme.BottomItemStyle;
+			const TVTest::Theme::Style &Style=i==0?m_Theme.ItemStyle:m_Theme.BottomItemStyle;
 
-			Theme::FillGradient(hdcDst,&rcRow,&Style.Gradient);
+			TVTest::Theme::Draw(hdcDst,rcRow,Style.Back.Fill);
 			rcRow.top=rcRow.bottom;
 			rcRow.bottom+=ItemHeight;
 		}
-		::SetTextColor(hdcDst,m_Theme.ItemStyle.TextColor);
 		rc.left+=m_Style.ItemPadding.Left;
 		rc.right-=m_Style.ItemPadding.Right;
-		::DrawText(hdcDst,m_SingleText.Get(),-1,&rc,
-				   DT_LEFT | DT_SINGLELINE | DT_VCENTER | DT_NOPREFIX | DT_END_ELLIPSIS);
+		TVTest::Theme::Draw(hdcDst,rc,m_Theme.ItemStyle.Fore,m_SingleText.Get(),
+							DT_LEFT | DT_SINGLELINE | DT_VCENTER | DT_NOPREFIX | DT_END_ELLIPSIS);
 	} else {
 		const int Left=rc.left;
 		int Row=0;
@@ -964,15 +989,15 @@ void CStatusView::Draw(HDC hdc,const RECT *pPaintRect)
 				rc.right=rc.left+pItem->GetWidth()+HorzMargin;
 				if (rc.right>pPaintRect->left && rc.left<pPaintRect->right) {
 					const bool fHighlight=i==m_HotItem;
-					const Theme::Style &Style=
+					const TVTest::Theme::Style &Style=
 						fHighlight?m_Theme.HighlightItemStyle:
 						Row==0?m_Theme.ItemStyle:m_Theme.BottomItemStyle;
 					RECT rcItem=rc;
 					if (hdcDst!=hdc)
 						::OffsetRect(&rcItem,-rcItem.left,-rcItem.top);
-					Theme::DrawStyleBackground(hdcDst,&rcItem,&Style);
-					::SetTextColor(hdcDst,Style.TextColor);
-					::SetBkColor(hdcDst,MixColor(Style.Gradient.Color1,Style.Gradient.Color2));
+					TVTest::Theme::Draw(hdcDst,rcItem,Style.Back);
+					::SetTextColor(hdcDst,Style.Fore.Fill.GetSolidColor());
+					::SetBkColor(hdcDst,Style.Back.Fill.GetSolidColor());
 					RECT rcDraw=rcItem;
 					TVTest::Style::Subtract(&rcDraw,m_Style.ItemPadding);
 					pItem->Draw(hdcDst,rcItem,rcDraw);
@@ -984,8 +1009,8 @@ void CStatusView::Draw(HDC hdc,const RECT *pPaintRect)
 				if (rc.right<pPaintRect->right) {
 					rc.left=max(rc.right,pPaintRect->left);
 					rc.right=pPaintRect->right;
-					Theme::FillGradient(hdc,&rc,
-										Row==0?&m_Theme.ItemStyle.Gradient:&m_Theme.BottomItemStyle.Gradient);
+					TVTest::Theme::Draw(hdc,rc,
+										Row==0?m_Theme.ItemStyle.Back.Fill:m_Theme.BottomItemStyle.Back.Fill);
 				}
 				rc.right=Left;
 				rc.top=rc.bottom;
@@ -996,12 +1021,12 @@ void CStatusView::Draw(HDC hdc,const RECT *pPaintRect)
 		if (rc.right<pPaintRect->right) {
 			rc.left=max(rc.right,pPaintRect->left);
 			rc.right=pPaintRect->right;
-			Theme::FillGradient(hdc,&rc,
-								Row==0?&m_Theme.ItemStyle.Gradient:&m_Theme.BottomItemStyle.Gradient);
+			TVTest::Theme::Draw(hdc,rc,
+								Row==0?m_Theme.ItemStyle.Back.Fill:m_Theme.BottomItemStyle.Back.Fill);
 		}
 	}
 
-	Theme::DrawBorder(hdc,rcClient,&m_Theme.Border);
+	TVTest::Theme::Draw(hdc,rcClient,m_Theme.Border);
 
 	::SetBkColor(hdcDst,crOldBkColor);
 	::SetTextColor(hdcDst,crOldTextColor);
@@ -1022,7 +1047,7 @@ void CStatusView::AdjustSize()
 	GetPosition(&rcWindow);
 	::SetRectEmpty(&rc);
 	rc.bottom=m_ItemHeight*m_Rows;
-	Theme::AddBorderRect(&m_Theme.Border,&rc);
+	TVTest::Theme::AddBorderRect(m_Theme.Border,&rc);
 	CalcPositionFromClientRect(&rc);
 	int Height=rc.bottom-rc.top;
 	if (Height!=rcWindow.bottom-rcWindow.top) {
@@ -1044,7 +1069,7 @@ void CStatusView::CalcRows()
 		int Rows,RowWidth;
 
 		GetClientRect(&rc);
-		Theme::SubtractBorderRect(&m_Theme.Border,&rc);
+		TVTest::Theme::SubtractBorderRect(m_Theme.Border,&rc);
 		Rows=1;
 		RowWidth=0;
 		for (size_t i=0;i<m_ItemList.size();i++) {

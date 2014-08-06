@@ -1263,20 +1263,23 @@ CProgramGuide::CProgramGuide(CEventSearchOptions &EventSearchOptions)
 	m_ColorList[COLOR_CONTENT_ANIME]=RGB(255,224,255);
 	m_ColorList[COLOR_CONTENT_DOCUMENTARY]=RGB(255,255,224);
 	m_ColorList[COLOR_CONTENT_THEATER]=RGB(224,255,255);
-	m_ChannelNameBackGradient.Type=Theme::GRADIENT_NORMAL;
-	m_ChannelNameBackGradient.Direction=Theme::DIRECTION_VERT;
-	m_ChannelNameBackGradient.Color1=::GetSysColor(COLOR_3DFACE);
-	m_ChannelNameBackGradient.Color2=m_ChannelNameBackGradient.Color1;
-	m_CurChannelNameBackGradient=m_ChannelNameBackGradient;
-	m_TimeBarMarginGradient.Type=Theme::GRADIENT_NORMAL;
-	m_TimeBarMarginGradient.Direction=Theme::DIRECTION_HORZ;
-	m_TimeBarMarginGradient.Color1=::GetSysColor(COLOR_3DFACE);
-	m_TimeBarMarginGradient.Color2=m_TimeBarMarginGradient.Color1;
+	m_ChannelNameBackStyle.Type=TVTest::Theme::FILL_GRADIENT;
+	m_ChannelNameBackStyle.Gradient.Type=TVTest::Theme::GRADIENT_NORMAL;
+	m_ChannelNameBackStyle.Gradient.Direction=TVTest::Theme::DIRECTION_VERT;
+	m_ChannelNameBackStyle.Gradient.Color1=::GetSysColor(COLOR_3DFACE);
+	m_ChannelNameBackStyle.Gradient.Color2=m_ChannelNameBackStyle.Gradient.Color1;
+	m_CurChannelNameBackStyle=m_ChannelNameBackStyle;
+	m_TimeBarMarginStyle.Type=TVTest::Theme::FILL_GRADIENT;
+	m_TimeBarMarginStyle.Gradient.Type=TVTest::Theme::GRADIENT_NORMAL;
+	m_TimeBarMarginStyle.Gradient.Direction=TVTest::Theme::DIRECTION_HORZ;
+	m_TimeBarMarginStyle.Gradient.Color1=::GetSysColor(COLOR_3DFACE);
+	m_TimeBarMarginStyle.Gradient.Color2=m_TimeBarMarginStyle.Gradient.Color1;
 	for (int i=0;i<TIME_BAR_BACK_COLORS;i++) {
-		m_TimeBarBackGradient[i].Type=Theme::GRADIENT_NORMAL;
-		m_TimeBarBackGradient[i].Direction=Theme::DIRECTION_HORZ;
-		m_TimeBarBackGradient[i].Color1=m_TimeBarMarginGradient.Color1;
-		m_TimeBarBackGradient[i].Color2=m_TimeBarMarginGradient.Color2;
+		m_TimeBarBackStyle[i].Type=TVTest::Theme::FILL_GRADIENT;
+		m_TimeBarBackStyle[i].Gradient.Type=TVTest::Theme::GRADIENT_NORMAL;
+		m_TimeBarBackStyle[i].Gradient.Direction=TVTest::Theme::DIRECTION_HORZ;
+		m_TimeBarBackStyle[i].Gradient.Color1=m_TimeBarMarginStyle.Gradient.Color1;
+		m_TimeBarBackStyle[i].Gradient.Color2=m_TimeBarMarginStyle.Gradient.Color2;
 	}
 
 	m_EventInfoPopup.SetEventHandler(&m_EventInfoPopupHandler);
@@ -1305,6 +1308,43 @@ void CProgramGuide::SetStyle(const TVTest::Style::CStyleManager *pStyleManager)
 void CProgramGuide::NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager)
 {
 	m_Style.NormalizeStyle(pStyleManager);
+}
+
+
+void CProgramGuide::SetTheme(const TVTest::Theme::CThemeManager *pThemeManager)
+{
+	static const struct {
+		int From,To;
+	} ProgramGuideColorMap[] = {
+		{CColorScheme::COLOR_PROGRAMGUIDE_BACK,				COLOR_BACK},
+		{CColorScheme::COLOR_PROGRAMGUIDE_TEXT,				COLOR_EVENTTEXT},
+		{CColorScheme::COLOR_PROGRAMGUIDE_EVENTTITLE,		COLOR_EVENTTITLE},
+		{CColorScheme::COLOR_PROGRAMGUIDE_HIGHLIGHTTEXT,	COLOR_HIGHLIGHT_TEXT},
+		{CColorScheme::COLOR_PROGRAMGUIDE_HIGHLIGHTTITLE,	COLOR_HIGHLIGHT_TITLE},
+		{CColorScheme::COLOR_PROGRAMGUIDE_HIGHLIGHTBORDER,	COLOR_HIGHLIGHT_BORDER},
+		{CColorScheme::COLOR_PROGRAMGUIDE_CHANNELTEXT,		COLOR_CHANNELNAMETEXT},
+		{CColorScheme::COLOR_PROGRAMGUIDE_CURCHANNELTEXT,	COLOR_CURCHANNELNAMETEXT},
+		{CColorScheme::COLOR_PROGRAMGUIDE_TIMETEXT,			COLOR_TIMETEXT},
+		{CColorScheme::COLOR_PROGRAMGUIDE_TIMELINE,			COLOR_TIMELINE},
+		{CColorScheme::COLOR_PROGRAMGUIDE_CURTIMELINE,		COLOR_CURTIMELINE},
+	};
+	for (int i=0;i<lengthof(ProgramGuideColorMap);i++)
+		SetColor(ProgramGuideColorMap[i].To,
+				 pThemeManager->GetColor(ProgramGuideColorMap[i].From));
+
+	for (int i=CProgramGuide::COLOR_CONTENT_FIRST,j=0;i<=CProgramGuide::COLOR_CONTENT_LAST;i++,j++)
+		SetColor(i,pThemeManager->GetColor(CColorScheme::COLOR_PROGRAMGUIDE_CONTENT_FIRST+j));
+
+	TVTest::Theme::FillStyle ChBackStyle,CurChBackStyle,TimeBarMarginStyle;
+	pThemeManager->GetFillStyle(TVTest::Theme::CThemeManager::STYLE_PROGRAMGUIDE_CHANNEL,&ChBackStyle);
+	pThemeManager->GetFillStyle(TVTest::Theme::CThemeManager::STYLE_PROGRAMGUIDE_CURCHANNEL,&CurChBackStyle);
+	pThemeManager->GetFillStyle(TVTest::Theme::CThemeManager::STYLE_PROGRAMGUIDE_TIMEBAR,&TimeBarMarginStyle);
+
+	TVTest::Theme::FillStyle TimeStyles[CProgramGuide::TIME_BAR_BACK_COLORS];
+	for (int i=0;i<CProgramGuide::TIME_BAR_BACK_COLORS;i++)
+		pThemeManager->GetFillStyle(TVTest::Theme::CThemeManager::STYLE_PROGRAMGUIDE_TIMEBAR_0_2+i,&TimeStyles[i]);
+
+	SetBackColors(ChBackStyle,CurChBackStyle,TimeBarMarginStyle,TimeStyles);
 }
 
 
@@ -1716,29 +1756,32 @@ void CProgramGuide::DrawEventList(const ProgramGuide::CEventLayout *pLayout,
 
 void CProgramGuide::DrawHeaderBackground(HDC hdc,const RECT &Rect,bool fCur) const
 {
-	const Theme::GradientInfo &Gradient=
-		fCur?m_CurChannelNameBackGradient:m_ChannelNameBackGradient;
+	const TVTest::Theme::FillStyle &Style=
+		fCur?m_CurChannelNameBackStyle:m_ChannelNameBackStyle;
 	RECT rc;
 
 	rc=Rect;
 	rc.left++;
 	rc.right--;
-	Theme::FillGradient(hdc,&rc,&Gradient);
+	TVTest::Theme::Draw(hdc,rc,Style);
 
-	Theme::GradientInfo Border;
-	Border.Type=Gradient.Type;
-	Border.Direction=Theme::DIRECTION_VERT;
-	Border.Color1=MixColor(Gradient.Color1,RGB(255,255,255),192);
-	Border.Color2=MixColor(Gradient.Color2,RGB(255,255,255),192);
+	TVTest::Theme::FillStyle Border;
+	Border.Type=TVTest::Theme::FILL_GRADIENT;
+	Border.Gradient.Type=
+		Style.Type==TVTest::Theme::FILL_GRADIENT?
+			Style.Gradient.Type : TVTest::Theme::GRADIENT_NORMAL;
+	Border.Gradient.Direction=TVTest::Theme::DIRECTION_VERT;
+	Border.Gradient.Color1.Set(255,255,255);
+	Border.Gradient.Color2.Set(255,255,255);
 	rc=Rect;
 	rc.right=rc.left+1;
-	Theme::FillGradient(hdc,&rc,&Border);
+	TVTest::Theme::Draw(hdc,rc,TVTest::Theme::MixStyle(Style,Border,192));
 
-	Border.Color1=MixColor(Gradient.Color1,RGB(0,0,0),192);
-	Border.Color2=MixColor(Gradient.Color2,RGB(0,0,0),192);
+	Border.Gradient.Color1.Set(0,0,0);
+	Border.Gradient.Color2.Set(0,0,0);
 	rc=Rect;
 	rc.left=rc.right-1;
-	Theme::FillGradient(hdc,&rc,&Border);
+	TVTest::Theme::Draw(hdc,rc,TVTest::Theme::MixStyle(Style,Border,192));
 }
 
 
@@ -1846,7 +1889,7 @@ void CProgramGuide::DrawTimeBar(HDC hdc,const RECT &Rect,bool fRight)
 		else
 			Hour=(m_BeginHour+i)%24;
 		rc.bottom=rc.top+PixelsPerHour;
-		Theme::FillGradient(hdc,&rc,&m_TimeBarBackGradient[Hour/3]);
+		TVTest::Theme::Draw(hdc,rc,m_TimeBarBackStyle[Hour/3]);
 		::MoveToEx(hdc,rc.left,rc.top,NULL);
 		::LineTo(hdc,rc.right,rc.top);
 		if (((m_ListMode==LIST_SERVICES && m_Day==DAY_TODAY) || m_ListMode==LIST_WEEK)
@@ -2036,7 +2079,7 @@ void CProgramGuide::Draw(HDC hdc,const RECT &PaintRect)
 			}
 			if (rc.left<PaintRect.right) {
 				rc.right=PaintRect.right;
-				Theme::FillGradient(hdc,&rc,&m_ChannelNameBackGradient);
+				TVTest::Theme::Draw(hdc,rc,m_ChannelNameBackStyle);
 			}
 			::SelectClipRgn(hdc,NULL);
 			::DeleteObject(hrgn);
@@ -2099,7 +2142,7 @@ void CProgramGuide::Draw(HDC hdc,const RECT &PaintRect)
 			if (rc.left<rc.right) {
 				rc.top=0;
 				rc.bottom=m_HeaderHeight;
-				Theme::FillGradient(hdc,&rc,&m_ChannelNameBackGradient);
+				TVTest::Theme::Draw(hdc,rc,m_ChannelNameBackStyle);
 			}
 		}
 	}
@@ -2127,15 +2170,15 @@ void CProgramGuide::Draw(HDC hdc,const RECT &PaintRect)
 
 	if (rc.bottom<PaintRect.bottom) {
 		::SetRect(&rc,0,rc.bottom,m_TimeBarWidth,rcClient.bottom);
-		Theme::FillGradient(hdc,&rc,&m_TimeBarMarginGradient);
+		TVTest::Theme::Draw(hdc,rc,m_TimeBarMarginStyle);
 		::OffsetRect(&rc,rcGuide.right,0);
-		Theme::FillGradient(hdc,&rc,&m_TimeBarMarginGradient);
+		TVTest::Theme::Draw(hdc,rc,m_TimeBarMarginStyle);
 	}
 	if (PaintRect.top<HeaderHeight) {
 		::SetRect(&rc,0,0,m_TimeBarWidth,HeaderHeight);
-		Theme::FillGradient(hdc,&rc,&m_TimeBarMarginGradient);
+		TVTest::Theme::Draw(hdc,rc,m_TimeBarMarginStyle);
 		::OffsetRect(&rc,rcGuide.right,0);
-		Theme::FillGradient(hdc,&rc,&m_TimeBarMarginGradient);
+		TVTest::Theme::Draw(hdc,rc,m_TimeBarMarginStyle);
 	}
 
 	if (m_ListMode==LIST_SERVICES && m_Day!=DAY_TODAY
@@ -3098,16 +3141,16 @@ bool CProgramGuide::SetColor(int Type,COLORREF Color)
 }
 
 
-void CProgramGuide::SetBackColors(const Theme::GradientInfo *pChannelBackGradient,
-								  const Theme::GradientInfo *pCurChannelBackGradient,
-								  const Theme::GradientInfo *pTimeBarMarginGradient,
-								  const Theme::GradientInfo *pTimeBarBackGradient)
+void CProgramGuide::SetBackColors(const TVTest::Theme::FillStyle &ChannelBackStyle,
+								  const TVTest::Theme::FillStyle &CurChannelBackStyle,
+								  const TVTest::Theme::FillStyle &TimeBarMarginStyle,
+								  const TVTest::Theme::FillStyle *pTimeBarBackStyles)
 {
-	m_ChannelNameBackGradient=*pChannelBackGradient;
-	m_CurChannelNameBackGradient=*pCurChannelBackGradient;
-	m_TimeBarMarginGradient=*pTimeBarMarginGradient;
+	m_ChannelNameBackStyle=ChannelBackStyle;
+	m_CurChannelNameBackStyle=CurChannelBackStyle;
+	m_TimeBarMarginStyle=TimeBarMarginStyle;
 	for (int i=0;i<TIME_BAR_BACK_COLORS;i++)
-		m_TimeBarBackGradient[i]=pTimeBarBackGradient[i];
+		m_TimeBarBackStyle[i]=pTimeBarBackStyles[i];
 	if (m_hwnd!=NULL)
 		Invalidate();
 }
@@ -5248,7 +5291,7 @@ void CStatusBar::SetBarPosition(int x,int y,int Width,int Height)
 
 void CStatusBar::SetTheme(const ThemeInfo &Theme)
 {
-	m_StatusView.SetTheme(Theme.pStatusTheme);
+	m_StatusView.SetStatusViewTheme(Theme.StatusTheme);
 }
 
 
@@ -5427,27 +5470,28 @@ void CFavoritesToolbar::OnCustomDraw(NMTBCUSTOMDRAW *pnmtb,HDC hdc)
 		m_pProgramGuide->GetFavorites()->Get(pnmtb->nmcd.lItemlParam);
 
 	if (pInfo!=NULL) {
-		Theme::Style Style;
+		TVTest::Theme::BackgroundStyle Style;
 		COLORREF LightColor=pInfo->BackColor;
 		COLORREF DarkColor=MixColor(LightColor,RGB(0,0,0),220);
 
-		Style.Gradient.Type=Theme::GRADIENT_NORMAL;
-		Style.Gradient.Direction=Theme::DIRECTION_VERT;
+		Style.Fill.Type=TVTest::Theme::FILL_GRADIENT;
+		Style.Fill.Gradient.Type=TVTest::Theme::GRADIENT_NORMAL;
+		Style.Fill.Gradient.Direction=TVTest::Theme::DIRECTION_VERT;
 		if ((pnmtb->nmcd.uItemState&(CDIS_CHECKED | CDIS_HOT))!=0) {
-			Style.Gradient.Color1=DarkColor;
-			Style.Gradient.Color2=LightColor;
+			Style.Fill.Gradient.Color1=DarkColor;
+			Style.Fill.Gradient.Color2=LightColor;
 		} else {
-			Style.Gradient.Color1=LightColor;
-			Style.Gradient.Color2=DarkColor;
+			Style.Fill.Gradient.Color1=LightColor;
+			Style.Fill.Gradient.Color2=DarkColor;
 		}
 		if ((pnmtb->nmcd.uItemState&(CDIS_CHECKED | CDIS_SELECTED))!=0) {
-			Style.Border.Type=Theme::BORDER_SUNKEN;
+			Style.Border.Type=TVTest::Theme::BORDER_SUNKEN;
 			Style.Border.Color=DarkColor;
 		} else {
-			Style.Border.Type=Theme::BORDER_RAISED;
+			Style.Border.Type=TVTest::Theme::BORDER_RAISED;
 			Style.Border.Color=LightColor;
 		}
-		Theme::DrawStyleBackground(hdc,&pnmtb->nmcd.rc,&Style);
+		TVTest::Theme::Draw(hdc,pnmtb->nmcd.rc,Style);
 
 		HFONT hfont=reinterpret_cast<HFONT>(::SendMessage(m_hwnd,WM_GETFONT,0,0));
 		HGDIOBJ hOldFont=::SelectObject(hdc,hfont);
@@ -5550,24 +5594,25 @@ bool CDateToolbar::SetButtons(const SYSTEMTIME *pDateList,int Days,int FirstComm
 
 void CDateToolbar::OnCustomDraw(NMTBCUSTOMDRAW *pnmtb,HDC hdc)
 {
-	Theme::Style Style;
-	Style.Gradient.Type=Theme::GRADIENT_NORMAL;
-	Style.Gradient.Direction=Theme::DIRECTION_VERT;
+	TVTest::Theme::BackgroundStyle Style;
+	Style.Fill.Type=TVTest::Theme::FILL_GRADIENT;
+	Style.Fill.Gradient.Type=TVTest::Theme::GRADIENT_NORMAL;
+	Style.Fill.Gradient.Direction=TVTest::Theme::DIRECTION_VERT;
 	if ((pnmtb->nmcd.uItemState&(CDIS_CHECKED | CDIS_HOT))!=0) {
-		Style.Gradient.Color1=RGB(220,220,220);
-		Style.Gradient.Color2=RGB(255,255,255);
+		Style.Fill.Gradient.Color1.Set(220,220,220);
+		Style.Fill.Gradient.Color2.Set(255,255,255);
 	} else {
-		Style.Gradient.Color1=RGB(255,255,255);
-		Style.Gradient.Color2=RGB(220,220,220);
+		Style.Fill.Gradient.Color1.Set(255,255,255);
+		Style.Fill.Gradient.Color2.Set(220,220,220);
 	}
 	if ((pnmtb->nmcd.uItemState&CDIS_CHECKED)!=0) {
-		Style.Border.Type=Theme::BORDER_SUNKEN;
-		Style.Border.Color=RGB(220,220,220);
+		Style.Border.Type=TVTest::Theme::BORDER_SUNKEN;
+		Style.Border.Color.Set(220,220,220);
 	} else {
-		Style.Border.Type=Theme::BORDER_RAISED;
-		Style.Border.Color=RGB(255,255,255);
+		Style.Border.Type=TVTest::Theme::BORDER_RAISED;
+		Style.Border.Color.Set(255,255,255);
 	}
-	Theme::DrawStyleBackground(hdc,&pnmtb->nmcd.rc,&Style);
+	TVTest::Theme::Draw(hdc,pnmtb->nmcd.rc,Style);
 
 	int DayOfWeek=(int)(pnmtb->nmcd.lItemlParam&0xFF);
 
@@ -5696,24 +5741,25 @@ void CTimeToolbar::OnCustomDraw(NMTBCUSTOMDRAW *pnmtb,HDC hdc)
 		DarkColor=MixColor(RGB(192,216,255),DarkColor,(Hour+1)*4);
 	}
 
-	Theme::Style Style;
-	Style.Gradient.Type=Theme::GRADIENT_NORMAL;
-	Style.Gradient.Direction=Theme::DIRECTION_VERT;
+	TVTest::Theme::BackgroundStyle Style;
+	Style.Fill.Type=TVTest::Theme::FILL_GRADIENT;
+	Style.Fill.Gradient.Type=TVTest::Theme::GRADIENT_NORMAL;
+	Style.Fill.Gradient.Direction=TVTest::Theme::DIRECTION_VERT;
 	if ((pnmtb->nmcd.uItemState&(CDIS_CHECKED | CDIS_HOT))!=0) {
-		Style.Gradient.Color1=DarkColor;
-		Style.Gradient.Color2=LightColor;
+		Style.Fill.Gradient.Color1=DarkColor;
+		Style.Fill.Gradient.Color2=LightColor;
 	} else {
-		Style.Gradient.Color1=LightColor;
-		Style.Gradient.Color2=DarkColor;
+		Style.Fill.Gradient.Color1=LightColor;
+		Style.Fill.Gradient.Color2=DarkColor;
 	}
 	if ((pnmtb->nmcd.uItemState&(CDIS_CHECKED | CDIS_SELECTED))!=0) {
-		Style.Border.Type=Theme::BORDER_SUNKEN;
+		Style.Border.Type=TVTest::Theme::BORDER_SUNKEN;
 		Style.Border.Color=DarkColor;
 	} else {
-		Style.Border.Type=Theme::BORDER_RAISED;
+		Style.Border.Type=TVTest::Theme::BORDER_RAISED;
 		Style.Border.Color=LightColor;
 	}
-	Theme::DrawStyleBackground(hdc,&pnmtb->nmcd.rc,&Style);
+	TVTest::Theme::Draw(hdc,pnmtb->nmcd.rc,Style);
 
 	HFONT hfont=reinterpret_cast<HFONT>(::SendMessage(m_hwnd,WM_GETFONT,0,0));
 	HGDIOBJ hOldFont=::SelectObject(hdc,hfont);
@@ -5768,11 +5814,13 @@ CProgramGuideFrameBase::~CProgramGuideFrameBase()
 }
 
 
-void CProgramGuideFrameBase::SetStatusTheme(const CStatusView::ThemeInfo *pTheme)
+void CProgramGuideFrameBase::SetTheme(const TVTest::Theme::CThemeManager *pThemeManager)
 {
 	ProgramGuideBar::CProgramGuideBar::ThemeInfo Theme;
 
-	Theme.pStatusTheme=pTheme;
+	CStatusView::GetStatusViewThemeFromThemeManager(pThemeManager,&Theme.StatusTheme);
+	pThemeManager->GetBorderStyle(TVTest::Theme::CThemeManager::STYLE_PROGRAMGUIDE_STATUS,
+								  &Theme.StatusTheme.Border);
 
 	for (int i=0;i<lengthof(m_ToolbarList);i++)
 		m_ToolbarList[i]->SetTheme(Theme);
@@ -6173,6 +6221,12 @@ bool CProgramGuideFrame::SetAlwaysOnTop(bool fTop)
 }
 
 
+void CProgramGuideFrame::SetTheme(const TVTest::Theme::CThemeManager *pThemeManager)
+{
+	CProgramGuideFrameBase::SetTheme(pThemeManager);
+}
+
+
 bool CProgramGuideFrame::Show()
 {
 	if (m_hwnd==NULL)
@@ -6325,6 +6379,13 @@ bool CProgramGuideDisplay::Create(HWND hwndParent,DWORD Style,DWORD ExStyle,int 
 {
 	return CreateBasicWindow(hwndParent,Style,ExStyle,ID,
 							 m_pszWindowClass,NULL,m_hinst);
+}
+
+
+void CProgramGuideDisplay::SetTheme(const TVTest::Theme::CThemeManager *pThemeManager)
+{
+	CProgramGuideFrameBase::SetTheme(pThemeManager);
+	CDisplayView::SetTheme(pThemeManager);
 }
 
 

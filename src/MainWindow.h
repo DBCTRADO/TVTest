@@ -80,6 +80,7 @@ protected:
 class CMainWindow
 	: public CBasicWindow
 	, public CUISkin
+	, public TVTest::CUIBase
 	, public COSDManager::CEventHandler
 {
 public:
@@ -162,7 +163,6 @@ public:
 	void EndProgramGuideUpdate(unsigned int Flags=EPG_UPDATE_END_DEFAULT);
 
 	void UpdatePanel();
-	void ApplyColorScheme(const class CColorScheme *pColorScheme);
 	bool SetViewWindowEdge(bool fEdge);
 	bool GetViewWindowEdge() const { return m_fViewWindowEdge; }
 
@@ -188,6 +188,9 @@ public:
 
 // CUISkin
 	HWND GetVideoHostWindow() const override;
+
+// CUIBase
+	void SetTheme(const TVTest::Theme::CThemeManager *pThemeManager) override;
 
 private:
 	class CBarLayout
@@ -266,7 +269,9 @@ private:
 		POINT m_LastMovePos;
 	};
 
-	class CFullscreen : public CCustomWindow
+	class CFullscreen
+		: public CCustomWindow
+		, public TVTest::CUIBase
 	{
 	public:
 		CFullscreen(CMainWindow &MainWindow);
@@ -277,10 +282,12 @@ private:
 		bool SetPanelWidth(int Width);
 		int GetPanelWidth() const { return m_PanelWidth; }
 		void HideAllBars();
-		void ApplyColorScheme(const class CColorScheme *pColorScheme);
 		void OnRButtonDown();
 		void OnMButtonDown();
 		void OnMouseMove();
+
+	// CUIBase
+		void SetTheme(const TVTest::Theme::CThemeManager *pThemeManager) override;
 
 		static bool Initialize(HINSTANCE hinst);
 

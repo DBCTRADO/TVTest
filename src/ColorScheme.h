@@ -254,37 +254,10 @@ public:
 		BORDER_CONTROLPANELHIGHLIGHTITEM,
 		NUM_BORDERS
 	};
-	enum {
-		STYLE_STATUSITEM,
-		STYLE_STATUSBOTTOMITEM,
-		STYLE_STATUSHIGHLIGHTITEM,
-		STYLE_TITLEBARCAPTION,
-		STYLE_TITLEBARICON,
-		STYLE_TITLEBARHIGHLIGHTITEM,
-		STYLE_SIDEBARITEM,
-		STYLE_SIDEBARHIGHLIGHTITEM,
-		STYLE_SIDEBARCHECKITEM,
-		STYLE_PANEL_TAB,
-		STYLE_PANEL_CURTAB,
-		STYLE_PANEL_TABMARGIN,
-		STYLE_PANEL_TITLE,
-		STYLE_PROGRAMLISTPANEL_EVENT,
-		STYLE_PROGRAMLISTPANEL_CUREVENT,
-		STYLE_PROGRAMLISTPANEL_TITLE,
-		STYLE_PROGRAMLISTPANEL_CURTITLE,
-		STYLE_CHANNELPANEL_CHANNELNAME,
-		STYLE_CHANNELPANEL_CURCHANNELNAME,
-		STYLE_CHANNELPANEL_EVENTNAME1,
-		STYLE_CHANNELPANEL_EVENTNAME2,
-		STYLE_CHANNELPANEL_CURCHANNELEVENTNAME1,
-		STYLE_CHANNELPANEL_CURCHANNELEVENTNAME2,
-		STYLE_CONTROLPANELITEM,
-		STYLE_CONTROLPANELHIGHLIGHTITEM,
-		NUM_STYLES
-	};
+
 	struct GradientStyle {
-		Theme::GradientType Type;
-		Theme::GradientDirection Direction;
+		TVTest::Theme::GradientType Type;
+		TVTest::Theme::GradientDirection Direction;
 	};
 
 	CColorScheme();
@@ -294,15 +267,14 @@ public:
 	COLORREF GetColor(int Type) const;
 	COLORREF GetColor(LPCTSTR pszText) const;
 	bool SetColor(int Type,COLORREF Color);
-	Theme::GradientType GetGradientType(int Gradient) const;
-	Theme::GradientType GetGradientType(LPCTSTR pszText) const;
+	TVTest::Theme::GradientType GetGradientType(int Gradient) const;
+	TVTest::Theme::GradientType GetGradientType(LPCTSTR pszText) const;
 	bool SetGradientStyle(int Gradient,const GradientStyle &Style);
 	bool GetGradientStyle(int Gradient,GradientStyle *pStyle) const;
-	bool GetGradientInfo(int Gradient,Theme::GradientInfo *pInfo) const;
-	Theme::BorderType GetBorderType(int Border) const;
-	bool SetBorderType(int Border,Theme::BorderType Type);
-	bool GetBorderInfo(int Border,Theme::BorderInfo *pInfo) const;
-	bool GetStyle(int Type,Theme::Style *pStyle) const;
+	bool GetGradientStyle(int Gradient,TVTest::Theme::GradientStyle *pStyle) const;
+	TVTest::Theme::BorderType GetBorderType(int Border) const;
+	bool SetBorderType(int Border,TVTest::Theme::BorderType Type);
+	bool GetBorderStyle(int Border,TVTest::Theme::BorderStyle *pStyle) const;
 	LPCTSTR GetName() const { return m_Name.Get(); }
 	bool SetName(LPCTSTR pszName);
 	LPCTSTR GetFileName() const { return m_FileName.Get(); }
@@ -317,10 +289,10 @@ public:
 
 	static LPCTSTR GetColorName(int Type);
 	static COLORREF GetDefaultColor(int Type);
-	static Theme::GradientType GetDefaultGradientType(int Gradient);
+	static TVTest::Theme::GradientType GetDefaultGradientType(int Gradient);
 	static bool GetDefaultGradientStyle(int Gradient,GradientStyle *pStyle);
 	static bool IsGradientDirectionEnabled(int Gradient);
-	static Theme::BorderType GetDefaultBorderType(int Border);
+	static TVTest::Theme::BorderType GetDefaultBorderType(int Border);
 	static int GetColorGradient(int Type);
 	static int GetColorBorder(int Type);
 	static bool IsBorderAlways(int Border);
@@ -328,7 +300,7 @@ public:
 private:
 	COLORREF m_ColorList[NUM_COLORS];
 	GradientStyle m_GradientList[NUM_GRADIENTS];
-	Theme::BorderType m_BorderList[NUM_BORDERS];
+	TVTest::Theme::BorderType m_BorderList[NUM_BORDERS];
 	CDynamicString m_Name;
 	CDynamicString m_FileName;
 	struct ColorInfo {
@@ -338,21 +310,16 @@ private:
 	};
 	struct GradientInfo {
 		LPCTSTR pszText;
-		Theme::GradientDirection Direction;
+		TVTest::Theme::GradientDirection Direction;
 		bool fEnableDirection;
 		int Color1;
 		int Color2;
 	};
 	struct BorderInfo {
 		LPCTSTR pszText;
-		Theme::BorderType DefaultType;
+		TVTest::Theme::BorderType DefaultType;
 		int Color;
 		bool fAlways;
-	};
-	struct StyleInfo {
-		int Gradient;
-		int Border;
-		int TextColor;
 	};
 
 	DWORD m_LoadedFlags[(NUM_COLORS+31)/32];
@@ -360,8 +327,7 @@ private:
 	static const ColorInfo m_ColorInfoList[NUM_COLORS];
 	static const GradientInfo m_GradientInfoList[NUM_GRADIENTS];
 	static const BorderInfo m_BorderInfoList[NUM_BORDERS];
-	static const Theme::BorderType m_CustomDefaultBorderList[NUM_BORDERS];
-	static const StyleInfo m_StyleList[NUM_STYLES];
+	static const TVTest::Theme::BorderType m_CustomDefaultBorderList[NUM_BORDERS];
 };
 
 class CColorSchemeList
@@ -411,7 +377,7 @@ private:
 	CColorScheme *m_pColorScheme;
 	CColorSchemeList m_PresetList;
 	CColorScheme::GradientStyle m_GradientList[CColorScheme::NUM_GRADIENTS];
-	Theme::BorderType m_BorderList[CColorScheme::NUM_BORDERS];
+	TVTest::Theme::BorderType m_BorderList[CColorScheme::NUM_BORDERS];
 	CColorScheme *m_pPreviewColorScheme;
 	bool m_fPreview;
 	CEventHandler *m_pEventHandler;

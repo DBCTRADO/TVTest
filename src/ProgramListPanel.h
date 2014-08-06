@@ -40,12 +40,12 @@ class CProgramListPanel
 	, public TVTest::CUIBase
 {
 public:
-	struct ThemeInfo {
-		Theme::Style EventNameStyle;
-		Theme::Style CurEventNameStyle;
-		Theme::Style EventTextStyle;
-		Theme::Style CurEventTextStyle;
-		COLORREF MarginColor;
+	struct ProgramListPanelTheme {
+		TVTest::Theme::Style EventNameStyle;
+		TVTest::Theme::Style CurEventNameStyle;
+		TVTest::Theme::Style EventTextStyle;
+		TVTest::Theme::Style CurEventTextStyle;
+		TVTest::Theme::ThemeColor MarginColor;
 	};
 
 	static bool Initialize(HINSTANCE hinst);
@@ -59,6 +59,7 @@ public:
 // CUIBase
 	void SetStyle(const TVTest::Style::CStyleManager *pStyleManager) override;
 	void NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager) override;
+	void SetTheme(const TVTest::Theme::CThemeManager *pThemeManager) override;
 
 // CProgramListPanel
 	void SetEpgProgramList(CEpgProgramList *pList) { m_pProgramList=pList; }
@@ -66,8 +67,8 @@ public:
 	bool OnProgramListChanged();
 	void ClearProgramList();
 	void SetCurrentEventID(int EventID);
-	bool SetTheme(const ThemeInfo *pTheme);
-	bool GetTheme(ThemeInfo *pTheme) const;
+	bool SetProgramListPanelTheme(const ProgramListPanelTheme &Theme);
+	bool GetProgramListPanelTheme(ProgramListPanelTheme *pTheme) const;
 	bool SetFont(const LOGFONT *pFont);
 	bool SetEventInfoFont(const LOGFONT *pFont);
 	void ShowRetrievingMessage(bool fShow);
@@ -91,7 +92,7 @@ private:
 	DrawUtil::CFont m_TitleFont;
 	int m_FontHeight;
 	ProgramListPanelStyle m_Style;
-	ThemeInfo m_Theme;
+	ProgramListPanelTheme m_Theme;
 	CEpgIcons m_EpgIcons;
 	UINT m_VisibleEventIcons;
 	int m_TotalLines;

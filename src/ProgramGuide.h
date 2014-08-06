@@ -322,6 +322,7 @@ public:
 // CUIBase
 	void SetStyle(const TVTest::Style::CStyleManager *pStyleManager) override;
 	void NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager) override;
+	void SetTheme(const TVTest::Theme::CThemeManager *pThemeManager) override;
 
 // CProgramGuide
 	bool SetEpgProgramList(CEpgProgramList *pList);
@@ -370,10 +371,10 @@ public:
 	int GetItemWidth() const { return m_ItemWidth; }
 	bool SetUIOptions(int LinesPerHour,int ItemWidth,int LineMargin);
 	bool SetColor(int Type,COLORREF Color);
-	void SetBackColors(const Theme::GradientInfo *pChannelBackGradient,
-					   const Theme::GradientInfo *pCurChannelBackGradient,
-					   const Theme::GradientInfo *pTimeBarMarginGradient,
-					   const Theme::GradientInfo *pTimeBarBackGradient);
+	void SetBackColors(const TVTest::Theme::FillStyle &ChannelBackStyle,
+					   const TVTest::Theme::FillStyle &CurChannelBackStyle,
+					   const TVTest::Theme::FillStyle &TimeBarMarginStyle,
+					   const TVTest::Theme::FillStyle *pTimeBarBackStyles);
 	bool SetFont(const LOGFONT *pFont);
 	bool GetFont(LOGFONT *pFont) const;
 	bool SetEventInfoFont(const LOGFONT *pFont);
@@ -512,10 +513,10 @@ private:
 	CFrame *m_pFrame;
 	CProgramCustomizer *m_pProgramCustomizer;
 	COLORREF m_ColorList[NUM_COLORS];
-	Theme::GradientInfo m_ChannelNameBackGradient;
-	Theme::GradientInfo m_CurChannelNameBackGradient;
-	Theme::GradientInfo m_TimeBarMarginGradient;
-	Theme::GradientInfo m_TimeBarBackGradient[TIME_BAR_BACK_COLORS];
+	TVTest::Theme::FillStyle m_ChannelNameBackStyle;
+	TVTest::Theme::FillStyle m_CurChannelNameBackStyle;
+	TVTest::Theme::FillStyle m_TimeBarMarginStyle;
+	TVTest::Theme::FillStyle m_TimeBarBackStyle[TIME_BAR_BACK_COLORS];
 	CProgramGuideToolList m_ToolList;
 	int m_WheelScrollLines;
 	unsigned int m_Filter;
@@ -605,7 +606,7 @@ namespace ProgramGuideBar
 	{
 	public:
 		struct ThemeInfo {
-			const CStatusView::ThemeInfo *pStatusTheme;
+			CStatusView::StatusViewTheme StatusTheme;
 		};
 
 		CProgramGuideBar(CProgramGuide *pProgramGuide);
@@ -637,7 +638,8 @@ namespace ProgramGuideBar
 
 class CProgramGuideFrameSettings;
 
-class ABSTRACT_CLASS(CProgramGuideFrameBase) : public CProgramGuide::CFrame
+class ABSTRACT_CLASS(CProgramGuideFrameBase)
+	: public CProgramGuide::CFrame
 {
 public:
 	enum {
@@ -651,9 +653,9 @@ public:
 
 	CProgramGuideFrameBase(CProgramGuide *pProgramGuide,CProgramGuideFrameSettings *pSettings);
 	virtual ~CProgramGuideFrameBase() = 0;
-	void SetStatusTheme(const CStatusView::ThemeInfo *pTheme);
 	bool SetToolbarVisible(int Toolbar,bool fVisible);
 	bool GetToolbarVisible(int Toolbar) const;
+	void SetTheme(const TVTest::Theme::CThemeManager *pThemeManager);
 
 protected:
 	CProgramGuide *m_pProgramGuide;
@@ -703,7 +705,10 @@ private:
 	ToolbarInfo m_ToolbarList[CProgramGuideFrameBase::TOOLBAR_NUM];
 };
 
-class CProgramGuideFrame : public CProgramGuideFrameBase, public CCustomWindow
+class CProgramGuideFrame
+	: public CProgramGuideFrameBase
+	, public CCustomWindow
+	, public TVTest::CUIBase
 {
 public:
 	static bool Initialize(HINSTANCE hinst);
@@ -716,6 +721,8 @@ public:
 // CProgramGuide::CFrame
 	bool SetAlwaysOnTop(bool fTop) override;
 	bool GetAlwaysOnTop() const override { return m_fAlwaysOnTop; }
+// CUIBase
+	void SetTheme(const TVTest::Theme::CThemeManager *pThemeManager) override;
 // CProgramGuideFrame
 	bool Show();
 
@@ -736,7 +743,9 @@ private:
 	static HINSTANCE m_hinst;
 };
 
-class CProgramGuideDisplay : public CProgramGuideFrameBase, public CDisplayView
+class CProgramGuideDisplay
+	: public CProgramGuideFrameBase
+	, public CDisplayView
 {
 public:
 	class ABSTRACT_CLASS(CProgramGuideDisplayEventHandler) : public CDisplayView::CEventHandler
@@ -757,6 +766,8 @@ public:
 	~CProgramGuideDisplay();
 // CBasicWindow
 	bool Create(HWND hwndParent,DWORD Style,DWORD ExStyle=0,int ID=0) override;
+// CUIBase
+	void SetTheme(const TVTest::Theme::CThemeManager *pThemeManager) override;
 // CProgramGuideDisplay
 	void SetEventHandler(CProgramGuideDisplayEventHandler *pHandler);
 

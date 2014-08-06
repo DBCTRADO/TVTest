@@ -596,6 +596,7 @@
     <ClCompile Include="Style.cpp" />
     <ClCompile Include="Taskbar.cpp" />
     <ClCompile Include="Theme.cpp" />
+    <ClCompile Include="ThemeManager.cpp" />
     <ClCompile Include="TitleBar.cpp" />
     <ClCompile Include="Tooltip.cpp" />
     <ClCompile Include="TVTest.cpp" />
@@ -757,6 +758,7 @@
     <ClInclude Include="Style.h" />
     <ClInclude Include="Taskbar.h" />
     <ClInclude Include="Theme.h" />
+    <ClInclude Include="ThemeManager.h" />
     <ClInclude Include="TitleBar.h" />
     <ClInclude Include="Tooltip.h" />
     <ClInclude Include="TVTest.h" />

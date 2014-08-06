@@ -104,6 +104,9 @@ bool FillGradient(HDC hdc,const RECT *pRect,const RGBA &Color1,const RGBA &Color
 			|| pRect->left>=pRect->right || pRect->top>=pRect->bottom)
 		return false;
 
+	if (Color1.Alpha==255 && Color2.Alpha==255)
+		return FillGradient(hdc,pRect,Color1.GetCOLORREF(),Color2.GetCOLORREF(),Direction);
+
 	if (Direction==DIRECTION_HORZMIRROR || Direction==DIRECTION_VERTMIRROR) {
 		RECT rc;
 

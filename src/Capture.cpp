@@ -392,6 +392,12 @@ bool CCaptureWindow::Create(HWND hwndParent,DWORD Style,DWORD ExStyle,int ID)
 }
 
 
+void CCaptureWindow::SetTheme(const TVTest::Theme::CThemeManager *pThemeManager)
+{
+	m_Status.SetTheme(pThemeManager);
+}
+
+
 bool CCaptureWindow::SetImage(const BITMAPINFO *pbmi,const void *pBits)
 {
 	ClearImage();
@@ -457,12 +463,6 @@ void CCaptureWindow::ShowStatusBar(bool fShow)
 			m_Status.SetVisible(fShow);
 		}
 	}
-}
-
-
-void CCaptureWindow::SetStatusTheme(const CStatusView::ThemeInfo *pTheme)
-{
-	m_Status.SetTheme(pTheme);
 }
 
 

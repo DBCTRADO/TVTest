@@ -50,22 +50,20 @@ CPanelForm::CPanelForm()
 	m_WindowPosition.Width=200;
 	m_WindowPosition.Height=240;
 
-	m_Theme.TabStyle.Gradient.Type=Theme::GRADIENT_NORMAL;
-	m_Theme.TabStyle.Gradient.Direction=Theme::DIRECTION_VERT;
-	m_Theme.TabStyle.Gradient.Color1=RGB(192,192,192);
-	m_Theme.TabStyle.Gradient.Color2=RGB(192,192,192);
-	m_Theme.TabStyle.Border.Type=Theme::BORDER_SOLID;
-	m_Theme.TabStyle.Border.Color=RGB(128,128,128);
-	m_Theme.TabStyle.TextColor=RGB(0,0,0);
-	m_Theme.CurTabStyle.Gradient.Type=Theme::GRADIENT_NORMAL;
-	m_Theme.CurTabStyle.Gradient.Direction=Theme::DIRECTION_VERT;
-	m_Theme.CurTabStyle.Gradient.Color1=RGB(224,224,224);
-	m_Theme.CurTabStyle.Gradient.Color2=RGB(224,224,224);
-	m_Theme.CurTabStyle.Border.Type=Theme::BORDER_SOLID;
-	m_Theme.CurTabStyle.Border.Color=RGB(128,128,128);
-	m_Theme.CurTabStyle.TextColor=RGB(0,0,0);
+	m_Theme.TabStyle.Back.Fill.Type=TVTest::Theme::FILL_SOLID;
+	m_Theme.TabStyle.Back.Fill.Solid.Color.Set(192,192,192);
+	m_Theme.TabStyle.Back.Border.Type=TVTest::Theme::BORDER_SOLID;
+	m_Theme.TabStyle.Back.Border.Color.Set(128,128,128);
+	m_Theme.TabStyle.Fore.Fill.Type=TVTest::Theme::FILL_SOLID;
+	m_Theme.TabStyle.Fore.Fill.Solid.Color.Set(0,0,0);
+	m_Theme.CurTabStyle.Back.Fill.Type=TVTest::Theme::FILL_SOLID;
+	m_Theme.CurTabStyle.Back.Fill.Solid.Color.Set(224,224,224);
+	m_Theme.CurTabStyle.Back.Border.Type=TVTest::Theme::BORDER_SOLID;
+	m_Theme.CurTabStyle.Back.Border.Color.Set(128,128,128);
+	m_Theme.CurTabStyle.Fore.Fill.Type=TVTest::Theme::FILL_SOLID;
+	m_Theme.CurTabStyle.Fore.Fill.Solid.Color.Set(0,0,0);
 	m_Theme.TabMarginStyle=m_Theme.TabStyle;
-	m_Theme.TabMarginStyle.Border.Type=Theme::BORDER_NONE;
+	m_Theme.TabMarginStyle.Back.Border.Type=TVTest::Theme::BORDER_NONE;
 	m_Theme.BackColor=RGB(192,192,192);
 	m_Theme.BorderColor=RGB(128,128,128);
 }
@@ -102,6 +100,25 @@ void CPanelForm::SetStyle(const TVTest::Style::CStyleManager *pStyleManager)
 void CPanelForm::NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager)
 {
 	m_Style.NormalizeStyle(pStyleManager);
+}
+
+
+void CPanelForm::SetTheme(const TVTest::Theme::CThemeManager *pThemeManager)
+{
+	PanelFormTheme Theme;
+
+	pThemeManager->GetStyle(TVTest::Theme::CThemeManager::STYLE_PANEL_TAB,
+							&Theme.TabStyle);
+	pThemeManager->GetStyle(TVTest::Theme::CThemeManager::STYLE_PANEL_CURTAB,
+							&Theme.CurTabStyle);
+	pThemeManager->GetStyle(TVTest::Theme::CThemeManager::STYLE_PANEL_TABMARGIN,
+							&Theme.TabMarginStyle);
+	Theme.BackColor=
+		pThemeManager->GetColor(CColorScheme::COLOR_PANELBACK);
+	Theme.BorderColor=
+		pThemeManager->GetColor(CColorScheme::COLOR_PANELTABLINE);
+
+	SetPanelFormTheme(Theme);
 }
 
 
@@ -253,18 +270,16 @@ void CPanelForm::SetEventHandler(CEventHandler *pHandler)
 }
 
 
-bool CPanelForm::SetTheme(const ThemeInfo *pTheme)
+bool CPanelForm::SetPanelFormTheme(const PanelFormTheme &Theme)
 {
-	if (pTheme==NULL)
-		return false;
-	m_Theme=*pTheme;
+	m_Theme=Theme;
 	if (m_hwnd!=NULL)
 		Invalidate();
 	return true;
 }
 
 
-bool CPanelForm::GetTheme(ThemeInfo *pTheme) const
+bool CPanelForm::GetPanelFormTheme(PanelFormTheme *pTheme) const
 {
 	if (pTheme==NULL)
 		return false;
@@ -478,21 +493,20 @@ void CPanelForm::Draw(HDC hdc,const RECT &PaintRect)
 				continue;
 
 			const bool fCur=Index==m_CurTab;
-			const Theme::Style &Style=fCur?m_Theme.CurTabStyle:m_Theme.TabStyle;
+			const TVTest::Theme::Style &Style=fCur?m_Theme.CurTabStyle:m_Theme.TabStyle;
 			RECT rcTab,rcText;
 
 			rcTab=rc;
 			if (fCur)
 				rcTab.bottom++;
-			Theme::DrawStyleBackground(hdc,&rcTab,&Style);
+			TVTest::Theme::Draw(hdc,rcTab,Style.Back);
 			if (!fCur) {
 				::MoveToEx(hdc,rc.left,rc.bottom-1,NULL);
 				::LineTo(hdc,rc.right,rc.bottom-1);
 			}
-			::SetTextColor(hdc,Style.TextColor);
 			rcText=rc;
 			TVTest::Style::Subtract(&rcText,m_Style.TabPadding);
-			::DrawText(hdc,pWindow->m_Title.Get(),-1,&rcText,
+			TVTest::Theme::Draw(hdc,rcText,Style.Fore,pWindow->m_Title.Get(),
 				DT_CENTER | DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX | DT_END_ELLIPSIS);
 			rc.left=rc.right;
 			rc.right=rc.left+TabWidth;
@@ -505,7 +519,7 @@ void CPanelForm::Draw(HDC hdc,const RECT &PaintRect)
 			if (PaintRect.left>rc.left)
 				rc.left=PaintRect.left;
 			rc.right=PaintRect.right;
-			Theme::DrawStyleBackground(hdc,&rc,&m_Theme.TabMarginStyle);
+			TVTest::Theme::Draw(hdc,rc,m_Theme.TabMarginStyle.Back);
 			::MoveToEx(hdc,rc.left,rc.bottom-1,NULL);
 			::LineTo(hdc,rc.right,rc.bottom-1);
 		}

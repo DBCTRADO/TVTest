@@ -52,11 +52,11 @@ bool CBasicViewer::Create(HWND hwndParent,int ViewID,int ContainerID,HWND hwndMe
 		WS_CHILD | WS_VISIBLE | WS_CLIPCHILDREN | WS_CLIPSIBLINGS,0,ViewID);
 	m_ViewWindow.SetMessageWindow(hwndMessage);
 	const CColorScheme *pColorScheme=m_App.ColorSchemeOptions.GetColorScheme();
-	Theme::BorderInfo Border;
-	pColorScheme->GetBorderInfo(CColorScheme::BORDER_SCREEN,&Border);
+	Theme::BorderStyle Border;
+	pColorScheme->GetBorderStyle(CColorScheme::BORDER_SCREEN,&Border);
 	if (!m_App.MainWindow.GetViewWindowEdge())
 		Border.Type=Theme::BORDER_NONE;
-	m_ViewWindow.SetBorder(&Border);
+	m_ViewWindow.SetBorder(Border);
 	m_VideoContainer.Create(m_ViewWindow.GetHandle(),
 		WS_CHILD | WS_CLIPCHILDREN | WS_CLIPSIBLINGS,0,ContainerID,
 		&m_App.CoreEngine.m_DtvEngine);
@@ -694,7 +694,7 @@ void CMainWindow::SetTitleBarVisible(bool fVisible)
 			if (!fMaximize)
 				GetPosition(&rc);
 			if (!m_fCustomTitleBar)
-				SetStyle(GetStyle()^WS_CAPTION,fMaximize);
+				SetWindowStyle(GetWindowStyle()^WS_CAPTION,fMaximize);
 			else if (!fVisible)
 				m_LayoutBase.SetContainerVisible(CONTAINER_ID_TITLEBAR,false);
 			if (!fMaximize) {
@@ -734,7 +734,7 @@ void CMainWindow::SetCustomTitleBar(bool fCustom)
 			if (m_fShowTitleBar) {
 				if (!fCustom)
 					m_LayoutBase.SetContainerVisible(CONTAINER_ID_TITLEBAR,false);
-				SetStyle(GetStyle()^WS_CAPTION,true);
+				SetWindowStyle(GetWindowStyle()^WS_CAPTION,true);
 				if (fCustom)
 					m_LayoutBase.SetContainerVisible(CONTAINER_ID_TITLEBAR,true);
 			}
@@ -5665,36 +5665,19 @@ void CMainWindow::UpdateControlPanel()
 }
 
 
-void CMainWindow::ApplyColorScheme(const CColorScheme *pColorScheme)
+void CMainWindow::SetTheme(const TVTest::Theme::CThemeManager *pThemeManager)
 {
-	m_LayoutBase.SetBackColor(pColorScheme->GetColor(CColorScheme::COLOR_SPLITTER));
+	m_LayoutBase.SetBackColor(pThemeManager->GetColor(CColorScheme::COLOR_SPLITTER));
 
-	Theme::BorderInfo Border;
-	pColorScheme->GetBorderInfo(CColorScheme::BORDER_SCREEN,&Border);
+	Theme::BorderStyle Border;
+	pThemeManager->GetBorderStyle(TVTest::Theme::CThemeManager::STYLE_SCREEN,&Border);
 	if (!m_fViewWindowEdge)
 		Border.Type=Theme::BORDER_NONE;
-	m_Viewer.GetViewWindow().SetBorder(&Border);
+	m_Viewer.GetViewWindow().SetBorder(Border);
 
-	CTitleBar::ThemeInfo TitleBarTheme;
-	pColorScheme->GetStyle(CColorScheme::STYLE_TITLEBARCAPTION,
-						   &TitleBarTheme.CaptionStyle);
-	pColorScheme->GetStyle(CColorScheme::STYLE_TITLEBARICON,
-						   &TitleBarTheme.IconStyle);
-	pColorScheme->GetStyle(CColorScheme::STYLE_TITLEBARHIGHLIGHTITEM,
-						   &TitleBarTheme.HighlightIconStyle);
-	pColorScheme->GetBorderInfo(CColorScheme::BORDER_TITLEBAR,
-								&TitleBarTheme.Border);
-	m_TitleBar.SetTheme(&TitleBarTheme);
-
-	Theme::GradientInfo Gradient;
-	pColorScheme->GetGradientInfo(CColorScheme::GRADIENT_NOTIFICATIONBARBACK,&Gradient);
-	m_NotificationBar.SetColors(
-		&Gradient,
-		pColorScheme->GetColor(CColorScheme::COLOR_NOTIFICATIONBARTEXT),
-		pColorScheme->GetColor(CColorScheme::COLOR_NOTIFICATIONBARWARNINGTEXT),
-		pColorScheme->GetColor(CColorScheme::COLOR_NOTIFICATIONBARERRORTEXT));
-
-	m_Fullscreen.ApplyColorScheme(pColorScheme);
+	m_TitleBar.SetTheme(pThemeManager);
+	m_NotificationBar.SetTheme(pThemeManager);
+	m_Fullscreen.SetTheme(pThemeManager);
 }
 
 
@@ -5702,12 +5685,12 @@ bool CMainWindow::SetViewWindowEdge(bool fEdge)
 {
 	if (m_fViewWindowEdge!=fEdge) {
 		const CColorScheme *pColorScheme=m_App.ColorSchemeOptions.GetColorScheme();
-		Theme::BorderInfo Border;
+		Theme::BorderStyle Border;
 
-		pColorScheme->GetBorderInfo(CColorScheme::BORDER_SCREEN,&Border);
+		pColorScheme->GetBorderStyle(CColorScheme::BORDER_SCREEN,&Border);
 		if (!fEdge)
 			Border.Type=Theme::BORDER_NONE;
-		m_Viewer.GetViewWindow().SetBorder(&Border);
+		m_Viewer.GetViewWindow().SetBorder(Border);
 		m_fViewWindowEdge=fEdge;
 	}
 	return true;
@@ -5986,9 +5969,9 @@ bool CMainWindow::CFullscreen::OnCreate()
 	m_Panel.ShowTitle(true);
 	m_Panel.EnableFloating(false);
 	m_Panel.SetEventHandler(&m_PanelEventHandler);
-	CPanel::ThemeInfo PanelTheme;
-	m_App.Panel.Frame.GetTheme(&PanelTheme);
-	m_Panel.SetTheme(&PanelTheme);
+	CPanel::PanelTheme PanelTheme;
+	m_App.Panel.Frame.GetPanelTheme(&PanelTheme);
+	m_Panel.SetPanelTheme(PanelTheme);
 
 	Layout::CSplitter *pSplitter=new Layout::CSplitter(CONTAINER_ID_PANELSPLITTER);
 	pSplitter->SetVisible(true);
@@ -6095,9 +6078,9 @@ void CMainWindow::CFullscreen::HideAllBars()
 }
 
 
-void CMainWindow::CFullscreen::ApplyColorScheme(const CColorScheme *pColorScheme)
+void CMainWindow::CFullscreen::SetTheme(const TVTest::Theme::CThemeManager *pThemeManager)
 {
-	m_LayoutBase.SetBackColor(pColorScheme->GetColor(CColorScheme::COLOR_SPLITTER));
+	m_LayoutBase.SetBackColor(pThemeManager->GetColor(CColorScheme::COLOR_SPLITTER));
 }
 
 
@@ -6249,9 +6232,6 @@ void CMainWindow::CFullscreen::ShowTitleBar(bool fShow)
 
 	if (fShow) {
 		RECT rc,rcBar;
-		const CColorScheme *pColorScheme=m_App.ColorSchemeOptions.GetColorScheme();
-		Theme::GradientInfo Gradient1,Gradient2;
-		Theme::BorderInfo Border;
 
 		ShowSideBar(false);
 		m_ViewWindow.GetClientRect(&rc);
@@ -6259,9 +6239,9 @@ void CMainWindow::CFullscreen::ShowTitleBar(bool fShow)
 		m_TitleBar.SetPosition(&rcBar);
 		m_TitleBar.SetLabel(m_MainWindow.GetTitleBar().GetLabel());
 		m_TitleBar.SetMaximizeMode(m_MainWindow.GetMaximize());
-		CTitleBar::ThemeInfo TitleBarTheme;
-		m_MainWindow.GetTitleBar().GetTheme(&TitleBarTheme);
-		m_TitleBar.SetTheme(&TitleBarTheme);
+		CTitleBar::TitleBarTheme TitleBarTheme;
+		m_MainWindow.GetTitleBar().GetTitleBarTheme(&TitleBarTheme);
+		m_TitleBar.SetTitleBarTheme(TitleBarTheme);
 		m_TitleBar.SetVisible(true);
 		::BringWindowToTop(m_TitleBar.GetHandle());
 	} else {

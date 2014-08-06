@@ -2,6 +2,16 @@
 #define BASIC_WINDOW_H
 
 
+#undef GetWindowStyle
+#undef GetWindowExStyle
+inline DWORD GetWindowStyle(HWND hwnd) {
+	return ::GetWindowLong(hwnd,GWL_STYLE);
+}
+inline DWORD GetWindowExStyle(HWND hwnd) {
+	return ::GetWindowLong(hwnd,GWL_EXSTYLE);
+}
+
+
 // ウィンドウの基底クラス
 class ABSTRACT_CLASS(CBasicWindow)
 {
@@ -48,10 +58,10 @@ public:
 	bool SetParent(CBasicWindow *pWindow);
 	HWND GetParent() const;
 	bool MoveToMonitorInside();
-	DWORD GetStyle() const;
-	bool SetStyle(DWORD Style,bool fFrameChange=false);
-	DWORD GetExStyle() const;
-	bool SetExStyle(DWORD ExStyle,bool fFrameChange=false);
+	DWORD GetWindowStyle() const;
+	bool SetWindowStyle(DWORD Style,bool fFrameChange=false);
+	DWORD GetWindowExStyle() const;
+	bool SetWindowExStyle(DWORD ExStyle,bool fFrameChange=false);
 	LRESULT SendMessage(UINT Msg,WPARAM wParam,LPARAM lParam);
 	bool PostMessage(UINT Msg,WPARAM wParam,LPARAM lParam);
 	bool SendSizeMessage();

@@ -49,23 +49,21 @@ CSideBar::CSideBar(const CCommandList *pCommandList)
 	, m_pEventHandler(NULL)
 	, m_pCommandList(pCommandList)
 {
-	m_Theme.ItemStyle.Gradient.Type=Theme::GRADIENT_NORMAL;
-	m_Theme.ItemStyle.Gradient.Direction=Theme::DIRECTION_HORZ;
-	m_Theme.ItemStyle.Gradient.Color1=RGB(192,192,192);
-	m_Theme.ItemStyle.Gradient.Color2=RGB(192,192,192);
-	m_Theme.ItemStyle.Border.Type=Theme::BORDER_NONE;
-	m_Theme.ItemStyle.TextColor=RGB(0,0,0);
-	m_Theme.HighlightItemStyle.Gradient.Type=Theme::GRADIENT_NORMAL;
-	m_Theme.HighlightItemStyle.Gradient.Direction=Theme::DIRECTION_HORZ;
-	m_Theme.HighlightItemStyle.Gradient.Color1=RGB(128,128,128);
-	m_Theme.HighlightItemStyle.Gradient.Color2=RGB(128,128,128);
-	m_Theme.HighlightItemStyle.Border.Type=Theme::BORDER_NONE;
-	m_Theme.HighlightItemStyle.TextColor=RGB(255,255,255);
+	m_Theme.ItemStyle.Back.Fill.Type=TVTest::Theme::FILL_SOLID;
+	m_Theme.ItemStyle.Back.Fill.Solid.Color.Set(192,192,192);
+	m_Theme.ItemStyle.Back.Border.Type=TVTest::Theme::BORDER_NONE;
+	m_Theme.ItemStyle.Fore.Fill.Type=TVTest::Theme::FILL_SOLID;
+	m_Theme.ItemStyle.Fore.Fill.Solid.Color.Set(0,0,0);
+	m_Theme.HighlightItemStyle.Back.Fill.Type=TVTest::Theme::FILL_SOLID;
+	m_Theme.HighlightItemStyle.Back.Fill.Solid.Color.Set(128,128,128);
+	m_Theme.HighlightItemStyle.Back.Border.Type=TVTest::Theme::BORDER_NONE;
+	m_Theme.HighlightItemStyle.Fore.Fill.Type=TVTest::Theme::FILL_SOLID;
+	m_Theme.HighlightItemStyle.Fore.Fill.Solid.Color.Set(255,255,255);
 	m_Theme.CheckItemStyle=m_Theme.ItemStyle;
-	m_Theme.CheckItemStyle.Border.Type=Theme::BORDER_SUNKEN;
-	m_Theme.CheckItemStyle.Border.Color=RGB(192,192,192);
-	m_Theme.Border.Type=Theme::BORDER_RAISED;
-	m_Theme.Border.Color=RGB(192,192,192);
+	m_Theme.CheckItemStyle.Back.Border.Type=TVTest::Theme::BORDER_SUNKEN;
+	m_Theme.CheckItemStyle.Back.Border.Color.Set(192,192,192);
+	m_Theme.Border.Type=TVTest::Theme::BORDER_RAISED;
+	m_Theme.Border.Color.Set(192,192,192);
 }
 
 
@@ -96,10 +94,27 @@ void CSideBar::NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager)
 }
 
 
+void CSideBar::SetTheme(const TVTest::Theme::CThemeManager *pThemeManager)
+{
+	SideBarTheme Theme;
+
+	pThemeManager->GetStyle(TVTest::Theme::CThemeManager::STYLE_SIDEBAR_ITEM,
+							&Theme.ItemStyle);
+	pThemeManager->GetStyle(TVTest::Theme::CThemeManager::STYLE_SIDEBAR_ITEM_HOT,
+							&Theme.HighlightItemStyle);
+	pThemeManager->GetStyle(TVTest::Theme::CThemeManager::STYLE_SIDEBAR_ITEM_CHECKED,
+							&Theme.CheckItemStyle);
+	pThemeManager->GetBorderStyle(TVTest::Theme::CThemeManager::STYLE_SIDEBAR,
+								  &Theme.Border);
+
+	SetSideBarTheme(Theme);
+}
+
+
 int CSideBar::GetBarWidth() const
 {
 	RECT rc;
-	Theme::GetBorderWidths(&m_Theme.Border,&rc);
+	TVTest::Theme::GetBorderWidths(m_Theme.Border,&rc);
 	int Width;
 	if (m_fVertical) {
 		Width=m_Style.IconSize.Width+m_Style.ItemPadding.Horz()+rc.left+rc.right;
@@ -228,18 +243,16 @@ bool CSideBar::IsItemChecked(int Command) const
 }
 
 
-bool CSideBar::SetTheme(const ThemeInfo *pTheme)
+bool CSideBar::SetSideBarTheme(const SideBarTheme &Theme)
 {
-	if (pTheme==NULL)
-		return false;
-	m_Theme=*pTheme;
+	m_Theme=Theme;
 	if (m_hwnd!=NULL)
 		Invalidate();
 	return true;
 }
 
 
-bool CSideBar::GetTheme(ThemeInfo *pTheme) const
+bool CSideBar::GetSideBarTheme(SideBarTheme *pTheme) const
 {
 	if (pTheme==NULL)
 		return false;
@@ -444,7 +457,7 @@ LRESULT CSideBar::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 				int x,y;
 
 				::GetWindowRect(hwnd,&rcBar);
-				Theme::SubtractBorderRect(&m_Theme.Border,&rcBar);
+				TVTest::Theme::SubtractBorderRect(m_Theme.Border,&rcBar);
 				::GetWindowRect(pnmh->hwndFrom,&rcTip);
 				x=rcBar.right;
 				y=rcTip.top;
@@ -493,7 +506,7 @@ void CSideBar::GetItemRect(int Item,RECT *pRect) const
 		}
 	}
 	RECT rcBorder;
-	Theme::GetBorderWidths(&m_Theme.Border,&rcBorder);
+	TVTest::Theme::GetBorderWidths(m_Theme.Border,&rcBorder);
 	if (m_fVertical) {
 		pRect->left=rcBorder.left;
 		pRect->right=rcBorder.left+ItemWidth;
@@ -546,15 +559,15 @@ void CSideBar::UpdateTooltipsRect()
 }
 
 
-static Theme::GradientDirection GetGradientDirection(bool fVertical,Theme::GradientDirection Direction)
+static TVTest::Theme::GradientDirection GetGradientDirection(bool fVertical,TVTest::Theme::GradientDirection Direction)
 {
 	if (fVertical)
 		return Direction;
 	switch (Direction) {
-	case Theme::DIRECTION_HORZ:			Direction=Theme::DIRECTION_VERT;		break;
-	case Theme::DIRECTION_VERT:			Direction=Theme::DIRECTION_HORZ;		break;
-	case Theme::DIRECTION_HORZMIRROR:	Direction=Theme::DIRECTION_VERTMIRROR;	break;
-	case Theme::DIRECTION_VERTMIRROR:	Direction=Theme::DIRECTION_HORZMIRROR;	break;
+	case TVTest::Theme::DIRECTION_HORZ:			Direction=TVTest::Theme::DIRECTION_VERT;		break;
+	case TVTest::Theme::DIRECTION_VERT:			Direction=TVTest::Theme::DIRECTION_HORZ;		break;
+	case TVTest::Theme::DIRECTION_HORZMIRROR:	Direction=TVTest::Theme::DIRECTION_VERTMIRROR;	break;
+	case TVTest::Theme::DIRECTION_VERTMIRROR:	Direction=TVTest::Theme::DIRECTION_HORZMIRROR;	break;
 	}
 	return Direction;
 }
@@ -572,12 +585,17 @@ void CSideBar::Draw(HDC hdc,const RECT &PaintRect)
 		rc.left=PaintRect.left;
 		rc.right=PaintRect.right;
 	}
-	Theme::GradientInfo Gradient;
-	Gradient=m_Theme.ItemStyle.Gradient;
-	Gradient.Direction=GetGradientDirection(m_fVertical,Gradient.Direction);
-	Theme::FillGradient(hdc,&rc,&Gradient);
+
+	TVTest::Theme::BackgroundStyle BackStyle;
+	BackStyle=m_Theme.ItemStyle.Back;
+	if (BackStyle.Fill.Type==TVTest::Theme::FILL_GRADIENT)
+		BackStyle.Fill.Gradient.Direction=
+			GetGradientDirection(m_fVertical,BackStyle.Fill.Gradient.Direction);
+	TVTest::Theme::Draw(hdc,rc,BackStyle);
+
 	HDC hdcMemory=::CreateCompatibleDC(hdc);
 	HBITMAP hbmOld=static_cast<HBITMAP>(::GetCurrentObject(hdcMemory,OBJ_BITMAP));
+
 	for (int i=0;i<(int)m_ItemList.size();i++) {
 		GetItemRect(i,&rc);
 		if (m_ItemList[i].Command!=ITEM_SEPARATOR
@@ -588,28 +606,29 @@ void CSideBar::Draw(HDC hdc,const RECT &PaintRect)
 			RECT rcItem;
 
 			if (m_HotItem==i) {
-				Theme::Style Style=m_Theme.HighlightItemStyle;
-				Style.Gradient.Direction=
-					GetGradientDirection(m_fVertical,Style.Gradient.Direction);
+				TVTest::Theme::Style Style=m_Theme.HighlightItemStyle;
+				if (Style.Back.Fill.Type==TVTest::Theme::FILL_GRADIENT)
+					Style.Back.Fill.Gradient.Direction=
+						GetGradientDirection(m_fVertical,Style.Back.Fill.Gradient.Direction);
 				if ((m_ItemList[i].Flags&ITEM_FLAG_CHECKED)!=0)
-					Style.Border=m_Theme.CheckItemStyle.Border;
-				Theme::DrawStyleBackground(hdc,&rc,&Style);
-				ForeColor=m_Theme.HighlightItemStyle.TextColor;
+					Style.Back.Border=m_Theme.CheckItemStyle.Back.Border;
+				TVTest::Theme::Draw(hdc,rc,Style.Back);
+				ForeColor=m_Theme.HighlightItemStyle.Fore.Fill.GetSolidColor();
 			} else {
 				if ((m_ItemList[i].Flags&ITEM_FLAG_CHECKED)!=0) {
-					Theme::Style Style=m_Theme.CheckItemStyle;
-					Style.Gradient.Direction=
-						GetGradientDirection(m_fVertical,Style.Gradient.Direction);
-					Theme::DrawStyleBackground(hdc,&rc,&Style);
-					ForeColor=m_Theme.CheckItemStyle.TextColor;
+					TVTest::Theme::Style Style=m_Theme.CheckItemStyle;
+					if (Style.Back.Fill.Type==TVTest::Theme::FILL_GRADIENT)
+						Style.Back.Fill.Gradient.Direction=
+							GetGradientDirection(m_fVertical,Style.Back.Fill.Gradient.Direction);
+					TVTest::Theme::Draw(hdc,rc,Style.Back);
+					ForeColor=m_Theme.CheckItemStyle.Fore.Fill.GetSolidColor();
 				} else {
-					ForeColor=m_Theme.ItemStyle.TextColor;
+					ForeColor=m_Theme.ItemStyle.Fore.Fill.GetSolidColor();
 				}
 				if ((m_ItemList[i].Flags&ITEM_FLAG_DISABLED)!=0) {
 #if 0
 					ForeColor=MixColor(ForeColor,
-									   MixColor(m_Theme.ItemStyle.Gradient.Color1,
-												m_Theme.ItemStyle.Gradient.Color2));
+									   m_Theme.ItemStyle.Fore.Fill.GetSolidColor());
 #else
 					Opacity=128;
 #endif
@@ -627,26 +646,11 @@ void CSideBar::Draw(HDC hdc,const RECT &PaintRect)
 			}
 		}
 	}
-	/*
-	if ((m_fVertical && PaintRect.bottom>rc.bottom)
-			|| (!m_fVertical && PaintRect.right>rc.right)) {
-		Theme::GradientInfo Gradient;
 
-		if (m_fVertical) {
-			rc.top=rc.bottom;
-			rc.bottom=PaintRect.bottom;
-		} else {
-			rc.left=rc.right;
-			rc.right=PaintRect.right;
-		}
-		Gradient=m_Theme.ItemStyle.Gradient;
-		Gradient.Direction=FillDir;
-		Theme::FillGradient(hdc,&rc,&Gradient);
-	}
-	*/
 	::SelectObject(hdcMemory,hbmOld);
 	::DeleteDC(hdcMemory);
-	Theme::DrawBorder(hdc,rcClient,&m_Theme.Border);
+
+	TVTest::Theme::Draw(hdc,rcClient,m_Theme.Border);
 }
 
 

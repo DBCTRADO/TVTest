@@ -72,24 +72,6 @@ CChannelPanel::CChannelPanel()
 	m_ChannelFont.Create(&lf);
 
 	::ZeroMemory(&m_UpdatedTime,sizeof(SYSTEMTIME));
-
-	m_Theme.ChannelNameStyle.Gradient.Type=Theme::GRADIENT_NORMAL;
-	m_Theme.ChannelNameStyle.Gradient.Direction=Theme::DIRECTION_VERT;
-	m_Theme.ChannelNameStyle.Gradient.Color1=RGB(128,128,128);
-	m_Theme.ChannelNameStyle.Gradient.Color2=RGB(128,128,128);
-	m_Theme.ChannelNameStyle.Border.Type=Theme::BORDER_NONE;
-	m_Theme.ChannelNameStyle.TextColor=RGB(255,255,255);
-	m_Theme.CurChannelNameStyle=m_Theme.ChannelNameStyle;
-	m_Theme.EventStyle[0].Gradient.Type=Theme::GRADIENT_NORMAL;
-	m_Theme.EventStyle[0].Gradient.Direction=Theme::DIRECTION_VERT;
-	m_Theme.EventStyle[0].Gradient.Color1=RGB(0,0,0);
-	m_Theme.EventStyle[0].Gradient.Color2=RGB(0,0,0);
-	m_Theme.EventStyle[0].Border.Type=Theme::BORDER_NONE;
-	m_Theme.EventStyle[0].TextColor=RGB(255,255,255);
-	m_Theme.EventStyle[1]=m_Theme.EventStyle[0];
-	m_Theme.CurChannelEventStyle[0]=m_Theme.EventStyle[0];
-	m_Theme.CurChannelEventStyle[1]=m_Theme.CurChannelEventStyle[0];
-	m_Theme.MarginColor=RGB(0,0,0);
 }
 
 
@@ -116,6 +98,28 @@ void CChannelPanel::SetStyle(const TVTest::Style::CStyleManager *pStyleManager)
 void CChannelPanel::NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager)
 {
 	m_Style.NormalizeStyle(pStyleManager);
+}
+
+
+void CChannelPanel::SetTheme(const TVTest::Theme::CThemeManager *pThemeManager)
+{
+	ChannelPanelTheme Theme;
+
+	pThemeManager->GetStyle(TVTest::Theme::CThemeManager::STYLE_CHANNELPANEL_CHANNELNAME,
+							&Theme.ChannelNameStyle);
+	pThemeManager->GetStyle(TVTest::Theme::CThemeManager::STYLE_CHANNELPANEL_CURCHANNELNAME,
+							&Theme.CurChannelNameStyle);
+	pThemeManager->GetStyle(TVTest::Theme::CThemeManager::STYLE_CHANNELPANEL_EVENTNAME1,
+							&Theme.EventStyle[0]);
+	pThemeManager->GetStyle(TVTest::Theme::CThemeManager::STYLE_CHANNELPANEL_EVENTNAME2,
+							&Theme.EventStyle[1]);
+	pThemeManager->GetStyle(TVTest::Theme::CThemeManager::STYLE_CHANNELPANEL_CURCHANNELEVENTNAME1,
+							&Theme.CurChannelEventStyle[0]);
+	pThemeManager->GetStyle(TVTest::Theme::CThemeManager::STYLE_CHANNELPANEL_CURCHANNELEVENTNAME2,
+							&Theme.CurChannelEventStyle[1]);
+	Theme.MarginColor=pThemeManager->GetColor(CColorScheme::COLOR_PANELBACK);
+
+	SetChannelPanelTheme(Theme);
 }
 
 
@@ -390,18 +394,16 @@ void CChannelPanel::SetEventHandler(CEventHandler *pEventHandler)
 }
 
 
-bool CChannelPanel::SetTheme(const ThemeInfo *pTheme)
+bool CChannelPanel::SetChannelPanelTheme(const ChannelPanelTheme &Theme)
 {
-	if (pTheme==NULL)
-		return false;
-	m_Theme=*pTheme;
+	m_Theme=Theme;
 	if (m_hwnd!=NULL)
 		Invalidate();
 	return true;
 }
 
 
-bool CChannelPanel::GetTheme(ThemeInfo *pTheme) const
+bool CChannelPanel::GetChannelPanelTheme(ChannelPanelTheme *pTheme) const
 {
 	if (pTheme==NULL)
 		return false;
@@ -735,14 +737,14 @@ void CChannelPanel::Draw(HDC hdc,const RECT *prcPaint)
 
 		rc.bottom=rc.top+m_ChannelNameHeight;
 		if (rc.bottom>prcPaint->top) {
-			const Theme::Style &Style=
+			const TVTest::Theme::Style &Style=
 				fCurrent?m_Theme.CurChannelNameStyle:m_Theme.ChannelNameStyle;
 
 			DrawUtil::SelectObject(hdc,m_ChannelFont);
-			::SetTextColor(hdc,Style.TextColor);
+			::SetTextColor(hdc,Style.Fore.Fill.GetSolidColor());
 			rc.left=0;
 			rc.right=rcClient.right;
-			Theme::DrawStyleBackground(hdc,&rc,&Style);
+			TVTest::Theme::Draw(hdc,rc,Style.Back);
 			RECT rcName=rc;
 			TVTest::Style::Subtract(&rcName,m_Style.ChannelNameMargin);
 			rcName.right-=m_Style.ChannelChevronMargin+m_Style.ChannelChevronSize.Width;
@@ -753,7 +755,7 @@ void CChannelPanel::Draw(HDC hdc,const RECT *prcPaint)
 						   m_Style.ChannelChevronSize.Width,
 						   m_Style.ChannelChevronSize.Height,
 						   pChannelInfo->IsExpanded()?1:0,
-						   Style.TextColor);
+						   Style.Fore.Fill.GetSolidColor());
 		}
 
 		int NumEvents=pChannelInfo->IsExpanded()?m_ExpandEvents:m_EventsPerChannel;
@@ -763,12 +765,12 @@ void CChannelPanel::Draw(HDC hdc,const RECT *prcPaint)
 			rc.top=rc.bottom;
 			rc.bottom=rc.top+m_EventNameHeight;
 			if (rc.bottom>prcPaint->top) {
-				const Theme::Style &Style=
+				const TVTest::Theme::Style &Style=
 					(fCurrent?m_Theme.CurChannelEventStyle:m_Theme.EventStyle)[j%2];
 
 				DrawUtil::SelectObject(hdc,m_Font);
-				::SetTextColor(hdc,Style.TextColor);
-				Theme::DrawStyleBackground(hdc,&rc,&Style);
+				::SetTextColor(hdc,Style.Fore.Fill.GetSolidColor());
+				TVTest::Theme::Draw(hdc,rc,Style.Back);
 				RECT rcText=rc;
 				TVTest::Style::Subtract(&rcText,m_Style.EventNameMargin);
 				pChannelInfo->DrawEventName(hdc,&rcText,j);
@@ -1168,6 +1170,26 @@ void CChannelPanel::CChannelEventInfo::DrawEventName(HDC hdc,const RECT *pRect,i
 		::DrawText(hdc,szText,-1,&rc,
 				   DT_WORDBREAK | DT_NOPREFIX | DT_END_ELLIPSIS);
 	}
+}
+
+
+
+
+CChannelPanel::ChannelPanelTheme::ChannelPanelTheme()
+{
+	ChannelNameStyle.Back.Fill.Type=TVTest::Theme::FILL_SOLID;
+	ChannelNameStyle.Back.Fill.Solid.Color.Set(128,128,128);
+	ChannelNameStyle.Fore.Fill.Type=TVTest::Theme::FILL_SOLID;
+	ChannelNameStyle.Fore.Fill.Solid.Color.Set(255,255,255);
+	CurChannelNameStyle=ChannelNameStyle;
+	EventStyle[0].Back.Fill.Type=TVTest::Theme::FILL_SOLID;
+	EventStyle[0].Back.Fill.Solid.Color.Set(0,0,0);
+	EventStyle[0].Fore.Fill.Type=TVTest::Theme::FILL_SOLID;
+	EventStyle[0].Fore.Fill.Solid.Color.Set(255,255,255);
+	EventStyle[1]=EventStyle[0];
+	CurChannelEventStyle[0]=EventStyle[0];
+	CurChannelEventStyle[1]=CurChannelEventStyle[0];
+	MarginColor.Set(0,0,0);
 }
 
 

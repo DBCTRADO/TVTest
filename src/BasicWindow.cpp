@@ -42,7 +42,7 @@ bool CBasicWindow::SetPosition(int Left,int Top,int Width,int Height)
 	if (Width<0 || Height<0)
 		return false;
 	if (m_hwnd!=NULL) {
-		if ((GetWindowStyle(m_hwnd) & WS_CHILD)!=0
+		if ((GetWindowStyle() & WS_CHILD)!=0
 				|| (!::IsZoomed(m_hwnd) && !::IsIconic(m_hwnd))) {
 			::MoveWindow(m_hwnd,Left,Top,Width,Height,TRUE);
 		} else {
@@ -54,7 +54,7 @@ bool CBasicWindow::SetPosition(int Left,int Top,int Width,int Height)
 			wp.rcNormalPosition.top=Top;
 			wp.rcNormalPosition.right=Left+Width;
 			wp.rcNormalPosition.bottom=Top+Height;
-			if ((GetWindowExStyle(m_hwnd) & WS_EX_TOOLWINDOW)==0) {
+			if ((GetWindowExStyle() & WS_EX_TOOLWINDOW)==0) {
 				HMONITOR hMonitor=::MonitorFromRect(&wp.rcNormalPosition,MONITOR_DEFAULTTONEAREST);
 				MONITORINFO mi;
 
@@ -89,7 +89,7 @@ void CBasicWindow::GetPosition(int *pLeft,int *pTop,int *pWidth,int *pHeight) co
 	if (m_hwnd!=NULL) {
 		RECT rc;
 
-		if ((GetWindowStyle(m_hwnd)&WS_CHILD)!=0) {
+		if ((GetWindowStyle() & WS_CHILD)!=0) {
 			::GetWindowRect(m_hwnd,&rc);
 			::MapWindowPoints(NULL,::GetParent(m_hwnd),reinterpret_cast<POINT*>(&rc),2);
 			if (pLeft)
@@ -113,7 +113,7 @@ void CBasicWindow::GetPosition(int *pLeft,int *pTop,int *pWidth,int *pHeight) co
 					WS_EX_TOOLWINDOWスタイルが付いていない場合は、
 					rcNormalPositionはワークスペース座標になる(仕様が意味不明...)
 				*/
-				if ((GetWindowExStyle(m_hwnd)&WS_EX_TOOLWINDOW)==0) {
+				if ((GetWindowExStyle() & WS_EX_TOOLWINDOW)==0) {
 					/*
 						ワークスペース座標をスクリーン座標に変換
 						しかし、マルチモニタの時はどのモニタのワークスペース座標が
@@ -267,7 +267,7 @@ bool CBasicWindow::CalcPositionFromClientRect(RECT *pRect) const
 {
 	if (m_hwnd==NULL)
 		return false;
-	return ::AdjustWindowRectEx(pRect,GetStyle(),FALSE,GetExStyle())!=FALSE;
+	return ::AdjustWindowRectEx(pRect,GetWindowStyle(),FALSE,GetWindowExStyle())!=FALSE;
 }
 
 
@@ -321,7 +321,7 @@ bool CBasicWindow::MoveToMonitorInside()
 }
 
 
-DWORD CBasicWindow::GetStyle() const
+DWORD CBasicWindow::GetWindowStyle() const
 {
 	if (m_hwnd==NULL)
 		return 0;
@@ -329,7 +329,7 @@ DWORD CBasicWindow::GetStyle() const
 }
 
 
-bool CBasicWindow::SetStyle(DWORD Style,bool fFrameChange)
+bool CBasicWindow::SetWindowStyle(DWORD Style,bool fFrameChange)
 {
 	if (m_hwnd==NULL)
 		return false;
@@ -341,7 +341,7 @@ bool CBasicWindow::SetStyle(DWORD Style,bool fFrameChange)
 }
 
 
-DWORD CBasicWindow::GetExStyle() const
+DWORD CBasicWindow::GetWindowExStyle() const
 {
 	if (m_hwnd==NULL)
 		return 0;
@@ -349,7 +349,7 @@ DWORD CBasicWindow::GetExStyle() const
 }
 
 
-bool CBasicWindow::SetExStyle(DWORD ExStyle,bool fFrameChange)
+bool CBasicWindow::SetWindowExStyle(DWORD ExStyle,bool fFrameChange)
 {
 	if (m_hwnd==NULL)
 		return false;

@@ -51,14 +51,10 @@ CPanel::CPanel()
 	, m_fEnableFloating(true)
 	, m_pEventHandler(NULL)
 {
-	COLORREF CaptionColor=::GetSysColor(COLOR_INACTIVECAPTION);
-
-	m_Theme.TitleStyle.Gradient.Type=Theme::GRADIENT_NORMAL;
-	m_Theme.TitleStyle.Gradient.Direction=Theme::DIRECTION_VERT;
-	m_Theme.TitleStyle.Gradient.Color1=CaptionColor;
-	m_Theme.TitleStyle.Gradient.Color2=CaptionColor;
-	m_Theme.TitleStyle.Border.Type=Theme::BORDER_NONE;
-	m_Theme.TitleStyle.TextColor=::GetSysColor(COLOR_INACTIVECAPTIONTEXT);
+	m_Theme.TitleStyle.Back.Fill.Type=TVTest::Theme::FILL_SOLID;
+	m_Theme.TitleStyle.Back.Fill.Solid.Color=::GetSysColor(COLOR_INACTIVECAPTION);
+	m_Theme.TitleStyle.Fore.Fill.Type=TVTest::Theme::FILL_SOLID;
+	m_Theme.TitleStyle.Fore.Fill.Solid.Color=::GetSysColor(COLOR_INACTIVECAPTIONTEXT);
 }
 
 
@@ -84,6 +80,17 @@ void CPanel::SetStyle(const TVTest::Style::CStyleManager *pStyleManager)
 void CPanel::NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager)
 {
 	m_Style.NormalizeStyle(pStyleManager);
+}
+
+
+void CPanel::SetTheme(const TVTest::Theme::CThemeManager *pThemeManager)
+{
+	PanelTheme Theme;
+
+	pThemeManager->GetStyle(TVTest::Theme::CThemeManager::STYLE_PANEL_TITLE,
+							&Theme.TitleStyle);
+
+	SetPanelTheme(Theme);
 }
 
 
@@ -131,11 +138,9 @@ void CPanel::SetEventHandler(CEventHandler *pHandler)
 }
 
 
-bool CPanel::SetTheme(const ThemeInfo *pTheme)
+bool CPanel::SetPanelTheme(const PanelTheme &Theme)
 {
-	if (pTheme==NULL)
-		return false;
-	m_Theme=*pTheme;
+	m_Theme=Theme;
 	if (m_hwnd!=NULL && m_fShowTitle) {
 		RECT rc;
 
@@ -146,7 +151,7 @@ bool CPanel::SetTheme(const ThemeInfo *pTheme)
 }
 
 
-bool CPanel::GetTheme(ThemeInfo *pTheme) const
+bool CPanel::GetPanelTheme(PanelTheme *pTheme) const
 {
 	if (pTheme==NULL)
 		return false;
@@ -187,13 +192,13 @@ void CPanel::Draw(HDC hdc,const RECT &PaintRect) const
 		RECT rc;
 
 		GetTitleRect(&rc);
-		Theme::DrawStyleBackground(hdc,&rc,&m_Theme.TitleStyle);
+		TVTest::Theme::Draw(hdc,rc,m_Theme.TitleStyle.Back);
 		if (!m_Title.IsEmpty()) {
 			TVTest::Style::Subtract(&rc,m_Style.TitlePadding);
 			rc.right-=m_Style.TitleButtonSize.Width;
 			DrawUtil::DrawText(hdc,m_Title.Get(),rc,
 				DT_LEFT | DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX,
-				&m_Font,m_Theme.TitleStyle.TextColor);
+				&m_Font,m_Theme.TitleStyle.Fore.Fill.GetSolidColor());
 		}
 		GetCloseButtonRect(&rc);
 		::DrawFrameControl(hdc,&rc,DFC_CAPTION,
@@ -462,7 +467,7 @@ bool CPanelFrame::Create(HWND hwndParent,DWORD Style,DWORD ExStyle,int ID)
 						   PANEL_FRAME_WINDOW_CLASS,TEXT("ƒpƒlƒ‹"),m_hinst))
 		return false;
 	if (m_Opacity<255) {
-		SetExStyle(ExStyle | WS_EX_LAYERED);
+		SetWindowExStyle(ExStyle | WS_EX_LAYERED);
 		::SetLayeredWindowAttributes(m_hwnd,0,m_Opacity,LWA_ALPHA);
 	}
 	return true;
@@ -581,15 +586,15 @@ bool CPanelFrame::SetPanelVisible(bool fVisible,bool fNoActivate)
 }
 
 
-bool CPanelFrame::SetTheme(const CPanel::ThemeInfo *pTheme)
+bool CPanelFrame::SetPanelTheme(const CPanel::PanelTheme &Theme)
 {
-	return m_Panel.SetTheme(pTheme);
+	return m_Panel.SetPanelTheme(Theme);
 }
 
 
-bool CPanelFrame::GetTheme(CPanel::ThemeInfo *pTheme) const
+bool CPanelFrame::GetPanelTheme(CPanel::PanelTheme *pTheme) const
 {
-	return m_Panel.GetTheme(pTheme);
+	return m_Panel.GetPanelTheme(pTheme);
 }
 
 
@@ -599,20 +604,26 @@ bool CPanelFrame::SetOpacity(int Opacity)
 		return false;
 	if (Opacity!=m_Opacity) {
 		if (m_hwnd!=NULL) {
-			DWORD ExStyle=GetExStyle();
+			DWORD ExStyle=GetWindowExStyle();
 
 			if (Opacity<255) {
 				if ((ExStyle&WS_EX_LAYERED)==0)
-					SetExStyle(ExStyle|WS_EX_LAYERED);
+					SetWindowExStyle(ExStyle|WS_EX_LAYERED);
 				::SetLayeredWindowAttributes(m_hwnd,0,Opacity,LWA_ALPHA);
 			} else {
 				if ((ExStyle&WS_EX_LAYERED)!=0)
-					SetExStyle(ExStyle^WS_EX_LAYERED);
+					SetWindowExStyle(ExStyle^WS_EX_LAYERED);
 			}
 		}
 		m_Opacity=Opacity;
 	}
 	return true;
+}
+
+
+void CPanelFrame::SetTheme(const TVTest::Theme::CThemeManager *pThemeManager)
+{
+	m_Panel.SetTheme(pThemeManager);
 }
 
 

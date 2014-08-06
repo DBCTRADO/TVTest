@@ -122,7 +122,7 @@ public:
 	bool IsFloating() const;
 	bool OnOwnerMovingOrSizing(const RECT *pOldRect,const RECT *pNewRect);
 	bool IsAttached();
-	void SetColorScheme(const CColorScheme *pColorScheme);
+	void SetTheme(const TVTest::Theme::CThemeManager *pThemeManager);
 
 private:
 	class CFrameEventHandler : public CPanelFrame::CEventHandler

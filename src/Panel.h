@@ -26,8 +26,8 @@ public:
 		virtual bool OnMenuSelected(int Command) { return false; }
 	};
 	enum { MENU_USER=100 };
-	struct ThemeInfo {
-		Theme::Style TitleStyle;
+	struct PanelTheme {
+		TVTest::Theme::Style TitleStyle;
 	};
 
 	static bool Initialize(HINSTANCE hinst);
@@ -41,6 +41,7 @@ public:
 // CUIBase
 	void SetStyle(const TVTest::Style::CStyleManager *pStyleManager) override;
 	void NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager) override;
+	void SetTheme(const TVTest::Theme::CThemeManager *pThemeManager) override;
 
 // CPanel
 	bool SetWindow(CBasicWindow *pWindow,LPCTSTR pszTitle);
@@ -48,8 +49,8 @@ public:
 	void EnableFloating(bool fEnable);
 	void SetEventHandler(CEventHandler *pHandler);
 	CBasicWindow *GetWindow() { return m_pWindow; }
-	bool SetTheme(const ThemeInfo *pTheme);
-	bool GetTheme(ThemeInfo *pTheme) const;
+	bool SetPanelTheme(const PanelTheme &Theme);
+	bool GetPanelTheme(PanelTheme *pTheme) const;
 	bool GetTitleRect(RECT *pRect) const;
 	bool GetContentRect(RECT *pRect) const;
 
@@ -71,7 +72,7 @@ private:
 	bool m_fShowTitle;
 	bool m_fEnableFloating;
 	PanelStyle m_Style;
-	ThemeInfo m_Theme;
+	PanelTheme m_Theme;
 	CEventHandler *m_pEventHandler;
 	bool m_fCloseButtonPushed;
 	POINT m_ptDragStartPos;
@@ -105,7 +106,10 @@ public:
 	bool Hide();
 };
 
-class CPanelFrame : public CCustomWindow, public CPanel::CEventHandler
+class CPanelFrame
+	: public CCustomWindow
+	, public TVTest::CUIBase
+	, public CPanel::CEventHandler
 {
 public:
 	class ABSTRACT_CLASS(CEventHandler) {
@@ -135,8 +139,8 @@ public:
 	bool SetPanelVisible(bool fVisible,bool fNoActivate=false);
 	int GetDockingWidth() const { return m_DockingWidth; }
 	bool SetDockingWidth(int Width);
-	bool SetTheme(const CPanel::ThemeInfo *pTheme);
-	bool GetTheme(CPanel::ThemeInfo *pTheme) const;
+	bool SetPanelTheme(const CPanel::PanelTheme &Theme);
+	bool GetPanelTheme(CPanel::PanelTheme *pTheme) const;
 	bool SetOpacity(int Opacity);
 	int GetOpacity() const { return m_Opacity; }
 	Layout::CSplitter *m_pSplitter;
@@ -152,6 +156,9 @@ public:
 		DOCKING_LEFT,
 		DOCKING_RIGHT
 	};
+
+// CUIBase
+	void SetTheme(const TVTest::Theme::CThemeManager *pThemeManager) override;
 
 private:
 	DockingPlace m_DragDockingTarget;

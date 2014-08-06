@@ -297,19 +297,17 @@ CProgramListPanel::CProgramListPanel()
 	//, m_hwndToolTip(NULL)
 	, m_fShowRetrievingMessage(false)
 {
-	m_Theme.EventNameStyle.Gradient.Type=Theme::GRADIENT_NORMAL;
-	m_Theme.EventNameStyle.Gradient.Direction=Theme::DIRECTION_VERT;
-	m_Theme.EventNameStyle.Gradient.Color1=RGB(0,0,0);
-	m_Theme.EventNameStyle.Gradient.Color2=RGB(0,0,0);
-	m_Theme.EventNameStyle.Border.Type=Theme::BORDER_NONE;
-	m_Theme.EventNameStyle.TextColor=RGB(255,255,255);
+	m_Theme.EventNameStyle.Back.Fill.Type=TVTest::Theme::FILL_SOLID;
+	m_Theme.EventNameStyle.Back.Fill.Solid.Color.Set(0,0,0);
+	m_Theme.EventNameStyle.Back.Border.Type=TVTest::Theme::BORDER_NONE;
+	m_Theme.EventNameStyle.Fore.Fill.Type=TVTest::Theme::FILL_SOLID;
+	m_Theme.EventNameStyle.Fore.Fill.Solid.Color.Set(255,255,255);
 	m_Theme.CurEventNameStyle=m_Theme.EventNameStyle;
-	m_Theme.EventTextStyle.Gradient.Type=Theme::GRADIENT_NORMAL;
-	m_Theme.EventTextStyle.Gradient.Direction=Theme::DIRECTION_VERT;
-	m_Theme.EventTextStyle.Gradient.Color1=RGB(128,128,128);
-	m_Theme.EventTextStyle.Gradient.Color2=RGB(128,128,128);
-	m_Theme.EventTextStyle.Border.Type=Theme::BORDER_NONE;
-	m_Theme.EventTextStyle.TextColor=RGB(255,255,255);
+	m_Theme.EventTextStyle.Back.Fill.Type=TVTest::Theme::FILL_SOLID;
+	m_Theme.EventTextStyle.Back.Fill.Solid.Color.Set(128,128,128);
+	m_Theme.EventTextStyle.Back.Border.Type=TVTest::Theme::BORDER_NONE;
+	m_Theme.EventTextStyle.Fore.Fill.Type=TVTest::Theme::FILL_SOLID;
+	m_Theme.EventTextStyle.Fore.Fill.Solid.Color.Set(255,255,255);
 	m_Theme.CurEventTextStyle=m_Theme.EventTextStyle;
 	m_Theme.MarginColor=RGB(0,0,0);
 }
@@ -337,6 +335,25 @@ void CProgramListPanel::SetStyle(const TVTest::Style::CStyleManager *pStyleManag
 void CProgramListPanel::NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager)
 {
 	m_Style.NormalizeStyle(pStyleManager);
+}
+
+
+void CProgramListPanel::SetTheme(const TVTest::Theme::CThemeManager *pThemeManager)
+{
+	ProgramListPanelTheme Theme;
+
+	pThemeManager->GetStyle(TVTest::Theme::CThemeManager::STYLE_PROGRAMLISTPANEL_EVENT,
+							&Theme.EventTextStyle);
+	pThemeManager->GetStyle(TVTest::Theme::CThemeManager::STYLE_PROGRAMLISTPANEL_CUREVENT,
+							&Theme.CurEventTextStyle);
+	pThemeManager->GetStyle(TVTest::Theme::CThemeManager::STYLE_PROGRAMLISTPANEL_TITLE,
+							&Theme.EventNameStyle);
+	pThemeManager->GetStyle(TVTest::Theme::CThemeManager::STYLE_PROGRAMLISTPANEL_CURTITLE,
+							&Theme.CurEventNameStyle);
+	Theme.MarginColor=
+		pThemeManager->GetColor(CColorScheme::COLOR_PANELBACK);
+
+	SetProgramListPanelTheme(Theme);
 }
 
 
@@ -545,41 +562,16 @@ void CProgramListPanel::SetScrollBar()
 }
 
 
-/*
-void CProgramListPanel:: SetColors(
-	const Theme::GradientInfo *pEventBackGradient,COLORREF EventTextColor,
-	const Theme::GradientInfo *pCurEventBackGradient,COLORREF CurEventTextColor,
-	const Theme::GradientInfo *pTitleBackGradient,COLORREF TitleTextColor,
-	const Theme::GradientInfo *pCurTitleBackGradient,COLORREF CurTitleTextColor,
-	COLORREF MarginColor)
+bool CProgramListPanel::SetProgramListPanelTheme(const ProgramListPanelTheme &Theme)
 {
-	m_EventBackGradient=*pEventBackGradient;
-	m_EventTextColor=EventTextColor;
-	m_CurEventBackGradient=*pCurEventBackGradient;
-	m_CurEventTextColor=CurEventTextColor;
-	m_TitleBackGradient=*pTitleBackGradient;
-	m_TitleTextColor=TitleTextColor;
-	m_CurTitleBackGradient=*pCurTitleBackGradient;
-	m_CurTitleTextColor=CurTitleTextColor;
-	m_MarginColor=MarginColor;
-	if (m_hwnd!=NULL)
-		Invalidate();
-}
-*/
-
-
-bool CProgramListPanel::SetTheme(const ThemeInfo *pTheme)
-{
-	if (pTheme==NULL)
-		return false;
-	m_Theme=*pTheme;
+	m_Theme=Theme;
 	if (m_hwnd!=NULL)
 		Invalidate();
 	return true;
 }
 
 
-bool CProgramListPanel::GetTheme(ThemeInfo *pTheme) const
+bool CProgramListPanel::GetProgramListPanelTheme(ProgramListPanelTheme *pTheme) const
 {
 	if (pTheme==NULL)
 		return false;
@@ -906,7 +898,7 @@ void CProgramListPanel::DrawProgramList(HDC hdc,const RECT *prcPaint)
 	if (m_fShowRetrievingMessage && m_ItemList.NumItems()==0) {
 		::FillRect(hdc,prcPaint,hbr);
 		DrawUtil::SelectObject(hdc,m_Font);
-		::SetTextColor(hdc,m_Theme.EventTextStyle.TextColor);
+		::SetTextColor(hdc,m_Theme.EventTextStyle.Fore.Fill.GetSolidColor());
 		TVTest::Style::Subtract(&rc,m_Style.TitlePadding);
 		DrawUtil::DrawWrapText(hdc,TEXT("”Ô‘g•\‚ÌŽæ“¾’†‚Å‚·..."),&rc,LineHeight);
 	} else {
@@ -918,13 +910,13 @@ void CProgramListPanel::DrawProgramList(HDC hdc,const RECT *prcPaint)
 			rc.bottom=rc.top+pItem->GetTitleLines()*LineHeight+
 				(m_Style.TitlePadding.Top+m_Style.TitlePadding.Bottom-m_Style.LineSpacing);
 			if (rc.bottom>prcPaint->top) {
-				const Theme::Style &Style=
+				const TVTest::Theme::Style &Style=
 					fCur?m_Theme.CurEventNameStyle:m_Theme.EventNameStyle;
 
 				DrawUtil::SelectObject(hdc,m_TitleFont);
-				::SetTextColor(hdc,Style.TextColor);
+				::SetTextColor(hdc,Style.Fore.Fill.GetSolidColor());
 				rc.left=0;
-				Theme::DrawStyleBackground(hdc,&rc,&Style);
+				TVTest::Theme::Draw(hdc,rc,Style.Back);
 				RECT rcTitle=rc;
 				TVTest::Style::Subtract(&rcTitle,m_Style.TitlePadding);
 				pItem->DrawTitle(hdc,&rcTitle,LineHeight);
@@ -933,13 +925,13 @@ void CProgramListPanel::DrawProgramList(HDC hdc,const RECT *prcPaint)
 			rc.top=rc.bottom;
 			rc.bottom=rc.top+pItem->GetTextLines()*LineHeight;
 			if (rc.bottom>prcPaint->top) {
-				const Theme::Style &Style=
+				const TVTest::Theme::Style &Style=
 					fCur?m_Theme.CurEventTextStyle:m_Theme.EventTextStyle;
 
 				DrawUtil::SelectObject(hdc,m_Font);
-				::SetTextColor(hdc,Style.TextColor);
+				::SetTextColor(hdc,Style.Fore.Fill.GetSolidColor());
 				rc.left=0;
-				Theme::DrawStyleBackground(hdc,&rc,&Style);
+				TVTest::Theme::Draw(hdc,rc,Style.Back);
 				rc.left=GetTextLeftMargin();
 				pItem->DrawText(hdc,&rc,LineHeight);
 

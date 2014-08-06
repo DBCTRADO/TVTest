@@ -104,6 +104,8 @@ public:
 	bool OnMouseHover(int x,int y) override;
 	void OnFocus(bool fFocus) override;
 	LRESULT OnNotifyMessage(LPNMHDR pnmh) override;
+// CUIBase
+	void SetTheme(const TVTest::Theme::CThemeManager *pThemeManager) override;
 // CRecordStatusItem
 	void ShowRemainTime(bool fRemain);
 	void SetCircleColor(COLORREF Color);

@@ -3,6 +3,7 @@
 
 
 #include "Style.h"
+#include "ThemeManager.h"
 
 
 namespace TVTest
@@ -14,6 +15,7 @@ namespace TVTest
 		virtual ~CUIBase() = 0;
 		virtual void SetStyle(const Style::CStyleManager *pStyleManager);
 		virtual void NormalizeStyle(const Style::CStyleManager *pStyleManager);
+		virtual void SetTheme(const Theme::CThemeManager *pThemeManager);
 
 	protected:
 		void InitializeUI();

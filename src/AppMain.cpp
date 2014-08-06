@@ -836,7 +836,7 @@ int CAppMain::Main(HINSTANCE hInstance,LPCTSTR pszCmdLine,int nCmdShow)
 		// WS_CAPTION を外す場合、この段階でスタイルを変えないとおかしくなる
 		// (最初からこのスタイルにしてもキャプションが表示される
 		//  ShowWindow の前に入れると、キャプションを表示させた時にアイコンが出ない)
-		MainWindow.SetStyle(MainWindow.GetStyle()^WS_CAPTION,true);
+		MainWindow.SetWindowStyle(MainWindow.GetWindowStyle()^WS_CAPTION,true);
 		MainWindow.Update();
 	}
 
@@ -1290,70 +1290,16 @@ bool CAppMain::GetAbsolutePath(LPCTSTR pszPath,LPTSTR pszAbsolutePath) const
 // 配色を適用する
 bool CAppMain::ApplyColorScheme(const CColorScheme *pColorScheme)
 {
-	Theme::GradientInfo Gradient1,Gradient2,Gradient3,Gradient4;
-	Theme::BorderInfo Border;
+	TVTest::Theme::CThemeManager ThemeManager(pColorScheme);
 
-	MainWindow.ApplyColorScheme(pColorScheme);
-
-	CStatusView::ThemeInfo StatusTheme;
-	pColorScheme->GetStyle(CColorScheme::STYLE_STATUSITEM,
-						   &StatusTheme.ItemStyle);
-	pColorScheme->GetStyle(CColorScheme::STYLE_STATUSBOTTOMITEM,
-						   &StatusTheme.BottomItemStyle);
-	pColorScheme->GetStyle(CColorScheme::STYLE_STATUSHIGHLIGHTITEM,
-						   &StatusTheme.HighlightItemStyle);
-	pColorScheme->GetBorderInfo(CColorScheme::BORDER_STATUS,
-								&StatusTheme.Border);
-	StatusView.SetTheme(&StatusTheme);
-	CaptureWindow.SetStatusTheme(&StatusTheme);
-	pColorScheme->GetBorderInfo(CColorScheme::BORDER_PROGRAMGUIDESTATUS,
-								&StatusTheme.Border);
-	Epg.ProgramGuideFrame.SetStatusTheme(&StatusTheme);
-	Epg.ProgramGuideDisplay.SetStatusTheme(&StatusTheme);
-	CRecordStatusItem *pRecordStatus=dynamic_cast<CRecordStatusItem*>(StatusView.GetItemByID(STATUS_ITEM_RECORD));
-	if (pRecordStatus!=nullptr)
-		pRecordStatus->SetCircleColor(pColorScheme->GetColor(CColorScheme::COLOR_STATUSRECORDINGCIRCLE));
-
-	CSideBar::ThemeInfo SideBarTheme;
-	pColorScheme->GetStyle(CColorScheme::STYLE_SIDEBARITEM,
-						   &SideBarTheme.ItemStyle);
-	pColorScheme->GetStyle(CColorScheme::STYLE_SIDEBARHIGHLIGHTITEM,
-						   &SideBarTheme.HighlightItemStyle);
-	pColorScheme->GetStyle(CColorScheme::STYLE_SIDEBARCHECKITEM,
-						   &SideBarTheme.CheckItemStyle);
-	pColorScheme->GetBorderInfo(CColorScheme::BORDER_SIDEBAR,
-								&SideBarTheme.Border);
-	SideBar.SetTheme(&SideBarTheme);
-
-	Panel.SetColorScheme(pColorScheme);
-
-	static const struct {
-		int From,To;
-	} ProgramGuideColorMap[] = {
-		{CColorScheme::COLOR_PROGRAMGUIDE_BACK,				CProgramGuide::COLOR_BACK},
-		{CColorScheme::COLOR_PROGRAMGUIDE_TEXT,				CProgramGuide::COLOR_EVENTTEXT},
-		{CColorScheme::COLOR_PROGRAMGUIDE_EVENTTITLE,		CProgramGuide::COLOR_EVENTTITLE},
-		{CColorScheme::COLOR_PROGRAMGUIDE_HIGHLIGHTTEXT,	CProgramGuide::COLOR_HIGHLIGHT_TEXT},
-		{CColorScheme::COLOR_PROGRAMGUIDE_HIGHLIGHTTITLE,	CProgramGuide::COLOR_HIGHLIGHT_TITLE},
-		{CColorScheme::COLOR_PROGRAMGUIDE_HIGHLIGHTBORDER,	CProgramGuide::COLOR_HIGHLIGHT_BORDER},
-		{CColorScheme::COLOR_PROGRAMGUIDE_CHANNELTEXT,		CProgramGuide::COLOR_CHANNELNAMETEXT},
-		{CColorScheme::COLOR_PROGRAMGUIDE_CURCHANNELTEXT,	CProgramGuide::COLOR_CURCHANNELNAMETEXT},
-		{CColorScheme::COLOR_PROGRAMGUIDE_TIMETEXT,			CProgramGuide::COLOR_TIMETEXT},
-		{CColorScheme::COLOR_PROGRAMGUIDE_TIMELINE,			CProgramGuide::COLOR_TIMELINE},
-		{CColorScheme::COLOR_PROGRAMGUIDE_CURTIMELINE,		CProgramGuide::COLOR_CURTIMELINE},
-	};
-	for (int i=0;i<lengthof(ProgramGuideColorMap);i++)
-		Epg.ProgramGuide.SetColor(ProgramGuideColorMap[i].To,
-								  pColorScheme->GetColor(ProgramGuideColorMap[i].From));
-	for (int i=CProgramGuide::COLOR_CONTENT_FIRST,j=0;i<=CProgramGuide::COLOR_CONTENT_LAST;i++,j++)
-		Epg.ProgramGuide.SetColor(i,pColorScheme->GetColor(CColorScheme::COLOR_PROGRAMGUIDE_CONTENT_FIRST+j));
-	pColorScheme->GetGradientInfo(CColorScheme::GRADIENT_PROGRAMGUIDECHANNELBACK,&Gradient1);
-	pColorScheme->GetGradientInfo(CColorScheme::GRADIENT_PROGRAMGUIDECURCHANNELBACK,&Gradient2);
-	pColorScheme->GetGradientInfo(CColorScheme::GRADIENT_PROGRAMGUIDETIMEBACK,&Gradient3);
-	Theme::GradientInfo TimeGradients[CProgramGuide::TIME_BAR_BACK_COLORS];
-	for (int i=0;i<CProgramGuide::TIME_BAR_BACK_COLORS;i++)
-		pColorScheme->GetGradientInfo(CColorScheme::GRADIENT_PROGRAMGUIDETIME0TO2BACK+i,&TimeGradients[i]);
-	Epg.ProgramGuide.SetBackColors(&Gradient1,&Gradient2,&Gradient3,TimeGradients);
+	MainWindow.SetTheme(&ThemeManager);
+	StatusView.SetTheme(&ThemeManager);
+	SideBar.SetTheme(&ThemeManager);
+	Panel.SetTheme(&ThemeManager);
+	CaptureWindow.SetTheme(&ThemeManager);
+	Epg.ProgramGuide.SetTheme(&ThemeManager);
+	Epg.ProgramGuideFrame.SetTheme(&ThemeManager);
+	Epg.ProgramGuideDisplay.SetTheme(&ThemeManager);
 
 	PluginManager.SendColorChangeEvent();
 

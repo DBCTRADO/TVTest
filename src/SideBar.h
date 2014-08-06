@@ -31,11 +31,11 @@ public:
 		ITEM_FLAG_CHECKED	=0x0002
 	};
 
-	struct ThemeInfo {
-		Theme::Style ItemStyle;
-		Theme::Style HighlightItemStyle;
-		Theme::Style CheckItemStyle;
-		Theme::BorderInfo Border;
+	struct SideBarTheme {
+		TVTest::Theme::Style ItemStyle;
+		TVTest::Theme::Style HighlightItemStyle;
+		TVTest::Theme::Style CheckItemStyle;
+		TVTest::Theme::BorderStyle Border;
 	};
 
 	class ABSTRACT_CLASS(CEventHandler) {
@@ -63,6 +63,7 @@ public:
 // CUIBase
 	void SetStyle(const TVTest::Style::CStyleManager *pStyleManager) override;
 	void NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager) override;
+	void SetTheme(const TVTest::Theme::CThemeManager *pThemeManager) override;
 
 // CSideBar
 	int GetBarWidth() const;
@@ -76,8 +77,8 @@ public:
 	bool CheckItem(int Command,bool fCheck);
 	bool CheckRadioItem(int First,int Last,int Check);
 	bool IsItemChecked(int Command) const;
-	bool SetTheme(const ThemeInfo *pTheme);
-	bool GetTheme(ThemeInfo *pTheme) const;
+	bool SetSideBarTheme(const SideBarTheme &Theme);
+	bool GetSideBarTheme(SideBarTheme *pTheme) const;
 	void ShowToolTips(bool fShow);
 	void SetVertical(bool fVertical);
 	void SetEventHandler(CEventHandler *pHandler);
@@ -101,7 +102,7 @@ protected:
 	bool m_fShowTooltips;
 	DrawUtil::CMonoColorIconList m_Icons;
 	bool m_fVertical;
-	ThemeInfo m_Theme;
+	SideBarTheme m_Theme;
 	std::vector<SideBarItem> m_ItemList;
 	int m_HotItem;
 	int m_ClickItem;

@@ -16,10 +16,12 @@ class CControlPanel
 	, public TVTest::CUIBase
 {
 public:
-	struct ThemeInfo {
-		Theme::Style ItemStyle;
-		Theme::Style OverItemStyle;
-		COLORREF MarginColor;
+	struct ControlPanelTheme {
+		TVTest::Theme::Style ItemStyle;
+		TVTest::Theme::Style OverItemStyle;
+		TVTest::Theme::ThemeColor MarginColor;
+
+		ControlPanelTheme();
 	};
 
 	static bool Initialize(HINSTANCE hinst);
@@ -33,6 +35,7 @@ public:
 // CUIBase
 	void SetStyle(const TVTest::Style::CStyleManager *pStyleManager) override;
 	void NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager) override;
+	void SetTheme(const TVTest::Theme::CThemeManager *pThemeManager) override;
 
 // CControlPanel
 	bool AddItem(CControlPanelItem *pItem);
@@ -40,8 +43,8 @@ public:
 	bool UpdateItem(int Index);
 	bool GetItemPosition(int Index,RECT *pRect) const;
 	void UpdateLayout();
-	bool SetTheme(const ThemeInfo *pTheme);
-	bool GetTheme(ThemeInfo *pTheme) const;
+	bool SetControlPanelTheme(const ControlPanelTheme &Theme);
+	bool GetControlPanelTheme(ControlPanelTheme *pTheme) const;
 	bool SetFont(const LOGFONT *pFont);
 	int GetFontHeight() const { return m_FontHeight; }
 	void SetSendMessageWindow(HWND hwnd);
@@ -65,7 +68,7 @@ private:
 	DrawUtil::CFont m_Font;
 	int m_FontHeight;
 	ControlPanelStyle m_Style;
-	ThemeInfo m_Theme;
+	ControlPanelTheme m_Theme;
 	DrawUtil::COffscreen m_Offscreen;
 	HWND m_hwndMessage;
 	int m_HotItem;

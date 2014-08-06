@@ -13,6 +13,12 @@ struct RGBA {
 	RGBA() : Red(0), Green(0), Blue(0), Alpha(0) {}
 	RGBA(BYTE r,BYTE g,BYTE b,BYTE a=255) : Red(r), Green(g), Blue(b), Alpha(a) {}
 	RGBA(COLORREF c) : Red(GetRValue(c)), Green(GetGValue(c)), Blue(GetBValue(c)), Alpha(255) {}
+	bool operator==(const RGBA &op) const {
+		return Red==op.Red && Green==op.Green && Blue==op.Blue && Alpha==op.Alpha;
+	}
+	bool operator!=(const RGBA &op) const { return !(*this==op); }
+	operator COLORREF() const { return GetCOLORREF(); }
+	void Set(BYTE r,BYTE g,BYTE b,BYTE a=255) { Red=r; Green=g; Blue=b; Alpha=a; }
 	COLORREF GetCOLORREF() const { return RGB(Red,Green,Blue); }
 };
 

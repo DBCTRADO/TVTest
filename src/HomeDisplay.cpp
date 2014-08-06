@@ -140,14 +140,13 @@ void CChannelListCategoryBase::Draw(HDC hdc,const CHomeDisplay::StyleInfo &Style
 		if (!IsRectIntersect(&rcItem,&PaintRect))
 			continue;
 		const CChannelItemBase *pItem=m_ItemList[i];
-		const Theme::Style *pItemStyle;
+		const TVTest::Theme::Style *pItemStyle;
 		if (i==m_HotItem) {
 			pItemStyle=&Style.ItemHotStyle;
 		} else {
 			pItemStyle=&Style.ItemStyle[i%2];
 		}
-		Theme::DrawStyleBackground(hdc,&rcItem,pItemStyle);
-		::SetTextColor(hdc,pItemStyle->TextColor);
+		TVTest::Theme::Draw(hdc,rcItem,pItemStyle->Back);
 		rc=rcItem;
 		rc.left+=Style.ItemMargins.Left;
 		rc.top+=Style.ItemMargins.Top;
@@ -160,7 +159,7 @@ void CChannelListCategoryBase::Draw(HDC hdc,const CHomeDisplay::StyleInfo &Style
 								 i==m_HotItem?255:224);
 			rc.top+=Style.FontHeight;
 		}
-		::DrawText(hdc,pItem->GetName(),-1,&rc,
+		TVTest::Theme::Draw(hdc,rc,pItemStyle->Fore,pItem->GetName(),
 			DT_LEFT | DT_SINGLELINE | DT_VCENTER | DT_NOPREFIX | DT_END_ELLIPSIS);
 
 		rc.left=rc.right+8;
@@ -185,7 +184,7 @@ void CChannelListCategoryBase::Draw(HDC hdc,const CHomeDisplay::StyleInfo &Style
 						pEventInfo->GetEventName());
 				}
 				if (Length>0) {
-					::DrawText(hdc,szText,Length,&rc,
+					TVTest::Theme::Draw(hdc,rc,pItemStyle->Fore,szText,
 						DT_LEFT | DT_SINGLELINE | DT_VCENTER | DT_NOPREFIX | DT_END_ELLIPSIS);
 				}
 			}
@@ -839,14 +838,14 @@ void CFeaturedEventsCategory::Draw(HDC hdc,const CHomeDisplay::StyleInfo &Style,
 			continue;
 		const CEventItem *pItem=m_ItemList[i];
 		const CChannelInfo &ChannelInfo=pItem->GetChannelInfo();
-		const Theme::Style *pItemStyle;
+		const TVTest::Theme::Style *pItemStyle;
 		if (i==m_HotItem) {
 			pItemStyle=&Style.ItemHotStyle;
 		} else {
 			pItemStyle=&Style.ItemStyle[i%2];
 		}
-		Theme::DrawStyleBackground(hdc,&rcItem,pItemStyle);
-		::SetTextColor(hdc,pItemStyle->TextColor);
+		TVTest::Theme::Draw(hdc,rcItem,pItemStyle->Back);
+		::SetTextColor(hdc,pItemStyle->Fore.Fill.GetSolidColor());
 		rc=rcItem;
 		rc.left+=Style.ItemMargins.Left;
 		rc.top+=Style.ItemMargins.Top;
@@ -1350,8 +1349,8 @@ CHomeDisplay::CHomeDisplay(CEventSearchOptions &EventSearchOptions)
 	, m_ScrollPos(0)
 	, m_himlIcons(NULL)
 {
-	GetBackgroundStyle(BACKGROUND_STYLE_CATEGORIES,&m_Style.CategoriesBackGradient);
-	GetBackgroundStyle(BACKGROUND_STYLE_CONTENT,&m_Style.ContentBackGradient);
+	GetBackgroundStyle(BACKGROUND_STYLE_CATEGORIES,&m_Style.CategoriesBackStyle);
+	GetBackgroundStyle(BACKGROUND_STYLE_CONTENT,&m_Style.ContentBackStyle);
 	GetItemStyle(ITEM_STYLE_NORMAL,&m_Style.CategoryItemStyle);
 	GetItemStyle(ITEM_STYLE_SELECTED,&m_Style.CategoryItemSelStyle);
 	GetItemStyle(ITEM_STYLE_CURRENT,&m_Style.CategoryItemCurStyle);
@@ -1949,7 +1948,7 @@ void CHomeDisplay::Draw(HDC hdc,const RECT &PaintRect)
 	if (PaintRect.left<m_CategoriesAreaWidth) {
 		RECT rcCategories=rcClient;
 		rcCategories.right=m_CategoriesAreaWidth;
-		Theme::FillGradient(hdc,&rcCategories,&m_Style.CategoriesBackGradient);
+		TVTest::Theme::Draw(hdc,rcCategories,m_Style.CategoriesBackStyle);
 
 		RECT rcItem;
 		rcItem.left=rcCategories.left+m_Style.CategoriesMargins.Left;
@@ -1958,20 +1957,20 @@ void CHomeDisplay::Draw(HDC hdc,const RECT &PaintRect)
 
 		for (size_t i=0;i<m_CategoryList.size();i++) {
 			const CCategory *pCategory=m_CategoryList[i];
-			const Theme::Style *pStyle=
+			const TVTest::Theme::Style *pStyle=
 				((int)i==m_CurCategory)?
 					(pCategory->IsFocused()?&m_Style.CategoryItemSelStyle:&m_Style.CategoryItemCurStyle):
 					(&m_Style.CategoryItemStyle);
 
 			rcItem.bottom=rcItem.top+m_CategoryItemHeight;
-			Theme::DrawStyleBackground(hdc,&rcItem,pStyle);
+			TVTest::Theme::Draw(hdc,rcItem,pStyle->Back);
 			RECT rc=rcItem;
 			TVTest::Style::Subtract(&rc,m_Style.CategoryItemMargins);
 			::ImageList_Draw(m_himlIcons,pCategory->GetIconIndex(),
 							 hdc,rc.left,rc.top+((rc.bottom-rc.top)-CATEGORY_ICON_HEIGHT)/2,ILD_TRANSPARENT);
 			rc.left+=CATEGORY_ICON_WIDTH+m_Style.CategoryIconMargin;
-			::SetTextColor(hdc,pStyle->TextColor);
-			::DrawText(hdc,pCategory->GetTitle(),-1,&rc,DT_NOPREFIX | DT_SINGLELINE | DT_VCENTER);
+			TVTest::Theme::Draw(hdc,rc,pStyle->Fore,pCategory->GetTitle(),
+								DT_NOPREFIX | DT_SINGLELINE | DT_VCENTER);
 			rcItem.top=rcItem.bottom;
 		}
 	}
@@ -1979,7 +1978,7 @@ void CHomeDisplay::Draw(HDC hdc,const RECT &PaintRect)
 	if (PaintRect.right>m_CategoriesAreaWidth) {
 		RECT rcContent=rcClient;
 		rcContent.left=m_CategoriesAreaWidth;
-		Theme::FillGradient(hdc,&rcContent,&m_Style.ContentBackGradient);
+		TVTest::Theme::Draw(hdc,rcContent,m_Style.ContentBackStyle);
 
 		if (pCategory!=NULL) {
 			TVTest::Style::Subtract(&rcContent,m_Style.ContentMargins);

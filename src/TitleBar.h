@@ -15,11 +15,11 @@ class CTitleBar
 	, public TVTest::CUIBase
 {
 public:
-	struct ThemeInfo {
-		Theme::Style CaptionStyle;
-		Theme::Style IconStyle;
-		Theme::Style HighlightIconStyle;
-		Theme::BorderInfo Border;
+	struct TitleBarTheme {
+		TVTest::Theme::Style CaptionStyle;
+		TVTest::Theme::Style IconStyle;
+		TVTest::Theme::Style HighlightIconStyle;
+		TVTest::Theme::BorderStyle Border;
 	};
 
 	class ABSTRACT_CLASS(CEventHandler) {
@@ -53,6 +53,7 @@ public:
 // CUIBase
 	void SetStyle(const TVTest::Style::CStyleManager *pStyleManager) override;
 	void NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager) override;
+	void SetTheme(const TVTest::Theme::CThemeManager *pThemeManager) override;
 
 // CTitleBar
 	int CalcHeight() const;
@@ -63,8 +64,8 @@ public:
 	void SetMaximizeMode(bool fMaximize);
 	void SetFullscreenMode(bool fFullscreen);
 	bool SetEventHandler(CEventHandler *pHandler);
-	bool SetTheme(const ThemeInfo *pTheme);
-	bool GetTheme(ThemeInfo *pTheme) const;
+	bool SetTitleBarTheme(const TitleBarTheme &Theme);
+	bool GetTitleBarTheme(TitleBarTheme *pTheme) const;
 	bool SetFont(const LOGFONT *pFont);
 	void SetIcon(HICON hIcon);
 
@@ -97,7 +98,7 @@ private:
 	TitleBarStyle m_Style;
 	DrawUtil::CFont m_Font;
 	int m_FontHeight;
-	ThemeInfo m_Theme;
+	TitleBarTheme m_Theme;
 	DrawUtil::CMonoColorIconList m_ButtonIcons;
 	HBITMAP m_hbmIcons;
 	CTooltip m_Tooltip;

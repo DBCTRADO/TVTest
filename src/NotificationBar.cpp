@@ -46,10 +46,11 @@ CNotificationBar::CNotificationBar()
 	, m_BarHeight(0)
 	, m_TimerCount(0)
 {
-	m_BackGradient.Type=Theme::GRADIENT_NORMAL;
-	m_BackGradient.Direction=Theme::DIRECTION_VERT;
-	m_BackGradient.Color1=RGB(128,128,128);
-	m_BackGradient.Color2=RGB(64,64,64);
+	m_BackStyle.Fill.Type=TVTest::Theme::FILL_GRADIENT;
+	m_BackStyle.Fill.Gradient.Type=TVTest::Theme::GRADIENT_NORMAL;
+	m_BackStyle.Fill.Gradient.Direction=TVTest::Theme::DIRECTION_VERT;
+	m_BackStyle.Fill.Gradient.Color1.Set(128,128,128);
+	m_BackStyle.Fill.Gradient.Color2.Set(64,64,64);
 	m_TextColor[MESSAGE_INFO]=RGB(224,224,224);
 	m_TextColor[MESSAGE_WARNING]=RGB(255,160,64);
 	m_TextColor[MESSAGE_ERROR]=RGB(224,64,64);
@@ -77,6 +78,22 @@ void CNotificationBar::SetStyle(const TVTest::Style::CStyleManager *pStyleManage
 void CNotificationBar::NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager)
 {
 	m_Style.NormalizeStyle(pStyleManager);
+}
+
+
+void CNotificationBar::SetTheme(const TVTest::Theme::CThemeManager *pThemeManager)
+{
+	pThemeManager->GetBackgroundStyle(TVTest::Theme::CThemeManager::STYLE_NOTIFICATIONBAR,&m_BackStyle);
+
+	m_TextColor[MESSAGE_INFO]=
+		pThemeManager->GetColor(CColorScheme::COLOR_NOTIFICATIONBARTEXT);
+	m_TextColor[MESSAGE_WARNING]=
+		pThemeManager->GetColor(CColorScheme::COLOR_NOTIFICATIONBARWARNINGTEXT);
+	m_TextColor[MESSAGE_ERROR]=
+		pThemeManager->GetColor(CColorScheme::COLOR_NOTIFICATIONBARERRORTEXT);
+
+	if (m_hwnd!=NULL)
+		Invalidate();
 }
 
 
@@ -168,19 +185,6 @@ bool CNotificationBar::Hide()
 }
 
 
-bool CNotificationBar::SetColors(const Theme::GradientInfo *pBackGradient,
-	COLORREF crTextColor,COLORREF crWarningTextColor,COLORREF crErrorTextColor)
-{
-	m_BackGradient=*pBackGradient;
-	m_TextColor[MESSAGE_INFO]=crTextColor;
-	m_TextColor[MESSAGE_WARNING]=crWarningTextColor;
-	m_TextColor[MESSAGE_ERROR]=crErrorTextColor;
-	if (m_hwnd!=NULL)
-		Invalidate();
-	return true;
-}
-
-
 bool CNotificationBar::SetFont(const LOGFONT *pFont)
 {
 	if (!m_Font.Create(pFont))
@@ -259,7 +263,7 @@ LRESULT CNotificationBar::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lPa
 			::BeginPaint(hwnd,&ps);
 
 			::GetClientRect(hwnd,&rc);
-			Theme::FillGradient(ps.hdc,&rc,&m_BackGradient);
+			TVTest::Theme::Draw(ps.hdc,rc,m_BackStyle);
 
 			if (!m_MessageQueue.empty()) {
 				const MessageInfo &Info=m_MessageQueue.front();

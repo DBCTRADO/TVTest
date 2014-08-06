@@ -38,12 +38,12 @@ public:
 		bool fVisible;
 	};
 
-	struct ThemeInfo {
-		Theme::Style TabStyle;
-		Theme::Style CurTabStyle;
-		Theme::Style TabMarginStyle;
-		COLORREF BackColor;
-		COLORREF BorderColor;
+	struct PanelFormTheme {
+		TVTest::Theme::Style TabStyle;
+		TVTest::Theme::Style CurTabStyle;
+		TVTest::Theme::Style TabMarginStyle;
+		TVTest::Theme::ThemeColor BackColor;
+		TVTest::Theme::ThemeColor BorderColor;
 	};
 
 	static bool Initialize(HINSTANCE hinst);
@@ -58,6 +58,7 @@ public:
 // CUIBase
 	void SetStyle(const TVTest::Style::CStyleManager *pStyleManager) override;
 	void NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager) override;
+	void SetTheme(const TVTest::Theme::CThemeManager *pThemeManager) override;
 
 // CPanelForm
 	bool AddWindow(CPage *pWindow,int ID,LPCTSTR pszTitle);
@@ -72,8 +73,8 @@ public:
 	bool SetTabOrder(const int *pOrder);
 	bool GetTabInfo(int Index,TabInfo *pInfo) const;
 	void SetEventHandler(CEventHandler *pHandler);
-	bool SetTheme(const ThemeInfo *pTheme);
-	bool GetTheme(ThemeInfo *pTheme) const;
+	bool SetPanelFormTheme(const PanelFormTheme &Theme);
+	bool GetPanelFormTheme(PanelFormTheme *pTheme) const;
 	bool SetTabFont(const LOGFONT *pFont);
 	bool SetPageFont(const LOGFONT *pFont);
 
@@ -105,7 +106,7 @@ private:
 	int m_NumWindows;
 	int m_TabOrder[MAX_WINDOWS];
 	PanelFormStyle m_Style;
-	ThemeInfo m_Theme;
+	PanelFormTheme m_Theme;
 	DrawUtil::CFont m_Font;
 	int m_TabHeight;
 	int m_TabWidth;

@@ -94,14 +94,14 @@ private:
 		HICON m_hIcon;
 	};
 
-	Theme::GradientInfo m_TunerAreaBackGradient;
-	Theme::GradientInfo m_ChannelAreaBackGradient;
-	Theme::Style m_TunerItemStyle;
-	Theme::Style m_TunerItemSelStyle;
-	Theme::Style m_TunerItemCurStyle;
-	Theme::Style m_ChannelItemStyle[2];
-	Theme::Style m_ChannelItemCurStyle;
-	Theme::Style m_ClockStyle;
+	TVTest::Theme::BackgroundStyle m_TunerAreaBackStyle;
+	TVTest::Theme::BackgroundStyle m_ChannelAreaBackStyle;
+	TVTest::Theme::Style m_TunerItemStyle;
+	TVTest::Theme::Style m_TunerItemSelStyle;
+	TVTest::Theme::Style m_TunerItemCurStyle;
+	TVTest::Theme::Style m_ChannelItemStyle[2];
+	TVTest::Theme::Style m_ChannelItemCurStyle;
+	TVTest::Theme::Style m_ClockStyle;
 	DrawUtil::CFont m_Font;
 	bool m_fAutoFontSize;
 	int m_FontHeight;

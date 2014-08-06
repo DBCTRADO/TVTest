@@ -15,6 +15,7 @@
 class CStatusView;
 
 class ABSTRACT_CLASS(CStatusItem)
+	: public TVTest::CUIBase
 {
 protected:
 	CStatusView *m_pStatus;
@@ -58,8 +59,6 @@ public:
 	virtual void OnFocus(bool fFocus) {}
 	virtual bool OnMouseHover(int x,int y) { return false; }
 	virtual LRESULT OnNotifyMessage(LPNMHDR pnmh) { return 0; }
-	virtual void SetStyle(const TVTest::Style::CStyleManager *pStyleManager) {}
-	virtual void NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager) {}
 
 	friend CStatusView;
 };
@@ -90,11 +89,11 @@ public:
 		friend CStatusView;
 	};
 
-	struct ThemeInfo {
-		Theme::Style ItemStyle;
-		Theme::Style HighlightItemStyle;
-		Theme::Style BottomItemStyle;
-		Theme::BorderInfo Border;
+	struct StatusViewTheme {
+		TVTest::Theme::Style ItemStyle;
+		TVTest::Theme::Style HighlightItemStyle;
+		TVTest::Theme::Style BottomItemStyle;
+		TVTest::Theme::BorderStyle Border;
 	};
 
 	static bool Initialize(HINSTANCE hinst);
@@ -108,6 +107,7 @@ public:
 // CUIBase
 	void SetStyle(const TVTest::Style::CStyleManager *pStyleManager) override;
 	void NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager) override;
+	void SetTheme(const TVTest::Theme::CThemeManager *pThemeManager) override;
 
 // CStatusView
 	int NumItems() const { return (int)m_ItemList.size(); }
@@ -128,8 +128,10 @@ public:
 	int GetFontHeight() const { return m_FontHeight; }
 	int GetIntegralWidth() const;
 	void SetSingleText(LPCTSTR pszText);
-	bool SetTheme(const ThemeInfo *pTheme);
-	bool GetTheme(ThemeInfo *pTheme) const;
+	static bool GetStatusViewThemeFromThemeManager(
+		const TVTest::Theme::CThemeManager *pThemeManager,StatusViewTheme *pTheme);
+	bool SetStatusViewTheme(const StatusViewTheme &Theme);
+	bool GetStatusViewTheme(StatusViewTheme *pTheme) const;
 	bool SetFont(const LOGFONT *pFont);
 	bool GetFont(LOGFONT *pFont) const;
 	bool SetMultiRow(bool fMultiRow);
@@ -168,7 +170,7 @@ private:
 	bool m_fMultiRow;
 	int m_MaxRows;
 	int m_Rows;
-	ThemeInfo m_Theme;
+	StatusViewTheme m_Theme;
 	std::vector<CStatusItem*> m_ItemList;
 	bool m_fSingleMode;
 	CDynamicString m_SingleText;

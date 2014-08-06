@@ -31,12 +31,11 @@ public:
 // CUIBase
 	void SetStyle(const TVTest::Style::CStyleManager *pStyleManager) override;
 	void NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager) override;
+	void SetTheme(const TVTest::Theme::CThemeManager *pThemeManager) override;
 
 // CNotificationBar
 	bool Show(LPCTSTR pszText,MessageType Type,DWORD Timeout,bool fSkippable);
 	bool Hide();
-	bool SetColors(const Theme::GradientInfo *pBackGradient,
-				   COLORREF crTextColor,COLORREF crWarningTextColor,COLORREF crErrorTextColor);
 	bool SetFont(const LOGFONT *pFont);
 	void SetAnimate(bool fAnimate) { m_fAnimate=fAnimate; }
 	int GetBarHeight() const { return m_BarHeight; }
@@ -76,7 +75,7 @@ private:
 	static const DWORD FADE_ANIMATION_INTERVAL=50;
 
 	NotificationBarStyle m_Style;
-	Theme::GradientInfo m_BackGradient;
+	TVTest::Theme::BackgroundStyle m_BackStyle;
 	COLORREF m_TextColor[3];
 	DrawUtil::CFont m_Font;
 	int m_BarHeight;

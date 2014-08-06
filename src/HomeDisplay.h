@@ -18,13 +18,13 @@ class CHomeDisplay
 {
 public:
 	struct StyleInfo {
-		Theme::GradientInfo CategoriesBackGradient;
-		Theme::GradientInfo ContentBackGradient;
-		Theme::Style CategoryItemStyle;
-		Theme::Style CategoryItemSelStyle;
-		Theme::Style CategoryItemCurStyle;
-		Theme::Style ItemStyle[2];
-		Theme::Style ItemHotStyle;
+		TVTest::Theme::BackgroundStyle CategoriesBackStyle;
+		TVTest::Theme::BackgroundStyle ContentBackStyle;
+		TVTest::Theme::Style CategoryItemStyle;
+		TVTest::Theme::Style CategoryItemSelStyle;
+		TVTest::Theme::Style CategoryItemCurStyle;
+		TVTest::Theme::Style ItemStyle[2];
+		TVTest::Theme::Style ItemHotStyle;
 		COLORREF BannerTextColor;
 		TVTest::Style::Margins ContentMargins;
 		int FontHeight;

@@ -47,20 +47,6 @@ CControlPanel::CControlPanel()
 	GetDefaultFont(&lf);
 	m_Font.Create(&lf);
 	m_FontHeight=abs(lf.lfHeight);
-
-	m_Theme.ItemStyle.Gradient.Type=Theme::GRADIENT_NORMAL;
-	m_Theme.ItemStyle.Gradient.Direction=Theme::DIRECTION_VERT;
-	m_Theme.ItemStyle.Gradient.Color1=RGB(0,0,0);
-	m_Theme.ItemStyle.Gradient.Color2=RGB(0,0,0);
-	m_Theme.ItemStyle.Border.Type=Theme::BORDER_NONE;
-	m_Theme.ItemStyle.TextColor=RGB(255,255,255);
-	m_Theme.OverItemStyle.Gradient.Type=Theme::GRADIENT_NORMAL;
-	m_Theme.OverItemStyle.Gradient.Direction=Theme::DIRECTION_VERT;
-	m_Theme.OverItemStyle.Gradient.Color1=RGB(255,255,255);
-	m_Theme.OverItemStyle.Gradient.Color2=RGB(255,255,255);
-	m_Theme.OverItemStyle.Border.Type=Theme::BORDER_NONE;
-	m_Theme.OverItemStyle.TextColor=RGB(0,0,0);
-	m_Theme.MarginColor=RGB(0,0,0);
 }
 
 
@@ -94,6 +80,21 @@ void CControlPanel::NormalizeStyle(const TVTest::Style::CStyleManager *pStyleMan
 
 	for (auto itr=m_ItemList.begin();itr!=m_ItemList.end();++itr)
 		(*itr)->NormalizeStyle(pStyleManager);
+}
+
+
+void CControlPanel::SetTheme(const TVTest::Theme::CThemeManager *pThemeManager)
+{
+	ControlPanelTheme Theme;
+
+	pThemeManager->GetStyle(TVTest::Theme::CThemeManager::STYLE_CONTROLPANEL_ITEM,
+							&Theme.ItemStyle);
+	pThemeManager->GetStyle(TVTest::Theme::CThemeManager::STYLE_CONTROLPANEL_ITEM_HOT,
+							&Theme.OverItemStyle);
+	Theme.MarginColor=
+		pThemeManager->GetColor(CColorScheme::COLOR_CONTROLPANELMARGIN);
+
+	SetControlPanelTheme(Theme);
 }
 
 
@@ -173,18 +174,16 @@ void CControlPanel::UpdateLayout()
 }
 
 
-bool CControlPanel::SetTheme(const ThemeInfo *pTheme)
+bool CControlPanel::SetControlPanelTheme(const ControlPanelTheme &Theme)
 {
-	if (pTheme==NULL)
-		return false;
-	m_Theme=*pTheme;
+	m_Theme=Theme;
 	if (m_hwnd!=NULL)
 		Invalidate();
 	return true;
 }
 
 
-bool CControlPanel::GetTheme(ThemeInfo *pTheme) const
+bool CControlPanel::GetControlPanelTheme(ControlPanelTheme *pTheme) const
 {
 	if (pTheme==NULL)
 		return false;
@@ -322,25 +321,21 @@ void CControlPanel::Draw(HDC hdc,const RECT &PaintRect)
 				rcDest.bottom=rc.bottom;
 			::OffsetRect(&rc,-m_Style.Padding.Left,-rc.top);
 			if (i==m_HotItem) {
-				crText=m_Theme.OverItemStyle.TextColor;
-				crBack=MixColor(m_Theme.OverItemStyle.Gradient.Color1,
-								m_Theme.OverItemStyle.Gradient.Color2);
-				Theme::DrawStyleBackground(hdcOffscreen,&rc,&m_Theme.OverItemStyle);
+				crText=m_Theme.OverItemStyle.Fore.Fill.GetSolidColor();
+				crBack=m_Theme.OverItemStyle.Back.Fill.GetSolidColor();
+				TVTest::Theme::Draw(hdcOffscreen,rc,m_Theme.OverItemStyle.Back);
 			} else {
-				Theme::Style Style=m_Theme.ItemStyle;
+				TVTest::Theme::Style Style=m_Theme.ItemStyle;
 
-				crText=Style.TextColor;
-				crBack=MixColor(Style.Gradient.Color1,Style.Gradient.Color2);
+				crText=Style.Fore.Fill.GetSolidColor();
+				crBack=Style.Back.Fill.GetSolidColor();
 				if (!pItem->GetEnable()) {
 					crText=MixColor(crText,crBack);
 				} else if (pItem->GetCheck()) {
-					Style.Gradient.Color1=MixColor(Style.Gradient.Color1,
-												   m_Theme.OverItemStyle.Gradient.Color1);
-					Style.Gradient.Color2=MixColor(Style.Gradient.Color2,
-												  m_Theme.OverItemStyle.Gradient.Color2);
-					crBack=MixColor(Style.Gradient.Color1,Style.Gradient.Color2);
+					Style.Back.Fill=TVTest::Theme::MixStyle(Style.Back.Fill,m_Theme.OverItemStyle.Back.Fill);
+					crBack=Style.Back.Fill.GetSolidColor();
 				}
-				Theme::DrawStyleBackground(hdcOffscreen,&rc,&Style);
+				TVTest::Theme::Draw(hdcOffscreen,rc,Style.Back);
 			}
 			::SetTextColor(hdcOffscreen,crText);
 			::SetBkColor(hdcOffscreen,crBack);
@@ -512,6 +507,24 @@ LRESULT CControlPanel::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam
 	}
 
 	return CCustomWindow::OnMessage(hwnd,uMsg,wParam,lParam);
+}
+
+
+
+
+CControlPanel::ControlPanelTheme::ControlPanelTheme()
+{
+	ItemStyle.Back.Fill.Type=TVTest::Theme::FILL_SOLID;
+	ItemStyle.Back.Fill.Solid.Color.Set(0,0,0);
+	ItemStyle.Back.Border.Type=TVTest::Theme::BORDER_NONE;
+	ItemStyle.Fore.Fill.Type=TVTest::Theme::FILL_SOLID;
+	ItemStyle.Fore.Fill.Solid.Color.Set(255,255,255);
+	OverItemStyle.Back.Fill.Type=TVTest::Theme::FILL_SOLID;
+	OverItemStyle.Back.Fill.Solid.Color.Set(255,255,255);
+	OverItemStyle.Back.Border.Type=TVTest::Theme::BORDER_NONE;
+	OverItemStyle.Fore.Fill.Type=TVTest::Theme::FILL_SOLID;
+	OverItemStyle.Fore.Fill.Solid.Color.Set(0,0,0);
+	MarginColor.Set(0,0,0);
 }
 
 

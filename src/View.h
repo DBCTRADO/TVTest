@@ -67,8 +67,8 @@ protected:
 	virtual bool GetCloseButtonRect(RECT *pRect) const;
 	bool CloseButtonHitTest(int x,int y) const;
 	void DrawCloseButton(HDC hdc) const;
-	bool GetItemStyle(ItemType Type,Theme::Style *pStyle) const;
-	bool GetBackgroundStyle(BackgroundType Type,Theme::GradientInfo *pGradient) const;
+	bool GetItemStyle(ItemType Type,TVTest::Theme::Style *pStyle) const;
+	bool GetBackgroundStyle(BackgroundType Type,TVTest::Theme::BackgroundStyle *pStyle) const;
 	int GetDefaultFontSize(int Width,int Height) const;
 	void SetEventHandler(CEventHandler *pEventHandler);
 	bool HandleMessage(HWND hwnd,UINT Msg,WPARAM wParam,LPARAM lParam,LRESULT *pResult);
@@ -171,7 +171,7 @@ public:
 	void SetMessageWindow(HWND hwnd);
 	void SetEventHandler(CEventHandler *pEventHandler);
 	bool SetLogo(HBITMAP hbm);
-	void SetBorder(const Theme::BorderInfo *pInfo);
+	void SetBorder(const TVTest::Theme::BorderStyle &Style);
 	void ShowCursor(bool fShow);
 	bool CalcClientRect(RECT *pRect) const;
 	bool CalcWindowRect(RECT *pRect) const;
@@ -185,7 +185,7 @@ private:
 	HWND m_hwndMessage;
 	CEventHandler *m_pEventHandler;
 	HBITMAP m_hbmLogo;
-	Theme::BorderInfo m_BorderInfo;
+	TVTest::Theme::BorderStyle m_BorderStyle;
 	bool m_fShowCursor;
 
 // CCustomWindow

@@ -448,6 +448,11 @@ LRESULT CRecordStatusItem::OnNotifyMessage(LPNMHDR pnmh)
 	return 0;
 }
 
+void CRecordStatusItem::SetTheme(const TVTest::Theme::CThemeManager *pThemeManager)
+{
+	SetCircleColor(pThemeManager->GetColor(CColorScheme::COLOR_STATUSRECORDINGCIRCLE));
+}
+
 void CRecordStatusItem::ShowRemainTime(bool fRemain)
 {
 	if (m_fRemain!=fRemain) {

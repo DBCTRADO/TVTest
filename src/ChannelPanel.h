@@ -22,12 +22,14 @@ class CChannelPanel
 	, public CSettingsBase
 {
 public:
-	struct ThemeInfo {
-		Theme::Style ChannelNameStyle;
-		Theme::Style CurChannelNameStyle;
-		Theme::Style EventStyle[2];
-		Theme::Style CurChannelEventStyle[2];
-		COLORREF MarginColor;
+	struct ChannelPanelTheme {
+		TVTest::Theme::Style ChannelNameStyle;
+		TVTest::Theme::Style CurChannelNameStyle;
+		TVTest::Theme::Style EventStyle[2];
+		TVTest::Theme::Style CurChannelEventStyle[2];
+		TVTest::Theme::ThemeColor MarginColor;
+
+		ChannelPanelTheme();
 	};
 
 	class CEventHandler {
@@ -51,6 +53,7 @@ public:
 // CUIBase
 	void SetStyle(const TVTest::Style::CStyleManager *pStyleManager) override;
 	void NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager) override;
+	void SetTheme(const TVTest::Theme::CThemeManager *pThemeManager) override;
 
 // CSettingsBase
 	bool ReadSettings(CSettings &Settings) override;
@@ -68,8 +71,8 @@ public:
 	bool ScrollToChannel(int Channel);
 	bool ScrollToCurrentChannel();
 	void SetEventHandler(CEventHandler *pEventHandler);
-	bool SetTheme(const ThemeInfo *pTheme);
-	bool GetTheme(ThemeInfo *pTheme) const;
+	bool SetChannelPanelTheme(const ChannelPanelTheme &Theme);
+	bool GetChannelPanelTheme(ChannelPanelTheme *pTheme) const;
 	bool SetFont(const LOGFONT *pFont);
 	bool SetEventInfoFont(const LOGFONT *pFont);
 	void SetDetailToolTip(bool fDetail);
@@ -141,7 +144,7 @@ private:
 	int m_EventNameHeight;
 	int m_ItemHeight;
 	int m_ExpandedItemHeight;
-	ThemeInfo m_Theme;
+	ChannelPanelTheme m_Theme;
 	DrawUtil::CMonoColorIconList m_Chevron;
 	int m_EventsPerChannel;
 	int m_ExpandAdditionalEvents;

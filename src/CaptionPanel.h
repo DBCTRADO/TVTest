@@ -56,6 +56,9 @@ public:
 	bool Create(HWND hwndParent,DWORD Style,DWORD ExStyle=0,int ID=0) override;
 	void SetVisible(bool fVisible) override;
 
+// CUIBase
+	void SetTheme(const TVTest::Theme::CThemeManager *pThemeManager) override;
+
 // CCaptionPanel
 	void SetColor(COLORREF BackColor,COLORREF TextColor);
 	bool SetFont(const LOGFONT *pFont);

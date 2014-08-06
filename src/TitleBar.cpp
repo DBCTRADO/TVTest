@@ -64,21 +64,19 @@ CTitleBar::CTitleBar()
 	, m_fFullscreen(false)
 	, m_pEventHandler(NULL)
 {
-	m_Theme.CaptionStyle.Gradient.Type=Theme::GRADIENT_NORMAL;
-	m_Theme.CaptionStyle.Gradient.Direction=Theme::DIRECTION_VERT;
-	m_Theme.CaptionStyle.Gradient.Color1=RGB(192,192,192);
-	m_Theme.CaptionStyle.Gradient.Color2=RGB(192,192,192);
-	m_Theme.CaptionStyle.Border.Type=Theme::BORDER_NONE;
-	m_Theme.CaptionStyle.TextColor=RGB(255,255,255);
+	m_Theme.CaptionStyle.Back.Fill.Type=TVTest::Theme::FILL_SOLID;
+	m_Theme.CaptionStyle.Back.Fill.Solid.Color.Set(192,192,192);
+	m_Theme.CaptionStyle.Back.Border.Type=TVTest::Theme::BORDER_NONE;
+	m_Theme.CaptionStyle.Fore.Fill.Type=TVTest::Theme::FILL_SOLID;
+	m_Theme.CaptionStyle.Fore.Fill.Solid.Color.Set(255,255,255);
 	m_Theme.IconStyle=m_Theme.CaptionStyle;
-	m_Theme.HighlightIconStyle.Gradient.Type=Theme::GRADIENT_NORMAL;
-	m_Theme.HighlightIconStyle.Gradient.Direction=Theme::DIRECTION_VERT;
-	m_Theme.HighlightIconStyle.Gradient.Color1=RGB(0,0,128);
-	m_Theme.HighlightIconStyle.Gradient.Color2=RGB(0,0,128);
-	m_Theme.HighlightIconStyle.Border.Type=Theme::BORDER_NONE;
-	m_Theme.HighlightIconStyle.TextColor=RGB(255,255,255);
-	m_Theme.Border.Type=Theme::BORDER_RAISED;
-	m_Theme.Border.Color=RGB(192,192,192);
+	m_Theme.HighlightIconStyle.Back.Fill.Type=TVTest::Theme::FILL_SOLID;
+	m_Theme.HighlightIconStyle.Back.Fill.Solid.Color.Set(0,0,128);
+	m_Theme.HighlightIconStyle.Back.Border.Type=TVTest::Theme::BORDER_NONE;
+	m_Theme.HighlightIconStyle.Fore.Fill.Type=TVTest::Theme::FILL_SOLID;
+	m_Theme.HighlightIconStyle.Fore.Fill.Solid.Color.Set(255,255,255);
+	m_Theme.Border.Type=TVTest::Theme::BORDER_RAISED;
+	m_Theme.Border.Color.Set(192,192,192);
 }
 
 
@@ -116,6 +114,23 @@ void CTitleBar::NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager
 }
 
 
+void CTitleBar::SetTheme(const TVTest::Theme::CThemeManager *pThemeManager)
+{
+	TitleBarTheme Theme;
+
+	pThemeManager->GetStyle(TVTest::Theme::CThemeManager::STYLE_TITLEBAR_CAPTION,
+							&Theme.CaptionStyle);
+	pThemeManager->GetStyle(TVTest::Theme::CThemeManager::STYLE_TITLEBAR_BUTTON,
+							&Theme.IconStyle);
+	pThemeManager->GetStyle(TVTest::Theme::CThemeManager::STYLE_TITLEBAR_BUTTON_HOT,
+							&Theme.HighlightIconStyle);
+	pThemeManager->GetBorderStyle(TVTest::Theme::CThemeManager::STYLE_TITLEBAR,
+								  &Theme.Border);
+
+	SetTitleBarTheme(Theme);
+}
+
+
 int CTitleBar::CalcHeight() const
 {
 	int LabelHeight=m_FontHeight+m_Style.LabelMargin.Vert()+m_Style.LabelExtraHeight;
@@ -125,7 +140,7 @@ int CTitleBar::CalcHeight() const
 	if (Height<ButtonHeight)
 		Height=ButtonHeight;
 	RECT Border;
-	Theme::GetBorderWidths(&m_Theme.Border,&Border);
+	TVTest::Theme::GetBorderWidths(m_Theme.Border,&Border);
 
 	return Height+m_Style.Padding.Vert()+Border.top+Border.bottom;
 }
@@ -184,18 +199,16 @@ bool CTitleBar::SetEventHandler(CEventHandler *pHandler)
 }
 
 
-bool CTitleBar::SetTheme(const ThemeInfo *pTheme)
+bool CTitleBar::SetTitleBarTheme(const TitleBarTheme &Theme)
 {
-	if (pTheme==NULL)
-		return false;
-	m_Theme=*pTheme;
+	m_Theme=Theme;
 	if (m_hwnd!=NULL)
 		Invalidate();
 	return true;
 }
 
 
-bool CTitleBar::GetTheme(ThemeInfo *pTheme) const
+bool CTitleBar::GetTitleBarTheme(TitleBarTheme *pTheme) const
 {
 	if (pTheme==NULL)
 		return false;
@@ -466,7 +479,7 @@ bool CTitleBar::GetItemRect(int Item,RECT *pRect) const
 	RECT rc;
 
 	GetClientRect(&rc);
-	Theme::SubtractBorderRect(&m_Theme.Border,&rc);
+	TVTest::Theme::SubtractBorderRect(m_Theme.Border,&rc);
 	TVTest::Style::Subtract(&rc,m_Style.Padding);
 	const int ButtonWidth=GetButtonWidth();
 	int ButtonPos=rc.right-NUM_BUTTONS*ButtonWidth;
@@ -521,7 +534,7 @@ int CTitleBar::HitTest(int x,int y) const
 bool CTitleBar::PtInIcon(int x,int y) const
 {
 	RECT Border;
-	Theme::GetBorderWidths(&m_Theme.Border,&Border);
+	TVTest::Theme::GetBorderWidths(m_Theme.Border,&Border);
 	int IconLeft=Border.left+m_Style.Padding.Left+m_Style.IconMargin.Left;
 	if (x>=IconLeft && x<IconLeft+m_Style.IconSize.Width)
 		return true;
@@ -549,12 +562,12 @@ void CTitleBar::Draw(HDC hdc,const RECT &PaintRect)
 	COLORREF crOldBkColor=::GetBkColor(hdc);
 
 	GetClientRect(&rc);
-	Theme::SubtractBorderRect(&m_Theme.Border,&rc);
+	TVTest::Theme::SubtractBorderRect(m_Theme.Border,&rc);
 	if (rc.left<PaintRect.left)
 		rc.left=PaintRect.left;
 	if (rc.right>PaintRect.right)
 		rc.right=PaintRect.right;
-	Theme::DrawStyleBackground(hdc,&rc,&m_Theme.CaptionStyle);
+	TVTest::Theme::Draw(hdc,rc,m_Theme.CaptionStyle.Back);
 
 	for (int i=0;i<=ITEM_LAST;i++) {
 		GetItemRect(i,&rc);
@@ -577,19 +590,18 @@ void CTitleBar::Draw(HDC hdc,const RECT &PaintRect)
 				}
 				if (!m_Label.IsEmpty()) {
 					TVTest::Style::Subtract(&rc,m_Style.LabelMargin);
-					::SetTextColor(hdc,m_Theme.CaptionStyle.TextColor);
-					::DrawText(hdc,m_Label.Get(),-1,&rc,
+					TVTest::Theme::Draw(hdc,rc,m_Theme.CaptionStyle.Fore,m_Label.Get(),
 						DT_LEFT | DT_SINGLELINE | DT_VCENTER | DT_NOPREFIX | DT_END_ELLIPSIS);
 				}
 			} else {
-				const Theme::Style &Style=
+				const TVTest::Theme::Style &Style=
 					fHighlight?m_Theme.HighlightIconStyle:m_Theme.IconStyle;
 
 				// ‚Æ‚è‚ ‚¦‚¸•Ï‚É‚È‚ç‚È‚¢‚æ‚¤‚É‚·‚éB
 				// ”wŒi‚ð“§‰ßŽw’è‚Å‚«‚é‚æ‚¤‚É‚µ‚½•û‚ª—Ç‚¢B
-				if (Style.Border.Type!=Theme::BORDER_NONE
-						|| Style.Gradient!=m_Theme.CaptionStyle.Gradient)
-					Theme::DrawStyleBackground(hdc,&rc,&Style);
+				if (Style.Back.Border.Type!=TVTest::Theme::BORDER_NONE
+						|| Style.Back.Fill!=m_Theme.CaptionStyle.Back.Fill)
+					TVTest::Theme::Draw(hdc,rc,Style.Back);
 				m_ButtonIcons.Draw(hdc,
 					rc.left+m_Style.ButtonPadding.Left,
 					rc.top+m_Style.ButtonPadding.Top,
@@ -598,13 +610,13 @@ void CTitleBar::Draw(HDC hdc,const RECT &PaintRect)
 					(i==ITEM_MAXIMIZE && m_fMaximized)?ICON_RESTORE:
 					((i==ITEM_FULLSCREEN && m_fFullscreen)?ICON_FULLSCREENCLOSE:
 						i-1),
-					Style.TextColor);
+					Style.Fore.Fill.GetSolidColor());
 			}
 		}
 	}
 
 	GetClientRect(&rc);
-	Theme::DrawBorder(hdc,rc,&m_Theme.Border);
+	TVTest::Theme::Draw(hdc,rc,m_Theme.Border);
 
 	::SetBkColor(hdc,crOldBkColor);
 	::SetTextColor(hdc,crOldTextColor);

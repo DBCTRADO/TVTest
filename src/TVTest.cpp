@@ -453,74 +453,15 @@ bool CMainPanel::IsAttached()
 }
 
 
-void CMainPanel::SetColorScheme(const CColorScheme *pColorScheme)
+void CMainPanel::SetTheme(const TVTest::Theme::CThemeManager *pThemeManager)
 {
-	CPanel::ThemeInfo PanelTheme;
-	pColorScheme->GetStyle(CColorScheme::STYLE_PANEL_TITLE,
-						   &PanelTheme.TitleStyle);
-	Frame.SetTheme(&PanelTheme);
-
-	CPanelForm::ThemeInfo PanelFormTheme;
-	pColorScheme->GetStyle(CColorScheme::STYLE_PANEL_TAB,
-						   &PanelFormTheme.TabStyle);
-	pColorScheme->GetStyle(CColorScheme::STYLE_PANEL_CURTAB,
-						   &PanelFormTheme.CurTabStyle);
-	pColorScheme->GetStyle(CColorScheme::STYLE_PANEL_TABMARGIN,
-						   &PanelFormTheme.TabMarginStyle);
-	PanelFormTheme.BackColor=
-		pColorScheme->GetColor(CColorScheme::COLOR_PANELBACK);
-	PanelFormTheme.BorderColor=
-		pColorScheme->GetColor(CColorScheme::COLOR_PANELTABLINE);
-	Form.SetTheme(&PanelFormTheme);
-
-	InfoPanel.SetColor(
-		pColorScheme->GetColor(CColorScheme::COLOR_PANELBACK),
-		pColorScheme->GetColor(CColorScheme::COLOR_PANELTEXT));
-	InfoPanel.SetProgramInfoColor(
-		pColorScheme->GetColor(CColorScheme::COLOR_PROGRAMINFOBACK),
-		pColorScheme->GetColor(CColorScheme::COLOR_PROGRAMINFOTEXT));
-
-	CProgramListPanel::ThemeInfo ProgramListPanelTheme;
-	pColorScheme->GetStyle(CColorScheme::STYLE_PROGRAMLISTPANEL_EVENT,
-						   &ProgramListPanelTheme.EventTextStyle);
-	pColorScheme->GetStyle(CColorScheme::STYLE_PROGRAMLISTPANEL_CUREVENT,
-						   &ProgramListPanelTheme.CurEventTextStyle);
-	pColorScheme->GetStyle(CColorScheme::STYLE_PROGRAMLISTPANEL_TITLE,
-						   &ProgramListPanelTheme.EventNameStyle);
-	pColorScheme->GetStyle(CColorScheme::STYLE_PROGRAMLISTPANEL_CURTITLE,
-						   &ProgramListPanelTheme.CurEventNameStyle);
-	ProgramListPanelTheme.MarginColor=
-		pColorScheme->GetColor(CColorScheme::COLOR_PANELBACK);
-	ProgramListPanel.SetTheme(&ProgramListPanelTheme);
-
-	CChannelPanel::ThemeInfo ChannelPanelTheme;
-	pColorScheme->GetStyle(CColorScheme::STYLE_CHANNELPANEL_CHANNELNAME,
-						   &ChannelPanelTheme.ChannelNameStyle);
-	pColorScheme->GetStyle(CColorScheme::STYLE_CHANNELPANEL_CURCHANNELNAME,
-						   &ChannelPanelTheme.CurChannelNameStyle);
-	pColorScheme->GetStyle(CColorScheme::STYLE_CHANNELPANEL_EVENTNAME1,
-						   &ChannelPanelTheme.EventStyle[0]);
-	pColorScheme->GetStyle(CColorScheme::STYLE_CHANNELPANEL_EVENTNAME2,
-						   &ChannelPanelTheme.EventStyle[1]);
-	pColorScheme->GetStyle(CColorScheme::STYLE_CHANNELPANEL_CURCHANNELEVENTNAME1,
-						   &ChannelPanelTheme.CurChannelEventStyle[0]);
-	pColorScheme->GetStyle(CColorScheme::STYLE_CHANNELPANEL_CURCHANNELEVENTNAME2,
-						   &ChannelPanelTheme.CurChannelEventStyle[1]);
-	ChannelPanelTheme.MarginColor=pColorScheme->GetColor(CColorScheme::COLOR_PANELBACK);
-	ChannelPanel.SetTheme(&ChannelPanelTheme);
-
-	CControlPanel::ThemeInfo ControlPanelTheme;
-	pColorScheme->GetStyle(CColorScheme::STYLE_CONTROLPANELITEM,
-						   &ControlPanelTheme.ItemStyle);
-	pColorScheme->GetStyle(CColorScheme::STYLE_CONTROLPANELHIGHLIGHTITEM,
-						   &ControlPanelTheme.OverItemStyle);
-	ControlPanelTheme.MarginColor=
-		pColorScheme->GetColor(CColorScheme::COLOR_CONTROLPANELMARGIN);
-	ControlPanel.SetTheme(&ControlPanelTheme);
-
-	CaptionPanel.SetColor(
-		pColorScheme->GetColor(CColorScheme::COLOR_CAPTIONPANELBACK),
-		pColorScheme->GetColor(CColorScheme::COLOR_CAPTIONPANELTEXT));
+	Frame.SetTheme(pThemeManager);
+	Form.SetTheme(pThemeManager);
+	InfoPanel.SetTheme(pThemeManager);
+	ProgramListPanel.SetTheme(pThemeManager);
+	ChannelPanel.SetTheme(pThemeManager);
+	ControlPanel.SetTheme(pThemeManager);
+	CaptionPanel.SetTheme(pThemeManager);
 }
 
 

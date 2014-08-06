@@ -127,6 +127,17 @@ void CInformationPanel::NormalizeStyle(const TVTest::Style::CStyleManager *pStyl
 }
 
 
+void CInformationPanel::SetTheme(const TVTest::Theme::CThemeManager *pThemeManager)
+{
+	SetColor(
+		pThemeManager->GetColor(CColorScheme::COLOR_PANELBACK),
+		pThemeManager->GetColor(CColorScheme::COLOR_PANELTEXT));
+	SetProgramInfoColor(
+		pThemeManager->GetColor(CColorScheme::COLOR_PROGRAMINFOBACK),
+		pThemeManager->GetColor(CColorScheme::COLOR_PROGRAMINFOTEXT));
+}
+
+
 void CInformationPanel::ResetStatistics()
 {
 	/*

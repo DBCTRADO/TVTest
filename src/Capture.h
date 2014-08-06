@@ -64,7 +64,9 @@ private:
 	LRESULT OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
 };
 
-class CCaptureWindow : public CCustomWindow
+class CCaptureWindow
+	: public CCustomWindow
+	, public TVTest::CUIBase
 {
 public:
 	class ABSTRACT_CLASS(CEventHandler) {
@@ -85,9 +87,14 @@ public:
 
 	CCaptureWindow();
 	~CCaptureWindow();
+
 // CBasicWindow
 	bool Create(HWND hwndParent,DWORD Style,DWORD ExStyle=0,int ID=0) override;
-// CCustomWindow
+
+// CUIBase
+	void SetTheme(const TVTest::Theme::CThemeManager *pThemeManager) override;
+
+// CCaptureWindow
 	bool SetImage(const BITMAPINFO *pbmi,const void *pBits);
 	bool SetImage(CCaptureImage *pImage);
 	bool ClearImage();
@@ -95,7 +102,6 @@ public:
 	bool SetEventHandler(CEventHandler *pEventHandler);
 	void ShowStatusBar(bool fShow);
 	bool IsStatusBarVisible() const { return m_fShowStatusBar; }
-	void SetStatusTheme(const CStatusView::ThemeInfo *pTheme);
 
 private:
 	class CPreviewEventHandler : public CCapturePreview::CEventHandler

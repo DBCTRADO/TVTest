@@ -381,7 +381,7 @@ void CMenuPainter::DrawBorder(HDC hdc,const RECT &Rect)
 		m_UxTheme.DrawBackground(hdc,MENU_POPUPBORDERS,0,
 								 MENU_POPUPBACKGROUND,0,&Rect);
 	} else {
-		Theme::DrawBorder(hdc,Rect,Theme::BORDER_RAISED);
+		TVTest::Theme::Draw(hdc,Rect,TVTest::Theme::BORDER_RAISED);
 	}
 }
 

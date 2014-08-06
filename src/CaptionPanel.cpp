@@ -73,6 +73,14 @@ bool CCaptionPanel::Create(HWND hwndParent,DWORD Style,DWORD ExStyle,int ID)
 }
 
 
+void CCaptionPanel::SetTheme(const TVTest::Theme::CThemeManager *pThemeManager)
+{
+	SetColor(
+		pThemeManager->GetColor(CColorScheme::COLOR_CAPTIONPANELBACK),
+		pThemeManager->GetColor(CColorScheme::COLOR_CAPTIONPANELTEXT));
+}
+
+
 void CCaptionPanel::SetVisible(bool fVisible)
 {
 	if (m_hwnd!=NULL) {

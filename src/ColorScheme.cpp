@@ -6,6 +6,7 @@
 #include "Settings.h"
 #include "DialogUtil.h"
 #include "DrawUtil.h"
+#include "ThemeManager.h"
 #include "resource.h"
 
 #ifdef _DEBUG
@@ -13,6 +14,8 @@
 static char THIS_FILE[]=__FILE__;
 #define new DEBUG_NEW
 #endif
+
+using namespace TVTest;
 
 
 #define MAX_COLORSCHEME_NAME 128
@@ -367,59 +370,6 @@ const Theme::BorderType CColorScheme::m_CustomDefaultBorderList[NUM_BORDERS] = {
 	Theme::BORDER_SUNKEN,
 };
 
-const CColorScheme::StyleInfo CColorScheme::m_StyleList[NUM_STYLES] = {
-	{GRADIENT_STATUSBACK,						BORDER_STATUSITEM,
-		COLOR_STATUSTEXT},
-	{GRADIENT_STATUSBOTTOMITEMBACK,				BORDER_STATUSBOTTOMITEM,
-		COLOR_STATUSBOTTOMITEMTEXT},
-	{GRADIENT_STATUSHIGHLIGHTBACK,				BORDER_STATUSHIGHLIGHT,
-		COLOR_STATUSHIGHLIGHTTEXT},
-	{GRADIENT_TITLEBARBACK,						BORDER_TITLEBARCAPTION,
-		COLOR_TITLEBARTEXT},
-	{GRADIENT_TITLEBARICON,						BORDER_TITLEBARICON,
-		COLOR_TITLEBARICON},
-	{GRADIENT_TITLEBARHIGHLIGHTBACK,			BORDER_TITLEBARHIGHLIGHT,
-		COLOR_TITLEBARHIGHLIGHTICON},
-	{GRADIENT_SIDEBARBACK,						BORDER_SIDEBARITEM,
-		COLOR_SIDEBARICON},
-	{GRADIENT_SIDEBARHIGHLIGHTBACK,				BORDER_SIDEBARHIGHLIGHT,
-		COLOR_SIDEBARHIGHLIGHTICON},
-	{GRADIENT_SIDEBARCHECKBACK,					BORDER_SIDEBARCHECK,
-		COLOR_SIDEBARCHECKICON},
-	{GRADIENT_PANELTABBACK,						BORDER_PANEL_TAB,
-		COLOR_PANELTABTEXT},
-	{GRADIENT_PANELCURTABBACK,					BORDER_PANEL_CURTAB,
-		COLOR_PANELCURTABTEXT},
-	{GRADIENT_PANELTABMARGIN,					BORDER_PANEL_TABMARGIN,
-		-1},
-	{GRADIENT_PANELTITLEBACK,					BORDER_PANEL_TITLE,
-		COLOR_PANELTITLETEXT},
-	{GRADIENT_PROGRAMLISTPANEL_EVENTBACK,		BORDER_PROGRAMLISTPANEL_EVENT,
-		COLOR_PROGRAMLISTPANEL_EVENTTEXT},
-	{GRADIENT_PROGRAMLISTPANEL_CUREVENTBACK,	BORDER_PROGRAMLISTPANEL_CUREVENT,
-		COLOR_PROGRAMLISTPANEL_CUREVENTTEXT},
-	{GRADIENT_PROGRAMLISTPANEL_TITLEBACK,		BORDER_PROGRAMLISTPANEL_TITLE,
-		COLOR_PROGRAMLISTPANEL_TITLETEXT},
-	{GRADIENT_PROGRAMLISTPANEL_CURTITLEBACK,	BORDER_PROGRAMLISTPANEL_CURTITLE,
-		COLOR_PROGRAMLISTPANEL_CURTITLETEXT},
-	{GRADIENT_CHANNELPANEL_CHANNELNAMEBACK,		BORDER_CHANNELPANEL_CHANNELNAME,
-		COLOR_CHANNELPANEL_CHANNELNAMETEXT},
-	{GRADIENT_CHANNELPANEL_CURCHANNELNAMEBACK,	BORDER_CHANNELPANEL_CURCHANNELNAME,
-		COLOR_CHANNELPANEL_CURCHANNELNAMETEXT},
-	{GRADIENT_CHANNELPANEL_EVENTNAMEBACK1,		BORDER_CHANNELPANEL_EVENTNAME1,
-		COLOR_CHANNELPANEL_EVENTNAME1TEXT},
-	{GRADIENT_CHANNELPANEL_EVENTNAMEBACK2,		BORDER_CHANNELPANEL_EVENTNAME2,
-		COLOR_CHANNELPANEL_EVENTNAME2TEXT},
-	{GRADIENT_CHANNELPANEL_CUREVENTNAMEBACK1,	BORDER_CHANNELPANEL_CUREVENTNAME1,
-		COLOR_CHANNELPANEL_CUREVENTNAME1TEXT},
-	{GRADIENT_CHANNELPANEL_CUREVENTNAMEBACK2,	BORDER_CHANNELPANEL_CUREVENTNAME2,
-		COLOR_CHANNELPANEL_CUREVENTNAME2TEXT},
-	{GRADIENT_CONTROLPANELBACK,					BORDER_CONTROLPANELITEM,
-		COLOR_CONTROLPANELTEXT},
-	{GRADIENT_CONTROLPANELHIGHLIGHTBACK,		BORDER_CONTROLPANELHIGHLIGHTITEM,
-		COLOR_CONTROLPANELHIGHLIGHTTEXT},
-};
-
 
 CColorScheme::CColorScheme()
 {
@@ -517,14 +467,14 @@ bool CColorScheme::GetGradientStyle(int Gradient,GradientStyle *pStyle) const
 }
 
 
-bool CColorScheme::GetGradientInfo(int Gradient,Theme::GradientInfo *pInfo) const
+bool CColorScheme::GetGradientStyle(int Gradient,Theme::GradientStyle *pStyle) const
 {
 	if (Gradient<0 || Gradient>=NUM_GRADIENTS)
 		return false;
-	pInfo->Type=m_GradientList[Gradient].Type;
-	pInfo->Direction=m_GradientList[Gradient].Direction;
-	pInfo->Color1=m_ColorList[m_GradientInfoList[Gradient].Color1];
-	pInfo->Color2=m_ColorList[m_GradientInfoList[Gradient].Color2];
+	pStyle->Type=m_GradientList[Gradient].Type;
+	pStyle->Direction=m_GradientList[Gradient].Direction;
+	pStyle->Color1=m_ColorList[m_GradientInfoList[Gradient].Color1];
+	pStyle->Color2=m_ColorList[m_GradientInfoList[Gradient].Color2];
 	return true;
 }
 
@@ -547,29 +497,12 @@ bool CColorScheme::SetBorderType(int Border,Theme::BorderType Type)
 }
 
 
-bool CColorScheme::GetBorderInfo(int Border,Theme::BorderInfo *pInfo) const
+bool CColorScheme::GetBorderStyle(int Border,Theme::BorderStyle *pStyle) const
 {
 	if (Border<0 || Border>=NUM_BORDERS)
 		return false;
-	pInfo->Type=m_BorderList[Border];
-	pInfo->Color=m_ColorList[m_BorderInfoList[Border].Color];
-	return true;
-}
-
-
-bool CColorScheme::GetStyle(int Type,Theme::Style *pStyle) const
-{
-	if (Type<0 || Type>=NUM_STYLES)
-		return false;
-
-	const StyleInfo &Info=m_StyleList[Type];
-	GetGradientInfo(Info.Gradient,&pStyle->Gradient);
-	if (Info.Border>=0)
-		GetBorderInfo(Info.Border,&pStyle->Border);
-	else
-		pStyle->Border.Type=Theme::BORDER_NONE;
-	if (Info.TextColor>=0)
-		pStyle->TextColor=m_ColorList[Info.TextColor];
+	pStyle->Type=m_BorderList[Border];
+	pStyle->Color=m_ColorList[m_BorderInfoList[Border].Color];
 	return true;
 }
 
@@ -1337,16 +1270,16 @@ INT_PTR CColorSchemeOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lP
 							break;
 						bool fSelected=(pdis->itemState & ODS_SELECTED)!=0
 									&& (pdis->itemState & ODS_COMBOBOXEDIT)==0;
+						Theme::CThemeManager ThemeManager(pColorScheme);
 						Theme::Style Style;
 
-						pColorScheme->GetStyle(fSelected?
-											   CColorScheme::STYLE_STATUSHIGHLIGHTITEM:
-											   CColorScheme::STYLE_STATUSITEM,
-											   &Style);
-						Theme::DrawStyleBackground(pdis->hDC,&pdis->rcItem,&Style);
+						ThemeManager.GetStyle(fSelected?
+											  Theme::CThemeManager::STYLE_STATUSBAR_ITEM_HOT:
+											  Theme::CThemeManager::STYLE_STATUSBAR_ITEM,
+											  &Style);
+						Theme::Draw(pdis->hDC,pdis->rcItem,Style.Back);
 						if (!IsStringEmpty(pColorScheme->GetName())) {
 							int OldBkMode;
-							COLORREF crOldTextColor;
 							RECT rc;
 							HFONT hfont,hfontOld;
 
@@ -1362,12 +1295,10 @@ INT_PTR CColorSchemeOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lP
 								hfont=NULL;
 							}
 							OldBkMode=::SetBkMode(pdis->hDC,TRANSPARENT);
-							crOldTextColor=::SetTextColor(pdis->hDC,Style.TextColor);
 							rc=pdis->rcItem;
 							rc.left+=4;
-							::DrawText(pdis->hDC,pColorScheme->GetName(),-1,&rc,
+							Theme::Draw(pdis->hDC,rc,Style.Fore,pColorScheme->GetName(),
 								DT_LEFT | DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX | DT_END_ELLIPSIS);
-							::SetTextColor(pdis->hDC,crOldTextColor);
 							::SetBkMode(pdis->hDC,OldBkMode);
 							if (hfont!=NULL) {
 								::SelectObject(pdis->hDC,hfontOld);
