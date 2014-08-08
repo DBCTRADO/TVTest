@@ -810,14 +810,14 @@ bool CServiceInfo::SaveiEpgFile(const CEventInfoData *pEventInfo,LPCTSTR pszFile
 	if (hFile==INVALID_HANDLE_VALUE)
 		return false;
 	if (!IsStringEmpty(GetServiceName()))
-		::WideCharToMultiByte(CP_ACP,0,GetServiceName(),-1,
+		::WideCharToMultiByte(932,0,GetServiceName(),-1,
 							  szServiceName,sizeof(szServiceName),NULL,NULL);
 	else
 		szServiceName[0]='\0';
 	pEventInfo->GetStartTime(&stStart);
 	pEventInfo->GetEndTime(&stEnd);
 	if (!IsStringEmpty(pEventInfo->GetEventName()))
-		::WideCharToMultiByte(CP_ACP,0,pEventInfo->GetEventName(),-1,
+		::WideCharToMultiByte(932,0,pEventInfo->GetEventName(),-1,
 							  szEventName,sizeof(szEventName),NULL,NULL);
 	else
 		szEventName[0]='\0';
@@ -838,7 +838,7 @@ bool CServiceInfo::SaveiEpgFile(const CEventInfoData *pEventInfo,LPCTSTR pszFile
 		char szStation[16];
 		StdUtil::snprintf(szStation,lengthof(szStation),
 						  pszStationFormat,m_ServiceData.m_ServiceID);
-		Length=::wnsprintfA(szText,lengthof(szText),
+		Length=StdUtil::snprintf(szText,lengthof(szText),
 			"Content-type: application/x-tv-program-digital-info; charset=shift_jis\r\n"
 			"version: 2\r\n"
 			"station: %s\r\n"
@@ -856,7 +856,7 @@ bool CServiceInfo::SaveiEpgFile(const CEventInfoData *pEventInfo,LPCTSTR pszFile
 			stEnd.wHour,stEnd.wMinute,
 			szEventName,pEventInfo->m_EventID);
 	} else {
-		Length=::wnsprintfA(szText,lengthof(szText),
+		Length=StdUtil::snprintf(szText,lengthof(szText),
 			"Content-type: application/x-tv-program-info; charset=shift_jis\r\n"
 			"version: 1\r\n"
 			"station: %s\r\n"
