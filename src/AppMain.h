@@ -17,6 +17,7 @@
 #include "ControlPanelItems.h"
 #include "Accelerator.h"
 #include "Controller.h"
+#include "NetworkDefinition.h"
 #include "CasLibraryManager.h"
 #include "OptionDialog.h"
 #include "GeneralOptions.h"
@@ -407,6 +408,7 @@ public:
 	CBalloonTip NotifyBalloonTip;
 	CTotTimeAdjuster TotTimeAdjuster;
 
+	TVTest::CNetworkDefinition NetworkDefinition;
 	CChannelManager ChannelManager;
 
 #ifdef NETWORK_REMOCON_SUPPORT

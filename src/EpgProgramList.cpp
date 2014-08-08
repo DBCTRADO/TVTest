@@ -46,18 +46,6 @@ bool CServiceInfoData::operator==(const CServiceInfoData &Info) const
 }
 
 
-bool CServiceInfoData::IsBS() const
-{
-	return IsBSNetworkID(m_NetworkID);
-}
-
-
-bool CServiceInfoData::IsCS() const
-{
-	return IsCSNetworkID(m_NetworkID);
-}
-
-
 
 
 CEventInfoData::CEventInfoData()

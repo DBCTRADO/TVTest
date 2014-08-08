@@ -197,7 +197,8 @@ static void InitServiceListView(
 									   ServiceList.NumChannels()+1,100);
 	ImageList_AddIcon(himl,CreateEmptyIcon(IconWidth,IconHeight));
 	ListView_SetImageList(hwndList,himl,LVSIL_SMALL);
-	CLogoManager &LogoManager=GetAppClass().LogoManager;
+	CAppMain &App=GetAppClass();
+	CLogoManager &LogoManager=App.LogoManager;
 
 	enum {
 		GROUP_ID_TERRESTRIAL=1,
@@ -265,10 +266,17 @@ static void InitServiceListView(
 
 		lvi.lParam=i;
 
-		switch (GetNetworkType(pChannelInfo->GetNetworkID())) {
-		case NETWORK_TERRESTRIAL:	lvi.iGroupId=GROUP_ID_TERRESTRIAL;	break;
-		case NETWORK_BS:			lvi.iGroupId=GROUP_ID_BS;			break;
-		case NETWORK_CS:			lvi.iGroupId=GROUP_ID_CS;			break;
+		switch (App.NetworkDefinition.GetNetworkType(pChannelInfo->GetNetworkID())) {
+		default:
+		case TVTest::CNetworkDefinition::NETWORK_TERRESTRIAL:
+			lvi.iGroupId=GROUP_ID_TERRESTRIAL;
+			break;
+		case TVTest::CNetworkDefinition::NETWORK_BS:
+			lvi.iGroupId=GROUP_ID_BS;
+			break;
+		case TVTest::CNetworkDefinition::NETWORK_CS:
+			lvi.iGroupId=GROUP_ID_CS;
+			break;
 		}
 
 		int Index=ListView_InsertItem(hwndList,&lvi);

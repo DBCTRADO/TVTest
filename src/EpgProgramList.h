@@ -25,8 +25,6 @@ public:
 	CServiceInfoData(WORD NetworkID,WORD TSID,WORD ServiceID);
 	bool operator==(const CServiceInfoData &Info) const;
 	bool operator!=(const CServiceInfoData &Info) const { return !(*this==Info); }
-	bool IsBS() const;
-	bool IsCS() const;
 };
 
 class CEventInfoData

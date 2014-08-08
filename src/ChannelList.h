@@ -5,27 +5,6 @@
 #include <vector>
 
 
-// iniファイルなどで設定できた方がいいと思われる
-inline bool IsBSNetworkID(WORD NetworkID) { return NetworkID==4; }
-inline bool IsCSNetworkID(WORD NetworkID) { return NetworkID>=6 && NetworkID<=10; }
-
-enum NetworkType
-{
-	NETWORK_TERRESTRIAL,
-	NETWORK_BS,
-	NETWORK_CS
-};
-
-inline NetworkType GetNetworkType(WORD NetworkID)
-{
-	if (IsBSNetworkID(NetworkID))
-		return NETWORK_BS;
-	if (IsCSNetworkID(NetworkID))
-		return NETWORK_CS;
-	return NETWORK_TERRESTRIAL;
-}
-
-
 #define FIRST_UHF_CHANNEL 13
 #define MAX_CHANNEL_NAME 64
 

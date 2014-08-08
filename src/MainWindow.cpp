@@ -3535,7 +3535,8 @@ void CMainWindow::OnTimer(HWND hwnd,UINT id)
 				const WORD NetworkID=pChannelInfo->GetNetworkID();
 				const WORD TSID=pChannelInfo->GetTransportStreamID();
 				const WORD ServiceID=pChannelInfo->GetServiceID();
-				const NetworkType Network=GetNetworkType(NetworkID);
+				const CNetworkDefinition::NetworkType Network=
+					m_App.NetworkDefinition.GetNetworkType(NetworkID);
 
 				if (pEventManager->HasSchedule(NetworkID,TSID,ServiceID,false)) {
 					fBasic=true;
@@ -3543,9 +3544,9 @@ void CMainWindow::OnTimer(HWND hwnd,UINT id)
 						fComplete=false;
 						break;
 					}
-					if (Network==NETWORK_TERRESTRIAL
-							|| (Network==NETWORK_BS && m_App.EpgOptions.GetUpdateBSExtended())
-							|| (Network==NETWORK_CS && m_App.EpgOptions.GetUpdateCSExtended())) {
+					if ((Network!=CNetworkDefinition::NETWORK_BS && Network!=CNetworkDefinition::NETWORK_CS)
+							|| (Network==CNetworkDefinition::NETWORK_BS && m_App.EpgOptions.GetUpdateBSExtended())
+							|| (Network==CNetworkDefinition::NETWORK_CS && m_App.EpgOptions.GetUpdateCSExtended())) {
 						if (pEventManager->HasSchedule(NetworkID,TSID,ServiceID,true)
 								&& !pEventManager->IsScheduleComplete(NetworkID,TSID,ServiceID,true)) {
 							fComplete=false;
@@ -3570,7 +3571,7 @@ void CMainWindow::OnTimer(HWND hwnd,UINT id)
 				DWORD Timeout;
 
 				// ^–Ê–Ú‚É”»’è‚·‚éê‡BIT‚©‚çŽüŠú‚ðŽæ‚Á‚Ä‚­‚é•K—v‚ª‚ ‚é
-				if (IsBSNetworkID(NetworkID) || IsCSNetworkID(NetworkID))
+				if (m_App.NetworkDefinition.IsSatelliteNetworkID(NetworkID))
 					Timeout=360000;
 				else
 					Timeout=120000;
@@ -5434,15 +5435,16 @@ bool CMainWindow::BeginProgramGuideUpdate(LPCTSTR pszBonDriver,const CChannelLis
 			const CChannelInfo *pChInfo=pChannelList->GetChannelInfo(i);
 
 			if (pChInfo->IsEnabled()) {
-				const NetworkType Network=GetNetworkType(pChInfo->GetNetworkID());
+				const CNetworkDefinition::NetworkType Network=
+					m_App.NetworkDefinition.GetNetworkType(pChInfo->GetNetworkID());
 				std::vector<EpgChannelGroup>::iterator itr;
 
 				for (itr=m_EpgUpdateChannelList.begin();itr!=m_EpgUpdateChannelList.end();++itr) {
 					if (pChInfo->GetSpace()==itr->Space && pChInfo->GetChannelIndex()==itr->Channel)
 						break;
 					if (pChInfo->GetNetworkID()==itr->ChannelList.GetChannelInfo(0)->GetNetworkID()
-							&& ((Network==NETWORK_BS && !m_App.EpgOptions.GetUpdateBSExtended())
-							 || (Network==NETWORK_CS && !m_App.EpgOptions.GetUpdateCSExtended())))
+							&& ((Network==CNetworkDefinition::NETWORK_BS && !m_App.EpgOptions.GetUpdateBSExtended())
+							 || (Network==CNetworkDefinition::NETWORK_CS && !m_App.EpgOptions.GetUpdateCSExtended())))
 						break;
 				}
 				if (itr==m_EpgUpdateChannelList.end()) {
@@ -5549,7 +5551,7 @@ bool CMainWindow::SetEpgUpdateNextChannel()
 			DWORD Time=0;
 			for (size_t j=i;j<m_EpgUpdateChannelList.size();j++) {
 				WORD NetworkID=m_EpgUpdateChannelList[j].ChannelList.GetChannelInfo(0)->GetNetworkID();
-				if (IsBSNetworkID(NetworkID) || IsCSNetworkID(NetworkID))
+				if (m_App.NetworkDefinition.IsSatelliteNetworkID(NetworkID))
 					Time+=180000;
 				else
 					Time+=60000;

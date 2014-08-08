@@ -822,11 +822,22 @@ bool CServiceInfo::SaveiEpgFile(const CEventInfoData *pEventInfo,LPCTSTR pszFile
 	else
 		szEventName[0]='\0';
 	if (fVersion2) {
+		const char *pszStationFormat;
+		switch (GetAppClass().NetworkDefinition.GetNetworkType(m_ServiceData.m_NetworkID)) {
+		default:
+		case TVTest::CNetworkDefinition::NETWORK_TERRESTRIAL:
+			pszStationFormat="DFS%05x";
+			break;
+		case TVTest::CNetworkDefinition::NETWORK_BS:
+			pszStationFormat="BSDT%03d";
+			break;
+		case TVTest::CNetworkDefinition::NETWORK_CS:
+			pszStationFormat="CSDT%03d";
+			break;
+		}
 		char szStation[16];
 		StdUtil::snprintf(szStation,lengthof(szStation),
-						  m_ServiceData.IsBS()?"BSDT%03d":
-						  m_ServiceData.IsCS()?"CSDT%03d":"DFS%05x",
-						  m_ServiceData.m_ServiceID);
+						  pszStationFormat,m_ServiceData.m_ServiceID);
 		Length=::wnsprintfA(szText,lengthof(szText),
 			"Content-type: application/x-tv-program-digital-info; charset=shift_jis\r\n"
 			"version: 2\r\n"

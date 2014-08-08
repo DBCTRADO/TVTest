@@ -364,12 +364,14 @@ bool CAppCore::UpdateChannelList(LPCTSTR pszBonDriverName,const CTuningSpaceList
 							ChannelInfo.GetServiceID(),
 							false)<0) {
 						const int ChannelCount=pChannelList->NumChannels();
-						const NetworkType ChannelNetworkType=GetNetworkType(ChannelInfo.GetNetworkID());
+						const CNetworkDefinition &NetworkDefinition=GetAppClass().NetworkDefinition;
+						const CNetworkDefinition::NetworkType ChannelNetworkType=
+							NetworkDefinition.GetNetworkType(ChannelInfo.GetNetworkID());
 
 						for (int i=0;i<ChannelCount;i++) {
 							const CChannelInfo *pChInfo=pChannelList->GetChannelInfo(i);
 
-							if (GetNetworkType(pChInfo->GetNetworkID())==ChannelNetworkType
+							if (NetworkDefinition.GetNetworkType(pChInfo->GetNetworkID())==ChannelNetworkType
 									&& (pChInfo->GetServiceID()==ChannelInfo.GetServiceID()
 										|| ::lstrcmp(pChInfo->GetName(),ChannelInfo.GetName())==0)) {
 								TRACE(TEXT("お気に入りチャンネル更新 : %s -> %s / NID %d -> %d / TSID %04x -> %04x / SID %d -> %d\n"),
@@ -460,7 +462,7 @@ bool CAppCore::SetChannel(int Space,int Channel,int ServiceID/*=-1*/,bool fStric
 
 		CDtvEngine::ServiceSelectInfo ServiceSel;
 		ServiceSel.ServiceID=ServiceID>0?ServiceID:CDtvEngine::SID_INVALID;
-		ServiceSel.bFollowViewableService=!IsCSNetworkID(pChInfo->GetNetworkID());
+		ServiceSel.bFollowViewableService=!m_App.NetworkDefinition.IsCSNetworkID(pChInfo->GetNetworkID());
 
 		if (!fStrictService && m_f1SegMode) {
 			ServiceSel.bPrefer1Seg=true;
@@ -745,7 +747,7 @@ bool CAppCore::SetServiceByID(WORD ServiceID,unsigned int Flags)
 	CDtvEngine::ServiceSelectInfo ServiceSel;
 
 	ServiceSel.ServiceID=ServiceID!=0?ServiceID:CDtvEngine::SID_INVALID;
-	ServiceSel.bFollowViewableService=!IsCSNetworkID(NetworkID);
+	ServiceSel.bFollowViewableService=!m_App.NetworkDefinition.IsCSNetworkID(NetworkID);
 
 	if (!fStrict && m_f1SegMode) {
 		ServiceSel.bPrefer1Seg=true;

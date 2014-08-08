@@ -491,6 +491,7 @@
     <ClCompile Include="CaptureOptions.cpp" />
     <ClCompile Include="CardReaderDialog.cpp" />
     <ClCompile Include="CasLibraryManager.cpp" />
+    <ClCompile Include="NetworkDefinition.cpp" />
     <ClCompile Include="ChannelHistory.cpp" />
     <ClCompile Include="ChannelList.cpp" />
     <ClCompile Include="ChannelManager.cpp" />
@@ -653,6 +654,7 @@
     <ClInclude Include="CaptureOptions.h" />
     <ClInclude Include="CardReaderDialog.h" />
     <ClInclude Include="CasLibraryManager.h" />
+    <ClInclude Include="NetworkDefinition.h" />
     <ClInclude Include="ChannelHistory.h" />
     <ClInclude Include="ChannelList.h" />
     <ClInclude Include="ChannelManager.h" />

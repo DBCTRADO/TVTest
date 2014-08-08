@@ -479,6 +479,7 @@ bool CAppMain::LoadSettings()
 	Panel.ChannelPanel.LoadSettings(Settings);
 	PanAndScanOptions.LoadSettings(Settings);
 	HomeDisplay.LoadSettings(Settings);
+	NetworkDefinition.LoadSettings(Settings);
 	CasLibraryManager.LoadSettings(Settings);
 
 	return true;

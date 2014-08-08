@@ -1089,12 +1089,10 @@ void CFeaturedEventsCategory::SortItems(CFeaturedEventsSettings::SortType SortTy
 		{
 			const CChannelInfo &ChannelInfo1=pItem1->GetChannelInfo();
 			const CChannelInfo &ChannelInfo2=pItem2->GetChannelInfo();
-			NetworkType Network1=GetNetworkType(ChannelInfo1.GetNetworkID());
-			NetworkType Network2=GetNetworkType(ChannelInfo2.GetNetworkID());
 			int Cmp;
-			if (Network1!=Network2) {
-				Cmp=(int)Network1-(int)Network2;
-			} else {
+			Cmp=GetAppClass().NetworkDefinition.GetNetworkTypeOrder(
+				ChannelInfo1.GetNetworkID(),ChannelInfo2.GetNetworkID());
+			if (Cmp==0) {
 				int Channel1=ChannelInfo1.GetChannelNo();
 				if (Channel1<=0)
 					Channel1=ChannelInfo1.GetServiceID();

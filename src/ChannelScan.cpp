@@ -171,15 +171,10 @@ int CALLBACK CChannelScan::CChannelListSort::CompareFunc(LPARAM lParam1,LPARAM l
 		break;
 
 	case COLUMN_SERVICEID:
-		{
-			NetworkType Ch1Network=GetNetworkType(pChInfo1->GetNetworkID());
-			NetworkType Ch2Network=GetNetworkType(pChInfo2->GetNetworkID());
-			if (Ch1Network!=Ch2Network) {
-				Cmp=Ch1Network-Ch2Network;
-			} else {
-				Cmp=pChInfo1->GetServiceID()-pChInfo2->GetServiceID();
-			}
-		}
+		Cmp=GetAppClass().NetworkDefinition.GetNetworkTypeOrder(
+			pChInfo1->GetNetworkID(),pChInfo2->GetNetworkID());
+		if (Cmp==0)
+			Cmp=pChInfo1->GetServiceID()-pChInfo2->GetServiceID();
 		break;
 
 	case COLUMN_REMOTECONTROLKEYID:
@@ -922,7 +917,8 @@ INT_PTR CChannelScan::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 
 							int SortColumn;
 							if (m_ScanningChannelList.HasRemoteControlKeyID()
-									&& GetNetworkType(m_ScanningChannelList.GetChannelInfo(0)->GetNetworkID())==NETWORK_TERRESTRIAL)
+									&& GetAppClass().NetworkDefinition.IsTerrestrialNetworkID(
+										m_ScanningChannelList.GetChannelInfo(0)->GetNetworkID()))
 								SortColumn=COLUMN_REMOTECONTROLKEYID;
 							else
 								SortColumn=COLUMN_SERVICEID;
@@ -1469,7 +1465,8 @@ unsigned int __stdcall CChannelScan::ScanProc(LPVOID lpParameter)
 
 void CChannelScan::Scan()
 {
-	CDtvEngine *pDtvEngine=&GetAppClass().CoreEngine.m_DtvEngine;
+	CAppMain &App=GetAppClass();
+	CDtvEngine *pDtvEngine=&App.CoreEngine.m_DtvEngine;
 	CTsAnalyzer *pTsAnalyzer=&pDtvEngine->m_TsAnalyzer;
 
 	ScanResult Result=SCAN_RESULT_CANCELLED;
@@ -1575,7 +1572,7 @@ void CChannelScan::Scan()
 							} else {
 								// BS/CS の場合はサービスの検索を有効にする
 								WORD NetworkID=pTsAnalyzer->GetNetworkID();
-								if (IsBSNetworkID(NetworkID) || IsCSNetworkID(NetworkID))
+								if (App.NetworkDefinition.IsSatelliteNetworkID(NetworkID))
 									fScanService=true;
 							}
 						}
@@ -1620,15 +1617,8 @@ void CChannelScan::Scan()
 
 					int RemoteControlKeyID=pTsAnalyzer->GetRemoteControlKeyID();
 					if (RemoteControlKeyID==0) {
-						// BSのリモコン番号を割り当てる
-						if (IsBSNetworkID(NetworkID) && ServiceID<230) {
-							if (ServiceID<=109)
-								RemoteControlKeyID=ServiceID%10;
-							else
-								RemoteControlKeyID=ServiceID/10-10;
-						} else if (ServiceID<1000) {
-							RemoteControlKeyID=ServiceID;
-						}
+						RemoteControlKeyID=
+							App.NetworkDefinition.GetRemoteControlKeyID(NetworkID,ServiceID);
 					}
 
 					CChannelInfo *pChInfo=
@@ -1650,7 +1640,7 @@ void CChannelScan::Scan()
 							&& ServiceInfo.ServiceType!=SERVICE_TYPE_DIGITALAUDIO
 							)
 							// BSのサブチャンネル
-							|| (IsBSNetworkID(NetworkID) && ServiceID<190 && ServiceCount>0)
+							|| (App.NetworkDefinition.IsBSNetworkID(NetworkID) && ServiceID<190 && ServiceCount>0)
 							// 地デジのサブチャンネル
 							|| (NetworkID==TransportStreamID && ServiceCount>0)
 						)
