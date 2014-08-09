@@ -710,7 +710,7 @@ TVTest::Theme::ThemeColor CEpgTheme::GetColor(int Type) const
 
 TVTest::Theme::ThemeColor CEpgTheme::GetGenreColor(int Genre) const
 {
-	return m_ColorList[Genre>=0 && Genre<CEpgGenre::NUM_GENRE?
+	return m_ColorList[Genre>=0 && Genre<=CEventInfoData::CONTENT_LAST?
 					   COLOR_CONTENT_FIRST+Genre:
 					   COLOR_CONTENT_OTHER];
 }
