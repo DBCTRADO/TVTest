@@ -5,6 +5,7 @@
 #include "StatusView.h"
 #include "Tooltip.h"
 #include "EventInfoPopup.h"
+#include "EpgUtil.h"
 
 
 enum {
@@ -174,6 +175,7 @@ class CProgramInfoStatusItem : public CStatusItem
 	bool m_fEnablePopupInfo;
 	CEventInfoPopup m_EventInfoPopup;
 	CDynamicString m_Text;
+	CEpgTheme m_EpgTheme;
 
 	void ShowPopupInfo();
 
@@ -188,6 +190,8 @@ public:
 	void OnLButtonDoubleClick(int x,int y) override;
 	void OnFocus(bool fFocus) override;
 	bool OnMouseHover(int x,int y) override;
+// CUIBase
+	void SetTheme(const TVTest::Theme::CThemeManager *pThemeManager) override;
 // CProgramInfoStatusItem
 	void EnablePopupInfo(bool fEnable);
 	bool UpdateContent();

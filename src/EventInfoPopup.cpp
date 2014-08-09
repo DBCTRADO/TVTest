@@ -168,19 +168,15 @@ void CEventInfoPopup::SetEventInfo(const CEventInfoData *pEventInfo)
 		}
 	}
 
-	for (int i=0;i<m_EventInfo.m_ContentNibble.NibbleCount;i++) {
-		if (m_EventInfo.m_ContentNibble.NibbleList[i].ContentNibbleLevel1!=0xE) {
-			CEpgGenre EpgGenre;
-			LPCTSTR pszGenre=EpgGenre.GetText(m_EventInfo.m_ContentNibble.NibbleList[i].ContentNibbleLevel1,-1);
-			if (pszGenre!=NULL) {
-				Formatter.AppendFormat(TEXT("\r\n■ ジャンル： %s"),pszGenre);
-				pszGenre=EpgGenre.GetText(
-					m_EventInfo.m_ContentNibble.NibbleList[i].ContentNibbleLevel1,
-					m_EventInfo.m_ContentNibble.NibbleList[i].ContentNibbleLevel2);
-				if (pszGenre!=NULL)
-					Formatter.AppendFormat(TEXT(" - %s"),pszGenre);
-			}
-			break;
+	int Genre1,Genre2;
+	if (EpgUtil::GetEventGenre(m_EventInfo,&Genre1,&Genre2)) {
+		CEpgGenre EpgGenre;
+		LPCTSTR pszGenre=EpgGenre.GetText(Genre1,-1);
+		if (pszGenre!=NULL) {
+			Formatter.AppendFormat(TEXT("\r\n■ ジャンル： %s"),pszGenre);
+			pszGenre=EpgGenre.GetText(Genre1,Genre2);
+			if (pszGenre!=NULL)
+				Formatter.AppendFormat(TEXT(" - %s"),pszGenre);
 		}
 	}
 

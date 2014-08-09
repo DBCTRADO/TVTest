@@ -38,6 +38,7 @@ public:
 class CProgramListPanel
 	: public CPanelForm::CPage
 	, public TVTest::CUIBase
+	, public CSettingsBase
 {
 public:
 	struct ProgramListPanelTheme {
@@ -61,6 +62,10 @@ public:
 	void NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager) override;
 	void SetTheme(const TVTest::Theme::CThemeManager *pThemeManager) override;
 
+// CSettingsBase
+	bool ReadSettings(CSettings &Settings) override;
+	bool WriteSettings(CSettings &Settings) override;
+
 // CProgramListPanel
 	void SetEpgProgramList(CEpgProgramList *pList) { m_pProgramList=pList; }
 	bool UpdateProgramList(const CChannelInfo *pChannelInfo);
@@ -73,6 +78,8 @@ public:
 	bool SetEventInfoFont(const LOGFONT *pFont);
 	void ShowRetrievingMessage(bool fShow);
 	void SetVisibleEventIcons(UINT VisibleIcons);
+	void SetUseEpgColorScheme(bool fUseEpgColorScheme);
+	bool GetUseEpgColorScheme() const { return m_fUseEpgColorScheme; }
 
 private:
 	struct ProgramListPanelStyle
@@ -93,6 +100,8 @@ private:
 	int m_FontHeight;
 	ProgramListPanelStyle m_Style;
 	ProgramListPanelTheme m_Theme;
+	CEpgTheme m_EpgTheme;
+	bool m_fUseEpgColorScheme;
 	CEpgIcons m_EpgIcons;
 	UINT m_VisibleEventIcons;
 	int m_TotalLines;

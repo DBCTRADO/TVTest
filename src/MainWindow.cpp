@@ -3059,6 +3059,14 @@ void CMainWindow::OnCommand(HWND hwnd,int id,HWND hwndCtl,UINT codeNotify)
 		m_App.Panel.ChannelPanel.SetEventsPerChannel(-1,id-CM_CHANNELPANEL_EXPANDEVENTS_2+2);
 		return;
 
+	case CM_CHANNELPANEL_USEEPGCOLORSCHEME:
+		m_App.Panel.ChannelPanel.SetUseEpgColorScheme(!m_App.Panel.ChannelPanel.GetUseEpgColorScheme());
+		return;
+
+	case CM_CHANNELPANEL_SHOWGENRECOLOR:
+		m_App.Panel.ChannelPanel.SetShowGenreColor(!m_App.Panel.ChannelPanel.GetShowGenreColor());
+		return;
+
 	case CM_CHANNELNO_2DIGIT:
 	case CM_CHANNELNO_3DIGIT:
 		{

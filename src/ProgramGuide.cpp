@@ -1252,8 +1252,6 @@ CProgramGuide::CProgramGuide(CEventSearchOptions &EventSearchOptions)
 
 	const COLORREF WindowTextColor=::GetSysColor(COLOR_WINDOWTEXT);
 	m_ColorList[COLOR_BACK]=::GetSysColor(COLOR_WINDOW);
-	m_ColorList[COLOR_EVENTTITLE]=WindowTextColor;
-	m_ColorList[COLOR_EVENTTEXT]=WindowTextColor;
 	m_ColorList[COLOR_CHANNELNAMETEXT]=WindowTextColor;
 	m_ColorList[COLOR_TIMETEXT]=WindowTextColor;
 	m_ColorList[COLOR_TIMELINE]=m_ColorList[COLOR_TIMETEXT];
@@ -1262,18 +1260,7 @@ CProgramGuide::CProgramGuide(CEventSearchOptions &EventSearchOptions)
 	m_ColorList[COLOR_HIGHLIGHT_TEXT]=RGB(0,0,128);
 	m_ColorList[COLOR_HIGHLIGHT_BACK]=RGB(255,255,255);
 	m_ColorList[COLOR_HIGHLIGHT_BORDER]=RGB(128,128,255);
-	for (int i=COLOR_CONTENT_FIRST;i<=COLOR_CONTENT_LAST;i++)
-		m_ColorList[i]=RGB(240,240,240);
-	m_ColorList[COLOR_CONTENT_NEWS]=RGB(255,255,224);
-	m_ColorList[COLOR_CONTENT_SPORTS]=RGB(255,255,224);
-	//m_ColorList[COLOR_CONTENT_INFORMATION]=RGB(255,255,224);
-	m_ColorList[COLOR_CONTENT_DRAMA]=RGB(255,224,224);
-	m_ColorList[COLOR_CONTENT_MUSIC]=RGB(224,255,224);
-	m_ColorList[COLOR_CONTENT_VARIETY]=RGB(224,224,255);
-	m_ColorList[COLOR_CONTENT_MOVIE]=RGB(224,255,255);
-	m_ColorList[COLOR_CONTENT_ANIME]=RGB(255,224,255);
-	m_ColorList[COLOR_CONTENT_DOCUMENTARY]=RGB(255,255,224);
-	m_ColorList[COLOR_CONTENT_THEATER]=RGB(224,255,255);
+
 	m_ChannelNameBackStyle.Type=TVTest::Theme::FILL_GRADIENT;
 	m_ChannelNameBackStyle.Gradient.Type=TVTest::Theme::GRADIENT_NORMAL;
 	m_ChannelNameBackStyle.Gradient.Direction=TVTest::Theme::DIRECTION_VERT;
@@ -1328,8 +1315,6 @@ void CProgramGuide::SetTheme(const TVTest::Theme::CThemeManager *pThemeManager)
 		int From,To;
 	} ProgramGuideColorMap[] = {
 		{CColorScheme::COLOR_PROGRAMGUIDE_BACK,				COLOR_BACK},
-		{CColorScheme::COLOR_PROGRAMGUIDE_TEXT,				COLOR_EVENTTEXT},
-		{CColorScheme::COLOR_PROGRAMGUIDE_EVENTTITLE,		COLOR_EVENTTITLE},
 		{CColorScheme::COLOR_PROGRAMGUIDE_HIGHLIGHTTEXT,	COLOR_HIGHLIGHT_TEXT},
 		{CColorScheme::COLOR_PROGRAMGUIDE_HIGHLIGHTTITLE,	COLOR_HIGHLIGHT_TITLE},
 		{CColorScheme::COLOR_PROGRAMGUIDE_HIGHLIGHTBORDER,	COLOR_HIGHLIGHT_BORDER},
@@ -1343,9 +1328,6 @@ void CProgramGuide::SetTheme(const TVTest::Theme::CThemeManager *pThemeManager)
 		SetColor(ProgramGuideColorMap[i].To,
 				 pThemeManager->GetColor(ProgramGuideColorMap[i].From));
 
-	for (int i=CProgramGuide::COLOR_CONTENT_FIRST,j=0;i<=CProgramGuide::COLOR_CONTENT_LAST;i++,j++)
-		SetColor(i,pThemeManager->GetColor(CColorScheme::COLOR_PROGRAMGUIDE_CONTENT_FIRST+j));
-
 	TVTest::Theme::FillStyle ChBackStyle,CurChBackStyle,TimeBarMarginStyle;
 	pThemeManager->GetFillStyle(TVTest::Theme::CThemeManager::STYLE_PROGRAMGUIDE_CHANNEL,&ChBackStyle);
 	pThemeManager->GetFillStyle(TVTest::Theme::CThemeManager::STYLE_PROGRAMGUIDE_CURCHANNEL,&CurChBackStyle);
@@ -1356,6 +1338,11 @@ void CProgramGuide::SetTheme(const TVTest::Theme::CThemeManager *pThemeManager)
 		pThemeManager->GetFillStyle(TVTest::Theme::CThemeManager::STYLE_PROGRAMGUIDE_TIMEBAR_0_2+i,&TimeStyles[i]);
 
 	SetBackColors(ChBackStyle,CurChBackStyle,TimeBarMarginStyle,TimeStyles);
+
+	m_EpgTheme.SetTheme(pThemeManager);
+
+	if (m_hwnd!=NULL)
+		Invalidate();
 }
 
 
@@ -1611,10 +1598,9 @@ void CProgramGuide::DrawEventList(const ProgramGuide::CEventLayout *pLayout,
 				pEventInfo=pItem->GetCommonEventInfo();
 			const int Genre1=pItem->GetGenre(0);
 			const int Genre2=pItem->GetGenre(1);
-			int ColorType=Genre1>=0?COLOR_CONTENT_FIRST+Genre1:COLOR_CONTENT_OTHER;
-			COLORREF BackColor=m_ColorList[ColorType];
-			COLORREF TitleColor=m_ColorList[COLOR_EVENTTITLE];
-			COLORREF TextColor=m_ColorList[COLOR_EVENTTEXT];
+			COLORREF BackColor=m_EpgTheme.GetGenreColor(Genre1);
+			COLORREF TitleColor=m_EpgTheme.GetColor(CEpgTheme::COLOR_EVENTNAME);
+			COLORREF TextColor=m_EpgTheme.GetColor(CEpgTheme::COLOR_EVENTTEXT);
 
 			const bool fHighlight=
 				m_ProgramSearch.GetHighlightResult()
@@ -4447,19 +4433,8 @@ bool CProgramGuide::CEventInfoPopupHandler::ShowPopup(LPARAM Param,CEventInfoPop
 			}
 			*/
 
-			int Genre=-1;
-			for (int i=0;i<pEventInfo->m_ContentNibble.NibbleCount;i++) {
-				if (pEventInfo->m_ContentNibble.NibbleList[i].ContentNibbleLevel1!=0xE) {
-					Genre=pEventInfo->m_ContentNibble.NibbleList[i].ContentNibbleLevel1;
-					break;
-				}
-			}
-			COLORREF Color;
-			if (Genre>=0 && Genre<=CEventInfoData::CONTENT_LAST)
-				Color=m_pProgramGuide->m_ColorList[COLOR_CONTENT_FIRST+Genre];
-			else
-				Color=m_pProgramGuide->m_ColorList[COLOR_CONTENT_OTHER];
-			pPopup->SetTitleColor(Color,m_pProgramGuide->m_ColorList[COLOR_EVENTTITLE]);
+			pPopup->SetTitleColor(m_pProgramGuide->m_EpgTheme.GetGenreColor(*pEventInfo),
+								  m_pProgramGuide->m_EpgTheme.GetColor(CEpgTheme::COLOR_EVENTNAME));
 
 			const ProgramGuide::CServiceInfo *pServiceInfo=pLayout->GetServiceInfo();
 			int IconWidth,IconHeight;

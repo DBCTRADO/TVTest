@@ -256,6 +256,35 @@ namespace EpgUtil
 		return true;
 	}
 
+
+	bool GetEventGenre(const CEventInfoData &EventInfo,
+					   int *pLevel1,int *pLevel2)
+	{
+		return GetEventGenre(EventInfo.m_ContentNibble,pLevel1,pLevel2);
+	}
+
+
+	bool GetEventGenre(const CEventInfoData::ContentNibble &ContentNibble,
+					   int *pLevel1,int *pLevel2)
+	{
+		for (int i=0;i<ContentNibble.NibbleCount;i++) {
+			if (ContentNibble.NibbleList[i].ContentNibbleLevel1!=0xE) {
+				if (pLevel1!=nullptr)
+					*pLevel1=ContentNibble.NibbleList[i].ContentNibbleLevel1;
+				if (pLevel2!=nullptr)
+					*pLevel2=ContentNibble.NibbleList[i].ContentNibbleLevel2;
+				return true;
+			}
+		}
+
+		if (pLevel1!=nullptr)
+			*pLevel1=-1;
+		if (pLevel2!=nullptr)
+			*pLevel2=-1;
+
+		return false;
+	}
+
 }
 
 
@@ -624,4 +653,159 @@ unsigned int CEpgIcons::GetEventIcons(const CEventInfoData *pEventInfo)
 	}
 
 	return ShowIcons;
+}
+
+
+
+
+CEpgTheme::CEpgTheme()
+{
+	m_ColorList[COLOR_EVENTNAME].Set(0,0,0);
+	m_ColorList[COLOR_EVENTTEXT].Set(0,0,0);
+	for (int i=COLOR_CONTENT_FIRST;i<=COLOR_CONTENT_LAST;i++)
+		m_ColorList[i].Set(240,240,240);
+	m_ColorList[COLOR_CONTENT_NEWS       ].Set(255,255,224);
+	m_ColorList[COLOR_CONTENT_SPORTS     ].Set(255,255,224);
+//	m_ColorList[COLOR_CONTENT_INFORMATION].Set(255,255,224);
+	m_ColorList[COLOR_CONTENT_DRAMA      ].Set(255,224,224);
+	m_ColorList[COLOR_CONTENT_MUSIC      ].Set(224,255,224);
+	m_ColorList[COLOR_CONTENT_VARIETY    ].Set(224,224,255);
+	m_ColorList[COLOR_CONTENT_MOVIE      ].Set(224,255,255);
+	m_ColorList[COLOR_CONTENT_ANIME      ].Set(255,224,255);
+	m_ColorList[COLOR_CONTENT_DOCUMENTARY].Set(255,255,224);
+	m_ColorList[COLOR_CONTENT_THEATER    ].Set(224,255,255);
+}
+
+
+void CEpgTheme::SetTheme(const TVTest::Theme::CThemeManager *pThemeManager)
+{
+	m_ColorList[COLOR_EVENTNAME]=
+		pThemeManager->GetColor(CColorScheme::COLOR_PROGRAMGUIDE_EVENTTITLE);
+	m_ColorList[COLOR_EVENTTEXT]=
+		pThemeManager->GetColor(CColorScheme::COLOR_PROGRAMGUIDE_TEXT);
+
+	for (int i=COLOR_CONTENT_FIRST,j=0;i<=COLOR_CONTENT_LAST;i++,j++) {
+		m_ColorList[i]=
+			pThemeManager->GetColor(CColorScheme::COLOR_PROGRAMGUIDE_CONTENT_FIRST+j);
+	}
+}
+
+
+bool CEpgTheme::SetColor(int Type,const TVTest::Theme::ThemeColor &Color)
+{
+	if (Type<0 || Type>=NUM_COLORS)
+		return false;
+	m_ColorList[Type]=Color;
+	return true;
+}
+
+
+TVTest::Theme::ThemeColor CEpgTheme::GetColor(int Type) const
+{
+	if (Type<0 || Type>=NUM_COLORS)
+		return TVTest::Theme::ThemeColor();
+	return m_ColorList[Type];
+}
+
+
+TVTest::Theme::ThemeColor CEpgTheme::GetGenreColor(int Genre) const
+{
+	return m_ColorList[Genre>=0 && Genre<CEpgGenre::NUM_GENRE?
+					   COLOR_CONTENT_FIRST+Genre:
+					   COLOR_CONTENT_OTHER];
+}
+
+
+TVTest::Theme::ThemeColor CEpgTheme::GetGenreColor(const CEventInfoData &EventInfo) const
+{
+	int Genre;
+
+	if (!EpgUtil::GetEventGenre(EventInfo,&Genre))
+		return m_ColorList[COLOR_CONTENT_OTHER];
+
+	return GetGenreColor(Genre);
+}
+
+
+TVTest::Theme::BackgroundStyle CEpgTheme::GetContentBackgroundStyle(
+	int Genre,unsigned int Flags) const
+{
+	return GetContentBackgroundStyle(GetGenreColor(Genre),Flags);
+}
+
+
+TVTest::Theme::BackgroundStyle CEpgTheme::GetContentBackgroundStyle(
+	const CEventInfoData &EventInfo,unsigned int Flags) const
+{
+	return GetContentBackgroundStyle(GetGenreColor(EventInfo),Flags);
+}
+
+
+bool CEpgTheme::DrawContentBackground(HDC hdc,const RECT &Rect,
+									  const CEventInfoData &EventInfo,unsigned int Flags) const
+{
+	if (hdc==nullptr)
+		return false;
+
+	unsigned int StyleFlags=0;
+	if ((Flags & DRAW_CONTENT_BACKGROUND_CURRENT)!=0)
+		StyleFlags|=CONTENT_STYLE_CURRENT;
+	if ((Flags & DRAW_CONTENT_BACKGROUND_NOBORDER)!=0)
+		StyleFlags|=CONTENT_STYLE_NOBORDER;
+	TVTest::Theme::Draw(hdc,Rect,GetContentBackgroundStyle(EventInfo,StyleFlags));
+
+	if ((Flags & DRAW_CONTENT_BACKGROUND_SEPARATOR)!=0) {
+		HPEN hpen=::CreatePen(PS_SOLID,1,MixColor(GetGenreColor(EventInfo),RGB(0,0,0),224));
+		HPEN hpenOld=static_cast<HPEN>(::SelectObject(hdc,hpen));
+		::MoveToEx(hdc,Rect.left,Rect.top,NULL);
+		::LineTo(hdc,Rect.right,Rect.top);
+		::SelectObject(hdc,hpenOld);
+		::DeleteObject(hpen);
+	}
+
+	return true;
+}
+
+
+TVTest::Theme::BackgroundStyle CEpgTheme::GetContentBackgroundStyle(
+	const TVTest::Theme::ThemeColor &Color,unsigned int Flags) const
+{
+	TVTest::Theme::BackgroundStyle BackStyle;
+
+	if ((Flags & CONTENT_STYLE_CURRENT)==0) {
+		BackStyle.Fill.Type=TVTest::Theme::FILL_SOLID;
+		BackStyle.Fill.Solid=TVTest::Theme::SolidStyle(Color);
+	} else {
+		double h,s,v,s1,v1;
+		TVTest::Theme::ThemeColor Color1,Color2;
+		RGBToHSV(Color.Red,Color.Green,Color.Blue,&h,&s,&v);
+		s1=s;
+		v1=v;
+		if (v<1.0) {
+			v1+=0.05;
+			if (v1>1.0)
+				v1=1.0;
+		} else {
+			s1-=0.05;
+			if (s1<0.0)
+				s1=0.0;
+		}
+		Color1=HSVToRGB(h,s1,v1);
+		v1=v-0.05;
+		if (v1<0.0)
+			v1=0.0;
+		Color2=HSVToRGB(h,s,v1);
+		BackStyle.Fill.Type=TVTest::Theme::FILL_GRADIENT;
+		BackStyle.Fill.Gradient=TVTest::Theme::GradientStyle(
+			TVTest::Theme::GRADIENT_NORMAL,
+			TVTest::Theme::DIRECTION_VERT,
+			Color1,Color2);
+	}
+
+#if 0
+	if ((Flags & CONTENT_STYLE_NOBORDER)!=0)
+		BackStyle.Border.Type=TVTest::Theme::BORDER_NONE;
+#endif
+
+	return BackStyle;
 }

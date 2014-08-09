@@ -107,6 +107,49 @@ COLORREF HSVToRGB(double Hue,double Saturation,double Value)
 }
 
 
+void RGBToHSV(BYTE Red,BYTE Green,BYTE Blue,
+			  double *pHue,double *pSaturation,double *pValue)
+{
+	const double r=(double)Red/255.0,g=(double)Green/255.0,b=(double)Blue/255.0;
+	double h,s,v;
+	double Max,Min;
+
+	if (r>g) {
+		Max=max(r,b);
+		Min=min(g,b);
+	} else {
+		Max=max(g,b);
+		Min=min(r,b);
+	}
+	v=Max;
+	if (Max>Min) {
+		s=(Max-Min)/Max;
+		double Delta=Max-Min;
+		if (r==Max)
+			h=(g-b)/Delta;
+		else if (g==Max)
+			h=2.0+(b-r)/Delta;
+		else
+			h=4.0+(r-g)/Delta;
+		h/=6.0;
+		if (h<0.0)
+			h+=1.0;
+		else if (h>=1.0)
+			h-=1.0;
+	} else {
+		s=0.0;
+		h=0.0;
+	}
+
+	if (pHue!=NULL)
+		*pHue=h;
+	if (pSaturation!=NULL)
+		*pSaturation=s;
+	if (pValue!=NULL)
+		*pValue=v;
+}
+
+
 FILETIME &operator+=(FILETIME &ft,LONGLONG Offset)
 {
 	ULARGE_INTEGER Result;

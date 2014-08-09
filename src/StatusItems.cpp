@@ -3,7 +3,6 @@
 #include "StatusItems.h"
 #include "AppMain.h"
 #include "Menu.h"
-#include "EpgUtil.h"
 #include "resource.h"
 
 #ifdef _DEBUG
@@ -713,6 +712,11 @@ bool CProgramInfoStatusItem::OnMouseHover(int x,int y)
 	return true;
 }
 
+void CProgramInfoStatusItem::SetTheme(const TVTest::Theme::CThemeManager *pThemeManager)
+{
+	m_EpgTheme.SetTheme(pThemeManager);
+}
+
 void CProgramInfoStatusItem::EnablePopupInfo(bool fEnable)
 {
 	m_fEnablePopupInfo=fEnable;
@@ -769,6 +773,9 @@ void CProgramInfoStatusItem::ShowPopupInfo()
 			::ClientToScreen(m_pStatus->GetHandle(),&pt);
 			m_EventInfoPopup.GetSize(&Width,&Height);
 			::SetRect(&rc,pt.x,pt.y-Height,pt.x+Width,pt.y);
+
+			m_EventInfoPopup.SetTitleColor(m_EpgTheme.GetGenreColor(EventInfo),
+										   m_EpgTheme.GetColor(CEpgTheme::COLOR_EVENTNAME));
 
 			int IconWidth,IconHeight;
 			m_EventInfoPopup.GetPreferredIconSize(&IconWidth,&IconHeight);

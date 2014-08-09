@@ -15,6 +15,8 @@ float LevelToDeciBel(int Level);
 
 COLORREF MixColor(COLORREF Color1,COLORREF Color2,BYTE Ratio=128);
 COLORREF HSVToRGB(double Hue,double Saturation,double Value);
+void RGBToHSV(BYTE Red,BYTE Green,BYTE Blue,
+			  double *pHue,double *pSaturation,double *pValue);
 
 inline DWORD TickTimeSpan(DWORD Start,DWORD End) { return End-Start; }
 extern __declspec(selectany) const FILETIME FILETIME_NULL={0,0};

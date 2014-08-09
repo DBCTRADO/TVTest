@@ -4,6 +4,7 @@
 
 #include "EpgProgramList.h"
 #include "DrawUtil.h"
+#include "ThemeManager.h"
 
 
 namespace EpgUtil
@@ -48,6 +49,11 @@ namespace EpgUtil
 	bool GetLanguageText(DWORD LanguageCode,
 						 LPTSTR pszText,int MaxText,
 						 LanguageTextType Type=LANGUAGE_TEXT_LONG);
+
+	bool GetEventGenre(const CEventInfoData &EventInfo,
+					   int *pLevel1,int *pLevel2=nullptr);
+	bool GetEventGenre(const CEventInfoData::ContentNibble &ContentNibble,
+					   int *pLevel1,int *pLevel2=nullptr);
 
 }
 
@@ -106,6 +112,61 @@ public:
 	static bool Draw(HDC hdcDst,int DstX,int DstY,int Width,int Height,
 					 HDC hdcSrc,int Icon,BYTE Opacity=255,const RECT *pClipping=nullptr);
 	static unsigned int GetEventIcons(const CEventInfoData *pEventInfo);
+};
+
+class CEpgTheme
+{
+public:
+	enum {
+		COLOR_EVENTNAME,
+		COLOR_EVENTTEXT,
+		COLOR_CONTENT_NEWS,
+		COLOR_CONTENT_SPORTS,
+		COLOR_CONTENT_INFORMATION,
+		COLOR_CONTENT_DRAMA,
+		COLOR_CONTENT_MUSIC,
+		COLOR_CONTENT_VARIETY,
+		COLOR_CONTENT_MOVIE,
+		COLOR_CONTENT_ANIME,
+		COLOR_CONTENT_DOCUMENTARY,
+		COLOR_CONTENT_THEATER,
+		COLOR_CONTENT_EDUCATION,
+		COLOR_CONTENT_WELFARE,
+		COLOR_CONTENT_OTHER,
+		COLOR_CONTENT_FIRST=COLOR_CONTENT_NEWS,
+		COLOR_CONTENT_LAST=COLOR_CONTENT_OTHER,
+		COLOR_LAST=COLOR_CONTENT_LAST,
+		NUM_COLORS=COLOR_LAST+1
+	};
+
+	enum {
+		CONTENT_STYLE_CURRENT	=0x0001U,
+		CONTENT_STYLE_NOBORDER	=0x0002U
+	};
+	enum {
+		DRAW_CONTENT_BACKGROUND_CURRENT		=0x0001U,
+		DRAW_CONTENT_BACKGROUND_SEPARATOR	=0x0002U,
+		DRAW_CONTENT_BACKGROUND_NOBORDER	=0x0004U
+	};
+
+	CEpgTheme();
+	void SetTheme(const TVTest::Theme::CThemeManager *pThemeManager);
+	bool SetColor(int Type,const TVTest::Theme::ThemeColor &Color);
+	TVTest::Theme::ThemeColor GetColor(int Type) const;
+	TVTest::Theme::ThemeColor GetGenreColor(int Genre) const;
+	TVTest::Theme::ThemeColor GetGenreColor(const CEventInfoData &EventInfo) const;
+	TVTest::Theme::BackgroundStyle GetContentBackgroundStyle(
+		int Genre,unsigned int Flags=0) const;
+	TVTest::Theme::BackgroundStyle GetContentBackgroundStyle(
+		const CEventInfoData &EventInfo,unsigned int Flags=0) const;
+	bool DrawContentBackground(HDC hdc,const RECT &Rect,
+							   const CEventInfoData &EventInfo,unsigned int Flags=0) const;
+
+private:
+	TVTest::Theme::BackgroundStyle GetContentBackgroundStyle(
+		const TVTest::Theme::ThemeColor &Color,unsigned int Flags) const;
+
+	TVTest::Theme::ThemeColor m_ColorList[NUM_COLORS];
 };
 
 

@@ -14,6 +14,7 @@
 #include "Tooltip.h"
 #include "Settings.h"
 #include "WindowUtil.h"
+#include "EpgUtil.h"
 
 
 class CChannelPanel
@@ -83,6 +84,10 @@ public:
 	bool ExpandChannel(int Channel,bool fExpand);
 	void SetScrollToCurChannel(bool fScroll);
 	bool GetScrollToCurChannel() const { return m_fScrollToCurChannel; }
+	void SetUseEpgColorScheme(bool fUseEpgColorScheme);
+	bool GetUseEpgColorScheme() const { return m_fUseEpgColorScheme; }
+	void SetShowGenreColor(bool fShowGenreColor);
+	bool GetShowGenreColor() const { return m_fShowGenreColor; }
 	void SetLogoManager(CLogoManager *pLogoManager);
 	bool QueryUpdate() const;
 
@@ -145,6 +150,9 @@ private:
 	int m_ItemHeight;
 	int m_ExpandedItemHeight;
 	ChannelPanelTheme m_Theme;
+	CEpgTheme m_EpgTheme;
+	bool m_fUseEpgColorScheme;
+	bool m_fShowGenreColor;
 	DrawUtil::CMonoColorIconList m_Chevron;
 	int m_EventsPerChannel;
 	int m_ExpandAdditionalEvents;

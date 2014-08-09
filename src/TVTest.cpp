@@ -754,6 +754,9 @@ void CMainPanel::CChannelPanelEventHandler::OnRButtonDown()
 						CM_CHANNELPANEL_EVENTS_1+g_App.Panel.ChannelPanel.GetEventsPerChannel()-1);
 	Menu.CheckRadioItem(CM_CHANNELPANEL_EXPANDEVENTS_2,CM_CHANNELPANEL_EXPANDEVENTS_8,
 						CM_CHANNELPANEL_EXPANDEVENTS_2+g_App.Panel.ChannelPanel.GetExpandAdditionalEvents()-2);
+	Menu.CheckItem(CM_CHANNELPANEL_USEEPGCOLORSCHEME,g_App.Panel.ChannelPanel.GetUseEpgColorScheme());
+	Menu.CheckItem(CM_CHANNELPANEL_SHOWGENRECOLOR,g_App.Panel.ChannelPanel.GetShowGenreColor());
+	Menu.EnableItem(CM_CHANNELPANEL_SHOWGENRECOLOR,!g_App.Panel.ChannelPanel.GetUseEpgColorScheme());
 	Menu.Show(g_App.UICore.GetMainWindow());
 }
 

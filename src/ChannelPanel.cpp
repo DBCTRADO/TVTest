@@ -3,7 +3,6 @@
 #include "ChannelPanel.h"
 #include "StdUtil.h"
 #include "DrawUtil.h"
-#include "EpgUtil.h"
 #include "resource.h"
 
 #ifdef _DEBUG
@@ -55,6 +54,8 @@ CChannelPanel::CChannelPanel()
 	, m_ItemHeight(0)
 	, m_ExpandedItemHeight(0)
 
+	, m_fUseEpgColorScheme(false)
+	, m_fShowGenreColor(false)
 	, m_EventsPerChannel(2)
 	, m_ExpandAdditionalEvents(4)
 	, m_ExpandEvents(m_EventsPerChannel+m_ExpandAdditionalEvents)
@@ -120,6 +121,8 @@ void CChannelPanel::SetTheme(const TVTest::Theme::CThemeManager *pThemeManager)
 	Theme.MarginColor=pThemeManager->GetColor(CColorScheme::COLOR_PANELBACK);
 
 	SetChannelPanelTheme(Theme);
+
+	m_EpgTheme.SetTheme(pThemeManager);
 }
 
 
@@ -136,6 +139,8 @@ bool CChannelPanel::ReadSettings(CSettings &Settings)
 		SetEventsPerChannel(EventsPerChannel,AdditionalEvents);
 
 	Settings.Read(TEXT("ChannelPanelScrollToCurChannel"),&m_fScrollToCurChannel);
+	Settings.Read(TEXT("ChannelPanelUseEpgColorScheme"),&m_fUseEpgColorScheme);
+	Settings.Read(TEXT("ChannelPanelShowGenreColor"),&m_fShowGenreColor);
 
 	return true;
 }
@@ -147,6 +152,8 @@ bool CChannelPanel::WriteSettings(CSettings &Settings)
 	Settings.Write(TEXT("ChannelPanelEventsPerChannel"),m_EventsPerChannel);
 	Settings.Write(TEXT("ChannelPanelExpandEvents"),m_ExpandAdditionalEvents);
 	Settings.Write(TEXT("ChannelPanelScrollToCurChannel"),m_fScrollToCurChannel);
+	Settings.Write(TEXT("ChannelPanelUseEpgColorScheme"),m_fUseEpgColorScheme);
+	Settings.Write(TEXT("ChannelPanelShowGenreColor"),m_fShowGenreColor);
 
 	return true;
 }
@@ -526,6 +533,26 @@ void CChannelPanel::SetScrollToCurChannel(bool fScroll)
 }
 
 
+void CChannelPanel::SetUseEpgColorScheme(bool fUseEpgColorScheme)
+{
+	if (m_fUseEpgColorScheme!=fUseEpgColorScheme) {
+		m_fUseEpgColorScheme=fUseEpgColorScheme;
+		if (m_hwnd!=NULL)
+			Invalidate();
+	}
+}
+
+
+void CChannelPanel::SetShowGenreColor(bool fShowGenreColor)
+{
+	if (m_fShowGenreColor!=fShowGenreColor) {
+		m_fShowGenreColor=fShowGenreColor;
+		if (!m_fUseEpgColorScheme && m_hwnd!=NULL)
+			Invalidate();
+	}
+}
+
+
 void CChannelPanel::SetLogoManager(CLogoManager *pLogoManager)
 {
 	m_pLogoManager=pLogoManager;
@@ -765,12 +792,27 @@ void CChannelPanel::Draw(HDC hdc,const RECT *prcPaint)
 			rc.top=rc.bottom;
 			rc.bottom=rc.top+m_EventNameHeight;
 			if (rc.bottom>prcPaint->top) {
-				const TVTest::Theme::Style &Style=
-					(fCurrent?m_Theme.CurChannelEventStyle:m_Theme.EventStyle)[j%2];
-
+				if (m_fUseEpgColorScheme && pChannelInfo->IsEventEnabled(j)) {
+					m_EpgTheme.DrawContentBackground(hdc,rc,pChannelInfo->GetEventInfo(j),
+													 CEpgTheme::DRAW_CONTENT_BACKGROUND_SEPARATOR);
+					::SetTextColor(hdc,m_EpgTheme.GetColor(CEpgTheme::COLOR_EVENTNAME));
+				} else {
+					const TVTest::Theme::Style &Style=
+						(fCurrent?m_Theme.CurChannelEventStyle:m_Theme.EventStyle)[j%2];
+					TVTest::Theme::Draw(hdc,rc,Style.Back);
+					if (m_fShowGenreColor && pChannelInfo->IsEventEnabled(j)) {
+						RECT rcBar=rc;
+						TVTest::Theme::SubtractBorderRect(Style.Back.Border,&rcBar);
+						rcBar.right=m_Style.EventNameMargin.Left;
+						unsigned int Flags=CEpgTheme::DRAW_CONTENT_BACKGROUND_NOBORDER;
+						if (rcBar.top==rc.top && rcBar.bottom==rc.bottom)
+							Flags|=CEpgTheme::DRAW_CONTENT_BACKGROUND_SEPARATOR;
+						m_EpgTheme.DrawContentBackground(hdc,rcBar,
+							pChannelInfo->GetEventInfo(j),Flags);
+					}
+					::SetTextColor(hdc,Style.Fore.Fill.GetSolidColor());
+				}
 				DrawUtil::SelectObject(hdc,m_Font);
-				::SetTextColor(hdc,Style.Fore.Fill.GetSolidColor());
-				TVTest::Theme::Draw(hdc,rc,Style.Back);
 				RECT rcText=rc;
 				TVTest::Style::Subtract(&rcText,m_Style.EventNameMargin);
 				pChannelInfo->DrawEventName(hdc,&rcText,j);
@@ -1002,6 +1044,9 @@ bool CChannelPanel::ShowEventInfoPopup(LPARAM Param,CEventInfoPopup *pPopup)
 	const CChannelEventInfo *pChEventInfo=m_ChannelList[Channel];
 	if (!pChEventInfo->IsEventEnabled(Event))
 		return false;
+
+	pPopup->SetTitleColor(m_EpgTheme.GetGenreColor(pChEventInfo->GetEventInfo(Event)),
+						  m_EpgTheme.GetColor(CEpgTheme::COLOR_EVENTNAME));
 
 	HICON hIcon=NULL;
 	if (m_pLogoManager!=NULL) {

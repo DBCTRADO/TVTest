@@ -4,6 +4,7 @@
 #include "AppMain.h"
 #include "LogoManager.h"
 #include "DrawUtil.h"
+#include "resource.h"
 
 #ifdef _DEBUG
 #undef THIS_FILE
@@ -291,6 +292,7 @@ CProgramListPanel::CProgramListPanel()
 	, m_EventInfoPopupHandler(this)
 	, m_pProgramList(NULL)
 	, m_FontHeight(0)
+	, m_fUseEpgColorScheme(false)
 	, m_VisibleEventIcons(((1<<(CEpgIcons::ICON_LAST+1))-1)^CEpgIcons::IconFlag(CEpgIcons::ICON_PAY))
 	, m_CurEventID(-1)
 	, m_ScrollPos(0)
@@ -354,6 +356,24 @@ void CProgramListPanel::SetTheme(const TVTest::Theme::CThemeManager *pThemeManag
 		pThemeManager->GetColor(CColorScheme::COLOR_PANELBACK);
 
 	SetProgramListPanelTheme(Theme);
+
+	m_EpgTheme.SetTheme(pThemeManager);
+}
+
+
+bool CProgramListPanel::ReadSettings(CSettings &Settings)
+{
+	Settings.Read(TEXT("ProgramListPanel.UseEpgColorScheme"),&m_fUseEpgColorScheme);
+
+	return true;
+}
+
+
+bool CProgramListPanel::WriteSettings(CSettings &Settings)
+{
+	Settings.Write(TEXT("ProgramListPanel.UseEpgColorScheme"),m_fUseEpgColorScheme);
+
+	return true;
 }
 
 
@@ -643,6 +663,16 @@ void CProgramListPanel::SetVisibleEventIcons(UINT VisibleIcons)
 }
 
 
+void CProgramListPanel::SetUseEpgColorScheme(bool fUseEpgColorScheme)
+{
+	if (m_fUseEpgColorScheme!=fUseEpgColorScheme) {
+		m_fUseEpgColorScheme=fUseEpgColorScheme;
+		if (m_hwnd!=NULL)
+			Invalidate();
+	}
+}
+
+
 int CProgramListPanel::HitTest(int x,int y) const
 {
 	POINT pt;
@@ -795,6 +825,25 @@ LRESULT CProgramListPanel::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lP
 		SetFocus(hwnd);
 		return 0;
 
+	case WM_RBUTTONDOWN:
+		{
+			::SetFocus(hwnd);
+
+			CPopupMenu Menu(GetAppClass().GetResourceInstance(),IDM_PROGRAMLISTPANEL);
+
+			Menu.CheckItem(CM_PROGRAMLISTPANEL_USEEPGCOLORSCHEME,m_fUseEpgColorScheme);
+			Menu.Show(hwnd);
+		}
+		return 0;
+
+	case WM_COMMAND:
+		switch (LOWORD(wParam)) {
+		case CM_PROGRAMLISTPANEL_USEEPGCOLORSCHEME:
+			SetUseEpgColorScheme(!m_fUseEpgColorScheme);
+			return 0;
+		}
+		return 0;
+
 #if 0	// テキストが長過ぎてツールチップを使うと問題がある
 	case WM_NOTIFY:
 		switch (reinterpret_cast<LPNMHDR>(lParam)->code) {
@@ -905,33 +954,53 @@ void CProgramListPanel::DrawProgramList(HDC hdc,const RECT *prcPaint)
 		rc.top=-m_ScrollPos;
 		for (int i=0;i<m_ItemList.NumItems();i++) {
 			CProgramItemInfo *pItem=m_ItemList.GetItem(i);
-			bool fCur=pItem->GetEventID()==m_CurEventID;
+			const bool fCur=pItem->GetEventID()==m_CurEventID;
+			const int EventTextHeight=pItem->GetTextLines()*LineHeight;
 
 			rc.bottom=rc.top+pItem->GetTitleLines()*LineHeight+
 				(m_Style.TitlePadding.Top+m_Style.TitlePadding.Bottom-m_Style.LineSpacing);
+			if (m_fUseEpgColorScheme) {
+				RECT rcContent;
+				rcContent.left=0;
+				rcContent.top=rc.top;
+				rcContent.right=rc.right;
+				rcContent.bottom=rc.bottom+EventTextHeight;
+				if (rcContent.bottom>prcPaint->top) {
+					unsigned int Flags=CEpgTheme::DRAW_CONTENT_BACKGROUND_SEPARATOR;
+					if (fCur)
+						Flags|=CEpgTheme::DRAW_CONTENT_BACKGROUND_CURRENT;
+					m_EpgTheme.DrawContentBackground(hdc,rcContent,pItem->GetEventInfo(),Flags);
+				}
+			}
 			if (rc.bottom>prcPaint->top) {
-				const TVTest::Theme::Style &Style=
-					fCur?m_Theme.CurEventNameStyle:m_Theme.EventNameStyle;
-
-				DrawUtil::SelectObject(hdc,m_TitleFont);
-				::SetTextColor(hdc,Style.Fore.Fill.GetSolidColor());
 				rc.left=0;
-				TVTest::Theme::Draw(hdc,rc,Style.Back);
+				if (m_fUseEpgColorScheme) {
+					::SetTextColor(hdc,m_EpgTheme.GetColor(CEpgTheme::COLOR_EVENTNAME));
+				} else {
+					const TVTest::Theme::Style &Style=
+						fCur?m_Theme.CurEventNameStyle:m_Theme.EventNameStyle;
+					::SetTextColor(hdc,Style.Fore.Fill.GetSolidColor());
+					TVTest::Theme::Draw(hdc,rc,Style.Back);
+				}
+				DrawUtil::SelectObject(hdc,m_TitleFont);
 				RECT rcTitle=rc;
 				TVTest::Style::Subtract(&rcTitle,m_Style.TitlePadding);
 				pItem->DrawTitle(hdc,&rcTitle,LineHeight);
 			}
 
 			rc.top=rc.bottom;
-			rc.bottom=rc.top+pItem->GetTextLines()*LineHeight;
+			rc.bottom=rc.top+EventTextHeight;
 			if (rc.bottom>prcPaint->top) {
-				const TVTest::Theme::Style &Style=
-					fCur?m_Theme.CurEventTextStyle:m_Theme.EventTextStyle;
-
-				DrawUtil::SelectObject(hdc,m_Font);
-				::SetTextColor(hdc,Style.Fore.Fill.GetSolidColor());
 				rc.left=0;
-				TVTest::Theme::Draw(hdc,rc,Style.Back);
+				if (m_fUseEpgColorScheme) {
+					::SetTextColor(hdc,m_EpgTheme.GetColor(CEpgTheme::COLOR_EVENTTEXT));
+				} else {
+					const TVTest::Theme::Style &Style=
+						fCur?m_Theme.CurEventTextStyle:m_Theme.EventTextStyle;
+					::SetTextColor(hdc,Style.Fore.Fill.GetSolidColor());
+					TVTest::Theme::Draw(hdc,rc,Style.Back);
+				}
+				DrawUtil::SelectObject(hdc,m_Font);
 				rc.left=GetTextLeftMargin();
 				pItem->DrawText(hdc,&rc,LineHeight);
 
@@ -1002,6 +1071,9 @@ bool CProgramListPanel::CEventInfoPopupHandler::ShowPopup(LPARAM Param,CEventInf
 	const CProgramItemInfo *pItem=m_pPanel->m_ItemList.GetItem((int)Param);
 	if (pItem==NULL)
 		return false;
+
+	pPopup->SetTitleColor(m_pPanel->m_EpgTheme.GetGenreColor(pItem->GetEventInfo()),
+						  m_pPanel->m_EpgTheme.GetColor(CEpgTheme::COLOR_EVENTNAME));
 
 	int IconWidth,IconHeight;
 	pPopup->GetPreferredIconSize(&IconWidth,&IconHeight);
