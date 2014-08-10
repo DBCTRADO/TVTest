@@ -41,6 +41,10 @@ public:
 	bool IsSelected() const;
 	LPTSTR GetSelectedText() const;
 	void GetPreferredIconSize(int *pWidth,int *pHeight) const;
+	bool GetPopupPosition(int x,int y,RECT *pPos) const;
+	bool AdjustPopupPosition(POINT *pPos) const;
+	bool GetDefaultPopupPosition(RECT *pPos) const;
+	bool GetDefaultPopupPosition(POINT *pPos) const;
 
 	static bool Initialize(HINSTANCE hinst);
 

@@ -1058,7 +1058,20 @@ bool CChannelPanel::ShowEventInfoPopup(LPARAM Param,CEventInfoPopup *pPopup)
 			IconWidth,IconHeight);
 	}
 
-	if (!pPopup->Show(&pChEventInfo->GetEventInfo(Event),NULL,
+	RECT rc;
+	POINT pt;
+	GetItemRect(Channel,&rc);
+	pt.x=rc.left;
+	pt.y=rc.top;
+	::ClientToScreen(m_hwnd,&pt);
+	int y=pt.y+m_ChannelNameHeight+m_EventNameHeight*(Event+1);
+	pPopup->GetDefaultPopupPosition(&rc);
+	if (rc.top>y) {
+		rc.bottom=y+(rc.bottom-rc.top);
+		rc.top=y;
+	}
+
+	if (!pPopup->Show(&pChEventInfo->GetEventInfo(Event),&rc,
 					  hIcon,pChEventInfo->GetChannelInfo().GetName())) {
 		if (hIcon!=NULL)
 			::DestroyIcon(hIcon);

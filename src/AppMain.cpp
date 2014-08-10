@@ -772,9 +772,6 @@ int CAppMain::Main(HINSTANCE hInstance,LPCTSTR pszCmdLine,int nCmdShow)
 		}
 	}
 
-	ColorSchemeOptions.SetEventHandler(this);
-	ColorSchemeOptions.ApplyColorScheme();
-
 	// 各ウィンドウの初期化
 	CMainWindow::Initialize(m_hInst);
 	CViewWindow::Initialize(m_hInst);
@@ -825,6 +822,10 @@ int CAppMain::Main(HINSTANCE hInstance,LPCTSTR pszCmdLine,int nCmdShow)
 			MessageBox(nullptr,TEXT("ウィンドウが作成できません。"),nullptr,MB_OK | MB_ICONSTOP);
 		return 0;
 	}
+
+	ColorSchemeOptions.SetEventHandler(this);
+	ColorSchemeOptions.ApplyColorScheme();
+
 	if (nCmdShow==SW_SHOWMINIMIZED || nCmdShow==SW_SHOWMINNOACTIVE || nCmdShow==SW_MINIMIZE)
 		CmdLineOptions.m_fMinimize=true;
 	if (CmdLineOptions.m_fStandby && CmdLineOptions.m_fMinimize)

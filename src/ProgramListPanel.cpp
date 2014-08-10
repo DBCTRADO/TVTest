@@ -697,6 +697,31 @@ int CProgramListPanel::HitTest(int x,int y) const
 }
 
 
+bool CProgramListPanel::GetItemRect(int Item,RECT *pRect) const
+{
+	if (Item<0 || Item>=m_ItemList.NumItems())
+		return false;
+
+	RECT rc;
+
+	GetClientRect(&rc);
+	rc.top=-m_ScrollPos;
+	for (int i=0;;i++) {
+		const CProgramItemInfo *pItem=m_ItemList.GetItem(i);
+
+		rc.bottom=rc.top+(pItem->GetTitleLines()+pItem->GetTextLines())*(m_FontHeight+m_Style.LineSpacing)+
+			(m_Style.TitlePadding.Top+m_Style.TitlePadding.Bottom-m_Style.LineSpacing);
+		if (i==Item)
+			break;
+		rc.top=rc.bottom;
+	}
+
+	*pRect=rc;
+
+	return true;
+}
+
+
 /*
 void CProgramListPanel::SetToolTip()
 {
@@ -1068,7 +1093,8 @@ bool CProgramListPanel::CEventInfoPopupHandler::HitTest(int x,int y,LPARAM *pPar
 
 bool CProgramListPanel::CEventInfoPopupHandler::ShowPopup(LPARAM Param,CEventInfoPopup *pPopup)
 {
-	const CProgramItemInfo *pItem=m_pPanel->m_ItemList.GetItem((int)Param);
+	const int ItemIndex=static_cast<int>(Param);
+	const CProgramItemInfo *pItem=m_pPanel->m_ItemList.GetItem(ItemIndex);
 	if (pItem==NULL)
 		return false;
 
@@ -1082,7 +1108,19 @@ bool CProgramListPanel::CEventInfoPopupHandler::ShowPopup(LPARAM Param,CEventInf
 		m_pPanel->m_CurChannel.GetServiceID(),
 		IconWidth,IconHeight);
 
-	if (!pPopup->Show(&pItem->GetEventInfo(),NULL,
+	RECT rc;
+	POINT pt;
+	m_pPanel->GetItemRect(ItemIndex,&rc);
+	pt.x=rc.left;
+	pt.y=rc.bottom;
+	::ClientToScreen(m_pPanel->m_hwnd,&pt);
+	pPopup->GetDefaultPopupPosition(&rc);
+	if (rc.top>pt.y) {
+		rc.bottom=pt.y+(rc.bottom-rc.top);
+		rc.top=pt.y;
+	}
+
+	if (!pPopup->Show(&pItem->GetEventInfo(),&rc,
 					  hIcon,m_pPanel->m_CurChannel.GetName())) {
 		if (hIcon!=NULL)
 			::DestroyIcon(hIcon);

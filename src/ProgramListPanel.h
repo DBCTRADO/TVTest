@@ -135,6 +135,7 @@ private:
 	void CalcFontHeight();
 	int GetTextLeftMargin() const;
 	int HitTest(int x,int y) const;
+	bool GetItemRect(int Item,RECT *pRect) const;
 	//void SetToolTip();
 // CCustomWindow
 	LRESULT OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam) override;

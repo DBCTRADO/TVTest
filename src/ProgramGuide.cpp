@@ -4443,7 +4443,19 @@ bool CProgramGuide::CEventInfoPopupHandler::ShowPopup(LPARAM Param,CEventInfoPop
 				pServiceInfo->GetNetworkID(),pServiceInfo->GetServiceID(),
 				IconWidth,IconHeight);
 
-			if (!pPopup->Show(pEventInfo,NULL,hIcon,pServiceInfo->GetServiceName())) {
+			RECT rc;
+			POINT pt;
+			m_pProgramGuide->GetEventRect(List,Event,&rc);
+			pt.x=rc.left;
+			pt.y=rc.bottom;
+			::ClientToScreen(m_pProgramGuide->m_hwnd,&pt);
+			pPopup->GetDefaultPopupPosition(&rc);
+			if (rc.top>pt.y) {
+				rc.bottom=pt.y+(rc.bottom-rc.top);
+				rc.top=pt.y;
+			}
+
+			if (!pPopup->Show(pEventInfo,&rc,hIcon,pServiceInfo->GetServiceName())) {
 				if (hIcon!=NULL)
 					::DestroyIcon(hIcon);
 				return false;

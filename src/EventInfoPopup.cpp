@@ -281,41 +281,23 @@ bool CEventInfoPopup::Show(const CEventInfoData *pEventInfo,const RECT *pPos,
 {
 	if (pEventInfo==NULL)
 		return false;
-	bool fExists=m_hwnd!=NULL;
-	if (!fExists) {
+
+	if (m_hwnd==NULL) {
 		if (!Create(NULL,WS_POPUP | WS_CLIPCHILDREN | WS_THICKFRAME,WS_EX_TOPMOST | WS_EX_NOACTIVATE,0))
 			return false;
 	}
-	if (pPos!=NULL) {
-		if (!GetVisible())
+
+	if (!GetVisible() || m_EventInfo!=*pEventInfo) {
+		if (pPos!=NULL) {
 			SetPosition(pPos);
-	} else if (!IsVisible() || m_EventInfo!=*pEventInfo) {
-		RECT rc;
-		POINT pt;
-		int Width,Height;
+		} else {
+			RECT rc;
 
-		GetPosition(&rc);
-		Width=rc.right-rc.left;
-		Height=rc.bottom-rc.top;
-		::GetCursorPos(&pt);
-		pt.y+=16;
-		HMONITOR hMonitor=::MonitorFromPoint(pt,MONITOR_DEFAULTTONEAREST);
-		if (hMonitor!=NULL) {
-			MONITORINFO mi;
-
-			mi.cbSize=sizeof(mi);
-			if (::GetMonitorInfo(hMonitor,&mi)) {
-				if (pt.x+Width>mi.rcMonitor.right)
-					pt.x=mi.rcMonitor.right-Width;
-				if (pt.y+Height>mi.rcMonitor.bottom) {
-					pt.y=mi.rcMonitor.bottom-Height;
-					if (pt.x+Width<mi.rcMonitor.right)
-						pt.x+=min(16,mi.rcMonitor.right-(pt.x+Width));
-				}
-			}
+			GetDefaultPopupPosition(&rc);
+			::SetWindowPos(m_hwnd,HWND_TOPMOST,
+						   rc.left,rc.top,rc.right-rc.left,rc.bottom-rc.top,
+						   SWP_NOACTIVATE);
 		}
-		::SetWindowPos(m_hwnd,HWND_TOPMOST,pt.x,pt.y,Width,Height,
-					   SWP_NOACTIVATE);
 	}
 
 	SetEventInfo(pEventInfo);
@@ -402,6 +384,7 @@ void CEventInfoPopup::SetTitleColor(COLORREF BackColor,COLORREF TextColor)
 		GetClientRect(&rc);
 		rc.bottom=m_TitleHeight;
 		::InvalidateRect(m_hwnd,&rc,TRUE);
+		::RedrawWindow(m_hwnd,NULL,NULL,RDW_FRAME | RDW_INVALIDATE);
 	}
 }
 
@@ -454,6 +437,88 @@ void CEventInfoPopup::GetPreferredIconSize(int *pWidth,int *pHeight) const
 		*pWidth=::GetSystemMetrics(SM_CXSMICON);
 	if (pHeight!=NULL)
 		*pHeight=::GetSystemMetrics(SM_CYSMICON);
+}
+
+
+bool CEventInfoPopup::GetPopupPosition(int x,int y,RECT *pPos) const
+{
+	if (pPos==NULL)
+		return false;
+
+	RECT rc;
+	int Width,Height;
+
+	GetPosition(&rc);
+	Width=rc.right-rc.left;
+	Height=rc.bottom-rc.top;
+
+	POINT pt={x,y};
+	HMONITOR hMonitor=::MonitorFromPoint(pt,MONITOR_DEFAULTTONEAREST);
+	if (hMonitor!=NULL) {
+		MONITORINFO mi;
+
+		mi.cbSize=sizeof(mi);
+		if (::GetMonitorInfo(hMonitor,&mi)) {
+			if (x+Width>mi.rcMonitor.right)
+				x=mi.rcMonitor.right-Width;
+			if (y+Height>mi.rcMonitor.bottom) {
+				y=mi.rcMonitor.bottom-Height;
+				if (x+Width<mi.rcMonitor.right)
+					x+=min(16,mi.rcMonitor.right-(x+Width));
+			}
+		}
+	}
+
+	pPos->left=x;
+	pPos->right=x+Width;
+	pPos->top=y;
+	pPos->bottom=y+Height;
+
+	return true;
+}
+
+
+bool CEventInfoPopup::AdjustPopupPosition(POINT *pPos) const
+{
+	if (pPos==NULL)
+		return false;
+
+	RECT rc;
+	if (!GetPopupPosition(pPos->x,pPos->y,&rc))
+		return false;
+
+	pPos->x=rc.left;
+	pPos->y=rc.top;
+
+	return true;
+}
+
+
+bool CEventInfoPopup::GetDefaultPopupPosition(RECT *pPos) const
+{
+	if (pPos==NULL)
+		return false;
+
+	POINT pt;
+	::GetCursorPos(&pt);
+
+	return GetPopupPosition(pt.x,pt.y+16,pPos);
+}
+
+
+bool CEventInfoPopup::GetDefaultPopupPosition(POINT *pPos) const
+{
+	if (pPos==NULL)
+		return false;
+
+	RECT rc;
+	if (!GetDefaultPopupPosition(&rc))
+		return false;
+
+	pPos->x=rc.left;
+	pPos->y=rc.top;
+
+	return true;
 }
 
 
