@@ -476,6 +476,7 @@ bool CAppMain::LoadSettings()
 	PluginOptions.LoadSettings(Settings);
 	RecentChannelList.LoadSettings(Settings);
 	Panel.InfoPanel.LoadSettings(Settings);
+	Panel.ProgramListPanel.LoadSettings(Settings);
 	Panel.ChannelPanel.LoadSettings(Settings);
 	PanAndScanOptions.LoadSettings(Settings);
 	HomeDisplay.LoadSettings(Settings);
@@ -609,6 +610,7 @@ bool CAppMain::SaveSettings(unsigned int Flags)
 	if ((Flags&SETTINGS_SAVE_STATUS)!=0) {
 		RecentChannelList.SaveSettings(Settings);
 		Panel.InfoPanel.SaveSettings(Settings);
+		Panel.ProgramListPanel.SaveSettings(Settings);
 		Panel.ChannelPanel.SaveSettings(Settings);
 	}
 
