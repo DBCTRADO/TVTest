@@ -4104,6 +4104,8 @@ void CMainWindow::OnServiceChanged()
 
 	if (m_App.Panel.Form.GetCurPageID()==PANEL_ID_INFORMATION)
 		UpdateProgramInfo();
+
+	OnAudioStreamChanged();
 }
 
 
