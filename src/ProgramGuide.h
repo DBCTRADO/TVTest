@@ -325,6 +325,8 @@ public:
 	const ProgramGuide::CServiceList &GetServiceList() const { return m_ServiceList; }
 	void SetCurrentService(WORD NetworkID,WORD TSID,WORD ServiceID);
 	void ClearCurrentService() { SetCurrentService(0,0,0); }
+	void SetCurrentEvent(WORD EventID);
+	void ClearCurrentEvent() { SetCurrentEvent(0); }
 
 	bool GetExcludeNoEventServices() const { return m_fExcludeNoEventServices; }
 	bool SetExcludeNoEventServices(bool fExclude);
@@ -477,6 +479,7 @@ private:
 	ServiceInfo m_CurrentChannel;
 	bool m_fExcludeNoEventServices;
 	ServiceInfoList m_ExcludeServiceList;
+	WORD m_CurrentEventID;
 
 	int m_BeginHour;
 	SYSTEMTIME m_stFirstTime;
@@ -569,7 +572,10 @@ private:
 	const ProgramGuide::CEventItem *GetEventItem(int ListIndex,int EventIndex) const;
 	bool GetEventRect(int ListIndex,int EventIndex,RECT *pRect) const;
 	bool RedrawEvent(int ListIndex,int EventIndex);
+	bool RedrawEventByIDs(WORD NetworkID,WORD TSID,WORD ServiceID,WORD EventID);
 	bool EventHitTest(int x,int y,int *pListIndex,int *pEventIndex,RECT *pItemRect=NULL) const;
+	bool GetEventIndexByIDs(WORD NetworkID,WORD TSID,WORD ServiceID,WORD EventID,
+							int *pListIndex,int *pEventIndex) const;
 	bool SelectEvent(int ListIndex,int EventIndex);
 	bool SelectEventByPosition(int x,int y);
 	bool SelectEventByIDs(WORD NetworkID,WORD TSID,WORD ServiceID,WORD EventID);

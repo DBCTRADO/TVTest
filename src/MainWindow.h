@@ -571,6 +571,7 @@ private:
 	void OnCommand(HWND hwnd,int id,HWND hwndCtl,UINT codeNotify);
 	void OnTimer(HWND hwnd,UINT id);
 	bool OnInitMenuPopup(HMENU hmenu);
+	void OnEventChanged();
 	void AutoSelectStereoMode();
 	bool OnExecute(LPCTSTR pszCmdLine);
 	int GetZoomPercentage();

@@ -781,20 +781,28 @@ TVTest::Theme::BackgroundStyle CEpgTheme::GetContentBackgroundStyle(
 		RGBToHSV(Color.Red,Color.Green,Color.Blue,&h,&s,&v);
 		s1=s;
 		v1=v;
-		if (v<1.0) {
+		if (s1<0.1 || v1<=0.95) {
 			v1+=0.05;
 			if (v1>1.0)
 				v1=1.0;
 		} else {
-			s1-=0.05;
+			s1-=s*0.5;
 			if (s1<0.0)
 				s1=0.0;
 		}
 		Color1=HSVToRGB(h,s1,v1);
-		v1=v-0.05;
-		if (v1<0.0)
-			v1=0.0;
-		Color2=HSVToRGB(h,s,v1);
+		s1=s;
+		v1=v;
+		if (s1>=0.1 && s1<=0.9) {
+			s1+=s*0.5;
+			if (s1>1.0)
+				s1=1.0;
+		} else {
+			v1-=0.05;
+			if (v1<0.0)
+				v1=0.0;
+		}
+		Color2=HSVToRGB(h,s1,v1);
 		BackStyle.Fill.Type=TVTest::Theme::FILL_GRADIENT;
 		BackStyle.Fill.Gradient=TVTest::Theme::GradientStyle(
 			TVTest::Theme::GRADIENT_NORMAL,

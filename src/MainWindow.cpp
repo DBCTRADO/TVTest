@@ -3270,75 +3270,7 @@ void CMainWindow::OnTimer(HWND hwnd,UINT id)
 
 			// 番組の切り替わり
 			if ((UpdateStatus&CCoreEngine::STATUS_EVENTID)!=0) {
-				// 番組の最後まで録画
-				if (m_App.RecordManager.GetStopOnEventEnd())
-					m_App.Core.StopRecord();
-
-				m_pCore->UpdateTitle();
-
-				if (m_App.OSDOptions.IsNotifyEnabled(COSDOptions::NOTIFY_EVENTNAME)
-						&& !m_App.Core.IsChannelScanning()) {
-					TCHAR szEventName[256];
-
-					if (m_App.CoreEngine.m_DtvEngine.GetEventName(szEventName,lengthof(szEventName))>0) {
-						TCHAR szBarText[EpgUtil::MAX_EVENT_TIME_LENGTH+lengthof(szEventName)];
-						int Length=0;
-						SYSTEMTIME StartTime;
-						DWORD Duration;
-
-						if (m_App.CoreEngine.m_DtvEngine.GetEventTime(&StartTime,&Duration)) {
-							Length=EpgUtil::FormatEventTime(StartTime,Duration,
-															szBarText,EpgUtil::MAX_EVENT_TIME_LENGTH);
-							if (Length>0)
-								szBarText[Length++]=_T(' ');
-						}
-						::lstrcpy(szBarText+Length,szEventName);
-						ShowNotificationBar(szBarText,CNotificationBar::MESSAGE_INFO,0,true);
-					}
-				}
-
-				if (IsPanelVisible()
-						&& m_App.Panel.Form.GetCurPageID()==PANEL_ID_INFORMATION)
-					UpdateProgramInfo();
-
-				m_App.Panel.ProgramListPanel.SetCurrentEventID(m_App.CoreEngine.m_DtvEngine.GetEventID());
-
-				CProgramInfoStatusItem *pProgramInfoItem=
-					dynamic_cast<CProgramInfoStatusItem*>(m_App.StatusView.GetItemByID(STATUS_ITEM_PROGRAMINFO));
-				if (pProgramInfoItem!=nullptr) {
-					pProgramInfoItem->UpdateContent();
-					pProgramInfoItem->Update();
-				}
-
-				if (m_AspectRatioType!=ASPECTRATIO_DEFAULT
-						&& (m_fForceResetPanAndScan
-						|| (m_App.ViewOptions.GetResetPanScanEventChange()
-							&& m_AspectRatioType<ASPECTRATIO_CUSTOM))) {
-					m_App.CoreEngine.m_DtvEngine.m_MediaViewer.SetPanAndScan(0,0);
-					if (!m_pCore->GetFullscreen()
-							&& IsViewerEnabled()) {
-						AutoFitWindowToVideo();
-						// この時点でまだ新しい映像サイズが取得できない場合があるため、
-						// WM_APP_VIDEOSIZECHANGED が来た時に調整するようにする
-						m_AspectRatioResetTime=::GetTickCount();
-					}
-					m_AspectRatioType=ASPECTRATIO_DEFAULT;
-					m_fForceResetPanAndScan=false;
-					m_App.StatusView.UpdateItem(STATUS_ITEM_VIDEOSIZE);
-					m_App.Panel.ControlPanel.UpdateItem(CONTROLPANEL_ITEM_VIDEO);
-					/*
-					m_App.MainMenu.CheckRadioItem(CM_ASPECTRATIO_FIRST,CM_ASPECTRATIO_3D_LAST,
-											CM_ASPECTRATIO_DEFAULT);
-					*/
-					m_App.AspectRatioIconMenu.CheckRadioItem(
-						CM_ASPECTRATIO_FIRST,CM_ASPECTRATIO_3D_LAST,
-						CM_ASPECTRATIO_DEFAULT);
-					m_App.SideBar.CheckRadioItem(CM_ASPECTRATIO_FIRST,CM_ASPECTRATIO_LAST,
-										   CM_ASPECTRATIO_DEFAULT);
-				}
-
-				m_CurEventStereoMode=-1;
-				AutoSelectStereoMode();
+				OnEventChanged();
 			}
 
 			// 時間変更などを反映させるために番組情報を更新
@@ -4172,6 +4104,84 @@ void CMainWindow::OnServiceChanged()
 
 	if (m_App.Panel.Form.GetCurPageID()==PANEL_ID_INFORMATION)
 		UpdateProgramInfo();
+}
+
+
+void CMainWindow::OnEventChanged()
+{
+	const WORD EventID=m_App.CoreEngine.m_DtvEngine.GetEventID();
+
+	// 番組の最後まで録画
+	if (m_App.RecordManager.GetStopOnEventEnd())
+		m_App.Core.StopRecord();
+
+	m_pCore->UpdateTitle();
+
+	if (m_App.OSDOptions.IsNotifyEnabled(COSDOptions::NOTIFY_EVENTNAME)
+			&& !m_App.Core.IsChannelScanning()) {
+		TCHAR szEventName[256];
+
+		if (m_App.CoreEngine.m_DtvEngine.GetEventName(szEventName,lengthof(szEventName))>0) {
+			TCHAR szBarText[EpgUtil::MAX_EVENT_TIME_LENGTH+lengthof(szEventName)];
+			int Length=0;
+			SYSTEMTIME StartTime;
+			DWORD Duration;
+
+			if (m_App.CoreEngine.m_DtvEngine.GetEventTime(&StartTime,&Duration)) {
+				Length=EpgUtil::FormatEventTime(StartTime,Duration,
+												szBarText,EpgUtil::MAX_EVENT_TIME_LENGTH);
+				if (Length>0)
+					szBarText[Length++]=_T(' ');
+			}
+			::lstrcpy(szBarText+Length,szEventName);
+			ShowNotificationBar(szBarText,CNotificationBar::MESSAGE_INFO,0,true);
+		}
+	}
+
+	if (IsPanelVisible()
+			&& m_App.Panel.Form.GetCurPageID()==PANEL_ID_INFORMATION)
+		UpdateProgramInfo();
+
+	m_App.Panel.ProgramListPanel.SetCurrentEventID(EventID);
+
+	CProgramInfoStatusItem *pProgramInfoItem=
+		dynamic_cast<CProgramInfoStatusItem*>(m_App.StatusView.GetItemByID(STATUS_ITEM_PROGRAMINFO));
+	if (pProgramInfoItem!=nullptr) {
+		pProgramInfoItem->UpdateContent();
+		pProgramInfoItem->Update();
+	}
+
+	m_App.Epg.ProgramGuide.SetCurrentEvent(EventID);
+
+	if (m_AspectRatioType!=ASPECTRATIO_DEFAULT
+			&& (m_fForceResetPanAndScan
+			|| (m_App.ViewOptions.GetResetPanScanEventChange()
+				&& m_AspectRatioType<ASPECTRATIO_CUSTOM))) {
+		m_App.CoreEngine.m_DtvEngine.m_MediaViewer.SetPanAndScan(0,0);
+		if (!m_pCore->GetFullscreen()
+				&& IsViewerEnabled()) {
+			AutoFitWindowToVideo();
+			// この時点でまだ新しい映像サイズが取得できない場合があるため、
+			// WM_APP_VIDEOSIZECHANGED が来た時に調整するようにする
+			m_AspectRatioResetTime=::GetTickCount();
+		}
+		m_AspectRatioType=ASPECTRATIO_DEFAULT;
+		m_fForceResetPanAndScan=false;
+		m_App.StatusView.UpdateItem(STATUS_ITEM_VIDEOSIZE);
+		m_App.Panel.ControlPanel.UpdateItem(CONTROLPANEL_ITEM_VIDEO);
+		/*
+		m_App.MainMenu.CheckRadioItem(CM_ASPECTRATIO_FIRST,CM_ASPECTRATIO_3D_LAST,
+									  CM_ASPECTRATIO_DEFAULT);
+		*/
+		m_App.AspectRatioIconMenu.CheckRadioItem(
+			CM_ASPECTRATIO_FIRST,CM_ASPECTRATIO_3D_LAST,
+			CM_ASPECTRATIO_DEFAULT);
+		m_App.SideBar.CheckRadioItem(CM_ASPECTRATIO_FIRST,CM_ASPECTRATIO_LAST,
+									 CM_ASPECTRATIO_DEFAULT);
+	}
+
+	m_CurEventStereoMode=-1;
+	AutoSelectStereoMode();
 }
 
 

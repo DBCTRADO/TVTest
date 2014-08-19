@@ -1225,6 +1225,7 @@ CProgramGuide::CProgramGuide(CEventSearchOptions &EventSearchOptions)
 	, m_CurrentChannelProvider(-1)
 	, m_CurrentChannelGroup(-1)
 	, m_fExcludeNoEventServices(true)
+	, m_CurrentEventID(0)
 	, m_BeginHour(-1)
 	, m_pEventHandler(NULL)
 	, m_pFrame(NULL)
@@ -1610,6 +1611,14 @@ void CProgramGuide::DrawEventList(const ProgramGuide::CEventLayout *pLayout,
 				TextColor=m_ColorList[COLOR_HIGHLIGHT_TEXT];
 			}
 
+			const bool fCurrent=
+				m_CurrentEventID!=0
+				&& m_CurrentChannel.ServiceID!=0
+				&& pEventInfo->m_NetworkID==m_CurrentChannel.NetworkID
+				&& pEventInfo->m_TSID==m_CurrentChannel.TransportStreamID
+				&& pEventInfo->m_ServiceID==m_CurrentChannel.ServiceID
+				&& pEventInfo->m_EventID==m_CurrentEventID;
+
 			bool fFilter=false;
 			if ((m_Filter&FILTER_FREE)!=0
 					&& pEventInfo->m_CaType!=CEventInfoData::CA_TYPE_FREE
@@ -1638,13 +1647,15 @@ void CProgramGuide::DrawEventList(const ProgramGuide::CEventLayout *pLayout,
 					fFilter=false;
 			}
 
-			if (fFilter) {
-				BackColor=MixColor(BackColor,m_ColorList[COLOR_BACK],96);
-				TitleColor=MixColor(TitleColor,m_ColorList[COLOR_BACK],96);
-				TextColor=MixColor(TextColor,m_ColorList[COLOR_BACK],96);
-			} else {
-				if (fCommonEvent)
-					BackColor=MixColor(BackColor,m_ColorList[COLOR_BACK],192);
+			if (!fCurrent) {
+				if (fFilter) {
+					BackColor=MixColor(BackColor,m_ColorList[COLOR_BACK],96);
+					TitleColor=MixColor(TitleColor,m_ColorList[COLOR_BACK],96);
+					TextColor=MixColor(TextColor,m_ColorList[COLOR_BACK],96);
+				} else {
+					if (fCommonEvent)
+						BackColor=MixColor(BackColor,m_ColorList[COLOR_BACK],192);
+				}
 			}
 
 			if (fHighlight) {
@@ -1652,6 +1663,9 @@ void CProgramGuide::DrawEventList(const ProgramGuide::CEventLayout *pLayout,
 					MixColor(m_ColorList[COLOR_HIGHLIGHT_BACK],BackColor,128),
 					BackColor,
 					DrawUtil::DIRECTION_VERT);
+			} else if (fCurrent) {
+				m_EpgTheme.DrawContentBackground(hdc,rcItem,*pEventInfo,
+												 CEpgTheme::DRAW_CONTENT_BACKGROUND_CURRENT);
 			} else {
 				DrawUtil::Fill(hdc,&rcItem,BackColor);
 			}
@@ -1708,6 +1722,13 @@ void CProgramGuide::DrawEventList(const ProgramGuide::CEventLayout *pLayout,
 				rcInner.bottom-=m_Style.SelectedBorder.Bottom;
 				DrawUtil::FillBorder(hdc,&rcOuter,&rcInner,&rcOuter,hbr);
 				::DeleteObject(hbr);
+			} else if (fCurrent) {
+				HBRUSH hbr=::CreateSolidBrush(m_ColorList[COLOR_CURTIMELINE]);
+				RECT rcOuter=rcItem;
+				rcOuter.left-=m_Style.SelectedBorder.Left;
+				rcOuter.right+=m_Style.SelectedBorder.Right;
+				DrawUtil::FillBorder(hdc,&rcOuter,&rcItem,&rcOuter,hbr);
+				::DeleteObject(hbr);
 			}
 
 			::SetTextColor(hdc,TitleColor);
@@ -1732,7 +1753,7 @@ void CProgramGuide::DrawEventList(const ProgramGuide::CEventLayout *pLayout,
 											m_Style.EventIconSize.Width,
 											m_Style.EventIconSize.Height,
 											hdcIcons,Icon,
-											(fCommonEvent || fFilter)?128:255,
+											(!fCurrent && (fCommonEvent || fFilter))?128:255,
 											&rcItem);
 							y+=m_Style.EventIconSize.Height+m_Style.EventIconMargin.Bottom;
 						}
@@ -2713,15 +2734,56 @@ bool CProgramGuide::GetChannelList(CChannelList *pList,bool fVisibleOnly) const
 
 void CProgramGuide::SetCurrentService(WORD NetworkID,WORD TSID,WORD ServiceID)
 {
+	bool fRedrawEvent=false;
+	int ListIndex,EventIndex;
+	if (m_CurrentEventID!=0 && m_hwnd!=NULL) {
+		fRedrawEvent=GetEventIndexByIDs(
+			m_CurrentChannel.NetworkID,
+			m_CurrentChannel.TransportStreamID,
+			m_CurrentChannel.ServiceID,
+			m_CurrentEventID,
+			&ListIndex,&EventIndex);
+	}
+
 	m_CurrentChannel.NetworkID=NetworkID;
 	m_CurrentChannel.TransportStreamID=TSID;
 	m_CurrentChannel.ServiceID=ServiceID;
+	m_CurrentEventID=0;
+
 	if (m_hwnd!=NULL) {
 		RECT rc;
 
 		GetClientRect(&rc);
 		rc.bottom=m_HeaderHeight;
 		::InvalidateRect(m_hwnd,&rc,TRUE);
+
+		if (fRedrawEvent)
+			RedrawEvent(ListIndex,EventIndex);
+	}
+}
+
+
+void CProgramGuide::SetCurrentEvent(WORD EventID)
+{
+	if (m_CurrentEventID!=EventID) {
+		const WORD OldEventID=m_CurrentEventID;
+
+		m_CurrentEventID=EventID;
+
+		if (m_hwnd!=NULL) {
+			if (OldEventID!=0) {
+				RedrawEventByIDs(m_CurrentChannel.NetworkID,
+								 m_CurrentChannel.TransportStreamID,
+								 m_CurrentChannel.ServiceID,
+								 OldEventID);
+			}
+			if (m_CurrentEventID!=0) {
+				RedrawEventByIDs(m_CurrentChannel.NetworkID,
+								 m_CurrentChannel.TransportStreamID,
+								 m_CurrentChannel.ServiceID,
+								 m_CurrentEventID);
+			}
+		}
 	}
 }
 
@@ -3437,6 +3499,17 @@ bool CProgramGuide::RedrawEvent(int ListIndex,int EventIndex)
 }
 
 
+bool CProgramGuide::RedrawEventByIDs(WORD NetworkID,WORD TSID,WORD ServiceID,WORD EventID)
+{
+	int ListIndex,EventIndex;
+
+	if (!GetEventIndexByIDs(NetworkID,TSID,ServiceID,EventID,&ListIndex,&EventIndex))
+		return false;
+
+	return RedrawEvent(ListIndex,EventIndex);
+}
+
+
 bool CProgramGuide::EventHitTest(int x,int y,int *pListIndex,int *pEventIndex,RECT *pItemRect) const
 {
 	POINT pt;
@@ -3482,6 +3555,40 @@ bool CProgramGuide::EventHitTest(int x,int y,int *pListIndex,int *pEventIndex,RE
 			}
 		}
 	}
+	return false;
+}
+
+
+bool CProgramGuide::GetEventIndexByIDs(
+	WORD NetworkID,WORD TSID,WORD ServiceID,WORD EventID,
+	int *pListIndex,int *pEventIndex) const
+{
+	int ListIndex;
+
+	if (m_ListMode==LIST_SERVICES) {
+		ListIndex=m_ServiceList.FindItemByIDs(TSID,ServiceID);
+		if (ListIndex<0)
+			return false;
+	} else {
+		return false;
+	}
+
+	const ProgramGuide::CEventLayout *pEventLayout=m_EventLayoutList[ListIndex];
+	if (pEventLayout==NULL)
+		return false;
+	const size_t NumItems=pEventLayout->NumItems();
+	for (size_t i=0;i<NumItems;i++) {
+		const ProgramGuide::CEventItem *pItem=pEventLayout->GetItem(i);
+		if (pItem->GetEventInfo()!=NULL
+				&& pItem->GetEventInfo()->m_EventID==EventID) {
+			if (pListIndex!=NULL)
+				*pListIndex=ListIndex;
+			if (pEventIndex!=NULL)
+				*pEventIndex=static_cast<int>(i);
+			return true;
+		}
+	}
+
 	return false;
 }
 
@@ -3536,29 +3643,12 @@ bool CProgramGuide::SelectEventByPosition(int x,int y)
 
 bool CProgramGuide::SelectEventByIDs(WORD NetworkID,WORD TSID,WORD ServiceID,WORD EventID)
 {
-	int ListIndex;
+	int ListIndex,EventIndex;
 
-	if (m_ListMode==LIST_SERVICES) {
-		ListIndex=m_ServiceList.FindItemByIDs(TSID,ServiceID);
-		if (ListIndex<0)
-			return false;
-	} else {
+	if (!GetEventIndexByIDs(NetworkID,TSID,ServiceID,EventID,&ListIndex,&EventIndex))
 		return false;
-	}
 
-	const ProgramGuide::CEventLayout *pEventLayout=m_EventLayoutList[ListIndex];
-	if (pEventLayout==NULL)
-		return false;
-	const size_t NumItems=pEventLayout->NumItems();
-	for (size_t i=0;i<NumItems;i++) {
-		const ProgramGuide::CEventItem *pItem=pEventLayout->GetItem(i);
-		if (pItem->GetEventInfo()!=NULL
-				&& pItem->GetEventInfo()->m_EventID==EventID) {
-			return SelectEvent(ListIndex,(int)i);
-		}
-	}
-
-	return false;
+	return SelectEvent(ListIndex,EventIndex);
 }
 
 
