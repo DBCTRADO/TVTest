@@ -1009,6 +1009,9 @@
     <ClInclude Include="NetworkDefinition.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
+    <ClInclude Include="BonTsEngine\TsUtil.h">
+      <Filter>BonTsEngine\Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="TVTest.rc">

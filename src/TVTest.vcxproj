@@ -648,6 +648,7 @@
     <ClInclude Include="BonTsEngine\TsSelector.h" />
     <ClInclude Include="BonTsEngine\TsStream.h" />
     <ClInclude Include="BonTsEngine\TsTable.h" />
+    <ClInclude Include="BonTsEngine\TsUtil.h" />
     <ClInclude Include="BonTsEngine\TsUtilClass.h" />
     <ClInclude Include="CaptionPanel.h" />
     <ClInclude Include="Capture.h" />

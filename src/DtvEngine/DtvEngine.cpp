@@ -24,6 +24,7 @@ CDtvEngine::CDtvEngine(void)
 	, m_CurServiceID(SID_INVALID)
 	, m_VideoStreamType(STREAM_TYPE_UNINITIALIZED)
 	, m_CurAudioStream(0)
+	, m_CurAudioComponentTag(CTsAnalyzer::COMPONENTTAG_INVALID)
 
 	, m_BonSrcDecoder(this)
 	, m_TsPacketParser(this)
@@ -347,10 +348,13 @@ bool CDtvEngine::SelectService(WORD ServiceID)
 		}
 	}
 
-	const WORD OldServiceID = m_CurServiceID;
+	const bool bServiceChanged = (ServiceID != m_CurServiceID);
 
 	m_CurServiceIndex = m_TsAnalyzer.GetServiceIndexByID(ServiceID);
 	m_CurServiceID = ServiceID;
+
+	TRACE(TEXT("------- Service Select -------\n"));
+	TRACE(TEXT("%d (ServiceID = %04X)\n"), m_CurServiceIndex, ServiceID);
 
 	WORD VideoPID = CMediaViewer::PID_INVALID;
 	WORD AudioPID = CMediaViewer::PID_INVALID;
@@ -358,14 +362,24 @@ bool CDtvEngine::SelectService(WORD ServiceID)
 
 	m_TsAnalyzer.GetVideoEsPID(m_CurServiceIndex, 0, &VideoPID);
 	m_TsAnalyzer.GetVideoStreamType(m_CurServiceIndex, 0, &VideoStreamType);
-	if (!m_TsAnalyzer.GetAudioEsPID(m_CurServiceIndex, m_CurAudioStream, &AudioPID)
-			&& m_CurAudioStream != 0) {
-		m_TsAnalyzer.GetAudioEsPID(m_CurServiceIndex, 0, &AudioPID);
-		m_CurAudioStream = 0;
-	}
 
-	TRACE(TEXT("------- Service Select -------\n"));
-	TRACE(TEXT("%d (ServiceID = %04X)\n"), m_CurServiceIndex, ServiceID);
+	int AudioIndex;
+	if (m_CurAudioComponentTag != CTsAnalyzer::COMPONENTTAG_INVALID
+			/* && !bServiceChanged */) {
+		AudioIndex = m_TsAnalyzer.GetAudioIndexByComponentTag(m_CurServiceIndex, m_CurAudioComponentTag);
+		if (AudioIndex < 0)
+			AudioIndex = 0;
+	} else {
+		AudioIndex = 0;
+	}
+	if (!m_TsAnalyzer.GetAudioEsPID(m_CurServiceIndex, AudioIndex, &AudioPID)
+			&& AudioIndex != 0) {
+		m_TsAnalyzer.GetAudioEsPID(m_CurServiceIndex, 0, &AudioPID);
+		AudioIndex = 0;
+	}
+	m_CurAudioStream = AudioIndex;
+	m_CurAudioComponentTag = m_TsAnalyzer.GetAudioComponentTag(m_CurServiceIndex, AudioIndex);
+	TRACE(TEXT("Select audio : %d (component_tag %02X)\n"), m_CurAudioStream, m_CurAudioComponentTag);
 
 	if (m_VideoStreamType != VideoStreamType) {
 		TRACE(TEXT("Video stream_type changed (%02x -> %02x)\n"),
@@ -386,7 +400,7 @@ bool CDtvEngine::SelectService(WORD ServiceID)
 
 	m_CaptionDecoder.SetTargetStream(ServiceID);
 
-	if (m_pEventHandler && m_CurServiceID != OldServiceID)
+	if (m_pEventHandler && bServiceChanged)
 		m_pEventHandler->OnServiceChanged(ServiceID);
 
 	return true;
@@ -475,10 +489,11 @@ const DWORD CDtvEngine::OnDecoderEvent(CMediaDecoder *pDecoder, const DWORD dwEv
 					// ÉXÉgÉäÅ[ÉÄIDÇ™ïœÇÌÇ¡ÇƒÇ¢ÇÈÇ»ÇÁèâä˙âª
 					TRACE(TEXT("CDtvEngine Å°Stream Change!! %04X\n"), wTransportStream);
 
+					m_wCurTransportStream = wTransportStream;
 					m_CurServiceIndex = SERVICE_INVALID;
 					m_CurServiceID = SID_INVALID;
 					m_CurAudioStream = 0;
-					m_wCurTransportStream = wTransportStream;
+					m_CurAudioComponentTag = CTsAnalyzer::COMPONENTTAG_INVALID;
 
 					bool bSetService = true;
 					WORD ServiceID = SID_DEFAULT;
@@ -780,6 +795,9 @@ bool CDtvEngine::SetAudioStream(const int StreamIndex)
 		return false;
 
 	m_CurAudioStream = StreamIndex;
+	m_CurAudioComponentTag = m_TsAnalyzer.GetAudioComponentTag(m_CurServiceIndex, StreamIndex);
+
+	TRACE(TEXT("Select audio : %d (component_tag %02X)\n"), m_CurAudioStream, m_CurAudioComponentTag);
 
 	return true;
 }

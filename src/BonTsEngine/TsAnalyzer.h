@@ -120,18 +120,20 @@ public:
 	bool IsServiceUpdated(const int Index) const;
 	bool Is1SegService(const int Index) const;
 	bool GetPmtPID(const int Index, WORD *pPmtPID) const;
+	WORD GetVideoEsNum(const int Index) const;
 	bool GetVideoEsInfo(const int Index, const int VideoIndex, EsInfo *pEsInfo) const;
 	bool GetVideoEsPID(const int Index, const int VideoIndex, WORD *pVideoPID) const;
 	bool GetVideoStreamType(const int Index, const int VideoIndex, BYTE *pStreamType) const;
 	BYTE GetVideoComponentTag(const int Index, const int VideoIndex) const;
+	int GetVideoIndexByComponentTag(const int Index, const BYTE ComponentTag) const;
 	WORD GetAudioEsNum(const int Index) const;
 	bool GetAudioEsInfo(const int Index, const int AudioIndex, EsInfo *pEsInfo) const;
 	bool GetAudioStreamType(const int Index, const int AudioIndex, BYTE *pStreamType) const;
 	bool GetAudioEsPID(const int Index, const int AudioIndex, WORD *pAudioPID) const;
 	BYTE GetAudioComponentTag(const int Index, const int AudioIndex) const;
+	int GetAudioIndexByComponentTag(const int Index, const BYTE ComponentTag) const;
 #ifdef TS_ANALYZER_EIT_SUPPORT
 	BYTE GetVideoComponentType(const int Index) const;
-	int GetAudioIndexByComponentTag(const int Index, const BYTE ComponentTag) const;
 	BYTE GetAudioComponentType(const int Index, const int AudioIndex) const;
 	int GetAudioComponentText(const int Index, const int AudioIndex, LPTSTR pszText, int MaxLength) const;
 #endif

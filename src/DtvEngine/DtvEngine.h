@@ -215,6 +215,7 @@ protected:
 	ServiceSelectInfo m_ServiceSel;
 	BYTE m_VideoStreamType;
 	int m_CurAudioStream;
+	BYTE m_CurAudioComponentTag;
 
 	bool m_bBuiled;
 	bool m_bDescramble;

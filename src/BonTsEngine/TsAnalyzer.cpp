@@ -5,6 +5,7 @@
 #ifdef TS_ANALYZER_EIT_SUPPORT
 #include "TsEncode.h"
 #endif
+#include "TsUtil.h"
 
 #ifdef _DEBUG
 #undef THIS_FILE
@@ -357,6 +358,16 @@ bool CTsAnalyzer::GetPmtPID(const int Index, WORD *pPmtPID) const
 }
 
 
+WORD CTsAnalyzer::GetVideoEsNum(const int Index) const
+{
+	CBlockLock Lock(&m_DecoderLock);
+
+	if (Index >= 0 && (size_t)Index < m_ServiceList.size())
+		return (WORD)m_ServiceList[Index].VideoEsList.size();
+	return 0;
+}
+
+
 bool CTsAnalyzer::GetVideoEsInfo(const int Index, const int VideoIndex, EsInfo *pEsInfo) const
 {
 	if (Index < 0 || VideoIndex < 0 || pEsInfo == NULL)
@@ -409,6 +420,21 @@ BYTE CTsAnalyzer::GetVideoComponentTag(const int Index, const int VideoIndex) co
 			&& VideoIndex >= 0 && (size_t)VideoIndex < m_ServiceList[Index].VideoEsList.size())
 		return m_ServiceList[Index].VideoEsList[VideoIndex].ComponentTag;
 	return COMPONENTTAG_INVALID;
+}
+
+
+int CTsAnalyzer::GetVideoIndexByComponentTag(const int Index, const BYTE ComponentTag) const
+{
+	CBlockLock Lock(&m_DecoderLock);
+
+	if (Index >= 0 && (size_t)Index < m_ServiceList.size()) {
+		for (size_t i = 0; i < m_ServiceList[Index].VideoEsList.size(); i++) {
+			if (m_ServiceList[Index].VideoEsList[i].ComponentTag == ComponentTag)
+				return (int)i;
+		}
+	}
+
+	return -1;
 }
 
 
@@ -482,6 +508,21 @@ BYTE CTsAnalyzer::GetAudioComponentTag(const int Index, const int AudioIndex) co
 }
 
 
+int CTsAnalyzer::GetAudioIndexByComponentTag(const int Index, const BYTE ComponentTag) const
+{
+	CBlockLock Lock(&m_DecoderLock);
+
+	if (Index >= 0 && (size_t)Index < m_ServiceList.size()) {
+		for (size_t i = 0; i < m_ServiceList[Index].AudioEsList.size(); i++) {
+			if (m_ServiceList[Index].AudioEsList[i].ComponentTag == ComponentTag)
+				return (int)i;
+		}
+	}
+
+	return -1;
+}
+
+
 #ifdef TS_ANALYZER_EIT_SUPPORT
 
 BYTE CTsAnalyzer::GetVideoComponentType(const int Index) const
@@ -499,35 +540,6 @@ BYTE CTsAnalyzer::GetVideoComponentType(const int Index) const
 		}
 	}
 	return 0;
-}
-
-
-int CTsAnalyzer::GetAudioIndexByComponentTag(const int Index, const BYTE ComponentTag) const
-{
-	CBlockLock Lock(&m_DecoderLock);
-
-	if (Index >= 0 && (size_t)Index < m_ServiceList.size()
-			&& m_ServiceList[Index].AudioEsList.size() > 0) {
-		const CDescBlock *pDescBlock = GetHEitItemDesc(Index);
-
-		if (pDescBlock) {
-			for (WORD i = 0; i < pDescBlock->GetDescNum(); i++) {
-				const CBaseDesc *pDesc = pDescBlock->GetDescByIndex(i);
-
-				if (pDesc->GetTag() == CAudioComponentDesc::DESC_TAG) {
-					const CAudioComponentDesc *pAudioDesc = dynamic_cast<const CAudioComponentDesc*>(pDesc);
-
-					if (pAudioDesc) {
-						for (size_t j = 0; j < m_ServiceList[Index].AudioEsList.size(); j++) {
-							if (pAudioDesc->GetComponentTag() == m_ServiceList[Index].AudioEsList[j].ComponentTag)
-								return (int)j;
-						}
-					}
-				}
-			}
-		}
-	}
-	return -1;
 }
 
 
@@ -1268,13 +1280,10 @@ int CTsAnalyzer::GetEventExtendedText(const int ServiceIndex, LPTSTR pszText, in
 		return 0;
 
 	// descriptor_number 順にソートする
-	for (int i = (int)DescList.size() - 2; i >= 0; i--) {
-		const CExtendedEventDesc *pKey = DescList[i];
-		int j;
-		for (j = i + 1; j < (int)DescList.size() && DescList[j]->GetDescriptorNumber() < pKey->GetDescriptorNumber(); j++)
-			DescList[j - 1] = DescList[j];
-		DescList[j - 1] = pKey;
-	}
+	TsEngine::InsertionSort(DescList,
+		[](const CExtendedEventDesc *pDesc1, const CExtendedEventDesc *pDesc2) {
+			return pDesc1->GetDescriptorNumber() < pDesc2->GetDescriptorNumber();
+		});
 
 	struct ItemInfo {
 		BYTE DescriptorNumber;
@@ -1817,6 +1826,16 @@ void CALLBACK CTsAnalyzer::OnPmtUpdated(const WORD wPID, CTsPidMapTarget *pMapTa
 			break;
 		}
 	}
+
+	// component_tag 順にソート
+	auto ComponentTagCmp =
+		[](const EsInfo &Info1, const EsInfo &Info2) {
+			return Info1.ComponentTag < Info2.ComponentTag;
+		};
+	TsEngine::InsertionSort(Info.VideoEsList, ComponentTagCmp);
+	TsEngine::InsertionSort(Info.AudioEsList, ComponentTagCmp);
+	TsEngine::InsertionSort(Info.CaptionEsList, ComponentTagCmp);
+	TsEngine::InsertionSort(Info.DataCarrouselEsList, ComponentTagCmp);
 
 	WORD PcrPID = pPmtTable->GetPcrPID();
 	if (PcrPID < 0x1FFFU) {
