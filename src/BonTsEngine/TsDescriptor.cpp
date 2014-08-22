@@ -1481,6 +1481,8 @@ bool CComponentGroupDesc::StoreContents(const BYTE *pPayload)
 		for (int j = 0; j < Group.CAUnitNum; j++) {
 			CAUnitInfo &CAUnit = Group.CAUnit[j];
 
+			if (Pos >= m_byDescLen)
+				return false;
 			CAUnit.CAUnitID = pPayload[Pos] >> 4;
 			CAUnit.ComponentNum = pPayload[Pos] & 0x0F;
 			Pos++;
