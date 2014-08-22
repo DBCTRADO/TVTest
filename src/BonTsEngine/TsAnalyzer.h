@@ -28,19 +28,20 @@ public:
 		WORD PID;
 		BYTE StreamType;
 		BYTE ComponentTag;
+		BYTE QualityLevel;
+		WORD HierarchicalReferencePID;
+
 		EsInfo()
 			: PID(PID_INVALID)
 			, StreamType(STREAM_TYPE_INVALID)
 			, ComponentTag(COMPONENTTAG_INVALID)
-		{
-		}
-		EsInfo(WORD pid, BYTE stream_type, BYTE component_tag)
-			: PID(pid)
-			, StreamType(stream_type)
-			, ComponentTag(component_tag)
+			, QualityLevel(0xFF)
+			, HierarchicalReferencePID(PID_INVALID)
 		{
 		}
 	};
+
+	typedef std::vector<EsInfo> EsInfoList;
 
 	struct EcmInfo {
 		WORD CaSystemID;
@@ -122,12 +123,14 @@ public:
 	bool GetPmtPID(const int Index, WORD *pPmtPID) const;
 	WORD GetVideoEsNum(const int Index) const;
 	bool GetVideoEsInfo(const int Index, const int VideoIndex, EsInfo *pEsInfo) const;
+	bool GetVideoEsList(const int Index, EsInfoList *pEsList) const;
 	bool GetVideoEsPID(const int Index, const int VideoIndex, WORD *pVideoPID) const;
 	bool GetVideoStreamType(const int Index, const int VideoIndex, BYTE *pStreamType) const;
 	BYTE GetVideoComponentTag(const int Index, const int VideoIndex) const;
 	int GetVideoIndexByComponentTag(const int Index, const BYTE ComponentTag) const;
 	WORD GetAudioEsNum(const int Index) const;
 	bool GetAudioEsInfo(const int Index, const int AudioIndex, EsInfo *pEsInfo) const;
+	bool GetAudioEsList(const int Index, EsInfoList *pEsList) const;
 	bool GetAudioStreamType(const int Index, const int AudioIndex, BYTE *pStreamType) const;
 	bool GetAudioEsPID(const int Index, const int AudioIndex, WORD *pAudioPID) const;
 	BYTE GetAudioComponentTag(const int Index, const int AudioIndex) const;
@@ -233,6 +236,9 @@ public:
 		EventContentNibble ContentNibble;
 	};
 
+	typedef CComponentGroupDesc::GroupInfo EventComponentGroupInfo;
+	typedef std::vector<EventComponentGroupInfo> EventComponentGroupList;
+
 	WORD GetEventID(const int ServiceIndex, const bool bNext = false) const;
 	bool GetEventStartTime(const int ServiceIndex, SYSTEMTIME *pSystemTime, const bool bNext = false) const;
 	DWORD GetEventDuration(const int ServiceIndex, const bool bNext = false) const;
@@ -246,6 +252,10 @@ public:
 	bool GetEventAudioList(const int ServiceIndex, EventAudioList *pList, const bool bNext = false) const;
 	bool GetEventContentNibble(const int ServiceIndex, EventContentNibble *pInfo, const bool bNext = false) const;
 	bool GetEventInfo(const int ServiceIndex, EventInfo *pInfo, const bool bUseEventGroup = true, const bool bNext = false) const;
+	int GetEventComponentGroupNum(const int ServiceIndex, const bool bNext = false) const;
+	bool GetEventComponentGroupInfo(const int ServiceIndex, const int GroupIndex, EventComponentGroupInfo *pInfo, const bool bNext = false) const;
+	bool GetEventComponentGroupList(const int ServiceIndex, EventComponentGroupList *pList, const bool bNext = false) const;
+	int GetEventComponentGroupIndexByComponentTag(const int ServiceIndex, const BYTE ComponentTag, const bool bNext = false) const;
 #endif	// TS_ANALYZER_EIT_SUPPORT
 
 	bool GetTotTime(SYSTEMTIME *pTime) const;

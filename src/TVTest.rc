@@ -129,6 +129,10 @@ BEGIN
 			*/
 			MENUITEM "",0,GRAYED
 		END
+		POPUP "映像切替(&Q)"
+		BEGIN
+			MENUITEM "",0,GRAYED
+		END
 		MENUITEM SEPARATOR
 		MENUITEM "録画開始/停止(&R)",CM_RECORD
 		MENUITEM "録画(詳細指定)(&D)...",CM_RECORDOPTION
@@ -702,6 +706,10 @@ BEGIN
 	CM_ADDTOFAVORITES,			"お気に入りに追加"
 	CM_ORGANIZEFAVORITES,		"お気に入りの管理"
 
+	CM_SWITCHVIDEO,				"映像切替"
+	CM_VIDEOSTREAM_SWITCH,		"映像ストリーム切替"
+	CM_MULTIVIEW_SWITCH,		"マルチビュー切替"
+
 	IDS_MENU_ZOOM,				"倍率"
 	IDS_MENU_ASPECTRATIO,		"比率"
 	IDS_MENU_CHANNEL,			"チャンネル"
@@ -711,6 +719,7 @@ BEGIN
 	IDS_MENU_CHANNELHISTORY,	"最近見たチャンネル"
 	IDS_MENU_VOLUME,			"音量"
 	IDS_MENU_AUDIO,				"音声切替"
+	IDS_MENU_VIDEO,				"映像切替"
 	IDS_MENU_RESET,				"リセット"
 	IDS_MENU_BAR,				"バー/枠"
 	IDS_MENU_PLUGIN,			"プラグイン"

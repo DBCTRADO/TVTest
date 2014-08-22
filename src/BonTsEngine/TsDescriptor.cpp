@@ -453,6 +453,50 @@ bool CStreamIdDesc::StoreContents(const BYTE *pPayload)
 
 
 /////////////////////////////////////////////////////////////////////////////
+// [0xC0] Hierarchical Transmission 記述子抽象化クラス
+/////////////////////////////////////////////////////////////////////////////
+
+CHierarchicalTransmissionDesc::CHierarchicalTransmissionDesc()
+{
+	Reset();
+}
+
+void CHierarchicalTransmissionDesc::Reset()
+{
+	CBaseDesc::Reset();
+
+	m_QualityLevel = 0xFF;
+	m_ReferencePID = 0xFFFF;
+}
+
+BYTE CHierarchicalTransmissionDesc::GetQualityLevel() const
+{
+	return m_QualityLevel;
+}
+
+WORD CHierarchicalTransmissionDesc::GetReferencePID() const
+{
+	return m_ReferencePID;
+}
+
+bool CHierarchicalTransmissionDesc::StoreContents(const BYTE *pPayload)
+{
+	if (m_byDescTag != DESC_TAG || m_byDescLen != 3)
+		return false;
+
+	m_QualityLevel = pPayload[0] & 0x01;
+	m_ReferencePID = ((WORD)(pPayload[1] & 0x1F) << 8) | (WORD)pPayload[2];
+
+	/*
+	TRACE(TEXT("hierarchical_transmission_descriptor\nquality_level = %d / reference_PID = %04x\n"),
+		  m_QualityLevel, m_ReferencePID);
+	*/
+
+	return true;
+}
+
+
+/////////////////////////////////////////////////////////////////////////////
 // [0x40] Network Name 記述子抽象化クラス
 /////////////////////////////////////////////////////////////////////////////
 
@@ -1374,6 +1418,105 @@ bool CEventGroupDesc::StoreContents(const BYTE *pPayload)
 
 
 /////////////////////////////////////////////////////////////////////////////
+// [0xD9] Component Group 記述子抽象化クラス
+/////////////////////////////////////////////////////////////////////////////
+
+CComponentGroupDesc::CComponentGroupDesc()
+{
+	Reset();
+}
+
+void CComponentGroupDesc::Reset()
+{
+	m_ComponentGroupType = 0;
+	m_bTotalBitRateFlag = false;
+	m_GroupList.clear();
+}
+
+BYTE CComponentGroupDesc::GetComponentGroupType() const
+{
+	return m_ComponentGroupType;
+}
+
+bool CComponentGroupDesc::GetTotalBitRateFlag() const
+{
+	return m_bTotalBitRateFlag;
+}
+
+BYTE CComponentGroupDesc::GetGroupNum() const
+{
+	return static_cast<BYTE>(m_GroupList.size());
+}
+
+const CComponentGroupDesc::GroupInfo *CComponentGroupDesc::GetGroupInfo(const int Index) const
+{
+	if (Index < 0 || static_cast<size_t>(Index) >= m_GroupList.size())
+		return NULL;
+
+	return &m_GroupList[Index];
+}
+
+bool CComponentGroupDesc::StoreContents(const BYTE *pPayload)
+{
+	if (m_byDescTag != DESC_TAG || m_byDescLen < 1)
+		return false;
+
+	m_ComponentGroupType = pPayload[0] >> 5;
+	m_bTotalBitRateFlag = (pPayload[0] & 0x10) != 0;
+
+	const int GroupNum = pPayload[0] & 0x0F;
+
+	m_GroupList.clear();
+	m_GroupList.reserve(GroupNum);
+
+	int Pos = 1;
+
+	for (int i = 0; (i < GroupNum) && (Pos + 2 <= m_byDescLen); i++) {
+		GroupInfo Group;
+
+		Group.ComponentGroupID = pPayload[Pos] >> 4;
+		Group.CAUnitNum = pPayload[Pos] & 0x0F;
+		Pos++;
+
+		for (int j = 0; j < Group.CAUnitNum; j++) {
+			CAUnitInfo &CAUnit = Group.CAUnit[j];
+
+			CAUnit.CAUnitID = pPayload[Pos] >> 4;
+			CAUnit.ComponentNum = pPayload[Pos] & 0x0F;
+			Pos++;
+			if (Pos + CAUnit.ComponentNum > m_byDescLen)
+				return false;
+			::CopyMemory(CAUnit.ComponentTag, &pPayload[Pos], CAUnit.ComponentNum);
+			Pos += CAUnit.ComponentNum;
+		}
+
+		if (m_bTotalBitRateFlag) {
+			if (Pos >= m_byDescLen)
+				return false;
+			Group.TotalBitRate = pPayload[Pos++];
+		} else {
+			Group.TotalBitRate = 0;
+		}
+
+		if (Pos >= m_byDescLen)
+			return false;
+		const BYTE TextLength = pPayload[Pos++];
+		Group.szText[0] = '\0';
+		if (TextLength > 0) {
+			if (Pos + TextLength > m_byDescLen)
+				return false;
+			CAribString::AribToString(Group.szText, _countof(Group.szText), &pPayload[Pos], TextLength);
+			Pos += TextLength;
+		}
+
+		m_GroupList.push_back(Group);
+	}
+
+	return true;
+}
+
+
+/////////////////////////////////////////////////////////////////////////////
 // [0x58] Local Time Offset 記述子抽象化クラス
 /////////////////////////////////////////////////////////////////////////////
 
@@ -1841,6 +1984,7 @@ CBaseDesc * CDescBlock::CreateDescInstance(const BYTE byTag)
 	case CShortEventDesc::DESC_TAG					: return new CShortEventDesc;
 	case CExtendedEventDesc::DESC_TAG				: return new CExtendedEventDesc;
 	case CStreamIdDesc::DESC_TAG					: return new CStreamIdDesc;
+	case CHierarchicalTransmissionDesc::DESC_TAG	: return new CHierarchicalTransmissionDesc;
 	case CNetworkNameDesc::DESC_TAG					: return new CNetworkNameDesc;
 	case CServiceListDesc::DESC_TAG					: return new CServiceListDesc;
 	case CSatelliteDeliverySystemDesc::DESC_TAG		: return new CSatelliteDeliverySystemDesc;
@@ -1853,6 +1997,7 @@ CBaseDesc * CDescBlock::CreateDescInstance(const BYTE byTag)
 	case CLogoTransmissionDesc::DESC_TAG			: return new CLogoTransmissionDesc;
 	case CSeriesDesc::DESC_TAG						: return new CSeriesDesc;
 	case CEventGroupDesc::DESC_TAG					: return new CEventGroupDesc;
+	case CComponentGroupDesc::DESC_TAG				: return new CComponentGroupDesc;
 	case CLocalTimeOffsetDesc::DESC_TAG				: return new CLocalTimeOffsetDesc;
 	case CDownloadContentDesc::DESC_TAG				: return new CDownloadContentDesc;
 	case CCaContractInfoDesc::DESC_TAG				: return new CCaContractInfoDesc;

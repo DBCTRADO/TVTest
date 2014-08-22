@@ -205,6 +205,30 @@ protected:
 
 
 /////////////////////////////////////////////////////////////////////////////
+// [0xC0] Hierarchical Transmission 記述子抽象化クラス
+/////////////////////////////////////////////////////////////////////////////
+
+class CHierarchicalTransmissionDesc : public CDescTemplate<CHierarchicalTransmissionDesc, 0xC0>
+{
+public:
+	CHierarchicalTransmissionDesc();
+
+// CBaseDesc
+	void Reset() override;
+
+// CHierarchicalTransmissionDesc
+	BYTE GetQualityLevel() const;
+	WORD GetReferencePID() const;
+
+protected:
+	bool StoreContents(const BYTE *pPayload) override;
+
+	BYTE m_QualityLevel;
+	WORD m_ReferencePID;
+};
+
+
+/////////////////////////////////////////////////////////////////////////////
 // [0x40] Network Name 記述子抽象化クラス
 /////////////////////////////////////////////////////////////////////////////
 
@@ -636,6 +660,51 @@ protected:
 
 	BYTE m_GroupType;
 	std::vector<EventInfo> m_EventList;
+};
+
+
+/////////////////////////////////////////////////////////////////////////////
+// [0xD9] Component Group 記述子抽象化クラス
+/////////////////////////////////////////////////////////////////////////////
+
+class CComponentGroupDesc : public CDescTemplate<CComponentGroupDesc, 0xD9>
+{
+public:
+	CComponentGroupDesc();
+
+// CBaseDesc
+	void Reset() override;
+
+// CComponentGroupDesc
+	static const int MAX_TEXT = 64;
+
+	struct CAUnitInfo
+	{
+		BYTE CAUnitID;
+		BYTE ComponentNum;
+		BYTE ComponentTag[16];
+	};
+
+	struct GroupInfo
+	{
+		BYTE ComponentGroupID;
+		BYTE CAUnitNum;
+		CAUnitInfo CAUnit[16];
+		BYTE TotalBitRate;
+		TCHAR szText[MAX_TEXT];
+	};
+
+	BYTE GetComponentGroupType() const;
+	bool GetTotalBitRateFlag() const;
+	BYTE GetGroupNum() const;
+	const GroupInfo *GetGroupInfo(const int Index) const;
+
+protected:
+	bool StoreContents(const BYTE *pPayload) override;
+
+	BYTE m_ComponentGroupType;
+	bool m_bTotalBitRateFlag;
+	std::vector<GroupInfo> m_GroupList;
 };
 
 

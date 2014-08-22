@@ -141,6 +141,7 @@ static const struct {
 	{TEXT("RecentChannelMenu"),			CM_RECENTCHANNELMENU},
 	{TEXT("VolumeMenu"),				CM_VOLUMEMENU},
 	{TEXT("AudioMenu"),					CM_AUDIOMENU},
+	{TEXT("VideoMenu"),					CM_VIDEOMENU},
 	{TEXT("ResetMenu"),					CM_RESETMENU},
 	{TEXT("BarMenu"),					CM_BARMENU},
 	{TEXT("PluginMenu"),				CM_PLUGINMENU},
@@ -172,6 +173,9 @@ static const struct {
 	{TEXT("TuningSpace5"),				CM_SPACE_FIRST+4},
 	{TEXT("ChannelNo2Digit"),			CM_CHANNELNO_2DIGIT},
 	{TEXT("ChannelNo3Digit"),			CM_CHANNELNO_3DIGIT},
+	{TEXT("SwitchVideo"),				CM_SWITCHVIDEO},
+	{TEXT("SwitchVideoStream"),			CM_VIDEOSTREAM_SWITCH},
+	{TEXT("SwitchMultiView"),			CM_MULTIVIEW_SWITCH},
 };
 
 

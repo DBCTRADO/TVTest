@@ -2933,6 +2933,7 @@ void CMainWindow::OnCommand(HWND hwnd,int id,HWND hwndCtl,UINT codeNotify)
 	case CM_RECENTCHANNELMENU:
 	case CM_VOLUMEMENU:
 	case CM_AUDIOMENU:
+	case CM_VIDEOMENU:
 	case CM_RESETMENU:
 	case CM_BARMENU:
 	case CM_PLUGINMENU:
@@ -3097,6 +3098,39 @@ void CMainWindow::OnCommand(HWND hwnd,int id,HWND hwndCtl,UINT codeNotify)
 		}
 		return;
 
+	case CM_SWITCHVIDEO:
+		{
+			CDtvEngine &DtvEngine=m_App.CoreEngine.m_DtvEngine;
+
+			if (DtvEngine.m_TsAnalyzer.GetEventComponentGroupNum(DtvEngine.GetServiceIndex())>0)
+				SendCommand(CM_MULTIVIEW_SWITCH);
+			else
+				SendCommand(CM_VIDEOSTREAM_SWITCH);
+		}
+		return;
+
+	case CM_VIDEOSTREAM_SWITCH:
+		{
+			CDtvEngine &DtvEngine=m_App.CoreEngine.m_DtvEngine;
+			const int StreamCount=DtvEngine.GetVideoStreamNum();
+
+			if (StreamCount>1) {
+				DtvEngine.SetVideoStream((DtvEngine.GetVideoStream()+1)%StreamCount);
+			}
+		}
+		return;
+
+	case CM_MULTIVIEW_SWITCH:
+		{
+			CDtvEngine &DtvEngine=m_App.CoreEngine.m_DtvEngine;
+			const int GroupCount=DtvEngine.m_TsAnalyzer.GetEventComponentGroupNum(DtvEngine.GetServiceIndex());
+
+			if (GroupCount>1) {
+				SendCommand(CM_MULTIVIEW_FIRST+(DtvEngine.GetCurComponentGroup()+1)%GroupCount);
+			}
+		}
+		return;
+
 	default:
 		if ((id>=CM_ZOOM_FIRST && id<=CM_ZOOM_LAST)
 				|| (id>=CM_CUSTOMZOOM_FIRST && id<=CM_CUSTOMZOOM_LAST)) {
@@ -3225,6 +3259,44 @@ void CMainWindow::OnCommand(HWND hwnd,int id,HWND hwndCtl,UINT codeNotify)
 
 		if (id>=CM_PANANDSCAN_PRESET_FIRST && id<=CM_PANANDSCAN_PRESET_LAST) {
 			SetPanAndScan(id);
+			return;
+		}
+
+		if (id>=CM_VIDEOSTREAM_FIRST && id<=CM_VIDEOSTREAM_LAST) {
+			m_App.CoreEngine.m_DtvEngine.SetVideoStream(id-CM_VIDEOSTREAM_FIRST);
+			return;
+		}
+
+		if (id>=CM_MULTIVIEW_FIRST && id<=CM_MULTIVIEW_LAST) {
+			const WORD ServiceIndex=m_App.CoreEngine.m_DtvEngine.GetServiceIndex();
+			CTsAnalyzer &TsAnalyzer=m_App.CoreEngine.m_DtvEngine.m_TsAnalyzer;
+			CTsAnalyzer::EventComponentGroupInfo GroupInfo;
+
+			if (ServiceIndex!=CDtvEngine::SERVICE_INVALID
+					&& TsAnalyzer.GetEventComponentGroupInfo(ServiceIndex,id-CM_MULTIVIEW_FIRST,&GroupInfo)) {
+				int VideoIndex=-1,AudioIndex=-1;
+
+				for (int i=0;i<GroupInfo.CAUnitNum;i++) {
+					for (int j=0;j<GroupInfo.CAUnit[i].ComponentNum;j++) {
+						const BYTE ComponentTag=GroupInfo.CAUnit[i].ComponentTag[j];
+						if (VideoIndex<0) {
+							int Index=TsAnalyzer.GetVideoIndexByComponentTag(ServiceIndex,ComponentTag);
+							if (Index>=0)
+								VideoIndex=Index;
+						}
+						if (AudioIndex<0) {
+							int Index=TsAnalyzer.GetAudioIndexByComponentTag(ServiceIndex,ComponentTag);
+							if (Index>=0)
+								AudioIndex=Index;
+						}
+						if (VideoIndex>=0 && AudioIndex>=0) {
+							m_App.CoreEngine.m_DtvEngine.SetVideoStream(VideoIndex);
+							m_pCore->SetAudioStream(AudioIndex);
+							return;
+						}
+					}
+				}
+			}
 			return;
 		}
 	}
@@ -3777,9 +3849,11 @@ bool CMainWindow::OnInitMenuPopup(HMENU hmenu)
 		CPopupMenu Menu(hmenu);
 		Menu.Clear();
 
+		CDtvEngine &DtvEngine=m_App.CoreEngine.m_DtvEngine;
 		CTsAnalyzer::EventAudioInfo AudioInfo;
-		const bool fDualMono=m_App.CoreEngine.m_DtvEngine.GetEventAudioInfo(&AudioInfo)
-								&& AudioInfo.ComponentType==0x02;
+		const bool fDualMono=
+			DtvEngine.GetEventAudioInfo(&AudioInfo)
+			&& AudioInfo.ComponentType==0x02;
 		if (fDualMono) {
 			// Dual mono
 			TCHAR szText[80],szAudio1[64],szAudio2[64];
@@ -3824,40 +3898,123 @@ bool CMainWindow::OnInitMenuPopup(HMENU hmenu)
 			Menu.AppendSeparator();
 		}
 
-		const int NumAudioStreams=m_pCore->GetNumAudioStreams();
-		if (NumAudioStreams>0) {
-			for (int i=0;i<NumAudioStreams;i++) {
-				TCHAR szText[64];
-				int Length;
+		auto GetAudioInfoText=[](const CTsAnalyzer::EventAudioInfo &AudioInfo,
+								 LPTSTR pszText,int MaxText)
+		{
+			if (AudioInfo.szText[0]!='\0') {
+				LPTSTR p=::StrChr(AudioInfo.szText,_T('\r'));
+				if (p!=nullptr) {
+					TCHAR szBuf[CTsAnalyzer::EventAudioInfo::MAX_TEXT];
+					StdUtil::strncpy(szBuf,p-AudioInfo.szText,AudioInfo.szText);
+					p++;
+					if (*p==_T('\n'))
+						p++;
+					StdUtil::snprintf(pszText,MaxText,TEXT("%s/%s"),szBuf,p);
+				} else {
+					StdUtil::strncpy(pszText,MaxText,AudioInfo.szText);
+				}
+			} else {
+				EpgUtil::GetLanguageText(AudioInfo.LanguageCode,pszText,MaxText);
+			}
+		};
 
-				Length=::wsprintf(szText,TEXT("&%d: 音声%d"),i+1,i+1);
-				if (NumAudioStreams>1
-						&& m_App.CoreEngine.m_DtvEngine.GetEventAudioInfo(&AudioInfo,i)) {
-					if (AudioInfo.szText[0]!='\0') {
-						LPTSTR p=::StrChr(AudioInfo.szText,_T('\r'));
-						if (p!=nullptr) {
-							*p++=_T('/');
-							if (*p==_T('\n'))
-								::MoveMemory(p,p+1,::lstrlen(p)*sizeof(*p));
+		const WORD ServiceIndex=DtvEngine.GetServiceIndex();
+		CTsAnalyzer::EsInfoList EsList;
+
+		if (DtvEngine.m_TsAnalyzer.GetAudioEsList(ServiceIndex,&EsList)
+				&& !EsList.empty()) {
+			CTsAnalyzer::EventComponentGroupList GroupList;
+
+			if (DtvEngine.m_TsAnalyzer.GetEventComponentGroupList(ServiceIndex,&GroupList)
+					&& !GroupList.empty()) {
+				// マルチビューTV
+				const int NumGroup=static_cast<int>(GroupList.size());
+				const BYTE CurAudioComponentTag=DtvEngine.GetAudioComponentTag();
+				int SubGroupCount=0;
+				int CurAudioIndex=-1;
+
+				// グループ毎の音声
+				for (int i=0;i<NumGroup;i++) {
+					const CTsAnalyzer::EventComponentGroupInfo &GroupInfo=GroupList[i];
+					int AudioCount=0;
+
+					for (int j=0;j<GroupInfo.CAUnitNum;j++) {
+						for (int k=0;k<GroupInfo.CAUnit[j].ComponentNum;k++) {
+							const BYTE ComponentTag=GroupInfo.CAUnit[j].ComponentTag[k];
+
+							for (int EsIndex=0;EsIndex=static_cast<int>(EsList.size());EsIndex++) {
+								if (EsList[EsIndex].ComponentTag==ComponentTag) {
+									TCHAR szText[80];
+									int Length;
+
+									if (GroupInfo.szText[0]!=_T('\0')) {
+										Length=CopyToMenuText(GroupInfo.szText,szText,lengthof(szText));
+									} else {
+										if (GroupInfo.ComponentGroupID==0)
+											Length=StdUtil::snprintf(szText,lengthof(szText),TEXT("メイン"));
+										else
+											Length=StdUtil::snprintf(szText,lengthof(szText),TEXT("サブ%d"),SubGroupCount+1);
+									}
+
+									TCHAR szAudio[64],szFormat[64];
+									GetAudioInfoText(AudioInfo,szAudio,lengthof(szAudio));
+									CopyToMenuText(szAudio,szFormat,lengthof(szFormat));
+									StdUtil::snprintf(szText+Length,lengthof(szText)-Length,
+													  TEXT(": 音声%d (%s)"),AudioCount+1,szFormat);
+									Menu.Append(CM_AUDIOSTREAM_FIRST+EsIndex,szText);
+									if (ComponentTag==CurAudioComponentTag)
+										CurAudioIndex=EsIndex;
+									EsList[EsIndex].ComponentTag=CTsAnalyzer::COMPONENTTAG_INVALID;
+									AudioCount++;
+									break;
+								}
+							}
 						}
-						StdUtil::snprintf(szText+Length,lengthof(szText)-Length,
-							TEXT(" (%s)"),AudioInfo.szText);
-					} else {
-						TCHAR szLang[EpgUtil::MAX_LANGUAGE_TEXT_LENGTH];
-						EpgUtil::GetLanguageText(AudioInfo.LanguageCode,szLang,lengthof(szLang));
-						StdUtil::snprintf(szText+Length,lengthof(szText)-Length,
-							TEXT(" (%s)"),szLang);
+					}
+
+					if (GroupInfo.ComponentGroupID!=0)
+						SubGroupCount++;
+				}
+
+				// グループに属さない音声
+				int AudioCount=0;
+				for (int i=0;i<static_cast<int>(EsList.size());i++) {
+					if (EsList[i].ComponentTag!=CTsAnalyzer::COMPONENTTAG_INVALID) {
+						TCHAR szText[64];
+						AudioCount++;
+						StdUtil::snprintf(szText,lengthof(szText),TEXT("音声%d"),AudioCount);
+						Menu.Append(CM_AUDIOSTREAM_FIRST+i,szText);
+						if (EsList[i].ComponentTag==CurAudioComponentTag)
+							CurAudioIndex=i;
 					}
 				}
-				Menu.Append(CM_AUDIOSTREAM_FIRST+i,szText);
+
+				if (CurAudioIndex>=0) {
+					Menu.CheckRadioItem(CM_AUDIOSTREAM_FIRST,
+										CM_AUDIOSTREAM_FIRST+static_cast<int>(EsList.size())-1,
+										CM_AUDIOSTREAM_FIRST+CurAudioIndex);
+				}
+			} else {
+				for (int i=0;i<static_cast<int>(EsList.size());i++) {
+					TCHAR szText[64];
+					int Length=StdUtil::snprintf(szText,lengthof(szText),TEXT("&%d: 音声%d"),i+1,i+1);
+					if (EsList.size()>1
+							&& DtvEngine.GetEventAudioInfo(&AudioInfo,i)) {
+						TCHAR szAudio[64],szFormat[64];
+						GetAudioInfoText(AudioInfo,szAudio,lengthof(szAudio));
+						CopyToMenuText(szAudio,szFormat,lengthof(szFormat));
+						StdUtil::snprintf(szText+Length,lengthof(szText)-Length,TEXT(" (%s)"),szFormat);
+					}
+					Menu.Append(CM_AUDIOSTREAM_FIRST+i,szText);
+				}
+				Menu.CheckRadioItem(CM_AUDIOSTREAM_FIRST,
+									CM_AUDIOSTREAM_FIRST+static_cast<int>(EsList.size())-1,
+									CM_AUDIOSTREAM_FIRST+m_pCore->GetAudioStream());
 			}
-			Menu.CheckRadioItem(CM_AUDIOSTREAM_FIRST,
-								CM_AUDIOSTREAM_FIRST+NumAudioStreams-1,
-								CM_AUDIOSTREAM_FIRST+m_pCore->GetAudioStream());
 		}
 
 		if (!fDualMono) {
-			if (NumAudioStreams>0)
+			if (!EsList.empty())
 				Menu.AppendSeparator();
 			Menu.Append(CM_STEREO_THROUGH,TEXT("ステレオ/スルー(&S)"));
 			Menu.Append(CM_STEREO_LEFT,TEXT("左(主音声)(&L)"));
@@ -3874,6 +4031,133 @@ bool CMainWindow::OnInitMenuPopup(HMENU hmenu)
 		m_App.CoreEngine.GetSpdifOptions(&SpdifOptions);
 		Menu.CheckRadioItem(CM_SPDIF_DISABLED,CM_SPDIF_AUTO,
 							CM_SPDIF_DISABLED+(int)SpdifOptions.Mode);
+	} else if (hmenu==m_App.MainMenu.GetSubMenu(CMainMenu::SUBMENU_VIDEO)) {
+		CPopupMenu Menu(hmenu);
+		Menu.Clear();
+
+		CDtvEngine &DtvEngine=m_App.CoreEngine.m_DtvEngine;
+		const WORD ServiceIndex=DtvEngine.GetServiceIndex();
+		CTsAnalyzer::EventComponentGroupList GroupList;
+
+		if (DtvEngine.m_TsAnalyzer.GetEventComponentGroupList(ServiceIndex,&GroupList)
+				&& !GroupList.empty()) {
+			// マルチビューTV
+			const int NumGroup=static_cast<int>(GroupList.size());
+			const BYTE CurVideoComponentTag=DtvEngine.GetVideoComponentTag();
+			int CurGroup=-1;
+			int SubGroupCount=0;
+
+			for (int i=0;i<NumGroup;i++) {
+				CTsAnalyzer::EventComponentGroupInfo &GroupInfo=GroupList[i];
+				TCHAR szText[80];
+
+				if (GroupInfo.szText[0]!=_T('\0')) {
+					CopyToMenuText(GroupInfo.szText,szText,lengthof(szText));
+				} else {
+					if (GroupInfo.ComponentGroupID==0)
+						StdUtil::strncpy(szText,lengthof(szText),TEXT("メイン"));
+					else
+						StdUtil::snprintf(szText,lengthof(szText),TEXT("サブ%d"),SubGroupCount+1);
+					StdUtil::strncpy(GroupInfo.szText,lengthof(GroupInfo.szText),szText);
+				}
+				if (GroupInfo.ComponentGroupID!=0)
+					SubGroupCount++;
+
+				Menu.Append(CM_MULTIVIEW_FIRST+i,szText);
+
+				if (CurGroup<0) {
+					for (int j=0;j<GroupInfo.CAUnitNum;j++) {
+						for (int k=0;k<GroupInfo.CAUnit[j].ComponentNum;k++) {
+							if (GroupInfo.CAUnit[j].ComponentTag[k]==CurVideoComponentTag) {
+								CurGroup=i;
+								break;
+							}
+						}
+					}
+				}
+			}
+
+			if (CurGroup>=0) {
+				Menu.CheckRadioItem(CM_MULTIVIEW_FIRST,
+									CM_MULTIVIEW_FIRST+NumGroup-1,
+									CM_MULTIVIEW_FIRST+CurGroup);
+			}
+
+			CTsAnalyzer::EsInfoList EsList;
+
+			if (DtvEngine.m_TsAnalyzer.GetVideoEsList(ServiceIndex,&EsList)
+					&& !EsList.empty()) {
+				Menu.AppendSeparator();
+
+				int CurVideoIndex=-1;
+
+				// グループ毎の映像
+				for (int i=0;i<NumGroup;i++) {
+					const CTsAnalyzer::EventComponentGroupInfo &GroupInfo=GroupList[i];
+					int VideoCount=0;
+
+					for (int j=0;j<GroupInfo.CAUnitNum;j++) {
+						for (int k=0;k<GroupInfo.CAUnit[j].ComponentNum;k++) {
+							const BYTE ComponentTag=GroupInfo.CAUnit[j].ComponentTag[k];
+							for (int EsIndex=0;EsIndex=static_cast<int>(EsList.size());EsIndex++) {
+								if (EsList[EsIndex].ComponentTag==ComponentTag) {
+									TCHAR szText[80];
+									VideoCount++;
+									int Length=CopyToMenuText(GroupInfo.szText,szText,lengthof(szText));
+									StdUtil::snprintf(szText+Length,lengthof(szText)-Length,TEXT(": 映像%d"),VideoCount);
+									Menu.Append(CM_VIDEOSTREAM_FIRST+EsIndex,szText);
+									if (ComponentTag==CurVideoComponentTag)
+										CurVideoIndex=EsIndex;
+									EsList[EsIndex].ComponentTag=CTsAnalyzer::COMPONENTTAG_INVALID;
+									break;
+								}
+							}
+						}
+					}
+				}
+
+				// グループに属さない映像
+				int VideoCount=0;
+				for (int i=0;i<static_cast<int>(EsList.size());i++) {
+					if (EsList[i].ComponentTag!=CTsAnalyzer::COMPONENTTAG_INVALID) {
+						TCHAR szText[64];
+						VideoCount++;
+						int Length=StdUtil::snprintf(szText,lengthof(szText),TEXT("映像%d"),VideoCount);
+						if (EsList[i].QualityLevel==0)
+							StdUtil::strncpy(szText+Length,lengthof(szText)-Length,TEXT(" (降雨対応放送)"));
+						Menu.Append(CM_VIDEOSTREAM_FIRST+i,szText);
+						if (EsList[i].ComponentTag==CurVideoComponentTag)
+							CurVideoIndex=i;
+					}
+				}
+
+				if (CurVideoIndex>=0) {
+					Menu.CheckRadioItem(CM_VIDEOSTREAM_FIRST,
+										CM_VIDEOSTREAM_FIRST+static_cast<int>(EsList.size())-1,
+										CM_VIDEOSTREAM_FIRST+CurVideoIndex);
+				}
+			}
+		} else {
+			CTsAnalyzer::EsInfoList EsList;
+
+			if (DtvEngine.m_TsAnalyzer.GetVideoEsList(ServiceIndex,&EsList)
+					&& !EsList.empty()) {
+				for (int i=0;i<static_cast<int>(EsList.size()) && CM_VIDEOSTREAM_FIRST+i<=CM_VIDEOSTREAM_LAST;i++) {
+					TCHAR szText[64];
+					int Length=StdUtil::snprintf(szText,lengthof(szText),TEXT("%s%d: 映像%d"),
+												 i<9?TEXT("&"):TEXT(""),i+1,i+1);
+					if (EsList[i].QualityLevel==0)
+						StdUtil::strncpy(szText+Length,lengthof(szText)-Length,TEXT(" (降雨対応放送)"));
+					Menu.Append(CM_VIDEOSTREAM_FIRST+i,szText);
+				}
+
+				Menu.CheckRadioItem(CM_VIDEOSTREAM_FIRST,
+									CM_VIDEOSTREAM_FIRST+static_cast<int>(EsList.size())-1,
+									CM_VIDEOSTREAM_FIRST+DtvEngine.GetVideoStream());
+			} else {
+				Menu.Append(0U,TEXT("映像なし"),MF_GRAYED);
+			}
+		}
 	} else if (hmenu==m_App.MainMenu.GetSubMenu(CMainMenu::SUBMENU_FILTERPROPERTY)) {
 		for (int i=0;i<lengthof(m_DirectShowFilterPropertyList);i++) {
 			m_App.MainMenu.EnableItem(m_DirectShowFilterPropertyList[i].Command,

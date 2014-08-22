@@ -33,6 +33,7 @@ const CMenuOptions::MenuInfo CMenuOptions::m_DefaultMenuItemList[] =
 	{MENU_ID_SEPARATOR,					0,							0},
 	{CMainMenu::SUBMENU_VOLUME,			IDS_MENU_VOLUME,			CM_VOLUMEMENU},
 	{CMainMenu::SUBMENU_AUDIO,			IDS_MENU_AUDIO,				CM_AUDIOMENU},
+	{CMainMenu::SUBMENU_VIDEO,			IDS_MENU_VIDEO,				CM_VIDEOMENU},
 	{MENU_ID_SEPARATOR,					0,							0},
 	{CM_RECORD,							CM_RECORD,					CM_RECORD},
 	{CM_RECORDOPTION,					CM_RECORDOPTION,			CM_RECORDOPTION},

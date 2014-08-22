@@ -127,7 +127,8 @@ public:
 	bool SetService(const ServiceSelectInfo *pServiceSelInfo, const bool bReserve = true);
 	bool SetServiceByID(const WORD ServiceID, const bool bReserve = true);
 	bool SetServiceByIndex(const WORD Service);
-	bool GetServiceID(WORD *pServiceID);
+	bool GetServiceID(WORD *pServiceID) const;
+	WORD GetServiceIndex() const;
 
 	WORD GetEventID(bool bNext = false);
 	int GetEventName(LPTSTR pszName, int MaxLength, bool bNext = false);
@@ -137,6 +138,7 @@ public:
 	bool GetEventSeriesInfo(CTsAnalyzer::EventSeriesInfo *pInfo, bool bNext = false);
 	bool GetEventInfo(CTsAnalyzer::EventInfo *pInfo, bool bNext = false);
 	bool GetEventAudioInfo(CTsAnalyzer::EventAudioInfo *pInfo, const int AudioIndex = -1, bool bNext = false);
+	int GetCurComponentGroup() const;
 
 	unsigned __int64 GetPcrTimeStamp();
 
@@ -153,13 +155,20 @@ public:
 	bool CloseMediaViewer();
 	bool ResetMediaViewer();
 	bool EnableMediaViewer(const bool bEnable = true);
+
 	BYTE GetVideoStreamType() const;
+	int GetVideoStreamNum(const int Service = -1) const;
+	bool SetVideoStream(const int StreamIndex);
+	int GetVideoStream() const;
+	BYTE GetVideoComponentTag() const;
+
 	BYTE GetAudioChannelNum();
-	int GetAudioStreamNum(const int Service = -1);
+	int GetAudioStreamNum(const int Service = -1) const;
 	bool SetAudioStream(const int StreamIndex);
 	int GetAudioStream() const;
-	BYTE GetAudioComponentType(const int AudioIndex = -1);
-	int GetAudioComponentText(LPTSTR pszText, int MaxLength, const int AudioIndex = -1);
+	BYTE GetAudioComponentTag() const;
+	BYTE GetAudioComponentType(const int AudioIndex = -1) const;
+	int GetAudioComponentText(LPTSTR pszText, int MaxLength, const int AudioIndex = -1) const;
 
 	bool LoadCasLibrary(LPCTSTR pszFileName);
 	bool OpenCasCard(int Device, LPCTSTR pszReaderName = NULL);
@@ -205,7 +214,7 @@ protected:
 	void ConnectDecoder(DecoderID ID);
 	void DisconnectDecoder(DecoderID ID);
 
-	CCriticalLock m_EngineLock;
+	mutable CCriticalLock m_EngineLock;
 	CEventHandler *m_pEventHandler;
 	std::vector<DecoderConnectionInfo> m_DecoderConnectionList;
 
@@ -214,6 +223,8 @@ protected:
 	WORD m_CurServiceID;
 	ServiceSelectInfo m_ServiceSel;
 	BYTE m_VideoStreamType;
+	int m_CurVideoStream;
+	BYTE m_CurVideoComponentTag;
 	int m_CurAudioStream;
 	BYTE m_CurAudioComponentTag;
 

@@ -23,6 +23,8 @@ CDtvEngine::CDtvEngine(void)
 	, m_CurServiceIndex(SERVICE_INVALID)
 	, m_CurServiceID(SID_INVALID)
 	, m_VideoStreamType(STREAM_TYPE_UNINITIALIZED)
+	, m_CurVideoStream(0)
+	, m_CurVideoComponentTag(CTsAnalyzer::COMPONENTTAG_INVALID)
 	, m_CurAudioStream(0)
 	, m_CurAudioComponentTag(CTsAnalyzer::COMPONENTTAG_INVALID)
 
@@ -360,8 +362,24 @@ bool CDtvEngine::SelectService(WORD ServiceID)
 	WORD AudioPID = CMediaViewer::PID_INVALID;
 	BYTE VideoStreamType = STREAM_TYPE_INVALID;
 
-	m_TsAnalyzer.GetVideoEsPID(m_CurServiceIndex, 0, &VideoPID);
-	m_TsAnalyzer.GetVideoStreamType(m_CurServiceIndex, 0, &VideoStreamType);
+	int VideoIndex;
+	if (m_CurVideoComponentTag != CTsAnalyzer::COMPONENTTAG_INVALID
+			/* && !bServiceChanged */) {
+		VideoIndex = m_TsAnalyzer.GetVideoIndexByComponentTag(m_CurServiceIndex, m_CurVideoComponentTag);
+		if (VideoIndex < 0)
+			VideoIndex = 0;
+	} else {
+		VideoIndex = 0;
+	}
+	if (!m_TsAnalyzer.GetVideoEsPID(m_CurServiceIndex, VideoIndex, &VideoPID)
+			&& VideoIndex != 0) {
+		m_TsAnalyzer.GetVideoEsPID(m_CurServiceIndex, 0, &VideoPID);
+		VideoIndex = 0;
+	}
+	m_CurVideoStream = VideoIndex;
+	m_CurVideoComponentTag = m_TsAnalyzer.GetVideoComponentTag(m_CurServiceIndex, VideoIndex);
+	m_TsAnalyzer.GetVideoStreamType(m_CurServiceIndex, VideoIndex, &VideoStreamType);
+	TRACE(TEXT("Select video : %d (component_tag %02X)\n"), m_CurVideoStream, m_CurVideoComponentTag);
 
 	int AudioIndex;
 	if (m_CurAudioComponentTag != CTsAnalyzer::COMPONENTTAG_INVALID
@@ -407,10 +425,16 @@ bool CDtvEngine::SelectService(WORD ServiceID)
 }
 
 
-bool CDtvEngine::GetServiceID(WORD *pServiceID)
+bool CDtvEngine::GetServiceID(WORD *pServiceID) const
 {
 	// サービスID取得
 	return m_TsAnalyzer.GetServiceID(m_CurServiceIndex, pServiceID);
+}
+
+
+WORD CDtvEngine::GetServiceIndex() const
+{
+	return m_CurServiceIndex;
 }
 
 
@@ -462,6 +486,18 @@ bool CDtvEngine::GetEventAudioInfo(CTsAnalyzer::EventAudioInfo *pInfo, const int
 }
 
 
+int CDtvEngine::GetCurComponentGroup() const
+{
+	CBlockLock Lock(&m_EngineLock);
+
+	if (m_CurVideoComponentTag != CTsAnalyzer::COMPONENTTAG_INVALID) {
+		return m_TsAnalyzer.GetEventComponentGroupIndexByComponentTag(m_CurServiceIndex, m_CurVideoComponentTag);
+	}
+
+	return -1;
+}
+
+
 unsigned __int64 CDtvEngine::GetPcrTimeStamp()
 {
 	// PCRタイムスタンプ取得
@@ -492,6 +528,8 @@ const DWORD CDtvEngine::OnDecoderEvent(CMediaDecoder *pDecoder, const DWORD dwEv
 					m_wCurTransportStream = wTransportStream;
 					m_CurServiceIndex = SERVICE_INVALID;
 					m_CurServiceID = SID_INVALID;
+					m_CurVideoStream = 0;
+					m_CurVideoComponentTag = CTsAnalyzer::COMPONENTTAG_INVALID;
 					m_CurAudioStream = 0;
 					m_CurAudioComponentTag = CTsAnalyzer::COMPONENTTAG_INVALID;
 
@@ -764,13 +802,71 @@ BYTE CDtvEngine::GetVideoStreamType() const
 }
 
 
+int CDtvEngine::GetVideoStreamNum(const int Service) const
+{
+	WORD ServiceID;
+	if (Service<0) {
+		if (!GetServiceID(&ServiceID))
+			return 0;
+	} else {
+		if (!m_TsAnalyzer.GetViewableServiceID(Service, &ServiceID))
+			return 0;
+	}
+	return m_TsAnalyzer.GetVideoEsNum(m_TsAnalyzer.GetServiceIndexByID(ServiceID));
+}
+
+
+bool CDtvEngine::SetVideoStream(const int StreamIndex)
+{
+	CBlockLock Lock(&m_EngineLock);
+
+	if (StreamIndex < 0 || StreamIndex >= GetVideoStreamNum())
+		return false;
+
+	WORD VideoPID = CMediaViewer::PID_INVALID;
+	BYTE VideoStreamType = STREAM_TYPE_INVALID;
+
+	m_TsAnalyzer.GetVideoEsPID(m_CurServiceIndex, StreamIndex, &VideoPID);
+	m_TsAnalyzer.GetVideoStreamType(m_CurServiceIndex, StreamIndex, &VideoStreamType);
+
+	m_CurVideoStream = StreamIndex;
+	m_CurVideoComponentTag = m_TsAnalyzer.GetVideoComponentTag(m_CurServiceIndex, StreamIndex);
+
+	TRACE(TEXT("Select video : %d (component_tag %02X)\n"), m_CurVideoStream, m_CurVideoComponentTag);
+
+	if (m_VideoStreamType != VideoStreamType) {
+		TRACE(TEXT("Video stream_type changed (%02x -> %02x)\n"),
+			  m_VideoStreamType, VideoStreamType);
+		m_VideoStreamType = VideoStreamType;
+		if (m_pEventHandler!=NULL)
+			m_pEventHandler->OnVideoStreamTypeChanged(VideoStreamType);
+	}
+
+	m_MediaViewer.SetVideoPID(VideoPID);
+
+	return true;
+}
+
+
+int CDtvEngine::GetVideoStream() const
+{
+	return m_CurVideoStream;
+}
+
+
+BYTE CDtvEngine::GetVideoComponentTag() const
+{
+	return m_CurVideoComponentTag;
+}
+
+
 BYTE CDtvEngine::GetAudioChannelNum()
 {
 	return m_MediaViewer.GetAudioChannelNum();
 }
 
 
-int CDtvEngine::GetAudioStreamNum(const int Service)
+int CDtvEngine::GetAudioStreamNum(const int Service) const
 {
 	WORD ServiceID;
 	if (Service<0) {
@@ -786,6 +882,8 @@ int CDtvEngine::GetAudioStreamNum(const int Service)
 
 bool CDtvEngine::SetAudioStream(const int StreamIndex)
 {
+	CBlockLock Lock(&m_EngineLock);
+
 	WORD AudioPID;
 
 	if (!m_TsAnalyzer.GetAudioEsPID(m_CurServiceIndex, StreamIndex, &AudioPID))
@@ -809,13 +907,19 @@ int CDtvEngine::GetAudioStream() const
 }
 
 
-BYTE CDtvEngine::GetAudioComponentType(const int AudioIndex)
+BYTE CDtvEngine::GetAudioComponentTag() const
+{
+	return m_CurAudioComponentTag;
+}
+
+
+BYTE CDtvEngine::GetAudioComponentType(const int AudioIndex) const
 {
 	return m_TsAnalyzer.GetAudioComponentType(m_CurServiceIndex, AudioIndex < 0 ? m_CurAudioStream : AudioIndex);
 }
 
 
-int CDtvEngine::GetAudioComponentText(LPTSTR pszText, int MaxLength, const int AudioIndex)
+int CDtvEngine::GetAudioComponentText(LPTSTR pszText, int MaxLength, const int AudioIndex) const
 {
 	return m_TsAnalyzer.GetAudioComponentText(m_CurServiceIndex, AudioIndex < 0 ? m_CurAudioStream : AudioIndex, pszText, MaxLength);
 }
