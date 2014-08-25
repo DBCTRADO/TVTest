@@ -2745,6 +2745,16 @@ void CMainWindow::OnCommand(HWND hwnd,int id,HWND hwndCtl,UINT codeNotify)
 		}
 		return;
 
+	case CM_CHANNEL_PREVIOUS:
+		if (m_App.RecentChannelList.NumChannels()>1) {
+			const CRecentChannelList::CChannel *pChannel=
+				m_App.RecentChannelList.GetChannelInfo(1);
+			if (pChannel!=nullptr) {
+				m_App.Core.OpenTunerAndSetChannel(pChannel->GetDriverFileName(),pChannel);
+			}
+		}
+		return;
+
 #ifdef _DEBUG
 	case CM_UPDATECHANNELLIST:
 		// チャンネルリストの自動更新(現状役には立たない)

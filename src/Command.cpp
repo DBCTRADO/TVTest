@@ -69,6 +69,7 @@ static const struct {
 	{TEXT("ChannelDown"),				CM_CHANNEL_DOWN},
 	{TEXT("ChannelBackward"),			CM_CHANNEL_BACKWARD},
 	{TEXT("ChannelForward"),			CM_CHANNEL_FORWARD},
+	{TEXT("ChannelPrevious"),			CM_CHANNEL_PREVIOUS},
 	{TEXT("Mute"),						CM_VOLUME_MUTE},
 	{TEXT("VolumeUp"),					CM_VOLUME_UP},
 	{TEXT("VolumeDown"),				CM_VOLUME_DOWN},

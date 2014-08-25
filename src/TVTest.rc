@@ -588,6 +588,7 @@ BEGIN
 	CM_CHANNEL_DOWN,			"前のチャンネル"
 	CM_CHANNEL_BACKWARD,		"前のチャンネルに戻る"
 	CM_CHANNEL_FORWARD,			"次のチャンネルに進む"
+	CM_CHANNEL_PREVIOUS,		"直前のチャンネル"
 	CM_VOLUME_MUTE,				"消音"
 	CM_VOLUME_UP,				"音量を上げる"
 	CM_VOLUME_DOWN,				"音量を下げる"
