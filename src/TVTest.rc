@@ -665,6 +665,7 @@ BEGIN
 	CM_RECENTCHANNELMENU,		"最近見たチャンネル メニュー"
 	CM_VOLUMEMENU,				"音量 メニュー"
 	CM_AUDIOMENU,				"音声 メニュー"
+	CM_VIDEOMENU,				"映像 メニュー"
 	CM_RESETMENU,				"リセット メニュー"
 	CM_BARMENU,					"バー/枠 メニュー"
 	CM_PLUGINMENU,				"プラグイン メニュー"
