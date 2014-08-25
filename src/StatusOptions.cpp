@@ -35,6 +35,7 @@ CStatusOptions::CStatusOptions(CStatusView *pStatusView)
 	, m_pStatusView(pStatusView)
 	, m_fShowTOTTime(false)
 	, m_fEnablePopupProgramInfo(true)
+	, m_fShowEventProgress(true)
 	, m_fMultiRow(!IS_HD)
 	, m_MaxRows(2)
 {
@@ -122,6 +123,7 @@ bool CStatusOptions::ReadSettings(CSettings &Settings)
 
 	Settings.Read(TEXT("TOTTime"),&m_fShowTOTTime);
 	Settings.Read(TEXT("PopupProgramInfo"),&m_fEnablePopupProgramInfo);
+	Settings.Read(TEXT("ShowEventProgress"),&m_fShowEventProgress);
 
 	return true;
 }
@@ -153,6 +155,7 @@ bool CStatusOptions::WriteSettings(CSettings &Settings)
 
 	Settings.Write(TEXT("TOTTime"),m_fShowTOTTime);
 	Settings.Write(TEXT("PopupProgramInfo"),m_fEnablePopupProgramInfo);
+	Settings.Write(TEXT("ShowEventProgress"),m_fShowEventProgress);
 
 	return true;
 }

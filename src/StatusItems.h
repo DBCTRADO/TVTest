@@ -172,10 +172,17 @@ public:
 class CProgramInfoStatusItem : public CStatusItem
 {
 	bool m_fNext;
+	bool m_fShowProgress;
 	bool m_fEnablePopupInfo;
 	CEventInfoPopup m_EventInfoPopup;
 	CDynamicString m_Text;
 	CEpgTheme m_EpgTheme;
+	TVTest::Theme::BackgroundStyle m_ProgressBackStyle;
+	TVTest::Theme::BackgroundStyle m_ProgressElapsedStyle;
+	bool m_fValidProgress;
+	SYSTEMTIME m_EventStartTime;
+	DWORD m_EventDuration;
+	SYSTEMTIME m_CurTime;
 
 	void ShowPopupInfo();
 
@@ -185,6 +192,7 @@ public:
 	LPCTSTR GetName() const override { return TEXT("î‘ëgèÓïÒ"); }
 	void Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect) override;
 	void DrawPreview(HDC hdc,const RECT &ItemRect,const RECT &DrawRect) override;
+	bool UpdateContent() override;
 	void OnLButtonDown(int x,int y) override;
 	void OnRButtonDown(int x,int y) override;
 	void OnLButtonDoubleClick(int x,int y) override;
@@ -193,8 +201,10 @@ public:
 // CUIBase
 	void SetTheme(const TVTest::Theme::CThemeManager *pThemeManager) override;
 // CProgramInfoStatusItem
+	void SetShowProgress(bool fShow);
+	bool GetShowProgress() const { return m_fShowProgress; }
 	void EnablePopupInfo(bool fEnable);
-	bool UpdateContent();
+	bool UpdateProgress();
 	bool SetEventInfoFont(const LOGFONT *pFont) {
 		return m_EventInfoPopup.SetFont(pFont);
 	}

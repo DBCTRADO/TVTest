@@ -1681,6 +1681,7 @@ bool CMainWindow::OnCreate(const CREATESTRUCT *pcs)
 	m_App.StatusView.AddItem(pClockStatusItem);
 	CProgramInfoStatusItem *pProgramInfoStatusItem=new CProgramInfoStatusItem;
 	pProgramInfoStatusItem->EnablePopupInfo(m_App.StatusOptions.IsPopupProgramInfoEnabled());
+	pProgramInfoStatusItem->SetShowProgress(m_App.StatusOptions.GetShowEventProgress());
 	m_App.StatusView.AddItem(pProgramInfoStatusItem);
 	m_App.StatusView.AddItem(new CBufferingStatusItem);
 	m_App.StatusView.AddItem(new CTunerStatusItem);
@@ -2920,6 +2921,17 @@ void CMainWindow::OnCommand(HWND hwnd,int id,HWND hwndCtl,UINT codeNotify)
 		}
 		return;
 
+	case CM_PROGRAMINFOSTATUS_SHOWPROGRESS:
+		{
+			CProgramInfoStatusItem *pItem=
+				dynamic_cast<CProgramInfoStatusItem*>(m_App.StatusView.GetItemByID(STATUS_ITEM_PROGRAMINFO));
+			if (pItem!=nullptr) {
+				pItem->SetShowProgress(!pItem->GetShowProgress());
+				m_App.StatusOptions.SetShowEventProgress(pItem->GetShowProgress());
+			}
+		}
+		return;
+
 	case CM_ADJUSTTOTTIME:
 		m_App.TotTimeAdjuster.BeginAdjust();
 		return;
@@ -3340,20 +3352,27 @@ void CMainWindow::OnTimer(HWND hwnd,UINT id)
 					m_App.CoreEngine.m_DtvEngine.m_MediaViewer.IsSpdifPassthrough());
 			}
 
-			// 番組の切り替わり
-			if ((UpdateStatus&CCoreEngine::STATUS_EVENTID)!=0) {
+			bool fUpdateEventInfo=false;
+
+			if ((UpdateStatus & CCoreEngine::STATUS_EVENTID)!=0) {
+				// 番組の切り替わり
 				OnEventChanged();
+			} else if (TimerCount%(10000/UPDATE_TIMER_INTERVAL)==0) {	// 10秒間隔
+				// 時間変更などを反映させるために番組情報を更新
+				fUpdateEventInfo=true;
+
+				m_pCore->UpdateTitle();
 			}
 
-			// 時間変更などを反映させるために番組情報を更新
-			if (TimerCount%(10000/UPDATE_TIMER_INTERVAL)==0) {
-				m_pCore->UpdateTitle();
-
-				CProgramInfoStatusItem *pProgramInfoItem=
-					dynamic_cast<CProgramInfoStatusItem*>(m_App.StatusView.GetItemByID(STATUS_ITEM_PROGRAMINFO));
-				if (pProgramInfoItem!=nullptr) {
-					if (pProgramInfoItem->UpdateContent())
-						pProgramInfoItem->Update();
+			CProgramInfoStatusItem *pProgramInfoStatusItem=
+				dynamic_cast<CProgramInfoStatusItem*>(m_App.StatusView.GetItemByID(STATUS_ITEM_PROGRAMINFO));
+			if (pProgramInfoStatusItem!=nullptr) {
+				if (fUpdateEventInfo) {
+					pProgramInfoStatusItem->Update();
+				} else if (pProgramInfoStatusItem->GetShowProgress()
+						&& (UpdateStatus & CCoreEngine::STATUS_TOT)!=0) {
+					if (pProgramInfoStatusItem->UpdateProgress())
+						pProgramInfoStatusItem->Redraw();
 				}
 			}
 
@@ -3382,8 +3401,15 @@ void CMainWindow::OnTimer(HWND hwnd,UINT id)
 								 | CCoreEngine::STATISTIC_PACKETBUFFERRATE))!=0)
 				m_App.StatusView.UpdateItem(STATUS_ITEM_BUFFERING);
 
-			m_App.StatusView.UpdateItem(STATUS_ITEM_CLOCK);
-			m_App.TotTimeAdjuster.AdjustTime();
+			CClockStatusItem *pClockStatusItem=
+				dynamic_cast<CClockStatusItem*>(m_App.StatusView.GetItemByID(STATUS_ITEM_CLOCK));
+			if (pClockStatusItem!=nullptr
+					&& (!pClockStatusItem->IsTOT() || (UpdateStatus & CCoreEngine::STATUS_TOT)!=0)) {
+				pClockStatusItem->Update();
+			}
+
+			if ((UpdateStatus & CCoreEngine::STATUS_TOT)!=0)
+				m_App.TotTimeAdjuster.AdjustTime();
 
 			m_App.StatusView.UpdateItem(STATUS_ITEM_MEDIABITRATE);
 
@@ -3419,7 +3445,7 @@ void CMainWindow::OnTimer(HWND hwnd,UINT id)
 							FreeSpace<0?0:FreeSpace);
 					}
 
-					if (TimerCount%(10000/UPDATE_TIMER_INTERVAL)==0)
+					if (fUpdateEventInfo)
 						UpdateProgramInfo();
 				} else if (m_App.Panel.Form.GetCurPageID()==PANEL_ID_CHANNEL) {
 					// チャンネルタブ更新
@@ -4428,15 +4454,9 @@ void CMainWindow::OnEventChanged()
 			&& m_App.Panel.Form.GetCurPageID()==PANEL_ID_INFORMATION)
 		UpdateProgramInfo();
 
+	m_App.StatusView.UpdateItem(STATUS_ITEM_PROGRAMINFO);
+
 	m_App.Panel.ProgramListPanel.SetCurrentEventID(EventID);
-
-	CProgramInfoStatusItem *pProgramInfoItem=
-		dynamic_cast<CProgramInfoStatusItem*>(m_App.StatusView.GetItemByID(STATUS_ITEM_PROGRAMINFO));
-	if (pProgramInfoItem!=nullptr) {
-		pProgramInfoItem->UpdateContent();
-		pProgramInfoItem->Update();
-	}
-
 	m_App.Epg.ProgramGuide.SetCurrentEvent(EventID);
 
 	if (m_AspectRatioType!=ASPECTRATIO_DEFAULT

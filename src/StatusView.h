@@ -48,7 +48,9 @@ public:
 	void SetVisible(bool fVisible);
 	bool GetVisible() const { return m_fVisible; }
 	bool Update();
+	void Redraw();
 	virtual LPCTSTR GetName() const=0;
+	virtual bool UpdateContent() { return true; }
 	virtual void Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect)=0;
 	virtual void DrawPreview(HDC hdc,const RECT &ItemRect,const RECT &DrawRect) { Draw(hdc,ItemRect,DrawRect); }
 	virtual void OnLButtonDown(int x,int y) {}
@@ -118,7 +120,8 @@ public:
 	bool AddItem(CStatusItem *pItem);
 	int IDToIndex(int ID) const;
 	int IndexToID(int Index) const;
-	void UpdateItem(int ID);
+	bool UpdateItem(int ID);
+	void RedrawItem(int ID);
 	bool GetItemRect(int ID,RECT *pRect) const;
 	bool GetItemRectByIndex(int Index,RECT *pRect) const;
 	bool GetItemClientRect(int ID,RECT *pRect) const;

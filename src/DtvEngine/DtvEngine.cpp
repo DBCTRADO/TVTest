@@ -645,6 +645,12 @@ const DWORD CDtvEngine::OnDecoderEvent(CMediaDecoder *pDecoder, const DWORD dwEv
 			if (m_pEventHandler)
 				m_pEventHandler->OnServiceInfoUpdated(&m_TsAnalyzer);
 			return 0UL;
+
+		case CTsAnalyzer::EVENT_TOT_UPDATED:
+			//  TOT‚ªXV‚³‚ê‚½
+			if (m_pEventHandler)
+				m_pEventHandler->OnTotUpdated(&m_TsAnalyzer);
+			return 0UL;
 		}
 	} else if (pDecoder == &m_FileWriter) {
 		switch (dwEventID) {

@@ -1474,6 +1474,11 @@ void CAppMain::CDtvEngineEventHandler::OnCardReaderHung()
 	m_App.MainWindow.PostMessage(WM_APP_CARDREADERHUNG,0,0);
 }
 
+void CAppMain::CDtvEngineEventHandler::OnTotUpdated(CTsAnalyzer *pTsAnalyzer)
+{
+	m_App.CoreEngine.SetAsyncStatusUpdatedFlag(CCoreEngine::STATUS_TOT);
+}
+
 
 CAppMain::CStreamInfoEventHandler::CStreamInfoEventHandler(CAppMain &App)
 	: m_App(App)

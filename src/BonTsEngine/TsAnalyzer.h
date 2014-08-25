@@ -291,6 +291,7 @@ public:
 		EVENT_SDT_UPDATED,
 		EVENT_NIT_UPDATED,
 		EVENT_PCR_UPDATED,
+		EVENT_TOT_UPDATED,
 		EVENT_INVALID,
 		NUM_EVENTS = EVENT_INVALID,
 		EVENT_LAST = NUM_EVENTS - 1
@@ -371,4 +372,5 @@ private:
 	static void CALLBACK OnSdtUpdated(const WORD wPID, CTsPidMapTarget *pMapTarget, CTsPidMapManager *pMapManager, const PVOID pParam);
 	static void CALLBACK OnNitUpdated(const WORD wPID, CTsPidMapTarget *pMapTarget, CTsPidMapManager *pMapManager, const PVOID pParam);
 	static void CALLBACK OnPcrUpdated(const WORD wPID, CTsPidMapTarget *pMapTarget, CTsPidMapManager *pMapManager, const PVOID pParam);
+	static void CALLBACK OnTotUpdated(const WORD wPID, CTsPidMapTarget *pMapTarget, CTsPidMapManager *pMapManager, const PVOID pParam);
 };

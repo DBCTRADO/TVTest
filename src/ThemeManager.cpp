@@ -43,6 +43,16 @@ const CThemeManager::StyleInfo CThemeManager::m_StyleList[NUM_STYLES] = {
 		CColorScheme::COLOR_STATUSHIGHLIGHTTEXT
 	},
 	{
+		CColorScheme::GRADIENT_STATUSEVENTPROGRESSBACK,
+		CColorScheme::BORDER_STATUSEVENTPROGRESS,
+		-1
+	},
+	{
+		CColorScheme::GRADIENT_STATUSEVENTPROGRESSELAPSED,
+		CColorScheme::BORDER_STATUSEVENTPROGRESSELAPSED,
+		-1
+	},
+	{
 		-1,
 		CColorScheme::BORDER_TITLEBAR,
 		-1

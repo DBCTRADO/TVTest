@@ -86,6 +86,7 @@ public:
 		virtual void OnEcmError(LPCTSTR pszText) {}
 		virtual void OnEcmRefused() {}
 		virtual void OnCardReaderHung() {}
+		virtual void OnTotUpdated(CTsAnalyzer *pTsAnalyzer) {}
 	};
 
 	struct ServiceSelectInfo

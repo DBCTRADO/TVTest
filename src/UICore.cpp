@@ -606,6 +606,8 @@ bool CUICore::ShowSpecialMenu(MenuType Menu,const POINT *pPos,UINT Flags)
 
 			Menu.CheckItem(CM_PROGRAMINFOSTATUS_POPUPINFO,
 						   m_App.StatusOptions.IsPopupProgramInfoEnabled());
+			Menu.CheckItem(CM_PROGRAMINFOSTATUS_SHOWPROGRESS,
+						   m_App.StatusOptions.GetShowEventProgress());
 			Menu.Show(GetMainWindow(),&pt,Flags);
 		}
 		break;

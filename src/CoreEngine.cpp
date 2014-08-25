@@ -2,6 +2,9 @@
 #include "TVTest.h"
 #include "CoreEngine.h"
 
+#include <intrin.h>
+#pragma intrinsic(_InterlockedOr)
+
 #ifdef _DEBUG
 #undef THIS_FILE
 static char THIS_FILE[]=__FILE__;
@@ -45,6 +48,8 @@ CCoreEngine::CCoreEngine()
 	, m_StreamRemain(0)
 	, m_TimerResolution(0)
 	, m_fNoEpg(false)
+
+	, m_AsyncStatusUpdatedFlags(0)
 {
 	m_szDriverDirectory[0]='\0';
 	m_szDriverFileName[0]='\0';
@@ -631,7 +636,17 @@ DWORD CCoreEngine::UpdateAsyncStatus()
 		TRACE(TEXT("EventID = %d\n"),EventID);
 	}
 
+	if (m_AsyncStatusUpdatedFlags!=0) {
+		Updated|=::InterlockedExchange(pointer_cast<LONG*>(&m_AsyncStatusUpdatedFlags),0);
+	}
+
 	return Updated;
+}
+
+
+void CCoreEngine::SetAsyncStatusUpdatedFlag(DWORD Status)
+{
+	_InterlockedOr(pointer_cast<long*>(&m_AsyncStatusUpdatedFlags),Status);
 }
 
 

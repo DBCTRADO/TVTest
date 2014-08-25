@@ -79,6 +79,13 @@ bool CStatusItem::Update()
 }
 
 
+void CStatusItem::Redraw()
+{
+	if (m_pStatus!=NULL)
+		m_pStatus->RedrawItem(m_ID);
+}
+
+
 bool CStatusItem::GetMenuPos(POINT *pPos,UINT *pFlags)
 {
 	if (m_pStatus==NULL)
@@ -541,7 +548,20 @@ LRESULT CStatusView::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 }
 
 
-void CStatusView::UpdateItem(int ID)
+bool CStatusView::UpdateItem(int ID)
+{
+	CStatusItem *pItem=GetItemByID(ID);
+
+	if (pItem==NULL || !pItem->UpdateContent())
+		return false;
+
+	RedrawItem(ID);
+
+	return true;
+}
+
+
+void CStatusView::RedrawItem(int ID)
 {
 	if (m_hwnd!=NULL) {
 		RECT rc;
@@ -904,11 +924,11 @@ void CStatusView::SetHotItem(int Item)
 		m_HotItem=Item;
 		if (OldHotItem>=0) {
 			m_ItemList[OldHotItem]->OnFocus(false);
-			UpdateItem(IndexToID(OldHotItem));
+			RedrawItem(IndexToID(OldHotItem));
 		}
 		if (m_HotItem>=0) {
 			m_ItemList[m_HotItem]->OnFocus(true);
-			UpdateItem(IndexToID(m_HotItem));
+			RedrawItem(IndexToID(m_HotItem));
 		}
 
 		TRACKMOUSEEVENT tme;

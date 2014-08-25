@@ -24,6 +24,8 @@ public:
 	void SetShowTOTTime(bool fShow) { m_fShowTOTTime=fShow; }
 	bool IsPopupProgramInfoEnabled() const { return m_fEnablePopupProgramInfo; }
 	void EnablePopupProgramInfo(bool fEnable) { m_fEnablePopupProgramInfo=fEnable; }
+	bool GetShowEventProgress() const { return m_fShowEventProgress; }
+	void SetShowEventProgress(bool fShow) { m_fShowEventProgress=fShow; }
 
 private:
 	CStatusView *m_pStatusView;
@@ -48,6 +50,7 @@ private:
 
 	bool m_fShowTOTTime;
 	bool m_fEnablePopupProgramInfo;
+	bool m_fShowEventProgress;
 
 // CBasicDialog
 	INT_PTR DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam) override;

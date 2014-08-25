@@ -149,7 +149,7 @@ void CTsAnalyzer::Reset()
 #endif
 
 	// TOTテーブルPIDマップ追加
-	m_PidMapManager.MapTarget(PID_TOT, new CTotTable);
+	m_PidMapManager.MapTarget(PID_TOT, new CTotTable, OnTotUpdated, this);
 }
 
 
@@ -2240,6 +2240,16 @@ void CALLBACK CTsAnalyzer::OnPcrUpdated(const WORD wPID, CTsPidMapTarget *pMapTa
 
 	// イベントハンドラ呼び出し
 	pThis->CallEventHandler(EVENT_PCR_UPDATED);
+}
+
+
+void CALLBACK CTsAnalyzer::OnTotUpdated(const WORD wPID, CTsPidMapTarget *pMapTarget, CTsPidMapManager *pMapManager, const PVOID pParam)
+{
+	// TOTが更新された
+	CTsAnalyzer *pThis = static_cast<CTsAnalyzer *>(pParam);
+
+	// イベントハンドラ呼び出し
+	pThis->CallEventHandler(EVENT_TOT_UPDATED);
 }
 
 

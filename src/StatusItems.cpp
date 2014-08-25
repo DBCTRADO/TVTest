@@ -636,12 +636,31 @@ void CClockStatusItem::SetTOT(bool fTOT)
 CProgramInfoStatusItem::CProgramInfoStatusItem()
 	: CStatusItem(STATUS_ITEM_PROGRAMINFO,256)
 	, m_fNext(false)
+	, m_fShowProgress(true)
 	, m_fEnablePopupInfo(true)
+	, m_ProgressBackStyle(TVTest::Theme::FillStyle(TVTest::Theme::SolidStyle(TVTest::Theme::ThemeColor(160,160,160))))
+	, m_ProgressElapsedStyle(TVTest::Theme::FillStyle(TVTest::Theme::SolidStyle(TVTest::Theme::ThemeColor(0,0,128))))
+	, m_fValidProgress(false)
 {
 }
 
 void CProgramInfoStatusItem::Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect)
 {
+	if (m_fShowProgress && m_fValidProgress) {
+		RECT rcProgress=DrawRect;
+		rcProgress.top=rcProgress.bottom-(DrawRect.bottom-DrawRect.top)/3;
+		TVTest::Theme::Draw(hdc,rcProgress,m_ProgressBackStyle);
+		LONGLONG Elapsed=DiffSystemTime(&m_EventStartTime,&m_CurTime)/1000LL;
+		if (Elapsed>0) {
+			TVTest::Theme::SubtractBorderRect(m_ProgressBackStyle.Border,&rcProgress);
+			if (m_EventDuration>0 && Elapsed<static_cast<LONGLONG>(m_EventDuration)) {
+				rcProgress.right=rcProgress.left+
+					::MulDiv((rcProgress.right-rcProgress.left),static_cast<int>(Elapsed),m_EventDuration);
+			}
+			TVTest::Theme::Draw(hdc,rcProgress,m_ProgressElapsedStyle);
+		}
+	}
+
 	if (!m_Text.IsEmpty())
 		DrawText(hdc,DrawRect,m_Text.Get());
 }
@@ -649,6 +668,39 @@ void CProgramInfoStatusItem::Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawR
 void CProgramInfoStatusItem::DrawPreview(HDC hdc,const RECT &ItemRect,const RECT &DrawRect)
 {
 	DrawText(hdc,DrawRect,TEXT("1:00`1:30 ¡“ú‚Ìƒjƒ…[ƒX"));
+}
+
+bool CProgramInfoStatusItem::UpdateContent()
+{
+	CCoreEngine &CoreEngine=GetAppClass().CoreEngine;
+	TCHAR szText[256],szEventName[256];
+	CStaticStringFormatter Formatter(szText,lengthof(szText));
+	SYSTEMTIME StartTime;
+	DWORD Duration;
+
+	if (m_fNext)
+		Formatter.Append(TEXT("ŽŸ: "));
+	if (CoreEngine.m_DtvEngine.GetEventTime(&StartTime,&Duration,m_fNext)) {
+		TCHAR szTime[EpgUtil::MAX_EVENT_TIME_LENGTH];
+		if (EpgUtil::FormatEventTime(StartTime,Duration,szTime,lengthof(szTime))>0) {
+			Formatter.Append(szTime);
+			Formatter.Append(TEXT(" "));
+		}
+	}
+	if (CoreEngine.m_DtvEngine.GetEventName(szEventName,lengthof(szEventName),m_fNext)>0)
+		Formatter.Append(szEventName);
+
+	bool fUpdated=false;
+
+	if (m_Text.Compare(Formatter.GetString())!=0) {
+		m_Text.Set(Formatter.GetString());
+		fUpdated=true;
+	}
+
+	if (UpdateProgress())
+		fUpdated=true;
+
+	return fUpdated;
 }
 
 void CProgramInfoStatusItem::OnLButtonDown(int x,int y)
@@ -715,6 +767,22 @@ bool CProgramInfoStatusItem::OnMouseHover(int x,int y)
 void CProgramInfoStatusItem::SetTheme(const TVTest::Theme::CThemeManager *pThemeManager)
 {
 	m_EpgTheme.SetTheme(pThemeManager);
+
+	pThemeManager->GetBackgroundStyle(
+		TVTest::Theme::CThemeManager::STYLE_STATUSBAR_EVENT_PROGRESS,
+		&m_ProgressBackStyle);
+	pThemeManager->GetBackgroundStyle(
+		TVTest::Theme::CThemeManager::STYLE_STATUSBAR_EVENT_PROGRESS_ELAPSED,
+		&m_ProgressElapsedStyle);
+}
+
+void CProgramInfoStatusItem::SetShowProgress(bool fShow)
+{
+	if (m_fShowProgress!=fShow) {
+		m_fShowProgress=fShow;
+		UpdateProgress();
+		Update();
+	}
 }
 
 void CProgramInfoStatusItem::EnablePopupInfo(bool fEnable)
@@ -724,29 +792,35 @@ void CProgramInfoStatusItem::EnablePopupInfo(bool fEnable)
 		m_EventInfoPopup.Hide();
 }
 
-bool CProgramInfoStatusItem::UpdateContent()
+bool CProgramInfoStatusItem::UpdateProgress()
 {
-	CCoreEngine &CoreEngine=GetAppClass().CoreEngine;
-	TCHAR szText[256],szEventName[256];
-	CStaticStringFormatter Formatter(szText,lengthof(szText));
-	SYSTEMTIME StartTime;
-	DWORD Duration;
+	if (m_fShowProgress) {
+		CDtvEngine &DtvEngine=GetAppClass().CoreEngine.m_DtvEngine;
+		SYSTEMTIME StartTime,CurTime;
+		DWORD Duration;
+		bool fValid=
+			DtvEngine.GetEventTime(&StartTime,&Duration) &&
+			DtvEngine.m_TsAnalyzer.GetTotTime(&CurTime);
+		bool fUpdated;
 
-	if (m_fNext)
-		Formatter.Append(TEXT("ŽŸ: "));
-	if (CoreEngine.m_DtvEngine.GetEventTime(&StartTime,&Duration,m_fNext)) {
-		TCHAR szTime[EpgUtil::MAX_EVENT_TIME_LENGTH];
-		if (EpgUtil::FormatEventTime(StartTime,Duration,szTime,lengthof(szTime))>0) {
-			Formatter.Append(szTime);
-			Formatter.Append(TEXT(" "));
+		if (fValid) {
+			fUpdated=
+				!m_fValidProgress
+				|| CompareSystemTime(&m_EventStartTime,&StartTime)!=0
+				|| m_EventDuration!=Duration
+				|| CompareSystemTime(&m_CurTime,&CurTime)!=0;
+			m_EventStartTime=StartTime;
+			m_EventDuration=Duration;
+			m_CurTime=CurTime;
+		} else {
+			fUpdated=m_fValidProgress;
 		}
+		m_fValidProgress=fValid;
+
+		return fUpdated;
 	}
-	if (CoreEngine.m_DtvEngine.GetEventName(szEventName,lengthof(szEventName),m_fNext)>0)
-		Formatter.Append(szEventName);
-	if (m_Text.Compare(Formatter.GetString())==0)
-		return false;
-	m_Text.Set(Formatter.GetString());
-	return true;
+
+	return false;
 }
 
 void CProgramInfoStatusItem::ShowPopupInfo()
