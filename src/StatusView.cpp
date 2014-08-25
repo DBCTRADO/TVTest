@@ -853,8 +853,7 @@ bool CStatusView::SetItemOrder(const int *pOrderList)
 	if (m_hwnd!=NULL && !m_fSingleMode) {
 		if (m_fMultiRow)
 			AdjustSize();
-		else
-			Invalidate();
+		Invalidate();
 	}
 	return true;
 }
