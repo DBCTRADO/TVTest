@@ -1,4 +1,5 @@
 #include "stdafx.h"
+#include <cwctype>
 #include "StringUtility.h"
 #include "Util.h"
 
@@ -397,6 +398,55 @@ namespace TVTest
 			}
 
 			return true;
+		}
+
+
+		// FNV hash parameters
+		static const UINT32 FNV_PRIME_32=16777619UL;
+		static const UINT32 FNV_OFFSET_BASIS_32=2166136261UL;
+		static const UINT64 FNV_PRIME_64=1099511628211ULL;
+		static const UINT64 FNV_OFFSET_BASIS_64=14695981039346656037ULL;
+
+		template<typename TIterator,typename THash> THash FNVHash(
+			const TIterator &begin,const TIterator &end,
+			const THash OffsetBasis,const THash Prime)
+		{
+			THash Hash=OffsetBasis;
+
+			for (auto i=begin;i!=end;++i)
+				Hash=(Prime*Hash)^(*i);
+			return Hash;
+		}
+
+		template<typename TIterator,typename TTransform,typename THash> THash FNVHash(
+			const TIterator &begin,const TIterator &end,TTransform Transform,
+			const THash OffsetBasis,const THash Prime)
+		{
+			THash Hash=OffsetBasis;
+
+			for (auto i=begin;i!=end;++i)
+				Hash=(Prime*Hash)^Transform(*i);
+			return Hash;
+		}
+
+		UINT32 Hash32(const String &Str)
+		{
+			return FNVHash(Str.begin(),Str.end(),FNV_OFFSET_BASIS_32,FNV_PRIME_32);
+		}
+
+		UINT64 Hash64(const String &Str)
+		{
+			return FNVHash(Str.begin(),Str.end(),FNV_OFFSET_BASIS_64,FNV_PRIME_64);
+		}
+
+		UINT32 HashNoCase32(const String &Str)
+		{
+			return FNVHash(Str.begin(),Str.end(),std::towlower,FNV_OFFSET_BASIS_32,FNV_PRIME_32);
+		}
+
+		UINT64 HashNoCase64(const String &Str)
+		{
+			return FNVHash(Str.begin(),Str.end(),std::towlower,FNV_OFFSET_BASIS_64,FNV_PRIME_64);
 		}
 
 	}

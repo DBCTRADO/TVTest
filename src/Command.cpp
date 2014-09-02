@@ -2,9 +2,6 @@
 #include "TVTest.h"
 #include "AppMain.h"
 #include "Command.h"
-#include "DriverManager.h"
-#include "Plugin.h"
-#include "ZoomOptions.h"
 #include "HelperClass/StdUtil.h"
 #include "resource.h"
 
@@ -17,8 +14,8 @@ static char THIS_FILE[]=__FILE__;
 
 static const struct {
 	LPCTSTR pszText;
-	WORD Command;
-} CommandList[] = {
+	WORD ID;
+} DefaultCommandList[] = {
 	{TEXT("Zoom20"),					CM_ZOOM_20},
 	{TEXT("Zoom25"),					CM_ZOOM_25},
 	{TEXT("Zoom33"),					CM_ZOOM_33},
@@ -184,6 +181,7 @@ static const struct {
 
 CCommandList::CCommandList()
 {
+	RegisterDefaultCommands();
 }
 
 
@@ -192,82 +190,27 @@ CCommandList::~CCommandList()
 }
 
 
-bool CCommandList::Initialize(const CDriverManager *pDriverManager,
-							  const CPluginManager *pPluginManager)
-{
-	m_DriverList.clear();
-	if (pDriverManager!=NULL) {
-		for (int i=0;i<pDriverManager->NumDrivers();i++)
-			m_DriverList.push_back(CDynamicString(::PathFindFileName(pDriverManager->GetDriverInfo(i)->GetFileName())));
-	}
-
-	m_PluginList.clear();
-	m_PluginCommandList.clear();
-	if (pPluginManager!=NULL) {
-		for (int i=0;i<pPluginManager->NumPlugins();i++) {
-			const CPlugin *pPlugin=pPluginManager->GetPlugin(i);
-			LPCTSTR pszFileName=::PathFindFileName(pPlugin->GetFileName());
-
-			m_PluginList.push_back(CDynamicString(pszFileName));
-			for (int j=0;j<pPlugin->NumPluginCommands();j++) {
-				TVTest::CommandInfo Info;
-				LPTSTR pszText;
-
-				pPlugin->GetPluginCommandInfo(j,&Info);
-				pszText=new TCHAR[::lstrlen(pszFileName)+1+::lstrlen(Info.pszText)+1];
-				::wsprintf(pszText,TEXT("%s:%s"),pszFileName,Info.pszText);
-				m_PluginCommandList.push_back(PluginCommandInfo(pszText,Info.pszName));
-				delete [] pszText;
-			}
-		}
-	}
-
-	return true;
-}
-
-
 int CCommandList::NumCommands() const
 {
-	return (int)(lengthof(CommandList)+m_DriverList.size()+
-				 m_PluginList.size()+m_PluginCommandList.size());
+	return static_cast<int>(m_CommandList.size());
 }
 
 
 int CCommandList::GetCommandID(int Index) const
 {
-	int Base;
-
-	if (Index<0 || Index>=NumCommands())
+	if (Index<0 || static_cast<size_t>(Index)>=m_CommandList.size())
 		return 0;
-	if (Index<lengthof(CommandList))
-		return CommandList[Index].Command;
-	Base=lengthof(CommandList);
-	if (Index<Base+(int)m_DriverList.size())
-		return CM_DRIVER_FIRST+Index-Base;
-	Base+=(int)m_DriverList.size();
-	if (Index<Base+(int)m_PluginList.size())
-		return CM_PLUGIN_FIRST+Index-Base;
-	Base+=(int)m_PluginList.size();
-	return CM_PLUGINCOMMAND_FIRST+Index-Base;
+
+	return m_CommandList[Index].ID;
 }
 
 
 LPCTSTR CCommandList::GetCommandText(int Index) const
 {
-	int Base;
+	if (Index<0 || static_cast<size_t>(Index)>=m_CommandList.size())
+		return nullptr;
 
-	if (Index<0 || Index>=NumCommands())
-		return NULL;
-	if (Index<lengthof(CommandList))
-		return CommandList[Index].pszText;
-	Base=lengthof(CommandList);
-	if (Index<Base+(int)m_DriverList.size())
-		return m_DriverList[Index-Base].Get();
-	Base+=(int)m_DriverList.size();
-	if (Index<Base+(int)m_PluginList.size())
-		return m_PluginList[Index-Base].Get();
-	Base+=(int)m_PluginList.size();
-	return m_PluginCommandList[Index-Base].Text.Get();
+	return m_CommandList[Index].Text.c_str();
 }
 
 
@@ -283,47 +226,36 @@ LPCTSTR CCommandList::GetCommandTextByID(int ID) const
 
 int CCommandList::GetCommandName(int Index,LPTSTR pszName,int MaxLength) const
 {
-	int Base;
-
-	if (pszName==NULL || MaxLength<1)
+	if (pszName==nullptr || MaxLength<1)
 		return 0;
-	if (Index<0 || Index>=NumCommands()) {
+	if (Index<0 || static_cast<size_t>(Index)>=m_CommandList.size()) {
 		pszName[0]=_T('\0');
 		return 0;
 	}
-	if (Index<lengthof(CommandList)) {
-		const int Command=CommandList[Index].Command;
-		int Length=0;
-		for (size_t i=0;i<m_CustomizerList.size();i++) {
-			if (m_CustomizerList[i]->IsCommandValid(Command)) {
-				if (m_CustomizerList[i]->GetCommandName(Command,pszName,MaxLength))
-					Length=::lstrlen(pszName);
-				break;
-			}
+
+	const CommandInfo &Info=m_CommandList[Index];
+	const int ID=Info.ID;
+	int Length=0;
+
+	for (size_t i=0;i<m_CustomizerList.size();i++) {
+		if (m_CustomizerList[i]->IsCommandValid(ID)) {
+			if (m_CustomizerList[i]->GetCommandName(ID,pszName,MaxLength))
+				Length=::lstrlen(pszName);
+			break;
 		}
-		if (Length==0)
-			Length=::LoadString(GetAppClass().GetResourceInstance(),
-								Command,pszName,MaxLength);
-		return Length;
 	}
-	Base=lengthof(CommandList);
-	if (Index<Base+(int)m_DriverList.size())
-		return StdUtil::snprintf(pszName,MaxLength,TEXT("ドライバ (%s)"),
-								 m_DriverList[Index-Base].Get());
-	Base+=(int)m_DriverList.size();
-	if (Index<Base+(int)m_PluginList.size())
-		return StdUtil::snprintf(pszName,MaxLength,TEXT("プラグイン (%s)"),
-								 m_PluginList[Index-Base].Get());
-	Base+=(int)m_PluginList.size();
-	const PluginCommandInfo &PluginCommand=m_PluginCommandList[Index-Base];
-	LPCTSTR pszText=PluginCommand.Text.Get();
-	int Length;
-	TCHAR szFileName[MAX_PATH];
-	for (Length=0;pszText[Length]!=_T(':');Length++)
-		szFileName[Length]=pszText[Length];
-	szFileName[Length]=_T('\0');
-	return StdUtil::snprintf(pszName,MaxLength,TEXT("%s (%s)"),
-							 szFileName,PluginCommand.Name.Get());
+
+	if (Length==0) {
+		if (!Info.Name.empty()) {
+			::lstrcpyn(pszName,Info.Name.c_str(),MaxLength);
+			Length=min(static_cast<int>(Info.Name.length()),MaxLength-1);
+		} else {
+			Length=::LoadString(GetAppClass().GetResourceInstance(),
+								ID,pszName,MaxLength);
+		}
+	}
+
+	return Length;
 }
 
 
@@ -339,57 +271,72 @@ int CCommandList::GetCommandNameByID(int ID,LPTSTR pszName,int MaxLength) const
 
 int CCommandList::IDToIndex(int ID) const
 {
-	int Base;
+	auto itr=m_CommandIDMap.find(ID);
+	if (itr!=m_CommandIDMap.end())
+		return static_cast<int>(itr->second);
 
-	// 項目が多くなったらmapあたりを使って探すように直す
-	for (int i=0;i<lengthof(CommandList);i++) {
-		if (CommandList[i].Command==ID)
-			return i;
-	}
-	Base=lengthof(CommandList);
-	if (ID>=CM_DRIVER_FIRST && ID<CM_DRIVER_FIRST+(int)m_DriverList.size())
-		return Base+ID-CM_DRIVER_FIRST;
-	Base+=(int)m_DriverList.size();
-	if (ID>=CM_PLUGIN_FIRST && ID<CM_PLUGIN_FIRST+(int)m_PluginList.size())
-		return Base+ID-CM_PLUGIN_FIRST;
-	Base+=(int)m_PluginList.size();
-	if (ID>=CM_PLUGINCOMMAND_FIRST && ID<CM_PLUGINCOMMAND_LAST+(int)m_PluginCommandList.size())
-		return Base+ID-CM_PLUGINCOMMAND_FIRST;
 	return -1;
 }
 
 
 int CCommandList::ParseText(LPCTSTR pszText) const
 {
-	int i;
-
 	if (IsStringEmpty(pszText))
 		return 0;
-	// 項目が多くなったらmapあたりを使って探すように直す
-	for (i=0;i<lengthof(CommandList);i++) {
-		if (::lstrcmpi(CommandList[i].pszText,pszText)==0)
-			return CommandList[i].Command;
+
+	auto itr=m_CommandTextMap.find(TVTest::String(pszText));
+	if (itr==m_CommandTextMap.end())
+		return 0;
+
+	return itr->second;
+}
+
+
+bool CCommandList::RegisterCommand(int ID,LPCTSTR pszText,LPCTSTR pszName)
+{
+	if (IsStringEmpty(pszText))
+		return false;
+
+	CommandInfo Info;
+
+	Info.ID=ID;
+	Info.Text=pszText;
+	if (!IsStringEmpty(pszName))
+		Info.Name=pszName;
+
+	m_CommandList.push_back(Info);
+#ifndef _DEBUG
+	m_CommandTextMap.insert(std::pair<TVTest::String,int>(Info.Text,ID));
+	m_CommandIDMap.insert(std::pair<int,size_t>(ID,m_CommandList.size()-1));
+#else
+	if (!m_CommandTextMap.insert(std::pair<TVTest::String,int>(Info.Text,ID)).second
+			|| !m_CommandIDMap.insert(std::pair<int,size_t>(ID,m_CommandList.size()-1)).second) {
+		// 識別子重複
+		::DebugBreak();
 	}
-	for (i=0;i<(int)m_DriverList.size();i++) {
-		if (m_DriverList[i].CompareIgnoreCase(pszText)==0)
-			return CM_DRIVER_FIRST+i;
-	}
-	for (i=0;i<(int)m_PluginList.size();i++) {
-		if (m_PluginList[i].CompareIgnoreCase(pszText)==0)
-			return CM_PLUGIN_FIRST+i;
-	}
-	for (i=0;i<(int)m_PluginCommandList.size();i++) {
-		if (m_PluginCommandList[i].Text.CompareIgnoreCase(pszText)==0)
-			return CM_PLUGINCOMMAND_FIRST+i;
-	}
-	return 0;
+#endif
+
+	return true;
 }
 
 
 bool CCommandList::AddCommandCustomizer(CCommandCustomizer *pCustomizer)
 {
-	if (pCustomizer==NULL)
+	if (pCustomizer==nullptr)
 		return false;
 	m_CustomizerList.push_back(pCustomizer);
 	return true;
+}
+
+
+void CCommandList::RegisterDefaultCommands()
+{
+	static const size_t ReserveSize=lengthof(DefaultCommandList)+64;
+
+	m_CommandList.reserve(ReserveSize);
+	m_CommandTextMap.rehash(ReserveSize);
+	m_CommandIDMap.rehash(ReserveSize);
+
+	for (int i=0;i<lengthof(DefaultCommandList);i++)
+		RegisterCommand(DefaultCommandList[i].ID,DefaultCommandList[i].pszText);
 }

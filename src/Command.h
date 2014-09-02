@@ -3,10 +3,8 @@
 
 
 #include <vector>
+#include <unordered_map>
 
-
-class CDriverManager;
-class CPluginManager;
 
 class CCommandList
 {
@@ -32,8 +30,6 @@ public:
 
 	CCommandList();
 	~CCommandList();
-	bool Initialize(const CDriverManager *pDriverManager,
-					const CPluginManager *pPluginManager);
 	int NumCommands() const;
 	int GetCommandID(int Index) const;
 	LPCTSTR GetCommandText(int Index) const;
@@ -42,19 +38,24 @@ public:
 	int GetCommandNameByID(int ID,LPTSTR pszName,int MaxLength) const;
 	int IDToIndex(int ID) const;
 	int ParseText(LPCTSTR pszText) const;
+	bool RegisterCommand(int ID,LPCTSTR pszText,LPCTSTR pszName=nullptr);
 	bool AddCommandCustomizer(CCommandCustomizer *pCustomizer);
 
 private:
-	struct PluginCommandInfo {
-		CDynamicString Text;
-		CDynamicString Name;
-		PluginCommandInfo(LPCTSTR pszText,LPCTSTR pszName) : Text(pszText), Name(pszName) {}
+	void RegisterDefaultCommands();
+
+	struct CommandInfo {
+		int ID;
+		TVTest::String Text;
+		TVTest::String Name;
 	};
 
+	std::vector<CommandInfo> m_CommandList;
+	std::unordered_map<TVTest::String,int,
+		TVTest::StringFunctional::HashNoCase,
+		TVTest::StringFunctional::EqualNoCase> m_CommandTextMap;
+	std::unordered_map<int,size_t> m_CommandIDMap;
 	std::vector<CCommandCustomizer*> m_CustomizerList;
-	std::vector<CDynamicString> m_DriverList;
-	std::vector<CDynamicString> m_PluginList;
-	std::vector<PluginCommandInfo> m_PluginCommandList;
 };
 
 

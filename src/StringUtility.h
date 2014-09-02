@@ -93,6 +93,54 @@ namespace TVTest
 		bool Encode(LPCWSTR pszSrc,String *pDst,LPCWSTR pszEncodeChars=L"\\\"\',/");
 		bool Decode(LPCWSTR pszSrc,String *pDst);
 
+		UINT32 Hash32(const String &Str);
+		UINT64 Hash64(const String &Str);
+		UINT32 HashNoCase32(const String &Str);
+		UINT64 HashNoCase64(const String &Str);
+		inline std::size_t Hash(const String &Str) {
+#ifndef _WIN64
+			return Hash32(Str);
+#else
+			return Hash64(Str);
+#endif
+		}
+		inline std::size_t HashNoCase(const String &Str) {
+#ifndef _WIN64
+			return HashNoCase32(Str);
+#else
+			return HashNoCase64(Str);
+#endif
+		}
+
+	}
+
+	namespace StringFunctional
+	{
+
+		struct Equal {
+			bool operator()(const String &Str1,const String &Str2) const {
+				return Str1==Str2;
+			}
+		};
+
+		struct EqualNoCase {
+			bool operator()(const String &Str1,const String &Str2) const {
+				return StringUtility::CompareNoCase(Str1,Str2)==0;
+			}
+		};
+
+		struct Hash {
+			std::size_t operator()(const String &Str) const {
+				return StringUtility::Hash(Str);
+			}
+		};
+
+		struct HashNoCase {
+			std::size_t operator()(const String &Str) const {
+				return StringUtility::HashNoCase(Str);
+			}
+		};
+
 	}
 
 }

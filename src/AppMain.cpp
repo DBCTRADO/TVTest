@@ -902,7 +902,7 @@ int CAppMain::Main(HINSTANCE hInstance,LPCTSTR pszCmdLine,int nCmdShow)
 		PluginManager.LoadPlugins(szPluginDir,&ExcludePlugins);
 	}
 
-	CommandList.Initialize(&DriverManager,&PluginManager);
+	RegisterCommands();
 	CommandList.AddCommandCustomizer(&ZoomOptions);
 	CommandList.AddCommandCustomizer(&PanAndScanOptions);
 
@@ -1251,6 +1251,53 @@ BOOL CALLBACK CAppMain::ControllerFocusCallback(HWND hwnd,LPARAM Param)
 		pInfo->fFocus=false;
 	}
 	return TRUE;
+}
+
+
+void CAppMain::RegisterCommands()
+{
+	// BonDriver
+	for (int i=0;i<DriverManager.NumDrivers();i++) {
+		const CDriverInfo *pDriverInfo=DriverManager.GetDriverInfo(i);
+		LPCTSTR pszFileName=::PathFindFileName(pDriverInfo->GetFileName());
+		TCHAR szName[CCommandList::MAX_COMMAND_NAME];
+
+		StdUtil::snprintf(szName,lengthof(szName),TEXT("BonDriver切替 : %s"),pszFileName);
+		CommandList.RegisterCommand(CM_DRIVER_FIRST+i,pszFileName,szName);
+	}
+
+	// プラグイン
+	for (int i=0;i<PluginManager.NumPlugins();i++) {
+		const CPlugin *pPlugin=PluginManager.GetPlugin(i);
+		LPCTSTR pszFileName=::PathFindFileName(pPlugin->GetFileName());
+		TCHAR szName[CCommandList::MAX_COMMAND_NAME];
+
+		StdUtil::snprintf(szName,lengthof(szName),TEXT("プラグインOn/Off : %s"),pszFileName);
+		CommandList.RegisterCommand(CM_PLUGIN_FIRST+i,pszFileName,szName);
+	}
+
+	// プラグインの各コマンド
+	int ID=CM_PLUGINCOMMAND_FIRST;
+	for (int i=0;i<PluginManager.NumPlugins();i++) {
+		const CPlugin *pPlugin=PluginManager.GetPlugin(i);
+		LPCTSTR pszFileName=::PathFindFileName(pPlugin->GetFileName());
+
+		for (int j=0;j<pPlugin->NumPluginCommands();j++) {
+			TVTest::CommandInfo Info;
+			TVTest::String Text;
+			TCHAR szName[CCommandList::MAX_COMMAND_NAME];
+
+			pPlugin->GetPluginCommandInfo(j,&Info);
+
+			Text=pszFileName;
+			Text+=_T(':');
+			Text+=Info.pszText;
+
+			StdUtil::snprintf(szName,lengthof(szName),TEXT("%s : %s"),pszFileName,Info.pszName);
+			CommandList.RegisterCommand(ID,Text.c_str(),szName);
+			ID++;
+		}
+	}
 }
 
 

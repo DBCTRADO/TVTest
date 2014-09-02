@@ -577,6 +577,7 @@ private:
 // CColorSchemeOptions::CEventHandler
 	bool ApplyColorScheme(const CColorScheme *pColorScheme) override;
 
+	void RegisterCommands();
 	bool IsNoAcceleratorMessage(const MSG *pmsg);
 	void ApplyEventInfoFont();
 	bool GetAbsolutePath(LPCTSTR pszPath,LPTSTR pszAbsolutePath) const;
