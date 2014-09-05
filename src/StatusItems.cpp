@@ -713,7 +713,6 @@ void CProgramInfoStatusItem::OnLButtonDown(int x,int y)
 	} else {
 		m_fNext=!m_fNext;
 		m_EventInfoPopup.Hide();
-		UpdateContent();
 		Update();
 	}
 }
@@ -734,7 +733,6 @@ void CProgramInfoStatusItem::OnLButtonDoubleClick(int x,int y)
 {
 	if (!m_fEnablePopupInfo) {
 		m_fNext=!m_fNext;
-		UpdateContent();
 		Update();
 		m_EventInfoPopup.Hide();
 		ShowPopupInfo();
@@ -781,7 +779,7 @@ void CProgramInfoStatusItem::SetShowProgress(bool fShow)
 	if (m_fShowProgress!=fShow) {
 		m_fShowProgress=fShow;
 		UpdateProgress();
-		Update();
+		Redraw();
 	}
 }
 
