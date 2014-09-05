@@ -15,23 +15,195 @@ class CInformationPanel
 	, public CSettingsBase
 {
 public:
-	class ABSTRACT_CLASS(CEventHandler) {
-	public:
-		virtual ~CEventHandler() {}
-		virtual bool OnProgramInfoUpdate(bool fNext) { return false; }
-	};
-
 	enum {
-		ITEM_VIDEO,
-		ITEM_DECODER,
+		ITEM_VIDEOINFO,
+		ITEM_VIDEODECODER,
 		ITEM_VIDEORENDERER,
 		ITEM_AUDIODEVICE,
 		ITEM_SIGNALLEVEL,
 		ITEM_MEDIABITRATE,
 		ITEM_ERROR,
 		ITEM_RECORD,
+		ITEM_SERVICE,
 		ITEM_PROGRAMINFO,
 		NUM_ITEMS,
+	};
+
+	class CItem
+	{
+	public:
+		CItem(CInformationPanel *pPanel,bool fVisible);
+		virtual ~CItem() {}
+		virtual int GetID() const = 0;
+		virtual LPCTSTR GetName() const = 0;
+		virtual void Reset() {}
+		virtual bool Update() = 0;
+		virtual void Draw(HDC hdc,const RECT &Rect) {}
+		bool IsVisible() const { return m_fVisible; }
+		void SetVisible(bool fVisible) { m_fVisible=fVisible; }
+
+	protected:
+		void DrawItem(HDC hdc,const RECT &Rect,LPCTSTR pszText);
+		void UpdateItem();
+
+		CInformationPanel *m_pPanel;
+		bool m_fVisible;
+	};
+
+	template<int id> class CItemTemplate : public CItem
+	{
+	public:
+		static const int ID=id;
+		CItemTemplate(CInformationPanel *pPanel,bool fVisible) : CItem(pPanel,fVisible) {}
+		int GetID() const override { return id; }
+	};
+
+	class CVideoInfoItem : public CItemTemplate<ITEM_VIDEOINFO>
+	{
+	public:
+		CVideoInfoItem(CInformationPanel *pPanel,bool fVisible);
+		LPCTSTR GetName() const override { return TEXT("VideoInfo"); }
+		void Reset() override;
+		bool Update() override;
+		void Draw(HDC hdc,const RECT &Rect) override;
+
+	private:
+		int m_OriginalVideoWidth;
+		int m_OriginalVideoHeight;
+		int m_DisplayVideoWidth;
+		int m_DisplayVideoHeight;
+		int m_AspectX;
+		int m_AspectY;
+	};
+
+	class CVideoDecoderItem : public CItemTemplate<ITEM_VIDEODECODER>
+	{
+	public:
+		CVideoDecoderItem(CInformationPanel *pPanel,bool fVisible);
+		LPCTSTR GetName() const override { return TEXT("VideoInfo"); }
+		void Reset() override;
+		bool Update() override;
+		void Draw(HDC hdc,const RECT &Rect) override;
+
+	private:
+		TVTest::String m_VideoDecoderName;
+	};
+
+	class CVideoRendererItem : public CItemTemplate<ITEM_VIDEORENDERER>
+	{
+	public:
+		CVideoRendererItem(CInformationPanel *pPanel,bool fVisible);
+		LPCTSTR GetName() const override { return TEXT("VideoRenderer"); }
+		void Reset() override;
+		bool Update() override;
+		void Draw(HDC hdc,const RECT &Rect) override;
+
+	private:
+		TVTest::String m_VideoRendererName;
+	};
+
+	class CAudioDeviceItem : public CItemTemplate<ITEM_AUDIODEVICE>
+	{
+	public:
+		CAudioDeviceItem(CInformationPanel *pPanel,bool fVisible);
+		LPCTSTR GetName() const override { return TEXT("AudioDevice"); }
+		void Reset() override;
+		bool Update() override;
+		void Draw(HDC hdc,const RECT &Rect) override;
+
+	private:
+		TVTest::String m_AudioDeviceName;
+	};
+
+	class CSignalLevelItem : public CItemTemplate<ITEM_SIGNALLEVEL>
+	{
+	public:
+		CSignalLevelItem(CInformationPanel *pPanel,bool fVisible);
+		LPCTSTR GetName() const override { return TEXT("SignalLevel"); }
+		void Reset() override;
+		bool Update() override;
+		void Draw(HDC hdc,const RECT &Rect) override;
+		void ShowSignalLevel(bool fShow);
+
+	private:
+		bool m_fShowSignalLevel;
+		float m_SignalLevel;
+		DWORD m_BitRate;
+	};
+
+	class CMediaBitRateItem : public CItemTemplate<ITEM_MEDIABITRATE>
+	{
+	public:
+		CMediaBitRateItem(CInformationPanel *pPanel,bool fVisible);
+		LPCTSTR GetName() const override { return TEXT("MediaBitrate"); }
+		void Reset() override;
+		bool Update() override;
+		void Draw(HDC hdc,const RECT &Rect) override;
+
+	private:
+		DWORD m_VideoBitRate;
+		DWORD m_AudioBitRate;
+	};
+
+	class CErrorItem : public CItemTemplate<ITEM_ERROR>
+	{
+	public:
+		CErrorItem(CInformationPanel *pPanel,bool fVisible);
+		LPCTSTR GetName() const override { return TEXT("Error"); }
+		void Reset() override;
+		bool Update() override;
+		void Draw(HDC hdc,const RECT &Rect) override;
+
+	private:
+		bool m_fShowScramble;
+		ULONGLONG m_ErrorPacketCount;
+		ULONGLONG m_ContinuityErrorPacketCount;
+		ULONGLONG m_ScramblePacketCount;
+	};
+
+	class CRecordItem : public CItemTemplate<ITEM_RECORD>
+	{
+	public:
+		CRecordItem(CInformationPanel *pPanel,bool fVisible);
+		LPCTSTR GetName() const override { return TEXT("Record"); }
+		void Reset() override;
+		bool Update() override;
+		void Draw(HDC hdc,const RECT &Rect) override;
+
+	private:
+		bool m_fRecording;
+		ULONGLONG m_WroteSize;
+		unsigned int m_RecordTime;
+		LONGLONG m_DiskFreeSpace;
+	};
+
+	class CServiceItem : public CItemTemplate<ITEM_SERVICE>
+	{
+	public:
+		CServiceItem(CInformationPanel *pPanel,bool fVisible);
+		LPCTSTR GetName() const override { return TEXT("Service"); }
+		void Reset() override;
+		bool Update() override;
+		void Draw(HDC hdc,const RECT &Rect) override;
+
+	private:
+		TVTest::String m_ServiceName;
+	};
+
+	class CProgramInfoItem : public CItemTemplate<ITEM_PROGRAMINFO>
+	{
+	public:
+		CProgramInfoItem(CInformationPanel *pPanel,bool fVisible);
+		LPCTSTR GetName() const override { return TEXT("ProgramInfo"); }
+		void Reset() override;
+		bool Update() override;
+		const TVTest::String &GetInfoText() const { return m_InfoText; }
+		void SetNext(bool fNext);
+		bool IsNext() const { return m_fNext; }
+
+	private:
+		TVTest::String m_InfoText;
+		bool m_fNext;
 	};
 
 	static bool Initialize(HINSTANCE hinst);
@@ -52,28 +224,21 @@ public:
 	bool WriteSettings(CSettings &Settings) override;
 
 // CInformationPanel
-	void ResetStatistics();
 	bool IsVisible() const;
 	void SetColor(COLORREF crBackColor,COLORREF crTextColor);
 	void SetProgramInfoColor(COLORREF crBackColor,COLORREF crTextColor);
 	bool SetFont(const LOGFONT *pFont);
+	CItem *GetItem(int Item);
+	const CItem *GetItem(int Item) const;
+	template<typename T> T *GetItem() { return static_cast<T*>(GetItem(T::ID)); }
+	template<typename T> const T *GetItem() const { return static_cast<const T*>(GetItem(T::ID)); }
 	bool SetItemVisible(int Item,bool fVisible);
 	bool IsItemVisible(int Item) const;
-	void UpdateItem(int Item);
-	void SetVideoSize(int OriginalWidth,int OriginalHeight,int DisplayWidth,int DisplayHeight);
-	void SetAspectRatio(int AspectX,int AspectY);
-	void SetVideoDecoderName(LPCTSTR pszName);
-	void SetVideoRendererName(LPCTSTR pszName);
-	void SetAudioDeviceName(LPCTSTR pszName);
-	void ShowSignalLevel(bool fShow);
-	void SetMediaBitRate(DWORD VideoBitRate,DWORD AudioBitRate);
-	void SetRecordStatus(bool fRecording,LPCTSTR pszFileName=NULL,
-						 ULONGLONG WroteSize=0,unsigned int RecordTime=0,
-						 ULONGLONG FreeSpace=0);
-	void SetProgramInfo(LPCTSTR pszInfo);
-	bool GetProgramInfoNext() const { return m_fNextProgramInfo; }
+	bool UpdateItem(int Item);
+	void RedrawItem(int Item);
+	bool ResetItem(int Item);
+	bool UpdateAllItems();
 	bool SetProgramInfoRichEdit(bool fRichEdit);
-	bool SetEventHandler(CEventHandler *pHandler);
 
 private:
 	struct InformationPanelStyle
@@ -86,17 +251,16 @@ private:
 		void NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager);
 	};
 
+	template<typename T> void RegisterItem(bool fVisible=true)
+	{
+		T *pItem=new T(this,fVisible);
+		m_ItemList[pItem->GetID()]=pItem;
+	}
+
 	static const LPCTSTR m_pszClassName;
 	static HINSTANCE m_hinst;
 
-	HWND m_hwndProgramInfo;
-	WNDPROC m_pOldProgramInfoProc;
-	HWND m_hwndProgramInfoPrev;
-	HWND m_hwndProgramInfoNext;
-	CEventHandler *m_pEventHandler;
-	CRichEditUtil m_RichEditUtil;
-	bool m_fUseRichEdit;
-
+	CItem *m_ItemList[NUM_ITEMS];
 	InformationPanelStyle m_Style;
 	COLORREF m_crBackColor;
 	COLORREF m_crTextColor;
@@ -107,36 +271,22 @@ private:
 	DrawUtil::CFont m_Font;
 	int m_FontHeight;
 	DrawUtil::COffscreen m_Offscreen;
-	unsigned int m_ItemVisibility;
 
-	int m_OriginalVideoWidth;
-	int m_OriginalVideoHeight;
-	int m_DisplayVideoWidth;
-	int m_DisplayVideoHeight;
-	int m_AspectX;
-	int m_AspectY;
-	CDynamicString m_VideoDecoderName;
-	CDynamicString m_VideoRendererName;
-	CDynamicString m_AudioDeviceName;
-	bool m_fSignalLevel;
-	DWORD m_VideoBitRate;
-	DWORD m_AudioBitRate;
-	bool m_fRecording;
-	ULONGLONG m_RecordWroteSize;
-	unsigned int m_RecordTime;
-	ULONGLONG m_DiskFreeSpace;
-	CDynamicString m_ProgramInfo;
+	HWND m_hwndProgramInfo;
+	WNDPROC m_pOldProgramInfoProc;
+	HWND m_hwndProgramInfoPrev;
+	HWND m_hwndProgramInfoNext;
+	CRichEditUtil m_RichEditUtil;
+	bool m_fUseRichEdit;
 	CRichEditUtil::CharRangeList m_ProgramInfoLinkList;
 	POINT m_ProgramInfoClickPos;
 	bool m_fProgramInfoCursorOverLink;
-	bool m_fNextProgramInfo;
-
-	static const LPCTSTR m_pszItemNameList[];
 
 	static LRESULT CALLBACK ProgramInfoHookProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam);
 
 	void UpdateProgramInfoText();
 	bool CreateProgramInfoEdit();
+	void OnCommand(HWND hwnd,int id,HWND hwndCtl,UINT codeNotify);
 	void GetItemRect(int Item,RECT *pRect) const;
 	void CalcFontHeight();
 	void Draw(HDC hdc,const RECT &PaintRect);

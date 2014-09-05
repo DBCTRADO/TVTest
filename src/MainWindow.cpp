@@ -296,7 +296,8 @@ void CMainWindow::CreatePanel()
 
 	m_App.Panel.InfoPanel.SetProgramInfoRichEdit(m_App.PanelOptions.GetProgramInfoUseRichEdit());
 	m_App.Panel.InfoPanel.Create(m_App.Panel.Form.GetHandle(),WS_CHILD | WS_CLIPCHILDREN);
-	m_App.Panel.InfoPanel.ShowSignalLevel(!m_App.DriverOptions.IsNoSignalLevel(m_App.CoreEngine.GetDriverFileName()));
+	m_App.Panel.InfoPanel.GetItem<CInformationPanel::CSignalLevelItem>()->ShowSignalLevel(
+		!m_App.DriverOptions.IsNoSignalLevel(m_App.CoreEngine.GetDriverFileName()));
 	m_App.Panel.Form.AddWindow(&m_App.Panel.InfoPanel,PANEL_ID_INFORMATION,TEXT("情報"));
 
 	m_App.Panel.ProgramListPanel.SetEpgProgramList(&m_App.EpgProgramList);
@@ -336,14 +337,11 @@ bool CMainWindow::InitializeViewer(BYTE VideoStreamType)
 
 	if (m_Viewer.BuildViewer(VideoStreamType)) {
 		CMediaViewer &MediaViewer=m_App.CoreEngine.m_DtvEngine.m_MediaViewer;
-		TCHAR szText[256];
 
-		m_App.Panel.InfoPanel.SetVideoDecoderName(
-			MediaViewer.GetVideoDecoderName(szText,lengthof(szText))?szText:nullptr);
-		m_App.Panel.InfoPanel.SetVideoRendererName(
-			MediaViewer.GetVideoRendererName(szText,lengthof(szText))?szText:nullptr);
-		m_App.Panel.InfoPanel.SetAudioDeviceName(
-			MediaViewer.GetAudioRendererName(szText,lengthof(szText))?szText:nullptr);
+		m_App.Panel.InfoPanel.UpdateItem(CInformationPanel::ITEM_VIDEODECODER);
+		m_App.Panel.InfoPanel.UpdateItem(CInformationPanel::ITEM_VIDEORENDERER);
+		m_App.Panel.InfoPanel.UpdateItem(CInformationPanel::ITEM_AUDIODEVICE);
+
 		if (fEnableViewer)
 			m_pCore->EnableViewer(true);
 		if (m_fCustomFrame)
@@ -368,9 +366,9 @@ bool CMainWindow::FinalizeViewer()
 	m_App.MainMenu.CheckItem(CM_DISABLEVIEWER,true);
 	m_App.SideBar.CheckItem(CM_DISABLEVIEWER,true);
 
-	m_App.Panel.InfoPanel.SetVideoDecoderName(nullptr);
-	m_App.Panel.InfoPanel.SetVideoRendererName(nullptr);
-	m_App.Panel.InfoPanel.SetAudioDeviceName(nullptr);
+	m_App.Panel.InfoPanel.ResetItem(CInformationPanel::ITEM_VIDEODECODER);
+	m_App.Panel.InfoPanel.ResetItem(CInformationPanel::ITEM_VIDEORENDERER);
+	m_App.Panel.InfoPanel.ResetItem(CInformationPanel::ITEM_AUDIODEVICE);
 
 	return true;
 }
@@ -606,7 +604,7 @@ void CMainWindow::ShowPanel(bool fShow)
 	m_App.Panel.Frame.SetPanelVisible(fShow);
 
 	if (!fShow) {
-		m_App.Panel.InfoPanel.ResetStatistics();
+		m_App.Panel.InfoPanel.ResetItem(CInformationPanel::ITEM_PROGRAMINFO);
 		//m_App.Panel.ProgramListPanel.ClearProgramList();
 		m_App.Panel.ChannelPanel.ClearChannelList();
 	}
@@ -1382,6 +1380,8 @@ LRESULT CMainWindow::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 			if (m_App.pNetworkRemocon!=nullptr)
 				m_App.pNetworkRemocon->GetChannel(&m_App.NetworkRemoconGetChannel);
 #endif
+
+			m_App.Panel.InfoPanel.UpdateItem(CInformationPanel::ITEM_SERVICE);
 		}
 		return 0;
 
@@ -1390,6 +1390,9 @@ LRESULT CMainWindow::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 		m_App.AddLog(TEXT("サービスを変更しました。(SID %d)"),static_cast<int>(wParam));
 		m_pCore->UpdateTitle();
 		m_App.StatusView.UpdateItem(STATUS_ITEM_CHANNEL);
+		m_App.Panel.InfoPanel.UpdateItem(CInformationPanel::ITEM_SERVICE);
+		if (m_App.Panel.Form.GetCurPageID()==PANEL_ID_INFORMATION)
+			m_App.Panel.InfoPanel.UpdateItem(CInformationPanel::ITEM_PROGRAMINFO);
 		return 0;
 
 	case WM_APP_CHANGECASLIBRARY:
@@ -3340,11 +3343,7 @@ void CMainWindow::OnTimer(HWND hwnd,UINT id)
 			// 映像サイズの変化
 			if ((UpdateStatus&CCoreEngine::STATUS_VIDEOSIZE)!=0) {
 				m_App.StatusView.UpdateItem(STATUS_ITEM_VIDEOSIZE);
-				m_App.Panel.InfoPanel.SetVideoSize(
-					m_App.CoreEngine.GetOriginalVideoWidth(),
-					m_App.CoreEngine.GetOriginalVideoHeight(),
-					m_App.CoreEngine.GetDisplayVideoWidth(),
-					m_App.CoreEngine.GetDisplayVideoHeight());
+				m_App.Panel.InfoPanel.UpdateItem(CInformationPanel::ITEM_VIDEOINFO);
 				m_App.Panel.ControlPanel.UpdateItem(CONTROLPANEL_ITEM_VIDEO);
 			}
 
@@ -3427,18 +3426,15 @@ void CMainWindow::OnTimer(HWND hwnd,UINT id)
 				// パネルの更新
 				if (m_App.Panel.Form.GetCurPageID()==PANEL_ID_INFORMATION) {
 					// 情報タブ更新
-					BYTE AspectX,AspectY;
-					if (m_App.CoreEngine.m_DtvEngine.m_MediaViewer.GetEffectiveAspectRatio(&AspectX,&AspectY))
-						m_App.Panel.InfoPanel.SetAspectRatio(AspectX,AspectY);
+
+					m_App.Panel.InfoPanel.UpdateItem(CInformationPanel::ITEM_VIDEOINFO);
 
 					if ((UpdateStatistics&(CCoreEngine::STATISTIC_SIGNALLEVEL
 										 | CCoreEngine::STATISTIC_BITRATE))!=0) {
 						m_App.Panel.InfoPanel.UpdateItem(CInformationPanel::ITEM_SIGNALLEVEL);
 					}
 
-					m_App.Panel.InfoPanel.SetMediaBitRate(
-						m_App.CoreEngine.m_DtvEngine.m_MediaViewer.GetVideoBitRate(),
-						m_App.CoreEngine.m_DtvEngine.m_MediaViewer.GetAudioBitRate());
+					m_App.Panel.InfoPanel.UpdateItem(CInformationPanel::ITEM_MEDIABITRATE);
 
 					if ((UpdateStatistics&(CCoreEngine::STATISTIC_ERRORPACKETCOUNT
 										 | CCoreEngine::STATISTIC_CONTINUITYERRORPACKETCOUNT
@@ -3446,17 +3442,11 @@ void CMainWindow::OnTimer(HWND hwnd,UINT id)
 						m_App.Panel.InfoPanel.UpdateItem(CInformationPanel::ITEM_ERROR);
 					}
 
-					if (m_App.RecordManager.IsRecording()) {
-						const CRecordTask *pRecordTask=m_App.RecordManager.GetRecordTask();
-						const LONGLONG FreeSpace=pRecordTask->GetFreeSpace();
-
-						m_App.Panel.InfoPanel.SetRecordStatus(true,pRecordTask->GetFileName(),
-							pRecordTask->GetWroteSize(),pRecordTask->GetRecordTime(),
-							FreeSpace<0?0:FreeSpace);
-					}
+					if (m_App.RecordManager.IsRecording())
+						m_App.Panel.InfoPanel.UpdateItem(CInformationPanel::ITEM_RECORD);
 
 					if (fUpdateEventInfo)
-						UpdateProgramInfo();
+						m_App.Panel.InfoPanel.UpdateItem(CInformationPanel::ITEM_PROGRAMINFO);
 				} else if (m_App.Panel.Form.GetCurPageID()==PANEL_ID_CHANNEL) {
 					// チャンネルタブ更新
 					if (!m_App.EpgOptions.IsEpgFileLoading()
@@ -3712,60 +3702,6 @@ void CMainWindow::OnTimer(HWND hwnd,UINT id)
 		::KillTimer(hwnd,TIMER_ID_HIDECURSOR);
 		break;
 	}
-}
-
-
-bool CMainWindow::UpdateProgramInfo()
-{
-	const bool fNext=m_App.Panel.InfoPanel.GetProgramInfoNext();
-	TCHAR szText[4096],szTemp[2048];
-	CStaticStringFormatter Formatter(szText,lengthof(szText));
-
-	if (fNext)
-		Formatter.Append(TEXT("次 : "));
-
-	SYSTEMTIME StartTime;
-	DWORD Duration;
-	if (m_App.CoreEngine.m_DtvEngine.GetEventTime(&StartTime,&Duration,fNext)
-			&& EpgUtil::FormatEventTime(StartTime,Duration,szTemp,lengthof(szTemp),
-				EpgUtil::EVENT_TIME_DATE | EpgUtil::EVENT_TIME_YEAR | EpgUtil::EVENT_TIME_UNDECIDED_TEXT)>0) {
-		Formatter.Append(szTemp);
-		Formatter.Append(TEXT("\r\n"));
-	}
-	if (m_App.CoreEngine.m_DtvEngine.GetEventName(szTemp,lengthof(szTemp),fNext)>0) {
-		Formatter.Append(szTemp);
-		Formatter.Append(TEXT("\r\n\r\n"));
-	}
-	if (m_App.CoreEngine.m_DtvEngine.GetEventText(szTemp,lengthof(szTemp),fNext)>0) {
-		Formatter.Append(szTemp);
-		Formatter.Append(TEXT("\r\n\r\n"));
-	}
-	if (m_App.CoreEngine.m_DtvEngine.GetEventExtendedText(szTemp,lengthof(szTemp),fNext)>0) {
-		Formatter.Append(szTemp);
-	}
-
-	CTsAnalyzer::EventSeriesInfo SeriesInfo;
-	if (m_App.CoreEngine.m_DtvEngine.GetEventSeriesInfo(&SeriesInfo,fNext)
-			&& SeriesInfo.EpisodeNumber!=0 && SeriesInfo.LastEpisodeNumber!=0) {
-		Formatter.Append(TEXT("\r\n\r\n(シリーズ"));
-		if (SeriesInfo.RepeatLabel!=0)
-			Formatter.Append(TEXT(" [再]"));
-		if (SeriesInfo.EpisodeNumber!=0 && SeriesInfo.LastEpisodeNumber!=0)
-			Formatter.AppendFormat(TEXT(" 第%d回 / 全%d回"),
-								   SeriesInfo.EpisodeNumber,SeriesInfo.LastEpisodeNumber);
-		// expire_date は実際の最終回の日時でないので、紛らわしいため表示しない
-		/*
-		if (SeriesInfo.bIsExpireDateValid)
-			Formatter.AppendFormat(TEXT(" 終了予定%d/%d/%d"),
-								   SeriesInfo.ExpireDate.wYear,
-								   SeriesInfo.ExpireDate.wMonth,
-								   SeriesInfo.ExpireDate.wDay);
-		*/
-		Formatter.Append(TEXT(")"));
-	}
-
-	m_App.Panel.InfoPanel.SetProgramInfo(Formatter.GetString());
-	return true;
 }
 
 
@@ -4234,13 +4170,16 @@ void CMainWindow::OnTunerChanged()
 		EndProgramGuideUpdate(0);
 
 	m_App.Panel.ProgramListPanel.ClearProgramList();
-	m_App.Panel.InfoPanel.ResetStatistics();
+	m_App.Panel.InfoPanel.ResetItem(CInformationPanel::ITEM_SERVICE);
+	m_App.Panel.InfoPanel.ResetItem(CInformationPanel::ITEM_PROGRAMINFO);
+
 	bool fNoSignalLevel=m_App.DriverOptions.IsNoSignalLevel(m_App.CoreEngine.GetDriverFileName());
-	m_App.Panel.InfoPanel.ShowSignalLevel(!fNoSignalLevel);
+	m_App.Panel.InfoPanel.GetItem<CInformationPanel::CSignalLevelItem>()->ShowSignalLevel(!fNoSignalLevel);
 	CSignalLevelStatusItem *pItem=dynamic_cast<CSignalLevelStatusItem*>(
 		m_App.StatusView.GetItemByID(STATUS_ITEM_SIGNALLEVEL));
 	if (pItem!=nullptr)
 		pItem->ShowSignalLevel(!fNoSignalLevel);
+
 	/*
 	if (IsPanelVisible() && m_App.Panel.Form.GetCurPageID()==PANEL_ID_CHANNEL) {
 		m_App.Panel.ChannelPanel.SetChannelList(
@@ -4312,7 +4251,8 @@ void CMainWindow::OnChannelChanged(unsigned int Status)
 	m_App.Panel.ProgramListPanel.ClearProgramList();
 	::SetTimer(m_hwnd,TIMER_ID_PROGRAMLISTUPDATE,10000,nullptr);
 	m_ProgramListUpdateTimerCount=0;
-	m_App.Panel.InfoPanel.ResetStatistics();
+	m_App.Panel.InfoPanel.ResetItem(CInformationPanel::ITEM_SERVICE);
+	m_App.Panel.InfoPanel.ResetItem(CInformationPanel::ITEM_PROGRAMINFO);
 	m_App.Panel.ProgramListPanel.ShowRetrievingMessage(true);
 	if (fSpaceChanged) {
 		if (IsPanelVisible() && m_App.Panel.Form.GetCurPageID()==PANEL_ID_CHANNEL) {
@@ -4422,8 +4362,9 @@ void CMainWindow::OnServiceChanged()
 
 	m_App.StatusView.UpdateItem(STATUS_ITEM_CHANNEL);
 
+	m_App.Panel.InfoPanel.UpdateItem(CInformationPanel::ITEM_SERVICE);
 	if (m_App.Panel.Form.GetCurPageID()==PANEL_ID_INFORMATION)
-		UpdateProgramInfo();
+		m_App.Panel.InfoPanel.UpdateItem(CInformationPanel::ITEM_PROGRAMINFO);
 
 	OnAudioStreamChanged();
 }
@@ -4462,7 +4403,7 @@ void CMainWindow::OnEventChanged()
 
 	if (IsPanelVisible()
 			&& m_App.Panel.Form.GetCurPageID()==PANEL_ID_INFORMATION)
-		UpdateProgramInfo();
+		m_App.Panel.InfoPanel.UpdateItem(CInformationPanel::ITEM_PROGRAMINFO);
 
 	m_App.StatusView.UpdateItem(STATUS_ITEM_PROGRAMINFO);
 
@@ -4521,7 +4462,7 @@ void CMainWindow::OnRecordingStarted()
 void CMainWindow::OnRecordingStopped()
 {
 	m_App.StatusView.UpdateItem(STATUS_ITEM_RECORD);
-	m_App.Panel.InfoPanel.SetRecordStatus(false);
+	m_App.Panel.InfoPanel.UpdateItem(CInformationPanel::ITEM_RECORD);
 	//m_App.MainMenu.EnableItem(CM_RECORDOPTION,true);
 	//m_App.MainMenu.EnableItem(CM_RECORDSTOPTIME,false);
 	m_App.TaskbarManager.SetRecordingStatus(false);
@@ -5905,17 +5846,7 @@ void CMainWindow::UpdatePanel()
 {
 	switch (m_App.Panel.Form.GetCurPageID()) {
 	case PANEL_ID_INFORMATION:
-		{
-			BYTE AspectX,AspectY;
-			if (m_App.CoreEngine.m_DtvEngine.m_MediaViewer.GetEffectiveAspectRatio(&AspectX,&AspectY))
-				m_App.Panel.InfoPanel.SetAspectRatio(AspectX,AspectY);
-			if (m_App.RecordManager.IsRecording()) {
-				const CRecordTask *pRecordTask=m_App.RecordManager.GetRecordTask();
-				m_App.Panel.InfoPanel.SetRecordStatus(true,pRecordTask->GetFileName(),
-					pRecordTask->GetWroteSize(),pRecordTask->GetRecordTime());
-			}
-			UpdateProgramInfo();
-		}
+		m_App.Panel.InfoPanel.UpdateAllItems();
 		break;
 
 	case PANEL_ID_PROGRAMLIST:

@@ -721,9 +721,15 @@ int CCoreEngine::GetBitRateText(LPTSTR pszText,int MaxLength) const
 }
 
 
-int CCoreEngine::GetBitRateText(float BitRate,LPTSTR pszText,int MaxLength) const
+int CCoreEngine::GetBitRateText(DWORD BitRate,LPTSTR pszText,int MaxLength) const
 {
-	return StdUtil::snprintf(pszText,MaxLength,TEXT("%.2f Mbps"),BitRate);
+	return GetBitRateText(BitRateToFloat(BitRate),pszText,MaxLength);
+}
+
+
+int CCoreEngine::GetBitRateText(float BitRate,LPTSTR pszText,int MaxLength,int Precision) const
+{
+	return StdUtil::snprintf(pszText,MaxLength,TEXT("%.*f Mbps"),Precision,BitRate);
 }
 
 

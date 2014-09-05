@@ -172,8 +172,6 @@ public:
 	CStatusView &GetStatusView();
 	CSideBar &GetSideBar();
 
-	bool UpdateProgramInfo();
-
 	enum {
 		PROGRAMGUIDE_SHOW_ONSCREEN = 0x0001U,
 		PROGRAMGUIDE_SHOW_POPUP    = 0x0002U

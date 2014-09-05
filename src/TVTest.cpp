@@ -376,7 +376,6 @@ CMainPanel::CMainPanel()
 	Frame.SetFloating(false);
 	Frame.SetEventHandler(&m_FrameEventHandler);
 	Form.SetEventHandler(&m_FormEventHandler);
-	InfoPanel.SetEventHandler(&m_InfoPanelEventHandler);
 	ChannelPanel.SetEventHandler(&m_ChannelPanelEventHandler);
 }
 
@@ -709,13 +708,6 @@ void CMainPanel::CFormEventHandler::OnTabRButtonDown(int x,int y)
 bool CMainPanel::CFormEventHandler::OnKeyDown(UINT KeyCode,UINT Flags)
 {
 	g_App.MainWindow.SendMessage(WM_KEYDOWN,KeyCode,Flags);
-	return true;
-}
-
-
-bool CMainPanel::CInformationPanelEventHandler::OnProgramInfoUpdate(bool fNext)
-{
-	g_App.MainWindow.UpdateProgramInfo();
 	return true;
 }
 

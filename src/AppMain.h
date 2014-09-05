@@ -163,11 +163,6 @@ private:
 		bool OnKeyDown(UINT KeyCode,UINT Flags) override;
 	};
 
-	class CInformationPanelEventHandler : public CInformationPanel::CEventHandler
-	{
-		bool OnProgramInfoUpdate(bool fNext) override;
-	};
-
 	class CChannelPanelEventHandler : public CChannelPanel::CEventHandler
 	{
 		void OnChannelClick(const CChannelInfo *pChannelInfo) override;
@@ -176,7 +171,6 @@ private:
 
 	CFrameEventHandler m_FrameEventHandler;
 	CFormEventHandler m_FormEventHandler;
-	CInformationPanelEventHandler m_InfoPanelEventHandler;
 	CChannelPanelEventHandler m_ChannelPanelEventHandler;
 };
 

@@ -128,9 +128,11 @@ public:
 	int GetSignalLevelText(LPTSTR pszText,int MaxLength) const;
 	int GetSignalLevelText(float SignalLevel,LPTSTR pszText,int MaxLength) const;
 	DWORD GetBitRate() const { return m_BitRate; }
-	float GetBitRateFloat() const { return (float)m_BitRate/(float)(1024*1024); }
+	static float BitRateToFloat(DWORD BitRate) { return (float)BitRate/(float)(1000*1000); }
+	float GetBitRateFloat() const { return BitRateToFloat(m_BitRate); }
 	int GetBitRateText(LPTSTR pszText,int MaxLength) const;
-	int GetBitRateText(float BitRate,LPTSTR pszText,int MaxLength) const;
+	int GetBitRateText(DWORD BitRate,LPTSTR pszText,int MaxLength) const;
+	int GetBitRateText(float BitRate,LPTSTR pszText,int MaxLength,int Precision=2) const;
 	DWORD GetStreamRemain() const { return m_StreamRemain; }
 	int GetPacketBufferUsedPercentage();
 	bool GetCurrentEventInfo(CEventInfoData *pInfo,WORD ServiceID=0xFFFF,bool fNext=false);
