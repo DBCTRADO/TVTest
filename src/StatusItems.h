@@ -46,10 +46,16 @@ public:
 	CVideoSizeStatusItem();
 // CStatusItem
 	LPCTSTR GetName() const override { return TEXT("映像サイズ"); }
+	bool UpdateContent() override;
 	void Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect) override;
 	void DrawPreview(HDC hdc,const RECT &ItemRect,const RECT &DrawRect) override;
 	void OnLButtonDown(int x,int y) override;
 	void OnRButtonDown(int x,int y) override;
+
+private:
+	int m_OriginalVideoWidth;
+	int m_OriginalVideoHeight;
+	int m_ZoomPercentage;
 };
 
 class CVolumeStatusItem : public CStatusItem
@@ -132,34 +138,43 @@ public:
 	CErrorStatusItem();
 // CStatusItem
 	LPCTSTR GetName() const override { return TEXT("エラー"); }
+	bool UpdateContent() override;
 	void Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect) override;
 	void DrawPreview(HDC hdc,const RECT &ItemRect,const RECT &DrawRect) override;
 	void OnLButtonDown(int x,int y) override;
 	void OnRButtonDown(int x,int y) override;
+
+private:
+	ULONGLONG m_ContinuityErrorPacketCount;
+	ULONGLONG m_ErrorPacketCount;
+	ULONGLONG m_ScramblePacketCount;
 };
 
 class CSignalLevelStatusItem : public CStatusItem
 {
-	bool m_fShowSignalLevel;
-
 public:
 	CSignalLevelStatusItem();
 // CStatusItem
 	LPCTSTR GetName() const override { return TEXT("信号レベル"); }
+	bool UpdateContent() override;
 	void Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect) override;
 	void DrawPreview(HDC hdc,const RECT &ItemRect,const RECT &DrawRect) override;
 // CSignalLevelStatusItem
 	void ShowSignalLevel(bool fShow);
+
+private:
+	bool m_fShowSignalLevel;
+	float m_SignalLevel;
+	DWORD m_BitRate;
 };
 
 class CClockStatusItem : public CStatusItem
 {
-	bool m_fTOT;
-
 public:
 	CClockStatusItem();
 // CStatusItem
 	LPCTSTR GetName() const override { return TEXT("時計"); }
+	bool UpdateContent() override;
 	void Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect) override;
 	void DrawPreview(HDC hdc,const RECT &ItemRect,const RECT &DrawRect) override;
 	void OnLButtonDown(int x,int y) override;
@@ -167,6 +182,12 @@ public:
 // CClockStatusItem
 	void SetTOT(bool fTOT);
 	bool IsTOT() const { return m_fTOT; }
+
+private:
+	void FormatTime(const SYSTEMTIME &Time,LPTSTR pszText,int MaxLength) const;
+
+	bool m_fTOT;
+	SYSTEMTIME m_Time;
 };
 
 class CProgramInfoStatusItem : public CStatusItem
@@ -216,9 +237,14 @@ public:
 	CBufferingStatusItem();
 // CStatusItem
 	LPCTSTR GetName() const override { return TEXT("バッファリング"); }
+	bool UpdateContent() override;
 	void Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect) override;
 	void DrawPreview(HDC hdc,const RECT &ItemRect,const RECT &DrawRect) override;
 	void OnLButtonDown(int x,int y) override;
+
+private:
+	DWORD m_StreamRemain;
+	int m_PacketBufferUsedPercentage;
 };
 
 class CTunerStatusItem : public CStatusItem
@@ -239,8 +265,13 @@ public:
 	CMediaBitRateStatusItem();
 // CStatusItem
 	LPCTSTR GetName() const override { return TEXT("ビットレート"); }
+	bool UpdateContent() override;
 	void Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect) override;
 	void DrawPreview(HDC hdc,const RECT &ItemRect,const RECT &DrawRect) override;
+
+private:
+	DWORD m_VideoBitRate;
+	DWORD m_AudioBitRate;
 };
 
 class CFavoritesStatusItem : public CIconStatusItem
