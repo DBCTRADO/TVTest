@@ -268,7 +268,7 @@ protected:
 		bool IsComplete(int Hour, bool bExtended) const;
 		bool IsTableComplete(int Table, int Hour, bool bExtended) const;
 		bool HasSchedule(const bool bExtended) const;
-		bool OnSection(const class CEitTable *pTable, const CPsiSection *pSection);
+		bool OnSection(const class CEitParserTable *pTable, const CPsiSection *pSection);
 
 	private:
 		struct SegmentInfo {

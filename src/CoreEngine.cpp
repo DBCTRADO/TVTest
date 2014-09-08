@@ -38,7 +38,6 @@ CCoreEngine::CCoreEngine()
 	, m_AutoStereoMode(STEREOMODE_LEFT)
 	, m_fDownMixSurround(true)
 	, m_fSpdifPassthrough(false)
-	, m_EventID(0)
 	, m_ErrorPacketCount(0)
 	, m_ContinuityErrorPacketCount(0)
 	, m_ScramblePacketCount(0)
@@ -627,13 +626,6 @@ DWORD CCoreEngine::UpdateAsyncStatus()
 		m_fSpdifPassthrough=fSpdifPassthrough;
 		Updated|=STATUS_SPDIFPASSTHROUGH;
 		TRACE(TEXT("S/PDIF passthrough %s\n"),fSpdifPassthrough?TEXT("ON"):TEXT("OFF"));
-	}
-
-	WORD EventID=m_DtvEngine.GetEventID();
-	if (EventID!=m_EventID) {
-		m_EventID=EventID;
-		Updated|=STATUS_EVENTID;
-		TRACE(TEXT("EventID = %d\n"),EventID);
 	}
 
 	if (m_AsyncStatusUpdatedFlags!=0) {

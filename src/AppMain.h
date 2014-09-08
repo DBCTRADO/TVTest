@@ -514,6 +514,8 @@ private:
 		void OnEcmError(LPCTSTR pszText) override;
 		void OnEcmRefused() override;
 		void OnCardReaderHung() override;
+		void OnEventChanged(CTsAnalyzer *pTsAnalyzer,WORD EventID) override;
+		void OnEventUpdated(CTsAnalyzer *pTsAnalyzer) override;
 		void OnTotUpdated(CTsAnalyzer *pTsAnalyzer) override;
 	// CDtvEngineEventHandler
 		void OnServiceUpdated(CTsAnalyzer *pTsAnalyzer,bool fListUpdated,bool fStreamChanged);

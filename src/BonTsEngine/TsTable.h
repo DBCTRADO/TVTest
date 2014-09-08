@@ -176,6 +176,7 @@ public:
 	bool UnmapTable(const BYTE TableID);
 	void UnmapAllTables();
 	CPsiTableBase * GetTableByID(const BYTE TableID);
+	const CPsiTableBase * GetTableByID(const BYTE TableID) const;
 	BYTE GetLastUpdatedTableID() const;
 
 protected:
@@ -434,53 +435,85 @@ protected:
 
 
 /////////////////////////////////////////////////////////////////////////////
-// EIT[p/f]テーブル抽象化クラス
+// EITテーブル抽象化クラス
 /////////////////////////////////////////////////////////////////////////////
 
-class CEitPfTable : public CPsiStreamTable
+class CEitTable : public CPsiSingleTable
 {
 public:
-	CEitPfTable();
+	enum {
+		TABLE_ID_PF_ACTUAL = 0x4E,	// p/f actual
+		TABLE_ID_PF_OTHER  = 0x4F	// p/f other
+	};
+
+	CEitTable();
 
 // CPsiSingleTable
-	virtual void Reset() override;
+	void Reset() override;
 
-// CEitPfTable
-	const DWORD GetServiceNum() const;
-	const int GetServiceIndexByID(WORD ServiceID) const;
-	const WORD GetServiceID(DWORD Index) const;
-	const WORD GetTransportStreamID(DWORD Index) const;
-	const WORD GetOriginalNetworkID(DWORD Index) const;
-	const WORD GetEventID(DWORD Index, DWORD EventIndex) const;
-	const SYSTEMTIME *GetStartTime(DWORD Index, DWORD EventIndex) const;
-	const DWORD GetDuration(DWORD Index, DWORD EventIndex) const;
-	const BYTE GetRunningStatus(DWORD Index, DWORD EventIndex) const;
-	const bool GetFreeCaMode(DWORD Index, DWORD EventIndex) const;
-	const CDescBlock * GetItemDesc(DWORD Index, DWORD EventIndex) const;
-
-protected:
-	virtual const bool OnTableUpdate(const CPsiSection *pCurSection) override;
-
+// CEitTable
 	struct EventInfo {
-		bool bEnable;
 		WORD EventID;
 		bool bValidStartTime;
 		SYSTEMTIME StartTime;
 		DWORD Duration;
 		BYTE RunningStatus;
-		bool FreeCaMode;
+		bool bFreeCaMode;
 		CDescBlock DescBlock;
-		EventInfo() : bEnable(false) {}
 	};
 
-	struct ServiceInfo {
-		WORD ServiceID;
-		WORD TransportStreamID;
-		WORD OriginalNetworkID;
-		EventInfo EventList[2];
-	};
+	WORD GetServiceID() const;
+	WORD GetTransportStreamID() const;
+	WORD GetOriginalNetworkID() const;
+	BYTE GetSegmentLastSectionNumber() const;
+	BYTE GetLastTableID() const;
+	int GetEventNum() const;
+	const EventInfo * GetEventInfo(const int Index = 0) const;
+	WORD GetEventID(const int Index = 0) const;
+	const SYSTEMTIME * GetStartTime(const int Index = 0) const;
+	DWORD GetDuration(const int Index = 0) const;
+	BYTE GetRunningStatus(const int Index = 0) const;
+	bool GetFreeCaMode(const int Index = 0) const;
+	const CDescBlock * GetItemDesc(const int Index = 0) const;
 
-	std::vector<ServiceInfo> m_ServiceList;
+protected:
+	const bool OnTableUpdate(const CPsiSection *pCurSection, const CPsiSection *pOldSection) override;
+
+	WORD m_ServiceID;
+	WORD m_TransportStreamID;
+	WORD m_OriginalNetworkID;
+	BYTE m_SegmentLastSectionNumber;
+	BYTE m_LastTableID;
+
+	std::vector<EventInfo> m_EventList;
+};
+
+class CEitMultiTable : public CPsiTable
+{
+public:
+	const CEitTable * GetEitTable(const WORD ServiceID, const WORD SectionNo) const;
+
+protected:
+// CPsiTable
+	CPsiTableBase * CreateSectionTable(const CPsiSection *pSection) override;
+};
+
+class CEitPfTable : public CPsiTableSet
+{
+public:
+	CEitPfTable();
+	const CEitMultiTable * GetPfActualTable() const;
+	const CEitTable * GetPfActualTable(const WORD ServiceID, const bool bFollowing = false) const;
+	const CEitMultiTable * GetPfOtherTable() const;
+	const CEitTable * GetPfOtherTable(const WORD ServiceID, const bool bFollowing = false) const;
+};
+
+class CEitPfActualTable : public CPsiTableSet
+{
+public:
+	CEitPfActualTable();
+	const CEitMultiTable * GetPfActualTable() const;
+	const CEitTable * GetPfActualTable(const WORD ServiceID, const bool bFollowing = false) const;
 };
 
 

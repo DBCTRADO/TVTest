@@ -3334,9 +3334,6 @@ void CMainWindow::OnTimer(HWND hwnd,UINT id)
 	case TIMER_ID_UPDATE:
 		// 情報更新
 		{
-			static unsigned int TimerCount=0;
-			const CChannelInfo *pChInfo=m_App.ChannelManager.GetCurrentChannelInfo();
-
 			DWORD UpdateStatus=m_App.CoreEngine.UpdateAsyncStatus();
 			DWORD UpdateStatistics=m_App.CoreEngine.UpdateStatistics();
 
@@ -3366,8 +3363,8 @@ void CMainWindow::OnTimer(HWND hwnd,UINT id)
 			if ((UpdateStatus & CCoreEngine::STATUS_EVENTID)!=0) {
 				// 番組の切り替わり
 				OnEventChanged();
-			} else if (TimerCount%(10000/UPDATE_TIMER_INTERVAL)==0) {	// 10秒間隔
-				// 時間変更などを反映させるために番組情報を更新
+			} else if ((UpdateStatus & CCoreEngine::STATUS_EVENTINFO)!=0) {
+				// 番組情報が更新された
 				fUpdateEventInfo=true;
 
 				m_pCore->UpdateTitle();
@@ -3424,9 +3421,9 @@ void CMainWindow::OnTimer(HWND hwnd,UINT id)
 
 			if (IsPanelVisible()) {
 				// パネルの更新
-				if (m_App.Panel.Form.GetCurPageID()==PANEL_ID_INFORMATION) {
+				switch (m_App.Panel.Form.GetCurPageID()) {
+				case PANEL_ID_INFORMATION:
 					// 情報タブ更新
-
 					m_App.Panel.InfoPanel.UpdateItem(CInformationPanel::ITEM_VIDEOINFO);
 
 					if ((UpdateStatistics&(CCoreEngine::STATISTIC_SIGNALLEVEL
@@ -3447,11 +3444,25 @@ void CMainWindow::OnTimer(HWND hwnd,UINT id)
 
 					if (fUpdateEventInfo)
 						m_App.Panel.InfoPanel.UpdateItem(CInformationPanel::ITEM_PROGRAMINFO);
-				} else if (m_App.Panel.Form.GetCurPageID()==PANEL_ID_CHANNEL) {
+					break;
+
+				case PANEL_ID_CHANNEL:
 					// チャンネルタブ更新
-					if (!m_App.EpgOptions.IsEpgFileLoading()
-							&& m_App.Panel.ChannelPanel.QueryUpdate())
-						m_App.Panel.ChannelPanel.UpdateAllChannels(false);
+					if (!m_App.EpgOptions.IsEpgFileLoading()) {
+						if (m_App.Panel.ChannelPanel.QueryUpdate()) {
+							m_App.Panel.ChannelPanel.UpdateAllChannels(false);
+						} else if (fUpdateEventInfo) {
+							CAppCore::StreamIDInfo Info;
+							if (m_App.Core.GetCurrentStreamIDInfo(&Info))
+								m_App.Panel.ChannelPanel.UpdateChannels(Info.NetworkID,Info.TransportStreamID);
+						}
+					}
+					break;
+
+				case PANEL_ID_PROGRAMLIST:
+					if (fUpdateEventInfo)
+						UpdatePanel();
+					break;
 				}
 			}
 
@@ -3474,8 +3485,6 @@ void CMainWindow::OnTimer(HWND hwnd,UINT id)
 					m_fAlertedLowFreeSpace=true;
 				}
 			}
-
-			TimerCount++;
 		}
 		break;
 
@@ -4251,8 +4260,8 @@ void CMainWindow::OnChannelChanged(unsigned int Status)
 	m_App.Panel.ProgramListPanel.ClearProgramList();
 	::SetTimer(m_hwnd,TIMER_ID_PROGRAMLISTUPDATE,10000,nullptr);
 	m_ProgramListUpdateTimerCount=0;
-	m_App.Panel.InfoPanel.ResetItem(CInformationPanel::ITEM_SERVICE);
-	m_App.Panel.InfoPanel.ResetItem(CInformationPanel::ITEM_PROGRAMINFO);
+	m_App.Panel.InfoPanel.UpdateItem(CInformationPanel::ITEM_SERVICE);
+	m_App.Panel.InfoPanel.UpdateItem(CInformationPanel::ITEM_PROGRAMINFO);
 	m_App.Panel.ProgramListPanel.ShowRetrievingMessage(true);
 	if (fSpaceChanged) {
 		if (IsPanelVisible() && m_App.Panel.Form.GetCurPageID()==PANEL_ID_CHANNEL) {

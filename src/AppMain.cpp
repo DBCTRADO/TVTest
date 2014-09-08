@@ -1521,6 +1521,18 @@ void CAppMain::CDtvEngineEventHandler::OnCardReaderHung()
 	m_App.MainWindow.PostMessage(WM_APP_CARDREADERHUNG,0,0);
 }
 
+void CAppMain::CDtvEngineEventHandler::OnEventChanged(CTsAnalyzer *pTsAnalyzer,WORD EventID)
+{
+	TRACE(TEXT("CDtvEngineEventHandler::OnEventChanged() : event_id %#04x\n"),EventID);
+	if (EventID!=CTsAnalyzer::EVENTID_INVALID)
+		m_App.CoreEngine.SetAsyncStatusUpdatedFlag(CCoreEngine::STATUS_EVENTID);
+}
+
+void CAppMain::CDtvEngineEventHandler::OnEventUpdated(CTsAnalyzer *pTsAnalyzer)
+{
+	m_App.CoreEngine.SetAsyncStatusUpdatedFlag(CCoreEngine::STATUS_EVENTINFO);
+}
+
 void CAppMain::CDtvEngineEventHandler::OnTotUpdated(CTsAnalyzer *pTsAnalyzer)
 {
 	m_App.CoreEngine.SetAsyncStatusUpdatedFlag(CCoreEngine::STATUS_TOT);

@@ -14,18 +14,15 @@ static char THIS_FILE[]=__FILE__;
 // EITテーブル解析クラス
 /////////////////////////////////////////////////////////////////////////////
 
-class CEitTable : public CPsiStreamTable
+class CEitParserTable : public CPsiStreamTable
 {
 public:
-	CEitTable(ISectionHandler *pHandler = NULL);
-	CEitTable(const CEitTable &Operand);
-
-	CEitTable & operator = (const CEitTable &Operand);
+	CEitParserTable(ISectionHandler *pHandler = NULL);
 
 // CPsiStreamTable
-	virtual void Reset(void);
+	void Reset() override;
 
-// CEitTable
+// CEitParserTable
 	struct EventInfo {
 		WORD EventID;
 		bool bValidStartTime;
@@ -36,22 +33,22 @@ public:
 		CDescBlock DescBlock;
 	};
 
-	const WORD GetServiceID() const;
-	const WORD GetTransportStreamID() const;
-	const WORD GetOriginalNetworkID() const;
-	const BYTE GetSegmentLastSectionNumber() const;
-	const BYTE GetLastTableID() const;
-	const int GetEventNum() const;
+	WORD GetServiceID() const;
+	WORD GetTransportStreamID() const;
+	WORD GetOriginalNetworkID() const;
+	BYTE GetSegmentLastSectionNumber() const;
+	BYTE GetLastTableID() const;
+	int GetEventNum() const;
 	const EventInfo * GetEventInfo(const int Index) const;
-	const WORD GetEventID(const int Index) const;
+	WORD GetEventID(const int Index) const;
 	const SYSTEMTIME * GetStartTime(const int Index) const;
-	const DWORD GetDuration(const int Index) const;
-	const BYTE GetRunningStatus(const int Index) const;
-	const bool GetFreeCaMode(const int Index) const;
+	DWORD GetDuration(const int Index) const;
+	BYTE GetRunningStatus(const int Index) const;
+	bool GetFreeCaMode(const int Index) const;
 	const CDescBlock * GetItemDesc(const int Index) const;
 
 protected:
-	virtual const bool OnTableUpdate(const CPsiSection *pCurSection);
+	const bool OnTableUpdate(const CPsiSection *pCurSection) override;
 
 	WORD m_ServiceID;
 	WORD m_TransportStreamID;
@@ -62,31 +59,13 @@ protected:
 	std::vector<EventInfo> m_EventList;
 };
 
-CEitTable::CEitTable(ISectionHandler *pHandler)
+CEitParserTable::CEitParserTable(ISectionHandler *pHandler)
 	: CPsiStreamTable(pHandler)
 {
 	Reset();
 }
 
-CEitTable::CEitTable(const CEitTable &Operand)
-{
-	*this = Operand;
-}
-
-CEitTable & CEitTable::operator = (const CEitTable &Operand)
-{
-	if (this != &Operand) {
-		CPsiStreamTable::operator = (Operand);
-		m_ServiceID = Operand.m_ServiceID;
-		m_TransportStreamID = Operand.m_TransportStreamID;
-		m_OriginalNetworkID = Operand.m_OriginalNetworkID;
-		m_EventList = Operand.m_EventList;
-	}
-
-	return *this;
-}
-
-void CEitTable::Reset(void)
+void CEitParserTable::Reset(void)
 {
 	// 状態をクリアする
 	CPsiStreamTable::Reset();
@@ -94,78 +73,80 @@ void CEitTable::Reset(void)
 	m_ServiceID = 0;
 	m_TransportStreamID = 0;
 	m_OriginalNetworkID = 0;
+	m_SegmentLastSectionNumber = 0;
+	m_LastTableID = 0;
 	m_EventList.clear();
 }
 
-const WORD CEitTable::GetServiceID() const
+WORD CEitParserTable::GetServiceID() const
 {
 	return m_ServiceID;
 }
 
-const WORD CEitTable::GetTransportStreamID() const
+WORD CEitParserTable::GetTransportStreamID() const
 {
 	return m_TransportStreamID;
 }
 
-const WORD CEitTable::GetOriginalNetworkID() const
+WORD CEitParserTable::GetOriginalNetworkID() const
 {
 	return m_OriginalNetworkID;
 }
 
 
-const BYTE CEitTable::GetSegmentLastSectionNumber() const
+BYTE CEitParserTable::GetSegmentLastSectionNumber() const
 {
 	return m_SegmentLastSectionNumber;
 }
 
 
-const BYTE CEitTable::GetLastTableID() const
+BYTE CEitParserTable::GetLastTableID() const
 {
 	return m_LastTableID;
 }
 
 
-const int CEitTable::GetEventNum() const
+int CEitParserTable::GetEventNum() const
 {
 	return (int)m_EventList.size();
 }
 
-const CEitTable::EventInfo * CEitTable::GetEventInfo(const int Index) const
+const CEitParserTable::EventInfo * CEitParserTable::GetEventInfo(const int Index) const
 {
 	if (Index < 0 || (size_t)Index >= m_EventList.size())
 		return NULL;
 	return &m_EventList[Index];
 }
 
-const WORD CEitTable::GetEventID(const int Index) const
+WORD CEitParserTable::GetEventID(const int Index) const
 {
 	if (Index < 0 || (size_t)Index >= m_EventList.size())
 		return 0;
 	return m_EventList[Index].EventID;
 }
 
-const SYSTEMTIME * CEitTable::GetStartTime(const int Index) const
+const SYSTEMTIME * CEitParserTable::GetStartTime(const int Index) const
 {
 	if (Index < 0 || (size_t)Index >= m_EventList.size())
 		return NULL;
 	return &m_EventList[Index].StartTime;
 }
 
-const DWORD CEitTable::GetDuration(const int Index) const
+DWORD CEitParserTable::GetDuration(const int Index) const
 {
 	if (Index < 0 || (size_t)Index >= m_EventList.size())
 		return 0;
 	return m_EventList[Index].Duration;
 }
 
-const BYTE CEitTable::GetRunningStatus(const int Index) const
+BYTE CEitParserTable::GetRunningStatus(const int Index) const
 {
 	if (Index < 0 || (size_t)Index >= m_EventList.size())
 		return 0;
 	return m_EventList[Index].RunningStatus;
 }
 
-const bool CEitTable::GetFreeCaMode(const int Index) const
+bool CEitParserTable::GetFreeCaMode(const int Index) const
 {
 	// Free CA Modeを返す
 	if (Index < 0 || (size_t)Index >= m_EventList.size())
@@ -173,7 +154,7 @@ const bool CEitTable::GetFreeCaMode(const int Index) const
 	return m_EventList[Index].bFreeCaMode;
 }
 
-const CDescBlock * CEitTable::GetItemDesc(const int Index) const
+const CDescBlock * CEitParserTable::GetItemDesc(const int Index) const
 {
 	// アイテムの記述子ブロックを返す
 	if (Index < 0 || (size_t)Index >= m_EventList.size())
@@ -181,7 +162,7 @@ const CDescBlock * CEitTable::GetItemDesc(const int Index) const
 	return &m_EventList[Index].DescBlock;
 }
 
-const bool CEitTable::OnTableUpdate(const CPsiSection *pCurSection)
+const bool CEitParserTable::OnTableUpdate(const CPsiSection *pCurSection)
 {
 	const BYTE TableID = pCurSection->GetTableID();
 	if (TableID < 0x4E || TableID > 0x6F
@@ -479,13 +460,13 @@ void CEventManager::Reset()
 	m_PidMapManager.UnmapAllTarget();
 
 	// H-EITテーブルPIDマップ追加
-	m_PidMapManager.MapTarget(PID_HEIT, new CEitTable(this));
+	m_PidMapManager.MapTarget(PID_HEIT, new CEitParserTable(this));
 
 	// M-EITテーブルPIDマップ追加
-	//m_PidMapManager.MapTarget(PID_MEIT, new CEitTable(this));
+	//m_PidMapManager.MapTarget(PID_MEIT, new CEitParserTable(this));
 
 	// L-EITテーブルPIDマップ追加
-	m_PidMapManager.MapTarget(PID_LEIT, new CEitTable(this));
+	m_PidMapManager.MapTarget(PID_LEIT, new CEitParserTable(this));
 
 	// TOTテーブルPIDマップ追加
 	m_PidMapManager.MapTarget(PID_TOT, new CTotTable, OnTotUpdated, this);
@@ -668,7 +649,7 @@ bool CEventManager::RemoveEvent(EventMap *pMap, const WORD EventID)
 
 void CEventManager::OnSection(CPsiStreamTable *pTable, const CPsiSection *pSection)
 {
-	const CEitTable *pEitTable = dynamic_cast<const CEitTable *>(pTable);
+	const CEitParserTable *pEitTable = dynamic_cast<const CEitParserTable *>(pTable);
 
 	ServiceMapKey Key = GetServiceMapKey(pEitTable->GetOriginalNetworkID(),
 										 pEitTable->GetTransportStreamID(),
@@ -714,7 +695,7 @@ void CEventManager::OnSection(CPsiStreamTable *pTable, const CPsiSection *pSecti
 
 	if (NumEvents > 0) {
 		for (int i = 0; i < NumEvents; i++) {
-			const CEitTable::EventInfo *pEventInfo = pEitTable->GetEventInfo(i);
+			const CEitParserTable::EventInfo *pEventInfo = pEitTable->GetEventInfo(i);
 
 			// 開始/終了時刻が未定義のものは除外する
 			if (!pEventInfo->bValidStartTime || pEventInfo->Duration == 0)
@@ -1147,7 +1128,7 @@ bool CEventManager::CScheduleInfo::HasSchedule(const bool bExtended) const
 }
 
 
-bool CEventManager::CScheduleInfo::OnSection(const CEitTable *pTable, const CPsiSection *pSection)
+bool CEventManager::CScheduleInfo::OnSection(const CEitParserTable *pTable, const CPsiSection *pSection)
 {
 	const BYTE TableID = pSection->GetTableID();
 	const BYTE LastTableID = pTable->GetLastTableID();

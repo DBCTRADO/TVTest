@@ -19,7 +19,8 @@ public:
 	enum {
 		PID_INVALID = 0xFFFF,
 		COMPONENTTAG_INVALID = 0xFF,
-		LOGOID_INVALID = 0xFFFF
+		LOGOID_INVALID = 0xFFFF,
+		EVENTID_INVALID = 0x0000
 	};
 
 	enum { MAX_SERVICE_NAME = 256 };
@@ -290,6 +291,7 @@ public:
 		EVENT_PMT_UPDATED,
 		EVENT_SDT_UPDATED,
 		EVENT_NIT_UPDATED,
+		EVENT_EIT_UPDATED,
 		EVENT_PCR_UPDATED,
 		EVENT_TOT_UPDATED,
 		EVENT_INVALID,
@@ -314,7 +316,7 @@ protected:
 	void NotifyResetEvent();
 
 #ifdef TS_ANALYZER_EIT_SUPPORT
-	const class CEitPfTable *GetEitPfTableByServiceID(const WORD ServiceID, int *pIndex = NULL) const;
+	const class CEitTable *GetEitPfTableByServiceID(WORD ServiceID, bool bNext = false) const;
 	const CDescBlock *GetHEitItemDesc(const int ServiceIndex, const bool bNext = false) const;
 #ifdef TS_ANALYZER_L_EIT_SUPPORT
 	const CDescBlock *GetLEitItemDesc(const int ServiceIndex, const bool bNext = false) const;
@@ -371,6 +373,7 @@ private:
 	static void CALLBACK OnPmtUpdated(const WORD wPID, CTsPidMapTarget *pMapTarget, CTsPidMapManager *pMapManager, const PVOID pParam);
 	static void CALLBACK OnSdtUpdated(const WORD wPID, CTsPidMapTarget *pMapTarget, CTsPidMapManager *pMapManager, const PVOID pParam);
 	static void CALLBACK OnNitUpdated(const WORD wPID, CTsPidMapTarget *pMapTarget, CTsPidMapManager *pMapManager, const PVOID pParam);
+	static void CALLBACK OnEitUpdated(const WORD wPID, CTsPidMapTarget *pMapTarget, CTsPidMapManager *pMapManager, const PVOID pParam);
 	static void CALLBACK OnPcrUpdated(const WORD wPID, CTsPidMapTarget *pMapTarget, CTsPidMapManager *pMapManager, const PVOID pParam);
 	static void CALLBACK OnTotUpdated(const WORD wPID, CTsPidMapTarget *pMapTarget, CTsPidMapManager *pMapManager, const PVOID pParam);
 };

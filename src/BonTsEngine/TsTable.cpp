@@ -414,6 +414,16 @@ CPsiTableBase * CPsiTableSet::GetTableByID(const BYTE TableID)
 	return itr->second;
 }
 
+const CPsiTableBase * CPsiTableSet::GetTableByID(const BYTE TableID) const
+{
+	SectionTableMap::const_iterator itr = m_TableMap.find(TableID);
+
+	if (itr == m_TableMap.end())
+		return NULL;
+
+	return itr->second;
+}
+
 BYTE CPsiTableSet::GetLastUpdatedTableID() const
 {
 	return m_LastUpdatedTableID;
@@ -1118,175 +1128,212 @@ CPsiTableBase * CNitMultiTable::CreateSectionTable(const CPsiSection *pSection)
 
 
 /////////////////////////////////////////////////////////////////////////////
-// EIT[p/f]テーブル抽象化クラス
+// EITテーブル抽象化クラス
 /////////////////////////////////////////////////////////////////////////////
 
-CEitPfTable::CEitPfTable()
-	: CPsiStreamTable()
+CEitTable::CEitTable()
+	: CPsiSingleTable()
 {
-
+	Reset();
 }
 
-void CEitPfTable::Reset()
+void CEitTable::Reset()
 {
 	// 状態をクリアする
-	CPsiStreamTable::Reset();
+	CPsiSingleTable::Reset();
 
-	m_ServiceList.clear();
+	m_ServiceID = 0;
+	m_TransportStreamID = 0;
+	m_OriginalNetworkID = 0;
+	m_SegmentLastSectionNumber = 0;
+	m_LastTableID = 0;
+	m_EventList.clear();
 }
 
-const DWORD CEitPfTable::GetServiceNum() const
+WORD CEitTable::GetServiceID() const
 {
-	// サービス数を返す
-	return (DWORD)m_ServiceList.size();
+	return m_ServiceID;
 }
 
-const int CEitPfTable::GetServiceIndexByID(WORD ServiceID) const
+WORD CEitTable::GetTransportStreamID() const
 {
-	// サービスIDからインデックスを返す
-	for (DWORD Index = 0 ; Index < GetServiceNum() ; Index++) {
-		if (m_ServiceList[Index].ServiceID == ServiceID) {
-			return Index;
-		}
-	}
-
-	// サービスIDが見つからない
-	return -1;
+	return m_TransportStreamID;
 }
 
-const WORD CEitPfTable::GetServiceID(DWORD Index) const
+WORD CEitTable::GetOriginalNetworkID() const
 {
-	// サービスIDを返す
-	if (Index >= GetServiceNum())
-		return 0xFFFF;
-	return m_ServiceList[Index].ServiceID;
+	return m_OriginalNetworkID;
 }
 
-const WORD CEitPfTable::GetTransportStreamID(DWORD Index) const
+BYTE CEitTable::GetSegmentLastSectionNumber() const
 {
-	if (Index >= GetServiceNum())
-		return 0;
-	return m_ServiceList[Index].TransportStreamID;
+	return m_SegmentLastSectionNumber;
 }
 
-const WORD CEitPfTable::GetOriginalNetworkID(DWORD Index) const
+BYTE CEitTable::GetLastTableID() const
 {
-	if (Index >= GetServiceNum())
-		return 0;
-	return m_ServiceList[Index].OriginalNetworkID;
+	return m_LastTableID;
 }
 
-const WORD CEitPfTable::GetEventID(DWORD Index,DWORD EventIndex) const
+int CEitTable::GetEventNum() const
 {
-	if (Index >= GetServiceNum() || EventIndex > 1
-			|| !m_ServiceList[Index].EventList[EventIndex].bEnable)
-		return 0;
-	return m_ServiceList[Index].EventList[EventIndex].EventID;
+	return (int)m_EventList.size();
 }
 
-const SYSTEMTIME *CEitPfTable::GetStartTime(DWORD Index,DWORD EventIndex) const
+const CEitTable::EventInfo * CEitTable::GetEventInfo(const int Index) const
 {
-	if (Index >= GetServiceNum() || EventIndex > 1
-			|| !m_ServiceList[Index].EventList[EventIndex].bEnable
-			|| !m_ServiceList[Index].EventList[EventIndex].bValidStartTime)
+	if (Index < 0 || (size_t)Index >= m_EventList.size())
 		return NULL;
-	return &m_ServiceList[Index].EventList[EventIndex].StartTime;
+	return &m_EventList[Index];
 }
 
-const DWORD CEitPfTable::GetDuration(DWORD Index,DWORD EventIndex) const
+WORD CEitTable::GetEventID(const int Index) const
 {
-	if (Index >= GetServiceNum() || EventIndex > 1
-			|| !m_ServiceList[Index].EventList[EventIndex].bEnable)
+	if (Index < 0 || (size_t)Index >= m_EventList.size())
 		return 0;
-	return m_ServiceList[Index].EventList[EventIndex].Duration;
+	return m_EventList[Index].EventID;
 }
 
-const BYTE CEitPfTable::GetRunningStatus(DWORD Index,DWORD EventIndex) const
+const SYSTEMTIME * CEitTable::GetStartTime(const int Index) const
 {
-	if (Index >= GetServiceNum() || EventIndex > 1
-			|| !m_ServiceList[Index].EventList[EventIndex].bEnable)
-		return 0xFF;
-	return m_ServiceList[Index].EventList[EventIndex].RunningStatus;
+	if (Index < 0 || (size_t)Index >= m_EventList.size())
+		return NULL;
+	return &m_EventList[Index].StartTime;
 }
 
-const bool CEitPfTable::GetFreeCaMode(DWORD Index,DWORD EventIndex) const
+DWORD CEitTable::GetDuration(const int Index) const
+{
+	if (Index < 0 || (size_t)Index >= m_EventList.size())
+		return 0;
+	return m_EventList[Index].Duration;
+}
+
+BYTE CEitTable::GetRunningStatus(const int Index) const
+{
+	if (Index < 0 || (size_t)Index >= m_EventList.size())
+		return 0;
+	return m_EventList[Index].RunningStatus;
+}
+
+bool CEitTable::GetFreeCaMode(const int Index) const
 {
 	// Free CA Modeを返す
-	if (Index >= GetServiceNum() || EventIndex > 1
-			|| !m_ServiceList[Index].EventList[EventIndex].bEnable)
-		return false;
-	return m_ServiceList[Index].EventList[EventIndex].FreeCaMode;
+	if (Index < 0 || (size_t)Index >= m_EventList.size())
+		return 0;
+	return m_EventList[Index].bFreeCaMode;
 }
 
-const CDescBlock * CEitPfTable::GetItemDesc(DWORD Index,DWORD EventIndex) const
+const CDescBlock * CEitTable::GetItemDesc(const int Index) const
 {
 	// アイテムの記述子ブロックを返す
-	if (Index >= GetServiceNum() || EventIndex > 1
-			|| !m_ServiceList[Index].EventList[EventIndex].bEnable)
+	if (Index < 0 || (size_t)Index >= m_EventList.size())
 		return NULL;
-	return &m_ServiceList[Index].EventList[EventIndex].DescBlock;
+	return &m_EventList[Index].DescBlock;
 }
 
-const bool CEitPfTable::OnTableUpdate(const CPsiSection *pCurSection)
+const bool CEitTable::OnTableUpdate(const CPsiSection *pCurSection, const CPsiSection *pOldSection)
 {
-	if (pCurSection->GetTableID() != 0x4E
-			|| pCurSection->GetSectionNumber() > 0x01)
+	const BYTE TableID = pCurSection->GetTableID();
+	if (TableID < 0x4E || TableID > 0x6F)
 		return false;
 
-	const WORD wDataSize = pCurSection->GetPayloadSize();
-	const BYTE *pHexData = pCurSection->GetPayloadData();
+	const WORD DataSize = pCurSection->GetPayloadSize();
+	const BYTE *pData = pCurSection->GetPayloadData();
 
-	if (wDataSize < 18)
+	if (DataSize < 6)
 		return false;
 
-	WORD ServiceID, TransportStreamID, OriginalNetworkID;
-	ServiceID = pCurSection->GetTableIdExtension();
-	TransportStreamID = ((WORD)pHexData[0] << 8) | (WORD)pHexData[1];
-	OriginalNetworkID = ((WORD)pHexData[2] << 8) | (WORD)pHexData[3];
+	m_ServiceID = pCurSection->GetTableIdExtension();
+	m_TransportStreamID = ((WORD)pData[0] << 8) | (WORD)pData[1];
+	m_OriginalNetworkID = ((WORD)pData[2] << 8) | (WORD)pData[3];
+	m_SegmentLastSectionNumber = pData[4];
+	m_LastTableID = pData[5];
 
-	/*
-	if (pHexData[4] != 0x01)	// segment_last_section_number
-		return false;
-	*/
-	if (pHexData[5] != 0x4E)	// last_table_id
-		return false;
+	m_EventList.clear();
+	WORD Pos = 6;
+	for (int i = 0; Pos + 12 <= DataSize; i++) {
+		m_EventList.push_back(EventInfo());
 
-	/*
-	TRACE(TEXT("------- EIT[p/f] Table -------\nSID = %04X / TSID = %04X / ONID = %04X\n"),
-		  ServiceID, TransportStreamID, OriginalNetworkID);
-	*/
+		EventInfo &Info = m_EventList.back();
 
-	int Index = GetServiceIndexByID(ServiceID);
-	if (Index < 0) {
-		ServiceInfo Service;
-
-		Service.ServiceID = ServiceID;
-		Service.TransportStreamID = TransportStreamID;
-		Service.OriginalNetworkID = OriginalNetworkID;
-		m_ServiceList.push_back(Service);
-		Index = (int)m_ServiceList.size() - 1;
+		Info.EventID = ((WORD)pData[Pos + 0] << 8) | (WORD)pData[Pos + 1];
+		Info.bValidStartTime = CAribTime::AribToSystemTime(&pData[Pos + 2], &Info.StartTime);
+		Info.Duration = CAribTime::AribBcdToSecond(&pData[Pos + 7]);
+		Info.RunningStatus = pData[Pos + 10] >> 5;
+		Info.bFreeCaMode = (pData[Pos + 10] & 0x10) != 0;
+		WORD DescLength = (((WORD)pData[Pos + 10] & 0x0F) << 8) | (WORD)pData[Pos + 11];
+		if (DescLength > 0 && Pos + 12 + DescLength <= DataSize)
+			Info.DescBlock.ParseBlock(&pData[Pos + 12], DescLength);
+		Pos += 12 + DescLength;
 	}
 
-	EventInfo &Info = m_ServiceList[Index].EventList[pCurSection->GetSectionNumber()];
-
-	Info.EventID = ((WORD)pHexData[6] << 8) | (WORD)pHexData[7];
-	Info.bValidStartTime = CAribTime::AribToSystemTime(&pHexData[8], &Info.StartTime);
-	Info.Duration = CAribTime::AribBcdToSecond(&pHexData[13]);
-	Info.RunningStatus = pHexData[16] >> 5;
-	Info.FreeCaMode = (pHexData[16] & 0x10) != 0;
-	WORD DescLength = (((WORD)pHexData[16] & 0x0F) << 8) | (WORD)pHexData[17];
-	if (DescLength > 0 && DescLength <= wDataSize - 18)
-		Info.DescBlock.ParseBlock(&pHexData[18], DescLength);
-	else
-		Info.DescBlock.Reset();
-	Info.bEnable = true;
-
-	/*
-	TRACE(TEXT("EventID = %02X / %04d/%d/%d %d:%02d %lu sec\n"),
-		  Info.EventID,Info.StartTime.wYear,Info.StartTime.wMonth,Info.StartTime.wDay,Info.StartTime.wHour,Info.StartTime.wMinute,Info.Duration);
-	*/
-
 	return true;
+}
+
+
+const CEitTable * CEitMultiTable::GetEitTable(const WORD ServiceID, const WORD SectionNo) const
+{
+	const int Index = GetExtensionIndexByTableID(ServiceID);
+	if (Index >= 0)
+		return dynamic_cast<const CEitTable *>(GetSection(Index, SectionNo));
+	return NULL;
+}
+
+CPsiTableBase * CEitMultiTable::CreateSectionTable(const CPsiSection *pSection)
+{
+	return new CEitTable;
+}
+
+
+CEitPfTable::CEitPfTable()
+{
+	MapTable(CEitTable::TABLE_ID_PF_ACTUAL, new CEitMultiTable);
+	MapTable(CEitTable::TABLE_ID_PF_OTHER, new CEitMultiTable);
+}
+
+const CEitMultiTable * CEitPfTable::GetPfActualTable() const
+{
+	return dynamic_cast<const CEitMultiTable *>(GetTableByID(CEitTable::TABLE_ID_PF_ACTUAL));
+}
+
+const CEitTable * CEitPfTable::GetPfActualTable(const WORD ServiceID, const bool bFollowing) const
+{
+	const CEitMultiTable *pTable = GetPfActualTable();
+	if (pTable)
+		return pTable->GetEitTable(ServiceID, bFollowing ? 1 : 0);
+	return NULL;
+}
+
+const CEitMultiTable * CEitPfTable::GetPfOtherTable() const
+{
+	return dynamic_cast<const CEitMultiTable *>(GetTableByID(CEitTable::TABLE_ID_PF_OTHER));
+}
+
+const CEitTable * CEitPfTable::GetPfOtherTable(const WORD ServiceID, const bool bFollowing) const
+{
+	const CEitMultiTable *pTable = GetPfOtherTable();
+	if (pTable)
+		return pTable->GetEitTable(ServiceID, bFollowing ? 1 : 0);
+	return NULL;
+}
+
+
+CEitPfActualTable::CEitPfActualTable()
+{
+	MapTable(CEitTable::TABLE_ID_PF_ACTUAL, new CEitMultiTable);
+}
+
+const CEitMultiTable * CEitPfActualTable::GetPfActualTable() const
+{
+	return dynamic_cast<const CEitMultiTable *>(GetTableByID(CEitTable::TABLE_ID_PF_ACTUAL));
+}
+
+const CEitTable * CEitPfActualTable::GetPfActualTable(const WORD ServiceID, const bool bFollowing) const
+{
+	const CEitMultiTable *pTable = GetPfActualTable();
+	if (pTable)
+		return pTable->GetEitTable(ServiceID, bFollowing ? 1 : 0);
+	return NULL;
 }
 
 

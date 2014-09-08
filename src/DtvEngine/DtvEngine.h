@@ -86,6 +86,8 @@ public:
 		virtual void OnEcmError(LPCTSTR pszText) {}
 		virtual void OnEcmRefused() {}
 		virtual void OnCardReaderHung() {}
+		virtual void OnEventChanged(CTsAnalyzer *pTsAnalyzer, WORD EventID) {}
+		virtual void OnEventUpdated(CTsAnalyzer *pTsAnalyzer) {}
 		virtual void OnTotUpdated(CTsAnalyzer *pTsAnalyzer) {}
 	};
 
@@ -228,6 +230,7 @@ protected:
 	BYTE m_CurVideoComponentTag;
 	int m_CurAudioStream;
 	BYTE m_CurAudioComponentTag;
+	WORD m_CurEventID;
 
 	bool m_bBuiled;
 	bool m_bDescramble;

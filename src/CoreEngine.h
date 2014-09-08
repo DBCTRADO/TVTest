@@ -105,8 +105,9 @@ public:
 		STATUS_AUDIOSTREAMS			=0x00000004UL,
 		STATUS_AUDIOCOMPONENTTYPE	=0x00000008UL,
 		STATUS_SPDIFPASSTHROUGH		=0x00000010UL,
-		STATUS_EVENTID				=0x00000020UL,
-		STATUS_TOT					=0x00000040UL
+		STATUS_EVENTINFO			=0x00000020UL,
+		STATUS_EVENTID				=0x00000040UL,
+		STATUS_TOT					=0x00000080UL
 	};
 	DWORD UpdateAsyncStatus();
 	void SetAsyncStatusUpdatedFlag(DWORD Status);
@@ -171,7 +172,6 @@ private:
 	bool m_fDownMixSurround;
 	CAudioDecFilter::SpdifOptions m_SpdifOptions;
 	bool m_fSpdifPassthrough;
-	WORD m_EventID;
 	ULONGLONG m_ErrorPacketCount;
 	ULONGLONG m_ContinuityErrorPacketCount;
 	ULONGLONG m_ScramblePacketCount;

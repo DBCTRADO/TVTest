@@ -27,6 +27,7 @@ CDtvEngine::CDtvEngine(void)
 	, m_CurVideoComponentTag(CTsAnalyzer::COMPONENTTAG_INVALID)
 	, m_CurAudioStream(0)
 	, m_CurAudioComponentTag(CTsAnalyzer::COMPONENTTAG_INVALID)
+	, m_CurEventID(CTsAnalyzer::EVENTID_INVALID)
 
 	, m_BonSrcDecoder(this)
 	, m_TsPacketParser(this)
@@ -421,6 +422,13 @@ bool CDtvEngine::SelectService(WORD ServiceID)
 	if (m_pEventHandler && bServiceChanged)
 		m_pEventHandler->OnServiceChanged(ServiceID);
 
+	const WORD EventID = GetEventID();
+	if (m_CurEventID != EventID) {
+		m_CurEventID = EventID;
+		if (m_pEventHandler)
+			m_pEventHandler->OnEventChanged(&m_TsAnalyzer, EventID);
+	}
+
 	return true;
 }
 
@@ -532,6 +540,7 @@ const DWORD CDtvEngine::OnDecoderEvent(CMediaDecoder *pDecoder, const DWORD dwEv
 					m_CurVideoComponentTag = CTsAnalyzer::COMPONENTTAG_INVALID;
 					m_CurAudioStream = 0;
 					m_CurAudioComponentTag = CTsAnalyzer::COMPONENTTAG_INVALID;
+					m_CurEventID = CTsAnalyzer::EVENTID_INVALID;
 
 					bool bSetService = true;
 					WORD ServiceID = SID_DEFAULT;
@@ -644,6 +653,23 @@ const DWORD CDtvEngine::OnDecoderEvent(CMediaDecoder *pDecoder, const DWORD dwEv
 			// サービスの情報が更新された
 			if (m_pEventHandler)
 				m_pEventHandler->OnServiceInfoUpdated(&m_TsAnalyzer);
+			return 0UL;
+
+		case CTsAnalyzer::EVENT_EIT_UPDATED:
+			//  EITが更新された
+			{
+				const WORD EventID = GetEventID();
+
+				if (m_CurEventID != EventID) {
+					m_CurEventID = EventID;
+
+					if (m_pEventHandler)
+						m_pEventHandler->OnEventChanged(&m_TsAnalyzer, EventID);
+				}
+
+				if (m_pEventHandler)
+					m_pEventHandler->OnEventUpdated(&m_TsAnalyzer);
+			}
 			return 0UL;
 
 		case CTsAnalyzer::EVENT_TOT_UPDATED:
