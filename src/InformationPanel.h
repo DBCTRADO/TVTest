@@ -80,7 +80,7 @@ public:
 	{
 	public:
 		CVideoDecoderItem(CInformationPanel *pPanel,bool fVisible);
-		LPCTSTR GetName() const override { return TEXT("VideoInfo"); }
+		LPCTSTR GetName() const override { return TEXT("VideoDecoder"); }
 		void Reset() override;
 		bool Update() override;
 		void Draw(HDC hdc,const RECT &Rect) override;
