@@ -650,17 +650,16 @@ protected:
 class CPcrTable : public CPsiNullTable
 {
 public:
-	CPcrTable(WORD wServiceIndex);
+	typedef ULONGLONG PcrType;
+
+	CPcrTable();
 
 // CPsiNullTable
-	virtual const bool StorePacket(const CTsPacket *pPacket);
+	const bool StorePacket(const CTsPacket *pPacket) override;
 
 // CPcrTable
-	void AddServiceIndex(WORD wServiceIndex);
-	const WORD GetServiceIndex(WORD *pwServiceIndex, WORD wIndex=0);
-	const unsigned __int64 GetPcrTimeStamp();
+	PcrType GetPcrTimeStamp() const;
 
 protected:
-	std::vector<WORD> m_ServiceIndex;
-	unsigned __int64 m_ui64_Pcr;
+	PcrType m_Pcr;
 };

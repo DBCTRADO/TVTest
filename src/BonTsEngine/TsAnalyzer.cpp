@@ -693,11 +693,17 @@ bool CTsAnalyzer::GetPcrTimeStamp(const int Index, ULONGLONG *pTimeStamp) const
 
 	CBlockLock Lock(&m_DecoderLock);
 
-	// PCRを取得する
-	if (Index >= 0 && (size_t)Index < m_ServiceList.size()) {
-		*pTimeStamp = m_ServiceList[Index].PcrTimeStamp;
-		return true;
+	WORD PcrPID;
+
+	if (GetPcrPID(Index, &PcrPID)) {
+		const CPcrTable *pPcrTable =
+			dynamic_cast<const CPcrTable *>(m_PidMapManager.GetMapTarget(PcrPID));
+		if (pPcrTable) {
+			*pTimeStamp = pPcrTable->GetPcrTimeStamp();
+			return true;
+		}
 	}
+
 	return false;
 }
 
@@ -1983,14 +1989,7 @@ void CALLBACK CTsAnalyzer::OnPmtUpdated(const WORD wPID, CTsPidMapTarget *pMapTa
 		CTsPidMapTarget *pMap = pMapManager->GetMapTarget(PcrPID);
 		if (!pMap) {
 			// 新規Map
-			pMapManager->MapTarget(PcrPID, new CPcrTable(ServiceIndex), OnPcrUpdated, pParam);
-		} else {
-			// 既存Map
-			CPcrTable *pPcrTable = dynamic_cast<CPcrTable*>(pMap);
-			if(pPcrTable) {
-				// サービス追加
-				pPcrTable->AddServiceIndex(ServiceIndex);
-			}
+			pMapManager->MapTarget(PcrPID, new CPcrTable);
 		}
 	}
 
@@ -2230,28 +2229,6 @@ void CALLBACK CTsAnalyzer::OnEitUpdated(const WORD wPID, CTsPidMapTarget *pMapTa
 
 	// イベントハンドラ呼び出し
 	pThis->CallEventHandler(EVENT_EIT_UPDATED);
-}
-
-
-void CALLBACK CTsAnalyzer::OnPcrUpdated(const WORD wPID, CTsPidMapTarget *pMapTarget, CTsPidMapManager *pMapManager, const PVOID pParam)
-{
-	// PCRが更新された
-	CTsAnalyzer *pThis = static_cast<CTsAnalyzer *>(pParam);
-	CPcrTable *pPcrTable = dynamic_cast<CPcrTable *>(pMapTarget);
-	if (pPcrTable == NULL)
-		return;
-
-	const ULONGLONG TimeStamp = pPcrTable->GetPcrTimeStamp();
-
-	WORD ServiceIndex;
-	for (WORD Index = 0; pPcrTable->GetServiceIndex(&ServiceIndex, Index); Index++) {
-		if (ServiceIndex < pThis->m_ServiceList.size()) {
-			pThis->m_ServiceList[ServiceIndex].PcrTimeStamp = TimeStamp;
-		}
-	}
-
-	// イベントハンドラ呼び出し
-	pThis->CallEventHandler(EVENT_PCR_UPDATED);
 }
 
 

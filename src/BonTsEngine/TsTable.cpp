@@ -1676,45 +1676,32 @@ const bool CSdttTable::OnTableUpdate(const CPsiSection *pCurSection)
 // PCR’ŠÛ‰»ƒNƒ‰ƒX
 /////////////////////////////////////////////////////////////////////////////
 
-CPcrTable::CPcrTable(WORD wServiceIndex)
+CPcrTable::CPcrTable()
 	: CPsiNullTable()
-	, m_ui64_Pcr(0)
+	, m_Pcr(0)
 {
-	m_ServiceIndex.push_back(wServiceIndex);
 }
 
 const bool CPcrTable::StorePacket(const CTsPacket *pPacket)
 {
-	if(!pPacket)return false;
+	if (!pPacket)
+		return false;
 
-	if(pPacket->m_AdaptationField.bPcrFlag){
+	if (pPacket->m_AdaptationField.bPcrFlag) {
 		if (pPacket->m_AdaptationField.byOptionSize < 5)
 			return false;
-		m_ui64_Pcr = ((unsigned __int64)pPacket->m_AdaptationField.pOptionData[0] << 25 ) |
-			((unsigned __int64)pPacket->m_AdaptationField.pOptionData[1] << 17 ) |
-			((unsigned __int64)pPacket->m_AdaptationField.pOptionData[2] << 9 ) |
-			((unsigned __int64)pPacket->m_AdaptationField.pOptionData[3] << 1 ) |
-			((unsigned __int64)pPacket->m_AdaptationField.pOptionData[4] >> 7 );
-		}
+		m_Pcr =
+			((PcrType)pPacket->m_AdaptationField.pOptionData[0] << 25 ) |
+			((PcrType)pPacket->m_AdaptationField.pOptionData[1] << 17 ) |
+			((PcrType)pPacket->m_AdaptationField.pOptionData[2] << 9 ) |
+			((PcrType)pPacket->m_AdaptationField.pOptionData[3] << 1 ) |
+			((PcrType)pPacket->m_AdaptationField.pOptionData[4] >> 7 );
+	}
 
 	return true;
 }
 
-void CPcrTable::AddServiceIndex(WORD wServiceIndex)
+CPcrTable::PcrType CPcrTable::GetPcrTimeStamp() const
 {
-	m_ServiceIndex.push_back(wServiceIndex);
-}
-
-const WORD CPcrTable::GetServiceIndex(WORD *pwServiceIndex, WORD wIndex)
-{
-	if (wIndex < m_ServiceIndex.size() && pwServiceIndex) {
-		*pwServiceIndex = m_ServiceIndex[wIndex];
-		return true;
-	}
-	return false;
-}
-
-const unsigned __int64 CPcrTable::GetPcrTimeStamp()
-{
-	return m_ui64_Pcr;
+	return m_Pcr;
 }
