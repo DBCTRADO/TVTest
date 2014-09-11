@@ -1594,6 +1594,7 @@ void CProgramGuide::DrawEventList(const ProgramGuide::CEventLayout *pLayout,
 				continue;
 
 			const CEventInfoData *pEventInfo=pItem->GetEventInfo();
+			const CEventInfoData *pOrigEventInfo=pEventInfo;
 			const bool fCommonEvent=pEventInfo->m_fCommonEvent;
 			if (fCommonEvent && pItem->GetCommonEventInfo()!=NULL)
 				pEventInfo=pItem->GetCommonEventInfo();
@@ -1702,8 +1703,15 @@ void CProgramGuide::DrawEventList(const ProgramGuide::CEventLayout *pLayout,
 			rcText.right=rcItem.right;
 			rcText.bottom=rcItem.bottom;
 
-			if (m_pProgramCustomizer!=NULL)
-				m_pProgramCustomizer->DrawBackground(*pEventInfo,hdc,rcItem,rcTitle,rcText,BackColor);
+			if (m_pProgramCustomizer!=NULL) {
+				if (!fCommonEvent) {
+					m_pProgramCustomizer->DrawBackground(*pEventInfo,hdc,rcItem,rcTitle,rcText,BackColor);
+				} else {
+					CEventInfoData Info(*pEventInfo);
+					Info.m_ServiceID=pOrigEventInfo->m_ServiceID;
+					m_pProgramCustomizer->DrawBackground(Info,hdc,rcItem,rcTitle,rcText,BackColor);
+				}
+			}
 
 			if (fHighlight) {
 				HBRUSH hbr=::CreateSolidBrush(MixColor(m_ColorList[COLOR_HIGHLIGHT_BORDER],BackColor,80));
