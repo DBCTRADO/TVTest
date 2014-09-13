@@ -578,7 +578,6 @@ bool CUICore::ShowSpecialMenu(MenuType Menu,const POINT *pPos,UINT Flags)
 			CPopupMenu Menu(m_App.GetResourceInstance(),IDM_BUFFERING);
 
 			Menu.CheckItem(CM_ENABLEBUFFERING,m_App.CoreEngine.GetPacketBuffering());
-			Menu.EnableItem(CM_RESETBUFFER,m_App.CoreEngine.GetPacketBuffering());
 			Menu.Show(GetMainWindow(),&pt,Flags);
 		}
 		break;

@@ -6,6 +6,7 @@
 #include <Dvdmedia.h>
 #include "MediaViewer.h"
 #include "StdUtil.h"
+#include "../DirectShowFilter/BonSrcFilter.h"
 #ifdef BONTSENGINE_MPEG2_SUPPORT
 #include "../DirectShowFilter/Mpeg2ParserFilter.h"
 #endif
@@ -183,6 +184,8 @@ CMediaViewer::CMediaViewer(IEventHandler *pEventHandler)
 	, m_bEnablePTSSync(false)
 	, m_bAdjust1SegVideoSampleTime(true)
 	, m_bAdjust1SegFrameRate(true)
+	, m_BufferSize(0)
+	, m_InitialPoolPercentage(0)
 	, m_pAudioStreamCallback(NULL)
 	, m_pAudioStreamCallbackParam(NULL)
 	, m_pImageMixer(NULL)
@@ -323,6 +326,9 @@ bool CMediaViewer::OpenViewer(
 			if (pOutput==NULL)
 				throw CBonException(TEXT("ソースフィルタの出力ピンを取得できません。"));
 			m_pSrcFilter->EnableSync(m_bEnablePTSSync, m_b1SegMode);
+			if (m_BufferSize != 0)
+				m_pSrcFilter->SetBufferSize(m_BufferSize);
+			m_pSrcFilter->SetInitialPoolPercentage(m_InitialPoolPercentage);
 		}
 
 		Trace(TEXT("MPEG-2 Demultiplexerフィルタの接続中..."));
@@ -726,17 +732,12 @@ bool CMediaViewer::OpenViewer(
 
 		m_bInit=true;
 
-		ULONG PID;
-		if (m_pMp2DemuxVideoMap) {
-			if (m_wVideoEsPID != PID_INVALID) {
-				PID = m_wVideoEsPID;
-				if (FAILED(m_pMp2DemuxVideoMap->MapPID(1, &PID, MEDIA_ELEMENTARY_STREAM)))
-					m_wVideoEsPID = PID_INVALID;
-			}
+		if (m_pMp2DemuxVideoMap && m_wVideoEsPID != PID_INVALID) {
+			if (!MapVideoPID(m_wVideoEsPID))
+				m_wVideoEsPID = PID_INVALID;
 		}
 		if (m_wAudioEsPID != PID_INVALID) {
-			PID = m_wAudioEsPID;
-			if (FAILED(m_pMp2DemuxAudioMap->MapPID(1, &PID, MEDIA_ELEMENTARY_STREAM)))
+			if (!MapAudioPID(m_wAudioEsPID))
 				m_wAudioEsPID = PID_INVALID;
 		}
 	} catch (CBonException &Exception) {
@@ -1019,25 +1020,18 @@ bool CMediaViewer::SetVideoPID(const WORD wPID)
 	TRACE(TEXT("CMediaViewer::SetVideoPID() %04X <- %04X\n"), wPID, m_wVideoEsPID);
 
 	if (m_pMp2DemuxVideoMap) {
-		ULONG TempPID;
-
 		// 現在のPIDをアンマップ
 		if (m_wVideoEsPID != PID_INVALID) {
-			TempPID = m_wVideoEsPID;
+			ULONG TempPID = m_wVideoEsPID;
 			if (m_pMp2DemuxVideoMap->UnmapPID(1UL, &TempPID) != S_OK)
-				return false;
-		}
-
-		// 新規にPIDをマップ
-		if (wPID != PID_INVALID) {
-			TempPID = wPID;
-			if (m_pMp2DemuxVideoMap->MapPID(1UL, &TempPID, MEDIA_ELEMENTARY_STREAM) != S_OK)
 				return false;
 		}
 	}
 
-	if (m_pSrcFilter!=NULL)
-		m_pSrcFilter->SetVideoPID(wPID);
+	if (!MapVideoPID(wPID)) {
+		m_wVideoEsPID = PID_INVALID;
+		return false;
+	}
 
 	m_wVideoEsPID = wPID;
 
@@ -1055,25 +1049,18 @@ bool CMediaViewer::SetAudioPID(const WORD wPID)
 	TRACE(TEXT("CMediaViewer::SetAudioPID() %04X <- %04X\n"), wPID, m_wAudioEsPID);
 
 	if (m_pMp2DemuxAudioMap) {
-		ULONG TempPID;
-
 		// 現在のPIDをアンマップ
 		if (m_wAudioEsPID != PID_INVALID) {
-			TempPID = m_wAudioEsPID;
+			ULONG TempPID = m_wAudioEsPID;
 			if (m_pMp2DemuxAudioMap->UnmapPID(1UL, &TempPID) != S_OK)
-				return false;
-		}
-
-		// 新規にPIDをマップ
-		if (wPID != PID_INVALID) {
-			TempPID = wPID;
-			if (m_pMp2DemuxAudioMap->MapPID(1UL, &TempPID, MEDIA_ELEMENTARY_STREAM) != S_OK)
 				return false;
 		}
 	}
 
-	if (m_pSrcFilter!=NULL)
-		m_pSrcFilter->SetAudioPID(wPID);
+	if (!MapAudioPID(wPID)) {
+		m_wAudioEsPID = PID_INVALID;
+		return false;
+	}
 
 	m_wAudioEsPID = wPID;
 
@@ -1845,6 +1832,51 @@ bool CMediaViewer::SetAdjust1SegFrameRate(bool bAdjust)
 }
 
 
+void CMediaViewer::ResetBuffer()
+{
+	if (m_pSrcFilter != NULL)
+		m_pSrcFilter->Reset();
+}
+
+
+bool CMediaViewer::SetBufferSize(size_t Size)
+{
+	TRACE(TEXT("CMediaViewer::SetBufferSize(%Iu)\n"), Size);
+
+	if (m_pSrcFilter != NULL) {
+		if (!m_pSrcFilter->SetBufferSize(Size))
+			return false;
+	}
+
+	m_BufferSize = Size;
+
+	return true;
+}
+
+
+bool CMediaViewer::SetInitialPoolPercentage(int Percentage)
+{
+	TRACE(TEXT("CMediaViewer::SetInitialPoolPercentage(%d)\n"), Percentage);
+
+	if (m_pSrcFilter != NULL) {
+		if (!m_pSrcFilter->SetInitialPoolPercentage(Percentage))
+			return false;
+	}
+
+	m_InitialPoolPercentage = Percentage;
+
+	return true;
+}
+
+
+int CMediaViewer::GetBufferFillPercentage() const
+{
+	if (m_pSrcFilter != NULL)
+		return m_pSrcFilter->GetBufferFillPercentage();
+	return 0;
+}
+
+
 DWORD CMediaViewer::GetAudioBitRate() const
 {
 	if (m_pAudioDecoder != NULL)
@@ -1911,6 +1943,42 @@ void CMediaViewer::ConnectVideoDecoder(
 		throw CBonException(hr, szText1,
 			TEXT("設定で有効なデコーダが選択されているか確認してください。\nまた、レンダラを変えてみてください。"));
 	}
+}
+
+
+bool CMediaViewer::MapVideoPID(WORD PID)
+{
+	if (m_pMp2DemuxVideoMap) {
+		// 新規にPIDをマップ
+		if (PID != PID_INVALID) {
+			ULONG TempPID = PID;
+			if (m_pMp2DemuxVideoMap->MapPID(1UL, &TempPID, MEDIA_ELEMENTARY_STREAM) != S_OK)
+				return false;
+		}
+	}
+
+	if (m_pSrcFilter)
+		m_pSrcFilter->SetVideoPID(PID);
+
+	return true;
+}
+
+
+bool CMediaViewer::MapAudioPID(WORD PID)
+{
+	if (m_pMp2DemuxAudioMap) {
+		// 新規にPIDをマップ
+		if (PID != PID_INVALID) {
+			ULONG TempPID = PID;
+			if (m_pMp2DemuxAudioMap->MapPID(1UL, &TempPID, MEDIA_ELEMENTARY_STREAM) != S_OK)
+				return false;
+		}
+	}
+
+	if (m_pSrcFilter)
+		m_pSrcFilter->SetAudioPID(PID);
+
+	return true;
 }
 
 

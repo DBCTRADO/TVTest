@@ -24,7 +24,8 @@ CBonSrcPin::CBonSrcPin(HRESULT *phr, CBonSrcFilter *pFilter)
 	, m_pFilter(pFilter)
 	, m_hThread(NULL)
 	, m_hEndEvent(NULL)
-	, m_SrcStream(0x1000)
+	, m_InitialPoolPercentage(0)
+	, m_bBuffering(false)
 	, m_bOutputWhenPaused(false)
 {
 	TRACE(TEXT("CBonSrcPin::CBonSrcPin() %p\n"), this);
@@ -85,7 +86,10 @@ HRESULT CBonSrcPin::Active()
 	if (m_hThread)
 		return E_UNEXPECTED;
 
-	m_SrcStream.Reset();
+	if (!m_SrcStream.Initialize())
+		return E_OUTOFMEMORY;
+
+	m_bBuffering = m_InitialPoolPercentage > 0;
 
 	if (m_hEndEvent == NULL) {
 		m_hEndEvent = ::CreateEvent(NULL, TRUE, FALSE, NULL);
@@ -174,6 +178,7 @@ HRESULT CBonSrcPin::DecideBufferSize(IMemAllocator *pAlloc, ALLOCATOR_PROPERTIES
 
 bool CBonSrcPin::InputMedia(CMediaData *pMediaData)
 {
+#if 0
 	for (int i = 0; m_SrcStream.IsBufferFull(); i++) {
 		if (i == 100) {
 			Flush();
@@ -181,6 +186,7 @@ bool CBonSrcPin::InputMedia(CMediaData *pMediaData)
 		}
 		::Sleep(10);
 	}
+#endif
 
 	m_SrcStream.InputMedia(pMediaData);
 
@@ -203,9 +209,9 @@ void CBonSrcPin::Flush()
 }
 
 
-bool CBonSrcPin::EnableSync(bool bEnable,bool b1Seg)
+bool CBonSrcPin::EnableSync(bool bEnable, bool b1Seg)
 {
-	return m_SrcStream.EnableSync(bEnable,b1Seg);
+	return m_SrcStream.EnableSync(bEnable, b1Seg);
 }
 
 
@@ -227,6 +233,29 @@ void CBonSrcPin::SetAudioPID(WORD PID)
 }
 
 
+bool CBonSrcPin::SetBufferSize(size_t Size)
+{
+	return m_SrcStream.SetQueueSize(Size != 0 ? Size : CTsSrcStream::DEFAULT_QUEUE_SIZE);
+}
+
+
+bool CBonSrcPin::SetInitialPoolPercentage(int Percentage)
+{
+	if (Percentage < 0 || Percentage > 100)
+		return false;
+
+	m_InitialPoolPercentage = Percentage;
+
+	return true;
+}
+
+
+int CBonSrcPin::GetBufferFillPercentage()
+{
+	return m_SrcStream.GetFillPercentage();
+}
+
+
 unsigned int __stdcall CBonSrcPin::StreamThread(LPVOID lpParameter)
 {
 	CBonSrcPin *pThis = static_cast<CBonSrcPin*>(lpParameter);
@@ -238,6 +267,14 @@ unsigned int __stdcall CBonSrcPin::StreamThread(LPVOID lpParameter)
 	DWORD Wait = 0;
 
 	while (::WaitForSingleObject(pThis->m_hEndEvent, Wait) == WAIT_TIMEOUT) {
+		if (pThis->m_bBuffering) {
+			if (pThis->m_SrcStream.GetFillPercentage() < pThis->m_InitialPoolPercentage) {
+				Wait = 10;
+				continue;
+			}
+			pThis->m_bBuffering = false;
+		}
+
 		if (pThis->m_SrcStream.IsDataAvailable()) {
 			// 空のメディアサンプルを要求する
 			IMediaSample *pSample = NULL;
@@ -247,9 +284,9 @@ unsigned int __stdcall CBonSrcPin::StreamThread(LPVOID lpParameter)
 				BYTE *pSampleData = NULL;
 				hr = pSample->GetPointer(&pSampleData);
 				if (SUCCEEDED(hr)) {
-					DWORD Size = SAMPLE_PACKETS;
-					if (pThis->m_SrcStream.GetData(pSampleData, &Size)) {
-						pSample->SetActualDataLength(Size * TS_PACKETSIZE);
+					size_t Size = pThis->m_SrcStream.GetData(pSampleData, SAMPLE_PACKETS);
+					if (Size != 0) {
+						pSample->SetActualDataLength(static_cast<long>(Size * TS_PACKETSIZE));
 						pThis->Deliver(pSample);
 					}
 					pSample->Release();
@@ -257,7 +294,7 @@ unsigned int __stdcall CBonSrcPin::StreamThread(LPVOID lpParameter)
 			}
 			Wait = 0;
 		} else {
-			Wait = 5;
+			Wait = 10;
 		}
 	}
 

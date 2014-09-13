@@ -53,12 +53,8 @@ bool CPlaybackOptions::Apply(DWORD Flags)
 	}
 
 	if ((Flags&UPDATE_PACKETBUFFERING)!=0) {
-		if (!m_fPacketBuffering)
-			CoreEngine.SetPacketBuffering(false);
 		CoreEngine.SetPacketBufferLength(m_PacketBufferLength);
-		CoreEngine.SetPacketBufferPoolPercentage(m_PacketBufferPoolPercentage);
-		if (m_fPacketBuffering)
-			CoreEngine.SetPacketBuffering(true);
+		CoreEngine.SetPacketBufferPool(m_fPacketBuffering,m_PacketBufferPoolPercentage);
 	}
 
 	if ((Flags&UPDATE_STREAMTHREADPRIORITY)!=0) {
@@ -237,12 +233,12 @@ INT_PTR CPlaybackOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPara
 							  !m_fUseAudioRendererClock);
 
 			// Buffering
+			SetDlgItemInt(hDlg,IDC_OPTIONS_BUFFERSIZE,m_PacketBufferLength,FALSE);
+			DlgUpDown_SetRange(hDlg,IDC_OPTIONS_BUFFERSIZE_UD,1,MAX_PACKET_BUFFER_LENGTH);
 			DlgCheckBox_Check(hDlg,IDC_OPTIONS_ENABLEBUFFERING,
 							  m_fPacketBuffering);
 			EnableDlgItems(hDlg,IDC_OPTIONS_BUFFERING_FIRST,IDC_OPTIONS_BUFFERING_LAST,
-					m_fPacketBuffering);
-			SetDlgItemInt(hDlg,IDC_OPTIONS_BUFFERSIZE,m_PacketBufferLength,FALSE);
-			DlgUpDown_SetRange(hDlg,IDC_OPTIONS_BUFFERSIZE_UD,1,MAX_PACKET_BUFFER_LENGTH);
+						   m_fPacketBuffering);
 			SetDlgItemInt(hDlg,IDC_OPTIONS_BUFFERPOOLPERCENTAGE,
 						  m_PacketBufferPoolPercentage,TRUE);
 			DlgUpDown_SetRange(hDlg,IDC_OPTIONS_BUFFERPOOLPERCENTAGE_UD,0,100);
@@ -358,18 +354,17 @@ INT_PTR CPlaybackOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPara
 					SetGeneralUpdateFlag(UPDATE_GENERAL_BUILDMEDIAVIEWER);
 				}
 
-				bool fBuffering=DlgCheckBox_IsChecked(hDlg,IDC_OPTIONS_ENABLEBUFFERING);
 				DWORD BufferLength=::GetDlgItemInt(hDlg,IDC_OPTIONS_BUFFERSIZE,NULL,FALSE);
 				BufferLength=CLAMP(BufferLength,0,MAX_PACKET_BUFFER_LENGTH);
+				bool fBuffering=DlgCheckBox_IsChecked(hDlg,IDC_OPTIONS_ENABLEBUFFERING);
 				int PoolPercentage=::GetDlgItemInt(hDlg,IDC_OPTIONS_BUFFERPOOLPERCENTAGE,NULL,TRUE);
 				PoolPercentage=CLAMP(PoolPercentage,0,100);
-				if (fBuffering!=m_fPacketBuffering
-					|| (fBuffering
-						&& (BufferLength!=m_PacketBufferLength
-							|| PoolPercentage!=m_PacketBufferPoolPercentage)))
+				if (BufferLength!=m_PacketBufferLength
+						|| fBuffering!=m_fPacketBuffering
+						|| (fBuffering && PoolPercentage!=m_PacketBufferPoolPercentage))
 					SetUpdateFlag(UPDATE_PACKETBUFFERING);
-				m_fPacketBuffering=fBuffering;
 				m_PacketBufferLength=BufferLength;
+				m_fPacketBuffering=fBuffering;
 				m_PacketBufferPoolPercentage=PoolPercentage;
 
 				int Priority=(int)DlgComboBox_GetCurSel(hDlg,IDC_OPTIONS_STREAMTHREADPRIORITY);

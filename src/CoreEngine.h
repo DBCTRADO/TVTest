@@ -71,12 +71,10 @@ public:
 	bool GetDescramble() const { return m_fDescramble; }
 	bool GetCasDeviceList(CasDeviceList *pList);
 
-	bool SetPacketBuffering(bool fBuffering);
-	bool GetPacketBuffering() const { return m_fPacketBuffering; }
 	bool SetPacketBufferLength(DWORD BufferLength);
-	DWORD GetPacketBufferLength() const { return m_PacketBufferLength; }
-	bool SetPacketBufferPoolPercentage(int Percentage);
-	int GetPacketBufferPoolPercentage() const { return m_PacketBufferPoolPercentage; }
+	bool GetPacketBuffering() const { return m_fPacketBuffering; }
+	bool SetPacketBufferPool(bool fBuffering,int Percentage);
+	void ResetPacketBuffer();
 
 	bool GetVideoViewSize(int *pWidth,int *pHeight);
 	int GetOriginalVideoWidth() const { return m_OriginalVideoWidth; }
@@ -135,7 +133,7 @@ public:
 	int GetBitRateText(DWORD BitRate,LPTSTR pszText,int MaxLength) const;
 	int GetBitRateText(float BitRate,LPTSTR pszText,int MaxLength,int Precision=2) const;
 	DWORD GetStreamRemain() const { return m_StreamRemain; }
-	int GetPacketBufferUsedPercentage();
+	int GetPacketBufferUsedPercentage() const;
 	bool GetCurrentEventInfo(CEventInfoData *pInfo,WORD ServiceID=0xFFFF,bool fNext=false);
 	void *GetCurrentImage();
 	bool SetMinTimerResolution(bool fMin);
@@ -153,8 +151,6 @@ private:
 	bool m_fDescramble;
 
 	bool m_fPacketBuffering;
-	DWORD m_PacketBufferLength;
-	int m_PacketBufferPoolPercentage;
 
 	int m_OriginalVideoWidth;
 	int m_OriginalVideoHeight;
@@ -178,7 +174,7 @@ private:
 	float m_SignalLevel;
 	DWORD m_BitRate;
 	DWORD m_StreamRemain;
-	DWORD m_PacketBufferUsedCount;
+	int m_PacketBufferFillPercentage;
 	UINT m_TimerResolution;
 	bool m_fNoEpg;
 

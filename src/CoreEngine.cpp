@@ -20,8 +20,6 @@ CCoreEngine::CCoreEngine()
 	, m_fDescramble(true)
 
 	, m_fPacketBuffering(false)
-	, m_PacketBufferLength(m_DtvEngine.m_MediaBuffer.GetBufferLength())
-	, m_PacketBufferPoolPercentage(m_DtvEngine.m_MediaBuffer.GetPoolPercentage())
 
 	, m_OriginalVideoWidth(0)
 	, m_OriginalVideoHeight(0)
@@ -43,7 +41,7 @@ CCoreEngine::CCoreEngine()
 	, m_ScramblePacketCount(0)
 	, m_SignalLevel(0.0)
 	, m_BitRate(0)
-	, m_PacketBufferUsedCount(0)
+	, m_PacketBufferFillPercentage(0)
 	, m_StreamRemain(0)
 	, m_TimerResolution(0)
 	, m_fNoEpg(false)
@@ -89,9 +87,7 @@ bool CCoreEngine::BuildDtvEngine(CDtvEngine::CEventHandler *pEventHandler)
 	    Å´               Å´
 	CTsSelector      CMediaGrabber
 	    Å´               Å´
-	CFileWriter      CMediaBuffer
-	                     Å´
-	                 CMediaViewer
+	CFileWriter      CMediaViewer
 	*/
 
 	struct {
@@ -131,14 +127,12 @@ bool CCoreEngine::BuildDtvEngine(CDtvEngine::CEventHandler *pEventHandler)
 	ConnectionList.Add(CDtvEngine::DECODER_ID_CaptionDecoder,
 					   CDtvEngine::DECODER_ID_MediaGrabber);
 	ConnectionList.Add(CDtvEngine::DECODER_ID_MediaGrabber,
-					   CDtvEngine::DECODER_ID_MediaBuffer);
-	ConnectionList.Add(CDtvEngine::DECODER_ID_MediaBuffer,
 					   CDtvEngine::DECODER_ID_MediaViewer);
 
 	if (!m_DtvEngine.BuildEngine(
 			ConnectionList.List.data(),static_cast<int>(ConnectionList.List.size()),
 			pEventHandler,
-			m_fDescramble,true/*m_fPacketBuffering*/)) {
+			m_fDescramble)) {
 		return false;
 	}
 
@@ -433,30 +427,24 @@ bool CCoreEngine::GetCasDeviceList(CasDeviceList *pList)
 }
 
 
-bool CCoreEngine::SetPacketBuffering(bool fBuffering)
+bool CCoreEngine::SetPacketBufferLength(DWORD BufferLength)
 {
-	if (!m_DtvEngine.m_MediaBuffer.EnableBuffering(fBuffering))
+	return m_DtvEngine.m_MediaViewer.SetBufferSize(BufferLength);
+}
+
+
+bool CCoreEngine::SetPacketBufferPool(bool fBuffering,int Percentage)
+{
+	if (!m_DtvEngine.m_MediaViewer.SetInitialPoolPercentage(fBuffering?Percentage:0))
 		return false;
 	m_fPacketBuffering=fBuffering;
 	return true;
 }
 
 
-bool CCoreEngine::SetPacketBufferLength(DWORD BufferLength)
+void CCoreEngine::ResetPacketBuffer()
 {
-	if (!m_DtvEngine.m_MediaBuffer.SetBufferLength(BufferLength))
-		return false;
-	m_PacketBufferLength=BufferLength;
-	return true;
-}
-
-
-bool CCoreEngine::SetPacketBufferPoolPercentage(int Percentage)
-{
-	if (!m_DtvEngine.m_MediaBuffer.SetPoolPercentage(Percentage))
-		return false;
-	m_PacketBufferPoolPercentage=Percentage;
-	return true;
+	m_DtvEngine.m_MediaViewer.ResetBuffer();
 }
 
 
@@ -676,9 +664,9 @@ DWORD CCoreEngine::UpdateStatistics()
 		m_StreamRemain=StreamRemain;
 		Updated|=STATISTIC_STREAMREMAIN;
 	}
-	DWORD BufferUsedCount=m_DtvEngine.m_MediaBuffer.GetUsedBufferCount();
-	if (BufferUsedCount!=m_PacketBufferUsedCount) {
-		m_PacketBufferUsedCount=BufferUsedCount;
+	int BufferFillPercentage=m_DtvEngine.m_MediaViewer.GetBufferFillPercentage();
+	if (BufferFillPercentage!=m_PacketBufferFillPercentage) {
+		m_PacketBufferFillPercentage=BufferFillPercentage;
 		Updated|=STATISTIC_PACKETBUFFERRATE;
 	}
 	return Updated;
@@ -725,10 +713,9 @@ int CCoreEngine::GetBitRateText(float BitRate,LPTSTR pszText,int MaxLength,int P
 }
 
 
-int CCoreEngine::GetPacketBufferUsedPercentage()
+int CCoreEngine::GetPacketBufferUsedPercentage() const
 {
-	return m_DtvEngine.m_MediaBuffer.GetUsedBufferCount()*100/
-								m_DtvEngine.m_MediaBuffer.GetBufferLength();
+	return m_PacketBufferFillPercentage;
 }
 
 

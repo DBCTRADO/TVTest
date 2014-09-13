@@ -86,9 +86,6 @@
     <ClCompile Include="BonTsEngine\LogoDownloader.cpp">
       <Filter>BonTsEngine\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="BonTsEngine\MediaBuffer.cpp">
-      <Filter>BonTsEngine\Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="BonTsEngine\MediaData.cpp">
       <Filter>BonTsEngine\Source Files</Filter>
     </ClCompile>
@@ -562,9 +559,6 @@
     <ClInclude Include="BonTsEngine\LogoDownloader.h">
       <Filter>BonTsEngine\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="BonTsEngine\MediaBuffer.h">
-      <Filter>BonTsEngine\Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="BonTsEngine\MediaData.h">
       <Filter>BonTsEngine\Header Files</Filter>
     </ClInclude>
@@ -1011,6 +1005,9 @@
     </ClInclude>
     <ClInclude Include="BonTsEngine\TsUtil.h">
       <Filter>BonTsEngine\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="DirectShowFilter\RingBuffer.h">
+      <Filter>DirectShowFilter\Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

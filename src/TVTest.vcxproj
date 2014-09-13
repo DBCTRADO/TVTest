@@ -468,7 +468,6 @@
     <ClCompile Include="BonTsEngine\FileReader.cpp" />
     <ClCompile Include="BonTsEngine\FileWriter.cpp" />
     <ClCompile Include="BonTsEngine\LogoDownloader.cpp" />
-    <ClCompile Include="BonTsEngine\MediaBuffer.cpp" />
     <ClCompile Include="BonTsEngine\MediaData.cpp" />
     <ClCompile Include="BonTsEngine\MediaDecoder.cpp" />
     <ClCompile Include="BonTsEngine\MediaGrabber.cpp" />
@@ -631,7 +630,6 @@
     <ClInclude Include="BonTsEngine\FileWriter.h" />
     <ClInclude Include="BonTsEngine\IBonDriver.h" />
     <ClInclude Include="BonTsEngine\LogoDownloader.h" />
-    <ClInclude Include="BonTsEngine\MediaBuffer.h" />
     <ClInclude Include="BonTsEngine\MediaData.h" />
     <ClInclude Include="BonTsEngine\MediaDecoder.h" />
     <ClInclude Include="BonTsEngine\MediaGrabber.h" />
@@ -655,6 +653,7 @@
     <ClInclude Include="CaptureOptions.h" />
     <ClInclude Include="CardReaderDialog.h" />
     <ClInclude Include="CasLibraryManager.h" />
+    <ClInclude Include="DirectShowFilter\RingBuffer.h" />
     <ClInclude Include="NetworkDefinition.h" />
     <ClInclude Include="ChannelHistory.h" />
     <ClInclude Include="ChannelList.h" />

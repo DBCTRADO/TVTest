@@ -36,7 +36,6 @@ CDtvEngine::CDtvEngine(void)
 	, m_MediaViewer(this)
 	, m_MediaTee(this)
 	, m_FileWriter(this)
-	, m_MediaBuffer(this)
 	, m_MediaGrabber(this)
 	, m_TsSelector(this)
 	, m_EventManager(this)
@@ -45,7 +44,6 @@ CDtvEngine::CDtvEngine(void)
 
 	, m_bBuiled(false)
 	, m_bDescramble(true)
-	, m_bBuffering(false)
 	, m_bStartStreamingOnDriverOpen(false)
 
 	, m_bDescrambleCurServiceOnly(false)
@@ -64,7 +62,7 @@ CDtvEngine::~CDtvEngine(void)
 bool CDtvEngine::BuildEngine(const DecoderConnectionInfo *pDecoderConnectionList,
 							 int DecoderConnectionCount,
 							 CEventHandler *pEventHandler,
-							 bool bDescramble, bool bBuffering)
+							 bool bDescramble)
 {
 	if (m_bBuiled)
 		return true;
@@ -87,11 +85,8 @@ bool CDtvEngine::BuildEngine(const DecoderConnectionInfo *pDecoderConnectionList
 	}
 
 	m_CasProcessor.EnableDescramble(bDescramble);
-	if (bBuffering)
-		m_MediaBuffer.Play();
 
 	m_bDescramble = bDescramble;
-	m_bBuffering = bBuffering;
 
 	// イベントハンドラ設定
 	m_pEventHandler = pEventHandler;
@@ -120,9 +115,6 @@ bool CDtvEngine::CloseEngine(void)
 	//m_MediaViewer.Stop();
 
 	ReleaseSrcFilter();
-
-	Trace(TEXT("バッファのストリーミングを停止しています..."));
-	m_MediaBuffer.Stop();
 
 	Trace(TEXT("カードリーダを閉じています..."));
 	m_CasProcessor.CloseCasCard();
@@ -172,8 +164,6 @@ bool CDtvEngine::OpenBonDriver(LPCTSTR pszFileName)
 		SetError(m_BonSrcDecoder.GetLastErrorException());
 		return false;
 	}
-
-	m_MediaBuffer.SetFileMode(false);
 
 	const DecoderConnectionInfo *pOutputConnection = GetOutputConnectionInfo(DECODER_ID_BonSrcDecoder);
 	if (pOutputConnection != NULL) {
@@ -747,12 +737,15 @@ bool CDtvEngine::BuildMediaViewer(HWND hwndHost, HWND hwndMessage,
 	BYTE VideoStreamType, LPCWSTR pszVideoDecoder,
 	LPCWSTR pszAudioDevice)
 {
-	if (!m_MediaViewer.OpenViewer(hwndHost, hwndMessage, VideoRenderer,
-								  VideoStreamType, pszVideoDecoder,
-								  pszAudioDevice)) {
+	DisconnectDecoder(DECODER_ID_MediaViewer);
+	bool bOK = m_MediaViewer.OpenViewer(
+		hwndHost, hwndMessage, VideoRenderer,
+		VideoStreamType, pszVideoDecoder,
+		pszAudioDevice);
+	if (!bOK)
 		SetError(m_MediaViewer.GetLastErrorException());
-		return false;
-	}
+	ConnectDecoder(DECODER_ID_MediaViewer);
+
 	return true;
 }
 
@@ -792,9 +785,6 @@ bool CDtvEngine::ResetMediaViewer()
 		return false;
 
 	m_MediaViewer.Reset();
-
-	if (m_bBuffering)
-		m_MediaBuffer.Reset();
 
 	CBlockLock Lock(&m_EngineLock);
 
@@ -1024,13 +1014,6 @@ bool CDtvEngine::SetDescramble(bool bDescramble)
 }
 
 
-bool CDtvEngine::ResetBuffer()
-{
-	m_MediaBuffer.ResetBuffer();
-	return true;
-}
-
-
 bool CDtvEngine::SetDescrambleService(WORD ServiceID)
 {
 	return m_CasProcessor.SetTargetServiceID(ServiceID);
@@ -1116,7 +1099,6 @@ CMediaDecoder *CDtvEngine::GetDecoderByID(DecoderID ID)
 	case DECODER_ID_MediaViewer:	return &m_MediaViewer;
 	case DECODER_ID_MediaTee:		return &m_MediaTee;
 	case DECODER_ID_FileWriter:		return &m_FileWriter;
-	case DECODER_ID_MediaBuffer:	return &m_MediaBuffer;
 	case DECODER_ID_MediaGrabber:	return &m_MediaGrabber;
 	case DECODER_ID_TsSelector:		return &m_TsSelector;
 	case DECODER_ID_EventManager:	return &m_EventManager;

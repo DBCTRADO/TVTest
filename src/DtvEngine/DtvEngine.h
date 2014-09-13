@@ -14,7 +14,6 @@
 #include "MediaTee.h"
 //#include "FileWriter.h"
 #include "BufferedFileWriter.h"
-#include "MediaBuffer.h"
 #include "MediaGrabber.h"
 #include "TsSelector.h"
 #include "EventManager.h"
@@ -46,7 +45,6 @@ public:
 		DECODER_ID_MediaViewer,
 		DECODER_ID_MediaTee,
 		DECODER_ID_FileWriter,
-		DECODER_ID_MediaBuffer,
 		DECODER_ID_MediaGrabber,
 		DECODER_ID_TsSelector,
 		DECODER_ID_EventManager,
@@ -115,7 +113,7 @@ public:
 	bool BuildEngine(const DecoderConnectionInfo *pDecoderConnectionList,
 					 int DecoderConnectionCount,
 					 CEventHandler *pEventHandler,
-					 bool bDescramble = true, bool bBuffering = true);
+					 bool bDescramble = true);
 	bool IsEngineBuild() const { return m_bBuiled; };
 	bool IsBuildComplete() const;
 	bool CloseEngine(void);
@@ -177,7 +175,6 @@ public:
 	bool OpenCasCard(int Device, LPCTSTR pszReaderName = NULL);
 	bool CloseCasCard();
 	bool SetDescramble(bool bDescramble);
-	bool ResetBuffer();
 	bool SetDescrambleService(WORD ServiceID);
 	bool SetDescrambleCurServiceOnly(bool bOnly);
 	bool GetDescrambleCurServiceOnly() const { return m_bDescrambleCurServiceOnly; }
@@ -200,7 +197,6 @@ public:
 	CMediaTee m_MediaTee;					// メディアティー
 	//CFileWriter m_FileWriter;				// ファイルライター
 	CBufferedFileWriter m_FileWriter;
-	CMediaBuffer m_MediaBuffer;
 	CMediaGrabber m_MediaGrabber;
 	CTsSelector m_TsSelector;
 	CEventManager m_EventManager;
@@ -234,7 +230,6 @@ protected:
 
 	bool m_bBuiled;
 	bool m_bDescramble;
-	bool m_bBuffering;
 	bool m_bStartStreamingOnDriverOpen;
 
 	bool m_bDescrambleCurServiceOnly;

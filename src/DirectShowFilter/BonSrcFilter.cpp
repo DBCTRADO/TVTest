@@ -1,6 +1,7 @@
 #include "StdAfx.h"
 #include <initguid.h>
 #include "BonSrcFilter.h"
+#include "BonSrcPin.h"
 
 #ifdef _DEBUG
 #undef THIS_FILE
@@ -171,4 +172,28 @@ void CBonSrcFilter::SetOutputWhenPaused(bool bOutput)
 	m_bOutputWhenPaused=bOutput;
 	if (m_pSrcPin)
 		m_pSrcPin->SetOutputWhenPaused(bOutput);
+}
+
+
+bool CBonSrcFilter::SetBufferSize(size_t Size)
+{
+	if (m_pSrcPin)
+		return m_pSrcPin->SetBufferSize(Size);
+	return false;
+}
+
+
+bool CBonSrcFilter::SetInitialPoolPercentage(int Percentage)
+{
+	if (m_pSrcPin)
+		return m_pSrcPin->SetInitialPoolPercentage(Percentage);
+	return false;
+}
+
+
+int CBonSrcFilter::GetBufferFillPercentage() const
+{
+	if (m_pSrcPin)
+		return m_pSrcPin->GetBufferFillPercentage();
+	return 0;
 }

@@ -2882,12 +2882,14 @@ void CMainWindow::OnCommand(HWND hwnd,int id,HWND hwndCtl,UINT codeNotify)
 		return;
 
 	case CM_ENABLEBUFFERING:
-		m_App.CoreEngine.SetPacketBuffering(!m_App.CoreEngine.GetPacketBuffering());
+		m_App.CoreEngine.SetPacketBufferPool(
+			!m_App.CoreEngine.GetPacketBuffering(),
+			m_App.PlaybackOptions.GetPacketBufferPoolPercentage());
 		m_App.PlaybackOptions.SetPacketBuffering(m_App.CoreEngine.GetPacketBuffering());
 		return;
 
 	case CM_RESETBUFFER:
-		m_App.CoreEngine.m_DtvEngine.ResetBuffer();
+		m_App.CoreEngine.ResetPacketBuffer();
 		return;
 
 	case CM_RESETERRORCOUNT:

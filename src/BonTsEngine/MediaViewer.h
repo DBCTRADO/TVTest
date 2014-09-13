@@ -9,7 +9,6 @@
 #include "MediaDecoder.h"
 #include "TsUtilClass.h"
 #include "../DirectShowFilter/DirectShowUtil.h"
-#include "../DirectShowFilter/BonSrcFilter.h"
 #include "../DirectShowFilter/AudioDecFilter.h"
 #include "../DirectShowFilter/VideoRenderer.h"
 #include "../DirectShowFilter/ImageMixer.h"
@@ -138,6 +137,10 @@ public:
 	bool IsPTSSyncEnabled() const;
 	bool SetAdjust1SegVideoSampleTime(bool bAdjust);
 	bool SetAdjust1SegFrameRate(bool bAdjust);
+	void ResetBuffer();
+	bool SetBufferSize(size_t Size);
+	bool SetInitialPoolPercentage(int Percentage);
+	int GetBufferFillPercentage() const;
 	DWORD GetAudioBitRate() const;
 	DWORD GetVideoBitRate() const;
 
@@ -147,6 +150,8 @@ protected:
 	bool CalcSourceRect(RECT *pRect) const;
 	void ConnectVideoDecoder(LPCTSTR pszCodecName, const GUID &MediaSubType,
 							 LPCTSTR pszDecoderName, IPin **ppOutputPin);
+	bool MapVideoPID(WORD PID);
+	bool MapAudioPID(WORD PID);
 
 	bool m_bInit;
 
@@ -157,7 +162,7 @@ protected:
 	// DirectShowフィルタ
 	IBaseFilter *m_pVideoDecoderFilter;
 	// Source
-	CBonSrcFilter *m_pSrcFilter;
+	class CBonSrcFilter *m_pSrcFilter;
 	// 音声デコーダ
 	CAudioDecFilter *m_pAudioDecoder;
 	// 音声フィルタ
@@ -204,6 +209,8 @@ protected:
 	bool m_bEnablePTSSync;
 	bool m_bAdjust1SegVideoSampleTime;
 	bool m_bAdjust1SegFrameRate;
+	size_t m_BufferSize;
+	int m_InitialPoolPercentage;
 	CAudioDecFilter::StreamCallback m_pAudioStreamCallback;
 	void *m_pAudioStreamCallbackParam;
 	CImageMixer *m_pImageMixer;
