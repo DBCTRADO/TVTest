@@ -238,7 +238,7 @@ namespace TVTest
 		if (i==m_SectionList.end())
 			return false;
 
-		i->Entries.clear();
+		i->Entries.remove_if([](const CEntry &Entry) -> bool { return !Entry.Name.empty(); });
 
 		return true;
 	}
