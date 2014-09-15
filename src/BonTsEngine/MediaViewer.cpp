@@ -186,6 +186,7 @@ CMediaViewer::CMediaViewer(IEventHandler *pEventHandler)
 	, m_bAdjust1SegFrameRate(true)
 	, m_BufferSize(0)
 	, m_InitialPoolPercentage(0)
+	, m_PacketInputWait(0)
 	, m_pAudioStreamCallback(NULL)
 	, m_pAudioStreamCallbackParam(NULL)
 	, m_pImageMixer(NULL)
@@ -329,6 +330,7 @@ bool CMediaViewer::OpenViewer(
 			if (m_BufferSize != 0)
 				m_pSrcFilter->SetBufferSize(m_BufferSize);
 			m_pSrcFilter->SetInitialPoolPercentage(m_InitialPoolPercentage);
+			m_pSrcFilter->SetInputWait(m_PacketInputWait);
 		}
 
 		Trace(TEXT("MPEG-2 DemultiplexerƒtƒBƒ‹ƒ^‚ÌÚ‘±’†..."));
@@ -1874,6 +1876,21 @@ int CMediaViewer::GetBufferFillPercentage() const
 	if (m_pSrcFilter != NULL)
 		return m_pSrcFilter->GetBufferFillPercentage();
 	return 0;
+}
+
+
+bool CMediaViewer::SetPacketInputWait(DWORD Wait)
+{
+	TRACE(TEXT("CMediaViewer::SetPacketInputWait(%u)\n"), Wait);
+
+	if (m_pSrcFilter != NULL) {
+		if (!m_pSrcFilter->SetInputWait(Wait))
+			return false;
+	}
+
+	m_PacketInputWait = Wait;
+
+	return true;
 }
 
 

@@ -197,3 +197,11 @@ int CBonSrcFilter::GetBufferFillPercentage() const
 		return m_pSrcPin->GetBufferFillPercentage();
 	return 0;
 }
+
+
+bool CBonSrcFilter::SetInputWait(DWORD Wait)
+{
+	if (m_pSrcPin)
+		return m_pSrcPin->SetInputWait(Wait);
+	return false;
+}

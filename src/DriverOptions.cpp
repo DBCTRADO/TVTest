@@ -18,6 +18,10 @@ static char THIS_FILE[]=__FILE__;
 #define DRIVER_FLAG_ALLCHANNELS						0x00000008
 #define DRIVER_FLAG_RESETCHANNELCHANGEERRORCOUNT	0x00000010
 #define DRIVER_FLAG_NOTIGNOREINITIALSTREAM			0x00000020
+#define DRIVER_FLAG_PUMPSTREAMSYNCPLAYBACK			0x00000040
+
+#define DRIVER_FLAG_MASK							0x0000007F
+#define DRIVER_FLAG_DEFAULTMASK						0x0000003F
 
 
 
@@ -25,6 +29,12 @@ static char THIS_FILE[]=__FILE__;
 static bool IsBonDriverSpinel(LPCTSTR pszFileName)
 {
 	return ::StrStrI(::PathFindFileName(pszFileName),TEXT("Spinel"))!=NULL;
+}
+
+static bool IsFileBonDriver(LPCTSTR pszFileName)
+{
+	return ::PathMatchSpec(pszFileName,TEXT("*_File.dll"))
+		|| ::PathMatchSpec(pszFileName,TEXT("*_Pipe.dll"));
 }
 
 
@@ -76,6 +86,8 @@ public:
 	void SetPurgeStreamOnChannelChange(bool fPurge) { m_Options.fPurgeStreamOnChannelChange=fPurge; }
 	bool GetResetChannelChangeErrorCount() const { return m_Options.fResetChannelChangeErrorCount; }
 	void SetResetChannelChangeErrorCount(bool fReset) { m_Options.fResetChannelChangeErrorCount=fReset; }
+	bool GetPumpStreamSyncPlayback() const { return m_Options.fPumpStreamSyncPlayback; }
+	void SetPumpStreamSyncPlayback(bool fSync) { m_Options.fPumpStreamSyncPlayback=fSync; }
 	DWORD GetFirstChannelSetDelay() const { return m_Options.FirstChannelSetDelay; }
 	void SetFirstChannelSetDelay(DWORD Delay) { m_Options.FirstChannelSetDelay=Delay; }
 	DWORD GetMinChannelChangeInterval() const { return m_Options.MinChannelChangeInterval; }
@@ -246,12 +258,24 @@ bool CDriverOptions::ReadSettings(CSettings &Settings)
 					pSettings->SetInitialServiceID(Value);
 				::wsprintf(szName,TEXT("Driver%d_Options"),i);
 				if (Settings.Read(szName,&Value)) {
-					pSettings->SetNoDescramble((Value&DRIVER_FLAG_NODESCRAMBLE)!=0);
-					pSettings->SetNoSignalLevel((Value&DRIVER_FLAG_NOSIGNALLEVEL)!=0);
-					pSettings->SetPurgeStreamOnChannelChange((Value&DRIVER_FLAG_PURGESTREAMONCHANNELCHANGE)!=0);
-					pSettings->SetAllChannels((Value&DRIVER_FLAG_ALLCHANNELS)!=0);
-					pSettings->SetResetChannelChangeErrorCount((Value&DRIVER_FLAG_RESETCHANNELCHANGEERRORCOUNT)!=0);
-					pSettings->SetIgnoreInitialStream((Value&DRIVER_FLAG_NOTIGNOREINITIALSTREAM)==0);
+					unsigned int Mask;
+					::wsprintf(szName,TEXT("Driver%d_OptionsMask"),i);
+					if (!Settings.Read(szName,&Mask))
+						Mask=DRIVER_FLAG_DEFAULTMASK;
+					if ((Mask & DRIVER_FLAG_NODESCRAMBLE)!=0)
+						pSettings->SetNoDescramble((Value & DRIVER_FLAG_NODESCRAMBLE)!=0);
+					if ((Mask & DRIVER_FLAG_NOSIGNALLEVEL)!=0)
+						pSettings->SetNoSignalLevel((Value & DRIVER_FLAG_NOSIGNALLEVEL)!=0);
+					if ((Mask & DRIVER_FLAG_PURGESTREAMONCHANNELCHANGE)!=0)
+						pSettings->SetPurgeStreamOnChannelChange((Value & DRIVER_FLAG_PURGESTREAMONCHANNELCHANGE)!=0);
+					if ((Mask & DRIVER_FLAG_ALLCHANNELS)!=0)
+						pSettings->SetAllChannels((Value & DRIVER_FLAG_ALLCHANNELS)!=0);
+					if ((Mask & DRIVER_FLAG_RESETCHANNELCHANGEERRORCOUNT)!=0)
+						pSettings->SetResetChannelChangeErrorCount((Value & DRIVER_FLAG_RESETCHANNELCHANGEERRORCOUNT)!=0);
+					if ((Mask & DRIVER_FLAG_NOTIGNOREINITIALSTREAM)!=0)
+						pSettings->SetIgnoreInitialStream((Value & DRIVER_FLAG_NOTIGNOREINITIALSTREAM)==0);
+					if ((Mask & DRIVER_FLAG_PUMPSTREAMSYNCPLAYBACK)!=0)
+						pSettings->SetPumpStreamSyncPlayback((Value & DRIVER_FLAG_PUMPSTREAMSYNCPLAYBACK)!=0);
 				}
 				::wsprintf(szName,TEXT("Driver%d_FirstChSetDelay"),i);
 				if (Settings.Read(szName,&Value))
@@ -316,7 +340,11 @@ bool CDriverOptions::WriteSettings(CSettings &Settings)
 			Flags|=DRIVER_FLAG_RESETCHANNELCHANGEERRORCOUNT;
 		if (!pSettings->GetIgnoreInitialStream())
 			Flags|=DRIVER_FLAG_NOTIGNOREINITIALSTREAM;
+		if (pSettings->GetPumpStreamSyncPlayback())
+			Flags|=DRIVER_FLAG_PUMPSTREAMSYNCPLAYBACK;
 		Settings.Write(szName,Flags);
+		::wsprintf(szName,TEXT("Driver%d_OptionsMask"),i);
+		Settings.Write(szName,DRIVER_FLAG_MASK);
 		::wsprintf(szName,TEXT("Driver%d_FirstChSetDelay"),i);
 		Settings.Write(szName,(unsigned int)pSettings->GetFirstChannelSetDelay());
 		::wsprintf(szName,TEXT("Driver%d_MinChChangeInterval"),i);
@@ -416,52 +444,69 @@ bool CDriverOptions::SetLastChannel(LPCTSTR pszFileName,const ChannelInfo *pChan
 
 bool CDriverOptions::IsNoDescramble(LPCTSTR pszFileName) const
 {
-	if (pszFileName==NULL)
+	const CDriverSettings *pSettings=GetBonDriverSettings(pszFileName);
+	if (pSettings==NULL)
 		return false;
-
-	int Index=m_SettingList.Find(pszFileName);
-	if (Index<0)
-		return false;
-	return m_SettingList.GetDriverSettings(Index)->GetNoDescramble();
+	return pSettings->GetNoDescramble();
 }
 
 
 bool CDriverOptions::IsNoSignalLevel(LPCTSTR pszFileName) const
 {
-	if (pszFileName==NULL)
+	const CDriverSettings *pSettings=GetBonDriverSettings(pszFileName);
+	if (pSettings==NULL)
 		return false;
-
-	int Index=m_SettingList.Find(pszFileName);
-	if (Index<0)
-		return false;
-	return m_SettingList.GetDriverSettings(Index)->GetNoSignalLevel();
+	return pSettings->GetNoSignalLevel();
 }
 
 
 bool CDriverOptions::IsResetChannelChangeErrorCount(LPCTSTR pszFileName) const
 {
-	if (pszFileName==NULL)
+	const CDriverSettings *pSettings=GetBonDriverSettings(pszFileName);
+	if (pSettings==NULL)
 		return false;
-
-	int Index=m_SettingList.Find(pszFileName);
-	if (Index<0)
-		return false;
-	return m_SettingList.GetDriverSettings(Index)->GetResetChannelChangeErrorCount();
+	return pSettings->GetResetChannelChangeErrorCount();
 }
 
 
 bool CDriverOptions::GetBonDriverOptions(LPCTSTR pszFileName,BonDriverOptions *pOptions) const
 {
-	if (pszFileName==NULL || pOptions==NULL)
+	if (pOptions==NULL)
 		return false;
+
+	const CDriverSettings *pSettings=GetBonDriverSettings(pszFileName);
+	if (pSettings==NULL)
+		return false;
+
+	*pOptions = pSettings->GetOptions();
+
+	return true;
+}
+
+
+CDriverSettings *CDriverOptions::GetBonDriverSettings(LPCTSTR pszFileName)
+{
+	if (IsStringEmpty(pszFileName))
+		return NULL;
 
 	int Index=m_SettingList.Find(pszFileName);
 	if (Index<0)
-		return false;
+		return NULL;
 
-	*pOptions = m_SettingList.GetDriverSettings(Index)->GetOptions();
+	return m_SettingList.GetDriverSettings(Index);
+}
 
-	return true;
+
+const CDriverSettings *CDriverOptions::GetBonDriverSettings(LPCTSTR pszFileName) const
+{
+	if (IsStringEmpty(pszFileName))
+		return NULL;
+
+	int Index=m_SettingList.Find(pszFileName);
+	if (Index<0)
+		return NULL;
+
+	return m_SettingList.GetDriverSettings(Index);
 }
 
 
@@ -548,6 +593,8 @@ void CDriverOptions::InitDlgItem(int Driver)
 						  pSettings->GetPurgeStreamOnChannelChange());
 		DlgCheckBox_Check(m_hDlg,IDC_DRIVEROPTIONS_RESETCHANNELCHANGEERRORCOUNT,
 						  pSettings->GetResetChannelChangeErrorCount());
+		DlgCheckBox_Check(m_hDlg,IDC_DRIVEROPTIONS_PUMPSTREAMSYNCPLAYBACK,
+						  pSettings->GetPumpStreamSyncPlayback());
 
 		::SetDlgItemInt(m_hDlg,IDC_DRIVEROPTIONS_FIRSTCHANNELSETDELAY,
 						pSettings->GetFirstChannelSetDelay(),FALSE);
@@ -801,6 +848,17 @@ INT_PTR CDriverOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 			}
 			return TRUE;
 
+		case IDC_DRIVEROPTIONS_PUMPSTREAMSYNCPLAYBACK:
+			{
+				CDriverSettings *pSettings=GetCurSelDriverSettings();
+
+				if (pSettings!=NULL) {
+					pSettings->SetPumpStreamSyncPlayback(
+						DlgCheckBox_IsChecked(hDlg,IDC_DRIVEROPTIONS_PUMPSTREAMSYNCPLAYBACK));
+				}
+			}
+			return TRUE;
+
 		case IDC_DRIVEROPTIONS_FIRSTCHANNELSETDELAY:
 			if (HIWORD(wParam)==EN_CHANGE) {
 				CDriverSettings *pSettings=GetCurSelDriverSettings();
@@ -854,6 +912,7 @@ CDriverOptions::BonDriverOptions::BonDriverOptions()
 	, fIgnoreInitialStream(true)
 	, fPurgeStreamOnChannelChange(true)
 	, fResetChannelChangeErrorCount(true)
+	, fPumpStreamSyncPlayback(false)
 	, FirstChannelSetDelay(0)
 	, MinChannelChangeInterval(0)
 {
@@ -862,10 +921,12 @@ CDriverOptions::BonDriverOptions::BonDriverOptions()
 
 CDriverOptions::BonDriverOptions::BonDriverOptions(LPCTSTR pszBonDriverName)
 	: fNoDescramble(false)
-	, fNoSignalLevel(GetAppClass().CoreEngine.IsNetworkDriverFileName(pszBonDriverName))
+	, fNoSignalLevel(GetAppClass().CoreEngine.IsNetworkDriverFileName(pszBonDriverName)
+					 || IsFileBonDriver(pszBonDriverName))
 	, fIgnoreInitialStream(!IsBonDriverSpinel(pszBonDriverName))
 	, fPurgeStreamOnChannelChange(true)
 	, fResetChannelChangeErrorCount(true)
+	, fPumpStreamSyncPlayback(IsFileBonDriver(pszBonDriverName))
 	, FirstChannelSetDelay(0)
 	, MinChannelChangeInterval(0)
 {

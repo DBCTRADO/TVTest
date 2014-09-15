@@ -42,6 +42,7 @@ public:
 	bool SetBufferSize(size_t Size);
 	bool SetInitialPoolPercentage(int Percentage);
 	int GetBufferFillPercentage() const;
+	bool SetInputWait(DWORD Wait);
 
 protected:
 	CBonSrcFilter(LPUNKNOWN pUnk, HRESULT *phr);

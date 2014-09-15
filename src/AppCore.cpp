@@ -1343,6 +1343,9 @@ void CAppCore::ApplyBonDriverOptions()
 	BonSrcDecoder.SetPurgeStreamOnChannelChange(Options.fPurgeStreamOnChannelChange);
 	BonSrcDecoder.SetFirstChannelSetDelay(Options.FirstChannelSetDelay);
 	BonSrcDecoder.SetMinChannelChangeInterval(Options.MinChannelChangeInterval);
+
+	m_App.CoreEngine.m_DtvEngine.m_MediaViewer.SetPacketInputWait(
+		Options.fPumpStreamSyncPlayback?3000:0);
 }
 
 

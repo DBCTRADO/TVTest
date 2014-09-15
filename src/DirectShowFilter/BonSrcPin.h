@@ -37,6 +37,7 @@ public:
 	bool SetBufferSize(size_t Size);
 	bool SetInitialPoolPercentage(int Percentage);
 	int GetBufferFillPercentage();
+	bool SetInputWait(DWORD Wait);
 
 protected:
 	void EndStreamThread();
@@ -51,4 +52,6 @@ protected:
 	int m_InitialPoolPercentage;
 	bool m_bBuffering;
 	bool m_bOutputWhenPaused;
+	DWORD m_InputWait;
+	bool m_bInputTimeout;
 };

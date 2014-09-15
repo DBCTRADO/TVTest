@@ -141,6 +141,7 @@ public:
 	bool SetBufferSize(size_t Size);
 	bool SetInitialPoolPercentage(int Percentage);
 	int GetBufferFillPercentage() const;
+	bool SetPacketInputWait(DWORD Wait);
 	DWORD GetAudioBitRate() const;
 	DWORD GetVideoBitRate() const;
 
@@ -211,6 +212,7 @@ protected:
 	bool m_bAdjust1SegFrameRate;
 	size_t m_BufferSize;
 	int m_InitialPoolPercentage;
+	DWORD m_PacketInputWait;
 	CAudioDecFilter::StreamCallback m_pAudioStreamCallback;
 	void *m_pAudioStreamCallbackParam;
 	CImageMixer *m_pImageMixer;

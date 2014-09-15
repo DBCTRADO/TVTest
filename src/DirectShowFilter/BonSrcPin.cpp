@@ -27,6 +27,8 @@ CBonSrcPin::CBonSrcPin(HRESULT *phr, CBonSrcFilter *pFilter)
 	, m_InitialPoolPercentage(0)
 	, m_bBuffering(false)
 	, m_bOutputWhenPaused(false)
+	, m_InputWait(0)
+	, m_bInputTimeout(false)
 {
 	TRACE(TEXT("CBonSrcPin::CBonSrcPin() %p\n"), this);
 
@@ -90,6 +92,7 @@ HRESULT CBonSrcPin::Active()
 		return E_OUTOFMEMORY;
 
 	m_bBuffering = m_InitialPoolPercentage > 0;
+	m_bInputTimeout = false;
 
 	if (m_hEndEvent == NULL) {
 		m_hEndEvent = ::CreateEvent(NULL, TRUE, FALSE, NULL);
@@ -178,17 +181,27 @@ HRESULT CBonSrcPin::DecideBufferSize(IMemAllocator *pAlloc, ALLOCATOR_PROPERTIES
 
 bool CBonSrcPin::InputMedia(CMediaData *pMediaData)
 {
-#if 0
-	for (int i = 0; m_SrcStream.IsBufferFull(); i++) {
-		if (i == 100) {
-			Flush();
+	const DWORD Wait = m_InputWait;
+	if (Wait != 0 && m_SrcStream.IsBufferFull()) {
+		if (m_bInputTimeout)
 			return false;
+		// ƒTƒ“ƒvƒ‹‚ªo—Í‚³‚ê‚é‚Ì‚ð‘Ò‚Â
+		const DWORD BeginTime = ::GetTickCount();
+		for (;;) {
+			::Sleep(10);
+			if (!m_SrcStream.IsBufferFull())
+				break;
+			if ((DWORD)(::GetTickCount() - BeginTime) >= Wait) {
+				TRACE(TEXT("CBonSrcPin::InputMedia() : Timeout %u ms\n"), Wait);
+				m_bInputTimeout = true;
+				return false;
+			}
 		}
-		::Sleep(10);
 	}
-#endif
 
 	m_SrcStream.InputMedia(pMediaData);
+
+	m_bInputTimeout = false;
 
 	return true;
 }
@@ -253,6 +266,13 @@ bool CBonSrcPin::SetInitialPoolPercentage(int Percentage)
 int CBonSrcPin::GetBufferFillPercentage()
 {
 	return m_SrcStream.GetFillPercentage();
+}
+
+
+bool CBonSrcPin::SetInputWait(DWORD Wait)
+{
+	m_InputWait = Wait;
+	return true;
 }
 
 
