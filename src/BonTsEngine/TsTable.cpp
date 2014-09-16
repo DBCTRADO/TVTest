@@ -1196,7 +1196,8 @@ WORD CEitTable::GetEventID(const int Index) const
 
 const SYSTEMTIME * CEitTable::GetStartTime(const int Index) const
 {
-	if (Index < 0 || (size_t)Index >= m_EventList.size())
+	if (Index < 0 || (size_t)Index >= m_EventList.size()
+			|| !m_EventList[Index].bValidStartTime)
 		return NULL;
 	return &m_EventList[Index].StartTime;
 }
