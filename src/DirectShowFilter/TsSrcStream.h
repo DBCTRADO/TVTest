@@ -31,6 +31,7 @@ public:
 	bool IsSyncFor1Seg() const { return m_bSyncFor1Seg; }
 	void SetVideoPID(WORD PID);
 	void SetAudioPID(WORD PID);
+	LONGLONG GetPTSDuration() const { return m_PTSDuration; }
 
 private:
 	enum { PACKET_SIZE = 188 };
@@ -57,6 +58,7 @@ private:
 	LONGLONG m_VideoPTSPrev;
 	LONGLONG m_AudioPTS;
 	LONGLONG m_AudioPTSPrev;
+	LONGLONG m_PTSDuration;
 	WORD m_VideoPID;
 	WORD m_AudioPID;
 };

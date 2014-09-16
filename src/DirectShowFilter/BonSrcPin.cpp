@@ -288,7 +288,15 @@ unsigned int __stdcall CBonSrcPin::StreamThread(LPVOID lpParameter)
 
 	while (::WaitForSingleObject(pThis->m_hEndEvent, Wait) == WAIT_TIMEOUT) {
 		if (pThis->m_bBuffering) {
-			if (pThis->m_SrcStream.GetFillPercentage() < pThis->m_InitialPoolPercentage) {
+			const int PoolPercentage = pThis->m_InitialPoolPercentage;
+			if (pThis->m_SrcStream.GetFillPercentage() < PoolPercentage
+					/*
+						バッファ使用割合のみでは、ワンセグ等ビットレートが低い場合になかなか再生が開始されないので、
+						ビットレートを 2MB/s として経過時間でも判定する。
+						これも設定できるようにするか、あるいは時間での判定に統一する方がいいかも知れない。
+					*/
+					&& pThis->m_SrcStream.GetPTSDuration() <
+						(LONGLONG)(pThis->m_SrcStream.GetQueueSize() * TS_PACKETSIZE) * PoolPercentage / (2000000LL * 100LL / 90000LL)) {
 				Wait = 10;
 				continue;
 			}
