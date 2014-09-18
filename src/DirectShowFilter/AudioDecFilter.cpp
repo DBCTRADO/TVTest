@@ -400,8 +400,14 @@ HRESULT CAudioDecFilter::Transform(IMediaSample *pIn, IMediaSample *pOut)
 			}
 			InDataPos += DecodeSize;
 
+#if 0
+			/*
+				音声フォーマット切り替わり時にDiscontinuityを設定すると
+				倍速再生がおかしくなる模様
+			*/
 			if (FrameInfo.bDiscontinuity)
 				m_bDiscontinuity = true;
+#endif
 
 			SampleInfo.bMediaTypeChanged = false;
 
