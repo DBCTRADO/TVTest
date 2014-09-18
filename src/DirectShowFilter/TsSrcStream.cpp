@@ -65,8 +65,7 @@ bool CTsSrcStream::Initialize()
 {
 	Reset();
 
-	const size_t ChunkSize = m_PacketQueue.GetChunkSize();
-	if (!m_PacketQueue.Resize((m_QueueSize + ChunkSize - 1) / ChunkSize))
+	if (!ResizeQueue(m_QueueSize, m_bEnableSync ? m_PoolSize : 0))
 		return false;
 
 	if (m_bEnableSync) {
@@ -95,21 +94,18 @@ bool CTsSrcStream::InputMedia(const CMediaData *pMediaData)
 
 	if (pPacket->m_Header.bPayloadUnitStartIndicator) {
 		const LONGLONG PTS = GetPacketPTS(pPacket);
-		if (PTS < 0) {
-			AddData(pMediaData);
-			return true;
-		}
-
-		if (PID == m_VideoPID) {
-			m_VideoPTSPrev = m_VideoPTS;
-			m_VideoPTS = PTS;
-		} else {
-			if (m_AudioPTSPrev >= 0) {
-				if (m_AudioPTSPrev < PTS)
-					m_PTSDuration += PTS - m_AudioPTSPrev;
+		if (PTS >= 0) {
+			if (PID == m_VideoPID) {
+				m_VideoPTSPrev = m_VideoPTS;
+				m_VideoPTS = PTS;
+			} else {
+				if (m_AudioPTSPrev >= 0) {
+					if (m_AudioPTSPrev < PTS)
+						m_PTSDuration += PTS - m_AudioPTSPrev;
+				}
+				m_AudioPTSPrev = m_AudioPTS;
+				m_AudioPTS = PTS;
 			}
-			m_AudioPTSPrev = m_AudioPTS;
-			m_AudioPTS = PTS;
 		}
 	}
 
@@ -135,6 +131,8 @@ bool CTsSrcStream::InputMedia(const CMediaData *pMediaData)
 		}
 
 		if (PID == m_VideoPID && m_VideoPTS >= 0) {
+			if (m_PacketPool.IsFull())
+				AddPoolPacket();
 			PacketPtsData *pData = m_PacketPool.Push();
 			::CopyMemory(pData->Data, pMediaData->GetData(), PACKET_SIZE);
 			pData->PTS = m_VideoPTS;
@@ -170,6 +168,8 @@ bool CTsSrcStream::InputMedia(const CMediaData *pMediaData)
 		}
 
 		if (PID == m_AudioPID && m_AudioPTS >= 0) {
+			if (m_PacketPool.IsFull())
+				AddPoolPacket();
 			PacketPtsData *pData = m_PacketPool.Push();
 			::CopyMemory(pData->Data, pMediaData->GetData(), PACKET_SIZE);
 			pData->PTS = m_AudioPTS;
@@ -197,11 +197,11 @@ bool CTsSrcStream::InputMedia(const CMediaData *pMediaData)
 	if (CurTime-Time>=10000) {
 		DWORD VideoMs=(DWORD)(m_VideoPTS/90);
 		DWORD AudioMs=(DWORD)(m_AudioPTS/90);
-		TRACE(TEXT("PTS Video %lu.%03lu / Audio %lu.%03lu / Diff %+lld / Pool %lu/%lu / Buffer %lu/%lu\n"),
+		TRACE(TEXT("PTS Video %lu.%03lu / Audio %lu.%03lu / Diff %+lld / Pool %lu/%lu / Buffer %lu/%lu/%lu\n"),
 			  VideoMs/1000,VideoMs%1000,AudioMs/1000,AudioMs%1000,
 			  m_AudioPTS-m_VideoPTS,
 			  (DWORD)m_PacketPool.GetUsed(),(DWORD)m_PacketPool.GetCapacity(),
-			  (DWORD)m_PacketQueue.GetUsed(),(DWORD)m_PacketQueue.GetAllocatedSize());
+			  (DWORD)m_PacketQueue.GetUsed(),(DWORD)m_PacketQueue.GetAllocatedSize(),(DWORD)m_PacketQueue.GetCapacity());
 		Time=CurTime;
 	}
 #endif
@@ -210,15 +210,20 @@ bool CTsSrcStream::InputMedia(const CMediaData *pMediaData)
 }
 
 
-void CTsSrcStream::AddData(const CMediaData *pMediaData)
+void CTsSrcStream::AddData(const BYTE *pData)
 {
-	m_PacketQueue.Write(pMediaData->GetData());
+	if (m_PacketQueue.IsFull())
+		m_PacketQueue.Pop(m_QueueSize / 2);
+	m_PacketQueue.Write(pData);
 }
 
 
-void CTsSrcStream::AddPacket(const PacketPtsData *pPacket)
+void CTsSrcStream::AddPoolPacket()
 {
-	m_PacketQueue.Write(pPacket->Data);
+	if (!m_PacketPool.IsEmpty()) {
+		AddPacket(m_PacketPool.Front());
+		m_PacketPool.Pop();
+	}
 }
 
 
@@ -287,6 +292,14 @@ bool CTsSrcStream::IsBufferFull()
 {
 	CBlockLock Lock(&m_Lock);
 
+	return m_PacketQueue.GetUsed() >= m_QueueSize;
+}
+
+
+bool CTsSrcStream::IsBufferActuallyFull()
+{
+	CBlockLock Lock(&m_Lock);
+
 	return m_PacketQueue.IsFull();
 }
 
@@ -310,8 +323,7 @@ bool CTsSrcStream::SetQueueSize(size_t Size)
 	CBlockLock Lock(&m_Lock);
 
 	if (m_QueueSize != Size) {
-		const size_t ChunkSize = m_PacketQueue.GetChunkSize();
-		if (!m_PacketQueue.Resize((Size + ChunkSize - 1) / ChunkSize))
+		if (!ResizeQueue(Size, m_bEnableSync ? m_PoolSize : 0))
 			return false;
 		m_QueueSize = Size;
 	}
@@ -374,4 +386,11 @@ void CTsSrcStream::SetAudioPID(WORD PID)
 	CBlockLock Lock(&m_Lock);
 
 	m_AudioPID = PID;
+}
+
+
+bool CTsSrcStream::ResizeQueue(size_t QueueSize, size_t PoolSize)
+{
+	const size_t ChunkSize = m_PacketQueue.GetChunkSize();
+	return m_PacketQueue.Resize((QueueSize + PoolSize + ChunkSize - 1) / ChunkSize);
 }

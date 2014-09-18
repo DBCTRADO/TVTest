@@ -277,6 +277,19 @@ public:
 		}
 	}
 
+	void Pop(size_t Size)
+	{
+		if (m_Used <= Size) {
+			Clear();
+		} else {
+			const size_t Pos = m_Pos + Size;
+			for (size_t i = 0; i < Pos / ChunkSize; i++)
+				RotateBuffer();
+			m_Pos = Pos % ChunkSize;
+			m_Used -= Size;
+		}
+	}
+
 	void Write(const T *pData)
 	{
 		::CopyMemory(Push(), pData, UnitBytes);

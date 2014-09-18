@@ -21,6 +21,7 @@ public:
 	void Reset();
 	bool IsDataAvailable();
 	bool IsBufferFull();
+	bool IsBufferActuallyFull();
 	int GetFillPercentage();
 	bool SetQueueSize(size_t Size);
 	size_t GetQueueSize() const { return m_QueueSize; }
@@ -42,9 +43,12 @@ private:
 	};
 
 	void ResetSync();
-	void AddData(const CMediaData *pMediaData);
-	void AddPacket(const PacketPtsData *pPacket);
+	void AddData(const BYTE *pData);
+	void AddData(const CMediaData *pMediaData) { AddData(pMediaData->GetData()); }
+	void AddPacket(const PacketPtsData *pPacket) { AddData(pPacket->Data); }
+	void AddPoolPacket();
 	void AddPoolPackets();
+	bool ResizeQueue(size_t QueueSize, size_t PoolSize);
 
 	CCriticalLock m_Lock;
 	CChunkedRingBuffer<BYTE,PACKET_SIZE,1024> m_PacketQueue;
