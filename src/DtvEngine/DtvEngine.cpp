@@ -472,7 +472,7 @@ bool CDtvEngine::GetEventSeriesInfo(CTsAnalyzer::EventSeriesInfo *pInfo, bool bN
 }
 
 
-bool CDtvEngine::GetEventInfo(CTsAnalyzer::EventInfo *pInfo, bool bNext)
+bool CDtvEngine::GetEventInfo(CEventInfo *pInfo, bool bNext)
 {
 	return m_TsAnalyzer.GetEventInfo(m_CurServiceIndex, pInfo, true, bNext);
 }

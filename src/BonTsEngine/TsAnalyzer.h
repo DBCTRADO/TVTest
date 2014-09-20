@@ -5,6 +5,7 @@
 #include "MediaDecoder.h"
 #include "TsStream.h"
 #include "TsDescriptor.h"
+#include "EventInfo.h"
 
 // EIT ÇÃâêÕÇçsÇ§
 #define TS_ANALYZER_EIT_SUPPORT
@@ -176,65 +177,12 @@ public:
 	bool Get1SegServiceIDByIndex(const int Index, WORD *pServiceID) const;
 
 #ifdef TS_ANALYZER_EIT_SUPPORT
-	struct EventSeriesInfo {
-		WORD SeriesID;
-		BYTE RepeatLabel;
-		BYTE ProgramPattern;
-		bool bIsExpireDateValid;
-		SYSTEMTIME ExpireDate;
-		WORD EpisodeNumber;
-		WORD LastEpisodeNumber;
-		TCHAR szSeriesName[CSeriesDesc::MAX_SERIES_NAME];
-	};
-
-	struct EventVideoInfo {
-		enum { MAX_TEXT = 64 };
-		BYTE StreamContent;
-		BYTE ComponentType;
-		BYTE ComponentTag;
-		DWORD LanguageCode;
-		TCHAR szText[MAX_TEXT];
-	};
-
-	struct EventAudioInfo {
-		enum { MAX_TEXT = 64 };
-		BYTE StreamContent;
-		BYTE ComponentType;
-		BYTE ComponentTag;
-		BYTE SimulcastGroupTag;
-		bool bESMultiLingualFlag;
-		bool bMainComponentFlag;
-		BYTE QualityIndicator;
-		BYTE SamplingRate;
-		DWORD LanguageCode;
-		DWORD LanguageCode2;
-		TCHAR szText[MAX_TEXT];
-	};
-
-	typedef std::vector<EventAudioInfo> EventAudioList;
-
-	struct EventContentNibble {
-		int NibbleCount;
-		CContentDesc::Nibble NibbleList[7];
-	};
-
-	struct EventInfo {
-		WORD EventID;
-		bool bValidStartTime;
-		SYSTEMTIME StartTime;
-		DWORD Duration;
-		BYTE RunningStatus;
-		bool bFreeCaMode;
-		LPTSTR pszEventName;
-		int MaxEventName;
-		LPTSTR pszEventText;
-		int MaxEventText;
-		LPTSTR pszEventExtendedText;
-		int MaxEventExtendedText;
-		EventVideoInfo Video;
-		EventAudioList Audio;
-		EventContentNibble ContentNibble;
-	};
+	typedef CEventInfo::VideoInfo EventVideoInfo;
+	typedef CEventInfo::VideoList EventVideoList;
+	typedef CEventInfo::AudioInfo EventAudioInfo;
+	typedef CEventInfo::AudioList EventAudioList;
+	typedef CEventInfo::ContentNibble EventContentNibble;
+	typedef CEventInfo::SeriesInfo EventSeriesInfo;
 
 	typedef CComponentGroupDesc::GroupInfo EventComponentGroupInfo;
 	typedef std::vector<EventComponentGroupInfo> EventComponentGroupList;
@@ -247,11 +195,12 @@ public:
 	int GetEventText(const int ServiceIndex, LPTSTR pszText, int MaxLength, const bool bNext = false) const;
 	int GetEventExtendedText(const int ServiceIndex, LPTSTR pszText, int MaxLength, const bool bUseEventGroup = true, const bool bNext = false) const;
 	bool GetEventSeriesInfo(const int ServiceIndex, EventSeriesInfo *pInfo, const bool bNext = false) const;
-	bool GetEventVideoInfo(const int ServiceIndex, EventVideoInfo *pInfo, const bool bNext = false) const;
+	bool GetEventVideoInfo(const int ServiceIndex, const int VideoIndex, EventVideoInfo *pInfo, const bool bNext = false) const;
+	bool GetEventVideoList(const int ServiceIndex, EventVideoList *pList, const bool bNext = false) const;
 	bool GetEventAudioInfo(const int ServiceIndex, const int AudioIndex, EventAudioInfo *pInfo, bool bNext = false) const;
 	bool GetEventAudioList(const int ServiceIndex, EventAudioList *pList, const bool bNext = false) const;
 	bool GetEventContentNibble(const int ServiceIndex, EventContentNibble *pInfo, const bool bNext = false) const;
-	bool GetEventInfo(const int ServiceIndex, EventInfo *pInfo, const bool bUseEventGroup = true, const bool bNext = false) const;
+	bool GetEventInfo(const int ServiceIndex, CEventInfo *pInfo, const bool bUseEventGroup = true, const bool bNext = false) const;
 	int GetEventComponentGroupNum(const int ServiceIndex, const bool bNext = false) const;
 	bool GetEventComponentGroupInfo(const int ServiceIndex, const int GroupIndex, EventComponentGroupInfo *pInfo, const bool bNext = false) const;
 	bool GetEventComponentGroupList(const int ServiceIndex, EventComponentGroupList *pList, const bool bNext = false) const;
@@ -319,6 +268,7 @@ protected:
 #ifdef TS_ANALYZER_L_EIT_SUPPORT
 	const CDescBlock *GetLEitItemDesc(const int ServiceIndex, const bool bNext = false) const;
 #endif
+	const CComponentDesc *GetComponentDescByComponentTag(const CDescBlock *pDescBlock, const BYTE ComponentTag) const;
 	const CAudioComponentDesc *GetAudioComponentDescByComponentTag(const CDescBlock *pDescBlock, const BYTE ComponentTag) const;
 #endif
 

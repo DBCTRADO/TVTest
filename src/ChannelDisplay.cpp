@@ -575,8 +575,8 @@ bool CChannelDisplay::UpdateChannelInfo(int Index)
 				&m_EpgBaseTime,&EventInfo)) {
 			pChannel->SetEvent(0,&EventInfo);
 			SYSTEMTIME st;
-			if (EventInfo.m_fValidStartTime
-					&& EventInfo.m_DurationSec>0
+			if (EventInfo.m_bValidStartTime
+					&& EventInfo.m_Duration>0
 					&& EventInfo.GetEndTime(&st)
 					&& m_pEpgProgramList->GetEventInfo(
 						pChannel->GetNetworkID(),
@@ -594,7 +594,7 @@ bool CChannelDisplay::UpdateChannelInfo(int Index)
 						pChannel->GetTransportStreamID(),
 						pChannel->GetServiceID(),
 						&m_EpgBaseTime,&EventInfo)
-					&& DiffSystemTime(&m_EpgBaseTime,&EventInfo.m_stStartTime)<8*60*60*1000) {
+					&& DiffSystemTime(&m_EpgBaseTime,&EventInfo.m_StartTime)<8*60*60*1000) {
 				pChannel->SetEvent(1,&EventInfo);
 			} else {
 				pChannel->SetEvent(1,NULL);
@@ -818,12 +818,12 @@ void CChannelDisplay::Draw(HDC hdc,const RECT *pPaintRect)
 							int Length;
 							Length=EpgUtil::FormatEventTime(pEventInfo,szText,lengthof(szText),
 								EpgUtil::EVENT_TIME_HOUR_2DIGITS | EpgUtil::EVENT_TIME_START_ONLY);
-							if (!IsStringEmpty(pEventInfo->GetEventName())) {
+							if (!pEventInfo->m_EventName.empty()) {
 								Length+=StdUtil::snprintf(
 									szText+Length,lengthof(szText)-Length,
 									TEXT("%s%s"),
 									Length>0?TEXT(" "):TEXT(""),
-									pEventInfo->GetEventName());
+									pEventInfo->m_EventName.c_str());
 							}
 							if (Length>0) {
 								TVTest::Theme::Draw(hdc,rc,pStyle->Fore,szText,
@@ -1287,7 +1287,7 @@ bool CChannelDisplay::CTuner::CChannel::SetEvent(int Index,const CEventInfoData 
 	if (pEvent!=NULL)
 		m_Event[Index]=*pEvent;
 	else
-		m_Event[Index].SetEventName(NULL);
+		m_Event[Index].m_EventName.clear();
 	return true;
 }
 
@@ -1296,7 +1296,7 @@ const CEventInfoData *CChannelDisplay::CTuner::CChannel::GetEvent(int Index) con
 {
 	if (Index<0 || Index>1)
 		return NULL;
-	if (m_Event[Index].GetEventName()==NULL)
+	if (m_Event[Index].m_EventName.empty())
 		return NULL;
 	return &m_Event[Index];
 }

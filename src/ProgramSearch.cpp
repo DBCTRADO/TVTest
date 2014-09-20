@@ -595,7 +595,7 @@ bool CEventSearcher::Match(const CEventInfoData *pEventInfo)
 	if (m_Settings.fServiceList) {
 		if (!m_Settings.ServiceList.IsExists(
 				pEventInfo->m_NetworkID,
-				pEventInfo->m_TSID,
+				pEventInfo->m_TransportStreamID,
 				pEventInfo->m_ServiceID))
 			return false;
 	}
@@ -623,15 +623,15 @@ bool CEventSearcher::Match(const CEventInfoData *pEventInfo)
 	}
 
 	if (m_Settings.fDayOfWeek) {
-		if ((m_Settings.DayOfWeekFlags&(1<<pEventInfo->m_stStartTime.wDayOfWeek))==0)
+		if ((m_Settings.DayOfWeekFlags&(1<<pEventInfo->m_StartTime.wDayOfWeek))==0)
 			return false;
 	}
 
 	if (m_Settings.fTime) {
 		int RangeStart=(m_Settings.StartTime.Hour*60+m_Settings.StartTime.Minute)%(24*60);
 		int RangeEnd=(m_Settings.EndTime.Hour*60+m_Settings.EndTime.Minute)%(24*60);
-		int EventStart=pEventInfo->m_stStartTime.wHour*60+pEventInfo->m_stStartTime.wMinute;
-		int EventEnd=EventStart+pEventInfo->m_DurationSec/60;
+		int EventStart=pEventInfo->m_StartTime.wHour*60+pEventInfo->m_StartTime.wMinute;
+		int EventEnd=EventStart+pEventInfo->m_Duration/60;
 
 		if (RangeStart<=RangeEnd) {
 			if (EventEnd<=RangeStart || EventStart>RangeEnd)
@@ -643,34 +643,35 @@ bool CEventSearcher::Match(const CEventInfoData *pEventInfo)
 	}
 
 	if (m_Settings.fDuration) {
-		if (pEventInfo->m_DurationSec<m_Settings.DurationShortest)
+		if (pEventInfo->m_Duration<m_Settings.DurationShortest)
 			return false;
 		if (m_Settings.DurationLongest>0
-				&& pEventInfo->m_DurationSec>m_Settings.DurationLongest)
+				&& pEventInfo->m_Duration>m_Settings.DurationLongest)
 			return false;
 	}
 
 	if (m_Settings.fCA) {
 		switch (m_Settings.CA) {
 		case CEventSearchSettings::CA_FREE:
-			if (pEventInfo->m_CaType!=CEventInfoData::CA_TYPE_FREE)
+			if (pEventInfo->m_bFreeCaMode)
 				return false;
 			break;
 		case CEventSearchSettings::CA_CHARGEABLE:
-			if (pEventInfo->m_CaType!=CEventInfoData::CA_TYPE_CHARGEABLE)
+			if (!pEventInfo->m_bFreeCaMode)
 				return false;
 			break;
 		}
 	}
 
-	if (m_Settings.fVideo) {
+	if (m_Settings.fVideo
+			&& !pEventInfo->m_VideoList.empty()) {
 		switch (m_Settings.Video) {
 		case CEventSearchSettings::VIDEO_HD:
-			if (EpgUtil::GetVideoType(pEventInfo->m_VideoInfo.ComponentType)!=EpgUtil::VIDEO_TYPE_HD)
+			if (EpgUtil::GetVideoType(pEventInfo->m_VideoList[0].ComponentType)!=EpgUtil::VIDEO_TYPE_HD)
 				return false;
 			break;
 		case CEventSearchSettings::VIDEO_SD:
-			if (EpgUtil::GetVideoType(pEventInfo->m_VideoInfo.ComponentType)!=EpgUtil::VIDEO_TYPE_SD)
+			if (EpgUtil::GetVideoType(pEventInfo->m_VideoList[0].ComponentType)!=EpgUtil::VIDEO_TYPE_SD)
 				return false;
 			break;
 		}
@@ -767,11 +768,11 @@ bool CEventSearcher::MatchKeyword(const CEventInfoData *pEventInfo,LPCTSTR pszKe
 		}
 		if (i>0) {
 			if ((m_Settings.fEventName
-						&& FindKeyword(pEventInfo->GetEventName(),szWord,i)>=0)
+						&& FindKeyword(pEventInfo->m_EventName.c_str(),szWord,i)>=0)
 					|| (m_Settings.fEventText
-						&& FindKeyword(pEventInfo->GetEventText(),szWord,i)>=0)
+						&& FindKeyword(pEventInfo->m_EventText.c_str(),szWord,i)>=0)
 					|| (m_Settings.fEventText
-						&& FindKeyword(pEventInfo->GetEventExtText(),szWord,i)>=0)) {
+						&& FindKeyword(pEventInfo->m_EventExtendedText.c_str(),szWord,i)>=0)) {
 				if (fMinus)
 					return false;
 				fMatch=true;
@@ -796,14 +797,14 @@ bool CEventSearcher::MatchKeyword(const CEventInfoData *pEventInfo,LPCTSTR pszKe
 bool CEventSearcher::MatchRegExp(const CEventInfoData *pEventInfo)
 {
 	return (m_Settings.fEventName
-			&& !IsStringEmpty(pEventInfo->GetEventName())
-			&& m_RegExp.Match(pEventInfo->GetEventName()))
+			&& !pEventInfo->m_EventName.empty()
+			&& m_RegExp.Match(pEventInfo->m_EventName.c_str()))
 		|| (m_Settings.fEventText
-			&& !IsStringEmpty(pEventInfo->GetEventText())
-			&& m_RegExp.Match(pEventInfo->GetEventText()))
+			&& !pEventInfo->m_EventText.empty()
+			&& m_RegExp.Match(pEventInfo->m_EventText.c_str()))
 		|| (m_Settings.fEventText
-			&& !IsStringEmpty(pEventInfo->GetEventExtText())
-			&& m_RegExp.Match(pEventInfo->GetEventExtText()));
+			&& !pEventInfo->m_EventExtendedText.empty()
+			&& m_RegExp.Match(pEventInfo->m_EventExtendedText.c_str()));
 }
 
 
@@ -998,7 +999,7 @@ typedef struct tagNMLVEMPTYMARKUP {
 static ULONGLONG GetResultMapKey(const CEventInfoData *pEventInfo)
 {
 	return ((ULONGLONG)pEventInfo->m_NetworkID<<48)
-		| ((ULONGLONG)pEventInfo->m_TSID<<32)
+		| ((ULONGLONG)pEventInfo->m_TransportStreamID<<32)
 		| ((DWORD)pEventInfo->m_ServiceID<<16)
 		| pEventInfo->m_EventID;
 }
@@ -2000,19 +2001,19 @@ int CALLBACK CProgramSearchDialog::ResultCompareFunc(LPARAM lParam1,LPARAM lPara
 		Cmp=::lstrcmpi(pInfo1->m_pszChannelName,pInfo2->m_pszChannelName);
 		break;
 	case 1:	// “úŽž
-		Cmp=CompareSystemTime(&pInfo1->m_stStartTime,&pInfo2->m_stStartTime);
+		Cmp=CompareSystemTime(&pInfo1->m_StartTime,&pInfo2->m_StartTime);
 		break;
 	case 2:	// ”Ô‘g–¼
-		if (pInfo1->GetEventName()==NULL) {
-			if (pInfo2->GetEventName()==NULL)
+		if (pInfo1->m_EventName.empty()) {
+			if (pInfo2->m_EventName.empty())
 				Cmp=0;
 			else
 				Cmp=-1;
 		} else {
-			if (pInfo2->GetEventName()==NULL)
+			if (pInfo2->m_EventName.empty())
 				Cmp=1;
 			else
-				Cmp=::lstrcmpi(pInfo1->GetEventName(),pInfo2->GetEventName());
+				Cmp=::lstrcmpi(pInfo1->m_EventName.c_str(),pInfo2->m_EventName.c_str());
 		}
 		break;
 	}
@@ -2041,9 +2042,9 @@ bool CProgramSearchDialog::AddSearchResult(const CEventInfoData *pEventInfo,LPCT
 	SYSTEMTIME stEnd;
 	pEventInfo->GetEndTime(&stEnd);
 	StdUtil::snprintf(szText,lengthof(szText),TEXT("%02d/%02d(%s) %02d:%02d`%02d:%02d"),
-					  pEventInfo->m_stStartTime.wMonth,pEventInfo->m_stStartTime.wDay,
-					  GetDayOfWeekText(pEventInfo->m_stStartTime.wDayOfWeek),
-					  pEventInfo->m_stStartTime.wHour,pEventInfo->m_stStartTime.wMinute,
+					  pEventInfo->m_StartTime.wMonth,pEventInfo->m_StartTime.wDay,
+					  GetDayOfWeekText(pEventInfo->m_StartTime.wDayOfWeek),
+					  pEventInfo->m_StartTime.wHour,pEventInfo->m_StartTime.wMinute,
 					  stEnd.wHour,stEnd.wMinute);
 	lvi.mask=LVIF_TEXT;
 	lvi.iSubItem=1;
@@ -2051,7 +2052,7 @@ bool CProgramSearchDialog::AddSearchResult(const CEventInfoData *pEventInfo,LPCT
 	ListView_SetItem(hwndList,&lvi);
 	//lvi.mask=LVIF_TEXT;
 	lvi.iSubItem=2;
-	::lstrcpyn(szText,NullToEmptyString(pEventInfo->GetEventName()),lengthof(szText));
+	::lstrcpyn(szText,pEventInfo->m_EventName.c_str(),lengthof(szText));
 	//lvi.pszText=szText;
 	ListView_SetItem(hwndList,&lvi);
 
@@ -2102,18 +2103,18 @@ int CProgramSearchDialog::FormatEventTimeText(const CEventInfoData *pEventInfo,L
 
 	TCHAR szEndTime[16];
 	SYSTEMTIME stEnd;
-	if (pEventInfo->m_DurationSec>0 && pEventInfo->GetEndTime(&stEnd))
+	if (pEventInfo->m_Duration>0 && pEventInfo->GetEndTime(&stEnd))
 		StdUtil::snprintf(szEndTime,lengthof(szEndTime),
 						  TEXT("`%d:%02d"),stEnd.wHour,stEnd.wMinute);
 	else
 		szEndTime[0]='\0';
 	return StdUtil::snprintf(pszText,MaxLength,TEXT("%d/%d/%d(%s) %d:%02d%s\r\n"),
-							 pEventInfo->m_stStartTime.wYear,
-							 pEventInfo->m_stStartTime.wMonth,
-							 pEventInfo->m_stStartTime.wDay,
-							 GetDayOfWeekText(pEventInfo->m_stStartTime.wDayOfWeek),
-							 pEventInfo->m_stStartTime.wHour,
-							 pEventInfo->m_stStartTime.wMinute,
+							 pEventInfo->m_StartTime.wYear,
+							 pEventInfo->m_StartTime.wMonth,
+							 pEventInfo->m_StartTime.wDay,
+							 GetDayOfWeekText(pEventInfo->m_StartTime.wDayOfWeek),
+							 pEventInfo->m_StartTime.wHour,
+							 pEventInfo->m_StartTime.wMinute,
 							 szEndTime);
 }
 
@@ -2128,11 +2129,11 @@ int CProgramSearchDialog::FormatEventInfoText(const CEventInfoData *pEventInfo,L
 	return StdUtil::snprintf(
 		pszText,MaxLength,
 		TEXT("%s\r\n\r\n%s%s%s%s"),
-		NullToEmptyString(pEventInfo->GetEventName()),
-		NullToEmptyString(pEventInfo->GetEventText()),
-		pEventInfo->GetEventText()!=NULL?TEXT("\r\n\r\n"):TEXT(""),
-		NullToEmptyString(pEventInfo->GetEventExtText()),
-		pEventInfo->GetEventExtText()!=NULL?TEXT("\r\n\r\n"):TEXT(""));
+		pEventInfo->m_EventName.c_str(),
+		pEventInfo->m_EventText.c_str(),
+		!pEventInfo->m_EventText.empty()?TEXT("\r\n\r\n"):TEXT(""),
+		pEventInfo->m_EventExtendedText.c_str(),
+		!pEventInfo->m_EventExtendedText.empty()?TEXT("\r\n\r\n"):TEXT(""));
 }
 
 

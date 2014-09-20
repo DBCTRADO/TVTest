@@ -201,7 +201,7 @@ bool CChannelPanel::UpdateEvents(CChannelEventInfo *pInfo,const SYSTEMTIME *pTim
 				i++;
 			}
 			if (m_pProgramList->GetNextEventInfo(NetworkID,TransportStreamID,ServiceID,&st,&EventInfo)
-					&& DiffSystemTime(&st,&EventInfo.m_stStartTime)<8*60*60*1000) {
+					&& DiffSystemTime(&st,&EventInfo.m_StartTime)<8*60*60*1000) {
 				if (pInfo->SetEventInfo(i,&EventInfo))
 					fChanged=true;
 			} else {
@@ -1124,16 +1124,14 @@ bool CChannelPanel::CChannelEventInfo::SetEventInfo(int Index,const CEventInfoDa
 	if (pInfo!=NULL) {
 		if ((int)m_EventList.size()<=Index)
 			m_EventList.resize(Index+1);
-		if (m_EventList[Index]!=*pInfo) {
+		if (!m_EventList[Index].IsEqual(*pInfo)) {
 			m_EventList[Index]=*pInfo;
 			fChanged=true;
 		}
 	} else {
 		if (Index<(int)m_EventList.size()
-				&& m_EventList[Index].m_fValidStartTime) {
-			CEventInfoData Info;
-
-			m_EventList[Index]=Info;
+				&& m_EventList[Index].m_bValidStartTime) {
+			m_EventList[Index]=CEventInfoData();
 			fChanged=true;
 		}
 	}
@@ -1152,7 +1150,7 @@ bool CChannelPanel::CChannelEventInfo::IsEventEnabled(int Index) const
 {
 	if (Index<0 || Index>=(int)m_EventList.size())
 		return false;
-	return m_EventList[Index].m_fValidStartTime;
+	return m_EventList[Index].m_bValidStartTime;
 }
 
 
@@ -1168,9 +1166,9 @@ int CChannelPanel::CChannelEventInfo::FormatEventText(LPTSTR pszText,int MaxLeng
 	EpgUtil::FormatEventTime(&Info,szTime,lengthof(szTime));
 	return StdUtil::snprintf(pszText,MaxLength,TEXT("%s %s%s%s"),
 							 szTime,
-							 NullToEmptyString(Info.GetEventName()),
-							 Info.GetEventText()!=NULL?TEXT("\n\n"):TEXT(""),
-							 NullToEmptyString(Info.GetEventText()));
+							 Info.m_EventName.c_str(),
+							 !Info.m_EventText.empty()?TEXT("\n\n"):TEXT(""),
+							 Info.m_EventText.c_str());
 }
 
 
@@ -1223,7 +1221,7 @@ void CChannelPanel::CChannelEventInfo::DrawEventName(HDC hdc,const RECT *pRect,i
 		EpgUtil::FormatEventTime(&Info,szTime,lengthof(szTime),
 								 EpgUtil::EVENT_TIME_HOUR_2DIGITS);
 		StdUtil::snprintf(szText,lengthof(szText),TEXT("%s %s"),
-						  szTime,NullToEmptyString(Info.GetEventName()));
+						  szTime,Info.m_EventName.c_str());
 		RECT rc=*pRect;
 		::DrawText(hdc,szText,-1,&rc,
 				   DT_WORDBREAK | DT_NOPREFIX | DT_END_ELLIPSIS);

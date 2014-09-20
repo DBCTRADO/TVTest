@@ -83,7 +83,7 @@ bool CEventInfoPopup::Create(HWND hwndParent,DWORD Style,DWORD ExStyle,int ID)
 
 void CEventInfoPopup::SetEventInfo(const CEventInfoData *pEventInfo)
 {
-	if (m_EventInfo==*pEventInfo)
+	if (m_EventInfo.IsEqual(*pEventInfo))
 		return;
 
 	m_EventInfo=*pEventInfo;
@@ -111,8 +111,8 @@ void CEventInfoPopup::SetEventInfo(const CEventInfoData *pEventInfo)
 		}
 	}
 
-	if (!IsStringEmpty(m_EventInfo.GetEventName())) {
-		Formatter.Append(m_EventInfo.GetEventName());
+	if (!m_EventInfo.m_EventName.empty()) {
+		Formatter.Append(m_EventInfo.m_EventName.c_str());
 		Formatter.Append(TEXT("\r\n"));
 	}
 
@@ -125,24 +125,27 @@ void CEventInfoPopup::SetEventInfo(const CEventInfoData *pEventInfo)
 		Formatter.Clear();
 	}
 
-	if (!IsStringEmpty(m_EventInfo.GetEventText())) {
-		Formatter.Append(m_EventInfo.GetEventText());
+	if (!m_EventInfo.m_EventText.empty()) {
+		Formatter.Append(m_EventInfo.m_EventText.c_str());
 		Formatter.RemoveTrailingWhitespace();
 	}
-	if (!IsStringEmpty(m_EventInfo.GetEventExtText())) {
-		if (!IsStringEmpty(m_EventInfo.GetEventText()))
+	if (!m_EventInfo.m_EventExtendedText.empty()) {
+		if (!m_EventInfo.m_EventText.empty())
 			Formatter.Append(TEXT("\r\n\r\n"));
-		Formatter.Append(m_EventInfo.GetEventExtText());
+		Formatter.Append(m_EventInfo.m_EventExtendedText.c_str());
 		Formatter.RemoveTrailingWhitespace();
 	}
 
 	Formatter.Append(TEXT("\r\n"));
 
-	LPCTSTR pszVideo=EpgUtil::GetComponentTypeText(
-		m_EventInfo.m_VideoInfo.StreamContent,
-		m_EventInfo.m_VideoInfo.ComponentType);
-	if (pszVideo!=NULL) {
-		Formatter.AppendFormat(TEXT("\r\n■ 映像： %s"),pszVideo);
+	if (!m_EventInfo.m_VideoList.empty()) {
+		// TODO: 複数映像対応
+		LPCTSTR pszVideo=EpgUtil::GetComponentTypeText(
+			m_EventInfo.m_VideoList[0].StreamContent,
+			m_EventInfo.m_VideoList[0].ComponentType);
+		if (pszVideo!=NULL) {
+			Formatter.AppendFormat(TEXT("\r\n■ 映像： %s"),pszVideo);
+		}
 	}
 
 	if (!m_EventInfo.m_AudioList.empty()) {
@@ -182,7 +185,7 @@ void CEventInfoPopup::SetEventInfo(const CEventInfoData *pEventInfo)
 
 	if (m_fDetailInfo) {
 		Formatter.AppendFormat(TEXT("\r\n■ イベントID： 0x%04X"),m_EventInfo.m_EventID);
-		if (m_EventInfo.m_fCommonEvent)
+		if (m_EventInfo.m_bCommonEvent)
 			Formatter.AppendFormat(TEXT(" (イベント共有 サービスID 0x%04X / イベントID 0x%04X)"),
 								   m_EventInfo.m_CommonEventInfo.ServiceID,
 								   m_EventInfo.m_CommonEventInfo.EventID);
@@ -642,7 +645,7 @@ LRESULT CEventInfoPopup::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lPar
 			::DestroyMenu(hmenu);
 			switch (Command) {
 			case 1:
-				CopyTextToClipboard(hwnd,m_EventInfo.GetEventName());
+				CopyTextToClipboard(hwnd,m_EventInfo.m_EventName.c_str());
 				break;
 			}
 			return 0;
@@ -751,7 +754,7 @@ LRESULT CEventInfoPopup::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lPar
 					break;
 
 				case COMMAND_COPYEVENTNAME:
-					CopyTextToClipboard(hwnd,m_EventInfo.GetEventName());
+					CopyTextToClipboard(hwnd,m_EventInfo.m_EventName.c_str());
 					break;
 
 				default:

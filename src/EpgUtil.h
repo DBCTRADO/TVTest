@@ -55,6 +55,8 @@ namespace EpgUtil
 	bool GetEventGenre(const CEventInfoData::ContentNibble &ContentNibble,
 					   int *pLevel1,int *pLevel2=nullptr);
 
+	LPCTSTR GetEventDisplayText(const CEventInfo &EventInfo);
+
 }
 
 

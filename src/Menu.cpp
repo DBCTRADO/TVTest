@@ -843,7 +843,7 @@ int CChannelMenu::GetEventText(const CEventInfoData *pEventInfo,
 		szEnd[0]='\0';
 	return StdUtil::snprintf(pszText,MaxLength,TEXT("%02d:%02d`%s %ls"),
 							 stStart.wHour,stStart.wMinute,szEnd,
-							 NullToEmptyString(pEventInfo->GetEventName()));
+							 pEventInfo->m_EventName.c_str());
 }
 
 

@@ -27,17 +27,10 @@ public:
 	bool operator!=(const CServiceInfoData &Info) const { return !(*this==Info); }
 };
 
-class CEventInfoData
+class CEventInfoData : public CEventInfo
 {
 public:
-	typedef CEventManager::CEventInfo::VideoInfo VideoInfo;
-	typedef CEventManager::CEventInfo::AudioInfo AudioInfo;
-	typedef CEventManager::CEventInfo::AudioList AudioList;
 	typedef CContentDesc::Nibble NibbleData;
-	typedef CEventManager::CEventInfo::ContentNibble ContentNibble;
-	typedef CEventManager::CEventInfo::EventGroupInfo EventGroupInfo;
-	typedef CEventManager::CEventInfo::EventGroupList EventGroupList;
-	typedef CEventManager::CEventInfo::CommonEventInfo CommonEventInfo;
 
 	enum {
 		AUDIOCOMPONENT_MONO=1,
@@ -64,70 +57,18 @@ public:
 		CONTENT_LAST=CONTENT_WELFARE
 	};
 
-	enum {
-		CA_TYPE_UNKNOWN,
-		CA_TYPE_FREE,
-		CA_TYPE_CHARGEABLE
-	};
-
-	enum {
-		TYPE_BASIC     = 0x0001U,
-		TYPE_EXTENDED  = 0x0002U,
-		TYPE_PRESENT   = 0x0004U,
-		TYPE_FOLLOWING = 0x0008U
-	};
-
-	WORD m_NetworkID;
-	WORD m_TSID;
-	WORD m_ServiceID;
-	WORD m_EventID;
-	bool m_fValidStartTime;
-	SYSTEMTIME m_stStartTime;
-	DWORD m_DurationSec;
-	BYTE m_RunningStatus;
-	//bool m_fFreeCaMode;
-	BYTE m_CaType;
-	VideoInfo m_VideoInfo;
-	AudioList m_AudioList;
-	ContentNibble m_ContentNibble;
-	EventGroupList m_EventGroupList;
-	bool m_fCommonEvent;
-	CommonEventInfo m_CommonEventInfo;
-	ULONGLONG m_UpdateTime;
-	unsigned int m_Type;
 	bool m_fDatabase;
 
 	CEventInfoData();
-	CEventInfoData(const CEventInfoData &Info);
 	CEventInfoData(CEventInfoData &&Info);
-	CEventInfoData(const CEventManager::CEventInfo &Info);
+	CEventInfoData(const CEventInfo &Info);
 	~CEventInfoData();
-	CEventInfoData &operator=(const CEventInfoData &Info);
 	CEventInfoData &operator=(CEventInfoData &&Info);
-	CEventInfoData &operator=(const CEventManager::CEventInfo &Info);
+	CEventInfoData &operator=(const CEventInfo &Info);
 	bool operator==(const CEventInfoData &Info) const;
 	bool operator!=(const CEventInfoData &Info) const { return !(*this==Info); }
-	LPCWSTR GetEventName() const { return m_EventName.Get(); }
-	bool SetEventName(LPCWSTR pszEventName);
-	LPCWSTR GetEventText() const { return m_EventText.Get(); }
-	bool SetEventText(LPCWSTR pszEventText);
-	LPCWSTR GetEventExtText() const { return m_EventExtText.Get(); }
-	bool SetEventExtText(LPCWSTR pszEventExtText);
-	bool GetStartTime(SYSTEMTIME *pTime) const;
-	bool GetEndTime(SYSTEMTIME *pTime) const;
 	int GetMainAudioIndex() const;
 	const AudioInfo *GetMainAudioInfo() const;
-	bool HasExtended() const { return (m_Type&TYPE_EXTENDED)!=0; }
-	bool IsPresent() const { return (m_Type&TYPE_PRESENT)!=0; }
-	bool IsFollowing() const { return (m_Type&TYPE_FOLLOWING)!=0; }
-	bool IsPresentFollowing() const { return (m_Type&(TYPE_PRESENT | TYPE_FOLLOWING))!=0; }
-
-private:
-	CDynamicString m_EventName;
-	CDynamicString m_EventText;
-	CDynamicString m_EventExtText;
-
-	friend class CEpgProgramList;
 };
 
 class CEventInfoList

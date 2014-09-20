@@ -724,60 +724,18 @@ bool CCoreEngine::GetCurrentEventInfo(CEventInfoData *pInfo,WORD ServiceID,bool 
 	if (pInfo==NULL)
 		return false;
 
-	CTsAnalyzer::EventInfo EventInfo;
-	TCHAR szEventName[256],szEventText[256],szEventExtText[2048];
-
-	EventInfo.pszEventName=szEventName;
-	EventInfo.MaxEventName=lengthof(szEventName);
-	EventInfo.pszEventText=szEventText;
-	EventInfo.MaxEventText=lengthof(szEventText);
-	EventInfo.pszEventExtendedText=szEventExtText;
-	EventInfo.MaxEventExtendedText=lengthof(szEventExtText);
 	if (ServiceID==0xFFFF) {
 		if (!m_DtvEngine.GetServiceID(&ServiceID))
 			return false;
 	}
 	int ServiceIndex=m_DtvEngine.m_TsAnalyzer.GetServiceIndexByID(ServiceID);
-	if (ServiceIndex<0
-			|| !m_DtvEngine.m_TsAnalyzer.GetEventInfo(ServiceIndex ,&EventInfo, true, fNext))
+	if (ServiceIndex<0)
 		return false;
 
-	pInfo->m_NetworkID=m_DtvEngine.m_TsAnalyzer.GetNetworkID();
-	pInfo->m_TSID=m_DtvEngine.m_TsAnalyzer.GetTransportStreamID();
-	pInfo->m_ServiceID=ServiceID;
-	pInfo->m_EventID=EventInfo.EventID;
-	pInfo->m_fValidStartTime=EventInfo.bValidStartTime;
-	if (EventInfo.bValidStartTime)
-		pInfo->m_stStartTime=EventInfo.StartTime;
-	pInfo->m_DurationSec=EventInfo.Duration;
-	pInfo->m_RunningStatus=EventInfo.RunningStatus;
-	pInfo->m_CaType=EventInfo.bFreeCaMode?
-		CEventInfoData::CA_TYPE_CHARGEABLE:CEventInfoData::CA_TYPE_FREE;
-	pInfo->m_VideoInfo.StreamContent=EventInfo.Video.StreamContent;
-	pInfo->m_VideoInfo.ComponentType=EventInfo.Video.ComponentType;
-	pInfo->m_VideoInfo.ComponentTag=EventInfo.Video.ComponentTag;
-	pInfo->m_VideoInfo.LanguageCode=EventInfo.Video.LanguageCode;
-	::lstrcpyn(pInfo->m_VideoInfo.szText,EventInfo.Video.szText,CEventInfoData::VideoInfo::MAX_TEXT);
-	pInfo->m_AudioList.resize(EventInfo.Audio.size());
-	for (size_t i=0;i<EventInfo.Audio.size();i++) {
-		pInfo->m_AudioList[i].StreamContent=EventInfo.Audio[i].StreamContent;
-		pInfo->m_AudioList[i].ComponentType=EventInfo.Audio[i].ComponentType;
-		pInfo->m_AudioList[i].ComponentTag=EventInfo.Audio[i].ComponentTag;
-		pInfo->m_AudioList[i].SimulcastGroupTag=EventInfo.Audio[i].SimulcastGroupTag;
-		pInfo->m_AudioList[i].bESMultiLingualFlag=EventInfo.Audio[i].bESMultiLingualFlag;
-		pInfo->m_AudioList[i].bMainComponentFlag=EventInfo.Audio[i].bMainComponentFlag;
-		pInfo->m_AudioList[i].QualityIndicator=EventInfo.Audio[i].QualityIndicator;
-		pInfo->m_AudioList[i].SamplingRate=EventInfo.Audio[i].SamplingRate;
-		pInfo->m_AudioList[i].LanguageCode=EventInfo.Audio[i].LanguageCode;
-		pInfo->m_AudioList[i].LanguageCode2=EventInfo.Audio[i].LanguageCode2;
-		::lstrcpyn(pInfo->m_AudioList[i].szText,EventInfo.Audio[i].szText,CEventInfoData::AudioInfo::MAX_TEXT);
-	}
-	pInfo->SetEventName(szEventName[0]!='\0'?szEventName:NULL);
-	pInfo->SetEventText(szEventText[0]!='\0'?szEventText:NULL);
-	pInfo->SetEventExtText(szEventExtText[0]!='\0'?szEventExtText:NULL);
-	pInfo->m_ContentNibble.NibbleCount=EventInfo.ContentNibble.NibbleCount;
-	for (int i=0;i<EventInfo.ContentNibble.NibbleCount;i++)
-		pInfo->m_ContentNibble.NibbleList[i]=EventInfo.ContentNibble.NibbleList[i];
+	CEventInfo EventInfo;
+	if (!m_DtvEngine.m_TsAnalyzer.GetEventInfo(ServiceIndex,&EventInfo,true,fNext))
+		return false;
+	*pInfo=EventInfo;
 
 	return true;
 }

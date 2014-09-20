@@ -136,9 +136,9 @@ bool CFeaturedEvents::Update()
 		if (pServiceInfo!=NULL) {
 			const CEventInfoList &EventList=pServiceInfo->m_EventList;
 			for (auto itEvent=EventList.EventDataMap.begin();itEvent!=EventList.EventDataMap.end();++itEvent) {
-				if (itEvent->second.m_fCommonEvent)
+				if (itEvent->second.m_bCommonEvent)
 					continue;
-				if (CompareSystemTime(&itEvent->second.m_stStartTime,&PeriodTime)>=0)
+				if (CompareSystemTime(&itEvent->second.m_StartTime,&PeriodTime)>=0)
 					continue;
 				SYSTEMTIME stEnd;
 				itEvent->second.GetEndTime(&stEnd);

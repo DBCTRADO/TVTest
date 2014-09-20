@@ -33,11 +33,11 @@ static void EventInfoToProgramGuideProgramInfo(const CEventInfoData &EventInfo,
 											   TVTest::ProgramGuideProgramInfo *pProgramInfo)
 {
 	pProgramInfo->NetworkID=EventInfo.m_NetworkID;
-	pProgramInfo->TransportStreamID=EventInfo.m_TSID;
+	pProgramInfo->TransportStreamID=EventInfo.m_TransportStreamID;
 	pProgramInfo->ServiceID=EventInfo.m_ServiceID;
 	pProgramInfo->EventID=EventInfo.m_EventID;
-	pProgramInfo->StartTime=EventInfo.m_stStartTime;
-	pProgramInfo->Duration=EventInfo.m_DurationSec;
+	pProgramInfo->StartTime=EventInfo.m_StartTime;
+	pProgramInfo->Duration=EventInfo.m_Duration;
 }
 
 
@@ -238,15 +238,17 @@ void CEpgDataConverter::GetEventInfoSize(const CEventInfoData &EventInfo,
 	SIZE_T InfoSize=sizeof(TVTest::EpgEventInfo);
 	SIZE_T StringSize=0;
 
-	if (!IsStringEmpty(EventInfo.GetEventName()))
-		StringSize+=::lstrlenW(EventInfo.GetEventName())+1;
-	if (!IsStringEmpty(EventInfo.GetEventText()))
-		StringSize+=::lstrlenW(EventInfo.GetEventText())+1;
-	if (!IsStringEmpty(EventInfo.GetEventExtText()))
-		StringSize+=::lstrlenW(EventInfo.GetEventExtText())+1;
-	InfoSize+=sizeof(TVTest::EpgEventVideoInfo*)+sizeof(TVTest::EpgEventVideoInfo);
-	if (EventInfo.m_VideoInfo.szText[0]!='\0')
-		StringSize+=::lstrlenW(EventInfo.m_VideoInfo.szText)+1;
+	if (!EventInfo.m_EventName.empty())
+		StringSize+=EventInfo.m_EventName.length()+1;
+	if (!EventInfo.m_EventText.empty())
+		StringSize+=EventInfo.m_EventText.length()+1;
+	if (!EventInfo.m_EventExtendedText.empty())
+		StringSize+=EventInfo.m_EventExtendedText.length()+1;
+	InfoSize+=(sizeof(TVTest::EpgEventVideoInfo)+sizeof(TVTest::EpgEventVideoInfo*))*EventInfo.m_VideoList.size();
+	for (size_t i=0;i<EventInfo.m_VideoList.size();i++) {
+		if (EventInfo.m_VideoList[i].szText[0]!='\0')
+			StringSize+=::lstrlenW(EventInfo.m_VideoList[i].szText)+1;
+	}
 	InfoSize+=(sizeof(TVTest::EpgEventAudioInfo)+sizeof(TVTest::EpgEventAudioInfo*))*EventInfo.m_AudioList.size();
 	for (size_t i=0;i<EventInfo.m_AudioList.size();i++) {
 		if (EventInfo.m_AudioList[i].szText[0]!='\0')
@@ -270,48 +272,56 @@ void CEpgDataConverter::ConvertEventInfo(const CEventInfoData &EventData,
 	TVTest::EpgEventInfo *pEventInfo=*ppEventInfo;
 	pEventInfo->EventID=EventData.m_EventID;
 	pEventInfo->RunningStatus=EventData.m_RunningStatus;
-	pEventInfo->FreeCaMode=EventData.m_CaType==CEventInfoData::CA_TYPE_CHARGEABLE;
+	pEventInfo->FreeCaMode=EventData.m_bFreeCaMode;
 	pEventInfo->Reserved=0;
-	pEventInfo->StartTime=EventData.m_stStartTime;
-	pEventInfo->Duration=EventData.m_DurationSec;
-	pEventInfo->VideoListLength=1;
+	pEventInfo->StartTime=EventData.m_StartTime;
+	pEventInfo->Duration=EventData.m_Duration;
+	pEventInfo->VideoListLength=(BYTE)EventData.m_VideoList.size();
 	pEventInfo->AudioListLength=(BYTE)EventData.m_AudioList.size();
 	pEventInfo->ContentListLength=(BYTE)EventData.m_ContentNibble.NibbleCount;
 	pEventInfo->EventGroupListLength=(BYTE)EventData.m_EventGroupList.size();
-	if (!IsStringEmpty(EventData.GetEventName())) {
+	if (!EventData.m_EventName.empty()) {
 		pEventInfo->pszEventName=pString;
-		pString=CopyString(pString,EventData.GetEventName());
+		pString=CopyString(pString,EventData.m_EventName.c_str());
 	} else {
 		pEventInfo->pszEventName=NULL;
 	}
-	if (!IsStringEmpty(EventData.GetEventText())) {
+	if (!EventData.m_EventText.empty()) {
 		pEventInfo->pszEventText=pString;
-		pString=CopyString(pString,EventData.GetEventText());
+		pString=CopyString(pString,EventData.m_EventText.c_str());
 	} else {
 		pEventInfo->pszEventText=NULL;
 	}
-	if (!IsStringEmpty(EventData.GetEventExtText())) {
+	if (!EventData.m_EventExtendedText.empty()) {
 		pEventInfo->pszEventExtendedText=pString;
-		pString=CopyString(pString,EventData.GetEventExtText());
+		pString=CopyString(pString,EventData.m_EventExtendedText.c_str());
 	} else {
 		pEventInfo->pszEventExtendedText=NULL;
 	}
 
 	BYTE *p=(BYTE*)(pEventInfo+1);
-	pEventInfo->VideoList=(TVTest::EpgEventVideoInfo**)p;
-	p+=sizeof(TVTest::EpgEventVideoInfo*);
-	pEventInfo->VideoList[0]=(TVTest::EpgEventVideoInfo*)p;
-	pEventInfo->VideoList[0]->StreamContent=EventData.m_VideoInfo.StreamContent;
-	pEventInfo->VideoList[0]->ComponentType=EventData.m_VideoInfo.ComponentType;
-	pEventInfo->VideoList[0]->ComponentTag=EventData.m_VideoInfo.ComponentTag;
-	pEventInfo->VideoList[0]->Reserved=0;
-	pEventInfo->VideoList[0]->LanguageCode=EventData.m_VideoInfo.LanguageCode;
-	p+=sizeof(TVTest::EpgEventVideoInfo);
-	if (EventData.m_VideoInfo.szText[0]!='\0') {
-		pEventInfo->VideoList[0]->pszText=pString;
-		pString=CopyString(pString,EventData.m_VideoInfo.szText);
+
+	if (!EventData.m_VideoList.empty()) {
+		pEventInfo->VideoList=(TVTest::EpgEventVideoInfo**)p;
+		p+=sizeof(TVTest::EpgEventVideoInfo*)*EventData.m_VideoList.size();
+		for (size_t i=0;i<EventData.m_VideoList.size();i++) {
+			const CEventInfoData::VideoInfo &Video=EventData.m_VideoList[i];
+			pEventInfo->VideoList[i]=(TVTest::EpgEventVideoInfo*)p;
+			pEventInfo->VideoList[i]->StreamContent=Video.StreamContent;
+			pEventInfo->VideoList[i]->ComponentType=Video.ComponentType;
+			pEventInfo->VideoList[i]->ComponentTag=Video.ComponentTag;
+			pEventInfo->VideoList[i]->Reserved=0;
+			pEventInfo->VideoList[i]->LanguageCode=Video.LanguageCode;
+			p+=sizeof(TVTest::EpgEventVideoInfo);
+			if (Video.szText[i]!='\0') {
+				pEventInfo->VideoList[i]->pszText=pString;
+				pString=CopyString(pString,Video.szText);
+			} else {
+				pEventInfo->VideoList[i]->pszText=NULL;
+			}
+		}
 	} else {
-		pEventInfo->VideoList[0]->pszText=NULL;
+		pEventInfo->VideoList=NULL;
 	}
 
 	if (EventData.m_AudioList.size()>0) {

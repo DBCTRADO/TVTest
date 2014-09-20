@@ -98,40 +98,14 @@ void CProgramItemInfo::DrawText(HDC hdc,const RECT *pRect,int LineHeight)
 bool CProgramItemInfo::IsChanged(const CProgramItemInfo *pItem) const
 {
 	return m_EventID!=pItem->m_EventID
-		|| memcmp(&m_EventInfo.m_stStartTime,&pItem->m_EventInfo.m_stStartTime,sizeof(SYSTEMTIME))!=0
-		|| m_EventInfo.m_DurationSec!=pItem->m_EventInfo.m_DurationSec;
+		|| CompareSystemTime(&m_EventInfo.m_StartTime,&pItem->m_EventInfo.m_StartTime)!=0
+		|| m_EventInfo.m_Duration!=pItem->m_EventInfo.m_Duration;
 }
 
 
 LPCTSTR CProgramItemInfo::GetEventText() const
 {
-	LPCTSTR pszEventText,p;
-
-	pszEventText=m_EventInfo.GetEventText();
-	if (pszEventText!=NULL) {
-		p=pszEventText;
-		while (*p!='\0') {
-			if (*p<=0x20) {
-				p++;
-				continue;
-			}
-			return p;
-		}
-	}
-	pszEventText=m_EventInfo.GetEventExtText();
-	if (pszEventText!=NULL) {
-		p=pszEventText;
-		if (memcmp(p,TEXT("”Ô‘g“à—e"),4*(3-sizeof(TCHAR)))==0)
-			p+=4*(3-sizeof(TCHAR));
-		while (*p!='\0') {
-			if (*p<=0x20) {
-				p++;
-				continue;
-			}
-			return p;
-		}
-	}
-	return pszEventText;
+	return EpgUtil::GetEventDisplayText(m_EventInfo);
 }
 
 
@@ -142,7 +116,7 @@ void CProgramItemInfo::GetEventTitleText(LPTSTR pszText,int MaxLength) const
 	EpgUtil::FormatEventTime(&m_EventInfo,szTime,lengthof(szTime),
 							 EpgUtil::EVENT_TIME_HOUR_2DIGITS | EpgUtil::EVENT_TIME_START_ONLY);
 	StdUtil::snprintf(pszText,MaxLength,TEXT("%s %s"),
-					  szTime,NullToEmptyString(m_EventInfo.GetEventName()));
+					  szTime,m_EventInfo.m_EventName.c_str());
 }
 
 
@@ -204,15 +178,15 @@ void CProgramItemList::Clear()
 
 void CProgramItemList::SortSub(CProgramItemInfo **ppFirst,CProgramItemInfo **ppLast)
 {
-	SYSTEMTIME stKey=ppFirst[(ppLast-ppFirst)/2]->GetEventInfo().m_stStartTime;
+	SYSTEMTIME stKey=ppFirst[(ppLast-ppFirst)/2]->GetEventInfo().m_StartTime;
 	CProgramItemInfo **p,**q;
 
 	p=ppFirst;
 	q=ppLast;
 	while (p<=q) {
-		while (CompareSystemTime(&(*p)->GetEventInfo().m_stStartTime,&stKey)<0)
+		while (CompareSystemTime(&(*p)->GetEventInfo().m_StartTime,&stKey)<0)
 			p++;
-		while (CompareSystemTime(&(*q)->GetEventInfo().m_stStartTime,&stKey)>0)
+		while (CompareSystemTime(&(*q)->GetEventInfo().m_StartTime,&stKey)>0)
 			q--;
 		if (p<=q) {
 			CProgramItemInfo *pTemp;
@@ -456,7 +430,7 @@ bool CProgramListPanel::UpdateListInfo(const CChannelInfo *pChannelInfo)
 
 		itrEvent->second.GetEndTime(&stEnd);
 		if (CompareSystemTime(&stFirst,&stEnd)<0
-				&& CompareSystemTime(&stLast,&itrEvent->second.m_stStartTime)>0) {
+				&& CompareSystemTime(&stLast,&itrEvent->second.m_StartTime)>0) {
 			NewItemList.Add(new CProgramItemInfo(itrEvent->second));
 			i++;
 		}
@@ -882,24 +856,24 @@ LRESULT CProgramListPanel::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lP
 					const CEventInfoData &EventInfo=pItem->GetEventInfo();
 					TCHAR szEndTime[16];
 					SYSTEMTIME stEnd;
-					if (EventInfo.m_DurationSec>0 && EventInfo.GetEndTime(&stEnd))
+					if (EventInfo.m_Duration>0 && EventInfo.GetEndTime(&stEnd))
 						StdUtil::snprintf(szEndTime,lengthof(szEndTime),
 										  TEXT("`%d:%02d"),stEnd.wHour,stEnd.wMinute);
 					else
 						szEndTime[0]='\0';
 					StdUtil::snprintf(szText,lengthof(szText),
 						TEXT("%d/%d(%s) %d:%02d%s\n%s\n\n%s%s%s%s"),
-						EventInfo.m_stStartTime.wMonth,
-						EventInfo.m_stStartTime.wDay,
-						GetDayOfWeekText(EventInfo.m_stStartTime.wDayOfWeek),
-						EventInfo.m_stStartTime.wHour,
-						EventInfo.m_stStartTime.wMinute,
+						EventInfo.m_StartTime.wMonth,
+						EventInfo.m_StartTime.wDay,
+						GetDayOfWeekText(EventInfo.m_StartTime.wDayOfWeek),
+						EventInfo.m_StartTime.wHour,
+						EventInfo.m_StartTime.wMinute,
 						szEndTime,
-						NullToEmptyString(EventInfo.GetEventName()),
-						NullToEmptyString(EventInfo.GetEventText()),
-						EventInfo.GetEventText()!=NULL?TEXT("\n\n"):TEXT(""),
-						NullToEmptyString(EventInfo.GetEventExtText()),
-						EventInfo.GetEventExtText()!=NULL?TEXT("\n\n"):TEXT(""));
+						EventInfo.m_EventName.c_str(),
+						EventInfo.m_EventText.c_str(),
+						!EventInfo.m_EventText.empty()?TEXT("\n\n"):TEXT(""),
+						EventInfo.m_EventExtendedText.c_str(),
+						!EventInfo.m_EventExtendedText.empty()?TEXT("\n\n"):TEXT(""));
 					pnmtdi->lpszText=szText;
 				} else {
 					pnmtdi->lpszText=TEXT("");

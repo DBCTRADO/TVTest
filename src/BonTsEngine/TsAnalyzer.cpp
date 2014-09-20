@@ -1137,24 +1137,68 @@ int CTsAnalyzer::GetEventText(const int ServiceIndex, LPTSTR pszText, int MaxLen
 }
 
 
-bool CTsAnalyzer::GetEventVideoInfo(const int ServiceIndex, EventVideoInfo *pInfo, const bool bNext) const
+static void ComponentDescToVideoInfo(const CComponentDesc *pComponentDesc, CTsAnalyzer::EventVideoInfo *pInfo)
+{
+	pInfo->StreamContent = pComponentDesc->GetStreamContent();
+	pInfo->ComponentType = pComponentDesc->GetComponentType();
+	pInfo->ComponentTag = pComponentDesc->GetComponentTag();
+	pInfo->LanguageCode = pComponentDesc->GetLanguageCode();
+	pComponentDesc->GetText(pInfo->szText, CTsAnalyzer::EventVideoInfo::MAX_TEXT);
+}
+
+bool CTsAnalyzer::GetEventVideoInfo(const int ServiceIndex, const int VideoIndex, EventVideoInfo *pInfo, const bool bNext) const
 {
 	if (pInfo == NULL)
 		return false;
 
-	const CDescBlock *pDescBlock = GetHEitItemDesc(ServiceIndex, bNext);
-	if (pDescBlock) {
-		const CComponentDesc *pComponentDesc = pDescBlock->GetDesc<CComponentDesc>();
+	CBlockLock Lock(&m_DecoderLock);
 
-		if (pComponentDesc) {
-			pInfo->StreamContent = pComponentDesc->GetStreamContent();
-			pInfo->ComponentType = pComponentDesc->GetComponentType();
-			pInfo->ComponentTag = pComponentDesc->GetComponentTag();
-			pInfo->LanguageCode = pComponentDesc->GetLanguageCode();
-			pComponentDesc->GetText(pInfo->szText, EventVideoInfo::MAX_TEXT);
-			return true;
+	if (ServiceIndex >= 0 && (size_t)ServiceIndex < m_ServiceList.size()
+			&& VideoIndex >= 0 && (size_t)VideoIndex < m_ServiceList[ServiceIndex].VideoEsList.size()) {
+		const CDescBlock *pDescBlock = GetHEitItemDesc(ServiceIndex, bNext);
+
+		if (pDescBlock) {
+			const CComponentDesc *pComponentDesc =
+				GetComponentDescByComponentTag(pDescBlock, m_ServiceList[ServiceIndex].VideoEsList[VideoIndex].ComponentTag);
+			if (pComponentDesc != NULL) {
+				ComponentDescToVideoInfo(pComponentDesc, pInfo);
+				return true;
+			}
 		}
 	}
+
+	return false;
+}
+
+
+bool CTsAnalyzer::GetEventVideoList(const int ServiceIndex, EventVideoList *pList, const bool bNext) const
+{
+	if (pList == NULL)
+		return false;
+
+	pList->clear();
+
+	CBlockLock Lock(&m_DecoderLock);
+
+	const CDescBlock *pDescBlock = GetHEitItemDesc(ServiceIndex, bNext);
+	if (pDescBlock) {
+		for (WORD i = 0; i < pDescBlock->GetDescNum(); i++) {
+			const CBaseDesc *pDesc = pDescBlock->GetDescByIndex(i);
+
+			if (pDesc->GetTag() == CComponentDesc::DESC_TAG) {
+				const CComponentDesc *pComponentDesc = dynamic_cast<const CComponentDesc*>(pDesc);
+
+				if (pComponentDesc) {
+					EventVideoInfo VideoInfo;
+
+					ComponentDescToVideoInfo(pComponentDesc, &VideoInfo);
+					pList->push_back(VideoInfo);
+				}
+			}
+		}
+		return true;
+	}
+
 	return false;
 }
 
@@ -1194,6 +1238,7 @@ bool CTsAnalyzer::GetEventAudioInfo(const int ServiceIndex, const int AudioIndex
 			}
 		}
 	}
+
 	return false;
 }
 
@@ -1203,9 +1248,12 @@ bool CTsAnalyzer::GetEventAudioList(const int ServiceIndex, EventAudioList *pLis
 	if (pList == NULL)
 		return false;
 
+	pList->clear();
+
+	CBlockLock Lock(&m_DecoderLock);
+
 	const CDescBlock *pDescBlock = GetHEitItemDesc(ServiceIndex, bNext);
 	if (pDescBlock) {
-		pList->clear();
 		for (WORD i = 0; i < pDescBlock->GetDescNum(); i++) {
 			const CBaseDesc *pDesc = pDescBlock->GetDescByIndex(i);
 
@@ -1222,6 +1270,7 @@ bool CTsAnalyzer::GetEventAudioList(const int ServiceIndex, EventAudioList *pLis
 		}
 		return true;
 	}
+
 	return false;
 }
 
@@ -1301,104 +1350,7 @@ int CTsAnalyzer::GetEventExtendedText(const int ServiceIndex, LPTSTR pszText, in
 			return 0;
 	}
 
-	std::vector<const CExtendedEventDesc *> DescList;
-	for (int i = 0; i < pDescBlock->GetDescNum(); i++) {
-		const CBaseDesc *pDesc = pDescBlock->GetDescByIndex(i);
-		if (pDesc != NULL && pDesc->GetTag() == CExtendedEventDesc::DESC_TAG) {
-			const CExtendedEventDesc *pExtendedEvent = dynamic_cast<const CExtendedEventDesc *>(pDesc);
-			if (pExtendedEvent != NULL) {
-				DescList.push_back(pExtendedEvent);
-			}
-		}
-	}
-	if (DescList.size() == 0)
-		return 0;
-
-	// descriptor_number 順にソートする
-	TsEngine::InsertionSort(DescList,
-		[](const CExtendedEventDesc *pDesc1, const CExtendedEventDesc *pDesc2) {
-			return pDesc1->GetDescriptorNumber() < pDesc2->GetDescriptorNumber();
-		});
-
-	struct ItemInfo {
-		BYTE DescriptorNumber;
-		LPCTSTR pszDescription;
-		int Data1Length;
-		const BYTE *pData1;
-		int Data2Length;
-		const BYTE *pData2;
-	};
-	std::vector<ItemInfo> ItemList;
-	for (int i = 0; i < (int)DescList.size(); i++) {
-		const CExtendedEventDesc *pExtendedEvent = DescList[i];
-		for (int j = 0; j < pExtendedEvent->GetItemCount(); j++) {
-			const CExtendedEventDesc::ItemInfo *pItem = pExtendedEvent->GetItem(j);
-			if (pItem == NULL)
-				continue;
-			if (pItem->szDescription[0] != '\0') {
-				// 新規項目
-				ItemInfo Item;
-				Item.DescriptorNumber = pExtendedEvent->GetDescriptorNumber();
-				Item.pszDescription = pItem->szDescription;
-				Item.Data1Length = pItem->ItemLength;
-				Item.pData1 = pItem->ItemChar;
-				Item.Data2Length = 0;
-				Item.pData2 = NULL;
-				ItemList.push_back(Item);
-			} else if (ItemList.size() > 0) {
-				// 前の項目の続き
-				ItemInfo &Item = ItemList[ItemList.size() - 1];
-				if (Item.DescriptorNumber == pExtendedEvent->GetDescriptorNumber() - 1
-						&& Item.pData2 == NULL) {
-					Item.Data2Length = pItem->ItemLength;
-					Item.pData2 = pItem->ItemChar;
-				}
-			}
-		}
-	}
-
-	TCHAR szText[1024];
-	int Length;
-	int Pos = 0;
-	for (int i = 0; i < (int)ItemList.size(); i++) {
-		ItemInfo &Item = ItemList[i];
-		Length = ::lstrlen(Item.pszDescription);
-		if (Length + 2 >= MaxLength - Pos)
-			break;
-		::lstrcpy(&pszText[Pos], Item.pszDescription);
-		Pos += Length;
-		pszText[Pos++] = '\r';
-		pszText[Pos++] = '\n';
-		if (Item.pData2 == NULL) {
-			CAribString::AribToString(szText, 1024, Item.pData1, Item.Data1Length);
-		} else {
-			BYTE Buffer[220 * 2];
-			::CopyMemory(Buffer, Item.pData1, Item.Data1Length);
-			::CopyMemory(Buffer + Item.Data1Length, Item.pData2, Item.Data2Length);
-			CAribString::AribToString(szText, 1024, Buffer, Item.Data1Length + Item.Data2Length);
-		}
-		LPTSTR p = szText;
-		while (*p != '\0') {
-			if (Pos >= MaxLength - 1)
-				break;
-			pszText[Pos++] = *p;
-			if (*p == '\r') {
-				if (*(p + 1) != '\n') {
-					if (Pos == MaxLength - 1)
-						break;
-					pszText[Pos++] = '\n';
-				}
-			}
-			p++;
-		}
-		if (Pos + 2 >= MaxLength)
-			break;
-		pszText[Pos++] = '\r';
-		pszText[Pos++] = '\n';
-	}
-	pszText[Pos] = '\0';
-
-	return Pos;
+	return ::GetEventExtendedText(pDescBlock, pszText, MaxLength);
 }
 
 
@@ -1429,7 +1381,7 @@ bool CTsAnalyzer::GetEventSeriesInfo(const int ServiceIndex, EventSeriesInfo *pI
 }
 
 
-bool CTsAnalyzer::GetEventInfo(const int ServiceIndex, EventInfo *pInfo, const bool bUseEventGroup, const bool bNext) const
+bool CTsAnalyzer::GetEventInfo(const int ServiceIndex, CEventInfo *pInfo, const bool bUseEventGroup, const bool bNext) const
 {
 	if (pInfo == NULL)
 		return false;
@@ -1444,39 +1396,44 @@ bool CTsAnalyzer::GetEventInfo(const int ServiceIndex, EventInfo *pInfo, const b
 	if (pEitTable == NULL)
 		return false;
 
-	pInfo->EventID = pEitTable->GetEventID();
+	pInfo->m_NetworkID = pEitTable->GetOriginalNetworkID();
+	pInfo->m_TransportStreamID = pEitTable->GetTransportStreamID();
+	pInfo->m_ServiceID = pEitTable->GetServiceID();
+	pInfo->m_EventID = pEitTable->GetEventID();
 	const SYSTEMTIME *pStartTime = pEitTable->GetStartTime();
 	if (pStartTime != NULL) {
-		pInfo->bValidStartTime = true;
-		pInfo->StartTime = *pStartTime;
+		pInfo->m_bValidStartTime = true;
+		pInfo->m_StartTime = *pStartTime;
 	} else {
-		pInfo->bValidStartTime = false;
-		::ZeroMemory(&pInfo->StartTime, sizeof(SYSTEMTIME));
+		pInfo->m_bValidStartTime = false;
+		::ZeroMemory(&pInfo->m_StartTime, sizeof(SYSTEMTIME));
 	}
-	pInfo->Duration = pEitTable->GetDuration();
-	pInfo->RunningStatus = pEitTable->GetRunningStatus();
-	pInfo->bFreeCaMode = pEitTable->GetFreeCaMode();
-	if (pInfo->pszEventName != NULL && pInfo->MaxEventName > 0) {
-		pInfo->pszEventName[0] = '\0';
-		GetEventName(ServiceIndex, pInfo->pszEventName, pInfo->MaxEventName, bNext);
-	}
-	if (pInfo->pszEventText != NULL && pInfo->MaxEventText > 0) {
-		pInfo->pszEventText[0] = '\0';
-		GetEventText(ServiceIndex, pInfo->pszEventText, pInfo->MaxEventText, bNext);
-	}
-	if (pInfo->pszEventExtendedText != NULL && pInfo->MaxEventExtendedText > 0) {
-		pInfo->pszEventExtendedText[0] = '\0';
-		GetEventExtendedText(ServiceIndex, pInfo->pszEventExtendedText, pInfo->MaxEventExtendedText, bUseEventGroup, bNext);
-	}
+	pInfo->m_Duration = pEitTable->GetDuration();
+	pInfo->m_RunningStatus = pEitTable->GetRunningStatus();
+	pInfo->m_bFreeCaMode = pEitTable->GetFreeCaMode();
 
-	::ZeroMemory(&pInfo->Video, sizeof(EventVideoInfo));
-	GetEventVideoInfo(ServiceIndex, &pInfo->Video, bNext);
+	TCHAR szText[2048];
+	if (GetEventName(ServiceIndex, szText, _countof(szText), bNext) > 0)
+		pInfo->m_EventName = szText;
+	else
+		pInfo->m_EventName.clear();
+	if (GetEventText(ServiceIndex, szText, _countof(szText), bNext) > 0)
+		pInfo->m_EventText = szText;
+	else
+		pInfo->m_EventText.clear();
+	if (GetEventExtendedText(ServiceIndex, szText, _countof(szText), bUseEventGroup, bNext) > 0)
+		pInfo->m_EventExtendedText = szText;
+	else
+		pInfo->m_EventExtendedText.clear();
 
-	pInfo->Audio.clear();
-	GetEventAudioList(ServiceIndex, &pInfo->Audio, bNext);
+	GetEventVideoList(ServiceIndex, &pInfo->m_VideoList, bNext);
+	GetEventAudioList(ServiceIndex, &pInfo->m_AudioList, bNext);
 
-	if (!GetEventContentNibble(ServiceIndex, &pInfo->ContentNibble, bNext))
-		pInfo->ContentNibble.NibbleCount = 0;
+	if (!GetEventContentNibble(ServiceIndex, &pInfo->m_ContentNibble, bNext))
+		pInfo->m_ContentNibble.NibbleCount = 0;
+
+	pInfo->m_Type = CEventInfo::TYPE_BASIC | CEventInfo::TYPE_EXTENDED
+		| (bNext ? CEventInfo::TYPE_FOLLOWING : CEventInfo::TYPE_PRESENT);
 
 	return true;
 }
@@ -1647,6 +1604,25 @@ const CDescBlock *CTsAnalyzer::GetLEitItemDesc(const int ServiceIndex, const boo
 	return NULL;
 }
 #endif
+
+
+const CComponentDesc *CTsAnalyzer::GetComponentDescByComponentTag(const CDescBlock *pDescBlock, const BYTE ComponentTag) const
+{
+	if (pDescBlock != NULL) {
+		for (WORD i = 0; i < pDescBlock->GetDescNum(); i++) {
+			const CBaseDesc *pDesc = pDescBlock->GetDescByIndex(i);
+
+			if (pDesc->GetTag() == CComponentDesc::DESC_TAG) {
+				const CComponentDesc *pComponentDesc = dynamic_cast<const CComponentDesc*>(pDesc);
+
+				if (pComponentDesc != NULL
+						&& pComponentDesc->GetComponentTag() == ComponentTag)
+					return pComponentDesc;
+			}
+		}
+	}
+	return NULL;
+}
 
 
 const CAudioComponentDesc *CTsAnalyzer::GetAudioComponentDescByComponentTag(const CDescBlock *pDescBlock, const BYTE ComponentTag) const

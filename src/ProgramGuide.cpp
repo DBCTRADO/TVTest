@@ -174,11 +174,11 @@ int CEventItem::GetGenre(int Level) const
 
 bool CEventItem::SetCommonEvent(const CEventInfoData *pEvent)
 {
-	if (m_pEventInfo==NULL || !m_pEventInfo->m_fCommonEvent || pEvent==NULL)
+	if (m_pEventInfo==NULL || !m_pEventInfo->m_bCommonEvent || pEvent==NULL)
 		return false;
 	m_pCommonEventInfo=pEvent;
 	/*
-	if (m_pEventInfo->GetEventName()==NULL)
+	if (m_pEventInfo->m_EventName.empty())
 		m_TitleLines=pItem->m_TitleLines;	// とりあえず
 	*/
 	return true;
@@ -198,11 +198,13 @@ int CEventItem::GetTitleText(LPTSTR pszText,int MaxLength) const
 							 m_EndTime.wHour,m_EndTime.wMinute,m_EndTime.wSecond);
 #endif
 	if (m_pEventInfo!=NULL) {
-		LPCTSTR pszEventName=m_pEventInfo->GetEventName();
-		if (pszEventName==NULL && m_pCommonEventInfo!=NULL)
-			pszEventName=m_pCommonEventInfo->GetEventName();
-		if (pszEventName!=NULL)
-			Length+=StdUtil::snprintf(pszText+Length,MaxLength-Length,TEXT(" %s"),pszEventName);
+		const CEventInfoData::String *pEventName;
+		if (m_pEventInfo->m_EventName.empty() && m_pCommonEventInfo!=NULL)
+			pEventName=&m_pCommonEventInfo->m_EventName;
+		else
+			pEventName=&m_pEventInfo->m_EventName;
+		if (!pEventName->empty())
+			Length+=StdUtil::snprintf(pszText+Length,MaxLength-Length,TEXT(" %s"),pEventName->c_str());
 	}
 	return Length;
 }
@@ -213,37 +215,16 @@ LPCTSTR CEventItem::GetEventText() const
 	if (m_pEventInfo==NULL)
 		return NULL;
 
-	LPCTSTR pszEventText,p;
+#if 0
+	if (m_pCommonEventInfo!=NULL
+			&& ((m_pEventInfo->m_EventText.empty()
+					&& !m_pCommonEventInfo->m_EventText.empty())
+				|| (m_pEventInfo->m_EventExtendedText.empty()
+					&& !m_pCommonEventInfo->m_EventExtendedText.empty())))
+		return EpgUtil::GetEventDisplayText(*m_pCommonEventInfo);
+#endif
 
-	pszEventText=m_pEventInfo->GetEventText();
-	//if (pszEventText==NULL && m_pCommonEventInfo!=NULL)
-	//	pszEventText=m_pCommonEventInfo->GetEventText();
-	if (pszEventText!=NULL) {
-		p=pszEventText;
-		while (*p!='\0') {
-			if (*p<=0x20) {
-				p++;
-				continue;
-			}
-			return p;
-		}
-	}
-	pszEventText=m_pEventInfo->GetEventExtText();
-	//if (pszEventText==NULL && m_pCommonEventInfo!=NULL)
-	//	pszEventText=m_pCommonEventInfo->GetEventExtText();
-	if (pszEventText!=NULL) {
-		p=pszEventText;
-		if (memcmp(p,TEXT("番組内容"),8)==0)
-			p+=4*(3-sizeof(TCHAR));
-		while (*p!='\0') {
-			if (*p<=0x20) {
-				p++;
-				continue;
-			}
-			return p;
-		}
-	}
-	return NULL;
+	return EpgUtil::GetEventDisplayText(*m_pEventInfo);
 }
 
 
@@ -645,7 +626,7 @@ void CServiceInfo::SortEvents()
 		public:
 			bool operator()(const CEventInfoData *pEvent1,const CEventInfoData *pEvent2)
 			{
-				return CompareSystemTime(&pEvent1->m_stStartTime,&pEvent2->m_stStartTime)<0;
+				return CompareSystemTime(&pEvent1->m_StartTime,&pEvent2->m_StartTime)<0;
 			}
 		};
 
@@ -678,7 +659,7 @@ void CServiceInfo::CalcLayout(CEventLayout *pEventList,const CServiceList *pServ
 			}
 
 			CEventItem *pItem=new CEventItem(pEvent);
-			if (pEvent->m_fCommonEvent) {
+			if (pEvent->m_bCommonEvent) {
 				const CEventInfoData *pCommonEvent=
 					pServiceList->GetEventByIDs(m_ServiceData.m_TSID,
 												pEvent->m_CommonEventInfo.ServiceID,
@@ -816,8 +797,8 @@ bool CServiceInfo::SaveiEpgFile(const CEventInfoData *pEventInfo,LPCTSTR pszFile
 		szServiceName[0]='\0';
 	pEventInfo->GetStartTime(&stStart);
 	pEventInfo->GetEndTime(&stEnd);
-	if (!IsStringEmpty(pEventInfo->GetEventName()))
-		::WideCharToMultiByte(932,0,pEventInfo->GetEventName(),-1,
+	if (!pEventInfo->m_EventName.empty())
+		::WideCharToMultiByte(932,0,pEventInfo->m_EventName.c_str(),-1,
 							  szEventName,sizeof(szEventName),NULL,NULL);
 	else
 		szEventName[0]='\0';
@@ -1595,7 +1576,7 @@ void CProgramGuide::DrawEventList(const ProgramGuide::CEventLayout *pLayout,
 
 			const CEventInfoData *pEventInfo=pItem->GetEventInfo();
 			const CEventInfoData *pOrigEventInfo=pEventInfo;
-			const bool fCommonEvent=pEventInfo->m_fCommonEvent;
+			const bool fCommonEvent=pEventInfo->m_bCommonEvent;
 			if (fCommonEvent && pItem->GetCommonEventInfo()!=NULL)
 				pEventInfo=pItem->GetCommonEventInfo();
 			const int Genre1=pItem->GetGenre(0);
@@ -1616,26 +1597,26 @@ void CProgramGuide::DrawEventList(const ProgramGuide::CEventLayout *pLayout,
 				m_CurrentEventID!=0
 				&& m_CurrentChannel.ServiceID!=0
 				&& pEventInfo->m_NetworkID==m_CurrentChannel.NetworkID
-				&& pEventInfo->m_TSID==m_CurrentChannel.TransportStreamID
+				&& pEventInfo->m_TransportStreamID==m_CurrentChannel.TransportStreamID
 				&& pEventInfo->m_ServiceID==m_CurrentChannel.ServiceID
 				&& pEventInfo->m_EventID==m_CurrentEventID;
 
 			bool fFilter=false;
 			if ((m_Filter&FILTER_FREE)!=0
-					&& pEventInfo->m_CaType!=CEventInfoData::CA_TYPE_FREE
-					&& pEventInfo->m_NetworkID>=4 && pEventInfo->m_NetworkID<=10) {
+					&& pEventInfo->m_bFreeCaMode
+					&& GetAppClass().NetworkDefinition.IsSatelliteNetworkID(pEventInfo->m_NetworkID)) {
 				fFilter=true;
 			} else if ((m_Filter&FILTER_NEWPROGRAM)!=0
-					&& (pEventInfo->GetEventName()==NULL
-						|| ::StrStr(pEventInfo->GetEventName(),TEXT("[新]"))==NULL)) {
+					&& (pEventInfo->m_EventName.empty()
+						|| pEventInfo->m_EventName.find(TEXT("[新]"))==CEventInfo::String::npos)) {
 				fFilter=true;
 			} else if ((m_Filter&FILTER_ORIGINAL)!=0
-					&& pEventInfo->GetEventName()!=NULL
-					&& ::StrStr(pEventInfo->GetEventName(),TEXT("[再]"))!=NULL) {
+					&& !pEventInfo->m_EventName.empty()
+					&& pEventInfo->m_EventName.find(TEXT("[再]"))!=CEventInfo::String::npos) {
 				fFilter=true;
 			} else if ((m_Filter&FILTER_RERUN)!=0
-					&& (pEventInfo->GetEventName()==NULL
-						|| ::StrStr(pEventInfo->GetEventName(),TEXT("[再]"))==NULL)) {
+					&& (pEventInfo->m_EventName.empty()
+						|| pEventInfo->m_EventName.find(TEXT("[再]"))==CEventInfo::String::npos)) {
 				fFilter=true;
 			} else if ((m_Filter&FILTER_NOT_SHOPPING)!=0
 					&& Genre1==2 && Genre2==4) {
@@ -3124,8 +3105,8 @@ bool CProgramGuide::JumpEvent(WORD NetworkID,WORD TSID,WORD ServiceID,WORD Event
 		Pos.x=0;
 	else if (Pos.x>max(Size.cx-Page.cx,0))
 		Pos.x=max(Size.cx-Page.cx,0);
-	Pos.y=(int)(DiffSystemTime(&stFirst,&pEventInfo->m_stStartTime)/(1000*60))*m_LinesPerHour/60;
-	const int YOffset=(Page.cy-(int)(pEventInfo->m_DurationSec*m_LinesPerHour/(60*60)))/2;
+	Pos.y=(int)(DiffSystemTime(&stFirst,&pEventInfo->m_StartTime)/(1000*60))*m_LinesPerHour/60;
+	const int YOffset=(Page.cy-(int)(pEventInfo->m_Duration*m_LinesPerHour/(60*60)))/2;
 	if (YOffset>0)
 		Pos.y-=YOffset;
 	if (Pos.y<0)
@@ -3142,7 +3123,7 @@ bool CProgramGuide::JumpEvent(WORD NetworkID,WORD TSID,WORD ServiceID,WORD Event
 
 bool CProgramGuide::JumpEvent(const CEventInfoData &EventInfo)
 {
-	return JumpEvent(EventInfo.m_NetworkID,EventInfo.m_TSID,EventInfo.m_ServiceID,EventInfo.m_EventID);
+	return JumpEvent(EventInfo.m_NetworkID,EventInfo.m_TransportStreamID,EventInfo.m_ServiceID,EventInfo.m_EventID);
 }
 
 
@@ -4521,7 +4502,7 @@ bool CProgramGuide::CEventInfoPopupHandler::ShowPopup(LPARAM Param,CEventInfoPop
 			else
 				pEventInfo=pItem->GetEventInfo();
 			/*
-			if (pEventInfo->GetEventName()==NULL && pEventInfo->m_fCommonEvent) {
+			if (pEventInfo->m_EventName.empty() && pEventInfo->m_bCommonEvent) {
 				const CProgramGuideItem *pCommonItem=m_pProgramGuide->m_ServiceList.GetEventByIDs(
 					pServiceInfo->GetTSID(),
 					pEventInfo->m_CommonEventInfo.ServiceID,
@@ -4618,7 +4599,7 @@ bool CProgramGuide::CProgramSearchEventHandler::OnSearch()
 
 		for (;j<pServiceInfo->NumEvents();j++) {
 			pEventInfo=pServiceInfo->GetEvent(j);
-			if (!pEventInfo->m_fCommonEvent
+			if (!pEventInfo->m_bCommonEvent
 					&& Match(pEventInfo))
 				AddSearchResult(pEventInfo,pServiceInfo->GetServiceName());
 		}
@@ -4693,7 +4674,7 @@ void CProgramGuide::CProgramSearchEventHandler::DoCommand(
 	int Command,const CEventInfoData *pEventInfo)
 {
 	ProgramGuide::CServiceInfo *pServiceInfo=
-		m_pProgramGuide->m_ServiceList.GetItemByIDs(pEventInfo->m_TSID,pEventInfo->m_ServiceID);
+		m_pProgramGuide->m_ServiceList.GetItemByIDs(pEventInfo->m_TransportStreamID,pEventInfo->m_ServiceID);
 
 	if (Command==CM_PROGRAMGUIDE_JUMPEVENT) {
 		m_pProgramGuide->JumpEvent(*pEventInfo);
@@ -6763,12 +6744,12 @@ bool CProgramGuideTool::Execute(const ProgramGuide::CServiceInfo *pServiceInfo,
 				} else if (::lstrcmpi(szKeyword,TEXT("end-minute"))==0) {
 					q+=StdUtil::snprintf(q,pEnd-q,TEXT("%02d"),stEnd.wMinute);
 				} else if (::lstrcmpi(szKeyword,TEXT("duration-sec"))==0) {
-					q+=StdUtil::snprintf(q,pEnd-q,TEXT("%d"),pEventInfo->m_DurationSec);
+					q+=StdUtil::snprintf(q,pEnd-q,TEXT("%d"),pEventInfo->m_Duration);
 				} else if (::lstrcmpi(szKeyword,TEXT("duration-min"))==0) {
-					q+=StdUtil::snprintf(q,pEnd-q,TEXT("%d"),(pEventInfo->m_DurationSec+59)/60);
+					q+=StdUtil::snprintf(q,pEnd-q,TEXT("%d"),(pEventInfo->m_Duration+59)/60);
 				} else if (::lstrcmpi(szKeyword,TEXT("event-name"))==0) {
-					if (pEventInfo->GetEventName()!=NULL)
-						q+=StdUtil::snprintf(q,pEnd-q,TEXT("%s"),pEventInfo->GetEventName());
+					if (!pEventInfo->m_EventName.empty())
+						q+=StdUtil::snprintf(q,pEnd-q,TEXT("%s"),pEventInfo->m_EventName.c_str());
 				} else if (::lstrcmpi(szKeyword,TEXT("service-name"))==0) {
 					q+=StdUtil::snprintf(q,pEnd-q,TEXT("%s"),pServiceInfo->GetServiceName());
 				}

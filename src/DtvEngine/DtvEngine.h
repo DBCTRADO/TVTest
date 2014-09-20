@@ -137,7 +137,7 @@ public:
 	int GetEventExtendedText(LPTSTR pszText, int MaxLength, bool bNext = false);
 	bool GetEventTime(SYSTEMTIME *pStartTime, DWORD *pDuration, bool bNext = false);
 	bool GetEventSeriesInfo(CTsAnalyzer::EventSeriesInfo *pInfo, bool bNext = false);
-	bool GetEventInfo(CTsAnalyzer::EventInfo *pInfo, bool bNext = false);
+	bool GetEventInfo(CEventInfo *pInfo, bool bNext = false);
 	bool GetEventAudioInfo(CTsAnalyzer::EventAudioInfo *pInfo, const int AudioIndex = -1, bool bNext = false);
 	int GetCurComponentGroup() const;
 

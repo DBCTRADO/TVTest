@@ -1174,9 +1174,9 @@ namespace TVTest
 							  TEXT("%02d:%02d"),stEnd.wHour,stEnd.wMinute);
 		else
 			szEnd[0]=_T('\0');
-		return StdUtil::snprintf(pszText,MaxLength,TEXT("%02d:%02d`%s %ls"),
+		return StdUtil::snprintf(pszText,MaxLength,TEXT("%02d:%02d`%s %s"),
 								 stStart.wHour,stStart.wMinute,szEnd,
-								 NullToEmptyString(pEventInfo->GetEventName()));
+								 pEventInfo->m_EventName.c_str());
 	}
 
 	void CFavoritesMenu::CreateFont(HDC hdc)

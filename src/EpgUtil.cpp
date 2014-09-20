@@ -142,12 +142,12 @@ namespace EpgUtil
 		if (pszTime==NULL || MaxLength<1)
 			return 0;
 
-		if (pEventInfo==NULL || !pEventInfo->m_fValidStartTime) {
+		if (pEventInfo==NULL || !pEventInfo->m_bValidStartTime) {
 			pszTime[0]=_T('\0');
 			return 0;
 		}
 
-		return FormatEventTime(pEventInfo->m_stStartTime,pEventInfo->m_DurationSec,
+		return FormatEventTime(pEventInfo->m_StartTime,pEventInfo->m_Duration,
 							   pszTime,MaxLength,Flags);
 	}
 
@@ -283,6 +283,39 @@ namespace EpgUtil
 			*pLevel2=-1;
 
 		return false;
+	}
+
+
+	LPCTSTR GetEventDisplayText(const CEventInfo &EventInfo)
+	{
+		LPCTSTR p;
+
+		if (!EventInfo.m_EventText.empty()) {
+			p=EventInfo.m_EventText.c_str();
+			while (*p!='\0') {
+				if (*p<=0x20) {
+					p++;
+					continue;
+				}
+				return p;
+			}
+		}
+
+		if (!EventInfo.m_EventExtendedText.empty()) {
+			p=EventInfo.m_EventExtendedText.c_str();
+			TCHAR szContent[]=TEXT("”Ô‘g“à—e");
+			if (::StrCmpN(p,szContent,lengthof(szContent)-1)==0)
+				p+=lengthof(szContent)-1;
+			while (*p!='\0') {
+				if (*p<=0x20) {
+					p++;
+					continue;
+				}
+				return p;
+			}
+		}
+
+		return NULL;
 	}
 
 }
@@ -615,11 +648,13 @@ unsigned int CEpgIcons::GetEventIcons(const CEventInfoData *pEventInfo)
 {
 	unsigned int ShowIcons=0;
 
-	EpgUtil::VideoType Video=EpgUtil::GetVideoType(pEventInfo->m_VideoInfo.ComponentType);
-	if (Video==EpgUtil::VIDEO_TYPE_HD)
-		ShowIcons|=IconFlag(ICON_HD);
-	else if (Video==EpgUtil::VIDEO_TYPE_SD)
-		ShowIcons|=IconFlag(ICON_SD);
+	if (!pEventInfo->m_VideoList.empty()) {
+		EpgUtil::VideoType Video=EpgUtil::GetVideoType(pEventInfo->m_VideoList[0].ComponentType);
+		if (Video==EpgUtil::VIDEO_TYPE_HD)
+			ShowIcons|=IconFlag(ICON_HD);
+		else if (Video==EpgUtil::VIDEO_TYPE_SD)
+			ShowIcons|=IconFlag(ICON_SD);
+	}
 
 	if (!pEventInfo->m_AudioList.empty()) {
 		const CEventInfoData::AudioInfo *pAudioInfo=pEventInfo->GetMainAudioInfo();
@@ -645,11 +680,11 @@ unsigned int CEpgIcons::GetEventIcons(const CEventInfoData *pEventInfo)
 		}
 	}
 
-	if (pEventInfo->m_NetworkID>=4 && pEventInfo->m_NetworkID<=10) {
-		if (pEventInfo->m_CaType==CEventInfoData::CA_TYPE_FREE)
-			ShowIcons|=IconFlag(ICON_FREE);
-		else if (pEventInfo->m_CaType==CEventInfoData::CA_TYPE_CHARGEABLE)
+	if (GetAppClass().NetworkDefinition.IsSatelliteNetworkID(pEventInfo->m_NetworkID)) {
+		if (pEventInfo->m_bFreeCaMode)
 			ShowIcons|=IconFlag(ICON_PAY);
+		else
+			ShowIcons|=IconFlag(ICON_FREE);
 	}
 
 	return ShowIcons;

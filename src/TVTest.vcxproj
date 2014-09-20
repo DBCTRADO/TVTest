@@ -463,6 +463,7 @@
     <ClCompile Include="BonTsEngine\CaptionDecoder.cpp" />
     <ClCompile Include="BonTsEngine\CaptionParser.cpp" />
     <ClCompile Include="BonTsEngine\CasProcessor.cpp" />
+    <ClCompile Include="BonTsEngine\EventInfo.cpp" />
     <ClCompile Include="BonTsEngine\EventManager.cpp" />
     <ClCompile Include="BonTsEngine\Exception.cpp" />
     <ClCompile Include="BonTsEngine\FileReader.cpp" />
@@ -624,6 +625,7 @@
     <ClInclude Include="BonTsEngine\CaptionParser.h" />
     <ClInclude Include="BonTsEngine\CasProcessor.h" />
     <ClInclude Include="BonTsEngine\Common.h" />
+    <ClInclude Include="BonTsEngine\EventInfo.h" />
     <ClInclude Include="BonTsEngine\EventManager.h" />
     <ClInclude Include="BonTsEngine\Exception.h" />
     <ClInclude Include="BonTsEngine\FileReader.h" />

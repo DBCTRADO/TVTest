@@ -518,6 +518,9 @@
     <ClCompile Include="NetworkDefinition.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
+    <ClCompile Include="BonTsEngine\EventInfo.cpp">
+      <Filter>BonTsEngine\Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="BonTsEngine\Bitstream.h">
@@ -1008,6 +1011,9 @@
     </ClInclude>
     <ClInclude Include="DirectShowFilter\RingBuffer.h">
       <Filter>DirectShowFilter\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="BonTsEngine\EventInfo.h">
+      <Filter>BonTsEngine\Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

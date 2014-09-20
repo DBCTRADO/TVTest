@@ -176,12 +176,12 @@ void CChannelListCategoryBase::Draw(HDC hdc,const CHomeDisplay::StyleInfo &Style
 
 				Length=EpgUtil::FormatEventTime(pEventInfo,szText,lengthof(szText),
 					EpgUtil::EVENT_TIME_HOUR_2DIGITS | EpgUtil::EVENT_TIME_START_ONLY);
-				if (!IsStringEmpty(pEventInfo->GetEventName())) {
+				if (!pEventInfo->m_EventName.empty()) {
 					Length+=StdUtil::snprintf(
 						szText+Length,lengthof(szText)-Length,
 						TEXT("%s%s"),
 						Length>0?TEXT(" "):TEXT(""),
-						pEventInfo->GetEventName());
+						pEventInfo->m_EventName.c_str());
 				}
 				if (Length>0) {
 					TVTest::Theme::Draw(hdc,rc,pItemStyle->Fore,szText,
@@ -304,8 +304,8 @@ void CChannelListCategoryBase::UpdateChannelInfo()
 				&stCurTime,&EventInfo)) {
 			pItem->SetEvent(0,&EventInfo);
 			SYSTEMTIME st;
-			if (EventInfo.m_fValidStartTime
-					&& EventInfo.m_DurationSec>0
+			if (EventInfo.m_bValidStartTime
+					&& EventInfo.m_Duration>0
 					&& EventInfo.GetEndTime(&st)
 					&& EpgProgramList.GetEventInfo(
 						pItem->GetNetworkID(),
@@ -323,7 +323,7 @@ void CChannelListCategoryBase::UpdateChannelInfo()
 						pItem->GetTransportStreamID(),
 						pItem->GetServiceID(),
 						&stCurTime,&EventInfo)
-					&& DiffSystemTime(&stCurTime,&EventInfo.m_stStartTime)<8*60*60*1000) {
+					&& DiffSystemTime(&stCurTime,&EventInfo.m_StartTime)<8*60*60*1000) {
 				pItem->SetEvent(1,&EventInfo);
 			} else {
 				pItem->SetEvent(1,NULL);
@@ -439,7 +439,7 @@ bool CChannelListCategoryBase::CChannelItemBase::SetEvent(int Index,const CEvent
 	if (pEvent!=NULL)
 		m_Event[Index]=*pEvent;
 	else
-		m_Event[Index].SetEventName(NULL);
+		m_Event[Index].m_EventName.clear();
 	return true;
 }
 
@@ -448,7 +448,7 @@ const CEventInfoData *CChannelListCategoryBase::CChannelItemBase::GetEvent(int I
 {
 	if (Index<0 || Index>1)
 		return NULL;
-	if (m_Event[Index].GetEventName()==NULL)
+	if (m_Event[Index].m_EventName.empty())
 		return NULL;
 	return &m_Event[Index];
 }
@@ -737,7 +737,7 @@ bool CFeaturedEventsCategory::Create()
 	for (size_t i=0;i<EventCount;i++) {
 		const CEventInfoData *pEventInfo=FeaturedEvents.GetEventInfo(i);
 		int Index=ServiceList.FindByIDs(
-			pEventInfo->m_NetworkID,pEventInfo->m_TSID,pEventInfo->m_ServiceID);
+			pEventInfo->m_NetworkID,pEventInfo->m_TransportStreamID,pEventInfo->m_ServiceID);
 
 		if (Index>=0)
 			m_ItemList.push_back(new CEventItem(*ServiceList.GetChannelInfo(Index),*pEventInfo));
@@ -875,9 +875,10 @@ void CFeaturedEventsCategory::Draw(HDC hdc,const CHomeDisplay::StyleInfo &Style,
 		rc.left=rcItem.left+Style.ItemMargins.Left;
 		rc.top=rc.bottom;
 		rc.bottom=rc.top+Style.FontHeight;
-		if (!IsStringEmpty(EventInfo.GetEventName())) {
+		if (!EventInfo.m_EventName.empty()) {
 			::SelectObject(hdc,hfontTitle);
-			::DrawText(hdc,EventInfo.GetEventName(),-1,&rc,
+			::DrawText(hdc,
+				EventInfo.m_EventName.data(),(int)EventInfo.m_EventName.length(),&rc,
 				DT_LEFT | DT_SINGLELINE | DT_VCENTER | DT_NOPREFIX | DT_END_ELLIPSIS);
 			::SelectObject(hdc,hfontText);
 		}
@@ -1076,11 +1077,11 @@ void CFeaturedEventsCategory::SortItems(CFeaturedEventsSettings::SortType SortTy
 		{
 			int Cmp;
 
-			Cmp=CompareSystemTime(&pItem1->GetEventInfo().m_stStartTime,
-								  &pItem2->GetEventInfo().m_stStartTime);
+			Cmp=CompareSystemTime(&pItem1->GetEventInfo().m_StartTime,
+								  &pItem2->GetEventInfo().m_StartTime);
 			if (Cmp==0) {
-				Cmp=(int)pItem1->GetEventInfo().m_DurationSec-
-					(int)pItem2->GetEventInfo().m_DurationSec;
+				Cmp=(int)pItem1->GetEventInfo().m_Duration-
+					(int)pItem2->GetEventInfo().m_Duration;
 			}
 			return Cmp;
 		}
@@ -1266,10 +1267,10 @@ HBITMAP CFeaturedEventsCategory::CEventItem::GetStretchedLogo(int Width,int Heig
 bool CFeaturedEventsCategory::CEventItem::GetEventText(TVTest::String *pText) const
 {
 	pText->clear();
-	if (!IsStringEmpty(m_EventInfo.GetEventText()))
-		AppendEventText(pText,m_EventInfo.GetEventText());
-	if (!IsStringEmpty(m_EventInfo.GetEventExtText()))
-		AppendEventText(pText,m_EventInfo.GetEventExtText());
+	if (!m_EventInfo.m_EventText.empty())
+		AppendEventText(pText,m_EventInfo.m_EventText.c_str());
+	if (!m_EventInfo.m_EventExtendedText.empty())
+		AppendEventText(pText,m_EventInfo.m_EventExtendedText.c_str());
 	return !pText->empty();
 }
 

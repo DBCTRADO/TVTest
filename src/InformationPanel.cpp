@@ -1343,30 +1343,33 @@ void CInformationPanel::CProgramInfoItem::Reset()
 bool CInformationPanel::CProgramInfoItem::Update()
 {
 	CCoreEngine &CoreEngine=GetAppClass().CoreEngine;
-	TCHAR szText[4096],szTemp[2048];
+	TCHAR szText[4096],szTemp[256];
 	CStaticStringFormatter Formatter(szText,lengthof(szText));
 
 	if (m_fNext)
 		Formatter.Append(TEXT("ŽŸ : "));
 
-	SYSTEMTIME StartTime;
-	DWORD Duration;
-	if (CoreEngine.m_DtvEngine.GetEventTime(&StartTime,&Duration,m_fNext)
-			&& EpgUtil::FormatEventTime(StartTime,Duration,szTemp,lengthof(szTemp),
-				EpgUtil::EVENT_TIME_DATE | EpgUtil::EVENT_TIME_YEAR | EpgUtil::EVENT_TIME_UNDECIDED_TEXT)>0) {
-		Formatter.Append(szTemp);
-		Formatter.Append(TEXT("\r\n"));
-	}
-	if (CoreEngine.m_DtvEngine.GetEventName(szTemp,lengthof(szTemp),m_fNext)>0) {
-		Formatter.Append(szTemp);
-		Formatter.Append(TEXT("\r\n\r\n"));
-	}
-	if (CoreEngine.m_DtvEngine.GetEventText(szTemp,lengthof(szTemp),m_fNext)>0) {
-		Formatter.Append(szTemp);
-		Formatter.Append(TEXT("\r\n\r\n"));
-	}
-	if (CoreEngine.m_DtvEngine.GetEventExtendedText(szTemp,lengthof(szTemp),m_fNext)>0) {
-		Formatter.Append(szTemp);
+	CEventInfoData EventInfo;
+
+	if (CoreEngine.GetCurrentEventInfo(&EventInfo,0xFFFF,m_fNext)) {
+		if (EpgUtil::FormatEventTime(&EventInfo,szTemp,lengthof(szTemp),
+									 EpgUtil::EVENT_TIME_DATE |
+									 EpgUtil::EVENT_TIME_YEAR |
+									 EpgUtil::EVENT_TIME_UNDECIDED_TEXT)>0) {
+			Formatter.Append(szTemp);
+			Formatter.Append(TEXT("\r\n"));
+		}
+		if (!EventInfo.m_EventName.empty()) {
+			Formatter.Append(EventInfo.m_EventName.c_str());
+			Formatter.Append(TEXT("\r\n\r\n"));
+		}
+		if (!EventInfo.m_EventText.empty()) {
+			Formatter.Append(EventInfo.m_EventText.c_str());
+			Formatter.Append(TEXT("\r\n\r\n"));
+		}
+		if (!EventInfo.m_EventExtendedText.empty()) {
+			Formatter.Append(EventInfo.m_EventExtendedText.c_str());
+		}
 	}
 
 	CTsAnalyzer::EventSeriesInfo SeriesInfo;
