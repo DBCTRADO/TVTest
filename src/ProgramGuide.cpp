@@ -1596,10 +1596,10 @@ void CProgramGuide::DrawEventList(const ProgramGuide::CEventLayout *pLayout,
 			const bool fCurrent=
 				m_CurrentEventID!=0
 				&& m_CurrentChannel.ServiceID!=0
-				&& pEventInfo->m_NetworkID==m_CurrentChannel.NetworkID
-				&& pEventInfo->m_TransportStreamID==m_CurrentChannel.TransportStreamID
-				&& pEventInfo->m_ServiceID==m_CurrentChannel.ServiceID
-				&& pEventInfo->m_EventID==m_CurrentEventID;
+				&& pOrigEventInfo->m_NetworkID==m_CurrentChannel.NetworkID
+				&& pOrigEventInfo->m_TransportStreamID==m_CurrentChannel.TransportStreamID
+				&& pOrigEventInfo->m_ServiceID==m_CurrentChannel.ServiceID
+				&& pOrigEventInfo->m_EventID==m_CurrentEventID;
 
 			bool fFilter=false;
 			if ((m_Filter&FILTER_FREE)!=0
