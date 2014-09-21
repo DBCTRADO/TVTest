@@ -919,6 +919,13 @@ int CMainWindow::GetPanelPaneIndex() const
 
 bool CMainWindow::IsPanelVisible() const
 {
+	return m_App.Panel.fShowPanelWindow
+		|| (m_pCore->GetFullscreen() && IsFullscreenPanelVisible());
+}
+
+
+bool CMainWindow::IsPanelPresent() const
+{
 	return m_pCore->GetFullscreen()?IsFullscreenPanelVisible():m_App.Panel.fShowPanelWindow;
 }
 
@@ -3723,7 +3730,7 @@ bool CMainWindow::OnInitMenuPopup(HMENU hmenu)
 
 		m_App.MainMenu.EnableItem(CM_COPY,fView);
 		m_App.MainMenu.EnableItem(CM_SAVEIMAGE,fView);
-		m_App.MainMenu.CheckItem(CM_PANEL,IsPanelVisible());
+		m_App.MainMenu.CheckItem(CM_PANEL,IsPanelPresent());
 	} else if (hmenu==m_App.MainMenu.GetSubMenu(CMainMenu::SUBMENU_ZOOM)) {
 		CZoomOptions::ZoomInfo Zoom;
 
@@ -6336,7 +6343,10 @@ void CMainWindow::CFullscreen::ShowPanel(bool fShow)
 				m_App.Panel.Frame.SetPanelVisible(true);
 			}
 		}
+
 		m_fShowPanel=fShow;
+
+		m_App.SideBar.CheckItem(CM_PANEL,fShow);
 	}
 }
 

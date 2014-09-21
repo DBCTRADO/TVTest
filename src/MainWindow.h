@@ -136,6 +136,7 @@ public:
 	bool OnBarMouseLeave(HWND hwnd);
 	int GetPanelPaneIndex() const;
 	bool IsPanelVisible() const;
+	bool IsPanelPresent() const;
 	bool IsFullscreenPanelVisible() const { return m_Fullscreen.IsPanelVisible(); }
 	int GetAspectRatioType() const { return m_AspectRatioType; }
 

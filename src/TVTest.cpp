@@ -1358,7 +1358,7 @@ void CSideBarOptionsEventHandler::OnItemChanged()
 	g_App.SideBar.CheckItem(CM_ALWAYSONTOP,UICore.GetAlwaysOnTop());
 	g_App.SideBar.CheckItem(CM_DISABLEVIEWER,!g_App.MainWindow.IsPlaybackEnabled());
 	g_App.SideBar.CheckItem(CM_CAPTUREPREVIEW,g_App.CaptureWindow.GetVisible());
-	g_App.SideBar.CheckItem(CM_PANEL,g_App.MainWindow.IsPanelVisible());
+	g_App.SideBar.CheckItem(CM_PANEL,g_App.MainWindow.IsPanelPresent());
 	g_App.SideBar.CheckItem(CM_PROGRAMGUIDE,g_App.Epg.fShowProgramGuide);
 	g_App.SideBar.CheckItem(CM_STATUSBAR,g_App.MainWindow.GetStatusBarVisible());
 	g_App.SideBar.CheckItem(CM_STREAMINFO,g_App.StreamInfo.IsVisible());
