@@ -69,6 +69,7 @@ void CBonSrcDecoder::ResetGraph(void)
 
 	if (m_pBonDriver == NULL) {
 		ResetDownstreamDecoder();
+		SendDecoderEvent(EVENT_GRAPH_RESET);
 	} else {
 		if (HasPendingRequest()) {
 			Trace(TEXT("前回の要求が完了しないため新しい要求を行えません。"));
@@ -688,6 +689,8 @@ void CBonSrcDecoder::StreamingMain()
 				TRACE(TEXT("IBonDriver::SetChannel(%d)\n"), Request.SetChannel.Channel);
 				m_bRequestResult = m_pBonDriver->SetChannel(Request.SetChannel.Channel);
 				m_SetChannelTime = ::GetTickCount();
+				if (m_bRequestResult)
+					SendDecoderEvent(EVENT_CHANNEL_CHANGED);
 				break;
 
 			case StreamingRequest::TYPE_SETCHANNEL2:
@@ -697,6 +700,8 @@ void CBonSrcDecoder::StreamingMain()
 				m_bRequestResult = m_pBonDriver2->SetChannel(Request.SetChannel2.Space,
 															 Request.SetChannel2.Channel);
 				m_SetChannelTime = ::GetTickCount();
+				if (m_bRequestResult)
+					SendDecoderEvent(EVENT_CHANNEL_CHANGED);
 				break;
 
 			case StreamingRequest::TYPE_PURGESTREAM:
@@ -708,6 +713,7 @@ void CBonSrcDecoder::StreamingMain()
 				TRACE(TEXT("ResetDownstreamDecoder()\n"));
 				ResetStatus();
 				ResetDownstreamDecoder();
+				SendDecoderEvent(EVENT_GRAPH_RESET);
 				break;
 			}
 

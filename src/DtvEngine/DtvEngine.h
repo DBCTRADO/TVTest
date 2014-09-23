@@ -221,6 +221,7 @@ protected:
 	WORD m_CurServiceIndex;
 	WORD m_CurServiceID;
 	ServiceSelectInfo m_ServiceSel;
+	ServiceSelectInfo m_SetChannelServiceSel;
 	BYTE m_VideoStreamType;
 	int m_CurVideoStream;
 	BYTE m_CurVideoComponentTag;

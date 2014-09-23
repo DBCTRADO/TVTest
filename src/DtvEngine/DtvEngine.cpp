@@ -141,7 +141,6 @@ bool CDtvEngine::ResetEngine(void)
 		return false;
 
 	// デコーダグラフリセット
-	ResetStatus();
 	m_BonSrcDecoder.ResetGraph();
 
 	return true;
@@ -212,25 +211,19 @@ bool CDtvEngine::SetChannel(const BYTE byTuningSpace, const WORD wChannel,
 		  byTuningSpace, wChannel,
 		  pServiceSelInfo ? pServiceSelInfo->ServiceID : 0);
 
-	CBlockLock Lock(&m_EngineLock);
-
-	// サービスはPATが来るまで保留
-	ServiceSelectInfo OldServiceSel = m_ServiceSel;
+	m_EngineLock.Lock();
 	if (pServiceSelInfo) {
-		m_ServiceSel = *pServiceSelInfo;
+		m_SetChannelServiceSel = *pServiceSelInfo;
 	} else {
-		m_ServiceSel.Reset();
+		m_SetChannelServiceSel.Reset();
 	}
+	m_EngineLock.Unlock();
 
 	// チャンネル変更
 	if (!m_BonSrcDecoder.SetChannelAndPlay(byTuningSpace, wChannel)) {
-		m_ServiceSel = OldServiceSel;
-
 		SetError(m_BonSrcDecoder.GetLastErrorException());
 		return false;
 	}
-
-	ResetStatus();
 
 	return true;
 }
@@ -509,7 +502,24 @@ unsigned __int64 CDtvEngine::GetPcrTimeStamp()
 const DWORD CDtvEngine::OnDecoderEvent(CMediaDecoder *pDecoder, const DWORD dwEventID, PVOID pParam)
 {
 	// デコーダからのイベントを受け取る(暫定)
-	if (pDecoder == &m_TsAnalyzer) {
+	if (pDecoder == &m_BonSrcDecoder) {
+		switch (dwEventID) {
+		case CBonSrcDecoder::EVENT_GRAPH_RESET:
+			// デコーダグラフがリセットされた
+			ResetStatus();
+			return 0;
+
+		case CBonSrcDecoder::EVENT_CHANNEL_CHANGED:
+			// チャンネルが変更された
+			{
+				CBlockLock Lock(&m_EngineLock);
+
+				m_ServiceSel = m_SetChannelServiceSel;
+				ResetStatus();
+			}
+			return 0;
+		}
+	} else if (pDecoder == &m_TsAnalyzer) {
 		switch (dwEventID) {
 		case CTsAnalyzer::EVENT_PAT_UPDATED:
 		case CTsAnalyzer::EVENT_PMT_UPDATED:
