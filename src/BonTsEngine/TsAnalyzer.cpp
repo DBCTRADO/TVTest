@@ -96,9 +96,6 @@ void CTsAnalyzer::Reset()
 {
 	CBlockLock Lock(&m_DecoderLock);
 
-	// イベントハンドラにリセットを通知する
-	NotifyResetEvent();
-
 	// 全テーブルアンマップ
 	m_PidMapManager.UnmapAllTarget();
 
@@ -1750,55 +1747,14 @@ bool CTsAnalyzer::GetTerrestrialDeliverySystemList(TerrestrialDeliverySystemList
 }
 
 
-bool CTsAnalyzer::AddEventHandler(IAnalyzerEventHandler *pHandler)
+void CTsAnalyzer::SetDecoderEvent(EventType Type)
 {
-	if (pHandler == NULL)
-		return false;
-
-	CBlockLock Lock(&m_DecoderLock);
-
-	m_EventHandlerList.push_back(pHandler);
-
-	return true;
-}
-
-
-bool CTsAnalyzer::RemoveEventHandler(IAnalyzerEventHandler *pHandler)
-{
-	CBlockLock Lock(&m_DecoderLock);
-
-	for (std::vector<IAnalyzerEventHandler*>::iterator itr = m_EventHandlerList.begin(); itr != m_EventHandlerList.end(); ++itr) {
-		if (*itr == pHandler) {
-			m_EventHandlerList.erase(itr);
-			return true;
-		}
-	}
-	return false;
-}
-
-
-void CTsAnalyzer::CallEventHandler(EventType Type)
-{
-	for (size_t i = 0; i < m_EventHandlerList.size(); i++) {
-		m_EventHandlerList[i]->OnEvent(this, Type);
-	}
-
 #if 0
-	//SendDecoderEvent((DWORD)Type);
+	SendDecoderEvent((DWORD)Type);
 #else
-#ifdef _DEBUG
-	if (m_DecoderEvent != EVENT_INVALID) ::DebugBreak();
-#endif
+	_ASSERT(m_DecoderEvent == EVENT_INVALID);
 	m_DecoderEvent = Type;
 #endif
-}
-
-
-void CTsAnalyzer::NotifyResetEvent()
-{
-	for (size_t i = 0; i < m_EventHandlerList.size(); i++) {
-		m_EventHandlerList[i]->OnReset(this);
-	}
 }
 
 
@@ -1846,8 +1802,8 @@ void CALLBACK CTsAnalyzer::OnPatUpdated(const WORD wPID, CTsPidMapTarget *pMapTa
 		pMapManager->MapTarget(pPatTable->GetPmtPID((WORD)Index), new CPmtTable(TABLE_DEBUG), OnPmtUpdated, pParam);
 	}
 
-	// イベントハンドラ呼び出し
-	pThis->CallEventHandler(EVENT_PAT_UPDATED);
+	// 通知イベント設定
+	pThis->SetDecoderEvent(EVENT_PAT_UPDATED);
 }
 
 
@@ -2004,8 +1960,8 @@ void CALLBACK CTsAnalyzer::OnPmtUpdated(const WORD wPID, CTsPidMapTarget *pMapTa
 		}
 	}
 
-	// イベントハンドラ呼び出し
-	pThis->CallEventHandler(EVENT_PMT_UPDATED);
+	// 通知イベント設定
+	pThis->SetDecoderEvent(EVENT_PMT_UPDATED);
 }
 
 
@@ -2082,8 +2038,8 @@ void CALLBACK CTsAnalyzer::OnSdtUpdated(const WORD wPID, CTsPidMapTarget *pMapTa
 
 		pThis->m_bSdtUpdated = true;
 
-		// イベントハンドラ呼び出し
-		pThis->CallEventHandler(EVENT_SDT_UPDATED);
+		// 通知イベント設定
+		pThis->SetDecoderEvent(EVENT_SDT_UPDATED);
 	} else if (TableID == CSdtTable::TABLE_ID_OTHER) {
 		// 他のTSのSDT
 		const CSdtOtherTable *pSdtOtherTable = pTableSet->GetOtherSdtTable();
@@ -2191,8 +2147,8 @@ void CALLBACK CTsAnalyzer::OnNitUpdated(const WORD wPID, CTsPidMapTarget *pMapTa
 
 	pThis->m_bNitUpdated = true;
 
-	// イベントハンドラ呼び出し
-	pThis->CallEventHandler(EVENT_NIT_UPDATED);
+	// 通知イベント設定
+	pThis->SetDecoderEvent(EVENT_NIT_UPDATED);
 }
 
 
@@ -2203,8 +2159,8 @@ void CALLBACK CTsAnalyzer::OnEitUpdated(const WORD wPID, CTsPidMapTarget *pMapTa
 
 	CTsAnalyzer *pThis = static_cast<CTsAnalyzer*>(pParam);
 
-	// イベントハンドラ呼び出し
-	pThis->CallEventHandler(EVENT_EIT_UPDATED);
+	// 通知イベント設定
+	pThis->SetDecoderEvent(EVENT_EIT_UPDATED);
 }
 
 
@@ -2213,23 +2169,6 @@ void CALLBACK CTsAnalyzer::OnTotUpdated(const WORD wPID, CTsPidMapTarget *pMapTa
 	// TOTが更新された
 	CTsAnalyzer *pThis = static_cast<CTsAnalyzer *>(pParam);
 
-	// イベントハンドラ呼び出し
-	pThis->CallEventHandler(EVENT_TOT_UPDATED);
-}
-
-
-
-
-CTsAnalyzer::IAnalyzerEventHandler::IAnalyzerEventHandler()
-{
-}
-
-
-CTsAnalyzer::IAnalyzerEventHandler::~IAnalyzerEventHandler()
-{
-}
-
-
-void CTsAnalyzer::IAnalyzerEventHandler::OnReset(CTsAnalyzer *pAnalyzer)
-{
+	// 通知イベント設定
+	pThis->SetDecoderEvent(EVENT_TOT_UPDATED);
 }

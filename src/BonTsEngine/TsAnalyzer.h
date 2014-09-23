@@ -17,6 +17,16 @@
 class CTsAnalyzer : public CMediaDecoder
 {
 public:
+	enum EventType {
+		EVENT_INVALID,
+		EVENT_PAT_UPDATED,
+		EVENT_PMT_UPDATED,
+		EVENT_SDT_UPDATED,
+		EVENT_NIT_UPDATED,
+		EVENT_EIT_UPDATED,
+		EVENT_TOT_UPDATED
+	};
+
 	enum {
 		PID_INVALID = 0xFFFF,
 		COMPONENTTAG_INVALID = 0xFF,
@@ -234,33 +244,8 @@ public:
 	bool GetSatelliteDeliverySystemList(SatelliteDeliverySystemList *pList) const;
 	bool GetTerrestrialDeliverySystemList(TerrestrialDeliverySystemList *pList) const;
 
-	enum EventType {
-		EVENT_PAT_UPDATED,
-		EVENT_PMT_UPDATED,
-		EVENT_SDT_UPDATED,
-		EVENT_NIT_UPDATED,
-		EVENT_EIT_UPDATED,
-		EVENT_TOT_UPDATED,
-		EVENT_INVALID,
-		NUM_EVENTS = EVENT_INVALID,
-		EVENT_LAST = NUM_EVENTS - 1
-	};
-
-	class IAnalyzerEventHandler
-	{
-	public:
-		IAnalyzerEventHandler();
-		virtual ~IAnalyzerEventHandler();
-		virtual void OnEvent(CTsAnalyzer *pAnalyzer, EventType Type) = 0;
-		virtual void OnReset(CTsAnalyzer *pAnalyzer);
-	};
-
-	bool AddEventHandler(IAnalyzerEventHandler *pHandler);
-	bool RemoveEventHandler(IAnalyzerEventHandler *pHandler);
-
 protected:
-	void CallEventHandler(EventType Type);
-	void NotifyResetEvent();
+	void SetDecoderEvent(EventType Type);
 
 #ifdef TS_ANALYZER_EIT_SUPPORT
 	const class CEitTable *GetEitPfTableByServiceID(WORD ServiceID, bool bNext = false) const;
@@ -296,7 +281,6 @@ protected:
 	};
 	NitInfo m_NitInfo;
 
-	std::vector<IAnalyzerEventHandler*> m_EventHandlerList;
 	EventType m_DecoderEvent;
 
 	enum {
