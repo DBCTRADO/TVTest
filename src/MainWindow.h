@@ -23,7 +23,6 @@
 #define WM_APP_CHANNELCHANGE			(WM_APP+1)
 #define WM_APP_IMAGESAVE				(WM_APP+2)
 #define WM_APP_TRAYICON					(WM_APP+3)
-#define WM_APP_EXECUTE					(WM_APP+4)
 #define WM_APP_QUERYPORT				(WM_APP+5)	// (*)
 #define WM_APP_FILEWRITEERROR			(WM_APP+6)
 #define WM_APP_VIDEOSIZECHANGED			(WM_APP+7)
@@ -572,7 +571,6 @@ private:
 	bool OnInitMenuPopup(HMENU hmenu);
 	void OnEventChanged();
 	void AutoSelectStereoMode();
-	bool OnExecute(LPCTSTR pszCmdLine);
 	int GetZoomPercentage();
 	bool AutoFitWindowToVideo();
 	bool SetPanAndScan(int Command);

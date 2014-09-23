@@ -371,6 +371,9 @@ public:
 	};
 #endif	// NETWORK_REMOCON_SUPPORT
 
+	static const UINT WM_INTERPROCESS=WM_COPYDATA;
+	static const UINT PROCESS_MESSAGE_EXECUTE=0x54565400;
+
 #ifndef _DEBUG
 	static CDebugHelper DebugHelper;
 #endif
@@ -488,6 +491,8 @@ public:
 	};
 	bool SaveSettings(unsigned int Flags);
 	bool ShowOptionDialog(HWND hwndOwner,int StartPage=-1);
+	bool SendInterprocessMessage(HWND hwnd,UINT Message,const void *pParam,DWORD ParamSize);
+	LRESULT ReceiveInterprocessMessage(HWND hwnd,WPARAM wParam,LPARAM lParam);
 	bool BroadcastControllerFocusMessage(HWND hwnd,bool fSkipSelf,bool fFocus,
 										 DWORD ActiveThreadID=0);
 	void SetEnablePlaybackOnStart(bool fEnable) { m_fEnablePlaybackOnStart=fEnable; }
@@ -577,6 +582,7 @@ private:
 	bool IsNoAcceleratorMessage(const MSG *pmsg);
 	void ApplyEventInfoFont();
 	bool GetAbsolutePath(LPCTSTR pszPath,LPTSTR pszAbsolutePath) const;
+	bool ProcessCommandLine(LPCTSTR pszCmdLine);
 	static BOOL CALLBACK ControllerFocusCallback(HWND hwnd,LPARAM Param);
 };
 

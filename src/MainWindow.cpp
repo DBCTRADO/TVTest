@@ -1323,6 +1323,9 @@ LRESULT CMainWindow::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 		m_App.OSDOptions.OnDwmCompositionChanged();
 		return 0;
 
+	case CAppMain::WM_INTERPROCESS:
+		return m_App.ReceiveInterprocessMessage(hwnd,wParam,lParam);
+
 	case WM_APP_SERVICEUPDATE:
 		// サービスが更新された
 		TRACE(TEXT("WM_APP_SERVICEUPDATE\n"));
@@ -1456,23 +1459,6 @@ LRESULT CMainWindow::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 		case WM_LBUTTONUP:
 			SendCommand(CM_SHOW);
 			break;
-		}
-		return 0;
-
-	case WM_APP_EXECUTE:
-		// 複数起動禁止時に複数起動された
-		// (新しく起動されたプロセスから送られてくる)
-		TRACE(TEXT("WM_APP_EXECUTE\n"));
-		{
-			ATOM atom=(ATOM)wParam;
-			TCHAR szCmdLine[256];
-
-			szCmdLine[0]='\0';
-			if (atom!=0) {
-				::GlobalGetAtomName(atom,szCmdLine,lengthof(szCmdLine));
-				::GlobalDeleteAtom(atom);
-			}
-			OnExecute(szCmdLine);
 		}
 		return 0;
 
@@ -5550,64 +5536,6 @@ void CMainWindow::ResumeViewer(unsigned int Flags)
 bool CMainWindow::ConfirmExit()
 {
 	return m_App.RecordOptions.ConfirmExit(GetVideoHostWindow(),&m_App.RecordManager);
-}
-
-
-bool CMainWindow::OnExecute(LPCTSTR pszCmdLine)
-{
-	CCommandLineOptions CmdLine;
-
-	m_App.PluginManager.SendExecuteEvent(pszCmdLine);
-
-	CmdLine.Parse(pszCmdLine);
-
-	if (!CmdLine.m_fMinimize && !CmdLine.m_fTray) {
-		SendCommand(CM_SHOW);
-
-		if (CmdLine.m_fFullscreen)
-			m_pCore->SetFullscreen(true);
-		else if (CmdLine.m_fMaximize)
-			SetMaximize(true);
-	}
-
-	if (CmdLine.m_fSilent || CmdLine.m_TvRockDID>=0)
-		m_App.Core.SetSilent(true);
-	if (CmdLine.m_fSaveLog)
-		m_App.CmdLineOptions.m_fSaveLog=true;
-
-	if (!CmdLine.m_DriverName.IsEmpty()) {
-		if (m_App.Core.OpenTuner(CmdLine.m_DriverName.Get())) {
-			if (CmdLine.IsChannelSpecified())
-				m_App.Core.SetCommandLineChannel(&CmdLine);
-			else
-				m_App.Core.RestoreChannel();
-		}
-	} else {
-		if (CmdLine.IsChannelSpecified())
-			m_App.Core.SetCommandLineChannel(&CmdLine);
-	}
-
-	if (CmdLine.m_fRecord) {
-		if (CmdLine.m_fRecordCurServiceOnly)
-			m_App.CmdLineOptions.m_fRecordCurServiceOnly=true;
-		m_App.Core.CommandLineRecord(&CmdLine);
-	} else if (CmdLine.m_fRecordStop) {
-		m_App.Core.StopRecord();
-	}
-
-	if (CmdLine.m_Volume>=0)
-		m_pCore->SetVolume(min(CmdLine.m_Volume,CCoreEngine::MAX_VOLUME),false);
-	if (CmdLine.m_fMute)
-		m_pCore->SetMute(true);
-
-	if (CmdLine.m_fShowProgramGuide)
-		ShowProgramGuide(true);
-	if (CmdLine.m_fHomeDisplay)
-		PostCommand(CM_HOMEDISPLAY);
-	else if (CmdLine.m_fChannelDisplay)
-		PostCommand(CM_CHANNELDISPLAY);
-
-	return true;
 }
 
 

@@ -664,19 +664,10 @@ int CAppMain::Main(HINSTANCE hInstance,LPCTSTR pszCmdLine,int nCmdShow)
 		CTVTestWindowFinder Finder;
 		HWND hwnd=Finder.FindCommandLineTarget();
 		if (::IsWindow(hwnd)) {
-			ATOM atom;
-
-			if (pszCmdLine[0]!=_T('\0'))
-				atom=::GlobalAddAtom(pszCmdLine);
-			else
-				atom=0;
-			// ATOM だと256文字までしか渡せないので、WM_COPYDATA 辺りの方がいいかも
-			/*
-			DWORD_PTR Result;
-			::SendMessageTimeout(hwnd,WM_APP_EXECUTE,(WPARAM)atom,0,
-								 SMTO_NORMAL,10000,&Result);
-			*/
-			::PostMessage(hwnd,WM_APP_EXECUTE,(WPARAM)atom,0);
+			if (!SendInterprocessMessage(hwnd,PROCESS_MESSAGE_EXECUTE,
+										 pszCmdLine,(::lstrlen(pszCmdLine)+1)*sizeof(TCHAR))) {
+				Logger.AddLog(TEXT("既存のプロセスにメッセージを送信できません。"));
+			}
 			return 0;
 		}
 		if (!CmdLineOptions.m_fSingleTask) {
@@ -1229,6 +1220,44 @@ bool CAppMain::ShowOptionDialog(HWND hwndOwner,int StartPage)
 }
 
 
+bool CAppMain::SendInterprocessMessage(HWND hwnd,UINT Message,const void *pParam,DWORD ParamSize)
+{
+	COPYDATASTRUCT cds;
+	cds.dwData=Message;
+	cds.cbData=ParamSize;
+	cds.lpData=const_cast<void*>(pParam);
+
+	DWORD_PTR Result=0;
+	return ::SendMessageTimeout(hwnd,WM_COPYDATA,0,reinterpret_cast<LPARAM>(&cds),
+								SMTO_NORMAL | SMTO_NOTIMEOUTIFNOTHUNG,10000,&Result)!=0
+		&& Result!=0;
+}
+
+
+LRESULT CAppMain::ReceiveInterprocessMessage(HWND hwnd,WPARAM wParam,LPARAM lParam)
+{
+	::ReplyMessage(TRUE);
+
+	const COPYDATASTRUCT *pcds=reinterpret_cast<const COPYDATASTRUCT*>(lParam);
+
+	switch (pcds->dwData) {
+	case PROCESS_MESSAGE_EXECUTE:
+		if (pcds->cbData>=sizeof(TCHAR) && pcds->lpData!=nullptr) {
+			LPCTSTR pszCommandLine=static_cast<LPCTSTR>(pcds->lpData);
+			if (pszCommandLine[pcds->cbData/sizeof(TCHAR)-1]==_T('\0'))
+				ProcessCommandLine(pszCommandLine);
+		}
+		break;
+
+	default:
+		AddLog(TEXT("未知のメッセージ %Ix を受信しました。"),pcds->dwData);
+		break;
+	}
+
+	return TRUE;
+}
+
+
 bool CAppMain::BroadcastControllerFocusMessage(
 	HWND hwnd,bool fSkipSelf,bool fFocus,DWORD ActiveThreadID)
 {
@@ -1333,6 +1362,67 @@ bool CAppMain::GetAbsolutePath(LPCTSTR pszPath,LPTSTR pszAbsolutePath) const
 			return false;
 		::lstrcpy(pszAbsolutePath,pszPath);
 	}
+
+	return true;
+}
+
+
+bool CAppMain::ProcessCommandLine(LPCTSTR pszCmdLine)
+{
+	AddLog(TEXT("新しいコマンドラインオプションを受信しました。"));
+	AddLog(TEXT("コマンドラインオプション : %s"),pszCmdLine);
+
+	CCommandLineOptions CmdLine;
+
+	PluginManager.SendExecuteEvent(pszCmdLine);
+
+	CmdLine.Parse(pszCmdLine);
+
+	if (!CmdLine.m_fMinimize && !CmdLine.m_fTray) {
+		UICore.DoCommand(CM_SHOW);
+
+		if (CmdLine.m_fFullscreen)
+			UICore.SetFullscreen(true);
+		else if (CmdLine.m_fMaximize)
+			MainWindow.SetMaximize(true);
+	}
+
+	if (CmdLine.m_fSilent || CmdLine.m_TvRockDID>=0)
+		Core.SetSilent(true);
+	if (CmdLine.m_fSaveLog)
+		CmdLineOptions.m_fSaveLog=true;
+
+	if (!CmdLine.m_DriverName.IsEmpty()) {
+		if (Core.OpenTuner(CmdLine.m_DriverName.Get())) {
+			if (CmdLine.IsChannelSpecified())
+				Core.SetCommandLineChannel(&CmdLine);
+			else
+				Core.RestoreChannel();
+		}
+	} else {
+		if (CmdLine.IsChannelSpecified())
+			Core.SetCommandLineChannel(&CmdLine);
+	}
+
+	if (CmdLine.m_fRecord) {
+		if (CmdLine.m_fRecordCurServiceOnly)
+			CmdLineOptions.m_fRecordCurServiceOnly=true;
+		Core.CommandLineRecord(&CmdLine);
+	} else if (CmdLine.m_fRecordStop) {
+		Core.StopRecord();
+	}
+
+	if (CmdLine.m_Volume>=0)
+		UICore.SetVolume(min(CmdLine.m_Volume,CCoreEngine::MAX_VOLUME),false);
+	if (CmdLine.m_fMute)
+		UICore.SetMute(true);
+
+	if (CmdLine.m_fShowProgramGuide)
+		MainWindow.ShowProgramGuide(true);
+	if (CmdLine.m_fHomeDisplay)
+		UICore.DoCommandAsync(CM_HOMEDISPLAY);
+	else if (CmdLine.m_fChannelDisplay)
+		UICore.DoCommandAsync(CM_CHANNELDISPLAY);
 
 	return true;
 }
