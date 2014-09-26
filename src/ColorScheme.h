@@ -268,6 +268,18 @@ public:
 	struct GradientStyle {
 		TVTest::Theme::GradientType Type;
 		TVTest::Theme::GradientDirection Direction;
+
+		bool operator==(const GradientStyle &Op) const {
+			return Type==Op.Type && Direction==Op.Direction;
+		}
+		bool operator!=(const GradientStyle &Op) const {
+			return !(*this==Op);
+		}
+	};
+
+	enum {
+		SAVE_NODEFAULT	= 0x0001U,	// デフォルトと同じ設定を保存しない
+		SAVE_NONAME		= 0x0002U	// 名前を保存しない
 	};
 
 	CColorScheme();
@@ -289,9 +301,9 @@ public:
 	bool SetName(LPCTSTR pszName);
 	LPCTSTR GetFileName() const { return m_FileName.Get(); }
 	bool Load(CSettings &Settings);
-	bool Save(CSettings &Settings) const;
+	bool Save(CSettings &Settings,unsigned int Flags=0) const;
 	bool Load(LPCTSTR pszFileName);
-	bool Save(LPCTSTR pszFileName) const;
+	bool Save(LPCTSTR pszFileName,unsigned int Flags=0) const;
 	bool SetFileName(LPCTSTR pszFileName);
 	void SetDefault();
 	bool IsLoaded(int Type) const;

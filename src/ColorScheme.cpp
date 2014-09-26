@@ -723,24 +723,60 @@ bool CColorScheme::Load(CSettings &Settings)
 }
 
 
-bool CColorScheme::Save(CSettings &Settings) const
+bool CColorScheme::Save(CSettings &Settings,unsigned int Flags) const
 {
-	int i;
-
 	if (!Settings.SetSection(TEXT("ColorScheme")))
 		return false;
-	Settings.Write(TEXT("Name"),m_Name.GetSafe());
-	for (i=0;i<NUM_COLORS;i++)
-		Settings.WriteColor(m_ColorInfoList[i].pszText,m_ColorList[i]);
-	for (i=0;i<NUM_GRADIENTS;i++) {
-		static const LPCTSTR pszTypeName[] = {
-			TEXT("normal"),	TEXT("glossy"), TEXT("interlaced")
-		};
-		TCHAR szName[128];
 
-		Settings.Write(m_GradientInfoList[i].pszText,pszTypeName[m_GradientList[i].Type]);
-		::wsprintf(szName,TEXT("%sDirection"),m_GradientInfoList[i].pszText);
-		Settings.Write(szName,GradientDirectionList[m_GradientList[i].Direction]);
+	bool fSaveAllColors=true,fSaveGradients=true;
+
+	if ((Flags & SAVE_NODEFAULT)!=0) {
+		/*
+			SAVE_NODEFAULT が指定されている場合、デフォルトから変更されていない時のみ設定を保存する。
+			Loadの処理が複雑なので、単純に変更されているもののみ保存すればいいという訳ではないため、
+			デフォルトから変更されている場合は全ての設定を保存する。
+		*/
+		CColorScheme DefaultColorScheme;
+		int i;
+
+		for (i=0;i<NUM_COLORS;i++) {
+			if ((i<COLOR_PROGRAMGUIDE_CONTENT_FIRST || i>COLOR_PROGRAMGUIDE_CONTENT_LAST)
+					&& m_ColorList[i]!=DefaultColorScheme.m_ColorList[i])
+				break;
+		}
+		if (i==NUM_COLORS)
+			fSaveAllColors=false;
+
+		for (i=0;i<NUM_GRADIENTS;i++) {
+			if (m_GradientList[i]!=DefaultColorScheme.m_GradientList[i])
+				break;
+		}
+		if (i==NUM_GRADIENTS)
+			fSaveGradients=false;
+
+		if (!fSaveAllColors || !fSaveGradients)
+			Settings.Clear();
+	}
+
+	if ((Flags & SAVE_NONAME)==0)
+		Settings.Write(TEXT("Name"),m_Name.GetSafe());
+
+	for (int i=0;i<NUM_COLORS;i++) {
+		if (fSaveAllColors || m_ColorList[i]!=m_ColorInfoList[i].DefaultColor)
+			Settings.WriteColor(m_ColorInfoList[i].pszText,m_ColorList[i]);
+	}
+
+	if (fSaveGradients) {
+		for (int i=0;i<NUM_GRADIENTS;i++) {
+			static const LPCTSTR pszTypeName[] = {
+				TEXT("normal"),	TEXT("glossy"), TEXT("interlaced")
+			};
+			TCHAR szName[128];
+
+			Settings.Write(m_GradientInfoList[i].pszText,pszTypeName[m_GradientList[i].Type]);
+			::wsprintf(szName,TEXT("%sDirection"),m_GradientInfoList[i].pszText);
+			Settings.Write(szName,GradientDirectionList[m_GradientList[i].Direction]);
+		}
 	}
 
 	if (Settings.SetSection(TEXT("Style"))) {
@@ -748,7 +784,7 @@ bool CColorScheme::Save(CSettings &Settings) const
 			TEXT("none"),	TEXT("solid"),	TEXT("sunken"),	TEXT("raised")
 		};
 
-		for (i=0;i<NUM_BORDERS;i++)
+		for (int i=0;i<NUM_BORDERS;i++)
 			Settings.Write(m_BorderInfoList[i].pszText,pszTypeName[m_BorderList[i]]);
 	}
 
@@ -779,14 +815,14 @@ bool CColorScheme::Load(LPCTSTR pszFileName)
 }
 
 
-bool CColorScheme::Save(LPCTSTR pszFileName) const
+bool CColorScheme::Save(LPCTSTR pszFileName,unsigned int Flags) const
 {
 	CSettings Settings;
 
 	if (!Settings.Open(pszFileName,CSettings::OPEN_WRITE))
 		return false;
 
-	return Save(Settings);
+	return Save(Settings,Flags);
 }
 
 
@@ -1062,7 +1098,9 @@ bool CColorSchemeOptions::LoadSettings(CSettings &Settings)
 
 bool CColorSchemeOptions::SaveSettings(CSettings &Settings)
 {
-	return m_pColorScheme->Save(Settings);
+	return m_pColorScheme->Save(Settings,
+								CColorScheme::SAVE_NODEFAULT |
+								CColorScheme::SAVE_NONAME);
 }
 
 
