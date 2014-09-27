@@ -101,6 +101,11 @@
 #define NULL nullptr
 #endif
 
+#if !defined(WIN_XP_SUPPORT) && !defined(NO_WIN_XP_SUPPORT)
+// Windows XP ‘Î‰
+#define WIN_XP_SUPPORT
+#endif
+
 
 // BonTsEngine ‚Ìİ’è
 #define BONTSENGINE_MPEG2_SUPPORT	// MPEG-2 ‘Î‰

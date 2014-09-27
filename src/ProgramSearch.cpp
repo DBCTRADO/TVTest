@@ -553,7 +553,9 @@ bool CEventSearchSettingsList::Save(CSettings &Settings,LPCTSTR pszPrefix) const
 
 
 CEventSearcher::CEventSearcher()
+#ifdef WIN_XP_SUPPORT
 	: m_pFindNLSString(GET_MODULE_FUNCTION(TEXT("kernel32.dll"),FindNLSString))
+#endif
 {
 }
 
@@ -698,6 +700,7 @@ int CEventSearcher::FindKeyword(LPCTSTR pszText,LPCTSTR pKeyword,int KeywordLeng
 	if (m_Settings.fIgnoreWidth)
 		Flags|=NORM_IGNOREWIDTH;
 
+#ifdef WIN_XP_SUPPORT
 	int Pos;
 
 	if (m_pFindNLSString!=NULL) {
@@ -723,6 +726,10 @@ int CEventSearcher::FindKeyword(LPCTSTR pszText,LPCTSTR pKeyword,int KeywordLeng
 	}
 
 	return Pos;
+#else	// WIN_XP_SUPPORT
+	return ::FindNLSString(LOCALE_USER_DEFAULT,FIND_FROMSTART | Flags,
+						   pszText,-1,pKeyword,KeywordLength,pFoundLength);
+#endif
 }
 
 

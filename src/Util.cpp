@@ -580,6 +580,8 @@ int GetErrorText(DWORD ErrorCode,LPTSTR pszText,int MaxLength)
 }
 
 
+#ifdef WIN_XP_SUPPORT
+
 class CFileNameCompare
 {
 public:
@@ -633,6 +635,15 @@ bool IsEqualFileName(LPCWSTR pszFileName1,LPCWSTR pszFileName2)
 {
 	return g_FileNameCompare.IsEqual(pszFileName1,pszFileName2);
 }
+
+#else	// WIN_XP_SUPPORT
+
+bool IsEqualFileName(LPCWSTR pszFileName1,LPCWSTR pszFileName2)
+{
+	return ::CompareStringOrdinal(pszFileName1,-1,pszFileName2,-1,TRUE)==CSTR_EQUAL;
+}
+
+#endif
 
 
 bool IsValidFileName(LPCTSTR pszFileName,bool fWildcard,LPTSTR pszMessage,int MaxMessage)

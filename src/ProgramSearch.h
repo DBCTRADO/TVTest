@@ -170,7 +170,9 @@ public:
 private:
 	CEventSearchSettings m_Settings;
 	TVTest::CRegExp m_RegExp;
+#ifdef WIN_XP_SUPPORT
 	decltype(FindNLSString) *m_pFindNLSString;
+#endif
 
 	bool MatchKeyword(const CEventInfoData *pEventInfo,LPCTSTR pszKeyword) const;
 	bool MatchRegExp(const CEventInfoData *pEventInfo);

@@ -11,9 +11,11 @@ public:
 	bool ApplyAeroGlass(HWND hwnd,const RECT *pRect);
 	bool EnableNcRendering(HWND hwnd,bool fEnable);
 
+#ifdef WIN_XP_SUPPORT
 private:
 	HMODULE m_hDwmLib;
 	bool LoadDwmLib();
+#endif
 };
 
 class CBufferedPaint
