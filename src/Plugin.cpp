@@ -2587,129 +2587,47 @@ bool CPluginManager::SendProgramGuideProgramEvent(UINT Event,const CEventInfoDat
 }
 
 
-bool CPluginManager::SendChannelChangeEvent()
+void CPluginManager::OnTunerChanged()
 {
-	return SendEvent(TVTest::EVENT_CHANNELCHANGE);
+	SendEvent(TVTest::EVENT_DRIVERCHANGE);
 }
 
 
-bool CPluginManager::SendServiceChangeEvent()
+void CPluginManager::OnChannelChanged(unsigned int Status)
 {
-	return SendEvent(TVTest::EVENT_SERVICECHANGE);
+	SendEvent(TVTest::EVENT_CHANNELCHANGE);
 }
 
 
-bool CPluginManager::SendDriverChangeEvent()
+void CPluginManager::OnServiceChanged()
 {
-	return SendEvent(TVTest::EVENT_DRIVERCHANGE);
+	SendEvent(TVTest::EVENT_SERVICECHANGE);
 }
 
 
-bool CPluginManager::SendServiceUpdateEvent()
+void CPluginManager::OnServiceInfoUpdated()
 {
-	return SendEvent(TVTest::EVENT_SERVICEUPDATE);
+	SendEvent(TVTest::EVENT_SERVICEUPDATE);
 }
 
 
-bool CPluginManager::SendRecordStatusChangeEvent()
+void CPluginManager::OnServiceListUpdated()
 {
-	const CRecordManager *pRecordManager=&GetAppClass().RecordManager;
-	int Status;
-
-	if (pRecordManager->IsRecording()) {
-		if (pRecordManager->IsPaused())
-			Status=TVTest::RECORD_STATUS_PAUSED;
-		else
-			Status=TVTest::RECORD_STATUS_RECORDING;
-	} else {
-		Status=TVTest::RECORD_STATUS_NOTRECORDING;
-	}
-	return SendEvent(TVTest::EVENT_RECORDSTATUSCHANGE,Status);
+	SendEvent(TVTest::EVENT_SERVICEUPDATE);
 }
 
 
-bool CPluginManager::SendFullscreenChangeEvent(bool fFullscreen)
+void CPluginManager::OnRecordingStart(TVTest::AppEvent::RecordingStartInfo *pInfo)
 {
-	return SendEvent(TVTest::EVENT_FULLSCREENCHANGE,fFullscreen);
-}
-
-
-bool CPluginManager::SendPreviewChangeEvent(bool fPreview)
-{
-	return SendEvent(TVTest::EVENT_PREVIEWCHANGE,fPreview);
-}
-
-
-bool CPluginManager::SendVolumeChangeEvent(int Volume,bool fMute)
-{
-	return SendEvent(TVTest::EVENT_VOLUMECHANGE,Volume,fMute);
-}
-
-
-bool CPluginManager::SendStereoModeChangeEvent(int StereoMode)
-{
-	return SendEvent(TVTest::EVENT_STEREOMODECHANGE,StereoMode);
-}
-
-
-bool CPluginManager::SendColorChangeEvent()
-{
-	return SendEvent(TVTest::EVENT_COLORCHANGE);
-}
-
-
-bool CPluginManager::SendStandbyEvent(bool fStandby)
-{
-	return SendEvent(TVTest::EVENT_STANDBY,fStandby);
-}
-
-
-bool CPluginManager::SendExecuteEvent(LPCTSTR pszCommandLine)
-{
-	return SendEvent(TVTest::EVENT_EXECUTE,reinterpret_cast<LPARAM>(pszCommandLine));
-}
-
-
-bool CPluginManager::SendResetEvent()
-{
-	return SendEvent(TVTest::EVENT_RESET);
-}
-
-
-bool CPluginManager::SendStatusResetEvent()
-{
-	return SendEvent(TVTest::EVENT_STATUSRESET);
-}
-
-
-bool CPluginManager::SendAudioStreamChangeEvent(int Stream)
-{
-	return SendEvent(TVTest::EVENT_AUDIOSTREAMCHANGE,Stream);
-}
-
-
-bool CPluginManager::SendSettingsChangeEvent()
-{
-	return SendEvent(TVTest::EVENT_SETTINGSCHANGE);
-}
-
-
-bool CPluginManager::SendCloseEvent()
-{
-	return SendEvent(TVTest::EVENT_CLOSE);
-}
-
-
-bool CPluginManager::SendStartRecordEvent(const CRecordManager *pRecordManager,LPTSTR pszFileName,int MaxFileName)
-{
+	const CRecordManager *pRecordManager=pInfo->pRecordManager;
 	TVTest::StartRecordInfo Info;
 
 	Info.Size=sizeof(TVTest::StartRecordInfo);
 	Info.Flags=0;
 	Info.Modified=0;
 	Info.Client=(DWORD)pRecordManager->GetClient();
-	Info.pszFileName=pszFileName;
-	Info.MaxFileName=MaxFileName;
+	Info.pszFileName=pInfo->pszFileName;
+	Info.MaxFileName=pInfo->MaxFileName;
 	CRecordManager::TimeSpecInfo TimeSpec;
 	pRecordManager->GetStartTimeSpec(&TimeSpec);
 	switch (TimeSpec.Type) {
@@ -2739,19 +2657,139 @@ bool CPluginManager::SendStartRecordEvent(const CRecordManager *pRecordManager,L
 		Info.StopTime.Duration=TimeSpec.Time.Duration;
 		break;
 	}
-	return SendEvent(TVTest::EVENT_STARTRECORD,reinterpret_cast<LPARAM>(&Info));
+
+	SendEvent(TVTest::EVENT_STARTRECORD,reinterpret_cast<LPARAM>(&Info));
 }
 
 
-bool CPluginManager::SendRelayRecordEvent(LPCTSTR pszFileName)
+void CPluginManager::OnRecordingStarted()
 {
-	return SendEvent(TVTest::EVENT_RELAYRECORD,reinterpret_cast<LPARAM>(pszFileName));
+	OnRecordingStateChanged();
 }
 
 
-bool CPluginManager::SendStartupDoneEvent()
+void CPluginManager::OnRecordingStopped()
 {
-	return SendEvent(TVTest::EVENT_STARTUPDONE);
+	OnRecordingStateChanged();
+}
+
+
+void CPluginManager::OnRecordingPaused()
+{
+	OnRecordingStateChanged();
+}
+
+
+void CPluginManager::OnRecordingResumed()
+{
+	OnRecordingStateChanged();
+}
+
+
+void CPluginManager::OnRecordingStateChanged()
+{
+	const CRecordManager *pRecordManager=&GetAppClass().RecordManager;
+	int Status;
+
+	if (pRecordManager->IsRecording()) {
+		if (pRecordManager->IsPaused())
+			Status=TVTest::RECORD_STATUS_PAUSED;
+		else
+			Status=TVTest::RECORD_STATUS_RECORDING;
+	} else {
+		Status=TVTest::RECORD_STATUS_NOTRECORDING;
+	}
+	SendEvent(TVTest::EVENT_RECORDSTATUSCHANGE,Status);
+}
+
+
+void CPluginManager::OnRecordingFileChanged(LPCTSTR pszFileName)
+{
+	SendEvent(TVTest::EVENT_RELAYRECORD,reinterpret_cast<LPARAM>(pszFileName));
+}
+
+
+void CPluginManager::OnFullscreenChanged(bool fFullscreen)
+{
+	SendEvent(TVTest::EVENT_FULLSCREENCHANGE,fFullscreen);
+}
+
+
+void CPluginManager::OnPlaybackStateChanged(bool fPlayback)
+{
+	SendEvent(TVTest::EVENT_PREVIEWCHANGE,fPlayback);
+}
+
+
+void CPluginManager::OnVolumeChanged(int Volume)
+{
+	SendEvent(TVTest::EVENT_VOLUMECHANGE,Volume,false);
+}
+
+
+void CPluginManager::OnMuteChanged(bool fMute)
+{
+	SendEvent(TVTest::EVENT_VOLUMECHANGE,GetAppClass().UICore.GetVolume(),fMute);
+}
+
+
+void CPluginManager::OnStereoModeChanged(int StereoMode)
+{
+	SendEvent(TVTest::EVENT_STEREOMODECHANGE,StereoMode);
+}
+
+
+void CPluginManager::OnAudioStreamChanged(int Stream)
+{
+	SendEvent(TVTest::EVENT_AUDIOSTREAMCHANGE,Stream);
+}
+
+
+void CPluginManager::OnColorSchemeChanged()
+{
+	SendEvent(TVTest::EVENT_COLORCHANGE);
+}
+
+
+void CPluginManager::OnStandbyChanged(bool fStandby)
+{
+	SendEvent(TVTest::EVENT_STANDBY,fStandby);
+}
+
+
+void CPluginManager::OnExecute(LPCTSTR pszCommandLine)
+{
+	SendEvent(TVTest::EVENT_EXECUTE,reinterpret_cast<LPARAM>(pszCommandLine));
+}
+
+
+void CPluginManager::OnEngineReset()
+{
+	SendEvent(TVTest::EVENT_RESET);
+}
+
+
+void CPluginManager::OnStatisticsReset()
+{
+	SendEvent(TVTest::EVENT_STATUSRESET);
+}
+
+
+void CPluginManager::OnSettingsChanged()
+{
+	SendEvent(TVTest::EVENT_SETTINGSCHANGE);
+}
+
+
+void CPluginManager::OnClose()
+{
+	SendEvent(TVTest::EVENT_CLOSE);
+}
+
+
+void CPluginManager::OnStartupDone()
+{
+	SendEvent(TVTest::EVENT_STARTUPDONE);
 }
 
 

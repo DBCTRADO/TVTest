@@ -1152,8 +1152,7 @@ void CEpg::CProgramGuideEventHandler::OnServiceTitleLButtonDown(LPCTSTR pszDrive
 			if (g_App.pNetworkRemocon!=NULL) {
 				g_App.pNetworkRemocon->SetChannel(pChannelList->GetChannelInfo(Index)->GetChannelNo()-1);
 				g_App.ChannelManager.SetNetworkRemoconCurrentChannel(Index);
-				g_App.UICore.OnChannelChanged(0);
-				g_App.PluginManager.SendChannelChangeEvent();
+				g_App.AppEventManager.OnChannelChanged(0);
 			} else
 #endif
 			{

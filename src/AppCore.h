@@ -104,6 +104,7 @@ public:
 	bool StartReservedRecord();
 	bool CancelReservedRecord();
 	bool StopRecord();
+	bool PauseResumeRecording();
 	bool RelayRecord(LPCTSTR pszFileName);
 	bool CommandLineRecord(const CCommandLineOptions *pCmdLine);
 	bool CommandLineRecord(LPCTSTR pszFileName,const FILETIME *pStartTime,int Delay,int Duration);

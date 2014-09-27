@@ -521,6 +521,9 @@
     <ClCompile Include="BonTsEngine\EventInfo.cpp">
       <Filter>BonTsEngine\Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="AppEvent.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="BonTsEngine\Bitstream.h">
@@ -1014,6 +1017,9 @@
     </ClInclude>
     <ClInclude Include="BonTsEngine\EventInfo.h">
       <Filter>BonTsEngine\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="AppEvent.h">
+      <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

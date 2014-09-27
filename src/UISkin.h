@@ -2,13 +2,14 @@
 #define UI_SKIN_H
 
 
+#include "AppEvent.h"
 #include "NotificationBar.h"
 #include "BonTsEngine/Exception.h"
 
 
 class CUICore;
 
-class ABSTRACT_CLASS(CUISkin)
+class ABSTRACT_CLASS(CUISkin) : public TVTest::CAppEventHandler
 {
 protected:
 	enum {
@@ -54,22 +55,10 @@ protected:
 	virtual bool SetPanAndScan(const PanAndScanInfo &Info) = 0;
 	virtual bool GetPanAndScan(PanAndScanInfo *pInfo) const = 0;
 	virtual bool SetLogo(HBITMAP hbm) = 0;
-	virtual void OnVolumeChanged(bool fOSD) {}
-	virtual void OnMuteChanged() {}
-	virtual void OnStereoModeChanged() {}
-	virtual void OnAudioStreamChanged() {}
-	virtual bool OnStandbyChange(bool fStandby) { return true; }
-	virtual bool OnFullscreenChange(bool fFullscreen) = 0;
 	virtual bool SetAlwaysOnTop(bool fTop) = 0;
-	virtual void OnTunerChanged() {}
-	virtual void OnTunerOpened() {}
-	virtual void OnTunerClosed() {}
-	virtual void OnChannelListChanged() {}
-	virtual void OnChannelChanged(unsigned int Status) {}
-	virtual void OnServiceChanged() {}
-	virtual void OnRecordingStarted() {}
-	virtual void OnRecordingStopped() {}
-	virtual void On1SegModeChanged(bool f1SegMode) {}
+	virtual bool SetFullscreen(bool fFullscreen) = 0;
+	virtual bool SetStandby(bool fStandby) = 0;
+	virtual bool ShowVolumeOSD() = 0;
 
 	void SetWheelChannelChanging(bool fChanging,DWORD Delay=0);
 

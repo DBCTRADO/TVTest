@@ -201,7 +201,7 @@ bool CAppCore::InitializeChannel()
 	m_App.NetworkRemoconOptions.InitNetworkRemocon(&m_App.pNetworkRemocon,
 											 &m_App.CoreEngine,&m_App.ChannelManager);
 #endif
-	m_App.UICore.OnChannelListChanged();
+	m_App.AppEventManager.OnChannelListChanged();
 	m_App.ChannelScan.SetTuningSpaceList(m_App.ChannelManager.GetTuningSpaceList());
 	return true;
 }
@@ -323,7 +323,7 @@ bool CAppCore::UpdateCurrentChannelList(const CTuningSpaceList *pList)
 												   &m_App.CoreEngine,&m_App.ChannelManager);
 #endif
 
-	m_App.UICore.OnChannelListChanged();
+	m_App.AppEventManager.OnChannelListChanged();
 
 	UpdateChannelList(m_App.CoreEngine.GetDriverFileName(),pList);
 
@@ -486,8 +486,8 @@ bool CAppCore::SetChannel(int Space,int Channel,int ServiceID/*=-1*/,bool fStric
 		}
 
 		m_App.ChannelManager.SetCurrentServiceID(ServiceID);
-		m_App.UICore.OnChannelChanged(Space!=OldSpace ? CUICore::CHANNEL_CHANGED_STATUS_SPACE_CHANGED : 0);
-		m_App.PluginManager.SendChannelChangeEvent();
+		m_App.AppEventManager.OnChannelChanged(
+			Space!=OldSpace ? AppEvent::CHANNEL_CHANGED_STATUS_SPACE_CHANGED : 0);
 	} else {
 		if (ServiceID<=0) {
 			if (pChInfo->GetServiceID()>0)
@@ -583,8 +583,7 @@ bool CAppCore::SwitchChannelByNo(int ChannelNo,bool fSwitchService)
 		m_App.pNetworkRemocon->SetChannel(ChannelNo-1);
 		m_App.ChannelManager.SetNetworkRemoconCurrentChannel(
 			m_App.ChannelManager.GetCurrentChannelList()->FindChannelNo(ChannelNo));
-		m_App.UICore.OnChannelChanged(0);
-		m_App.PluginManager.SendChannelChangeEvent();
+		m_App.AppEventManager.OnChannelChanged(0);
 		return true;
 	}
 #endif
@@ -727,9 +726,9 @@ bool CAppCore::FollowChannelChange(WORD TransportStreamID,WORD ServiceID)
 	if (!m_App.ChannelManager.SetCurrentChannel(Space,Channel))
 		return false;
 	m_App.ChannelManager.SetCurrentServiceID(0);
-	m_App.UICore.OnChannelChanged(CUICore::CHANNEL_CHANGED_STATUS_DETECTED
-		| (fSpaceChanged ? CUICore::CHANNEL_CHANGED_STATUS_SPACE_CHANGED : 0));
-	m_App.PluginManager.SendChannelChangeEvent();
+	m_App.AppEventManager.OnChannelChanged(
+		AppEvent::CHANNEL_CHANGED_STATUS_DETECTED
+		| (fSpaceChanged ? AppEvent::CHANNEL_CHANGED_STATUS_SPACE_CHANGED : 0));
 	return true;
 }
 
@@ -819,14 +818,13 @@ bool CAppCore::SetServiceByID(WORD ServiceID,unsigned int Flags)
 									   ServiceID);
 		if (Index>=0) {
 			m_App.ChannelManager.SetCurrentChannel(m_App.ChannelManager.GetCurrentSpace(),Index);
-			m_App.UICore.OnChannelChanged(0);
-			m_App.PluginManager.SendChannelChangeEvent();
+			m_App.AppEventManager.OnChannelChanged(0);
 			fChannelChanged=true;
 		}
 	}
 
 	if (!fChannelChanged)
-		m_App.UICore.OnServiceChanged();
+		m_App.AppEventManager.OnServiceChanged();
 
 	return true;
 }
@@ -978,17 +976,15 @@ bool CAppCore::OpenTuner(LPCTSTR pszFileName)
 	fOK=OpenAndInitializeTuner();
 	if (fOK) {
 		InitializeChannel();
-		m_App.PluginManager.SendDriverChangeEvent();
 		::SetCursor(hcurOld);
 	} else {
-		m_App.PluginManager.SendDriverChangeEvent();
 		::SetCursor(hcurOld);
 		OnError(&m_App.CoreEngine,TEXT("BonDriverの初期化ができません。"));
 	}
 
 	m_App.CoreEngine.m_DtvEngine.SetTracer(nullptr);
 	m_App.StatusView.SetSingleText(nullptr);
-	m_App.UICore.OnTunerChanged();
+	m_App.AppEventManager.OnTunerChanged();
 
 	return fOK;
 }
@@ -1038,7 +1034,7 @@ bool CAppCore::OpenTuner()
 
 	if (!m_App.CoreEngine.IsTunerOpen()) {
 		if (OpenAndInitializeTuner(OPEN_CAS_CARD_NO_UI)) {
-			m_App.UICore.OnTunerOpened();
+			m_App.AppEventManager.OnTunerOpened();
 		} else {
 			OnError(&m_App.CoreEngine,TEXT("BonDriverの初期化ができません。"));
 			fOK=false;
@@ -1091,7 +1087,7 @@ bool CAppCore::CloseTuner()
 		m_App.CoreEngine.CloseTuner();
 		SaveCurrentChannel();
 		m_App.ChannelManager.SetCurrentChannel(m_App.ChannelManager.GetCurrentSpace(),-1);
-		m_App.UICore.OnTunerClosed();
+		m_App.AppEventManager.OnTunerClosed();
 	}
 
 	return true;
@@ -1143,7 +1139,7 @@ bool CAppCore::Set1SegMode(bool f1Seg,bool fServiceChange)
 			}
 		}
 
-		m_App.UICore.On1SegModeChanged(m_f1SegMode);
+		m_App.AppEventManager.On1SegModeChanged(m_f1SegMode);
 	}
 
 	return true;
@@ -1453,7 +1449,11 @@ bool CAppCore::StartRecord(LPCTSTR pszFileName,
 	}
 	if (!GenerateRecordFileName(szFileName,lengthof(szFileName)))
 		return false;
-	m_App.PluginManager.SendStartRecordEvent(&m_App.RecordManager,szFileName,lengthof(szFileName));
+	AppEvent::RecordingStartInfo RecStartInfo;
+	RecStartInfo.pRecordManager=&m_App.RecordManager;
+	RecStartInfo.pszFileName=szFileName;
+	RecStartInfo.MaxFileName=lengthof(szFileName);
+	m_App.AppEventManager.OnRecordingStart(&RecStartInfo);
 	m_App.CoreEngine.ResetErrorCount();
 	if (!m_App.RecordManager.StartRecord(&m_App.CoreEngine.m_DtvEngine,szFileName,fTimeShift)) {
 		OnError(&m_App.RecordManager,TEXT("録画を開始できません。"));
@@ -1462,7 +1462,7 @@ bool CAppCore::StartRecord(LPCTSTR pszFileName,
 	m_App.ResidentManager.SetStatus(CResidentManager::STATUS_RECORDING,
 									CResidentManager::STATUS_RECORDING);
 	AddLog(TEXT("録画開始 %s"),szFileName);
-	m_App.UICore.OnRecordingStarted();
+	m_App.AppEventManager.OnRecordingStarted();
 	return true;
 }
 
@@ -1509,7 +1509,11 @@ bool CAppCore::StartReservedRecord()
 			return false;
 	}
 	OpenTuner();
-	m_App.PluginManager.SendStartRecordEvent(&m_App.RecordManager,szFileName,lengthof(szFileName));
+	AppEvent::RecordingStartInfo RecStartInfo;
+	RecStartInfo.pRecordManager=&m_App.RecordManager;
+	RecStartInfo.pszFileName=szFileName;
+	RecStartInfo.MaxFileName=lengthof(szFileName);
+	m_App.AppEventManager.OnRecordingStart(&RecStartInfo);
 	m_App.CoreEngine.ResetErrorCount();
 	if (!m_App.RecordManager.StartRecord(&m_App.CoreEngine.m_DtvEngine,szFileName)) {
 		m_App.RecordManager.CancelReserve();
@@ -1519,7 +1523,7 @@ bool CAppCore::StartReservedRecord()
 	m_App.ResidentManager.SetStatus(CResidentManager::STATUS_RECORDING,
 									CResidentManager::STATUS_RECORDING);
 	AddLog(TEXT("録画開始 %s"),szFileName);
-	m_App.UICore.OnRecordingStarted();
+	m_App.AppEventManager.OnRecordingStarted();
 	return true;
 }
 
@@ -1552,9 +1556,28 @@ bool CAppCore::StopRecord()
 	AddLog(TEXT("録画停止 %s (書き出しサイズ %s Bytes)"),szFileName,szSize);
 
 	m_App.ResidentManager.SetStatus(0,CResidentManager::STATUS_RECORDING);
-	m_App.UICore.OnRecordingStopped();
+	m_App.AppEventManager.OnRecordingStopped();
 	if (m_fExitOnRecordingStop)
 		m_App.Exit();
+
+	return true;
+}
+
+
+bool CAppCore::PauseResumeRecording()
+{
+	if (!m_App.RecordManager.IsRecording())
+		return false;
+	if (!m_App.RecordManager.PauseRecord())
+		return false;
+
+	if (m_App.RecordManager.IsPaused()) {
+		AddLog(TEXT("録画一時停止"));
+		m_App.AppEventManager.OnRecordingPaused();
+	} else {
+		AddLog(TEXT("録画再開"));
+		m_App.AppEventManager.OnRecordingResumed();
+	}
 
 	return true;
 }
@@ -1569,7 +1592,7 @@ bool CAppCore::RelayRecord(LPCTSTR pszFileName)
 		return false;
 	}
 	AddLog(TEXT("録画ファイルを切り替えました %s"),pszFileName);
-	m_App.PluginManager.SendRelayRecordEvent(pszFileName);
+	m_App.AppEventManager.OnRecordingFileChanged(pszFileName);
 	return true;
 }
 
@@ -1630,7 +1653,7 @@ LPCTSTR CAppCore::GetDefaultRecordFolder() const
 void CAppCore::BeginChannelScan(int Space)
 {
 	m_App.ChannelManager.SetCurrentChannel(Space,-1);
-	m_App.UICore.OnChannelChanged(CUICore::CHANNEL_CHANGED_STATUS_SPACE_CHANGED);
+	m_App.AppEventManager.OnChannelChanged(AppEvent::CHANNEL_CHANGED_STATUS_SPACE_CHANGED);
 }
 
 

@@ -45,10 +45,14 @@ CUICore::~CUICore()
 
 bool CUICore::SetSkin(CUISkin *pSkin)
 {
-	if (m_pSkin!=nullptr)
+	if (m_pSkin!=nullptr) {
+		m_App.AppEventManager.RemoveEventHandler(m_pSkin);
 		m_pSkin->m_pCore=nullptr;
-	if (pSkin!=nullptr)
+	}
+	if (pSkin!=nullptr) {
 		pSkin->m_pCore=this;
+		m_App.AppEventManager.AddEventHandler(pSkin);
+	}
 	m_pSkin=pSkin;
 	return true;
 }
@@ -168,9 +172,9 @@ bool CUICore::SetVolume(int Volume,bool fOSD)
 {
 	if (!m_App.CoreEngine.SetVolume(Volume))
 		return false;
-	if (m_pSkin!=nullptr)
-		m_pSkin->OnVolumeChanged(fOSD);
-	m_App.PluginManager.SendVolumeChangeEvent(Volume,false);
+	m_App.AppEventManager.OnVolumeChanged(Volume);
+	if (fOSD && m_pSkin!=nullptr)
+		m_pSkin->ShowVolumeOSD();
 	return true;
 }
 
@@ -186,9 +190,7 @@ bool CUICore::SetMute(bool fMute)
 	if (fMute!=GetMute()) {
 		if (!m_App.CoreEngine.SetMute(fMute))
 			return false;
-		if (m_pSkin!=nullptr)
-			m_pSkin->OnMuteChanged();
-		m_App.PluginManager.SendVolumeChangeEvent(GetVolume(),fMute);
+		m_App.AppEventManager.OnMuteChanged(fMute);
 	}
 	return true;
 }
@@ -205,9 +207,7 @@ bool CUICore::SetStereoMode(int StereoMode)
 	/*if (StereoMode!=GetStereoMode())*/ {
 		if (!m_App.CoreEngine.SetStereoMode(StereoMode))
 			return false;
-		if (m_pSkin!=nullptr)
-			m_pSkin->OnStereoModeChanged();
-		m_App.PluginManager.SendStereoModeChangeEvent(StereoMode);
+		m_App.AppEventManager.OnStereoModeChanged(StereoMode);
 	}
 	return true;
 }
@@ -230,9 +230,7 @@ bool CUICore::SetAudioStream(int Stream)
 	if (Stream!=GetAudioStream()) {
 		if (!m_App.CoreEngine.m_DtvEngine.SetAudioStream(Stream))
 			return false;
-		if (m_pSkin!=nullptr)
-			m_pSkin->OnAudioStreamChanged();
-		m_App.PluginManager.SendAudioStreamChangeEvent(Stream);
+		m_App.AppEventManager.OnAudioStreamChanged(Stream);
 	}
 	return true;
 }
@@ -354,10 +352,11 @@ bool CUICore::SetStandby(bool fStandby)
 {
 	if (m_fStandby!=fStandby) {
 		if (m_pSkin!=nullptr) {
-			if (!m_pSkin->OnStandbyChange(fStandby))
+			if (!m_pSkin->SetStandby(fStandby))
 				return false;
 		}
 		m_fStandby=fStandby;
+		m_App.AppEventManager.OnStandbyChanged(fStandby);
 	}
 	return true;
 }
@@ -380,10 +379,10 @@ bool CUICore::SetFullscreen(bool fFullscreen)
 	if (m_fFullscreen!=fFullscreen) {
 		if (m_pSkin==nullptr)
 			return false;
-		if (!m_pSkin->OnFullscreenChange(fFullscreen))
+		if (!m_pSkin->SetFullscreen(fFullscreen))
 			return false;
 		m_fFullscreen=fFullscreen;
-		m_App.PluginManager.SendFullscreenChangeEvent(fFullscreen);
+		m_App.AppEventManager.OnFullscreenChanged(fFullscreen);
 	}
 	return true;
 }
@@ -1043,83 +1042,4 @@ bool CUICore::ProcessDialogMessage(MSG *pMessage)
 			return true;
 	}
 	return false;
-}
-
-
-void CUICore::OnTunerChanged()
-{
-	if (m_pSkin!=nullptr)
-		m_pSkin->OnTunerChanged();
-	UpdateTitle();
-	UpdateIcon();
-}
-
-
-void CUICore::OnTunerOpened()
-{
-	if (m_pSkin!=nullptr)
-		m_pSkin->OnTunerOpened();
-	UpdateTitle();
-	UpdateIcon();
-}
-
-
-void CUICore::OnTunerClosed()
-{
-	if (m_pSkin!=nullptr)
-		m_pSkin->OnTunerClosed();
-	UpdateTitle();
-	UpdateIcon();
-}
-
-
-void CUICore::OnChannelListChanged()
-{
-	if (m_pSkin!=nullptr)
-		m_pSkin->OnChannelListChanged();
-	UpdateTitle();
-	UpdateIcon();
-}
-
-
-void CUICore::OnChannelChanged(unsigned int Status)
-{
-	if (m_pSkin!=nullptr)
-		m_pSkin->OnChannelChanged(Status);
-	UpdateTitle();
-	UpdateIcon();
-}
-
-
-void CUICore::OnServiceChanged()
-{
-	if (m_pSkin!=nullptr)
-		m_pSkin->OnServiceChanged();
-	UpdateTitle();
-	m_App.PluginManager.SendServiceChangeEvent();
-}
-
-
-void CUICore::OnRecordingStarted()
-{
-	if (m_pSkin!=nullptr)
-		m_pSkin->OnRecordingStarted();
-	UpdateTitle();
-	m_App.PluginManager.SendRecordStatusChangeEvent();
-}
-
-
-void CUICore::OnRecordingStopped()
-{
-	if (m_pSkin!=nullptr)
-		m_pSkin->OnRecordingStopped();
-	UpdateTitle();
-	m_App.PluginManager.SendRecordStatusChangeEvent();
-}
-
-
-void CUICore::On1SegModeChanged(bool f1SegMode)
-{
-	if (m_pSkin!=nullptr)
-		m_pSkin->On1SegModeChanged(f1SegMode);
 }

@@ -41,11 +41,6 @@ public:
 		PANANDSCAN_CUSTOM
 	};
 
-	enum {
-		CHANNEL_CHANGED_STATUS_SPACE_CHANGED = 0x0001U,
-		CHANNEL_CHANGED_STATUS_DETECTED      = 0x0002U
-	};
-
 	CUICore(CAppMain &App);
 	~CUICore();
 	bool SetSkin(CUISkin *pSkin);
@@ -115,16 +110,6 @@ public:
 	bool RegisterModelessDialog(CBasicDialog *pDialog);
 	bool UnregisterModelessDialog(CBasicDialog *pDialog);
 	bool ProcessDialogMessage(MSG *pMessage);
-
-	void OnTunerChanged();
-	void OnTunerOpened();
-	void OnTunerClosed();
-	void OnChannelListChanged();
-	void OnChannelChanged(unsigned int Status);
-	void OnServiceChanged();
-	void OnRecordingStarted();
-	void OnRecordingStopped();
-	void On1SegModeChanged(bool f1SegMode);
 
 private:
 	CAppMain &m_App;

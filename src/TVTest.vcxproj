@@ -454,6 +454,7 @@
     <ClCompile Include="Accelerator.cpp" />
     <ClCompile Include="Aero.cpp" />
     <ClCompile Include="AppCore.cpp" />
+    <ClCompile Include="AppEvent.cpp" />
     <ClCompile Include="AppUtil.cpp" />
     <ClCompile Include="BasicWindow.cpp" />
     <ClCompile Include="BonTsEngine\Bitstream.cpp" />
@@ -615,6 +616,7 @@
     <ClInclude Include="Accelerator.h" />
     <ClInclude Include="Aero.h" />
     <ClInclude Include="AppCore.h" />
+    <ClInclude Include="AppEvent.h" />
     <ClInclude Include="AppUtil.h" />
     <ClInclude Include="BasicWindow.h" />
     <ClInclude Include="BonTsEngine\Bitstream.h" />

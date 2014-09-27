@@ -537,22 +537,27 @@ private:
 	bool SetPanAndScan(const PanAndScanInfo &Info) override;
 	bool GetPanAndScan(PanAndScanInfo *pInfo) const override;
 	bool SetLogo(HBITMAP hbm) override;
-	void OnVolumeChanged(bool fOSD) override;
-	void OnMuteChanged() override;
-	void OnStereoModeChanged() override;
-	void OnAudioStreamChanged() override;
-	bool OnStandbyChange(bool fStandby) override;
-	bool OnFullscreenChange(bool fFullscreen) override;
 	bool SetAlwaysOnTop(bool fTop) override;
+	bool SetFullscreen(bool fFullscreen) override;
+	bool SetStandby(bool fStandby) override;
+	bool ShowVolumeOSD() override;
+
+// CAppEventHandler
 	void OnTunerChanged() override;
 	void OnTunerOpened() override;
 	void OnTunerClosed() override;
-	void OnChannelListChanged() override;
 	void OnChannelChanged(unsigned int Status) override;
 	void OnServiceChanged() override;
+	void OnChannelListChanged() override;
 	void OnRecordingStarted() override;
 	void OnRecordingStopped() override;
+	void OnRecordingPaused() override;
+	void OnRecordingResumed() override;
 	void On1SegModeChanged(bool f1SegMode) override;
+	void OnVolumeChanged(int Volume) override;
+	void OnMuteChanged(bool fMute) override;
+	void OnStereoModeChanged(int StereoMode) override;
+	void OnAudioStreamChanged(int Stream) override;
 
 // COSDManager::CEventHandler
 	bool GetOSDWindow(HWND *phwndParent,RECT *pRect,bool *pfForcePseudoOSD) override;
@@ -569,6 +574,7 @@ private:
 	void OnCommand(HWND hwnd,int id,HWND hwndCtl,UINT codeNotify);
 	void OnTimer(HWND hwnd,UINT id);
 	bool OnInitMenuPopup(HMENU hmenu);
+	void OnRecordingStateChanged();
 	void OnEventChanged();
 	void AutoSelectStereoMode();
 	int GetZoomPercentage();

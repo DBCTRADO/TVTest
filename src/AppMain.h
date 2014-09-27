@@ -3,6 +3,7 @@
 
 
 #include "AppCore.h"
+#include "AppEvent.h"
 #include "UICore.h"
 #include "Graphics.h"
 #include "Style.h"
@@ -379,6 +380,7 @@ public:
 #endif
 
 	CAppCore Core;
+	TVTest::CAppEventManager AppEventManager;
 	CCoreEngine CoreEngine;
 	CUICore UICore;
 	CLogger Logger;

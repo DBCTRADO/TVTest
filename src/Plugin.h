@@ -4,6 +4,7 @@
 
 #include <vector>
 #include "TVTestPlugin.h"
+#include "AppEvent.h"
 #include "Options.h"
 #include "MediaData.h"
 #include "BonTsEngine/Exception.h"
@@ -124,7 +125,7 @@ public:
 	static LRESULT OnPluginMessage(WPARAM wParam,LPARAM lParam);
 };
 
-class CPluginManager
+class CPluginManager : public TVTest::CAppEventHandler
 {
 	struct MenuCommandInfo {
 		CPlugin *pPlugin;
@@ -140,6 +141,34 @@ class CPluginManager
 	bool SendEvent(UINT Event,LPARAM lParam1=0,LPARAM lParam2=0);
 	bool SendProgramGuideEvent(UINT Event,LPARAM Param1=0,LPARAM Param2=0);
 	bool SendProgramGuideProgramEvent(UINT Event,const CEventInfoData &EventInfo,LPARAM Param);
+	void OnRecordingStateChanged();
+
+// CAppEventHandler
+	void OnTunerChanged() override;
+	void OnChannelChanged(unsigned int Status) override;
+	void OnServiceChanged() override;
+	void OnServiceInfoUpdated() override;
+	void OnServiceListUpdated() override;
+	void OnRecordingStart(TVTest::AppEvent::RecordingStartInfo *pInfo) override;
+	void OnRecordingStarted() override;
+	void OnRecordingStopped() override;
+	void OnRecordingPaused() override;
+	void OnRecordingResumed() override;
+	void OnRecordingFileChanged(LPCTSTR pszFileName) override;
+	void OnFullscreenChanged(bool fFullscreen) override;
+	void OnPlaybackStateChanged(bool fPlayback) override;
+	void OnVolumeChanged(int Volume) override;
+	void OnMuteChanged(bool fMute) override;
+	void OnStereoModeChanged(int StereoMode) override;
+	void OnAudioStreamChanged(int Stream) override;
+	void OnColorSchemeChanged() override;
+	void OnStandbyChanged(bool fStandby) override;
+	void OnExecute(LPCTSTR pszCommandLine) override;
+	void OnEngineReset() override;
+	void OnStatisticsReset() override;
+	void OnSettingsChanged() override;
+	void OnClose() override;
+	void OnStartupDone() override;
 
 public:
 	CPluginManager();
@@ -158,26 +187,6 @@ public:
 	bool OnPluginCommand(LPCTSTR pszCommand);
 	bool OnProgramGuideCommand(LPCTSTR pszCommand,UINT Action,const CEventInfoData *pEvent=NULL,
 							   const POINT *pCursorPos=NULL,const RECT *pItemRect=NULL);
-	bool SendChannelChangeEvent();
-	bool SendServiceChangeEvent();
-	bool SendDriverChangeEvent();
-	bool SendServiceUpdateEvent();
-	bool SendRecordStatusChangeEvent();
-	bool SendFullscreenChangeEvent(bool fFullscreen);
-	bool SendPreviewChangeEvent(bool fPreview);
-	bool SendVolumeChangeEvent(int Volume,bool fMute);
-	bool SendStereoModeChangeEvent(int StereoMode);
-	bool SendColorChangeEvent();
-	bool SendStandbyEvent(bool fStandby);
-	bool SendExecuteEvent(LPCTSTR pszCommandLine);
-	bool SendResetEvent();
-	bool SendStatusResetEvent();
-	bool SendAudioStreamChangeEvent(int Stream);
-	bool SendSettingsChangeEvent();
-	bool SendCloseEvent();
-	bool SendStartRecordEvent(const class CRecordManager *pRecordManager,LPTSTR pszFileName,int MaxFileName);
-	bool SendRelayRecordEvent(LPCTSTR pszFileName);
-	bool SendStartupDoneEvent();
 	bool SendProgramGuideInitializeEvent(HWND hwnd);
 	bool SendProgramGuideFinalizeEvent(HWND hwnd);
 	bool SendProgramGuideInitializeMenuEvent(HMENU hmenu,UINT *pCommand);

@@ -201,6 +201,8 @@ CAppMain::CAppMain()
 {
 	UICore.SetSkin(&MainWindow);
 
+	AppEventManager.AddEventHandler(&PluginManager);
+
 	StreamInfo.SetEventHandler(&m_StreamInfoEventHandler);
 	CaptureWindow.SetEventHandler(&m_CaptureWindowEventHandler);
 }
@@ -863,7 +865,7 @@ int CAppMain::Main(HINSTANCE hInstance,LPCTSTR pszCmdLine,int nCmdShow)
 			StatusView.SetSingleText(TEXT("BonDriverの読み込み中..."));
 			if (Core.OpenAndInitializeTuner(
 					!Core.IsSilent()?CAppCore::OPEN_CAS_CARD_RETRY:0)) {
-				UICore.OnTunerChanged();
+				AppEventManager.OnTunerChanged();
 			} else {
 				Core.OnError(&CoreEngine,TEXT("BonDriverの初期化ができません。"));
 			}
@@ -1113,7 +1115,7 @@ int CAppMain::Main(HINSTANCE hInstance,LPCTSTR pszCmdLine,int nCmdShow)
 		}
 	}
 
-	PluginManager.SendStartupDoneEvent();
+	AppEventManager.OnStartupDone();
 
 	// メッセージループ
 	MSG msg;
@@ -1214,7 +1216,7 @@ bool CAppMain::ShowOptionDialog(HWND hwndOwner,int StartPage)
 
 	SaveSettings(SETTINGS_SAVE_OPTIONS);
 
-	PluginManager.SendSettingsChangeEvent();
+	AppEventManager.OnSettingsChanged();
 
 	return true;
 }
@@ -1374,7 +1376,7 @@ bool CAppMain::ProcessCommandLine(LPCTSTR pszCmdLine)
 
 	CCommandLineOptions CmdLine;
 
-	PluginManager.SendExecuteEvent(pszCmdLine);
+	AppEventManager.OnExecute(pszCmdLine);
 
 	CmdLine.Parse(pszCmdLine);
 
@@ -1442,7 +1444,7 @@ bool CAppMain::ApplyColorScheme(const CColorScheme *pColorScheme)
 	Epg.ProgramGuideFrame.SetTheme(&ThemeManager);
 	Epg.ProgramGuideDisplay.SetTheme(&ThemeManager);
 
-	PluginManager.SendColorChangeEvent();
+	AppEventManager.OnColorSchemeChanged();
 
 	return true;
 }

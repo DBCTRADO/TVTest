@@ -82,7 +82,7 @@ bool CBasicViewer::EnableViewer(bool fEnable)
 		if (m_App.PlaybackOptions.GetMinTimerResolution())
 			m_App.CoreEngine.SetMinTimerResolution(fEnable);
 		m_fEnabled=fEnable;
-		m_App.PluginManager.SendPreviewChangeEvent(fEnable);
+		m_App.AppEventManager.OnPlaybackStateChanged(fEnable);
 	}
 	return true;
 }
@@ -374,7 +374,7 @@ bool CMainWindow::FinalizeViewer()
 }
 
 
-bool CMainWindow::OnFullscreenChange(bool fFullscreen)
+bool CMainWindow::SetFullscreen(bool fFullscreen)
 {
 	if (fFullscreen) {
 		if (::IsIconic(m_hwnd))
@@ -1376,7 +1376,6 @@ LRESULT CMainWindow::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 						}
 					}
 				}
-				m_App.PluginManager.SendServiceUpdateEvent();
 			} else if (pInfo->m_fServiceListEmpty && pInfo->m_fStreamChanged
 					&& !m_App.Core.IsChannelScanning()
 					&& !m_fProgramGuideUpdating) {
@@ -1392,6 +1391,11 @@ LRESULT CMainWindow::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 #endif
 
 			m_App.Panel.InfoPanel.UpdateItem(CInformationPanel::ITEM_SERVICE);
+
+			if (wParam!=0)
+				m_App.AppEventManager.OnServiceListUpdated();
+			else
+				m_App.AppEventManager.OnServiceInfoUpdated();
 		}
 		return 0;
 
@@ -1611,7 +1615,7 @@ LRESULT CMainWindow::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 
 		//m_App.CoreEngine.EnableMediaViewer(false);
 
-		m_App.PluginManager.SendCloseEvent();
+		m_App.AppEventManager.OnClose();
 
 		m_Fullscreen.Destroy();
 
@@ -2462,7 +2466,7 @@ void CMainWindow::OnCommand(HWND hwnd,int id,HWND hwndCtl,UINT codeNotify)
 
 	case CM_RESET:
 		m_App.CoreEngine.m_DtvEngine.ResetEngine();
-		m_App.PluginManager.SendResetEvent();
+		m_App.AppEventManager.OnEngineReset();
 		return;
 
 	case CM_RESETVIEWER:
@@ -2512,12 +2516,7 @@ void CMainWindow::OnCommand(HWND hwnd,int id,HWND hwndCtl,UINT codeNotify)
 		return;
 
 	case CM_RECORD_PAUSE:
-		if (m_App.RecordManager.IsRecording()) {
-			m_App.RecordManager.PauseRecord();
-			m_App.StatusView.UpdateItem(STATUS_ITEM_RECORD);
-			m_App.Logger.AddLog(m_App.RecordManager.IsPaused()?TEXT("˜^‰æˆêŽž’âŽ~"):TEXT("˜^‰æÄŠJ"));
-			m_App.PluginManager.SendRecordStatusChangeEvent();
-		}
+		m_App.Core.PauseResumeRecording();
 		return;
 
 	case CM_RECORDOPTION:
@@ -2889,7 +2888,7 @@ void CMainWindow::OnCommand(HWND hwnd,int id,HWND hwndCtl,UINT codeNotify)
 		m_App.CoreEngine.ResetErrorCount();
 		m_App.StatusView.UpdateItem(STATUS_ITEM_ERROR);
 		m_App.Panel.InfoPanel.UpdateItem(CInformationPanel::ITEM_ERROR);
-		m_App.PluginManager.SendStatusResetEvent();
+		m_App.AppEventManager.OnStatisticsReset();
 		return;
 
 	case CM_SHOWRECORDREMAINTIME:
@@ -4202,6 +4201,9 @@ void CMainWindow::OnTunerChanged()
 	if (m_App.SideBarOptions.GetShowChannelLogo())
 		m_App.SideBar.Invalidate();
 	m_fForceResetPanAndScan=true;
+
+	m_pCore->UpdateTitle();
+	m_pCore->UpdateIcon();
 }
 
 
@@ -4209,11 +4211,16 @@ void CMainWindow::OnTunerOpened()
 {
 	if (m_fProgramGuideUpdating)
 		EndProgramGuideUpdate(0);
+
+	m_pCore->UpdateTitle();
+	m_pCore->UpdateIcon();
 }
 
 
 void CMainWindow::OnTunerClosed()
 {
+	m_pCore->UpdateTitle();
+	m_pCore->UpdateIcon();
 }
 
 
@@ -4227,19 +4234,22 @@ void CMainWindow::OnChannelListChanged()
 	}
 	if (m_App.SideBarOptions.GetShowChannelLogo())
 		m_App.SideBar.Invalidate();
+
+	m_pCore->UpdateTitle();
+	m_pCore->UpdateIcon();
 }
 
 
 void CMainWindow::OnChannelChanged(unsigned int Status)
 {
-	const bool fSpaceChanged=(Status & CUICore::CHANNEL_CHANGED_STATUS_SPACE_CHANGED)!=0;
+	const bool fSpaceChanged=(Status & AppEvent::CHANNEL_CHANGED_STATUS_SPACE_CHANGED)!=0;
 	const int CurSpace=m_App.ChannelManager.GetCurrentSpace();
 	const CChannelInfo *pCurChannel=m_App.ChannelManager.GetCurrentChannelInfo();
 
 	SetWheelChannelChanging(false);
 
 	if (m_fProgramGuideUpdating && !m_fEpgUpdateChannelChange
-			&& (Status & CUICore::CHANNEL_CHANGED_STATUS_DETECTED)==0)
+			&& (Status & AppEvent::CHANNEL_CHANGED_STATUS_DETECTED)==0)
 		EndProgramGuideUpdate(0);
 
 	if (CurSpace>CChannelManager::SPACE_INVALID)
@@ -4306,6 +4316,9 @@ void CMainWindow::OnChannelChanged(unsigned int Status)
 	m_CurEventStereoMode=-1;
 	*/
 	m_fForceResetPanAndScan=true;
+
+	m_pCore->UpdateTitle();
+	m_pCore->UpdateIcon();
 }
 
 
@@ -4370,7 +4383,9 @@ void CMainWindow::OnServiceChanged()
 	if (m_App.Panel.Form.GetCurPageID()==PANEL_ID_INFORMATION)
 		m_App.Panel.InfoPanel.UpdateItem(CInformationPanel::ITEM_PROGRAMINFO);
 
-	OnAudioStreamChanged();
+	OnAudioStreamChanged(m_pCore->GetAudioStream());
+
+	m_pCore->UpdateTitle();
 }
 
 
@@ -4460,6 +4475,8 @@ void CMainWindow::OnRecordingStarted()
 	m_fAlertedLowFreeSpace=false;
 	if (m_App.OSDOptions.IsOSDEnabled(COSDOptions::OSD_RECORDING))
 		m_App.OSDManager.ShowOSD(TEXT("œ˜^‰æ"));
+
+	m_pCore->UpdateTitle();
 }
 
 
@@ -4475,6 +4492,27 @@ void CMainWindow::OnRecordingStopped()
 		m_App.OSDManager.ShowOSD(TEXT("¡˜^‰æ’âŽ~"));
 	if (m_pCore->GetStandby())
 		m_App.Core.CloseTuner();
+
+	m_pCore->UpdateTitle();
+}
+
+
+void CMainWindow::OnRecordingPaused()
+{
+	OnRecordingStateChanged();
+}
+
+
+void CMainWindow::OnRecordingResumed()
+{
+	OnRecordingStateChanged();
+}
+
+
+void CMainWindow::OnRecordingStateChanged()
+{
+	m_App.StatusView.UpdateItem(STATUS_ITEM_RECORD);
+	m_App.Panel.InfoPanel.UpdateItem(CInformationPanel::ITEM_RECORD);
 }
 
 
@@ -4674,33 +4712,35 @@ HWND CMainWindow::GetViewerWindow() const
 }
 
 
-void CMainWindow::OnVolumeChanged(bool fOSD)
+bool CMainWindow::ShowVolumeOSD()
 {
-	const int Volume=m_pCore->GetVolume();
-
-	m_App.StatusView.UpdateItem(STATUS_ITEM_VOLUME);
-	m_App.Panel.ControlPanel.UpdateItem(CONTROLPANEL_ITEM_VOLUME);
-	m_App.MainMenu.CheckItem(CM_VOLUME_MUTE,false);
-	if (fOSD && m_App.OSDOptions.IsOSDEnabled(COSDOptions::OSD_VOLUME)
-			&& GetVisible() && !::IsIconic(m_hwnd))
-		m_App.OSDManager.ShowVolumeOSD(Volume);
+	if (m_App.OSDOptions.IsOSDEnabled(COSDOptions::OSD_VOLUME)
+			&& GetVisible() && !::IsIconic(m_hwnd)) {
+		m_App.OSDManager.ShowVolumeOSD(m_pCore->GetVolume());
+		return true;
+	}
+	return false;
 }
 
 
-void CMainWindow::OnMuteChanged()
+void CMainWindow::OnVolumeChanged(int Volume)
 {
-	const bool fMute=m_pCore->GetMute();
+	m_App.StatusView.UpdateItem(STATUS_ITEM_VOLUME);
+	m_App.Panel.ControlPanel.UpdateItem(CONTROLPANEL_ITEM_VOLUME);
+	m_App.MainMenu.CheckItem(CM_VOLUME_MUTE,false);
+}
 
+
+void CMainWindow::OnMuteChanged(bool fMute)
+{
 	m_App.StatusView.UpdateItem(STATUS_ITEM_VOLUME);
 	m_App.Panel.ControlPanel.UpdateItem(CONTROLPANEL_ITEM_VOLUME);
 	m_App.MainMenu.CheckItem(CM_VOLUME_MUTE,fMute);
 }
 
 
-void CMainWindow::OnStereoModeChanged()
+void CMainWindow::OnStereoModeChanged(int StereoMode)
 {
-	const int StereoMode=m_pCore->GetStereoMode();
-
 	m_CurEventStereoMode=StereoMode;
 	/*
 	m_App.MainMenu.CheckRadioItem(CM_STEREO_THROUGH,CM_STEREO_RIGHT,
@@ -4711,10 +4751,8 @@ void CMainWindow::OnStereoModeChanged()
 }
 
 
-void CMainWindow::OnAudioStreamChanged()
+void CMainWindow::OnAudioStreamChanged(int Stream)
 {
-	const int Stream=m_pCore->GetAudioStream();
-
 	m_App.MainMenu.CheckRadioItem(CM_AUDIOSTREAM_FIRST,
 								  CM_AUDIOSTREAM_FIRST+m_pCore->GetNumAudioStreams()-1,
 								  CM_AUDIOSTREAM_FIRST+Stream);
@@ -5340,7 +5378,7 @@ void CMainWindow::ShowFloatingWindows(bool fShow)
 }
 
 
-bool CMainWindow::OnStandbyChange(bool fStandby)
+bool CMainWindow::SetStandby(bool fStandby)
 {
 	if (fStandby) {
 		if (m_fStandbyInit)
@@ -5353,7 +5391,6 @@ bool CMainWindow::OnStandbyChange(bool fStandby)
 			m_pCore->SetFullscreen(false);
 		ShowFloatingWindows(false);
 		SetVisible(false);
-		m_App.PluginManager.SendStandbyEvent(true);
 
 		if (!m_fProgramGuideUpdating) {
 			StoreTunerResumeInfo();
@@ -5387,7 +5424,6 @@ bool CMainWindow::OnStandbyChange(bool fStandby)
 			m_pCore->SetFullscreen(true);
 		ShowFloatingWindows(true);
 		ForegroundWindow(m_hwnd);
-		m_App.PluginManager.SendStandbyEvent(false);
 		ResumeTuner();
 		ResumeViewer(ResumeInfo::VIEWERSUSPEND_STANDBY);
 	}
