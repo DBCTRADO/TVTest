@@ -544,8 +544,10 @@ private:
 	bool UpdateService(ProgramGuide::CServiceInfo *pService,bool fUpdateEpg);
 	void UpdateServiceList();
 	void CalcLayout();
-	void DrawEventList(const ProgramGuide::CEventLayout *pLayout,
-					   HDC hdc,const RECT &Rect,const RECT &PaintRect) const;
+	void DrawEvent(ProgramGuide::CEventItem *pItem,
+				   HDC hdc,const RECT &Rect,int LineHeight,HDC hdcIcons,int CurTimePos);
+	void DrawEventList(ProgramGuide::CEventLayout *pLayout,
+					   HDC hdc,const RECT &Rect,const RECT &PaintRect);
 	void DrawHeaderBackground(HDC hdc,const RECT &Rect,bool fCur) const;
 	void DrawServiceHeader(ProgramGuide::CServiceInfo *pServiceInfo,
 						   HDC hdc,const RECT &Rect,int Chevron,
