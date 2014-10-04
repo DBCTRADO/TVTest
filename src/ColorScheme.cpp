@@ -557,9 +557,6 @@ bool CColorScheme::Load(CSettings &Settings)
 					break;
 				}
 			}
-		} else if (i==COLOR_SPLITTER) {
-			m_ColorList[i]=::GetSysColor(COLOR_3DFACE);
-			SetLoadedFlag(i);
 		} else {
 			static const struct {
 				int To,From;
