@@ -8,6 +8,7 @@
 #include "Aero.h"
 #include "Help.h"
 #include "resource.h"
+#include <algorithm>
 
 #ifdef _DEBUG
 #undef THIS_FILE
@@ -405,23 +406,36 @@ INT_PTR CInitialSettings::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPara
 void CInitialSettings::InitDecoderList(int ID,const GUID &SubType,LPCTSTR pszDecoderName)
 {
 	CDirectShowFilterFinder FilterFinder;
-	int Sel=0,Count=0;
+	std::vector<TVTest::String> FilterList;
+	int Sel=0;
 
 	if (FilterFinder.FindFilter(&MEDIATYPE_Video,&SubType)) {
+		FilterList.reserve(FilterFinder.GetFilterCount());
 		for (int i=0;i<FilterFinder.GetFilterCount();i++) {
 			WCHAR szFilterName[MAX_DECODER_NAME];
 
 			if (FilterFinder.GetFilterInfo(i,NULL,szFilterName,lengthof(szFilterName))) {
-				int Index=(int)DlgComboBox_AddString(m_hDlg,ID,szFilterName);
-				if (::lstrcmpi(szFilterName,pszDecoderName)==0)
-					Sel=Index;
-				Count++;
+				FilterList.push_back(TVTest::String(szFilterName));
 			}
 		}
+		if (FilterList.size()>1) {
+			std::sort(FilterList.begin(),FilterList.end(),
+				[](const TVTest::String Filter1,const TVTest::String &Filter2) {
+					return ::CompareString(LOCALE_USER_DEFAULT,
+										   NORM_IGNORECASE | NORM_IGNORESYMBOLS,
+										   Filter1.data(),(int)Filter1.length(),
+										   Filter2.data(),(int)Filter2.length())==CSTR_LESS_THAN;
+				});
+		}
+		for (size_t i=0;i<FilterList.size();i++) {
+			DlgComboBox_AddString(m_hDlg,ID,FilterList[i].c_str());
+		}
+
+		Sel=(int)DlgComboBox_FindStringExact(m_hDlg,ID,-1,pszDecoderName)+1;
 	}
 
 	DlgComboBox_InsertString(m_hDlg,ID,
-		0,Count>0?TEXT("自動"):TEXT("<デコーダが見付かりません>"));
+		0,!FilterList.empty()?TEXT("自動"):TEXT("<デコーダが見付かりません>"));
 	DlgComboBox_SetCurSel(m_hDlg,ID,Sel);
 }
 

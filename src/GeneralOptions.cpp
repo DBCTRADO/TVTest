@@ -6,6 +6,7 @@
 #include "DialogUtil.h"
 #include "MessageDialog.h"
 #include "resource.h"
+#include <algorithm>
 
 #ifdef _DEBUG
 #undef THIS_FILE
@@ -610,21 +611,34 @@ void CGeneralOptions::SetVideoDecoderList(
 	int ID,const GUID &SubType,BYTE StreamType,const TVTest::String &DecoderName)
 {
 	CDirectShowFilterFinder FilterFinder;
-	int Count=0;
+	std::vector<TVTest::String> FilterList;
 	if (FilterFinder.FindFilter(&MEDIATYPE_Video,&SubType)) {
+		FilterList.reserve(FilterFinder.GetFilterCount());
 		for (int i=0;i<FilterFinder.GetFilterCount();i++) {
 			WCHAR szFilterName[MAX_VIDEO_DECODER_NAME];
 
 			if (FilterFinder.GetFilterInfo(i,NULL,szFilterName,lengthof(szFilterName))) {
-				DlgComboBox_AddString(m_hDlg,ID,szFilterName);
-				Count++;
+				FilterList.push_back(TVTest::String(szFilterName));
 			}
 		}
 	}
 	int Sel=0;
-	if (Count==0) {
+	if (FilterList.empty()) {
 		DlgComboBox_AddString(m_hDlg,ID,TEXT("<デコーダが見付かりません>"));
 	} else {
+		if (FilterList.size()>1) {
+			std::sort(FilterList.begin(),FilterList.end(),
+				[](const TVTest::String Filter1,const TVTest::String &Filter2) {
+					return ::CompareString(LOCALE_USER_DEFAULT,
+										   NORM_IGNORECASE | NORM_IGNORESYMBOLS,
+										   Filter1.data(),(int)Filter1.length(),
+										   Filter2.data(),(int)Filter2.length())==CSTR_LESS_THAN;
+				});
+		}
+		for (size_t i=0;i<FilterList.size();i++) {
+			DlgComboBox_AddString(m_hDlg,ID,FilterList[i].c_str());
+		}
+
 		CMediaViewer &MediaViewer=GetAppClass().CoreEngine.m_DtvEngine.m_MediaViewer;
 		TCHAR szText[32+MAX_VIDEO_DECODER_NAME];
 
