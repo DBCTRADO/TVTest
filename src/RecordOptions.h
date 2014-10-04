@@ -14,17 +14,16 @@ class CRecordOptions : public COptions
 	bool m_fConfirmExit;
 	bool m_fConfirmStop;
 	bool m_fConfirmStopStatusBarOnly;
-	bool m_fCurServiceOnly;
-	bool m_fSaveSubtitle;
-	bool m_fSaveDataCarrousel;
 	bool m_fAlertLowFreeSpace;
 	unsigned int m_LowFreeSpaceThreshold;
-	unsigned int m_BufferSize;
 	unsigned int m_TimeShiftBufferSize;
 	bool m_fEnableTimeShiftRecording;
 	unsigned int m_MaxPendingSize;
 	bool m_fShowRemainTime;
 	int m_StatusBarRecordCommand;
+	CRecordingSettings m_Settings;
+
+	std::vector<TVTest::String> m_WritePluginList;
 
 // CBasicDialog
 	INT_PTR DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
@@ -56,7 +55,7 @@ public:
 	bool ConfirmStop(HWND hwndOwner) const;
 	bool ConfirmStatusBarStop(HWND hwndOwner) const;
 	bool ConfirmExit(HWND hwndOwner,const CRecordManager *pRecordManager) const;
-	bool ApplyOptions(CRecordManager *pManager);
+	bool GetRecordingSettings(CRecordingSettings *pSettings);
 	bool GetAlertLowFreeSpace() const { return m_fAlertLowFreeSpace; }
 	ULONGLONG GetLowFreeSpaceThresholdBytes() const {
 		return (ULONGLONG)m_LowFreeSpaceThreshold*(1024*1024);

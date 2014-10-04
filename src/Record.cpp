@@ -5,12 +5,64 @@
 #include "DialogUtil.h"
 #include "StdUtil.h"
 #include "resource.h"
+#include <algorithm>
 
 #ifdef _DEBUG
 #undef THIS_FILE
 static char THIS_FILE[]=__FILE__;
 #define new DEBUG_NEW
 #endif
+
+
+
+
+CRecordingSettings::CRecordingSettings()
+	: m_fCurServiceOnly(false)
+	, m_SaveStream(CTsSelector::STREAM_ALL)
+	, m_BufferSize(DEFAULT_BUFFER_SIZE)
+	, m_PreAllocationUnit(0)
+	, m_fTimeShift(false)
+{
+}
+
+
+bool CRecordingSettings::IsSaveCaption() const
+{
+	return TestSaveStreamFlag(CTsSelector::STREAM_CAPTION);
+}
+
+
+void CRecordingSettings::SetSaveCaption(bool fSave)
+{
+	SetSaveStreamFlag(CTsSelector::STREAM_CAPTION,fSave);
+}
+
+
+bool CRecordingSettings::IsSaveDataCarrousel() const
+{
+	return TestSaveStreamFlag(CTsSelector::STREAM_DATACARROUSEL);
+}
+
+
+void CRecordingSettings::SetSaveDataCarrousel(bool fSave)
+{
+	SetSaveStreamFlag(CTsSelector::STREAM_DATACARROUSEL,fSave);
+}
+
+
+bool CRecordingSettings::TestSaveStreamFlag(DWORD Flag) const
+{
+	return (m_SaveStream & Flag)==Flag;
+}
+
+
+void CRecordingSettings::SetSaveStreamFlag(DWORD Flag,bool fSet)
+{
+	if (fSet)
+		m_SaveStream|=Flag;
+	else
+		m_SaveStream^=Flag;
+}
 
 
 
@@ -71,17 +123,52 @@ CRecordTask::~CRecordTask()
 }
 
 
-bool CRecordTask::Start(CDtvEngine *pDtvEngine,LPCTSTR pszFileName)
+bool CRecordTask::Start(CDtvEngine *pDtvEngine,LPCTSTR pszFileName,const CRecordingSettings &Settings)
 {
 	if (m_State!=STATE_STOP)
 		return false;
-	if (!pDtvEngine->m_FileWriter.OpenFile(pszFileName,
-										   CNCachedFile::CNF_SHAREREAD))
+
+	bool fOldWriteCurOnly=pDtvEngine->GetWriteCurServiceOnly();
+	DWORD OldWriteStream;
+	pDtvEngine->GetWriteStream(NULL,&OldWriteStream);
+	pDtvEngine->SetWriteCurServiceOnly(Settings.m_fCurServiceOnly,Settings.m_SaveStream);
+	pDtvEngine->m_TsRecorder.SetBufferSize(Settings.m_BufferSize);
+	pDtvEngine->m_TsRecorder.SetPreAllocationUnit(Settings.m_PreAllocationUnit);
+	if (!Settings.m_fTimeShift)
+		pDtvEngine->m_TsRecorder.ClearQueue();
+
+	TVTest::String WritePlugin;
+	HMODULE hWriteLib=NULL;
+	if (!Settings.m_WritePlugin.empty()) {
+		if (::PathIsFileSpec(Settings.m_WritePlugin.c_str())) {
+			TCHAR szPath[MAX_PATH];
+			GetAppClass().GetAppDirectory(szPath);
+			if (::PathAppend(szPath,Settings.m_WritePlugin.c_str()))
+				WritePlugin=szPath;
+		} else {
+			WritePlugin=Settings.m_WritePlugin;
+		}
+		if (!WritePlugin.empty()) {
+			// 出力プラグインがロードできなければプラグインを使わないようにする
+			hWriteLib=::LoadLibrary(WritePlugin.c_str());
+			if (hWriteLib==NULL)
+				WritePlugin.clear();
+		}
+	}
+
+	bool fResult=pDtvEngine->m_TsRecorder.OpenFile(WritePlugin.c_str(),pszFileName);
+	if (hWriteLib!=NULL)
+		::FreeLibrary(hWriteLib);
+	if (!fResult) {
+		pDtvEngine->SetWriteCurServiceOnly(fOldWriteCurOnly,OldWriteStream);
 		return false;
+	}
+
 	m_State=STATE_RECORDING;
 	m_pDtvEngine=pDtvEngine;
 	m_StartTime.SetCurrentTime();
 	m_TotalPauseTime=0;
+
 	return true;
 }
 
@@ -89,7 +176,7 @@ bool CRecordTask::Start(CDtvEngine *pDtvEngine,LPCTSTR pszFileName)
 bool CRecordTask::Stop()
 {
 	if (m_State==STATE_RECORDING || m_State==STATE_PAUSE) {
-		m_pDtvEngine->m_FileWriter.CloseFile();
+		m_pDtvEngine->m_TsRecorder.CloseFile();
 		m_State=STATE_STOP;
 		m_pDtvEngine=NULL;
 	}
@@ -100,12 +187,12 @@ bool CRecordTask::Stop()
 bool CRecordTask::Pause()
 {
 	if (m_State==STATE_RECORDING) {
-		m_pDtvEngine->m_FileWriter.Pause();
+		m_pDtvEngine->m_TsRecorder.Pause();
 		m_State=STATE_PAUSE;
 		m_PauseStartTime=::GetTickCount();
 	} else if (m_State==STATE_PAUSE) {
-		m_pDtvEngine->m_FileWriter.ClearQueue();
-		m_pDtvEngine->m_FileWriter.Resume();
+		m_pDtvEngine->m_TsRecorder.ClearQueue();
+		m_pDtvEngine->m_TsRecorder.Resume();
 		m_State=STATE_RECORDING;
 		m_TotalPauseTime+=TickTimeSpan(m_PauseStartTime,::GetTickCount());
 	} else
@@ -171,17 +258,21 @@ DWORD CRecordTask::GetPauseTime() const
 
 LONGLONG CRecordTask::GetWroteSize() const
 {
-	if (m_State==STATE_STOP)
-		return 0;
-	return m_pDtvEngine->m_FileWriter.GetWriteSize();
+	if (m_State==STATE_STOP
+			|| !m_pDtvEngine->m_TsRecorder.IsWriteSizeAvailable())
+		return -1;
+	return m_pDtvEngine->m_TsRecorder.GetWriteSize();
 }
 
 
-LPCTSTR CRecordTask::GetFileName() const
+int CRecordTask::GetFileName(LPTSTR pszFileName,int MaxFileName) const
 {
-	if (m_State==STATE_STOP)
-		return NULL;
-	return m_pDtvEngine->m_FileWriter.GetFileName();
+	if (m_State==STATE_STOP) {
+		if (pszFileName!=NULL && MaxFileName>0)
+			pszFileName[0]=_T('\0');
+		return 0;
+	}
+	return m_pDtvEngine->m_TsRecorder.GetFileName(pszFileName,MaxFileName);
 }
 
 
@@ -189,7 +280,7 @@ bool CRecordTask::RelayFile(LPCTSTR pszFileName)
 {
 	if (m_State==STATE_STOP)
 		return false;
-	return m_pDtvEngine->m_FileWriter.RelayFile(pszFileName,CNCachedFile::CNF_SHAREREAD);
+	return m_pDtvEngine->m_TsRecorder.RelayFile(pszFileName);
 }
 
 
@@ -198,11 +289,12 @@ LONGLONG CRecordTask::GetFreeSpace() const
 	if (m_State==STATE_STOP)
 		return -1;
 
-	LPCTSTR pszFileName=m_pDtvEngine->m_FileWriter.GetFileName();
-	if (pszFileName==NULL)
+	TCHAR szFileName[MAX_PATH];
+	int Length=GetFileName(szFileName,lengthof(szFileName));
+	if (Length<1 || Length>=lengthof(szFileName))
 		return -1;
 	TCHAR szPath[MAX_PATH];
-	::lstrcpy(szPath,pszFileName);
+	::lstrcpy(szPath,szFileName);
 	*::PathFindFileName(szPath)='\0';
 	ULARGE_INTEGER FreeSpace;
 	if (!::GetDiskFreeSpaceEx(szPath,&FreeSpace,NULL,NULL))
@@ -220,9 +312,6 @@ CRecordManager::CRecordManager()
 	, m_Client(CLIENT_USER)
 	, m_pDtvEngine(NULL)
 	//, m_ExistsOperation(EXISTS_CONFIRM)
-	, m_fCurServiceOnly(false)
-	, m_SaveStream(CTsSelector::STREAM_ALL)
-	, m_BufferSize(0x100000)
 {
 	m_StartTimeSpec.Type=TIME_NOTSPECIFIED;
 	m_StopTimeSpec.Type=TIME_NOTSPECIFIED;
@@ -334,25 +423,24 @@ bool CRecordManager::IsStopTimeSpecified() const
 
 bool CRecordManager::StartRecord(CDtvEngine *pDtvEngine,LPCTSTR pszFileName,bool fTimeShift)
 {
-	if (m_fRecording)
-		return false;
-	bool fOldWriteCurOnly=pDtvEngine->GetWriteCurServiceOnly();
-	DWORD OldWriteStream;
-	pDtvEngine->GetWriteStream(NULL,&OldWriteStream);
-	pDtvEngine->SetWriteCurServiceOnly(m_fCurServiceOnly,m_SaveStream);
-	pDtvEngine->m_FileWriter.SetBufferSize((DWORD)m_BufferSize);
-	if (!fTimeShift)
-		pDtvEngine->m_FileWriter.ClearQueue();
-	if (!m_RecordTask.Start(pDtvEngine,pszFileName)) {
-		pDtvEngine->SetWriteCurServiceOnly(fOldWriteCurOnly,OldWriteStream);
-		SetError(pDtvEngine->m_FileWriter.GetLastErrorException());
+	if (m_fRecording) {
+		SetError(TEXT("既に録画中です。"));
 		return false;
 	}
+
+	m_Settings.m_fTimeShift=fTimeShift;
+
+	if (!m_RecordTask.Start(pDtvEngine,pszFileName,m_Settings)) {
+		SetError(pDtvEngine->m_TsRecorder.GetLastErrorException());
+		return false;
+	}
+
 	m_pDtvEngine=pDtvEngine;
 	m_fRecording=true;
 	m_fReserved=false;
 	m_StartTimeSpec.Type=TIME_NOTSPECIFIED;
 	ClearError();
+
 	return true;
 }
 
@@ -362,7 +450,7 @@ void CRecordManager::StopRecord()
 	if (m_fRecording) {
 		m_RecordTask.Stop();
 		m_fRecording=false;
-		if (m_fCurServiceOnly)
+		if (m_Settings.m_fCurServiceOnly)
 			m_pDtvEngine->SetWriteCurServiceOnly(false);
 		//m_FileName.Clear();
 		m_pDtvEngine=NULL;
@@ -383,7 +471,7 @@ bool CRecordManager::RelayFile(LPCTSTR pszFileName)
 	if (!m_fRecording)
 		return false;
 	if (!m_RecordTask.RelayFile(pszFileName)) {
-		SetError(m_pDtvEngine->m_FileWriter.GetLastErrorException());
+		SetError(m_pDtvEngine->m_TsRecorder.GetLastErrorException());
 		return false;
 	}
 	ClearError();
@@ -708,19 +796,46 @@ INT_PTR CALLBACK CRecordManager::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARA
 #endif
 			}
 
-			DlgCheckBox_Check(hDlg,IDC_RECORD_CURSERVICEONLY,pThis->m_fCurServiceOnly);
+			DlgCheckBox_Check(hDlg,IDC_RECORD_CURSERVICEONLY,
+							  pThis->m_Settings.m_fCurServiceOnly);
 			DlgCheckBox_Check(hDlg,IDC_RECORD_SAVESUBTITLE,
-				(pThis->m_SaveStream&CTsSelector::STREAM_CAPTION)!=0);
+							  pThis->m_Settings.IsSaveCaption());
 			DlgCheckBox_Check(hDlg,IDC_RECORD_SAVEDATACARROUSEL,
-				(pThis->m_SaveStream&CTsSelector::STREAM_DATACARROUSEL)!=0);
+							  pThis->m_Settings.IsSaveDataCarrousel());
 			if (pThis->m_fRecording) {
 				EnableDlgItems(hDlg,IDC_RECORD_CURSERVICEONLY,IDC_RECORD_SAVEDATACARROUSEL,false);
 			} else {
 				/*
 				EnableDlgItems(hDlg,IDC_RECORD_SAVESUBTITLE,IDC_RECORD_SAVEDATACARROUSEL,
-							   pThis->m_fCurServiceOnly);
+							   pThis->m_Settings.m_fCurServiceOnly);
 				*/
 			}
+
+			// 保存プラグイン
+			DlgComboBox_AddString(hDlg,IDC_RECORD_WRITEPLUGIN,TEXT("使用しない (TS出力)"));
+			if (!pThis->m_fRecording) {
+				GetWritePluginList(&pThis->m_WritePluginList);
+				int Sel=-1;
+				for (size_t i=0;i<pThis->m_WritePluginList.size();i++) {
+					LPCTSTR pszFileName=pThis->m_WritePluginList[i].c_str();
+					DlgComboBox_AddString(hDlg,IDC_RECORD_WRITEPLUGIN,pszFileName);
+					if (!pThis->m_Settings.m_WritePlugin.empty()
+							&& IsEqualFileName(pszFileName,pThis->m_Settings.m_WritePlugin.c_str()))
+						Sel=(int)i;
+				}
+				DlgComboBox_SetCurSel(hDlg,IDC_RECORD_WRITEPLUGIN,Sel+1);
+				EnableDlgItem(hDlg,IDC_RECORD_WRITEPLUGINSETTING,Sel>0);
+			} else {
+				int Sel=0;
+				if (!pThis->m_Settings.m_WritePlugin.empty()) {
+					DlgComboBox_AddString(hDlg,IDC_RECORD_WRITEPLUGIN,
+										  ::PathFindFileName(pThis->m_Settings.m_WritePlugin.c_str()));
+					Sel=1;
+				}
+				DlgComboBox_SetCurSel(hDlg,IDC_RECORD_WRITEPLUGIN,Sel);
+				EnableDlgItems(hDlg,IDC_RECORD_WRITEPLUGIN_LABEL,IDC_RECORD_WRITEPLUGINSETTING,false);
+			}
+
 			EnableDlgItem(hDlg,IDC_RECORD_CANCEL,pThis->m_fReserved);
 		}
 		return TRUE;
@@ -840,12 +955,23 @@ INT_PTR CALLBACK CRecordManager::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARA
 			return TRUE;
 #endif
 
-		/*
-		case IDC_RECORD_CURSERVICEONLY:
-			EnableDlgItems(hDlg,IDC_RECORD_SAVESUBTITLE,IDC_RECORD_SAVEDATACARROUSEL,
-				DlgCheckBox_IsChecked(hDlg,IDC_RECORD_CURSERVICEONLY));
+		case IDC_RECORD_WRITEPLUGIN:
+			if (HIWORD(wParam)==CBN_SELCHANGE) {
+				EnableDlgItem(hDlg,IDC_RECORD_WRITEPLUGINSETTING,
+							  DlgComboBox_GetCurSel(hDlg,IDC_RECORD_WRITEPLUGIN)>0);
+			}
 			return TRUE;
-		*/
+
+		case IDC_RECORD_WRITEPLUGINSETTING:
+			{
+				CRecordManager *pThis=GetThis(hDlg);
+				int Sel=DlgComboBox_GetCurSel(hDlg,IDC_RECORD_WRITEPLUGIN)-1;
+
+				if (Sel>=0 && (size_t)Sel<pThis->m_WritePluginList.size()) {
+					ShowWritePluginSetting(hDlg,pThis->m_WritePluginList[Sel].c_str());
+				}
+			}
+			return TRUE;
 
 		case IDOK:
 			{
@@ -972,12 +1098,18 @@ INT_PTR CALLBACK CRecordManager::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARA
 						break;
 					}
 
-					pThis->m_fCurServiceOnly=DlgCheckBox_IsChecked(hDlg,IDC_RECORD_CURSERVICEONLY);
-					pThis->m_SaveStream=CTsSelector::STREAM_ALL;
-					if (!DlgCheckBox_IsChecked(hDlg,IDC_RECORD_SAVESUBTITLE))
-						pThis->m_SaveStream^=CTsSelector::STREAM_CAPTION;
-					if (!DlgCheckBox_IsChecked(hDlg,IDC_RECORD_SAVEDATACARROUSEL))
-						pThis->m_SaveStream^=CTsSelector::STREAM_DATACARROUSEL;
+					pThis->m_Settings.m_fCurServiceOnly=
+						DlgCheckBox_IsChecked(hDlg,IDC_RECORD_CURSERVICEONLY);
+					pThis->m_Settings.SetSaveCaption(
+						DlgCheckBox_IsChecked(hDlg,IDC_RECORD_SAVESUBTITLE));
+					pThis->m_Settings.SetSaveDataCarrousel(
+						DlgCheckBox_IsChecked(hDlg,IDC_RECORD_SAVEDATACARROUSEL));
+
+					int Sel=(int)DlgComboBox_GetCurSel(hDlg,IDC_RECORDOPTIONS_WRITEPLUGIN)-1;
+					if (Sel>=0 && (size_t)Sel<pThis->m_WritePluginList.size())
+						pThis->m_Settings.m_WritePlugin=pThis->m_WritePluginList[Sel];
+					else
+						pThis->m_Settings.m_WritePlugin.clear();
 				}
 
 				if (DlgCheckBox_IsChecked(hDlg,IDC_RECORD_STOPSPECTIME)) {
@@ -1016,9 +1148,16 @@ INT_PTR CALLBACK CRecordManager::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARA
 		return TRUE;
 
 	case WM_DESTROY:
-		::RemoveProp(hDlg,TEXT("This"));
+		{
+			CRecordManager *pThis=GetThis(hDlg);
+
+			pThis->m_WritePluginList.clear();
+
+			::RemoveProp(hDlg,TEXT("This"));
+		}
 		return TRUE;
 	}
+
 	return FALSE;
 }
 
@@ -1342,21 +1481,39 @@ bool CRecordManager::DoFileExistsOperation(HWND hwndOwner,LPTSTR pszFileName)
 
 bool CRecordManager::SetCurServiceOnly(bool fOnly)
 {
-	m_fCurServiceOnly=fOnly;
+	m_Settings.m_fCurServiceOnly=fOnly;
 	return true;
 }
 
 
 bool CRecordManager::SetSaveStream(DWORD Stream)
 {
-	m_SaveStream=Stream;
+	m_Settings.m_SaveStream=Stream;
 	return true;
 }
 
 
-bool CRecordManager::SetBufferSize(SIZE_T BufferSize)
+bool CRecordManager::SetWritePlugin(LPCTSTR pszPlugin)
 {
-	m_BufferSize=BufferSize;
+	if (IsStringEmpty(pszPlugin))
+		m_Settings.m_WritePlugin.clear();
+	else
+		m_Settings.m_WritePlugin=pszPlugin;
+	return true;
+}
+
+
+LPCTSTR CRecordManager::GetWritePlugin() const
+{
+	if (m_Settings.m_WritePlugin.empty())
+		return NULL;
+	return m_Settings.m_WritePlugin.c_str();
+}
+
+
+bool CRecordManager::SetBufferSize(DWORD BufferSize)
+{
+	m_Settings.m_BufferSize=BufferSize;
 	return true;
 }
 
@@ -1432,4 +1589,58 @@ void CRecordManager::GetEventInfoSample(EventInfo *pEventInfo)
 	::GetLocalTime(&pEventInfo->stTotTime);
 	pEventInfo->stTotTime.wSecond=pEventInfo->stTotTime.wSecond/5*5;
 	pEventInfo->stTotTime.wMilliseconds=0;
+}
+
+
+bool CRecordManager::GetWritePluginList(std::vector<TVTest::String> *pList)
+{
+	if (pList==nullptr)
+		return false;
+
+	pList->clear();
+
+	TCHAR szDir[MAX_PATH];
+	HANDLE hFind;
+	WIN32_FIND_DATA fd;
+
+	GetAppClass().GetAppDirectory(szDir);
+	::PathAppend(szDir,TEXT("Write_*.dll"));
+	hFind=::FindFirstFile(szDir,&fd);
+	if (hFind==INVALID_HANDLE_VALUE)
+		return false;
+	do {
+		if ((fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)==0)
+			pList->push_back(TVTest::String(fd.cFileName));
+	} while (::FindNextFile(hFind,&fd));
+	::FindClose(hFind);
+
+	if (pList->size()>1) {
+		std::sort(pList->begin(),pList->end(),
+				  [](const TVTest::String &Lib1,const TVTest::String &Lib2) {
+				      return TVTest::StringUtility::CompareNoCase(Lib1,Lib2)<0;
+				  });
+	}
+
+	return true;
+}
+
+
+bool CRecordManager::ShowWritePluginSetting(HWND hwndOwner,LPCTSTR pszPlugin)
+{
+	if (IsStringEmpty(pszPlugin))
+		return false;
+
+	bool fOK=false;
+	HMODULE hLib=::LoadLibrary(pszPlugin);
+	if (hLib!=NULL) {
+		typedef void (WINAPI *Setting)(HWND parentWnd);
+		Setting pSetting=(Setting)::GetProcAddress(hLib,"Setting");
+		if (pSetting!=NULL) {
+			pSetting(hwndOwner);
+			fOK=true;
+		}
+		::FreeLibrary(hLib);
+	}
+
+	return fOK;
 }

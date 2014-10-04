@@ -2,8 +2,32 @@
 #define RECORD_H
 
 
+#include <vector>
 #include "DtvEngine.h"
 
+
+class CRecordingSettings
+{
+public:
+	static const DWORD DEFAULT_BUFFER_SIZE=0x100000;
+
+	bool m_fCurServiceOnly;
+	DWORD m_SaveStream;
+	TVTest::String m_WritePlugin;
+	DWORD m_BufferSize;
+	ULONGLONG m_PreAllocationUnit;
+	bool m_fTimeShift;
+
+	CRecordingSettings();
+	bool IsSaveCaption() const;
+	void SetSaveCaption(bool fSave);
+	bool IsSaveDataCarrousel() const;
+	void SetSaveDataCarrousel(bool fSave);
+
+private:
+	bool TestSaveStreamFlag(DWORD Flag) const;
+	void SetSaveStreamFlag(DWORD Flag,bool fSet);
+};
 
 class CRecordTime {
 	FILETIME m_Time;
@@ -36,7 +60,7 @@ protected:
 public:
 	CRecordTask();
 	virtual ~CRecordTask();
-	bool Start(CDtvEngine *pDtvEngine,LPCTSTR pszFileName);
+	bool Start(CDtvEngine *pDtvEngine,LPCTSTR pszFileName,const CRecordingSettings &Settings);
 	bool Stop();
 	bool Pause();
 	State GetState() const;
@@ -49,7 +73,7 @@ public:
 	DWORD GetRecordTime() const;
 	DWORD GetPauseTime() const;
 	LONGLONG GetWroteSize() const;
-	LPCTSTR GetFileName() const;
+	int GetFileName(LPTSTR pszFileName,int MaxFileName) const;
 	bool RelayFile(LPCTSTR pszFileName);
 #undef GetFreeSpace
 	LONGLONG GetFreeSpace() const;
@@ -104,9 +128,9 @@ private:
 	CRecordTask m_RecordTask;
 	CDtvEngine *m_pDtvEngine;
 	//FileExistsOperation m_ExistsOperation;
-	bool m_fCurServiceOnly;
-	DWORD m_SaveStream;
-	SIZE_T m_BufferSize;
+	CRecordingSettings m_Settings;
+
+	std::vector<TVTest::String> m_WritePluginList;
 
 	static CRecordManager *GetThis(HWND hDlg);
 	static INT_PTR CALLBACK DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam);
@@ -151,13 +175,20 @@ public:
 	bool RecordDialog(HWND hwndOwner);
 	bool GenerateFileName(LPTSTR pszFileName,int MaxLength,const EventInfo *pEventInfo,LPCTSTR pszFormat=NULL) const;
 	//bool DoFileExistsOperation(HWND hwndOwner,LPTSTR pszFileName);
+
+	CRecordingSettings &GetRecordingSettings() { return m_Settings; }
+	const CRecordingSettings &GetRecordingSettings() const { return m_Settings; }
 	bool SetCurServiceOnly(bool fOnly);
-	bool GetCurServiceOnly() const { return m_fCurServiceOnly; }
+	bool GetCurServiceOnly() const { return m_Settings.m_fCurServiceOnly; }
 	bool SetSaveStream(DWORD Stream);
-	DWORD GetSaveStream() const { return m_SaveStream; }
-	bool SetBufferSize(SIZE_T BufferSize);
+	bool SetWritePlugin(LPCTSTR pszPlugin);
+	LPCTSTR GetWritePlugin() const;
+	bool SetBufferSize(DWORD BufferSize);
+
 	static bool InsertFileNameParameter(HWND hDlg,int ID,const POINT *pMenuPos);
 	static void GetEventInfoSample(EventInfo *pEventInfo);
+	static bool GetWritePluginList(std::vector<TVTest::String> *pList);
+	static bool ShowWritePluginSetting(HWND hwndOwner,LPCTSTR pszPlugin);
 };
 
 

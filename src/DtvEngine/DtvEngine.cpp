@@ -35,7 +35,7 @@ CDtvEngine::CDtvEngine(void)
 	, m_CasProcessor(this)
 	, m_MediaViewer(this)
 	, m_MediaTee(this)
-	, m_FileWriter(this)
+	, m_TsRecorder(this)
 	, m_MediaGrabber(this)
 	, m_TsSelector(this)
 	, m_EventManager(this)
@@ -678,12 +678,12 @@ const DWORD CDtvEngine::OnDecoderEvent(CMediaDecoder *pDecoder, const DWORD dwEv
 				m_pEventHandler->OnTotUpdated(&m_TsAnalyzer);
 			return 0UL;
 		}
-	} else if (pDecoder == &m_FileWriter) {
+	} else if (pDecoder == &m_TsRecorder) {
 		switch (dwEventID) {
-		case CBufferedFileWriter::EID_WRITE_ERROR:
+		case CTsRecorder::EVENT_WRITE_ERROR:
 			// ‘‚«ž‚ÝƒGƒ‰[‚ª”­¶‚µ‚½
 			if (m_pEventHandler)
-				m_pEventHandler->OnFileWriteError(&m_FileWriter);
+				m_pEventHandler->OnFileWriteError(&m_TsRecorder);
 			return 0UL;
 		}
 	} else if (pDecoder == &m_MediaViewer) {
@@ -1108,7 +1108,7 @@ CMediaDecoder *CDtvEngine::GetDecoderByID(DecoderID ID)
 	case DECODER_ID_CasProcessor:	return &m_CasProcessor;
 	case DECODER_ID_MediaViewer:	return &m_MediaViewer;
 	case DECODER_ID_MediaTee:		return &m_MediaTee;
-	case DECODER_ID_FileWriter:		return &m_FileWriter;
+	case DECODER_ID_TsRecorder:		return &m_TsRecorder;
 	case DECODER_ID_MediaGrabber:	return &m_MediaGrabber;
 	case DECODER_ID_TsSelector:		return &m_TsSelector;
 	case DECODER_ID_EventManager:	return &m_EventManager;

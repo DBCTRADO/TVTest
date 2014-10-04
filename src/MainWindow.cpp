@@ -2532,7 +2532,7 @@ void CMainWindow::OnCommand(HWND hwnd,int id,HWND hwndCtl,UINT codeNotify)
 						m_App.RecordManager.SetFileName(szFileName);
 				}
 				if (!m_App.RecordManager.IsReserved())
-					m_App.RecordOptions.ApplyOptions(&m_App.RecordManager);
+					m_App.RecordOptions.GetRecordingSettings(&m_App.RecordManager.GetRecordingSettings());
 				if (m_App.RecordManager.RecordDialog(GetVideoHostWindow())) {
 					m_App.RecordManager.SetClient(CRecordManager::CLIENT_USER);
 					if (m_App.RecordManager.IsReserved()) {

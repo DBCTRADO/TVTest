@@ -1573,7 +1573,7 @@ void CAppMain::CDtvEngineEventHandler::OnServiceChanged(WORD ServiceID)
 	m_App.MainWindow.PostMessage(WM_APP_SERVICECHANGED,ServiceID,0);
 }
 
-void CAppMain::CDtvEngineEventHandler::OnFileWriteError(CBufferedFileWriter *pFileWriter)
+void CAppMain::CDtvEngineEventHandler::OnFileWriteError(CTsRecorder *pTsRecorder)
 {
 	m_App.MainWindow.PostMessage(WM_APP_FILEWRITEERROR,0,0);
 }

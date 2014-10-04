@@ -2132,9 +2132,8 @@ LRESULT CPlugin::OnPluginMessage(WPARAM wParam,LPARAM lParam)
 			if (pInfo->Size>TVTest::RECORDSTATUSINFO_SIZE_V1) {
 				if (pInfo->pszFileName!=NULL && pInfo->MaxFileName>0) {
 					if (pRecordManager->IsRecording()) {
-						::lstrcpyn(pInfo->pszFileName,
-								   pRecordManager->GetRecordTask()->GetFileName(),
-								   pInfo->MaxFileName);
+						pRecordManager->GetRecordTask()->GetFileName(
+							pInfo->pszFileName,pInfo->MaxFileName);
 					} else {
 						pInfo->pszFileName[0]='\0';
 					}

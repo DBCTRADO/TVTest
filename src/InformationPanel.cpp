@@ -1227,7 +1227,7 @@ bool CInformationPanel::CRecordItem::Update()
 {
 	CAppMain &App=GetAppClass();
 	bool fRecording=App.RecordManager.IsRecording();
-	ULONGLONG WroteSize;
+	LONGLONG WroteSize;
 	unsigned int RecordTime;
 	LONGLONG DiskFreeSpace;
 
@@ -1259,16 +1259,20 @@ bool CInformationPanel::CRecordItem::Update()
 void CInformationPanel::CRecordItem::Draw(HDC hdc,const RECT &Rect)
 {
 	if (m_fRecording) {
-		unsigned int RecordSec=m_RecordTime/1000;
-		unsigned int Size=
-			(unsigned int)(m_WroteSize/(ULONGLONG)(1024*1024/100));
 		TCHAR szText[256];
 		int Length;
 
+		unsigned int RecordSec=m_RecordTime/1000;
 		Length=StdUtil::snprintf(szText,lengthof(szText),
-			TEXT("œ %d:%02d:%02d / %d.%02d MB"),
-			RecordSec/(60*60),(RecordSec/60)%60,RecordSec%60,
-			Size/100,Size%100);
+			TEXT("œ %d:%02d:%02d"),
+			RecordSec/(60*60),(RecordSec/60)%60,RecordSec%60);
+		if (m_WroteSize>=0) {
+			unsigned int Size=
+				(unsigned int)(m_WroteSize/(ULONGLONG)(1024*1024/100));
+			Length+=StdUtil::snprintf(szText+Length,lengthof(szText)-Length,
+									  TEXT(" / %d.%02d MB"),
+									  Size/100,Size%100);
+		}
 		if (m_DiskFreeSpace>=0) {
 			unsigned int FreeSpace=
 				(unsigned int)(m_DiskFreeSpace/(ULONGLONG)(1024*1024*1024/100));

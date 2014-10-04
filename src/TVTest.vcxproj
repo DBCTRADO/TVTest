@@ -457,18 +457,16 @@
     <ClCompile Include="AppEvent.cpp" />
     <ClCompile Include="AppUtil.cpp" />
     <ClCompile Include="BasicWindow.cpp" />
+    <ClCompile Include="BonTsEngine\BasicFile.cpp" />
     <ClCompile Include="BonTsEngine\Bitstream.cpp" />
     <ClCompile Include="BonTsEngine\BonBaseClass.cpp" />
     <ClCompile Include="BonTsEngine\BonSrcDecoder.cpp" />
-    <ClCompile Include="BonTsEngine\BufferedFileWriter.cpp" />
     <ClCompile Include="BonTsEngine\CaptionDecoder.cpp" />
     <ClCompile Include="BonTsEngine\CaptionParser.cpp" />
     <ClCompile Include="BonTsEngine\CasProcessor.cpp" />
     <ClCompile Include="BonTsEngine\EventInfo.cpp" />
     <ClCompile Include="BonTsEngine\EventManager.cpp" />
     <ClCompile Include="BonTsEngine\Exception.cpp" />
-    <ClCompile Include="BonTsEngine\FileReader.cpp" />
-    <ClCompile Include="BonTsEngine\FileWriter.cpp" />
     <ClCompile Include="BonTsEngine\LogoDownloader.cpp" />
     <ClCompile Include="BonTsEngine\MediaData.cpp" />
     <ClCompile Include="BonTsEngine\MediaDecoder.cpp" />
@@ -483,6 +481,7 @@
     <ClCompile Include="BonTsEngine\TsInformation.cpp" />
     <ClCompile Include="BonTsEngine\TsMedia.cpp" />
     <ClCompile Include="BonTsEngine\TsPacketParser.cpp" />
+    <ClCompile Include="BonTsEngine\TsRecorder.cpp" />
     <ClCompile Include="BonTsEngine\TsSelector.cpp" />
     <ClCompile Include="BonTsEngine\TsStream.cpp" />
     <ClCompile Include="BonTsEngine\TsTable.cpp" />
@@ -619,10 +618,10 @@
     <ClInclude Include="AppEvent.h" />
     <ClInclude Include="AppUtil.h" />
     <ClInclude Include="BasicWindow.h" />
+    <ClInclude Include="BonTsEngine\BasicFile.h" />
     <ClInclude Include="BonTsEngine\Bitstream.h" />
     <ClInclude Include="BonTsEngine\BonBaseClass.h" />
     <ClInclude Include="BonTsEngine\BonSrcDecoder.h" />
-    <ClInclude Include="BonTsEngine\BufferedFileWriter.h" />
     <ClInclude Include="BonTsEngine\CaptionDecoder.h" />
     <ClInclude Include="BonTsEngine\CaptionParser.h" />
     <ClInclude Include="BonTsEngine\CasProcessor.h" />
@@ -630,8 +629,6 @@
     <ClInclude Include="BonTsEngine\EventInfo.h" />
     <ClInclude Include="BonTsEngine\EventManager.h" />
     <ClInclude Include="BonTsEngine\Exception.h" />
-    <ClInclude Include="BonTsEngine\FileReader.h" />
-    <ClInclude Include="BonTsEngine\FileWriter.h" />
     <ClInclude Include="BonTsEngine\IBonDriver.h" />
     <ClInclude Include="BonTsEngine\LogoDownloader.h" />
     <ClInclude Include="BonTsEngine\MediaData.h" />
@@ -647,6 +644,7 @@
     <ClInclude Include="BonTsEngine\TsInformation.h" />
     <ClInclude Include="BonTsEngine\TsMedia.h" />
     <ClInclude Include="BonTsEngine\TsPacketParser.h" />
+    <ClInclude Include="BonTsEngine\TsRecorder.h" />
     <ClInclude Include="BonTsEngine\TsSelector.h" />
     <ClInclude Include="BonTsEngine\TsStream.h" />
     <ClInclude Include="BonTsEngine\TsTable.h" />

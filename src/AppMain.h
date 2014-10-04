@@ -513,7 +513,7 @@ private:
 		void OnServiceListUpdated(CTsAnalyzer *pTsAnalyzer,bool bStreamChanged) override;
 		void OnServiceInfoUpdated(CTsAnalyzer *pTsAnalyzer) override;
 		void OnServiceChanged(WORD ServiceID) override;
-		void OnFileWriteError(CBufferedFileWriter *pFileWriter) override;
+		void OnFileWriteError(CTsRecorder *pTsRecorder) override;
 		void OnVideoStreamTypeChanged(BYTE VideoStreamType) override;
 		void OnVideoSizeChanged(CMediaViewer *pMediaViewer) override;
 		void OnEmmProcessed() override;

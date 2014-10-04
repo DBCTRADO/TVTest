@@ -1426,7 +1426,7 @@ bool CAppCore::StartRecord(LPCTSTR pszFileName,
 	m_App.RecordManager.SetStopTimeSpec(pStopTime);
 	m_App.RecordManager.SetStopOnEventEnd(false);
 	m_App.RecordManager.SetClient(Client);
-	m_App.RecordOptions.ApplyOptions(&m_App.RecordManager);
+	m_App.RecordOptions.GetRecordingSettings(&m_App.RecordManager.GetRecordingSettings());
 	if (m_App.CmdLineOptions.m_fRecordCurServiceOnly)
 		m_App.RecordManager.SetCurServiceOnly(true);
 	if (m_App.RecordManager.IsReserved()) {
@@ -1520,10 +1520,13 @@ bool CAppCore::StartReservedRecord()
 		OnError(&m_App.RecordManager,TEXT("録画を開始できません。"));
 		return false;
 	}
+	m_App.RecordManager.GetRecordTask()->GetFileName(szFileName,lengthof(szFileName));
+	AddLog(TEXT("録画開始 %s"),szFileName);
+
 	m_App.ResidentManager.SetStatus(CResidentManager::STATUS_RECORDING,
 									CResidentManager::STATUS_RECORDING);
-	AddLog(TEXT("録画開始 %s"),szFileName);
 	m_App.AppEventManager.OnRecordingStarted();
+
 	return true;
 }
 
@@ -1542,18 +1545,18 @@ bool CAppCore::StopRecord()
 	if (!m_App.RecordManager.IsRecording())
 		return false;
 
-	TCHAR szFileName[MAX_PATH],szSize[32];
-	StdUtil::strncpy(szFileName,lengthof(szFileName),
-					 m_App.RecordManager.GetRecordTask()->GetFileName());
+	TCHAR szFileName[MAX_PATH];
+	m_App.RecordManager.GetRecordTask()->GetFileName(szFileName,lengthof(szFileName));
 
 	m_App.RecordManager.StopRecord();
 	m_App.RecordOptions.Apply(CRecordOptions::UPDATE_RECORDSTREAM);
 	m_App.CoreEngine.m_DtvEngine.SetDescrambleCurServiceOnly(
 		m_App.GeneralOptions.GetDescrambleCurServiceOnly());
 
-	UInt64ToString(m_App.CoreEngine.m_DtvEngine.m_FileWriter.GetWriteSize(),
-				   szSize,lengthof(szSize));
-	AddLog(TEXT("録画停止 %s (書き出しサイズ %s Bytes)"),szFileName,szSize);
+	CTsRecorder::WriteStatistics Stats;
+	m_App.CoreEngine.m_DtvEngine.m_TsRecorder.GetWriteStatistics(&Stats);
+	AddLog(TEXT("録画停止 %s (出力TSサイズ %llu Bytes / 書き出しエラー回数 %u)"),
+		   szFileName,Stats.OutputSize,Stats.WriteErrorCount);
 
 	m_App.ResidentManager.SetStatus(0,CResidentManager::STATUS_RECORDING);
 	m_App.AppEventManager.OnRecordingStopped();

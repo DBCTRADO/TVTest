@@ -421,21 +421,32 @@ int CRecordStatusItem::GetTipText(LPTSTR pszText,int MaxLength)
 
 	if (RecordManager.IsRecording()) {
 		const CRecordTask *pRecordTask=RecordManager.GetRecordTask();
+		int Length;
 
 		unsigned int RecordSec=pRecordTask->GetRecordTime()/1000;
-		unsigned int WroteSize=(unsigned int)(pRecordTask->GetWroteSize()/(1024*1024/100));
+		Length=StdUtil::snprintf(pszText,MaxLength,
+								 TEXT("● %d:%02d:%02d"),
+								 RecordSec/(60*60),(RecordSec/60)%60,RecordSec%60);
+
+		LONGLONG WroteSize=pRecordTask->GetWroteSize();
+		if (WroteSize>=0) {
+			unsigned int Size=(unsigned int)(WroteSize/(1024*1024/100));
+			Length+=StdUtil::snprintf(pszText+Length,MaxLength-Length,
+									  TEXT("\r\nサイズ: %d.%02d MB"),
+									  Size/100,Size%100);
+		}
+
 		LONGLONG DiskFreeSpace=pRecordTask->GetFreeSpace();
-		unsigned int FreeSpace;
-		if (DiskFreeSpace>0)
-			FreeSpace=(unsigned int)(DiskFreeSpace/(ULONGLONG)(1024*1024*1024/100));
-		else
-			FreeSpace=0;
-		return StdUtil::snprintf(pszText,MaxLength,
-								 TEXT("● %d:%02d:%02d\r\nサイズ: %d.%02d MB\r\n空き容量: %d.%02d GB"),
-								 RecordSec/(60*60),(RecordSec/60)%60,RecordSec%60,
-								 WroteSize/100,WroteSize%100,
-								 FreeSpace/100,FreeSpace%100);
+		if (DiskFreeSpace>0) {
+			unsigned int FreeSpace=(unsigned int)(DiskFreeSpace/(ULONGLONG)(1024*1024*1024/100));
+			Length+=StdUtil::snprintf(pszText+Length,MaxLength-Length,
+									  TEXT("\r\n空き容量: %d.%02d GB"),
+									  FreeSpace/100,FreeSpace%100);
+		}
+
+		return Length;
 	}
+
 	pszText[0]='\0';
 	return 0;
 }

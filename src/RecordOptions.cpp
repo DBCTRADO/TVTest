@@ -18,7 +18,6 @@ static const UINT MEGA_BYTES=1024*1024;
 // 書き出しバッファサイズの制限(バイト単位)
 static const UINT WRITE_BUFFER_SIZE_MIN=1024;
 static const UINT WRITE_BUFFER_SIZE_MAX=32*MEGA_BYTES;
-static const UINT WRITE_BUFFER_SIZE_DEFAULT=MEGA_BYTES;
 
 // さかのぼり録画バッファサイズの制限(MiB単位)
 static const UINT TIMESHIFT_BUFFER_SIZE_MIN=1;
@@ -46,12 +45,8 @@ CRecordOptions::CRecordOptions()
 	, m_fConfirmExit(true)
 	, m_fConfirmStop(false)
 	, m_fConfirmStopStatusBarOnly(false)
-	, m_fCurServiceOnly(false)
-	, m_fSaveSubtitle(true)
-	, m_fSaveDataCarrousel(true)
 	, m_fAlertLowFreeSpace(true)
 	, m_LowFreeSpaceThreshold(2048)
-	, m_BufferSize(WRITE_BUFFER_SIZE_DEFAULT)
 	, m_TimeShiftBufferSize(TIMESHIFT_BUFFER_SIZE_DEFAULT)
 	, m_fEnableTimeShiftRecording(false)
 	, m_MaxPendingSize(MAX_PENDING_SIZE_DEFAULT)
@@ -75,23 +70,19 @@ bool CRecordOptions::Apply(DWORD Flags)
 
 	if ((Flags&UPDATE_RECORDSTREAM)!=0
 			&& !GetAppClass().RecordManager.IsRecording()) {
-		DWORD Stream=CTsSelector::STREAM_ALL;
-		if (!m_fSaveSubtitle)
-			Stream^=CTsSelector::STREAM_CAPTION;
-		if (!m_fSaveDataCarrousel)
-			Stream^=CTsSelector::STREAM_DATACARROUSEL;
-		DtvEngine.SetWriteCurServiceOnly(m_fCurServiceOnly,Stream);
-		DtvEngine.m_FileWriter.ClearQueue();
+		DtvEngine.SetWriteCurServiceOnly(m_Settings.m_fCurServiceOnly,
+										 m_Settings.m_SaveStream);
+		DtvEngine.m_TsRecorder.ClearQueue();
 	}
 
 	if ((Flags&UPDATE_TIMESHIFTBUFFER)!=0)
-		DtvEngine.m_FileWriter.SetQueueSize(MEGA_BYTES,m_TimeShiftBufferSize);
+		DtvEngine.m_TsRecorder.SetQueueSize(MEGA_BYTES,m_TimeShiftBufferSize);
 
 	if ((Flags&UPDATE_ENABLETIMESHIFT)!=0)
-		DtvEngine.m_FileWriter.EnableQueueing(m_fEnableTimeShiftRecording);
+		DtvEngine.m_TsRecorder.EnableQueueing(m_fEnableTimeShiftRecording);
 
 	if ((Flags&UPDATE_MAXPENDINGSIZE)!=0)
-		DtvEngine.m_FileWriter.SetMaxPendingSize(m_MaxPendingSize);
+		DtvEngine.m_TsRecorder.SetMaxPendingSize(m_MaxPendingSize);
 
 	return true;
 }
@@ -136,11 +127,15 @@ bool CRecordOptions::ReadSettings(CSettings &Settings)
 	Settings.Read(TEXT("ConfrimRecordingExit"),&m_fConfirmExit);
 	Settings.Read(TEXT("ConfrimRecordStop"),&m_fConfirmStop);
 	Settings.Read(TEXT("ConfrimRecordStopStatusBarOnly"),&m_fConfirmStopStatusBarOnly);
-	Settings.Read(TEXT("RecordCurServiceOnly"),&m_fCurServiceOnly);
-	Settings.Read(TEXT("RecordSubtitle"),&m_fSaveSubtitle);
-	Settings.Read(TEXT("RecordDataCarrousel"),&m_fSaveDataCarrousel);
+	Settings.Read(TEXT("RecordCurServiceOnly"),&m_Settings.m_fCurServiceOnly);
+	bool f;
+	if (Settings.Read(TEXT("RecordSubtitle"),&f))
+		m_Settings.SetSaveCaption(f);
+	if (Settings.Read(TEXT("RecordDataCarrousel"),&f))
+		m_Settings.SetSaveDataCarrousel(f);
+	Settings.Read(TEXT("WritePlugin"),&m_Settings.m_WritePlugin);
 	if (Settings.Read(TEXT("RecordBufferSize"),&Value))
-		m_BufferSize=CLAMP(Value,WRITE_BUFFER_SIZE_MIN,WRITE_BUFFER_SIZE_MAX);
+		m_Settings.m_BufferSize=CLAMP(Value,WRITE_BUFFER_SIZE_MIN,WRITE_BUFFER_SIZE_MAX);
 	Settings.Read(TEXT("AlertLowFreeSpace"),&m_fAlertLowFreeSpace);
 	Settings.Read(TEXT("LowFreeSpaceThreshold"),&m_LowFreeSpaceThreshold);
 	if (Settings.Read(TEXT("TimeShiftRecBufferSize"),&Value))
@@ -173,10 +168,11 @@ bool CRecordOptions::WriteSettings(CSettings &Settings)
 	Settings.Write(TEXT("ConfrimRecordingExit"),m_fConfirmExit);
 	Settings.Write(TEXT("ConfrimRecordStop"),m_fConfirmStop);
 	Settings.Write(TEXT("ConfrimRecordStopStatusBarOnly"),m_fConfirmStopStatusBarOnly);
-	Settings.Write(TEXT("RecordCurServiceOnly"),m_fCurServiceOnly);
-	Settings.Write(TEXT("RecordSubtitle"),m_fSaveSubtitle);
-	Settings.Write(TEXT("RecordDataCarrousel"),m_fSaveDataCarrousel);
-	Settings.Write(TEXT("RecordBufferSize"),m_BufferSize);
+	Settings.Write(TEXT("RecordCurServiceOnly"),m_Settings.m_fCurServiceOnly);
+	Settings.Write(TEXT("RecordSubtitle"),m_Settings.IsSaveCaption());
+	Settings.Write(TEXT("RecordDataCarrousel"),m_Settings.IsSaveDataCarrousel());
+	Settings.Write(TEXT("WritePlugin"),m_Settings.m_WritePlugin);
+	Settings.Write(TEXT("RecordBufferSize"),static_cast<unsigned int>(m_Settings.m_BufferSize));
 	Settings.Write(TEXT("AlertLowFreeSpace"),m_fAlertLowFreeSpace);
 	Settings.Write(TEXT("LowFreeSpaceThreshold"),m_LowFreeSpaceThreshold);
 	Settings.Write(TEXT("TimeShiftRecBufferSize"),m_TimeShiftBufferSize);
@@ -327,7 +323,7 @@ bool CRecordOptions::ConfirmExit(HWND hwndOwner,const CRecordManager *pRecordMan
 bool CRecordOptions::EnableTimeShiftRecording(bool fEnable)
 {
 	if (m_fEnableTimeShiftRecording!=fEnable) {
-		if (!GetAppClass().CoreEngine.m_DtvEngine.m_FileWriter.EnableQueueing(fEnable))
+		if (!GetAppClass().CoreEngine.m_DtvEngine.m_TsRecorder.EnableQueueing(fEnable))
 			return false;
 		m_fEnableTimeShiftRecording=fEnable;
 	}
@@ -335,16 +331,13 @@ bool CRecordOptions::EnableTimeShiftRecording(bool fEnable)
 }
 
 
-bool CRecordOptions::ApplyOptions(CRecordManager *pManager)
+bool CRecordOptions::GetRecordingSettings(CRecordingSettings *pSettings)
 {
-	pManager->SetCurServiceOnly(m_fCurServiceOnly);
-	DWORD Stream=CTsSelector::STREAM_ALL;
-	if (!m_fSaveSubtitle)
-		Stream^=CTsSelector::STREAM_CAPTION;
-	if (!m_fSaveDataCarrousel)
-		Stream^=CTsSelector::STREAM_DATACARROUSEL;
-	pManager->SetSaveStream(Stream);
-	pManager->SetBufferSize(m_BufferSize);
+	if (pSettings==NULL)
+		return false;
+
+	*pSettings=m_Settings;
+
 	return true;
 }
 
@@ -367,21 +360,35 @@ INT_PTR CRecordOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 			::SetDlgItemText(hDlg,IDC_RECORDOPTIONS_SAVEFOLDER,m_szSaveFolder);
 			::SendDlgItemMessage(hDlg,IDC_RECORDOPTIONS_FILENAME,EM_LIMITTEXT,MAX_PATH-1,0);
 			::SetDlgItemText(hDlg,IDC_RECORDOPTIONS_FILENAME,m_szFileName);
-			::CheckDlgButton(hDlg,IDC_RECORDOPTIONS_CONFIRMCHANNELCHANGE,
-				m_fConfirmChannelChange?BST_CHECKED:BST_UNCHECKED);
-			::CheckDlgButton(hDlg,IDC_RECORDOPTIONS_CONFIRMEXIT,
-				m_fConfirmExit?BST_CHECKED:BST_UNCHECKED);
-			::CheckDlgButton(hDlg,IDC_RECORDOPTIONS_CONFIRMSTOP,
-				m_fConfirmStop?BST_CHECKED:BST_UNCHECKED);
-			::CheckDlgButton(hDlg,IDC_RECORDOPTIONS_CONFIRMSTATUSBARSTOP,
-				m_fConfirmStopStatusBarOnly?BST_CHECKED:BST_UNCHECKED);
+			DlgCheckBox_Check(hDlg,IDC_RECORDOPTIONS_CONFIRMCHANNELCHANGE,
+							  m_fConfirmChannelChange);
+			DlgCheckBox_Check(hDlg,IDC_RECORDOPTIONS_CONFIRMEXIT,
+							  m_fConfirmExit);
+			DlgCheckBox_Check(hDlg,IDC_RECORDOPTIONS_CONFIRMSTOP,
+							  m_fConfirmStop);
+			DlgCheckBox_Check(hDlg,IDC_RECORDOPTIONS_CONFIRMSTATUSBARSTOP,
+							  m_fConfirmStopStatusBarOnly);
 			EnableDlgItem(hDlg,IDC_RECORDOPTIONS_CONFIRMSTATUSBARSTOP,m_fConfirmStop);
-			::CheckDlgButton(hDlg,IDC_RECORDOPTIONS_CURSERVICEONLY,
-				m_fCurServiceOnly?BST_CHECKED:BST_UNCHECKED);
-			::CheckDlgButton(hDlg,IDC_RECORDOPTIONS_SAVESUBTITLE,
-				m_fSaveSubtitle?BST_CHECKED:BST_UNCHECKED);
-			::CheckDlgButton(hDlg,IDC_RECORDOPTIONS_SAVEDATACARROUSEL,
-				m_fSaveDataCarrousel?BST_CHECKED:BST_UNCHECKED);
+			DlgCheckBox_Check(hDlg,IDC_RECORDOPTIONS_CURSERVICEONLY,
+							  m_Settings.m_fCurServiceOnly);
+			DlgCheckBox_Check(hDlg,IDC_RECORDOPTIONS_SAVESUBTITLE,
+							  m_Settings.IsSaveCaption());
+			DlgCheckBox_Check(hDlg,IDC_RECORDOPTIONS_SAVEDATACARROUSEL,
+							  m_Settings.IsSaveDataCarrousel());
+
+			// 保存プラグイン
+			DlgComboBox_AddString(hDlg,IDC_RECORDOPTIONS_WRITEPLUGIN,TEXT("使用しない (TS出力)"));
+			CRecordManager::GetWritePluginList(&m_WritePluginList);
+			int Sel=-1;
+			for (size_t i=0;i<m_WritePluginList.size();i++) {
+				LPCTSTR pszFileName=m_WritePluginList[i].c_str();
+				DlgComboBox_AddString(hDlg,IDC_RECORDOPTIONS_WRITEPLUGIN,pszFileName);
+				if (!m_Settings.m_WritePlugin.empty()
+						&& IsEqualFileName(pszFileName,m_Settings.m_WritePlugin.c_str()))
+					Sel=(int)i;
+			}
+			DlgComboBox_SetCurSel(hDlg,IDC_RECORDOPTIONS_WRITEPLUGIN,Sel+1);
+			EnableDlgItem(hDlg,IDC_RECORDOPTIONS_WRITEPLUGINSETTING,Sel>0);
 
 			DlgCheckBox_Check(hDlg,IDC_RECORDOPTIONS_ALERTLOWFREESPACE,m_fAlertLowFreeSpace);
 			::SetDlgItemInt(hDlg,IDC_RECORDOPTIONS_LOWFREESPACETHRESHOLD,m_LowFreeSpaceThreshold,FALSE);
@@ -406,7 +413,7 @@ INT_PTR CRecordOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 			}
 
 			::SetDlgItemInt(hDlg,IDC_RECORDOPTIONS_BUFFERSIZE,
-							m_BufferSize/1024,FALSE);
+							m_Settings.m_BufferSize/1024,FALSE);
 			DlgUpDown_SetRange(hDlg,IDC_RECORDOPTIONS_BUFFERSIZE_UD,
 							   WRITE_BUFFER_SIZE_MIN/1024,WRITE_BUFFER_SIZE_MAX/1024);
 
@@ -474,6 +481,23 @@ INT_PTR CRecordOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 								IDC_RECORDOPTIONS_LOWFREESPACETHRESHOLD_UNIT,
 						   DlgCheckBox_IsChecked(hDlg,IDC_RECORDOPTIONS_ALERTLOWFREESPACE));
 			return TRUE;
+
+		case IDC_RECORDOPTIONS_WRITEPLUGIN:
+			if (HIWORD(wParam)==CBN_SELCHANGE) {
+				EnableDlgItem(hDlg,IDC_RECORDOPTIONS_WRITEPLUGINSETTING,
+							  DlgComboBox_GetCurSel(hDlg,IDC_RECORDOPTIONS_WRITEPLUGIN)>0);
+			}
+			return TRUE;
+
+		case IDC_RECORDOPTIONS_WRITEPLUGINSETTING:
+			{
+				int Sel=DlgComboBox_GetCurSel(hDlg,IDC_RECORDOPTIONS_WRITEPLUGIN)-1;
+
+				if (Sel>=0 && (size_t)Sel<m_WritePluginList.size()) {
+					CRecordManager::ShowWritePluginSetting(hDlg,m_WritePluginList[Sel].c_str());
+				}
+			}
+			return TRUE;
 		}
 		return TRUE;
 
@@ -539,18 +563,18 @@ INT_PTR CRecordOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 
 				bool fOptionChanged=false;
 				bool f=DlgCheckBox_IsChecked(hDlg,IDC_RECORDOPTIONS_CURSERVICEONLY);
-				if (m_fCurServiceOnly!=f) {
-					m_fCurServiceOnly=f;
+				if (m_Settings.m_fCurServiceOnly!=f) {
+					m_Settings.m_fCurServiceOnly=f;
 					fOptionChanged=true;
 				}
 				f=DlgCheckBox_IsChecked(hDlg,IDC_RECORDOPTIONS_SAVESUBTITLE);
-				if (m_fSaveSubtitle!=f) {
-					m_fSaveSubtitle=f;
+				if (m_Settings.IsSaveCaption()!=f) {
+					m_Settings.SetSaveCaption(f);
 					fOptionChanged=true;
 				}
 				f=DlgCheckBox_IsChecked(hDlg,IDC_RECORDOPTIONS_SAVEDATACARROUSEL);
-				if (m_fSaveDataCarrousel!=f) {
-					m_fSaveDataCarrousel=f;
+				if (m_Settings.IsSaveDataCarrousel()!=f) {
+					m_Settings.SetSaveDataCarrousel(f);
 					fOptionChanged=true;
 				}
 				if (fOptionChanged)
@@ -565,10 +589,16 @@ INT_PTR CRecordOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 				if (Sel>=0 && Sel<lengthof(StatusBarCommandList))
 					m_StatusBarRecordCommand=StatusBarCommandList[Sel];
 
+				Sel=(int)DlgComboBox_GetCurSel(hDlg,IDC_RECORDOPTIONS_WRITEPLUGIN)-1;
+				if (Sel>=0 && (size_t)Sel<m_WritePluginList.size())
+					m_Settings.m_WritePlugin=m_WritePluginList[Sel];
+				else
+					m_Settings.m_WritePlugin.clear();
+
 				unsigned int BufferSize=
 					::GetDlgItemInt(hDlg,IDC_RECORDOPTIONS_BUFFERSIZE,NULL,FALSE);
 				if (BufferSize!=0)
-					m_BufferSize=CLAMP(BufferSize*1024,WRITE_BUFFER_SIZE_MIN,WRITE_BUFFER_SIZE_MAX);
+					m_Settings.m_BufferSize=CLAMP(BufferSize*1024,WRITE_BUFFER_SIZE_MIN,WRITE_BUFFER_SIZE_MAX);
 
 				BufferSize=::GetDlgItemInt(hDlg,IDC_RECORDOPTIONS_TIMESHIFTBUFFERSIZE,NULL,FALSE);
 				if (BufferSize!=0) {
@@ -592,6 +622,10 @@ INT_PTR CRecordOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 			}
 			break;
 		}
+		break;
+
+	case WM_DESTROY:
+		m_WritePluginList.clear();
 		break;
 	}
 

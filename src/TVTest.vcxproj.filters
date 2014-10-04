@@ -62,9 +62,6 @@
     <ClCompile Include="BonTsEngine\BonSrcDecoder.cpp">
       <Filter>BonTsEngine\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="BonTsEngine\BufferedFileWriter.cpp">
-      <Filter>BonTsEngine\Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="BonTsEngine\CaptionDecoder.cpp">
       <Filter>BonTsEngine\Source Files</Filter>
     </ClCompile>
@@ -75,12 +72,6 @@
       <Filter>BonTsEngine\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="BonTsEngine\Exception.cpp">
-      <Filter>BonTsEngine\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="BonTsEngine\FileReader.cpp">
-      <Filter>BonTsEngine\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="BonTsEngine\FileWriter.cpp">
       <Filter>BonTsEngine\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="BonTsEngine\LogoDownloader.cpp">
@@ -524,6 +515,12 @@
     <ClCompile Include="AppEvent.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
+    <ClCompile Include="BonTsEngine\TsRecorder.cpp">
+      <Filter>BonTsEngine\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="BonTsEngine\BasicFile.cpp">
+      <Filter>BonTsEngine\Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="BonTsEngine\Bitstream.h">
@@ -533,9 +530,6 @@
       <Filter>BonTsEngine\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="BonTsEngine\BonSrcDecoder.h">
-      <Filter>BonTsEngine\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="BonTsEngine\BufferedFileWriter.h">
       <Filter>BonTsEngine\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="BonTsEngine\CaptionDecoder.h">
@@ -551,12 +545,6 @@
       <Filter>BonTsEngine\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="BonTsEngine\Exception.h">
-      <Filter>BonTsEngine\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="BonTsEngine\FileReader.h">
-      <Filter>BonTsEngine\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="BonTsEngine\FileWriter.h">
       <Filter>BonTsEngine\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="BonTsEngine\IBonDriver.h">
@@ -1020,6 +1008,12 @@
     </ClInclude>
     <ClInclude Include="AppEvent.h">
       <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="BonTsEngine\TsRecorder.h">
+      <Filter>BonTsEngine\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="BonTsEngine\BasicFile.h">
+      <Filter>BonTsEngine\Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

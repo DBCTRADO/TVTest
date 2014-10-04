@@ -12,8 +12,7 @@
 #include "CasProcessor.h"
 #include "MediaViewer.h"
 #include "MediaTee.h"
-//#include "FileWriter.h"
-#include "BufferedFileWriter.h"
+#include "TsRecorder.h"
 #include "MediaGrabber.h"
 #include "TsSelector.h"
 #include "EventManager.h"
@@ -44,7 +43,7 @@ public:
 		DECODER_ID_CasProcessor,
 		DECODER_ID_MediaViewer,
 		DECODER_ID_MediaTee,
-		DECODER_ID_FileWriter,
+		DECODER_ID_TsRecorder,
 		DECODER_ID_MediaGrabber,
 		DECODER_ID_TsSelector,
 		DECODER_ID_EventManager,
@@ -76,7 +75,7 @@ public:
 		virtual void OnServiceListUpdated(CTsAnalyzer *pTsAnalyzer, bool bStreamChanged) {}
 		virtual void OnServiceInfoUpdated(CTsAnalyzer *pTsAnalyzer) {}
 		virtual void OnServiceChanged(WORD ServiceID) {}
-		virtual void OnFileWriteError(CBufferedFileWriter *pFileWriter) {}
+		virtual void OnFileWriteError(CTsRecorder *pTsRecorder) {}
 		virtual void OnVideoStreamTypeChanged(BYTE StreamType) {}
 		virtual void OnVideoSizeChanged(CMediaViewer *pMediaViewer) {}
 		virtual void OnEmmProcessed() {}
@@ -195,8 +194,7 @@ public:
 	CCasProcessor m_CasProcessor;
 	CMediaViewer m_MediaViewer;				// メディアビューアー
 	CMediaTee m_MediaTee;					// メディアティー
-	//CFileWriter m_FileWriter;				// ファイルライター
-	CBufferedFileWriter m_FileWriter;
+	CTsRecorder m_TsRecorder;
 	CMediaGrabber m_MediaGrabber;
 	CTsSelector m_TsSelector;
 	CEventManager m_EventManager;

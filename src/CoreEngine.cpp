@@ -87,7 +87,7 @@ bool CCoreEngine::BuildDtvEngine(CDtvEngine::CEventHandler *pEventHandler)
 	    Å´               Å´
 	CTsSelector      CMediaGrabber
 	    Å´               Å´
-	CFileWriter      CMediaViewer
+	CTsRecorder      CMediaViewer
 	*/
 
 	struct {
@@ -121,7 +121,7 @@ bool CCoreEngine::BuildDtvEngine(CDtvEngine::CEventHandler *pEventHandler)
 	ConnectionList.Add(CDtvEngine::DECODER_ID_LogoDownloader,
 					   CDtvEngine::DECODER_ID_TsSelector);
 	ConnectionList.Add(CDtvEngine::DECODER_ID_TsSelector,
-					   CDtvEngine::DECODER_ID_FileWriter);
+					   CDtvEngine::DECODER_ID_TsRecorder);
 	ConnectionList.Add(CDtvEngine::DECODER_ID_CasProcessor,
 					   CDtvEngine::DECODER_ID_CaptionDecoder);
 	ConnectionList.Add(CDtvEngine::DECODER_ID_CaptionDecoder,
