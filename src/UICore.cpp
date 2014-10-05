@@ -274,74 +274,120 @@ int CUICore::FormatCurrentAudioText(LPTSTR pszText,int MaxLength) const
 	if (NumChannels==CMediaViewer::AUDIO_CHANNEL_INVALID)
 		return 0;
 
-	if (m_App.CoreEngine.m_DtvEngine.GetAudioStreamNum()>1)
+	const int NumAudio=m_App.CoreEngine.m_DtvEngine.GetAudioStreamNum();
+	const int StereoMode=m_App.UICore.GetStereoMode();
+	CTsAnalyzer::EventAudioInfo AudioInfo;
+
+	if (NumAudio>1)
 		Formatter.AppendFormat(TEXT("#%d: "),m_App.CoreEngine.m_DtvEngine.GetAudioStream()+1);
 
-	switch (NumChannels) {
-	case 1:
-		Formatter.Append(TEXT("Mono"));
-		break;
-	case CMediaViewer::AUDIO_CHANNEL_DUALMONO:
-	case 2:
-		{
-			const int StereoMode=m_App.UICore.GetStereoMode();
-			CTsAnalyzer::EventAudioInfo AudioInfo;
-			bool fValidAudioInfo=m_App.CoreEngine.m_DtvEngine.GetEventAudioInfo(&AudioInfo);
-
-			if (NumChannels==CMediaViewer::AUDIO_CHANNEL_DUALMONO
-					/*|| (fValidAudioInfo && AudioInfo.ComponentType==0x02)*/) {
-				// Dual mono
+	if (NumChannels==CMediaViewer::AUDIO_CHANNEL_DUALMONO) {
+		// Dual mono
+		if (m_App.CoreEngine.m_DtvEngine.GetEventAudioInfo(&AudioInfo)
+				&& AudioInfo.bESMultiLingualFlag
 				// ES multilingual flag ‚ª—§‚Á‚Ä‚¢‚é‚Ì‚É—¼•û“ú–{Œê‚Ìê‡‚ª‚ ‚é
-				if (fValidAudioInfo
-						&& AudioInfo.bESMultiLingualFlag
-						&& AudioInfo.LanguageCode!=AudioInfo.LanguageCode2) {
-					// “ñƒJ‘Œê
-					TCHAR szLang1[EpgUtil::MAX_LANGUAGE_TEXT_LENGTH];
-					TCHAR szLang2[EpgUtil::MAX_LANGUAGE_TEXT_LENGTH];
+				&& AudioInfo.LanguageCode!=AudioInfo.LanguageCode2) {
+			// “ñƒJ‘Œê
+			TCHAR szLang1[EpgUtil::MAX_LANGUAGE_TEXT_LENGTH];
+			TCHAR szLang2[EpgUtil::MAX_LANGUAGE_TEXT_LENGTH];
 
-					Formatter.Append(TEXT("[“ñ] "));
+			Formatter.Append(TEXT("[“ñ] "));
 
-					switch (StereoMode) {
-					case 0:
-						EpgUtil::GetLanguageText(AudioInfo.LanguageCode,
-												 szLang1,lengthof(szLang1),
-												 EpgUtil::LANGUAGE_TEXT_SHORT);
-						EpgUtil::GetLanguageText(AudioInfo.LanguageCode2,
-												 szLang2,lengthof(szLang2),
-												 EpgUtil::LANGUAGE_TEXT_SHORT);
-						Formatter.AppendFormat(TEXT("%s+%s"),szLang1,szLang2);
-						break;
-					case 1:
-						EpgUtil::GetLanguageText(AudioInfo.LanguageCode,
-												 szLang1,lengthof(szLang1),
-												 EpgUtil::LANGUAGE_TEXT_SIMPLE);
-						Formatter.Append(szLang1);
-						break;
-					case 2:
-						EpgUtil::GetLanguageText(AudioInfo.LanguageCode2,
-												 szLang2,lengthof(szLang2),
-												 EpgUtil::LANGUAGE_TEXT_SIMPLE);
-						Formatter.Append(szLang2);
-						break;
-					}
-				} else {
-					Formatter.AppendFormat(TEXT("Mono (%s)"),
-										   StereoMode==0?TEXT("Žå+•›"):
-										   StereoMode==1?TEXT("Žå"):TEXT("•›"));
-				}
-			} else {
-				Formatter.Append(TEXT("Stereo"));
-				if (StereoMode!=0)
-					Formatter.Append(StereoMode==1?TEXT("(L)"):TEXT("(R)"));
+			switch (StereoMode) {
+			case 0:
+				EpgUtil::GetLanguageText(AudioInfo.LanguageCode,
+										 szLang1,lengthof(szLang1),
+										 EpgUtil::LANGUAGE_TEXT_SHORT);
+				EpgUtil::GetLanguageText(AudioInfo.LanguageCode2,
+										 szLang2,lengthof(szLang2),
+										 EpgUtil::LANGUAGE_TEXT_SHORT);
+				Formatter.AppendFormat(TEXT("%s+%s"),szLang1,szLang2);
+				break;
+			case 1:
+				EpgUtil::GetLanguageText(AudioInfo.LanguageCode,
+										 szLang1,lengthof(szLang1),
+										 EpgUtil::LANGUAGE_TEXT_SIMPLE);
+				Formatter.Append(szLang1);
+				break;
+			case 2:
+				EpgUtil::GetLanguageText(AudioInfo.LanguageCode2,
+										 szLang2,lengthof(szLang2),
+										 EpgUtil::LANGUAGE_TEXT_SIMPLE);
+				Formatter.Append(szLang2);
+				break;
 			}
+		} else {
+			Formatter.Append(
+				StereoMode==1?TEXT("Žå‰¹º"):
+				StereoMode==2?TEXT("•›‰¹º"):
+				TEXT("Žå+•›‰¹º"));
 		}
-		break;
-	case 6:
-		Formatter.Append(TEXT("5.1ch"));
-		break;
-	default:
-		Formatter.AppendFormat(TEXT("%dch"),NumChannels);
-		break;
+	} else if (NumAudio>1 && m_App.CoreEngine.m_DtvEngine.GetEventAudioInfo(&AudioInfo)) {
+		switch (NumChannels) {
+		case 1:
+			Formatter.Append(TEXT("[M]"));
+			break;
+
+		case 2:
+			Formatter.Append(
+				StereoMode==1?TEXT("[S(L)]"):
+				StereoMode==2?TEXT("[S(R)]"):
+				TEXT("[S]"));
+			break;
+
+		case 6:
+			Formatter.Append(TEXT("[5.1]"));
+			break;
+
+		default:
+			Formatter.AppendFormat(TEXT("[%dch]"),NumChannels);
+			break;
+		}
+
+		TCHAR szAudio[CTsAnalyzer::EventAudioInfo::MAX_TEXT];
+		if (AudioInfo.szText[0]!='\0') {
+			LPTSTR p=::StrChr(AudioInfo.szText,_T('\r'));
+			if (p!=nullptr) {
+				TCHAR szBuf[CTsAnalyzer::EventAudioInfo::MAX_TEXT];
+				StdUtil::strncpy(szBuf,p-AudioInfo.szText,AudioInfo.szText);
+				p++;
+				if (*p==_T('\n'))
+					p++;
+				int Length=::lstrlen(szBuf);
+				StdUtil::snprintf(szBuf+Length,lengthof(szBuf)-Length,TEXT("/%s"),p);
+				TVTest::StringUtility::ToHalfWidthNoKatakana(
+					szBuf,szAudio,lengthof(szAudio));
+			} else {
+				TVTest::StringUtility::ToHalfWidthNoKatakana(
+					AudioInfo.szText,szAudio,lengthof(szAudio));
+			}
+		} else {
+			EpgUtil::GetLanguageText(AudioInfo.LanguageCode,
+									 szAudio,lengthof(szAudio),
+									 EpgUtil::LANGUAGE_TEXT_SIMPLE);
+		}
+		Formatter.Append(TEXT(" "));
+		Formatter.Append(szAudio);
+	} else {
+		switch (NumChannels) {
+		case 1:
+			Formatter.Append(TEXT("Mono"));
+			break;
+
+		case 2:
+			Formatter.Append(TEXT("Stereo"));
+			if (StereoMode!=0)
+				Formatter.Append(StereoMode==1?TEXT("(L)"):TEXT("(R)"));
+			break;
+
+		case 6:
+			Formatter.Append(TEXT("5.1ch"));
+			break;
+
+		default:
+			Formatter.AppendFormat(TEXT("%dch"),NumChannels);
+			break;
+		}
 	}
 
 	return (int)Formatter.Length();

@@ -166,22 +166,8 @@ bool CKeywordSearch::EncodeURL(UINT CodePage,LPCWSTR pszSrc,String *pDst) const
 
 	String SrcString;
 
-	// •Ð‰¼–¼ˆÈŠO‚ð”¼Šp‚É•ÏŠ·
-	for (int i=0;i<SrcLength;i++) {
-		WORD Type;
-		if (::GetStringTypeEx(LOCALE_USER_DEFAULT,CT_CTYPE3,&pszSrc[i],1,&Type)
-				&& (Type & (C3_FULLWIDTH | C3_KATAKANA))==C3_FULLWIDTH) {
-			TCHAR Buff[4];
-			int Length=::LCMapString(LOCALE_USER_DEFAULT,LCMAP_HALFWIDTH,
-									 &pszSrc[i],1,Buff,lengthof(Buff));
-			if (Length>0) {
-				SrcString.append(Buff,Length);
-				continue;
-			}
-		}
-
-		SrcString+=pszSrc[i];
-	}
+	if (!StringUtility::ToHalfWidthNoKatakana(pszSrc,SrcLength,&SrcString))
+		SrcString.assign(pszSrc,SrcLength);
 
 	StringUtility::Trim(SrcString,L" \t\r\n");
 	if (SrcString.empty())

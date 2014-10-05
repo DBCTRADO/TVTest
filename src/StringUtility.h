@@ -87,6 +87,10 @@ namespace TVTest
 		bool Replace(String &Str,String::value_type From,String::value_type To);
 		void ToUpper(String &Str);
 		void ToLower(String &Str);
+		bool ToHalfWidthNoKatakana(LPCWSTR pSrc,String::size_type SrcLength,String *pDst);
+		bool ToHalfWidthNoKatakana(const String &Src,String *pDst);
+		bool ToHalfWidthNoKatakana(LPCWSTR pszSrc,String *pDst);
+		bool ToHalfWidthNoKatakana(LPCWSTR pszSrc,LPWSTR pszDst,String::size_type DstLength);
 		bool ToAnsi(const String &Src,AnsiString *pDst);
 		bool Split(const String &Src,LPCWSTR pszDelimiter,std::vector<String> *pList);
 		bool Combine(const std::vector<String> &List,LPCWSTR pszDelimiter,String *pDst);
