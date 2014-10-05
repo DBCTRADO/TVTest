@@ -250,6 +250,11 @@ void CEventInfoPopup::FormatAudioInfo(
 		EpgUtil::GetLanguageText(pAudioInfo->LanguageCode2,szLang2,lengthof(szLang2));
 		StdUtil::snprintf(szAudioComponent,lengthof(szAudioComponent),
 						  TEXT(" [%s/%s]"),szLang1,szLang2);
+	} else {
+		TCHAR szLang[EpgUtil::MAX_LANGUAGE_TEXT_LENGTH];
+		EpgUtil::GetLanguageText(pAudioInfo->LanguageCode,szLang,lengthof(szLang));
+		StdUtil::snprintf(szAudioComponent,lengthof(szAudioComponent),
+						  TEXT(" [%s]"),szLang);
 	}
 
 	StdUtil::snprintf(pszText,MaxLength,TEXT("%s%s"),
