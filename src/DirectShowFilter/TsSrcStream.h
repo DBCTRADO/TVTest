@@ -16,7 +16,7 @@ public:
 	CTsSrcStream();
 	~CTsSrcStream();
 	bool Initialize();
-	bool InputMedia(const CMediaData *pMediaData);
+	bool InputMedia(CMediaData *pMediaData);
 	size_t GetData(BYTE *pData, size_t Size);
 	void Reset();
 	bool IsDataAvailable();
@@ -32,6 +32,7 @@ public:
 	bool IsSyncFor1Seg() const { return m_bSyncFor1Seg; }
 	void SetVideoPID(WORD PID);
 	void SetAudioPID(WORD PID);
+	void MapAudioPID(WORD AudioPID, WORD MapPID);
 	LONGLONG GetPTSDuration() const { return m_PTSDuration; }
 
 private:
@@ -65,6 +66,7 @@ private:
 	LONGLONG m_PTSDuration;
 	WORD m_VideoPID;
 	WORD m_AudioPID;
+	WORD m_MapAudioPID;
 };
 
 

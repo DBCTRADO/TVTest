@@ -59,7 +59,7 @@ public:
 	bool Is1SegMode() const;
 
 	bool SetVideoPID(const WORD wPID);
-	bool SetAudioPID(const WORD wPID);
+	bool SetAudioPID(const WORD wPID, const bool bUseMap = false);
 	WORD GetVideoPID() const;
 	WORD GetAudioPID() const;
 
@@ -189,6 +189,7 @@ protected:
 	// Elementary Stream‚ÌPID
 	WORD m_wVideoEsPID;
 	WORD m_wAudioEsPID;
+	WORD m_MapAudioPID;
 
 	WORD m_wVideoWindowX;
 	WORD m_wVideoWindowY;

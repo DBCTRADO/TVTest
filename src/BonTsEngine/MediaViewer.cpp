@@ -161,6 +161,7 @@ CMediaViewer::CMediaViewer(IEventHandler *pEventHandler)
 
 	, m_wVideoEsPID(PID_INVALID)
 	, m_wAudioEsPID(PID_INVALID)
+	, m_MapAudioPID(PID_INVALID)
 
 	, m_wVideoWindowX(0)
 	, m_wVideoWindowY(0)
@@ -1041,27 +1042,38 @@ bool CMediaViewer::SetVideoPID(const WORD wPID)
 }
 
 
-bool CMediaViewer::SetAudioPID(const WORD wPID)
+bool CMediaViewer::SetAudioPID(const WORD wPID, const bool bUseMap)
 {
 	// 音声出力ピンにPIDをマッピングする
 
-	if (wPID == m_wAudioEsPID)
+	if (wPID == m_wAudioEsPID
+			&& (bUseMap || wPID == m_MapAudioPID))
 		return true;
 
 	TRACE(TEXT("CMediaViewer::SetAudioPID() %04X <- %04X\n"), wPID, m_wAudioEsPID);
 
-	if (m_pMp2DemuxAudioMap) {
-		// 現在のPIDをアンマップ
-		if (m_wAudioEsPID != PID_INVALID) {
-			ULONG TempPID = m_wAudioEsPID;
-			if (m_pMp2DemuxAudioMap->UnmapPID(1UL, &TempPID) != S_OK)
-				return false;
+	if (bUseMap && wPID != PID_INVALID && m_MapAudioPID != PID_INVALID) {
+		/*
+			bUseMap が true の場合、PID を書き換えて音声ストリームを変更する
+			IMPEG2PIDMap::MapPID() を呼ぶと再生が一瞬止まるので、それを回避するため
+		*/
+		if (m_pSrcFilter)
+			m_pSrcFilter->MapAudioPID(wPID, m_MapAudioPID);
+	} else {
+		if (m_pMp2DemuxAudioMap) {
+			// 現在のPIDをアンマップ
+			if (m_MapAudioPID != PID_INVALID) {
+				ULONG TempPID = m_MapAudioPID;
+				if (m_pMp2DemuxAudioMap->UnmapPID(1UL, &TempPID) != S_OK)
+					return false;
+				m_MapAudioPID = PID_INVALID;
+			}
 		}
-	}
 
-	if (!MapAudioPID(wPID)) {
-		m_wAudioEsPID = PID_INVALID;
-		return false;
+		if (!MapAudioPID(wPID)) {
+			m_wAudioEsPID = PID_INVALID;
+			return false;
+		}
 	}
 
 	m_wAudioEsPID = wPID;
@@ -1989,6 +2001,7 @@ bool CMediaViewer::MapAudioPID(WORD PID)
 			ULONG TempPID = PID;
 			if (m_pMp2DemuxAudioMap->MapPID(1UL, &TempPID, MEDIA_ELEMENTARY_STREAM) != S_OK)
 				return false;
+			m_MapAudioPID = PID;
 		}
 	}
 

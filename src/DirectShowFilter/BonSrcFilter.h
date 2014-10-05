@@ -43,6 +43,7 @@ public:
 	bool SetInitialPoolPercentage(int Percentage);
 	int GetBufferFillPercentage() const;
 	bool SetInputWait(DWORD Wait);
+	bool MapAudioPID(WORD AudioPID, WORD MapPID);
 
 protected:
 	CBonSrcFilter(LPUNKNOWN pUnk, HRESULT *phr);

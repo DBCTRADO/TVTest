@@ -276,6 +276,13 @@ bool CBonSrcPin::SetInputWait(DWORD Wait)
 }
 
 
+bool CBonSrcPin::MapAudioPID(WORD AudioPID, WORD MapPID)
+{
+	m_SrcStream.MapAudioPID(AudioPID, MapPID);
+	return true;
+}
+
+
 unsigned int __stdcall CBonSrcPin::StreamThread(LPVOID lpParameter)
 {
 	CBonSrcPin *pThis = static_cast<CBonSrcPin*>(lpParameter);

@@ -205,3 +205,11 @@ bool CBonSrcFilter::SetInputWait(DWORD Wait)
 		return m_pSrcPin->SetInputWait(Wait);
 	return false;
 }
+
+
+bool CBonSrcFilter::MapAudioPID(WORD AudioPID, WORD MapPID)
+{
+	if (m_pSrcPin)
+		return m_pSrcPin->MapAudioPID(AudioPID, MapPID);
+	return false;
+}

@@ -921,7 +921,7 @@ bool CDtvEngine::SetAudioStream(const int StreamIndex)
 	if (!m_TsAnalyzer.GetAudioEsPID(m_CurServiceIndex, StreamIndex, &AudioPID))
 		return false;
 
-	if (!m_MediaViewer.SetAudioPID(AudioPID))
+	if (!m_MediaViewer.SetAudioPID(AudioPID, true))
 		return false;
 
 	m_CurAudioStream = StreamIndex;

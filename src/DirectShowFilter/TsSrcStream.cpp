@@ -51,6 +51,7 @@ CTsSrcStream::CTsSrcStream()
 	, m_bSyncFor1Seg(false)
 	, m_VideoPID(PID_INVALID)
 	, m_AudioPID(PID_INVALID)
+	, m_MapAudioPID(PID_INVALID)
 {
 	Reset();
 }
@@ -77,7 +78,7 @@ bool CTsSrcStream::Initialize()
 }
 
 
-bool CTsSrcStream::InputMedia(const CMediaData *pMediaData)
+bool CTsSrcStream::InputMedia(CMediaData *pMediaData)
 {
 	CBlockLock Lock(&m_Lock);
 
@@ -85,17 +86,25 @@ bool CTsSrcStream::InputMedia(const CMediaData *pMediaData)
 		PTS‚ğ“¯Šú‚·‚éˆ—‚ÍATBS–â‘è‘ÎôˆÄ(up0357)‚ğŒ³‚É‚µ‚Ä‚¢‚Ü‚·B
 	*/
 
-	const CTsPacket *pPacket = static_cast<const CTsPacket*>(pMediaData);
+	CTsPacket *pPacket = static_cast<CTsPacket*>(pMediaData);
 	const WORD PID = pPacket->GetPID();
 	if (PID != m_VideoPID && PID != m_AudioPID) {
-		AddData(pMediaData);
+		if (PID != m_MapAudioPID)
+			AddData(pMediaData);
 		return true;
+	}
+
+	const bool bVideoPacket = (PID == m_VideoPID);
+
+	if (!bVideoPacket && m_MapAudioPID != PID_INVALID) {
+		pPacket->SetAt(1, (pPacket->GetAt(1) & 0xE0) | ((m_MapAudioPID >> 8) & 0x1F));
+		pPacket->SetAt(2, m_MapAudioPID & 0xFF);
 	}
 
 	if (pPacket->m_Header.bPayloadUnitStartIndicator) {
 		const LONGLONG PTS = GetPacketPTS(pPacket);
 		if (PTS >= 0) {
-			if (PID == m_VideoPID) {
+			if (bVideoPacket) {
 				m_VideoPTSPrev = m_VideoPTS;
 				m_VideoPTS = PTS;
 			} else {
@@ -130,7 +139,7 @@ bool CTsSrcStream::InputMedia(const CMediaData *pMediaData)
 			}
 		}
 
-		if (PID == m_VideoPID && m_VideoPTS >= 0) {
+		if (bVideoPacket && m_VideoPTS >= 0) {
 			if (m_PacketPool.IsFull())
 				AddPoolPacket();
 			PacketPtsData *pData = m_PacketPool.Push();
@@ -167,7 +176,7 @@ bool CTsSrcStream::InputMedia(const CMediaData *pMediaData)
 			}
 		}
 
-		if (PID == m_AudioPID && m_AudioPTS >= 0) {
+		if (!bVideoPacket && m_AudioPTS >= 0) {
 			if (m_PacketPool.IsFull())
 				AddPoolPacket();
 			PacketPtsData *pData = m_PacketPool.Push();
@@ -386,6 +395,21 @@ void CTsSrcStream::SetAudioPID(WORD PID)
 	CBlockLock Lock(&m_Lock);
 
 	m_AudioPID = PID;
+	m_MapAudioPID = PID_INVALID;
+}
+
+
+void CTsSrcStream::MapAudioPID(WORD AudioPID, WORD MapPID)
+{
+	TRACE(TEXT("CTsSrcStream::MapAudioPID() : %04x -> %04x\n"), AudioPID, MapPID);
+
+	CBlockLock Lock(&m_Lock);
+
+	m_AudioPID = AudioPID;
+	if (AudioPID == MapPID)
+		m_MapAudioPID = PID_INVALID;
+	else
+		m_MapAudioPID = MapPID;
 }
 
 

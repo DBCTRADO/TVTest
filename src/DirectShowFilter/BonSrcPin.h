@@ -38,6 +38,7 @@ public:
 	bool SetInitialPoolPercentage(int Percentage);
 	int GetBufferFillPercentage();
 	bool SetInputWait(DWORD Wait);
+	bool MapAudioPID(WORD AudioPID, WORD MapPID);
 
 protected:
 	void EndStreamThread();
