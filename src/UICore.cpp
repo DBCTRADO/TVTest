@@ -323,24 +323,26 @@ int CUICore::FormatCurrentAudioText(LPTSTR pszText,int MaxLength) const
 				TEXT("Žå+•›‰¹º"));
 		}
 	} else if (NumAudio>1 && m_App.CoreEngine.m_DtvEngine.GetEventAudioInfo(&AudioInfo)) {
+		TCHAR szFormat[16];
+
 		switch (NumChannels) {
 		case 1:
-			Formatter.Append(TEXT("[M]"));
+			::lstrcpy(szFormat,TEXT("[M]"));
 			break;
 
 		case 2:
-			Formatter.Append(
-				StereoMode==1?TEXT("[S(L)]"):
-				StereoMode==2?TEXT("[S(R)]"):
-				TEXT("[S]"));
+			::lstrcpy(szFormat,
+					  StereoMode==1?TEXT("[S(L)]"):
+					  StereoMode==2?TEXT("[S(R)]"):
+					  TEXT("[S]"));
 			break;
 
 		case 6:
-			Formatter.Append(TEXT("[5.1]"));
+			::lstrcpy(szFormat,TEXT("[5.1]"));
 			break;
 
 		default:
-			Formatter.AppendFormat(TEXT("[%dch]"),NumChannels);
+			StdUtil::snprintf(szFormat,lengthof(szFormat),TEXT("[%dch]"),NumChannels);
 			break;
 		}
 
@@ -361,13 +363,32 @@ int CUICore::FormatCurrentAudioText(LPTSTR pszText,int MaxLength) const
 				TVTest::StringUtility::ToHalfWidthNoKatakana(
 					AudioInfo.szText,szAudio,lengthof(szAudio));
 			}
+
+			// [S] ‚È‚Ç‚ª‚ ‚ê‚Îœ‹Ž‚·‚é
+			p=::StrStrI(szAudio,szFormat);
+			if (p!=NULL) {
+				int Length=::lstrlen(szFormat);
+				if (p>szAudio && *(p-1)==_T(' ')) {
+					p--;
+					Length++;
+				}
+				if (p[Length]==_T(' '))
+					Length++;
+				if (p==szAudio && ::lstrlen(szAudio)==Length) {
+					EpgUtil::GetLanguageText(AudioInfo.LanguageCode,
+											 szAudio,lengthof(szAudio),
+											 EpgUtil::LANGUAGE_TEXT_SIMPLE);
+				} else {
+					std::memmove(p,p+Length,(::lstrlen(p+Length)+1)*sizeof(TCHAR));
+				}
+			}
 		} else {
 			EpgUtil::GetLanguageText(AudioInfo.LanguageCode,
 									 szAudio,lengthof(szAudio),
 									 EpgUtil::LANGUAGE_TEXT_SIMPLE);
 		}
-		Formatter.Append(TEXT(" "));
-		Formatter.Append(szAudio);
+
+		Formatter.AppendFormat(TEXT("%s %s"),szFormat,szAudio);
 	} else {
 		switch (NumChannels) {
 		case 1:
