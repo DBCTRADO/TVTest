@@ -728,6 +728,8 @@ int CAppMain::Main(HINSTANCE hInstance,LPCTSTR pszCmdLine,int nCmdShow)
 		Core.LoadCasLibrary(nullptr);
 	}
 
+	GraphicsCore.Initialize();
+
 	TCHAR szDriverFileName[MAX_PATH];
 
 	// 初期設定ダイアログの表示
@@ -753,8 +755,6 @@ int CAppMain::Main(HINSTANCE hInstance,LPCTSTR pszCmdLine,int nCmdShow)
 	}
 
 	GeneralOptions.SetTemporaryNoDescramble(CmdLineOptions.m_fNoDescramble);
-
-	GraphicsCore.Initialize();
 
 	// スタイル設定の読み込み
 	{
