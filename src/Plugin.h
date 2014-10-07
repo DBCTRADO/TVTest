@@ -11,7 +11,9 @@
 #include "BonTsEngine/TsUtilClass.h"
 
 
-class CPlugin : public CBonErrorHandler
+class CPlugin
+	: public CBonErrorHandler
+	, public CMediaGrabber::IGrabber
 {
 	class CPluginCommandInfo {
 		int m_ID;
@@ -50,6 +52,8 @@ class CPlugin : public CBonErrorHandler
 	UINT m_ProgramGuideEventFlags;
 	TVTest::WindowMessageCallbackFunc m_pMessageCallback;
 	void *m_pMessageCallbackClientData;
+	std::vector<TVTest::StreamCallbackInfo> m_StreamCallbackList;
+	CCriticalLock m_GrabberLock;
 	std::vector<CPluginCommandInfo> m_CommandList;
 	std::vector<CProgramGuideCommand> m_ProgramGuideCommandList;
 	std::vector<CDynamicString> m_ControllerList;
@@ -57,20 +61,6 @@ class CPlugin : public CBonErrorHandler
 	static HWND m_hwndMessage;
 	static UINT m_MessageCode;
 
-	class CMediaGrabberInfo {
-	public:
-		CPlugin *m_pPlugin;
-		TVTest::StreamCallbackInfo m_CallbackInfo;
-		CMediaGrabberInfo(CPlugin *pPlugin,TVTest::StreamCallbackInfo *pCallbackInfo)
-			: m_pPlugin(pPlugin)
-			, m_CallbackInfo(*pCallbackInfo)
-		{
-		}
-	};
-	static bool m_fSetGrabber;
-	static std::vector<CMediaGrabberInfo> m_GrabberList;
-	static CCriticalLock m_GrabberLock;
-	static bool CALLBACK GrabMediaCallback(const CMediaData *pMediaData,const PVOID pParam);
 	class CAudioStreamCallbackInfo {
 	public:
 		CPlugin *m_pPlugin;
@@ -90,6 +80,9 @@ class CPlugin : public CBonErrorHandler
 	static LRESULT CALLBACK Callback(TVTest::PluginParam *pParam,UINT Message,LPARAM lParam1,LPARAM lParam2);
 	static LRESULT SendPluginMessage(TVTest::PluginParam *pParam,UINT Message,LPARAM lParam1,LPARAM lParam2,
 									 LRESULT FailedResult=0);
+
+// CMediaGrabber::IGrabber
+	bool OnInputMedia(CMediaData *pMediaData) override;
 
 public:
 	CPlugin();

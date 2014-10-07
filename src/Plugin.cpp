@@ -504,10 +504,6 @@ void CEpgDataConverter::FreeEventList(TVTest::EpgEventInfo **ppEventList)
 HWND CPlugin::m_hwndMessage=NULL;
 UINT CPlugin::m_MessageCode=0;
 
-bool CPlugin::m_fSetGrabber=false;
-std::vector<CPlugin::CMediaGrabberInfo> CPlugin::m_GrabberList;
-CCriticalLock CPlugin::m_GrabberLock;
-
 std::vector<CPlugin::CAudioStreamCallbackInfo> CPlugin::m_AudioStreamCallbackList;
 CCriticalLock CPlugin::m_AudioStreamLock;
 
@@ -628,20 +624,10 @@ void CPlugin::Free()
 	m_ProgramGuideEventFlags=0;
 	m_pMessageCallback=NULL;
 
-	m_GrabberLock.Lock();
-	if (m_fSetGrabber) {
-		for (std::vector<CMediaGrabberInfo>::iterator i=m_GrabberList.begin();i!=m_GrabberList.end();) {
-			if (i->m_pPlugin==this)
-				i=m_GrabberList.erase(i);
-			else
-				++i;
-		}
-		if (m_GrabberList.empty()) {
-			App.CoreEngine.m_DtvEngine.m_MediaGrabber.SetMediaGrabCallback(NULL);
-			m_fSetGrabber=false;
-		}
+	if (!m_StreamCallbackList.empty()) {
+		App.CoreEngine.m_DtvEngine.m_MediaGrabber.RemoveGrabber(this);
+		m_StreamCallbackList.clear();
 	}
-	m_GrabberLock.Unlock();
 
 	m_AudioStreamLock.Lock();
 	for (std::vector<CAudioStreamCallbackInfo>::iterator i=m_AudioStreamCallbackList.begin();
@@ -1172,25 +1158,33 @@ LRESULT CALLBACK CPlugin::Callback(TVTest::PluginParam *pParam,UINT Message,LPAR
 
 			TVTest::StreamCallbackInfo *pInfo=reinterpret_cast<TVTest::StreamCallbackInfo*>(lParam1);
 
-			if (pInfo==NULL || pInfo->Size!=sizeof(TVTest::StreamCallbackInfo))
+			if (pInfo==NULL
+					|| pInfo->Size!=sizeof(TVTest::StreamCallbackInfo)
+					|| pInfo->Callback==NULL)
 				return FALSE;
 
-			CBlockLock Lock(&m_GrabberLock);
+			CBlockLock Lock(&pThis->m_GrabberLock);
 
 			if ((pInfo->Flags&TVTest::STREAM_CALLBACK_REMOVE)==0) {
-				if (!m_fSetGrabber) {
-					CMediaGrabber &MediaGrabber=GetAppClass().CoreEngine.m_DtvEngine.m_MediaGrabber;
-
-					MediaGrabber.SetMediaGrabCallback(GrabMediaCallback,&m_GrabberList);
-					m_fSetGrabber=true;
+				if (pThis->m_StreamCallbackList.empty()) {
+					GetAppClass().CoreEngine.m_DtvEngine.m_MediaGrabber.AddGrabber(pThis);
+				} else {
+					for (auto itr=pThis->m_StreamCallbackList.begin();
+							itr!=pThis->m_StreamCallbackList.end();++itr) {
+						if (itr->Callback==pInfo->Callback) {
+							itr->pClientData=pInfo->pClientData;
+							return TRUE;
+						}
+					}
 				}
-				m_GrabberList.push_back(CMediaGrabberInfo(pThis,pInfo));
+				pThis->m_StreamCallbackList.push_back(*pInfo);
 			} else {
-				for (std::vector<CMediaGrabberInfo>::iterator i=m_GrabberList.begin();
-						i!=m_GrabberList.end();i++) {
-					if (i->m_pPlugin==pThis
-							&& i->m_CallbackInfo.Callback==pInfo->Callback) {
-						m_GrabberList.erase(i);
+				for (auto itr=pThis->m_StreamCallbackList.begin();
+						itr!=pThis->m_StreamCallbackList.end();++itr) {
+					if (itr->Callback==pInfo->Callback) {
+						pThis->m_StreamCallbackList.erase(itr);
+						if (pThis->m_StreamCallbackList.empty())
+							GetAppClass().CoreEngine.m_DtvEngine.m_MediaGrabber.RemoveGrabber(pThis);
 						return TRUE;
 					}
 				}
@@ -2254,18 +2248,18 @@ LRESULT CPlugin::OnPluginMessage(WPARAM wParam,LPARAM lParam)
 }
 
 
-bool CALLBACK CPlugin::GrabMediaCallback(const CMediaData *pMediaData, const PVOID pParam)
+bool CPlugin::OnInputMedia(CMediaData *pMediaData)
 {
 	CBlockLock Lock(&m_GrabberLock);
-	BYTE *pData=const_cast<BYTE*>(pMediaData->GetData());
 
-	for (size_t i=0;i<m_GrabberList.size();i++) {
-		CMediaGrabberInfo &Info=m_GrabberList[i];
+	bool fOK=true;
 
-		if (!Info.m_CallbackInfo.Callback(pData,Info.m_CallbackInfo.pClientData))
-			return false;
+	for (auto itr=m_StreamCallbackList.begin();itr!=m_StreamCallbackList.end();++itr) {
+		if (!itr->Callback(pMediaData->GetData(),itr->pClientData))
+			fOK=false;
 	}
-	return true;
+
+	return fOK;
 }
 
 

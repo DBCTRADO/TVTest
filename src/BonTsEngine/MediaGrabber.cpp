@@ -17,10 +17,6 @@ static char THIS_FILE[]=__FILE__;
 
 CMediaGrabber::CMediaGrabber(IEventHandler *pEventHandler)
 	: CMediaDecoder(pEventHandler, 1UL, 1UL)
-	, m_pfnMediaGrabFunc(NULL)
-	, m_pfnResetGrabFunc(NULL)
-	, m_pMediaGrabParam(NULL)
-	, m_pResetGrabParam(NULL)
 {
 }
 
@@ -33,8 +29,8 @@ void CMediaGrabber::Reset(void)
 	CBlockLock Lock(&m_DecoderLock);
 
 	// コールバックに通知する
-	if (m_pfnResetGrabFunc)
-		m_pfnResetGrabFunc(m_pResetGrabParam);
+	for (auto itr = m_GrabberList.begin(); itr != m_GrabberList.end(); ++itr)
+		(*itr)->OnReset();
 }
 
 const bool CMediaGrabber::InputMedia(CMediaData *pMediaData, const DWORD dwInputIndex)
@@ -46,11 +42,16 @@ const bool CMediaGrabber::InputMedia(CMediaData *pMediaData, const DWORD dwInput
 		return false;
 	*/
 
+	bool bFail = false;
+
 	// コールバックに通知する
-	if (m_pfnMediaGrabFunc) {
-		if (!m_pfnMediaGrabFunc(pMediaData, m_pMediaGrabParam))
-			return false;
+	for (auto itr = m_GrabberList.begin(); itr != m_GrabberList.end(); ++itr) {
+		if (!(*itr)->OnInputMedia(pMediaData))
+			bFail = true;
 	}
+
+	if (bFail)
+		return false;
 
 	// 下位デコーダにデータを渡す
 	OutputMedia(pMediaData);
@@ -58,20 +59,28 @@ const bool CMediaGrabber::InputMedia(CMediaData *pMediaData, const DWORD dwInput
 	return true;
 }
 
-void CMediaGrabber::SetMediaGrabCallback(const MEDIAGRABFUNC pCallback, const PVOID pParam)
+bool CMediaGrabber::AddGrabber(IGrabber *pGrabber)
 {
+	if (!pGrabber)
+		return false;
+
 	CBlockLock Lock(&m_DecoderLock);
 
-	// メディア受け取りコールバックを登録する
-	m_pfnMediaGrabFunc = pCallback;
-	m_pMediaGrabParam = pParam;
+	m_GrabberList.push_back(pGrabber);
+
+	return true;
 }
 
-void CMediaGrabber::SetResetGrabCallback(const RESETGRABFUNC pCallback, const PVOID pParam)
+bool CMediaGrabber::RemoveGrabber(IGrabber *pGrabber)
 {
 	CBlockLock Lock(&m_DecoderLock);
 
-	// リセット受け取りコールバックを登録する
-	m_pfnResetGrabFunc = pCallback;
-	m_pResetGrabParam = pParam;
+	for (auto itr = m_GrabberList.begin(); itr != m_GrabberList.end(); ++itr) {
+		if (*itr == pGrabber) {
+			m_GrabberList.erase(itr);
+			return true;
+		}
+	}
+
+	return false;
 }
