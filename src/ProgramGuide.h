@@ -11,6 +11,7 @@
 #include "DrawUtil.h"
 #include "ProgramSearch.h"
 #include "ProgramGuideFavorites.h"
+#include "FeaturedEvents.h"
 #include "EventInfoPopup.h"
 #include "Tooltip.h"
 #include "StatusView.h"
@@ -159,6 +160,7 @@ class CProgramGuide
 	: public CCustomWindow
 	, public TVTest::CUIBase
 	, protected CDoubleBufferingDraw
+	, protected CFeaturedEvents::CEventHandler
 {
 public:
 	enum ListMode {
@@ -378,6 +380,8 @@ public:
 	UINT GetVisibleEventIcons() const { return m_VisibleEventIcons; }
 	bool GetKeepTimePos() const { return m_fKeepTimePos; }
 	void SetKeepTimePos(bool fKeep);
+	bool GetShowFeaturedMark() const { return m_fShowFeaturedMark; }
+	void SetShowFeaturedMark(bool fShow);
 	const TVTest::Style::Margins &GetToolbarItemPadding() const;
 
 	void GetInfoPopupSize(int *pWidth,int *pHeight) { m_EventInfoPopup.GetSize(pWidth,pHeight); }
@@ -407,6 +411,7 @@ private:
 		TVTest::Style::IntValue HeaderShadowHeight;
 		TVTest::Style::Size EventIconSize;
 		TVTest::Style::Margins EventIconMargin;
+		TVTest::Style::Margins FeaturedMarkMargin;
 		TVTest::Style::Margins HighlightBorder;
 		TVTest::Style::Margins SelectedBorder;
 		TVTest::Style::Margins TimeBarPadding;
@@ -504,6 +509,7 @@ private:
 	TVTest::Theme::FillStyle m_CurChannelNameBackStyle;
 	TVTest::Theme::FillStyle m_TimeBarMarginStyle;
 	TVTest::Theme::FillStyle m_TimeBarBackStyle[TIME_BAR_BACK_COLORS];
+	TVTest::Theme::BackgroundStyle m_FeaturedMarkStyle;
 	CProgramGuideToolList m_ToolList;
 	int m_WheelScrollLines;
 	unsigned int m_Filter;
@@ -536,6 +542,9 @@ private:
 	TVTest::String m_Message;
 
 	CProgramGuideFavorites m_Favorites;
+
+	bool m_fShowFeaturedMark;
+	CFeaturedEventsMatcher m_FeaturedEventsMatcher;
 
 	static const LPCTSTR m_pszWindowClass;
 	static HINSTANCE m_hinst;
@@ -589,6 +598,9 @@ private:
 
 // CCustomWindow
 	LRESULT OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
+
+// CFeaturedEvents::CEventHandler
+	void OnFeaturedEventsSettingsChanged(CFeaturedEvents &FeaturedEvents) override;
 };
 
 namespace ProgramGuideBar

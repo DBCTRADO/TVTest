@@ -414,9 +414,33 @@ CEventSearchSettingsList::CEventSearchSettingsList()
 }
 
 
+CEventSearchSettingsList::CEventSearchSettingsList(const CEventSearchSettingsList &Src)
+{
+	*this=Src;
+}
+
+
 CEventSearchSettingsList::~CEventSearchSettingsList()
 {
 	Clear();
+}
+
+
+CEventSearchSettingsList &CEventSearchSettingsList::operator=(const CEventSearchSettingsList &Src)
+{
+	if (&Src!=this) {
+		Clear();
+
+		if (!Src.m_List.empty()) {
+			m_List.reserve(Src.m_List.size());
+
+			for (auto it=Src.m_List.begin();it!=Src.m_List.end();++it) {
+				m_List.push_back(new CEventSearchSettings(**it));
+			}
+		}
+	}
+
+	return *this;
 }
 
 

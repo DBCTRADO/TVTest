@@ -137,7 +137,9 @@ class CEventSearchSettingsList
 {
 public:
 	CEventSearchSettingsList();
+	CEventSearchSettingsList(const CEventSearchSettingsList &Src);
 	~CEventSearchSettingsList();
+	CEventSearchSettingsList &operator=(const CEventSearchSettingsList &Src);
 	void Clear();
 	size_t GetCount() const;
 	size_t GetEnabledCount() const;

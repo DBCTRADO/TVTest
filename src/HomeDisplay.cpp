@@ -632,10 +632,12 @@ bool CRecentChannelsCategory::OnDecide()
 
 
 
-class CFeaturedEventsCategory : public CHomeDisplay::CCategory
+class CFeaturedEventsCategory
+	: public CHomeDisplay::CCategory
+	, public CFeaturedEvents::CEventHandler
 {
 public:
-	CFeaturedEventsCategory(CHomeDisplay *pHomeDisplay,CEventSearchOptions &EventSearchOptions);
+	CFeaturedEventsCategory(CHomeDisplay *pHomeDisplay);
 	~CFeaturedEventsCategory();
 
 // CHomeDisplay::CCategory
@@ -644,14 +646,14 @@ public:
 	int GetIconIndex() const override { return CATEGORY_ICON_FEATURED_EVENTS; }
 	int GetHeight() const override { return m_Height; }
 	bool Create() override;
-	void ReadSettings(CSettings &Settings) override;
-	void WriteSettings(CSettings &Settings) override;
 	void LayOut(const CHomeDisplay::StyleInfo &Style,HDC hdc,const RECT &ContentRect) override;
 	void Draw(HDC hdc,const CHomeDisplay::StyleInfo &Style,const RECT &ContentRect,const RECT &PaintRect) const override;
 	bool GetCurItemRect(RECT *pRect) const override;
 	bool SetFocus(bool fFocus) override;
 	bool IsFocused() const override { return m_HotItem>=0; }
 	bool OnDecide() override;
+	void OnWindowCreate() override;
+	void OnWindowDestroy() override;
 	void OnCursorMove(int x,int y) override;
 	void OnCursorLeave() override;
 	bool OnClick(int x,int y) override;
@@ -685,9 +687,6 @@ private:
 		static void AppendEventText(TVTest::String *pString,LPCWSTR pszText);
 	};
 
-	CFeaturedEventsSettings m_Settings;
-	CEventSearchOptions &m_EventSearchOptions;
-	CFeaturedEventsDialog m_Dialog;
 	RECT m_Rect;
 	int m_Height;
 	int m_ItemHeight;
@@ -704,13 +703,14 @@ private:
 	int GetItemByPosition(int x,int y) const;
 	void RedrawItem(int Item);
 	bool SetHotItem(int Item);
+
+// CFeaturedEvents::CEventHandler
+	void OnFeaturedEventsSettingsChanged(CFeaturedEvents &FeaturedEvents) override;
 };
 
 
-CFeaturedEventsCategory::CFeaturedEventsCategory(CHomeDisplay *pHomeDisplay,CEventSearchOptions &EventSearchOptions)
+CFeaturedEventsCategory::CFeaturedEventsCategory(CHomeDisplay *pHomeDisplay)
 	: CCategory(pHomeDisplay)
-	, m_EventSearchOptions(EventSearchOptions)
-	, m_Dialog(m_Settings,m_EventSearchOptions)
 	, m_Height(0)
 	, m_HotItem(-1)
 {
@@ -727,15 +727,18 @@ bool CFeaturedEventsCategory::Create()
 {
 	Clear();
 
+	CAppMain &App=GetAppClass();
+
 	CChannelList ServiceList;
-	GetAppClass().DriverManager.GetAllServiceList(&ServiceList);
+	App.DriverManager.GetAllServiceList(&ServiceList);
 
-	CFeaturedEvents FeaturedEvents(m_Settings);
-	FeaturedEvents.Update();
+	const CFeaturedEventsSettings &Settings=App.FeaturedEvents.GetSettings();
+	CFeaturedEventsSearcher Searcher(Settings);
+	Searcher.Update();
 
-	const size_t EventCount=FeaturedEvents.GetEventCount();
+	const size_t EventCount=Searcher.GetEventCount();
 	for (size_t i=0;i<EventCount;i++) {
-		const CEventInfoData *pEventInfo=FeaturedEvents.GetEventInfo(i);
+		const CEventInfoData *pEventInfo=Searcher.GetEventInfo(i);
 		int Index=ServiceList.FindByIDs(
 			pEventInfo->m_NetworkID,pEventInfo->m_TransportStreamID,pEventInfo->m_ServiceID);
 
@@ -743,30 +746,19 @@ bool CFeaturedEventsCategory::Create()
 			m_ItemList.push_back(new CEventItem(*ServiceList.GetChannelInfo(Index),*pEventInfo));
 	}
 
-	SortItems(m_Settings.GetSortType());
+	SortItems(Settings.GetSortType());
 
 	return true;
 }
 
 
-void CFeaturedEventsCategory::ReadSettings(CSettings &Settings)
-{
-	m_Settings.LoadSettings(Settings);
-}
-
-
-void CFeaturedEventsCategory::WriteSettings(CSettings &Settings)
-{
-	m_Settings.SaveSettings(Settings);
-}
-
-
 void CFeaturedEventsCategory::LayOut(const CHomeDisplay::StyleInfo &Style,HDC hdc,const RECT &ContentRect)
 {
+	const CFeaturedEventsSettings &Settings=GetAppClass().FeaturedEvents.GetSettings();
 	int ItemBaseHeight=2*Style.FontHeight+Style.ItemMargins.Vert();
 	m_ItemHeight=ItemBaseHeight;
-	if (m_Settings.GetShowEventText())
-		m_ItemHeight+=m_Settings.GetEventTextLines()*Style.FontHeight;
+	if (Settings.GetShowEventText())
+		m_ItemHeight+=Settings.GetEventTextLines()*Style.FontHeight;
 	m_Height=(int)m_ItemList.size()*m_ItemHeight;
 	m_Rect=ContentRect;
 
@@ -795,8 +787,8 @@ void CFeaturedEventsCategory::LayOut(const CHomeDisplay::StyleInfo &Style,HDC hd
 		int Height=m_ItemHeight;
 		if (pItem->GetEventText(&Text)) {
 			int Lines=DrawUtil::CalcWrapTextLines(hdc,Text.c_str(),EventTextWidth);
-			if (!m_Settings.GetShowEventText()
-					|| Lines>m_Settings.GetEventTextLines()) {
+			if (!Settings.GetShowEventText()
+					|| Lines>Settings.GetEventTextLines()) {
 				Height=ItemBaseHeight+Lines*Style.FontHeight;
 				if (pItem->IsExpanded()) {
 					m_Height+=Height-m_ItemHeight;
@@ -810,9 +802,11 @@ void CFeaturedEventsCategory::LayOut(const CHomeDisplay::StyleInfo &Style,HDC hd
 
 void CFeaturedEventsCategory::Draw(HDC hdc,const CHomeDisplay::StyleInfo &Style,const RECT &ContentRect,const RECT &PaintRect) const
 {
+	const CFeaturedEventsSettings &Settings=GetAppClass().FeaturedEvents.GetSettings();
+
 	if (m_ItemList.empty()) {
 		LPCTSTR pszText;
-		if (m_Settings.GetSearchSettingsList().GetCount()==0) {
+		if (Settings.GetSearchSettingsList().GetCount()==0) {
 			pszText=TEXT("注目の番組を表示するには、右クリックメニューの [注目の番組の設定] から検索条件を登録します。");
 		} else {
 			pszText=TEXT("検索された番組はありません。");
@@ -883,7 +877,7 @@ void CFeaturedEventsCategory::Draw(HDC hdc,const CHomeDisplay::StyleInfo &Style,
 			::SelectObject(hdc,hfontText);
 		}
 
-		if (m_Settings.GetShowEventText() || pItem->IsExpanded()) {
+		if (Settings.GetShowEventText() || pItem->IsExpanded()) {
 			TVTest::String Text;
 
 			if (pItem->GetEventText(&Text)) {
@@ -930,6 +924,18 @@ bool CFeaturedEventsCategory::OnDecide()
 }
 
 
+void CFeaturedEventsCategory::OnWindowCreate()
+{
+	GetAppClass().FeaturedEvents.AddEventHandler(this);
+}
+
+
+void CFeaturedEventsCategory::OnWindowDestroy()
+{
+	GetAppClass().FeaturedEvents.RemoveEventHandler(this);
+}
+
+
 void CFeaturedEventsCategory::OnCursorMove(int x,int y)
 {
 	SetHotItem(GetItemByPosition(x,y));
@@ -955,15 +961,17 @@ bool CFeaturedEventsCategory::OnRButtonDown(int x,int y)
 		ID_SETTINGS=1
 	};
 
+	CFeaturedEvents &FeaturedEvents=GetAppClass().FeaturedEvents;
+	CFeaturedEventsSettings &Settings=FeaturedEvents.GetSettings();
 	HMENU hmenu=::LoadMenu(GetAppClass().GetResourceInstance(),
 						   MAKEINTRESOURCE(IDM_FEATUREDEVENTS));
 
 	::CheckMenuItem(hmenu,CM_FEATUREDEVENTS_SHOWEVENTTEXT,
-					MF_BYCOMMAND | (m_Settings.GetShowEventText()?MF_CHECKED:MF_UNCHECKED));
+					MF_BYCOMMAND | (Settings.GetShowEventText()?MF_CHECKED:MF_UNCHECKED));
 	::CheckMenuRadioItem(hmenu,
 						 CM_FEATUREDEVENTS_SORT_FIRST,
 						 CM_FEATUREDEVENTS_SORT_LAST,
-						 CM_FEATUREDEVENTS_SORT_FIRST+(int)m_Settings.GetSortType(),
+						 CM_FEATUREDEVENTS_SORT_FIRST+(int)Settings.GetSortType(),
 						 MF_BYCOMMAND);
 
 	POINT pt;
@@ -974,13 +982,11 @@ bool CFeaturedEventsCategory::OnRButtonDown(int x,int y)
 
 	switch (Result) {
 	case CM_FEATUREDEVENTS_SETTINGS:
-		if (m_Dialog.Show(m_pHomeDisplay->GetHandle())) {
-			m_pHomeDisplay->UpdateCurContent();
-		}
+		FeaturedEvents.ShowDialog(m_pHomeDisplay->GetHandle());
 		break;
 
 	case CM_FEATUREDEVENTS_SHOWEVENTTEXT:
-		m_Settings.SetShowEventText(!m_Settings.GetShowEventText());
+		Settings.SetShowEventText(!Settings.GetShowEventText());
 		m_pHomeDisplay->UpdateCurContent();
 		break;
 
@@ -989,8 +995,8 @@ bool CFeaturedEventsCategory::OnRButtonDown(int x,int y)
 				&& Result<=CM_FEATUREDEVENTS_SORT_LAST) {
 			CFeaturedEventsSettings::SortType SortType=
 				(CFeaturedEventsSettings::SortType)(Result-CM_FEATUREDEVENTS_SORT_FIRST);
-			if (SortType!=m_Settings.GetSortType()) {
-				m_Settings.SetSortType(SortType);
+			if (SortType!=Settings.GetSortType()) {
+				Settings.SetSortType(SortType);
 				SortItems(SortType);
 				m_pHomeDisplay->SetScrollPos(0,false);
 				m_pHomeDisplay->Invalidate();
@@ -1227,6 +1233,13 @@ bool CFeaturedEventsCategory::SetHotItem(int Item)
 }
 
 
+void CFeaturedEventsCategory::OnFeaturedEventsSettingsChanged(CFeaturedEvents &FeaturedEvents)
+{
+	if (m_pHomeDisplay->GetCurCategoryID()==CATEGORY_ID_FEATURED_EVENTS)
+		m_pHomeDisplay->UpdateCurContent();
+}
+
+
 CFeaturedEventsCategory::CEventItem::CEventItem(const CChannelInfo &ChannelInfo,const CEventInfoData &EventInfo)
 	: m_ChannelInfo(ChannelInfo)
 	, m_EventInfo(EventInfo)
@@ -1339,7 +1352,7 @@ bool CHomeDisplay::Initialize(HINSTANCE hinst)
 }
 
 
-CHomeDisplay::CHomeDisplay(CEventSearchOptions &EventSearchOptions)
+CHomeDisplay::CHomeDisplay()
 	: m_fAutoFontSize(true)
 	, m_ContentHeight(0)
 	, m_pHomeDisplayEventHandler(NULL)
@@ -1379,7 +1392,7 @@ CHomeDisplay::CHomeDisplay(CEventSearchOptions &EventSearchOptions)
 	m_CategoryList.reserve(3);
 	m_CategoryList.push_back(new CFavoritesCategory(this));
 	m_CategoryList.push_back(new CRecentChannelsCategory(this));
-	m_CategoryList.push_back(new CFeaturedEventsCategory(this,EventSearchOptions));
+	m_CategoryList.push_back(new CFeaturedEventsCategory(this));
 }
 
 
@@ -1627,6 +1640,14 @@ bool CHomeDisplay::SetCurCategory(int Category)
 }
 
 
+int CHomeDisplay::GetCurCategoryID() const
+{
+	if (m_CurCategory<0 || (size_t)m_CurCategory>=m_CategoryList.size())
+		return -1;
+	return m_CategoryList[m_CurCategory]->GetID();
+}
+
+
 bool CHomeDisplay::UpdateCurContent()
 {
 	if (m_CurCategory<0)
@@ -1680,6 +1701,9 @@ LRESULT CHomeDisplay::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 		m_CursorPart=PART_MARGIN;
 		m_himlIcons=::ImageList_LoadImage(m_hinst,MAKEINTRESOURCE(IDB_HOME),
 										  CATEGORY_ICON_WIDTH,1,0,IMAGE_BITMAP,LR_CREATEDIBSECTION);
+
+		for (auto itr=m_CategoryList.begin();itr!=m_CategoryList.end();++itr)
+			(*itr)->OnWindowCreate();
 		return 0;
 
 	case WM_SIZE:
@@ -1920,6 +1944,9 @@ LRESULT CHomeDisplay::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 		return 0;
 
 	case WM_DESTROY:
+		for (auto itr=m_CategoryList.begin();itr!=m_CategoryList.end();++itr)
+			(*itr)->OnWindowDestroy();
+
 		if (m_himlIcons!=NULL) {
 			::ImageList_Destroy(m_himlIcons);
 			m_himlIcons=NULL;

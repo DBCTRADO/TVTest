@@ -45,6 +45,7 @@
 #include "CommandLine.h"
 #include "ChannelHistory.h"
 #include "Favorites.h"
+#include "FeaturedEvents.h"
 #include "Help.h"
 #include "StreamInfo.h"
 #include "HomeDisplay.h"
@@ -457,6 +458,7 @@ public:
 	TVTest::CFavoritesManager FavoritesManager;
 	TVTest::CFavoritesMenu FavoritesMenu;
 	TVTest::CKeywordSearch KeywordSearch;
+	CFeaturedEvents FeaturedEvents;
 
 	struct {
 		int Space;

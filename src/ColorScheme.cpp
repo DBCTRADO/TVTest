@@ -113,6 +113,9 @@ const CColorScheme::ColorInfo CColorScheme::m_ColorInfoList[NUM_COLORS] = {
 	{HEXRGB(0x222222),	TEXT("ChannelPanelCurEventName2Back2"),		TEXT("チャンネルパネル 選択番組名2背景2")},
 	{HEXRGB(0xAAAAAA),	TEXT("ChannelPanelCurEventName2Text"),		TEXT("チャンネルパネル 選択番組名2文字")},
 	{HEXRGB(0x333333),	TEXT("ChannelPanelCurEventName2Border"),	TEXT("チャンネルパネル 選択番組名2外枠")},
+	{HEXRGB(0x00FF00),	TEXT("ChannelPanelFeaturedMark"),			TEXT("チャンネルパネル 注目マーク背景1")},
+	{HEXRGB(0x00FF00),	TEXT("ChannelPanelFeaturedMark2"),			TEXT("チャンネルパネル 注目マーク背景2")},
+	{HEXRGB(0x00BF00),	TEXT("ChannelPanelFeaturedMarkBorder"),		TEXT("チャンネルパネル 注目マーク外枠")},
 	{HEXRGB(0x333333),	TEXT("ControlPanelBack"),					TEXT("操作パネル 背景1")},
 	{HEXRGB(0x333333),	TEXT("ControlPanelBack2"),					TEXT("操作パネル 背景2")},
 	{HEXRGB(0x999999),	TEXT("ControlPanelText"),					TEXT("操作パネル 文字")},
@@ -161,6 +164,9 @@ const CColorScheme::ColorInfo CColorScheme::m_ColorInfoList[NUM_COLORS] = {
 	{HEXRGB(0x0000BF),	TEXT("ProgramGuideHighlightText"),			TEXT("EPG番組表 検索番組内容")},
 	{HEXRGB(0x0000FF),	TEXT("ProgramGuideHighlightTitle"),			TEXT("EPG番組表 検索番組名")},
 	{HEXRGB(0x6666FF),	TEXT("ProgramGuideHighlightBorder"),		TEXT("EPG番組表 検索番組枠")},
+	{HEXRGB(0xCCFFCC),	TEXT("ProgramGuideFeaturedMark"),			TEXT("EPG番組表 注目マーク背景1")},
+	{HEXRGB(0x99FF99),	TEXT("ProgramGuideFeaturedMark2"),			TEXT("EPG番組表 注目マーク背景2")},
+	{HEXRGB(0x00EF00),	TEXT("ProgramGuideFeaturedMarkBorder"),		TEXT("EPG番組表 注目マーク外枠")},
 	{HEXRGB(0x333333),	TEXT("ProgramGuideChannelBack"),			TEXT("EPG番組表 チャンネル名背景1")},
 	{HEXRGB(0x111111),	TEXT("ProgramGuideChannelBack2"),			TEXT("EPG番組表 チャンネル名背景2")},
 	{HEXRGB(0x999999),	TEXT("ProgramGuideChannelText"),			TEXT("EPG番組表 チャンネル名文字")},
@@ -242,6 +248,8 @@ const CColorScheme::GradientInfo CColorScheme::m_GradientInfoList[NUM_GRADIENTS]
 		COLOR_CHANNELPANEL_CUREVENTNAME1BACK1,	COLOR_CHANNELPANEL_CUREVENTNAME1BACK2},
 	{TEXT("ChannelPanelCurEventName2BackGradient"),		Theme::DIRECTION_VERT,	true,
 		COLOR_CHANNELPANEL_CUREVENTNAME2BACK1,	COLOR_CHANNELPANEL_CUREVENTNAME2BACK2},
+	{TEXT("ChannelPanelFeaturedMarkGradient"),		Theme::DIRECTION_VERT,		true,
+		COLOR_CHANNELPANEL_FEATUREDMARK1,		COLOR_CHANNELPANEL_FEATUREDMARK2},
 	{TEXT("ControlPanelBackGradient"),					Theme::DIRECTION_VERT,	true,
 		COLOR_CONTROLPANELBACK1,				COLOR_CONTROLPANELBACK2},
 	{TEXT("ControlPanelHighlightBackGradient"),			Theme::DIRECTION_VERT,	true,
@@ -260,6 +268,8 @@ const CColorScheme::GradientInfo CColorScheme::m_GradientInfoList[NUM_GRADIENTS]
 		COLOR_SIDEBARCHECKBACK1,				COLOR_SIDEBARCHECKBACK2},
 	{TEXT("NotificationBarBackGradient"),				Theme::DIRECTION_VERT,	true,
 		COLOR_NOTIFICATIONBARBACK1,				COLOR_NOTIFICATIONBARBACK2},
+	{TEXT("ProgramGuideFeaturedMarkGradient"),			Theme::DIRECTION_HORZ,	true,
+		COLOR_PROGRAMGUIDE_FEATUREDMARK1,		COLOR_PROGRAMGUIDE_FEATUREDMARK2},
 	{TEXT("ProgramGuideChannelBackGradient"),			Theme::DIRECTION_VERT,	true,
 		COLOR_PROGRAMGUIDE_CHANNELBACK1,		COLOR_PROGRAMGUIDE_CHANNELBACK2},
 	{TEXT("ProgramGuideCurChannelBackGradient"),		Theme::DIRECTION_VERT,	true,
@@ -345,10 +355,14 @@ const CColorScheme::BorderInfo CColorScheme::m_BorderInfoList[NUM_BORDERS] = {
 		COLOR_CHANNELPANEL_CUREVENTNAME1BORDER,		false},
 	{TEXT("ChannelPanelCurEventName2Border"),	Theme::BORDER_NONE,
 		COLOR_CHANNELPANEL_CUREVENTNAME2BORDER,		false},
+	{TEXT("ChannelPanelFeaturedMarkBorder"),	Theme::BORDER_SOLID,
+		COLOR_CHANNELPANEL_FEATUREDMARKBORDER,		false},
 	{TEXT("ControlPanelItemBorder"),			Theme::BORDER_NONE,
 		COLOR_CONTROLPANELITEMBORDER,				false},
 	{TEXT("ControlPanelHighlightBorder"),		Theme::BORDER_NONE,
 		COLOR_CONTROLPANELHIGHLIGHTBORDER,			false},
+	{TEXT("ProgramGuideFeaturedMarkBorder"),	Theme::BORDER_SOLID,
+		COLOR_PROGRAMGUIDE_FEATUREDMARKBORDER,		false},
 };
 
 const Theme::BorderType CColorScheme::m_CustomDefaultBorderList[NUM_BORDERS] = {
@@ -382,8 +396,10 @@ const Theme::BorderType CColorScheme::m_CustomDefaultBorderList[NUM_BORDERS] = {
 	Theme::BORDER_SOLID,
 	Theme::BORDER_SOLID,
 	Theme::BORDER_SOLID,
+	Theme::BORDER_SOLID,
 	Theme::BORDER_NONE,
 	Theme::BORDER_SUNKEN,
+	Theme::BORDER_SOLID,
 };
 
 

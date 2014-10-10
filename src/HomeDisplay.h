@@ -64,6 +64,8 @@ public:
 		virtual bool SetFocus(bool fFocus) {}
 		virtual bool IsFocused() const = 0;
 		virtual bool OnDecide() { return false; }
+		virtual void OnWindowCreate() {}
+		virtual void OnWindowDestroy() {}
 		virtual void OnCursorMove(int x,int y) {}
 		virtual void OnCursorLeave() {}
 		virtual bool OnClick(int x,int y) { return false; }
@@ -75,7 +77,7 @@ public:
 		class CHomeDisplay *m_pHomeDisplay;
 	};
 
-	CHomeDisplay(CEventSearchOptions &EventSearchOptions);
+	CHomeDisplay();
 	~CHomeDisplay();
 
 // CBasicWindow
@@ -98,6 +100,7 @@ public:
 	int GetScrollPos() const { return m_ScrollPos; }
 	bool SetScrollPos(int Pos,bool fScroll=true);
 	bool SetCurCategory(int Category);
+	int GetCurCategoryID() const;
 	bool UpdateCurContent();
 	bool OnContentChanged();
 

@@ -60,6 +60,7 @@ class CEventItem
 	bool m_fSelected;
 
 	int GetTitleText(LPTSTR pszText,int MaxLength) const;
+	int GetTimeText(LPTSTR pszText,int MaxLength) const;
 	LPCTSTR GetEventText() const;
 
 public:
@@ -78,6 +79,7 @@ public:
 	void CalcTitleLines(HDC hdc,int Width);
 	void DrawTitle(HDC hdc,const RECT *pRect,int LineHeight) const;
 	void DrawText(HDC hdc,const RECT *pRect,int LineHeight) const;
+	void GetTimeSize(HDC hdc,SIZE *pSize) const;
 	int GetItemPos() const { return m_ItemPos; }
 	void SetItemPos(int Pos) { m_ItemPos=Pos; }
 	int GetItemLines() const { return m_ItemLines; }
@@ -185,14 +187,7 @@ int CEventItem::GetTitleText(LPTSTR pszText,int MaxLength) const
 {
 	int Length;
 
-#ifndef _DEBUG
-	Length=StdUtil::snprintf(pszText,MaxLength,TEXT("%d:%02d"),
-							 m_StartTime.wHour,m_StartTime.wMinute);
-#else
-	Length=StdUtil::snprintf(pszText,MaxLength,TEXT("%d:%02d.%02d-%d:%02d.%02d"),
-							 m_StartTime.wHour,m_StartTime.wMinute,m_StartTime.wSecond,
-							 m_EndTime.wHour,m_EndTime.wMinute,m_EndTime.wSecond);
-#endif
+	Length=GetTimeText(pszText,MaxLength);
 	if (m_pEventInfo!=NULL) {
 		const CEventInfoData::String *pEventName;
 		if (m_pEventInfo->m_EventName.empty() && m_pCommonEventInfo!=NULL)
@@ -203,6 +198,13 @@ int CEventItem::GetTitleText(LPTSTR pszText,int MaxLength) const
 			Length+=StdUtil::snprintf(pszText+Length,MaxLength-Length,TEXT(" %s"),pEventName->c_str());
 	}
 	return Length;
+}
+
+
+int CEventItem::GetTimeText(LPTSTR pszText,int MaxLength) const
+{
+	return StdUtil::snprintf(pszText,MaxLength,TEXT("%d:%02d"),
+							 m_StartTime.wHour,m_StartTime.wMinute);
 }
 
 
@@ -248,6 +250,16 @@ void CEventItem::DrawText(HDC hdc,const RECT *pRect,int LineHeight) const
 	LPCTSTR pszEventText=GetEventText();
 	if (!IsStringEmpty(pszEventText))
 		DrawUtil::DrawWrapText(hdc,pszEventText,pRect,LineHeight);
+}
+
+
+void CEventItem::GetTimeSize(HDC hdc,SIZE *pSize) const
+{
+	TCHAR szText[32];
+	int Length;
+
+	Length=GetTimeText(szText,lengthof(szText));
+	::GetTextExtentPoint32(hdc,szText,Length,pSize);
 }
 
 
@@ -1188,6 +1200,7 @@ CProgramGuide::CProgramGuide(CEventSearchOptions &EventSearchOptions)
 	, m_Filter(0)
 	, m_fEpgUpdating(false)
 	, m_ProgramSearch(EventSearchOptions)
+	, m_fShowFeaturedMark(true)
 {
 	m_WindowPosition.Left=0;
 	m_WindowPosition.Top=0;
@@ -1233,6 +1246,8 @@ CProgramGuide::CProgramGuide(CEventSearchOptions &EventSearchOptions)
 		m_TimeBarBackStyle[i].Gradient.Color1=m_TimeBarMarginStyle.Gradient.Color1;
 		m_TimeBarBackStyle[i].Gradient.Color2=m_TimeBarMarginStyle.Gradient.Color2;
 	}
+	m_FeaturedMarkStyle.Fill.Type=TVTest::Theme::FILL_SOLID;
+	m_FeaturedMarkStyle.Fill.Solid.Color.Set(0,255,0);
 
 	m_EventInfoPopup.SetEventHandler(&m_EventInfoPopupHandler);
 }
@@ -1286,6 +1301,8 @@ void CProgramGuide::SetTheme(const TVTest::Theme::CThemeManager *pThemeManager)
 	pThemeManager->GetFillStyle(TVTest::Theme::CThemeManager::STYLE_PROGRAMGUIDE_CHANNEL,&ChBackStyle);
 	pThemeManager->GetFillStyle(TVTest::Theme::CThemeManager::STYLE_PROGRAMGUIDE_CURCHANNEL,&CurChBackStyle);
 	pThemeManager->GetFillStyle(TVTest::Theme::CThemeManager::STYLE_PROGRAMGUIDE_TIMEBAR,&TimeBarMarginStyle);
+	pThemeManager->GetBackgroundStyle(TVTest::Theme::CThemeManager::STYLE_PROGRAMGUIDE_FEATUREDMARK,
+									  &m_FeaturedMarkStyle);
 
 	TVTest::Theme::FillStyle TimeStyles[CProgramGuide::TIME_BAR_BACK_COLORS];
 	for (int i=0;i<CProgramGuide::TIME_BAR_BACK_COLORS;i++)
@@ -1665,6 +1682,19 @@ void CProgramGuide::DrawEvent(ProgramGuide::CEventItem *pItem,
 		rcOuter.right+=m_Style.SelectedBorder.Right;
 		DrawUtil::FillBorder(hdc,&rcOuter,&Rect,&rcOuter,hbr);
 		::DeleteObject(hbr);
+	}
+
+	if (m_fShowFeaturedMark
+			&& m_FeaturedEventsMatcher.IsMatch(*pEventInfo)) {
+		SIZE sz;
+		RECT rcMark;
+		pItem->GetTimeSize(hdc,&sz);
+		rcMark.left=rcTitle.left;
+		rcMark.top=rcTitle.top;
+		rcMark.right=rcMark.left+sz.cx;
+		rcMark.bottom=rcMark.top+sz.cy;
+		TVTest::Style::Subtract(&rcMark,m_Style.FeaturedMarkMargin);
+		TVTest::Theme::Draw(hdc,rcMark,m_FeaturedMarkStyle);
 	}
 
 	::SetTextColor(hdc,TitleColor);
@@ -3318,6 +3348,19 @@ void CProgramGuide::SetKeepTimePos(bool fKeep)
 }
 
 
+void CProgramGuide::SetShowFeaturedMark(bool fShow)
+{
+	if (m_fShowFeaturedMark!=fShow) {
+		m_fShowFeaturedMark=fShow;
+		if (m_hwnd!=NULL) {
+			if (m_fShowFeaturedMark)
+				m_FeaturedEventsMatcher.BeginMatching(GetAppClass().FeaturedEvents.GetSettings());
+			Invalidate();
+		}
+	}
+}
+
+
 const TVTest::Style::Margins &CProgramGuide::GetToolbarItemPadding() const
 {
 	return m_Style.ToolbarItemPadding;
@@ -3641,6 +3684,11 @@ LRESULT CProgramGuide::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam
 				m_pProgramCustomizer->Initialize();
 
 			m_fBarShadow=CBufferedPaint::IsSupported();
+
+			CFeaturedEvents &FeaturedEvents=GetAppClass().FeaturedEvents;
+			FeaturedEvents.AddEventHandler(this);
+			if (m_fShowFeaturedMark)
+				m_FeaturedEventsMatcher.BeginMatching(FeaturedEvents.GetSettings());
 
 			GetCurrentJST(&m_stCurTime);
 			::SetTimer(hwnd,TIMER_ID_UPDATECURTIME,1000,NULL);
@@ -3978,6 +4026,7 @@ LRESULT CProgramGuide::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam
 			m_pEventHandler->OnDestroy();
 		m_Chevron.Destroy();
 		m_EpgIcons.Destroy();
+		GetAppClass().FeaturedEvents.RemoveEventHandler(this);
 		return 0;
 	}
 
@@ -4105,6 +4154,10 @@ void CProgramGuide::OnCommand(int id)
 					m_pFrame->OnFavoritesChanged();
 			}
 		}
+		return;
+
+	case CM_PROGRAMGUIDE_SHOWFEATUREDMARK:
+		SetShowFeaturedMark(!m_fShowFeaturedMark);
 		return;
 
 	default:
@@ -4317,6 +4370,8 @@ void CProgramGuide::ShowPopupMenu(int x,int y)
 		MF_BYCOMMAND | (m_fDragScroll?MF_CHECKED:MF_UNCHECKED));
 	::CheckMenuItem(hmenu,CM_PROGRAMGUIDE_POPUPEVENTINFO,
 		MF_BYCOMMAND | (m_fShowToolTip?MF_CHECKED:MF_UNCHECKED));
+	::CheckMenuItem(hmenu,CM_PROGRAMGUIDE_SHOWFEATUREDMARK,
+		MF_BYCOMMAND | (m_fShowFeaturedMark?MF_CHECKED:MF_UNCHECKED));
 	::CheckMenuItem(hmenu,CM_PROGRAMGUIDE_KEEPTIMEPOS,
 		MF_BYCOMMAND | (m_fKeepTimePos?MF_CHECKED:MF_UNCHECKED));
 	::EnableMenuItem(hmenu,CM_PROGRAMGUIDE_IEPGASSOCIATE,
@@ -4402,6 +4457,15 @@ bool CProgramGuide::ExecuteTool(int Tool,
 
 	return pTool->Execute(pServiceInfo,pEventInfo,
 						  ::GetAncestor(m_hwnd,GA_ROOT));
+}
+
+
+void CProgramGuide::OnFeaturedEventsSettingsChanged(CFeaturedEvents &FeaturedEvents)
+{
+	if (m_fShowFeaturedMark) {
+		m_FeaturedEventsMatcher.BeginMatching(FeaturedEvents.GetSettings());
+		Invalidate();
+	}
 }
 
 
@@ -4683,6 +4747,7 @@ CProgramGuide::ProgramGuideStyle::ProgramGuideStyle()
 	, HeaderShadowHeight(8)
 	, EventIconSize(CEpgIcons::ICON_WIDTH,CEpgIcons::ICON_HEIGHT)
 	, EventIconMargin(1)
+	, FeaturedMarkMargin(0)
 	, HighlightBorder(3)
 	, SelectedBorder(2)
 	, TimeBarPadding(4)
@@ -4704,6 +4769,7 @@ void CProgramGuide::ProgramGuideStyle::SetStyle(const TVTest::Style::CStyleManag
 	pStyleManager->Get(TEXT("program-guide.header.shadow.height"),&HeaderShadowHeight);
 	pStyleManager->Get(TEXT("program-guide.event.icon"),&EventIconSize);
 	pStyleManager->Get(TEXT("program-guide.event.icon.margin"),&EventIconMargin);
+	pStyleManager->Get(TEXT("program-guide.event.featured-mark.margin"),&FeaturedMarkMargin);
 	pStyleManager->Get(TEXT("program-guide.event.highlight-border"),&HighlightBorder);
 	pStyleManager->Get(TEXT("program-guide.event.selected-border"),&SelectedBorder);
 	pStyleManager->Get(TEXT("program-guide.time-bar.padding"),&TimeBarPadding);
@@ -4724,6 +4790,7 @@ void CProgramGuide::ProgramGuideStyle::NormalizeStyle(const TVTest::Style::CStyl
 	pStyleManager->ToPixels(&HeaderShadowHeight);
 	pStyleManager->ToPixels(&EventIconSize);
 	pStyleManager->ToPixels(&EventIconMargin);
+	pStyleManager->ToPixels(&FeaturedMarkMargin);
 	pStyleManager->ToPixels(&HighlightBorder);
 	pStyleManager->ToPixels(&SelectedBorder);
 	pStyleManager->ToPixels(&TimeBarPadding);

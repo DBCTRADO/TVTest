@@ -3087,6 +3087,10 @@ void CMainWindow::OnCommand(HWND hwnd,int id,HWND hwndCtl,UINT codeNotify)
 		m_App.Panel.ChannelPanel.SetShowGenreColor(!m_App.Panel.ChannelPanel.GetShowGenreColor());
 		return;
 
+	case CM_CHANNELPANEL_SHOWFEATUREDMARK:
+		m_App.Panel.ChannelPanel.SetShowFeaturedMark(!m_App.Panel.ChannelPanel.GetShowFeaturedMark());
+		return;
+
 	case CM_CHANNELNO_2DIGIT:
 	case CM_CHANNELNO_3DIGIT:
 		{

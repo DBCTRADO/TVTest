@@ -749,6 +749,7 @@ void CMainPanel::CChannelPanelEventHandler::OnRButtonDown()
 	Menu.CheckItem(CM_CHANNELPANEL_USEEPGCOLORSCHEME,g_App.Panel.ChannelPanel.GetUseEpgColorScheme());
 	Menu.CheckItem(CM_CHANNELPANEL_SHOWGENRECOLOR,g_App.Panel.ChannelPanel.GetShowGenreColor());
 	Menu.EnableItem(CM_CHANNELPANEL_SHOWGENRECOLOR,!g_App.Panel.ChannelPanel.GetUseEpgColorScheme());
+	Menu.CheckItem(CM_CHANNELPANEL_SHOWFEATUREDMARK,g_App.Panel.ChannelPanel.GetShowFeaturedMark());
 	Menu.Show(g_App.UICore.GetMainWindow());
 }
 

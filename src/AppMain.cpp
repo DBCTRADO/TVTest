@@ -177,7 +177,6 @@ CAppMain::CAppMain()
 	, MainWindow(*this)
 	, SideBar(&CommandList)
 	, ChannelMenu(&EpgProgramList,&LogoManager)
-	, HomeDisplay(EventSearchOptions)
 	, ChannelDisplay(&EpgProgramList)
 #ifdef NETWORK_REMOCON_SUPPORT
 	, pNetworkRemocon(nullptr)
@@ -192,6 +191,7 @@ CAppMain::CAppMain()
 	, PanelOptions(&Panel.Frame)
 	, ProgramGuideOptions(&Epg.ProgramGuide,&PluginManager)
 	, PluginOptions(&PluginManager)
+	, FeaturedEvents(EventSearchOptions)
 
 	, m_fFirstExecute(false)
 
@@ -488,6 +488,7 @@ bool CAppMain::LoadSettings()
 	HomeDisplay.LoadSettings(Settings);
 	NetworkDefinition.LoadSettings(Settings);
 	CasLibraryManager.LoadSettings(Settings);
+	FeaturedEvents.LoadSettings(Settings);
 
 	return true;
 }
@@ -602,6 +603,7 @@ bool CAppMain::SaveSettings(unsigned int Flags)
 	//	{&PanAndScanOptions,				false},
 		{&Epg.ProgramGuideFrameSettings,	true},
 		{&HomeDisplay,						true},
+		{&FeaturedEvents,					true},
 	};
 
 	for (size_t i=0;i<lengthof(SettingsList);i++) {

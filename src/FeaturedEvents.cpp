@@ -78,19 +78,19 @@ bool CFeaturedEventsSettings::WriteSettings(CSettings &Settings)
 
 
 
-CFeaturedEvents::CFeaturedEvents(const CFeaturedEventsSettings &Settings)
+CFeaturedEventsSearcher::CFeaturedEventsSearcher(const CFeaturedEventsSettings &Settings)
 	: m_Settings(Settings)
 {
 }
 
 
-CFeaturedEvents::~CFeaturedEvents()
+CFeaturedEventsSearcher::~CFeaturedEventsSearcher()
 {
 	Clear();
 }
 
 
-void CFeaturedEvents::Clear()
+void CFeaturedEventsSearcher::Clear()
 {
 	for (auto it=m_EventList.begin();it!=m_EventList.end();++it)
 		delete *it;
@@ -98,7 +98,7 @@ void CFeaturedEvents::Clear()
 }
 
 
-bool CFeaturedEvents::Update()
+bool CFeaturedEventsSearcher::Update()
 {
 	Clear();
 
@@ -162,18 +162,64 @@ bool CFeaturedEvents::Update()
 }
 
 
-size_t CFeaturedEvents::GetEventCount() const
+size_t CFeaturedEventsSearcher::GetEventCount() const
 {
 	return m_EventList.size();
 }
 
 
-const CEventInfoData *CFeaturedEvents::GetEventInfo(size_t Index) const
+const CEventInfoData *CFeaturedEventsSearcher::GetEventInfo(size_t Index) const
 {
 	if (Index>=m_EventList.size())
 		return NULL;
 
 	return m_EventList[Index];
+}
+
+
+
+
+bool CFeaturedEventsMatcher::BeginMatching(const CFeaturedEventsSettings &Settings)
+{
+	m_DefaultServiceList=Settings.GetDefaultServiceList();
+
+	const CEventSearchSettingsList &SearchSettingsList=Settings.GetSearchSettingsList();
+	m_SearcherList.resize(SearchSettingsList.GetEnabledCount());
+
+	for (size_t i=0;i<SearchSettingsList.GetCount();i++) {
+		const CEventSearchSettings *pSettings=SearchSettingsList.Get(i);
+
+		if (!pSettings->fDisabled) {
+			m_SearcherList[i].BeginSearch(*pSettings);
+		}
+	}
+
+	return true;
+}
+
+
+void CFeaturedEventsMatcher::EndMatching()
+{
+	m_DefaultServiceList.Clear();
+	m_SearcherList.clear();
+}
+
+
+bool CFeaturedEventsMatcher::IsMatch(const CEventInfoData &EventInfo)
+{
+	for (auto itSearcher=m_SearcherList.begin();itSearcher!=m_SearcherList.end();++itSearcher) {
+		if (!itSearcher->GetSearchSettings().fServiceList) {
+			if (!m_DefaultServiceList.IsExists(EventInfo.m_NetworkID,
+											   EventInfo.m_TransportStreamID,
+											   EventInfo.m_ServiceID))
+				continue;
+		}
+		if (itSearcher->Match(&EventInfo)) {
+			return true;
+		}
+	}
+
+	return false;
 }
 
 
@@ -989,4 +1035,60 @@ void CFeaturedEventsDialog::UpdateSearchSettingsItem(HWND hDlg,int Item)
 	}
 
 	ListView_SetItemText(hwndList,Item,2,const_cast<LPTSTR>(Genre.c_str()));
+}
+
+
+
+
+CFeaturedEvents::CFeaturedEvents(CEventSearchOptions &EventSearchOptions)
+	: m_Dialog(m_Settings,EventSearchOptions)
+{
+}
+
+
+bool CFeaturedEvents::LoadSettings(CSettings &Settings)
+{
+	return m_Settings.LoadSettings(Settings);
+}
+
+
+bool CFeaturedEvents::SaveSettings(CSettings &Settings)
+{
+	return m_Settings.SaveSettings(Settings);
+}
+
+
+bool CFeaturedEvents::AddEventHandler(CEventHandler *pEventHandler)
+{
+	if (pEventHandler==nullptr)
+		return false;
+
+	m_EventHandlerList.push_back(pEventHandler);
+
+	return true;
+}
+
+
+bool CFeaturedEvents::RemoveEventHandler(CEventHandler *pEventHandler)
+{
+	for (auto itr=m_EventHandlerList.begin();itr!=m_EventHandlerList.end();++itr) {
+		if (*itr==pEventHandler) {
+			m_EventHandlerList.erase(itr);
+			return true;
+		}
+	}
+
+	return false;
+}
+
+
+bool CFeaturedEvents::ShowDialog(HWND hwndOwner)
+{
+	if (!m_Dialog.Show(hwndOwner))
+		return false;
+
+	for (auto itr=m_EventHandlerList.begin();itr!=m_EventHandlerList.end();++itr)
+		(*itr)->OnFeaturedEventsSettingsChanged(*this);
+
+	return true;
 }

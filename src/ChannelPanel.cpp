@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "TVTest.h"
+#include "AppMain.h"
 #include "ChannelPanel.h"
 #include "StdUtil.h"
 #include "DrawUtil.h"
@@ -56,6 +57,7 @@ CChannelPanel::CChannelPanel()
 
 	, m_fUseEpgColorScheme(false)
 	, m_fShowGenreColor(false)
+	, m_fShowFeaturedMark(true)
 	, m_EventsPerChannel(2)
 	, m_ExpandAdditionalEvents(4)
 	, m_ExpandEvents(m_EventsPerChannel+m_ExpandAdditionalEvents)
@@ -119,6 +121,8 @@ void CChannelPanel::SetTheme(const TVTest::Theme::CThemeManager *pThemeManager)
 	pThemeManager->GetStyle(TVTest::Theme::CThemeManager::STYLE_CHANNELPANEL_CURCHANNELEVENTNAME2,
 							&Theme.CurChannelEventStyle[1]);
 	Theme.MarginColor=pThemeManager->GetColor(CColorScheme::COLOR_PANELBACK);
+	pThemeManager->GetBackgroundStyle(TVTest::Theme::CThemeManager::STYLE_CHANNELPANEL_FEATUREDMARK,
+									  &Theme.FeaturedMarkStyle);
 
 	SetChannelPanelTheme(Theme);
 
@@ -141,6 +145,7 @@ bool CChannelPanel::ReadSettings(CSettings &Settings)
 	Settings.Read(TEXT("ChannelPanelScrollToCurChannel"),&m_fScrollToCurChannel);
 	Settings.Read(TEXT("ChannelPanelUseEpgColorScheme"),&m_fUseEpgColorScheme);
 	Settings.Read(TEXT("ChannelPanelShowGenreColor"),&m_fShowGenreColor);
+	Settings.Read(TEXT("ChannelPanelShowFeaturedMark"),&m_fShowFeaturedMark);
 
 	return true;
 }
@@ -154,6 +159,7 @@ bool CChannelPanel::WriteSettings(CSettings &Settings)
 	Settings.Write(TEXT("ChannelPanelScrollToCurChannel"),m_fScrollToCurChannel);
 	Settings.Write(TEXT("ChannelPanelUseEpgColorScheme"),m_fUseEpgColorScheme);
 	Settings.Write(TEXT("ChannelPanelShowGenreColor"),m_fShowGenreColor);
+	Settings.Write(TEXT("ChannelPanelShowFeaturedMark"),m_fShowFeaturedMark);
 
 	return true;
 }
@@ -553,6 +559,19 @@ void CChannelPanel::SetShowGenreColor(bool fShowGenreColor)
 }
 
 
+void CChannelPanel::SetShowFeaturedMark(bool fShowFeaturedMark)
+{
+	if (m_fShowFeaturedMark!=fShowFeaturedMark) {
+		m_fShowFeaturedMark=fShowFeaturedMark;
+		if (m_hwnd!=NULL) {
+			if (m_fShowFeaturedMark)
+				m_FeaturedEventsMatcher.BeginMatching(GetAppClass().FeaturedEvents.GetSettings());
+			Invalidate();
+		}
+	}
+}
+
+
 void CChannelPanel::SetLogoManager(CLogoManager *pLogoManager)
 {
 	m_pLogoManager=pLogoManager;
@@ -586,6 +605,11 @@ LRESULT CChannelPanel::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam
 			else
 				CreateTooltip();
 			m_Chevron.Load(m_hinst,IDB_CHEVRON,CHEVRON_WIDTH,CHEVRON_HEIGHT);
+
+			CFeaturedEvents &FeaturedEvents=GetAppClass().FeaturedEvents;
+			FeaturedEvents.AddEventHandler(this);
+			if (m_fShowFeaturedMark)
+				m_FeaturedEventsMatcher.BeginMatching(FeaturedEvents.GetSettings());
 		}
 		return 0;
 
@@ -743,8 +767,10 @@ LRESULT CChannelPanel::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam
 		m_EventInfoPopupManager.Finalize();
 		m_Tooltip.Destroy();
 		m_Chevron.Destroy();
+		GetAppClass().FeaturedEvents.RemoveEventHandler(this);
 		return 0;
 	}
+
 	return ::DefWindowProc(hwnd,uMsg,wParam,lParam);
 }
 
@@ -788,10 +814,14 @@ void CChannelPanel::Draw(HDC hdc,const RECT *prcPaint)
 		int NumEvents=pChannelInfo->IsExpanded()?m_ExpandEvents:m_EventsPerChannel;
 		rc.left=0;
 		rc.right=rcClient.right;
+
 		for (int j=0;j<NumEvents;j++) {
 			rc.top=rc.bottom;
 			rc.bottom=rc.top+m_EventNameHeight;
+
 			if (rc.bottom>prcPaint->top) {
+				RECT rcContent=rc;
+
 				if (m_fUseEpgColorScheme && pChannelInfo->IsEventEnabled(j)) {
 					m_EpgTheme.DrawContentBackground(hdc,rc,pChannelInfo->GetEventInfo(j),
 													 CEpgTheme::DRAW_CONTENT_BACKGROUND_SEPARATOR);
@@ -800,9 +830,9 @@ void CChannelPanel::Draw(HDC hdc,const RECT *prcPaint)
 					const TVTest::Theme::Style &Style=
 						(fCurrent?m_Theme.CurChannelEventStyle:m_Theme.EventStyle)[j%2];
 					TVTest::Theme::Draw(hdc,rc,Style.Back);
+					TVTest::Theme::SubtractBorderRect(Style.Back.Border,&rcContent);
 					if (m_fShowGenreColor && pChannelInfo->IsEventEnabled(j)) {
-						RECT rcBar=rc;
-						TVTest::Theme::SubtractBorderRect(Style.Back.Border,&rcBar);
+						RECT rcBar=rcContent;
 						rcBar.right=m_Style.EventNameMargin.Left;
 						unsigned int Flags=CEpgTheme::DRAW_CONTENT_BACKGROUND_NOBORDER;
 						if (rcBar.top==rc.top && rcBar.bottom==rc.bottom)
@@ -812,12 +842,24 @@ void CChannelPanel::Draw(HDC hdc,const RECT *prcPaint)
 					}
 					::SetTextColor(hdc,Style.Fore.Fill.GetSolidColor());
 				}
+
+				if (m_fShowFeaturedMark
+						&& pChannelInfo->IsEventEnabled(j)
+						&& m_FeaturedEventsMatcher.IsMatch(pChannelInfo->GetEventInfo(j))) {
+					RECT rcMark=rcContent;
+					rcMark.right=m_Style.EventNameMargin.Left;
+					TVTest::Style::Subtract(&rcMark,m_Style.FeaturedMarkMargin);
+					rcMark.bottom=rcMark.top+(rcMark.right-rcMark.left);
+					TVTest::Theme::Draw(hdc,rcMark,m_Theme.FeaturedMarkStyle);
+				}
+
 				DrawUtil::SelectObject(hdc,m_Font);
 				RECT rcText=rc;
 				TVTest::Style::Subtract(&rcText,m_Style.EventNameMargin);
 				pChannelInfo->DrawEventName(hdc,&rcText,j);
 			}
 		}
+
 		rc.top=rc.bottom;
 	}
 
@@ -1082,6 +1124,15 @@ bool CChannelPanel::ShowEventInfoPopup(LPARAM Param,CEventInfoPopup *pPopup)
 }
 
 
+void CChannelPanel::OnFeaturedEventsSettingsChanged(CFeaturedEvents &FeaturedEvents)
+{
+	if (m_fShowFeaturedMark) {
+		m_FeaturedEventsMatcher.BeginMatching(FeaturedEvents.GetSettings());
+		Invalidate();
+	}
+}
+
+
 CChannelPanel::CEventInfoPopupHandler::CEventInfoPopupHandler(CChannelPanel *pChannelPanel)
 	: m_pChannelPanel(pChannelPanel)
 {
@@ -1246,6 +1297,8 @@ CChannelPanel::ChannelPanelTheme::ChannelPanelTheme()
 	CurChannelEventStyle[0]=EventStyle[0];
 	CurChannelEventStyle[1]=CurChannelEventStyle[0];
 	MarginColor.Set(0,0,0);
+	FeaturedMarkStyle.Fill.Type=TVTest::Theme::FILL_SOLID;
+	FeaturedMarkStyle.Fill.Solid.Color.Set(0,255,0);
 }
 
 
@@ -1257,6 +1310,7 @@ CChannelPanel::ChannelPanelStyle::ChannelPanelStyle()
 	, EventNameMargin(8,1,2,1)
 	, ChannelChevronSize(CHEVRON_WIDTH,CHEVRON_HEIGHT)
 	, ChannelChevronMargin(12)
+	, FeaturedMarkMargin(1)
 {
 }
 
@@ -1268,6 +1322,7 @@ void CChannelPanel::ChannelPanelStyle::SetStyle(const TVTest::Style::CStyleManag
 	pStyleManager->Get(TEXT("channel-list-panel.channel-name.chevron"),&ChannelChevronSize);
 	pStyleManager->Get(TEXT("channel-list-panel.channel-name.chevron.margin"),&ChannelChevronMargin);
 	pStyleManager->Get(TEXT("channel-list-panel.event-name.margin"),&EventNameMargin);
+	pStyleManager->Get(TEXT("channel-list-panel.featured-mark.margin"),&FeaturedMarkMargin);
 }
 
 
@@ -1278,4 +1333,5 @@ void CChannelPanel::ChannelPanelStyle::NormalizeStyle(const TVTest::Style::CStyl
 	pStyleManager->ToPixels(&ChannelChevronSize);
 	pStyleManager->ToPixels(&ChannelChevronMargin);
 	pStyleManager->ToPixels(&EventNameMargin);
+	pStyleManager->ToPixels(&FeaturedMarkMargin);
 }

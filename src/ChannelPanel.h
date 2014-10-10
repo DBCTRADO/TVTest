@@ -15,12 +15,14 @@
 #include "Settings.h"
 #include "WindowUtil.h"
 #include "EpgUtil.h"
+#include "FeaturedEvents.h"
 
 
 class CChannelPanel
 	: public CPanelForm::CPage
 	, public TVTest::CUIBase
 	, public CSettingsBase
+	, protected CFeaturedEvents::CEventHandler
 {
 public:
 	struct ChannelPanelTheme {
@@ -29,6 +31,7 @@ public:
 		TVTest::Theme::Style EventStyle[2];
 		TVTest::Theme::Style CurChannelEventStyle[2];
 		TVTest::Theme::ThemeColor MarginColor;
+		TVTest::Theme::BackgroundStyle FeaturedMarkStyle;
 
 		ChannelPanelTheme();
 	};
@@ -88,6 +91,8 @@ public:
 	bool GetUseEpgColorScheme() const { return m_fUseEpgColorScheme; }
 	void SetShowGenreColor(bool fShowGenreColor);
 	bool GetShowGenreColor() const { return m_fShowGenreColor; }
+	void SetShowFeaturedMark(bool fShowFeaturedMark);
+	bool GetShowFeaturedMark() const { return m_fShowFeaturedMark; }
 	void SetLogoManager(CLogoManager *pLogoManager);
 	bool QueryUpdate() const;
 
@@ -132,6 +137,7 @@ private:
 		TVTest::Style::Margins EventNameMargin;
 		TVTest::Style::Size ChannelChevronSize;
 		TVTest::Style::IntValue ChannelChevronMargin;
+		TVTest::Style::Margins FeaturedMarkMargin;
 
 		ChannelPanelStyle();
 		void SetStyle(const TVTest::Style::CStyleManager *pStyleManager);
@@ -153,6 +159,7 @@ private:
 	CEpgTheme m_EpgTheme;
 	bool m_fUseEpgColorScheme;
 	bool m_fShowGenreColor;
+	bool m_fShowFeaturedMark;
 	DrawUtil::CMonoColorIconList m_Chevron;
 	int m_EventsPerChannel;
 	int m_ExpandAdditionalEvents;
@@ -178,6 +185,7 @@ private:
 	CEventInfoPopupHandler m_EventInfoPopupHandler;
 	CLogoManager *m_pLogoManager;
 	SYSTEMTIME m_UpdatedTime;
+	CFeaturedEventsMatcher m_FeaturedEventsMatcher;
 
 	static const LPCTSTR m_pszClassName;
 	static HINSTANCE m_hinst;
@@ -204,6 +212,9 @@ private:
 
 // CCustomWindow
 	LRESULT OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
+
+// CFeaturedEvents::CEventHandler
+	void OnFeaturedEventsSettingsChanged(CFeaturedEvents &FeaturedEvents) override;
 };
 
 

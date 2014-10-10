@@ -135,6 +135,10 @@ bool CProgramGuideOptions::LoadSettings(CSettings &Settings)
 		if (Settings.Read(TEXT("KeepTimePos"),&fKeepTimePos))
 			m_pProgramGuide->SetKeepTimePos(fKeepTimePos);
 
+		bool fShowFeaturedMark;
+		if (Settings.Read(TEXT("ShowFeaturedMark"),&fShowFeaturedMark))
+			m_pProgramGuide->SetShowFeaturedMark(fShowFeaturedMark);
+
 		bool fExcludeNoEvent;
 		if (Settings.Read(TEXT("ExcludeNoEventServices"),&fExcludeNoEvent))
 			m_pProgramGuide->SetExcludeNoEventServices(fExcludeNoEvent);
@@ -323,6 +327,7 @@ bool CProgramGuideOptions::SaveSettings(CSettings &Settings)
 		Settings.Write(TEXT("ShowToolTip"),m_pProgramGuide->GetShowToolTip());
 		Settings.Write(TEXT("Filter"),m_pProgramGuide->GetFilter());
 		Settings.Write(TEXT("KeepTimePos"),m_pProgramGuide->GetKeepTimePos());
+		Settings.Write(TEXT("ShowFeaturedMark"),m_pProgramGuide->GetShowFeaturedMark());
 		Settings.Write(TEXT("ExcludeNoEventServices"),m_pProgramGuide->GetExcludeNoEventServices());
 
 		int Width,Height;

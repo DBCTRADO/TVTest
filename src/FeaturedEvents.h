@@ -53,11 +53,11 @@ private:
 	int m_EventTextLines;
 };
 
-class CFeaturedEvents
+class CFeaturedEventsSearcher
 {
 public:
-	CFeaturedEvents(const CFeaturedEventsSettings &Settings);
-	~CFeaturedEvents();
+	CFeaturedEventsSearcher(const CFeaturedEventsSettings &Settings);
+	~CFeaturedEventsSearcher();
 	void Clear();
 	bool Update();
 	size_t GetEventCount() const;
@@ -66,6 +66,18 @@ public:
 private:
 	const CFeaturedEventsSettings &m_Settings;
 	std::vector<CEventInfoData*> m_EventList;
+};
+
+class CFeaturedEventsMatcher
+{
+public:
+	bool BeginMatching(const CFeaturedEventsSettings &Settings);
+	void EndMatching();
+	bool IsMatch(const CEventInfoData &EventInfo);
+
+private:
+	CEventSearchServiceList m_DefaultServiceList;
+	std::vector<CEventSearcher> m_SearcherList;
 };
 
 class CFeaturedEventsDialog : public CResizableDialog
@@ -98,6 +110,33 @@ private:
 	CEventSearchOptions &m_Options;
 	CChannelList m_ServiceList;
 	int m_SettingsColumnWidth[NUM_SETTINGS_COLUMNS];
+};
+
+class CFeaturedEvents : public CSettingsBase
+{
+public:
+	class ABSTRACT_CLASS(CEventHandler)
+	{
+	public:
+		virtual void OnFeaturedEventsSettingsChanged(CFeaturedEvents &FeaturedEvents) {}
+	};
+
+	CFeaturedEvents(CEventSearchOptions &EventSearchOptions);
+
+// CSettingsBase
+	bool LoadSettings(CSettings &Settings) override;
+	bool SaveSettings(CSettings &Settings) override;
+
+// CFeaturedEvents
+	CFeaturedEventsSettings &GetSettings() { return m_Settings; }
+	bool AddEventHandler(CEventHandler *pEventHandler);
+	bool RemoveEventHandler(CEventHandler *pEventHandler);
+	bool ShowDialog(HWND hwndOwner);
+
+private:
+	CFeaturedEventsSettings m_Settings;
+	CFeaturedEventsDialog m_Dialog;
+	std::vector<CEventHandler*> m_EventHandlerList;
 };
 
 
