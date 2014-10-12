@@ -103,9 +103,13 @@ bool CPseudoOSD::Create(HWND hwndParent,bool fLayeredWindow)
 			return true;
 		Destroy();
 	}
+
 	m_fLayeredWindow=fLayeredWindow;
+	m_fPopupLayeredWindow=
+		fLayeredWindow && !Util::OS::IsWindows8OrLater();
 	m_hwndParent=hwndParent;
-	if (fLayeredWindow) {
+
+	if (m_fPopupLayeredWindow) {
 		POINT pt;
 		RECT rc;
 
@@ -122,7 +126,9 @@ bool CPseudoOSD::Create(HWND hwndParent,bool fLayeredWindow)
 		m_ParentPosition.y=rc.top;
 		return true;
 	}
-	return ::CreateWindowEx(0,m_pszWindowClass,NULL,WS_CHILD,
+
+	return ::CreateWindowEx(fLayeredWindow?(WS_EX_LAYERED | WS_EX_TRANSPARENT):0,
+							m_pszWindowClass,NULL,WS_CHILD,
 							m_Position.Left,m_Position.Top,
 							m_Position.Width,m_Position.Height,
 							hwndParent,NULL,m_hinst,this)!=NULL;
@@ -142,7 +148,7 @@ bool CPseudoOSD::Show(DWORD Time,bool fAnimation)
 	if (m_hwnd==NULL)
 		return false;
 
-	if (m_fLayeredWindow) {
+	if (m_fPopupLayeredWindow) {
 		if (Time>0) {
 			POINT pt;
 
@@ -187,13 +193,21 @@ bool CPseudoOSD::Show(DWORD Time,bool fAnimation)
 		::KillTimer(m_hwnd,TIMER_ID_HIDE);
 		m_TimerID&=~TIMER_ID_HIDE;
 	}
-	if (::IsWindowVisible(m_hwnd)) {
-		::RedrawWindow(m_hwnd,NULL,NULL,RDW_INVALIDATE | RDW_UPDATENOW);
-	} else {
+	if (m_fLayeredWindow) {
+		UpdateLayeredWindow();
 		::ShowWindow(m_hwnd,SW_SHOW);
 		::BringWindowToTop(m_hwnd);
 		::UpdateWindow(m_hwnd);
+	} else {
+		if (::IsWindowVisible(m_hwnd)) {
+			::RedrawWindow(m_hwnd,NULL,NULL,RDW_INVALIDATE | RDW_UPDATENOW);
+		} else {
+			::ShowWindow(m_hwnd,SW_SHOW);
+			::BringWindowToTop(m_hwnd);
+			::UpdateWindow(m_hwnd);
+		}
 	}
+
 	return true;
 }
 
@@ -246,12 +260,14 @@ bool CPseudoOSD::SetPosition(int Left,int Top,int Width,int Height)
 {
 	if (Width<=0 || Height<=0)
 		return false;
+
 	m_Position.Left=Left;
 	m_Position.Top=Top;
 	m_Position.Width=Width;
 	m_Position.Height=Height;
+
 	if (m_hwnd!=NULL) {
-		if (m_fLayeredWindow) {
+		if (m_fPopupLayeredWindow) {
 			POINT pt;
 
 			pt.x=Left;
@@ -263,6 +279,7 @@ bool CPseudoOSD::SetPosition(int Left,int Top,int Width,int Height)
 			::SetWindowPos(m_hwnd,HWND_TOP,Left,Top,Width,Height,0);
 		}
 	}
+
 	return true;
 }
 
@@ -402,7 +419,7 @@ bool CPseudoOSD::SetImage(HBITMAP hbm,unsigned int ImageEffect)
 
 void CPseudoOSD::OnParentMove()
 {
-	if (m_hwnd!=NULL && m_fLayeredWindow) {
+	if (m_hwnd!=NULL && m_fPopupLayeredWindow) {
 		RECT rcParent,rc;
 
 		::GetWindowRect(m_hwndParent,&rcParent);
@@ -594,8 +611,7 @@ CPseudoOSD *CPseudoOSD::GetThis(HWND hwnd)
 }
 
 
-LRESULT CALLBACK CPseudoOSD::WndProc(HWND hwnd,UINT uMsg,
-												WPARAM wParam,LPARAM lParam)
+LRESULT CALLBACK CPseudoOSD::WndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 {
 	switch (uMsg) {
 	case WM_CREATE:
@@ -646,7 +662,7 @@ LRESULT CALLBACK CPseudoOSD::WndProc(HWND hwnd,UINT uMsg,
 
 			case TIMER_ID_ANIMATION:
 				pThis->m_AnimationCount++;
-				if (pThis->m_fLayeredWindow) {
+				if (pThis->m_fPopupLayeredWindow) {
 					RECT rc;
 
 					::GetWindowRect(hwnd,&rc);
@@ -709,5 +725,6 @@ LRESULT CALLBACK CPseudoOSD::WndProc(HWND hwnd,UINT uMsg,
 		}
 		return 0;
 	}
-	return DefWindowProc(hwnd,uMsg,wParam,lParam);
+
+	return ::DefWindowProc(hwnd,uMsg,wParam,lParam);
 }

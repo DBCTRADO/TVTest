@@ -171,8 +171,7 @@
       <TargetMachine>MachineX86</TargetMachine>
     </Link>
     <Manifest>
-      <AdditionalManifestFiles>
-      </AdditionalManifestFiles>
+      <AdditionalManifestFiles>$(SolutionDir)Resource\compatibility.manifest;%(AdditionalManifestFiles)</AdditionalManifestFiles>
       <OutputManifestFile>$(IntDir)$(TargetName)$(TargetExt).embed.manifest</OutputManifestFile>
       <EnableDPIAwareness>true</EnableDPIAwareness>
     </Manifest>
@@ -220,8 +219,7 @@
       <TargetMachine>MachineX64</TargetMachine>
     </Link>
     <Manifest>
-      <AdditionalManifestFiles>
-      </AdditionalManifestFiles>
+      <AdditionalManifestFiles>$(SolutionDir)Resource\compatibility.manifest;%(AdditionalManifestFiles)</AdditionalManifestFiles>
       <OutputManifestFile>$(IntDir)$(TargetName)$(TargetExt).embed.manifest</OutputManifestFile>
       <EnableDPIAwareness>true</EnableDPIAwareness>
     </Manifest>
@@ -276,8 +274,7 @@
       <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
     </Link>
     <Manifest>
-      <AdditionalManifestFiles>
-      </AdditionalManifestFiles>
+      <AdditionalManifestFiles>$(SolutionDir)Resource\compatibility.manifest;%(AdditionalManifestFiles)</AdditionalManifestFiles>
       <OutputManifestFile>$(IntDir)$(TargetName)$(TargetExt).embed.manifest</OutputManifestFile>
       <EnableDPIAwareness>true</EnableDPIAwareness>
     </Manifest>
@@ -332,8 +329,7 @@
       <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
     </Link>
     <Manifest>
-      <AdditionalManifestFiles>
-      </AdditionalManifestFiles>
+      <AdditionalManifestFiles>$(SolutionDir)Resource\compatibility.manifest;%(AdditionalManifestFiles)</AdditionalManifestFiles>
       <OutputManifestFile>$(IntDir)$(TargetName)$(TargetExt).embed.manifest</OutputManifestFile>
       <EnableDPIAwareness>true</EnableDPIAwareness>
     </Manifest>
@@ -388,8 +384,7 @@
       <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
     </Link>
     <Manifest>
-      <AdditionalManifestFiles>
-      </AdditionalManifestFiles>
+      <AdditionalManifestFiles>$(SolutionDir)Resource\compatibility.manifest;%(AdditionalManifestFiles)</AdditionalManifestFiles>
       <OutputManifestFile>$(IntDir)$(TargetName)$(TargetExt).embed.manifest</OutputManifestFile>
       <EnableDPIAwareness>true</EnableDPIAwareness>
     </Manifest>
@@ -444,8 +439,7 @@
       <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
     </Link>
     <Manifest>
-      <AdditionalManifestFiles>
-      </AdditionalManifestFiles>
+      <AdditionalManifestFiles>$(SolutionDir)Resource\compatibility.manifest;%(AdditionalManifestFiles)</AdditionalManifestFiles>
       <OutputManifestFile>$(IntDir)$(TargetName)$(TargetExt).embed.manifest</OutputManifestFile>
       <EnableDPIAwareness>true</EnableDPIAwareness>
     </Manifest>
@@ -781,6 +775,9 @@
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="TVTest.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Manifest Include="Resource\compatibility.manifest" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

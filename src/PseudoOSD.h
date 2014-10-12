@@ -65,6 +65,7 @@ private:
 	UINT_PTR m_TimerID;
 	int m_AnimationCount;
 	bool m_fLayeredWindow;
+	bool m_fPopupLayeredWindow;
 	HWND m_hwndParent;
 	POINT m_ParentPosition;
 
