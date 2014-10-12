@@ -54,6 +54,7 @@
 #include "ZoomOptions.h"
 #include "PanAndScanOptions.h"
 #include "LogoManager.h"
+#include "EpgCapture.h"
 #include "KeywordSearch.h"
 #ifndef _DEBUG
 #include "DebugHelper.h"
@@ -251,8 +252,6 @@ private:
 		bool OnClose() override;
 		void OnDestroy() override;
 		void OnServiceTitleLButtonDown(LPCTSTR pszDriverFileName,const CServiceInfoData *pServiceInfo) override;
-		bool OnBeginUpdate(LPCTSTR pszBonDriver,const CChannelList *pChannelList) override;
-		void OnEndUpdate() override;
 		bool OnKeyDown(UINT KeyCode,UINT Flags) override;
 		bool OnMenuInitialize(HMENU hmenu,UINT CommandBase) override;
 		bool OnMenuSelected(UINT Command) override;
@@ -421,6 +420,7 @@ public:
 	CDriverManager DriverManager;
 	CCasLibraryManager CasLibraryManager;
 	CLogoManager LogoManager;
+	TVTest::CEpgCaptureManager EpgCaptureManager;
 
 	CEpg Epg;
 

@@ -1175,37 +1175,6 @@ void CEpg::CProgramGuideEventHandler::OnServiceTitleLButtonDown(LPCTSTR pszDrive
 }
 
 
-bool CEpg::CProgramGuideEventHandler::OnBeginUpdate(LPCTSTR pszBonDriver,const CChannelList *pChannelList)
-{
-	if (g_App.CmdLineOptions.m_fNoEpg) {
-		g_App.MainWindow.ShowMessage(
-			TEXT("コマンドラインオプションでEPG情報を取得しないように指定されているため、\n番組表の取得ができません。"),
-			TEXT("お知らせ"),MB_OK | MB_ICONINFORMATION);
-		return false;
-	}
-	if (g_App.RecordManager.IsRecording()) {
-		g_App.MainWindow.ShowMessage(
-			TEXT("録画を停止させてから番組表を取得してください。"),
-			TEXT("お知らせ"),MB_OK | MB_ICONINFORMATION);
-		return false;
-	}
-	if (g_App.CoreEngine.IsNetworkDriverFileName(pszBonDriver)) {
-		g_App.MainWindow.ShowMessage(
-			TEXT("UDP/TCPでは番組表の取得はできません。"),
-			TEXT("お知らせ"),MB_OK | MB_ICONINFORMATION);
-		return false;
-	}
-
-	return g_App.MainWindow.BeginProgramGuideUpdate(pszBonDriver,pChannelList);
-}
-
-
-void CEpg::CProgramGuideEventHandler::OnEndUpdate()
-{
-	g_App.MainWindow.OnProgramGuideUpdateEnd();
-}
-
-
 bool CEpg::CProgramGuideEventHandler::OnKeyDown(UINT KeyCode,UINT Flags)
 {
 	g_App.MainWindow.SendMessage(WM_KEYDOWN,KeyCode,Flags);

@@ -221,9 +221,6 @@ CMainWindow::CMainWindow(CAppMain &App)
 
 	, m_fLockLayout(false)
 
-	, m_fProgramGuideUpdating(false)
-	, m_fEpgUpdateChannelChange(false)
-
 	, m_fShowCursor(true)
 	, m_fNoHideCursor(false)
 
@@ -247,6 +244,7 @@ CMainWindow::CMainWindow(CAppMain &App)
 	, m_ChannelNoInputTimeout(3000)
 	, m_ChannelNoInputTimer(TIMER_ID_CHANNELNO)
 	, m_DisplayBaseEventHandler(this)
+	, m_EpgCaptureEventHandler(this)
 {
 	// 適当にデフォルトサイズを設定
 #ifndef TVTEST_FOR_1SEG
@@ -1301,8 +1299,8 @@ LRESULT CMainWindow::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 	case WM_POWERBROADCAST:
 		if (wParam==PBT_APMSUSPEND) {
 			m_App.Logger.AddLog(TEXT("サスペンドへの移行通知を受けました。"));
-			if (m_fProgramGuideUpdating) {
-				EndProgramGuideUpdate(0);
+			if (m_App.EpgCaptureManager.IsCapturing()) {
+				m_App.EpgCaptureManager.EndCapture(0);
 			} else if (!m_pCore->GetStandby()) {
 				StoreTunerResumeInfo();
 			}
@@ -1378,7 +1376,7 @@ LRESULT CMainWindow::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 				}
 			} else if (pInfo->m_fServiceListEmpty && pInfo->m_fStreamChanged
 					&& !m_App.Core.IsChannelScanning()
-					&& !m_fProgramGuideUpdating) {
+					&& !m_App.EpgCaptureManager.IsCapturing()) {
 				ShowNotificationBar(TEXT("このチャンネルは放送休止中です"),
 									CNotificationBar::MESSAGE_INFO);
 			}
@@ -1862,6 +1860,8 @@ bool CMainWindow::OnCreate(const CREATESTRUCT *pcs)
 			m_fFrameCut?CMediaViewer::STRETCH_CUTFRAME:
 						CMediaViewer::STRETCH_KEEPASPECTRATIO);
 
+	m_App.EpgCaptureManager.SetEventHandler(&m_EpgCaptureEventHandler);
+
 	::SetTimer(m_hwnd,TIMER_ID_UPDATE,UPDATE_TIMER_INTERVAL,nullptr);
 
 	m_fShowCursor=true;
@@ -1887,6 +1887,8 @@ void CMainWindow::OnDestroy()
 
 	m_App.HtmlHelpClass.Finalize();
 	m_pCore->PreventDisplaySave(false);
+
+	m_App.EpgCaptureManager.SetEventHandler(nullptr);
 
 	m_App.Finalize();
 
@@ -3567,74 +3569,8 @@ void CMainWindow::OnTimer(HWND hwnd,UINT id)
 
 	case TIMER_ID_PROGRAMGUIDEUPDATE:
 		// 番組表の取得
-		if (m_fProgramGuideUpdating) {
-			CEventManager *pEventManager=&m_App.CoreEngine.m_DtvEngine.m_EventManager;
-			const CChannelList *pChannelList=m_App.ChannelManager.GetCurrentRealChannelList();
-			const CChannelInfo *pCurChannelInfo=m_App.ChannelManager.GetCurrentChannelInfo();
-			if (pChannelList==nullptr || pCurChannelInfo==nullptr) {
-				EndProgramGuideUpdate();
-				break;
-			}
-
-			bool fComplete=true,fBasic=false,fNoBasic=false;
-			EpgChannelGroup &CurChGroup=m_EpgUpdateChannelList[m_EpgUpdateCurChannel];
-			for (int i=0;i<CurChGroup.ChannelList.NumChannels();i++) {
-				const CChannelInfo *pChannelInfo=CurChGroup.ChannelList.GetChannelInfo(i);
-				const WORD NetworkID=pChannelInfo->GetNetworkID();
-				const WORD TSID=pChannelInfo->GetTransportStreamID();
-				const WORD ServiceID=pChannelInfo->GetServiceID();
-				const CNetworkDefinition::NetworkType Network=
-					m_App.NetworkDefinition.GetNetworkType(NetworkID);
-
-				if (pEventManager->HasSchedule(NetworkID,TSID,ServiceID,false)) {
-					fBasic=true;
-					if (!pEventManager->IsScheduleComplete(NetworkID,TSID,ServiceID,false)) {
-						fComplete=false;
-						break;
-					}
-					if ((Network!=CNetworkDefinition::NETWORK_BS && Network!=CNetworkDefinition::NETWORK_CS)
-							|| (Network==CNetworkDefinition::NETWORK_BS && m_App.EpgOptions.GetUpdateBSExtended())
-							|| (Network==CNetworkDefinition::NETWORK_CS && m_App.EpgOptions.GetUpdateCSExtended())) {
-						if (pEventManager->HasSchedule(NetworkID,TSID,ServiceID,true)
-								&& !pEventManager->IsScheduleComplete(NetworkID,TSID,ServiceID,true)) {
-							fComplete=false;
-							break;
-						}
-					}
-				} else {
-					fNoBasic=true;
-				}
-			}
-
-			if (fComplete && fBasic && fNoBasic
-					&& m_EpgAccumulateClock.GetSpan()<60000)
-				fComplete=false;
-
-			if (fComplete) {
-				TRACE(TEXT("EPG schedule complete\n"));
-				if (!m_pCore->GetStandby())
-					m_App.Epg.ProgramGuide.SendMessage(WM_COMMAND,CM_PROGRAMGUIDE_REFRESH,0);
-			} else {
-				WORD NetworkID=m_App.CoreEngine.m_DtvEngine.m_TsAnalyzer.GetNetworkID();
-				DWORD Timeout;
-
-				// 真面目に判定する場合BITから周期を取ってくる必要がある
-				if (m_App.NetworkDefinition.IsSatelliteNetworkID(NetworkID))
-					Timeout=360000;
-				else
-					Timeout=120000;
-				if (m_EpgAccumulateClock.GetSpan()>=Timeout) {
-					TRACE(TEXT("EPG schedule timeout\n"));
-					fComplete=true;
-				} else {
-					::SetTimer(m_hwnd,TIMER_ID_PROGRAMGUIDEUPDATE,5000,nullptr);
-				}
-			}
-
-			if (fComplete) {
-				SetEpgUpdateNextChannel();
-			}
-		}
+		if (!m_App.EpgCaptureManager.ProcessCapture())
+			::SetTimer(m_hwnd,TIMER_ID_PROGRAMGUIDEUPDATE,3000,nullptr);
 		break;
 
 	case TIMER_ID_VIDEOSIZECHANGED:
@@ -4176,8 +4112,8 @@ void CMainWindow::OnTunerChanged()
 {
 	SetWheelChannelChanging(false);
 
-	if (m_fProgramGuideUpdating)
-		EndProgramGuideUpdate(0);
+	if (m_App.EpgCaptureManager.IsCapturing())
+		m_App.EpgCaptureManager.EndCapture(0);
 
 	m_App.Panel.ProgramListPanel.ClearProgramList();
 	m_App.Panel.InfoPanel.ResetItem(CInformationPanel::ITEM_SERVICE);
@@ -4216,8 +4152,8 @@ void CMainWindow::OnTunerChanged()
 
 void CMainWindow::OnTunerOpened()
 {
-	if (m_fProgramGuideUpdating)
-		EndProgramGuideUpdate(0);
+	if (m_App.EpgCaptureManager.IsCapturing())
+		m_App.EpgCaptureManager.EndCapture(0);
 
 	m_pCore->UpdateTitle();
 	m_pCore->UpdateIcon();
@@ -4255,9 +4191,10 @@ void CMainWindow::OnChannelChanged(unsigned int Status)
 
 	SetWheelChannelChanging(false);
 
-	if (m_fProgramGuideUpdating && !m_fEpgUpdateChannelChange
+	if (m_App.EpgCaptureManager.IsCapturing()
+			&& !m_App.EpgCaptureManager.IsChannelChanging()
 			&& (Status & AppEvent::CHANNEL_CHANGED_STATUS_DETECTED)==0)
-		EndProgramGuideUpdate(0);
+		m_App.EpgCaptureManager.EndCapture(0);
 
 	if (CurSpace>CChannelManager::SPACE_INVALID)
 		m_App.MainMenu.CheckRadioItem(CM_SPACE_ALL,CM_SPACE_ALL+m_App.ChannelManager.NumSpaces(),
@@ -4473,7 +4410,8 @@ void CMainWindow::OnEventChanged()
 
 void CMainWindow::OnRecordingStarted()
 {
-	EndProgramGuideUpdate(0);
+	if (m_App.EpgCaptureManager.IsCapturing())
+		m_App.EpgCaptureManager.EndCapture(0);
 
 	m_App.StatusView.UpdateItem(STATUS_ITEM_RECORD);
 	m_App.StatusView.UpdateItem(STATUS_ITEM_ERROR);
@@ -5402,17 +5340,21 @@ bool CMainWindow::SetStandby(bool fStandby)
 		ShowFloatingWindows(false);
 		SetVisible(false);
 
-		if (!m_fProgramGuideUpdating) {
+		if (!m_App.EpgCaptureManager.IsCapturing()) {
 			StoreTunerResumeInfo();
 
 			if (m_App.EpgOptions.GetUpdateWhenStandby()
 					&& m_App.CoreEngine.IsTunerOpen()
 					&& !m_App.RecordManager.IsRecording()
 					&& !m_App.CoreEngine.IsNetworkDriver()
-					&& !m_App.CmdLineOptions.m_fNoEpg)
-				BeginProgramGuideUpdate(nullptr,nullptr,true);
+					&& !m_App.CmdLineOptions.m_fNoEpg) {
+				m_App.EpgCaptureManager.BeginCapture(
+					nullptr,nullptr,
+					CEpgCaptureManager::BEGIN_STANDBY | CEpgCaptureManager::BEGIN_NO_UI);
+			}
 
-			if (!m_App.RecordManager.IsRecording() && !m_fProgramGuideUpdating)
+			if (!m_App.RecordManager.IsRecording()
+					&& !m_App.EpgCaptureManager.IsCapturing())
 				m_App.Core.CloseTuner();
 		}
 	} else {
@@ -5522,8 +5464,8 @@ void CMainWindow::StoreTunerResumeInfo()
 
 bool CMainWindow::ResumeTuner()
 {
-	if (m_fProgramGuideUpdating)
-		EndProgramGuideUpdate(0);
+	if (m_App.EpgCaptureManager.IsCapturing())
+		m_App.EpgCaptureManager.EndCapture(0);
 
 	if (m_Resume.fOpenTuner) {
 		m_Resume.fOpenTuner=false;
@@ -5663,174 +5605,6 @@ bool CMainWindow::OnChannelNoInput(int Number)
 	}
 
 	return true;
-}
-
-
-bool CMainWindow::BeginProgramGuideUpdate(LPCTSTR pszBonDriver,const CChannelList *pChannelList,bool fStandby)
-{
-	if (!m_fProgramGuideUpdating) {
-		if (m_App.CmdLineOptions.m_fNoEpg) {
-			if (!fStandby)
-				ShowMessage(TEXT("コマンドラインオプションでEPG情報を取得しないように指定されているため、\n番組表の取得ができません。"),
-							TEXT("お知らせ"),MB_OK | MB_ICONINFORMATION);
-			return false;
-		}
-		if (m_App.RecordManager.IsRecording()) {
-			if (!fStandby)
-				ShowMessage(TEXT("録画中は番組表の取得を行えません。"),
-							TEXT("お知らせ"),MB_OK | MB_ICONINFORMATION);
-			return false;
-		}
-
-		const bool fTunerOpen=m_App.CoreEngine.IsTunerOpen();
-
-		if (!IsStringEmpty(pszBonDriver)) {
-			if (!m_App.Core.OpenTuner(pszBonDriver))
-				return false;
-		}
-
-		if (pChannelList==nullptr) {
-			pChannelList=m_App.ChannelManager.GetCurrentRealChannelList();
-			if (pChannelList==nullptr) {
-				if (!fTunerOpen)
-					m_App.Core.CloseTuner();
-				return false;
-			}
-		}
-		m_EpgUpdateChannelList.clear();
-		for (int i=0;i<pChannelList->NumChannels();i++) {
-			const CChannelInfo *pChInfo=pChannelList->GetChannelInfo(i);
-
-			if (pChInfo->IsEnabled()) {
-				const CNetworkDefinition::NetworkType Network=
-					m_App.NetworkDefinition.GetNetworkType(pChInfo->GetNetworkID());
-				std::vector<EpgChannelGroup>::iterator itr;
-
-				for (itr=m_EpgUpdateChannelList.begin();itr!=m_EpgUpdateChannelList.end();++itr) {
-					if (pChInfo->GetSpace()==itr->Space && pChInfo->GetChannelIndex()==itr->Channel)
-						break;
-					if (pChInfo->GetNetworkID()==itr->ChannelList.GetChannelInfo(0)->GetNetworkID()
-							&& ((Network==CNetworkDefinition::NETWORK_BS && !m_App.EpgOptions.GetUpdateBSExtended())
-							 || (Network==CNetworkDefinition::NETWORK_CS && !m_App.EpgOptions.GetUpdateCSExtended())))
-						break;
-				}
-				if (itr==m_EpgUpdateChannelList.end()) {
-					m_EpgUpdateChannelList.push_back(EpgChannelGroup());
-					itr=m_EpgUpdateChannelList.end();
-					--itr;
-					itr->Space=pChInfo->GetSpace();
-					itr->Channel=pChInfo->GetChannelIndex();
-					itr->Time=0;
-				}
-				itr->ChannelList.AddChannel(*pChInfo);
-			}
-		}
-		if (m_EpgUpdateChannelList.empty()) {
-			if (!fTunerOpen)
-				m_App.Core.CloseTuner();
-			return false;
-		}
-
-		if (m_pCore->GetStandby()) {
-			if (!m_App.Core.OpenTuner())
-				return false;
-		} else {
-			if (!m_App.CoreEngine.IsTunerOpen())
-				return false;
-			if (!fStandby) {
-				StoreTunerResumeInfo();
-				m_Resume.fOpenTuner=fTunerOpen;
-			}
-		}
-
-		m_App.Logger.AddLog(TEXT("番組表の取得を開始します。"));
-		m_fProgramGuideUpdating=true;
-		SuspendViewer(ResumeInfo::VIEWERSUSPEND_EPGUPDATE);
-		m_EpgUpdateCurChannel=-1;
-		SetEpgUpdateNextChannel();
-	}
-
-	return true;
-}
-
-
-void CMainWindow::OnProgramGuideUpdateEnd(unsigned int Flags)
-{
-	if (m_fProgramGuideUpdating) {
-		HANDLE hThread;
-		int OldPriority;
-
-		m_App.Logger.AddLog(TEXT("番組表の取得を終了します。"));
-		::KillTimer(m_hwnd,TIMER_ID_PROGRAMGUIDEUPDATE);
-		m_fProgramGuideUpdating=false;
-		m_EpgUpdateChannelList.clear();
-		if (m_pCore->GetStandby()) {
-			hThread=::GetCurrentThread();
-			OldPriority=::GetThreadPriority(hThread);
-			::SetThreadPriority(hThread,THREAD_PRIORITY_LOWEST);
-		} else {
-			::SetCursor(::LoadCursor(nullptr,IDC_WAIT));
-		}
-		m_App.EpgProgramList.UpdateProgramList();
-		m_App.EpgOptions.SaveEpgFile(&m_App.EpgProgramList);
-		if (m_pCore->GetStandby()) {
-			m_App.Epg.ProgramGuide.SendMessage(WM_COMMAND,CM_PROGRAMGUIDE_REFRESH,0);
-			::SetThreadPriority(hThread,OldPriority);
-			if ((Flags&EPG_UPDATE_END_CLOSE_TUNER)!=0)
-				m_App.Core.CloseTuner();
-		} else {
-			::SetCursor(::LoadCursor(nullptr,IDC_ARROW));
-			if ((Flags&EPG_UPDATE_END_RESUME)!=0)
-				ResumeChannel();
-			if (IsPanelVisible() && m_App.Panel.Form.GetCurPageID()==PANEL_ID_CHANNEL)
-				m_App.Panel.ChannelPanel.UpdateAllChannels(false);
-		}
-		ResumeViewer(ResumeInfo::VIEWERSUSPEND_EPGUPDATE);
-	}
-}
-
-
-void CMainWindow::EndProgramGuideUpdate(unsigned int Flags)
-{
-	OnProgramGuideUpdateEnd(Flags);
-
-	if (m_App.Epg.ProgramGuide.IsCreated())
-		m_App.Epg.ProgramGuide.SendMessage(WM_COMMAND,CM_PROGRAMGUIDE_ENDUPDATE,0);
-}
-
-
-bool CMainWindow::SetEpgUpdateNextChannel()
-{
-	size_t i;
-
-	for (i=m_EpgUpdateCurChannel+1;i<m_EpgUpdateChannelList.size();i++) {
-		const EpgChannelGroup &ChGroup=m_EpgUpdateChannelList[i];
-
-		m_fEpgUpdateChannelChange=true;
-		bool fOK=m_App.Core.SetChannelByIndex(ChGroup.Space,ChGroup.Channel);
-		m_fEpgUpdateChannelChange=false;
-		if (fOK) {
-			::SetTimer(m_hwnd,TIMER_ID_PROGRAMGUIDEUPDATE,30000,nullptr);
-			m_EpgUpdateCurChannel=(int)i;
-			m_EpgAccumulateClock.Start();
-
-			// TODO: 残り時間をちゃんと算出する
-			DWORD Time=0;
-			for (size_t j=i;j<m_EpgUpdateChannelList.size();j++) {
-				WORD NetworkID=m_EpgUpdateChannelList[j].ChannelList.GetChannelInfo(0)->GetNetworkID();
-				if (m_App.NetworkDefinition.IsSatelliteNetworkID(NetworkID))
-					Time+=180000;
-				else
-					Time+=60000;
-			}
-			m_App.Epg.ProgramGuide.SetEpgUpdateProgress(
-				m_EpgUpdateCurChannel,(int)m_EpgUpdateChannelList.size(),Time);
-			return true;
-		}
-	}
-
-	EndProgramGuideUpdate();
-	return false;
 }
 
 
@@ -6978,4 +6752,76 @@ bool CMainWindow::CShowCursorManager::OnCursorMove(int x,int y)
 	}
 
 	return false;
+}
+
+
+CMainWindow::CEpgCaptureEventHandler::CEpgCaptureEventHandler(CMainWindow *pMainWindow)
+	 : m_pMainWindow(pMainWindow)
+{
+}
+
+void CMainWindow::CEpgCaptureEventHandler::OnBeginCapture(unsigned int Flags,unsigned int Status)
+{
+	if ((Status & CEpgCaptureManager::BEGIN_STATUS_STANDBY)==0) {
+		m_pMainWindow->StoreTunerResumeInfo();
+		m_pMainWindow->m_Resume.fOpenTuner=
+			(Status & CEpgCaptureManager::BEGIN_STATUS_TUNER_ALREADY_OPENED)!=0;
+	}
+
+	m_pMainWindow->SuspendViewer(ResumeInfo::VIEWERSUSPEND_EPGUPDATE);
+
+	m_pMainWindow->m_App.Epg.ProgramGuide.OnEpgCaptureBegin();
+}
+
+void CMainWindow::CEpgCaptureEventHandler::OnEndCapture(unsigned int Flags)
+{
+	CAppMain &App=m_pMainWindow->m_App;
+	HANDLE hThread;
+	int OldPriority;
+
+	::KillTimer(m_pMainWindow->m_hwnd,TIMER_ID_PROGRAMGUIDEUPDATE);
+
+	if (m_pMainWindow->m_pCore->GetStandby()) {
+		hThread=::GetCurrentThread();
+		OldPriority=::GetThreadPriority(hThread);
+		::SetThreadPriority(hThread,THREAD_PRIORITY_LOWEST);
+	} else {
+		::SetCursor(::LoadCursor(nullptr,IDC_WAIT));
+	}
+	App.EpgProgramList.UpdateProgramList();
+	App.EpgOptions.SaveEpgFile(&App.EpgProgramList);
+	App.Epg.ProgramGuide.OnEpgCaptureEnd();
+	if (m_pMainWindow->m_pCore->GetStandby()) {
+		App.Epg.ProgramGuide.Refresh();
+		::SetThreadPriority(hThread,OldPriority);
+		if ((Flags & CEpgCaptureManager::END_CLOSE_TUNER)!=0)
+			App.Core.CloseTuner();
+	} else {
+		::SetCursor(::LoadCursor(nullptr,IDC_ARROW));
+		if ((Flags & CEpgCaptureManager::END_RESUME)!=0)
+			m_pMainWindow->ResumeChannel();
+		if (m_pMainWindow->IsPanelVisible()
+				&& App.Panel.Form.GetCurPageID()==PANEL_ID_CHANNEL)
+			App.Panel.ChannelPanel.UpdateAllChannels(false);
+	}
+
+	m_pMainWindow->ResumeViewer(ResumeInfo::VIEWERSUSPEND_EPGUPDATE);
+}
+
+void CMainWindow::CEpgCaptureEventHandler::OnChannelChanged()
+{
+	CAppMain &App=m_pMainWindow->m_App;
+
+	::SetTimer(m_pMainWindow->m_hwnd,TIMER_ID_PROGRAMGUIDEUPDATE,15000,nullptr);
+
+	App.Epg.ProgramGuide.SetEpgCaptureProgress(
+		App.EpgCaptureManager.GetCurChannel(),
+		App.EpgCaptureManager.GetChannelCount(),
+		App.EpgCaptureManager.GetRemainingTime());
+}
+
+void CMainWindow::CEpgCaptureEventHandler::OnChannelEnd(bool fComplete)
+{
+	if (!m_pMainWindow->m_pCore->GetStandby())
+		m_pMainWindow->m_App.Epg.ProgramGuide.Refresh();
 }

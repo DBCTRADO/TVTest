@@ -267,8 +267,6 @@ public:
 		virtual bool OnClose() { return true; }
 		virtual void OnDestroy() {}
 		virtual void OnServiceTitleLButtonDown(LPCTSTR pszDriverFileName,const CServiceInfoData *pServiceInfo) {}
-		virtual bool OnBeginUpdate(LPCTSTR pszBonDriver,const CChannelList *pChannelList) = 0;
-		virtual void OnEndUpdate() {}
 		virtual bool OnRefresh() { return true; }
 		virtual bool OnKeyDown(UINT KeyCode,UINT Flags) { return false; }
 		virtual bool OnMenuInitialize(HMENU hmenu,UINT CommandBase) { return false; }
@@ -312,6 +310,7 @@ public:
 // CProgramGuide
 	bool SetEpgProgramList(CEpgProgramList *pList);
 	void Clear();
+	bool Refresh();
 	bool UpdateProgramGuide(bool fUpdateList=false);
 	bool SetChannelProviderManager(CProgramGuideChannelProviderManager *pManager);
 	bool EnumChannelProvider(int Index,LPTSTR pszName,int MaxName) const;
@@ -391,7 +390,10 @@ public:
 	bool ShowProgramSearch(bool fShow);
 
 	void SetMessage(LPCTSTR pszMessage,bool fUpdate=true);
-	void SetEpgUpdateProgress(int Pos,int End,DWORD RemainingTime);
+
+	void OnEpgCaptureBegin();
+	void OnEpgCaptureEnd();
+	void SetEpgCaptureProgress(int Pos,int End,DWORD RemainingTime);
 
 	CProgramGuideToolList *GetToolList() { return &m_ToolList; }
 	CProgramGuideFavorites *GetFavorites() { return &m_Favorites; }

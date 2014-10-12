@@ -1343,6 +1343,19 @@ void CProgramGuide::Clear()
 }
 
 
+bool CProgramGuide::Refresh()
+{
+	if (m_hwnd==NULL)
+		return false;
+
+	if (m_pEventHandler!=NULL
+			&& !m_pEventHandler->OnRefresh())
+		return false;
+
+	return UpdateProgramGuide(true);
+}
+
+
 bool CProgramGuide::UpdateProgramGuide(bool fUpdateList)
 {
 	if (m_hwnd!=NULL && m_pChannelProvider!=NULL) {
@@ -3426,7 +3439,21 @@ void CProgramGuide::SetMessage(LPCTSTR pszMessage,bool fUpdate)
 }
 
 
-void CProgramGuide::SetEpgUpdateProgress(int Pos,int End,DWORD RemainingTime)
+void CProgramGuide::OnEpgCaptureBegin()
+{
+}
+
+
+void CProgramGuide::OnEpgCaptureEnd()
+{
+	if (m_fEpgUpdating) {
+		m_fEpgUpdating=false;
+		SetCaption();
+	}
+}
+
+
+void CProgramGuide::SetEpgCaptureProgress(int Pos,int End,DWORD RemainingTime)
 {
 	m_EpgUpdateProgress.Pos=Pos;
 	m_EpgUpdateProgress.End=End;
@@ -3441,11 +3468,8 @@ bool CProgramGuide::OnCloseFrame()
 	if (m_pEventHandler!=NULL && !m_pEventHandler->OnClose())
 		return false;
 
-	if (m_fEpgUpdating) {
-		if (m_pEventHandler)
-			m_pEventHandler->OnEndUpdate();
-		m_fEpgUpdating=false;
-	}
+	if (m_fEpgUpdating)
+		GetAppClass().EpgCaptureManager.EndCapture();
 
 	ShowProgramSearch(false);
 
@@ -4039,19 +4063,24 @@ void CProgramGuide::OnCommand(int id)
 	switch (id) {
 	case CM_PROGRAMGUIDE_UPDATE:
 		if (!m_fEpgUpdating) {
-			TCHAR szBonDriver[MAX_PATH];
+			CAppMain &App=GetAppClass();
 
-			if (m_pEventHandler!=NULL
-					&& m_pChannelProvider!=NULL
-					&& m_pChannelProvider->GetBonDriver(szBonDriver,lengthof(szBonDriver))) {
-				CChannelList ChannelList;
+			if (!App.EpgCaptureManager.IsCapturing()) {
+				TCHAR szBonDriver[MAX_PATH];
 
-				GetChannelList(&ChannelList,false);
-				m_EpgUpdateProgress.Clear();
-				if (ChannelList.NumChannels()>0
-						&& m_pEventHandler->OnBeginUpdate(szBonDriver,&ChannelList)) {
-					m_fEpgUpdating=true;
-					SetCaption();
+				if (m_pEventHandler!=NULL
+						&& m_pChannelProvider!=NULL
+						&& m_pChannelProvider->GetBonDriver(szBonDriver,lengthof(szBonDriver))) {
+					CChannelList ChannelList;
+
+					GetChannelList(&ChannelList,false);
+					if (ChannelList.NumChannels()>0) {
+						m_EpgUpdateProgress.Clear();
+						if (App.EpgCaptureManager.BeginCapture(szBonDriver,&ChannelList)) {
+							m_fEpgUpdating=true;
+							SetCaption();
+						}
+					}
 				}
 			}
 		}
@@ -4059,18 +4088,12 @@ void CProgramGuide::OnCommand(int id)
 
 	case CM_PROGRAMGUIDE_ENDUPDATE:
 		if (m_fEpgUpdating) {
-			if (m_pEventHandler!=NULL)
-				m_pEventHandler->OnEndUpdate();
-			m_fEpgUpdating=false;
-			SetCaption();
+			GetAppClass().EpgCaptureManager.EndCapture();
 		}
 		return;
 
 	case CM_PROGRAMGUIDE_REFRESH:
-		if (m_pEventHandler==NULL
-				|| m_pEventHandler->OnRefresh()) {
-			UpdateProgramGuide(true);
-		}
+		Refresh();
 		return;
 
 	case CM_PROGRAMGUIDE_IEPGASSOCIATE:

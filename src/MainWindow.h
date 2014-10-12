@@ -13,6 +13,7 @@
 #include "Panel.h"
 #include "OSDManager.h"
 #include "WindowUtil.h"
+#include "EpgCapture.h"
 
 
 #define MAIN_WINDOW_CLASS		APP_NAME TEXT(" Window")
@@ -152,15 +153,6 @@ public:
 	bool BeginChannelNoInput(int Digits);
 	void EndChannelNoInput();
 	bool OnChannelNoInput(int Number);
-
-	bool BeginProgramGuideUpdate(LPCTSTR pszBonDriver=NULL,const CChannelList *pChannelList=NULL,bool fStandby=false);
-	enum {
-		EPG_UPDATE_END_CLOSE_TUNER = 0x0001U,
-		EPG_UPDATE_END_RESUME      = 0x0002U,
-		EPG_UPDATE_END_DEFAULT     = EPG_UPDATE_END_CLOSE_TUNER | EPG_UPDATE_END_RESUME
-	};
-	void OnProgramGuideUpdateEnd(unsigned int Flags=EPG_UPDATE_END_DEFAULT);
-	void EndProgramGuideUpdate(unsigned int Flags=EPG_UPDATE_END_DEFAULT);
 
 	void UpdatePanel();
 	bool SetViewWindowEdge(bool fEdge);
@@ -364,6 +356,20 @@ private:
 		void OnSizeChanged(int Width,int Height) override;
 	};
 
+	class CEpgCaptureEventHandler : public TVTest::CEpgCaptureManager::CEventHandler
+	{
+	public:
+		CEpgCaptureEventHandler(CMainWindow *pMainWindow);
+
+	private:
+		CMainWindow *m_pMainWindow;
+
+		void OnBeginCapture(unsigned int Flags,unsigned int Status) override;
+		void OnEndCapture(unsigned int Flags) override;
+		void OnChannelChanged() override;
+		void OnChannelEnd(bool fComplete) override;
+	};
+
 	enum { UPDATE_TIMER_INTERVAL=500 };
 
 	CAppMain &m_App;
@@ -422,18 +428,6 @@ private:
 	WindowSize m_1SegWindowSize;
 
 	bool m_fLockLayout;
-
-	struct EpgChannelGroup {
-		int Space;
-		int Channel;
-		DWORD Time;
-		CChannelList ChannelList;
-	};
-	bool m_fProgramGuideUpdating;
-	int m_EpgUpdateCurChannel;
-	std::vector<EpgChannelGroup> m_EpgUpdateChannelList;
-	Util::CClock m_EpgAccumulateClock;
-	bool m_fEpgUpdateChannelChange;
 
 	bool m_fShowCursor;
 	bool m_fNoHideCursor;
@@ -512,6 +506,8 @@ private:
 	ChannelNoInputInfo m_ChannelNoInput;
 	DWORD m_ChannelNoInputTimeout;
 	CTimer m_ChannelNoInputTimer;
+
+	CEpgCaptureEventHandler m_EpgCaptureEventHandler;
 
 	struct DirectShowFilterPropertyInfo {
 		CMediaViewer::PropertyFilter Filter;
