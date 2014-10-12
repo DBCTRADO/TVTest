@@ -1472,7 +1472,8 @@ namespace Util
 	namespace OS
 	{
 
-		bool GetVersion(DWORD *pMajor,DWORD *pMinor)
+#if 0
+		static bool GetVersion(DWORD *pMajor,DWORD *pMinor)
 		{
 			OSVERSIONINFO osvi;
 
@@ -1503,21 +1504,42 @@ namespace Util
 			return MajorVersion>Major
 				|| (MajorVersion==Major && MinorVersion>=Minor);
 		}
-
-		DWORD GetMajorVersion()
+#else
+		static bool VerifyOSVersion(DWORD Major,BYTE MajorOperator,
+									DWORD Minor,BYTE MinorOperator)
 		{
-			DWORD MajorVersion;
-			if (!GetVersion(&MajorVersion,nullptr))
-				return 0;
-			return MajorVersion;
+			OSVERSIONINFOEX osvi={sizeof(osvi)};
+
+			osvi.dwMajorVersion=Major;
+			osvi.dwMinorVersion=Minor;
+
+			return ::VerifyVersionInfo(&osvi,VER_MAJORVERSION | VER_MINORVERSION,
+				::VerSetConditionMask(
+					::VerSetConditionMask(0,VER_MAJORVERSION,MajorOperator),
+					VER_MINORVERSION,MinorOperator))!=FALSE;
 		}
+
+		static bool CheckOSVersion(DWORD Major,DWORD Minor)
+		{
+			return VerifyOSVersion(Major,VER_EQUAL,Minor,VER_EQUAL);
+		}
+
+		static bool CheckOSVersionLater(DWORD Major,DWORD Minor)
+		{
+			return VerifyOSVersion(Major,VER_GREATER_EQUAL,Minor,VER_GREATER_EQUAL);
+		}
+#endif
 
 		bool IsWindowsXP()
 		{
+#if 0
 			DWORD MajorVersion,MinorVersion;
 			if (!GetVersion(&MajorVersion,&MinorVersion))
 				return false;
 			return MajorVersion==5 && MinorVersion>=1;
+#else
+			return VerifyOSVersion(5,VER_EQUAL,1,VER_GREATER_EQUAL);
+#endif
 		}
 
 		bool IsWindowsVista()
@@ -1548,6 +1570,11 @@ namespace Util
 		bool IsWindows7OrLater()
 		{
 			return CheckOSVersionLater(6,1);
+		}
+
+		bool IsWindows8OrLater()
+		{
+			return CheckOSVersionLater(6,2);
 		}
 
 	}	// namespace OS

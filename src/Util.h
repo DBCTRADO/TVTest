@@ -205,8 +205,6 @@ namespace Util
 	namespace OS
 	{
 
-		bool GetVersion(DWORD *pMajor,DWORD *pMinor);
-		DWORD GetMajorVersion();
 		bool IsWindowsXP();
 		bool IsWindowsVista();
 		bool IsWindows7();
@@ -214,6 +212,7 @@ namespace Util
 		bool IsWindowsXPOrLater();
 		bool IsWindowsVistaOrLater();
 		bool IsWindows7OrLater();
+		bool IsWindows8OrLater();
 
 	}	// namespace OS
 
