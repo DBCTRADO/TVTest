@@ -76,10 +76,6 @@ public:
 #endif
 
 	bool ChannelFileHasStreamIDs() const { return m_fChannelFileHasStreamIDs; }
-	bool UpdateStreamInfo(int Space,int ChannelIndex,
-						  WORD NetworkID,WORD TransportStreamID,WORD ServiceID);
-	bool LoadChannelSettings(LPCTSTR pszFileName,LPCTSTR pszDriverName);
-	bool SaveChannelSettings(LPCTSTR pszFileName,LPCTSTR pszDriverName);
 };
 
 class CChannelSpec

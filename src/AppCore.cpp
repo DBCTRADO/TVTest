@@ -25,8 +25,6 @@ CAppCore::CAppCore(CAppMain &App)
 	, m_fCasCardOpenError(false)
 	, m_f1SegMode(false)
 {
-	::GetModuleFileName(nullptr,m_szChannelSettingFileName,MAX_PATH);
-	::PathRenameExtension(m_szChannelSettingFileName,TEXT(".ch.ini"));
 }
 
 
@@ -159,23 +157,6 @@ bool CAppCore::InitializeChannel()
 				AddLog(TEXT("(チャンネルファイルが古いので再スキャンをお薦めします)"));
 		}
 	}
-
-	TCHAR szFileName[MAX_PATH];
-	bool fLoadChannelSettings=true;
-	if (!fNetworkDriver) {
-		::lstrcpy(szFileName,m_App.CoreEngine.GetDriverFileName());
-	} else {
-#ifdef NETWORK_REMOCON_SUPPORT
-		if (szNetworkDriverName[0]!=_T('\0')) {
-			::lstrcpy(szFileName,szNetworkDriverName);
-		} else
-#endif
-		{
-			fLoadChannelSettings=false;
-		}
-	}
-	if (fLoadChannelSettings)
-		m_App.ChannelManager.LoadChannelSettings(m_szChannelSettingFileName,szFileName);
 
 	CDriverOptions::ChannelInfo InitChInfo;
 	if (m_App.DriverOptions.GetInitialChannel(m_App.CoreEngine.GetDriverFileName(),&InitChInfo)) {
@@ -408,15 +389,6 @@ bool CAppCore::UpdateChannelList(LPCTSTR pszBonDriverName,const CTuningSpaceList
 		m_App.FavoritesManager.SetModified(true);
 
 	return true;
-}
-
-
-bool CAppCore::SaveChannelSettings()
-{
-	if (!m_App.CoreEngine.IsTunerOpen() || m_App.CoreEngine.IsNetworkDriver())
-		return true;
-	return m_App.ChannelManager.SaveChannelSettings(m_szChannelSettingFileName,
-													m_App.CoreEngine.GetDriverFileName());
 }
 
 
@@ -951,7 +923,6 @@ bool CAppCore::OpenTuner(LPCTSTR pszFileName)
 	bool fOK;
 
 	SaveCurrentChannel();
-	SaveChannelSettings();
 
 	m_App.CoreEngine.m_DtvEngine.SetTracer(&m_App.StatusView);
 

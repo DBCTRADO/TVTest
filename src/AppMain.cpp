@@ -307,7 +307,6 @@ void CAppMain::Finalize()
 	NotifyBalloonTip.Finalize();
 
 	Core.SaveCurrentChannel();
-	Core.SaveChannelSettings();
 
 	FINALIZE_CONTINUE
 

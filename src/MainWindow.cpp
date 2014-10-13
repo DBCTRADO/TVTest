@@ -1329,7 +1329,6 @@ LRESULT CMainWindow::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 		TRACE(TEXT("WM_APP_SERVICEUPDATE\n"));
 		{
 			CServiceUpdateInfo *pInfo=reinterpret_cast<CServiceUpdateInfo*>(lParam);
-			int i;
 
 			if (pInfo->m_fStreamChanged) {
 				if (m_ResetErrorCountTimer.IsEnabled())
@@ -1356,23 +1355,6 @@ LRESULT CMainWindow::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 					// 外部からチャンネル変更されたか、
 					// BonDriverが開かれたときのデフォルトチャンネル
 					m_App.Core.FollowChannelChange(TransportStreamID,ServiceID);
-				}
-				if (pChInfo!=nullptr && !m_App.CoreEngine.IsNetworkDriver()) {
-					// チャンネルの情報を更新する
-					// 古いチャンネル設定ファイルにはNIDとTSIDの情報が含まれていないため
-					const WORD NetworkID=pInfo->m_NetworkID;
-
-					if (NetworkID!=0) {
-						for (i=0;i<pInfo->m_NumServices;i++) {
-							ServiceID=pInfo->m_pServiceList[i].ServiceID;
-							if (ServiceID!=0) {
-								m_App.ChannelManager.UpdateStreamInfo(
-									pChInfo->GetSpace(),
-									pChInfo->GetChannelIndex(),
-									NetworkID,TransportStreamID,ServiceID);
-							}
-						}
-					}
 				}
 			} else if (pInfo->m_fServiceListEmpty && pInfo->m_fStreamChanged
 					&& !m_App.Core.IsChannelScanning()

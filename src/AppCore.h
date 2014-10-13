@@ -45,7 +45,6 @@ public:
 	bool IsSilent() const { return m_fSilent; }
 	bool SaveCurrentChannel();
 
-	bool SaveChannelSettings();
 	bool InitializeChannel();
 	bool GetChannelFileName(LPCTSTR pszDriverFileName,
 							LPTSTR pszChannelFileName,int MaxChannelFileName);
@@ -123,7 +122,6 @@ public:
 private:
 	CAppMain &m_App;
 	bool m_fSilent;
-	TCHAR m_szChannelSettingFileName[MAX_PATH];
 	bool m_fExitOnRecordingStop;
 	bool m_fCasCardOpenError;
 	bool m_f1SegMode;

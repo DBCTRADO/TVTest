@@ -500,28 +500,6 @@ bool CChannelList::Sort(SortType Type,bool fDescending)
 }
 
 
-bool CChannelList::UpdateStreamInfo(int Space,int ChannelIndex,
-	WORD NetworkID,WORD TransportStreamID,WORD ServiceID)
-{
-	if (ServiceID==0)
-		return false;
-
-	for (auto i=m_ChannelList.begin();i!=m_ChannelList.end();i++) {
-		CChannelInfo *pChannelInfo=*i;
-
-		if (pChannelInfo->GetSpace()==Space
-				&& pChannelInfo->GetChannelIndex()==ChannelIndex
-				&& pChannelInfo->GetServiceID()==ServiceID) {
-			if (NetworkID!=0 && pChannelInfo->GetNetworkID()==0)
-				pChannelInfo->SetNetworkID(NetworkID);
-			if (TransportStreamID!=0 && pChannelInfo->GetTransportStreamID()==0)
-				pChannelInfo->SetTransportStreamID(TransportStreamID);
-		}
-	}
-	return true;
-}
-
-
 bool CChannelList::HasRemoteControlKeyID() const
 {
 	for (auto i=m_ChannelList.begin();i!=m_ChannelList.end();i++) {
@@ -1186,17 +1164,4 @@ bool CTuningSpaceList::LoadFromFile(LPCTSTR pszFileName)
 	delete [] pFileBuffer;
 
 	return MakeTuningSpaceList(&m_AllChannelList);
-}
-
-
-bool CTuningSpaceList::UpdateStreamInfo(int Space,int ChannelIndex,
-	WORD NetworkID,WORD TransportStreamID,WORD ServiceID)
-{
-	if (Space<0 || Space>=NumSpaces())
-		return false;
-	m_TuningSpaceList[Space]->GetChannelList()->UpdateStreamInfo(
-			Space,ChannelIndex,NetworkID,TransportStreamID,ServiceID);
-	m_AllChannelList.UpdateStreamInfo(Space,ChannelIndex,
-									  NetworkID,TransportStreamID,ServiceID);
-	return true;
 }

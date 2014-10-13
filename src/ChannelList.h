@@ -91,8 +91,6 @@ public:
 		SORT_TRAILER
 	};
 	bool Sort(SortType Type,bool fDescending=false);
-	bool UpdateStreamInfo(int Space,int ChannelIndex,
-		WORD NetworkID,WORD TransportStreamID,WORD ServiceID);
 	bool HasRemoteControlKeyID() const;
 	bool HasMultiService() const;
 
@@ -154,8 +152,6 @@ public:
 	void Clear();
 	bool SaveToFile(LPCTSTR pszFileName) const;
 	bool LoadFromFile(LPCTSTR pszFileName);
-	bool UpdateStreamInfo(int Space,int ChannelIndex,
-		WORD NetworkID,WORD TransportStreamID,WORD ServiceID);
 
 private:
 	std::vector<CTuningSpaceInfo*> m_TuningSpaceList;
