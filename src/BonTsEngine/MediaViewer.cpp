@@ -818,6 +818,7 @@ void CMediaViewer::CloseViewer()
 	SAFE_RELEASE(m_pMp2DemuxAudioMap);
 	SAFE_RELEASE(m_pMp2DemuxVideoMap);
 	SAFE_RELEASE(m_pMp2DemuxFilter);
+	m_MapAudioPID = PID_INVALID;
 
 	SAFE_RELEASE(m_pSrcFilter);
 
@@ -1017,6 +1018,8 @@ bool CMediaViewer::SetVideoPID(const WORD wPID)
 {
 	// 映像出力ピンにPIDをマッピングする
 
+	CBlockLock Lock(&m_DecoderLock);
+
 	if (wPID == m_wVideoEsPID)
 		return true;
 
@@ -1045,6 +1048,8 @@ bool CMediaViewer::SetVideoPID(const WORD wPID)
 bool CMediaViewer::SetAudioPID(const WORD wPID, const bool bUseMap)
 {
 	// 音声出力ピンにPIDをマッピングする
+
+	CBlockLock Lock(&m_DecoderLock);
 
 	if (wPID == m_wAudioEsPID
 			&& (bUseMap || wPID == m_MapAudioPID))
