@@ -800,7 +800,7 @@ bool CDtvEngine::ResetMediaViewer()
 
 	WORD VideoPID = CMediaViewer::PID_INVALID;
 	WORD AudioPID = CMediaViewer::PID_INVALID;
-	if (m_TsAnalyzer.GetVideoEsPID(m_CurServiceIndex, 0, &VideoPID))
+	if (m_TsAnalyzer.GetVideoEsPID(m_CurServiceIndex, m_CurVideoStream, &VideoPID))
 		m_MediaViewer.SetVideoPID(VideoPID);
 	if (m_TsAnalyzer.GetAudioEsPID(m_CurServiceIndex, m_CurAudioStream, &AudioPID))
 		m_MediaViewer.SetAudioPID(AudioPID);
