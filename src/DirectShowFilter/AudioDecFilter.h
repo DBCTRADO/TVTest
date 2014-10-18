@@ -137,6 +137,7 @@ private:
 	REFERENCE_TIME m_StartTime;
 	LONGLONG m_SampleCount;
 	bool m_bDiscontinuity;
+	bool m_bInputDiscontinuity;
 
 	SpdifOptions m_SpdifOptions;
 	bool m_bPassthrough;

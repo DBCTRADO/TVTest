@@ -109,6 +109,7 @@ CAudioDecFilter::CAudioDecFilter(LPUNKNOWN pUnk, HRESULT *phr)
 	, m_StartTime(-1)
 	, m_SampleCount(0)
 	, m_bDiscontinuity(true)
+	, m_bInputDiscontinuity(true)
 
 	, m_SpdifOptions(SPDIF_MODE_DISABLED, 0)
 	, m_bPassthrough(false)
@@ -359,6 +360,7 @@ HRESULT CAudioDecFilter::Transform(IMediaSample *pIn, IMediaSample *pOut)
 			rtStart = -1;
 		if (pIn->IsDiscontinuity() == S_OK) {
 			m_bDiscontinuity = true;
+			m_bInputDiscontinuity = true;
 		} else if (hr == S_OK || hr == VFW_S_NO_STOP_TIME) {
 			if (!m_bJitterCorrection) {
 				m_StartTime = rtStart;
@@ -422,6 +424,7 @@ HRESULT CAudioDecFilter::Transform(IMediaSample *pIn, IMediaSample *pOut)
 				}
 				m_MediaType = SampleInfo.MediaType;
 				m_bDiscontinuity = true;
+				m_bInputDiscontinuity = true;
 			}
 
 			IMediaSample *pOutSample = NULL;
@@ -459,9 +462,10 @@ HRESULT CAudioDecFilter::Transform(IMediaSample *pIn, IMediaSample *pOut)
 			// Discontinuity‚ðÝ’è‚·‚é‚Æ”{‘¬Ä¶‚ª‚¨‚©‚µ‚­‚È‚é–Í—l
 			pOutSample->SetDiscontinuity(m_bDiscontinuity);
 #else
-			pOutSample->SetDiscontinuity(FALSE);
+			pOutSample->SetDiscontinuity(m_bInputDiscontinuity);
 #endif
 			m_bDiscontinuity = false;
+			m_bInputDiscontinuity = false;
 			pOutSample->SetSyncPoint(TRUE);
 
 			hr = m_pOutput->Deliver(pOutSample);
@@ -954,6 +958,7 @@ void CAudioDecFilter::ResetSync()
 	m_StartTime = -1;
 	m_SampleCount = 0;
 	m_bDiscontinuity = true;
+	m_bInputDiscontinuity = true;
 }
 
 
