@@ -58,6 +58,7 @@ private:
 	{
 		TVTest::Style::Margins Padding;
 		TVTest::Style::Margins ItemPadding;
+		TVTest::Style::IntValue TextExtraHeight;
 
 		ControlPanelStyle();
 		void SetStyle(const TVTest::Style::CStyleManager *pStyleManager);
@@ -84,6 +85,7 @@ private:
 	void Draw(HDC hdc,const RECT &PaintRect);
 	void SendCommand(int Command);
 	bool CalcTextSize(LPCTSTR pszText,SIZE *pSize);
+	int GetTextItemHeight() const;
 };
 
 class ABSTRACT_CLASS(CControlPanelItem)
@@ -98,6 +100,7 @@ protected:
 	CControlPanel *m_pControlPanel;
 
 	bool CalcTextSize(LPCTSTR pszText,SIZE *pSize) const;
+	int GetTextItemHeight() const;
 	void GetMenuPos(POINT *pPos) const;
 
 public:

@@ -249,10 +249,19 @@ bool CControlPanel::CalcTextSize(LPCTSTR pszText,SIZE *pSize)
 	if (hdc==NULL)
 		return false;
 	HFONT hfontOld=DrawUtil::SelectObject(hdc,m_Font);
-	::GetTextExtentPoint32(hdc,pszText,::lstrlen(pszText),pSize);
+	RECT rc={0,0,0,0};
+	::DrawText(hdc,pszText,-1,&rc,DT_NOPREFIX | DT_CALCRECT);
+	pSize->cx=rc.right-rc.left;
+	pSize->cy=rc.bottom-rc.top;
 	SelectFont(hdc,hfontOld);
 	::ReleaseDC(m_hwnd,hdc);
 	return true;
+}
+
+
+int CControlPanel::GetTextItemHeight() const
+{
+	return m_FontHeight+m_Style.TextExtraHeight+m_Style.ItemPadding.Vert();
 }
 
 
@@ -532,7 +541,8 @@ CControlPanel::ControlPanelTheme::ControlPanelTheme()
 
 CControlPanel::ControlPanelStyle::ControlPanelStyle()
 	: Padding(2)
-	, ItemPadding(4)
+	, ItemPadding(4,2,4,2)
+	, TextExtraHeight(4)
 {
 }
 
@@ -541,6 +551,7 @@ void CControlPanel::ControlPanelStyle::SetStyle(const TVTest::Style::CStyleManag
 {
 	pStyleManager->Get(TEXT("control-panel.padding"),&Padding);
 	pStyleManager->Get(TEXT("control-panel.item.padding"),&ItemPadding);
+	pStyleManager->Get(TEXT("control-panel.item.text.extra-height"),&TextExtraHeight);
 }
 
 
@@ -548,6 +559,7 @@ void CControlPanel::ControlPanelStyle::NormalizeStyle(const TVTest::Style::CStyl
 {
 	pStyleManager->ToPixels(&Padding);
 	pStyleManager->ToPixels(&ItemPadding);
+	pStyleManager->ToPixels(&TextExtraHeight);
 }
 
 
@@ -646,6 +658,14 @@ bool CControlPanelItem::CalcTextSize(LPCTSTR pszText,SIZE *pSize) const
 		return false;
 	}
 	return m_pControlPanel->CalcTextSize(pszText,pSize);
+}
+
+
+int CControlPanelItem::GetTextItemHeight() const
+{
+	if (m_pControlPanel==NULL)
+		return 0;
+	return m_pControlPanel->GetTextItemHeight();
 }
 
 

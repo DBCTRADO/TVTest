@@ -16,9 +16,8 @@ static char THIS_FILE[]=__FILE__;
 
 void CTunerControlItem::CalcSize(int Width,SIZE *pSize)
 {
-	const TVTest::Style::Margins &Padding=m_pControlPanel->GetItemPadding();
 	pSize->cx=Width;
-	pSize->cy=m_pControlPanel->GetFontHeight()+Padding.Vert();
+	pSize->cy=GetTextItemHeight();
 }
 
 void CTunerControlItem::Draw(HDC hdc,const RECT &Rect)
@@ -63,9 +62,8 @@ void CTunerControlItem::OnRButtonDown(int x,int y)
 
 void CChannelControlItem::CalcSize(int Width,SIZE *pSize)
 {
-	const TVTest::Style::Margins &Padding=m_pControlPanel->GetItemPadding();
 	pSize->cx=Width;
-	pSize->cy=m_pControlPanel->GetFontHeight()+Padding.Vert();
+	pSize->cy=GetTextItemHeight();
 }
 
 void CChannelControlItem::Draw(HDC hdc,const RECT &Rect)
@@ -113,9 +111,8 @@ void CChannelControlItem::OnRButtonDown(int x,int y)
 
 void CVideoControlItem::CalcSize(int Width,SIZE *pSize)
 {
-	const TVTest::Style::Margins &Padding=m_pControlPanel->GetItemPadding();
 	pSize->cx=Width;
-	pSize->cy=m_pControlPanel->GetFontHeight()+Padding.Vert();
+	pSize->cy=GetTextItemHeight();
 }
 
 void CVideoControlItem::Draw(HDC hdc,const RECT &Rect)
@@ -246,9 +243,8 @@ void CVolumeControlItem::NormalizeStyle(const TVTest::Style::CStyleManager *pSty
 
 void CAudioControlItem::CalcSize(int Width,SIZE *pSize)
 {
-	const TVTest::Style::Margins &Padding=m_pControlPanel->GetItemPadding();
 	pSize->cx=Width;
-	pSize->cy=m_pControlPanel->GetFontHeight()+Padding.Vert();
+	pSize->cy=GetTextItemHeight();
 	if (pSize->cy<16)
 		pSize->cy=16;
 }
@@ -305,15 +301,14 @@ CControlPanelButton::~CControlPanelButton()
 
 void CControlPanelButton::CalcSize(int Width,SIZE *pSize)
 {
-	int FontHeight=m_pControlPanel->GetFontHeight();
 	const TVTest::Style::Margins &Padding=m_pControlPanel->GetItemPadding();
 
 	if (m_Width<0)
 		CalcTextSize(m_Text.Get(),pSize);
 	else
-		pSize->cx=m_Width*FontHeight;
+		pSize->cx=m_Width*m_pControlPanel->GetFontHeight();
 	pSize->cx+=Padding.Horz();
-	pSize->cy=FontHeight+Padding.Vert();
+	pSize->cy=GetTextItemHeight();
 }
 
 void CControlPanelButton::Draw(HDC hdc,const RECT &Rect)
