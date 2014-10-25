@@ -20,7 +20,8 @@ namespace TVTest
 
 		enum UnitType {
 			UNIT_UNDEFINED,
-			UNIT_PIXEL,
+			UNIT_LOGICAL_PIXEL,
+			UNIT_PHYSICAL_PIXEL,
 			UNIT_POINT,
 			UNIT_DIP
 		};
@@ -47,7 +48,7 @@ namespace TVTest
 			UnitType Unit;
 
 			ValueTemplate() : Value(0), Unit(UNIT_UNDEFINED) {}
-			ValueTemplate(T v,UnitType u=UNIT_PIXEL) : Value(v), Unit(u) {}
+			ValueTemplate(T v,UnitType u=UNIT_LOGICAL_PIXEL) : Value(v), Unit(u) {}
 			operator T() const { return Value; }
 			ValueTemplate<T> &operator=(T v) { Value=v; return *this; }
 			bool operator==(const ValueTemplate<T> &o) const { return Value==o.Value && Unit==o.Unit; }
@@ -62,7 +63,7 @@ namespace TVTest
 			IntValue Height;
 
 			Size() {}
-			Size(int w,int h,UnitType u=UNIT_PIXEL) : Width(w,u), Height(h,u) {}
+			Size(int w,int h,UnitType u=UNIT_LOGICAL_PIXEL) : Width(w,u), Height(h,u) {}
 			Size(int w,UnitType wu,int h,UnitType hu) : Width(w,wu), Height(h,hu) {}
 			bool operator==(const Size &o) const { return Width==o.Width && Height==o.Height; }
 			bool operator!=(const Size &o) const { return !(*this==o); }
@@ -76,11 +77,11 @@ namespace TVTest
 			IntValue Bottom;
 
 			Margins() {}
-			Margins(int l,int t,int r,int b,UnitType u=UNIT_PIXEL)
+			Margins(int l,int t,int r,int b,UnitType u=UNIT_LOGICAL_PIXEL)
 				: Left(l,u), Top(t,u), Right(r,u), Bottom(b,u) {}
 			Margins(int l,UnitType lu,int t,UnitType tu,int r,UnitType ru,int b,UnitType bu)
 				: Left(l,lu), Top(t,tu), Right(r,ru), Bottom(b,bu) {}
-			Margins(int m,UnitType u=UNIT_PIXEL)
+			Margins(int m,UnitType u=UNIT_LOGICAL_PIXEL)
 				: Left(m,u), Top(m,u), Right(m,u), Bottom(m,u) {}
 			bool operator==(const Margins &o) const {
 				return Left==o.Left && Top==o.Top && Right==o.Right && Bottom==o.Bottom; }
@@ -110,6 +111,7 @@ namespace TVTest
 			bool ToPixels(Size *pValue) const;
 			bool ToPixels(Margins *pValue) const;
 			int ToPixels(int Value,UnitType Unit) const;
+			int LogicalPixelsToPhysicalPixels(int Pixels) const;
 			int PointsToPixels(int Points) const;
 			int DipToPixels(int Dip) const;
 

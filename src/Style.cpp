@@ -339,7 +339,11 @@ bool CStyleManager::ToPixels(IntValue *pValue) const
 		return false;
 
 	switch (pValue->Unit) {
-	case UNIT_PIXEL:
+	case UNIT_LOGICAL_PIXEL:
+		pValue->Value=LogicalPixelsToPhysicalPixels(pValue->Value);
+		break;
+
+	case UNIT_PHYSICAL_PIXEL:
 		return true;
 
 	case UNIT_POINT:
@@ -354,7 +358,7 @@ bool CStyleManager::ToPixels(IntValue *pValue) const
 		return false;
 	}
 
-	pValue->Unit=UNIT_PIXEL;
+	pValue->Unit=UNIT_PHYSICAL_PIXEL;
 
 	return true;
 }
@@ -389,7 +393,10 @@ bool CStyleManager::ToPixels(Margins *pValue) const
 int CStyleManager::ToPixels(int Value,UnitType Unit) const
 {
 	switch (Unit) {
-	case UNIT_PIXEL:
+	case UNIT_LOGICAL_PIXEL:
+		return LogicalPixelsToPhysicalPixels(Value);
+
+	case UNIT_PHYSICAL_PIXEL:
 		return Value;
 
 	case UNIT_POINT:
@@ -400,6 +407,12 @@ int CStyleManager::ToPixels(int Value,UnitType Unit) const
 	}
 
 	return 0;
+}
+
+
+int CStyleManager::LogicalPixelsToPhysicalPixels(int Pixels) const
+{
+	return ::MulDiv(Pixels,m_ResolutionY,96);
 }
 
 
@@ -419,9 +432,10 @@ int CStyleManager::DipToPixels(int Dip) const
 
 UnitType CStyleManager::ParseUnit(LPCTSTR pszUnit)
 {
-	if (IsStringEmpty(pszUnit)
-			|| ::lstrcmpi(pszUnit,TEXT("px"))==0)
-		return UNIT_PIXEL;
+	if (IsStringEmpty(pszUnit))
+		return UNIT_LOGICAL_PIXEL;
+	if (::lstrcmpi(pszUnit,TEXT("px"))==0)
+		return UNIT_PHYSICAL_PIXEL;
 	if (::lstrcmpi(pszUnit,TEXT("pt"))==0)
 		return UNIT_POINT;
 	if (::lstrcmpi(pszUnit,TEXT("dp"))==0)
