@@ -355,7 +355,7 @@ public:
 
 	int GetLinesPerHour() const { return m_LinesPerHour; }
 	int GetItemWidth() const { return m_ItemWidth; }
-	bool SetUIOptions(int LinesPerHour,int ItemWidth,int LineMargin);
+	bool SetUIOptions(int LinesPerHour,int ItemWidth);
 	bool SetColor(int Type,COLORREF Color);
 	void SetBackColors(const TVTest::Theme::FillStyle &ChannelBackStyle,
 					   const TVTest::Theme::FillStyle &CurChannelBackStyle,
@@ -411,6 +411,8 @@ private:
 		TVTest::Style::Size HeaderChevronSize;
 		TVTest::Style::Margins HeaderChevronMargin;
 		TVTest::Style::IntValue HeaderShadowHeight;
+		TVTest::Style::IntValue EventLeading;
+		TVTest::Style::IntValue EventLineSpacing;
 		TVTest::Style::Size EventIconSize;
 		TVTest::Style::Margins EventIconMargin;
 		TVTest::Style::Margins FeaturedMarkMargin;
@@ -567,6 +569,7 @@ private:
 	void DrawTimeBar(HDC hdc,const RECT &Rect,bool fRight);
 	void Draw(HDC hdc,const RECT &PaintRect);
 	void DrawMessage(HDC hdc,const RECT &ClientRect) const;
+	int GetLineHeight() const;
 	int CalcHeaderHeight() const;
 	int GetCurTimeLinePos() const;
 	void GetProgramGuideRect(RECT *pRect) const;

@@ -47,7 +47,6 @@ private:
 	int m_ViewHours;
 	int m_ItemWidth;
 	int m_LinesPerHour;
-	int m_LineMargin;
 	LOGFONT m_Font;
 	LOGFONT m_CurSettingFont;
 	UINT m_VisibleEventIcons;

@@ -26,7 +26,6 @@ CProgramGuideOptions::CProgramGuideOptions(CProgramGuide *pProgramGuide,CPluginM
 	, m_ViewHours(26)
 	, m_ItemWidth(pProgramGuide->GetItemWidth())
 	, m_LinesPerHour(pProgramGuide->GetLinesPerHour())
-	, m_LineMargin(1)
 	, m_VisibleEventIcons(m_pProgramGuide->GetVisibleEventIcons())
 	, m_himlEventIcons(NULL)
 	, m_WheelScrollLines(pProgramGuide->GetWheelScrollLines())
@@ -77,9 +76,7 @@ bool CProgramGuideOptions::LoadSettings(CSettings &Settings)
 				&& Value>=CProgramGuide::MIN_LINES_PER_HOUR
 				&& Value<=CProgramGuide::MAX_LINES_PER_HOUR)
 			m_LinesPerHour=Value;
-		if (Settings.Read(TEXT("LineMargin"),&Value))
-			m_LineMargin=max(Value,0);
-		m_pProgramGuide->SetUIOptions(m_LinesPerHour,m_ItemWidth,m_LineMargin);
+		m_pProgramGuide->SetUIOptions(m_LinesPerHour,m_ItemWidth);
 
 		Settings.Read(TEXT("EventIcons"),&m_VisibleEventIcons);
 		m_pProgramGuide->SetVisibleEventIcons(m_VisibleEventIcons);
@@ -312,7 +309,6 @@ bool CProgramGuideOptions::SaveSettings(CSettings &Settings)
 		Settings.Write(TEXT("ViewHours"),m_ViewHours);
 		Settings.Write(TEXT("ItemWidth"),m_ItemWidth);
 		Settings.Write(TEXT("LinesPerHour"),m_LinesPerHour);
-		Settings.Write(TEXT("LineMargin"),m_LineMargin);
 		Settings.Write(TEXT("EventIcons"),m_VisibleEventIcons);
 		Settings.Write(TEXT("WheelScrollLines"),m_WheelScrollLines);
 		Settings.Write(TEXT("ProgramLDoubleClick"),m_ProgramLDoubleClickCommand.GetSafe());
@@ -497,8 +493,6 @@ INT_PTR CProgramGuideOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM l
 			DlgEdit_SetInt(hDlg,IDC_PROGRAMGUIDEOPTIONS_LINESPERHOUR,m_LinesPerHour);
 			DlgUpDown_SetRange(hDlg,IDC_PROGRAMGUIDEOPTIONS_LINESPERHOUR_UD,
 				CProgramGuide::MIN_LINES_PER_HOUR,CProgramGuide::MAX_LINES_PER_HOUR);
-			DlgEdit_SetInt(hDlg,IDC_PROGRAMGUIDEOPTIONS_LINEMARGIN,m_LineMargin);
-			DlgUpDown_SetRange(hDlg,IDC_PROGRAMGUIDEOPTIONS_LINEMARGIN_UD,0,100);
 
 			m_CurSettingFont=m_Font;
 			SetFontInfo(hDlg,&m_CurSettingFont);
@@ -837,8 +831,7 @@ INT_PTR CProgramGuideOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM l
 				Value=::GetDlgItemInt(hDlg,IDC_PROGRAMGUIDEOPTIONS_LINESPERHOUR,NULL,TRUE);
 				m_LinesPerHour=CLAMP(Value,
 					(int)CProgramGuide::MIN_LINES_PER_HOUR,(int)CProgramGuide::MAX_LINES_PER_HOUR);
-				m_LineMargin=::GetDlgItemInt(hDlg,IDC_PROGRAMGUIDEOPTIONS_LINEMARGIN,NULL,TRUE);
-				m_pProgramGuide->SetUIOptions(m_LinesPerHour,m_ItemWidth,m_LineMargin);
+				m_pProgramGuide->SetUIOptions(m_LinesPerHour,m_ItemWidth);
 
 				if (!CompareLogFont(&m_Font,&m_CurSettingFont)) {
 					m_Font=m_CurSettingFont;

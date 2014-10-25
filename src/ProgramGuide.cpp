@@ -1171,7 +1171,6 @@ CProgramGuide::CProgramGuide(CEventSearchOptions &EventSearchOptions)
 	, m_ListMode(LIST_SERVICES)
 	, m_WeekListService(-1)
 	, m_LinesPerHour(12)
-	, m_LineMargin(1)
 	, m_ItemWidth(140)
 	, m_TextLeftMargin(m_Style.EventIconSize.Width+
 					   m_Style.EventIconMargin.Left+m_Style.EventIconMargin.Right)
@@ -1703,7 +1702,7 @@ void CProgramGuide::DrawEvent(ProgramGuide::CEventItem *pItem,
 		RECT rcMark;
 		pItem->GetTimeSize(hdc,&sz);
 		rcMark.left=rcTitle.left;
-		rcMark.top=rcTitle.top;
+		rcMark.top=rcTitle.top+m_Style.EventLeading;
 		rcMark.right=rcMark.left+sz.cx;
 		rcMark.bottom=rcMark.top+sz.cy;
 		TVTest::Style::Subtract(&rcMark,m_Style.FeaturedMarkMargin);
@@ -1711,12 +1710,15 @@ void CProgramGuide::DrawEvent(ProgramGuide::CEventItem *pItem,
 	}
 
 	::SetTextColor(hdc,TitleColor);
+	rcTitle.top+=m_Style.EventLeading;
 	pItem->DrawTitle(hdc,&rcTitle,LineHeight);
 
 	if (rcText.bottom>rcTitle.bottom) {
 		::SetTextColor(hdc,TextColor);
 		DrawUtil::SelectObject(hdc,m_Font);
-		pItem->DrawText(hdc,&rcText,LineHeight);
+		RECT rc=rcText;
+		rc.top+=m_Style.EventLeading;
+		pItem->DrawText(hdc,&rc,LineHeight);
 
 		const unsigned int ShowIcons=
 			CEpgIcons::GetEventIcons(pEventInfo) & m_VisibleEventIcons;
@@ -1745,7 +1747,7 @@ void CProgramGuide::DrawEvent(ProgramGuide::CEventItem *pItem,
 void CProgramGuide::DrawEventList(ProgramGuide::CEventLayout *pLayout,
 								  HDC hdc,const RECT &Rect,const RECT &PaintRect)
 {
-	const int LineHeight=m_FontHeight+m_LineMargin;
+	const int LineHeight=GetLineHeight();
 	const int CurTimePos=Rect.top+GetCurTimeLinePos();
 
 	HFONT hfontOld=static_cast<HFONT>(::GetCurrentObject(hdc,OBJ_FONT));
@@ -1893,7 +1895,7 @@ void CProgramGuide::DrawDayHeader(int Day,HDC hdc,const RECT &Rect) const
 
 void CProgramGuide::DrawTimeBar(HDC hdc,const RECT &Rect,bool fRight)
 {
-	const int PixelsPerHour=(m_FontHeight+m_LineMargin)*m_LinesPerHour;
+	const int PixelsPerHour=GetLineHeight()*m_LinesPerHour;
 	const int CurTimePos=Rect.top+GetCurTimeLinePos();
 	HFONT hfontOld;
 	COLORREF crOldTextColor;
@@ -2114,12 +2116,12 @@ void CProgramGuide::Draw(HDC hdc,const RECT &PaintRect)
 
 		hrgn=::CreateRectRgnIndirect(&rcGuide);
 		::SelectClipRgn(hdc,hrgn);
-		rc.top=HeaderHeight-m_ScrollPos.y*(m_FontHeight+m_LineMargin);
+		rc.top=HeaderHeight-m_ScrollPos.y*GetLineHeight();
 		rc.left=m_TimeBarWidth+m_Style.ColumnMargin-m_ScrollPos.x;
 		HPEN hpen,hpenOld;
 		hpen=::CreatePen(PS_SOLID,0,m_ColorList[COLOR_TIMELINE]);
 		hpenOld=SelectPen(hdc,hpen);
-		int PixelsPerHour=(m_FontHeight+m_LineMargin)*m_LinesPerHour;
+		int PixelsPerHour=GetLineHeight()*m_LinesPerHour;
 		int CurTimePos=rc.top+GetCurTimeLinePos();
 		for (size_t i=0;i<m_EventLayoutList.Length();i++) {
 			rc.right=rc.left+m_ItemWidth;
@@ -2180,8 +2182,8 @@ void CProgramGuide::Draw(HDC hdc,const RECT &PaintRect)
 	rc.bottom=rcClient.bottom;
 	hrgn=::CreateRectRgnIndirect(&rc);
 	::SelectClipRgn(hdc,hrgn);
-	rc.top=HeaderHeight-m_ScrollPos.y*(m_FontHeight+m_LineMargin);
-		rc.bottom=rc.top+(m_FontHeight+m_LineMargin)*m_LinesPerHour*m_Hours;
+	rc.top=HeaderHeight-m_ScrollPos.y*GetLineHeight();
+		rc.bottom=rc.top+GetLineHeight()*m_LinesPerHour*m_Hours;
 	if (PaintRect.left<m_TimeBarWidth) {
 		rc.left=0;
 		rc.right=m_TimeBarWidth;
@@ -2268,6 +2270,12 @@ void CProgramGuide::Draw(HDC hdc,const RECT &PaintRect)
 }
 
 
+int CProgramGuide::GetLineHeight() const
+{
+	return m_FontHeight+m_Style.EventLeading+m_Style.EventLineSpacing;
+}
+
+
 int CProgramGuide::CalcHeaderHeight() const
 {
 	int NameHeight=m_FontHeight+m_Style.HeaderChannelNameMargin.Vert();
@@ -2286,7 +2294,7 @@ int CProgramGuide::GetCurTimeLinePos() const
 	Span=DiffSystemTime(&stFirst,&m_stCurTime)%(24LL*60*60*1000);
 	if (Span<0)
 		Span+=24*60*60*1000;
-	return (int)(Span*(LONGLONG)((m_FontHeight+m_LineMargin)*m_LinesPerHour)/(60*60*1000));
+	return (int)(Span*(LONGLONG)(GetLineHeight()*m_LinesPerHour)/(60*60*1000));
 }
 
 
@@ -2314,7 +2322,7 @@ void CProgramGuide::GetPageSize(SIZE *pSize) const
 
 	GetProgramGuideRect(&rc);
 	pSize->cx=max(rc.right-rc.left,0);
-	pSize->cy=max(rc.bottom-rc.top,0)/(m_FontHeight+m_LineMargin);
+	pSize->cy=max(rc.bottom-rc.top,0)/GetLineHeight();
 }
 
 
@@ -2349,7 +2357,7 @@ void CProgramGuide::Scroll(int XScroll,int YScroll)
 			Pos.y=max(GuideSize.cy-PageSize.cy,0);
 		si.nPos=Pos.y;
 		::SetScrollInfo(m_hwnd,SB_VERT,&si,TRUE);
-		YScrollSize=(m_ScrollPos.y-Pos.y)*(m_FontHeight+m_LineMargin);
+		YScrollSize=(m_ScrollPos.y-Pos.y)*GetLineHeight();
 	}
 
 	m_ScrollPos=Pos;
@@ -2430,7 +2438,7 @@ void CProgramGuide::SetScrollBar()
 	si.fMask=SIF_PAGE | SIF_RANGE | SIF_POS | SIF_DISABLENOSCROLL;
 	si.nMin=0;
 	si.nMax=m_Hours*m_LinesPerHour-1;
-	si.nPage=(rc.bottom-rc.top)/(m_FontHeight+m_LineMargin);
+	si.nPage=(rc.bottom-rc.top)/GetLineHeight();
 	si.nPos=m_ScrollPos.y;
 	::SetScrollInfo(m_hwnd,SB_VERT,&si,TRUE);
 	si.nMax=(int)m_EventLayoutList.Length()*(m_ItemWidth+m_Style.ColumnMargin*2)-1;
@@ -2577,7 +2585,7 @@ void CProgramGuide::SetTooltip()
 		}
 		if (m_Day<DAY_LAST) {
 			int y=m_HeaderHeight+
-				(m_Hours*m_LinesPerHour-m_ScrollPos.y)*(m_FontHeight+m_LineMargin);
+				(m_Hours*m_LinesPerHour-m_ScrollPos.y)*GetLineHeight();
 			rc.top=y-m_TimeBarWidth;
 			rc.bottom=y;
 			rc.left=0;
@@ -3176,17 +3184,15 @@ bool CProgramGuide::ScrollToCurrentService()
 }
 
 
-bool CProgramGuide::SetUIOptions(int LinesPerHour,int ItemWidth,int LineMargin)
+bool CProgramGuide::SetUIOptions(int LinesPerHour,int ItemWidth)
 {
 	if (LinesPerHour<MIN_LINES_PER_HOUR || LinesPerHour>MAX_LINES_PER_HOUR
 			|| ItemWidth<MIN_ITEM_WIDTH || ItemWidth>MAX_ITEM_WIDTH)
 		return false;
 	if (m_LinesPerHour!=LinesPerHour
-			|| m_ItemWidth!=ItemWidth
-			|| m_LineMargin!=LineMargin) {
+			|| m_ItemWidth!=ItemWidth) {
 		m_LinesPerHour=LinesPerHour;
 		m_ItemWidth=ItemWidth;
-		m_LineMargin=LineMargin;
 		if (m_hwnd!=NULL) {
 			m_ScrollPos.x=0;
 			m_ScrollPos.y=0;
@@ -3506,7 +3512,7 @@ bool CProgramGuide::GetEventRect(int ListIndex,int EventIndex,RECT *pRect) const
 	if (pItem==NULL)
 		return false;
 
-	int LineHeight=m_FontHeight+m_LineMargin;
+	int LineHeight=GetLineHeight();
 	RECT rc;
 	GetProgramGuideRect(&rc);
 
@@ -3561,7 +3567,7 @@ bool CProgramGuide::EventHitTest(int x,int y,int *pListIndex,int *pEventIndex,RE
 		int List=XPos/ServiceWidth;
 		if (List<(int)m_EventLayoutList.Length()) {
 			const ProgramGuide::CEventLayout *pLayout=m_EventLayoutList[List];
-			int LineHeight=m_FontHeight+m_LineMargin;
+			int LineHeight=GetLineHeight();
 			int YOrigin=rc.top-m_ScrollPos.y*LineHeight;
 
 			y-=YOrigin;
@@ -3848,7 +3854,7 @@ LRESULT CProgramGuide::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam
 					if (m_Day>DAY_FIRST && pt.y<m_HeaderHeight) {
 						::SendMessage(hwnd,WM_COMMAND,CM_PROGRAMGUIDE_DAY_FIRST+(m_Day-1),0);
 					} else if (m_Day<DAY_LAST) {
-						int y=(m_Hours*m_LinesPerHour-m_ScrollPos.y)*(m_FontHeight+m_LineMargin);
+						int y=(m_Hours*m_LinesPerHour-m_ScrollPos.y)*GetLineHeight();
 						if (pt.y-m_HeaderHeight>=y-m_TimeBarWidth
 								&& pt.y-m_HeaderHeight<y) {
 							::SendMessage(hwnd,WM_COMMAND,CM_PROGRAMGUIDE_DAY_FIRST+(m_Day+1),0);
@@ -3912,7 +3918,7 @@ LRESULT CProgramGuide::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam
 			int XScroll,YScroll;
 
 			XScroll=(m_DragInfo.StartScrollPos.x+(m_DragInfo.StartCursorPos.x-x))-m_ScrollPos.x;
-			YScroll=(m_DragInfo.StartScrollPos.y+(m_DragInfo.StartCursorPos.y-y)/(m_FontHeight+m_LineMargin))-m_ScrollPos.y;
+			YScroll=(m_DragInfo.StartScrollPos.y+(m_DragInfo.StartCursorPos.y-y)/GetLineHeight())-m_ScrollPos.y;
 			if (XScroll!=0 || YScroll!=0)
 				Scroll(XScroll,YScroll);
 		}
@@ -3952,8 +3958,7 @@ LRESULT CProgramGuide::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam
 						::SetCursor(::LoadCursor(NULL,IDC_HAND));
 						return TRUE;
 					}
-					int y=(m_Hours*m_LinesPerHour-m_ScrollPos.y)*
-						(m_FontHeight+m_LineMargin);
+					int y=(m_Hours*m_LinesPerHour-m_ScrollPos.y)*GetLineHeight();
 					if (m_Day<DAY_LAST
 							&& pt.y-m_HeaderHeight>=y-m_TimeBarWidth
 							&& pt.y-m_HeaderHeight<y) {
@@ -4027,7 +4032,7 @@ LRESULT CProgramGuide::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam
 
 						::GetClientRect(hwnd,&rc);
 						GetProgramGuideRect(&rcGuide);
-						Offset=rcGuide.top-m_ScrollPos.y*(m_FontHeight+m_LineMargin);
+						Offset=rcGuide.top-m_ScrollPos.y*GetLineHeight();
 						rc.top=Offset+OldTimeLinePos-m_FontHeight/2;
 						rc.bottom=Offset+NewTimeLinePos+m_FontHeight/2;
 						::InvalidateRect(hwnd,&rc,FALSE);
@@ -4768,6 +4773,8 @@ CProgramGuide::ProgramGuideStyle::ProgramGuideStyle()
 	, HeaderChevronSize(CHEVRON_WIDTH,CHEVRON_HEIGHT)
 	, HeaderChevronMargin(8,0,0,0)
 	, HeaderShadowHeight(8)
+	, EventLeading(1)
+	, EventLineSpacing(0)
 	, EventIconSize(CEpgIcons::ICON_WIDTH,CEpgIcons::ICON_HEIGHT)
 	, EventIconMargin(1)
 	, FeaturedMarkMargin(0)
@@ -4790,6 +4797,8 @@ void CProgramGuide::ProgramGuideStyle::SetStyle(const TVTest::Style::CStyleManag
 	pStyleManager->Get(TEXT("program-guide.header.chevron"),&HeaderChevronSize);
 	pStyleManager->Get(TEXT("program-guide.header.chevron.margin"),&HeaderChevronMargin);
 	pStyleManager->Get(TEXT("program-guide.header.shadow.height"),&HeaderShadowHeight);
+	pStyleManager->Get(TEXT("program-guide.event.leading"),&EventLeading);
+	pStyleManager->Get(TEXT("program-guide.event.line-spacing"),&EventLineSpacing);
 	pStyleManager->Get(TEXT("program-guide.event.icon"),&EventIconSize);
 	pStyleManager->Get(TEXT("program-guide.event.icon.margin"),&EventIconMargin);
 	pStyleManager->Get(TEXT("program-guide.event.featured-mark.margin"),&FeaturedMarkMargin);
@@ -4811,6 +4820,8 @@ void CProgramGuide::ProgramGuideStyle::NormalizeStyle(const TVTest::Style::CStyl
 	pStyleManager->ToPixels(&HeaderChevronSize);
 	pStyleManager->ToPixels(&HeaderChevronMargin);
 	pStyleManager->ToPixels(&HeaderShadowHeight);
+	pStyleManager->ToPixels(&EventLeading);
+	pStyleManager->ToPixels(&EventLineSpacing);
 	pStyleManager->ToPixels(&EventIconSize);
 	pStyleManager->ToPixels(&EventIconMargin);
 	pStyleManager->ToPixels(&FeaturedMarkMargin);
