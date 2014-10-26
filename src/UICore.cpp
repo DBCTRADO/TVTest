@@ -687,13 +687,6 @@ bool CUICore::ShowSpecialMenu(MenuType Menu,const POINT *pPos,UINT Flags)
 
 void CUICore::InitChannelMenu(HMENU hmenu)
 {
-#ifdef NETWORK_REMOCON_SUPPORT
-	if (m_App.pNetworkRemocon!=nullptr) {
-		InitNetworkRemoconChannelMenu(hmenu);
-		return;
-	}
-#endif
-
 	const CChannelList *pList=m_App.ChannelManager.GetCurrentChannelList();
 
 	m_App.ChannelMenu.Destroy();
@@ -728,62 +721,6 @@ void CUICore::InitChannelMenu(HMENU hmenu)
 		}
 	}
 }
-
-
-#ifdef NETWORK_REMOCON_SUPPORT
-void CUICore::InitNetworkRemoconChannelMenu(HMENU hmenu)
-{
-	const CChannelList &RemoconChList=m_App.pNetworkRemocon->GetChannelList();
-	int i;
-	TCHAR szText[MAX_CHANNEL_NAME+4];
-	const CChannelList *pPortList;
-
-	ClearMenu(hmenu);
-	if (RemoconChList.NumChannels()>0) {
-		int No,Min,Max;
-
-		Min=1000;
-		Max=0;
-		for (i=0;i<RemoconChList.NumChannels();i++) {
-			No=RemoconChList.GetChannelNo(i);
-			if (No<Min)
-				Min=No;
-			if (No>Max)
-				Max=No;
-		}
-		for (No=Min;No<=Max;No++) {
-			for (i=0;i<RemoconChList.NumChannels();i++) {
-				if (RemoconChList.GetChannelNo(i)==No) {
-					StdUtil::snprintf(szText,lengthof(szText),
-									  TEXT("%d: %s"),No,RemoconChList.GetName(i));
-					AppendMenu(hmenu,MF_STRING | MF_ENABLED,
-							   CM_CHANNELNO_FIRST+No-1,szText);
-				}
-			}
-		}
-		if (m_App.ChannelManager.GetNetworkRemoconCurrentChannel()>=0) {
-			::CheckMenuRadioItem(hmenu,
-				CM_CHANNELNO_FIRST,CM_CHANNELNO_FIRST+Max-1,
-				CM_CHANNEL_FIRST+m_App.ChannelManager.GetNetworkRemoconCurrentChannel(),
-				MF_BYCOMMAND);
-		}
-	}
-	pPortList=m_App.ChannelManager.GetDriverChannelList(0);
-	for (i=0;i<pPortList->NumChannels();i++) {
-		StdUtil::snprintf(szText,lengthof(szText),TEXT("%d: %s"),
-						  pPortList->GetChannelNo(i),pPortList->GetName(i));
-		AppendMenu(hmenu,MF_STRING | MF_ENABLED
-			| ((i!=0 && i%m_App.MenuOptions.GetMaxChannelMenuRows()==0) || (i==0 && RemoconChList.NumChannels()>0)?MF_MENUBREAK:0),
-			CM_CHANNEL_FIRST+i,szText);
-	}
-	if (m_App.ChannelManager.GetCurrentChannel()>=0) {
-		::CheckMenuRadioItem(hmenu,
-			CM_CHANNEL_FIRST,CM_CHANNEL_FIRST+pPortList->NumChannels()-1,
-			CM_CHANNEL_FIRST+m_App.ChannelManager.GetCurrentChannel(),
-			MF_BYCOMMAND);
-	}
-}
-#endif	// NETWORK_REMOCON_SUPPORT
 
 
 void CUICore::InitTunerMenu(HMENU hmenu)

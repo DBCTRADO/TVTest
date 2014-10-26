@@ -70,7 +70,7 @@ bool CEpgCaptureManager::BeginCapture(
 	}
 
 	if (pChannelList==nullptr) {
-		pChannelList=App.ChannelManager.GetCurrentRealChannelList();
+		pChannelList=App.ChannelManager.GetCurrentChannelList();
 		if (pChannelList==nullptr) {
 			if (!fTunerAlreadyOpened)
 				App.Core.CloseTuner();
@@ -167,7 +167,7 @@ bool CEpgCaptureManager::ProcessCapture()
 
 	CAppMain &App=GetAppClass();
 	CEventManager &EventManager=App.CoreEngine.m_DtvEngine.m_EventManager;
-	const CChannelList *pChannelList=App.ChannelManager.GetCurrentRealChannelList();
+	const CChannelList *pChannelList=App.ChannelManager.GetCurrentChannelList();
 	const CChannelInfo *pCurChannelInfo=App.ChannelManager.GetCurrentChannelInfo();
 	if (pChannelList==nullptr || pCurChannelInfo==nullptr) {
 		EndCapture();

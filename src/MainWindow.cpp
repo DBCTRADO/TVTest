@@ -1339,7 +1339,7 @@ LRESULT CMainWindow::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 
 			if (!m_App.Core.IsChannelScanning()
 					&& pInfo->m_NumServices>0 && pInfo->m_CurService>=0) {
-				const CChannelInfo *pChInfo=m_App.ChannelManager.GetCurrentRealChannelInfo();
+				const CChannelInfo *pChInfo=m_App.ChannelManager.GetCurrentChannelInfo();
 				WORD ServiceID,TransportStreamID;
 
 				TransportStreamID=pInfo->m_TransportStreamID;
@@ -1364,11 +1364,6 @@ LRESULT CMainWindow::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 			}
 
 			delete pInfo;
-
-#ifdef NETWORK_REMOCON_SUPPORT
-			if (m_App.pNetworkRemocon!=nullptr)
-				m_App.pNetworkRemocon->GetChannel(&m_App.NetworkRemoconGetChannel);
-#endif
 
 			m_App.Panel.InfoPanel.UpdateItem(CInformationPanel::ITEM_SERVICE);
 
@@ -1396,24 +1391,6 @@ LRESULT CMainWindow::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 				m_App.Core.OpenCasCard(CAppCore::OPEN_CAS_CARD_NOTIFY_ERROR);
 		}
 		return 0;
-
-#ifdef NETWORK_REMOCON_SUPPORT
-	case WM_APP_CHANNELCHANGE:
-		TRACE(TEXT("WM_APP_CHANNELCHANGE\n"));
-		{
-			const CChannelList &List=m_App.pNetworkRemocon->GetChannelList();
-
-			m_App.ChannelManager.SetNetworkRemoconCurrentChannel((int)wParam);
-			m_App.StatusView.UpdateItem(STATUS_ITEM_CHANNEL);
-			m_App.Panel.ControlPanel.UpdateItem(CONTROLPANEL_ITEM_CHANNEL);
-			const int ChannelNo=List.GetChannelNo(m_App.ChannelManager.GetNetworkRemoconCurrentChannel());
-			m_App.MainMenu.CheckRadioItem(CM_CHANNELNO_FIRST,CM_CHANNELNO_LAST,
-										  CM_CHANNELNO_FIRST+ChannelNo-1);
-			m_App.SideBar.CheckRadioItem(CM_CHANNELNO_FIRST,CM_CHANNELNO_LAST,
-										 CM_CHANNELNO_FIRST+ChannelNo-1);
-		}
-		return 0;
-#endif
 
 	/*
 	case WM_APP_IMAGESAVE:
@@ -1452,12 +1429,7 @@ LRESULT CMainWindow::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 		if (!m_fClosing && m_App.CoreEngine.IsNetworkDriver()) {
 			WORD Port=m_App.ChannelManager.GetCurrentChannel()+
 										(m_App.CoreEngine.IsUDPDriver()?1234:2230);
-#ifdef NETWORK_REMOCON_SUPPORT
-			WORD RemoconPort=m_App.pNetworkRemocon!=nullptr?m_App.pNetworkRemocon->GetPort():0;
-			return MAKELRESULT(Port,RemoconPort);
-#else
 			return MAKELRESULT(Port,0);
-#endif
 		}
 		return 0;
 
@@ -3091,7 +3063,7 @@ void CMainWindow::OnCommand(HWND hwnd,int id,HWND hwndCtl,UINT codeNotify)
 
 	case CM_ADDTOFAVORITES:
 		{
-			const CChannelInfo *pChannel=m_App.ChannelManager.GetCurrentRealChannelInfo();
+			const CChannelInfo *pChannel=m_App.ChannelManager.GetCurrentChannelInfo();
 			if (pChannel!=nullptr)
 				m_App.FavoritesManager.AddChannel(pChannel,m_App.CoreEngine.GetDriverFileName());
 		}
@@ -3671,7 +3643,7 @@ bool CMainWindow::OnInitMenuPopup(HMENU hmenu)
 			CM_FAVORITECHANNEL_FIRST,hmenu,m_hwnd,
 			CFavoritesMenu::FLAG_SHOWEVENTINFO | CFavoritesMenu::FLAG_SHOWLOGO);
 		::EnableMenuItem(hmenu,CM_ADDTOFAVORITES,
-			MF_BYCOMMAND | (m_App.ChannelManager.GetCurrentRealChannelInfo()!=nullptr?MF_ENABLED:MF_GRAYED));
+			MF_BYCOMMAND | (m_App.ChannelManager.GetCurrentChannelInfo()!=nullptr?MF_ENABLED:MF_GRAYED));
 	} else if (hmenu==m_App.MainMenu.GetSubMenu(CMainMenu::SUBMENU_CHANNELHISTORY)) {
 		m_App.RecentChannelList.SetMenu(hmenu);
 	} else if (hmenu==m_App.MainMenu.GetSubMenu(CMainMenu::SUBMENU_ASPECTRATIO)) {
@@ -4228,7 +4200,7 @@ void CMainWindow::OnChannelChanged(unsigned int Status)
 	UpdateControlPanel();
 
 	LPCTSTR pszDriverFileName=m_App.CoreEngine.GetDriverFileName();
-	pCurChannel=m_App.ChannelManager.GetCurrentRealChannelInfo();
+	pCurChannel=m_App.ChannelManager.GetCurrentChannelInfo();
 	if (pCurChannel!=nullptr) {
 		m_App.RecentChannelList.Add(pszDriverFileName,pCurChannel);
 		m_App.ChannelHistory.SetCurrentChannel(pszDriverFileName,pCurChannel);
@@ -6565,11 +6537,7 @@ void CMainWindow::CSideBarManager::OnMouseLeave()
 
 bool CMainWindow::CSideBarManager::GetTooltipText(int Command,LPTSTR pszText,int MaxText)
 {
-	if (Command>=CM_CHANNELNO_FIRST && Command<=CM_CHANNELNO_LAST
-#ifdef NETWORK_REMOCON_SUPPORT
-			&& m_pMainWindow->m_App.pNetworkRemocon==nullptr)
-#endif
-	{
+	if (Command>=CM_CHANNELNO_FIRST && Command<=CM_CHANNELNO_LAST) {
 		const CChannelInfo *pChInfo=GetChannelInfoByCommand(Command);
 		if (pChInfo!=nullptr) {
 			StdUtil::snprintf(pszText,MaxText,TEXT("%d: %s"),
@@ -6584,11 +6552,7 @@ bool CMainWindow::CSideBarManager::DrawIcon(
 	int Command,HDC hdc,const RECT &ItemRect,COLORREF ForeColor,HDC hdcBuffer)
 {
 	if (Command>=CM_CHANNELNO_FIRST && Command<=CM_CHANNELNO_LAST
-			&& m_pMainWindow->m_App.SideBarOptions.GetShowChannelLogo()
-#ifdef NETWORK_REMOCON_SUPPORT
-			&& m_pMainWindow->m_App.pNetworkRemocon==nullptr)
-#endif
-	{
+			&& m_pMainWindow->m_App.SideBarOptions.GetShowChannelLogo()) {
 		// アイコンに局ロゴを表示
 		// TODO: 新しくロゴが取得された時に再描画する
 		const CChannelInfo *pChannel=GetChannelInfoByCommand(Command);

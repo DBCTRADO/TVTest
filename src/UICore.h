@@ -89,9 +89,6 @@ public:
 	void PopupSubMenu(int SubMenu,const POINT *pPos=NULL,UINT Flags=0);
 	bool ShowSpecialMenu(MenuType Menu,const POINT *pPos=NULL,UINT Flags=0);
 	void InitChannelMenu(HMENU hmenu);
-#ifdef NETWORK_REMOCON_SUPPORT
-	void InitNetworkRemoconChannelMenu(HMENU hmenu);
-#endif
 	void InitTunerMenu(HMENU hmenu);
 	bool ProcessTunerMenu(int Command);
 

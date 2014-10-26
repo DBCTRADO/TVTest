@@ -68,9 +68,6 @@ bool CAppCore::InitializeChannel()
 {
 	const bool fNetworkDriver=m_App.CoreEngine.IsNetworkDriver();
 	CFilePath ChannelFilePath;
-#ifdef NETWORK_REMOCON_SUPPORT
-	TCHAR szNetworkDriverName[MAX_PATH];
-#endif
 
 	m_App.ChannelManager.Reset();
 	m_App.ChannelManager.MakeDriverTuningSpaceList(&m_App.CoreEngine.m_DtvEngine.m_BonSrcDecoder);
@@ -80,74 +77,6 @@ bool CAppCore::InitializeChannel()
 		GetChannelFileName(m_App.CoreEngine.GetDriverFileName(),szPath,MAX_PATH);
 		ChannelFilePath.SetPath(szPath);
 	}
-#ifdef NETWORK_REMOCON_SUPPORT
-	else {
-		bool fOK=false;
-
-		if (m_App.NetworkRemoconOptions.IsEnable()) {
-			if (m_App.NetworkRemoconOptions.CreateNetworkRemocon(&m_App.pNetworkRemocon)) {
-				m_App.NetworkRemoconGetDriver.Initialize();
-				if (m_App.pNetworkRemocon->GetDriverList(&m_App.NetworkRemoconGetDriver)
-						&& m_App.NetworkRemoconGetDriver.Wait(2000)
-						&& m_App.NetworkRemoconGetDriver.GetCurDriver()[0]!=_T('\0')) {
-					TCHAR szFileName[MAX_PATH];
-
-					if (m_App.NetworkRemoconOptions.FindChannelFile(
-							m_App.NetworkRemoconGetDriver.GetCurDriver(),szFileName)) {
-						LPTSTR p;
-
-						m_App.NetworkRemoconOptions.SetDefaultChannelFileName(szFileName);
-						p=szFileName;
-						while (*p!=_T('('))
-							p++;
-						*p=_T('\0');
-						::wsprintf(szNetworkDriverName,TEXT("%s.dll"),szFileName);
-						::lstrcpy(p,CHANNEL_FILE_EXTENSION);
-						ChannelFilePath.SetPath(szFileName);
-						m_App.GetAppDirectory(szFileName);
-						ChannelFilePath.SetDirectory(szFileName);
-						fOK=ChannelFilePath.IsExists();
-#ifdef DEFERRED_CHANNEL_FILE_EXTENSION
-						if (!fOK) {
-							ChannelFilePath.SetExtension(DEFERRED_CHANNEL_FILE_EXTENSION);
-							fOK=ChannelFilePath.IsExists();
-						}
-#endif
-					}
-				}
-			}
-			if (!fOK && !IsStringEmpty(m_App.NetworkRemoconOptions.GetChannelFileName())) {
-				TCHAR szFileName[MAX_PATH],*q;
-				LPCTSTR p;
-
-				m_App.GetAppDirectory(szFileName);
-				ChannelFilePath.SetPath(szFileName);
-				p=m_App.NetworkRemoconOptions.GetChannelFileName();
-				q=szFileName;
-				while (*p!=_T('(') && *p!=_T('\0')) {
-					int Length=StringCharLength(p);
-					if (Length==0)
-						break;
-					for (int i=0;i<Length;i++)
-						*q++=*p++;
-				}
-				*q=_T('\0');
-				::wsprintf(szNetworkDriverName,TEXT("%s.dll"),szFileName);
-				::lstrcpy(q,CHANNEL_FILE_EXTENSION);
-				ChannelFilePath.Append(szFileName);
-				fOK=ChannelFilePath.IsExists();
-#ifdef DEFERRED_CHANNEL_FILE_EXTENSION
-				if (!fOK) {
-					ChannelFilePath.SetExtension(DEFERRED_CHANNEL_FILE_EXTENSION);
-					fOK=ChannelFilePath.IsExists();
-				}
-#endif
-			}
-		}
-		if (!fOK)
-			szNetworkDriverName[0]=_T('\0');
-	}
-#endif	// NETWORK_REMOCON_SUPPORT
 
 	if (!ChannelFilePath.IsEmpty()) {
 		if (m_App.ChannelManager.LoadChannelList(ChannelFilePath.GetPath())) {
@@ -178,10 +107,6 @@ bool CAppCore::InitializeChannel()
 		m_App.RestoreChannelInfo.fAllChannels?CChannelManager::SPACE_ALL:max(m_App.RestoreChannelInfo.Space,0),
 		-1);
 	m_App.ChannelManager.SetCurrentServiceID(0);
-#ifdef NETWORK_REMOCON_SUPPORT
-	m_App.NetworkRemoconOptions.InitNetworkRemocon(&m_App.pNetworkRemocon,
-											 &m_App.CoreEngine,&m_App.ChannelManager);
-#endif
 	m_App.AppEventManager.OnChannelListChanged();
 	m_App.ChannelScan.SetTuningSpaceList(m_App.ChannelManager.GetTuningSpaceList());
 	return true;
@@ -299,10 +224,6 @@ bool CAppCore::UpdateCurrentChannelList(const CTuningSpaceList *pList)
 	WORD ServiceID;
 	if (m_App.CoreEngine.m_DtvEngine.GetServiceID(&ServiceID))
 		FollowChannelChange(m_App.CoreEngine.m_DtvEngine.m_TsAnalyzer.GetTransportStreamID(),ServiceID);
-#ifdef NETWORK_REMOCON_SUPPORT
-	m_App.NetworkRemoconOptions.InitNetworkRemocon(&m_App.pNetworkRemocon,
-												   &m_App.CoreEngine,&m_App.ChannelManager);
-#endif
 
 	m_App.AppEventManager.OnChannelListChanged();
 
@@ -400,12 +321,12 @@ const CChannelInfo *CAppCore::GetCurrentChannelInfo() const
 
 bool CAppCore::SetChannel(int Space,int Channel,int ServiceID/*=-1*/,bool fStrictService/*=false*/)
 {
-	const CChannelInfo *pPrevChInfo=m_App.ChannelManager.GetCurrentRealChannelInfo();
+	const CChannelInfo *pPrevChInfo=m_App.ChannelManager.GetCurrentChannelInfo();
 	int OldSpace=m_App.ChannelManager.GetCurrentSpace(),OldChannel=m_App.ChannelManager.GetCurrentChannel();
 
 	if (!m_App.ChannelManager.SetCurrentChannel(Space,Channel))
 		return false;
-	const CChannelInfo *pChInfo=m_App.ChannelManager.GetCurrentRealChannelInfo();
+	const CChannelInfo *pChInfo=m_App.ChannelManager.GetCurrentChannelInfo();
 	if (pChInfo==nullptr) {
 		m_App.ChannelManager.SetCurrentChannel(OldSpace,OldChannel);
 		return false;
@@ -414,7 +335,7 @@ bool CAppCore::SetChannel(int Space,int Channel,int ServiceID/*=-1*/,bool fStric
 			|| pChInfo->GetSpace()!=pPrevChInfo->GetSpace()
 			|| pChInfo->GetChannelIndex()!=pPrevChInfo->GetChannelIndex()) {
 		if (ServiceID>0) {
-			const CChannelList *pChList=m_App.ChannelManager.GetCurrentRealChannelList();
+			const CChannelList *pChList=m_App.ChannelManager.GetCurrentChannelList();
 			int Index=pChList->FindByIndex(pChInfo->GetSpace(),
 										   pChInfo->GetChannelIndex(),
 										   ServiceID);
@@ -529,7 +450,7 @@ bool CAppCore::SelectChannel(const ChannelSelectInfo &SelInfo)
 
 bool CAppCore::SwitchChannel(int Channel)
 {
-	const CChannelList *pChList=m_App.ChannelManager.GetCurrentRealChannelList();
+	const CChannelList *pChList=m_App.ChannelManager.GetCurrentChannelList();
 	if (pChList==nullptr)
 		return false;
 	const CChannelInfo *pChInfo=pChList->GetChannelInfo(Channel);
@@ -547,18 +468,6 @@ bool CAppCore::SwitchChannelByNo(int ChannelNo,bool fSwitchService)
 {
 	if (ChannelNo<1)
 		return false;
-
-#ifdef NETWORK_REMOCON_SUPPORT
-	if (m_App.pNetworkRemocon!=nullptr) {
-		if (!m_App.UICore.ConfirmChannelChange())
-			return false;
-		m_App.pNetworkRemocon->SetChannel(ChannelNo-1);
-		m_App.ChannelManager.SetNetworkRemoconCurrentChannel(
-			m_App.ChannelManager.GetCurrentChannelList()->FindChannelNo(ChannelNo));
-		m_App.AppEventManager.OnChannelChanged(0);
-		return true;
-	}
-#endif
 
 	const CChannelList *pList=m_App.ChannelManager.GetCurrentChannelList();
 	if (pList==nullptr)
@@ -598,17 +507,6 @@ bool CAppCore::SwitchChannelByNo(int ChannelNo,bool fSwitchService)
 
 bool CAppCore::SetCommandLineChannel(const CCommandLineOptions *pCmdLine)
 {
-#ifdef NETWORK_REMOCON_SUPPORT
-	if (m_App.ChannelManager.IsNetworkRemoconMode()) {
-		if (pCmdLine->m_ControllerChannel==0)
-			return false;
-		if (m_App.ChannelManager.GetCurrentChannelList()->FindChannelNo(pCmdLine->m_ControllerChannel)>=0) {
-			return SwitchChannelByNo(pCmdLine->m_ControllerChannel,false);
-		}
-		return false;
-	}
-#endif
-
 	const CChannelList *pChannelList;
 
 	for (int i=0;(pChannelList=m_App.ChannelManager.GetChannelList(i))!=nullptr;i++) {
@@ -667,7 +565,7 @@ bool CAppCore::FollowChannelChange(WORD TransportStreamID,WORD ServiceID)
 	const CChannelInfo *pChannelInfo=nullptr;
 	int Space,Channel;
 
-	pChannelList=m_App.ChannelManager.GetCurrentRealChannelList();
+	pChannelList=m_App.ChannelManager.GetCurrentChannelList();
 	if (pChannelList!=nullptr) {
 		Channel=pChannelList->FindByIDs(0,TransportStreamID,ServiceID);
 		if (Channel>=0) {
@@ -688,7 +586,7 @@ bool CAppCore::FollowChannelChange(WORD TransportStreamID,WORD ServiceID)
 	if (pChannelInfo==nullptr)
 		return false;
 
-	const CChannelInfo *pCurChInfo=m_App.ChannelManager.GetCurrentRealChannelInfo();
+	const CChannelInfo *pCurChInfo=m_App.ChannelManager.GetCurrentChannelInfo();
 	if (pCurChInfo==nullptr
 			|| pCurChInfo->GetTransportStreamID()!=TransportStreamID) {
 		AddLog(TEXT("ストリームの変化を検知しました。(TSID %d / SID %d)"),
@@ -710,7 +608,7 @@ bool CAppCore::SetServiceByID(WORD ServiceID,unsigned int Flags)
 	TRACE(TEXT("CAppCore::SetServiceByID(%04x,%x)\n"),ServiceID,Flags);
 
 	const bool fStrict=(Flags & SET_SERVICE_STRICT_ID)!=0;
-	const CChannelInfo *pCurChInfo=m_App.ChannelManager.GetCurrentRealChannelInfo();
+	const CChannelInfo *pCurChInfo=m_App.ChannelManager.GetCurrentChannelInfo();
 	WORD NetworkID=m_App.CoreEngine.m_DtvEngine.m_TsAnalyzer.GetNetworkID();
 	if (NetworkID==0 && pCurChInfo!=nullptr && pCurChInfo->GetNetworkID()>0)
 		NetworkID=pCurChInfo->GetNetworkID();
@@ -763,11 +661,6 @@ bool CAppCore::SetServiceByID(WORD ServiceID,unsigned int Flags)
 	if (ServiceID!=0) {
 		int ServiceIndex=m_App.CoreEngine.m_DtvEngine.m_TsAnalyzer.GetServiceIndexByID(ServiceID);
 		if (ServiceIndex>=0) {
-#ifdef NETWORK_REMOCON_SUPPORT
-			if (m_App.pNetworkRemocon!=nullptr)
-				m_App.pNetworkRemocon->SetService(ServiceIndex);
-#endif
-
 			//AddLog(TEXT("サービスを変更しました。(SID %d)"),ServiceID);
 
 			if (fStrict && m_f1SegMode
@@ -784,7 +677,7 @@ bool CAppCore::SetServiceByID(WORD ServiceID,unsigned int Flags)
 	bool fChannelChanged=false;
 
 	if (!m_f1SegMode && ServiceID!=0 && pCurChInfo!=nullptr) {
-		const CChannelList *pChList=m_App.ChannelManager.GetCurrentRealChannelList();
+		const CChannelList *pChList=m_App.ChannelManager.GetCurrentChannelList();
 		int Index=pChList->FindByIndex(pCurChInfo->GetSpace(),
 									   pCurChInfo->GetChannelIndex(),
 									   ServiceID);
@@ -1319,7 +1212,7 @@ void CAppCore::ApplyBonDriverOptions()
 bool CAppCore::SaveCurrentChannel()
 {
 	if (!IsStringEmpty(m_App.CoreEngine.GetDriverFileName())) {
-		const CChannelInfo *pInfo=m_App.ChannelManager.GetCurrentRealChannelInfo();
+		const CChannelInfo *pInfo=m_App.ChannelManager.GetCurrentChannelInfo();
 
 		if (pInfo!=nullptr) {
 			CDriverOptions::ChannelInfo ChInfo;

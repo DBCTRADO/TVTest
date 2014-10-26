@@ -1039,7 +1039,7 @@ CTunerStatusItem::CTunerStatusItem()
 void CTunerStatusItem::Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect)
 {
 	const CChannelManager &ChannelManager=GetAppClass().ChannelManager;
-	const CChannelInfo *pChInfo=ChannelManager.GetCurrentRealChannelInfo();
+	const CChannelInfo *pChInfo=ChannelManager.GetCurrentChannelInfo();
 	LPCTSTR pszText;
 
 	if (pChInfo!=NULL || ChannelManager.GetCurrentSpace()>=0) {

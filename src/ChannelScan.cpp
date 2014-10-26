@@ -744,7 +744,7 @@ INT_PTR CChannelScan::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 				DlgComboBox_AddString(hDlg,IDC_CHANNELSCAN_SPACE,pszName);
 			}
 			if (NumSpaces>0) {
-				const CChannelInfo *pCurChannel=App.ChannelManager.GetCurrentRealChannelInfo();
+				const CChannelInfo *pCurChannel=App.ChannelManager.GetCurrentChannelInfo();
 				if (pCurChannel!=NULL && pCurChannel->GetSpace()<NumSpaces)
 					m_ScanSpace=pCurChannel->GetSpace();
 				else

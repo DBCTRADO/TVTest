@@ -23,7 +23,7 @@ void CTunerControlItem::CalcSize(int Width,SIZE *pSize)
 void CTunerControlItem::Draw(HDC hdc,const RECT &Rect)
 {
 	const CChannelManager &ChannelManager=GetAppClass().ChannelManager;
-	const CChannelInfo *pChInfo=ChannelManager.GetCurrentRealChannelInfo();
+	const CChannelInfo *pChInfo=ChannelManager.GetCurrentChannelInfo();
 	LPCTSTR pszText;
 
 	if (pChInfo!=NULL || ChannelManager.GetCurrentSpace()>=0) {

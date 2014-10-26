@@ -35,12 +35,6 @@ void CChannelManager::Reset()
 	m_fUseDriverChannelList=false;
 	m_fChannelFileHasStreamIDs=false;
 	m_ChannelFileName.clear();
-
-#ifdef NETWORK_REMOCON_SUPPORT
-	m_fNetworkRemocon=false;
-	m_pNetworkRemoconChannelList=NULL;
-	m_NetworkRemoconCurrentChannel=-1;
-#endif
 }
 
 
@@ -169,14 +163,9 @@ bool CChannelManager::SetUseDriverChannelList(bool fUse)
 
 bool CChannelManager::SetCurrentChannel(int Space,int Channel)
 {
-#ifdef NETWORK_REMOCON_SUPPORT
-	if (!m_fNetworkRemocon)
-#endif
-	{
-		if (Space!=SPACE_ALL && Space!=SPACE_INVALID) {
-			if (Space<0 || Space>=NumSpaces())
-				return false;
-		}
+	if (Space!=SPACE_ALL && Space!=SPACE_INVALID) {
+		if (Space<0 || Space>=NumSpaces())
+			return false;
 	}
 	if (Space!=SPACE_INVALID) {
 		const CChannelList *pList=GetChannelList(Space);
@@ -211,20 +200,6 @@ const CChannelInfo *CChannelManager::GetCurrentChannelInfo() const
 
 	if (pList==NULL)
 		return NULL;
-	return pList->GetChannelInfo(
-#ifdef NETWORK_REMOCON_SUPPORT
-		m_fNetworkRemocon?m_NetworkRemoconCurrentChannel:
-#endif
-		m_CurrentChannel);
-}
-
-
-const CChannelInfo *CChannelManager::GetCurrentRealChannelInfo() const
-{
-	const CChannelList *pList=GetChannelList(m_CurrentSpace);
-
-	if (pList==NULL)
-		return NULL;
 	return pList->GetChannelInfo(m_CurrentChannel);
 }
 
@@ -250,50 +225,35 @@ int CChannelManager::GetNextChannel(bool fNext) const
 	if (m_ChangingChannel>=0)
 		Channel=m_ChangingChannel;
 
-#ifdef NETWORK_REMOCON_SUPPORT
-	if (m_fNetworkRemocon) {
-		if (Channel<0) {
-			if (m_NetworkRemoconCurrentChannel<0)
-				return -1;
-			Channel=m_NetworkRemoconCurrentChannel;
-		}
+	if (Channel<0) {
+		if (m_CurrentChannel<0)
+			return -1;
+		Channel=m_CurrentChannel;
+	}
+	//if (pList->HasRemoteControlKeyID()) {
+	if (pList->GetChannelNo(Channel)>0) {
 		if (fNext)
 			Channel=pList->GetNextChannel(Channel,true);
 		else
 			Channel=pList->GetPrevChannel(Channel,true);
-	} else
-#endif
-	{
-		if (Channel<0) {
-			if (m_CurrentChannel<0)
-				return -1;
-			Channel=m_CurrentChannel;
-		}
-		//if (pList->HasRemoteControlKeyID()) {
-		if (pList->GetChannelNo(Channel)>0) {
-			if (fNext)
-				Channel=pList->GetNextChannel(Channel,true);
-			else
-				Channel=pList->GetPrevChannel(Channel,true);
-		} else {
-			int i;
+	} else {
+		int i;
 
-			for (i=pList->NumChannels();i>0;i--) {
-				if (fNext) {
-					Channel++;
-					if (Channel>=pList->NumChannels())
-						Channel=0;
-				} else {
-					Channel--;
-					if (Channel<0)
-						Channel=pList->NumChannels()-1;
-				}
-				if (pList->IsEnabled(Channel))
-					break;
+		for (i=pList->NumChannels();i>0;i--) {
+			if (fNext) {
+				Channel++;
+				if (Channel>=pList->NumChannels())
+					Channel=0;
+			} else {
+				Channel--;
+				if (Channel<0)
+					Channel=pList->NumChannels()-1;
 			}
-			if (i==0)
-				return -1;
+			if (pList->IsEnabled(Channel))
+				break;
 		}
+		if (i==0)
+			return -1;
 	}
 
 	return Channel;
@@ -310,16 +270,6 @@ const CChannelInfo *CChannelManager::GetNextChannelInfo(bool fNext) const
 
 
 const CChannelList *CChannelManager::GetCurrentChannelList() const
-{
-#ifdef NETWORK_REMOCON_SUPPORT
-	if (m_fNetworkRemocon)
-		return m_pNetworkRemoconChannelList;
-#endif
-	return GetChannelList(m_CurrentSpace);
-}
-
-
-const CChannelList *CChannelManager::GetCurrentRealChannelList() const
 {
 	return GetChannelList(m_CurrentSpace);
 }
@@ -437,31 +387,6 @@ bool CChannelManager::GetChannelFileName(LPTSTR pszFileName,int MaxLength) const
 
 	return true;
 }
-
-
-#ifdef NETWORK_REMOCON_SUPPORT
-
-bool CChannelManager::SetNetworkRemoconMode(bool fNetworkRemocon,CChannelList *pList)
-{
-	if (fNetworkRemocon && pList==NULL)
-		return false;
-	m_fNetworkRemocon=fNetworkRemocon;
-	m_pNetworkRemoconChannelList=pList;
-	m_NetworkRemoconCurrentChannel=-1;
-	return true;
-}
-
-
-bool CChannelManager::SetNetworkRemoconCurrentChannel(int Channel)
-{
-	if (m_pNetworkRemoconChannelList==NULL
-			|| Channel<-1 || Channel>=m_pNetworkRemoconChannelList->NumChannels())
-		return false;
-	m_NetworkRemoconCurrentChannel=Channel;
-	return true;
-}
-
-#endif	// NETWORK_REMOCON_SUPPORT
 
 
 

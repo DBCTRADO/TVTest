@@ -178,10 +178,6 @@ CAppMain::CAppMain()
 	, SideBar(&CommandList)
 	, ChannelMenu(&EpgProgramList,&LogoManager)
 	, ChannelDisplay(&EpgProgramList)
-#ifdef NETWORK_REMOCON_SUPPORT
-	, pNetworkRemocon(nullptr)
-	, NetworkRemoconGetChannel(&MainWindow)
-#endif
 
 	, Epg(EpgProgramList,EventSearchOptions)
 
@@ -293,9 +289,6 @@ void CAppMain::Finalize()
 #define FINALIZE_CONTINUE
 #endif
 
-#ifdef NETWORK_REMOCON_SUPPORT
-	SAFE_DELETE(pNetworkRemocon);
-#endif
 	ResidentManager.Finalize();
 	ChannelMenu.Destroy();
 	FavoritesMenu.Destroy();
@@ -464,9 +457,6 @@ bool CAppMain::LoadSettings()
 		ControllerManager.ReadSettings(Settings);
 		ChannelScan.ReadSettings(Settings);
 		EpgOptions.ReadSettings(Settings);
-#ifdef NETWORK_REMOCON_SUPPORT
-		NetworkRemoconOptions.ReadSettings(Settings);
-#endif
 		Logger.ReadSettings(Settings);
 		ZoomOptions.ReadSettings(Settings);
 	}
@@ -594,9 +584,6 @@ bool CAppMain::SaveSettings(unsigned int Flags)
 		{&ChannelScan,						false},
 		{&EpgOptions,						false},
 		{&ProgramGuideOptions,				true},
-#ifdef NETWORK_REMOCON_SUPPORT
-		{&NetworkRemoconOptions,			false},
-#endif
 		{&Logger,							false},
 	//	{&ZoomOptions,						false},
 	//	{&PanAndScanOptions,				false},
@@ -955,25 +942,11 @@ int CAppMain::Main(HINSTANCE hInstance,LPCTSTR pszCmdLine,int nCmdShow)
 			CPortQuery PortQuery;
 			WORD UDPPort=CmdLineOptions.m_UDPPort>0?(WORD)CmdLineOptions.m_UDPPort:
 											CoreEngine.IsUDPDriver()?1234:2230;
-#ifdef NETWORK_REMOCON_SUPPORT
-			WORD RemoconPort=NetworkRemoconOptions.GetPort();
-#endif
 
 			StatusView.SetSingleText(TEXT("空きポートを検索しています..."));
-			PortQuery.Query(MainWindow.GetHandle(),&UDPPort,CoreEngine.IsUDPDriver()?1243:2239
-#ifdef NETWORK_REMOCON_SUPPORT
-							,&RemoconPort
-#endif
-							);
+			PortQuery.Query(MainWindow.GetHandle(),&UDPPort,CoreEngine.IsUDPDriver()?1243:2239);
 			CmdLineOptions.m_UDPPort=UDPPort;
-#ifdef NETWORK_REMOCON_SUPPORT
-			NetworkRemoconOptions.SetTempPort(RemoconPort);
-#endif
 		}
-#ifdef NETWORK_REMOCON_SUPPORT
-		if (CmdLineOptions.m_fUseNetworkRemocon)
-			NetworkRemoconOptions.SetTempEnable(true);
-#endif
 	}
 
 	StatusView.SetSingleText(TEXT("チャンネル設定を読み込んでいます..."));
@@ -1206,14 +1179,6 @@ bool CAppMain::ShowOptionDialog(HWND hwndOwner,int StartPage)
 	if ((COptions::GetGeneralUpdateFlags() & COptions::UPDATE_GENERAL_EVENTINFOFONT)!=0) {
 		ApplyEventInfoFont();
 	}
-
-#ifdef NETWORK_REMOCON_SUPPORT
-	if (NetworkRemoconOptions.GetUpdateFlags()!=0) {
-		Core.InitializeChannel();
-		if (pNetworkRemocon!=nullptr)
-			pNetworkRemocon->GetChannel(&NetworkRemoconGetChannel);
-	}
-#endif
 
 	if ((ProgramGuideOptions.GetUpdateFlags() & CProgramGuideOptions::UPDATE_EVENTICONS)!=0)
 		Panel.ProgramListPanel.SetVisibleEventIcons(ProgramGuideOptions.GetVisibleEventIcons());
@@ -1453,93 +1418,6 @@ bool CAppMain::ApplyColorScheme(const CColorScheme *pColorScheme)
 
 	return true;
 }
-
-
-#ifdef NETWORK_REMOCON_SUPPORT
-
-CAppMain::CNetworkRemoconGetChannelReceiver::CNetworkRemoconGetChannelReceiver(CMainWindow *pMainWindow)
-	: m_pMainWindow(pMainWindow)
-{
-}
-
-void CAppMain::CNetworkRemoconGetChannelReceiver::OnReceive(LPCSTR pszText)
-{
-	int Channel=std::strtol(pszText,nullptr,10);
-	::PostMessage(m_pMainWindow->GetHandle(),WM_APP_CHANNELCHANGE,Channel,0);
-}
-
-
-CAppMain::CNetworkRemoconGetDriverReceiver::CNetworkRemoconGetDriverReceiver()
-	: m_hEvent(nullptr)
-{
-	m_szCurDriver[0]='\0';
-}
-
-CAppMain::CNetworkRemoconGetDriverReceiver::~CNetworkRemoconGetDriverReceiver()
-{
-	if (m_hEvent!=nullptr)
-		::CloseHandle(m_hEvent);
-}
-
-void CAppMain::CNetworkRemoconGetDriverReceiver::OnReceive(LPCSTR pszText)
-{
-	LPCSTR p;
-	int Sel,i;
-
-	m_szCurDriver[0]='\0';
-	p=pszText;
-	while (*p!='\t') {
-		if (*p=='\0')
-			goto End;
-		p++;
-	}
-	p++;
-	Sel=0;
-	for (;*p>='0' && *p<='9';p++)
-		Sel=Sel*10+(*p-'0');
-	if (*p!='\t')
-		goto End;
-	p++;
-	for (i=0;i<=Sel && *p!='\0';i++) {
-		while (*p!='\t') {
-			if (*p=='\0')
-				goto End;
-			p++;
-		}
-		p++;
-		if (i==Sel) {
-			int j;
-
-			for (j=0;*p!='\t' && *p!='\0';j++) {
-				m_szCurDriver[j]=*p++;
-			}
-			m_szCurDriver[j]='\0';
-			break;
-		} else {
-			while (*p!='\t' && *p!='\0')
-				p++;
-			if (*p=='\t')
-				p++;
-		}
-	}
-End:
-	::SetEvent(m_hEvent);
-}
-
-void CAppMain::CNetworkRemoconGetDriverReceiver::Initialize()
-{
-	if (m_hEvent==nullptr)
-		m_hEvent=::CreateEvent(nullptr,FALSE,FALSE,nullptr);
-	else
-		::ResetEvent(m_hEvent);
-}
-
-bool CAppMain::CNetworkRemoconGetDriverReceiver::Wait(DWORD TimeOut)
-{
-	return ::WaitForSingleObject(m_hEvent,TimeOut)==WAIT_OBJECT_0;
-}
-
-#endif	// NETWORK_REMOCON_SUPPORT
 
 
 CAppMain::CDtvEngineEventHandler::CDtvEngineEventHandler(CAppMain &App)

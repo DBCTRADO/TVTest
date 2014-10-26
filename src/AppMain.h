@@ -38,9 +38,6 @@
 #include "EpgOptions.h"
 #include "ProgramGuideOptions.h"
 #include "Plugin.h"
-#ifdef NETWORK_REMOCON_SUPPORT
-#include "NetworkRemocon.h"
-#endif
 #include "Logger.h"
 #include "CommandLine.h"
 #include "ChannelHistory.h"
@@ -351,27 +348,6 @@ class CAppMain
 	: public CColorSchemeOptions::CEventHandler
 {
 public:
-#ifdef NETWORK_REMOCON_SUPPORT
-	class CNetworkRemoconGetChannelReceiver : public CNetworkRemoconReceiver {
-		CMainWindow *m_pMainWindow;
-	public:
-		CNetworkRemoconGetChannelReceiver(CMainWindow *pMainWindow);
-		void OnReceive(LPCSTR pszText) override;
-	};
-
-	class CNetworkRemoconGetDriverReceiver : public CNetworkRemoconReceiver {
-		HANDLE m_hEvent;
-		TCHAR m_szCurDriver[64];
-	public:
-		CNetworkRemoconGetDriverReceiver();
-		~CNetworkRemoconGetDriverReceiver();
-		void OnReceive(LPCSTR pszText) override;
-		void Initialize();
-		bool Wait(DWORD TimeOut);
-		LPCTSTR GetCurDriver() const { return m_szCurDriver; }
-	};
-#endif	// NETWORK_REMOCON_SUPPORT
-
 	static const UINT WM_INTERPROCESS=WM_COPYDATA;
 	static const UINT PROCESS_MESSAGE_EXECUTE=0x54565400;
 
@@ -410,12 +386,6 @@ public:
 	TVTest::CNetworkDefinition NetworkDefinition;
 	CChannelManager ChannelManager;
 
-#ifdef NETWORK_REMOCON_SUPPORT
-	CNetworkRemocon *pNetworkRemocon;
-	CNetworkRemoconGetChannelReceiver NetworkRemoconGetChannel;
-	CNetworkRemoconGetDriverReceiver NetworkRemoconGetDriver;
-#endif
-
 	CResidentManager ResidentManager;
 	CDriverManager DriverManager;
 	CCasLibraryManager CasLibraryManager;
@@ -450,9 +420,6 @@ public:
 	CEpgOptions EpgOptions;
 	CProgramGuideOptions ProgramGuideOptions;
 	CPluginOptions PluginOptions;
-#ifdef NETWORK_REMOCON_SUPPORT
-	CNetworkRemoconOptions NetworkRemoconOptions;
-#endif
 	CRecentChannelList RecentChannelList;
 	CChannelHistory ChannelHistory;
 	TVTest::CFavoritesManager FavoritesManager;

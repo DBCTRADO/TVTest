@@ -36,9 +36,6 @@ const COptionDialog::PageInfo COptionDialog::m_PageList[] = {
 	{TEXT("EPG/番組情報"),			&g_App.EpgOptions,				HELP_ID_OPTIONS_EPG},
 	{TEXT("EPG番組表"),				&g_App.ProgramGuideOptions,		HELP_ID_OPTIONS_PROGRAMGUIDE},
 	{TEXT("プラグイン"),			&g_App.PluginOptions,			HELP_ID_OPTIONS_PLUGIN},
-#ifdef NETWORK_REMOCON_SUPPORT
-	{TEXT("ネットワークリモコン"),	&g_App.NetworkRemoconOptions,	HELP_ID_OPTIONS_NETWORKREMOCON},
-#endif
 	{TEXT("ログ"),					&g_App.Logger,					HELP_ID_OPTIONS_LOG},
 };
 
@@ -717,21 +714,14 @@ void CMainPanel::CChannelPanelEventHandler::OnChannelClick(const CChannelInfo *p
 	const CChannelList *pList=g_App.ChannelManager.GetCurrentChannelList();
 
 	if (pList!=NULL) {
-#ifdef NETWORK_REMOCON_SUPPORT
-		if (g_App.pNetworkRemocon!=NULL) {
-			g_App.UICore.DoCommandAsync(CM_CHANNELNO_FIRST+pChannelInfo->GetChannelNo()-1);
-		} else
-#endif
-		{
-			int Index=pList->FindByIndex(pChannelInfo->GetSpace(),
-										 pChannelInfo->GetChannelIndex(),
-										 pChannelInfo->GetServiceID());
-			if (Index<0 && pChannelInfo->GetServiceID()>0)
-				Index=pList->FindByIndex(pChannelInfo->GetSpace(),
-										 pChannelInfo->GetChannelIndex());
-			if (Index>=0)
-				g_App.UICore.DoCommandAsync(CM_CHANNEL_FIRST+Index);
-		}
+		int Index=pList->FindByIndex(pChannelInfo->GetSpace(),
+									 pChannelInfo->GetChannelIndex(),
+									 pChannelInfo->GetServiceID());
+		if (Index<0 && pChannelInfo->GetServiceID()>0)
+			Index=pList->FindByIndex(pChannelInfo->GetSpace(),
+									 pChannelInfo->GetChannelIndex());
+		if (Index>=0)
+			g_App.UICore.DoCommandAsync(CM_CHANNEL_FIRST+Index);
 	}
 }
 
@@ -1149,16 +1139,7 @@ void CEpg::CProgramGuideEventHandler::OnServiceTitleLButtonDown(LPCTSTR pszDrive
 	if (pChannelList!=NULL) {
 		int Index=FindChannel(pChannelList,pServiceInfo);
 		if (Index>=0) {
-#ifdef NETWORK_REMOCON_SUPPORT
-			if (g_App.pNetworkRemocon!=NULL) {
-				g_App.pNetworkRemocon->SetChannel(pChannelList->GetChannelInfo(Index)->GetChannelNo()-1);
-				g_App.ChannelManager.SetNetworkRemoconCurrentChannel(Index);
-				g_App.AppEventManager.OnChannelChanged(0);
-			} else
-#endif
-			{
-				g_App.Core.SetChannel(g_App.ChannelManager.GetCurrentSpace(),Index);
-			}
+			g_App.Core.SetChannel(g_App.ChannelManager.GetCurrentSpace(),Index);
 			return;
 		}
 	}

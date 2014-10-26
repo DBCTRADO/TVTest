@@ -46,11 +46,6 @@
 #define ABOUT_VERSION_TEXT	APP_NAME TEXT(" ver.") VERSION_TEXT
 #endif
 
-#ifndef NO_NETWORK_REMOCON
-#define NETWORK_REMOCON_SUPPORT
-#endif
-
-
 
 #ifndef RC_INVOKED
 

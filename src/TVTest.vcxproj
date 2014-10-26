@@ -552,7 +552,6 @@
     <ClCompile Include="MenuOptions.cpp" />
     <ClCompile Include="MessageDialog.cpp" />
     <ClCompile Include="MiscDialog.cpp" />
-    <ClCompile Include="NetworkRemocon.cpp" />
     <ClCompile Include="NotificationBar.cpp" />
     <ClCompile Include="OperationOptions.cpp" />
     <ClCompile Include="OptionDialog.cpp" />
@@ -720,7 +719,6 @@
     <ClInclude Include="MenuOptions.h" />
     <ClInclude Include="MessageDialog.h" />
     <ClInclude Include="MiscDialog.h" />
-    <ClInclude Include="NetworkRemocon.h" />
     <ClInclude Include="NotificationBar.h" />
     <ClInclude Include="OperationOptions.h" />
     <ClInclude Include="OptionDialog.h" />

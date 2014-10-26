@@ -21,7 +21,6 @@
 
 // (*) が付いたものは、変えると異なるバージョン間での互換性が無くなるので注意
 #define WM_APP_SERVICEUPDATE			(WM_APP+0)
-#define WM_APP_CHANNELCHANGE			(WM_APP+1)
 #define WM_APP_IMAGESAVE				(WM_APP+2)
 #define WM_APP_TRAYICON					(WM_APP+3)
 #define WM_APP_QUERYPORT				(WM_APP+5)	// (*)
