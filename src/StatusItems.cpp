@@ -15,7 +15,7 @@ static char THIS_FILE[]=__FILE__;
 
 
 CChannelStatusItem::CChannelStatusItem()
-	: CStatusItem(STATUS_ITEM_CHANNEL,100)
+	: CStatusItem(STATUS_ITEM_CHANNEL,SizeValue(9*EM_FACTOR,SIZE_EM))
 {
 }
 
@@ -73,7 +73,7 @@ void CChannelStatusItem::OnRButtonDown(int x,int y)
 
 
 CVideoSizeStatusItem::CVideoSizeStatusItem()
-	: CStatusItem(STATUS_ITEM_VIDEOSIZE,120)
+	: CStatusItem(STATUS_ITEM_VIDEOSIZE,SizeValue(10*EM_FACTOR,SIZE_EM))
 	, m_OriginalVideoWidth(0)
 	, m_OriginalVideoHeight(0)
 	, m_ZoomPercentage(0)
@@ -143,7 +143,7 @@ void CVideoSizeStatusItem::OnRButtonDown(int x,int y)
 
 
 CVolumeStatusItem::CVolumeStatusItem()
-	: CStatusItem(STATUS_ITEM_VOLUME,80)
+	: CStatusItem(STATUS_ITEM_VOLUME,SizeValue(7*EM_FACTOR,SIZE_EM))
 	, m_BarHeight(8)
 	, m_BarPadding(1)
 	, m_BarBorderWidth(1)
@@ -239,7 +239,7 @@ void CVolumeStatusItem::NormalizeStyle(const TVTest::Style::CStyleManager *pStyl
 
 
 CAudioChannelStatusItem::CAudioChannelStatusItem()
-	: CStatusItem(STATUS_ITEM_AUDIOCHANNEL,80)
+	: CStatusItem(STATUS_ITEM_AUDIOCHANNEL,SizeValue(7*EM_FACTOR,SIZE_EM))
 {
 }
 
@@ -287,7 +287,7 @@ void CAudioChannelStatusItem::OnRButtonDown(int x,int y)
 
 
 CRecordStatusItem::CRecordStatusItem()
-	: CStatusItem(STATUS_ITEM_RECORD,64)
+	: CStatusItem(STATUS_ITEM_RECORD,SizeValue(6*EM_FACTOR,SIZE_EM))
 	, m_fRemain(false)
 	, m_CircleColor(RGB(223,63,0))
 {
@@ -529,7 +529,7 @@ void CCaptureStatusItem::OnRButtonDown(int x,int y)
 
 
 CErrorStatusItem::CErrorStatusItem()
-	: CStatusItem(STATUS_ITEM_ERROR,120)
+	: CStatusItem(STATUS_ITEM_ERROR,SizeValue(11*EM_FACTOR,SIZE_EM))
 	, m_ContinuityErrorPacketCount(0)
 	, m_ErrorPacketCount(0)
 	, m_ScramblePacketCount(0)
@@ -588,7 +588,7 @@ void CErrorStatusItem::OnRButtonDown(int x,int y)
 
 
 CSignalLevelStatusItem::CSignalLevelStatusItem()
-	: CStatusItem(STATUS_ITEM_SIGNALLEVEL,120)
+	: CStatusItem(STATUS_ITEM_SIGNALLEVEL,SizeValue(10*EM_FACTOR,SIZE_EM))
 	, m_fShowSignalLevel(true)
 	, m_SignalLevel(0.0f)
 	, m_BitRate(0)
@@ -647,7 +647,7 @@ void CSignalLevelStatusItem::ShowSignalLevel(bool fShow)
 
 
 CClockStatusItem::CClockStatusItem()
-	: CStatusItem(STATUS_ITEM_CLOCK,48)
+	: CStatusItem(STATUS_ITEM_CLOCK,SizeValue(5*EM_FACTOR,SIZE_EM))
 	, m_fTOT(false)
 {
 	::ZeroMemory(&m_Time,sizeof(m_Time));
@@ -752,7 +752,7 @@ void CClockStatusItem::FormatTime(const SYSTEMTIME &Time,LPTSTR pszText,int MaxL
 
 
 CProgramInfoStatusItem::CProgramInfoStatusItem()
-	: CStatusItem(STATUS_ITEM_PROGRAMINFO,256)
+	: CStatusItem(STATUS_ITEM_PROGRAMINFO,SizeValue(20*EM_FACTOR,SIZE_EM))
 	, m_fNext(false)
 	, m_fShowProgress(true)
 	, m_fEnablePopupInfo(true)
@@ -983,7 +983,7 @@ void CProgramInfoStatusItem::ShowPopupInfo()
 
 
 CBufferingStatusItem::CBufferingStatusItem()
-	: CStatusItem(STATUS_ITEM_BUFFERING,80)
+	: CStatusItem(STATUS_ITEM_BUFFERING,SizeValue(7*EM_FACTOR,SIZE_EM))
 	, m_StreamRemain(0)
 	, m_PacketBufferUsedPercentage(0)
 {
@@ -1032,7 +1032,7 @@ void CBufferingStatusItem::OnLButtonDown(int x,int y)
 
 
 CTunerStatusItem::CTunerStatusItem()
-	: CStatusItem(STATUS_ITEM_TUNER,80)
+	: CStatusItem(STATUS_ITEM_TUNER,SizeValue(7*EM_FACTOR,SIZE_EM))
 {
 }
 
@@ -1083,7 +1083,7 @@ void CTunerStatusItem::OnRButtonDown(int x,int y)
 
 
 CMediaBitRateStatusItem::CMediaBitRateStatusItem()
-	: CStatusItem(STATUS_ITEM_MEDIABITRATE,140)
+	: CStatusItem(STATUS_ITEM_MEDIABITRATE,SizeValue(12*EM_FACTOR,SIZE_EM))
 	, m_VideoBitRate(0)
 	, m_AudioBitRate(0)
 {

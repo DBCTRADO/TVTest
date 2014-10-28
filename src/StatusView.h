@@ -17,31 +17,29 @@ class CStatusView;
 class ABSTRACT_CLASS(CStatusItem)
 	: public TVTest::CUIBase
 {
-protected:
-	CStatusView *m_pStatus;
-	int m_ID;
-	int m_DefaultWidth;
-	int m_Width;
-	int m_MinWidth;
-	bool m_fVisible;
-	bool m_fBreak;
-
-	bool GetMenuPos(POINT *pPos,UINT *pFlags);
-	enum {
-		DRAWTEXT_HCENTER = 0x00000001UL
-	};
-	void DrawText(HDC hdc,const RECT &Rect,LPCTSTR pszText,DWORD Flags=0) const;
-	void DrawIcon(HDC hdc,const RECT &Rect,DrawUtil::CMonoColorIconList &IconList,
-				  int IconIndex=0,bool fEnabled=true) const;
-
 public:
-	CStatusItem(int ID,int DefaultWidth);
+	enum SizeUnit {
+		SIZE_PIXEL,
+		SIZE_EM
+	};
+
+	static const int EM_FACTOR=1000;
+
+	struct SizeValue
+	{
+		int Value;
+		SizeUnit Unit;
+
+		SizeValue(int v,SizeUnit u) : Value(v), Unit(u) {}
+	};
+
+	CStatusItem(int ID,const SizeValue &DefaultWidth);
 	virtual ~CStatusItem() {}
 	int GetIndex() const;
 	bool GetRect(RECT *pRect) const;
 	bool GetClientRect(RECT *pRect) const;
 	int GetID() const { return m_ID; }
-	int GetDefaultWidth() const { return m_DefaultWidth; }
+	const SizeValue &GetDefaultWidth() const { return m_DefaultWidth; }
 	int GetWidth() const { return m_Width; }
 	bool SetWidth(int Width);
 	int GetMinWidth() const { return m_MinWidth; }
@@ -63,6 +61,23 @@ public:
 	virtual LRESULT OnNotifyMessage(LPNMHDR pnmh) { return 0; }
 
 	friend CStatusView;
+
+protected:
+	CStatusView *m_pStatus;
+	int m_ID;
+	SizeValue m_DefaultWidth;
+	int m_Width;
+	int m_MinWidth;
+	bool m_fVisible;
+	bool m_fBreak;
+
+	bool GetMenuPos(POINT *pPos,UINT *pFlags);
+	enum {
+		DRAWTEXT_HCENTER = 0x00000001UL
+	};
+	void DrawText(HDC hdc,const RECT &Rect,LPCTSTR pszText,DWORD Flags=0) const;
+	void DrawIcon(HDC hdc,const RECT &Rect,DrawUtil::CMonoColorIconList &IconList,
+				  int IconIndex=0,bool fEnabled=true) const;
 };
 
 class CIconStatusItem : public CStatusItem
@@ -126,6 +141,7 @@ public:
 	bool GetItemRectByIndex(int Index,RECT *pRect) const;
 	bool GetItemClientRect(int ID,RECT *pRect) const;
 	int GetItemHeight() const;
+	int CalcItemHeight(const DrawUtil::CFont &Font) const;
 	const TVTest::Style::Margins &GetItemPadding() const;
 	const TVTest::Style::Size &GetIconSize() const;
 	int GetFontHeight() const { return m_FontHeight; }
@@ -190,8 +206,11 @@ private:
 	void Draw(HDC hdc,const RECT *pPaintRect);
 	void AdjustSize();
 	void CalcRows();
+	int CalcFontHeight(const DrawUtil::CFont &Font) const;
 	int CalcFontHeight() const;
+	int CalcItemHeight(int FontHeight) const;
 	int CalcItemHeight() const;
+	int CalcItemPixelSize(const CStatusItem::SizeValue &Size) const;
 
 // CCustomWindow
 	LRESULT OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam) override;

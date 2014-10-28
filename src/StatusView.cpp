@@ -11,11 +11,11 @@ static char THIS_FILE[]=__FILE__;
 
 
 
-CStatusItem::CStatusItem(int ID,int DefaultWidth)
+CStatusItem::CStatusItem(int ID,const SizeValue &DefaultWidth)
 	: m_pStatus(NULL)
 	, m_ID(ID)
 	, m_DefaultWidth(DefaultWidth)
-	, m_Width(DefaultWidth)
+	, m_Width(-1)
 	, m_MinWidth(8)
 	, m_fVisible(true)
 	, m_fBreak(false)
@@ -151,7 +151,7 @@ void CStatusItem::DrawIcon(HDC hdc,const RECT &Rect,DrawUtil::CMonoColorIconList
 
 
 CIconStatusItem::CIconStatusItem(int ID,int DefaultWidth)
-	: CStatusItem(ID,DefaultWidth)
+	: CStatusItem(ID,SizeValue(DefaultWidth,SIZE_PIXEL))
 {
 	m_MinWidth=DefaultWidth;
 }
@@ -359,6 +359,12 @@ LRESULT CStatusView::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 
 			m_FontHeight=CalcFontHeight();
 			m_ItemHeight=CalcItemHeight();
+
+			for (auto itr=m_ItemList.begin();itr!=m_ItemList.end();++itr) {
+				CStatusItem *pItem=*itr;
+				if (pItem->GetWidth()<0)
+					pItem->SetWidth(CalcItemPixelSize(pItem->GetDefaultWidth()));
+			}
 
 			LPCREATESTRUCT pcs=reinterpret_cast<LPCREATESTRUCT>(lParam);
 			RECT rc;
@@ -641,6 +647,12 @@ int CStatusView::GetItemHeight() const
 	GetClientRect(&rc);
 	TVTest::Theme::SubtractBorderRect(m_Theme.Border,&rc);
 	return rc.bottom-rc.top;
+}
+
+
+int CStatusView::CalcItemHeight(const DrawUtil::CFont &Font) const
+{
+	return CalcItemHeight(CalcFontHeight(Font));
 }
 
 
@@ -1120,18 +1132,44 @@ void CStatusView::CalcRows()
 }
 
 
-int CStatusView::CalcFontHeight() const
+int CStatusView::CalcFontHeight(const DrawUtil::CFont &Font) const
 {
 	HDC hdc=::GetDC(m_hwnd);
-	int FontHeight=m_Font.GetHeight(hdc,false);
+	int FontHeight=Font.GetHeight(hdc,false);
 	::ReleaseDC(m_hwnd,hdc);
 	return FontHeight;
 }
 
 
+int CStatusView::CalcFontHeight() const
+{
+	return CalcFontHeight(m_Font);
+}
+
+
+int CStatusView::CalcItemHeight(int FontHeight) const
+{
+	return max(FontHeight+m_Style.TextExtraHeight,m_Style.IconSize.Height)+m_Style.ItemPadding.Vert();
+}
+
+
 int CStatusView::CalcItemHeight() const
 {
-	return max(m_FontHeight+m_Style.TextExtraHeight,m_Style.IconSize.Height)+m_Style.ItemPadding.Vert();
+	return CalcItemHeight(m_FontHeight);
+}
+
+
+int CStatusView::CalcItemPixelSize(const CStatusItem::SizeValue &Size) const
+{
+	switch (Size.Unit) {
+	case CStatusItem::SIZE_PIXEL:
+		return Size.Value;
+
+	case CStatusItem::SIZE_EM:
+		return ::MulDiv(Size.Value,m_FontHeight,CStatusItem::EM_FACTOR);
+	}
+
+	return 0;
 }
 
 

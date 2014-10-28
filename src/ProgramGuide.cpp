@@ -4856,7 +4856,7 @@ class CProgramGuideTunerStatusItem : public CStatusItem
 
 public:
 	CProgramGuideTunerStatusItem::CProgramGuideTunerStatusItem(CProgramGuide *pProgramGuide)
-		: CStatusItem(STATUS_ITEM_TUNER,160)
+		: CStatusItem(STATUS_ITEM_TUNER,SizeValue(14*EM_FACTOR,SIZE_EM))
 		, m_pProgramGuide(pProgramGuide)
 	{
 	}
@@ -4947,7 +4947,7 @@ class CListSelectStatusItem : public CStatusItem
 
 public:
 	CListSelectStatusItem::CListSelectStatusItem(CProgramGuide *pProgramGuide)
-		: CStatusItem(STATUS_ITEM_DATE,160)
+		: CStatusItem(STATUS_ITEM_DATE,SizeValue(14*EM_FACTOR,SIZE_EM))
 		, m_pProgramGuide(pProgramGuide)
 	{
 	}
@@ -5030,7 +5030,7 @@ class CListPrevStatusItem : public CStatusItem
 
 public:
 	CListPrevStatusItem::CListPrevStatusItem(CProgramGuide *pProgramGuide)
-		: CStatusItem(STATUS_ITEM_DATEPREV,16)
+		: CStatusItem(STATUS_ITEM_DATEPREV,SizeValue(16,SIZE_PIXEL))
 		, m_pProgramGuide(pProgramGuide)
 	{
 	}
@@ -5072,7 +5072,7 @@ class CListNextStatusItem : public CStatusItem
 
 public:
 	CListNextStatusItem::CListNextStatusItem(CProgramGuide *pProgramGuide)
-		: CStatusItem(STATUS_ITEM_DATENEXT,16)
+		: CStatusItem(STATUS_ITEM_DATENEXT,SizeValue(16,SIZE_PIXEL))
 		, m_pProgramGuide(pProgramGuide)
 	{
 	}

@@ -44,6 +44,8 @@ private:
 	WNDPROC m_pOldListProc;
 	int m_ItemHeight;
 	int m_TextWidth;
+	TVTest::Style::Margins m_ItemMargin;
+	TVTest::Style::Size m_CheckSize;
 	int m_DropInsertPos;
 	UINT m_DragTimerID;
 	bool m_fDragResize;
@@ -55,7 +57,7 @@ private:
 // CBasicDialog
 	INT_PTR DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
 
-	void SetDefaultItemList();
+	void GetDefaultItemList(StatusItemInfo *pList) const;
 	void InitListBox(HWND hDlg);
 	void CalcTextWidth(HWND hDlg);
 	void SetListHExtent(HWND hDlg);

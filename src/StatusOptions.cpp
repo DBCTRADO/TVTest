@@ -21,9 +21,6 @@ static const bool IS_HD=
 #endif
 	;
 
-#define ITEM_MARGIN	2
-#define CHECK_WIDTH	14
-
 #define TIMER_ID_UP		1
 #define TIMER_ID_DOWN	2
 
@@ -38,8 +35,11 @@ CStatusOptions::CStatusOptions(CStatusView *pStatusView)
 	, m_fShowEventProgress(true)
 	, m_fMultiRow(!IS_HD)
 	, m_MaxRows(2)
+
+	, m_ItemMargin(3)
+	, m_CheckSize(14,14)
 {
-	SetDefaultItemList();
+	GetDefaultItemList(m_ItemList);
 	m_pStatusView->GetFont(&m_lfItemFont);
 }
 
@@ -168,7 +168,7 @@ bool CStatusOptions::Create(HWND hwndOwner)
 }
 
 
-void CStatusOptions::SetDefaultItemList()
+void CStatusOptions::GetDefaultItemList(StatusItemInfo *pList) const
 {
 	static const struct {
 		BYTE ID;
@@ -191,21 +191,17 @@ void CStatusOptions::SetDefaultItemList()
 	};
 
 	for (int i=0;i<NUM_STATUS_ITEMS;i++) {
-		m_ItemList[i].ID=DefaultItemList[i].ID;
-		m_ItemList[i].fVisible=DefaultItemList[i].fVisible;
-		m_ItemList[i].Width=-1;
+		pList[i].ID=DefaultItemList[i].ID;
+		pList[i].fVisible=DefaultItemList[i].fVisible;
+		pList[i].Width=-1;
 	}
 }
 
 
 void CStatusOptions::InitListBox(HWND hDlg)
 {
-	int i;
-
-	for (i=0;i<NUM_STATUS_ITEMS;i++) {
-		m_ItemListCur[i]=m_ItemList[i];
+	for (int i=0;i<NUM_STATUS_ITEMS;i++)
 		DlgListBox_AddString(hDlg,IDC_STATUSOPTIONS_ITEMLIST,&m_ItemListCur[i]);
-	}
 }
 
 
@@ -229,12 +225,21 @@ INT_PTR CStatusOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 		{
 			m_DropInsertPos=-1;
 			m_DragTimerID=0;
-			InitListBox(hDlg);
-			m_pOldListProc=SubclassWindow(GetDlgItem(hDlg,IDC_STATUSOPTIONS_ITEMLIST),ItemListProc);
-			m_ItemHeight=m_pStatusView->GetItemHeight()+(1+ITEM_MARGIN)*2;
+
+			const TVTest::Style::CStyleManager &StyleManager=GetAppClass().StyleManager;
+			StyleManager.ToPixels(&m_ItemMargin);
+			StyleManager.ToPixels(&m_CheckSize);
+			m_ItemHeight=m_pStatusView->GetItemHeight()+m_ItemMargin.Vert();
 			DlgListBox_SetItemHeight(hDlg,IDC_STATUSOPTIONS_ITEMLIST,0,m_ItemHeight);
+
+			for (int i=0;i<NUM_STATUS_ITEMS;i++)
+				m_ItemListCur[i]=m_ItemList[i];
+			InitListBox(hDlg);
 			CalcTextWidth(hDlg);
 			SetListHExtent(hDlg);
+
+			m_pOldListProc=SubclassWindow(GetDlgItem(hDlg,IDC_STATUSOPTIONS_ITEMLIST),ItemListProc);
+
 			m_CurSettingFont=m_lfItemFont;
 			SetFontInfo(hDlg,&m_CurSettingFont);
 			DlgCheckBox_Check(hDlg,IDC_STATUSOPTIONS_MULTIROW,m_fMultiRow);
@@ -262,7 +267,7 @@ INT_PTR CStatusOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 					COLORREF crTextColor,crOldTextColor;
 					RECT rc;
 
-					if ((pdis->itemState&ODS_SELECTED)==0) {
+					if ((pdis->itemState & ODS_SELECTED)==0) {
 						TextColor=COLOR_WINDOWTEXT;
 						BackColor=COLOR_WINDOW;
 					} else {
@@ -276,23 +281,24 @@ INT_PTR CStatusOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 					if (!pItemInfo->fVisible)
 						crTextColor=MixColor(crTextColor,::GetSysColor(BackColor));
 					crOldTextColor=::SetTextColor(pdis->hDC,crTextColor);
-					rc.left=pdis->rcItem.left+ITEM_MARGIN;
-					rc.top=pdis->rcItem.top+ITEM_MARGIN;
-					rc.right=rc.left+CHECK_WIDTH;
-					rc.bottom=pdis->rcItem.bottom-ITEM_MARGIN;
+					rc.left=pdis->rcItem.left+m_ItemMargin.Left;
+					rc.top=pdis->rcItem.top+m_ItemMargin.Top;
+					rc.right=rc.left+m_CheckSize.Width;
+					rc.bottom=pdis->rcItem.bottom-m_ItemMargin.Bottom;
 					::DrawFrameControl(pdis->hDC,&rc,DFC_BUTTON,
 						DFCS_BUTTONCHECK | (pItemInfo->fVisible?DFCS_CHECKED:0));
-					rc.left=pdis->rcItem.left+ITEM_MARGIN+CHECK_WIDTH+ITEM_MARGIN;
-					rc.top=pdis->rcItem.top+ITEM_MARGIN;
+					rc.left=pdis->rcItem.left+m_ItemMargin.Horz()+m_CheckSize.Width;
+					rc.top=pdis->rcItem.top+m_ItemMargin.Top;
 					rc.right=rc.left+m_TextWidth;
-					rc.bottom=pdis->rcItem.bottom-ITEM_MARGIN;
+					rc.bottom=pdis->rcItem.bottom-m_ItemMargin.Bottom;
 					::DrawText(pdis->hDC,pItem->GetName(),-1,&rc,
 						DT_LEFT | DT_SINGLELINE | DT_VCENTER | DT_NOPREFIX);
-					rc.left=rc.right+ITEM_MARGIN+1;
-					rc.right=rc.left+(pItemInfo->Width>=0?
-									pItemInfo->Width:pItem->GetDefaultWidth());
-					rc.top=pdis->rcItem.top+((pdis->rcItem.bottom-pdis->rcItem.top)-m_pStatusView->GetItemHeight())/2;
-					rc.bottom=rc.top+m_pStatusView->GetItemHeight();
+					rc.left=rc.right+m_ItemMargin.Left;
+					rc.right=rc.left+(pItemInfo->Width>=0?pItemInfo->Width:pItem->GetWidth())+
+						m_pStatusView->GetItemPadding().Horz();
+					const int ItemHeight=m_ItemHeight-m_ItemMargin.Vert();
+					rc.top+=((rc.bottom-rc.top)-ItemHeight)/2;
+					rc.bottom=rc.top+ItemHeight;
 					HPEN hpen,hpenOld;
 					HBRUSH hbrOld;
 					hpen=::CreatePen(PS_SOLID,1,crTextColor);
@@ -313,7 +319,7 @@ INT_PTR CStatusOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 							(int)pdis->itemID==m_DropInsertPos?
 										pdis->rcItem.top:pdis->rcItem.bottom-1,
 							pdis->rcItem.right-pdis->rcItem.left,1,DSTINVERT);
-					if ((pdis->itemState&ODS_FOCUS)==0)
+					if ((pdis->itemState & ODS_FOCUS)==0)
 						break;
 				}
 			case ODA_FOCUS:
@@ -327,8 +333,8 @@ INT_PTR CStatusOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 	case WM_COMMAND:
 		switch (LOWORD(wParam)) {
 		case IDC_STATUSOPTIONS_DEFAULT:
-			SetDefaultItemList();
 			DlgListBox_Clear(hDlg,IDC_STATUSOPTIONS_ITEMLIST);
+			GetDefaultItemList(m_ItemListCur);
 			InitListBox(hDlg);
 			SetListHExtent(hDlg);
 			return TRUE;
@@ -340,16 +346,12 @@ INT_PTR CStatusOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 				if (ChooseFontDialog(hDlg,&lf)
 						&& !CompareLogFont(&m_CurSettingFont,&lf)) {
 					DrawUtil::CFont Font(lf);
-					TVTest::Style::Margins Padding=m_pStatusView->GetItemPadding();
 
 					m_CurSettingFont=lf;
 					SetFontInfo(hDlg,&lf);
-					HWND hwndList=::GetDlgItem(hDlg,IDC_STATUSOPTIONS_ITEMLIST);
-					HDC hdc=::GetDC(hwndList);
-					m_ItemHeight=(Font.GetHeight(hdc,false)+Padding.Top+Padding.Bottom)+(1+ITEM_MARGIN)*2;
-					::ReleaseDC(hwndList,hdc);
+					m_ItemHeight=m_pStatusView->CalcItemHeight(Font)+m_ItemMargin.Vert();
 					DlgListBox_SetItemHeight(hDlg,IDC_STATUSOPTIONS_ITEMLIST,0,m_ItemHeight);
-					::InvalidateRect(hwndList,NULL,TRUE);
+					InvalidateDlgItem(hDlg,IDC_STATUSOPTIONS_ITEMLIST);
 				}
 			}
 			return TRUE;
@@ -377,6 +379,11 @@ INT_PTR CStatusOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 				if (!CompareLogFont(&m_lfItemFont,&m_CurSettingFont)) {
 					m_lfItemFont=m_CurSettingFont;
 					m_pStatusView->SetFont(&m_lfItemFont);
+					for (int i=0;i<NUM_STATUS_ITEMS;i++) {
+						StatusItemInfo &Item=m_ItemList[i];
+						if (Item.Width<0)
+							Item.Width=m_pStatusView->GetItemByID(Item.ID)->GetWidth();
+					}
 				}
 
 				bool fMultiRow=DlgCheckBox_IsChecked(hDlg,IDC_STATUSOPTIONS_MULTIROW);
@@ -440,20 +447,19 @@ void CStatusOptions::CalcTextWidth(HWND hDlg)
 
 void CStatusOptions::SetListHExtent(HWND hDlg)
 {
-	HWND hwndList;
-	int MaxWidth,Width;
-	int i;
+	HWND hwndList=::GetDlgItem(hDlg,IDC_STATUSOPTIONS_ITEMLIST);
+	int MaxWidth=0;
 
-	hwndList=GetDlgItem(hDlg,IDC_STATUSOPTIONS_ITEMLIST);
-	MaxWidth=0;
-	for (i=0;i<NUM_STATUS_ITEMS;i++) {
-		Width=m_ItemListCur[i].Width>=0?m_ItemListCur[i].Width:
-			m_pStatusView->GetItem(m_pStatusView->IDToIndex(m_ItemList[i].ID))->GetWidth();
+	for (int i=0;i<NUM_STATUS_ITEMS;i++) {
+		const StatusItemInfo &Item=m_ItemListCur[i];
+		int Width=Item.Width>=0?Item.Width:m_pStatusView->GetItemByID(Item.ID)->GetWidth();
 		if (Width>MaxWidth)
 			MaxWidth=Width;
 	}
+
 	ListBox_SetHorizontalExtent(hwndList,
-		ITEM_MARGIN+CHECK_WIDTH+ITEM_MARGIN+m_TextWidth+ITEM_MARGIN+MaxWidth+2+ITEM_MARGIN);
+		m_ItemMargin.Horz()+m_CheckSize.Width+
+		m_ItemMargin.Horz()+MaxWidth+m_pStatusView->GetItemPadding().Horz());
 }
 
 
@@ -525,11 +531,13 @@ bool CStatusOptions::GetItemPreviewRect(HWND hwndList,int Index,RECT *pRect)
 	pItemInfo=reinterpret_cast<StatusItemInfo*>(ListBox_GetItemData(hwndList,Index));
 	ListBox_GetItemRect(hwndList,Index,&rc);
 	OffsetRect(&rc,-GetScrollPos(hwndList,SB_HORZ),0);
-	rc.left+=ITEM_MARGIN+CHECK_WIDTH+ITEM_MARGIN+m_TextWidth+ITEM_MARGIN+1;
-	rc.right=rc.left+(pItemInfo->Width>=0?pItemInfo->Width:
-				m_pStatusView->GetItemByID(pItemInfo->ID)->GetDefaultWidth());
-	rc.top+=ITEM_MARGIN+1;
-	rc.bottom-=ITEM_MARGIN+1;
+	rc.left+=m_ItemMargin.Horz()+m_CheckSize.Width+m_TextWidth+m_ItemMargin.Left;
+	rc.right=rc.left+
+		(pItemInfo->Width>=0?pItemInfo->Width:
+			m_pStatusView->GetItemByID(pItemInfo->ID)->GetWidth())+
+		m_pStatusView->GetItemPadding().Horz();
+	rc.top+=m_ItemMargin.Top;
+	rc.bottom-=m_ItemMargin.Bottom;
 	*pRect=rc;
 	return true;
 }
@@ -541,7 +549,8 @@ bool CStatusOptions::IsCursorResize(HWND hwndList,int x,int y)
 
 	if (!GetItemPreviewRect(hwndList,ListBox_GetHitItem(hwndList,x,y),&rc))
 		return false;
-	return x>=rc.right-2 && x<=rc.right+2;
+	int Margin=(::GetSystemMetrics(SM_CXSIZEFRAME)+1)/2;
+	return x>=rc.right-Margin && x<=rc.right+Margin;
 }
 
 
@@ -562,7 +571,8 @@ LRESULT CALLBACK CStatusOptions::ItemListProc(HWND hwnd,UINT uMsg,WPARAM wParam,
 
 				ListBox_GetItemRect(hwnd,Sel,&rc);
 				OffsetRect(&rc,-GetScrollPos(hwnd,SB_HORZ),0);
-				if (x>=rc.left+ITEM_MARGIN && x<rc.left+ITEM_MARGIN+CHECK_WIDTH) {
+				if (x>=rc.left+pThis->m_ItemMargin.Left
+						&& x<rc.left+pThis->m_ItemMargin.Left+pThis->m_CheckSize.Width) {
 					StatusItemInfo *pItemInfo=reinterpret_cast<StatusItemInfo*>(ListBox_GetItemData(hwnd,Sel));
 					RECT rc;
 
@@ -616,9 +626,10 @@ LRESULT CALLBACK CStatusOptions::ItemListProc(HWND hwnd,UINT uMsg,WPARAM wParam,
 
 				if (pThis->GetItemPreviewRect(hwnd,Sel,&rc)) {
 					StatusItemInfo *pItemInfo=reinterpret_cast<StatusItemInfo*>(ListBox_GetItemData(hwnd,Sel));
+					int Width=(x-rc.left)-pThis->m_pStatusView->GetItemPadding().Horz();
+					int MinWidth=pThis->m_pStatusView->GetItemByID(pItemInfo->ID)->GetMinWidth();
 
-					pItemInfo->Width=max(x-(int)rc.left,
-						pThis->m_pStatusView->GetItemByID(pItemInfo->ID)->GetMinWidth());
+					pItemInfo->Width=max(Width,MinWidth);
 					ListBox_GetItemRect(hwnd,Sel,&rc);
 					InvalidateRect(hwnd,&rc,TRUE);
 					pThis->SetListHExtent(GetParent(hwnd));
@@ -720,8 +731,6 @@ bool CStatusOptions::ApplyItemList()
 		pItem->SetVisible(m_ItemList[i].fVisible);
 		if (m_ItemList[i].Width>=0)
 			pItem->SetWidth(m_ItemList[i].Width);
-		else
-			pItem->SetWidth(pItem->GetDefaultWidth());
 	}
 	return m_pStatusView->SetItemOrder(ItemOrder);
 }
