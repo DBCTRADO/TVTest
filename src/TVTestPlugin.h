@@ -87,6 +87,9 @@
 	ver.0.0.14 (TVTest ver.0.9.0 or later)
 	・以下のメッセージを追加した
 	  ・MESSAGE_GETSTYLEVALUE
+	  ・MESSAGE_THEMEDRAWBACKGROUND
+	  ・MESSAGE_THEMEDRAWTEXT
+	  ・MESSAGE_THEMEDRAWICON
 	・以下のイベントを追加した
 	  ・EVENT_FILTERGRAPH_INITIALIZE
 	  ・EVENT_FILTERGRAPH_INITIALIZED
@@ -379,6 +382,9 @@ enum {
 #endif
 #if TVTEST_PLUGIN_VERSION>=TVTEST_PLUGIN_VERSION_(0,0,14)
 	MESSAGE_GETSTYLEVALUE,				// スタイル値を取得
+	MESSAGE_THEMEDRAWBACKGROUND,		// テーマの背景を描画
+	MESSAGE_THEMEDRAWTEXT,				// テーマの文字列を描画
+	MESSAGE_THEMEDRAWICON,				// テーマのアイコンを描画
 #endif
 	MESSAGE_TRAILER
 };
@@ -1952,6 +1958,109 @@ inline bool MsgGetStyleValuePixels(PluginParam *pParam,LPCWSTR pszName,int *pVal
 	return MsgGetStyleValue(pParam,pszName,STYLE_UNIT_PIXEL,pValue);
 }
 
+// テーマの背景描画情報
+struct ThemeDrawBackgroundInfo {
+	DWORD Size;			// 構造体のサイズ
+	DWORD Flags;		// 各種フラグ(THEME_DRAW_BACKGROUND_FLAG_*)
+	LPCWSTR pszStyle;	// スタイル名
+	HDC hdc;			// 描画先DC
+	RECT DrawRect;		// 描画領域
+};
+
+// テーマ描画フラグ
+enum {
+	THEME_DRAW_BACKGROUND_FLAG_ADJUSTRECT	=0x00000001U	// クライアント領域を取得
+};
+
+// テーマの背景を描画する
+// 通常は下のオーバーロードされた関数を利用する方が簡単です。
+inline bool MsgThemeDrawBackground(PluginParam *pParam,ThemeDrawBackgroundInfo *pInfo) {
+	return (*pParam->Callback)(pParam,MESSAGE_THEMEDRAWBACKGROUND,(LPARAM)pInfo,0)!=FALSE;
+}
+
+// テーマの背景を描画する
+inline bool MsgThemeDrawBackground(PluginParam *pParam,LPCWSTR pszStyle,HDC hdc,const RECT &DrawRect) {
+	ThemeDrawBackgroundInfo Info;
+	Info.Size=sizeof(Info);
+	Info.Flags=0;
+	Info.pszStyle=pszStyle;
+	Info.hdc=hdc;
+	Info.DrawRect=DrawRect;
+	return MsgThemeDrawBackground(pParam,&Info);
+}
+
+// テーマの文字列描画情報
+struct ThemeDrawTextInfo {
+	DWORD Size;			// 構造体のサイズ
+	DWORD Flags;		// 各種フラグ(現在は常に0)
+	LPCWSTR pszStyle;	// スタイル名
+	HDC hdc;			// 描画先DC
+	LPCWSTR pszText;	// 描画する文字列
+	RECT DrawRect;		// 描画先の領域
+	UINT DrawFlags;		// 描画フラグ(DrawText API の DT_*)
+};
+
+// テーマの文字列を描画する
+// 通常は下のオーバーロードされた関数を利用する方が簡単です。
+inline bool MsgThemeDrawText(PluginParam *pParam,ThemeDrawTextInfo *pInfo) {
+	return (*pParam->Callback)(pParam,MESSAGE_THEMEDRAWTEXT,(LPARAM)pInfo,0)!=FALSE;
+}
+
+// テーマの文字列を描画する
+inline bool MsgThemeDrawText(PluginParam *pParam,
+		LPCWSTR pszStyle,HDC hdc,LPCWSTR pszText,const RECT &DrawRect,UINT DrawFlags) {
+	ThemeDrawTextInfo Info;
+	Info.Size=sizeof(Info);
+	Info.Flags=0;
+	Info.pszStyle=pszStyle;
+	Info.hdc=hdc;
+	Info.pszText=pszText;
+	Info.DrawRect=DrawRect;
+	Info.DrawFlags=DrawFlags;
+	return MsgThemeDrawText(pParam,&Info);
+}
+
+// テーマのアイコン描画情報
+struct ThemeDrawIconInfo {
+	DWORD Size;			// 構造体のサイズ
+	DWORD Flags;		// 各種フラグ(現在は常に0)
+	LPCWSTR pszStyle;	// スタイル名
+	HDC hdc;			// 描画先DC
+	HBITMAP hbm;		// 描画するビットマップ
+	RECT DstRect;		// 描画先の領域
+	RECT SrcRect;		// 描画元の領域
+	BYTE Opacity;		// 不透明度(1-255)
+	BYTE Reserved[3];	// 予約領域
+};
+
+// テーマのアイコンを描画する
+// 通常は下のオーバーロードされた関数を利用する方が簡単です。
+inline bool MsgThemeDrawIcon(PluginParam *pParam,ThemeDrawIconInfo *pInfo) {
+	return (*pParam->Callback)(pParam,MESSAGE_THEMEDRAWICON,(LPARAM)pInfo,0)!=FALSE;
+}
+
+// テーマのアイコンを描画する
+inline bool MsgThemeDrawIcon(PluginParam *pParam,LPCWSTR pszStyle,
+		HDC hdc,int DstX,int DstY,int DstWidth,int DstHeight,
+		HBITMAP hbm,int SrcX,int SrcY,int SrcWidth,int SrcHeight,BYTE Opacity=255) {
+	ThemeDrawIconInfo Info;
+	Info.Size=sizeof(Info);
+	Info.Flags=0;
+	Info.pszStyle=pszStyle;
+	Info.hdc=hdc;
+	Info.hbm=hbm;
+	Info.DstRect.left=DstX;
+	Info.DstRect.top=DstY;
+	Info.DstRect.right=DstX+DstWidth;
+	Info.DstRect.bottom=DstY+DstHeight;
+	Info.SrcRect.left=SrcX;
+	Info.SrcRect.top=SrcY;
+	Info.SrcRect.right=SrcX+SrcWidth;
+	Info.SrcRect.bottom=SrcY+SrcHeight;
+	Info.Opacity=Opacity;
+	return MsgThemeDrawIcon(pParam,&Info);
+}
+
 #endif	// TVTEST_PLUGIN_VERSION>=TVTEST_PLUGIN_VERSION_(0,0,14)
 
 
@@ -2320,6 +2429,30 @@ public:
 	}
 	bool GetStyleValuePixels(LPCWSTR pszName,int *pValue) {
 		return MsgGetStyleValuePixels(m_pParam,pszName,pValue);
+	}
+	bool ThemeDrawBackground(ThemeDrawBackgroundInfo *pInfo) {
+		pInfo->Size=sizeof(ThemeDrawBackgroundInfo);
+		return MsgThemeDrawBackground(m_pParam,pInfo);
+	}
+	bool ThemeDrawBackground(PluginParam *pParam,LPCWSTR pszStyle,HDC hdc,const RECT &DrawRect) {
+		return MsgThemeDrawBackground(m_pParam,pszStyle,hdc,DrawRect);
+	}
+	bool ThemeDrawText(ThemeDrawTextInfo *pInfo) {
+		pInfo->Size=sizeof(ThemeDrawTextInfo);
+		return MsgThemeDrawText(m_pParam,pInfo);
+	}
+	bool ThemeDrawText(LPCWSTR pszStyle,HDC hdc,LPCWSTR pszText,const RECT &DrawRect,UINT DrawFlags) {
+		return MsgThemeDrawText(m_pParam,pszStyle,hdc,pszText,DrawRect,DrawFlags);
+	}
+	bool ThemeDrawIcon(PluginParam *pParam,ThemeDrawIconInfo *pInfo) {
+		pInfo->Size=sizeof(ThemeDrawIconInfo);
+		return MsgThemeDrawIcon(m_pParam,pInfo);
+	}
+	bool ThemeDrawIcon(LPCWSTR pszStyle,
+			HDC hdc,int DstX,int DstY,int DstWidth,int DstHeight,
+			HBITMAP hbm,int SrcX,int SrcY,int SrcWidth,int SrcHeight,BYTE Opacity=255) {
+		return MsgThemeDrawIcon(m_pParam,pszStyle,hdc,DstX,DstY,DstWidth,DstHeight,
+								hbm,SrcX,SrcY,SrcWidth,SrcHeight,Opacity);
 	}
 #endif
 };

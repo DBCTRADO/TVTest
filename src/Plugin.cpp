@@ -1761,6 +1761,83 @@ LRESULT CPlugin::OnCallback(TVTest::PluginParam *pParam,UINT Message,LPARAM lPar
 		}
 		return TRUE;
 
+	case TVTest::MESSAGE_THEMEDRAWBACKGROUND:
+		{
+			TVTest::ThemeDrawBackgroundInfo *pInfo=
+				reinterpret_cast<TVTest::ThemeDrawBackgroundInfo*>(lParam1);
+
+			if (pInfo==NULL
+					|| pInfo->Size!=sizeof(TVTest::ThemeDrawBackgroundInfo)
+					|| IsStringEmpty(pInfo->pszStyle)
+					|| pInfo->hdc==NULL)
+				return FALSE;
+
+			TVTest::Theme::CThemeManager ThemeManager(GetAppClass().ColorSchemeOptions.GetColorScheme());
+			int Type=ThemeManager.ParseStyleName(pInfo->pszStyle);
+			if (Type<0)
+				return FALSE;
+			TVTest::Theme::BackgroundStyle Style;
+			ThemeManager.GetBackgroundStyle(Type,&Style);
+			TVTest::Theme::Draw(pInfo->hdc,pInfo->DrawRect,Style);
+			if ((pInfo->Flags & TVTest::THEME_DRAW_BACKGROUND_FLAG_ADJUSTRECT)!=0)
+				TVTest::Theme::SubtractBorderRect(Style.Border,&pInfo->DrawRect);
+		}
+		return TRUE;
+
+	case TVTest::MESSAGE_THEMEDRAWTEXT:
+		{
+			TVTest::ThemeDrawTextInfo *pInfo=
+				reinterpret_cast<TVTest::ThemeDrawTextInfo*>(lParam1);
+
+			if (pInfo==NULL
+					|| pInfo->Size!=sizeof(TVTest::ThemeDrawTextInfo)
+					|| IsStringEmpty(pInfo->pszStyle)
+					|| pInfo->hdc==NULL
+					|| pInfo->pszText==NULL)
+				return FALSE;
+
+			TVTest::Theme::CThemeManager ThemeManager(GetAppClass().ColorSchemeOptions.GetColorScheme());
+			int Type=ThemeManager.ParseStyleName(pInfo->pszStyle);
+			if (Type<0)
+				return FALSE;
+			TVTest::Theme::ForegroundStyle Style;
+			ThemeManager.GetForegroundStyle(Type,&Style);
+			TVTest::Theme::Draw(pInfo->hdc,pInfo->DrawRect,Style,pInfo->pszText,pInfo->DrawFlags);
+		}
+		return TRUE;
+
+	case TVTest::MESSAGE_THEMEDRAWICON:
+		{
+			TVTest::ThemeDrawIconInfo *pInfo=
+				reinterpret_cast<TVTest::ThemeDrawIconInfo*>(lParam1);
+
+			if (pInfo==NULL
+					|| pInfo->Size!=sizeof(TVTest::ThemeDrawTextInfo)
+					|| IsStringEmpty(pInfo->pszStyle)
+					|| pInfo->hdc==NULL
+					|| pInfo->hbm==NULL)
+				return FALSE;
+
+			TVTest::Theme::CThemeManager ThemeManager(GetAppClass().ColorSchemeOptions.GetColorScheme());
+			int Type=ThemeManager.ParseStyleName(pInfo->pszStyle);
+			if (Type<0)
+				return FALSE;
+			TVTest::Theme::ForegroundStyle Style;
+			ThemeManager.GetForegroundStyle(Type,&Style);
+			DrawUtil::CMonoColorBitmap Bitmap;
+			if (!Bitmap.Create(pInfo->hbm))
+				return FALSE;
+			Bitmap.Draw(pInfo->hdc,
+						pInfo->DstRect.left,pInfo->DstRect.top,
+						pInfo->DstRect.right-pInfo->DstRect.left,
+						pInfo->DstRect.bottom-pInfo->DstRect.top,
+						pInfo->SrcRect.left,pInfo->SrcRect.top,
+						pInfo->SrcRect.right-pInfo->SrcRect.left,
+						pInfo->SrcRect.bottom-pInfo->SrcRect.top,
+						Style.Fill.GetSolidColor(),pInfo->Opacity);
+		}
+		return TRUE;
+
 #ifdef _DEBUG
 	default:
 		TRACE(TEXT("CPluign::OnCallback() : Unknown message %u\n"),Message);

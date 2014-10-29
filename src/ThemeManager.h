@@ -73,10 +73,13 @@ namespace TVTest
 			bool GetBorderStyle(int Type,BorderStyle *pStyle) const;
 			bool GetBackgroundStyle(int Type,BackgroundStyle *pStyle) const;
 			bool GetForegroundStyle(int Type,ForegroundStyle *pStyle) const;
+			LPCTSTR GetStyleName(int Type) const;
+			int ParseStyleName(LPCTSTR pszName) const;
 
 		private:
 			struct StyleInfo
 			{
+				LPCTSTR pszName;
 				int Gradient;
 				int Border;
 				int ForeColor;
