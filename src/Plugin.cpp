@@ -1703,6 +1703,64 @@ LRESULT CPlugin::OnCallback(TVTest::PluginParam *pParam,UINT Message,LPARAM lPar
 		}
 		return TRUE;
 
+	case TVTest::MESSAGE_GETSTYLEVALUE:
+		{
+			TVTest::StyleValueInfo *pInfo=reinterpret_cast<TVTest::StyleValueInfo*>(lParam1);
+
+			if (pInfo==NULL
+					|| pInfo->Size!=sizeof(TVTest::StyleValueInfo)
+					|| pInfo->Flags!=0
+					|| IsStringEmpty(pInfo->pszName))
+				return FALSE;
+
+			const TVTest::Style::CStyleManager &StyleManager=GetAppClass().StyleManager;
+			TVTest::Style::StyleInfo Style;
+
+			if (!StyleManager.Get(pInfo->pszName,&Style))
+				return FALSE;
+			if (Style.Type==TVTest::Style::TYPE_INT) {
+				if (pInfo->Unit==TVTest::STYLE_UNIT_UNDEFINED) {
+					pInfo->Value=Style.Value.Int;
+					switch (Style.Unit) {
+					case TVTest::Style::UNIT_LOGICAL_PIXEL:
+						pInfo->Value=StyleManager.LogicalPixelsToPhysicalPixels(pInfo->Value);
+						pInfo->Unit=TVTest::STYLE_UNIT_PIXEL;
+						break;
+					case TVTest::Style::UNIT_PHYSICAL_PIXEL:
+						pInfo->Unit=TVTest::STYLE_UNIT_PIXEL;
+						break;
+					case TVTest::Style::UNIT_POINT:
+						pInfo->Unit=TVTest::STYLE_UNIT_POINT;
+						break;
+					case TVTest::Style::UNIT_DIP:
+						pInfo->Unit=TVTest::STYLE_UNIT_DIP;
+						break;
+					}
+				} else {
+					TVTest::Style::UnitType Unit;
+					switch (pInfo->Unit) {
+					case TVTest::STYLE_UNIT_PIXEL:
+						Unit=TVTest::Style::UNIT_PHYSICAL_PIXEL;
+						break;
+					case TVTest::STYLE_UNIT_POINT:
+						Unit=TVTest::Style::UNIT_POINT;
+						break;
+					case TVTest::STYLE_UNIT_DIP:
+						Unit=TVTest::Style::UNIT_DIP;
+						break;
+					default:
+						return FALSE;
+					}
+					pInfo->Value=StyleManager.ConvertUnit(Style.Value.Int,Style.Unit,Unit);
+				}
+			} else if (Style.Type==TVTest::Style::TYPE_BOOL) {
+				pInfo->Value=Style.Value.Bool;
+			} else {
+				return FALSE;
+			}
+		}
+		return TRUE;
+
 #ifdef _DEBUG
 	default:
 		TRACE(TEXT("CPluign::OnCallback() : Unknown message %u\n"),Message);

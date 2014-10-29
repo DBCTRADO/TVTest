@@ -114,6 +114,7 @@ namespace TVTest
 			int LogicalPixelsToPhysicalPixels(int Pixels) const;
 			int PointsToPixels(int Points) const;
 			int DipToPixels(int Dip) const;
+			int ConvertUnit(int Value,UnitType SrcUnit,UnitType DstUnit) const;
 
 		private:
 			typedef std::unordered_map<String,StyleInfo> StyleMap;

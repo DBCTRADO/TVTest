@@ -85,6 +85,8 @@
 	更新履歴
 
 	ver.0.0.14 (TVTest ver.0.9.0 or later)
+	・以下のメッセージを追加した
+	  ・MESSAGE_GETSTYLEVALUE
 	・以下のイベントを追加した
 	  ・EVENT_FILTERGRAPH_INITIALIZE
 	  ・EVENT_FILTERGRAPH_INITIALIZED
@@ -374,6 +376,9 @@ enum {
 #if TVTEST_PLUGIN_VERSION>=TVTEST_PLUGIN_VERSION_(0,0,13)
 	MESSAGE_ENABLEPROGRAMGUIDEEVENT,	// 番組表のイベントの有効/無効を設定する
 	MESSAGE_REGISTERPROGRAMGUIDECOMMAND,	// 番組表のコマンドを登録
+#endif
+#if TVTEST_PLUGIN_VERSION>=TVTEST_PLUGIN_VERSION_(0,0,14)
+	MESSAGE_GETSTYLEVALUE,				// スタイル値を取得
 #endif
 	MESSAGE_TRAILER
 };
@@ -1901,6 +1906,52 @@ struct FilterGraphInfo {
 	interface IGraphBuilder *pGraphBuilder;	// IGraphBuilder
 };
 
+// スタイル値の単位
+enum {
+	STYLE_UNIT_UNDEFINED,	// 未定義
+	STYLE_UNIT_PIXEL,		// ピクセル
+	STYLE_UNIT_POINT,		// ポイント
+	STYLE_UNIT_DIP			// dip
+};
+
+// スタイル値の情報
+struct StyleValueInfo {
+	DWORD Size;			// 構造体のサイズ
+	DWORD Flags;		// 各種フラグ(現在は常に0)
+	LPCWSTR pszName;	// スタイル名
+	int Unit;			// 取得する値の単位(STYLE_UNIT_*)
+	int Value;			// 取得された値
+};
+
+// スタイル値を取得する
+// 通常は下のオーバーロードされた関数を利用する方が簡単です。
+inline bool MsgGetStyleValue(PluginParam *pParam,StyleValueInfo *pInfo) {
+	return (*pParam->Callback)(pParam,MESSAGE_GETSTYLEVALUE,(LPARAM)pInfo,0)!=FALSE;
+}
+
+// 指定された単位のスタイル値を取得する
+inline bool MsgGetStyleValue(PluginParam *pParam,LPCWSTR pszName,int Unit,int *pValue) {
+	StyleValueInfo Info;
+	Info.Size=sizeof(Info);
+	Info.Flags=0;
+	Info.pszName=pszName;
+	Info.Unit=Unit;
+	if (!MsgGetStyleValue(pParam,&Info))
+		return false;
+	*pValue=Info.Value;
+	return true;
+}
+
+// オリジナルの単位のスタイル値を取得する
+inline bool MsgGetStyleValue(PluginParam *pParam,LPCWSTR pszName,int *pValue) {
+	return MsgGetStyleValue(pParam,pszName,STYLE_UNIT_UNDEFINED,pValue);
+}
+
+// ピクセル単位のスタイル値を取得する
+inline bool MsgGetStyleValuePixels(PluginParam *pParam,LPCWSTR pszName,int *pValue) {
+	return MsgGetStyleValue(pParam,pszName,STYLE_UNIT_PIXEL,pValue);
+}
+
 #endif	// TVTEST_PLUGIN_VERSION>=TVTEST_PLUGIN_VERSION_(0,0,14)
 
 
@@ -2254,6 +2305,21 @@ public:
 	}
 	bool RegisterProgramGuideCommand(const ProgramGuideCommandInfo *pCommandList,int NumCommands=1) {
 		return MsgRegisterProgramGuideCommand(m_pParam,pCommandList,NumCommands);
+	}
+#endif
+#if TVTEST_PLUGIN_VERSION>=TVTEST_PLUGIN_VERSION_(0,0,13)
+	bool GetStyleValue(StyleValueInfo *pInfo) {
+		pInfo->Size=sizeof(StyleValueInfo);
+		return MsgGetStyleValue(m_pParam,pInfo);
+	}
+	bool GetStyleValue(LPCWSTR pszName,int Unit,int *pValue) {
+		return MsgGetStyleValue(m_pParam,pszName,Unit,pValue);
+	}
+	bool GetStyleValue(LPCWSTR pszName,int *pValue) {
+		return MsgGetStyleValue(m_pParam,pszName,pValue);
+	}
+	bool GetStyleValuePixels(LPCWSTR pszName,int *pValue) {
+		return MsgGetStyleValuePixels(m_pParam,pszName,pValue);
 	}
 #endif
 };

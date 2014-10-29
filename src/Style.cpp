@@ -430,6 +430,26 @@ int CStyleManager::DipToPixels(int Dip) const
 }
 
 
+int CStyleManager::ConvertUnit(int Value,UnitType SrcUnit,UnitType DstUnit) const
+{
+	switch (DstUnit) {
+	case UNIT_LOGICAL_PIXEL:
+		return ::MulDiv(ToPixels(Value,SrcUnit),96,m_ResolutionY);
+
+	case UNIT_PHYSICAL_PIXEL:
+		return ToPixels(Value,SrcUnit);
+
+	case UNIT_POINT:
+		return ::MulDiv(ToPixels(Value,SrcUnit),72,m_ResolutionY);
+
+	case UNIT_DIP:
+		return ::MulDiv(ToPixels(Value,SrcUnit),160,m_ResolutionY);
+	}
+
+	return Value;
+}
+
+
 UnitType CStyleManager::ParseUnit(LPCTSTR pszUnit)
 {
 	if (IsStringEmpty(pszUnit))
