@@ -134,6 +134,7 @@ class CPluginManager : public TVTest::CAppEventHandler
 	bool SendEvent(UINT Event,LPARAM lParam1=0,LPARAM lParam2=0);
 	bool SendProgramGuideEvent(UINT Event,LPARAM Param1=0,LPARAM Param2=0);
 	bool SendProgramGuideProgramEvent(UINT Event,const CEventInfoData &EventInfo,LPARAM Param);
+	bool SendFilterGraphEvent(UINT Event,CMediaViewer *pMediaViewer,IGraphBuilder *pGraphBuilder);
 	void OnRecordingStateChanged();
 
 // CAppEventHandler
@@ -190,6 +191,10 @@ public:
 		HMENU hmenu,UINT *pCommand,const POINT &CursorPos,const RECT &ItemRect);
 	bool SendProgramGuideProgramMenuSelectedEvent(const CEventInfoData &Event,UINT Command);
 	bool OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam,LRESULT *pResult);
+	void SendFilterGraphInitializeEvent(CMediaViewer *pMediaViewer,IGraphBuilder *pGraphBuilder);
+	void SendFilterGraphInitializedEvent(CMediaViewer *pMediaViewer,IGraphBuilder *pGraphBuilder);
+	void SendFilterGraphFinalizeEvent(CMediaViewer *pMediaViewer,IGraphBuilder *pGraphBuilder);
+	void SendFilterGraphFinalizedEvent(CMediaViewer *pMediaViewer,IGraphBuilder *pGraphBuilder);
 };
 
 class CPluginOptions : public COptions

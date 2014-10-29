@@ -86,6 +86,10 @@ public:
 		virtual void OnEventChanged(CTsAnalyzer *pTsAnalyzer, WORD EventID) {}
 		virtual void OnEventUpdated(CTsAnalyzer *pTsAnalyzer) {}
 		virtual void OnTotUpdated(CTsAnalyzer *pTsAnalyzer) {}
+		virtual void OnFilterGraphInitialize(CMediaViewer *pMediaViewer, IGraphBuilder *pGraphBuilder) {}
+		virtual void OnFilterGraphInitialized(CMediaViewer *pMediaViewer, IGraphBuilder *pGraphBuilder) {}
+		virtual void OnFilterGraphFinalize(CMediaViewer *pMediaViewer, IGraphBuilder *pGraphBuilder) {}
+		virtual void OnFilterGraphFinalized(CMediaViewer *pMediaViewer, IGraphBuilder *pGraphBuilder) {}
 	};
 
 	struct ServiceSelectInfo

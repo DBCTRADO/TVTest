@@ -1,5 +1,5 @@
 /*
-	TVTest プラグインヘッダ ver.0.0.13
+	TVTest プラグインヘッダ ver.0.0.14
 
 	このファイルは再配布・改変など自由に行って構いません。
 	ただし、改変した場合はオリジナルと違う旨を記載して頂けると、混乱がなくてい
@@ -83,6 +83,13 @@
 
 /*
 	更新履歴
+
+	ver.0.0.14 (TVTest ver.0.9.0 or later)
+	・以下のイベントを追加した
+	  ・EVENT_FILTERGRAPH_INITIALIZE
+	  ・EVENT_FILTERGRAPH_INITIALIZED
+	  ・EVENT_FILTERGRAPH_FINALIZE
+	  ・EVENT_FILTERGRAPH_FINALIZED
 
 	ver.0.0.13 (TVTest ver.0.7.16 or later)
 	・以下のメッセージを追加した
@@ -203,7 +210,7 @@ namespace TVTest {
 #define TVTEST_PLUGIN_VERSION_(major,minor,rev) \
 	(((major)<<24) | ((minor)<<12) | (rev))
 #ifndef TVTEST_PLUGIN_VERSION
-#define TVTEST_PLUGIN_VERSION TVTEST_PLUGIN_VERSION_(0,0,13)
+#define TVTEST_PLUGIN_VERSION TVTEST_PLUGIN_VERSION_(0,0,14)
 #endif
 
 // エクスポート関数定義用
@@ -418,6 +425,12 @@ enum {
 	EVENT_PROGRAMGUIDE_PROGRAM_DRAWBACKGROUND,	// 番組表の番組の背景を描画
 	EVENT_PROGRAMGUIDE_PROGRAM_INITIALIZEMENU,	// 番組表の番組のメニューの設定
 	EVENT_PROGRAMGUIDE_PROGRAM_MENUSELECTED,	// 番組表の番組のメニューが選択された
+#endif
+#if TVTEST_PLUGIN_VERSION>=TVTEST_PLUGIN_VERSION_(0,0,14)
+	EVENT_FILTERGRAPH_INITIALIZE,				// フィルタグラフの初期化開始
+	EVENT_FILTERGRAPH_INITIALIZED,				// フィルタグラフの初期化終了
+	EVENT_FILTERGRAPH_FINALIZE,					// フィルタグラフの終了処理開始
+	EVENT_FILTERGRAPH_FINALIZED,				// フィルタグラフの終了処理終了
 #endif
 	EVENT_TRAILER
 };
@@ -1341,7 +1354,7 @@ inline DWORD MsgGetSetting(PluginParam *pParam,LPCWSTR pszName,LPWSTR pszString,
 
 // BonDriverのフルパス名を取得する
 // 戻り値はパスの長さ(終端のNullを除く)が返ります。
-// pszPahtをNULLで呼べば長さだけを取得できます。
+// pszPathをNULLで呼べば長さだけを取得できます。
 inline int MsgGetDriverFullPathName(PluginParam *pParam,LPWSTR pszPath,int MaxLength)
 {
 	return (int)(*pParam->Callback)(pParam,MESSAGE_GETDRIVERFULLPATHNAME,(LPARAM)pszPath,MaxLength);
@@ -1854,6 +1867,19 @@ inline bool MsgRegisterProgramGuideCommand(PluginParam *pParam,
 
 #endif	// TVTEST_PLUGIN_VERSION>=TVTEST_PLUGIN_VERSION_(0,0,13)
 
+#if TVTEST_PLUGIN_VERSION>=TVTEST_PLUGIN_VERSION_(0,0,14)
+
+// フィルタグラフの情報
+// フィルタグラフ関係のイベント(EVENT_FILTERGRAPH_*)で渡されます。
+struct FilterGraphInfo {
+	DWORD Flags;							// 各種フラグ(現在は常に0)
+	BYTE VideoStreamType;					// 映像stream_type
+	BYTE Reserved[3];						// 予約
+	interface IGraphBuilder *pGraphBuilder;	// IGraphBuilder
+};
+
+#endif	// TVTEST_PLUGIN_VERSION>=TVTEST_PLUGIN_VERSION_(0,0,14)
+
 
 /*
 	TVTest アプリケーションクラス
@@ -2361,6 +2387,16 @@ protected:
 	virtual bool OnProgramGuideProgramMenuSelected(
 		const ProgramGuideProgramInfo *pProgramInfo,UINT Command) { return false; }
 #endif
+#if TVTEST_PLUGIN_VERSION>=TVTEST_PLUGIN_VERSION_(0,0,14)
+	// フィルタグラフの初期化
+	virtual void OnFilterGraphInitialize(FilterGraphInfo *pInfo) {}
+	// フィルタグラフが初期化された
+	virtual void OnFilterGraphInitialized(FilterGraphInfo *pInfo) {}
+	// フィルタグラフの終了処理
+	virtual void OnFilterGraphFinalize(FilterGraphInfo *pInfo) {}
+	// フィルタグラフが終了処理された
+	virtual void OnFilterGraphFinalized(FilterGraphInfo *pInfo) {}
+#endif
 
 public:
 	virtual ~CTVTestEventHandler() {}
@@ -2427,6 +2463,20 @@ public:
 		case EVENT_PROGRAMGUIDE_PROGRAM_MENUSELECTED:
 			return OnProgramGuideProgramMenuSelected(
 				(const ProgramGuideProgramInfo*)lParam1,(UINT)lParam2);
+#endif
+#if TVTEST_PLUGIN_VERSION>=TVTEST_PLUGIN_VERSION_(0,0,14)
+		case EVENT_FILTERGRAPH_INITIALIZE:
+			OnFilterGraphInitialize((FilterGraphInfo*)lParam1);
+			return 0;
+		case EVENT_FILTERGRAPH_INITIALIZED:
+			OnFilterGraphInitialized((FilterGraphInfo*)lParam1);
+			return 0;
+		case EVENT_FILTERGRAPH_FINALIZE:
+			OnFilterGraphFinalize((FilterGraphInfo*)lParam1);
+			return 0;
+		case EVENT_FILTERGRAPH_FINALIZED:
+			OnFilterGraphFinalized((FilterGraphInfo*)lParam1);
+			return 0;
 #endif
 		}
 		return 0;

@@ -692,6 +692,34 @@ const DWORD CDtvEngine::OnDecoderEvent(CMediaDecoder *pDecoder, const DWORD dwEv
 			if (m_pEventHandler)
 				m_pEventHandler->OnVideoSizeChanged(&m_MediaViewer);
 			return 0UL;
+
+		case CMediaViewer::EID_FILTER_GRAPH_INITIALIZE:
+			if (m_pEventHandler) {
+				m_pEventHandler->OnFilterGraphInitialize(
+					&m_MediaViewer, static_cast<IGraphBuilder*>(pParam));
+			}
+			return 0;
+
+		case CMediaViewer::EID_FILTER_GRAPH_INITIALIZED:
+			if (m_pEventHandler) {
+				m_pEventHandler->OnFilterGraphInitialized(
+					&m_MediaViewer, static_cast<IGraphBuilder*>(pParam));
+			}
+			return 0;
+
+		case CMediaViewer::EID_FILTER_GRAPH_FINALIZE:
+			if (m_pEventHandler) {
+				m_pEventHandler->OnFilterGraphFinalize(
+					&m_MediaViewer, static_cast<IGraphBuilder*>(pParam));
+			}
+			return 0;
+
+		case CMediaViewer::EID_FILTER_GRAPH_FINALIZED:
+			if (m_pEventHandler) {
+				m_pEventHandler->OnFilterGraphFinalized(
+					&m_MediaViewer, static_cast<IGraphBuilder*>(pParam));
+			}
+			return 0;
 		}
 	} else if (pDecoder == &m_CasProcessor) {
 		switch (dwEventID) {

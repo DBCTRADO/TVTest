@@ -2580,6 +2580,19 @@ bool CPluginManager::SendProgramGuideProgramEvent(UINT Event,const CEventInfoDat
 }
 
 
+bool CPluginManager::SendFilterGraphEvent(
+	UINT Event,CMediaViewer *pMediaViewer,IGraphBuilder *pGraphBuilder)
+{
+	TVTest::FilterGraphInfo Info;
+
+	Info.Flags=0;
+	Info.VideoStreamType=pMediaViewer->GetVideoStreamType();
+	::ZeroMemory(Info.Reserved,sizeof(Info.Reserved));
+	Info.pGraphBuilder=pGraphBuilder;
+	return SendEvent(Event,reinterpret_cast<LPARAM>(&Info));
+}
+
+
 void CPluginManager::OnTunerChanged()
 {
 	SendEvent(TVTest::EVENT_DRIVERCHANGE);
@@ -2947,6 +2960,34 @@ bool CPluginManager::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam,L
 			fNoDefault=true;
 	}
 	return fNoDefault;
+}
+
+
+void CPluginManager::SendFilterGraphInitializeEvent(
+	CMediaViewer *pMediaViewer,IGraphBuilder *pGraphBuilder)
+{
+	SendFilterGraphEvent(TVTest::EVENT_FILTERGRAPH_INITIALIZE,pMediaViewer,pGraphBuilder);
+}
+
+
+void CPluginManager::SendFilterGraphInitializedEvent(
+	CMediaViewer *pMediaViewer,IGraphBuilder *pGraphBuilder)
+{
+	SendFilterGraphEvent(TVTest::EVENT_FILTERGRAPH_INITIALIZED,pMediaViewer,pGraphBuilder);
+}
+
+
+void CPluginManager::SendFilterGraphFinalizeEvent(
+	CMediaViewer *pMediaViewer,IGraphBuilder *pGraphBuilder)
+{
+	SendFilterGraphEvent(TVTest::EVENT_FILTERGRAPH_FINALIZE,pMediaViewer,pGraphBuilder);
+}
+
+
+void CPluginManager::SendFilterGraphFinalizedEvent(
+	CMediaViewer *pMediaViewer,IGraphBuilder *pGraphBuilder)
+{
+	SendFilterGraphEvent(TVTest::EVENT_FILTERGRAPH_FINALIZED,pMediaViewer,pGraphBuilder);
 }
 
 

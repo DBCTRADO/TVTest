@@ -493,6 +493,10 @@ private:
 		void OnEventChanged(CTsAnalyzer *pTsAnalyzer,WORD EventID) override;
 		void OnEventUpdated(CTsAnalyzer *pTsAnalyzer) override;
 		void OnTotUpdated(CTsAnalyzer *pTsAnalyzer) override;
+		void OnFilterGraphInitialize(CMediaViewer *pMediaViewer,IGraphBuilder *pGraphBuilder) override;
+		void OnFilterGraphInitialized(CMediaViewer *pMediaViewer,IGraphBuilder *pGraphBuilder) override;
+		void OnFilterGraphFinalize(CMediaViewer *pMediaViewer,IGraphBuilder *pGraphBuilder) override;
+		void OnFilterGraphFinalized(CMediaViewer *pMediaViewer,IGraphBuilder *pGraphBuilder) override;
 	// CDtvEngineEventHandler
 		void OnServiceUpdated(CTsAnalyzer *pTsAnalyzer,bool fListUpdated,bool fStreamChanged);
 	};

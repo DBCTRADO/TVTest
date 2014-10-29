@@ -300,6 +300,9 @@ bool CMediaViewer::OpenViewer(
 		if (FAILED(hr)) {
 			throw CBonException(hr,TEXT("フィルタグラフマネージャを作成できません。"));
 		}
+
+		SendDecoderEvent(EID_FILTER_GRAPH_INITIALIZE, m_pFilterGraph);
+
 #ifdef _DEBUG
 		AddToRot(m_pFilterGraph, &m_dwRegister);
 #endif
@@ -767,6 +770,8 @@ bool CMediaViewer::OpenViewer(
 	SAFE_RELEASE(pOutputVideo);
 	SAFE_RELEASE(pOutputAudio);
 
+	SendDecoderEvent(EID_FILTER_GRAPH_INITIALIZED, m_pFilterGraph);
+
 	ClearError();
 
 	TRACE(TEXT("フィルタグラフ構築成功\n"));
@@ -787,6 +792,8 @@ void CMediaViewer::CloseViewer()
 		Trace(TEXT("フィルタグラフを停止しています..."));
 		m_pFilterGraph->Abort();
 		Stop();
+
+		SendDecoderEvent(EID_FILTER_GRAPH_FINALIZE, m_pFilterGraph);
 	}
 
 	Trace(TEXT("COMインスタンスを解放しています..."));
@@ -835,6 +842,7 @@ void CMediaViewer::CloseViewer()
 
 	if (m_pFilterGraph) {
 		Trace(TEXT("フィルタグラフを解放しています..."));
+		SendDecoderEvent(EID_FILTER_GRAPH_FINALIZED, m_pFilterGraph);
 #ifdef _DEBUG
 		TRACE(TEXT("FilterGraph RefCount = %d\n"),DirectShowUtil::GetRefCount(m_pFilterGraph));
 #endif

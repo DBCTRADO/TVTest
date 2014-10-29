@@ -1513,6 +1513,30 @@ void CAppMain::CDtvEngineEventHandler::OnTotUpdated(CTsAnalyzer *pTsAnalyzer)
 	m_App.CoreEngine.SetAsyncStatusUpdatedFlag(CCoreEngine::STATUS_TOT);
 }
 
+void CAppMain::CDtvEngineEventHandler::OnFilterGraphInitialize(
+	CMediaViewer *pMediaViewer,IGraphBuilder *pGraphBuilder)
+{
+	m_App.PluginManager.SendFilterGraphInitializeEvent(pMediaViewer,pGraphBuilder);
+}
+
+void CAppMain::CDtvEngineEventHandler::OnFilterGraphInitialized(
+	CMediaViewer *pMediaViewer,IGraphBuilder *pGraphBuilder)
+{
+	m_App.PluginManager.SendFilterGraphInitializedEvent(pMediaViewer,pGraphBuilder);
+}
+
+void CAppMain::CDtvEngineEventHandler::OnFilterGraphFinalize(
+	CMediaViewer *pMediaViewer,IGraphBuilder *pGraphBuilder)
+{
+	m_App.PluginManager.SendFilterGraphFinalizeEvent(pMediaViewer,pGraphBuilder);
+}
+
+void CAppMain::CDtvEngineEventHandler::OnFilterGraphFinalized(
+	CMediaViewer *pMediaViewer,IGraphBuilder *pGraphBuilder)
+{
+	m_App.PluginManager.SendFilterGraphFinalizedEvent(pMediaViewer,pGraphBuilder);
+}
+
 
 CAppMain::CStreamInfoEventHandler::CStreamInfoEventHandler(CAppMain &App)
 	: m_App(App)

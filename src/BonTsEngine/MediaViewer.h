@@ -25,7 +25,11 @@ class CMediaViewer : public CMediaDecoder
 {
 public:
 	enum EVENTID {
-		EID_VIDEO_SIZE_CHANGED	// 映像のサイズが変わった
+		EID_VIDEO_SIZE_CHANGED,			// 映像のサイズが変わった
+		EID_FILTER_GRAPH_INITIALIZE,	// フィルタグラフの初期化
+		EID_FILTER_GRAPH_INITIALIZED,	// フィルタグラフが初期化された
+		EID_FILTER_GRAPH_FINALIZE,		// フィルタグラフの終了処理
+		EID_FILTER_GRAPH_FINALIZED		// フィルタグラフが終了処理された
 	};
 	enum {
 		PID_INVALID=0xFFFF
