@@ -458,7 +458,7 @@ void CStatusOptions::SetListHExtent(HWND hDlg)
 	}
 
 	ListBox_SetHorizontalExtent(hwndList,
-		m_ItemMargin.Horz()+m_CheckSize.Width+
+		m_ItemMargin.Horz()+m_CheckSize.Width+m_TextWidth+
 		m_ItemMargin.Horz()+MaxWidth+m_pStatusView->GetItemPadding().Horz());
 }
 
