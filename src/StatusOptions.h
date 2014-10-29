@@ -20,6 +20,7 @@ public:
 	bool Create(HWND hwndOwner) override;
 // CStatusOptions
 	bool ApplyOptions();
+	const LOGFONT &GetFont() const { return m_lfItemFont; }
 	bool GetShowTOTTime() const { return m_fShowTOTTime; }
 	void SetShowTOTTime(bool fShow) { m_fShowTOTTime=fShow; }
 	bool IsPopupProgramInfoEnabled() const { return m_fEnablePopupProgramInfo; }

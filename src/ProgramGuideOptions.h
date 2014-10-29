@@ -29,6 +29,7 @@ public:
 	bool GetTimeRange(SYSTEMTIME *pstFirst,SYSTEMTIME *pstLast);
 	bool GetOnScreen() const { return m_fOnScreen; }
 	bool ScrollToCurChannel() const { return m_fScrollToCurChannel; }
+	const LOGFONT &GetFont() const { return m_Font; }
 	UINT GetVisibleEventIcons() const { return m_VisibleEventIcons; }
 	LPCTSTR GetProgramLDoubleClickCommand() const { return m_ProgramLDoubleClickCommand.Get(); }
 	int ParseCommand(LPCTSTR pszCommand) const;

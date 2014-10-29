@@ -90,6 +90,11 @@
 	  ・EVENT_FILTERGRAPH_INITIALIZED
 	  ・EVENT_FILTERGRAPH_FINALIZE
 	  ・EVENT_FILTERGRAPH_FINALIZED
+	・MESSAGE_GETSETTING で取得できる設定に以下を追加した
+	  ・OSDFont
+	  ・PanelFont
+	  ・ProgramGuideFont
+	  ・StatusBarFont
 
 	ver.0.0.13 (TVTest ver.0.7.16 or later)
 	・以下のメッセージを追加した
@@ -1289,9 +1294,16 @@ enum SettingType {
 	設定名の大文字と小文字は区別されません。
 
 	設定名                内容                                型
+
 	DriverDirectory       BonDriver の検索ディレクトリ        文字列
 	IniFilePath           Ini ファイルのパス                  文字列
 	RecordFolder          録画時の保存先フォルダ              文字列
+
+	* ver.0.0.14 以降
+	OSDFont               OSD のフォント                      データ(LOGFONT)
+	PanelFont             パネルのフォント                    データ(LOGFONT)
+	ProgramGuideFont      番組表のフォント                    データ(LOGFONT)
+	StatusBarFont         ステータスバーのフォント            データ(LOGFONT)
 */
 
 // 設定を取得する
@@ -1350,6 +1362,17 @@ inline DWORD MsgGetSetting(PluginParam *pParam,LPCWSTR pszName,LPWSTR pszString,
 	if (!(*pParam->Callback)(pParam,MESSAGE_GETSETTING,(LPARAM)&Info,0))
 		return 0;
 	return Info.ValueSize/sizeof(WCHAR);
+}
+
+// フォントの設定を取得する
+inline bool MsgGetSetting(PluginParam *pParam,LPCWSTR pszName,LOGFONT *pFont)
+{
+	SettingInfo Info;
+	Info.pszName=pszName;
+	Info.Type=SETTING_TYPE_DATA;
+	Info.ValueSize=sizeof(LOGFONT);
+	Info.Value.pData=pFont;
+	return (*pParam->Callback)(pParam,MESSAGE_GETSETTING,(LPARAM)&Info,0)!=FALSE;
 }
 
 // BonDriverのフルパス名を取得する

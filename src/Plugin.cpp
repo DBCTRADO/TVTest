@@ -2211,6 +2211,20 @@ static bool GetSettingString(TVTest::SettingInfo *pSetting,LPCWSTR pszString)
 	return true;
 }
 
+static bool GetSettingFont(TVTest::SettingInfo *pSetting,const LOGFONT *pFont)
+{
+	if (pSetting->Type!=TVTest::SETTING_TYPE_DATA)
+		return false;
+	if (pSetting->Value.pData!=NULL) {
+		if (pSetting->ValueSize!=sizeof(LOGFONT))
+			return false;
+		::CopyMemory(pSetting->Value.pData,pFont,sizeof(LOGFONT));
+	} else {
+		pSetting->ValueSize=sizeof(LOGFONT);
+	}
+	return true;
+}
+
 bool CPlugin::OnGetSetting(TVTest::SettingInfo *pSetting) const
 {
 	if (pSetting==NULL || pSetting->pszName==NULL)
@@ -2226,6 +2240,14 @@ bool CPlugin::OnGetSetting(TVTest::SettingInfo *pSetting) const
 		return GetSettingString(pSetting,App.GetIniFileName());
 	} else if (::lstrcmpiW(pSetting->pszName,L"RecordFolder")==0) {
 		return GetSettingString(pSetting,App.Core.GetDefaultRecordFolder());
+	} else if (::lstrcmpiW(pSetting->pszName,L"OSDFont")==0) {
+		return GetSettingFont(pSetting,App.OSDOptions.GetOSDFont());
+	} else if (::lstrcmpiW(pSetting->pszName,L"PanelFont")==0) {
+		return GetSettingFont(pSetting,App.PanelOptions.GetFont());
+	} else if (::lstrcmpiW(pSetting->pszName,L"ProgramGuideFont")==0) {
+		return GetSettingFont(pSetting,&App.ProgramGuideOptions.GetFont());
+	} else if (::lstrcmpiW(pSetting->pszName,L"StatusBarFont")==0) {
+		return GetSettingFont(pSetting,&App.StatusOptions.GetFont());
 	}
 
 	return false;
