@@ -1838,6 +1838,40 @@ LRESULT CPlugin::OnCallback(TVTest::PluginParam *pParam,UINT Message,LPARAM lPar
 		}
 		return TRUE;
 
+	case TVTest::MESSAGE_GETEPGCAPTURESTATUS:
+		{
+			TVTest::EpgCaptureStatusInfo *pInfo=
+				reinterpret_cast<TVTest::EpgCaptureStatusInfo*>(lParam1);
+
+			if (pInfo==NULL
+					|| pInfo->Size!=sizeof(TVTest::EpgCaptureStatusInfo)
+					|| pInfo->Flags!=0)
+				return FALSE;
+
+			CEventManager &EventManager=GetAppClass().CoreEngine.m_DtvEngine.m_EventManager;
+			DWORD Status=0;
+
+			if ((pInfo->Status & TVTest::EPG_CAPTURE_STATUS_SCHEDULEBASICCOMPLETED)!=0) {
+				if (EventManager.IsScheduleComplete(pInfo->NetworkID,pInfo->TransportStreamID,pInfo->ServiceID,false))
+					Status|=TVTest::EPG_CAPTURE_STATUS_SCHEDULEBASICCOMPLETED;
+			}
+			if ((pInfo->Status & TVTest::EPG_CAPTURE_STATUS_SCHEDULEEXTENDEDCOMPLETED)!=0) {
+				if (EventManager.IsScheduleComplete(pInfo->NetworkID,pInfo->TransportStreamID,pInfo->ServiceID,true))
+					Status|=TVTest::EPG_CAPTURE_STATUS_SCHEDULEEXTENDEDCOMPLETED;
+			}
+			if ((pInfo->Status & TVTest::EPG_CAPTURE_STATUS_HASSCHEDULEBASIC)!=0) {
+				if (EventManager.HasSchedule(pInfo->NetworkID,pInfo->TransportStreamID,pInfo->ServiceID,false))
+					Status|=TVTest::EPG_CAPTURE_STATUS_HASSCHEDULEBASIC;
+			}
+			if ((pInfo->Status & TVTest::EPG_CAPTURE_STATUS_HASSCHEDULEEXTENDED)!=0) {
+				if (EventManager.HasSchedule(pInfo->NetworkID,pInfo->TransportStreamID,pInfo->ServiceID,true))
+					Status|=TVTest::EPG_CAPTURE_STATUS_HASSCHEDULEEXTENDED;
+			}
+
+			pInfo->Status=Status;
+		}
+		return TRUE;
+
 #ifdef _DEBUG
 	default:
 		TRACE(TEXT("CPluign::OnCallback() : Unknown message %u\n"),Message);

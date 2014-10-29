@@ -90,6 +90,7 @@
 	  ・MESSAGE_THEMEDRAWBACKGROUND
 	  ・MESSAGE_THEMEDRAWTEXT
 	  ・MESSAGE_THEMEDRAWICON
+	  ・MESSAGE_GETEPGCAPTURESTATUS
 	・以下のイベントを追加した
 	  ・EVENT_FILTERGRAPH_INITIALIZE
 	  ・EVENT_FILTERGRAPH_INITIALIZED
@@ -385,6 +386,7 @@ enum {
 	MESSAGE_THEMEDRAWBACKGROUND,		// テーマの背景を描画
 	MESSAGE_THEMEDRAWTEXT,				// テーマの文字列を描画
 	MESSAGE_THEMEDRAWICON,				// テーマのアイコンを描画
+	MESSAGE_GETEPGCAPTURESTATUS,		// EPG取得状況を取得
 #endif
 	MESSAGE_TRAILER
 };
@@ -2061,6 +2063,48 @@ inline bool MsgThemeDrawIcon(PluginParam *pParam,LPCWSTR pszStyle,
 	return MsgThemeDrawIcon(pParam,&Info);
 }
 
+// EPG 取得状況の情報
+struct EpgCaptureStatusInfo {
+	DWORD Size;				// 構造体のサイズ
+	WORD Flags;				// 各種フラグ(現在は常に0)
+	WORD NetworkID;			// ネットワークID
+	WORD TransportStreamID;	// ストリームID
+	WORD ServiceID;			// サービスID
+	DWORD Status;			// ステータス(EPG_CAPTURE_STATUS_*)
+};
+
+// EPG 取得状況のステータス
+enum {
+	EPG_CAPTURE_STATUS_SCHEDULEBASICCOMPLETED		=0x00000001U,	// schedule basic が揃っている
+	EPG_CAPTURE_STATUS_SCHEDULEEXTENDEDCOMPLETED	=0x00000002U,	// schedule extended が揃っている
+	EPG_CAPTURE_STATUS_HASSCHEDULEBASIC				=0x00000004U,	// schedule basic が存在する
+	EPG_CAPTURE_STATUS_HASSCHEDULEEXTENDED			=0x00000008U	// schedule extended が存在する
+};
+
+// EPG 取得状況を取得する
+/*
+	// 例
+	EpgCaptureStatusInfo Info;
+	Info.Size = sizeof(Info);
+	Info.Flags = 0;
+	// 取得したいサービスを指定する
+	Info.NetworkID = NetworkID;
+	Info.TransportStreamID = TransportStreamID;
+	Info.ServiceID = ServiceID;
+	// Info.Status に取得したいステータスを指定する
+	Info.Status = EPG_CAPTURE_STATUS_SCHEDULEBASICCOMPLETED |
+	              EPG_CAPTURE_STATUS_SCHEDULEEXTENDEDCOMPLETED;
+	if (MsgGetEpgCaptureStatus(pParam, &Info)) {
+		if (Info.Status & EPG_CAPTURE_STATUS_SCHEDULEBASICCOMPLETED)
+			std::printf("schedule basic 揃った\n");
+		if (Info.Status & EPG_CAPTURE_STATUS_SCHEDULEEXTENDEDCOMPLETED)
+			std::printf("schedule extended 揃った\n");
+	}
+*/
+inline bool MsgGetEpgCaptureStatus(PluginParam *pParam,EpgCaptureStatusInfo *pInfo) {
+	return (*pParam->Callback)(pParam,MESSAGE_GETEPGCAPTURESTATUS,(LPARAM)pInfo,0)!=FALSE;
+}
+
 #endif	// TVTEST_PLUGIN_VERSION>=TVTEST_PLUGIN_VERSION_(0,0,14)
 
 
@@ -2453,6 +2497,9 @@ public:
 			HBITMAP hbm,int SrcX,int SrcY,int SrcWidth,int SrcHeight,BYTE Opacity=255) {
 		return MsgThemeDrawIcon(m_pParam,pszStyle,hdc,DstX,DstY,DstWidth,DstHeight,
 								hbm,SrcX,SrcY,SrcWidth,SrcHeight,Opacity);
+	}
+	bool GetEpgCaptureStatus(PluginParam *pParam,EpgCaptureStatusInfo *pInfo) {
+		return MsgGetEpgCaptureStatus(m_pParam,pInfo);
 	}
 #endif
 };
