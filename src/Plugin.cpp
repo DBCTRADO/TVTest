@@ -817,10 +817,18 @@ bool CPlugin::Settings(HWND hwndOwner)
 }
 
 
-inline CPlugin *ThisFromParam(TVTest::PluginParam *pParam)
+LRESULT CALLBACK CPlugin::Callback(TVTest::PluginParam *pParam,UINT Message,LPARAM lParam1,LPARAM lParam2)
 {
-	return static_cast<CPlugin*>(pParam->pInternalData);
+	if (pParam==NULL)
+		return 0;
+
+	CPlugin *pPlugin=static_cast<CPlugin*>(pParam->pInternalData);
+	if (pPlugin==NULL)
+		return 0;
+
+	return pPlugin->OnCallback(pParam,Message,lParam1,lParam2);
 }
+
 
 LRESULT CPlugin::SendPluginMessage(TVTest::PluginParam *pParam,UINT Message,LPARAM lParam1,LPARAM lParam2,
 								   LRESULT FailedResult)
@@ -828,7 +836,7 @@ LRESULT CPlugin::SendPluginMessage(TVTest::PluginParam *pParam,UINT Message,LPAR
 	PluginMessageParam MessageParam;
 	DWORD_PTR Result;
 
-	MessageParam.pPlugin=ThisFromParam(pParam);
+	MessageParam.pPlugin=this;
 	if (MessageParam.pPlugin==NULL)
 		return FailedResult;
 	MessageParam.Message=Message;
@@ -844,16 +852,14 @@ LRESULT CPlugin::SendPluginMessage(TVTest::PluginParam *pParam,UINT Message,LPAR
 }
 
 
-LRESULT CALLBACK CPlugin::Callback(TVTest::PluginParam *pParam,UINT Message,LPARAM lParam1,LPARAM lParam2)
+LRESULT CPlugin::OnCallback(TVTest::PluginParam *pParam,UINT Message,LPARAM lParam1,LPARAM lParam2)
 {
 	switch (Message) {
 	case TVTest::MESSAGE_GETVERSION:
 		return TVTest::MakeVersion(VERSION_MAJOR,VERSION_MINOR,VERSION_BUILD);
 
 	case TVTest::MESSAGE_QUERYMESSAGE:
-		if (lParam1>=0 && lParam1<TVTest::MESSAGE_TRAILER)
-			return TRUE;
-		return FALSE;
+		return lParam1>=0 && lParam1<TVTest::MESSAGE_TRAILER;
 
 	case TVTest::MESSAGE_MEMORYALLOC:
 		{
@@ -869,14 +875,8 @@ LRESULT CALLBACK CPlugin::Callback(TVTest::PluginParam *pParam,UINT Message,LPAR
 		return (LRESULT)(void*)0;
 
 	case TVTest::MESSAGE_SETEVENTCALLBACK:
-		{
-			CPlugin *pThis=ThisFromParam(pParam);
-			if (pThis==NULL)
-				return FALSE;
-
-			pThis->m_pEventCallback=reinterpret_cast<TVTest::EventCallbackFunc>(lParam1);
-			pThis->m_pEventCallbackClientData=reinterpret_cast<void*>(lParam2);
-		}
+		m_pEventCallback=reinterpret_cast<TVTest::EventCallbackFunc>(lParam1);
+		m_pEventCallbackClientData=reinterpret_cast<void*>(lParam2);
 		return TRUE;
 
 	case TVTest::MESSAGE_GETCURRENTCHANNELINFO:
@@ -1152,10 +1152,6 @@ LRESULT CALLBACK CPlugin::Callback(TVTest::PluginParam *pParam,UINT Message,LPAR
 
 	case TVTest::MESSAGE_SETSTREAMCALLBACK:
 		{
-			CPlugin *pThis=ThisFromParam(pParam);
-			if (pThis==NULL)
-				return FALSE;
-
 			TVTest::StreamCallbackInfo *pInfo=reinterpret_cast<TVTest::StreamCallbackInfo*>(lParam1);
 
 			if (pInfo==NULL
@@ -1163,28 +1159,28 @@ LRESULT CALLBACK CPlugin::Callback(TVTest::PluginParam *pParam,UINT Message,LPAR
 					|| pInfo->Callback==NULL)
 				return FALSE;
 
-			CBlockLock Lock(&pThis->m_GrabberLock);
+			CBlockLock Lock(&m_GrabberLock);
 
 			if ((pInfo->Flags&TVTest::STREAM_CALLBACK_REMOVE)==0) {
-				if (pThis->m_StreamCallbackList.empty()) {
-					GetAppClass().CoreEngine.m_DtvEngine.m_MediaGrabber.AddGrabber(pThis);
+				if (m_StreamCallbackList.empty()) {
+					GetAppClass().CoreEngine.m_DtvEngine.m_MediaGrabber.AddGrabber(this);
 				} else {
-					for (auto itr=pThis->m_StreamCallbackList.begin();
-							itr!=pThis->m_StreamCallbackList.end();++itr) {
+					for (auto itr=m_StreamCallbackList.begin();
+							itr!=m_StreamCallbackList.end();++itr) {
 						if (itr->Callback==pInfo->Callback) {
 							itr->pClientData=pInfo->pClientData;
 							return TRUE;
 						}
 					}
 				}
-				pThis->m_StreamCallbackList.push_back(*pInfo);
+				m_StreamCallbackList.push_back(*pInfo);
 			} else {
-				for (auto itr=pThis->m_StreamCallbackList.begin();
-						itr!=pThis->m_StreamCallbackList.end();++itr) {
+				for (auto itr=m_StreamCallbackList.begin();
+						itr!=m_StreamCallbackList.end();++itr) {
 					if (itr->Callback==pInfo->Callback) {
-						pThis->m_StreamCallbackList.erase(itr);
-						if (pThis->m_StreamCallbackList.empty())
-							GetAppClass().CoreEngine.m_DtvEngine.m_MediaGrabber.RemoveGrabber(pThis);
+						m_StreamCallbackList.erase(itr);
+						if (m_StreamCallbackList.empty())
+							GetAppClass().CoreEngine.m_DtvEngine.m_MediaGrabber.RemoveGrabber(this);
 						return TRUE;
 					}
 				}
@@ -1194,13 +1190,7 @@ LRESULT CALLBACK CPlugin::Callback(TVTest::PluginParam *pParam,UINT Message,LPAR
 		return TRUE;
 
 	case TVTest::MESSAGE_ENABLEPLUGIN:
-		{
-			CPlugin *pThis=ThisFromParam(pParam);
-			if (pThis==NULL)
-				return FALSE;
-
-			return pThis->Enable(lParam1!=0);
-		}
+		return Enable(lParam1!=0);
 
 	case TVTest::MESSAGE_GETCOLOR:
 		{
@@ -1288,27 +1278,17 @@ LRESULT CALLBACK CPlugin::Callback(TVTest::PluginParam *pParam,UINT Message,LPAR
 		return SendPluginMessage(pParam,Message,lParam1,lParam2);
 
 	case TVTest::MESSAGE_ISPLUGINENABLED:
-		{
-			CPlugin *pThis=ThisFromParam(pParam);
-			if (pThis==NULL)
-				return FALSE;
-
-			return pThis->IsEnabled();
-		}
+		return IsEnabled();
 
 	case TVTest::MESSAGE_REGISTERCOMMAND:
 		{
-			CPlugin *pThis=ThisFromParam(pParam);
-			if (pThis==NULL)
-				return FALSE;
-
 			const TVTest::CommandInfo *pCommandList=reinterpret_cast<TVTest::CommandInfo*>(lParam1);
 			int NumCommands=(int)lParam2;
 
 			if (pCommandList==NULL || NumCommands<=0)
 				return FALSE;
 			for (int i=0;i<NumCommands;i++) {
-				pThis->m_CommandList.push_back(CPluginCommandInfo(pCommandList[i]));
+				m_CommandList.push_back(CPluginCommandInfo(pCommandList[i]));
 			}
 		}
 		return TRUE;
@@ -1319,11 +1299,7 @@ LRESULT CALLBACK CPlugin::Callback(TVTest::PluginParam *pParam,UINT Message,LPAR
 			if (pszText==NULL)
 				return FALSE;
 
-			CPlugin *pThis=ThisFromParam(pParam);
-			if (pThis==NULL)
-				return FALSE;
-
-			LPCTSTR pszFileName=::PathFindFileName(pThis->m_FileName.Get());
+			LPCTSTR pszFileName=::PathFindFileName(m_FileName.Get());
 			GetAppClass().AddLog(TEXT("%s : %s"),pszFileName,pszText);
 		}
 		return TRUE;
@@ -1334,10 +1310,6 @@ LRESULT CALLBACK CPlugin::Callback(TVTest::PluginParam *pParam,UINT Message,LPAR
 
 	case TVTest::MESSAGE_SETAUDIOCALLBACK:
 		{
-			CPlugin *pThis=ThisFromParam(pParam);
-			if (pThis==NULL)
-				return FALSE;
-
 			TVTest::AudioCallbackFunc pCallback=reinterpret_cast<TVTest::AudioCallbackFunc>(lParam1);
 
 			m_AudioStreamLock.Lock();
@@ -1347,19 +1319,19 @@ LRESULT CALLBACK CPlugin::Callback(TVTest::PluginParam *pParam,UINT Message,LPAR
 				} else {
 					for (std::vector<CAudioStreamCallbackInfo>::iterator i=m_AudioStreamCallbackList.begin();
 							i!=m_AudioStreamCallbackList.end();i++) {
-						if (i->m_pPlugin==pThis) {
+						if (i->m_pPlugin==this) {
 							m_AudioStreamCallbackList.erase(i);
 							break;
 						}
 					}
 				}
-				m_AudioStreamCallbackList.push_back(CAudioStreamCallbackInfo(pThis,pCallback,reinterpret_cast<void*>(lParam2)));
+				m_AudioStreamCallbackList.push_back(CAudioStreamCallbackInfo(this,pCallback,reinterpret_cast<void*>(lParam2)));
 				m_AudioStreamLock.Unlock();
 			} else {
 				bool fFound=false;
 				for (std::vector<CAudioStreamCallbackInfo>::iterator i=m_AudioStreamCallbackList.begin();
 						i!=m_AudioStreamCallbackList.end();i++) {
-					if (i->m_pPlugin==pThis) {
+					if (i->m_pPlugin==this) {
 						m_AudioStreamCallbackList.erase(i);
 						fFound=true;
 						break;
@@ -1441,44 +1413,7 @@ LRESULT CALLBACK CPlugin::Callback(TVTest::PluginParam *pParam,UINT Message,LPAR
 		return TRUE;
 
 	case TVTest::MESSAGE_GETSETTING:
-		{
-			TVTest::SettingInfo *pSetting=reinterpret_cast<TVTest::SettingInfo*>(lParam1);
-
-			if (pSetting==NULL || pSetting->pszName==NULL)
-				return FALSE;
-			if (::lstrcmpi(pSetting->pszName,TEXT("DriverDirectory"))==0) {
-				if (pSetting->Type!=TVTest::SETTING_TYPE_STRING)
-					return FALSE;
-				TCHAR szDirectory[MAX_PATH];
-				GetAppClass().Core.GetDriverDirectory(szDirectory,lengthof(szDirectory));
-				if (pSetting->Value.pszString!=NULL)
-					::lstrcpyn(pSetting->Value.pszString,szDirectory,pSetting->ValueSize);
-				else
-					pSetting->ValueSize=(::lstrlen(szDirectory)+1)*sizeof(WCHAR);
-			} else if (::lstrcmpi(pSetting->pszName,TEXT("IniFilePath"))==0) {
-				if (pSetting->Type!=TVTest::SETTING_TYPE_STRING)
-					return FALSE;
-				LPCTSTR pszPath=GetAppClass().GetIniFileName();
-				if (pSetting->Value.pszString!=NULL)
-					::lstrcpyn(pSetting->Value.pszString,pszPath,pSetting->ValueSize);
-				else
-					pSetting->ValueSize=(::lstrlen(pszPath)+1)*sizeof(WCHAR);
-			} else if (::lstrcmpi(pSetting->pszName,TEXT("RecordFolder"))==0) {
-				if (pSetting->Type!=TVTest::SETTING_TYPE_STRING)
-					return FALSE;
-				LPCTSTR pszFolder=GetAppClass().Core.GetDefaultRecordFolder();
-				if (pSetting->Value.pszString!=NULL)
-					::lstrcpyn(pSetting->Value.pszString,pszFolder,pSetting->ValueSize);
-				else
-					pSetting->ValueSize=(::lstrlen(pszFolder)+1)*sizeof(WCHAR);
-			} else {
-				return FALSE;
-			}
-			if (pSetting->Type==TVTest::SETTING_TYPE_STRING
-					&& pSetting->Value.pszString!=NULL)
-				pSetting->ValueSize=(::lstrlen(pSetting->Value.pszString)+1)*sizeof(WCHAR);
-		}
-		return TRUE;
+		return OnGetSetting(reinterpret_cast<TVTest::SettingInfo*>(lParam1));
 
 	case TVTest::MESSAGE_GETDRIVERFULLPATHNAME:
 		return SendPluginMessage(pParam,Message,lParam1,lParam2);
@@ -1505,13 +1440,11 @@ LRESULT CALLBACK CPlugin::Callback(TVTest::PluginParam *pParam,UINT Message,LPAR
 		return SendPluginMessage(pParam,Message,lParam1,lParam2);
 
 	case TVTest::MESSAGE_SILENTMODE:
-		{
-			if (lParam1==TVTest::SILENTMODE_GET) {
-				return GetAppClass().Core.IsSilent();
-			} else if (lParam1==TVTest::SILENTMODE_SET) {
-				GetAppClass().Core.SetSilent(lParam2!=0);
-				return TRUE;
-			}
+		if (lParam1==TVTest::SILENTMODE_GET) {
+			return GetAppClass().Core.IsSilent();
+		} else if (lParam1==TVTest::SILENTMODE_SET) {
+			GetAppClass().Core.SetSilent(lParam2!=0);
+			return TRUE;
 		}
 		return FALSE;
 
@@ -1520,10 +1453,6 @@ LRESULT CALLBACK CPlugin::Callback(TVTest::PluginParam *pParam,UINT Message,LPAR
 
 	case TVTest::MESSAGE_REGISTERCONTROLLER:
 		{
-			CPlugin *pThis=ThisFromParam(pParam);
-			if (pThis==NULL)
-				return FALSE;
-
 			const TVTest::ControllerInfo *pInfo=reinterpret_cast<const TVTest::ControllerInfo*>(lParam1);
 
 			if (pInfo==NULL
@@ -1533,14 +1462,14 @@ LRESULT CALLBACK CPlugin::Callback(TVTest::PluginParam *pParam,UINT Message,LPAR
 					|| pInfo->NumButtons<1
 					|| pInfo->pButtonList==NULL)
 				return FALSE;
-			CControllerPlugin *pController=new CControllerPlugin(pThis,pInfo);
+			CControllerPlugin *pController=new CControllerPlugin(this,pInfo);
 			CControllerManager *pControllerManager=&GetAppClass().ControllerManager;
 			if (!pControllerManager->AddController(pController)) {
 				delete pController;
 				return FALSE;
 			}
-			pThis->m_ControllerList.push_back(CDynamicString(pInfo->pszName));
-			if (pThis->m_fEnabled)
+			m_ControllerList.push_back(CDynamicString(pInfo->pszName));
+			if (m_fEnabled)
 				pControllerManager->LoadControllerSettings(pInfo->pszName);
 		}
 		return TRUE;
@@ -1757,20 +1686,11 @@ LRESULT CALLBACK CPlugin::Callback(TVTest::PluginParam *pParam,UINT Message,LPAR
 		return TRUE;
 
 	case TVTest::MESSAGE_ENABLEPROGRAMGUIDEEVENT:
-		{
-			CPlugin *pThis=ThisFromParam(pParam);
-			if (pThis==NULL)
-				return FALSE;
-
-			pThis->m_ProgramGuideEventFlags=(UINT)lParam1;
-		}
+		m_ProgramGuideEventFlags=(UINT)lParam1;
 		return TRUE;
 
 	case TVTest::MESSAGE_REGISTERPROGRAMGUIDECOMMAND:
 		{
-			CPlugin *pThis=ThisFromParam(pParam);
-			if (pThis==NULL)
-				return FALSE;
 			const TVTest::ProgramGuideCommandInfo *pCommandList=
 				reinterpret_cast<TVTest::ProgramGuideCommandInfo*>(lParam1);
 			const int NumCommands=(int)lParam2;
@@ -1778,17 +1698,18 @@ LRESULT CALLBACK CPlugin::Callback(TVTest::PluginParam *pParam,UINT Message,LPAR
 			if (pCommandList==NULL || NumCommands<1)
 				return FALSE;
 			for (int i=0;i<NumCommands;i++) {
-				pThis->m_ProgramGuideCommandList.push_back(CProgramGuideCommand(pCommandList[i]));
+				m_ProgramGuideCommandList.push_back(CProgramGuideCommand(pCommandList[i]));
 			}
 		}
 		return TRUE;
 
 #ifdef _DEBUG
 	default:
-		TRACE(TEXT("CPluign::Callback() : Unknown message %u\n"),Message);
+		TRACE(TEXT("CPluign::OnCallback() : Unknown message %u\n"),Message);
 		break;
 #endif
 	}
+
 	return 0;
 }
 
@@ -2272,6 +2193,42 @@ void CALLBACK CPlugin::AudioStreamCallback(short *pData,DWORD Samples,int Channe
 
 		(Info.m_pCallback)(pData,Samples,Channels,Info.m_pClientData);
 	}
+}
+
+
+static bool GetSettingString(TVTest::SettingInfo *pSetting,LPCWSTR pszString)
+{
+	if (pSetting->Type!=TVTest::SETTING_TYPE_STRING)
+		return false;
+	if (pSetting->Value.pszString!=NULL) {
+		if (pSetting->ValueSize==0)
+			return false;
+		::lstrcpynW(pSetting->Value.pszString,pszString,pSetting->ValueSize);
+		pSetting->ValueSize=(::lstrlenW(pSetting->Value.pszString)+1)*sizeof(WCHAR);
+	} else {
+		pSetting->ValueSize=(::lstrlenW(pszString)+1)*sizeof(WCHAR);
+	}
+	return true;
+}
+
+bool CPlugin::OnGetSetting(TVTest::SettingInfo *pSetting) const
+{
+	if (pSetting==NULL || pSetting->pszName==NULL)
+		return false;
+
+	CAppMain &App=GetAppClass();
+
+	if (::lstrcmpiW(pSetting->pszName,L"DriverDirectory")==0) {
+		TCHAR szDirectory[MAX_PATH];
+		App.Core.GetDriverDirectory(szDirectory,lengthof(szDirectory));
+		return GetSettingString(pSetting,szDirectory);
+	} else if (::lstrcmpiW(pSetting->pszName,L"IniFilePath")==0) {
+		return GetSettingString(pSetting,App.GetIniFileName());
+	} else if (::lstrcmpiW(pSetting->pszName,L"RecordFolder")==0) {
+		return GetSettingString(pSetting,App.Core.GetDefaultRecordFolder());
+	}
+
+	return false;
 }
 
 

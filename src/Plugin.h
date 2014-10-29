@@ -78,11 +78,15 @@ class CPlugin
 
 	static void CALLBACK AudioStreamCallback(short *pData,DWORD Samples,int Channels,void *pParam);
 	static LRESULT CALLBACK Callback(TVTest::PluginParam *pParam,UINT Message,LPARAM lParam1,LPARAM lParam2);
-	static LRESULT SendPluginMessage(TVTest::PluginParam *pParam,UINT Message,LPARAM lParam1,LPARAM lParam2,
-									 LRESULT FailedResult=0);
 
 // CMediaGrabber::IGrabber
 	bool OnInputMedia(CMediaData *pMediaData) override;
+
+// CPlugin
+	LRESULT SendPluginMessage(TVTest::PluginParam *pParam,UINT Message,LPARAM lParam1,LPARAM lParam2,
+							  LRESULT FailedResult=0);
+	LRESULT OnCallback(TVTest::PluginParam *pParam,UINT Message,LPARAM lParam1,LPARAM lParam2);
+	bool OnGetSetting(TVTest::SettingInfo *pSetting) const;
 
 public:
 	CPlugin();
