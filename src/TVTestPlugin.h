@@ -91,6 +91,8 @@
 	  ・MESSAGE_THEMEDRAWTEXT
 	  ・MESSAGE_THEMEDRAWICON
 	  ・MESSAGE_GETEPGCAPTURESTATUS
+	  ・MESSAGE_GETAPPCOMMANDINFO
+	  ・MESSAGE_GETAPPCOMMANDCOUNT
 	・以下のイベントを追加した
 	  ・EVENT_FILTERGRAPH_INITIALIZE
 	  ・EVENT_FILTERGRAPH_INITIALIZED
@@ -387,6 +389,8 @@ enum {
 	MESSAGE_THEMEDRAWTEXT,				// テーマの文字列を描画
 	MESSAGE_THEMEDRAWICON,				// テーマのアイコンを描画
 	MESSAGE_GETEPGCAPTURESTATUS,		// EPG取得状況を取得
+	MESSAGE_GETAPPCOMMANDINFO,			// コマンドの情報を取得
+	MESSAGE_GETAPPCOMMANDCOUNT,			// コマンドの数を取得
 #endif
 	MESSAGE_TRAILER
 };
@@ -2105,6 +2109,46 @@ inline bool MsgGetEpgCaptureStatus(PluginParam *pParam,EpgCaptureStatusInfo *pIn
 	return (*pParam->Callback)(pParam,MESSAGE_GETEPGCAPTURESTATUS,(LPARAM)pInfo,0)!=FALSE;
 }
 
+// コマンドの情報
+struct AppCommandInfo {
+	DWORD Size;			// 構造体のサイズ
+	DWORD Index;		// 取得するコマンドのインデックス
+	LPWSTR pszText;		// コマンドの文字列
+	int MaxText;		// コマンドの文字列のバッファ長
+	LPWSTR pszName;		// コマンドの名前
+	int MaxName;		// コマンドの名前のバッファ長
+};
+
+// コマンドの情報を取得する
+// TVTInitialize 内で呼ぶと、プラグインのコマンドなどが取得できませんので注意してください。
+// pszText に NULL を指定すると、必要なバッファ長(終端のNull文字を含む)が MaxText に返ります。
+// pszName に NULL を指定すると、必要なバッファ長(終端のNull文字を含む)が MaxName に返ります。
+/*
+	// 例
+	DWORD Count = MsgGetAppCommandCount(pParam);
+	for (DWORD i = 0; i < Count; i++) {
+		AppCommandInfo Info;
+		WCHAR szText[256],szName[256];
+		Info.Size = sizeof(Info);
+		Info.Index = i;
+		Info.pszText = szText;
+		Info.MaxText = _countof(szText);
+		Info.pszName = szName;
+		Info.MaxName = _countof(szName);
+		if (MsgGetAppCommandInfo(pParam,&Info)) {
+			std::wprintf(L"Command %u %s %s\n", i, szText, szName);
+		}
+	}
+*/
+inline bool MsgGetAppCommandInfo(PluginParam *pParam,AppCommandInfo *pInfo) {
+	return (*pParam->Callback)(pParam,MESSAGE_GETAPPCOMMANDINFO,(LPARAM)pInfo,0)!=FALSE;
+}
+
+// コマンドの数を取得する
+inline DWORD MsgGetAppCommandCount(PluginParam *pParam) {
+	return (DWORD)(*pParam->Callback)(pParam,MESSAGE_GETAPPCOMMANDCOUNT,0,0);
+}
+
 #endif	// TVTEST_PLUGIN_VERSION>=TVTEST_PLUGIN_VERSION_(0,0,14)
 
 
@@ -2500,6 +2544,13 @@ public:
 	}
 	bool GetEpgCaptureStatus(PluginParam *pParam,EpgCaptureStatusInfo *pInfo) {
 		return MsgGetEpgCaptureStatus(m_pParam,pInfo);
+	}
+	bool GetAppCommandInfo(AppCommandInfo *pInfo) {
+		pInfo->Size=sizeof(AppCommandInfo);
+		return MsgGetAppCommandInfo(m_pParam,pInfo);
+	}
+	DWORD GetAppCommandCount() {
+		return MsgGetAppCommandCount(m_pParam);
 	}
 #endif
 };

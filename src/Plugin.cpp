@@ -1872,6 +1872,36 @@ LRESULT CPlugin::OnCallback(TVTest::PluginParam *pParam,UINT Message,LPARAM lPar
 		}
 		return TRUE;
 
+	case TVTest::MESSAGE_GETAPPCOMMANDINFO:
+		{
+			TVTest::AppCommandInfo *pInfo=reinterpret_cast<TVTest::AppCommandInfo*>(lParam1);
+
+			if (pInfo==NULL || pInfo->Size!=sizeof(TVTest::AppCommandInfo))
+				return FALSE;
+
+			const CCommandList &CommandList=GetAppClass().CommandList;
+
+			LPCTSTR pszText=CommandList.GetCommandText(pInfo->Index);
+			if (pszText==NULL)
+				return FALSE;
+			if (pInfo->pszText!=NULL) {
+				::lstrcpynW(pInfo->pszText,pszText,pInfo->MaxText);
+			} else {
+				pInfo->MaxText=::lstrlenW(pszText)+1;
+			}
+			TCHAR szName[CCommandList::MAX_COMMAND_NAME];
+			CommandList.GetCommandName(pInfo->Index,szName,lengthof(szName));
+			if (pInfo->pszName!=NULL) {
+				::lstrcpynW(pInfo->pszName,szName,pInfo->MaxName);
+			} else {
+				pInfo->MaxName=::lstrlenW(szName)+1;
+			}
+		}
+		return TRUE;
+
+	case TVTest::MESSAGE_GETAPPCOMMANDCOUNT:
+		return GetAppClass().CommandList.NumCommands();
+
 #ifdef _DEBUG
 	default:
 		TRACE(TEXT("CPluign::OnCallback() : Unknown message %u\n"),Message);
