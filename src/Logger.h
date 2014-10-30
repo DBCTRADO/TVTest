@@ -11,12 +11,15 @@ class CLogItem
 {
 	FILETIME m_Time;
 	CDynamicString m_Text;
+	DWORD m_SerialNumber;
 
 public:
-	CLogItem(LPCTSTR pszText);
+	CLogItem();
+	CLogItem(LPCTSTR pszText,DWORD SerialNumber);
 	~CLogItem();
 	LPCTSTR GetText() const { return m_Text.Get(); }
 	void GetTime(SYSTEMTIME *pTime) const;
+	DWORD GetSerialNumber() const { return m_SerialNumber; }
 	int Format(char *pszText,int MaxLength) const;
 	int Format(WCHAR *pszText,int MaxLength) const;
 	int FormatTime(char *pszText,int MaxLength) const;
@@ -40,6 +43,9 @@ public:
 	bool AddLog(LPCTSTR pszText, ...);
 	bool AddLogV(LPCTSTR pszText,va_list Args);
 	void Clear();
+	std::size_t GetLogCount() const;
+	bool GetLog(std::size_t Index,CLogItem *pItem) const;
+	bool GetLogBySerialNumber(DWORD SerialNumber,CLogItem *pItem) const;
 	bool SetOutputToFile(bool fOutput);
 	bool GetOutputToFile() const { return m_fOutputToFile; }
 	bool SaveToFile(LPCTSTR pszFileName,bool fAppend);
@@ -54,8 +60,9 @@ private:
 	void OnTrace(LPCTSTR pszOutput) override;
 
 	std::vector<CLogItem*> m_LogList;
+	DWORD m_SerialNumber;
 	bool m_fOutputToFile;
-	CCriticalLock m_Lock;
+	mutable CCriticalLock m_Lock;
 };
 
 

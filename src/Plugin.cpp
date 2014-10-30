@@ -1911,6 +1911,36 @@ LRESULT CPlugin::OnCallback(TVTest::PluginParam *pParam,UINT Message,LPARAM lPar
 	case TVTest::MESSAGE_SETVIDEOSTREAM:
 		return SendPluginMessage(pParam,Message,lParam1,lParam2);
 
+	case TVTest::MESSAGE_GETLOG:
+		{
+			TVTest::GetLogInfo *pInfo=reinterpret_cast<TVTest::GetLogInfo*>(lParam1);
+
+			if (pInfo==NULL || pInfo->Size!=sizeof(TVTest::GetLogInfo))
+				return FALSE;
+
+			const CLogger &Logger=GetAppClass().Logger;
+			CLogItem Log;
+
+			if ((pInfo->Flags & TVTest::GET_LOG_FLAG_BYSERIAL)==0) {
+				if (!Logger.GetLog(pInfo->Index,&Log))
+					return FALSE;
+				pInfo->Serial=Log.GetSerialNumber();
+			} else {
+				if (!Logger.GetLogBySerialNumber(pInfo->Serial,&Log))
+					return FALSE;
+			}
+			LPCTSTR pszText=Log.GetText();
+			if (pInfo->pszText!=NULL) {
+				::lstrcpyn(pInfo->pszText,pszText,pInfo->MaxText);
+			} else {
+				pInfo->MaxText=::lstrlen(pszText)+1;
+			}
+		}
+		return TRUE;
+
+	case TVTest::MESSAGE_GETLOGCOUNT:
+		return GetAppClass().Logger.GetLogCount();
+
 #ifdef _DEBUG
 	default:
 		TRACE(TEXT("CPluign::OnCallback() : Unknown message %u\n"),Message);

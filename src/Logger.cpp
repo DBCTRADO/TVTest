@@ -18,8 +18,14 @@ static char THIS_FILE[]=__FILE__;
 
 
 
-CLogItem::CLogItem(LPCTSTR pszText)
+CLogItem::CLogItem()
+{
+}
+
+
+CLogItem::CLogItem(LPCTSTR pszText,DWORD SerialNumber)
 	: m_Text(pszText)
+	, m_SerialNumber(SerialNumber)
 {
 	::GetSystemTimeAsFileTime(&m_Time);
 }
@@ -97,7 +103,8 @@ int CLogItem::FormatTime(WCHAR *pszText,int MaxLength) const
 
 
 CLogger::CLogger()
-	: m_fOutputToFile(false)
+	: m_SerialNumber(0)
+	, m_fOutputToFile(false)
 {
 }
 
@@ -160,7 +167,7 @@ bool CLogger::AddLogV(LPCTSTR pszText,va_list Args)
 
 	TCHAR szText[MAX_LOG_TEXT_LENGTH];
 	StdUtil::vsnprintf(szText,lengthof(szText),pszText,Args);
-	CLogItem *pLogItem=new CLogItem(szText);
+	CLogItem *pLogItem=new CLogItem(szText,m_SerialNumber++);
 	m_LogList.push_back(pLogItem);
 	TRACE(TEXT("Log : %s\n"),szText);
 
@@ -195,6 +202,50 @@ void CLogger::Clear()
 	for (auto itr=m_LogList.begin();itr!=m_LogList.end();++itr)
 		delete *itr;
 	m_LogList.clear();
+}
+
+
+std::size_t CLogger::GetLogCount() const
+{
+	CBlockLock Lock(&m_Lock);
+
+	return m_LogList.size();
+}
+
+
+bool CLogger::GetLog(std::size_t Index,CLogItem *pItem) const
+{
+	if (pItem==NULL)
+		return false;
+
+	CBlockLock Lock(&m_Lock);
+
+	if (Index>=m_LogList.size())
+		return false;
+
+	*pItem=*m_LogList[Index];
+
+	return true;
+}
+
+
+bool CLogger::GetLogBySerialNumber(DWORD SerialNumber,CLogItem *pItem) const
+{
+	if (pItem==NULL)
+		return false;
+
+	CBlockLock Lock(&m_Lock);
+
+	if (m_LogList.empty())
+		return false;
+
+	DWORD FirstSerial=m_LogList.front()->GetSerialNumber();
+	if (SerialNumber<FirstSerial || SerialNumber>=FirstSerial+m_LogList.size())
+		return false;
+
+	*pItem=*m_LogList[SerialNumber-FirstSerial];
+
+	return true;
 }
 
 

@@ -96,6 +96,8 @@
 	  ・MESSAGE_GETVIDEOSTREAMCOUNT
 	  ・MESSAGE_GETVIDEOSTREAM
 	  ・MESSAGE_SETVIDEOSTREAM
+	  ・MESSAGE_GETLOG
+	  ・MESSAGE_GETLOGCOUNT
 	・以下のイベントを追加した
 	  ・EVENT_FILTERGRAPH_INITIALIZE
 	  ・EVENT_FILTERGRAPH_INITIALIZED
@@ -397,6 +399,8 @@ enum {
 	MESSAGE_GETVIDEOSTREAMCOUNT,		// 映像ストリームの数を取得
 	MESSAGE_GETVIDEOSTREAM,				// 映像ストリームを取得
 	MESSAGE_SETVIDEOSTREAM,				// 映像ストリームを設定
+	MESSAGE_GETLOG,						// ログを取得
+	MESSAGE_GETLOGCOUNT,				// ログの数を取得
 #endif
 	MESSAGE_TRAILER
 };
@@ -2170,6 +2174,31 @@ inline bool MsgSetVideoStream(PluginParam *pParam,int Stream) {
 	return (*pParam->Callback)(pParam,MESSAGE_SETVIDEOSTREAM,Stream,0)!=FALSE;
 }
 
+// ログ取得の情報
+struct GetLogInfo {
+	DWORD Size;		// 構造体のサイズ
+	DWORD Flags;	// 各種フラグ(GET_LOG_FLAG_*)
+	DWORD Index;	// ログのインデックス
+	DWORD Serial;	// ログのシリアルナンバー
+	LPWSTR pszText;	// 取得する文字列
+	DWORD MaxText;	// 文字列の最大長
+};
+
+enum {
+	GET_LOG_FLAG_BYSERIAL	=0x00000001U	// シリアルナンバーから取得
+};
+
+// ログを取得する
+inline bool MsgGetLog(PluginParam *pParam,GetLogInfo *pInfo) {
+	return (*pParam->Callback)(pParam,MESSAGE_GETLOG,(LPARAM)pInfo,0)!=FALSE;
+}
+
+// ログの数を取得する
+// ユーザーがログをクリアするなどして、数が減ることもあり得ます。
+inline DWORD MsgGetLogCount(PluginParam *pParam) {
+	return (DWORD)(*pParam->Callback)(pParam,MESSAGE_GETLOGCOUNT,0,0);
+}
+
 #endif	// TVTEST_PLUGIN_VERSION>=TVTEST_PLUGIN_VERSION_(0,0,14)
 
 
@@ -2581,6 +2610,13 @@ public:
 	}
 	bool SetVideoStream(int Stream) {
 		return MsgSetVideoStream(m_pParam,Stream);
+	}
+	bool GetLog(GetLogInfo *pInfo) {
+		pInfo->Size=sizeof(GetLogInfo);
+		return MsgGetLog(m_pParam,pInfo);
+	}
+	DWORD GetLogCount() {
+		return MsgGetLogCount(m_pParam);
 	}
 #endif
 };
