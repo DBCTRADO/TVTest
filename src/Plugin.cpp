@@ -1802,6 +1802,10 @@ LRESULT CPlugin::OnCallback(TVTest::PluginParam *pParam,UINT Message,LPARAM lPar
 				return FALSE;
 			TVTest::Theme::ForegroundStyle Style;
 			ThemeManager.GetForegroundStyle(Type,&Style);
+			if (pInfo->Color!=CLR_INVALID) {
+				Style.Fill.Type=TVTest::Theme::FILL_SOLID;
+				Style.Fill.Solid.Color=TVTest::Theme::ThemeColor(pInfo->Color);
+			}
 			TVTest::Theme::Draw(pInfo->hdc,pInfo->DrawRect,Style,pInfo->pszText,pInfo->DrawFlags);
 		}
 		return TRUE;
@@ -1834,7 +1838,8 @@ LRESULT CPlugin::OnCallback(TVTest::PluginParam *pParam,UINT Message,LPARAM lPar
 						pInfo->SrcRect.left,pInfo->SrcRect.top,
 						pInfo->SrcRect.right-pInfo->SrcRect.left,
 						pInfo->SrcRect.bottom-pInfo->SrcRect.top,
-						Style.Fill.GetSolidColor(),pInfo->Opacity);
+						pInfo->Color!=CLR_INVALID?pInfo->Color:Style.Fill.GetSolidColor(),
+						pInfo->Opacity);
 		}
 		return TRUE;
 

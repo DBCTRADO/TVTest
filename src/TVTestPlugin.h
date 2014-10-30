@@ -2014,6 +2014,7 @@ struct ThemeDrawTextInfo {
 	LPCWSTR pszText;	// •`‰æ‚·‚é•¶Žš—ñ
 	RECT DrawRect;		// •`‰ææ‚Ì—Ìˆæ
 	UINT DrawFlags;		// •`‰æƒtƒ‰ƒO(DrawText API ‚Ì DT_*)
+	COLORREF Color;		// •`‰æ‚·‚éF
 };
 
 // ƒe[ƒ}‚Ì•¶Žš—ñ‚ð•`‰æ‚·‚é
@@ -2024,7 +2025,8 @@ inline bool MsgThemeDrawText(PluginParam *pParam,ThemeDrawTextInfo *pInfo) {
 
 // ƒe[ƒ}‚Ì•¶Žš—ñ‚ð•`‰æ‚·‚é
 inline bool MsgThemeDrawText(PluginParam *pParam,
-		LPCWSTR pszStyle,HDC hdc,LPCWSTR pszText,const RECT &DrawRect,UINT DrawFlags) {
+		LPCWSTR pszStyle,HDC hdc,LPCWSTR pszText,const RECT &DrawRect,
+		UINT DrawFlags,COLORREF Color=CLR_INVALID) {
 	ThemeDrawTextInfo Info;
 	Info.Size=sizeof(Info);
 	Info.Flags=0;
@@ -2033,6 +2035,7 @@ inline bool MsgThemeDrawText(PluginParam *pParam,
 	Info.pszText=pszText;
 	Info.DrawRect=DrawRect;
 	Info.DrawFlags=DrawFlags;
+	Info.Color=Color;
 	return MsgThemeDrawText(pParam,&Info);
 }
 
@@ -2045,6 +2048,7 @@ struct ThemeDrawIconInfo {
 	HBITMAP hbm;		// •`‰æ‚·‚éƒrƒbƒgƒ}ƒbƒv
 	RECT DstRect;		// •`‰ææ‚Ì—Ìˆæ
 	RECT SrcRect;		// •`‰æŒ³‚Ì—Ìˆæ
+	COLORREF Color;		// •`‰æ‚·‚éF
 	BYTE Opacity;		// •s“§–¾“x(1-255)
 	BYTE Reserved[3];	// —\–ñ—Ìˆæ
 };
@@ -2058,7 +2062,8 @@ inline bool MsgThemeDrawIcon(PluginParam *pParam,ThemeDrawIconInfo *pInfo) {
 // ƒe[ƒ}‚ÌƒAƒCƒRƒ“‚ð•`‰æ‚·‚é
 inline bool MsgThemeDrawIcon(PluginParam *pParam,LPCWSTR pszStyle,
 		HDC hdc,int DstX,int DstY,int DstWidth,int DstHeight,
-		HBITMAP hbm,int SrcX,int SrcY,int SrcWidth,int SrcHeight,BYTE Opacity=255) {
+		HBITMAP hbm,int SrcX,int SrcY,int SrcWidth,int SrcHeight,
+		COLORREF Color=CLR_INVALID,BYTE Opacity=255) {
 	ThemeDrawIconInfo Info;
 	Info.Size=sizeof(Info);
 	Info.Flags=0;
@@ -2073,6 +2078,7 @@ inline bool MsgThemeDrawIcon(PluginParam *pParam,LPCWSTR pszStyle,
 	Info.SrcRect.top=SrcY;
 	Info.SrcRect.right=SrcX+SrcWidth;
 	Info.SrcRect.bottom=SrcY+SrcHeight;
+	Info.Color=Color;
 	Info.Opacity=Opacity;
 	return MsgThemeDrawIcon(pParam,&Info);
 }
@@ -2579,8 +2585,9 @@ public:
 		pInfo->Size=sizeof(ThemeDrawTextInfo);
 		return MsgThemeDrawText(m_pParam,pInfo);
 	}
-	bool ThemeDrawText(LPCWSTR pszStyle,HDC hdc,LPCWSTR pszText,const RECT &DrawRect,UINT DrawFlags) {
-		return MsgThemeDrawText(m_pParam,pszStyle,hdc,pszText,DrawRect,DrawFlags);
+	bool ThemeDrawText(LPCWSTR pszStyle,HDC hdc,LPCWSTR pszText,const RECT &DrawRect,
+					   UINT DrawFlags,COLORREF Color=CLR_INVALID) {
+		return MsgThemeDrawText(m_pParam,pszStyle,hdc,pszText,DrawRect,DrawFlags,Color);
 	}
 	bool ThemeDrawIcon(PluginParam *pParam,ThemeDrawIconInfo *pInfo) {
 		pInfo->Size=sizeof(ThemeDrawIconInfo);
@@ -2588,9 +2595,10 @@ public:
 	}
 	bool ThemeDrawIcon(LPCWSTR pszStyle,
 			HDC hdc,int DstX,int DstY,int DstWidth,int DstHeight,
-			HBITMAP hbm,int SrcX,int SrcY,int SrcWidth,int SrcHeight,BYTE Opacity=255) {
+			HBITMAP hbm,int SrcX,int SrcY,int SrcWidth,int SrcHeight,
+			COLORREF Color=CLR_INVALID,BYTE Opacity=255) {
 		return MsgThemeDrawIcon(m_pParam,pszStyle,hdc,DstX,DstY,DstWidth,DstHeight,
-								hbm,SrcX,SrcY,SrcWidth,SrcHeight,Opacity);
+								hbm,SrcX,SrcY,SrcWidth,SrcHeight,Color,Opacity);
 	}
 	bool GetEpgCaptureStatus(PluginParam *pParam,EpgCaptureStatusInfo *pInfo) {
 		return MsgGetEpgCaptureStatus(m_pParam,pInfo);
