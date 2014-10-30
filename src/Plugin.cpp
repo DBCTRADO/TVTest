@@ -1902,6 +1902,15 @@ LRESULT CPlugin::OnCallback(TVTest::PluginParam *pParam,UINT Message,LPARAM lPar
 	case TVTest::MESSAGE_GETAPPCOMMANDCOUNT:
 		return GetAppClass().CommandList.NumCommands();
 
+	case TVTest::MESSAGE_GETVIDEOSTREAMCOUNT:
+		return GetAppClass().CoreEngine.m_DtvEngine.GetVideoStreamNum();
+
+	case TVTest::MESSAGE_GETVIDEOSTREAM:
+		return GetAppClass().CoreEngine.m_DtvEngine.GetVideoStream();
+
+	case TVTest::MESSAGE_SETVIDEOSTREAM:
+		return SendPluginMessage(pParam,Message,lParam1,lParam2);
+
 #ifdef _DEBUG
 	default:
 		TRACE(TEXT("CPluign::OnCallback() : Unknown message %u\n"),Message);
@@ -2357,6 +2366,9 @@ LRESULT CPlugin::OnPluginMessage(WPARAM wParam,LPARAM lParam)
 		pParam->pPlugin->m_pMessageCallback=reinterpret_cast<TVTest::WindowMessageCallbackFunc>(pParam->lParam1);
 		pParam->pPlugin->m_pMessageCallbackClientData=reinterpret_cast<void*>(pParam->lParam2);
 		return TRUE;
+
+	case TVTest::MESSAGE_SETVIDEOSTREAM:
+		return GetAppClass().CoreEngine.m_DtvEngine.SetVideoStream((int)pParam->lParam1);
 
 #ifdef _DEBUG
 	default:

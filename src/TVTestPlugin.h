@@ -93,6 +93,9 @@
 	  ・MESSAGE_GETEPGCAPTURESTATUS
 	  ・MESSAGE_GETAPPCOMMANDINFO
 	  ・MESSAGE_GETAPPCOMMANDCOUNT
+	  ・MESSAGE_GETVIDEOSTREAMCOUNT
+	  ・MESSAGE_GETVIDEOSTREAM
+	  ・MESSAGE_SETVIDEOSTREAM
 	・以下のイベントを追加した
 	  ・EVENT_FILTERGRAPH_INITIALIZE
 	  ・EVENT_FILTERGRAPH_INITIALIZED
@@ -391,6 +394,9 @@ enum {
 	MESSAGE_GETEPGCAPTURESTATUS,		// EPG取得状況を取得
 	MESSAGE_GETAPPCOMMANDINFO,			// コマンドの情報を取得
 	MESSAGE_GETAPPCOMMANDCOUNT,			// コマンドの数を取得
+	MESSAGE_GETVIDEOSTREAMCOUNT,		// 映像ストリームの数を取得
+	MESSAGE_GETVIDEOSTREAM,				// 映像ストリームを取得
+	MESSAGE_SETVIDEOSTREAM,				// 映像ストリームを設定
 #endif
 	MESSAGE_TRAILER
 };
@@ -2149,6 +2155,21 @@ inline DWORD MsgGetAppCommandCount(PluginParam *pParam) {
 	return (DWORD)(*pParam->Callback)(pParam,MESSAGE_GETAPPCOMMANDCOUNT,0,0);
 }
 
+// 映像ストリームの数を取得する
+inline int MsgGetVideoStreamCount(PluginParam *pParam) {
+	return (int)(*pParam->Callback)(pParam,MESSAGE_GETVIDEOSTREAMCOUNT,0,0);
+}
+
+// 現在の映像ストリームを取得する
+inline int MsgGetVideoStream(PluginParam *pParam) {
+	return (int)(*pParam->Callback)(pParam,MESSAGE_GETVIDEOSTREAM,0,0);
+}
+
+// 映像ストリームを設定する
+inline bool MsgSetVideoStream(PluginParam *pParam,int Stream) {
+	return (*pParam->Callback)(pParam,MESSAGE_SETVIDEOSTREAM,Stream,0)!=FALSE;
+}
+
 #endif	// TVTEST_PLUGIN_VERSION>=TVTEST_PLUGIN_VERSION_(0,0,14)
 
 
@@ -2551,6 +2572,15 @@ public:
 	}
 	DWORD GetAppCommandCount() {
 		return MsgGetAppCommandCount(m_pParam);
+	}
+	int GetVideoStreamCount() {
+		return MsgGetVideoStreamCount(m_pParam);
+	}
+	int GetVideoStream() {
+		return MsgGetVideoStream(m_pParam);
+	}
+	bool SetVideoStream(int Stream) {
+		return MsgSetVideoStream(m_pParam,Stream);
 	}
 #endif
 };
