@@ -22,6 +22,9 @@
 // ウィンドウクラス名
 #define SLEEPTIMER_WINDOW_CLASS TEXT("TVTest SleepTimer Window")
 
+// プラグインのコマンド
+#define COMMAND_ONOFF 1	// 有効/無効の切替
+
 // スリープを実行するタイマーの識別子
 #define SLEEP_TIMER_ID 1
 
@@ -50,6 +53,7 @@ class CSleepTimer : public TVTest::CTVTestPlugin
 	int m_ConfirmTimerCount;			// 確認のタイマー
 
 	bool InitializePlugin();
+	bool OnEnablePlugin(bool fEnable);
 	static LRESULT CALLBACK EventCallback(UINT Event,LPARAM lParam1,LPARAM lParam2,void *pClientData);
 	static CSleepTimer *GetThis(HWND hwnd);
 	static LRESULT CALLBACK WndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam);
@@ -96,6 +100,21 @@ bool CSleepTimer::GetPluginInfo(TVTest::PluginInfo *pInfo)
 bool CSleepTimer::Initialize()
 {
 	// 初期化処理
+
+	// コマンドを登録
+	TVTest::PluginCommandInfo CommandInfo;
+	CommandInfo.Size           = sizeof(CommandInfo);
+	CommandInfo.Flags          = TVTest::PLUGIN_COMMAND_FLAG_ICONIZE;
+	CommandInfo.State          = 0;
+	CommandInfo.ID             = COMMAND_ONOFF;
+	CommandInfo.pszText        = L"OnOff";
+	CommandInfo.pszName        = L"スリープタイマー 入/切";
+	CommandInfo.pszDescription = L"スリープタイマーの有効/無効を切り替えます。";
+	CommandInfo.hbmIcon        =
+		(HBITMAP)::LoadImage(g_hinstDLL, MAKEINTRESOURCE(IDB_ICON),
+							 IMAGE_BITMAP, 0, 0, LR_CREATEDIBSECTION);
+	m_pApp->RegisterPluginCommand(&CommandInfo);
+	::DeleteObject(CommandInfo.hbmIcon);
 
 	// イベントコールバック関数を登録
 	m_pApp->SetEventCallback(EventCallback,this);
@@ -176,6 +195,32 @@ bool CSleepTimer::Finalize()
 		::WritePrivateProfileInt(TEXT("Settings"),TEXT("ConfirmTimeout"),m_ConfirmTimeout,m_szIniFileName);
 		::WritePrivateProfileInt(TEXT("Settings"),TEXT("ShowSettings"),m_fShowSettings,m_szIniFileName);
 	}
+
+	return true;
+}
+
+
+// プラグインの有効/無効が切り替わった時の処理
+bool CSleepTimer::OnEnablePlugin(bool fEnable)
+{
+	InitializePlugin();
+
+	if (fEnable && m_fShowSettings) {
+		if (::DialogBoxParam(g_hinstDLL,MAKEINTRESOURCE(IDD_SETTINGS),
+							 m_pApp->GetAppWindow(),SettingsDlgProc,
+							 reinterpret_cast<LPARAM>(this))!=IDOK)
+			return false;
+	}
+
+	m_fEnabled=fEnable;
+
+	if (m_fEnabled)
+		::SetTimer(m_hwnd,SLEEP_TIMER_ID,m_SleepTime*1000,NULL);
+	else
+		::KillTimer(m_hwnd,SLEEP_TIMER_ID);
+
+	m_pApp->SetPluginCommandState(COMMAND_ONOFF,
+								  m_fEnabled?TVTest::PLUGIN_COMMAND_STATE_CHECKED:0);
 
 	return true;
 }
@@ -263,19 +308,7 @@ LRESULT CALLBACK CSleepTimer::EventCallback(UINT Event,LPARAM lParam1,LPARAM lPa
 	switch (Event) {
 	case TVTest::EVENT_PLUGINENABLE:
 		// プラグインの有効状態が変化した
-		pThis->InitializePlugin();
-		if (lParam1!=0 && pThis->m_fShowSettings) {
-			if (::DialogBoxParam(g_hinstDLL,MAKEINTRESOURCE(IDD_SETTINGS),
-								 pThis->m_pApp->GetAppWindow(),SettingsDlgProc,
-								 reinterpret_cast<LPARAM>(pThis))!=IDOK)
-				return FALSE;
-		}
-		pThis->m_fEnabled=lParam1!=0;
-		if (pThis->m_fEnabled)
-			::SetTimer(pThis->m_hwnd,SLEEP_TIMER_ID,pThis->m_SleepTime*1000,NULL);
-		else
-			::KillTimer(pThis->m_hwnd,SLEEP_TIMER_ID);
-		return TRUE;
+		return pThis->OnEnablePlugin(lParam1!=0);
 
 	case TVTest::EVENT_PLUGINSETTINGS:
 		// プラグインの設定を行う
@@ -283,7 +316,16 @@ LRESULT CALLBACK CSleepTimer::EventCallback(UINT Event,LPARAM lParam1,LPARAM lPa
 		return ::DialogBoxParam(g_hinstDLL,MAKEINTRESOURCE(IDD_SETTINGS),
 								reinterpret_cast<HWND>(lParam1),SettingsDlgProc,
 								reinterpret_cast<LPARAM>(pThis))==IDOK;
+
+	case TVTest::EVENT_COMMAND:
+		// コマンドが実行された
+		if (lParam1==COMMAND_ONOFF) {
+			// プラグインの有効/無効を切り替え
+			pThis->m_pApp->EnablePlugin(!pThis->m_fEnabled);
+		}
+		return TRUE;
 	}
+
 	return 0;
 }
 
@@ -312,7 +354,6 @@ LRESULT CALLBACK CSleepTimer::WndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM l
 	case WM_TIMER:
 		{
 			CSleepTimer *pThis=GetThis(hwnd);
-			TVTest::RecordStatusInfo Info;
 
 			pThis->m_pApp->EnablePlugin(false);	// タイマーは一回限り有効
 			::KillTimer(hwnd,wParam);			// EventCallbackで呼ばれるはずだが、念のため
@@ -326,6 +367,7 @@ LRESULT CALLBACK CSleepTimer::WndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM l
 			}
 
 			// 録画中はスリープ実行しない
+			TVTest::RecordStatusInfo Info;
 			if (!pThis->m_pApp->GetRecordStatus(&Info)
 					|| Info.Status!=TVTest::RECORD_STATUS_NOTRECORDING) {
 				pThis->m_pApp->AddLog(L"録画中なのでスリープがキャンセルされました。");
