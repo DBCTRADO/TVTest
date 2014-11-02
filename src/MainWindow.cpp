@@ -221,6 +221,7 @@ CMainWindow::CMainWindow(CAppMain &App)
 	, m_WindowSizeMode(WINDOW_SIZE_HD)
 
 	, m_fLockLayout(false)
+	, m_fStatusBarInitialized(false)
 
 	, m_fShowCursor(true)
 	, m_fNoHideCursor(false)
@@ -675,6 +676,67 @@ void CMainWindow::SetStatusBarVisible(bool fVisible)
 			}
 		}
 	}
+}
+
+
+bool CMainWindow::ShowStatusBarItem(int ID,bool fShow)
+{
+	CStatusItem *pItem=m_App.StatusView.GetItemByID(ID);
+	if (pItem==nullptr)
+		return false;
+	if (pItem->GetVisible()==fShow)
+		return true;
+
+	pItem->SetVisible(fShow);
+
+	if (!m_fStatusBarInitialized)
+		return true;
+
+	if (m_fShowStatusBar)
+		LockLayout();
+
+	int OldHeight=m_App.StatusView.GetHeight();
+	m_App.StatusView.AdjustSize();
+	int NewHeight=m_App.StatusView.GetHeight();
+
+	if (OldHeight!=NewHeight) {
+		const int Offset=NewHeight-OldHeight;
+		RECT rc;
+
+		if (m_fShowStatusBar) {
+			GetPosition(&rc);
+			rc.bottom+=Offset;
+			SetPosition(&rc);
+		}
+		if ((!m_fShowStatusBar && m_App.StatusView.GetVisible())
+				|| (m_pCore->GetFullscreen() && m_Fullscreen.IsStatusBarVisible())) {
+			m_App.StatusView.GetPosition(&rc);
+			rc.top-=Offset;
+			rc.bottom=rc.top+NewHeight;
+			m_App.StatusView.SetPosition(&rc);
+		}
+
+		// ポップアップ表示されたサイドバーの位置の調整
+		if (((!m_fShowSideBar && m_App.SideBar.GetVisible())
+				|| (m_pCore->GetFullscreen() && m_Fullscreen.IsSideBarVisible()))
+				&& m_App.SideBarOptions.GetPlace()==CSideBarOptions::PLACE_BOTTOM) {
+			m_App.SideBar.GetPosition(&rc);
+			::OffsetRect(&rc,0,-Offset);
+			m_App.SideBar.SetPosition(&rc);
+		}
+	}
+
+	if (m_fShowStatusBar)
+		UpdateLayout();
+
+	return true;
+}
+
+
+void CMainWindow::OnStatusBarInitialized()
+{
+	m_App.StatusView.AdjustSize();
+	m_fStatusBarInitialized=true;
 }
 
 
@@ -3446,6 +3508,8 @@ void CMainWindow::OnTimer(HWND hwnd,UINT id)
 					m_fAlertedLowFreeSpace=true;
 				}
 			}
+
+			m_App.PluginManager.SendStatusItemUpdateTimerEvent();
 		}
 		break;
 

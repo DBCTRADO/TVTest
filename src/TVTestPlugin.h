@@ -101,11 +101,19 @@
 	  ・MESSAGE_REGISTERPLUGINCOMMAND
 	  ・MESSAGE_SETPLUGINCOMMANDSTATE
 	  ・MESSAGE_PLUGINCOMMANDNOTIFY
+	  ・MESSAGE_REGISTERSTATUSITEM
+	  ・MESSAGE_SETSTATUSITEMSTATE
+	  ・MESSAGE_GETSTATUSITEMINFO
+	  ・MESSAGE_STATUSITEMNOTIFY
 	・以下のイベントを追加した
 	  ・EVENT_FILTERGRAPH_INITIALIZE
 	  ・EVENT_FILTERGRAPH_INITIALIZED
 	  ・EVENT_FILTERGRAPH_FINALIZE
 	  ・EVENT_FILTERGRAPH_FINALIZED
+	  ・EVENT_DRAWCOMMANDICON
+	  ・EVENT_STATUSITEM_DRAW
+	  ・EVENT_STATUSITEM_NOTIFY
+	  ・EVENT_STATUSITEM_MOUSE
 	・MESSAGE_GETSETTING で取得できる設定に以下を追加した
 	  ・OSDFont
 	  ・PanelFont
@@ -407,6 +415,10 @@ enum {
 	MESSAGE_REGISTERPLUGINCOMMAND,		// プラグインのコマンドを登録
 	MESSAGE_SETPLUGINCOMMANDSTATE,		// プラグインのコマンドの状態を設定
 	MESSAGE_PLUGINCOMMANDNOTIFY,		// プラグインのコマンドの通知
+	MESSAGE_REGISTERSTATUSITEM,			// ステータス項目を登録
+	MESSAGE_SETSTATUSITEMSTATE,			// ステータス項目の状態を設定
+	MESSAGE_GETSTATUSITEMINFO,			// ステータス項目の情報を取得
+	MESSAGE_STATUSITEMNOTIFY,			// ステータス項目の通知
 #endif
 	MESSAGE_TRAILER
 };
@@ -470,6 +482,9 @@ enum {
 	EVENT_FILTERGRAPH_FINALIZE,					// フィルタグラフの終了処理開始
 	EVENT_FILTERGRAPH_FINALIZED,				// フィルタグラフの終了処理終了
 	EVENT_DRAWCOMMANDICON,						// コマンドアイコンの描画
+	EVENT_STATUSITEM_DRAW,						// ステータス項目を描画
+	EVENT_STATUSITEM_NOTIFY,					// ステータス項目の通知
+	EVENT_STATUSITEM_MOUSE,						// ステータス項目のマウス操作
 #endif
 	EVENT_TRAILER
 };
@@ -2280,6 +2295,157 @@ enum {
 	COMMAND_ICON_STATE_HOT		=0x0004U	// カーソルが当たっている
 };
 
+// ステータス項目の情報
+struct StatusItemInfo {
+	DWORD Size;			// 構造体のサイズ
+	DWORD Type;			// 種類(STATUS_ITEM_TYPE_*)
+	DWORD Flags;		// フラグ(STATUS_ITEM_FLAG_*)
+	int ID;				// 識別子
+	LPCWSTR pszIDText;	// 識別子文字列
+	LPCWSTR pszName;	// 名前
+	int MinWidth;		// 最小の幅
+	int MaxWidth;		// 最大の幅(-1で制限なし)
+	int DefaultWidth;	// デフォルト幅(正数ではピクセル単位、負数ではフォントの高さの-1/1000単位)
+	int MinHeight;		// 最小の高さ
+};
+
+// ステータス項目の種類
+enum {
+	STATUS_ITEM_TYPE_NORMAL	// 普通
+};
+
+// ステータス項目のフラグ
+enum {
+	STATUS_ITEM_FLAG_VARIABLEWIDTH	=0x00000001U,	// 可変幅
+	STATUS_ITEM_FLAG_FULLROW		=0x00000002U,	// 一行
+	STATUS_ITEM_FLAG_TIMERUPDATE	=0x00000004U	// 定期的に更新する
+};
+
+// ステータス項目の幅をフォントサイズから求める
+inline int StatusItemWidthByFontSize(int Size) { return Size*-1000; }
+
+// ステータス項目を登録する
+inline bool MsgRegisterStatusItem(PluginParam *pParam,const StatusItemInfo *pInfo) {
+	return (*pParam->Callback)(pParam,MESSAGE_REGISTERSTATUSITEM,(LPARAM)pInfo,0)!=FALSE;
+}
+
+// ステータス項目の状態
+enum {
+	STATUS_ITEM_STATE_VISIBLE		=0x00000001U,	// 可視
+	STATUS_ITEM_STATE_HOT			=0x00000002U	// カーソルが当たっている
+};
+
+// ステータス項目の状態の情報
+struct StatusItemStateInfo {
+	DWORD Size;			// 構造体のサイズ
+	int ID;				// 項目の識別子
+	DWORD StateMask;	// 状態のマスク(STATUS_ITEM_STATE_*)
+	DWORD State;		// 状態(STATUS_ITEM_STATE_*)
+};
+
+// ステータス項目の状態を設定する
+inline bool MsgSetStatusItemState(PluginParam *pParam,StatusItemStateInfo *pInfo) {
+	return (*pParam->Callback)(pParam,MESSAGE_SETSTATUSITEMSTATE,(LPARAM)pInfo,0)!=FALSE;
+}
+
+// ステータス項目の情報取得
+struct StatusItemGetInfo {
+	DWORD Size;			// 構造体のサイズ
+	DWORD Mask;			// 取得する情報のマスク(STATUS_ITEM_GET_INFO_MASK_*)
+	int ID;				// 項目の識別子
+	DWORD State;		// 状態(STATUS_ITEM_STATE_*)
+	HWND hwnd;			// ウィンドウハンドル
+	RECT ItemRect;		// 項目の領域
+	RECT ContentRect;	// 項目の余白を除いた領域
+};
+
+// ステータス項目の情報取得
+enum {
+	STATUS_ITEM_GET_INFO_MASK_STATE			=0x00000001U,	// State を取得
+	STATUS_ITEM_GET_INFO_MASK_HWND			=0x00000002U,	// hwnd を取得
+	STATUS_ITEM_GET_INFO_MASK_ITEMRECT		=0x00000004U,	// ItemRect を取得
+	STATUS_ITEM_GET_INFO_MASK_CONTENTRECT	=0x00000008U	// ContentRect を取得
+};
+
+// ステータス項目の情報を取得する
+inline bool MsgGetStatusItemInfo(PluginParam *pParam,StatusItemGetInfo *pInfo) {
+	return (*pParam->Callback)(pParam,MESSAGE_GETSTATUSITEMINFO,(LPARAM)pInfo,0)!=FALSE;
+}
+
+// ステータス項目の通知
+enum {
+	STATUS_ITEM_NOTIFY_REDRAW	// 再描画する
+};
+
+// ステータス項目の通知を行う
+inline bool MsgStatusItemNotify(PluginParam *pParam,int ID,UINT Type) {
+	return (*pParam->Callback)(pParam,MESSAGE_STATUSITEMNOTIFY,ID,Type)!=FALSE;
+}
+
+// ステータス項目の描画情報
+// EVENT_STATUSITEM_DRAW で渡されます。
+// 描画はダブルバッファリングによって行われるため、
+// ItemRect / DrawRect で渡される位置は表示上の位置とは異なっています。
+struct StatusItemDrawInfo {
+	int ID;				// 項目の識別子
+	WORD Flags;			// 各種フラグ(STATUS_ITEM_DRAW_FLAG_*)
+	WORD State;			// 状態(STATUS_ITEM_DRAW_STATE_*)
+	LPCWSTR pszStyle;	// スタイル
+	HDC hdc;			// 描画先DC
+	RECT ItemRect;		// 項目の領域
+	RECT DrawRect;		// 描画する領域
+	COLORREF Color;		// 色
+};
+
+// ステータス項目描画フラグ
+enum {
+	STATUS_ITEM_DRAW_FLAG_PREVIEW	=0x0001U	// プレビュー(設定ダイアログでの表示)
+};
+
+// ステータス項目描画状態
+enum {
+	STATUS_ITEM_DRAW_STATE_HOT		=0x0001U	// カーソルが当たっている
+};
+
+// ステータス項目の通知情報
+// EVENT_STATUSITEM_NOTIFY で渡されます。
+struct StatusItemEventInfo {
+	int ID;				// 項目の識別子
+	UINT Event;			// イベントの種類(STATUS_ITEM_EVENT_*)
+	LPARAM Param;		// パラメータ
+};
+
+// ステータス項目のイベント
+enum {
+	STATUS_ITEM_EVENT_CREATED=1,			// 項目が作成された
+	STATUS_ITEM_EVENT_VISIBILITYCHANGED,	// 項目の表示状態が変わった
+	STATUS_ITEM_EVENT_ENTER,				// カーソルが当たった
+	STATUS_ITEM_EVENT_LEAVE,				// カーソルが離れた
+	STATUS_ITEM_EVENT_SIZECHANGED,			// 項目の大きさが変わった
+	STATUS_ITEM_EVENT_UPDATETIMER			// 更新タイマー
+};
+
+// ステータス項目のマウスイベント情報
+// EVENT_STATUSITEM_MOUSE で渡されます。
+struct StatusItemMouseEventInfo {
+	int ID;				// 項目の識別子
+	UINT Action;		// マウス操作の種類(STATUS_ITEM_MOUSE_ACTION_*)
+	HWND hwnd;			// ウィンドウハンドル
+	POINT CursorPos;	// カーソル位置(クライアント座標)
+	RECT ItemRect;		// 項目の領域
+	RECT ContentRect;	// 項目の余白を除いた領域
+};
+
+// ステータス項目のマウス操作の種類
+enum {
+	STATUS_ITEM_MOUSE_ACTION_LDOWN=1,		// 左ボタンが押された
+	STATUS_ITEM_MOUSE_ACTION_LUP,			// 左ボタンが離された
+	STATUS_ITEM_MOUSE_ACTION_LDOUBLECLICK,	// 左ダブルクリック
+	STATUS_ITEM_MOUSE_ACTION_RDOWN,			// 右ボタンが押された
+	STATUS_ITEM_MOUSE_ACTION_RUP,			// 右ボタンが離された
+	STATUS_ITEM_MOUSE_ACTION_MOVE			// カーソル移動
+};
+
 #endif	// TVTEST_PLUGIN_VERSION>=TVTEST_PLUGIN_VERSION_(0,0,14)
 
 
@@ -2710,6 +2876,20 @@ public:
 	bool PluginCommandNotify(int ID,unsigned int Type) {
 		return MsgPluginCommandNotify(m_pParam,ID,Type);
 	}
+	bool RegisterStatusItem(const StatusItemInfo *pInfo) {
+		return MsgRegisterStatusItem(m_pParam,pInfo);
+	}
+	bool SetStatusItemState(StatusItemStateInfo *pInfo) {
+		pInfo->Size=sizeof(StatusItemStateInfo);
+		return MsgSetStatusItemState(m_pParam,pInfo);
+	}
+	bool GetStatusItemInfo(StatusItemGetInfo *pInfo) {
+		pInfo->Size=sizeof(StatusItemGetInfo);
+		return MsgGetStatusItemInfo(m_pParam,pInfo);
+	}
+	bool StatusItemNotify(int ID,UINT Type) {
+		return MsgStatusItemNotify(m_pParam,ID,Type);
+	}
 #endif
 };
 
@@ -2875,7 +3055,13 @@ protected:
 	// フィルタグラフが終了処理された
 	virtual void OnFilterGraphFinalized(FilterGraphInfo *pInfo) {}
 	// コマンドアイコンの描画
-	virtual bool OnDrawCommandIcon(DrawCommandIconInfo *pInfo) {}
+	virtual bool OnDrawCommandIcon(DrawCommandIconInfo *pInfo) { return false; }
+	// ステータス項目の描画
+	virtual bool OnStatusItemDraw(StatusItemDrawInfo *pInfo) { return false; }
+	// ステータス項目の通知
+	virtual bool OnStatusItemNotify(StatusItemEventInfo *pInfo) { return false; }
+	// ステータス項目のマウスイベント
+	virtual bool OnStatusItemMouseEvent(StatusItemMouseEventInfo *pInfo) { return false; }
 #endif
 
 public:
@@ -2959,6 +3145,12 @@ public:
 			return 0;
 		case EVENT_DRAWCOMMANDICON:
 			return OnDrawCommandIcon((DrawCommandIconInfo*)lParam1);
+		case EVENT_STATUSITEM_DRAW:
+			return OnStatusItemDraw((StatusItemDrawInfo*)lParam1);
+		case EVENT_STATUSITEM_NOTIFY:
+			return OnStatusItemNotify((StatusItemEventInfo*)lParam1);
+		case EVENT_STATUSITEM_MOUSE:
+			return OnStatusItemMouseEvent((StatusItemMouseEventInfo*)lParam1);
 #endif
 		}
 		return 0;

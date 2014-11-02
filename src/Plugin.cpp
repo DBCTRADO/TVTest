@@ -664,6 +664,14 @@ void CPlugin::Free()
 		App.AddLog(TEXT("%s ‚ð‰ð•ú‚µ‚Ü‚µ‚½B"),pszFileName);
 	}
 
+	for (auto itr=m_StatusItemList.begin();itr!=m_StatusItemList.end();++itr) {
+		StatusItem *pItem=*itr;
+		if (pItem->pItem!=NULL)
+			pItem->pItem->DetachItem();
+		delete pItem;
+	}
+	m_StatusItemList.clear();
+
 	m_FileName.Clear();
 	m_PluginName.Clear();
 	m_Copyright.Clear();
@@ -838,6 +846,68 @@ bool CPlugin::NotifyProgramGuideCommand(LPCTSTR pszCommand,UINT Action,const CEv
 bool CPlugin::IsDisableOnStart() const
 {
 	return (m_Flags&TVTest::PLUGIN_FLAG_DISABLEONSTART)!=0;
+}
+
+
+void CPlugin::RegisterStatusItems()
+{
+	CAppMain &App=GetAppClass();
+
+	for (auto itr=m_StatusItemList.begin();itr!=m_StatusItemList.end();++itr) {
+		StatusItem *pItem=*itr;
+		TVTest::String IDText;
+
+		IDText=::PathFindFileName(GetFileName());
+		IDText+=_T(':');
+		IDText+=pItem->IDText;
+
+		int ItemID=App.StatusOptions.RegisterItem(IDText.c_str());
+		if (ItemID>=0) {
+			pItem->ItemID=ItemID;
+			App.StatusView.AddItem(new CPluginStatusItem(this,pItem));
+		}
+	}
+}
+
+
+void CPlugin::SendStatusItemCreatedEvent()
+{
+	for (auto itr=m_StatusItemList.begin();itr!=m_StatusItemList.end();++itr) {
+		const StatusItem *pItem=*itr;
+
+		if (pItem->pItem!=NULL) {
+			TVTest::StatusItemEventInfo Info;
+
+			Info.ID=pItem->ID;
+			Info.Event=TVTest::STATUS_ITEM_EVENT_CREATED;
+			Info.Param=0;
+
+			SendEvent(TVTest::EVENT_STATUSITEM_NOTIFY,
+					  reinterpret_cast<LPARAM>(&Info),0);
+		}
+	}
+}
+
+
+void CPlugin::SendStatusItemUpdateTimerEvent()
+{
+	for (auto itr=m_StatusItemList.begin();itr!=m_StatusItemList.end();++itr) {
+		const StatusItem *pItem=*itr;
+
+		if ((pItem->Flags & TVTest::STATUS_ITEM_FLAG_TIMERUPDATE)!=0
+				&& pItem->pItem!=NULL) {
+			TVTest::StatusItemEventInfo Info;
+
+			Info.ID=pItem->ID;
+			Info.Event=TVTest::STATUS_ITEM_EVENT_UPDATETIMER;
+			Info.Param=0;
+
+			if (SendEvent(TVTest::EVENT_STATUSITEM_NOTIFY,
+						  reinterpret_cast<LPARAM>(&Info),0)!=FALSE) {
+				pItem->pItem->Redraw();
+			}
+		}
+	}
 }
 
 
@@ -2055,6 +2125,115 @@ LRESULT CPlugin::OnCallback(TVTest::PluginParam *pParam,UINT Message,LPARAM lPar
 		}
 		return FALSE;
 
+	case TVTest::MESSAGE_REGISTERSTATUSITEM:
+		{
+			const TVTest::StatusItemInfo *pInfo=
+				reinterpret_cast<const TVTest::StatusItemInfo*>(lParam1);
+
+			if (pInfo==NULL
+					|| pInfo->Size!=sizeof(TVTest::StatusItemInfo)
+					|| pInfo->Type!=TVTest::STATUS_ITEM_TYPE_NORMAL
+					|| IsStringEmpty(pInfo->pszIDText)
+					|| IsStringEmpty(pInfo->pszName))
+				return FALSE;
+
+			StatusItem *pItem=new StatusItem;
+
+			pItem->Flags=pInfo->Flags;
+			pItem->ID=pInfo->ID;
+			pItem->IDText=pInfo->pszIDText;
+			pItem->Name=pInfo->pszName;
+			pItem->MinWidth=pInfo->MinWidth;
+			pItem->MaxWidth=pInfo->MaxWidth;
+			pItem->DefaultWidth=pInfo->DefaultWidth;
+			pItem->MinHeight=pInfo->MinHeight;
+			pItem->ItemID=-1;
+			pItem->State=0;
+			pItem->pItem=NULL;
+
+			m_StatusItemList.push_back(pItem);
+		}
+		return TRUE;
+
+	case TVTest::MESSAGE_SETSTATUSITEMSTATE:
+		{
+			TVTest::StatusItemStateInfo *pInfo=
+				reinterpret_cast<TVTest::StatusItemStateInfo*>(lParam1);
+
+			if (pInfo==NULL || pInfo->Size!=sizeof(TVTest::StatusItemStateInfo))
+				return FALSE;
+
+			for (auto itr=m_StatusItemList.begin();itr!=m_StatusItemList.end();++itr) {
+				StatusItem *pItem=*itr;
+				if (pItem->ID==pInfo->ID) {
+					DWORD OldState=pItem->State;
+					DWORD NewState=(pItem->State & ~pInfo->StateMask) | (pInfo->State & pInfo->StateMask);
+					pItem->State=NewState;
+					if (((NewState ^ OldState) & TVTest::STATUS_ITEM_STATE_VISIBLE)!=0) {
+						if (pItem->pItem!=NULL) {
+							GetAppClass().MainWindow.ShowStatusBarItem(
+								pItem->ItemID,(NewState & TVTest::STATUS_ITEM_STATE_VISIBLE)!=0);
+						}
+					}
+					return TRUE;
+				}
+			}
+		}
+		return FALSE;
+
+	case TVTest::MESSAGE_GETSTATUSITEMINFO:
+		{
+			TVTest::StatusItemGetInfo *pInfo=
+				reinterpret_cast<TVTest::StatusItemGetInfo*>(lParam1);
+
+			if (pInfo==NULL || pInfo->Size!=sizeof(TVTest::StatusItemGetInfo))
+				return FALSE;
+
+			for (auto itr=m_StatusItemList.begin();itr!=m_StatusItemList.end();++itr) {
+				StatusItem *pItem=*itr;
+
+				if (pItem->ID==pInfo->ID) {
+					if ((pInfo->Mask & TVTest::STATUS_ITEM_GET_INFO_MASK_STATE)!=0)
+						pInfo->State=pItem->State;
+
+					if ((pInfo->Mask & TVTest::STATUS_ITEM_GET_INFO_MASK_HWND)!=0) {
+						if (pItem->pItem!=NULL)
+							pInfo->hwnd=pItem->pItem->GetWindowHandle();
+						else
+							pInfo->hwnd=NULL;
+					}
+
+					if ((pInfo->Mask & TVTest::STATUS_ITEM_GET_INFO_MASK_ITEMRECT)!=0) {
+						if (pItem->pItem==NULL || !pItem->pItem->GetRect(&pInfo->ItemRect))
+							::SetRectEmpty(&pInfo->ItemRect);
+					}
+
+					if ((pInfo->Mask & TVTest::STATUS_ITEM_GET_INFO_MASK_CONTENTRECT)!=0) {
+						if (pItem->pItem==NULL || !pItem->pItem->GetClientRect(&pInfo->ContentRect))
+							::SetRectEmpty(&pInfo->ContentRect);
+					}
+
+					return TRUE;
+				}
+			}
+		}
+		return FALSE;
+
+	case TVTest::MESSAGE_STATUSITEMNOTIFY:
+		for (auto itr=m_StatusItemList.begin();itr!=m_StatusItemList.end();++itr) {
+			StatusItem *pItem=*itr;
+
+			if (pItem->ID==lParam1) {
+				switch (lParam2) {
+				case TVTest::STATUS_ITEM_NOTIFY_REDRAW:
+					if (pItem->pItem!=NULL)
+						pItem->pItem->Redraw();
+					return TRUE;
+				}
+			}
+		}
+		return FALSE;
+
 #ifdef _DEBUG
 	default:
 		TRACE(TEXT("CPluign::OnCallback() : Unknown message %u\n"),Message);
@@ -2654,6 +2833,199 @@ CPlugin::CProgramGuideCommand::CProgramGuideCommand(const TVTest::ProgramGuideCo
 	: CPluginCommandInfo(Info.ID,Info.pszText,Info.pszName)
 	, m_Type(Info.Type)
 {
+}
+
+
+
+
+CPlugin::CPluginStatusItem::CPluginStatusItem(CPlugin *pPlugin,StatusItem *pItem)
+	: CStatusItem(pItem->ItemID,
+				  SizeValue(std::abs(pItem->DefaultWidth),
+							pItem->DefaultWidth>=0?SIZE_PIXEL:SIZE_EM))
+	, m_pPlugin(pPlugin)
+	, m_pItem(pItem)
+{
+	m_MinWidth=pItem->MinWidth;
+	m_MaxWidth=pItem->MaxWidth;
+	m_MinHeight=pItem->MinHeight;
+	m_fVisible=(pItem->State & TVTest::STATUS_ITEM_STATE_VISIBLE)!=0;
+	m_fFullRow=(pItem->Flags & TVTest::STATUS_ITEM_FLAG_FULLROW)!=0;
+	m_fVariableWidth=(pItem->Flags & TVTest::STATUS_ITEM_FLAG_VARIABLEWIDTH)!=0;
+	m_IDText=::PathFindFileName(m_pPlugin->GetFileName());
+	m_IDText+=_T(':');
+	m_IDText+=pItem->IDText;
+	pItem->pItem=this;
+}
+
+
+CPlugin::CPluginStatusItem::~CPluginStatusItem()
+{
+	if (m_pItem!=NULL)
+		m_pItem->pItem=NULL;
+}
+
+
+void CPlugin::CPluginStatusItem::Draw(
+	HDC hdc,const RECT &ItemRect,const RECT &DrawRect,unsigned int Flags)
+{
+	NotifyDraw(hdc,ItemRect,DrawRect,Flags);
+}
+
+
+void CPlugin::CPluginStatusItem::OnLButtonDown(int x,int y)
+{
+	NotifyMouseEvent(TVTest::STATUS_ITEM_MOUSE_ACTION_LDOWN,x,y);
+}
+
+
+void CPlugin::CPluginStatusItem::OnLButtonUp(int x,int y)
+{
+	NotifyMouseEvent(TVTest::STATUS_ITEM_MOUSE_ACTION_LUP,x,y);
+}
+
+
+void CPlugin::CPluginStatusItem::OnLButtonDoubleClick(int x,int y)
+{
+	NotifyMouseEvent(TVTest::STATUS_ITEM_MOUSE_ACTION_LDOUBLECLICK,x,y);
+}
+
+
+void CPlugin::CPluginStatusItem::OnRButtonDown(int x,int y)
+{
+	NotifyMouseEvent(TVTest::STATUS_ITEM_MOUSE_ACTION_RDOWN,x,y);
+}
+
+
+void CPlugin::CPluginStatusItem::OnRButtonUp(int x,int y)
+{
+	NotifyMouseEvent(TVTest::STATUS_ITEM_MOUSE_ACTION_RUP,x,y);
+}
+
+
+void CPlugin::CPluginStatusItem::OnMouseMove(int x,int y)
+{
+	NotifyMouseEvent(TVTest::STATUS_ITEM_MOUSE_ACTION_MOVE,x,y);
+}
+
+
+void CPlugin::CPluginStatusItem::OnVisibilityChanged()
+{
+	if (m_pItem!=NULL) {
+		if (m_fVisible)
+			m_pItem->State|=TVTest::STATUS_ITEM_STATE_VISIBLE;
+		else
+			m_pItem->State&=~TVTest::STATUS_ITEM_STATE_VISIBLE;
+
+		if (m_pPlugin!=NULL) {
+			TVTest::StatusItemEventInfo Info;
+			Info.ID=m_pItem->ID;
+			Info.Event=TVTest::STATUS_ITEM_EVENT_VISIBILITYCHANGED;
+			Info.Param=m_fVisible;
+			m_pPlugin->SendEvent(TVTest::EVENT_STATUSITEM_NOTIFY,
+								 reinterpret_cast<LPARAM>(&Info),0);
+		}
+	}
+}
+
+
+void CPlugin::CPluginStatusItem::OnFocus(bool fFocus)
+{
+	if (m_pItem!=NULL) {
+		if (fFocus)
+			m_pItem->State|=TVTest::STATUS_ITEM_STATE_HOT;
+		else
+			m_pItem->State&=~TVTest::STATUS_ITEM_STATE_HOT;
+
+		if (m_pPlugin!=NULL) {
+			TVTest::StatusItemEventInfo Info;
+			Info.ID=m_pItem->ID;
+			Info.Event=fFocus?
+				TVTest::STATUS_ITEM_EVENT_ENTER:
+				TVTest::STATUS_ITEM_EVENT_LEAVE;
+			Info.Param=0;
+			m_pPlugin->SendEvent(TVTest::EVENT_STATUSITEM_NOTIFY,
+								 reinterpret_cast<LPARAM>(&Info),0);
+		}
+	}
+}
+
+
+void CPlugin::CPluginStatusItem::OnSizeChanged()
+{
+	if (m_pPlugin!=NULL && m_pItem!=NULL) {
+		TVTest::StatusItemEventInfo Info;
+		Info.ID=m_pItem->ID;
+		Info.Event=TVTest::STATUS_ITEM_EVENT_SIZECHANGED;
+		Info.Param=0;
+		m_pPlugin->SendEvent(TVTest::EVENT_STATUSITEM_NOTIFY,
+							 reinterpret_cast<LPARAM>(&Info),0);
+	}
+}
+
+
+void CPlugin::CPluginStatusItem::DetachItem()
+{
+	m_pPlugin=NULL;
+	m_pItem=NULL;
+}
+
+
+HWND CPlugin::CPluginStatusItem::GetWindowHandle() const
+{
+	if (m_pStatus==NULL)
+		return NULL;
+	return m_pStatus->GetHandle();
+}
+
+
+void CPlugin::CPluginStatusItem::NotifyDraw(
+	HDC hdc,const RECT &ItemRect,const RECT &DrawRect,unsigned int Flags)
+{
+	if (m_pPlugin!=NULL && m_pItem!=NULL) {
+		TVTest::StatusItemDrawInfo Info;
+
+		Info.ID=m_pItem->ID;
+		Info.Flags=0;
+		if ((Flags & DRAW_PREVIEW)!=0)
+			Info.Flags|=TVTest::STATUS_ITEM_DRAW_FLAG_PREVIEW;
+		Info.State=0;
+		if ((Flags & DRAW_HIGHLIGHT)!=0) {
+			Info.State|=TVTest::STATUS_ITEM_DRAW_STATE_HOT;
+			Info.pszStyle=L"status-bar.item.hot";
+		} else if ((Flags & DRAW_BOTTOM)!=0) {
+			Info.pszStyle=L"status-bar.item.bottom";
+		} else {
+			Info.pszStyle=L"status-bar.item";
+		}
+		Info.hdc=hdc;
+		Info.ItemRect=ItemRect;
+		Info.DrawRect=DrawRect;
+		Info.Color=::GetTextColor(hdc);
+
+		m_pPlugin->SendEvent(TVTest::EVENT_STATUSITEM_DRAW,
+							 reinterpret_cast<LPARAM>(&Info),0);
+	}
+}
+
+
+void CPlugin::CPluginStatusItem::NotifyMouseEvent(UINT Action,int x,int y)
+{
+	if (m_pPlugin!=NULL && m_pItem!=NULL) {
+		TVTest::StatusItemMouseEventInfo Info;
+
+		Info.ID=m_pItem->ID;
+		Info.Action=Action;
+		Info.hwnd=m_pStatus->GetHandle();
+		Info.CursorPos.x=x;
+		Info.CursorPos.y=y;
+		GetRect(&Info.ItemRect);
+		Info.CursorPos.x+=Info.ItemRect.left;
+		Info.CursorPos.y+=Info.ItemRect.top;
+		GetClientRect(&Info.ContentRect);
+
+		m_pPlugin->SendEvent(TVTest::EVENT_STATUSITEM_MOUSE,
+							 reinterpret_cast<LPARAM>(&Info),0);
+	}
 }
 
 
@@ -3356,6 +3728,27 @@ void CPluginManager::SendFilterGraphFinalizedEvent(
 	CMediaViewer *pMediaViewer,IGraphBuilder *pGraphBuilder)
 {
 	SendFilterGraphEvent(TVTest::EVENT_FILTERGRAPH_FINALIZED,pMediaViewer,pGraphBuilder);
+}
+
+
+void CPluginManager::RegisterStatusItems()
+{
+	for (auto itr=m_PluginList.begin();itr!=m_PluginList.end();++itr)
+		(*itr)->RegisterStatusItems();
+}
+
+
+void CPluginManager::SendStatusItemCreatedEvent()
+{
+	for (auto itr=m_PluginList.begin();itr!=m_PluginList.end();++itr) 
+		(*itr)->SendStatusItemCreatedEvent();
+}
+
+
+void CPluginManager::SendStatusItemUpdateTimerEvent()
+{
+	for (auto itr=m_PluginList.begin();itr!=m_PluginList.end();++itr) 
+		(*itr)->SendStatusItemUpdateTimerEvent();
 }
 
 

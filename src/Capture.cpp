@@ -607,7 +607,7 @@ CCaptureWindow::CCaptureStatusItem::CCaptureStatusItem(DrawUtil::CMonoColorIconL
 {
 }
 
-void CCaptureWindow::CCaptureStatusItem::Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect)
+void CCaptureWindow::CCaptureStatusItem::Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect,unsigned int Flags)
 {
 	DrawIcon(hdc,DrawRect,m_Icons,CAPTURE_ICON_CAPTURE);
 }
@@ -638,7 +638,7 @@ CCaptureWindow::CSaveStatusItem::CSaveStatusItem(CCaptureWindow *pCaptureWindow,
 {
 }
 
-void CCaptureWindow::CSaveStatusItem::Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect)
+void CCaptureWindow::CSaveStatusItem::Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect,unsigned int Flags)
 {
 	DrawIcon(hdc,DrawRect,m_Icons,CAPTURE_ICON_SAVE);
 }
@@ -657,7 +657,7 @@ CCaptureWindow::CCopyStatusItem::CCopyStatusItem(CCaptureWindow *pCaptureWindow,
 {
 }
 
-void CCaptureWindow::CCopyStatusItem::Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect)
+void CCaptureWindow::CCopyStatusItem::Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect,unsigned int Flags)
 {
 	DrawIcon(hdc,DrawRect,m_Icons,CAPTURE_ICON_COPY);
 }

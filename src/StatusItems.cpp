@@ -19,8 +19,13 @@ CChannelStatusItem::CChannelStatusItem()
 {
 }
 
-void CChannelStatusItem::Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect)
+void CChannelStatusItem::Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect,unsigned int Flags)
 {
+	if ((Flags & DRAW_PREVIEW)!=0) {
+		DrawText(hdc,DrawRect,TEXT("アフリカ中央テレビ"));
+		return;
+	}
+
 	CAppMain &App=GetAppClass();
 	const CChannelManager &ChannelManager=App.ChannelManager;
 	const CChannelInfo *pInfo;
@@ -44,11 +49,6 @@ void CChannelStatusItem::Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect)
 		::lstrcpy(szText,TEXT("<チャンネル>"));
 	}
 	DrawText(hdc,DrawRect,szText);
-}
-
-void CChannelStatusItem::DrawPreview(HDC hdc,const RECT &ItemRect,const RECT &DrawRect)
-{
-	DrawText(hdc,DrawRect,TEXT("アフリカ中央テレビ"));
 }
 
 void CChannelStatusItem::OnLButtonDown(int x,int y)
@@ -100,25 +100,24 @@ bool CVideoSizeStatusItem::UpdateContent()
 	return true;
 }
 
-void CVideoSizeStatusItem::Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect)
+void CVideoSizeStatusItem::Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect,unsigned int Flags)
 {
-	TCHAR szText[64];
+	if ((Flags & DRAW_PREVIEW)==0) {
+		TCHAR szText[64];
 
-	StdUtil::snprintf(szText,lengthof(szText),TEXT("%d x %d (%d %%)"),
-					  m_OriginalVideoWidth,m_OriginalVideoHeight,
-					  m_ZoomPercentage);
-	DrawText(hdc,DrawRect,szText);
-}
-
-void CVideoSizeStatusItem::DrawPreview(HDC hdc,const RECT &ItemRect,const RECT &DrawRect)
-{
-	DrawText(hdc,DrawRect,
+		StdUtil::snprintf(szText,lengthof(szText),TEXT("%d x %d (%d %%)"),
+						  m_OriginalVideoWidth,m_OriginalVideoHeight,
+						  m_ZoomPercentage);
+		DrawText(hdc,DrawRect,szText);
+	} else {
+		DrawText(hdc,DrawRect,
 #ifndef TVTEST_FOR_1SEG
-			 TEXT("1920 x 1080 (100 %)")
+				 TEXT("1920 x 1080 (100 %)")
 #else
-			 TEXT("320 x 180 (100 %)")
+				 TEXT("320 x 180 (100 %)")
 #endif
-			 );
+				 );
+	}
 }
 
 void CVideoSizeStatusItem::OnLButtonDown(int x,int y)
@@ -150,7 +149,7 @@ CVolumeStatusItem::CVolumeStatusItem()
 {
 }
 
-void CVolumeStatusItem::Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect)
+void CVolumeStatusItem::Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect,unsigned int Flags)
 {
 	CUICore *pUICore=&GetAppClass().UICore;
 	LOGBRUSH lb;
@@ -243,8 +242,13 @@ CAudioChannelStatusItem::CAudioChannelStatusItem()
 {
 }
 
-void CAudioChannelStatusItem::Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect)
+void CAudioChannelStatusItem::Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect,unsigned int Flags)
 {
+	if ((Flags & DRAW_PREVIEW)!=0) {
+		DrawText(hdc,DrawRect,TEXT("Stereo"));
+		return;
+	}
+
 	CAppMain &App=GetAppClass();
 	RECT rc=DrawRect;
 
@@ -262,11 +266,6 @@ void CAudioChannelStatusItem::Draw(HDC hdc,const RECT &ItemRect,const RECT &Draw
 	if (App.UICore.FormatCurrentAudioText(szText,lengthof(szText))<=0)
 		::lstrcpy(szText,TEXT("<音声>"));
 	DrawText(hdc,rc,szText);
-}
-
-void CAudioChannelStatusItem::DrawPreview(HDC hdc,const RECT &ItemRect,const RECT &DrawRect)
-{
-	DrawText(hdc,DrawRect,TEXT("Stereo"));
 }
 
 void CAudioChannelStatusItem::OnLButtonDown(int x,int y)
@@ -293,8 +292,18 @@ CRecordStatusItem::CRecordStatusItem()
 {
 }
 
-void CRecordStatusItem::Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect)
+void CRecordStatusItem::Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect,unsigned int Flags)
 {
+	if ((Flags & DRAW_PREVIEW)!=0) {
+		RECT rc=DrawRect;
+		COLORREF OldTextColor=::SetTextColor(hdc,m_CircleColor);
+		::DrawText(hdc,TEXT("●"),-1,&rc,DT_LEFT | DT_SINGLELINE | DT_VCENTER);
+		::SetTextColor(hdc,OldTextColor);
+		rc.left+=m_pStatus->GetFontHeight()+4;
+		DrawText(hdc,rc,TEXT("0:24:15"));
+		return;
+	}
+
 	const CRecordManager &RecordManager=GetAppClass().RecordManager;
 	const int FontHeight=m_pStatus->GetFontHeight();
 	RECT rc;
@@ -356,16 +365,6 @@ void CRecordStatusItem::Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect)
 		pszText=TEXT("■ <録画>");
 	}
 	DrawText(hdc,rc,pszText);
-}
-
-void CRecordStatusItem::DrawPreview(HDC hdc,const RECT &ItemRect,const RECT &DrawRect)
-{
-	RECT rc=DrawRect;
-	COLORREF OldTextColor=::SetTextColor(hdc,m_CircleColor);
-	::DrawText(hdc,TEXT("●"),-1,&rc,DT_LEFT | DT_SINGLELINE | DT_VCENTER);
-	::SetTextColor(hdc,OldTextColor);
-	rc.left+=m_pStatus->GetFontHeight()+4;
-	DrawText(hdc,rc,TEXT("0:24:15"));
 }
 
 void CRecordStatusItem::OnLButtonDown(int x,int y)
@@ -505,7 +504,7 @@ CCaptureStatusItem::CCaptureStatusItem()
 {
 }
 
-void CCaptureStatusItem::Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect)
+void CCaptureStatusItem::Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect,unsigned int Flags)
 {
 	if (!m_Icons.IsCreated())
 		m_Icons.Load(GetAppClass().GetResourceInstance(),IDB_CAPTURE,16,16);
@@ -555,20 +554,19 @@ bool CErrorStatusItem::UpdateContent()
 	return true;
 }
 
-void CErrorStatusItem::Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect)
+void CErrorStatusItem::Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect,unsigned int Flags)
 {
-	TCHAR szText[80];
+	if ((Flags & DRAW_PREVIEW)==0) {
+		TCHAR szText[80];
 
-	StdUtil::snprintf(szText,lengthof(szText),TEXT("D %llu / E %llu / S %llu"),
-					  m_ContinuityErrorPacketCount,
-					  m_ErrorPacketCount,
-					  m_ScramblePacketCount);
-	DrawText(hdc,DrawRect,szText);
-}
-
-void CErrorStatusItem::DrawPreview(HDC hdc,const RECT &ItemRect,const RECT &DrawRect)
-{
-	DrawText(hdc,DrawRect,TEXT("D 2 / E 0 / S 127"));
+		StdUtil::snprintf(szText,lengthof(szText),TEXT("D %llu / E %llu / S %llu"),
+						  m_ContinuityErrorPacketCount,
+						  m_ErrorPacketCount,
+						  m_ScramblePacketCount);
+		DrawText(hdc,DrawRect,szText);
+	} else {
+		DrawText(hdc,DrawRect,TEXT("D 2 / E 0 / S 127"));
+	}
 }
 
 void CErrorStatusItem::OnLButtonDown(int x,int y)
@@ -610,30 +608,28 @@ bool CSignalLevelStatusItem::UpdateContent()
 	return true;
 }
 
-void CSignalLevelStatusItem::Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect)
+void CSignalLevelStatusItem::Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect,unsigned int Flags)
 {
 	const CCoreEngine &CoreEngine=GetAppClass().CoreEngine;
 	TCHAR szText[64];
-	int Length=0;
 
-	if (m_fShowSignalLevel) {
-		TCHAR szSignalLevel[32];
-		CoreEngine.GetSignalLevelText(m_SignalLevel,szSignalLevel,lengthof(szSignalLevel));
-		Length=StdUtil::snprintf(szText,lengthof(szText),TEXT("%s / "),szSignalLevel);
+	if ((Flags & DRAW_PREVIEW)==0) {
+		int Length=0;
+
+		if (m_fShowSignalLevel) {
+			TCHAR szSignalLevel[32];
+			CoreEngine.GetSignalLevelText(m_SignalLevel,szSignalLevel,lengthof(szSignalLevel));
+			Length=StdUtil::snprintf(szText,lengthof(szText),TEXT("%s / "),szSignalLevel);
+		}
+		CoreEngine.GetBitRateText(m_BitRate,szText+Length,lengthof(szText)-Length);
+	} else {
+		TCHAR szSignalLevel[32],szBitRate[32];
+
+		CoreEngine.GetSignalLevelText(24.52f,szSignalLevel,lengthof(szSignalLevel));
+		CoreEngine.GetBitRateText(16.73f,szBitRate,lengthof(szBitRate));
+		StdUtil::snprintf(szText,lengthof(szText),TEXT("%s / %s"),szSignalLevel,szBitRate);
 	}
-	CoreEngine.GetBitRateText(m_BitRate,szText+Length,lengthof(szText)-Length);
 
-	DrawText(hdc,DrawRect,szText);
-}
-
-void CSignalLevelStatusItem::DrawPreview(HDC hdc,const RECT &ItemRect,const RECT &DrawRect)
-{
-	const CCoreEngine &CoreEngine=GetAppClass().CoreEngine;
-	TCHAR szText[64],szSignalLevel[32],szBitRate[32];
-
-	CoreEngine.GetSignalLevelText(24.52f,szSignalLevel,lengthof(szSignalLevel));
-	CoreEngine.GetBitRateText(16.73f,szBitRate,lengthof(szBitRate));
-	StdUtil::snprintf(szText,lengthof(szText),TEXT("%s / %s"),szSignalLevel,szBitRate);
 	DrawText(hdc,DrawRect,szText);
 }
 
@@ -672,26 +668,19 @@ bool CClockStatusItem::UpdateContent()
 	return true;
 }
 
-void CClockStatusItem::Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect)
+void CClockStatusItem::Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect,unsigned int Flags)
 {
-	if (m_Time.wYear==0)
-		return;
-
 	TCHAR szText[64];
 
-	FormatTime(m_Time,szText,lengthof(szText));
-
-	DrawText(hdc,DrawRect,szText);
-}
-
-void CClockStatusItem::DrawPreview(HDC hdc,const RECT &ItemRect,const RECT &DrawRect)
-{
-	SYSTEMTIME st={2112,9,0,3,12,9,3,0};
-	TCHAR szText[64];
-
-	st.wDayOfWeek=CalcDayOfWeek(st.wYear,st.wMonth,st.wDay);
-
-	FormatTime(st,szText,lengthof(szText));
+	if ((Flags & DRAW_PREVIEW)==0) {
+		if (m_Time.wYear==0)
+			return;
+		FormatTime(m_Time,szText,lengthof(szText));
+	} else {
+		SYSTEMTIME st={2112,9,0,3,12,9,3,0};
+		st.wDayOfWeek=CalcDayOfWeek(st.wYear,st.wMonth,st.wDay);
+		FormatTime(st,szText,lengthof(szText));
+	}
 
 	DrawText(hdc,DrawRect,szText);
 }
@@ -762,8 +751,13 @@ CProgramInfoStatusItem::CProgramInfoStatusItem()
 {
 }
 
-void CProgramInfoStatusItem::Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect)
+void CProgramInfoStatusItem::Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect,unsigned int Flags)
 {
+	if ((Flags & DRAW_PREVIEW)!=0) {
+		DrawText(hdc,DrawRect,TEXT("1:00～1:30 今日のニュース"));
+		return;
+	}
+
 	if (m_fShowProgress && m_fValidProgress) {
 		RECT rcProgress=DrawRect;
 		rcProgress.top=rcProgress.bottom-(DrawRect.bottom-DrawRect.top)/3;
@@ -781,11 +775,6 @@ void CProgramInfoStatusItem::Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawR
 
 	if (!m_Text.IsEmpty())
 		DrawText(hdc,DrawRect,m_Text.Get());
-}
-
-void CProgramInfoStatusItem::DrawPreview(HDC hdc,const RECT &ItemRect,const RECT &DrawRect)
-{
-	DrawText(hdc,DrawRect,TEXT("1:00～1:30 今日のニュース"));
 }
 
 bool CProgramInfoStatusItem::UpdateContent()
@@ -1005,19 +994,19 @@ bool CBufferingStatusItem::UpdateContent()
 	return true;
 }
 
-void CBufferingStatusItem::Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect)
+void CBufferingStatusItem::Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect,unsigned int Flags)
 {
+	if ((Flags & DRAW_PREVIEW)!=0) {
+		DrawText(hdc,DrawRect,TEXT("R 2 / B 48%"));
+		return;
+	}
+
 	TCHAR szText[32];
 
 	StdUtil::snprintf(szText,lengthof(szText),TEXT("R %u / B %d%%"),
 					  static_cast<unsigned int>(m_StreamRemain),
 					  m_PacketBufferUsedPercentage);
 	DrawText(hdc,DrawRect,szText);
-}
-
-void CBufferingStatusItem::DrawPreview(HDC hdc,const RECT &ItemRect,const RECT &DrawRect)
-{
-	DrawText(hdc,DrawRect,TEXT("R 2 / B 48%"));
 }
 
 void CBufferingStatusItem::OnLButtonDown(int x,int y)
@@ -1036,8 +1025,13 @@ CTunerStatusItem::CTunerStatusItem()
 {
 }
 
-void CTunerStatusItem::Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect)
+void CTunerStatusItem::Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect,unsigned int Flags)
 {
+	if ((Flags & DRAW_PREVIEW)!=0) {
+		DrawText(hdc,DrawRect,TEXT("地デジ"));
+		return;
+	}
+
 	const CChannelManager &ChannelManager=GetAppClass().ChannelManager;
 	const CChannelInfo *pChInfo=ChannelManager.GetCurrentChannelInfo();
 	LPCTSTR pszText;
@@ -1054,11 +1048,6 @@ void CTunerStatusItem::Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect)
 		pszText=TEXT("<チューナー>");
 	}
 	DrawText(hdc,DrawRect,pszText);
-}
-
-void CTunerStatusItem::DrawPreview(HDC hdc,const RECT &ItemRect,const RECT &DrawRect)
-{
-	DrawText(hdc,DrawRect,TEXT("地デジ"));
 }
 
 void CTunerStatusItem::OnLButtonDown(int x,int y)
@@ -1104,8 +1093,13 @@ bool CMediaBitRateStatusItem::UpdateContent()
 	return true;
 }
 
-void CMediaBitRateStatusItem::Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect)
+void CMediaBitRateStatusItem::Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect,unsigned int Flags)
 {
+	if ((Flags & DRAW_PREVIEW)!=0) {
+		DrawText(hdc,DrawRect,TEXT("V 13.25 Mbps / A 185 kbps"));
+		return;
+	}
+
 	TCHAR szText[64];
 	int Length;
 
@@ -1125,18 +1119,13 @@ void CMediaBitRateStatusItem::Draw(HDC hdc,const RECT &ItemRect,const RECT &Draw
 	DrawText(hdc,DrawRect,szText);
 }
 
-void CMediaBitRateStatusItem::DrawPreview(HDC hdc,const RECT &ItemRect,const RECT &DrawRect)
-{
-	DrawText(hdc,DrawRect,TEXT("V 13.25 Mbps / A 185 kbps"));
-}
-
 
 CFavoritesStatusItem::CFavoritesStatusItem()
 	: CIconStatusItem(STATUS_ITEM_FAVORITES,16)
 {
 }
 
-void CFavoritesStatusItem::Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect)
+void CFavoritesStatusItem::Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect,unsigned int Flags)
 {
 	if (!m_Icons.IsCreated())
 		m_Icons.Load(GetAppClass().GetResourceInstance(),IDB_STATUSBAR_FAVORITES,16,16);

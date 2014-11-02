@@ -30,6 +30,7 @@ static const bool IS_HD=
 CStatusOptions::CStatusOptions(CStatusView *pStatusView)
 	: COptions(TEXT("Status"))
 	, m_pStatusView(pStatusView)
+	, m_ItemID(STATUS_ITEM_LAST+1)
 	, m_fShowTOTTime(false)
 	, m_fEnablePopupProgramInfo(true)
 	, m_fShowEventProgress(true)
@@ -39,7 +40,40 @@ CStatusOptions::CStatusOptions(CStatusView *pStatusView)
 	, m_ItemMargin(3)
 	, m_CheckSize(14,14)
 {
-	GetDefaultItemList(m_ItemList);
+	static const struct {
+		BYTE ID;
+		bool fVisible;
+	} DefaultItemList[] = {
+		{STATUS_ITEM_TUNER,			IS_HD},
+		{STATUS_ITEM_CHANNEL,		true},
+		{STATUS_ITEM_FAVORITES,		false},
+		{STATUS_ITEM_VIDEOSIZE,		true},
+		{STATUS_ITEM_VOLUME,		true},
+		{STATUS_ITEM_AUDIOCHANNEL,	true},
+		{STATUS_ITEM_RECORD,		true},
+		{STATUS_ITEM_CAPTURE,		IS_HD},
+		{STATUS_ITEM_ERROR,			IS_HD},
+		{STATUS_ITEM_SIGNALLEVEL,	true},
+		{STATUS_ITEM_CLOCK,			false},
+		{STATUS_ITEM_PROGRAMINFO,	false},
+		{STATUS_ITEM_BUFFERING,		false},
+		{STATUS_ITEM_MEDIABITRATE,	false},
+	};
+
+	m_AvailItemList.reserve(lengthof(DefaultItemList));
+
+	for (int i=0;i<lengthof(DefaultItemList);i++) {
+		StatusItemInfo Info;
+
+		Info.ID=DefaultItemList[i].ID;
+		Info.fVisible=DefaultItemList[i].fVisible;
+		Info.Width=-1;
+
+		m_AvailItemList.push_back(Info);
+	}
+
+	m_ItemList=m_AvailItemList;
+
 	m_pStatusView->GetFont(&m_lfItemFont);
 }
 
@@ -53,45 +87,62 @@ CStatusOptions::~CStatusOptions()
 bool CStatusOptions::ReadSettings(CSettings &Settings)
 {
 	int NumItems;
-	if (Settings.Read(TEXT("NumItems"),&NumItems)
-			&& NumItems>0 && NumItems<=NUM_STATUS_ITEMS) {
-		StatusItemInfo ItemList[NUM_STATUS_ITEMS];
-		int i,j,k;
+	if (Settings.Read(TEXT("NumItems"),&NumItems) && NumItems>0) {
+		StatusItemInfoList ItemList;
+		TVTest::String ID;
 
-		for (i=j=0;i<NumItems;i++) {
+		for (int i=0;i<NumItems;i++) {
 			TCHAR szKey[32];
 
-			::wsprintf(szKey,TEXT("Item%d_ID"),i);
-			if (Settings.Read(szKey,&ItemList[j].ID)
-					&& ItemList[j].ID>=STATUS_ITEM_FIRST
-					&& ItemList[j].ID<=STATUS_ITEM_LAST) {
-				for (k=0;k<j;k++) {
-					if (ItemList[k].ID==ItemList[j].ID)
-						break;
+			StdUtil::snprintf(szKey,lengthof(szKey),TEXT("Item%d_ID"),i);
+			if (Settings.Read(szKey,&ID) && !ID.empty()) {
+				StatusItemInfo Item;
+
+				LPTSTR p;
+				long IDNum=std::_tcstol(ID.c_str(),&p,10);
+				if (*p==_T('\0')) {
+					if (IDNum>=STATUS_ITEM_FIRST && IDNum<=STATUS_ITEM_LAST) {
+						Item.ID=(int)IDNum;
+					} else {
+						continue;
+					}
+					size_t j;
+					for (j=0;j<ItemList.size();j++) {
+						if (ItemList[j].ID==Item.ID)
+							break;
+					}
+					if (j<ItemList.size())
+						continue;
+					for (size_t j=0;j<m_AvailItemList.size();j++) {
+						if (m_AvailItemList[j].ID==Item.ID) {
+							Item.fVisible=m_AvailItemList[j].fVisible;
+							break;
+						}
+					}
+				} else {
+					Item.ID=-1;
+					Item.IDText=ID;
+					size_t j=0;
+					for (j=0;j<ItemList.size();j++) {
+						if (TVTest::StringUtility::CompareNoCase(ItemList[j].IDText,Item.IDText)==0)
+							break;
+					}
+					if (j<ItemList.size())
+						continue;
+					Item.fVisible=false;
 				}
-				if (k==j) {
-					::wsprintf(szKey,TEXT("Item%d_Visible"),i);
-					Settings.Read(szKey,&ItemList[j].fVisible);
-					::wsprintf(szKey,TEXT("Item%d_Width"),i);
-					if (!Settings.Read(szKey,&ItemList[j].Width) || ItemList[j].Width<1)
-						ItemList[j].Width=-1;
-					j++;
-				}
+
+				StdUtil::snprintf(szKey,lengthof(szKey),TEXT("Item%d_Visible"),i);
+				Settings.Read(szKey,&Item.fVisible);
+				StdUtil::snprintf(szKey,lengthof(szKey),TEXT("Item%d_Width"),i);
+				if (!Settings.Read(szKey,&Item.Width) || Item.Width<1)
+					Item.Width=-1;
+
+				ItemList.push_back(Item);
 			}
 		}
-		NumItems=j;
-		if (NumItems<NUM_STATUS_ITEMS) {
-			for (i=0;i<NUM_STATUS_ITEMS;i++) {
-				for (k=0;k<NumItems;k++) {
-					if (ItemList[k].ID==m_ItemList[i].ID)
-						break;
-				}
-				if (k==NumItems)
-					m_ItemList[j++]=m_ItemList[i];
-			}
-		}
-		for (i=0;i<NumItems;i++)
-			m_ItemList[i]=ItemList[i];
+
+		m_ItemList=ItemList;
 	}
 
 	// Font
@@ -131,16 +182,20 @@ bool CStatusOptions::ReadSettings(CSettings &Settings)
 
 bool CStatusOptions::WriteSettings(CSettings &Settings)
 {
-	if (Settings.Write(TEXT("NumItems"),NUM_STATUS_ITEMS)) {
-		for (int i=0;i<NUM_STATUS_ITEMS;i++) {
+	if (Settings.Write(TEXT("NumItems"),(int)m_ItemList.size())) {
+		for (int i=0;i<(int)m_ItemList.size();i++) {
+			const StatusItemInfo &Info=m_ItemList[i];
 			TCHAR szKey[32];
 
-			::wsprintf(szKey,TEXT("Item%d_ID"),i);
-			Settings.Write(szKey,m_ItemList[i].ID);
-			::wsprintf(szKey,TEXT("Item%d_Visible"),i);
-			Settings.Write(szKey,m_ItemList[i].fVisible);
-			::wsprintf(szKey,TEXT("Item%d_Width"),i);
-			Settings.Write(szKey,m_ItemList[i].Width);
+			StdUtil::snprintf(szKey,lengthof(szKey),TEXT("Item%d_ID"),i);
+			if (!Info.IDText.empty())
+				Settings.Write(szKey,Info.IDText);
+			else
+				Settings.Write(szKey,Info.ID);
+			StdUtil::snprintf(szKey,lengthof(szKey),TEXT("Item%d_Visible"),i);
+			Settings.Write(szKey,Info.fVisible);
+			StdUtil::snprintf(szKey,lengthof(szKey),TEXT("Item%d_Width"),i);
+			Settings.Write(szKey,Info.Width);
 		}
 	}
 
@@ -168,39 +223,67 @@ bool CStatusOptions::Create(HWND hwndOwner)
 }
 
 
-void CStatusOptions::GetDefaultItemList(StatusItemInfo *pList) const
+bool CStatusOptions::ApplyOptions()
 {
-	static const struct {
-		BYTE ID;
-		bool fVisible;
-	} DefaultItemList[NUM_STATUS_ITEMS] = {
-		{STATUS_ITEM_TUNER,			IS_HD},
-		{STATUS_ITEM_CHANNEL,		true},
-		{STATUS_ITEM_FAVORITES,		false},
-		{STATUS_ITEM_VIDEOSIZE,		true},
-		{STATUS_ITEM_VOLUME,		true},
-		{STATUS_ITEM_AUDIOCHANNEL,	true},
-		{STATUS_ITEM_RECORD,		true},
-		{STATUS_ITEM_CAPTURE,		IS_HD},
-		{STATUS_ITEM_ERROR,			IS_HD},
-		{STATUS_ITEM_SIGNALLEVEL,	true},
-		{STATUS_ITEM_CLOCK,			false},
-		{STATUS_ITEM_PROGRAMINFO,	false},
-		{STATUS_ITEM_BUFFERING,		false},
-		{STATUS_ITEM_MEDIABITRATE,	false},
-	};
+	m_pStatusView->EnableSizeAdjustment(false);
+	m_pStatusView->SetMultiRow(m_fMultiRow);
+	m_pStatusView->SetMaxRows(m_MaxRows);
+	m_pStatusView->SetFont(&m_lfItemFont);
+	m_pStatusView->EnableSizeAdjustment(true);
+	return true;
+}
 
-	for (int i=0;i<NUM_STATUS_ITEMS;i++) {
-		pList[i].ID=DefaultItemList[i].ID;
-		pList[i].fVisible=DefaultItemList[i].fVisible;
-		pList[i].Width=-1;
+
+bool CStatusOptions::ApplyItemList()
+{
+	StatusItemInfoList ItemList;
+
+	MakeItemList(&ItemList);
+
+	std::vector<int> ItemOrder;
+	ItemOrder.resize(ItemList.size());
+
+	for (size_t i=0;i<ItemList.size();i++) {
+		ItemOrder[i]=ItemList[i].ID;
+		CStatusItem *pItem=m_pStatusView->GetItemByID(ItemOrder[i]);
+		pItem->SetVisible(ItemList[i].fVisible);
+		if (ItemList[i].Width>=0)
+			pItem->SetWidth(ItemList[i].Width);
 	}
+
+	return m_pStatusView->SetItemOrder(ItemOrder.data());
+}
+
+
+int CStatusOptions::RegisterItem(LPCTSTR pszID)
+{
+	if (IsStringEmpty(pszID))
+		return -1;
+
+	StatusItemInfo Item;
+
+	Item.ID=m_ItemID++;
+	Item.IDText=pszID;
+	Item.fVisible=false;
+	Item.Width=-1;
+
+	m_AvailItemList.push_back(Item);
+
+	for (size_t i=0;i<m_ItemList.size();i++) {
+		if (m_ItemList[i].ID<0
+				&& TVTest::StringUtility::CompareNoCase(m_ItemList[i].IDText,Item.IDText)==0) {
+			m_ItemList[i].ID=Item.ID;
+			break;
+		}
+	}
+
+	return Item.ID;
 }
 
 
 void CStatusOptions::InitListBox(HWND hDlg)
 {
-	for (int i=0;i<NUM_STATUS_ITEMS;i++)
+	for (size_t i=0;i<m_ItemListCur.size();i++)
 		DlgListBox_AddString(hDlg,IDC_STATUSOPTIONS_ITEMLIST,&m_ItemListCur[i]);
 }
 
@@ -232,8 +315,11 @@ INT_PTR CStatusOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 			m_ItemHeight=m_pStatusView->GetItemHeight()+m_ItemMargin.Vert();
 			DlgListBox_SetItemHeight(hDlg,IDC_STATUSOPTIONS_ITEMLIST,0,m_ItemHeight);
 
-			for (int i=0;i<NUM_STATUS_ITEMS;i++)
-				m_ItemListCur[i]=m_ItemList[i];
+			MakeItemList(&m_ItemListCur);
+			for (auto itr=m_ItemListCur.begin();itr!=m_ItemListCur.end();++itr) {
+				const CStatusItem *pItem=m_pStatusView->GetItemByID(itr->ID);
+				itr->fVisible=pItem->GetVisible();
+			}
 			InitListBox(hDlg);
 			CalcTextWidth(hDlg);
 			SetListHExtent(hDlg);
@@ -334,7 +420,7 @@ INT_PTR CStatusOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 		switch (LOWORD(wParam)) {
 		case IDC_STATUSOPTIONS_DEFAULT:
 			DlgListBox_Clear(hDlg,IDC_STATUSOPTIONS_ITEMLIST);
-			GetDefaultItemList(m_ItemListCur);
+			m_ItemListCur=m_AvailItemList;
 			InitListBox(hDlg);
 			SetListHExtent(hDlg);
 			return TRUE;
@@ -371,15 +457,17 @@ INT_PTR CStatusOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 			{
 				m_pStatusView->EnableSizeAdjustment(false);
 
-				for (int i=0;i<NUM_STATUS_ITEMS;i++)
+				m_ItemList.resize(m_ItemListCur.size());
+				for (size_t i=0;i<m_ItemListCur.size();i++) {
 					m_ItemList[i]=*reinterpret_cast<StatusItemInfo*>(
 						DlgListBox_GetItemData(hDlg,IDC_STATUSOPTIONS_ITEMLIST,i));
+				}
 				ApplyItemList();
 
 				if (!CompareLogFont(&m_lfItemFont,&m_CurSettingFont)) {
 					m_lfItemFont=m_CurSettingFont;
 					m_pStatusView->SetFont(&m_lfItemFont);
-					for (int i=0;i<NUM_STATUS_ITEMS;i++) {
+					for (size_t i=0;i<m_ItemList.size();i++) {
 						StatusItemInfo &Item=m_ItemList[i];
 						if (Item.Width<0)
 							Item.Width=m_pStatusView->GetItemByID(Item.ID)->GetWidth();
@@ -434,7 +522,7 @@ void CStatusOptions::CalcTextWidth(HWND hDlg)
 	Count=ListBox_GetCount(hwndList);
 	MaxWidth=0;
 	for (i=0;i<Count;i++) {
-		pItem=m_pStatusView->GetItemByID(m_ItemList[i].ID);
+		pItem=m_pStatusView->GetItemByID(m_ItemListCur[i].ID);
 		GetTextExtentPoint32(hdc,pItem->GetName(),lstrlen(pItem->GetName()),&sz);
 		if (sz.cx>MaxWidth)
 			MaxWidth=sz.cx;
@@ -450,7 +538,7 @@ void CStatusOptions::SetListHExtent(HWND hDlg)
 	HWND hwndList=::GetDlgItem(hDlg,IDC_STATUSOPTIONS_ITEMLIST);
 	int MaxWidth=0;
 
-	for (int i=0;i<NUM_STATUS_ITEMS;i++) {
+	for (size_t i=0;i<m_ItemListCur.size();i++) {
 		const StatusItemInfo &Item=m_ItemListCur[i];
 		int Width=Item.Width>=0?Item.Width:m_pStatusView->GetItemByID(Item.ID)->GetWidth();
 		if (Width>MaxWidth)
@@ -627,9 +715,15 @@ LRESULT CALLBACK CStatusOptions::ItemListProc(HWND hwnd,UINT uMsg,WPARAM wParam,
 				if (pThis->GetItemPreviewRect(hwnd,Sel,&rc)) {
 					StatusItemInfo *pItemInfo=reinterpret_cast<StatusItemInfo*>(ListBox_GetItemData(hwnd,Sel));
 					int Width=(x-rc.left)-pThis->m_pStatusView->GetItemPadding().Horz();
-					int MinWidth=pThis->m_pStatusView->GetItemByID(pItemInfo->ID)->GetMinWidth();
+					const CStatusItem *pItem=pThis->m_pStatusView->GetItemByID(pItemInfo->ID);
+					int MinWidth=pItem->GetMinWidth();
+					int MaxWidth=pItem->GetMaxWidth();
 
-					pItemInfo->Width=max(Width,MinWidth);
+					if (Width<MinWidth)
+						Width=MinWidth;
+					else if (MaxWidth>0 && Width>MaxWidth)
+						Width=MaxWidth;
+					pItemInfo->Width=Width;
 					ListBox_GetItemRect(hwnd,Sel,&rc);
 					InvalidateRect(hwnd,&rc,TRUE);
 					pThis->SetListHExtent(GetParent(hwnd));
@@ -719,30 +813,32 @@ LRESULT CALLBACK CStatusOptions::ItemListProc(HWND hwnd,UINT uMsg,WPARAM wParam,
 }
 
 
-bool CStatusOptions::ApplyItemList()
+void CStatusOptions::MakeItemList(StatusItemInfoList *pList) const
 {
-	int i;
-	int ItemOrder[NUM_STATUS_ITEMS];
-	CStatusItem *pItem;
+	pList->clear();
+	pList->reserve(m_AvailItemList.size());
 
-	for (i=0;i<NUM_STATUS_ITEMS;i++) {
-		ItemOrder[i]=m_ItemList[i].ID;
-		pItem=m_pStatusView->GetItemByID(ItemOrder[i]);
-		pItem->SetVisible(m_ItemList[i].fVisible);
-		if (m_ItemList[i].Width>=0)
-			pItem->SetWidth(m_ItemList[i].Width);
+	for (auto itr=m_ItemList.begin();itr!=m_ItemList.end();++itr) {
+		if (itr->ID>=0)
+			pList->push_back(*itr);
 	}
-	return m_pStatusView->SetItemOrder(ItemOrder);
-}
 
-
-bool CStatusOptions::ApplyOptions()
-{
-	m_pStatusView->EnableSizeAdjustment(false);
-	m_pStatusView->SetMultiRow(m_fMultiRow);
-	m_pStatusView->SetMaxRows(m_MaxRows);
-	m_pStatusView->SetFont(&m_lfItemFont);
-	ApplyItemList();
-	m_pStatusView->EnableSizeAdjustment(true);
-	return true;
+	if (pList->size()<m_AvailItemList.size()) {
+		for (size_t i=0;i<m_AvailItemList.size();i++) {
+			const int ID=m_AvailItemList[i].ID;
+			bool fFound=false;
+			for (size_t j=0;j<pList->size();j++) {
+				if ((*pList)[j].ID==ID) {
+					fFound=true;
+					break;
+				}
+			}
+			if (!fFound) {
+				pList->push_back(m_AvailItemList[i]);
+				const CStatusItem *pItem=m_pStatusView->GetItemByID(ID);
+				if (pItem!=NULL)
+					pList->back().fVisible=pItem->GetVisible();
+			}
+		}
+	}
 }

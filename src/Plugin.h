@@ -76,6 +76,9 @@ public:
 								   const POINT *pCursorPos,const RECT *pItemRect);
 	bool IsDisableOnStart() const;
 	bool IsProgramGuideEventEnabled(UINT EventFlag) const { return (m_ProgramGuideEventFlags&EventFlag)!=0; }
+	void RegisterStatusItems();
+	void SendStatusItemCreatedEvent();
+	void SendStatusItemUpdateTimerEvent();
 
 	static void SetMessageWindow(HWND hwnd,UINT Message);
 	static LRESULT OnPluginMessage(WPARAM wParam,LPARAM lParam);
@@ -88,6 +91,56 @@ private:
 	public:
 		CProgramGuideCommand(const TVTest::ProgramGuideCommandInfo &Info);
 		UINT GetType() const { return m_Type; }
+	};
+
+	class CPluginStatusItem;
+
+	struct StatusItem
+	{
+		DWORD Flags;
+		int ID;
+		TVTest::String IDText;
+		TVTest::String Name;
+		int MinWidth;
+		int MaxWidth;
+		int DefaultWidth;
+		int MinHeight;
+		int ItemID;
+		DWORD State;
+		CPluginStatusItem *pItem;
+	};
+
+	class CPluginStatusItem : public CStatusItem
+	{
+	public:
+		CPluginStatusItem(CPlugin *pPlugin,StatusItem *pItem);
+		~CPluginStatusItem();
+
+	// CStatusItem
+		LPCTSTR GetIDText() const override { return m_IDText.c_str(); }
+		LPCTSTR GetName() const override { return m_pItem->Name.c_str(); }
+		void Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect,unsigned int Flags) override;
+		void OnLButtonDown(int x,int y) override;
+		void OnLButtonUp(int x,int y) override;
+		void OnLButtonDoubleClick(int x,int y) override;
+		void OnRButtonDown(int x,int y) override;
+		void OnRButtonUp(int x,int y) override;
+		void OnMouseMove(int x,int y) override;
+		void OnVisibilityChanged() override;
+		void OnFocus(bool fFocus) override;
+		void OnSizeChanged() override;
+
+	// CPluginStatusItem
+		void DetachItem();
+		HWND GetWindowHandle() const;
+
+	private:
+		CPlugin *m_pPlugin;
+		StatusItem *m_pItem;
+		TVTest::String m_IDText;
+
+		void NotifyDraw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect,unsigned int Flags);
+		void NotifyMouseEvent(UINT Action,int x,int y);
 	};
 
 	HMODULE m_hLib;
@@ -112,6 +165,7 @@ private:
 	std::vector<CPluginCommandInfo> m_CommandList;
 	std::vector<CProgramGuideCommand> m_ProgramGuideCommandList;
 	std::vector<CDynamicString> m_ControllerList;
+	std::vector<StatusItem*> m_StatusItemList;
 
 	static HWND m_hwndMessage;
 	static UINT m_MessageCode;
@@ -222,6 +276,9 @@ public:
 	void SendFilterGraphInitializedEvent(CMediaViewer *pMediaViewer,IGraphBuilder *pGraphBuilder);
 	void SendFilterGraphFinalizeEvent(CMediaViewer *pMediaViewer,IGraphBuilder *pGraphBuilder);
 	void SendFilterGraphFinalizedEvent(CMediaViewer *pMediaViewer,IGraphBuilder *pGraphBuilder);
+	void RegisterStatusItems();
+	void SendStatusItemCreatedEvent();
+	void SendStatusItemUpdateTimerEvent();
 };
 
 class CPluginOptions : public COptions

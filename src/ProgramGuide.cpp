@@ -4861,9 +4861,10 @@ public:
 	{
 	}
 
+	LPCTSTR GetIDText() const override { return TEXT("Tuner"); }
 	LPCTSTR GetName() const override { return TEXT("チューナー"); }
 
-	void Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect) override
+	void Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect,unsigned int Flags) override
 	{
 		TCHAR szText[256];
 
@@ -4952,9 +4953,10 @@ public:
 	{
 	}
 
+	LPCTSTR GetIDText() const override { return TEXT("Date"); }
 	LPCTSTR GetName() const override { return TEXT("日時"); }
 
-	void Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect) override
+	void Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect,unsigned int Flags) override
 	{
 		if (m_pProgramGuide->GetListMode()==CProgramGuide::LIST_SERVICES) {
 			SYSTEMTIME stFirst;
@@ -5035,9 +5037,10 @@ public:
 	{
 	}
 
+	LPCTSTR GetIDText() const override { return TEXT("Prev"); }
 	LPCTSTR GetName() const override { return TEXT("前へ"); }
 
-	void Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect) override
+	void Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect,unsigned int Flags) override
 	{
 		bool fEnabled;
 
@@ -5077,9 +5080,10 @@ public:
 	{
 	}
 
+	LPCTSTR GetIDText() const override { return TEXT("Next"); }
 	LPCTSTR GetName() const override { return TEXT("次へ"); }
 
-	void Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect) override
+	void Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect,unsigned int Flags) override
 	{
 		bool fEnabled;
 

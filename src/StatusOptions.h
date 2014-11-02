@@ -2,11 +2,10 @@
 #define STATUS_OPTIONS_H
 
 
+#include <vector>
 #include "Options.h"
 #include "StatusItems.h"
 
-
-#define NUM_STATUS_ITEMS (STATUS_ITEM_LAST+1)
 
 class CStatusOptions : public COptions
 {
@@ -20,6 +19,8 @@ public:
 	bool Create(HWND hwndOwner) override;
 // CStatusOptions
 	bool ApplyOptions();
+	bool ApplyItemList();
+	int RegisterItem(LPCTSTR pszID);
 	const LOGFONT &GetFont() const { return m_lfItemFont; }
 	bool GetShowTOTTime() const { return m_fShowTOTTime; }
 	void SetShowTOTTime(bool fShow) { m_fShowTOTTime=fShow; }
@@ -29,14 +30,21 @@ public:
 	void SetShowEventProgress(bool fShow) { m_fShowEventProgress=fShow; }
 
 private:
-	CStatusView *m_pStatusView;
-	struct StatusItemInfo {
+	struct StatusItemInfo
+	{
 		int ID;
+		TVTest::String IDText;
 		bool fVisible;
 		int Width;
 	};
-	StatusItemInfo m_ItemList[NUM_STATUS_ITEMS];
-	StatusItemInfo m_ItemListCur[NUM_STATUS_ITEMS];
+
+	typedef std::vector<StatusItemInfo> StatusItemInfoList;
+
+	CStatusView *m_pStatusView;
+	StatusItemInfoList m_AvailItemList;
+	StatusItemInfoList m_ItemList;
+	StatusItemInfoList m_ItemListCur;
+	int m_ItemID;
 	LOGFONT m_lfItemFont;
 	bool m_fMultiRow;
 	int m_MaxRows;
@@ -58,14 +66,13 @@ private:
 // CBasicDialog
 	INT_PTR DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
 
-	void GetDefaultItemList(StatusItemInfo *pList) const;
 	void InitListBox(HWND hDlg);
 	void CalcTextWidth(HWND hDlg);
 	void SetListHExtent(HWND hDlg);
 	void DrawInsertMark(HWND hwndList,int Pos);
 	bool GetItemPreviewRect(HWND hwndList,int Index,RECT *pRect);
 	bool IsCursorResize(HWND hwndList,int x,int y);
-	bool ApplyItemList();
+	void MakeItemList(StatusItemInfoList *pList) const;
 
 	static LRESULT CALLBACK ItemListProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam);
 

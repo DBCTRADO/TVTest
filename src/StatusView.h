@@ -33,6 +33,12 @@ public:
 		SizeValue(int v,SizeUnit u) : Value(v), Unit(u) {}
 	};
 
+	enum {
+		DRAW_HIGHLIGHT	= 0x00000001U,
+		DRAW_BOTTOM		= 0x00000002U,
+		DRAW_PREVIEW	= 0x00000004U
+	};
+
 	CStatusItem(int ID,const SizeValue &DefaultWidth);
 	virtual ~CStatusItem() {}
 	int GetIndex() const;
@@ -43,21 +49,31 @@ public:
 	int GetWidth() const { return m_Width; }
 	bool SetWidth(int Width);
 	int GetMinWidth() const { return m_MinWidth; }
+	int GetMaxWidth() const { return m_MaxWidth; }
+	int GetActualWidth() const { return m_ActualWidth; }
+	bool SetActualWidth(int Width);
+	int GetMinHeight() const { return m_MinHeight; }
 	void SetVisible(bool fVisible);
 	bool GetVisible() const { return m_fVisible; }
+	bool IsFullRow() const { return m_fFullRow; }
+	bool IsVariableWidth() const { return m_fVariableWidth; }
 	bool Update();
 	void Redraw();
+	virtual LPCTSTR GetIDText() const=0;
 	virtual LPCTSTR GetName() const=0;
 	virtual bool UpdateContent() { return true; }
-	virtual void Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect)=0;
-	virtual void DrawPreview(HDC hdc,const RECT &ItemRect,const RECT &DrawRect) { Draw(hdc,ItemRect,DrawRect); }
+	virtual void Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect,unsigned int Flags)=0;
 	virtual void OnLButtonDown(int x,int y) {}
-	virtual void OnRButtonDown(int x,int y) { OnLButtonDown(x,y); }
+	virtual void OnLButtonUp(int x,int y) {}
 	virtual void OnLButtonDoubleClick(int x,int y) { OnLButtonDown(x,y); }
+	virtual void OnRButtonDown(int x,int y) { OnLButtonDown(x,y); }
+	virtual void OnRButtonUp(int x,int y) {}
 	virtual void OnMouseMove(int x,int y) {}
-	virtual void OnVisibleChange(bool fVisible) {}
+	virtual void OnVisibilityChanged() {}
+	virtual void OnPresentStatusChange(bool fPresent) {}
 	virtual void OnFocus(bool fFocus) {}
 	virtual bool OnMouseHover(int x,int y) { return false; }
+	virtual void OnSizeChanged() {}
 	virtual LRESULT OnNotifyMessage(LPNMHDR pnmh) { return 0; }
 
 	friend CStatusView;
@@ -68,8 +84,13 @@ protected:
 	SizeValue m_DefaultWidth;
 	int m_Width;
 	int m_MinWidth;
+	int m_MaxWidth;
+	int m_ActualWidth;
+	int m_MinHeight;
 	bool m_fVisible;
 	bool m_fBreak;
+	bool m_fFullRow;
+	bool m_fVariableWidth;
 
 	bool GetMenuPos(POINT *pPos,UINT *pFlags);
 	enum {
@@ -146,6 +167,7 @@ public:
 	const TVTest::Style::Size &GetIconSize() const;
 	int GetFontHeight() const { return m_FontHeight; }
 	int GetIntegralWidth() const;
+	bool AdjustSize();
 	void SetSingleText(LPCTSTR pszText);
 	static bool GetStatusViewThemeFromThemeManager(
 		const TVTest::Theme::CThemeManager *pThemeManager,StatusViewTheme *pTheme);
@@ -204,8 +226,7 @@ private:
 
 	void SetHotItem(int Item);
 	void Draw(HDC hdc,const RECT *pPaintRect);
-	void AdjustSize();
-	void CalcRows();
+	void CalcLayout();
 	int CalcFontHeight(const DrawUtil::CFont &Font) const;
 	int CalcFontHeight() const;
 	int CalcItemHeight(int FontHeight) const;

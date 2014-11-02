@@ -894,6 +894,11 @@ int CAppMain::Main(HINSTANCE hInstance,LPCTSTR pszCmdLine,int nCmdShow)
 	if (!CmdLineOptions.m_fNoPlugin)
 		PluginOptions.RestorePluginOptions();
 
+	PluginManager.RegisterStatusItems();
+	StatusOptions.ApplyItemList();
+	PluginManager.SendStatusItemCreatedEvent();
+	MainWindow.OnStatusBarInitialized();
+
 	SideBarOptions.ApplyItemList();
 	if (MainWindow.GetSideBarVisible()) {
 		MainWindow.GetLayoutBase().SetContainerVisible(CONTAINER_ID_SIDEBAR,true);

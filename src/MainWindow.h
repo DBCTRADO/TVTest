@@ -123,6 +123,8 @@ public:
 	void ShowPanel(bool fShow);
 	void SetStatusBarVisible(bool fVisible);
 	bool GetStatusBarVisible() const { return m_fShowStatusBar; }
+	bool ShowStatusBarItem(int ID,bool fShow);
+	void OnStatusBarInitialized();
 	void SetTitleBarVisible(bool fVisible);
 	bool GetTitleBarVisible() const { return m_fShowTitleBar; }
 	void SetCustomTitleBar(bool fCustom);
@@ -267,6 +269,8 @@ private:
 		CFullscreen(CMainWindow &MainWindow);
 		~CFullscreen();
 		bool Create(HWND hwndOwner,CBasicViewer *pViewer);
+		bool IsStatusBarVisible() const { return m_fShowStatusView; }
+		bool IsSideBarVisible() const { return m_fShowSideBar; }
 		void ShowPanel(bool fShow);
 		bool IsPanelVisible() const { return m_fShowPanel; }
 		bool SetPanelWidth(int Width);
@@ -440,6 +444,7 @@ private:
 	WindowSize m_1SegWindowSize;
 
 	bool m_fLockLayout;
+	bool m_fStatusBarInitialized;
 
 	bool m_fShowCursor;
 	bool m_fNoHideCursor;
