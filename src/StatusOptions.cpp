@@ -142,6 +142,22 @@ bool CStatusOptions::ReadSettings(CSettings &Settings)
 			}
 		}
 
+		for (size_t i=0;i<m_AvailItemList.size();i++) {
+			const int ID=m_AvailItemList[i].ID;
+			bool fFound=false;
+			for (size_t j=0;j<ItemList.size();j++) {
+				if (ItemList[j].ID==ID) {
+					fFound=true;
+					break;
+				}
+			}
+			if (!fFound) {
+				StatusItemInfo Item(m_AvailItemList[i]);
+				Item.fVisible=false;
+				ItemList.push_back(Item);
+			}
+		}
+
 		m_ItemList=ItemList;
 	}
 
