@@ -109,6 +109,10 @@ CSideBarOptions::CSideBarOptions(CSideBar *pSideBar,const CZoomOptions *pZoomOpt
 	, m_himlIcons(NULL)
 	, m_pEventHandler(NULL)
 {
+	m_AvailItemList.resize(lengthof(ItemList));
+	for (int i=0;i<lengthof(ItemList);i++)
+		m_AvailItemList[i]=ItemList[i];
+
 	m_ItemList.resize(lengthof(DefaultItemList));
 	for (int i=0;i<lengthof(DefaultItemList);i++)
 		m_ItemList[i]=DefaultItemList[i];
@@ -133,18 +137,25 @@ bool CSideBarOptions::ReadSettings(CSettings &Settings)
 		m_Place=(PlaceType)Value;
 
 	if (Settings.Read(TEXT("ItemCount"),&NumItems) && NumItems>0) {
-		// はまるのを防ぐために、アイテムの種類*2 を上限にしておく
-		if (NumItems>=lengthof(ItemList)*2)
-			NumItems=lengthof(ItemList)*2;
-		m_ItemList.clear();
-		for (int i=0;i<NumItems;i++) {
-			TCHAR szName[32],szCommand[CCommandList::MAX_COMMAND_TEXT];
+		// はまるのを防ぐために、200を上限にしておく
+		if (NumItems>=200)
+			NumItems=200;
 
-			::wsprintf(szName,TEXT("Item%d"),i);
-			if (Settings.Read(szName,szCommand,lengthof(szCommand))) {
+		m_ItemNameList.clear();
+
+		TVTest::String Command;
+
+		for (int i=0;i<NumItems;i++) {
+			TCHAR szName[32];
+
+			StdUtil::snprintf(szName,lengthof(szName),TEXT("Item%d"),i);
+			if (Settings.Read(szName,&Command)) {
+				m_ItemNameList.push_back(Command);
+				/*
 				if (szCommand[0]=='\0') {
-					m_ItemList.push_back(ITEM_SEPARATOR);
+					m_ItemNameList.push_back(TVTest::String());
 				} else {
+					m_ItemNameList.push_back(TVTest::String(szCommand));
 					int Command=m_pSideBar->GetCommandList()->ParseText(szCommand);
 
 					if (Command!=0) {
@@ -156,6 +167,7 @@ bool CSideBarOptions::ReadSettings(CSettings &Settings)
 						}
 					}
 				}
+				*/
 			}
 		}
 	}
@@ -173,17 +185,24 @@ bool CSideBarOptions::WriteSettings(CSettings &Settings)
 	Settings.Write(TEXT("ShowChannelLogo"),m_fShowChannelLogo);
 	Settings.Write(TEXT("Place"),(int)m_Place);
 
-	Settings.Write(TEXT("ItemCount"),(int)m_ItemList.size());
+	Settings.Write(TEXT("ItemCount"),(int)m_ItemNameList.size());
+	for (size_t i=0;i<m_ItemNameList.size();i++) {
+		TCHAR szName[32];
+		StdUtil::snprintf(szName,lengthof(szName),TEXT("Item%d"),(int)i);
+		Settings.Write(szName,m_ItemNameList[i]);
+	}
+	/*
 	const CCommandList *pCommandList=m_pSideBar->GetCommandList();
 	for (size_t i=0;i<m_ItemList.size();i++) {
 		TCHAR szName[32];
 
-		::wsprintf(szName,TEXT("Item%d"),i);
+		StdUtil::snprintf(szName,lengthof(szName),TEXT("Item%d"),i);
 		if (m_ItemList[i]==ITEM_SEPARATOR)
 			Settings.Write(szName,TEXT(""));
 		else
 			Settings.Write(szName,pCommandList->GetCommandTextByID(m_ItemList[i]));
 	}
+	*/
 
 	return true;
 }
@@ -324,10 +343,62 @@ HBITMAP CSideBarOptions::CreateImage(IconSizeType SizeType,SIZE *pIconSize)
 
 bool CSideBarOptions::ApplySideBarOptions()
 {
-	ApplyItemList();
 	m_pSideBar->ShowToolTips(m_fShowToolTips);
 	m_pSideBar->SetVertical(m_Place==PLACE_LEFT || m_Place==PLACE_RIGHT);
 	return true;
+}
+
+
+void CSideBarOptions::ApplyItemList()
+{
+	const CCommandList *pCommandList=m_pSideBar->GetCommandList();
+
+	if (!m_ItemNameList.empty()) {
+		m_ItemList.clear();
+
+		for (size_t i=0;i<m_ItemNameList.size();i++) {
+			if (m_ItemNameList[i].empty()) {
+				m_ItemList.push_back(ITEM_SEPARATOR);
+			} else {
+				int ID=pCommandList->ParseText(m_ItemNameList[i].c_str());
+				if (ID!=0)
+					m_ItemList.push_back(ID);
+			}
+		}
+	}
+
+	m_pSideBar->DeleteAllItems();
+
+	for (size_t i=0;i<m_ItemList.size();i++) {
+		const int Command=m_ItemList[i];
+
+		if (Command==ITEM_SEPARATOR) {
+			m_pSideBar->AddSeparator();
+		} else {
+			for (size_t j=0;j<m_AvailItemList.size();j++) {
+				if (m_AvailItemList[j].Command==Command) {
+					CSideBar::SideBarItem Item;
+
+					Item.Command=Command;
+					Item.Icon=m_AvailItemList[j].Icon;
+					Item.State=0;
+					unsigned int State=pCommandList->GetCommandStateByID(Command);
+					if ((State & CCommandList::COMMAND_STATE_DISABLED)!=0)
+						Item.State|=CSideBar::ITEM_STATE_DISABLED;
+					if ((State & CCommandList::COMMAND_STATE_CHECKED)!=0)
+						Item.State|=CSideBar::ITEM_STATE_CHECKED;
+
+					m_pSideBar->AddItem(&Item);
+					break;
+				}
+			}
+		}
+	}
+
+	m_pSideBar->Invalidate();
+
+	if (m_pEventHandler!=NULL)
+		m_pEventHandler->OnItemChanged();
 }
 
 
@@ -346,31 +417,20 @@ bool CSideBarOptions::SetSideBarImage()
 }
 
 
-void CSideBarOptions::ApplyItemList() const
+bool CSideBarOptions::RegisterCommand(int ID)
 {
-	m_pSideBar->DeleteAllItems();
-	for (size_t i=0;i<m_ItemList.size();i++) {
-		if (m_ItemList[i]==ITEM_SEPARATOR) {
-			CSideBar::SideBarItem Item;
+	if (ID<=0 || IsAvailableItem(ID))
+		return false;
 
-			Item.Command=CSideBar::ITEM_SEPARATOR;
-			Item.Icon=-1;
-			Item.Flags=0;
-			m_pSideBar->AddItem(&Item);
-		} else {
-			int j;
+	CSideBar::SideBarItem Item;
 
-			for (j=0;j<lengthof(ItemList);j++) {
-				if (ItemList[j].Command==m_ItemList[i]) {
-					m_pSideBar->AddItem(&ItemList[j]);
-					break;
-				}
-			}
-		}
-	}
-	m_pSideBar->Invalidate();
-	if (m_pEventHandler!=NULL)
-		m_pEventHandler->OnItemChanged();
+	Item.Command=ID;
+	Item.Icon=-1;
+	Item.State=0;
+
+	m_AvailItemList.push_back(Item);
+
+	return true;
 }
 
 
@@ -400,6 +460,31 @@ INT_PTR CSideBarOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam
 			m_himlIcons=Bitmap.CreateImageList(sz.cx,::GetSysColor(COLOR_WINDOWTEXT));
 			Bitmap.Destroy();
 
+			m_IconIDMap.clear();
+			for (int i=0;i<lengthof(ItemList);i++)
+				m_IconIDMap.insert(std::pair<int,int>(ItemList[i].Command,ItemList[i].Icon));
+			const CCommandList *pCommandList=m_pSideBar->GetCommandList();
+			for (size_t i=lengthof(ItemList);i<m_AvailItemList.size();i++) {
+				const int ID=m_AvailItemList[i].Command;
+				if (ID>=CM_PLUGINCOMMAND_FIRST && ID<=CM_PLUGINCOMMAND_LAST) {
+					LPCTSTR pszCommand;
+					CPlugin *pPlugin=GetAppClass().PluginManager.GetPluginByPluginCommand(
+						pCommandList->GetCommandTextByID(ID),&pszCommand);
+					if (pPlugin!=NULL) {
+						CPlugin::CPluginCommandInfo *pCommandInfo=
+							pPlugin->GetPluginCommandInfo(pszCommand);
+						if (pCommandInfo!=NULL && pCommandInfo->GetIcon().IsCreated()) {
+							HICON hIcon=pCommandInfo->GetIcon().ExtractIcon(::GetSysColor(COLOR_WINDOWTEXT));
+							if (hIcon!=NULL) {
+								int Icon=ImageList_AddIcon(m_himlIcons,hIcon);
+								::DestroyIcon(hIcon);
+								m_IconIDMap.insert(std::pair<int,int>(ID,Icon));
+							}
+						}
+					}
+				}
+			}
+
 			HWND hwndList=::GetDlgItem(hDlg,IDC_SIDEBAR_ITEMLIST);
 			ListView_SetExtendedListViewStyle(hwndList,LVS_EX_FULLROWSELECT | LVS_EX_LABELTIP);
 			ListView_SetImageList(hwndList,m_himlIcons,LVSIL_SMALL);
@@ -420,10 +505,11 @@ INT_PTR CSideBarOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam
 			rc.right-=::GetSystemMetrics(SM_CXVSCROLL);
 			lvc.cx=rc.right;
 			ListView_InsertColumn(hwndList,0,&lvc);
-			int List[lengthof(ItemList)];
-			for (int i=0;i<lengthof(ItemList);i++)
-				List[i]=ItemList[i].Command;
-			SetItemList(hwndList,List,lengthof(List));
+			std::vector<int> List;
+			List.resize(m_AvailItemList.size());
+			for (size_t i=0;i<m_AvailItemList.size();i++)
+				List[i]=m_AvailItemList[i].Command;
+			SetItemList(hwndList,List.data(),(int)List.size());
 		}
 		return TRUE;
 
@@ -469,7 +555,7 @@ INT_PTR CSideBarOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam
 
 		case IDC_SIDEBAR_DEFAULT:
 			SetItemList(::GetDlgItem(hDlg,IDC_SIDEBAR_ITEMLIST),
-							   DefaultItemList,lengthof(DefaultItemList));
+						DefaultItemList,lengthof(DefaultItemList));
 			return TRUE;
 
 		case IDC_SIDEBAR_ADD:
@@ -583,6 +669,18 @@ INT_PTR CSideBarOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam
 				}
 				if (ItemList!=m_ItemList) {
 					m_ItemList=ItemList;
+
+					const CCommandList *pCommandList=m_pSideBar->GetCommandList();
+					m_ItemNameList.clear();
+					for (int i=0;i<Count;i++) {
+						const int ID=m_ItemList[i];
+						if (ID==ITEM_SEPARATOR) {
+							m_ItemNameList.push_back(TVTest::String());
+						} else {
+							m_ItemNameList.push_back(TVTest::String(pCommandList->GetCommandTextByID(ID)));
+						}
+					}
+
 					ApplyItemList();
 				}
 
@@ -597,6 +695,7 @@ INT_PTR CSideBarOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam
 			::ImageList_Destroy(m_himlIcons);
 			m_himlIcons=NULL;
 		}
+		m_IconIDMap.clear();
 		return TRUE;
 	}
 
@@ -614,21 +713,32 @@ void CSideBarOptions::SetItemList(HWND hwndList,const int *pList,int NumItems)
 	lvi.mask=LVIF_TEXT | LVIF_IMAGE | LVIF_PARAM;
 	lvi.iSubItem=0;
 	lvi.pszText=szText;
+
 	for (int i=0;i<NumItems;i++) {
-		if (pList[i]==ITEM_SEPARATOR) {
+		const int ID=pList[i];
+
+		lvi.iImage=-1;
+		if (ID==ITEM_SEPARATOR) {
 			::lstrcpy(szText,TEXT("(区切り)"));
-			lvi.iImage=-1;
 		} else {
-			pCommandList->GetCommandName(pCommandList->IDToIndex(pList[i]),szText,lengthof(szText));
-			for (int j=0;j<lengthof(ItemList);j++) {
-				if (ItemList[j].Command==pList[i]) {
-					lvi.iImage=ItemList[j].Icon;
-					break;
-				}
-			}
+			pCommandList->GetCommandName(pCommandList->IDToIndex(ID),szText,lengthof(szText));
+			auto itr=m_IconIDMap.find(ID);
+			if (itr!=m_IconIDMap.end())
+				lvi.iImage=itr->second;
 		}
 		lvi.iItem=i;
 		lvi.lParam=pList[i];
 		ListView_InsertItem(hwndList,&lvi);
 	}
+}
+
+
+bool CSideBarOptions::IsAvailableItem(int ID) const
+{
+	for (size_t i=0;i<m_AvailItemList.size();i++) {
+		if (m_AvailItemList[i].Command==ID)
+			return true;
+	}
+
+	return false;
 }

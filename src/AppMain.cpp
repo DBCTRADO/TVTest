@@ -894,6 +894,12 @@ int CAppMain::Main(HINSTANCE hInstance,LPCTSTR pszCmdLine,int nCmdShow)
 	if (!CmdLineOptions.m_fNoPlugin)
 		PluginOptions.RestorePluginOptions();
 
+	SideBarOptions.ApplyItemList();
+	if (MainWindow.GetSideBarVisible()) {
+		MainWindow.GetLayoutBase().SetContainerVisible(CONTAINER_ID_SIDEBAR,true);
+		SideBar.Update();
+	}
+
 	// 再生の初期化
 	CoreEngine.m_DtvEngine.m_MediaViewer.SetUseAudioRendererClock(PlaybackOptions.GetUseAudioRendererClock());
 	CoreEngine.SetDownMixSurround(PlaybackOptions.GetDownMixSurround());
@@ -1280,22 +1286,33 @@ void CAppMain::RegisterCommands()
 	// プラグインの各コマンド
 	int ID=CM_PLUGINCOMMAND_FIRST;
 	for (int i=0;i<PluginManager.NumPlugins();i++) {
-		const CPlugin *pPlugin=PluginManager.GetPlugin(i);
+		CPlugin *pPlugin=PluginManager.GetPlugin(i);
 		LPCTSTR pszFileName=::PathFindFileName(pPlugin->GetFileName());
 
 		for (int j=0;j<pPlugin->NumPluginCommands();j++) {
-			TVTest::CommandInfo Info;
+			CPlugin::CPluginCommandInfo *pInfo=pPlugin->GetPluginCommandInfo(j);
+
+			pInfo->SetCommand(ID);
+
 			TVTest::String Text;
-			TCHAR szName[CCommandList::MAX_COMMAND_NAME];
-
-			pPlugin->GetPluginCommandInfo(j,&Info);
-
 			Text=pszFileName;
 			Text+=_T(':');
-			Text+=Info.pszText;
+			Text+=pInfo->GetText();
 
-			StdUtil::snprintf(szName,lengthof(szName),TEXT("%s : %s"),pszFileName,Info.pszName);
-			CommandList.RegisterCommand(ID,Text.c_str(),szName);
+			TCHAR szName[CCommandList::MAX_COMMAND_NAME];
+			StdUtil::snprintf(szName,lengthof(szName),TEXT("%s : %s"),pszFileName,pInfo->GetName());
+
+			unsigned int State=0;
+			if ((pInfo->GetState() & TVTest::PLUGIN_COMMAND_STATE_DISABLED)!=0)
+				State|=CCommandList::COMMAND_STATE_DISABLED;
+			if ((pInfo->GetState() & TVTest::PLUGIN_COMMAND_STATE_CHECKED)!=0)
+				State|=CCommandList::COMMAND_STATE_CHECKED;
+
+			CommandList.RegisterCommand(ID,Text.c_str(),szName,pInfo->GetName(),State);
+
+			if ((pInfo->GetFlags() & TVTest::PLUGIN_COMMAND_FLAG_ICONIZE)!=0)
+				SideBarOptions.RegisterCommand(ID);
+
 			ID++;
 		}
 	}

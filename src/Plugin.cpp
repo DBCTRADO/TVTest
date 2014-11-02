@@ -709,6 +709,54 @@ int CPlugin::NumPluginCommands() const
 }
 
 
+int CPlugin::ParsePluginCommand(LPCWSTR pszCommand) const
+{
+	if (IsStringEmpty(pszCommand))
+		return -1;
+
+	for (size_t i=0;i<m_CommandList.size();i++) {
+		if (::lstrcmpi(m_CommandList[i].GetText(),pszCommand)==0)
+			return (int)i;
+	}
+
+	return -1;
+}
+
+
+CPlugin::CPluginCommandInfo *CPlugin::GetPluginCommandInfo(int Index)
+{
+	if (Index<0 || (size_t)Index>=m_CommandList.size())
+		return NULL;
+	return &m_CommandList[Index];
+}
+
+
+const CPlugin::CPluginCommandInfo *CPlugin::GetPluginCommandInfo(int Index) const
+{
+	if (Index<0 || (size_t)Index>=m_CommandList.size())
+		return NULL;
+	return &m_CommandList[Index];
+}
+
+
+CPlugin::CPluginCommandInfo *CPlugin::GetPluginCommandInfo(LPCWSTR pszCommand)
+{
+	int Index=ParsePluginCommand(pszCommand);
+	if (Index<0)
+		return NULL;
+	return &m_CommandList[Index];
+}
+
+
+const CPlugin::CPluginCommandInfo *CPlugin::GetPluginCommandInfo(LPCWSTR pszCommand) const
+{
+	int Index=ParsePluginCommand(pszCommand);
+	if (Index<0)
+		return NULL;
+	return &m_CommandList[Index];
+}
+
+
 bool CPlugin::GetPluginCommandInfo(int Index,TVTest::CommandInfo *pInfo) const
 {
 	if (Index<0 || (size_t)Index>=m_CommandList.size() || pInfo==NULL)
@@ -723,13 +771,18 @@ bool CPlugin::GetPluginCommandInfo(int Index,TVTest::CommandInfo *pInfo) const
 
 bool CPlugin::NotifyCommand(LPCWSTR pszCommand)
 {
-	for (size_t i=0;i<m_CommandList.size();i++) {
-		if (::lstrcmpi(m_CommandList[i].GetText(),pszCommand)==0) {
-			SendEvent(TVTest::EVENT_COMMAND,m_CommandList[i].GetID(),0);
-			return true;
-		}
-	}
-	return false;
+	int i=ParsePluginCommand(pszCommand);
+	if (i<0)
+		return false;
+	return SendEvent(TVTest::EVENT_COMMAND,m_CommandList[i].GetID(),0)!=FALSE;
+}
+
+
+bool CPlugin::DrawPluginCommandIcon(const TVTest::DrawCommandIconInfo *pInfo)
+{
+	if (pInfo==NULL)
+		return false;
+	return SendEvent(TVTest::EVENT_DRAWCOMMANDICON,reinterpret_cast<LPARAM>(pInfo),0)!=FALSE;
 }
 
 
@@ -1946,6 +1999,62 @@ LRESULT CPlugin::OnCallback(TVTest::PluginParam *pParam,UINT Message,LPARAM lPar
 	case TVTest::MESSAGE_GETLOGCOUNT:
 		return GetAppClass().Logger.GetLogCount();
 
+	case TVTest::MESSAGE_REGISTERPLUGINCOMMAND:
+		{
+			const TVTest::PluginCommandInfo *pInfo=
+				reinterpret_cast<const TVTest::PluginCommandInfo*>(lParam1);
+
+			if (pInfo==NULL || pInfo->Size!=sizeof(TVTest::PluginCommandInfo))
+				return FALSE;
+
+			m_CommandList.push_back(CPluginCommandInfo(*pInfo));
+		}
+		return TRUE;
+
+	case TVTest::MESSAGE_SETPLUGINCOMMANDSTATE:
+		{
+			const int ID=(int)lParam1;
+
+			for (auto itr=m_CommandList.begin();itr!=m_CommandList.end();++itr) {
+				if (itr->GetID()==ID) {
+					const DWORD State=(DWORD)lParam2;
+
+					itr->SetState(State);
+
+					unsigned int CommandState=0;
+					if ((State & TVTest::PLUGIN_COMMAND_STATE_DISABLED)!=0)
+						CommandState|=CCommandList::COMMAND_STATE_DISABLED;
+					if ((State & TVTest::PLUGIN_COMMAND_STATE_CHECKED)!=0)
+						CommandState|=CCommandList::COMMAND_STATE_CHECKED;
+					GetAppClass().CommandList.SetCommandStateByID(
+						itr->GetCommand(),
+						CCommandList::COMMAND_STATE_DISABLED |
+						CCommandList::COMMAND_STATE_CHECKED,
+						CommandState);
+
+					return TRUE;
+				}
+			}
+		}
+		return FALSE;
+
+	case TVTest::MESSAGE_PLUGINCOMMANDNOTIFY:
+		{
+			const int ID=(int)lParam1;
+
+			for (auto itr=m_CommandList.begin();itr!=m_CommandList.end();++itr) {
+				if (itr->GetID()==ID) {
+					const unsigned int Type=(unsigned int)lParam2;
+
+					if ((Type & TVTest::PLUGIN_COMMAND_NOTIFY_CHANGEICON))
+						GetAppClass().SideBar.RedrawItem(itr->GetCommand());
+
+					return TRUE;
+				}
+			}
+		}
+		return FALSE;
+
 #ifdef _DEBUG
 	default:
 		TRACE(TEXT("CPluign::OnCallback() : Unknown message %u\n"),Message);
@@ -2504,6 +2613,9 @@ bool CPlugin::OnGetSetting(TVTest::SettingInfo *pSetting) const
 
 CPlugin::CPluginCommandInfo::CPluginCommandInfo(int ID,LPCWSTR pszText,LPCWSTR pszName)
 	: m_ID(ID)
+	, m_Command(0)
+	, m_Flags(0)
+	, m_State(0)
 	, m_Text(pszText)
 	, m_Name(pszName)
 {
@@ -2512,9 +2624,24 @@ CPlugin::CPluginCommandInfo::CPluginCommandInfo(int ID,LPCWSTR pszText,LPCWSTR p
 
 CPlugin::CPluginCommandInfo::CPluginCommandInfo(const TVTest::CommandInfo &Info)
 	: m_ID(Info.ID)
+	, m_Command(0)
+	, m_Flags(0)
+	, m_State(0)
 	, m_Text(Info.pszText)
 	, m_Name(Info.pszName)
 {
+}
+
+
+CPlugin::CPluginCommandInfo::CPluginCommandInfo(const TVTest::PluginCommandInfo &Info)
+	: m_ID(Info.ID)
+	, m_Command(0)
+	, m_Flags(Info.Flags)
+	, m_State(Info.State)
+	, m_Text(Info.pszText)
+	, m_Name(Info.pszName)
+{
+	m_Icon.Create(Info.hbmIcon);
 }
 
 
@@ -2690,6 +2817,29 @@ int CPluginManager::FindPluginByCommand(int Command) const
 }
 
 
+CPlugin *CPluginManager::GetPluginByPluginCommand(LPCTSTR pszCommand,LPCTSTR *ppszCommandText)
+{
+	if (IsStringEmpty(pszCommand))
+		return NULL;
+
+	LPCTSTR pDelimiter=::StrChr(pszCommand,_T(':'));
+	if (pDelimiter==NULL || (pDelimiter-pszCommand)>=MAX_PATH)
+		return NULL;
+
+	TCHAR szFileName[MAX_PATH];
+	::lstrcpyn(szFileName,pszCommand,(int)((pDelimiter-pszCommand)+1));
+
+	int PluginIndex=FindPluginByFileName(szFileName);
+	if (PluginIndex<0)
+		return NULL;
+
+	if (ppszCommandText!=NULL)
+		*ppszCommandText=pDelimiter+1;
+
+	return m_PluginList[PluginIndex];
+}
+
+
 bool CPluginManager::DeletePlugin(int Index)
 {
 	if (Index<0 || (size_t)Index>=m_PluginList.size())
@@ -2722,20 +2872,13 @@ bool CPluginManager::SetMenu(HMENU hmenu) const
 
 bool CPluginManager::OnPluginCommand(LPCTSTR pszCommand)
 {
-	if (pszCommand==NULL)
+	LPCTSTR pszCommandText;
+	CPlugin *pPlugin=GetPluginByPluginCommand(pszCommand,&pszCommandText);
+
+	if (pPlugin==NULL)
 		return false;
 
-	LPCTSTR pDelimiter=::StrChr(pszCommand,_T(':'));
-	if (pDelimiter==NULL || (pDelimiter-pszCommand)>=MAX_PATH)
-		return false;
-
-	TCHAR szFileName[MAX_PATH];
-	::lstrcpyn(szFileName,pszCommand,(int)((pDelimiter-pszCommand)+1));
-
-	int PluginIndex=FindPluginByFileName(szFileName);
-	if (PluginIndex<0)
-		return false;
-	return m_PluginList[PluginIndex]->NotifyCommand(pDelimiter+1);
+	return pPlugin->NotifyCommand(pszCommandText);
 }
 
 

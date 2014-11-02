@@ -98,6 +98,9 @@
 	  ・MESSAGE_SETVIDEOSTREAM
 	  ・MESSAGE_GETLOG
 	  ・MESSAGE_GETLOGCOUNT
+	  ・MESSAGE_REGISTERPLUGINCOMMAND
+	  ・MESSAGE_SETPLUGINCOMMANDSTATE
+	  ・MESSAGE_PLUGINCOMMANDNOTIFY
 	・以下のイベントを追加した
 	  ・EVENT_FILTERGRAPH_INITIALIZE
 	  ・EVENT_FILTERGRAPH_INITIALIZED
@@ -401,6 +404,9 @@ enum {
 	MESSAGE_SETVIDEOSTREAM,				// 映像ストリームを設定
 	MESSAGE_GETLOG,						// ログを取得
 	MESSAGE_GETLOGCOUNT,				// ログの数を取得
+	MESSAGE_REGISTERPLUGINCOMMAND,		// プラグインのコマンドを登録
+	MESSAGE_SETPLUGINCOMMANDSTATE,		// プラグインのコマンドの状態を設定
+	MESSAGE_PLUGINCOMMANDNOTIFY,		// プラグインのコマンドの通知
 #endif
 	MESSAGE_TRAILER
 };
@@ -463,6 +469,7 @@ enum {
 	EVENT_FILTERGRAPH_INITIALIZED,				// フィルタグラフの初期化終了
 	EVENT_FILTERGRAPH_FINALIZE,					// フィルタグラフの終了処理開始
 	EVENT_FILTERGRAPH_FINALIZED,				// フィルタグラフの終了処理終了
+	EVENT_DRAWCOMMANDICON,						// コマンドアイコンの描画
 #endif
 	EVENT_TRAILER
 };
@@ -1142,6 +1149,7 @@ struct CommandInfo {
 // MsgRegisterCommand(pParam, ID_MYCOMMAND, L"MyCommand", L"私のコマンド");
 // コマンドが実行されると EVENT_COMMAND イベントが送られます。
 // その際、パラメータとして識別子が渡されます。
+// MsgRegisterCommand から機能が追加されたバージョンの MsgRegisterPluginCommand もあります。
 inline bool MsgRegisterCommand(PluginParam *pParam,int ID,LPCWSTR pszText,LPCWSTR pszName)
 {
 	CommandInfo Info;
@@ -2205,6 +2213,73 @@ inline DWORD MsgGetLogCount(PluginParam *pParam) {
 	return (DWORD)(*pParam->Callback)(pParam,MESSAGE_GETLOGCOUNT,0,0);
 }
 
+// プラグインのコマンドの情報
+// CommandInfo が拡張されたものです。
+struct PluginCommandInfo {
+	DWORD Size;				// 構造体のサイズ
+	DWORD Flags;			// 各種フラグ(PLUGIN_COMMAND_FLAG_*)
+	DWORD State;			// 状態(PLUGIN_COMMAND_STATE_*)
+	int ID;					// 識別子
+	LPCWSTR pszText;		// コマンドの文字列
+	LPCWSTR pszName;		// コマンドの名前
+	LPCWSTR pszDescription;	// コマンドの説明
+	HBITMAP hbmIcon;		// アイコン
+};
+
+// プラグインのコマンドのフラグ
+enum {
+	PLUGIN_COMMAND_FLAG_ICONIZE			=0x00000001U,	// アイコン表示
+	PLUGIN_COMMAND_FLAG_NOTIFYDRAWICON	=0x00000002U	// アイコン描画の通知
+};
+
+// プラグインコマンドの状態
+enum {
+	PLUGIN_COMMAND_STATE_DISABLED		=0x00000001U,	// 無効
+	PLUGIN_COMMAND_STATE_CHECKED		=0x00000002U	// チェック
+};
+
+// プラグインのコマンドを登録する
+// 基本的に MsgRegisterCommand と同じですが、メンバが追加されています。
+inline bool MsgRegisterPluginCommand(PluginParam *pParam,const PluginCommandInfo *pInfo) {
+	return (*pParam->Callback)(pParam,MESSAGE_REGISTERPLUGINCOMMAND,(LPARAM)pInfo,0)!=FALSE;
+}
+
+// プラグインのコマンドの状態を設定する
+inline bool MsgSetPluginCommandState(PluginParam *pParam,int ID,DWORD State) {
+	return (*pParam->Callback)(pParam,MESSAGE_SETPLUGINCOMMANDSTATE,ID,State)!=FALSE;
+}
+
+// プラグインコマンドの通知の種類
+enum {
+	PLUGIN_COMMAND_NOTIFY_CHANGEICON	=0x00000001U	// アイコンを変える
+};
+
+// プラグインコマンドの通知を行う
+inline bool MsgPluginCommandNotify(PluginParam *pParam,int ID,unsigned int Type) {
+	return (*pParam->Callback)(pParam,MESSAGE_PLUGINCOMMANDNOTIFY,ID,Type)!=FALSE;
+}
+
+// コマンドアイコンの描画情報
+// EVENT_DRAWCOMMANDICON で渡されます。
+struct DrawCommandIconInfo {
+	int ID;				// コマンドの識別子
+	WORD Flags;			// 各種フラグ(現在は常に0)
+	WORD State;			// 状態(COMMAND_ICON_STATE_*)
+	LPCWSTR pszStyle;	// スタイル名
+	HDC hdc;			// 描画先DC
+	RECT DrawRect;		// 描画先領域
+	COLORREF Color;		// 色
+	BYTE Opacity;		// 不透明度
+	BYTE Reserved[3];	// 予約領域
+};
+
+// コマンドアイコンのステータス
+enum {
+	COMMAND_ICON_STATE_DISABLED	=0x0001U,	// 無効状態
+	COMMAND_ICON_STATE_CHECKED	=0x0002U,	// チェック状態
+	COMMAND_ICON_STATE_HOT		=0x0004U	// カーソルが当たっている
+};
+
 #endif	// TVTEST_PLUGIN_VERSION>=TVTEST_PLUGIN_VERSION_(0,0,14)
 
 
@@ -2626,6 +2701,15 @@ public:
 	DWORD GetLogCount() {
 		return MsgGetLogCount(m_pParam);
 	}
+	bool RegisterPluginCommand(const PluginCommandInfo *pInfo) {
+		return MsgRegisterPluginCommand(m_pParam,pInfo);
+	}
+	bool SetPluginCommandState(int ID,DWORD State) {
+		return MsgSetPluginCommandState(m_pParam,ID,State);
+	}
+	bool PluginCommandNotify(int ID,unsigned int Type) {
+		return MsgPluginCommandNotify(m_pParam,ID,Type);
+	}
 #endif
 };
 
@@ -2790,6 +2874,8 @@ protected:
 	virtual void OnFilterGraphFinalize(FilterGraphInfo *pInfo) {}
 	// フィルタグラフが終了処理された
 	virtual void OnFilterGraphFinalized(FilterGraphInfo *pInfo) {}
+	// コマンドアイコンの描画
+	virtual bool OnDrawCommandIcon(DrawCommandIconInfo *pInfo) {}
 #endif
 
 public:
@@ -2871,6 +2957,8 @@ public:
 		case EVENT_FILTERGRAPH_FINALIZED:
 			OnFilterGraphFinalized((FilterGraphInfo*)lParam1);
 			return 0;
+		case EVENT_DRAWCOMMANDICON:
+			return OnDrawCommandIcon((DrawCommandIconInfo*)lParam1);
 #endif
 		}
 		return 0;

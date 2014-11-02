@@ -56,6 +56,7 @@ bool DrawMonoColorDIB(HDC hdcDst,int DstX,int DstY,
 bool DrawMonoColorDIB(HDC hdcDst,int DstX,int DstY,
 					  HBITMAP hbm,int SrcX,int SrcY,int Width,int Height,COLORREF Color);
 HBITMAP CreateDIB(int Width,int Height,int BitCount,void **ppBits=NULL);
+HBITMAP DuplicateDIB(HBITMAP hbmSrc);
 HBITMAP ResizeBitmap(HBITMAP hbmSrc,int Width,int Height,int BitCount=24,int StretchMode=STRETCH_HALFTONE);
 
 int CalcWrapTextLines(HDC hdc,LPCTSTR pszText,int Width);
@@ -152,7 +153,11 @@ class CMonoColorBitmap
 {
 public:
 	CMonoColorBitmap();
+	CMonoColorBitmap(const CMonoColorBitmap &Src);
+	CMonoColorBitmap(CMonoColorBitmap &&Src);
 	~CMonoColorBitmap();
+	CMonoColorBitmap &operator=(const CMonoColorBitmap &Src);
+	CMonoColorBitmap &operator=(CMonoColorBitmap &&Src);
 	bool Load(HINSTANCE hinst,LPCTSTR pszName);
 	bool Load(HINSTANCE hinst,int ID) { return Load(hinst,MAKEINTRESOURCE(ID)); }
 	bool Create(HBITMAP hbm);
@@ -168,6 +173,7 @@ public:
 	HIMAGELIST CreateImageList(int IconWidth,COLORREF Color);
 	HBITMAP ExtractBitmap(int x,int y,int Width,int Height,COLORREF Color);
 	HICON ExtractIcon(int x,int y,int Width,int Height,COLORREF Color);
+	HICON ExtractIcon(COLORREF Color);
 
 private:
 	void SetColor(COLORREF Color);

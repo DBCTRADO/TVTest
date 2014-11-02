@@ -173,6 +173,18 @@ bool CSideBar::AddItems(const SideBarItem *pItemList,int NumItems)
 }
 
 
+bool CSideBar::AddSeparator()
+{
+	SideBarItem Item;
+
+	Item.Command=ITEM_SEPARATOR;
+	Item.Icon=-1;
+	Item.State=0;
+
+	return AddItem(&Item);
+}
+
+
 int CSideBar::CommandToIndex(int Command) const
 {
 	for (size_t i=0;i<m_ItemList.size();i++) {
@@ -189,8 +201,8 @@ bool CSideBar::EnableItem(int Command,bool fEnable)
 
 	if (Index<0)
 		return false;
-	if (((m_ItemList[Index].Flags&ITEM_FLAG_DISABLED)==0)!=fEnable) {
-		m_ItemList[Index].Flags^=ITEM_FLAG_DISABLED;
+	if (m_ItemList[Index].IsEnabled()!=fEnable) {
+		m_ItemList[Index].State^=ITEM_STATE_DISABLED;
 		if (!fEnable && m_HotItem==Index)
 			m_HotItem=-1;
 		UpdateItem(Index);
@@ -205,7 +217,7 @@ bool CSideBar::IsItemEnabled(int Command) const
 
 	if (Index<0)
 		return false;
-	return (m_ItemList[Index].Flags&ITEM_FLAG_DISABLED)==0;
+	return m_ItemList[Index].IsEnabled();
 }
 
 
@@ -215,8 +227,8 @@ bool CSideBar::CheckItem(int Command,bool fCheck)
 
 	if (Index<0)
 		return false;
-	if (((m_ItemList[Index].Flags&ITEM_FLAG_CHECKED)!=0)!=fCheck) {
-		m_ItemList[Index].Flags^=ITEM_FLAG_CHECKED;
+	if (m_ItemList[Index].IsChecked()!=fCheck) {
+		m_ItemList[Index].State^=ITEM_STATE_CHECKED;
 		UpdateItem(Index);
 	}
 	return true;
@@ -239,7 +251,20 @@ bool CSideBar::IsItemChecked(int Command) const
 
 	if (Index<0)
 		return false;
-	return (m_ItemList[Index].Flags&ITEM_FLAG_CHECKED)!=0;
+	return m_ItemList[Index].IsChecked();
+}
+
+
+bool CSideBar::RedrawItem(int Command)
+{
+	int Index=CommandToIndex(Command);
+
+	if (Index<0)
+		return false;
+
+	UpdateItem(Index);
+
+	return true;
 }
 
 
@@ -347,7 +372,7 @@ LRESULT CSideBar::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 
 			if (HotItem>=0
 					&& (m_ItemList[HotItem].Command==ITEM_SEPARATOR
-						|| (m_ItemList[HotItem].Flags&ITEM_FLAG_DISABLED)!=0))
+						|| m_ItemList[HotItem].IsDisabled()))
 				HotItem=-1;
 			if (GetCapture()==hwnd) {
 				if (HotItem!=m_ClickItem)
@@ -441,7 +466,7 @@ LRESULT CSideBar::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 						|| !m_pEventHandler->GetTooltipText(
 								m_ItemList[pnmttdi->hdr.idFrom].Command,
 								pnmttdi->szText,lengthof(pnmttdi->szText))) {
-					m_pCommandList->GetCommandNameByID(
+					m_pCommandList->GetCommandShortNameByID(
 						m_ItemList[pnmttdi->hdr.idFrom].Command,
 						pnmttdi->szText,lengthof(pnmttdi->szText));
 				}
@@ -601,21 +626,22 @@ void CSideBar::Draw(HDC hdc,const RECT &PaintRect)
 		if (m_ItemList[i].Command!=ITEM_SEPARATOR
 				&& rc.left<PaintRect.right && rc.right>PaintRect.left
 				&& rc.top<PaintRect.bottom && rc.bottom>PaintRect.top) {
+			const bool fHot=m_HotItem==i;
 			COLORREF ForeColor;
 			BYTE Opacity=255;
 			RECT rcItem;
 
-			if (m_HotItem==i) {
+			if (fHot) {
 				TVTest::Theme::Style Style=m_Theme.HighlightItemStyle;
 				if (Style.Back.Fill.Type==TVTest::Theme::FILL_GRADIENT)
 					Style.Back.Fill.Gradient.Direction=
 						GetGradientDirection(m_fVertical,Style.Back.Fill.Gradient.Direction);
-				if ((m_ItemList[i].Flags&ITEM_FLAG_CHECKED)!=0)
+				if (m_ItemList[i].IsChecked())
 					Style.Back.Border=m_Theme.CheckItemStyle.Back.Border;
 				TVTest::Theme::Draw(hdc,rc,Style.Back);
 				ForeColor=m_Theme.HighlightItemStyle.Fore.Fill.GetSolidColor();
 			} else {
-				if ((m_ItemList[i].Flags&ITEM_FLAG_CHECKED)!=0) {
+				if (m_ItemList[i].IsChecked()) {
 					TVTest::Theme::Style Style=m_Theme.CheckItemStyle;
 					if (Style.Back.Fill.Type==TVTest::Theme::FILL_GRADIENT)
 						Style.Back.Fill.Gradient.Direction=
@@ -625,7 +651,7 @@ void CSideBar::Draw(HDC hdc,const RECT &PaintRect)
 				} else {
 					ForeColor=m_Theme.ItemStyle.Fore.Fill.GetSolidColor();
 				}
-				if ((m_ItemList[i].Flags&ITEM_FLAG_DISABLED)!=0) {
+				if (m_ItemList[i].IsDisabled()) {
 #if 0
 					ForeColor=MixColor(ForeColor,
 									   m_Theme.ItemStyle.Fore.Fill.GetSolidColor());
@@ -634,12 +660,28 @@ void CSideBar::Draw(HDC hdc,const RECT &PaintRect)
 #endif
 				}
 			}
+
 			rcItem.left=rc.left+m_Style.ItemPadding.Left;
 			rcItem.top=rc.top+m_Style.ItemPadding.Top;
 			rcItem.right=rcItem.left+m_Style.IconSize.Width;
 			rcItem.bottom=rcItem.top+m_Style.IconSize.Height;
-			if (m_pEventHandler==NULL
-					|| !m_pEventHandler->DrawIcon(m_ItemList[i].Command,hdc,rcItem,ForeColor,hdcMemory)) {
+
+			bool fIconDrew=false;
+			if (m_pEventHandler!=NULL) {
+				DrawIconInfo Info;
+				Info.Command=m_ItemList[i].Command;
+				Info.State=m_ItemList[i].State;
+				if (fHot)
+					Info.State|=ITEM_STATE_HOT;
+				Info.hdc=hdc;
+				Info.IconRect=rcItem;
+				Info.Color=ForeColor;
+				Info.Opacity=Opacity;
+				Info.hdcBuffer=hdcMemory;
+				if (m_pEventHandler->DrawIcon(&Info))
+					fIconDrew=true;
+			}
+			if (!fIconDrew && m_ItemList[i].Icon>=0) {
 				m_Icons.Draw(hdc,rcItem.left,rcItem.top,
 							 m_Style.IconSize.Width,m_Style.IconSize.Height,
 							 m_ItemList[i].Icon,ForeColor,Opacity);

@@ -5,6 +5,7 @@
 #include "UISkin.h"
 #include "View.h"
 #include "ChannelManager.h"
+#include "Command.h"
 #include "Layout.h"
 #include "TitleBar.h"
 #include "StatusView.h"
@@ -243,7 +244,7 @@ private:
 		void OnRButtonDown(int x,int y) override;
 		void OnMouseLeave() override;
 		bool GetTooltipText(int Command,LPTSTR pszText,int MaxText) override;
-		bool DrawIcon(int Command,HDC hdc,const RECT &ItemRect,COLORREF ForeColor,HDC hdcBuffer) override;
+		bool DrawIcon(const CSideBar::DrawIconInfo *pInfo) override;
 	};
 
 	class CShowCursorManager
@@ -369,6 +370,17 @@ private:
 		void OnChannelEnd(bool fComplete) override;
 	};
 
+	class CCommandEventHandler : public CCommandList::CEventHandler
+	{
+	public:
+		CCommandEventHandler(CMainWindow *pMainWindow);
+
+	private:
+		CMainWindow *m_pMainWindow;
+
+		void OnCommandStateChanged(int ID,unsigned int OldState,unsigned int NewState) override;
+	};
+
 	enum { UPDATE_TIMER_INTERVAL=500 };
 
 	CAppMain &m_App;
@@ -382,6 +394,7 @@ private:
 	CViewWindowEventHandler m_ViewWindowEventHandler;
 	CFullscreen m_Fullscreen;
 	CNotificationBar m_NotificationBar;
+	CCommandEventHandler m_CommandEventHandler;
 
 	bool m_fShowStatusBar;
 	bool m_fPopupStatusBar;

@@ -180,6 +180,7 @@ static const struct {
 
 
 CCommandList::CCommandList()
+	: m_pEventHandler(nullptr)
 {
 	RegisterDefaultCommands();
 }
@@ -219,7 +220,7 @@ LPCTSTR CCommandList::GetCommandTextByID(int ID) const
 	int Index=IDToIndex(ID);
 
 	if (Index<0)
-		return NULL;
+		return nullptr;
 	return GetCommandText(Index);
 }
 
@@ -269,6 +270,50 @@ int CCommandList::GetCommandNameByID(int ID,LPTSTR pszName,int MaxLength) const
 }
 
 
+int CCommandList::GetCommandShortName(int Index,LPTSTR pszName,int MaxLength) const
+{
+	if (pszName==nullptr || MaxLength<1)
+		return 0;
+	if (Index<0 || static_cast<size_t>(Index)>=m_CommandList.size()) {
+		pszName[0]=_T('\0');
+		return 0;
+	}
+
+	const CommandInfo &Info=m_CommandList[Index];
+	const int ID=Info.ID;
+	int Length=0;
+
+	for (size_t i=0;i<m_CustomizerList.size();i++) {
+		if (m_CustomizerList[i]->IsCommandValid(ID)) {
+			if (m_CustomizerList[i]->GetCommandName(ID,pszName,MaxLength))
+				Length=::lstrlen(pszName);
+			break;
+		}
+	}
+
+	if (Length==0) {
+		if (!Info.ShortName.empty()) {
+			::lstrcpyn(pszName,Info.ShortName.c_str(),MaxLength);
+			Length=min(static_cast<int>(Info.ShortName.length()),MaxLength-1);
+		} else {
+			Length=GetCommandName(Index,pszName,MaxLength);
+		}
+	}
+
+	return Length;
+}
+
+
+int CCommandList::GetCommandShortNameByID(int ID,LPTSTR pszName,int MaxLength) const
+{
+	int Index=IDToIndex(ID);
+
+	if (Index<0)
+		return 0;
+	return GetCommandShortName(Index,pszName,MaxLength);
+}
+
+
 int CCommandList::IDToIndex(int ID) const
 {
 	auto itr=m_CommandIDMap.find(ID);
@@ -292,7 +337,8 @@ int CCommandList::ParseText(LPCTSTR pszText) const
 }
 
 
-bool CCommandList::RegisterCommand(int ID,LPCTSTR pszText,LPCTSTR pszName)
+bool CCommandList::RegisterCommand(
+	int ID,LPCTSTR pszText,LPCTSTR pszName,LPCTSTR pszShortName,unsigned int State)
 {
 	if (IsStringEmpty(pszText))
 		return false;
@@ -300,9 +346,12 @@ bool CCommandList::RegisterCommand(int ID,LPCTSTR pszText,LPCTSTR pszName)
 	CommandInfo Info;
 
 	Info.ID=ID;
+	Info.State=State;
 	Info.Text=pszText;
 	if (!IsStringEmpty(pszName))
 		Info.Name=pszName;
+	if (!IsStringEmpty(pszShortName))
+		Info.ShortName=pszShortName;
 
 	m_CommandList.push_back(Info);
 #ifndef _DEBUG
@@ -326,6 +375,45 @@ bool CCommandList::AddCommandCustomizer(CCommandCustomizer *pCustomizer)
 		return false;
 	m_CustomizerList.push_back(pCustomizer);
 	return true;
+}
+
+
+void CCommandList::SetEventHandler(CEventHandler *pEventHandler)
+{
+	m_pEventHandler=pEventHandler;
+}
+
+
+bool CCommandList::SetCommandStateByID(int ID,unsigned int State)
+{
+	return SetCommandStateByID(ID,~0U,State);
+}
+
+
+bool CCommandList::SetCommandStateByID(int ID,unsigned int Mask,unsigned int State)
+{
+	int Index=IDToIndex(ID);
+	if (Index<0)
+		return false;
+
+	unsigned int OldState=m_CommandList[Index].State;
+	unsigned int NewState=(OldState & ~Mask) | (State & Mask);
+	if (OldState!=NewState) {
+		m_CommandList[Index].State=NewState;
+		if (m_pEventHandler!=nullptr)
+			m_pEventHandler->OnCommandStateChanged(ID,OldState,NewState);
+	}
+
+	return true;
+}
+
+
+unsigned int CCommandList::GetCommandStateByID(int ID) const
+{
+	int Index=IDToIndex(ID);
+	if (Index<0)
+		return 0;
+	return m_CommandList[Index].State;
 }
 
 

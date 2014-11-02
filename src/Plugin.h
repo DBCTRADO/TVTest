@@ -15,21 +15,76 @@ class CPlugin
 	: public CBonErrorHandler
 	, public CMediaGrabber::IGrabber
 {
-	class CPluginCommandInfo {
+public:
+	class CPluginCommandInfo
+	{
 		int m_ID;
-		CDynamicString m_Text;
-		CDynamicString m_Name;
+		int m_Command;
+		unsigned int m_Flags;
+		unsigned int m_State;
+		TVTest::String m_Text;
+		TVTest::String m_Name;
+		TVTest::Theme::ThemeBitmap m_Icon;
+
 	public:
 		CPluginCommandInfo(int ID,LPCWSTR pszText,LPCWSTR pszName);
+		CPluginCommandInfo(const TVTest::PluginCommandInfo &Info);
 		CPluginCommandInfo(const TVTest::CommandInfo &Info);
 		virtual ~CPluginCommandInfo();
 		int GetID() const { return m_ID; }
-		LPCWSTR GetText() const { return m_Text.Get(); }
-		LPCWSTR GetName() const { return m_Name.Get(); }
+		int GetCommand() const { return m_Command; }
+		void SetCommand(int Command) { m_Command=Command; }
+		unsigned int GetFlags() const { return m_Flags; }
+		unsigned int GetState() const { return m_State; }
+		void SetState(unsigned int State) { m_State=State; }
+		LPCWSTR GetText() const { return m_Text.c_str(); }
+		LPCWSTR GetName() const { return m_Name.c_str(); }
+		TVTest::Theme::ThemeBitmap &GetIcon() { return m_Icon; }
 	};
 
-	class CProgramGuideCommand : public CPluginCommandInfo {
+	CPlugin();
+	~CPlugin();
+	bool Load(LPCTSTR pszFileName);
+	void Free();
+	bool IsLoaded() const { return m_hLib!=NULL; }
+	bool IsEnabled() const { return m_fEnabled; }
+	bool Enable(bool fEnable);
+	HMODULE GetModuleHandle() { return m_hLib; }
+	LPCTSTR GetFileName() const { return m_FileName.Get(); }
+	LPCTSTR GetPluginName() const { return m_PluginName.GetSafe(); }
+	LPCTSTR GetCopyright() const { return m_Copyright.GetSafe(); }
+	LPCTSTR GetDescription() const { return m_Description.GetSafe(); }
+	LRESULT SendEvent(UINT Event,LPARAM lParam1=0,LPARAM lParam2=0);
+	bool OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam,LRESULT *pResult);
+	bool Settings(HWND hwndOwner);
+	bool HasSettings() const { return (m_Flags&TVTest::PLUGIN_FLAG_HASSETTINGS)!=0; }
+	bool CanUnload() const { return (m_Flags&TVTest::PLUGIN_FLAG_NOUNLOAD)==0; }
+	int GetCommand() const { return m_Command; }
+	bool SetCommand(int Command);
+	int NumPluginCommands() const;
+	int ParsePluginCommand(LPCWSTR pszCommand) const;
+	CPluginCommandInfo *GetPluginCommandInfo(int Index);
+	const CPluginCommandInfo *GetPluginCommandInfo(int Index) const;
+	CPluginCommandInfo *GetPluginCommandInfo(LPCWSTR pszCommand);
+	const CPluginCommandInfo *GetPluginCommandInfo(LPCWSTR pszCommand) const;
+	bool GetPluginCommandInfo(int Index,TVTest::CommandInfo *pInfo) const;
+	bool NotifyCommand(LPCWSTR pszCommand);
+	bool DrawPluginCommandIcon(const TVTest::DrawCommandIconInfo *pInfo);
+	int NumProgramGuideCommands() const;
+	bool GetProgramGuideCommandInfo(int Index,TVTest::ProgramGuideCommandInfo *pInfo) const;
+	bool NotifyProgramGuideCommand(LPCTSTR pszCommand,UINT Action,const CEventInfoData *pEvent,
+								   const POINT *pCursorPos,const RECT *pItemRect);
+	bool IsDisableOnStart() const;
+	bool IsProgramGuideEventEnabled(UINT EventFlag) const { return (m_ProgramGuideEventFlags&EventFlag)!=0; }
+
+	static void SetMessageWindow(HWND hwnd,UINT Message);
+	static LRESULT OnPluginMessage(WPARAM wParam,LPARAM lParam);
+
+private:
+	class CProgramGuideCommand : public CPluginCommandInfo
+	{
 		UINT m_Type;
+
 	public:
 		CProgramGuideCommand(const TVTest::ProgramGuideCommandInfo &Info);
 		UINT GetType() const { return m_Type; }
@@ -87,39 +142,6 @@ class CPlugin
 							  LRESULT FailedResult=0);
 	LRESULT OnCallback(TVTest::PluginParam *pParam,UINT Message,LPARAM lParam1,LPARAM lParam2);
 	bool OnGetSetting(TVTest::SettingInfo *pSetting) const;
-
-public:
-	CPlugin();
-	~CPlugin();
-	bool Load(LPCTSTR pszFileName);
-	void Free();
-	bool IsLoaded() const { return m_hLib!=NULL; }
-	bool IsEnabled() const { return m_fEnabled; }
-	bool Enable(bool fEnable);
-	HMODULE GetModuleHandle() { return m_hLib; }
-	LPCTSTR GetFileName() const { return m_FileName.Get(); }
-	LPCTSTR GetPluginName() const { return m_PluginName.GetSafe(); }
-	LPCTSTR GetCopyright() const { return m_Copyright.GetSafe(); }
-	LPCTSTR GetDescription() const { return m_Description.GetSafe(); }
-	LRESULT SendEvent(UINT Event,LPARAM lParam1=0,LPARAM lParam2=0);
-	bool OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam,LRESULT *pResult);
-	bool Settings(HWND hwndOwner);
-	bool HasSettings() const { return (m_Flags&TVTest::PLUGIN_FLAG_HASSETTINGS)!=0; }
-	bool CanUnload() const { return (m_Flags&TVTest::PLUGIN_FLAG_NOUNLOAD)==0; }
-	int GetCommand() const { return m_Command; }
-	bool SetCommand(int Command);
-	int NumPluginCommands() const;
-	bool GetPluginCommandInfo(int Index,TVTest::CommandInfo *pInfo) const;
-	bool NotifyCommand(LPCWSTR pszCommand);
-	int NumProgramGuideCommands() const;
-	bool GetProgramGuideCommandInfo(int Index,TVTest::ProgramGuideCommandInfo *pInfo) const;
-	bool NotifyProgramGuideCommand(LPCTSTR pszCommand,UINT Action,const CEventInfoData *pEvent,
-								   const POINT *pCursorPos,const RECT *pItemRect);
-	bool IsDisableOnStart() const;
-	bool IsProgramGuideEventEnabled(UINT EventFlag) const { return (m_ProgramGuideEventFlags&EventFlag)!=0; }
-
-	static void SetMessageWindow(HWND hwnd,UINT Message);
-	static LRESULT OnPluginMessage(WPARAM wParam,LPARAM lParam);
 };
 
 class CPluginManager : public TVTest::CAppEventHandler
@@ -180,6 +202,7 @@ public:
 	int FindPlugin(const CPlugin *pPlugin) const;
 	int FindPluginByFileName(LPCTSTR pszFileName) const;
 	int FindPluginByCommand(int Command) const;
+	CPlugin *GetPluginByPluginCommand(LPCTSTR pszCommand,LPCTSTR *ppszCommandText=NULL);
 	bool DeletePlugin(int Index);
 	bool SetMenu(HMENU hmenu) const;
 	bool OnPluginCommand(LPCTSTR pszCommand);

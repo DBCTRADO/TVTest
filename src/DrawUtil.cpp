@@ -523,6 +523,42 @@ HBITMAP CreateDIB(int Width,int Height,int BitCount,void **ppBits)
 }
 
 
+HBITMAP DuplicateDIB(HBITMAP hbmSrc)
+{
+	if (hbmSrc==NULL)
+		return NULL;
+
+	BITMAP bm;
+	if (::GetObject(hbmSrc,sizeof(bm),&bm)!=sizeof(bm)
+			|| bm.bmBits==NULL)
+		return NULL;
+
+	void *pBits;
+	HBITMAP hbm=CreateDIB(bm.bmWidth,bm.bmHeight,bm.bmBitsPixel,&pBits);
+	if (hbm==NULL)
+		return NULL;
+
+	::CopyMemory(pBits,bm.bmBits,bm.bmHeight*bm.bmWidthBytes);
+
+	if (bm.bmBitsPixel<=8) {
+		HDC hdc=::CreateCompatibleDC(NULL);
+		if (hdc==NULL) {
+			::DeleteObject(hbm);
+			return NULL;
+		}
+		HGDIOBJ hOldBitmap=::SelectObject(hdc,hbmSrc);
+		RGBQUAD ColorTable[256];
+		::GetDIBColorTable(hdc,0,1<<bm.bmBitsPixel,ColorTable);
+		::SelectObject(hdc,hbm);
+		::SetDIBColorTable(hdc,0,1<<bm.bmBitsPixel,ColorTable);
+		::SelectObject(hdc,hOldBitmap);
+		::DeleteDC(hdc);
+	}
+
+	return hbm;
+}
+
+
 HBITMAP ResizeBitmap(HBITMAP hbmSrc,int Width,int Height,int BitCount,int StretchMode)
 {
 	if (hbmSrc==NULL || Width<1 || Height==0)
@@ -1102,9 +1138,12 @@ CBitmap &CBitmap::operator=(const CBitmap &Src)
 {
 	if (&Src!=this) {
 		Destroy();
-		if (Src.m_hbm!=NULL)
-			m_hbm=static_cast<HBITMAP>(::CopyImage(Src.m_hbm,IMAGE_BITMAP,0,0,
-												   Src.IsDIB()?LR_CREATEDIBSECTION:0));
+		if (Src.m_hbm!=NULL) {
+			if (Src.IsDIB())
+				m_hbm=DuplicateDIB(Src.m_hbm);
+			else
+				m_hbm=static_cast<HBITMAP>(::CopyImage(Src.m_hbm,IMAGE_BITMAP,0,0,0));
+		}
 	}
 	return *this;
 }
@@ -1177,9 +1216,55 @@ CMonoColorBitmap::CMonoColorBitmap()
 {
 }
 
+CMonoColorBitmap::CMonoColorBitmap(const CMonoColorBitmap &Src)
+	: m_hbm(NULL)
+	, m_hbmPremultiplied(NULL)
+{
+	*this=Src;
+}
+
+CMonoColorBitmap::CMonoColorBitmap(CMonoColorBitmap &&Src)
+	: m_hbm(NULL)
+	, m_hbmPremultiplied(NULL)
+{
+	*this=std::move(Src);
+}
+
 CMonoColorBitmap::~CMonoColorBitmap()
 {
 	Destroy();
+}
+
+CMonoColorBitmap &CMonoColorBitmap::operator=(const CMonoColorBitmap &Src)
+{
+	if (&Src!=this) {
+		Destroy();
+
+		if (Src.m_hbm!=NULL)
+			m_hbm=DuplicateDIB(Src.m_hbm);
+		if (Src.m_hbmPremultiplied!=NULL)
+			m_hbmPremultiplied=DuplicateDIB(Src.m_hbmPremultiplied);
+		m_Color=Src.m_Color;
+		m_fColorImage=Src.m_fColorImage;
+	}
+
+	return *this;
+}
+
+CMonoColorBitmap &CMonoColorBitmap::operator=(CMonoColorBitmap &&Src)
+{
+	if (&Src!=this) {
+		Destroy();
+
+		m_hbm=Src.m_hbm;
+		Src.m_hbm=NULL;
+		m_hbmPremultiplied=Src.m_hbmPremultiplied;
+		Src.m_hbmPremultiplied=NULL;
+		m_Color=Src.m_Color;
+		m_fColorImage=Src.m_fColorImage;
+	}
+
+	return *this;
 }
 
 bool CMonoColorBitmap::Load(HINSTANCE hinst,LPCTSTR pszName)
@@ -1419,6 +1504,18 @@ HICON CMonoColorBitmap::ExtractIcon(int x,int y,int Width,int Height,COLORREF Co
 	::DeleteObject(hbmColor);
 
 	return hico;
+}
+
+HICON CMonoColorBitmap::ExtractIcon(COLORREF Color)
+{
+	if (m_hbm==NULL)
+		return NULL;
+
+	BITMAP bm;
+	if (::GetObject(m_hbm,sizeof(bm),&bm)!=sizeof(bm))
+		return NULL;
+
+	return ExtractIcon(0,0,bm.bmWidth,bm.bmHeight,Color);
 }
 
 void CMonoColorBitmap::SetColor(COLORREF Color)

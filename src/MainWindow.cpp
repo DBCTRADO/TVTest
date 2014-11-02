@@ -198,6 +198,7 @@ CMainWindow::CMainWindow(CAppMain &App)
 	, m_VideoContainerEventHandler(this)
 	, m_ViewWindowEventHandler(this)
 	, m_Fullscreen(*this)
+	, m_CommandEventHandler(this)
 
 	, m_fShowStatusBar(true)
 	, m_fPopupStatusBar(true)
@@ -1652,7 +1653,7 @@ bool CMainWindow::OnCreate(const CREATESTRUCT *pcs)
 	m_App.SideBarOptions.ApplySideBarOptions();
 	m_App.SideBar.SetEventHandler(&m_SideBarManager);
 	m_App.SideBar.Create(m_LayoutBase.GetHandle(),
-						 WS_CHILD | WS_CLIPSIBLINGS | (m_fShowSideBar?WS_VISIBLE:0),
+						 WS_CHILD | WS_CLIPSIBLINGS/* | (m_fShowSideBar?WS_VISIBLE:0)*/,
 						 0,IDC_SIDEBAR);
 	m_App.SideBarOptions.SetSideBarImage();
 
@@ -1674,7 +1675,7 @@ bool CMainWindow::OnCreate(const CREATESTRUCT *pcs)
 	pWindowContainer=new Layout::CWindowContainer(CONTAINER_ID_SIDEBAR);
 	pWindowContainer->SetWindow(&m_App.SideBar);
 	pWindowContainer->SetMinSize(SideBarWidth,SideBarWidth);
-	pWindowContainer->SetVisible(m_fShowSideBar);
+	pWindowContainer->SetVisible(/*m_fShowSideBar*/false);
 	pSideBarSplitter->SetPane(1,pWindowContainer);
 	pSideBarSplitter->SetPaneSize(CONTAINER_ID_SIDEBAR,SideBarWidth);
 	if (SideBarPlace==CSideBarOptions::PLACE_LEFT
@@ -1753,6 +1754,9 @@ bool CMainWindow::OnCreate(const CREATESTRUCT *pcs)
 	::ImmAssociateContextEx(m_hwnd,nullptr,IACE_CHILDREN);
 
 	m_App.MainMenu.Create(m_App.GetResourceInstance());
+
+	m_App.CommandList.SetEventHandler(&m_CommandEventHandler);
+
 	m_App.MainMenu.CheckItem(CM_ALWAYSONTOP,m_pCore->GetAlwaysOnTop());
 	int Gain,SurroundGain;
 	m_App.CoreEngine.GetAudioGainControl(&Gain,&SurroundGain);
@@ -3232,7 +3236,7 @@ void CMainWindow::OnCommand(HWND hwnd,int id,HWND hwndCtl,UINT codeNotify)
 		}
 
 		if (id>=CM_PLUGINCOMMAND_FIRST && id<=CM_PLUGINCOMMAND_LAST) {
-			m_App.PluginManager.OnPluginCommand(m_App.CommandList.GetCommandText(m_App.CommandList.IDToIndex(id)));
+			m_App.PluginManager.OnPluginCommand(m_App.CommandList.GetCommandTextByID(id));
 			return;
 		}
 
@@ -6548,34 +6552,85 @@ bool CMainWindow::CSideBarManager::GetTooltipText(int Command,LPTSTR pszText,int
 	return false;
 }
 
-bool CMainWindow::CSideBarManager::DrawIcon(
-	int Command,HDC hdc,const RECT &ItemRect,COLORREF ForeColor,HDC hdcBuffer)
+bool CMainWindow::CSideBarManager::DrawIcon(const CSideBar::DrawIconInfo *pInfo)
 {
-	if (Command>=CM_CHANNELNO_FIRST && Command<=CM_CHANNELNO_LAST
-			&& m_pMainWindow->m_App.SideBarOptions.GetShowChannelLogo()) {
-		// ƒAƒCƒRƒ“‚É‹ÇƒƒS‚ð•\Ž¦
-		// TODO: V‚µ‚­ƒƒS‚ªŽæ“¾‚³‚ê‚½Žž‚ÉÄ•`‰æ‚·‚é
-		const CChannelInfo *pChannel=GetChannelInfoByCommand(Command);
-		if (pChannel!=nullptr) {
-			HBITMAP hbmLogo=m_pMainWindow->m_App.LogoManager.GetAssociatedLogoBitmap(
-				pChannel->GetNetworkID(),pChannel->GetServiceID(),
-				CLogoManager::LOGOTYPE_SMALL);
-			if (hbmLogo!=nullptr) {
-				const int Width=ItemRect.right-ItemRect.left;
-				const int Height=ItemRect.bottom-ItemRect.top;
-				const int IconHeight=Height*10/16;	// –{—ˆ‚Ì”ä—¦‚æ‚èc’·‚É‚µ‚Ä‚¢‚é(Œ©‰h‚¦‚Ì‚½‚ß)
-				HBITMAP hbmOld=SelectBitmap(hdcBuffer,hbmLogo);
-				int OldStretchMode=::SetStretchBltMode(hdc,STRETCH_HALFTONE);
-				BITMAP bm;
-				::GetObject(hbmLogo,sizeof(bm),&bm);
-				::StretchBlt(hdc,ItemRect.left,ItemRect.top+(Height-IconHeight)/2,Width,IconHeight,
-							 hdcBuffer,0,0,bm.bmWidth,bm.bmHeight,SRCCOPY);
-				::SetStretchBltMode(hdc,OldStretchMode);
-				::SelectObject(hdcBuffer,hbmOld);
-				return true;
+	if (pInfo->Command>=CM_CHANNELNO_FIRST && pInfo->Command<=CM_CHANNELNO_LAST) {
+		if (m_pMainWindow->m_App.SideBarOptions.GetShowChannelLogo()) {
+			// ƒAƒCƒRƒ“‚É‹ÇƒƒS‚ð•\Ž¦
+			// TODO: V‚µ‚­ƒƒS‚ªŽæ“¾‚³‚ê‚½Žž‚ÉÄ•`‰æ‚·‚é
+			const CChannelInfo *pChannel=GetChannelInfoByCommand(pInfo->Command);
+			if (pChannel!=nullptr) {
+				HBITMAP hbmLogo=m_pMainWindow->m_App.LogoManager.GetAssociatedLogoBitmap(
+					pChannel->GetNetworkID(),pChannel->GetServiceID(),
+					CLogoManager::LOGOTYPE_SMALL);
+				if (hbmLogo!=nullptr) {
+					const int Width=pInfo->IconRect.right-pInfo->IconRect.left;
+					const int Height=pInfo->IconRect.bottom-pInfo->IconRect.top;
+					const int IconHeight=Height*10/16;	// –{—ˆ‚Ì”ä—¦‚æ‚èc’·‚É‚µ‚Ä‚¢‚é(Œ©‰h‚¦‚Ì‚½‚ß)
+					HBITMAP hbmOld=SelectBitmap(pInfo->hdcBuffer,hbmLogo);
+					int OldStretchMode=::SetStretchBltMode(pInfo->hdc,STRETCH_HALFTONE);
+					BITMAP bm;
+					::GetObject(hbmLogo,sizeof(bm),&bm);
+					::StretchBlt(pInfo->hdc,
+								 pInfo->IconRect.left,pInfo->IconRect.top+(Height-IconHeight)/2,Width,IconHeight,
+								 pInfo->hdcBuffer,0,0,bm.bmWidth,bm.bmHeight,SRCCOPY);
+					::SetStretchBltMode(pInfo->hdc,OldStretchMode);
+					::SelectObject(pInfo->hdcBuffer,hbmOld);
+					return true;
+				}
 			}
 		}
+	} else if (pInfo->Command>=CM_PLUGINCOMMAND_FIRST
+			&& pInfo->Command<=CM_PLUGINCOMMAND_LAST) {
+		LPCTSTR pszCommand;
+		CPlugin *pPlugin=m_pMainWindow->m_App.PluginManager.GetPluginByPluginCommand(
+			m_pMainWindow->m_App.CommandList.GetCommandTextByID(pInfo->Command),&pszCommand);
+
+		if (pPlugin!=nullptr) {
+			CPlugin::CPluginCommandInfo *pCommandInfo=
+				pPlugin->GetPluginCommandInfo(pszCommand);
+
+			if (pCommandInfo!=nullptr) {
+				if ((pCommandInfo->GetFlags() & TVTest::PLUGIN_COMMAND_FLAG_NOTIFYDRAWICON)!=0) {
+					TVTest::DrawCommandIconInfo Info;
+
+					Info.ID=pCommandInfo->GetID();
+					Info.Flags=0;
+					Info.State=0;
+					if ((pInfo->State & CSideBar::ITEM_STATE_DISABLED)!=0)
+						Info.State|=TVTest::COMMAND_ICON_STATE_DISABLED;
+					if ((pInfo->State & CSideBar::ITEM_STATE_CHECKED)!=0)
+						Info.State|=TVTest::COMMAND_ICON_STATE_CHECKED;
+					if ((pInfo->State & CSideBar::ITEM_STATE_HOT)!=0)
+						Info.State|=TVTest::COMMAND_ICON_STATE_HOT;
+					if ((Info.State & TVTest::COMMAND_ICON_STATE_HOT)!=0)
+						Info.pszStyle=L"side-bar.item.hot";
+					else if ((Info.State & TVTest::COMMAND_ICON_STATE_CHECKED)!=0)
+						Info.pszStyle=L"side-bar.item.checked";
+					else
+						Info.pszStyle=L"side-bar.item";
+					Info.hdc=pInfo->hdc;
+					Info.DrawRect=pInfo->IconRect;
+					Info.Color=pInfo->Color;
+					Info.Opacity=pInfo->Opacity;
+
+					if (pPlugin->DrawPluginCommandIcon(&Info))
+						return true;
+				}
+
+				pCommandInfo->GetIcon().Draw(
+					pInfo->hdc,
+					pInfo->IconRect.left,pInfo->IconRect.top,
+					pInfo->IconRect.right-pInfo->IconRect.left,
+					pInfo->IconRect.bottom-pInfo->IconRect.top,
+					0,0,0,0,
+					pInfo->Color,pInfo->Opacity);
+			}
+		}
+
+		return true;
 	}
+
 	return false;
 }
 
@@ -6770,4 +6825,26 @@ void CMainWindow::CEpgCaptureEventHandler::OnChannelEnd(bool fComplete)
 {
 	if (!m_pMainWindow->m_pCore->GetStandby())
 		m_pMainWindow->m_App.Epg.ProgramGuide.Refresh();
+}
+
+
+CMainWindow::CCommandEventHandler::CCommandEventHandler(CMainWindow *pMainWindow)
+	: m_pMainWindow(pMainWindow)
+{
+}
+
+void CMainWindow::CCommandEventHandler::OnCommandStateChanged(
+	int ID,unsigned int OldState,unsigned int NewState)
+{
+	if (((OldState ^ NewState) & CCommandList::COMMAND_STATE_CHECKED)!=0) {
+		const bool fChecked=(NewState & CCommandList::COMMAND_STATE_CHECKED)!=0;
+		m_pMainWindow->m_App.MainMenu.CheckItem(ID,fChecked);
+		m_pMainWindow->m_App.SideBar.CheckItem(ID,fChecked);
+	}
+
+	if (((OldState ^ NewState) & CCommandList::COMMAND_STATE_DISABLED)!=0) {
+		const bool fEnabled=(NewState & CCommandList::COMMAND_STATE_DISABLED)==0;
+		m_pMainWindow->m_App.MainMenu.EnableItem(ID,fEnabled);
+		m_pMainWindow->m_App.SideBar.EnableItem(ID,fEnabled);
+	}
 }

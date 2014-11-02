@@ -12,6 +12,7 @@ namespace TVTest
 	{
 
 		typedef DrawUtil::RGBA ThemeColor;
+		typedef DrawUtil::CMonoColorBitmap ThemeBitmap;
 
 		struct SolidStyle
 		{

@@ -21,14 +21,20 @@ public:
 		ITEM_SEPARATOR=0
 	};
 
+	enum {
+		ITEM_STATE_DISABLED	=0x0001U,
+		ITEM_STATE_CHECKED	=0x0002U,
+		ITEM_STATE_HOT		=0x0004U
+	};
+
 	struct SideBarItem {
 		int Command;
 		int Icon;
-		unsigned int Flags;
-	};
-	enum {
-		ITEM_FLAG_DISABLED	=0x0001,
-		ITEM_FLAG_CHECKED	=0x0002
+		unsigned int State;
+
+		bool IsDisabled() const { return (State & ITEM_STATE_DISABLED)!=0; }
+		bool IsEnabled() const { return !IsDisabled(); }
+		bool IsChecked() const { return (State & ITEM_STATE_CHECKED)!=0; }
 	};
 
 	struct SideBarTheme {
@@ -36,6 +42,16 @@ public:
 		TVTest::Theme::Style HighlightItemStyle;
 		TVTest::Theme::Style CheckItemStyle;
 		TVTest::Theme::BorderStyle Border;
+	};
+
+	struct DrawIconInfo {
+		int Command;
+		unsigned int State;
+		HDC hdc;
+		RECT IconRect;
+		COLORREF Color;
+		BYTE Opacity;
+		HDC hdcBuffer;
 	};
 
 	class ABSTRACT_CLASS(CEventHandler) {
@@ -48,7 +64,7 @@ public:
 		virtual void OnRButtonDown(int x,int y) {}
 		virtual void OnMouseLeave() {}
 		virtual bool GetTooltipText(int Command,LPTSTR pszText,int MaxText) { return false; }
-		virtual bool DrawIcon(int Command,HDC hdc,const RECT &ItemRect,COLORREF ForeColor,HDC hdcBuffer) { return false; }
+		virtual bool DrawIcon(const DrawIconInfo *pInfo) { return false; }
 		friend class CSideBar;
 	};
 
@@ -71,12 +87,14 @@ public:
 	void DeleteAllItems();
 	bool AddItem(const SideBarItem *pItem);
 	bool AddItems(const SideBarItem *pItemList,int NumItems);
+	bool AddSeparator();
 	int CommandToIndex(int Command) const;
 	bool EnableItem(int Command,bool fEnable);
 	bool IsItemEnabled(int Command) const;
 	bool CheckItem(int Command,bool fCheck);
 	bool CheckRadioItem(int First,int Last,int Check);
 	bool IsItemChecked(int Command) const;
+	bool RedrawItem(int Command);
 	bool SetSideBarTheme(const SideBarTheme &Theme);
 	bool GetSideBarTheme(SideBarTheme *pTheme) const;
 	void ShowToolTips(bool fShow);
