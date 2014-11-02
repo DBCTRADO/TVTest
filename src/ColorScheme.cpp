@@ -36,7 +36,7 @@ const CColorScheme::ColorInfo CColorScheme::m_ColorInfoList[NUM_COLORS] = {
 	{HEXRGB(0x999999),	TEXT("StatusText"),							TEXT("ステータスバー 文字")},
 	{HEXRGB(0x777777),	TEXT("StatusItemBorder"),					TEXT("ステータスバー 項目外枠")},
 	{HEXRGB(0x111111),	TEXT("StatusBottomItemBack"),				TEXT("ステータスバー 下段背景1")},
-	{HEXRGB(0x222222),	TEXT("StatusBottomItemBack2"),				TEXT("ステータスバー 下段背景2")},
+	{HEXRGB(0x111111),	TEXT("StatusBottomItemBack2"),				TEXT("ステータスバー 下段背景2")},
 	{HEXRGB(0x999999),	TEXT("StatusBottomItemText"),				TEXT("ステータスバー 下段文字")},
 	{HEXRGB(0x111111),	TEXT("StatusBottomItemBorder"),				TEXT("ステータスバー 下段外枠")},
 	{HEXRGB(0x4486E8),	TEXT("StatusHighlightBack"),				TEXT("ステータスバー 選択背景1")},
