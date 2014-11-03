@@ -2132,7 +2132,6 @@ LRESULT CPlugin::OnCallback(TVTest::PluginParam *pParam,UINT Message,LPARAM lPar
 
 			if (pInfo==NULL
 					|| pInfo->Size!=sizeof(TVTest::StatusItemInfo)
-					|| pInfo->Type!=TVTest::STATUS_ITEM_TYPE_NORMAL
 					|| IsStringEmpty(pInfo->pszIDText)
 					|| IsStringEmpty(pInfo->pszName))
 				return FALSE;
@@ -2148,6 +2147,7 @@ LRESULT CPlugin::OnCallback(TVTest::PluginParam *pParam,UINT Message,LPARAM lPar
 			pItem->DefaultWidth=pInfo->DefaultWidth;
 			pItem->MinHeight=pInfo->MinHeight;
 			pItem->ItemID=-1;
+			pItem->Style=pInfo->Style;
 			pItem->State=0;
 			pItem->pItem=NULL;
 
@@ -2849,8 +2849,8 @@ CPlugin::CPluginStatusItem::CPluginStatusItem(CPlugin *pPlugin,StatusItem *pItem
 	m_MaxWidth=pItem->MaxWidth;
 	m_MinHeight=pItem->MinHeight;
 	m_fVisible=(pItem->State & TVTest::STATUS_ITEM_STATE_VISIBLE)!=0;
-	m_fFullRow=(pItem->Flags & TVTest::STATUS_ITEM_FLAG_FULLROW)!=0;
-	m_fVariableWidth=(pItem->Flags & TVTest::STATUS_ITEM_FLAG_VARIABLEWIDTH)!=0;
+	m_fFullRow=(pItem->Flags & TVTest::STATUS_ITEM_STYLE_FULLROW)!=0;
+	m_fVariableWidth=(pItem->Flags & TVTest::STATUS_ITEM_STYLE_VARIABLEWIDTH)!=0;
 	m_IDText=::PathFindFileName(m_pPlugin->GetFileName());
 	m_IDText+=_T(':');
 	m_IDText+=pItem->IDText;

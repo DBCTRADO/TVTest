@@ -106,6 +106,7 @@ private:
 		int DefaultWidth;
 		int MinHeight;
 		int ItemID;
+		DWORD Style;
 		DWORD State;
 		CPluginStatusItem *pItem;
 	};

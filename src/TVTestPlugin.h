@@ -2298,8 +2298,8 @@ enum {
 // ステータス項目の情報
 struct StatusItemInfo {
 	DWORD Size;			// 構造体のサイズ
-	DWORD Type;			// 種類(STATUS_ITEM_TYPE_*)
-	DWORD Flags;		// フラグ(STATUS_ITEM_FLAG_*)
+	DWORD Flags;		// 各種フラグ(STATUS_ITEM_FLAG_*)
+	DWORD Style;		// スタイル(STATUS_ITEM_STYLE_*)
 	int ID;				// 識別子
 	LPCWSTR pszIDText;	// 識別子文字列
 	LPCWSTR pszName;	// 名前
@@ -2309,16 +2309,16 @@ struct StatusItemInfo {
 	int MinHeight;		// 最小の高さ
 };
 
-// ステータス項目の種類
-enum {
-	STATUS_ITEM_TYPE_NORMAL	// 普通
-};
-
 // ステータス項目のフラグ
 enum {
-	STATUS_ITEM_FLAG_VARIABLEWIDTH	=0x00000001U,	// 可変幅
-	STATUS_ITEM_FLAG_FULLROW		=0x00000002U,	// 一行
-	STATUS_ITEM_FLAG_TIMERUPDATE	=0x00000004U	// 定期的に更新する
+	STATUS_ITEM_FLAG_TIMERUPDATE	=0x00000001U	// 定期的に更新する
+};
+
+// ステータス項目のスタイル
+enum {
+	STATUS_ITEM_STYLE_VARIABLEWIDTH	=0x00000001U,	// 可変幅
+	STATUS_ITEM_STYLE_FULLROW		=0x00000002U,	// 一行表示
+	STATUS_ITEM_STYLE_FORCEFULLROW	=0x00000004U	// 強制一行表示
 };
 
 // ステータス項目の幅をフォントサイズから求める
