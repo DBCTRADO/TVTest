@@ -102,7 +102,7 @@
 	  ・MESSAGE_SETPLUGINCOMMANDSTATE
 	  ・MESSAGE_PLUGINCOMMANDNOTIFY
 	  ・MESSAGE_REGISTERSTATUSITEM
-	  ・MESSAGE_SETSTATUSITEMSTATE
+	  ・MESSAGE_SETSTATUSITEM
 	  ・MESSAGE_GETSTATUSITEMINFO
 	  ・MESSAGE_STATUSITEMNOTIFY
 	・以下のイベントを追加した
@@ -416,7 +416,7 @@ enum {
 	MESSAGE_SETPLUGINCOMMANDSTATE,		// プラグインのコマンドの状態を設定
 	MESSAGE_PLUGINCOMMANDNOTIFY,		// プラグインのコマンドの通知
 	MESSAGE_REGISTERSTATUSITEM,			// ステータス項目を登録
-	MESSAGE_SETSTATUSITEMSTATE,			// ステータス項目の状態を設定
+	MESSAGE_SETSTATUSITEM,				// ステータス項目の設定
 	MESSAGE_GETSTATUSITEMINFO,			// ステータス項目の情報を取得
 	MESSAGE_STATUSITEMNOTIFY,			// ステータス項目の通知
 #endif
@@ -2335,17 +2335,26 @@ enum {
 	STATUS_ITEM_STATE_HOT			=0x00000002U	// カーソルが当たっている
 };
 
-// ステータス項目の状態の情報
-struct StatusItemStateInfo {
+// ステータス項目の設定の情報
+struct StatusItemSetInfo {
 	DWORD Size;			// 構造体のサイズ
+	DWORD Mask;			// 設定する情報のマスク(STATUS_ITEM_SET_INFO_MASK_*)
 	int ID;				// 項目の識別子
 	DWORD StateMask;	// 状態のマスク(STATUS_ITEM_STATE_*)
 	DWORD State;		// 状態(STATUS_ITEM_STATE_*)
+	DWORD StyleMask;	// スタイルのマスク(STATUS_ITEM_STYLE_*)
+	DWORD Style;		// スタイル(STATUS_ITEM_STYLE_*)
 };
 
-// ステータス項目の状態を設定する
-inline bool MsgSetStatusItemState(PluginParam *pParam,StatusItemStateInfo *pInfo) {
-	return (*pParam->Callback)(pParam,MESSAGE_SETSTATUSITEMSTATE,(LPARAM)pInfo,0)!=FALSE;
+// ステータス項目の設定
+enum {
+	STATUS_ITEM_SET_INFO_MASK_STATE	=0x00000001U,	// StateMask / State を設定
+	STATUS_ITEM_SET_INFO_MASK_STYLE	=0x00000002U	// StyleMask / Style を設定
+};
+
+// ステータス項目を設定する
+inline bool MsgSetStatusItem(PluginParam *pParam,const StatusItemSetInfo *pInfo) {
+	return (*pParam->Callback)(pParam,MESSAGE_SETSTATUSITEM,(LPARAM)pInfo,0)!=FALSE;
 }
 
 // ステータス項目の情報取得
@@ -2879,9 +2888,8 @@ public:
 	bool RegisterStatusItem(const StatusItemInfo *pInfo) {
 		return MsgRegisterStatusItem(m_pParam,pInfo);
 	}
-	bool SetStatusItemState(StatusItemStateInfo *pInfo) {
-		pInfo->Size=sizeof(StatusItemStateInfo);
-		return MsgSetStatusItemState(m_pParam,pInfo);
+	bool SetStatusItem(const StatusItemSetInfo *pInfo) {
+		return MsgSetStatusItem(m_pParam,pInfo);
 	}
 	bool GetStatusItemInfo(StatusItemGetInfo *pInfo) {
 		pInfo->Size=sizeof(StatusItemGetInfo);

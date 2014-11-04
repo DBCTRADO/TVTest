@@ -2155,26 +2155,41 @@ LRESULT CPlugin::OnCallback(TVTest::PluginParam *pParam,UINT Message,LPARAM lPar
 		}
 		return TRUE;
 
-	case TVTest::MESSAGE_SETSTATUSITEMSTATE:
+	case TVTest::MESSAGE_SETSTATUSITEM:
 		{
-			TVTest::StatusItemStateInfo *pInfo=
-				reinterpret_cast<TVTest::StatusItemStateInfo*>(lParam1);
+			TVTest::StatusItemSetInfo *pInfo=
+				reinterpret_cast<TVTest::StatusItemSetInfo*>(lParam1);
 
-			if (pInfo==NULL || pInfo->Size!=sizeof(TVTest::StatusItemStateInfo))
+			if (pInfo==NULL || pInfo->Size!=sizeof(TVTest::StatusItemSetInfo))
 				return FALSE;
 
 			for (auto itr=m_StatusItemList.begin();itr!=m_StatusItemList.end();++itr) {
 				StatusItem *pItem=*itr;
 				if (pItem->ID==pInfo->ID) {
-					DWORD OldState=pItem->State;
-					DWORD NewState=(pItem->State & ~pInfo->StateMask) | (pInfo->State & pInfo->StateMask);
-					pItem->State=NewState;
-					if (((NewState ^ OldState) & TVTest::STATUS_ITEM_STATE_VISIBLE)!=0) {
-						if (pItem->pItem!=NULL) {
-							GetAppClass().MainWindow.ShowStatusBarItem(
-								pItem->ItemID,(NewState & TVTest::STATUS_ITEM_STATE_VISIBLE)!=0);
+					if ((pInfo->Mask & TVTest::STATUS_ITEM_SET_INFO_MASK_STATE)!=0) {
+						DWORD OldState=pItem->State;
+						DWORD NewState=(pItem->State & ~pInfo->StateMask) | (pInfo->State & pInfo->StateMask);
+						pItem->State=NewState;
+						if (((NewState ^ OldState) & TVTest::STATUS_ITEM_STATE_VISIBLE)!=0) {
+							if (pItem->pItem!=NULL) {
+								GetAppClass().MainWindow.ShowStatusBarItem(
+									pItem->ItemID,(NewState & TVTest::STATUS_ITEM_STATE_VISIBLE)!=0);
+							}
 						}
 					}
+
+					if ((pInfo->Mask & TVTest::STATUS_ITEM_SET_INFO_MASK_STYLE)!=0) {
+						DWORD OldStyle=pItem->Style;
+						DWORD NewStyle=(OldStyle & ~pInfo->StyleMask) | (pInfo->Style & pInfo->StyleMask);
+						if (NewStyle!=OldStyle) {
+							pItem->Style=NewStyle;
+							if (pItem->pItem!=NULL) {
+								pItem->pItem->ApplyStyle();
+								GetAppClass().StatusView.AdjustSize();
+							}
+						}
+					}
+
 					return TRUE;
 				}
 			}
@@ -2849,13 +2864,7 @@ CPlugin::CPluginStatusItem::CPluginStatusItem(CPlugin *pPlugin,StatusItem *pItem
 	m_MaxWidth=pItem->MaxWidth;
 	m_MinHeight=pItem->MinHeight;
 	m_fVisible=(pItem->State & TVTest::STATUS_ITEM_STATE_VISIBLE)!=0;
-
-	if ((pItem->Style & TVTest::STATUS_ITEM_STYLE_VARIABLEWIDTH)!=0)
-		m_Style|=STYLE_VARIABLEWIDTH;
-	if ((pItem->Style & TVTest::STATUS_ITEM_STYLE_FULLROW)!=0)
-		m_Style|=STYLE_FULLROW;
-	if ((pItem->Style & TVTest::STATUS_ITEM_STYLE_FORCEFULLROW)!=0)
-		m_Style|=STYLE_FULLROW | STYLE_FORCEFULLROW;
+	ApplyStyle();
 
 	m_IDText=::PathFindFileName(m_pPlugin->GetFileName());
 	m_IDText+=_T(':');
@@ -2982,6 +2991,20 @@ HWND CPlugin::CPluginStatusItem::GetWindowHandle() const
 	if (m_pStatus==NULL)
 		return NULL;
 	return m_pStatus->GetHandle();
+}
+
+
+void CPlugin::CPluginStatusItem::ApplyStyle()
+{
+	if (m_pItem!=NULL) {
+		m_Style=0;
+		if ((m_pItem->Style & TVTest::STATUS_ITEM_STYLE_VARIABLEWIDTH)!=0)
+			m_Style|=STYLE_VARIABLEWIDTH;
+		if ((m_pItem->Style & TVTest::STATUS_ITEM_STYLE_FULLROW)!=0)
+			m_Style|=STYLE_FULLROW;
+		if ((m_pItem->Style & TVTest::STATUS_ITEM_STYLE_FORCEFULLROW)!=0)
+			m_Style|=STYLE_FULLROW | STYLE_FORCEFULLROW;
+	}
 }
 
 

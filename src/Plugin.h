@@ -134,6 +134,7 @@ private:
 	// CPluginStatusItem
 		void DetachItem();
 		HWND GetWindowHandle() const;
+		void ApplyStyle();
 
 	private:
 		CPlugin *m_pPlugin;
