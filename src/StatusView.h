@@ -18,6 +18,12 @@ class ABSTRACT_CLASS(CStatusItem)
 	: public TVTest::CUIBase
 {
 public:
+	enum {
+		STYLE_VARIABLEWIDTH	= 0x00000001U,
+		STYLE_FULLROW		= 0x00000002U,
+		STYLE_FORCEFULLROW	= 0x00000004U
+	};
+
 	enum SizeUnit {
 		SIZE_PIXEL,
 		SIZE_EM
@@ -55,8 +61,12 @@ public:
 	int GetMinHeight() const { return m_MinHeight; }
 	void SetVisible(bool fVisible);
 	bool GetVisible() const { return m_fVisible; }
-	bool IsFullRow() const { return m_fFullRow; }
-	bool IsVariableWidth() const { return m_fVariableWidth; }
+	void SetItemStyle(unsigned int Style);
+	void SetItemStyle(unsigned int Mask,unsigned int Style);
+	unsigned int GetItemStyle() const { return m_Style; }
+	bool IsVariableWidth() const { return (m_Style & STYLE_VARIABLEWIDTH)!=0; }
+	bool IsFullRow() const { return (m_Style & STYLE_FULLROW)!=0; }
+	bool IsForceFullRow() const { return (m_Style & STYLE_FORCEFULLROW)!=0; }
 	bool Update();
 	void Redraw();
 	virtual LPCTSTR GetIDText() const=0;
@@ -89,8 +99,7 @@ protected:
 	int m_MinHeight;
 	bool m_fVisible;
 	bool m_fBreak;
-	bool m_fFullRow;
-	bool m_fVariableWidth;
+	unsigned int m_Style;
 
 	bool GetMenuPos(POINT *pPos,UINT *pFlags);
 	enum {
@@ -227,6 +236,8 @@ private:
 	void SetHotItem(int Item);
 	void Draw(HDC hdc,const RECT *pPaintRect);
 	void CalcLayout();
+	int CalcRows(const std::vector<const CStatusItem*> &ItemList,int MaxRowWidth) const;
+	int CalcRows(const std::vector<CStatusItem*> &ItemList,int MaxRowWidth);
 	int CalcFontHeight(const DrawUtil::CFont &Font) const;
 	int CalcFontHeight() const;
 	int CalcItemHeight(int FontHeight) const;

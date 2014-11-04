@@ -22,8 +22,7 @@ CStatusItem::CStatusItem(int ID,const SizeValue &DefaultWidth)
 	, m_MinHeight(0)
 	, m_fVisible(true)
 	, m_fBreak(false)
-	, m_fFullRow(false)
-	, m_fVariableWidth(false)
+	, m_Style(0)
 {
 }
 
@@ -94,6 +93,18 @@ void CStatusItem::SetVisible(bool fVisible)
 		OnVisibilityChanged();
 	}
 	OnPresentStatusChange(fVisible && m_pStatus!=NULL && m_pStatus->GetVisible());
+}
+
+
+void CStatusItem::SetItemStyle(unsigned int Style)
+{
+	m_Style=Style;
+}
+
+
+void CStatusItem::SetItemStyle(unsigned int Mask,unsigned int Style)
+{
+	m_Style=(m_Style & ~Mask) | (Style & Mask);
 }
 
 
@@ -650,14 +661,14 @@ bool CStatusView::GetItemRectByIndex(int Index,RECT *pRect) const
 	RECT rc;
 	GetClientRect(&rc);
 	TVTest::Theme::SubtractBorderRect(m_Theme.Border,&rc);
-	if (m_fMultiRow)
+	if (m_Rows>1)
 		rc.bottom=rc.top+m_ItemHeight;
 	const int HorzMargin=m_Style.ItemPadding.Horz();
 	int Left=rc.left;
 	const CStatusItem *pItem;
 	for (int i=0;i<Index;i++) {
 		pItem=m_ItemList[i];
-		if (m_fMultiRow && pItem->m_fBreak) {
+		if (pItem->m_fBreak) {
 			rc.left=Left;
 			rc.top=rc.bottom;
 			rc.bottom+=m_ItemHeight;
@@ -694,7 +705,7 @@ int CStatusView::GetItemHeight() const
 {
 	RECT rc;
 
-	if (m_fMultiRow)
+	if (m_Rows>1)
 		return m_ItemHeight;
 	GetClientRect(&rc);
 	TVTest::Theme::SubtractBorderRect(m_Theme.Border,&rc);
@@ -875,7 +886,7 @@ bool CStatusView::SetMaxRows(int MaxRows)
 		return false;
 	if (m_MaxRows!=MaxRows) {
 		m_MaxRows=MaxRows;
-		if (m_hwnd!=NULL && m_fMultiRow && m_Rows>MaxRows)
+		if (m_hwnd!=NULL)
 			AdjustSize();
 	}
 	return true;
@@ -884,48 +895,19 @@ bool CStatusView::SetMaxRows(int MaxRows)
 
 int CStatusView::CalcHeight(int Width) const
 {
+	std::vector<const CStatusItem*> ItemList;
+	ItemList.reserve(m_ItemList.size());
+	for (auto itr=m_ItemList.begin();itr!=m_ItemList.end();++itr) {
+		const CStatusItem *pItem=*itr;
+
+		if (pItem->GetVisible())
+			ItemList.push_back(pItem);
+	}
+
 	RECT rcBorder;
 	TVTest::Theme::GetBorderWidths(m_Theme.Border,&rcBorder);
 
-	int Rows=1;
-
-	if (m_fMultiRow) {
-		std::vector<const CStatusItem*> ItemList;
-		ItemList.reserve(m_ItemList.size());
-		for (auto itr=m_ItemList.begin();itr!=m_ItemList.end();++itr) {
-			const CStatusItem *pItem=*itr;
-
-			if (pItem->GetVisible())
-				ItemList.push_back(pItem);
-		}
-
-		const int ClientWidth=Width-(rcBorder.left+rcBorder.right);
-		int RowWidth=0;
-
-		for (size_t i=0;i<ItemList.size() && Rows<m_MaxRows;i++) {
-			const CStatusItem *pItem=ItemList[i];
-
-			if (pItem->IsFullRow()) {
-				Rows++;
-				if (RowWidth>0 && i+1<ItemList.size() && Rows<m_MaxRows)
-					Rows++;
-				RowWidth=0;
-			} else {
-				const int ItemWidth=pItem->GetActualWidth()+m_Style.ItemPadding.Horz();
-
-				if (RowWidth==0) {
-					RowWidth=ItemWidth;
-				} else {
-					if (RowWidth+ItemWidth>ClientWidth && Rows<m_MaxRows) {
-						Rows++;
-						RowWidth=ItemWidth;
-					} else {
-						RowWidth+=ItemWidth;
-					}
-				}
-			}
-		}
-	}
+	int Rows=CalcRows(ItemList,Width-(rcBorder.left+rcBorder.right));
 
 	return m_ItemHeight*Rows+rcBorder.top+rcBorder.bottom;
 }
@@ -959,8 +941,7 @@ bool CStatusView::SetItemOrder(const int *pOrderList)
 	}
 	m_ItemList=NewList;
 	if (m_hwnd!=NULL && !m_fSingleMode) {
-		if (m_fMultiRow)
-			AdjustSize();
+		AdjustSize();
 		Invalidate();
 	}
 	return true;
@@ -1065,7 +1046,7 @@ void CStatusView::Draw(HDC hdc,const RECT *pPaintRect)
 	GetClientRect(&rcClient);
 	rc=rcClient;
 	TVTest::Theme::SubtractBorderRect(m_Theme.Border,&rc);
-	const int ItemHeight=m_fMultiRow?m_ItemHeight:rc.bottom-rc.top;
+	const int ItemHeight=m_Rows>1?m_ItemHeight:rc.bottom-rc.top;
 
 	if (!m_fSingleMode) {
 		int MaxWidth=0;
@@ -1089,7 +1070,7 @@ void CStatusView::Draw(HDC hdc,const RECT *pPaintRect)
 	crOldTextColor=::GetTextColor(hdcDst);
 	crOldBkColor=::GetBkColor(hdcDst);
 
-	if (m_fMultiRow)
+	if (m_Rows>1)
 		rc.bottom=rc.top+ItemHeight;
 
 	if (m_fSingleMode) {
@@ -1140,7 +1121,7 @@ void CStatusView::Draw(HDC hdc,const RECT *pPaintRect)
 						m_Offscreen.CopyTo(hdc,&rc);
 				}
 			}
-			if (m_fMultiRow && pItem->m_fBreak) {
+			if (m_Rows>1 && pItem->m_fBreak) {
 				if (rc.right<pPaintRect->right) {
 					rc.left=max(rc.right,pPaintRect->left);
 					rc.right=pPaintRect->right;
@@ -1184,48 +1165,15 @@ void CStatusView::CalcLayout()
 			ItemList.push_back(pItem);
 	}
 
-	const int MaxRows=m_fMultiRow?m_MaxRows:1;
 	RECT rc;
-	int MaxRowWidth,RowWidth,Rows;
-
 	GetClientRect(&rc);
 	TVTest::Theme::SubtractBorderRect(m_Theme.Border,&rc);
-	MaxRowWidth=rc.right-rc.left;
-	RowWidth=0;
-	Rows=1;
+	const int MaxRowWidth=rc.right-rc.left;
 
-	for (size_t i=0;i<ItemList.size();i++) {
-		CStatusItem *pItem=ItemList[i];
-
-		if (pItem->m_fFullRow) {
-			if (Rows<m_MaxRows
-					&& (i==0 || i+1==ItemList.size() || Rows+1<m_MaxRows)) {
-				if (i>0)
-					ItemList[i-1]->m_fBreak=true;
-				pItem->SetActualWidth(MaxRowWidth-m_Style.ItemPadding.Horz());
-				pItem->m_fBreak=true;
-				Rows++;
-				if (i+1<ItemList.size() && Rows<m_MaxRows)
-					Rows++;
-				RowWidth=0;
-				continue;
-			}
-		}
-		const int ItemWidth=pItem->GetWidth()+m_Style.ItemPadding.Horz();
-		if (Rows<m_MaxRows && RowWidth>0 && RowWidth+ItemWidth>MaxRowWidth) {
-			if (i>0)
-				ItemList[i-1]->m_fBreak=true;
-			Rows++;
-			RowWidth=ItemWidth;
-		} else {
-			RowWidth+=ItemWidth;
-		}
-	}
-
-	m_Rows=Rows;
+	m_Rows=CalcRows(ItemList,MaxRowWidth);
 
 	CStatusItem *pVariableItem=NULL;
-	RowWidth=0;
+	int RowWidth=0;
 	for (size_t i=0;i<ItemList.size();i++) {
 		CStatusItem *pItem=ItemList[i];
 
@@ -1242,6 +1190,80 @@ void CStatusView::CalcLayout()
 			RowWidth=0;
 		}
 	}
+}
+
+
+int CStatusView::CalcRows(const std::vector<const CStatusItem*> &ItemList,int MaxRowWidth) const
+{
+	const int MaxRegularRows=m_fMultiRow?m_MaxRows:1;
+	int Rows=1;
+	int RowWidth=0;
+
+	for (size_t i=0;i<ItemList.size();i++) {
+		const CStatusItem *pItem=ItemList[i];
+
+		if (pItem->IsFullRow()) {
+			if (pItem->IsForceFullRow()
+					|| (Rows<MaxRegularRows
+						&& (i==0 || i+1==ItemList.size() || Rows+1<MaxRegularRows))) {
+				Rows++;
+				if (i+1<ItemList.size() && Rows<MaxRegularRows)
+					Rows++;
+				RowWidth=0;
+				continue;
+			}
+		}
+
+		const int ItemWidth=pItem->GetWidth()+m_Style.ItemPadding.Horz();
+		if (Rows<MaxRegularRows && RowWidth>0 && RowWidth+ItemWidth>MaxRowWidth) {
+			Rows++;
+			RowWidth=ItemWidth;
+		} else {
+			RowWidth+=ItemWidth;
+		}
+	}
+
+	return Rows;
+}
+
+
+int CStatusView::CalcRows(const std::vector<CStatusItem*> &ItemList,int MaxRowWidth)
+{
+	const int MaxRegularRows=m_fMultiRow?m_MaxRows:1;
+	int Rows=1;
+	int RowWidth=0;
+
+	for (size_t i=0;i<ItemList.size();i++) {
+		CStatusItem *pItem=ItemList[i];
+
+		if (pItem->IsFullRow()) {
+			if (pItem->IsForceFullRow()
+					|| (Rows<MaxRegularRows
+						&& (i==0 || i+1==ItemList.size() || Rows+1<MaxRegularRows))) {
+				if (i>0)
+					ItemList[i-1]->m_fBreak=true;
+				pItem->SetActualWidth(MaxRowWidth-m_Style.ItemPadding.Horz());
+				pItem->m_fBreak=true;
+				Rows++;
+				if (i+1<ItemList.size() && Rows<MaxRegularRows)
+					Rows++;
+				RowWidth=0;
+				continue;
+			}
+		}
+
+		const int ItemWidth=pItem->GetWidth()+m_Style.ItemPadding.Horz();
+		if (Rows<MaxRegularRows && RowWidth>0 && RowWidth+ItemWidth>MaxRowWidth) {
+			if (i>0)
+				ItemList[i-1]->m_fBreak=true;
+			Rows++;
+			RowWidth=ItemWidth;
+		} else {
+			RowWidth+=ItemWidth;
+		}
+	}
+
+	return Rows;
 }
 
 

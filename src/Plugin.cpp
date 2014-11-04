@@ -2849,11 +2849,18 @@ CPlugin::CPluginStatusItem::CPluginStatusItem(CPlugin *pPlugin,StatusItem *pItem
 	m_MaxWidth=pItem->MaxWidth;
 	m_MinHeight=pItem->MinHeight;
 	m_fVisible=(pItem->State & TVTest::STATUS_ITEM_STATE_VISIBLE)!=0;
-	m_fFullRow=(pItem->Flags & TVTest::STATUS_ITEM_STYLE_FULLROW)!=0;
-	m_fVariableWidth=(pItem->Flags & TVTest::STATUS_ITEM_STYLE_VARIABLEWIDTH)!=0;
+
+	if ((pItem->Style & TVTest::STATUS_ITEM_STYLE_VARIABLEWIDTH)!=0)
+		m_Style|=STYLE_VARIABLEWIDTH;
+	if ((pItem->Style & TVTest::STATUS_ITEM_STYLE_FULLROW)!=0)
+		m_Style|=STYLE_FULLROW;
+	if ((pItem->Style & TVTest::STATUS_ITEM_STYLE_FORCEFULLROW)!=0)
+		m_Style|=STYLE_FULLROW | STYLE_FORCEFULLROW;
+
 	m_IDText=::PathFindFileName(m_pPlugin->GetFileName());
 	m_IDText+=_T(':');
 	m_IDText+=pItem->IDText;
+
 	pItem->pItem=this;
 }
 
