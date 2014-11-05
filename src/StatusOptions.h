@@ -21,6 +21,7 @@ public:
 	bool ApplyOptions();
 	bool ApplyItemList();
 	int RegisterItem(LPCTSTR pszID);
+	bool SetItemVisibility(int ID,bool fVisible);
 	const LOGFONT &GetFont() const { return m_lfItemFont; }
 	bool GetShowTOTTime() const { return m_fShowTOTTime; }
 	void SetShowTOTTime(bool fShow) { m_fShowTOTTime=fShow; }

@@ -297,6 +297,19 @@ int CStatusOptions::RegisterItem(LPCTSTR pszID)
 }
 
 
+bool CStatusOptions::SetItemVisibility(int ID,bool fVisible)
+{
+	for (auto itr=m_ItemList.begin();itr!=m_ItemList.end();++itr) {
+		if (itr->ID==ID) {
+			itr->fVisible=fVisible;
+			return true;
+		}
+	}
+
+	return false;
+}
+
+
 void CStatusOptions::InitListBox(HWND hDlg)
 {
 	for (size_t i=0;i<m_ItemListCur.size();i++)

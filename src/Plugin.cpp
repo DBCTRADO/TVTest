@@ -2171,9 +2171,10 @@ LRESULT CPlugin::OnCallback(TVTest::PluginParam *pParam,UINT Message,LPARAM lPar
 						DWORD NewState=(pItem->State & ~pInfo->StateMask) | (pInfo->State & pInfo->StateMask);
 						pItem->State=NewState;
 						if (((NewState ^ OldState) & TVTest::STATUS_ITEM_STATE_VISIBLE)!=0) {
+							const bool fVisible=(NewState & TVTest::STATUS_ITEM_STATE_VISIBLE)!=0;
+							GetAppClass().StatusOptions.SetItemVisibility(pItem->ItemID,fVisible);
 							if (pItem->pItem!=NULL) {
-								GetAppClass().MainWindow.ShowStatusBarItem(
-									pItem->ItemID,(NewState & TVTest::STATUS_ITEM_STATE_VISIBLE)!=0);
+								GetAppClass().MainWindow.ShowStatusBarItem(pItem->ItemID,fVisible);
 							}
 						}
 					}
