@@ -2828,7 +2828,7 @@ public:
 		pInfo->Size=sizeof(ThemeDrawBackgroundInfo);
 		return MsgThemeDrawBackground(m_pParam,pInfo);
 	}
-	bool ThemeDrawBackground(PluginParam *pParam,LPCWSTR pszStyle,HDC hdc,const RECT &DrawRect) {
+	bool ThemeDrawBackground(LPCWSTR pszStyle,HDC hdc,const RECT &DrawRect) {
 		return MsgThemeDrawBackground(m_pParam,pszStyle,hdc,DrawRect);
 	}
 	bool ThemeDrawText(ThemeDrawTextInfo *pInfo) {
@@ -2839,7 +2839,7 @@ public:
 					   UINT DrawFlags,COLORREF Color=CLR_INVALID) {
 		return MsgThemeDrawText(m_pParam,pszStyle,hdc,pszText,DrawRect,DrawFlags,Color);
 	}
-	bool ThemeDrawIcon(PluginParam *pParam,ThemeDrawIconInfo *pInfo) {
+	bool ThemeDrawIcon(ThemeDrawIconInfo *pInfo) {
 		pInfo->Size=sizeof(ThemeDrawIconInfo);
 		return MsgThemeDrawIcon(m_pParam,pInfo);
 	}
@@ -2850,7 +2850,7 @@ public:
 		return MsgThemeDrawIcon(m_pParam,pszStyle,hdc,DstX,DstY,DstWidth,DstHeight,
 								hbm,SrcX,SrcY,SrcWidth,SrcHeight,Color,Opacity);
 	}
-	bool GetEpgCaptureStatus(PluginParam *pParam,EpgCaptureStatusInfo *pInfo) {
+	bool GetEpgCaptureStatus(EpgCaptureStatusInfo *pInfo) {
 		return MsgGetEpgCaptureStatus(m_pParam,pInfo);
 	}
 	bool GetAppCommandInfo(AppCommandInfo *pInfo) {
