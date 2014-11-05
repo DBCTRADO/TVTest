@@ -52,7 +52,8 @@
 	class CMyPlugin : public TVTest::CTVTestPlugin
 	{
 	public:
-		bool GetPluginInfo(TVTest::PluginInfo *pInfo) {
+		bool GetPluginInfo(TVTest::PluginInfo *pInfo) override
+		{
 			// プラグインの情報を返す
 			pInfo->Type           = TVTest::PLUGIN_TYPE_NORMAL;
 			pInfo->Flags          = 0;
@@ -61,12 +62,16 @@
 			pInfo->pszDescription = L"何もしないプラグイン";
 			return true;	// false を返すとプラグインのロードが失敗になる
 		}
-		bool Initialize() {
+
+		bool Initialize() override
+		{
 			// ここで初期化を行う
 			// 何もしないのであればオーバーライドしなくても良い
 			return true;	// false を返すとプラグインのロードが失敗になる
 		}
-		bool Finalize() {
+
+		bool Finalize() override
+		{
 			// ここでクリーンアップを行う
 			// 何もしないのであればオーバーライドしなくても良い
 			return true;
@@ -489,6 +494,7 @@ enum {
 	EVENT_TRAILER
 };
 
+// バージョン番号を DWORD にまとめる
 inline DWORD MakeVersion(BYTE Major,WORD Minor,WORD Build) {
 	return ((DWORD)Major<<24) | ((DWORD)Minor<<12) | Build;
 }
@@ -1226,8 +1232,12 @@ inline bool MsgSetAudioCallback(PluginParam *pParam,AudioCallbackFunc pCallback,
 
 // コマンドを実行する
 // 文字列を指定してコマンドを実行します。
-// コマンドは TVTest.ini の [Accelerator] セクションの Accel*_Command の文字列と同じです。
-// 一覧は TVTest のソースの Command.cpp にあります。
+// コマンドとは TVTest の各機能を実行するためのものです。
+// コマンドの情報は MsgGetAppCommandInfo で取得できます。
+/*
+	// 例
+	MsgDoCommand(pParam, L"Options");	// 設定ダイアログを表示
+*/
 inline bool MsgDoCommand(PluginParam *pParam,LPCWSTR pszCommand)
 {
 	return (*pParam->Callback)(pParam,MESSAGE_DOCOMMAND,(LPARAM)pszCommand,0)!=0;
@@ -2037,7 +2047,7 @@ struct ThemeDrawTextInfo {
 	LPCWSTR pszText;	// 描画する文字列
 	RECT DrawRect;		// 描画先の領域
 	UINT DrawFlags;		// 描画フラグ(DrawText API の DT_*)
-	COLORREF Color;		// 描画する色
+	COLORREF Color;		// 描画する色(CLR_INVALID でデフォルトの色)
 };
 
 // テーマの文字列を描画する
@@ -2071,7 +2081,7 @@ struct ThemeDrawIconInfo {
 	HBITMAP hbm;		// 描画するビットマップ
 	RECT DstRect;		// 描画先の領域
 	RECT SrcRect;		// 描画元の領域
-	COLORREF Color;		// 描画する色
+	COLORREF Color;		// 描画する色(CLR_INVALID でデフォルトの色)
 	BYTE Opacity;		// 不透明度(1-255)
 	BYTE Reserved[3];	// 予約領域
 };
@@ -2162,6 +2172,7 @@ struct AppCommandInfo {
 // TVTInitialize 内で呼ぶと、プラグインのコマンドなどが取得できませんので注意してください。
 // pszText に NULL を指定すると、必要なバッファ長(終端のNull文字を含む)が MaxText に返ります。
 // pszName に NULL を指定すると、必要なバッファ長(終端のNull文字を含む)が MaxName に返ります。
+// pszText に取得されたコマンド文字列を MsgDoCommand に指定して実行できます。
 /*
 	// 例
 	DWORD Count = MsgGetAppCommandCount(pParam);
@@ -2204,6 +2215,8 @@ inline bool MsgSetVideoStream(PluginParam *pParam,int Stream) {
 }
 
 // ログ取得の情報
+// Index は現在保持されているログの中でのインデックスを、
+// Serial は起動時からの連番を表します。
 struct GetLogInfo {
 	DWORD Size;		// 構造体のサイズ
 	DWORD Flags;	// 各種フラグ(GET_LOG_FLAG_*)
@@ -2213,11 +2226,37 @@ struct GetLogInfo {
 	DWORD MaxText;	// 文字列の最大長
 };
 
+// ログ取得のフラグ
 enum {
 	GET_LOG_FLAG_BYSERIAL	=0x00000001U	// シリアルナンバーから取得
 };
 
 // ログを取得する
+// GetLogInfo の pszText に NULL を指定すると、
+// 必要なバッファ長(終端のNull文字を含む)が MaxText に返ります。
+/*
+	// 例
+	// 全てのログを列挙する
+	GetLogInfo Info;
+	// まず最初のログのシリアルを取得
+	Info.Size = sizeof(Info);
+	Info.Flags = 0;
+	Info.Index = 0;
+	Info.pszText = NULL;
+	if (MsgGetLog(pParam, &Info)) {
+		// シリアルから順番にログを取得
+		WCHAR szText[256];
+		Info.Flags = GET_LOG_FLAG_BYSERIAL;
+		Info.pszText = szText;
+		for (;;) {
+			Info.MaxText = _countof(szText);
+			if (!MsgGetLog(pParam, &Info))
+				break;
+			std::wprintf(L"Log %u : %s\n", Info.Serial, Info.pszText);
+			Info.Serial++;
+		}
+	}
+*/
 inline bool MsgGetLog(PluginParam *pParam,GetLogInfo *pInfo) {
 	return (*pParam->Callback)(pParam,MESSAGE_GETLOG,(LPARAM)pInfo,0)!=FALSE;
 }
@@ -2233,7 +2272,7 @@ inline DWORD MsgGetLogCount(PluginParam *pParam) {
 struct PluginCommandInfo {
 	DWORD Size;				// 構造体のサイズ
 	DWORD Flags;			// 各種フラグ(PLUGIN_COMMAND_FLAG_*)
-	DWORD State;			// 状態(PLUGIN_COMMAND_STATE_*)
+	DWORD State;			// 状態フラグ(PLUGIN_COMMAND_STATE_*)
 	int ID;					// 識別子
 	LPCWSTR pszText;		// コマンドの文字列
 	LPCWSTR pszName;		// コマンドの名前
@@ -2243,11 +2282,11 @@ struct PluginCommandInfo {
 
 // プラグインのコマンドのフラグ
 enum {
-	PLUGIN_COMMAND_FLAG_ICONIZE			=0x00000001U,	// アイコン表示
-	PLUGIN_COMMAND_FLAG_NOTIFYDRAWICON	=0x00000002U	// アイコン描画の通知
+	PLUGIN_COMMAND_FLAG_ICONIZE			=0x00000001U,	// アイコン表示(サイドバーなどに表示される)
+	PLUGIN_COMMAND_FLAG_NOTIFYDRAWICON	=0x00000002U	// アイコン描画の通知(EVENT_DRAWCOMMANDICON で描画を行う)
 };
 
-// プラグインコマンドの状態
+// プラグインコマンドの状態フラグ
 enum {
 	PLUGIN_COMMAND_STATE_DISABLED		=0x00000001U,	// 無効
 	PLUGIN_COMMAND_STATE_CHECKED		=0x00000002U	// チェック
@@ -2266,7 +2305,7 @@ inline bool MsgSetPluginCommandState(PluginParam *pParam,int ID,DWORD State) {
 
 // プラグインコマンドの通知の種類
 enum {
-	PLUGIN_COMMAND_NOTIFY_CHANGEICON	=0x00000001U	// アイコンを変える
+	PLUGIN_COMMAND_NOTIFY_CHANGEICON	=0x00000001U	// アイコンを再描画する
 };
 
 // プラグインコマンドの通知を行う
@@ -2279,7 +2318,7 @@ inline bool MsgPluginCommandNotify(PluginParam *pParam,int ID,unsigned int Type)
 struct DrawCommandIconInfo {
 	int ID;				// コマンドの識別子
 	WORD Flags;			// 各種フラグ(現在は常に0)
-	WORD State;			// 状態(COMMAND_ICON_STATE_*)
+	WORD State;			// 状態フラグ(COMMAND_ICON_STATE_*)
 	LPCWSTR pszStyle;	// スタイル名
 	HDC hdc;			// 描画先DC
 	RECT DrawRect;		// 描画先領域
@@ -2288,18 +2327,18 @@ struct DrawCommandIconInfo {
 	BYTE Reserved[3];	// 予約領域
 };
 
-// コマンドアイコンのステータス
+// コマンドアイコンの状態フラグ
 enum {
 	COMMAND_ICON_STATE_DISABLED	=0x0001U,	// 無効状態
 	COMMAND_ICON_STATE_CHECKED	=0x0002U,	// チェック状態
-	COMMAND_ICON_STATE_HOT		=0x0004U	// カーソルが当たっている
+	COMMAND_ICON_STATE_HOT		=0x0004U	// フォーカスが当たっている
 };
 
 // ステータス項目の情報
 struct StatusItemInfo {
 	DWORD Size;			// 構造体のサイズ
 	DWORD Flags;		// 各種フラグ(STATUS_ITEM_FLAG_*)
-	DWORD Style;		// スタイル(STATUS_ITEM_STYLE_*)
+	DWORD Style;		// スタイルフラグ(STATUS_ITEM_STYLE_*)
 	int ID;				// 識別子
 	LPCWSTR pszIDText;	// 識別子文字列
 	LPCWSTR pszName;	// 名前
@@ -2311,14 +2350,14 @@ struct StatusItemInfo {
 
 // ステータス項目のフラグ
 enum {
-	STATUS_ITEM_FLAG_TIMERUPDATE	=0x00000001U	// 定期的に更新する
+	STATUS_ITEM_FLAG_TIMERUPDATE	=0x00000001U	// 定期的に更新する(STATUS_ITEM_EVENT_UPDATETIMER が呼ばれる)
 };
 
-// ステータス項目のスタイル
+// ステータス項目のスタイルフラグ
 enum {
 	STATUS_ITEM_STYLE_VARIABLEWIDTH	=0x00000001U,	// 可変幅
-	STATUS_ITEM_STYLE_FULLROW		=0x00000002U,	// 一行表示
-	STATUS_ITEM_STYLE_FORCEFULLROW	=0x00000004U	// 強制一行表示
+	STATUS_ITEM_STYLE_FULLROW		=0x00000002U,	// 一行表示(表示領域が足りなければ一行表示にならないこともある)
+	STATUS_ITEM_STYLE_FORCEFULLROW	=0x00000004U	// 強制一行表示(常に一行表示になり、常に表示される)
 };
 
 // ステータス項目の幅をフォントサイズから求める
@@ -2329,10 +2368,10 @@ inline bool MsgRegisterStatusItem(PluginParam *pParam,const StatusItemInfo *pInf
 	return (*pParam->Callback)(pParam,MESSAGE_REGISTERSTATUSITEM,(LPARAM)pInfo,0)!=FALSE;
 }
 
-// ステータス項目の状態
+// ステータス項目の状態フラグ
 enum {
 	STATUS_ITEM_STATE_VISIBLE		=0x00000001U,	// 可視
-	STATUS_ITEM_STATE_HOT			=0x00000002U	// カーソルが当たっている
+	STATUS_ITEM_STATE_HOT			=0x00000002U	// フォーカスが当たっている
 };
 
 // ステータス項目の設定の情報
@@ -2340,10 +2379,10 @@ struct StatusItemSetInfo {
 	DWORD Size;			// 構造体のサイズ
 	DWORD Mask;			// 設定する情報のマスク(STATUS_ITEM_SET_INFO_MASK_*)
 	int ID;				// 項目の識別子
-	DWORD StateMask;	// 状態のマスク(STATUS_ITEM_STATE_*)
-	DWORD State;		// 状態(STATUS_ITEM_STATE_*)
-	DWORD StyleMask;	// スタイルのマスク(STATUS_ITEM_STYLE_*)
-	DWORD Style;		// スタイル(STATUS_ITEM_STYLE_*)
+	DWORD StateMask;	// 状態フラグのマスク(STATUS_ITEM_STATE_*)
+	DWORD State;		// 状態フラグ(STATUS_ITEM_STATE_*)
+	DWORD StyleMask;	// スタイルフラグのマスク(STATUS_ITEM_STYLE_*)
+	DWORD Style;		// スタイルフラグ(STATUS_ITEM_STYLE_*)
 };
 
 // ステータス項目の設定
@@ -2353,6 +2392,22 @@ enum {
 };
 
 // ステータス項目を設定する
+// StatusItemSetInfo の Size に構造体のサイズを、Mask に設定したい情報を、
+// ID に設定したい項目の識別子を指定して呼び出します。
+/*
+	// 例
+	// 項目の表示状態を設定する
+	void ShowStatusItem(PluginParam *pParam, int ID, bool fVisible)
+	{
+		StatusItemSetInfo Info;
+		Info.Size = sizeof(Info);
+		Info.Mask = STATUS_ITEM_SET_INFO_MASK_STATE;
+		Info.ID = ID;
+		Info.StateMask = STATUS_ITEM_STATE_VISIBLE;
+		Info.State = fVisible ? STATUS_ITEM_STATE_VISIBLE : 0;
+		MsgSetStatusItem(pParam, &Info);
+	}
+*/
 inline bool MsgSetStatusItem(PluginParam *pParam,const StatusItemSetInfo *pInfo) {
 	return (*pParam->Callback)(pParam,MESSAGE_SETSTATUSITEM,(LPARAM)pInfo,0)!=FALSE;
 }
@@ -2362,7 +2417,7 @@ struct StatusItemGetInfo {
 	DWORD Size;			// 構造体のサイズ
 	DWORD Mask;			// 取得する情報のマスク(STATUS_ITEM_GET_INFO_MASK_*)
 	int ID;				// 項目の識別子
-	DWORD State;		// 状態(STATUS_ITEM_STATE_*)
+	DWORD State;		// 状態フラグ(STATUS_ITEM_STATE_*)
 	HWND hwnd;			// ウィンドウハンドル
 	RECT ItemRect;		// 項目の領域
 	RECT ContentRect;	// 項目の余白を除いた領域
@@ -2377,6 +2432,21 @@ enum {
 };
 
 // ステータス項目の情報を取得する
+// StatusItemGetInfo の Size に構造体のサイズを、Mask に取得したい情報を、
+// ID に取得したい項目の識別子を指定して呼び出します。
+/*
+	// 例
+	// 項目の表示状態を取得する
+	bool IsStatusItemVisible(PluginParam *pParam, int ID)
+	{
+		StatusItemGetInfo Info;
+		Info.Size = sizeof(Info);
+		Info.Mask = STATUS_ITEM_GET_INFO_MASK_STATE;
+		Info.ID = ID;
+		return MsgGetStatusItem(pParam, &Info)
+			&& (Info.State & STATUS_ITEM_STATE_VISIBLE) != 0;
+	}
+*/
 inline bool MsgGetStatusItemInfo(PluginParam *pParam,StatusItemGetInfo *pInfo) {
 	return (*pParam->Callback)(pParam,MESSAGE_GETSTATUSITEMINFO,(LPARAM)pInfo,0)!=FALSE;
 }
@@ -2398,7 +2468,7 @@ inline bool MsgStatusItemNotify(PluginParam *pParam,int ID,UINT Type) {
 struct StatusItemDrawInfo {
 	int ID;				// 項目の識別子
 	WORD Flags;			// 各種フラグ(STATUS_ITEM_DRAW_FLAG_*)
-	WORD State;			// 状態(STATUS_ITEM_DRAW_STATE_*)
+	WORD State;			// 状態フラグ(STATUS_ITEM_DRAW_STATE_*)
 	LPCWSTR pszStyle;	// スタイル
 	HDC hdc;			// 描画先DC
 	RECT ItemRect;		// 項目の領域
@@ -2411,9 +2481,9 @@ enum {
 	STATUS_ITEM_DRAW_FLAG_PREVIEW	=0x0001U	// プレビュー(設定ダイアログでの表示)
 };
 
-// ステータス項目描画状態
+// ステータス項目描画状態フラグ
 enum {
-	STATUS_ITEM_DRAW_STATE_HOT		=0x0001U	// カーソルが当たっている
+	STATUS_ITEM_DRAW_STATE_HOT		=0x0001U	// フォーカスが当たっている
 };
 
 // ステータス項目の通知情報
@@ -2428,8 +2498,8 @@ struct StatusItemEventInfo {
 enum {
 	STATUS_ITEM_EVENT_CREATED=1,			// 項目が作成された
 	STATUS_ITEM_EVENT_VISIBILITYCHANGED,	// 項目の表示状態が変わった
-	STATUS_ITEM_EVENT_ENTER,				// カーソルが当たった
-	STATUS_ITEM_EVENT_LEAVE,				// カーソルが離れた
+	STATUS_ITEM_EVENT_ENTER,				// フォーカスが当たった
+	STATUS_ITEM_EVENT_LEAVE,				// フォーカスが離れた
 	STATUS_ITEM_EVENT_SIZECHANGED,			// 項目の大きさが変わった
 	STATUS_ITEM_EVENT_UPDATETIMER			// 更新タイマー
 };
