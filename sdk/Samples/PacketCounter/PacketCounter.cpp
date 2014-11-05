@@ -59,8 +59,8 @@ bool CPacketCounter::Initialize()
 	// ステータス項目を登録
 	TVTest::StatusItemInfo Item;
 	Item.Size         = sizeof(Item);
-	Item.Type         = TVTest::STATUS_ITEM_TYPE_NORMAL;
 	Item.Flags        = TVTest::STATUS_ITEM_FLAG_TIMERUPDATE;
+	Item.Style        = 0;
 	Item.ID           = STATUS_ITEM_ID;
 	Item.pszIDText    = L"PacketCounter";
 	Item.pszName      = L"パケットカウンター";
@@ -110,14 +110,14 @@ LRESULT CALLBACK CPacketCounter::EventCallback(
 		{
 			const TVTest::StatusItemDrawInfo *pInfo =
 				reinterpret_cast<const TVTest::StatusItemDrawInfo *>(lParam1);
-			TCHAR szText[32];
+			WCHAR szText[32];
 
 			if ((pInfo->Flags & TVTest::STATUS_ITEM_DRAW_FLAG_PREVIEW) == 0) {
 				// 通常の項目の描画
-				_itot_s(pThis->m_PacketCount, szText, _countof(szText), 10);
+				::_itow_s(pThis->m_PacketCount, szText, 10);
 			} else {
 				// プレビュー(設定ダイアログ)の項目の描画
-				::lstrcpy(szText, TEXT("123456"));
+				::lstrcpyW(szText, L"123456");
 			}
 			pThis->m_pApp->ThemeDrawText(pInfo->pszStyle, pInfo->hdc, szText,
 										 pInfo->DrawRect,
@@ -188,13 +188,15 @@ BOOL CALLBACK CPacketCounter::StreamCallback(BYTE *pData, void *pClientData)
 // ステータス項目の表示/非表示を切り替える
 void CPacketCounter::ShowItem(bool fShow)
 {
-	TVTest::StatusItemStateInfo Info;
+	TVTest::StatusItemSetInfo Info;
 
+	Info.Size      = sizeof(Info);
+	Info.Mask      = TVTest::STATUS_ITEM_SET_INFO_MASK_STATE;
 	Info.ID        = STATUS_ITEM_ID;
 	Info.StateMask = TVTest::STATUS_ITEM_STATE_VISIBLE;
 	Info.State     = fShow ? TVTest::STATUS_ITEM_STATE_VISIBLE : 0;
 
-	m_pApp->SetStatusItemState(&Info);
+	m_pApp->SetStatusItem(&Info);
 }
 
 
