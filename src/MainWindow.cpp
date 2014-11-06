@@ -1662,12 +1662,15 @@ LRESULT CMainWindow::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 
 bool CMainWindow::OnCreate(const CREATESTRUCT *pcs)
 {
+	InitializeUI();
+
 	RECT rc;
 	GetClientRect(&rc);
 	m_LayoutBase.SetPosition(&rc);
 	m_LayoutBase.Create(m_hwnd,
 						WS_CHILD | WS_VISIBLE | WS_CLIPCHILDREN | WS_CLIPSIBLINGS);
 
+	m_Viewer.GetViewWindow().SetMargin(m_Style.ScreenMargin);
 	m_Viewer.Create(m_LayoutBase.GetHandle(),IDC_VIEW,IDC_VIDEOCONTAINER,m_hwnd);
 	m_Viewer.GetViewWindow().SetEventHandler(&m_ViewWindowEventHandler);
 	m_Viewer.GetVideoContainer().SetEventHandler(&m_VideoContainerEventHandler);
@@ -5720,6 +5723,18 @@ void CMainWindow::UpdateControlPanel()
 }
 
 
+void CMainWindow::SetStyle(const TVTest::Style::CStyleManager *pStyleManager)
+{
+	m_Style.SetStyle(pStyleManager);
+}
+
+
+void CMainWindow::NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager)
+{
+	m_Style.NormalizeStyle(pStyleManager);
+}
+
+
 void CMainWindow::SetTheme(const TVTest::Theme::CThemeManager *pThemeManager)
 {
 	m_LayoutBase.SetBackColor(pThemeManager->GetColor(CColorScheme::COLOR_SPLITTER));
@@ -5978,19 +5993,41 @@ bool CMainWindow::CFullscreen::Create(HWND hwndParent,DWORD Style,DWORD ExStyle,
 
 bool CMainWindow::CFullscreen::Create(HWND hwndOwner,CBasicViewer *pViewer)
 {
+	m_ScreenMargin=m_MainWindow.m_Style.FullscreenMargin;
+
 	HMONITOR hMonitor;
 	int x,y,Width,Height;
 
 	hMonitor=::MonitorFromWindow(m_MainWindow.GetHandle(),MONITOR_DEFAULTTONEAREST);
 	if (hMonitor!=nullptr) {
-		MONITORINFO mi;
+		MONITORINFOEX mi;
 
-		mi.cbSize=sizeof(MONITORINFO);
+		mi.cbSize=sizeof(mi);
 		::GetMonitorInfo(hMonitor,&mi);
 		x=mi.rcMonitor.left;
 		y=mi.rcMonitor.top;
 		Width=mi.rcMonitor.right-mi.rcMonitor.left;
 		Height=mi.rcMonitor.bottom-mi.rcMonitor.top;
+
+		DISPLAY_DEVICE dd;
+		dd.cb=sizeof(dd);
+		int MonitorNo=1;
+		for (DWORD i=0;::EnumDisplayDevices(0,i,&dd,0);i++) {
+			if ((dd.StateFlags & DISPLAY_DEVICE_MIRRORING_DRIVER)==0) {
+				if (::lstrcmpi(dd.DeviceName,mi.szDevice)==0) {
+					const TVTest::Style::CStyleManager *pStyleManager=GetStyleManager();
+					TCHAR szKey[64];
+					StdUtil::snprintf(szKey,lengthof(szKey),TEXT("fullscreen.monitor%d.margin"),MonitorNo);
+					TVTest::Style::Margins Margin;
+					if (pStyleManager->Get(szKey,&Margin)) {
+						pStyleManager->ToPixels(&Margin);
+						m_ScreenMargin=Margin;
+					}
+					break;
+				}
+				MonitorNo++;
+			}
+		}
 	} else {
 		x=y=0;
 		Width=::GetSystemMetrics(SM_CXSCREEN);
@@ -6004,7 +6041,9 @@ bool CMainWindow::CFullscreen::Create(HWND hwndOwner,CBasicViewer *pViewer)
 	*/
 #endif
 	SetPosition(x,y,Width,Height);
+
 	m_pViewer=pViewer;
+
 	return Create(hwndOwner,WS_POPUP | WS_VISIBLE | WS_CLIPCHILDREN,WS_EX_TOPMOST);
 }
 
@@ -6013,6 +6052,7 @@ bool CMainWindow::CFullscreen::OnCreate()
 {
 	m_LayoutBase.Create(m_hwnd,WS_CHILD | WS_VISIBLE | WS_CLIPCHILDREN | WS_CLIPSIBLINGS);
 
+	m_ViewWindow.SetMargin(m_ScreenMargin);
 	m_ViewWindow.Create(m_LayoutBase.GetHandle(),
 		WS_CHILD | WS_VISIBLE | WS_CLIPCHILDREN  | WS_CLIPSIBLINGS,0,IDC_VIEW);
 	m_ViewWindow.SetMessageWindow(m_hwnd);
@@ -6357,6 +6397,27 @@ bool CMainWindow::CFullscreen::CPanelEventHandler::OnClose()
 {
 	m_pMainWindow->SendCommand(CM_PANEL);
 	return true;
+}
+
+
+
+
+CMainWindow::MainWindowStyle::MainWindowStyle()
+	: ScreenMargin(0,0,0,0)
+	, FullscreenMargin(0,0,0,0)
+{
+}
+
+void CMainWindow::MainWindowStyle::SetStyle(const TVTest::Style::CStyleManager *pStyleManager)
+{
+	pStyleManager->Get(TEXT("screen.margin"),&ScreenMargin);
+	pStyleManager->Get(TEXT("fullscreen.margin"),&FullscreenMargin);
+}
+
+void CMainWindow::MainWindowStyle::NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager)
+{
+	pStyleManager->ToPixels(&ScreenMargin);
+	pStyleManager->ToPixels(&FullscreenMargin);
 }
 
 

@@ -303,6 +303,15 @@ void CViewWindow::SetBorder(const TVTest::Theme::BorderStyle &Style)
 }
 
 
+void CViewWindow::SetMargin(const TVTest::Style::Margins &Margin)
+{
+	if (m_Margin!=Margin) {
+		m_Margin=Margin;
+		SendSizeMessage();
+	}
+}
+
+
 void CViewWindow::ShowCursor(bool fShow)
 {
 	if (m_fShowCursor!=fShow) {
@@ -325,13 +334,19 @@ void CViewWindow::ShowCursor(bool fShow)
 
 bool CViewWindow::CalcClientRect(RECT *pRect) const
 {
-	return TVTest::Theme::SubtractBorderRect(m_BorderStyle,pRect);
+	if (!TVTest::Theme::SubtractBorderRect(m_BorderStyle,pRect))
+		return false;
+	TVTest::Style::Subtract(pRect,m_Margin);
+	return true;
 }
 
 
 bool CViewWindow::CalcWindowRect(RECT *pRect) const
 {
-	return TVTest::Theme::AddBorderRect(m_BorderStyle,pRect);
+	if (!TVTest::Theme::AddBorderRect(m_BorderStyle,pRect))
+		return false;
+	TVTest::Style::Add(pRect,m_Margin);
+	return true;
 }
 
 

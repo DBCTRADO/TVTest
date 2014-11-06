@@ -182,9 +182,21 @@ public:
 	HWND GetVideoHostWindow() const override;
 
 // CUIBase
+	void SetStyle(const TVTest::Style::CStyleManager *pStyleManager) override;
+	void NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager) override;
 	void SetTheme(const TVTest::Theme::CThemeManager *pThemeManager) override;
 
 private:
+	struct MainWindowStyle
+	{
+		TVTest::Style::Margins ScreenMargin;
+		TVTest::Style::Margins FullscreenMargin;
+
+		MainWindowStyle();
+		void SetStyle(const TVTest::Style::CStyleManager *pStyleManager);
+		void NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager);
+	};
+
 	class CBarLayout
 	{
 	public:
@@ -304,6 +316,7 @@ private:
 		CTitleBarManager m_TitleBarManager;
 		CPanel m_Panel;
 		CPanelEventHandler m_PanelEventHandler;
+		TVTest::Style::Margins m_ScreenMargin;
 		bool m_fShowCursor;
 		bool m_fMenu;
 		bool m_fShowStatusView;
@@ -400,6 +413,7 @@ private:
 	CNotificationBar m_NotificationBar;
 	CCommandEventHandler m_CommandEventHandler;
 
+	MainWindowStyle m_Style;
 	bool m_fShowStatusBar;
 	bool m_fPopupStatusBar;
 	bool m_fShowTitleBar;

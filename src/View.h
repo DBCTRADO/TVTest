@@ -172,6 +172,7 @@ public:
 	void SetEventHandler(CEventHandler *pEventHandler);
 	bool SetLogo(HBITMAP hbm);
 	void SetBorder(const TVTest::Theme::BorderStyle &Style);
+	void SetMargin(const TVTest::Style::Margins &Margin);
 	void ShowCursor(bool fShow);
 	bool CalcClientRect(RECT *pRect) const;
 	bool CalcWindowRect(RECT *pRect) const;
@@ -186,6 +187,7 @@ private:
 	CEventHandler *m_pEventHandler;
 	HBITMAP m_hbmLogo;
 	TVTest::Theme::BorderStyle m_BorderStyle;
+	TVTest::Style::Margins m_Margin;
 	bool m_fShowCursor;
 
 // CCustomWindow
