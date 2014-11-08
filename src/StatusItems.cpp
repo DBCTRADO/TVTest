@@ -773,8 +773,8 @@ void CProgramInfoStatusItem::Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawR
 		}
 	}
 
-	if (!m_Text.IsEmpty())
-		DrawText(hdc,DrawRect,m_Text.Get());
+	if (!m_Text.empty())
+		DrawText(hdc,DrawRect,m_Text.c_str());
 }
 
 bool CProgramInfoStatusItem::UpdateContent()
@@ -799,8 +799,8 @@ bool CProgramInfoStatusItem::UpdateContent()
 
 	bool fUpdated=false;
 
-	if (m_Text.Compare(Formatter.GetString())!=0) {
-		m_Text.Set(Formatter.GetString());
+	if (m_Text.compare(Formatter.GetString())!=0) {
+		m_Text=Formatter.GetString();
 		fUpdated=true;
 	}
 

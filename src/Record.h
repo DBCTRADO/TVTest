@@ -119,7 +119,7 @@ public:
 private:
 	bool m_fRecording;
 	bool m_fReserved;
-	CDynamicString m_FileName;
+	TVTest::String m_FileName;
 	CRecordTime m_ReserveTime;
 	TimeSpecInfo m_StartTimeSpec;
 	TimeSpecInfo m_StopTimeSpec;
@@ -141,7 +141,7 @@ public:
 	CRecordManager();
 	~CRecordManager();
 	bool SetFileName(LPCTSTR pszFileName);
-	LPCTSTR GetFileName() const { return m_FileName.Get(); }
+	LPCTSTR GetFileName() const { return TVTest::StringUtility::GetCStrOrNull(m_FileName); }
 	/*
 	bool SetFileExistsOperation(FileExistsOperation Operation);
 	FileExistsOperation GetFileExistsOperation() const { return m_ExistsOperation; }

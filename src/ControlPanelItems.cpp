@@ -304,7 +304,7 @@ void CControlPanelButton::CalcSize(int Width,SIZE *pSize)
 	const TVTest::Style::Margins &Padding=m_pControlPanel->GetItemPadding();
 
 	if (m_Width<0)
-		CalcTextSize(m_Text.Get(),pSize);
+		CalcTextSize(m_Text.c_str(),pSize);
 	else
 		pSize->cx=m_Width*m_pControlPanel->GetFontHeight();
 	pSize->cx+=Padding.Horz();
@@ -315,6 +315,6 @@ void CControlPanelButton::Draw(HDC hdc,const RECT &Rect)
 {
 	RECT rc=Rect;
 	TVTest::Style::Subtract(&rc,m_pControlPanel->GetItemPadding());
-	::DrawText(hdc,m_Text.Get(),-1,&rc,
+	::DrawText(hdc,m_Text.c_str(),-1,&rc,
 			   DT_CENTER | DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX);
 }

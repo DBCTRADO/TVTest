@@ -51,7 +51,7 @@ int CLogItem::Format(char *pszText,int MaxLength) const
 
 	Length=FormatTime(pszText,MaxLength);
 	pszText[Length++]='>';
-	Length+=::WideCharToMultiByte(CP_ACP,0,m_Text.Get(),m_Text.Length(),
+	Length+=::WideCharToMultiByte(CP_ACP,0,m_Text.data(),(int)m_Text.length(),
 								  pszText+Length,MaxLength-Length-1,NULL,NULL);
 	pszText[Length]='\0';
 	return Length;
@@ -64,7 +64,7 @@ int CLogItem::Format(WCHAR *pszText,int MaxLength) const
 
 	Length=FormatTime(pszText,MaxLength);
 	pszText[Length++]=L'>';
-	::lstrcpynW(pszText+Length,m_Text.Get(),MaxLength-Length);
+	::lstrcpynW(pszText+Length,m_Text.c_str(),MaxLength-Length);
 	Length+=::lstrlenW(pszText+Length);
 	return Length;
 }

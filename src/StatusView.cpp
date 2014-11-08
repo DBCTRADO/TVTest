@@ -788,13 +788,13 @@ bool CStatusView::AdjustSize()
 void CStatusView::SetSingleText(LPCTSTR pszText)
 {
 	if (pszText!=NULL) {
-		m_SingleText.Set(pszText);
+		m_SingleText=pszText;
 		m_fSingleMode=true;
 		SetHotItem(-1);
 	} else {
 		if (!m_fSingleMode)
 			return;
-		m_SingleText.Clear();
+		m_SingleText.clear();
 		m_fSingleMode=false;
 	}
 	if (m_hwnd!=NULL)
@@ -1085,7 +1085,7 @@ void CStatusView::Draw(HDC hdc,const RECT *pPaintRect)
 		}
 		rc.left+=m_Style.ItemPadding.Left;
 		rc.right-=m_Style.ItemPadding.Right;
-		TVTest::Theme::Draw(hdcDst,rc,m_Theme.ItemStyle.Fore,m_SingleText.Get(),
+		TVTest::Theme::Draw(hdcDst,rc,m_Theme.ItemStyle.Fore,m_SingleText.c_str(),
 							DT_LEFT | DT_SINGLELINE | DT_VCENTER | DT_NOPREFIX | DT_END_ELLIPSIS);
 	} else {
 		const int Left=rc.left;

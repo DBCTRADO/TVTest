@@ -73,12 +73,8 @@ bool CPlaybackOptions::ReadSettings(CSettings &Settings)
 {
 	int Value;
 
-	TCHAR szAudioDevice[MAX_AUDIO_DEVICE_NAME];
-	if (Settings.Read(TEXT("AudioDevice"),szAudioDevice,lengthof(szAudioDevice)))
-		m_AudioDeviceName.Set(szAudioDevice);
-	TCHAR szAudioFilter[MAX_AUDIO_FILTER_NAME];
-	if (Settings.Read(TEXT("AudioFilter"),szAudioFilter,lengthof(szAudioFilter)))
-		m_AudioFilterName.Set(szAudioFilter);
+	Settings.Read(TEXT("AudioDevice"),&m_AudioDeviceName);
+	Settings.Read(TEXT("AudioFilter"),&m_AudioFilterName);
 	if (Settings.Read(TEXT("SpdifMode"),&Value))
 		m_SpdifOptions.Mode=(CAudioDecFilter::SpdifMode)Value;
 	Settings.Read(TEXT("SpdifChannels"),&m_SpdifOptions.PassthroughChannels);
@@ -106,8 +102,8 @@ bool CPlaybackOptions::ReadSettings(CSettings &Settings)
 
 bool CPlaybackOptions::WriteSettings(CSettings &Settings)
 {
-	Settings.Write(TEXT("AudioDevice"),m_AudioDeviceName.GetSafe());
-	Settings.Write(TEXT("AudioFilter"),m_AudioFilterName.GetSafe());
+	Settings.Write(TEXT("AudioDevice"),m_AudioDeviceName);
+	Settings.Write(TEXT("AudioFilter"),m_AudioFilterName);
 	Settings.Write(TEXT("SpdifMode"),(int)m_SpdifOptions.Mode);
 	Settings.Write(TEXT("SpdifChannels"),m_SpdifOptions.PassthroughChannels);
 	Settings.Write(TEXT("DownMixSurround"),m_fDownMixSurround);
@@ -160,8 +156,8 @@ INT_PTR CPlaybackOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPara
 				for (int i=0;i<DevEnum.GetDeviceCount();i++) {
 					LPCTSTR pszName=DevEnum.GetDeviceFriendlyName(i);
 					DlgComboBox_AddString(hDlg,IDC_OPTIONS_AUDIODEVICE,pszName);
-					if (Sel==0 && !m_AudioDeviceName.IsEmpty()
-							&& m_AudioDeviceName.CompareIgnoreCase(pszName)==0)
+					if (Sel==0 && !m_AudioDeviceName.empty()
+							&& TVTest::StringUtility::CompareNoCase(m_AudioDeviceName,pszName)==0)
 						Sel=i+1;
 				}
 			}
@@ -189,8 +185,8 @@ INT_PTR CPlaybackOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPara
 				for (int i=0;i<FilterFinder.GetFilterCount();i++) {
 					if (FilterFinder.GetFilterInfo(i,&idAudioFilter,szAudioFilter,lengthof(szAudioFilter))) {
 						DlgComboBox_AddString(hDlg,IDC_OPTIONS_AUDIOFILTER,szAudioFilter);
-						if (Sel==0 && !m_AudioFilterName.IsEmpty()
-								&& m_AudioFilterName.CompareIgnoreCase(szAudioFilter)==0)
+						if (Sel==0 && !m_AudioFilterName.empty()
+								&& TVTest::StringUtility::CompareNoCase(m_AudioFilterName,szAudioFilter)==0)
 							Sel=i+1;
 					}
 				}
@@ -287,8 +283,8 @@ INT_PTR CPlaybackOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPara
 					szAudioDevice[0]=_T('\0');
 				else
 					DlgComboBox_GetLBString(hDlg,IDC_OPTIONS_AUDIODEVICE,Sel,szAudioDevice);
-				if (m_AudioDeviceName.CompareIgnoreCase(szAudioDevice)!=0) {
-					m_AudioDeviceName.Set(szAudioDevice);
+				if (TVTest::StringUtility::CompareNoCase(m_AudioDeviceName,szAudioDevice)!=0) {
+					m_AudioDeviceName=szAudioDevice;
 					SetGeneralUpdateFlag(UPDATE_GENERAL_BUILDMEDIAVIEWER);
 				}
 
@@ -298,8 +294,8 @@ INT_PTR CPlaybackOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPara
 					szAudioFilter[0]=_T('\0');
 				else
 					DlgComboBox_GetLBString(hDlg,IDC_OPTIONS_AUDIOFILTER,Sel,szAudioFilter);
-				if (m_AudioFilterName.CompareIgnoreCase(szAudioFilter)!=0) {
-					m_AudioFilterName.Set(szAudioFilter);
+				if (TVTest::StringUtility::CompareNoCase(m_AudioFilterName,szAudioFilter)!=0) {
+					m_AudioFilterName=szAudioFilter;
 					SetGeneralUpdateFlag(UPDATE_GENERAL_BUILDMEDIAVIEWER);
 				}
 

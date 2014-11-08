@@ -60,7 +60,7 @@ public:
 	int GetButtonWidth() const;
 	int GetButtonHeight() const;
 	bool SetLabel(LPCTSTR pszLabel);
-	LPCTSTR GetLabel() const { return m_Label.Get(); }
+	LPCTSTR GetLabel() const { return m_Label.c_str(); }
 	void SetMaximizeMode(bool fMaximize);
 	void SetFullscreenMode(bool fFullscreen);
 	bool SetEventHandler(CEventHandler *pHandler);
@@ -102,7 +102,7 @@ private:
 	DrawUtil::CMonoColorIconList m_ButtonIcons;
 	HBITMAP m_hbmIcons;
 	CTooltip m_Tooltip;
-	CDynamicString m_Label;
+	TVTest::String m_Label;
 	HICON m_hIcon;
 	int m_HotItem;
 	int m_ClickItem;

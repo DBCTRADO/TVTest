@@ -252,11 +252,11 @@ void CAppMain::Initialize()
 	TCHAR szModuleFileName[MAX_PATH];
 
 	::GetModuleFileName(nullptr,szModuleFileName,MAX_PATH);
-	if (CmdLineOptions.m_IniFileName.IsEmpty()) {
+	if (CmdLineOptions.m_IniFileName.empty()) {
 		::lstrcpy(m_szIniFileName,szModuleFileName);
 		::PathRenameExtension(m_szIniFileName,TEXT(".ini"));
 	} else {
-		LPCTSTR pszIniFileName=CmdLineOptions.m_IniFileName.Get();
+		LPCTSTR pszIniFileName=CmdLineOptions.m_IniFileName.c_str();
 		if (::PathIsRelative(pszIniFileName)) {
 			TCHAR szTemp[MAX_PATH];
 			::lstrcpy(szTemp,szModuleFileName);
@@ -270,7 +270,7 @@ void CAppMain::Initialize()
 	::PathRenameExtension(m_szFavoritesFileName,TEXT(".tvfavorites"));
 
 	bool fExists=::PathFileExists(m_szIniFileName)!=FALSE;
-	m_fFirstExecute=!fExists && CmdLineOptions.m_IniFileName.IsEmpty();
+	m_fFirstExecute=!fExists && CmdLineOptions.m_IniFileName.empty();
 	if (fExists) {
 		AddLog(TEXT("設定を読み込んでいます..."));
 		LoadSettings();
@@ -361,9 +361,9 @@ bool CAppMain::LoadSettings()
 			const CCommandLineOptions::IniEntry &Entry=CmdLineOptions.m_IniValueList[i];
 
 			TRACE(TEXT("Override INI entry : [%s] %s=%s\n"),
-				  Entry.Section.GetSafe(),Entry.Name.GetSafe(),Entry.Value.GetSafe());
-			if (Settings.SetSection(Entry.Section.IsEmpty()?TEXT("Settings"):Entry.Section.Get())) {
-				Settings.Write(Entry.Name.Get(),Entry.Value.GetSafe());
+				  Entry.Section.c_str(),Entry.Name.c_str(),Entry.Value.c_str());
+			if (Settings.SetSection(Entry.Section.empty()?TEXT("Settings"):Entry.Section.c_str())) {
+				Settings.Write(Entry.Name.c_str(),Entry.Value);
 			}
 		}
 	}
@@ -700,11 +700,11 @@ int CAppMain::Main(HINSTANCE hInstance,LPCTSTR pszCmdLine,int nCmdShow)
 	// 初期設定ダイアログを表示するか
 	const bool fInitialSettings=
 		CmdLineOptions.m_fInitialSettings
-			|| (m_fFirstExecute && CmdLineOptions.m_DriverName.IsEmpty());
+			|| (m_fFirstExecute && CmdLineOptions.m_DriverName.empty());
 
 	// CASライブラリの読み込み
-	if (!CmdLineOptions.m_CasLibraryName.IsEmpty()) {
-		CasLibraryManager.SetDefaultCasLibrary(CmdLineOptions.m_CasLibraryName.Get());
+	if (!CmdLineOptions.m_CasLibraryName.empty()) {
+		CasLibraryManager.SetDefaultCasLibrary(CmdLineOptions.m_CasLibraryName.c_str());
 	} else if (!CasLibraryManager.HasDefaultCasLibrary()) {
 		TCHAR szDir[MAX_PATH];
 		GetAppDirectory(szDir);
@@ -734,8 +734,8 @@ int CAppMain::Main(HINSTANCE hInstance,LPCTSTR pszCmdLine,int nCmdShow)
 		GeneralOptions.SetVideoRendererType(InitialSettings.GetVideoRenderer());
 		GeneralOptions.SetCasDevice(InitialSettings.GetCasDevice());
 		RecordOptions.SetSaveFolder(InitialSettings.GetRecordFolder());
-	} else if (!CmdLineOptions.m_DriverName.IsEmpty()) {
-		::lstrcpy(szDriverFileName,CmdLineOptions.m_DriverName.Get());
+	} else if (!CmdLineOptions.m_DriverName.empty()) {
+		::lstrcpy(szDriverFileName,CmdLineOptions.m_DriverName.c_str());
 	} else if (CmdLineOptions.m_fNoDriver) {
 		szDriverFileName[0]=_T('\0');
 	} else {
@@ -747,8 +747,8 @@ int CAppMain::Main(HINSTANCE hInstance,LPCTSTR pszCmdLine,int nCmdShow)
 	// スタイル設定の読み込み
 	{
 		TCHAR szStyleFileName[MAX_PATH];
-		if (!CmdLineOptions.m_StyleFileName.IsEmpty()) {
-			GetAbsolutePath(CmdLineOptions.m_StyleFileName.Get(),szStyleFileName);
+		if (!CmdLineOptions.m_StyleFileName.empty()) {
+			GetAbsolutePath(CmdLineOptions.m_StyleFileName.c_str(),szStyleFileName);
 		} else {
 			::GetModuleFileName(nullptr,szStyleFileName,lengthof(szStyleFileName));
 			::PathRenameExtension(szStyleFileName,TEXT(".style.ini"));
@@ -873,8 +873,8 @@ int CAppMain::Main(HINSTANCE hInstance,LPCTSTR pszCmdLine,int nCmdShow)
 
 		CPlugin::SetMessageWindow(MainWindow.GetHandle(),WM_APP_PLUGINMESSAGE);
 		StatusView.SetSingleText(TEXT("プラグインを読み込んでいます..."));
-		if (!CmdLineOptions.m_PluginsDirectory.IsEmpty()) {
-			GetAbsolutePath(CmdLineOptions.m_PluginsDirectory.Get(),szPluginDir);
+		if (!CmdLineOptions.m_PluginsDirectory.empty()) {
+			GetAbsolutePath(CmdLineOptions.m_PluginsDirectory.c_str(),szPluginDir);
 		} else {
 			GetAppDirectory(szPluginDir);
 			::PathAppend(szPluginDir,TEXT("Plugins"));
@@ -882,7 +882,7 @@ int CAppMain::Main(HINSTANCE hInstance,LPCTSTR pszCmdLine,int nCmdShow)
 		Logger.AddLog(TEXT("プラグインを \"%s\" から読み込みます..."),szPluginDir);
 		if (CmdLineOptions.m_NoLoadPlugins.size()>0) {
 			for (size_t i=0;i<CmdLineOptions.m_NoLoadPlugins.size();i++)
-				ExcludePlugins.push_back(CmdLineOptions.m_NoLoadPlugins[i].Get());
+				ExcludePlugins.push_back(CmdLineOptions.m_NoLoadPlugins[i].c_str());
 		}
 		PluginManager.LoadPlugins(szPluginDir,&ExcludePlugins);
 	}
@@ -1072,12 +1072,12 @@ int CAppMain::Main(HINSTANCE hInstance,LPCTSTR pszCmdLine,int nCmdShow)
 	if (CmdLineOptions.m_fShowProgramGuide) {
 		CMainWindow::ProgramGuideSpaceInfo SpaceInfo;
 
-		if (!CmdLineOptions.m_ProgramGuideTuner.IsEmpty())
-			SpaceInfo.pszTuner=CmdLineOptions.m_ProgramGuideTuner.Get();
+		if (!CmdLineOptions.m_ProgramGuideTuner.empty())
+			SpaceInfo.pszTuner=CmdLineOptions.m_ProgramGuideTuner.c_str();
 		else
 			SpaceInfo.pszTuner=nullptr;
-		if (!CmdLineOptions.m_ProgramGuideSpace.IsEmpty())
-			SpaceInfo.pszSpace=CmdLineOptions.m_ProgramGuideSpace.Get();
+		if (!CmdLineOptions.m_ProgramGuideSpace.empty())
+			SpaceInfo.pszSpace=CmdLineOptions.m_ProgramGuideSpace.c_str();
 		else
 			SpaceInfo.pszSpace=nullptr;
 
@@ -1386,8 +1386,8 @@ bool CAppMain::ProcessCommandLine(LPCTSTR pszCmdLine)
 	if (CmdLine.m_fSaveLog)
 		CmdLineOptions.m_fSaveLog=true;
 
-	if (!CmdLine.m_DriverName.IsEmpty()) {
-		if (Core.OpenTuner(CmdLine.m_DriverName.Get())) {
+	if (!CmdLine.m_DriverName.empty()) {
+		if (Core.OpenTuner(CmdLine.m_DriverName.c_str())) {
 			if (CmdLine.IsChannelSpecified())
 				Core.SetCommandLineChannel(&CmdLine);
 			else

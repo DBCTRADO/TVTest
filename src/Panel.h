@@ -68,7 +68,7 @@ private:
 	DrawUtil::CFont m_Font;
 	int m_TitleHeight;
 	CBasicWindow *m_pWindow;
-	CDynamicString m_Title;
+	TVTest::String m_Title;
 	bool m_fShowTitle;
 	bool m_fEnableFloating;
 	PanelStyle m_Style;

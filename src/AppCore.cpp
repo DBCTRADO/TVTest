@@ -1468,7 +1468,7 @@ bool CAppCore::CommandLineRecord(const CCommandLineOptions *pCmdLine)
 {
 	if (pCmdLine==nullptr)
 		return false;
-	return CommandLineRecord(pCmdLine->m_RecordFileName.Get(),
+	return CommandLineRecord(pCmdLine->m_RecordFileName.c_str(),
 							 &pCmdLine->m_RecordStartTime,
 							 pCmdLine->m_RecordDelay,
 							 pCmdLine->m_RecordDuration);

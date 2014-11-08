@@ -103,12 +103,12 @@ bool CPanel::SetWindow(CBasicWindow *pWindow,LPCTSTR pszTitle)
 		if (pWindow->GetParent()!=m_hwnd)
 			pWindow->SetParent(m_hwnd);
 		pWindow->SetVisible(true);
-		m_Title.Set(pszTitle);
+		TVTest::StringUtility::Assign(m_Title,pszTitle);
 		GetPosition(&rc);
 		rc.right=rc.left+pWindow->GetWidth();
 		SetPosition(&rc);
 	} else {
-		m_Title.Clear();
+		m_Title.clear();
 	}
 	return true;
 }
@@ -193,10 +193,10 @@ void CPanel::Draw(HDC hdc,const RECT &PaintRect) const
 
 		GetTitleRect(&rc);
 		TVTest::Theme::Draw(hdc,rc,m_Theme.TitleStyle.Back);
-		if (!m_Title.IsEmpty()) {
+		if (!m_Title.empty()) {
 			TVTest::Style::Subtract(&rc,m_Style.TitlePadding);
 			rc.right-=m_Style.TitleButtonSize.Width;
-			DrawUtil::DrawText(hdc,m_Title.Get(),rc,
+			DrawUtil::DrawText(hdc,m_Title.c_str(),rc,
 				DT_LEFT | DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX,
 				&m_Font,m_Theme.TitleStyle.Fore.Fill.GetSolidColor());
 		}

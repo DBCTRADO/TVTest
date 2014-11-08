@@ -53,7 +53,7 @@ private:
 	COLORREF m_crTextColor;
 	DrawUtil::CFont m_Font;
 	unsigned int m_TextStyle;
-	CDynamicString m_Text;
+	TVTest::String m_Text;
 	HBITMAP m_hbmIcon;
 	int m_IconWidth;
 	int m_IconHeight;

@@ -332,7 +332,8 @@ bool CRecordManager::SetFileName(LPCTSTR pszFileName)
 {
 	if (m_fRecording)
 		return false;
-	return m_FileName.Set(pszFileName);
+	TVTest::StringUtility::Assign(m_FileName,pszFileName);
+	return true;
 }
 
 
@@ -456,7 +457,7 @@ void CRecordManager::StopRecord()
 		m_fRecording=false;
 		if (m_Settings.m_fCurServiceOnly)
 			m_pDtvEngine->SetWriteCurServiceOnly(false);
-		//m_FileName.Clear();
+		//m_FileName.clear();
 		m_pDtvEngine=NULL;
 	}
 }
@@ -652,8 +653,8 @@ INT_PTR CALLBACK CRecordManager::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARA
 
 			::SetProp(hDlg,TEXT("This"),pThis);
 			::SendDlgItemMessage(hDlg,IDC_RECORD_FILENAME,EM_LIMITTEXT,MAX_PATH-1,0);
-			if (!pThis->m_FileName.IsEmpty())
-				::SetDlgItemText(hDlg,IDC_RECORD_FILENAME,pThis->m_FileName.Get());
+			if (!pThis->m_FileName.empty())
+				::SetDlgItemText(hDlg,IDC_RECORD_FILENAME,pThis->m_FileName.c_str());
 			/*
 			static const LPCTSTR pszExistsOperation[] = {
 				TEXT("上書きする"),TEXT("確認を取る"),TEXT("連番を付加する")
@@ -1426,15 +1427,15 @@ int CRecordManager::MapFileNameCopy(LPWSTR pszFileName,int MaxFileName,LPCWSTR p
 bool CRecordManager::GenerateFileName(LPTSTR pszFileName,int MaxLength,const EventInfo *pEventInfo,LPCTSTR pszFormat) const
 {
 	if (pszFormat==NULL) {
-		if (m_FileName.IsEmpty())
+		if (m_FileName.empty())
 			return false;
 	}
 	if (FormatFileName(pszFileName,MaxLength-5,pEventInfo,
-					   pszFormat!=NULL?pszFormat:m_FileName.Get())==0)
+					   pszFormat!=NULL?pszFormat:m_FileName.c_str())==0)
 		return false;
 	if (pszFormat==NULL && ::PathFileExists(pszFileName)) {
 		LPTSTR pszSeqNumber=::PathFindExtension(pszFileName);
-		LPCTSTR pszExtension=::PathFindExtension(m_FileName.Get());
+		LPCTSTR pszExtension=::PathFindExtension(m_FileName.c_str());
 
 		for (int i=2;i<1000;i++) {
 			::wsprintf(pszSeqNumber,TEXT("-%d%s"),i,pszExtension);
@@ -1451,23 +1452,23 @@ bool CRecordManager::GenerateFileName(LPTSTR pszFileName,int MaxLength,const Eve
 /*
 bool CRecordManager::DoFileExistsOperation(HWND hwndOwner,LPTSTR pszFileName)
 {
-	lstrcpy(pszFileName,m_FileName.Get());
+	lstrcpy(pszFileName,m_FileName.c_str());
 	switch (m_ExistsOperation) {
 	case EXISTS_CONFIRM:
-		if (PathFileExists(m_FileName.Get())
+		if (PathFileExists(m_FileName.c_str())
 				&& MessageBox(hwndOwner,
 					TEXT("ファイルが既に存在します。\n上書きしますか?"),
 					TEXT("上書きの確認"),MB_OKCANCEL | MB_ICONQUESTION)!=IDOK)
 			return false;
 		break;
 	case EXISTS_SEQUENCIALNUMBER:
-		if (PathFileExists(m_FileName.Get())) {
+		if (PathFileExists(m_FileName.c_str())) {
 			int i;
 			TCHAR szFileName[MAX_PATH];
 			LPTSTR pszExtension,p;
 
-			pszExtension=PathFindExtension(m_FileName.Get());
-			lstrcpy(szFileName,m_FileName.Get());
+			pszExtension=PathFindExtension(m_FileName.c_str());
+			lstrcpy(szFileName,m_FileName.c_str());
 			p=PathFindExtension(szFileName);
 			for (i=0;;i++) {
 				wsprintf(p,TEXT("%d%s"),i+1,pszExtension);

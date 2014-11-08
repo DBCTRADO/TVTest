@@ -198,7 +198,7 @@ class CProgramInfoStatusItem : public CStatusItem
 	bool m_fShowProgress;
 	bool m_fEnablePopupInfo;
 	CEventInfoPopup m_EventInfoPopup;
-	CDynamicString m_Text;
+	TVTest::String m_Text;
 	CEpgTheme m_EpgTheme;
 	TVTest::Theme::BackgroundStyle m_ProgressBackStyle;
 	TVTest::Theme::BackgroundStyle m_ProgressElapsedStyle;

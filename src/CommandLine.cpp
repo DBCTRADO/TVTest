@@ -24,7 +24,7 @@ public:
 	bool IsSwitch() const;
 	bool IsOption(LPCWSTR pszOption) const;
 	bool GetOption(LPCWSTR pszOption,bool *pValue);
-	bool GetOption(LPCWSTR pszOption,CDynamicString *pValue);
+	bool GetOption(LPCWSTR pszOption,TVTest::String *pValue);
 	bool GetOption(LPCWSTR pszOption,LPTSTR pszValue,int MaxLength);
 	bool GetOption(LPCWSTR pszOption,int *pValue);
 	bool GetOption(LPCWSTR pszOption,DWORD *pValue);
@@ -84,11 +84,13 @@ bool CArgsParser::GetOption(LPCWSTR pszOption,bool *pValue)
 }
 
 
-bool CArgsParser::GetOption(LPCWSTR pszOption,CDynamicString *pValue)
+bool CArgsParser::GetOption(LPCWSTR pszOption,TVTest::String *pValue)
 {
 	if (IsOption(pszOption)) {
-		if (Next())
-			return pValue->Set(GetText());
+		if (Next()) {
+			TVTest::StringUtility::Assign(*pValue,GetText());
+			return true;
+		}
 	}
 	return false;
 }
@@ -349,16 +351,16 @@ static bool GetIniEntry(LPCWSTR pszText,CCommandLineOptions::IniEntry *pEntry)
 		LPCWSTR pEnd=::StrChrW(p,L']');
 		if (pEnd==NULL)
 			return false;
-		pEntry->Section.Set(p,pEnd-p);
+		pEntry->Section.assign(p,pEnd-p);
 		p=pEnd+1;
 	}
 
 	LPCWSTR pEnd=::StrChrW(p,L'=');
 	if (pEnd==NULL || pEnd-p<1)
 		return false;
-	pEntry->Name.Set(p,pEnd-p);
+	pEntry->Name.assign(p,pEnd-p);
 	p=pEnd+1;
-	pEntry->Value.Set(p);
+	pEntry->Value.assign(p);
 
 	return true;
 }
@@ -557,7 +559,7 @@ void CCommandLineOptions::Parse(LPCWSTR pszCmdLine)
 					if (Args.Next()) {
 						TCHAR szPlugin[MAX_PATH];
 						if (Args.GetText(szPlugin,MAX_PATH))
-							m_NoLoadPlugins.push_back(CDynamicString(szPlugin));
+							m_NoLoadPlugins.push_back(TVTest::String(szPlugin));
 					}
 				} else if (Args.IsOption(TEXT("did"))) {
 					if (Args.Next()) {

@@ -307,9 +307,9 @@ public:
 	TVTest::Theme::BorderType GetBorderType(int Border) const;
 	bool SetBorderType(int Border,TVTest::Theme::BorderType Type);
 	bool GetBorderStyle(int Border,TVTest::Theme::BorderStyle *pStyle) const;
-	LPCTSTR GetName() const { return m_Name.Get(); }
-	bool SetName(LPCTSTR pszName);
-	LPCTSTR GetFileName() const { return m_FileName.Get(); }
+	LPCTSTR GetName() const { return m_Name.c_str(); }
+	void SetName(LPCTSTR pszName);
+	LPCTSTR GetFileName() const { return m_FileName.c_str(); }
 	bool Load(CSettings &Settings);
 	bool Save(CSettings &Settings,unsigned int Flags=0) const;
 	bool Load(LPCTSTR pszFileName);
@@ -333,8 +333,8 @@ private:
 	COLORREF m_ColorList[NUM_COLORS];
 	GradientStyle m_GradientList[NUM_GRADIENTS];
 	TVTest::Theme::BorderType m_BorderList[NUM_BORDERS];
-	CDynamicString m_Name;
-	CDynamicString m_FileName;
+	TVTest::String m_Name;
+	TVTest::String m_FileName;
 	struct ColorInfo {
 		COLORREF DefaultColor;
 		LPCTSTR pszText;

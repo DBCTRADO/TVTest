@@ -32,9 +32,15 @@ bool CCardReaderErrorDialog::Show(HWND hwndOwner)
 }
 
 
-bool CCardReaderErrorDialog::SetMessage(LPCTSTR pszMessage)
+void CCardReaderErrorDialog::SetMessage(LPCTSTR pszMessage)
 {
-	return m_Message.Set(pszMessage);
+	TVTest::StringUtility::Assign(m_Message,pszMessage);
+}
+
+
+LPCTSTR CCardReaderErrorDialog::GetReaderName() const
+{
+	return TVTest::StringUtility::GetCStrOrNull(m_ReaderName);
 }
 
 
@@ -69,8 +75,8 @@ INT_PTR CCardReaderErrorDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM
 		{
 			::SendDlgItemMessage(hDlg,IDC_CARDREADER_ICON,STM_SETICON,
 				reinterpret_cast<WPARAM>(::LoadIcon(NULL,IDI_WARNING)),0);
-			if (!m_Message.IsEmpty())
-				::SetDlgItemText(hDlg,IDC_CARDREADER_MESSAGE,m_Message.Get());
+			if (!m_Message.empty())
+				::SetDlgItemText(hDlg,IDC_CARDREADER_MESSAGE,m_Message.c_str());
 			bool fFound=SearchReaders(hDlg);
 			EnableDlgItem(hDlg,IDC_CARDREADER_RETRY,fFound);
 			::CheckRadioButton(hDlg,IDC_CARDREADER_RETRY,IDC_CARDREADER_NOREADER,
@@ -137,14 +143,14 @@ INT_PTR CCardReaderErrorDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM
 					if (Length>0) {
 						LPTSTR pszName=new TCHAR[Length+1];
 						DlgListBox_GetString(hDlg,IDC_CARDREADER_READERLIST,Sel,pszName);
-						m_ReaderName.Set(pszName);
+						m_ReaderName=pszName;
 						delete [] pszName;
 					} else {
-						m_ReaderName.Clear();
+						m_ReaderName.clear();
 					}
 				} else {
 					m_CasDevice=-1;
-					m_ReaderName.Clear();
+					m_ReaderName.clear();
 				}
 			}
 		case IDCANCEL:

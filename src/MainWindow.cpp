@@ -2753,24 +2753,24 @@ void CMainWindow::OnCommand(HWND hwnd,int id,HWND hwndCtl,UINT codeNotify)
 	case CM_CHANNEL_BACKWARD:
 	case CM_CHANNEL_FORWARD:
 		{
-			const CChannelHistory::CChannel *pChannel;
+			const CTunerChannelInfo *pChannel;
 
 			if (id==CM_CHANNEL_BACKWARD)
 				pChannel=m_App.ChannelHistory.Backward();
 			else
 				pChannel=m_App.ChannelHistory.Forward();
 			if (pChannel!=nullptr) {
-				m_App.Core.OpenTunerAndSetChannel(pChannel->GetDriverFileName(),pChannel);
+				m_App.Core.OpenTunerAndSetChannel(pChannel->GetTunerName(),pChannel);
 			}
 		}
 		return;
 
 	case CM_CHANNEL_PREVIOUS:
 		if (m_App.RecentChannelList.NumChannels()>1) {
-			const CRecentChannelList::CChannel *pChannel=
+			const CTunerChannelInfo *pChannel=
 				m_App.RecentChannelList.GetChannelInfo(1);
 			if (pChannel!=nullptr) {
-				m_App.Core.OpenTunerAndSetChannel(pChannel->GetDriverFileName(),pChannel);
+				m_App.Core.OpenTunerAndSetChannel(pChannel->GetTunerName(),pChannel);
 			}
 		}
 		return;
@@ -3278,11 +3278,11 @@ void CMainWindow::OnCommand(HWND hwnd,int id,HWND hwndCtl,UINT codeNotify)
 		}
 
 		if (id>=CM_CHANNELHISTORY_FIRST && id<=CM_CHANNELHISTORY_LAST) {
-			const CRecentChannelList::CChannel *pChannel=
+			const CTunerChannelInfo *pChannel=
 				m_App.RecentChannelList.GetChannelInfo(id-CM_CHANNELHISTORY_FIRST);
 
 			if (pChannel!=nullptr)
-				m_App.Core.OpenTunerAndSetChannel(pChannel->GetDriverFileName(),pChannel);
+				m_App.Core.OpenTunerAndSetChannel(pChannel->GetTunerName(),pChannel);
 			return;
 		}
 

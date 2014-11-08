@@ -48,6 +48,18 @@ public:
 	bool IsEnabled() const { return m_fEnabled; }
 };
 
+class CTunerChannelInfo : public CChannelInfo
+{
+public:
+	CTunerChannelInfo();
+	CTunerChannelInfo(const CChannelInfo &ChannelInfo,LPCTSTR pszTunerName=NULL);
+	void SetTunerName(LPCTSTR pszName);
+	LPCTSTR GetTunerName() const { return m_TunerName.c_str(); }
+
+protected:
+	TVTest::String m_TunerName;
+};
+
 class CChannelList
 {
 public:

@@ -75,10 +75,7 @@ bool CChannelInfo::SetPhysicalChannel(int Channel)
 
 bool CChannelInfo::SetName(LPCTSTR pszName)
 {
-	if (pszName!=NULL)
-		m_Name=pszName;
-	else
-		m_Name.clear();
+	TVTest::StringUtility::Assign(m_Name,pszName);
 	return true;
 }
 
@@ -104,6 +101,26 @@ void CChannelInfo::SetServiceID(WORD ServiceID)
 void CChannelInfo::SetServiceType(BYTE ServiceType)
 {
 	m_ServiceType=ServiceType;
+}
+
+
+
+
+CTunerChannelInfo::CTunerChannelInfo()
+{
+}
+
+
+CTunerChannelInfo::CTunerChannelInfo(const CChannelInfo &ChannelInfo,LPCTSTR pszTunerName)
+	: CChannelInfo(ChannelInfo)
+{
+	SetTunerName(pszTunerName);
+}
+
+
+void CTunerChannelInfo::SetTunerName(LPCTSTR pszName)
+{
+	TVTest::StringUtility::Assign(m_TunerName,pszName);
 }
 
 

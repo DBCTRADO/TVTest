@@ -625,10 +625,10 @@ bool CChannelScan::LoadPreset(LPCTSTR pszFileName,CChannelList *pChannelList,int
 		return false;
 
 	CBonSrcDecoder &BonSrcDecoder=GetAppClass().CoreEngine.m_DtvEngine.m_BonSrcDecoder;
-	std::vector<CDynamicString> BonDriverChannelList;
+	std::vector<TVTest::String> BonDriverChannelList;
 	LPCTSTR pszName;
 	for (int i=0;(pszName=BonSrcDecoder.GetChannelName(Space,i))!=NULL;i++) {
-		BonDriverChannelList.push_back(CDynamicString(pszName));
+		BonDriverChannelList.push_back(TVTest::String(pszName));
 	}
 	if (BonDriverChannelList.empty())
 		return false;
@@ -646,7 +646,7 @@ bool CChannelScan::LoadPreset(LPCTSTR pszFileName,CChannelList *pChannelList,int
 			::lstrcpyn(szName,pszChannelName+1,TSNameLength+1);
 			bool fFound=false;
 			for (size_t j=0;j<BonDriverChannelList.size();j++) {
-				pszName=BonDriverChannelList[j].Get();
+				pszName=BonDriverChannelList[j].c_str();
 				LPCTSTR p=::StrStrI(pszName,szName);
 				if (p!=NULL && !::IsCharAlphaNumeric(p[TSNameLength])) {
 					ChannelInfo.SetChannelIndex((int)j);

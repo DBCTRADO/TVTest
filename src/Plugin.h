@@ -50,10 +50,10 @@ public:
 	bool IsEnabled() const { return m_fEnabled; }
 	bool Enable(bool fEnable);
 	HMODULE GetModuleHandle() { return m_hLib; }
-	LPCTSTR GetFileName() const { return m_FileName.Get(); }
-	LPCTSTR GetPluginName() const { return m_PluginName.GetSafe(); }
-	LPCTSTR GetCopyright() const { return m_Copyright.GetSafe(); }
-	LPCTSTR GetDescription() const { return m_Description.GetSafe(); }
+	LPCTSTR GetFileName() const { return m_FileName.c_str(); }
+	LPCTSTR GetPluginName() const { return m_PluginName.c_str(); }
+	LPCTSTR GetCopyright() const { return m_Copyright.c_str(); }
+	LPCTSTR GetDescription() const { return m_Description.c_str(); }
 	LRESULT SendEvent(UINT Event,LPARAM lParam1=0,LPARAM lParam2=0);
 	bool OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam,LRESULT *pResult);
 	bool Settings(HWND hwndOwner);
@@ -146,14 +146,14 @@ private:
 	};
 
 	HMODULE m_hLib;
-	CDynamicString m_FileName;
+	TVTest::String m_FileName;
 	TVTest::PluginParam m_PluginParam;
 	DWORD m_Version;
 	DWORD m_Type;
 	DWORD m_Flags;
-	CDynamicString m_PluginName;
-	CDynamicString m_Copyright;
-	CDynamicString m_Description;
+	TVTest::String m_PluginName;
+	TVTest::String m_Copyright;
+	TVTest::String m_Description;
 	bool m_fEnabled;
 	bool m_fSetting;
 	int m_Command;
@@ -166,7 +166,7 @@ private:
 	CCriticalLock m_GrabberLock;
 	std::vector<CPluginCommandInfo> m_CommandList;
 	std::vector<CProgramGuideCommand> m_ProgramGuideCommandList;
-	std::vector<CDynamicString> m_ControllerList;
+	std::vector<TVTest::String> m_ControllerList;
 	std::vector<StatusItem*> m_StatusItemList;
 
 	static HWND m_hwndMessage;

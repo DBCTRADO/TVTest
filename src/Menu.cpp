@@ -1475,7 +1475,8 @@ bool CDropDownMenu::SetItemText(int Command,LPCTSTR pszText)
 
 	if (Index<0)
 		return false;
-	return m_ItemList[Index]->SetText(pszText);
+	m_ItemList[Index]->SetText(pszText);
+	return true;
 }
 
 
@@ -1762,7 +1763,7 @@ LRESULT CALLBACK CDropDownMenu::WndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM
 
 CDropDownMenu::CItem::CItem(int Command,LPCTSTR pszText)
 	: m_Command(Command)
-	, m_Text(pszText)
+	, m_Text(TVTest::StringFromCStr(pszText))
 	, m_Width(0)
 {
 }
@@ -1773,18 +1774,18 @@ CDropDownMenu::CItem::~CItem()
 }
 
 
-bool CDropDownMenu::CItem::SetText(LPCTSTR pszText)
+void CDropDownMenu::CItem::SetText(LPCTSTR pszText)
 {
-	return m_Text.Set(pszText);
+	TVTest::StringUtility::Assign(m_Text,pszText);
 }
 
 
 int CDropDownMenu::CItem::GetWidth(HDC hdc)
 {
-	if (!m_Text.IsEmpty() && m_Width==0) {
+	if (!m_Text.empty() && m_Width==0) {
 		SIZE sz;
 
-		::GetTextExtentPoint32(hdc,m_Text.Get(),m_Text.Length(),&sz);
+		::GetTextExtentPoint32(hdc,m_Text.data(),(int)m_Text.length(),&sz);
 		m_Width=sz.cx;
 	}
 	return m_Width;
@@ -1793,9 +1794,10 @@ int CDropDownMenu::CItem::GetWidth(HDC hdc)
 
 void CDropDownMenu::CItem::Draw(HDC hdc,const RECT *pRect)
 {
-	if (!m_Text.IsEmpty()) {
+	if (!m_Text.empty()) {
 		RECT rc=*pRect;
 
-		::DrawText(hdc,m_Text.Get(),-1,&rc,DT_LEFT | DT_SINGLELINE | DT_VCENTER | DT_NOPREFIX);
+		::DrawText(hdc,m_Text.data(),(int)m_Text.length(),&rc,
+				   DT_LEFT | DT_SINGLELINE | DT_VCENTER | DT_NOPREFIX);
 	}
 }

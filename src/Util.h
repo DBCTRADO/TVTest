@@ -68,34 +68,6 @@ bool GetAbsolutePath(LPCTSTR pszFilePath,LPTSTR pszAbsolutePath,int MaxLength);
 HICON CreateIconFromBitmap(HBITMAP hbm,int IconWidth,int IconHeight,int ImageWidth=0,int ImageHeight=0);
 HICON CreateEmptyIcon(int Width,int Height);
 
-class CDynamicString {
-protected:
-	LPTSTR m_pszString;
-public:
-	CDynamicString();
-	CDynamicString(const CDynamicString &String);
-	CDynamicString(CDynamicString &&String);
-	explicit CDynamicString(LPCTSTR pszString);
-	virtual ~CDynamicString();
-	CDynamicString &operator=(const CDynamicString &String);
-	CDynamicString &operator=(CDynamicString &&String);
-	CDynamicString &operator+=(const CDynamicString &String);
-	CDynamicString &operator=(LPCTSTR pszString);
-	CDynamicString &operator+=(LPCTSTR pszString);
-	bool operator==(const CDynamicString &String) const;
-	bool operator!=(const CDynamicString &String) const;
-	LPCTSTR Get() const { return m_pszString; }
-	LPCTSTR GetSafe() const { return NullToEmptyString(m_pszString); }
-	bool Set(LPCTSTR pszString);
-	bool Set(LPCTSTR pszString,size_t Length);
-	bool Attach(LPTSTR pszString);
-	int Length() const;
-	void Clear();
-	bool IsEmpty() const;
-	int Compare(LPCTSTR pszString) const;
-	int CompareIgnoreCase(LPCTSTR pszString) const;
-};
-
 class CStaticStringFormatter
 {
 public:

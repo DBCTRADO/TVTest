@@ -160,8 +160,7 @@ int CTitleBar::GetButtonHeight() const
 
 bool CTitleBar::SetLabel(LPCTSTR pszLabel)
 {
-	if (!m_Label.Set(pszLabel))
-		return false;
+	TVTest::StringUtility::Assign(m_Label,pszLabel);
 	if (m_hwnd!=NULL)
 		UpdateItem(ITEM_LABEL);
 	return true;
@@ -588,9 +587,9 @@ void CTitleBar::Draw(HDC hdc,const RECT &PaintRect)
 								 0,NULL,DI_NORMAL);
 					rc.left+=m_Style.IconSize.Width;
 				}
-				if (!m_Label.IsEmpty()) {
+				if (!m_Label.empty()) {
 					TVTest::Style::Subtract(&rc,m_Style.LabelMargin);
-					TVTest::Theme::Draw(hdc,rc,m_Theme.CaptionStyle.Fore,m_Label.Get(),
+					TVTest::Theme::Draw(hdc,rc,m_Theme.CaptionStyle.Fore,m_Label.c_str(),
 						DT_LEFT | DT_SINGLELINE | DT_VCENTER | DT_NOPREFIX | DT_END_ELLIPSIS);
 				}
 			} else {

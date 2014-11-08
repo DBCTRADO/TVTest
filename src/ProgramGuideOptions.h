@@ -31,7 +31,7 @@ public:
 	bool ScrollToCurChannel() const { return m_fScrollToCurChannel; }
 	const LOGFONT &GetFont() const { return m_Font; }
 	UINT GetVisibleEventIcons() const { return m_VisibleEventIcons; }
-	LPCTSTR GetProgramLDoubleClickCommand() const { return m_ProgramLDoubleClickCommand.Get(); }
+	LPCTSTR GetProgramLDoubleClickCommand() const { return TVTest::StringUtility::GetCStrOrNull(m_ProgramLDoubleClickCommand); }
 	int ParseCommand(LPCTSTR pszCommand) const;
 
 private:
@@ -54,7 +54,7 @@ private:
 	CProgramGuideToolList m_ToolList;
 	HIMAGELIST m_himlEventIcons;
 	int m_WheelScrollLines;
-	CDynamicString m_ProgramLDoubleClickCommand;
+	TVTest::String m_ProgramLDoubleClickCommand;
 	CTooltip m_Tooltip;
 
 // CBasicDialog

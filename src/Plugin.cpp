@@ -47,13 +47,13 @@ class CControllerPlugin : public CController
 {
 	CPlugin *m_pPlugin;
 	DWORD m_Flags;
-	CDynamicString m_Name;
-	CDynamicString m_Text;
+	TVTest::String m_Name;
+	TVTest::String m_Text;
 	int m_NumButtons;
 	CController::ButtonInfo *m_pButtonList;
 	LPTSTR m_pButtonNameList;
-	CDynamicString m_IniFileName;
-	CDynamicString m_SectionName;
+	TVTest::String m_IniFileName;
+	TVTest::String m_SectionName;
 	UINT m_ControllerImageID;
 	UINT m_SelButtonsImageID;
 	TVTest::ControllerInfo::TranslateMessageCallback m_pTranslateMessage;
@@ -62,8 +62,8 @@ class CControllerPlugin : public CController
 public:
 	CControllerPlugin(CPlugin *pPlugin,const TVTest::ControllerInfo *pInfo);
 	~CControllerPlugin();
-	LPCTSTR GetName() const { return m_Name.Get(); }
-	LPCTSTR GetText() const { return m_Text.Get(); }
+	LPCTSTR GetName() const { return m_Name.c_str(); }
+	LPCTSTR GetText() const { return m_Text.c_str(); }
 	int NumButtons() const { return m_NumButtons; }
 	bool GetButtonInfo(int Index,ButtonInfo *pInfo) const;
 	bool Enable(bool fEnable) { return m_pPlugin->Enable(fEnable); }
@@ -85,8 +85,8 @@ CControllerPlugin::CControllerPlugin(CPlugin *pPlugin,const TVTest::ControllerIn
 	, m_Name(pInfo->pszName)
 	, m_Text(pInfo->pszText)
 	, m_NumButtons(pInfo->NumButtons)
-	, m_IniFileName(pInfo->pszIniFileName)
-	, m_SectionName(pInfo->pszSectionName)
+	, m_IniFileName(TVTest::StringFromCStr(pInfo->pszIniFileName))
+	, m_SectionName(TVTest::StringFromCStr(pInfo->pszSectionName))
 	, m_ControllerImageID(pInfo->ControllerImageID)
 	, m_SelButtonsImageID(pInfo->SelButtonsImageID)
 	, m_pTranslateMessage(pInfo->pTranslateMessage)
@@ -145,20 +145,20 @@ bool CControllerPlugin::TranslateMessage(HWND hwnd,MSG *pMessage)
 
 bool CControllerPlugin::GetIniFileName(LPTSTR pszFileName,int MaxLength) const
 {
-	if (m_IniFileName.IsEmpty())
+	if (m_IniFileName.empty())
 		return CController::GetIniFileName(pszFileName,MaxLength);
-	if (m_IniFileName.Length()>=MaxLength)
+	if (m_IniFileName.length()>=(TVTest::String::size_type)MaxLength)
 		return false;
-	::lstrcpy(pszFileName,m_IniFileName.Get());
+	::lstrcpy(pszFileName,m_IniFileName.c_str());
 	return true;
 }
 
 
 LPCTSTR CControllerPlugin::GetIniFileSection() const
 {
-	if (m_SectionName.IsEmpty())
-		return m_Name.Get();
-	return m_SectionName.Get();
+	if (m_SectionName.empty())
+		return m_Name.c_str();
+	return m_SectionName.c_str();
 }
 
 
@@ -581,7 +581,8 @@ bool CPlugin::Load(LPCTSTR pszFileName)
 	}
 	TVTest::PluginInfo PluginInfo;
 	::ZeroMemory(&PluginInfo,sizeof(PluginInfo));
-	if (!pGetPluginInfo(&PluginInfo)) {
+	if (!pGetPluginInfo(&PluginInfo)
+			|| IsStringEmpty(PluginInfo.pszPluginName)) {
 		::FreeLibrary(hLib);
 		SetError(TEXT("プラグインの情報を取得できません。"));
 		return false;
@@ -593,10 +594,10 @@ bool CPlugin::Load(LPCTSTR pszFileName)
 		SetError(TEXT("TVTInitialize()関数のアドレスを取得できません。"));
 		return false;
 	}
-	m_FileName.Set(pszFileName);
-	m_PluginName.Set(PluginInfo.pszPluginName);
-	m_Copyright.Set(PluginInfo.pszCopyright);
-	m_Description.Set(PluginInfo.pszDescription);
+	m_FileName=pszFileName;
+	m_PluginName=PluginInfo.pszPluginName;
+	TVTest::StringUtility::Assign(m_Copyright,PluginInfo.pszCopyright);
+	TVTest::StringUtility::Assign(m_Description,PluginInfo.pszDescription);
 	m_Type=PluginInfo.Type;
 	m_Flags=PluginInfo.Flags;
 	m_fEnabled=(m_Flags&TVTest::PLUGIN_FLAG_ENABLEDEFAULT)!=0;
@@ -643,11 +644,11 @@ void CPlugin::Free()
 	m_ProgramGuideCommandList.clear();
 
 	for (size_t i=0;i<m_ControllerList.size();i++)
-		App.ControllerManager.DeleteController(m_ControllerList[i].Get());
+		App.ControllerManager.DeleteController(m_ControllerList[i].c_str());
 	m_ControllerList.clear();
 
 	if (m_hLib!=NULL) {
-		LPCTSTR pszFileName=::PathFindFileName(m_FileName.Get());
+		LPCTSTR pszFileName=::PathFindFileName(m_FileName.c_str());
 
 		App.AddLog(TEXT("%s の終了処理を行っています..."),pszFileName);
 
@@ -672,10 +673,10 @@ void CPlugin::Free()
 	}
 	m_StatusItemList.clear();
 
-	m_FileName.Clear();
-	m_PluginName.Clear();
-	m_Copyright.Clear();
-	m_Description.Clear();
+	m_FileName.clear();
+	m_PluginName.clear();
+	m_Copyright.clear();
+	m_Description.clear();
 	m_fEnabled=false;
 	m_fSetting=false;
 	m_PluginParam.pInternalData=NULL;
@@ -695,7 +696,7 @@ bool CPlugin::Enable(bool fEnable)
 		m_fEnabled=fEnable;
 		if (fEnable) {
 			for (size_t i=0;i<m_ControllerList.size();i++)
-				GetAppClass().ControllerManager.LoadControllerSettings(m_ControllerList[i].Get());
+				GetAppClass().ControllerManager.LoadControllerSettings(m_ControllerList[i].c_str());
 		}
 	}
 	return true;
@@ -970,7 +971,7 @@ LRESULT CPlugin::SendPluginMessage(TVTest::PluginParam *pParam,UINT Message,LPAR
 							 SMTO_NORMAL,10000,&Result))
 		return Result;
 	GetAppClass().AddLog(TEXT("応答が無いためプラグインからのメッセージを処理できません。(%s : %u)"),
-						 ::PathFindFileName(MessageParam.pPlugin->m_FileName.Get()),Message);
+						 ::PathFindFileName(MessageParam.pPlugin->m_FileName.c_str()),Message);
 	return FailedResult;
 }
 
@@ -1422,7 +1423,7 @@ LRESULT CPlugin::OnCallback(TVTest::PluginParam *pParam,UINT Message,LPARAM lPar
 			if (pszText==NULL)
 				return FALSE;
 
-			LPCTSTR pszFileName=::PathFindFileName(m_FileName.Get());
+			LPCTSTR pszFileName=::PathFindFileName(m_FileName.c_str());
 			GetAppClass().AddLog(TEXT("%s : %s"),pszFileName,pszText);
 		}
 		return TRUE;
@@ -1591,7 +1592,7 @@ LRESULT CPlugin::OnCallback(TVTest::PluginParam *pParam,UINT Message,LPARAM lPar
 				delete pController;
 				return FALSE;
 			}
-			m_ControllerList.push_back(CDynamicString(pInfo->pszName));
+			m_ControllerList.push_back(TVTest::String(pInfo->pszName));
 			if (m_fEnabled)
 				pControllerManager->LoadControllerSettings(pInfo->pszName);
 		}

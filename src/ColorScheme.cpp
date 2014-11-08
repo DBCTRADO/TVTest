@@ -539,9 +539,9 @@ bool CColorScheme::GetBorderStyle(int Border,Theme::BorderStyle *pStyle) const
 }
 
 
-bool CColorScheme::SetName(LPCTSTR pszName)
+void CColorScheme::SetName(LPCTSTR pszName)
 {
-	return m_Name.Set(pszName);
+	TVTest::StringUtility::Assign(m_Name,pszName);
 }
 
 
@@ -772,7 +772,7 @@ bool CColorScheme::Save(CSettings &Settings,unsigned int Flags) const
 	}
 
 	if ((Flags & SAVE_NONAME)==0)
-		Settings.Write(TEXT("Name"),m_Name.GetSafe());
+		Settings.Write(TEXT("Name"),m_Name);
 
 	for (int i=0;i<NUM_COLORS;i++) {
 		if (fSaveAllColors || m_ColorList[i]!=m_ColorInfoList[i].DefaultColor)
@@ -817,7 +817,7 @@ bool CColorScheme::Load(LPCTSTR pszFileName)
 
 	SetFileName(pszFileName);
 
-	if (m_Name.IsEmpty()) {
+	if (m_Name.empty()) {
 		TCHAR szName[MAX_COLORSCHEME_NAME];
 		::lstrcpyn(szName,::PathFindFileName(pszFileName),lengthof(szName));
 		::PathRemoveExtension(szName);
@@ -841,7 +841,8 @@ bool CColorScheme::Save(LPCTSTR pszFileName,unsigned int Flags) const
 
 bool CColorScheme::SetFileName(LPCTSTR pszFileName)
 {
-	return m_FileName.Set(pszFileName);
+	TVTest::StringUtility::Assign(m_FileName,pszFileName);
+	return true;
 }
 
 
@@ -1048,7 +1049,7 @@ int CColorSchemeList::FindByName(LPCTSTR pszName,int FirstIndex) const
 		return -1;
 
 	for (int i=max(FirstIndex,0);i<(int)m_List.size();i++) {
-		if (m_List[i]->GetName()!=NULL
+		if (!IsStringEmpty(m_List[i]->GetName())
 				&& ::lstrcmpi(m_List[i]->GetName(),pszName)==0)
 			return i;
 	}
@@ -1059,25 +1060,10 @@ int CColorSchemeList::FindByName(LPCTSTR pszName,int FirstIndex) const
 void CColorSchemeList::SortByName()
 {
 	if (m_List.size()>1) {
-		class CPredicator
-		{
-		public:
-			bool operator()(const CColorScheme *pColorScheme1,
-							const CColorScheme *pColorScheme2) const
-			{
-				LPCTSTR pszName1=pColorScheme1->GetName();
-				if (pszName1==NULL)
-					pszName1=TEXT("");
-
-				LPCTSTR pszName2=pColorScheme2->GetName();
-				if (pszName2==NULL)
-					pszName2=TEXT("");
-
-				return ::lstrcmpi(pszName1,pszName2)<0;
-			}
-		};
-
-		std::sort(m_List.begin(),m_List.end(),CPredicator());
+		std::sort(m_List.begin(),m_List.end(),
+			[](const CColorScheme *pColorScheme1,const CColorScheme *pColorScheme2) -> bool {
+				return ::lstrcmpi(pColorScheme1->GetName(),pColorScheme2->GetName())<0;
+			});
 	}
 }
 
@@ -1452,16 +1438,9 @@ INT_PTR CColorSchemeOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lP
 				const CColorScheme *pColorScheme2=m_PresetList.GetColorScheme((int)pcis->itemData2);
 				if (pColorScheme1==NULL || pColorScheme2==NULL)
 					return 0;
-
-				LPCTSTR pszName1=pColorScheme1->GetName();
-				if (pszName1==NULL)
-					pszName1=TEXT("");
-
-				LPCTSTR pszName2=pColorScheme2->GetName();
-				if (pszName2==NULL)
-					pszName2=TEXT("");
-
-				int Cmp=::CompareString(pcis->dwLocaleId,NORM_IGNORECASE,pszName1,-1,pszName2,-1);
+				int Cmp=::CompareString(pcis->dwLocaleId,NORM_IGNORECASE,
+										pColorScheme1->GetName(),-1,
+										pColorScheme2->GetName(),-1);
 				if (Cmp!=0)
 					Cmp-=CSTR_EQUAL;
 				return Cmp;
@@ -1513,7 +1492,7 @@ INT_PTR CColorSchemeOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lP
 				if (Sel>=2) {
 					pColorScheme=m_PresetList.GetColorScheme(
 						(int)DlgComboBox_GetItemData(hDlg,IDC_COLORSCHEME_PRESET,Sel));
-					if (pColorScheme!=NULL && pColorScheme->GetName()!=NULL)
+					if (pColorScheme!=NULL && !IsStringEmpty(pColorScheme->GetName()))
 						::lstrcpyn(szName,pColorScheme->GetName(),lengthof(szName));
 				}
 				if (::DialogBoxParam(GetAppClass().GetResourceInstance(),

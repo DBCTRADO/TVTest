@@ -42,7 +42,7 @@ static bool IsFileBonDriver(LPCTSTR pszFileName)
 
 class CDriverSettings
 {
-	CDynamicString m_FileName;
+	TVTest::String m_FileName;
 	int m_InitialChannelType;
 	int m_InitialSpace;
 	int m_InitialChannel;
@@ -58,8 +58,8 @@ public:
 	bool m_fLastAllChannels;
 
 	CDriverSettings(LPCTSTR pszFileName);
-	LPCTSTR GetFileName() const { return m_FileName.Get(); }
-	bool SetFileName(LPCTSTR pszFileName) { return m_FileName.Set(pszFileName); }
+	LPCTSTR GetFileName() const { return m_FileName.c_str(); }
+	void SetFileName(LPCTSTR pszFileName) { TVTest::StringUtility::Assign(m_FileName,pszFileName); }
 	enum {
 		INITIALCHANNEL_NONE,
 		INITIALCHANNEL_LAST,

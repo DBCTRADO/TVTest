@@ -77,8 +77,8 @@ private:
 		CTuner(const CDriverInfo *pDriverInfo);
 		~CTuner();
 		void Clear();
-		LPCTSTR GetDriverFileName() const { return m_DriverFileName.Get(); }
-		LPCTSTR GetTunerName() const { return m_TunerName.Get(); }
+		LPCTSTR GetDriverFileName() const { return m_DriverFileName.c_str(); }
+		LPCTSTR GetTunerName() const { return m_TunerName.c_str(); }
 		LPCTSTR GetDisplayName() const;
 		void SetDisplayName(LPCTSTR pszName);
 		int NumSpaces() const;
@@ -88,9 +88,9 @@ private:
 		HICON GetIcon() const { return m_hIcon; }
 	private:
 		std::vector<CTuningSpaceInfo*> m_TuningSpaceList;
-		CDynamicString m_DriverFileName;
-		CDynamicString m_TunerName;
-		CDynamicString m_DisplayName;
+		TVTest::String m_DriverFileName;
+		TVTest::String m_TunerName;
+		TVTest::String m_DisplayName;
 		HICON m_hIcon;
 	};
 

@@ -10,14 +10,14 @@
 class CLogItem
 {
 	FILETIME m_Time;
-	CDynamicString m_Text;
+	TVTest::String m_Text;
 	DWORD m_SerialNumber;
 
 public:
 	CLogItem();
 	CLogItem(LPCTSTR pszText,DWORD SerialNumber);
 	~CLogItem();
-	LPCTSTR GetText() const { return m_Text.Get(); }
+	LPCTSTR GetText() const { return m_Text.c_str(); }
 	void GetTime(SYSTEMTIME *pTime) const;
 	DWORD GetSerialNumber() const { return m_SerialNumber; }
 	int Format(char *pszText,int MaxLength) const;

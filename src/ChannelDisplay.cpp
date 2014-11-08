@@ -1236,15 +1236,15 @@ void CChannelDisplay::CTuner::Clear()
 
 LPCTSTR CChannelDisplay::CTuner::GetDisplayName() const
 {
-	if (!m_DisplayName.IsEmpty())
-		return m_DisplayName.Get();
-	return m_TunerName.Get();
+	if (!m_DisplayName.empty())
+		return m_DisplayName.c_str();
+	return m_TunerName.c_str();
 }
 
 
 void CChannelDisplay::CTuner::SetDisplayName(LPCTSTR pszName)
 {
-	m_DisplayName.Set(pszName);
+	TVTest::StringUtility::Assign(m_DisplayName,pszName);
 }
 
 

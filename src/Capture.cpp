@@ -140,9 +140,15 @@ bool CCaptureImage::UnlockData()
 }
 
 
-bool CCaptureImage::SetComment(LPCTSTR pszComment)
+void CCaptureImage::SetComment(LPCTSTR pszComment)
 {
-	return m_Comment.Set(pszComment);
+	TVTest::StringUtility::Assign(m_Comment,pszComment);
+}
+
+
+LPCTSTR CCaptureImage::GetComment() const
+{
+	return TVTest::StringUtility::GetCStrOrNull(m_Comment);
 }
 
 

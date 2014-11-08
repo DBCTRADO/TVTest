@@ -223,7 +223,7 @@ private:
 	StatusViewTheme m_Theme;
 	std::vector<CStatusItem*> m_ItemList;
 	bool m_fSingleMode;
-	CDynamicString m_SingleText;
+	TVTest::String m_SingleText;
 	int m_HotItem;
 	CMouseLeaveTrack m_MouseLeaveTrack;
 	bool m_fOnButtonDown;

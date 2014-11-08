@@ -217,7 +217,7 @@ bool CPseudoOSD::Hide()
 	if (m_hwnd==NULL)
 		return false;
 	::ShowWindow(m_hwnd,SW_HIDE);
-	m_Text.Clear();
+	m_Text.clear();
 	m_hbm=NULL;
 	return true;
 }
@@ -233,7 +233,7 @@ bool CPseudoOSD::IsVisible() const
 
 bool CPseudoOSD::SetText(LPCTSTR pszText,HBITMAP hbmIcon,int IconWidth,int IconHeight,unsigned int ImageEffect)
 {
-	m_Text.Set(pszText);
+	TVTest::StringUtility::Assign(m_Text,pszText);
 	m_hbmIcon=hbmIcon;
 	if (hbmIcon!=NULL) {
 		m_IconWidth=IconWidth;
@@ -345,7 +345,7 @@ bool CPseudoOSD::CalcTextSize(SIZE *pSize)
 	pSize->cx=0;
 	pSize->cy=0;
 
-	if (m_Text.IsEmpty())
+	if (m_Text.empty())
 		return true;
 
 	HDC hdc;
@@ -359,7 +359,7 @@ bool CPseudoOSD::CalcTextSize(SIZE *pSize)
 	if (!m_fLayeredWindow) {
 		HFONT hfontOld=DrawUtil::SelectObject(hdc,m_Font);
 		RECT rc={0,0,0,0};
-		fResult=::DrawText(hdc,m_Text.Get(),-1,&rc,DT_CALCRECT | DT_NOPREFIX)!=0;
+		fResult=::DrawText(hdc,m_Text.data(),(int)m_Text.length(),&rc,DT_CALCRECT | DT_NOPREFIX)!=0;
 		if (fResult) {
 			pSize->cx=rc.right-rc.left;
 			pSize->cy=rc.bottom-rc.top;
@@ -371,12 +371,12 @@ bool CPseudoOSD::CalcTextSize(SIZE *pSize)
 		m_Font.GetLogFont(&lf);
 		if ((m_TextStyle & TEXT_STYLE_OUTLINE)!=0) {
 			fResult=Canvas.GetOutlineTextSize(
-				m_Text.Get(),lf,GetOutlineWidth(abs(lf.lfHeight)),
+				m_Text.c_str(),lf,GetOutlineWidth(abs(lf.lfHeight)),
 				TVTest::Graphics::TEXT_DRAW_ANTIALIAS | TVTest::Graphics::TEXT_DRAW_HINTING,
 				pSize);
 		} else {
 			fResult=Canvas.GetTextSize(
-				m_Text.Get(),lf,
+				m_Text.c_str(),lf,
 				TVTest::Graphics::TEXT_DRAW_ANTIALIAS | TVTest::Graphics::TEXT_DRAW_HINTING,
 				pSize);
 		}
@@ -394,7 +394,7 @@ bool CPseudoOSD::CalcTextSize(SIZE *pSize)
 bool CPseudoOSD::SetImage(HBITMAP hbm,unsigned int ImageEffect)
 {
 	m_hbm=hbm;
-	m_Text.Clear();
+	m_Text.clear();
 	m_hbmIcon=NULL;
 	m_ImageEffect=ImageEffect;
 #if 0
@@ -441,7 +441,7 @@ void CPseudoOSD::Draw(HDC hdc,const RECT &PaintRect) const
 	RECT rc;
 
 	::GetClientRect(m_hwnd,&rc);
-	if (!m_Text.IsEmpty()) {
+	if (!m_Text.empty()) {
 		HFONT hfontOld;
 		COLORREF crOldTextColor;
 		int OldBkMode;
@@ -468,7 +468,7 @@ void CPseudoOSD::Draw(HDC hdc,const RECT &PaintRect) const
 		hfontOld=DrawUtil::SelectObject(hdc,m_Font);
 		crOldTextColor=::SetTextColor(hdc,m_crTextColor);
 		OldBkMode=::SetBkMode(hdc,TRANSPARENT);
-		::DrawText(hdc,m_Text.Get(),-1,&rc,
+		::DrawText(hdc,m_Text.data(),(int)m_Text.length(),&rc,
 				   DT_CENTER | DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX);
 		::SetBkMode(hdc,OldBkMode);
 		::SetTextColor(hdc,crOldTextColor);
@@ -519,7 +519,7 @@ void CPseudoOSD::UpdateLayeredWindow()
 
 		::SetRect(&rc,0,0,Width,Height);
 
-		if (!m_Text.IsEmpty()) {
+		if (!m_Text.empty()) {
 			if (m_hbmIcon!=NULL) {
 				TVTest::Graphics::CImage Image;
 
@@ -574,12 +574,12 @@ void CPseudoOSD::UpdateLayeredWindow()
 
 			if ((m_TextStyle & TEXT_STYLE_OUTLINE)!=0) {
 				Canvas.DrawOutlineText(
-					m_Text.Get(),lf,rc,&TextBrush,
+					m_Text.c_str(),lf,rc,&TextBrush,
 					TVTest::Graphics::CColor(0,0,0,160),
 					GetOutlineWidth(abs(lf.lfHeight)),
 					DrawTextFlags);
 			} else {
-				Canvas.DrawText(m_Text.Get(),lf,rc,&TextBrush,DrawTextFlags);
+				Canvas.DrawText(m_Text.c_str(),lf,rc,&TextBrush,DrawTextFlags);
 			}
 		} else if (m_hbm!=NULL) {
 			TVTest::Graphics::CImage Image;

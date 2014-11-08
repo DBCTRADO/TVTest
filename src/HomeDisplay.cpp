@@ -565,9 +565,9 @@ private:
 		TVTest::String m_BonDriverFileName;
 
 	public:
-		CChannelItem(const CRecentChannelList::CChannel *pChannel)
+		CChannelItem(const CTunerChannelInfo *pChannel)
 			: CChannelItemBase(*pChannel)
-			, m_BonDriverFileName(pChannel->GetDriverFileName())
+			, m_BonDriverFileName(pChannel->GetTunerName())
 		{
 		}
 

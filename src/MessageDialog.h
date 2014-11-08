@@ -20,10 +20,10 @@ public:
 
 private:
 	CRichEditUtil m_RichEditUtil;
-	CDynamicString m_Text;
-	CDynamicString m_Title;
-	CDynamicString m_SystemMessage;
-	CDynamicString m_Caption;
+	TVTest::String m_Text;
+	TVTest::String m_Title;
+	TVTest::String m_SystemMessage;
+	TVTest::String m_Caption;
 	MessageType m_MessageType;
 	HWND m_hDlg;
 

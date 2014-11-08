@@ -106,7 +106,7 @@ private:
 	std::vector<ControllerSettings> m_CurSettingsList;
 	bool m_fFocus;
 	bool m_fActive;
-	CDynamicString m_CurController;
+	TVTest::String m_CurController;
 	HBITMAP m_hbmController;
 	HBITMAP m_hbmSelButtons;
 	RECT m_ImageRect;

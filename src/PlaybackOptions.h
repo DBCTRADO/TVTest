@@ -23,8 +23,8 @@ class CPlaybackOptions : public COptions
 		MAX_PACKET_BUFFER_LENGTH = 0x00100000UL
 	};
 
-	CDynamicString m_AudioDeviceName;
-	CDynamicString m_AudioFilterName;
+	TVTest::String m_AudioDeviceName;
+	TVTest::String m_AudioFilterName;
 
 	CAudioDecFilter::SpdifOptions m_SpdifOptions;
 	bool m_fDownMixSurround;
@@ -58,8 +58,8 @@ public:
 // CBasicDialog
 	bool Create(HWND hwndOwner) override;
 // CPlaybackOptions
-	LPCTSTR GetAudioDeviceName() const { return m_AudioDeviceName.Get(); }
-	LPCTSTR GetAudioFilterName() const { return m_AudioFilterName.Get(); }
+	LPCTSTR GetAudioDeviceName() const { return TVTest::StringUtility::GetCStrOrNull(m_AudioDeviceName); }
+	LPCTSTR GetAudioFilterName() const { return TVTest::StringUtility::GetCStrOrNull(m_AudioFilterName); }
 	const CAudioDecFilter::SpdifOptions &GetSpdifOptions() const { return m_SpdifOptions; }
 	bool SetSpdifOptions(const CAudioDecFilter::SpdifOptions &Options);
 	bool GetDownMixSurround() const { return m_fDownMixSurround; }

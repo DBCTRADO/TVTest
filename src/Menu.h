@@ -219,15 +219,15 @@ public:
 		CItem(int Command,LPCTSTR pszText);
 		virtual ~CItem();
 		int GetCommand() const { return m_Command; }
-		LPCTSTR GetText() const { return m_Text.Get(); }
-		bool SetText(LPCTSTR pszText);
+		LPCTSTR GetText() const { return m_Text.c_str(); }
+		void SetText(LPCTSTR pszText);
 		bool IsSeparator() const { return m_Command<0; }
 		virtual int GetWidth(HDC hdc);
 		virtual void Draw(HDC hdc,const RECT *pRect);
 
 	protected:
 		int m_Command;
-		CDynamicString m_Text;
+		TVTest::String m_Text;
 		int m_Width;
 	};
 

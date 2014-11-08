@@ -86,7 +86,7 @@ private:
 	public:
 		CPage *m_pWindow;
 		int m_ID;
-		CDynamicString m_Title;
+		TVTest::String m_Title;
 		bool m_fVisible;
 		CWindowInfo(CPage *pWindow,int ID,LPCTSTR pszTitle);
 		~CWindowInfo();

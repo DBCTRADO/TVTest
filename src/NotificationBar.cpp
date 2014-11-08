@@ -103,7 +103,7 @@ bool CNotificationBar::Show(LPCTSTR pszText,MessageType Type,DWORD Timeout,bool 
 		return false;
 
 	MessageInfo Info;
-	Info.Text.Set(pszText);
+	Info.Text=pszText;
 	Info.Type=Type;
 	if (Type==MESSAGE_WARNING || Type==MESSAGE_ERROR) {
 		Info.hIcon=static_cast<HICON>(
@@ -283,7 +283,7 @@ LRESULT CNotificationBar::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lPa
 						rc.left+=m_Style.IconSize.Width+m_Style.IconMargin.Right;
 					}
 					TVTest::Style::Subtract(&rc,m_Style.TextMargin);
-					DrawUtil::DrawText(ps.hdc,Info.Text.Get(),rc,
+					DrawUtil::DrawText(ps.hdc,Info.Text.c_str(),rc,
 						DT_SINGLELINE | DT_LEFT | DT_VCENTER | DT_NOPREFIX | DT_END_ELLIPSIS,
 						&m_Font,m_TextColor[Info.Type]);
 				}

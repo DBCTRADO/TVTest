@@ -160,6 +160,21 @@ namespace TVTest
 				Str.reserve(Size);
 		}
 
+		void Assign(String &Str,const String::value_type *pszSrc)
+		{
+			if (IsStringEmpty(pszSrc))
+				Str.clear();
+			else
+				Str=pszSrc;
+		}
+
+		const String::value_type *GetCStrOrNull(const String &Str)
+		{
+			if (Str.empty())
+				return nullptr;
+			return Str.c_str();
+		}
+
 		int Format(String &Str,LPCWSTR pszFormat, ...)
 		{
 			va_list Args;

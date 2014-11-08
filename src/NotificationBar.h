@@ -44,7 +44,7 @@ public:
 
 private:
 	struct MessageInfo {
-		CDynamicString Text;
+		TVTest::String Text;
 		MessageType Type;
 		HICON hIcon;
 		DWORD Timeout;

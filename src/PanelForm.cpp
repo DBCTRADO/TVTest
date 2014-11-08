@@ -411,7 +411,7 @@ void CPanelForm::CalcTabSize()
 	for (int i=0;i<m_NumWindows;i++) {
 		const CWindowInfo *pWindow=m_pWindowList[i];
 		if (pWindow->m_fVisible) {
-			::GetTextExtentPoint32(hdc,pWindow->m_Title.Get(),pWindow->m_Title.Length(),&sz);
+			::GetTextExtentPoint32(hdc,pWindow->m_Title.data(),(int)pWindow->m_Title.length(),&sz);
 			if (sz.cx>MaxWidth)
 				MaxWidth=sz.cx;
 		}
@@ -506,7 +506,7 @@ void CPanelForm::Draw(HDC hdc,const RECT &PaintRect)
 			}
 			rcText=rc;
 			TVTest::Style::Subtract(&rcText,m_Style.TabPadding);
-			TVTest::Theme::Draw(hdc,rcText,Style.Fore,pWindow->m_Title.Get(),
+			TVTest::Theme::Draw(hdc,rcText,Style.Fore,pWindow->m_Title.c_str(),
 				DT_CENTER | DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX | DT_END_ELLIPSIS);
 			rc.left=rc.right;
 			rc.right=rc.left+TabWidth;

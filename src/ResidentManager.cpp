@@ -101,7 +101,7 @@ bool CResidentManager::AddTrayIcon()
 	nid.uCallbackMessage=m_TrayIconMessage;
 	nid.hIcon=::LoadIcon(GetAppClass().GetResourceInstance(),
 		MAKEINTRESOURCE((m_Status&STATUS_RECORDING)!=0?IDI_TRAY_RECORDING:IDI_TRAY));
-	::lstrcpyn(nid.szTip,!m_TipText.IsEmpty()?m_TipText.Get():APP_NAME,lengthof(nid.szTip));
+	::lstrcpyn(nid.szTip,!m_TipText.empty()?m_TipText.c_str():APP_NAME,lengthof(nid.szTip));
 	if (!::Shell_NotifyIcon(NIM_ADD,&nid))
 		return false;
 	/*
@@ -151,7 +151,7 @@ bool CResidentManager::UpdateTipText()
 	nid.hWnd=m_hwnd;
 	nid.uID=1;
 	nid.uFlags=NIF_TIP;
-	::lstrcpyn(nid.szTip,!m_TipText.IsEmpty()?m_TipText.Get():APP_NAME,lengthof(nid.szTip));
+	::lstrcpyn(nid.szTip,!m_TipText.empty()?m_TipText.c_str():APP_NAME,lengthof(nid.szTip));
 	return ::Shell_NotifyIcon(NIM_MODIFY,&nid)!=FALSE;
 }
 
@@ -194,7 +194,7 @@ bool CResidentManager::SetStatus(UINT Status,UINT Mask)
 
 bool CResidentManager::SetTipText(LPCTSTR pszText)
 {
-	m_TipText.Set(pszText);
+	TVTest::StringUtility::Assign(m_TipText,pszText);
 	if (IsTrayIconVisible())
 		UpdateTipText();
 	return true;

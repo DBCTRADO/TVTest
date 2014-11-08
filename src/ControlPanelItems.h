@@ -90,7 +90,7 @@ private:
 class CControlPanelButton : public CControlPanelItem
 {
 protected:
-	CDynamicString m_Text;
+	TVTest::String m_Text;
 	int m_Width;
 
 public:

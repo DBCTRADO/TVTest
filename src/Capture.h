@@ -11,7 +11,7 @@ class CCaptureImage
 	HGLOBAL m_hData;
 	bool m_fLocked;
 	SYSTEMTIME m_stCaptureTime;
-	CDynamicString m_Comment;
+	TVTest::String m_Comment;
 
 public:
 	CCaptureImage(HGLOBAL hData);
@@ -22,8 +22,8 @@ public:
 	bool LockData(BITMAPINFO **ppbmi,BYTE **ppBits);
 	bool UnlockData();
 	const SYSTEMTIME &GetCaptureTime() const { return m_stCaptureTime; }
-	bool SetComment(LPCTSTR pszComment);
-	LPCTSTR GetComment() const { return m_Comment.Get(); }
+	void SetComment(LPCTSTR pszComment);
+	LPCTSTR GetComment() const;
 };
 
 class CCapturePreview : public CCustomWindow

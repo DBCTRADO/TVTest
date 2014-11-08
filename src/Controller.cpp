@@ -92,15 +92,15 @@ bool CControllerManager::ReadSettings(CSettings &Settings)
 	TCHAR szText[256];
 
 	if (Settings.Read(TEXT("CurController"),szText,lengthof(szText)))
-		m_CurController.Set(szText);
+		m_CurController=szText;
 	return true;
 }
 
 
 bool CControllerManager::WriteSettings(CSettings &Settings)
 {
-	if (!m_CurController.IsEmpty())
-		Settings.Write(TEXT("CurController"),m_CurController.Get());
+	if (!m_CurController.empty())
+		Settings.Write(TEXT("CurController"),m_CurController);
 	return true;
 }
 
@@ -512,8 +512,8 @@ INT_PTR CControllerManager::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPa
 					const ControllerInfo &Info=m_ControllerList[i];
 
 					DlgComboBox_AddString(hDlg,IDC_CONTROLLER_LIST,Info.pController->GetText());
-					if (!m_CurController.IsEmpty()
-							&& ::lstrcmpi(m_CurController.Get(),Info.pController->GetName())==0)
+					if (!m_CurController.empty()
+							&& ::lstrcmpi(m_CurController.c_str(),Info.pController->GetName())==0)
 						Sel=(int)i;
 					m_CurSettingsList[i]=Info.Settings;
 				}
@@ -675,7 +675,7 @@ INT_PTR CControllerManager::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPa
 
 				InitDlgItems();
 				if (pCurController!=NULL) {
-					m_CurController.Set(pCurController->GetName());
+					m_CurController=pCurController->GetName();
 					m_fChanged=true;
 				}
 			}
