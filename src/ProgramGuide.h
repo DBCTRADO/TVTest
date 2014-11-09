@@ -672,6 +672,7 @@ protected:
 	ProgramGuideBar::CProgramGuideBar *m_ToolbarList[TOOLBAR_NUM];
 	RECT m_ToolbarMargin;
 	POINT m_ToolbarGap;
+	bool m_fNoUpdateLayout;
 
 // CProgramGuide::CFrame
 	void OnDateChanged() override;
@@ -692,6 +693,10 @@ protected:
 class CProgramGuideFrameSettings : public CSettingsBase
 {
 public:
+	enum {
+		TOOLBAR_NUM=CProgramGuideFrameBase::TOOLBAR_NUM
+	};
+
 	CProgramGuideFrameSettings();
 
 // CSettingsBase
@@ -699,19 +704,35 @@ public:
 	bool WriteSettings(CSettings &Settings) override;
 
 // CProgramGuideFrameSettings
+	LPCTSTR GetToolbarIDText(int Toolbar) const;
+	LPCTSTR GetToolbarName(int Toolbar) const;
 	bool SetToolbarVisible(int Toolbar,bool fVisible);
 	bool GetToolbarVisible(int Toolbar) const;
+	bool SetToolbarOrderList(const int *pOrder);
+	bool GetToolbarOrderList(int *pOrder) const;
 
 private:
-	struct ToolbarInfo {
+	struct ToolbarInfo
+	{
+		LPCTSTR pszIDText;
+		LPCTSTR pszName;
+	};
+
+	struct ToolbarSettings
+	{
 		bool fVisible;
+		int Order;
 	};
 
 	enum {
 		TOOLBAR_STATUS_VISIBLE = 0x0001U
 	};
 
-	ToolbarInfo m_ToolbarList[CProgramGuideFrameBase::TOOLBAR_NUM];
+	ToolbarSettings m_ToolbarSettingsList[TOOLBAR_NUM];
+
+	static const ToolbarInfo m_ToolbarInfoList[TOOLBAR_NUM];
+
+	int ParseIDText(LPCTSTR pszID) const;
 };
 
 class CProgramGuideFrame

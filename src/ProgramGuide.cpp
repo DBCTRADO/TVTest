@@ -6,6 +6,7 @@
 #include "DialogUtil.h"
 #include "LogoManager.h"
 #include "EpgChannelSettings.h"
+#include "ProgramGuideToolbarOptions.h"
 #include "Help/HelpID.h"
 #include "resource.h"
 
@@ -5950,6 +5951,7 @@ void CTimeToolbar::OnCustomDraw(NMTBCUSTOMDRAW *pnmtb,HDC hdc)
 CProgramGuideFrameBase::CProgramGuideFrameBase(CProgramGuide *pProgramGuide,CProgramGuideFrameSettings *pSettings)
 	: m_pProgramGuide(pProgramGuide)
 	, m_pSettings(pSettings)
+	, m_fNoUpdateLayout(false)
 {
 	m_ToolbarMargin.left=0;
 	m_ToolbarMargin.top=0;
@@ -6002,7 +6004,8 @@ bool CProgramGuideFrameBase::SetToolbarVisible(int Toolbar,bool fVisible)
 				pBar->SetBarPosition(-sz.cx,-sz.cy,sz.cx,sz.cy);
 			}
 			pBar->SetBarVisible(fVisible);
-			OnLayoutChange();
+			if (!m_fNoUpdateLayout)
+				OnLayoutChange();
 		} else {
 			pBar->SetBarVisible(fVisible);
 		}
@@ -6089,6 +6092,20 @@ bool CProgramGuideFrameBase::OnCommand(int Command)
 			m_pProgramGuide->SetViewDay(CProgramGuide::DAY_TODAY);
 		m_pProgramGuide->ScrollToCurrentTime();
 		return true;
+
+	case CM_PROGRAMGUIDE_TOOLBAROPTIONS:
+		{
+			CProgramGuideToolbarOptions Options(*m_pSettings);
+
+			if (Options.Show(m_pProgramGuide->GetHandle())) {
+				m_fNoUpdateLayout=true;
+				for (int i=0;i<TOOLBAR_NUM;i++)
+					SetToolbarVisible(i,m_pSettings->GetToolbarVisible(i));
+				m_fNoUpdateLayout=false;
+				OnLayoutChange();
+			}
+		}
+		return true;
 	}
 
 	if (Command>=CM_PROGRAMGUIDE_TIME_FIRST
@@ -6147,12 +6164,15 @@ void CProgramGuideFrameBase::OnWindowDestroy()
 
 void CProgramGuideFrameBase::OnSizeChanged(int Width,int Height)
 {
+	int OrderList[TOOLBAR_NUM];
+	m_pSettings->GetToolbarOrderList(OrderList);
+
 	int x=m_ToolbarMargin.left;
 	int y=m_ToolbarMargin.top;
 	int BarHeight=0;
 
 	for (int i=0;i<lengthof(m_ToolbarList);i++) {
-		ProgramGuideBar::CProgramGuideBar *pBar=m_ToolbarList[i];
+		ProgramGuideBar::CProgramGuideBar *pBar=m_ToolbarList[OrderList[i]];
 
 		if (pBar->IsBarVisible()) {
 			SIZE sz;
@@ -6256,26 +6276,79 @@ LRESULT CProgramGuideFrameBase::DefaultMessageHandler(HWND hwnd,UINT uMsg,WPARAM
 
 
 
+const CProgramGuideFrameSettings::ToolbarInfo
+	CProgramGuideFrameSettings::m_ToolbarInfoList[TOOLBAR_NUM] =
+{
+	{TEXT("TunerMenu"),	TEXT("チューナーメニュー")},
+	{TEXT("DateMenu"),	TEXT("日付メニュー")},
+	{TEXT("Favorites"),	TEXT("番組表選択ボタン")},
+	{TEXT("DateBar"),	TEXT("日付バー")},
+	{TEXT("TimeBar"),	TEXT("時刻バー")},
+};
+
+
 CProgramGuideFrameSettings::CProgramGuideFrameSettings()
 	: CSettingsBase(TEXT("ProgramGuide"))
 {
-	for (int i=0;i<lengthof(m_ToolbarList);i++) {
-		m_ToolbarList[i].fVisible=true;
+	for (int i=0;i<lengthof(m_ToolbarSettingsList);i++) {
+		m_ToolbarSettingsList[i].fVisible=true;
+		m_ToolbarSettingsList[i].Order=i;
 	}
 }
 
 
 bool CProgramGuideFrameSettings::ReadSettings(CSettings &Settings)
 {
-	for (int i=0;i<lengthof(m_ToolbarList);i++) {
-		TCHAR szText[32];
+	int OrderList[TOOLBAR_NUM];
+	int Count=0;
 
-		::wsprintf(szText,TEXT("Toolbar%d_Status"),i);
+	for (int i=0;i<TOOLBAR_NUM;i++) {
+		TCHAR szText[32],szName[32];
+		int ID;
+
+		StdUtil::snprintf(szText,lengthof(szText),TEXT("Toolbar%d_Name"),i);
+		if (Settings.Read(szText,szName,lengthof(szName))) {
+			ID=ParseIDText(szName);
+			if (ID<0)
+				continue;
+		} else {
+			// ver.0.9.0 より前との互換用
+			ID=i;
+		}
+
+		int j;
+		for (j=0;j<Count;j++) {
+			if (OrderList[j]==ID)
+				break;
+		}
+		if (j<Count)
+			continue;
+
+		StdUtil::snprintf(szText,lengthof(szText),TEXT("Toolbar%d_Status"),i);
 		unsigned int Status;
 		if (Settings.Read(szText,&Status)) {
-			m_ToolbarList[i].fVisible=(Status & TOOLBAR_STATUS_VISIBLE)!=0;
+			m_ToolbarSettingsList[ID].fVisible=(Status & TOOLBAR_STATUS_VISIBLE)!=0;
+		}
+
+		OrderList[Count]=ID;
+		Count++;
+	}
+
+	if (Count<TOOLBAR_NUM) {
+		for (int i=0;i<TOOLBAR_NUM;i++) {
+			int j;
+			for (j=0;j<Count;j++) {
+				if (OrderList[j]==i)
+					break;
+			}
+			if (j==Count) {
+				OrderList[Count]=i;
+				Count++;
+			}
 		}
 	}
+
+	SetToolbarOrderList(OrderList);
 
 	return true;
 }
@@ -6283,12 +6356,20 @@ bool CProgramGuideFrameSettings::ReadSettings(CSettings &Settings)
 
 bool CProgramGuideFrameSettings::WriteSettings(CSettings &Settings)
 {
-	for (int i=0;i<lengthof(m_ToolbarList);i++) {
+	int OrderList[TOOLBAR_NUM];
+
+	GetToolbarOrderList(OrderList);
+
+	for (int i=0;i<TOOLBAR_NUM;i++) {
+		const int ID=OrderList[i];
 		TCHAR szText[32];
 
-		::wsprintf(szText,TEXT("Toolbar%d_Status"),i);
+		StdUtil::snprintf(szText,lengthof(szText),TEXT("Toolbar%d_Name"),i);
+		Settings.Write(szText,m_ToolbarInfoList[ID].pszIDText);
+
+		StdUtil::snprintf(szText,lengthof(szText),TEXT("Toolbar%d_Status"),i);
 		unsigned int Status=0;
-		if (m_ToolbarList[i].fVisible)
+		if (m_ToolbarSettingsList[ID].fVisible)
 			Status|=TOOLBAR_STATUS_VISIBLE;
 		Settings.Write(szText,Status);
 	}
@@ -6297,20 +6378,86 @@ bool CProgramGuideFrameSettings::WriteSettings(CSettings &Settings)
 }
 
 
+LPCTSTR CProgramGuideFrameSettings::GetToolbarIDText(int Toolbar) const
+{
+	if (Toolbar<0 || Toolbar>=lengthof(m_ToolbarInfoList))
+		return NULL;
+	return m_ToolbarInfoList[Toolbar].pszIDText;
+}
+
+
+LPCTSTR CProgramGuideFrameSettings::GetToolbarName(int Toolbar) const
+{
+	if (Toolbar<0 || Toolbar>=lengthof(m_ToolbarInfoList))
+		return NULL;
+	return m_ToolbarInfoList[Toolbar].pszName;
+}
+
+
 bool CProgramGuideFrameSettings::SetToolbarVisible(int Toolbar,bool fVisible)
 {
-	if (Toolbar<0 || Toolbar>=lengthof(m_ToolbarList))
+	if (Toolbar<0 || Toolbar>=lengthof(m_ToolbarSettingsList))
 		return false;
-	m_ToolbarList[Toolbar].fVisible=fVisible;
+	m_ToolbarSettingsList[Toolbar].fVisible=fVisible;
 	return true;
 }
 
 
 bool CProgramGuideFrameSettings::GetToolbarVisible(int Toolbar) const
 {
-	if (Toolbar<0 || Toolbar>=lengthof(m_ToolbarList))
+	if (Toolbar<0 || Toolbar>=lengthof(m_ToolbarSettingsList))
 		return false;
-	return m_ToolbarList[Toolbar].fVisible;
+	return m_ToolbarSettingsList[Toolbar].fVisible;
+}
+
+
+bool CProgramGuideFrameSettings::SetToolbarOrderList(const int *pOrder)
+{
+	if (pOrder==NULL)
+		return false;
+
+	for (int i=0;i<lengthof(m_ToolbarSettingsList);i++) {
+		const int ID=pOrder[i];
+
+		if (ID<0 || ID>=lengthof(m_ToolbarSettingsList))
+			return false;
+
+		for (int j=i+1;j<lengthof(m_ToolbarSettingsList);j++) {
+			if (pOrder[j]==ID)
+				return false;
+		}
+	}
+
+	for (int i=0;i<lengthof(m_ToolbarSettingsList);i++)
+		m_ToolbarSettingsList[pOrder[i]].Order=i;
+
+	return true;
+}
+
+
+bool CProgramGuideFrameSettings::GetToolbarOrderList(int *pOrder) const
+{
+	if (pOrder==NULL)
+		return false;
+
+	for (int i=0;i<lengthof(m_ToolbarSettingsList);i++)
+		pOrder[m_ToolbarSettingsList[i].Order]=i;
+
+	return true;
+}
+
+
+int CProgramGuideFrameSettings::ParseIDText(LPCTSTR pszID) const
+{
+	if (IsStringEmpty(pszID))
+		return -1;
+
+	for (int i=0;i<lengthof(m_ToolbarInfoList);i++) {
+		if (::lstrcmpi(m_ToolbarInfoList[i].pszIDText,pszID)==0)
+			return i;
+	}
+
+	return -1;
 }
 
 

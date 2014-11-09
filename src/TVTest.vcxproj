@@ -486,6 +486,7 @@
     <ClCompile Include="CardReaderDialog.cpp" />
     <ClCompile Include="CasLibraryManager.cpp" />
     <ClCompile Include="EpgCapture.cpp" />
+    <ClCompile Include="ListView.cpp" />
     <ClCompile Include="NetworkDefinition.cpp" />
     <ClCompile Include="ChannelHistory.cpp" />
     <ClCompile Include="ChannelList.cpp" />
@@ -567,6 +568,7 @@
     <ClCompile Include="ProgramGuide.cpp" />
     <ClCompile Include="ProgramGuideFavorites.cpp" />
     <ClCompile Include="ProgramGuideOptions.cpp" />
+    <ClCompile Include="ProgramGuideToolbarOptions.cpp" />
     <ClCompile Include="ProgramListPanel.cpp" />
     <ClCompile Include="ProgramSearch.cpp" />
     <ClCompile Include="PseudoOSD.cpp" />
@@ -651,6 +653,7 @@
     <ClInclude Include="CasLibraryManager.h" />
     <ClInclude Include="DirectShowFilter\RingBuffer.h" />
     <ClInclude Include="EpgCapture.h" />
+    <ClInclude Include="ListView.h" />
     <ClInclude Include="NetworkDefinition.h" />
     <ClInclude Include="ChannelHistory.h" />
     <ClInclude Include="ChannelList.h" />
@@ -734,6 +737,7 @@
     <ClInclude Include="ProgramGuide.h" />
     <ClInclude Include="ProgramGuideFavorites.h" />
     <ClInclude Include="ProgramGuideOptions.h" />
+    <ClInclude Include="ProgramGuideToolbarOptions.h" />
     <ClInclude Include="ProgramListPanel.h" />
     <ClInclude Include="ProgramSearch.h" />
     <ClInclude Include="PseudoOSD.h" />

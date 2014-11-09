@@ -521,6 +521,12 @@
     <ClCompile Include="EpgCapture.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
+    <ClCompile Include="ProgramGuideToolbarOptions.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="ListView.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="BonTsEngine\Bitstream.h">
@@ -1013,6 +1019,12 @@
       <Filter>BonTsEngine\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="EpgCapture.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="ProgramGuideToolbarOptions.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="ListView.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
   </ItemGroup>
