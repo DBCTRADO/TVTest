@@ -4,6 +4,7 @@
 
 #include <vector>
 #include "Options.h"
+#include "ListView.h"
 
 
 class CMenuOptions : public COptions
@@ -56,6 +57,7 @@ private:
 	std::vector<MenuItemInfo> m_MenuItemList;
 
 	bool m_fChanging;
+	TVTest::CListView m_ItemListView;
 };
 
 

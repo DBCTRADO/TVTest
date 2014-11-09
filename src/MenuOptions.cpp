@@ -241,18 +241,6 @@ bool CMenuOptions::Create(HWND hwndOwner)
 }
 
 
-static LPARAM GetListViewItemParam(HWND hwndList,int Item)
-{
-	LVITEM lvi;
-
-	lvi.mask=LVIF_PARAM;
-	lvi.iItem=Item;
-	lvi.iSubItem=0;
-	if (!ListView_GetItem(hwndList,&lvi))
-		return 0;
-	return lvi.lParam;
-}
-
 INT_PTR CMenuOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 {
 	switch (uMsg) {
@@ -264,35 +252,18 @@ INT_PTR CMenuOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 		DlgUpDown_SetRange(hDlg,IDC_MENUOPTIONS_MAXCHANNELMENUEVENTINFO_SPIN,0,100);
 
 		{
-			HWND hwndList=::GetDlgItem(hDlg,IDC_MENUOPTIONS_ITEMLIST);
-			ListView_SetExtendedListViewStyle(hwndList,
-				LVS_EX_FULLROWSELECT | LVS_EX_CHECKBOXES | LVS_EX_LABELTIP);
-
-			RECT rc;
-			::GetClientRect(hwndList,&rc);
-			LVCOLUMN lvc;
-			lvc.mask=LVCF_FMT | LVCF_WIDTH | LVCF_TEXT | LVCF_SUBITEM;
-			lvc.fmt=LVCFMT_LEFT;
-			lvc.cx=rc.right-::GetSystemMetrics(SM_CXVSCROLL);
-			lvc.pszText=TEXT("");
-			lvc.iSubItem=0;
-			ListView_InsertColumn(hwndList,0,&lvc);
+			m_ItemListView.Attach(::GetDlgItem(hDlg,IDC_MENUOPTIONS_ITEMLIST));
+			m_ItemListView.InitCheckList();
 
 			m_fChanging=true;
 
-			LVITEM lvi;
-			TCHAR szText[CCommandList::MAX_COMMAND_NAME];
-			lvi.mask=LVIF_TEXT | LVIF_PARAM;
-			lvi.iSubItem=0;
-			lvi.pszText=szText;
-
 			for (int i=0;i<(int)m_MenuItemList.size();i++) {
 				int ID=m_MenuItemList[i].ID;
+				TCHAR szText[CCommandList::MAX_COMMAND_NAME];
+
 				GetItemText(ID,szText,lengthof(szText));
-				lvi.iItem=i;
-				lvi.lParam=ID;
-				lvi.iItem=ListView_InsertItem(hwndList,&lvi);
-				ListView_SetCheckState(hwndList,lvi.iItem,m_MenuItemList[i].fVisible);
+				m_ItemListView.InsertItem(i,szText,ID);
+				m_ItemListView.CheckItem(i,m_MenuItemList[i].fVisible);
 			}
 
 			m_fChanging=false;
@@ -304,8 +275,7 @@ INT_PTR CMenuOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 		case IDC_MENUOPTIONS_ITEMLIST_UP:
 		case IDC_MENUOPTIONS_ITEMLIST_DOWN:
 			{
-				HWND hwndList=::GetDlgItem(hDlg,IDC_MENUOPTIONS_ITEMLIST);
-				int From=ListView_GetNextItem(hwndList,-1,LVNI_SELECTED),To;
+				int From=m_ItemListView.GetSelectedItem(),To;
 
 				if (From>=0) {
 					if (LOWORD(wParam)==IDC_MENUOPTIONS_ITEMLIST_UP) {
@@ -313,25 +283,13 @@ INT_PTR CMenuOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 							break;
 						To=From-1;
 					} else {
-						if (From+1>=ListView_GetItemCount(hwndList))
+						if (From+1>=m_ItemListView.GetItemCount())
 							break;
 						To=From+1;
 					}
 					m_fChanging=true;
-					LVITEM lvi;
-					TCHAR szText[CCommandList::MAX_COMMAND_NAME];
-					lvi.mask=LVIF_STATE | LVIF_TEXT | LVIF_PARAM;
-					lvi.iItem=From;
-					lvi.iSubItem=0;
-					lvi.stateMask=~0U;
-					lvi.pszText=szText;
-					lvi.cchTextMax=lengthof(szText);
-					ListView_GetItem(hwndList,&lvi);
-					BOOL fChecked=ListView_GetCheckState(hwndList,From);
-					ListView_DeleteItem(hwndList,From);
-					lvi.iItem=To;
-					ListView_InsertItem(hwndList,&lvi);
-					ListView_SetCheckState(hwndList,To,fChecked);
+					m_ItemListView.MoveItem(From,To);
+					m_ItemListView.EnsureItemVisible(To);
 					SetDlgItemState(hDlg);
 					m_fChanging=false;
 				}
@@ -340,23 +298,17 @@ INT_PTR CMenuOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 
 		case IDC_MENUOPTIONS_ITEMLIST_INSERTSEPARATOR:
 			{
-				HWND hwndList=::GetDlgItem(hDlg,IDC_MENUOPTIONS_ITEMLIST);
-				int Sel=ListView_GetNextItem(hwndList,-1,LVNI_SELECTED);
+				int Sel=m_ItemListView.GetSelectedItem();
 
 				if (Sel>=0) {
-					LVITEM lvi;
 					TCHAR szText[CCommandList::MAX_COMMAND_NAME];
 
 					m_fChanging=true;
 					GetItemText(MENU_ID_SEPARATOR,szText,lengthof(szText));
-					lvi.mask=LVIF_TEXT | LVIF_PARAM;
-					lvi.iItem=Sel;
-					lvi.iSubItem=0;
-					lvi.pszText=szText;
-					lvi.lParam=MENU_ID_SEPARATOR;
-					ListView_InsertItem(hwndList,&lvi);
-					ListView_SetItemState(hwndList,Sel,LVIS_SELECTED | LVIS_FOCUSED,LVIS_SELECTED | LVIS_FOCUSED);
-					ListView_SetCheckState(hwndList,Sel,TRUE);
+					m_ItemListView.InsertItem(Sel,szText,MENU_ID_SEPARATOR);
+					m_ItemListView.SetItemState(Sel,LVIS_SELECTED | LVIS_FOCUSED,LVIS_SELECTED | LVIS_FOCUSED);
+					m_ItemListView.CheckItem(Sel,true);
+					m_ItemListView.EnsureItemVisible(Sel);
 					SetDlgItemState(hDlg);
 					m_fChanging=false;
 				}
@@ -365,13 +317,12 @@ INT_PTR CMenuOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 
 		case IDC_MENUOPTIONS_ITEMLIST_REMOVESEPARATOR:
 			{
-				HWND hwndList=::GetDlgItem(hDlg,IDC_MENUOPTIONS_ITEMLIST);
-				int Sel=ListView_GetNextItem(hwndList,-1,LVNI_SELECTED);
+				int Sel=m_ItemListView.GetSelectedItem();
 
 				if (Sel>=0) {
-					if (GetListViewItemParam(hwndList,Sel)==MENU_ID_SEPARATOR) {
+					if (m_ItemListView.GetItemParam(Sel)==MENU_ID_SEPARATOR) {
 						m_fChanging=true;
-						ListView_DeleteItem(hwndList,Sel);
+						m_ItemListView.DeleteItem(Sel);
 						SetDlgItemState(hDlg);
 						m_fChanging=false;
 					}
@@ -381,25 +332,17 @@ INT_PTR CMenuOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 
 		case IDC_MENUOPTIONS_ITEMLIST_DEFAULT:
 			{
-				HWND hwndList=::GetDlgItem(hDlg,IDC_MENUOPTIONS_ITEMLIST);
-
 				m_fChanging=true;
 
-				ListView_DeleteAllItems(hwndList);
-
-				LVITEM lvi;
-				TCHAR szText[CCommandList::MAX_COMMAND_NAME];
-				lvi.mask=LVIF_TEXT | LVIF_PARAM;
-				lvi.iSubItem=0;
-				lvi.pszText=szText;
+				m_ItemListView.DeleteAllItems();
 
 				for (int i=0;i<lengthof(m_DefaultMenuItemList);i++) {
 					int ID=m_DefaultMenuItemList[i].ID;
+					TCHAR szText[CCommandList::MAX_COMMAND_NAME];
+
 					GetItemText(ID,szText,lengthof(szText));
-					lvi.iItem=i;
-					lvi.lParam=ID;
-					lvi.iItem=ListView_InsertItem(hwndList,&lvi);
-					ListView_SetCheckState(hwndList,lvi.iItem,TRUE);
+					m_ItemListView.InsertItem(i,szText,ID);
+					m_ItemListView.CheckItem(i,true);
 				}
 
 				SetDlgItemState(hDlg);
@@ -430,21 +373,13 @@ INT_PTR CMenuOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 			}
 
 			{
-				HWND hwndList=::GetDlgItem(hDlg,IDC_MENUOPTIONS_ITEMLIST);
-				const int ItemCount=ListView_GetItemCount(hwndList);
+				const int ItemCount=m_ItemListView.GetItemCount();
 
 				m_MenuItemList.resize(ItemCount);
 
-				LVITEM lvi;
-				lvi.mask=LVIF_STATE | LVIF_PARAM;
-				lvi.iSubItem=0;
-				lvi.stateMask=~0U;
-
 				for (int i=0;i<ItemCount;i++) {
-					lvi.iItem=i;
-					ListView_GetItem(hwndList,&lvi);
-					m_MenuItemList[i].ID=(int)lvi.lParam;
-					m_MenuItemList[i].fVisible=(lvi.state & LVIS_STATEIMAGEMASK)==INDEXTOSTATEIMAGEMASK(2);
+					m_MenuItemList[i].ID=(int)m_ItemListView.GetItemParam(i);
+					m_MenuItemList[i].fVisible=m_ItemListView.IsItemChecked(i);
 				}
 			}
 
@@ -452,6 +387,10 @@ INT_PTR CMenuOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 			return TRUE;
 		}
 		break;
+
+	case WM_DESTROY:
+		m_ItemListView.Detach();
+		return TRUE;
 	}
 
 	return FALSE;
@@ -460,14 +399,13 @@ INT_PTR CMenuOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 
 void CMenuOptions::SetDlgItemState(HWND hDlg)
 {
-	HWND hwndList=::GetDlgItem(hDlg,IDC_MENUOPTIONS_ITEMLIST);
-	int Sel=ListView_GetNextItem(hwndList,-1,LVNI_SELECTED);
+	int Sel=m_ItemListView.GetSelectedItem();
 
 	EnableDlgItem(hDlg,IDC_MENUOPTIONS_ITEMLIST_UP,Sel>0);
-	EnableDlgItem(hDlg,IDC_MENUOPTIONS_ITEMLIST_DOWN,Sel>=0 && Sel+1<ListView_GetItemCount(hwndList));
+	EnableDlgItem(hDlg,IDC_MENUOPTIONS_ITEMLIST_DOWN,Sel>=0 && Sel+1<m_ItemListView.GetItemCount());
 	EnableDlgItem(hDlg,IDC_MENUOPTIONS_ITEMLIST_INSERTSEPARATOR,Sel>=0);
 	EnableDlgItem(hDlg,IDC_MENUOPTIONS_ITEMLIST_REMOVESEPARATOR,
-				  Sel>=0 && GetListViewItemParam(hwndList,Sel)==MENU_ID_SEPARATOR);
+				  Sel>=0 && m_ItemListView.GetItemParam(Sel)==MENU_ID_SEPARATOR);
 }
 
 

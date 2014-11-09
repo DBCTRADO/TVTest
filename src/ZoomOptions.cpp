@@ -257,11 +257,10 @@ void CZoomOptions::FormatCommandText(int Command,const ZoomInfo &Info,LPTSTR psz
 
 void CZoomOptions::SetItemState(HWND hDlg)
 {
-	HWND hwndList=::GetDlgItem(hDlg,IDC_ZOOMOPTIONS_LIST);
-	int Sel=ListView_GetNextItem(hwndList,-1,LVNI_SELECTED);
+	int Sel=m_ItemListView.GetSelectedItem();
 
 	if (Sel>=0) {
-		const int Index=GetItemIndex(hwndList,Sel);
+		const int Index=GetItemIndex(Sel);
 		const ZoomInfo &Info=m_ZoomSettingList[Index];
 		const bool fCustom=m_DefaultZoomList[Index].Command>=CM_CUSTOMZOOM_FIRST
 						&& m_DefaultZoomList[Index].Command<=CM_CUSTOMZOOM_LAST;
@@ -288,32 +287,20 @@ void CZoomOptions::SetItemState(HWND hDlg)
 }
 
 
-int CZoomOptions::GetItemIndex(HWND hwndList,int Item)
+int CZoomOptions::GetItemIndex(int Item)
 {
-	LVITEM lvi;
-
-	lvi.mask=LVIF_PARAM;
-	lvi.iItem=Item;
-	lvi.iSubItem=0;
-	ListView_GetItem(hwndList,&lvi);
-	return (int)lvi.lParam;
+	return static_cast<int>(m_ItemListView.GetItemParam(Item));
 }
 
 
-void CZoomOptions::UpdateItemText(HWND hDlg,int Item)
+void CZoomOptions::UpdateItemText(int Item)
 {
-	HWND hwndList=::GetDlgItem(hDlg,IDC_ZOOMOPTIONS_LIST);
-	const int Index=GetItemIndex(hwndList,Item);
-	LVITEM lvi;
+	const int Index=GetItemIndex(Item);
 	TCHAR szText[MAX_ZOOM_TEXT];
 
 	FormatCommandText(m_DefaultZoomList[Index].Command,m_ZoomSettingList[Index],
 					  szText,lengthof(szText));
-	lvi.mask=LVIF_TEXT;
-	lvi.iItem=Item;
-	lvi.iSubItem=0;
-	lvi.pszText=szText;
-	ListView_SetItem(hwndList,&lvi);
+	m_ItemListView.SetItemText(Item,szText);
 }
 
 
@@ -323,36 +310,25 @@ INT_PTR CZoomOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 	case WM_INITDIALOG:
 		{
 			m_fChanging=true;
-			HWND hwndList=::GetDlgItem(hDlg,IDC_ZOOMOPTIONS_LIST);
-			ListView_SetExtendedListViewStyle(hwndList,
-											  LVS_EX_FULLROWSELECT | LVS_EX_CHECKBOXES);
-			RECT rc;
-			GetClientRect(hwndList,&rc);
-			rc.right-=GetSystemMetrics(SM_CXHSCROLL);
-			LVCOLUMN lvc;
-			lvc.mask=LVCF_FMT | LVCF_WIDTH | LVCF_TEXT | LVCF_SUBITEM;
-			lvc.fmt=LVCFMT_LEFT;
-			lvc.cx=rc.right;
-			lvc.pszText=TEXT("");
-			lvc.iSubItem=0;
-			ListView_InsertColumn(hwndList,0,&lvc);
-			LVITEM lvi;
-			TCHAR szText[MAX_ZOOM_TEXT];
-			lvi.mask=LVIF_TEXT | LVIF_PARAM;
-			lvi.iSubItem=0;
-			lvi.pszText=szText;
+
+			m_ItemListView.Attach(::GetDlgItem(hDlg,IDC_ZOOMOPTIONS_LIST));
+			m_ItemListView.InitCheckList();
+
 			for (int i=0;i<NUM_ZOOM_COMMANDS;i++) {
 				const int Index=m_Order[i];
 				const ZoomInfo &Info=m_ZoomList[Index];
+				TCHAR szText[MAX_ZOOM_TEXT];
+
 				m_ZoomSettingList[Index]=Info;
-				lvi.iItem=i;
-				lvi.lParam=Index;
 				FormatCommandText(m_DefaultZoomList[Index].Command,Info,szText,lengthof(szText));
-				ListView_InsertItem(hwndList,&lvi);
-				ListView_SetCheckState(hwndList,i,Info.fVisible);
+				m_ItemListView.InsertItem(i,szText,Index);
+				m_ItemListView.CheckItem(i,Info.fVisible);
 			}
+
 			SetItemState(hDlg);
+
 			m_fChanging=false;
+
 			AdjustDialogPos(::GetParent(hDlg),hDlg);
 		}
 		return TRUE;
@@ -362,19 +338,20 @@ INT_PTR CZoomOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 		case IDC_ZOOMOPTIONS_TYPE_RATE:
 		case IDC_ZOOMOPTIONS_TYPE_SIZE:
 			{
-				HWND hwndList=::GetDlgItem(hDlg,IDC_ZOOMOPTIONS_LIST);
-				const int Sel=ListView_GetNextItem(hwndList,-1,LVNI_SELECTED);
+				const int Sel=m_ItemListView.GetSelectedItem();
 
 				if (Sel>=0) {
-					const int Index=GetItemIndex(hwndList,Sel);
+					const int Index=GetItemIndex(Sel);
 					const int Command=m_DefaultZoomList[Index].Command;
+
 					if (Command>=CM_CUSTOMZOOM_FIRST && Command<=CM_CUSTOMZOOM_LAST) {
 						ZoomType Type=::IsDlgButtonChecked(hDlg,IDC_ZOOMOPTIONS_TYPE_RATE)?ZOOM_RATE:ZOOM_SIZE;
 						ZoomInfo &Info=m_ZoomSettingList[Index];
+
 						if (Type!=Info.Type) {
 							Info.Type=Type;
 							m_fChanging=true;
-							UpdateItemText(hDlg,Sel);
+							UpdateItemText(Sel);
 							SetItemState(hDlg);
 							m_fChanging=false;
 						}
@@ -388,18 +365,18 @@ INT_PTR CZoomOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 				int Rate=::GetDlgItemInt(hDlg,IDC_ZOOMOPTIONS_RATE,NULL,TRUE);
 
 				if (Rate>0 && Rate<=MAX_RATE) {
-					HWND hwndList=::GetDlgItem(hDlg,IDC_ZOOMOPTIONS_LIST);
-					const int Sel=ListView_GetNextItem(hwndList,-1,LVNI_SELECTED);
+					const int Sel=m_ItemListView.GetSelectedItem();
 
 					if (Sel>=0) {
-						const int Index=GetItemIndex(hwndList,Sel);
+						const int Index=GetItemIndex(Sel);
 						const int Command=m_DefaultZoomList[Index].Command;
+
 						if (Command>=CM_CUSTOMZOOM_FIRST && Command<=CM_CUSTOMZOOM_LAST) {
 							ZoomInfo &Info=m_ZoomSettingList[Index];
 							Info.Rate.Rate=Rate;
 							Info.Rate.Factor=100;
 							m_fChanging=true;
-							UpdateItemText(hDlg,Sel);
+							UpdateItemText(Sel);
 							m_fChanging=false;
 						}
 					}
@@ -414,18 +391,18 @@ INT_PTR CZoomOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 				int Height=::GetDlgItemInt(hDlg,IDC_ZOOMOPTIONS_HEIGHT,NULL,TRUE);
 
 				if (Width>0 && Height>0) {
-					HWND hwndList=::GetDlgItem(hDlg,IDC_ZOOMOPTIONS_LIST);
-					const int Sel=ListView_GetNextItem(hwndList,-1,LVNI_SELECTED);
+					const int Sel=m_ItemListView.GetSelectedItem();
 
 					if (Sel>=0) {
-						const int Index=GetItemIndex(hwndList,Sel);
+						const int Index=GetItemIndex(Sel);
 						const int Command=m_DefaultZoomList[Index].Command;
+
 						if (Command>=CM_CUSTOMZOOM_FIRST && Command<=CM_CUSTOMZOOM_LAST) {
 							ZoomInfo &Info=m_ZoomSettingList[Index];
 							Info.Size.Width=Width;
 							Info.Size.Height=Height;
 							m_fChanging=true;
-							UpdateItemText(hDlg,Sel);
+							UpdateItemText(Sel);
 							m_fChanging=false;
 						}
 					}
@@ -450,8 +427,7 @@ INT_PTR CZoomOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 		case IDC_ZOOMOPTIONS_UP:
 		case IDC_ZOOMOPTIONS_DOWN:
 			{
-				HWND hwndList=::GetDlgItem(hDlg,IDC_ZOOMOPTIONS_LIST);
-				int From=ListView_GetNextItem(hwndList,-1,LVNI_SELECTED),To;
+				int From=m_ItemListView.GetSelectedItem(),To;
 
 				if (From>=0) {
 					if (LOWORD(wParam)==IDC_ZOOMOPTIONS_UP) {
@@ -463,21 +439,10 @@ INT_PTR CZoomOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 							break;
 						To=From+1;
 					}
+
 					m_fChanging=true;
-					LVITEM lvi;
-					TCHAR szText[MAX_ZOOM_TEXT];
-					lvi.mask=LVIF_STATE | LVIF_TEXT | LVIF_PARAM;
-					lvi.iItem=From;
-					lvi.iSubItem=0;
-					lvi.stateMask=~0U;
-					lvi.pszText=szText;
-					lvi.cchTextMax=lengthof(szText);
-					ListView_GetItem(hwndList,&lvi);
-					BOOL fChecked=ListView_GetCheckState(hwndList,From);
-					ListView_DeleteItem(hwndList,From);
-					lvi.iItem=To;
-					ListView_InsertItem(hwndList,&lvi);
-					ListView_SetCheckState(hwndList,To,fChecked);
+					m_ItemListView.MoveItem(From,To);
+					m_ItemListView.EnsureItemVisible(To);
 					SetItemState(hDlg);
 					m_fChanging=false;
 				}
@@ -486,16 +451,14 @@ INT_PTR CZoomOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 
 		case IDOK:
 			{
-				HWND hwndList=::GetDlgItem(hDlg,IDC_ZOOMOPTIONS_LIST);
-
 				for (int i=0;i<NUM_ZOOM_COMMANDS;i++) {
-					int Index=GetItemIndex(hwndList,i);
+					int Index=GetItemIndex(i);
 					m_Order[i]=Index;
 					if (m_DefaultZoomList[Index].Command>=CM_CUSTOMZOOM_FIRST
 							&& m_DefaultZoomList[Index].Command<=CM_CUSTOMZOOM_LAST) {
 						m_ZoomList[Index]=m_ZoomSettingList[Index];
 					}
-					m_ZoomList[Index].fVisible=ListView_GetCheckState(hwndList,i)!=FALSE;
+					m_ZoomList[Index].fVisible=m_ItemListView.IsItemChecked(i);
 				}
 			}
 		case IDCANCEL:
@@ -512,6 +475,10 @@ INT_PTR CZoomOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 			return TRUE;
 		}
 		break;
+
+	case WM_DESTROY:
+		m_ItemListView.Detach();
+		return TRUE;
 	}
 
 	return FALSE;
