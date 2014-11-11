@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "TVTest.h"
 #include "Settings.h"
+#include <utility>
 
 #ifdef _DEBUG
 #undef THIS_FILE
@@ -181,7 +182,13 @@ bool CSettings::Read(LPCTSTR pszValueName,TVTest::String *pValue)
 	if (pValue==NULL)
 		return false;
 
-	return m_IniFile.GetValue(pszValueName,pValue);
+	TVTest::String Value;
+	if (!m_IniFile.GetValue(pszValueName,&Value))
+		return false;
+
+	*pValue=std::move(Value);
+
+	return true;
 }
 
 
