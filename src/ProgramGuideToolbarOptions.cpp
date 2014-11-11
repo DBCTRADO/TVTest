@@ -50,6 +50,14 @@ INT_PTR CProgramGuideToolbarOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,L
 				m_ItemListView.InsertItem(i,m_FrameSettings.GetToolbarName(ID),ID);
 				m_ItemListView.CheckItem(i,m_FrameSettings.GetToolbarVisible(ID));
 			}
+
+			for (int i=1;i<=CProgramGuideFrameSettings::DATEBAR_MAXBUTTONCOUNT;i++) {
+				TCHAR szText[4];
+				StdUtil::snprintf(szText,lengthof(szText),TEXT("%d"),i);
+				DlgComboBox_AddString(hDlg,IDC_PROGRAMGUIDETOOLBAR_DATEBAR_BUTTONCOUNT,szText);
+			}
+			DlgComboBox_SetCurSel(hDlg,IDC_PROGRAMGUIDETOOLBAR_DATEBAR_BUTTONCOUNT,
+								  m_FrameSettings.GetDateBarButtonCount()-1);
 		}
 		return TRUE;
 
@@ -90,6 +98,9 @@ INT_PTR CProgramGuideToolbarOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,L
 				}
 
 				m_FrameSettings.SetToolbarOrderList(OrderList);
+
+				m_FrameSettings.SetDateBarButtonCount(
+					(int)DlgComboBox_GetCurSel(hDlg,IDC_PROGRAMGUIDETOOLBAR_DATEBAR_BUTTONCOUNT)+1);
 			}
 		case IDCANCEL:
 			::EndDialog(hDlg,LOWORD(wParam));

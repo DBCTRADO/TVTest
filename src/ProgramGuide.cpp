@@ -5675,13 +5675,21 @@ void CFavoritesToolbar::OnCustomDraw(NMTBCUSTOMDRAW *pnmtb,HDC hdc)
 class CDateToolbar : public CProgramGuideToolbar
 {
 public:
+	enum {
+		MAX_BUTTON_COUNT=CProgramGuideFrameSettings::DATEBAR_MAXBUTTONCOUNT
+	};
+
 	CDateToolbar(CProgramGuide *pProgramGuide);
 	~CDateToolbar();
 	void OnDateChanged() override;
 	void OnTimeRangeChanged() override;
+	bool SetButtonCount(int Count);
+	int GetButtonCount() const { return m_ButtonCount; }
 
 private:
 	static const DWORD ITEM_FLAG_NOW=0x80000000;
+
+	int m_ButtonCount;
 
 	bool SetButtons(const SYSTEMTIME *pDateList,int Days,int FirstCommand);
 	void OnCustomDraw(NMTBCUSTOMDRAW *pnmtb,HDC hdc) override;
@@ -5690,6 +5698,7 @@ private:
 
 CDateToolbar::CDateToolbar(CProgramGuide *pProgramGuide)
 	: CProgramGuideToolbar(pProgramGuide)
+	, m_ButtonCount(CProgramGuideFrameSettings::DATEBAR_DEFAULTBUTTONCOUNT)
 {
 }
 
@@ -5702,21 +5711,31 @@ CDateToolbar::~CDateToolbar()
 
 void CDateToolbar::OnDateChanged()
 {
+	UnselectButton();
 	if (m_pProgramGuide->GetListMode()==CProgramGuide::LIST_SERVICES)
 		SelectButton(CM_PROGRAMGUIDE_DAY_FIRST+m_pProgramGuide->GetViewDay());
-	else
-		UnselectButton();
 }
 
 
 void CDateToolbar::OnTimeRangeChanged()
 {
-	SYSTEMTIME DateList[8];
+	SYSTEMTIME DateList[MAX_BUTTON_COUNT];
 
-	for (int i=0;i<8;i++)
+	for (int i=0;i<m_ButtonCount;i++)
 		m_pProgramGuide->GetDayTimeRange(i,&DateList[i],NULL);
-	SetButtons(DateList,8,CM_PROGRAMGUIDE_DAY_FIRST);
+	SetButtons(DateList,m_ButtonCount,CM_PROGRAMGUIDE_DAY_FIRST);
 	SelectButton(CM_PROGRAMGUIDE_DAY_FIRST+m_pProgramGuide->GetViewDay());
+}
+
+
+bool CDateToolbar::SetButtonCount(int Count)
+{
+	if (Count<1 || Count>MAX_BUTTON_COUNT)
+		return false;
+
+	m_ButtonCount=Count;
+
+	return true;
 }
 
 
@@ -5784,7 +5803,7 @@ void CDateToolbar::OnCustomDraw(NMTBCUSTOMDRAW *pnmtb,HDC hdc)
 
 	TCHAR szText[32];
 	if ((pnmtb->nmcd.lItemlParam&ITEM_FLAG_NOW)!=0) {
-		::lstrcpy(szText,TEXT("Œ»Ý"));
+		::lstrcpy(szText,TEXT("¡“ú"));
 	} else {
 		StdUtil::snprintf(szText,lengthof(szText),TEXT("%d/%d(%s)"),
 						  (int)(pnmtb->nmcd.lItemlParam>>16),
@@ -6099,8 +6118,17 @@ bool CProgramGuideFrameBase::OnCommand(int Command)
 
 			if (Options.Show(m_pProgramGuide->GetHandle())) {
 				m_fNoUpdateLayout=true;
+
 				for (int i=0;i<TOOLBAR_NUM;i++)
 					SetToolbarVisible(i,m_pSettings->GetToolbarVisible(i));
+
+				ProgramGuideBar::CDateToolbar *pDateToolbar=
+					static_cast<ProgramGuideBar::CDateToolbar*>(m_ToolbarList[TOOLBAR_DATE]);
+				if (pDateToolbar->GetButtonCount()!=m_pSettings->GetDateBarButtonCount()) {
+					pDateToolbar->SetButtonCount(m_pSettings->GetDateBarButtonCount());
+					pDateToolbar->OnTimeRangeChanged();
+				}
+
 				m_fNoUpdateLayout=false;
 				OnLayoutChange();
 			}
@@ -6150,6 +6178,10 @@ void CProgramGuideFrameBase::OnWindowCreate(HWND hwnd,bool fBufferedPaint)
 		pBar->EnableBufferedPaint(fBufferedPaint);
 		pBar->CreateBar(hwnd,WS_CHILD | (pBar->IsBarVisible()?WS_VISIBLE:0));
 	}
+
+	ProgramGuideBar::CDateToolbar *pDateToolbar=
+		static_cast<ProgramGuideBar::CDateToolbar*>(m_ToolbarList[TOOLBAR_DATE]);
+	pDateToolbar->SetButtonCount(m_pSettings->GetDateBarButtonCount());
 }
 
 
@@ -6289,6 +6321,7 @@ const CProgramGuideFrameSettings::ToolbarInfo
 
 CProgramGuideFrameSettings::CProgramGuideFrameSettings()
 	: CSettingsBase(TEXT("ProgramGuide"))
+	, m_DateBarButtonCount(DATEBAR_DEFAULTBUTTONCOUNT)
 {
 	for (int i=0;i<lengthof(m_ToolbarSettingsList);i++) {
 		m_ToolbarSettingsList[i].fVisible=true;
@@ -6350,6 +6383,10 @@ bool CProgramGuideFrameSettings::ReadSettings(CSettings &Settings)
 
 	SetToolbarOrderList(OrderList);
 
+	int Value;
+	if (Settings.Read(TEXT("DateBar.ButtonCount"),&Value))
+		m_DateBarButtonCount=CLAMP(Value,1,DATEBAR_MAXBUTTONCOUNT);
+
 	return true;
 }
 
@@ -6373,6 +6410,8 @@ bool CProgramGuideFrameSettings::WriteSettings(CSettings &Settings)
 			Status|=TOOLBAR_STATUS_VISIBLE;
 		Settings.Write(szText,Status);
 	}
+
+	Settings.Write(TEXT("DateBar.ButtonCount"),m_DateBarButtonCount);
 
 	return true;
 }
@@ -6442,6 +6481,17 @@ bool CProgramGuideFrameSettings::GetToolbarOrderList(int *pOrder) const
 
 	for (int i=0;i<lengthof(m_ToolbarSettingsList);i++)
 		pOrder[m_ToolbarSettingsList[i].Order]=i;
+
+	return true;
+}
+
+
+bool CProgramGuideFrameSettings::SetDateBarButtonCount(int ButtonCount)
+{
+	if (ButtonCount<1 || ButtonCount>DATEBAR_MAXBUTTONCOUNT)
+		return false;
+
+	m_DateBarButtonCount=ButtonCount;
 
 	return true;
 }

@@ -694,7 +694,9 @@ class CProgramGuideFrameSettings : public CSettingsBase
 {
 public:
 	enum {
-		TOOLBAR_NUM=CProgramGuideFrameBase::TOOLBAR_NUM
+		TOOLBAR_NUM=CProgramGuideFrameBase::TOOLBAR_NUM,
+		DATEBAR_MAXBUTTONCOUNT=8,
+		DATEBAR_DEFAULTBUTTONCOUNT=8
 	};
 
 	CProgramGuideFrameSettings();
@@ -710,6 +712,8 @@ public:
 	bool GetToolbarVisible(int Toolbar) const;
 	bool SetToolbarOrderList(const int *pOrder);
 	bool GetToolbarOrderList(int *pOrder) const;
+	bool SetDateBarButtonCount(int ButtonCount);
+	int GetDateBarButtonCount() const { return m_DateBarButtonCount; }
 
 private:
 	struct ToolbarInfo
@@ -729,6 +733,8 @@ private:
 	};
 
 	ToolbarSettings m_ToolbarSettingsList[TOOLBAR_NUM];
+
+	int m_DateBarButtonCount;
 
 	static const ToolbarInfo m_ToolbarInfoList[TOOLBAR_NUM];
 
