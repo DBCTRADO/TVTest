@@ -25,10 +25,16 @@ namespace TsEngine
 		}
 	}
 
-	template<typename TValue, typename TCmp>
-		void InsertionSort(std::vector<TValue> &array, TCmp cmp = std::less<TValue>())
+	template<typename TArray, typename TCmp>
+		void InsertionSort(TArray &array, TCmp cmp)
 	{
 		return InsertionSort(array.data(), array.size(), cmp);
+	}
+
+	template<typename TArray>
+		void InsertionSort(TArray &array)
+	{
+		return InsertionSort(array, std::less<TArray::value_type>());
 	}
 
 }
