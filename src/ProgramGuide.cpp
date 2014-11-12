@@ -8,6 +8,7 @@
 #include "EpgChannelSettings.h"
 #include "ProgramGuideToolbarOptions.h"
 #include "Help/HelpID.h"
+#include "BonTsEngine/TsUtil.h"
 #include "resource.h"
 
 #ifdef _DEBUG
@@ -5826,17 +5827,24 @@ void CDateToolbar::OnCustomDraw(NMTBCUSTOMDRAW *pnmtb,HDC hdc)
 class CTimeToolbar : public CProgramGuideToolbar
 {
 public:
-	struct TimeInfo {
-		int Hour;
-		int Command;
-	};
+	typedef CProgramGuideFrameSettings::TimeBarSettings TimeBarSettings;
 
 	CTimeToolbar(CProgramGuide *pProgramGuide);
 	~CTimeToolbar();
 	void OnDateChanged() override { ChangeTime(); }
 	void OnTimeRangeChanged() override { ChangeTime(); }
+	void SetSettings(const TimeBarSettings &Settings);
+	bool GetTimeByCommand(int Command,SYSTEMTIME *pTime) const;
 
 private:
+	struct TimeInfo {
+		WORD Hour;
+		WORD Offset;
+		int Command;
+	};
+
+	CProgramGuideFrameSettings::TimeBarSettings m_Settings;
+
 	void ChangeTime();
 	bool SetButtons(const TimeInfo *pTimeList,int TimeListLength);
 	void OnCustomDraw(NMTBCUSTOMDRAW *pnmtb,HDC hdc) override;
@@ -5855,6 +5863,31 @@ CTimeToolbar::~CTimeToolbar()
 }
 
 
+void CTimeToolbar::SetSettings(const TimeBarSettings &Settings)
+{
+	m_Settings=Settings;
+}
+
+
+bool CTimeToolbar::GetTimeByCommand(int Command,SYSTEMTIME *pTime) const
+{
+	TBBUTTONINFO tbbi;
+
+	tbbi.cbSize=sizeof(tbbi);
+	tbbi.dwMask=TBIF_LPARAM;
+	if (::SendMessage(m_hwnd,TB_GETBUTTONINFO,
+					  Command,reinterpret_cast<LPARAM>(&tbbi))<0)
+		return false;
+
+	if (!m_pProgramGuide->GetCurrentTimeRange(pTime,NULL))
+		return false;
+
+	OffsetSystemTime(pTime,HIWORD(tbbi.lParam)*(60*60*1000));
+
+	return true;
+}
+
+
 void CTimeToolbar::ChangeTime()
 {
 	SYSTEMTIME stFirst,stLast;
@@ -5862,14 +5895,64 @@ void CTimeToolbar::ChangeTime()
 	if (m_pProgramGuide->GetCurrentTimeRange(&stFirst,&stLast)) {
 		TimeInfo TimeList[(CM_PROGRAMGUIDE_TIME_LAST-CM_PROGRAMGUIDE_TIME_FIRST)+2];
 		SYSTEMTIME st=stFirst;
-		int i;
 
-		TimeList[0].Hour=-1;
+		TimeList[0].Hour=0;
+		TimeList[0].Offset=0;
 		TimeList[0].Command=CM_PROGRAMGUIDE_TIME_CURRENT;
-		for (i=1;i<lengthof(TimeList) && CompareSystemTime(&st,&stLast)<0;i++) {
-			TimeList[i].Hour=st.wHour;
-			TimeList[i].Command=CM_PROGRAMGUIDE_TIME_FIRST+(i-1);
-			OffsetSystemTime(&st,4*60*60*1000);
+
+		int i=1;
+
+		if (m_Settings.Time==TimeBarSettings::TIME_INTERVAL) {
+			for (;i<lengthof(TimeList) && i-1<m_Settings.MaxButtonCount
+					&& CompareSystemTime(&st,&stLast)<0;i++) {
+				TimeList[i].Hour=st.wHour;
+				TimeList[i].Offset=(i-1)*m_Settings.Interval;
+				TimeList[i].Command=CM_PROGRAMGUIDE_TIME_FIRST+(i-1);
+				OffsetSystemTime(&st,m_Settings.Interval*60*60*1000);
+			}
+		} else if (m_Settings.Time==TimeBarSettings::TIME_CUSTOM) {
+			std::vector<TVTest::String> Times;
+			TVTest::StringUtility::Split(m_Settings.CustomTime,_T(","),&Times);
+			if (!Times.empty()) {
+				std::vector<int> Hours;
+				Hours.reserve(Times.size());
+				for (auto itr=Times.begin();itr!=Times.end();++itr) {
+					try {
+						int Hour=std::stoi(*itr,nullptr,10);
+						if (Hour>=0)
+							Hours.push_back(Hour);
+					} catch (...) {
+					}
+				}
+				if (!Hours.empty()) {
+					TsEngine::InsertionSort(Hours);
+					const int FirstHour=stFirst.wHour;
+					const int LastHour=FirstHour+(int)(DiffSystemTime(&stFirst,&stLast)/(60*60*1000));
+					size_t j=0;
+					for (;j<Hours.size();j++) {
+						if (Hours[j]>=stFirst.wHour)
+							break;
+					}
+					for (size_t k=0;i<lengthof(TimeList) && i-1<m_Settings.MaxButtonCount && k<Hours.size();k++) {
+						int Hour=Hours[j];
+						j++;
+						if (j==Hours.size())
+							j=0;
+						if (Hour>=LastHour)
+							break;
+						int HourOffset=Hour;
+						if (HourOffset<FirstHour) {
+							HourOffset+=24;
+							if (HourOffset<FirstHour || HourOffset>=LastHour)
+								break;
+						}
+						TimeList[i].Hour=(WORD)Hour;
+						TimeList[i].Offset=(WORD)(HourOffset-FirstHour);
+						TimeList[i].Command=CM_PROGRAMGUIDE_TIME_FIRST+(i-1);
+						i++;
+					}
+				}
+			}
 		}
 
 		SetButtons(TimeList,i);
@@ -5893,14 +5976,14 @@ bool CTimeToolbar::SetButtons(const TimeInfo *pTimeList,int TimeListLength)
 		TCHAR szText[32];
 
 		tbb.idCommand=TimeInfo.Command;
-		if (TimeInfo.Hour<0) {
+		if (TimeInfo.Command==CM_PROGRAMGUIDE_TIME_CURRENT) {
 			::lstrcpy(szText,TEXT(" Œ»Ý "));
 		} else {
 			StdUtil::snprintf(szText,lengthof(szText),
 							  TEXT("%02dŽž`"),TimeInfo.Hour);
 		}
 		tbb.iString=reinterpret_cast<INT_PTR>(szText);
-		tbb.dwData=TimeInfo.Hour;
+		tbb.dwData=MAKELONG(TimeInfo.Hour,TimeInfo.Offset);
 		::SendMessage(m_hwnd,TB_ADDBUTTONS,1,reinterpret_cast<LPARAM>(&tbb));
 	}
 
@@ -5912,12 +5995,14 @@ bool CTimeToolbar::SetButtons(const TimeInfo *pTimeList,int TimeListLength)
 
 void CTimeToolbar::OnCustomDraw(NMTBCUSTOMDRAW *pnmtb,HDC hdc)
 {
-	const int Hour=(int)pnmtb->nmcd.lItemlParam;
+	const bool fCurrent=pnmtb->nmcd.dwItemSpec==CM_PROGRAMGUIDE_TIME_CURRENT;
+	int Hour;
 
 	COLORREF LightColor=RGB(255,255,255),DarkColor=RGB(220,220,220);
-	if (Hour>=0) {
-		LightColor=MixColor(RGB(192,216,255),LightColor,(Hour+1)*4);
-		DarkColor=MixColor(RGB(192,216,255),DarkColor,(Hour+1)*4);
+	if (!fCurrent) {
+		Hour=LOWORD(pnmtb->nmcd.lItemlParam);
+		LightColor=MixColor(RGB(192,216,255),LightColor,(BYTE)((Hour+1)*4));
+		DarkColor=MixColor(RGB(192,216,255),DarkColor,(BYTE)((Hour+1)*4));
 	}
 
 	TVTest::Theme::BackgroundStyle Style;
@@ -5946,7 +6031,7 @@ void CTimeToolbar::OnCustomDraw(NMTBCUSTOMDRAW *pnmtb,HDC hdc)
 	COLORREF OldTextColor=::SetTextColor(hdc,RGB(0,0,0));
 
 	TCHAR szText[32];
-	if (Hour<0) {
+	if (fCurrent) {
 		::lstrcpy(szText,TEXT("Œ»Ý"));
 	} else {
 		StdUtil::snprintf(szText,lengthof(szText),TEXT("%dŽž`"),Hour);
@@ -6129,6 +6214,11 @@ bool CProgramGuideFrameBase::OnCommand(int Command)
 					pDateToolbar->OnTimeRangeChanged();
 				}
 
+				ProgramGuideBar::CTimeToolbar *pTimeToolbar=
+					static_cast<ProgramGuideBar::CTimeToolbar*>(m_ToolbarList[TOOLBAR_TIME]);
+				pTimeToolbar->SetSettings(m_pSettings->GetTimeBarSettings());
+				pTimeToolbar->OnTimeRangeChanged();
+
 				m_fNoUpdateLayout=false;
 				OnLayoutChange();
 			}
@@ -6138,12 +6228,12 @@ bool CProgramGuideFrameBase::OnCommand(int Command)
 
 	if (Command>=CM_PROGRAMGUIDE_TIME_FIRST
 			&& Command<=CM_PROGRAMGUIDE_TIME_LAST) {
+		const ProgramGuideBar::CTimeToolbar *pTimeToolbar=
+			static_cast<const ProgramGuideBar::CTimeToolbar*>(m_ToolbarList[TOOLBAR_TIME]);
 		SYSTEMTIME st;
 
-		if (m_pProgramGuide->GetCurrentTimeRange(&st,NULL)) {
-			OffsetSystemTime(&st,(Command-CM_PROGRAMGUIDE_TIME_FIRST)*(4LL*60*60*1000));
+		if (pTimeToolbar->GetTimeByCommand(Command,&st))
 			m_pProgramGuide->ScrollToTime(st);
-		}
 		return true;
 	}
 
@@ -6182,6 +6272,10 @@ void CProgramGuideFrameBase::OnWindowCreate(HWND hwnd,bool fBufferedPaint)
 	ProgramGuideBar::CDateToolbar *pDateToolbar=
 		static_cast<ProgramGuideBar::CDateToolbar*>(m_ToolbarList[TOOLBAR_DATE]);
 	pDateToolbar->SetButtonCount(m_pSettings->GetDateBarButtonCount());
+
+	ProgramGuideBar::CTimeToolbar *pTimeToolbar=
+		static_cast<ProgramGuideBar::CTimeToolbar*>(m_ToolbarList[TOOLBAR_TIME]);
+	pTimeToolbar->SetSettings(m_pSettings->GetTimeBarSettings());
 }
 
 
@@ -6384,8 +6478,23 @@ bool CProgramGuideFrameSettings::ReadSettings(CSettings &Settings)
 	SetToolbarOrderList(OrderList);
 
 	int Value;
+
 	if (Settings.Read(TEXT("DateBar.ButtonCount"),&Value))
 		m_DateBarButtonCount=CLAMP(Value,1,DATEBAR_MAXBUTTONCOUNT);
+
+	if (Settings.Read(TEXT("TimeBar.TimeType"),&Value)
+			&& (Value==TimeBarSettings::TIME_INTERVAL
+				|| Value==TimeBarSettings::TIME_CUSTOM))
+		m_TimeBarSettings.Time=static_cast<TimeBarSettings::TimeType>(Value);
+	if (Settings.Read(TEXT("TimeBar.Interval"),&Value)
+			&& Value>=TimeBarSettings::INTERVAL_MIN
+			&& Value<=TimeBarSettings::INTERVAL_MAX)
+		m_TimeBarSettings.Interval=Value;
+	Settings.Read(TEXT("TimeBar.Custom"),&m_TimeBarSettings.CustomTime);
+	if (Settings.Read(TEXT("TimeBar.MaxButtonCount"),&Value)
+			&& Value>=TimeBarSettings::BUTTONCOUNT_MIN
+			&& Value<=TimeBarSettings::BUTTONCOUNT_MAX)
+		m_TimeBarSettings.MaxButtonCount=Value;
 
 	return true;
 }
@@ -6412,6 +6521,11 @@ bool CProgramGuideFrameSettings::WriteSettings(CSettings &Settings)
 	}
 
 	Settings.Write(TEXT("DateBar.ButtonCount"),m_DateBarButtonCount);
+
+	Settings.Write(TEXT("TimeBar.TimeType"),static_cast<int>(m_TimeBarSettings.Time));
+	Settings.Write(TEXT("TimeBar.Interval"),m_TimeBarSettings.Interval);
+	Settings.Write(TEXT("TimeBar.Custom"),m_TimeBarSettings.CustomTime);
+	Settings.Write(TEXT("TimeBar.MaxButtonCount"),m_TimeBarSettings.MaxButtonCount);
 
 	return true;
 }
@@ -6497,6 +6611,13 @@ bool CProgramGuideFrameSettings::SetDateBarButtonCount(int ButtonCount)
 }
 
 
+bool CProgramGuideFrameSettings::SetTimeBarSettings(const TimeBarSettings &Settings)
+{
+	m_TimeBarSettings=Settings;
+	return true;
+}
+
+
 int CProgramGuideFrameSettings::ParseIDText(LPCTSTR pszID) const
 {
 	if (IsStringEmpty(pszID))
@@ -6508,6 +6629,17 @@ int CProgramGuideFrameSettings::ParseIDText(LPCTSTR pszID) const
 	}
 
 	return -1;
+}
+
+
+
+
+CProgramGuideFrameSettings::TimeBarSettings::TimeBarSettings()
+	: Time(TIME_INTERVAL)
+	, Interval(4)
+	, CustomTime(TEXT("0,3,6,9,12,15,18,21"))
+	, MaxButtonCount(10)
+{
 }
 
 

@@ -213,6 +213,22 @@ LPTSTR GetDlgItemString(HWND hDlg,int ID)
 }
 
 
+bool GetDlgItemString(HWND hDlg,int ID,TVTest::String *pString)
+{
+	if (pString==NULL)
+		return false;
+	pString->clear();
+	if (GetDlgItemTextLength(hDlg,ID)==0)
+		return true;
+	LPTSTR pszBuffer=GetDlgItemString(hDlg,ID);
+	if (pszBuffer==NULL)
+		return false;
+	pString->assign(pszBuffer);
+	delete [] pszBuffer;
+	return true;
+}
+
+
 bool EnableDlgItemSyncCheckBox(HWND hDlg,int ID,int CheckBoxID)
 {
 	bool fCheck=DlgCheckBox_IsChecked(hDlg,CheckBoxID);

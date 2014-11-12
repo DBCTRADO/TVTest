@@ -699,6 +699,28 @@ public:
 		DATEBAR_DEFAULTBUTTONCOUNT=8
 	};
 
+	struct TimeBarSettings
+	{
+		enum TimeType {
+			TIME_INTERVAL,
+			TIME_CUSTOM
+		};
+
+		enum {
+			INTERVAL_MIN	=2,
+			INTERVAL_MAX	=12,
+			BUTTONCOUNT_MIN	=1,
+			BUTTONCOUNT_MAX	=20
+		};
+
+		TimeType Time;
+		int Interval;
+		TVTest::String CustomTime;
+		int MaxButtonCount;
+
+		TimeBarSettings();
+	};
+
 	CProgramGuideFrameSettings();
 
 // CSettingsBase
@@ -714,6 +736,8 @@ public:
 	bool GetToolbarOrderList(int *pOrder) const;
 	bool SetDateBarButtonCount(int ButtonCount);
 	int GetDateBarButtonCount() const { return m_DateBarButtonCount; }
+	bool SetTimeBarSettings(const TimeBarSettings &Settings);
+	const TimeBarSettings &GetTimeBarSettings() const { return m_TimeBarSettings; }
 
 private:
 	struct ToolbarInfo
@@ -735,6 +759,7 @@ private:
 	ToolbarSettings m_ToolbarSettingsList[TOOLBAR_NUM];
 
 	int m_DateBarButtonCount;
+	TimeBarSettings m_TimeBarSettings;
 
 	static const ToolbarInfo m_ToolbarInfoList[TOOLBAR_NUM];
 
