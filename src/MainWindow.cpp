@@ -6035,10 +6035,10 @@ bool CMainWindow::CFullscreen::Create(HWND hwndOwner,CBasicViewer *pViewer)
 	}
 #ifdef _DEBUG
 	// デバッグし易いように小さく表示
-	/*
-	Width/=2;
-	Height/=2;
-	*/
+	if (::GetKeyState(VK_SHIFT)<0) {
+		Width/=2;
+		Height/=2;
+	}
 #endif
 	SetPosition(x,y,Width,Height);
 
