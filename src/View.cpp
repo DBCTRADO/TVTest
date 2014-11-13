@@ -254,6 +254,7 @@ void CViewWindow::SetVideoContainer(CVideoContainerWindow *pVideoContainer)
 		RECT rc;
 
 		GetClientRect(&rc);
+		CalcClientRect(&rc);
 		pVideoContainer->SetPosition(&rc);
 	}
 }
@@ -363,9 +364,7 @@ LRESULT CViewWindow::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 
 				::SetRect(&rc,0,0,Width,Height);
 				CalcClientRect(&rc);
-				m_pVideoContainer->SetPosition(rc.left,rc.top,
-											   max(rc.right-rc.left,0),
-											   max(rc.bottom-rc.top,0));
+				m_pVideoContainer->SetPosition(&rc);
 			}
 			if (m_pEventHandler!=NULL)
 				m_pEventHandler->OnSizeChanged(Width,Height);
