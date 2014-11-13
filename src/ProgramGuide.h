@@ -294,6 +294,13 @@ public:
 		friend class CProgramGuide;
 	};
 
+	struct DateInfo
+	{
+		SYSTEMTIME BeginningTime;
+		SYSTEMTIME EndTime;
+		LPCTSTR pszRelativeDayText;
+	};
+
 	static bool Initialize(HINSTANCE hinst);
 
 	CProgramGuide(CEventSearchOptions &EventSearchOptions);
@@ -345,6 +352,8 @@ public:
 	bool GetTimeRange(SYSTEMTIME *pFirstTime,SYSTEMTIME *pLastTime) const;
 	bool GetCurrentTimeRange(SYSTEMTIME *pFirstTime,SYSTEMTIME *pLastTime) const;
 	bool GetDayTimeRange(int Day,SYSTEMTIME *pFirstTime,SYSTEMTIME *pLastTime) const;
+	bool GetCurrentDateInfo(DateInfo *pInfo) const;
+	bool GetDateInfo(int Day,DateInfo *pInfo) const;
 	bool ScrollToTime(const SYSTEMTIME &Time,bool fHour=false);
 	bool ScrollToCurrentTime();
 	bool SetViewDay(int Day);
@@ -552,6 +561,8 @@ private:
 
 	static const LPCTSTR m_pszWindowClass;
 	static HINSTANCE m_hinst;
+
+	static LPCTSTR GetRelativeDayText(int Day);
 
 	bool UpdateList(bool fUpdateList=false);
 	bool UpdateService(ProgramGuide::CServiceInfo *pService,bool fUpdateEpg);

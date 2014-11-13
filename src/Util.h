@@ -26,6 +26,12 @@ extern __declspec(selectany) const FILETIME FILETIME_NULL={0,0};
 #define FILETIME_HOUR			(60LL*FILETIME_MINUTE)
 FILETIME &operator+=(FILETIME &ft,LONGLONG Offset);
 LONGLONG operator-(const FILETIME &ft1,const FILETIME &ft2);
+struct TimeConsts {
+	static const LONGLONG SYSTEMTIME_SECOND=1000LL;
+	static const LONGLONG SYSTEMTIME_MINUTE=60LL*SYSTEMTIME_SECOND;
+	static const LONGLONG SYSTEMTIME_HOUR  =60LL*SYSTEMTIME_MINUTE;
+	static const LONGLONG SYSTEMTIME_DAY   =24LL*SYSTEMTIME_HOUR;
+};
 int CompareSystemTime(const SYSTEMTIME *pTime1,const SYSTEMTIME *pTime2);
 bool OffsetSystemTime(SYSTEMTIME *pTime,LONGLONG Offset);
 LONGLONG DiffSystemTime(const SYSTEMTIME *pStartTime,const SYSTEMTIME *pEndTime);
@@ -38,6 +44,10 @@ bool UTCToJST(const SYSTEMTIME *pUTCTime,SYSTEMTIME *pJST);
 inline void UTCToJST(FILETIME *pTime) { *pTime+=9LL*FILETIME_HOUR; }
 void GetCurrentJST(SYSTEMTIME *pTime);
 void GetCurrentJST(FILETIME *pTime);
+void SystemTimeTruncateDay(SYSTEMTIME *pTime);
+void SystemTimeTruncateHour(SYSTEMTIME *pTime);
+void SystemTimeTruncateMinute(SYSTEMTIME *pTime);
+void SystemTimeTruncateSecond(SYSTEMTIME *pTime);
 int CalcDayOfWeek(int Year,int Month,int Day);
 LPCTSTR GetDayOfWeekText(int DayOfWeek);
 

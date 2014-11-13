@@ -295,6 +295,36 @@ void GetCurrentJST(FILETIME *pTime)
 }
 
 
+void SystemTimeTruncateDay(SYSTEMTIME *pTime)
+{
+	pTime->wHour=0;
+	pTime->wMinute=0;
+	pTime->wSecond=0;
+	pTime->wMilliseconds=0;
+}
+
+
+void SystemTimeTruncateHour(SYSTEMTIME *pTime)
+{
+	pTime->wMinute=0;
+	pTime->wSecond=0;
+	pTime->wMilliseconds=0;
+}
+
+
+void SystemTimeTruncateMinuite(SYSTEMTIME *pTime)
+{
+	pTime->wSecond=0;
+	pTime->wMilliseconds=0;
+}
+
+
+void SystemTimeTruncateSecond(SYSTEMTIME *pTime)
+{
+	pTime->wMilliseconds=0;
+}
+
+
 int CalcDayOfWeek(int Year,int Month,int Day)
 {
 	if (Month<=2) {

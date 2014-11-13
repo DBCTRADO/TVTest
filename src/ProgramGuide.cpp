@@ -35,11 +35,6 @@ static char THIS_FILE[]=__FILE__;
 #define MAX_CHANNEL_PROVIDER_MENU_ITEMS \
 	(CM_PROGRAMGUIDE_CHANNELPROVIDER_LAST-CM_PROGRAMGUIDE_CHANNELPROVIDER_FIRST+1)
 
-static const LPCTSTR DayText[] = {
-	TEXT("¡“ú"), TEXT("–¾“ú"), TEXT("2“úŒã"), TEXT("3“úŒã"),
-	TEXT("4“úŒã"), TEXT("5“úŒã"), TEXT("6“úŒã"), TEXT("7“úŒã"),
-};
-
 
 
 
@@ -2500,27 +2495,35 @@ void CProgramGuide::SetCaption()
 					(m_EpgUpdateProgress.RemainingTime+59999)/60000);
 				m_pFrame->SetCaption(szText);
 			} else {
+				DateInfo Info;
 				TCHAR szText[256];
-				SYSTEMTIME stFirst,stLast;
 
-				GetCurrentTimeRange(&stFirst,&stLast);
+				GetCurrentDateInfo(&Info);
 				if (m_ListMode==LIST_SERVICES) {
-					OffsetSystemTime(&stLast,-60*60*1000);
+					OffsetSystemTime(&Info.EndTime,-TimeConsts::SYSTEMTIME_HOUR);
 					StdUtil::snprintf(szText,lengthof(szText),
-						TITLE_TEXT TEXT(" - %s %d/%d(%s) %d ` %d/%d(%s) %d"),
-						DayText[m_Day],stFirst.wMonth,stFirst.wDay,
-						GetDayOfWeekText(stFirst.wDayOfWeek),stFirst.wHour,
-						stLast.wMonth,stLast.wDay,
-						GetDayOfWeekText(stLast.wDayOfWeek),stLast.wHour);
+						TITLE_TEXT TEXT(" - %s%s%d/%d(%s) %d ` %d/%d(%s) %d"),
+						Info.pszRelativeDayText!=NULL?Info.pszRelativeDayText:TEXT(""),
+						Info.pszRelativeDayText!=NULL?TEXT(" "):TEXT(""),
+						Info.BeginningTime.wMonth,
+						Info.BeginningTime.wDay,
+						GetDayOfWeekText(Info.BeginningTime.wDayOfWeek),
+						Info.BeginningTime.wHour,
+						Info.EndTime.wMonth,
+						Info.EndTime.wDay,
+						GetDayOfWeekText(Info.EndTime.wDayOfWeek),
+						Info.EndTime.wHour);
 				} else {
-					stLast=stFirst;
-					OffsetSystemTime(&stLast,6LL*24*60*60*1000);
+					SYSTEMTIME stLast=Info.BeginningTime;
+					OffsetSystemTime(&stLast,6LL*TimeConsts::SYSTEMTIME_DAY);
 					StdUtil::snprintf(szText,lengthof(szText),
 						TITLE_TEXT TEXT(" - %s %d/%d(%s) ` %d/%d(%s)"),
 						m_ServiceList.GetItem(m_WeekListService)->GetServiceName(),
-						stFirst.wMonth,stFirst.wDay,
-						GetDayOfWeekText(stFirst.wDayOfWeek),
-						stLast.wMonth,stLast.wDay,
+						Info.BeginningTime.wMonth,
+						Info.BeginningTime.wDay,
+						GetDayOfWeekText(Info.BeginningTime.wDayOfWeek),
+						stLast.wMonth,
+						stLast.wDay,
 						GetDayOfWeekText(stLast.wDayOfWeek));
 				}
 				m_pFrame->SetCaption(szText);
@@ -3011,6 +3014,43 @@ bool CProgramGuide::GetDayTimeRange(int Day,SYSTEMTIME *pFirstTime,SYSTEMTIME *p
 }
 
 
+bool CProgramGuide::GetCurrentDateInfo(DateInfo *pInfo) const
+{
+	if (m_ListMode==LIST_WEEK) {
+		if (!GetCurrentTimeRange(&pInfo->BeginningTime,&pInfo->EndTime))
+			return false;
+		pInfo->pszRelativeDayText=NULL;
+	} else {
+		if (!GetDateInfo(m_Day,pInfo))
+			return false;
+	}
+	return true;
+}
+
+
+bool CProgramGuide::GetDateInfo(int Day,DateInfo *pInfo) const
+{
+	if (!GetDayTimeRange(Day,&pInfo->BeginningTime,&pInfo->EndTime))
+		return false;
+	if (m_ListMode==LIST_SERVICES) {
+		if (Day==DAY_TODAY) {
+			pInfo->pszRelativeDayText=GetRelativeDayText(0);
+		} else {
+			SYSTEMTIME st1,st2;
+			GetDayTimeRange(DAY_TODAY,&st1,NULL);
+			SystemTimeTruncateDay(&st1);
+			st2=pInfo->BeginningTime;
+			SystemTimeTruncateDay(&st2);
+			pInfo->pszRelativeDayText=
+				GetRelativeDayText((int)(DiffSystemTime(&st1,&st2)/TimeConsts::SYSTEMTIME_DAY));
+		}
+	} else {
+		pInfo->pszRelativeDayText=NULL;
+	}
+	return true;
+}
+
+
 bool CProgramGuide::ScrollToTime(const SYSTEMTIME &Time,bool fHour)
 {
 	SYSTEMTIME stFirst,stLast;
@@ -3489,6 +3529,25 @@ void CProgramGuide::OnShowFrame(bool fShow)
 {
 	if (m_ProgramSearch.IsCreated())
 		m_ProgramSearch.SetVisible(fShow);
+}
+
+
+LPCTSTR CProgramGuide::GetRelativeDayText(int Day)
+{
+	static const LPCTSTR DayText[] = {
+		TEXT("¡“ú"),
+		TEXT("–¾“ú"),
+		TEXT("2“úŒã"),
+		TEXT("3“úŒã"),
+		TEXT("4“úŒã"),
+		TEXT("5“úŒã"),
+		TEXT("6“úŒã"),
+		TEXT("7“úŒã"),
+	};
+
+	if (Day<0 || Day>=lengthof(DayText))
+		return NULL;
+	return DayText[Day];
 }
 
 
@@ -4961,14 +5020,16 @@ public:
 	void Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect,unsigned int Flags) override
 	{
 		if (m_pProgramGuide->GetListMode()==CProgramGuide::LIST_SERVICES) {
-			SYSTEMTIME stFirst;
+			CProgramGuide::DateInfo Info;
 			TCHAR szText[256];
 
-			m_pProgramGuide->GetCurrentTimeRange(&stFirst,NULL);
-			StdUtil::snprintf(szText,lengthof(szText),TEXT("%s %d/%d(%s) %d`"),
-							  DayText[m_pProgramGuide->GetViewDay()],
-							  stFirst.wMonth,stFirst.wDay,
-							  GetDayOfWeekText(stFirst.wDayOfWeek),stFirst.wHour);
+			m_pProgramGuide->GetCurrentDateInfo(&Info);
+			StdUtil::snprintf(szText,lengthof(szText),TEXT("%s%s%d/%d(%s) %d`"),
+							  Info.pszRelativeDayText!=NULL?Info.pszRelativeDayText:TEXT(""),
+							  Info.pszRelativeDayText!=NULL?TEXT(" "):TEXT(""),
+							  Info.BeginningTime.wMonth,Info.BeginningTime.wDay,
+							  GetDayOfWeekText(Info.BeginningTime.wDayOfWeek),
+							  Info.BeginningTime.wHour);
 			DrawText(hdc,DrawRect,szText);
 		} else {
 			const ProgramGuide::CServiceInfo *pService=
@@ -4986,13 +5047,17 @@ public:
 			m_Menu.Clear();
 			if (m_pProgramGuide->GetListMode()==CProgramGuide::LIST_SERVICES) {
 				for (int i=CProgramGuide::DAY_FIRST;i<=CProgramGuide::DAY_LAST;i++) {
-					SYSTEMTIME st;
+					CProgramGuide::DateInfo Info;
 					TCHAR szText[256];
 
-					m_pProgramGuide->GetDayTimeRange(i,&st,NULL);
-					StdUtil::snprintf(szText,lengthof(szText),TEXT("%s %d/%d(%s) %d`"),
-									  DayText[i],
-									  st.wMonth,st.wDay,GetDayOfWeekText(st.wDayOfWeek),st.wHour);
+					m_pProgramGuide->GetDateInfo(i,&Info);
+					StdUtil::snprintf(szText,lengthof(szText),TEXT("%s%s%d/%d(%s) %d`"),
+									  Info.pszRelativeDayText!=NULL?Info.pszRelativeDayText:TEXT(""),
+									  Info.pszRelativeDayText!=NULL?TEXT(" "):TEXT(""),
+									  Info.BeginningTime.wMonth,
+									  Info.BeginningTime.wDay,
+									  GetDayOfWeekText(Info.BeginningTime.wDayOfWeek),
+									  Info.BeginningTime.wHour);
 					m_Menu.AppendItem(new CDropDownMenu::CItem(CM_PROGRAMGUIDE_DAY_FIRST+i,szText));
 				}
 				CurItem=CM_PROGRAMGUIDE_DAY_FIRST+m_pProgramGuide->GetViewDay();
