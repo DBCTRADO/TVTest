@@ -452,12 +452,13 @@ INT_PTR CSideBarOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam
 			DlgCheckBox_Check(hDlg,IDC_SIDEBAR_SHOWTOOLTIPS,m_fShowToolTips);
 			DlgCheckBox_Check(hDlg,IDC_SIDEBAR_SHOWCHANNELLOGO,m_fShowChannelLogo);
 
+			const COLORREF IconColor=::GetSysColor(COLOR_WINDOWTEXT);
 			SIZE sz;
 			HBITMAP hbmIcons=CreateImage(ICON_SIZE_SMALL,&sz);
 			DrawUtil::CMonoColorBitmap Bitmap;
 			Bitmap.Create(hbmIcons);
 			::DeleteObject(hbmIcons);
-			m_himlIcons=Bitmap.CreateImageList(sz.cx,::GetSysColor(COLOR_WINDOWTEXT));
+			m_himlIcons=Bitmap.CreateImageList(sz.cx,IconColor);
 			Bitmap.Destroy();
 
 			m_IconIDMap.clear();
@@ -466,7 +467,17 @@ INT_PTR CSideBarOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam
 			const CCommandList *pCommandList=m_pSideBar->GetCommandList();
 			for (size_t i=lengthof(ItemList);i<m_AvailItemList.size();i++) {
 				const int ID=m_AvailItemList[i].Command;
-				if (ID>=CM_PLUGINCOMMAND_FIRST && ID<=CM_PLUGINCOMMAND_LAST) {
+				if (ID>=CM_PLUGIN_FIRST && ID<=CM_PLUGIN_LAST) {
+					CPlugin *pPlugin=GetAppClass().PluginManager.GetPluginByCommand(ID);
+					if (pPlugin!=NULL && pPlugin->GetIcon().IsCreated()) {
+						HICON hIcon=pPlugin->GetIcon().ExtractIcon(IconColor);
+						if (hIcon!=NULL) {
+							int Icon=ImageList_AddIcon(m_himlIcons,hIcon);
+							::DestroyIcon(hIcon);
+							m_IconIDMap.insert(std::pair<int,int>(ID,Icon));
+						}
+					}
+				} else if (ID>=CM_PLUGINCOMMAND_FIRST && ID<=CM_PLUGINCOMMAND_LAST) {
 					LPCTSTR pszCommand;
 					CPlugin *pPlugin=GetAppClass().PluginManager.GetPluginByPluginCommand(
 						pCommandList->GetCommandTextByID(ID),&pszCommand);
@@ -474,7 +485,7 @@ INT_PTR CSideBarOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam
 						CPlugin::CPluginCommandInfo *pCommandInfo=
 							pPlugin->GetPluginCommandInfo(pszCommand);
 						if (pCommandInfo!=NULL && pCommandInfo->GetIcon().IsCreated()) {
-							HICON hIcon=pCommandInfo->GetIcon().ExtractIcon(::GetSysColor(COLOR_WINDOWTEXT));
+							HICON hIcon=pCommandInfo->GetIcon().ExtractIcon(IconColor);
 							if (hIcon!=NULL) {
 								int Icon=ImageList_AddIcon(m_himlIcons,hIcon);
 								::DestroyIcon(hIcon);

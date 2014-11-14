@@ -1283,15 +1283,22 @@ void CAppMain::RegisterCommands()
 		const CPlugin *pPlugin=PluginManager.GetPlugin(i);
 		LPCTSTR pszFileName=::PathFindFileName(pPlugin->GetFileName());
 		TCHAR szName[CCommandList::MAX_COMMAND_NAME];
+		TCHAR szShortName[CCommandList::MAX_COMMAND_NAME];
 
-		StdUtil::snprintf(szName,lengthof(szName),TEXT("プラグインOn/Off : %s"),pszFileName);
-		CommandList.RegisterCommand(CM_PLUGIN_FIRST+i,pszFileName,szName);
+		StdUtil::snprintf(szName,lengthof(szName),TEXT("プラグイン有効/無効 : %s"),pszFileName);
+		StdUtil::snprintf(szShortName,lengthof(szShortName),
+						  TEXT("%s 有効/無効"),pPlugin->GetPluginName());
+		CommandList.RegisterCommand(CM_PLUGIN_FIRST+i,pszFileName,szName,szShortName);
 	}
 
 	// プラグインの各コマンド
 	int ID=CM_PLUGINCOMMAND_FIRST;
 	for (int i=0;i<PluginManager.NumPlugins();i++) {
 		CPlugin *pPlugin=PluginManager.GetPlugin(i);
+
+		if (pPlugin->GetIcon().IsCreated())
+			SideBarOptions.RegisterCommand(pPlugin->GetCommand());
+
 		LPCTSTR pszFileName=::PathFindFileName(pPlugin->GetFileName());
 
 		for (int j=0;j<pPlugin->NumPluginCommands();j++) {

@@ -6705,6 +6705,20 @@ bool CMainWindow::CSideBarManager::DrawIcon(const CSideBar::DrawIconInfo *pInfo)
 				}
 			}
 		}
+	} else if (pInfo->Command>=CM_PLUGIN_FIRST
+			&& pInfo->Command<=CM_PLUGIN_LAST) {
+		CPlugin *pPlugin=m_pMainWindow->m_App.PluginManager.GetPluginByCommand(pInfo->Command);
+
+		if (pPlugin!=nullptr && pPlugin->GetIcon().IsCreated()) {
+			pPlugin->GetIcon().Draw(
+				pInfo->hdc,
+				pInfo->IconRect.left,pInfo->IconRect.top,
+				pInfo->IconRect.right-pInfo->IconRect.left,
+				pInfo->IconRect.bottom-pInfo->IconRect.top,
+				0,0,0,0,
+				pInfo->Color,pInfo->Opacity);
+			return true;
+		}
 	} else if (pInfo->Command>=CM_PLUGINCOMMAND_FIRST
 			&& pInfo->Command<=CM_PLUGINCOMMAND_LAST) {
 		LPCTSTR pszCommand;

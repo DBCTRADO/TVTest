@@ -694,6 +694,14 @@ bool CPlugin::Enable(bool fEnable)
 		if (!fResult)
 			return false;
 		m_fEnabled=fEnable;
+
+		if (m_Command>0) {
+			GetAppClass().CommandList.SetCommandStateByID(
+				m_Command,
+				CCommandList::COMMAND_STATE_CHECKED,
+				fEnable?CCommandList::COMMAND_STATE_CHECKED:0);
+		}
+
 		if (fEnable) {
 			for (size_t i=0;i<m_ControllerList.size();i++)
 				GetAppClass().ControllerManager.LoadControllerSettings(m_ControllerList[i].c_str());
@@ -2126,6 +2134,22 @@ LRESULT CPlugin::OnCallback(TVTest::PluginParam *pParam,UINT Message,LPARAM lPar
 		}
 		return FALSE;
 
+	case TVTest::MESSAGE_REGISTERPLUGINICON:
+		{
+			const TVTest::PluginIconInfo *pInfo=
+				reinterpret_cast<const TVTest::PluginIconInfo*>(lParam1);
+
+			if (pInfo==NULL
+					|| pInfo->Size!=sizeof(TVTest::PluginIconInfo)
+					|| pInfo->Flags!=0
+					|| pInfo->hbmIcon==NULL)
+				return FALSE;
+
+			if (!m_PluginIcon.Create(pInfo->hbmIcon))
+				return FALSE;
+		}
+		return TRUE;
+
 	case TVTest::MESSAGE_REGISTERSTATUSITEM:
 		{
 			const TVTest::StatusItemInfo *pInfo=
@@ -3218,6 +3242,15 @@ int CPluginManager::FindPluginByCommand(int Command) const
 			return (int)i;
 	}
 	return -1;
+}
+
+
+CPlugin *CPluginManager::GetPluginByCommand(int Command)
+{
+	int Index=FindPluginByCommand(Command);
+	if (Index<0)
+		return NULL;
+	return GetPlugin(Index);
 }
 
 

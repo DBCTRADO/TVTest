@@ -1,5 +1,7 @@
 /*
-	TVTest プラグインヘッダ ver.0.0.14
+	TVTest プラグインヘッダ ver.0.0.14-pre
+
+	※ ver.0.0.14 はまだ開発途中です。今後変更される可能性があります。
 
 	このファイルは再配布・改変など自由に行って構いません。
 	ただし、改変した場合はオリジナルと違う旨を記載して頂けると、混乱がなくてい
@@ -106,6 +108,7 @@
 	  ・MESSAGE_REGISTERPLUGINCOMMAND
 	  ・MESSAGE_SETPLUGINCOMMANDSTATE
 	  ・MESSAGE_PLUGINCOMMANDNOTIFY
+	  ・MESSAGE_REGISTERPLUGINICON
 	  ・MESSAGE_REGISTERSTATUSITEM
 	  ・MESSAGE_SETSTATUSITEM
 	  ・MESSAGE_GETSTATUSITEMINFO
@@ -420,6 +423,7 @@ enum {
 	MESSAGE_REGISTERPLUGINCOMMAND,		// プラグインのコマンドを登録
 	MESSAGE_SETPLUGINCOMMANDSTATE,		// プラグインのコマンドの状態を設定
 	MESSAGE_PLUGINCOMMANDNOTIFY,		// プラグインのコマンドの通知
+	MESSAGE_REGISTERPLUGINICON,			// プラグインのアイコンを登録
 	MESSAGE_REGISTERSTATUSITEM,			// ステータス項目を登録
 	MESSAGE_SETSTATUSITEM,				// ステータス項目の設定
 	MESSAGE_GETSTATUSITEMINFO,			// ステータス項目の情報を取得
@@ -2313,6 +2317,36 @@ inline bool MsgPluginCommandNotify(PluginParam *pParam,int ID,unsigned int Type)
 	return (*pParam->Callback)(pParam,MESSAGE_PLUGINCOMMANDNOTIFY,ID,Type)!=FALSE;
 }
 
+// プラグインのアイコンの情報
+struct PluginIconInfo {
+	DWORD Size;			// 構造体のサイズ
+	DWORD Flags;		// 各種フラグ(現在は常に0)
+	HBITMAP hbmIcon;	// アイコン
+};
+
+// プラグインのアイコンを登録する
+// アイコンを登録すると、プラグインの有効/無効をサイドバーで切り替えられるようになります。
+inline bool MsgRegisterPluginIcon(PluginParam *pParam,const PluginIconInfo *pInfo) {
+	return (*pParam->Callback)(pParam,MESSAGE_REGISTERPLUGINICON,(LPARAM)pInfo,0)!=FALSE;
+}
+
+// プラグインのアイコンを登録する
+inline bool MsgRegisterPluginIcon(PluginParam *pParam,HBITMAP hbmIcon) {
+	PluginIconInfo Info;
+	Info.Size=sizeof(Info);
+	Info.Flags=0;
+	Info.hbmIcon=hbmIcon;
+	return MsgRegisterPluginIcon(pParam,&Info);
+}
+
+// プラグインのアイコンを登録する
+inline bool MsgRegisterPluginIconFromResource(PluginParam *pParam,HINSTANCE hinst,LPCTSTR pszName) {
+	HBITMAP hbmIcon=(HBITMAP)::LoadImage(hinst,pszName,IMAGE_BITMAP,0,0,LR_CREATEDIBSECTION);
+	bool fResult=MsgRegisterPluginIcon(pParam,hbmIcon);
+	::DeleteObject(hbmIcon);
+	return fResult;
+}
+
 // コマンドアイコンの描画情報
 // EVENT_DRAWCOMMANDICON で渡されます。
 struct DrawCommandIconInfo {
@@ -2954,6 +2988,15 @@ public:
 	}
 	bool PluginCommandNotify(int ID,unsigned int Type) {
 		return MsgPluginCommandNotify(m_pParam,ID,Type);
+	}
+	bool RegisterPluginIcon(const PluginIconInfo *pInfo) {
+		return MsgRegisterPluginIcon(m_pParam,pInfo);
+	}
+	bool RegisterPluginIcon(HBITMAP hbmIcon) {
+		return MsgRegisterPluginIcon(m_pParam,hbmIcon);
+	}
+	bool RegisterPluginIconFromResource(HINSTANCE hinst,LPCTSTR pszName) {
+		return MsgRegisterPluginIconFromResource(m_pParam,hinst,pszName);
 	}
 	bool RegisterStatusItem(const StatusItemInfo *pInfo) {
 		return MsgRegisterStatusItem(m_pParam,pInfo);

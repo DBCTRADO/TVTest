@@ -61,6 +61,7 @@ public:
 	bool CanUnload() const { return (m_Flags&TVTest::PLUGIN_FLAG_NOUNLOAD)==0; }
 	int GetCommand() const { return m_Command; }
 	bool SetCommand(int Command);
+	TVTest::Theme::ThemeBitmap &GetIcon() { return m_PluginIcon; }
 	int NumPluginCommands() const;
 	int ParsePluginCommand(LPCWSTR pszCommand) const;
 	CPluginCommandInfo *GetPluginCommandInfo(int Index);
@@ -157,6 +158,7 @@ private:
 	bool m_fEnabled;
 	bool m_fSetting;
 	int m_Command;
+	TVTest::Theme::ThemeBitmap m_PluginIcon;
 	TVTest::EventCallbackFunc m_pEventCallback;
 	void *m_pEventCallbackClientData;
 	UINT m_ProgramGuideEventFlags;
@@ -258,6 +260,7 @@ public:
 	int FindPlugin(const CPlugin *pPlugin) const;
 	int FindPluginByFileName(LPCTSTR pszFileName) const;
 	int FindPluginByCommand(int Command) const;
+	CPlugin *GetPluginByCommand(int Command);
 	CPlugin *GetPluginByPluginCommand(LPCTSTR pszCommand,LPCTSTR *ppszCommandText=NULL);
 	bool DeletePlugin(int Index);
 	bool SetMenu(HMENU hmenu) const;
