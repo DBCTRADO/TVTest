@@ -699,7 +699,6 @@ INT_PTR CDriverOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 		{
 			if (m_pDriverManager!=NULL
 					&& m_pDriverManager->NumDrivers()>0) {
-				int CurDriver=0;
 
 				m_CurSettingList=m_SettingList;
 				for (int i=0;i<m_pDriverManager->NumDrivers();i++) {
@@ -716,14 +715,17 @@ INT_PTR CDriverOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 					}
 					DlgComboBox_SetItemData(hDlg,IDC_DRIVEROPTIONS_DRIVERLIST,i,(LPARAM)pSettings);
 				}
+				int CurDriver=-1;
 				LPCTSTR pszCurDriverName=GetAppClass().CoreEngine.GetDriverFileName();
 				if (pszCurDriverName[0]!='\0') {
 					CurDriver=(int)DlgComboBox_FindStringExact(hDlg,IDC_DRIVEROPTIONS_DRIVERLIST,
 						-1,::PathFindFileName(pszCurDriverName));
-					if (CurDriver<0)
-						CurDriver=0;
 				}
 				DlgComboBox_SetCurSel(hDlg,IDC_DRIVEROPTIONS_DRIVERLIST,CurDriver);
+				if (Util::OS::IsWindowsVistaOrLater()) {
+					DlgComboBox_SetCueBanner(hDlg,IDC_DRIVEROPTIONS_DRIVERLIST,
+											 TEXT("Ý’è‚·‚é BonDriver ‚ð‘I‘ð‚µ‚Ä‚­‚¾‚³‚¢"));
+				}
 				InitDlgItem(CurDriver);
 			} else {
 				EnableDlgItems(hDlg,IDC_DRIVEROPTIONS_FIRST,IDC_DRIVEROPTIONS_LAST,false);
