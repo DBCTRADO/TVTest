@@ -24,11 +24,6 @@
 // プラグインクラス
 class CSignalGraph : public TVTest::CTVTestPlugin
 {
-	// コマンド
-	enum {
-		COMMAND_ONOFF	= 1	// 有効/無効の切り替え
-	};
-
 	struct SignalInfo {
 		DWORD SignalLevel;
 		DWORD BitRate;
@@ -78,20 +73,8 @@ bool CSignalGraph::GetPluginInfo(TVTest::PluginInfo *pInfo)
 // 初期化処理
 bool CSignalGraph::Initialize()
 {
-	// コマンドを登録
-	TVTest::PluginCommandInfo CommandInfo;
-	CommandInfo.Size           = sizeof(CommandInfo);
-	CommandInfo.Flags          = TVTest::PLUGIN_COMMAND_FLAG_ICONIZE;
-	CommandInfo.State          = 0;
-	CommandInfo.ID             = COMMAND_ONOFF;
-	CommandInfo.pszText        = L"OnOff";
-	CommandInfo.pszName        = L"Signal Graph";
-	CommandInfo.pszDescription = L"Signal Graph を表示します。";
-	CommandInfo.hbmIcon        =
-		(HBITMAP)::LoadImage(g_hinstDLL, MAKEINTRESOURCE(IDB_ICON),
-							 IMAGE_BITMAP, 0, 0, LR_CREATEDIBSECTION);
-	m_pApp->RegisterPluginCommand(&CommandInfo);
-	::DeleteObject(CommandInfo.hbmIcon);
+	// アイコンを登録
+	m_pApp->RegisterPluginIconFromResource(g_hinstDLL,MAKEINTRESOURCE(IDB_ICON));
 
 	// イベントコールバック関数を登録
 	m_pApp->SetEventCallback(EventCallback,this);
@@ -160,9 +143,6 @@ LRESULT CALLBACK CSignalGraph::EventCallback(UINT Event,LPARAM lParam1,LPARAM lP
 			}
 
 			::ShowWindow(pThis->m_hwnd,fEnable?SW_SHOW:SW_HIDE);
-
-			pThis->m_pApp->SetPluginCommandState(COMMAND_ONOFF,
-												 fEnable?TVTest::PLUGIN_COMMAND_STATE_CHECKED:0);
 		}
 		return TRUE;
 
@@ -171,14 +151,6 @@ LRESULT CALLBACK CSignalGraph::EventCallback(UINT Event,LPARAM lParam1,LPARAM lP
 		if (pThis->m_pApp->IsPluginEnabled()) {
 			// 待機状態の時はウィンドウを隠す
 			::ShowWindow(pThis->m_hwnd,lParam1!=0?SW_HIDE:SW_SHOW);
-		}
-		return TRUE;
-
-	case TVTest::EVENT_COMMAND:
-		// コマンドが実行された
-		if (lParam1==COMMAND_ONOFF) {
-			// プラグインの有効/無効を切り替え
-			pThis->m_pApp->EnablePlugin(!pThis->m_pApp->IsPluginEnabled());
 		}
 		return TRUE;
 	}

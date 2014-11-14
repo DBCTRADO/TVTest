@@ -22,9 +22,6 @@
 // ウィンドウクラス名
 #define SLEEPTIMER_WINDOW_CLASS TEXT("TVTest SleepTimer Window")
 
-// プラグインのコマンド
-#define COMMAND_ONOFF 1	// 有効/無効の切替
-
 // スリープを実行するタイマーの識別子
 #define SLEEP_TIMER_ID 1
 
@@ -101,20 +98,8 @@ bool CSleepTimer::Initialize()
 {
 	// 初期化処理
 
-	// コマンドを登録
-	TVTest::PluginCommandInfo CommandInfo;
-	CommandInfo.Size           = sizeof(CommandInfo);
-	CommandInfo.Flags          = TVTest::PLUGIN_COMMAND_FLAG_ICONIZE;
-	CommandInfo.State          = 0;
-	CommandInfo.ID             = COMMAND_ONOFF;
-	CommandInfo.pszText        = L"OnOff";
-	CommandInfo.pszName        = L"スリープタイマー 入/切";
-	CommandInfo.pszDescription = L"スリープタイマーの有効/無効を切り替えます。";
-	CommandInfo.hbmIcon        =
-		(HBITMAP)::LoadImage(g_hinstDLL, MAKEINTRESOURCE(IDB_ICON),
-							 IMAGE_BITMAP, 0, 0, LR_CREATEDIBSECTION);
-	m_pApp->RegisterPluginCommand(&CommandInfo);
-	::DeleteObject(CommandInfo.hbmIcon);
+	// アイコンを登録
+	m_pApp->RegisterPluginIconFromResource(g_hinstDLL,MAKEINTRESOURCE(IDB_ICON));
 
 	// イベントコールバック関数を登録
 	m_pApp->SetEventCallback(EventCallback,this);
@@ -219,9 +204,6 @@ bool CSleepTimer::OnEnablePlugin(bool fEnable)
 	else
 		::KillTimer(m_hwnd,SLEEP_TIMER_ID);
 
-	m_pApp->SetPluginCommandState(COMMAND_ONOFF,
-								  m_fEnabled?TVTest::PLUGIN_COMMAND_STATE_CHECKED:0);
-
 	return true;
 }
 
@@ -316,14 +298,6 @@ LRESULT CALLBACK CSleepTimer::EventCallback(UINT Event,LPARAM lParam1,LPARAM lPa
 		return ::DialogBoxParam(g_hinstDLL,MAKEINTRESOURCE(IDD_SETTINGS),
 								reinterpret_cast<HWND>(lParam1),SettingsDlgProc,
 								reinterpret_cast<LPARAM>(pThis))==IDOK;
-
-	case TVTest::EVENT_COMMAND:
-		// コマンドが実行された
-		if (lParam1==COMMAND_ONOFF) {
-			// プラグインの有効/無効を切り替え
-			pThis->m_pApp->EnablePlugin(!pThis->m_fEnabled);
-		}
-		return TRUE;
 	}
 
 	return 0;
