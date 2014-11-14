@@ -587,7 +587,7 @@ private:
 	void OnAudioStreamChanged(int Stream) override;
 
 // COSDManager::CEventHandler
-	bool GetOSDWindow(HWND *phwndParent,RECT *pRect,bool *pfForcePseudoOSD) override;
+	bool GetOSDClientInfo(COSDManager::OSDClientInfo *pInfo) override;
 	bool SetOSDHideTimer(DWORD Delay) override;
 
 // CMainWindow

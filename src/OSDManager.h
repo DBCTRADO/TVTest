@@ -12,11 +12,19 @@ class COSDManager
 	: public TVTest::CUIBase
 {
 public:
+	struct OSDClientInfo
+	{
+		HWND hwndParent;
+		RECT ClientRect;
+		bool fForcePseudoOSD;
+		bool fAnimation;
+	};
+
 	class ABSTRACT_CLASS(CEventHandler)
 	{
 	public:
 		virtual ~CEventHandler() {}
-		virtual bool GetOSDWindow(HWND *phwndParent,RECT *pRect,bool *pfForcePseudoOSD)=0;
+		virtual bool GetOSDClientInfo(OSDClientInfo *pInfo)=0;
 		virtual bool SetOSDHideTimer(DWORD Delay)=0;
 	};
 

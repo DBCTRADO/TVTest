@@ -5767,20 +5767,30 @@ bool CMainWindow::SetViewWindowEdge(bool fEdge)
 }
 
 
-bool CMainWindow::GetOSDWindow(HWND *phwndParent,RECT *pRect,bool *pfForcePseudoOSD)
+bool CMainWindow::GetOSDClientInfo(COSDManager::OSDClientInfo *pInfo)
 {
 	if (!GetVisible() || ::IsIconic(m_hwnd))
 		return false;
+
 	if (m_Viewer.GetVideoContainer().GetVisible()) {
-		*phwndParent=m_Viewer.GetVideoContainer().GetHandle();
+		pInfo->hwndParent=m_Viewer.GetVideoContainer().GetHandle();
 	} else {
-		*phwndParent=m_Viewer.GetVideoContainer().GetParent();
-		*pfForcePseudoOSD=true;
+		pInfo->hwndParent=m_Viewer.GetVideoContainer().GetParent();
+		pInfo->fForcePseudoOSD=true;
 	}
-	::GetClientRect(*phwndParent,pRect);
-	pRect->top+=m_NotificationBar.GetBarHeight();
+
+	// まだ再生が開始されていない場合、アニメーションを無効にする
+	// アニメーションの途中で DirectShow の初期化処理が入り、中途半端な表示になるため
+	if (m_fEnablePlayback && !IsViewerEnabled())
+		pInfo->fAnimation=false;
+
+	RECT rc;
+	::GetClientRect(pInfo->hwndParent,&rc);
+	rc.top+=m_NotificationBar.GetBarHeight();
 	if (!m_fShowStatusBar && m_fPopupStatusBar)
-		pRect->bottom-=m_App.StatusView.GetHeight();
+		rc.bottom-=m_App.StatusView.GetHeight();
+	pInfo->ClientRect=rc;
+
 	return true;
 }
 
