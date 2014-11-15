@@ -596,7 +596,8 @@ CSignalLevelStatusItem::CSignalLevelStatusItem()
 bool CSignalLevelStatusItem::UpdateContent()
 {
 	const CCoreEngine &CoreEngine=GetAppClass().CoreEngine;
-	const float SignalLevel=CoreEngine.GetSignalLevel();
+	const float SignalLevel=
+		m_fShowSignalLevel ? CoreEngine.GetSignalLevel() : 0.0f;
 	const DWORD BitRate=CoreEngine.GetBitRate();
 
 	if (SignalLevel==m_SignalLevel && BitRate==m_BitRate)
@@ -637,7 +638,8 @@ void CSignalLevelStatusItem::ShowSignalLevel(bool fShow)
 {
 	if (m_fShowSignalLevel!=fShow) {
 		m_fShowSignalLevel=fShow;
-		Update();
+		UpdateContent();
+		Redraw();
 	}
 }
 

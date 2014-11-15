@@ -45,6 +45,7 @@ public:
 	protected:
 		void DrawItem(HDC hdc,const RECT &Rect,LPCTSTR pszText);
 		void UpdateItem();
+		void Redraw();
 
 		CInformationPanel *m_pPanel;
 		bool m_fVisible;

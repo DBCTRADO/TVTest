@@ -854,6 +854,12 @@ void CInformationPanel::CItem::UpdateItem()
 }
 
 
+void CInformationPanel::CItem::Redraw()
+{
+	m_pPanel->RedrawItem(GetID());
+}
+
+
 
 
 CInformationPanel::CVideoInfoItem::CVideoInfoItem(CInformationPanel *pPanel,bool fVisible)
@@ -1057,7 +1063,8 @@ void CInformationPanel::CSignalLevelItem::Reset()
 bool CInformationPanel::CSignalLevelItem::Update()
 {
 	const CCoreEngine &CoreEngine=GetAppClass().CoreEngine;
-	const float SignalLevel=CoreEngine.GetSignalLevel();
+	const float SignalLevel=
+		m_fShowSignalLevel ? CoreEngine.GetSignalLevel() : 0.0f;
 	const DWORD BitRate=CoreEngine.GetBitRate();
 
 	if (SignalLevel==m_SignalLevel && BitRate==m_BitRate)
@@ -1091,7 +1098,8 @@ void CInformationPanel::CSignalLevelItem::ShowSignalLevel(bool fShow)
 {
 	if (m_fShowSignalLevel!=fShow) {
 		m_fShowSignalLevel=fShow;
-		UpdateItem();
+		Update();
+		Redraw();
 	}
 }
 
