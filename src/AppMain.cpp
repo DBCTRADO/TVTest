@@ -850,22 +850,6 @@ int CAppMain::Main(HINSTANCE hInstance,LPCTSTR pszCmdLine,int nCmdShow)
 	CoreEngine.BuildDtvEngine(&m_DtvEngineHandler);
 	RecordOptions.Apply(COptions::UPDATE_ALL);
 
-	// BonDriver の読み込み
-	CoreEngine.SetDriverFileName(szDriverFileName);
-	if (!CmdLineOptions.m_fNoDriver && !CmdLineOptions.m_fStandby) {
-		if (CoreEngine.IsDriverSpecified()) {
-			StatusView.SetSingleText(TEXT("BonDriverの読み込み中..."));
-			if (Core.OpenAndInitializeTuner(
-					!Core.IsSilent()?CAppCore::OPEN_CAS_CARD_RETRY:0)) {
-				AppEventManager.OnTunerChanged();
-			} else {
-				Core.OnError(&CoreEngine,TEXT("BonDriverの初期化ができません。"));
-			}
-		} else {
-			AddLog(TEXT("デフォルトのBonDriverはありません。"));
-		}
-	}
-
 	// プラグインの読み込み
 	if (!CmdLineOptions.m_fNoPlugin) {
 		TCHAR szPluginDir[MAX_PATH];
@@ -903,6 +887,22 @@ int CAppMain::Main(HINSTANCE hInstance,LPCTSTR pszCmdLine,int nCmdShow)
 	if (MainWindow.GetSideBarVisible()) {
 		MainWindow.GetLayoutBase().SetContainerVisible(CONTAINER_ID_SIDEBAR,true);
 		SideBar.Update();
+	}
+
+	// BonDriver の読み込み
+	CoreEngine.SetDriverFileName(szDriverFileName);
+	if (!CmdLineOptions.m_fNoDriver && !CmdLineOptions.m_fStandby) {
+		if (CoreEngine.IsDriverSpecified()) {
+			StatusView.SetSingleText(TEXT("BonDriverの読み込み中..."));
+			if (Core.OpenAndInitializeTuner(
+					!Core.IsSilent()?CAppCore::OPEN_CAS_CARD_RETRY:0)) {
+				AppEventManager.OnTunerChanged();
+			} else {
+				Core.OnError(&CoreEngine,TEXT("BonDriverの初期化ができません。"));
+			}
+		} else {
+			AddLog(TEXT("デフォルトのBonDriverはありません。"));
+		}
 	}
 
 	// 再生の初期化
