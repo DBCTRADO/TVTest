@@ -2914,7 +2914,7 @@ public:
 		return MsgRegisterProgramGuideCommand(m_pParam,pCommandList,NumCommands);
 	}
 #endif
-#if TVTEST_PLUGIN_VERSION>=TVTEST_PLUGIN_VERSION_(0,0,13)
+#if TVTEST_PLUGIN_VERSION>=TVTEST_PLUGIN_VERSION_(0,0,14)
 	bool GetStyleValue(StyleValueInfo *pInfo) {
 		pInfo->Size=sizeof(StyleValueInfo);
 		return MsgGetStyleValue(m_pParam,pInfo);
