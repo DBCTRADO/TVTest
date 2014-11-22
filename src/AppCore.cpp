@@ -358,7 +358,7 @@ bool CAppCore::SetChannel(int Space,int Channel,int ServiceID/*=-1*/,bool fStric
 		ServiceSel.bFollowViewableService=!m_App.NetworkDefinition.IsCSNetworkID(pChInfo->GetNetworkID());
 
 		if (!fStrictService && m_f1SegMode) {
-			ServiceSel.bPrefer1Seg=true;
+			ServiceSel.OneSegSelect=CDtvEngine::ONESEG_SELECT_HIGHPRIORITY;
 
 			// サブチャンネルの選択の場合、ワンセグもサブチャンネルを優先する
 			if (ServiceSel.ServiceID!=CDtvEngine::SID_INVALID) {
@@ -619,7 +619,7 @@ bool CAppCore::SetServiceByID(WORD ServiceID,unsigned int Flags)
 	ServiceSel.bFollowViewableService=!m_App.NetworkDefinition.IsCSNetworkID(NetworkID);
 
 	if (!fStrict && m_f1SegMode) {
-		ServiceSel.bPrefer1Seg=true;
+		ServiceSel.OneSegSelect=CDtvEngine::ONESEG_SELECT_HIGHPRIORITY;
 
 		if (pCurChInfo!=nullptr) {
 			// サブチャンネルの選択の場合、ワンセグもサブチャンネルを優先する
@@ -644,7 +644,7 @@ bool CAppCore::SetServiceByID(WORD ServiceID,unsigned int Flags)
 				ServiceID=0;
 		}
 	} else {
-		if (ServiceSel.bPrefer1Seg)
+		if (ServiceSel.OneSegSelect==CDtvEngine::ONESEG_SELECT_HIGHPRIORITY)
 			AddLog(TEXT("サービスを選択します..."));
 		else
 			AddLog(TEXT("サービスを選択します(SID %d)..."),ServiceSel.ServiceID);
@@ -670,7 +670,7 @@ bool CAppCore::SetServiceByID(WORD ServiceID,unsigned int Flags)
 		}
 	}
 
-	if (m_f1SegMode && !ServiceSel.bPrefer1Seg) {
+	if (m_f1SegMode && ServiceSel.OneSegSelect!=CDtvEngine::ONESEG_SELECT_HIGHPRIORITY) {
 		Set1SegMode(false,false);
 	}
 

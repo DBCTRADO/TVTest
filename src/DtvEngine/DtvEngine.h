@@ -92,17 +92,23 @@ public:
 		virtual void OnFilterGraphFinalized(CMediaViewer *pMediaViewer, IGraphBuilder *pGraphBuilder) {}
 	};
 
+	enum OneSegSelectType {
+		ONESEG_SELECT_LOWPRIORITY,
+		ONESEG_SELECT_HIGHPRIORITY,
+		ONESEG_SELECT_REFUSE
+	};
+
 	struct ServiceSelectInfo
 	{
 		WORD ServiceID;
 		bool bFollowViewableService;
-		bool bPrefer1Seg;
+		OneSegSelectType OneSegSelect;
 		WORD PreferredServiceIndex;
 
 		ServiceSelectInfo()
 			: ServiceID(SID_DEFAULT)
 			, bFollowViewableService(false)
-			, bPrefer1Seg(false)
+			, OneSegSelect(ONESEG_SELECT_LOWPRIORITY)
 			, PreferredServiceIndex(SERVICE_INVALID)
 		{
 		}
@@ -129,8 +135,6 @@ public:
 	bool SetChannel(const BYTE byTuningSpace, const WORD wChannel,
 					const ServiceSelectInfo *pServiceSelInfo = NULL);
 	bool SetService(const ServiceSelectInfo *pServiceSelInfo, const bool bReserve = true);
-	bool SetServiceByID(const WORD ServiceID, const bool bReserve = true);
-	bool SetServiceByIndex(const WORD Service);
 	bool GetServiceID(WORD *pServiceID) const;
 	WORD GetServiceIndex() const;
 
@@ -208,7 +212,7 @@ public:
 protected:
 	virtual const DWORD OnDecoderEvent(CMediaDecoder *pDecoder, const DWORD dwEventID, PVOID pParam);
 
-	bool SelectService(WORD ServiceID);
+	bool SelectService(WORD ServiceID, bool bNo1Seg = false);
 	CMediaDecoder *GetDecoderByID(DecoderID ID);
 	const DecoderConnectionInfo *GetInputConnectionInfo(DecoderID ID) const;
 	const DecoderConnectionInfo *GetOutputConnectionInfo(DecoderID ID) const;

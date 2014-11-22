@@ -244,8 +244,8 @@ bool CDtvEngine::SetService(const ServiceSelectInfo *pServiceSelInfo, const bool
 
 	bool bSetService = true, b1Seg = false;
 
-	if (pServiceSelInfo->bPrefer1Seg) {
-		// ワンセグ指定
+	if (pServiceSelInfo->OneSegSelect == ONESEG_SELECT_HIGHPRIORITY) {
+		// ワンセグ優先
 		WORD SID;
 		if (pServiceSelInfo->PreferredServiceIndex != SERVICE_INVALID
 				&& m_TsAnalyzer.Get1SegServiceIDByIndex(
@@ -268,7 +268,7 @@ bool CDtvEngine::SetService(const ServiceSelectInfo *pServiceSelInfo, const bool
 	}
 
 	if (bSetService)
-		SelectService(ServiceID);
+		SelectService(ServiceID, pServiceSelInfo->OneSegSelect == ONESEG_SELECT_REFUSE);
 
 	m_ServiceSel = *pServiceSelInfo;
 
@@ -276,43 +276,7 @@ bool CDtvEngine::SetService(const ServiceSelectInfo *pServiceSelInfo, const bool
 }
 
 
-bool CDtvEngine::SetServiceByID(const WORD ServiceID, const bool bReserve)
-{
-	TRACE(TEXT("CDtvEngine::SetServiceByID(%04x, %d)\n"), ServiceID, bReserve);
-
-	ServiceSelectInfo ServiceSel;
-
-	ServiceSel.ServiceID = ServiceID;
-	ServiceSel.bFollowViewableService = m_ServiceSel.bFollowViewableService;
-
-	return SetService(&ServiceSel, bReserve);
-}
-
-
-bool CDtvEngine::SetServiceByIndex(const WORD Service)
-{
-	CBlockLock Lock(&m_EngineLock);
-
-	WORD ServiceID;
-
-	if (Service == SERVICE_DEFAULT) {
-		ServiceID = SID_DEFAULT;
-	} else {
-		if (!m_TsAnalyzer.GetViewableServiceID(Service, &ServiceID))
-			return false;
-	}
-
-	if (!SelectService(ServiceID))
-		return false;
-
-	m_ServiceSel.ServiceID = m_CurServiceID;
-	m_ServiceSel.bPrefer1Seg = false;
-
-	return true;
-}
-
-
-bool CDtvEngine::SelectService(WORD ServiceID)
+bool CDtvEngine::SelectService(WORD ServiceID, bool bNo1Seg)
 {
 	TRACE(TEXT("CDtvEngine::SelectService(%04x)\n"), ServiceID);
 
@@ -325,6 +289,9 @@ bool CDtvEngine::SelectService(WORD ServiceID)
 		// 先頭PMTが到着するまで失敗にする
 		if (!m_TsAnalyzer.GetFirstViewableServiceID(&ServiceID)) {
 			TRACE(TEXT("No viewable service\n"));
+			return false;
+		}
+		if (bNo1Seg && m_TsAnalyzer.Is1SegService(m_TsAnalyzer.GetServiceIndexByID(ServiceID))) {
 			return false;
 		}
 	} else {
@@ -545,8 +512,8 @@ const DWORD CDtvEngine::OnDecoderEvent(CMediaDecoder *pDecoder, const DWORD dwEv
 					bool bSetService = true;
 					WORD ServiceID = SID_DEFAULT;
 
-					if (m_ServiceSel.bPrefer1Seg) {
-						// ワンセグ指定
+					if (m_ServiceSel.OneSegSelect == ONESEG_SELECT_HIGHPRIORITY) {
+						// ワンセグ優先
 						// この段階ではまだ保留
 						bSetService = false;
 					} else if (m_ServiceSel.ServiceID != SID_INVALID) {
@@ -565,7 +532,7 @@ const DWORD CDtvEngine::OnDecoderEvent(CMediaDecoder *pDecoder, const DWORD dwEv
 						}
 					}
 
-					if (!bSetService || !SelectService(ServiceID)) {
+					if (!bSetService || !SelectService(ServiceID, m_ServiceSel.OneSegSelect == ONESEG_SELECT_REFUSE)) {
 						m_MediaViewer.SetVideoPID(CMediaViewer::PID_INVALID);
 						m_MediaViewer.SetAudioPID(CMediaViewer::PID_INVALID);
 					}
@@ -576,8 +543,8 @@ const DWORD CDtvEngine::OnDecoderEvent(CMediaDecoder *pDecoder, const DWORD dwEv
 					bool bSetService = true, b1Seg = false;
 					WORD ServiceID = SID_DEFAULT;
 
-					if (m_ServiceSel.bPrefer1Seg) {
-						// ワンセグ指定
+					if (m_ServiceSel.OneSegSelect == ONESEG_SELECT_HIGHPRIORITY) {
+						// ワンセグ優先
 						WORD SID;
 						if (m_ServiceSel.PreferredServiceIndex != SERVICE_INVALID) {
 							if (m_TsAnalyzer.Get1SegServiceIDByIndex(
@@ -641,7 +608,7 @@ const DWORD CDtvEngine::OnDecoderEvent(CMediaDecoder *pDecoder, const DWORD dwEv
 					}
 
 					if (bSetService)
-						SelectService(ServiceID);
+						SelectService(ServiceID, m_ServiceSel.OneSegSelect == ONESEG_SELECT_REFUSE);
 				}
 
 				if (m_pEventHandler)
