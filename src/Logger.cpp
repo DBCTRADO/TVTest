@@ -163,13 +163,24 @@ bool CLogger::AddLogV(LPCTSTR pszText,va_list Args)
 	if (pszText==NULL)
 		return false;
 
-	CBlockLock Lock(&m_Lock);
-
 	TCHAR szText[MAX_LOG_TEXT_LENGTH];
 	StdUtil::vsnprintf(szText,lengthof(szText),pszText,Args);
-	CLogItem *pLogItem=new CLogItem(szText,m_SerialNumber++);
+	AddLogRaw(szText);
+
+	return true;
+}
+
+
+bool CLogger::AddLogRaw(LPCTSTR pszText)
+{
+	if (pszText==NULL)
+		return false;
+
+	CBlockLock Lock(&m_Lock);
+
+	CLogItem *pLogItem=new CLogItem(pszText,m_SerialNumber++);
 	m_LogList.push_back(pLogItem);
-	TRACE(TEXT("Log : %s\n"),szText);
+	TRACE(TEXT("Log : %s\n"),pszText);
 
 	if (m_fOutputToFile) {
 		TCHAR szFileName[MAX_PATH];
@@ -423,5 +434,5 @@ INT_PTR CLogger::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 
 void CLogger::OnTrace(LPCTSTR pszOutput)
 {
-	AddLog(pszOutput);
+	AddLogRaw(pszOutput);
 }

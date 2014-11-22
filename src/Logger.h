@@ -42,6 +42,7 @@ public:
 // CLogger
 	bool AddLog(LPCTSTR pszText, ...);
 	bool AddLogV(LPCTSTR pszText,va_list Args);
+	bool AddLogRaw(LPCTSTR pszText);
 	void Clear();
 	std::size_t GetLogCount() const;
 	bool GetLog(std::size_t Index,CLogItem *pItem) const;
