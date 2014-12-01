@@ -29,6 +29,15 @@ CMediaDecoder::~CMediaDecoder()
 {
 }
 
+bool CMediaDecoder::Initialize()
+{
+	return true;
+}
+
+void CMediaDecoder::Finalize()
+{
+}
+
 void CMediaDecoder::Reset()
 {
 }
@@ -66,12 +75,38 @@ bool CMediaDecoder::SetOutputDecoder(CMediaDecoder *pDecoder, const DWORD dwOutp
 	return true;
 }
 
+CMediaDecoder *CMediaDecoder::GetOutputDecoder(const DWORD Index) const
+{
+	if (Index >= m_dwOutputNum)
+		return NULL;
+
+	return m_aOutputDecoder[Index].pDecoder;
+}
+
 const bool CMediaDecoder::InputMedia(CMediaData *pMediaData, const DWORD dwInputIndex)
 {
 	CBlockLock Lock(&m_DecoderLock);
 
 	OutputMedia(pMediaData, dwInputIndex);
 	return true;
+}
+
+
+bool CMediaDecoder::SetActiveServiceID(WORD ServiceID)
+{
+	return false;
+}
+
+WORD CMediaDecoder::GetActiveServiceID() const
+{
+	return 0;
+}
+
+void CMediaDecoder::SetEventHandler(IEventHandler *pEventHandler)
+{
+	CBlockLock Lock(&m_DecoderLock);
+
+	m_pEventHandler = pEventHandler;
 }
 
 bool CMediaDecoder::OutputMedia(CMediaData *pMediaData, const DWORD dwOutptIndex)

@@ -19,7 +19,7 @@
 #include "Accelerator.h"
 #include "Controller.h"
 #include "NetworkDefinition.h"
-#include "CasLibraryManager.h"
+#include "TSProcessorManager.h"
 #include "OptionDialog.h"
 #include "GeneralOptions.h"
 #include "ViewOptions.h"
@@ -37,6 +37,7 @@
 #include "ChannelScan.h"
 #include "EpgOptions.h"
 #include "ProgramGuideOptions.h"
+#include "TSProcessorOptions.h"
 #include "Plugin.h"
 #include "Logger.h"
 #include "CommandLine.h"
@@ -388,7 +389,7 @@ public:
 
 	CResidentManager ResidentManager;
 	CDriverManager DriverManager;
-	CCasLibraryManager CasLibraryManager;
+	TVTest::CTSProcessorManager TSProcessorManager;
 	CLogoManager LogoManager;
 	TVTest::CEpgCaptureManager EpgCaptureManager;
 
@@ -419,6 +420,7 @@ public:
 	CChannelScan ChannelScan;
 	CEpgOptions EpgOptions;
 	CProgramGuideOptions ProgramGuideOptions;
+	TVTest::CTSProcessorOptions TSProcessorOptions;
 	CPluginOptions PluginOptions;
 	CRecentChannelList RecentChannelList;
 	CChannelHistory ChannelHistory;
@@ -485,11 +487,6 @@ private:
 		void OnFileWriteError(CTsRecorder *pTsRecorder) override;
 		void OnVideoStreamTypeChanged(BYTE VideoStreamType) override;
 		void OnVideoSizeChanged(CMediaViewer *pMediaViewer) override;
-		void OnEmmProcessed() override;
-		void OnEmmError(LPCTSTR pszText) override;
-		void OnEcmError(LPCTSTR pszText) override;
-		void OnEcmRefused() override;
-		void OnCardReaderHung() override;
 		void OnEventChanged(CTsAnalyzer *pTsAnalyzer,WORD EventID) override;
 		void OnEventUpdated(CTsAnalyzer *pTsAnalyzer) override;
 		void OnTotUpdated(CTsAnalyzer *pTsAnalyzer) override;

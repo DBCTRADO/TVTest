@@ -187,6 +187,7 @@ CAppMain::CAppMain()
 	, PanelOptions(&Panel.Frame)
 	, ProgramGuideOptions(&Epg.ProgramGuide,&PluginManager)
 	, PluginOptions(&PluginManager)
+	, TSProcessorOptions(TSProcessorManager)
 	, FeaturedEvents(EventSearchOptions)
 
 	, m_fFirstExecute(false)
@@ -476,7 +477,7 @@ bool CAppMain::LoadSettings()
 	PanAndScanOptions.LoadSettings(Settings);
 	HomeDisplay.LoadSettings(Settings);
 	NetworkDefinition.LoadSettings(Settings);
-	CasLibraryManager.LoadSettings(Settings);
+	TSProcessorOptions.LoadSettings(Settings);
 	FeaturedEvents.LoadSettings(Settings);
 
 	return true;
@@ -503,7 +504,6 @@ bool CAppMain::SaveSettings(unsigned int Flags)
 		if ((Flags&SETTINGS_SAVE_STATUS)!=0) {
 			int Left,Top,Width,Height;
 
-			//Settings.Write(TEXT("CasLibrary"),CoreEngine.GetCasLibraryName());
 			Settings.Write(TEXT("EnablePlay"),m_fEnablePlaybackOnStart);
 			Settings.Write(TEXT("Volume"),CoreEngine.GetVolume());
 			int Gain,SurroundGain;
@@ -584,6 +584,7 @@ bool CAppMain::SaveSettings(unsigned int Flags)
 		{&ChannelScan,						false},
 		{&EpgOptions,						false},
 		{&ProgramGuideOptions,				true},
+		{&TSProcessorOptions,				true},
 		{&Logger,							false},
 	//	{&ZoomOptions,						false},
 	//	{&PanAndScanOptions,				false},
@@ -702,20 +703,6 @@ int CAppMain::Main(HINSTANCE hInstance,LPCTSTR pszCmdLine,int nCmdShow)
 		CmdLineOptions.m_fInitialSettings
 			|| (m_fFirstExecute && CmdLineOptions.m_DriverName.empty());
 
-	// CASライブラリの読み込み
-	if (!CmdLineOptions.m_CasLibraryName.empty()) {
-		CasLibraryManager.SetDefaultCasLibrary(CmdLineOptions.m_CasLibraryName.c_str());
-	} else if (!CasLibraryManager.HasDefaultCasLibrary()) {
-		TCHAR szDir[MAX_PATH];
-		GetAppDirectory(szDir);
-		CasLibraryManager.FindDefaultCasLibrary(szDir);
-	}
-	if (CasLibraryManager.HasDefaultCasLibrary()
-			&& (fInitialSettings || !CasLibraryManager.HasCasLibraryNetworkMap())) {
-		//StatusView.SetSingleText(TEXT("CASライブラリの読み込み中..."));
-		Core.LoadCasLibrary(nullptr);
-	}
-
 	GraphicsCore.Initialize();
 
 	TCHAR szDriverFileName[MAX_PATH];
@@ -732,7 +719,6 @@ int CAppMain::Main(HINSTANCE hInstance,LPCTSTR pszCmdLine,int nCmdShow)
 		GeneralOptions.SetH264DecoderName(InitialSettings.GetH264DecoderName());
 		GeneralOptions.SetH265DecoderName(InitialSettings.GetH265DecoderName());
 		GeneralOptions.SetVideoRendererType(InitialSettings.GetVideoRenderer());
-		GeneralOptions.SetCasDevice(InitialSettings.GetCasDevice());
 		RecordOptions.SetSaveFolder(InitialSettings.GetRecordFolder());
 	} else if (!CmdLineOptions.m_DriverName.empty()) {
 		::lstrcpy(szDriverFileName,CmdLineOptions.m_DriverName.c_str());
@@ -741,8 +727,6 @@ int CAppMain::Main(HINSTANCE hInstance,LPCTSTR pszCmdLine,int nCmdShow)
 	} else {
 		GeneralOptions.GetFirstDriverName(szDriverFileName);
 	}
-
-	GeneralOptions.SetTemporaryNoDescramble(CmdLineOptions.m_fNoDescramble);
 
 	// スタイル設定の読み込み
 	{
@@ -837,17 +821,14 @@ int CAppMain::Main(HINSTANCE hInstance,LPCTSTR pszCmdLine,int nCmdShow)
 
 	ViewOptions.Apply(COptions::UPDATE_ALL);
 
+	if (CmdLineOptions.m_fNoTSProcessor)
+		CoreEngine.EnableTSProcessor(false);
 	CoreEngine.SetMinTimerResolution(PlaybackOptions.GetMinTimerResolution());
-	CoreEngine.SetDescramble(!CmdLineOptions.m_fNoDescramble);
 	CoreEngine.SetNoEpg(CmdLineOptions.m_fNoEpg);
-	CoreEngine.m_DtvEngine.SetDescrambleCurServiceOnly(GeneralOptions.GetDescrambleCurServiceOnly());
-	CoreEngine.m_DtvEngine.m_CasProcessor.SetInstruction(GeneralOptions.GetDescrambleInstruction());
-	CoreEngine.m_DtvEngine.m_CasProcessor.EnableContract(GeneralOptions.GetEnableEmmProcess());
 	PlaybackOptions.Apply(COptions::UPDATE_ALL);
 	CoreEngine.m_DtvEngine.m_LogoDownloader.SetLogoHandler(&LogoManager);
 	CoreEngine.m_DtvEngine.SetTracer(&StatusView);
 	CoreEngine.m_DtvEngine.m_BonSrcDecoder.SetTracer(&Logger);
-	CoreEngine.BuildDtvEngine(&m_DtvEngineHandler);
 	RecordOptions.Apply(COptions::UPDATE_ALL);
 
 	// プラグインの読み込み
@@ -889,13 +870,18 @@ int CAppMain::Main(HINSTANCE hInstance,LPCTSTR pszCmdLine,int nCmdShow)
 		SideBar.Update();
 	}
 
+	CoreEngine.BuildDtvEngine(&m_DtvEngineHandler);
+	TSProcessorManager.OpenDefaultFilters();
+
 	// BonDriver の読み込み
 	CoreEngine.SetDriverFileName(szDriverFileName);
 	if (!CmdLineOptions.m_fNoDriver && !CmdLineOptions.m_fStandby) {
 		if (CoreEngine.IsDriverSpecified()) {
 			StatusView.SetSingleText(TEXT("BonDriverの読み込み中..."));
 			if (Core.OpenAndInitializeTuner(
-					!Core.IsSilent()?CAppCore::OPEN_CAS_CARD_RETRY:0)) {
+					Core.IsSilent()?
+						CAppCore::OPENTUNER_NO_UI:
+						CAppCore::OPENTUNER_RETRY_DIALOG)) {
 				AppEventManager.OnTunerChanged();
 			} else {
 				Core.OnError(&CoreEngine,TEXT("BonDriverの初期化ができません。"));
@@ -1473,7 +1459,9 @@ void CAppMain::CDtvEngineEventHandler::OnServiceListUpdated(
 void CAppMain::CDtvEngineEventHandler::OnServiceInfoUpdated(CTsAnalyzer *pTsAnalyzer)
 {
 	OnServiceUpdated(pTsAnalyzer,false,false);
-	m_App.MainWindow.PostMessage(WM_APP_CHANGECASLIBRARY,0,0);
+	m_App.MainWindow.PostMessage(WM_APP_SERVICEINFOUPDATED,0,
+								 MAKELPARAM(pTsAnalyzer->GetNetworkID(),
+											pTsAnalyzer->GetTransportStreamID()));
 }
 
 void CAppMain::CDtvEngineEventHandler::OnServiceChanged(WORD ServiceID)
@@ -1498,31 +1486,6 @@ void CAppMain::CDtvEngineEventHandler::OnVideoSizeChanged(CMediaViewer *pMediaVi
 		後でパンスキャンの設定を行う必要がある
 	*/
 	m_App.MainWindow.PostMessage(WM_APP_VIDEOSIZECHANGED,0,0);
-}
-
-void CAppMain::CDtvEngineEventHandler::OnEmmProcessed()
-{
-	m_App.MainWindow.PostMessage(WM_APP_EMMPROCESSED,true,0);
-}
-
-void CAppMain::CDtvEngineEventHandler::OnEmmError(LPCTSTR pszText)
-{
-	m_App.MainWindow.PostMessage(WM_APP_EMMPROCESSED,false,0);
-}
-
-void CAppMain::CDtvEngineEventHandler::OnEcmError(LPCTSTR pszText)
-{
-	m_App.MainWindow.PostMessage(WM_APP_ECMERROR,0,(LPARAM)DuplicateString(pszText));
-}
-
-void CAppMain::CDtvEngineEventHandler::OnEcmRefused()
-{
-	m_App.MainWindow.PostMessage(WM_APP_ECMREFUSED,0,0);
-}
-
-void CAppMain::CDtvEngineEventHandler::OnCardReaderHung()
-{
-	m_App.MainWindow.PostMessage(WM_APP_CARDREADERHUNG,0,0);
 }
 
 void CAppMain::CDtvEngineEventHandler::OnEventChanged(CTsAnalyzer *pTsAnalyzer,WORD EventID)

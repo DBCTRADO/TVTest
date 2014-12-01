@@ -135,6 +135,12 @@ namespace TVTest
 			}
 		};
 
+		struct LessNoCase {
+			bool operator()(const String &Str1,const String &Str2) const {
+				return StringUtility::CompareNoCase(Str1,Str2)<0;
+			}
+		};
+
 		struct Hash {
 			std::size_t operator()(const String &Str) const {
 				return StringUtility::Hash(Str);

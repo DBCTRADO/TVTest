@@ -58,12 +58,6 @@ INT_PTR CStreamInfo::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 		AddControl(IDC_STREAMINFO_SERVICE,ALIGN_ALL);
 		AddControl(IDC_STREAMINFO_UPDATE,ALIGN_BOTTOM_RIGHT);
 		AddControl(IDC_STREAMINFO_COPY,ALIGN_BOTTOM_RIGHT);
-#if 0
-		AddControl(IDC_STREAMINFO_CONTRACT_LABEL,ALIGN_BOTTOM);
-		AddControl(IDC_STREAMINFO_CONTRACT_SERVICE,ALIGN_HORZ_BOTTOM);
-		AddControl(IDC_STREAMINFO_CONTRACT_CHECK,ALIGN_BOTTOM_RIGHT);
-		AddControl(IDC_STREAMINFO_CONTRACT_INFO,ALIGN_HORZ_BOTTOM);
-#endif
 
 		ApplyPosition();
 		return TRUE;
@@ -97,41 +91,6 @@ INT_PTR CStreamInfo::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 				delete [] pszText;
 			}
 			return TRUE;
-
-#if 0
-		case IDC_STREAMINFO_CONTRACT_CHECK:
-			{
-				LRESULT Sel=DlgComboBox_GetCurSel(hDlg,IDC_STREAMINFO_CONTRACT_SERVICE);
-
-				if (Sel>=0) {
-					LRESULT Data=DlgComboBox_GetItemData(hDlg,IDC_STREAMINFO_CONTRACT_SERVICE,Sel);
-					SYSTEMTIME st;
-					CCasProcessor::ContractStatus Status=
-						GetAppClass().CoreEngine.m_DtvEngine.m_CasProcessor.GetContractPeriod(
-							LOWORD(Data),HIWORD(Data),&st);
-					TCHAR szText[256];
-
-					switch (Status) {
-					case CCasProcessor::CONTRACT_CONTRACTED:
-						StdUtil::snprintf(szText,lengthof(szText),
-										  TEXT("契約期限 %d年%d月%d日 まで"),st.wYear,st.wMonth,st.wDay);
-						break;
-					case CCasProcessor::CONTRACT_UNCONTRACTED:
-						::lstrcpy(szText,TEXT("未契約です"));
-						break;
-					case CCasProcessor::CONTRACT_UNKNOWN:
-						::lstrcpy(szText,TEXT("契約情報を確認できません"));
-						break;
-					case CCasProcessor::CONTRACT_ERROR:
-					default:
-						::lstrcpy(szText,TEXT("エラーが発生しました"));
-						break;
-					}
-					::SetDlgItemText(hDlg,IDC_STREAMINFO_CONTRACT_INFO,szText);
-				}
-			}
-			return TRUE;
-#endif
 
 		case IDOK:
 		case IDCANCEL:
@@ -516,29 +475,6 @@ void CStreamInfo::SetService()
 			}
 		}
 	}
-
-#if 0
-	// 契約情報確認サービス
-	DlgComboBox_Clear(m_hDlg,IDC_STREAMINFO_CONTRACT_SERVICE);
-	int ContractCount=0;
-	if (!ServiceList.empty()) {
-		for (size_t i=0;i<ServiceList.size();i++) {
-			const CTsAnalyzer::ServiceInfo &ServiceInfo=ServiceList[i];
-
-			if (ServiceInfo.szServiceName[0]!=_T('\0')
-					&& DtvEngine.m_CasProcessor.HasContractInfo(NID,ServiceInfo.ServiceID)) {
-				LRESULT Index=DlgComboBox_AddString(m_hDlg,IDC_STREAMINFO_CONTRACT_SERVICE,ServiceInfo.szServiceName);
-				DlgComboBox_SetItemData(m_hDlg,IDC_STREAMINFO_CONTRACT_SERVICE,Index,MAKELPARAM(NID,ServiceInfo.ServiceID));
-				ContractCount++;
-			}
-		}
-		if (ContractCount>0)
-			DlgComboBox_SetCurSel(m_hDlg,IDC_STREAMINFO_CONTRACT_SERVICE,0);
-	}
-	EnableDlgItems(m_hDlg,IDC_STREAMINFO_CONTRACT_SERVICE,IDC_STREAMINFO_CONTRACT_CHECK,ContractCount>0);
-
-	::SetDlgItemText(m_hDlg,IDC_STREAMINFO_CONTRACT_INFO,TEXT(""));
-#endif
 }
 
 

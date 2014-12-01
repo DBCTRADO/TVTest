@@ -17,7 +17,7 @@ static char THIS_FILE[]=__FILE__;
 CCoreEngine::CCoreEngine()
 	: m_DriverType(DRIVER_UNKNOWN)
 
-	, m_fDescramble(true)
+	, m_fEnableTSProcessor(true)
 
 	, m_fPacketBuffering(false)
 
@@ -65,47 +65,27 @@ CCoreEngine::~CCoreEngine()
 void CCoreEngine::Close()
 {
 	m_DtvEngine.CloseEngine();
+
+	if (!m_TSProcessorList.empty()) {
+		for (auto it=m_TSProcessorList.begin();it!=m_TSProcessorList.end();++it)
+			it->pTSProcessor->Release();
+		m_TSProcessorList.clear();
+	}
 }
 
 
 bool CCoreEngine::BuildDtvEngine(CDtvEngine::CEventHandler *pEventHandler)
 {
-	/*
-	グラフ構成図
-
-	CBonSrcDecoder
-	    ↓
-	CTsPacketParser
-	    ↓
-	CTsAnalyzer
-	    ↓
-	CMediaTee──────┐
-	    ↓               │
-	(CEventManager)  CCasProcessor
-	    ↓               ↓
-	CLogoDownloader  CCaptionDecoder
-	    ↓               ↓
-	CTsSelector      CMediaGrabber
-	    ↓               ↓
-	CTsRecorder      CMediaViewer
-	*/
-
-	struct {
-		std::vector<CDtvEngine::DecoderConnectionInfo> List;
-
-		void Add(CDtvEngine::DecoderID OutputDecoder,
-				 CDtvEngine::DecoderID InputDecoder,
-				 int OutputIndex=0)
-		{
-			List.push_back(CDtvEngine::DecoderConnectionInfo(OutputDecoder,InputDecoder,OutputIndex));
-		}
-	} ConnectionList;
+	TSProcessorConnectionList ConnectionList;
+	int DecoderID,OutputIndex;
 
 	ConnectionList.Add(CDtvEngine::DECODER_ID_BonSrcDecoder,
 					   CDtvEngine::DECODER_ID_TsPacketParser);
 	ConnectionList.Add(CDtvEngine::DECODER_ID_TsPacketParser,
 					   CDtvEngine::DECODER_ID_TsAnalyzer);
-	ConnectionList.Add(CDtvEngine::DECODER_ID_TsAnalyzer,
+	DecoderID=CDtvEngine::DECODER_ID_TsAnalyzer;
+	ConnectTSProcessor(&ConnectionList,TSPROCESSOR_CONNECTPOSITION_ROOT,&DecoderID);
+	ConnectionList.Add(DecoderID,
 					   CDtvEngine::DECODER_ID_MediaTee);
 	if (!m_fNoEpg) {
 		ConnectionList.Add(CDtvEngine::DECODER_ID_MediaTee,
@@ -116,23 +96,27 @@ bool CCoreEngine::BuildDtvEngine(CDtvEngine::CEventHandler *pEventHandler)
 		ConnectionList.Add(CDtvEngine::DECODER_ID_MediaTee,
 						   CDtvEngine::DECODER_ID_LogoDownloader,0);
 	}
-	ConnectionList.Add(CDtvEngine::DECODER_ID_MediaTee,
-					   CDtvEngine::DECODER_ID_CasProcessor,1);
-	ConnectionList.Add(CDtvEngine::DECODER_ID_LogoDownloader,
+	DecoderID=CDtvEngine::DECODER_ID_LogoDownloader;
+	ConnectTSProcessor(&ConnectionList,TSPROCESSOR_CONNECTPOSITION_RECORDER,&DecoderID);
+	ConnectionList.Add(DecoderID,
+					   CDtvEngine::DECODER_ID_MediaGrabber);
+	ConnectionList.Add(CDtvEngine::DECODER_ID_MediaGrabber,
 					   CDtvEngine::DECODER_ID_TsSelector);
 	ConnectionList.Add(CDtvEngine::DECODER_ID_TsSelector,
 					   CDtvEngine::DECODER_ID_TsRecorder);
-	ConnectionList.Add(CDtvEngine::DECODER_ID_CasProcessor,
+	DecoderID=CDtvEngine::DECODER_ID_MediaTee;
+	OutputIndex=1;
+	ConnectTSProcessor(&ConnectionList,TSPROCESSOR_CONNECTPOSITION_VIEWER,&DecoderID,&OutputIndex);
+	ConnectionList.Add(DecoderID,
+					   CDtvEngine::DECODER_ID_TsPacketCounter,OutputIndex);
+	ConnectionList.Add(CDtvEngine::DECODER_ID_TsPacketCounter,
 					   CDtvEngine::DECODER_ID_CaptionDecoder);
 	ConnectionList.Add(CDtvEngine::DECODER_ID_CaptionDecoder,
-					   CDtvEngine::DECODER_ID_MediaGrabber);
-	ConnectionList.Add(CDtvEngine::DECODER_ID_MediaGrabber,
 					   CDtvEngine::DECODER_ID_MediaViewer);
 
 	if (!m_DtvEngine.BuildEngine(
 			ConnectionList.List.data(),static_cast<int>(ConnectionList.List.size()),
-			pEventHandler,
-			m_fDescramble)) {
+			pEventHandler)) {
 		return false;
 	}
 
@@ -140,9 +124,59 @@ bool CCoreEngine::BuildDtvEngine(CDtvEngine::CEventHandler *pEventHandler)
 }
 
 
-bool CCoreEngine::IsBuildComplete() const
+void CCoreEngine::ConnectTSProcessor(TSProcessorConnectionList *pList,
+									 TSProcessorConnectPosition ConnectPosition,
+									 int *pDecoderID,int *pOutputIndex)
 {
-	return m_DtvEngine.IsBuildComplete();
+	if (!m_fEnableTSProcessor)
+		return;
+
+	int DecoderID=*pDecoderID;
+	int OutputIndex=pOutputIndex!=NULL?*pOutputIndex:0;
+
+	for (auto it=m_TSProcessorList.begin();it!=m_TSProcessorList.end();++it) {
+		if (it->ConnectPosition==ConnectPosition) {
+			pList->Add(DecoderID,it->DecoderID,OutputIndex);
+			DecoderID=it->DecoderID;
+			OutputIndex=0;
+		}
+	}
+
+	*pDecoderID=DecoderID;
+	if (pOutputIndex!=NULL)
+		*pOutputIndex=OutputIndex;
+}
+
+
+TVTest::CTSProcessor *CCoreEngine::GetTSProcessorByIndex(size_t Index)
+{
+	if (Index>=m_TSProcessorList.size())
+		return NULL;
+	return m_TSProcessorList[Index].pTSProcessor;
+}
+
+
+bool CCoreEngine::RegisterTSProcessor(TVTest::CTSProcessor *pTSProcessor,
+									  TSProcessorConnectPosition ConnectPosition)
+{
+	if (pTSProcessor==NULL)
+		return false;
+
+	TSProcessorInfo Info;
+
+	Info.pTSProcessor=pTSProcessor;
+	Info.ConnectPosition=ConnectPosition;
+	Info.DecoderID=m_DtvEngine.RegisterDecoder(pTSProcessor);
+
+	m_TSProcessorList.push_back(Info);
+
+	return true;
+}
+
+
+void CCoreEngine::EnableTSProcessor(bool fEnable)
+{
+	m_fEnableTSProcessor=fEnable;
 }
 
 
@@ -335,95 +369,6 @@ bool CCoreEngine::IsNetworkDriverFileName(LPCTSTR pszFileName)
 			|| IsEqualFileName(pszName,TEXT("BonDriver_TCP.dll")))
 		return true;
 	return false;
-}
-
-
-bool CCoreEngine::LoadCasLibrary()
-{
-	if (!m_DtvEngine.LoadCasLibrary(m_CasLibraryName.c_str())) {
-		SetError(m_DtvEngine.GetLastErrorException());
-		return false;
-	}
-	return true;
-}
-
-
-bool CCoreEngine::IsCasLibraryLoaded() const
-{
-	return m_DtvEngine.m_CasProcessor.IsCasLibraryLoaded();
-}
-
-
-bool CCoreEngine::SetCasLibraryName(LPCTSTR pszName)
-{
-	if (!IsStringEmpty(pszName))
-		m_CasLibraryName=pszName;
-	else
-		m_CasLibraryName.clear();
-	return true;
-}
-
-
-bool CCoreEngine::OpenCasCard(int Device,LPCTSTR pszName)
-{
-	if (!SetDescramble(Device>=0))
-		return false;
-	if (!m_DtvEngine.OpenCasCard(Device,pszName)) {
-		SetError(m_DtvEngine.GetLastErrorException());
-		return false;
-	}
-	return true;
-}
-
-
-bool CCoreEngine::CloseCasCard()
-{
-	return m_DtvEngine.CloseCasCard();
-}
-
-
-bool CCoreEngine::IsCasCardOpen() const
-{
-	return m_DtvEngine.m_CasProcessor.IsCasCardOpen();
-}
-
-
-bool CCoreEngine::SetDescramble(bool fDescramble)
-{
-	if (m_DtvEngine.IsEngineBuild()) {
-		if (!m_DtvEngine.SetDescramble(fDescramble)) {
-			SetError(m_DtvEngine.GetLastErrorException());
-			return false;
-		}
-	}
-	m_fDescramble=fDescramble;
-	return true;
-}
-
-
-bool CCoreEngine::GetCasDeviceList(CasDeviceList *pList)
-{
-	if (pList==NULL)
-		return false;
-
-	CasDeviceInfo Info;
-
-	Info.Device=-1;
-	Info.DeviceID=0;
-//	Info.Name=TEXT("");
-	Info.Text=TEXT("なし (スクランブル解除しない)");
-	pList->push_back(Info);
-
-	CCasProcessor::CasDeviceInfo DeviceInfo;
-	for (int i=0;m_DtvEngine.m_CasProcessor.GetCasDeviceInfo(i,&DeviceInfo);i++) {
-		Info.Device=i;
-		Info.DeviceID=DeviceInfo.DeviceID;
-		Info.Name=DeviceInfo.Name;
-		Info.Text=DeviceInfo.Text;
-		pList->push_back(Info);
-	}
-
-	return true;
 }
 
 
@@ -644,7 +589,7 @@ DWORD CCoreEngine::UpdateStatistics()
 		m_ContinuityErrorPacketCount=ContinuityErrorCount;
 		Updated|=STATISTIC_CONTINUITYERRORPACKETCOUNT;
 	}
-	ULONGLONG ScrambleCount=m_DtvEngine.m_CasProcessor.GetScramblePacketCount();
+	ULONGLONG ScrambleCount=m_DtvEngine.m_TsPacketCounter.GetScrambledPacketCount();
 	if (ScrambleCount!=m_ScramblePacketCount) {
 		m_ScramblePacketCount=ScrambleCount;
 		Updated|=STATISTIC_SCRAMBLEPACKETCOUNT;
@@ -678,7 +623,7 @@ void CCoreEngine::ResetErrorCount()
 	m_DtvEngine.m_TsPacketParser.ResetErrorPacketCount();
 	m_ErrorPacketCount=0;
 	m_ContinuityErrorPacketCount=0;
-	m_DtvEngine.m_CasProcessor.ResetScramblePacketCount();
+	m_DtvEngine.m_TsPacketCounter.ResetScrambledPacketCount();
 	m_ScramblePacketCount=0;
 }
 

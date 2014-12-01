@@ -431,3 +431,16 @@ bool SetListViewSortMark(HWND hwndList,int Column,bool fAscending)
 
 	return true;
 }
+
+
+bool AdjustListViewColumnWidth(HWND hwndList,bool fUseHeader)
+{
+	if (hwndList==NULL)
+		return false;
+
+	int Count=Header_GetItemCount(ListView_GetHeader(hwndList));
+	for (int i=0;i<Count;i++)
+		ListView_SetColumnWidth(hwndList,i,fUseHeader?LVSCW_AUTOSIZE_USEHEADER:LVSCW_AUTOSIZE);
+
+	return true;
+}

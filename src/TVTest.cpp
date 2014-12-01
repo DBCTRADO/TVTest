@@ -36,6 +36,7 @@ const COptionDialog::PageInfo COptionDialog::m_PageList[] = {
 	{TEXT("EPG/番組情報"),			&g_App.EpgOptions,				HELP_ID_OPTIONS_EPG},
 	{TEXT("EPG番組表"),				&g_App.ProgramGuideOptions,		HELP_ID_OPTIONS_PROGRAMGUIDE},
 	{TEXT("プラグイン"),			&g_App.PluginOptions,			HELP_ID_OPTIONS_PLUGIN},
+	{TEXT("TSプロセッサー"),		&g_App.TSProcessorOptions,		HELP_ID_OPTIONS_TSPROCESSOR},
 	{TEXT("ログ"),					&g_App.Logger,					HELP_ID_OPTIONS_LOG},
 };
 

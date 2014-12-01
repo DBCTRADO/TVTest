@@ -1447,11 +1447,13 @@ LRESULT CMainWindow::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 			m_App.Panel.InfoPanel.UpdateItem(CInformationPanel::ITEM_PROGRAMINFO);
 		return 0;
 
-	case WM_APP_CHANGECASLIBRARY:
-		TRACE(TEXT("WM_APP_CHANGECASLIBRARY\n"));
-		if (!IsMessageInQueue(hwnd,WM_APP_CHANGECASLIBRARY)) {
-			if (m_App.Core.LoadCasLibrary())
-				m_App.Core.OpenCasCard(CAppCore::OPEN_CAS_CARD_NOTIFY_ERROR);
+	case WM_APP_SERVICEINFOUPDATED:
+		TRACE(TEXT("WM_APP_SERVICEINFOUPDATED\n"));
+		if (!IsMessageInQueue(hwnd,WM_APP_SERVICEINFOUPDATED)) {
+			m_App.TSProcessorManager.OnNetworkChanged(
+				LOWORD(lParam),HIWORD(lParam),
+				CTSProcessorManager::FILTER_OPEN_NOTIFY_ERROR |
+				CTSProcessorManager::FILTER_OPEN_NO_UI);
 		}
 		return 0;
 
@@ -1532,51 +1534,6 @@ LRESULT CMainWindow::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 		}
 		return 0;
 
-	case WM_APP_EMMPROCESSED:
-		// EMM 処理が行われた
-		TRACE(TEXT("WM_APP_EMMPROCESSED\n"));
-		m_App.Logger.AddLog(wParam!=0?TEXT("EMM処理を行いました。"):TEXT("EMM処理でエラーが発生しました。"));
-		return 0;
-
-	case WM_APP_ECMERROR:
-		// ECM 処理のエラーが発生した
-		TRACE(TEXT("WM_APP_ECMERROR\n"));
-		{
-			LPTSTR pszText=reinterpret_cast<LPTSTR>(lParam);
-
-			if (m_App.OSDOptions.IsNotifyEnabled(COSDOptions::NOTIFY_ECMERROR))
-				ShowNotificationBar(TEXT("スクランブル解除でエラーが発生しました"),
-									CNotificationBar::MESSAGE_ERROR);
-			if (pszText!=nullptr) {
-				TCHAR szText[256];
-				StdUtil::snprintf(szText,lengthof(szText),
-								  TEXT("ECM処理でエラーが発生しました。(%s)"),pszText);
-				m_App.Logger.AddLog(szText);
-				delete [] pszText;
-			} else {
-				m_App.Logger.AddLog(TEXT("ECM処理でエラーが発生しました。"));
-			}
-		}
-		return 0;
-
-	case WM_APP_ECMREFUSED:
-		// ECM が受け付けられない
-		TRACE(TEXT("WM_APP_ECMREFUSED\n"));
-		if (m_App.OSDOptions.IsNotifyEnabled(COSDOptions::NOTIFY_ECMERROR)
-				&& IsViewerEnabled())
-			ShowNotificationBar(TEXT("契約されていないため視聴できません"),
-								CNotificationBar::MESSAGE_WARNING,6000);
-		return 0;
-
-	case WM_APP_CARDREADERHUNG:
-		// カードリーダーから応答が無い
-		TRACE(TEXT("WM_APP_CARDREADERHUNG\n"));
-		if (m_App.OSDOptions.IsNotifyEnabled(COSDOptions::NOTIFY_ECMERROR))
-			ShowNotificationBar(TEXT("カードリーダーから応答がありません"),
-								CNotificationBar::MESSAGE_ERROR,6000);
-		m_App.Logger.AddLog(TEXT("カードリーダーから応答がありません。"));
-		return 0;
-
 	case WM_APP_EPGLOADED:
 		// EPGファイルが読み込まれた
 		TRACE(TEXT("WM_APP_EPGLOADED\n"));
@@ -1596,6 +1553,23 @@ LRESULT CMainWindow::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 	case WM_APP_PLUGINMESSAGE:
 		// プラグインのメッセージの処理
 		return CPlugin::OnPluginMessage(wParam,lParam);
+
+	case WM_APP_SHOWNOTIFICATIONBAR:
+		// 通知バーの表示
+		TRACE(TEXT("WM_APP_SHOWNOTIFICATIONBAR"));
+		{
+			LPCTSTR pszMessage=reinterpret_cast<LPCTSTR>(lParam);
+
+			if (pszMessage!=nullptr) {
+				if (m_App.OSDOptions.IsNotifyEnabled(HIWORD(wParam))) {
+					ShowNotificationBar(pszMessage,
+						static_cast<CNotificationBar::MessageType>(LOWORD(wParam)),
+						6000);
+				}
+				delete [] pszMessage;
+			}
+		}
+		return 0;
 
 	case WM_ACTIVATEAPP:
 		{

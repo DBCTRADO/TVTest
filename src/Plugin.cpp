@@ -9,6 +9,7 @@
 #include "DriverManager.h"
 #include "LogoManager.h"
 #include "Controller.h"
+#include "TSProcessor.h"
 #include "BonTsEngine/TsEncode.h"
 #include "resource.h"
 #include <algorithm>
@@ -991,7 +992,12 @@ LRESULT CPlugin::OnCallback(TVTest::PluginParam *pParam,UINT Message,LPARAM lPar
 		return TVTest::MakeVersion(VERSION_MAJOR,VERSION_MINOR,VERSION_BUILD);
 
 	case TVTest::MESSAGE_QUERYMESSAGE:
-		return lParam1>=0 && lParam1<TVTest::MESSAGE_TRAILER;
+		if (lParam1<0 || lParam1>=TVTest::MESSAGE_TRAILER)
+			return FALSE;
+		if (lParam1==TVTest::MESSAGE_GETBCASINFO
+				|| lParam1==TVTest::MESSAGE_SENDBCASCOMMAND)
+			return FALSE;
+		return TRUE;
 
 	case TVTest::MESSAGE_MEMORYALLOC:
 		{
@@ -1165,12 +1171,7 @@ LRESULT CPlugin::OnCallback(TVTest::PluginParam *pParam,UINT Message,LPARAM lPar
 			pInfo->ScramblePacketCount=(DWORD)pCoreEngine->GetScramblePacketCount();
 			if (pInfo->Size==sizeof(TVTest::StatusInfo)) {
 				pInfo->DropPacketCount=(DWORD)DropCount;
-				if (pCoreEngine->IsCasCardOpen()) {
-					pInfo->BcasCardStatus=TVTest::BCAS_STATUS_OK;
-				} else {
-					// 取りあえず...
-					pInfo->BcasCardStatus=TVTest::BCAS_STATUS_NOTOPEN;
-				}
+				pInfo->BcasCardStatus=TVTest::BCAS_STATUS_OK;	// 非対応
 			}
 		}
 		return TRUE;
@@ -1488,46 +1489,20 @@ LRESULT CPlugin::OnCallback(TVTest::PluginParam *pParam,UINT Message,LPARAM lPar
 		}
 
 	case TVTest::MESSAGE_GETBCASINFO:
+		// このメッセージは現在サポートされない
 		{
 			TVTest::BCasInfo *pBCasInfo=reinterpret_cast<TVTest::BCasInfo*>(lParam1);
 
 			if (pBCasInfo==NULL || pBCasInfo->Size!=sizeof(TVTest::BCasInfo))
 				return FALSE;
 
-			CCasProcessor::CasCardInfo CardInfo;
-			if (!GetAppClass().CoreEngine.m_DtvEngine.m_CasProcessor.GetCasCardInfo(&CardInfo))
-				return FALSE;
-			pBCasInfo->CASystemID=CardInfo.CASystemID;
-			::CopyMemory(pBCasInfo->CardID,CardInfo.CardID,6);
-			pBCasInfo->CardType=CardInfo.CardType;
-			pBCasInfo->MessagePartitionLength=CardInfo.MessagePartitionLength;
-			::CopyMemory(pBCasInfo->SystemKey,CardInfo.SystemKey,32);
-			::CopyMemory(pBCasInfo->InitialCBC,CardInfo.InitialCBC,8);
-			pBCasInfo->CardManufacturerID=CardInfo.CardManufacturerID;
-			pBCasInfo->CardVersion=CardInfo.CardVersion;
-			pBCasInfo->CheckCode=CardInfo.CheckCode;
-#ifdef UNICODE
-			::WideCharToMultiByte(CP_ACP,0,CardInfo.CardIDText,-1,
-								  pBCasInfo->szFormatCardID,lengthof(pBCasInfo->szFormatCardID),NULL,NULL);
-#else
-			::lstrcpyn(pBCasInfo->szFormatCardID,CardInfo.CardIDText,lengthof(pBCasInfo->szFormatCardID));
-#endif
+			::ZeroMemory(pBCasInfo,sizeof(TVTest::BCasInfo));
 		}
-		return TRUE;
+		return FALSE;
 
 	case TVTest::MESSAGE_SENDBCASCOMMAND:
-		{
-			TVTest::BCasCommandInfo *pBCasCommand=reinterpret_cast<TVTest::BCasCommandInfo*>(lParam1);
-
-			if (pBCasCommand==NULL
-					|| pBCasCommand->pSendData==NULL || pBCasCommand->SendSize==0
-					|| pBCasCommand->pReceiveData==NULL)
-				return FALSE;
-
-			return GetAppClass().CoreEngine.m_DtvEngine.m_CasProcessor.SendCasCommand(
-				pBCasCommand->pSendData, pBCasCommand->SendSize,
-				pBCasCommand->pReceiveData, &pBCasCommand->ReceiveSize);
-		}
+		// このメッセージは現在サポートされない
+		return FALSE;
 
 	case TVTest::MESSAGE_GETHOSTINFO:
 		{
@@ -2274,6 +2249,28 @@ LRESULT CPlugin::OnCallback(TVTest::PluginParam *pParam,UINT Message,LPARAM lPar
 			}
 		}
 		return FALSE;
+
+	case TVTest::MESSAGE_REGISTERTSPROCESSOR:
+		{
+			const TVTest::TSProcessorInfo *pInfo=
+				reinterpret_cast<const TVTest::TSProcessorInfo*>(lParam1);
+
+			if (pInfo==NULL
+					|| pInfo->Size!=sizeof(TVTest::TSProcessorInfo)
+					|| pInfo->Flags!=0
+					|| pInfo->pTSProcessor==NULL)
+				return FALSE;
+
+			TVTest::CTSProcessor *pTSProcessor=
+				new TVTest::CTSProcessor(pInfo->pTSProcessor);
+			if (!GetAppClass().TSProcessorManager.RegisterTSProcessor(
+					pTSProcessor,
+					(CCoreEngine::TSProcessorConnectPosition)pInfo->ConnectPosition)) {
+				pTSProcessor->Release();
+				return FALSE;
+			}
+		}
+		return TRUE;
 
 #ifdef _DEBUG
 	default:
