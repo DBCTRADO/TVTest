@@ -59,7 +59,8 @@ private:
 	enum {
 		UPDATE_DECODER				= 0x00000001UL,
 		UPDATE_RENDERER				= 0x00000002UL,
-		UPDATE_RESIDENT				= 0x00000004UL
+		UPDATE_RESIDENT				= 0x00000004UL,
+		UPDATE_1SEGFALLBACK			= 0x00000008UL
 	};
 
 	TVTest::String m_BonDriverDirectory;
@@ -72,6 +73,7 @@ private:
 	CVideoRenderer::RendererType m_VideoRendererType;
 	bool m_fResident;
 	bool m_fKeepSingleTask;
+	bool m_fEnable1SegFallback;
 };
 
 

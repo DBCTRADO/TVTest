@@ -22,6 +22,7 @@ CGeneralOptions::CGeneralOptions()
 	, m_VideoRendererType(CVideoRenderer::RENDERER_DEFAULT)
 	, m_fResident(false)
 	, m_fKeepSingleTask(false)
+	, m_fEnable1SegFallback(true)
 {
 }
 
@@ -36,8 +37,12 @@ bool CGeneralOptions::Apply(DWORD Flags)
 {
 	CAppMain &App=GetAppClass();
 
-	if ((Flags&UPDATE_RESIDENT)!=0) {
+	if ((Flags & UPDATE_RESIDENT)!=0) {
 		App.UICore.SetResident(m_fResident);
+	}
+
+	if ((Flags & UPDATE_1SEGFALLBACK)!=0) {
+		App.CoreEngine.m_DtvEngine.m_TsPacketParser.EnablePATGeneration(m_fEnable1SegFallback);
 	}
 
 	return true;
@@ -78,6 +83,8 @@ bool CGeneralOptions::ReadSettings(CSettings &Settings)
 
 	Settings.Read(TEXT("Resident"),&m_fResident);
 	Settings.Read(TEXT("KeepSingleTask"),&m_fKeepSingleTask);
+	Settings.Read(TEXT("Enable1SegFallback"),&m_fEnable1SegFallback);
+
 	return true;
 }
 
@@ -95,6 +102,8 @@ bool CGeneralOptions::WriteSettings(CSettings &Settings)
 				   CVideoRenderer::EnumRendererName((int)m_VideoRendererType));
 	Settings.Write(TEXT("Resident"),m_fResident);
 	Settings.Write(TEXT("KeepSingleTask"),m_fKeepSingleTask);
+	Settings.Write(TEXT("Enable1SegFallback"),m_fEnable1SegFallback);
+
 	return true;
 }
 
@@ -277,6 +286,7 @@ INT_PTR CGeneralOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam
 
 			DlgCheckBox_Check(hDlg,IDC_OPTIONS_RESIDENT,m_fResident);
 			DlgCheckBox_Check(hDlg,IDC_OPTIONS_KEEPSINGLETASK,m_fKeepSingleTask);
+			DlgCheckBox_Check(hDlg,IDC_OPTIONS_ENABLE1SEGFALLBACK,m_fEnable1SegFallback);
 		}
 		return TRUE;
 
@@ -391,6 +401,13 @@ INT_PTR CGeneralOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam
 
 				m_fKeepSingleTask=
 					DlgCheckBox_IsChecked(hDlg,IDC_OPTIONS_KEEPSINGLETASK);
+
+				bool fEnable1SegFallback=
+					DlgCheckBox_IsChecked(hDlg,IDC_OPTIONS_ENABLE1SEGFALLBACK);
+				if (fEnable1SegFallback!=m_fEnable1SegFallback) {
+					m_fEnable1SegFallback=fEnable1SegFallback;
+					SetUpdateFlag(UPDATE_1SEGFALLBACK);
+				}
 
 				m_fChanged=true;
 			}

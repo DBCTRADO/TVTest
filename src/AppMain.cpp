@@ -813,7 +813,8 @@ int CAppMain::Main(HINSTANCE hInstance,LPCTSTR pszCmdLine,int nCmdShow)
 		MainWindow.Update();
 	}
 
-	ResidentManager.SetResident(GeneralOptions.GetResident());
+	GeneralOptions.Apply(COptions::UPDATE_ALL);
+
 	ResidentManager.Initialize(MainWindow.GetHandle(),WM_APP_TRAYICON);
 	ResidentManager.SetMinimizeToTray(CmdLineOptions.m_fTray || ViewOptions.GetMinimizeToTray());
 	if (CmdLineOptions.m_fMinimize)
