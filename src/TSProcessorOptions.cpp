@@ -4,6 +4,7 @@
 #include "TSProcessorOptions.h"
 #include "DialogUtil.h"
 #include "MessageDialog.h"
+#include "Help/HelpID.h"
 #include "resource.h"
 
 #ifdef _DEBUG
@@ -752,6 +753,10 @@ INT_PTR CTSProcessorOptions::CTunerMapDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM
 				::PostMessage(hDlg,WM_APP_UPDATEDEVICEFILTERLIST,0,0);
 			return TRUE;
 
+		case IDC_TSPROCESSORTUNERMAP_HELP:
+			GetAppClass().Core.ShowHelpContent(HELP_ID_TSPROCESSOR_TUNERMAP);
+			return TRUE;
+
 		case IDOK:
 			GetDlgItemString(hDlg,IDC_TSPROCESSORTUNERMAP_TUNER,&m_pInfo->Tuner);
 			m_pInfo->fEnableProcessing=
@@ -842,6 +847,10 @@ INT_PTR CTSProcessorOptions::CNetworkMapDialog::DlgProc(HWND hDlg,UINT uMsg,WPAR
 		case IDC_TSPROCESSORNETWORKMAP_DEVICE:
 			if (HIWORD(wParam)==CBN_SELCHANGE || HIWORD(wParam)==CBN_EDITCHANGE)
 				::PostMessage(hDlg,WM_APP_UPDATEDEVICEFILTERLIST,0,0);
+			return TRUE;
+
+		case IDC_TSPROCESSORNETWORKMAP_HELP:
+			GetAppClass().Core.ShowHelpContent(HELP_ID_TSPROCESSOR_NETWORKMAP);
 			return TRUE;
 
 		case IDOK:
