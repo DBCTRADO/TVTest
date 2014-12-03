@@ -238,17 +238,17 @@ bool CTSProcessorManager::SetTSProcessorSettings(CTSProcessorSettings *pSettings
 }
 
 
-bool CTSProcessorManager::ApplyTSProcessorSettings(const GUID &guid)
+bool CTSProcessorManager::ApplyTSProcessorSettings(const GUID &guid,bool fSetProperties)
 {
 	CTSProcessor *pTSProcessor=GetTSProcessor(guid);
 	if (pTSProcessor==nullptr)
 		return false;
 
-	return ApplyTSProcessorSettings(pTSProcessor,guid);
+	return ApplyTSProcessorSettings(pTSProcessor,guid,fSetProperties);
 }
 
 
-bool CTSProcessorManager::ApplyTSProcessorSettings(CTSProcessor *pTSProcessor)
+bool CTSProcessorManager::ApplyTSProcessorSettings(CTSProcessor *pTSProcessor,bool fSetProperties)
 {
 	if (pTSProcessor==nullptr)
 		return false;
@@ -257,11 +257,12 @@ bool CTSProcessorManager::ApplyTSProcessorSettings(CTSProcessor *pTSProcessor)
 	if (!pTSProcessor->GetGuid(&guid))
 		return false;
 
-	return ApplyTSProcessorSettings(pTSProcessor,guid);
+	return ApplyTSProcessorSettings(pTSProcessor,guid,fSetProperties);
 }
 
 
-bool CTSProcessorManager::ApplyTSProcessorSettings(CTSProcessor *pTSProcessor,const GUID &guid)
+bool CTSProcessorManager::ApplyTSProcessorSettings(
+	CTSProcessor *pTSProcessor,const GUID &guid,bool fSetProperties)
 {
 	const CTSProcessorSettings *pSettings=GetTSProcessorSettings(guid);
 	if (pSettings==nullptr)
@@ -270,7 +271,8 @@ bool CTSProcessorManager::ApplyTSProcessorSettings(CTSProcessor *pTSProcessor,co
 	if (pSettings->m_EnableProcessing)
 		pTSProcessor->SetEnableProcessing(pSettings->m_EnableProcessing.value());
 
-	if (!pSettings->m_PropertyList.empty()
+	if (fSetProperties
+			&& !pSettings->m_PropertyList.empty()
 			&& pTSProcessor->IsPropertyBagSupported()) {
 		CPropertyBag *pPropBag=new CPropertyBag;
 		for (auto it=pSettings->m_PropertyList.begin();it!=pSettings->m_PropertyList.end();++it) {
@@ -282,6 +284,37 @@ bool CTSProcessorManager::ApplyTSProcessorSettings(CTSProcessor *pTSProcessor,co
 	}
 
 	return true;
+}
+
+
+bool CTSProcessorManager::SaveTSProcessorProperties(CTSProcessor *pTSProcessor)
+{
+	if (pTSProcessor==nullptr)
+		return false;
+
+	bool fSaved=false;
+	GUID guid;
+
+	if (pTSProcessor->IsPropertyBagSupported()
+			&& pTSProcessor->GetGuid(&guid)) {
+		CTSProcessorSettings *pSettings=GetTSProcessorSettings(guid);
+
+		if (pSettings!=nullptr) {
+			CPropertyBag *pPropBag=new CPropertyBag;
+
+			if (SUCCEEDED(pTSProcessor->SaveProperties(pPropBag))) {
+				pSettings->m_PropertyList.clear();
+				for (auto it=pPropBag->begin();it!=pPropBag->end();++it) {
+					pSettings->m_PropertyList.insert(*it);
+				}
+				fSaved=true;
+			}
+
+			pPropBag->Release();
+		}
+	}
+
+	return fSaved;
 }
 
 
@@ -614,25 +647,7 @@ void CTSProcessorManager::OpenFilter(
 
 void CTSProcessorManager::OnFinalize(CTSProcessor *pTSProcessor)
 {
-	GUID guid;
-
-	if (pTSProcessor->IsPropertyBagSupported()
-			&& pTSProcessor->GetGuid(&guid)) {
-		CTSProcessorSettings *pSettings=GetTSProcessorSettings(guid);
-
-		if (pSettings!=nullptr) {
-			CPropertyBag *pPropBag=new CPropertyBag;
-
-			if (SUCCEEDED(pTSProcessor->SaveProperties(pPropBag))) {
-				pSettings->m_PropertyList.clear();
-				for (auto it=pPropBag->begin();it!=pPropBag->end();++it) {
-					pSettings->m_PropertyList.insert(*it);
-				}
-			}
-
-			pPropBag->Release();
-		}
-	}
+	SaveTSProcessorProperties(pTSProcessor);
 }
 
 

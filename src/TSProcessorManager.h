@@ -103,8 +103,9 @@ namespace TVTest
 		CTSProcessorSettings *GetTSProcessorSettings(const GUID &guid);
 		const CTSProcessorSettings *GetTSProcessorSettings(const GUID &guid) const;
 		bool SetTSProcessorSettings(CTSProcessorSettings *pSettings);
-		bool ApplyTSProcessorSettings(const GUID &guid);
-		bool ApplyTSProcessorSettings(CTSProcessor *pTSProcessor);
+		bool ApplyTSProcessorSettings(const GUID &guid,bool fSetProperties=true);
+		bool ApplyTSProcessorSettings(CTSProcessor *pTSProcessor,bool fSetProperties=true);
+		bool SaveTSProcessorProperties(CTSProcessor *pTSProcessor);
 		bool RegisterTSProcessor(CTSProcessor *pTSProcessor,
 								 CCoreEngine::TSProcessorConnectPosition ConnectPosition);
 		CTSProcessor *GetTSProcessor(const GUID &guid) const;
@@ -118,7 +119,7 @@ namespace TVTest
 	private:
 		std::vector<CTSProcessorSettings*> m_SettingsList;
 
-		bool ApplyTSProcessorSettings(CTSProcessor *pTSProcessor,const GUID &guid);
+		bool ApplyTSProcessorSettings(CTSProcessor *pTSProcessor,const GUID &guid,bool fSetProperties=true);
 		void OpenFilter(
 			CTSProcessor *pTSProcessor,CTSProcessorSettings *pSettings,
 			const FilterInfo &Filter,unsigned int FilterOpenFlags);

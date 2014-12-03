@@ -140,7 +140,8 @@ INT_PTR CTSProcessorOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lP
 				CTSProcessor *pTSProcessor=
 					m_TSProcessorManager.GetTSProcessor(m_pCurSettings->m_guid);
 				if (pTSProcessor!=nullptr) {
-					pTSProcessor->ShowPropertyPage(hDlg, GetAppClass().GetResourceInstance());
+					if (pTSProcessor->ShowPropertyPage(hDlg, GetAppClass().GetResourceInstance()))
+						m_TSProcessorManager.SaveTSProcessorProperties(pTSProcessor);
 				}
 			}
 			return TRUE;
@@ -312,7 +313,7 @@ INT_PTR CTSProcessorOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lP
 				for (auto it=m_SettingsList.begin();it!=m_SettingsList.end();++it) {
 					GUID guid=(*it)->m_guid;
 					m_TSProcessorManager.SetTSProcessorSettings(*it);
-					m_TSProcessorManager.ApplyTSProcessorSettings(guid);
+					m_TSProcessorManager.ApplyTSProcessorSettings(guid,false);
 				}
 				m_SettingsList.clear();
 
