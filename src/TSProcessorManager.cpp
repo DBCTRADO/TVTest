@@ -110,7 +110,7 @@ bool CTSProcessorManager::ReadSettings(CSettings &Settings)
 					StdUtil::snprintf(szKey,lengthof(szKey),TEXT("Processor%d.Property%d.Value"),i,j);
 					if (Settings.Read(szKey,&Value)) {
 						CVariant Var;
-						if (SUCCEEDED(Var.FromString(Value)))
+						if (SUCCEEDED(Var.FromString(StringUtility::Decode(Value))))
 							pTSProcessorSettings->m_PropertyList.insert(std::pair<String,CVariant>(Name,Var));
 					}
 				}
@@ -191,7 +191,7 @@ bool CTSProcessorManager::WriteSettings(CSettings &Settings) const
 				StdUtil::snprintf(szKey,lengthof(szKey),TEXT("Processor%d.Property%d.Name"),i,j);
 				Settings.Write(szKey,it->first);
 				StdUtil::snprintf(szKey,lengthof(szKey),TEXT("Processor%d.Property%d.Value"),i,j);
-				Settings.Write(szKey,Value);
+				Settings.Write(szKey,StringUtility::Encode(Value,TEXT("\"")));
 				j++;
 			}
 		}

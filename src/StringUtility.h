@@ -97,7 +97,9 @@ namespace TVTest
 		bool Split(const String &Src,LPCWSTR pszDelimiter,std::vector<String> *pList);
 		bool Combine(const std::vector<String> &List,LPCWSTR pszDelimiter,String *pDst);
 		bool Encode(LPCWSTR pszSrc,String *pDst,LPCWSTR pszEncodeChars=L"\\\"\',/");
+		String Encode(const String &Src,LPCWSTR pszEncodeChars=L"\\\"\',/");
 		bool Decode(LPCWSTR pszSrc,String *pDst);
+		String Decode(const String &Src);
 
 		UINT32 Hash32(const String &Str);
 		UINT64 Hash64(const String &Str);
