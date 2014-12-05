@@ -626,10 +626,15 @@ void CPlugin::Free()
 	m_ProgramGuideEventFlags=0;
 	m_pMessageCallback=NULL;
 
-	if (!m_StreamCallbackList.empty()) {
-		App.CoreEngine.m_DtvEngine.m_MediaGrabber.RemoveGrabber(this);
-		m_StreamCallbackList.clear();
+	m_GrabberLock.Lock();
+	if (!m_StreamGrabberList.empty()) {
+		for (auto it=m_StreamGrabberList.begin();it!=m_StreamGrabberList.end();++it) {
+			App.CoreEngine.m_DtvEngine.m_MediaGrabber.RemoveGrabber(*it);
+			delete *it;
+		}
+		m_StreamGrabberList.clear();
 	}
+	m_GrabberLock.Unlock();
 
 	m_AudioStreamLock.Lock();
 	for (std::vector<CAudioStreamCallbackInfo>::iterator i=m_AudioStreamCallbackList.begin();
@@ -1294,26 +1299,28 @@ LRESULT CPlugin::OnCallback(TVTest::PluginParam *pParam,UINT Message,LPARAM lPar
 
 			CBlockLock Lock(&m_GrabberLock);
 
-			if ((pInfo->Flags&TVTest::STREAM_CALLBACK_REMOVE)==0) {
-				if (m_StreamCallbackList.empty()) {
-					GetAppClass().CoreEngine.m_DtvEngine.m_MediaGrabber.AddGrabber(this);
-				} else {
-					for (auto itr=m_StreamCallbackList.begin();
-							itr!=m_StreamCallbackList.end();++itr) {
-						if (itr->Callback==pInfo->Callback) {
-							itr->pClientData=pInfo->pClientData;
+			if ((pInfo->Flags & TVTest::STREAM_CALLBACK_REMOVE)==0) {
+				// コールバック登録
+				if (!m_StreamGrabberList.empty()) {
+					for (auto it=m_StreamGrabberList.begin();it!=m_StreamGrabberList.end();++it) {
+						CStreamGrabber *pGrabber=*it;
+						if (pGrabber->GetCallbackFunc()==pInfo->Callback) {
+							pGrabber->SetClientData(pInfo->pClientData);
 							return TRUE;
 						}
 					}
 				}
-				m_StreamCallbackList.push_back(*pInfo);
+				CStreamGrabber *pGrabber=new CStreamGrabber(pInfo->Callback,pInfo->pClientData);
+				m_StreamGrabberList.push_back(pGrabber);
+				GetAppClass().CoreEngine.m_DtvEngine.m_MediaGrabber.AddGrabber(pGrabber);
 			} else {
-				for (auto itr=m_StreamCallbackList.begin();
-						itr!=m_StreamCallbackList.end();++itr) {
-					if (itr->Callback==pInfo->Callback) {
-						m_StreamCallbackList.erase(itr);
-						if (m_StreamCallbackList.empty())
-							GetAppClass().CoreEngine.m_DtvEngine.m_MediaGrabber.RemoveGrabber(this);
+				// コールバック削除
+				for (auto it=m_StreamGrabberList.begin();it!=m_StreamGrabberList.end();++it) {
+					CStreamGrabber *pGrabber=*it;
+					if (pGrabber->GetCallbackFunc()==pInfo->Callback) {
+						GetAppClass().CoreEngine.m_DtvEngine.m_MediaGrabber.RemoveGrabber(pGrabber);
+						m_StreamGrabberList.erase(it);
+						delete pGrabber;
 						return TRUE;
 					}
 				}
@@ -2743,21 +2750,6 @@ LRESULT CPlugin::OnPluginMessage(WPARAM wParam,LPARAM lParam)
 }
 
 
-bool CPlugin::OnInputMedia(CMediaData *pMediaData)
-{
-	CBlockLock Lock(&m_GrabberLock);
-
-	bool fOK=true;
-
-	for (auto itr=m_StreamCallbackList.begin();itr!=m_StreamCallbackList.end();++itr) {
-		if (!itr->Callback(pMediaData->GetData(),itr->pClientData))
-			fOK=false;
-	}
-
-	return fOK;
-}
-
-
 void CALLBACK CPlugin::AudioStreamCallback(short *pData,DWORD Samples,int Channels,void *pParam)
 {
 	CBlockLock Lock(&m_AudioStreamLock);
@@ -2873,6 +2865,27 @@ CPlugin::CProgramGuideCommand::CProgramGuideCommand(const TVTest::ProgramGuideCo
 	: CPluginCommandInfo(Info.ID,Info.pszText,Info.pszName)
 	, m_Type(Info.Type)
 {
+}
+
+
+
+
+CPlugin::CStreamGrabber::CStreamGrabber(TVTest::StreamCallbackFunc Callback,void *pClientData)
+	: m_Callback(Callback)
+	, m_pClientData(pClientData)
+{
+}
+
+
+void CPlugin::CStreamGrabber::SetClientData(void *pClientData)
+{
+	m_pClientData=pClientData;
+}
+
+
+bool CPlugin::CStreamGrabber::OnInputMedia(CMediaData *pMediaData)
+{
+	return m_Callback(pMediaData->GetData(),m_pClientData)!=FALSE;
 }
 
 

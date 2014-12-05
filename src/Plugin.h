@@ -13,7 +13,6 @@
 
 class CPlugin
 	: public CBonErrorHandler
-	, public CMediaGrabber::IGrabber
 {
 public:
 	class CPluginCommandInfo
@@ -94,6 +93,21 @@ private:
 		UINT GetType() const { return m_Type; }
 	};
 
+	class CStreamGrabber : public CMediaGrabber::IGrabber
+	{
+	public:
+		CStreamGrabber(TVTest::StreamCallbackFunc Callback,void *pClientData);
+		TVTest::StreamCallbackFunc GetCallbackFunc() const { return m_Callback; }
+		void SetClientData(void *pClientData);
+
+	private:
+		TVTest::StreamCallbackFunc m_Callback;
+		void *m_pClientData;
+
+	// CMediaGrabber::IGrabber
+		bool OnInputMedia(CMediaData *pMediaData) override;
+	};
+
 	class CPluginStatusItem;
 
 	struct StatusItem
@@ -164,7 +178,7 @@ private:
 	UINT m_ProgramGuideEventFlags;
 	TVTest::WindowMessageCallbackFunc m_pMessageCallback;
 	void *m_pMessageCallbackClientData;
-	std::vector<TVTest::StreamCallbackInfo> m_StreamCallbackList;
+	std::vector<CStreamGrabber*> m_StreamGrabberList;
 	CCriticalLock m_GrabberLock;
 	std::vector<CPluginCommandInfo> m_CommandList;
 	std::vector<CProgramGuideCommand> m_ProgramGuideCommandList;
@@ -191,9 +205,6 @@ private:
 
 	static void CALLBACK AudioStreamCallback(short *pData,DWORD Samples,int Channels,void *pParam);
 	static LRESULT CALLBACK Callback(TVTest::PluginParam *pParam,UINT Message,LPARAM lParam1,LPARAM lParam2);
-
-// CMediaGrabber::IGrabber
-	bool OnInputMedia(CMediaData *pMediaData) override;
 
 // CPlugin
 	LRESULT SendPluginMessage(TVTest::PluginParam *pParam,UINT Message,LPARAM lParam1,LPARAM lParam2,
