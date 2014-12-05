@@ -12,15 +12,15 @@
 namespace TVTest
 {
 
-	MIDL_INTERFACE("9E0B0063-94EA-45ed-A736-6BC51A4AB5EF") ITsEnginePacket : public IUnknown
+	MIDL_INTERFACE("9E0B0063-94EA-45ed-A736-6BC51A4AB5EF") ITsMediaData : public IUnknown
 	{
-		STDMETHOD(SetTsPacket)(CTsPacket *pPacket) = 0;
-		STDMETHOD_(CTsPacket*, GetTsPacket)() = 0;
+		STDMETHOD(SetMediaData)(CMediaData *pMediaData) = 0;
+		STDMETHOD_(CMediaData*, GetMediaData)() = 0;
 	};
 
 	class CTSPacketInterface
 		: public Interface::ITSPacket
-		, public ITsEnginePacket
+		, public ITsMediaData
 		, protected CIUnknownImpl
 	{
 	public:
@@ -37,12 +37,12 @@ namespace TVTest
 		STDMETHODIMP SetModified(BOOL fModified) override;
 		STDMETHODIMP GetModified() override;
 
-	// ITsEnginePacket
-		STDMETHODIMP SetTsPacket(CTsPacket *pPacket) override;
-		STDMETHODIMP_(CTsPacket*) GetTsPacket() override { return m_pPacket; }
+	// ITsMediaData
+		STDMETHODIMP SetMediaData(CMediaData *pMediaData) override;
+		STDMETHODIMP_(CMediaData*) GetMediaData() override { return m_pMediaData; }
 
 	protected:
-		CTsPacket *m_pPacket;
+		CMediaData *m_pMediaData;
 		bool m_fModified;
 
 		~CTSPacketInterface();
@@ -107,6 +107,9 @@ namespace TVTest
 		bool GetGuid(GUID *pGuid) const;
 		bool GetName(String *pName) const;
 
+		void SetSourceProcessor(bool fSource);
+		bool GetSourceProcessor() const { return m_fSourceProcessor; }
+
 		bool IsPropertyBagSupported() const;
 		bool LoadProperties(IPropertyBag *pPropBag);
 		bool SaveProperties(IPropertyBag *pPropBag);
@@ -153,6 +156,7 @@ namespace TVTest
 		Interface::IFilter *m_pFilter;
 		CTSPacketInterface *m_pTSPacket;
 		CTsPacket m_OutputPacket;
+		bool m_fSourceProcessor;
 		CEventHandler *m_pEventHandler;
 		String m_ModuleName;
 		int m_CurDevice;

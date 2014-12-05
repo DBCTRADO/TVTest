@@ -2573,10 +2573,13 @@ namespace Interface {
 #endif
 
 // TSプロセッサの接続位置
+// 詳細は TVTestInterface.h を参照してください。
 enum {
-	TS_PROCESSOR_CONNECT_POSITION_ROOT,		// ルート
-	TS_PROCESSOR_CONNECT_POSITION_VIEWER,	// ビューア
-	TS_PROCESSOR_CONNECT_POSITION_RECORDER	// レコーダ
+	TS_PROCESSOR_CONNECT_POSITION_SOURCE,			// ソース(チューナー等からストリームが入力された後)
+	TS_PROCESSOR_CONNECT_POSITION_PREPROCESSING,	// 前処理(TSを解析する前)
+	TS_PROCESSOR_CONNECT_POSITION_POSTPROCESSING,	// 後処理(TSを解析した後)
+	TS_PROCESSOR_CONNECT_POSITION_VIEWER,			// ビューア(再生の前)
+	TS_PROCESSOR_CONNECT_POSITION_RECORDER			// レコーダ(ストリーム書き出しの前)
 };
 
 // TSプロセッサの情報

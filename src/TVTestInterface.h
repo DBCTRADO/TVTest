@@ -1,19 +1,79 @@
-#ifndef TVTEST_INTERFACE_H
-#define TVTEST_INTERFACE_H
+/*
+	TVTest インターフェースヘッダ ver.0.0.14-pre
 
+	※ ver.0.0.14 はまだ開発途中です。今後変更される可能性があります。
+
+	このファイルは再配布・改変など自由に行って構いません。
+	ただし、改変した場合はオリジナルと違う旨を記載して頂けると、混乱がなくてい
+	いと思います。
+*/
 
 /*
 	プラグインから MESSAGE_REGISTERTSPROCESSOR で ITSProcessor を登録すると、
 	TS に対する処理が行えるようになります。
 
-	ITSProcessor は必要に応じて以下のインターフェースを実装します。
+	ITSProcessor は必要に応じて以下のインターフェースを実装し、
+	QueryInterface() で取得できるようにします。
 
-	IFilterManager
-	IFilterModule
-	IPersistPropertyBag
-	ISpecifyPropertyPages
-	ISpecifyPropertyPages2
+	・IFilterManager
+	・IFilterModule
+	・IPersistPropertyBag
+	・ISpecifyPropertyPages
+	・ISpecifyPropertyPages2
+
+	ITSProcessor の処理の流れは以下のようになります。
+
+	  ITSProcessor::Initialize()           初期化処理
+	    ↓
+	  ITSProcessor::StartStreaming() ←┐  ストリーミングの開始
+	    ↓                             │
+	  ITSProcessor::InputPacket()      │  ストリームの入力(繰り返し呼ばれる)
+	    ↓                             │
+	  ITSProcessor::StopStreaming()  ─┘  ストリーミングの終了
+	    ↓
+	  ITSProcessor::Finalize()             終了処理
+
+	ITSProcessor::InputPacket() で ITSPacket を通じてTSデータが渡されるので、
+	ITSProcessor::StartStreaming() で渡された ITSOutput の OutputPacket() を
+	呼び出してTSデータを出力します。
+
+	TSプロセッサを登録する際に、接続位置として TS_PROCESSOR_CONNECT_POSITION_SOURCE を
+	指定した場合、ITSProcessor::InputPacket() に入力されるデータはチューナー等から
+	入力されたストリームそのままであり、ITSPacket::GetSize() で取得されるサイズは不定です。
+	それ以外の場合、ITSPacket は188バイトのパケットデータを表します。
+
+	なお、ITSPacket がパケットデータを表す時、パケットのヘッダを書き換えた場合は
+	ITSPacket::SetModified() を呼び出して、変更されたことが分かるようにする必要があります。
+
+	MESSAGE_REGISTERTSPROCESSOR で TSProcessorInfo::ConnectPosition に指定する
+	接続位置の関係は以下のようになります。
+
+	  チューナー等
+	    ↓(*1)
+	  TS_PROCESSOR_CONNECT_POSITION_SOURCE
+	    ↓(*1)
+	  パケットの切り出し(ストリームがパケット単位に切り出されます)
+	    ↓
+	  TS_PROCESSOR_CONNECT_POSITION_PREPROCESSING
+	    ↓
+	  TSの解析(PAT/PMT/SDT/NIT/EIT 等の解析が行われます)
+	    ↓
+	  TS_PROCESSOR_CONNECT_POSITION_POSTPROCESSING
+	    ├──────────────────┐
+	    ↓                                    ↓
+	  TS_PROCESSOR_CONNECT_POSITION_VIEWER  TS_PROCESSOR_CONNECT_POSITION_RECORDER
+	    ↓                                    ↓
+	  ビューア                              レコーダ
+
+	(*1) はサイズが不定のストリームで、それ以外は188バイトのTSパケットです。
 */
+
+
+#ifndef TVTEST_INTERFACE_H
+#define TVTEST_INTERFACE_H
+
+
+#include <pshpack1.h>
 
 
 namespace TVTest
@@ -144,6 +204,9 @@ MIDL_INTERFACE("5CB26641-E1B3-4E8E-884A-8BEF5240B7EC") IFilterManager : public I
 }	// namespace Interface
 
 }	// namespace TVTest
+
+
+#include <poppack.h>
 
 
 #ifndef TVTEST_INTERFACE_NO_EXTERNAL

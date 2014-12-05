@@ -79,12 +79,16 @@ bool CCoreEngine::BuildDtvEngine(CDtvEngine::CEventHandler *pEventHandler)
 	TSProcessorConnectionList ConnectionList;
 	int DecoderID,OutputIndex;
 
-	ConnectionList.Add(CDtvEngine::DECODER_ID_BonSrcDecoder,
+	DecoderID=CDtvEngine::DECODER_ID_BonSrcDecoder;
+	ConnectTSProcessor(&ConnectionList,TSPROCESSOR_CONNECTPOSITION_SOURCE,&DecoderID);
+	ConnectionList.Add(DecoderID,
 					   CDtvEngine::DECODER_ID_TsPacketParser);
-	ConnectionList.Add(CDtvEngine::DECODER_ID_TsPacketParser,
+	DecoderID=CDtvEngine::DECODER_ID_TsPacketParser;
+	ConnectTSProcessor(&ConnectionList,TSPROCESSOR_CONNECTPOSITION_PREPROCESSING,&DecoderID);
+	ConnectionList.Add(DecoderID,
 					   CDtvEngine::DECODER_ID_TsAnalyzer);
 	DecoderID=CDtvEngine::DECODER_ID_TsAnalyzer;
-	ConnectTSProcessor(&ConnectionList,TSPROCESSOR_CONNECTPOSITION_ROOT,&DecoderID);
+	ConnectTSProcessor(&ConnectionList,TSPROCESSOR_CONNECTPOSITION_POSTPROCESSING,&DecoderID);
 	ConnectionList.Add(DecoderID,
 					   CDtvEngine::DECODER_ID_MediaTee);
 	if (!m_fNoEpg) {
@@ -167,6 +171,9 @@ bool CCoreEngine::RegisterTSProcessor(TVTest::CTSProcessor *pTSProcessor,
 	Info.pTSProcessor=pTSProcessor;
 	Info.ConnectPosition=ConnectPosition;
 	Info.DecoderID=m_DtvEngine.RegisterDecoder(pTSProcessor);
+
+	if (ConnectPosition==TSPROCESSOR_CONNECTPOSITION_SOURCE)
+		pTSProcessor->SetSourceProcessor(true);
 
 	m_TSProcessorList.push_back(Info);
 

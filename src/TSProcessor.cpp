@@ -27,7 +27,7 @@ template<typename T> void SafeRelease(T **ppT)
 
 
 CTSPacketInterface::CTSPacketInterface()
-	: m_pPacket(nullptr)
+	: m_pMediaData(nullptr)
 	, m_fModified(false)
 {
 }
@@ -45,8 +45,8 @@ STDMETHODIMP CTSPacketInterface::QueryInterface(REFIID riid, void **ppvObject)
 
 	if (riid == IID_IUnknown || riid == __uuidof(ITSPacket)) {
 		*ppvObject = static_cast<ITSPacket*>(this);
-	} else if (riid == __uuidof(ITsEnginePacket)) {
-		*ppvObject = static_cast<ITsEnginePacket*>(this);
+	} else if (riid == __uuidof(ITsMediaData)) {
+		*ppvObject = static_cast<ITsMediaData*>(this);
 	} else {
 		*ppvObject = nullptr;
 		return E_NOINTERFACE;
@@ -63,12 +63,12 @@ STDMETHODIMP CTSPacketInterface::GetData(BYTE **ppData)
 	if (ppData == nullptr)
 		return E_POINTER;
 
-	if (m_pPacket == nullptr) {
+	if (m_pMediaData == nullptr) {
 		*ppData = nullptr;
 		return E_FAIL;
 	}
 
-	*ppData = m_pPacket->GetData();
+	*ppData = m_pMediaData->GetData();
 
 	return S_OK;
 }
@@ -79,10 +79,10 @@ STDMETHODIMP CTSPacketInterface::GetSize(ULONG *pSize)
 	if (pSize == nullptr)
 		return E_POINTER;
 
-	if (m_pPacket == nullptr)
+	if (m_pMediaData == nullptr)
 		return E_UNEXPECTED;
 
-	*pSize = m_pPacket->GetSize();
+	*pSize = m_pMediaData->GetSize();
 
 	return S_OK;
 }
@@ -101,9 +101,9 @@ STDMETHODIMP CTSPacketInterface::GetModified()
 }
 
 
-STDMETHODIMP CTSPacketInterface::SetTsPacket(CTsPacket *pPacket)
+STDMETHODIMP CTSPacketInterface::SetMediaData(CMediaData *pMediaData)
 {
-	m_pPacket = pPacket;
+	m_pMediaData = pMediaData;
 	return S_OK;
 }
 
@@ -117,6 +117,7 @@ CTSProcessor::CTSProcessor(Interface::ITSProcessor *pTSProcessor, IEventHandler 
 	, m_pFilterModule(nullptr)
 	, m_pFilter(nullptr)
 	, m_pTSPacket(new CTSPacketInterface)
+	, m_fSourceProcessor(false)
 	, m_pEventHandler(nullptr)
 	, m_CurDevice(-1)
 {
@@ -163,7 +164,7 @@ void CTSProcessor::Reset()
 
 const bool CTSProcessor::InputMedia(CMediaData *pMediaData, const DWORD dwInputIndex)
 {
-	m_pTSPacket->SetTsPacket(static_cast<CTsPacket*>(pMediaData));
+	m_pTSPacket->SetMediaData(pMediaData);
 
 	return SUCCEEDED(m_pTSProcessor->InputPacket(m_pTSPacket));
 }
@@ -205,6 +206,12 @@ bool CTSProcessor::GetName(String *pName) const
 	pName->clear();
 
 	return false;
+}
+
+
+void CTSProcessor::SetSourceProcessor(bool fSource)
+{
+	m_fSourceProcessor=fSource;
 }
 
 
@@ -896,38 +903,51 @@ STDMETHODIMP CTSProcessor::OutputPacket(Interface::ITSPacket *pPacket)
 	if (pPacket == nullptr)
 		return E_POINTER;
 
-	ITsEnginePacket *pTsEnginePacket;
+	ITsMediaData *pTsMediaData;
 
-	if (SUCCEEDED(pPacket->QueryInterface(IID_PPV_ARGS(&pTsEnginePacket)))) {
-		CTsPacket *pTsPacket = pTsEnginePacket->GetTsPacket();
+	if (SUCCEEDED(pPacket->QueryInterface(IID_PPV_ARGS(&pTsMediaData)))) {
+		CMediaData *pMediaData = pTsMediaData->GetMediaData();
 
-		if (pPacket->GetModified() == S_OK) {
+		if (!m_fSourceProcessor && pPacket->GetModified() == S_OK) {
+#ifndef _DEBUG
+			CTsPacket *pTsPacket = static_cast<CTsPacket*>(pMediaData);
+#else
+			CTsPacket *pTsPacket = dynamic_cast<CTsPacket*>(pMediaData);
+			_ASSERT(pTsPacket != nullptr);
+#endif
 			if (pTsPacket->ParsePacket() != CTsPacket::EC_VALID) {
-				pTsEnginePacket->Release();
+				pTsMediaData->Release();
 				return E_FAIL;
 			}
 		}
 
-		OutputMedia(pTsPacket);
+		OutputMedia(pMediaData);
 
-		pTsEnginePacket->Release();
+		pTsMediaData->Release();
 	} else {
 		HRESULT hr;
-		ULONG Size;
+		ULONG Size = 0;
 		hr = pPacket->GetSize(&Size);
 		if (FAILED(hr))
 			return hr;
-		if (Size != TS_PACKETSIZE)
-			return E_FAIL;
 		BYTE *pData = nullptr;
 		hr = pPacket->GetData(&pData);
 		if (FAILED(hr))
 			return hr;
-
-		if (m_OutputPacket.SetData(pData, TS_PACKETSIZE) != TS_PACKETSIZE)
-			return E_OUTOFMEMORY;
-		if (m_OutputPacket.ParsePacket() != CTsPacket::EC_VALID)
+		if (Size == 0 || pData == nullptr)
 			return E_FAIL;
+
+		if (m_fSourceProcessor) {
+			if (m_OutputPacket.SetData(pData, Size) != Size)
+				return E_OUTOFMEMORY;
+		} else {
+			if (Size != TS_PACKETSIZE)
+				return E_FAIL;
+			if (m_OutputPacket.SetData(pData, TS_PACKETSIZE) != TS_PACKETSIZE)
+				return E_OUTOFMEMORY;
+			if (m_OutputPacket.ParsePacket() != CTsPacket::EC_VALID)
+				return E_FAIL;
+		}
 
 		OutputMedia(&m_OutputPacket);
 	}
