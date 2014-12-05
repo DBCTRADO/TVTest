@@ -19,7 +19,6 @@ class CTsPacket : public CMediaData
 {
 public:
 	CTsPacket();
-	CTsPacket(const BYTE *pHexData);
 	CTsPacket(const CTsPacket &Operand);
 	CTsPacket & operator = (const CTsPacket &Operand);
 	~CTsPacket();

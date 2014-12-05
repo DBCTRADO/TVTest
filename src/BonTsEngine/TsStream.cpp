@@ -36,13 +36,6 @@ CTsPacket::CTsPacket()
 	::ZeroMemory(&m_AdaptationField, sizeof(m_AdaptationField));
 }
 
-CTsPacket::CTsPacket(const BYTE *pHexData)
-	: CMediaData(pHexData, TS_PACKETSIZE)
-{
-	// バイナリデータからパケットを生成する
-	ParsePacket();
-}
-
 CTsPacket::CTsPacket(const CTsPacket &Operand)
 {
 	*this = Operand;
