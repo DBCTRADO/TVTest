@@ -2269,6 +2269,8 @@ LRESULT CPlugin::OnCallback(TVTest::PluginParam *pParam,UINT Message,LPARAM lPar
 				pTSProcessor->Release();
 				return FALSE;
 			}
+
+			m_Flags|=TVTest::PLUGIN_FLAG_NOUNLOAD;
 		}
 		return TRUE;
 
