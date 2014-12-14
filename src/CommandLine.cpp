@@ -546,7 +546,6 @@ void CCommandLineOptions::Parse(LPCWSTR pszCmdLine)
 					&& !Args.GetOption(TEXT("style"),&m_StyleFileName)
 					&& !Args.GetOption(TEXT("tray"),&m_fTray)
 					&& !Args.GetOption(TEXT("tsid"),&m_TransportStreamID)
-					&& !Args.GetOption(TEXT("tvcas"),&m_CasLibraryName)
 					&& !Args.GetOption(TEXT("volume"),&m_Volume)
 					&& !Args.GetOption(TEXT("width"),&m_WindowWidth)) {
 				if (Args.IsOption(TEXT("inikey"))) {
