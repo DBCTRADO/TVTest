@@ -13,7 +13,6 @@ static char THIS_FILE[]=__FILE__;
 
 
 #define DRIVER_FLAG_NOSIGNALLEVEL					0x00000001
-#define DRIVER_FLAG_NODESCRAMBLE					0x00000002
 #define DRIVER_FLAG_PURGESTREAMONCHANNELCHANGE		0x00000004
 #define DRIVER_FLAG_ALLCHANNELS						0x00000008
 #define DRIVER_FLAG_RESETCHANNELCHANGEERRORCOUNT	0x00000010
@@ -76,8 +75,6 @@ public:
 	bool GetAllChannels() const { return m_fAllChannels; }
 	void SetAllChannels(bool fAll) { m_fAllChannels=fAll; }
 	const CDriverOptions::BonDriverOptions &GetOptions() const { return m_Options; }
-	bool GetNoDescramble() const { return m_Options.fNoDescramble; }
-	void SetNoDescramble(bool fNoDescramble) { m_Options.fNoDescramble=fNoDescramble; }
 	bool GetNoSignalLevel() const { return m_Options.fNoSignalLevel; }
 	void SetNoSignalLevel(bool fNoSignalLevel) { m_Options.fNoSignalLevel=fNoSignalLevel; }
 	bool GetIgnoreInitialStream() const { return m_Options.fIgnoreInitialStream; }
@@ -262,8 +259,6 @@ bool CDriverOptions::ReadSettings(CSettings &Settings)
 					::wsprintf(szName,TEXT("Driver%d_OptionsMask"),i);
 					if (!Settings.Read(szName,&Mask))
 						Mask=DRIVER_FLAG_DEFAULTMASK;
-					if ((Mask & DRIVER_FLAG_NODESCRAMBLE)!=0)
-						pSettings->SetNoDescramble((Value & DRIVER_FLAG_NODESCRAMBLE)!=0);
 					if ((Mask & DRIVER_FLAG_NOSIGNALLEVEL)!=0)
 						pSettings->SetNoSignalLevel((Value & DRIVER_FLAG_NOSIGNALLEVEL)!=0);
 					if ((Mask & DRIVER_FLAG_PURGESTREAMONCHANNELCHANGE)!=0)
@@ -328,8 +323,6 @@ bool CDriverOptions::WriteSettings(CSettings &Settings)
 		Settings.Write(szName,pSettings->GetInitialServiceID());
 		::wsprintf(szName,TEXT("Driver%d_Options"),i);
 		int Flags=0;
-		if (pSettings->GetNoDescramble())
-			Flags|=DRIVER_FLAG_NODESCRAMBLE;
 		if (pSettings->GetNoSignalLevel())
 			Flags|=DRIVER_FLAG_NOSIGNALLEVEL;
 		if (pSettings->GetPurgeStreamOnChannelChange())
@@ -439,15 +432,6 @@ bool CDriverOptions::SetLastChannel(LPCTSTR pszFileName,const ChannelInfo *pChan
 	pSettings->m_LastTransportStreamID=pChannelInfo->TransportStreamID;
 	pSettings->m_fLastAllChannels=pChannelInfo->fAllChannels;
 	return true;
-}
-
-
-bool CDriverOptions::IsNoDescramble(LPCTSTR pszFileName) const
-{
-	const CDriverSettings *pSettings=GetBonDriverSettings(pszFileName);
-	if (pSettings==NULL)
-		return false;
-	return pSettings->GetNoDescramble();
 }
 
 
@@ -583,8 +567,6 @@ void CDriverOptions::InitDlgItem(int Driver)
 			DlgComboBox_SetCurSel(m_hDlg,IDC_DRIVEROPTIONS_INITCHANNEL_CHANNEL,Sel);
 		}
 
-		DlgCheckBox_Check(m_hDlg,IDC_DRIVEROPTIONS_NODESCRAMBLE,
-						  pSettings->GetNoDescramble());
 		DlgCheckBox_Check(m_hDlg,IDC_DRIVEROPTIONS_NOSIGNALLEVEL,
 						  pSettings->GetNoSignalLevel());
 		DlgCheckBox_Check(m_hDlg,IDC_DRIVEROPTIONS_IGNOREINITIALSTREAM,
@@ -800,16 +782,6 @@ INT_PTR CDriverOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 			}
 			return TRUE;
 
-		case IDC_DRIVEROPTIONS_NODESCRAMBLE:
-			{
-				CDriverSettings *pSettings=GetCurSelDriverSettings();
-
-				if (pSettings!=NULL) {
-					pSettings->SetNoDescramble(DlgCheckBox_IsChecked(hDlg,IDC_DRIVEROPTIONS_NODESCRAMBLE));
-				}
-			}
-			return TRUE;
-
 		case IDC_DRIVEROPTIONS_NOSIGNALLEVEL:
 			{
 				CDriverSettings *pSettings=GetCurSelDriverSettings();
@@ -909,8 +881,7 @@ INT_PTR CDriverOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 
 
 CDriverOptions::BonDriverOptions::BonDriverOptions()
-	: fNoDescramble(false)
-	, fNoSignalLevel(false)
+	: fNoSignalLevel(false)
 	, fIgnoreInitialStream(true)
 	, fPurgeStreamOnChannelChange(true)
 	, fResetChannelChangeErrorCount(true)
@@ -922,8 +893,7 @@ CDriverOptions::BonDriverOptions::BonDriverOptions()
 
 
 CDriverOptions::BonDriverOptions::BonDriverOptions(LPCTSTR pszBonDriverName)
-	: fNoDescramble(false)
-	, fNoSignalLevel(GetAppClass().CoreEngine.IsNetworkDriverFileName(pszBonDriverName)
+	: fNoSignalLevel(GetAppClass().CoreEngine.IsNetworkDriverFileName(pszBonDriverName)
 					 || IsFileBonDriver(pszBonDriverName))
 	, fIgnoreInitialStream(!IsBonDriverSpinel(pszBonDriverName))
 	, fPurgeStreamOnChannelChange(true)

@@ -45,14 +45,8 @@ public:
 	bool SetH265DecoderName(LPCTSTR pszDecoderName);
 	CVideoRenderer::RendererType GetVideoRendererType() const;
 	bool SetVideoRendererType(CVideoRenderer::RendererType Renderer);
-	int GetCasDevice(bool fUseName);
-	bool SetCasDevice(int Device);
-	void SetTemporaryNoDescramble(bool fNoDescramble);
 	bool GetResident() const;
 	bool GetKeepSingleTask() const;
-	int GetDescrambleInstruction() const { return m_DescrambleInstruction; }
-	bool GetDescrambleCurServiceOnly() const;
-	bool GetEnableEmmProcess() const;
 
 private:
 // CBasicDialog
@@ -61,15 +55,12 @@ private:
 	void SetVideoDecoderList(
 		int ID,const GUID &SubType,BYTE StreamType,const TVTest::String &DecoderName);
 	void GetVideoDecoderSetting(int ID,BYTE StreamType,TVTest::String *pDecoderName);
-	void DescrambleBenchmarkTest(HWND hwndOwner);
 
 	enum {
 		UPDATE_DECODER				= 0x00000001UL,
 		UPDATE_RENDERER				= 0x00000002UL,
-		UPDATE_CARDREADER			= 0x00000004UL,
-		UPDATE_RESIDENT				= 0x00000008UL,
-		UPDATE_DESCRAMBLECURONLY	= 0x00000010UL,
-		UPDATE_ENABLEEMMPROCESS		= 0x00000020UL
+		UPDATE_RESIDENT				= 0x00000004UL,
+		UPDATE_1SEGFALLBACK			= 0x00000008UL
 	};
 
 	TVTest::String m_BonDriverDirectory;
@@ -80,16 +71,9 @@ private:
 	TVTest::String m_H264DecoderName;
 	TVTest::String m_H265DecoderName;
 	CVideoRenderer::RendererType m_VideoRendererType;
-	TVTest::String m_CasDeviceName;
-	int m_CasDevice;
-	bool m_fTemporaryNoDescramble;
 	bool m_fResident;
 	bool m_fKeepSingleTask;
-	int m_DescrambleInstruction;
-	bool m_fDescrambleCurServiceOnly;
-	bool m_fEnableEmmProcess;
-
-	bool m_fEnableCasSettings;
+	bool m_fEnable1SegFallback;
 };
 
 

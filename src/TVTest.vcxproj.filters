@@ -182,9 +182,6 @@
     <ClCompile Include="CaptureOptions.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="CardReaderDialog.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
     <ClCompile Include="ChannelHistory.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
@@ -425,9 +422,6 @@
     <ClCompile Include="EpgChannelSettings.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="BonTsEngine\CasProcessor.cpp">
-      <Filter>BonTsEngine\Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="RegExp.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
@@ -471,9 +465,6 @@
       <Filter>DirectShowFilter\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="MainWindow.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="CasLibraryManager.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
     <ClCompile Include="AppCore.cpp">
@@ -525,6 +516,24 @@
       <Filter>ソース ファイル</Filter>
     </ClCompile>
     <ClCompile Include="ListView.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="TSProcessorManager.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="TSProcessor.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="TSProcessorOptions.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="BonTsEngine\TsPacketCounter.cpp">
+      <Filter>BonTsEngine\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="TSProcessorErrorDialog.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="ComUtility.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
   </ItemGroup>
@@ -662,9 +671,6 @@
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="CaptureOptions.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="CardReaderDialog.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="ChannelHistory.h">
@@ -922,9 +928,6 @@
     <ClInclude Include="EpgChannelSettings.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="BonTsEngine\CasProcessor.h">
-      <Filter>BonTsEngine\Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="RegExp.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
@@ -969,9 +972,6 @@
     </ClInclude>
     <ClInclude Include="DirectShowFilter\H265ParserFilter.h">
       <Filter>DirectShowFilter\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="CasLibraryManager.h">
-      <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="AppCore.h">
       <Filter>ヘッダー ファイル</Filter>
@@ -1025,6 +1025,27 @@
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="ListView.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="TVTestInterface.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="TSProcessorManager.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="TSProcessor.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="TSProcessorOptions.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="BonTsEngine\TsPacketCounter.h">
+      <Filter>BonTsEngine\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="TSProcessorErrorDialog.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="ComUtility.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
   </ItemGroup>

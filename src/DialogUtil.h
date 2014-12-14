@@ -146,6 +146,7 @@ bool PopupMenuFromControls(HWND hDlg,const int *pIDList,int IDListLength,
 #define LBN_EX_RBUTTONDOWN	0x0100
 bool ExtendListBox(HWND hwndList,unsigned int Flags=0);
 bool SetListViewSortMark(HWND hwndList,int Column,bool fAscending=true);
+bool AdjustListViewColumnWidth(HWND hwndList,bool fUseHeader=true);
 
 
 #endif

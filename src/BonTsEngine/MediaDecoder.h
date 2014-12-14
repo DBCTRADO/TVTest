@@ -27,6 +27,9 @@ public:
 	CMediaDecoder(IEventHandler *pEventHandler = NULL, const DWORD dwInputNum = 1UL, const DWORD dwOutputNum = 1UL);
 	virtual ~CMediaDecoder() = 0;
 
+	virtual bool Initialize();
+	virtual void Finalize();
+
 	virtual void Reset();
 	virtual void ResetGraph();
 
@@ -34,7 +37,13 @@ public:
 	virtual DWORD GetOutputNum() const;
 
 	bool SetOutputDecoder(CMediaDecoder *pDecoder, const DWORD dwOutputIndex = 0UL, const DWORD dwInputIndex = 0UL);
+	CMediaDecoder *GetOutputDecoder(const DWORD Index) const;
 	virtual const bool InputMedia(CMediaData *pMediaData, const DWORD dwInputIndex = 0UL);
+
+	virtual bool SetActiveServiceID(WORD ServiceID);
+	virtual WORD GetActiveServiceID() const;
+
+	void SetEventHandler(IEventHandler *pEventHandler);
 
 protected:
 	bool OutputMedia(CMediaData *pMediaData, const DWORD dwOutptIndex = 0UL);

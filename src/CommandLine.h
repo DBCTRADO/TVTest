@@ -14,9 +14,8 @@ public:
 
 	TVTest::String m_IniFileName;
 	TVTest::String m_DriverName;
-	TVTest::String m_CasLibraryName;
 	bool m_fNoDriver;
-	bool m_fNoDescramble;
+	bool m_fNoTSProcessor;
 	bool m_fSingleTask;
 	bool m_fStandby;
 	bool m_fNoView;

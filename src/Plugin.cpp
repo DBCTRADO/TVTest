@@ -9,6 +9,7 @@
 #include "DriverManager.h"
 #include "LogoManager.h"
 #include "Controller.h"
+#include "TSProcessor.h"
 #include "BonTsEngine/TsEncode.h"
 #include "resource.h"
 #include <algorithm>
@@ -625,10 +626,15 @@ void CPlugin::Free()
 	m_ProgramGuideEventFlags=0;
 	m_pMessageCallback=NULL;
 
-	if (!m_StreamCallbackList.empty()) {
-		App.CoreEngine.m_DtvEngine.m_MediaGrabber.RemoveGrabber(this);
-		m_StreamCallbackList.clear();
+	m_GrabberLock.Lock();
+	if (!m_StreamGrabberList.empty()) {
+		for (auto it=m_StreamGrabberList.begin();it!=m_StreamGrabberList.end();++it) {
+			App.CoreEngine.m_DtvEngine.m_MediaGrabber.RemoveGrabber(*it);
+			delete *it;
+		}
+		m_StreamGrabberList.clear();
 	}
+	m_GrabberLock.Unlock();
 
 	m_AudioStreamLock.Lock();
 	for (std::vector<CAudioStreamCallbackInfo>::iterator i=m_AudioStreamCallbackList.begin();
@@ -991,7 +997,12 @@ LRESULT CPlugin::OnCallback(TVTest::PluginParam *pParam,UINT Message,LPARAM lPar
 		return TVTest::MakeVersion(VERSION_MAJOR,VERSION_MINOR,VERSION_BUILD);
 
 	case TVTest::MESSAGE_QUERYMESSAGE:
-		return lParam1>=0 && lParam1<TVTest::MESSAGE_TRAILER;
+		if (lParam1<0 || lParam1>=TVTest::MESSAGE_TRAILER)
+			return FALSE;
+		if (lParam1==TVTest::MESSAGE_GETBCASINFO
+				|| lParam1==TVTest::MESSAGE_SENDBCASCOMMAND)
+			return FALSE;
+		return TRUE;
 
 	case TVTest::MESSAGE_MEMORYALLOC:
 		{
@@ -1165,12 +1176,7 @@ LRESULT CPlugin::OnCallback(TVTest::PluginParam *pParam,UINT Message,LPARAM lPar
 			pInfo->ScramblePacketCount=(DWORD)pCoreEngine->GetScramblePacketCount();
 			if (pInfo->Size==sizeof(TVTest::StatusInfo)) {
 				pInfo->DropPacketCount=(DWORD)DropCount;
-				if (pCoreEngine->IsCasCardOpen()) {
-					pInfo->BcasCardStatus=TVTest::BCAS_STATUS_OK;
-				} else {
-					// 取りあえず...
-					pInfo->BcasCardStatus=TVTest::BCAS_STATUS_NOTOPEN;
-				}
+				pInfo->BcasCardStatus=TVTest::BCAS_STATUS_OK;	// 非対応
 			}
 		}
 		return TRUE;
@@ -1293,26 +1299,28 @@ LRESULT CPlugin::OnCallback(TVTest::PluginParam *pParam,UINT Message,LPARAM lPar
 
 			CBlockLock Lock(&m_GrabberLock);
 
-			if ((pInfo->Flags&TVTest::STREAM_CALLBACK_REMOVE)==0) {
-				if (m_StreamCallbackList.empty()) {
-					GetAppClass().CoreEngine.m_DtvEngine.m_MediaGrabber.AddGrabber(this);
-				} else {
-					for (auto itr=m_StreamCallbackList.begin();
-							itr!=m_StreamCallbackList.end();++itr) {
-						if (itr->Callback==pInfo->Callback) {
-							itr->pClientData=pInfo->pClientData;
+			if ((pInfo->Flags & TVTest::STREAM_CALLBACK_REMOVE)==0) {
+				// コールバック登録
+				if (!m_StreamGrabberList.empty()) {
+					for (auto it=m_StreamGrabberList.begin();it!=m_StreamGrabberList.end();++it) {
+						CStreamGrabber *pGrabber=*it;
+						if (pGrabber->GetCallbackFunc()==pInfo->Callback) {
+							pGrabber->SetClientData(pInfo->pClientData);
 							return TRUE;
 						}
 					}
 				}
-				m_StreamCallbackList.push_back(*pInfo);
+				CStreamGrabber *pGrabber=new CStreamGrabber(pInfo->Callback,pInfo->pClientData);
+				m_StreamGrabberList.push_back(pGrabber);
+				GetAppClass().CoreEngine.m_DtvEngine.m_MediaGrabber.AddGrabber(pGrabber);
 			} else {
-				for (auto itr=m_StreamCallbackList.begin();
-						itr!=m_StreamCallbackList.end();++itr) {
-					if (itr->Callback==pInfo->Callback) {
-						m_StreamCallbackList.erase(itr);
-						if (m_StreamCallbackList.empty())
-							GetAppClass().CoreEngine.m_DtvEngine.m_MediaGrabber.RemoveGrabber(this);
+				// コールバック削除
+				for (auto it=m_StreamGrabberList.begin();it!=m_StreamGrabberList.end();++it) {
+					CStreamGrabber *pGrabber=*it;
+					if (pGrabber->GetCallbackFunc()==pInfo->Callback) {
+						GetAppClass().CoreEngine.m_DtvEngine.m_MediaGrabber.RemoveGrabber(pGrabber);
+						m_StreamGrabberList.erase(it);
+						delete pGrabber;
 						return TRUE;
 					}
 				}
@@ -1488,46 +1496,20 @@ LRESULT CPlugin::OnCallback(TVTest::PluginParam *pParam,UINT Message,LPARAM lPar
 		}
 
 	case TVTest::MESSAGE_GETBCASINFO:
+		// このメッセージは現在サポートされない
 		{
 			TVTest::BCasInfo *pBCasInfo=reinterpret_cast<TVTest::BCasInfo*>(lParam1);
 
 			if (pBCasInfo==NULL || pBCasInfo->Size!=sizeof(TVTest::BCasInfo))
 				return FALSE;
 
-			CCasProcessor::CasCardInfo CardInfo;
-			if (!GetAppClass().CoreEngine.m_DtvEngine.m_CasProcessor.GetCasCardInfo(&CardInfo))
-				return FALSE;
-			pBCasInfo->CASystemID=CardInfo.CASystemID;
-			::CopyMemory(pBCasInfo->CardID,CardInfo.CardID,6);
-			pBCasInfo->CardType=CardInfo.CardType;
-			pBCasInfo->MessagePartitionLength=CardInfo.MessagePartitionLength;
-			::CopyMemory(pBCasInfo->SystemKey,CardInfo.SystemKey,32);
-			::CopyMemory(pBCasInfo->InitialCBC,CardInfo.InitialCBC,8);
-			pBCasInfo->CardManufacturerID=CardInfo.CardManufacturerID;
-			pBCasInfo->CardVersion=CardInfo.CardVersion;
-			pBCasInfo->CheckCode=CardInfo.CheckCode;
-#ifdef UNICODE
-			::WideCharToMultiByte(CP_ACP,0,CardInfo.CardIDText,-1,
-								  pBCasInfo->szFormatCardID,lengthof(pBCasInfo->szFormatCardID),NULL,NULL);
-#else
-			::lstrcpyn(pBCasInfo->szFormatCardID,CardInfo.CardIDText,lengthof(pBCasInfo->szFormatCardID));
-#endif
+			::ZeroMemory(pBCasInfo,sizeof(TVTest::BCasInfo));
 		}
-		return TRUE;
+		return FALSE;
 
 	case TVTest::MESSAGE_SENDBCASCOMMAND:
-		{
-			TVTest::BCasCommandInfo *pBCasCommand=reinterpret_cast<TVTest::BCasCommandInfo*>(lParam1);
-
-			if (pBCasCommand==NULL
-					|| pBCasCommand->pSendData==NULL || pBCasCommand->SendSize==0
-					|| pBCasCommand->pReceiveData==NULL)
-				return FALSE;
-
-			return GetAppClass().CoreEngine.m_DtvEngine.m_CasProcessor.SendCasCommand(
-				pBCasCommand->pSendData, pBCasCommand->SendSize,
-				pBCasCommand->pReceiveData, &pBCasCommand->ReceiveSize);
-		}
+		// このメッセージは現在サポートされない
+		return FALSE;
 
 	case TVTest::MESSAGE_GETHOSTINFO:
 		{
@@ -2275,6 +2257,30 @@ LRESULT CPlugin::OnCallback(TVTest::PluginParam *pParam,UINT Message,LPARAM lPar
 		}
 		return FALSE;
 
+	case TVTest::MESSAGE_REGISTERTSPROCESSOR:
+		{
+			const TVTest::TSProcessorInfo *pInfo=
+				reinterpret_cast<const TVTest::TSProcessorInfo*>(lParam1);
+
+			if (pInfo==NULL
+					|| pInfo->Size!=sizeof(TVTest::TSProcessorInfo)
+					|| pInfo->Flags!=0
+					|| pInfo->pTSProcessor==NULL)
+				return FALSE;
+
+			TVTest::CTSProcessor *pTSProcessor=
+				new TVTest::CTSProcessor(pInfo->pTSProcessor);
+			if (!GetAppClass().TSProcessorManager.RegisterTSProcessor(
+					pTSProcessor,
+					(CCoreEngine::TSProcessorConnectPosition)pInfo->ConnectPosition)) {
+				pTSProcessor->Release();
+				return FALSE;
+			}
+
+			m_Flags|=TVTest::PLUGIN_FLAG_NOUNLOAD;
+		}
+		return TRUE;
+
 #ifdef _DEBUG
 	default:
 		TRACE(TEXT("CPluign::OnCallback() : Unknown message %u\n"),Message);
@@ -2744,21 +2750,6 @@ LRESULT CPlugin::OnPluginMessage(WPARAM wParam,LPARAM lParam)
 }
 
 
-bool CPlugin::OnInputMedia(CMediaData *pMediaData)
-{
-	CBlockLock Lock(&m_GrabberLock);
-
-	bool fOK=true;
-
-	for (auto itr=m_StreamCallbackList.begin();itr!=m_StreamCallbackList.end();++itr) {
-		if (!itr->Callback(pMediaData->GetData(),itr->pClientData))
-			fOK=false;
-	}
-
-	return fOK;
-}
-
-
 void CALLBACK CPlugin::AudioStreamCallback(short *pData,DWORD Samples,int Channels,void *pParam)
 {
 	CBlockLock Lock(&m_AudioStreamLock);
@@ -2874,6 +2865,27 @@ CPlugin::CProgramGuideCommand::CProgramGuideCommand(const TVTest::ProgramGuideCo
 	: CPluginCommandInfo(Info.ID,Info.pszText,Info.pszName)
 	, m_Type(Info.Type)
 {
+}
+
+
+
+
+CPlugin::CStreamGrabber::CStreamGrabber(TVTest::StreamCallbackFunc Callback,void *pClientData)
+	: m_Callback(Callback)
+	, m_pClientData(pClientData)
+{
+}
+
+
+void CPlugin::CStreamGrabber::SetClientData(void *pClientData)
+{
+	m_pClientData=pClientData;
+}
+
+
+bool CPlugin::CStreamGrabber::OnInputMedia(CMediaData *pMediaData)
+{
+	return m_Callback(pMediaData->GetData(),m_pClientData)!=FALSE;
 }
 
 

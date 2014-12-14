@@ -3,12 +3,21 @@
 
 
 #include "DtvEngine.h"
+#include "TSProcessor.h"
 #include "EpgProgramList.h"
 
 
 class CCoreEngine : public CBonErrorHandler
 {
 public:
+	enum TSProcessorConnectPosition {
+		TSPROCESSOR_CONNECTPOSITION_SOURCE,
+		TSPROCESSOR_CONNECTPOSITION_PREPROCESSING,
+		TSPROCESSOR_CONNECTPOSITION_POSTPROCESSING,
+		TSPROCESSOR_CONNECTPOSITION_VIEWER,
+		TSPROCESSOR_CONNECTPOSITION_RECORDER
+	};
+
 	enum DriverType {
 		DRIVER_UNKNOWN,
 		DRIVER_UDP,
@@ -23,20 +32,16 @@ public:
 		STEREOMODE_RIGHT
 	};
 
-	struct CasDeviceInfo
-	{
-		int Device;
-		DWORD DeviceID;
-		TVTest::String Name;
-		TVTest::String Text;
-	};
-	typedef std::vector<CasDeviceInfo> CasDeviceList;
-
 	CCoreEngine();
 	~CCoreEngine();
 	void Close();
 	bool BuildDtvEngine(CDtvEngine::CEventHandler *pEventHandler);
-	bool IsBuildComplete() const;
+	bool RegisterTSProcessor(TVTest::CTSProcessor *pTSProcessor,
+							 TSProcessorConnectPosition ConnectPosition);
+	size_t GetTSProcessorCount() const { return m_TSProcessorList.size(); }
+	TVTest::CTSProcessor *GetTSProcessorByIndex(size_t Index);
+	void EnableTSProcessor(bool fEnable);
+	bool IsTSProcessorEnabled() const { return m_fEnableTSProcessor; }
 	bool BuildMediaViewer(HWND hwndHost,HWND hwndMessage,
 		CVideoRenderer::RendererType VideoRenderer,
 		BYTE VideoStreamType,LPCWSTR pszVideoDecoder=NULL,
@@ -59,17 +64,6 @@ public:
 	bool IsTCPDriver() const { return m_DriverType==DRIVER_TCP; }
 	bool IsNetworkDriver() const { return IsUDPDriver() || IsTCPDriver(); }
 	static bool IsNetworkDriverFileName(LPCTSTR pszFileName);
-
-	bool LoadCasLibrary();
-	bool IsCasLibraryLoaded() const;
-	LPCTSTR GetCasLibraryName() const { return m_CasLibraryName.c_str(); }
-	bool SetCasLibraryName(LPCTSTR pszName);
-	bool OpenCasCard(int Device,LPCTSTR pszName=NULL);
-	bool CloseCasCard();
-	bool IsCasCardOpen() const;
-	bool SetDescramble(bool fDescramble);
-	bool GetDescramble() const { return m_fDescramble; }
-	bool GetCasDeviceList(CasDeviceList *pList);
 
 	bool SetPacketBufferLength(DWORD BufferLength);
 	bool GetPacketBuffering() const { return m_fPacketBuffering; }
@@ -143,12 +137,29 @@ public:
 	CDtvEngine m_DtvEngine;
 
 private:
+	struct TSProcessorInfo
+	{
+		TVTest::CTSProcessor *pTSProcessor;
+		TSProcessorConnectPosition ConnectPosition;
+		int DecoderID;
+	};
+
+	struct TSProcessorConnectionList
+	{
+		std::vector<CDtvEngine::DecoderConnectionInfo> List;
+
+		void Add(int OutputDecoder,int InputDecoder,int OutputIndex=0)
+		{
+			List.push_back(CDtvEngine::DecoderConnectionInfo(OutputDecoder,InputDecoder,OutputIndex));
+		}
+	};
+
 	TCHAR m_szDriverDirectory[MAX_PATH];
 	TCHAR m_szDriverFileName[MAX_PATH];
 	DriverType m_DriverType;
 
-	TVTest::String m_CasLibraryName;
-	bool m_fDescramble;
+	std::vector<TSProcessorInfo> m_TSProcessorList;
+	bool m_fEnableTSProcessor;
 
 	bool m_fPacketBuffering;
 
@@ -179,6 +190,10 @@ private:
 	bool m_fNoEpg;
 
 	DWORD m_AsyncStatusUpdatedFlags;
+
+	void ConnectTSProcessor(TSProcessorConnectionList *pList,
+							TSProcessorConnectPosition ConnectPosition,
+							int *pDecoderID,int *pOutputIndex=NULL);
 };
 
 

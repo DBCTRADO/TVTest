@@ -457,7 +457,6 @@
     <ClCompile Include="BonTsEngine\BonSrcDecoder.cpp" />
     <ClCompile Include="BonTsEngine\CaptionDecoder.cpp" />
     <ClCompile Include="BonTsEngine\CaptionParser.cpp" />
-    <ClCompile Include="BonTsEngine\CasProcessor.cpp" />
     <ClCompile Include="BonTsEngine\EventInfo.cpp" />
     <ClCompile Include="BonTsEngine\EventManager.cpp" />
     <ClCompile Include="BonTsEngine\Exception.cpp" />
@@ -474,6 +473,7 @@
     <ClCompile Include="BonTsEngine\TsEncode.cpp" />
     <ClCompile Include="BonTsEngine\TsInformation.cpp" />
     <ClCompile Include="BonTsEngine\TsMedia.cpp" />
+    <ClCompile Include="BonTsEngine\TsPacketCounter.cpp" />
     <ClCompile Include="BonTsEngine\TsPacketParser.cpp" />
     <ClCompile Include="BonTsEngine\TsRecorder.cpp" />
     <ClCompile Include="BonTsEngine\TsSelector.cpp" />
@@ -483,8 +483,8 @@
     <ClCompile Include="CaptionPanel.cpp" />
     <ClCompile Include="Capture.cpp" />
     <ClCompile Include="CaptureOptions.cpp" />
-    <ClCompile Include="CardReaderDialog.cpp" />
-    <ClCompile Include="CasLibraryManager.cpp" />
+    <ClCompile Include="ComUtility.cpp" />
+    <ClCompile Include="TSProcessorErrorDialog.cpp" />
     <ClCompile Include="EpgCapture.cpp" />
     <ClCompile Include="ListView.cpp" />
     <ClCompile Include="NetworkDefinition.cpp" />
@@ -596,6 +596,9 @@
     <ClCompile Include="ThemeManager.cpp" />
     <ClCompile Include="TitleBar.cpp" />
     <ClCompile Include="Tooltip.cpp" />
+    <ClCompile Include="TSProcessor.cpp" />
+    <ClCompile Include="TSProcessorManager.cpp" />
+    <ClCompile Include="TSProcessorOptions.cpp" />
     <ClCompile Include="TVTest.cpp" />
     <ClCompile Include="AppMain.cpp" />
     <ClCompile Include="UIBase.cpp" />
@@ -620,7 +623,6 @@
     <ClInclude Include="BonTsEngine\BonSrcDecoder.h" />
     <ClInclude Include="BonTsEngine\CaptionDecoder.h" />
     <ClInclude Include="BonTsEngine\CaptionParser.h" />
-    <ClInclude Include="BonTsEngine\CasProcessor.h" />
     <ClInclude Include="BonTsEngine\Common.h" />
     <ClInclude Include="BonTsEngine\EventInfo.h" />
     <ClInclude Include="BonTsEngine\EventManager.h" />
@@ -639,6 +641,7 @@
     <ClInclude Include="BonTsEngine\TsEncode.h" />
     <ClInclude Include="BonTsEngine\TsInformation.h" />
     <ClInclude Include="BonTsEngine\TsMedia.h" />
+    <ClInclude Include="BonTsEngine\TsPacketCounter.h" />
     <ClInclude Include="BonTsEngine\TsPacketParser.h" />
     <ClInclude Include="BonTsEngine\TsRecorder.h" />
     <ClInclude Include="BonTsEngine\TsSelector.h" />
@@ -649,8 +652,8 @@
     <ClInclude Include="CaptionPanel.h" />
     <ClInclude Include="Capture.h" />
     <ClInclude Include="CaptureOptions.h" />
-    <ClInclude Include="CardReaderDialog.h" />
-    <ClInclude Include="CasLibraryManager.h" />
+    <ClInclude Include="ComUtility.h" />
+    <ClInclude Include="TSProcessorErrorDialog.h" />
     <ClInclude Include="DirectShowFilter\RingBuffer.h" />
     <ClInclude Include="EpgCapture.h" />
     <ClInclude Include="ListView.h" />
@@ -763,8 +766,12 @@
     <ClInclude Include="ThemeManager.h" />
     <ClInclude Include="TitleBar.h" />
     <ClInclude Include="Tooltip.h" />
+    <ClInclude Include="TSProcessor.h" />
+    <ClInclude Include="TSProcessorManager.h" />
+    <ClInclude Include="TSProcessorOptions.h" />
     <ClInclude Include="TVTest.h" />
     <ClInclude Include="AppMain.h" />
+    <ClInclude Include="TVTestInterface.h" />
     <ClInclude Include="TVTestPlugin.h" />
     <ClInclude Include="UIBase.h" />
     <ClInclude Include="UICore.h" />

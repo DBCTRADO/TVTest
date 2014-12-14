@@ -37,6 +37,12 @@ public:
 		WORD ServiceID;
 	};
 
+	enum {
+		OPENTUNER_NO_UI        = 0x0001U,
+		OPENTUNER_NO_NOTIFY    = 0x0002U,
+		OPENTUNER_RETRY_DIALOG = 0x0004U
+	};
+
 	CAppCore(CAppMain &App);
 	bool GetDriverDirectory(LPTSTR pszDirectory,int MaxLength) const;
 	void AddLog(LPCTSTR pszText, ...);
@@ -72,22 +78,11 @@ public:
 	bool OpenTuner(LPCTSTR pszFileName);
 	bool OpenTunerAndSetChannel(LPCTSTR pszDriverFileName,const CChannelInfo *pChannelInfo);
 	bool OpenTuner();
-	bool OpenAndInitializeTuner(unsigned int OpenCasCardFlags=0);
+	bool OpenAndInitializeTuner(unsigned int OpenFlags=0);
 	bool CloseTuner();
 
 	bool Set1SegMode(bool f1Seg,bool fServiceChange);
 	bool Is1SegMode() const { return m_f1SegMode; }
-
-	enum {
-		OPEN_CAS_CARD_RETRY        = 0x0001U,
-		OPEN_CAS_CARD_NO_UI        = 0x0002U,
-		OPEN_CAS_CARD_NOTIFY_ERROR = 0x0004U
-	};
-	bool OpenCasCard(unsigned int Flags=0);
-	bool ChangeCasCard(int Device,LPCTSTR pszName=NULL);
-	bool LoadCasLibrary(LPCTSTR pszFileName);
-	bool LoadCasLibrary();
-	bool LoadCasLibrary(WORD NetworkID,WORD TSID);
 
 	void ApplyBonDriverOptions();
 
@@ -123,13 +118,10 @@ private:
 	CAppMain &m_App;
 	bool m_fSilent;
 	bool m_fExitOnRecordingStop;
-	bool m_fCasCardOpenError;
 	bool m_f1SegMode;
 
 	int GetCorresponding1SegService(int Space,WORD NetworkID,WORD TSID,WORD ServiceID) const;
 	bool GenerateRecordFileName(LPTSTR pszFileName,int MaxFileName) const;
-	bool OpenCasCardDefaultReader(int Device);
-	void OutCasCardInfo();
 
 	// ÉRÉsÅ[ã÷é~
 	CAppCore(const CAppCore &) /* = delete */;

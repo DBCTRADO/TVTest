@@ -370,7 +370,7 @@ static bool GetIniEntry(LPCWSTR pszText,CCommandLineOptions::IniEntry *pEntry)
 
 CCommandLineOptions::CCommandLineOptions()
 	: m_fNoDriver(false)
-	, m_fNoDescramble(false)
+	, m_fNoTSProcessor(false)
 	, m_fSingleTask(false)
 	, m_fStandby(false)
 	, m_fNoView(false)
@@ -446,7 +446,7 @@ CCommandLineOptions::CCommandLineOptions()
 	/width			ウィンドウの幅の指定
 	/height			ウィンドウの高さの指定
 	/mute			消音
-	/nd				スクランブル解除しない
+	/nd				TSプロセッサーを無効にする
 	/nid			ネットワークID
 	/nodriver		BonDriverを読み込まない
 	/nodshow		DirectShowの初期化をしない
@@ -515,7 +515,7 @@ void CCommandLineOptions::Parse(LPCWSTR pszCmdLine)
 					&& !Args.GetOption(TEXT("min"),&m_fMinimize)
 					&& !Args.GetOption(TEXT("mpeg2"),&m_fMpeg2)
 					&& !Args.GetOption(TEXT("mute"),&m_fMute)
-					&& !Args.GetOption(TEXT("nd"),&m_fNoDescramble)
+					&& !Args.GetOption(TEXT("nd"),&m_fNoTSProcessor)
 					&& !Args.GetOption(TEXT("nodriver"),&m_fNoDriver)
 					&& !Args.GetOption(TEXT("nodshow"),&m_fNoDirectShow)
 					&& !Args.GetOption(TEXT("noepg"),&m_fNoEpg)
@@ -546,7 +546,6 @@ void CCommandLineOptions::Parse(LPCWSTR pszCmdLine)
 					&& !Args.GetOption(TEXT("style"),&m_StyleFileName)
 					&& !Args.GetOption(TEXT("tray"),&m_fTray)
 					&& !Args.GetOption(TEXT("tsid"),&m_TransportStreamID)
-					&& !Args.GetOption(TEXT("tvcas"),&m_CasLibraryName)
 					&& !Args.GetOption(TEXT("volume"),&m_Volume)
 					&& !Args.GetOption(TEXT("width"),&m_WindowWidth)) {
 				if (Args.IsOption(TEXT("inikey"))) {

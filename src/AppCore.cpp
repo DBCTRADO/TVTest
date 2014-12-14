@@ -3,7 +3,6 @@
 #include "AppCore.h"
 #include "AppMain.h"
 #include "AppUtil.h"
-#include "CardReaderDialog.h"
 #include "resource.h"
 
 #ifdef _DEBUG
@@ -22,7 +21,6 @@ CAppCore::CAppCore(CAppMain &App)
 	: m_App(App)
 	, m_fSilent(false)
 	, m_fExitOnRecordingStop(false)
-	, m_fCasCardOpenError(false)
 	, m_f1SegMode(false)
 {
 }
@@ -823,18 +821,7 @@ bool CAppCore::OpenTuner(LPCTSTR pszFileName)
 		m_App.CoreEngine.CloseTuner();
 	}
 
-	if (m_App.CoreEngine.IsCasCardOpen()) {
-		LPCTSTR pszOldDriver=m_App.CoreEngine.GetDriverFileName();
-		if (m_App.DriverOptions.IsNoDescramble(pszFileName)
-				|| m_App.CasLibraryManager.GetCasDeviceNameByTunerName(pszFileName)!=
-					m_App.CasLibraryManager.GetCasDeviceNameByTunerName(pszOldDriver)
-				|| m_App.CasLibraryManager.GetCasReaderNameByTunerName(pszFileName)!=
-					m_App.CasLibraryManager.GetCasReaderNameByTunerName(pszOldDriver)) {
-			if (m_App.CoreEngine.CloseCasCard()) {
-				AddLog(TEXT("カードリーダーを閉じました。"));
-			}
-		}
-	}
+	m_App.TSProcessorManager.OnTunerChange(m_App.CoreEngine.GetDriverFileName(),pszFileName);
 
 	m_App.CoreEngine.SetDriverFileName(pszFileName);
 	fOK=OpenAndInitializeTuner();
@@ -897,7 +884,7 @@ bool CAppCore::OpenTuner()
 	bool fOK=true;
 
 	if (!m_App.CoreEngine.IsTunerOpen()) {
-		if (OpenAndInitializeTuner(OPEN_CAS_CARD_NO_UI)) {
+		if (OpenAndInitializeTuner(OPENTUNER_NO_UI)) {
 			m_App.AppEventManager.OnTunerOpened();
 		} else {
 			OnError(&m_App.CoreEngine,TEXT("BonDriverの初期化ができません。"));
@@ -912,7 +899,7 @@ bool CAppCore::OpenTuner()
 }
 
 
-bool CAppCore::OpenAndInitializeTuner(unsigned int OpenCasCardFlags)
+bool CAppCore::OpenAndInitializeTuner(unsigned int OpenFlags)
 {
 	CDriverOptions::BonDriverOptions Options(m_App.CoreEngine.GetDriverFileName());
 	m_App.DriverOptions.GetBonDriverOptions(m_App.CoreEngine.GetDriverFileName(),&Options);
@@ -926,12 +913,14 @@ bool CAppCore::OpenAndInitializeTuner(unsigned int OpenCasCardFlags)
 
 	ApplyBonDriverOptions();
 
-	if (!m_App.CasLibraryManager.HasCasLibraryNetworkMap()
-			&& m_App.CoreEngine.IsCasLibraryLoaded()
-			&& !m_App.CoreEngine.IsCasCardOpen()
-			&& !m_App.DriverOptions.IsNoDescramble(m_App.CoreEngine.GetDriverFileName())) {
-		OpenCasCard(OpenCasCardFlags);
-	}
+	unsigned int DecoderOpenFlags=0;
+	if ((OpenFlags & OPENTUNER_NO_NOTIFY)==0)
+		DecoderOpenFlags|=CTSProcessorManager::FILTER_OPEN_NOTIFY_ERROR;
+	if (m_fSilent || (OpenFlags & OPENTUNER_NO_UI)!=0)
+		DecoderOpenFlags|=CTSProcessorManager::FILTER_OPEN_NO_UI;
+	else if ((OpenFlags & OPENTUNER_RETRY_DIALOG)!=0)
+		DecoderOpenFlags|=CTSProcessorManager::FILTER_OPEN_RETRY_DIALOG;
+	m_App.TSProcessorManager.OnTunerOpened(m_App.CoreEngine.GetDriverFileName(),DecoderOpenFlags);
 
 	return true;
 }
@@ -941,11 +930,7 @@ bool CAppCore::CloseTuner()
 {
 	TRACE(TEXT("CAppCore::CloseTuner()\n"));
 
-	if (m_App.CoreEngine.IsCasCardOpen()) {
-		if (m_App.CoreEngine.CloseCasCard()) {
-			AddLog(TEXT("カードリーダーを閉じました。"));
-		}
-	}
+	m_App.TSProcessorManager.CloseAllFilters();
 
 	if (m_App.CoreEngine.IsTunerOpen()) {
 		m_App.CoreEngine.CloseTuner();
@@ -1025,166 +1010,6 @@ int CAppCore::GetCorresponding1SegService(
 	}
 
 	return ServiceIndex;
-}
-
-
-bool CAppCore::OpenCasCard(unsigned int Flags)
-{
-	TRACE(TEXT("CAppCore::OpenCasCard()\n"));
-
-	if (!m_App.CoreEngine.IsCasCardOpen()) {
-		int Device;
-		const TVTest::String &DeviceName=
-			m_App.CasLibraryManager.GetCasDeviceNameByTunerName(m_App.CoreEngine.GetDriverFileName());
-		if (!DeviceName.empty()) {
-			Device=m_App.CoreEngine.m_DtvEngine.m_CasProcessor.GetCasDeviceByName(DeviceName.c_str());
-			if (Device<0)
-				AddLog(TEXT("指定されたCASデバイス \"%s\" がありません。"),DeviceName.c_str());
-		} else {
-			Device=m_App.GeneralOptions.GetCasDevice(true);
-		}
-
-		if (Device>=0 && !OpenCasCardDefaultReader(Device)) {
-			AddLog(TEXT("カードリーダーをオープンできません。"));
-
-			m_fCasCardOpenError=true;
-
-			if ((Flags & OPEN_CAS_CARD_RETRY)!=0) {
-				TCHAR szText[1024];
-				CStaticStringFormatter Formatter(szText,lengthof(szText));
-				CCardReaderErrorDialog Dialog;
-
-				Formatter.AppendFormat(TEXT("%s\r\n"),m_App.CoreEngine.GetLastErrorText());
-				if (!IsStringEmpty(m_App.CoreEngine.GetLastErrorSystemMessage()))
-					Formatter.AppendFormat(TEXT("(%s)\r\n"),m_App.CoreEngine.GetLastErrorSystemMessage());
-				Formatter.Append(
-					TEXT("※もし正常に視聴できるのにこのダイアログが表示される場合、")
-					TEXT("設定でカードリーダーに「なし」を選択してください。"));
-				Dialog.SetMessage(Formatter.GetString());
-				while (Dialog.Show(m_App.UICore.GetDialogOwner())) {
-					if (m_App.CoreEngine.OpenCasCard(Dialog.GetCasDevice(),Dialog.GetReaderName())
-							|| Dialog.GetCasDevice()<0)
-						break;
-				}
-			} else {
-				if ((Flags & OPEN_CAS_CARD_NOTIFY_ERROR)!=0) {
-					m_App.UICore.GetSkin()->ShowNotificationBar(
-						TEXT("カードリーダーをオープンできません。"),
-						CNotificationBar::MESSAGE_ERROR,6000);
-				}
-
-				if ((Flags & OPEN_CAS_CARD_NO_UI)==0 && !m_fSilent) {
-					m_App.UICore.GetSkin()->ShowErrorMessage(&m_App.CoreEngine);
-				}
-			}
-		}
-
-		m_fCasCardOpenError=!m_App.CoreEngine.IsCasCardOpen();
-
-		OutCasCardInfo();
-	}
-
-	return true;
-}
-
-
-bool CAppCore::ChangeCasCard(int Device,LPCTSTR pszName)
-{
-	bool fResult;
-
-	if (pszName==nullptr) {
-		fResult=OpenCasCardDefaultReader(Device);
-	} else {
-		fResult=m_App.CoreEngine.OpenCasCard(Device,pszName);
-	}
-	if (!fResult) {
-		OnError(&m_App.CoreEngine);
-		return false;
-	}
-
-	OutCasCardInfo();
-
-	return true;
-}
-
-
-bool CAppCore::LoadCasLibrary(LPCTSTR pszFileName)
-{
-	if (IsStringEmpty(pszFileName)) {
-		if (!m_App.CasLibraryManager.HasDefaultCasLibrary())
-			return false;
-		pszFileName=m_App.CasLibraryManager.GetDefaultCasLibrary();
-	}
-
-	TRACE(TEXT("CAppCore::LoadCasLibrary() : \"%s\"\n"),pszFileName);
-
-	m_fCasCardOpenError=false;
-
-	m_App.CoreEngine.SetCasLibraryName(pszFileName);
-
-	if (!m_App.CoreEngine.LoadCasLibrary()) {
-		OnError(&m_App.CoreEngine,TEXT("CASライブラリを読み込めません。"));
-		return false;
-	}
-
-	CCasProcessor::CasModuleInfo ModInfo;
-
-	m_App.CoreEngine.m_DtvEngine.m_CasProcessor.GetCasModuleInfo(&ModInfo);
-	AddLog(TEXT("CASライブラリ \"%s\" (%s %s) を読み込みました。"),
-		   m_App.CoreEngine.GetCasLibraryName(),
-		   ModInfo.Name,ModInfo.Version);
-
-	return true;
-}
-
-
-bool CAppCore::LoadCasLibrary()
-{
-	WORD NetworkID,TSID;
-
-	NetworkID=m_App.CoreEngine.m_DtvEngine.m_TsAnalyzer.GetNetworkID();
-	TSID=m_App.CoreEngine.m_DtvEngine.m_TsAnalyzer.GetTransportStreamID();
-	if (NetworkID==0 || TSID==0)
-		return false;
-
-	return LoadCasLibrary(NetworkID,TSID);
-}
-
-
-bool CAppCore::LoadCasLibrary(WORD NetworkID,WORD TSID)
-{
-	const TVTest::String &FileName=m_App.CasLibraryManager.GetCasLibraryFileName(NetworkID,TSID);
-	if (FileName.empty())
-		return false;
-	if (IsEqualFileName(FileName.c_str(),m_App.CoreEngine.GetCasLibraryName()))
-		return !m_fCasCardOpenError;
-
-	return LoadCasLibrary(FileName.c_str());
-}
-
-
-bool CAppCore::OpenCasCardDefaultReader(int Device)
-{
-	const TVTest::String &ReaderName=
-		m_App.CasLibraryManager.GetCasReaderNameByTunerName(m_App.CoreEngine.GetDriverFileName());
-
-	return m_App.CoreEngine.OpenCasCard(Device,ReaderName.empty()?nullptr:ReaderName.c_str());
-}
-
-
-void CAppCore::OutCasCardInfo()
-{
-	if (m_App.CoreEngine.IsCasCardOpen()) {
-		TCHAR szName[MAX_PATH];
-		if (m_App.CoreEngine.m_DtvEngine.m_CasProcessor.GetCasCardName(szName,lengthof(szName))>0) {
-			AddLog(TEXT("カードリーダー \"%s\" をオープンしました。"),szName);
-			CCasProcessor::CasCardInfo CardInfo;
-			if (m_App.CoreEngine.m_DtvEngine.m_CasProcessor.GetCasCardInfo(&CardInfo)) {
-				AddLog(TEXT("(カードID %s / カード識別 %c%03d)"),
-					CardInfo.CardIDText,CardInfo.CardManufacturerID,CardInfo.CardVersion);
-			}
-		}
-	}
 }
 
 
@@ -1414,8 +1239,6 @@ bool CAppCore::StopRecord()
 
 	m_App.RecordManager.StopRecord();
 	m_App.RecordOptions.Apply(CRecordOptions::UPDATE_RECORDSTREAM);
-	m_App.CoreEngine.m_DtvEngine.SetDescrambleCurServiceOnly(
-		m_App.GeneralOptions.GetDescrambleCurServiceOnly());
 
 	CTsRecorder::WriteStatistics Stats;
 	m_App.CoreEngine.m_DtvEngine.m_TsRecorder.GetWriteStatistics(&Stats);

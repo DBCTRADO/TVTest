@@ -22,7 +22,6 @@ static char THIS_FILE[]=__FILE__;
 CInitialSettings::CInitialSettings(const CDriverManager *pDriverManager)
 	: m_pDriverManager(pDriverManager)
 	, m_VideoRenderer(CVideoRenderer::RENDERER_DEFAULT)
-	, m_CasDevice(-1)
 	, m_fDrawLogo(false)
 {
 	m_szDriverFileName[0]='\0';
@@ -131,25 +130,6 @@ INT_PTR CInitialSettings::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPara
 									  m_VideoRenderer);
 			}
 
-			// カードリーダー
-			{
-				CCoreEngine &CoreEngine=GetAppClass().CoreEngine;
-				CCoreEngine::CasDeviceList CasDevList;
-				const int DefaultDevice=CoreEngine.m_DtvEngine.m_CasProcessor.GetDefaultCasDevice();
-				int Sel=0;
-
-				CoreEngine.GetCasDeviceList(&CasDevList);
-				for (size_t i=0;i<CasDevList.size();i++) {
-					DlgComboBox_AddString(hDlg,IDC_INITIALSETTINGS_CASDEVICE,
-										  CasDevList[i].Text.c_str());
-					DlgComboBox_SetItemData(hDlg,IDC_INITIALSETTINGS_CASDEVICE,
-											i,CasDevList[i].Device);
-					if (CasDevList[i].Device==DefaultDevice)
-						Sel=(int)i;
-				}
-				DlgComboBox_SetCurSel(hDlg,IDC_INITIALSETTINGS_CASDEVICE,Sel);
-			}
-
 			// 録画フォルダ
 			::SetDlgItemText(hDlg,IDC_INITIALSETTINGS_RECORDFOLDER,m_szRecordFolder);
 			::SendDlgItemMessage(hDlg,IDC_INITIALSETTINGS_RECORDFOLDER,EM_LIMITTEXT,MAX_PATH-1,0);
@@ -185,39 +165,6 @@ INT_PTR CInitialSettings::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPara
 				ofn.Flags=OFN_HIDEREADONLY | OFN_FILEMUSTEXIST | OFN_EXPLORER;
 				if (::GetOpenFileName(&ofn)) {
 					::SetDlgItemText(hDlg,IDC_INITIALSETTINGS_DRIVER,szFileName);
-				}
-			}
-			return TRUE;
-
-		case IDC_INITIALSETTINGS_SEARCHCARDREADER:
-			{
-				CCasProcessor &CasProcessor=GetAppClass().CoreEngine.m_DtvEngine.m_CasProcessor;
-				int Device=-1;
-				TCHAR szText[1024];
-				CStaticStringFormatter Formatter(szText,lengthof(szText));
-
-				::SetCursor(::LoadCursor(NULL,IDC_WAIT));
-				Formatter.Append(TEXT("以下のカードリーダが見付かりました。\n"));
-
-				const int DeviceCount=CasProcessor.GetCasDeviceCount();
-				for (int i=0;i<DeviceCount;i++) {
-					CCasProcessor::StringList CardList;
-
-					if (CasProcessor.IsCasDeviceAvailable(i)
-							&& CasProcessor.GetCasDeviceCardList(i,&CardList)) {
-						for (auto itr=CardList.begin();itr!=CardList.end();++itr)
-							Formatter.AppendFormat(TEXT("\"%s\"\n"),itr->c_str());
-						if (Device<0)
-							Device=i;
-					}
-				}
-
-				::SetCursor(::LoadCursor(NULL,IDC_ARROW));
-				if (Device<0) {
-					::MessageBox(hDlg,TEXT("カードリーダは見付かりませんでした。"),TEXT("検索結果"),MB_OK | MB_ICONINFORMATION);
-				} else {
-					DlgComboBox_SetCurSel(hDlg,IDC_INITIALSETTINGS_CASDEVICE,Device+1);
-					::MessageBox(hDlg,szText,TEXT("検索結果"),MB_OK | MB_ICONINFORMATION);
 				}
 			}
 			return TRUE;
@@ -317,12 +264,6 @@ INT_PTR CInitialSettings::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPara
 				m_H265DecoderName=H265DecoderName;
 
 				m_VideoRenderer=VideoRenderer;
-
-				LRESULT CasDeviceSel=DlgComboBox_GetCurSel(hDlg,IDC_INITIALSETTINGS_CASDEVICE);
-				if (CasDeviceSel>=0)
-					m_CasDevice=(int)DlgComboBox_GetItemData(hDlg,IDC_INITIALSETTINGS_CASDEVICE,CasDeviceSel);
-				else
-					m_CasDevice=-1;
 
 				TCHAR szRecordFolder[MAX_PATH];
 				::GetDlgItemText(hDlg,IDC_INITIALSETTINGS_RECORDFOLDER,

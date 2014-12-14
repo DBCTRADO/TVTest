@@ -1182,18 +1182,15 @@ bool CInformationPanel::CErrorItem::Update()
 	const ULONGLONG ContinuityErrorPacketCount=CoreEngine.GetContinuityErrorPacketCount();
 	const ULONGLONG ErrorPacketCount=CoreEngine.GetErrorPacketCount();
 	const ULONGLONG ScramblePacketCount=CoreEngine.GetScramblePacketCount();
-	const bool fShowScramble=CoreEngine.GetDescramble();
 
 	if (ContinuityErrorPacketCount==m_ContinuityErrorPacketCount
 			&& ErrorPacketCount==m_ErrorPacketCount
-			&& ScramblePacketCount==m_ScramblePacketCount
-			&& fShowScramble==m_fShowScramble)
+			&& ScramblePacketCount==m_ScramblePacketCount)
 		return false;
 
 	m_ContinuityErrorPacketCount=ContinuityErrorPacketCount;
 	m_ErrorPacketCount=ErrorPacketCount;
 	m_ScramblePacketCount=ScramblePacketCount;
-	m_fShowScramble=fShowScramble;
 
 	return true;
 }

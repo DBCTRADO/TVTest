@@ -39,7 +39,6 @@ public:
 	};
 
 	struct BonDriverOptions {
-		bool fNoDescramble;
 		bool fNoSignalLevel;
 		bool fIgnoreInitialStream;
 		bool fPurgeStreamOnChannelChange;
@@ -63,7 +62,6 @@ public:
 	bool Initialize(CDriverManager *pDriverManager);
 	bool GetInitialChannel(LPCTSTR pszFileName,ChannelInfo *pChannelInfo) const;
 	bool SetLastChannel(LPCTSTR pszFileName,const ChannelInfo *pChannelInfo);
-	bool IsNoDescramble(LPCTSTR pszFileName) const;
 	bool IsNoSignalLevel(LPCTSTR pszFileName) const;
 	bool IsResetChannelChangeErrorCount(LPCTSTR pszFileName) const;
 	bool GetBonDriverOptions(LPCTSTR pszFileName,BonDriverOptions *pOptions) const;

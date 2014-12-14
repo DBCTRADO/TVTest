@@ -163,9 +163,20 @@
 			<param name="Local" value="options\plugin.html">
 			</OBJECT>
 		<LI> <OBJECT type="text/sitemap">
-			<param name="Name" value="ネットワークリモコン">
-			<param name="Local" value="options\networkremocon.html">
+			<param name="Name" value="TSプロセッサー">
+			<param name="Local" value="options\tsprocessor.html">
+			<param name="ImageNumber" value="11">
 			</OBJECT>
+		<UL>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="チューナーマップ">
+				<param name="Local" value="options\tsprocessor_tunermap.html">
+				</OBJECT>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="ネットワークマップ">
+				<param name="Local" value="options\tsprocessor_networkmap.html">
+				</OBJECT>
+		</UL>
 		<LI> <OBJECT type="text/sitemap">
 			<param name="Name" value="ログ">
 			<param name="Local" value="options\log.html">

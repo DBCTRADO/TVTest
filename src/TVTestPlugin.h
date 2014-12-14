@@ -113,6 +113,7 @@
 	  ・MESSAGE_SETSTATUSITEM
 	  ・MESSAGE_GETSTATUSITEMINFO
 	  ・MESSAGE_STATUSITEMNOTIFY
+	  ・MESSAGE_REGISTERTSPROCESSOR
 	・以下のイベントを追加した
 	  ・EVENT_FILTERGRAPH_INITIALIZE
 	  ・EVENT_FILTERGRAPH_INITIALIZED
@@ -428,6 +429,7 @@ enum {
 	MESSAGE_SETSTATUSITEM,				// ステータス項目の設定
 	MESSAGE_GETSTATUSITEMINFO,			// ステータス項目の情報を取得
 	MESSAGE_STATUSITEMNOTIFY,			// ステータス項目の通知
+	MESSAGE_REGISTERTSPROCESSOR,		// TSプロセッサの登録
 #endif
 	MESSAGE_TRAILER
 };
@@ -815,6 +817,7 @@ struct StatusInfo {
 #if TVTEST_PLUGIN_VERSION>=TVTEST_PLUGIN_VERSION_(0,0,2)
 	DWORD DropPacketCount;				// ドロップパケット数
 	DWORD BcasCardStatus;				// B-CAS カードの状態(BCAS_STATUS_???)
+										// ※ B-CAS 関連の機能は削除されました。現在は利用できません。
 #endif
 };
 
@@ -1267,6 +1270,7 @@ struct BCasInfo {
 };
 
 // B-CAS カードの情報を取得する
+// ※ B-CAS 関連の機能は削除されました。現在は利用できません。
 // カードが開かれていない場合は false が返ります。
 inline bool MsgGetBCasInfo(PluginParam *pParam,BCasInfo *pInfo)
 {
@@ -1282,6 +1286,7 @@ struct BCasCommandInfo {
 };
 
 // B-CAS カードにコマンドを送信する
+// ※ B-CAS 関連の機能は削除されました。現在は利用できません。
 // BCasCommandInfo の pSendData に送信データへのポインタを指定して、
 // SendSize に送信データのバイト数を設定します。
 // また、pReceiveData に受信データを格納するバッファへのポインタを指定して、
@@ -1293,6 +1298,7 @@ inline bool MsgSendBCasCommand(PluginParam *pParam,BCasCommandInfo *pInfo)
 }
 
 // B-CAS カードにコマンドを送信する
+// ※ B-CAS 関連の機能は削除されました。現在は利用できません。
 inline bool MsgSendBCasCommand(PluginParam *pParam,const BYTE *pSendData,DWORD SendSize,BYTE *pReceiveData,DWORD *pReceiveSize)
 {
 	BCasCommandInfo Info;
@@ -2559,6 +2565,36 @@ enum {
 	STATUS_ITEM_MOUSE_ACTION_MOVE			// カーソル移動
 };
 
+// TSプロセッサのインターフェースは TVTestInterface.h で宣言されています。
+#ifndef TVTEST_INTERFACE_H
+namespace Interface {
+	struct ITSProcessor;
+}
+#endif
+
+// TSプロセッサの接続位置
+// 詳細は TVTestInterface.h を参照してください。
+enum {
+	TS_PROCESSOR_CONNECT_POSITION_SOURCE,			// ソース(チューナー等からストリームが入力された後)
+	TS_PROCESSOR_CONNECT_POSITION_PREPROCESSING,	// 前処理(TSを解析する前)
+	TS_PROCESSOR_CONNECT_POSITION_POSTPROCESSING,	// 後処理(TSを解析した後)
+	TS_PROCESSOR_CONNECT_POSITION_VIEWER,			// ビューア(再生の前)
+	TS_PROCESSOR_CONNECT_POSITION_RECORDER			// レコーダ(ストリーム書き出しの前)
+};
+
+// TSプロセッサの情報
+struct TSProcessorInfo {
+	DWORD Size;								// 構造体のサイズ
+	DWORD Flags;							// 各種フラグ(現在は常に0)
+	Interface::ITSProcessor *pTSProcessor;	// 接続する ITSProcessor
+	DWORD ConnectPosition;					// 接続位置(TS_PROCESSOR_CONNECT_POSITION_*)
+};
+
+// TSプロセッサを登録する
+inline bool MsgRegisterTSProcessor(PluginParam *pParam,const TSProcessorInfo *pInfo) {
+	return (*pParam->Callback)(pParam,MESSAGE_REGISTERTSPROCESSOR,(LPARAM)pInfo,0)!=FALSE;
+}
+
 #endif	// TVTEST_PLUGIN_VERSION>=TVTEST_PLUGIN_VERSION_(0,0,14)
 
 
@@ -3010,6 +3046,9 @@ public:
 	}
 	bool StatusItemNotify(int ID,UINT Type) {
 		return MsgStatusItemNotify(m_pParam,ID,Type);
+	}
+	bool RegisterTSProcessor(const TSProcessorInfo *pInfo) {
+		return MsgRegisterTSProcessor(m_pParam,pInfo);
 	}
 #endif
 };

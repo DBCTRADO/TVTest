@@ -20,13 +20,9 @@ static char THIS_FILE[]=__FILE__;
 CGeneralOptions::CGeneralOptions()
 	: m_DefaultDriverType(DEFAULT_DRIVER_LAST)
 	, m_VideoRendererType(CVideoRenderer::RENDERER_DEFAULT)
-	, m_CasDevice(-1)
-	, m_fTemporaryNoDescramble(false)
 	, m_fResident(false)
 	, m_fKeepSingleTask(false)
-	, m_DescrambleInstruction(0)
-	, m_fDescrambleCurServiceOnly(false)
-	, m_fEnableEmmProcess(false)
+	, m_fEnable1SegFallback(true)
 {
 }
 
@@ -40,23 +36,13 @@ CGeneralOptions::~CGeneralOptions()
 bool CGeneralOptions::Apply(DWORD Flags)
 {
 	CAppMain &App=GetAppClass();
-	CCoreEngine &CoreEngine=App.CoreEngine;
 
-	if ((Flags&UPDATE_CARDREADER)!=0) {
-		App.Core.ChangeCasCard(m_CasDevice);
-	}
-
-	if ((Flags&UPDATE_RESIDENT)!=0) {
+	if ((Flags & UPDATE_RESIDENT)!=0) {
 		App.UICore.SetResident(m_fResident);
 	}
 
-	if ((Flags&UPDATE_DESCRAMBLECURONLY)!=0) {
-		if (!App.RecordManager.IsRecording())
-			CoreEngine.m_DtvEngine.SetDescrambleCurServiceOnly(m_fDescrambleCurServiceOnly);
-	}
-
-	if ((Flags&UPDATE_ENABLEEMMPROCESS)!=0) {
-		CoreEngine.m_DtvEngine.m_CasProcessor.EnableContract(m_fEnableEmmProcess);
+	if ((Flags & UPDATE_1SEGFALLBACK)!=0) {
+		App.CoreEngine.m_DtvEngine.m_TsPacketParser.EnablePATGeneration(m_fEnable1SegFallback);
 	}
 
 	return true;
@@ -95,34 +81,10 @@ bool CGeneralOptions::ReadSettings(CSettings &Settings)
 		}
 	}
 
-	if (!Settings.Read(TEXT("CasDevice"),&m_CasDeviceName)) {
-		// 以前のバージョンとの互換用
-		if (Settings.Read(TEXT("CardReader"),&Value)) {
-			if (Value>=0)
-				m_CasDevice=Value-1;
-		}
-	}
-
-	if (Settings.Read(TEXT("DescrambleInstruction"),&Value)) {
-		m_DescrambleInstruction=Value;
-	} else {
-		// 以前のバージョンとの互換用
-		bool f;
-		if (Settings.Read(TEXT("DescrambleSSSE3"),&f) && f) {
-			m_DescrambleInstruction=2;
-		} else if (Settings.Read(TEXT("DescrambleSSE2"),&f)) {
-			if (f)
-				m_DescrambleInstruction=1;
-			else
-				m_DescrambleInstruction=0;
-		}
-	}
-
-	Settings.Read(TEXT("DescrambleCurServiceOnly"),&m_fDescrambleCurServiceOnly);
-	Settings.Read(TEXT("ProcessEMM"),&m_fEnableEmmProcess);
-
 	Settings.Read(TEXT("Resident"),&m_fResident);
 	Settings.Read(TEXT("KeepSingleTask"),&m_fKeepSingleTask);
+	Settings.Read(TEXT("Enable1SegFallback"),&m_fEnable1SegFallback);
+
 	return true;
 }
 
@@ -138,16 +100,10 @@ bool CGeneralOptions::WriteSettings(CSettings &Settings)
 	Settings.Write(TEXT("H265Decoder"),m_H265DecoderName);
 	Settings.Write(TEXT("Renderer"),
 				   CVideoRenderer::EnumRendererName((int)m_VideoRendererType));
-	Settings.Write(TEXT("CasDevice"),m_CasDeviceName);
-	/*
-	Settings.Write(TEXT("DescrambleSSE2"),m_DescrambleInstruction!=CTsDescrambler::INSTRUCTION_NORMAL);
-	Settings.Write(TEXT("DescrambleSSSE3"),m_DescrambleInstruction==CTsDescrambler::INSTRUCTION_SSSE3);
-	*/
-	Settings.Write(TEXT("DescrambleInstruction"),m_DescrambleInstruction);
-	Settings.Write(TEXT("DescrambleCurServiceOnly"),m_fDescrambleCurServiceOnly);
-	Settings.Write(TEXT("ProcessEMM"),m_fEnableEmmProcess);
 	Settings.Write(TEXT("Resident"),m_fResident);
 	Settings.Write(TEXT("KeepSingleTask"),m_fKeepSingleTask);
+	Settings.Write(TEXT("Enable1SegFallback"),m_fEnable1SegFallback);
+
 	return true;
 }
 
@@ -267,46 +223,6 @@ bool CGeneralOptions::SetVideoRendererType(CVideoRenderer::RendererType Renderer
 }
 
 
-int CGeneralOptions::GetCasDevice(bool fUseName)
-{
-	if (fUseName) {
-		if (!m_CasDeviceName.empty()) {
-			m_CasDevice=GetAppClass().CoreEngine.m_DtvEngine.m_CasProcessor.GetCasDeviceByName(m_CasDeviceName.c_str());
-		} else {
-			m_CasDevice=-1;
-		}
-	}
-
-	return m_CasDevice;
-}
-
-
-bool CGeneralOptions::SetCasDevice(int Device)
-{
-	if (Device>=0) {
-		CCasProcessor::CasDeviceInfo DeviceInfo;
-
-		if (!GetAppClass().CoreEngine.m_DtvEngine.m_CasProcessor.GetCasDeviceInfo(Device,&DeviceInfo))
-			return false;
-		m_CasDeviceName=DeviceInfo.Name;
-	} else {
-		if (Device<-1)
-			return false;
-		m_CasDeviceName.clear();
-	}
-
-	m_CasDevice=Device;
-
-	return true;
-}
-
-
-void CGeneralOptions::SetTemporaryNoDescramble(bool fNoDescramble)
-{
-	m_fTemporaryNoDescramble=fNoDescramble;
-}
-
-
 bool CGeneralOptions::GetResident() const
 {
 	return m_fResident;
@@ -316,18 +232,6 @@ bool CGeneralOptions::GetResident() const
 bool CGeneralOptions::GetKeepSingleTask() const
 {
 	return m_fKeepSingleTask;
-}
-
-
-bool CGeneralOptions::GetDescrambleCurServiceOnly() const
-{
-	return m_fDescrambleCurServiceOnly;
-}
-
-
-bool CGeneralOptions::GetEnableEmmProcess() const
-{
-	return m_fEnableEmmProcess;
 }
 
 
@@ -380,57 +284,9 @@ INT_PTR CGeneralOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam
 				DlgComboBox_AddString(hDlg,IDC_OPTIONS_RENDERER,pszRenderer);
 			DlgComboBox_SetCurSel(hDlg,IDC_OPTIONS_RENDERER,m_VideoRendererType);
 
-			// カードリーダー
-			{
-				CCoreEngine &CoreEngine=App.CoreEngine;
-				CCasProcessor &CasProcessor=CoreEngine.m_DtvEngine.m_CasProcessor;
-				if (!CasProcessor.IsCasLibraryLoaded())
-					App.Core.LoadCasLibrary(NULL);
-				m_fEnableCasSettings=CasProcessor.IsCasLibraryLoaded();
-
-				CCoreEngine::CasDeviceList CasDevList;
-				int Sel=0;
-				CoreEngine.GetCasDeviceList(&CasDevList);
-				for (size_t i=0;i<CasDevList.size();i++) {
-					DlgComboBox_AddString(hDlg,IDC_OPTIONS_CARDREADER,
-										  CasDevList[i].Text.c_str());
-					DlgComboBox_SetItemData(hDlg,IDC_OPTIONS_CARDREADER,
-											i,CasDevList[i].Device);
-					if (CasDevList[i].Device==m_CasDevice)
-						Sel=(int)i;
-				}
-				DlgComboBox_SetCurSel(hDlg,IDC_OPTIONS_CARDREADER,
-									  m_fTemporaryNoDescramble?0:Sel);
-				if (!m_fEnableCasSettings)
-					EnableDlgItem(hDlg,IDC_OPTIONS_CARDREADER,false);
-
-				DlgCheckBox_Check(hDlg,IDC_OPTIONS_DESCRAMBLECURSERVICEONLY,m_fDescrambleCurServiceOnly);
-				DlgCheckBox_Check(hDlg,IDC_OPTIONS_ENABLEEMMPROCESS,m_fEnableEmmProcess);
-				if (!m_fEnableCasSettings || m_CasDevice<0) {
-					EnableDlgItems(hDlg,IDC_OPTIONS_DESCRAMBLE_FIRST,
-										IDC_OPTIONS_DESCRAMBLE_LAST,false);
-				}
-
-				if (m_fEnableCasSettings) {
-					const UINT AvailableInstructions=CasProcessor.GetAvailableInstructions();
-					TCHAR szName[64];
-					for (int i=0;CasProcessor.GetInstructionName(i,szName,lengthof(szName))>0;i++) {
-						if ((AvailableInstructions&(1U<<i))!=0) {
-							LRESULT Index=DlgComboBox_AddString(hDlg,IDC_OPTIONS_DESCRAMBLEINSTRUCTION,szName);
-							DlgComboBox_SetItemData(hDlg,IDC_OPTIONS_DESCRAMBLEINSTRUCTION,Index,i);
-						}
-					}
-					DlgComboBox_SetCurSel(hDlg,IDC_OPTIONS_DESCRAMBLEINSTRUCTION,m_DescrambleInstruction);
-				} else {
-					EnableDlgItems(hDlg,
-								   IDC_OPTIONS_DESCRAMBLEINSTRUCTION_LABEL,
-								   IDC_OPTIONS_DESCRAMBLEBENCHMARK,
-								   false);
-				}
-			}
-
 			DlgCheckBox_Check(hDlg,IDC_OPTIONS_RESIDENT,m_fResident);
 			DlgCheckBox_Check(hDlg,IDC_OPTIONS_KEEPSINGLETASK,m_fKeepSingleTask);
+			DlgCheckBox_Check(hDlg,IDC_OPTIONS_ENABLE1SEGFALLBACK,m_fEnable1SegFallback);
 		}
 		return TRUE;
 
@@ -491,27 +347,6 @@ INT_PTR CGeneralOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam
 					::SetDlgItemText(hDlg,IDC_OPTIONS_DEFAULTDRIVER,szFileName);
 			}
 			return TRUE;
-
-		case IDC_OPTIONS_CARDREADER:
-			if (HIWORD(wParam)==CBN_SELCHANGE
-					&& m_fEnableCasSettings) {
-				EnableDlgItems(hDlg,
-					IDC_OPTIONS_DESCRAMBLE_FIRST,
-					IDC_OPTIONS_DESCRAMBLE_LAST,
-					DlgComboBox_GetCurSel(hDlg,IDC_OPTIONS_CARDREADER)>0);
-			}
-			return TRUE;
-
-		case IDC_OPTIONS_DESCRAMBLEBENCHMARK:
-			if (::MessageBox(hDlg,
-					TEXT("ベンチマークテストを開始します。\n")
-					TEXT("終了するまで操作は行わないようにしてください。\n")
-					TEXT("結果はばらつきがありますので、数回実行してください。"),
-					TEXT("ベンチマークテスト"),
-					MB_OKCANCEL | MB_ICONINFORMATION)==IDOK) {
-				DescrambleBenchmarkTest(hDlg);
-			}
-			return TRUE;
 		}
 		return TRUE;
 
@@ -558,35 +393,6 @@ INT_PTR CGeneralOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam
 									   STREAM_TYPE_H265,
 									   &m_H265DecoderName);
 
-				if (m_fEnableCasSettings) {
-					int Sel=(int)DlgComboBox_GetCurSel(hDlg,IDC_OPTIONS_CARDREADER);
-					int CasDevice=(int)DlgComboBox_GetItemData(hDlg,IDC_OPTIONS_CARDREADER,Sel);
-					if ((m_fTemporaryNoDescramble && Sel>0)
-							|| (!m_fTemporaryNoDescramble && CasDevice!=m_CasDevice)) {
-						SetCasDevice(CasDevice);
-						m_fTemporaryNoDescramble=false;
-						SetUpdateFlag(UPDATE_CARDREADER);
-					}
-
-					Sel=(int)DlgComboBox_GetCurSel(hDlg,IDC_OPTIONS_DESCRAMBLEINSTRUCTION);
-					if (Sel>=0) {
-						m_DescrambleInstruction=
-							(int)DlgComboBox_GetItemData(hDlg,IDC_OPTIONS_DESCRAMBLEINSTRUCTION,Sel);
-					}
-
-					bool fCurOnly=DlgCheckBox_IsChecked(hDlg,IDC_OPTIONS_DESCRAMBLECURSERVICEONLY);
-					if (fCurOnly!=m_fDescrambleCurServiceOnly) {
-						m_fDescrambleCurServiceOnly=fCurOnly;
-						SetUpdateFlag(UPDATE_DESCRAMBLECURONLY);
-					}
-
-					bool fEmm=DlgCheckBox_IsChecked(hDlg,IDC_OPTIONS_ENABLEEMMPROCESS);
-					if (fEmm!=m_fEnableEmmProcess) {
-						m_fEnableEmmProcess=fEmm;
-						SetUpdateFlag(UPDATE_ENABLEEMMPROCESS);
-					}
-				}
-
 				bool fResident=DlgCheckBox_IsChecked(hDlg,IDC_OPTIONS_RESIDENT);
 				if (fResident!=m_fResident) {
 					m_fResident=fResident;
@@ -595,6 +401,13 @@ INT_PTR CGeneralOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam
 
 				m_fKeepSingleTask=
 					DlgCheckBox_IsChecked(hDlg,IDC_OPTIONS_KEEPSINGLETASK);
+
+				bool fEnable1SegFallback=
+					DlgCheckBox_IsChecked(hDlg,IDC_OPTIONS_ENABLE1SEGFALLBACK);
+				if (fEnable1SegFallback!=m_fEnable1SegFallback) {
+					m_fEnable1SegFallback=fEnable1SegFallback;
+					SetUpdateFlag(UPDATE_1SEGFALLBACK);
+				}
 
 				m_fChanged=true;
 			}
@@ -672,86 +485,4 @@ void CGeneralOptions::GetVideoDecoderSetting(
 		if (StreamType==GetAppClass().CoreEngine.m_DtvEngine.m_MediaViewer.GetVideoStreamType())
 			SetGeneralUpdateFlag(UPDATE_GENERAL_BUILDMEDIAVIEWER);
 	}
-}
-
-
-// ベンチマークテスト
-void CGeneralOptions::DescrambleBenchmarkTest(HWND hwndOwner)
-{
-	CCasProcessor &CasProcessor=GetAppClass().CoreEngine.m_DtvEngine.m_CasProcessor;
-	const UINT AvailableInstructions=CasProcessor.GetAvailableInstructions();
-	if (AvailableInstructions==0)
-		return;
-
-	HCURSOR hcurOld=::SetCursor(LoadCursor(NULL,IDC_WAIT));
-
-	static const DWORD BENCHMARK_ROUND=200000;
-	DWORD BenchmarkCount=0,MaxTime=0;
-	DWORD Times[32];
-	::ZeroMemory(Times,sizeof(Times));
-
-	do {
-		for (int i=0;AvailableInstructions>>i!=0;i++) {
-			if (((AvailableInstructions>>i)&1)!=0) {
-				DWORD Time;
-				CasProcessor.DescrambleBenchmarkTest(i,BENCHMARK_ROUND,&Time);
-				Times[i]+=Time;
-				if (Times[i]>MaxTime)
-					MaxTime=Times[i];
-			}
-		}
-		BenchmarkCount+=BENCHMARK_ROUND;
-	} while (MaxTime<1500);
-
-	::SetCursor(hcurOld);
-
-	TCHAR szCPU[256];
-	DWORD Type=REG_SZ,Size=sizeof(szCPU);
-	if (::SHGetValue(HKEY_LOCAL_MACHINE,
-					 TEXT("HARDWARE\\DESCRIPTION\\System\\CentralProcessor\\0"),
-					 TEXT("ProcessorNameString"),
-					 &Type,szCPU,&Size)!=ERROR_SUCCESS
-			|| Type!=REG_SZ)
-		szCPU[0]='\0';
-
-	TCHAR szText[1024];
-	CStaticStringFormatter Formatter(szText,lengthof(szText));
-	if (szCPU[0]!='\0')
-		Formatter.AppendFormat(TEXT("%s\n"),szCPU);
-	Formatter.AppendFormat(TEXT("%u 回の実行に掛かった時間\n"),BenchmarkCount);
-	DWORD NormalTime=Times[0];
-	DWORD MinTime=0xFFFFFFFF;
-	int Fastest=0;
-	for (int i=0;AvailableInstructions>>i!=0;i++) {
-		if (((AvailableInstructions>>i)&1)!=0) {
-			const DWORD Time=Times[i];
-			TCHAR szName[64];
-
-			CasProcessor.GetInstructionName(i,szName,lengthof(szName));
-			Formatter.AppendFormat(TEXT("%s : %u ms (%d パケット/秒)"),
-				szName,Time,::MulDiv(BenchmarkCount,1000,Time));
-			if (i>0 && NormalTime>0 && Time>0) {
-				int Percentage;
-				if (NormalTime>=Time)
-					Percentage=(int)(NormalTime*100/Time)-100;
-				else
-					Percentage=-(int)((Time*100/NormalTime)-100);
-				Formatter.AppendFormat(TEXT(" (高速化される割合 %d %%)"),Percentage);
-			}
-			Formatter.Append(TEXT("\n"));
-
-			if (Time<MinTime) {
-				MinTime=Time;
-				Fastest=i;
-			}
-		}
-	}
-
-	TCHAR szName[64];
-	CasProcessor.GetInstructionName(Fastest,szName,lengthof(szName));
-	Formatter.AppendFormat(TEXT("\n%s にすることをお勧めします。"),szName);
-
-	CMessageDialog MessageDialog;
-	MessageDialog.Show(hwndOwner,CMessageDialog::TYPE_INFO,Formatter.GetString(),
-					   TEXT("ベンチマークテスト結果"),NULL,TEXT("ベンチマークテスト"));
 }

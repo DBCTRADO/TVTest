@@ -12,6 +12,18 @@ static char THIS_FILE[]=__FILE__;
 #endif
 
 
+template<typename TPred> void WalkDecoderGraph(CMediaDecoder *pDecoder, TPred Pred)
+{
+	Pred(pDecoder);
+	const DWORD OutputNum = pDecoder->GetOutputNum();
+	for (DWORD i = 0; i < OutputNum; i++) {
+		CMediaDecoder *pOutDecoder = pDecoder->GetOutputDecoder(i);
+		if (pOutDecoder)
+			WalkDecoderGraph(pOutDecoder, Pred);
+	}
+}
+
+
 //////////////////////////////////////////////////////////////////////
 // CDtvEngine 構築/消滅
 //////////////////////////////////////////////////////////////////////
@@ -32,7 +44,6 @@ CDtvEngine::CDtvEngine(void)
 	, m_BonSrcDecoder(this)
 	, m_TsPacketParser(this)
 	, m_TsAnalyzer(this)
-	, m_CasProcessor(this)
 	, m_MediaViewer(this)
 	, m_MediaTee(this)
 	, m_TsRecorder(this)
@@ -41,12 +52,11 @@ CDtvEngine::CDtvEngine(void)
 	, m_EventManager(this)
 	, m_CaptionDecoder(this)
 	, m_LogoDownloader(this)
+	, m_TsPacketCounter(this)
 
 	, m_bBuiled(false)
-	, m_bDescramble(true)
 	, m_bStartStreamingOnDriverOpen(false)
 
-	, m_bDescrambleCurServiceOnly(false)
 	, m_bWriteCurServiceOnly(false)
 	, m_WriteStream(CTsSelector::STREAM_ALL)
 {
@@ -61,8 +71,7 @@ CDtvEngine::~CDtvEngine(void)
 
 bool CDtvEngine::BuildEngine(const DecoderConnectionInfo *pDecoderConnectionList,
 							 int DecoderConnectionCount,
-							 CEventHandler *pEventHandler,
-							 bool bDescramble)
+							 CEventHandler *pEventHandler)
 {
 	if (m_bBuiled)
 		return true;
@@ -84,9 +93,8 @@ bool CDtvEngine::BuildEngine(const DecoderConnectionInfo *pDecoderConnectionList
 		m_DecoderConnectionList.push_back(ConnectionInfo);
 	}
 
-	m_CasProcessor.EnableDescramble(bDescramble);
-
-	m_bDescramble = bDescramble;
+	WalkDecoderGraph(&m_BonSrcDecoder,
+					 [](CMediaDecoder *pDecoder) { pDecoder->Initialize(); });
 
 	// イベントハンドラ設定
 	m_pEventHandler = pEventHandler;
@@ -98,17 +106,10 @@ bool CDtvEngine::BuildEngine(const DecoderConnectionInfo *pDecoderConnectionList
 }
 
 
-bool CDtvEngine::IsBuildComplete() const
-{
-	return m_bBuiled && IsSrcFilterOpen() && m_MediaViewer.IsOpen()
-		&& (!m_bDescramble || m_CasProcessor.IsCasCardOpen());
-}
-
-
 bool CDtvEngine::CloseEngine(void)
 {
-	//if (!m_bBuiled)
-	//	return true;
+	if (!m_bBuiled)
+		return true;
 
 	Trace(TEXT("DtvEngineを閉じています..."));
 
@@ -116,11 +117,11 @@ bool CDtvEngine::CloseEngine(void)
 
 	ReleaseSrcFilter();
 
-	Trace(TEXT("カードリーダを閉じています..."));
-	m_CasProcessor.CloseCasCard();
-
 	Trace(TEXT("メディアビューアを閉じています..."));
 	m_MediaViewer.CloseViewer();
+
+	WalkDecoderGraph(&m_BonSrcDecoder,
+					 [](CMediaDecoder *pDecoder) { pDecoder->Finalize(); });
 
 	// イベントハンドラ解除
 	m_pEventHandler = NULL;
@@ -147,21 +148,44 @@ bool CDtvEngine::ResetEngine(void)
 }
 
 
+int CDtvEngine::RegisterDecoder(CMediaDecoder *pDecoder)
+{
+	if (pDecoder == NULL)
+		return -1;
+
+	DecoderInfo Info;
+
+	Info.ID = DECODER_ID_External + (int)m_DecoderList.size();
+	Info.pDecoder = pDecoder;
+
+	m_DecoderList.push_back(Info);
+
+	pDecoder->SetEventHandler(this);
+
+	return Info.ID;
+}
+
+
 bool CDtvEngine::OpenBonDriver(LPCTSTR pszFileName)
 {
 	ReleaseSrcFilter();
 
+	m_BonSrcDecoder.SetOutputDecoder(NULL);
+
+	bool bOK = false;
+
 	// ソースフィルタを開く
 	Trace(TEXT("BonDriverを読み込んでいます..."));
-	if (!m_BonSrcDecoder.LoadBonDriver(pszFileName)) {
+	if (m_BonSrcDecoder.LoadBonDriver(pszFileName)) {
+		Trace(TEXT("チューナを開いています..."));
+		if (m_BonSrcDecoder.OpenTuner()) {
+			bOK = true;
+		} else {
+			SetError(m_BonSrcDecoder.GetLastErrorException());
+			m_BonSrcDecoder.UnloadBonDriver();
+		}
+	} else {
 		SetError(m_BonSrcDecoder.GetLastErrorException());
-		return false;
-	}
-	Trace(TEXT("チューナを開いています..."));
-	if (!m_BonSrcDecoder.OpenTuner()) {
-		m_BonSrcDecoder.UnloadBonDriver();
-		SetError(m_BonSrcDecoder.GetLastErrorException());
-		return false;
 	}
 
 	const DecoderConnectionInfo *pOutputConnection = GetOutputConnectionInfo(DECODER_ID_BonSrcDecoder);
@@ -169,6 +193,9 @@ bool CDtvEngine::OpenBonDriver(LPCTSTR pszFileName)
 		m_BonSrcDecoder.SetOutputDecoder(GetDecoderByID(pOutputConnection->InputDecoder),
 										 pOutputConnection->OutputIndex);
 	}
+
+	if (!bOK)
+		return false;
 
 	if (m_bStartStreamingOnDriverOpen) {
 		Trace(TEXT("ストリームの再生を開始しています..."));
@@ -191,8 +218,6 @@ bool CDtvEngine::ReleaseSrcFilter()
 		Trace(TEXT("BonDriver を解放しています..."));
 		m_BonSrcDecoder.UnloadBonDriver();
 	}
-
-	m_BonSrcDecoder.SetOutputDecoder(NULL);
 
 	return true;
 }
@@ -362,7 +387,8 @@ bool CDtvEngine::SelectService(WORD ServiceID, bool bNo1Seg)
 	m_MediaViewer.SetVideoPID(VideoPID);
 	m_MediaViewer.SetAudioPID(AudioPID);
 
-	SetDescrambleService(m_bDescrambleCurServiceOnly ? ServiceID : 0);
+	WalkDecoderGraph(&m_BonSrcDecoder,
+					 [=](CMediaDecoder *pDecoder) { pDecoder->SetActiveServiceID(ServiceID); });
 
 	if (m_bWriteCurServiceOnly)
 		SetWriteStream(ServiceID, m_WriteStream);
@@ -688,49 +714,6 @@ const DWORD CDtvEngine::OnDecoderEvent(CMediaDecoder *pDecoder, const DWORD dwEv
 			}
 			return 0;
 		}
-	} else if (pDecoder == &m_CasProcessor) {
-		switch (dwEventID) {
-		case CCasProcessor::EVENT_EMM_PROCESSED:
-			// EMM処理が行われた
-			if (m_pEventHandler)
-				m_pEventHandler->OnEmmProcessed();
-			return 0UL;
-
-		case CCasProcessor::EVENT_EMM_ERROR:
-			// EMM処理でエラーが発生した
-			if (m_pEventHandler) {
-				CCasProcessor::EmmErrorInfo *pInfo = static_cast<CCasProcessor::EmmErrorInfo*>(pParam);
-
-				m_pEventHandler->OnEmmError(pInfo->pszText);
-			}
-			return 0UL;
-
-		case CCasProcessor::EVENT_ECM_ERROR:
-			// ECM処理でエラーが発生した
-			if (m_pEventHandler) {
-				CCasProcessor::EcmErrorInfo *pInfo = static_cast<CCasProcessor::EcmErrorInfo*>(pParam);
-
-				if (m_CasProcessor.GetEcmPIDByServiceID(m_CurServiceID) == pInfo->EcmPID)
-					m_pEventHandler->OnEcmError(pInfo->pszText);
-			}
-			return 0UL;
-
-		case CCasProcessor::EVENT_ECM_REFUSED:
-			// ECMが受け付けられない
-			if (m_pEventHandler) {
-				CCasProcessor::EcmErrorInfo *pInfo = static_cast<CCasProcessor::EcmErrorInfo*>(pParam);
-
-				if (m_CasProcessor.GetEcmPIDByServiceID(m_CurServiceID) == pInfo->EcmPID)
-					m_pEventHandler->OnEcmRefused();
-			}
-			return 0UL;
-
-		case CCasProcessor::EVENT_CARD_READER_HUNG:
-			// カードリーダーから応答が無い
-			if (m_pEventHandler)
-				m_pEventHandler->OnCardReaderHung();
-			return 0UL;
-		}
 	}
 
 	return 0UL;
@@ -952,93 +935,6 @@ int CDtvEngine::GetAudioComponentText(LPTSTR pszText, int MaxLength, const int A
 }
 
 
-bool CDtvEngine::LoadCasLibrary(LPCTSTR pszFileName)
-{
-	DisconnectDecoder(DECODER_ID_CasProcessor);
-
-	if (!m_CasProcessor.LoadCasLibrary(pszFileName)) {
-		SetError(m_CasProcessor.GetLastErrorException());
-		return false;
-	}
-
-	return true;
-}
-
-
-bool CDtvEngine::OpenCasCard(int Device, LPCTSTR pszReaderName)
-{
-	// CASカードを開く
-	if (Device>=0) {
-		Trace(TEXT("CASカードを開いています..."));
-		if (!m_CasProcessor.OpenCasCard(Device,pszReaderName)) {
-			TCHAR szText[256];
-
-			if (m_CasProcessor.GetLastErrorText()!=NULL)
-				::wsprintf(szText,TEXT("CASカードの初期化に失敗しました。%s"),m_CasProcessor.GetLastErrorText());
-			else
-				::lstrcpy(szText,TEXT("CASカードの初期化に失敗しました。"));
-			SetError(0,szText,
-					 TEXT("カードリーダが接続されているか、設定で有効なカードリーダが選択されているか確認してください。"),
-					 m_CasProcessor.GetLastErrorSystemMessage());
-			return false;
-		}
-
-		ConnectDecoder(DECODER_ID_CasProcessor);
-
-		WORD ServiceID = 0;
-		if (m_bDescrambleCurServiceOnly && m_CurServiceID != SID_INVALID)
-			ServiceID = m_CurServiceID;
-		SetDescrambleService(ServiceID);
-	} else if (m_CasProcessor.IsCasCardOpen()) {
-		m_CasProcessor.CloseCasCard();
-	}
-	return true;
-}
-
-
-bool CDtvEngine::CloseCasCard()
-{
-	if (m_CasProcessor.IsCasCardOpen())
-		m_CasProcessor.CloseCasCard();
-	return true;
-}
-
-
-bool CDtvEngine::SetDescramble(bool bDescramble)
-{
-	if (!m_bBuiled) {
-		SetError(0,TEXT("内部エラー : DtvEngineが構築されていません。"));
-		return false;
-	}
-
-	if (m_bDescramble != bDescramble) {
-		m_CasProcessor.EnableDescramble(bDescramble);
-		m_bDescramble = bDescramble;
-	}
-	return true;
-}
-
-
-bool CDtvEngine::SetDescrambleService(WORD ServiceID)
-{
-	return m_CasProcessor.SetTargetServiceID(ServiceID);
-}
-
-
-bool CDtvEngine::SetDescrambleCurServiceOnly(bool bOnly)
-{
-	if (m_bDescrambleCurServiceOnly != bOnly) {
-		WORD ServiceID = 0;
-
-		m_bDescrambleCurServiceOnly = bOnly;
-		if (bOnly && m_CurServiceID != SID_INVALID)
-			ServiceID = m_CurServiceID;
-		SetDescrambleService(ServiceID);
-	}
-	return true;
-}
-
-
 bool CDtvEngine::SetWriteStream(WORD ServiceID, DWORD Stream)
 {
 	return m_TsSelector.SetTargetServiceID(ServiceID, Stream);
@@ -1094,28 +990,33 @@ void CDtvEngine::ResetStatus()
 }
 
 
-CMediaDecoder *CDtvEngine::GetDecoderByID(DecoderID ID)
+CMediaDecoder *CDtvEngine::GetDecoderByID(int ID)
 {
 	switch (ID) {
-	case DECODER_ID_BonSrcDecoder:	return &m_BonSrcDecoder;
-	case DECODER_ID_TsPacketParser:	return &m_TsPacketParser;
-	case DECODER_ID_TsAnalyzer:		return &m_TsAnalyzer;
-	case DECODER_ID_CasProcessor:	return &m_CasProcessor;
-	case DECODER_ID_MediaViewer:	return &m_MediaViewer;
-	case DECODER_ID_MediaTee:		return &m_MediaTee;
-	case DECODER_ID_TsRecorder:		return &m_TsRecorder;
-	case DECODER_ID_MediaGrabber:	return &m_MediaGrabber;
-	case DECODER_ID_TsSelector:		return &m_TsSelector;
-	case DECODER_ID_EventManager:	return &m_EventManager;
-	case DECODER_ID_CaptionDecoder:	return &m_CaptionDecoder;
-	case DECODER_ID_LogoDownloader:	return &m_LogoDownloader;
+	case DECODER_ID_BonSrcDecoder:		return &m_BonSrcDecoder;
+	case DECODER_ID_TsPacketParser:		return &m_TsPacketParser;
+	case DECODER_ID_TsAnalyzer:			return &m_TsAnalyzer;
+	case DECODER_ID_MediaViewer:		return &m_MediaViewer;
+	case DECODER_ID_MediaTee:			return &m_MediaTee;
+	case DECODER_ID_TsRecorder:			return &m_TsRecorder;
+	case DECODER_ID_MediaGrabber:		return &m_MediaGrabber;
+	case DECODER_ID_TsSelector:			return &m_TsSelector;
+	case DECODER_ID_EventManager:		return &m_EventManager;
+	case DECODER_ID_CaptionDecoder:		return &m_CaptionDecoder;
+	case DECODER_ID_LogoDownloader:		return &m_LogoDownloader;
+	case DECODER_ID_TsPacketCounter:	return &m_TsPacketCounter;
+	}
+
+	for (auto itr = m_DecoderList.begin(); itr != m_DecoderList.end(); ++itr) {
+		if (itr->ID == ID)
+			return itr->pDecoder;
 	}
 
 	return NULL;
 }
 
 
-const CDtvEngine::DecoderConnectionInfo *CDtvEngine::GetInputConnectionInfo(DecoderID ID) const
+const CDtvEngine::DecoderConnectionInfo *CDtvEngine::GetInputConnectionInfo(int ID) const
 {
 	for (auto itr = m_DecoderConnectionList.begin(); itr != m_DecoderConnectionList.end(); ++itr) {
 		if (itr->InputDecoder == ID)
@@ -1126,7 +1027,7 @@ const CDtvEngine::DecoderConnectionInfo *CDtvEngine::GetInputConnectionInfo(Deco
 }
 
 
-const CDtvEngine::DecoderConnectionInfo *CDtvEngine::GetOutputConnectionInfo(DecoderID ID) const
+const CDtvEngine::DecoderConnectionInfo *CDtvEngine::GetOutputConnectionInfo(int ID) const
 {
 	for (auto itr = m_DecoderConnectionList.begin(); itr != m_DecoderConnectionList.end(); ++itr) {
 		if (itr->OutputDecoder == ID)
@@ -1137,7 +1038,7 @@ const CDtvEngine::DecoderConnectionInfo *CDtvEngine::GetOutputConnectionInfo(Dec
 }
 
 
-void CDtvEngine::ConnectDecoder(DecoderID ID)
+void CDtvEngine::ConnectDecoder(int ID)
 {
 	const DecoderConnectionInfo *pInputConnection = GetInputConnectionInfo(ID);
 
@@ -1150,7 +1051,7 @@ void CDtvEngine::ConnectDecoder(DecoderID ID)
 }
 
 
-void CDtvEngine::DisconnectDecoder(DecoderID ID)
+void CDtvEngine::DisconnectDecoder(int ID)
 {
 	// MediaTee は非対応
 	const DecoderConnectionInfo *pInputConnection = GetInputConnectionInfo(ID);

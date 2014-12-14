@@ -444,6 +444,15 @@ namespace TVTest
 			return true;
 		}
 
+		String Encode(const String &Src,LPCWSTR pszEncodeChars)
+		{
+			String Dst;
+
+			Encode(Src.c_str(),&Dst,pszEncodeChars);
+
+			return Dst;
+		}
+
 		bool Decode(LPCWSTR pszSrc,String *pDst)
 		{
 			if (pszSrc==nullptr || pDst==nullptr)
@@ -464,6 +473,15 @@ namespace TVTest
 			}
 
 			return true;
+		}
+
+		String Decode(const String &Src)
+		{
+			String Dst;
+
+			Decode(Src.c_str(),&Dst);
+
+			return Dst;
 		}
 
 

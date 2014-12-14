@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "TVTest.h"
 #include "ListView.h"
+#include "DialogUtil.h"
 
 #ifdef _DEBUG
 #undef THIS_FILE
@@ -43,6 +44,13 @@ void CListView::Detach()
 }
 
 
+void CListView::SetExtendedStyle(DWORD Style)
+{
+	if (m_hwnd!=NULL)
+		ListView_SetExtendedListViewStyle(m_hwnd,Style);
+}
+
+
 bool CListView::InitCheckList()
 {
 	if (m_hwnd==NULL)
@@ -69,6 +77,9 @@ int CListView::InsertItem(int Index,LPCTSTR pszText,LPARAM Param)
 {
 	if (m_hwnd==NULL)
 		return -1;
+
+	if (Index<0)
+		Index=GetItemCount();
 
 	LVITEM lvi;
 
@@ -105,6 +116,21 @@ bool CListView::SetItemText(int Index,LPCTSTR pszText)
 	ListView_SetItemText(m_hwnd,Index,0,const_cast<LPTSTR>(pszText));
 
 	return true;
+}
+
+
+bool CListView::SetItemText(int Index,int SubItem,LPCTSTR pszText)
+{
+	if (m_hwnd==NULL)
+		return false;
+
+	LVITEM lvi;
+	lvi.mask=LVIF_TEXT;
+	lvi.iItem=Index;
+	lvi.iSubItem=SubItem;
+	lvi.pszText=const_cast<LPTSTR>(pszText);
+
+	return ListView_SetItem(m_hwnd,&lvi)!=FALSE;
 }
 
 
@@ -206,6 +232,29 @@ bool CListView::EnsureItemVisible(int Index,bool fPartialOK)
 		return false;
 
 	return ListView_EnsureVisible(m_hwnd,Index,fPartialOK)!=FALSE;
+}
+
+
+int CListView::InsertColumn(int Index,LPCTSTR pszText,int Format)
+{
+	if (m_hwnd==NULL)
+		return false;
+
+	LVCOLUMN lvc;
+
+	lvc.mask=LVCF_FMT | LVCF_TEXT | LVCF_SUBITEM;
+	lvc.fmt=Format;
+	lvc.pszText=const_cast<LPTSTR>(pszText);
+	lvc.iSubItem=Index;
+
+	return ListView_InsertColumn(m_hwnd,Index,&lvc);
+}
+
+
+void CListView::AdjustColumnWidth(bool fUseHeader)
+{
+	if (m_hwnd!=NULL)
+		AdjustListViewColumnWidth(m_hwnd,fUseHeader);
 }
 
 
