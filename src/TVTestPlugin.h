@@ -2880,6 +2880,9 @@ public:
 	DWORD GetSetting(LPCWSTR pszName,LPWSTR pszString,DWORD MaxLength) {
 		return MsgGetSetting(m_pParam,pszName,pszString,MaxLength);
 	}
+	bool GetSetting(LPCWSTR pszName,LOGFONT *pFont) {
+		return MsgGetSetting(m_pParam,pszName,pFont);
+	}
 	int GetDriverFullPathName(LPWSTR pszPath,int MaxLength) {
 		return MsgGetDriverFullPathName(m_pParam,pszPath,MaxLength);
 	}
