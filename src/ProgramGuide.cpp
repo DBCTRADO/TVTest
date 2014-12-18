@@ -5999,10 +5999,10 @@ void CTimeToolbar::ChangeTime()
 							break;
 					}
 					for (size_t k=0;i<lengthof(TimeList) && i-1<m_Settings.MaxButtonCount && k<Hours.size();k++) {
-						int Hour=Hours[j];
-						j++;
 						if (j==Hours.size())
 							j=0;
+						int Hour=Hours[j];
+						j++;
 						if (Hour>=LastHour)
 							break;
 						int HourOffset=Hour;
