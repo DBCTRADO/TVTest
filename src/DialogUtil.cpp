@@ -229,6 +229,44 @@ bool GetDlgItemString(HWND hDlg,int ID,TVTest::String *pString)
 }
 
 
+bool GetDlgListBoxItemString(HWND hDlg,int ID,int Index,TVTest::String *pString)
+{
+	if (hDlg==NULL || pString==NULL)
+		return false;
+
+	pString->clear();
+
+	int Length=(int)DlgListBox_GetStringLength(hDlg,ID,Index);
+	if (Length>0) {
+		LPTSTR pszBuffer=new TCHAR[Length+1];
+		if (DlgListBox_GetString(hDlg,ID,Index,pszBuffer)>0)
+			pString->assign(pszBuffer);
+		delete [] pszBuffer;
+	}
+
+	return true;
+}
+
+
+bool GetDlgComboBoxItemString(HWND hDlg,int ID,int Index,TVTest::String *pString)
+{
+	if (hDlg==NULL || pString==NULL)
+		return false;
+
+	pString->clear();
+
+	int Length=(int)DlgComboBox_GetLBStringLength(hDlg,ID,Index);
+	if (Length>0) {
+		LPTSTR pszBuffer=new TCHAR[Length+1];
+		if (DlgComboBox_GetLBString(hDlg,ID,Index,pszBuffer)>0)
+			pString->assign(pszBuffer);
+		delete [] pszBuffer;
+	}
+
+	return true;
+}
+
+
 bool EnableDlgItemSyncCheckBox(HWND hDlg,int ID,int CheckBoxID)
 {
 	bool fCheck=DlgCheckBox_IsChecked(hDlg,CheckBoxID);

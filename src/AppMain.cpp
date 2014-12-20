@@ -453,6 +453,7 @@ bool CAppMain::LoadSettings()
 		OSDOptions.ReadSettings(Settings);
 		PanelOptions.ReadSettings(Settings);
 		PlaybackOptions.ReadSettings(Settings);
+		AudioOptions.ReadSettings(Settings);
 		RecordOptions.ReadSettings(Settings);
 		CaptureOptions.ReadSettings(Settings);
 		ControllerManager.ReadSettings(Settings);
@@ -570,6 +571,7 @@ bool CAppMain::SaveSettings(unsigned int Flags)
 		{&SideBarOptions,					true},
 		{&PanelOptions,						true},
 		{&DriverOptions,					true},
+		{&AudioOptions,						false},
 		{&PlaybackOptions,					true},
 		{&RecordOptions,					true},
 		{&CaptureOptions,					true},
@@ -894,7 +896,7 @@ int CAppMain::Main(HINSTANCE hInstance,LPCTSTR pszCmdLine,int nCmdShow)
 
 	// Ä¶‚Ì‰Šú‰»
 	CoreEngine.m_DtvEngine.m_MediaViewer.SetUseAudioRendererClock(PlaybackOptions.GetUseAudioRendererClock());
-	CoreEngine.SetSpdifOptions(PlaybackOptions.GetSpdifOptions());
+	CoreEngine.SetSpdifOptions(AudioOptions.GetSpdifOptions());
 	if (CmdLineOptions.m_Volume>=0)
 		CoreEngine.SetVolume(min(CmdLineOptions.m_Volume,CCoreEngine::MAX_VOLUME));
 	if (PlaybackOptions.IsMuteOnStartUp() || CmdLineOptions.m_fMute)

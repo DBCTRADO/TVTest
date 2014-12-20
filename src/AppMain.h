@@ -31,6 +31,7 @@
 #include "ColorScheme.h"
 #include "OperationOptions.h"
 #include "DriverOptions.h"
+#include "AudioOptions.h"
 #include "PlaybackOptions.h"
 #include "RecordOptions.h"
 #include "CaptureOptions.h"
@@ -413,6 +414,7 @@ public:
 	CAccelerator Accelerator;
 	CControllerManager ControllerManager;
 	CDriverOptions DriverOptions;
+	CAudioOptions AudioOptions;
 	CPlaybackOptions PlaybackOptions;
 	CRecordOptions RecordOptions;
 	CRecordManager RecordManager;

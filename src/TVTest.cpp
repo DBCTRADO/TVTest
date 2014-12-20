@@ -29,6 +29,7 @@ const COptionDialog::PageInfo COptionDialog::m_PageList[] = {
 	{TEXT("キー割り当て"),			&g_App.Accelerator,				HELP_ID_OPTIONS_ACCELERATOR},
 	{TEXT("リモコン"),				&g_App.ControllerManager,		HELP_ID_OPTIONS_CONTROLLER},
 	{TEXT("BonDriver設定"),			&g_App.DriverOptions,			HELP_ID_OPTIONS_DRIVER},
+	{TEXT("音声"),					&g_App.AudioOptions,			HELP_ID_OPTIONS_AUDIO},
 	{TEXT("再生"),					&g_App.PlaybackOptions,			HELP_ID_OPTIONS_PLAYBACK},
 	{TEXT("録画"),					&g_App.RecordOptions,			HELP_ID_OPTIONS_RECORD},
 	{TEXT("キャプチャ"),			&g_App.CaptureOptions,			HELP_ID_OPTIONS_CAPTURE},

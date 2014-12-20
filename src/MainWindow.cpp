@@ -131,17 +131,17 @@ bool CBasicViewer::BuildViewer(BYTE VideoStreamType)
 							TEXT("âfëúÇ»Çµ"):
 							TsEngine::GetStreamTypeText(VideoStreamType));
 
-	m_App.CoreEngine.m_DtvEngine.m_MediaViewer.SetAudioFilter(m_App.PlaybackOptions.GetAudioFilterName());
+	m_App.CoreEngine.m_DtvEngine.m_MediaViewer.SetAudioFilter(m_App.AudioOptions.GetAudioFilterName());
 	if (!m_App.CoreEngine.BuildMediaViewer(
 			m_VideoContainer.GetHandle(),
 			m_VideoContainer.GetHandle(),
 			m_App.GeneralOptions.GetVideoRendererType(),
 			VideoStreamType,pszVideoDecoder,
-			m_App.PlaybackOptions.GetAudioDeviceName())) {
+			m_App.AudioOptions.GetAudioDeviceName())) {
 		m_App.Core.OnError(&m_App.CoreEngine,TEXT("DirectShowÇÃèâä˙âªÇ™Ç≈Ç´Ç‹ÇπÇÒÅB"));
 		return false;
 	}
-	m_App.PlaybackOptions.ApplyMediaViewerOptions();
+	m_App.AudioOptions.ApplyMediaViewerOptions();
 
 	m_App.Logger.AddLog(TEXT("DirectShowÇÃèâä˙âªÇçsÇ¢Ç‹ÇµÇΩÅB"));
 
@@ -2295,7 +2295,7 @@ void CMainWindow::OnCommand(HWND hwnd,int id,HWND hwndCtl,UINT codeNotify)
 	case CM_SPDIF_PASSTHROUGH:
 	case CM_SPDIF_AUTO:
 		{
-			CAudioDecFilter::SpdifOptions Options(m_App.PlaybackOptions.GetSpdifOptions());
+			CAudioDecFilter::SpdifOptions Options(m_App.AudioOptions.GetSpdifOptions());
 
 			Options.Mode=(CAudioDecFilter::SpdifMode)(id-CM_SPDIF_DISABLED);
 			m_App.CoreEngine.SetSpdifOptions(Options);
@@ -2304,7 +2304,7 @@ void CMainWindow::OnCommand(HWND hwnd,int id,HWND hwndCtl,UINT codeNotify)
 
 	case CM_SPDIF_TOGGLE:
 		{
-			CAudioDecFilter::SpdifOptions Options(m_App.PlaybackOptions.GetSpdifOptions());
+			CAudioDecFilter::SpdifOptions Options(m_App.AudioOptions.GetSpdifOptions());
 
 			if (m_App.CoreEngine.m_DtvEngine.m_MediaViewer.IsSpdifPassthrough())
 				Options.Mode=CAudioDecFilter::SPDIF_MODE_DISABLED;

@@ -135,6 +135,8 @@ bool SetDlgButtonBitmap(HWND hDlg,int ID,HINSTANCE hinst,LPCTSTR pszName);
 bool SetListBoxHExtent(HWND hDlg,int ID);
 LPTSTR GetDlgItemString(HWND hDlg,int ID);
 bool GetDlgItemString(HWND hDlg,int ID,TVTest::String *pString);
+bool GetDlgListBoxItemString(HWND hDlg,int ID,int Index,TVTest::String *pString);
+bool GetDlgComboBoxItemString(HWND hDlg,int ID,int Index,TVTest::String *pString);
 bool EnableDlgItemSyncCheckBox(HWND hDlg,int ID,int CheckBoxID);
 bool EnableDlgItemsSyncCheckBox(HWND hDlg,int FirstID,int LastID,int CheckBoxID);
 BOOL SetDlgItemInt64(HWND hDlg,int ID,ULONGLONG Value,BOOL fSigned);

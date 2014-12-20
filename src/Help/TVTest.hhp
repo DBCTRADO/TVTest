@@ -26,6 +26,7 @@ record.html
 commandline.html
 options.html
 options\accelerator.html
+options\audio.html
 options\capture.html
 options\channelscan.html
 options\colorscheme.html
@@ -59,6 +60,7 @@ programguide\search.html
 
 [ALIAS]
 HELP_ID_OPTIONS_ACCELERATOR=options\accelerator.html
+HELP_ID_OPTIONS_AUDIO=options\audio.html
 HELP_ID_OPTIONS_CAPTURE=options\capture.html
 HELP_ID_OPTIONS_CHANNELSCAN=options\channelscan.html
 HELP_ID_OPTIONS_COLORSCHEME=options\colorscheme.html
