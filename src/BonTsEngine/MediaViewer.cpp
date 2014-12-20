@@ -1605,6 +1605,23 @@ bool CMediaViewer::SetAudioGainControl(bool bGainControl, float Gain, float Surr
 }
 
 
+bool CMediaViewer::GetAudioDecFilter(CAudioDecFilter **ppFilter)
+{
+	if (ppFilter == NULL)
+		return false;
+
+	if (m_pAudioDecoder == NULL) {
+		*ppFilter = NULL;
+		return false;
+	}
+
+	*ppFilter = m_pAudioDecoder;
+	m_pAudioDecoder->AddRef();
+
+	return true;
+}
+
+
 bool CMediaViewer::GetVideoDecoderName(LPWSTR pszName, int Length) const
 {
 	// 選択されているビデオデコーダー名の取得

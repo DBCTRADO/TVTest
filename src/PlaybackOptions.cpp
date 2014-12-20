@@ -15,9 +15,52 @@ static char THIS_FILE[]=__FILE__;
 
 
 
+static const int MAX_FORMAT_DOUBLE_LENGTH=16;
+
+static void FormatDouble(double Value,LPTSTR pszString,int MaxString)
+{
+	int Length=StdUtil::snprintf(pszString,MaxString,TEXT("%.4f"),Value);
+	int i;
+	for (i=Length-1;i>1;i--) {
+		if (pszString[i]!=TEXT('0')) {
+			i++;
+			break;
+		}
+		if (pszString[i]==TEXT('.'))
+			break;
+	}
+	pszString[i]=TEXT('\0');
+}
+
+
+
+
+const CAudioDecFilter::SurroundMixingMatrix CPlaybackOptions::m_DefaultSurroundMixingMatrix = {
+	{
+		{1.0, 0.0, 0.0, 0.0, 0.0, 0.0},
+		{0.0, 1.0, 0.0, 0.0, 0.0, 0.0},
+		{0.0, 0.0, 1.0, 0.0, 0.0, 0.0},
+		{0.0, 0.0, 0.0, 1.0, 0.0, 0.0},
+		{0.0, 0.0, 0.0, 0.0, 1.0, 0.0},
+		{0.0, 0.0, 0.0, 0.0, 0.0, 1.0}
+	}
+};
+
+static const double PSQR = 1.0 / 1.4142135623730950488016887242097;
+const CAudioDecFilter::DownMixMatrix CPlaybackOptions::m_DefaultDownMixMatrix = {
+	{
+		{1.0, 0.0, PSQR, PSQR, PSQR, 0.0},
+		{0.0, 1.0, PSQR, PSQR, 0.0,  PSQR}
+	}
+};
+
 CPlaybackOptions::CPlaybackOptions()
 	: m_SpdifOptions(CAudioDecFilter::SPDIF_MODE_DISABLED,CAudioDecFilter::SPDIF_CHANNELS_SURROUND)
 	, m_fDownMixSurround(true)
+	, m_fUseCustomSurroundMixingMatrix(false)
+	, m_SurroundMixingMatrix(m_DefaultSurroundMixingMatrix)
+	, m_fUseCustomDownMixMatrix(false)
+	, m_DownMixMatrix(m_DefaultDownMixMatrix)
 	, m_fRestoreMute(false)
 	, m_fMute(false)
 	, m_fRestorePlayStatus(false)
@@ -79,6 +122,38 @@ bool CPlaybackOptions::ReadSettings(CSettings &Settings)
 		m_SpdifOptions.Mode=(CAudioDecFilter::SpdifMode)Value;
 	Settings.Read(TEXT("SpdifChannels"),&m_SpdifOptions.PassthroughChannels);
 	Settings.Read(TEXT("DownMixSurround"),&m_fDownMixSurround);
+
+	Settings.Read(TEXT("UseCustomSurroundMixingMatrix"),&m_fUseCustomSurroundMixingMatrix);
+	TVTest::String Buffer;
+	if (Settings.Read(TEXT("SurroundMixingMatrix"),&Buffer) && !Buffer.empty()) {
+		std::vector<TVTest::String> List;
+		if (TVTest::StringUtility::Split(Buffer,TEXT(","),&List) && List.size()>=6*6) {
+			for (int i=0;i<6;i++) {
+				for (int j=0;j<6;j++) {
+					double Value=std::_tcstod(List[i*6+j].c_str(),NULL);
+					if (Value==HUGE_VAL || Value==-HUGE_VAL)
+						Value=0.0;
+					m_SurroundMixingMatrix.Matrix[i][j]=Value;
+				}
+			}
+		}
+	}
+
+	Settings.Read(TEXT("UseCustomDownMixMatrix"),&m_fUseCustomDownMixMatrix);
+	if (Settings.Read(TEXT("DownMixMatrix"),&Buffer) && !Buffer.empty()) {
+		std::vector<TVTest::String> List;
+		if (TVTest::StringUtility::Split(Buffer,TEXT(","),&List) && List.size()>=2*6) {
+			for (int i=0;i<2;i++) {
+				for (int j=0;j<6;j++) {
+					double Value=std::_tcstod(List[i*6+j].c_str(),NULL);
+					if (Value==HUGE_VAL || Value==-HUGE_VAL)
+						Value=0.0;
+					m_DownMixMatrix.Matrix[i][j]=Value;
+				}
+			}
+		}
+	}
+
 	Settings.Read(TEXT("RestoreMute"),&m_fRestoreMute);
 	Settings.Read(TEXT("Mute"),&m_fMute);
 	Settings.Read(TEXT("RestorePlayStatus"),&m_fRestorePlayStatus);
@@ -107,6 +182,33 @@ bool CPlaybackOptions::WriteSettings(CSettings &Settings)
 	Settings.Write(TEXT("SpdifMode"),(int)m_SpdifOptions.Mode);
 	Settings.Write(TEXT("SpdifChannels"),m_SpdifOptions.PassthroughChannels);
 	Settings.Write(TEXT("DownMixSurround"),m_fDownMixSurround);
+
+	Settings.Write(TEXT("UseCustomSurroundMixingMatrix"),m_fUseCustomSurroundMixingMatrix);
+	TVTest::String Buffer;
+	for (int i=0;i<6;i++) {
+		for (int j=0;j<6;j++) {
+			if (!Buffer.empty())
+				Buffer+=TEXT(',');
+			TCHAR szValue[MAX_FORMAT_DOUBLE_LENGTH];
+			FormatDouble(m_SurroundMixingMatrix.Matrix[i][j],szValue,lengthof(szValue));
+			Buffer+=szValue;
+		}
+	}
+	Settings.Write(TEXT("SurroundMixingMatrix"),Buffer);
+
+	Settings.Write(TEXT("UseCustomDownMixMatrix"),m_fUseCustomDownMixMatrix);
+	Buffer.clear();
+	for (int i=0;i<2;i++) {
+		for (int j=0;j<6;j++) {
+			if (!Buffer.empty())
+				Buffer+=TEXT(',');
+			TCHAR szValue[MAX_FORMAT_DOUBLE_LENGTH];
+			FormatDouble(m_DownMixMatrix.Matrix[i][j],szValue,lengthof(szValue));
+			Buffer+=szValue;
+		}
+	}
+	Settings.Write(TEXT("DownMixMatrix"),Buffer);
+
 	Settings.Write(TEXT("RestoreMute"),m_fRestoreMute);
 	Settings.Write(TEXT("Mute"),GetAppClass().CoreEngine.GetMute());
 	Settings.Write(TEXT("RestorePlayStatus"),m_fRestorePlayStatus);
@@ -128,6 +230,25 @@ bool CPlaybackOptions::Create(HWND hwndOwner)
 {
 	return CreateDialogWindow(hwndOwner,
 							  GetAppClass().GetResourceInstance(),MAKEINTRESOURCE(IDD_OPTIONS_PLAYBACK));
+}
+
+
+bool CPlaybackOptions::ApplyMediaViewerOptions()
+{
+	CMediaViewer &MediaViewer=GetAppClass().CoreEngine.m_DtvEngine.m_MediaViewer;
+
+	MediaViewer.SetDownMixSurround(m_fDownMixSurround);
+
+	CAudioDecFilter *pAudioDecFilter;
+	if (MediaViewer.GetAudioDecFilter(&pAudioDecFilter)) {
+		pAudioDecFilter->SetSurroundMixingMatrix(
+			m_fUseCustomSurroundMixingMatrix?&m_SurroundMixingMatrix:NULL);
+		pAudioDecFilter->SetDownMixMatrix(
+			m_fUseCustomDownMixMatrix?&m_DownMixMatrix:NULL);
+		pAudioDecFilter->Release();
+	}
+
+	return true;
 }
 
 
@@ -264,6 +385,14 @@ INT_PTR CPlaybackOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPara
 			}
 			return TRUE;
 
+		case IDC_OPTIONS_SURROUNDOPTIONS:
+			{
+				CSurroundOptionsDialog Dlg(this);
+
+				Dlg.Show(hDlg);
+			}
+			return TRUE;
+
 		case IDC_OPTIONS_ENABLEBUFFERING:
 			EnableDlgItemsSyncCheckBox(hDlg,
 									   IDC_OPTIONS_BUFFERING_FIRST,
@@ -318,7 +447,6 @@ INT_PTR CPlaybackOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPara
 
 				m_fDownMixSurround=
 					DlgCheckBox_IsChecked(hDlg,IDC_OPTIONS_DOWNMIXSURROUND);
-				GetAppClass().CoreEngine.SetDownMixSurround(m_fDownMixSurround);
 				m_fRestoreMute=
 					DlgCheckBox_IsChecked(hDlg,IDC_OPTIONS_RESTOREMUTE);
 				m_fRestorePlayStatus=
@@ -375,6 +503,8 @@ INT_PTR CPlaybackOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPara
 					SetUpdateFlag(UPDATE_ADJUSTFRAMERATE);
 				}
 
+				ApplyMediaViewerOptions();
+
 				m_fChanged=true;
 			}
 			break;
@@ -383,4 +513,134 @@ INT_PTR CPlaybackOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPara
 	}
 
 	return FALSE;
+}
+
+
+
+
+CPlaybackOptions::CSurroundOptionsDialog::CSurroundOptionsDialog(CPlaybackOptions *pOptions)
+	: m_pOptions(pOptions)
+{
+}
+
+
+bool CPlaybackOptions::CSurroundOptionsDialog::Show(HWND hwndOwner)
+{
+	return ShowDialog(hwndOwner,
+					  GetAppClass().GetResourceInstance(),
+					  MAKEINTRESOURCE(IDD_SURROUNDOPTIONS))==IDOK;
+}
+
+
+INT_PTR CPlaybackOptions::CSurroundOptionsDialog::DlgProc(
+	HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
+{
+	switch (uMsg) {
+	case WM_INITDIALOG:
+		{
+			DlgCheckBox_Check(hDlg,IDC_SURROUND_USECUSTOMDOWNMIXMATRIX,
+							  m_pOptions->m_fUseCustomDownMixMatrix);
+			EnableDlgItems(hDlg,
+						   IDC_SURROUND_DOWNMIXMATRIX_FL_LABEL,
+						   IDC_SURROUND_DOWNMIXMATRIX_DEFAULT,
+						   m_pOptions->m_fUseCustomDownMixMatrix);
+			SetDownMixMatrix(m_pOptions->m_DownMixMatrix);
+
+			DlgCheckBox_Check(hDlg,IDC_SURROUND_USECUSTOMMIXINGMATRIX,
+							  m_pOptions->m_fUseCustomSurroundMixingMatrix);
+			EnableDlgItems(hDlg,
+						   IDC_SURROUND_MIXINGMATRIX_IN_FL_LABEL,
+						   IDC_SURROUND_MIXINGMATRIX_SR_SR,
+						   m_pOptions->m_fUseCustomSurroundMixingMatrix);
+			int ID=IDC_SURROUND_MIXINGMATRIX_FL_FL;
+			for (int i=0;i<6;i++) {
+				for (int j=0;j<6;j++) {
+					TCHAR szText[MAX_FORMAT_DOUBLE_LENGTH];
+					FormatDouble(m_pOptions->m_SurroundMixingMatrix.Matrix[i][j],
+								 szText,lengthof(szText));
+					::SetDlgItemText(hDlg,ID,szText);
+					ID++;
+				}
+			}
+		}
+		return TRUE;
+
+	case WM_COMMAND:
+		switch (LOWORD(wParam)) {
+		case IDC_SURROUND_USECUSTOMDOWNMIXMATRIX:
+			EnableDlgItemsSyncCheckBox(hDlg,
+				IDC_SURROUND_DOWNMIXMATRIX_FL_LABEL,
+				IDC_SURROUND_DOWNMIXMATRIX_DEFAULT,
+				IDC_SURROUND_USECUSTOMDOWNMIXMATRIX);
+			return TRUE;
+
+		case IDC_SURROUND_DOWNMIXMATRIX_DEFAULT:
+			SetDownMixMatrix(m_pOptions->m_DefaultDownMixMatrix);
+			return TRUE;
+
+		case IDC_SURROUND_USECUSTOMMIXINGMATRIX:
+			EnableDlgItemsSyncCheckBox(hDlg,
+				IDC_SURROUND_MIXINGMATRIX_IN_FL_LABEL,
+				IDC_SURROUND_MIXINGMATRIX_SR_SR,
+				IDC_SURROUND_USECUSTOMMIXINGMATRIX);
+			return TRUE;
+
+		case IDOK:
+			{
+				m_pOptions->m_fUseCustomDownMixMatrix=
+					DlgCheckBox_IsChecked(hDlg,IDC_SURROUND_USECUSTOMDOWNMIXMATRIX);
+				int ID=IDC_SURROUND_DOWNMIXMATRIX_L_FL;
+				for (int i=0;i<2;i++) {
+					for (int j=0;j<6;j++) {
+						TCHAR szText[16];
+						::GetDlgItemText(hDlg,ID,szText,lengthof(szText));
+						double Value=std::_tcstod(szText,NULL);
+						if (Value==HUGE_VAL || Value==-HUGE_VAL)
+							Value=0.0;
+						m_pOptions->m_DownMixMatrix.Matrix[i][j]=Value;
+						ID++;
+					}
+				}
+
+				m_pOptions->m_fUseCustomSurroundMixingMatrix=
+					DlgCheckBox_IsChecked(hDlg,IDC_SURROUND_USECUSTOMMIXINGMATRIX);
+				ID=IDC_SURROUND_MIXINGMATRIX_FL_FL;
+				for (int i=0;i<6;i++) {
+					for (int j=0;j<6;j++) {
+						TCHAR szText[16];
+						::GetDlgItemText(hDlg,ID,szText,lengthof(szText));
+						double Value=std::_tcstod(szText,NULL);
+						if (Value==HUGE_VAL || Value==-HUGE_VAL)
+							Value=0.0;
+						m_pOptions->m_SurroundMixingMatrix.Matrix[i][j]=Value;
+						ID++;
+					}
+				}
+
+				m_pOptions->m_fChanged=true;
+				m_pOptions->ApplyMediaViewerOptions();
+			}
+		case IDCANCEL:
+			::EndDialog(hDlg,LOWORD(wParam));
+			return TRUE;
+		}
+		return TRUE;
+	}
+
+	return FALSE;
+}
+
+
+void CPlaybackOptions::CSurroundOptionsDialog::SetDownMixMatrix(
+	const CAudioDecFilter::DownMixMatrix &Matrix)
+{
+	int ID=IDC_SURROUND_DOWNMIXMATRIX_L_FL;
+	for (int i=0;i<2;i++) {
+		for (int j=0;j<6;j++) {
+			TCHAR szText[MAX_FORMAT_DOUBLE_LENGTH];
+			FormatDouble(Matrix.Matrix[i][j],szText,lengthof(szText));
+			::SetDlgItemText(m_hDlg,ID,szText);
+			ID++;
+		}
+	}
 }

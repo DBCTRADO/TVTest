@@ -100,6 +100,8 @@ CAudioDecFilter::CAudioDecFilter(LPUNKNOWN pUnk, HRESULT *phr)
 	, m_StereoMode(STEREOMODE_STEREO)
 	, m_AutoStereoMode(STEREOMODE_STEREO)
 	, m_bDownMixSurround(true)
+	, m_bEnableCustomMixingMatrix(false)
+	, m_bEnableCustomDownMixMatrix(false)
 
 	, m_bGainControl(false)
 	, m_Gain(1.0f)
@@ -551,6 +553,36 @@ bool CAudioDecFilter::SetDownMixSurround(bool bDownMix)
 	CAutoLock AutoLock(&m_cPropLock);
 
 	m_bDownMixSurround = bDownMix;
+	return true;
+}
+
+
+bool CAudioDecFilter::SetSurroundMixingMatrix(const SurroundMixingMatrix *pMatrix)
+{
+	CAutoLock AutoLock(&m_cPropLock);
+
+	if (pMatrix) {
+		m_bEnableCustomMixingMatrix = true;
+		m_MixingMatrix = *pMatrix;
+	} else {
+		m_bEnableCustomMixingMatrix = false;
+	}
+
+	return true;
+}
+
+
+bool CAudioDecFilter::SetDownMixMatrix(const DownMixMatrix *pMatrix)
+{
+	CAutoLock AutoLock(&m_cPropLock);
+
+	if (pMatrix) {
+		m_bEnableCustomDownMixMatrix = true;
+		m_DownMixMatrix = *pMatrix;
+	} else {
+		m_bEnableCustomDownMixMatrix = false;
+	}
+
 	return true;
 }
 
@@ -1016,30 +1048,57 @@ DWORD CAudioDecFilter::DownMixSurround(short *pDst, const short *pSrc, const DWO
 {
 	// 5.1ch → 2ch ダウンミックス
 
-	int ChannelMap[6];
-	CAudioDecoder::DownmixInfo Info;
-	m_pDecoder->GetChannelMap(6, ChannelMap);
-	m_pDecoder->GetDownmixInfo(&Info);
-
 	const double Level = m_bGainControl ? m_SurroundGain : 1.0;
+	int ChannelMap[6];
 
-	for (DWORD Pos = 0; Pos < Samples; Pos++) {
-		int Left = (int)((
-			(double)pSrc[Pos * 6 + ChannelMap[CAudioDecoder::CHANNEL_6_FL ]] * Info.Front +
-			(double)pSrc[Pos * 6 + ChannelMap[CAudioDecoder::CHANNEL_6_BL ]] * Info.Rear +
-			(double)pSrc[Pos * 6 + ChannelMap[CAudioDecoder::CHANNEL_6_FC ]] * Info.Center +
-			(double)pSrc[Pos * 6 + ChannelMap[CAudioDecoder::CHANNEL_6_LFE]] * Info.LFE
-			) * Level);
+	if (!m_pDecoder->GetChannelMap(6, ChannelMap)) {
+		for (int i = 0; i < 6; i++)
+			ChannelMap[i] = i;
+	}
 
-		int Right = (int)((
-			(double)pSrc[Pos * 6 + ChannelMap[CAudioDecoder::CHANNEL_6_FR ]] * Info.Front +
-			(double)pSrc[Pos * 6 + ChannelMap[CAudioDecoder::CHANNEL_6_BR ]] * Info.Rear +
-			(double)pSrc[Pos * 6 + ChannelMap[CAudioDecoder::CHANNEL_6_FC ]] * Info.Center +
-			(double)pSrc[Pos * 6 + ChannelMap[CAudioDecoder::CHANNEL_6_LFE]] * Info.LFE
-			) * Level);
+	if (m_bEnableCustomDownMixMatrix) {
+		// カスタムマトリックスを使用
+		for (DWORD Pos = 0; Pos < Samples; Pos++) {
+			double Data[6];
 
-		pDst[Pos * 2 + 0] = ClampSample16(Left);
-		pDst[Pos * 2 + 1] = ClampSample16(Right);
+			for (int i = 0; i < 6; i++)
+				Data[i] = (double)pSrc[Pos * 6 + ChannelMap[i]];
+
+			for (int i = 0; i < 2; i++) {
+				int Value = (int)((
+					Data[0] * m_DownMixMatrix.Matrix[i][0] +
+					Data[1] * m_DownMixMatrix.Matrix[i][1] +
+					Data[2] * m_DownMixMatrix.Matrix[i][2] +
+					Data[3] * m_DownMixMatrix.Matrix[i][3] +
+					Data[4] * m_DownMixMatrix.Matrix[i][4] +
+					Data[5] * m_DownMixMatrix.Matrix[i][5]
+					) * Level);
+				pDst[Pos * 2 + i] = ClampSample16(Value);
+			}
+		}
+	} else {
+		// デフォルトの係数を使用
+		CAudioDecoder::DownmixInfo Info;
+		m_pDecoder->GetDownmixInfo(&Info);
+
+		for (DWORD Pos = 0; Pos < Samples; Pos++) {
+			int Left = (int)((
+				(double)pSrc[Pos * 6 + ChannelMap[CAudioDecoder::CHANNEL_6_FL ]] * Info.Front +
+				(double)pSrc[Pos * 6 + ChannelMap[CAudioDecoder::CHANNEL_6_BL ]] * Info.Rear +
+				(double)pSrc[Pos * 6 + ChannelMap[CAudioDecoder::CHANNEL_6_FC ]] * Info.Center +
+				(double)pSrc[Pos * 6 + ChannelMap[CAudioDecoder::CHANNEL_6_LFE]] * Info.LFE
+				) * Level);
+
+			int Right = (int)((
+				(double)pSrc[Pos * 6 + ChannelMap[CAudioDecoder::CHANNEL_6_FR ]] * Info.Front +
+				(double)pSrc[Pos * 6 + ChannelMap[CAudioDecoder::CHANNEL_6_BR ]] * Info.Rear +
+				(double)pSrc[Pos * 6 + ChannelMap[CAudioDecoder::CHANNEL_6_FC ]] * Info.Center +
+				(double)pSrc[Pos * 6 + ChannelMap[CAudioDecoder::CHANNEL_6_LFE]] * Info.LFE
+				) * Level);
+
+			pDst[Pos * 2 + 0] = ClampSample16(Left);
+			pDst[Pos * 2 + 1] = ClampSample16(Right);
+		}
 	}
 
 	// バッファサイズを返す
@@ -1049,19 +1108,48 @@ DWORD CAudioDecFilter::DownMixSurround(short *pDst, const short *pSrc, const DWO
 
 DWORD CAudioDecFilter::MapSurroundChannels(short *pDst, const short *pSrc, const DWORD Samples)
 {
-	int ChannelMap[6];
-	if (!m_pDecoder->GetChannelMap(6, ChannelMap)) {
-		for (int i = 0; i < 6; i++)
-			ChannelMap[i] = i;
-	}
+	if (m_bEnableCustomMixingMatrix) {
+		// カスタムマトリックスを使用
+		int ChannelMap[6];
 
-	for (DWORD i = 0 ; i < Samples ; i++) {
-		pDst[i * 6 + 0] = pSrc[i * 6 + ChannelMap[CAudioDecoder::CHANNEL_6_FL]];
-		pDst[i * 6 + 1] = pSrc[i * 6 + ChannelMap[CAudioDecoder::CHANNEL_6_FR]];
-		pDst[i * 6 + 2] = pSrc[i * 6 + ChannelMap[CAudioDecoder::CHANNEL_6_FC]];
-		pDst[i * 6 + 3] = pSrc[i * 6 + ChannelMap[CAudioDecoder::CHANNEL_6_LFE]];
-		pDst[i * 6 + 4] = pSrc[i * 6 + ChannelMap[CAudioDecoder::CHANNEL_6_BL]];
-		pDst[i * 6 + 5] = pSrc[i * 6 + ChannelMap[CAudioDecoder::CHANNEL_6_BR]];
+		if (!m_pDecoder->GetChannelMap(6, ChannelMap)) {
+			for (int i = 0; i < 6; i++)
+				ChannelMap[i] = i;
+		}
+
+		for (DWORD i = 0 ; i < Samples ; i++) {
+			double Data[6];
+
+			for (int j = 0; j < 6; j++)
+				Data[j] = (double)pSrc[i * 6 + ChannelMap[j]];
+
+			for (int j = 0; j < 6; j++) {
+				int Value = (int)(
+					Data[0] * m_MixingMatrix.Matrix[j][0] +
+					Data[1] * m_MixingMatrix.Matrix[j][1] +
+					Data[2] * m_MixingMatrix.Matrix[j][2] +
+					Data[3] * m_MixingMatrix.Matrix[j][3] +
+					Data[4] * m_MixingMatrix.Matrix[j][4] +
+					Data[5] * m_MixingMatrix.Matrix[j][5]);
+				pDst[i * 6 + j] = ClampSample16(Value);
+			}
+		}
+	} else {
+		// デフォルトの割り当てを使用
+		int ChannelMap[6];
+
+		if (m_pDecoder->GetChannelMap(6, ChannelMap)) {
+			for (DWORD i = 0 ; i < Samples ; i++) {
+				pDst[i * 6 + 0] = pSrc[i * 6 + ChannelMap[CAudioDecoder::CHANNEL_6_FL]];
+				pDst[i * 6 + 1] = pSrc[i * 6 + ChannelMap[CAudioDecoder::CHANNEL_6_FR]];
+				pDst[i * 6 + 2] = pSrc[i * 6 + ChannelMap[CAudioDecoder::CHANNEL_6_FC]];
+				pDst[i * 6 + 3] = pSrc[i * 6 + ChannelMap[CAudioDecoder::CHANNEL_6_LFE]];
+				pDst[i * 6 + 4] = pSrc[i * 6 + ChannelMap[CAudioDecoder::CHANNEL_6_BL]];
+				pDst[i * 6 + 5] = pSrc[i * 6 + ChannelMap[CAudioDecoder::CHANNEL_6_BR]];
+			}
+		} else {
+			::CopyMemory(pDst, pSrc, Samples * 6 * sizeof(short));
+		}
 	}
 
 	// バッファサイズを返す

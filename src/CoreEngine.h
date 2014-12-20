@@ -86,8 +86,6 @@ public:
 	int GetStereoMode() const { return m_StereoMode; }
 	bool SetAutoStereoMode(int Mode);
 	int GetAutoStereoMode() const { return m_AutoStereoMode; }
-	bool SetDownMixSurround(bool fDownMix);
-	bool GetDownMixSurround() const { return m_fDownMixSurround; }
 	bool SetSpdifOptions(const CAudioDecFilter::SpdifOptions &Options);
 	bool GetSpdifOptions(CAudioDecFilter::SpdifOptions *pOptions) const;
 
@@ -176,7 +174,6 @@ private:
 	int m_SurroundAudioGain;
 	int m_StereoMode;
 	int m_AutoStereoMode;
-	bool m_fDownMixSurround;
 	CAudioDecFilter::SpdifOptions m_SpdifOptions;
 	bool m_fSpdifPassthrough;
 	ULONGLONG m_ErrorPacketCount;

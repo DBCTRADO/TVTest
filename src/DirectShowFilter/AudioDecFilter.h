@@ -66,6 +66,14 @@ public:
 		bool operator!=(const SpdifOptions &Op) const { return !(*this==Op); }
 	};
 
+	struct SurroundMixingMatrix {
+		double Matrix[6][6];
+	};
+
+	struct DownMixMatrix {
+		double Matrix[2][6];
+	};
+
 	BYTE GetCurrentChannelNum() const;
 	bool SetStereoMode(int StereoMode);
 	int GetStereoMode() const { return m_StereoMode; }
@@ -73,6 +81,8 @@ public:
 	int GetAutoStereoMode() const { return m_AutoStereoMode; }
 	bool SetDownMixSurround(bool bDownMix);
 	bool GetDownMixSurround() const { return m_bDownMixSurround; }
+	bool SetSurroundMixingMatrix(const SurroundMixingMatrix *pMatrix);
+	bool SetDownMixMatrix(const DownMixMatrix *pMatrix);
 	bool SetGainControl(bool bGainControl, float Gain = 1.0f, float SurroundGain = 1.0f);
 	bool GetGainControl(float *pGain = NULL, float *pSurroundGain = NULL) const;
 	bool SetJitterCorrection(bool bEnable);
@@ -128,6 +138,10 @@ private:
 	int m_StereoMode;
 	int m_AutoStereoMode;
 	bool m_bDownMixSurround;
+	bool m_bEnableCustomMixingMatrix;
+	SurroundMixingMatrix m_MixingMatrix;
+	bool m_bEnableCustomDownMixMatrix;
+	DownMixMatrix m_DownMixMatrix;
 
 	bool m_bGainControl;
 	float m_Gain;

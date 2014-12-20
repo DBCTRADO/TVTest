@@ -132,19 +132,20 @@ bool CBasicViewer::BuildViewer(BYTE VideoStreamType)
 							TsEngine::GetStreamTypeText(VideoStreamType));
 
 	m_App.CoreEngine.m_DtvEngine.m_MediaViewer.SetAudioFilter(m_App.PlaybackOptions.GetAudioFilterName());
-	bool fOK=m_App.CoreEngine.BuildMediaViewer(
-		m_VideoContainer.GetHandle(),
-		m_VideoContainer.GetHandle(),
-		m_App.GeneralOptions.GetVideoRendererType(),
-		VideoStreamType,pszVideoDecoder,
-		m_App.PlaybackOptions.GetAudioDeviceName());
-	if (fOK) {
-		m_App.Logger.AddLog(TEXT("DirectShowの初期化を行いました。"));
-	} else {
+	if (!m_App.CoreEngine.BuildMediaViewer(
+			m_VideoContainer.GetHandle(),
+			m_VideoContainer.GetHandle(),
+			m_App.GeneralOptions.GetVideoRendererType(),
+			VideoStreamType,pszVideoDecoder,
+			m_App.PlaybackOptions.GetAudioDeviceName())) {
 		m_App.Core.OnError(&m_App.CoreEngine,TEXT("DirectShowの初期化ができません。"));
+		return false;
 	}
+	m_App.PlaybackOptions.ApplyMediaViewerOptions();
 
-	return fOK;
+	m_App.Logger.AddLog(TEXT("DirectShowの初期化を行いました。"));
+
+	return true;
 }
 
 

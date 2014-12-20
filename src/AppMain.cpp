@@ -894,7 +894,6 @@ int CAppMain::Main(HINSTANCE hInstance,LPCTSTR pszCmdLine,int nCmdShow)
 
 	// Ä¶‚Ì‰Šú‰»
 	CoreEngine.m_DtvEngine.m_MediaViewer.SetUseAudioRendererClock(PlaybackOptions.GetUseAudioRendererClock());
-	CoreEngine.SetDownMixSurround(PlaybackOptions.GetDownMixSurround());
 	CoreEngine.SetSpdifOptions(PlaybackOptions.GetSpdifOptions());
 	if (CmdLineOptions.m_Volume>=0)
 		CoreEngine.SetVolume(min(CmdLineOptions.m_Volume,CCoreEngine::MAX_VOLUME));

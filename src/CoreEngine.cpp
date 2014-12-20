@@ -34,7 +34,6 @@ CCoreEngine::CCoreEngine()
 	, m_SurroundAudioGain(100)
 	, m_StereoMode(STEREOMODE_STEREO)
 	, m_AutoStereoMode(STEREOMODE_LEFT)
-	, m_fDownMixSurround(true)
 	, m_fSpdifPassthrough(false)
 	, m_ErrorPacketCount(0)
 	, m_ContinuityErrorPacketCount(0)
@@ -213,7 +212,6 @@ bool CCoreEngine::BuildMediaViewer(HWND hwndHost,HWND hwndMessage,
 		(float)m_AudioGain/100.0f,(float)m_SurroundAudioGain/100.0f);
 	m_DtvEngine.m_MediaViewer.SetStereoMode(m_StereoMode);
 	m_DtvEngine.m_MediaViewer.SetAutoStereoMode(m_AutoStereoMode);
-	m_DtvEngine.m_MediaViewer.SetDownMixSurround(m_fDownMixSurround);
 	m_DtvEngine.m_MediaViewer.SetSpdifOptions(&m_SpdifOptions);
 	return true;
 }
@@ -486,16 +484,6 @@ bool CCoreEngine::SetAutoStereoMode(int Mode)
 	if (Mode!=m_AutoStereoMode) {
 		m_DtvEngine.m_MediaViewer.SetAutoStereoMode(Mode);
 		m_AutoStereoMode=Mode;
-	}
-	return true;
-}
-
-
-bool CCoreEngine::SetDownMixSurround(bool fDownMix)
-{
-	if (fDownMix!=m_fDownMixSurround) {
-		m_DtvEngine.m_MediaViewer.SetDownMixSurround(fDownMix);
-		m_fDownMixSurround=fDownMix;
 	}
 	return true;
 }
