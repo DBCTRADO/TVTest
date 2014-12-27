@@ -172,8 +172,12 @@ public:
 	bool GetSdtServiceList(SdtServiceList *pList) const;
 	bool GetSdtTsList(SdtTsList *pList) const;
 	bool GetNetworkTsList(NetworkTsList *pList) const;
+	bool IsPatUpdated() const;
 	bool IsSdtUpdated() const;
 	bool IsNitUpdated() const;
+#ifdef TS_ANALYZER_EIT_SUPPORT
+	bool IsEitUpdated() const;
+#endif
 	bool IsSdtComplete() const;
 
 	bool SetVideoStreamTypeViewable(const BYTE StreamType, const bool bViewable);
@@ -262,8 +266,13 @@ protected:
 	WORD m_TransportStreamID;
 	WORD m_NetworkID;
 
+	bool m_bPatUpdated;
 	bool m_bSdtUpdated;
 	bool m_bNitUpdated;
+#ifdef TS_ANALYZER_EIT_SUPPORT
+	bool m_bEitUpdated;
+	bool m_bSendEitUpdatedEvent;
+#endif
 
 	ServiceList m_ServiceList;
 	SdtServiceList m_SdtServiceList;
@@ -305,6 +314,8 @@ private:
 	static void CALLBACK OnPmtUpdated(const WORD wPID, CTsPidMapTarget *pMapTarget, CTsPidMapManager *pMapManager, const PVOID pParam);
 	static void CALLBACK OnSdtUpdated(const WORD wPID, CTsPidMapTarget *pMapTarget, CTsPidMapManager *pMapManager, const PVOID pParam);
 	static void CALLBACK OnNitUpdated(const WORD wPID, CTsPidMapTarget *pMapTarget, CTsPidMapManager *pMapManager, const PVOID pParam);
+#ifdef TS_ANALYZER_EIT_SUPPORT
 	static void CALLBACK OnEitUpdated(const WORD wPID, CTsPidMapTarget *pMapTarget, CTsPidMapManager *pMapManager, const PVOID pParam);
+#endif
 	static void CALLBACK OnTotUpdated(const WORD wPID, CTsPidMapTarget *pMapTarget, CTsPidMapManager *pMapManager, const PVOID pParam);
 };

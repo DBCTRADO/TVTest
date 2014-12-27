@@ -88,6 +88,14 @@ const bool CTsAnalyzer::InputMedia(CMediaData *pMediaData, const DWORD dwInputIn
 		SendDecoderEvent((DWORD)m_DecoderEvent);
 	}
 
+#ifdef TS_ANALYZER_EIT_SUPPORT
+	// 保留されていたEIT更新イベントを通知する
+	if (m_bSendEitUpdatedEvent) {
+		m_bSendEitUpdatedEvent = false;
+		SendDecoderEvent(EVENT_EIT_UPDATED);
+	}
+#endif
+
 	return true;
 }
 
@@ -105,11 +113,20 @@ void CTsAnalyzer::Reset()
 	// ネットワークID初期化
 	m_NetworkID = 0x0000;
 
+	// PAT更新フラグ初期化
+	m_bPatUpdated = false;
+
 	// SDT更新フラグ初期化
 	m_bSdtUpdated = false;
 
 	// NIT更新フラグ初期化
 	m_bNitUpdated = false;
+
+#ifdef TS_ANALYZER_EIT_SUPPORT
+	// EIT更新フラグ初期化
+	m_bEitUpdated = false;
+	m_bSendEitUpdatedEvent = false;
+#endif
 
 	// サービスリストクリア
 	m_ServiceList.clear();
@@ -851,6 +868,12 @@ bool CTsAnalyzer::GetNetworkTsList(NetworkTsList *pList) const
 }
 
 
+bool CTsAnalyzer::IsPatUpdated() const
+{
+	return m_bPatUpdated;
+}
+
+
 bool CTsAnalyzer::IsSdtUpdated() const
 {
 	return m_bSdtUpdated;
@@ -861,6 +884,14 @@ bool CTsAnalyzer::IsNitUpdated() const
 {
 	return m_bNitUpdated;
 }
+
+
+#ifdef TS_ANALYZER_EIT_SUPPORT
+bool CTsAnalyzer::IsEitUpdated() const
+{
+	return m_bEitUpdated;
+}
+#endif
 
 
 bool CTsAnalyzer::IsSdtComplete() const
@@ -1802,6 +1833,14 @@ void CALLBACK CTsAnalyzer::OnPatUpdated(const WORD wPID, CTsPidMapTarget *pMapTa
 		pMapManager->MapTarget(pPatTable->GetPmtPID((WORD)Index), new CPmtTable(TABLE_DEBUG), OnPmtUpdated, pParam);
 	}
 
+#ifdef TS_ANALYZER_EIT_SUPPORT
+	// PATが来る前にEITが来ていた場合ここで通知する
+	if (!pThis->m_bPatUpdated && pThis->m_bEitUpdated)
+		pThis->m_bSendEitUpdatedEvent = true;
+#endif
+
+	pThis->m_bPatUpdated = true;
+
 	// 通知イベント設定
 	pThis->SetDecoderEvent(EVENT_PAT_UPDATED);
 }
@@ -2152,6 +2191,7 @@ void CALLBACK CTsAnalyzer::OnNitUpdated(const WORD wPID, CTsPidMapTarget *pMapTa
 }
 
 
+#ifdef TS_ANALYZER_EIT_SUPPORT
 void CALLBACK CTsAnalyzer::OnEitUpdated(const WORD wPID, CTsPidMapTarget *pMapTarget, CTsPidMapManager *pMapManager, const PVOID pParam)
 {
 	// EITが更新された
@@ -2159,9 +2199,14 @@ void CALLBACK CTsAnalyzer::OnEitUpdated(const WORD wPID, CTsPidMapTarget *pMapTa
 
 	CTsAnalyzer *pThis = static_cast<CTsAnalyzer*>(pParam);
 
+	pThis->m_bEitUpdated = true;
+
 	// 通知イベント設定
-	pThis->SetDecoderEvent(EVENT_EIT_UPDATED);
+	// (PATがまだ来ていない場合は番組情報の取得関数が失敗するため保留にする)
+	if (pThis->m_bPatUpdated)
+		pThis->SetDecoderEvent(EVENT_EIT_UPDATED);
 }
+#endif
 
 
 void CALLBACK CTsAnalyzer::OnTotUpdated(const WORD wPID, CTsPidMapTarget *pMapTarget, CTsPidMapManager *pMapManager, const PVOID pParam)
