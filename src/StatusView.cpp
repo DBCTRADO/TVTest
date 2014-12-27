@@ -460,11 +460,7 @@ LRESULT CStatusView::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 			int x=GET_X_LPARAM(lParam),y=GET_Y_LPARAM(lParam);
 			RECT rc;
 
-			if (::GetCapture()==hwnd) {
-				GetItemRectByIndex(m_HotItem,&rc);
-				x-=rc.left;
-				m_ItemList[m_HotItem]->OnMouseMove(x,y);
-			} else {
+			if (::GetCapture()!=hwnd) {
 				if (m_fSingleMode)
 					break;
 
@@ -484,6 +480,13 @@ LRESULT CStatusView::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 				if (i!=m_HotItem)
 					SetHotItem(i);
 				m_MouseLeaveTrack.OnMouseMove();
+			}
+
+			if (m_HotItem>=0) {
+				GetItemRectByIndex(m_HotItem,&rc);
+				x-=rc.left;
+				y-=rc.top;
+				m_ItemList[m_HotItem]->OnMouseMove(x,y);
 			}
 		}
 		return 0;
@@ -520,6 +523,7 @@ LRESULT CStatusView::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 
 			GetItemRectByIndex(m_HotItem,&rc);
 			x-=rc.left;
+			y-=rc.top;
 			m_fOnButtonDown=true;
 			switch (uMsg) {
 			case WM_LBUTTONDOWN:
@@ -558,6 +562,7 @@ LRESULT CStatusView::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 
 			GetItemRectByIndex(m_HotItem,&rc);
 			x-=rc.left;
+			y-=rc.top;
 			switch (uMsg) {
 			case WM_LBUTTONUP:
 				m_ItemList[m_HotItem]->OnLButtonUp(x,y);
@@ -579,6 +584,7 @@ LRESULT CStatusView::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 
 			GetItemRectByIndex(m_HotItem,&rc);
 			x-=rc.left;
+			y-=rc.top;
 			if (m_ItemList[m_HotItem]->OnMouseHover(x,y)) {
 				TRACKMOUSEEVENT tme;
 				tme.cbSize=sizeof(TRACKMOUSEEVENT);

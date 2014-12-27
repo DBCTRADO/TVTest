@@ -185,8 +185,8 @@ void CVolumeStatusItem::Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect,u
 
 void CVolumeStatusItem::OnLButtonDown(int x,int y)
 {
+	::SetCapture(m_pStatus->GetHandle());
 	OnMouseMove(x,y);
-	SetCapture(m_pStatus->GetHandle());
 }
 
 void CVolumeStatusItem::OnRButtonDown(int x,int y)
@@ -206,6 +206,9 @@ void CVolumeStatusItem::OnRButtonDown(int x,int y)
 
 void CVolumeStatusItem::OnMouseMove(int x,int y)
 {
+	if (::GetCapture()!=m_pStatus->GetHandle())
+		return;
+
 	CUICore *pUICore=&GetAppClass().UICore;
 	RECT rcItem,rcClient;
 	int Volume;
