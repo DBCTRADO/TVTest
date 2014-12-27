@@ -4,7 +4,9 @@
 #include "AudioOptions.h"
 #include "DirectShowFilter/DirectShowUtil.h"
 #include "DialogUtil.h"
+#include "EpgUtil.h"
 #include "resource.h"
+#include <algorithm>
 
 #ifdef _DEBUG
 #undef THIS_FILE
@@ -13,6 +15,7 @@ static char THIS_FILE[]=__FILE__;
 #endif
 
 
+static const int MAX_LANGUAGE_TEXT_LENGTH=EpgUtil::MAX_LANGUAGE_TEXT_LENGTH+16;
 
 
 static const int MAX_FORMAT_DOUBLE_LENGTH=16;
@@ -54,6 +57,20 @@ const CAudioDecFilter::DownMixMatrix CAudioOptions::m_DefaultDownMixMatrix = {
 	}
 };
 
+const DWORD CAudioOptions::m_AudioLanguageList[] = {
+	LANGUAGE_CODE_JPN,	// 日本語
+	LANGUAGE_CODE_ENG,	// 英語
+	LANGUAGE_CODE_DEU,	// ドイツ語
+	LANGUAGE_CODE_FRA,	// フランス語
+	LANGUAGE_CODE_ITA,	// イタリア語
+	LANGUAGE_CODE_KOR,	// 韓国語
+	LANGUAGE_CODE_RUS,	// ロシア語
+	LANGUAGE_CODE_SPA,	// スペイン語
+	LANGUAGE_CODE_ZHO,	// 中国語
+	LANGUAGE_CODE_ETC,	// その他
+};
+
+
 CAudioOptions::CAudioOptions()
 	: m_SpdifOptions(CAudioDecFilter::SPDIF_MODE_DISABLED,CAudioDecFilter::SPDIF_CHANNELS_SURROUND)
 	, m_fDownMixSurround(true)
@@ -61,6 +78,7 @@ CAudioOptions::CAudioOptions()
 	, m_SurroundMixingMatrix(m_DefaultSurroundMixingMatrix)
 	, m_fUseCustomDownMixMatrix(false)
 	, m_DownMixMatrix(m_DefaultDownMixMatrix)
+	, m_fEnableLanguagePriority(false)
 {
 }
 
@@ -73,12 +91,11 @@ CAudioOptions::~CAudioOptions()
 
 bool CAudioOptions::ReadSettings(CSettings &Settings)
 {
-	int Value;
-
 	Settings.Read(TEXT("AudioDevice"),&m_AudioDeviceName);
 	Settings.Read(TEXT("AudioFilter"),&m_AudioFilterName);
-	if (Settings.Read(TEXT("SpdifMode"),&Value))
-		m_SpdifOptions.Mode=(CAudioDecFilter::SpdifMode)Value;
+	int SpdifMode;
+	if (Settings.Read(TEXT("SpdifMode"),&SpdifMode))
+		m_SpdifOptions.Mode=(CAudioDecFilter::SpdifMode)SpdifMode;
 	Settings.Read(TEXT("SpdifChannels"),&m_SpdifOptions.PassthroughChannels);
 	Settings.Read(TEXT("DownMixSurround"),&m_fDownMixSurround);
 
@@ -111,6 +128,21 @@ bool CAudioOptions::ReadSettings(CSettings &Settings)
 				}
 			}
 		}
+	}
+
+	Settings.Read(TEXT("EnableLangPriority"),&m_fEnableLanguagePriority);
+
+	m_LanguagePriority.clear();
+	for (int i=0;;i++) {
+		TCHAR szKey[32];
+		TVTest::String Value;
+		StdUtil::snprintf(szKey,lengthof(szKey),TEXT("LangPriority%d"),i);
+		if (!Settings.Read(szKey,&Value) || Value.length()<3)
+			break;
+		AudioLanguageInfo Info;
+		Info.Language=(Value[0]<<16)|(Value[1]<<8)|Value[2];
+		Info.fSub=Value.length()>=4 && Value[3]==TEXT('2');
+		m_LanguagePriority.push_back(Info);
 	}
 
 	return true;
@@ -150,6 +182,24 @@ bool CAudioOptions::WriteSettings(CSettings &Settings)
 		}
 	}
 	Settings.Write(TEXT("DownMixMatrix"),Buffer);
+
+	Settings.Write(TEXT("EnableLangPriority"),m_fEnableLanguagePriority);
+	for (int i=0;;i++) {
+		TCHAR szKey[32];
+		StdUtil::snprintf(szKey,lengthof(szKey),TEXT("LangPriority%d"),i);
+
+		if (i<(int)m_LanguagePriority.size()) {
+			const DWORD Lang=m_LanguagePriority[i].Language;
+			TCHAR szValue[8];
+			StdUtil::snprintf(szValue,lengthof(szValue),TEXT("%c%c%c%s"),
+							  (Lang>>16),(Lang>>8)&0xFF,Lang&0xFF,
+							  m_LanguagePriority[i].fSub?TEXT("2"):TEXT(""));
+			Settings.Write(szKey,szValue);
+		} else {
+			if (!Settings.DeleteValue(szKey))
+				break;
+		}
+	}
 
 	return true;
 }
@@ -259,6 +309,36 @@ INT_PTR CAudioOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 
 			DlgCheckBox_Check(hDlg,IDC_OPTIONS_DOWNMIXSURROUND,
 							  m_fDownMixSurround);
+
+			DlgCheckBox_Check(hDlg,IDC_OPTIONS_ENABLEAUDIOLANGUAGEPRIORITY,
+							  m_fEnableLanguagePriority);
+
+			for (size_t i=0;i<m_LanguagePriority.size();i++) {
+				const AudioLanguageInfo &Info=m_LanguagePriority[i];
+				TCHAR szText[MAX_LANGUAGE_TEXT_LENGTH];
+				GetLanguageText(Info.Language,Info.fSub,szText,lengthof(szText));
+				if (DlgListBox_FindStringExact(hDlg,IDC_OPTIONS_AUDIOLANGUAGEPRIORITY,0,szText)<0) {
+					DlgListBox_AddString(hDlg,IDC_OPTIONS_AUDIOLANGUAGEPRIORITY,szText);
+					DWORD Param=Info.Language;
+					if (Info.fSub)
+						Param|=LANGUAGE_FLAG_SUB;
+					DlgListBox_SetItemData(hDlg,IDC_OPTIONS_AUDIOLANGUAGEPRIORITY,i,Param);
+				}
+			}
+
+			for (int i=0;i<lengthof(m_AudioLanguageList);i++) {
+				const DWORD Language=m_AudioLanguageList[i];
+				TCHAR szText[MAX_LANGUAGE_TEXT_LENGTH];
+				GetLanguageText(Language,false,szText,lengthof(szText));
+				int Index=(int)DlgComboBox_AddString(hDlg,IDC_OPTIONS_AUDIOLANGUAGELIST,szText);
+				DlgComboBox_SetItemData(hDlg,IDC_OPTIONS_AUDIOLANGUAGELIST,Index,Language);
+				GetLanguageText(Language,true,szText,lengthof(szText));
+				Index=(int)DlgComboBox_AddString(hDlg,IDC_OPTIONS_AUDIOLANGUAGELIST,szText);
+				DlgComboBox_SetItemData(hDlg,IDC_OPTIONS_AUDIOLANGUAGELIST,Index,Language | LANGUAGE_FLAG_SUB);
+			}
+			DlgComboBox_SetCurSel(hDlg,IDC_OPTIONS_AUDIOLANGUAGELIST,0);
+
+			UpdateLanguagePriorityControls();
 		}
 		return TRUE;
 
@@ -278,6 +358,73 @@ INT_PTR CAudioOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 				CSurroundOptionsDialog Dlg(this);
 
 				Dlg.Show(hDlg);
+			}
+			return TRUE;
+
+		case IDC_OPTIONS_ENABLEAUDIOLANGUAGEPRIORITY:
+			UpdateLanguagePriorityControls();
+			return TRUE;
+
+		case IDC_OPTIONS_AUDIOLANGUAGEPRIORITY:
+			if (HIWORD(wParam)==LBN_SELCHANGE)
+				UpdateLanguagePriorityControls();
+			return TRUE;
+
+		case IDC_OPTIONS_AUDIOLANGUAGEPRIORITY_ADD:
+			{
+				int Sel=(int)DlgComboBox_GetCurSel(hDlg,IDC_OPTIONS_AUDIOLANGUAGELIST);
+
+				if (Sel>=0) {
+					DWORD Param=(DWORD)DlgComboBox_GetItemData(hDlg,IDC_OPTIONS_AUDIOLANGUAGELIST,Sel);
+					TCHAR szText[MAX_LANGUAGE_TEXT_LENGTH];
+					GetLanguageText(Param & 0x00FFFFFFUL,(Param & LANGUAGE_FLAG_SUB)!=0,
+									szText,lengthof(szText));
+					int Index=(int)DlgListBox_FindStringExact(hDlg,IDC_OPTIONS_AUDIOLANGUAGEPRIORITY,0,szText);
+					if (Index<0) {
+						Index=(int)DlgListBox_AddString(hDlg,IDC_OPTIONS_AUDIOLANGUAGEPRIORITY,szText);
+						DlgListBox_SetItemData(hDlg,IDC_OPTIONS_AUDIOLANGUAGEPRIORITY,Index,Param);
+					}
+					DlgListBox_SetCurSel(hDlg,IDC_OPTIONS_AUDIOLANGUAGEPRIORITY,Index);
+					UpdateLanguagePriorityControls();
+				}
+			}
+			return TRUE;
+
+		case IDC_OPTIONS_AUDIOLANGUAGEPRIORITY_REMOVE:
+			{
+				int Sel=(int)DlgListBox_GetCurSel(hDlg,IDC_OPTIONS_AUDIOLANGUAGEPRIORITY);
+
+				if (Sel>=0) {
+					DlgListBox_DeleteString(hDlg,IDC_OPTIONS_AUDIOLANGUAGEPRIORITY,Sel);
+					UpdateLanguagePriorityControls();
+				}
+			}
+			return TRUE;
+
+		case IDC_OPTIONS_AUDIOLANGUAGEPRIORITY_UP:
+		case IDC_OPTIONS_AUDIOLANGUAGEPRIORITY_DOWN:
+			{
+				int From=(int)DlgListBox_GetCurSel(hDlg,IDC_OPTIONS_AUDIOLANGUAGEPRIORITY);
+				int To;
+
+				if (LOWORD(wParam)==IDC_OPTIONS_AUDIOLANGUAGEPRIORITY_UP) {
+					if (From<1)
+						return TRUE;
+					To=From-1;
+				} else {
+					if (From<0 || From+1>=(int)DlgListBox_GetCount(hDlg,IDC_OPTIONS_AUDIOLANGUAGEPRIORITY))
+						return TRUE;
+					To=From+1;
+				}
+
+				TCHAR szText[MAX_LANGUAGE_TEXT_LENGTH];
+				DlgListBox_GetString(hDlg,IDC_OPTIONS_AUDIOLANGUAGEPRIORITY,From,szText);
+				DWORD Param=(DWORD)DlgListBox_GetItemData(hDlg,IDC_OPTIONS_AUDIOLANGUAGEPRIORITY,From);
+				DlgListBox_DeleteString(hDlg,IDC_OPTIONS_AUDIOLANGUAGEPRIORITY,From);
+				DlgListBox_InsertString(hDlg,IDC_OPTIONS_AUDIOLANGUAGEPRIORITY,To,szText);
+				DlgListBox_SetItemData(hDlg,IDC_OPTIONS_AUDIOLANGUAGEPRIORITY,To,Param);
+				DlgListBox_SetCurSel(hDlg,IDC_OPTIONS_AUDIOLANGUAGEPRIORITY,To);
+				UpdateLanguagePriorityControls();
 			}
 			return TRUE;
 		}
@@ -325,6 +472,17 @@ INT_PTR CAudioOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 				m_fDownMixSurround=
 					DlgCheckBox_IsChecked(hDlg,IDC_OPTIONS_DOWNMIXSURROUND);
 
+				m_fEnableLanguagePriority=
+					DlgCheckBox_IsChecked(hDlg,IDC_OPTIONS_ENABLEAUDIOLANGUAGEPRIORITY);
+
+				const int LangCount=(int)DlgListBox_GetCount(hDlg,IDC_OPTIONS_AUDIOLANGUAGEPRIORITY);
+				m_LanguagePriority.resize(LangCount);
+				for (int i=0;i<LangCount;i++) {
+					DWORD Param=(DWORD)DlgListBox_GetItemData(hDlg,IDC_OPTIONS_AUDIOLANGUAGEPRIORITY,i);
+					m_LanguagePriority[i].Language=Param & 0x00FFFFFFUL;
+					m_LanguagePriority[i].fSub=(Param & LANGUAGE_FLAG_SUB)!=0;
+				}
+
 				ApplyMediaViewerOptions();
 
 				m_fChanged=true;
@@ -335,6 +493,31 @@ INT_PTR CAudioOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 	}
 
 	return FALSE;
+}
+
+
+void CAudioOptions::GetLanguageText(DWORD Language,bool fSub,LPTSTR pszText,int MaxText) const
+{
+	EpgUtil::GetLanguageText(Language,pszText,MaxText,EpgUtil::LANGUAGE_TEXT_LONG);
+	if (fSub)
+		::StrCatBuff(pszText,TEXT("(副音声)"),MaxText);
+}
+
+
+void CAudioOptions::UpdateLanguagePriorityControls()
+{
+	bool fEnable=DlgCheckBox_IsChecked(m_hDlg,IDC_OPTIONS_ENABLEAUDIOLANGUAGEPRIORITY);
+	int Sel;
+
+	if (fEnable)
+		Sel=(int)DlgListBox_GetCurSel(m_hDlg,IDC_OPTIONS_AUDIOLANGUAGEPRIORITY);
+	EnableDlgItem(m_hDlg,IDC_OPTIONS_AUDIOLANGUAGEPRIORITY,fEnable);
+	EnableDlgItem(m_hDlg,IDC_OPTIONS_AUDIOLANGUAGEPRIORITY_ADD,fEnable);
+	EnableDlgItem(m_hDlg,IDC_OPTIONS_AUDIOLANGUAGEPRIORITY_REMOVE,fEnable && Sel>=0);
+	EnableDlgItem(m_hDlg,IDC_OPTIONS_AUDIOLANGUAGEPRIORITY_UP,fEnable && Sel>0);
+	EnableDlgItem(m_hDlg,IDC_OPTIONS_AUDIOLANGUAGEPRIORITY_DOWN,
+				  fEnable && Sel>=0 && Sel+1<(int)DlgListBox_GetCount(m_hDlg,IDC_OPTIONS_AUDIOLANGUAGEPRIORITY));
+	EnableDlgItem(m_hDlg,IDC_OPTIONS_AUDIOLANGUAGELIST,fEnable);
 }
 
 

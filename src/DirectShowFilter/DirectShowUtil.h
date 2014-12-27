@@ -18,6 +18,7 @@
 #include <mferror.h>
 #include <evr9.h>
 #endif
+#include <string>
 
 
 // guid‚É“ü‚Á‚Ä‚¢‚È‚¢’Ç‰Á•ªGUID
@@ -81,8 +82,9 @@ public:
 					DWORD Merit=MERIT_DO_NOT_USE+1);
 	bool PriorityFilterGoToHead(const CLSID idPriorityClass);
 	bool IgnoreFilterGoToTail(const CLSID idIgnoreClass,bool bRemoveIt=false);
-	int GetFilterCount();
-	bool GetFilterInfo(const int iIndex,CLSID *pidClass=NULL,LPWSTR pwszFriendlyName=NULL,int iBufLen=0);
+	int GetFilterCount() const;
+	bool GetFilterInfo(const int iIndex,CLSID *pidClass=NULL,LPWSTR pwszFriendlyName=NULL,int iBufLen=0) const;
+	bool GetFilterInfo(const int iIndex,CLSID *pidClass=NULL,std::wstring *pFriendlyName=NULL) const;
 protected:
 	class CFilterInfo {
 	public:

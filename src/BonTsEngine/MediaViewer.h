@@ -103,12 +103,13 @@ public:
 		AUDIO_CHANNEL_INVALID	= 0xFF
 	};
 	BYTE GetAudioChannelNum() const;
-	bool SetStereoMode(const int iMode);
-	int GetStereoMode() const;
+	bool SetDualMonoMode(CAudioDecFilter::DualMonoMode Mode);
+	CAudioDecFilter::DualMonoMode GetDualMonoMode() const;
+	bool SetStereoMode(CAudioDecFilter::StereoMode Mode);
+	CAudioDecFilter::StereoMode GetStereoMode() const;
 	bool SetSpdifOptions(const CAudioDecFilter::SpdifOptions *pOptions);
 	bool GetSpdifOptions(CAudioDecFilter::SpdifOptions *pOptions) const;
 	bool IsSpdifPassthrough() const;
-	bool SetAutoStereoMode(int Mode);
 	bool SetDownMixSurround(bool bDownMix);
 	bool GetDownMixSurround() const;
 	bool SetAudioGainControl(bool bGainControl, float Gain = 1.0f, float SurroundGain = 1.0f);

@@ -248,7 +248,8 @@ class CPluginManager : public TVTest::CAppEventHandler
 	void OnPlaybackStateChanged(bool fPlayback) override;
 	void OnVolumeChanged(int Volume) override;
 	void OnMuteChanged(bool fMute) override;
-	void OnStereoModeChanged(int StereoMode) override;
+	void OnDualMonoModeChanged(CAudioDecFilter::DualMonoMode Mode) override;
+	void OnStereoModeChanged(CAudioDecFilter::StereoMode Mode) override;
 	void OnAudioStreamChanged(int Stream) override;
 	void OnColorSchemeChanged() override;
 	void OnStandbyChanged(bool fStandby) override;

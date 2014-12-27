@@ -228,7 +228,7 @@ namespace EpgUtil
 		if (pszText==NULL || MaxText<1)
 			return false;
 
-		for (int i=0;i<lengthof(LanguageList)-1;i++) {
+		for (int i=0;i<lengthof(LanguageList);i++) {
 			if (LanguageList[i].LanguageCode==LanguageCode) {
 				LPCTSTR pszLang;
 

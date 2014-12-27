@@ -241,7 +241,6 @@ CMainWindow::CMainWindow(CAppMain &App)
 	, m_DefaultAspectRatioMenuItemCount(0)
 	, m_fFrameCut(false)
 	, m_ProgramListUpdateTimerCount(0)
-	, m_CurEventStereoMode(-1)
 	, m_fAlertedLowFreeSpace(false)
 	, m_ResetErrorCountTimer(TIMER_ID_RESETERRORCOUNT)
 	, m_ChannelNoInputTimeout(3000)
@@ -1572,6 +1571,11 @@ LRESULT CMainWindow::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 		}
 		return 0;
 
+	case WM_APP_AUDIOLISTCHANGED:
+		TRACE(TEXT("WM_APP_AUDIOLISTCHANGED\n"));
+		m_pCore->AutoSelectAudio();
+		return 0;
+
 	case WM_ACTIVATEAPP:
 		{
 			bool fActive=wParam!=FALSE;
@@ -1808,10 +1812,6 @@ bool CMainWindow::OnCreate(const CREATESTRUCT *pcs)
 			m_App.MainMenu.CheckRadioItem(CM_SURROUNDAUDIOGAIN_FIRST,CM_SURROUNDAUDIOGAIN_LAST,
 										  CM_SURROUNDAUDIOGAIN_FIRST+i);
 	}
-	/*
-	m_App.MainMenu.CheckRadioItem(CM_STEREO_THROUGH,CM_STEREO_RIGHT,
-		CM_STEREO_THROUGH+m_pCore->GetStereoMode());
-	*/
 	m_App.MainMenu.CheckRadioItem(CM_CAPTURESIZE_FIRST,CM_CAPTURESIZE_LAST,
 		CM_CAPTURESIZE_FIRST+m_App.CaptureOptions.GetPresetCaptureSize());
 	//m_App.MainMenu.CheckItem(CM_CAPTUREPREVIEW,m_App.CaptureWindow.GetVisible());
@@ -2279,10 +2279,13 @@ void CMainWindow::OnCommand(HWND hwnd,int id,HWND hwndCtl,UINT codeNotify)
 		}
 		return;
 
-	case CM_STEREO_THROUGH:
-	case CM_STEREO_LEFT:
-	case CM_STEREO_RIGHT:
-		m_pCore->SetStereoMode(id-CM_STEREO_THROUGH);
+	case CM_DUALMONO_MAIN:
+	case CM_DUALMONO_SUB:
+	case CM_DUALMONO_BOTH:
+		m_pCore->SetDualMonoMode(
+			id==CM_DUALMONO_MAIN?CAudioDecFilter::DUALMONO_MAIN:
+			id==CM_DUALMONO_SUB ?CAudioDecFilter::DUALMONO_SUB:
+			                     CAudioDecFilter::DUALMONO_BOTH);
 		ShowAudioOSD();
 		return;
 
@@ -3172,12 +3175,6 @@ void CMainWindow::OnCommand(HWND hwnd,int id,HWND hwndCtl,UINT codeNotify)
 			return;
 		}
 
-		if (id>=CM_AUDIOSTREAM_FIRST && id<=CM_AUDIOSTREAM_LAST) {
-			m_pCore->SetAudioStream(id-CM_AUDIOSTREAM_FIRST);
-			ShowAudioOSD();
-			return;
-		}
-
 		if (id>=CM_CAPTURESIZE_FIRST && id<=CM_CAPTURESIZE_LAST) {
 			int CaptureSize=id-CM_CAPTURESIZE_FIRST;
 
@@ -3290,6 +3287,18 @@ void CMainWindow::OnCommand(HWND hwnd,int id,HWND hwndCtl,UINT codeNotify)
 			return;
 		}
 
+		if (id>=CM_AUDIOSTREAM_FIRST && id<=CM_AUDIOSTREAM_LAST) {
+			m_pCore->SetAudioStream(id-CM_AUDIOSTREAM_FIRST);
+			ShowAudioOSD();
+			return;
+		}
+
+		if (id>=CM_AUDIO_FIRST && id<=CM_AUDIO_LAST) {
+			m_pCore->SelectAudio(id-CM_AUDIO_FIRST);
+			ShowAudioOSD();
+			return;
+		}
+
 		if (id>=CM_MULTIVIEW_FIRST && id<=CM_MULTIVIEW_LAST) {
 			const WORD ServiceIndex=m_App.CoreEngine.m_DtvEngine.GetServiceIndex();
 			CTsAnalyzer &TsAnalyzer=m_App.CoreEngine.m_DtvEngine.m_TsAnalyzer;
@@ -3348,8 +3357,10 @@ void CMainWindow::OnTimer(HWND hwnd,UINT id)
 							 | CCoreEngine::STATUS_AUDIOCOMPONENTTYPE
 							 | CCoreEngine::STATUS_SPDIFPASSTHROUGH))!=0) {
 				TRACE(TEXT("Audio status changed.\n"));
+				/*
 				if ((UpdateStatus&CCoreEngine::STATUS_SPDIFPASSTHROUGH)==0)
 					AutoSelectStereoMode();
+				*/
 				m_App.StatusView.UpdateItem(STATUS_ITEM_AUDIOCHANNEL);
 				m_App.Panel.ControlPanel.UpdateItem(CONTROLPANEL_ITEM_AUDIO);
 				m_App.SideBar.CheckItem(CM_SPDIF_TOGGLE,
@@ -3768,100 +3779,69 @@ bool CMainWindow::OnInitMenuPopup(HMENU hmenu)
 		Menu.Clear();
 
 		CDtvEngine &DtvEngine=m_App.CoreEngine.m_DtvEngine;
-		CTsAnalyzer::EventAudioInfo AudioInfo;
-		const bool fDualMono=
-			DtvEngine.GetEventAudioInfo(&AudioInfo)
-			&& AudioInfo.ComponentType==0x02;
-		if (fDualMono) {
-			// Dual mono
-			TCHAR szText[80],szAudio1[64],szAudio2[64];
+		CAudioManager::AudioList AudioList;
+		const CAudioDecFilter::DualMonoMode CurDualMonoMode=m_pCore->GetDualMonoMode();
+		bool fDualMono=false;
 
-			szAudio1[0]='\0';
-			szAudio2[0]='\0';
-			if (AudioInfo.szText[0]!='\0') {
-				LPTSTR pszDelimiter=::StrChr(AudioInfo.szText,_T('\r'));
-				if (pszDelimiter!=nullptr) {
-					*pszDelimiter='\0';
-					CopyToMenuText(AudioInfo.szText,szAudio1,lengthof(szAudio1));
-					CopyToMenuText(pszDelimiter+1,szAudio2,lengthof(szAudio2));
-				}
-			}
-			// ES multilingual flag が立っているのに両方日本語の場合がある
-			if (AudioInfo.bESMultiLingualFlag
-					&& AudioInfo.LanguageCode!=AudioInfo.LanguageCode2) {
-				// 二カ国語
-				if (szAudio1[0]=='\0')
-					EpgUtil::GetLanguageText(AudioInfo.LanguageCode,szAudio1,lengthof(szAudio1));
-				if (szAudio2[0]=='\0')
-					EpgUtil::GetLanguageText(AudioInfo.LanguageCode2,szAudio2,lengthof(szAudio2));
-				StdUtil::snprintf(szText,lengthof(szText),TEXT("%s+%s(&S)"),szAudio1,szAudio2);
-				Menu.Append(CM_STEREO_THROUGH,szText);
-				::wsprintf(szText,TEXT("%s(&L)"),szAudio1);
-				Menu.Append(CM_STEREO_LEFT,szText);
-				::wsprintf(szText,TEXT("%s(&R)"),szAudio2);
-				Menu.Append(CM_STEREO_RIGHT,szText);
-			} else {
-				Menu.Append(CM_STEREO_THROUGH,TEXT("主+副音声(&S)"));
-				if (szAudio1[0]!='\0')
-					StdUtil::snprintf(szText,lengthof(szText),TEXT("主音声(%s)(&L)"),szAudio1);
-				else
-					::lstrcpy(szText,TEXT("主音声(&L)"));
-				Menu.Append(CM_STEREO_LEFT,szText);
-				if (szAudio2[0]!='\0')
-					StdUtil::snprintf(szText,lengthof(szText),TEXT("副音声(%s)(&R)"),szAudio2);
-				else
-					::lstrcpy(szText,TEXT("副音声(&R)"));
-				Menu.Append(CM_STEREO_RIGHT,szText);
-			}
-			Menu.AppendSeparator();
-		}
-
-		auto GetAudioInfoText=[](const CTsAnalyzer::EventAudioInfo &AudioInfo,
-								 LPTSTR pszText,int MaxText)
-		{
-			if (AudioInfo.szText[0]!='\0') {
-				LPTSTR p=::StrChr(AudioInfo.szText,_T('\r'));
-				if (p!=nullptr) {
-					TCHAR szBuf[CTsAnalyzer::EventAudioInfo::MAX_TEXT];
-					StdUtil::strncpy(szBuf,p-AudioInfo.szText,AudioInfo.szText);
-					p++;
-					if (*p==_T('\n'))
-						p++;
-					StdUtil::snprintf(pszText,MaxText,TEXT("%s/%s"),szBuf,p);
+		if (m_App.AudioManager.GetAudioList(&AudioList) && !AudioList.empty()) {
+			auto GetAudioInfoText=[](
+				const CAudioManager::AudioInfo &Info,int StreamNumber,
+				LPTSTR pszText,int MaxText)
+			{
+				int Length;
+				if (!Info.Text.empty()) {
+					Length=CopyToMenuText(Info.Text.c_str(),pszText,MaxText);
+				} else if (Info.Language!=0 && (!Info.IsDualMono() || Info.fMultiLingual)) {
+					EpgUtil::GetLanguageText(Info.Language,pszText,MaxText);
+					Length=::lstrlen(pszText);
+					if (Info.DualMono==CAudioManager::DUALMONO_BOTH) {
+						TCHAR szLang2[EpgUtil::MAX_LANGUAGE_TEXT_LENGTH];
+						EpgUtil::GetLanguageText(Info.Language2,szLang2,lengthof(szLang2));
+						Length+=StdUtil::snprintf(pszText+Length,MaxText-Length,TEXT("+%s"),szLang2);
+					}
+				} else if (Info.IsDualMono()) {
+					Length=StdUtil::snprintf(pszText,MaxText,
+						Info.DualMono==CAudioManager::DUALMONO_MAIN?
+							TEXT("主音声"):
+						Info.DualMono==CAudioManager::DUALMONO_SUB?
+							TEXT("副音声"):
+							TEXT("主+副音声"));
 				} else {
-					StdUtil::strncpy(pszText,MaxText,AudioInfo.szText);
+					Length=StdUtil::snprintf(pszText,MaxText,TEXT("音声%d"),StreamNumber+1);
 				}
-			} else {
-				EpgUtil::GetLanguageText(AudioInfo.LanguageCode,pszText,MaxText);
-			}
-		};
+				if (Info.ComponentType!=CAudioManager::COMPONENT_TYPE_INVALID) {
+					LPCTSTR pszComponentType=EpgUtil::GetAudioComponentTypeText(Info.ComponentType);
+					if (pszComponentType!=nullptr) {
+						StdUtil::snprintf(pszText+Length,MaxText-Length,
+										  TEXT(" [%s]"),pszComponentType);
+					}
+				}
+			};
 
-		const WORD ServiceIndex=DtvEngine.GetServiceIndex();
-		CTsAnalyzer::EsInfoList EsList;
-
-		if (DtvEngine.m_TsAnalyzer.GetAudioEsList(ServiceIndex,&EsList)
-				&& !EsList.empty()) {
+			const WORD ServiceIndex=DtvEngine.GetServiceIndex();
+			const BYTE CurComponentTag=DtvEngine.GetAudioComponentTag();
 			CTsAnalyzer::EventComponentGroupList GroupList;
+			int Sel=-1;
 
 			if (DtvEngine.m_TsAnalyzer.GetEventComponentGroupList(ServiceIndex,&GroupList)
 					&& !GroupList.empty()) {
 				// マルチビューTV
 				const int NumGroup=static_cast<int>(GroupList.size());
-				const BYTE CurAudioComponentTag=DtvEngine.GetAudioComponentTag();
 				int SubGroupCount=0;
-				int CurAudioIndex=-1;
 
 				// グループ毎の音声
 				for (int i=0;i<NumGroup;i++) {
 					const CTsAnalyzer::EventComponentGroupInfo &GroupInfo=GroupList[i];
-					int AudioCount=0;
+					int StreamNumber=-1;
 
 					for (int j=0;j<GroupInfo.CAUnitNum;j++) {
 						for (int k=0;k<GroupInfo.CAUnit[j].ComponentNum;k++) {
 							const BYTE ComponentTag=GroupInfo.CAUnit[j].ComponentTag[k];
 
-							for (int EsIndex=0;EsIndex=static_cast<int>(EsList.size());EsIndex++) {
-								if (EsList[EsIndex].ComponentTag==ComponentTag) {
+							for (int AudioIndex=0;AudioIndex=static_cast<int>(AudioList.size());AudioIndex++) {
+								CAudioManager::AudioInfo &AudioInfo=AudioList[AudioIndex];
+
+								if (AudioInfo.ComponentTag==ComponentTag) {
 									TCHAR szText[80];
 									int Length;
 
@@ -3874,17 +3854,31 @@ bool CMainWindow::OnInitMenuPopup(HMENU hmenu)
 											Length=StdUtil::snprintf(szText,lengthof(szText),TEXT("サブ%d"),SubGroupCount+1);
 									}
 
-									TCHAR szAudio[64],szFormat[64];
-									GetAudioInfoText(AudioInfo,szAudio,lengthof(szAudio));
-									CopyToMenuText(szAudio,szFormat,lengthof(szFormat));
+									if (!AudioInfo.IsDualMono() || AudioInfo.DualMono==CAudioManager::DUALMONO_MAIN)
+										StreamNumber++;
+
+									TCHAR szAudio[64];
+									GetAudioInfoText(AudioInfo,StreamNumber,szAudio,lengthof(szAudio));
 									StdUtil::snprintf(szText+Length,lengthof(szText)-Length,
-													  TEXT(": 音声%d (%s)"),AudioCount+1,szFormat);
-									Menu.Append(CM_AUDIOSTREAM_FIRST+EsIndex,szText);
-									if (ComponentTag==CurAudioComponentTag)
-										CurAudioIndex=EsIndex;
-									EsList[EsIndex].ComponentTag=CTsAnalyzer::COMPONENTTAG_INVALID;
-									AudioCount++;
-									break;
+													  TEXT(": %s"),szAudio);
+									Menu.Append(CM_AUDIO_FIRST+AudioIndex,szText);
+									AudioInfo.ComponentTag=CAudioManager::COMPONENT_TAG_INVALID;
+
+									if (AudioInfo.IsDualMono()) {
+										if (CurDualMonoMode==CAudioDecFilter::DUALMONO_MAIN) {
+											if (AudioInfo.DualMono==CAudioManager::DUALMONO_MAIN)
+												Sel=AudioIndex;
+										} else if (CurDualMonoMode==CAudioDecFilter::DUALMONO_SUB) {
+											if (AudioInfo.DualMono==CAudioManager::DUALMONO_SUB)
+												Sel=AudioIndex;
+										} else {
+											if (AudioInfo.DualMono==CAudioManager::DUALMONO_BOTH)
+												Sel=AudioIndex;
+										}
+										fDualMono=true;
+									} else {
+										Sel=AudioIndex;
+									}
 								}
 							}
 						}
@@ -3893,58 +3887,85 @@ bool CMainWindow::OnInitMenuPopup(HMENU hmenu)
 					if (GroupInfo.ComponentGroupID!=0)
 						SubGroupCount++;
 				}
+			}
 
-				// グループに属さない音声
-				int AudioCount=0;
-				for (int i=0;i<static_cast<int>(EsList.size());i++) {
-					if (EsList[i].ComponentTag!=CTsAnalyzer::COMPONENTTAG_INVALID) {
-						TCHAR szText[64];
-						AudioCount++;
-						StdUtil::snprintf(szText,lengthof(szText),TEXT("音声%d"),AudioCount);
-						Menu.Append(CM_AUDIOSTREAM_FIRST+i,szText);
-						if (EsList[i].ComponentTag==CurAudioComponentTag)
-							CurAudioIndex=i;
+			int StreamNumber=-1;
+
+			for (int i=0;i<static_cast<int>(AudioList.size()) && i<=CM_AUDIO_LAST-CM_AUDIO_FIRST;i++) {
+				const CAudioManager::AudioInfo &AudioInfo=AudioList[i];
+
+				if (AudioInfo.ComponentTag==CAudioManager::COMPONENT_TAG_INVALID)
+					continue;
+
+				if (!AudioInfo.IsDualMono() || AudioInfo.DualMono==CAudioManager::DUALMONO_MAIN)
+					StreamNumber++;
+
+				TCHAR szText[80];
+				int Length;
+
+				Length=StdUtil::snprintf(szText,lengthof(szText),TEXT("%s%d: "),
+										 i<9?TEXT("&"):TEXT(""),i+1);
+				GetAudioInfoText(AudioInfo,StreamNumber,szText+Length,lengthof(szText)-Length);
+				Menu.Append(CM_AUDIO_FIRST+i,szText);
+
+				if (AudioInfo.ComponentTag==CurComponentTag) {
+					if (AudioInfo.IsDualMono()) {
+						if (CurDualMonoMode==CAudioDecFilter::DUALMONO_MAIN) {
+							if (AudioInfo.DualMono==CAudioManager::DUALMONO_MAIN)
+								Sel=i;
+						} else if (CurDualMonoMode==CAudioDecFilter::DUALMONO_SUB) {
+							if (AudioInfo.DualMono==CAudioManager::DUALMONO_SUB)
+								Sel=i;
+						} else {
+							if (AudioInfo.DualMono==CAudioManager::DUALMONO_BOTH)
+								Sel=i;
+						}
+						fDualMono=true;
+					} else {
+						Sel=i;
 					}
 				}
+			}
 
-				if (CurAudioIndex>=0) {
-					Menu.CheckRadioItem(CM_AUDIOSTREAM_FIRST,
-										CM_AUDIOSTREAM_FIRST+static_cast<int>(EsList.size())-1,
-										CM_AUDIOSTREAM_FIRST+CurAudioIndex);
-				}
-			} else {
-				for (int i=0;i<static_cast<int>(EsList.size());i++) {
-					TCHAR szText[64];
-					int Length=StdUtil::snprintf(szText,lengthof(szText),TEXT("&%d: 音声%d"),i+1,i+1);
-					if (EsList.size()>1
-							&& DtvEngine.GetEventAudioInfo(&AudioInfo,i)) {
-						TCHAR szAudio[64],szFormat[64];
-						GetAudioInfoText(AudioInfo,szAudio,lengthof(szAudio));
-						CopyToMenuText(szAudio,szFormat,lengthof(szFormat));
-						StdUtil::snprintf(szText+Length,lengthof(szText)-Length,TEXT(" (%s)"),szFormat);
-					}
-					Menu.Append(CM_AUDIOSTREAM_FIRST+i,szText);
-				}
-				Menu.CheckRadioItem(CM_AUDIOSTREAM_FIRST,
-									CM_AUDIOSTREAM_FIRST+static_cast<int>(EsList.size())-1,
-									CM_AUDIOSTREAM_FIRST+m_pCore->GetAudioStream());
+			if (Sel>=0) {
+				Menu.CheckRadioItem(CM_AUDIO_FIRST,
+									CM_AUDIO_FIRST+static_cast<int>(AudioList.size())-1,
+									CM_AUDIO_FIRST+Sel);
 			}
 		}
 
-		if (!fDualMono) {
-			if (!EsList.empty())
-				Menu.AppendSeparator();
-			Menu.Append(CM_STEREO_THROUGH,TEXT("ステレオ/スルー(&S)"));
-			Menu.Append(CM_STEREO_LEFT,TEXT("左(主音声)(&L)"));
-			Menu.Append(CM_STEREO_RIGHT,TEXT("右(副音声)(&R)"));
-		}
-		Menu.CheckRadioItem(CM_STEREO_THROUGH,CM_STEREO_RIGHT,
-							CM_STEREO_THROUGH+m_pCore->GetStereoMode());
+		HINSTANCE hinstRes=m_App.GetResourceInstance();
 
-		Menu.AppendSeparator();
-		Menu.Append(CM_SPDIF_DISABLED,TEXT("S/PDIFパススルー : 無効"));
-		Menu.Append(CM_SPDIF_PASSTHROUGH,TEXT("S/PDIFパススルー : 有効"));
-		Menu.Append(CM_SPDIF_AUTO,TEXT("S/PDIFパススルー : 自動切替"));
+		if (!fDualMono && DtvEngine.GetAudioChannelNum()==CMediaViewer::AUDIO_CHANNEL_DUALMONO) {
+			if (Menu.GetItemCount()>0)
+				Menu.AppendSeparator();
+			static const int DualMonoMenuList[] = {
+				CM_DUALMONO_MAIN,
+				CM_DUALMONO_SUB,
+				CM_DUALMONO_BOTH
+			};
+			for (int i=0;i<lengthof(DualMonoMenuList);i++) {
+				TCHAR szText[64];
+				::LoadString(hinstRes,DualMonoMenuList[i],szText,lengthof(szText));
+				Menu.Append(DualMonoMenuList[i],szText);
+			}
+			Menu.CheckRadioItem(CM_DUALMONO_MAIN,CM_DUALMONO_BOTH,
+				CurDualMonoMode==CAudioDecFilter::DUALMONO_MAIN?CM_DUALMONO_MAIN:
+				CurDualMonoMode==CAudioDecFilter::DUALMONO_SUB?CM_DUALMONO_SUB:CM_DUALMONO_BOTH);
+		}
+
+		if (Menu.GetItemCount()>0)
+			Menu.AppendSeparator();
+		static const int SpdifMenuList[] = {
+			CM_SPDIF_DISABLED,
+			CM_SPDIF_PASSTHROUGH,
+			CM_SPDIF_AUTO
+		};
+		for (int i=0;i<lengthof(SpdifMenuList);i++) {
+			TCHAR szText[64];
+			::LoadString(hinstRes,SpdifMenuList[i],szText,lengthof(szText));
+			Menu.Append(SpdifMenuList[i],szText);
+		}
 		CAudioDecFilter::SpdifOptions SpdifOptions;
 		m_App.CoreEngine.GetSpdifOptions(&SpdifOptions);
 		Menu.CheckRadioItem(CM_SPDIF_DISABLED,CM_SPDIF_AUTO,
@@ -4255,10 +4276,6 @@ void CMainWindow::OnChannelChanged(unsigned int Status)
 		m_ResetErrorCountTimer.Begin(m_hwnd,5000);
 	else
 		m_ResetErrorCountTimer.End();
-	/*
-	m_pCore->SetStereoMode(0);
-	m_CurEventStereoMode=-1;
-	*/
 	m_fForceResetPanAndScan=true;
 
 	m_pCore->UpdateTitle();
@@ -4399,9 +4416,6 @@ void CMainWindow::OnEventChanged()
 		m_App.SideBar.CheckRadioItem(CM_ASPECTRATIO_FIRST,CM_ASPECTRATIO_LAST,
 									 CM_ASPECTRATIO_DEFAULT);
 	}
-
-	m_CurEventStereoMode=-1;
-	AutoSelectStereoMode();
 
 	m_App.StatusView.UpdateItem(STATUS_ITEM_AUDIOCHANNEL);
 	m_App.Panel.ControlPanel.UpdateItem(CONTROLPANEL_ITEM_AUDIO);
@@ -4687,13 +4701,15 @@ void CMainWindow::OnMuteChanged(bool fMute)
 }
 
 
-void CMainWindow::OnStereoModeChanged(int StereoMode)
+void CMainWindow::OnDualMonoModeChanged(CAudioDecFilter::DualMonoMode Mode)
 {
-	m_CurEventStereoMode=StereoMode;
-	/*
-	m_App.MainMenu.CheckRadioItem(CM_STEREO_THROUGH,CM_STEREO_RIGHT,
-								  CM_STEREO_THROUGH+StereoMode);
-	*/
+	m_App.StatusView.UpdateItem(STATUS_ITEM_AUDIOCHANNEL);
+	m_App.Panel.ControlPanel.UpdateItem(CONTROLPANEL_ITEM_AUDIO);
+}
+
+
+void CMainWindow::OnStereoModeChanged(CAudioDecFilter::StereoMode Mode)
+{
 	m_App.StatusView.UpdateItem(STATUS_ITEM_AUDIOCHANNEL);
 	m_App.Panel.ControlPanel.UpdateItem(CONTROLPANEL_ITEM_AUDIO);
 }
@@ -4701,100 +4717,18 @@ void CMainWindow::OnStereoModeChanged(int StereoMode)
 
 void CMainWindow::OnAudioStreamChanged(int Stream)
 {
-	m_App.MainMenu.CheckRadioItem(CM_AUDIOSTREAM_FIRST,
-								  CM_AUDIOSTREAM_FIRST+m_pCore->GetNumAudioStreams()-1,
-								  CM_AUDIOSTREAM_FIRST+Stream);
 	m_App.StatusView.UpdateItem(STATUS_ITEM_AUDIOCHANNEL);
 	m_App.Panel.ControlPanel.UpdateItem(CONTROLPANEL_ITEM_AUDIO);
-}
-
-
-void CMainWindow::AutoSelectStereoMode()
-{
-	/*
-		Dual Mono 時に音声を自動で選択する
-		一つの番組で本編Dual Mono/CMステレオのような場合
-		  Aパート -> CM       -> Bパート
-		  副音声  -> ステレオ -> 副音声
-		のように、ユーザーの選択を記憶しておく必要がある
-	*/
-	const bool fDualMono=m_App.CoreEngine.m_DtvEngine.GetAudioChannelNum()==
-										CMediaViewer::AUDIO_CHANNEL_DUALMONO
-					/*|| m_App.CoreEngine.m_DtvEngine.GetAudioComponentType()==0x02*/;
-
-	if (m_CurEventStereoMode<0) {
-		m_pCore->SetStereoMode(fDualMono?m_App.CoreEngine.GetAutoStereoMode():CCoreEngine::STEREOMODE_STEREO);
-		m_CurEventStereoMode=-1;
-	} else {
-		int OldStereoMode=m_CurEventStereoMode;
-		m_pCore->SetStereoMode(fDualMono?m_CurEventStereoMode:CCoreEngine::STEREOMODE_STEREO);
-		m_CurEventStereoMode=OldStereoMode;
-	}
 }
 
 
 void CMainWindow::ShowAudioOSD()
 {
 	if (m_App.OSDOptions.IsOSDEnabled(COSDOptions::OSD_AUDIO)) {
-		CTsAnalyzer::EventAudioInfo AudioInfo;
 		TCHAR szText[128];
 
-		if (m_App.CoreEngine.m_DtvEngine.GetEventAudioInfo(&AudioInfo)) {
-			if (AudioInfo.ComponentType==0x02) {
-				// Dual mono
-				TCHAR szAudio1[64],szAudio2[64];
-
-				szAudio1[0]=_T('\0');
-				szAudio2[0]=_T('\0');
-				if (AudioInfo.szText[0]!=_T('\0')) {
-					LPTSTR pszDelimiter=::StrChr(AudioInfo.szText,_T('\r'));
-					if (pszDelimiter!=nullptr) {
-						*pszDelimiter=_T('\0');
-						if (*(pszDelimiter+1)==_T('\n'))
-							pszDelimiter++;
-						::lstrcpyn(szAudio1,AudioInfo.szText,lengthof(szAudio1));
-						::lstrcpyn(szAudio2,pszDelimiter+1,lengthof(szAudio2));
-					}
-				}
-				if (AudioInfo.bESMultiLingualFlag
-						&& AudioInfo.LanguageCode!=AudioInfo.LanguageCode2) {
-					// 二カ国語
-					if (szAudio1[0]==_T('\0'))
-						EpgUtil::GetLanguageText(AudioInfo.LanguageCode,szAudio1,lengthof(szAudio1));
-					if (szAudio2[0]==_T('\0'))
-						EpgUtil::GetLanguageText(AudioInfo.LanguageCode2,szAudio2,lengthof(szAudio2));
-				} else {
-					if (szAudio1[0]==_T('\0'))
-						::lstrcpy(szAudio1,TEXT("主音声"));
-					if (szAudio2[0]==_T('\0'))
-						::lstrcpy(szAudio2,TEXT("副音声"));
-				}
-				switch (m_pCore->GetStereoMode()) {
-				case 0:
-					StdUtil::snprintf(szText,lengthof(szText),TEXT("%s+%s"),szAudio1,szAudio2);
-					break;
-				case 1:
-					::lstrcpyn(szText,szAudio1,lengthof(szText));
-					break;
-				case 2:
-					::lstrcpyn(szText,szAudio2,lengthof(szText));
-					break;
-				default:
-					return;
-				}
-			} else {
-				if (AudioInfo.szText[0]==_T('\0')) {
-					EpgUtil::GetLanguageText(AudioInfo.LanguageCode,
-											 AudioInfo.szText,lengthof(AudioInfo.szText));
-				}
-				StdUtil::snprintf(szText,lengthof(szText),TEXT("音声%d (%s)"),
-					m_pCore->GetAudioStream()+1,AudioInfo.szText);
-			}
-		} else {
-			StdUtil::snprintf(szText,lengthof(szText),TEXT("音声%d"),m_pCore->GetAudioStream()+1);
-		}
-
-		m_App.OSDManager.ShowOSD(szText);
+		if (m_pCore->GetSelectedAudioText(szText,lengthof(szText)))
+			m_App.OSDManager.ShowOSD(szText);
 	}
 }
 

@@ -4,11 +4,25 @@
 
 #include "Options.h"
 #include "BonTsEngine/MediaViewer.h"
+#include <vector>
 
 
 class CAudioOptions : public COptions
 {
 public:
+	struct AudioLanguageInfo
+	{
+		DWORD Language;
+		bool fSub;
+
+		bool operator==(const AudioLanguageInfo &Op) const {
+			return Language==Op.Language && fSub==Op.fSub;
+		}
+		bool operator!=(const AudioLanguageInfo &Op) const { return !(*this==Op); }
+	};
+
+	typedef std::vector<AudioLanguageInfo> AudioLanguageList;
+
 	CAudioOptions();
 	~CAudioOptions();
 
@@ -26,6 +40,8 @@ public:
 	const CAudioDecFilter::SpdifOptions &GetSpdifOptions() const { return m_SpdifOptions; }
 	bool SetSpdifOptions(const CAudioDecFilter::SpdifOptions &Options);
 	bool GetDownMixSurround() const { return m_fDownMixSurround; }
+	bool GetEnableLanguagePriority() const { return m_fEnableLanguagePriority; }
+	const AudioLanguageList &GetLanguagePriority() const { return m_LanguagePriority; }
 
 private:
 	class CSurroundOptionsDialog : public CBasicDialog
@@ -43,6 +59,8 @@ private:
 
 	static const CAudioDecFilter::SurroundMixingMatrix m_DefaultSurroundMixingMatrix;
 	static const CAudioDecFilter::DownMixMatrix m_DefaultDownMixMatrix;
+	static const DWORD m_AudioLanguageList[];
+	static const DWORD LANGUAGE_FLAG_SUB=0x01000000;
 
 	TVTest::String m_AudioDeviceName;
 	TVTest::String m_AudioFilterName;
@@ -53,9 +71,14 @@ private:
 	CAudioDecFilter::SurroundMixingMatrix m_SurroundMixingMatrix;
 	bool m_fUseCustomDownMixMatrix;
 	CAudioDecFilter::DownMixMatrix m_DownMixMatrix;
+	bool m_fEnableLanguagePriority;
+	AudioLanguageList m_LanguagePriority;
 
 // CBasicDialog
 	INT_PTR DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
+
+	void GetLanguageText(DWORD Language,bool fSub,LPTSTR pszText,int MaxText) const;
+	void UpdateLanguagePriorityControls();
 };
 
 

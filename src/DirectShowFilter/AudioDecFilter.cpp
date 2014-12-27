@@ -97,8 +97,8 @@ CAudioDecFilter::CAudioDecFilter(LPUNKNOWN pUnk, HRESULT *phr)
 	, m_CurChannelNum(0)
 	, m_bDualMono(false)
 
+	, m_DualMonoMode(DUALMONO_MAIN)
 	, m_StereoMode(STEREOMODE_STEREO)
-	, m_AutoStereoMode(STEREOMODE_STEREO)
 	, m_bDownMixSurround(true)
 	, m_bEnableCustomMixingMatrix(false)
 	, m_bEnableCustomDownMixMatrix(false)
@@ -516,34 +516,39 @@ BYTE CAudioDecFilter::GetCurrentChannelNum() const
 }
 
 
-bool CAudioDecFilter::SetStereoMode(int StereoMode)
+bool CAudioDecFilter::SetDualMonoMode(DualMonoMode Mode)
 {
 	CAutoLock AutoLock(&m_cPropLock);
 
-	switch (StereoMode) {
-	case STEREOMODE_STEREO:
-	case STEREOMODE_LEFT:
-	case STEREOMODE_RIGHT:
-		m_StereoMode = StereoMode;
-		TRACE(TEXT("CAudioDecFilter : Stereo mode %d\n"), StereoMode);
+	switch (Mode) {
+	case DUALMONO_INVALID:
+	case DUALMONO_MAIN:
+	case DUALMONO_SUB:
+	case DUALMONO_BOTH:
+		TRACE(TEXT("CAudioDecFilter::SetDualMonoMode() : Mode %d\n"), Mode);
+		m_DualMonoMode = Mode;
+		if (m_bDualMono)
+			SelectDualMonoStereoMode();
 		return true;
 	}
+
 	return false;
 }
 
 
-bool CAudioDecFilter::SetAutoStereoMode(int StereoMode)
+bool CAudioDecFilter::SetStereoMode(StereoMode Mode)
 {
 	CAutoLock AutoLock(&m_cPropLock);
 
-	switch (StereoMode) {
+	switch (Mode) {
 	case STEREOMODE_STEREO:
 	case STEREOMODE_LEFT:
 	case STEREOMODE_RIGHT:
-		m_AutoStereoMode = StereoMode;
-		TRACE(TEXT("CAudioDecFilter : Auto stereo mode %d\n"), StereoMode);
+		m_StereoMode = Mode;
+		TRACE(TEXT("CAudioDecFilter::SetStereoMode() : Stereo mode %d\n"), Mode);
 		return true;
 	}
+
 	return false;
 }
 
@@ -700,11 +705,9 @@ HRESULT CAudioDecFilter::OnFrame(const BYTE *pData, const DWORD Samples,
 	if (bDualMono != m_bDualMono) {
 		m_bDualMono = bDualMono;
 		if (bDualMono) {
-			m_StereoMode = m_AutoStereoMode;
-			TRACE(TEXT("CAudioDecFilter : Change stereo mode %d\n"), m_StereoMode);
-		} else if (m_AutoStereoMode != STEREOMODE_STEREO) {
+			SelectDualMonoStereoMode();
+		} else {
 			m_StereoMode = STEREOMODE_STEREO;
-			TRACE(TEXT("CAudioDecFilter : Reset stereo mode\n"));
 		}
 	}
 
@@ -1171,5 +1174,15 @@ void CAudioDecFilter::GainControl(short *pBuffer, const DWORD Samples, const flo
 			int Value = ((int)*p * Level) / Factor;
 			*p++ = ClampSample16(Value);
 		}
+	}
+}
+
+
+void CAudioDecFilter::SelectDualMonoStereoMode()
+{
+	switch (m_DualMonoMode) {
+	case DUALMONO_MAIN:	m_StereoMode = STEREOMODE_LEFT;		break;
+	case DUALMONO_SUB:	m_StereoMode = STEREOMODE_RIGHT;	break;
+	case DUALMONO_BOTH:	m_StereoMode = STEREOMODE_STEREO;	break;
 	}
 }

@@ -29,6 +29,8 @@ public:
 	bool Clear();
 	bool SetSection(LPCTSTR pszSection);
 	bool GetEntries(EntryList *pEntries);
+	bool IsValueExists(LPCTSTR pszValueName);
+	bool DeleteValue(LPCTSTR pszValueName);
 	bool Read(LPCTSTR pszValueName,int *pData);
 	bool Write(LPCTSTR pszValueName,int Data);
 	bool Read(LPCTSTR pszValueName,unsigned int *pData);

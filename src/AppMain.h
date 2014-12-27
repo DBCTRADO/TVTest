@@ -52,6 +52,7 @@
 #include "Taskbar.h"
 #include "ZoomOptions.h"
 #include "PanAndScanOptions.h"
+#include "AudioManager.h"
 #include "LogoManager.h"
 #include "EpgCapture.h"
 #include "KeywordSearch.h"
@@ -391,6 +392,7 @@ public:
 	CResidentManager ResidentManager;
 	CDriverManager DriverManager;
 	TVTest::CTSProcessorManager TSProcessorManager;
+	TVTest::CAudioManager AudioManager;
 	CLogoManager LogoManager;
 	TVTest::CEpgCaptureManager EpgCaptureManager;
 

@@ -1532,16 +1532,32 @@ BYTE CMediaViewer::GetAudioChannelNum() const
 }
 
 
-bool CMediaViewer::SetStereoMode(const int iMode)
+bool CMediaViewer::SetDualMonoMode(CAudioDecFilter::DualMonoMode Mode)
 {
-	// ステレオ出力チャンネルの設定
 	if (m_pAudioDecoder)
-		return m_pAudioDecoder->SetStereoMode(iMode);
+		return m_pAudioDecoder->SetDualMonoMode(Mode);
 	return false;
 }
 
 
-int CMediaViewer::GetStereoMode() const
+CAudioDecFilter::DualMonoMode CMediaViewer::GetDualMonoMode() const
+{
+	if (m_pAudioDecoder)
+		return m_pAudioDecoder->GetDualMonoMode();
+	return CAudioDecFilter::DUALMONO_INVALID;
+}
+
+
+bool CMediaViewer::SetStereoMode(CAudioDecFilter::StereoMode Mode)
+{
+	// ステレオ出力チャンネルの設定
+	if (m_pAudioDecoder)
+		return m_pAudioDecoder->SetStereoMode(Mode);
+	return false;
+}
+
+
+CAudioDecFilter::StereoMode CMediaViewer::GetStereoMode() const
 {
 	if (m_pAudioDecoder)
 		return m_pAudioDecoder->GetStereoMode();
@@ -1569,14 +1585,6 @@ bool CMediaViewer::IsSpdifPassthrough() const
 {
 	if (m_pAudioDecoder)
 		return m_pAudioDecoder->IsSpdifPassthrough();
-	return false;
-}
-
-
-bool CMediaViewer::SetAutoStereoMode(int Mode)
-{
-	if (m_pAudioDecoder)
-		return m_pAudioDecoder->SetAutoStereoMode(Mode);
 	return false;
 }
 

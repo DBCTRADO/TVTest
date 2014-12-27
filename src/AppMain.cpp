@@ -1456,6 +1456,8 @@ void CAppMain::CDtvEngineEventHandler::OnServiceListUpdated(
 	CTsAnalyzer *pTsAnalyzer,bool bStreamChanged)
 {
 	OnServiceUpdated(pTsAnalyzer,true,bStreamChanged);
+	if (m_App.AudioManager.OnServiceUpdated())
+		m_App.MainWindow.PostMessage(WM_APP_AUDIOLISTCHANGED,0,0);
 }
 
 void CAppMain::CDtvEngineEventHandler::OnServiceInfoUpdated(CTsAnalyzer *pTsAnalyzer)
@@ -1469,6 +1471,8 @@ void CAppMain::CDtvEngineEventHandler::OnServiceInfoUpdated(CTsAnalyzer *pTsAnal
 void CAppMain::CDtvEngineEventHandler::OnServiceChanged(WORD ServiceID)
 {
 	m_App.MainWindow.PostMessage(WM_APP_SERVICECHANGED,ServiceID,0);
+	if (m_App.AudioManager.OnServiceUpdated())
+		m_App.MainWindow.PostMessage(WM_APP_AUDIOLISTCHANGED,0,0);
 }
 
 void CAppMain::CDtvEngineEventHandler::OnFileWriteError(CTsRecorder *pTsRecorder)
@@ -1493,13 +1497,18 @@ void CAppMain::CDtvEngineEventHandler::OnVideoSizeChanged(CMediaViewer *pMediaVi
 void CAppMain::CDtvEngineEventHandler::OnEventChanged(CTsAnalyzer *pTsAnalyzer,WORD EventID)
 {
 	TRACE(TEXT("CDtvEngineEventHandler::OnEventChanged() : event_id %#04x\n"),EventID);
-	if (EventID!=CTsAnalyzer::EVENTID_INVALID)
+	if (EventID!=CTsAnalyzer::EVENTID_INVALID) {
 		m_App.CoreEngine.SetAsyncStatusUpdatedFlag(CCoreEngine::STATUS_EVENTID);
+		if (m_App.AudioManager.OnEventUpdated())
+			m_App.MainWindow.PostMessage(WM_APP_AUDIOLISTCHANGED,0,0);
+	}
 }
 
 void CAppMain::CDtvEngineEventHandler::OnEventUpdated(CTsAnalyzer *pTsAnalyzer)
 {
 	m_App.CoreEngine.SetAsyncStatusUpdatedFlag(CCoreEngine::STATUS_EVENTINFO);
+	if (m_App.AudioManager.OnEventUpdated())
+		m_App.MainWindow.PostMessage(WM_APP_AUDIOLISTCHANGED,0,0);
 }
 
 void CAppMain::CDtvEngineEventHandler::OnTotUpdated(CTsAnalyzer *pTsAnalyzer)

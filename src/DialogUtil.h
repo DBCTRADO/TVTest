@@ -70,6 +70,10 @@
 	(::SendDlgItemMessage(hwndDlg,ID,LB_SETITEMHEIGHT,Index,Height)!=LB_ERR)
 #define DlgListBox_SetHorizontalExtent(hwndDlg,ID,Extent) \
 	::SendDlgItemMessage(hwndDlg,ID,LB_SETHORIZONTALEXTENT,Extent,0)
+#define DlgListBox_FindString(hwndDlg,ID,First,pszString) \
+	::SendDlgItemMessage(hwndDlg,ID,LB_FINDSTRING,First,(LPARAM)(pszString))
+#define DlgListBox_FindStringExact(hwndDlg,ID,First,pszString) \
+	::SendDlgItemMessage(hwndDlg,ID,LB_FINDSTRINGEXACT,First,(LPARAM)(pszString))
 
 #define DlgComboBox_LimitText(hwndDlg,ID,Limit) \
 	::SendDlgItemMessage(hwndDlg,ID,CB_LIMITTEXT,Limit,0)

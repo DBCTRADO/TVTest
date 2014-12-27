@@ -94,6 +94,21 @@ bool CSettings::GetEntries(EntryList *pEntries)
 }
 
 
+bool CSettings::IsValueExists(LPCTSTR pszValueName)
+{
+	return m_IniFile.IsValueExists(pszValueName);
+}
+
+
+bool CSettings::DeleteValue(LPCTSTR pszValueName)
+{
+	if ((m_OpenFlags&OPEN_WRITE)==0)
+		return false;
+
+	return m_IniFile.DeleteValue(pszValueName);
+}
+
+
 bool CSettings::Read(LPCTSTR pszValueName,int *pData)
 {
 	TCHAR szValue[16];

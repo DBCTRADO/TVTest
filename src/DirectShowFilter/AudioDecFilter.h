@@ -35,7 +35,14 @@ public:
 		CHANNEL_INVALID		= 0xFF
 	};
 
-	enum {
+	enum DualMonoMode {
+		DUALMONO_INVALID,
+		DUALMONO_MAIN,
+		DUALMONO_SUB,
+		DUALMONO_BOTH
+	};
+
+	enum StereoMode {
 		STEREOMODE_STEREO,
 		STEREOMODE_LEFT,
 		STEREOMODE_RIGHT
@@ -75,10 +82,10 @@ public:
 	};
 
 	BYTE GetCurrentChannelNum() const;
-	bool SetStereoMode(int StereoMode);
-	int GetStereoMode() const { return m_StereoMode; }
-	bool SetAutoStereoMode(int StereoMode);
-	int GetAutoStereoMode() const { return m_AutoStereoMode; }
+	bool SetDualMonoMode(DualMonoMode Mode);
+	DualMonoMode GetDualMonoMode() const { return m_DualMonoMode; }
+	bool SetStereoMode(StereoMode Mode);
+	StereoMode GetStereoMode() const { return m_StereoMode; }
 	bool SetDownMixSurround(bool bDownMix);
 	bool GetDownMixSurround() const { return m_bDownMixSurround; }
 	bool SetSurroundMixingMatrix(const SurroundMixingMatrix *pMatrix);
@@ -127,6 +134,7 @@ private:
 	DWORD DownMixSurround(short *pDst, const short *pSrc, const DWORD Samples);
 	DWORD MapSurroundChannels(short *pDst, const short *pSrc, const DWORD Samples);
 	void GainControl(short *pBuffer, const DWORD Samples, const float Gain);
+	void SelectDualMonoStereoMode();
 
 	CAudioDecoder *m_pDecoder;
 	mutable CCritSec m_cPropLock;
@@ -135,8 +143,8 @@ private:
 	BYTE m_CurChannelNum;
 	bool m_bDualMono;
 
-	int m_StereoMode;
-	int m_AutoStereoMode;
+	DualMonoMode m_DualMonoMode;
+	StereoMode m_StereoMode;
 	bool m_bDownMixSurround;
 	bool m_bEnableCustomMixingMatrix;
 	SurroundMixingMatrix m_MixingMatrix;

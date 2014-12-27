@@ -4,6 +4,7 @@
 
 #include <vector>
 #include "UISkin.h"
+#include "AudioManager.h"
 
 
 class CAppMain;
@@ -65,14 +66,20 @@ public:
 	bool SetVolume(int Volume,bool fOSD=true);
 	bool GetMute() const;
 	bool SetMute(bool fMute);
-	int GetStereoMode() const;
-	bool SetStereoMode(int StereoMode);
-	int GetAudioStream() const;
+	bool SetDualMonoMode(CAudioDecFilter::DualMonoMode Mode);
+	CAudioDecFilter::DualMonoMode GetDualMonoMode() const;
+	CAudioDecFilter::DualMonoMode GetActualDualMonoMode() const;
+	bool SetStereoMode(CAudioDecFilter::StereoMode Mode);
+	CAudioDecFilter::StereoMode GetStereoMode() const;
 	int GetNumAudioStreams() const;
+	int GetAudioStream() const;
 	bool SetAudioStream(int Stream);
-	bool SwitchStereoMode();
+	bool SelectAudio(int Index);
+	bool AutoSelectAudio();
 	bool SwitchAudio();
+	bool SwitchDualMonoMode();
 	int FormatCurrentAudioText(LPTSTR pszText,int MaxLength) const;
+	bool GetSelectedAudioText(LPTSTR pszText,int MaxLength) const;
 
 	bool GetStandby() const { return m_fStandby; }
 	bool SetStandby(bool fStandby);
@@ -127,6 +134,10 @@ private:
 	*/
 
 	std::vector<CBasicDialog*> m_ModelessDialogList;
+
+	bool SelectAudio(const TVTest::CAudioManager::AudioSelectInfo &Info,bool fUpdate=true);
+	bool SelectAudioStream(int Stream);
+	bool SelectDualMonoMode(CAudioDecFilter::DualMonoMode Mode,bool fUpdate=true);
 };
 
 

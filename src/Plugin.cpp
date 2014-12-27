@@ -1219,7 +1219,28 @@ LRESULT CPlugin::OnCallback(TVTest::PluginParam *pParam,UINT Message,LPARAM lPar
 		return SendPluginMessage(pParam,Message,lParam1,lParam2);
 
 	case TVTest::MESSAGE_GETSTEREOMODE:
+#if 0	// ver.0.9.0 ‚æ‚è‘O
 		return GetAppClass().UICore.GetStereoMode();
+#else
+		{
+			int StereoMode;
+
+			switch (GetAppClass().UICore.GetActualDualMonoMode()) {
+			case CAudioDecFilter::DUALMONO_MAIN:
+				StereoMode=TVTest::STEREOMODE_LEFT;
+				break;
+			case CAudioDecFilter::DUALMONO_SUB:
+				StereoMode=TVTest::STEREOMODE_RIGHT;
+				break;
+			case CAudioDecFilter::DUALMONO_BOTH:
+			default:
+				StereoMode=TVTest::STEREOMODE_STEREO;
+				break;
+			}
+
+			return StereoMode;
+		}
+#endif
 
 	case TVTest::MESSAGE_SETSTEREOMODE:
 		return SendPluginMessage(pParam,Message,lParam1,lParam2);
@@ -2646,7 +2667,23 @@ LRESULT CPlugin::OnPluginMessage(WPARAM wParam,LPARAM lParam)
 		}
 
 	case TVTest::MESSAGE_SETSTEREOMODE:
-		return GetAppClass().UICore.SetStereoMode((int)pParam->lParam1);
+#if 0	// ver.0.9.0 ‚æ‚è‘O
+		return GetAppClass().UICore.SetStereoMode(static_cast<CAudioDecFilter::StereoMode>(pParam->lParam1));
+#else
+		{
+			CAudioDecFilter::DualMonoMode Mode;
+
+			switch ((int)pParam->lParam1) {
+			case TVTest::STEREOMODE_STEREO:	Mode=CAudioDecFilter::DUALMONO_BOTH;	break;
+			case TVTest::STEREOMODE_LEFT:	Mode=CAudioDecFilter::DUALMONO_MAIN;	break;
+			case TVTest::STEREOMODE_RIGHT:	Mode=CAudioDecFilter::DUALMONO_SUB;		break;
+			default:
+				return FALSE;
+			}
+
+			return GetAppClass().UICore.SetDualMonoMode(Mode);
+		}
+#endif
 
 	case TVTest::MESSAGE_SETFULLSCREEN:
 		return GetAppClass().UICore.SetFullscreen(pParam->lParam1!=0);
@@ -3556,8 +3593,46 @@ void CPluginManager::OnMuteChanged(bool fMute)
 }
 
 
-void CPluginManager::OnStereoModeChanged(int StereoMode)
+void CPluginManager::OnDualMonoModeChanged(CAudioDecFilter::DualMonoMode Mode)
 {
+	int StereoMode;
+
+	switch (Mode) {
+	case CAudioDecFilter::DUALMONO_MAIN:
+		StereoMode=TVTest::STEREOMODE_LEFT;
+		break;
+	case CAudioDecFilter::DUALMONO_SUB:
+		StereoMode=TVTest::STEREOMODE_RIGHT;
+		break;
+	case CAudioDecFilter::DUALMONO_BOTH:
+		StereoMode=TVTest::STEREOMODE_STEREO;
+		break;
+	default:
+		return;
+	}
+
+	SendEvent(TVTest::EVENT_STEREOMODECHANGE,StereoMode);
+}
+
+
+void CPluginManager::OnStereoModeChanged(CAudioDecFilter::StereoMode Mode)
+{
+	int StereoMode;
+
+	switch (Mode) {
+	case CAudioDecFilter::STEREOMODE_STEREO:
+		StereoMode=TVTest::STEREOMODE_STEREO;
+		break;
+	case CAudioDecFilter::STEREOMODE_LEFT:
+		StereoMode=TVTest::STEREOMODE_LEFT;
+		break;
+	case CAudioDecFilter::STEREOMODE_RIGHT:
+		StereoMode=TVTest::STEREOMODE_RIGHT;
+		break;
+	default:
+		return;
+	}
+
 	SendEvent(TVTest::EVENT_STEREOMODECHANGE,StereoMode);
 }
 

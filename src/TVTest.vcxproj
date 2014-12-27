@@ -450,6 +450,7 @@
     <ClCompile Include="AppCore.cpp" />
     <ClCompile Include="AppEvent.cpp" />
     <ClCompile Include="AppUtil.cpp" />
+    <ClCompile Include="AudioManager.cpp" />
     <ClCompile Include="AudioOptions.cpp" />
     <ClCompile Include="BasicWindow.cpp" />
     <ClCompile Include="BonTsEngine\BasicFile.cpp" />
@@ -617,6 +618,7 @@
     <ClInclude Include="AppCore.h" />
     <ClInclude Include="AppEvent.h" />
     <ClInclude Include="AppUtil.h" />
+    <ClInclude Include="AudioManager.h" />
     <ClInclude Include="AudioOptions.h" />
     <ClInclude Include="BasicWindow.h" />
     <ClInclude Include="BonTsEngine\BasicFile.h" />

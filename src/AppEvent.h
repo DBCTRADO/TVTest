@@ -2,6 +2,7 @@
 #define TVTEST_APP_EVENT_H
 
 
+#include "DirectShowFilter/AudioDecFilter.h"
 #include <vector>
 
 
@@ -48,7 +49,8 @@ namespace TVTest
 		virtual void OnPlaybackStateChanged(bool fPlayback) {}
 		virtual void OnVolumeChanged(int Volume) {}
 		virtual void OnMuteChanged(bool fMute) {}
-		virtual void OnStereoModeChanged(int StereoMode) {}
+		virtual void OnDualMonoModeChanged(CAudioDecFilter::DualMonoMode Mode) {}
+		virtual void OnStereoModeChanged(CAudioDecFilter::StereoMode Mode) {}
 		virtual void OnAudioStreamChanged(int Stream) {}
 		virtual void OnColorSchemeChanged() {}
 		virtual void OnStandbyChanged(bool fStandby) {}
@@ -85,7 +87,8 @@ namespace TVTest
 		void OnPlaybackStateChanged(bool fPlayback);
 		void OnVolumeChanged(int Volume);
 		void OnMuteChanged(bool fMute);
-		void OnStereoModeChanged(int StereoMode);
+		void OnDualMonoModeChanged(CAudioDecFilter::DualMonoMode Mode);
+		void OnStereoModeChanged(CAudioDecFilter::StereoMode Mode);
 		void OnAudioStreamChanged(int Stream);
 		void OnColorSchemeChanged();
 		void OnStandbyChanged(bool fStandby);

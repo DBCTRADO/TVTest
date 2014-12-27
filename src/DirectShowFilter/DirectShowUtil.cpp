@@ -33,16 +33,17 @@ void CDirectShowFilterFinder::Clear()
 	m_FilterList.clear();
 }
 
-int CDirectShowFilterFinder::GetFilterCount()
+int CDirectShowFilterFinder::GetFilterCount() const
 {
 	return (int)m_FilterList.size();
 }
 
-bool CDirectShowFilterFinder::GetFilterInfo(const int iIndex,CLSID *pidClass,LPWSTR pwszFriendlyName,int iBufLen)
+bool CDirectShowFilterFinder::GetFilterInfo(
+	const int iIndex,CLSID *pidClass,LPWSTR pwszFriendlyName,int iBufLen) const
 {
 	if (iIndex<0 || iIndex>=GetFilterCount())
 		return false;
-	CFilterInfo &Info = m_FilterList[iIndex];
+	const CFilterInfo &Info = m_FilterList[iIndex];
 	if (pidClass)
 		*pidClass = Info.m_clsid;
 	if (pwszFriendlyName) {
@@ -51,6 +52,23 @@ bool CDirectShowFilterFinder::GetFilterInfo(const int iIndex,CLSID *pidClass,LPW
 		} else if (iBufLen>0) {
 			pwszFriendlyName[0]='\0';
 		}
+	}
+	return true;
+}
+
+bool CDirectShowFilterFinder::GetFilterInfo(
+	const int iIndex,CLSID *pidClass,std::wstring *pFriendlyName) const
+{
+	if (iIndex<0 || iIndex>=GetFilterCount())
+		return false;
+	const CFilterInfo &Info = m_FilterList[iIndex];
+	if (pidClass)
+		*pidClass = Info.m_clsid;
+	if (pFriendlyName) {
+		if (Info.m_pwszFriendlyName)
+			*pFriendlyName = Info.m_pwszFriendlyName;
+		else
+			pFriendlyName->clear();
 	}
 	return true;
 }

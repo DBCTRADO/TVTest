@@ -153,9 +153,15 @@ void CAppEventManager::OnMuteChanged(bool fMute)
 }
 
 
-void CAppEventManager::OnStereoModeChanged(int StereoMode)
+void CAppEventManager::OnDualMonoModeChanged(CAudioDecFilter::DualMonoMode Mode)
 {
-	CALL_HANDLERS(OnStereoModeChanged(StereoMode));
+	CALL_HANDLERS(OnDualMonoModeChanged(Mode));
+}
+
+
+void CAppEventManager::OnStereoModeChanged(CAudioDecFilter::StereoMode Mode)
+{
+	CALL_HANDLERS(OnStereoModeChanged(Mode));
 }
 
 

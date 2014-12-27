@@ -15,6 +15,7 @@
 #include "OSDManager.h"
 #include "WindowUtil.h"
 #include "EpgCapture.h"
+#include "AudioManager.h"
 
 
 #define MAIN_WINDOW_CLASS		APP_NAME TEXT(" Window")
@@ -34,6 +35,7 @@
 #define WM_APP_SERVICECHANGED			(WM_APP+15)
 #define WM_APP_VIDEOSTREAMTYPECHANGED	(WM_APP+16)
 #define WM_APP_SERVICEINFOUPDATED		(WM_APP+17)
+#define WM_APP_AUDIOLISTCHANGED			(WM_APP+18)
 
 enum {
 	CONTAINER_ID_VIEW=1,
@@ -490,7 +492,6 @@ private:
 	bool m_fFrameCut;
 	int m_VideoSizeChangedTimerCount;
 	unsigned int m_ProgramListUpdateTimerCount;
-	int m_CurEventStereoMode;
 	bool m_fAlertedLowFreeSpace;
 
 	class CTimer {
@@ -580,7 +581,8 @@ private:
 	void On1SegModeChanged(bool f1SegMode) override;
 	void OnVolumeChanged(int Volume) override;
 	void OnMuteChanged(bool fMute) override;
-	void OnStereoModeChanged(int StereoMode) override;
+	void OnDualMonoModeChanged(CAudioDecFilter::DualMonoMode Mode) override;
+	void OnStereoModeChanged(CAudioDecFilter::StereoMode Mode) override;
 	void OnAudioStreamChanged(int Stream) override;
 
 // COSDManager::CEventHandler
@@ -600,7 +602,6 @@ private:
 	bool OnInitMenuPopup(HMENU hmenu);
 	void OnRecordingStateChanged();
 	void OnEventChanged();
-	void AutoSelectStereoMode();
 	int GetZoomPercentage();
 	bool AutoFitWindowToVideo();
 	bool SetPanAndScan(int Command);

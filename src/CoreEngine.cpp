@@ -32,8 +32,8 @@ CCoreEngine::CCoreEngine()
 	, m_Volume(50)
 	, m_AudioGain(100)
 	, m_SurroundAudioGain(100)
-	, m_StereoMode(STEREOMODE_STEREO)
-	, m_AutoStereoMode(STEREOMODE_LEFT)
+	, m_DualMonoMode(CAudioDecFilter::DUALMONO_MAIN)
+	, m_StereoMode(CAudioDecFilter::STEREOMODE_STEREO)
 	, m_fSpdifPassthrough(false)
 	, m_ErrorPacketCount(0)
 	, m_ContinuityErrorPacketCount(0)
@@ -211,7 +211,7 @@ bool CCoreEngine::BuildMediaViewer(HWND hwndHost,HWND hwndMessage,
 		m_AudioGain!=100 || m_SurroundAudioGain!=100,
 		(float)m_AudioGain/100.0f,(float)m_SurroundAudioGain/100.0f);
 	m_DtvEngine.m_MediaViewer.SetStereoMode(m_StereoMode);
-	m_DtvEngine.m_MediaViewer.SetAutoStereoMode(m_AutoStereoMode);
+	m_DtvEngine.m_MediaViewer.SetDualMonoMode(m_DualMonoMode);
 	m_DtvEngine.m_MediaViewer.SetSpdifOptions(&m_SpdifOptions);
 	return true;
 }
@@ -465,26 +465,18 @@ bool CCoreEngine::GetAudioGainControl(int *pGain,int *pSurroundGain) const
 }
 
 
-bool CCoreEngine::SetStereoMode(int Mode)
+bool CCoreEngine::SetDualMonoMode(CAudioDecFilter::DualMonoMode Mode)
 {
-	if (Mode<0 || Mode>2)
-		return false;
-	/*if (Mode!=m_StereoMode)*/ {
-		m_DtvEngine.m_MediaViewer.SetStereoMode(Mode);
-		m_StereoMode=Mode;
-	}
+	m_DualMonoMode=Mode;
+	m_DtvEngine.m_MediaViewer.SetDualMonoMode(Mode);
 	return true;
 }
 
 
-bool CCoreEngine::SetAutoStereoMode(int Mode)
+bool CCoreEngine::SetStereoMode(CAudioDecFilter::StereoMode Mode)
 {
-	if (Mode<0 || Mode>2)
-		return false;
-	if (Mode!=m_AutoStereoMode) {
-		m_DtvEngine.m_MediaViewer.SetAutoStereoMode(Mode);
-		m_AutoStereoMode=Mode;
-	}
+	m_StereoMode=Mode;
+	m_DtvEngine.m_MediaViewer.SetStereoMode(Mode);
 	return true;
 }
 

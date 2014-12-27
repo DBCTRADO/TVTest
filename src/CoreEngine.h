@@ -26,12 +26,6 @@ public:
 
 	enum { MAX_VOLUME=100 };
 
-	enum {
-		STEREOMODE_STEREO,
-		STEREOMODE_LEFT,
-		STEREOMODE_RIGHT
-	};
-
 	CCoreEngine();
 	~CCoreEngine();
 	void Close();
@@ -82,10 +76,10 @@ public:
 	bool GetMute() const { return m_fMute; }
 	bool SetAudioGainControl(int Gain,int SurroundGain);
 	bool GetAudioGainControl(int *pGain,int *pSurroundGain) const;
-	bool SetStereoMode(int Mode);
-	int GetStereoMode() const { return m_StereoMode; }
-	bool SetAutoStereoMode(int Mode);
-	int GetAutoStereoMode() const { return m_AutoStereoMode; }
+	bool SetDualMonoMode(CAudioDecFilter::DualMonoMode Mode);
+	CAudioDecFilter::DualMonoMode GetDualMonoMode() const { return m_DualMonoMode; }
+	bool SetStereoMode(CAudioDecFilter::StereoMode Mode);
+	CAudioDecFilter::StereoMode GetStereoMode() const { return m_StereoMode; }
 	bool SetSpdifOptions(const CAudioDecFilter::SpdifOptions &Options);
 	bool GetSpdifOptions(CAudioDecFilter::SpdifOptions *pOptions) const;
 
@@ -172,8 +166,8 @@ private:
 	int m_Volume;
 	int m_AudioGain;
 	int m_SurroundAudioGain;
-	int m_StereoMode;
-	int m_AutoStereoMode;
+	CAudioDecFilter::DualMonoMode m_DualMonoMode;
+	CAudioDecFilter::StereoMode m_StereoMode;
 	CAudioDecFilter::SpdifOptions m_SpdifOptions;
 	bool m_fSpdifPassthrough;
 	ULONGLONG m_ErrorPacketCount;
