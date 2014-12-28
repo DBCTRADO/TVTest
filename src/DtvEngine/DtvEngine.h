@@ -169,7 +169,7 @@ public:
 	int GetAudioStreamNum(const int Service = -1) const;
 	bool SetAudioStream(const int StreamIndex);
 	int GetAudioStream() const;
-	BYTE GetAudioComponentTag() const;
+	BYTE GetAudioComponentTag(const int AudioIndex = -1) const;
 	BYTE GetAudioComponentType(const int AudioIndex = -1) const;
 	int GetAudioComponentText(LPTSTR pszText, int MaxLength, const int AudioIndex = -1) const;
 

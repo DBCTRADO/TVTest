@@ -917,9 +917,12 @@ int CDtvEngine::GetAudioStream() const
 }
 
 
-BYTE CDtvEngine::GetAudioComponentTag() const
+BYTE CDtvEngine::GetAudioComponentTag(const int AudioIndex) const
 {
-	return m_CurAudioComponentTag;
+	if (AudioIndex < 0)
+		return m_CurAudioComponentTag;
+
+	return m_TsAnalyzer.GetAudioComponentTag(m_CurServiceIndex, AudioIndex);
 }
 
 
