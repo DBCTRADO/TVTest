@@ -8,6 +8,7 @@ StatusHighlightBack2=#33669f
 StatusHighlightText=#bfbfce
 StatusEventProgressBack=#22446a
 StatusEventProgressElapsed=#33669f
+Splitter=#22446a
 PanelBack=#112235
 PanelText=#ababbe
 PanelTabBack=#22446a

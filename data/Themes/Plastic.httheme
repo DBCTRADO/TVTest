@@ -10,6 +10,7 @@ StatusHighlightBackGradient=glossy
 StatusHighlightText=#555555
 StatusEventProgressBack=#cccccc
 StatusEventProgressElapsed=#00bf4c
+Splitter=#dddddd
 PanelBack=#444444
 PanelText=#cccccc
 PanelTabBack=#cccccc

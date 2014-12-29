@@ -55,6 +55,7 @@ ChannelPanelEventNameBack=#666666
 ChannelPanelEventNameText=#eeeeee
 ChannelPanelCurEventNameBack=#666666
 ChannelPanelCurEventNameText=#eeeeee
+ChannelPanelProgress=#999999
 ControlPanelBack=#666666
 ControlPanelText=#eeeeee
 ControlPanelHighlightBack=#66a3ff
