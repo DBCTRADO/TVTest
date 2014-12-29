@@ -3094,6 +3094,19 @@ void CMainWindow::OnCommand(HWND hwnd,int id,HWND hwndCtl,UINT codeNotify)
 		m_App.Panel.ChannelPanel.SetShowFeaturedMark(!m_App.Panel.ChannelPanel.GetShowFeaturedMark());
 		return;
 
+	case CM_CHANNELPANEL_PROGRESSBAR_NONE:
+		m_App.Panel.ChannelPanel.SetShowProgressBar(false);
+		return;
+
+	case CM_CHANNELPANEL_PROGRESSBAR_ELAPSED:
+	case CM_CHANNELPANEL_PROGRESSBAR_REMAINING:
+		m_App.Panel.ChannelPanel.SetProgressBarStyle(
+			id==CM_CHANNELPANEL_PROGRESSBAR_ELAPSED?
+				CChannelPanel::PROGRESSBAR_STYLE_ELAPSED:
+				CChannelPanel::PROGRESSBAR_STYLE_REMAINING);
+		m_App.Panel.ChannelPanel.SetShowProgressBar(true);
+		return;
+
 	case CM_CHANNELNO_2DIGIT:
 	case CM_CHANNELNO_3DIGIT:
 		{
@@ -3469,6 +3482,8 @@ void CMainWindow::OnTimer(HWND hwnd,UINT id)
 								m_App.Panel.ChannelPanel.UpdateChannels(Info.NetworkID,Info.TransportStreamID);
 						}
 					}
+					if (m_App.Panel.ChannelPanel.QueryUpdateProgress())
+						m_App.Panel.ChannelPanel.UpdateProgress();
 					break;
 
 				case PANEL_ID_PROGRAMLIST:

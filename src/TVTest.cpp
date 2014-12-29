@@ -742,6 +742,12 @@ void CMainPanel::CChannelPanelEventHandler::OnRButtonDown()
 	Menu.CheckItem(CM_CHANNELPANEL_SHOWGENRECOLOR,g_App.Panel.ChannelPanel.GetShowGenreColor());
 	Menu.EnableItem(CM_CHANNELPANEL_SHOWGENRECOLOR,!g_App.Panel.ChannelPanel.GetUseEpgColorScheme());
 	Menu.CheckItem(CM_CHANNELPANEL_SHOWFEATUREDMARK,g_App.Panel.ChannelPanel.GetShowFeaturedMark());
+	Menu.CheckRadioItem(CM_CHANNELPANEL_PROGRESSBAR_NONE,CM_CHANNELPANEL_PROGRESSBAR_REMAINING,
+						!g_App.Panel.ChannelPanel.GetShowProgressBar()?
+							CM_CHANNELPANEL_PROGRESSBAR_NONE:
+						g_App.Panel.ChannelPanel.GetProgressBarStyle()==CChannelPanel::PROGRESSBAR_STYLE_ELAPSED?
+							CM_CHANNELPANEL_PROGRESSBAR_ELAPSED:
+							CM_CHANNELPANEL_PROGRESSBAR_REMAINING);
 	Menu.Show(g_App.UICore.GetMainWindow());
 }
 

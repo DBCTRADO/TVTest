@@ -32,6 +32,8 @@ public:
 		TVTest::Theme::Style CurChannelEventStyle[2];
 		TVTest::Theme::ThemeColor MarginColor;
 		TVTest::Theme::BackgroundStyle FeaturedMarkStyle;
+		TVTest::Theme::BackgroundStyle ProgressStyle;
+		TVTest::Theme::BackgroundStyle CurProgressStyle;
 
 		ChannelPanelTheme();
 	};
@@ -46,6 +48,11 @@ public:
 	enum {
 		MAX_EVENTS_PER_CHANNEL = 4,
 		MAX_EXPAND_EVENTS      = 10
+	};
+
+	enum ProgressBarStyle {
+		PROGRESSBAR_STYLE_ELAPSED,
+		PROGRESSBAR_STYLE_REMAINING
 	};
 
 	CChannelPanel();
@@ -93,6 +100,12 @@ public:
 	bool GetShowGenreColor() const { return m_fShowGenreColor; }
 	void SetShowFeaturedMark(bool fShowFeaturedMark);
 	bool GetShowFeaturedMark() const { return m_fShowFeaturedMark; }
+	void SetShowProgressBar(bool fShowProgressBar);
+	bool GetShowProgressBar() const { return m_fShowProgressBar; }
+	void SetProgressBarStyle(ProgressBarStyle Style);
+	ProgressBarStyle GetProgressBarStyle() const { return m_ProgressBarStyle; }
+	bool QueryUpdateProgress();
+	void UpdateProgress();
 	void SetLogoManager(CLogoManager *pLogoManager);
 	bool QueryUpdate() const;
 
@@ -160,6 +173,9 @@ private:
 	bool m_fUseEpgColorScheme;
 	bool m_fShowGenreColor;
 	bool m_fShowFeaturedMark;
+	bool m_fShowProgressBar;
+	ProgressBarStyle m_ProgressBarStyle;
+	DrawUtil::COffscreen m_Offscreen;
 	DrawUtil::CMonoColorIconList m_Chevron;
 	int m_EventsPerChannel;
 	int m_ExpandAdditionalEvents;
@@ -185,6 +201,7 @@ private:
 	CEventInfoPopupHandler m_EventInfoPopupHandler;
 	CLogoManager *m_pLogoManager;
 	SYSTEMTIME m_UpdatedTime;
+	SYSTEMTIME m_CurTime;
 	CFeaturedEventsMatcher m_FeaturedEventsMatcher;
 
 	static const LPCTSTR m_pszClassName;

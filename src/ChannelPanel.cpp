@@ -58,6 +58,8 @@ CChannelPanel::CChannelPanel()
 	, m_fUseEpgColorScheme(false)
 	, m_fShowGenreColor(false)
 	, m_fShowFeaturedMark(true)
+	, m_fShowProgressBar(false)
+	, m_ProgressBarStyle(PROGRESSBAR_STYLE_ELAPSED)
 	, m_EventsPerChannel(2)
 	, m_ExpandAdditionalEvents(4)
 	, m_ExpandEvents(m_EventsPerChannel+m_ExpandAdditionalEvents)
@@ -75,6 +77,7 @@ CChannelPanel::CChannelPanel()
 	m_ChannelFont.Create(&lf);
 
 	::ZeroMemory(&m_UpdatedTime,sizeof(SYSTEMTIME));
+	::ZeroMemory(&m_CurTime,sizeof(SYSTEMTIME));
 }
 
 
@@ -123,6 +126,10 @@ void CChannelPanel::SetTheme(const TVTest::Theme::CThemeManager *pThemeManager)
 	Theme.MarginColor=pThemeManager->GetColor(CColorScheme::COLOR_PANELBACK);
 	pThemeManager->GetBackgroundStyle(TVTest::Theme::CThemeManager::STYLE_CHANNELPANEL_FEATUREDMARK,
 									  &Theme.FeaturedMarkStyle);
+	pThemeManager->GetBackgroundStyle(TVTest::Theme::CThemeManager::STYLE_CHANNELPANEL_PROGRESS,
+									  &Theme.ProgressStyle);
+	pThemeManager->GetBackgroundStyle(TVTest::Theme::CThemeManager::STYLE_CHANNELPANEL_CURPROGRESS,
+									  &Theme.CurProgressStyle);
 
 	SetChannelPanelTheme(Theme);
 
@@ -146,6 +153,10 @@ bool CChannelPanel::ReadSettings(CSettings &Settings)
 	Settings.Read(TEXT("ChannelPanelUseEpgColorScheme"),&m_fUseEpgColorScheme);
 	Settings.Read(TEXT("ChannelPanelShowGenreColor"),&m_fShowGenreColor);
 	Settings.Read(TEXT("ChannelPanelShowFeaturedMark"),&m_fShowFeaturedMark);
+	Settings.Read(TEXT("ChannelPanelShowProgressBar"),&m_fShowProgressBar);
+	int Style;
+	if (Settings.Read(TEXT("ChannelPanelProgressBarStyle"),&Style))
+		m_ProgressBarStyle=static_cast<ProgressBarStyle>(Style);
 
 	return true;
 }
@@ -160,6 +171,8 @@ bool CChannelPanel::WriteSettings(CSettings &Settings)
 	Settings.Write(TEXT("ChannelPanelUseEpgColorScheme"),m_fUseEpgColorScheme);
 	Settings.Write(TEXT("ChannelPanelShowGenreColor"),m_fShowGenreColor);
 	Settings.Write(TEXT("ChannelPanelShowFeaturedMark"),m_fShowFeaturedMark);
+	Settings.Write(TEXT("ChannelPanelShowProgressBar"),m_fShowProgressBar);
+	Settings.Write(TEXT("ChannelPanelProgressBarStyle"),static_cast<int>(m_ProgressBarStyle));
 
 	return true;
 }
@@ -572,6 +585,54 @@ void CChannelPanel::SetShowFeaturedMark(bool fShowFeaturedMark)
 }
 
 
+void CChannelPanel::SetShowProgressBar(bool fShowProgressBar)
+{
+	if (m_fShowProgressBar!=fShowProgressBar) {
+		m_fShowProgressBar=fShowProgressBar;
+		if (m_hwnd!=NULL) {
+			if (m_fShowProgressBar)
+				GetCurrentJST(&m_CurTime);
+			Invalidate();
+		}
+	}
+}
+
+
+void CChannelPanel::SetProgressBarStyle(ProgressBarStyle Style)
+{
+	if (m_ProgressBarStyle!=Style) {
+		m_ProgressBarStyle=Style;
+		if (m_fShowProgressBar && m_hwnd!=NULL)
+			Invalidate();
+	}
+}
+
+
+bool CChannelPanel::QueryUpdateProgress()
+{
+	if (m_fShowProgressBar && m_hwnd!=NULL) {
+		SYSTEMTIME st;
+		GetCurrentJST(&st);
+		return m_CurTime.wSecond/10!=st.wSecond/10
+			|| m_CurTime.wMinute!=st.wMinute
+			|| m_CurTime.wHour!=st.wHour
+			|| m_CurTime.wDay!=st.wDay
+			|| m_CurTime.wMonth!=st.wMonth
+			|| m_CurTime.wYear!=st.wYear;
+	}
+	return false;
+}
+
+
+void CChannelPanel::UpdateProgress()
+{
+	if (m_fShowProgressBar && m_hwnd!=NULL) {
+		GetCurrentJST(&m_CurTime);
+		Invalidate();
+	}
+}
+
+
 void CChannelPanel::SetLogoManager(CLogoManager *pLogoManager)
 {
 	m_pLogoManager=pLogoManager;
@@ -605,6 +666,9 @@ LRESULT CChannelPanel::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam
 			else
 				CreateTooltip();
 			m_Chevron.Load(m_hinst,IDB_CHEVRON,CHEVRON_WIDTH,CHEVRON_HEIGHT);
+
+			if (m_fShowProgressBar)
+				GetCurrentJST(&m_CurTime);
 
 			CFeaturedEvents &FeaturedEvents=GetAppClass().FeaturedEvents;
 			FeaturedEvents.AddEventHandler(this);
@@ -763,9 +827,14 @@ LRESULT CChannelPanel::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam
 		}
 		break;
 
+	case WM_DISPLAYCHANGE:
+		m_Offscreen.Destroy();
+		return 0;
+
 	case WM_DESTROY:
 		m_EventInfoPopupManager.Finalize();
 		m_Tooltip.Destroy();
+		m_Offscreen.Destroy();
 		m_Chevron.Destroy();
 		GetAppClass().FeaturedEvents.RemoveEventHandler(this);
 		return 0;
@@ -777,59 +846,72 @@ LRESULT CChannelPanel::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam
 
 void CChannelPanel::Draw(HDC hdc,const RECT *prcPaint)
 {
-	HFONT hfontOld=static_cast<HFONT>(::GetCurrentObject(hdc,OBJ_FONT));
-	COLORREF crOldTextColor=::GetTextColor(hdc);
-	int OldBkMode=::SetBkMode(hdc,TRANSPARENT);
-
-	RECT rcClient,rc;
+	RECT rcClient;
 	GetClientRect(&rcClient);
-	rc.top=-m_ScrollPos;
-	for (int i=0;i<(int)m_ChannelList.size() && rc.top<prcPaint->bottom;i++) {
-		CChannelEventInfo *pChannelInfo=m_ChannelList[i];
-		const bool fCurrent=pChannelInfo->GetOriginalChannelIndex()==m_CurChannel;
 
-		rc.bottom=rc.top+m_ChannelNameHeight;
-		if (rc.bottom>prcPaint->top) {
+	if (!m_Offscreen.IsCreated()
+			|| m_Offscreen.GetWidth()<rcClient.right
+			|| m_Offscreen.GetHeight()<m_ChannelNameHeight+m_EventNameHeight*m_ExpandEvents)
+		m_Offscreen.Create(rcClient.right,m_ChannelNameHeight+m_EventNameHeight*m_ExpandEvents,hdc);
+	HDC hdcDst=m_Offscreen.GetDC();
+	if (hdcDst==NULL)
+		hdcDst=hdc;
+
+	HFONT hfontOld=static_cast<HFONT>(::GetCurrentObject(hdcDst,OBJ_FONT));
+	COLORREF crOldTextColor=::GetTextColor(hdcDst);
+	int OldBkMode=::SetBkMode(hdcDst,TRANSPARENT);
+
+	RECT rcItem;
+	rcItem.left=0;
+	rcItem.right=rcClient.right;
+	rcItem.top=-m_ScrollPos;
+
+	for (int i=0;i<(int)m_ChannelList.size() && rcItem.top<prcPaint->bottom;i++) {
+		CChannelEventInfo *pChannelInfo=m_ChannelList[i];
+		const int NumEvents=pChannelInfo->IsExpanded()?m_ExpandEvents:m_EventsPerChannel;
+		const int ItemHeight=m_ChannelNameHeight+m_EventNameHeight*NumEvents;
+
+		rcItem.bottom=rcItem.top+ItemHeight;
+		if (rcItem.bottom>prcPaint->top) {
+			const bool fCurrent=pChannelInfo->GetOriginalChannelIndex()==m_CurChannel;
+
+			RECT rc=rcItem;
+			if (hdcDst!=hdc)
+				::OffsetRect(&rc,0,-rcItem.top);
+
+			rc.bottom=rc.top+m_ChannelNameHeight;
+
 			const TVTest::Theme::Style &Style=
 				fCurrent?m_Theme.CurChannelNameStyle:m_Theme.ChannelNameStyle;
-
-			DrawUtil::SelectObject(hdc,m_ChannelFont);
-			::SetTextColor(hdc,Style.Fore.Fill.GetSolidColor());
-			rc.left=0;
-			rc.right=rcClient.right;
-			TVTest::Theme::Draw(hdc,rc,Style.Back);
+			DrawUtil::SelectObject(hdcDst,m_ChannelFont);
+			::SetTextColor(hdcDst,Style.Fore.Fill.GetSolidColor());
+			TVTest::Theme::Draw(hdcDst,rc,Style.Back);
 			RECT rcName=rc;
 			TVTest::Style::Subtract(&rcName,m_Style.ChannelNameMargin);
 			rcName.right-=m_Style.ChannelChevronMargin+m_Style.ChannelChevronSize.Width;
-			pChannelInfo->DrawChannelName(hdc,&rcName,m_Style.ChannelLogoMargin);
-			m_Chevron.Draw(hdc,
+			pChannelInfo->DrawChannelName(hdcDst,&rcName,m_Style.ChannelLogoMargin);
+			m_Chevron.Draw(hdcDst,
 						   rcName.right+m_Style.ChannelChevronMargin,
 						   rcName.top+((rcName.bottom-rcName.top)-m_Style.ChannelChevronSize.Height)/2,
 						   m_Style.ChannelChevronSize.Width,
 						   m_Style.ChannelChevronSize.Height,
 						   pChannelInfo->IsExpanded()?1:0,
 						   Style.Fore.Fill.GetSolidColor());
-		}
 
-		int NumEvents=pChannelInfo->IsExpanded()?m_ExpandEvents:m_EventsPerChannel;
-		rc.left=0;
-		rc.right=rcClient.right;
+			for (int j=0;j<NumEvents;j++) {
+				rc.top=rc.bottom;
+				rc.bottom=rc.top+m_EventNameHeight;
 
-		for (int j=0;j<NumEvents;j++) {
-			rc.top=rc.bottom;
-			rc.bottom=rc.top+m_EventNameHeight;
-
-			if (rc.bottom>prcPaint->top) {
 				RECT rcContent=rc;
 
 				if (m_fUseEpgColorScheme && pChannelInfo->IsEventEnabled(j)) {
-					m_EpgTheme.DrawContentBackground(hdc,rc,pChannelInfo->GetEventInfo(j),
+					m_EpgTheme.DrawContentBackground(hdcDst,rc,pChannelInfo->GetEventInfo(j),
 													 CEpgTheme::DRAW_CONTENT_BACKGROUND_SEPARATOR);
-					::SetTextColor(hdc,m_EpgTheme.GetColor(CEpgTheme::COLOR_EVENTNAME));
+					::SetTextColor(hdcDst,m_EpgTheme.GetColor(CEpgTheme::COLOR_EVENTNAME));
 				} else {
 					const TVTest::Theme::Style &Style=
 						(fCurrent?m_Theme.CurChannelEventStyle:m_Theme.EventStyle)[j%2];
-					TVTest::Theme::Draw(hdc,rc,Style.Back);
+					TVTest::Theme::Draw(hdcDst,rc,Style.Back);
 					TVTest::Theme::SubtractBorderRect(Style.Back.Border,&rcContent);
 					if (m_fShowGenreColor && pChannelInfo->IsEventEnabled(j)) {
 						RECT rcBar=rcContent;
@@ -837,10 +919,10 @@ void CChannelPanel::Draw(HDC hdc,const RECT *prcPaint)
 						unsigned int Flags=CEpgTheme::DRAW_CONTENT_BACKGROUND_NOBORDER;
 						if (rcBar.top==rc.top && rcBar.bottom==rc.bottom)
 							Flags|=CEpgTheme::DRAW_CONTENT_BACKGROUND_SEPARATOR;
-						m_EpgTheme.DrawContentBackground(hdc,rcBar,
+						m_EpgTheme.DrawContentBackground(hdcDst,rcBar,
 							pChannelInfo->GetEventInfo(j),Flags);
 					}
-					::SetTextColor(hdc,Style.Fore.Fill.GetSolidColor());
+					::SetTextColor(hdcDst,Style.Fore.Fill.GetSolidColor());
 				}
 
 				if (m_fShowFeaturedMark
@@ -850,31 +932,60 @@ void CChannelPanel::Draw(HDC hdc,const RECT *prcPaint)
 					rcMark.right=m_Style.EventNameMargin.Left;
 					TVTest::Style::Subtract(&rcMark,m_Style.FeaturedMarkMargin);
 					rcMark.bottom=rcMark.top+(rcMark.right-rcMark.left);
-					TVTest::Theme::Draw(hdc,rcMark,m_Theme.FeaturedMarkStyle);
+					TVTest::Theme::Draw(hdcDst,rcMark,m_Theme.FeaturedMarkStyle);
 				}
 
-				DrawUtil::SelectObject(hdc,m_Font);
 				RECT rcText=rc;
 				TVTest::Style::Subtract(&rcText,m_Style.EventNameMargin);
-				pChannelInfo->DrawEventName(hdc,&rcText,j);
+
+				if (m_fShowProgressBar && j==0 && pChannelInfo->IsEventEnabled(0)) {
+					const CEventInfoData &EventInfo=pChannelInfo->GetEventInfo(0);
+					LONGLONG Elapsed=DiffSystemTime(&EventInfo.m_StartTime,&m_CurTime)/1000LL;
+					if (Elapsed>=0) {
+						RECT rcProgress=rcText;
+						if (EventInfo.m_Duration>0) {
+							if (Elapsed>static_cast<LONGLONG>(EventInfo.m_Duration))
+								Elapsed=EventInfo.m_Duration;
+							int Width=
+								::MulDiv(rcProgress.right-rcProgress.left,
+										 static_cast<int>(Elapsed),
+										 EventInfo.m_Duration);
+							if (m_ProgressBarStyle==PROGRESSBAR_STYLE_ELAPSED)
+								rcProgress.right=rcProgress.left+Width;
+							else
+								rcProgress.left+=Width;
+						}
+						if (rcProgress.left<rcProgress.right) {
+							rcProgress.top=rcProgress.bottom-m_FontHeight/3;
+							TVTest::Theme::Draw(hdcDst,rcProgress,
+								fCurrent?m_Theme.CurProgressStyle:m_Theme.ProgressStyle);
+						}
+					}
+				}
+
+				DrawUtil::SelectObject(hdcDst,m_Font);
+				pChannelInfo->DrawEventName(hdcDst,&rcText,j);
 			}
+
+			if (hdcDst!=hdc)
+				m_Offscreen.CopyTo(hdc,&rcItem);
 		}
 
-		rc.top=rc.bottom;
+		rcItem.top=rcItem.bottom;
 	}
 
-	if (rc.top<prcPaint->bottom) {
-		rc.left=prcPaint->left;
-		if (rc.top<prcPaint->top)
-			rc.top=prcPaint->top;
-		rc.right=prcPaint->right;
-		rc.bottom=prcPaint->bottom;
-		DrawUtil::Fill(hdc,&rc,m_Theme.MarginColor);
-	}
+	::SetTextColor(hdcDst,crOldTextColor);
+	::SetBkMode(hdcDst,OldBkMode);
+	SelectFont(hdcDst,hfontOld);
 
-	::SetTextColor(hdc,crOldTextColor);
-	::SetBkMode(hdc,OldBkMode);
-	SelectFont(hdc,hfontOld);
+	if (rcItem.top<prcPaint->bottom) {
+		rcItem.left=prcPaint->left;
+		if (rcItem.top<prcPaint->top)
+			rcItem.top=prcPaint->top;
+		rcItem.right=prcPaint->right;
+		rcItem.bottom=prcPaint->bottom;
+		DrawUtil::Fill(hdc,&rcItem,m_Theme.MarginColor);
+	}
 }
 
 
@@ -1299,6 +1410,9 @@ CChannelPanel::ChannelPanelTheme::ChannelPanelTheme()
 	MarginColor.Set(0,0,0);
 	FeaturedMarkStyle.Fill.Type=TVTest::Theme::FILL_SOLID;
 	FeaturedMarkStyle.Fill.Solid.Color.Set(0,255,0);
+	ProgressStyle.Fill.Type=TVTest::Theme::FILL_SOLID;
+	ProgressStyle.Fill.Solid.Color.Set(160,160,160);
+	CurProgressStyle=ProgressStyle;
 }
 
 

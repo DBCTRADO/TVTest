@@ -198,6 +198,18 @@ const CThemeManager::StyleInfo CThemeManager::m_StyleList[NUM_STYLES] = {
 		-1
 	},
 	{
+		TEXT("channel-list-panel.progress"),
+		CColorScheme::GRADIENT_CHANNELPANEL_PROGRESS,
+		CColorScheme::BORDER_CHANNELPANEL_PROGRESS,
+		-1
+	},
+	{
+		TEXT("channel-list-panel.progress.current"),
+		CColorScheme::GRADIENT_CHANNELPANEL_CURPROGRESS,
+		CColorScheme::BORDER_CHANNELPANEL_CURPROGRESS,
+		-1
+	},
+	{
 		TEXT("control-panel.item"),
 		CColorScheme::GRADIENT_CONTROLPANELBACK,
 		CColorScheme::BORDER_CONTROLPANELITEM,
