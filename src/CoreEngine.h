@@ -82,6 +82,7 @@ public:
 	CAudioDecFilter::StereoMode GetStereoMode() const { return m_StereoMode; }
 	bool SetSpdifOptions(const CAudioDecFilter::SpdifOptions &Options);
 	bool GetSpdifOptions(CAudioDecFilter::SpdifOptions *pOptions) const;
+	bool IsSpdifPassthroughEnabled() const;
 
 	enum {
 		STATUS_VIDEOSIZE			=0x00000001UL,

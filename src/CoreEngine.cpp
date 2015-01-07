@@ -498,6 +498,14 @@ bool CCoreEngine::GetSpdifOptions(CAudioDecFilter::SpdifOptions *pOptions) const
 }
 
 
+bool CCoreEngine::IsSpdifPassthroughEnabled() const
+{
+	if (m_DtvEngine.m_MediaViewer.IsOpen())
+		return m_DtvEngine.m_MediaViewer.IsSpdifPassthrough();
+	return m_SpdifOptions.Mode==CAudioDecFilter::SPDIF_MODE_PASSTHROUGH;
+}
+
+
 // TODO: ïœâªÇ™Ç†Ç¡ÇΩèÍçá DtvEngine ë§Ç©ÇÁí ímÇ∑ÇÈÇÊÇ§Ç…Ç∑ÇÈ
 DWORD CCoreEngine::UpdateAsyncStatus()
 {

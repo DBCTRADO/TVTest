@@ -1819,6 +1819,11 @@ bool CMainWindow::OnCreate(const CREATESTRUCT *pcs)
 	m_App.MainMenu.CheckItem(CM_PANEL,m_App.Panel.fShowPanelWindow);
 	m_App.MainMenu.CheckItem(CM_1SEGMODE,m_App.Core.Is1SegMode());
 
+	m_App.CommandList.SetCommandStateByID(CM_SPDIF_TOGGLE,
+		CCommandList::COMMAND_STATE_CHECKED,
+		m_App.CoreEngine.IsSpdifPassthroughEnabled()?
+			CCommandList::COMMAND_STATE_CHECKED:0);
+
 	HMENU hSysMenu=::GetSystemMenu(m_hwnd,FALSE);
 	::InsertMenu(hSysMenu,0,MF_BYPOSITION | MF_STRING | MF_ENABLED,
 				 SC_ABOUT,TEXT("ÉoÅ[ÉWÉáÉìèÓïÒ(&A)"));
@@ -2302,20 +2307,27 @@ void CMainWindow::OnCommand(HWND hwnd,int id,HWND hwndCtl,UINT codeNotify)
 
 			Options.Mode=(CAudioDecFilter::SpdifMode)(id-CM_SPDIF_DISABLED);
 			m_App.CoreEngine.SetSpdifOptions(Options);
+			m_App.CommandList.SetCommandStateByID(CM_SPDIF_TOGGLE,
+				CCommandList::COMMAND_STATE_CHECKED,
+				m_App.CoreEngine.IsSpdifPassthroughEnabled()?
+					CCommandList::COMMAND_STATE_CHECKED:0);
 		}
 		return;
 
 	case CM_SPDIF_TOGGLE:
 		{
-			CAudioDecFilter::SpdifOptions Options(m_App.AudioOptions.GetSpdifOptions());
+			CAudioDecFilter::SpdifOptions Options;
 
-			if (m_App.CoreEngine.m_DtvEngine.m_MediaViewer.IsSpdifPassthrough())
+			m_App.CoreEngine.GetSpdifOptions(&Options);
+			if (m_App.CoreEngine.IsSpdifPassthroughEnabled())
 				Options.Mode=CAudioDecFilter::SPDIF_MODE_DISABLED;
 			else
 				Options.Mode=CAudioDecFilter::SPDIF_MODE_PASSTHROUGH;
 			m_App.CoreEngine.SetSpdifOptions(Options);
-			m_App.SideBar.CheckItem(CM_SPDIF_TOGGLE,
-				Options.Mode==CAudioDecFilter::SPDIF_MODE_PASSTHROUGH);
+			m_App.CommandList.SetCommandStateByID(CM_SPDIF_TOGGLE,
+				CCommandList::COMMAND_STATE_CHECKED,
+				m_App.CoreEngine.IsSpdifPassthroughEnabled()?
+					CCommandList::COMMAND_STATE_CHECKED:0);
 		}
 		return;
 
@@ -3376,8 +3388,10 @@ void CMainWindow::OnTimer(HWND hwnd,UINT id)
 				*/
 				m_App.StatusView.UpdateItem(STATUS_ITEM_AUDIOCHANNEL);
 				m_App.Panel.ControlPanel.UpdateItem(CONTROLPANEL_ITEM_AUDIO);
-				m_App.SideBar.CheckItem(CM_SPDIF_TOGGLE,
-					m_App.CoreEngine.m_DtvEngine.m_MediaViewer.IsSpdifPassthrough());
+				m_App.CommandList.SetCommandStateByID(CM_SPDIF_TOGGLE,
+					CCommandList::COMMAND_STATE_CHECKED,
+					m_App.CoreEngine.IsSpdifPassthroughEnabled()?
+						CCommandList::COMMAND_STATE_CHECKED:0);
 			}
 
 			bool fUpdateEventInfo=false;
