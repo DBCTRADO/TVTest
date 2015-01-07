@@ -106,7 +106,7 @@ bool CBasicFile::Open(LPCTSTR pszName, const UINT Flags)
 #if _WIN32_WINNT >= 0x0600
 	// I/OóDêÊìxÇÃê›íË
 	if (Flags & (OPEN_PRIORITY_LOW | OPEN_PRIORITY_IDLE)) {
-		FILE_IO_PRIORITY_HINT_INFO PriorityHint;
+		ALIGNAS(8) FILE_IO_PRIORITY_HINT_INFO PriorityHint;
 		PriorityHint.PriorityHint = (Flags & OPEN_PRIORITY_IDLE) ? IoPriorityHintVeryLow : IoPriorityHintLow;
 		TRACE(TEXT("Set file I/O priority hint %d\n"), (int)PriorityHint.PriorityHint);
 #ifdef WIN_XP_SUPPORT
