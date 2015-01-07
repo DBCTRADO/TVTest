@@ -115,7 +115,9 @@ CAudioDecFilter::CAudioDecFilter(LPUNKNOWN pUnk, HRESULT *phr)
 
 	, m_SpdifOptions(SPDIF_MODE_DISABLED, 0)
 	, m_bPassthrough(false)
+	, m_bPassthroughError(false)
 
+	, m_pEventHandler(NULL)
 	, m_pStreamCallback(NULL)
 {
 	TRACE(TEXT("CAudioDecFilter::CAudioDecFilter %p\n"), this);
@@ -288,6 +290,7 @@ HRESULT CAudioDecFilter::StartStreaming()
 
 	ResetSync();
 
+	m_bPassthroughError = false;
 	m_BitRateCalculator.Initialize();
 
 	return S_OK;
@@ -474,6 +477,11 @@ HRESULT CAudioDecFilter::Transform(IMediaSample *pIn, IMediaSample *pOut)
 #ifdef _DEBUG
 			if (FAILED(hr)) {
 				OutputLog(TEXT("サンプルを送信できません。(%08x)\r\n"), hr);
+				if (m_bPassthrough && !m_bPassthroughError) {
+					m_bPassthroughError = true;
+					if (m_pEventHandler)
+						m_pEventHandler->OnSpdifPassthroughError(hr);
+				}
 			}
 #endif
 			pOutSample->Release();
@@ -665,6 +673,12 @@ bool CAudioDecFilter::SetStreamCallback(StreamCallback pCallback, void *pParam)
 }
 
 
+void CAudioDecFilter::SetEventHandler(IEventHandler *pEventHandler)
+{
+	m_pEventHandler = pEventHandler;
+}
+
+
 DWORD CAudioDecFilter::GetBitRate() const
 {
 	CAutoLock AutoLock(&m_cPropLock);
@@ -700,6 +714,8 @@ HRESULT CAudioDecFilter::OnFrame(const BYTE *pData, const DWORD Samples,
 			bPassthrough = true;
 	}
 
+	if (m_bPassthrough != bPassthrough)
+		m_bPassthroughError = false;
 	m_bPassthrough = bPassthrough;
 
 	if (bDualMono != m_bDualMono) {

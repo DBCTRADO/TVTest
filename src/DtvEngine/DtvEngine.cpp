@@ -713,6 +713,11 @@ const DWORD CDtvEngine::OnDecoderEvent(CMediaDecoder *pDecoder, const DWORD dwEv
 					&m_MediaViewer, static_cast<IGraphBuilder*>(pParam));
 			}
 			return 0;
+
+		case CMediaViewer::EID_SPDIF_PASSTHROUGH_ERROR:
+			if (m_pEventHandler)
+				m_pEventHandler->OnSpdifPassthroughError(*static_cast<HRESULT*>(pParam));
+			return 0;
 		}
 	}
 

@@ -1576,6 +1576,26 @@ LRESULT CMainWindow::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 		m_pCore->AutoSelectAudio();
 		return 0;
 
+	case WM_APP_SPDIFPASSTHROUGHERROR:
+		// S/PDIFパススルー出力のエラー
+		TRACE(TEXT("WM_APP_SPDIFPASSTHROUGHERROR\n"));
+		{
+			//HRESULT hr=static_cast<HRESULT>(wParam);
+			CAudioDecFilter::SpdifOptions Options;
+
+			m_App.CoreEngine.GetSpdifOptions(&Options);
+			Options.Mode=CAudioDecFilter::SPDIF_MODE_DISABLED;
+			m_App.CoreEngine.SetSpdifOptions(Options);
+			m_App.CoreEngine.m_DtvEngine.ResetMediaViewer();
+
+			ShowMessage(TEXT("S/PDIFパススルー出力ができません。\n")
+						TEXT("デバイスがパススルー出力に対応しているか、\n")
+						TEXT("またパススルー出力できるように設定されているか確認してください。"),
+						TEXT("S/PDIFパススルー出力エラー"),
+						MB_OK | MB_ICONEXCLAMATION);
+		}
+		return 0;
+
 	case WM_ACTIVATEAPP:
 		{
 			bool fActive=wParam!=FALSE;

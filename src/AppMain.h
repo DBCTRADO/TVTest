@@ -498,6 +498,7 @@ private:
 		void OnFilterGraphInitialized(CMediaViewer *pMediaViewer,IGraphBuilder *pGraphBuilder) override;
 		void OnFilterGraphFinalize(CMediaViewer *pMediaViewer,IGraphBuilder *pGraphBuilder) override;
 		void OnFilterGraphFinalized(CMediaViewer *pMediaViewer,IGraphBuilder *pGraphBuilder) override;
+		void OnSpdifPassthroughError(HRESULT hr) override;
 	// CDtvEngineEventHandler
 		void OnServiceUpdated(CTsAnalyzer *pTsAnalyzer,bool fListUpdated,bool fStreamChanged);
 	};

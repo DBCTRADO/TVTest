@@ -21,7 +21,9 @@
 // Input	#0	: CTsPacket		入力データ
 /////////////////////////////////////////////////////////////////////////////
 
-class CMediaViewer : public CMediaDecoder
+class CMediaViewer
+	: public CMediaDecoder
+	, protected CAudioDecFilter::IEventHandler
 {
 public:
 	enum EVENTID {
@@ -29,13 +31,14 @@ public:
 		EID_FILTER_GRAPH_INITIALIZE,	// フィルタグラフの初期化
 		EID_FILTER_GRAPH_INITIALIZED,	// フィルタグラフが初期化された
 		EID_FILTER_GRAPH_FINALIZE,		// フィルタグラフの終了処理
-		EID_FILTER_GRAPH_FINALIZED		// フィルタグラフが終了処理された
+		EID_FILTER_GRAPH_FINALIZED,		// フィルタグラフが終了処理された
+		EID_SPDIF_PASSTHROUGH_ERROR		// S/PDIFパススルーのエラー
 	};
 	enum {
 		PID_INVALID=0xFFFF
 	};
 
-	CMediaViewer(IEventHandler *pEventHandler = NULL);
+	CMediaViewer(CMediaDecoder::IEventHandler *pEventHandler = NULL);
 	virtual ~CMediaViewer();
 
 // CMediaDecoder
@@ -159,6 +162,9 @@ protected:
 							 LPCTSTR pszDecoderName, IPin **ppOutputPin);
 	bool MapVideoPID(WORD PID);
 	bool MapAudioPID(WORD PID);
+
+// CAudioDecFilter::IEventHandler
+	void OnSpdifPassthroughError(HRESULT hr) override;
 
 	bool m_bInit;
 

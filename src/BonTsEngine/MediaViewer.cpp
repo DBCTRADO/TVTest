@@ -131,7 +131,7 @@ static HRESULT SetVideoMediaType(CMediaType *pMediaType, BYTE VideoStreamType, i
 // 構築/消滅
 //////////////////////////////////////////////////////////////////////
 
-CMediaViewer::CMediaViewer(IEventHandler *pEventHandler)
+CMediaViewer::CMediaViewer(CMediaDecoder::IEventHandler *pEventHandler)
 	: CMediaDecoder(pEventHandler, 1UL, 0UL)
 	, m_bInit(false)
 
@@ -493,6 +493,7 @@ bool CMediaViewer::OpenViewer(
 			if (FAILED(hr))
 				throw CBonException(hr,TEXT("音声デコーダフィルタをフィルタグラフに追加できません。"));
 
+			m_pAudioDecoder->SetEventHandler(this);
 			m_pAudioDecoder->SetJitterCorrection(m_bAdjustAudioStreamTime);
 			if (m_pAudioStreamCallback)
 				m_pAudioDecoder->SetStreamCallback(m_pAudioStreamCallback,
@@ -2047,6 +2048,12 @@ bool CMediaViewer::MapAudioPID(WORD PID)
 		m_pSrcFilter->SetAudioPID(PID);
 
 	return true;
+}
+
+
+void CMediaViewer::OnSpdifPassthroughError(HRESULT hr)
+{
+	SendDecoderEvent(EID_SPDIF_PASSTHROUGH_ERROR, &hr);
 }
 
 

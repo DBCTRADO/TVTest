@@ -81,6 +81,13 @@ public:
 		double Matrix[2][6];
 	};
 
+	class IEventHandler
+	{
+	public:
+		virtual ~IEventHandler() {}
+		virtual void OnSpdifPassthroughError(HRESULT hr) {}
+	};
+
 	BYTE GetCurrentChannelNum() const;
 	bool SetDualMonoMode(DualMonoMode Mode);
 	DualMonoMode GetDualMonoMode() const { return m_DualMonoMode; }
@@ -97,6 +104,7 @@ public:
 	bool SetSpdifOptions(const SpdifOptions *pOptions);
 	bool GetSpdifOptions(SpdifOptions *pOptions) const;
 	bool IsSpdifPassthrough() const { return m_bPassthrough; }
+	void SetEventHandler(IEventHandler *pEventHandler);
 
 	typedef void (CALLBACK *StreamCallback)(short *pData, DWORD Samples, int Channels, void *pParam);
 	bool SetStreamCallback(StreamCallback pCallback, void *pParam = NULL);
@@ -163,6 +171,9 @@ private:
 
 	SpdifOptions m_SpdifOptions;
 	bool m_bPassthrough;
+	bool m_bPassthroughError;
+
+	IEventHandler *m_pEventHandler;
 
 	StreamCallback m_pStreamCallback;
 	void *m_pStreamCallbackParam;

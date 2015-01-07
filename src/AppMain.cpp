@@ -1540,6 +1540,11 @@ void CAppMain::CDtvEngineEventHandler::OnFilterGraphFinalized(
 	m_App.PluginManager.SendFilterGraphFinalizedEvent(pMediaViewer,pGraphBuilder);
 }
 
+void CAppMain::CDtvEngineEventHandler::OnSpdifPassthroughError(HRESULT hr)
+{
+	m_App.MainWindow.PostMessage(WM_APP_SPDIFPASSTHROUGHERROR,hr,0);
+}
+
 
 CAppMain::CStreamInfoEventHandler::CStreamInfoEventHandler(CAppMain &App)
 	: m_App(App)

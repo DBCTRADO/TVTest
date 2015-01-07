@@ -86,6 +86,7 @@ public:
 		virtual void OnFilterGraphInitialized(CMediaViewer *pMediaViewer, IGraphBuilder *pGraphBuilder) {}
 		virtual void OnFilterGraphFinalize(CMediaViewer *pMediaViewer, IGraphBuilder *pGraphBuilder) {}
 		virtual void OnFilterGraphFinalized(CMediaViewer *pMediaViewer, IGraphBuilder *pGraphBuilder) {}
+		virtual void OnSpdifPassthroughError(HRESULT hr) {}
 	};
 
 	enum OneSegSelectType {
