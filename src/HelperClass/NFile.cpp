@@ -114,7 +114,7 @@ const bool CNFile::Open(LPCTSTR lpszName, const UINT Flags)
 		SetFileInformationByHandleFunc pSetFileInformationByHandle =
 			(SetFileInformationByHandleFunc)::GetProcAddress(hKernel, "SetFileInformationByHandle");
 		if (pSetFileInformationByHandle) {
-			ALIGNAS(8) FILE_IO_PRIORITY_HINT_INFO PriorityHint;
+			alignas(8) FILE_IO_PRIORITY_HINT_INFO PriorityHint;
 			PriorityHint.PriorityHint = (Flags & CNF_PRIORITY_IDLE) ? IoPriorityHintVeryLow : IoPriorityHintLow;
 			TRACE(TEXT("Set file I/O priority hint %d\n"), (int)PriorityHint.PriorityHint);
 			if (!pSetFileInformationByHandle(m_hFile, FileIoPriorityHintInfo, &PriorityHint, sizeof(PriorityHint))) {

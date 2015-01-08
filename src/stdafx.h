@@ -102,12 +102,9 @@
 #endif
 
 // アラインメント指定
-#if defined(_MSC_FULL_VER) && (_MSC_FULL_VER < 180021114)
-#define ALIGNAS(n) __declspec(align(n))
-#define ALIGNOF(t) __alignof(t)
-#else
-#define ALIGNAS(n) alignas(n)
-#define ALIGNOF(t) alignof(t)
+#if defined(_MSC_VER) && (_MSC_VER <= 1800)
+#define alignas(n) __declspec(align(n))
+#define alignof(t) __alignof(t)
 #endif
 
 #if !defined(WIN_XP_SUPPORT) && !defined(NO_WIN_XP_SUPPORT)
