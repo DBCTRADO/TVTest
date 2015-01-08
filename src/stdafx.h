@@ -21,6 +21,12 @@
 
 #define _WIN32_DCOM	// for CoInitializeEx()
 
+#if defined(_MSC_VER) && (_MSC_VER <= 1800)
+#ifndef _ALLOW_KEYWORD_MACROS
+#define _ALLOW_KEYWORD_MACROS
+#endif
+#endif
+
 #include <stdio.h>
 #include <process.h>
 #include <windows.h>
