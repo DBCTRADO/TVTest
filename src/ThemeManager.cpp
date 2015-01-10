@@ -16,6 +16,12 @@ namespace Theme
 {
 
 
+#define GRADIENT_SOLID_FLAG 0x1000
+#define GRADIENT_SOLID(Color) ((Color) | GRADIENT_SOLID_FLAG)
+#define GRADIENT_IS_SOLID(Gradient) (((Gradient) & GRADIENT_SOLID_FLAG)!=0)
+#define GRADIENT_GET_SOLID(Gradient) ((Gradient) & 0x0FFF)
+
+
 const CThemeManager::StyleInfo CThemeManager::m_StyleList[NUM_STYLES] = {
 	{
 		TEXT("screen"),
@@ -130,6 +136,12 @@ const CThemeManager::StyleInfo CThemeManager::m_StyleList[NUM_STYLES] = {
 		CColorScheme::GRADIENT_PANELTITLEBACK,
 		CColorScheme::BORDER_PANEL_TITLE,
 		CColorScheme::COLOR_PANELTITLETEXT
+	},
+	{
+		TEXT("panel.content"),
+		GRADIENT_SOLID(CColorScheme::COLOR_PANELBACK),
+		-1,
+		CColorScheme::COLOR_PANELTEXT
 	},
 	{
 		TEXT("program-list-panel.event"),
@@ -351,11 +363,20 @@ bool CThemeManager::GetFillStyle(int Type,FillStyle *pStyle) const
 
 	const StyleInfo &Info=m_StyleList[Type];
 
-	pStyle->Type=FILL_GRADIENT;
-	m_pColorScheme->GetGradientStyle(Info.Gradient,&pStyle->Gradient);
-	if (pStyle->Gradient.IsSolid()) {
-		pStyle->Type=FILL_SOLID;
-		pStyle->Solid.Color=pStyle->Gradient.Color1;
+	if (Info.Gradient>=0) {
+		if (GRADIENT_IS_SOLID(Info.Gradient)) {
+			pStyle->Type=FILL_SOLID;
+			pStyle->Solid.Color=ThemeColor(m_pColorScheme->GetColor(GRADIENT_GET_SOLID(Info.Gradient)));
+		} else {
+			pStyle->Type=FILL_GRADIENT;
+			m_pColorScheme->GetGradientStyle(Info.Gradient,&pStyle->Gradient);
+			if (pStyle->Gradient.IsSolid()) {
+				pStyle->Type=FILL_SOLID;
+				pStyle->Solid.Color=pStyle->Gradient.Color1;
+			}
+		}
+	} else {
+		pStyle->Type=FILL_NONE;
 	}
 
 	return true;
