@@ -1795,7 +1795,7 @@ LRESULT CPlugin::OnCallback(TVTest::PluginParam *pParam,UINT Message,LPARAM lPar
 				for (int j=0;j<NumChannels;j++) {
 					TVTest::ChannelInfo *pChannelInfo=(TVTest::ChannelInfo*)p;
 					p+=sizeof(TVTest::ChannelInfo);
-					pDriverSpaceInfo->ChannelList[i]=pChannelInfo;
+					pDriverSpaceInfo->ChannelList[j]=pChannelInfo;
 					pChannelInfo->Size=sizeof(TVTest::ChannelInfo);
 					ConvertChannelInfo(pChannelList->GetChannelInfo(j),pChannelInfo);
 				}
