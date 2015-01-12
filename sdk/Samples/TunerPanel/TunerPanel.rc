@@ -1,0 +1,20 @@
+#include <windows.h>
+#include "resource.h"
+
+
+IDM_MENU MENU
+BEGIN
+	POPUP ""
+	BEGIN
+		MENUITEM "ロゴとチャンネル名表示(&L)",CM_VIEW_LIST
+		MENUITEM "ロゴ表示(&I)",CM_VIEW_LOGO
+		MENUITEM SEPARATOR
+		POPUP "ロゴ表示の大きさ(&S)"
+		BEGIN
+			MENUITEM "小(&S)",CM_LOGOSIZE_SMALL
+			MENUITEM "中(&M)",CM_LOGOSIZE_MEDIUM
+			MENUITEM "大(&L)",CM_LOGOSIZE_LARGE
+			MENUITEM "特大(&X)",CM_LOGOSIZE_EXTRALARGE
+		END
+	END
+END

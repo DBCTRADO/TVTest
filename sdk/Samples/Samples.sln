@@ -29,6 +29,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GamePad", "GamePad\GamePad.
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MiniProgramGuide", "MiniProgramGuide\MiniProgramGuide.vcxproj", "{F78F780F-2042-44EA-9804-A1CB0C908611}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TunerPanel", "TunerPanel\TunerPanel.vcxproj", "{50951ABA-25D2-4BAD-8E4C-15711A6FCA65}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -207,6 +209,18 @@ Global
 		{F78F780F-2042-44EA-9804-A1CB0C908611}.Release|Win32.Build.0 = Release|Win32
 		{F78F780F-2042-44EA-9804-A1CB0C908611}.Release|x64.ActiveCfg = Release|x64
 		{F78F780F-2042-44EA-9804-A1CB0C908611}.Release|x64.Build.0 = Release|x64
+		{50951ABA-25D2-4BAD-8E4C-15711A6FCA65}.Debug|Win32.ActiveCfg = Debug|Win32
+		{50951ABA-25D2-4BAD-8E4C-15711A6FCA65}.Debug|Win32.Build.0 = Debug|Win32
+		{50951ABA-25D2-4BAD-8E4C-15711A6FCA65}.Debug|x64.ActiveCfg = Debug|x64
+		{50951ABA-25D2-4BAD-8E4C-15711A6FCA65}.Debug|x64.Build.0 = Debug|x64
+		{50951ABA-25D2-4BAD-8E4C-15711A6FCA65}.Release_static|Win32.ActiveCfg = Release_static|Win32
+		{50951ABA-25D2-4BAD-8E4C-15711A6FCA65}.Release_static|Win32.Build.0 = Release_static|Win32
+		{50951ABA-25D2-4BAD-8E4C-15711A6FCA65}.Release_static|x64.ActiveCfg = Release_static|x64
+		{50951ABA-25D2-4BAD-8E4C-15711A6FCA65}.Release_static|x64.Build.0 = Release_static|x64
+		{50951ABA-25D2-4BAD-8E4C-15711A6FCA65}.Release|Win32.ActiveCfg = Release|Win32
+		{50951ABA-25D2-4BAD-8E4C-15711A6FCA65}.Release|Win32.Build.0 = Release|Win32
+		{50951ABA-25D2-4BAD-8E4C-15711A6FCA65}.Release|x64.ActiveCfg = Release|x64
+		{50951ABA-25D2-4BAD-8E4C-15711A6FCA65}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
