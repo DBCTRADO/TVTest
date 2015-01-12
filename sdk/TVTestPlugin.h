@@ -113,6 +113,11 @@
 	  ・MESSAGE_SETSTATUSITEM
 	  ・MESSAGE_GETSTATUSITEMINFO
 	  ・MESSAGE_STATUSITEMNOTIFY
+	  ・MESSAGE_REGISTERTSPROCESSOR
+	  ・MESSAGE_REGISTERPANELITEM
+	  ・MESSAGE_SETPANELITEM
+	  ・MESSAGE_GETPANELITEMINFO
+	  ・MESSAGE_SELECTCHANNEL
 	・以下のイベントを追加した
 	  ・EVENT_FILTERGRAPH_INITIALIZE
 	  ・EVENT_FILTERGRAPH_INITIALIZED
@@ -122,6 +127,7 @@
 	  ・EVENT_STATUSITEM_DRAW
 	  ・EVENT_STATUSITEM_NOTIFY
 	  ・EVENT_STATUSITEM_MOUSE
+	  ・EVENT_PANELITEM_NOTIFY
 	・MESSAGE_GETSETTING で取得できる設定に以下を追加した
 	  ・OSDFont
 	  ・PanelFont
@@ -428,6 +434,11 @@ enum {
 	MESSAGE_SETSTATUSITEM,				// ステータス項目の設定
 	MESSAGE_GETSTATUSITEMINFO,			// ステータス項目の情報を取得
 	MESSAGE_STATUSITEMNOTIFY,			// ステータス項目の通知
+	MESSAGE_REGISTERTSPROCESSOR,		// TSプロセッサの登録
+	MESSAGE_REGISTERPANELITEM,			// パネル項目を登録
+	MESSAGE_SETPANELITEM,				// パネル項目の設定
+	MESSAGE_GETPANELITEMINFO,			// パネル項目の情報を取得
+	MESSAGE_SELECTCHANNEL,				// チャンネルを選択する
 #endif
 	MESSAGE_TRAILER
 };
@@ -494,6 +505,7 @@ enum {
 	EVENT_STATUSITEM_DRAW,						// ステータス項目を描画
 	EVENT_STATUSITEM_NOTIFY,					// ステータス項目の通知
 	EVENT_STATUSITEM_MOUSE,						// ステータス項目のマウス操作
+	EVENT_PANELITEM_NOTIFY,						// パネル項目の通知
 #endif
 	EVENT_TRAILER
 };
@@ -595,6 +607,7 @@ inline bool MsgGetCurrentChannelInfo(PluginParam *pParam,ChannelInfo *pInfo) {
 }
 
 // チャンネルを設定する
+// 機能が追加された MESSAGE_SELECTCHANNEL もあります。
 #if TVTEST_PLUGIN_VERSION<TVTEST_PLUGIN_VERSION_(0,0,8)
 inline bool MsgSetChannel(PluginParam *pParam,int Space,int Channel) {
 	return (*pParam->Callback)(pParam,MESSAGE_SETCHANNEL,Space,Channel)!=0;
@@ -815,6 +828,7 @@ struct StatusInfo {
 #if TVTEST_PLUGIN_VERSION>=TVTEST_PLUGIN_VERSION_(0,0,2)
 	DWORD DropPacketCount;				// ドロップパケット数
 	DWORD BcasCardStatus;				// B-CAS カードの状態(BCAS_STATUS_???)
+										// ※ B-CAS 関連の機能は削除されました。現在は利用できません。
 #endif
 };
 
@@ -1267,6 +1281,7 @@ struct BCasInfo {
 };
 
 // B-CAS カードの情報を取得する
+// ※ B-CAS 関連の機能は削除されました。現在は利用できません。
 // カードが開かれていない場合は false が返ります。
 inline bool MsgGetBCasInfo(PluginParam *pParam,BCasInfo *pInfo)
 {
@@ -1282,6 +1297,7 @@ struct BCasCommandInfo {
 };
 
 // B-CAS カードにコマンドを送信する
+// ※ B-CAS 関連の機能は削除されました。現在は利用できません。
 // BCasCommandInfo の pSendData に送信データへのポインタを指定して、
 // SendSize に送信データのバイト数を設定します。
 // また、pReceiveData に受信データを格納するバッファへのポインタを指定して、
@@ -1293,6 +1309,7 @@ inline bool MsgSendBCasCommand(PluginParam *pParam,BCasCommandInfo *pInfo)
 }
 
 // B-CAS カードにコマンドを送信する
+// ※ B-CAS 関連の機能は削除されました。現在は利用できません。
 inline bool MsgSendBCasCommand(PluginParam *pParam,const BYTE *pSendData,DWORD SendSize,BYTE *pReceiveData,DWORD *pReceiveSize)
 {
 	BCasCommandInfo Info;
@@ -2559,6 +2576,164 @@ enum {
 	STATUS_ITEM_MOUSE_ACTION_MOVE			// カーソル移動
 };
 
+// TSプロセッサのインターフェースは TVTestInterface.h で宣言されています。
+#ifndef TVTEST_INTERFACE_H
+namespace Interface {
+	struct ITSProcessor;
+}
+#endif
+
+// TSプロセッサの接続位置
+// 詳細は TVTestInterface.h を参照してください。
+enum {
+	TS_PROCESSOR_CONNECT_POSITION_SOURCE,			// ソース(チューナー等からストリームが入力された後)
+	TS_PROCESSOR_CONNECT_POSITION_PREPROCESSING,	// 前処理(TSを解析する前)
+	TS_PROCESSOR_CONNECT_POSITION_POSTPROCESSING,	// 後処理(TSを解析した後)
+	TS_PROCESSOR_CONNECT_POSITION_VIEWER,			// ビューア(再生の前)
+	TS_PROCESSOR_CONNECT_POSITION_RECORDER			// レコーダ(ストリーム書き出しの前)
+};
+
+// TSプロセッサの情報
+struct TSProcessorInfo {
+	DWORD Size;								// 構造体のサイズ
+	DWORD Flags;							// 各種フラグ(現在は常に0)
+	Interface::ITSProcessor *pTSProcessor;	// 接続する ITSProcessor
+	DWORD ConnectPosition;					// 接続位置(TS_PROCESSOR_CONNECT_POSITION_*)
+};
+
+// TSプロセッサを登録する
+inline bool MsgRegisterTSProcessor(PluginParam *pParam,const TSProcessorInfo *pInfo) {
+	return (*pParam->Callback)(pParam,MESSAGE_REGISTERTSPROCESSOR,(LPARAM)pInfo,0)!=FALSE;
+}
+
+// パネル項目の状態
+enum {
+	PANEL_ITEM_STATE_ENABLED	=0x0001U,	// 有効(タブに表示されている)
+	PANEL_ITEM_STATE_ACTIVE		=0x0002U	// アクティブ
+};
+
+// パネル項目の情報
+struct PanelItemInfo {
+	DWORD Size;			// 構造体のサイズ
+	DWORD Flags;		// 各種フラグ(現在は常に0)
+	DWORD Style;		// スタイルフラグ(現在は常に0)
+	int ID;				// 識別子
+	LPCWSTR pszIDText;	// 識別子文字列
+	LPCWSTR pszTitle;	// タイトル
+};
+
+// パネル項目を登録する
+inline bool MsgRegisterPanelItem(PluginParam *pParam,const PanelItemInfo *pInfo) {
+	return (*pParam->Callback)(pParam,MESSAGE_REGISTERPANELITEM,(LPARAM)pInfo,0)!=FALSE;
+}
+
+// パネル項目の設定の情報
+struct PanelItemSetInfo {
+	DWORD Size;			// 構造体のサイズ
+	DWORD Mask;			// 設定する情報のマスク(PANEL_ITEM_SET_INFO_MASK_* の組み合わせ)
+	int ID;				// 項目の識別子
+	DWORD StateMask;	// 状態フラグのマスク(PANEL_ITEM_STATE_* の組み合わせ)
+	DWORD State;		// 状態フラグ(PANEL_ITEM_STATE_* の組み合わせ)
+};
+
+// パネル項目の設定
+enum {
+	PANEL_ITEM_SET_INFO_MASK_STATE	=0x00000001U	// StateMask / State を設定
+};
+
+// ステータス項目を設定する
+// PanelItemSetInfo の Size に構造体のサイズを、Mask に設定したい情報を、
+// ID に設定したい項目の識別子を指定して呼び出します。
+/*
+	// 例
+	// 項目の有効状態を設定する
+	void EnablePanelItem(PluginParam *pParam, int ID, bool fEnable)
+	{
+		PanelItemSetInfo Info;
+		Info.Size = sizeof(PanelItemSetInfo);
+		Info.Mask = PANEL_ITEM_SET_INFO_MASK_STATE;
+		Info.ID = ID;
+		Info.StateMask = PANEL_ITEM_STATE_ENABLED;
+		Info.State = fEnable ? PANEL_ITEM_STATE_ENABLED : 0;
+		MsgSetPanelItem(pParam, &Info);
+	}
+*/
+inline bool MsgSetPanelItem(PluginParam *pParam,const PanelItemSetInfo *pInfo) {
+	return (*pParam->Callback)(pParam,MESSAGE_SETPANELITEM,(LPARAM)pInfo,0)!=FALSE;
+}
+
+// パネル項目の情報取得
+struct PanelItemGetInfo {
+	DWORD Size;			// 構造体のサイズ
+	DWORD Mask;			// 取得する情報のマスク(PANEL_ITEM_GET_INFO_MASK_* の組み合わせ)
+	int ID;				// 項目の識別子
+	DWORD State;		// 項目の状態フラグ(PANEL_ITEM_STATE_* の組み合わせ)
+	HWND hwndParent;	// 親ウィンドウのハンドル
+	HWND hwndItem;		// 項目のウィンドウハンドル
+};
+
+// パネル項目の情報取得マスク
+enum {
+	PANEL_ITEM_GET_INFO_MASK_STATE		=0x0001U,	// State を取得
+	PANEL_ITEM_GET_INFO_MASK_HWNDPARENT	=0x0002U,	// hwndParent を取得
+	PANEL_ITEM_GET_INFO_MASK_HWNDITEM	=0x0004U	// hwndItem を取得
+};
+
+// パネル項目の情報を取得する
+// PanelItemGetInfo の Size に構造体のサイズを、Mask に取得したい情報を、
+// ID に取得したい項目の識別子を指定して呼び出します。
+inline bool MsgGetPanelItemInfo(PluginParam *pParam,PanelItemGetInfo *pInfo) {
+	return (*pParam->Callback)(pParam,MESSAGE_GETPANELITEMINFO,(LPARAM)pInfo,0)!=FALSE;
+}
+
+// パネル項目の通知情報
+// EVENT_PANELITEM_NOTIFY で渡されます
+struct PanelItemEventInfo {
+	int ID;				// 項目の識別子
+	UINT Event;			// イベントの種類(PANEL_ITEM_EVENT_* のいずれか)
+};
+
+// パネル項目のイベント
+enum {
+	PANEL_ITEM_EVENT_CREATE=1,		// 項目を作成する
+	PANEL_ITEM_EVENT_ACTIVATE,		// 項目がアクティブになる
+	PANEL_ITEM_EVENT_DEACTIVATE,	// 項目が非アクティブになる
+	PANEL_ITEM_EVENT_ENABLE,		// 項目が有効になる
+	PANEL_ITEM_EVENT_DISABLE		// 項目が無効になる
+};
+
+// パネル項目作成イベントの情報
+// PANEL_ITEM_EVENT_CREATE で渡されます。
+// hwndItem に作成したウィンドウのハンドルを返します。
+struct PanelItemCreateEventInfo {
+	PanelItemEventInfo EventInfo;
+	RECT ItemRect;
+	HWND hwndParent;
+	HWND hwndItem;
+};
+
+// チャンネル選択の情報
+struct ChannelSelectInfo {
+	DWORD Size;				// 構造体のサイズ
+	DWORD Flags;			// 各種フラグ(CHANNEL_SELECT_FLAG_* の組み合わせ)
+	LPCWSTR pszTuner;		// チューナー名(NULL で指定なし)
+	int Space;				// チューニング空間(-1 で指定なし)
+	int Channel;			// チャンネル(-1 で指定なし)
+	WORD NetworkID;			// ネットワークID(0 で指定なし)
+	WORD TransportStreamID;	// トランスポートストリームID(0 で指定なし)
+	WORD ServiceID;			// サービスID(0 で指定なし)
+};
+
+// チャンネル選択のフラグ
+enum {
+	CHANNEL_SELECT_FLAG_STRICTSERVICE	=0x0001U	// ServiceID の指定を厳密に扱う
+};
+
+// チャンネルを選択する
+inline bool MsgSelectChannel(PluginParam *pParam,const ChannelSelectInfo *pInfo) {
+	return (*pParam->Callback)(pParam,MESSAGE_SELECTCHANNEL,(LPARAM)pInfo,0)!=FALSE;
+}
+
 #endif	// TVTEST_PLUGIN_VERSION>=TVTEST_PLUGIN_VERSION_(0,0,14)
 
 
@@ -2844,6 +3019,9 @@ public:
 	DWORD GetSetting(LPCWSTR pszName,LPWSTR pszString,DWORD MaxLength) {
 		return MsgGetSetting(m_pParam,pszName,pszString,MaxLength);
 	}
+	bool GetSetting(LPCWSTR pszName,LOGFONT *pFont) {
+		return MsgGetSetting(m_pParam,pszName,pFont);
+	}
 	int GetDriverFullPathName(LPWSTR pszPath,int MaxLength) {
 		return MsgGetDriverFullPathName(m_pParam,pszPath,MaxLength);
 	}
@@ -2914,7 +3092,7 @@ public:
 		return MsgRegisterProgramGuideCommand(m_pParam,pCommandList,NumCommands);
 	}
 #endif
-#if TVTEST_PLUGIN_VERSION>=TVTEST_PLUGIN_VERSION_(0,0,13)
+#if TVTEST_PLUGIN_VERSION>=TVTEST_PLUGIN_VERSION_(0,0,14)
 	bool GetStyleValue(StyleValueInfo *pInfo) {
 		pInfo->Size=sizeof(StyleValueInfo);
 		return MsgGetStyleValue(m_pParam,pInfo);
@@ -3010,6 +3188,22 @@ public:
 	}
 	bool StatusItemNotify(int ID,UINT Type) {
 		return MsgStatusItemNotify(m_pParam,ID,Type);
+	}
+	bool RegisterTSProcessor(const TSProcessorInfo *pInfo) {
+		return MsgRegisterTSProcessor(m_pParam,pInfo);
+	}
+	bool RegisterPanelItem(const PanelItemInfo *pInfo) {
+		return MsgRegisterPanelItem(m_pParam,pInfo);
+	}
+	bool SetPanelItem(const PanelItemSetInfo *pInfo) {
+		return MsgSetPanelItem(m_pParam,pInfo);
+	}
+	bool GetPanelItemInfo(PanelItemGetInfo *pInfo) {
+		pInfo->Size=sizeof(PanelItemGetInfo);
+		return MsgGetPanelItemInfo(m_pParam,pInfo);
+	}
+	bool SelectChannel(const ChannelSelectInfo *pInfo) {
+		return MsgSelectChannel(m_pParam,pInfo);
 	}
 #endif
 };
@@ -3183,6 +3377,8 @@ protected:
 	virtual bool OnStatusItemNotify(StatusItemEventInfo *pInfo) { return false; }
 	// ステータス項目のマウスイベント
 	virtual bool OnStatusItemMouseEvent(StatusItemMouseEventInfo *pInfo) { return false; }
+	// パネル項目の通知
+	virtual bool OnPanelItemNotify(PanelItemEventInfo *pInfo) { return false; }
 #endif
 
 public:
@@ -3272,6 +3468,8 @@ public:
 			return OnStatusItemNotify((StatusItemEventInfo*)lParam1);
 		case EVENT_STATUSITEM_MOUSE:
 			return OnStatusItemMouseEvent((StatusItemMouseEventInfo*)lParam1);
+		case EVENT_PANELITEM_NOTIFY:
+			return OnPanelItemNotify((PanelItemEventInfo*)lParam1);
 #endif
 		}
 		return 0;
