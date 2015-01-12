@@ -3306,6 +3306,7 @@ void CMainWindow::OnCommand(HWND hwnd,int id,HWND hwndCtl,UINT codeNotify)
 				SelInfo.Channel=ChannelInfo.Channel;
 				SelInfo.TunerName=ChannelInfo.BonDriverFileName;
 				SelInfo.fUseCurTuner=!ChannelInfo.fForceBonDriverChange;
+				SelInfo.fStrictService=false;
 				m_App.Core.SelectChannel(SelInfo);
 			}
 			return;

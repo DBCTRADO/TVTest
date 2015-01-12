@@ -535,6 +535,7 @@ bool CFavoritesCategory::OnDecide()
 		ChSelInfo.Channel=*static_cast<const CChannelInfo*>(pItem);
 		ChSelInfo.TunerName=pItem->GetBonDriverFileName();
 		ChSelInfo.fUseCurTuner=!pItem->GetForceBonDriverChange();
+		ChSelInfo.fStrictService=false;
 
 		return GetAppClass().Core.SelectChannel(ChSelInfo);
 	}
@@ -622,6 +623,7 @@ bool CRecentChannelsCategory::OnDecide()
 		ChSelInfo.Channel=*static_cast<const CChannelInfo*>(pItem);
 		ChSelInfo.TunerName=pItem->GetBonDriverFileName();
 		ChSelInfo.fUseCurTuner=false;
+		ChSelInfo.fStrictService=false;
 
 		return GetAppClass().Core.SelectChannel(ChSelInfo);
 	}

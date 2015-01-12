@@ -2440,6 +2440,9 @@ LRESULT CPlugin::OnCallback(TVTest::PluginParam *pParam,UINT Message,LPARAM lPar
 		}
 		return TRUE;
 
+	case TVTest::MESSAGE_SELECTCHANNEL:
+		return SendPluginMessage(pParam,Message,lParam1,lParam2);
+
 #ifdef _DEBUG
 	default:
 		TRACE(TEXT("CPluign::OnCallback() : Unknown message %u\n"),Message);
@@ -2914,6 +2917,33 @@ LRESULT CPlugin::OnPluginMessage(WPARAM wParam,LPARAM lParam)
 
 	case TVTest::MESSAGE_SETVIDEOSTREAM:
 		return GetAppClass().CoreEngine.m_DtvEngine.SetVideoStream((int)pParam->lParam1);
+
+	case TVTest::MESSAGE_SELECTCHANNEL:
+		{
+			const TVTest::ChannelSelectInfo *pInfo=
+				reinterpret_cast<const TVTest::ChannelSelectInfo*>(pParam->lParam1);
+
+			if (pInfo==NULL || pInfo->Size!=sizeof(TVTest::ChannelSelectInfo))
+				return FALSE;
+
+			CAppCore::ChannelSelectInfo SelInfo;
+
+			SelInfo.Channel.SetSpace(pInfo->Space);
+			SelInfo.Channel.SetChannelIndex(pInfo->Channel);
+			SelInfo.Channel.SetNetworkID(pInfo->NetworkID);
+			SelInfo.Channel.SetTransportStreamID(pInfo->TransportStreamID);
+			SelInfo.Channel.SetServiceID(pInfo->ServiceID);
+			if (pInfo->pszTuner!=NULL) {
+				SelInfo.TunerName=pInfo->pszTuner;
+				SelInfo.fUseCurTuner=false;
+			} else {
+				SelInfo.fUseCurTuner=true;
+			}
+			SelInfo.fStrictService=
+				(pInfo->Flags & TVTest::CHANNEL_SELECT_FLAG_STRICTSERVICE)!=0;
+
+			return GetAppClass().Core.SelectChannel(SelInfo);
+		}
 
 #ifdef _DEBUG
 	default:

@@ -117,6 +117,7 @@
 	  ・MESSAGE_REGISTERPANELITEM
 	  ・MESSAGE_SETPANELITEM
 	  ・MESSAGE_GETPANELITEMINFO
+	  ・MESSAGE_SELECTCHANNEL
 	・以下のイベントを追加した
 	  ・EVENT_FILTERGRAPH_INITIALIZE
 	  ・EVENT_FILTERGRAPH_INITIALIZED
@@ -437,6 +438,7 @@ enum {
 	MESSAGE_REGISTERPANELITEM,			// パネル項目を登録
 	MESSAGE_SETPANELITEM,				// パネル項目の設定
 	MESSAGE_GETPANELITEMINFO,			// パネル項目の情報を取得
+	MESSAGE_SELECTCHANNEL,				// チャンネルを選択する
 #endif
 	MESSAGE_TRAILER
 };
@@ -605,6 +607,7 @@ inline bool MsgGetCurrentChannelInfo(PluginParam *pParam,ChannelInfo *pInfo) {
 }
 
 // チャンネルを設定する
+// 機能が追加された MESSAGE_SELECTCHANNEL もあります。
 #if TVTEST_PLUGIN_VERSION<TVTEST_PLUGIN_VERSION_(0,0,8)
 inline bool MsgSetChannel(PluginParam *pParam,int Space,int Channel) {
 	return (*pParam->Callback)(pParam,MESSAGE_SETCHANNEL,Space,Channel)!=0;
@@ -2709,6 +2712,28 @@ struct PanelItemCreateEventInfo {
 	HWND hwndItem;
 };
 
+// チャンネル選択の情報
+struct ChannelSelectInfo {
+	DWORD Size;				// 構造体のサイズ
+	DWORD Flags;			// 各種フラグ(CHANNEL_SELECT_FLAG_* の組み合わせ)
+	LPCWSTR pszTuner;		// チューナー名(NULL で指定なし)
+	int Space;				// チューニング空間(-1 で指定なし)
+	int Channel;			// チャンネル(-1 で指定なし)
+	WORD NetworkID;			// ネットワークID(0 で指定なし)
+	WORD TransportStreamID;	// トランスポートストリームID(0 で指定なし)
+	WORD ServiceID;			// サービスID(0 で指定なし)
+};
+
+// チャンネル選択のフラグ
+enum {
+	CHANNEL_SELECT_FLAG_STRICTSERVICE	=0x0001U	// ServiceID の指定を厳密に扱う
+};
+
+// チャンネルを選択する
+inline bool MsgSelectChannel(PluginParam *pParam,const ChannelSelectInfo *pInfo) {
+	return (*pParam->Callback)(pParam,MESSAGE_SELECTCHANNEL,(LPARAM)pInfo,0)!=FALSE;
+}
+
 #endif	// TVTEST_PLUGIN_VERSION>=TVTEST_PLUGIN_VERSION_(0,0,14)
 
 
@@ -3176,6 +3201,9 @@ public:
 	bool GetPanelItemInfo(PanelItemGetInfo *pInfo) {
 		pInfo->Size=sizeof(PanelItemGetInfo);
 		return MsgGetPanelItemInfo(m_pParam,pInfo);
+	}
+	bool SelectChannel(const ChannelSelectInfo *pInfo) {
+		return MsgSelectChannel(m_pParam,pInfo);
 	}
 #endif
 };

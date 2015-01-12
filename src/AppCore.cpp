@@ -435,14 +435,15 @@ bool CAppCore::SelectChannel(const ChannelSelectInfo &SelInfo)
 			if (Index>=0) {
 				if (!m_App.UICore.ConfirmChannelChange())
 					return false;
-				return SetChannel(Space,Index);
+				return SetChannel(Space,Index,-1,SelInfo.fStrictService);
 			}
 		}
 	} else if (SelInfo.TunerName.empty()) {
 		return false;
 	}
 
-	return OpenTunerAndSetChannel(SelInfo.TunerName.c_str(),&SelInfo.Channel);
+	return OpenTunerAndSetChannel(SelInfo.TunerName.c_str(),
+								  &SelInfo.Channel,SelInfo.fStrictService);
 }
 
 
@@ -841,7 +842,8 @@ bool CAppCore::OpenTuner(LPCTSTR pszFileName)
 }
 
 
-bool CAppCore::OpenTunerAndSetChannel(LPCTSTR pszDriverFileName,const CChannelInfo *pChannelInfo)
+bool CAppCore::OpenTunerAndSetChannel(
+	LPCTSTR pszDriverFileName,const CChannelInfo *pChannelInfo,bool fStrictService)
 {
 	if (IsStringEmpty(pszDriverFileName) || pChannelInfo==nullptr)
 		return false;
@@ -855,21 +857,27 @@ bool CAppCore::OpenTunerAndSetChannel(LPCTSTR pszDriverFileName,const CChannelIn
 	const CChannelList *pList=m_App.ChannelManager.GetChannelList(pChannelInfo->GetSpace());
 	if (pList==nullptr)
 		return false;
-	int Index=pList->FindByIndex(-1,
-								 pChannelInfo->GetChannelIndex(),
-								 pChannelInfo->GetServiceID());
-	if (Index<0) {
-		if (pChannelInfo->GetServiceID()!=0
-				&& pChannelInfo->GetTransportStreamID()!=0) {
-			Index=pList->FindByIDs(pChannelInfo->GetNetworkID(),
-								   pChannelInfo->GetTransportStreamID(),
+
+	int Channel=-1;
+
+	if (pChannelInfo->GetChannelIndex()>=0) {
+		Channel=pList->FindByIndex(-1,
+								   pChannelInfo->GetChannelIndex(),
 								   pChannelInfo->GetServiceID());
+	}
+	if (Channel<0) {
+		if (pChannelInfo->GetServiceID()>0
+				&& (pChannelInfo->GetNetworkID()>0
+					|| pChannelInfo->GetTransportStreamID()>0)) {
+			Channel=pList->FindByIDs(pChannelInfo->GetNetworkID(),
+									 pChannelInfo->GetTransportStreamID(),
+									 pChannelInfo->GetServiceID());
 		}
-		if (Index<0)
+		if (Channel<0)
 			return false;
 	}
 
-	return SetChannel(pChannelInfo->GetSpace(),Index);
+	return SetChannel(pChannelInfo->GetSpace(),Channel,-1,fStrictService);
 }
 
 

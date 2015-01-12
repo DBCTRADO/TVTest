@@ -29,6 +29,7 @@ public:
 		CChannelInfo Channel;
 		TVTest::String TunerName;
 		bool fUseCurTuner;
+		bool fStrictService;
 	};
 
 	struct StreamIDInfo {
@@ -76,7 +77,9 @@ public:
 	bool GetCurrentServiceName(LPTSTR pszName,int MaxLength,bool fUseChannelName=true);
 
 	bool OpenTuner(LPCTSTR pszFileName);
-	bool OpenTunerAndSetChannel(LPCTSTR pszDriverFileName,const CChannelInfo *pChannelInfo);
+	bool OpenTunerAndSetChannel(LPCTSTR pszDriverFileName,
+								const CChannelInfo *pChannelInfo,
+								bool fStrictService=false);
 	bool OpenTuner();
 	bool OpenAndInitializeTuner(unsigned int OpenFlags=0);
 	bool CloseTuner();
