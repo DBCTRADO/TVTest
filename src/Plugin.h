@@ -79,6 +79,7 @@ public:
 	void RegisterStatusItems();
 	void SendStatusItemCreatedEvent();
 	void SendStatusItemUpdateTimerEvent();
+	void RegisterPanelItems();
 
 	static void SetMessageWindow(HWND hwnd,UINT Message);
 	static LRESULT OnPluginMessage(WPARAM wParam,LPARAM lParam);
@@ -160,6 +161,42 @@ private:
 		void NotifyMouseEvent(UINT Action,int x,int y);
 	};
 
+	class CPluginPanelItem;
+
+	struct PanelItem
+	{
+		int ID;
+		TVTest::String IDText;
+		TVTest::String Title;
+		DWORD StateMask;
+		DWORD State;
+		int ItemID;
+		CPluginPanelItem *pItem;
+	};
+
+	class CPluginPanelItem : public CPanelForm::CPage
+	{
+	public:
+		CPluginPanelItem(CPlugin *pPlugin,PanelItem *pItem);
+		~CPluginPanelItem();
+		bool Create(HWND hwndParent,DWORD Style,DWORD ExStyle=0,int ID=0) override;
+		void DetachItem();
+		HWND GetItemHandle() const { return m_hwndItem; }
+
+	private:
+		LRESULT OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
+		void OnActivate() override;
+		void OnDeactivate() override;
+		void OnVisibilityChanged(bool fVisible) override;
+		void OnFormDelete() override;
+
+		CPlugin *m_pPlugin;
+		PanelItem *m_pItem;
+		HWND m_hwndItem;
+
+		static bool m_fInitialized;
+	};
+
 	HMODULE m_hLib;
 	TVTest::String m_FileName;
 	TVTest::PluginParam m_PluginParam;
@@ -184,6 +221,7 @@ private:
 	std::vector<CProgramGuideCommand> m_ProgramGuideCommandList;
 	std::vector<TVTest::String> m_ControllerList;
 	std::vector<StatusItem*> m_StatusItemList;
+	std::vector<PanelItem*> m_PanelItemList;
 
 	static HWND m_hwndMessage;
 	static UINT m_MessageCode;
@@ -296,6 +334,7 @@ public:
 	void RegisterStatusItems();
 	void SendStatusItemCreatedEvent();
 	void SendStatusItemUpdateTimerEvent();
+	void RegisterPanelItems();
 };
 
 class CPluginOptions : public COptions

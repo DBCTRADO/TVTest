@@ -39,12 +39,12 @@ bool CPanelForm::Initialize(HINSTANCE hinst)
 
 
 CPanelForm::CPanelForm()
-	: m_NumWindows(0)
-	, m_Font(DrawUtil::FONT_DEFAULT)
+	: m_Font(DrawUtil::FONT_DEFAULT)
 	, m_TabHeight(0)
 	, m_TabWidth(0)
 	, m_fFitTabWidth(true)
 	, m_CurTab(-1)
+	, m_PrevActivePageID(-1)
 	, m_pEventHandler(NULL)
 {
 	m_WindowPosition.Width=200;
@@ -72,8 +72,11 @@ CPanelForm::CPanelForm()
 CPanelForm::~CPanelForm()
 {
 	Destroy();
-	for (int i=0;i<m_NumWindows;i++)
-		delete m_pWindowList[i];
+
+	for (auto it=m_WindowList.begin();it!=m_WindowList.end();++it) {
+		(*it)->m_pWindow->OnFormDelete();
+		delete *it;
+	}
 }
 
 
@@ -124,11 +127,10 @@ void CPanelForm::SetTheme(const TVTest::Theme::CThemeManager *pThemeManager)
 
 bool CPanelForm::AddWindow(CPage *pWindow,int ID,LPCTSTR pszTitle)
 {
-	if (m_NumWindows==MAX_WINDOWS)
+	if (pWindow==NULL)
 		return false;
-	m_pWindowList[m_NumWindows]=new CWindowInfo(pWindow,ID,pszTitle);
-	m_TabOrder[m_NumWindows]=m_NumWindows;
-	m_NumWindows++;
+	m_WindowList.push_back(new CWindowInfo(pWindow,ID,pszTitle));
+	m_TabOrder.push_back((int)m_WindowList.size()-1);
 	if (m_hwnd!=NULL) {
 		CalcTabSize();
 		Invalidate();
@@ -139,9 +141,9 @@ bool CPanelForm::AddWindow(CPage *pWindow,int ID,LPCTSTR pszTitle)
 
 CPanelForm::CPage *CPanelForm::GetPageByIndex(int Index)
 {
-	if (Index<0 || Index>=m_NumWindows)
+	if (Index<0 || (size_t)Index>=m_WindowList.size())
 		return NULL;
-	return m_pWindowList[Index]->m_pWindow;
+	return m_WindowList[Index]->m_pWindow;
 }
 
 
@@ -151,39 +153,55 @@ CPanelForm::CPage *CPanelForm::GetPageByID(int ID)
 
 	if (Index<0)
 		return NULL;
-	return m_pWindowList[Index]->m_pWindow;
+	return m_WindowList[Index]->m_pWindow;
 }
 
 
 bool CPanelForm::SetCurTab(int Index)
 {
-	if (Index<-1 || Index>=m_NumWindows)
+	if (Index<-1 || (size_t)Index>=m_WindowList.size())
 		return false;
+
+	if (!m_WindowList[Index]->m_fVisible)
+		return false;
+
 	if (m_CurTab!=Index) {
-		if (m_CurTab>=0)
-			m_pWindowList[m_CurTab]->m_pWindow->SetVisible(false);
+		if (m_CurTab>=0) {
+			CWindowInfo *pWindow=m_WindowList[m_CurTab];
+			m_PrevActivePageID=pWindow->m_ID;
+			pWindow->m_pWindow->OnDeactivate();
+			pWindow->m_pWindow->SetVisible(false);
+		}
+
 		if (Index>=0) {
+			CWindowInfo *pWindow=m_WindowList[Index];
 			RECT rc;
 
 			GetClientRect(&rc);
 			rc.top=m_TabHeight;
 			TVTest::Style::Subtract(&rc,m_Style.ClientMargin);
-			m_pWindowList[Index]->m_pWindow->SetPosition(&rc);
-			m_pWindowList[Index]->m_pWindow->SetVisible(true);
-			//SetFocus(m_pWindowList[Index]->m_pWindow->GetHandle());
+			pWindow->m_pWindow->SetPosition(&rc);
+			pWindow->m_pWindow->OnActivate();
+			pWindow->m_pWindow->SetVisible(true);
 		}
+
 		m_CurTab=Index;
+
 		Invalidate();
-		Update();
+		//Update();
+
+		if (m_pEventHandler!=NULL)
+			m_pEventHandler->OnSelChange();
 	}
+
 	return true;
 }
 
 
 int CPanelForm::IDToIndex(int ID) const
 {
-	for (int i=0;i<m_NumWindows;i++) {
-		if (m_pWindowList[i]->m_ID==ID)
+	for (int i=0;i<(int)m_WindowList.size();i++) {
+		if (m_WindowList[i]->m_ID==ID)
 			return i;
 	}
 	return -1;
@@ -194,7 +212,7 @@ int CPanelForm::GetCurPageID() const
 {
 	if (m_CurTab<0)
 		return -1;
-	return m_pWindowList[m_CurTab]->m_ID;
+	return m_WindowList[m_CurTab]->m_ID;
 }
 
 
@@ -214,13 +232,36 @@ bool CPanelForm::SetTabVisible(int ID,bool fVisible)
 
 	if (Index<0)
 		return false;
-	if (m_pWindowList[Index]->m_fVisible!=fVisible) {
-		m_pWindowList[Index]->m_fVisible=fVisible;
+
+	CWindowInfo *pWindow=m_WindowList[Index];
+	if (pWindow->m_fVisible!=fVisible) {
+		pWindow->m_fVisible=fVisible;
+		pWindow->m_pWindow->OnVisibilityChanged(fVisible);
+
+		if (!fVisible && m_CurTab==Index) {
+			int CurTab=-1;
+			if (m_PrevActivePageID>=0) {
+				int i=IDToIndex(m_PrevActivePageID);
+				if (i>=0 && m_WindowList[i]->m_fVisible)
+					CurTab=i;
+			}
+			if (CurTab<0) {
+				for (int i=0;i<(int)m_WindowList.size();i++) {
+					if (m_WindowList[i]->m_fVisible) {
+						CurTab=i;
+						break;
+					}
+				}
+			}
+			SetCurTab(CurTab);
+		}
+
 		if (m_hwnd!=NULL) {
 			CalcTabSize();
 			Invalidate();
 		}
 	}
+
 	return true;
 }
 
@@ -231,35 +272,69 @@ bool CPanelForm::GetTabVisible(int ID) const
 
 	if (Index<0)
 		return false;
-	return m_pWindowList[Index]->m_fVisible;
+	return m_WindowList[Index]->m_fVisible;
 }
 
 
-bool CPanelForm::SetTabOrder(const int *pOrder)
+bool CPanelForm::SetTabOrder(const int *pOrder,int Count)
 {
-	for (int i=0;i<m_NumWindows;i++) {
-		int j;
-		for (j=0;j<m_NumWindows;j++) {
-			if (m_pWindowList[j]->m_ID==pOrder[i])
+	if (pOrder==NULL || Count<0)
+		return false;
+
+	std::vector<int> TabOrder;
+
+	for (int i=0;i<Count;i++) {
+		size_t j;
+		for (j=0;j<m_WindowList.size();j++) {
+			if (m_WindowList[j]->m_ID==pOrder[i])
 				break;
 		}
-		if (j==m_NumWindows)
+		if (j==m_WindowList.size())
 			return false;
+		TabOrder.push_back(pOrder[i]);
 	}
-	::CopyMemory(m_TabOrder,pOrder,m_NumWindows*sizeof(int));
+
+	m_TabOrder=TabOrder;
+
 	if (m_hwnd!=NULL)
 		Invalidate();
+
 	return true;
 }
 
 
 bool CPanelForm::GetTabInfo(int Index,TabInfo *pInfo) const
 {
-	if (Index<0 || Index>=m_NumWindows || pInfo==NULL)
+	if (Index<0 || (size_t)Index>=m_TabOrder.size() || pInfo==NULL)
 		return false;
-	const CWindowInfo *pWindowInfo=m_pWindowList[m_TabOrder[Index]];
+	const CWindowInfo *pWindowInfo=m_WindowList[m_TabOrder[Index]];
 	pInfo->ID=pWindowInfo->m_ID;
 	pInfo->fVisible=pWindowInfo->m_fVisible;
+	return true;
+}
+
+
+int CPanelForm::GetTabID(int Index) const
+{
+	if (Index<0 || (size_t)Index>=m_TabOrder.size())
+		return -1;
+	return m_WindowList[m_TabOrder[Index]]->m_ID;
+}
+
+
+bool CPanelForm::GetTabTitle(int ID,TVTest::String *pTitle) const
+{
+	if (pTitle==NULL)
+		return false;
+
+	int Index=IDToIndex(ID);
+	if (Index<0) {
+		pTitle->clear();
+		return false;
+	}
+
+	*pTitle=m_WindowList[Index]->m_Title;
+
 	return true;
 }
 
@@ -305,8 +380,20 @@ bool CPanelForm::SetTabFont(const LOGFONT *pFont)
 
 bool CPanelForm::SetPageFont(const LOGFONT *pFont)
 {
-	for (int i=0;i<m_NumWindows;i++)
-		m_pWindowList[i]->m_pWindow->SetFont(pFont);
+	for (size_t i=0;i<m_WindowList.size();i++)
+		m_WindowList[i]->m_pWindow->SetFont(pFont);
+	return true;
+}
+
+
+bool CPanelForm::GetPageClientRect(RECT *pRect) const
+{
+	if (pRect==NULL)
+		return false;
+	if (!GetClientRect(pRect))
+		return false;
+	pRect->top=m_TabHeight;
+	TVTest::Style::Subtract(pRect,m_Style.ClientMargin);
 	return true;
 }
 
@@ -339,7 +426,7 @@ LRESULT CPanelForm::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 			RECT rc;
 			::SetRect(&rc,0,m_TabHeight,LOWORD(lParam),HIWORD(lParam));
 			TVTest::Style::Subtract(&rc,m_Style.ClientMargin);
-			m_pWindowList[m_CurTab]->m_pWindow->SetPosition(&rc);
+			m_WindowList[m_CurTab]->m_pWindow->SetPosition(&rc);
 		}
 		return 0;
 
@@ -349,8 +436,6 @@ LRESULT CPanelForm::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 
 			if (Index>=0 && Index!=m_CurTab) {
 				SetCurTab(Index);
-				if (m_pEventHandler!=NULL)
-					m_pEventHandler->OnSelChange();
 			}
 		}
 		return 0;
@@ -408,8 +493,8 @@ void CPanelForm::CalcTabSize()
 	m_TabHeight=m_Font.GetHeight(hdc)+m_Style.TabPadding.Top+m_Style.TabPadding.Bottom;
 	hfontOld=DrawUtil::SelectObject(hdc,m_Font);
 	MaxWidth=0;
-	for (int i=0;i<m_NumWindows;i++) {
-		const CWindowInfo *pWindow=m_pWindowList[i];
+	for (size_t i=0;i<m_WindowList.size();i++) {
+		const CWindowInfo *pWindow=m_WindowList[i];
 		if (pWindow->m_fVisible) {
 			::GetTextExtentPoint32(hdc,pWindow->m_Title.data(),(int)pWindow->m_Title.length(),&sz);
 			if (sz.cx>MaxWidth)
@@ -426,8 +511,8 @@ int CPanelForm::GetRealTabWidth() const
 {
 	if (m_fFitTabWidth) {
 		int NumVisibleTabs=0;
-		for (int i=0;i<m_NumWindows;i++) {
-			if (m_pWindowList[i]->m_fVisible)
+		for (size_t i=0;i<m_WindowList.size();i++) {
+			if (m_WindowList[i]->m_fVisible)
 				NumVisibleTabs++;
 		}
 		RECT rc;
@@ -451,9 +536,9 @@ int CPanelForm::HitTest(int x,int y) const
 	pt.x=x;
 	pt.y=y;
 	::SetRect(&rc,0,0,TabWidth,m_TabHeight);
-	for (int i=0;i<m_NumWindows;i++) {
+	for (size_t i=0;i<m_TabOrder.size();i++) {
 		int Index=m_TabOrder[i];
-		if (m_pWindowList[Index]->m_fVisible) {
+		if (m_WindowList[Index]->m_fVisible) {
 			if (::PtInRect(&rc,pt))
 				return Index;
 			::OffsetRect(&rc,TabWidth,0);
@@ -485,9 +570,9 @@ void CPanelForm::Draw(HDC hdc,const RECT &PaintRect)
 		rc.top=0;
 		rc.right=TabWidth;
 		rc.bottom=m_TabHeight;
-		for (i=0;i<m_NumWindows;i++) {
+		for (i=0;i<(int)m_TabOrder.size();i++) {
 			int Index=m_TabOrder[i];
-			const CWindowInfo *pWindow=m_pWindowList[Index];
+			const CWindowInfo *pWindow=m_WindowList[Index];
 
 			if (!pWindow->m_fVisible)
 				continue;

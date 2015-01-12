@@ -532,7 +532,6 @@ bool CAppMain::SaveSettings(unsigned int Flags)
 			Settings.Write(TEXT("InfoHeight"),Height);
 			Settings.Write(TEXT("PanelFloating"),Panel.Frame.GetFloating());
 			Settings.Write(TEXT("PanelDockingWidth"),Panel.Frame.GetDockingWidth());
-			Settings.Write(TEXT("InfoCurTab"),Panel.Form.GetCurPageID());
 
 			Epg.ProgramGuideFrame.GetPosition(&Left,&Top,&Width,&Height);
 			Settings.Write(TEXT("ProgramGuideLeft"),Left);

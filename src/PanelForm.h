@@ -6,6 +6,7 @@
 #include "UIBase.h"
 #include "Theme.h"
 #include "DrawUtil.h"
+#include <vector>
 
 
 class CPanelForm
@@ -22,6 +23,10 @@ public:
 		CPage();
 		virtual ~CPage()=0;
 		virtual bool SetFont(const LOGFONT *pFont) { return true; }
+		virtual void OnActivate() {}
+		virtual void OnDeactivate() {}
+		virtual void OnVisibilityChanged(bool fVisible) {}
+		virtual void OnFormDelete() {}
 	};
 
 	class ABSTRACT_CLASS(CEventHandler) {
@@ -62,7 +67,7 @@ public:
 
 // CPanelForm
 	bool AddWindow(CPage *pWindow,int ID,LPCTSTR pszTitle);
-	int NumPages() const { return m_NumWindows; }
+	int NumPages() const { return (int)m_WindowList.size(); }
 	CPage *GetPageByIndex(int Index);
 	CPage *GetPageByID(int ID);
 	int IDToIndex(int ID) const;
@@ -70,13 +75,16 @@ public:
 	bool SetCurPageByID(int ID);
 	bool SetTabVisible(int ID,bool fVisible);
 	bool GetTabVisible(int ID) const;
-	bool SetTabOrder(const int *pOrder);
+	bool SetTabOrder(const int *pOrder,int Count);
 	bool GetTabInfo(int Index,TabInfo *pInfo) const;
+	int GetTabID(int Index) const;
+	bool GetTabTitle(int ID,TVTest::String *pTitle) const;
 	void SetEventHandler(CEventHandler *pHandler);
 	bool SetPanelFormTheme(const PanelFormTheme &Theme);
 	bool GetPanelFormTheme(PanelFormTheme *pTheme) const;
 	bool SetTabFont(const LOGFONT *pFont);
 	bool SetPageFont(const LOGFONT *pFont);
+	bool GetPageClientRect(RECT *pRect) const;
 
 private:
 	enum {MAX_WINDOWS=8};
@@ -102,9 +110,8 @@ private:
 		void NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager);
 	};
 
-	CWindowInfo *m_pWindowList[MAX_WINDOWS];
-	int m_NumWindows;
-	int m_TabOrder[MAX_WINDOWS];
+	std::vector<CWindowInfo*> m_WindowList;
+	std::vector<int> m_TabOrder;
 	PanelFormStyle m_Style;
 	PanelFormTheme m_Theme;
 	DrawUtil::CFont m_Font;
@@ -112,6 +119,7 @@ private:
 	int m_TabWidth;
 	bool m_fFitTabWidth;
 	int m_CurTab;
+	int m_PrevActivePageID;
 	CEventHandler *m_pEventHandler;
 
 	static const LPCTSTR m_pszClassName;

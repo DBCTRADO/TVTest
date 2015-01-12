@@ -679,6 +679,14 @@ void CPlugin::Free()
 	}
 	m_StatusItemList.clear();
 
+	for (auto itr=m_PanelItemList.begin();itr!=m_PanelItemList.end();++itr) {
+		PanelItem *pItem=*itr;
+		if (pItem->pItem!=NULL)
+			pItem->pItem->DetachItem();
+		delete pItem;
+	}
+	m_PanelItemList.clear();
+
 	m_FileName.clear();
 	m_PluginName.clear();
 	m_Copyright.clear();
@@ -921,6 +929,38 @@ void CPlugin::SendStatusItemUpdateTimerEvent()
 						  reinterpret_cast<LPARAM>(&Info),0)!=FALSE) {
 				pItem->pItem->Redraw();
 			}
+		}
+	}
+}
+
+
+void CPlugin::RegisterPanelItems()
+{
+	CAppMain &App=GetAppClass();
+
+	for (auto itr=m_PanelItemList.begin();itr!=m_PanelItemList.end();++itr) {
+		PanelItem *pItem=*itr;
+		TVTest::String IDText;
+
+		IDText=::PathFindFileName(GetFileName());
+		IDText+=_T(':');
+		IDText+=pItem->IDText;
+
+		int ItemID=App.PanelOptions.RegisterPanelItem(IDText.c_str(),pItem->Title.c_str());
+		if (ItemID>=0) {
+			pItem->ItemID=ItemID;
+			if ((pItem->StateMask & TVTest::PANEL_ITEM_STATE_ENABLED)!=0) {
+				App.PanelOptions.SetPanelItemVisibility(
+					ItemID,(pItem->State & TVTest::PANEL_ITEM_STATE_ENABLED)!=0);
+			} else {
+				if (App.PanelOptions.GetPanelItemVisibility(ItemID))
+					pItem->State|=TVTest::PANEL_ITEM_STATE_ENABLED;
+				else
+					pItem->State&=~TVTest::PANEL_ITEM_STATE_ENABLED;
+			}
+			CPluginPanelItem *pPanelItem=new CPluginPanelItem(this,pItem);
+			pPanelItem->Create(App.Panel.Form.GetHandle(),WS_CHILD | WS_CLIPCHILDREN);
+			App.Panel.Form.AddWindow(pPanelItem,ItemID,pItem->Title.c_str());
 		}
 	}
 }
@@ -2302,6 +2342,104 @@ LRESULT CPlugin::OnCallback(TVTest::PluginParam *pParam,UINT Message,LPARAM lPar
 		}
 		return TRUE;
 
+	case TVTest::MESSAGE_REGISTERPANELITEM:
+		{
+			const TVTest::PanelItemInfo *pInfo=
+				reinterpret_cast<const TVTest::PanelItemInfo*>(lParam1);
+
+			if (pInfo==NULL
+					|| pInfo->Size!=sizeof(TVTest::PanelItemInfo)
+					|| pInfo->Flags!=0
+					|| pInfo->Style!=0
+					|| IsStringEmpty(pInfo->pszIDText)
+					|| IsStringEmpty(pInfo->pszTitle))
+				return FALSE;
+
+			PanelItem *pItem=new PanelItem;
+
+			pItem->ID=pInfo->ID;
+			pItem->IDText=pInfo->pszIDText;
+			pItem->Title=pInfo->pszTitle;
+			pItem->StateMask=0;
+			pItem->State=0;
+			pItem->ItemID=-1;
+			pItem->pItem=NULL;
+
+			m_PanelItemList.push_back(pItem);
+		}
+		return TRUE;
+
+	case TVTest::MESSAGE_SETPANELITEM:
+		{
+			TVTest::PanelItemSetInfo *pInfo=
+				reinterpret_cast<TVTest::PanelItemSetInfo*>(lParam1);
+
+			if (pInfo==NULL || pInfo->Size!=sizeof(TVTest::PanelItemSetInfo))
+				return FALSE;
+
+			for (auto itr=m_PanelItemList.begin();itr!=m_PanelItemList.end();++itr) {
+				PanelItem *pItem=*itr;
+				if (pItem->ID==pInfo->ID) {
+					if ((pInfo->Mask & TVTest::PANEL_ITEM_SET_INFO_MASK_STATE)!=0) {
+						if (pItem->pItem==NULL || pItem->pItem->GetItemHandle()==NULL) {
+							pItem->StateMask|=pInfo->StateMask;
+							pItem->State=(pItem->State & ~pInfo->StateMask) | (pInfo->State & pInfo->StateMask);
+						} else {
+							if ((pInfo->StateMask & TVTest::PANEL_ITEM_STATE_ENABLED)!=0) {
+								GetAppClass().PanelOptions.SetPanelItemVisibility(
+									pItem->ItemID,
+									(pInfo->State & TVTest::PANEL_ITEM_STATE_ENABLED)!=0);
+							}
+
+							if ((pInfo->StateMask & TVTest::PANEL_ITEM_STATE_ACTIVE)!=0) {
+								if ((pInfo->State & TVTest::PANEL_ITEM_STATE_ACTIVE)!=0) {
+									GetAppClass().Panel.Form.SetCurPageByID(pItem->ItemID);
+								}
+							}
+						}
+					}
+
+					return TRUE;
+				}
+			}
+		}
+		return FALSE;
+
+	case TVTest::MESSAGE_GETPANELITEMINFO:
+		{
+			TVTest::PanelItemGetInfo *pInfo=
+				reinterpret_cast<TVTest::PanelItemGetInfo*>(lParam1);
+
+			if (pInfo==NULL || pInfo->Size!=sizeof(TVTest::PanelItemGetInfo))
+				return FALSE;
+
+			auto it=std::find_if(m_PanelItemList.begin(),m_PanelItemList.end(),
+								 [&](const PanelItem *pItem) -> bool { return pItem->ID==pInfo->ID; });
+			if (it==m_PanelItemList.end())
+				return FALSE;
+
+			const PanelItem *pItem=*it;
+
+			if ((pInfo->Mask & TVTest::PANEL_ITEM_GET_INFO_MASK_STATE)!=0) {
+				pInfo->State=pItem->State;
+			}
+
+			if ((pInfo->Mask & TVTest::PANEL_ITEM_GET_INFO_MASK_HWNDPARENT)!=0) {
+				if (pItem->pItem!=NULL)
+					pInfo->hwndParent=pItem->pItem->GetHandle();
+				else
+					pInfo->hwndParent=NULL;
+			}
+
+			if ((pInfo->Mask & TVTest::PANEL_ITEM_GET_INFO_MASK_HWNDITEM)!=0) {
+				if (pItem->pItem!=NULL)
+					pInfo->hwndItem=pItem->pItem->GetItemHandle();
+				else
+					pInfo->hwndItem=NULL;
+			}
+		}
+		return TRUE;
+
 #ifdef _DEBUG
 	default:
 		TRACE(TEXT("CPluign::OnCallback() : Unknown message %u\n"),Message);
@@ -3136,6 +3274,166 @@ void CPlugin::CPluginStatusItem::NotifyMouseEvent(UINT Action,int x,int y)
 
 
 
+bool CPlugin::CPluginPanelItem::m_fInitialized=false;
+
+
+CPlugin::CPluginPanelItem::CPluginPanelItem(CPlugin *pPlugin,PanelItem *pItem)
+	: m_pPlugin(pPlugin)
+	, m_pItem(pItem)
+	, m_hwndItem(NULL)
+{
+	pItem->pItem=this;
+}
+
+
+CPlugin::CPluginPanelItem::~CPluginPanelItem()
+{
+	if (m_pItem!=NULL)
+		m_pItem->pItem=NULL;
+}
+
+
+bool CPlugin::CPluginPanelItem::Create(HWND hwndParent,DWORD Style,DWORD ExStyle,int ID)
+{
+	static const LPCTSTR CLASS_NAME=TEXT("TVTest Plugin Panel");
+
+	if (m_pPlugin==NULL || m_pItem==NULL)
+		return false;
+
+	HINSTANCE hinst=GetAppClass().GetInstance();
+
+	if (!m_fInitialized) {
+		WNDCLASS wc;
+
+		wc.style=0;
+		wc.lpfnWndProc=WndProc;
+		wc.cbClsExtra=0;
+		wc.cbWndExtra=0;
+		wc.hInstance=hinst;
+		wc.hIcon=NULL;
+		wc.hCursor=::LoadCursor(NULL,IDC_ARROW);
+		wc.hbrBackground=NULL;
+		wc.lpszMenuName=NULL;
+		wc.lpszClassName=CLASS_NAME;
+		if (::RegisterClass(&wc)==0)
+			return false;
+		m_fInitialized=true;
+	}
+
+	return CreateBasicWindow(hwndParent,Style,ExStyle,ID,
+							 CLASS_NAME,m_pItem->Title.c_str(),hinst);
+}
+
+
+void CPlugin::CPluginPanelItem::DetachItem()
+{
+	m_pPlugin=NULL;
+	m_pItem=NULL;
+	m_hwndItem=NULL;
+}
+
+
+LRESULT CPlugin::CPluginPanelItem::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
+{
+	switch (uMsg) {
+	case WM_CREATE:
+		{
+			TVTest::PanelItemCreateEventInfo CreateEvent;
+
+			CreateEvent.EventInfo.ID=m_pItem->ID;
+			CreateEvent.EventInfo.Event=TVTest::PANEL_ITEM_EVENT_CREATE;
+			GetAppClass().Panel.Form.GetPageClientRect(&CreateEvent.ItemRect);
+			CreateEvent.hwndParent=hwnd;
+			CreateEvent.hwndItem=NULL;
+
+			if (m_pPlugin->SendEvent(TVTest::EVENT_PANELITEM_NOTIFY,
+									 reinterpret_cast<LPARAM>(&CreateEvent),0)!=0)
+				m_hwndItem=CreateEvent.hwndItem;
+		}
+		return 0;
+
+	case WM_SIZE:
+		if (m_hwndItem!=NULL)
+			::MoveWindow(m_hwndItem,0,0,LOWORD(lParam),HIWORD(lParam),TRUE);
+		return 0;
+
+	case WM_PAINT:
+		{
+			PAINTSTRUCT ps;
+
+			::BeginPaint(hwnd,&ps);
+			DrawUtil::Fill(ps.hdc,&ps.rcPaint,
+				GetAppClass().ColorSchemeOptions.GetColor(CColorScheme::COLOR_PANELBACK));
+			::EndPaint(hwnd,&ps);
+		}
+		return 0;
+	}
+
+	return ::DefWindowProc(hwnd,uMsg,wParam,lParam);
+}
+
+
+void CPlugin::CPluginPanelItem::OnActivate()
+{
+	if (m_pItem!=NULL) {
+		m_pItem->State|=TVTest::PANEL_ITEM_STATE_ACTIVE;
+
+		if (m_pPlugin!=NULL) {
+			TVTest::PanelItemEventInfo Info;
+			Info.ID=m_pItem->ID;
+			Info.Event=TVTest::PANEL_ITEM_EVENT_ACTIVATE;
+			m_pPlugin->SendEvent(TVTest::EVENT_PANELITEM_NOTIFY,
+								 reinterpret_cast<LPARAM>(&Info),0);
+		}
+	}
+}
+
+
+void CPlugin::CPluginPanelItem::OnDeactivate()
+{
+	if (m_pItem!=NULL) {
+		m_pItem->State&=~TVTest::PANEL_ITEM_STATE_ACTIVE;
+
+		if (m_pPlugin!=NULL) {
+			TVTest::PanelItemEventInfo Info;
+			Info.ID=m_pItem->ID;
+			Info.Event=TVTest::PANEL_ITEM_EVENT_DEACTIVATE;
+			m_pPlugin->SendEvent(TVTest::EVENT_PANELITEM_NOTIFY,
+								 reinterpret_cast<LPARAM>(&Info),0);
+		}
+	}
+}
+
+
+void CPlugin::CPluginPanelItem::OnVisibilityChanged(bool fVisible)
+{
+	if (m_pItem!=NULL) {
+		if (fVisible)
+			m_pItem->State|=TVTest::PANEL_ITEM_STATE_ENABLED;
+		else
+			m_pItem->State&=~TVTest::PANEL_ITEM_STATE_ENABLED;
+
+		if (m_pPlugin!=NULL) {
+			TVTest::PanelItemEventInfo Info;
+			Info.ID=m_pItem->ID;
+			Info.Event=fVisible?
+				TVTest::PANEL_ITEM_EVENT_ENABLE:
+				TVTest::PANEL_ITEM_EVENT_DISABLE;
+			m_pPlugin->SendEvent(TVTest::EVENT_PANELITEM_NOTIFY,
+								 reinterpret_cast<LPARAM>(&Info),0);
+		}
+	}
+}
+
+
+void CPlugin::CPluginPanelItem::OnFormDelete()
+{
+	delete this;
+}
+
+
+
+
 CPluginManager::CPluginManager()
 {
 }
@@ -3901,6 +4199,13 @@ void CPluginManager::SendStatusItemUpdateTimerEvent()
 {
 	for (auto itr=m_PluginList.begin();itr!=m_PluginList.end();++itr) 
 		(*itr)->SendStatusItemUpdateTimerEvent();
+}
+
+
+void CPluginManager::RegisterPanelItems()
+{
+	for (auto itr=m_PluginList.begin();itr!=m_PluginList.end();++itr)
+		(*itr)->RegisterPanelItems();
 }
 
 

@@ -318,6 +318,8 @@ void CMainWindow::CreatePanel()
 	m_App.Panel.CaptionPanel.Create(m_App.Panel.Form.GetHandle(),WS_CHILD | WS_CLIPCHILDREN);
 	m_App.Panel.Form.AddWindow(&m_App.Panel.CaptionPanel,PANEL_ID_CAPTION,TEXT("Žš–‹"));
 
+	m_App.PluginManager.RegisterPanelItems();
+
 	m_App.PanelOptions.InitializePanelForm(&m_App.Panel.Form);
 	m_App.Panel.Frame.Create(m_hwnd,
 		dynamic_cast<Layout::CSplitter*>(m_LayoutBase.GetContainerByID(CONTAINER_ID_PANELSPLITTER)),
@@ -3073,14 +3075,6 @@ void CMainWindow::OnCommand(HWND hwnd,int id,HWND hwndCtl,UINT codeNotify)
 		m_App.RecentChannelList.Clear();
 		return;
 
-	case CM_PANEL_INFORMATION:
-	case CM_PANEL_PROGRAMLIST:
-	case CM_PANEL_CHANNEL:
-	case CM_PANEL_CONTROL:
-	case CM_PANEL_CAPTION:
-		m_App.Panel.Form.SetCurPageByID(id-CM_PANEL_FIRST);
-		return;
-
 	case CM_CHANNELPANEL_UPDATE:
 		m_App.Panel.ChannelPanel.UpdateAllChannels(true);
 		return;
@@ -3374,6 +3368,11 @@ void CMainWindow::OnCommand(HWND hwnd,int id,HWND hwndCtl,UINT codeNotify)
 					}
 				}
 			}
+			return;
+		}
+
+		if (id>=CM_PANEL_FIRST && id<=CM_PANEL_LAST) {
+			m_App.Panel.Form.SetCurPageByID(id-CM_PANEL_FIRST);
 			return;
 		}
 	}

@@ -684,11 +684,13 @@ void CMainPanel::CFormEventHandler::OnTabRButtonDown(int x,int y)
 		CPanelForm::TabInfo TabInfo;
 
 		m_pForm->GetTabInfo(i,&TabInfo);
-		if (TabInfo.fVisible) {
-			TCHAR szText[64];
-			::LoadString(g_App.GetResourceInstance(),
-						 CM_PANEL_FIRST+TabInfo.ID,szText,lengthof(szText));
-			Menu.Append(CM_PANEL_FIRST+TabInfo.ID,szText);
+		if (TabInfo.fVisible && CM_PANEL_FIRST+TabInfo.ID<=CM_PANEL_LAST) {
+			TVTest::String Title;
+			TCHAR szMenu[64];
+
+			m_pForm->GetTabTitle(TabInfo.ID,&Title);
+			CopyToMenuText(Title.c_str(),szMenu,lengthof(szMenu));
+			Menu.Append(CM_PANEL_FIRST+TabInfo.ID,szMenu);
 			if (TabInfo.ID==m_pForm->GetCurPageID())
 				Cur=VisibleCount;
 			VisibleCount++;

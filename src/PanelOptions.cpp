@@ -4,16 +4,13 @@
 #include "PanelOptions.h"
 #include "DialogUtil.h"
 #include "resource.h"
+#include <algorithm>
 
 #ifdef _DEBUG
 #undef THIS_FILE
 static char THIS_FILE[]=__FILE__;
 #define new DEBUG_NEW
 #endif
-
-
-#define TAB_ITEM_MARGIN	2
-#define TAB_CHECK_WIDTH	14
 
 
 
@@ -25,16 +22,30 @@ CPanelOptions::CPanelOptions(CPanelFrame *pPanelFrame)
 	, m_fAttachToMainWindow(true)
 	, m_Opacity(100)
 	, m_fSpecCaptionFont(true)
-	, m_FirstTab(-1)
-	, m_LastTab(0)
 	, m_fProgramInfoUseRichEdit(true)
 {
 	DrawUtil::GetDefaultUIFont(&m_Font);
 	DrawUtil::GetSystemFont(DrawUtil::FONT_MESSAGE,&m_CaptionFont);
 
-	for (int i=0;i<NUM_PANELS;i++) {
-		m_TabList[i].ID=PANEL_ID_FIRST+i;
-		m_TabList[i].fVisible=true;
+	static const struct {
+		LPCTSTR pszID;
+		LPCTSTR pszTitle;
+	} DefaultItemList[] = {
+		{TEXT("Information"),	TEXT("情報")},
+		{TEXT("ProgramList"),	TEXT("番組表")},
+		{TEXT("Channel"),		TEXT("チャンネル")},
+		{TEXT("Control"),		TEXT("操作")},
+		{TEXT("Caption"),		TEXT("字幕")},
+	};
+
+	m_AvailItemList.resize(lengthof(DefaultItemList));
+	m_ItemList.resize(lengthof(DefaultItemList));
+	for (int i=0;i<lengthof(DefaultItemList);i++) {
+		m_AvailItemList[i].ID=DefaultItemList[i].pszID;
+		m_AvailItemList[i].Title=DefaultItemList[i].pszTitle;
+		m_AvailItemList[i].fVisible=true;
+		m_ItemList[i].ID=m_AvailItemList[i].ID;
+		m_ItemList[i].fVisible=true;
 	}
 }
 
@@ -47,8 +58,6 @@ CPanelOptions::~CPanelOptions()
 
 bool CPanelOptions::InitializePanelForm(CPanelForm *pPanelForm)
 {
-	int TabOrder[NUM_PANELS];
-
 	pPanelForm->SetTabFont(&m_Font);
 	pPanelForm->SetPageFont(&m_Font);
 	if (m_fSpecCaptionFont) {
@@ -56,12 +65,11 @@ bool CPanelOptions::InitializePanelForm(CPanelForm *pPanelForm)
 		if (pCaptionPanel!=NULL)
 			pCaptionPanel->SetFont(&m_CaptionFont);
 	}
-	pPanelForm->SetCurPageByID(GetFirstTab());
-	for (int i=0;i<NUM_PANELS;i++) {
-		TabOrder[i]=m_TabList[i].ID;
-		pPanelForm->SetTabVisible(m_TabList[i].ID,m_TabList[i].fVisible);
-	}
-	pPanelForm->SetTabOrder(TabOrder);
+	int InitialTab=GetInitialTab();
+	if (InitialTab<0)
+		InitialTab=pPanelForm->GetTabID(0);
+	pPanelForm->SetCurPageByID(InitialTab);
+	ApplyItemList(pPanelForm);
 	return true;
 }
 
@@ -70,12 +78,8 @@ bool CPanelOptions::ReadSettings(CSettings &Settings)
 {
 	int Value;
 
-	if (Settings.Read(TEXT("InfoCurTab"),&Value)
-			&& Value>=PANEL_ID_FIRST && Value<=PANEL_ID_LAST)
-		m_LastTab=Value;
-	if (Settings.Read(TEXT("PanelFirstTab"),&Value)
-			&& Value>=-1 && Value<=PANEL_ID_LAST)
-		m_FirstTab=Value;
+	Settings.Read(TEXT("InfoCurTab"),&m_LastTab);
+	Settings.Read(TEXT("PanelFirstTab"),&m_InitialTab);
 	Settings.Read(TEXT("PanelSnapAtMainWindow"),&m_fSnapAtMainWindow);
 	Settings.Read(TEXT("PanelAttachToMainWindow"),&m_fAttachToMainWindow);
 	if (Settings.Read(TEXT("PanelOpacity"),&m_Opacity))
@@ -109,46 +113,56 @@ bool CPanelOptions::ReadSettings(CSettings &Settings)
 
 	int TabCount;
 	if (Settings.Read(TEXT("PanelTabCount"),&TabCount) && TabCount>0) {
-		if (TabCount>NUM_PANELS)
-			TabCount=NUM_PANELS;
-		int j=0;
+		PanelItemInfoList ItemList;
+		TVTest::String ID;
+
 		for (int i=0;i<TabCount;i++) {
 			TCHAR szName[32];
-			int ID;
 
-			::wsprintf(szName,TEXT("PanelTab%d_ID"),i);
-			if (Settings.Read(szName,&ID)
-					&& ID>=PANEL_ID_FIRST && ID<=PANEL_ID_LAST) {
-				int k;
-				for (k=0;k<j;k++) {
-					if (m_TabList[k].ID==ID)
-						break;
-				}
-				if (k==j) {
-					bool fVisible=true;
+			StdUtil::snprintf(szName,lengthof(szName),TEXT("PanelTab%d_ID"),i);
+			if (!Settings.Read(szName,&ID) || ID.empty())
+				continue;
 
-					::wsprintf(szName,TEXT("PanelTab%d_Visible"),i);
-					Settings.Read(szName,&fVisible);
-					m_TabList[j].ID=ID;
-					m_TabList[j].fVisible=fVisible;
-					j++;
-				}
+			PanelItemInfo Item;
+			LPTSTR p;
+			long IDNum=std::_tcstol(ID.c_str(),&p,10);
+			if (*p==_T('\0')) {
+				if (IDNum<PANEL_ID_FIRST || IDNum>PANEL_ID_LAST)
+					continue;
+				Item.ID=m_AvailItemList[IDNum].ID;
+			} else {
+				Item.ID=ID;
+			}
+			size_t j;
+			for (j=0;j<ItemList.size();j++) {
+				if (CompareID(ItemList[j].ID,Item.ID))
+					break;
+			}
+			if (j<ItemList.size())
+				continue;
+
+			StdUtil::snprintf(szName,lengthof(szName),TEXT("PanelTab%d_Visible"),i);
+			if (!Settings.Read(szName,&Item.fVisible))
+				Item.fVisible=true;
+
+			ItemList.push_back(Item);
+		}
+
+#if 0
+		for (size_t i=0;i<m_AvailItemList.size();i++) {
+			const TVTest::String &ID=m_AvailItemList[i].ID;
+			if (std::find_if(ItemList.begin(),ItemList.end(),
+					[&](const PanelItemInfo &Item) -> bool {
+						return CompareID(Item.ID,ID); })==ItemList.end()) {
+				PanelItemInfo Item;
+				Item.ID=ID;
+				Item.fVisible=false;
+				ItemList.push_back(Item);
 			}
 		}
-		if (j<NUM_PANELS) {
-			for (int i=PANEL_ID_FIRST;i<=PANEL_ID_LAST && j<NUM_PANELS;i++) {
-				int k;
-				for (k=0;k<j;k++) {
-					if (m_TabList[k].ID==i)
-						break;
-				}
-				if (k==j) {
-					m_TabList[j].ID=i;
-					m_TabList[j].fVisible=true;
-					j++;
-				}
-			}
-		}
+#endif
+
+		m_ItemList=ItemList;
 	}
 
 	Settings.Read(TEXT("InfoPanelUseRichEdit"),&m_fProgramInfoUseRichEdit);
@@ -159,7 +173,13 @@ bool CPanelOptions::ReadSettings(CSettings &Settings)
 
 bool CPanelOptions::WriteSettings(CSettings &Settings)
 {
-	Settings.Write(TEXT("PanelFirstTab"),m_FirstTab);
+	CPanelForm *pPanelForm=dynamic_cast<CPanelForm*>(m_pPanelFrame->GetWindow());
+	if (pPanelForm!=NULL) {
+		int CurPage=pPanelForm->GetCurPageID();
+		if (CurPage>=0 && (size_t)CurPage<m_AvailItemList.size())
+			Settings.Write(TEXT("InfoCurTab"),m_AvailItemList[CurPage].ID);
+	}
+	Settings.Write(TEXT("PanelFirstTab"),m_InitialTab);
 	Settings.Write(TEXT("PanelSnapAtMainWindow"),m_fSnapAtMainWindow);
 	Settings.Write(TEXT("PanelAttachToMainWindow"),m_fAttachToMainWindow);
 	Settings.Write(TEXT("PanelOpacity"),m_Opacity);
@@ -172,15 +192,16 @@ bool CPanelOptions::WriteSettings(CSettings &Settings)
 	Settings.Write(TEXT("CaptionPanelFontSpec"),m_fSpecCaptionFont);
 	Settings.Write(TEXT("CaptionPanelFont"),&m_CaptionFont);
 
-	// Tab order
-	Settings.Write(TEXT("PanelTabCount"),NUM_PANELS);
-	for (int i=0;i<NUM_PANELS;i++) {
+	// アイテムリスト
+	Settings.Write(TEXT("PanelTabCount"),(int)m_ItemList.size());
+	for (int i=0;i<(int)m_ItemList.size();i++) {
+		const PanelItemInfo &Item=m_ItemList[i];
 		TCHAR szName[32];
 
-		::wsprintf(szName,TEXT("PanelTab%d_ID"),i);
-		Settings.Write(szName,m_TabList[i].ID);
-		::wsprintf(szName,TEXT("PanelTab%d_Visible"),i);
-		Settings.Write(szName,m_TabList[i].fVisible);
+		StdUtil::snprintf(szName,lengthof(szName),TEXT("PanelTab%d_ID"),i);
+		Settings.Write(szName,Item.ID);
+		StdUtil::snprintf(szName,lengthof(szName),TEXT("PanelTab%d_Visible"),i);
+		Settings.Write(szName,Item.fVisible);
 	}
 
 	// Information panel
@@ -198,9 +219,127 @@ bool CPanelOptions::Create(HWND hwndOwner)
 }
 
 
-int CPanelOptions::GetFirstTab() const
+int CPanelOptions::GetInitialTab() const
 {
-	return m_FirstTab>=0?m_FirstTab:m_LastTab;
+	int ID=-1;
+
+	if (!m_InitialTab.empty()) {
+		LPTSTR p;
+		long IDNum=std::_tcstol(m_InitialTab.c_str(),&p,10);
+		if (*p==_T('\0')) {
+			if (IDNum>=0 && (size_t)IDNum<m_AvailItemList.size())
+				ID=IDNum;
+		} else {
+			ID=GetItemIDFromIDText(m_InitialTab);
+		}
+	}
+	if (ID<0 && !m_LastTab.empty()) {
+		LPTSTR p;
+		long IDNum=std::_tcstol(m_LastTab.c_str(),&p,10);
+		if (*p==_T('\0')) {
+			if (IDNum>=0 && (size_t)IDNum<m_AvailItemList.size())
+				ID=IDNum;
+		} else {
+			ID=GetItemIDFromIDText(m_LastTab);
+		}
+	}
+
+	return ID;
+}
+
+
+int CPanelOptions::RegisterPanelItem(LPCTSTR pszID,LPCTSTR pszTitle)
+{
+	if (IsStringEmpty(pszID) || IsStringEmpty(pszTitle))
+		return -1;
+
+	PanelItemInfo Item;
+
+	Item.ID=pszID;
+	Item.Title=pszTitle;
+	Item.fVisible=true;
+
+	if (GetItemIDFromIDText(Item.ID)>=0)
+		return -1;	// ID重複
+
+	m_AvailItemList.push_back(Item);
+
+	auto it=std::find_if(m_ItemList.begin(),m_ItemList.end(),
+		[&](const PanelItemInfo &Info) -> bool { return CompareID(Info.ID,Item.ID); });
+	if (it==m_ItemList.end())
+		m_ItemList.push_back(Item);
+
+	return (int)m_AvailItemList.size()-1;
+}
+
+
+bool CPanelOptions::SetPanelItemVisibility(int ID,bool fVisible)
+{
+	if (ID<0 || ID>=(int)m_AvailItemList.size())
+		return false;
+
+	m_AvailItemList[ID].fVisible=fVisible;
+
+	const TVTest::String &IDText=m_AvailItemList[ID].ID;
+	for (auto it=m_ItemList.begin();it!=m_ItemList.end();++it) {
+		if (CompareID(it->ID,IDText)) {
+			it->fVisible=fVisible;
+			break;
+		}
+	}
+
+	CPanelForm *pForm=dynamic_cast<CPanelForm*>(m_pPanelFrame->GetWindow());
+	if (pForm!=NULL)
+		pForm->SetTabVisible(ID,fVisible);
+
+	return true;
+}
+
+
+bool CPanelOptions::GetPanelItemVisibility(int ID) const
+{
+	if (ID<0 || ID>=(int)m_AvailItemList.size())
+		return false;
+
+	const TVTest::String &IDText=m_AvailItemList[ID].ID;
+	for (auto it=m_ItemList.begin();it!=m_ItemList.end();++it) {
+		if (CompareID(it->ID,IDText))
+			return it->fVisible;
+	}
+
+	return m_AvailItemList[ID].fVisible;
+}
+
+
+bool CPanelOptions::ApplyItemList(CPanelForm *pPanelForm) const
+{
+	if (pPanelForm==NULL)
+		return false;
+
+	std::vector<int> TabOrder;
+
+	TabOrder.reserve(m_AvailItemList.size());
+
+	for (size_t i=0;i<m_ItemList.size();i++) {
+		int ID=GetItemIDFromIDText(m_ItemList[i].ID);
+		if (ID>=0) {
+			TabOrder.push_back(ID);
+			pPanelForm->SetTabVisible(ID,m_ItemList[i].fVisible);
+		}
+	}
+
+	if (TabOrder.size()<m_AvailItemList.size()) {
+		for (int i=0;i<(int)m_AvailItemList.size();i++) {
+			if (std::find(TabOrder.begin(),TabOrder.end(),i)==TabOrder.end()) {
+				TabOrder.push_back(i);
+				pPanelForm->SetTabVisible(i,m_AvailItemList[i].fVisible);
+			}
+		}
+	}
+
+	pPanelForm->SetTabOrder(TabOrder.data(),(int)TabOrder.size());
+
+	return true;
 }
 
 
@@ -221,14 +360,6 @@ static void SetFontInfo(HWND hDlg,int ID,const LOGFONT *plf)
 
 INT_PTR CPanelOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 {
-	static const LPCTSTR pszTabList[] = {
-		TEXT("情報"),
-		TEXT("番組表"),
-		TEXT("チャンネル"),
-		TEXT("操作"),
-		TEXT("字幕"),
-	};
-
 	switch (uMsg) {
 	case WM_INITDIALOG:
 		{
@@ -250,21 +381,6 @@ INT_PTR CPanelOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 			::SendDlgItemMessage(hDlg,IDC_PANELOPTIONS_OPACITY_UD,
 										UDM_SETRANGE,0,MAKELPARAM(100,20));
 
-			HWND hwndTabList=::GetDlgItem(hDlg,IDC_PANELOPTIONS_TABLIST);
-			RECT rc;
-			::GetClientRect(::GetDlgItem(hDlg,IDC_PANELOPTIONS_TABLIST),&rc);
-			::SendMessage(hwndTabList,LB_SETITEMHEIGHT,0,rc.bottom);
-			::SendMessage(hwndTabList,LB_SETCOLUMNWIDTH,rc.right/NUM_PANELS,0);
-			for (int i=0;i<NUM_PANELS;i++)
-				::SendMessage(hwndTabList,LB_ADDSTRING,0,
-				MAKELPARAM(m_TabList[i].ID,m_TabList[i].fVisible));
-			::SetProp(hwndTabList,TEXT("TabList"),SubclassWindow(hwndTabList,TabListProc));
-
-			DlgComboBox_AddString(hDlg,IDC_PANELOPTIONS_FIRSTTAB,TEXT("最後に表示したタブ"));
-			for (int i=0;i<lengthof(pszTabList);i++)
-				DlgComboBox_AddString(hDlg,IDC_PANELOPTIONS_FIRSTTAB,pszTabList[i]);
-			DlgComboBox_SetCurSel(hDlg,IDC_PANELOPTIONS_FIRSTTAB,m_FirstTab+1);
-
 			m_CurSettingFont=m_Font;
 			SetFontInfo(hDlg,IDC_PANELOPTIONS_FONTINFO,&m_Font);
 			DlgCheckBox_Check(hDlg,IDC_PANELOPTIONS_SPECCAPTIONFONT,m_fSpecCaptionFont);
@@ -273,6 +389,49 @@ INT_PTR CPanelOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 						   m_fSpecCaptionFont);
 			m_CurSettingCaptionFont=m_CaptionFont;
 			SetFontInfo(hDlg,IDC_PANELOPTIONS_CAPTIONFONT_INFO,&m_CaptionFont);
+
+			m_ItemListView.Attach(::GetDlgItem(hDlg,IDC_PANELOPTIONS_ITEMLIST));
+			m_ItemListView.InitCheckList();
+			PanelItemInfoList ItemList(m_ItemList);
+			for (size_t i=0;i<m_AvailItemList.size();i++) {
+				const TVTest::String &ID=m_AvailItemList[i].ID;
+				if (std::find_if(ItemList.begin(),ItemList.end(),
+						[&](const PanelItemInfo &Item) -> bool {
+							return CompareID(Item.ID,ID); })==ItemList.end()) {
+					PanelItemInfo Item;
+					Item.ID=ID;
+					Item.fVisible=m_AvailItemList[i].fVisible;
+					ItemList.push_back(Item);
+				}
+			}
+			int ItemCount=0;
+			for (int i=0;i<(int)ItemList.size();i++) {
+				const PanelItemInfo &Item=ItemList[i];
+				int ID=GetItemIDFromIDText(Item.ID);
+				if (ID>=0) {
+					m_ItemListView.InsertItem(ItemCount,m_AvailItemList[ID].Title.c_str(),ID);
+					m_ItemListView.CheckItem(ItemCount,Item.fVisible);
+					ItemCount++;
+				}
+			}
+			UpdateItemListControlsState();
+
+			DlgComboBox_AddString(hDlg,IDC_PANELOPTIONS_FIRSTTAB,TEXT("最後に表示したタブ"));
+			int Sel=0;
+			if (!m_InitialTab.empty()) {
+				LPTSTR p;
+				long IDNum=std::_tcstol(m_InitialTab.c_str(),&p,10);
+				if (*p==_T('\0')) {
+					if (IDNum>=0 && (size_t)IDNum<m_AvailItemList.size())
+						Sel=IDNum+1;
+				}
+			}
+			for (size_t i=0;i<m_AvailItemList.size();i++) {
+				DlgComboBox_AddString(hDlg,IDC_PANELOPTIONS_FIRSTTAB,m_AvailItemList[i].Title.c_str());
+				if (Sel==0 && CompareID(m_AvailItemList[i].ID,m_InitialTab))
+					Sel=(int)i+1;
+			}
+			DlgComboBox_SetCurSel(hDlg,IDC_PANELOPTIONS_FIRSTTAB,Sel);
 		}
 		return TRUE;
 
@@ -284,39 +443,6 @@ INT_PTR CPanelOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 		}
 		return TRUE;
 
-	case WM_DRAWITEM:
-		{
-			LPDRAWITEMSTRUCT pdis=reinterpret_cast<LPDRAWITEMSTRUCT>(lParam);
-
-			if ((INT)pdis->itemID>=0) {
-				int ID=LOWORD(pdis->itemData);
-				if (ID>PANEL_ID_LAST)
-					break;
-				bool fVisible=HIWORD(pdis->itemData)!=0;
-				bool fSelected=(pdis->itemState&ODS_SELECTED)!=0;
-				COLORREF OldTextColor;
-				int OldBkMode;
-				RECT rc;
-
-				::FillRect(pdis->hDC,&pdis->rcItem,reinterpret_cast<HBRUSH>((fSelected?COLOR_HIGHLIGHT:COLOR_WINDOW)+1));
-				OldTextColor=::SetTextColor(pdis->hDC,::GetSysColor(fSelected?COLOR_HIGHLIGHTTEXT:COLOR_WINDOWTEXT));
-				OldBkMode=::SetBkMode(pdis->hDC,TRANSPARENT);
-				rc=pdis->rcItem;
-				::InflateRect(&rc,-TAB_ITEM_MARGIN,-TAB_ITEM_MARGIN);
-				rc.right=rc.left+TAB_CHECK_WIDTH;
-				::DrawFrameControl(pdis->hDC,&rc,DFC_BUTTON,
-								DFCS_BUTTONCHECK | (fVisible?DFCS_CHECKED:0));
-				rc.left=rc.right+TAB_ITEM_MARGIN;
-				rc.right=pdis->rcItem.right-TAB_ITEM_MARGIN;
-				::DrawText(pdis->hDC,pszTabList[ID],-1,&rc,DT_SINGLELINE | DT_LEFT | DT_VCENTER | DT_NOPREFIX | DT_END_ELLIPSIS);
-				::SetTextColor(pdis->hDC,OldTextColor);
-				::SetBkMode(pdis->hDC,OldBkMode);
-			}
-			if ((pdis->itemState & (ODS_FOCUS | ODS_NOFOCUSRECT))==ODS_FOCUS)
-				::DrawFocusRect(pdis->hDC,&pdis->rcItem);
-		}
-		return TRUE;
-
 	case WM_COMMAND:
 		switch (LOWORD(wParam)) {
 		case IDC_PANELOPTIONS_OPACITY_EDIT:
@@ -325,34 +451,19 @@ INT_PTR CPanelOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 										  IDC_PANELOPTIONS_OPACITY_TB);
 			return TRUE;
 
-		case IDC_PANELOPTIONS_TABLIST:
-			if (HIWORD(wParam)==CBN_SELCHANGE) {
-				int Sel=(int)DlgListBox_GetCurSel(hDlg,IDC_PANELOPTIONS_TABLIST);
-
-				::EnableDlgItem(hDlg,IDC_PANELOPTIONS_TAB_LEFT,Sel>0);
-				::EnableDlgItem(hDlg,IDC_PANELOPTIONS_TAB_RIGHT,Sel+1<NUM_PANELS);
-			}
-			return TRUE;
-
-		case IDC_PANELOPTIONS_TAB_LEFT:
-		case IDC_PANELOPTIONS_TAB_RIGHT:
+		case IDC_PANELOPTIONS_ITEMLIST_UP:
+		case IDC_PANELOPTIONS_ITEMLIST_DOWN:
 			{
-				int From=(int)DlgListBox_GetCurSel(hDlg,IDC_PANELOPTIONS_TABLIST),To;
+				int From=m_ItemListView.GetSelectedItem(),To;
 
-				if (LOWORD(wParam)==IDC_PANELOPTIONS_TAB_LEFT)
+				if (LOWORD(wParam)==IDC_PANELOPTIONS_ITEMLIST_UP)
 					To=From-1;
 				else
 					To=From+1;
-				if (To<0 || To>=NUM_PANELS)
+				if (To<0 || To>=m_ItemListView.GetItemCount())
 					return TRUE;
-				LPARAM Data1=DlgListBox_GetItemData(hDlg,IDC_PANELOPTIONS_TABLIST,From);
-				LPARAM Data2=DlgListBox_GetItemData(hDlg,IDC_PANELOPTIONS_TABLIST,To);
-				DlgListBox_SetItemData(hDlg,IDC_PANELOPTIONS_TABLIST,To,Data1);
-				DlgListBox_SetItemData(hDlg,IDC_PANELOPTIONS_TABLIST,From,Data2);
-				DlgListBox_SetCurSel(hDlg,IDC_PANELOPTIONS_TABLIST,To);
-				InvalidateDlgItem(hDlg,IDC_PANELOPTIONS_TABLIST);
-				::EnableDlgItem(hDlg,IDC_PANELOPTIONS_TAB_LEFT,To>0);
-				::EnableDlgItem(hDlg,IDC_PANELOPTIONS_TAB_RIGHT,To+1<NUM_PANELS);
+				m_ItemListView.MoveItem(From,To);
+				UpdateItemListControlsState();
 			}
 			return TRUE;
 
@@ -386,21 +497,6 @@ INT_PTR CPanelOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 					DlgCheckBox_IsChecked(hDlg,IDC_PANELOPTIONS_ATTACHTOMAINWINDOW);
 				m_Opacity=::GetDlgItemInt(hDlg,IDC_PANELOPTIONS_OPACITY_EDIT,NULL,TRUE);
 				m_pPanelFrame->SetOpacity(m_Opacity*255/100);
-				m_FirstTab=(int)DlgComboBox_GetCurSel(hDlg,IDC_PANELOPTIONS_FIRSTTAB)-1;
-
-				for (int i=0;i<NUM_PANELS;i++) {
-					LPARAM Data=DlgListBox_GetItemData(hDlg,IDC_PANELOPTIONS_TABLIST,i);
-					m_TabList[i].ID=LOWORD(Data);
-					m_TabList[i].fVisible=HIWORD(Data)!=0;
-				}
-				if (pPanel!=NULL) {
-					int TabOrder[NUM_PANELS];
-					for (int i=0;i<NUM_PANELS;i++) {
-						TabOrder[i]=m_TabList[i].ID;
-						pPanel->SetTabVisible(m_TabList[i].ID,m_TabList[i].fVisible);
-					}
-					pPanel->SetTabOrder(TabOrder);
-				}
 
 				bool fFontChanged=!CompareLogFont(&m_Font,&m_CurSettingFont);
 				if (fFontChanged) {
@@ -431,48 +527,59 @@ INT_PTR CPanelOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 											   &m_CaptionFont:&m_Font);
 				}
 
+				const int ItemCount=m_ItemListView.GetItemCount();
+				m_ItemList.clear();
+				m_ItemList.resize(ItemCount);
+				for (int i=0;i<ItemCount;i++) {
+					const PanelItemInfo &ItemInfo=m_AvailItemList[m_ItemListView.GetItemParam(i)];
+					m_ItemList[i].ID=ItemInfo.ID;
+					m_ItemList[i].fVisible=m_ItemListView.IsItemChecked(i);
+				}
+				if (pPanel!=NULL)
+					ApplyItemList(pPanel);
+
+				int InitialTab=(int)DlgComboBox_GetCurSel(hDlg,IDC_PANELOPTIONS_FIRSTTAB);
+				if (InitialTab==0) {
+					m_InitialTab.clear();
+				} else if (InitialTab>0) {
+					m_InitialTab=m_AvailItemList[InitialTab-1].ID;
+				}
+
 				m_fChanged=true;
 			}
 			break;
+
+		case LVN_ITEMCHANGED:
+			UpdateItemListControlsState();
+			return TRUE;
 		}
 		break;
+
+	case WM_DESTROY:
+		m_ItemListView.Detach();
+		return TRUE;
 	}
 
 	return FALSE;
 }
 
 
-LRESULT CALLBACK CPanelOptions::TabListProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
+void CPanelOptions::UpdateItemListControlsState()
 {
-	WNDPROC pOldWndProc=static_cast<WNDPROC>(::GetProp(hwnd,TEXT("TabList")));
+	int Sel=m_ItemListView.GetSelectedItem();
 
-	if (pOldWndProc==NULL)
-		return ::DefWindowProc(hwnd,uMsg,wParam,lParam);
+	::EnableDlgItem(m_hDlg,IDC_PANELOPTIONS_ITEMLIST_UP,Sel>0);
+	::EnableDlgItem(m_hDlg,IDC_PANELOPTIONS_ITEMLIST_DOWN,
+					Sel>=0 && Sel+1<m_ItemListView.GetItemCount());
+}
 
-	switch (uMsg) {
-	case WM_LBUTTONDOWN:
-		{
-			int x=GET_X_LPARAM(lParam);
-			int Count=(int)::SendMessage(hwnd,LB_GETCOUNT,0,0);
 
-			for (int i=0;i<Count;i++) {
-				RECT rc;
-				::SendMessage(hwnd,LB_GETITEMRECT,i,reinterpret_cast<LPARAM>(&rc));
-				if (x>=rc.left+TAB_ITEM_MARGIN && x<rc.left+TAB_ITEM_MARGIN+TAB_CHECK_WIDTH) {
-					LPARAM Data=::SendMessage(hwnd,LB_GETITEMDATA,i,0);
-					Data=MAKELPARAM(LOWORD(Data),!HIWORD(Data));
-					::SendMessage(hwnd,LB_SETITEMDATA,i,Data);
-					::InvalidateRect(hwnd,&rc,TRUE);
-					break;
-				}
-			}
-		}
-		break;
-
-	case WM_NCDESTROY:
-		::RemoveProp(hwnd,TEXT("TabList"));
-		break;
+int CPanelOptions::GetItemIDFromIDText(const TVTest::String &IDText) const
+{
+	for (int i=0;i<(int)m_AvailItemList.size();i++) {
+		if (CompareID(m_AvailItemList[i].ID,IDText))
+			return i;
 	}
 
-	return ::CallWindowProc(pOldWndProc,hwnd,uMsg,wParam,lParam);
+	return -1;
 }
