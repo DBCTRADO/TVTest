@@ -4,22 +4,12 @@
 
 #include "Options.h"
 #include "Command.h"
+#include "WheelCommand.h"
 
 
 class COperationOptions : public COptions
 {
 public:
-	enum WheelMode {
-		WHEEL_MODE_NONE,
-		WHEEL_MODE_VOLUME,
-		WHEEL_MODE_CHANNEL,
-		WHEEL_MODE_AUDIO,
-		WHEEL_MODE_ZOOM,
-		WHEEL_MODE_ASPECTRATIO,
-		WHEEL_MODE_FIRST=WHEEL_MODE_NONE,
-		WHEEL_MODE_LAST=WHEEL_MODE_ASPECTRATIO
-	};
-
 	enum {
 		WHEEL_CHANNEL_DELAY_MIN=100
 	};
@@ -36,12 +26,12 @@ public:
 	bool GetDisplayDragMove() const { return m_fDisplayDragMove; }
 	bool GetHideCursor() const { return m_fHideCursor; }
 	int GetVolumeStep() const { return m_VolumeStep; }
-	WheelMode GetWheelMode() const { return m_WheelMode; }
-	WheelMode GetWheelShiftMode() const { return m_WheelShiftMode; }
-	WheelMode GetWheelCtrlMode() const { return m_WheelCtrlMode; }
-	WheelMode GetWheelTiltMode() const { return m_WheelTiltMode; }
+	int GetWheelCommand() const { return m_WheelCommand; }
+	int GetWheelShiftCommand() const { return m_WheelShiftCommand; }
+	int GetWheelCtrlCommand() const { return m_WheelCtrlCommand; }
+	int GetWheelTiltCommand() const { return m_WheelTiltCommand; }
 	bool IsStatusBarWheelEnabled() const { return m_fStatusBarWheel; }
-	bool IsWheelModeReverse(WheelMode Mode) const;
+	bool IsWheelCommandReverse(int Command) const;
 	int GetWheelChannelDelay() const { return m_WheelChannelDelay; }
 	int GetWheelZoomStep() const { return m_WheelZoomStep; }
 	int GetLeftDoubleClickCommand() const { return m_LeftDoubleClickCommand; }
@@ -50,13 +40,15 @@ public:
 
 private:
 	const CCommandList *m_pCommandList;
+	TVTest::CWheelCommandManager m_WheelCommandManager;
+
 	bool m_fDisplayDragMove;
 	bool m_fHideCursor;
 	int m_VolumeStep;
-	WheelMode m_WheelMode;
-	WheelMode m_WheelShiftMode;
-	WheelMode m_WheelCtrlMode;
-	WheelMode m_WheelTiltMode;
+	int m_WheelCommand;
+	int m_WheelShiftCommand;
+	int m_WheelCtrlCommand;
+	int m_WheelTiltCommand;
 	bool m_fStatusBarWheel;
 	bool m_fWheelVolumeReverse;
 	bool m_fWheelChannelReverse;
@@ -69,7 +61,7 @@ private:
 // CBasicDialog
 	INT_PTR DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
 
-	void InitWheelSettings(int ID,WheelMode Mode) const;
+	void InitWheelSettings(int ID,int CurCommand) const;
 };
 
 

@@ -720,6 +720,12 @@ BEGIN
 	CM_VIDEOSTREAM_SWITCH,		"映像ストリーム切替"
 	CM_MULTIVIEW_SWITCH,		"マルチビュー切替"
 
+	CM_WHEEL_VOLUME,			"音量"
+	CM_WHEEL_CHANNEL,			"チャンネル"
+	CM_WHEEL_AUDIO,				"音声"
+	CM_WHEEL_ZOOM,				"表示倍率"
+	CM_WHEEL_ASPECTRATIO,		"比率"
+
 	IDS_MENU_ZOOM,				"倍率"
 	IDS_MENU_ASPECTRATIO,		"比率"
 	IDS_MENU_CHANNEL,			"チャンネル"

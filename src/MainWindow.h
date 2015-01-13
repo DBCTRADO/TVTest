@@ -471,7 +471,7 @@ private:
 
 	CMouseWheelHandler m_WheelHandler;
 	int m_WheelCount;
-	int m_PrevWheelMode;
+	int m_PrevWheelCommand;
 	DWORD m_PrevWheelTime;
 
 	enum {

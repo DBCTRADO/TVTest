@@ -232,7 +232,7 @@ CMainWindow::CMainWindow(CAppMain &App)
 	, m_fClosing(false)
 
 	, m_WheelCount(0)
-	, m_PrevWheelMode(COperationOptions::WHEEL_MODE_NONE)
+	, m_PrevWheelCommand(0)
 	, m_PrevWheelTime(0)
 
 	, m_AspectRatioType(ASPECTRATIO_DEFAULT)
@@ -4554,17 +4554,17 @@ void CMainWindow::OnMouseWheel(WPARAM wParam,LPARAM lParam,bool fHorz)
 		}
 	}
 
-	COperationOptions::WheelMode Mode;
+	int Command;
 
 	if (fHorz) {
-		Mode=m_App.OperationOptions.GetWheelTiltMode();
+		Command=m_App.OperationOptions.GetWheelTiltCommand();
 	} else {
 		if ((wParam&MK_SHIFT)!=0)
-			Mode=m_App.OperationOptions.GetWheelShiftMode();
+			Command=m_App.OperationOptions.GetWheelShiftCommand();
 		else if ((wParam&MK_CONTROL)!=0)
-			Mode=m_App.OperationOptions.GetWheelCtrlMode();
+			Command=m_App.OperationOptions.GetWheelCtrlCommand();
 		else
-			Mode=m_App.OperationOptions.GetWheelMode();
+			Command=m_App.OperationOptions.GetWheelCommand();
 	}
 
 	if (m_App.OperationOptions.IsStatusBarWheelEnabled() && m_App.StatusView.GetVisible()) {
@@ -4574,19 +4574,19 @@ void CMainWindow::OnMouseWheel(WPARAM wParam,LPARAM lParam,bool fHorz)
 		if (::PtInRect(&rc,pt)) {
 			switch (m_App.StatusView.GetCurItem()) {
 			case STATUS_ITEM_CHANNEL:
-				Mode=COperationOptions::WHEEL_MODE_CHANNEL;
+				Command=CM_WHEEL_CHANNEL;
 				break;
 #if 0
 			// 倍率が変わるとウィンドウサイズも変わるので使いづらい
 			case STATUS_ITEM_VIDEOSIZE:
-				Mode=COperationOptions::WHEEL_MODE_ZOOM;
+				Command=CM_WHEEL_ZOOM;
 				break;
 #endif
 			case STATUS_ITEM_VOLUME:
-				Mode=COperationOptions::WHEEL_MODE_VOLUME;
+				Command=CM_WHEEL_VOLUME;
 				break;
 			case STATUS_ITEM_AUDIOCHANNEL:
-				Mode=COperationOptions::WHEEL_MODE_AUDIO;
+				Command=CM_WHEEL_AUDIO;
 				break;
 			}
 		}
@@ -4595,23 +4595,23 @@ void CMainWindow::OnMouseWheel(WPARAM wParam,LPARAM lParam,bool fHorz)
 	int Delta=m_WheelHandler.OnMouseWheel(wParam,1);
 	if (Delta==0)
 		return;
-	if (m_App.OperationOptions.IsWheelModeReverse(Mode))
+	if (m_App.OperationOptions.IsWheelCommandReverse(Command))
 		Delta=-Delta;
 	const DWORD CurTime=::GetTickCount();
 	bool fProcessed=false;
 
-	if (Mode!=m_PrevWheelMode)
+	if (Command!=m_PrevWheelCommand)
 		m_WheelCount=0;
 	else
 		m_WheelCount++;
 
-	switch (Mode) {
-	case COperationOptions::WHEEL_MODE_VOLUME:
+	switch (Command) {
+	case CM_WHEEL_VOLUME:
 		SendCommand(Delta>0?CM_VOLUME_UP:CM_VOLUME_DOWN);
 		fProcessed=true;
 		break;
 
-	case COperationOptions::WHEEL_MODE_CHANNEL:
+	case CM_WHEEL_CHANNEL:
 		{
 			bool fUp;
 
@@ -4636,15 +4636,15 @@ void CMainWindow::OnMouseWheel(WPARAM wParam,LPARAM lParam,bool fHorz)
 		}
 		break;
 
-	case COperationOptions::WHEEL_MODE_AUDIO:
-		if (Mode!=m_PrevWheelMode || TickTimeSpan(m_PrevWheelTime,CurTime)>=300) {
+	case CM_WHEEL_AUDIO:
+		if (Command!=m_PrevWheelCommand || TickTimeSpan(m_PrevWheelTime,CurTime)>=300) {
 			SendCommand(CM_SWITCHAUDIO);
 			fProcessed=true;
 		}
 		break;
 
-	case COperationOptions::WHEEL_MODE_ZOOM:
-		if (Mode!=m_PrevWheelMode || TickTimeSpan(m_PrevWheelTime,CurTime)>=500) {
+	case CM_WHEEL_ZOOM:
+		if (Command!=m_PrevWheelCommand || TickTimeSpan(m_PrevWheelTime,CurTime)>=500) {
 			if (!IsZoomed(m_hwnd) && !m_pCore->GetFullscreen()) {
 				int Zoom;
 
@@ -4659,15 +4659,15 @@ void CMainWindow::OnMouseWheel(WPARAM wParam,LPARAM lParam,bool fHorz)
 		}
 		break;
 
-	case COperationOptions::WHEEL_MODE_ASPECTRATIO:
-		if (Mode!=m_PrevWheelMode || TickTimeSpan(m_PrevWheelTime,CurTime)>=300) {
+	case CM_WHEEL_ASPECTRATIO:
+		if (Command!=m_PrevWheelCommand || TickTimeSpan(m_PrevWheelTime,CurTime)>=300) {
 			SendCommand(CM_ASPECTRATIO);
 			fProcessed=true;
 		}
 		break;
 	}
 
-	m_PrevWheelMode=Mode;
+	m_PrevWheelCommand=Command;
 	if (fProcessed)
 		m_PrevWheelTime=CurTime;
 }

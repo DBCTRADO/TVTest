@@ -609,6 +609,7 @@
     <ClCompile Include="Util.cpp" />
     <ClCompile Include="View.cpp" />
     <ClCompile Include="ViewOptions.cpp" />
+    <ClCompile Include="WheelCommand.cpp" />
     <ClCompile Include="WindowUtil.cpp" />
     <ClCompile Include="ZoomOptions.cpp" />
   </ItemGroup>
@@ -783,6 +784,7 @@
     <ClInclude Include="Util.h" />
     <ClInclude Include="View.h" />
     <ClInclude Include="ViewOptions.h" />
+    <ClInclude Include="WheelCommand.h" />
     <ClInclude Include="WindowUtil.h" />
     <ClInclude Include="ZoomOptions.h" />
   </ItemGroup>
