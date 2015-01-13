@@ -4572,24 +4572,33 @@ void CMainWindow::OnMouseWheel(WPARAM wParam,LPARAM lParam,bool fHorz)
 
 		m_App.StatusView.GetScreenPosition(&rc);
 		if (::PtInRect(&rc,pt)) {
-			switch (m_App.StatusView.GetCurItem()) {
-			case STATUS_ITEM_CHANNEL:
-				Command=CM_WHEEL_CHANNEL;
-				break;
-#if 0
-			// 倍率が変わるとウィンドウサイズも変わるので使いづらい
-			case STATUS_ITEM_VIDEOSIZE:
-				Command=CM_WHEEL_ZOOM;
-				break;
-#endif
-			case STATUS_ITEM_VOLUME:
-				Command=CM_WHEEL_VOLUME;
-				break;
-			case STATUS_ITEM_AUDIOCHANNEL:
-				Command=CM_WHEEL_AUDIO;
-				break;
+			int ItemID=m_App.StatusView.GetCurItem();
+
+			if (ItemID>=0) {
+				CStatusItem *pItem=m_App.StatusView.GetItemByID(ItemID);
+
+				if (pItem!=NULL) {
+					POINT ptItem=pt;
+					RECT rcItem;
+
+					::ScreenToClient(m_App.StatusView.GetHandle(),&ptItem);
+					pItem->GetRect(&rcItem);
+					ptItem.x-=rcItem.left;
+					ptItem.y-=rcItem.top;
+
+					int NewCommand=0;
+					if (pItem->OnMouseWheel(ptItem.x,ptItem.y,
+											fHorz,GET_WHEEL_DELTA_WPARAM(wParam),
+											&NewCommand))
+						Command=NewCommand;
+				}
 			}
 		}
+	}
+
+	if (Command==0) {
+		m_PrevWheelCommand=0;
+		return;
 	}
 
 	int Delta=m_WheelHandler.OnMouseWheel(wParam,1);

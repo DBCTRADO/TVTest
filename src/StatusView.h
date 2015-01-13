@@ -83,6 +83,7 @@ public:
 	virtual void OnMButtonUp(int x,int y) {}
 	virtual void OnMButtonDoubleClick(int x,int y) {}
 	virtual void OnMouseMove(int x,int y) {}
+	virtual bool OnMouseWheel(int x,int y,bool fHorz,int Delta,int *pCommand) { return false; }
 	virtual void OnVisibilityChanged() {}
 	virtual void OnPresentStatusChange(bool fPresent) {}
 	virtual void OnFocus(bool fFocus) {}

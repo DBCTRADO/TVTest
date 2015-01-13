@@ -71,6 +71,12 @@ void CChannelStatusItem::OnRButtonDown(int x,int y)
 									  &pt,Flags | TPM_RIGHTBUTTON);
 }
 
+bool CChannelStatusItem::OnMouseWheel(int x,int y,bool fHorz,int Delta,int *pCommand)
+{
+	*pCommand=CM_WHEEL_CHANNEL;
+	return true;
+}
+
 
 CVideoSizeStatusItem::CVideoSizeStatusItem()
 	: CStatusItem(STATUS_ITEM_VIDEOSIZE,SizeValue(10*EM_FACTOR,SIZE_EM))
@@ -225,6 +231,12 @@ void CVolumeStatusItem::OnMouseMove(int x,int y)
 		pUICore->SetVolume(Volume,false);
 }
 
+bool CVolumeStatusItem::OnMouseWheel(int x,int y,bool fHorz,int Delta,int *pCommand)
+{
+	*pCommand=CM_WHEEL_VOLUME;
+	return true;
+}
+
 void CVolumeStatusItem::SetStyle(const TVTest::Style::CStyleManager *pStyleManager)
 {
 	pStyleManager->Get(TEXT("status-bar.volume.bar.height"),&m_BarHeight);
@@ -285,6 +297,12 @@ void CAudioChannelStatusItem::OnRButtonDown(int x,int y)
 	GetMenuPos(&pt,&Flags);
 	GetAppClass().UICore.PopupSubMenu(CMainMenu::SUBMENU_AUDIO,
 									  &pt,Flags | TPM_RIGHTBUTTON);
+}
+
+bool CAudioChannelStatusItem::OnMouseWheel(int x,int y,bool fHorz,int Delta,int *pCommand)
+{
+	*pCommand=CM_WHEEL_AUDIO;
+	return true;
 }
 
 

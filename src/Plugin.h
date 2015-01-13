@@ -147,6 +147,7 @@ private:
 		void OnMButtonUp(int x,int y) override;
 		void OnMButtonDoubleClick(int x,int y) override;
 		void OnMouseMove(int x,int y) override;
+		bool OnMouseWheel(int x,int y,bool fHorz,int Delta,int *pCommand) override;
 		void OnVisibilityChanged() override;
 		void OnFocus(bool fFocus) override;
 		void OnSizeChanged() override;
@@ -162,7 +163,7 @@ private:
 		TVTest::String m_IDText;
 
 		void NotifyDraw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect,unsigned int Flags);
-		void NotifyMouseEvent(UINT Action,int x,int y);
+		LRESULT NotifyMouseEvent(UINT Action,int x,int y,int WheelDelta=0);
 	};
 
 	class CPluginPanelItem;

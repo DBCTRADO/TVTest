@@ -2564,6 +2564,7 @@ struct StatusItemMouseEventInfo {
 	POINT CursorPos;	// カーソル位置(クライアント座標)
 	RECT ItemRect;		// 項目の領域
 	RECT ContentRect;	// 項目の余白を除いた領域
+	int WheelDelta;		// ホイール移動量
 };
 
 // ステータス項目のマウス操作の種類
@@ -2577,7 +2578,9 @@ enum {
 	STATUS_ITEM_MOUSE_ACTION_MDOWN,			// 中央ボタンが押された
 	STATUS_ITEM_MOUSE_ACTION_MUP,			// 中央ボタンが離された
 	STATUS_ITEM_MOUSE_ACTION_MDOUBLECLICK,	// 中央ダブルクリック
-	STATUS_ITEM_MOUSE_ACTION_MOVE			// カーソル移動
+	STATUS_ITEM_MOUSE_ACTION_MOVE,			// カーソル移動
+	STATUS_ITEM_MOUSE_ACTION_WHEEL,			// ホイール
+	STATUS_ITEM_MOUSE_ACTION_HORZWHEEL		// 横ホイール
 };
 
 // TSプロセッサのインターフェースは TVTestInterface.h で宣言されています。

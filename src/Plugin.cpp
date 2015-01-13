@@ -3191,6 +3191,15 @@ void CPlugin::CPluginStatusItem::OnMouseMove(int x,int y)
 }
 
 
+bool CPlugin::CPluginStatusItem::OnMouseWheel(int x,int y,bool fHorz,int Delta,int *pCommand)
+{
+	return NotifyMouseEvent(fHorz?
+								TVTest::STATUS_ITEM_MOUSE_ACTION_HORZWHEEL:
+								TVTest::STATUS_ITEM_MOUSE_ACTION_WHEEL,
+							x,y,Delta)!=0;
+}
+
+
 void CPlugin::CPluginStatusItem::OnVisibilityChanged()
 {
 	if (m_pItem!=NULL) {
@@ -3305,7 +3314,7 @@ void CPlugin::CPluginStatusItem::NotifyDraw(
 }
 
 
-void CPlugin::CPluginStatusItem::NotifyMouseEvent(UINT Action,int x,int y)
+LRESULT CPlugin::CPluginStatusItem::NotifyMouseEvent(UINT Action,int x,int y,int WheelDelta)
 {
 	if (m_pPlugin!=NULL && m_pItem!=NULL) {
 		TVTest::StatusItemMouseEventInfo Info;
@@ -3319,10 +3328,13 @@ void CPlugin::CPluginStatusItem::NotifyMouseEvent(UINT Action,int x,int y)
 		Info.CursorPos.x+=Info.ItemRect.left;
 		Info.CursorPos.y+=Info.ItemRect.top;
 		GetClientRect(&Info.ContentRect);
+		Info.WheelDelta=WheelDelta;
 
-		m_pPlugin->SendEvent(TVTest::EVENT_STATUSITEM_MOUSE,
-							 reinterpret_cast<LPARAM>(&Info),0);
+		return m_pPlugin->SendEvent(TVTest::EVENT_STATUSITEM_MOUSE,
+									reinterpret_cast<LPARAM>(&Info),0);
 	}
+
+	return 0;
 }
 
 

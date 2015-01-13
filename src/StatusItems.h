@@ -38,6 +38,7 @@ public:
 	void Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect,unsigned int Flags) override;
 	void OnLButtonDown(int x,int y) override;
 	void OnRButtonDown(int x,int y) override;
+	bool OnMouseWheel(int x,int y,bool fHorz,int Delta,int *pCommand) override;
 };
 
 class CVideoSizeStatusItem : public CStatusItem
@@ -69,6 +70,7 @@ public:
 	void OnLButtonDown(int x,int y) override;
 	void OnRButtonDown(int x,int y) override;
 	void OnMouseMove(int x,int y) override;
+	bool OnMouseWheel(int x,int y,bool fHorz,int Delta,int *pCommand) override;
 	void SetStyle(const TVTest::Style::CStyleManager *pStyleManager) override;
 	void NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager) override;
 
@@ -88,6 +90,7 @@ public:
 	void Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect,unsigned int Flags) override;
 	void OnLButtonDown(int x,int y) override;
 	void OnRButtonDown(int x,int y) override;
+	bool OnMouseWheel(int x,int y,bool fHorz,int Delta,int *pCommand) override;
 
 private:
 	DrawUtil::CMonoColorIconList m_Icons;
