@@ -78,6 +78,10 @@ public:
 	virtual void OnLButtonDoubleClick(int x,int y) { OnLButtonDown(x,y); }
 	virtual void OnRButtonDown(int x,int y) { OnLButtonDown(x,y); }
 	virtual void OnRButtonUp(int x,int y) {}
+	virtual void OnRButtonDoubleClick(int x,int y) {}
+	virtual void OnMButtonDown(int x,int y) {}
+	virtual void OnMButtonUp(int x,int y) {}
+	virtual void OnMButtonDoubleClick(int x,int y) {}
 	virtual void OnMouseMove(int x,int y) {}
 	virtual void OnVisibilityChanged() {}
 	virtual void OnPresentStatusChange(bool fPresent) {}

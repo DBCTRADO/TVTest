@@ -3161,6 +3161,30 @@ void CPlugin::CPluginStatusItem::OnRButtonUp(int x,int y)
 }
 
 
+void CPlugin::CPluginStatusItem::OnRButtonDoubleClick(int x,int y)
+{
+	NotifyMouseEvent(TVTest::STATUS_ITEM_MOUSE_ACTION_RDOUBLECLICK,x,y);
+}
+
+
+void CPlugin::CPluginStatusItem::OnMButtonDown(int x,int y)
+{
+	NotifyMouseEvent(TVTest::STATUS_ITEM_MOUSE_ACTION_MDOWN,x,y);
+}
+
+
+void CPlugin::CPluginStatusItem::OnMButtonUp(int x,int y)
+{
+	NotifyMouseEvent(TVTest::STATUS_ITEM_MOUSE_ACTION_MUP,x,y);
+}
+
+
+void CPlugin::CPluginStatusItem::OnMButtonDoubleClick(int x,int y)
+{
+	NotifyMouseEvent(TVTest::STATUS_ITEM_MOUSE_ACTION_MDOUBLECLICK,x,y);
+}
+
+
 void CPlugin::CPluginStatusItem::OnMouseMove(int x,int y)
 {
 	NotifyMouseEvent(TVTest::STATUS_ITEM_MOUSE_ACTION_MOVE,x,y);

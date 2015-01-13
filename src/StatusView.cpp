@@ -515,28 +515,45 @@ LRESULT CStatusView::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 		return 0;
 
 	case WM_LBUTTONDOWN:
-	case WM_RBUTTONDOWN:
 	case WM_LBUTTONDBLCLK:
+	case WM_RBUTTONDOWN:
+	case WM_RBUTTONDBLCLK:
+	case WM_MBUTTONDOWN:
+	case WM_MBUTTONDBLCLK:
 		if (m_HotItem>=0) {
+			CStatusItem *pItem=m_ItemList[m_HotItem];
 			int x=GET_X_LPARAM(lParam),y=GET_Y_LPARAM(lParam);
 			RECT rc;
 
 			GetItemRectByIndex(m_HotItem,&rc);
 			x-=rc.left;
 			y-=rc.top;
+
 			m_fOnButtonDown=true;
+
 			switch (uMsg) {
 			case WM_LBUTTONDOWN:
-				m_ItemList[m_HotItem]->OnLButtonDown(x,y);
-				break;
-			case WM_RBUTTONDOWN:
-				m_ItemList[m_HotItem]->OnRButtonDown(x,y);
+				pItem->OnLButtonDown(x,y);
 				break;
 			case WM_LBUTTONDBLCLK:
-				m_ItemList[m_HotItem]->OnLButtonDoubleClick(x,y);
+				pItem->OnLButtonDoubleClick(x,y);
+				break;
+			case WM_RBUTTONDOWN:
+				pItem->OnRButtonDown(x,y);
+				break;
+			case WM_RBUTTONDBLCLK:
+				pItem->OnRButtonDoubleClick(x,y);
+				break;
+			case WM_MBUTTONDOWN:
+				pItem->OnMButtonDown(x,y);
+				break;
+			case WM_MBUTTONDBLCLK:
+				pItem->OnMButtonDoubleClick(x,y);
 				break;
 			}
+
 			m_fOnButtonDown=false;
+
 			if (!m_MouseLeaveTrack.IsClientTrack()) {
 				POINT pt;
 
@@ -556,7 +573,9 @@ LRESULT CStatusView::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 
 	case WM_LBUTTONUP:
 	case WM_RBUTTONUP:
+	case WM_MBUTTONUP:
 		if (m_HotItem>=0) {
+			CStatusItem *pItem=m_ItemList[m_HotItem];
 			int x=GET_X_LPARAM(lParam),y=GET_Y_LPARAM(lParam);
 			RECT rc;
 
@@ -565,13 +584,17 @@ LRESULT CStatusView::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 			y-=rc.top;
 			switch (uMsg) {
 			case WM_LBUTTONUP:
-				m_ItemList[m_HotItem]->OnLButtonUp(x,y);
+				pItem->OnLButtonUp(x,y);
 				break;
 			case WM_RBUTTONUP:
-				m_ItemList[m_HotItem]->OnRButtonUp(x,y);
+				pItem->OnRButtonUp(x,y);
+				break;
+			case WM_MBUTTONUP:
+				pItem->OnMButtonUp(x,y);
 				break;
 			}
 		}
+
 		if (::GetCapture()==hwnd) {
 			::ReleaseCapture();
 		}

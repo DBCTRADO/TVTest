@@ -142,6 +142,10 @@ private:
 		void OnLButtonDoubleClick(int x,int y) override;
 		void OnRButtonDown(int x,int y) override;
 		void OnRButtonUp(int x,int y) override;
+		void OnRButtonDoubleClick(int x,int y) override;
+		void OnMButtonDown(int x,int y) override;
+		void OnMButtonUp(int x,int y) override;
+		void OnMButtonDoubleClick(int x,int y) override;
 		void OnMouseMove(int x,int y) override;
 		void OnVisibilityChanged() override;
 		void OnFocus(bool fFocus) override;
