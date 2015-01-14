@@ -25,9 +25,13 @@ public:
 		virtual bool OnMenuPopup(HMENU hmenu) { return true; }
 		virtual bool OnMenuSelected(int Command) { return false; }
 	};
+
 	enum { MENU_USER=100 };
+
 	struct PanelTheme {
 		TVTest::Theme::Style TitleStyle;
+		TVTest::Theme::Style TitleIconStyle;
+		TVTest::Theme::Style TitleIconHighlightStyle;
 	};
 
 	static bool Initialize(HINSTANCE hinst);
@@ -58,14 +62,24 @@ private:
 	struct PanelStyle
 	{
 		TVTest::Style::Margins TitlePadding;
-		TVTest::Style::Size TitleButtonSize;
+		TVTest::Style::Margins TitleLabelMargin;
+		TVTest::Style::IntValue TitleLabelExtraHeight;
+		TVTest::Style::Size TitleButtonIconSize;
+		TVTest::Style::Margins TitleButtonPadding;
 
 		PanelStyle();
 		void SetStyle(const TVTest::Style::CStyleManager *pStyleManager);
 		void NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager);
 	};
 
+	enum ItemType {
+		ITEM_NONE,
+		ITEM_CLOSE
+	};
+
 	DrawUtil::CFont m_Font;
+	DrawUtil::CFont m_IconFont;
+	int m_FontHeight;
 	int m_TitleHeight;
 	CBasicWindow *m_pWindow;
 	TVTest::String m_Title;
@@ -74,6 +88,7 @@ private:
 	PanelStyle m_Style;
 	PanelTheme m_Theme;
 	CEventHandler *m_pEventHandler;
+	ItemType m_HotItem;
 	bool m_fCloseButtonPushed;
 	POINT m_ptDragStartPos;
 	POINT m_ptMovingWindowPos;
@@ -83,6 +98,7 @@ private:
 	void Draw(HDC hdc,const RECT &PaintRect) const;
 	void OnSize(int Width,int Height);
 	void GetCloseButtonRect(RECT *pRect) const;
+	void SetHotItem(ItemType Item);
 // CCustomWindow
 	LRESULT OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
 };

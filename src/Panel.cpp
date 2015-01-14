@@ -50,11 +50,18 @@ CPanel::CPanel()
 	, m_fShowTitle(false)
 	, m_fEnableFloating(true)
 	, m_pEventHandler(NULL)
+	, m_HotItem(ITEM_NONE)
 {
 	m_Theme.TitleStyle.Back.Fill.Type=TVTest::Theme::FILL_SOLID;
 	m_Theme.TitleStyle.Back.Fill.Solid.Color=::GetSysColor(COLOR_INACTIVECAPTION);
 	m_Theme.TitleStyle.Fore.Fill.Type=TVTest::Theme::FILL_SOLID;
 	m_Theme.TitleStyle.Fore.Fill.Solid.Color=::GetSysColor(COLOR_INACTIVECAPTIONTEXT);
+	m_Theme.TitleIconStyle=m_Theme.TitleStyle;
+	m_Theme.TitleIconHighlightStyle.Back.Fill.Type=TVTest::Theme::FILL_SOLID;
+	m_Theme.TitleIconHighlightStyle.Back.Fill.Solid.Color.Set(0,0,128);
+	m_Theme.TitleIconHighlightStyle.Back.Border.Type=TVTest::Theme::BORDER_NONE;
+	m_Theme.TitleIconHighlightStyle.Fore.Fill.Type=TVTest::Theme::FILL_SOLID;
+	m_Theme.TitleIconHighlightStyle.Fore.Fill.Solid.Color.Set(255,255,255);
 }
 
 
@@ -89,6 +96,10 @@ void CPanel::SetTheme(const TVTest::Theme::CThemeManager *pThemeManager)
 
 	pThemeManager->GetStyle(TVTest::Theme::CThemeManager::STYLE_PANEL_TITLE,
 							&Theme.TitleStyle);
+	pThemeManager->GetStyle(TVTest::Theme::CThemeManager::STYLE_TITLEBAR_BUTTON,
+							&Theme.TitleIconStyle);
+	pThemeManager->GetStyle(TVTest::Theme::CThemeManager::STYLE_TITLEBAR_BUTTON_HOT,
+							&Theme.TitleIconHighlightStyle);
 
 	SetPanelTheme(Theme);
 }
@@ -193,17 +204,25 @@ void CPanel::Draw(HDC hdc,const RECT &PaintRect) const
 
 		GetTitleRect(&rc);
 		TVTest::Theme::Draw(hdc,rc,m_Theme.TitleStyle.Back);
+		TVTest::Theme::SubtractBorderRect(m_Theme.TitleStyle.Back.Border,&rc);
+
 		if (!m_Title.empty()) {
 			TVTest::Style::Subtract(&rc,m_Style.TitlePadding);
-			rc.right-=m_Style.TitleButtonSize.Width;
+			rc.right-=m_Style.TitleButtonIconSize.Width+m_Style.TitleButtonPadding.Horz();
+			TVTest::Style::Subtract(&rc,m_Style.TitleLabelMargin);
 			DrawUtil::DrawText(hdc,m_Title.c_str(),rc,
 				DT_LEFT | DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX,
 				&m_Font,m_Theme.TitleStyle.Fore.Fill.GetSolidColor());
 		}
+
 		GetCloseButtonRect(&rc);
-		::DrawFrameControl(hdc,&rc,DFC_CAPTION,
-						   DFCS_CAPTIONCLOSE | DFCS_MONO |
-						   (m_fCloseButtonPushed?DFCS_PUSHED:0));
+		const TVTest::Theme::Style &Style=
+			m_HotItem==ITEM_CLOSE?m_Theme.TitleIconHighlightStyle:m_Theme.TitleIconStyle;
+		if (Style.Back.Border.Type!=TVTest::Theme::BORDER_NONE
+				|| Style.Back.Fill!=m_Theme.TitleStyle.Back.Fill)
+			TVTest::Theme::Draw(hdc,rc,Style.Back);
+		DrawUtil::DrawText(hdc,TEXT("r"),rc,DT_CENTER | DT_VCENTER | DT_SINGLELINE,
+						   &m_IconFont,Style.Fore.Fill.GetSolidColor());
 	}
 }
 
@@ -226,14 +245,30 @@ void CPanel::OnSize(int Width,int Height)
 
 void CPanel::GetCloseButtonRect(RECT *pRect) const
 {
+	const int ButtonWidth=m_Style.TitleButtonIconSize.Width+m_Style.TitleButtonPadding.Horz();
+	const int ButtonHeight=m_Style.TitleButtonIconSize.Height+m_Style.TitleButtonPadding.Vert();
 	RECT rc;
 
 	GetClientRect(&rc);
+	TVTest::Theme::SubtractBorderRect(m_Theme.TitleStyle.Back.Border,&rc);
 	rc.right-=m_Style.TitlePadding.Right;
-	rc.left=rc.right-m_Style.TitleButtonSize.Width;
-	rc.top=(m_TitleHeight-m_Style.TitleButtonSize.Height)/2;
-	rc.bottom=rc.top+m_Style.TitleButtonSize.Height;
+	rc.left=rc.right-ButtonWidth;
+	rc.top=m_Style.TitlePadding.Top+
+		(m_TitleHeight-m_Style.TitlePadding.Vert()-ButtonHeight)/2;
+	rc.bottom=rc.top+ButtonHeight;
 	*pRect=rc;
+}
+
+
+void CPanel::SetHotItem(ItemType Item)
+{
+	if (m_HotItem!=Item) {
+		m_HotItem=Item;
+
+		RECT rc;
+		GetCloseButtonRect(&rc);
+		Invalidate(&rc);
+	}
 }
 
 
@@ -246,12 +281,31 @@ LRESULT CPanel::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 
 			if (!m_Font.IsCreated())
 				m_Font.Create(DrawUtil::FONT_CAPTION);
+
+			if (!m_IconFont.IsCreated()) {
+				LOGFONT lf;
+				::ZeroMemory(&lf,sizeof(lf));
+				lf.lfHeight=-m_Style.TitleButtonIconSize.Height;
+				lf.lfCharSet=SYMBOL_CHARSET;
+				::lstrcpy(lf.lfFaceName,TEXT("Marlett"));
+				m_IconFont.Create(&lf);
+			}
+
 			HDC hdc=::GetDC(hwnd);
-			int FontHeight=m_Font.GetHeight(hdc,false);
-			m_TitleHeight=max(FontHeight,m_Style.TitleButtonSize.Height)+
-				m_Style.TitlePadding.Top+m_Style.TitlePadding.Bottom;
+			m_FontHeight=m_Font.GetHeight(hdc,false);
+			int LabelHeight=m_FontHeight+
+				m_Style.TitleLabelMargin.Vert()+
+				m_Style.TitleLabelExtraHeight;
+			int ButtonHeight=
+				m_Style.TitleButtonIconSize.Height+
+				m_Style.TitleButtonPadding.Vert();
+			RECT Border;
+			TVTest::Theme::GetBorderWidths(m_Theme.TitleStyle.Back.Border,&Border);
+			m_TitleHeight=max(LabelHeight,ButtonHeight)+m_Style.TitlePadding.Vert()+
+				Border.top+Border.bottom;
 			::ReleaseDC(hwnd,hdc);
 
+			m_HotItem=ITEM_NONE;
 			m_fCloseButtonPushed=false;
 		}
 		return 0;
@@ -281,14 +335,17 @@ LRESULT CPanel::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 
 				GetCloseButtonRect(&rc);
 				if (::PtInRect(&rc,pt)) {
+					SetHotItem(ITEM_CLOSE);
 					m_fCloseButtonPushed=true;
 					::SetCapture(hwnd);
-					::InvalidateRect(hwnd,&rc,FALSE);
-				} else if (m_fEnableFloating) {
-					::ClientToScreen(hwnd,&pt);
-					m_fCloseButtonPushed=false;
-					m_ptDragStartPos=pt;
-					::SetCapture(hwnd);
+				} else {
+					SetHotItem(ITEM_NONE);
+					if (m_fEnableFloating) {
+						::ClientToScreen(hwnd,&pt);
+						m_fCloseButtonPushed=false;
+						m_ptDragStartPos=pt;
+						::SetCapture(hwnd);
+					}
 				}
 			}
 		}
@@ -315,33 +372,57 @@ LRESULT CPanel::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 		return 0;
 
 	case WM_MOUSEMOVE:
-		if (::GetCapture()==hwnd) {
-			if (!m_fCloseButtonPushed) {
-				POINT pt;
+		{
+			POINT pt;
 
-				pt.x=GET_X_LPARAM(lParam);
-				pt.y=GET_Y_LPARAM(lParam);
-				::ClientToScreen(hwnd,&pt);
-				if (abs(pt.x-m_ptDragStartPos.x)>=4
-						|| abs(pt.y-m_ptDragStartPos.y)>=4) {
-					::ReleaseCapture();
-					if (m_pEventHandler!=NULL
-							&& m_pEventHandler->OnFloating()) {
-						::SendMessage(GetParent(),WM_NCLBUTTONDOWN,
-									  HTCAPTION,MAKELONG(pt.x,pt.y));
+			pt.x=GET_X_LPARAM(lParam);
+			pt.y=GET_Y_LPARAM(lParam);
+
+			RECT rc;
+			GetCloseButtonRect(&rc);
+			if (::PtInRect(&rc,pt))
+				SetHotItem(ITEM_CLOSE);
+			else
+				SetHotItem(ITEM_NONE);
+
+			if (::GetCapture()==hwnd) {
+				if (!m_fCloseButtonPushed) {
+					::ClientToScreen(hwnd,&pt);
+					if (abs(pt.x-m_ptDragStartPos.x)>=4
+							|| abs(pt.y-m_ptDragStartPos.y)>=4) {
+						::ReleaseCapture();
+						if (m_pEventHandler!=NULL
+								&& m_pEventHandler->OnFloating()) {
+							::SendMessage(GetParent(),WM_NCLBUTTONDOWN,
+										  HTCAPTION,MAKELONG(pt.x,pt.y));
+						}
 					}
 				}
+			} else {
+				TRACKMOUSEEVENT tme;
+				tme.cbSize=sizeof(TRACKMOUSEEVENT);
+				tme.dwFlags=TME_LEAVE;
+				tme.hwndTrack=hwnd;
+				::TrackMouseEvent(&tme);
 			}
 		}
 		return 0;
 
+	case WM_MOUSELEAVE:
+		SetHotItem(ITEM_NONE);
+		return 0;
+
+	case WM_SETCURSOR:
+		if ((HWND)wParam==hwnd && LOWORD(lParam)==HTCLIENT && m_HotItem!=ITEM_NONE) {
+			::SetCursor(::LoadCursor(NULL,IDC_HAND));
+			return TRUE;
+		}
+		break;
+
 	case WM_CAPTURECHANGED:
 		if (m_fCloseButtonPushed) {
-			RECT rc;
-
+			SetHotItem(ITEM_NONE);
 			m_fCloseButtonPushed=false;
-			GetCloseButtonRect(&rc);
-			::InvalidateRect(hwnd,&rc,FALSE);
 		}
 		return 0;
 
@@ -392,8 +473,11 @@ LRESULT CPanel::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 
 
 CPanel::PanelStyle::PanelStyle()
-	: TitlePadding(4)
-	, TitleButtonSize(14,14)
+	: TitlePadding(0,0,4,0)
+	, TitleLabelMargin(4,2,4,2)
+	, TitleLabelExtraHeight(4)
+	, TitleButtonIconSize(12,12)
+	, TitleButtonPadding(2)
 {
 }
 
@@ -401,14 +485,20 @@ CPanel::PanelStyle::PanelStyle()
 void CPanel::PanelStyle::SetStyle(const TVTest::Style::CStyleManager *pStyleManager)
 {
 	pStyleManager->Get(TEXT("panel.title.padding"),&TitlePadding);
-	pStyleManager->Get(TEXT("panel.title.button"),&TitleButtonSize);
+	pStyleManager->Get(TEXT("panel.title.label.margin"),&TitleLabelMargin);
+	pStyleManager->Get(TEXT("panel.title.label.extra-height"),&TitleLabelExtraHeight);
+	pStyleManager->Get(TEXT("panel.title.button.icon"),&TitleButtonIconSize);
+	pStyleManager->Get(TEXT("panel.title.button.padding"),&TitleButtonPadding);
 }
 
 
 void CPanel::PanelStyle::NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager)
 {
 	pStyleManager->ToPixels(&TitlePadding);
-	pStyleManager->ToPixels(&TitleButtonSize);
+	pStyleManager->ToPixels(&TitleLabelMargin);
+	pStyleManager->ToPixels(&TitleLabelExtraHeight);
+	pStyleManager->ToPixels(&TitleButtonIconSize);
+	pStyleManager->ToPixels(&TitleButtonPadding);
 }
 
 
