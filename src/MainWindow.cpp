@@ -799,8 +799,6 @@ void CMainWindow::SetCustomTitleBar(bool fCustom)
 				if (fCustom)
 					m_LayoutBase.SetContainerVisible(CONTAINER_ID_TITLEBAR,true);
 			}
-			//m_App.MainMenu.CheckItem(CM_CUSTOMTITLEBAR,fCustom);
-			m_App.MainMenu.EnableItem(CM_SPLITTITLEBAR,!m_fCustomFrame && fCustom);
 		}
 	}
 }
@@ -843,7 +841,6 @@ void CMainWindow::SetSplitTitleBar(bool fSplit)
 			pStatusSplitter->ReplacePane(0,pParentSplitter);
 			pStatusSplitter->SetAdjustPane(pParentSplitter->GetID());
 			m_LayoutBase.Adjust();
-			//m_App.MainMenu.CheckItem(CM_SPLITTITLEBAR,fSplit);
 		}
 	}
 }
@@ -869,13 +866,6 @@ void CMainWindow::SetCustomFrame(bool fCustomFrame,int Width)
 				HookWindows(m_LayoutBase.GetHandle());
 				HookWindows(m_App.Panel.Form.GetHandle());
 			}
-			/*
-			m_App.MainMenu.CheckRadioItem(CM_WINDOWFRAME_NORMAL,CM_WINDOWFRAME_NONE,
-				!fCustomFrame?CM_WINDOWFRAME_NORMAL:
-					(m_CustomFrameWidth==0?CM_WINDOWFRAME_NONE:CM_WINDOWFRAME_CUSTOM));
-			m_App.MainMenu.EnableItem(CM_CUSTOMTITLEBAR,!fCustomFrame);
-			m_App.MainMenu.EnableItem(CM_SPLITTITLEBAR,!fCustomFrame && m_fCustomTitleBar);
-			*/
 		}
 	}
 }
@@ -4162,7 +4152,7 @@ bool CMainWindow::OnInitMenuPopup(HMENU hmenu)
 		m_App.MainMenu.CheckItem(CM_CUSTOMTITLEBAR,m_fCustomTitleBar);
 		m_App.MainMenu.EnableItem(CM_CUSTOMTITLEBAR,!m_fCustomFrame);
 		m_App.MainMenu.CheckItem(CM_SPLITTITLEBAR,m_fSplitTitleBar);
-		m_App.MainMenu.EnableItem(CM_SPLITTITLEBAR,!m_fCustomFrame && m_fCustomTitleBar);
+		m_App.MainMenu.EnableItem(CM_SPLITTITLEBAR,m_fCustomFrame || m_fCustomTitleBar);
 		m_App.MainMenu.CheckItem(CM_VIDEOEDGE,m_fViewWindowEdge);
 	} else {
 		if (m_App.ChannelMenuManager.InitPopup(m_App.MainMenu.GetSubMenu(CMainMenu::SUBMENU_SPACE),hmenu))
