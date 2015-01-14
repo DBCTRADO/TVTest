@@ -191,6 +191,7 @@ private:
 	{
 		TVTest::Style::Margins ScreenMargin;
 		TVTest::Style::Margins FullscreenMargin;
+		TVTest::Style::Margins ResizingMargin;
 
 		MainWindowStyle();
 		void SetStyle(const TVTest::Style::CStyleManager *pStyleManager);

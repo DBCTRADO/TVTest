@@ -5194,28 +5194,39 @@ LRESULT CALLBACK CMainWindow::ChildHookProc(HWND hwnd,UINT uMsg,WPARAM wParam,LP
 
 				pThis->GetScreenPosition(&rc);
 				if (::PtInRect(&rc,pt)) {
-					int FrameWidth=max(::GetSystemMetrics(SM_CXSIZEFRAME),pThis->m_CustomFrameWidth);
-					int FrameHeight=max(::GetSystemMetrics(SM_CYSIZEFRAME),pThis->m_CustomFrameWidth);
+					Style::Margins FrameWidth=pThis->m_Style.ResizingMargin;
+					if (FrameWidth.Left<pThis->m_CustomFrameWidth)
+						FrameWidth.Left=pThis->m_CustomFrameWidth;
+					if (FrameWidth.Top<pThis->m_CustomFrameWidth)
+						FrameWidth.Top=pThis->m_CustomFrameWidth;
+					if (FrameWidth.Right<pThis->m_CustomFrameWidth)
+						FrameWidth.Right=pThis->m_CustomFrameWidth;
+					if (FrameWidth.Bottom<pThis->m_CustomFrameWidth)
+						FrameWidth.Bottom=pThis->m_CustomFrameWidth;
+					int CornerMarginLeft=FrameWidth.Left*2;
+					int CornerMarginRight=FrameWidth.Right*2;
+					RECT rcFrame=rc;
+					Style::Subtract(&rcFrame,FrameWidth);
 					int Code=HTNOWHERE;
 
-					if (pt.x<rc.left+FrameWidth) {
-						if (pt.y<rc.top+FrameHeight)
+					if (pt.y<rcFrame.top) {
+						if (pt.x<rcFrame.left+CornerMarginLeft)
 							Code=HTTOPLEFT;
-						else if (pt.y>=rc.bottom-FrameHeight)
-							Code=HTBOTTOMLEFT;
-						else
-							Code=HTLEFT;
-					} else if (pt.x>=rc.right-FrameWidth) {
-						if (pt.y<rc.top+FrameHeight)
+						else if (pt.x>=rcFrame.right-CornerMarginRight)
 							Code=HTTOPRIGHT;
-						else if (pt.y>=rc.bottom-FrameHeight)
+						else
+							Code=HTTOP;
+					} else if (pt.y>=rcFrame.bottom) {
+						if (pt.x<rcFrame.left+CornerMarginLeft)
+							Code=HTBOTTOMLEFT;
+						else if (pt.x>=rcFrame.right-CornerMarginRight)
 							Code=HTBOTTOMRIGHT;
 						else
-							Code=HTRIGHT;
-					} else if (pt.y<rc.top+FrameHeight) {
-						Code=HTTOP;
-					} else if (pt.y>=rc.bottom-FrameHeight) {
-						Code=HTBOTTOM;
+							Code=HTBOTTOM;
+					} else if (pt.x<rcFrame.left) {
+						Code=HTLEFT;
+					} else if (pt.x>=rcFrame.right) {
+						Code=HTRIGHT;
 					}
 					if (Code!=HTNOWHERE) {
 						return Code;
@@ -6383,18 +6394,37 @@ CMainWindow::MainWindowStyle::MainWindowStyle()
 	: ScreenMargin(0,0,0,0)
 	, FullscreenMargin(0,0,0,0)
 {
+	int SizingBorderX=0,SizingBorderY;
+
+#ifdef WIN_XP_SUPPORT
+	if (Util::OS::IsWindowsVistaOrLater())
+#endif
+	{
+		NONCLIENTMETRICS ncm;
+
+		ncm.cbSize=sizeof(NONCLIENTMETRICS);
+		if (::SystemParametersInfo(SPI_GETNONCLIENTMETRICS,ncm.cbSize,&ncm,0))
+			SizingBorderX=SizingBorderY=ncm.iBorderWidth+ncm.iPaddedBorderWidth;
+	}
+	if (SizingBorderX==0) {
+		SizingBorderX=::GetSystemMetrics(SM_CXSIZEFRAME);
+		SizingBorderY=::GetSystemMetrics(SM_CYSIZEFRAME);
+	}
+	ResizingMargin=Style::Margins(SizingBorderX,SizingBorderY,SizingBorderX,SizingBorderY);
 }
 
 void CMainWindow::MainWindowStyle::SetStyle(const TVTest::Style::CStyleManager *pStyleManager)
 {
 	pStyleManager->Get(TEXT("screen.margin"),&ScreenMargin);
 	pStyleManager->Get(TEXT("fullscreen.margin"),&FullscreenMargin);
+	pStyleManager->Get(TEXT("main-window.resizing-margin"),&ResizingMargin);
 }
 
 void CMainWindow::MainWindowStyle::NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager)
 {
 	pStyleManager->ToPixels(&ScreenMargin);
 	pStyleManager->ToPixels(&FullscreenMargin);
+	pStyleManager->ToPixels(&ResizingMargin);
 }
 
 
