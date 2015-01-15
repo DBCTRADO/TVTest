@@ -53,6 +53,8 @@ const CColorScheme::ColorInfo CColorScheme::m_ColorInfoList[NUM_COLORS] = {
 	{HEXRGB(0x3465B0),	TEXT("StatusEventProgressElapsedBorder"),	TEXT("ステータスバー 番組経過時間バー外枠")},
 	{HEXRGB(0x222222),	TEXT("Splitter"),							TEXT("分割線")},
 	{HEXRGB(0x000000),	TEXT("ScreenBorder"),						TEXT("画面の外枠")},
+	{HEXRGB(0x666666),	TEXT("WindowFrame"),						TEXT("ウィンドウ細枠")},
+	{HEXRGB(0x666666),	TEXT("WindowFrameBorder"),					TEXT("ウィンドウ細枠の境界")},
 	{HEXRGB(0x333333),	TEXT("PanelBack"),							TEXT("パネル 背景")},
 	{HEXRGB(0x999999),	TEXT("PanelText"),							TEXT("パネル 文字")},
 	{HEXRGB(0x000000),	TEXT("PanelTabBack"),						TEXT("パネル タブ背景1")},
@@ -307,6 +309,8 @@ const CColorScheme::GradientInfo CColorScheme::m_GradientInfoList[NUM_GRADIENTS]
 const CColorScheme::BorderInfo CColorScheme::m_BorderInfoList[NUM_BORDERS] = {
 	{TEXT("ScreenBorder"),						Theme::BORDER_SUNKEN,
 		COLOR_SCREENBORDER,							true},
+	{TEXT("WindowFrameBorder"),					Theme::BORDER_NONE,
+		COLOR_WINDOWFRAMEBORDER,					false},
 	{TEXT("StatusBorder"),						Theme::BORDER_RAISED,
 		COLOR_STATUSBORDER,							false},
 	{TEXT("StatusItemBorder"),					Theme::BORDER_NONE,
@@ -381,6 +385,7 @@ const CColorScheme::BorderInfo CColorScheme::m_BorderInfoList[NUM_BORDERS] = {
 
 const Theme::BorderType CColorScheme::m_CustomDefaultBorderList[NUM_BORDERS] = {
 	Theme::BORDER_SOLID,
+	Theme::BORDER_NONE,
 	Theme::BORDER_RAISED,
 	Theme::BORDER_NONE,
 	Theme::BORDER_NONE,

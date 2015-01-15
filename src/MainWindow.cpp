@@ -1213,8 +1213,10 @@ LRESULT CMainWindow::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 			::OffsetRect(&rc,-rc.left,-rc.top);
 			rcEmpty=rc;
 			::InflateRect(&rcEmpty,-m_CustomFrameWidth,-m_CustomFrameWidth);
-			DrawUtil::FillBorder(hdc,&rc,&rcEmpty,&rc,
-								 static_cast<HBRUSH>(::GetStockObject(BLACK_BRUSH)));
+			TVTest::Theme::Draw(hdc,&rc,m_Theme.FrameStyle.Border);
+			HBRUSH hbr=::CreateSolidBrush(m_Theme.FrameStyle.Fill.GetSolidColor());
+			DrawUtil::FillBorder(hdc,&rc,&rcEmpty,&rc,hbr);
+			::DeleteObject(hbr);
 			::ReleaseDC(hwnd,hdc);
 			return 0;
 		}
@@ -5712,6 +5714,10 @@ void CMainWindow::NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManag
 
 void CMainWindow::SetTheme(const TVTest::Theme::CThemeManager *pThemeManager)
 {
+	pThemeManager->GetBackgroundStyle(TVTest::Theme::CThemeManager::STYLE_WINDOWFRAME,&m_Theme.FrameStyle);
+	if (m_fCustomFrame)
+		Redraw(NULL,RDW_FRAME | RDW_INVALIDATE);
+
 	m_LayoutBase.SetBackColor(pThemeManager->GetColor(CColorScheme::COLOR_SPLITTER));
 
 	Theme::BorderStyle Border;

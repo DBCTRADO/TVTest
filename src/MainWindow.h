@@ -198,6 +198,11 @@ private:
 		void NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager);
 	};
 
+	struct MainWindowTheme
+	{
+		TVTest::Theme::BackgroundStyle FrameStyle;
+	};
+
 	class CBarLayout
 	{
 	public:
@@ -416,6 +421,7 @@ private:
 	CCommandEventHandler m_CommandEventHandler;
 
 	MainWindowStyle m_Style;
+	MainWindowTheme m_Theme;
 	bool m_fShowStatusBar;
 	bool m_fPopupStatusBar;
 	bool m_fShowTitleBar;
