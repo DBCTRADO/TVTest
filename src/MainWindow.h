@@ -292,6 +292,7 @@ private:
 		void OnRButtonDown();
 		void OnMButtonDown();
 		void OnMouseMove();
+		CViewWindow &GetViewWindow() { return m_ViewWindow; }
 
 	// CUIBase
 		void SetTheme(const TVTest::Theme::CThemeManager *pThemeManager) override;
@@ -614,6 +615,7 @@ private:
 	void ShowAudioOSD();
 	void SetWindowVisible();
 	void ShowFloatingWindows(bool fShow);
+	CViewWindow &GetCurrentViewWindow();
 	void StoreTunerResumeInfo();
 	bool ResumeTuner();
 	void ResumeChannel();

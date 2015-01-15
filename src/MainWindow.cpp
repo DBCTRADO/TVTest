@@ -2822,7 +2822,7 @@ void CMainWindow::OnCommand(HWND hwnd,int id,HWND hwndCtl,UINT codeNotify)
 			} else {
 				pt.x=0;
 				pt.y=0;
-				::ClientToScreen(m_Viewer.GetViewWindow().GetHandle(),&pt);
+				::ClientToScreen(GetCurrentViewWindow().GetHandle(),&pt);
 			}
 			m_pCore->PopupMenu(&pt,fDefault?CUICore::POPUPMENU_DEFAULT:0);
 		}
@@ -2993,7 +2993,7 @@ void CMainWindow::OnCommand(HWND hwnd,int id,HWND hwndCtl,UINT codeNotify)
 			} else {
 				pt.x=0;
 				pt.y=0;
-				::ClientToScreen(m_Viewer.GetViewWindow().GetHandle(),&pt);
+				::ClientToScreen(GetCurrentViewWindow().GetHandle(),&pt);
 			}
 			m_App.MainMenu.PopupSubMenu(SubMenu,TPM_RIGHTBUTTON,pt.x,pt.y,hwnd);
 		}
@@ -5316,6 +5316,14 @@ void CMainWindow::ShowFloatingWindows(bool fShow)
 		m_App.CaptureWindow.SetVisible(fShow);
 	if (m_App.StreamInfo.IsCreated())
 		m_App.StreamInfo.SetVisible(fShow);
+}
+
+
+CViewWindow &CMainWindow::GetCurrentViewWindow()
+{
+	if (m_pCore->GetFullscreen())
+		return m_Fullscreen.GetViewWindow();
+	return m_Viewer.GetViewWindow();
 }
 
 
