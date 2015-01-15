@@ -201,6 +201,7 @@ private:
 	struct MainWindowTheme
 	{
 		TVTest::Theme::BackgroundStyle FrameStyle;
+		TVTest::Theme::BackgroundStyle ActiveFrameStyle;
 	};
 
 	class CBarLayout
@@ -621,6 +622,7 @@ private:
 	void ShowAudioOSD();
 	void SetWindowVisible();
 	void ShowFloatingWindows(bool fShow);
+	void DrawCustomFrame(bool fActive);
 	CViewWindow &GetCurrentViewWindow();
 	void StoreTunerResumeInfo();
 	bool ResumeTuner();

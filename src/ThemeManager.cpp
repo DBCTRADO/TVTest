@@ -36,6 +36,12 @@ const CThemeManager::StyleInfo CThemeManager::m_StyleList[NUM_STYLES] = {
 		-1
 	},
 	{
+		TEXT("window.frame.active"),
+		GRADIENT_SOLID(CColorScheme::COLOR_WINDOWACTIVEFRAMEBACK),
+		CColorScheme::BORDER_WINDOWACTIVEFRAME,
+		-1
+	},
+	{
 		TEXT("status-bar"),
 		-1,
 		CColorScheme::BORDER_STATUS,

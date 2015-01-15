@@ -1189,8 +1189,10 @@ LRESULT CMainWindow::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 
 // ウィンドウ枠を独自のものにするためのコード
 	case WM_NCACTIVATE:
-		if (m_fCustomFrame)
+		if (m_fCustomFrame) {
+			DrawCustomFrame(wParam!=FALSE);
 			return TRUE;
+		}
 		break;
 
 	case WM_NCCALCSIZE:
@@ -1206,18 +1208,7 @@ LRESULT CMainWindow::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 
 	case WM_NCPAINT:
 		if (m_fCustomFrame) {
-			HDC hdc=::GetWindowDC(hwnd);
-			RECT rc,rcEmpty;
-
-			::GetWindowRect(hwnd,&rc);
-			::OffsetRect(&rc,-rc.left,-rc.top);
-			rcEmpty=rc;
-			::InflateRect(&rcEmpty,-m_CustomFrameWidth,-m_CustomFrameWidth);
-			TVTest::Theme::Draw(hdc,&rc,m_Theme.FrameStyle.Border);
-			HBRUSH hbr=::CreateSolidBrush(m_Theme.FrameStyle.Fill.GetSolidColor());
-			DrawUtil::FillBorder(hdc,&rc,&rcEmpty,&rc,hbr);
-			::DeleteObject(hbr);
-			::ReleaseDC(hwnd,hdc);
+			DrawCustomFrame(::GetActiveWindow()==hwnd);
 			return 0;
 		}
 		break;
@@ -5320,6 +5311,25 @@ void CMainWindow::ShowFloatingWindows(bool fShow)
 }
 
 
+void CMainWindow::DrawCustomFrame(bool fActive)
+{
+	const TVTest::Theme::BackgroundStyle &Style=
+		fActive?m_Theme.ActiveFrameStyle:m_Theme.FrameStyle;
+	HDC hdc=::GetWindowDC(m_hwnd);
+	RECT rc,rcEmpty;
+
+	::GetWindowRect(m_hwnd,&rc);
+	::OffsetRect(&rc,-rc.left,-rc.top);
+	rcEmpty=rc;
+	::InflateRect(&rcEmpty,-m_CustomFrameWidth,-m_CustomFrameWidth);
+	TVTest::Theme::Draw(hdc,&rc,Style.Border);
+	HBRUSH hbr=::CreateSolidBrush(Style.Fill.GetSolidColor());
+	DrawUtil::FillBorder(hdc,&rc,&rcEmpty,&rc,hbr);
+	::DeleteObject(hbr);
+	::ReleaseDC(m_hwnd,hdc);
+}
+
+
 CViewWindow &CMainWindow::GetCurrentViewWindow()
 {
 	if (m_pCore->GetFullscreen())
@@ -5714,7 +5724,8 @@ void CMainWindow::NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManag
 
 void CMainWindow::SetTheme(const TVTest::Theme::CThemeManager *pThemeManager)
 {
-	pThemeManager->GetBackgroundStyle(TVTest::Theme::CThemeManager::STYLE_WINDOWFRAME,&m_Theme.FrameStyle);
+	pThemeManager->GetBackgroundStyle(TVTest::Theme::CThemeManager::STYLE_WINDOW_FRAME,&m_Theme.FrameStyle);
+	pThemeManager->GetBackgroundStyle(TVTest::Theme::CThemeManager::STYLE_WINDOW_ACTIVEFRAME,&m_Theme.ActiveFrameStyle);
 	if (m_fCustomFrame)
 		Redraw(NULL,RDW_FRAME | RDW_INVALIDATE);
 
