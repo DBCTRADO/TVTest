@@ -246,6 +246,12 @@ const CThemeManager::StyleInfo CThemeManager::m_StyleList[NUM_STYLES] = {
 		CColorScheme::COLOR_CONTROLPANELHIGHLIGHTTEXT
 	},
 	{
+		TEXT("control-panel.item.checked"),
+		CColorScheme::GRADIENT_CONTROLPANELCHECKEDBACK,
+		CColorScheme::BORDER_CONTROLPANELCHECKEDITEM,
+		CColorScheme::COLOR_CONTROLPANELCHECKEDTEXT
+	},
+	{
 		TEXT("notification-bar"),
 		CColorScheme::GRADIENT_NOTIFICATIONBARBACK,
 		-1,

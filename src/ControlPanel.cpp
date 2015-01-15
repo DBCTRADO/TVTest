@@ -91,6 +91,8 @@ void CControlPanel::SetTheme(const TVTest::Theme::CThemeManager *pThemeManager)
 							&Theme.ItemStyle);
 	pThemeManager->GetStyle(TVTest::Theme::CThemeManager::STYLE_CONTROLPANEL_ITEM_HOT,
 							&Theme.OverItemStyle);
+	pThemeManager->GetStyle(TVTest::Theme::CThemeManager::STYLE_CONTROLPANEL_ITEM_CHECKED,
+							&Theme.CheckedItemStyle);
 	Theme.MarginColor=
 		pThemeManager->GetColor(CColorScheme::COLOR_CONTROLPANELMARGIN);
 
@@ -334,16 +336,13 @@ void CControlPanel::Draw(HDC hdc,const RECT &PaintRect)
 				crBack=m_Theme.OverItemStyle.Back.Fill.GetSolidColor();
 				TVTest::Theme::Draw(hdcOffscreen,rc,m_Theme.OverItemStyle.Back);
 			} else {
-				TVTest::Theme::Style Style=m_Theme.ItemStyle;
+				TVTest::Theme::Style Style=
+					pItem->GetCheck()?m_Theme.CheckedItemStyle:m_Theme.ItemStyle;
 
 				crText=Style.Fore.Fill.GetSolidColor();
 				crBack=Style.Back.Fill.GetSolidColor();
-				if (!pItem->GetEnable()) {
+				if (!pItem->GetEnable())
 					crText=MixColor(crText,crBack);
-				} else if (pItem->GetCheck()) {
-					Style.Back.Fill=TVTest::Theme::MixStyle(Style.Back.Fill,m_Theme.OverItemStyle.Back.Fill);
-					crBack=Style.Back.Fill.GetSolidColor();
-				}
 				TVTest::Theme::Draw(hdcOffscreen,rc,Style.Back);
 			}
 			::SetTextColor(hdcOffscreen,crText);
@@ -533,6 +532,7 @@ CControlPanel::ControlPanelTheme::ControlPanelTheme()
 	OverItemStyle.Back.Border.Type=TVTest::Theme::BORDER_NONE;
 	OverItemStyle.Fore.Fill.Type=TVTest::Theme::FILL_SOLID;
 	OverItemStyle.Fore.Fill.Solid.Color.Set(0,0,0);
+	CheckedItemStyle=OverItemStyle;
 	MarginColor.Set(0,0,0);
 }
 

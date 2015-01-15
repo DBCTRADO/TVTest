@@ -19,6 +19,7 @@ public:
 	struct ControlPanelTheme {
 		TVTest::Theme::Style ItemStyle;
 		TVTest::Theme::Style OverItemStyle;
+		TVTest::Theme::Style CheckedItemStyle;
 		TVTest::Theme::ThemeColor MarginColor;
 
 		ControlPanelTheme();
