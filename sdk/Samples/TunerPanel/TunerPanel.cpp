@@ -1034,14 +1034,11 @@ void CTunerPanel::Draw(HDC hdc, const RECT &PaintRect)
 							&& m_HotItem.Channel == k) {
 						pszStyle = L"control-panel.item.hot";
 						m_pApp->ThemeDrawBackground(pszStyle, hdc, rc);
+					} else if (fCurrentChannel) {
+						pszStyle = L"control-panel.item.checked";
+						m_pApp->ThemeDrawBackground(pszStyle, hdc, rc);
 					} else {
 						pszStyle = L"panel.content";
-
-						if (fCurrentChannel) {
-							HBRUSH hbr = ::CreateSolidBrush(m_pApp->GetColor(L"ControlPanelHighlightBack"));
-							::FillRect(hdc, &rc, hbr);
-							::DeleteObject(hbr);
-						}
 					}
 
 					if (m_ViewMode == VIEW_MODE_LIST) {
