@@ -1009,6 +1009,19 @@ LRESULT CMainWindow::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 			CalcPositionFromClientRect(&rc);
 			pmmi->ptMinTrackSize.x=rc.right-rc.left;
 			pmmi->ptMinTrackSize.y=rc.bottom-rc.top;
+
+			if (!m_fShowTitleBar || m_fCustomTitleBar) {
+				HMONITOR hMonitor=::MonitorFromWindow(hwnd,MONITOR_DEFAULTTONEAREST);
+				MONITORINFO mi;
+
+				mi.cbSize=sizeof(MONITORINFO);
+				if (::GetMonitorInfo(hMonitor,&mi)) {
+					pmmi->ptMaxSize.x=mi.rcWork.right-mi.rcWork.left;
+					pmmi->ptMaxSize.y=mi.rcWork.bottom-mi.rcWork.top;
+					pmmi->ptMaxPosition.x=mi.rcWork.left;
+					pmmi->ptMaxPosition.y=mi.rcWork.top;
+				}
+			}
 		}
 		return 0;
 
@@ -1928,22 +1941,6 @@ void CMainWindow::OnSizeChanged(UINT State,int Width,int Height)
 		SetWindowVisible();
 	}
 
-	if (fMaximized && (!m_fShowTitleBar || m_fCustomTitleBar)) {
-		HMONITOR hMonitor=::MonitorFromWindow(m_hwnd,MONITOR_DEFAULTTONEAREST);
-		MONITORINFO mi;
-
-		mi.cbSize=sizeof(MONITORINFO);
-		::GetMonitorInfo(hMonitor,&mi);
-		::MoveWindow(m_hwnd,
-					 mi.rcWork.left,mi.rcWork.top,
-					 mi.rcWork.right-mi.rcWork.left,
-					 mi.rcWork.bottom-mi.rcWork.top,
-					 TRUE);
-		SIZE sz;
-		GetClientSize(&sz);
-		Width=sz.cx;
-		Height=sz.cy;
-	}
 	m_TitleBar.SetMaximizeMode(fMaximized);
 
 	if (m_fLockLayout || fMinimized)
