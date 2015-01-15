@@ -1059,7 +1059,8 @@ LRESULT CMainWindow::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 			break;
 		ForegroundWindow(hwnd);
 	case WM_LBUTTONDOWN:
-		if (uMsg==WM_NCLBUTTONDOWN || m_App.OperationOptions.GetDisplayDragMove()) {
+		if (!GetMaximize()
+				&& (uMsg==WM_NCLBUTTONDOWN || m_App.OperationOptions.GetDisplayDragMove())) {
 			m_fDragging=true;
 			/*
 			m_ptDragStartPos.x=GET_X_LPARAM(lParam);
@@ -1071,8 +1072,9 @@ LRESULT CMainWindow::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 			::SetCapture(hwnd);
 			::KillTimer(hwnd,TIMER_ID_HIDECURSOR);
 			::SetCursor(::LoadCursor(nullptr,IDC_ARROW));
+			return 0;
 		}
-		return 0;
+		break;
 
 	case WM_NCLBUTTONUP:
 	case WM_LBUTTONUP:
