@@ -199,6 +199,8 @@ CAppMain::CAppMain()
 	, m_ExitTimeout(60000)
 	, m_fEnablePlaybackOnStart(true)
 	, m_fIncrementNetworkPort(true)
+
+	, m_pColorScheme(NULL)
 {
 	UICore.SetSkin(&MainWindow);
 
@@ -1416,10 +1418,20 @@ bool CAppMain::ProcessCommandLine(LPCTSTR pszCmdLine)
 }
 
 
+const CColorScheme *CAppMain::GetCurrentColorScheme() const
+{
+	if (m_pColorScheme==NULL)
+		return ColorSchemeOptions.GetColorScheme();
+	return m_pColorScheme;
+}
+
+
 // 配色を適用する
 bool CAppMain::ApplyColorScheme(const CColorScheme *pColorScheme)
 {
 	TVTest::Theme::CThemeManager ThemeManager(pColorScheme);
+
+	m_pColorScheme=pColorScheme;
 
 	MainWindow.SetTheme(&ThemeManager);
 	StatusView.SetTheme(&ThemeManager);

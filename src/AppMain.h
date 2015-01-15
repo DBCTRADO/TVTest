@@ -474,6 +474,7 @@ public:
 										 DWORD ActiveThreadID=0);
 	void SetEnablePlaybackOnStart(bool fEnable) { m_fEnablePlaybackOnStart=fEnable; }
 	bool GetEnablePlaybackOnStart() const { return m_fEnablePlaybackOnStart; }
+	const CColorScheme *GetCurrentColorScheme() const;
 
 private:
 	class CDtvEngineEventHandler : public CDtvEngine::CEventHandler
@@ -547,6 +548,7 @@ private:
 	unsigned int m_ExitTimeout;
 	bool m_fEnablePlaybackOnStart;
 	bool m_fIncrementNetworkPort;
+	const CColorScheme *m_pColorScheme;
 
 	// ÉRÉsÅ[ã÷é~
 	CAppMain(const CAppMain &) /* = delete */;

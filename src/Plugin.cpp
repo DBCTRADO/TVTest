@@ -1947,7 +1947,7 @@ LRESULT CPlugin::OnCallback(TVTest::PluginParam *pParam,UINT Message,LPARAM lPar
 					|| pInfo->hdc==NULL)
 				return FALSE;
 
-			TVTest::Theme::CThemeManager ThemeManager(GetAppClass().ColorSchemeOptions.GetColorScheme());
+			TVTest::Theme::CThemeManager ThemeManager(GetAppClass().GetCurrentColorScheme());
 			int Type=ThemeManager.ParseStyleName(pInfo->pszStyle);
 			if (Type<0)
 				return FALSE;
@@ -1971,7 +1971,7 @@ LRESULT CPlugin::OnCallback(TVTest::PluginParam *pParam,UINT Message,LPARAM lPar
 					|| pInfo->pszText==NULL)
 				return FALSE;
 
-			TVTest::Theme::CThemeManager ThemeManager(GetAppClass().ColorSchemeOptions.GetColorScheme());
+			TVTest::Theme::CThemeManager ThemeManager(GetAppClass().GetCurrentColorScheme());
 			int Type=ThemeManager.ParseStyleName(pInfo->pszStyle);
 			if (Type<0)
 				return FALSE;
@@ -1997,7 +1997,7 @@ LRESULT CPlugin::OnCallback(TVTest::PluginParam *pParam,UINT Message,LPARAM lPar
 					|| pInfo->hbm==NULL)
 				return FALSE;
 
-			TVTest::Theme::CThemeManager ThemeManager(GetAppClass().ColorSchemeOptions.GetColorScheme());
+			TVTest::Theme::CThemeManager ThemeManager(GetAppClass().GetCurrentColorScheme());
 			int Type=ThemeManager.ParseStyleName(pInfo->pszStyle);
 			if (Type<0)
 				return FALSE;
