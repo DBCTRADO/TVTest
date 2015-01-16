@@ -1028,13 +1028,14 @@ int CAppMain::Main(HINSTANCE hInstance,LPCTSTR pszCmdLine,int nCmdShow)
 				&& RestoreChannelInfo.Channel>=0) {
 			Core.RestoreChannel();
 		} else {
-			const CChannelList *pList=ChannelManager.GetCurrentChannelList();
-			int i=pList->FindByIndex(
-				CoreEngine.m_DtvEngine.m_BonSrcDecoder.GetCurSpace(),
-				CoreEngine.m_DtvEngine.m_BonSrcDecoder.GetCurChannel());
-
-			if (i>=0)
-				UICore.DoCommand(CM_CHANNEL_FIRST+i);
+			const int CurSpace=(int)CoreEngine.m_DtvEngine.m_BonSrcDecoder.GetCurSpace();
+			const int CurChannel=(int)CoreEngine.m_DtvEngine.m_BonSrcDecoder.GetCurChannel();
+			if (CurSpace>=0 && CurChannel>=0) {
+				const CChannelList *pList=ChannelManager.GetCurrentChannelList();
+				int i=pList->FindByIndex(CurSpace,CurChannel);
+				if (i>=0)
+					UICore.DoCommand(CM_CHANNEL_FIRST+i);
+			}
 		}
 	}
 

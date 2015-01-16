@@ -46,6 +46,9 @@ public:
 		CHANNEL_CHANGE_INTERVAL_MAX = 5000UL
 	};
 
+	static const DWORD SPACE_INVALID   = 0xFFFFFFFFUL;
+	static const DWORD CHANNEL_INVALID = 0xFFFFFFFFUL;
+
 	CBonSrcDecoder(IEventHandler *pEventHandler = NULL);
 	virtual ~CBonSrcDecoder();
 
@@ -77,8 +80,8 @@ public:
 
 	int NumSpaces() const;
 	LPCTSTR GetTunerName() const;
-	int GetCurSpace() const;
-	int GetCurChannel() const;
+	DWORD GetCurSpace() const;
+	DWORD GetCurChannel() const;
 
 	float GetSignalLevel(void);
 	DWORD GetBitRate() const;

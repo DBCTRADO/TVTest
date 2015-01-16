@@ -556,20 +556,20 @@ LPCTSTR CBonSrcDecoder::GetTunerName() const
 	return m_pBonDriver2->GetTunerName();
 }
 
-int CBonSrcDecoder::GetCurSpace() const
+DWORD CBonSrcDecoder::GetCurSpace() const
 {
 	if (m_pBonDriver2 == NULL) {
 		//SetError(ERR_NOTOPEN, NULL);
-		return -1;
+		return SPACE_INVALID;
 	}
 	return m_pBonDriver2->GetCurSpace();
 }
 
-int CBonSrcDecoder::GetCurChannel() const
+DWORD CBonSrcDecoder::GetCurChannel() const
 {
 	if (m_pBonDriver2 == NULL) {
 		//SetError(ERR_NOTOPEN, NULL);
-		return -1;
+		return CHANNEL_INVALID;
 	}
 	return m_pBonDriver2->GetCurChannel();
 }
