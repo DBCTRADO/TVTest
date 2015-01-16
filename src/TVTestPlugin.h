@@ -2568,6 +2568,8 @@ struct StatusItemMouseEventInfo {
 };
 
 // ステータス項目のマウス操作の種類
+// DOWN か DOUBLECLICK が送られた際に SetCapture() でマウスキャプチャが行われると、
+// キャプチャが解除された時に CAPTURERELEASE が送られます。
 enum {
 	STATUS_ITEM_MOUSE_ACTION_LDOWN=1,		// 左ボタンが押された
 	STATUS_ITEM_MOUSE_ACTION_LUP,			// 左ボタンが離された
@@ -2580,7 +2582,8 @@ enum {
 	STATUS_ITEM_MOUSE_ACTION_MDOUBLECLICK,	// 中央ダブルクリック
 	STATUS_ITEM_MOUSE_ACTION_MOVE,			// カーソル移動
 	STATUS_ITEM_MOUSE_ACTION_WHEEL,			// ホイール
-	STATUS_ITEM_MOUSE_ACTION_HORZWHEEL		// 横ホイール
+	STATUS_ITEM_MOUSE_ACTION_HORZWHEEL,		// 横ホイール
+	STATUS_ITEM_MOUSE_ACTION_CAPTURERELEASE	// キャプチャが解除された
 };
 
 // TSプロセッサのインターフェースは TVTestInterface.h で宣言されています。

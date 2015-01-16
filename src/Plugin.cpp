@@ -3255,6 +3255,12 @@ void CPlugin::CPluginStatusItem::OnSizeChanged()
 }
 
 
+void CPlugin::CPluginStatusItem::OnCaptureReleased()
+{
+	NotifyMouseEvent(TVTest::STATUS_ITEM_MOUSE_ACTION_CAPTURERELEASE,0,0);
+}
+
+
 void CPlugin::CPluginStatusItem::DetachItem()
 {
 	m_pPlugin=NULL;

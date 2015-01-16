@@ -151,6 +151,7 @@ private:
 		void OnVisibilityChanged() override;
 		void OnFocus(bool fFocus) override;
 		void OnSizeChanged() override;
+		void OnCaptureReleased() override;
 
 	// CPluginStatusItem
 		void DetachItem();

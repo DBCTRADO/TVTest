@@ -426,6 +426,8 @@ LRESULT CStatusView::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 
 			m_HotItem=-1;
 			m_MouseLeaveTrack.Initialize(hwnd);
+
+			m_CapturedItem=-1;
 		}
 		return 0;
 
@@ -529,6 +531,8 @@ LRESULT CStatusView::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 			x-=rc.left;
 			y-=rc.top;
 
+			bool fCaptured=::GetCapture()==hwnd;
+
 			m_fOnButtonDown=true;
 
 			switch (uMsg) {
@@ -553,6 +557,9 @@ LRESULT CStatusView::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 			}
 
 			m_fOnButtonDown=false;
+
+			if (!fCaptured && ::GetCapture()==hwnd)
+				m_CapturedItem=m_HotItem;
 
 			if (!m_MouseLeaveTrack.IsClientTrack()) {
 				POINT pt;
@@ -627,6 +634,16 @@ LRESULT CStatusView::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 			}
 		}
 		break;
+
+	case WM_CAPTURECHANGED:
+		if (m_CapturedItem>=0) {
+			CStatusItem *pItem=GetItem(m_CapturedItem);
+
+			m_CapturedItem=-1;
+			if (pItem!=NULL)
+				pItem->OnCaptureReleased();
+		}
+		return 0;
 
 	case WM_NOTIFY:
 		if (m_HotItem>=0)

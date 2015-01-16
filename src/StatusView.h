@@ -89,6 +89,7 @@ public:
 	virtual void OnFocus(bool fFocus) {}
 	virtual bool OnMouseHover(int x,int y) { return false; }
 	virtual void OnSizeChanged() {}
+	virtual void OnCaptureReleased() {}
 	virtual LRESULT OnNotifyMessage(LPNMHDR pnmh) { return 0; }
 
 	friend CStatusView;
@@ -232,6 +233,7 @@ private:
 	int m_HotItem;
 	CMouseLeaveTrack m_MouseLeaveTrack;
 	bool m_fOnButtonDown;
+	int m_CapturedItem;
 	CEventHandler *m_pEventHandler;
 	DrawUtil::COffscreen m_Offscreen;
 	bool m_fBufferedPaint;
