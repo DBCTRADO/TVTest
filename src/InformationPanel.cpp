@@ -128,6 +128,9 @@ void CInformationPanel::SetTheme(const TVTest::Theme::CThemeManager *pThemeManag
 				::SendMessage(m_hwndProgramInfo,EM_SETSCROLLPOS,0,reinterpret_cast<LPARAM>(&ptScroll));
 			}
 			::InvalidateRect(m_hwndProgramInfo,NULL,TRUE);
+
+			if (IsItemVisible(ITEM_PROGRAMINFO))
+				SendSizeMessage();
 		}
 	}
 }
@@ -394,6 +397,7 @@ LRESULT CInformationPanel::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lP
 			RECT rc;
 
 			GetItemRect(ITEM_PROGRAMINFO,&rc);
+			TVTest::Theme::SubtractBorderRect(m_Theme.ProgramInfoStyle.Back.Border,&rc);
 			::MoveWindow(m_hwndProgramInfo,rc.left,rc.top,
 						 rc.right-rc.left,rc.bottom-rc.top,TRUE);
 		}
@@ -720,6 +724,11 @@ void CInformationPanel::Draw(HDC hdc,const RECT &PaintRect)
 	}
 
 	if (IsItemVisible(ITEM_PROGRAMINFO)) {
+		if (m_Theme.ProgramInfoStyle.Back.Border.Type!=TVTest::Theme::BORDER_NONE) {
+			GetItemRect(ITEM_PROGRAMINFO,&rc);
+			TVTest::Theme::Draw(hdc,rc,m_Theme.ProgramInfoStyle.Back.Border);
+		}
+
 		GetButtonRect(BUTTON_PROGRAMINFOPREV,&rc);
 		DrawProgramInfoPrevNextButton(
 			hdc,rc,false,IsButtonEnabled(BUTTON_PROGRAMINFOPREV),

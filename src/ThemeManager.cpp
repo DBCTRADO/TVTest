@@ -158,7 +158,7 @@ const CThemeManager::StyleInfo CThemeManager::m_StyleList[NUM_STYLES] = {
 	{
 		TEXT("information-panel.event"),
 		GRADIENT_SOLID(CColorScheme::COLOR_PROGRAMINFOBACK),
-		-1,
+		CColorScheme::BORDER_INFORMATIONPANEL_EVENTINFO,
 		CColorScheme::COLOR_PROGRAMINFOTEXT
 	},
 	{
