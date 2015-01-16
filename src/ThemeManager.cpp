@@ -156,6 +156,24 @@ const CThemeManager::StyleInfo CThemeManager::m_StyleList[NUM_STYLES] = {
 		CColorScheme::COLOR_PANELTEXT
 	},
 	{
+		TEXT("information-panel.event"),
+		GRADIENT_SOLID(CColorScheme::COLOR_PROGRAMINFOBACK),
+		-1,
+		CColorScheme::COLOR_PROGRAMINFOTEXT
+	},
+	{
+		TEXT("information-panel.button"),
+		CColorScheme::GRADIENT_INFORMATIONPANEL_BUTTONBACK,
+		CColorScheme::BORDER_INFORMATIONPANEL_BUTTON,
+		CColorScheme::COLOR_INFORMATIONPANEL_BUTTONTEXT
+	},
+	{
+		TEXT("information-panel.button.hot"),
+		CColorScheme::GRADIENT_INFORMATIONPANEL_HOTBUTTONBACK,
+		CColorScheme::BORDER_INFORMATIONPANEL_HOTBUTTON,
+		CColorScheme::COLOR_INFORMATIONPANEL_HOTBUTTONTEXT
+	},
+	{
 		TEXT("program-list-panel.event"),
 		CColorScheme::GRADIENT_PROGRAMLISTPANEL_EVENTBACK,
 		CColorScheme::BORDER_PROGRAMLISTPANEL_EVENT,

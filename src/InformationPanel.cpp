@@ -14,8 +14,8 @@ static char THIS_FILE[]=__FILE__;
 
 
 #define IDC_PROGRAMINFO		1000
-#define IDC_PROGRAMINFOPREV	1001
-#define IDC_PROGRAMINFONEXT	1002
+#define CM_PROGRAMINFOPREV	1001
+#define CM_PROGRAMINFONEXT	1002
 
 static const LPCTSTR SUBCLASS_PROP_NAME=APP_NAME TEXT("This");
 
@@ -31,7 +31,7 @@ bool CInformationPanel::Initialize(HINSTANCE hinst)
 	if (m_hinst==NULL) {
 		WNDCLASS wc;
 
-		wc.style=CS_HREDRAW;
+		wc.style=CS_HREDRAW | CS_VREDRAW;
 		wc.lpfnWndProc=WndProc;
 		wc.cbClsExtra=0;
 		wc.cbWndExtra=0;
@@ -52,18 +52,13 @@ bool CInformationPanel::Initialize(HINSTANCE hinst)
 CInformationPanel::CInformationPanel()
 	: CSettingsBase(TEXT("InformationPanel"))
 
-	, m_crBackColor(RGB(0,0,0))
-	, m_crTextColor(RGB(255,255,255))
-	, m_crProgramInfoBackColor(RGB(0,0,0))
-	, m_crProgramInfoTextColor(RGB(255,255,255))
 	, m_FontHeight(0)
 
 	, m_hwndProgramInfo(NULL)
 	, m_pOldProgramInfoProc(NULL)
-	, m_hwndProgramInfoPrev(NULL)
-	, m_hwndProgramInfoNext(NULL)
 	, m_fUseRichEdit(true)
 	, m_fProgramInfoCursorOverLink(false)
+	, m_HotButton(-1)
 {
 	RegisterItem<CVideoInfoItem>();
 	RegisterItem<CVideoDecoderItem>();
@@ -108,43 +103,25 @@ void CInformationPanel::NormalizeStyle(const TVTest::Style::CStyleManager *pStyl
 
 void CInformationPanel::SetTheme(const TVTest::Theme::CThemeManager *pThemeManager)
 {
-	SetColor(
-		pThemeManager->GetColor(CColorScheme::COLOR_PANELBACK),
-		pThemeManager->GetColor(CColorScheme::COLOR_PANELTEXT));
-	SetProgramInfoColor(
-		pThemeManager->GetColor(CColorScheme::COLOR_PROGRAMINFOBACK),
-		pThemeManager->GetColor(CColorScheme::COLOR_PROGRAMINFOTEXT));
-}
+	pThemeManager->GetStyle(TVTest::Theme::CThemeManager::STYLE_PANEL_CONTENT,
+							&m_Theme.Style);
+	pThemeManager->GetStyle(TVTest::Theme::CThemeManager::STYLE_INFORMATIONPANEL_EVENTINFO,
+							&m_Theme.ProgramInfoStyle);
+	pThemeManager->GetStyle(TVTest::Theme::CThemeManager::STYLE_INFORMATIONPANEL_BUTTON,
+							&m_Theme.ButtonStyle);
+	pThemeManager->GetStyle(TVTest::Theme::CThemeManager::STYLE_INFORMATIONPANEL_BUTTON_HOT,
+							&m_Theme.ButtonHotStyle);
 
-
-bool CInformationPanel::IsVisible() const
-{
-	return m_hwnd!=NULL;
-}
-
-
-void CInformationPanel::SetColor(COLORREF crBackColor,COLORREF crTextColor)
-{
-	m_crBackColor=crBackColor;
-	m_crTextColor=crTextColor;
 	if (m_hwnd!=NULL) {
-		m_BackBrush.Create(crBackColor);
-		::InvalidateRect(m_hwnd,NULL,TRUE);
-		::InvalidateRect(m_hwndProgramInfoPrev,NULL,TRUE);
-		::InvalidateRect(m_hwndProgramInfoNext,NULL,TRUE);
-	}
-}
+		m_BackBrush.Create(m_Theme.Style.Back.Fill.GetSolidColor());
+		m_ProgramInfoBackBrush.Create(m_Theme.ProgramInfoStyle.Back.Fill.GetSolidColor());
 
+		Invalidate();
 
-void CInformationPanel::SetProgramInfoColor(COLORREF crBackColor,COLORREF crTextColor)
-{
-	m_crProgramInfoBackColor=crBackColor;
-	m_crProgramInfoTextColor=crTextColor;
-	if (m_hwnd!=NULL) {
-		m_ProgramInfoBackBrush.Create(crBackColor);
 		if (m_hwndProgramInfo!=NULL) {
 			if (m_fUseRichEdit) {
-				::SendMessage(m_hwndProgramInfo,EM_SETBKGNDCOLOR,0,m_crProgramInfoBackColor);
+				::SendMessage(m_hwndProgramInfo,EM_SETBKGNDCOLOR,0,
+							  (COLORREF)m_Theme.ProgramInfoStyle.Back.Fill.GetSolidColor());
 				POINT ptScroll;
 				::SendMessage(m_hwndProgramInfo,EM_GETSCROLLPOS,0,reinterpret_cast<LPARAM>(&ptScroll));
 				UpdateProgramInfoText();
@@ -153,6 +130,12 @@ void CInformationPanel::SetProgramInfoColor(COLORREF crBackColor,COLORREF crText
 			::InvalidateRect(m_hwndProgramInfo,NULL,TRUE);
 		}
 	}
+}
+
+
+bool CInformationPanel::IsVisible() const
+{
+	return m_hwnd!=NULL;
 }
 
 
@@ -203,17 +186,11 @@ bool CInformationPanel::SetItemVisible(int Item,bool fVisible)
 		pItem->SetVisible(fVisible);
 
 		if (m_hwnd!=NULL) {
-			if (IsItemVisible(ITEM_PROGRAMINFO)) {
+			if (IsItemVisible(ITEM_PROGRAMINFO))
 				SendSizeMessage();
-			}
-			if (Item==ITEM_PROGRAMINFO) {
-				const int Show=fVisible?SW_SHOW:SW_HIDE;
-				::ShowWindow(m_hwndProgramInfo,Show);
-				::ShowWindow(m_hwndProgramInfoPrev,Show);
-				::ShowWindow(m_hwndProgramInfoNext,Show);
-			} else {
-				::InvalidateRect(m_hwnd,NULL,TRUE);
-			}
+			if (Item==ITEM_PROGRAMINFO)
+				::ShowWindow(m_hwndProgramInfo,fVisible?SW_SHOW:SW_HIDE);
+			::InvalidateRect(m_hwnd,NULL,TRUE);
 		}
 	}
 
@@ -268,8 +245,8 @@ bool CInformationPanel::ResetItem(int Item)
 		m_fProgramInfoCursorOverLink=false;
 		if (m_hwnd!=NULL) {
 			::SetWindowText(m_hwndProgramInfo,TEXT(""));
-			::EnableWindow(m_hwndProgramInfoPrev,FALSE);
-			::EnableWindow(m_hwndProgramInfoNext,TRUE);
+			RedrawButton(BUTTON_PROGRAMINFOPREV);
+			RedrawButton(BUTTON_PROGRAMINFONEXT);
 		}
 	}
 
@@ -336,7 +313,7 @@ void CInformationPanel::UpdateProgramInfoText()
 				m_Font.GetLogFont(&lf);
 				CRichEditUtil::LogFontToCharFormat(hdc,&lf,&cf);
 				cf.dwMask|=CFM_COLOR;
-				cf.crTextColor=m_crProgramInfoTextColor;
+				cf.crTextColor=m_Theme.ProgramInfoStyle.Fore.Fill.GetSolidColor();
 				::ReleaseDC(m_hwndProgramInfo,hdc);
 				CRichEditUtil::AppendText(m_hwndProgramInfo,InfoText.c_str(),&cf);
 				CRichEditUtil::DetectURL(m_hwndProgramInfo,&cf,0,-1,
@@ -367,7 +344,8 @@ bool CInformationPanel::CreateProgramInfoEdit()
 		if (m_hwndProgramInfo==NULL)
 			return false;
 		::SendMessage(m_hwndProgramInfo,EM_SETEVENTMASK,0,ENM_MOUSEEVENTS | ENM_LINK);
-		::SendMessage(m_hwndProgramInfo,EM_SETBKGNDCOLOR,0,m_crProgramInfoBackColor);
+		::SendMessage(m_hwndProgramInfo,EM_SETBKGNDCOLOR,0,
+					  (COLORREF)m_Theme.ProgramInfoStyle.Back.Fill.GetSolidColor());
 		m_fProgramInfoCursorOverLink=false;
 	} else {
 		m_hwndProgramInfo=::CreateWindowEx(0,TEXT("EDIT"),TEXT(""),
@@ -395,27 +373,17 @@ LRESULT CInformationPanel::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lP
 
 			if (!m_Font.IsCreated())
 				CreateDefaultFont(&m_Font);
-			m_BackBrush.Create(m_crBackColor);
-			m_ProgramInfoBackBrush.Create(m_crProgramInfoBackColor);
+			m_BackBrush.Create(m_Theme.Style.Back.Fill.GetSolidColor());
+			m_ProgramInfoBackBrush.Create(m_Theme.ProgramInfoStyle.Back.Fill.GetSolidColor());
 			CalcFontHeight();
+
+			m_HotButton=-1;
 
 			CProgramInfoItem *pProgramInfoItem=
 				static_cast<CProgramInfoItem*>(GetItem(ITEM_PROGRAMINFO));
 			CreateProgramInfoEdit();
 			if (pProgramInfoItem->IsVisible())
 				::ShowWindow(m_hwndProgramInfo,SW_SHOW);
-			m_hwndProgramInfoPrev=CreateWindowEx(0,TEXT("BUTTON"),TEXT(""),
-				WS_CHILD | WS_CLIPSIBLINGS
-					| (pProgramInfoItem->IsVisible()?WS_VISIBLE:0)
-					| (pProgramInfoItem->IsNext()?0:WS_DISABLED)
-					| BS_PUSHBUTTON | BS_OWNERDRAW,
-				0,0,0,0,hwnd,(HMENU)IDC_PROGRAMINFOPREV,m_hinst,NULL);
-			m_hwndProgramInfoNext=CreateWindowEx(0,TEXT("BUTTON"),TEXT(""),
-				WS_CHILD | WS_CLIPSIBLINGS
-					| (pProgramInfoItem->IsVisible()?WS_VISIBLE:0)
-					| (pProgramInfoItem->IsNext()?WS_DISABLED:0)
-					| BS_PUSHBUTTON | BS_OWNERDRAW,
-				0,0,0,0,hwnd,(HMENU)IDC_PROGRAMINFONEXT,m_hinst,NULL);
 		}
 		return 0;
 
@@ -428,12 +396,6 @@ LRESULT CInformationPanel::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lP
 			GetItemRect(ITEM_PROGRAMINFO,&rc);
 			::MoveWindow(m_hwndProgramInfo,rc.left,rc.top,
 						 rc.right-rc.left,rc.bottom-rc.top,TRUE);
-			::MoveWindow(m_hwndProgramInfoPrev,
-						 rc.right-m_Style.ButtonSize.Width*2,rc.bottom,
-						 m_Style.ButtonSize.Width,m_Style.ButtonSize.Height,TRUE);
-			::MoveWindow(m_hwndProgramInfoNext,
-						 rc.right-m_Style.ButtonSize.Width,rc.bottom,
-						 m_Style.ButtonSize.Width,m_Style.ButtonSize.Height,TRUE);
 		}
 		return 0;
 
@@ -451,53 +413,40 @@ LRESULT CInformationPanel::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lP
 		{
 			HDC hdc=reinterpret_cast<HDC>(wParam);
 
-			::SetTextColor(hdc,m_crProgramInfoTextColor);
-			::SetBkColor(hdc,m_crProgramInfoBackColor);
+			::SetTextColor(hdc,m_Theme.ProgramInfoStyle.Fore.Fill.GetSolidColor());
+			::SetBkColor(hdc,m_Theme.ProgramInfoStyle.Back.Fill.GetSolidColor());
 			return reinterpret_cast<LRESULT>(m_ProgramInfoBackBrush.GetHandle());
 		}
 
-	case WM_DRAWITEM:
+	case WM_LBUTTONDOWN:
 		{
-			LPDRAWITEMSTRUCT pdis=reinterpret_cast<LPDRAWITEMSTRUCT>(lParam);
-			HBRUSH hbrOld,hbr;
-			HPEN hpen,hpenOld;
-			POINT Points[3];
+			int Button=ButtonHitTest(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam));
 
-			hpen=::CreatePen(PS_SOLID,1,m_crTextColor);
-			hbrOld=DrawUtil::SelectObject(pdis->hDC,m_BackBrush);
-			hpenOld=SelectPen(pdis->hDC,hpen);
-			::Rectangle(pdis->hDC,
-						pdis->rcItem.left,pdis->rcItem.top,
-						pdis->rcItem.right,pdis->rcItem.bottom);
-			if (pdis->CtlID==IDC_PROGRAMINFOPREV) {
-				Points[0].x=pdis->rcItem.right-5;
-				Points[0].y=pdis->rcItem.top+3;
-				Points[1].x=Points[0].x;
-				Points[1].y=pdis->rcItem.bottom-4;
-				Points[2].x=pdis->rcItem.left+4;
-				Points[2].y=pdis->rcItem.top+(pdis->rcItem.bottom-pdis->rcItem.top)/2;
-			} else {
-				Points[0].x=pdis->rcItem.left+4;
-				Points[0].y=pdis->rcItem.top+3;
-				Points[1].x=Points[0].x;
-				Points[1].y=pdis->rcItem.bottom-4;
-				Points[2].x=pdis->rcItem.right-5;
-				Points[2].y=pdis->rcItem.top+(pdis->rcItem.bottom-pdis->rcItem.top)/2;
+			if (Button>=0) {
+				SetHotButton(Button);
+				::SetCapture(hwnd);
 			}
-			if ((pdis->itemState&ODS_DISABLED)!=0) {
-				hbr=::CreateSolidBrush(MixColor(m_crBackColor,m_crTextColor));
-			} else {
-				hbr=::CreateSolidBrush(m_crTextColor);
-			}
-			SelectBrush(pdis->hDC,hbr);
-			::SelectObject(pdis->hDC,GetStockObject(NULL_PEN));
-			::Polygon(pdis->hDC,Points,3);
-			SelectPen(pdis->hDC,hpenOld);
-			SelectBrush(pdis->hDC,hbrOld);
-			::DeleteObject(hpen);
-			::DeleteObject(hbr);
 		}
-		return TRUE;
+		return 0;
+
+	case WM_LBUTTONUP:
+		if (::GetCapture()==hwnd) {
+			if (m_HotButton>=0) {
+				SetHotButton(ButtonHitTest(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam)));
+
+				switch (m_HotButton) {
+				case BUTTON_PROGRAMINFOPREV:
+					::SendMessage(hwnd,WM_COMMAND,CM_PROGRAMINFOPREV,0);
+					break;
+				case BUTTON_PROGRAMINFONEXT:
+					::SendMessage(hwnd,WM_COMMAND,CM_PROGRAMINFONEXT,0);
+					break;
+				}
+			}
+
+			::ReleaseCapture();
+		}
+		return 0;
 
 	case WM_RBUTTONDOWN:
 		{
@@ -516,11 +465,32 @@ LRESULT CInformationPanel::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lP
 		}
 		return TRUE;
 
+	case WM_MOUSEMOVE:
+		{
+			SetHotButton(ButtonHitTest(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam)));
+
+			if (::GetCapture()==NULL) {
+				TRACKMOUSEEVENT tme;
+				tme.cbSize=sizeof(TRACKMOUSEEVENT);
+				tme.dwFlags=TME_LEAVE;
+				tme.hwndTrack=hwnd;
+				::TrackMouseEvent(&tme);
+			}
+		}
+		return 0;
+
+	case WM_MOUSELEAVE:
+	case WM_CAPTURECHANGED:
+		if (m_HotButton>=0)
+			SetHotButton(-1);
+		return 0;
+
 	case WM_SETCURSOR:
-		if ((HWND)wParam==m_hwndProgramInfoPrev
-				|| (HWND)wParam==m_hwndProgramInfoNext) {
-			::SetCursor(::LoadCursor(NULL,IDC_HAND));
-			return TRUE;
+		if ((HWND)wParam==hwnd) {
+			if (LOWORD(lParam)==HTCLIENT && m_HotButton>=0) {
+				::SetCursor(::LoadCursor(NULL,IDC_HAND));
+				return TRUE;
+			}
 		} else if ((HWND)wParam==m_hwndProgramInfo
 				&& LOWORD(lParam)==HTCLIENT
 				&& m_fUseRichEdit
@@ -595,8 +565,6 @@ LRESULT CInformationPanel::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lP
 		m_ProgramInfoBackBrush.Destroy();
 		m_Offscreen.Destroy();
 		m_hwndProgramInfo=NULL;
-		m_hwndProgramInfoPrev=NULL;
-		m_hwndProgramInfoNext=NULL;
 		return 0;
 	}
 
@@ -658,17 +626,17 @@ LRESULT CALLBACK CInformationPanel::ProgramInfoHookProc(HWND hwnd,UINT uMsg,WPAR
 void CInformationPanel::OnCommand(HWND hwnd,int id,HWND hwndCtl,UINT codeNotify)
 {
 	switch (id) {
-	case IDC_PROGRAMINFOPREV:
-	case IDC_PROGRAMINFONEXT:
+	case CM_PROGRAMINFOPREV:
+	case CM_PROGRAMINFONEXT:
 		{
-			bool fNext=id==IDC_PROGRAMINFONEXT;
+			bool fNext=id==CM_PROGRAMINFONEXT;
 			CProgramInfoItem *pItem=
 				static_cast<CProgramInfoItem*>(GetItem(ITEM_PROGRAMINFO));
 
 			if (fNext!=pItem->IsNext()) {
 				pItem->SetNext(fNext);
-				::EnableWindow(m_hwndProgramInfoPrev,fNext);
-				::EnableWindow(m_hwndProgramInfoNext,!fNext);
+				RedrawButton(BUTTON_PROGRAMINFOPREV);
+				RedrawButton(BUTTON_PROGRAMINFONEXT);
 			}
 		}
 		return;
@@ -734,7 +702,7 @@ void CInformationPanel::Draw(HDC hdc,const RECT &PaintRect)
 		hdcDst=hdc;
 
 	HFONT hfontOld=DrawUtil::SelectObject(hdcDst,m_Font);
-	COLORREF crOldTextColor=::SetTextColor(hdcDst,m_crTextColor);
+	COLORREF crOldTextColor=::SetTextColor(hdcDst,m_Theme.Style.Fore.Fill.GetSolidColor());
 	int OldBkMode=::SetBkMode(hdcDst,TRANSPARENT);
 
 	for (int i=0;i<ITEM_PROGRAMINFO;i++) {
@@ -749,6 +717,17 @@ void CInformationPanel::Draw(HDC hdc,const RECT &PaintRect)
 		rc.right=PaintRect.right;
 		rc.bottom=PaintRect.bottom;
 		::FillRect(hdc,&rc,m_BackBrush.GetHandle());
+	}
+
+	if (IsItemVisible(ITEM_PROGRAMINFO)) {
+		GetButtonRect(BUTTON_PROGRAMINFOPREV,&rc);
+		DrawProgramInfoPrevNextButton(
+			hdc,rc,false,IsButtonEnabled(BUTTON_PROGRAMINFOPREV),
+			m_HotButton==BUTTON_PROGRAMINFOPREV);
+		GetButtonRect(BUTTON_PROGRAMINFONEXT,&rc);
+		DrawProgramInfoPrevNextButton(
+			hdc,rc,true,IsButtonEnabled(BUTTON_PROGRAMINFONEXT),
+			m_HotButton==BUTTON_PROGRAMINFONEXT);
 	}
 
 	::SetBkMode(hdcDst,OldBkMode);
@@ -784,6 +763,121 @@ void CInformationPanel::DrawItem(HDC hdc,LPCTSTR pszText,const RECT &Rect)
 		::DrawText(hdcDst,pszText,-1,&rcDraw,DT_LEFT | DT_SINGLELINE | DT_END_ELLIPSIS);
 	if (hdcDst!=hdc)
 		m_Offscreen.CopyTo(hdc,&Rect);
+}
+
+
+void CInformationPanel::DrawProgramInfoPrevNextButton(
+	HDC hdc,const RECT &Rect,bool fNext,bool fEnabled,bool fHot) const
+{
+	const TVTest::Theme::Style &Style=
+		fEnabled && fHot?m_Theme.ButtonHotStyle:m_Theme.ButtonStyle;
+
+	TVTest::Theme::Draw(hdc,Rect,Style.Back);
+
+	HBRUSH hbr;
+	POINT Points[3];
+
+	if (!fNext) {
+		Points[0].x=Rect.right-5;
+		Points[0].y=Rect.top+3;
+		Points[1].x=Points[0].x;
+		Points[1].y=Rect.bottom-4;
+		Points[2].x=Rect.left+4;
+		Points[2].y=Rect.top+(Rect.bottom-Rect.top)/2;
+	} else {
+		Points[0].x=Rect.left+4;
+		Points[0].y=Rect.top+3;
+		Points[1].x=Points[0].x;
+		Points[1].y=Rect.bottom-4;
+		Points[2].x=Rect.right-5;
+		Points[2].y=Rect.top+(Rect.bottom-Rect.top)/2;
+	}
+	if (fEnabled) {
+		hbr=::CreateSolidBrush(Style.Fore.Fill.GetSolidColor());
+	} else {
+		hbr=::CreateSolidBrush(MixColor(
+			Style.Back.Fill.GetSolidColor(),
+			Style.Fore.Fill.GetSolidColor()));
+	}
+	HGDIOBJ hOldBrush=::SelectObject(hdc,hbr);
+	HGDIOBJ hOldPen=::SelectObject(hdc,::GetStockObject(NULL_PEN));
+	::Polygon(hdc,Points,3);
+	::SelectObject(hdc,hOldPen);
+	::SelectObject(hdc,hOldBrush);
+	::DeleteObject(hbr);
+}
+
+
+bool CInformationPanel::GetButtonRect(int Button,RECT *pRect) const
+{
+	RECT rc;
+
+	GetItemRect(ITEM_PROGRAMINFO,&rc);
+	pRect->left=rc.right-m_Style.ButtonSize.Width*(2-Button);
+	pRect->right=pRect->left+m_Style.ButtonSize.Width;
+	pRect->top=rc.bottom;
+	if (!IsItemVisible(ITEM_PROGRAMINFO)) {
+		pRect->bottom=rc.bottom;
+		return false;
+	}
+	pRect->bottom=rc.bottom+m_Style.ButtonSize.Height;
+
+	return true;
+}
+
+
+void CInformationPanel::RedrawButton(int Button)
+{
+	RECT rc;
+
+	if (GetButtonRect(Button,&rc))
+		Invalidate(&rc);
+}
+
+
+int CInformationPanel::ButtonHitTest(int x,int y) const
+{
+	POINT pt={x,y};
+
+	for (int i=0;i<NUM_BUTTONS;i++) {
+		if (IsButtonEnabled(i)) {
+			RECT rc;
+
+			if (GetButtonRect(i,&rc) && ::PtInRect(&rc,pt))
+				return i;
+		}
+	}
+
+	return -1;
+}
+
+
+void CInformationPanel::SetHotButton(int Button)
+{
+	if (Button!=m_HotButton) {
+		if (m_HotButton>=0)
+			RedrawButton(m_HotButton);
+		m_HotButton=Button;
+		if (m_HotButton>=0)
+			RedrawButton(m_HotButton);
+	}
+}
+
+
+bool CInformationPanel::IsButtonEnabled(int Button) const
+{
+	const CProgramInfoItem *pProgramInfoItem=
+		static_cast<const CProgramInfoItem*>(GetItem(ITEM_PROGRAMINFO));
+
+	switch (Button) {
+	case BUTTON_PROGRAMINFOPREV:
+		return pProgramInfoItem->IsNext();
+
+	case BUTTON_PROGRAMINFONEXT:
+		return !pProgramInfoItem->IsNext();
+	}
+
+	return false;
 }
 
 

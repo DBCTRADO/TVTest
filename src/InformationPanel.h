@@ -226,8 +226,6 @@ public:
 
 // CInformationPanel
 	bool IsVisible() const;
-	void SetColor(COLORREF crBackColor,COLORREF crTextColor);
-	void SetProgramInfoColor(COLORREF crBackColor,COLORREF crTextColor);
 	bool SetFont(const LOGFONT *pFont);
 	CItem *GetItem(int Item);
 	const CItem *GetItem(int Item) const;
@@ -252,17 +250,32 @@ private:
 		void NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager);
 	};
 
+	struct InformationPanelTheme
+	{
+		TVTest::Theme::Style Style;
+		TVTest::Theme::Style ProgramInfoStyle;
+		TVTest::Theme::Style ButtonStyle;
+		TVTest::Theme::Style ButtonHotStyle;
+	};
+
 	template<typename T> void RegisterItem(bool fVisible=true)
 	{
 		T *pItem=new T(this,fVisible);
 		m_ItemList[pItem->GetID()]=pItem;
 	}
 
+	enum {
+		BUTTON_PROGRAMINFOPREV,
+		BUTTON_PROGRAMINFONEXT,
+		NUM_BUTTONS
+	};
+
 	static const LPCTSTR m_pszClassName;
 	static HINSTANCE m_hinst;
 
 	CItem *m_ItemList[NUM_ITEMS];
 	InformationPanelStyle m_Style;
+	InformationPanelTheme m_Theme;
 	COLORREF m_crBackColor;
 	COLORREF m_crTextColor;
 	COLORREF m_crProgramInfoBackColor;
@@ -275,13 +288,12 @@ private:
 
 	HWND m_hwndProgramInfo;
 	WNDPROC m_pOldProgramInfoProc;
-	HWND m_hwndProgramInfoPrev;
-	HWND m_hwndProgramInfoNext;
 	CRichEditUtil m_RichEditUtil;
 	bool m_fUseRichEdit;
 	CRichEditUtil::CharRangeList m_ProgramInfoLinkList;
 	POINT m_ProgramInfoClickPos;
 	bool m_fProgramInfoCursorOverLink;
+	int m_HotButton;
 
 	static LRESULT CALLBACK ProgramInfoHookProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam);
 
@@ -293,6 +305,12 @@ private:
 	void Draw(HDC hdc,const RECT &PaintRect);
 	bool GetDrawItemRect(int Item,RECT *pRect,const RECT &PaintRect) const;
 	void DrawItem(HDC hdc,LPCTSTR pszText,const RECT &Rect);
+	void DrawProgramInfoPrevNextButton(HDC hdc,const RECT &Rect,bool fNext,bool fEnabled,bool fHot) const;
+	bool GetButtonRect(int Button,RECT *pRect) const;
+	void RedrawButton(int Button);
+	int ButtonHitTest(int x,int y) const;
+	void SetHotButton(int Button);
+	bool IsButtonEnabled(int Button) const;
 
 // CCustomWindow
 	LRESULT OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
