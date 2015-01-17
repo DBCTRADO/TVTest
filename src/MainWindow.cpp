@@ -2987,7 +2987,7 @@ void CMainWindow::OnCommand(HWND hwnd,int id,HWND hwndCtl,UINT codeNotify)
 				pt.y=0;
 				::ClientToScreen(GetCurrentViewWindow().GetHandle(),&pt);
 			}
-			m_App.MainMenu.PopupSubMenu(SubMenu,TPM_RIGHTBUTTON,pt.x,pt.y,hwnd);
+			m_App.MainMenu.PopupSubMenu(SubMenu,TPM_RIGHTBUTTON,hwnd,&pt);
 		}
 		return;
 

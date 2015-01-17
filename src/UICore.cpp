@@ -800,19 +800,13 @@ void CUICore::PopupMenu(const POINT *pPos,unsigned int Flags)
 }
 
 
-void CUICore::PopupSubMenu(int SubMenu,const POINT *pPos,UINT Flags)
+void CUICore::PopupSubMenu(int SubMenu,const POINT *pPos,UINT Flags,const RECT *pExcludeRect)
 {
-	POINT pt;
-
-	if (pPos!=nullptr)
-		pt=*pPos;
-	else
-		::GetCursorPos(&pt);
-	m_App.MainMenu.PopupSubMenu(SubMenu,Flags,pt.x,pt.y,m_pSkin->GetMainWindow());
+	m_App.MainMenu.PopupSubMenu(SubMenu,Flags,m_pSkin->GetMainWindow(),pPos,true,pExcludeRect);
 }
 
 
-bool CUICore::ShowSpecialMenu(MenuType Menu,const POINT *pPos,UINT Flags)
+bool CUICore::ShowSpecialMenu(MenuType Menu,const POINT *pPos,UINT Flags,const RECT *pExcludeRect)
 {
 	POINT pt;
 
@@ -820,10 +814,11 @@ bool CUICore::ShowSpecialMenu(MenuType Menu,const POINT *pPos,UINT Flags)
 		pt=*pPos;
 	else
 		::GetCursorPos(&pt);
+
 	switch (Menu) {
 	case MENU_TUNERSELECT:
 		m_App.TunerSelectMenu.Create(GetMainWindow());
-		m_App.TunerSelectMenu.Show(Flags,pt.x,pt.y);
+		m_App.TunerSelectMenu.Show(Flags,pt.x,pt.y,pExcludeRect);
 		m_App.TunerSelectMenu.Destroy();
 		break;
 
@@ -842,7 +837,7 @@ bool CUICore::ShowSpecialMenu(MenuType Menu,const POINT *pPos,UINT Flags)
 			Menu.CheckItem(CM_SHOWRECORDREMAINTIME,m_App.RecordOptions.GetShowRemainTime());
 			Menu.CheckItem(CM_EXITONRECORDINGSTOP,m_App.Core.GetExitOnRecordingStop());
 			m_App.Accelerator.SetMenuAccel(Menu.GetPopupHandle());
-			Menu.Show(GetMainWindow(),&pt,Flags);
+			Menu.Show(GetMainWindow(),&pt,Flags,pExcludeRect);
 		}
 		break;
 
@@ -854,7 +849,7 @@ bool CUICore::ShowSpecialMenu(MenuType Menu,const POINT *pPos,UINT Flags)
 				CM_CAPTURESIZE_FIRST+m_App.CaptureOptions.GetPresetCaptureSize());
 			Menu.CheckItem(CM_CAPTUREPREVIEW,m_App.CaptureWindow.GetVisible());
 			m_App.Accelerator.SetMenuAccel(Menu.GetPopupHandle());
-			Menu.Show(GetMainWindow(),&pt,Flags);
+			Menu.Show(GetMainWindow(),&pt,Flags,pExcludeRect);
 		}
 		break;
 
@@ -863,7 +858,7 @@ bool CUICore::ShowSpecialMenu(MenuType Menu,const POINT *pPos,UINT Flags)
 			CPopupMenu Menu(m_App.GetResourceInstance(),IDM_BUFFERING);
 
 			Menu.CheckItem(CM_ENABLEBUFFERING,m_App.CoreEngine.GetPacketBuffering());
-			Menu.Show(GetMainWindow(),&pt,Flags);
+			Menu.Show(GetMainWindow(),&pt,Flags,pExcludeRect);
 		}
 		break;
 
@@ -871,7 +866,7 @@ bool CUICore::ShowSpecialMenu(MenuType Menu,const POINT *pPos,UINT Flags)
 		{
 			CPopupMenu Menu(m_App.GetResourceInstance(),IDM_ERROR);
 
-			Menu.Show(GetMainWindow(),&pt,Flags);
+			Menu.Show(GetMainWindow(),&pt,Flags,pExcludeRect);
 		}
 		break;
 
@@ -880,7 +875,7 @@ bool CUICore::ShowSpecialMenu(MenuType Menu,const POINT *pPos,UINT Flags)
 			CPopupMenu Menu(m_App.GetResourceInstance(),IDM_TIME);
 
 			Menu.CheckItem(CM_SHOWTOTTIME,m_App.StatusOptions.GetShowTOTTime());
-			Menu.Show(GetMainWindow(),&pt,Flags);
+			Menu.Show(GetMainWindow(),&pt,Flags,pExcludeRect);
 		}
 		break;
 
@@ -892,7 +887,7 @@ bool CUICore::ShowSpecialMenu(MenuType Menu,const POINT *pPos,UINT Flags)
 						   m_App.StatusOptions.IsPopupProgramInfoEnabled());
 			Menu.CheckItem(CM_PROGRAMINFOSTATUS_SHOWPROGRESS,
 						   m_App.StatusOptions.GetShowEventProgress());
-			Menu.Show(GetMainWindow(),&pt,Flags);
+			Menu.Show(GetMainWindow(),&pt,Flags,pExcludeRect);
 		}
 		break;
 

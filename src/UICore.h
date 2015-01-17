@@ -93,8 +93,10 @@ public:
 	bool PreventDisplaySave(bool fPrevent);
 
 	void PopupMenu(const POINT *pPos=NULL,UINT Flags=0);
-	void PopupSubMenu(int SubMenu,const POINT *pPos=NULL,UINT Flags=0);
-	bool ShowSpecialMenu(MenuType Menu,const POINT *pPos=NULL,UINT Flags=0);
+	void PopupSubMenu(int SubMenu,const POINT *pPos=NULL,UINT Flags=0,
+					  const RECT *pExcludeRect=NULL);
+	bool ShowSpecialMenu(MenuType Menu,const POINT *pPos=NULL,UINT Flags=0,
+						 const RECT *pExcludeRect=NULL);
 	void InitChannelMenu(HMENU hmenu);
 	void InitTunerMenu(HMENU hmenu);
 	bool ProcessTunerMenu(int Command);

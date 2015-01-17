@@ -106,7 +106,7 @@ public:
 	~CTunerSelectMenu();
 	bool Create(HWND hwnd);
 	void Destroy();
-	bool Show(UINT Flags,int x,int y);
+	int Show(UINT Flags,int x,int y,const RECT *pExcludeRect=NULL);
 	bool OnInitMenuPopup(HMENU hmenu);
 };
 

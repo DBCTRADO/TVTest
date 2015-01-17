@@ -107,7 +107,7 @@ protected:
 	bool m_fBreak;
 	unsigned int m_Style;
 
-	bool GetMenuPos(POINT *pPos,UINT *pFlags);
+	bool GetMenuPos(POINT *pPos,UINT *pFlags,RECT *pExcludeRect);
 	enum {
 		DRAWTEXT_HCENTER = 0x00000001UL
 	};

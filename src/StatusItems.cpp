@@ -55,20 +55,22 @@ void CChannelStatusItem::OnLButtonDown(int x,int y)
 {
 	POINT pt;
 	UINT Flags;
+	RECT rc;
 
-	GetMenuPos(&pt,&Flags);
+	GetMenuPos(&pt,&Flags,&rc);
 	GetAppClass().UICore.PopupSubMenu(CMainMenu::SUBMENU_CHANNEL,
-									  &pt,Flags | TPM_RIGHTBUTTON);
+									  &pt,Flags | TPM_RIGHTBUTTON,&rc);
 }
 
 void CChannelStatusItem::OnRButtonDown(int x,int y)
 {
 	POINT pt;
 	UINT Flags;
+	RECT rc;
 
-	GetMenuPos(&pt,&Flags);
+	GetMenuPos(&pt,&Flags,&rc);
 	GetAppClass().UICore.PopupSubMenu(CMainMenu::SUBMENU_SERVICE,
-									  &pt,Flags | TPM_RIGHTBUTTON);
+									  &pt,Flags | TPM_RIGHTBUTTON,&rc);
 }
 
 bool CChannelStatusItem::OnMouseWheel(int x,int y,bool fHorz,int Delta,int *pCommand)
@@ -130,20 +132,22 @@ void CVideoSizeStatusItem::OnLButtonDown(int x,int y)
 {
 	POINT pt;
 	UINT Flags;
+	RECT rc;
 
-	GetMenuPos(&pt,&Flags);
+	GetMenuPos(&pt,&Flags,&rc);
 	GetAppClass().UICore.PopupSubMenu(CMainMenu::SUBMENU_ZOOM,
-									  &pt,Flags | TPM_RIGHTBUTTON);
+									  &pt,Flags | TPM_RIGHTBUTTON,&rc);
 }
 
 void CVideoSizeStatusItem::OnRButtonDown(int x,int y)
 {
 	POINT pt;
 	UINT Flags;
+	RECT rc;
 
-	GetMenuPos(&pt,&Flags);
+	GetMenuPos(&pt,&Flags,&rc);
 	GetAppClass().UICore.PopupSubMenu(CMainMenu::SUBMENU_ASPECTRATIO,
-									  &pt,Flags | TPM_RIGHTBUTTON);
+									  &pt,Flags | TPM_RIGHTBUTTON,&rc);
 }
 
 
@@ -197,15 +201,6 @@ void CVolumeStatusItem::OnLButtonDown(int x,int y)
 
 void CVolumeStatusItem::OnRButtonDown(int x,int y)
 {
-	// ƒƒjƒ…[‚ðo‚·‚æ‚¤‚É‚µ‚½‚ç•]”»ˆ«‚©‚Á‚½...
-	/*
-	POINT pt;
-	UINT Flags;
-
-	GetMenuPos(&pt,&Flags);
-	GetAppClass().UICore.PopupSubMenu(CMainMenu::SUBMENU_VOLUME,
-									  &pt,Flags | TPM_RIGHTBUTTON);
-	*/
 	CUICore *pUICore=&GetAppClass().UICore;
 	pUICore->SetMute(!pUICore->GetMute());
 }
@@ -293,10 +288,11 @@ void CAudioChannelStatusItem::OnRButtonDown(int x,int y)
 {
 	POINT pt;
 	UINT Flags;
+	RECT rc;
 
-	GetMenuPos(&pt,&Flags);
+	GetMenuPos(&pt,&Flags,&rc);
 	GetAppClass().UICore.PopupSubMenu(CMainMenu::SUBMENU_AUDIO,
-									  &pt,Flags | TPM_RIGHTBUTTON);
+									  &pt,Flags | TPM_RIGHTBUTTON,&rc);
 }
 
 bool CAudioChannelStatusItem::OnMouseWheel(int x,int y,bool fHorz,int Delta,int *pCommand)
@@ -407,10 +403,11 @@ void CRecordStatusItem::OnRButtonDown(int x,int y)
 {
 	POINT pt;
 	UINT Flags;
+	RECT rc;
 
-	GetMenuPos(&pt,&Flags);
+	GetMenuPos(&pt,&Flags,&rc);
 	GetAppClass().UICore.ShowSpecialMenu(CUICore::MENU_RECORD,
-										 &pt,Flags | TPM_RIGHTBUTTON);
+										 &pt,Flags | TPM_RIGHTBUTTON,&rc);
 }
 
 bool CRecordStatusItem::OnMouseHover(int x,int y)
@@ -541,10 +538,11 @@ void CCaptureStatusItem::OnRButtonDown(int x,int y)
 {
 	POINT pt;
 	UINT Flags;
+	RECT rc;
 
-	GetMenuPos(&pt,&Flags);
+	GetMenuPos(&pt,&Flags,&rc);
 	GetAppClass().UICore.ShowSpecialMenu(CUICore::MENU_CAPTURE,
-										 &pt,Flags | TPM_RIGHTBUTTON);
+										 &pt,Flags | TPM_RIGHTBUTTON,&rc);
 }
 
 
@@ -599,10 +597,11 @@ void CErrorStatusItem::OnRButtonDown(int x,int y)
 {
 	POINT pt;
 	UINT Flags;
+	RECT rc;
 
-	GetMenuPos(&pt,&Flags);
+	GetMenuPos(&pt,&Flags,&rc);
 	GetAppClass().UICore.ShowSpecialMenu(CUICore::MENU_STREAMERROR,
-										 &pt,Flags | TPM_RIGHTBUTTON);
+										 &pt,Flags | TPM_RIGHTBUTTON,&rc);
 }
 
 
@@ -717,10 +716,11 @@ void CClockStatusItem::OnRButtonDown(int x,int y)
 {
 	POINT pt;
 	UINT Flags;
+	RECT rc;
 
-	GetMenuPos(&pt,&Flags);
+	GetMenuPos(&pt,&Flags,&rc);
 	GetAppClass().UICore.ShowSpecialMenu(CUICore::MENU_CLOCK,
-										 &pt,Flags | TPM_RIGHTBUTTON);
+										 &pt,Flags | TPM_RIGHTBUTTON,&rc);
 }
 
 void CClockStatusItem::SetTOT(bool fTOT)
@@ -853,10 +853,11 @@ void CProgramInfoStatusItem::OnRButtonDown(int x,int y)
 
 	POINT pt;
 	UINT Flags;
+	RECT rc;
 
-	GetMenuPos(&pt,&Flags);
+	GetMenuPos(&pt,&Flags,&rc);
 	GetAppClass().UICore.ShowSpecialMenu(CUICore::MENU_PROGRAMINFO,
-										 &pt,Flags | TPM_RIGHTBUTTON);
+										 &pt,Flags | TPM_RIGHTBUTTON,&rc);
 }
 
 void CProgramInfoStatusItem::OnLButtonDoubleClick(int x,int y)
@@ -1036,10 +1037,11 @@ void CBufferingStatusItem::OnLButtonDown(int x,int y)
 {
 	POINT pt;
 	UINT Flags;
+	RECT rc;
 
-	GetMenuPos(&pt,&Flags);
+	GetMenuPos(&pt,&Flags,&rc);
 	GetAppClass().UICore.ShowSpecialMenu(CUICore::MENU_BUFFERING,
-										 &pt,Flags | TPM_RIGHTBUTTON);
+										 &pt,Flags | TPM_RIGHTBUTTON,&rc);
 }
 
 
@@ -1077,20 +1079,22 @@ void CTunerStatusItem::OnLButtonDown(int x,int y)
 {
 	POINT pt;
 	UINT Flags;
+	RECT rc;
 
-	GetMenuPos(&pt,&Flags);
+	GetMenuPos(&pt,&Flags,&rc);
 	GetAppClass().UICore.PopupSubMenu(CMainMenu::SUBMENU_SPACE,
-									  &pt,Flags | TPM_RIGHTBUTTON);
+									  &pt,Flags | TPM_RIGHTBUTTON,&rc);
 }
 
 void CTunerStatusItem::OnRButtonDown(int x,int y)
 {
 	POINT pt;
 	UINT Flags;
+	RECT rc;
 
-	GetMenuPos(&pt,&Flags);
+	GetMenuPos(&pt,&Flags,&rc);
 	GetAppClass().UICore.ShowSpecialMenu(CUICore::MENU_TUNERSELECT,
-										 &pt,Flags | TPM_RIGHTBUTTON);
+										 &pt,Flags | TPM_RIGHTBUTTON,&rc);
 }
 
 
@@ -1159,10 +1163,11 @@ void CFavoritesStatusItem::OnLButtonDown(int x,int y)
 {
 	POINT pt;
 	UINT Flags;
+	RECT rc;
 
-	GetMenuPos(&pt,&Flags);
+	GetMenuPos(&pt,&Flags,&rc);
 	GetAppClass().UICore.PopupSubMenu(CMainMenu::SUBMENU_FAVORITES,
-									  &pt,Flags | TPM_RIGHTBUTTON);
+									  &pt,Flags | TPM_RIGHTBUTTON,&rc);
 }
 
 void CFavoritesStatusItem::OnRButtonDown(int x,int y)

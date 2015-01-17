@@ -124,37 +124,31 @@ void CStatusItem::Redraw()
 }
 
 
-bool CStatusItem::GetMenuPos(POINT *pPos,UINT *pFlags)
+bool CStatusItem::GetMenuPos(POINT *pPos,UINT *pFlags,RECT *pExcludeRect)
 {
 	if (m_pStatus==NULL)
 		return false;
 
 	RECT rc;
-	POINT pt;
 
 	if (!GetRect(&rc))
 		return false;
+
+	MapWindowRect(m_pStatus->GetHandle(),NULL,&rc);
+
 	if (pFlags!=NULL)
 		*pFlags=0;
-	pt.x=rc.left;
-	pt.y=rc.bottom;
-	::ClientToScreen(m_pStatus->GetHandle(),&pt);
-	HMONITOR hMonitor=::MonitorFromPoint(pt,MONITOR_DEFAULTTONULL);
-	if (hMonitor!=NULL) {
-		MONITORINFO mi;
 
-		mi.cbSize=sizeof(mi);
-		if (::GetMonitorInfo(hMonitor,&mi)) {
-			if (pt.y>=mi.rcMonitor.bottom-32) {
-				pt.x=rc.left;
-				pt.y=rc.top;
-				::ClientToScreen(m_pStatus->GetHandle(),&pt);
-				if (pFlags!=NULL)
-					*pFlags=TPM_BOTTOMALIGN;
-			}
-		}
+	if (pPos!=NULL) {
+		pPos->x=rc.left;
+		pPos->y=rc.bottom;
 	}
-	*pPos=pt;
+
+	if (pExcludeRect!=NULL) {
+		*pExcludeRect=rc;
+		*pFlags|=TPM_VERTICAL;
+	}
+
 	return true;
 }
 

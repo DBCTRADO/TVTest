@@ -306,10 +306,10 @@ void CTunerSelectMenu::Destroy()
 }
 
 
-bool CTunerSelectMenu::Show(UINT Flags,int x,int y)
+int CTunerSelectMenu::Show(UINT Flags,int x,int y,const RECT *pExcludeRect)
 {
 	POINT pt={x,y};
-	return m_Menu.Show(m_hwnd,&pt,Flags);
+	return m_Menu.Show(m_hwnd,&pt,Flags,pExcludeRect);
 }
 
 

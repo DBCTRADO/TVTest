@@ -13,6 +13,28 @@ static char THIS_FILE[]=__FILE__;
 
 
 
+static int MyTrackPopupMenu(
+	HMENU hmenu,UINT Flags,HWND hwnd,const POINT *pPos=NULL,const RECT *pExcludeRect=NULL)
+{
+	POINT pt;
+	TPMPARAMS tpm;
+
+	if (pPos!=NULL)
+		pt=*pPos;
+	else
+		::GetCursorPos(&pt);
+
+	if (pExcludeRect!=NULL) {
+		tpm.cbSize=sizeof(TPMPARAMS);
+		tpm.rcExclude=*pExcludeRect;
+	}
+
+	return ::TrackPopupMenuEx(hmenu,Flags,pt.x,pt.y,hwnd,pExcludeRect!=NULL?&tpm:NULL);
+}
+
+
+
+
 CMainMenu::CMainMenu()
 	: m_hmenu(NULL)
 	, m_hmenuPopup(NULL)
@@ -126,7 +148,8 @@ bool CMainMenu::Show(UINT Flags,int x,int y,HWND hwnd,bool fToggle,const std::ve
 }
 
 
-bool CMainMenu::PopupSubMenu(int SubMenu,UINT Flags,int x,int y,HWND hwnd,bool fToggle)
+bool CMainMenu::PopupSubMenu(
+	int SubMenu,UINT Flags,HWND hwnd,const POINT *pPos,bool fToggle,const RECT *pExcludeRect)
 {
 	HMENU hmenu=GetSubMenu(SubMenu);
 
@@ -137,7 +160,7 @@ bool CMainMenu::PopupSubMenu(int SubMenu,UINT Flags,int x,int y,HWND hwnd,bool f
 			::EndMenu();
 		m_fPopup=true;
 		m_PopupMenu=SubMenu;
-		::TrackPopupMenu(hmenu,Flags,x,y,0,hwnd,NULL);
+		MyTrackPopupMenu(hmenu,Flags,hwnd,pPos,pExcludeRect);
 		m_fPopup=false;
 	} else {
 		::EndMenu();
@@ -1046,57 +1069,52 @@ HMENU CPopupMenu::GetSubMenu(int Pos) const
 }
 
 
-bool CPopupMenu::Show(HWND hwnd,const POINT *pPos,UINT Flags)
+int CPopupMenu::Show(HWND hwnd,const POINT *pPos,UINT Flags,const RECT *pExcludeRect)
 {
 	if (m_hmenu==NULL)
-		return false;
-	POINT pt;
-	if (pPos!=NULL)
-		pt=*pPos;
-	else
-		::GetCursorPos(&pt);
-	::TrackPopupMenu(GetPopupHandle(),Flags,pt.x,pt.y,0,hwnd,NULL);
-	return true;
+		return 0;
+
+	return MyTrackPopupMenu(GetPopupHandle(),Flags,hwnd,pPos,pExcludeRect);
 }
 
 
-bool CPopupMenu::Show(HMENU hmenu,HWND hwnd,const POINT *pPos,UINT Flags,bool fToggle)
+int CPopupMenu::Show(HMENU hmenu,HWND hwnd,const POINT *pPos,
+					 UINT Flags,bool fToggle,const RECT *pExcludeRect)
 {
+	int Result;
+
 	if (m_hmenu==NULL) {
 		m_hmenu=hmenu;
 		m_Type=TYPE_ATTACHED;
-		POINT pt;
-		if (pPos!=NULL)
-			pt=*pPos;
-		else
-			::GetCursorPos(&pt);
-		::TrackPopupMenu(m_hmenu,Flags,pt.x,pt.y,0,hwnd,NULL);
+		Result=MyTrackPopupMenu(m_hmenu,Flags,hwnd,pPos,pExcludeRect);
 		m_hmenu=NULL;
 	} else {
 		if (fToggle)
 			::EndMenu();
+		Result=0;
 	}
-	return true;
+
+	return Result;
 }
 
 
-bool CPopupMenu::Show(HINSTANCE hinst,LPCTSTR pszName,HWND hwnd,const POINT *pPos,UINT Flags,bool fToggle)
+int CPopupMenu::Show(HINSTANCE hinst,LPCTSTR pszName,HWND hwnd,const POINT *pPos,
+					 UINT Flags,bool fToggle,const RECT *pExcludeRect)
 {
+	int Result;
+
 	if (m_hmenu==NULL) {
 		if (!Load(hinst,pszName))
-			return false;
-		POINT pt;
-		if (pPos!=NULL)
-			pt=*pPos;
-		else
-			::GetCursorPos(&pt);
-		::TrackPopupMenu(GetPopupHandle(),Flags,pt.x,pt.y,0,hwnd,NULL);
+			return 0;
+		Result=MyTrackPopupMenu(GetPopupHandle(),Flags,hwnd,pPos,pExcludeRect);
 		Destroy();
 	} else {
 		if (fToggle)
 			::EndMenu();
+		Result=0;
 	}
-	return true;
+
+	return Result;
 }
 
 
