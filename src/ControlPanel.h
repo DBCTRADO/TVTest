@@ -121,7 +121,9 @@ public:
 	virtual void CalcSize(int Width,SIZE *pSize);
 	virtual void Draw(HDC hdc,const RECT &Rect)=0;
 	virtual void OnLButtonDown(int x,int y);
+	virtual void OnLButtonUp(int x,int y) {}
 	virtual void OnRButtonDown(int x,int y) {}
+	virtual void OnRButtonUp(int x,int y) {}
 	virtual void OnMouseMove(int x,int y) {}
 	virtual void SetStyle(const TVTest::Style::CStyleManager *pStyleManager) {}
 	virtual void NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager) {}

@@ -659,7 +659,7 @@ public:
 	void OnCursorMove(int x,int y) override;
 	void OnCursorLeave() override;
 	bool OnClick(int x,int y) override;
-	bool OnRButtonDown(int x,int y) override;
+	bool OnRButtonUp(int x,int y) override;
 	bool OnSetCursor() override { return false; }
 	bool OnCursorKey(WPARAM KeyCode) override;
 
@@ -957,7 +957,7 @@ bool CFeaturedEventsCategory::OnClick(int x,int y)
 }
 
 
-bool CFeaturedEventsCategory::OnRButtonDown(int x,int y)
+bool CFeaturedEventsCategory::OnRButtonUp(int x,int y)
 {
 	enum {
 		ID_SETTINGS=1
@@ -1797,7 +1797,7 @@ LRESULT CHomeDisplay::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 		}
 		return 0;
 
-	case WM_RBUTTONDOWN:
+	case WM_RBUTTONUP:
 		{
 			POINT pt={GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam)};
 			RECT rc;
@@ -1805,7 +1805,7 @@ LRESULT CHomeDisplay::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 			GetContentAreaRect(&rc);
 			if (m_CurCategory>=0
 					&& ::PtInRect(&rc,pt)
-					&& m_CategoryList[m_CurCategory]->OnRButtonDown(pt.x,pt.y)) {
+					&& m_CategoryList[m_CurCategory]->OnRButtonUp(pt.x,pt.y)) {
 				return 0;
 			}
 		}

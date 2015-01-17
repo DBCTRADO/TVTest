@@ -410,6 +410,9 @@ static LRESULT CALLBACK ListBoxHookProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM
 		return 0;
 
 	case WM_RBUTTONUP:
+		SendMessage(GetParent(hwnd),WM_COMMAND,
+					MAKEWPARAM(GetWindowID(hwnd),LBN_EX_RBUTTONUP),
+					reinterpret_cast<LPARAM>(hwnd));
 		return 0;
 
 	case WM_NCDESTROY:

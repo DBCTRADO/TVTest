@@ -1687,7 +1687,7 @@ INT_PTR CColorSchemeOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lP
 				}
 				break;
 
-			case LBN_EX_RBUTTONDOWN:
+			case LBN_EX_RBUTTONUP:
 				{
 					HMENU hmenu=::LoadMenu(GetAppClass().GetResourceInstance(),MAKEINTRESOURCE(IDM_COLORSCHEME));
 					POINT pt;
@@ -1873,7 +1873,7 @@ INT_PTR CColorSchemeOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lP
 
 // 開発用機能
 #ifdef _DEBUG
-	case WM_RBUTTONDOWN:
+	case WM_RBUTTONUP:
 		{
 			HMENU hmenu=::CreatePopupMenu();
 			::AppendMenu(hmenu,MF_STRING | MF_ENABLED,1,TEXT("配色コードをコピー(&C)"));

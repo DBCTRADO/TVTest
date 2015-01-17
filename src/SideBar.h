@@ -61,7 +61,7 @@ public:
 		CEventHandler();
 		virtual ~CEventHandler();
 		virtual void OnCommand(int Command) {}
-		virtual void OnRButtonDown(int x,int y) {}
+		virtual void OnRButtonUp(int x,int y) {}
 		virtual void OnMouseLeave() {}
 		virtual bool GetTooltipText(int Command,LPTSTR pszText,int MaxText) { return false; }
 		virtual bool DrawIcon(const DrawIconInfo *pInfo) { return false; }

@@ -452,7 +452,7 @@ LRESULT CInformationPanel::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lP
 		}
 		return 0;
 
-	case WM_RBUTTONDOWN:
+	case WM_RBUTTONUP:
 		{
 			HMENU hmenu;
 			POINT pt;
@@ -511,7 +511,7 @@ LRESULT CInformationPanel::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lP
 				MSGFILTER *pMsgFilter=reinterpret_cast<MSGFILTER*>(lParam);
 
 				switch (pMsgFilter->msg) {
-				case WM_RBUTTONDOWN:
+				case WM_RBUTTONUP:
 					TVTest::EventInfoUtil::EventInfoContextMenu(hwnd,m_hwndProgramInfo);
 					break;
 
@@ -585,6 +585,9 @@ LRESULT CALLBACK CInformationPanel::ProgramInfoHookProc(HWND hwnd,UINT uMsg,WPAR
 
 	switch (uMsg) {
 	case WM_RBUTTONDOWN:
+		return 0;
+
+	case WM_RBUTTONUP:
 		if (!static_cast<const CProgramInfoItem*>(pThis->GetItem(ITEM_PROGRAMINFO))->GetInfoText().empty()) {
 			HMENU hmenu=::CreatePopupMenu();
 			POINT pt;
@@ -611,9 +614,6 @@ LRESULT CALLBACK CInformationPanel::ProgramInfoHookProc(HWND hwnd,UINT uMsg,WPAR
 			}
 			::DestroyMenu(hmenu);
 		}
-		return 0;
-
-	case WM_RBUTTONUP:
 		return 0;
 
 	case WM_NCDESTROY:

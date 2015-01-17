@@ -753,9 +753,9 @@ LRESULT CChannelPanel::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam
 		}
 		return 0;
 
-	case WM_RBUTTONDOWN:
+	case WM_RBUTTONUP:
 		if (m_pEventHandler!=NULL)
-			m_pEventHandler->OnRButtonDown();
+			m_pEventHandler->OnRButtonUp(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam));
 		return 0;
 
 	case WM_MOUSEMOVE:

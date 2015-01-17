@@ -150,6 +150,7 @@ HMENU CreatePopupMenuFromControls(HWND hDlg,const int *pIDList,int IDListLength)
 bool PopupMenuFromControls(HWND hDlg,const int *pIDList,int IDListLength,
 						   unsigned int Flags=0,const POINT *ppt=NULL);
 #define LBN_EX_RBUTTONDOWN	0x0100
+#define LBN_EX_RBUTTONUP	0x0101
 bool ExtendListBox(HWND hwndList,unsigned int Flags=0);
 bool SetListViewSortMark(HWND hwndList,int Column,bool fAscending=true);
 bool AdjustListViewColumnWidth(HWND hwndList,bool fUseHeader=true);

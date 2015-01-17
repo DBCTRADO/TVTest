@@ -36,7 +36,7 @@ public:
 		CEventHandler();
 		virtual ~CEventHandler()=0;
 		virtual void OnLButtonDown(int x,int y) {}
-		virtual void OnRButtonDown(int x,int y) {}
+		virtual void OnRButtonUp(int x,int y) {}
 		virtual bool OnKeyDown(UINT KeyCode,UINT Flags) { return false; }
 		friend class CCapturePreview;
 	};
@@ -109,7 +109,7 @@ private:
 		CCaptureWindow *m_pCaptureWindow;
 	public:
 		CPreviewEventHandler(CCaptureWindow *pCaptureWindow);
-		void OnRButtonDown(int x,int y);
+		void OnRButtonUp(int x,int y);
 		bool OnKeyDown(UINT KeyCode,UINT Flags);
 	};
 

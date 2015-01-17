@@ -161,15 +161,15 @@ private:
 	public:
 		CFormEventHandler(CPanelForm *pForm);
 		void OnSelChange() override;
-		void OnRButtonDown() override;
-		void OnTabRButtonDown(int x,int y) override;
+		void OnRButtonUp(int x,int y) override;
+		void OnTabRButtonUp(int x,int y) override;
 		bool OnKeyDown(UINT KeyCode,UINT Flags) override;
 	};
 
 	class CChannelPanelEventHandler : public CChannelPanel::CEventHandler
 	{
 		void OnChannelClick(const CChannelInfo *pChannelInfo) override;
-		void OnRButtonDown() override;
+		void OnRButtonUp(int x,int y) override;
 	};
 
 	CFrameEventHandler m_FrameEventHandler;

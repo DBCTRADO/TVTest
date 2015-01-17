@@ -718,7 +718,7 @@ LRESULT CEventInfoPopup::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lPar
 	case WM_NOTIFY:
 		switch (((LPNMHDR)lParam)->code) {
 		case EN_MSGFILTER:
-			if (reinterpret_cast<MSGFILTER*>(lParam)->msg==WM_RBUTTONDOWN) {
+			if (reinterpret_cast<MSGFILTER*>(lParam)->msg==WM_RBUTTONUP) {
 				enum {
 					COMMAND_COPY=1,
 					COMMAND_SELECTALL,

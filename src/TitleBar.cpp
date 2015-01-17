@@ -371,10 +371,10 @@ LRESULT CTitleBar::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 		}
 		return 0;
 
-	case WM_RBUTTONDOWN:
+	case WM_RBUTTONUP:
 		if (m_HotItem==ITEM_LABEL) {
 			if (m_pEventHandler!=NULL)
-				m_pEventHandler->OnLabelRButtonDown(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam));
+				m_pEventHandler->OnLabelRButtonUp(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam));
 		}
 		return 0;
 

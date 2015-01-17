@@ -32,8 +32,8 @@ public:
 	class ABSTRACT_CLASS(CEventHandler) {
 	public:
 		virtual void OnSelChange() {}
-		virtual void OnRButtonDown() {}
-		virtual void OnTabRButtonDown(int x,int y) {}
+		virtual void OnRButtonUp(int x,int y) {}
+		virtual void OnTabRButtonUp(int x,int y) {}
 		virtual bool OnKeyDown(UINT KeyCode,UINT Flags) { return false; }
 		virtual void OnVisibleChange(bool fVisible) {}
 	};

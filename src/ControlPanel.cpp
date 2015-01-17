@@ -483,7 +483,26 @@ LRESULT CControlPanel::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam
 						::SendMessage(hwnd,WM_MOUSELEAVE,0,0);
 					}
 				}
-			} else if (uMsg==WM_RBUTTONDOWN) {
+			}
+		}
+		return 0;
+
+	case WM_LBUTTONUP:
+	case WM_RBUTTONUP:
+		{
+			int x=GET_X_LPARAM(lParam),y=GET_Y_LPARAM(lParam);
+
+			if (m_HotItem>=0) {
+				RECT rc;
+
+				m_ItemList[m_HotItem]->GetPosition(&rc);
+				x-=rc.left;
+				y-=rc.top;
+				if (uMsg==WM_LBUTTONUP)
+					m_ItemList[m_HotItem]->OnLButtonUp(x,y);
+				else
+					m_ItemList[m_HotItem]->OnRButtonUp(x,y);
+			} else if (uMsg==WM_RBUTTONUP) {
 				POINT pt;
 
 				pt.x=x;
@@ -491,12 +510,9 @@ LRESULT CControlPanel::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam
 				::MapWindowPoints(hwnd,GetParent(),&pt,1);
 				::SendMessage(GetParent(),uMsg,wParam,MAKELPARAM(pt.x,pt.y));
 			}
-		}
-		return 0;
 
-	case WM_LBUTTONUP:
-		if (GetCapture()==hwnd) {
-			::ReleaseCapture();
+			if (GetCapture()==hwnd)
+				::ReleaseCapture();
 		}
 		return 0;
 

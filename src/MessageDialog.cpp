@@ -178,7 +178,7 @@ INT_PTR CALLBACK CMessageDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARA
 			return TRUE;
 
 		case EN_MSGFILTER:
-			if (reinterpret_cast<MSGFILTER*>(lParam)->msg==WM_RBUTTONDOWN) {
+			if (reinterpret_cast<MSGFILTER*>(lParam)->msg==WM_RBUTTONUP) {
 				HMENU hmenu;
 				POINT pt;
 

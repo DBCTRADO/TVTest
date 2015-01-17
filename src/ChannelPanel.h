@@ -42,7 +42,7 @@ public:
 	public:
 		virtual ~CEventHandler() {}
 		virtual void OnChannelClick(const CChannelInfo *pChannelInfo) {}
-		virtual void OnRButtonDown() {}
+		virtual void OnRButtonUp(int x,int y) {}
 	};
 
 	enum {

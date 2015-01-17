@@ -307,9 +307,9 @@ LRESULT CCapturePreview::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lPar
 			m_pEventHandler->OnLButtonDown(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam));
 		return TRUE;
 
-	case WM_RBUTTONDOWN:
+	case WM_RBUTTONUP:
 		if (m_pEventHandler!=NULL)
-			m_pEventHandler->OnRButtonDown(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam));
+			m_pEventHandler->OnRButtonUp(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam));
 		return TRUE;
 
 	case WM_KEYDOWN:
@@ -585,7 +585,7 @@ CCaptureWindow::CPreviewEventHandler::CPreviewEventHandler(CCaptureWindow *pCapt
 }
 
 
-void CCaptureWindow::CPreviewEventHandler::OnRButtonDown(int x,int y)
+void CCaptureWindow::CPreviewEventHandler::OnRButtonUp(int x,int y)
 {
 	CPopupMenu Menu(GetAppClass().GetResourceInstance(),IDM_CAPTUREPREVIEW);
 

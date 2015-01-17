@@ -1036,18 +1036,18 @@ LRESULT CMainWindow::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 		}
 		break;
 
-	case WM_RBUTTONDOWN:
+	case WM_RBUTTONUP:
 		if (m_pCore->GetFullscreen()) {
-			m_Fullscreen.OnRButtonDown();
+			m_Fullscreen.OnRButtonUp();
 		} else {
 			::SendMessage(hwnd,WM_COMMAND,
 				MAKEWPARAM(m_App.OperationOptions.GetRightClickCommand(),COMMAND_FROM_MOUSE),0);
 		}
 		return 0;
 
-	case WM_MBUTTONDOWN:
+	case WM_MBUTTONUP:
 		if (m_pCore->GetFullscreen()) {
-			m_Fullscreen.OnMButtonDown();
+			m_Fullscreen.OnMButtonUp();
 		} else {
 			::SendMessage(hwnd,WM_COMMAND,
 				MAKEWPARAM(m_App.OperationOptions.GetMiddleClickCommand(),COMMAND_FROM_MOUSE),0);
@@ -5852,12 +5852,12 @@ LRESULT CMainWindow::CFullscreen::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LP
 		m_LayoutBase.SetPosition(0,0,LOWORD(lParam),HIWORD(lParam));
 		return 0;
 
-	case WM_RBUTTONDOWN:
-		OnRButtonDown();
+	case WM_RBUTTONUP:
+		OnRButtonUp();
 		return 0;
 
-	case WM_MBUTTONDOWN:
-		OnMButtonDown();
+	case WM_MBUTTONUP:
+		OnMButtonUp();
 		return 0;
 
 	case WM_LBUTTONDBLCLK:
@@ -6200,13 +6200,13 @@ void CMainWindow::CFullscreen::OnMouseCommand(int Command)
 }
 
 
-void CMainWindow::CFullscreen::OnRButtonDown()
+void CMainWindow::CFullscreen::OnRButtonUp()
 {
 	OnMouseCommand(m_App.OperationOptions.GetRightClickCommand());
 }
 
 
-void CMainWindow::CFullscreen::OnMButtonDown()
+void CMainWindow::CFullscreen::OnMButtonUp()
 {
 	OnMouseCommand(m_App.OperationOptions.GetMiddleClickCommand());
 }
@@ -6535,7 +6535,7 @@ void CMainWindow::CTitleBarManager::OnLabelLButtonDoubleClick(int x,int y)
 		OnFullscreen();
 }
 
-void CMainWindow::CTitleBarManager::OnLabelRButtonDown(int x,int y)
+void CMainWindow::CTitleBarManager::OnLabelRButtonUp(int x,int y)
 {
 	POINT pt;
 
@@ -6656,7 +6656,7 @@ void CMainWindow::CSideBarManager::OnCommand(int Command)
 	m_pMainWindow->SendCommand(Command);
 }
 
-void CMainWindow::CSideBarManager::OnRButtonDown(int x,int y)
+void CMainWindow::CSideBarManager::OnRButtonUp(int x,int y)
 {
 	CPopupMenu Menu(m_pMainWindow->m_App.GetResourceInstance(),IDM_SIDEBAR);
 	POINT pt;

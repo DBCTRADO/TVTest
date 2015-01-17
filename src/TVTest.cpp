@@ -667,13 +667,13 @@ void CMainPanel::CFormEventHandler::OnSelChange()
 }
 
 
-void CMainPanel::CFormEventHandler::OnRButtonDown()
+void CMainPanel::CFormEventHandler::OnRButtonUp(int x,int y)
 {
 	g_App.UICore.PopupMenu();
 }
 
 
-void CMainPanel::CFormEventHandler::OnTabRButtonDown(int x,int y)
+void CMainPanel::CFormEventHandler::OnTabRButtonUp(int x,int y)
 {
 	CPopupMenu Menu;
 	Menu.Create();
@@ -730,7 +730,7 @@ void CMainPanel::CChannelPanelEventHandler::OnChannelClick(const CChannelInfo *p
 }
 
 
-void CMainPanel::CChannelPanelEventHandler::OnRButtonDown()
+void CMainPanel::CChannelPanelEventHandler::OnRButtonUp(int x,int y)
 {
 	CPopupMenu Menu(g_App.GetResourceInstance(),IDM_CHANNELPANEL);
 

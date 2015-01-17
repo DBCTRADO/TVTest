@@ -320,6 +320,9 @@ LRESULT CALLBACK CCaptionPanel::EditWndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LP
 
 	switch (uMsg) {
 	case WM_RBUTTONDOWN:
+		return 0;
+
+	case WM_RBUTTONUP:
 		{
 			HMENU hmenu=::LoadMenu(GetAppClass().GetResourceInstance(),MAKEINTRESOURCE(IDM_CAPTIONPANEL));
 
@@ -329,14 +332,11 @@ LRESULT CALLBACK CCaptionPanel::EditWndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LP
 							MF_BYCOMMAND | (pThis->m_fAutoScroll?MF_CHECKED:MF_UNCHECKED));
 			::CheckMenuItem(hmenu,CM_CAPTIONPANEL_IGNORESMALL,
 							MF_BYCOMMAND | (pThis->m_fIgnoreSmall?MF_CHECKED:MF_UNCHECKED));
-			POINT pt;
-			::GetCursorPos(&pt);
+			POINT pt={GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam)};
+			::ClientToScreen(hwnd,&pt);
 			::TrackPopupMenu(::GetSubMenu(hmenu,0),TPM_RIGHTBUTTON,pt.x,pt.y,0,pThis->m_hwnd,NULL);
 			::DestroyMenu(hmenu);
 		}
-		return 0;
-
-	case WM_RBUTTONUP:
 		return 0;
 
 	case WM_NCDESTROY:

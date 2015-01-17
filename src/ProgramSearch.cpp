@@ -1985,7 +1985,7 @@ INT_PTR CProgramSearchDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM l
 			return TRUE;
 
 		case EN_MSGFILTER:
-			if (reinterpret_cast<MSGFILTER*>(lParam)->msg==WM_RBUTTONDOWN) {
+			if (reinterpret_cast<MSGFILTER*>(lParam)->msg==WM_RBUTTONUP) {
 				TVTest::EventInfoUtil::EventInfoContextMenu(hDlg,::GetDlgItem(hDlg,IDC_PROGRAMSEARCH_INFO));
 			}
 			return TRUE;

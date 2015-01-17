@@ -236,7 +236,7 @@ private:
 		void OnMouseLeave() override;
 		void OnLabelLButtonDown(int x,int y) override;
 		void OnLabelLButtonDoubleClick(int x,int y) override;
-		void OnLabelRButtonDown(int x,int y) override;
+		void OnLabelRButtonUp(int x,int y) override;
 		void OnIconLButtonDown(int x,int y) override;
 		void OnIconLButtonDoubleClick(int x,int y) override;
 	// CTitleBarManager
@@ -262,7 +262,7 @@ private:
 
 	// CSideBar::CEventHandler
 		void OnCommand(int Command) override;
-		void OnRButtonDown(int x,int y) override;
+		void OnRButtonUp(int x,int y) override;
 		void OnMouseLeave() override;
 		bool GetTooltipText(int Command,LPTSTR pszText,int MaxText) override;
 		bool DrawIcon(const CSideBar::DrawIconInfo *pInfo) override;
@@ -295,8 +295,8 @@ private:
 		bool SetPanelWidth(int Width);
 		int GetPanelWidth() const { return m_PanelWidth; }
 		void HideAllBars();
-		void OnRButtonDown();
-		void OnMButtonDown();
+		void OnRButtonUp();
+		void OnMButtonUp();
 		void OnMouseMove();
 		CViewWindow &GetViewWindow() { return m_ViewWindow; }
 

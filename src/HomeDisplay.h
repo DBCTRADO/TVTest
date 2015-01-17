@@ -69,7 +69,7 @@ public:
 		virtual void OnCursorMove(int x,int y) {}
 		virtual void OnCursorLeave() {}
 		virtual bool OnClick(int x,int y) { return false; }
-		virtual bool OnRButtonDown(int x,int y) { return false; }
+		virtual bool OnRButtonUp(int x,int y) { return false; }
 		virtual bool OnSetCursor() { return false; }
 		virtual bool OnCursorKey(WPARAM KeyCode) { return false; }
 

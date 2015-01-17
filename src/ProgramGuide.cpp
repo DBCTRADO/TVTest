@@ -3969,6 +3969,13 @@ LRESULT CProgramGuide::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam
 
 			::SetFocus(hwnd);
 			SelectEventByPosition(x,y);
+		}
+		return 0;
+
+	case WM_RBUTTONUP:
+		{
+			int x=GET_X_LPARAM(lParam),y=GET_Y_LPARAM(lParam);
+
 			ShowPopupMenu(x,y);
 		}
 		return 0;
@@ -6410,7 +6417,7 @@ LRESULT CProgramGuideFrameBase::DefaultMessageHandler(HWND hwnd,UINT uMsg,WPARAM
 	case WM_MOUSEHWHEEL:
 		return m_pProgramGuide->SendMessage(uMsg,wParam,lParam);
 
-	case WM_RBUTTONDOWN:
+	case WM_RBUTTONUP:
 		{
 			POINT pt={GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam)};
 			::ClientToScreen(hwnd,&pt);

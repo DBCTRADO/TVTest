@@ -440,7 +440,7 @@ LRESULT CPanelForm::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 		}
 		return 0;
 
-	case WM_RBUTTONDOWN:
+	case WM_RBUTTONUP:
 		if (m_pEventHandler!=NULL) {
 			POINT pt;
 			RECT rc;
@@ -450,9 +450,9 @@ LRESULT CPanelForm::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 			GetClientRect(&rc);
 			if (::PtInRect(&rc,pt)) {
 				if (pt.y<m_TabHeight)
-					m_pEventHandler->OnTabRButtonDown(pt.x,pt.y);
+					m_pEventHandler->OnTabRButtonUp(pt.x,pt.y);
 				else
-					m_pEventHandler->OnRButtonDown();
+					m_pEventHandler->OnRButtonUp(pt.x,pt.y);
 				return 0;
 			}
 		}
