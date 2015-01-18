@@ -1059,22 +1059,8 @@ int CAppMain::Main(HINSTANCE hInstance,LPCTSTR pszCmdLine,int nCmdShow)
 	FavoritesManager.Load(m_szFavoritesFileName);
 
 	// EPG”Ô‘g•\‚Ì•\Ž¦
-	if (CmdLineOptions.m_fShowProgramGuide) {
-		CMainWindow::ProgramGuideSpaceInfo SpaceInfo;
-
-		if (!CmdLineOptions.m_ProgramGuideTuner.empty())
-			SpaceInfo.pszTuner=CmdLineOptions.m_ProgramGuideTuner.c_str();
-		else
-			SpaceInfo.pszTuner=nullptr;
-		if (!CmdLineOptions.m_ProgramGuideSpace.empty())
-			SpaceInfo.pszSpace=CmdLineOptions.m_ProgramGuideSpace.c_str();
-		else
-			SpaceInfo.pszSpace=nullptr;
-
-		MainWindow.ShowProgramGuide(true,
-			UICore.GetFullscreen()?0:CMainWindow::PROGRAMGUIDE_SHOW_POPUP,
-			&SpaceInfo);
-	}
+	if (CmdLineOptions.m_fShowProgramGuide)
+		ShowProgramGuideByCommandLine(CmdLineOptions);
 
 	if (CmdLineOptions.m_fHomeDisplay) {
 		UICore.DoCommandAsync(CM_HOMEDISPLAY);
@@ -1369,7 +1355,7 @@ bool CAppMain::ProcessCommandLine(LPCTSTR pszCmdLine)
 
 	CmdLine.Parse(pszCmdLine);
 
-	if (!CmdLine.m_fMinimize && !CmdLine.m_fTray) {
+	if (!CmdLine.m_fMinimize && !CmdLine.m_fTray && !CmdLine.m_fProgramGuideOnly) {
 		UICore.DoCommand(CM_SHOW);
 
 		if (CmdLine.m_fFullscreen)
@@ -1408,14 +1394,33 @@ bool CAppMain::ProcessCommandLine(LPCTSTR pszCmdLine)
 	if (CmdLine.m_fMute)
 		UICore.SetMute(true);
 
-	if (CmdLine.m_fShowProgramGuide)
-		MainWindow.ShowProgramGuide(true);
+	if (CmdLine.m_fShowProgramGuide || CmdLine.m_fProgramGuideOnly)
+		ShowProgramGuideByCommandLine(CmdLine);
 	if (CmdLine.m_fHomeDisplay)
 		UICore.DoCommandAsync(CM_HOMEDISPLAY);
 	else if (CmdLine.m_fChannelDisplay)
 		UICore.DoCommandAsync(CM_CHANNELDISPLAY);
 
 	return true;
+}
+
+
+void CAppMain::ShowProgramGuideByCommandLine(const CCommandLineOptions &CmdLine)
+{
+	CMainWindow::ProgramGuideSpaceInfo SpaceInfo;
+
+	if (!CmdLine.m_ProgramGuideTuner.empty())
+		SpaceInfo.pszTuner=CmdLine.m_ProgramGuideTuner.c_str();
+	else
+		SpaceInfo.pszTuner=nullptr;
+	if (!CmdLine.m_ProgramGuideSpace.empty())
+		SpaceInfo.pszSpace=CmdLine.m_ProgramGuideSpace.c_str();
+	else
+		SpaceInfo.pszSpace=nullptr;
+
+	MainWindow.ShowProgramGuide(true,
+		UICore.GetFullscreen()?0:CMainWindow::PROGRAMGUIDE_SHOW_POPUP,
+		&SpaceInfo);
 }
 
 

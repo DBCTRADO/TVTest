@@ -562,6 +562,7 @@ private:
 	void ApplyEventInfoFont();
 	bool GetAbsolutePath(LPCTSTR pszPath,LPTSTR pszAbsolutePath) const;
 	bool ProcessCommandLine(LPCTSTR pszCmdLine);
+	void ShowProgramGuideByCommandLine(const CCommandLineOptions &CmdLine);
 	static BOOL CALLBACK ControllerFocusCallback(HWND hwnd,LPARAM Param);
 };
 
