@@ -74,27 +74,36 @@ static const bool abCharSizeTable[] =
 	false,	// CODE_MACRO					Macro
 };
 
-const DWORD CAribString::AribToString(TCHAR *lpszDst, const DWORD dwDstLen, const BYTE *pSrcData, const DWORD dwSrcLen)
+const DWORD CAribString::AribToString(
+	TCHAR *lpszDst, const DWORD dwDstLen, const BYTE *pSrcData, const DWORD dwSrcLen, const unsigned int Flags)
 {
 	// ARIB STD-B24 Part1 Å® Shift-JIS / Unicodeïœä∑
 	CAribString WorkObject;
 
-	return WorkObject.AribToStringInternal(lpszDst, dwDstLen, pSrcData, dwSrcLen);
+	return WorkObject.AribToStringInternal(lpszDst, dwDstLen, pSrcData, dwSrcLen, Flags);
 }
 
-const DWORD CAribString::CaptionToString(TCHAR *lpszDst, const DWORD dwDstLen, const BYTE *pSrcData, const DWORD dwSrcLen,
-										 const bool b1Seg, FormatList *pFormatList, IDRCSMap *pDRCSMap)
+const DWORD CAribString::CaptionToString(
+	TCHAR *lpszDst, const DWORD dwDstLen, const BYTE *pSrcData, const DWORD dwSrcLen,
+	const bool b1Seg, FormatList *pFormatList, IDRCSMap *pDRCSMap)
 {
 	CAribString WorkObject;
 
-	return WorkObject.AribToStringInternal(lpszDst, dwDstLen, pSrcData, dwSrcLen, true, b1Seg, pFormatList, pDRCSMap);
+	unsigned int Flags = FLAG_CAPTION;
+	if (b1Seg)
+		Flags|=FLAG_1SEG;
+
+	return WorkObject.AribToStringInternal(lpszDst, dwDstLen, pSrcData, dwSrcLen, Flags, pFormatList, pDRCSMap);
 }
 
 const DWORD CAribString::AribToStringInternal(TCHAR *lpszDst, const DWORD dwDstLen, const BYTE *pSrcData, const DWORD dwSrcLen,
-	const bool bCaption, const bool b1Seg, FormatList *pFormatList, IDRCSMap *pDRCSMap)
+	const unsigned int Flags, FormatList *pFormatList, IDRCSMap *pDRCSMap)
 {
 	if (pSrcData == NULL || lpszDst == NULL || dwDstLen == 0)
 		return 0UL;
+
+	const bool bCaption = (Flags & FLAG_CAPTION) != 0;
+	const bool b1Seg = (Flags & FLAG_1SEG) != 0;
 
 	// èÛë‘èâä˙ê›íË
 	m_byEscSeqCount = 0U;
@@ -129,6 +138,8 @@ const DWORD CAribString::AribToStringInternal(TCHAR *lpszDst, const DWORD dwDstL
 	m_bCaption = bCaption;
 	m_pFormatList = pFormatList;
 	m_pDRCSMap = pDRCSMap;
+
+	m_bUseCharSize = (Flags & FLAG_USE_CHAR_SIZE) != 0;
 
 	return ProcessString(lpszDst, dwDstLen, pSrcData, dwSrcLen);
 }
@@ -475,6 +486,22 @@ inline const int CAribString::PutAlphanumericChar(TCHAR *lpszDst, const DWORD dw
 		TEXT("ÇoÇpÇqÇrÇsÇtÇuÇvÇwÇxÇyÅmÅèÅnÅOÅQ")
 		TEXT("ÅMÇÅÇÇÇÉÇÑÇÖÇÜÇáÇàÇâÇäÇãÇåÇçÇéÇè")
 		TEXT("ÇêÇëÇíÇìÇîÇïÇñÇóÇòÇôÇöÅoÅbÅpÅPÅ@");
+	static const LPCWSTR acAlphanumericHalfWidthTable =
+		L"                "
+		L"                "
+		L" !\"#$%&'()*+,-./"
+		L"0123456789:;<=>?"
+		L"@ABCDEFGHIJKLMNO"
+		L"PQRSTUVWXYZ[\u00a5]^_"
+		L"`abcdefghijklmno"
+		L"pqrstuvwxyz{|}\u203e ";
+
+	if (m_bUseCharSize && m_CharSize == SIZE_MEDIUM) {
+		if (dwDstLen < 1)
+			return -1;
+		*lpszDst = acAlphanumericHalfWidthTable[wCode];
+		return 1;
+	}
 
 	if (dwDstLen < MB_CHAR_LENGTH)
 		return -1;

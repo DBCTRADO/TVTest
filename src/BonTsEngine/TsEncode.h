@@ -14,6 +14,12 @@
 class CAribString
 {
 public:
+	enum {
+		FLAG_CAPTION		= 0x0001U,
+		FLAG_1SEG			= 0x0002U,
+		FLAG_USE_CHAR_SIZE	= 0x0004U
+	};
+
 	enum CHAR_SIZE {
 		SIZE_SMALL,		// è¨å^
 		SIZE_MEDIUM,	// íÜå^
@@ -49,7 +55,9 @@ public:
 		virtual LPCTSTR GetString(WORD Code) = 0;
 	};
 
-	static const DWORD AribToString(TCHAR *lpszDst, const DWORD dwDstLen, const BYTE *pSrcData, const DWORD dwSrcLen);
+	static const DWORD AribToString(TCHAR *lpszDst, const DWORD dwDstLen,
+									const BYTE *pSrcData, const DWORD dwSrcLen,
+									const unsigned int Flags = FLAG_USE_CHAR_SIZE);
 	static const DWORD CaptionToString(TCHAR *lpszDst, const DWORD dwDstLen, const BYTE *pSrcData, const DWORD dwSrcLen,
 									   const bool b1Seg = false, FormatList *pFormatList = NULL, IDRCSMap *pDRCSMap = NULL);
 
@@ -110,9 +118,10 @@ private:
 	IDRCSMap *m_pDRCSMap;
 
 	bool m_bCaption;
+	bool m_bUseCharSize;
 
 	const DWORD AribToStringInternal(TCHAR *lpszDst, const DWORD dwDstLen, const BYTE *pSrcData, const DWORD dwSrcLen,
-		const bool bCaption = false, const bool b1Seg = false, FormatList *pFormatList = NULL, IDRCSMap *pDRCSMap = NULL);
+		const unsigned int Flags, FormatList *pFormatList = NULL, IDRCSMap *pDRCSMap = NULL);
 	const DWORD ProcessString(TCHAR *lpszDst, const DWORD dwDstLen, const BYTE *pSrcData, const DWORD dwSrcLen);
 	inline const int ProcessCharCode(TCHAR *lpszDst, const DWORD dwDstLen, const WORD wCode, const CODE_SET CodeSet);
 
