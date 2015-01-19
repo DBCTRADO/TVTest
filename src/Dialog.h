@@ -91,6 +91,8 @@ protected:
 	void DoLayout();
 	bool AddControl(int ID,unsigned int Align);
 	bool AddControls(int FirstID,int LastID,unsigned int Align);
+	bool UpdateControlPosition(int ID);
+	void UpdateLayout();
 	void ApplyPosition();
 };
 

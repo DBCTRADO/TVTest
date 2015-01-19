@@ -307,6 +307,8 @@ public:
 	bool IsHitEvent(const CEventInfoData *pEventInfo) const;
 	const CEventSearchOptions &GetOptions() const { return m_Options; }
 	CEventSearchOptions &GetOptions() { return m_Options; }
+	void SetResultListHeight(int Height);
+	int GetResultListHeight() const { return m_ResultListHeight; }
 
 private:
 	CEventHandler *m_pEventHandler;
@@ -319,8 +321,13 @@ private:
 	int m_SortColumn;
 	bool m_fSortDescending;
 	int m_ColumnWidth[NUM_COLUMNS];
+	int m_ResultListHeight;
+	bool m_fSplitterCursor;
+	int m_SplitterDragPos;
 	CRichEditUtil m_RichEditUtil;
 	CHARFORMAT m_InfoTextFormat;
+
+	static const int MIN_PANE_HEIGHT=16;
 
 	INT_PTR DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam);
 	bool AddSearchResult(const CEventInfoData *pEventInfo,LPCTSTR pszChannelName,LPARAM Param=0);
@@ -330,6 +337,8 @@ private:
 	int FormatEventInfoText(const CEventInfoData *pEventInfo,LPTSTR pszText,int MaxLength) const;
 	void HighlightKeyword();
 	bool SearchNextKeyword(LPCTSTR *ppszText,LPCTSTR pKeyword,int KeywordLength,int *pLength) const;
+	bool IsSplitterPos(int x,int y) const;
+	void AdjustResultListHeight(int Height);
 
 // CEventSearchSettings::CEventHandler
 	void OnSearch() override;

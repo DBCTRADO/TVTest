@@ -1,5 +1,7 @@
 #include "stdafx.h"
+#include "TVTest.h"
 #include "Dialog.h"
+#include "DialogUtil.h"
 
 #ifdef _DEBUG
 #undef THIS_FILE
@@ -272,11 +274,15 @@ void CResizableDialog::DoLayout()
 			rc.right+=Width-m_OriginalClientSize.cx;
 			if ((m_ControlList[i].Align&ALIGN_LEFT)==0)
 				rc.left+=Width-m_OriginalClientSize.cx;
+			if (rc.right<rc.left)
+				rc.right=rc.left;
 		}
 		if ((m_ControlList[i].Align&ALIGN_BOTTOM)!=0) {
 			rc.bottom+=Height-m_OriginalClientSize.cy;
 			if ((m_ControlList[i].Align&ALIGN_TOP)==0)
 				rc.top+=Height-m_OriginalClientSize.cy;
+			if (rc.bottom<rc.top)
+				rc.bottom=rc.top;
 		}
 		::MoveWindow(::GetDlgItem(m_hDlg,m_ControlList[i].ID),
 					 rc.left,rc.top,rc.right-rc.left,rc.bottom-rc.top,TRUE);
@@ -316,6 +322,32 @@ bool CResizableDialog::AddControls(int FirstID,int LastID,unsigned int Align)
 			return false;
 	}
 	return true;
+}
+
+
+bool CResizableDialog::UpdateControlPosition(int ID)
+{
+	for (size_t i=0;i<m_ControlList.size();i++) {
+		if (m_ControlList[i].ID==ID) {
+			GetDlgItemRect(m_hDlg,ID,&m_ControlList[i].rcOriginal);
+			return true;
+		}
+	}
+
+	return false;
+}
+
+
+void CResizableDialog::UpdateLayout()
+{
+	RECT rc;
+
+	::GetClientRect(m_hDlg,&rc);
+	m_OriginalClientSize.cx=rc.right;
+	m_OriginalClientSize.cy=rc.bottom;
+
+	for (size_t i=0;i<m_ControlList.size();i++)
+		GetDlgItemRect(m_hDlg,m_ControlList[i].ID,&m_ControlList[i].rcOriginal);
 }
 
 

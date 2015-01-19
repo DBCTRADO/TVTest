@@ -175,6 +175,9 @@ bool CProgramGuideOptions::LoadSettings(CSettings &Settings)
 				pProgramSearch->SetColumnWidth(i,Value);
 		}
 
+		if (Settings.Read(TEXT("SearchResultListHeight"),&Value))
+			pProgramSearch->SetResultListHeight(Value);
+
 		int Left,Top;
 		pProgramSearch->GetPosition(&Left,&Top,&Width,&Height);
 		Settings.Read(TEXT("SearchLeft"),&Left);
@@ -342,6 +345,8 @@ bool CProgramGuideOptions::SaveSettings(CSettings &Settings)
 			::wsprintf(szName,TEXT("SearchColumn%d_Width"),i);
 			Settings.Write(szName,pProgramSearch->GetColumnWidth(i));
 		}
+
+		Settings.Write(TEXT("SearchResultListHeight"),pProgramSearch->GetResultListHeight());
 
 		int Left,Top;
 		pProgramSearch->GetPosition(&Left,&Top,&Width,&Height);

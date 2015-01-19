@@ -1727,6 +1727,7 @@ CProgramSearchDialog::CProgramSearchDialog(CEventSearchOptions &Options)
 	, m_Options(Options)
 	, m_SearchSettingsDialog(Options)
 	, m_fHighlightResult(true)
+	, m_ResultListHeight(-1)
 {
 	m_ColumnWidth[0]=100;
 	m_ColumnWidth[1]=136;
@@ -1805,6 +1806,12 @@ bool CProgramSearchDialog::IsHitEvent(const CEventInfoData *pEventInfo) const
 }
 
 
+void CProgramSearchDialog::SetResultListHeight(int Height)
+{
+	m_ResultListHeight=Height;
+}
+
+
 INT_PTR CProgramSearchDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 {
 	switch (uMsg) {
@@ -1860,6 +1867,11 @@ INT_PTR CProgramSearchDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM l
 
 		ApplyPosition();
 
+		if (m_ResultListHeight>=0)
+			AdjustResultListHeight(m_ResultListHeight);
+
+		m_fSplitterCursor=false;
+
 		m_SearchSettingsDialog.SetFocus(IDC_EVENTSEARCH_KEYWORD);
 
 		return FALSE;
@@ -1871,6 +1883,10 @@ INT_PTR CProgramSearchDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM l
 			m_SearchSettingsDialog.SetPosition(&rc);
 
 			InvalidateDlgItem(hDlg,IDC_PROGRAMSEARCH_STATUS);
+
+			GetDlgItemRect(hDlg,IDC_PROGRAMSEARCH_RESULT,&rc);
+			if (rc.bottom-rc.top<MIN_PANE_HEIGHT)
+				AdjustResultListHeight(MIN_PANE_HEIGHT);
 		}
 		return TRUE;
 
@@ -1896,6 +1912,47 @@ INT_PTR CProgramSearchDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM l
 			return reinterpret_cast<INT_PTR>(::GetSysColorBrush(COLOR_WINDOW));
 		}
 		break;
+
+	case WM_SETCURSOR:
+		if ((HWND)wParam==hDlg && LOWORD(lParam)==HTCLIENT && m_fSplitterCursor) {
+			::SetCursor(::LoadCursor(NULL,IDC_SIZENS));
+			::SetWindowLongPtr(hDlg,DWLP_MSGRESULT,TRUE);
+			return TRUE;
+		}
+		break;
+
+	case WM_LBUTTONDOWN:
+		{
+			int x=GET_X_LPARAM(lParam),y=GET_Y_LPARAM(lParam);
+
+			if (IsSplitterPos(x,y)) {
+				RECT rc;
+
+				::GetWindowRect(::GetDlgItem(hDlg,IDC_PROGRAMSEARCH_RESULT),&rc);
+				m_ResultListHeight=rc.bottom-rc.top;
+				m_fSplitterCursor=true;
+				m_SplitterDragPos=y;
+				::SetCursor(::LoadCursor(NULL,IDC_SIZENS));
+				::SetCapture(hDlg);
+			}
+		}
+		return TRUE;
+
+	case WM_LBUTTONUP:
+		if (::GetCapture()==hDlg)
+			::ReleaseCapture();
+		return TRUE;
+
+	case WM_MOUSEMOVE:
+		{
+			int x=GET_X_LPARAM(lParam),y=GET_Y_LPARAM(lParam);
+
+			if (::GetCapture()==hDlg)
+				AdjustResultListHeight(m_ResultListHeight+(y-m_SplitterDragPos));
+			else
+				m_fSplitterCursor=IsSplitterPos(x,y);
+		}
+		return TRUE;
 
 	case WM_NOTIFY:
 		switch (((LPNMHDR)lParam)->code) {
@@ -2004,6 +2061,12 @@ INT_PTR CProgramSearchDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM l
 			HWND hwndList=::GetDlgItem(hDlg,IDC_PROGRAMSEARCH_RESULT);
 			for (int i=0;i<lengthof(m_ColumnWidth);i++)
 				m_ColumnWidth[i]=ListView_GetColumnWidth(hwndList,i);
+		}
+
+		{
+			RECT rc;
+			::GetWindowRect(::GetDlgItem(hDlg,IDC_PROGRAMSEARCH_RESULT),&rc);
+			m_ResultListHeight=rc.bottom-rc.top;
 		}
 
 		ClearSearchResult();
@@ -2280,6 +2343,37 @@ bool CProgramSearchDialog::SearchNextKeyword(LPCTSTR *ppszText,LPCTSTR pKeyword,
 		return false;
 	*ppszText+=Pos;
 	return true;
+}
+
+
+bool CProgramSearchDialog::IsSplitterPos(int x,int y) const
+{
+	RECT rcList,rcInfo;
+
+	GetDlgItemRect(m_hDlg,IDC_PROGRAMSEARCH_RESULT,&rcList);
+	GetDlgItemRect(m_hDlg,IDC_PROGRAMSEARCH_INFO,&rcInfo);
+	return x>=rcInfo.left && x<rcInfo.right && y>=rcList.bottom && y<rcInfo.top;
+}
+
+
+void CProgramSearchDialog::AdjustResultListHeight(int Height)
+{
+	RECT rcList,rcInfo;
+
+	GetDlgItemRect(m_hDlg,IDC_PROGRAMSEARCH_RESULT,&rcList);
+	GetDlgItemRect(m_hDlg,IDC_PROGRAMSEARCH_INFO,&rcInfo);
+	const int SplitterHeight=rcInfo.top-rcList.bottom;
+	if (Height<MIN_PANE_HEIGHT)
+		Height=MIN_PANE_HEIGHT;
+	if (rcList.top+Height>rcInfo.bottom-MIN_PANE_HEIGHT)
+		Height=(rcInfo.bottom-rcList.top)-MIN_PANE_HEIGHT-SplitterHeight;
+	rcList.bottom=rcList.top+Height;
+	::MoveWindow(::GetDlgItem(m_hDlg,IDC_PROGRAMSEARCH_RESULT),
+				 rcList.left,rcList.top,rcList.right-rcList.left,rcList.bottom-rcList.top,TRUE);
+	rcInfo.top=rcList.bottom+SplitterHeight;
+	::MoveWindow(::GetDlgItem(m_hDlg,IDC_PROGRAMSEARCH_INFO),
+				 rcInfo.left,rcInfo.top,rcInfo.right-rcInfo.left,rcInfo.bottom-rcInfo.top,TRUE);
+	UpdateLayout();
 }
 
 
