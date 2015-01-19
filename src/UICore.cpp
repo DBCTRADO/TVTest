@@ -994,10 +994,17 @@ void CUICore::InitTunerMenu(HMENU hmenu)
 		Menu.AppendUnformatted(CM_DRIVER_FIRST+i,m_App.CoreEngine.GetDriverFileName());
 		CurDriver=i++;
 	}
-	Menu.Append(CM_DRIVER_BROWSE,TEXT("éQè∆..."));
+
 	if (CurDriver>=0)
 		Menu.CheckRadioItem(CM_DRIVER_FIRST,CM_DRIVER_FIRST+i-1,
 							CM_DRIVER_FIRST+CurDriver);
+
+	Menu.Append(CM_DRIVER_BROWSE,TEXT("éQè∆..."));
+	Menu.AppendSeparator();
+	m_App.CommandList.GetCommandNameByID(CM_CLOSETUNER,szText,lengthof(szText));
+	Menu.Append(CM_CLOSETUNER,szText);
+	Menu.EnableItem(CM_CLOSETUNER,m_App.CoreEngine.IsTunerOpen());
+
 	m_App.Accelerator.SetMenuAccel(hmenu);
 }
 

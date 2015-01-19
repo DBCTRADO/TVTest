@@ -33,6 +33,7 @@ namespace TVTest
 		virtual void OnTunerChanged() {}
 		virtual void OnTunerOpened() {}
 		virtual void OnTunerClosed() {}
+		virtual void OnTunerShutDown() {}
 		virtual void OnChannelChanged(unsigned int Status) {}
 		virtual void OnServiceChanged() {}
 		virtual void OnServiceInfoUpdated() {}
@@ -71,6 +72,7 @@ namespace TVTest
 		void OnTunerChanged();
 		void OnTunerOpened();
 		void OnTunerClosed();
+		void OnTunerShutDown();
 		void OnChannelChanged(unsigned int Status);
 		void OnServiceChanged();
 		void OnServiceInfoUpdated();

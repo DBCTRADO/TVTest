@@ -223,6 +223,7 @@
 #define CM_MINIMIZE					234
 #define CM_MAXIMIZE					235
 #define CM_1SEGMODE					236
+#define CM_CLOSETUNER				237
 #define CM_ENABLEBUFFERING			240
 #define CM_RESETBUFFER				241
 #define CM_RESETERRORCOUNT			242

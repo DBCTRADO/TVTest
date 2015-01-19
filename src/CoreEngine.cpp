@@ -281,9 +281,13 @@ bool CCoreEngine::SetDriverDirectory(LPCTSTR pszDirectory)
 
 bool CCoreEngine::SetDriverFileName(LPCTSTR pszFileName)
 {
-	if (pszFileName==NULL || ::lstrlen(pszFileName)>=MAX_PATH)
-		return false;
-	::lstrcpy(m_szDriverFileName,pszFileName);
+	if (IsStringEmpty(pszFileName)) {
+		m_szDriverFileName[0]='\0';
+	} else {
+		if (::lstrlen(pszFileName)>=MAX_PATH)
+			return false;
+		::lstrcpy(m_szDriverFileName,pszFileName);
+	}
 	return true;
 }
 

@@ -3823,6 +3823,12 @@ void CPluginManager::OnTunerChanged()
 }
 
 
+void CPluginManager::OnTunerShutDown()
+{
+	SendEvent(TVTest::EVENT_DRIVERCHANGE);
+}
+
+
 void CPluginManager::OnChannelChanged(unsigned int Status)
 {
 	SendEvent(TVTest::EVENT_CHANNELCHANGE);

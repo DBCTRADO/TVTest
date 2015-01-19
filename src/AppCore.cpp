@@ -951,6 +951,19 @@ bool CAppCore::CloseTuner()
 }
 
 
+void CAppCore::ShutDownTuner()
+{
+	CloseTuner();
+
+	m_App.ChannelManager.Reset();
+
+	if (m_App.CoreEngine.IsDriverSpecified()) {
+		m_App.CoreEngine.SetDriverFileName(NULL);
+		m_App.AppEventManager.OnTunerShutDown();
+	}
+}
+
+
 bool CAppCore::Set1SegMode(bool f1Seg,bool fServiceChange)
 {
 	if (m_f1SegMode != f1Seg) {

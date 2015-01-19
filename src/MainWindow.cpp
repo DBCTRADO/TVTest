@@ -2841,6 +2841,10 @@ void CMainWindow::OnCommand(HWND hwnd,int id,HWND hwndCtl,UINT codeNotify)
 		m_App.Core.Set1SegMode(!m_App.Core.Is1SegMode(),true);
 		return;
 
+	case CM_CLOSETUNER:
+		m_App.Core.ShutDownTuner();
+		return;
+
 	case CM_HOMEDISPLAY:
 		if (!m_App.HomeDisplay.GetVisible()) {
 			Util::CWaitCursor WaitCursor;
@@ -4168,6 +4172,7 @@ void CMainWindow::OnTunerChanged()
 		m_App.EpgCaptureManager.EndCapture(0);
 
 	m_App.Panel.ProgramListPanel.ClearProgramList();
+	m_App.Panel.ProgramListPanel.ShowRetrievingMessage(false);
 	m_App.Panel.InfoPanel.ResetItem(CInformationPanel::ITEM_SERVICE);
 	m_App.Panel.InfoPanel.ResetItem(CInformationPanel::ITEM_PROGRAMINFO);
 
@@ -4191,8 +4196,11 @@ void CMainWindow::OnTunerChanged()
 	m_App.Epg.ProgramGuide.ClearCurrentService();
 	ClearMenu(m_App.MainMenu.GetSubMenu(CMainMenu::SUBMENU_SERVICE));
 	m_ResetErrorCountTimer.End();
+	m_App.StatusView.UpdateItem(STATUS_ITEM_CHANNEL);
 	m_App.StatusView.UpdateItem(STATUS_ITEM_TUNER);
+	m_App.Panel.ControlPanel.UpdateItem(CONTROLPANEL_ITEM_CHANNEL);
 	m_App.Panel.ControlPanel.UpdateItem(CONTROLPANEL_ITEM_TUNER);
+	m_App.SideBar.CheckRadioItem(CM_CHANNELNO_1,CM_CHANNELNO_12,0);
 	if (m_App.SideBarOptions.GetShowChannelLogo())
 		m_App.SideBar.Invalidate();
 	m_fForceResetPanAndScan=true;
@@ -4216,6 +4224,13 @@ void CMainWindow::OnTunerClosed()
 {
 	m_pCore->UpdateTitle();
 	m_pCore->UpdateIcon();
+}
+
+
+void CMainWindow::OnTunerShutDown()
+{
+	OnTunerChanged();
+	m_App.Panel.ChannelPanel.ClearChannelList();
 }
 
 

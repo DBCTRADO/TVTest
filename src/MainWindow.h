@@ -581,6 +581,7 @@ private:
 	void OnTunerChanged() override;
 	void OnTunerOpened() override;
 	void OnTunerClosed() override;
+	void OnTunerShutDown() override;
 	void OnChannelChanged(unsigned int Status) override;
 	void OnServiceChanged() override;
 	void OnChannelListChanged() override;

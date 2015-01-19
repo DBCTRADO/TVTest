@@ -656,6 +656,7 @@ BEGIN
 	CM_MINIMIZE,				"最小化/元のサイズに戻す"
 	CM_MAXIMIZE,				"最大化/元のサイズに戻す"
 	CM_1SEGMODE,				"ワンセグモード"
+	CM_CLOSETUNER,				"チューナーを閉じる"
 	CM_HOMEDISPLAY,				"ホーム画面"
 	CM_CHANNELDISPLAY,			"チャンネル選択画面"
 	CM_RECORDEVENT,				"この番組の最後まで録画"

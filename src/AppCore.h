@@ -83,6 +83,7 @@ public:
 	bool OpenTuner();
 	bool OpenAndInitializeTuner(unsigned int OpenFlags=0);
 	bool CloseTuner();
+	void ShutDownTuner();
 
 	bool Set1SegMode(bool f1Seg,bool fServiceChange);
 	bool Is1SegMode() const { return m_f1SegMode; }

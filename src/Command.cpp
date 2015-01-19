@@ -121,6 +121,7 @@ static const struct {
 	{TEXT("Minimize"),					CM_MINIMIZE},
 	{TEXT("Maximize"),					CM_MAXIMIZE},
 	{TEXT("OneSegMode"),				CM_1SEGMODE},
+	{TEXT("CloseTuner"),				CM_CLOSETUNER},
 	{TEXT("HomeDisplay"),				CM_HOMEDISPLAY},
 	{TEXT("ChannelDisplayMenu"),		CM_CHANNELDISPLAY},
 	{TEXT("Buffering"),					CM_ENABLEBUFFERING},
