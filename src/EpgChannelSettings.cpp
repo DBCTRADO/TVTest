@@ -37,8 +37,6 @@ bool CEpgChannelSettings::Show(HWND hwndOwner)
 
 INT_PTR CEpgChannelSettings::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 {
-	INT_PTR Result=CResizableDialog::DlgProc(hDlg,uMsg,wParam,lParam);
-
 	switch (uMsg) {
 	case WM_INITDIALOG:
 		{
@@ -171,5 +169,5 @@ INT_PTR CEpgChannelSettings::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lP
 		return TRUE;
 	}
 
-	return Result;
+	return FALSE;
 }

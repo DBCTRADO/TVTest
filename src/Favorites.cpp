@@ -1307,8 +1307,6 @@ namespace TVTest
 
 	INT_PTR COrganizeFavoritesDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 	{
-		INT_PTR Result=CResizableDialog::DlgProc(hDlg,uMsg,wParam,lParam);
-
 		switch (uMsg) {
 		case WM_INITDIALOG:
 			{
@@ -1656,7 +1654,7 @@ namespace TVTest
 			return TRUE;
 		}
 
-		return Result;
+		return FALSE;
 	}
 
 	void COrganizeFavoritesDialog::InsertTreeItems(HWND hwndTree,HTREEITEM hParent,const CFavoriteFolder *pFolder)

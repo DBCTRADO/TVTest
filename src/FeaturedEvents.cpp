@@ -626,8 +626,6 @@ INT_PTR CFeaturedEventsDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM 
 {
 	static const int PERIOD_UNIT=60*60;
 
-	INT_PTR Result=CResizableDialog::DlgProc(hDlg,uMsg,wParam,lParam);
-
 	switch (uMsg) {
 	case WM_INITDIALOG:
 		AddControl(IDC_FEATUREDEVENTS_SERVICELIST,ALIGN_VERT);
@@ -950,10 +948,10 @@ INT_PTR CFeaturedEventsDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM 
 			}
 			ListView_DeleteAllItems(hwndList);
 		}
-		break;
+		return TRUE;
 	}
 
-	return Result;
+	return FALSE;
 }
 
 

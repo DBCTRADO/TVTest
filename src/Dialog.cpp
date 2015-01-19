@@ -162,7 +162,7 @@ INT_PTR CALLBACK CBasicDialog::DialogProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPAR
 		pThis=GetThis(hDlg);
 		if (uMsg==WM_NCDESTROY) {
 			if (pThis!=NULL) {
-				pThis->DlgProc(hDlg,uMsg,wParam,lParam);
+				pThis->HandleMessage(hDlg,uMsg,wParam,lParam);
 				pThis->m_hDlg=NULL;
 			}
 			::RemoveProp(hDlg,TEXT("This"));
@@ -170,8 +170,14 @@ INT_PTR CALLBACK CBasicDialog::DialogProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPAR
 		}
 	}
 	if (pThis!=NULL)
-		return pThis->DlgProc(hDlg,uMsg,wParam,lParam);
+		return pThis->HandleMessage(hDlg,uMsg,wParam,lParam);
 	return FALSE;
+}
+
+
+INT_PTR CBasicDialog::HandleMessage(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
+{
+	return DlgProc(hDlg,uMsg,wParam,lParam);
 }
 
 
@@ -199,7 +205,7 @@ CResizableDialog::~CResizableDialog()
 }
 
 
-INT_PTR CResizableDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
+INT_PTR CResizableDialog::HandleMessage(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 {
 	switch (uMsg) {
 	case WM_INITDIALOG:
@@ -223,7 +229,7 @@ INT_PTR CResizableDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPara
 				m_hwndSizeGrip=NULL;
 			}
 		}
-		return TRUE;
+		break;
 
 	case WM_GETMINMAXINFO:
 		{
@@ -236,7 +242,7 @@ INT_PTR CResizableDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPara
 
 	case WM_SIZE:
 		DoLayout();
-		return TRUE;
+		break;
 
 	case WM_DESTROY:
 		{
@@ -245,9 +251,10 @@ INT_PTR CResizableDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPara
 			::GetWindowRect(hDlg,&rc);
 			m_Position.Set(&rc);
 		}
-		return TRUE;
+		break;
 	}
-	return FALSE;
+
+	return DlgProc(hDlg,uMsg,wParam,lParam);
 }
 
 

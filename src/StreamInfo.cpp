@@ -47,8 +47,6 @@ void CStreamInfo::SetEventHandler(CEventHandler *pHandler)
 
 INT_PTR CStreamInfo::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 {
-	INT_PTR Result=CResizableDialog::DlgProc(hDlg,uMsg,wParam,lParam);
-
 	switch (uMsg) {
 	case WM_INITDIALOG:
 		SetService();
@@ -135,7 +133,8 @@ INT_PTR CStreamInfo::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 		}
 		break;
 	}
-	return Result;
+
+	return FALSE;
 }
 
 

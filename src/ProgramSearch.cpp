@@ -1293,8 +1293,6 @@ void CEventSearchSettingsDialog::SetFocus(int ID)
 
 INT_PTR CEventSearchSettingsDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 {
-	INT_PTR Result=CResizableDialog::DlgProc(hDlg,uMsg,wParam,lParam);
-
 	switch (uMsg) {
 	case WM_INITDIALOG:
 		AddControl(IDC_EVENTSEARCH_KEYWORD,ALIGN_HORZ);
@@ -1620,7 +1618,7 @@ INT_PTR CEventSearchSettingsDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LP
 		return TRUE;
 	}
 
-	return Result;
+	return FALSE;
 }
 
 
@@ -1809,8 +1807,6 @@ bool CProgramSearchDialog::IsHitEvent(const CEventInfoData *pEventInfo) const
 
 INT_PTR CProgramSearchDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 {
-	INT_PTR Result=CResizableDialog::DlgProc(hDlg,uMsg,wParam,lParam);
-
 	switch (uMsg) {
 	case WM_INITDIALOG:
 		AddControl(IDC_PROGRAMSEARCH_SETTINGSPLACE,ALIGN_HORZ);
@@ -2017,7 +2013,7 @@ INT_PTR CProgramSearchDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM l
 		return TRUE;
 	}
 
-	return Result;
+	return FALSE;
 }
 
 
