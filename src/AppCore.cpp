@@ -954,6 +954,7 @@ bool CAppCore::CloseTuner()
 void CAppCore::ShutDownTuner()
 {
 	CloseTuner();
+	ResetEngine();
 
 	m_App.ChannelManager.Reset();
 
@@ -961,6 +962,13 @@ void CAppCore::ShutDownTuner()
 		m_App.CoreEngine.SetDriverFileName(NULL);
 		m_App.AppEventManager.OnTunerShutDown();
 	}
+}
+
+
+void CAppCore::ResetEngine()
+{
+	m_App.CoreEngine.m_DtvEngine.ResetEngine();
+	m_App.AppEventManager.OnEngineReset();
 }
 
 

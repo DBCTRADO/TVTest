@@ -2484,8 +2484,7 @@ void CMainWindow::OnCommand(HWND hwnd,int id,HWND hwndCtl,UINT codeNotify)
 		return;
 
 	case CM_RESET:
-		m_App.CoreEngine.m_DtvEngine.ResetEngine();
-		m_App.AppEventManager.OnEngineReset();
+		m_App.Core.ResetEngine();
 		return;
 
 	case CM_RESETVIEWER:
