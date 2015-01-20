@@ -96,10 +96,11 @@ bool CTaskTrayManager::AddTrayIcon()
 	nid.uID=1;
 	nid.uFlags=NIF_MESSAGE | NIF_ICON | NIF_TIP;
 	nid.uCallbackMessage=m_TrayIconMessage;
-	nid.hIcon=::LoadIcon(GetAppClass().GetResourceInstance(),
-		MAKEINTRESOURCE((m_Status&STATUS_RECORDING)!=0?IDI_TRAY_RECORDING:IDI_TRAY));
+	nid.hIcon=LoadTrayIcon();
 	::lstrcpyn(nid.szTip,!m_TipText.empty()?m_TipText.c_str():APP_NAME,lengthof(nid.szTip));
-	if (!::Shell_NotifyIcon(NIM_ADD,&nid))
+	bool fResult=::Shell_NotifyIcon(NIM_ADD,&nid)!=FALSE;
+	::DestroyIcon(nid.hIcon);
+	if (!fResult)
 		return false;
 	/*
 	nid.uVersion=NOTIFYICON_VERSION;
@@ -129,14 +130,27 @@ bool CTaskTrayManager::ChangeTrayIcon()
 	nid.hWnd=m_hwnd;
 	nid.uID=1;
 	nid.uFlags=NIF_ICON;
-	nid.hIcon=LoadIcon(GetAppClass().GetResourceInstance(),
-		MAKEINTRESOURCE((m_Status&STATUS_RECORDING)!=0?IDI_TRAY_RECORDING:IDI_TRAY));
-	if (!Shell_NotifyIcon(NIM_MODIFY,&nid)) {
+	nid.hIcon=LoadTrayIcon();
+	bool fResult=Shell_NotifyIcon(NIM_MODIFY,&nid)!=FALSE;
+	::DestroyIcon(nid.hIcon);
+	if (!fResult) {
 		if (!AddTrayIcon())
 			return false;
 	}
 
 	return true;
+}
+
+
+HICON CTaskTrayManager::LoadTrayIcon() const
+{
+	return (HICON)::LoadImage(
+		GetAppClass().GetResourceInstance(),
+		MAKEINTRESOURCE((m_Status & STATUS_RECORDING)!=0?IDI_TRAY_RECORDING:IDI_TRAY),
+		IMAGE_ICON,
+		::GetSystemMetrics(SM_CXSMICON),
+		::GetSystemMetrics(SM_CYSMICON),
+		LR_DEFAULTCOLOR);
 }
 
 

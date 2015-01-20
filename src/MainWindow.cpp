@@ -174,19 +174,21 @@ ATOM CMainWindow::m_atomChildOldWndProcProp=0;
 
 bool CMainWindow::Initialize(HINSTANCE hinst)
 {
-	WNDCLASS wc;
+	WNDCLASSEX wc;
 
+	wc.cbSize=sizeof(WNDCLASSEX);
 	wc.style=0;
 	wc.lpfnWndProc=WndProc;
 	wc.cbClsExtra=0;
 	wc.cbWndExtra=0;
 	wc.hInstance=hinst;
-	wc.hIcon=::LoadIcon(hinst,MAKEINTRESOURCE(IDI_ICON));
+	wc.hIcon=CAppMain::GetAppIcon();
 	wc.hCursor=::LoadCursor(nullptr,IDC_ARROW);
 	wc.hbrBackground=(HBRUSH)(COLOR_3DFACE+1);
 	wc.lpszMenuName=nullptr;
 	wc.lpszClassName=MAIN_WINDOW_CLASS;
-	return ::RegisterClass(&wc)!=0 && CFullscreen::Initialize(hinst);
+	wc.hIconSm=CAppMain::GetAppIconSmall();
+	return ::RegisterClassEx(&wc)!=0 && CFullscreen::Initialize(hinst);
 }
 
 
@@ -1680,7 +1682,7 @@ bool CMainWindow::OnCreate(const CREATESTRUCT *pcs)
 					  0,IDC_TITLEBAR);
 	m_TitleBar.SetEventHandler(&m_TitleBarManager);
 	m_TitleBar.SetLabel(pcs->lpszName);
-	m_TitleBar.SetIcon(::LoadIcon(m_App.GetInstance(),MAKEINTRESOURCE(IDI_ICON)));
+	m_TitleBar.SetIcon(m_TitleBar.IsIconDrawSmall()?m_App.GetAppIconSmall():m_App.GetAppIcon());
 	m_TitleBar.SetMaximizeMode((pcs->style&WS_MAXIMIZE)!=0);
 
 	m_App.StatusView.AddItem(new CChannelStatusItem);
@@ -6106,10 +6108,9 @@ bool CMainWindow::CFullscreen::OnCreate()
 	m_TitleBar.Create(m_ViewWindow.GetHandle(),
 					  WS_CHILD | WS_CLIPSIBLINGS,0,IDC_TITLEBAR);
 	m_TitleBar.SetEventHandler(&m_TitleBarManager);
-	HICON hico=reinterpret_cast<HICON>(m_MainWindow.SendMessage(WM_GETICON,ICON_SMALL,0));
-	if (hico==nullptr)
-		hico=::LoadIcon(m_App.GetInstance(),MAKEINTRESOURCE(IDI_ICON));
-	m_TitleBar.SetIcon(hico);
+	m_TitleBar.SetIcon(
+		reinterpret_cast<HICON>(m_MainWindow.SendMessage(
+			WM_GETICON,m_TitleBar.IsIconDrawSmall()?ICON_SMALL:ICON_BIG,0)));
 	m_TitleBar.SetMaximizeMode(m_MainWindow.GetMaximize());
 	m_TitleBar.SetFullscreenMode(true);
 

@@ -47,6 +47,7 @@ namespace TVTest
 		bool AddTrayIcon();
 		bool RemoveTrayIcon();
 		bool ChangeTrayIcon();
+		HICON LoadTrayIcon() const;
 		bool UpdateTipText();
 		bool NeedTrayIcon() const;
 	};

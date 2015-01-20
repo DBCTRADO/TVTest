@@ -68,6 +68,8 @@ public:
 	bool GetTitleBarTheme(TitleBarTheme *pTheme) const;
 	bool SetFont(const LOGFONT *pFont);
 	void SetIcon(HICON hIcon);
+	SIZE GetIconDrawSize() const;
+	bool IsIconDrawSmall() const;
 
 private:
 	enum {

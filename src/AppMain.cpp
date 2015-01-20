@@ -168,6 +168,9 @@ DWORD WINAPI CAppTerminator::WatchThread(LPVOID lpParameter)
 
 
 
+HICON CAppMain::m_hicoApp=NULL;
+HICON CAppMain::m_hicoAppSmall=NULL;
+
 
 CAppMain::CAppMain()
 	: m_hInst(nullptr)
@@ -208,6 +211,19 @@ CAppMain::CAppMain()
 
 	StreamInfo.SetEventHandler(&m_StreamInfoEventHandler);
 	CaptureWindow.SetEventHandler(&m_CaptureWindowEventHandler);
+}
+
+
+CAppMain::~CAppMain()
+{
+	if (m_hicoApp!=NULL) {
+		::DestroyIcon(m_hicoApp);
+		m_hicoApp=NULL;
+	}
+	if (m_hicoAppSmall!=NULL) {
+		::DestroyIcon(m_hicoAppSmall);
+		m_hicoAppSmall=NULL;
+	}
 }
 
 
@@ -1451,6 +1467,34 @@ bool CAppMain::ApplyColorScheme(const CColorScheme *pColorScheme)
 	AppEventManager.OnColorSchemeChanged();
 
 	return true;
+}
+
+
+HICON CAppMain::GetAppIcon()
+{
+	if (m_hicoApp==nullptr) {
+		m_hicoApp=(HICON)::LoadImage(
+			::GetModuleHandle(NULL),MAKEINTRESOURCE(IDI_ICON),
+			IMAGE_ICON,
+			::GetSystemMetrics(SM_CXICON),
+			::GetSystemMetrics(SM_CYICON),
+			LR_DEFAULTCOLOR);
+	}
+	return m_hicoApp;
+}
+
+
+HICON CAppMain::GetAppIconSmall()
+{
+	if (m_hicoAppSmall==nullptr) {
+		m_hicoAppSmall=(HICON)::LoadImage(
+			::GetModuleHandle(NULL),MAKEINTRESOURCE(IDI_ICON),
+			IMAGE_ICON,
+			::GetSystemMetrics(SM_CXSMICON),
+			::GetSystemMetrics(SM_CYSMICON),
+			LR_DEFAULTCOLOR);
+	}
+	return m_hicoAppSmall;
 }
 
 

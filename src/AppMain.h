@@ -449,6 +449,7 @@ public:
 	CChannelDisplayEventHandler ChannelDisplayEventHandler;
 
 	CAppMain();
+	~CAppMain();
 	HINSTANCE GetInstance() const;
 	HINSTANCE GetResourceInstance() const;
 	bool GetAppDirectory(LPTSTR pszDirectory) const;
@@ -475,6 +476,9 @@ public:
 	void SetEnablePlaybackOnStart(bool fEnable) { m_fEnablePlaybackOnStart=fEnable; }
 	bool GetEnablePlaybackOnStart() const { return m_fEnablePlaybackOnStart; }
 	const CColorScheme *GetCurrentColorScheme() const;
+
+	static HICON GetAppIcon();
+	static HICON GetAppIconSmall();
 
 private:
 	class CDtvEngineEventHandler : public CDtvEngine::CEventHandler
@@ -549,6 +553,9 @@ private:
 	bool m_fEnablePlaybackOnStart;
 	bool m_fIncrementNetworkPort;
 	const CColorScheme *m_pColorScheme;
+
+	static HICON m_hicoApp;
+	static HICON m_hicoAppSmall;
 
 	// ÉRÉsÅ[ã÷é~
 	CAppMain(const CAppMain &) /* = delete */;

@@ -1142,14 +1142,10 @@ bool CUICore::UpdateIcon()
 	}
 	HWND hwnd=GetMainWindow();
 	if (hwnd!=nullptr) {
-		HICON hicoDefault;
-
-		if (hicoBig==nullptr || hicoSmall==nullptr)
-			hicoDefault=::LoadIcon(m_App.GetInstance(),MAKEINTRESOURCE(IDI_ICON));
 		::SendMessage(hwnd,WM_SETICON,ICON_BIG,
-					  reinterpret_cast<LPARAM>(hicoBig!=nullptr?hicoBig:hicoDefault));
+					  reinterpret_cast<LPARAM>(hicoBig!=nullptr?hicoBig:m_App.GetAppIcon()));
 		::SendMessage(hwnd,WM_SETICON,ICON_SMALL,
-					  reinterpret_cast<LPARAM>(hicoSmall!=nullptr?hicoSmall:hicoDefault));
+					  reinterpret_cast<LPARAM>(hicoSmall!=nullptr?hicoSmall:m_App.GetAppIconSmall()));
 	}
 	if (m_hicoLogoBig!=nullptr)
 		::DestroyIcon(m_hicoLogoBig);

@@ -241,6 +241,23 @@ void CTitleBar::SetIcon(HICON hIcon)
 }
 
 
+SIZE CTitleBar::GetIconDrawSize() const
+{
+	SIZE sz;
+
+	sz.cx=m_Style.IconSize.Width;
+	sz.cy=m_Style.IconSize.Height;
+	return sz;
+}
+
+
+bool CTitleBar::IsIconDrawSmall() const
+{
+	return m_Style.IconSize.Width<=::GetSystemMetrics(SM_CXSMICON)
+		&& m_Style.IconSize.Height<=::GetSystemMetrics(SM_CYSMICON);
+}
+
+
 LRESULT CTitleBar::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 {
 	switch (uMsg) {
