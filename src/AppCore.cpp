@@ -1177,8 +1177,8 @@ bool CAppCore::StartRecord(LPCTSTR pszFileName,
 		OnError(&m_App.RecordManager,TEXT("録画を開始できません。"));
 		return false;
 	}
-	m_App.ResidentManager.SetStatus(CResidentManager::STATUS_RECORDING,
-									CResidentManager::STATUS_RECORDING);
+	m_App.TaskTrayManager.SetStatus(CTaskTrayManager::STATUS_RECORDING,
+									CTaskTrayManager::STATUS_RECORDING);
 	AddLog(TEXT("録画開始 %s"),szFileName);
 	m_App.AppEventManager.OnRecordingStarted();
 	return true;
@@ -1241,8 +1241,8 @@ bool CAppCore::StartReservedRecord()
 	m_App.RecordManager.GetRecordTask()->GetFileName(szFileName,lengthof(szFileName));
 	AddLog(TEXT("録画開始 %s"),szFileName);
 
-	m_App.ResidentManager.SetStatus(CResidentManager::STATUS_RECORDING,
-									CResidentManager::STATUS_RECORDING);
+	m_App.TaskTrayManager.SetStatus(CTaskTrayManager::STATUS_RECORDING,
+									CTaskTrayManager::STATUS_RECORDING);
 	m_App.AppEventManager.OnRecordingStarted();
 
 	return true;
@@ -1274,7 +1274,7 @@ bool CAppCore::StopRecord()
 	AddLog(TEXT("録画停止 %s (出力TSサイズ %llu Bytes / 書き出しエラー回数 %u)"),
 		   szFileName,Stats.OutputSize,Stats.WriteErrorCount);
 
-	m_App.ResidentManager.SetStatus(0,CResidentManager::STATUS_RECORDING);
+	m_App.TaskTrayManager.SetStatus(0,CTaskTrayManager::STATUS_RECORDING);
 	m_App.AppEventManager.OnRecordingStopped();
 	if (m_fExitOnRecordingStop)
 		m_App.Exit();

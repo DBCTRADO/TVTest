@@ -1649,7 +1649,7 @@ LRESULT CMainWindow::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 		if (m_App.ControllerManager.HandleMessage(hwnd,uMsg,wParam,lParam))
 			return 0;
 		*/
-		if (m_App.ResidentManager.HandleMessage(uMsg,wParam,lParam))
+		if (m_App.TaskTrayManager.HandleMessage(uMsg,wParam,lParam))
 			return 0;
 		if (m_App.TaskbarManager.HandleMessage(uMsg,wParam,lParam))
 			return 0;
@@ -1927,12 +1927,12 @@ void CMainWindow::OnSizeChanged(UINT State,int Width,int Height)
 	if (fMinimized) {
 		m_App.OSDManager.ClearOSD();
 		m_App.OSDManager.Reset();
-		m_App.ResidentManager.SetStatus(CResidentManager::STATUS_MINIMIZED,
-										CResidentManager::STATUS_MINIMIZED);
+		m_App.TaskTrayManager.SetStatus(CTaskTrayManager::STATUS_MINIMIZED,
+										CTaskTrayManager::STATUS_MINIMIZED);
 		if (m_App.ViewOptions.GetDisablePreviewWhenMinimized()) {
 			SuspendViewer(ResumeInfo::VIEWERSUSPEND_MINIMIZE);
 		}
-	} else if ((m_App.ResidentManager.GetStatus()&CResidentManager::STATUS_MINIMIZED)!=0) {
+	} else if ((m_App.TaskTrayManager.GetStatus() & CTaskTrayManager::STATUS_MINIMIZED)!=0) {
 		SetWindowVisible();
 	}
 
@@ -2714,7 +2714,7 @@ void CMainWindow::OnCommand(HWND hwnd,int id,HWND hwndCtl,UINT codeNotify)
 	case CM_CLOSE:
 		if (m_pCore->GetStandby()) {
 			m_pCore->SetStandby(false);
-		} else if (m_App.ResidentManager.GetResident()) {
+		} else if (m_App.TaskTrayManager.GetResident()) {
 			m_pCore->SetStandby(true,false);
 		} else if (m_App.GeneralOptions.GetStandaloneProgramGuide()
 				&& m_App.Epg.ProgramGuideFrame.GetVisible()) {
@@ -5283,9 +5283,9 @@ void CMainWindow::SetWindowVisible()
 {
 	bool fRestore=false,fShow=false;
 
-	if ((m_App.ResidentManager.GetStatus()&CResidentManager::STATUS_MINIMIZED)!=0) {
-		m_App.ResidentManager.SetStatus(0,CResidentManager::STATUS_MINIMIZED);
-		m_App.ResidentManager.SetMinimizeToTray(m_App.ViewOptions.GetMinimizeToTray());
+	if ((m_App.TaskTrayManager.GetStatus() & CTaskTrayManager::STATUS_MINIMIZED)!=0) {
+		m_App.TaskTrayManager.SetStatus(0,CTaskTrayManager::STATUS_MINIMIZED);
+		m_App.TaskTrayManager.SetMinimizeToTray(m_App.ViewOptions.GetMinimizeToTray());
 		fRestore=true;
 	}
 	if (!GetVisible()) {
@@ -5462,9 +5462,9 @@ bool CMainWindow::InitMinimize()
 		m_Resume.ViewerSuspendFlags=ResumeInfo::VIEWERSUSPEND_MINIMIZE;
 	}
 
-	m_App.ResidentManager.SetStatus(CResidentManager::STATUS_MINIMIZED,
-									CResidentManager::STATUS_MINIMIZED);
-	if (!m_App.ResidentManager.GetMinimizeToTray())
+	m_App.TaskTrayManager.SetStatus(CTaskTrayManager::STATUS_MINIMIZED,
+									CTaskTrayManager::STATUS_MINIMIZED);
+	if (!m_App.TaskTrayManager.GetMinimizeToTray())
 		::ShowWindow(m_hwnd,SW_SHOWMINNOACTIVE);
 
 	m_fMinimizeInit=true;
@@ -5475,8 +5475,8 @@ bool CMainWindow::InitMinimize()
 
 bool CMainWindow::IsMinimizeToTray() const
 {
-	return m_App.ResidentManager.GetMinimizeToTray()
-		&& (m_App.ResidentManager.GetStatus()&CResidentManager::STATUS_MINIMIZED)!=0;
+	return m_App.TaskTrayManager.GetMinimizeToTray()
+		&& (m_App.TaskTrayManager.GetStatus() & CTaskTrayManager::STATUS_MINIMIZED)!=0;
 }
 
 

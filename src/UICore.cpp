@@ -644,8 +644,9 @@ bool CUICore::SetStandby(bool fStandby,bool fTransient)
 		}
 		m_fStandby=fStandby;
 		m_fTransientStandby=fStandby && fTransient;
-		m_App.ResidentManager.SetStatus(fStandby?CResidentManager::STATUS_STANDBY:0,
-										CResidentManager::STATUS_STANDBY);
+		m_App.TaskTrayManager.SetStatus(
+			fStandby?TVTest::CTaskTrayManager::STATUS_STANDBY:0,
+			TVTest::CTaskTrayManager::STATUS_STANDBY);
 		m_App.AppEventManager.OnStandbyChanged(fStandby);
 	}
 	return true;
@@ -661,7 +662,7 @@ bool CUICore::GetResident() const
 bool CUICore::SetResident(bool fResident)
 {
 	if (m_fResident!=fResident) {
-		if (!m_App.ResidentManager.SetResident(fResident))
+		if (!m_App.TaskTrayManager.SetResident(fResident))
 			return false;
 		m_fResident=fResident;
 	}
@@ -1207,7 +1208,7 @@ bool CUICore::UpdateTitle()
 	if (::GetWindowText(hwnd,szOld,lengthof(szOld))<1
 			|| ::lstrcmp(pszText,szOld)!=0) {
 		::SetWindowText(hwnd,pszText);
-		m_App.ResidentManager.SetTipText(pszText);
+		m_App.TaskTrayManager.SetTipText(pszText);
 	}
 
 	return true;

@@ -9,7 +9,7 @@
 #include "Style.h"
 #include "MainWindow.h"
 #include "Menu.h"
-#include "ResidentManager.h"
+#include "TaskTray.h"
 #include "InformationPanel.h"
 #include "ProgramListPanel.h"
 #include "ChannelPanel.h"
@@ -380,6 +380,7 @@ public:
 	CTunerSelectMenu TunerSelectMenu;
 	CIconMenu AspectRatioIconMenu;
 	CTaskbarManager TaskbarManager;
+	TVTest::CTaskTrayManager TaskTrayManager;
 	CEventSearchOptions EventSearchOptions;
 	CHomeDisplay HomeDisplay;
 	CChannelDisplay ChannelDisplay;
@@ -389,7 +390,6 @@ public:
 	TVTest::CNetworkDefinition NetworkDefinition;
 	CChannelManager ChannelManager;
 
-	CResidentManager ResidentManager;
 	CDriverManager DriverManager;
 	TVTest::CTSProcessorManager TSProcessorManager;
 	TVTest::CAudioManager AudioManager;

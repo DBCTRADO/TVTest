@@ -578,7 +578,7 @@
     <ClCompile Include="Record.cpp" />
     <ClCompile Include="RecordOptions.cpp" />
     <ClCompile Include="RegExp.cpp" />
-    <ClCompile Include="ResidentManager.cpp" />
+    <ClCompile Include="TaskTray.cpp" />
     <ClCompile Include="RichEditUtil.cpp" />
     <ClCompile Include="Settings.cpp" />
     <ClCompile Include="SideBar.cpp" />
@@ -753,7 +753,7 @@
     <ClInclude Include="Record.h" />
     <ClInclude Include="RecordOptions.h" />
     <ClInclude Include="RegExp.h" />
-    <ClInclude Include="ResidentManager.h" />
+    <ClInclude Include="TaskTray.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="RichEditUtil.h" />
     <ClInclude Include="Settings.h" />

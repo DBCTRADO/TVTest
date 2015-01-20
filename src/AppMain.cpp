@@ -292,7 +292,7 @@ void CAppMain::Finalize()
 #define FINALIZE_CONTINUE
 #endif
 
-	ResidentManager.Finalize();
+	TaskTrayManager.Finalize();
 	ChannelMenu.Destroy();
 	FavoritesMenu.Destroy();
 	MainMenu.Destroy();
@@ -818,8 +818,8 @@ int CAppMain::Main(HINSTANCE hInstance,LPCTSTR pszCmdLine,int nCmdShow)
 
 	GeneralOptions.Apply(COptions::UPDATE_ALL);
 
-	ResidentManager.Initialize(MainWindow.GetHandle(),WM_APP_TRAYICON);
-	ResidentManager.SetMinimizeToTray(CmdLineOptions.m_fTray || ViewOptions.GetMinimizeToTray());
+	TaskTrayManager.Initialize(MainWindow.GetHandle(),WM_APP_TRAYICON);
+	TaskTrayManager.SetMinimizeToTray(CmdLineOptions.m_fTray || ViewOptions.GetMinimizeToTray());
 	if (CmdLineOptions.m_fMinimize)
 		MainWindow.InitMinimize();
 
@@ -1169,7 +1169,7 @@ bool CAppMain::ShowOptionDialog(HWND hwndOwner,int StartPage)
 
 	if ((ProgramGuideOptions.GetUpdateFlags() & CProgramGuideOptions::UPDATE_EVENTICONS)!=0)
 		Panel.ProgramListPanel.SetVisibleEventIcons(ProgramGuideOptions.GetVisibleEventIcons());
-	ResidentManager.SetMinimizeToTray(ViewOptions.GetMinimizeToTray());
+	TaskTrayManager.SetMinimizeToTray(ViewOptions.GetMinimizeToTray());
 
 	SaveSettings(SETTINGS_SAVE_OPTIONS);
 

@@ -1,6 +1,6 @@
 #include "stdafx.h"
 #include "TVTest.h"
-#include "ResidentManager.h"
+#include "TaskTray.h"
 #include "AppMain.h"
 #include "resource.h"
 
@@ -11,9 +11,11 @@ static char THIS_FILE[]=__FILE__;
 #endif
 
 
+namespace TVTest
+{
 
 
-CResidentManager::CResidentManager()
+CTaskTrayManager::CTaskTrayManager()
 	: m_hwnd(NULL)
 	, m_TrayIconMessage(0)
 	, m_fResident(false)
@@ -24,13 +26,13 @@ CResidentManager::CResidentManager()
 }
 
 
-CResidentManager::~CResidentManager()
+CTaskTrayManager::~CTaskTrayManager()
 {
 	Finalize();
 }
 
 
-bool CResidentManager::Initialize(HWND hwnd,UINT Message)
+bool CTaskTrayManager::Initialize(HWND hwnd,UINT Message)
 {
 	m_hwnd=hwnd;
 	m_TrayIconMessage=Message;
@@ -43,14 +45,14 @@ bool CResidentManager::Initialize(HWND hwnd,UINT Message)
 }
 
 
-void CResidentManager::Finalize()
+void CTaskTrayManager::Finalize()
 {
 	if (NeedTrayIcon())
 		RemoveTrayIcon();
 }
 
 
-bool CResidentManager::SetResident(bool fResident)
+bool CTaskTrayManager::SetResident(bool fResident)
 {
 	if (m_fResident!=fResident) {
 		if (m_hwnd!=NULL && !NeedTrayIcon() && fResident) {
@@ -65,7 +67,7 @@ bool CResidentManager::SetResident(bool fResident)
 }
 
 
-bool CResidentManager::SetMinimizeToTray(bool fMinimizeToTray)
+bool CTaskTrayManager::SetMinimizeToTray(bool fMinimizeToTray)
 {
 	if (m_fMinimizeToTray!=fMinimizeToTray) {
 		if (m_hwnd!=NULL) {
@@ -85,7 +87,7 @@ bool CResidentManager::SetMinimizeToTray(bool fMinimizeToTray)
 }
 
 
-bool CResidentManager::AddTrayIcon()
+bool CTaskTrayManager::AddTrayIcon()
 {
 	NOTIFYICONDATA nid;
 
@@ -107,7 +109,7 @@ bool CResidentManager::AddTrayIcon()
 }
 
 
-bool CResidentManager::RemoveTrayIcon()
+bool CTaskTrayManager::RemoveTrayIcon()
 {
 	NOTIFYICONDATA nid;
 
@@ -119,7 +121,7 @@ bool CResidentManager::RemoveTrayIcon()
 }
 
 
-bool CResidentManager::ChangeTrayIcon()
+bool CTaskTrayManager::ChangeTrayIcon()
 {
 	NOTIFYICONDATA nid;
 
@@ -138,7 +140,7 @@ bool CResidentManager::ChangeTrayIcon()
 }
 
 
-bool CResidentManager::UpdateTipText()
+bool CTaskTrayManager::UpdateTipText()
 {
 	NOTIFYICONDATA nid;
 
@@ -151,7 +153,7 @@ bool CResidentManager::UpdateTipText()
 }
 
 
-bool CResidentManager::NeedTrayIcon() const
+bool CTaskTrayManager::NeedTrayIcon() const
 {
 	return m_hwnd!=NULL
 		&& (m_fResident
@@ -160,7 +162,7 @@ bool CResidentManager::NeedTrayIcon() const
 }
 
 
-bool CResidentManager::SetStatus(UINT Status,UINT Mask)
+bool CTaskTrayManager::SetStatus(UINT Status,UINT Mask)
 {
 	const UINT NewStatus=(m_Status&~Mask)|(Status&Mask);
 
@@ -193,16 +195,16 @@ bool CResidentManager::SetStatus(UINT Status,UINT Mask)
 }
 
 
-bool CResidentManager::SetTipText(LPCTSTR pszText)
+bool CTaskTrayManager::SetTipText(LPCTSTR pszText)
 {
-	TVTest::StringUtility::Assign(m_TipText,pszText);
+	StringUtility::Assign(m_TipText,pszText);
 	if (NeedTrayIcon())
 		UpdateTipText();
 	return true;
 }
 
 
-bool CResidentManager::ShowMessage(LPCTSTR pszText,LPCTSTR pszTitle,int Icon,DWORD TimeOut)
+bool CTaskTrayManager::ShowMessage(LPCTSTR pszText,LPCTSTR pszTitle,int Icon,DWORD TimeOut)
 {
 	if (!NeedTrayIcon())
 		return false;
@@ -225,7 +227,7 @@ bool CResidentManager::ShowMessage(LPCTSTR pszText,LPCTSTR pszTitle,int Icon,DWO
 }
 
 
-bool CResidentManager::HandleMessage(UINT Message,WPARAM wParam,LPARAM lParam)
+bool CTaskTrayManager::HandleMessage(UINT Message,WPARAM wParam,LPARAM lParam)
 {
 	// ÉVÉFÉãÇ™çƒãNìÆÇµÇΩéûÇÃëŒçÙ
 	if (m_TaskbarCreatedMessage!=0
@@ -236,3 +238,6 @@ bool CResidentManager::HandleMessage(UINT Message,WPARAM wParam,LPARAM lParam)
 	}
 	return false;
 }
+
+
+}	// namespace TVTest
