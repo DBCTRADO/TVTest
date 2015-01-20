@@ -47,6 +47,7 @@ public:
 	bool SetVideoRendererType(CVideoRenderer::RendererType Renderer);
 	bool GetResident() const;
 	bool GetKeepSingleTask() const;
+	bool GetStandaloneProgramGuide() const { return m_fStandaloneProgramGuide; }
 
 private:
 // CBasicDialog
@@ -73,6 +74,7 @@ private:
 	CVideoRenderer::RendererType m_VideoRendererType;
 	bool m_fResident;
 	bool m_fKeepSingleTask;
+	bool m_fStandaloneProgramGuide;
 	bool m_fEnable1SegFallback;
 };
 

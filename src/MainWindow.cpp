@@ -2715,7 +2715,10 @@ void CMainWindow::OnCommand(HWND hwnd,int id,HWND hwndCtl,UINT codeNotify)
 		if (m_pCore->GetStandby()) {
 			m_pCore->SetStandby(false);
 		} else if (m_App.ResidentManager.GetResident()) {
-			m_pCore->SetStandby(true);
+			m_pCore->SetStandby(true,false);
+		} else if (m_App.GeneralOptions.GetStandaloneProgramGuide()
+				&& m_App.Epg.ProgramGuideFrame.GetVisible()) {
+			m_pCore->SetStandby(true,true);
 		} else {
 			PostMessage(WM_CLOSE,0,0);
 		}
@@ -5309,14 +5312,14 @@ void CMainWindow::SetWindowVisible()
 }
 
 
-void CMainWindow::ShowFloatingWindows(bool fShow)
+void CMainWindow::ShowFloatingWindows(bool fShow,bool fNoProgramGuide)
 {
 	if (m_App.Panel.fShowPanelWindow && m_App.Panel.IsFloating()) {
 		m_App.Panel.Frame.SetPanelVisible(fShow);
 		if (fShow)
 			m_App.Panel.Frame.Update();
 	}
-	if (m_App.Epg.fShowProgramGuide)
+	if (m_App.Epg.fShowProgramGuide && !fNoProgramGuide)
 		m_App.Epg.ProgramGuideFrame.SetVisible(fShow);
 	if (m_App.CaptureWindow.IsCreated())
 		m_App.CaptureWindow.SetVisible(fShow);
@@ -5363,7 +5366,7 @@ bool CMainWindow::SetStandby(bool fStandby)
 		m_Resume.fFullscreen=m_pCore->GetFullscreen();
 		if (m_Resume.fFullscreen)
 			m_pCore->SetFullscreen(false);
-		ShowFloatingWindows(false);
+		ShowFloatingWindows(false,m_App.GeneralOptions.GetStandaloneProgramGuide());
 		SetVisible(false);
 
 		if (!m_App.EpgCaptureManager.IsCapturing()) {
@@ -5394,8 +5397,6 @@ bool CMainWindow::SetStandby(bool fStandby)
 			m_Resume.fSetChannel=fSetChannel;
 			m_App.Core.InitializeChannel();
 			InitializeViewer();
-			if (!m_App.GeneralOptions.GetResident())
-				m_App.ResidentManager.SetResident(false);
 			m_fStandbyInit=false;
 		}
 		if (m_Resume.fFullscreen)
@@ -5446,9 +5447,8 @@ bool CMainWindow::InitStandby()
 		}
 	}
 
-	m_App.ResidentManager.SetResident(true);
 	m_fStandbyInit=true;
-	m_pCore->SetStandby(true);
+	m_pCore->SetStandby(true,true);
 
 	return true;
 }

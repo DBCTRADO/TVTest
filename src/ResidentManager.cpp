@@ -35,7 +35,7 @@ bool CResidentManager::Initialize(HWND hwnd,UINT Message)
 	m_hwnd=hwnd;
 	m_TrayIconMessage=Message;
 	m_TaskbarCreatedMessage=::RegisterWindowMessage(TEXT("TaskbarCreated"));
-	if (IsTrayIconVisible()) {
+	if (NeedTrayIcon()) {
 		if (!AddTrayIcon())
 			return false;
 	}
@@ -45,7 +45,7 @@ bool CResidentManager::Initialize(HWND hwnd,UINT Message)
 
 void CResidentManager::Finalize()
 {
-	if (IsTrayIconVisible())
+	if (NeedTrayIcon())
 		RemoveTrayIcon();
 }
 
@@ -53,18 +53,13 @@ void CResidentManager::Finalize()
 bool CResidentManager::SetResident(bool fResident)
 {
 	if (m_fResident!=fResident) {
-		if (m_hwnd!=NULL) {
-			if (!IsTrayIconVisible()) {
-				if (fResident) {
-					if (!AddTrayIcon())
-						return false;
-				}
-			} else {
-				if (!m_fMinimizeToTray || (m_Status&STATUS_MINIMIZED)==0)
-					RemoveTrayIcon();
-			}
+		if (m_hwnd!=NULL && !NeedTrayIcon() && fResident) {
+			if (!AddTrayIcon())
+				return false;
 		}
 		m_fResident=fResident;
+		if (m_hwnd!=NULL && !NeedTrayIcon())
+			RemoveTrayIcon();
 	}
 	return true;
 }
@@ -73,18 +68,18 @@ bool CResidentManager::SetResident(bool fResident)
 bool CResidentManager::SetMinimizeToTray(bool fMinimizeToTray)
 {
 	if (m_fMinimizeToTray!=fMinimizeToTray) {
-		if (m_hwnd!=NULL && !m_fResident) {
+		if (m_hwnd!=NULL) {
 			if ((m_Status&STATUS_MINIMIZED)!=0) {
-				if (fMinimizeToTray) {
+				if (fMinimizeToTray && !NeedTrayIcon()) {
 					if (!AddTrayIcon())
 						return false;
-				} else {
-					RemoveTrayIcon();
 				}
 				::ShowWindow(m_hwnd,fMinimizeToTray?SW_HIDE:SW_SHOW);
 			}
 		}
 		m_fMinimizeToTray=fMinimizeToTray;
+		if (m_hwnd!=NULL && !NeedTrayIcon())
+			RemoveTrayIcon();
 	}
 	return true;
 }
@@ -156,38 +151,44 @@ bool CResidentManager::UpdateTipText()
 }
 
 
-bool CResidentManager::IsTrayIconVisible() const
+bool CResidentManager::NeedTrayIcon() const
 {
-	return m_hwnd!=NULL && (m_fResident || (m_fMinimizeToTray && (m_Status&STATUS_MINIMIZED)!=0));
+	return m_hwnd!=NULL
+		&& (m_fResident
+			|| (m_Status & STATUS_STANDBY)!=0
+			|| (m_fMinimizeToTray && (m_Status & STATUS_MINIMIZED)!=0));
 }
 
 
 bool CResidentManager::SetStatus(UINT Status,UINT Mask)
 {
-	Status=(m_Status&~Mask)|(Status&Mask);
-	if (m_Status!=Status) {
-		const UINT OldStatus=m_Status;
+	const UINT NewStatus=(m_Status&~Mask)|(Status&Mask);
+
+	if (m_Status!=NewStatus) {
+		const UINT StatusDiff=m_Status^NewStatus;
+		const bool fNeedTrayIconOld=NeedTrayIcon();
 		bool fChangeIcon=false;
 
-		m_Status=Status;
-		if ((OldStatus&STATUS_RECORDING)!=(Status&STATUS_RECORDING))
+		if ((StatusDiff & STATUS_RECORDING)!=0)
 			fChangeIcon=true;
-		if ((OldStatus&STATUS_MINIMIZED)!=(Status&STATUS_MINIMIZED)) {
-			if (m_hwnd!=NULL && m_fMinimizeToTray) {
-				::ShowWindow(m_hwnd,(Status&STATUS_MINIMIZED)!=0?SW_HIDE:SW_SHOW);
-				if (!m_fResident) {
-					if ((Status&STATUS_MINIMIZED)!=0)
-						AddTrayIcon();
-					else
-						RemoveTrayIcon();
-					return true;
-				}
-			}
+		if ((StatusDiff & STATUS_MINIMIZED)!=0) {
+			if (m_hwnd!=NULL && m_fMinimizeToTray)
+				::ShowWindow(m_hwnd,(NewStatus & STATUS_MINIMIZED)!=0?SW_HIDE:SW_SHOW);
 		}
-		if (fChangeIcon && IsTrayIconVisible()) {
-			ChangeTrayIcon();
+
+		m_Status=NewStatus;
+
+		if (NeedTrayIcon()) {
+			if (!fNeedTrayIconOld)
+				AddTrayIcon();
+			else if (fChangeIcon)
+				ChangeTrayIcon();
+		} else {
+			if (fNeedTrayIconOld)
+				RemoveTrayIcon();
 		}
 	}
+
 	return true;
 }
 
@@ -195,7 +196,7 @@ bool CResidentManager::SetStatus(UINT Status,UINT Mask)
 bool CResidentManager::SetTipText(LPCTSTR pszText)
 {
 	TVTest::StringUtility::Assign(m_TipText,pszText);
-	if (IsTrayIconVisible())
+	if (NeedTrayIcon())
 		UpdateTipText();
 	return true;
 }
@@ -203,7 +204,7 @@ bool CResidentManager::SetTipText(LPCTSTR pszText)
 
 bool CResidentManager::ShowMessage(LPCTSTR pszText,LPCTSTR pszTitle,int Icon,DWORD TimeOut)
 {
-	if (!IsTrayIconVisible())
+	if (!NeedTrayIcon())
 		return false;
 
 	NOTIFYICONDATA nid;
@@ -229,7 +230,7 @@ bool CResidentManager::HandleMessage(UINT Message,WPARAM wParam,LPARAM lParam)
 	// ÉVÉFÉãÇ™çƒãNìÆÇµÇΩéûÇÃëŒçÙ
 	if (m_TaskbarCreatedMessage!=0
 			&& Message==m_TaskbarCreatedMessage) {
-		if (IsTrayIconVisible())
+		if (NeedTrayIcon())
 			AddTrayIcon();
 		return true;
 	}

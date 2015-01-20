@@ -1106,8 +1106,8 @@ void CEpg::CProgramGuideEventHandler::OnDestroy()
 {
 	m_pProgramGuide->Clear();
 
-	if (g_App.CmdLineOptions.m_fProgramGuideOnly
-			&& g_App.UICore.GetStandby()
+	if (g_App.UICore.GetStandby()
+			&& g_App.UICore.GetTransientStandby()
 			&& !g_App.RecordManager.IsRecording()
 			&& !g_App.RecordManager.IsReserved())
 		g_App.UICore.DoCommandAsync(CM_EXIT);

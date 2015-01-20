@@ -82,7 +82,8 @@ public:
 	bool GetSelectedAudioText(LPTSTR pszText,int MaxLength) const;
 
 	bool GetStandby() const { return m_fStandby; }
-	bool SetStandby(bool fStandby);
+	bool SetStandby(bool fStandby,bool fTransient=false);
+	bool GetTransientStandby() const { return m_fTransientStandby; }
 	bool GetResident() const;
 	bool SetResident(bool fResident);
 	bool GetFullscreen() const { return m_fFullscreen; }
@@ -121,6 +122,8 @@ private:
 	CAppMain &m_App;
 	CUISkin *m_pSkin;
 	bool m_fStandby;
+	bool m_fTransientStandby;
+	bool m_fResident;
 	bool m_fFullscreen;
 	bool m_fAlwaysOnTop;
 

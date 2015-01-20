@@ -17,6 +17,7 @@ CUICore::CUICore(CAppMain &App)
 	: m_App(App)
 	, m_pSkin(nullptr)
 	, m_fStandby(false)
+	, m_fTransientStandby(false)
 	, m_fFullscreen(false)
 	, m_fAlwaysOnTop(false)
 
@@ -634,7 +635,7 @@ bool CUICore::GetSelectedAudioText(LPTSTR pszText,int MaxLength) const
 }
 
 
-bool CUICore::SetStandby(bool fStandby)
+bool CUICore::SetStandby(bool fStandby,bool fTransient)
 {
 	if (m_fStandby!=fStandby) {
 		if (m_pSkin!=nullptr) {
@@ -642,6 +643,9 @@ bool CUICore::SetStandby(bool fStandby)
 				return false;
 		}
 		m_fStandby=fStandby;
+		m_fTransientStandby=fStandby && fTransient;
+		m_App.ResidentManager.SetStatus(fStandby?CResidentManager::STATUS_STANDBY:0,
+										CResidentManager::STATUS_STANDBY);
 		m_App.AppEventManager.OnStandbyChanged(fStandby);
 	}
 	return true;
@@ -650,13 +654,18 @@ bool CUICore::SetStandby(bool fStandby)
 
 bool CUICore::GetResident() const
 {
-	return m_App.ResidentManager.GetResident();
+	return m_fResident;
 }
 
 
 bool CUICore::SetResident(bool fResident)
 {
-	return m_App.ResidentManager.SetResident(fResident);
+	if (m_fResident!=fResident) {
+		if (!m_App.ResidentManager.SetResident(fResident))
+			return false;
+		m_fResident=fResident;
+	}
+	return true;
 }
 
 

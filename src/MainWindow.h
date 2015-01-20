@@ -622,7 +622,7 @@ private:
 	void ShowChannelOSD();
 	void ShowAudioOSD();
 	void SetWindowVisible();
-	void ShowFloatingWindows(bool fShow);
+	void ShowFloatingWindows(bool fShow,bool fNoProgramGuide=false);
 	void DrawCustomFrame(bool fActive);
 	CViewWindow &GetCurrentViewWindow();
 	void StoreTunerResumeInfo();

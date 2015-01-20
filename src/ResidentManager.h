@@ -15,12 +15,13 @@ class CResidentManager
 	bool RemoveTrayIcon();
 	bool ChangeTrayIcon();
 	bool UpdateTipText();
-	bool IsTrayIconVisible() const;
+	bool NeedTrayIcon() const;
 
 public:
 	enum {
 		STATUS_RECORDING	=0x00000001,
-		STATUS_MINIMIZED	=0x00000002
+		STATUS_MINIMIZED	=0x00000002,
+		STATUS_STANDBY		=0x00000004
 	};
 	CResidentManager();
 	~CResidentManager();
