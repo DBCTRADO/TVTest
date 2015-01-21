@@ -59,12 +59,6 @@ HBITMAP CreateDIB(int Width,int Height,int BitCount,void **ppBits=NULL);
 HBITMAP DuplicateDIB(HBITMAP hbmSrc);
 HBITMAP ResizeBitmap(HBITMAP hbmSrc,int Width,int Height,int BitCount=24,int StretchMode=STRETCH_HALFTONE);
 
-int CalcWrapTextLines(HDC hdc,LPCTSTR pszText,int Width);
-enum {
-	DRAW_TEXT_ELLIPSIS = 0x0001U
-};
-bool DrawWrapText(HDC hdc,LPCTSTR pszText,const RECT *pRect,int LineHeight,unsigned int Flags=0);
-
 enum FontType {
 	FONT_DEFAULT,
 	FONT_MESSAGE,

@@ -11,6 +11,7 @@
 #include "ChannelHistory.h"
 #include "FeaturedEvents.h"
 #include "DriverManager.h"
+#include "TextDraw.h"
 #include "resource.h"
 
 #ifdef _DEBUG
@@ -756,6 +757,9 @@ bool CFeaturedEventsCategory::Create()
 
 void CFeaturedEventsCategory::LayOut(const CHomeDisplay::StyleInfo &Style,HDC hdc,const RECT &ContentRect)
 {
+	TVTest::CTextDraw DrawText;
+	DrawText.Begin(hdc,TVTest::CTextDraw::FLAG_JAPANESE_HYPHNATION);
+
 	const CFeaturedEventsSettings &Settings=GetAppClass().FeaturedEvents.GetSettings();
 	int ItemBaseHeight=2*Style.FontHeight+Style.ItemMargins.Vert();
 	m_ItemHeight=ItemBaseHeight;
@@ -771,7 +775,9 @@ void CFeaturedEventsCategory::LayOut(const CHomeDisplay::StyleInfo &Style,HDC hd
 	const int EventTextWidth=(ContentRect.right-ContentRect.left)-
 		Style.ItemMargins.Horz()-Style.FontHeight;
 	TVTest::String Text;
+
 	m_ChannelNameWidth=0;
+
 	for (size_t i=0;i<m_ItemList.size();i++) {
 		CEventItem *pItem=m_ItemList[i];
 
@@ -788,7 +794,7 @@ void CFeaturedEventsCategory::LayOut(const CHomeDisplay::StyleInfo &Style,HDC hd
 
 		int Height=m_ItemHeight;
 		if (pItem->GetEventText(&Text)) {
-			int Lines=DrawUtil::CalcWrapTextLines(hdc,Text.c_str(),EventTextWidth);
+			int Lines=DrawText.CalcLineCount(Text.c_str(),EventTextWidth);
 			if (!Settings.GetShowEventText()
 					|| Lines>Settings.GetEventTextLines()) {
 				Height=ItemBaseHeight+Lines*Style.FontHeight;
@@ -819,6 +825,11 @@ void CFeaturedEventsCategory::Draw(HDC hdc,const CHomeDisplay::StyleInfo &Style,
 		::DrawText(hdc,pszText,-1,&rc,DT_LEFT | DT_NOPREFIX | DT_WORDBREAK);
 		return;
 	}
+
+	TVTest::CTextDraw DrawText;
+	DrawText.Begin(hdc,
+				   TVTest::CTextDraw::FLAG_END_ELLIPSIS |
+				   TVTest::CTextDraw::FLAG_JAPANESE_HYPHNATION);
 
 	HFONT hfontText=static_cast<HFONT>(::GetCurrentObject(hdc,OBJ_FONT));
 	LOGFONT lf;
@@ -886,8 +897,7 @@ void CFeaturedEventsCategory::Draw(HDC hdc,const CHomeDisplay::StyleInfo &Style,
 				rc.left=rcItem.left+Style.ItemMargins.Left+Style.FontHeight;
 				rc.top=rc.bottom;
 				rc.bottom=rcItem.bottom-Style.ItemMargins.Bottom;
-				DrawUtil::DrawWrapText(hdc,Text.c_str(),&rc,Style.FontHeight,
-									   DrawUtil::DRAW_TEXT_ELLIPSIS);
+				DrawText.Draw(Text.c_str(),rc,Style.FontHeight);
 			}
 		}
 	}

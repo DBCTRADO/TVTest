@@ -4,6 +4,7 @@
 #include "AppMain.h"
 #include "LogoManager.h"
 #include "DrawUtil.h"
+#include "TextDraw.h"
 #include "resource.h"
 
 #ifdef _DEBUG
@@ -25,10 +26,10 @@ public:
 	int GetTitleLines() const { return m_NameLines; }
 	int GetTextLines() const { return m_TextLines; }
 	int GetLines() const { return m_NameLines+m_TextLines; }
-	int CalcTitleLines(HDC hdc, int Width);
-	int CalcTextLines(HDC hdc,int Width);
-	void DrawTitle(HDC hdc,const RECT *pRect,int LineHeight);
-	void DrawText(HDC hdc,const RECT *pRect,int LineHeight);
+	int CalcTitleLines(TVTest::CTextDraw &DrawText,int Width);
+	int CalcTextLines(TVTest::CTextDraw &DrawText,int Width);
+	void DrawTitle(TVTest::CTextDraw &DrawText,const RECT &Rect,int LineHeight);
+	void DrawText(TVTest::CTextDraw &DrawText,const RECT &Rect,int LineHeight);
 	bool IsChanged(const CProgramItemInfo *pItem) const;
 
 private:
@@ -55,42 +56,42 @@ CProgramItemInfo::CProgramItemInfo(const CEventInfoData &EventInfo)
 }
 
 
-int CProgramItemInfo::CalcTitleLines(HDC hdc,int Width)
+int CProgramItemInfo::CalcTitleLines(TVTest::CTextDraw &DrawText,int Width)
 {
 	TCHAR szText[MAX_EVENT_TITLE];
 
 	GetEventTitleText(szText,lengthof(szText));
-	m_NameLines=DrawUtil::CalcWrapTextLines(hdc,szText,Width);
+	m_NameLines=DrawText.CalcLineCount(szText,Width);
 	return m_NameLines;
 }
 
 
-int CProgramItemInfo::CalcTextLines(HDC hdc,int Width)
+int CProgramItemInfo::CalcTextLines(TVTest::CTextDraw &DrawText,int Width)
 {
 	LPCTSTR pszEventText=GetEventText();
 
 	if (pszEventText!=NULL)
-		m_TextLines=DrawUtil::CalcWrapTextLines(hdc,pszEventText,Width);
+		m_TextLines=DrawText.CalcLineCount(pszEventText,Width);
 	else
 		m_TextLines=0;
 	return m_TextLines;
 }
 
 
-void CProgramItemInfo::DrawTitle(HDC hdc,const RECT *pRect,int LineHeight)
+void CProgramItemInfo::DrawTitle(TVTest::CTextDraw &DrawText,const RECT &Rect,int LineHeight)
 {
 	TCHAR szText[MAX_EVENT_TITLE];
 
 	GetEventTitleText(szText,lengthof(szText));
-	DrawUtil::DrawWrapText(hdc,szText,pRect,LineHeight);
+	DrawText.Draw(szText,Rect,LineHeight);
 }
 
 
-void CProgramItemInfo::DrawText(HDC hdc,const RECT *pRect,int LineHeight)
+void CProgramItemInfo::DrawText(TVTest::CTextDraw &DrawText,const RECT &Rect,int LineHeight)
 {
 	LPCTSTR pszEventText=GetEventText();
 	if (pszEventText!=NULL) {
-		DrawUtil::DrawWrapText(hdc,pszEventText,pRect,LineHeight);
+		DrawText.Draw(pszEventText,Rect,LineHeight);
 	}
 }
 
@@ -482,11 +483,12 @@ void CProgramListPanel::SetCurrentEventID(int EventID)
 
 void CProgramListPanel::CalcDimensions()
 {
-	HDC hdc;
+	HDC hdc=::GetDC(m_hwnd);
+	TVTest::CTextDraw DrawText;
+	DrawText.Begin(hdc,TVTest::CTextDraw::FLAG_JAPANESE_HYPHNATION);
 	RECT rc;
 	HFONT hfontOld;
 
-	hdc=::GetDC(m_hwnd);
 	GetClientRect(&rc);
 	hfontOld=static_cast<HFONT>(::GetCurrentObject(hdc,OBJ_FONT));
 	m_TotalLines=0;
@@ -494,9 +496,9 @@ void CProgramListPanel::CalcDimensions()
 		CProgramItemInfo *pItem=m_ItemList.GetItem(i);
 
 		DrawUtil::SelectObject(hdc,m_TitleFont);
-		m_TotalLines+=pItem->CalcTitleLines(hdc,rc.right);
+		m_TotalLines+=pItem->CalcTitleLines(DrawText,rc.right);
 		DrawUtil::SelectObject(hdc,m_Font);
-		m_TotalLines+=pItem->CalcTextLines(hdc,rc.right-GetTextLeftMargin());
+		m_TotalLines+=pItem->CalcTextLines(DrawText,rc.right-GetTextLeftMargin());
 	}
 	::SelectObject(hdc,hfontOld);
 	::ReleaseDC(m_hwnd,hdc);
@@ -930,6 +932,9 @@ LRESULT CProgramListPanel::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lP
 
 void CProgramListPanel::DrawProgramList(HDC hdc,const RECT *prcPaint)
 {
+	TVTest::CTextDraw DrawText;
+	DrawText.Begin(hdc,TVTest::CTextDraw::FLAG_JAPANESE_HYPHNATION);
+
 	const int LineHeight=m_FontHeight+m_Style.LineSpacing;
 	RECT rc,rcMargin;
 
@@ -948,7 +953,7 @@ void CProgramListPanel::DrawProgramList(HDC hdc,const RECT *prcPaint)
 		DrawUtil::SelectObject(hdc,m_Font);
 		::SetTextColor(hdc,m_Theme.EventTextStyle.Fore.Fill.GetSolidColor());
 		TVTest::Style::Subtract(&rc,m_Style.TitlePadding);
-		DrawUtil::DrawWrapText(hdc,TEXT("番組表の取得中です..."),&rc,LineHeight);
+		DrawText.Draw(TEXT("番組表の取得中です..."),rc,LineHeight);
 	} else {
 		rc.top=-m_ScrollPos;
 		for (int i=0;i<m_ItemList.NumItems();i++) {
@@ -984,7 +989,7 @@ void CProgramListPanel::DrawProgramList(HDC hdc,const RECT *prcPaint)
 				DrawUtil::SelectObject(hdc,m_TitleFont);
 				RECT rcTitle=rc;
 				TVTest::Style::Subtract(&rcTitle,m_Style.TitlePadding);
-				pItem->DrawTitle(hdc,&rcTitle,LineHeight);
+				pItem->DrawTitle(DrawText,rcTitle,LineHeight);
 			}
 
 			rc.top=rc.bottom;
@@ -1001,7 +1006,7 @@ void CProgramListPanel::DrawProgramList(HDC hdc,const RECT *prcPaint)
 				}
 				DrawUtil::SelectObject(hdc,m_Font);
 				rc.left=GetTextLeftMargin();
-				pItem->DrawText(hdc,&rc,LineHeight);
+				pItem->DrawText(DrawText,rc,LineHeight);
 
 				const unsigned int ShowIcons=
 					CEpgIcons::GetEventIcons(&pItem->GetEventInfo()) & m_VisibleEventIcons;

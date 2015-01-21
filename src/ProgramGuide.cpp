@@ -73,9 +73,9 @@ public:
 	int GetGenre(int Level=0) const;
 	bool SetCommonEvent(const CEventInfoData *pEvent);
 	int GetTitleLines() const { return m_TitleLines; }
-	void CalcTitleLines(HDC hdc,int Width);
-	void DrawTitle(HDC hdc,const RECT *pRect,int LineHeight) const;
-	void DrawText(HDC hdc,const RECT *pRect,int LineHeight) const;
+	void CalcTitleLines(TVTest::CTextDraw &TextDraw,int Width);
+	void DrawTitle(TVTest::CTextDraw &TextDraw,const RECT &Rect,int LineHeight) const;
+	void DrawText(TVTest::CTextDraw &TextDraw,const RECT &Rect,int LineHeight) const;
 	void GetTimeSize(HDC hdc,SIZE *pSize) const;
 	int GetItemPos() const { return m_ItemPos; }
 	void SetItemPos(int Pos) { m_ItemPos=Pos; }
@@ -223,30 +223,30 @@ LPCTSTR CEventItem::GetEventText() const
 }
 
 
-void CEventItem::CalcTitleLines(HDC hdc,int Width)
+void CEventItem::CalcTitleLines(TVTest::CTextDraw &TextDraw,int Width)
 {
 	if (m_TitleLines==0) {
 		TCHAR szText[MAX_TITLE_LENGTH];
 		GetTitleText(szText,lengthof(szText));
-		m_TitleLines=DrawUtil::CalcWrapTextLines(hdc,szText,Width);
+		m_TitleLines=TextDraw.CalcLineCount(szText,Width);
 	}
 }
 
 
-void CEventItem::DrawTitle(HDC hdc,const RECT *pRect,int LineHeight) const
+void CEventItem::DrawTitle(TVTest::CTextDraw &TextDraw,const RECT &Rect,int LineHeight) const
 {
 	TCHAR szText[MAX_TITLE_LENGTH];
 
 	GetTitleText(szText,lengthof(szText));
-	DrawUtil::DrawWrapText(hdc,szText,pRect,LineHeight);
+	TextDraw.Draw(szText,Rect,LineHeight);
 }
 
 
-void CEventItem::DrawText(HDC hdc,const RECT *pRect,int LineHeight) const
+void CEventItem::DrawText(TVTest::CTextDraw &TextDraw,const RECT &Rect,int LineHeight) const
 {
 	LPCTSTR pszEventText=GetEventText();
 	if (!IsStringEmpty(pszEventText))
-		DrawUtil::DrawWrapText(hdc,pszEventText,pRect,LineHeight);
+		TextDraw.Draw(pszEventText,Rect,LineHeight);
 }
 
 
@@ -1542,8 +1542,10 @@ void CProgramGuide::CalcLayout()
 }
 
 
-void CProgramGuide::DrawEvent(ProgramGuide::CEventItem *pItem,
-							  HDC hdc,const RECT &Rect,int LineHeight,HDC hdcIcons,int CurTimePos)
+void CProgramGuide::DrawEvent(
+	ProgramGuide::CEventItem *pItem,
+	HDC hdc,const RECT &Rect,TVTest::CTextDraw &TextDraw,int LineHeight,
+	HDC hdcIcons,int CurTimePos)
 {
 	const CEventInfoData *pEventInfo=pItem->GetEventInfo();
 	const CEventInfoData *pOrigEventInfo=pEventInfo;
@@ -1649,7 +1651,7 @@ void CProgramGuide::DrawEvent(ProgramGuide::CEventItem *pItem,
 
 	RECT rcTitle,rcText;
 	DrawUtil::SelectObject(hdc,m_TitleFont);
-	pItem->CalcTitleLines(hdc,Rect.right-Rect.left);
+	pItem->CalcTitleLines(TextDraw,Rect.right-Rect.left);
 	rcTitle=Rect;
 	rcTitle.bottom=min(Rect.bottom,Rect.top+pItem->GetTitleLines()*LineHeight);
 	rcText.left=Rect.left+m_TextLeftMargin;
@@ -1708,14 +1710,14 @@ void CProgramGuide::DrawEvent(ProgramGuide::CEventItem *pItem,
 
 	::SetTextColor(hdc,TitleColor);
 	rcTitle.top+=m_Style.EventLeading;
-	pItem->DrawTitle(hdc,&rcTitle,LineHeight);
+	pItem->DrawTitle(TextDraw,rcTitle,LineHeight);
 
 	if (rcText.bottom>rcTitle.bottom) {
 		::SetTextColor(hdc,TextColor);
 		DrawUtil::SelectObject(hdc,m_Font);
 		RECT rc=rcText;
 		rc.top+=m_Style.EventLeading;
-		pItem->DrawText(hdc,&rc,LineHeight);
+		pItem->DrawText(TextDraw,rc,LineHeight);
 
 		const unsigned int ShowIcons=
 			CEpgIcons::GetEventIcons(pEventInfo) & m_VisibleEventIcons;
@@ -1741,8 +1743,10 @@ void CProgramGuide::DrawEvent(ProgramGuide::CEventItem *pItem,
 }
 
 
-void CProgramGuide::DrawEventList(ProgramGuide::CEventLayout *pLayout,
-								  HDC hdc,const RECT &Rect,const RECT &PaintRect)
+void CProgramGuide::DrawEventList(
+	ProgramGuide::CEventLayout *pLayout,
+	HDC hdc,const RECT &Rect,const RECT &PaintRect,
+	TVTest::CTextDraw &TextDraw)
 {
 	const int LineHeight=GetLineHeight();
 	const int CurTimePos=Rect.top+GetCurTimeLinePos();
@@ -1768,7 +1772,7 @@ void CProgramGuide::DrawEventList(ProgramGuide::CEventLayout *pLayout,
 			if (rcItem.bottom<=PaintRect.top)
 				continue;
 
-			DrawEvent(pItem,hdc,rcItem,LineHeight,hdcIcons,CurTimePos);
+			DrawEvent(pItem,hdc,rcItem,TextDraw,LineHeight,hdcIcons,CurTimePos);
 		}
 	}
 
@@ -2113,6 +2117,12 @@ void CProgramGuide::Draw(HDC hdc,const RECT &PaintRect)
 
 		hrgn=::CreateRectRgnIndirect(&rcGuide);
 		::SelectClipRgn(hdc,hrgn);
+
+		TVTest::CTextDraw TextDraw;
+		TextDraw.Begin(hdc,
+					   TVTest::CTextDraw::FLAG_END_ELLIPSIS |
+					   TVTest::CTextDraw::FLAG_JAPANESE_HYPHNATION);
+
 		rc.top=HeaderHeight-m_ScrollPos.y*GetLineHeight();
 		rc.left=m_TimeBarWidth+m_Style.ColumnMargin-m_ScrollPos.x;
 		HPEN hpen,hpenOld;
@@ -2120,6 +2130,7 @@ void CProgramGuide::Draw(HDC hdc,const RECT &PaintRect)
 		hpenOld=SelectPen(hdc,hpen);
 		int PixelsPerHour=GetLineHeight()*m_LinesPerHour;
 		int CurTimePos=rc.top+GetCurTimeLinePos();
+
 		for (size_t i=0;i<m_EventLayoutList.Length();i++) {
 			rc.right=rc.left+m_ItemWidth;
 			if (rc.top<PaintRect.bottom) {
@@ -2153,7 +2164,7 @@ void CProgramGuide::Draw(HDC hdc,const RECT &PaintRect)
 					}
 				}
 				if (rc.left<PaintRect.right && rc.right>PaintRect.left)
-					DrawEventList(m_EventLayoutList[i],hdc,rc,PaintRect);
+					DrawEventList(m_EventLayoutList[i],hdc,rc,PaintRect,TextDraw);
 			}
 			rc.left=rc.right+m_Style.ColumnMargin*2;
 		}

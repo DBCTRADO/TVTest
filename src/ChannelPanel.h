@@ -16,6 +16,7 @@
 #include "WindowUtil.h"
 #include "EpgUtil.h"
 #include "FeaturedEvents.h"
+#include "TextDraw.h"
 
 
 class CChannelPanel
@@ -135,7 +136,7 @@ private:
 		WORD GetServiceID() const { return m_ChannelInfo.GetServiceID(); }
 		int FormatEventText(LPTSTR pszText,int MaxLength,int Index) const;
 		void DrawChannelName(HDC hdc,const RECT *pRect,const TVTest::Style::Margins &LogoMargins);
-		void DrawEventName(HDC hdc,const RECT *pRect,int Index);
+		void DrawEventName(int Index,TVTest::CTextDraw &TextDraw,const RECT &Rect,int LineHeight);
 		int GetOriginalChannelIndex() const { return m_OriginalChannelIndex; }
 		HBITMAP GetLogo() const { return m_hbmLogo; }
 		void SetLogo(HBITMAP hbm) { m_hbmLogo=hbm; }

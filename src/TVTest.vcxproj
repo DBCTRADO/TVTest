@@ -486,6 +486,7 @@
     <ClCompile Include="Capture.cpp" />
     <ClCompile Include="CaptureOptions.cpp" />
     <ClCompile Include="ComUtility.cpp" />
+    <ClCompile Include="TextDraw.cpp" />
     <ClCompile Include="TSProcessorErrorDialog.cpp" />
     <ClCompile Include="EpgCapture.cpp" />
     <ClCompile Include="ListView.cpp" />
@@ -658,6 +659,7 @@
     <ClInclude Include="Capture.h" />
     <ClInclude Include="CaptureOptions.h" />
     <ClInclude Include="ComUtility.h" />
+    <ClInclude Include="TextDraw.h" />
     <ClInclude Include="TSProcessorErrorDialog.h" />
     <ClInclude Include="DirectShowFilter\RingBuffer.h" />
     <ClInclude Include="EpgCapture.h" />

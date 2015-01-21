@@ -9,6 +9,7 @@
 #include "UIBase.h"
 #include "Theme.h"
 #include "DrawUtil.h"
+#include "TextDraw.h"
 #include "ProgramSearch.h"
 #include "ProgramGuideFavorites.h"
 #include "FeaturedEvents.h"
@@ -569,9 +570,11 @@ private:
 	void UpdateServiceList();
 	void CalcLayout();
 	void DrawEvent(ProgramGuide::CEventItem *pItem,
-				   HDC hdc,const RECT &Rect,int LineHeight,HDC hdcIcons,int CurTimePos);
+				   HDC hdc,const RECT &Rect,TVTest::CTextDraw &TextDraw,int LineHeight,
+				   HDC hdcIcons,int CurTimePos);
 	void DrawEventList(ProgramGuide::CEventLayout *pLayout,
-					   HDC hdc,const RECT &Rect,const RECT &PaintRect);
+					   HDC hdc,const RECT &Rect,const RECT &PaintRect,
+					   TVTest::CTextDraw &TextDraw);
 	void DrawHeaderBackground(HDC hdc,const RECT &Rect,bool fCur) const;
 	void DrawServiceHeader(ProgramGuide::CServiceInfo *pServiceInfo,
 						   HDC hdc,const RECT &Rect,int Chevron,

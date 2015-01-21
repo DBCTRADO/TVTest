@@ -861,6 +861,11 @@ void CChannelPanel::Draw(HDC hdc,const RECT *prcPaint)
 	COLORREF crOldTextColor=::GetTextColor(hdcDst);
 	int OldBkMode=::SetBkMode(hdcDst,TRANSPARENT);
 
+	TVTest::CTextDraw TextDraw;
+	TextDraw.Begin(hdcDst,
+				   TVTest::CTextDraw::FLAG_JAPANESE_HYPHNATION |
+				   TVTest::CTextDraw::FLAG_END_ELLIPSIS);
+
 	RECT rcItem;
 	rcItem.left=0;
 	rcItem.right=rcClient.right;
@@ -964,7 +969,7 @@ void CChannelPanel::Draw(HDC hdc,const RECT *prcPaint)
 				}
 
 				DrawUtil::SelectObject(hdcDst,m_Font);
-				pChannelInfo->DrawEventName(hdcDst,&rcText,j);
+				pChannelInfo->DrawEventName(j,TextDraw,rcText,m_FontHeight);
 			}
 
 			if (hdcDst!=hdc)
@@ -1374,7 +1379,8 @@ void CChannelPanel::CChannelEventInfo::DrawChannelName(
 }
 
 
-void CChannelPanel::CChannelEventInfo::DrawEventName(HDC hdc,const RECT *pRect,int Index)
+void CChannelPanel::CChannelEventInfo::DrawEventName(
+	int Index,TVTest::CTextDraw &TextDraw,const RECT &Rect,int LineHeight)
 {
 	if (IsEventEnabled(Index)) {
 		const CEventInfoData &Info=m_EventList[Index];
@@ -1384,9 +1390,7 @@ void CChannelPanel::CChannelEventInfo::DrawEventName(HDC hdc,const RECT *pRect,i
 								 EpgUtil::EVENT_TIME_HOUR_2DIGITS);
 		StdUtil::snprintf(szText,lengthof(szText),TEXT("%s %s"),
 						  szTime,Info.m_EventName.c_str());
-		RECT rc=*pRect;
-		::DrawText(hdc,szText,-1,&rc,
-				   DT_WORDBREAK | DT_NOPREFIX | DT_END_ELLIPSIS);
+		TextDraw.Draw(szText,Rect,LineHeight);
 	}
 }
 
