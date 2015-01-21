@@ -3909,9 +3909,11 @@ LRESULT CProgramGuide::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam
 								ProgramGuide::CServiceInfo *pServiceInfo=m_ServiceList.GetItem(Service);
 
 								if (pServiceInfo!=NULL) {
+									TVTest::String BonDriver(pServiceInfo->GetBonDriverFileName());
+									CServiceInfoData ServiceInfo(pServiceInfo->GetServiceInfoData());
+
 									m_pEventHandler->OnServiceTitleLButtonDown(
-										pServiceInfo->GetBonDriverFileName(),
-										&pServiceInfo->GetServiceInfoData());
+										BonDriver.c_str(),&ServiceInfo);
 								}
 							}
 						} else if (x%HeaderWidth>=HeaderWidth-ChevronArea) {
