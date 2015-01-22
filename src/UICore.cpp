@@ -143,7 +143,8 @@ int CUICore::GetZoomPercentage() const
 	int Rate,Factor;
 	if (!m_pSkin->GetZoomRate(&Rate,&Factor) || Factor==0)
 		return false;
-	return (Rate*100+Factor/2)/Factor;
+	//return ::MulDiv(Rate,100,Factor);
+	return Rate*100/Factor;
 }
 
 

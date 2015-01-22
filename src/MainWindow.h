@@ -613,7 +613,6 @@ private:
 	bool OnInitMenuPopup(HMENU hmenu);
 	void OnRecordingStateChanged();
 	void OnEventChanged();
-	int GetZoomPercentage();
 	bool AutoFitWindowToVideo();
 	bool SetPanAndScan(int Command);
 	void LockLayout();

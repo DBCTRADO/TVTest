@@ -4656,14 +4656,19 @@ void CMainWindow::OnMouseWheel(WPARAM wParam,LPARAM lParam,bool fHorz)
 	case CM_WHEEL_ZOOM:
 		if (Command!=m_PrevWheelCommand || TickTimeSpan(m_PrevWheelTime,CurTime)>=500) {
 			if (!IsZoomed(m_hwnd) && !m_pCore->GetFullscreen()) {
-				int Zoom;
-
-				Zoom=GetZoomPercentage();
-				if (Delta>0)
-					Zoom+=m_App.OperationOptions.GetWheelZoomStep();
-				else
-					Zoom-=m_App.OperationOptions.GetWheelZoomStep();
-				SetZoomRate(Zoom,100);
+				int ZoomNum,ZoomDenom;
+				if (m_pCore->GetZoomRate(&ZoomNum,&ZoomDenom)) {
+					int Step=m_App.OperationOptions.GetWheelZoomStep();
+					if (Delta<0)
+						Step=-Step;
+					if (ZoomDenom>=100) {
+						ZoomNum+=::MulDiv(Step,ZoomDenom,100);
+					} else {
+						ZoomNum=ZoomNum*100+Step*ZoomDenom;
+						ZoomDenom*=100;
+					}
+					SetZoomRate(ZoomNum,ZoomDenom);
+				}
 			}
 			fProcessed=true;
 		}
@@ -4851,16 +4856,6 @@ bool CMainWindow::GetZoomRate(int *pRate,int *pFactor)
 	if (pFactor)
 		*pFactor=Factor;
 	return fOK;
-}
-
-
-int CMainWindow::GetZoomPercentage()
-{
-	int Rate,Factor;
-
-	if (!GetZoomRate(&Rate,&Factor) || Factor==0)
-		return 0;
-	return (Rate*100+Factor/2)/Factor;
 }
 
 
