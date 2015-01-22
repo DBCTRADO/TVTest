@@ -320,7 +320,8 @@ void CInformationPanel::UpdateProgramInfoText()
 				::ReleaseDC(m_hwndProgramInfo,hdc);
 				CRichEditUtil::AppendText(m_hwndProgramInfo,InfoText.c_str(),&cf);
 				CRichEditUtil::DetectURL(m_hwndProgramInfo,&cf,0,-1,
-										 CRichEditUtil::URL_NO_LINK,&m_ProgramInfoLinkList);
+										 CRichEditUtil::URL_NO_LINK | CRichEditUtil::URL_TO_HALF_WIDTH,
+										 &m_ProgramInfoLinkList);
 				POINT pt={0,0};
 				::SendMessage(m_hwndProgramInfo,EM_SETSCROLLPOS,0,reinterpret_cast<LPARAM>(&pt));
 			}
