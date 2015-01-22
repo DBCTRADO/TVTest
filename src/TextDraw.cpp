@@ -16,10 +16,10 @@ namespace TVTest
 
 // 行頭禁則文字
 const LPCWSTR CTextDraw::m_pszStartProhibitChars=
-	L")）]］｣」』】〉》、。,.!！?？ー～…・ァィゥェォッャュョヮヵヶぁぃぅぇぉっゃゅょゎゝゞ々";
+	L")）]］｣」』】〉》”、。,，.．!！?？ー～…・ァィゥェォッャュョヮヵヶぁぃぅぇぉっゃゅょゎゝゞ々";
 // 行末禁則文字
 const LPCWSTR CTextDraw::m_pszEndProhibitChars=
-	L"(（[［｢「『【〈《#＃";
+	L"(（[［｢「『【〈《“#＃";
 
 
 CTextDraw::CTextDraw()
