@@ -900,6 +900,46 @@ HICON CreateEmptyIcon(int Width,int Height)
 }
 
 
+HICON LoadIconStandardSize(HINSTANCE hinst,LPCTSTR pszName,IconSizeType Size)
+{
+	int Metric;
+	HICON hico;
+
+	switch (Size) {
+	case ICON_SIZE_SMALL:	Metric=LIM_SMALL;	break;
+	case ICON_SIZE_NORMAL:	Metric=LIM_LARGE;	break;
+	default:
+		return NULL;
+	}
+
+#ifdef WIN_XP_SUPPORT
+	auto pLoadIconMetric=GET_MODULE_FUNCTION(TEXT("comctl32.dll"),LoadIconMetric);
+	if (pLoadIconMetric!=NULL) {
+		if (SUCCEEDED(pLoadIconMetric(hinst,pszName,Metric,&hico)))
+			return hico;
+	}
+#else
+	if (SUCCEEDED(::LoadIconMetric(hinst,pszName,Metric,&hico)))
+		return hico;
+#endif
+
+	int Width,Height;
+
+	switch (Size) {
+	case ICON_SIZE_SMALL:
+		Width=::GetSystemMetrics(SM_CXSMICON);
+		Height=::GetSystemMetrics(SM_CYSMICON);
+		break;
+	case ICON_SIZE_NORMAL:
+		Width=::GetSystemMetrics(SM_CXICON);
+		Height=::GetSystemMetrics(SM_CYICON);
+		break;
+	}
+
+	return (HICON)::LoadImage(hinst,pszName,IMAGE_ICON,Width,Height,LR_DEFAULTCOLOR);
+}
+
+
 
 
 CStaticStringFormatter::CStaticStringFormatter(LPTSTR pBuffer,size_t BufferLength)

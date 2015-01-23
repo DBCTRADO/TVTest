@@ -144,13 +144,10 @@ bool CTaskTrayManager::ChangeTrayIcon()
 
 HICON CTaskTrayManager::LoadTrayIcon() const
 {
-	return (HICON)::LoadImage(
+	return LoadIconStandardSize(
 		GetAppClass().GetResourceInstance(),
 		MAKEINTRESOURCE((m_Status & STATUS_RECORDING)!=0?IDI_TRAY_RECORDING:IDI_TRAY),
-		IMAGE_ICON,
-		::GetSystemMetrics(SM_CXSMICON),
-		::GetSystemMetrics(SM_CYSMICON),
-		LR_DEFAULTCOLOR);
+		ICON_SIZE_SMALL);
 }
 
 

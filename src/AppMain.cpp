@@ -1481,12 +1481,8 @@ bool CAppMain::ApplyColorScheme(const CColorScheme *pColorScheme)
 HICON CAppMain::GetAppIcon()
 {
 	if (m_hicoApp==nullptr) {
-		m_hicoApp=(HICON)::LoadImage(
-			::GetModuleHandle(NULL),MAKEINTRESOURCE(IDI_ICON),
-			IMAGE_ICON,
-			::GetSystemMetrics(SM_CXICON),
-			::GetSystemMetrics(SM_CYICON),
-			LR_DEFAULTCOLOR);
+		m_hicoApp=LoadIconStandardSize(
+			::GetModuleHandle(NULL),MAKEINTRESOURCE(IDI_ICON),ICON_SIZE_NORMAL);
 	}
 	return m_hicoApp;
 }
@@ -1495,12 +1491,8 @@ HICON CAppMain::GetAppIcon()
 HICON CAppMain::GetAppIconSmall()
 {
 	if (m_hicoAppSmall==nullptr) {
-		m_hicoAppSmall=(HICON)::LoadImage(
-			::GetModuleHandle(NULL),MAKEINTRESOURCE(IDI_ICON),
-			IMAGE_ICON,
-			::GetSystemMetrics(SM_CXSMICON),
-			::GetSystemMetrics(SM_CYSMICON),
-			LR_DEFAULTCOLOR);
+		m_hicoAppSmall=LoadIconStandardSize(
+			::GetModuleHandle(NULL),MAKEINTRESOURCE(IDI_ICON),ICON_SIZE_SMALL);
 	}
 	return m_hicoAppSmall;
 }

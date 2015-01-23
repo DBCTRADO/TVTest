@@ -77,6 +77,11 @@ bool GetAbsolutePath(LPCTSTR pszFilePath,LPTSTR pszAbsolutePath,int MaxLength);
 
 HICON CreateIconFromBitmap(HBITMAP hbm,int IconWidth,int IconHeight,int ImageWidth=0,int ImageHeight=0);
 HICON CreateEmptyIcon(int Width,int Height);
+enum IconSizeType {
+	ICON_SIZE_SMALL,
+	ICON_SIZE_NORMAL
+};
+HICON LoadIconStandardSize(HINSTANCE hinst,LPCTSTR pszName,IconSizeType Size);
 
 class CStaticStringFormatter
 {
