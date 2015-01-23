@@ -1371,13 +1371,21 @@ bool CAppMain::ProcessCommandLine(LPCTSTR pszCmdLine)
 
 	CmdLine.Parse(pszCmdLine);
 
-	if (!CmdLine.m_fMinimize && !CmdLine.m_fTray && !CmdLine.m_fProgramGuideOnly) {
+	if (!CmdLine.m_fMinimize
+			&& !CmdLine.m_fStandby
+			&& !CmdLine.m_fNoView
+			&& !CmdLine.m_fNoDirectShow
+			&& !CmdLine.m_fTray
+			&& !CmdLine.m_fProgramGuideOnly)
 		UICore.DoCommand(CM_SHOW);
 
+	if (MainWindow.GetVisible()) {
 		if (CmdLine.m_fFullscreen)
 			UICore.SetFullscreen(true);
 		else if (CmdLine.m_fMaximize)
 			MainWindow.SetMaximize(true);
+		else if (CmdLine.m_fMinimize)
+			::ShowWindow(MainWindow.GetHandle(),SW_MINIMIZE);
 	}
 
 	if (CmdLine.m_fSilent || CmdLine.m_TvRockDID>=0)
