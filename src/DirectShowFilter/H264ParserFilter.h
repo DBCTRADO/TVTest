@@ -31,8 +31,7 @@ public:
 	HRESULT BeginFlush() override;
 
 // CVideoParser
-	bool SetAdjustTime(bool bAdjust) override;
-	bool SetAdjustFrameRate(bool bAdjust) override;
+	bool SetAdjustSampleOptions(unsigned int Flags) override;
 
 protected:
 	CH264ParserFilter(LPUNKNOWN pUnk, HRESULT *phr);
@@ -90,6 +89,7 @@ protected:
 	CSampleDataQueue m_OutSampleQueue;
 	bool m_bAdjustTime;
 	bool m_bAdjustFrameRate;
+	bool m_bAdjust1Seg;
 	REFERENCE_TIME m_PrevTime;
 	DWORD m_SampleCount;
 	CSampleDataQueue m_SampleQueue;

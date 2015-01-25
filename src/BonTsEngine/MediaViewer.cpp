@@ -474,8 +474,7 @@ bool CMediaViewer::OpenViewer(
 			m_pVideoParser->SetVideoInfoCallback(OnVideoInfo, this);
 			// madVR は映像サイズの変化時に MediaType を設定しないと新しいサイズが適用されない
 			m_pVideoParser->SetAttachMediaType(RendererType == CVideoRenderer::RENDERER_madVR);
-			m_pVideoParser->SetAdjustTime(m_bAdjust1SegVideoSampleTime && m_b1SegMode);
-			m_pVideoParser->SetAdjustFrameRate(m_bAdjust1SegFrameRate && m_b1SegMode);
+			ApplyAdjustVideoSampleOptions();
 		}
 
 		Trace(TEXT("音声デコーダの接続中..."));
@@ -1009,10 +1008,7 @@ void CMediaViewer::Set1SegMode(bool b1Seg)
 
 		if (m_pSrcFilter != NULL)
 			m_pSrcFilter->EnableSync(m_bEnablePTSSync, m_b1SegMode);
-		if (m_pVideoParser != NULL) {
-			m_pVideoParser->SetAdjustTime(m_bAdjust1SegVideoSampleTime && m_b1SegMode);
-			m_pVideoParser->SetAdjustFrameRate(m_bAdjust1SegFrameRate && m_b1SegMode);
-		}
+		ApplyAdjustVideoSampleOptions();
 	}
 }
 
@@ -1140,8 +1136,6 @@ bool CMediaViewer::AdjustVideoPosition()
 			DestHeight = WindowHeight;
 		} else {
 			int AspectX, AspectY;
-			double window_rate = (double)WindowWidth / (double)WindowHeight;
-			double aspect_rate;
 
 			if (m_ForceAspectX > 0 && m_ForceAspectY > 0) {
 				// アスペクト比が指定されている
@@ -1170,14 +1164,15 @@ bool CMediaViewer::AdjustVideoPosition()
 					AspectY = WindowHeight;
 				}
 			}
-			aspect_rate = (double)AspectX / (double)AspectY;
-			if ((m_ViewStretchMode==STRETCH_KEEPASPECTRATIO && aspect_rate>window_rate)
-					|| (m_ViewStretchMode==STRETCH_CUTFRAME && aspect_rate<window_rate)) {
+			double WindowRatio = (double)WindowWidth / (double)WindowHeight;
+			double AspectRatio = (double)AspectX / (double)AspectY;
+			if ((m_ViewStretchMode == STRETCH_KEEPASPECTRATIO && AspectRatio > WindowRatio)
+					|| (m_ViewStretchMode == STRETCH_CUTFRAME && AspectRatio < WindowRatio)) {
 				DestWidth = WindowWidth;
-				DestHeight = DestWidth * AspectY  / AspectX;
+				DestHeight = ::MulDiv(DestWidth, AspectY, AspectX);
 			} else {
 				DestHeight = WindowHeight;
-				DestWidth = DestHeight * AspectX / AspectY;
+				DestWidth = ::MulDiv(DestHeight, AspectX, AspectY);
 			}
 		}
 
@@ -1193,22 +1188,22 @@ bool CMediaViewer::AdjustVideoPosition()
 		if (WindowWidth < DestWidth) {
 			rcDst.left = 0;
 			rcDst.right = WindowWidth;
-			rcSrc.left += (DestWidth - WindowWidth) * (rcSrc.right - rcSrc.left) / DestWidth / 2;
+			rcSrc.left += ::MulDiv(DestWidth - WindowWidth, rcSrc.right - rcSrc.left, DestWidth) / 2;
 			rcSrc.right = m_VideoInfo.m_OrigWidth - rcSrc.left;
 		} else {
 			if (m_bNoMaskSideCut
 					&& WindowWidth > DestWidth
 					&& rcSrc.right - rcSrc.left < m_VideoInfo.m_OrigWidth) {
-				int NewDestWidth=m_VideoInfo.m_OrigWidth*DestWidth/(rcSrc.right-rcSrc.left);
+				int NewDestWidth = ::MulDiv(m_VideoInfo.m_OrigWidth, DestWidth, rcSrc.right-rcSrc.left);
 				if (NewDestWidth > WindowWidth)
-					NewDestWidth=WindowWidth;
-				int NewSrcWidth=(rcSrc.right-rcSrc.left)*NewDestWidth/DestWidth;
-				rcSrc.left=(m_VideoInfo.m_OrigWidth-NewSrcWidth)/2;
-				rcSrc.right=rcSrc.left+NewSrcWidth;
+					NewDestWidth = WindowWidth;
+				int NewSrcWidth = ::MulDiv(rcSrc.right-rcSrc.left, NewDestWidth, DestWidth);
+				rcSrc.left = (m_VideoInfo.m_OrigWidth - NewSrcWidth) / 2;
+				rcSrc.right = rcSrc.left + NewSrcWidth;
 				TRACE(TEXT("Adjust %d x %d -> %d x %d [%d - %d (%d)]\n"),
-					  DestWidth,DestHeight,NewDestWidth,DestHeight,
-					  rcSrc.left,rcSrc.right,NewSrcWidth);
-				DestWidth=NewDestWidth;
+					  DestWidth, DestHeight, NewDestWidth, DestHeight,
+					  rcSrc.left, rcSrc.right, NewSrcWidth);
+				DestWidth = NewDestWidth;
 			}
 			rcDst.left = (WindowWidth - DestWidth) / 2;
 			rcDst.right = rcDst.left + DestWidth;
@@ -1216,20 +1211,30 @@ bool CMediaViewer::AdjustVideoPosition()
 		if (WindowHeight < DestHeight) {
 			rcDst.top = 0;
 			rcDst.bottom = WindowHeight;
-			rcSrc.top += (DestHeight - WindowHeight) * (rcSrc.bottom - rcSrc.top) / DestHeight / 2;
+			rcSrc.top += ::MulDiv(DestHeight - WindowHeight, rcSrc.bottom - rcSrc.top, DestHeight) / 2;
 			rcSrc.bottom = m_VideoInfo.m_OrigHeight - rcSrc.top;
 		} else {
 			rcDst.top = (WindowHeight - DestHeight) / 2,
 			rcDst.bottom = rcDst.top + DestHeight;
 		}
 #endif
+
 		rcWindow.left = 0;
 		rcWindow.top = 0;
 		rcWindow.right = WindowWidth;
 		rcWindow.bottom = WindowHeight;
+
+#if 0
+		TRACE(TEXT("SetVideoPosition %d,%d,%d,%d -> %d,%d,%d,%d [%d,%d,%d,%d]\n"),
+			  rcSrc.left, rcSrc.top, rcSrc.right, rcSrc.bottom,
+			  rcDst.left, rcDst.top, rcDst.right, rcDst.bottom,
+			  rcWindow.left, rcWindow.top, rcWindow.right, rcWindow.bottom);
+#endif
+
 		return m_pVideoRenderer->SetVideoPosition(
 			m_VideoInfo.m_OrigWidth, m_VideoInfo.m_OrigHeight, &rcSrc, &rcDst, &rcWindow);
 	}
+
 	return false;
 }
 
@@ -1443,36 +1448,43 @@ bool CMediaViewer::GetSourceRect(RECT *pRect) const
 
 bool CMediaViewer::CalcSourceRect(RECT *pRect) const
 {
-	long SrcX,SrcY,SrcWidth,SrcHeight;
-
-	if (m_VideoInfo.m_OrigWidth==0 || m_VideoInfo.m_OrigHeight==0)
+	if (m_VideoInfo.m_OrigWidth == 0 || m_VideoInfo.m_OrigHeight == 0)
 		return false;
-	if (m_Clipping.HorzFactor!=0) {
-		SrcWidth=m_VideoInfo.m_OrigWidth-
-			m_VideoInfo.m_OrigWidth*(m_Clipping.Left+m_Clipping.Right)/m_Clipping.HorzFactor;
-		SrcX=m_VideoInfo.m_OrigWidth*m_Clipping.Left/m_Clipping.HorzFactor;
+
+	long SrcX, SrcY, SrcWidth, SrcHeight;
+
+	if (m_Clipping.HorzFactor != 0) {
+		long ClipLeft, ClipRight;
+		ClipLeft = ::MulDiv(m_VideoInfo.m_OrigWidth, m_Clipping.Left, m_Clipping.HorzFactor);
+		ClipRight = ::MulDiv(m_VideoInfo.m_OrigWidth, m_Clipping.Right, m_Clipping.HorzFactor);
+		SrcWidth = m_VideoInfo.m_OrigWidth - (ClipLeft + ClipRight);
+		SrcX = ClipLeft;
 	} else if (m_bIgnoreDisplayExtension) {
-		SrcWidth=m_VideoInfo.m_OrigWidth;
-		SrcX=0;
+		SrcWidth = m_VideoInfo.m_OrigWidth;
+		SrcX = 0;
 	} else {
-		SrcWidth=m_VideoInfo.m_DisplayWidth;
-		SrcX=m_VideoInfo.m_PosX;
+		SrcWidth = m_VideoInfo.m_DisplayWidth;
+		SrcX = m_VideoInfo.m_PosX;
 	}
-	if (m_Clipping.VertFactor!=0) {
-		SrcHeight=m_VideoInfo.m_OrigHeight-
-			m_VideoInfo.m_OrigHeight*(m_Clipping.Top+m_Clipping.Bottom)/m_Clipping.VertFactor;
-		SrcY=m_VideoInfo.m_OrigHeight*m_Clipping.Top/m_Clipping.VertFactor;
+	if (m_Clipping.VertFactor != 0) {
+		long ClipTop, ClipBottom;
+		ClipTop = ::MulDiv(m_VideoInfo.m_OrigHeight, m_Clipping.Top, m_Clipping.VertFactor);
+		ClipBottom = ::MulDiv(m_VideoInfo.m_OrigHeight, m_Clipping.Bottom, m_Clipping.VertFactor);
+		SrcHeight = m_VideoInfo.m_OrigHeight - (ClipTop + ClipBottom);
+		SrcY = ClipTop;
 	} else if (m_bIgnoreDisplayExtension) {
-		SrcHeight=m_VideoInfo.m_OrigHeight;
-		SrcY=0;
+		SrcHeight = m_VideoInfo.m_OrigHeight;
+		SrcY = 0;
 	} else {
-		SrcHeight=m_VideoInfo.m_DisplayHeight;
-		SrcY=m_VideoInfo.m_PosY;
+		SrcHeight = m_VideoInfo.m_DisplayHeight;
+		SrcY = m_VideoInfo.m_PosY;
 	}
-	pRect->left=SrcX;
-	pRect->top=SrcY;
-	pRect->right=SrcX+SrcWidth;
-	pRect->bottom=SrcY+SrcHeight;
+
+	pRect->left = SrcX;
+	pRect->top = SrcY;
+	pRect->right = SrcX + SrcWidth;
+	pRect->bottom = SrcY + SrcHeight;
+
 	return true;
 }
 
@@ -1865,22 +1877,15 @@ bool CMediaViewer::IsPTSSyncEnabled() const
 }
 
 
-bool CMediaViewer::SetAdjust1SegVideoSampleTime(bool bAdjust)
+bool CMediaViewer::SetAdjust1SegVideoSample(bool bAdjustTime, bool bAdjustFrameRate)
 {
-	TRACE(TEXT("CMediaViewer::SetAdjustSampleTime(%s)\n"), bAdjust ? TEXT("true") : TEXT("false"));
-	m_bAdjust1SegVideoSampleTime = bAdjust;
-	if (m_pVideoParser != NULL)
-		return m_pVideoParser->SetAdjustTime(bAdjust && m_b1SegMode);
-	return true;
-}
+	TRACE(TEXT("CMediaViewer::SetAdjust1SegVideoSample() : Adjust time %d / Adjust frame rate %d\n"),
+		  bAdjustTime, bAdjustFrameRate);
 
+	m_bAdjust1SegVideoSampleTime = bAdjustTime;
+	m_bAdjust1SegFrameRate = bAdjustFrameRate;
+	ApplyAdjustVideoSampleOptions();
 
-bool CMediaViewer::SetAdjust1SegFrameRate(bool bAdjust)
-{
-	TRACE(TEXT("CMediaViewer::SetAdjustFrameRate(%s)\n"), bAdjust ? TEXT("true") : TEXT("false"));
-	m_bAdjust1SegFrameRate = bAdjust;
-	if (m_pVideoParser != NULL)
-		return m_pVideoParser->SetAdjustFrameRate(bAdjust && m_b1SegMode);
 	return true;
 }
 
@@ -2048,6 +2053,24 @@ bool CMediaViewer::MapAudioPID(WORD PID)
 		m_pSrcFilter->SetAudioPID(PID);
 
 	return true;
+}
+
+
+void CMediaViewer::ApplyAdjustVideoSampleOptions()
+{
+	if (m_pVideoParser != NULL) {
+		unsigned int Flags = 0;
+
+		if (m_b1SegMode) {
+			Flags = CVideoParser::ADJUST_SAMPLE_1SEG;
+			if (m_bAdjust1SegVideoSampleTime)
+				Flags |= CVideoParser::ADJUST_SAMPLE_TIME;
+			if (m_bAdjust1SegFrameRate)
+				Flags |= CVideoParser::ADJUST_SAMPLE_FRAME_RATE;
+		}
+
+		m_pVideoParser->SetAdjustSampleOptions(Flags);
+	}
 }
 
 

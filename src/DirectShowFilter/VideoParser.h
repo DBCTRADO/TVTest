@@ -70,6 +70,12 @@ public:
 		}
 	};
 
+	enum {
+		ADJUST_SAMPLE_TIME       = 0x0001U,
+		ADJUST_SAMPLE_FRAME_RATE = 0x0002U,
+		ADJUST_SAMPLE_1SEG       = 0x0004U
+	};
+
 	CVideoParser();
 	virtual ~CVideoParser();
 
@@ -82,8 +88,7 @@ public:
 	DWORD GetBitRate() const;
 
 	void SetAttachMediaType(bool bAttach);
-	virtual bool SetAdjustTime(bool bAdjust) { return false; }
-	virtual bool SetAdjustFrameRate(bool bAdjust) { return false; }
+	virtual bool SetAdjustSampleOptions(unsigned int Flags) { return false; }
 
 protected:
 	void NotifyVideoInfo() const;

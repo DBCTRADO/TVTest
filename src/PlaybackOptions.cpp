@@ -59,7 +59,7 @@ bool CPlaybackOptions::Apply(DWORD Flags)
 	}
 
 	if ((Flags&UPDATE_ADJUSTFRAMERATE)!=0) {
-		CoreEngine.m_DtvEngine.m_MediaViewer.SetAdjust1SegVideoSampleTime(m_fAdjust1SegFrameRate);
+		CoreEngine.m_DtvEngine.m_MediaViewer.SetAdjust1SegVideoSample(m_fAdjust1SegFrameRate, true);
 	}
 
 	return true;

@@ -144,8 +144,7 @@ public:
 	bool ClearOSD();
 	bool EnablePTSSync(bool bEnable);
 	bool IsPTSSyncEnabled() const;
-	bool SetAdjust1SegVideoSampleTime(bool bAdjust);
-	bool SetAdjust1SegFrameRate(bool bAdjust);
+	bool SetAdjust1SegVideoSample(bool bAdjustTime, bool bAdjustFrameRate);
 	void ResetBuffer();
 	bool SetBufferSize(size_t Size);
 	bool SetInitialPoolPercentage(int Percentage);
@@ -162,6 +161,7 @@ protected:
 							 LPCTSTR pszDecoderName, IPin **ppOutputPin);
 	bool MapVideoPID(WORD PID);
 	bool MapAudioPID(WORD PID);
+	void ApplyAdjustVideoSampleOptions();
 
 // CAudioDecFilter::IEventHandler
 	void OnSpdifPassthroughError(HRESULT hr) override;
