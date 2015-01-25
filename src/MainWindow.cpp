@@ -1451,6 +1451,8 @@ LRESULT CMainWindow::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 
 	case WM_APP_SERVICEINFOUPDATED:
 		TRACE(TEXT("WM_APP_SERVICEINFOUPDATED\n"));
+		m_pCore->UpdateTitle();
+		m_App.StatusView.UpdateItem(STATUS_ITEM_CHANNEL);
 		if (!IsMessageInQueue(hwnd,WM_APP_SERVICEINFOUPDATED)) {
 			m_App.TSProcessorManager.OnNetworkChanged(
 				LOWORD(lParam),HIWORD(lParam),
