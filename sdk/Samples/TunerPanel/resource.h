@@ -1,4 +1,5 @@
-#define IDM_MENU	1
+#define IDB_ICON	1
+#define IDM_MENU	10
 
 #define CM_VIEW_LIST			100
 #define CM_VIEW_LOGO			101

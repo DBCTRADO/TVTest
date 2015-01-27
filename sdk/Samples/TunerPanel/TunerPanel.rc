@@ -2,6 +2,8 @@
 #include "resource.h"
 
 
+IDB_ICON BITMAP "Icon.bmp"
+
 IDM_MENU MENU
 BEGIN
 	POPUP ""

@@ -230,8 +230,12 @@ bool CTunerPanel::Initialize()
 	PanelInfo.ID = PANEL_ID;
 	PanelInfo.pszIDText = L"Tuner";
 	PanelInfo.pszTitle = L"チューナー";
+	PanelInfo.hbmIcon = (HBITMAP)::LoadImage(g_hinstDLL, MAKEINTRESOURCE(IDB_ICON),
+											 IMAGE_BITMAP, 0, 0, LR_CREATEDIBSECTION);
 
-	if (!m_pApp->RegisterPanelItem(&PanelInfo)) {
+	bool fResult = m_pApp->RegisterPanelItem(&PanelInfo);
+	::DeleteObject(PanelInfo.hbmIcon);
+	if (!fResult) {
 		m_pApp->AddLog(L"パネル項目を登録できません。");
 		return false;
 	}
