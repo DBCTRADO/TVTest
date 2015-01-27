@@ -208,7 +208,8 @@ bool CCaptureOptions::GenerateFileName(LPTSTR pszFileName,int MaxLength,const SY
 	SYSTEMTIME st;
 
 	if (m_szSaveFolder[0]!='\0') {
-		::lstrcpy(szSaveFolder,m_szSaveFolder);
+		if (!GetAbsolutePath(m_szSaveFolder,szSaveFolder,lengthof(szSaveFolder)))
+			return false;
 	} else {
 		if (!GetAppClass().GetAppDirectory(szSaveFolder))
 			return false;
@@ -309,10 +310,11 @@ bool CCaptureOptions::OpenSaveFolder() const
 	TCHAR szFolder[MAX_PATH];
 
 	if (m_szSaveFolder[0]!='\0') {
-		::lstrcpy(szFolder,m_szSaveFolder);
+		if (!GetAbsolutePath(m_szSaveFolder,szFolder,lengthof(szFolder)))
+			return false;
 	} else {
-		::GetModuleFileName(NULL,szFolder,lengthof(szFolder));
-		*(::PathFindFileName(szFolder)-1)='\0';
+		if (!GetAppClass().GetAppDirectory(szFolder))
+			return false;
 	}
 	return (ULONG_PTR)::ShellExecute(NULL,TEXT("open"),szFolder,NULL,NULL,SW_SHOWNORMAL)>32;
 }
