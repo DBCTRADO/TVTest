@@ -248,9 +248,14 @@ bool CEpgOptions::LoadEDCBData()
 	bool fOK=true;
 
 	if (m_fUseEDCBData && m_szEDCBDataFolder[0]!='\0') {
+		TCHAR szPath[MAX_PATH];
+
+		if (!GetAbsolutePath(m_szEDCBDataFolder,szPath,lengthof(szPath)))
+			return false;
+
 		CEpgDataLoader Loader;
 
-		fOK=Loader.Load(m_szEDCBDataFolder);
+		fOK=Loader.Load(szPath);
 	}
 	return fOK;
 }
@@ -261,10 +266,15 @@ bool CEpgOptions::AsyncLoadEDCBData(CEDCBDataLoadEventHandler *pEventHandler)
 	bool fOK=true;
 
 	if (m_fUseEDCBData && m_szEDCBDataFolder[0]!='\0') {
+		TCHAR szPath[MAX_PATH];
+
+		if (!GetAbsolutePath(m_szEDCBDataFolder,szPath,lengthof(szPath)))
+			return false;
+
 		delete m_pEpgDataLoader;
 		m_pEpgDataLoader=new CEpgDataLoader;
 
-		fOK=m_pEpgDataLoader->LoadAsync(m_szEDCBDataFolder,pEventHandler);
+		fOK=m_pEpgDataLoader->LoadAsync(szPath,pEventHandler);
 	}
 	return fOK;
 }
