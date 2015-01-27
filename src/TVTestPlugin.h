@@ -2630,6 +2630,7 @@ struct PanelItemInfo {
 	int ID;				// 識別子
 	LPCWSTR pszIDText;	// 識別子文字列
 	LPCWSTR pszTitle;	// タイトル
+	HBITMAP hbmIcon;	// アイコンのビットマップ
 };
 
 // パネル項目を登録する

@@ -178,6 +178,7 @@ private:
 		DWORD State;
 		int ItemID;
 		CPluginPanelItem *pItem;
+		TVTest::Theme::ThemeBitmap Icon;
 	};
 
 	class CPluginPanelItem : public CPanelForm::CPage
@@ -195,6 +196,8 @@ private:
 		void OnDeactivate() override;
 		void OnVisibilityChanged(bool fVisible) override;
 		void OnFormDelete() override;
+		bool DrawIcon(HDC hdc,int x,int y,int Width,int Height,
+					  const TVTest::Theme::ThemeColor &Color) override;
 
 		CPlugin *m_pPlugin;
 		PanelItem *m_pItem;

@@ -41,6 +41,7 @@ public:
 	bool GetAttachToMainWindow() const { return m_fAttachToMainWindow; }
 	const LOGFONT *GetFont() const { return &m_Font; }
 	int GetInitialTab() const;
+	CPanelForm::TabStyle GetTabStyle() const { return m_TabStyle; }
 	bool GetProgramInfoUseRichEdit() const { return m_fProgramInfoUseRichEdit; }
 	int RegisterPanelItem(LPCTSTR pszID,LPCTSTR pszTitle);
 	bool SetPanelItemVisibility(int ID,bool fVisible);
@@ -74,6 +75,7 @@ private:
 	TVTest::String m_LastTab;
 	PanelItemInfoList m_AvailItemList;
 	PanelItemInfoList m_ItemList;
+	CPanelForm::TabStyle m_TabStyle;
 	bool m_fProgramInfoUseRichEdit;
 	TVTest::CListView m_ItemListView;
 

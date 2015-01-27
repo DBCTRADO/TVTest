@@ -960,7 +960,13 @@ void CPlugin::RegisterPanelItems()
 			}
 			CPluginPanelItem *pPanelItem=new CPluginPanelItem(this,pItem);
 			pPanelItem->Create(App.Panel.Form.GetHandle(),WS_CHILD | WS_CLIPCHILDREN);
-			App.Panel.Form.AddWindow(pPanelItem,ItemID,pItem->Title.c_str());
+			CPanelForm::PageInfo PageInfo;
+			PageInfo.pPage=pPanelItem;
+			PageInfo.pszTitle=pItem->Title.c_str();
+			PageInfo.ID=ItemID;
+			PageInfo.Icon=-1;
+			PageInfo.fVisible=(pItem->State & TVTest::PANEL_ITEM_STATE_ENABLED)!=0;
+			App.Panel.Form.AddPage(PageInfo);
 		}
 	}
 }
@@ -2364,6 +2370,8 @@ LRESULT CPlugin::OnCallback(TVTest::PluginParam *pParam,UINT Message,LPARAM lPar
 			pItem->State=0;
 			pItem->ItemID=-1;
 			pItem->pItem=NULL;
+			if (pInfo->hbmIcon!=NULL)
+				pItem->Icon.Create(pInfo->hbmIcon);
 
 			m_PanelItemList.push_back(pItem);
 		}
@@ -3501,6 +3509,16 @@ void CPlugin::CPluginPanelItem::OnVisibilityChanged(bool fVisible)
 void CPlugin::CPluginPanelItem::OnFormDelete()
 {
 	delete this;
+}
+
+
+bool CPlugin::CPluginPanelItem::DrawIcon(
+	HDC hdc,int x,int y,int Width,int Height,const TVTest::Theme::ThemeColor &Color)
+{
+	if (m_pItem==NULL || !m_pItem->Icon.IsCreated())
+		return false;
+
+	return m_pItem->Icon.Draw(hdc,x,y,Width,Height,0,0,0,0,Color);
 }
 
 

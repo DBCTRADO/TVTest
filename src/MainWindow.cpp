@@ -293,32 +293,71 @@ bool CMainWindow::Show(int CmdShow)
 
 void CMainWindow::CreatePanel()
 {
-	m_App.Panel.Form.Create(m_hwnd,WS_CHILD | WS_CLIPCHILDREN | WS_CLIPSIBLINGS);
+	const SIZE IconDrawSize=m_App.Panel.Form.GetIconDrawSize();
+	LPCTSTR pszIconImage;
+	int IconSize;
+	if (IconDrawSize.cx<=16 && IconDrawSize.cy<=16) {
+		pszIconImage=MAKEINTRESOURCE(IDB_PANELTABICONS16);
+		IconSize=16;
+	} else {
+		pszIconImage=MAKEINTRESOURCE(IDB_PANELTABICONS32);
+		IconSize=32;
+	}
+	HBITMAP hbm=(HBITMAP)::LoadImage(m_App.GetResourceInstance(),pszIconImage,
+									 IMAGE_BITMAP,0,0,LR_CREATEDIBSECTION);
+	m_App.Panel.Form.SetIconImage(hbm,IconSize,IconSize);
+	::DeleteObject(hbm);
+
 	m_App.Panel.Form.SetTabFont(m_App.PanelOptions.GetFont());
+	m_App.Panel.Form.SetTabStyle(m_App.PanelOptions.GetTabStyle());
+	m_App.Panel.Form.Create(m_hwnd,WS_CHILD | WS_CLIPCHILDREN | WS_CLIPSIBLINGS);
+
+	CPanelForm::PageInfo PageInfo;
 
 	m_App.Panel.InfoPanel.SetProgramInfoRichEdit(m_App.PanelOptions.GetProgramInfoUseRichEdit());
 	m_App.Panel.InfoPanel.Create(m_App.Panel.Form.GetHandle(),WS_CHILD | WS_CLIPCHILDREN);
 	m_App.Panel.InfoPanel.GetItem<CInformationPanel::CSignalLevelItem>()->ShowSignalLevel(
 		!m_App.DriverOptions.IsNoSignalLevel(m_App.CoreEngine.GetDriverFileName()));
-	m_App.Panel.Form.AddWindow(&m_App.Panel.InfoPanel,PANEL_ID_INFORMATION,TEXT("情報"));
+	PageInfo.pPage=&m_App.Panel.InfoPanel;
+	PageInfo.pszTitle=TEXT("情報");
+	PageInfo.ID=PANEL_ID_INFORMATION;
+	PageInfo.Icon=0;
+	PageInfo.fVisible=true;
+	m_App.Panel.Form.AddPage(PageInfo);
 
 	m_App.Panel.ProgramListPanel.SetEpgProgramList(&m_App.EpgProgramList);
 	m_App.Panel.ProgramListPanel.SetVisibleEventIcons(m_App.ProgramGuideOptions.GetVisibleEventIcons());
 	m_App.Panel.ProgramListPanel.Create(m_App.Panel.Form.GetHandle(),WS_CHILD | WS_VSCROLL);
-	m_App.Panel.Form.AddWindow(&m_App.Panel.ProgramListPanel,PANEL_ID_PROGRAMLIST,TEXT("番組表"));
+	PageInfo.pPage=&m_App.Panel.ProgramListPanel;
+	PageInfo.pszTitle=TEXT("番組表");
+	PageInfo.ID=PANEL_ID_PROGRAMLIST;
+	PageInfo.Icon=1;
+	m_App.Panel.Form.AddPage(PageInfo);
 
 	m_App.Panel.ChannelPanel.SetEpgProgramList(&m_App.EpgProgramList);
 	m_App.Panel.ChannelPanel.SetLogoManager(&m_App.LogoManager);
 	m_App.Panel.ChannelPanel.Create(m_App.Panel.Form.GetHandle(),WS_CHILD | WS_VSCROLL);
-	m_App.Panel.Form.AddWindow(&m_App.Panel.ChannelPanel,PANEL_ID_CHANNEL,TEXT("チャンネル"));
+	PageInfo.pPage=&m_App.Panel.ChannelPanel;
+	PageInfo.pszTitle=TEXT("チャンネル");
+	PageInfo.ID=PANEL_ID_CHANNEL;
+	PageInfo.Icon=2;
+	m_App.Panel.Form.AddPage(PageInfo);
 
 	m_App.Panel.ControlPanel.SetSendMessageWindow(m_hwnd);
 	InitControlPanel();
 	m_App.Panel.ControlPanel.Create(m_App.Panel.Form.GetHandle(),WS_CHILD);
-	m_App.Panel.Form.AddWindow(&m_App.Panel.ControlPanel,PANEL_ID_CONTROL,TEXT("操作"));
+	PageInfo.pPage=&m_App.Panel.ControlPanel;
+	PageInfo.pszTitle=TEXT("操作");
+	PageInfo.ID=PANEL_ID_CONTROL;
+	PageInfo.Icon=3;
+	m_App.Panel.Form.AddPage(PageInfo);
 
 	m_App.Panel.CaptionPanel.Create(m_App.Panel.Form.GetHandle(),WS_CHILD | WS_CLIPCHILDREN);
-	m_App.Panel.Form.AddWindow(&m_App.Panel.CaptionPanel,PANEL_ID_CAPTION,TEXT("字幕"));
+	PageInfo.pPage=&m_App.Panel.CaptionPanel;
+	PageInfo.pszTitle=TEXT("字幕");
+	PageInfo.ID=PANEL_ID_CAPTION;
+	PageInfo.Icon=4;
+	m_App.Panel.Form.AddPage(PageInfo);
 
 	m_App.PluginManager.RegisterPanelItems();
 

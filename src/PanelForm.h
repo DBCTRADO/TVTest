@@ -27,6 +27,8 @@ public:
 		virtual void OnDeactivate() {}
 		virtual void OnVisibilityChanged(bool fVisible) {}
 		virtual void OnFormDelete() {}
+		virtual bool DrawIcon(HDC hdc,int x,int y,int Width,int Height,
+							  const TVTest::Theme::ThemeColor &Color) { return false; }
 	};
 
 	class ABSTRACT_CLASS(CEventHandler) {
@@ -36,6 +38,14 @@ public:
 		virtual void OnTabRButtonUp(int x,int y) {}
 		virtual bool OnKeyDown(UINT KeyCode,UINT Flags) { return false; }
 		virtual void OnVisibleChange(bool fVisible) {}
+	};
+
+	struct PageInfo {
+		CPage *pPage;
+		LPCTSTR pszTitle;
+		int ID;
+		int Icon;
+		bool fVisible;
 	};
 
 	struct TabInfo {
@@ -50,6 +60,14 @@ public:
 		TVTest::Theme::ThemeColor BackColor;
 		TVTest::Theme::ThemeColor BorderColor;
 	};
+
+	enum TabStyle {
+		TABSTYLE_TEXT_ONLY,
+		TABSTYLE_ICON_ONLY,
+		TABSTYLE_ICON_AND_TEXT
+	};
+	static const TabStyle TABSTYLE_FIRST = TABSTYLE_TEXT_ONLY;
+	static const TabStyle TABSTYLE_LAST  = TABSTYLE_ICON_AND_TEXT;
 
 	static bool Initialize(HINSTANCE hinst);
 
@@ -66,7 +84,7 @@ public:
 	void SetTheme(const TVTest::Theme::CThemeManager *pThemeManager) override;
 
 // CPanelForm
-	bool AddWindow(CPage *pWindow,int ID,LPCTSTR pszTitle);
+	bool AddPage(const PageInfo &Info);
 	int NumPages() const { return (int)m_WindowList.size(); }
 	CPage *GetPageByIndex(int Index);
 	CPage *GetPageByID(int ID);
@@ -85,6 +103,9 @@ public:
 	bool SetTabFont(const LOGFONT *pFont);
 	bool SetPageFont(const LOGFONT *pFont);
 	bool GetPageClientRect(RECT *pRect) const;
+	bool SetTabStyle(TabStyle Style);
+	bool SetIconImage(HBITMAP hbm,int Width,int Height);
+	SIZE GetIconDrawSize() const;
 
 private:
 	enum {MAX_WINDOWS=8};
@@ -93,16 +114,21 @@ private:
 	{
 	public:
 		CPage *m_pWindow;
-		int m_ID;
 		TVTest::String m_Title;
+		int m_ID;
+		int m_Icon;
 		bool m_fVisible;
-		CWindowInfo(CPage *pWindow,int ID,LPCTSTR pszTitle);
+		CWindowInfo(const PageInfo &Info);
 		~CWindowInfo();
 	};
 
 	struct PanelFormStyle
 	{
 		TVTest::Style::Margins TabPadding;
+		TVTest::Style::Size TabIconSize;
+		TVTest::Style::Margins TabIconMargin;
+		TVTest::Style::Margins TabLabelMargin;
+		TVTest::Style::IntValue TabIconLabelMargin;
 		TVTest::Style::Margins ClientMargin;
 
 		PanelFormStyle();
@@ -115,6 +141,8 @@ private:
 	PanelFormStyle m_Style;
 	PanelFormTheme m_Theme;
 	DrawUtil::CFont m_Font;
+	DrawUtil::CMonoColorIconList m_Icons;
+	TabStyle m_TabStyle;
 	int m_TabHeight;
 	int m_TabWidth;
 	bool m_fFitTabWidth;

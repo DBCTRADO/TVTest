@@ -22,6 +22,7 @@ CPanelOptions::CPanelOptions(CPanelFrame *pPanelFrame)
 	, m_fAttachToMainWindow(true)
 	, m_Opacity(100)
 	, m_fSpecCaptionFont(true)
+	, m_TabStyle(CPanelForm::TABSTYLE_TEXT_ONLY)
 	, m_fProgramInfoUseRichEdit(true)
 {
 	DrawUtil::GetDefaultUIFont(&m_Font);
@@ -111,6 +112,10 @@ bool CPanelOptions::ReadSettings(CSettings &Settings)
 	if (!Settings.Read(TEXT("CaptionPanelFont"),&m_CaptionFont))
 		m_CaptionFont=m_Font;
 
+	if (Settings.Read(TEXT("PanelTabStyle"),&Value)
+			&& Value>=CPanelForm::TABSTYLE_FIRST && Value<=CPanelForm::TABSTYLE_LAST)
+		m_TabStyle=static_cast<CPanelForm::TabStyle>(Value);
+
 	int TabCount;
 	if (Settings.Read(TEXT("PanelTabCount"),&TabCount) && TabCount>0) {
 		PanelItemInfoList ItemList;
@@ -183,6 +188,7 @@ bool CPanelOptions::WriteSettings(CSettings &Settings)
 	Settings.Write(TEXT("PanelSnapAtMainWindow"),m_fSnapAtMainWindow);
 	Settings.Write(TEXT("PanelAttachToMainWindow"),m_fAttachToMainWindow);
 	Settings.Write(TEXT("PanelOpacity"),m_Opacity);
+	Settings.Write(TEXT("PanelTabStyle"),(int)m_TabStyle);
 
 	// Font
 	Settings.Write(TEXT("PanelFontName"),m_Font.lfFaceName);
@@ -432,6 +438,15 @@ INT_PTR CPanelOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 					Sel=(int)i+1;
 			}
 			DlgComboBox_SetCurSel(hDlg,IDC_PANELOPTIONS_FIRSTTAB,Sel);
+
+			static const LPCTSTR TabStyleList[] = {
+				TEXT("文字のみ"),
+				TEXT("アイコンのみ"),
+				TEXT("アイコンと文字"),
+			};
+			for (int i=0;i<lengthof(TabStyleList);i++)
+				DlgComboBox_AddString(hDlg,IDC_PANELOPTIONS_TABSTYLE,TabStyleList[i]);
+			DlgComboBox_SetCurSel(hDlg,IDC_PANELOPTIONS_TABSTYLE,(int)m_TabStyle);
 		}
 		return TRUE;
 
@@ -543,6 +558,12 @@ INT_PTR CPanelOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 					m_InitialTab.clear();
 				} else if (InitialTab>0) {
 					m_InitialTab=m_AvailItemList[InitialTab-1].ID;
+				}
+
+				int TabStyleSel=DlgComboBox_GetCurSel(hDlg,IDC_PANELOPTIONS_TABSTYLE);
+				if (TabStyleSel>=0) {
+					m_TabStyle=static_cast<CPanelForm::TabStyle>(TabStyleSel);
+					pPanel->SetTabStyle(m_TabStyle);
 				}
 
 				m_fChanged=true;

@@ -40,6 +40,7 @@ bool CPanelForm::Initialize(HINSTANCE hinst)
 
 CPanelForm::CPanelForm()
 	: m_Font(DrawUtil::FONT_DEFAULT)
+	, m_TabStyle(TABSTYLE_TEXT_ONLY)
 	, m_TabHeight(0)
 	, m_TabWidth(0)
 	, m_fFitTabWidth(true)
@@ -125,11 +126,9 @@ void CPanelForm::SetTheme(const TVTest::Theme::CThemeManager *pThemeManager)
 }
 
 
-bool CPanelForm::AddWindow(CPage *pWindow,int ID,LPCTSTR pszTitle)
+bool CPanelForm::AddPage(const PageInfo &Info)
 {
-	if (pWindow==NULL)
-		return false;
-	m_WindowList.push_back(new CWindowInfo(pWindow,ID,pszTitle));
+	m_WindowList.push_back(new CWindowInfo(Info));
 	m_TabOrder.push_back((int)m_WindowList.size()-1);
 	if (m_hwnd!=NULL) {
 		CalcTabSize();
@@ -398,6 +397,41 @@ bool CPanelForm::GetPageClientRect(RECT *pRect) const
 }
 
 
+bool CPanelForm::SetTabStyle(TabStyle Style)
+{
+	if (m_TabStyle!=Style) {
+		m_TabStyle=Style;
+		if (m_hwnd!=NULL) {
+			CalcTabSize();
+			SendSizeMessage();
+			Invalidate();
+		}
+	}
+	return true;
+}
+
+
+bool CPanelForm::SetIconImage(HBITMAP hbm,int Width,int Height)
+{
+	if (hbm==NULL)
+		return false;
+	if (!m_Icons.Create(hbm,Width,Height))
+		return false;
+	if (m_hwnd!=NULL)
+		Invalidate();
+	return true;
+}
+
+
+SIZE CPanelForm::GetIconDrawSize() const
+{
+	SIZE sz;
+	sz.cx=m_Style.TabIconSize.Width;
+	sz.cy=m_Style.TabIconSize.Height;
+	return sz;
+}
+
+
 LRESULT CPanelForm::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 {
 	switch (uMsg) {
@@ -486,24 +520,39 @@ void CPanelForm::CalcTabSize()
 {
 	HDC hdc;
 	HFONT hfontOld;
-	int MaxWidth;
-	SIZE sz;
+	int IconHeight,LabelHeight;
 
 	hdc=::GetDC(m_hwnd);
-	m_TabHeight=m_Font.GetHeight(hdc)+m_Style.TabPadding.Top+m_Style.TabPadding.Bottom;
+	IconHeight=m_Style.TabIconSize.Height+m_Style.TabIconMargin.Vert();
+	LabelHeight=m_Font.GetHeight(hdc)+m_Style.TabLabelMargin.Vert();
+	m_TabHeight=max(IconHeight,LabelHeight)+m_Style.TabPadding.Vert();
 	hfontOld=DrawUtil::SelectObject(hdc,m_Font);
-	MaxWidth=0;
-	for (size_t i=0;i<m_WindowList.size();i++) {
-		const CWindowInfo *pWindow=m_WindowList[i];
-		if (pWindow->m_fVisible) {
-			::GetTextExtentPoint32(hdc,pWindow->m_Title.data(),(int)pWindow->m_Title.length(),&sz);
-			if (sz.cx>MaxWidth)
-				MaxWidth=sz.cx;
+
+	m_TabWidth=m_Style.TabPadding.Horz();
+
+	if (m_TabStyle!=TABSTYLE_ICON_ONLY) {
+		int MaxWidth=0;
+		SIZE sz;
+
+		for (size_t i=0;i<m_WindowList.size();i++) {
+			const CWindowInfo *pWindow=m_WindowList[i];
+			if (pWindow->m_fVisible) {
+				::GetTextExtentPoint32(hdc,pWindow->m_Title.data(),(int)pWindow->m_Title.length(),&sz);
+				if (sz.cx>MaxWidth)
+					MaxWidth=sz.cx;
+			}
 		}
+		m_TabWidth+=MaxWidth+m_Style.TabLabelMargin.Horz();
 	}
+
+	if (m_TabStyle!=TABSTYLE_TEXT_ONLY) {
+		m_TabWidth+=m_Style.TabIconSize.Width+m_Style.TabIconMargin.Horz();
+		if (m_TabStyle==TABSTYLE_ICON_AND_TEXT)
+			m_TabWidth+=m_Style.TabIconLabelMargin;
+	}
+
 	SelectFont(hdc,hfontOld);
 	::ReleaseDC(m_hwnd,hdc);
-	m_TabWidth=MaxWidth+m_Style.TabPadding.Left+m_Style.TabPadding.Right;
 }
 
 
@@ -517,8 +566,15 @@ int CPanelForm::GetRealTabWidth() const
 		}
 		RECT rc;
 		GetClientRect(&rc);
-		if (NumVisibleTabs*m_TabWidth>rc.right)
-			return max(rc.right/NumVisibleTabs,16+m_Style.TabPadding.Left+m_Style.TabPadding.Right);
+		if (NumVisibleTabs*m_TabWidth>rc.right) {
+			int Width=rc.right/NumVisibleTabs;
+			int MinWidth=m_Style.TabPadding.Horz();
+			if (m_TabStyle!=TABSTYLE_TEXT_ONLY)
+				MinWidth+=m_Style.TabIconSize.Width;
+			else
+				MinWidth+=16;
+			return max(Width,MinWidth);
+		}
 	}
 	return m_TabWidth;
 }
@@ -570,6 +626,7 @@ void CPanelForm::Draw(HDC hdc,const RECT &PaintRect)
 		rc.top=0;
 		rc.right=TabWidth;
 		rc.bottom=m_TabHeight;
+
 		for (i=0;i<(int)m_TabOrder.size();i++) {
 			int Index=m_TabOrder[i];
 			const CWindowInfo *pWindow=m_WindowList[Index];
@@ -579,7 +636,7 @@ void CPanelForm::Draw(HDC hdc,const RECT &PaintRect)
 
 			const bool fCur=Index==m_CurTab;
 			const TVTest::Theme::Style &Style=fCur?m_Theme.CurTabStyle:m_Theme.TabStyle;
-			RECT rcTab,rcText;
+			RECT rcTab,rcContent,rcText;
 
 			rcTab=rc;
 			if (fCur)
@@ -589,17 +646,56 @@ void CPanelForm::Draw(HDC hdc,const RECT &PaintRect)
 				::MoveToEx(hdc,rc.left,rc.bottom-1,NULL);
 				::LineTo(hdc,rc.right,rc.bottom-1);
 			}
-			rcText=rc;
-			TVTest::Style::Subtract(&rcText,m_Style.TabPadding);
-			TVTest::Theme::Draw(hdc,rcText,Style.Fore,pWindow->m_Title.c_str(),
-				DT_CENTER | DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX | DT_END_ELLIPSIS);
+
+			rcContent=rc;
+			TVTest::Style::Subtract(&rcContent,m_Style.TabPadding);
+			rcText=rcContent;
+
+			if (m_TabStyle!=TABSTYLE_TEXT_ONLY) {
+				RECT rcIcon=rcContent;
+				TVTest::Style::Subtract(&rcIcon,m_Style.TabIconMargin);
+				int x=rcIcon.left;
+				int y=rcIcon.top+((rcIcon.bottom-rcIcon.top)-m_Style.TabIconSize.Height)/2;
+				if (m_TabStyle==TABSTYLE_ICON_ONLY)
+					x+=((rcIcon.right-rcIcon.left)-m_Style.TabIconSize.Width)/2;
+				bool fIcon;
+				if (pWindow->m_Icon>=0) {
+					m_Icons.Draw(
+						hdc,x,y,
+						m_Style.TabIconSize.Width,
+						m_Style.TabIconSize.Height,
+						pWindow->m_Icon,
+						Style.Fore.Fill.GetSolidColor());
+					fIcon=true;
+				} else {
+					fIcon=pWindow->m_pWindow->DrawIcon(
+						hdc,x,y,
+						m_Style.TabIconSize.Width,
+						m_Style.TabIconSize.Height,
+						Style.Fore.Fill.GetSolidColor());
+				}
+				if (fIcon) {
+					rcText.left=rcIcon.left+m_Style.TabIconSize.Width+
+						m_Style.TabIconMargin.Right+m_Style.TabIconLabelMargin;
+				}
+			}
+
+			if (m_TabStyle!=TABSTYLE_ICON_ONLY) {
+				TVTest::Style::Subtract(&rcText,m_Style.TabLabelMargin);
+				TVTest::Theme::Draw(hdc,rcText,Style.Fore,pWindow->m_Title.c_str(),
+					(m_TabStyle!=TABSTYLE_TEXT_ONLY ? DT_LEFT : DT_CENTER)
+						| DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX | DT_END_ELLIPSIS);
+			}
+
 			rc.left=rc.right;
 			rc.right=rc.left+TabWidth;
 		}
+
 		SelectBrush(hdc,hbrOld);
 		SelectFont(hdc,hfontOld);
 		::SetBkMode(hdc,OldBkMode);
 		::SetTextColor(hdc,crOldTextColor);
+
 		if (PaintRect.right>rc.left) {
 			if (PaintRect.left>rc.left)
 				rc.left=PaintRect.left;
@@ -608,9 +704,11 @@ void CPanelForm::Draw(HDC hdc,const RECT &PaintRect)
 			::MoveToEx(hdc,rc.left,rc.bottom-1,NULL);
 			::LineTo(hdc,rc.right,rc.bottom-1);
 		}
+
 		SelectPen(hdc,hpenOld);
 		::DeleteObject(hpen);
 	}
+
 	if (PaintRect.bottom>m_TabHeight) {
 		RECT rc;
 
@@ -625,11 +723,12 @@ void CPanelForm::Draw(HDC hdc,const RECT &PaintRect)
 
 
 
-CPanelForm::CWindowInfo::CWindowInfo(CPage *pWindow,int ID,LPCTSTR pszTitle)
-	: m_pWindow(pWindow)
-	, m_ID(ID)
-	, m_Title(pszTitle)
-	, m_fVisible(true)
+CPanelForm::CWindowInfo::CWindowInfo(const PageInfo &Info)
+	: m_pWindow(Info.pPage)
+	, m_Title(Info.pszTitle)
+	, m_ID(Info.ID)
+	, m_Icon(Info.Icon)
+	, m_fVisible(Info.fVisible)
 {
 }
 
@@ -681,6 +780,10 @@ bool CPanelForm::CPage::CreateDefaultFont(DrawUtil::CFont *pFont)
 
 CPanelForm::PanelFormStyle::PanelFormStyle()
 	: TabPadding(3)
+	, TabIconSize(16,16)
+	, TabIconMargin(0)
+	, TabLabelMargin(0)
+	, TabIconLabelMargin(4)
 	, ClientMargin(4)
 {
 }
@@ -689,6 +792,10 @@ CPanelForm::PanelFormStyle::PanelFormStyle()
 void CPanelForm::PanelFormStyle::SetStyle(const TVTest::Style::CStyleManager *pStyleManager)
 {
 	pStyleManager->Get(TEXT("panel.tab.padding"),&TabPadding);
+	pStyleManager->Get(TEXT("panel.tab.icon"),&TabIconSize);
+	pStyleManager->Get(TEXT("panel.tab.icon.margin"),&TabIconMargin);
+	pStyleManager->Get(TEXT("panel.tab.label.margin"),&TabLabelMargin);
+	pStyleManager->Get(TEXT("panel.tab.icon-label-margin"),&TabIconLabelMargin);
 	pStyleManager->Get(TEXT("panel.client.margin"),&ClientMargin);
 }
 
@@ -696,5 +803,9 @@ void CPanelForm::PanelFormStyle::SetStyle(const TVTest::Style::CStyleManager *pS
 void CPanelForm::PanelFormStyle::NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager)
 {
 	pStyleManager->ToPixels(&TabPadding);
+	pStyleManager->ToPixels(&TabIconSize);
+	pStyleManager->ToPixels(&TabIconMargin);
+	pStyleManager->ToPixels(&TabLabelMargin);
+	pStyleManager->ToPixels(&TabIconLabelMargin);
 	pStyleManager->ToPixels(&ClientMargin);
 }
