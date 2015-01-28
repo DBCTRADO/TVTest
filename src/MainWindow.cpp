@@ -5431,6 +5431,8 @@ bool CMainWindow::EnablePlayback(bool fEnable)
 {
 	m_fEnablePlayback=fEnable;
 
+	m_pCore->SetCommandCheckedState(CM_DISABLEVIEWER,!m_fEnablePlayback);
+
 	return true;
 }
 
