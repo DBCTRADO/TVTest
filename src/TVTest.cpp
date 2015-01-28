@@ -1096,8 +1096,7 @@ void CEpg::CChannelProviderManager::CFavoritesChannelProvider::AddSubItems(
 bool CEpg::CProgramGuideEventHandler::OnClose()
 {
 	g_App.Epg.fShowProgramGuide=false;
-	g_App.MainMenu.CheckItem(CM_PROGRAMGUIDE,false);
-	g_App.SideBar.CheckItem(CM_PROGRAMGUIDE,false);
+	g_App.UICore.SetCommandCheckedState(CM_PROGRAMGUIDE,false);
 	return true;
 }
 
@@ -1189,8 +1188,7 @@ bool CEpg::CProgramGuideDisplayEventHandler::OnHide()
 {
 	m_pProgramGuideDisplay->Destroy();
 	g_App.Epg.fShowProgramGuide=false;
-	g_App.MainMenu.CheckItem(CM_PROGRAMGUIDE,g_App.Epg.fShowProgramGuide);
-	g_App.SideBar.CheckItem(CM_PROGRAMGUIDE,g_App.Epg.fShowProgramGuide);
+	g_App.UICore.SetCommandCheckedState(CM_PROGRAMGUIDE,g_App.Epg.fShowProgramGuide);
 	return true;
 }
 
@@ -1310,21 +1308,9 @@ void CEpgLoadEventHandler::OnEnd(bool fSuccess,CEventManager *pEventManager)
 
 void CSideBarOptionsEventHandler::OnItemChanged()
 {
-	const CUICore &UICore=g_App.UICore;
-
 	g_App.SideBar.CheckRadioItem(CM_ASPECTRATIO_FIRST,CM_ASPECTRATIO_LAST,
 								 CM_ASPECTRATIO_FIRST+g_App.MainWindow.GetAspectRatioType());
-	g_App.SideBar.CheckItem(CM_FULLSCREEN,UICore.GetFullscreen());
-	g_App.SideBar.CheckItem(CM_ALWAYSONTOP,UICore.GetAlwaysOnTop());
-	g_App.SideBar.CheckItem(CM_DISABLEVIEWER,!g_App.MainWindow.IsPlaybackEnabled());
-	g_App.SideBar.CheckItem(CM_CAPTUREPREVIEW,g_App.CaptureWindow.GetVisible());
-	g_App.SideBar.CheckItem(CM_PANEL,g_App.MainWindow.IsPanelPresent());
-	g_App.SideBar.CheckItem(CM_PROGRAMGUIDE,g_App.Epg.fShowProgramGuide);
-	g_App.SideBar.CheckItem(CM_STATUSBAR,g_App.MainWindow.GetStatusBarVisible());
-	g_App.SideBar.CheckItem(CM_STREAMINFO,g_App.StreamInfo.IsVisible());
-	g_App.SideBar.CheckItem(CM_1SEGMODE,g_App.Core.Is1SegMode());
-	//g_App.SideBar.CheckItem(CM_HOMEDISPLAY,g_App.HomeDisplay.GetVisible());
-	//g_App.SideBar.CheckItem(CM_CHANNELDISPLAY,g_App.ChannelDisplay.GetVisible());
+
 	const CChannelInfo *pCurChannel=g_App.ChannelManager.GetCurrentChannelInfo();
 	int ChannelNo;
 	if (pCurChannel!=NULL)

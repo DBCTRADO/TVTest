@@ -107,6 +107,11 @@ public:
 	bool DoCommandAsync(int Command);
 	bool DoCommandAsync(LPCTSTR pszCommand);
 
+	bool SetCommandEnabledState(int Command,bool fEnabled);
+	bool GetCommandEnabledState(int Command) const;
+	bool SetCommandCheckedState(int Command,bool fChecked);
+	bool GetCommandCheckedState(int Command) const;
+
 	bool ConfirmChannelChange();
 	bool ConfirmStopRecording();
 

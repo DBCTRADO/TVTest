@@ -1634,8 +1634,7 @@ void CAppMain::CStreamInfoEventHandler::OnRestoreSettings()
 
 bool CAppMain::CStreamInfoEventHandler::OnClose()
 {
-	m_App.MainMenu.CheckItem(CM_STREAMINFO,false);
-	m_App.SideBar.CheckItem(CM_STREAMINFO,false);
+	m_App.UICore.SetCommandCheckedState(CM_STREAMINFO,false);
 	return true;
 }
 
@@ -1670,8 +1669,7 @@ void CAppMain::CCaptureWindowEventHandler::OnRestoreSettings()
 
 bool CAppMain::CCaptureWindowEventHandler::OnClose()
 {
-	m_App.MainMenu.CheckItem(CM_CAPTUREPREVIEW,false);
-	m_App.SideBar.CheckItem(CM_CAPTUREPREVIEW,false);
+	m_App.UICore.SetCommandCheckedState(CM_CAPTUREPREVIEW,false);
 	m_pCaptureWindow->ClearImage();
 	return true;
 }

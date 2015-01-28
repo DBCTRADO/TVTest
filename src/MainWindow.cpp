@@ -406,8 +406,7 @@ bool CMainWindow::FinalizeViewer()
 
 	m_fEnablePlayback=false;
 
-	m_App.MainMenu.CheckItem(CM_DISABLEVIEWER,true);
-	m_App.SideBar.CheckItem(CM_DISABLEVIEWER,true);
+	m_pCore->SetCommandCheckedState(CM_DISABLEVIEWER,true);
 
 	m_App.Panel.InfoPanel.ResetItem(CInformationPanel::ITEM_VIDEODECODER);
 	m_App.Panel.InfoPanel.ResetItem(CInformationPanel::ITEM_VIDEORENDERER);
@@ -433,9 +432,8 @@ bool CMainWindow::SetFullscreen(bool fFullscreen)
 	}
 	m_App.StatusView.UpdateItem(STATUS_ITEM_VIDEOSIZE);
 	m_App.Panel.ControlPanel.UpdateItem(CONTROLPANEL_ITEM_VIDEO);
-	m_App.MainMenu.CheckItem(CM_FULLSCREEN,fFullscreen);
-	m_App.SideBar.CheckItem(CM_FULLSCREEN,fFullscreen);
-	m_App.SideBar.CheckItem(CM_PANEL,
+	m_pCore->SetCommandCheckedState(CM_FULLSCREEN,fFullscreen);
+	m_pCore->SetCommandCheckedState(CM_PANEL,
 		fFullscreen?m_Fullscreen.IsPanelVisible():m_App.Panel.fShowPanelWindow);
 	return true;
 }
@@ -628,8 +626,7 @@ bool CMainWindow::SetAlwaysOnTop(bool fTop)
 	if (m_hwnd!=nullptr) {
 		::SetWindowPos(m_hwnd,fTop?HWND_TOPMOST:HWND_NOTOPMOST,0,0,0,0,
 					   SWP_NOMOVE | SWP_NOSIZE);
-		m_App.MainMenu.CheckItem(CM_ALWAYSONTOP,fTop);
-		m_App.SideBar.CheckItem(CM_ALWAYSONTOP,fTop);
+		m_pCore->SetCommandCheckedState(CM_ALWAYSONTOP,fTop);
 	}
 	return true;
 }
@@ -681,8 +678,8 @@ void CMainWindow::ShowPanel(bool fShow)
 	if (fShow)
 		UpdatePanel();
 
-	m_App.MainMenu.CheckItem(CM_PANEL,fShow);
-	m_App.SideBar.CheckItem(CM_PANEL,fShow);
+	if (!m_pCore->GetFullscreen())
+		m_pCore->SetCommandCheckedState(CM_PANEL,fShow);
 }
 
 
@@ -714,8 +711,7 @@ void CMainWindow::SetStatusBarVisible(bool fVisible)
 
 				UpdateLayout();
 
-				//m_App.MainMenu.CheckItem(CM_STATUSBAR,fVisible);
-				m_App.SideBar.CheckItem(CM_STATUSBAR,fVisible);
+				m_pCore->SetCommandCheckedState(CM_STATUSBAR,m_fShowStatusBar);
 			}
 		}
 	}
@@ -819,7 +815,7 @@ void CMainWindow::SetTitleBarVisible(bool fVisible)
 
 			UpdateLayout();
 
-			//m_App.MainMenu.CheckItem(CM_TITLEBAR,fVisible);
+			m_pCore->SetCommandCheckedState(CM_TITLEBAR,m_fShowTitleBar);
 		}
 	}
 }
@@ -942,7 +938,7 @@ void CMainWindow::SetSideBarVisible(bool fVisible)
 
 			UpdateLayout();
 
-			//m_App.MainMenu.CheckItem(CM_SIDEBAR,fVisible);
+			m_pCore->SetCommandCheckedState(CM_SIDEBAR,m_fShowSideBar);
 		}
 	}
 }
@@ -1864,7 +1860,7 @@ bool CMainWindow::OnCreate(const CREATESTRUCT *pcs)
 
 	m_App.CommandList.SetEventHandler(&m_CommandEventHandler);
 
-	m_App.MainMenu.CheckItem(CM_ALWAYSONTOP,m_pCore->GetAlwaysOnTop());
+	m_pCore->SetCommandCheckedState(CM_ALWAYSONTOP,m_pCore->GetAlwaysOnTop());
 	int Gain,SurroundGain;
 	m_App.CoreEngine.GetAudioGainControl(&Gain,&SurroundGain);
 	for (int i=0;i<lengthof(m_AudioGainList);i++) {
@@ -1877,15 +1873,13 @@ bool CMainWindow::OnCreate(const CREATESTRUCT *pcs)
 	}
 	m_App.MainMenu.CheckRadioItem(CM_CAPTURESIZE_FIRST,CM_CAPTURESIZE_LAST,
 		CM_CAPTURESIZE_FIRST+m_App.CaptureOptions.GetPresetCaptureSize());
-	//m_App.MainMenu.CheckItem(CM_CAPTUREPREVIEW,m_App.CaptureWindow.GetVisible());
-	m_App.MainMenu.CheckItem(CM_DISABLEVIEWER,!m_fEnablePlayback);
-	m_App.MainMenu.CheckItem(CM_PANEL,m_App.Panel.fShowPanelWindow);
-	m_App.MainMenu.CheckItem(CM_1SEGMODE,m_App.Core.Is1SegMode());
+	//m_pCore->SetCommandCheckedState(CM_CAPTUREPREVIEW,m_App.CaptureWindow.GetVisible());
+	m_pCore->SetCommandCheckedState(CM_DISABLEVIEWER,!m_fEnablePlayback);
+	m_pCore->SetCommandCheckedState(CM_PANEL,m_App.Panel.fShowPanelWindow);
+	m_pCore->SetCommandCheckedState(CM_1SEGMODE,m_App.Core.Is1SegMode());
 
-	m_App.CommandList.SetCommandStateByID(CM_SPDIF_TOGGLE,
-		CCommandList::COMMAND_STATE_CHECKED,
-		m_App.CoreEngine.IsSpdifPassthroughEnabled()?
-			CCommandList::COMMAND_STATE_CHECKED:0);
+	m_pCore->SetCommandCheckedState(CM_SPDIF_TOGGLE,
+		m_App.CoreEngine.IsSpdifPassthroughEnabled());
 
 	HMENU hSysMenu=::GetSystemMenu(m_hwnd,FALSE);
 	::InsertMenu(hSysMenu,0,MF_BYPOSITION | MF_STRING | MF_ENABLED,
@@ -2354,10 +2348,8 @@ void CMainWindow::OnCommand(HWND hwnd,int id,HWND hwndCtl,UINT codeNotify)
 
 			Options.Mode=(CAudioDecFilter::SpdifMode)(id-CM_SPDIF_DISABLED);
 			m_App.CoreEngine.SetSpdifOptions(Options);
-			m_App.CommandList.SetCommandStateByID(CM_SPDIF_TOGGLE,
-				CCommandList::COMMAND_STATE_CHECKED,
-				m_App.CoreEngine.IsSpdifPassthroughEnabled()?
-					CCommandList::COMMAND_STATE_CHECKED:0);
+			m_pCore->SetCommandCheckedState(CM_SPDIF_TOGGLE,
+				m_App.CoreEngine.IsSpdifPassthroughEnabled());
 		}
 		return;
 
@@ -2371,10 +2363,8 @@ void CMainWindow::OnCommand(HWND hwnd,int id,HWND hwndCtl,UINT codeNotify)
 			else
 				Options.Mode=CAudioDecFilter::SPDIF_MODE_PASSTHROUGH;
 			m_App.CoreEngine.SetSpdifOptions(Options);
-			m_App.CommandList.SetCommandStateByID(CM_SPDIF_TOGGLE,
-				CCommandList::COMMAND_STATE_CHECKED,
-				m_App.CoreEngine.IsSpdifPassthroughEnabled()?
-					CCommandList::COMMAND_STATE_CHECKED:0);
+			m_pCore->SetCommandCheckedState(CM_SPDIF_TOGGLE,
+				m_App.CoreEngine.IsSpdifPassthroughEnabled());
 		}
 		return;
 
@@ -2511,9 +2501,8 @@ void CMainWindow::OnCommand(HWND hwnd,int id,HWND hwndCtl,UINT codeNotify)
 				m_App.CaptureWindow.ClearImage();
 			}
 
-			const bool fVisible=m_App.CaptureWindow.GetVisible();
-			m_App.MainMenu.CheckItem(CM_CAPTUREPREVIEW,fVisible);
-			m_App.SideBar.CheckItem(CM_CAPTUREPREVIEW,fVisible);
+			m_pCore->SetCommandCheckedState(
+				CM_CAPTUREPREVIEW,m_App.CaptureWindow.GetVisible());
 		}
 		return;
 
@@ -2748,9 +2737,7 @@ void CMainWindow::OnCommand(HWND hwnd,int id,HWND hwndCtl,UINT codeNotify)
 				m_App.StreamInfo.Destroy();
 			}
 
-			const bool fVisible=m_App.StreamInfo.IsVisible();
-			m_App.MainMenu.CheckItem(CM_STREAMINFO,fVisible);
-			m_App.SideBar.CheckItem(CM_STREAMINFO,fVisible);
+			m_pCore->SetCommandCheckedState(CM_STREAMINFO,m_App.StreamInfo.IsVisible());
 		}
 		return;
 
@@ -3439,10 +3426,8 @@ void CMainWindow::OnTimer(HWND hwnd,UINT id)
 				*/
 				m_App.StatusView.UpdateItem(STATUS_ITEM_AUDIOCHANNEL);
 				m_App.Panel.ControlPanel.UpdateItem(CONTROLPANEL_ITEM_AUDIO);
-				m_App.CommandList.SetCommandStateByID(CM_SPDIF_TOGGLE,
-					CCommandList::COMMAND_STATE_CHECKED,
-					m_App.CoreEngine.IsSpdifPassthroughEnabled()?
-						CCommandList::COMMAND_STATE_CHECKED:0);
+				m_pCore->SetCommandCheckedState(CM_SPDIF_TOGGLE,
+					m_App.CoreEngine.IsSpdifPassthroughEnabled());
 			}
 
 			bool fUpdateEventInfo=false;
@@ -3749,7 +3734,6 @@ bool CMainWindow::OnInitMenuPopup(HMENU hmenu)
 
 		m_App.MainMenu.EnableItem(CM_COPY,fView);
 		m_App.MainMenu.EnableItem(CM_SAVEIMAGE,fView);
-		m_App.MainMenu.CheckItem(CM_PANEL,IsPanelPresent());
 	} else if (hmenu==m_App.MainMenu.GetSubMenu(CMainMenu::SUBMENU_ZOOM)) {
 		CZoomOptions::ZoomInfo Zoom;
 
@@ -4184,9 +4168,6 @@ bool CMainWindow::OnInitMenuPopup(HMENU hmenu)
 					m_DirectShowFilterPropertyList[i].Filter));
 		}
 	} else if (hmenu==m_App.MainMenu.GetSubMenu(CMainMenu::SUBMENU_BAR)) {
-		m_App.MainMenu.CheckItem(CM_TITLEBAR,m_fShowTitleBar);
-		m_App.MainMenu.CheckItem(CM_STATUSBAR,m_fShowStatusBar);
-		m_App.MainMenu.CheckItem(CM_SIDEBAR,m_fShowSideBar);
 		m_App.MainMenu.CheckRadioItem(CM_WINDOWFRAME_NORMAL,CM_WINDOWFRAME_NONE,
 			!m_fCustomFrame?CM_WINDOWFRAME_NORMAL:
 			(m_CustomFrameWidth==0?CM_WINDOWFRAME_NONE:CM_WINDOWFRAME_CUSTOM));
@@ -4571,8 +4552,7 @@ void CMainWindow::OnRecordingStateChanged()
 
 void CMainWindow::On1SegModeChanged(bool f1SegMode)
 {
-	m_App.MainMenu.CheckItem(CM_1SEGMODE,f1SegMode);
-	m_App.SideBar.CheckItem(CM_1SEGMODE,f1SegMode);
+	m_pCore->SetCommandCheckedState(CM_1SEGMODE,f1SegMode);
 }
 
 
@@ -4760,8 +4740,7 @@ bool CMainWindow::EnableViewer(bool fEnable)
 
 	m_fEnablePlayback=fEnable;
 
-	m_App.MainMenu.CheckItem(CM_DISABLEVIEWER,!fEnable);
-	m_App.SideBar.CheckItem(CM_DISABLEVIEWER,!fEnable);
+	m_pCore->SetCommandCheckedState(CM_DISABLEVIEWER,!fEnable);
 
 	return true;
 }
@@ -4794,7 +4773,7 @@ void CMainWindow::OnVolumeChanged(int Volume)
 {
 	m_App.StatusView.UpdateItem(STATUS_ITEM_VOLUME);
 	m_App.Panel.ControlPanel.UpdateItem(CONTROLPANEL_ITEM_VOLUME);
-	m_App.MainMenu.CheckItem(CM_VOLUME_MUTE,false);
+	m_pCore->SetCommandCheckedState(CM_VOLUME_MUTE,false);
 }
 
 
@@ -4802,7 +4781,7 @@ void CMainWindow::OnMuteChanged(bool fMute)
 {
 	m_App.StatusView.UpdateItem(STATUS_ITEM_VOLUME);
 	m_App.Panel.ControlPanel.UpdateItem(CONTROLPANEL_ITEM_VOLUME);
-	m_App.MainMenu.CheckItem(CM_VOLUME_MUTE,fMute);
+	m_pCore->SetCommandCheckedState(CM_VOLUME_MUTE,fMute);
 }
 
 
@@ -5136,8 +5115,7 @@ bool CMainWindow::ShowProgramGuide(bool fShow,unsigned int Flags,const ProgramGu
 
 	m_App.Epg.fShowProgramGuide=fShow;
 
-	m_App.MainMenu.CheckItem(CM_PROGRAMGUIDE,m_App.Epg.fShowProgramGuide);
-	m_App.SideBar.CheckItem(CM_PROGRAMGUIDE,m_App.Epg.fShowProgramGuide);
+	m_pCore->SetCommandCheckedState(CM_PROGRAMGUIDE,m_App.Epg.fShowProgramGuide);
 
 	return true;
 }
@@ -6209,7 +6187,7 @@ void CMainWindow::CFullscreen::ShowPanel(bool fShow)
 
 		m_fShowPanel=fShow;
 
-		m_App.SideBar.CheckItem(CM_PANEL,fShow);
+		m_App.UICore.SetCommandCheckedState(CM_PANEL,fShow);
 	}
 }
 

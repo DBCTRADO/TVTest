@@ -1105,6 +1105,34 @@ bool CUICore::DoCommandAsync(LPCTSTR pszCommand)
 }
 
 
+bool CUICore::SetCommandEnabledState(int Command,bool fEnabled)
+{
+	return m_App.CommandList.SetCommandStateByID(Command,
+		CCommandList::COMMAND_STATE_DISABLED,
+		fEnabled ? 0 : CCommandList::COMMAND_STATE_DISABLED);
+}
+
+
+bool CUICore::GetCommandEnabledState(int Command) const
+{
+	return (m_App.CommandList.GetCommandStateByID(Command) & CCommandList::COMMAND_STATE_DISABLED)==0;
+}
+
+
+bool CUICore::SetCommandCheckedState(int Command,bool fChecked)
+{
+	return m_App.CommandList.SetCommandStateByID(Command,
+		CCommandList::COMMAND_STATE_CHECKED,
+		fChecked ? CCommandList::COMMAND_STATE_CHECKED : 0);
+}
+
+
+bool CUICore::GetCommandCheckedState(int Command) const
+{
+	return (m_App.CommandList.GetCommandStateByID(Command) & CCommandList::COMMAND_STATE_CHECKED)!=0;
+}
+
+
 bool CUICore::ConfirmChannelChange()
 {
 	if (m_App.RecordManager.IsRecording()) {

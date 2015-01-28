@@ -185,6 +185,20 @@ bool CSideBar::AddSeparator()
 }
 
 
+int CSideBar::GetItemCount() const
+{
+	return (int)m_ItemList.size();
+}
+
+
+int CSideBar::GetItemCommand(int Index) const
+{
+	if (Index<0 || (size_t)Index>=m_ItemList.size())
+		return -1;
+	return m_ItemList[Index].Command;
+}
+
+
 int CSideBar::CommandToIndex(int Command) const
 {
 	for (size_t i=0;i<m_ItemList.size();i++) {
@@ -211,6 +225,20 @@ bool CSideBar::EnableItem(int Command,bool fEnable)
 }
 
 
+bool CSideBar::EnableItemByIndex(int Index,bool fEnable)
+{
+	if (Index<0 || (size_t)Index>=m_ItemList.size())
+		return false;
+	if (m_ItemList[Index].IsEnabled()!=fEnable) {
+		m_ItemList[Index].State^=ITEM_STATE_DISABLED;
+		if (!fEnable && m_HotItem==Index)
+			m_HotItem=-1;
+		UpdateItem(Index);
+	}
+	return true;
+}
+
+
 bool CSideBar::IsItemEnabled(int Command) const
 {
 	int Index=CommandToIndex(Command);
@@ -226,6 +254,18 @@ bool CSideBar::CheckItem(int Command,bool fCheck)
 	int Index=CommandToIndex(Command);
 
 	if (Index<0)
+		return false;
+	if (m_ItemList[Index].IsChecked()!=fCheck) {
+		m_ItemList[Index].State^=ITEM_STATE_CHECKED;
+		UpdateItem(Index);
+	}
+	return true;
+}
+
+
+bool CSideBar::CheckItemByIndex(int Index,bool fCheck)
+{
+	if (Index<0 || (size_t)Index>=m_ItemList.size())
 		return false;
 	if (m_ItemList[Index].IsChecked()!=fCheck) {
 		m_ItemList[Index].State^=ITEM_STATE_CHECKED;

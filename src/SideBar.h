@@ -88,10 +88,14 @@ public:
 	bool AddItem(const SideBarItem *pItem);
 	bool AddItems(const SideBarItem *pItemList,int NumItems);
 	bool AddSeparator();
+	int GetItemCount() const;
+	int GetItemCommand(int Index) const;
 	int CommandToIndex(int Command) const;
 	bool EnableItem(int Command,bool fEnable);
+	bool EnableItemByIndex(int Index,bool fEnable);
 	bool IsItemEnabled(int Command) const;
 	bool CheckItem(int Command,bool fCheck);
+	bool CheckItemByIndex(int Index,bool fCheck);
 	bool CheckRadioItem(int First,int Last,int Check);
 	bool IsItemChecked(int Command) const;
 	bool RedrawItem(int Command);
