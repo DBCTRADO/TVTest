@@ -245,7 +245,7 @@ CMainWindow::CMainWindow(CAppMain &App)
 	, m_ProgramListUpdateTimerCount(0)
 	, m_fAlertedLowFreeSpace(false)
 	, m_ResetErrorCountTimer(TIMER_ID_RESETERRORCOUNT)
-	, m_ChannelNoInputTimeout(3000)
+	, m_ChannelInput(App.Accelerator.GetChannelInputOptions())
 	, m_ChannelNoInputTimer(TIMER_ID_CHANNELNO)
 	, m_DisplayBaseEventHandler(this)
 	, m_EpgCaptureEventHandler(this)
@@ -1147,34 +1147,23 @@ LRESULT CMainWindow::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 			break;
 	case WM_KEYDOWN:
 		{
-			int Channel;
+			CChannelInput::KeyDownResult Result=m_ChannelInput.OnKeyDown(wParam);
 
-			if (wParam>=VK_F1 && wParam<=VK_F12) {
-				if (!m_App.Accelerator.IsFunctionKeyChannelChange())
+			if (Result!=CChannelInput::KEYDOWN_NOTPROCESSED) {
+				switch (Result) {
+				case CChannelInput::KEYDOWN_COMPLETED:
+					EndChannelNoInput(true);
 					break;
-				Channel=((int)wParam-VK_F1)+1;
-			} else if (wParam>=VK_NUMPAD0 && wParam<=VK_NUMPAD9) {
-				if (m_ChannelNoInput.fInputting) {
-					OnChannelNoInput((int)wParam-VK_NUMPAD0);
+
+				case CChannelInput::KEYDOWN_CANCELLED:
+					EndChannelNoInput(false);
 					break;
-				}
-				if (!m_App.Accelerator.IsNumPadChannelChange())
-					break;
-				if (wParam==VK_NUMPAD0)
-					Channel=10;
-				else
-					Channel=(int)wParam-VK_NUMPAD0;
-			} else if (wParam>='0' && wParam<='9') {
-				if (m_ChannelNoInput.fInputting) {
-					OnChannelNoInput((int)wParam-'0');
+
+				case CChannelInput::KEYDOWN_BEGIN:
+				case CChannelInput::KEYDOWN_CONTINUE:
+					OnChannelNoInput();
 					break;
 				}
-				if (!m_App.Accelerator.IsDigitKeyChannelChange())
-					break;
-				if (wParam=='0')
-					Channel=10;
-				else
-					Channel=(int)wParam-'0';
 			} else if (wParam>=VK_F13 && wParam<=VK_F24
 					&& !m_App.ControllerManager.IsControllerEnabled(TEXT("HDUS Remocon"))
 					&& (::GetKeyState(VK_SHIFT)<0 || ::GetKeyState(VK_CONTROL)<0)) {
@@ -1184,8 +1173,6 @@ LRESULT CMainWindow::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 			} else {
 				break;
 			}
-
-			m_App.Core.SwitchChannelByNo(Channel,true);
 		}
 		return 0;
 
@@ -3156,9 +3143,10 @@ void CMainWindow::OnCommand(HWND hwnd,int id,HWND hwndCtl,UINT codeNotify)
 		{
 			int Digits=id==CM_CHANNELNO_2DIGIT?2:3;
 
-			if (m_ChannelNoInput.fInputting) {
-				EndChannelNoInput();
-				if (Digits==m_ChannelNoInput.Digits)
+			if (m_ChannelInput.IsInputting()) {
+				bool fCancel=Digits==m_ChannelInput.GetMaxDigits();
+				EndChannelNoInput(false);
+				if (fCancel)
 					return;
 			}
 			BeginChannelNoInput(Digits);
@@ -3705,7 +3693,12 @@ void CMainWindow::OnTimer(HWND hwnd,UINT id)
 
 	case TIMER_ID_CHANNELNO:
 		// チャンネル番号入力の時間切れ
-		EndChannelNoInput();
+		if (m_ChannelInput.IsInputting()
+				&& !m_App.Accelerator.GetChannelInputOptions().fKeyTimeoutCancel) {
+			EndChannelNoInput(true);
+		} else {
+			EndChannelNoInput(false);
+		}
 		return;
 
 	case TIMER_ID_HIDECURSOR:
@@ -5571,84 +5564,91 @@ bool CMainWindow::ConfirmExit()
 }
 
 
+bool CMainWindow::IsNoAcceleratorMessage(const MSG *pMsg)
+{
+	if (pMsg->message==WM_KEYDOWN || pMsg->message==WM_KEYUP) {
+		if (m_ChannelInput.IsKeyNeeded(pMsg->wParam))
+			return true;
+	}
+
+	return false;
+}
+
+
 bool CMainWindow::BeginChannelNoInput(int Digits)
 {
-	if (m_ChannelNoInput.fInputting)
-		EndChannelNoInput();
+	if (m_ChannelInput.IsInputting())
+		EndChannelNoInput(false);
 
-	if (Digits<1 || Digits>5)
+	if (Digits<0 || Digits>5)
 		return false;
 
 	TRACE(TEXT("チャンネル番号%d桁入力開始\n"),Digits);
 
-	m_ChannelNoInput.fInputting=true;
-	m_ChannelNoInput.Digits=Digits;
-	m_ChannelNoInput.CurDigit=0;
-	m_ChannelNoInput.Number=0;
+	m_ChannelInput.BeginInput(Digits);
 
-	m_ChannelNoInputTimer.Begin(m_hwnd,m_ChannelNoInputTimeout);
-
-	if (m_App.OSDOptions.IsOSDEnabled(COSDOptions::OSD_CHANNELNOINPUT)) {
-		m_App.OSDManager.ShowOSD(TEXT("---"),COSDManager::SHOW_NO_FADE);
-	}
+	OnChannelNoInput();
 
 	return true;
 }
 
 
-void CMainWindow::EndChannelNoInput()
+void CMainWindow::EndChannelNoInput(bool fDetermine)
 {
-	if (m_ChannelNoInput.fInputting) {
+	if (m_ChannelInput.IsInputting()) {
 		TRACE(TEXT("チャンネル番号入力終了\n"));
-		m_ChannelNoInput.fInputting=false;
+
+		int Number=0;
+		if (fDetermine)
+			Number=m_ChannelInput.GetNumber();
+
+		m_ChannelInput.EndInput();
 		m_ChannelNoInputTimer.End();
 		m_App.OSDManager.ClearOSD();
-	}
-}
 
-
-bool CMainWindow::OnChannelNoInput(int Number)
-{
-	if (!m_ChannelNoInput.fInputting
-			|| Number<0 || Number>9)
-		return false;
-
-	m_ChannelNoInput.Number=m_ChannelNoInput.Number*10+Number;
-	m_ChannelNoInput.CurDigit++;
-
-	if (m_App.OSDOptions.IsOSDEnabled(COSDOptions::OSD_CHANNELNOINPUT)) {
-		TCHAR szText[8];
-		int Number=m_ChannelNoInput.Number;
-		for (int i=m_ChannelNoInput.Digits-1;i>=0;i--) {
-			if (i<m_ChannelNoInput.CurDigit) {
-				szText[i]=Number%10+_T('0');
-				Number/=10;
-			} else {
-				szText[i]=_T('-');
-			}
-		}
-		szText[m_ChannelNoInput.Digits]=_T('\0');
-		m_App.OSDManager.ShowOSD(szText,COSDManager::SHOW_NO_FADE);
-	}
-
-	if (m_ChannelNoInput.CurDigit<m_ChannelNoInput.Digits) {
-		m_ChannelNoInputTimer.Begin(m_hwnd,m_ChannelNoInputTimeout);
-	} else {
-		EndChannelNoInput();
-
-		if (m_ChannelNoInput.Number>0) {
+		if (Number>0) {
+#if 0
 			const CChannelList *pChannelList=m_App.ChannelManager.GetCurrentChannelList();
 			if (pChannelList!=nullptr) {
-				int Index=pChannelList->FindChannelNo(m_ChannelNoInput.Number);
-				if (Index<0 && m_ChannelNoInput.Number<=0xFFFF)
-					Index=pChannelList->FindServiceID((WORD)m_ChannelNoInput.Number);
+				int Index=pChannelList->FindChannelNo(Number);
+				if (Index<0 && Number<=0xFFFF)
+					Index=pChannelList->FindServiceID((WORD)Number);
 				if (Index>=0)
 					SendCommand(CM_CHANNEL_FIRST+Index);
 			}
+#else
+			m_App.Core.SwitchChannelByNo(Number,true);
+#endif
 		}
 	}
+}
 
-	return true;
+
+void CMainWindow::OnChannelNoInput()
+{
+	if (m_App.OSDOptions.IsOSDEnabled(COSDOptions::OSD_CHANNELNOINPUT)) {
+		TCHAR szText[16];
+		int MaxDigits=m_ChannelInput.GetMaxDigits();
+		int Number=m_ChannelInput.GetNumber();
+		if (MaxDigits>0) {
+			for (int i=MaxDigits-1;i>=0;i--) {
+				if (i<m_ChannelInput.GetCurDigits()) {
+					szText[i]=Number%10+_T('0');
+					Number/=10;
+				} else {
+					szText[i]=_T('-');
+				}
+			}
+			szText[MaxDigits]=_T('\0');
+		} else {
+			StdUtil::snprintf(szText,lengthof(szText),TEXT("%d"),Number);
+		}
+		m_App.OSDManager.ShowOSD(szText,COSDManager::SHOW_NO_FADE);
+	}
+
+	const DWORD Timeout=m_App.Accelerator.GetChannelInputOptions().KeyTimeout;
+	if (Timeout>0)
+		m_ChannelNoInputTimer.Begin(m_hwnd,Timeout);
 }
 
 

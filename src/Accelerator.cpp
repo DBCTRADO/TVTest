@@ -252,9 +252,6 @@ CAccelerator::CAccelerator()
 	m_pMainMenu=NULL;
 	m_pCommandList=NULL;
 	m_fRegisterHotKey=false;
-	m_fFunctionKeyChangeChannel=true;
-	m_fDigitKeyChangeChannel=true;
-	m_fNumPadChangeChannel=true;
 }
 
 
@@ -394,9 +391,33 @@ bool CAccelerator::UnregisterHotKey()
 bool CAccelerator::LoadSettings(CSettings &Settings)
 {
 	if (Settings.SetSection(TEXT("Settings"))) {
-		Settings.Read(TEXT("FuncKeyChangeChannel"),&m_fFunctionKeyChangeChannel);
-		Settings.Read(TEXT("DigitKeyChangeChannel"),&m_fDigitKeyChangeChannel);
-		Settings.Read(TEXT("NumPadChangeChannel"),&m_fNumPadChangeChannel);
+		for (int i=0;i<=TVTest::CChannelInputOptions::KEY_LAST;i++) {
+			TCHAR szKey[32];
+			int Value;
+
+			StdUtil::snprintf(szKey,lengthof(szKey),TEXT("ChInputKeyMode%d"),i);
+			if (Settings.Read(szKey,&Value)) {
+				m_ChannelInputOptions.KeyInputMode[i]=
+					static_cast<TVTest::CChannelInputOptions::KeyInputModeType>(Value);
+			} else {
+				// ver.0.9.0 ‚æ‚è‘O‚Æ‚ÌŒÝŠ·—p
+				static const LPCTSTR KeyList[] = {
+					TEXT("DigitKeyChangeChannel"),
+					TEXT("NumPadChangeChannel"),
+					TEXT("FuncKeyChangeChannel")
+				};
+				bool f;
+
+				if (Settings.Read(KeyList[i],&f)) {
+					m_ChannelInputOptions.KeyInputMode[i]=
+						f?TVTest::CChannelInputOptions::KEYINPUTMODE_SINGLEKEY:
+						  TVTest::CChannelInputOptions::KEYINPUTMODE_DISABLED;
+				}
+			}
+		}
+
+		Settings.Read(TEXT("ChInputKeyTimeout"),&m_ChannelInputOptions.KeyTimeout);
+		Settings.Read(TEXT("ChInputKeyTimeoutCancel"),&m_ChannelInputOptions.fKeyTimeoutCancel);
 	}
 
 	if (m_pCommandList==NULL)
@@ -479,9 +500,13 @@ bool CAccelerator::LoadSettings(CSettings &Settings)
 bool CAccelerator::SaveSettings(CSettings &Settings)
 {
 	if (Settings.SetSection(TEXT("Settings"))) {
-		Settings.Write(TEXT("FuncKeyChangeChannel"),m_fFunctionKeyChangeChannel);
-		Settings.Write(TEXT("DigitKeyChangeChannel"),m_fDigitKeyChangeChannel);
-		Settings.Write(TEXT("NumPadChangeChannel"),m_fNumPadChangeChannel);
+		for (int i=0;i<=TVTest::CChannelInputOptions::KEY_LAST;i++) {
+			TCHAR szKey[32];
+			StdUtil::snprintf(szKey,lengthof(szKey),TEXT("ChInputKeyMode%d"),i);
+			Settings.Write(szKey,(int)m_ChannelInputOptions.KeyInputMode[i]);
+		}
+		Settings.Write(TEXT("ChInputKeyTimeout"),m_ChannelInputOptions.KeyTimeout);
+		Settings.Write(TEXT("ChInputKeyTimeoutCancel"),m_ChannelInputOptions.fKeyTimeoutCancel);
 	}
 
 	if (m_pCommandList==NULL)
@@ -845,13 +870,6 @@ INT_PTR CAccelerator::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 			for (size_t i=0;i<m_MediaKeyList.size();i++)
 				DlgComboBox_AddString(hDlg,IDC_ACCELERATOR_APPCOMMAND,m_MediaKeyList[i].pszText);
 			SetDlgItemStatus(hDlg);
-
-			DlgCheckBox_Check(hDlg,IDC_OPTIONS_CHANGECH_FUNCTION,
-							  m_fFunctionKeyChangeChannel);
-			DlgCheckBox_Check(hDlg,IDC_OPTIONS_CHANGECH_DIGIT,
-							  m_fDigitKeyChangeChannel);
-			DlgCheckBox_Check(hDlg,IDC_OPTIONS_CHANGECH_NUMPAD,
-							  m_fNumPadChangeChannel);
 		}
 		return TRUE;
 
@@ -1014,6 +1032,15 @@ INT_PTR CAccelerator::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 				SetDlgItemStatus(hDlg);
 			}
 			return TRUE;
+
+		case IDC_ACCELERATOR_CHANNELINPUTOPTIONS:
+			{
+				TVTest::CChannelInputOptionsDialog Dialog(m_ChannelInputOptions);
+
+				if (Dialog.Show(hDlg))
+					m_fChanged=true;
+			}
+			return TRUE;
 		}
 		return TRUE;
 
@@ -1151,13 +1178,6 @@ INT_PTR CAccelerator::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 				m_hAccel=hAccel;
 				m_pMainMenu->SetAccelerator(this);
 				RegisterHotKey();
-
-				m_fFunctionKeyChangeChannel=
-					DlgCheckBox_IsChecked(hDlg,IDC_OPTIONS_CHANGECH_FUNCTION);
-				m_fDigitKeyChangeChannel=
-					DlgCheckBox_IsChecked(hDlg,IDC_OPTIONS_CHANGECH_DIGIT);
-				m_fNumPadChangeChannel=
-					DlgCheckBox_IsChecked(hDlg,IDC_OPTIONS_CHANGECH_NUMPAD);
 
 				m_fChanged=true;
 			}

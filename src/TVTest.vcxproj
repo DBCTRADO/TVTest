@@ -485,6 +485,7 @@
     <ClCompile Include="CaptionPanel.cpp" />
     <ClCompile Include="Capture.cpp" />
     <ClCompile Include="CaptureOptions.cpp" />
+    <ClCompile Include="ChannelInput.cpp" />
     <ClCompile Include="ComUtility.cpp" />
     <ClCompile Include="TextDraw.cpp" />
     <ClCompile Include="TSProcessorErrorDialog.cpp" />
@@ -658,6 +659,7 @@
     <ClInclude Include="CaptionPanel.h" />
     <ClInclude Include="Capture.h" />
     <ClInclude Include="CaptureOptions.h" />
+    <ClInclude Include="ChannelInput.h" />
     <ClInclude Include="ComUtility.h" />
     <ClInclude Include="TextDraw.h" />
     <ClInclude Include="TSProcessorErrorDialog.h" />

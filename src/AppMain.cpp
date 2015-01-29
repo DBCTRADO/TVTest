@@ -1124,8 +1124,10 @@ bool CAppMain::IsNoAcceleratorMessage(const MSG *pmsg)
 	HWND hwnd=::GetFocus();
 
 	if (hwnd!=nullptr && ::IsWindowVisible(hwnd)) {
-		const CDisplayView *pDisplayView=MainWindow.GetDisplayBase().GetDisplayView();
+		if (MainWindow.IsNoAcceleratorMessage(pmsg))
+			return true;
 
+		const CDisplayView *pDisplayView=MainWindow.GetDisplayBase().GetDisplayView();
 		if (pDisplayView!=nullptr && hwnd==pDisplayView->GetHandle()) {
 			return pDisplayView->IsMessageNeed(pmsg);
 		} else if (pmsg->message==WM_KEYDOWN || pmsg->message==WM_KEYUP) {

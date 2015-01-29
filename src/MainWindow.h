@@ -16,6 +16,7 @@
 #include "WindowUtil.h"
 #include "EpgCapture.h"
 #include "AudioManager.h"
+#include "ChannelInput.h"
 
 
 #define MAIN_WINDOW_CLASS		APP_NAME TEXT(" Window")
@@ -152,9 +153,9 @@ public:
 	bool ConfirmExit();
 	void OnMouseWheel(WPARAM wParam,LPARAM lParam,bool fHorz);
 
+	bool IsNoAcceleratorMessage(const MSG *pMsg);
 	bool BeginChannelNoInput(int Digits);
-	void EndChannelNoInput();
-	bool OnChannelNoInput(int Number);
+	void EndChannelNoInput(bool fDetermine=false);
 
 	void UpdatePanel();
 	bool SetViewWindowEdge(bool fEdge);
@@ -535,15 +536,7 @@ private:
 	};
 	CDisplayBaseEventHandler m_DisplayBaseEventHandler;
 
-	struct ChannelNoInputInfo {
-		bool fInputting;
-		int Digits;
-		int CurDigit;
-		int Number;
-		ChannelNoInputInfo() : fInputting(false) {}
-	};
-	ChannelNoInputInfo m_ChannelNoInput;
-	DWORD m_ChannelNoInputTimeout;
+	TVTest::CChannelInput m_ChannelInput;
 	CTimer m_ChannelNoInputTimer;
 
 	CEpgCaptureEventHandler m_EpgCaptureEventHandler;
@@ -629,6 +622,7 @@ private:
 	void ResumeChannel();
 	void SuspendViewer(unsigned int Flags);
 	void ResumeViewer(unsigned int Flags);
+	void OnChannelNoInput();
 	bool SetEpgUpdateNextChannel();
 	void RefreshChannelPanel();
 	void InitControlPanel();
