@@ -662,9 +662,6 @@ int CAppMain::Main(HINSTANCE hInstance,LPCTSTR pszCmdLine,int nCmdShow)
 			CoreEngine.m_DtvEngine.m_TsAnalyzer.SetVideoStreamTypeViewable(
 				STREAM_TYPE_H265,CmdLineOptions.m_fH265);
 		}
-
-		if (CmdLineOptions.m_f1Seg)
-			Core.Set1SegMode(true,false);
 	}
 
 	Initialize();
@@ -841,6 +838,8 @@ int CAppMain::Main(HINSTANCE hInstance,LPCTSTR pszCmdLine,int nCmdShow)
 
 	ViewOptions.Apply(COptions::UPDATE_ALL);
 
+	if (CmdLineOptions.m_f1Seg)
+		Core.Set1SegMode(true,false);
 	if (CmdLineOptions.m_fNoTSProcessor)
 		CoreEngine.EnableTSProcessor(false);
 	CoreEngine.SetMinTimerResolution(PlaybackOptions.GetMinTimerResolution());
