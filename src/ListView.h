@@ -22,6 +22,7 @@ namespace TVTest
 		bool SetItemState(int Index,UINT State,UINT Mask);
 		bool CheckItem(int Index,bool fCheck);
 		bool IsItemChecked(int Index) const;
+		bool SetItemParam(int Index,LPARAM Param);
 		LPARAM GetItemParam(int Index) const;
 		int GetItemCount() const;
 		int GetSelectedItem() const;

@@ -165,6 +165,22 @@ bool CListView::IsItemChecked(int Index) const
 }
 
 
+bool CListView::SetItemParam(int Index,LPARAM Param)
+{
+	if (m_hwnd==NULL)
+		return false;
+
+	LVITEM lvi;
+
+	lvi.mask=LVIF_PARAM;
+	lvi.iItem=Index;
+	lvi.iSubItem=0;
+	lvi.lParam=Param;
+
+	return ListView_SetItem(m_hwnd,&lvi)!=FALSE;
+}
+
+
 LPARAM CListView::GetItemParam(int Index) const
 {
 	if (m_hwnd==NULL)
