@@ -52,7 +52,9 @@ INT_PTR CEpgChannelSettings::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lP
 			const int IconHeight=::GetSystemMetrics(SM_CYSMICON);
 			HIMAGELIST himl=::ImageList_Create(IconWidth,IconHeight,ILC_COLOR24 | ILC_MASK,
 											   m_ChannelList.NumChannels()+1,100);
-			ImageList_AddIcon(himl,CreateEmptyIcon(IconWidth,IconHeight));
+			HICON hico=CreateEmptyIcon(IconWidth,IconHeight);
+			ImageList_AddIcon(himl,hico);
+			::DestroyIcon(hico);
 			ListView_SetImageList(hwndList,himl,LVSIL_SMALL);
 			CLogoManager &LogoManager=GetAppClass().LogoManager;
 

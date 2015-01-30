@@ -241,7 +241,9 @@ static void InitServiceListView(
 	const int IconHeight=::GetSystemMetrics(SM_CYSMICON);
 	HIMAGELIST himl=::ImageList_Create(IconWidth,IconHeight,ILC_COLOR24 | ILC_MASK,
 									   ServiceList.NumChannels()+1,100);
-	ImageList_AddIcon(himl,CreateEmptyIcon(IconWidth,IconHeight));
+	HICON hico=CreateEmptyIcon(IconWidth,IconHeight);
+	ImageList_AddIcon(himl,hico);
+	::DestroyIcon(hico);
 	ListView_SetImageList(hwndList,himl,LVSIL_SMALL);
 	CAppMain &App=GetAppClass();
 	CLogoManager &LogoManager=App.LogoManager;
