@@ -23,6 +23,7 @@ CPanelOptions::CPanelOptions(CPanelFrame *pPanelFrame)
 	, m_Opacity(100)
 	, m_fSpecCaptionFont(true)
 	, m_TabStyle(CPanelForm::TABSTYLE_TEXT_ONLY)
+	, m_fTabTooltip(true)
 	, m_fProgramInfoUseRichEdit(true)
 {
 	DrawUtil::GetDefaultUIFont(&m_Font);
@@ -71,6 +72,7 @@ bool CPanelOptions::InitializePanelForm(CPanelForm *pPanelForm)
 		InitialTab=pPanelForm->GetTabID(0);
 	pPanelForm->SetCurPageByID(InitialTab);
 	ApplyItemList(pPanelForm);
+	pPanelForm->EnableTooltip(m_fTabTooltip);
 	return true;
 }
 
@@ -115,6 +117,8 @@ bool CPanelOptions::ReadSettings(CSettings &Settings)
 	if (Settings.Read(TEXT("PanelTabStyle"),&Value)
 			&& Value>=CPanelForm::TABSTYLE_FIRST && Value<=CPanelForm::TABSTYLE_LAST)
 		m_TabStyle=static_cast<CPanelForm::TabStyle>(Value);
+
+	Settings.Read(TEXT("PanelTabTooltip"),&m_fTabTooltip);
 
 	int TabCount;
 	if (Settings.Read(TEXT("PanelTabCount"),&TabCount) && TabCount>0) {
@@ -189,6 +193,7 @@ bool CPanelOptions::WriteSettings(CSettings &Settings)
 	Settings.Write(TEXT("PanelAttachToMainWindow"),m_fAttachToMainWindow);
 	Settings.Write(TEXT("PanelOpacity"),m_Opacity);
 	Settings.Write(TEXT("PanelTabStyle"),(int)m_TabStyle);
+	Settings.Write(TEXT("PanelTabTooltip"),m_fTabTooltip);
 
 	// Font
 	Settings.Write(TEXT("PanelFontName"),m_Font.lfFaceName);
@@ -447,6 +452,8 @@ INT_PTR CPanelOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 			for (int i=0;i<lengthof(TabStyleList);i++)
 				DlgComboBox_AddString(hDlg,IDC_PANELOPTIONS_TABSTYLE,TabStyleList[i]);
 			DlgComboBox_SetCurSel(hDlg,IDC_PANELOPTIONS_TABSTYLE,(int)m_TabStyle);
+
+			DlgCheckBox_Check(hDlg,IDC_PANELOPTIONS_TABTOOLTIP,m_fTabTooltip);
 		}
 		return TRUE;
 
@@ -565,6 +572,10 @@ INT_PTR CPanelOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 					m_TabStyle=static_cast<CPanelForm::TabStyle>(TabStyleSel);
 					pPanel->SetTabStyle(m_TabStyle);
 				}
+
+				m_fTabTooltip=
+					DlgCheckBox_IsChecked(hDlg,IDC_PANELOPTIONS_TABTOOLTIP);
+				pPanel->EnableTooltip(m_fTabTooltip);
 
 				m_fChanged=true;
 			}

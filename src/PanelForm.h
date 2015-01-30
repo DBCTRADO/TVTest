@@ -6,6 +6,7 @@
 #include "UIBase.h"
 #include "Theme.h"
 #include "DrawUtil.h"
+#include "Tooltip.h"
 #include <vector>
 
 
@@ -106,6 +107,7 @@ public:
 	bool SetTabStyle(TabStyle Style);
 	bool SetIconImage(HBITMAP hbm,int Width,int Height);
 	SIZE GetIconDrawSize() const;
+	bool EnableTooltip(bool fEnable);
 
 private:
 	enum {MAX_WINDOWS=8};
@@ -149,6 +151,8 @@ private:
 	int m_CurTab;
 	int m_PrevActivePageID;
 	CEventHandler *m_pEventHandler;
+	CTooltip m_Tooltip;
+	bool m_fEnableTooltip;
 
 	static const LPCTSTR m_pszClassName;
 	static HINSTANCE m_hinst;
@@ -158,6 +162,8 @@ private:
 	int GetRealTabWidth() const;
 	int HitTest(int x,int y) const;
 	void Draw(HDC hdc,const RECT &PaintRect);
+	void UpdateTooltip();
+
 // CCustomWindow
 	LRESULT OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
 };

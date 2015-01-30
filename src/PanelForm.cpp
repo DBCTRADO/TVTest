@@ -47,6 +47,7 @@ CPanelForm::CPanelForm()
 	, m_CurTab(-1)
 	, m_PrevActivePageID(-1)
 	, m_pEventHandler(NULL)
+	, m_fEnableTooltip(true)
 {
 	m_WindowPosition.Width=200;
 	m_WindowPosition.Height=240;
@@ -133,6 +134,7 @@ bool CPanelForm::AddPage(const PageInfo &Info)
 	if (m_hwnd!=NULL) {
 		CalcTabSize();
 		Invalidate();
+		UpdateTooltip();
 	}
 	return true;
 }
@@ -258,6 +260,7 @@ bool CPanelForm::SetTabVisible(int ID,bool fVisible)
 		if (m_hwnd!=NULL) {
 			CalcTabSize();
 			Invalidate();
+			UpdateTooltip();
 		}
 	}
 
@@ -295,8 +298,10 @@ bool CPanelForm::SetTabOrder(const int *pOrder,int Count)
 
 	m_TabOrder=TabOrder;
 
-	if (m_hwnd!=NULL)
+	if (m_hwnd!=NULL) {
 		Invalidate();
+		UpdateTooltip();
+	}
 
 	return true;
 }
@@ -368,9 +373,7 @@ bool CPanelForm::SetTabFont(const LOGFONT *pFont)
 		return false;
 	if (m_hwnd!=NULL) {
 		CalcTabSize();
-		RECT rc;
-		GetClientRect(&rc);
-		SendMessage(WM_SIZE,0,MAKELPARAM(rc.right,rc.bottom));
+		SendSizeMessage();
 		Invalidate();
 	}
 	return true;
@@ -432,12 +435,28 @@ SIZE CPanelForm::GetIconDrawSize() const
 }
 
 
+bool CPanelForm::EnableTooltip(bool fEnable)
+{
+	if (m_fEnableTooltip!=fEnable) {
+		m_fEnableTooltip=fEnable;
+		if (m_hwnd!=NULL)
+			UpdateTooltip();
+	}
+	return true;
+}
+
+
 LRESULT CPanelForm::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 {
 	switch (uMsg) {
 	case WM_CREATE:
-		InitializeUI();
-		CalcTabSize();
+		{
+			InitializeUI();
+			CalcTabSize();
+
+			m_Tooltip.Create(hwnd);
+			UpdateTooltip();
+		}
 		return 0;
 
 	case WM_PAINT:
@@ -455,7 +474,9 @@ LRESULT CPanelForm::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 			RECT rc;
 			::SetRect(&rc,0,0,LOWORD(lParam),m_TabHeight);
 			::InvalidateRect(hwnd,&rc,FALSE);
+			UpdateTooltip();
 		}
+
 		if (m_CurTab>=0) {
 			RECT rc;
 			::SetRect(&rc,0,m_TabHeight,LOWORD(lParam),HIWORD(lParam));
@@ -511,7 +532,12 @@ LRESULT CPanelForm::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 				&& m_pEventHandler->OnKeyDown((UINT)wParam,(UINT)lParam))
 			return 0;
 		break;
+
+	case WM_DESTROY:
+		m_Tooltip.Destroy();
+		return 0;
 	}
+
 	return ::DefWindowProc(hwnd,uMsg,wParam,lParam);
 }
 
@@ -718,6 +744,49 @@ void CPanelForm::Draw(HDC hdc,const RECT &PaintRect)
 		rc.bottom=PaintRect.bottom;
 		DrawUtil::Fill(hdc,&rc,m_Theme.BackColor);
 	}
+}
+
+
+void CPanelForm::UpdateTooltip()
+{
+	const int TabWidth=GetRealTabWidth();
+
+	if (!m_fEnableTooltip || !m_fFitTabWidth
+			|| (m_TabStyle!=TABSTYLE_ICON_ONLY && TabWidth>=m_TabWidth)) {
+		m_Tooltip.Enable(false);
+		return;
+	}
+
+	int ToolCount=m_Tooltip.NumTools();
+	int TabCount=0;
+	RECT rc;
+
+	rc.left=0;
+	rc.top=0;
+	rc.bottom=m_TabHeight;
+
+	for (size_t i=0;i<m_TabOrder.size();i++) {
+		const CWindowInfo *pInfo=m_WindowList[m_TabOrder[i]];
+
+		if (pInfo->m_fVisible) {
+			rc.right=rc.left+TabWidth;
+			if (TabCount<ToolCount) {
+				m_Tooltip.SetToolRect(TabCount,rc);
+				m_Tooltip.SetText(TabCount,pInfo->m_Title.c_str());
+			} else {
+				m_Tooltip.AddTool(TabCount,rc,pInfo->m_Title.c_str());
+			}
+			TabCount++;
+			rc.left=rc.right;
+		}
+	}
+
+	if (ToolCount>TabCount) {
+		for (int i=ToolCount-1;i>=TabCount;i--)
+			m_Tooltip.DeleteTool(i);
+	}
+
+	m_Tooltip.Enable(true);
 }
 
 

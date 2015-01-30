@@ -76,6 +76,7 @@ private:
 	PanelItemInfoList m_AvailItemList;
 	PanelItemInfoList m_ItemList;
 	CPanelForm::TabStyle m_TabStyle;
+	bool m_fTabTooltip;
 	bool m_fProgramInfoUseRichEdit;
 	TVTest::CListView m_ItemListView;
 
