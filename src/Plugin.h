@@ -58,6 +58,7 @@ public:
 	bool Settings(HWND hwndOwner);
 	bool HasSettings() const { return (m_Flags&TVTest::PLUGIN_FLAG_HASSETTINGS)!=0; }
 	bool CanUnload() const { return (m_Flags&TVTest::PLUGIN_FLAG_NOUNLOAD)==0; }
+	bool IsNoEnabledDisabled() const { return (m_Flags & TVTest::PLUGIN_FLAG_NOENABLEDDISABLED)!=0; }
 	int GetCommand() const { return m_Command; }
 	bool SetCommand(int Command);
 	TVTest::Theme::ThemeBitmap &GetIcon() { return m_PluginIcon; }

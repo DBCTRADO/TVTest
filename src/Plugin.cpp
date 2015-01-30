@@ -699,6 +699,9 @@ void CPlugin::Free()
 
 bool CPlugin::Enable(bool fEnable)
 {
+	if ((m_Flags & TVTest::PLUGIN_FLAG_NOENABLEDDISABLED)!=0)
+		return false;
+
 	if (m_fEnabled!=fEnable) {
 		if (m_fSetting)
 			return false;
@@ -3733,9 +3736,11 @@ bool CPluginManager::SetMenu(HMENU hmenu) const
 		for (size_t i=0;i<m_PluginList.size();i++) {
 			const CPlugin *pPlugin=m_PluginList[i];
 
-			::AppendMenu(hmenu,MFT_STRING | MFS_ENABLED |
-						 (pPlugin->IsEnabled()?MFS_CHECKED:MFS_UNCHECKED),
-						 pPlugin->GetCommand(),pPlugin->GetPluginName());
+			if (!pPlugin->IsNoEnabledDisabled()) {
+				::AppendMenu(hmenu,MFT_STRING | MFS_ENABLED |
+							 (pPlugin->IsEnabled()?MFS_CHECKED:MFS_UNCHECKED),
+							 pPlugin->GetCommand(),pPlugin->GetPluginName());
+			}
 		}
 	} else {
 		::AppendMenu(hmenu,MFT_STRING | MFS_GRAYED,0,TEXT("‚È‚µ"));

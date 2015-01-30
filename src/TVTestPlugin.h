@@ -133,6 +133,7 @@
 	  ・PanelFont
 	  ・ProgramGuideFont
 	  ・StatusBarFont
+	・プラグインのフラグに PLUGIN_FLAG_NOENABLEDDISABLED を追加した
 
 	ver.0.0.13 (TVTest ver.0.7.16 or later)
 	・以下のメッセージを追加した
@@ -270,14 +271,18 @@ enum {
 
 // プラグインのフラグ
 enum {
-	PLUGIN_FLAG_HASSETTINGS		=0x00000001UL,	// 設定ダイアログがある
-	PLUGIN_FLAG_ENABLEDEFAULT	=0x00000002UL	// デフォルトで有効
-												// 特別な理由が無い限り使わない
+	PLUGIN_FLAG_HASSETTINGS			=0x00000001UL,	// 設定ダイアログがある
+	PLUGIN_FLAG_ENABLEDEFAULT		=0x00000002UL	// デフォルトで有効
+													// 特別な理由が無い限り使わない
 #if TVTEST_PLUGIN_VERSION>=TVTEST_PLUGIN_VERSION_(0,0,10)
-	,PLUGIN_FLAG_DISABLEONSTART	=0x00000004UL	// 起動時は必ず無効
+	,PLUGIN_FLAG_DISABLEONSTART		=0x00000004UL	// 起動時は必ず無効
 #endif
 #if TVTEST_PLUGIN_VERSION>=TVTEST_PLUGIN_VERSION_(0,0,11)
-	,PLUGIN_FLAG_NOUNLOAD		=0x00000008UL	// 終了時以外アンロード不可
+	,PLUGIN_FLAG_NOUNLOAD			=0x00000008UL	// 終了時以外アンロード不可
+#endif
+#if TVTEST_PLUGIN_VERSION>=TVTEST_PLUGIN_VERSION_(0,0,14)
+	,PLUGIN_FLAG_NOENABLEDDISABLED	=0x00000010UL	// 有効/無効の区別がない
+													// メニューに表示されず、EVENT_PLUGINENABLE が送られません
 #endif
 };
 
