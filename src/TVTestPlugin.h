@@ -118,6 +118,8 @@
 	  ・MESSAGE_SETPANELITEM
 	  ・MESSAGE_GETPANELITEMINFO
 	  ・MESSAGE_SELECTCHANNEL
+	  ・MESSAGE_GETFAVORITELIST
+	  ・MESSAGE_FREEFAVORITELIST
 	・以下のイベントを追加した
 	  ・EVENT_FILTERGRAPH_INITIALIZE
 	  ・EVENT_FILTERGRAPH_INITIALIZED
@@ -444,6 +446,8 @@ enum {
 	MESSAGE_SETPANELITEM,				// パネル項目の設定
 	MESSAGE_GETPANELITEMINFO,			// パネル項目の情報を取得
 	MESSAGE_SELECTCHANNEL,				// チャンネルを選択する
+	MESSAGE_GETFAVORITELIST,			// お気に入りチャンネルを取得
+	MESSAGE_FREEFAVORITELIST,			// お気に入りチャンネルを解放
 #endif
 	MESSAGE_TRAILER
 };
@@ -2750,6 +2754,64 @@ inline bool MsgSelectChannel(PluginParam *pParam,const ChannelSelectInfo *pInfo)
 	return (*pParam->Callback)(pParam,MESSAGE_SELECTCHANNEL,(LPARAM)pInfo,0)!=FALSE;
 }
 
+// お気に入り項目の種類
+enum {
+	FAVORITE_ITEM_TYPE_FOLDER,	// フォルダ
+	FAVORITE_ITEM_TYPE_CHANNEL	// チャンネル
+};
+
+// お気に入り項目の情報
+struct FavoriteItemInfo {
+	DWORD Type;						// 種類(FAVORITE_ITEM_TYPE_* のいずれか)
+	DWORD Flags;					// 各種フラグ(現在は常に0)
+	LPCWSTR pszName;				// 名前
+	union {
+		// Type == FAVORITE_ITEM_TYPE_FOLDER の場合
+		struct {
+			DWORD Flags;								// 各種フラグ(現在は常に0)
+			DWORD ItemCount;							// 子項目数
+			const struct FavoriteItemInfo *ItemList;	// 子項目のリスト
+		} Folder;
+		// Type == FAVORITE_ITEM_TYPE_CHANNEL の場合
+		struct {
+			DWORD Flags;			// 各種フラグ(FAVORITE_CHANNEL_FLAG_*)
+			int Space;				// チューニング空間
+			int Channel;			// チャンネルインデックス
+			int ChannelNo;			// リモコン番号
+			WORD NetworkID;			// ネットワークID
+			WORD TransportStreamID;	// トランスポートストリームID
+			WORD ServiceID;			// サービスID
+			WORD Reserved;			// 予約(現在は常に0)
+			LPCWSTR pszTuner;		// チューナー名
+		} Channel;
+	};
+};
+
+// お気に入りチャンネルのフラグ
+enum {
+	FAVORITE_CHANNEL_FLAG_FORCETUNERCHANGE	=0x0001U	// チューナー指定を強制
+};
+
+// お気に入りリスト
+struct FavoriteList {
+	DWORD Size;					// 構造体のサイズ
+	DWORD ItemCount;			// お気に入り項目数
+	FavoriteItemInfo *ItemList;	// お気に入り項目のリスト
+};
+
+// お気に入りリストを取得する
+// FavoriteList の Size メンバに構造体のサイズを設定して呼び出します。
+// 取得したリストは MsgFreeFavoriteList で解放します。
+inline bool MsgGetFavoriteList(PluginParam *pParam,FavoriteList *pList) {
+	return (*pParam->Callback)(pParam,MESSAGE_GETFAVORITELIST,(LPARAM)pList,0)!=FALSE;
+}
+
+// お気に入りリストを解放する
+// MsgGetFavoriteList で取得したリストを解放します。
+inline void MsgFreeFavoriteList(PluginParam *pParam,FavoriteList *pList) {
+	(*pParam->Callback)(pParam,MESSAGE_FREEFAVORITELIST,(LPARAM)pList,0);
+}
+
 #endif	// TVTEST_PLUGIN_VERSION>=TVTEST_PLUGIN_VERSION_(0,0,14)
 
 
@@ -3220,6 +3282,13 @@ public:
 	}
 	bool SelectChannel(const ChannelSelectInfo *pInfo) {
 		return MsgSelectChannel(m_pParam,pInfo);
+	}
+	bool GetFavoriteList(FavoriteList *pList) {
+		pList->Size=sizeof(FavoriteList);
+		return MsgGetFavoriteList(m_pParam,pList);
+	}
+	void FreeFavoriteList(FavoriteList *pList) {
+		MsgFreeFavoriteList(m_pParam,pList);
 	}
 #endif
 };

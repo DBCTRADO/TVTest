@@ -502,6 +502,123 @@ void CEpgDataConverter::FreeEventList(TVTest::EpgEventInfo **ppEventList)
 
 
 
+static void GetFavoriteItemSize(const TVTest::CFavoriteItem *pItem,
+								size_t *pStructSize,size_t *pStringSize)
+{
+	*pStructSize+=sizeof(TVTest::FavoriteItemInfo);
+	*pStringSize+=::lstrlen(pItem->GetName())+1;
+
+	if (pItem->GetType()==TVTest::CFavoriteItem::ITEM_FOLDER) {
+		const TVTest::CFavoriteFolder *pFolder=
+			static_cast<const TVTest::CFavoriteFolder*>(pItem);
+
+		for (size_t i=0;i<pFolder->GetItemCount();i++)
+			GetFavoriteItemSize(pFolder->GetItem(i),pStructSize,pStringSize);
+	} else if (pItem->GetType()==TVTest::CFavoriteItem::ITEM_CHANNEL) {
+		const TVTest::CFavoriteChannel *pChannel=
+			static_cast<const TVTest::CFavoriteChannel*>(pItem);
+
+		*pStringSize+=::lstrlen(pChannel->GetBonDriverFileName())+1;
+	}
+}
+
+
+static void GetFavoriteItemInfo(const TVTest::CFavoriteItem *pItem,
+								TVTest::FavoriteItemInfo **ppItemInfo,
+								LPWSTR *ppStringBuffer)
+{
+	TVTest::FavoriteItemInfo *pItemInfo=*ppItemInfo;
+	LPWSTR pStringBuffer=*ppStringBuffer;
+	size_t Length;
+
+	::ZeroMemory(pItemInfo,sizeof(TVTest::FavoriteItemInfo));
+	pItemInfo->pszName=pStringBuffer;
+	Length=::lstrlen(pItem->GetName())+1;
+	::CopyMemory(pStringBuffer,pItem->GetName(),Length*sizeof(WCHAR));
+	pStringBuffer+=Length;
+
+	++*ppItemInfo;
+
+	if (pItem->GetType()==TVTest::CFavoriteItem::ITEM_FOLDER) {
+		const TVTest::CFavoriteFolder *pFolder=
+			static_cast<const TVTest::CFavoriteFolder*>(pItem);
+
+		pItemInfo->Type=TVTest::FAVORITE_ITEM_TYPE_FOLDER;
+		pItemInfo->Folder.ItemCount=static_cast<DWORD>(pFolder->GetItemCount());
+		if (pFolder->GetItemCount()>0) {
+			pItemInfo->Folder.ItemList=*ppItemInfo;
+			for (size_t i=0;i<pFolder->GetItemCount();i++)
+				GetFavoriteItemInfo(pFolder->GetItem(i),ppItemInfo,&pStringBuffer);
+		}
+	} else if (pItem->GetType()==TVTest::CFavoriteItem::ITEM_CHANNEL) {
+		const TVTest::CFavoriteChannel *pChannel=
+			static_cast<const TVTest::CFavoriteChannel*>(pItem);
+		const CChannelInfo &ChannelInfo=pChannel->GetChannelInfo();
+
+		pItemInfo->Type=TVTest::FAVORITE_ITEM_TYPE_CHANNEL;
+		if (pChannel->GetForceBonDriverChange())
+			pItemInfo->Channel.Flags|=TVTest::FAVORITE_CHANNEL_FLAG_FORCETUNERCHANGE;
+		pItemInfo->Channel.Space=ChannelInfo.GetSpace();
+		pItemInfo->Channel.Channel=ChannelInfo.GetChannelIndex();
+		pItemInfo->Channel.ChannelNo=ChannelInfo.GetChannelNo();
+		pItemInfo->Channel.NetworkID=ChannelInfo.GetNetworkID();
+		pItemInfo->Channel.TransportStreamID=ChannelInfo.GetTransportStreamID();
+		pItemInfo->Channel.ServiceID=ChannelInfo.GetServiceID();
+		pItemInfo->Channel.pszTuner=pStringBuffer;
+		Length=::lstrlen(pChannel->GetBonDriverFileName())+1;
+		::CopyMemory(pStringBuffer,pChannel->GetBonDriverFileName(),Length*sizeof(WCHAR));
+		pStringBuffer+=Length;
+	}
+
+	*ppStringBuffer=pStringBuffer;
+}
+
+
+static bool GetFavoriteList(const TVTest::CFavoriteFolder &Folder,TVTest::FavoriteList *pList)
+{
+	pList->ItemCount=0;
+	pList->ItemList=NULL;
+
+	if (Folder.GetItemCount()==0)
+		return true;
+
+	size_t StructSize=0,StringSize=0;
+
+	for (size_t i=0;i<Folder.GetItemCount();i++)
+		GetFavoriteItemSize(Folder.GetItem(i),&StructSize,&StringSize);
+
+	StringSize*=sizeof(WCHAR);
+	BYTE *pBuffer=static_cast<BYTE*>(std::malloc(StructSize+StringSize));
+	if (pBuffer==NULL)
+		return false;
+	pList->ItemList=pointer_cast<TVTest::FavoriteItemInfo*>(pBuffer);
+	pList->ItemCount=static_cast<DWORD>(Folder.GetItemCount());
+
+	TVTest::FavoriteItemInfo *pItemInfo=pList->ItemList;
+	LPWSTR pStringBuffer=pointer_cast<LPWSTR>(pBuffer+StructSize);
+
+	for (size_t i=0;i<Folder.GetItemCount();i++)
+		GetFavoriteItemInfo(Folder.GetItem(i),&pItemInfo,&pStringBuffer);
+
+	_ASSERT(((BYTE*)pItemInfo-(BYTE*)pList->ItemList)==StructSize &&
+			((BYTE*)pStringBuffer-(BYTE*)pItemInfo)==StringSize);
+
+	return true;
+}
+
+
+static void FreeFavoriteList(TVTest::FavoriteList *pList)
+{
+	pList->ItemCount=0;
+	if (pList->ItemList!=NULL) {
+		std::free(pList->ItemList);
+		pList->ItemList=NULL;
+	}
+}
+
+
+
+
 HWND CPlugin::m_hwndMessage=NULL;
 UINT CPlugin::m_MessageCode=0;
 
@@ -2453,6 +2570,25 @@ LRESULT CPlugin::OnCallback(TVTest::PluginParam *pParam,UINT Message,LPARAM lPar
 
 	case TVTest::MESSAGE_SELECTCHANNEL:
 		return SendPluginMessage(pParam,Message,lParam1,lParam2);
+
+	case TVTest::MESSAGE_GETFAVORITELIST:
+		{
+			TVTest::FavoriteList *pList=reinterpret_cast<TVTest::FavoriteList*>(lParam1);
+
+			if (pList==NULL || pList->Size!=sizeof(TVTest::FavoriteList))
+				return FALSE;
+
+			return GetFavoriteList(GetAppClass().FavoritesManager.GetRootFolder(),pList);
+		}
+
+	case TVTest::MESSAGE_FREEFAVORITELIST:
+		{
+			TVTest::FavoriteList *pList=reinterpret_cast<TVTest::FavoriteList*>(lParam1);
+
+			if (pList!=NULL && pList->Size==sizeof(TVTest::FavoriteList))
+				FreeFavoriteList(pList);
+		}
+		return 0;
 
 #ifdef _DEBUG
 	default:
