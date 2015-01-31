@@ -3211,6 +3211,7 @@ public:
 								hbm,SrcX,SrcY,SrcWidth,SrcHeight,Color,Opacity);
 	}
 	bool GetEpgCaptureStatus(EpgCaptureStatusInfo *pInfo) {
+		pInfo->Size=sizeof(EpgCaptureStatusInfo);
 		return MsgGetEpgCaptureStatus(m_pParam,pInfo);
 	}
 	bool GetAppCommandInfo(AppCommandInfo *pInfo) {
