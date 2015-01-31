@@ -2794,7 +2794,9 @@ LRESULT CPlugin::OnPluginMessage(WPARAM wParam,LPARAM lParam)
 
 			if (pRecInfo==NULL || pRecInfo->Size!=sizeof(TVTest::RecordInfo))
 				return FALSE;
+
 			const CRecordManager *pRecordManager=&GetAppClass().RecordManager;
+
 			if ((pRecInfo->Mask&TVTest::RECORD_MASK_FILENAME)!=0
 					&& pRecInfo->pszFileName!=NULL && pRecInfo->MaxFileName>0) {
 				if (pRecordManager->GetFileName()!=NULL)
@@ -2803,7 +2805,10 @@ LRESULT CPlugin::OnPluginMessage(WPARAM wParam,LPARAM lParam)
 				else
 					pRecInfo->pszFileName[0]='\0';
 			}
-			pRecordManager->GetReserveTime(&pRecInfo->ReserveTime);
+
+			if (!pRecordManager->GetReserveTime(&pRecInfo->ReserveTime))
+				pRecInfo->ReserveTime=FILETIME_NULL;
+
 			if ((pRecInfo->Mask&TVTest::RECORD_MASK_STARTTIME)!=0) {
 				CRecordManager::TimeSpecInfo StartTime;
 
@@ -2823,6 +2828,7 @@ LRESULT CPlugin::OnPluginMessage(WPARAM wParam,LPARAM lParam)
 					break;
 				}
 			}
+
 			if ((pRecInfo->Mask&TVTest::RECORD_MASK_STOPTIME)!=0) {
 				CRecordManager::TimeSpecInfo StopTime;
 
