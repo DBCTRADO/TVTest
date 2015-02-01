@@ -999,15 +999,9 @@ bool CAppCore::Set1SegMode(bool f1Seg,bool fServiceChange)
 					}
 
 					SetServiceByID(ServiceID,SET_SERVICE_NO_CHANGE_CUR_SERVICE_ID);
-				} else if (TsAnalyzer.GetViewableServiceNum()>0) {
-					m_f1SegMode=false;
-					AddLog(TEXT("ワンセグサービスがありません。"));
-					if (!m_fSilent) {
-						m_App.UICore.GetSkin()->ShowMessage(
-							TEXT("ワンセグサービスがありません。"),TEXT("ワンセグモード"),
-							MB_OK | MB_ICONINFORMATION);
-					}
-					return false;
+				} else {
+					m_App.CoreEngine.m_DtvEngine.SetOneSegSelectType(
+						CDtvEngine::ONESEG_SELECT_HIGHPRIORITY);
 				}
 			} else {
 				SetServiceByID(

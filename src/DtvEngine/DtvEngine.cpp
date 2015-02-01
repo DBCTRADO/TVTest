@@ -422,6 +422,17 @@ WORD CDtvEngine::GetServiceIndex() const
 }
 
 
+bool CDtvEngine::SetOneSegSelectType(OneSegSelectType Type)
+{
+	CBlockLock Lock(&m_EngineLock);
+
+	m_ServiceSel.OneSegSelect = Type;
+	m_ServiceSel.PreferredServiceIndex = SERVICE_INVALID;
+
+	return true;
+}
+
+
 WORD CDtvEngine::GetEventID(bool bNext)
 {
 	return m_TsAnalyzer.GetEventID(m_CurServiceIndex, bNext);

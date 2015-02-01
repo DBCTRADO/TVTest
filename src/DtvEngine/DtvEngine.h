@@ -133,6 +133,7 @@ public:
 	bool SetService(const ServiceSelectInfo *pServiceSelInfo, const bool bReserve = true);
 	bool GetServiceID(WORD *pServiceID) const;
 	WORD GetServiceIndex() const;
+	bool SetOneSegSelectType(OneSegSelectType Type);
 
 	WORD GetEventID(bool bNext = false);
 	int GetEventName(LPTSTR pszName, int MaxLength, bool bNext = false);
