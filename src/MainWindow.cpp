@@ -51,7 +51,7 @@ bool CBasicViewer::Create(HWND hwndParent,int ViewID,int ContainerID,HWND hwndMe
 	m_ViewWindow.Create(hwndParent,
 		WS_CHILD | WS_VISIBLE | WS_CLIPCHILDREN | WS_CLIPSIBLINGS,0,ViewID);
 	m_ViewWindow.SetMessageWindow(hwndMessage);
-	const CColorScheme *pColorScheme=m_App.GetCurrentColorScheme();
+	const CColorScheme *pColorScheme=m_App.UICore.GetCurrentColorScheme();
 	Theme::BorderStyle Border;
 	pColorScheme->GetBorderStyle(CColorScheme::BORDER_SCREEN,&Border);
 	if (!m_App.MainWindow.GetViewWindowEdge())
@@ -5781,7 +5781,7 @@ void CMainWindow::SetTheme(const TVTest::Theme::CThemeManager *pThemeManager)
 bool CMainWindow::SetViewWindowEdge(bool fEdge)
 {
 	if (m_fViewWindowEdge!=fEdge) {
-		const CColorScheme *pColorScheme=m_App.GetCurrentColorScheme();
+		const CColorScheme *pColorScheme=m_pCore->GetCurrentColorScheme();
 		Theme::BorderStyle Border;
 
 		pColorScheme->GetBorderStyle(CColorScheme::BORDER_SCREEN,&Border);

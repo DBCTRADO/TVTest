@@ -202,8 +202,6 @@ CAppMain::CAppMain()
 	, m_ExitTimeout(60000)
 	, m_fEnablePlaybackOnStart(true)
 	, m_fIncrementNetworkPort(true)
-
-	, m_pColorScheme(NULL)
 {
 	UICore.SetSkin(&MainWindow);
 
@@ -810,7 +808,7 @@ int CAppMain::Main(HINSTANCE hInstance,LPCTSTR pszCmdLine,int nCmdShow)
 		return 0;
 	}
 
-	ColorSchemeOptions.SetEventHandler(this);
+	ColorSchemeOptions.SetEventHandler(&UICore);
 	ColorSchemeOptions.ApplyColorScheme();
 
 	if (nCmdShow==SW_SHOWMINIMIZED || nCmdShow==SW_SHOWMINNOACTIVE || nCmdShow==SW_MINIMIZE)
@@ -1446,36 +1444,6 @@ void CAppMain::ShowProgramGuideByCommandLine(const CCommandLineOptions &CmdLine)
 	MainWindow.ShowProgramGuide(true,
 		UICore.GetFullscreen()?0:CMainWindow::PROGRAMGUIDE_SHOW_POPUP,
 		&SpaceInfo);
-}
-
-
-const CColorScheme *CAppMain::GetCurrentColorScheme() const
-{
-	if (m_pColorScheme==NULL)
-		return ColorSchemeOptions.GetColorScheme();
-	return m_pColorScheme;
-}
-
-
-// 配色を適用する
-bool CAppMain::ApplyColorScheme(const CColorScheme *pColorScheme)
-{
-	TVTest::Theme::CThemeManager ThemeManager(pColorScheme);
-
-	m_pColorScheme=pColorScheme;
-
-	MainWindow.SetTheme(&ThemeManager);
-	StatusView.SetTheme(&ThemeManager);
-	SideBar.SetTheme(&ThemeManager);
-	Panel.SetTheme(&ThemeManager);
-	CaptureWindow.SetTheme(&ThemeManager);
-	Epg.ProgramGuide.SetTheme(&ThemeManager);
-	Epg.ProgramGuideFrame.SetTheme(&ThemeManager);
-	Epg.ProgramGuideDisplay.SetTheme(&ThemeManager);
-
-	AppEventManager.OnColorSchemeChanged();
-
-	return true;
 }
 
 

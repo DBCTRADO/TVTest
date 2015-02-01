@@ -4,6 +4,7 @@
 
 #include <vector>
 #include "UISkin.h"
+#include "ColorScheme.h"
 #include "AudioManager.h"
 
 
@@ -11,6 +12,7 @@ class CAppMain;
 class CBasicDialog;
 
 class CUICore
+	: public CColorSchemeOptions::CEventHandler
 {
 public:
 	enum {
@@ -124,6 +126,7 @@ public:
 	bool ProcessDialogMessage(MSG *pMessage);
 
 	COLORREF GetColor(LPCTSTR pszText) const;
+	const CColorScheme *GetCurrentColorScheme() const;
 
 	bool ShowHelpContent(int ID);
 
@@ -152,9 +155,14 @@ private:
 
 	std::vector<CBasicDialog*> m_ModelessDialogList;
 
+	const CColorScheme *m_pColorScheme;
+
 	bool SelectAudio(const TVTest::CAudioManager::AudioSelectInfo &Info,bool fUpdate=true);
 	bool SelectAudioStream(int Stream);
 	bool SelectDualMonoMode(CAudioDecFilter::DualMonoMode Mode,bool fUpdate=true);
+
+// CColorSchemeOptions::CEventHandler
+	bool ApplyColorScheme(const CColorScheme *pColorScheme) override;
 };
 
 

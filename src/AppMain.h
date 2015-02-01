@@ -348,7 +348,6 @@ public:
 
 
 class CAppMain
-	: public CColorSchemeOptions::CEventHandler
 {
 public:
 	static const UINT WM_INTERPROCESS=WM_COPYDATA;
@@ -475,7 +474,6 @@ public:
 										 DWORD ActiveThreadID=0);
 	void SetEnablePlaybackOnStart(bool fEnable) { m_fEnablePlaybackOnStart=fEnable; }
 	bool GetEnablePlaybackOnStart() const { return m_fEnablePlaybackOnStart; }
-	const CColorScheme *GetCurrentColorScheme() const;
 
 	static HICON GetAppIcon();
 	static HICON GetAppIconSmall();
@@ -552,7 +550,6 @@ private:
 	unsigned int m_ExitTimeout;
 	bool m_fEnablePlaybackOnStart;
 	bool m_fIncrementNetworkPort;
-	const CColorScheme *m_pColorScheme;
 
 	static HICON m_hicoApp;
 	static HICON m_hicoAppSmall;
@@ -560,9 +557,6 @@ private:
 	// ÉRÉsÅ[ã÷é~
 	CAppMain(const CAppMain &) /* = delete */;
 	CAppMain &operator=(const CAppMain &) /* = delete */;
-
-// CColorSchemeOptions::CEventHandler
-	bool ApplyColorScheme(const CColorScheme *pColorScheme) override;
 
 	void RegisterCommands();
 	bool IsNoAcceleratorMessage(const MSG *pmsg);

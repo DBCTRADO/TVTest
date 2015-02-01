@@ -31,6 +31,8 @@ CUICore::CUICore(CAppMain &App)
 	, m_fLowPowerActiveOriginal(FALSE)
 	, m_fPowerOffActiveOriginal(FALSE)
 	*/
+
+	, m_pColorScheme(NULL)
 {
 }
 
@@ -1308,6 +1310,36 @@ bool CUICore::ProcessDialogMessage(MSG *pMessage)
 COLORREF CUICore::GetColor(LPCTSTR pszText) const
 {
 	return m_App.ColorSchemeOptions.GetColor(pszText);
+}
+
+
+const CColorScheme *CUICore::GetCurrentColorScheme() const
+{
+	if (m_pColorScheme==NULL)
+		return m_App.ColorSchemeOptions.GetColorScheme();
+	return m_pColorScheme;
+}
+
+
+// 配色を適用する
+bool CUICore::ApplyColorScheme(const CColorScheme *pColorScheme)
+{
+	TVTest::Theme::CThemeManager ThemeManager(pColorScheme);
+
+	m_pColorScheme=pColorScheme;
+
+	m_App.MainWindow.SetTheme(&ThemeManager);
+	m_App.StatusView.SetTheme(&ThemeManager);
+	m_App.SideBar.SetTheme(&ThemeManager);
+	m_App.Panel.SetTheme(&ThemeManager);
+	m_App.CaptureWindow.SetTheme(&ThemeManager);
+	m_App.Epg.ProgramGuide.SetTheme(&ThemeManager);
+	m_App.Epg.ProgramGuideFrame.SetTheme(&ThemeManager);
+	m_App.Epg.ProgramGuideDisplay.SetTheme(&ThemeManager);
+
+	m_App.AppEventManager.OnColorSchemeChanged();
+
+	return true;
 }
 
 
