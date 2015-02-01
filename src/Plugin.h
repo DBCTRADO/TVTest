@@ -293,6 +293,7 @@ class CPluginManager : public TVTest::CAppEventHandler
 	void OnRecordingPaused() override;
 	void OnRecordingResumed() override;
 	void OnRecordingFileChanged(LPCTSTR pszFileName) override;
+	void On1SegModeChanged(bool f1SegMode) override;
 	void OnFullscreenChanged(bool fFullscreen) override;
 	void OnPlaybackStateChanged(bool fPlayback) override;
 	void OnVolumeChanged(int Volume) override;

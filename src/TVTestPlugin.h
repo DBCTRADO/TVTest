@@ -120,6 +120,8 @@
 	  ・MESSAGE_SELECTCHANNEL
 	  ・MESSAGE_GETFAVORITELIST
 	  ・MESSAGE_FREEFAVORITELIST
+	  ・MESSAGE_GET1SEGMODE
+	  ・MESSAGE_SET1SEGMODE
 	・以下のイベントを追加した
 	  ・EVENT_FILTERGRAPH_INITIALIZE
 	  ・EVENT_FILTERGRAPH_INITIALIZED
@@ -131,6 +133,7 @@
 	  ・EVENT_STATUSITEM_MOUSE
 	  ・EVENT_PANELITEM_NOTIFY
 	  ・EVENT_FAVORITESCHANGED
+	  ・EVENT_1SEGMODECHANGED
 	・MESSAGE_GETSETTING で取得できる設定に以下を追加した
 	  ・OSDFont
 	  ・PanelFont
@@ -449,6 +452,8 @@ enum {
 	MESSAGE_SELECTCHANNEL,				// チャンネルを選択する
 	MESSAGE_GETFAVORITELIST,			// お気に入りチャンネルを取得
 	MESSAGE_FREEFAVORITELIST,			// お気に入りチャンネルを解放
+	MESSAGE_GET1SEGMODE,				// ワンセグモードを取得
+	MESSAGE_SET1SEGMODE,				// ワンセグモードを設定
 #endif
 	MESSAGE_TRAILER
 };
@@ -517,6 +522,7 @@ enum {
 	EVENT_STATUSITEM_MOUSE,						// ステータス項目のマウス操作
 	EVENT_PANELITEM_NOTIFY,						// パネル項目の通知
 	EVENT_FAVORITESCHANGED,						// お気に入りチャンネルが変更された
+	EVENT_1SEGMODECHANGED,						// ワンセグモードが変わった
 #endif
 	EVENT_TRAILER
 };
@@ -2814,6 +2820,16 @@ inline void MsgFreeFavoriteList(PluginParam *pParam,FavoriteList *pList) {
 	(*pParam->Callback)(pParam,MESSAGE_FREEFAVORITELIST,(LPARAM)pList,0);
 }
 
+// ワンセグモードを取得する
+inline bool MsgGet1SegMode(PluginParam *pParam) {
+	return (*pParam->Callback)(pParam,MESSAGE_GET1SEGMODE,0,0)!=FALSE;
+}
+
+// ワンセグモードを設定する
+inline bool MsgSet1SegMode(PluginParam *pParam,bool f1SegMode) {
+	return (*pParam->Callback)(pParam,MESSAGE_SET1SEGMODE,f1SegMode,0)!=FALSE;
+}
+
 #endif	// TVTEST_PLUGIN_VERSION>=TVTEST_PLUGIN_VERSION_(0,0,14)
 
 
@@ -3293,6 +3309,12 @@ public:
 	void FreeFavoriteList(FavoriteList *pList) {
 		MsgFreeFavoriteList(m_pParam,pList);
 	}
+	bool Get1SegMode() {
+		return MsgGet1SegMode(m_pParam);
+	}
+	bool Set1SegMode(bool f1SegMode) {
+		return MsgSet1SegMode(m_pParam,f1SegMode);
+	}
 #endif
 };
 
@@ -3469,6 +3491,8 @@ protected:
 	virtual bool OnPanelItemNotify(PanelItemEventInfo *pInfo) { return false; }
 	// お気に入りチャンネルが変更された
 	virtual void OnFavoritesChanged() {}
+	// ワンセグモードが変わった
+	virtual void On1SegModeChanged(bool f1SegMode) {}
 #endif
 
 public:
@@ -3562,6 +3586,9 @@ public:
 			return OnPanelItemNotify((PanelItemEventInfo*)lParam1);
 		case EVENT_FAVORITESCHANGED:
 			OnFavoritesChanged();
+			return 0;
+		case EVENT_1SEGMODECHANGED:
+			On1SegModeChanged(lParam1!=0);
 			return 0;
 #endif
 		}

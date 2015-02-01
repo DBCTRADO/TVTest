@@ -2590,6 +2590,12 @@ LRESULT CPlugin::OnCallback(TVTest::PluginParam *pParam,UINT Message,LPARAM lPar
 		}
 		return 0;
 
+	case TVTest::MESSAGE_GET1SEGMODE:
+		return GetAppClass().Core.Is1SegMode();
+
+	case TVTest::MESSAGE_SET1SEGMODE:
+		return SendPluginMessage(pParam,Message,lParam1,lParam2);
+
 #ifdef _DEBUG
 	default:
 		TRACE(TEXT("CPluign::OnCallback() : Unknown message %u\n"),Message);
@@ -3097,6 +3103,9 @@ LRESULT CPlugin::OnPluginMessage(WPARAM wParam,LPARAM lParam)
 
 			return GetAppClass().Core.SelectChannel(SelInfo);
 		}
+
+	case TVTest::MESSAGE_SET1SEGMODE:
+		return GetAppClass().Core.Set1SegMode(pParam->lParam1!=0,true);
 
 #ifdef _DEBUG
 	default:
@@ -4107,6 +4116,12 @@ void CPluginManager::OnRecordingStateChanged()
 void CPluginManager::OnRecordingFileChanged(LPCTSTR pszFileName)
 {
 	SendEvent(TVTest::EVENT_RELAYRECORD,reinterpret_cast<LPARAM>(pszFileName));
+}
+
+
+void CPluginManager::On1SegModeChanged(bool f1SegMode)
+{
+	SendEvent(TVTest::EVENT_1SEGMODECHANGED,f1SegMode);
 }
 
 
