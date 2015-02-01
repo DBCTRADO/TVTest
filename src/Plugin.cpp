@@ -2722,8 +2722,11 @@ LRESULT CPlugin::OnPluginMessage(WPARAM wParam,LPARAM lParam)
 		{
 			LPCWSTR pszDriverName=reinterpret_cast<LPCWSTR>(pParam->lParam1);
 
-			if (pszDriverName==NULL)
-				return FALSE;
+			if (pszDriverName==NULL) {
+				GetAppClass().Core.ShutDownTuner();
+				return TRUE;
+			}
+
 			return GetAppClass().Core.OpenTuner(pszDriverName);
 		}
 
