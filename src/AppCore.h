@@ -111,13 +111,9 @@ public:
 	bool GetExitOnRecordingStop() const { return m_fExitOnRecordingStop; }
 	void SetExitOnRecordingStop(bool fExit) { m_fExitOnRecordingStop=fExit; }
 
-	bool ShowHelpContent(int ID);
 	void BeginChannelScan(int Space);
 	bool IsChannelScanning() const;
 	bool IsDriverNoSignalLevel(LPCTSTR pszFileName) const;
-	void SetProgress(int Pos,int Max);
-	void EndProgress();
-	COLORREF GetColor(LPCTSTR pszText) const;
 
 private:
 	CAppMain &m_App;

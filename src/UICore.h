@@ -123,6 +123,13 @@ public:
 	bool UnregisterModelessDialog(CBasicDialog *pDialog);
 	bool ProcessDialogMessage(MSG *pMessage);
 
+	COLORREF GetColor(LPCTSTR pszText) const;
+
+	bool ShowHelpContent(int ID);
+
+	void SetProgress(int Pos,int Max);
+	void EndProgress();
+
 private:
 	CAppMain &m_App;
 	CUISkin *m_pSkin;

@@ -181,7 +181,7 @@ INT_PTR CChannelInputOptionsDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LP
 	case WM_COMMAND:
 		switch (LOWORD(wParam)) {
 		case IDC_CHANNELINPUT_HELP:
-			GetAppClass().Core.ShowHelpContent(HELP_ID_CHANNELINPUTOPTIONS);
+			GetAppClass().UICore.ShowHelpContent(HELP_ID_CHANNELINPUTOPTIONS);
 			return TRUE;
 
 		case IDOK:

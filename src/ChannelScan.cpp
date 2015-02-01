@@ -1370,7 +1370,7 @@ INT_PTR CChannelScan::ScanDlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPara
 			::SetDlgItemText(hDlg,IDC_CHANNELSCAN_INFO,szText);
 			::SetDlgItemText(hDlg,IDC_CHANNELSCAN_CHANNEL,m_BonDriverChannelList[CurChannel].c_str());
 			::SendDlgItemMessage(hDlg,IDC_CHANNELSCAN_PROGRESS,PBM_SETPOS,wParam,0);
-			GetAppClass().Core.SetProgress(CurChannel,NumChannels);
+			GetAppClass().UICore.SetProgress(CurChannel,NumChannels);
 		}
 		return TRUE;
 
@@ -1399,7 +1399,7 @@ INT_PTR CChannelScan::ScanDlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPara
 			::WaitForSingleObject(m_hScanThread,INFINITE);
 
 			//GetAppClass().Core.EndChannelScan();
-			GetAppClass().Core.EndProgress();
+			GetAppClass().UICore.EndProgress();
 
 			if (m_fCancelled) {
 				::EndDialog(hDlg,IDCANCEL);

@@ -1303,3 +1303,27 @@ bool CUICore::ProcessDialogMessage(MSG *pMessage)
 	}
 	return false;
 }
+
+
+COLORREF CUICore::GetColor(LPCTSTR pszText) const
+{
+	return m_App.ColorSchemeOptions.GetColor(pszText);
+}
+
+
+bool CUICore::ShowHelpContent(int ID)
+{
+	return m_App.HtmlHelpClass.ShowContent(ID);
+}
+
+
+void CUICore::SetProgress(int Pos,int Max)
+{
+	m_App.TaskbarManager.SetProgress(Pos,Max);
+}
+
+
+void CUICore::EndProgress()
+{
+	m_App.TaskbarManager.EndProgress();
+}

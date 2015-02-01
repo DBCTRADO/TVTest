@@ -7408,7 +7408,7 @@ INT_PTR CALLBACK CProgramGuideTool::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LP
 			return TRUE;
 
 		case IDC_PROGRAMGUIDETOOL_HELP:
-			GetAppClass().Core.ShowHelpContent(HELP_ID_PROGRAMGUIDETOOL);
+			GetAppClass().UICore.ShowHelpContent(HELP_ID_PROGRAMGUIDETOOL);
 			return TRUE;
 
 		case IDOK:

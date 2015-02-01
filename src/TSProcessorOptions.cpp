@@ -755,7 +755,7 @@ INT_PTR CTSProcessorOptions::CTunerMapDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM
 			return TRUE;
 
 		case IDC_TSPROCESSORTUNERMAP_HELP:
-			GetAppClass().Core.ShowHelpContent(HELP_ID_TSPROCESSOR_TUNERMAP);
+			GetAppClass().UICore.ShowHelpContent(HELP_ID_TSPROCESSOR_TUNERMAP);
 			return TRUE;
 
 		case IDOK:
@@ -851,7 +851,7 @@ INT_PTR CTSProcessorOptions::CNetworkMapDialog::DlgProc(HWND hDlg,UINT uMsg,WPAR
 			return TRUE;
 
 		case IDC_TSPROCESSORNETWORKMAP_HELP:
-			GetAppClass().Core.ShowHelpContent(HELP_ID_TSPROCESSOR_NETWORKMAP);
+			GetAppClass().UICore.ShowHelpContent(HELP_ID_TSPROCESSOR_NETWORKMAP);
 			return TRUE;
 
 		case IDOK:

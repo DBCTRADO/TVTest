@@ -181,7 +181,7 @@ INT_PTR CInitialSettings::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPara
 			return TRUE;
 
 		case IDC_INITIALSETTINGS_HELP:
-			GetAppClass().Core.ShowHelpContent(HELP_ID_INITIALSETTINGS);
+			GetAppClass().UICore.ShowHelpContent(HELP_ID_INITIALSETTINGS);
 			return TRUE;
 
 		case IDOK:

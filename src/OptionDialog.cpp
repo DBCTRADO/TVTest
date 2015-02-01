@@ -233,7 +233,7 @@ INT_PTR COptionDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 			return TRUE;
 
 		case IDC_OPTIONS_HELP:
-			GetAppClass().Core.ShowHelpContent(m_PageList[m_CurrentPage].HelpID);
+			GetAppClass().UICore.ShowHelpContent(m_PageList[m_CurrentPage].HelpID);
 			return TRUE;
 
 		case IDOK:

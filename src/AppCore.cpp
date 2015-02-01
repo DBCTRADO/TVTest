@@ -1077,12 +1077,6 @@ bool CAppCore::SaveCurrentChannel()
 }
 
 
-bool CAppCore::ShowHelpContent(int ID)
-{
-	return m_App.HtmlHelpClass.ShowContent(ID);
-}
-
-
 bool CAppCore::GenerateRecordFileName(LPTSTR pszFileName,int MaxFileName) const
 {
 	CRecordManager::EventInfo EventInfo;
@@ -1379,22 +1373,4 @@ bool CAppCore::IsChannelScanning() const
 bool CAppCore::IsDriverNoSignalLevel(LPCTSTR pszFileName) const
 {
 	return m_App.DriverOptions.IsNoSignalLevel(pszFileName);
-}
-
-
-void CAppCore::SetProgress(int Pos,int Max)
-{
-	m_App.TaskbarManager.SetProgress(Pos,Max);
-}
-
-
-void CAppCore::EndProgress()
-{
-	m_App.TaskbarManager.EndProgress();
-}
-
-
-COLORREF CAppCore::GetColor(LPCTSTR pszText) const
-{
-	return m_App.ColorSchemeOptions.GetColor(pszText);
 }

@@ -1525,7 +1525,7 @@ LRESULT CPlugin::OnCallback(TVTest::PluginParam *pParam,UINT Message,LPARAM lPar
 
 			if (pszName==NULL)
 				return CLR_INVALID;
-			return GetAppClass().Core.GetColor(pszName);
+			return GetAppClass().UICore.GetColor(pszName);
 		}
 
 	case TVTest::MESSAGE_DECODEARIBSTRING:
