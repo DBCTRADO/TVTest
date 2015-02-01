@@ -118,7 +118,14 @@
 		<LI> <OBJECT type="text/sitemap">
 			<param name="Name" value="キー割り当て">
 			<param name="Local" value="options\accelerator.html">
+			<param name="ImageNumber" value="11">
 			</OBJECT>
+		<UL>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="チャンネル番号入力の設定">
+				<param name="Local" value="options\channelinput.html">
+				</OBJECT>
+		</UL>
 		<LI> <OBJECT type="text/sitemap">
 			<param name="Name" value="リモコン">
 			<param name="Local" value="options\controller.html">
