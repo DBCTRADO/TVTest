@@ -308,6 +308,7 @@ class CPluginManager : public TVTest::CAppEventHandler
 	void OnSettingsChanged() override;
 	void OnClose() override;
 	void OnStartupDone() override;
+	void OnFavoritesChanged() override;
 
 public:
 	CPluginManager();

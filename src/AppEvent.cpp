@@ -225,6 +225,12 @@ void CAppEventManager::OnStartupDone()
 }
 
 
+void CAppEventManager::OnFavoritesChanged()
+{
+	CALL_HANDLERS(OnFavoritesChanged());
+}
+
+
 
 
 CAppEventHandler::~CAppEventHandler()

@@ -130,6 +130,7 @@
 	  ・EVENT_STATUSITEM_NOTIFY
 	  ・EVENT_STATUSITEM_MOUSE
 	  ・EVENT_PANELITEM_NOTIFY
+	  ・EVENT_FAVORITESCHANGED
 	・MESSAGE_GETSETTING で取得できる設定に以下を追加した
 	  ・OSDFont
 	  ・PanelFont
@@ -515,6 +516,7 @@ enum {
 	EVENT_STATUSITEM_NOTIFY,					// ステータス項目の通知
 	EVENT_STATUSITEM_MOUSE,						// ステータス項目のマウス操作
 	EVENT_PANELITEM_NOTIFY,						// パネル項目の通知
+	EVENT_FAVORITESCHANGED,						// お気に入りチャンネルが変更された
 #endif
 	EVENT_TRAILER
 };
@@ -3465,6 +3467,8 @@ protected:
 	virtual bool OnStatusItemMouseEvent(StatusItemMouseEventInfo *pInfo) { return false; }
 	// パネル項目の通知
 	virtual bool OnPanelItemNotify(PanelItemEventInfo *pInfo) { return false; }
+	// お気に入りチャンネルが変更された
+	virtual void OnFavoritesChanged() {}
 #endif
 
 public:
@@ -3556,6 +3560,9 @@ public:
 			return OnStatusItemMouseEvent((StatusItemMouseEventInfo*)lParam1);
 		case EVENT_PANELITEM_NOTIFY:
 			return OnPanelItemNotify((PanelItemEventInfo*)lParam1);
+		case EVENT_FAVORITESCHANGED:
+			OnFavoritesChanged();
+			return 0;
 #endif
 		}
 		return 0;

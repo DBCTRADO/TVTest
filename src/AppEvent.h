@@ -61,6 +61,7 @@ namespace TVTest
 		virtual void OnSettingsChanged() {}
 		virtual void OnClose() {}
 		virtual void OnStartupDone() {}
+		virtual void OnFavoritesChanged() {}
 	};
 
 	class CAppEventManager
@@ -100,6 +101,7 @@ namespace TVTest
 		void OnSettingsChanged();
 		void OnClose();
 		void OnStartupDone();
+		void OnFavoritesChanged();
 
 	private:
 		std::vector<CAppEventHandler*> m_HandlerList;

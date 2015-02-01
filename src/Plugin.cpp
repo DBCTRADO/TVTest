@@ -4232,6 +4232,12 @@ void CPluginManager::OnStartupDone()
 }
 
 
+void CPluginManager::OnFavoritesChanged()
+{
+	SendEvent(TVTest::EVENT_FAVORITESCHANGED);
+}
+
+
 bool CPluginManager::SendProgramGuideInitializeEvent(HWND hwnd)
 {
 	return SendProgramGuideEvent(TVTest::EVENT_PROGRAMGUIDE_INITIALIZE,

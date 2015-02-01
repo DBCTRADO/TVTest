@@ -3156,8 +3156,10 @@ void CMainWindow::OnCommand(HWND hwnd,int id,HWND hwndCtl,UINT codeNotify)
 	case CM_ADDTOFAVORITES:
 		{
 			const CChannelInfo *pChannel=m_App.ChannelManager.GetCurrentChannelInfo();
-			if (pChannel!=nullptr)
-				m_App.FavoritesManager.AddChannel(pChannel,m_App.CoreEngine.GetDriverFileName());
+			if (pChannel!=nullptr) {
+				if (m_App.FavoritesManager.AddChannel(pChannel,m_App.CoreEngine.GetDriverFileName()))
+					m_App.AppEventManager.OnFavoritesChanged();
+			}
 		}
 		return;
 
@@ -3165,7 +3167,8 @@ void CMainWindow::OnCommand(HWND hwnd,int id,HWND hwndCtl,UINT codeNotify)
 		{
 			COrganizeFavoritesDialog Dialog(&m_App.FavoritesManager);
 
-			Dialog.Show(GetVideoHostWindow());
+			if (Dialog.Show(GetVideoHostWindow()))
+				m_App.AppEventManager.OnFavoritesChanged();
 		}
 		return;
 
