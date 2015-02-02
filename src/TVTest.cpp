@@ -95,8 +95,8 @@ bool CTotTimeAdjuster::AdjustTime()
 				// バッファがあるので少し時刻を戻す
 				OffsetSystemTime(&st,-2000);
 				if (::SetLocalTime(&st)) {
-					g_App.Logger.AddLog(TEXT("TOTで時刻合わせを行いました。(%d/%d/%d %d:%02d:%02d)"),
-										st.wYear,st.wMonth,st.wDay,st.wHour,st.wMinute,st.wSecond);
+					g_App.AddLog(TEXT("TOTで時刻合わせを行いました。(%d/%d/%d %d:%02d:%02d)"),
+								 st.wYear,st.wMonth,st.wDay,st.wHour,st.wMinute,st.wSecond);
 					fOK=true;
 				}
 			}
@@ -1465,11 +1465,11 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,HINSTANCE /*hPrevInstance*/,
 
 	SetErrorMode(SEM_FAILCRITICALERRORS | SEM_NOOPENFILEERRORBOX);
 
-	g_App.Logger.AddLog(TEXT("******** ") ABOUT_VERSION_TEXT
+	g_App.AddLog(TEXT("******** ") ABOUT_VERSION_TEXT
 #ifdef VERSION_PLATFORM
-						TEXT(" (") VERSION_PLATFORM TEXT(")")
+				 TEXT(" (") VERSION_PLATFORM TEXT(")")
 #endif
-						TEXT(" 起動 ********"));
+				 TEXT(" 起動 ********"));
 
 	CoInitializeEx(NULL,COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE | COINIT_SPEED_OVER_MEMORY);
 
@@ -1477,7 +1477,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,HINSTANCE /*hPrevInstance*/,
 
 	CoUninitialize();
 
-	g_App.Logger.AddLog(TEXT("******** 終了 ********"));
+	g_App.AddLog(TEXT("******** 終了 ********"));
 	if (g_App.CmdLineOptions.m_fSaveLog && !g_App.Logger.GetOutputToFile()) {
 		TCHAR szFileName[MAX_PATH];
 

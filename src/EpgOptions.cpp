@@ -52,7 +52,7 @@ void CEpgOptions::Finalize()
 		if (::WaitForSingleObject(m_hLoadThread,0)==WAIT_TIMEOUT) {
 			GetAppClass().AddLog(TEXT("EPGデータ読み込みスレッドの終了を待っています..."));
 			if (::WaitForSingleObject(m_hLoadThread,30000)==WAIT_TIMEOUT) {
-				GetAppClass().AddLog(TEXT("EPGデータ読み込みスレッドを強制終了します。"));
+				GetAppClass().AddLog(CLogItem::TYPE_WARNING,TEXT("EPGデータ読み込みスレッドを強制終了します。"));
 				::TerminateThread(m_hLoadThread,-1);
 			}
 		}
@@ -306,7 +306,7 @@ bool CEpgOptions::LoadLogoFile()
 		if (::PathFileExists(szFileName)) {
 			App.AddLog(TEXT("ロゴデータを \"%s\" から読み込みます..."),szFileName);
 			if (!LogoManager.LoadLogoFile(szFileName)) {
-				App.AddLog(TEXT("ロゴファイルの読み込みでエラーが発生しました。"));
+				App.AddLog(CLogItem::TYPE_ERROR,TEXT("ロゴファイルの読み込みでエラーが発生しました。"));
 				return false;
 			}
 		}
@@ -339,7 +339,7 @@ bool CEpgOptions::SaveLogoFile()
 		if (!::PathFileExists(szFileName) || LogoManager.IsLogoDataUpdated()) {
 			App.AddLog(TEXT("ロゴデータを \"%s\" に保存します..."),szFileName);
 			if (!LogoManager.SaveLogoFile(szFileName)) {
-				App.AddLog(TEXT("ロゴファイルの保存でエラーが発生しました。"));
+				App.AddLog(CLogItem::TYPE_ERROR,TEXT("ロゴファイルの保存でエラーが発生しました。"));
 				return false;
 			}
 		}

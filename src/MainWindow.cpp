@@ -126,10 +126,11 @@ bool CBasicViewer::BuildViewer(BYTE VideoStreamType)
 	if (m_fEnabled)
 		EnableViewer(false);
 
-	m_App.Logger.AddLog(TEXT("DirectShowの初期化を行います(%s)..."),
-						VideoStreamType==STREAM_TYPE_INVALID?
-							TEXT("映像なし"):
-							TsEngine::GetStreamTypeText(VideoStreamType));
+	m_App.AddLog(
+		TEXT("DirectShowの初期化を行います(%s)..."),
+		VideoStreamType==STREAM_TYPE_INVALID?
+			TEXT("映像なし"):
+			TsEngine::GetStreamTypeText(VideoStreamType));
 
 	m_App.CoreEngine.m_DtvEngine.m_MediaViewer.SetAudioFilter(m_App.AudioOptions.GetAudioFilterName());
 	if (!m_App.CoreEngine.BuildMediaViewer(
@@ -143,7 +144,7 @@ bool CBasicViewer::BuildViewer(BYTE VideoStreamType)
 	}
 	m_App.AudioOptions.ApplyMediaViewerOptions();
 
-	m_App.Logger.AddLog(TEXT("DirectShowの初期化を行いました。"));
+	m_App.AddLog(TEXT("DirectShowの初期化を行いました。"));
 
 	return true;
 }
@@ -1385,7 +1386,7 @@ LRESULT CMainWindow::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 
 	case WM_POWERBROADCAST:
 		if (wParam==PBT_APMSUSPEND) {
-			m_App.Logger.AddLog(TEXT("サスペンドへの移行通知を受けました。"));
+			m_App.AddLog(TEXT("サスペンドへの移行通知を受けました。"));
 			if (m_App.EpgCaptureManager.IsCapturing()) {
 				m_App.EpgCaptureManager.EndCapture(0);
 			} else if (!m_pCore->GetStandby()) {
@@ -1395,7 +1396,7 @@ LRESULT CMainWindow::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 			m_App.Core.CloseTuner();
 			FinalizeViewer();
 		} else if (wParam==PBT_APMRESUMESUSPEND) {
-			m_App.Logger.AddLog(TEXT("サスペンドからの復帰通知を受けました。"));
+			m_App.AddLog(TEXT("サスペンドからの復帰通知を受けました。"));
 			if (!m_pCore->GetStandby()) {
 				// 遅延させた方がいいかも?
 				ResumeTuner();
@@ -1649,7 +1650,7 @@ LRESULT CMainWindow::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 
 		::SetCursor(::LoadCursor(nullptr,IDC_WAIT));
 
-		m_App.Logger.AddLog(TEXT("ウィンドウを閉じています..."));
+		m_App.AddLog(TEXT("ウィンドウを閉じています..."));
 
 		::KillTimer(hwnd,TIMER_ID_UPDATE);
 
@@ -2815,7 +2816,7 @@ void CMainWindow::OnCommand(HWND hwnd,int id,HWND hwndCtl,UINT codeNotify)
 				if (TuningSpaceList.SaveToFile(szFileName))
 					m_App.AddLog(TEXT("チャンネルファイルを \"%s\" に保存しました。"),szFileName);
 				else
-					m_App.AddLog(TEXT("チャンネルファイル \"%s\" を保存できません。"),szFileName);
+					m_App.AddLog(CLogItem::TYPE_ERROR,TEXT("チャンネルファイル \"%s\" を保存できません。"),szFileName);
 			}
 		}
 		return;
@@ -5372,7 +5373,7 @@ bool CMainWindow::SetStandby(bool fStandby)
 	if (fStandby) {
 		if (m_fStandbyInit)
 			return true;
-		m_App.Logger.AddLog(TEXT("待機状態に移行します。"));
+		m_App.AddLog(TEXT("待機状態に移行します。"));
 		SuspendViewer(ResumeInfo::VIEWERSUSPEND_STANDBY);
 		//FinalizeViewer();
 		m_Resume.fFullscreen=m_pCore->GetFullscreen();
@@ -5399,7 +5400,7 @@ bool CMainWindow::SetStandby(bool fStandby)
 				m_App.Core.CloseTuner();
 		}
 	} else {
-		m_App.Logger.AddLog(TEXT("待機状態から復帰します。"));
+		m_App.AddLog(TEXT("待機状態から復帰します。"));
 		SetWindowVisible();
 		Util::CWaitCursor WaitCursor;
 		if (m_fStandbyInit) {

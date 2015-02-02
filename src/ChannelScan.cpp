@@ -1124,7 +1124,7 @@ INT_PTR CChannelScan::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 						TCHAR szText[32+MAX_PATH];
 						StdUtil::snprintf(szText,lengthof(szText),
 										  TEXT("チャンネルファイル \"%s\" を保存できません。"),szFileName);
-						App.AddLog(TEXT("%s"),szText);
+						App.AddLog(CLogItem::TYPE_ERROR,TEXT("%s"),szText);
 						::MessageBox(hDlg,szText,NULL,MB_OK | MB_ICONEXCLAMATION);
 					}
 					SetUpdateFlag(UPDATE_CHANNELLIST);
@@ -1164,7 +1164,7 @@ INT_PTR CChannelScan::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 											} else {
 												StdUtil::snprintf(szText,lengthof(szText),
 																  TEXT("チャンネルファイル \"%s\" を保存できません。"),szFileName);
-												App.AddLog(TEXT("%s"),szText);
+												App.AddLog(CLogItem::TYPE_ERROR,TEXT("%s"),szText);
 												if (::MessageBox(hDlg,szText,NULL,MB_OKCANCEL | MB_ICONEXCLAMATION)!=IDOK)
 													break;
 											}
@@ -1435,7 +1435,7 @@ INT_PTR CChannelScan::ScanDlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPara
 			if (m_hScanThread!=NULL) {
 				::SetEvent(m_hCancelEvent);
 				if (::WaitForSingleObject(m_hScanThread,30000)==WAIT_TIMEOUT) {
-					GetAppClass().AddLog(TEXT("チャンネルスキャンスレッドを強制終了します。"));
+					GetAppClass().AddLog(CLogItem::TYPE_WARNING,TEXT("チャンネルスキャンスレッドを強制終了します。"));
 					::TerminateThread(m_hScanThread,-1);
 				}
 				::CloseHandle(m_hScanThread);

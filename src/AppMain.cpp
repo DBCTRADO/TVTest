@@ -141,6 +141,7 @@ DWORD WINAPI CAppTerminator::WatchThread(LPVOID lpParameter)
 
 		if (Result==WAIT_TIMEOUT) {
 			pThis->m_App.AddLog(
+				CLogItem::TYPE_WARNING,
 				TEXT("終了処理がタイムアウトしました(%ums)。プロセスを強制的に終了させます。"),
 				pThis->m_Timeout);
 
@@ -248,12 +249,22 @@ bool CAppMain::GetAppDirectory(LPTSTR pszDirectory) const
 }
 
 
+void CAppMain::AddLog(CLogItem::LogType Type,LPCTSTR pszText, ...)
+{
+	va_list Args;
+
+	va_start(Args,pszText);
+	Logger.AddLogV(Type,pszText,Args);
+	va_end(Args);
+}
+
+
 void CAppMain::AddLog(LPCTSTR pszText, ...)
 {
 	va_list Args;
 
 	va_start(Args,pszText);
-	Logger.AddLogV(pszText,Args);
+	Logger.AddLogV(CLogItem::TYPE_INFORMATION,pszText,Args);
 	va_end(Args);
 }
 
@@ -369,7 +380,7 @@ bool CAppMain::LoadSettings()
 	CSettings &Settings=m_Settings;
 
 	if (!Settings.Open(m_szIniFileName,CSettings::OPEN_READ | CSettings::OPEN_WRITE_VOLATILE)) {
-		AddLog(TEXT("設定ファイル \"%s\" を開けません。"),m_szIniFileName);
+		AddLog(CLogItem::TYPE_ERROR,TEXT("設定ファイル \"%s\" を開けません。"),m_szIniFileName);
 		return false;
 	}
 
@@ -509,7 +520,7 @@ bool CAppMain::SaveSettings(unsigned int Flags)
 		StdUtil::snprintf(szMessage,lengthof(szMessage),
 						  TEXT("設定ファイル \"%s\" を開けません。"),
 						  m_szIniFileName);
-		AddLog(TEXT("%s"),szMessage);
+		AddLog(CLogItem::TYPE_ERROR,TEXT("%s"),szMessage);
 		if (!Core.IsSilent())
 			UICore.GetSkin()->ShowErrorMessage(szMessage);
 		return false;
@@ -636,7 +647,7 @@ int CAppMain::Main(HINSTANCE hInstance,LPCTSTR pszCmdLine,int nCmdShow)
 
 	// コマンドラインの解析
 	if (pszCmdLine[0]!=_T('\0')) {
-		Logger.AddLog(TEXT("コマンドラインオプション : %s"),pszCmdLine);
+		AddLog(TEXT("コマンドラインオプション : %s"),pszCmdLine);
 
 		CmdLineOptions.Parse(pszCmdLine);
 
@@ -669,13 +680,13 @@ int CAppMain::Main(HINSTANCE hInstance,LPCTSTR pszCmdLine,int nCmdShow)
 	// 複数起動のチェック
 	if (AppMutex.AlreadyExists()
 			&& (GeneralOptions.GetKeepSingleTask() || CmdLineOptions.m_fSingleTask)) {
-		Logger.AddLog(TEXT("複数起動が禁止されています。"));
+		AddLog(TEXT("複数起動が禁止されています。"));
 		CTVTestWindowFinder Finder;
 		HWND hwnd=Finder.FindCommandLineTarget();
 		if (::IsWindow(hwnd)) {
 			if (!SendInterprocessMessage(hwnd,PROCESS_MESSAGE_EXECUTE,
 										 pszCmdLine,(::lstrlen(pszCmdLine)+1)*sizeof(TCHAR))) {
-				Logger.AddLog(TEXT("既存のプロセスにメッセージを送信できません。"));
+				AddLog(CLogItem::TYPE_ERROR,TEXT("既存のプロセスにメッセージを送信できません。"));
 			}
 			return 0;
 		}
@@ -802,7 +813,7 @@ int CAppMain::Main(HINSTANCE hInstance,LPCTSTR pszCmdLine,int nCmdShow)
 
 	// ウィンドウの作成
 	if (!MainWindow.Create(nullptr,WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN)) {
-		Logger.AddLog(TEXT("ウィンドウが作成できません。"));
+		AddLog(CLogItem::TYPE_ERROR,TEXT("ウィンドウが作成できません。"));
 		if (!Core.IsSilent())
 			MessageBox(nullptr,TEXT("ウィンドウが作成できません。"),nullptr,MB_OK | MB_ICONSTOP);
 		return 0;
@@ -861,7 +872,7 @@ int CAppMain::Main(HINSTANCE hInstance,LPCTSTR pszCmdLine,int nCmdShow)
 			GetAppDirectory(szPluginDir);
 			::PathAppend(szPluginDir,TEXT("Plugins"));
 		}
-		Logger.AddLog(TEXT("プラグインを \"%s\" から読み込みます..."),szPluginDir);
+		AddLog(TEXT("プラグインを \"%s\" から読み込みます..."),szPluginDir);
 		if (CmdLineOptions.m_NoLoadPlugins.size()>0) {
 			for (size_t i=0;i<CmdLineOptions.m_NoLoadPlugins.size();i++)
 				ExcludePlugins.push_back(CmdLineOptions.m_NoLoadPlugins[i].c_str());
@@ -1224,7 +1235,7 @@ LRESULT CAppMain::ReceiveInterprocessMessage(HWND hwnd,WPARAM wParam,LPARAM lPar
 		break;
 
 	default:
-		AddLog(TEXT("未知のメッセージ %Ix を受信しました。"),pcds->dwData);
+		AddLog(CLogItem::TYPE_WARNING,TEXT("未知のメッセージ %Ix を受信しました。"),pcds->dwData);
 		break;
 	}
 

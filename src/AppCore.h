@@ -46,7 +46,6 @@ public:
 
 	CAppCore(CAppMain &App);
 	bool GetDriverDirectory(LPTSTR pszDirectory,int MaxLength) const;
-	void AddLog(LPCTSTR pszText, ...);
 	void OnError(const CBonErrorHandler *pErrorHandler,LPCTSTR pszTitle=NULL);
 	void SetSilent(bool fSilent);
 	bool IsSilent() const { return m_fSilent; }

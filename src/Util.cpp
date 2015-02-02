@@ -940,6 +940,49 @@ HICON LoadIconStandardSize(HINSTANCE hinst,LPCTSTR pszName,IconSizeType Size)
 }
 
 
+HICON LoadSystemIcon(LPCTSTR pszName,IconSizeType Size)
+{
+	int Metric;
+	HICON hico;
+
+	switch (Size) {
+	case ICON_SIZE_SMALL:	Metric=LIM_SMALL;	break;
+	case ICON_SIZE_NORMAL:	Metric=LIM_LARGE;	break;
+	default:
+		return NULL;
+	}
+
+#ifdef WIN_XP_SUPPORT
+	auto pLoadIconMetric=GET_MODULE_FUNCTION(TEXT("comctl32.dll"),LoadIconMetric);
+	if (pLoadIconMetric!=NULL) {
+		if (SUCCEEDED(pLoadIconMetric(NULL,pszName,Metric,&hico)))
+			return hico;
+	}
+#else
+	if (SUCCEEDED(::LoadIconMetric(NULL,pszName,Metric,&hico)))
+		return hico;
+#endif
+
+	int Width,Height;
+
+	switch (Size) {
+	case ICON_SIZE_SMALL:
+		Width=::GetSystemMetrics(SM_CXSMICON);
+		Height=::GetSystemMetrics(SM_CYSMICON);
+		break;
+	case ICON_SIZE_NORMAL:
+		Width=::GetSystemMetrics(SM_CXICON);
+		Height=::GetSystemMetrics(SM_CYICON);
+		break;
+	}
+
+	hico=::LoadIcon(NULL,pszName);
+	if (hico!=NULL)
+		hico=(HICON)::CopyImage(hico,IMAGE_ICON,Width,Height,0);
+	return hico;
+}
+
+
 
 
 CStaticStringFormatter::CStaticStringFormatter(LPTSTR pBuffer,size_t BufferLength)

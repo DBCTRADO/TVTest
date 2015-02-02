@@ -9,21 +9,30 @@
 
 class CLogItem
 {
-	FILETIME m_Time;
-	TVTest::String m_Text;
-	DWORD m_SerialNumber;
-
 public:
+	enum LogType {
+		TYPE_INFORMATION,
+		TYPE_WARNING,
+		TYPE_ERROR
+	};
+
 	CLogItem();
-	CLogItem(LPCTSTR pszText,DWORD SerialNumber);
+	CLogItem(LogType Type,LPCTSTR pszText,DWORD SerialNumber);
 	~CLogItem();
 	LPCTSTR GetText() const { return m_Text.c_str(); }
 	void GetTime(SYSTEMTIME *pTime) const;
+	LogType GetType() const { return m_Type; }
 	DWORD GetSerialNumber() const { return m_SerialNumber; }
 	int Format(char *pszText,int MaxLength) const;
 	int Format(WCHAR *pszText,int MaxLength) const;
 	int FormatTime(char *pszText,int MaxLength) const;
 	int FormatTime(WCHAR *pszText,int MaxLength) const;
+
+private:
+	FILETIME m_Time;
+	TVTest::String m_Text;
+	LogType m_Type;
+	DWORD m_SerialNumber;
 };
 
 class CLogger : public COptions, public CTracer
@@ -40,9 +49,9 @@ public:
 	bool Create(HWND hwndOwner) override;
 
 // CLogger
-	bool AddLog(LPCTSTR pszText, ...);
-	bool AddLogV(LPCTSTR pszText,va_list Args);
-	bool AddLogRaw(LPCTSTR pszText);
+	bool AddLog(CLogItem::LogType Type,LPCTSTR pszText, ...);
+	bool AddLogV(CLogItem::LogType Type,LPCTSTR pszText,va_list Args);
+	bool AddLogRaw(CLogItem::LogType Type,LPCTSTR pszText);
 	void Clear();
 	std::size_t GetLogCount() const;
 	bool GetLog(std::size_t Index,CLogItem *pItem) const;

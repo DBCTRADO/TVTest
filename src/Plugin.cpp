@@ -778,7 +778,8 @@ void CPlugin::Free()
 		TVTest::FinalizeFunc pFinalize=
 			reinterpret_cast<TVTest::FinalizeFunc>(::GetProcAddress(m_hLib,"TVTFinalize"));
 		if (pFinalize==NULL) {
-			App.AddLog(TEXT("%s のTVTFinalize()関数のアドレスを取得できません。"),
+			App.AddLog(CLogItem::TYPE_ERROR,
+					   TEXT("%s のTVTFinalize()関数のアドレスを取得できません。"),
 					   pszFileName);
 		} else {
 			pFinalize();
@@ -1150,8 +1151,10 @@ LRESULT CPlugin::SendPluginMessage(TVTest::PluginParam *pParam,UINT Message,LPAR
 							 Message,reinterpret_cast<LPARAM>(&MessageParam),
 							 SMTO_NORMAL,10000,&Result))
 		return Result;
-	GetAppClass().AddLog(TEXT("応答が無いためプラグインからのメッセージを処理できません。(%s : %u)"),
-						 ::PathFindFileName(MessageParam.pPlugin->m_FileName.c_str()),Message);
+	GetAppClass().AddLog(
+		CLogItem::TYPE_ERROR,
+		TEXT("応答が無いためプラグインからのメッセージを処理できません。(%s : %u)"),
+		::PathFindFileName(MessageParam.pPlugin->m_FileName.c_str()),Message);
 	return FailedResult;
 }
 
@@ -3754,13 +3757,15 @@ bool CPluginManager::LoadPlugins(LPCTSTR pszDirectory,const std::vector<LPCTSTR>
 				App.AddLog(TEXT("%s を読み込みました。"),wfd.cFileName);
 				m_PluginList.push_back(pPlugin);
 			} else {
-				App.AddLog(TEXT("%s : %s"),
-						   wfd.cFileName,
-						   !IsStringEmpty(pPlugin->GetLastErrorText())?
-						   pPlugin->GetLastErrorText():
-						   TEXT("プラグインを読み込めません。"));
+				App.AddLog(
+					CLogItem::TYPE_ERROR,
+					TEXT("%s : %s"),
+					wfd.cFileName,
+					!IsStringEmpty(pPlugin->GetLastErrorText())?
+						pPlugin->GetLastErrorText():
+						TEXT("プラグインを読み込めません。"));
 				if (!IsStringEmpty(pPlugin->GetLastErrorAdvise()))
-					App.AddLog(TEXT("(%s)"),pPlugin->GetLastErrorAdvise());
+					App.AddLog(CLogItem::TYPE_ERROR,TEXT("(%s)"),pPlugin->GetLastErrorAdvise());
 				delete pPlugin;
 			}
 		} while (::FindNextFile(hFind,&wfd));

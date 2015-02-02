@@ -153,6 +153,7 @@ bool CRecordTask::Start(CDtvEngine *pDtvEngine,LPCTSTR pszFileName,const CRecord
 			hWriteLib=::LoadLibrary(WritePlugin.c_str());
 			if (hWriteLib==NULL) {
 				GetAppClass().AddLog(
+					CLogItem::TYPE_WARNING,
 					TEXT("出力プラグイン \"%s\" がロードできないため、TS出力を行います。"),
 					WritePlugin.c_str());
 				WritePlugin.clear();

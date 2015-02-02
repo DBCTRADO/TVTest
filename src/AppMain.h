@@ -454,6 +454,7 @@ public:
 	bool GetAppDirectory(LPTSTR pszDirectory) const;
 	LPCTSTR GetIniFileName() const { return m_szIniFileName; }
 	LPCTSTR GetFavoritesFileName() const { return m_szFavoritesFileName; }
+	void AddLog(CLogItem::LogType Type,LPCTSTR pszText, ...);
 	void AddLog(LPCTSTR pszText, ...);
 	bool IsFirstExecute() const;
 	int Main(HINSTANCE hInstance,LPCTSTR pszCmdLine,int nCmdShow);

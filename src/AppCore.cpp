@@ -32,21 +32,11 @@ bool CAppCore::GetDriverDirectory(LPTSTR pszDirectory,int MaxLength) const
 }
 
 
-void CAppCore::AddLog(LPCTSTR pszText, ...)
-{
-	va_list Args;
-
-	va_start(Args,pszText);
-	m_App.Logger.AddLogV(pszText,Args);
-	va_end(Args);
-}
-
-
 void CAppCore::OnError(const CBonErrorHandler *pErrorHandler,LPCTSTR pszTitle)
 {
 	if (pErrorHandler==nullptr)
 		return;
-	m_App.Logger.AddLog(TEXT("%s"),pErrorHandler->GetLastErrorText());
+	m_App.AddLog(CLogItem::TYPE_ERROR,TEXT("%s"),pErrorHandler->GetLastErrorText());
 	if (!m_fSilent)
 		m_App.UICore.GetSkin()->ShowErrorMessage(pErrorHandler,pszTitle);
 }
@@ -78,10 +68,10 @@ bool CAppCore::InitializeChannel()
 
 	if (!ChannelFilePath.IsEmpty()) {
 		if (m_App.ChannelManager.LoadChannelList(ChannelFilePath.GetPath())) {
-			AddLog(TEXT("チャンネル設定を \"%s\" から読み込みました。"),
-				   ChannelFilePath.GetPath());
+			m_App.AddLog(TEXT("チャンネル設定を \"%s\" から読み込みました。"),
+						 ChannelFilePath.GetPath());
 			if (!m_App.ChannelManager.ChannelFileHasStreamIDs())
-				AddLog(TEXT("(チャンネルファイルが古いので再スキャンをお薦めします)"));
+				m_App.AddLog(CLogItem::TYPE_WARNING,TEXT("チャンネルファイルが古いので再スキャンをお薦めします。"));
 		}
 	}
 
@@ -347,9 +337,9 @@ bool CAppCore::SetChannel(int Space,int Channel,int ServiceID/*=-1*/,bool fStric
 		}
 
 		LPCTSTR pszTuningSpace=m_App.ChannelManager.GetDriverTuningSpaceList()->GetTuningSpaceName(pChInfo->GetSpace());
-		AddLog(TEXT("BonDriverにチャンネル変更を要求します。(チューニング空間 %d[%s] / Ch %d[%s] / Sv %d)"),
-			   pChInfo->GetSpace(),pszTuningSpace!=nullptr?pszTuningSpace:TEXT("\?\?\?"),
-			   pChInfo->GetChannelIndex(),pChInfo->GetName(),ServiceID);
+		m_App.AddLog(TEXT("BonDriverにチャンネル変更を要求します。(チューニング空間 %d[%s] / Ch %d[%s] / Sv %d)"),
+					 pChInfo->GetSpace(),pszTuningSpace!=nullptr?pszTuningSpace:TEXT("\?\?\?"),
+					 pChInfo->GetChannelIndex(),pChInfo->GetName(),ServiceID);
 
 		CDtvEngine::ServiceSelectInfo ServiceSel;
 		ServiceSel.ServiceID=ServiceID>0?ServiceID:CDtvEngine::SID_INVALID;
@@ -371,7 +361,7 @@ bool CAppCore::SetChannel(int Space,int Channel,int ServiceID/*=-1*/,bool fStric
 
 		if (!m_App.CoreEngine.m_DtvEngine.SetChannel(
 				pChInfo->GetSpace(),pChInfo->GetChannelIndex(),&ServiceSel)) {
-			AddLog(TEXT("%s"),m_App.CoreEngine.m_DtvEngine.GetLastErrorText());
+			m_App.AddLog(CLogItem::TYPE_ERROR,TEXT("%s"),m_App.CoreEngine.m_DtvEngine.GetLastErrorText());
 			m_App.ChannelManager.SetCurrentChannel(OldSpace,OldChannel);
 			return false;
 		}
@@ -552,7 +542,7 @@ bool CAppCore::SetCommandLineChannel(const CCommandLineOptions *pCmdLine)
 		}
 	}
 
-	AddLog(TEXT("コマンドラインで指定されたチャンネルが見付かりません。"));
+	m_App.AddLog(CLogItem::TYPE_ERROR,TEXT("コマンドラインで指定されたチャンネルが見付かりません。"));
 
 	return false;
 }
@@ -588,8 +578,8 @@ bool CAppCore::FollowChannelChange(WORD TransportStreamID,WORD ServiceID)
 	const CChannelInfo *pCurChInfo=m_App.ChannelManager.GetCurrentChannelInfo();
 	if (pCurChInfo==nullptr
 			|| pCurChInfo->GetTransportStreamID()!=TransportStreamID) {
-		AddLog(TEXT("ストリームの変化を検知しました。(TSID %d / SID %d)"),
-			   TransportStreamID,ServiceID);
+		m_App.AddLog(TEXT("ストリームの変化を検知しました。(TSID %d / SID %d)"),
+					 TransportStreamID,ServiceID);
 	}
 	const bool fSpaceChanged=Space!=m_App.ChannelManager.GetCurrentSpace();
 	if (!m_App.ChannelManager.SetCurrentChannel(Space,Channel))
@@ -636,7 +626,7 @@ bool CAppCore::SetServiceByID(WORD ServiceID,unsigned int Flags)
 	bool fResult;
 
 	if (ServiceSel.ServiceID==CDtvEngine::SID_DEFAULT) {
-		AddLog(TEXT("デフォルトのサービスを選択します..."));
+		m_App.AddLog(TEXT("デフォルトのサービスを選択します..."));
 		fResult=m_App.CoreEngine.m_DtvEngine.SetService(&ServiceSel);
 		if (fResult) {
 			if (!m_App.CoreEngine.m_DtvEngine.GetServiceID(&ServiceID))
@@ -644,13 +634,13 @@ bool CAppCore::SetServiceByID(WORD ServiceID,unsigned int Flags)
 		}
 	} else {
 		if (ServiceSel.OneSegSelect==CDtvEngine::ONESEG_SELECT_HIGHPRIORITY)
-			AddLog(TEXT("サービスを選択します..."));
+			m_App.AddLog(TEXT("サービスを選択します..."));
 		else
-			AddLog(TEXT("サービスを選択します(SID %d)..."),ServiceSel.ServiceID);
+			m_App.AddLog(TEXT("サービスを選択します(SID %d)..."),ServiceSel.ServiceID);
 		fResult=m_App.CoreEngine.m_DtvEngine.SetService(&ServiceSel);
 	}
 	if (!fResult) {
-		AddLog(TEXT("サービスを選択できません。"));
+		m_App.AddLog(CLogItem::TYPE_ERROR,TEXT("サービスを選択できません。"));
 		return false;
 	}
 
@@ -660,7 +650,7 @@ bool CAppCore::SetServiceByID(WORD ServiceID,unsigned int Flags)
 	if (ServiceID!=0) {
 		int ServiceIndex=m_App.CoreEngine.m_DtvEngine.m_TsAnalyzer.GetServiceIndexByID(ServiceID);
 		if (ServiceIndex>=0) {
-			//AddLog(TEXT("サービスを変更しました。(SID %d)"),ServiceID);
+			//m_App.AddLog(TEXT("サービスを変更しました。(SID %d)"),ServiceID);
 
 			if (fStrict && m_f1SegMode
 					&& !m_App.CoreEngine.m_DtvEngine.m_TsAnalyzer.Is1SegService(ServiceIndex)) {
@@ -917,7 +907,7 @@ bool CAppCore::OpenAndInitializeTuner(unsigned int OpenFlags)
 	if (!m_App.CoreEngine.OpenTuner())
 		return false;
 
-	AddLog(TEXT("%s を読み込みました。"),m_App.CoreEngine.GetDriverFileName());
+	m_App.AddLog(TEXT("%s を読み込みました。"),m_App.CoreEngine.GetDriverFileName());
 
 	ApplyBonDriverOptions();
 
@@ -977,7 +967,7 @@ bool CAppCore::Set1SegMode(bool f1Seg,bool fServiceChange)
 	if (m_f1SegMode != f1Seg) {
 		m_f1SegMode = f1Seg;
 
-		AddLog(TEXT("ワンセグモードを%sにします。"),f1Seg?TEXT("オン"):TEXT("オフ"));
+		m_App.AddLog(TEXT("ワンセグモードを%sにします。"),f1Seg?TEXT("オン"):TEXT("オフ"));
 
 		if (fServiceChange) {
 			if (m_f1SegMode) {
@@ -1167,7 +1157,7 @@ bool CAppCore::StartRecord(LPCTSTR pszFileName,
 	}
 	m_App.TaskTrayManager.SetStatus(CTaskTrayManager::STATUS_RECORDING,
 									CTaskTrayManager::STATUS_RECORDING);
-	AddLog(TEXT("録画開始 %s"),szFileName);
+	m_App.AddLog(TEXT("録画開始 %s"),szFileName);
 	m_App.AppEventManager.OnRecordingStarted();
 	return true;
 }
@@ -1227,7 +1217,7 @@ bool CAppCore::StartReservedRecord()
 		return false;
 	}
 	m_App.RecordManager.GetRecordTask()->GetFileName(szFileName,lengthof(szFileName));
-	AddLog(TEXT("録画開始 %s"),szFileName);
+	m_App.AddLog(TEXT("録画開始 %s"),szFileName);
 
 	m_App.TaskTrayManager.SetStatus(CTaskTrayManager::STATUS_RECORDING,
 									CTaskTrayManager::STATUS_RECORDING);
@@ -1259,8 +1249,8 @@ bool CAppCore::StopRecord()
 
 	CTsRecorder::WriteStatistics Stats;
 	m_App.CoreEngine.m_DtvEngine.m_TsRecorder.GetWriteStatistics(&Stats);
-	AddLog(TEXT("録画停止 %s (出力TSサイズ %llu Bytes / 書き出しエラー回数 %u)"),
-		   szFileName,Stats.OutputSize,Stats.WriteErrorCount);
+	m_App.AddLog(TEXT("録画停止 %s (出力TSサイズ %llu Bytes / 書き出しエラー回数 %u)"),
+				 szFileName,Stats.OutputSize,Stats.WriteErrorCount);
 
 	m_App.TaskTrayManager.SetStatus(0,CTaskTrayManager::STATUS_RECORDING);
 	m_App.AppEventManager.OnRecordingStopped();
@@ -1279,10 +1269,10 @@ bool CAppCore::PauseResumeRecording()
 		return false;
 
 	if (m_App.RecordManager.IsPaused()) {
-		AddLog(TEXT("録画一時停止"));
+		m_App.AddLog(TEXT("録画一時停止"));
 		m_App.AppEventManager.OnRecordingPaused();
 	} else {
-		AddLog(TEXT("録画再開"));
+		m_App.AddLog(TEXT("録画再開"));
 		m_App.AppEventManager.OnRecordingResumed();
 	}
 
@@ -1298,7 +1288,7 @@ bool CAppCore::RelayRecord(LPCTSTR pszFileName)
 		OnError(&m_App.RecordManager,TEXT("録画ファイルを切り替えできません。"));
 		return false;
 	}
-	AddLog(TEXT("録画ファイルを切り替えました %s"),pszFileName);
+	m_App.AddLog(TEXT("録画ファイルを切り替えました %s"),pszFileName);
 	m_App.AppEventManager.OnRecordingFileChanged(pszFileName);
 	return true;
 }
@@ -1327,15 +1317,15 @@ bool CAppCore::CommandLineRecord(LPCTSTR pszFileName,const FILETIME *pStartTime,
 			StartTime.Time.DateTime+=(LONGLONG)Delay*FILETIME_SECOND;
 		SYSTEMTIME st;
 		::FileTimeToSystemTime(pStartTime,&st);
-		AddLog(TEXT("コマンドラインから録画指定されました。(%d/%d/%d %d:%02d:%02d 開始)"),
-			   st.wYear,st.wMonth,st.wDay,st.wHour,st.wMinute,st.wSecond);
+		m_App.AddLog(TEXT("コマンドラインから録画指定されました。(%d/%d/%d %d:%02d:%02d 開始)"),
+					 st.wYear,st.wMonth,st.wDay,st.wHour,st.wMinute,st.wSecond);
 	} else if (Delay>0) {
 		StartTime.Type=CRecordManager::TIME_DURATION;
 		StartTime.Time.Duration=Delay*1000;
-		AddLog(TEXT("コマンドラインから録画指定されました。(%d 秒後開始)"),Delay);
+		m_App.AddLog(TEXT("コマンドラインから録画指定されました。(%d 秒後開始)"),Delay);
 	} else {
 		StartTime.Type=CRecordManager::TIME_NOTSPECIFIED;
-		AddLog(TEXT("コマンドラインから録画指定されました。"));
+		m_App.AddLog(TEXT("コマンドラインから録画指定されました。"));
 	}
 	if (Duration>0) {
 		StopTime.Type=CRecordManager::TIME_DURATION;
