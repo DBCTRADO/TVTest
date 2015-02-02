@@ -236,7 +236,7 @@ bool CTunerPanel::Initialize()
 	bool fResult = m_pApp->RegisterPanelItem(&PanelInfo);
 	::DeleteObject(PanelInfo.hbmIcon);
 	if (!fResult) {
-		m_pApp->AddLog(L"パネル項目を登録できません。");
+		m_pApp->AddLog(L"パネル項目を登録できません。", TVTest::LOG_TYPE_ERROR);
 		return false;
 	}
 

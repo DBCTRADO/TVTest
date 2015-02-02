@@ -88,7 +88,7 @@ bool CDiskRelay::Initialize()
 	if (!m_pApp->GetHostInfo(&HostInfo)
 			|| HostInfo.SupportedPluginVersion<TVTEST_PLUGIN_VERSION_(0,0,10)
 			|| !m_pApp->QueryMessage(TVTest::MESSAGE_RELAYRECORD)) {
-		m_pApp->AddLog(L"このバージョンでは利用できません。");
+		m_pApp->AddLog(L"このバージョンでは利用できません。",TVTest::LOG_TYPE_ERROR);
 		return false;
 	}
 
@@ -173,7 +173,8 @@ bool CDiskRelay::CheckFreeSpace()
 		ULARGE_INTEGER FreeSpace;
 		if (::GetDiskFreeSpaceEx(szPath,&FreeSpace,NULL,NULL)
 				&& FreeSpace.QuadPart<=(ULONGLONG)m_LowFreeSpace*0x100000) {
-			m_pApp->AddLog(TEXT("空き容量が少ないため続きを予備のフォルダに録画します。"));
+			m_pApp->AddLog(TEXT("空き容量が少ないため続きを予備のフォルダに録画します。"),
+						   TVTest::LOG_TYPE_WARNING);
 			for (;m_NextFolder<NUM_SPARE_FOLDERS;m_NextFolder++) {
 				if (m_szSpareFolder[m_NextFolder][0]!='\0'
 						&& ::PathIsDirectory(m_szSpareFolder[m_NextFolder])) {
@@ -190,7 +191,8 @@ bool CDiskRelay::CheckFreeSpace()
 					}
 				}
 			}
-			m_pApp->AddLog(TEXT("空き容量のあるフォルダがありません。"));
+			m_pApp->AddLog(TEXT("空き容量のあるフォルダがありません。"),
+						   TVTest::LOG_TYPE_ERROR);
 		}
 	}
 	return false;

@@ -69,7 +69,7 @@ bool CPacketCounter::Initialize()
 	Item.DefaultWidth = TVTest::StatusItemWidthByFontSize(6);
 	Item.MinHeight    = 0;
 	if (!m_pApp->RegisterStatusItem(&Item)) {
-		m_pApp->AddLog(L"ステータス項目を登録できません。");
+		m_pApp->AddLog(L"ステータス項目を登録できません。", TVTest::LOG_TYPE_ERROR);
 		return false;
 	}
 

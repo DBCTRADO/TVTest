@@ -118,6 +118,10 @@
 	  ・MESSAGE_SETPANELITEM
 	  ・MESSAGE_GETPANELITEMINFO
 	  ・MESSAGE_SELECTCHANNEL
+	  ・MESSAGE_GETFAVORITELIST
+	  ・MESSAGE_FREEFAVORITELIST
+	  ・MESSAGE_GET1SEGMODE
+	  ・MESSAGE_SET1SEGMODE
 	・以下のイベントを追加した
 	  ・EVENT_FILTERGRAPH_INITIALIZE
 	  ・EVENT_FILTERGRAPH_INITIALIZED
@@ -128,11 +132,14 @@
 	  ・EVENT_STATUSITEM_NOTIFY
 	  ・EVENT_STATUSITEM_MOUSE
 	  ・EVENT_PANELITEM_NOTIFY
+	  ・EVENT_FAVORITESCHANGED
+	  ・EVENT_1SEGMODECHANGED
 	・MESSAGE_GETSETTING で取得できる設定に以下を追加した
 	  ・OSDFont
 	  ・PanelFont
 	  ・ProgramGuideFont
 	  ・StatusBarFont
+	・プラグインのフラグに PLUGIN_FLAG_NOENABLEDDISABLED を追加した
 
 	ver.0.0.13 (TVTest ver.0.7.16 or later)
 	・以下のメッセージを追加した
@@ -270,14 +277,18 @@ enum {
 
 // プラグインのフラグ
 enum {
-	PLUGIN_FLAG_HASSETTINGS		=0x00000001UL,	// 設定ダイアログがある
-	PLUGIN_FLAG_ENABLEDEFAULT	=0x00000002UL	// デフォルトで有効
-												// 特別な理由が無い限り使わない
+	PLUGIN_FLAG_HASSETTINGS			=0x00000001UL,	// 設定ダイアログがある
+	PLUGIN_FLAG_ENABLEDEFAULT		=0x00000002UL	// デフォルトで有効
+													// 特別な理由が無い限り使わない
 #if TVTEST_PLUGIN_VERSION>=TVTEST_PLUGIN_VERSION_(0,0,10)
-	,PLUGIN_FLAG_DISABLEONSTART	=0x00000004UL	// 起動時は必ず無効
+	,PLUGIN_FLAG_DISABLEONSTART		=0x00000004UL	// 起動時は必ず無効
 #endif
 #if TVTEST_PLUGIN_VERSION>=TVTEST_PLUGIN_VERSION_(0,0,11)
-	,PLUGIN_FLAG_NOUNLOAD		=0x00000008UL	// 終了時以外アンロード不可
+	,PLUGIN_FLAG_NOUNLOAD			=0x00000008UL	// 終了時以外アンロード不可
+#endif
+#if TVTEST_PLUGIN_VERSION>=TVTEST_PLUGIN_VERSION_(0,0,14)
+	,PLUGIN_FLAG_NOENABLEDDISABLED	=0x00000010UL	// 有効/無効の区別がない
+													// メニューに表示されず、EVENT_PLUGINENABLE が送られません
 #endif
 };
 
@@ -439,6 +450,10 @@ enum {
 	MESSAGE_SETPANELITEM,				// パネル項目の設定
 	MESSAGE_GETPANELITEMINFO,			// パネル項目の情報を取得
 	MESSAGE_SELECTCHANNEL,				// チャンネルを選択する
+	MESSAGE_GETFAVORITELIST,			// お気に入りチャンネルを取得
+	MESSAGE_FREEFAVORITELIST,			// お気に入りチャンネルを解放
+	MESSAGE_GET1SEGMODE,				// ワンセグモードを取得
+	MESSAGE_SET1SEGMODE,				// ワンセグモードを設定
 #endif
 	MESSAGE_TRAILER
 };
@@ -506,6 +521,8 @@ enum {
 	EVENT_STATUSITEM_NOTIFY,					// ステータス項目の通知
 	EVENT_STATUSITEM_MOUSE,						// ステータス項目のマウス操作
 	EVENT_PANELITEM_NOTIFY,						// パネル項目の通知
+	EVENT_FAVORITESCHANGED,						// お気に入りチャンネルが変更された
+	EVENT_1SEGMODECHANGED,						// ワンセグモードが変わった
 #endif
 	EVENT_TRAILER
 };
@@ -685,6 +702,7 @@ inline int MsgGetDriverName(PluginParam *pParam,LPWSTR pszName,int MaxLength) {
 
 // BonDriverを設定する
 // ファイル名のみか相対パスを指定すると、BonDriver 検索フォルダの設定が使用されます。
+// NULL を指定すると現在の BonDriver が解放されます(ver.0.0.14 以降)。
 inline bool MsgSetDriverName(PluginParam *pParam,LPCWSTR pszName) {
 	return (*pParam->Callback)(pParam,MESSAGE_SETDRIVERNAME,(LPARAM)pszName,0)!=0;
 }
@@ -1211,6 +1229,21 @@ inline bool MsgAddLog(PluginParam *pParam,LPCWSTR pszText)
 {
 	return (*pParam->Callback)(pParam,MESSAGE_ADDLOG,(LPARAM)pszText,0)!=0;
 }
+
+#if TVTEST_PLUGIN_VERSION>=TVTEST_PLUGIN_VERSION_(0,0,14)
+// ログの種類
+enum {
+	LOG_TYPE_INFORMATION,	// 情報
+	LOG_TYPE_WARNING,		// 警告
+	LOG_TYPE_ERROR			// エラー
+};
+
+// ログを記録する
+inline bool MsgAddLog(PluginParam *pParam,LPCWSTR pszText,int Type)
+{
+	return (*pParam->Callback)(pParam,MESSAGE_ADDLOG,(LPARAM)pszText,Type)!=0;
+}
+#endif
 
 #endif	// TVTEST_PLUGIN_VERSION>=TVTEST_PLUGIN_VERSION_(0,0,3)
 
@@ -2245,6 +2278,7 @@ struct GetLogInfo {
 	DWORD Serial;	// ログのシリアルナンバー
 	LPWSTR pszText;	// 取得する文字列
 	DWORD MaxText;	// 文字列の最大長
+	int Type;		// ログの種類(LOG_TYPE_*)
 };
 
 // ログ取得のフラグ
@@ -2745,6 +2779,74 @@ inline bool MsgSelectChannel(PluginParam *pParam,const ChannelSelectInfo *pInfo)
 	return (*pParam->Callback)(pParam,MESSAGE_SELECTCHANNEL,(LPARAM)pInfo,0)!=FALSE;
 }
 
+// お気に入り項目の種類
+enum {
+	FAVORITE_ITEM_TYPE_FOLDER,	// フォルダ
+	FAVORITE_ITEM_TYPE_CHANNEL	// チャンネル
+};
+
+// お気に入り項目の情報
+struct FavoriteItemInfo {
+	DWORD Type;						// 種類(FAVORITE_ITEM_TYPE_* のいずれか)
+	DWORD Flags;					// 各種フラグ(現在は常に0)
+	LPCWSTR pszName;				// 名前
+	union {
+		// Type == FAVORITE_ITEM_TYPE_FOLDER の場合
+		struct {
+			DWORD Flags;								// 各種フラグ(現在は常に0)
+			DWORD ItemCount;							// 子項目数
+			const struct FavoriteItemInfo *ItemList;	// 子項目のリスト
+		} Folder;
+		// Type == FAVORITE_ITEM_TYPE_CHANNEL の場合
+		struct {
+			DWORD Flags;			// 各種フラグ(FAVORITE_CHANNEL_FLAG_*)
+			int Space;				// チューニング空間
+			int Channel;			// チャンネルインデックス
+			int ChannelNo;			// リモコン番号
+			WORD NetworkID;			// ネットワークID
+			WORD TransportStreamID;	// トランスポートストリームID
+			WORD ServiceID;			// サービスID
+			WORD Reserved;			// 予約(現在は常に0)
+			LPCWSTR pszTuner;		// チューナー名
+		} Channel;
+	};
+};
+
+// お気に入りチャンネルのフラグ
+enum {
+	FAVORITE_CHANNEL_FLAG_FORCETUNERCHANGE	=0x0001U	// チューナー指定を強制
+};
+
+// お気に入りリスト
+struct FavoriteList {
+	DWORD Size;					// 構造体のサイズ
+	DWORD ItemCount;			// お気に入り項目数
+	FavoriteItemInfo *ItemList;	// お気に入り項目のリスト
+};
+
+// お気に入りリストを取得する
+// FavoriteList の Size メンバに構造体のサイズを設定して呼び出します。
+// 取得したリストは MsgFreeFavoriteList で解放します。
+inline bool MsgGetFavoriteList(PluginParam *pParam,FavoriteList *pList) {
+	return (*pParam->Callback)(pParam,MESSAGE_GETFAVORITELIST,(LPARAM)pList,0)!=FALSE;
+}
+
+// お気に入りリストを解放する
+// MsgGetFavoriteList で取得したリストを解放します。
+inline void MsgFreeFavoriteList(PluginParam *pParam,FavoriteList *pList) {
+	(*pParam->Callback)(pParam,MESSAGE_FREEFAVORITELIST,(LPARAM)pList,0);
+}
+
+// ワンセグモードを取得する
+inline bool MsgGet1SegMode(PluginParam *pParam) {
+	return (*pParam->Callback)(pParam,MESSAGE_GET1SEGMODE,0,0)!=FALSE;
+}
+
+// ワンセグモードを設定する
+inline bool MsgSet1SegMode(PluginParam *pParam,bool f1SegMode) {
+	return (*pParam->Callback)(pParam,MESSAGE_SET1SEGMODE,f1SegMode,0)!=FALSE;
+}
+
 #endif	// TVTEST_PLUGIN_VERSION>=TVTEST_PLUGIN_VERSION_(0,0,14)
 
 
@@ -2985,6 +3087,11 @@ public:
 	bool AddLog(LPCWSTR pszText) {
 		return MsgAddLog(m_pParam,pszText);
 	}
+#if TVTEST_PLUGIN_VERSION>=TVTEST_PLUGIN_VERSION_(0,0,14)
+	bool AddLog(LPCWSTR pszText,int Type) {
+		return MsgAddLog(m_pParam,pszText,Type);
+	}
+#endif
 #endif
 #if TVTEST_PLUGIN_VERSION>=TVTEST_PLUGIN_VERSION_(0,0,5)
 	bool ResetStatus() {
@@ -3144,6 +3251,7 @@ public:
 								hbm,SrcX,SrcY,SrcWidth,SrcHeight,Color,Opacity);
 	}
 	bool GetEpgCaptureStatus(EpgCaptureStatusInfo *pInfo) {
+		pInfo->Size=sizeof(EpgCaptureStatusInfo);
 		return MsgGetEpgCaptureStatus(m_pParam,pInfo);
 	}
 	bool GetAppCommandInfo(AppCommandInfo *pInfo) {
@@ -3215,6 +3323,19 @@ public:
 	}
 	bool SelectChannel(const ChannelSelectInfo *pInfo) {
 		return MsgSelectChannel(m_pParam,pInfo);
+	}
+	bool GetFavoriteList(FavoriteList *pList) {
+		pList->Size=sizeof(FavoriteList);
+		return MsgGetFavoriteList(m_pParam,pList);
+	}
+	void FreeFavoriteList(FavoriteList *pList) {
+		MsgFreeFavoriteList(m_pParam,pList);
+	}
+	bool Get1SegMode() {
+		return MsgGet1SegMode(m_pParam);
+	}
+	bool Set1SegMode(bool f1SegMode) {
+		return MsgSet1SegMode(m_pParam,f1SegMode);
 	}
 #endif
 };
@@ -3390,6 +3511,10 @@ protected:
 	virtual bool OnStatusItemMouseEvent(StatusItemMouseEventInfo *pInfo) { return false; }
 	// パネル項目の通知
 	virtual bool OnPanelItemNotify(PanelItemEventInfo *pInfo) { return false; }
+	// お気に入りチャンネルが変更された
+	virtual void OnFavoritesChanged() {}
+	// ワンセグモードが変わった
+	virtual void On1SegModeChanged(bool f1SegMode) {}
 #endif
 
 public:
@@ -3481,6 +3606,12 @@ public:
 			return OnStatusItemMouseEvent((StatusItemMouseEventInfo*)lParam1);
 		case EVENT_PANELITEM_NOTIFY:
 			return OnPanelItemNotify((PanelItemEventInfo*)lParam1);
+		case EVENT_FAVORITESCHANGED:
+			OnFavoritesChanged();
+			return 0;
+		case EVENT_1SEGMODECHANGED:
+			On1SegModeChanged(lParam1!=0);
+			return 0;
 #endif
 		}
 		return 0;
