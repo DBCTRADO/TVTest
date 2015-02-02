@@ -1230,6 +1230,21 @@ inline bool MsgAddLog(PluginParam *pParam,LPCWSTR pszText)
 	return (*pParam->Callback)(pParam,MESSAGE_ADDLOG,(LPARAM)pszText,0)!=0;
 }
 
+#if TVTEST_PLUGIN_VERSION>=TVTEST_PLUGIN_VERSION_(0,0,14)
+// ログの種類
+enum {
+	LOG_TYPE_INFORMATION,	// 情報
+	LOG_TYPE_WARNING,		// 警告
+	LOG_TYPE_ERROR			// エラー
+};
+
+// ログを記録する
+inline bool MsgAddLog(PluginParam *pParam,LPCWSTR pszText,int Type)
+{
+	return (*pParam->Callback)(pParam,MESSAGE_ADDLOG,(LPARAM)pszText,Type)!=0;
+}
+#endif
+
 #endif	// TVTEST_PLUGIN_VERSION>=TVTEST_PLUGIN_VERSION_(0,0,3)
 
 #if TVTEST_PLUGIN_VERSION>=TVTEST_PLUGIN_VERSION_(0,0,5)
@@ -2263,6 +2278,7 @@ struct GetLogInfo {
 	DWORD Serial;	// ログのシリアルナンバー
 	LPWSTR pszText;	// 取得する文字列
 	DWORD MaxText;	// 文字列の最大長
+	int Type;		// ログの種類(LOG_TYPE_*)
 };
 
 // ログ取得のフラグ
@@ -3071,6 +3087,11 @@ public:
 	bool AddLog(LPCWSTR pszText) {
 		return MsgAddLog(m_pParam,pszText);
 	}
+#if TVTEST_PLUGIN_VERSION>=TVTEST_PLUGIN_VERSION_(0,0,14)
+	bool AddLog(LPCWSTR pszText,int Type) {
+		return MsgAddLog(m_pParam,pszText,Type);
+	}
+#endif
 #endif
 #if TVTEST_PLUGIN_VERSION>=TVTEST_PLUGIN_VERSION_(0,0,5)
 	bool ResetStatus() {

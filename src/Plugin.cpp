@@ -1630,7 +1630,7 @@ LRESULT CPlugin::OnCallback(TVTest::PluginParam *pParam,UINT Message,LPARAM lPar
 				return FALSE;
 
 			LPCTSTR pszFileName=::PathFindFileName(m_FileName.c_str());
-			GetAppClass().AddLog(TEXT("%s : %s"),pszFileName,pszText);
+			GetAppClass().AddLog((CLogItem::LogType)lParam2,TEXT("%s : %s"),pszFileName,pszText);
 		}
 		return TRUE;
 
@@ -2244,6 +2244,7 @@ LRESULT CPlugin::OnCallback(TVTest::PluginParam *pParam,UINT Message,LPARAM lPar
 			} else {
 				pInfo->MaxText=::lstrlen(pszText)+1;
 			}
+			pInfo->Type=(int)Log.GetType();
 		}
 		return TRUE;
 
