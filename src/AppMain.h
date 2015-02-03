@@ -77,39 +77,6 @@ public:
 	bool AdjustTime();
 };
 
-class CChannelMenuManager
-{
-public:
-	bool InitPopup(HMENU hmenuParent,HMENU hmenu);
-	bool CreateChannelMenu(const CChannelList *pChannelList,int CurChannel,
-						   UINT Command,HMENU hmenu,HWND hwnd,unsigned int Flags=0);
-};
-
-class CTunerSelectMenu
-{
-	struct PopupInfo {
-		const CChannelList *pChannelList;
-		int Command;
-		PopupInfo(const CChannelList *pList,int Cmd)
-			: pChannelList(pList)
-			, Command(Cmd)
-		{
-		}
-	};
-
-	CPopupMenu m_Menu;
-	HWND m_hwnd;
-	std::vector<PopupInfo> m_PopupList;
-
-public:
-	CTunerSelectMenu();
-	~CTunerSelectMenu();
-	bool Create(HWND hwnd);
-	void Destroy();
-	int Show(UINT Flags,int x,int y,const RECT *pExcludeRect=NULL);
-	bool OnInitMenuPopup(HMENU hmenu);
-};
-
 class CMainPanel
 {
 public:
@@ -374,8 +341,6 @@ public:
 	CMainPanel Panel;
 	CHtmlHelp HtmlHelpClass;
 	CChannelMenu ChannelMenu;
-	CChannelMenuManager ChannelMenuManager;
-	CTunerSelectMenu TunerSelectMenu;
 	CIconMenu AspectRatioIconMenu;
 	CTaskbarManager TaskbarManager;
 	TVTest::CTaskTrayManager TaskTrayManager;

@@ -6,6 +6,7 @@
 #include "UISkin.h"
 #include "ColorScheme.h"
 #include "AudioManager.h"
+#include "Menu.h"
 
 
 class CAppMain;
@@ -103,6 +104,7 @@ public:
 	void InitChannelMenu(HMENU hmenu);
 	void InitTunerMenu(HMENU hmenu);
 	bool ProcessTunerMenu(int Command);
+	bool HandleInitMenuPopup(HMENU hmenu);
 
 	bool DoCommand(int Command);
 	bool DoCommand(LPCTSTR pszCommand);
@@ -134,6 +136,33 @@ public:
 	void EndProgress();
 
 private:
+	class CTunerSelectMenu
+	{
+	public:
+		CTunerSelectMenu(CUICore &UICore);
+		~CTunerSelectMenu();
+		bool Create(HWND hwnd);
+		void Destroy();
+		int Show(UINT Flags,int x,int y,const RECT *pExcludeRect=NULL);
+		bool OnInitMenuPopup(HMENU hmenu);
+
+	private:
+		struct PopupInfo {
+			const CChannelList *pChannelList;
+			int Command;
+			PopupInfo(const CChannelList *pList,int Cmd)
+				: pChannelList(pList)
+				, Command(Cmd)
+			{
+			}
+		};
+
+		CUICore &m_UICore;
+		CPopupMenu m_Menu;
+		HWND m_hwnd;
+		std::vector<PopupInfo> m_PopupList;
+	};
+
 	CAppMain &m_App;
 	CUISkin *m_pSkin;
 	bool m_fStandby;
@@ -153,6 +182,8 @@ private:
 	BOOL m_fPowerOffActiveOriginal;
 	*/
 
+	CTunerSelectMenu m_TunerSelectMenu;
+
 	std::vector<CBasicDialog*> m_ModelessDialogList;
 
 	const CColorScheme *m_pColorScheme;
@@ -160,6 +191,11 @@ private:
 	bool SelectAudio(const TVTest::CAudioManager::AudioSelectInfo &Info,bool fUpdate=true);
 	bool SelectAudioStream(int Stream);
 	bool SelectDualMonoMode(CAudioDecFilter::DualMonoMode Mode,bool fUpdate=true);
+
+	bool CreateChannelMenu(
+		const CChannelList *pChannelList,int CurChannel,
+		UINT Command,HMENU hmenu,HWND hwnd,unsigned int Flags=0);
+	bool InitChannelMenuPopup(HMENU hmenuParent,HMENU hmenu);
 
 // CColorSchemeOptions::CEventHandler
 	bool ApplyColorScheme(const CColorScheme *pColorScheme) override;

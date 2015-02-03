@@ -32,6 +32,8 @@ CUICore::CUICore(CAppMain &App)
 	, m_fPowerOffActiveOriginal(FALSE)
 	*/
 
+	, m_TunerSelectMenu(*this)
+
 	, m_pColorScheme(NULL)
 {
 }
@@ -830,9 +832,9 @@ bool CUICore::ShowSpecialMenu(MenuType Menu,const POINT *pPos,UINT Flags,const R
 
 	switch (Menu) {
 	case MENU_TUNERSELECT:
-		m_App.TunerSelectMenu.Create(GetMainWindow());
-		m_App.TunerSelectMenu.Show(Flags,pt.x,pt.y,pExcludeRect);
-		m_App.TunerSelectMenu.Destroy();
+		m_TunerSelectMenu.Create(GetMainWindow());
+		m_TunerSelectMenu.Show(Flags,pt.x,pt.y,pExcludeRect);
+		m_TunerSelectMenu.Destroy();
 		break;
 
 	case MENU_RECORD:
@@ -922,8 +924,8 @@ void CUICore::InitChannelMenu(HMENU hmenu)
 		return;
 
 	if (!m_App.CoreEngine.IsNetworkDriver()) {
-		m_App.ChannelMenuManager.CreateChannelMenu(pList,m_App.ChannelManager.GetCurrentChannel(),
-											 CM_CHANNEL_FIRST,hmenu,GetMainWindow());
+		CreateChannelMenu(pList,m_App.ChannelManager.GetCurrentChannel(),
+						  CM_CHANNEL_FIRST,hmenu,GetMainWindow());
 	} else {
 		bool fControlKeyID=pList->HasRemoteControlKeyID();
 		for (int i=0,j=0;i<pList->NumChannels();i++) {
@@ -1063,6 +1065,18 @@ bool CUICore::ProcessTunerMenu(int Command)
 			}
 		}
 	}
+	return false;
+}
+
+
+bool CUICore::HandleInitMenuPopup(HMENU hmenu)
+{
+	if (InitChannelMenuPopup(m_App.MainMenu.GetSubMenu(CMainMenu::SUBMENU_SPACE),hmenu))
+		return true;
+
+	if (m_TunerSelectMenu.OnInitMenuPopup(hmenu))
+		return true;
+
 	return false;
 }
 
@@ -1358,4 +1372,266 @@ void CUICore::SetProgress(int Pos,int Max)
 void CUICore::EndProgress()
 {
 	m_App.TaskbarManager.EndProgress();
+}
+
+
+bool CUICore::CreateChannelMenu(
+	const CChannelList *pChannelList,int CurChannel,
+	UINT Command,HMENU hmenu,HWND hwnd,unsigned int Flags)
+{
+	if (pChannelList==NULL)
+		return false;
+	const bool fEventInfo=
+		(Flags & CChannelMenu::FLAG_SHOWEVENTINFO)!=0
+		|| pChannelList->NumEnableChannels()<=m_App.MenuOptions.GetMaxChannelMenuEventInfo();
+	unsigned int MenuFlags=CChannelMenu::FLAG_SHOWLOGO | Flags;
+	if (fEventInfo)
+		MenuFlags|=CChannelMenu::FLAG_SHOWEVENTINFO;
+	else
+		MenuFlags|=CChannelMenu::FLAG_SHOWTOOLTIP;
+	return m_App.ChannelMenu.Create(pChannelList,CurChannel,
+									Command,hmenu,hwnd,MenuFlags,
+									fEventInfo?0:m_App.MenuOptions.GetMaxChannelMenuRows());
+}
+
+
+bool CUICore::InitChannelMenuPopup(HMENU hmenuParent,HMENU hmenu)
+{
+	bool fChannelMenu=false;
+	int Count=::GetMenuItemCount(hmenuParent);
+	int i;
+	for (i=0;i<Count;i++) {
+		if (::GetSubMenu(hmenuParent,i)==hmenu) {
+			fChannelMenu=true;
+			break;
+		}
+		if ((::GetMenuState(hmenuParent,i,MF_BYPOSITION) & MF_POPUP)==0)
+			break;
+	}
+
+	if (!fChannelMenu)
+		return false;
+
+	const CChannelManager &ChannelManager=m_App.ChannelManager;
+	const CChannelList *pChannelList;
+	int Command=CM_SPACE_CHANNEL_FIRST;
+
+	pChannelList=ChannelManager.GetAllChannelList();
+	if (ChannelManager.NumSpaces()>1) {
+		if (i==0) {
+			CreateChannelMenu(
+				pChannelList,
+				ChannelManager.GetCurrentSpace()==CChannelManager::SPACE_ALL?
+					ChannelManager.GetCurrentChannel():-1,
+				Command,hmenu,GetMainWindow(),
+				CChannelMenu::FLAG_SPACEBREAK);
+			return true;
+		}
+		i--;
+	}
+	if (i>=ChannelManager.NumSpaces()) {
+		TRACE(TEXT("CUICore::InitChannelMenuPopup() : Invalid space %d\n"),i);
+		ClearMenu(hmenu);
+		return true;
+	}
+	Command+=pChannelList->NumChannels();
+	for (int j=0;j<i;j++) {
+		pChannelList=ChannelManager.GetChannelList(j);
+		Command+=pChannelList->NumChannels();
+	}
+	CreateChannelMenu(
+		ChannelManager.GetChannelList(i),
+		ChannelManager.GetCurrentSpace()==i?
+			ChannelManager.GetCurrentChannel():-1,
+		Command,hmenu,GetMainWindow());
+
+	return true;
+}
+
+
+
+
+CUICore::CTunerSelectMenu::CTunerSelectMenu(CUICore &UICore)
+	: m_UICore(UICore)
+{
+}
+
+
+CUICore::CTunerSelectMenu::~CTunerSelectMenu()
+{
+	Destroy();
+}
+
+
+bool CUICore::CTunerSelectMenu::Create(HWND hwnd)
+{
+	Destroy();
+
+	m_Menu.Create();
+	m_hwnd=hwnd;
+
+	const CChannelManager &ChannelManager=m_UICore.m_App.ChannelManager;
+	HMENU hmenuSpace;
+	const CChannelList *pChannelList;
+	int Command;
+	int i,j;
+	LPCTSTR pszName;
+	TCHAR szText[MAX_PATH*2];
+	int Length;
+
+	Command=CM_SPACE_CHANNEL_FIRST;
+	pChannelList=ChannelManager.GetAllChannelList();
+	if (ChannelManager.NumSpaces()>1) {
+		hmenuSpace=::CreatePopupMenu();
+		m_Menu.Append(hmenuSpace,TEXT("&A: すべて"));
+	}
+	Command+=pChannelList->NumChannels();
+	for (i=0;i<ChannelManager.NumSpaces();i++) {
+		pChannelList=ChannelManager.GetChannelList(i);
+		hmenuSpace=::CreatePopupMenu();
+		Length=StdUtil::snprintf(szText,lengthof(szText),TEXT("&%d: "),i);
+		pszName=ChannelManager.GetTuningSpaceName(i);
+		if (!IsStringEmpty(pszName))
+			CopyToMenuText(pszName,szText+Length,lengthof(szText)-Length);
+		else
+			StdUtil::snprintf(szText+Length,lengthof(szText)-Length,TEXT("チューニング空間%d"),i);
+		m_Menu.Append(hmenuSpace,szText,
+					  pChannelList->NumEnableChannels()>0?MF_ENABLED:MF_GRAYED);
+		Command+=pChannelList->NumChannels();
+	}
+
+	if (Command>CM_SPACE_CHANNEL_FIRST)
+		m_Menu.AppendSeparator();
+
+	CDriverManager &DriverManager=m_UICore.m_App.DriverManager;
+
+	for (i=0;i<DriverManager.NumDrivers();i++) {
+		CDriverInfo *pDriverInfo=DriverManager.GetDriverInfo(i);
+
+		if (IsEqualFileName(pDriverInfo->GetFileName(),
+							m_UICore.m_App.CoreEngine.GetDriverFileName())) {
+			continue;
+		}
+		TCHAR szFileName[MAX_PATH];
+		::lstrcpyn(szFileName,pDriverInfo->GetFileName(),lengthof(szFileName));
+		::PathRemoveExtension(szFileName);
+
+		const CTuningSpaceList *pTuningSpaceList;
+		if (pDriverInfo->LoadTuningSpaceList(CDriverInfo::LOADTUNINGSPACE_NOLOADDRIVER)
+				&& (pTuningSpaceList=pDriverInfo->GetAvailableTuningSpaceList())!=NULL) {
+			HMENU hmenuDriver=::CreatePopupMenu();
+
+			for (j=0;j<pTuningSpaceList->NumSpaces();j++) {
+				pChannelList=pTuningSpaceList->GetChannelList(j);
+				if (pChannelList->NumEnableChannels()==0) {
+					Command+=pChannelList->NumChannels();
+					continue;
+				}
+				if (pTuningSpaceList->NumSpaces()>1)
+					hmenuSpace=::CreatePopupMenu();
+				else
+					hmenuSpace=hmenuDriver;
+				m_PopupList.push_back(PopupInfo(pChannelList,Command));
+				MENUINFO mi;
+				mi.cbSize=sizeof(mi);
+				mi.fMask=MIM_MENUDATA;
+				mi.dwMenuData=m_PopupList.size()-1;
+				::SetMenuInfo(hmenuSpace,&mi);
+				Command+=pChannelList->NumChannels();
+				if (hmenuSpace!=hmenuDriver) {
+					pszName=pTuningSpaceList->GetTuningSpaceName(j);
+					Length=StdUtil::snprintf(szText,lengthof(szText),TEXT("&%d: "),j);
+					if (!IsStringEmpty(pszName))
+						CopyToMenuText(pszName,szText+Length,lengthof(szText)-Length);
+					else
+						StdUtil::snprintf(szText+Length,lengthof(szText)-Length,
+										  TEXT("チューニング空間%d"),j);
+					::AppendMenu(hmenuDriver,MF_POPUP | MF_ENABLED,
+								 reinterpret_cast<UINT_PTR>(hmenuSpace),szText);
+				}
+			}
+			if (!IsStringEmpty(pDriverInfo->GetTunerName())) {
+				TCHAR szTemp[lengthof(szText)];
+
+				StdUtil::snprintf(szTemp,lengthof(szTemp),TEXT("%s [%s]"),
+								  pDriverInfo->GetTunerName(),
+								  szFileName);
+				CopyToMenuText(szTemp,szText,lengthof(szText));
+			} else {
+				CopyToMenuText(szFileName,szText,lengthof(szText));
+			}
+			m_Menu.Append(hmenuDriver,szText);
+		} else {
+			m_Menu.AppendUnformatted(CM_DRIVER_FIRST+i,szFileName);
+		}
+	}
+
+	return true;
+}
+
+
+void CUICore::CTunerSelectMenu::Destroy()
+{
+	m_Menu.Destroy();
+	m_hwnd=NULL;
+	m_PopupList.clear();
+}
+
+
+int CUICore::CTunerSelectMenu::Show(UINT Flags,int x,int y,const RECT *pExcludeRect)
+{
+	POINT pt={x,y};
+	return m_Menu.Show(m_hwnd,&pt,Flags,pExcludeRect);
+}
+
+
+bool CUICore::CTunerSelectMenu::OnInitMenuPopup(HMENU hmenu)
+{
+	if (!m_Menu.IsCreated())
+		return false;
+
+	if (m_UICore.InitChannelMenuPopup(m_Menu.GetPopupHandle(),hmenu))
+		return true;
+
+	bool fChannelMenu=false;
+	int Count=m_Menu.GetItemCount();
+	int i,j;
+	i=m_UICore.m_App.ChannelManager.NumSpaces();
+	if (i>1)
+		i++;
+	for (i++;i<Count;i++) {
+		HMENU hmenuChannel=m_Menu.GetSubMenu(i);
+		int Items=::GetMenuItemCount(hmenuChannel);
+
+		if (hmenuChannel==hmenu) {
+			if (Items>0)
+				return true;
+			fChannelMenu=true;
+			break;
+		}
+		if (Items>0) {
+			for (j=0;j<Items;j++) {
+				if (::GetSubMenu(hmenuChannel,j)==hmenu)
+					break;
+			}
+			if (j<Items) {
+				fChannelMenu=true;
+				break;
+			}
+		}
+	}
+
+	if (fChannelMenu) {
+		MENUINFO mi;
+
+		mi.cbSize=sizeof(mi);
+		mi.fMask=MIM_MENUDATA;
+		if (!::GetMenuInfo(hmenu,&mi) || mi.dwMenuData>=m_PopupList.size())
+			return false;
+		const PopupInfo &Info=m_PopupList[mi.dwMenuData];
+		m_UICore.CreateChannelMenu(Info.pChannelList,-1,Info.Command,hmenu,m_hwnd);
+		return true;
+	}
+
+	return false;
 }

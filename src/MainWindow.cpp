@@ -4116,10 +4116,7 @@ bool CMainWindow::OnInitMenuPopup(HMENU hmenu)
 		m_App.MainMenu.EnableItem(CM_SPLITTITLEBAR,m_fCustomFrame || m_fCustomTitleBar);
 		m_App.MainMenu.CheckItem(CM_VIDEOEDGE,m_fViewWindowEdge);
 	} else {
-		if (m_App.ChannelMenuManager.InitPopup(m_App.MainMenu.GetSubMenu(CMainMenu::SUBMENU_SPACE),hmenu))
-			return true;
-
-		if (m_App.TunerSelectMenu.OnInitMenuPopup(hmenu))
+		if (m_pCore->HandleInitMenuPopup(hmenu))
 			return true;
 
 		return false;
