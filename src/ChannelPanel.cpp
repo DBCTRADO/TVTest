@@ -754,8 +754,14 @@ LRESULT CChannelPanel::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam
 		return 0;
 
 	case WM_RBUTTONUP:
-		if (m_pEventHandler!=NULL)
-			m_pEventHandler->OnRButtonUp(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam));
+		{
+			POINT pt;
+
+			pt.x=GET_X_LPARAM(lParam);
+			pt.y=GET_Y_LPARAM(lParam);
+			::ClientToScreen(hwnd,&pt);
+			ShowMenu(pt.x,pt.y);
+		}
 		return 0;
 
 	case WM_MOUSEMOVE:
@@ -769,6 +775,10 @@ LRESULT CChannelPanel::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam
 			else
 				::SetCursor(::LoadCursor(NULL,IDC_ARROW));
 		}
+		return 0;
+
+	case WM_COMMAND:
+		OnCommand(LOWORD(wParam));
 		return 0;
 
 	case WM_NOTIFY:
@@ -990,6 +1000,70 @@ void CChannelPanel::Draw(HDC hdc,const RECT *prcPaint)
 		rcItem.right=prcPaint->right;
 		rcItem.bottom=prcPaint->bottom;
 		DrawUtil::Fill(hdc,&rcItem,m_Theme.MarginColor);
+	}
+}
+
+
+void CChannelPanel::OnCommand(int ID)
+{
+	switch (ID) {
+	case CM_CHANNELPANEL_UPDATE:
+		UpdateAllChannels(true);
+		return;
+
+	case CM_CHANNELPANEL_CURCHANNEL:
+		ScrollToCurrentChannel();
+		return;
+
+	case CM_CHANNELPANEL_DETAILPOPUP:
+		SetDetailToolTip(!m_fDetailToolTip);
+		return;
+
+	case CM_CHANNELPANEL_SCROLLTOCURCHANNEL:
+		SetScrollToCurChannel(!m_fScrollToCurChannel);
+		return;
+
+	case CM_CHANNELPANEL_EVENTS_1:
+	case CM_CHANNELPANEL_EVENTS_2:
+	case CM_CHANNELPANEL_EVENTS_3:
+	case CM_CHANNELPANEL_EVENTS_4:
+		SetEventsPerChannel(ID-CM_CHANNELPANEL_EVENTS_1+1);
+		return;
+
+	case CM_CHANNELPANEL_EXPANDEVENTS_2:
+	case CM_CHANNELPANEL_EXPANDEVENTS_3:
+	case CM_CHANNELPANEL_EXPANDEVENTS_4:
+	case CM_CHANNELPANEL_EXPANDEVENTS_5:
+	case CM_CHANNELPANEL_EXPANDEVENTS_6:
+	case CM_CHANNELPANEL_EXPANDEVENTS_7:
+	case CM_CHANNELPANEL_EXPANDEVENTS_8:
+		SetEventsPerChannel(-1,ID-CM_CHANNELPANEL_EXPANDEVENTS_2+2);
+		return;
+
+	case CM_CHANNELPANEL_USEEPGCOLORSCHEME:
+		SetUseEpgColorScheme(!m_fUseEpgColorScheme);
+		return;
+
+	case CM_CHANNELPANEL_SHOWGENRECOLOR:
+		SetShowGenreColor(!m_fShowGenreColor);
+		return;
+
+	case CM_CHANNELPANEL_SHOWFEATUREDMARK:
+		SetShowFeaturedMark(!m_fShowFeaturedMark);
+		return;
+
+	case CM_CHANNELPANEL_PROGRESSBAR_NONE:
+		SetShowProgressBar(false);
+		return;
+
+	case CM_CHANNELPANEL_PROGRESSBAR_ELAPSED:
+	case CM_CHANNELPANEL_PROGRESSBAR_REMAINING:
+		SetProgressBarStyle(
+			ID==CM_CHANNELPANEL_PROGRESSBAR_ELAPSED?
+				PROGRESSBAR_STYLE_ELAPSED:
+				PROGRESSBAR_STYLE_REMAINING);
+		SetShowProgressBar(true);
+		return;
 	}
 }
 
@@ -1237,6 +1311,33 @@ bool CChannelPanel::ShowEventInfoPopup(LPARAM Param,CEventInfoPopup *pPopup)
 	}
 
 	return true;
+}
+
+
+void CChannelPanel::ShowMenu(int x,int y)
+{
+	CPopupMenu Menu(GetAppClass().GetResourceInstance(),IDM_CHANNELPANEL);
+
+	Menu.CheckItem(CM_CHANNELPANEL_DETAILPOPUP,m_fDetailToolTip);
+	Menu.CheckItem(CM_CHANNELPANEL_SCROLLTOCURCHANNEL,m_fScrollToCurChannel);
+	Menu.CheckRadioItem(CM_CHANNELPANEL_EVENTS_1,CM_CHANNELPANEL_EVENTS_4,
+						CM_CHANNELPANEL_EVENTS_1+m_EventsPerChannel-1);
+	Menu.CheckRadioItem(CM_CHANNELPANEL_EXPANDEVENTS_2,CM_CHANNELPANEL_EXPANDEVENTS_8,
+						CM_CHANNELPANEL_EXPANDEVENTS_2+m_ExpandAdditionalEvents-2);
+	Menu.CheckItem(CM_CHANNELPANEL_USEEPGCOLORSCHEME,m_fUseEpgColorScheme);
+	Menu.CheckItem(CM_CHANNELPANEL_SHOWGENRECOLOR,m_fShowGenreColor);
+	Menu.EnableItem(CM_CHANNELPANEL_SHOWGENRECOLOR,!m_fUseEpgColorScheme);
+	Menu.CheckItem(CM_CHANNELPANEL_SHOWFEATUREDMARK,m_fShowFeaturedMark);
+	Menu.CheckRadioItem(
+		CM_CHANNELPANEL_PROGRESSBAR_NONE,CM_CHANNELPANEL_PROGRESSBAR_REMAINING,
+		!m_fShowProgressBar?
+			CM_CHANNELPANEL_PROGRESSBAR_NONE:
+		m_ProgressBarStyle==PROGRESSBAR_STYLE_ELAPSED?
+			CM_CHANNELPANEL_PROGRESSBAR_ELAPSED:
+			CM_CHANNELPANEL_PROGRESSBAR_REMAINING);
+
+	POINT pt={x,y};
+	Menu.Show(m_hwnd,&pt);
 }
 
 

@@ -43,7 +43,6 @@ public:
 	public:
 		virtual ~CEventHandler() {}
 		virtual void OnChannelClick(const CChannelInfo *pChannelInfo) {}
-		virtual void OnRButtonUp(int x,int y) {}
 	};
 
 	enum {
@@ -211,6 +210,7 @@ private:
 	void ClearChannels();
 	bool UpdateEvents(CChannelEventInfo *pInfo,const SYSTEMTIME *pTime=NULL);
 	void Draw(HDC hdc,const RECT *prcPaint);
+	void OnCommand(int ID);
 	void SetScrollPos(int Pos);
 	void SetScrollBar();
 	void CalcItemHeight();
@@ -227,6 +227,7 @@ private:
 	void SetTooltips(bool fRectOnly=false);
 	bool EventInfoPopupHitTest(int x,int y,LPARAM *pParam);
 	bool ShowEventInfoPopup(LPARAM Param,CEventInfoPopup *pPopup);
+	void ShowMenu(int x,int y);
 
 // CCustomWindow
 	LRESULT OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam) override;

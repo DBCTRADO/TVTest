@@ -169,7 +169,6 @@ private:
 	class CChannelPanelEventHandler : public CChannelPanel::CEventHandler
 	{
 		void OnChannelClick(const CChannelInfo *pChannelInfo) override;
-		void OnRButtonUp(int x,int y) override;
 	};
 
 	CFrameEventHandler m_FrameEventHandler;

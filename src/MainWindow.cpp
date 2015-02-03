@@ -3081,64 +3081,6 @@ void CMainWindow::OnCommand(HWND hwnd,int id,HWND hwndCtl,UINT codeNotify)
 		m_App.RecentChannelList.Clear();
 		return;
 
-	case CM_CHANNELPANEL_UPDATE:
-		m_App.Panel.ChannelPanel.UpdateAllChannels(true);
-		return;
-
-	case CM_CHANNELPANEL_CURCHANNEL:
-		m_App.Panel.ChannelPanel.ScrollToCurrentChannel();
-		return;
-
-	case CM_CHANNELPANEL_DETAILPOPUP:
-		m_App.Panel.ChannelPanel.SetDetailToolTip(!m_App.Panel.ChannelPanel.GetDetailToolTip());
-		return;
-
-	case CM_CHANNELPANEL_SCROLLTOCURCHANNEL:
-		m_App.Panel.ChannelPanel.SetScrollToCurChannel(!m_App.Panel.ChannelPanel.GetScrollToCurChannel());
-		return;
-
-	case CM_CHANNELPANEL_EVENTS_1:
-	case CM_CHANNELPANEL_EVENTS_2:
-	case CM_CHANNELPANEL_EVENTS_3:
-	case CM_CHANNELPANEL_EVENTS_4:
-		m_App.Panel.ChannelPanel.SetEventsPerChannel(id-CM_CHANNELPANEL_EVENTS_1+1);
-		return;
-
-	case CM_CHANNELPANEL_EXPANDEVENTS_2:
-	case CM_CHANNELPANEL_EXPANDEVENTS_3:
-	case CM_CHANNELPANEL_EXPANDEVENTS_4:
-	case CM_CHANNELPANEL_EXPANDEVENTS_5:
-	case CM_CHANNELPANEL_EXPANDEVENTS_6:
-	case CM_CHANNELPANEL_EXPANDEVENTS_7:
-	case CM_CHANNELPANEL_EXPANDEVENTS_8:
-		m_App.Panel.ChannelPanel.SetEventsPerChannel(-1,id-CM_CHANNELPANEL_EXPANDEVENTS_2+2);
-		return;
-
-	case CM_CHANNELPANEL_USEEPGCOLORSCHEME:
-		m_App.Panel.ChannelPanel.SetUseEpgColorScheme(!m_App.Panel.ChannelPanel.GetUseEpgColorScheme());
-		return;
-
-	case CM_CHANNELPANEL_SHOWGENRECOLOR:
-		m_App.Panel.ChannelPanel.SetShowGenreColor(!m_App.Panel.ChannelPanel.GetShowGenreColor());
-		return;
-
-	case CM_CHANNELPANEL_SHOWFEATUREDMARK:
-		m_App.Panel.ChannelPanel.SetShowFeaturedMark(!m_App.Panel.ChannelPanel.GetShowFeaturedMark());
-		return;
-
-	case CM_CHANNELPANEL_PROGRESSBAR_NONE:
-		m_App.Panel.ChannelPanel.SetShowProgressBar(false);
-		return;
-
-	case CM_CHANNELPANEL_PROGRESSBAR_ELAPSED:
-	case CM_CHANNELPANEL_PROGRESSBAR_REMAINING:
-		m_App.Panel.ChannelPanel.SetProgressBarStyle(
-			id==CM_CHANNELPANEL_PROGRESSBAR_ELAPSED?
-				CChannelPanel::PROGRESSBAR_STYLE_ELAPSED:
-				CChannelPanel::PROGRESSBAR_STYLE_REMAINING);
-		m_App.Panel.ChannelPanel.SetShowProgressBar(true);
-		return;
-
 	case CM_CHANNELNO_2DIGIT:
 	case CM_CHANNELNO_3DIGIT:
 		{

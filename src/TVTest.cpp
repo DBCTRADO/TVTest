@@ -730,30 +730,6 @@ void CMainPanel::CChannelPanelEventHandler::OnChannelClick(const CChannelInfo *p
 }
 
 
-void CMainPanel::CChannelPanelEventHandler::OnRButtonUp(int x,int y)
-{
-	CPopupMenu Menu(g_App.GetResourceInstance(),IDM_CHANNELPANEL);
-
-	Menu.CheckItem(CM_CHANNELPANEL_DETAILPOPUP,g_App.Panel.ChannelPanel.GetDetailToolTip());
-	Menu.CheckItem(CM_CHANNELPANEL_SCROLLTOCURCHANNEL,g_App.Panel.ChannelPanel.GetScrollToCurChannel());
-	Menu.CheckRadioItem(CM_CHANNELPANEL_EVENTS_1,CM_CHANNELPANEL_EVENTS_4,
-						CM_CHANNELPANEL_EVENTS_1+g_App.Panel.ChannelPanel.GetEventsPerChannel()-1);
-	Menu.CheckRadioItem(CM_CHANNELPANEL_EXPANDEVENTS_2,CM_CHANNELPANEL_EXPANDEVENTS_8,
-						CM_CHANNELPANEL_EXPANDEVENTS_2+g_App.Panel.ChannelPanel.GetExpandAdditionalEvents()-2);
-	Menu.CheckItem(CM_CHANNELPANEL_USEEPGCOLORSCHEME,g_App.Panel.ChannelPanel.GetUseEpgColorScheme());
-	Menu.CheckItem(CM_CHANNELPANEL_SHOWGENRECOLOR,g_App.Panel.ChannelPanel.GetShowGenreColor());
-	Menu.EnableItem(CM_CHANNELPANEL_SHOWGENRECOLOR,!g_App.Panel.ChannelPanel.GetUseEpgColorScheme());
-	Menu.CheckItem(CM_CHANNELPANEL_SHOWFEATUREDMARK,g_App.Panel.ChannelPanel.GetShowFeaturedMark());
-	Menu.CheckRadioItem(CM_CHANNELPANEL_PROGRESSBAR_NONE,CM_CHANNELPANEL_PROGRESSBAR_REMAINING,
-						!g_App.Panel.ChannelPanel.GetShowProgressBar()?
-							CM_CHANNELPANEL_PROGRESSBAR_NONE:
-						g_App.Panel.ChannelPanel.GetProgressBarStyle()==CChannelPanel::PROGRESSBAR_STYLE_ELAPSED?
-							CM_CHANNELPANEL_PROGRESSBAR_ELAPSED:
-							CM_CHANNELPANEL_PROGRESSBAR_REMAINING);
-	Menu.Show(g_App.UICore.GetMainWindow());
-}
-
-
 
 
 void CDisplayEventHandlerBase::RelayMouseMessage(CDisplayView *pView,UINT Message,int x,int y)
