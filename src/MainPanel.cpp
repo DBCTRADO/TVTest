@@ -16,6 +16,7 @@ CMainPanel::CMainPanel()
 	: m_FrameEventHandler(&Frame)
 	, m_FormEventHandler(&Form)
 	, fShowPanelWindow(false)
+	, m_fEnableProgramListUpdate(true)
 {
 	Frame.SetFloating(false);
 	Frame.SetEventHandler(&m_FrameEventHandler);
@@ -106,6 +107,110 @@ void CMainPanel::SetTheme(const TVTest::Theme::CThemeManager *pThemeManager)
 	ChannelPanel.SetTheme(pThemeManager);
 	ControlPanel.SetTheme(pThemeManager);
 	CaptionPanel.SetTheme(pThemeManager);
+}
+
+
+void CMainPanel::UpdateContent()
+{
+	switch (Form.GetCurPageID()) {
+	case PANEL_ID_INFORMATION:
+		UpdateInformationPanel();
+		break;
+
+	case PANEL_ID_PROGRAMLIST:
+		if (m_fEnableProgramListUpdate)
+			UpdateProgramListPanel();
+		break;
+
+	case PANEL_ID_CHANNEL:
+		UpdateChannelPanel();
+		break;
+	}
+}
+
+
+void CMainPanel::UpdateInformationPanel()
+{
+	InfoPanel.UpdateAllItems();
+}
+
+
+void CMainPanel::UpdateProgramListPanel()
+{
+	CAppMain &App=GetAppClass();
+	CChannelInfo ChInfo;
+
+	if (App.Core.GetCurrentStreamChannelInfo(&ChInfo)
+			&& ChInfo.GetServiceID()!=0) {
+		App.EpgProgramList.UpdateService(
+			ChInfo.GetNetworkID(),
+			ChInfo.GetTransportStreamID(),
+			ChInfo.GetServiceID());
+		ProgramListPanel.UpdateProgramList(&ChInfo);
+	}
+}
+
+
+void CMainPanel::UpdateChannelPanel()
+{
+	CAppMain &App=GetAppClass();
+	Util::CWaitCursor WaitCursor;
+
+	if (ChannelPanel.IsChannelListEmpty()) {
+		ChannelPanel.SetChannelList(
+			App.ChannelManager.GetCurrentChannelList(),
+			!App.EpgOptions.IsEpgFileLoading());
+	} else {
+		if (!App.EpgOptions.IsEpgFileLoading())
+			ChannelPanel.UpdateAllChannels(false);
+	}
+	ChannelPanel.SetCurrentChannel(App.ChannelManager.GetCurrentChannel());
+}
+
+
+void CMainPanel::InitControlPanel()
+{
+	ControlPanel.AddItem(new CTunerControlItem);
+	ControlPanel.AddItem(new CChannelControlItem);
+
+	const CChannelList *pList=GetAppClass().ChannelManager.GetCurrentChannelList();
+	for (int i=0;i<12;i++) {
+		TCHAR szText[4];
+		CControlPanelButton *pItem;
+
+		StdUtil::snprintf(szText,lengthof(szText),TEXT("%d"),i+1);
+		pItem=new CControlPanelButton(CM_CHANNELNO_FIRST+i,szText,i%6==0,1);
+		if (pList==nullptr || pList->FindChannelNo(i+1)<0)
+			pItem->SetEnable(false);
+		ControlPanel.AddItem(pItem);
+	}
+
+	ControlPanel.AddItem(new CVideoControlItem);
+	ControlPanel.AddItem(new CVolumeControlItem);
+	ControlPanel.AddItem(new CAudioControlItem);
+}
+
+
+void CMainPanel::UpdateControlPanel()
+{
+	CAppMain &App=GetAppClass();
+	const CChannelList *pList=App.ChannelManager.GetCurrentChannelList();
+	const CChannelInfo *pCurChannel=App.ChannelManager.GetCurrentChannelInfo();
+
+	for (int i=0;i<12;i++) {
+		CControlPanelItem *pItem=ControlPanel.GetItem(CONTROLPANEL_ITEM_CHANNEL_1+i);
+		if (pItem!=nullptr) {
+			pItem->SetEnable(pList!=nullptr && pList->FindChannelNo(i+1)>=0);
+			pItem->SetCheck(false);
+		}
+	}
+	if (pCurChannel!=nullptr) {
+		if (pCurChannel->GetChannelNo()>=1 && pCurChannel->GetChannelNo()<=12) {
+			ControlPanel.CheckRadioItem(
+				CM_CHANNELNO_FIRST,CM_CHANNELNO_LAST,
+				CM_CHANNELNO_FIRST+pCurChannel->GetChannelNo()-1);
+		}
+	}
 }
 
 
@@ -317,7 +422,7 @@ CMainPanel::CFormEventHandler::CFormEventHandler(CPanelForm *pForm)
 
 void CMainPanel::CFormEventHandler::OnSelChange()
 {
-	GetAppClass().MainWindow.UpdatePanel();
+	GetAppClass().Panel.UpdateContent();
 }
 
 

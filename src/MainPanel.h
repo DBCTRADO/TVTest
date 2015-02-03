@@ -29,6 +29,13 @@ public:
 	bool OnOwnerMovingOrSizing(const RECT *pOldRect,const RECT *pNewRect);
 	bool IsAttached();
 	void SetTheme(const TVTest::Theme::CThemeManager *pThemeManager);
+	void UpdateContent();
+	void UpdateInformationPanel();
+	void UpdateProgramListPanel();
+	void UpdateChannelPanel();
+	void UpdateControlPanel();
+	void InitControlPanel();
+	void EnableProgramListUpdate(bool fEnable) { m_fEnableProgramListUpdate=fEnable; }
 
 private:
 	class CFrameEventHandler : public CPanelFrame::CEventHandler
@@ -76,6 +83,7 @@ private:
 	CFrameEventHandler m_FrameEventHandler;
 	CFormEventHandler m_FormEventHandler;
 	CChannelPanelEventHandler m_ChannelPanelEventHandler;
+	bool m_fEnableProgramListUpdate;
 };
 
 

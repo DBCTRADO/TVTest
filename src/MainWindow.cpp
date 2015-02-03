@@ -345,7 +345,7 @@ void CMainWindow::CreatePanel()
 	m_App.Panel.Form.AddPage(PageInfo);
 
 	m_App.Panel.ControlPanel.SetSendMessageWindow(m_hwnd);
-	InitControlPanel();
+	m_App.Panel.InitControlPanel();
 	m_App.Panel.ControlPanel.Create(m_App.Panel.Form.GetHandle(),WS_CHILD);
 	PageInfo.pPage=&m_App.Panel.ControlPanel;
 	PageInfo.pszTitle=TEXT("操作");
@@ -677,7 +677,7 @@ void CMainWindow::ShowPanel(bool fShow)
 	UpdateLayout();
 
 	if (fShow)
-		UpdatePanel();
+		m_App.Panel.UpdateContent();
 
 	if (!m_pCore->GetFullscreen())
 		m_pCore->SetCommandCheckedState(CM_PANEL,fShow);
@@ -1567,7 +1567,7 @@ LRESULT CMainWindow::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 		if (IsPanelVisible()
 				&& (m_App.Panel.Form.GetCurPageID()==PANEL_ID_PROGRAMLIST
 				 || m_App.Panel.Form.GetCurPageID()==PANEL_ID_CHANNEL)) {
-			UpdatePanel();
+			m_App.Panel.UpdateContent();
 		}
 		return 0;
 
@@ -3472,7 +3472,7 @@ void CMainWindow::OnTimer(HWND hwnd,UINT id)
 
 				case PANEL_ID_PROGRAMLIST:
 					if (fUpdateEventInfo)
-						UpdatePanel();
+						m_App.Panel.UpdateContent();
 					break;
 				}
 			}
@@ -3545,6 +3545,8 @@ void CMainWindow::OnTimer(HWND hwnd,UINT id)
 		// EPG情報の同期
 		if (!m_App.EpgOptions.IsEpgFileLoading()
 				&& !m_App.EpgOptions.IsEDCBDataLoading()) {
+			m_App.Panel.EnableProgramListUpdate(true);
+
 			CChannelInfo ChInfo;
 
 			if (IsPanelVisible()
@@ -4236,6 +4238,7 @@ void CMainWindow::OnChannelChanged(unsigned int Status)
 	if (pCurChannel!=nullptr && m_App.OSDOptions.IsOSDEnabled(COSDOptions::OSD_CHANNEL))
 		ShowChannelOSD();
 	m_App.Panel.ProgramListPanel.ClearProgramList();
+	m_App.Panel.EnableProgramListUpdate(false);
 	::SetTimer(m_hwnd,TIMER_ID_PROGRAMLISTUPDATE,10000,nullptr);
 	m_ProgramListUpdateTimerCount=0;
 	m_App.Panel.InfoPanel.UpdateItem(CInformationPanel::ITEM_SERVICE);
@@ -4272,7 +4275,7 @@ void CMainWindow::OnChannelChanged(unsigned int Status)
 								 pCurChannel!=nullptr && ChannelNo>=1 && ChannelNo<=12?
 								 CM_CHANNELNO_1+ChannelNo-1:0);
 	m_App.Panel.CaptionPanel.Clear();
-	UpdateControlPanel();
+	m_App.Panel.UpdateControlPanel();
 
 	LPCTSTR pszDriverFileName=m_App.CoreEngine.GetDriverFileName();
 	pCurChannel=m_App.ChannelManager.GetCurrentChannelInfo();
@@ -5595,96 +5598,6 @@ void CMainWindow::OnChannelNoInput()
 }
 
 
-void CMainWindow::UpdatePanel()
-{
-	switch (m_App.Panel.Form.GetCurPageID()) {
-	case PANEL_ID_INFORMATION:
-		m_App.Panel.InfoPanel.UpdateAllItems();
-		break;
-
-	case PANEL_ID_PROGRAMLIST:
-		if (m_ProgramListUpdateTimerCount>0) {
-			CChannelInfo ChInfo;
-			if (m_App.Core.GetCurrentStreamChannelInfo(&ChInfo)
-					&& ChInfo.GetServiceID()!=0) {
-				m_App.EpgProgramList.UpdateService(
-					ChInfo.GetNetworkID(),
-					ChInfo.GetTransportStreamID(),
-					ChInfo.GetServiceID());
-				m_App.Panel.ProgramListPanel.UpdateProgramList(&ChInfo);
-			}
-		}
-		break;
-
-	case PANEL_ID_CHANNEL:
-		RefreshChannelPanel();
-		break;
-	}
-}
-
-
-void CMainWindow::RefreshChannelPanel()
-{
-	Util::CWaitCursor WaitCursor;
-
-	if (m_App.Panel.ChannelPanel.IsChannelListEmpty()) {
-		m_App.Panel.ChannelPanel.SetChannelList(
-			m_App.ChannelManager.GetCurrentChannelList(),
-			!m_App.EpgOptions.IsEpgFileLoading());
-	} else {
-		if (!m_App.EpgOptions.IsEpgFileLoading())
-			m_App.Panel.ChannelPanel.UpdateAllChannels(false);
-	}
-	m_App.Panel.ChannelPanel.SetCurrentChannel(m_App.ChannelManager.GetCurrentChannel());
-}
-
-
-// 操作パネルのアイテムを設定する
-void CMainWindow::InitControlPanel()
-{
-	m_App.Panel.ControlPanel.AddItem(new CTunerControlItem);
-	m_App.Panel.ControlPanel.AddItem(new CChannelControlItem);
-
-	const CChannelList *pList=m_App.ChannelManager.GetCurrentChannelList();
-	for (int i=0;i<12;i++) {
-		TCHAR szText[4];
-		CControlPanelButton *pItem;
-
-		StdUtil::snprintf(szText,lengthof(szText),TEXT("%d"),i+1);
-		pItem=new CControlPanelButton(CM_CHANNELNO_FIRST+i,szText,i%6==0,1);
-		if (pList==nullptr || pList->FindChannelNo(i+1)<0)
-			pItem->SetEnable(false);
-		m_App.Panel.ControlPanel.AddItem(pItem);
-	}
-
-	m_App.Panel.ControlPanel.AddItem(new CVideoControlItem);
-	m_App.Panel.ControlPanel.AddItem(new CVolumeControlItem);
-	m_App.Panel.ControlPanel.AddItem(new CAudioControlItem);
-}
-
-
-void CMainWindow::UpdateControlPanel()
-{
-	const CChannelList *pList=m_App.ChannelManager.GetCurrentChannelList();
-	const CChannelInfo *pCurChannel=m_App.ChannelManager.GetCurrentChannelInfo();
-
-	for (int i=0;i<12;i++) {
-		CControlPanelItem *pItem=m_App.Panel.ControlPanel.GetItem(CONTROLPANEL_ITEM_CHANNEL_1+i);
-		if (pItem!=nullptr) {
-			pItem->SetEnable(pList!=nullptr && pList->FindChannelNo(i+1)>=0);
-			pItem->SetCheck(false);
-		}
-	}
-	if (pCurChannel!=nullptr) {
-		if (pCurChannel->GetChannelNo()>=1 && pCurChannel->GetChannelNo()<=12) {
-			m_App.Panel.ControlPanel.CheckRadioItem(
-				CM_CHANNELNO_FIRST,CM_CHANNELNO_LAST,
-				CM_CHANNELNO_FIRST+pCurChannel->GetChannelNo()-1);
-		}
-	}
-}
-
-
 void CMainWindow::SetStyle(const TVTest::Style::CStyleManager *pStyleManager)
 {
 	m_Style.SetStyle(pStyleManager);
@@ -6117,7 +6030,7 @@ void CMainWindow::CFullscreen::ShowPanel(bool fShow)
 			}
 			m_Panel.SendSizeMessage();
 			m_LayoutBase.SetContainerVisible(CONTAINER_ID_PANEL,true);
-			m_MainWindow.UpdatePanel();
+			m_App.Panel.UpdateContent();
 		} else {
 			m_PanelWidth=m_Panel.GetWidth();
 			m_LayoutBase.SetContainerVisible(CONTAINER_ID_PANEL,false);

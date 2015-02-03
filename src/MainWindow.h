@@ -157,7 +157,6 @@ public:
 	bool BeginChannelNoInput(int Digits);
 	void EndChannelNoInput(bool fDetermine=false);
 
-	void UpdatePanel();
 	bool SetViewWindowEdge(bool fEdge);
 	bool GetViewWindowEdge() const { return m_fViewWindowEdge; }
 
@@ -624,9 +623,6 @@ private:
 	void ResumeViewer(unsigned int Flags);
 	void OnChannelNoInput();
 	bool SetEpgUpdateNextChannel();
-	void RefreshChannelPanel();
-	void InitControlPanel();
-	void UpdateControlPanel();
 	void HookWindows(HWND hwnd);
 	void HookChildWindow(HWND hwnd);
 	void SendCommand(int Command) { SendMessage(WM_COMMAND,Command,0); }
