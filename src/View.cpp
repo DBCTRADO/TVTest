@@ -829,3 +829,16 @@ void CDisplayBase::SetFocus()
 CDisplayBase::CEventHandler::~CEventHandler()
 {
 }
+
+
+
+
+void CDisplayEventHandlerBase::RelayMouseMessage(CDisplayView *pView,UINT Message,int x,int y)
+{
+	if (pView==nullptr)
+		return;
+	HWND hwndParent=pView->GetParent();
+	POINT pt={x,y};
+	::MapWindowPoints(pView->GetHandle(),hwndParent,&pt,1);
+	::SendMessage(hwndParent,Message,0,MAKELPARAM(pt.x,pt.y));
+}

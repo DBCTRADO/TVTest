@@ -112,6 +112,12 @@ private:
 	bool m_fVisible;
 };
 
+class CDisplayEventHandlerBase
+{
+protected:
+	void RelayMouseMessage(CDisplayView *pView,UINT Message,int x,int y);
+};
+
 class CVideoContainerWindow : public CCustomWindow
 {
 public:
