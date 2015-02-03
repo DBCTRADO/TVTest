@@ -578,10 +578,9 @@ bool CPanelFrame::Create(HWND hwndOwner,Layout::CSplitter *pSplitter,int PanelID
 	m_Panel.Create(m_hwnd,WS_CHILD | WS_VISIBLE | WS_CLIPCHILDREN);
 	m_Panel.SetWindow(pWindow,pszTitle);
 	m_Panel.SetEventHandler(this);
-	if (m_DockingWidth<0) {
-		m_Panel.GetClientRect(&rc);
+	m_Panel.GetPosition(&rc);
+	if (m_DockingWidth<0)
 		m_DockingWidth=rc.right;
-	}
 	if (m_fFloating) {
 		m_Panel.SetVisible(false);
 		m_Panel.SetParent(this);
@@ -595,6 +594,8 @@ bool CPanelFrame::Create(HWND hwndOwner,Layout::CSplitter *pSplitter,int PanelID
 
 		pContainer->SetWindow(&m_Panel);
 		m_pSplitter->SetPaneSize(PanelID,m_DockingWidth);
+		rc.right=rc.left+m_DockingWidth;
+		m_Panel.SetPosition(&rc);
 		m_Panel.ShowTitle(true);
 	}
 	return true;
