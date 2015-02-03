@@ -2,6 +2,7 @@
 #include "TVTest.h"
 #include "AppMain.h"
 #include "BonTsEngine/TsInformation.h"
+#include "resource.h"
 
 #ifdef _DEBUG
 #undef THIS_FILE
@@ -17,6 +18,7 @@ namespace TVTest
 CMainDisplay::CMainDisplay(CAppMain &App)
 	: m_App(App)
 	, m_fViewerEnabled(false)
+	, ChannelDisplayEventHandler(App)
 {
 }
 
@@ -124,6 +126,99 @@ bool CMainDisplay::CloseViewer()
 	EnableViewer(false);
 	m_App.CoreEngine.CloseMediaViewer();
 	return true;
+}
+
+
+
+
+void CMainDisplay::CHomeDisplayEventHandler::OnClose()
+{
+	m_pHomeDisplay->SetVisible(false);
+}
+
+
+void CMainDisplay::CHomeDisplayEventHandler::OnMouseMessage(UINT Msg,int x,int y)
+{
+	RelayMouseMessage(m_pHomeDisplay,Msg,x,y);
+}
+
+
+
+
+CMainDisplay::CChannelDisplayEventHandler::CChannelDisplayEventHandler(CAppMain &App)
+	: m_App(App)
+{
+}
+
+
+void CMainDisplay::CChannelDisplayEventHandler::OnTunerSelect(
+	LPCTSTR pszDriverFileName,int TuningSpace)
+{
+	if (m_App.CoreEngine.IsTunerOpen()
+			&& IsEqualFileName(m_App.CoreEngine.GetDriverFileName(),pszDriverFileName)) {
+		m_App.UICore.DoCommand(CM_CHANNELDISPLAY);
+	} else {
+		if (!m_App.UICore.ConfirmChannelChange())
+			return;
+
+		if (m_App.Core.OpenTuner(pszDriverFileName)) {
+			if (TuningSpace!=SPACE_NOTSPECIFIED) {
+				m_App.UICore.DoCommand(CM_SPACE_FIRST+TuningSpace);
+				if (TuningSpace==SPACE_ALL
+						|| TuningSpace==m_App.RestoreChannelInfo.Space)
+					m_App.Core.RestoreChannel();
+			} else {
+				m_App.Core.RestoreChannel();
+			}
+		}
+		m_App.UICore.DoCommand(CM_CHANNELDISPLAY);
+	}
+}
+
+
+void CMainDisplay::CChannelDisplayEventHandler::OnChannelSelect(
+	LPCTSTR pszDriverFileName,const CChannelInfo *pChannelInfo)
+{
+	if (!m_App.UICore.ConfirmChannelChange())
+		return;
+
+	if (m_App.Core.OpenTuner(pszDriverFileName)) {
+		int Space;
+		if (m_App.RestoreChannelInfo.fAllChannels)
+			Space=CChannelManager::SPACE_ALL;
+		else
+			Space=pChannelInfo->GetSpace();
+		const CChannelList *pList=m_App.ChannelManager.GetChannelList(Space);
+		if (pList!=NULL) {
+			int Index=pList->FindByIndex(pChannelInfo->GetSpace(),
+										 pChannelInfo->GetChannelIndex(),
+										 pChannelInfo->GetServiceID());
+
+			if (Index<0 && Space==CChannelManager::SPACE_ALL) {
+				Space=pChannelInfo->GetSpace();
+				pList=m_App.ChannelManager.GetChannelList(Space);
+				if (pList!=NULL)
+					Index=pList->FindByIndex(-1,
+											 pChannelInfo->GetChannelIndex(),
+											 pChannelInfo->GetServiceID());
+			}
+			if (Index>=0)
+				m_App.Core.SetChannel(Space,Index);
+		}
+		m_App.UICore.DoCommand(CM_CHANNELDISPLAY);
+	}
+}
+
+
+void CMainDisplay::CChannelDisplayEventHandler::OnClose()
+{
+	m_pChannelDisplay->SetVisible(false);
+}
+
+
+void CMainDisplay::CChannelDisplayEventHandler::OnMouseMessage(UINT Msg,int x,int y)
+{
+	RelayMouseMessage(m_pChannelDisplay,Msg,x,y);
 }
 
 

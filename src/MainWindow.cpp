@@ -2750,7 +2750,7 @@ void CMainWindow::OnCommand(HWND hwnd,int id,HWND hwndCtl,UINT codeNotify)
 			m_App.HomeDisplay.SetFont(m_App.OSDOptions.GetDisplayFont(),
 									  m_App.OSDOptions.IsDisplayFontAutoSize());
 			if (!m_App.HomeDisplay.IsCreated()) {
-				m_App.HomeDisplay.SetEventHandler(&m_App.HomeDisplayEventHandler);
+				m_App.HomeDisplay.SetEventHandler(&m_Display.HomeDisplayEventHandler);
 				m_App.HomeDisplay.Create(m_Display.GetDisplayBase().GetParent()->GetHandle(),
 										 WS_CHILD | WS_CLIPCHILDREN);
 				if (m_fCustomFrame)
@@ -2772,7 +2772,7 @@ void CMainWindow::OnCommand(HWND hwnd,int id,HWND hwndCtl,UINT codeNotify)
 			m_App.ChannelDisplay.SetFont(m_App.OSDOptions.GetDisplayFont(),
 										 m_App.OSDOptions.IsDisplayFontAutoSize());
 			if (!m_App.ChannelDisplay.IsCreated()) {
-				m_App.ChannelDisplay.SetEventHandler(&m_App.ChannelDisplayEventHandler);
+				m_App.ChannelDisplay.SetEventHandler(&m_Display.ChannelDisplayEventHandler);
 				m_App.ChannelDisplay.Create(
 					m_Display.GetDisplayBase().GetParent()->GetHandle(),
 					WS_CHILD | WS_CLIPCHILDREN);

@@ -92,24 +92,6 @@ class CSideBarOptionsEventHandler : public CSideBarOptions::CEventHandler
 	void OnItemChanged() override;
 };
 
-class CHomeDisplayEventHandler
-	: public CHomeDisplay::CHomeDisplayEventHandler
-	, protected CDisplayEventHandlerBase
-{
-	void OnClose() override;
-	void OnMouseMessage(UINT Msg,int x,int y) override;
-};
-
-class CChannelDisplayEventHandler
-	: public CChannelDisplay::CChannelDisplayEventHandler
-	, protected CDisplayEventHandlerBase
-{
-	void OnTunerSelect(LPCTSTR pszDriverFileName,int TuningSpace) override;
-	void OnChannelSelect(LPCTSTR pszDriverFileName,const CChannelInfo *pChannelInfo) override;
-	void OnClose() override;
-	void OnMouseMessage(UINT Msg,int x,int y) override;
-};
-
 class CServiceUpdateInfo
 {
 public:
@@ -224,9 +206,6 @@ public:
 	CEpgLoadEventHandler EpgLoadEventHandler;
 
 	CSideBarOptionsEventHandler SideBarOptionsEventHandler;
-
-	CHomeDisplayEventHandler HomeDisplayEventHandler;
-	CChannelDisplayEventHandler ChannelDisplayEventHandler;
 
 	CAppMain();
 	~CAppMain();
