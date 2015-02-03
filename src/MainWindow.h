@@ -4,6 +4,7 @@
 
 #include "UISkin.h"
 #include "View.h"
+#include "MainDisplay.h"
 #include "ChannelManager.h"
 #include "Command.h"
 #include "Layout.h"
@@ -53,30 +54,6 @@ enum {
 
 
 class CAppMain;
-
-class CBasicViewer
-{
-public:
-	CBasicViewer(CAppMain &App);
-	bool Create(HWND hwndParent,int ViewID,int ContainerID,HWND hwndMessage);
-	bool EnableViewer(bool fEnable);
-	bool IsViewerEnabled() const { return m_fEnabled; }
-	bool BuildViewer(BYTE VideoStreamType=0);
-	bool CloseViewer();
-	CViewWindow &GetViewWindow() { return m_ViewWindow; }
-	const CViewWindow &GetViewWindow() const { return m_ViewWindow; }
-	CVideoContainerWindow &GetVideoContainer() { return m_VideoContainer; }
-	const CVideoContainerWindow &GetVideoContainer() const { return m_VideoContainer; }
-	CDisplayBase &GetDisplayBase() { return m_DisplayBase; }
-	const CDisplayBase &GetDisplayBase() const { return m_DisplayBase; }
-
-protected:
-	CAppMain &m_App;
-	bool m_fEnabled;
-	CViewWindow m_ViewWindow;
-	CVideoContainerWindow m_VideoContainer;
-	CDisplayBase m_DisplayBase;
-};
 
 class CMainWindow
 	: public CBasicWindow
@@ -161,7 +138,7 @@ public:
 	bool GetViewWindowEdge() const { return m_fViewWindowEdge; }
 
 	Layout::CLayoutBase &GetLayoutBase() { return m_LayoutBase; }
-	CDisplayBase &GetDisplayBase() { return m_Viewer.GetDisplayBase(); }
+	CDisplayBase &GetDisplayBase() { return m_Display.GetDisplayBase(); }
 	CTitleBar &GetTitleBar() { return m_TitleBar; }
 	CStatusView &GetStatusView();
 	CSideBar &GetSideBar();
@@ -287,7 +264,7 @@ private:
 	public:
 		CFullscreen(CMainWindow &MainWindow);
 		~CFullscreen();
-		bool Create(HWND hwndOwner,CBasicViewer *pViewer);
+		bool Create(HWND hwndOwner,TVTest::CMainDisplay *pDisplay);
 		bool IsStatusBarVisible() const { return m_fShowStatusView; }
 		bool IsSideBarVisible() const { return m_fShowSideBar; }
 		void ShowPanel(bool fShow);
@@ -319,7 +296,7 @@ private:
 		CAppMain &m_App;
 		Layout::CLayoutBase m_LayoutBase;
 		CViewWindow m_ViewWindow;
-		CBasicViewer *m_pViewer;
+		TVTest::CMainDisplay *m_pDisplay;
 		CTitleBar m_TitleBar;
 		CTitleBarManager m_TitleBarManager;
 		CPanel m_Panel;
@@ -410,7 +387,7 @@ private:
 
 	CAppMain &m_App;
 	Layout::CLayoutBase m_LayoutBase;
-	CBasicViewer m_Viewer;
+	TVTest::CMainDisplay m_Display;
 	CTitleBar m_TitleBar;
 	CTitleBarManager m_TitleBarManager;
 	CSideBarManager m_SideBarManager;

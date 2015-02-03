@@ -488,6 +488,7 @@
     <ClCompile Include="ChannelInput.cpp" />
     <ClCompile Include="ComUtility.cpp" />
     <ClCompile Include="Epg.cpp" />
+    <ClCompile Include="MainDisplay.cpp" />
     <ClCompile Include="MainPanel.cpp" />
     <ClCompile Include="TextDraw.cpp" />
     <ClCompile Include="TSProcessorErrorDialog.cpp" />
@@ -664,6 +665,7 @@
     <ClInclude Include="ChannelInput.h" />
     <ClInclude Include="ComUtility.h" />
     <ClInclude Include="Epg.h" />
+    <ClInclude Include="MainDisplay.h" />
     <ClInclude Include="MainPanel.h" />
     <ClInclude Include="TextDraw.h" />
     <ClInclude Include="TSProcessorErrorDialog.h" />

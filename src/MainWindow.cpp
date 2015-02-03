@@ -9,7 +9,6 @@
 #include "EventInfoPopup.h"
 #include "ToolTip.h"
 #include "HelperClass/StdUtil.h"
-#include "BonTsEngine/TsInformation.h"
 #include "resource.h"
 
 #pragma comment(lib,"imm32.lib")	// for ImmAssociateContext(Ex)
@@ -34,127 +33,6 @@ static int CalcZoomSize(int Size,int Rate,int Factor)
 	if (Factor==0)
 		return 0;
 	return ::MulDiv(Size,Rate,Factor);
-}
-
-
-
-
-CBasicViewer::CBasicViewer(CAppMain &App)
-	: m_App(App)
-	, m_fEnabled(false)
-{
-}
-
-
-bool CBasicViewer::Create(HWND hwndParent,int ViewID,int ContainerID,HWND hwndMessage)
-{
-	m_ViewWindow.Create(hwndParent,
-		WS_CHILD | WS_VISIBLE | WS_CLIPCHILDREN | WS_CLIPSIBLINGS,0,ViewID);
-	m_ViewWindow.SetMessageWindow(hwndMessage);
-	const CColorScheme *pColorScheme=m_App.UICore.GetCurrentColorScheme();
-	Theme::BorderStyle Border;
-	pColorScheme->GetBorderStyle(CColorScheme::BORDER_SCREEN,&Border);
-	if (!m_App.MainWindow.GetViewWindowEdge())
-		Border.Type=Theme::BORDER_NONE;
-	m_ViewWindow.SetBorder(Border);
-	m_VideoContainer.Create(m_ViewWindow.GetHandle(),
-		WS_CHILD | WS_CLIPCHILDREN | WS_CLIPSIBLINGS,0,ContainerID,
-		&m_App.CoreEngine.m_DtvEngine);
-	m_ViewWindow.SetVideoContainer(&m_VideoContainer);
-
-	m_DisplayBase.SetParent(&m_VideoContainer);
-	m_VideoContainer.SetDisplayBase(&m_DisplayBase);
-
-	return true;
-}
-
-
-bool CBasicViewer::EnableViewer(bool fEnable)
-{
-	if (m_fEnabled!=fEnable) {
-		if (fEnable && !m_App.CoreEngine.m_DtvEngine.m_MediaViewer.IsOpen())
-			return false;
-		if (fEnable || (!fEnable && !m_DisplayBase.IsVisible()))
-			m_VideoContainer.SetVisible(fEnable);
-		m_App.CoreEngine.m_DtvEngine.m_MediaViewer.SetVisible(fEnable);
-		if (!m_App.CoreEngine.EnableMediaViewer(fEnable))
-			return false;
-		if (m_App.PlaybackOptions.GetMinTimerResolution())
-			m_App.CoreEngine.SetMinTimerResolution(fEnable);
-		m_fEnabled=fEnable;
-		m_App.AppEventManager.OnPlaybackStateChanged(fEnable);
-	}
-	return true;
-}
-
-
-bool CBasicViewer::BuildViewer(BYTE VideoStreamType)
-{
-	if (VideoStreamType==0) {
-		VideoStreamType=m_App.CoreEngine.m_DtvEngine.GetVideoStreamType();
-		if (VideoStreamType==STREAM_TYPE_UNINITIALIZED)
-			return false;
-	}
-	LPCWSTR pszVideoDecoder=nullptr;
-
-	switch (VideoStreamType) {
-#ifdef BONTSENGINE_MPEG2_SUPPORT
-	case STREAM_TYPE_MPEG2_VIDEO:
-		pszVideoDecoder=m_App.GeneralOptions.GetMpeg2DecoderName();
-		break;
-#endif
-
-#ifdef BONTSENGINE_H264_SUPPORT
-	case STREAM_TYPE_H264:
-		pszVideoDecoder=m_App.GeneralOptions.GetH264DecoderName();
-		break;
-#endif
-
-#ifdef BONTSENGINE_H265_SUPPORT
-	case STREAM_TYPE_H265:
-		pszVideoDecoder=m_App.GeneralOptions.GetH265DecoderName();
-		break;
-#endif
-
-	default:
-		if (m_App.CoreEngine.m_DtvEngine.GetAudioStreamNum()==0)
-			return false;
-		VideoStreamType=STREAM_TYPE_INVALID;
-		break;
-	}
-
-	if (m_fEnabled)
-		EnableViewer(false);
-
-	m_App.AddLog(
-		TEXT("DirectShowの初期化を行います(%s)..."),
-		VideoStreamType==STREAM_TYPE_INVALID?
-			TEXT("映像なし"):
-			TsEngine::GetStreamTypeText(VideoStreamType));
-
-	m_App.CoreEngine.m_DtvEngine.m_MediaViewer.SetAudioFilter(m_App.AudioOptions.GetAudioFilterName());
-	if (!m_App.CoreEngine.BuildMediaViewer(
-			m_VideoContainer.GetHandle(),
-			m_VideoContainer.GetHandle(),
-			m_App.GeneralOptions.GetVideoRendererType(),
-			VideoStreamType,pszVideoDecoder,
-			m_App.AudioOptions.GetAudioDeviceName())) {
-		m_App.Core.OnError(&m_App.CoreEngine,TEXT("DirectShowの初期化ができません。"));
-		return false;
-	}
-	m_App.AudioOptions.ApplyMediaViewerOptions();
-
-	m_App.AddLog(TEXT("DirectShowの初期化を行いました。"));
-
-	return true;
-}
-
-
-bool CBasicViewer::CloseViewer()
-{
-	EnableViewer(false);
-	m_App.CoreEngine.CloseMediaViewer();
-	return true;
 }
 
 
@@ -195,7 +73,7 @@ bool CMainWindow::Initialize(HINSTANCE hinst)
 
 CMainWindow::CMainWindow(CAppMain &App)
 	: m_App(App)
-	, m_Viewer(App)
+	, m_Display(App)
 	, m_TitleBarManager(this,true)
 	, m_SideBarManager(this)
 	, m_StatusViewEventHandler(this)
@@ -379,7 +257,7 @@ bool CMainWindow::InitializeViewer(BYTE VideoStreamType)
 
 	m_App.CoreEngine.m_DtvEngine.SetTracer(&m_App.StatusView);
 
-	if (m_Viewer.BuildViewer(VideoStreamType)) {
+	if (m_Display.BuildViewer(VideoStreamType)) {
 		CMediaViewer &MediaViewer=m_App.CoreEngine.m_DtvEngine.m_MediaViewer;
 
 		m_App.Panel.InfoPanel.UpdateItem(CInformationPanel::ITEM_VIDEODECODER);
@@ -389,7 +267,7 @@ bool CMainWindow::InitializeViewer(BYTE VideoStreamType)
 		if (fEnableViewer)
 			m_pCore->EnableViewer(true);
 		if (m_fCustomFrame)
-			HookWindows(m_Viewer.GetVideoContainer().GetHandle());
+			HookWindows(m_Display.GetVideoContainer().GetHandle());
 	} else {
 		FinalizeViewer();
 	}
@@ -403,7 +281,7 @@ bool CMainWindow::InitializeViewer(BYTE VideoStreamType)
 
 bool CMainWindow::FinalizeViewer()
 {
-	m_Viewer.CloseViewer();
+	m_Display.CloseViewer();
 
 	m_fEnablePlayback=false;
 
@@ -422,7 +300,7 @@ bool CMainWindow::SetFullscreen(bool fFullscreen)
 	if (fFullscreen) {
 		if (::IsIconic(m_hwnd))
 			::ShowWindow(m_hwnd,SW_RESTORE);
-		if (!m_Fullscreen.Create(m_hwnd,&m_Viewer))
+		if (!m_Fullscreen.Create(m_hwnd,&m_Display))
 			return false;
 	} else {
 		ForegroundWindow(m_hwnd);
@@ -470,7 +348,7 @@ void CMainWindow::AdjustWindowSize(int Width,int Height,bool fScreenSize)
 
 	if (fScreenSize) {
 		::SetRect(&rc,0,0,Width,Height);
-		m_Viewer.GetViewWindow().CalcWindowRect(&rc);
+		m_Display.GetViewWindow().CalcWindowRect(&rc);
 		Width=rc.right-rc.left;
 		Height=rc.bottom-rc.top;
 		m_LayoutBase.GetScreenPosition(&rc);
@@ -1364,7 +1242,7 @@ LRESULT CMainWindow::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 		return 0;
 
 	case WM_SETFOCUS:
-		m_Viewer.GetDisplayBase().SetFocus();
+		m_Display.GetDisplayBase().SetFocus();
 		return 0;
 
 	case WM_SETTEXT:
@@ -1422,7 +1300,7 @@ LRESULT CMainWindow::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 				if (m_ResetErrorCountTimer.IsEnabled())
 					m_ResetErrorCountTimer.Begin(hwnd,2000);
 
-				m_Viewer.GetDisplayBase().SetVisible(false);
+				m_Display.GetDisplayBase().SetVisible(false);
 			}
 
 			if (!m_App.Core.IsChannelScanning()
@@ -1696,11 +1574,11 @@ bool CMainWindow::OnCreate(const CREATESTRUCT *pcs)
 	m_LayoutBase.Create(m_hwnd,
 						WS_CHILD | WS_VISIBLE | WS_CLIPCHILDREN | WS_CLIPSIBLINGS);
 
-	m_Viewer.GetViewWindow().SetMargin(m_Style.ScreenMargin);
-	m_Viewer.Create(m_LayoutBase.GetHandle(),IDC_VIEW,IDC_VIDEOCONTAINER,m_hwnd);
-	m_Viewer.GetViewWindow().SetEventHandler(&m_ViewWindowEventHandler);
-	m_Viewer.GetVideoContainer().SetEventHandler(&m_VideoContainerEventHandler);
-	m_Viewer.GetDisplayBase().SetEventHandler(&m_DisplayBaseEventHandler);
+	m_Display.GetViewWindow().SetMargin(m_Style.ScreenMargin);
+	m_Display.Create(m_LayoutBase.GetHandle(),IDC_VIEW,IDC_VIDEOCONTAINER,m_hwnd);
+	m_Display.GetViewWindow().SetEventHandler(&m_ViewWindowEventHandler);
+	m_Display.GetVideoContainer().SetEventHandler(&m_VideoContainerEventHandler);
+	m_Display.GetDisplayBase().SetEventHandler(&m_DisplayBaseEventHandler);
 
 	m_TitleBar.Create(m_LayoutBase.GetHandle(),
 					  WS_CHILD | WS_CLIPSIBLINGS | (m_fShowTitleBar && m_fCustomTitleBar?WS_VISIBLE:0),
@@ -1737,7 +1615,7 @@ bool CMainWindow::OnCreate(const CREATESTRUCT *pcs)
 	m_App.StatusView.SetEventHandler(&m_StatusViewEventHandler);
 	m_App.StatusOptions.ApplyOptions();
 
-	m_NotificationBar.Create(m_Viewer.GetVideoContainer().GetHandle(),
+	m_NotificationBar.Create(m_Display.GetVideoContainer().GetHandle(),
 							 WS_CHILD | WS_CLIPSIBLINGS);
 
 	m_App.SideBarOptions.SetEventHandler(&m_App.SideBarOptionsEventHandler);
@@ -1758,7 +1636,7 @@ bool CMainWindow::OnCreate(const CREATESTRUCT *pcs)
 		(fSideBarVertical?Layout::CSplitter::STYLE_HORZ:Layout::CSplitter::STYLE_VERT));
 	pSideBarSplitter->SetVisible(true);
 	pWindowContainer=new Layout::CWindowContainer(CONTAINER_ID_VIEW);
-	pWindowContainer->SetWindow(&m_Viewer.GetViewWindow());
+	pWindowContainer->SetWindow(&m_Display.GetViewWindow());
 	pWindowContainer->SetMinSize(32,32);
 	pWindowContainer->SetVisible(true);
 	pSideBarSplitter->SetPane(0,pWindowContainer);
@@ -2002,7 +1880,7 @@ bool CMainWindow::OnSizeChanging(UINT Edge,RECT *pRect)
 
 			GetPosition(&rcWindow);
 			GetClientRect(&rcClient);
-			m_Viewer.GetViewWindow().CalcClientRect(&rcClient);
+			m_Display.GetViewWindow().CalcClientRect(&rcClient);
 			if (m_fShowStatusBar)
 				rcClient.bottom-=m_App.StatusView.GetHeight();
 			if (m_fShowTitleBar && m_fCustomTitleBar)
@@ -2080,8 +1958,8 @@ void CMainWindow::OnMouseMove(int x,int y)
 		RECT rcClient,rcTitle,rcStatus,rcSideBar,rc;
 		bool fShowTitleBar=false,fShowStatusBar=false,fShowSideBar=false;
 
-		m_Viewer.GetViewWindow().GetClientRect(&rcClient);
-		MapWindowRect(m_Viewer.GetViewWindow().GetHandle(),m_LayoutBase.GetHandle(),&rcClient);
+		m_Display.GetViewWindow().GetClientRect(&rcClient);
+		MapWindowRect(m_Display.GetViewWindow().GetHandle(),m_LayoutBase.GetHandle(),&rcClient);
 		if (!m_fShowTitleBar && m_fPopupTitleBar) {
 			rc=rcClient;
 			m_TitleBarManager.Layout(&rc,&rcTitle);
@@ -2171,8 +2049,8 @@ bool CMainWindow::OnSetCursor(HWND hwndCursor,int HitTestCode,int MouseMessage)
 {
 	if (HitTestCode==HTCLIENT) {
 		if (hwndCursor==m_hwnd
-				|| hwndCursor==m_Viewer.GetVideoContainer().GetHandle()
-				|| hwndCursor==m_Viewer.GetViewWindow().GetHandle()
+				|| hwndCursor==m_Display.GetVideoContainer().GetHandle()
+				|| hwndCursor==m_Display.GetViewWindow().GetHandle()
 				|| hwndCursor==m_NotificationBar.GetHandle()
 				|| CPseudoOSD::IsPseudoOSD(hwndCursor)) {
 			::SetCursor(m_fShowCursor?::LoadCursor(nullptr,IDC_ARROW):nullptr);
@@ -2873,17 +2751,17 @@ void CMainWindow::OnCommand(HWND hwnd,int id,HWND hwndCtl,UINT codeNotify)
 									  m_App.OSDOptions.IsDisplayFontAutoSize());
 			if (!m_App.HomeDisplay.IsCreated()) {
 				m_App.HomeDisplay.SetEventHandler(&m_App.HomeDisplayEventHandler);
-				m_App.HomeDisplay.Create(m_Viewer.GetDisplayBase().GetParent()->GetHandle(),
+				m_App.HomeDisplay.Create(m_Display.GetDisplayBase().GetParent()->GetHandle(),
 										 WS_CHILD | WS_CLIPCHILDREN);
 				if (m_fCustomFrame)
 					HookWindows(m_App.HomeDisplay.GetHandle());
 			}
 			m_App.HomeDisplay.UpdateContents();
-			m_Viewer.GetDisplayBase().SetDisplayView(&m_App.HomeDisplay);
-			m_Viewer.GetDisplayBase().SetVisible(true);
+			m_Display.GetDisplayBase().SetDisplayView(&m_App.HomeDisplay);
+			m_Display.GetDisplayBase().SetVisible(true);
 			m_App.HomeDisplay.Update();
 		} else {
-			m_Viewer.GetDisplayBase().SetVisible(false);
+			m_Display.GetDisplayBase().SetVisible(false);
 		}
 		return;
 
@@ -2896,15 +2774,15 @@ void CMainWindow::OnCommand(HWND hwnd,int id,HWND hwndCtl,UINT codeNotify)
 			if (!m_App.ChannelDisplay.IsCreated()) {
 				m_App.ChannelDisplay.SetEventHandler(&m_App.ChannelDisplayEventHandler);
 				m_App.ChannelDisplay.Create(
-					m_Viewer.GetDisplayBase().GetParent()->GetHandle(),
+					m_Display.GetDisplayBase().GetParent()->GetHandle(),
 					WS_CHILD | WS_CLIPCHILDREN);
 				m_App.ChannelDisplay.SetDriverManager(&m_App.DriverManager);
 				m_App.ChannelDisplay.SetLogoManager(&m_App.LogoManager);
 				if (m_fCustomFrame)
 					HookWindows(m_App.ChannelDisplay.GetHandle());
 			}
-			m_Viewer.GetDisplayBase().SetDisplayView(&m_App.ChannelDisplay);
-			m_Viewer.GetDisplayBase().SetVisible(true);
+			m_Display.GetDisplayBase().SetDisplayView(&m_App.ChannelDisplay);
+			m_Display.GetDisplayBase().SetVisible(true);
 			if (m_App.CoreEngine.IsDriverSpecified()) {
 				m_App.ChannelDisplay.SetSelect(
 					m_App.CoreEngine.GetDriverFileName(),
@@ -2912,7 +2790,7 @@ void CMainWindow::OnCommand(HWND hwnd,int id,HWND hwndCtl,UINT codeNotify)
 			}
 			m_App.ChannelDisplay.Update();
 		} else {
-			m_Viewer.GetDisplayBase().SetVisible(false);
+			m_Display.GetDisplayBase().SetVisible(false);
 		}
 		return;
 
@@ -3615,7 +3493,7 @@ void CMainWindow::OnTimer(HWND hwnd,UINT id)
 			}
 		}
 
-		m_Viewer.GetVideoContainer().SendSizeMessage();
+		m_Display.GetVideoContainer().SendSizeMessage();
 		m_App.StatusView.UpdateItem(STATUS_ITEM_VIDEOSIZE);
 		m_App.Panel.ControlPanel.UpdateItem(CONTROLPANEL_ITEM_VIDEO);
 		if (m_VideoSizeChangedTimerCount==3)
@@ -3651,11 +3529,11 @@ void CMainWindow::OnTimer(HWND hwnd,UINT id)
 
 	case TIMER_ID_HIDECURSOR:
 		if (m_App.OperationOptions.GetHideCursor()) {
-			if (!m_fNoHideCursor && !m_Viewer.GetDisplayBase().IsVisible()) {
+			if (!m_fNoHideCursor && !m_Display.GetDisplayBase().IsVisible()) {
 				POINT pt;
 				RECT rc;
 				::GetCursorPos(&pt);
-				m_Viewer.GetViewWindow().GetScreenPosition(&rc);
+				m_Display.GetViewWindow().GetScreenPosition(&rc);
 				if (::PtInRect(&rc,pt)) {
 					ShowCursor(false);
 					::SetCursor(nullptr);
@@ -3684,7 +3562,7 @@ bool CMainWindow::OnInitMenuPopup(HMENU hmenu)
 		}
 
 		SIZE sz;
-		if (m_Viewer.GetVideoContainer().GetClientSize(&sz)) {
+		if (m_Display.GetVideoContainer().GetClientSize(&sz)) {
 			Zoom.Size.Width=sz.cx;
 			Zoom.Size.Height=sz.cy;
 		} else {
@@ -4319,7 +4197,7 @@ void CMainWindow::UpdateLayout()
 void CMainWindow::ShowCursor(bool fShow)
 {
 	m_App.CoreEngine.m_DtvEngine.m_MediaViewer.HideCursor(!fShow);
-	m_Viewer.GetViewWindow().ShowCursor(fShow);
+	m_Display.GetViewWindow().ShowCursor(fShow);
 	m_fShowCursor=fShow;
 }
 
@@ -4501,13 +4379,13 @@ void CMainWindow::OnMouseWheel(WPARAM wParam,LPARAM lParam,bool fHorz)
 	pt.x=GET_X_LPARAM(lParam);
 	pt.y=GET_Y_LPARAM(lParam);
 
-	if (m_Viewer.GetDisplayBase().IsVisible()) {
-		CDisplayView *pDisplayView=m_Viewer.GetDisplayBase().GetDisplayView();
+	if (m_Display.GetDisplayBase().IsVisible()) {
+		CDisplayView *pDisplayView=m_Display.GetDisplayBase().GetDisplayView();
 
 		if (pDisplayView!=nullptr) {
 			RECT rc;
 
-			m_Viewer.GetDisplayBase().GetParent()->GetScreenPosition(&rc);
+			m_Display.GetDisplayBase().GetParent()->GetScreenPosition(&rc);
 			if (::PtInRect(&rc,pt)) {
 				if (pDisplayView->OnMouseWheel(fHorz?WM_MOUSEHWHEEL:WM_MOUSEWHEEL,wParam,lParam))
 					return;
@@ -4671,7 +4549,7 @@ bool CMainWindow::EnableViewer(bool fEnable)
 	}
 
 	if (MediaViewer.IsOpen()) {
-		if (!m_Viewer.EnableViewer(fEnable))
+		if (!m_Display.EnableViewer(fEnable))
 			return false;
 
 		m_pCore->PreventDisplaySave(fEnable);
@@ -4687,13 +4565,13 @@ bool CMainWindow::EnableViewer(bool fEnable)
 
 bool CMainWindow::IsViewerEnabled() const
 {
-	return m_Viewer.IsViewerEnabled();
+	return m_Display.IsViewerEnabled();
 }
 
 
 HWND CMainWindow::GetViewerWindow() const
 {
-	return m_Viewer.GetVideoContainer().GetHandle();
+	return m_Display.GetVideoContainer().GetHandle();
 }
 
 
@@ -4772,7 +4650,7 @@ bool CMainWindow::SetZoomRate(int Rate,int Factor)
 		if (m_App.ViewOptions.GetZoomKeepAspectRatio()) {
 			SIZE ScreenSize;
 
-			m_Viewer.GetVideoContainer().GetClientSize(&ScreenSize);
+			m_Display.GetVideoContainer().GetClientSize(&ScreenSize);
 			if (ScreenSize.cx>0 && ScreenSize.cy>0) {
 				if ((double)ZoomWidth/(double)ScreenSize.cx<=(double)ZoomHeight/(double)ScreenSize.cy) {
 					ZoomWidth=CalcZoomSize(ScreenSize.cx,ZoomHeight,ScreenSize.cy);
@@ -4799,7 +4677,7 @@ bool CMainWindow::GetZoomRate(int *pRate,int *pFactor)
 		/*
 		SIZE sz;
 
-		m_Viewer.GetVideoContainer().GetClientSize(&sz);
+		m_Display.GetVideoContainer().GetClientSize(&sz);
 		Rate=sz.cy;
 		Factor=Height;
 		*/
@@ -4826,7 +4704,7 @@ bool CMainWindow::AutoFitWindowToVideo()
 	if (!m_App.CoreEngine.GetVideoViewSize(&Width,&Height)
 			|| Width<=0 || Height<=0)
 		return false;
-	m_Viewer.GetVideoContainer().GetClientSize(&sz);
+	m_Display.GetVideoContainer().GetClientSize(&sz);
 	Width=CalcZoomSize(Width,sz.cy,Height);
 	if (sz.cx<Width)
 		AdjustWindowSize(Width,sz.cy);
@@ -4873,7 +4751,7 @@ bool CMainWindow::SetPanAndScan(const PanAndScanInfo &Info)
 				SIZE sz;
 				int Width,Height;
 
-				m_Viewer.GetVideoContainer().GetClientSize(&sz);
+				m_Display.GetVideoContainer().GetClientSize(&sz);
 				if (m_App.CoreEngine.GetVideoViewSize(&Width,&Height))
 					AdjustWindowSize(CalcZoomSize(Width,sz.cy,Height),sz.cy);
 			}
@@ -4957,7 +4835,7 @@ bool CMainWindow::SetPanAndScan(int Command)
 
 bool CMainWindow::SetLogo(HBITMAP hbm)
 {
-	return m_Viewer.GetViewWindow().SetLogo(hbm);
+	return m_Display.GetViewWindow().SetLogo(hbm);
 }
 
 
@@ -4976,9 +4854,9 @@ bool CMainWindow::ShowProgramGuide(bool fShow,unsigned int Flags,const ProgramGu
 		Util::CWaitCursor WaitCursor;
 
 		if (fOnScreen) {
-			m_App.Epg.ProgramGuideDisplay.Create(m_Viewer.GetDisplayBase().GetParent()->GetHandle(),
+			m_App.Epg.ProgramGuideDisplay.Create(m_Display.GetDisplayBase().GetParent()->GetHandle(),
 				WS_CHILD | WS_CLIPCHILDREN);
-			m_Viewer.GetDisplayBase().SetDisplayView(&m_App.Epg.ProgramGuideDisplay);
+			m_Display.GetDisplayBase().SetDisplayView(&m_App.Epg.ProgramGuideDisplay);
 			if (m_fCustomFrame)
 				HookWindows(m_App.Epg.ProgramGuideDisplay.GetHandle());
 		} else {
@@ -4993,7 +4871,7 @@ bool CMainWindow::ShowProgramGuide(bool fShow,unsigned int Flags,const ProgramGu
 		m_App.Epg.ProgramGuide.SetViewDay(CProgramGuide::DAY_TODAY);
 
 		if (fOnScreen) {
-			m_Viewer.GetDisplayBase().SetVisible(true);
+			m_Display.GetDisplayBase().SetVisible(true);
 		} else {
 			m_App.Epg.ProgramGuideFrame.Show();
 			m_App.Epg.ProgramGuideFrame.Update();
@@ -5048,7 +4926,7 @@ bool CMainWindow::ShowProgramGuide(bool fShow,unsigned int Flags,const ProgramGu
 		if (m_App.Epg.ProgramGuideFrame.IsCreated()) {
 			m_App.Epg.ProgramGuideFrame.Destroy();
 		} else {
-			m_Viewer.GetDisplayBase().SetVisible(false);
+			m_Display.GetDisplayBase().SetVisible(false);
 		}
 	}
 
@@ -5306,7 +5184,7 @@ CViewWindow &CMainWindow::GetCurrentViewWindow()
 {
 	if (m_pCore->GetFullscreen())
 		return m_Fullscreen.GetViewWindow();
-	return m_Viewer.GetViewWindow();
+	return m_Display.GetViewWindow();
 }
 
 
@@ -5623,7 +5501,7 @@ void CMainWindow::SetTheme(const TVTest::Theme::CThemeManager *pThemeManager)
 	pThemeManager->GetBorderStyle(TVTest::Theme::CThemeManager::STYLE_SCREEN,&Border);
 	if (!m_fViewWindowEdge)
 		Border.Type=Theme::BORDER_NONE;
-	m_Viewer.GetViewWindow().SetBorder(Border);
+	m_Display.GetViewWindow().SetBorder(Border);
 
 	m_TitleBar.SetTheme(pThemeManager);
 	m_NotificationBar.SetTheme(pThemeManager);
@@ -5640,7 +5518,7 @@ bool CMainWindow::SetViewWindowEdge(bool fEdge)
 		pColorScheme->GetBorderStyle(CColorScheme::BORDER_SCREEN,&Border);
 		if (!fEdge)
 			Border.Type=Theme::BORDER_NONE;
-		m_Viewer.GetViewWindow().SetBorder(Border);
+		m_Display.GetViewWindow().SetBorder(Border);
 		m_fViewWindowEdge=fEdge;
 	}
 	return true;
@@ -5652,10 +5530,10 @@ bool CMainWindow::GetOSDClientInfo(COSDManager::OSDClientInfo *pInfo)
 	if (!GetVisible() || ::IsIconic(m_hwnd))
 		return false;
 
-	if (m_Viewer.GetVideoContainer().GetVisible()) {
-		pInfo->hwndParent=m_Viewer.GetVideoContainer().GetHandle();
+	if (m_Display.GetVideoContainer().GetVisible()) {
+		pInfo->hwndParent=m_Display.GetVideoContainer().GetHandle();
 	} else {
-		pInfo->hwndParent=m_Viewer.GetVideoContainer().GetParent();
+		pInfo->hwndParent=m_Display.GetVideoContainer().GetParent();
 		pInfo->fForcePseudoOSD=true;
 	}
 
@@ -5716,7 +5594,7 @@ bool CMainWindow::CFullscreen::Initialize(HINSTANCE hinst)
 CMainWindow::CFullscreen::CFullscreen(CMainWindow &MainWindow)
 	: m_MainWindow(MainWindow)
 	, m_App(MainWindow.m_App)
-	, m_pViewer(nullptr)
+	, m_pDisplay(nullptr)
 	, m_TitleBarManager(&MainWindow,false)
 	, m_PanelEventHandler(&MainWindow)
 	, m_PanelWidth(-1)
@@ -5758,7 +5636,7 @@ LRESULT CMainWindow::CFullscreen::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LP
 
 	case WM_TIMER:
 		if (wParam==TIMER_ID_HIDECURSOR) {
-			if (!m_fMenu && !m_pViewer->GetDisplayBase().IsVisible()) {
+			if (!m_fMenu && !m_pDisplay->GetDisplayBase().IsVisible()) {
 				POINT pt;
 				RECT rc;
 				::GetCursorPos(&pt);
@@ -5777,7 +5655,7 @@ LRESULT CMainWindow::CFullscreen::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LP
 			HWND hwndCursor=reinterpret_cast<HWND>(wParam);
 
 			if (hwndCursor==hwnd
-					|| hwndCursor==m_pViewer->GetVideoContainer().GetHandle()
+					|| hwndCursor==m_pDisplay->GetVideoContainer().GetHandle()
 					|| hwndCursor==m_ViewWindow.GetHandle()
 					|| CPseudoOSD::IsPseudoOSD(hwndCursor)) {
 				::SetCursor(m_fShowCursor?::LoadCursor(nullptr,IDC_ARROW):nullptr);
@@ -5844,8 +5722,8 @@ LRESULT CMainWindow::CFullscreen::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LP
 		break;
 
 	case WM_SETFOCUS:
-		if (m_pViewer->GetDisplayBase().IsVisible())
-			m_pViewer->GetDisplayBase().SetFocus();
+		if (m_pDisplay->GetDisplayBase().IsVisible())
+			m_pDisplay->GetDisplayBase().SetFocus();
 		return 0;
 
 	case WM_SETTEXT:
@@ -5858,10 +5736,10 @@ LRESULT CMainWindow::CFullscreen::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LP
 		break;
 
 	case WM_DESTROY:
-		m_pViewer->GetVideoContainer().SetParent(&m_pViewer->GetViewWindow());
-		m_pViewer->GetViewWindow().SendSizeMessage();
+		m_pDisplay->GetVideoContainer().SetParent(&m_pDisplay->GetViewWindow());
+		m_pDisplay->GetViewWindow().SendSizeMessage();
 		ShowCursor(true);
-		m_pViewer->GetDisplayBase().AdjustPosition();
+		m_pDisplay->GetDisplayBase().AdjustPosition();
 		m_TitleBar.Destroy();
 		m_App.OSDManager.Reset();
 		ShowStatusView(false);
@@ -5881,7 +5759,7 @@ bool CMainWindow::CFullscreen::Create(HWND hwndParent,DWORD Style,DWORD ExStyle,
 }
 
 
-bool CMainWindow::CFullscreen::Create(HWND hwndOwner,CBasicViewer *pViewer)
+bool CMainWindow::CFullscreen::Create(HWND hwndOwner,CMainDisplay *pDisplay)
 {
 	m_ScreenMargin=m_MainWindow.m_Style.FullscreenMargin;
 
@@ -5932,7 +5810,7 @@ bool CMainWindow::CFullscreen::Create(HWND hwndOwner,CBasicViewer *pViewer)
 #endif
 	SetPosition(x,y,Width,Height);
 
-	m_pViewer=pViewer;
+	m_pDisplay=pDisplay;
 
 	return Create(hwndOwner,WS_POPUP | WS_VISIBLE | WS_CLIPCHILDREN,WS_EX_TOPMOST);
 }
@@ -5946,8 +5824,8 @@ bool CMainWindow::CFullscreen::OnCreate()
 	m_ViewWindow.Create(m_LayoutBase.GetHandle(),
 		WS_CHILD | WS_VISIBLE | WS_CLIPCHILDREN  | WS_CLIPSIBLINGS,0,IDC_VIEW);
 	m_ViewWindow.SetMessageWindow(m_hwnd);
-	m_pViewer->GetVideoContainer().SetParent(m_ViewWindow.GetHandle());
-	m_ViewWindow.SetVideoContainer(&m_pViewer->GetVideoContainer());
+	m_pDisplay->GetVideoContainer().SetParent(m_ViewWindow.GetHandle());
+	m_ViewWindow.SetVideoContainer(&m_pDisplay->GetVideoContainer());
 
 	m_Panel.Create(m_LayoutBase.GetHandle(),
 				   WS_CHILD | WS_CLIPCHILDREN | WS_CLIPSIBLINGS);
@@ -5974,8 +5852,8 @@ bool CMainWindow::CFullscreen::OnCreate()
 	m_LayoutBase.SetTopContainer(pSplitter);
 
 	RECT rc;
-	m_pViewer->GetDisplayBase().GetParent()->GetClientRect(&rc);
-	m_pViewer->GetDisplayBase().SetPosition(&rc);
+	m_pDisplay->GetDisplayBase().GetParent()->GetClientRect(&rc);
+	m_pDisplay->GetDisplayBase().SetPosition(&rc);
 
 	m_TitleBar.Create(m_ViewWindow.GetHandle(),
 					  WS_CHILD | WS_CLIPSIBLINGS,0,IDC_TITLEBAR);
@@ -6770,7 +6648,7 @@ CMainWindow::CDisplayBaseEventHandler::CDisplayBaseEventHandler(CMainWindow *pMa
 bool CMainWindow::CDisplayBaseEventHandler::OnVisibleChange(bool fVisible)
 {
 	if (!m_pMainWindow->IsViewerEnabled()) {
-		m_pMainWindow->m_Viewer.GetVideoContainer().SetVisible(fVisible);
+		m_pMainWindow->m_Display.GetVideoContainer().SetVisible(fVisible);
 	}
 	if (fVisible && m_pMainWindow->m_pCore->GetFullscreen()) {
 		m_pMainWindow->m_Fullscreen.HideAllBars();
