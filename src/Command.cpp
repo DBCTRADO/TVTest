@@ -418,6 +418,29 @@ unsigned int CCommandList::GetCommandStateByID(int ID) const
 }
 
 
+bool CCommandList::SetCommandRadioCheckedState(int FirstID,int LastID,int CheckedID)
+{
+	if (FirstID>LastID)
+		return false;
+
+	for (int i=FirstID;i<=LastID;i++) {
+		int Index=IDToIndex(i);
+
+		if (Index>=0) {
+			if (i==CheckedID)
+				m_CommandList[Index].State|=COMMAND_STATE_CHECKED;
+			else
+				m_CommandList[Index].State&=~COMMAND_STATE_CHECKED;
+		}
+	}
+
+	if (m_pEventHandler!=nullptr)
+		m_pEventHandler->OnCommandRadioCheckedStateChanged(FirstID,LastID,CheckedID);
+
+	return true;
+}
+
+
 void CCommandList::RegisterDefaultCommands()
 {
 	static const size_t ReserveSize=lengthof(DefaultCommandList)+64;

@@ -86,12 +86,6 @@ class CEpgLoadEventHandler
 	void OnEnd(bool fSuccess,CEventManager *pEventManager) override;
 };
 
-class CSideBarOptionsEventHandler : public CSideBarOptions::CEventHandler
-{
-// CSideBarOptions::CEventHandler
-	void OnItemChanged() override;
-};
-
 class CServiceUpdateInfo
 {
 public:
@@ -204,8 +198,6 @@ public:
 	} RestoreChannelInfo;
 
 	CEpgLoadEventHandler EpgLoadEventHandler;
-
-	CSideBarOptionsEventHandler SideBarOptionsEventHandler;
 
 	CAppMain();
 	~CAppMain();

@@ -107,7 +107,6 @@ CSideBarOptions::CSideBarOptions(CSideBar *pSideBar,const CZoomOptions *pZoomOpt
 	, m_fShowChannelLogo(true)
 	, m_Place(PLACE_LEFT)
 	, m_himlIcons(NULL)
-	, m_pEventHandler(NULL)
 {
 	m_AvailItemList.resize(lengthof(ItemList));
 	for (int i=0;i<lengthof(ItemList);i++)
@@ -396,9 +395,6 @@ void CSideBarOptions::ApplyItemList()
 	}
 
 	m_pSideBar->Invalidate();
-
-	if (m_pEventHandler!=NULL)
-		m_pEventHandler->OnItemChanged();
 }
 
 

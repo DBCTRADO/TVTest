@@ -149,23 +149,6 @@ void CEpgLoadEventHandler::OnEnd(bool fSuccess,CEventManager *pEventManager)
 
 
 
-void CSideBarOptionsEventHandler::OnItemChanged()
-{
-	g_App.SideBar.CheckRadioItem(CM_ASPECTRATIO_FIRST,CM_ASPECTRATIO_LAST,
-								 CM_ASPECTRATIO_FIRST+g_App.MainWindow.GetAspectRatioType());
-
-	const CChannelInfo *pCurChannel=g_App.ChannelManager.GetCurrentChannelInfo();
-	int ChannelNo;
-	if (pCurChannel!=NULL)
-		ChannelNo=pCurChannel->GetChannelNo();
-	g_App.SideBar.CheckRadioItem(CM_CHANNELNO_1,CM_CHANNELNO_12,
-								 pCurChannel!=NULL && ChannelNo>=1 && ChannelNo<=12?
-								 CM_CHANNELNO_1+ChannelNo-1:0);
-}
-
-
-
-
 CServiceUpdateInfo::CServiceUpdateInfo(CDtvEngine *pEngine,CTsAnalyzer *pTsAnalyzer)
 {
 	CTsAnalyzer::ServiceList ServiceList;

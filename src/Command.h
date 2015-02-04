@@ -24,6 +24,7 @@ public:
 	public:
 		virtual ~CEventHandler() {}
 		virtual void OnCommandStateChanged(int ID,unsigned int OldState,unsigned int NewState) {}
+		virtual void OnCommandRadioCheckedStateChanged(int FirstID,int LastID,int CheckedID) {}
 	};
 
 	class ABSTRACT_CLASS(CCommandCustomizer)
@@ -60,6 +61,7 @@ public:
 	bool SetCommandStateByID(int ID,unsigned int State);
 	bool SetCommandStateByID(int ID,unsigned int Mask,unsigned int State);
 	unsigned int GetCommandStateByID(int ID) const;
+	bool SetCommandRadioCheckedState(int FirstID,int LastID,int CheckedID);
 
 private:
 	void RegisterDefaultCommands();

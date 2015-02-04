@@ -1618,7 +1618,6 @@ bool CMainWindow::OnCreate(const CREATESTRUCT *pcs)
 	m_NotificationBar.Create(m_Display.GetVideoContainer().GetHandle(),
 							 WS_CHILD | WS_CLIPSIBLINGS);
 
-	m_App.SideBarOptions.SetEventHandler(&m_App.SideBarOptionsEventHandler);
 	m_App.SideBarOptions.ApplySideBarOptions();
 	m_App.SideBar.SetEventHandler(&m_SideBarManager);
 	m_App.SideBar.Create(m_LayoutBase.GetHandle(),
@@ -1730,14 +1729,17 @@ bool CMainWindow::OnCreate(const CREATESTRUCT *pcs)
 	int Gain,SurroundGain;
 	m_App.CoreEngine.GetAudioGainControl(&Gain,&SurroundGain);
 	for (int i=0;i<lengthof(m_AudioGainList);i++) {
-		if (Gain==m_AudioGainList[i])
-			m_App.MainMenu.CheckRadioItem(CM_AUDIOGAIN_FIRST,CM_AUDIOGAIN_LAST,
-										  CM_AUDIOGAIN_FIRST+i);
-		if (SurroundGain==m_AudioGainList[i])
-			m_App.MainMenu.CheckRadioItem(CM_SURROUNDAUDIOGAIN_FIRST,CM_SURROUNDAUDIOGAIN_LAST,
-										  CM_SURROUNDAUDIOGAIN_FIRST+i);
+		if (Gain==m_AudioGainList[i]) {
+			m_pCore->SetCommandRadioCheckedState(
+				CM_AUDIOGAIN_FIRST,CM_AUDIOGAIN_LAST,CM_AUDIOGAIN_FIRST+i);
+		}
+		if (SurroundGain==m_AudioGainList[i]) {
+			m_pCore->SetCommandRadioCheckedState(
+				CM_SURROUNDAUDIOGAIN_FIRST,CM_SURROUNDAUDIOGAIN_LAST,
+				CM_SURROUNDAUDIOGAIN_FIRST+i);
+		}
 	}
-	m_App.MainMenu.CheckRadioItem(CM_CAPTURESIZE_FIRST,CM_CAPTURESIZE_LAST,
+	m_pCore->SetCommandRadioCheckedState(CM_CAPTURESIZE_FIRST,CM_CAPTURESIZE_LAST,
 		CM_CAPTURESIZE_FIRST+m_App.CaptureOptions.GetPresetCaptureSize());
 	//m_pCore->SetCommandCheckedState(CM_CAPTUREPREVIEW,m_App.CaptureWindow.GetVisible());
 	m_pCore->SetCommandCheckedState(CM_DISABLEVIEWER,!m_fEnablePlayback);
@@ -1770,7 +1772,7 @@ bool CMainWindow::OnCreate(const CREATESTRUCT *pcs)
 										 m_App.GetInstance(),MAKEINTRESOURCE(IDB_PANSCAN),16,
 										 AspectRatioMenuItems,lengthof(AspectRatioMenuItems));
 	if (m_AspectRatioType<ASPECTRATIO_CUSTOM) {
-		m_App.AspectRatioIconMenu.CheckRadioItem(
+		m_pCore->SetCommandRadioCheckedState(
 			CM_ASPECTRATIO_FIRST,CM_ASPECTRATIO_3D_LAST,
 			CM_ASPECTRATIO_FIRST+m_AspectRatioType);
 	}
@@ -2173,7 +2175,7 @@ void CMainWindow::OnCommand(HWND hwnd,int id,HWND hwndCtl,UINT codeNotify)
 			m_App.CoreEngine.GetAudioGainControl(nullptr,&SurroundGain);
 			m_App.CoreEngine.SetAudioGainControl(
 				m_AudioGainList[id-CM_AUDIOGAIN_FIRST],SurroundGain);
-			m_App.MainMenu.CheckRadioItem(CM_AUDIOGAIN_NONE,CM_AUDIOGAIN_LAST,id);
+			m_pCore->SetCommandRadioCheckedState(CM_AUDIOGAIN_NONE,CM_AUDIOGAIN_LAST,id);
 		}
 		return;
 
@@ -2187,7 +2189,7 @@ void CMainWindow::OnCommand(HWND hwnd,int id,HWND hwndCtl,UINT codeNotify)
 			m_App.CoreEngine.GetAudioGainControl(&Gain,nullptr);
 			m_App.CoreEngine.SetAudioGainControl(
 				Gain,m_AudioGainList[id-CM_SURROUNDAUDIOGAIN_FIRST]);
-			m_App.MainMenu.CheckRadioItem(CM_SURROUNDAUDIOGAIN_NONE,CM_SURROUNDAUDIOGAIN_LAST,id);
+			m_pCore->SetCommandRadioCheckedState(CM_SURROUNDAUDIOGAIN_NONE,CM_SURROUNDAUDIOGAIN_LAST,id);
 		}
 		return;
 
@@ -3048,7 +3050,7 @@ void CMainWindow::OnCommand(HWND hwnd,int id,HWND hwndCtl,UINT codeNotify)
 			int CaptureSize=id-CM_CAPTURESIZE_FIRST;
 
 			m_App.CaptureOptions.SetPresetCaptureSize(CaptureSize);
-			m_App.MainMenu.CheckRadioItem(CM_CAPTURESIZE_FIRST,CM_CAPTURESIZE_LAST,id);
+			m_pCore->SetCommandRadioCheckedState(CM_CAPTURESIZE_FIRST,CM_CAPTURESIZE_LAST,id);
 			return;
 		}
 
@@ -4042,7 +4044,7 @@ void CMainWindow::OnTunerChanged()
 	m_App.StatusView.UpdateItem(STATUS_ITEM_TUNER);
 	m_App.Panel.ControlPanel.UpdateItem(CONTROLPANEL_ITEM_CHANNEL);
 	m_App.Panel.ControlPanel.UpdateItem(CONTROLPANEL_ITEM_TUNER);
-	m_App.SideBar.CheckRadioItem(CM_CHANNELNO_1,CM_CHANNELNO_12,0);
+	m_pCore->SetCommandRadioCheckedState(CM_CHANNELNO_1,CM_CHANNELNO_12,0);
 	if (m_App.SideBarOptions.GetShowChannelLogo())
 		m_App.SideBar.Invalidate();
 	m_fForceResetPanAndScan=true;
@@ -4147,11 +4149,12 @@ void CMainWindow::OnChannelChanged(unsigned int Status)
 	int ChannelNo;
 	if (pCurChannel!=nullptr)
 		ChannelNo=pCurChannel->GetChannelNo();
+	m_pCore->SetCommandRadioCheckedState(
+		CM_CHANNELNO_1,CM_CHANNELNO_12,
+		pCurChannel!=nullptr && ChannelNo>=1 && ChannelNo<=12?
+			CM_CHANNELNO_1+ChannelNo-1:0);
 	if (fSpaceChanged && m_App.SideBarOptions.GetShowChannelLogo())
 		m_App.SideBar.Invalidate();
-	m_App.SideBar.CheckRadioItem(CM_CHANNELNO_1,CM_CHANNELNO_12,
-								 pCurChannel!=nullptr && ChannelNo>=1 && ChannelNo<=12?
-								 CM_CHANNELNO_1+ChannelNo-1:0);
 	m_App.Panel.CaptionPanel.Clear();
 	m_App.Panel.UpdateControlPanel();
 
@@ -4295,15 +4298,9 @@ void CMainWindow::OnEventChanged()
 		m_fForceResetPanAndScan=false;
 		m_App.StatusView.UpdateItem(STATUS_ITEM_VIDEOSIZE);
 		m_App.Panel.ControlPanel.UpdateItem(CONTROLPANEL_ITEM_VIDEO);
-		/*
-		m_App.MainMenu.CheckRadioItem(CM_ASPECTRATIO_FIRST,CM_ASPECTRATIO_3D_LAST,
-									  CM_ASPECTRATIO_DEFAULT);
-		*/
-		m_App.AspectRatioIconMenu.CheckRadioItem(
+		m_pCore->SetCommandRadioCheckedState(
 			CM_ASPECTRATIO_FIRST,CM_ASPECTRATIO_3D_LAST,
 			CM_ASPECTRATIO_DEFAULT);
-		m_App.SideBar.CheckRadioItem(CM_ASPECTRATIO_FIRST,CM_ASPECTRATIO_LAST,
-									 CM_ASPECTRATIO_DEFAULT);
 	}
 
 	m_App.StatusView.UpdateItem(STATUS_ITEM_AUDIOCHANNEL);
@@ -4823,10 +4820,8 @@ bool CMainWindow::SetPanAndScan(int Command)
 	m_AspectRatioType=Type;
 	m_AspectRatioResetTime=0;
 
-	m_App.AspectRatioIconMenu.CheckRadioItem(
+	m_pCore->SetCommandRadioCheckedState(
 		CM_ASPECTRATIO_FIRST,CM_ASPECTRATIO_3D_LAST,
-		m_AspectRatioType<ASPECTRATIO_CUSTOM?CM_ASPECTRATIO_FIRST+m_AspectRatioType:0);
-	m_App.SideBar.CheckRadioItem(CM_ASPECTRATIO_FIRST,CM_ASPECTRATIO_LAST,
 		m_AspectRatioType<ASPECTRATIO_CUSTOM?CM_ASPECTRATIO_FIRST+m_AspectRatioType:0);
 
 	return true;
@@ -6772,4 +6767,14 @@ void CMainWindow::CCommandEventHandler::OnCommandStateChanged(
 		m_pMainWindow->m_App.MainMenu.EnableItem(ID,fEnabled);
 		m_pMainWindow->m_App.SideBar.EnableItem(ID,fEnabled);
 	}
+}
+
+void CMainWindow::CCommandEventHandler::OnCommandRadioCheckedStateChanged(
+	int FirstID,int LastID,int CheckedID)
+{
+	if (FirstID>=CM_ASPECTRATIO_FIRST && FirstID<=CM_ASPECTRATIO_LAST)
+		m_pMainWindow->m_App.AspectRatioIconMenu.CheckRadioItem(FirstID,LastID,CheckedID);
+	else
+		m_pMainWindow->m_App.MainMenu.CheckRadioItem(FirstID,LastID,CheckedID);
+	m_pMainWindow->m_App.SideBar.CheckRadioItem(FirstID,LastID,CheckedID);
 }

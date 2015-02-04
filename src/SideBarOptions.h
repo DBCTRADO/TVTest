@@ -21,11 +21,6 @@ public:
 		PLACE_LAST=PLACE_BOTTOM
 	};
 
-	class ABSTRACT_CLASS(CEventHandler) {
-	public:
-		virtual void OnItemChanged() {}
-	};
-
 	CSideBarOptions(CSideBar *pSideBar,const CZoomOptions *pZoomOptions);
 	~CSideBarOptions();
 // CSettingsBase
@@ -42,7 +37,6 @@ public:
 	PlaceType GetPlace() const { return m_Place; }
 	bool SetPlace(PlaceType Place);
 	bool GetShowChannelLogo() const { return m_fShowChannelLogo; }
-	void SetEventHandler(CEventHandler *pHandler) { m_pEventHandler=pHandler; }
 
 protected:
 	enum { ITEM_SEPARATOR=0 };
@@ -63,7 +57,6 @@ protected:
 	PlaceType m_Place;
 	HIMAGELIST m_himlIcons;
 	std::map<int,int> m_IconIDMap;
-	CEventHandler *m_pEventHandler;
 
 // CBasicDialog
 	INT_PTR DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam) override;

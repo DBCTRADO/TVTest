@@ -115,6 +115,7 @@ public:
 	bool GetCommandEnabledState(int Command) const;
 	bool SetCommandCheckedState(int Command,bool fChecked);
 	bool GetCommandCheckedState(int Command) const;
+	bool SetCommandRadioCheckedState(int FirstCommand,int LastCommand,int CheckedCommand);
 
 	bool ConfirmChannelChange();
 	bool ConfirmStopRecording();

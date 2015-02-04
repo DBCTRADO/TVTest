@@ -381,6 +381,7 @@ private:
 		CMainWindow *m_pMainWindow;
 
 		void OnCommandStateChanged(int ID,unsigned int OldState,unsigned int NewState) override;
+		void OnCommandRadioCheckedStateChanged(int FirstID,int LastID,int CheckedID) override;
 	};
 
 	enum { UPDATE_TIMER_INTERVAL=500 };

@@ -1149,6 +1149,12 @@ bool CUICore::GetCommandCheckedState(int Command) const
 }
 
 
+bool CUICore::SetCommandRadioCheckedState(int FirstCommand,int LastCommand,int CheckedCommand)
+{
+	return m_App.CommandList.SetCommandRadioCheckedState(FirstCommand,LastCommand,CheckedCommand);
+}
+
+
 bool CUICore::ConfirmChannelChange()
 {
 	if (m_App.RecordManager.IsRecording()) {
