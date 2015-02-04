@@ -1562,7 +1562,7 @@ bool CRecordManager::InsertFileNameParameter(HWND hDlg,int ID,const POINT *pMenu
 	for (int i=0;i<lengthof(ParameterList);i++) {
 		TCHAR szText[128];
 
-		StdUtil::snprintf(szText,lengthof(szText),TEXT("%s (%s)"),
+		StdUtil::snprintf(szText,lengthof(szText),TEXT("%s\t%s"),
 						  ParameterList[i].pszParameter,ParameterList[i].pszText);
 		::AppendMenu(hmenu,MFT_STRING | MFS_ENABLED,i+1,szText);
 	}
