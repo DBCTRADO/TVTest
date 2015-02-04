@@ -50,6 +50,7 @@ namespace TVTest
 		const CVideoContainerWindow &GetVideoContainer() const { return m_VideoContainer; }
 		CDisplayBase &GetDisplayBase() { return m_DisplayBase; }
 		const CDisplayBase &GetDisplayBase() const { return m_DisplayBase; }
+		HWND GetDisplayViewParent() const;
 
 		CHomeDisplayEventHandler HomeDisplayEventHandler;
 		CChannelDisplayEventHandler ChannelDisplayEventHandler;

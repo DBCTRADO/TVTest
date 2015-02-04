@@ -129,6 +129,12 @@ bool CMainDisplay::CloseViewer()
 }
 
 
+HWND CMainDisplay::GetDisplayViewParent() const
+{
+	return m_DisplayBase.GetParent()->GetHandle();
+}
+
+
 
 
 void CMainDisplay::CHomeDisplayEventHandler::OnClose()

@@ -2751,7 +2751,7 @@ void CMainWindow::OnCommand(HWND hwnd,int id,HWND hwndCtl,UINT codeNotify)
 									  m_App.OSDOptions.IsDisplayFontAutoSize());
 			if (!m_App.HomeDisplay.IsCreated()) {
 				m_App.HomeDisplay.SetEventHandler(&m_Display.HomeDisplayEventHandler);
-				m_App.HomeDisplay.Create(m_Display.GetDisplayBase().GetParent()->GetHandle(),
+				m_App.HomeDisplay.Create(m_Display.GetDisplayViewParent(),
 										 WS_CHILD | WS_CLIPCHILDREN);
 				if (m_fCustomFrame)
 					HookWindows(m_App.HomeDisplay.GetHandle());
@@ -2774,7 +2774,7 @@ void CMainWindow::OnCommand(HWND hwnd,int id,HWND hwndCtl,UINT codeNotify)
 			if (!m_App.ChannelDisplay.IsCreated()) {
 				m_App.ChannelDisplay.SetEventHandler(&m_Display.ChannelDisplayEventHandler);
 				m_App.ChannelDisplay.Create(
-					m_Display.GetDisplayBase().GetParent()->GetHandle(),
+					m_Display.GetDisplayViewParent(),
 					WS_CHILD | WS_CLIPCHILDREN);
 				m_App.ChannelDisplay.SetDriverManager(&m_App.DriverManager);
 				m_App.ChannelDisplay.SetLogoManager(&m_App.LogoManager);
@@ -4854,7 +4854,7 @@ bool CMainWindow::ShowProgramGuide(bool fShow,unsigned int Flags,const ProgramGu
 		Util::CWaitCursor WaitCursor;
 
 		if (fOnScreen) {
-			m_App.Epg.ProgramGuideDisplay.Create(m_Display.GetDisplayBase().GetParent()->GetHandle(),
+			m_App.Epg.ProgramGuideDisplay.Create(m_Display.GetDisplayViewParent(),
 				WS_CHILD | WS_CLIPCHILDREN);
 			m_Display.GetDisplayBase().SetDisplayView(&m_App.Epg.ProgramGuideDisplay);
 			if (m_fCustomFrame)
