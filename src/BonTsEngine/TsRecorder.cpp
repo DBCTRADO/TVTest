@@ -485,6 +485,7 @@ bool CTsRecorder::OpenFile(LPCTSTR pszPluginName, LPCTSTR pszFileName, UINT Flag
 	if (!m_pWriter->Open(pszFileName, Flags, m_PreAllocationUnit)) {
 		SetError(m_pWriter->GetLastErrorException());
 		delete m_pWriter;
+		m_pWriter = nullptr;
 		return false;
 	}
 
