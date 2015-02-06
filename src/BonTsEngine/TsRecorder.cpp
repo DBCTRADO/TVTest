@@ -834,11 +834,19 @@ bool CTsRecorder::PushData(const BYTE *pData, SIZE_T DataSize)
 		}
 	}
 
+	ULONGLONG MaxQueueSize = 0;
+	if (m_bEnableQueueing)
+		MaxQueueSize = m_MaxQueueSize * m_QueueBlockSize;
+	if (m_pWriter && !m_bPause)
+		MaxQueueSize += m_MaxPendingSize;
+#ifndef _WIN64
+	if (MaxQueueSize > 0x80000000ULL)
+		MaxQueueSize = 0x80000000ULL;
+#endif
+
 	QueueBlock Block;
 
-	if (m_WriteQueue.size() < m_MaxQueueSize
-			|| (m_pWriter && !m_bPause
-				&& m_WriteQueue.size() * m_QueueBlockSize < m_MaxPendingSize)) {
+	if ((ULONGLONG)(m_WriteQueue.size() * m_QueueBlockSize) < MaxQueueSize) {
 		try {
 			Block.pData = new BYTE[m_QueueBlockSize];
 		} catch (...) {
