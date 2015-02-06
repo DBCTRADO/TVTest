@@ -9,6 +9,14 @@ static char THIS_FILE[]=__FILE__;
 #endif
 
 
+template<typename T> T ROUND_PACKET_SIZE(T Size)
+{
+	return (Size + 187) / 188 * 188;
+}
+
+
+
+
 class CFileWriter : public CTsRecorder::CWriter
 {
 public:
@@ -410,7 +418,7 @@ CTsRecorder::CTsRecorder(IEventHandler *pEventHandler)
 	, m_bPause(false)
 
 	, m_bEnableQueueing(false)
-	, m_QueueBlockSize(m_BufferSize)
+	, m_QueueBlockSize(ROUND_PACKET_SIZE(m_BufferSize))
 	, m_MaxQueueSize(16)
 	, m_MaxPendingSize(0x20000000)
 	, m_hThread(nullptr)
@@ -751,6 +759,8 @@ bool CTsRecorder::SetQueueSize(SIZE_T BlockSize, SIZE_T MaxBlocks)
 		return false;
 
 	CBlockLock Lock(&m_QueueLock);
+
+	BlockSize = ROUND_PACKET_SIZE(BlockSize);
 
 	if (m_QueueBlockSize != BlockSize) {
 		if (m_pWriter)
