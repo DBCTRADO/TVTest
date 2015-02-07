@@ -21,13 +21,13 @@ void CBonBaseClass::SetTracer(CTracer *pTracer)
 }
 
 
-void CBonBaseClass::Trace(LPCTSTR pszOutput, ...)
+void CBonBaseClass::Trace(CTracer::TraceType Type, LPCTSTR pszOutput, ...)
 {
 	if (m_pTracer != NULL && pszOutput != NULL) {
 		va_list Args;
 
 		va_start(Args, pszOutput);
-		m_pTracer->TraceV(pszOutput, Args);
+		m_pTracer->TraceV(Type, pszOutput, Args);
 		va_end(Args);
 	}
 }

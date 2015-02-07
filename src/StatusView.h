@@ -202,7 +202,7 @@ public:
 	void EnableSizeAdjustment(bool fEnable);
 
 // CTracer
-	void OnTrace(LPCTSTR pszOutput) override;
+	void OnTrace(CTracer::TraceType Type,LPCTSTR pszOutput) override;
 
 private:
 	struct StatusViewStyle

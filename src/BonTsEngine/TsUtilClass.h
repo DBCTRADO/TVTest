@@ -129,13 +129,19 @@ public:
 
 class CTracer
 {
-	TCHAR m_szBuffer[256];
 public:
+	enum TraceType {
+		TYPE_INFORMATION,
+		TYPE_WARNING,
+		TYPE_ERROR
+	};
+
 	virtual ~CTracer() {}
-	void Trace(LPCTSTR pszOutput, ...);
-	void TraceV(LPCTSTR pszOutput,va_list Args);
+	void Trace(TraceType Type, LPCTSTR pszOutput, ...);
+	void TraceV(TraceType Type, LPCTSTR pszOutput, va_list Args);
+
 protected:
-	virtual void OnTrace(LPCTSTR pszOutput)=0;
+	virtual void OnTrace(TraceType Type, LPCTSTR pszOutput) = 0;
 };
 
 

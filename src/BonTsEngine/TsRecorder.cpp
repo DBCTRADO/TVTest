@@ -506,10 +506,10 @@ bool CTsRecorder::OpenFile(LPCTSTR pszPluginName, LPCTSTR pszFileName, UINT Flag
 		} catch (...) {
 #if 0
 			CloseFile();
-			SetError(TEXT("メモリが確保できません。"));
+			SetError(CTracer::TYPE_ERROR, TEXT("メモリが確保できません。"));
 			return false;
 #else
-			Trace(TEXT("書き出しバッファのメモリを確保できません。"));
+			Trace(CTracer::TYPE_WARNING, TEXT("書き出しバッファのメモリを確保できません。"));
 			// バッファリングなしで続行
 #endif
 		}
@@ -569,7 +569,7 @@ void CTsRecorder::CloseFile()
 	if (m_hThread) {
 		m_EndEvent.Set();
 		if (::WaitForSingleObject(m_hThread, 10000) != WAIT_OBJECT_0) {
-			Trace(TEXT("ファイル書き出しスレッドが応答しないため強制終了します。"));
+			Trace(CTracer::TYPE_WARNING, TEXT("ファイル書き出しスレッドが応答しないため強制終了します。"));
 			::TerminateThread(m_hThread, -1);
 		}
 		::CloseHandle(m_hThread);
@@ -887,7 +887,7 @@ bool CTsRecorder::FlushBuffer()
 
 	while (!m_WriteQueue.empty()) {
 		if (::GetTickCount() - StartTime >= 10000) {
-			Trace(TEXT("書き出し待ちデータを全て書き出すのに時間が掛かり過ぎているため中止します。"));
+			Trace(CTracer::TYPE_WARNING, TEXT("書き出し待ちデータを全て書き出すのに時間が掛かり過ぎているため中止します。"));
 			return false;
 		}
 
@@ -974,7 +974,7 @@ unsigned int __stdcall CTsRecorder::WriteThread(LPVOID lpParameter)
 	try {
 		pThis->WriteMain();
 	} catch (...) {
-		pThis->Trace(TEXT("ファイル書き出しスレッドで例外が発生しました。"));
+		pThis->Trace(CTracer::TYPE_ERROR, TEXT("ファイル書き出しスレッドで例外が発生しました。"));
 	}
 
 	return 0;

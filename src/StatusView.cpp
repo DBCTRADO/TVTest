@@ -1039,9 +1039,10 @@ void CStatusView::EnableSizeAdjustment(bool fEnable)
 }
 
 
-void CStatusView::OnTrace(LPCTSTR pszOutput)
+void CStatusView::OnTrace(CTracer::TraceType Type,LPCTSTR pszOutput)
 {
-	SetSingleText(pszOutput);
+	if (Type==CTracer::TYPE_INFORMATION)
+		SetSingleText(pszOutput);
 }
 
 

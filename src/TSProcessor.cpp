@@ -880,7 +880,22 @@ STDMETHODIMP CTSProcessor::OutLog(Interface::LogType Type, LPCWSTR pszMessage)
 		return S_OK;
 	}
 
-	Trace(pszMessage);
+	CTracer::TraceType TraceType;
+
+	switch (Type) {
+	case Interface::LOG_INFO:
+	default:
+		TraceType = CTracer::TYPE_INFORMATION;
+		break;
+	case Interface::LOG_WARNING:
+		TraceType = CTracer::TYPE_WARNING;
+		break;
+	case Interface::LOG_ERROR:
+		TraceType = CTracer::TYPE_ERROR;
+		break;
+	}
+
+	Trace(TraceType, TEXT("%s"), pszMessage);
 
 	return S_OK;
 }

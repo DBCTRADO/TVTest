@@ -15,7 +15,7 @@ public:
 	virtual ~CBonBaseClass() = 0;
 	virtual void SetTracer(CTracer *pTracer);
 protected:
-	void Trace(LPCTSTR pszOutput, ...);
+	void Trace(CTracer::TraceType Type, LPCTSTR pszOutput, ...);
 };
 
 

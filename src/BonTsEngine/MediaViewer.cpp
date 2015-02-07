@@ -313,7 +313,7 @@ bool CMediaViewer::OpenViewer(
 			throw CBonException(hr,TEXT("メディアコントロールを取得できません。"));
 		}
 
-		Trace(TEXT("ソースフィルタの接続中..."));
+		Trace(CTracer::TYPE_INFORMATION, TEXT("ソースフィルタの接続中..."));
 
 		/* CBonSrcFilter */
 		{
@@ -337,7 +337,7 @@ bool CMediaViewer::OpenViewer(
 			m_pSrcFilter->SetInputWait(m_PacketInputWait);
 		}
 
-		Trace(TEXT("MPEG-2 Demultiplexerフィルタの接続中..."));
+		Trace(CTracer::TYPE_INFORMATION, TEXT("MPEG-2 Demultiplexerフィルタの接続中..."));
 
 		/* MPEG-2 Demultiplexer */
 		{
@@ -409,7 +409,7 @@ bool CMediaViewer::OpenViewer(
 #ifdef BONTSENGINE_MPEG2_SUPPORT
 		case STREAM_TYPE_MPEG2_VIDEO:
 			{
-				Trace(TEXT("MPEG-2パーサフィルタの接続中..."));
+				Trace(CTracer::TYPE_INFORMATION, TEXT("MPEG-2パーサフィルタの接続中..."));
 
 				// インスタンス作成
 				CMpeg2ParserFilter *pMpeg2Parser =
@@ -430,7 +430,7 @@ bool CMediaViewer::OpenViewer(
 #ifdef BONTSENGINE_H264_SUPPORT
 		case STREAM_TYPE_H264:
 			{
-				Trace(TEXT("H.264パーサフィルタの接続中..."));
+				Trace(CTracer::TYPE_INFORMATION, TEXT("H.264パーサフィルタの接続中..."));
 
 				// インスタンス作成
 				CH264ParserFilter *pH264Parser =
@@ -451,7 +451,7 @@ bool CMediaViewer::OpenViewer(
 #ifdef BONTSENGINE_H265_SUPPORT
 		case STREAM_TYPE_H265:
 			{
-				Trace(TEXT("H.265パーサフィルタの接続中..."));
+				Trace(CTracer::TYPE_INFORMATION, TEXT("H.265パーサフィルタの接続中..."));
 
 				// インスタンス作成
 				CH265ParserFilter *pH265Parser =
@@ -477,7 +477,7 @@ bool CMediaViewer::OpenViewer(
 			ApplyAdjustVideoSampleOptions();
 		}
 
-		Trace(TEXT("音声デコーダの接続中..."));
+		Trace(CTracer::TYPE_INFORMATION, TEXT("音声デコーダの接続中..."));
 
 #if 1
 		/* CAudioDecFilter */
@@ -561,7 +561,7 @@ bool CMediaViewer::OpenViewer(
 
 		/* ユーザー指定の音声フィルタの接続 */
 		if (m_pszAudioFilterName) {
-			Trace(TEXT("音声フィルタの接続中..."));
+			Trace(CTracer::TYPE_INFORMATION, TEXT("音声フィルタの接続中..."));
 
 			// 検索
 			bool bConnectSuccess=false;
@@ -619,7 +619,7 @@ bool CMediaViewer::OpenViewer(
 		m_VideoStreamType = VideoStreamType;
 
 		if (!bNoVideo) {
-			Trace(TEXT("映像レンダラの構築中..."));
+			Trace(CTracer::TYPE_INFORMATION, TEXT("映像レンダラの構築中..."));
 
 			if (!CVideoRenderer::CreateRenderer(RendererType, &m_pVideoRenderer)) {
 				throw CBonException(TEXT("映像レンダラを作成できません。"),
@@ -632,7 +632,7 @@ bool CMediaViewer::OpenViewer(
 			m_VideoRendererType = RendererType;
 		}
 
-		Trace(TEXT("音声レンダラの構築中..."));
+		Trace(CTracer::TYPE_INFORMATION, TEXT("音声レンダラの構築中..."));
 
 		// 音声レンダラ構築
 		{
@@ -789,14 +789,14 @@ void CMediaViewer::CloseViewer()
 	*/
 
 	if (m_pFilterGraph) {
-		Trace(TEXT("フィルタグラフを停止しています..."));
+		Trace(CTracer::TYPE_INFORMATION, TEXT("フィルタグラフを停止しています..."));
 		m_pFilterGraph->Abort();
 		Stop();
 
 		SendDecoderEvent(EID_FILTER_GRAPH_FINALIZE, m_pFilterGraph);
 	}
 
-	Trace(TEXT("COMインスタンスを解放しています..."));
+	Trace(CTracer::TYPE_INFORMATION, TEXT("COMインスタンスを解放しています..."));
 
 	// COMインスタンスを開放する
 	if (m_pVideoRenderer!=NULL) {
@@ -841,7 +841,7 @@ void CMediaViewer::CloseViewer()
 #endif
 
 	if (m_pFilterGraph) {
-		Trace(TEXT("フィルタグラフを解放しています..."));
+		Trace(CTracer::TYPE_INFORMATION, TEXT("フィルタグラフを解放しています..."));
 		SendDecoderEvent(EID_FILTER_GRAPH_FINALIZED, m_pFilterGraph);
 #ifdef _DEBUG
 		TRACE(TEXT("FilterGraph RefCount = %d\n"),DirectShowUtil::GetRefCount(m_pFilterGraph));
@@ -1969,12 +1969,10 @@ DWORD CMediaViewer::GetVideoBitRate() const
 void CMediaViewer::ConnectVideoDecoder(
 	LPCTSTR pszCodecName, const GUID &MediaSubType, LPCTSTR pszDecoderName, IPin **ppOutputPin)
 {
-	TCHAR szText1[128], szText2[128];
-
-	StdUtil::snprintf(szText1, _countof(szText1), TEXT("%sデコーダの接続中..."), pszCodecName);
-	Trace(szText1);
+	Trace(CTracer::TYPE_INFORMATION, TEXT("%sデコーダの接続中..."), pszCodecName);
 
 	CDirectShowFilterFinder FilterFinder;
+	TCHAR szText1[128], szText2[128];
 
 	// 検索
 	if(!FilterFinder.FindFilter(&MEDIATYPE_Video, &MediaSubType)) {

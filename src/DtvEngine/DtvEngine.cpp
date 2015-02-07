@@ -76,7 +76,7 @@ bool CDtvEngine::BuildEngine(const DecoderConnectionInfo *pDecoderConnectionList
 	if (m_bBuiled)
 		return true;
 
-	Trace(TEXT("デコーダグラフを構築しています..."));
+	Trace(CTracer::TYPE_INFORMATION, TEXT("デコーダグラフを構築しています..."));
 
 	m_DecoderConnectionList.reserve(DecoderConnectionCount);
 
@@ -111,13 +111,13 @@ bool CDtvEngine::CloseEngine(void)
 	if (!m_bBuiled)
 		return true;
 
-	Trace(TEXT("DtvEngineを閉じています..."));
+	Trace(CTracer::TYPE_INFORMATION, TEXT("DtvEngineを閉じています..."));
 
 	//m_MediaViewer.Stop();
 
 	ReleaseSrcFilter();
 
-	Trace(TEXT("メディアビューアを閉じています..."));
+	Trace(CTracer::TYPE_INFORMATION, TEXT("メディアビューアを閉じています..."));
 	m_MediaViewer.CloseViewer();
 
 	WalkDecoderGraph(&m_BonSrcDecoder,
@@ -130,7 +130,7 @@ bool CDtvEngine::CloseEngine(void)
 
 	m_bBuiled = false;
 
-	Trace(TEXT("DtvEngineを閉じました。"));
+	Trace(CTracer::TYPE_INFORMATION, TEXT("DtvEngineを閉じました。"));
 
 	return true;
 }
@@ -175,9 +175,9 @@ bool CDtvEngine::OpenBonDriver(LPCTSTR pszFileName)
 	bool bOK = false;
 
 	// ソースフィルタを開く
-	Trace(TEXT("BonDriverを読み込んでいます..."));
+	Trace(CTracer::TYPE_INFORMATION, TEXT("BonDriverを読み込んでいます..."));
 	if (m_BonSrcDecoder.LoadBonDriver(pszFileName)) {
-		Trace(TEXT("チューナを開いています..."));
+		Trace(CTracer::TYPE_INFORMATION, TEXT("チューナを開いています..."));
 		if (m_BonSrcDecoder.OpenTuner()) {
 			bOK = true;
 		} else {
@@ -198,7 +198,7 @@ bool CDtvEngine::OpenBonDriver(LPCTSTR pszFileName)
 		return false;
 
 	if (m_bStartStreamingOnDriverOpen) {
-		Trace(TEXT("ストリームの再生を開始しています..."));
+		Trace(CTracer::TYPE_INFORMATION, TEXT("ストリームの再生を開始しています..."));
 		if (!m_BonSrcDecoder.Play()) {
 			SetError(m_BonSrcDecoder.GetLastErrorException());
 			return false;
@@ -215,7 +215,7 @@ bool CDtvEngine::ReleaseSrcFilter()
 {
 	// ソースフィルタを開放する
 	if (m_BonSrcDecoder.IsBonDriverLoaded()) {
-		Trace(TEXT("BonDriver を解放しています..."));
+		Trace(CTracer::TYPE_INFORMATION, TEXT("BonDriver を解放しています..."));
 		m_BonSrcDecoder.UnloadBonDriver();
 	}
 

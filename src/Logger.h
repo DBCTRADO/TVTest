@@ -62,12 +62,12 @@ public:
 	void GetDefaultLogFileName(LPTSTR pszFileName) const;
 	bool CopyToClipboard(HWND hwnd);
 
+// CTracer
+	void OnTrace(CTracer::TraceType Type,LPCTSTR pszOutput) override;
+
 private:
 // CBasicDialog
 	INT_PTR DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
-
-// CTracer
-	void OnTrace(LPCTSTR pszOutput) override;
 
 	std::vector<CLogItem*> m_LogList;
 	DWORD m_SerialNumber;
