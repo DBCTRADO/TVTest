@@ -9,13 +9,15 @@
 
 class ABSTRACT_CLASS_DECL CBonBaseClass : public CBonErrorHandler
 {
-	CTracer *m_pTracer;
 public:
 	CBonBaseClass();
 	virtual ~CBonBaseClass() = 0;
 	virtual void SetTracer(CTracer *pTracer);
+
 protected:
 	void Trace(CTracer::TraceType Type, LPCTSTR pszOutput, ...);
+
+	CTracer *m_pTracer;
 };
 
 

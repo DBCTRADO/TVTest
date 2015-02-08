@@ -24,6 +24,14 @@ template<typename TPred> void WalkDecoderGraph(CMediaDecoder *pDecoder, TPred Pr
 }
 
 
+static void DisconnectOutputDecoders(CMediaDecoder *pDecoder)
+{
+	const DWORD OutputNum = pDecoder->GetOutputNum();
+	for (DWORD i = 0; i < OutputNum; i++)
+		pDecoder->SetOutputDecoder(nullptr, i);
+}
+
+
 //////////////////////////////////////////////////////////////////////
 // CDtvEngine 構築/消滅
 //////////////////////////////////////////////////////////////////////
@@ -94,7 +102,10 @@ bool CDtvEngine::BuildEngine(const DecoderConnectionInfo *pDecoderConnectionList
 	}
 
 	WalkDecoderGraph(&m_BonSrcDecoder,
-					 [](CMediaDecoder *pDecoder) { pDecoder->Initialize(); });
+		[&](CMediaDecoder *pDecoder) {
+			pDecoder->SetTracer(m_pTracer);
+			pDecoder->Initialize();
+		});
 
 	// イベントハンドラ設定
 	m_pEventHandler = pEventHandler;
@@ -121,7 +132,15 @@ bool CDtvEngine::CloseEngine(void)
 	m_MediaViewer.CloseViewer();
 
 	WalkDecoderGraph(&m_BonSrcDecoder,
-					 [](CMediaDecoder *pDecoder) { pDecoder->Finalize(); });
+		[](CMediaDecoder *pDecoder) {
+			pDecoder->Finalize();
+			pDecoder->SetTracer(nullptr);
+		});
+
+	for (int i = 1; i < DECODER_ID_External; i++)
+		DisconnectOutputDecoders(GetDecoderByID(i));
+	for (auto it = m_DecoderList.begin(); it != m_DecoderList.end(); ++it)
+		DisconnectOutputDecoders(it->pDecoder);
 
 	// イベントハンドラ解除
 	m_pEventHandler = NULL;
@@ -997,7 +1016,9 @@ void CDtvEngine::SetStartStreamingOnDriverOpen(bool bStart)
 void CDtvEngine::SetTracer(CTracer *pTracer)
 {
 	CBonBaseClass::SetTracer(pTracer);
-	m_MediaViewer.SetTracer(pTracer);
+
+	WalkDecoderGraph(&m_BonSrcDecoder,
+					 [&](CMediaDecoder *pDecoder) { pDecoder->SetTracer(pTracer); });
 }
 
 
