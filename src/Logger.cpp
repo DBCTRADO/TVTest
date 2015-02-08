@@ -492,19 +492,3 @@ INT_PTR CLogger::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 
 	return FALSE;
 }
-
-
-void CLogger::OnTrace(CTracer::TraceType Type,LPCTSTR pszOutput)
-{
-	CLogItem::LogType LogType;
-
-	switch (Type) {
-	case CTracer::TYPE_INFORMATION:	LogType=CLogItem::TYPE_INFORMATION;	break;
-	case CTracer::TYPE_WARNING:		LogType=CLogItem::TYPE_WARNING;		break;
-	case CTracer::TYPE_ERROR:		LogType=CLogItem::TYPE_ERROR;		break;
-	default:
-		return;
-	}
-
-	AddLogRaw(LogType,pszOutput);
-}

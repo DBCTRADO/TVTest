@@ -35,6 +35,8 @@ CUICore::CUICore(CAppMain &App)
 	, m_TunerSelectMenu(*this)
 
 	, m_pColorScheme(NULL)
+
+	, m_fStatusBarTrace(false)
 {
 }
 
@@ -1381,6 +1383,16 @@ void CUICore::EndProgress()
 }
 
 
+void CUICore::SetStatusBarTrace(bool fStatusBarTrace)
+{
+	if (m_fStatusBarTrace!=fStatusBarTrace) {
+		m_fStatusBarTrace=fStatusBarTrace;
+		if (!m_fStatusBarTrace)
+			m_App.StatusView.SetSingleText(NULL);
+	}
+}
+
+
 bool CUICore::CreateChannelMenu(
 	const CChannelList *pChannelList,int CurChannel,
 	UINT Command,HMENU hmenu,HWND hwnd,unsigned int Flags)
@@ -1452,6 +1464,25 @@ bool CUICore::InitChannelMenuPopup(HMENU hmenuParent,HMENU hmenu)
 		Command,hmenu,GetMainWindow());
 
 	return true;
+}
+
+
+void CUICore::OnTrace(CTracer::TraceType Type,LPCTSTR pszOutput)
+{
+	CLogItem::LogType LogType;
+
+	switch (Type) {
+	case CTracer::TYPE_INFORMATION:	LogType=CLogItem::TYPE_INFORMATION;	break;
+	case CTracer::TYPE_WARNING:		LogType=CLogItem::TYPE_WARNING;		break;
+	case CTracer::TYPE_ERROR:		LogType=CLogItem::TYPE_ERROR;		break;
+	default:
+		return;
+	}
+
+	if (m_fStatusBarTrace && Type==CTracer::TYPE_INFORMATION)
+		m_App.StatusView.SetSingleText(pszOutput);
+	else
+		m_App.Logger.AddLogRaw(LogType,pszOutput);
 }
 
 

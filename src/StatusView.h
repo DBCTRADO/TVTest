@@ -126,7 +126,6 @@ public:
 class CStatusView
 	: public CCustomWindow
 	, public TVTest::CUIBase
-	, public CTracer
 {
 public:
 	class ABSTRACT_CLASS(CEventHandler)
@@ -200,9 +199,6 @@ public:
 						 bool fHighlight=false,HFONT hfont=NULL) const;
 	bool EnableBufferedPaint(bool fEnable);
 	void EnableSizeAdjustment(bool fEnable);
-
-// CTracer
-	void OnTrace(CTracer::TraceType Type,LPCTSTR pszOutput) override;
 
 private:
 	struct StatusViewStyle

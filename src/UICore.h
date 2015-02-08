@@ -7,6 +7,7 @@
 #include "ColorScheme.h"
 #include "AudioManager.h"
 #include "Menu.h"
+#include "BonTsEngine/TsUtilClass.h"
 
 
 class CAppMain;
@@ -14,6 +15,7 @@ class CBasicDialog;
 
 class CUICore
 	: public CColorSchemeOptions::CEventHandler
+	, public CTracer
 {
 public:
 	enum {
@@ -136,6 +138,8 @@ public:
 	void SetProgress(int Pos,int Max);
 	void EndProgress();
 
+	void SetStatusBarTrace(bool fStatusBarTrace);
+
 private:
 	class CTunerSelectMenu
 	{
@@ -189,6 +193,8 @@ private:
 
 	const CColorScheme *m_pColorScheme;
 
+	bool m_fStatusBarTrace;
+
 	bool SelectAudio(const TVTest::CAudioManager::AudioSelectInfo &Info,bool fUpdate=true);
 	bool SelectAudioStream(int Stream);
 	bool SelectDualMonoMode(CAudioDecFilter::DualMonoMode Mode,bool fUpdate=true);
@@ -200,6 +206,9 @@ private:
 
 // CColorSchemeOptions::CEventHandler
 	bool ApplyColorScheme(const CColorScheme *pColorScheme) override;
+
+// CTracer
+	void OnTrace(CTracer::TraceType Type,LPCTSTR pszOutput) override;
 };
 
 

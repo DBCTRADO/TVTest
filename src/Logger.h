@@ -4,7 +4,6 @@
 
 #include <vector>
 #include "Options.h"
-#include "TsUtilClass.h"
 
 
 class CLogItem
@@ -35,7 +34,8 @@ private:
 	DWORD m_SerialNumber;
 };
 
-class CLogger : public COptions, public CTracer
+class CLogger
+	: public COptions
 {
 public:
 	CLogger();
@@ -61,9 +61,6 @@ public:
 	bool SaveToFile(LPCTSTR pszFileName,bool fAppend);
 	void GetDefaultLogFileName(LPTSTR pszFileName) const;
 	bool CopyToClipboard(HWND hwnd);
-
-// CTracer
-	void OnTrace(CTracer::TraceType Type,LPCTSTR pszOutput) override;
 
 private:
 // CBasicDialog

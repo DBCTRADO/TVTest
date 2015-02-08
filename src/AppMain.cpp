@@ -331,10 +331,8 @@ void CAppMain::Finalize()
 
 	FINALIZE_CONTINUE
 
-	CoreEngine.m_DtvEngine.SetTracer(&Logger);
 	CoreEngine.Close();
 	CoreEngine.m_DtvEngine.SetTracer(nullptr);
-	CoreEngine.m_DtvEngine.m_BonSrcDecoder.SetTracer(nullptr);
 
 	FINALIZE_CONTINUE
 
@@ -855,8 +853,8 @@ int CAppMain::Main(HINSTANCE hInstance,LPCTSTR pszCmdLine,int nCmdShow)
 	CoreEngine.SetNoEpg(CmdLineOptions.m_fNoEpg);
 	PlaybackOptions.Apply(COptions::UPDATE_ALL);
 	CoreEngine.m_DtvEngine.m_LogoDownloader.SetLogoHandler(&LogoManager);
-	CoreEngine.m_DtvEngine.SetTracer(&StatusView);
-	CoreEngine.m_DtvEngine.m_BonSrcDecoder.SetTracer(&Logger);
+	CoreEngine.m_DtvEngine.SetTracer(&UICore);
+	UICore.SetStatusBarTrace(true);
 	RecordOptions.Apply(COptions::UPDATE_ALL);
 
 	// ÉvÉâÉOÉCÉìÇÃì«Ç›çûÇ›
@@ -1001,10 +999,9 @@ int CAppMain::Main(HINSTANCE hInstance,LPCTSTR pszCmdLine,int nCmdShow)
 		}
 	}
 
-	CoreEngine.m_DtvEngine.SetTracer(nullptr);
 	if (!MainWindow.GetStatusBarVisible())
 		StatusView.SetVisible(false);
-	StatusView.SetSingleText(nullptr);
+	UICore.SetStatusBarTrace(false);
 
 	MainWindow.CreatePanel();
 	if (Panel.fShowPanelWindow

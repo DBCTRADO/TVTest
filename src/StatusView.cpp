@@ -1039,13 +1039,6 @@ void CStatusView::EnableSizeAdjustment(bool fEnable)
 }
 
 
-void CStatusView::OnTrace(CTracer::TraceType Type,LPCTSTR pszOutput)
-{
-	if (Type==CTracer::TYPE_INFORMATION)
-		SetSingleText(pszOutput);
-}
-
-
 void CStatusView::SetHotItem(int Item)
 {
 	if (Item<0 || (size_t)Item>=m_ItemList.size())

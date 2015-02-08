@@ -255,7 +255,7 @@ bool CMainWindow::InitializeViewer(BYTE VideoStreamType)
 {
 	const bool fEnableViewer=IsViewerEnabled();
 
-	m_App.CoreEngine.m_DtvEngine.SetTracer(&m_App.StatusView);
+	m_pCore->SetStatusBarTrace(true);
 
 	if (m_Display.BuildViewer(VideoStreamType)) {
 		CMediaViewer &MediaViewer=m_App.CoreEngine.m_DtvEngine.m_MediaViewer;
@@ -272,8 +272,7 @@ bool CMainWindow::InitializeViewer(BYTE VideoStreamType)
 		FinalizeViewer();
 	}
 
-	m_App.CoreEngine.m_DtvEngine.SetTracer(nullptr);
-	m_App.StatusView.SetSingleText(nullptr);
+	m_pCore->SetStatusBarTrace(false);
 
 	return true;
 }

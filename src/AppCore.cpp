@@ -806,7 +806,7 @@ bool CAppCore::OpenTuner(LPCTSTR pszFileName)
 
 	SaveCurrentChannel();
 
-	m_App.CoreEngine.m_DtvEngine.SetTracer(&m_App.StatusView);
+	m_App.UICore.SetStatusBarTrace(true);
 
 	if (m_App.CoreEngine.IsTunerOpen()) {
 		m_App.CoreEngine.CloseTuner();
@@ -824,8 +824,7 @@ bool CAppCore::OpenTuner(LPCTSTR pszFileName)
 		OnError(&m_App.CoreEngine,TEXT("BonDriverÇÃèâä˙âªÇ™Ç≈Ç´Ç‹ÇπÇÒÅB"));
 	}
 
-	m_App.CoreEngine.m_DtvEngine.SetTracer(nullptr);
-	m_App.StatusView.SetSingleText(nullptr);
+	m_App.UICore.SetStatusBarTrace(false);
 	m_App.AppEventManager.OnTunerChanged();
 
 	return fOK;
@@ -878,7 +877,7 @@ bool CAppCore::OpenTuner()
 	if (!m_App.CoreEngine.IsDriverSpecified())
 		return false;
 
-	m_App.CoreEngine.m_DtvEngine.SetTracer(&m_App.StatusView);
+	m_App.UICore.SetStatusBarTrace(true);
 	bool fOK=true;
 
 	if (!m_App.CoreEngine.IsTunerOpen()) {
@@ -890,8 +889,7 @@ bool CAppCore::OpenTuner()
 		}
 	}
 
-	m_App.CoreEngine.m_DtvEngine.SetTracer(nullptr);
-	m_App.StatusView.SetSingleText(nullptr);
+	m_App.UICore.SetStatusBarTrace(false);
 
 	return fOK;
 }

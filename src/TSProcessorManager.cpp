@@ -326,7 +326,6 @@ bool CTSProcessorManager::RegisterTSProcessor(
 	if (!App.CoreEngine.RegisterTSProcessor(pTSProcessor,ConnectPosition))
 		return false;
 
-	pTSProcessor->SetTracer(&App.Logger);
 	pTSProcessor->SetEventHandler(this);
 
 	GUID guid;
