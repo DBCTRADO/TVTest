@@ -20,6 +20,7 @@ private:
 	TVTest::Graphics::CImage m_LogoImage;
 	bool m_fDrawLogo;
 	DrawUtil::CFont m_Font;
+	DrawUtil::CFont m_LinkFont;
 
 	INT_PTR DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
 };
