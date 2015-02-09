@@ -30,6 +30,7 @@ public:
 		virtual void OnFormDelete() {}
 		virtual bool DrawIcon(HDC hdc,int x,int y,int Width,int Height,
 							  const TVTest::Theme::ThemeColor &Color) { return false; }
+		virtual bool NeedKeyboardFocus() const { return false; }
 	};
 
 	class ABSTRACT_CLASS(CEventHandler) {

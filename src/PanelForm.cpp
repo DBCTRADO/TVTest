@@ -489,8 +489,13 @@ LRESULT CPanelForm::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 		{
 			int Index=HitTest(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam));
 
-			if (Index>=0 && Index!=m_CurTab) {
-				SetCurTab(Index);
+			if (Index>=0) {
+				if (Index!=m_CurTab)
+					SetCurTab(Index);
+
+				const CPage *pPage=m_WindowList[Index]->m_pWindow;
+				if (pPage->NeedKeyboardFocus())
+					::SetFocus(pPage->GetHandle());
 			}
 		}
 		return 0;

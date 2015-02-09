@@ -232,6 +232,9 @@ private:
 // CCustomWindow
 	LRESULT OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
 
+// CPanelForm::CPage
+	bool NeedKeyboardFocus() const override { return true; }
+
 // CFeaturedEvents::CEventHandler
 	void OnFeaturedEventsSettingsChanged(CFeaturedEvents &FeaturedEvents) override;
 };
