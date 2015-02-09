@@ -2492,6 +2492,7 @@ LRESULT CPlugin::OnCallback(TVTest::PluginParam *pParam,UINT Message,LPARAM lPar
 			pItem->Title=pInfo->pszTitle;
 			pItem->StateMask=0;
 			pItem->State=0;
+			pItem->Style=pInfo->Style;
 			pItem->ItemID=-1;
 			pItem->pItem=NULL;
 			if (pInfo->hbmIcon!=NULL)
@@ -2529,6 +2530,10 @@ LRESULT CPlugin::OnCallback(TVTest::PluginParam *pParam,UINT Message,LPARAM lPar
 								}
 							}
 						}
+					}
+
+					if ((pInfo->Mask & TVTest::PANEL_ITEM_SET_INFO_MASK_STYLE)!=0) {
+						pItem->Style=(pItem->Style & ~pInfo->StyleMask) | (pInfo->Style & pInfo->StyleMask);
 					}
 
 					return TRUE;
@@ -3608,6 +3613,11 @@ LRESULT CPlugin::CPluginPanelItem::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,L
 			::EndPaint(hwnd,&ps);
 		}
 		return 0;
+
+	case WM_SETFOCUS:
+		if (m_hwndItem!=NULL)
+			::SetFocus(m_hwndItem);
+		return 0;
 	}
 
 	return ::DefWindowProc(hwnd,uMsg,wParam,lParam);
@@ -3680,6 +3690,12 @@ bool CPlugin::CPluginPanelItem::DrawIcon(
 		return false;
 
 	return m_pItem->Icon.Draw(hdc,x,y,Width,Height,0,0,0,0,Color);
+}
+
+
+bool CPlugin::CPluginPanelItem::NeedKeyboardFocus() const
+{
+	return m_pItem!=NULL && (m_pItem->Style & TVTest::PANEL_ITEM_STYLE_NEEDFOCUS)!=0;
 }
 
 

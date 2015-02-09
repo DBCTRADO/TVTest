@@ -177,6 +177,7 @@ private:
 		TVTest::String Title;
 		DWORD StateMask;
 		DWORD State;
+		DWORD Style;
 		int ItemID;
 		CPluginPanelItem *pItem;
 		TVTest::Theme::ThemeBitmap Icon;
@@ -199,6 +200,7 @@ private:
 		void OnFormDelete() override;
 		bool DrawIcon(HDC hdc,int x,int y,int Width,int Height,
 					  const TVTest::Theme::ThemeColor &Color) override;
+		bool NeedKeyboardFocus() const override;
 
 		CPlugin *m_pPlugin;
 		PanelItem *m_pItem;

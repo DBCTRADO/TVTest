@@ -2650,6 +2650,11 @@ inline bool MsgRegisterTSProcessor(PluginParam *pParam,const TSProcessorInfo *pI
 	return (*pParam->Callback)(pParam,MESSAGE_REGISTERTSPROCESSOR,(LPARAM)pInfo,0)!=FALSE;
 }
 
+// パネル項目のスタイル
+enum {
+	PANEL_ITEM_STYLE_NEEDFOCUS	=0x0001U	// キーボードフォーカスを受け取る
+};
+
 // パネル項目の状態
 enum {
 	PANEL_ITEM_STATE_ENABLED	=0x0001U,	// 有効(タブに表示されている)
@@ -2660,7 +2665,7 @@ enum {
 struct PanelItemInfo {
 	DWORD Size;			// 構造体のサイズ
 	DWORD Flags;		// 各種フラグ(現在は常に0)
-	DWORD Style;		// スタイルフラグ(現在は常に0)
+	DWORD Style;		// スタイルフラグ(PANEL_ITEM_STYLE_* の組み合わせ)
 	int ID;				// 識別子
 	LPCWSTR pszIDText;	// 識別子文字列
 	LPCWSTR pszTitle;	// タイトル
@@ -2679,11 +2684,14 @@ struct PanelItemSetInfo {
 	int ID;				// 項目の識別子
 	DWORD StateMask;	// 状態フラグのマスク(PANEL_ITEM_STATE_* の組み合わせ)
 	DWORD State;		// 状態フラグ(PANEL_ITEM_STATE_* の組み合わせ)
+	DWORD StyleMask;	// スタイルフラグのマスク(PANEL_ITEM_STYLE_* の組み合わせ)
+	DWORD Style;		// スタイルフラグ(PANEL_ITEM_STYLE_* の組み合わせ)
 };
 
 // パネル項目の設定
 enum {
-	PANEL_ITEM_SET_INFO_MASK_STATE	=0x00000001U	// StateMask / State を設定
+	PANEL_ITEM_SET_INFO_MASK_STATE	=0x00000001U,	// StateMask / State を設定
+	PANEL_ITEM_SET_INFO_MASK_STYLE	=0x00000002U	// StyleMask / Style を設定
 };
 
 // ステータス項目を設定する
