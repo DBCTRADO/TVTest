@@ -226,7 +226,7 @@ bool CTunerPanel::Initialize()
 
 	PanelInfo.Size = sizeof(TVTest::PanelItemInfo);
 	PanelInfo.Flags = 0;
-	PanelInfo.Style = 0;
+	PanelInfo.Style = TVTest::PANEL_ITEM_STYLE_NEEDFOCUS;
 	PanelInfo.ID = PANEL_ID;
 	PanelInfo.pszIDText = L"Tuner";
 	PanelInfo.pszTitle = L"チューナー";
