@@ -2427,6 +2427,9 @@ LRESULT CPlugin::OnCallback(TVTest::PluginParam *pParam,UINT Message,LPARAM lPar
 							::SetRectEmpty(&pInfo->ContentRect);
 					}
 
+					if ((pInfo->Mask & TVTest::STATUS_ITEM_GET_INFO_MASK_STYLE)!=0)
+						pInfo->Style=pItem->Style;
+
 					return TRUE;
 				}
 			}
