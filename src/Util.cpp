@@ -983,6 +983,37 @@ HICON LoadSystemIcon(LPCTSTR pszName,IconSizeType Size)
 }
 
 
+HICON LoadSystemIcon(LPCTSTR pszName,int Width,int Height)
+{
+	if (Width<=0 || Height<=0)
+		return NULL;
+
+	HICON hico;
+
+#ifdef WIN_XP_SUPPORT
+	auto pLoadIconWithScaleDown=
+		GET_MODULE_FUNCTION(TEXT("comctl32.dll"),LoadIconWithScaleDown);
+	if (pLoadIconWithScaleDown!=NULL) {
+		if (SUCCEEDED(pLoadIconWithScaleDown(NULL,pszName,Width,Height,&hico)))
+			return hico;
+	}
+#else
+	if (SUCCEEDED(::LoadIconWithScaleDown(NULL,pszName,Width,Height,&hico)))
+		return hico;
+#endif
+
+	if (Width==::GetSystemMetrics(SM_CXICON) && Height==::GetSystemMetrics(SM_CYICON))
+		return LoadSystemIcon(pszName,ICON_SIZE_NORMAL);
+	if (Width==::GetSystemMetrics(SM_CXSMICON) && Height==::GetSystemMetrics(SM_CYSMICON))
+		return LoadSystemIcon(pszName,ICON_SIZE_SMALL);
+
+	hico=::LoadIcon(NULL,pszName);
+	if (hico!=NULL)
+		hico=(HICON)::CopyImage(hico,IMAGE_ICON,Width,Height,0);
+	return hico;
+}
+
+
 
 
 CStaticStringFormatter::CStaticStringFormatter(LPTSTR pBuffer,size_t BufferLength)

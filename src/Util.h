@@ -83,6 +83,7 @@ enum IconSizeType {
 };
 HICON LoadIconStandardSize(HINSTANCE hinst,LPCTSTR pszName,IconSizeType Size);
 HICON LoadSystemIcon(LPCTSTR pszName,IconSizeType Size);
+HICON LoadSystemIcon(LPCTSTR pszName,int Width,int Height);
 
 class CStaticStringFormatter
 {
