@@ -6,6 +6,7 @@
 #include "EpgProgramList.h"
 #include "DrawUtil.h"
 #include "RichEditUtil.h"
+#include "GUIUtil.h"
 
 
 class CEventInfoPopup : protected CCustomWindow
@@ -65,7 +66,7 @@ private:
 	int m_ButtonMargin;
 	bool m_fDetailInfo;
 	TVTest::String m_TitleText;
-	HICON m_hTitleIcon;
+	TVTest::CIcon m_TitleIcon;
 	CEventHandler *m_pEventHandler;
 
 	static const LPCTSTR m_pszWindowClass;

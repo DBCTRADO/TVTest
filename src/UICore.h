@@ -7,6 +7,7 @@
 #include "ColorScheme.h"
 #include "AudioManager.h"
 #include "Menu.h"
+#include "GUIUtil.h"
 #include "BonTsEngine/TsUtilClass.h"
 
 
@@ -176,8 +177,8 @@ private:
 	bool m_fFullscreen;
 	bool m_fAlwaysOnTop;
 
-	HICON m_hicoLogoBig;
-	HICON m_hicoLogoSmall;
+	TVTest::CIcon m_LogoIconBig;
+	TVTest::CIcon m_LogoIconSmall;
 
 	bool m_fViewerInitializeError;
 

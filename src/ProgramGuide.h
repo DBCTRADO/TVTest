@@ -18,6 +18,7 @@
 #include "StatusView.h"
 #include "Settings.h"
 #include "WindowUtil.h"
+#include "GUIUtil.h"
 
 
 namespace ProgramGuide
@@ -120,7 +121,7 @@ public:
 private:
 	TCHAR m_szName[MAX_NAME];
 	TCHAR m_szCommand[MAX_COMMAND];
-	HICON m_hIcon;
+	TVTest::CIcon m_Icon;
 
 	static bool GetCommandFileName(LPCTSTR *ppszCommand,LPTSTR pszFileName,int MaxFileName);
 	static CProgramGuideTool *GetThis(HWND hDlg);

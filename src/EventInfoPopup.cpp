@@ -52,7 +52,6 @@ CEventInfoPopup::CEventInfoPopup()
 	, m_TitleIconTextMargin(4)
 	, m_ButtonSize(14)
 	, m_ButtonMargin(3)
-	, m_hTitleIcon(NULL)
 	, m_pEventHandler(NULL)
 	, m_fDetailInfo(
 #ifdef _DEBUG
@@ -315,9 +314,7 @@ bool CEventInfoPopup::Show(const CEventInfoData *pEventInfo,const RECT *pPos,
 	else
 		m_TitleText.clear();
 
-	if (m_hTitleIcon!=NULL)
-		::DestroyIcon(m_hTitleIcon);
-	m_hTitleIcon=hIcon;
+	m_TitleIcon.Attach(hIcon);
 
 	::ShowWindow(m_hwnd,SW_SHOWNA);
 
@@ -572,13 +569,13 @@ LRESULT CEventInfoPopup::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lPar
 
 			rc.left+=m_TitleLeftMargin;
 
-			if (m_hTitleIcon!=NULL) {
+			if (m_TitleIcon) {
 				int IconWidth=::GetSystemMetrics(SM_CXSMICON);
 				int IconHeight=::GetSystemMetrics(SM_CYSMICON);
 
 				::DrawIconEx(ps.hdc,
 					rc.left,rc.top+(m_TitleHeight-IconHeight)/2,
-					m_hTitleIcon,IconWidth,IconHeight,0,NULL,DI_NORMAL);
+					m_TitleIcon,IconWidth,IconHeight,0,NULL,DI_NORMAL);
 				rc.left+=IconWidth+m_TitleIconTextMargin;
 			}
 
@@ -793,10 +790,7 @@ LRESULT CEventInfoPopup::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lPar
 		return 0;
 
 	case WM_DESTROY:
-		if (m_hTitleIcon!=NULL) {
-			::DestroyIcon(m_hTitleIcon);
-			m_hTitleIcon=NULL;
-		}
+		m_TitleIcon.Destroy();
 		return 0;
 	}
 

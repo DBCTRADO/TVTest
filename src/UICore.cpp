@@ -21,9 +21,6 @@ CUICore::CUICore(CAppMain &App)
 	, m_fFullscreen(false)
 	, m_fAlwaysOnTop(false)
 
-	, m_hicoLogoBig(nullptr)
-	, m_hicoLogoSmall(nullptr)
-
 	, m_fViewerInitializeError(false)
 
 	, m_fScreenSaverActiveOriginal(FALSE)
@@ -43,10 +40,6 @@ CUICore::CUICore(CAppMain &App)
 
 CUICore::~CUICore()
 {
-	if (m_hicoLogoBig!=nullptr)
-		::DeleteObject(m_hicoLogoBig);
-	if (m_hicoLogoSmall!=nullptr)
-		::DeleteObject(m_hicoLogoSmall);
 }
 
 
@@ -1193,6 +1186,7 @@ bool CUICore::UpdateIcon()
 				::GetSystemMetrics(SM_CYSMICON));
 		}
 	}
+
 	HWND hwnd=GetMainWindow();
 	if (hwnd!=nullptr) {
 		::SendMessage(hwnd,WM_SETICON,ICON_BIG,
@@ -1200,12 +1194,10 @@ bool CUICore::UpdateIcon()
 		::SendMessage(hwnd,WM_SETICON,ICON_SMALL,
 					  reinterpret_cast<LPARAM>(hicoSmall!=nullptr?hicoSmall:m_App.GetAppIconSmall()));
 	}
-	if (m_hicoLogoBig!=nullptr)
-		::DestroyIcon(m_hicoLogoBig);
-	m_hicoLogoBig=hicoBig;
-	if (m_hicoLogoSmall!=nullptr)
-		::DestroyIcon(m_hicoLogoSmall);
-	m_hicoLogoSmall=hicoSmall;
+
+	m_LogoIconBig.Attach(hicoBig);
+	m_LogoIconSmall.Attach(hicoSmall);
+
 	return true;
 }
 

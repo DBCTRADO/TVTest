@@ -10,6 +10,7 @@
 #include "DrawUtil.h"
 #include "Theme.h"
 #include "WindowUtil.h"
+#include "GUIUtil.h"
 
 
 class CChannelDisplay : public CDisplayView
@@ -85,13 +86,13 @@ private:
 		CTuningSpaceInfo *GetTuningSpaceInfo(int Index);
 		const CTuningSpaceInfo *GetTuningSpaceInfo(int Index) const;
 		void SetIcon(HICON hico);
-		HICON GetIcon() const { return m_hIcon; }
+		HICON GetIcon() const { return m_Icon; }
 	private:
 		std::vector<CTuningSpaceInfo*> m_TuningSpaceList;
 		TVTest::String m_DriverFileName;
 		TVTest::String m_TunerName;
 		TVTest::String m_DisplayName;
-		HICON m_hIcon;
+		TVTest::CIcon m_Icon;
 	};
 
 	TVTest::Theme::BackgroundStyle m_TunerAreaBackStyle;

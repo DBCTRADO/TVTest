@@ -1175,7 +1175,6 @@ LRESULT CChannelDisplay::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lPar
 CChannelDisplay::CTuner::CTuner(const CDriverInfo *pDriverInfo)
 	: m_DriverFileName(pDriverInfo->GetFileName())
 	, m_TunerName(pDriverInfo->GetTunerName())
-	, m_hIcon(NULL)
 {
 	const CTuningSpaceList *pList=pDriverInfo->GetAvailableTuningSpaceList();
 
@@ -1221,8 +1220,6 @@ CChannelDisplay::CTuner::CTuner(const CDriverInfo *pDriverInfo)
 CChannelDisplay::CTuner::~CTuner()
 {
 	Clear();
-	if (m_hIcon!=NULL)
-		::DestroyIcon(m_hIcon);
 }
 
 
@@ -1272,9 +1269,7 @@ const CTuningSpaceInfo *CChannelDisplay::CTuner::GetTuningSpaceInfo(int Index) c
 
 void CChannelDisplay::CTuner::SetIcon(HICON hico)
 {
-	if (m_hIcon!=NULL)
-		::DestroyIcon(m_hIcon);
-	m_hIcon=hico;
+	m_Icon.Attach(hico);
 }
 
 

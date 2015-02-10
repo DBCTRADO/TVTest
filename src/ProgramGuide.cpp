@@ -7077,7 +7077,6 @@ CProgramGuideDisplay::CProgramGuideDisplayEventHandler::CProgramGuideDisplayEven
 
 
 CProgramGuideTool::CProgramGuideTool()
-	: m_hIcon(NULL)
 {
 	m_szName[0]='\0';
 	m_szCommand[0]='\0';
@@ -7085,14 +7084,12 @@ CProgramGuideTool::CProgramGuideTool()
 
 
 CProgramGuideTool::CProgramGuideTool(const CProgramGuideTool &Tool)
-	: m_hIcon(NULL)
 {
 	*this=Tool;
 }
 
 
 CProgramGuideTool::CProgramGuideTool(LPCTSTR pszName,LPCTSTR pszCommand)
-	: m_hIcon(NULL)
 {
 	::lstrcpy(m_szName,pszName);
 	::lstrcpy(m_szCommand,pszCommand);
@@ -7101,8 +7098,6 @@ CProgramGuideTool::CProgramGuideTool(LPCTSTR pszName,LPCTSTR pszCommand)
 
 CProgramGuideTool::~CProgramGuideTool()
 {
-	if (m_hIcon!=NULL)
-		::DestroyIcon(m_hIcon);
 }
 
 
@@ -7111,12 +7106,7 @@ CProgramGuideTool &CProgramGuideTool::operator=(const CProgramGuideTool &Tool)
 	if (&Tool!=this) {
 		::lstrcpy(m_szName,Tool.m_szName);
 		::lstrcpy(m_szCommand,Tool.m_szCommand);
-		if (m_hIcon!=NULL)
-			::DestroyIcon(m_hIcon);
-		if (Tool.m_hIcon!=NULL)
-			m_hIcon=::CopyIcon(Tool.m_hIcon);
-		else
-			m_hIcon=NULL;
+		m_Icon=Tool.m_Icon;
 	}
 	return *this;
 }
@@ -7132,7 +7122,7 @@ bool CProgramGuideTool::GetPath(LPTSTR pszPath,int MaxLength) const
 
 HICON CProgramGuideTool::GetIcon()
 {
-	if (m_hIcon==NULL && m_szCommand[0]!='\0') {
+	if (!m_Icon && m_szCommand[0]!='\0') {
 		TCHAR szFileName[MAX_PATH];
 		LPCTSTR p=m_szCommand;
 
@@ -7140,10 +7130,10 @@ HICON CProgramGuideTool::GetIcon()
 			SHFILEINFO shfi;
 			if (::SHGetFileInfo(szFileName,0,&shfi,sizeof(shfi),
 								SHGFI_ICON | SHGFI_SMALLICON))
-				m_hIcon=shfi.hIcon;
+				m_Icon.Attach(shfi.hIcon);
 		}
 	}
-	return m_hIcon;
+	return m_Icon;
 }
 
 
@@ -7419,10 +7409,7 @@ INT_PTR CALLBACK CProgramGuideTool::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LP
 								 pThis->m_szName,MAX_NAME);
 				::GetDlgItemText(hDlg,IDC_PROGRAMGUIDETOOL_COMMAND,
 								 pThis->m_szCommand,MAX_COMMAND);
-				if (pThis->m_hIcon!=NULL) {
-					::DestroyIcon(pThis->m_hIcon);
-					pThis->m_hIcon=NULL;
-				}
+				pThis->m_Icon.Destroy();
 			}
 		case IDCANCEL:
 			EndDialog(hDlg,LOWORD(wParam));
