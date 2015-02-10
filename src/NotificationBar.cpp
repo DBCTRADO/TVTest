@@ -105,16 +105,6 @@ bool CNotificationBar::Show(LPCTSTR pszText,MessageType Type,DWORD Timeout,bool 
 	MessageInfo Info;
 	Info.Text=pszText;
 	Info.Type=Type;
-	if (Type==MESSAGE_WARNING || Type==MESSAGE_ERROR) {
-		Info.hIcon=static_cast<HICON>(
-			::LoadImage(NULL,Type==MESSAGE_WARNING?IDI_WARNING:IDI_ERROR,
-						IMAGE_ICON,
-						::GetSystemMetrics(SM_CXSMICON),
-						::GetSystemMetrics(SM_CYSMICON),
-						LR_SHARED));
-	} else {
-		Info.hIcon=NULL;
-	}
 	Info.Timeout=Timeout;
 	Info.fSkippable=fSkippable;
 	m_MessageQueue.push_back(Info);
@@ -248,6 +238,15 @@ LRESULT CNotificationBar::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lPa
 				m_Font.Create(&lf);
 			}
 
+			/*
+			m_Icons[MESSAGE_INFO].Attach(
+				LoadSystemIcon(IDI_INFORMATION,m_Style.IconSize.Width,m_Style.IconSize.Height));
+			*/
+			m_Icons[MESSAGE_WARNING].Attach(
+				LoadSystemIcon(IDI_WARNING,m_Style.IconSize.Width,m_Style.IconSize.Height));
+			m_Icons[MESSAGE_ERROR].Attach(
+				LoadSystemIcon(IDI_ERROR,m_Style.IconSize.Width,m_Style.IconSize.Height));
+
 			CalcBarHeight();
 
 			InitializeTimer(hwnd);
@@ -270,14 +269,14 @@ LRESULT CNotificationBar::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lPa
 
 				TVTest::Style::Subtract(&rc,m_Style.Padding);
 				if (rc.left<rc.right) {
-					if (Info.hIcon!=NULL) {
+					if (Info.Type>=0 && Info.Type<lengthof(m_Icons) && m_Icons[Info.Type]) {
 						rc.left+=m_Style.IconMargin.Left;
 						::DrawIconEx(
 							ps.hdc,
 							rc.left,
 							rc.top+m_Style.IconMargin.Top+
 								((rc.bottom-rc.top)-m_Style.IconMargin.Vert()-m_Style.IconSize.Height)/2,
-							Info.hIcon,
+							m_Icons[Info.Type],
 							m_Style.IconSize.Width,m_Style.IconSize.Height,
 							0,NULL,DI_NORMAL);
 						rc.left+=m_Style.IconSize.Width+m_Style.IconMargin.Right;

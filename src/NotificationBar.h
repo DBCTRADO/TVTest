@@ -8,6 +8,7 @@
 #include "Theme.h"
 #include "DrawUtil.h"
 #include "WindowUtil.h"
+#include "GUIUtil.h"
 
 
 class CNotificationBar
@@ -46,7 +47,6 @@ private:
 	struct MessageInfo {
 		TVTest::String Text;
 		MessageType Type;
-		HICON hIcon;
 		DWORD Timeout;
 		bool fSkippable;
 	};
@@ -82,6 +82,7 @@ private:
 	bool m_fAnimate;
 	std::deque<MessageInfo> m_MessageQueue;
 	int m_TimerCount;
+	TVTest::CIcon m_Icons[3];
 
 	static HINSTANCE m_hinst;
 
