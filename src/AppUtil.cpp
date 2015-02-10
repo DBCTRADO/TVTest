@@ -1,5 +1,4 @@
 #include "stdafx.h"
-#include <psapi.h>	// for GetModuleFileNameEx
 #include "TVTest.h"
 #include "AppUtil.h"
 #include "AppMain.h"
@@ -11,7 +10,10 @@ static char THIS_FILE[]=__FILE__;
 #define new DEBUG_NEW
 #endif
 
+#ifdef WIN_XP_SUPPORT
+#include <psapi.h>	// for GetModuleFileNameEx
 #pragma comment(lib,"psapi.lib")
+#endif
 
 
 
@@ -119,12 +121,18 @@ BOOL CALLBACK CTVTestWindowFinder::FindWindowCallback(HWND hwnd,LPARAM lParam)
 		HANDLE hProcess;
 		::GetWindowThreadProcessId(hwnd,&ProcessId);
 		hProcess=::OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ,FALSE,ProcessId);
-		if (hProcess!=NULL
-				&& ::GetModuleFileNameEx(hProcess,NULL,szFileName,lengthof(szFileName))>0
-				&& IsEqualFileName(szFileName,pThis->m_szModuleFileName)) {
-			pThis->m_hwndFound=hwnd;
-			::CloseHandle(hProcess);
-			return FALSE;
+		if (hProcess!=NULL) {
+#ifdef WIN_XP_SUPPORT
+			if (::GetModuleFileNameEx(hProcess,NULL,szFileName,lengthof(szFileName))>0
+#else
+			DWORD FileNameSize=lengthof(szFileName);
+			if (::QueryFullProcessImageName(hProcess,0,szFileName,&FileNameSize)
+#endif
+					&& IsEqualFileName(szFileName,pThis->m_szModuleFileName)) {
+				pThis->m_hwndFound=hwnd;
+				::CloseHandle(hProcess);
+				return FALSE;
+			}
 		}
 		::CloseHandle(hProcess);
 	}
