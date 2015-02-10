@@ -347,15 +347,23 @@ INT_PTR CRecordOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 	switch (uMsg) {
 	case WM_INITDIALOG:
 		{
-			/*
+#if 0
 			if (m_szSaveFolder[0]=='\0') {
-				if (!::SHGetSpecialFolderPath(hDlg,m_szSaveFolder,
-											  CSIDL_MYVIDEO,FALSE)
-						&& !::SHGetSpecialFolderPath(hDlg,m_szSaveFolder,
-													 CSIDL_PERSONAL,FALSE))
+#ifdef WIN_XP_SUPPORT
+				if (!::SHGetSpecialFolderPath(hDlg,m_szSaveFolder,CSIDL_MYVIDEO,FALSE)
+						&& !::SHGetSpecialFolderPath(hDlg,m_szSaveFolder,CSIDL_PERSONAL,FALSE))
 					m_szSaveFolder[0]='\0';
+#else
+				PWSTR pszPath;
+				if (::SHGetKnownFolderPath(FOLDERID_Videos,0,NULL,&pszPath)==S_OK
+						|| ::SHGetKnownFolderPath(FOLDERID_Documents,0,NULL,&pszPath)==S_OK) {
+					if (::lstrlen(pszPath)<lengthof(m_szSaveFolder))
+						::lstrcpy(m_szSaveFolder,pszPath);
+					::CoTaskMemFree(pszPath);
+				}
+#endif
 			}
-			*/
+#endif
 			::SendDlgItemMessage(hDlg,IDC_RECORDOPTIONS_SAVEFOLDER,EM_LIMITTEXT,MAX_PATH-1,0);
 			::SetDlgItemText(hDlg,IDC_RECORDOPTIONS_SAVEFOLDER,m_szSaveFolder);
 			::SendDlgItemMessage(hDlg,IDC_RECORDOPTIONS_FILENAME,EM_LIMITTEXT,MAX_PATH-1,0);

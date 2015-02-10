@@ -27,12 +27,28 @@ CEpgOptions::CEpgOptions()
 	, m_pEpgDataLoader(NULL)
 {
 	::lstrcpy(m_szEpgFileName,TEXT("EpgData"));
+
+	m_szEDCBDataFolder[0]='\0';
 #if 0
-	if (::SHGetSpecialFolderPath(NULL,m_szEDCBDataFolder,CSIDL_PERSONAL,FALSE))
-		::PathAppend(m_szEDCBDataFolder,TEXT("EpgTimerBon\\EpgData"));
-	else
+	static const TCHAR szEpgDataFolder[]=TEXT("EpgTimerBon\\EpgData");
+#ifdef WIN_XP_SUPPORT
+	TCHAR szPath[MAX_PATH];
+	if (::SHGetSpecialFolderPath(NULL,szPath,CSIDL_PERSONAL,FALSE)
+			&& ::lstrlen(szPath)+lengthof(szEpgDataFolder)<lengthof(m_szEDCBDataFolder)) {
+		::PathAppend(m_szEDCBDataFolder,szEpgDataFolder);
+	}
+#else
+	PWSTR pszPath;
+	if (::SHGetKnownFolderPath(FOLDERID_Documents,0,NULL,&pszPath)==S_OK) {
+		if (::lstrlen(pszPath)+lengthof(szEpgDataFolder)<lengthof(m_szEDCBDataFolder)) {
+			::lstrcpy(m_szEDCBDataFolder,pszPath);
+			::PathAppend(m_szEDCBDataFolder,szEpgDataFolder);
+		}
+		::CoTaskMemFree(pszPath);
+	}
 #endif
-		m_szEDCBDataFolder[0]='\0';
+#endif
+
 	::lstrcpy(m_szLogoFileName,TEXT("LogoData"));
 
 	DrawUtil::GetSystemFont(DrawUtil::FONT_MESSAGE,&m_EventInfoFont);

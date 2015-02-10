@@ -31,9 +31,20 @@ CInitialSettings::CInitialSettings(const CDriverManager *pDriverManager)
 	if (Util::OS::IsWindowsVistaOrLater())
 		m_VideoRenderer=CVideoRenderer::RENDERER_EVR;
 #endif
-	if (!::SHGetSpecialFolderPath(NULL,m_szRecordFolder,CSIDL_MYVIDEO,FALSE)
-			&& !::SHGetSpecialFolderPath(NULL,m_szRecordFolder,CSIDL_PERSONAL,FALSE))
-		m_szRecordFolder[0]='\0';
+
+#ifdef WIN_XP_SUPPORT
+	TCHAR szRecFolder[MAX_PATH];
+	if (::SHGetSpecialFolderPath(NULL,szRecFolder,CSIDL_MYVIDEO,FALSE)
+			|| ::SHGetSpecialFolderPath(NULL,szRecFolder,CSIDL_PERSONAL,FALSE))
+		m_RecordFolder=szRecFolder;
+#else
+	PWSTR pszRecFolder;
+	if (::SHGetKnownFolderPath(FOLDERID_Videos,0,NULL,&pszRecFolder)==S_OK
+			|| ::SHGetKnownFolderPath(FOLDERID_Documents,0,NULL,&pszRecFolder)==S_OK) {
+		m_RecordFolder=pszRecFolder;
+		::CoTaskMemFree(pszRecFolder);
+	}
+#endif
 }
 
 
@@ -131,7 +142,7 @@ INT_PTR CInitialSettings::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPara
 			}
 
 			// ˜^‰æƒtƒHƒ‹ƒ_
-			::SetDlgItemText(hDlg,IDC_INITIALSETTINGS_RECORDFOLDER,m_szRecordFolder);
+			::SetDlgItemText(hDlg,IDC_INITIALSETTINGS_RECORDFOLDER,m_RecordFolder.c_str());
 			::SendDlgItemMessage(hDlg,IDC_INITIALSETTINGS_RECORDFOLDER,EM_LIMITTEXT,MAX_PATH-1,0);
 
 			AdjustDialogPos(NULL,hDlg);
@@ -288,7 +299,7 @@ INT_PTR CInitialSettings::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPara
 						}
 					}
 				}
-				::lstrcpy(m_szRecordFolder,szRecordFolder);
+				m_RecordFolder=szRecordFolder;
 			}
 		case IDCANCEL:
 			::EndDialog(hDlg,LOWORD(wParam));

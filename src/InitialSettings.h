@@ -26,7 +26,7 @@ public:
 	LPCTSTR GetH264DecoderName() const { return m_H264DecoderName.c_str(); }
 	LPCTSTR GetH265DecoderName() const { return m_H265DecoderName.c_str(); }
 	CVideoRenderer::RendererType GetVideoRenderer() const { return m_VideoRenderer; }
-	LPCTSTR GetRecordFolder() const { return m_szRecordFolder; }
+	LPCTSTR GetRecordFolder() const { return m_RecordFolder.c_str(); }
 
 private:
 	const CDriverManager *m_pDriverManager;
@@ -35,7 +35,7 @@ private:
 	TVTest::String m_H264DecoderName;
 	TVTest::String m_H265DecoderName;
 	CVideoRenderer::RendererType m_VideoRenderer;
-	TCHAR m_szRecordFolder[MAX_PATH];
+	TVTest::String m_RecordFolder;
 	CAeroGlass m_AeroGlass;
 	TVTest::Graphics::CImage m_LogoImage;
 	bool m_fDrawLogo;
