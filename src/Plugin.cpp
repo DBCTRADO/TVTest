@@ -2483,7 +2483,6 @@ LRESULT CPlugin::OnCallback(TVTest::PluginParam *pParam,UINT Message,LPARAM lPar
 			if (pInfo==NULL
 					|| pInfo->Size!=sizeof(TVTest::PanelItemInfo)
 					|| pInfo->Flags!=0
-					|| pInfo->Style!=0
 					|| IsStringEmpty(pInfo->pszIDText)
 					|| IsStringEmpty(pInfo->pszTitle))
 				return FALSE;
