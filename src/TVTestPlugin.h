@@ -2723,13 +2723,15 @@ struct PanelItemGetInfo {
 	DWORD State;		// 項目の状態フラグ(PANEL_ITEM_STATE_* の組み合わせ)
 	HWND hwndParent;	// 親ウィンドウのハンドル
 	HWND hwndItem;		// 項目のウィンドウハンドル
+	DWORD Style;		// スタイルフラグ(PANEL_ITEM_STYLE_* の組み合わせ)
 };
 
 // パネル項目の情報取得マスク
 enum {
 	PANEL_ITEM_GET_INFO_MASK_STATE		=0x0001U,	// State を取得
 	PANEL_ITEM_GET_INFO_MASK_HWNDPARENT	=0x0002U,	// hwndParent を取得
-	PANEL_ITEM_GET_INFO_MASK_HWNDITEM	=0x0004U	// hwndItem を取得
+	PANEL_ITEM_GET_INFO_MASK_HWNDITEM	=0x0004U,	// hwndItem を取得
+	PANEL_ITEM_GET_INFO_MASK_STYLE		=0x0008U	// Style を取得
 };
 
 // パネル項目の情報を取得する
