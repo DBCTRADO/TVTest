@@ -199,7 +199,15 @@ public:
 	bool IsPresentFollowing() const { return (m_Type & (TYPE_PRESENT | TYPE_FOLLOWING)) != 0; }
 	bool GetStartTime(SYSTEMTIME *pTime) const;
 	bool GetEndTime(SYSTEMTIME *pTime) const;
+	bool GetStartTimeUtc(SYSTEMTIME *pTime) const;
+	bool GetEndTimeUtc(SYSTEMTIME *pTime) const;
+	bool GetStartTimeLocal(SYSTEMTIME *pTime) const;
+	bool GetEndTimeLocal(SYSTEMTIME *pTime) const;
 };
 
 
+bool EpgTimeToUtc(const SYSTEMTIME *pEpgTime, SYSTEMTIME *pUtc);
+bool UtcToEpgTime(const SYSTEMTIME *pUtc, SYSTEMTIME *pEpgTime);
+bool EpgTimeToLocalTime(const SYSTEMTIME *pEpgTime, SYSTEMTIME *pLocalTime);
+bool GetCurrentEpgTime(SYSTEMTIME *pTime);
 int GetEventExtendedText(const CDescBlock *pDescBlock, LPTSTR pszText, int MaxLength);

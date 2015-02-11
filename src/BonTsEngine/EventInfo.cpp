@@ -124,6 +124,142 @@ bool CEventInfo::GetEndTime(SYSTEMTIME *pTime) const
 }
 
 
+bool CEventInfo::GetStartTimeUtc(SYSTEMTIME *pTime) const
+{
+	if (pTime == nullptr)
+		return false;
+
+	if (m_bValidStartTime) {
+		if (EpgTimeToUtc(&m_StartTime, pTime))
+			return true;
+	}
+
+	::ZeroMemory(pTime, sizeof(SYSTEMTIME));
+
+	return false;
+}
+
+
+bool CEventInfo::GetEndTimeUtc(SYSTEMTIME *pTime) const
+{
+	if (pTime == nullptr)
+		return false;
+
+	if (m_bValidStartTime) {
+		CDateTime Time(m_StartTime);
+		if (Time.Offset(CDateTime::HOURS(-9) + CDateTime::SECONDS(m_Duration))) {
+			Time.Get(pTime);
+			return true;
+		}
+	}
+
+	::ZeroMemory(pTime, sizeof(SYSTEMTIME));
+
+	return false;
+}
+
+
+bool CEventInfo::GetStartTimeLocal(SYSTEMTIME *pTime) const
+{
+	if (pTime == nullptr)
+		return false;
+
+	if (m_bValidStartTime) {
+		if (EpgTimeToLocalTime(&m_StartTime, pTime))
+			return true;
+	}
+
+	::ZeroMemory(pTime, sizeof(SYSTEMTIME));
+
+	return false;
+}
+
+
+bool CEventInfo::GetEndTimeLocal(SYSTEMTIME *pTime) const
+{
+	if (pTime == nullptr)
+		return false;
+
+	SYSTEMTIME st;
+
+	if (GetEndTime(&st) && EpgTimeToLocalTime(&st, pTime))
+		return true;
+
+	::ZeroMemory(pTime, sizeof(SYSTEMTIME));
+
+	return false;
+}
+
+
+
+
+// EPGの日時(UTC+9)からUTCに変換する
+bool EpgTimeToUtc(const SYSTEMTIME *pEpgTime, SYSTEMTIME *pUtc)
+{
+	if (pEpgTime == nullptr || pUtc == nullptr)
+		return false;
+
+	CDateTime Time(*pEpgTime);
+
+	if (!Time.Offset(CDateTime::HOURS(-9))) {
+		::ZeroMemory(pUtc, sizeof(SYSTEMTIME));
+		return false;
+	}
+
+	Time.Get(pUtc);
+
+	return true;
+}
+
+
+// UTCからEPGの日時(UTC+9)に変換する
+bool UtcToEpgTime(const SYSTEMTIME *pUtc, SYSTEMTIME *pEpgTime)
+{
+	if (pUtc == nullptr || pEpgTime == nullptr)
+		return false;
+
+	CDateTime Time(*pUtc);
+
+	if (!Time.Offset(CDateTime::HOURS(9))) {
+		::ZeroMemory(pEpgTime, sizeof(SYSTEMTIME));
+		return false;
+	}
+
+	Time.Get(pEpgTime);
+
+	return true;
+}
+
+
+// EPGの日時(UTC+9)からローカル日時に変換する
+bool EpgTimeToLocalTime(const SYSTEMTIME *pEpgTime, SYSTEMTIME *pLocalTime)
+{
+	if (pEpgTime == nullptr || pLocalTime == nullptr)
+		return false;
+
+	SYSTEMTIME stUtc;
+
+	if (!EpgTimeToUtc(pEpgTime, &stUtc)
+			|| !::SystemTimeToTzSpecificLocalTime(nullptr, &stUtc, pLocalTime)) {
+		::ZeroMemory(pLocalTime, sizeof(SYSTEMTIME));
+		return false;
+	}
+
+	return true;
+}
+
+
+// 現在の日時をEPGの日時(UTC+9)で取得する
+bool GetCurrentEpgTime(SYSTEMTIME *pTime)
+{
+	if (pTime == nullptr)
+		return false;
+
+	SYSTEMTIME st;
+	::GetSystemTime(&st);
+
+	return UtcToEpgTime(&st, pTime);
+}
 
 
 // 拡張テキストを取得する

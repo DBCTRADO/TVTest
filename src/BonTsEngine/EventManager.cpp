@@ -564,20 +564,7 @@ void CEventManager::OnSection(CPsiStreamTable *pTable, const CPsiSection *pSecti
 	ServiceEventMap &Service = itrService->second;
 
 	SYSTEMTIME CurSysTime;
-#if 0
-	::GetLocalTime(&CurSysTime);
-#else
-	// UTC+9ÇÃåªç›ì˙éûÇéÊìæ
-	FILETIME ft;
-	ULARGE_INTEGER uli;
-	::GetSystemTimeAsFileTime(&ft);
-	uli.LowPart  = ft.dwLowDateTime;
-	uli.HighPart = ft.dwHighDateTime;
-	uli.QuadPart += 9LL * 60LL * 60LL * 10000000LL;
-	ft.dwLowDateTime  = uli.LowPart;
-	ft.dwHighDateTime = uli.HighPart;
-	::FileTimeToSystemTime(&ft, &CurSysTime);
-#endif
+	GetCurrentEpgTime(&CurSysTime);
 
 	const ULONGLONG CurTotTime = m_CurTotSeconds;
 	bool bUpdated = false;
