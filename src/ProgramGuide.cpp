@@ -200,8 +200,7 @@ int CEventItem::GetTitleText(LPTSTR pszText,int MaxLength) const
 
 int CEventItem::GetTimeText(LPTSTR pszText,int MaxLength) const
 {
-	return StdUtil::snprintf(pszText,MaxLength,TEXT("%d:%02d"),
-							 m_StartTime.wHour,m_StartTime.wMinute);
+	return EpgUtil::FormatEventTime(m_StartTime,0,pszText,MaxLength,EpgUtil::EVENT_TIME_START_ONLY);
 }
 
 

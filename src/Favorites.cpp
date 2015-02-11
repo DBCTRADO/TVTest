@@ -1165,18 +1165,13 @@ namespace TVTest
 	int CFavoritesMenu::GetEventText(const CEventInfoData *pEventInfo,
 									 LPTSTR pszText,int MaxLength) const
 	{
-		SYSTEMTIME stStart,stEnd;
-		TCHAR szEnd[16];
+		TCHAR szTime[EpgUtil::MAX_EVENT_TIME_LENGTH];
 
-		pEventInfo->GetStartTime(&stStart);
-		if (pEventInfo->GetEndTime(&stEnd))
-			StdUtil::snprintf(szEnd,lengthof(szEnd),
-							  TEXT("%02d:%02d"),stEnd.wHour,stEnd.wMinute);
-		else
-			szEnd[0]=_T('\0');
-		return StdUtil::snprintf(pszText,MaxLength,TEXT("%02d:%02d`%s %s"),
-								 stStart.wHour,stStart.wMinute,szEnd,
-								 pEventInfo->m_EventName.c_str());
+		EpgUtil::FormatEventTime(
+			pEventInfo,szTime,lengthof(szTime),EpgUtil::EVENT_TIME_HOUR_2DIGITS);
+
+		return StdUtil::snprintf(pszText,MaxLength,TEXT("%s %s"),
+								 szTime,pEventInfo->m_EventName.c_str());
 	}
 
 	void CFavoritesMenu::CreateFont(HDC hdc)
