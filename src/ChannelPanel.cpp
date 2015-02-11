@@ -220,7 +220,7 @@ bool CChannelPanel::UpdateEvents(CChannelEventInfo *pInfo,const SYSTEMTIME *pTim
 				i++;
 			}
 			if (m_pProgramList->GetNextEventInfo(NetworkID,TransportStreamID,ServiceID,&st,&EventInfo)
-					&& DiffSystemTime(&st,&EventInfo.m_StartTime)<8*60*60*1000) {
+					&& DiffSystemTime(&st,&EventInfo.m_StartTime)<8*TimeConsts::SYSTEMTIME_HOUR) {
 				if (pInfo->SetEventInfo(i,&EventInfo))
 					fChanged=true;
 			} else {
@@ -955,7 +955,9 @@ void CChannelPanel::Draw(HDC hdc,const RECT *prcPaint)
 
 				if (m_fShowProgressBar && j==0 && pChannelInfo->IsEventEnabled(0)) {
 					const CEventInfoData &EventInfo=pChannelInfo->GetEventInfo(0);
-					LONGLONG Elapsed=DiffSystemTime(&EventInfo.m_StartTime,&m_CurTime)/1000LL;
+					LONGLONG Elapsed=
+						DiffSystemTime(&EventInfo.m_StartTime,&m_CurTime)/
+							TimeConsts::SYSTEMTIME_SECOND;
 					if (Elapsed>=0) {
 						RECT rcProgress=rcText;
 						if (EventInfo.m_Duration>0) {

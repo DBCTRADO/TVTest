@@ -785,7 +785,7 @@ void CProgramInfoStatusItem::Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawR
 		RECT rcProgress=DrawRect;
 		rcProgress.top=rcProgress.bottom-(DrawRect.bottom-DrawRect.top)/3;
 		TVTest::Theme::Draw(hdc,rcProgress,m_ProgressBackStyle);
-		LONGLONG Elapsed=DiffSystemTime(&m_EventStartTime,&m_CurTime)/1000LL;
+		LONGLONG Elapsed=DiffSystemTime(&m_EventStartTime,&m_CurTime)/TimeConsts::SYSTEMTIME_SECOND;
 		if (Elapsed>0) {
 			TVTest::Theme::SubtractBorderRect(m_ProgressBackStyle.Border,&rcProgress);
 			if (m_EventDuration>0 && Elapsed<static_cast<LONGLONG>(m_EventDuration)) {

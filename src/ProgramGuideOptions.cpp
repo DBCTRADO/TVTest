@@ -438,7 +438,7 @@ bool CProgramGuideOptions::GetTimeRange(SYSTEMTIME *pstFirst,SYSTEMTIME *pstLast
 	GetCurrentEpgTime(&st);
 	SystemTimeTruncateHour(&st);
 	*pstFirst=st;
-	OffsetSystemTime(&st,(LONGLONG)m_ViewHours*(60*60*1000));
+	OffsetSystemTime(&st,(LONGLONG)m_ViewHours*TimeConsts::SYSTEMTIME_HOUR);
 	*pstLast=st;
 	return true;
 }
@@ -816,7 +816,7 @@ INT_PTR CProgramGuideOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM l
 					m_ViewHours=Value;
 					m_pProgramGuide->GetTimeRange(&stFirst,NULL);
 					stLast=stFirst;
-					OffsetSystemTime(&stLast,(LONGLONG)m_ViewHours*(60*60*1000));
+					OffsetSystemTime(&stLast,(LONGLONG)m_ViewHours*TimeConsts::SYSTEMTIME_HOUR);
 					m_pProgramGuide->SetTimeRange(&stFirst,&stLast);
 					fUpdate=true;
 				}

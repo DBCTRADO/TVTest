@@ -324,7 +324,7 @@ void CChannelListCategoryBase::UpdateChannelInfo()
 						pItem->GetTransportStreamID(),
 						pItem->GetServiceID(),
 						&stCurTime,&EventInfo)
-					&& DiffSystemTime(&stCurTime,&EventInfo.m_StartTime)<8*60*60*1000) {
+					&& DiffSystemTime(&stCurTime,&EventInfo.m_StartTime)<8*TimeConsts::SYSTEMTIME_HOUR) {
 				pItem->SetEvent(1,&EventInfo);
 			} else {
 				pItem->SetEvent(1,NULL);

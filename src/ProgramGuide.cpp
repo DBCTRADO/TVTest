@@ -113,7 +113,7 @@ CEventItem::CEventItem(const SYSTEMTIME &StartTime,DWORD Duration)
 	, m_fSelected(false)
 {
 	m_EndTime=StartTime;
-	OffsetSystemTime(&m_EndTime,Duration*1000);
+	OffsetSystemTime(&m_EndTime,Duration*TimeConsts::SYSTEMTIME_SECOND);
 }
 
 
@@ -369,7 +369,7 @@ void CEventLayout::InsertNullItems(const SYSTEMTIME &FirstTime,const SYSTEMTIME 
 			} else if (Cmp<0) {
 				LONGLONG Diff=DiffSystemTime(&stPrev,&stStart);
 
-				if (Diff<60*1000) {
+				if (Diff<TimeConsts::SYSTEMTIME_MINUTE) {
 					if (pPrevItem)
 						pPrevItem->SetEndTime(stStart);
 				} else {
@@ -670,7 +670,7 @@ void CServiceInfo::CalcLayout(CEventLayout *pEventList,const CServiceList *pServ
 		if (CompareSystemTime(&stFirst,&LastTime)>=0)
 			break;
 		stLast=stFirst;
-		OffsetSystemTime(&stLast,60*60*1000);
+		OffsetSystemTime(&stLast,TimeConsts::SYSTEMTIME_HOUR);
 		do {
 			if (CompareSystemTime(&pEventList->GetItem(i)->GetEndTime(),&stFirst)>0)
 				break;
@@ -689,13 +689,13 @@ void CServiceInfo::CalcLayout(CEventLayout *pEventList,const CServiceList *pServ
 
 			const SYSTEMTIME &stStart=pEventList->GetItem(i)->GetStartTime();
 			if (CompareSystemTime(&stStart,&stFirst)>0) {
-				Offset=(int)(DiffSystemTime(&stFirst,&stStart)*LinesPerHour/(60*60*1000));
+				Offset=(int)(DiffSystemTime(&stFirst,&stStart)*LinesPerHour/TimeConsts::SYSTEMTIME_HOUR);
 				Lines-=Offset;
 			}
 			if (Lines>ProgramsPerHour) {
 				const SYSTEMTIME &stEnd=pEventList->GetItem(i+ProgramsPerHour-1)->GetEndTime();
 				if (CompareSystemTime(&stEnd,&stLast)<0) {
-					Lines-=(int)(DiffSystemTime(&stEnd,&stLast)*LinesPerHour/(60*60*1000));
+					Lines-=(int)(DiffSystemTime(&stEnd,&stLast)*LinesPerHour/TimeConsts::SYSTEMTIME_HOUR);
 					if (Lines<ProgramsPerHour)
 						Lines=ProgramsPerHour;
 				}
@@ -1529,8 +1529,8 @@ void CProgramGuide::CalcLayout()
 					pLayout,&m_ServiceList,
 					hdc,stFirst,stLast,m_LinesPerHour);
 				m_EventLayoutList.Add(pLayout);
-				OffsetSystemTime(&stFirst,24*60*60*1000);
-				OffsetSystemTime(&stLast,24*60*60*1000);
+				OffsetSystemTime(&stFirst,TimeConsts::SYSTEMTIME_DAY);
+				OffsetSystemTime(&stLast,TimeConsts::SYSTEMTIME_DAY);
 			}
 		}
 	}
@@ -1874,7 +1874,7 @@ void CProgramGuide::DrawDayHeader(int Day,HDC hdc,const RECT &Rect) const
 	SYSTEMTIME st;
 	GetCurrentTimeRange(&st,NULL);
 	if (Day>0)
-		OffsetSystemTime(&st,Day*(24*60*60*1000));
+		OffsetSystemTime(&st,Day*TimeConsts::SYSTEMTIME_DAY);
 
 	DrawHeaderBackground(hdc,Rect,false);
 
@@ -1956,7 +1956,7 @@ void CProgramGuide::DrawTimeBar(HDC hdc,const RECT &Rect,bool fRight)
 			SYSTEMTIME st;
 			GetCurrentTimeRange(&st,NULL);
 			if (i>0)
-				OffsetSystemTime(&st,(LONGLONG)i*(1000*60*60));
+				OffsetSystemTime(&st,(LONGLONG)i*TimeConsts::SYSTEMTIME_HOUR);
 			StdUtil::snprintf(szText,lengthof(szText),TEXT("%d/%d(%s) %dŽž"),
 							  st.wMonth,st.wDay,GetDayOfWeekText(st.wDayOfWeek),Hour);
 		} else {
@@ -2298,10 +2298,10 @@ int CProgramGuide::GetCurTimeLinePos() const
 	LONGLONG Span;
 
 	GetCurrentTimeRange(&stFirst,NULL);
-	Span=DiffSystemTime(&stFirst,&m_stCurTime)%(24LL*60*60*1000);
+	Span=DiffSystemTime(&stFirst,&m_stCurTime)%(24LL*TimeConsts::SYSTEMTIME_HOUR);
 	if (Span<0)
-		Span+=24*60*60*1000;
-	return (int)(Span*(LONGLONG)(GetLineHeight()*m_LinesPerHour)/(60*60*1000));
+		Span+=24*TimeConsts::SYSTEMTIME_HOUR;
+	return (int)(Span*(LONGLONG)(GetLineHeight()*m_LinesPerHour)/TimeConsts::SYSTEMTIME_HOUR);
 }
 
 
@@ -2470,11 +2470,11 @@ bool CProgramGuide::SetTimePos(int Pos)
 
 	GetCurrentTimeRange(&stBegin,&stEnd);
 	st=stBegin;
-	OffsetSystemTime(&st,(LONGLONG)(Pos*60/m_LinesPerHour-stBegin.wHour*60)*60*1000);
+	OffsetSystemTime(&st,(LONGLONG)(Pos*60/m_LinesPerHour-stBegin.wHour*60)*TimeConsts::SYSTEMTIME_MINUTE);
 	if (CompareSystemTime(&st,&stBegin)<0)
-		OffsetSystemTime(&st,24*60*60*1000);
+		OffsetSystemTime(&st,TimeConsts::SYSTEMTIME_DAY);
 	else if (CompareSystemTime(&st,&stEnd)>=0)
-		OffsetSystemTime(&st,-24*60*60*1000);
+		OffsetSystemTime(&st,-TimeConsts::SYSTEMTIME_DAY);
 	return ScrollToTime(st);
 }
 
@@ -2984,9 +2984,9 @@ bool CProgramGuide::GetCurrentTimeRange(SYSTEMTIME *pFirstTime,SYSTEMTIME *pLast
 	if (m_ListMode==LIST_WEEK) {
 		GetDayTimeRange(DAY_TOMORROW,pFirstTime,pLastTime);
 		if (pFirstTime!=NULL)
-			OffsetSystemTime(pFirstTime,-24*60*60*1000);
+			OffsetSystemTime(pFirstTime,-TimeConsts::SYSTEMTIME_DAY);
 		if (pLastTime!=NULL)
-			OffsetSystemTime(pLastTime,-24*60*60*1000);
+			OffsetSystemTime(pLastTime,-TimeConsts::SYSTEMTIME_DAY);
 		return true;
 	}
 
@@ -3010,7 +3010,7 @@ bool CProgramGuide::GetDayTimeRange(int Day,SYSTEMTIME *pFirstTime,SYSTEMTIME *p
 			else
 				Offset-=24-m_BeginHour;
 		}
-		Offset*=60*60*1000;
+		Offset*=TimeConsts::SYSTEMTIME_HOUR;
 		OffsetSystemTime(&stFirst,Offset);
 		OffsetSystemTime(&stLast,Offset);
 	}
@@ -3075,16 +3075,16 @@ bool CProgramGuide::ScrollToTime(const SYSTEMTIME &Time,bool fHour)
 		st.wMonth=stFirst.wMonth;
 		st.wDay=stFirst.wDay;
 		if (CompareSystemTime(&st,&stFirst)<0)
-			OffsetSystemTime(&st,24LL*60*60*1000);
+			OffsetSystemTime(&st,TimeConsts::SYSTEMTIME_DAY);
 	}
 
 	LONGLONG Diff=DiffSystemTime(&stFirst,&st);
 	POINT Pos;
 	Pos.x=m_ScrollPos.x;
 	if (fHour)
-		Pos.y=(int)(Diff/(60*60*1000))*m_LinesPerHour;
+		Pos.y=(int)(Diff/TimeConsts::SYSTEMTIME_HOUR)*m_LinesPerHour;
 	else
-		Pos.y=(int)(Diff/(60*1000)*m_LinesPerHour/60);
+		Pos.y=(int)(Diff/TimeConsts::SYSTEMTIME_MINUTE*m_LinesPerHour/60);
 	SetScrollPos(Pos);
 
 	return true;
@@ -3183,7 +3183,7 @@ bool CProgramGuide::JumpEvent(WORD NetworkID,WORD TSID,WORD ServiceID,WORD Event
 		Pos.x=0;
 	else if (Pos.x>max(Size.cx-Page.cx,0))
 		Pos.x=max(Size.cx-Page.cx,0);
-	Pos.y=(int)(DiffSystemTime(&stFirst,&pEventInfo->m_StartTime)/(1000*60))*m_LinesPerHour/60;
+	Pos.y=(int)(DiffSystemTime(&stFirst,&pEventInfo->m_StartTime)/TimeConsts::SYSTEMTIME_MINUTE)*m_LinesPerHour/60;
 	const int YOffset=(Page.cy-(int)(pEventInfo->m_Duration*m_LinesPerHour/(60*60)))/2;
 	if (YOffset>0)
 		Pos.y-=YOffset;
@@ -5964,7 +5964,7 @@ bool CTimeToolbar::GetTimeByCommand(int Command,SYSTEMTIME *pTime) const
 	if (!m_pProgramGuide->GetCurrentTimeRange(pTime,NULL))
 		return false;
 
-	OffsetSystemTime(pTime,HIWORD(tbbi.lParam)*(60*60*1000));
+	OffsetSystemTime(pTime,HIWORD(tbbi.lParam)*TimeConsts::SYSTEMTIME_HOUR);
 
 	return true;
 }
@@ -5990,7 +5990,7 @@ void CTimeToolbar::ChangeTime()
 				TimeList[i].Hour=st.wHour;
 				TimeList[i].Offset=(i-1)*m_Settings.Interval;
 				TimeList[i].Command=CM_PROGRAMGUIDE_TIME_FIRST+(i-1);
-				OffsetSystemTime(&st,m_Settings.Interval*60*60*1000);
+				OffsetSystemTime(&st,m_Settings.Interval*TimeConsts::SYSTEMTIME_HOUR);
 			}
 		} else if (m_Settings.Time==TimeBarSettings::TIME_CUSTOM) {
 			std::vector<TVTest::String> Times;
@@ -6009,7 +6009,7 @@ void CTimeToolbar::ChangeTime()
 				if (!Hours.empty()) {
 					TsEngine::InsertionSort(Hours);
 					const int FirstHour=stFirst.wHour;
-					const int LastHour=FirstHour+(int)(DiffSystemTime(&stFirst,&stLast)/(60*60*1000));
+					const int LastHour=FirstHour+(int)(DiffSystemTime(&stFirst,&stLast)/TimeConsts::SYSTEMTIME_HOUR);
 					size_t j=0;
 					for (;j<Hours.size();j++) {
 						if (Hours[j]>=stFirst.wHour)

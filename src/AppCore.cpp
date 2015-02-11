@@ -1095,7 +1095,7 @@ bool CAppCore::GenerateRecordFileName(LPTSTR pszFileName,int MaxFileName) const
 			GetCurrentEpgTime(&stCur);
 		if (m_App.CoreEngine.m_DtvEngine.GetEventTime(&stStart,nullptr,true)) {
 			LONGLONG Diff=DiffSystemTime(&stCur,&stStart);
-			if (Diff>=0 && Diff<60*1000)
+			if (Diff>=0 && Diff<TimeConsts::SYSTEMTIME_MINUTE)
 				fNext=true;
 		}
 		if (m_App.CoreEngine.m_DtvEngine.GetEventName(szEventName,lengthof(szEventName),fNext))

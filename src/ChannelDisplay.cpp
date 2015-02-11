@@ -594,7 +594,7 @@ bool CChannelDisplay::UpdateChannelInfo(int Index)
 						pChannel->GetTransportStreamID(),
 						pChannel->GetServiceID(),
 						&m_EpgBaseTime,&EventInfo)
-					&& DiffSystemTime(&m_EpgBaseTime,&EventInfo.m_StartTime)<8*60*60*1000) {
+					&& DiffSystemTime(&m_EpgBaseTime,&EventInfo.m_StartTime)<8*TimeConsts::SYSTEMTIME_HOUR) {
 				pChannel->SetEvent(1,&EventInfo);
 			} else {
 				pChannel->SetEvent(1,NULL);

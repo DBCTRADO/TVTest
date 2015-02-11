@@ -1192,7 +1192,7 @@ namespace TVTest
 	void CFavoritesMenu::GetBaseTime(SYSTEMTIME *pTime)
 	{
 		GetCurrentEpgTime(pTime);
-		OffsetSystemTime(pTime,120*1000);
+		OffsetSystemTime(pTime,2*TimeConsts::SYSTEMTIME_MINUTE);
 	}
 
 

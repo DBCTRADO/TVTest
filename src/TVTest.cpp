@@ -93,7 +93,7 @@ bool CTotTimeAdjuster::AdjustTime()
 			if (::AdjustTokenPrivileges(hToken,FALSE, &tkp,sizeof(TOKEN_PRIVILEGES),NULL,0)
 					&& ::GetLastError()==ERROR_SUCCESS) {
 				// バッファがあるので少し時刻を戻す
-				OffsetSystemTime(&st,-2000);
+				OffsetSystemTime(&st,-2*TimeConsts::SYSTEMTIME_SECOND);
 				if (::SetLocalTime(&st)) {
 					g_App.AddLog(TEXT("TOTで時刻合わせを行いました。(%d/%d/%d %d:%02d:%02d)"),
 								 st.wYear,st.wMonth,st.wDay,st.wHour,st.wMinute,st.wSecond);

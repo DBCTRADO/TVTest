@@ -422,7 +422,7 @@ bool CProgramListPanel::UpdateListInfo(const CChannelInfo *pChannelInfo)
 	stFirst.wSecond=0;
 	stFirst.wMilliseconds=0;
 	stLast=stFirst;
-	OffsetSystemTime(&stLast,24*60*60*1000);
+	OffsetSystemTime(&stLast,24*TimeConsts::SYSTEMTIME_HOUR);
 	fChanged=false;
 	i=0;
 	for (itrEvent=pServiceInfo->m_EventList.EventDataMap.begin();

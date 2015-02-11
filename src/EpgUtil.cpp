@@ -187,7 +187,7 @@ namespace EpgUtil
 		if ((Flags & EVENT_TIME_START_ONLY)==0) {
 			if (Duration>0) {
 				SYSTEMTIME EndTime=StartTime;
-				if (OffsetSystemTime(&EndTime,Duration*1000)) {
+				if (OffsetSystemTime(&EndTime,Duration*TimeConsts::SYSTEMTIME_SECOND)) {
 					StdUtil::snprintf(szEndTime,lengthof(szEndTime),pszTimeFormat,
 									  EndTime.wHour,EndTime.wMinute);
 				}

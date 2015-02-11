@@ -105,7 +105,7 @@ bool CFeaturedEventsSearcher::Update()
 	SYSTEMTIME StartTime,PeriodTime;
 	GetCurrentEpgTime(&StartTime);
 	PeriodTime=StartTime;
-	OffsetSystemTime(&PeriodTime,(LONGLONG)m_Settings.GetPeriodSeconds()*1000);
+	OffsetSystemTime(&PeriodTime,(LONGLONG)m_Settings.GetPeriodSeconds()*TimeConsts::SYSTEMTIME_SECOND);
 
 	const CEventSearchServiceList &DefaultServiceList=m_Settings.GetDefaultServiceList();
 	CEventSearchServiceList ServiceIDList(DefaultServiceList);
