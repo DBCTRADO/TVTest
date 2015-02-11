@@ -2947,22 +2947,20 @@ bool CProgramGuide::SetBeginHour(int Hour)
 
 bool CProgramGuide::SetTimeRange(const SYSTEMTIME *pFirstTime,const SYSTEMTIME *pLastTime)
 {
-	FILETIME ftFirst,ftLast;
+	SYSTEMTIME stFirst,stLast;
 
-	if (CompareSystemTime(pFirstTime,pLastTime)>=0)
+	stFirst=*pFirstTime;
+	SystemTimeTruncateHour(&stFirst);
+	stLast=*pLastTime;
+	SystemTimeTruncateHour(&stLast);
+
+	int Hours=(int)(DiffSystemTime(&stFirst,&stLast)/TimeConsts::SYSTEMTIME_HOUR);
+	if (Hours<=0)
 		return false;
 
-	m_stFirstTime=*pFirstTime;
-	m_stFirstTime.wMinute=0;
-	m_stFirstTime.wSecond=0;
-	m_stFirstTime.wMilliseconds=0;
-	m_stLastTime=*pLastTime;
-	m_stLastTime.wMinute=0;
-	m_stLastTime.wSecond=0;
-	m_stLastTime.wMilliseconds=0;
-	::SystemTimeToFileTime(&m_stFirstTime,&ftFirst);
-	::SystemTimeToFileTime(&m_stLastTime,&ftLast);
-	m_Hours=(int)((ftLast-ftFirst)/(FILETIME_SECOND*60*60));
+	m_stFirstTime=stFirst;
+	m_stLastTime=stLast;
+	m_Hours=Hours;
 
 	if (m_pFrame!=NULL)
 		m_pFrame->OnTimeRangeChanged();
