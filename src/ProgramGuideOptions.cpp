@@ -435,10 +435,8 @@ bool CProgramGuideOptions::GetTimeRange(SYSTEMTIME *pstFirst,SYSTEMTIME *pstLast
 {
 	SYSTEMTIME st;
 
-	::GetLocalTime(&st);
-	st.wMinute=0;
-	st.wSecond=0;
-	st.wMilliseconds=0;
+	GetCurrentEpgTime(&st);
+	SystemTimeTruncateHour(&st);
 	*pstFirst=st;
 	OffsetSystemTime(&st,(LONGLONG)m_ViewHours*(60*60*1000));
 	*pstLast=st;
