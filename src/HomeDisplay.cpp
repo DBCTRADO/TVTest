@@ -292,7 +292,7 @@ void CChannelListCategoryBase::UpdateChannelInfo()
 	CLogoManager &LogoManager=GetAppClass().LogoManager;
 	SYSTEMTIME stCurTime;
 
-	GetCurrentJST(&stCurTime);
+	GetCurrentEpgTime(&stCurTime);
 
 	for (size_t i=0;i<m_ItemList.size();i++) {
 		CChannelItemBase *pItem=m_ItemList[i];

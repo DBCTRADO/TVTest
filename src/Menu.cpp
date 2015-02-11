@@ -482,7 +482,7 @@ const CEventInfoData *CChannelMenuItem::GetEventInfo(CEpgProgramList *pProgramLi
 			if (pCurTime!=NULL)
 				st=*pCurTime;
 			else
-				GetCurrentJST(&st);
+				GetCurrentEpgTime(&st);
 		} else {
 			if (!m_EventList[Index-1].EventInfo.GetEndTime(&st))
 				return NULL;
@@ -892,7 +892,7 @@ void CChannelMenu::CreateFont(HDC hdc)
 
 void CChannelMenu::GetBaseTime(SYSTEMTIME *pTime)
 {
-	GetCurrentJST(pTime);
+	GetCurrentEpgTime(pTime);
 	OffsetSystemTime(pTime,120*1000);
 }
 

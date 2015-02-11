@@ -546,7 +546,7 @@ bool CChannelDisplay::SetCurTuner(int Index,bool fUpdate)
 		}
 		m_CurChannel=-1;
 		m_ChannelScrollPos=0;
-		GetCurrentJST(&m_EpgBaseTime);
+		GetCurrentEpgTime(&m_EpgBaseTime);
 		m_EpgBaseTime.wSecond=0;
 		m_EpgBaseTime.wMilliseconds=0;
 		UpdateChannelInfo(Index);

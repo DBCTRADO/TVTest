@@ -1820,15 +1820,15 @@ LRESULT CPlugin::OnCallback(TVTest::PluginParam *pParam,UINT Message,LPARAM lPar
 												   &EventData))
 					return reinterpret_cast<LRESULT>((TVTest::EpgEventInfo*)NULL);
 			} else if (pQueryInfo->Type==TVTest::EPG_EVENT_QUERY_TIME) {
-				SYSTEMTIME stUTC,stLocal;
+				SYSTEMTIME stUTC,stEpg;
 
 				if (!::FileTimeToSystemTime(&pQueryInfo->Time,&stUTC)
-						|| !UTCToJST(&stUTC,&stLocal))
+						|| !UtcToEpgTime(&stUTC,&stEpg))
 					return reinterpret_cast<LRESULT>((TVTest::EpgEventInfo*)NULL);
 				if (!pEpgProgramList->GetEventInfo(pQueryInfo->NetworkID,
 												   pQueryInfo->TransportStreamID,
 												   pQueryInfo->ServiceID,
-												   &stLocal,
+												   &stEpg,
 												   &EventData))
 					return reinterpret_cast<LRESULT>((TVTest::EpgEventInfo*)NULL);
 			} else {

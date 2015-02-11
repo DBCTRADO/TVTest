@@ -678,7 +678,7 @@ namespace TVTest
 				if (pCurTime!=NULL)
 					st=*pCurTime;
 				else
-					GetCurrentJST(&st);
+					GetCurrentEpgTime(&st);
 			} else {
 				if (!m_EventList[Index-1].EventInfo.GetEndTime(&st))
 					return NULL;
@@ -1196,7 +1196,7 @@ namespace TVTest
 
 	void CFavoritesMenu::GetBaseTime(SYSTEMTIME *pTime)
 	{
-		GetCurrentJST(pTime);
+		GetCurrentEpgTime(pTime);
 		OffsetSystemTime(pTime,120*1000);
 	}
 

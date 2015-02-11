@@ -309,7 +309,7 @@ bool CEpgProgramList::UpdateService(CEventManager *pEventManager,
 			ULONGLONG CurTime;
 			if (fDiscardEndedEvents) {
 				SYSTEMTIME st;
-				GetCurrentJST(&st);
+				GetCurrentEpgTime(&st);
 				CurTime=CEventManager::SystemTimeToSeconds(st);
 			}
 
@@ -1380,7 +1380,7 @@ bool CEpgProgramList::SaveToFile(LPCTSTR pszFileName)
 	}
 
 	SYSTEMTIME stCurrent,st;
-	GetCurrentJST(&stCurrent);
+	GetCurrentEpgTime(&stCurrent);
 
 	WORD *pNumEvents=new WORD[m_ServiceMap.size()];
 	DWORD NumServices=0;

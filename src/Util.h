@@ -35,15 +35,7 @@ struct TimeConsts {
 int CompareSystemTime(const SYSTEMTIME *pTime1,const SYSTEMTIME *pTime2);
 bool OffsetSystemTime(SYSTEMTIME *pTime,LONGLONG Offset);
 LONGLONG DiffSystemTime(const SYSTEMTIME *pStartTime,const SYSTEMTIME *pEndTime);
-bool SystemTimeToLocalTimeNoDST(const SYSTEMTIME *pUTCTime,SYSTEMTIME *pLocalTime);
 void GetLocalTimeAsFileTime(FILETIME *pTime);
-void GetLocalTimeNoDST(SYSTEMTIME *pTime);
-void GetLocalTimeNoDST(FILETIME *pTime);
-inline bool UTCToJST(SYSTEMTIME *pTime) { return OffsetSystemTime(pTime,9*60*60*1000); }
-bool UTCToJST(const SYSTEMTIME *pUTCTime,SYSTEMTIME *pJST);
-inline void UTCToJST(FILETIME *pTime) { *pTime+=9LL*FILETIME_HOUR; }
-void GetCurrentJST(SYSTEMTIME *pTime);
-void GetCurrentJST(FILETIME *pTime);
 void SystemTimeTruncateDay(SYSTEMTIME *pTime);
 void SystemTimeTruncateHour(SYSTEMTIME *pTime);
 void SystemTimeTruncateMinute(SYSTEMTIME *pTime);

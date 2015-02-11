@@ -418,7 +418,7 @@ bool CProgramListPanel::UpdateListInfo(const CChannelInfo *pChannelInfo)
 		return false;
 	}
 	NewItemList.Reserve(NumEvents);
-	GetCurrentJST(&stFirst);
+	GetCurrentEpgTime(&stFirst);
 	stFirst.wSecond=0;
 	stFirst.wMilliseconds=0;
 	stLast=stFirst;

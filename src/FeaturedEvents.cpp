@@ -103,7 +103,7 @@ bool CFeaturedEventsSearcher::Update()
 	Clear();
 
 	SYSTEMTIME StartTime,PeriodTime;
-	GetCurrentJST(&StartTime);
+	GetCurrentEpgTime(&StartTime);
 	PeriodTime=StartTime;
 	OffsetSystemTime(&PeriodTime,(LONGLONG)m_Settings.GetPeriodSeconds()*1000);
 

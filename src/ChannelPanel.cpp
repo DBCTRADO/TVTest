@@ -205,7 +205,7 @@ bool CChannelPanel::UpdateEvents(CChannelEventInfo *pInfo,const SYSTEMTIME *pTim
 	if (pTime!=NULL)
 		st=*pTime;
 	else
-		GetCurrentJST(&st);
+		GetCurrentEpgTime(&st);
 	const int NumEvents=pInfo->IsExpanded()?m_ExpandEvents:m_EventsPerChannel;
 	for (int i=0;i<NumEvents;i++) {
 		if (m_pProgramList->GetEventInfo(NetworkID,TransportStreamID,ServiceID,&st,&EventInfo)) {
@@ -247,7 +247,7 @@ bool CChannelPanel::SetChannelList(const CChannelList *pChannelList,bool fSetEve
 	if (pChannelList!=NULL) {
 		SYSTEMTIME stCurrent;
 
-		GetCurrentJST(&stCurrent);
+		GetCurrentEpgTime(&stCurrent);
 		for (int i=0;i<pChannelList->NumChannels();i++) {
 			const CChannelInfo *pChInfo=pChannelList->GetChannelInfo(i);
 
@@ -285,7 +285,7 @@ bool CChannelPanel::UpdateAllChannels(bool fUpdateProgramList)
 	if (m_pProgramList!=NULL && !m_ChannelList.empty()) {
 		bool fChanged=false;
 
-		GetCurrentJST(&m_UpdatedTime);
+		GetCurrentEpgTime(&m_UpdatedTime);
 		for (size_t i=0;i<m_ChannelList.size();i++) {
 			CChannelEventInfo *pInfo=m_ChannelList[i];
 
@@ -337,7 +337,7 @@ bool CChannelPanel::UpdateChannels(WORD NetworkID,WORD TransportStreamID)
 	SYSTEMTIME st;
 	bool fChanged=false;
 
-	GetCurrentJST(&st);
+	GetCurrentEpgTime(&st);
 	for (size_t i=0;i<m_ChannelList.size();i++) {
 		CChannelEventInfo *pInfo=m_ChannelList[i];
 
@@ -591,7 +591,7 @@ void CChannelPanel::SetShowProgressBar(bool fShowProgressBar)
 		m_fShowProgressBar=fShowProgressBar;
 		if (m_hwnd!=NULL) {
 			if (m_fShowProgressBar)
-				GetCurrentJST(&m_CurTime);
+				GetCurrentEpgTime(&m_CurTime);
 			Invalidate();
 		}
 	}
@@ -612,7 +612,7 @@ bool CChannelPanel::QueryUpdateProgress()
 {
 	if (m_fShowProgressBar && m_hwnd!=NULL) {
 		SYSTEMTIME st;
-		GetCurrentJST(&st);
+		GetCurrentEpgTime(&st);
 		return m_CurTime.wSecond/10!=st.wSecond/10
 			|| m_CurTime.wMinute!=st.wMinute
 			|| m_CurTime.wHour!=st.wHour
@@ -627,7 +627,7 @@ bool CChannelPanel::QueryUpdateProgress()
 void CChannelPanel::UpdateProgress()
 {
 	if (m_fShowProgressBar && m_hwnd!=NULL) {
-		GetCurrentJST(&m_CurTime);
+		GetCurrentEpgTime(&m_CurTime);
 		Invalidate();
 	}
 }
@@ -643,7 +643,7 @@ bool CChannelPanel::QueryUpdate() const
 {
 	SYSTEMTIME st;
 
-	GetCurrentJST(&st);
+	GetCurrentEpgTime(&st);
 	return m_UpdatedTime.wMinute!=st.wMinute
 		|| m_UpdatedTime.wHour!=st.wHour
 		|| m_UpdatedTime.wDay!=st.wDay
@@ -668,7 +668,7 @@ LRESULT CChannelPanel::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam
 			m_Chevron.Load(m_hinst,IDB_CHEVRON,CHEVRON_WIDTH,CHEVRON_HEIGHT);
 
 			if (m_fShowProgressBar)
-				GetCurrentJST(&m_CurTime);
+				GetCurrentEpgTime(&m_CurTime);
 
 			CFeaturedEvents &FeaturedEvents=GetAppClass().FeaturedEvents;
 			FeaturedEvents.AddEventHandler(this);

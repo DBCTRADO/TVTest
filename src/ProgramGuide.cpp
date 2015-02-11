@@ -1365,7 +1365,7 @@ bool CProgramGuide::UpdateProgramGuide(bool fUpdateList)
 		if (UpdateList(fUpdateList)) {
 			CalcLayout();
 			SetScrollBar();
-			GetCurrentJST(&m_stCurTime);
+			GetCurrentEpgTime(&m_stCurTime);
 		}
 
 		SetMessage(NULL,false);
@@ -3124,7 +3124,7 @@ bool CProgramGuide::SetViewDay(int Day)
 			CalcLayout();
 			SetScrollBar();
 			SetCaption();
-			GetCurrentJST(&m_stCurTime);
+			GetCurrentEpgTime(&m_stCurTime);
 			Invalidate();
 
 			RestoreTimePos();
@@ -3792,7 +3792,7 @@ LRESULT CProgramGuide::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam
 			if (m_fShowFeaturedMark)
 				m_FeaturedEventsMatcher.BeginMatching(FeaturedEvents.GetSettings());
 
-			GetCurrentJST(&m_stCurTime);
+			GetCurrentEpgTime(&m_stCurTime);
 			::SetTimer(hwnd,TIMER_ID_UPDATECURTIME,1000,NULL);
 		}
 		return 0;
@@ -4097,7 +4097,7 @@ LRESULT CProgramGuide::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam
 			if (m_Day==DAY_TODAY) {
 				SYSTEMTIME st;
 
-				GetCurrentJST(&st);
+				GetCurrentEpgTime(&st);
 				if (m_stCurTime.wMinute!=st.wMinute
 						|| m_stCurTime.wHour!=st.wHour
 						|| m_stCurTime.wDay!=st.wDay

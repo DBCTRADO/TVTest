@@ -224,74 +224,12 @@ LONGLONG DiffSystemTime(const SYSTEMTIME *pStartTime,const SYSTEMTIME *pEndTime)
 }
 
 
-bool SystemTimeToLocalTimeNoDST(const SYSTEMTIME *pUTCTime,SYSTEMTIME *pLocalTime)
-{
-	TIME_ZONE_INFORMATION tzi;
-
-	if (GetTimeZoneInformation(&tzi)!=TIME_ZONE_ID_INVALID) {
-		tzi.StandardDate.wMonth=0;
-		tzi.DaylightDate.wMonth=0;
-		if (SystemTimeToTzSpecificLocalTime(&tzi,pUTCTime,pLocalTime))
-			return true;
-	}
-	return SystemTimeToTzSpecificLocalTime(NULL,pUTCTime,pLocalTime)!=FALSE;
-}
-
-
 void GetLocalTimeAsFileTime(FILETIME *pTime)
 {
 	SYSTEMTIME st;
 
 	GetLocalTime(&st);
 	SystemTimeToFileTime(&st,pTime);
-}
-
-
-void GetLocalTimeNoDST(SYSTEMTIME *pTime)
-{
-	TIME_ZONE_INFORMATION tzi;
-
-	if (GetTimeZoneInformation(&tzi)!=TIME_ZONE_ID_INVALID) {
-		SYSTEMTIME stUTC;
-
-		tzi.StandardDate.wMonth=0;
-		tzi.DaylightDate.wMonth=0;
-		GetSystemTime(&stUTC);
-		if (SystemTimeToTzSpecificLocalTime(&tzi,&stUTC,pTime))
-			return;
-	}
-	GetLocalTime(pTime);
-}
-
-
-void GetLocalTimeNoDST(FILETIME *pTime)
-{
-	SYSTEMTIME st;
-
-	GetLocalTimeNoDST(&st);
-	SystemTimeToFileTime(&st,pTime);
-}
-
-
-bool UTCToJST(const SYSTEMTIME *pUTCTime,SYSTEMTIME *pJST)
-{
-	*pJST=*pUTCTime;
-	return UTCToJST(pJST);
-}
-
-
-void GetCurrentJST(SYSTEMTIME *pTime)
-{
-	::GetSystemTime(pTime);
-	if (!UTCToJST(pTime))
-		::GetLocalTime(pTime);
-}
-
-
-void GetCurrentJST(FILETIME *pTime)
-{
-	::GetSystemTimeAsFileTime(pTime);
-	UTCToJST(pTime);
 }
 
 
