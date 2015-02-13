@@ -158,18 +158,26 @@ namespace EpgUtil
 		if (pszTime==NULL || MaxLength<1)
 			return 0;
 
+		SYSTEMTIME stStart;
+
+		if ((Flags & EVENT_TIME_NO_CONVERT)!=0) {
+			stStart=StartTime;
+		} else {
+			EpgTimeToDisplayTime(StartTime,&stStart);
+		}
+
 		TCHAR szDate[32];
 		if ((Flags & EVENT_TIME_DATE)!=0) {
 			int Length=0;
 			if ((Flags & EVENT_TIME_YEAR)!=0) {
 				Length=StdUtil::snprintf(szDate,lengthof(szDate),TEXT("%d/"),
-										 StartTime.wYear);
+										 stStart.wYear);
 			}
 			StdUtil::snprintf(szDate+Length,lengthof(szDate)-Length,
 							  TEXT("%d/%d(%s) "),
-							  StartTime.wMonth,
-							  StartTime.wDay,
-							  GetDayOfWeekText(StartTime.wDayOfWeek));
+							  stStart.wMonth,
+							  stStart.wDay,
+							  GetDayOfWeekText(stStart.wDayOfWeek));
 		} else {
 			szDate[0]=_T('\0');
 		}
@@ -180,13 +188,13 @@ namespace EpgUtil
 
 		StdUtil::snprintf(szStartTime,lengthof(szStartTime),
 						  pszTimeFormat,
-						  StartTime.wHour,
-						  StartTime.wMinute);
+						  stStart.wHour,
+						  stStart.wMinute);
 
 		szEndTime[0]=_T('\0');
 		if ((Flags & EVENT_TIME_START_ONLY)==0) {
 			if (Duration>0) {
-				SYSTEMTIME EndTime=StartTime;
+				SYSTEMTIME EndTime=stStart;
 				if (OffsetSystemTime(&EndTime,Duration*TimeConsts::SYSTEMTIME_SECOND)) {
 					StdUtil::snprintf(szEndTime,lengthof(szEndTime),pszTimeFormat,
 									  EndTime.wHour,EndTime.wMinute);
@@ -202,6 +210,85 @@ namespace EpgUtil
 								 szStartTime,
 								 (Flags & EVENT_TIME_START_ONLY)==0?TEXT("Å`"):TEXT(""),
 								 szEndTime);
+	}
+
+
+	bool EpgTimeToDisplayTime(const SYSTEMTIME &EpgTime,SYSTEMTIME *pDisplayTime)
+	{
+		if (pDisplayTime==NULL)
+			return false;
+
+		switch (GetAppClass().EpgOptions.GetEpgTimeMode()) {
+		case CEpgOptions::EPGTIME_RAW:
+			*pDisplayTime=EpgTime;
+			return true;
+
+		case CEpgOptions::EPGTIME_LOCAL:
+			return EpgTimeToLocalTime(&EpgTime,pDisplayTime);
+
+		case CEpgOptions::EPGTIME_UTC:
+			return EpgTimeToUtc(&EpgTime,pDisplayTime);
+		}
+
+		return false;
+	}
+
+
+	bool EpgTimeToDisplayTime(SYSTEMTIME *pTime)
+	{
+		if (pTime==NULL)
+			return false;
+
+		SYSTEMTIME st;
+
+		if (!EpgTimeToDisplayTime(*pTime,&st))
+			return false;
+
+		*pTime=st;
+
+		return true;
+	}
+
+
+	bool DisplayTimeToEpgTime(const SYSTEMTIME &DisplayTime,SYSTEMTIME *pEpgTime)
+	{
+		if (pEpgTime==NULL)
+			return false;
+
+		switch (GetAppClass().EpgOptions.GetEpgTimeMode()) {
+		case CEpgOptions::EPGTIME_RAW:
+			*pEpgTime=DisplayTime;
+			return true;
+
+		case CEpgOptions::EPGTIME_LOCAL:
+			{
+				SYSTEMTIME st;
+
+				return ::TzSpecificLocalTimeToSystemTime(NULL,&DisplayTime,&st)
+					&& UtcToEpgTime(&st,pEpgTime);
+			}
+
+		case CEpgOptions::EPGTIME_UTC:
+			return UtcToEpgTime(&DisplayTime,pEpgTime);
+		}
+
+		return false;
+	}
+
+
+	bool DisplayTimeToEpgTime(SYSTEMTIME *pTime)
+	{
+		if (pTime==NULL)
+			return false;
+
+		SYSTEMTIME st;
+
+		if (!DisplayTimeToEpgTime(*pTime,&st))
+			return false;
+
+		*pTime=st;
+
+		return true;
 	}
 
 

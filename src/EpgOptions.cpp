@@ -21,6 +21,7 @@ CEpgOptions::CEpgOptions()
 	, m_fUpdateBSExtended(false)
 	, m_fUpdateCSExtended(false)
 	, m_fUseEDCBData(false)
+	, m_EpgTimeMode(EPGTIME_LOCAL)
 	, m_fSaveLogoFile(true)
 
 	, m_hLoadThread(NULL)
@@ -90,6 +91,11 @@ bool CEpgOptions::ReadSettings(CSettings &Settings)
 	Settings.Read(TEXT("UseEpgData"),&m_fUseEDCBData);
 	Settings.Read(TEXT("EpgDataFolder"),m_szEDCBDataFolder,lengthof(m_szEDCBDataFolder));
 
+	int Value;
+	if (Settings.Read(TEXT("EpgTimeMode"),&Value)
+			&& Value>=EPGTIME_FIRST && Value<=EPGTIME_LAST)
+		m_EpgTimeMode=(EpgTimeMode)Value;
+
 	Settings.Read(TEXT("SaveLogoData"),&m_fSaveLogoFile);
 	Settings.Read(TEXT("LogoDataFileName"),m_szLogoFileName,lengthof(m_szLogoFileName));
 
@@ -127,6 +133,7 @@ bool CEpgOptions::WriteSettings(CSettings &Settings)
 	Settings.Write(TEXT("EpgUpdateCSExtended"),m_fUpdateCSExtended);
 	Settings.Write(TEXT("UseEpgData"),m_fUseEDCBData);
 	Settings.Write(TEXT("EpgDataFolder"),m_szEDCBDataFolder);
+	Settings.Write(TEXT("EpgTimeMode"),(int)m_EpgTimeMode);
 
 	Settings.Write(TEXT("SaveLogoData"),m_fSaveLogoFile);
 	Settings.Write(TEXT("LogoDataFileName"),m_szLogoFileName);

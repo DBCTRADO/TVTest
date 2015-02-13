@@ -26,7 +26,8 @@ namespace EpgUtil
 		EVENT_TIME_START_ONLY     = 0x0002U,
 		EVENT_TIME_DATE           = 0x0004U,
 		EVENT_TIME_YEAR           = 0x0008U,
-		EVENT_TIME_UNDECIDED_TEXT = 0x0010U
+		EVENT_TIME_UNDECIDED_TEXT = 0x0010U,
+		EVENT_TIME_NO_CONVERT     = 0x0020U
 	};
 	enum {
 		MAX_EVENT_TIME_LENGTH = 64
@@ -36,6 +37,10 @@ namespace EpgUtil
 						LPTSTR pszTime,int MaxLength,unsigned int Flags=0);
 	int FormatEventTime(const SYSTEMTIME &StartTime,DWORD Duration,
 						LPTSTR pszTime,int MaxLength,unsigned int Flags=0);
+	bool EpgTimeToDisplayTime(const SYSTEMTIME &EpgTime,SYSTEMTIME *pDisplayTime);
+	bool EpgTimeToDisplayTime(SYSTEMTIME *pTime);
+	bool DisplayTimeToEpgTime(const SYSTEMTIME &DisplayTime,SYSTEMTIME *pEpgTime);
+	bool DisplayTimeToEpgTime(SYSTEMTIME *pTime);
 
 	enum LanguageTextType {
 		LANGUAGE_TEXT_LONG,

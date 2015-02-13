@@ -2129,12 +2129,15 @@ bool CProgramSearchDialog::AddSearchResult(const CEventInfoData *pEventInfo,LPCT
 	lvi.pszText=szText;
 	lvi.lParam=reinterpret_cast<LPARAM>(pSearchEventInfo);
 	ListView_InsertItem(hwndList,&lvi);
-	SYSTEMTIME stEnd;
+	SYSTEMTIME stStart,stEnd;
+	EpgUtil::EpgTimeToDisplayTime(pEventInfo->m_StartTime,&stStart);
 	pEventInfo->GetEndTime(&stEnd);
-	StdUtil::snprintf(szText,lengthof(szText),TEXT("%02d/%02d(%s) %02d:%02dÅ`%02d:%02d"),
-					  pEventInfo->m_StartTime.wMonth,pEventInfo->m_StartTime.wDay,
-					  GetDayOfWeekText(pEventInfo->m_StartTime.wDayOfWeek),
-					  pEventInfo->m_StartTime.wHour,pEventInfo->m_StartTime.wMinute,
+	EpgUtil::EpgTimeToDisplayTime(&stEnd);
+	StdUtil::snprintf(szText,lengthof(szText),
+					  TEXT("%02d/%02d(%s) %02d:%02dÅ`%02d:%02d"),
+					  stStart.wMonth,stStart.wDay,
+					  GetDayOfWeekText(stStart.wDayOfWeek),
+					  stStart.wHour,stStart.wMinute,
 					  stEnd.wHour,stEnd.wMinute);
 	lvi.mask=LVIF_TEXT;
 	lvi.iSubItem=1;

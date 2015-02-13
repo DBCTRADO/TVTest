@@ -1910,17 +1910,21 @@ void CProgramGuide::DrawTimeBar(HDC hdc,const RECT &Rect,bool fRight)
 	rc.top=Rect.top;
 	rc.right=Rect.right;
 
-	for (int i=0;i<m_Hours;i++) {
-		int Hour;
+	SYSTEMTIME Time;
+	GetCurrentTimeRange(&Time,NULL);
 
-		if ((m_ListMode==LIST_SERVICES && m_Day==DAY_TODAY) || m_BeginHour<0)
-			Hour=(m_stFirstTime.wHour+i)%24;
-		else
-			Hour=(m_BeginHour+i)%24;
+	for (int i=0;i<m_Hours;i++) {
+		SYSTEMTIME DispTime;
+
+		if (i>0)
+			OffsetSystemTime(&Time,TimeConsts::SYSTEMTIME_HOUR);
+		EpgUtil::EpgTimeToDisplayTime(Time,&DispTime);
+
 		rc.bottom=rc.top+PixelsPerHour;
-		TVTest::Theme::Draw(hdc,rc,m_TimeBarBackStyle[Hour/3]);
+		TVTest::Theme::Draw(hdc,rc,m_TimeBarBackStyle[DispTime.wHour/3]);
 		::MoveToEx(hdc,rc.left,rc.top,NULL);
 		::LineTo(hdc,rc.right,rc.top);
+
 		if (((m_ListMode==LIST_SERVICES && m_Day==DAY_TODAY) || m_ListMode==LIST_WEEK)
 				&& CurTimePos>=rc.top && CurTimePos<rc.bottom) {
 			const int TriangleHeight=m_FontHeight*2/3;
@@ -1951,16 +1955,15 @@ void CProgramGuide::DrawTimeBar(HDC hdc,const RECT &Rect,bool fRight)
 			::DeleteObject(hbr);
 			::DeleteObject(::SelectObject(hdc,hpen));
 		}
+
 		TCHAR szText[64];
-		if (m_ListMode==LIST_SERVICES && (i==0 || Hour==0)) {
-			SYSTEMTIME st;
-			GetCurrentTimeRange(&st,NULL);
-			if (i>0)
-				OffsetSystemTime(&st,(LONGLONG)i*TimeConsts::SYSTEMTIME_HOUR);
+		if (m_ListMode==LIST_SERVICES && (i==0 || DispTime.wHour==0)) {
 			StdUtil::snprintf(szText,lengthof(szText),TEXT("%d/%d(%s) %déû"),
-							  st.wMonth,st.wDay,GetDayOfWeekText(st.wDayOfWeek),Hour);
+							  DispTime.wMonth,DispTime.wDay,
+							  GetDayOfWeekText(DispTime.wDayOfWeek),
+							  DispTime.wHour);
 		} else {
-			StdUtil::snprintf(szText,lengthof(szText),TEXT("%d"),Hour);
+			StdUtil::snprintf(szText,lengthof(szText),TEXT("%d"),DispTime.wHour);
 		}
 		::TextOut(hdc,
 				  rc.right-m_Style.TimeBarPadding.Right,
@@ -3004,11 +3007,39 @@ bool CProgramGuide::GetDayTimeRange(int Day,SYSTEMTIME *pFirstTime,SYSTEMTIME *p
 		if (m_BeginHour<0) {
 			Offset=Day*24;
 		} else {
+			int Begin=m_BeginHour*60;
+			CEpgOptions::EpgTimeMode TimeMode=GetAppClass().EpgOptions.GetEpgTimeMode();
+
+			switch (TimeMode) {
+			case CEpgOptions::EPGTIME_LOCAL:
+				{
+					TIME_ZONE_INFORMATION tzi;
+					DWORD Result=::GetTimeZoneInformation(&tzi);
+					switch (Result) {
+					case TIME_ZONE_ID_UNKNOWN:
+						Begin+=tzi.Bias;
+						break;
+					case TIME_ZONE_ID_STANDARD:
+						Begin+=tzi.Bias+tzi.StandardBias;
+						break;
+					case TIME_ZONE_ID_DAYLIGHT:
+						Begin+=tzi.Bias+tzi.DaylightBias;
+						break;
+					}
+					if (Begin<0)
+						Begin+=24*60;
+				}
+			case CEpgOptions::EPGTIME_UTC:
+				Begin+=9*60;
+				break;
+			}
+			Begin=Begin/60%24;
+
 			Offset=Day*24-stFirst.wHour;
-			if (stFirst.wHour>=m_BeginHour)
-				Offset+=m_BeginHour;
+			if (stFirst.wHour>=Begin)
+				Offset+=Begin;
 			else
-				Offset-=24-m_BeginHour;
+				Offset-=24-Begin;
 		}
 		Offset*=TimeConsts::SYSTEMTIME_HOUR;
 		OffsetSystemTime(&stFirst,Offset);
@@ -5041,6 +5072,7 @@ public:
 			TCHAR szText[256];
 
 			m_pProgramGuide->GetCurrentDateInfo(&Info);
+			EpgUtil::EpgTimeToDisplayTime(&Info.BeginningTime);
 			StdUtil::snprintf(szText,lengthof(szText),TEXT("%s%s%d/%d(%s) %déûÅ`"),
 							  Info.pszRelativeDayText!=NULL?Info.pszRelativeDayText:TEXT(""),
 							  Info.pszRelativeDayText!=NULL?TEXT(" "):TEXT(""),
@@ -5068,6 +5100,7 @@ public:
 					TCHAR szText[256];
 
 					m_pProgramGuide->GetDateInfo(i,&Info);
+					EpgUtil::EpgTimeToDisplayTime(&Info.BeginningTime);
 					StdUtil::snprintf(szText,lengthof(szText),TEXT("%s%s%d/%d(%s) %déûÅ`"),
 									  Info.pszRelativeDayText!=NULL?Info.pszRelativeDayText:TEXT(""),
 									  Info.pszRelativeDayText!=NULL?TEXT(" "):TEXT(""),
@@ -5804,8 +5837,11 @@ void CDateToolbar::OnTimeRangeChanged()
 {
 	SYSTEMTIME DateList[MAX_BUTTON_COUNT];
 
-	for (int i=0;i<m_ButtonCount;i++)
-		m_pProgramGuide->GetDayTimeRange(i,&DateList[i],NULL);
+	for (int i=0;i<m_ButtonCount;i++) {
+		SYSTEMTIME st;
+		m_pProgramGuide->GetDayTimeRange(i,&st,NULL);
+		EpgUtil::EpgTimeToDisplayTime(st,&DateList[i]);
+	}
 	SetButtons(DateList,m_ButtonCount,CM_PROGRAMGUIDE_DAY_FIRST);
 	SelectButton(CM_PROGRAMGUIDE_DAY_FIRST+m_pProgramGuide->GetViewDay());
 }
@@ -5976,8 +6012,6 @@ void CTimeToolbar::ChangeTime()
 
 	if (m_pProgramGuide->GetCurrentTimeRange(&stFirst,&stLast)) {
 		TimeInfo TimeList[(CM_PROGRAMGUIDE_TIME_LAST-CM_PROGRAMGUIDE_TIME_FIRST)+2];
-		SYSTEMTIME st=stFirst;
-
 		TimeList[0].Hour=0;
 		TimeList[0].Offset=0;
 		TimeList[0].Command=CM_PROGRAMGUIDE_TIME_CURRENT;
@@ -5985,9 +6019,14 @@ void CTimeToolbar::ChangeTime()
 		int i=1;
 
 		if (m_Settings.Time==TimeBarSettings::TIME_INTERVAL) {
+			SYSTEMTIME st=stFirst;
+
 			for (;i<lengthof(TimeList) && i-1<m_Settings.MaxButtonCount
 					&& CompareSystemTime(&st,&stLast)<0;i++) {
-				TimeList[i].Hour=st.wHour;
+				SYSTEMTIME stDisp;
+
+				EpgUtil::EpgTimeToDisplayTime(st,&stDisp);
+				TimeList[i].Hour=stDisp.wHour;
 				TimeList[i].Offset=(i-1)*m_Settings.Interval;
 				TimeList[i].Command=CM_PROGRAMGUIDE_TIME_FIRST+(i-1);
 				OffsetSystemTime(&st,m_Settings.Interval*TimeConsts::SYSTEMTIME_HOUR);
@@ -6008,11 +6047,13 @@ void CTimeToolbar::ChangeTime()
 				}
 				if (!Hours.empty()) {
 					TsEngine::InsertionSort(Hours);
-					const int FirstHour=stFirst.wHour;
+					SYSTEMTIME stDispFirst;
+					EpgUtil::EpgTimeToDisplayTime(stFirst,&stDispFirst);
+					const int FirstHour=stDispFirst.wHour;
 					const int LastHour=FirstHour+(int)(DiffSystemTime(&stFirst,&stLast)/TimeConsts::SYSTEMTIME_HOUR);
 					size_t j=0;
 					for (;j<Hours.size();j++) {
-						if (Hours[j]>=stFirst.wHour)
+						if (Hours[j]>=FirstHour)
 							break;
 					}
 					for (size_t k=0;i<lengthof(TimeList) && i-1<m_Settings.MaxButtonCount && k<Hours.size();k++) {
@@ -6028,10 +6069,18 @@ void CTimeToolbar::ChangeTime()
 							if (HourOffset<FirstHour || HourOffset>=LastHour)
 								break;
 						}
-						TimeList[i].Hour=(WORD)Hour;
-						TimeList[i].Offset=(WORD)(HourOffset-FirstHour);
-						TimeList[i].Command=CM_PROGRAMGUIDE_TIME_FIRST+(i-1);
-						i++;
+						HourOffset-=FirstHour;
+						SYSTEMTIME st=stDispFirst;
+						OffsetSystemTime(&st,HourOffset*TimeConsts::SYSTEMTIME_HOUR);
+						if (EpgUtil::DisplayTimeToEpgTime(&st)) {
+							int Diff=(int)(DiffSystemTime(&stFirst,&st)/TimeConsts::SYSTEMTIME_HOUR);
+							if (Diff>=0) {
+								TimeList[i].Hour=(WORD)Hour;
+								TimeList[i].Offset=(WORD)Diff;
+								TimeList[i].Command=CM_PROGRAMGUIDE_TIME_FIRST+(i-1);
+								i++;
+							}
+						}
 					}
 				}
 			}
