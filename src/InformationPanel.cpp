@@ -1337,7 +1337,7 @@ bool CInformationPanel::CRecordItem::Update()
 	CAppMain &App=GetAppClass();
 	bool fRecording=App.RecordManager.IsRecording();
 	LONGLONG WroteSize;
-	unsigned int RecordTime;
+	CRecordTask::DurationType RecordTime;
 	LONGLONG DiskFreeSpace;
 
 	if (fRecording) {
@@ -1371,7 +1371,7 @@ void CInformationPanel::CRecordItem::Draw(HDC hdc,const RECT &Rect)
 		TCHAR szText[256];
 		int Length;
 
-		unsigned int RecordSec=m_RecordTime/1000;
+		unsigned int RecordSec=(unsigned int)(m_RecordTime/1000);
 		Length=StdUtil::snprintf(szText,lengthof(szText),
 			TEXT("Åú %d:%02d:%02d"),
 			RecordSec/(60*60),(RecordSec/60)%60,RecordSec%60);

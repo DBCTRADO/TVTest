@@ -75,11 +75,8 @@ CRecordTime::CRecordTime()
 
 bool CRecordTime::SetCurrentTime()
 {
-	SYSTEMTIME st;
-
-	::GetLocalTime(&st);
-	m_TickTime=::GetTickCount();
-	::SystemTimeToFileTime(&st,&m_Time);
+	GetLocalTimeAsFileTime(&m_Time);
+	m_TickTime=Util::GetTickCount();
 	return true;
 }
 
@@ -194,12 +191,12 @@ bool CRecordTask::Pause()
 	if (m_State==STATE_RECORDING) {
 		m_pDtvEngine->m_TsRecorder.Pause();
 		m_State=STATE_PAUSE;
-		m_PauseStartTime=::GetTickCount();
+		m_PauseStartTime=Util::GetTickCount();
 	} else if (m_State==STATE_PAUSE) {
 		m_pDtvEngine->m_TsRecorder.ClearQueue();
 		m_pDtvEngine->m_TsRecorder.Resume();
 		m_State=STATE_RECORDING;
-		m_TotalPauseTime+=TickTimeSpan(m_PauseStartTime,::GetTickCount());
+		m_TotalPauseTime+=TickTimeSpan(m_PauseStartTime,Util::GetTickCount());
 	} else
 		return false;
 	return true;
@@ -212,7 +209,7 @@ CRecordTask::State CRecordTask::GetState() const
 }
 
 
-DWORD CRecordTask::GetStartTime() const
+CRecordTask::DurationType CRecordTask::GetStartTime() const
 {
 	if (m_State==STATE_STOP)
 		return 0;
@@ -237,12 +234,12 @@ bool CRecordTask::GetStartTime(CRecordTime *pTime) const
 }
 
 
-DWORD CRecordTask::GetRecordTime() const
+CRecordTask::DurationType CRecordTask::GetRecordTime() const
 {
-	DWORD Time;
+	DurationType Time;
 
 	if (m_State==STATE_RECORDING) {
-		Time=TickTimeSpan(m_StartTime.GetTickTime(),::GetTickCount());
+		Time=TickTimeSpan(m_StartTime.GetTickTime(),Util::GetTickCount());
 	} else if (m_State==STATE_PAUSE) {
 		Time=TickTimeSpan(m_StartTime.GetTickTime(),m_PauseStartTime);
 	} else
@@ -251,12 +248,12 @@ DWORD CRecordTask::GetRecordTime() const
 }
 
 
-DWORD CRecordTask::GetPauseTime() const
+CRecordTask::DurationType CRecordTask::GetPauseTime() const
 {
 	if (m_State==STATE_RECORDING)
 		return m_TotalPauseTime;
 	if (m_State==STATE_PAUSE)
-		return TickTimeSpan(m_PauseStartTime,::GetTickCount())+m_TotalPauseTime;
+		return TickTimeSpan(m_PauseStartTime,Util::GetTickCount())+m_TotalPauseTime;
 	return 0;
 }
 
@@ -500,7 +497,7 @@ bool CRecordManager::CancelReserve()
 }
 
 
-DWORD CRecordManager::GetRecordTime() const
+CRecordTask::DurationType CRecordManager::GetRecordTime() const
 {
 	if (!m_fRecording)
 		return 0;
@@ -508,7 +505,7 @@ DWORD CRecordManager::GetRecordTime() const
 }
 
 
-DWORD CRecordManager::GetPauseTime() const
+CRecordTask::DurationType CRecordManager::GetPauseTime() const
 {
 	if (!m_fRecording)
 		return 0;
@@ -533,7 +530,7 @@ LONGLONG CRecordManager::GetRemainTime() const
 		break;
 	case TIME_DURATION:
 		Remain=m_StopTimeSpec.Time.Duration-
-			(LONGLONG)TickTimeSpan(m_RecordTask.GetStartTime(),::GetTickCount());
+			(LONGLONG)TickTimeSpan(m_RecordTask.GetStartTime(),Util::GetTickCount());
 		break;
 	default:
 		Remain=-1;
@@ -560,14 +557,14 @@ bool CRecordManager::QueryStart(int Offset) const
 		break;
 	case TIME_DURATION:
 		{
-			DWORD Span=TickTimeSpan(m_ReserveTime.GetTickTime(),::GetTickCount());
+			ULONGLONG Span=TickTimeSpan(m_ReserveTime.GetTickTime(),Util::GetTickCount());
 
 			if (Offset!=0) {
 				if ((LONGLONG)Offset<=-(LONGLONG)Span)
 					return true;
 				Span+=Offset;
 			}
-			if ((ULONGLONG)Span>=m_StartTimeSpec.Time.Duration)
+			if (Span>=m_StartTimeSpec.Time.Duration)
 				return true;
 		}
 		break;
@@ -594,15 +591,15 @@ bool CRecordManager::QueryStop(int Offset) const
 		break;
 	case TIME_DURATION:
 		{
-			DWORD Span;
+			ULONGLONG Span;
 
-			Span=TickTimeSpan(m_RecordTask.GetStartTime(),::GetTickCount());
+			Span=TickTimeSpan(m_RecordTask.GetStartTime(),Util::GetTickCount());
 			if (Offset!=0) {
 				if ((LONGLONG)Offset<=-(LONGLONG)Span)
 					return true;
 				Span+=Offset;
 			}
-			if ((ULONGLONG)Span>=m_StopTimeSpec.Time.Duration)
+			if (Span>=m_StopTimeSpec.Time.Duration)
 				return true;
 		}
 		break;

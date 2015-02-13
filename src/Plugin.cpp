@@ -2959,8 +2959,8 @@ LRESULT CPlugin::OnPluginMessage(WPARAM wParam,LPARAM lParam)
 			} else {
 				pInfo->StopTimeSpec=TVTest::RECORD_STOP_NOTSPECIFIED;
 			}
-			pInfo->RecordTime=pRecordManager->GetRecordTime();
-			pInfo->PauseTime=pRecordManager->GetPauseTime();
+			pInfo->RecordTime=(DWORD)pRecordManager->GetRecordTime();
+			pInfo->PauseTime=(DWORD)pRecordManager->GetPauseTime();
 			if (pInfo->Size>TVTest::RECORDSTATUSINFO_SIZE_V1) {
 				if (pInfo->pszFileName!=NULL && pInfo->MaxFileName>0) {
 					if (pRecordManager->IsRecording()) {

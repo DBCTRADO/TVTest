@@ -366,7 +366,7 @@ void CRecordStatusItem::Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect,u
 		bool fRemain=m_fRemain && RecordManager.IsStopTimeSpecified();
 		int RecordSec;
 		if (fRemain) {
-			RecordSec=(int)RecordManager.GetRemainTime()/1000;
+			RecordSec=(int)(RecordManager.GetRemainTime()/1000);
 			if (RecordSec<0)
 				RecordSec=0;
 		} else {
@@ -440,7 +440,7 @@ int CRecordStatusItem::GetTipText(LPTSTR pszText,int MaxLength)
 		const CRecordTask *pRecordTask=RecordManager.GetRecordTask();
 		int Length;
 
-		unsigned int RecordSec=pRecordTask->GetRecordTime()/1000;
+		unsigned int RecordSec=(unsigned int)(pRecordTask->GetRecordTime()/1000);
 		Length=StdUtil::snprintf(pszText,MaxLength,
 								 TEXT("Åú %d:%02d:%02d"),
 								 RecordSec/(60*60),(RecordSec/60)%60,RecordSec%60);

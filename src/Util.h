@@ -19,6 +19,8 @@ void RGBToHSV(BYTE Red,BYTE Green,BYTE Blue,
 			  double *pHue,double *pSaturation,double *pValue);
 
 inline DWORD TickTimeSpan(DWORD Start,DWORD End) { return End-Start; }
+inline ULONGLONG TickTimeSpan(ULONGLONG Start,ULONGLONG End) { _ASSERT(Start<=End); return End-Start; }
+
 extern __declspec(selectany) const FILETIME FILETIME_NULL={0,0};
 #define FILETIME_MILLISECOND	10000LL
 #define FILETIME_SECOND			(1000LL*FILETIME_MILLISECOND)
@@ -182,6 +184,14 @@ namespace Util
 	Util::GetLibraryFunction<decltype(Func)>(hLib,#Func)
 #define GET_MODULE_FUNCTION(pszModule,Func) \
 	Util::GetModuleFunction<decltype(Func)>(pszModule,#Func)
+
+#ifdef WIN_XP_SUPPORT
+	typedef DWORD TickCountType;
+	inline TickCountType GetTickCount() { return ::GetTickCount(); }
+#else
+	typedef ULONGLONG TickCountType;
+	inline TickCountType GetTickCount() { return ::GetTickCount64(); }
+#endif
 
 	namespace OS
 	{

@@ -174,7 +174,7 @@ public:
 	private:
 		bool m_fRecording;
 		LONGLONG m_WroteSize;
-		unsigned int m_RecordTime;
+		CRecordTask::DurationType m_RecordTime;
 		LONGLONG m_DiskFreeSpace;
 	};
 

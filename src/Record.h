@@ -31,13 +31,13 @@ private:
 
 class CRecordTime {
 	FILETIME m_Time;
-	DWORD m_TickTime;
+	Util::TickCountType m_TickTime;
 
 public:
 	CRecordTime();
 	bool SetCurrentTime();
 	bool GetTime(FILETIME *pTime) const;
-	DWORD GetTickTime() const { return m_TickTime; }
+	Util::TickCountType GetTickTime() const { return m_TickTime; }
 	void Clear();
 	bool IsValid() const;
 };
@@ -50,12 +50,14 @@ public:
 		STATE_PAUSE
 	};
 
+	typedef Util::TickCountType DurationType;
+
 protected:
 	State m_State;
 	CDtvEngine *m_pDtvEngine;
 	CRecordTime m_StartTime;
-	DWORD m_PauseStartTime;
-	DWORD m_TotalPauseTime;
+	DurationType m_PauseStartTime;
+	DurationType m_TotalPauseTime;
 
 public:
 	CRecordTask();
@@ -67,11 +69,11 @@ public:
 	bool IsStopped() const { return m_State==STATE_STOP; }
 	bool IsRecording() const { return m_State==STATE_RECORDING; }
 	bool IsPaused() const { return m_State==STATE_PAUSE; }
-	DWORD GetStartTime() const;
+	DurationType GetStartTime() const;
 	bool GetStartTime(FILETIME *pTime) const;
 	bool GetStartTime(CRecordTime *pTime) const;
-	DWORD GetRecordTime() const;
-	DWORD GetPauseTime() const;
+	DurationType GetRecordTime() const;
+	DurationType GetPauseTime() const;
 	LONGLONG GetWroteSize() const;
 	int GetFileName(LPTSTR pszFileName,int MaxFileName) const;
 	bool RelayFile(LPCTSTR pszFileName);
@@ -166,8 +168,8 @@ public:
 	bool IsPaused() const;
 	bool IsReserved() const { return m_fReserved; }
 	bool CancelReserve();
-	DWORD GetRecordTime() const;
-	DWORD GetPauseTime() const;
+	CRecordTask::DurationType GetRecordTime() const;
+	CRecordTask::DurationType GetPauseTime() const;
 	LONGLONG GetRemainTime() const;
 	const CRecordTask *GetRecordTask() const { return &m_RecordTask; }
 	bool QueryStart(int Offset=0) const;
