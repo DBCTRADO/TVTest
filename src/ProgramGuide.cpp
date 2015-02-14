@@ -1957,7 +1957,7 @@ void CProgramGuide::DrawTimeBar(HDC hdc,const RECT &Rect,bool fRight)
 		}
 
 		TCHAR szText[64];
-		if (m_ListMode==LIST_SERVICES && (i==0 || DispTime.wHour==0)) {
+		if (m_ListMode==LIST_SERVICES && (i==0 || DispTime.wHour%3==0)) {
 			StdUtil::snprintf(szText,lengthof(szText),TEXT("%d/%d(%s) %dŽž"),
 							  DispTime.wMonth,DispTime.wDay,
 							  GetDayOfWeekText(DispTime.wDayOfWeek),
