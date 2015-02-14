@@ -263,6 +263,57 @@ void SystemTimeTruncateSecond(SYSTEMTIME *pTime)
 }
 
 
+#include <pshpack1.h>
+struct REG_TZI_FORMAT
+{
+	LONG Bias;
+	LONG StandardBias;
+	LONG DaylightBias;
+	SYSTEMTIME StandardDate;
+	SYSTEMTIME DaylightDate;
+};
+#include <poppack.h>
+
+bool GetJSTTimeZoneInformation(TIME_ZONE_INFORMATION *pInfo)
+{
+	if (pInfo==NULL)
+		return false;
+
+	::ZeroMemory(pInfo,sizeof(TIME_ZONE_INFORMATION));
+
+	bool fOK=false;
+	HKEY hkey;
+
+	if (::RegOpenKeyEx(HKEY_LOCAL_MACHINE,
+			TEXT("SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Time Zones\\Tokyo Standard Time"),
+			0,KEY_QUERY_VALUE,&hkey)==ERROR_SUCCESS) {
+		REG_TZI_FORMAT TimeZoneInfo;
+		DWORD Type,Size=sizeof(REG_TZI_FORMAT);
+
+		if (::RegQueryValueEx(hkey,TEXT("TZI"),NULL,&Type,
+					pointer_cast<BYTE*>(&TimeZoneInfo),&Size)==ERROR_SUCCESS
+				&& Type==REG_BINARY
+				&& Size==sizeof(REG_TZI_FORMAT)) {
+			pInfo->Bias=TimeZoneInfo.Bias;
+			pInfo->StandardDate=TimeZoneInfo.StandardDate;
+			pInfo->StandardBias=TimeZoneInfo.StandardBias;
+			pInfo->DaylightDate=TimeZoneInfo.DaylightDate;
+			pInfo->DaylightBias=TimeZoneInfo.DaylightBias;
+			fOK=true;
+		}
+
+		::RegCloseKey(hkey);
+	}
+
+	if (!fOK) {
+		pInfo->Bias=-9*60;
+		pInfo->DaylightBias=-60;
+	}
+
+	return true;
+}
+
+
 int CalcDayOfWeek(int Year,int Month,int Day)
 {
 	if (Month<=2) {

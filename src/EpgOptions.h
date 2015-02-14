@@ -24,6 +24,7 @@ public:
 
 	enum EpgTimeMode {
 		EPGTIME_RAW,
+		EPGTIME_JST,
 		EPGTIME_LOCAL,
 		EPGTIME_UTC
 	};

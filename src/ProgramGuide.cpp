@@ -3009,6 +3009,7 @@ bool CProgramGuide::GetDayTimeRange(int Day,SYSTEMTIME *pFirstTime,SYSTEMTIME *p
 		} else {
 			int Begin=m_BeginHour*60;
 			CEpgOptions::EpgTimeMode TimeMode=GetAppClass().EpgOptions.GetEpgTimeMode();
+			bool fUTC=false;
 
 			switch (TimeMode) {
 			case CEpgOptions::EPGTIME_LOCAL:
@@ -3028,11 +3029,33 @@ bool CProgramGuide::GetDayTimeRange(int Day,SYSTEMTIME *pFirstTime,SYSTEMTIME *p
 					}
 					if (Begin<0)
 						Begin+=24*60;
+					fUTC=true;
 				}
+				break;
+
+			case CEpgOptions::EPGTIME_JST:
+				{
+					TIME_ZONE_INFORMATION tzi;
+
+					if (GetJSTTimeZoneInformation(&tzi)) {
+						SYSTEMTIME stUTC,stJST;
+
+						::GetSystemTime(&stUTC);
+						if (::SystemTimeToTzSpecificLocalTime(&tzi,&stUTC,&stJST)) {
+							Begin+=(int)(DiffSystemTime(&stJST,&stUTC)/TimeConsts::SYSTEMTIME_MINUTE);
+							fUTC=true;
+						}
+					}
+				}
+				break;
+
 			case CEpgOptions::EPGTIME_UTC:
-				Begin+=9*60;
+				fUTC=true;
 				break;
 			}
+
+			if (fUTC)
+				Begin+=9*60;
 			Begin=Begin/60%24;
 
 			Offset=Day*24-stFirst.wHour;

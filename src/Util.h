@@ -42,6 +42,7 @@ void SystemTimeTruncateDay(SYSTEMTIME *pTime);
 void SystemTimeTruncateHour(SYSTEMTIME *pTime);
 void SystemTimeTruncateMinute(SYSTEMTIME *pTime);
 void SystemTimeTruncateSecond(SYSTEMTIME *pTime);
+bool GetJSTTimeZoneInformation(TIME_ZONE_INFORMATION *pInfo);
 int CalcDayOfWeek(int Year,int Month,int Day);
 LPCTSTR GetDayOfWeekText(int DayOfWeek);
 

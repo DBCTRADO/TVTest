@@ -21,7 +21,7 @@ CEpgOptions::CEpgOptions()
 	, m_fUpdateBSExtended(false)
 	, m_fUpdateCSExtended(false)
 	, m_fUseEDCBData(false)
-	, m_EpgTimeMode(EPGTIME_LOCAL)
+	, m_EpgTimeMode(EPGTIME_JST)
 	, m_fSaveLogoFile(true)
 
 	, m_hLoadThread(NULL)

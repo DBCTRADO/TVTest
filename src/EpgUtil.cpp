@@ -223,6 +223,16 @@ namespace EpgUtil
 			*pDisplayTime=EpgTime;
 			return true;
 
+		case CEpgOptions::EPGTIME_JST:
+			{
+				SYSTEMTIME st;
+				TIME_ZONE_INFORMATION tzi;
+
+				return EpgTimeToUtc(&EpgTime,&st)
+					&& GetJSTTimeZoneInformation(&tzi)
+					&& ::SystemTimeToTzSpecificLocalTime(&tzi,&st,pDisplayTime);
+			}
+
 		case CEpgOptions::EPGTIME_LOCAL:
 			return EpgTimeToLocalTime(&EpgTime,pDisplayTime);
 
@@ -259,6 +269,16 @@ namespace EpgUtil
 		case CEpgOptions::EPGTIME_RAW:
 			*pEpgTime=DisplayTime;
 			return true;
+
+		case CEpgOptions::EPGTIME_JST:
+			{
+				SYSTEMTIME st;
+				TIME_ZONE_INFORMATION tzi;
+
+				return GetJSTTimeZoneInformation(&tzi)
+					&& ::TzSpecificLocalTimeToSystemTime(&tzi,&DisplayTime,&st)
+					&& UtcToEpgTime(&st,pEpgTime);
+			}
 
 		case CEpgOptions::EPGTIME_LOCAL:
 			{
