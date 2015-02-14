@@ -177,42 +177,6 @@ void CProgramItemList::Clear()
 }
 
 
-void CProgramItemList::SortSub(CProgramItemInfo **ppFirst,CProgramItemInfo **ppLast)
-{
-	SYSTEMTIME stKey=ppFirst[(ppLast-ppFirst)/2]->GetEventInfo().m_StartTime;
-	CProgramItemInfo **p,**q;
-
-	p=ppFirst;
-	q=ppLast;
-	while (p<=q) {
-		while (CompareSystemTime(&(*p)->GetEventInfo().m_StartTime,&stKey)<0)
-			p++;
-		while (CompareSystemTime(&(*q)->GetEventInfo().m_StartTime,&stKey)>0)
-			q--;
-		if (p<=q) {
-			CProgramItemInfo *pTemp;
-
-			pTemp=*p;
-			*p=*q;
-			*q=pTemp;
-			p++;
-			q--;
-		}
-	}
-	if (q>ppFirst)
-		SortSub(ppFirst,q);
-	if (p<ppLast)
-		SortSub(p,ppLast);
-}
-
-
-void CProgramItemList::Sort()
-{
-	if (m_NumItems>1)
-		SortSub(&m_ppItemList[0],&m_ppItemList[m_NumItems-1]);
-}
-
-
 void CProgramItemList::Reserve(int NumItems)
 {
 	Clear();
@@ -393,23 +357,15 @@ bool CProgramListPanel::UpdateListInfo(const CChannelInfo *pChannelInfo)
 	if (m_pProgramList==NULL || pChannelInfo==NULL)
 		return false;
 
-	CEpgServiceInfo *pServiceInfo;
-	CEventInfoList::EventIterator itrEvent;
-	int NumEvents;
-	int i,j;
-	CProgramItemList NewItemList;
-	SYSTEMTIME stFirst,stLast;
-	bool fChanged;
-
 	m_CurChannel=*pChannelInfo;
 
-	pServiceInfo=m_pProgramList->GetServiceInfo(
+	const CEpgServiceInfo *pServiceInfo=m_pProgramList->GetServiceInfo(
 		pChannelInfo->GetNetworkID(),
 		pChannelInfo->GetTransportStreamID(),
 		pChannelInfo->GetServiceID());
 	if (pServiceInfo==NULL)
 		return false;
-	NumEvents=(int)pServiceInfo->m_EventList.EventDataMap.size();
+	int NumEvents=(int)pServiceInfo->m_EventList.EventDataMap.size();
 	if (NumEvents==0) {
 		if (m_ItemList.NumItems()>0) {
 			m_ItemList.Clear();
@@ -417,40 +373,50 @@ bool CProgramListPanel::UpdateListInfo(const CChannelInfo *pChannelInfo)
 		}
 		return false;
 	}
+	CProgramItemList NewItemList;
 	NewItemList.Reserve(NumEvents);
+
+	const CEventInfoList &EventList=pServiceInfo->m_EventList;
+	SYSTEMTIME stFirst;
 	GetCurrentEpgTime(&stFirst);
 	stFirst.wSecond=0;
 	stFirst.wMilliseconds=0;
-	stLast=stFirst;
-	OffsetSystemTime(&stLast,24*TimeConsts::SYSTEMTIME_HOUR);
-	fChanged=false;
-	i=0;
-	for (itrEvent=pServiceInfo->m_EventList.EventDataMap.begin();
-			itrEvent!=pServiceInfo->m_EventList.EventDataMap.end();++itrEvent) {
-		SYSTEMTIME stEnd;
-
-		itrEvent->second.GetEndTime(&stEnd);
-		if (CompareSystemTime(&stFirst,&stEnd)<0
-				&& CompareSystemTime(&stLast,&itrEvent->second.m_StartTime)>0) {
-			NewItemList.Add(new CProgramItemInfo(itrEvent->second));
-			i++;
+	CEventManager::TimeEventInfo Key(stFirst);
+	auto itrTime=EventList.EventTimeMap.lower_bound(Key);
+	if (itrTime!=EventList.EventTimeMap.begin()) {
+		--itrTime;
+		if (itrTime->StartTime+itrTime->Duration>Key.StartTime) {
+			auto itrEvent=EventList.EventDataMap.find(itrTime->EventID);
+			if (itrEvent!=EventList.EventDataMap.end())
+				NewItemList.Add(new CProgramItemInfo(itrEvent->second));
 		}
+		++itrTime;
 	}
-	if (i>1)
-		NewItemList.Sort();
-	if (i>m_ItemList.NumItems()) {
+	Key.StartTime+=24*60*60;
+	for (;itrTime!=EventList.EventTimeMap.end();++itrTime) {
+		if (itrTime->StartTime>=Key.StartTime)
+			break;
+		auto itrEvent=EventList.EventDataMap.find(itrTime->EventID);
+		if (itrEvent!=EventList.EventDataMap.end())
+			NewItemList.Add(new CProgramItemInfo(itrEvent->second));
+	}
+
+	bool fChanged;
+	if (NewItemList.NumItems()!=m_ItemList.NumItems()) {
 		fChanged=true;
 	} else {
-		for (j=0;j<i;j++) {
-			if (m_ItemList.GetItem(j)->IsChanged(NewItemList.GetItem(j))) {
+		fChanged=false;
+		for (int i=0;i<m_ItemList.NumItems();i++) {
+			if (m_ItemList.GetItem(i)->IsChanged(NewItemList.GetItem(i))) {
 				fChanged=true;
 				break;
 			}
 		}
 	}
-	if (i==m_ItemList.NumItems() && !fChanged)
+	if (!fChanged)
 		return false;
 	m_ItemList.Attach(&NewItemList);
+
 	return true;
 }
 

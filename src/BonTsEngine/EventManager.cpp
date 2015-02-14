@@ -418,29 +418,41 @@ static bool IsEventValid(const CEventInfo &Event)
 	return !Event.m_EventName.empty() || Event.m_bCommonEvent;
 }
 
-bool CEventManager::GetEventList(const WORD NetworkID, const WORD TransportStreamID, const WORD ServiceID, EventList *pList)
+bool CEventManager::GetEventList(const WORD NetworkID, const WORD TransportStreamID, const WORD ServiceID,
+								 EventList *pList, TimeEventMap *pTimeEventMap)
 {
 	if (!pList)
 		return false;
+
+	pList->clear();
 
 	CBlockLock Lock(&m_DecoderLock);
 
 	ServiceMapKey Key = GetServiceMapKey(NetworkID, TransportStreamID, ServiceID);
 	ServiceMap::iterator itrService = m_ServiceMap.find(Key);
-	if (itrService == m_ServiceMap.end()) {
-		pList->clear();
+	if (itrService == m_ServiceMap.end())
 		return false;
-	}
 
-	pList->resize(itrService->second.EventMap.size());
-	EventMap::iterator itrEvent = itrService->second.EventMap.begin();
-	size_t i;
-	for (i = 0; itrEvent != itrService->second.EventMap.end(); ++itrEvent) {
-		if (IsEventValid(itrEvent->second))
-			(*pList)[i++] = itrEvent->second;
+	const ServiceEventMap &Service = itrService->second;
+
+	pList->reserve(Service.EventMap.size());
+
+	if (pTimeEventMap) {
+		pTimeEventMap->clear();
+		for (auto itrTime = Service.TimeMap.begin(); itrTime != Service.TimeMap.end(); ++itrTime) {
+			auto itrEvent = Service.EventMap.find(itrTime->EventID);
+			if (itrEvent != Service.EventMap.end()
+					&& IsEventValid(itrEvent->second)) {
+				pList->push_back(itrEvent->second);
+				pTimeEventMap->insert(*itrTime);
+			}
+		}
+	} else {
+		for (auto itrEvent = Service.EventMap.begin(); itrEvent != Service.EventMap.end(); ++itrEvent) {
+			if (IsEventValid(itrEvent->second))
+				pList->push_back(itrEvent->second);
+		}
 	}
-	if (i < pList->size())
-		pList->resize(i);
 
 	itrService->second.bUpdated = false;
 
@@ -864,6 +876,15 @@ CEventManager::TimeEventInfo::TimeEventInfo(ULONGLONG Time)
 
 CEventManager::TimeEventInfo::TimeEventInfo(const SYSTEMTIME &StartTime)
 	: StartTime(SystemTimeToSeconds(StartTime))
+{
+}
+
+
+CEventManager::TimeEventInfo::TimeEventInfo(const CEventInfo &Info)
+	: StartTime(SystemTimeToSeconds(Info.m_StartTime))
+	, Duration(Info.m_Duration)
+	, EventID(Info.m_EventID)
+	, UpdateTime(Info.m_UpdatedTime)
 {
 }
 

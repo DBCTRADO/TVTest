@@ -81,6 +81,7 @@ public:
 #endif
 	typedef EventMap::iterator EventIterator;
 	EventMap EventDataMap; //ÉLÅ[ EventID
+	CEventManager::TimeEventMap EventTimeMap;
 
 	CEventInfoList();
 	CEventInfoList(const CEventInfoList &List);

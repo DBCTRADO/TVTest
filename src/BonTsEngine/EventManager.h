@@ -32,6 +32,21 @@ public:
 	};
 	typedef std::vector<ServiceInfo> ServiceList;
 
+	struct TimeEventInfo {
+		ULONGLONG StartTime;
+		DWORD Duration;
+		WORD EventID;
+		ULONGLONG UpdateTime;
+
+		TimeEventInfo(ULONGLONG Time);
+		TimeEventInfo(const SYSTEMTIME &StartTime);
+		TimeEventInfo(const CEventInfo &Info);
+		bool operator<(const TimeEventInfo &Obj) const {
+			return StartTime < Obj.StartTime;
+		}
+	};
+	typedef std::set<TimeEventInfo> TimeEventMap;
+
 	CEventManager(IEventHandler *pEventHandler = NULL);
 	virtual ~CEventManager();
 
@@ -44,7 +59,8 @@ public:
 	int GetServiceNum();
 	bool GetServiceList(ServiceList *pList);
 	bool IsServiceUpdated(const WORD NetworkID, const WORD TransportStreamID, const WORD ServiceID);
-	bool GetEventList(const WORD NetworkID, const WORD TransportStreamID, const WORD ServiceID, EventList *pList);
+	bool GetEventList(const WORD NetworkID, const WORD TransportStreamID, const WORD ServiceID,
+					  EventList *pList, TimeEventMap *pTimeEventMap = NULL);
 	bool GetEventInfo(const WORD NetworkID, const WORD TransportStreamID, const WORD ServiceID,
 					  const WORD EventID, CEventInfo *pInfo);
 	bool GetEventInfo(const WORD NetworkID, const WORD TransportStreamID, const WORD ServiceID,
@@ -61,19 +77,6 @@ public:
 	}
 
 protected:
-	struct TimeEventInfo {
-		ULONGLONG StartTime;
-		DWORD Duration;
-		WORD EventID;
-		ULONGLONG UpdateTime;
-
-		TimeEventInfo(ULONGLONG Time);
-		TimeEventInfo(const SYSTEMTIME &StartTime);
-		bool operator<(const TimeEventInfo &Obj) const {
-			return StartTime < Obj.StartTime;
-		}
-	};
-
 	class CScheduleInfo {
 	public:
 		CScheduleInfo();
@@ -108,7 +111,6 @@ protected:
 #else
 	typedef std::map<WORD, CEventInfo> EventMap;
 #endif
-	typedef std::set<TimeEventInfo> TimeEventMap;
 
 	struct ServiceEventMap {
 		ServiceInfo Info;

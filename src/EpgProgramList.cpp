@@ -223,10 +223,11 @@ bool CEpgProgramList::UpdateService(CEventManager *pEventManager,
 		return false;
 
 	CEventManager::EventList EventList;
+	CEventManager::TimeEventMap EventTimeTable;
 	if (!pEventManager->GetEventList(pService->OriginalNetworkID,
 									 pService->TransportStreamID,
 									 pService->ServiceID,
-									 &EventList)
+									 &EventList,&EventTimeTable)
 			|| EventList.empty())
 		return false;
 
@@ -236,30 +237,6 @@ bool CEpgProgramList::UpdateService(CEventManager *pEventManager,
 	CEpgServiceInfo *pServiceInfo=new CEpgServiceInfo(ServiceData);
 #ifdef EVENTMANAGER_USE_UNORDERED_MAP
 	pServiceInfo->m_EventList.EventDataMap.rehash(max(EventList.size(),300));
-#endif
-
-	struct EventTime {
-		ULONGLONG StartTime;
-		DWORD Duration;
-		WORD EventID;
-		ULONGLONG UpdateTime;
-		EventTime(const CEventInfoData &Info)
-			: StartTime(CEventManager::SystemTimeToSeconds(Info.m_StartTime))
-			, Duration(Info.m_Duration)
-			, EventID(Info.m_EventID)
-			, UpdateTime(Info.m_UpdatedTime)
-		{
-		}
-		bool operator<(const EventTime &Obj) const {
-			return StartTime < Obj.StartTime;
-		}
-	};
-	std::set<EventTime> EventTimeTable;
-
-#ifdef _DEBUG
-	SYSTEMTIME stOldestTime,stNewestTime;
-	::FillMemory(&stOldestTime,sizeof(SYSTEMTIME),0xFF);
-	::FillMemory(&stNewestTime,sizeof(SYSTEMTIME),0x00);
 #endif
 
 	const bool fDatabase=(Flags & SERVICE_UPDATE_DATABASE)!=0;
@@ -273,25 +250,23 @@ bool CEpgProgramList::UpdateService(CEventManager *pEventManager,
 		//EventData.m_TransportStreamID=ServiceData.m_TSID;
 		//EventData.m_ServiceID=ServiceData.m_ServiceID;
 		EventData.m_fDatabase=fDatabase;
-
-#ifdef _DEBUG
-		if (CompareSystemTime(&EventData.m_StartTime,&stOldestTime)<0)
-			stOldestTime=EventData.m_StartTime;
-		SYSTEMTIME stEnd;
-		EventData.GetEndTime(&stEnd);
-		if (CompareSystemTime(&stEnd,&stNewestTime)>0)
-			stNewestTime=EventData.m_StartTime;
-#endif
-
-		EventTimeTable.insert(EventTime(EventData));
 	}
 
 #ifdef _DEBUG
-	TRACE(TEXT("CEpgProgramList::UpdateService() [%d] %d/%d %d:%02d - %d/%d %d:%02d %u Events\n"),
-		  pService->ServiceID,
-		  stOldestTime.wMonth,stOldestTime.wDay,stOldestTime.wHour,stOldestTime.wMinute,
-		  stNewestTime.wMonth,stNewestTime.wDay,stNewestTime.wHour,stNewestTime.wMinute,
-		  (unsigned int)pServiceInfo->m_EventList.EventDataMap.size());
+	{
+		SYSTEMTIME stOldestTime,stNewestTime;
+
+		pServiceInfo->m_EventList.EventDataMap.find(
+			EventTimeTable.begin()->EventID)->second.GetStartTime(&stOldestTime);
+		pServiceInfo->m_EventList.EventDataMap.find(
+			EventTimeTable.rbegin()->EventID)->second.GetEndTime(&stNewestTime);
+
+		TRACE(TEXT("CEpgProgramList::UpdateService() [%d] %d/%d %d:%02d - %d/%d %d:%02d %u Events\n"),
+			  pService->ServiceID,
+			  stOldestTime.wMonth,stOldestTime.wDay,stOldestTime.wHour,stOldestTime.wMinute,
+			  stNewestTime.wMonth,stNewestTime.wDay,stNewestTime.wHour,stNewestTime.wMinute,
+			  (unsigned int)pServiceInfo->m_EventList.EventDataMap.size());
+	}
 #endif
 
 	const ServiceMapKey Key=GetServiceMapKey(ServiceData);
@@ -341,16 +316,16 @@ bool CEpgProgramList::UpdateService(CEventManager *pEventManager,
 					continue;
 				}
 
-				EventTime Time(itrEvent->second);
+				CEventManager::TimeEventInfo Time(itrEvent->second);
 
 				if (fDiscardEndedEvents
 						&& Time.StartTime+Time.Duration<=CurTime)
 					continue;
 
-				std::set<EventTime>::iterator itrUpper=EventTimeTable.upper_bound(Time);
+				auto itrUpper=EventTimeTable.upper_bound(Time);
 				bool fSkip=false;
 				if (itrUpper!=EventTimeTable.begin()) {
-					std::set<EventTime>::iterator itr=itrUpper;
+					auto itr=itrUpper;
 					--itr;
 					if (itr->StartTime==Time.StartTime) {
 						fSkip=true;
@@ -370,7 +345,7 @@ bool CEpgProgramList::UpdateService(CEventManager *pEventManager,
 					}
 				}
 				if (!fSkip) {
-					for (std::set<EventTime>::iterator itr=itrUpper;itr!=EventTimeTable.end();) {
+					for (auto itr=itrUpper;itr!=EventTimeTable.end();) {
 						if (itr->StartTime>=Time.StartTime+Time.Duration)
 							break;
 						if (itr->UpdateTime>=Time.UpdateTime) {
@@ -384,6 +359,7 @@ bool CEpgProgramList::UpdateService(CEventManager *pEventManager,
 				if (!fSkip) {
 					pServiceInfo->m_EventList.EventDataMap.insert(
 						std::pair<WORD,CEventInfoData>(itrEvent->second.m_EventID,itrEvent->second));
+					pServiceInfo->m_EventList.EventTimeMap.insert(CEventManager::TimeEventInfo(itrEvent->second));
 					fMergeOldEvents=true;
 #ifdef _DEBUG
 					MergeEventCount++;
@@ -405,6 +381,8 @@ bool CEpgProgramList::UpdateService(CEventManager *pEventManager,
 	} else {
 		pServiceInfo->m_fMergeOldEvents=fDatabase;
 	}
+
+	pServiceInfo->m_EventList.EventTimeMap=EventTimeTable;
 
 	m_fUpdated=true;
 
@@ -568,23 +546,23 @@ bool CEpgProgramList::GetEventInfo(WORD NetworkID,WORD TSID,WORD ServiceID,
 	}
 
 	CEpgServiceInfo *pServiceInfo=GetServiceInfo(NetworkID,TSID,ServiceID);
-	if (pServiceInfo==NULL)
-		return NULL;
+	if (pServiceInfo==NULL || pServiceInfo->m_EventList.EventTimeMap.empty())
+		return false;
 
-	CEventInfoList::EventMap::iterator itrEvent;
-	for (itrEvent=pServiceInfo->m_EventList.EventDataMap.begin();
-			itrEvent!=pServiceInfo->m_EventList.EventDataMap.end();++itrEvent) {
-		SYSTEMTIME stStart,stEnd;
-
-		itrEvent->second.GetStartTime(&stStart);
-		itrEvent->second.GetEndTime(&stEnd);
-		if (CompareSystemTime(&stStart,pTime)<=0
-				&& CompareSystemTime(&stEnd,pTime)>0) {
-			*pInfo=itrEvent->second;
-			SetCommonEventInfo(pInfo);
-			return true;
+	CEventManager::TimeEventInfo Key(*pTime);
+	auto itrTime=pServiceInfo->m_EventList.EventTimeMap.upper_bound(Key);
+	if (itrTime!=pServiceInfo->m_EventList.EventTimeMap.begin()) {
+		--itrTime;
+		if (itrTime->StartTime+itrTime->Duration>Key.StartTime) {
+			auto itrEvent=pServiceInfo->m_EventList.EventDataMap.find(itrTime->EventID);
+			if (itrEvent!=pServiceInfo->m_EventList.EventDataMap.end()) {
+				*pInfo=itrEvent->second;
+				SetCommonEventInfo(pInfo);
+				return true;
+			}
 		}
 	}
+
 	return false;
 }
 
@@ -598,25 +576,17 @@ bool CEpgProgramList::GetNextEventInfo(WORD NetworkID,WORD TSID,WORD ServiceID,
 	if (pServiceInfo==NULL)
 		return NULL;
 
-	CEventInfoList::EventMap::iterator itrEvent;
-	const CEventInfoData *pNextEvent=NULL;
-	SYSTEMTIME stNearest;
-	for (itrEvent=pServiceInfo->m_EventList.EventDataMap.begin();
-			itrEvent!=pServiceInfo->m_EventList.EventDataMap.end();++itrEvent) {
-		SYSTEMTIME stStart;
-
-		itrEvent->second.GetStartTime(&stStart);
-		if (CompareSystemTime(&stStart,pTime)>0
-				&& (pNextEvent==NULL || CompareSystemTime(&stStart,&stNearest)<0)) {
-			pNextEvent=&itrEvent->second;
-			stNearest=stStart;
+	CEventManager::TimeEventInfo Key(*pTime);
+	auto itrTime=pServiceInfo->m_EventList.EventTimeMap.upper_bound(Key);
+	if (itrTime!=pServiceInfo->m_EventList.EventTimeMap.end()) {
+		auto itrEvent=pServiceInfo->m_EventList.EventDataMap.find(itrTime->EventID);
+		if (itrEvent!=pServiceInfo->m_EventList.EventDataMap.end()) {
+			*pInfo=itrEvent->second;
+			SetCommonEventInfo(pInfo);
+			return true;
 		}
 	}
-	if (pNextEvent!=NULL) {
-		*pInfo=*pNextEvent;
-		SetCommonEventInfo(pInfo);
-		return true;
-	}
+
 	return false;
 }
 
@@ -1318,6 +1288,7 @@ bool CEpgProgramList::LoadFromFile(LPCTSTR pszFileName)
 					pServiceInfo->m_EventList.EventDataMap.erase(itrEvent);
 				} else {
 					fCRCError=false;
+					pServiceInfo->m_EventList.EventTimeMap.insert(*pEventData);
 				}
 			}
 		}
@@ -1581,13 +1552,15 @@ bool CEpgProgramList::Merge(CEpgProgramList *pSrcList)
 			m_ServiceMap.insert(std::pair<ServiceMapKey,CEpgServiceInfo*>(Key,pSrcServiceInfo));
 			pSrcList->m_ServiceMap.erase(itrSrcService++);
 		} else {
+			CEventInfoList &DstList=itrDstService->second->m_EventList;
 			CEventInfoList::EventMap::iterator itrEvent;
 
 			for (itrEvent=pSrcServiceInfo->m_EventList.EventDataMap.begin();
 					itrEvent!=pSrcServiceInfo->m_EventList.EventDataMap.end();
 					++itrEvent) {
-				itrDstService->second->m_EventList.EventDataMap.insert(
+				DstList.EventDataMap.insert(
 					std::pair<WORD,CEventInfoData>(itrEvent->first,itrEvent->second));
+				DstList.EventTimeMap.insert(itrEvent->second);
 			}
 			++itrSrcService;
 		}

@@ -436,10 +436,6 @@ class CServiceInfo
 	typedef std::map<WORD,CEventInfoData*> EventIDMap;
 	EventIDMap m_EventIDMap;
 
-#ifdef EVENT_LIST_CUSTOM_SORT
-	void SortSub(CEventInfoData **ppFirst,CEventInfoData **ppLast);
-#endif
-
 public:
 	CServiceInfo(const CChannelInfo &ChannelInfo,LPCTSTR pszBonDriver);
 	CServiceInfo(const CChannelInfo &ChannelInfo,const CEpgServiceInfo &Info,LPCTSTR pszBonDriver);
@@ -461,7 +457,6 @@ public:
 	const CEventInfoData *GetEventByEventID(WORD EventID) const;
 	bool AddEvent(CEventInfoData *pEvent);
 	void ClearEvents();
-	void SortEvents();
 	void CalcLayout(CEventLayout *pEventList,const CServiceList *pServiceList,
 		HDC hdc,const SYSTEMTIME &FirstTime,const SYSTEMTIME &LastTime,int LinesPerHour);
 	bool SaveiEpgFile(const CEventInfoData *pEventInfo,LPCTSTR pszFileName,bool fVersion2) const;
@@ -565,58 +560,6 @@ void CServiceInfo::ClearEvents()
 		delete m_EventList[i];
 	m_EventList.clear();
 	m_EventIDMap.clear();
-}
-
-
-#ifdef EVENT_LIST_CUSTOM_SORT
-void CServiceInfo::SortSub(CEventInfoData **ppFirst,CEventInfoData **ppLast)
-{
-	SYSTEMTIME stKey=ppFirst[(ppLast-ppFirst)/2]->m_stStartTime;
-	CEventInfoData **p,**q;
-
-	p=ppFirst;
-	q=ppLast;
-	while (p<=q) {
-		while (CompareSystemTime(&(*p)->m_stStartTime,&stKey)<0)
-			p++;
-		while (CompareSystemTime(&(*q)->m_stStartTime,&stKey)>0)
-			q--;
-		if (p<=q) {
-			CEventInfoData *pTemp;
-
-			pTemp=*p;
-			*p=*q;
-			*q=pTemp;
-			p++;
-			q--;
-		}
-	}
-	if (q>ppFirst)
-		SortSub(ppFirst,q);
-	if (p<ppLast)
-		SortSub(p,ppLast);
-}
-#endif
-
-
-void CServiceInfo::SortEvents()
-{
-	if (m_EventList.size()>1) {
-#ifdef EVENT_LIST_CUSTOM_SORT
-		SortSub(&m_EventList[0],&m_EventList[m_EventList.size()-1]);
-#else
-		class Compare
-		{
-		public:
-			bool operator()(const CEventInfoData *pEvent1,const CEventInfoData *pEvent2)
-			{
-				return CompareSystemTime(&pEvent1->m_StartTime,&pEvent2->m_StartTime)<0;
-			}
-		};
-
-		std::sort(m_EventList.begin(),m_EventList.end(),Compare());
-#endif
-	}
 }
 
 
@@ -1426,13 +1369,14 @@ bool CProgramGuide::UpdateList(bool fUpdateList)
 
 		if (pServiceInfo!=NULL) {
 			pService=new ProgramGuide::CServiceInfo(*pChannelInfo,*pServiceInfo,szBonDriver);
-			CEventInfoList::EventIterator itrEvent;
-			for (itrEvent=pServiceInfo->m_EventList.EventDataMap.begin();
-					itrEvent!=pServiceInfo->m_EventList.EventDataMap.end();
-					++itrEvent) {
-				pService->AddEvent(new CEventInfoData(itrEvent->second));
+			const CEventInfoList &EventList=pServiceInfo->m_EventList;
+			for (auto itrTime=EventList.EventTimeMap.begin();
+					itrTime!=EventList.EventTimeMap.end();
+					++itrTime) {
+				auto itrEvent=EventList.EventDataMap.find(itrTime->EventID);
+				if (itrEvent!=EventList.EventDataMap.end())
+					pService->AddEvent(new CEventInfoData(itrEvent->second));
 			}
-			pService->SortEvents();
 		} else {
 			if (m_fExcludeNoEventServices)
 				continue;
@@ -1471,13 +1415,17 @@ bool CProgramGuide::UpdateService(ProgramGuide::CServiceInfo *pService,bool fUpd
 		return false;
 
 	pService->ClearEvents();
-	CEventInfoList::EventIterator itrEvent;
-	for (itrEvent=pServiceInfo->m_EventList.EventDataMap.begin();
-			itrEvent!=pServiceInfo->m_EventList.EventDataMap.end();
-			++itrEvent) {
-		pService->AddEvent(new CEventInfoData(itrEvent->second));
+
+	const CEventInfoList &EventList=pServiceInfo->m_EventList;
+
+	for (auto itrTime=EventList.EventTimeMap.begin();
+			itrTime!=EventList.EventTimeMap.end();
+			++itrTime) {
+		auto itrEvent=EventList.EventDataMap.find(itrTime->EventID);
+		if (itrEvent!=EventList.EventDataMap.end())
+			pService->AddEvent(new CEventInfoData(itrEvent->second));
 	}
-	pService->SortEvents();
+
 	return true;
 }
 

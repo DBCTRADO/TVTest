@@ -20,7 +20,6 @@ class CProgramItemList
 	int m_NumItems;
 	CProgramItemInfo **m_ppItemList;
 	int m_ItemListLength;
-	void SortSub(CProgramItemInfo **ppFirst,CProgramItemInfo **ppLast);
 
 public:
 	CProgramItemList();
@@ -30,7 +29,6 @@ public:
 	const CProgramItemInfo *GetItem(int Index) const;
 	bool Add(CProgramItemInfo *pItem);
 	void Clear();
-	void Sort();
 	void Reserve(int NumItems);
 	void Attach(CProgramItemList *pList);
 };
