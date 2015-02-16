@@ -252,6 +252,8 @@ bool CEpgProgramList::UpdateService(CEventManager *pEventManager,
 		EventData.m_fDatabase=fDatabase;
 	}
 
+	pServiceInfo->m_EventList.EventTimeMap=EventTimeTable;
+
 #ifdef _DEBUG
 	{
 		SYSTEMTIME stOldestTime,stNewestTime;
@@ -381,8 +383,6 @@ bool CEpgProgramList::UpdateService(CEventManager *pEventManager,
 	} else {
 		pServiceInfo->m_fMergeOldEvents=fDatabase;
 	}
-
-	pServiceInfo->m_EventList.EventTimeMap=EventTimeTable;
 
 	m_fUpdated=true;
 
