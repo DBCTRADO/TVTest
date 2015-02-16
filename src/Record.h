@@ -108,14 +108,12 @@ public:
 	};
 	*/
 
-	struct EventInfo {
+	struct FileNameFormatInfo {
 		LPCTSTR pszChannelName;
 		int ChannelNo;
 		LPCTSTR pszServiceName;
-		WORD ServiceID;
-		LPCTSTR pszEventName;
-		WORD EventID;
 		SYSTEMTIME stTotTime;
+		CEventInfo EventInfo;
 	};
 
 private:
@@ -136,8 +134,11 @@ private:
 
 	static CRecordManager *GetThis(HWND hDlg);
 	static INT_PTR CALLBACK DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam);
-	int FormatFileName(LPTSTR pszFileName,int MaxFileName,const EventInfo *pEventInfo,LPCTSTR pszFormat) const;
+	int FormatFileName(LPTSTR pszFileName,int MaxFileName,
+					   const FileNameFormatInfo *pFormatInfo,LPCTSTR pszFormat) const;
 	static int MapFileNameCopy(LPWSTR pszFileName,int MaxFileName,LPCWSTR pszText);
+	static bool IsDateTimeParameter(LPCTSTR pszKeyword);
+	static int FormatDateTime(LPCTSTR pszKeyword,const SYSTEMTIME &Time,LPTSTR pszText,int MaxText);
 
 public:
 	CRecordManager();
@@ -175,7 +176,8 @@ public:
 	bool QueryStart(int Offset=0) const;
 	bool QueryStop(int Offset=0) const;
 	bool RecordDialog(HWND hwndOwner);
-	bool GenerateFileName(LPTSTR pszFileName,int MaxLength,const EventInfo *pEventInfo,LPCTSTR pszFormat=NULL) const;
+	bool GenerateFileName(LPTSTR pszFileName,int MaxLength,
+						  const FileNameFormatInfo *pFormatInfo,LPCTSTR pszFormat=NULL) const;
 	//bool DoFileExistsOperation(HWND hwndOwner,LPTSTR pszFileName);
 
 	CRecordingSettings &GetRecordingSettings() { return m_Settings; }
@@ -188,7 +190,7 @@ public:
 	bool SetBufferSize(DWORD BufferSize);
 
 	static bool InsertFileNameParameter(HWND hDlg,int ID,const POINT *pMenuPos);
-	static void GetEventInfoSample(EventInfo *pEventInfo);
+	static void GetFileNameFormatInfoSample(FileNameFormatInfo *pFormatInfo);
 	static bool GetWritePluginList(std::vector<TVTest::String> *pList);
 	static bool ShowWritePluginSetting(HWND hwndOwner,LPCTSTR pszPlugin);
 };

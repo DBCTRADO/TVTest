@@ -456,11 +456,11 @@ INT_PTR CRecordOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 				::GetDlgItemText(hDlg,IDC_RECORDOPTIONS_FILENAME,szFormat,lengthof(szFormat));
 				szFileName[0]='\0';
 				if (szFormat[0]!='\0') {
-					CRecordManager::EventInfo EventInfo;
+					CRecordManager::FileNameFormatInfo FormatInfo;
 
-					CRecordManager::GetEventInfoSample(&EventInfo);
+					CRecordManager::GetFileNameFormatInfoSample(&FormatInfo);
 					if (!GetAppClass().RecordManager.GenerateFileName(
-							szFileName,lengthof(szFileName),&EventInfo,szFormat))
+							szFileName,lengthof(szFileName),&FormatInfo,szFormat))
 						szFileName[0]='\0';
 				}
 				::SetDlgItemText(hDlg,IDC_RECORDOPTIONS_FILENAMEPREVIEW,szFileName);

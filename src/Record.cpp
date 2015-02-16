@@ -897,9 +897,9 @@ INT_PTR CALLBACK CRecordManager::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARA
 				::GetDlgItemText(hDlg,IDC_RECORD_FILENAME,szFormat,lengthof(szFormat));
 				szFileName[0]='\0';
 				if (szFormat[0]!='\0') {
-					EventInfo Info;
+					FileNameFormatInfo Info;
 
-					GetEventInfoSample(&Info);
+					GetFileNameFormatInfoSample(&Info);
 					if (!pThis->GenerateFileName(szFileName,lengthof(szFileName),
 												 &Info,szFormat))
 						szFileName[0]='\0';
@@ -1269,7 +1269,9 @@ bool CRecordManager::ChangeStopTimeDialog(HWND hwndOwner)
 #endif
 
 
-int CRecordManager::FormatFileName(LPTSTR pszFileName,int MaxFileName,const EventInfo *pEventInfo,LPCTSTR pszFormat) const
+int CRecordManager::FormatFileName(
+	LPTSTR pszFileName,int MaxFileName,
+	const FileNameFormatInfo *pFormatInfo,LPCTSTR pszFormat) const
 {
 	SYSTEMTIME stStart;
 	LPCTSTR p;
@@ -1300,68 +1302,63 @@ int CRecordManager::FormatFileName(LPTSTR pszFileName,int MaxFileName,const Even
 
 					p+=j+1;
 					szKeyword[j]=_T('\0');
-					if (::lstrcmpi(szKeyword,TEXT("date"))==0) {
-						i+=StdUtil::snprintf(&pszFileName[i],Remain,TEXT("%d%02d%02d"),
-											 stStart.wYear,stStart.wMonth,stStart.wDay);
-					} else if (::lstrcmpi(szKeyword,TEXT("year"))==0) {
-						i+=StdUtil::snprintf(&pszFileName[i],Remain,TEXT("%d"),stStart.wYear);
-					} else if (::lstrcmpi(szKeyword,TEXT("year2"))==0) {
-						i+=StdUtil::snprintf(&pszFileName[i],Remain,TEXT("%02d"),stStart.wYear%100);
-					} else if (::lstrcmpi(szKeyword,TEXT("month"))==0) {
-						i+=StdUtil::snprintf(&pszFileName[i],Remain,TEXT("%d"),stStart.wMonth);
-					} else if (::lstrcmpi(szKeyword,TEXT("month2"))==0) {
-						i+=StdUtil::snprintf(&pszFileName[i],Remain,TEXT("%02d"),stStart.wMonth);
-					} else if (::lstrcmpi(szKeyword,TEXT("day"))==0) {
-						i+=StdUtil::snprintf(&pszFileName[i],Remain,TEXT("%d"),stStart.wDay);
-					} else if (::lstrcmpi(szKeyword,TEXT("day2"))==0) {
-						i+=StdUtil::snprintf(&pszFileName[i],Remain,TEXT("%02d"),stStart.wDay);
-					} else if (::lstrcmpi(szKeyword,TEXT("time"))==0) {
-						i+=StdUtil::snprintf(&pszFileName[i],Remain,TEXT("%02d%02d%02d"),
-											 stStart.wHour,stStart.wMinute,stStart.wSecond);
-					} else if (::lstrcmpi(szKeyword,TEXT("hour"))==0) {
-						i+=StdUtil::snprintf(&pszFileName[i],Remain,TEXT("%d"),stStart.wHour);
-					} else if (::lstrcmpi(szKeyword,TEXT("hour2"))==0) {
-						i+=StdUtil::snprintf(&pszFileName[i],Remain,TEXT("%02d"),stStart.wHour);
-					} else if (::lstrcmpi(szKeyword,TEXT("minute"))==0) {
-						i+=StdUtil::snprintf(&pszFileName[i],Remain,TEXT("%d"),stStart.wMinute);
-					} else if (::lstrcmpi(szKeyword,TEXT("minute2"))==0) {
-						i+=StdUtil::snprintf(&pszFileName[i],Remain,TEXT("%02d"),stStart.wMinute);
-					} else if (::lstrcmpi(szKeyword,TEXT("second"))==0) {
-						i+=StdUtil::snprintf(&pszFileName[i],Remain,TEXT("%d"),stStart.wSecond);
-					} else if (::lstrcmpi(szKeyword,TEXT("second2"))==0) {
-						i+=StdUtil::snprintf(&pszFileName[i],Remain,TEXT("%02d"),stStart.wSecond);
-					} else if (::lstrcmpi(szKeyword,TEXT("day-of-week"))==0) {
-						i+=StdUtil::snprintf(&pszFileName[i],Remain,TEXT("%s"),
-											 GetDayOfWeekText(stStart.wDayOfWeek));
-					} else if (::lstrcmpi(szKeyword,TEXT("channel-name"))==0) {
-						if (pEventInfo->pszChannelName!=NULL)
-							i+=MapFileNameCopy(&pszFileName[i],Remain,pEventInfo->pszChannelName);
+					if (::lstrcmpi(szKeyword,TEXT("channel-name"))==0) {
+						if (pFormatInfo->pszChannelName!=NULL)
+							i+=MapFileNameCopy(&pszFileName[i],Remain,pFormatInfo->pszChannelName);
 					} else if (::lstrcmpi(szKeyword,TEXT("channel-no"))==0) {
-						if (pEventInfo->ChannelNo!=0)
-							i+=StdUtil::snprintf(&pszFileName[i],Remain,TEXT("%d"),pEventInfo->ChannelNo);
+						if (pFormatInfo->ChannelNo!=0)
+							i+=StdUtil::snprintf(&pszFileName[i],Remain,TEXT("%d"),pFormatInfo->ChannelNo);
 					} else if (::lstrcmpi(szKeyword,TEXT("channel-no2"))==0) {
-						if (pEventInfo->ChannelNo!=0)
-							i+=StdUtil::snprintf(&pszFileName[i],Remain,TEXT("%02d"),pEventInfo->ChannelNo);
+						if (pFormatInfo->ChannelNo!=0)
+							i+=StdUtil::snprintf(&pszFileName[i],Remain,TEXT("%02d"),pFormatInfo->ChannelNo);
 					} else if (::lstrcmpi(szKeyword,TEXT("channel-no3"))==0) {
-						if (pEventInfo->ChannelNo!=0)
-							i+=StdUtil::snprintf(&pszFileName[i],Remain,TEXT("%03d"),pEventInfo->ChannelNo);
+						if (pFormatInfo->ChannelNo!=0)
+							i+=StdUtil::snprintf(&pszFileName[i],Remain,TEXT("%03d"),pFormatInfo->ChannelNo);
 					} else if (::lstrcmpi(szKeyword,TEXT("event-name"))==0) {
-						if (pEventInfo->pszEventName!=NULL)
-							i+=MapFileNameCopy(&pszFileName[i],Remain,pEventInfo->pszEventName);
+						if (!pFormatInfo->EventInfo.m_EventName.empty())
+							i+=MapFileNameCopy(&pszFileName[i],Remain,pFormatInfo->EventInfo.m_EventName.c_str());
 					} else if (::lstrcmpi(szKeyword,TEXT("event-id"))==0) {
-						i+=StdUtil::snprintf(&pszFileName[i],Remain,TEXT("%04X"),pEventInfo->EventID);
+						i+=StdUtil::snprintf(&pszFileName[i],Remain,TEXT("%04X"),pFormatInfo->EventInfo.m_EventID);
 					} else if (::lstrcmpi(szKeyword,TEXT("service-name"))==0) {
-						if (pEventInfo->pszServiceName!=NULL)
-							i+=MapFileNameCopy(&pszFileName[i],Remain,pEventInfo->pszServiceName);
+						if (pFormatInfo->pszServiceName!=NULL)
+							i+=MapFileNameCopy(&pszFileName[i],Remain,pFormatInfo->pszServiceName);
 					} else if (::lstrcmpi(szKeyword,TEXT("service-id"))==0) {
-						if (pEventInfo->ServiceID!=0)
-							i+=StdUtil::snprintf(&pszFileName[i],Remain,TEXT("%04X"),pEventInfo->ServiceID);
-					} else if (::lstrcmpi(szKeyword,TEXT("tot-date"))==0) {
-						i+=StdUtil::snprintf(&pszFileName[i],Remain,TEXT("%d%02d%02d"),
-							pEventInfo->stTotTime.wYear,pEventInfo->stTotTime.wMonth,pEventInfo->stTotTime.wDay);
-					} else if (::lstrcmpi(szKeyword,TEXT("tot-time"))==0) {
-						i+=StdUtil::snprintf(&pszFileName[i],Remain,TEXT("%02d%02d%02d"),
-							pEventInfo->stTotTime.wHour,pEventInfo->stTotTime.wMinute,pEventInfo->stTotTime.wSecond);
+						if (pFormatInfo->EventInfo.m_ServiceID!=0)
+							i+=StdUtil::snprintf(&pszFileName[i],Remain,TEXT("%04X"),pFormatInfo->EventInfo.m_ServiceID);
+					} else if (::lstrcmpi(szKeyword,TEXT("event-duration-hour"))==0) {
+						i+=StdUtil::snprintf(&pszFileName[i],Remain,TEXT("%d"),
+											 (int)(pFormatInfo->EventInfo.m_Duration/(60*60)));
+					} else if (::lstrcmpi(szKeyword,TEXT("event-duration-hour2"))==0) {
+						i+=StdUtil::snprintf(&pszFileName[i],Remain,TEXT("%02d"),
+											 (int)(pFormatInfo->EventInfo.m_Duration/(60*60)));
+					} else if (::lstrcmpi(szKeyword,TEXT("event-duration-min"))==0) {
+						i+=StdUtil::snprintf(&pszFileName[i],Remain,TEXT("%d"),
+											 (int)(pFormatInfo->EventInfo.m_Duration/60%60));
+					} else if (::lstrcmpi(szKeyword,TEXT("event-duration-min2"))==0) {
+						i+=StdUtil::snprintf(&pszFileName[i],Remain,TEXT("%02d"),
+											 (int)(pFormatInfo->EventInfo.m_Duration/60%60));
+					} else if (::lstrcmpi(szKeyword,TEXT("event-duration-sec"))==0) {
+						i+=StdUtil::snprintf(&pszFileName[i],Remain,TEXT("%d"),
+											 (int)(pFormatInfo->EventInfo.m_Duration%60));
+					} else if (::lstrcmpi(szKeyword,TEXT("event-duration-sec2"))==0) {
+						i+=StdUtil::snprintf(&pszFileName[i],Remain,TEXT("%02d"),
+											 (int)(pFormatInfo->EventInfo.m_Duration%60));
+					} else if (IsDateTimeParameter(szKeyword)) {
+						i+=FormatDateTime(szKeyword,stStart,&pszFileName[i],Remain);
+					} else if (::StrCmpNI(szKeyword,TEXT("start-"),6)==0
+							&& IsDateTimeParameter(szKeyword+6)) {
+						if (pFormatInfo->EventInfo.m_bValidStartTime) {
+							i+=FormatDateTime(szKeyword+6,pFormatInfo->EventInfo.m_StartTime,
+											  &pszFileName[i],Remain);
+						}
+					} else if (::StrCmpNI(szKeyword,TEXT("end-"),4)==0
+							&& IsDateTimeParameter(szKeyword+4)) {
+						SYSTEMTIME EndTime;
+						if (pFormatInfo->EventInfo.GetEndTime(&EndTime))
+							i+=FormatDateTime(szKeyword+4,EndTime,&pszFileName[i],Remain);
+					} else if (::StrCmpNI(szKeyword,TEXT("tot-"),4)==0
+							&& IsDateTimeParameter(szKeyword+4)) {
+						i+=FormatDateTime(szKeyword+4,pFormatInfo->stTotTime,&pszFileName[i],Remain);
 					} else {
 						TRACE(TEXT("Unknown keyword %%%s%%\n"),szKeyword);
 						i+=StdUtil::snprintf(&pszFileName[i],Remain,TEXT("%%%s%%"),szKeyword);
@@ -1422,13 +1419,83 @@ int CRecordManager::MapFileNameCopy(LPWSTR pszFileName,int MaxFileName,LPCWSTR p
 }
 
 
-bool CRecordManager::GenerateFileName(LPTSTR pszFileName,int MaxLength,const EventInfo *pEventInfo,LPCTSTR pszFormat) const
+bool CRecordManager::IsDateTimeParameter(LPCTSTR pszKeyword)
+{
+	static const LPCTSTR ParameterList[] = {
+		TEXT("date"),
+		TEXT("year"),
+		TEXT("year2"),
+		TEXT("month"),
+		TEXT("month2"),
+		TEXT("day"),
+		TEXT("day2"),
+		TEXT("time"),
+		TEXT("hour"),
+		TEXT("hour2"),
+		TEXT("minute"),
+		TEXT("minute2"),
+		TEXT("second"),
+		TEXT("second2"),
+		TEXT("day-of-week"),
+	};
+
+	for (int i=0;i<lengthof(ParameterList);i++) {
+		if (::lstrcmpi(ParameterList[i],pszKeyword)==0)
+			return true;
+	}
+
+	return false;
+}
+
+
+int CRecordManager::FormatDateTime(LPCTSTR pszKeyword,const SYSTEMTIME &Time,LPTSTR pszText,int MaxText)
+{
+	if (::lstrcmpi(pszKeyword,TEXT("date"))==0)
+		return StdUtil::snprintf(pszText,MaxText,TEXT("%d%02d%02d"),
+								 Time.wYear,Time.wMonth,Time.wDay);
+	if (::lstrcmpi(pszKeyword,TEXT("year"))==0)
+		return StdUtil::snprintf(pszText,MaxText,TEXT("%d"),Time.wYear);
+	if (::lstrcmpi(pszKeyword,TEXT("year2"))==0)
+		return StdUtil::snprintf(pszText,MaxText,TEXT("%02d"),Time.wYear%100);
+	if (::lstrcmpi(pszKeyword,TEXT("month"))==0)
+		return StdUtil::snprintf(pszText,MaxText,TEXT("%d"),Time.wMonth);
+	if (::lstrcmpi(pszKeyword,TEXT("month2"))==0)
+		return StdUtil::snprintf(pszText,MaxText,TEXT("%02d"),Time.wMonth);
+	if (::lstrcmpi(pszKeyword,TEXT("day"))==0)
+		return StdUtil::snprintf(pszText,MaxText,TEXT("%d"),Time.wDay);
+	if (::lstrcmpi(pszKeyword,TEXT("day2"))==0)
+		return StdUtil::snprintf(pszText,MaxText,TEXT("%02d"),Time.wDay);
+	if (::lstrcmpi(pszKeyword,TEXT("time"))==0)
+		return StdUtil::snprintf(pszText,MaxText,TEXT("%02d%02d%02d"),
+								 Time.wHour,Time.wMinute,Time.wSecond);
+	if (::lstrcmpi(pszKeyword,TEXT("hour"))==0)
+		return StdUtil::snprintf(pszText,MaxText,TEXT("%d"),Time.wHour);
+	if (::lstrcmpi(pszKeyword,TEXT("hour2"))==0)
+		return StdUtil::snprintf(pszText,MaxText,TEXT("%02d"),Time.wHour);
+	if (::lstrcmpi(pszKeyword,TEXT("minute"))==0)
+		return StdUtil::snprintf(pszText,MaxText,TEXT("%d"),Time.wMinute);
+	if (::lstrcmpi(pszKeyword,TEXT("minute2"))==0)
+		return StdUtil::snprintf(pszText,MaxText,TEXT("%02d"),Time.wMinute);
+	if (::lstrcmpi(pszKeyword,TEXT("second"))==0)
+		return StdUtil::snprintf(pszText,MaxText,TEXT("%d"),Time.wSecond);
+	if (::lstrcmpi(pszKeyword,TEXT("second2"))==0)
+		return StdUtil::snprintf(pszText,MaxText,TEXT("%02d"),Time.wSecond);
+	if (::lstrcmpi(pszKeyword,TEXT("day-of-week"))==0)
+		return StdUtil::snprintf(pszText,MaxText,TEXT("%s"),
+								 GetDayOfWeekText(Time.wDayOfWeek));
+	return 0;
+}
+
+
+bool CRecordManager::GenerateFileName(
+	LPTSTR pszFileName,int MaxLength,
+	const FileNameFormatInfo *pFormatInfo,LPCTSTR pszFormat) const
 {
 	if (pszFormat==NULL) {
 		if (m_FileName.empty())
 			return false;
 	}
-	if (FormatFileName(pszFileName,MaxLength-5,pEventInfo,
+	if (FormatFileName(pszFileName,MaxLength-5,pFormatInfo,
 					   pszFormat!=NULL?pszFormat:m_FileName.c_str())==0)
 		return false;
 	if (pszFormat==NULL && ::PathFileExists(pszFileName)) {
@@ -1527,44 +1594,110 @@ bool CRecordManager::InsertFileNameParameter(HWND hDlg,int ID,const POINT *pMenu
 		LPCTSTR pszParameter;
 		LPCTSTR pszText;
 	} ParameterList[] = {
-		{TEXT("%date%"),			TEXT("開始年月日")},
-		{TEXT("%year%"),			TEXT("開始年")},
-		{TEXT("%year2%"),			TEXT("開始年(下2桁)")},
-		{TEXT("%month%"),			TEXT("開始月")},
-		{TEXT("%month2%"),			TEXT("開始月(2桁)")},
-		{TEXT("%day%"),				TEXT("開始日")},
-		{TEXT("%day2%"),			TEXT("開始日(2桁)")},
-		{TEXT("%time%"),			TEXT("開始時刻(時+分+秒)")},
-		{TEXT("%hour%"),			TEXT("開始時")},
-		{TEXT("%hour2%"),			TEXT("開始時(2桁)")},
-		{TEXT("%minute%"),			TEXT("開始分")},
-		{TEXT("%minute2%"),			TEXT("開始分(2桁)")},
-		{TEXT("%second%"),			TEXT("開始秒")},
-		{TEXT("%second2%"),			TEXT("開始秒(2桁)")},
-		{TEXT("%day-of-week%"),		TEXT("開始曜日(漢字)")},
-		{TEXT("%channel-name%"),	TEXT("チャンネル名")},
-		{TEXT("%channel-no%"),		TEXT("チャンネル番号")},
-		{TEXT("%channel-no2%"),		TEXT("チャンネル番号(2桁)")},
-		{TEXT("%channel-no3%"),		TEXT("チャンネル番号(3桁)")},
-		{TEXT("%event-name%"),		TEXT("イベント名")},
-		{TEXT("%event-id%"),		TEXT("イベントID")},
-		{TEXT("%service-name%"),	TEXT("サービス名")},
-		{TEXT("%service-id%"),		TEXT("サービスID")},
-		{TEXT("%tot-date%"),		TEXT("TOT年月日")},
-		{TEXT("%tot-time%"),		TEXT("TOT時刻(時+分+秒)")},
+		{NULL,								TEXT("録画開始日時")},
+		{TEXT("%date%"),					TEXT("年月日")},
+		{TEXT("%year%"),					TEXT("年")},
+		{TEXT("%year2%"),					TEXT("年(下2桁)")},
+		{TEXT("%month%"),					TEXT("月")},
+		{TEXT("%month2%"),					TEXT("月(2桁)")},
+		{TEXT("%day%"),						TEXT("日")},
+		{TEXT("%day2%"),					TEXT("日(2桁)")},
+		{TEXT("%time%"),					TEXT("時刻(時+分+秒)")},
+		{TEXT("%hour%"),					TEXT("時")},
+		{TEXT("%hour2%"),					TEXT("時(2桁)")},
+		{TEXT("%minute%"),					TEXT("分")},
+		{TEXT("%minute2%"),					TEXT("分(2桁)")},
+		{TEXT("%second%"),					TEXT("秒")},
+		{TEXT("%second2%"),					TEXT("秒(2桁)")},
+		{TEXT("%day-of-week%"),				TEXT("曜日(漢字)")},
+		{NULL,								TEXT("番組開始日時")},
+		{TEXT("%start-date%"),				TEXT("年月日")},
+		{TEXT("%start-year%"),				TEXT("年")},
+		{TEXT("%start-year2%"),				TEXT("年(下2桁)")},
+		{TEXT("%start-month%"),				TEXT("月")},
+		{TEXT("%start-month2%"),			TEXT("月(2桁)")},
+		{TEXT("%start-day%"),				TEXT("日")},
+		{TEXT("%start-day2%"),				TEXT("日(2桁)")},
+		{TEXT("%start-time%"),				TEXT("時刻(時+分+秒)")},
+		{TEXT("%start-hour%"),				TEXT("時")},
+		{TEXT("%start-hour2%"),				TEXT("時(2桁)")},
+		{TEXT("%start-minute%"),			TEXT("分")},
+		{TEXT("%start-minute2%"),			TEXT("分(2桁)")},
+		{TEXT("%start-second%"),			TEXT("秒")},
+		{TEXT("%start-second2%"),			TEXT("秒(2桁)")},
+		{TEXT("%start-day-of-week%"),		TEXT("曜日(漢字)")},
+		{NULL,								TEXT("番組終了日時")},
+		{TEXT("%end-date%"),				TEXT("年月日")},
+		{TEXT("%end-year%"),				TEXT("年")},
+		{TEXT("%end-year2%"),				TEXT("年(下2桁)")},
+		{TEXT("%end-month%"),				TEXT("月")},
+		{TEXT("%end-month2%"),				TEXT("月(2桁)")},
+		{TEXT("%end-day%"),					TEXT("日")},
+		{TEXT("%end-day2%"),				TEXT("日(2桁)")},
+		{TEXT("%end-time%"),				TEXT("時刻(時+分+秒)")},
+		{TEXT("%end-hour%"),				TEXT("時")},
+		{TEXT("%end-hour2%"),				TEXT("時(2桁)")},
+		{TEXT("%end-minute%"),				TEXT("分")},
+		{TEXT("%end-minute2%"),				TEXT("分(2桁)")},
+		{TEXT("%end-second%"),				TEXT("秒")},
+		{TEXT("%end-second2%"),				TEXT("秒(2桁)")},
+		{TEXT("%end-day-of-week%"),			TEXT("曜日(漢字)")},
+		{NULL,								TEXT("TOT日時")},
+		{TEXT("%tot-date%"),				TEXT("年月日")},
+		{TEXT("%tot-year%"),				TEXT("年")},
+		{TEXT("%tot-year2%"),				TEXT("年(下2桁)")},
+		{TEXT("%tot-month%"),				TEXT("月")},
+		{TEXT("%tot-month2%"),				TEXT("月(2桁)")},
+		{TEXT("%tot-day%"),					TEXT("日")},
+		{TEXT("%tot-day2%"),				TEXT("日(2桁)")},
+		{TEXT("%tot-time%"),				TEXT("時刻(時+分+秒)")},
+		{TEXT("%tot-hour%"),				TEXT("時")},
+		{TEXT("%tot-hour2%"),				TEXT("時(2桁)")},
+		{TEXT("%tot-minute%"),				TEXT("分")},
+		{TEXT("%tot-minute2%"),				TEXT("分(2桁)")},
+		{TEXT("%tot-second%"),				TEXT("秒")},
+		{TEXT("%tot-second2%"),				TEXT("秒(2桁)")},
+		{TEXT("%tot-day-of-week%"),			TEXT("曜日(漢字)")},
+		{NULL,								TEXT("番組の長さ")},
+		{TEXT("%event-duration-hour%"),		TEXT("時間")},
+		{TEXT("%event-duration-hour2%"),	TEXT("時間(2桁)")},
+		{TEXT("%event-duration-min%"),		TEXT("分")},
+		{TEXT("%event-duration-min2%"),		TEXT("分(2桁)")},
+		{TEXT("%event-duration-sec%"),		TEXT("秒")},
+		{TEXT("%event-duration-sec2%"),		TEXT("秒(2桁)")},
+		{NULL,								NULL},
+		{TEXT("%channel-name%"),			TEXT("チャンネル名")},
+		{TEXT("%channel-no%"),				TEXT("チャンネル番号")},
+		{TEXT("%channel-no2%"),				TEXT("チャンネル番号(2桁)")},
+		{TEXT("%channel-no3%"),				TEXT("チャンネル番号(3桁)")},
+		{TEXT("%event-name%"),				TEXT("番組名")},
+		{TEXT("%event-id%"),				TEXT("イベントID")},
+		{TEXT("%service-name%"),			TEXT("サービス名")},
+		{TEXT("%service-id%"),				TEXT("サービスID")},
 	};
-	HMENU hmenu=::CreatePopupMenu();
+	HMENU hmenuRoot=::CreatePopupMenu();
+	HMENU hmenu=hmenuRoot;
 	int Command;
 
 	for (int i=0;i<lengthof(ParameterList);i++) {
-		TCHAR szText[128];
-
-		StdUtil::snprintf(szText,lengthof(szText),TEXT("%s\t%s"),
-						  ParameterList[i].pszParameter,ParameterList[i].pszText);
-		::AppendMenu(hmenu,MFT_STRING | MFS_ENABLED,i+1,szText);
+		if (ParameterList[i].pszParameter==NULL) {
+			if (ParameterList[i].pszText!=NULL) {
+				hmenu=::CreatePopupMenu();
+				::AppendMenu(hmenuRoot,MF_POPUP | MF_STRING | MF_ENABLED,
+							 reinterpret_cast<UINT_PTR>(hmenu),
+							 ParameterList[i].pszText);
+			} else {
+				hmenu=hmenuRoot;
+			}
+		} else {
+			TCHAR szText[128];
+			StdUtil::snprintf(szText,lengthof(szText),TEXT("%s\t%s"),
+							  ParameterList[i].pszText,ParameterList[i].pszParameter);
+			::AppendMenu(hmenu,MF_STRING | MF_ENABLED,i+1,szText);
+		}
 	}
-	Command=::TrackPopupMenu(hmenu,TPM_RETURNCMD,pMenuPos->x,pMenuPos->y,0,hDlg,NULL);
-	::DestroyMenu(hmenu);
+	Command=::TrackPopupMenu(hmenuRoot,TPM_RETURNCMD,pMenuPos->x,pMenuPos->y,0,hDlg,NULL);
+	::DestroyMenu(hmenuRoot);
 	if (Command<=0)
 		return false;
 
@@ -1581,17 +1714,27 @@ bool CRecordManager::InsertFileNameParameter(HWND hDlg,int ID,const POINT *pMenu
 }
 
 
-void CRecordManager::GetEventInfoSample(EventInfo *pEventInfo)
+void CRecordManager::GetFileNameFormatInfoSample(FileNameFormatInfo *pFormatInfo)
 {
-	pEventInfo->pszChannelName=TEXT("アフリカ中央テレビ");
-	pEventInfo->ChannelNo=13;
-	pEventInfo->pszServiceName=TEXT("アフテレ1");
-	pEventInfo->ServiceID=0x1234;
-	pEventInfo->pszEventName=TEXT("今日のニュース");
-	pEventInfo->EventID=0xABCD;
-	::GetLocalTime(&pEventInfo->stTotTime);
-	pEventInfo->stTotTime.wSecond=pEventInfo->stTotTime.wSecond/5*5;
-	pEventInfo->stTotTime.wMilliseconds=0;
+	SYSTEMTIME st;
+
+	::GetLocalTime(&st);
+	st.wMilliseconds=0;
+
+	pFormatInfo->pszChannelName=TEXT("アフリカ中央テレビ");
+	pFormatInfo->ChannelNo=13;
+	pFormatInfo->pszServiceName=TEXT("アフテレ1");
+	pFormatInfo->stTotTime=st;
+	pFormatInfo->stTotTime.wSecond=st.wSecond/5*5;
+	pFormatInfo->EventInfo.m_ServiceID=0x1234;
+	pFormatInfo->EventInfo.m_EventID=0xABCD;
+	pFormatInfo->EventInfo.m_EventName=TEXT("今日のニュース");
+	pFormatInfo->EventInfo.m_bValidStartTime=true;
+	OffsetSystemTime(&st,5*TimeConsts::SYSTEMTIME_MINUTE);
+	st.wMinute=st.wMinute/5*5;
+	st.wSecond=0;
+	pFormatInfo->EventInfo.m_StartTime=st;
+	pFormatInfo->EventInfo.m_Duration=60*60;
 }
 
 

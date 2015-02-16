@@ -1067,43 +1067,51 @@ bool CAppCore::SaveCurrentChannel()
 
 bool CAppCore::GenerateRecordFileName(LPTSTR pszFileName,int MaxFileName) const
 {
-	CRecordManager::EventInfo EventInfo;
+	CRecordManager::FileNameFormatInfo FormatInfo;
 	const CChannelInfo *pChannelInfo=m_App.ChannelManager.GetCurrentChannelInfo();
 	WORD ServiceID;
-	TCHAR szServiceName[32],szEventName[256];
+	TCHAR szServiceName[32];
+	bool fEventInfoValid=false;
 
-	EventInfo.pszChannelName=nullptr;
-	EventInfo.ChannelNo=0;
-	EventInfo.pszServiceName=nullptr;
-	EventInfo.pszEventName=nullptr;
+	FormatInfo.pszChannelName=nullptr;
+	FormatInfo.ChannelNo=0;
+	FormatInfo.pszServiceName=nullptr;
 	if (pChannelInfo!=nullptr) {
-		EventInfo.pszChannelName=pChannelInfo->GetName();
+		FormatInfo.pszChannelName=pChannelInfo->GetName();
 		if (pChannelInfo->GetChannelNo()!=0)
-			EventInfo.ChannelNo=pChannelInfo->GetChannelNo();
+			FormatInfo.ChannelNo=pChannelInfo->GetChannelNo();
 		else if (pChannelInfo->GetServiceID()>0)
-			EventInfo.ChannelNo=pChannelInfo->GetServiceID();
+			FormatInfo.ChannelNo=pChannelInfo->GetServiceID();
 	}
 	if (m_App.CoreEngine.m_DtvEngine.GetServiceID(&ServiceID)) {
 		int Index=m_App.CoreEngine.m_DtvEngine.m_TsAnalyzer.GetServiceIndexByID(ServiceID);
 		if (m_App.CoreEngine.m_DtvEngine.m_TsAnalyzer.GetServiceName(Index,szServiceName,lengthof(szServiceName)))
-			EventInfo.pszServiceName=szServiceName;
-		if (!m_App.CoreEngine.m_DtvEngine.GetServiceID(&EventInfo.ServiceID))
-			EventInfo.ServiceID=0;
+			FormatInfo.pszServiceName=szServiceName;
 		bool fNext=false;
 		SYSTEMTIME stCur,stStart;
 		if (!m_App.CoreEngine.m_DtvEngine.m_TsAnalyzer.GetTotTime(&stCur))
 			GetCurrentEpgTime(&stCur);
+		FormatInfo.stTotTime=stCur;
 		if (m_App.CoreEngine.m_DtvEngine.GetEventTime(&stStart,nullptr,true)) {
 			LONGLONG Diff=DiffSystemTime(&stCur,&stStart);
 			if (Diff>=0 && Diff<TimeConsts::SYSTEMTIME_MINUTE)
 				fNext=true;
 		}
-		if (m_App.CoreEngine.m_DtvEngine.GetEventName(szEventName,lengthof(szEventName),fNext))
-			EventInfo.pszEventName=szEventName;
-		EventInfo.EventID=m_App.CoreEngine.m_DtvEngine.GetEventID(fNext);
-		EventInfo.stTotTime=stCur;
+		if (m_App.CoreEngine.m_DtvEngine.GetEventInfo(&FormatInfo.EventInfo,fNext))
+			fEventInfoValid=true;
+		FormatInfo.EventInfo.m_ServiceID=ServiceID;
+	} else {
+		FormatInfo.EventInfo.m_ServiceID=0;
 	}
-	return m_App.RecordManager.GenerateFileName(pszFileName,MaxFileName,&EventInfo);
+	if (!fEventInfoValid) {
+		FormatInfo.EventInfo.m_NetworkID=0;
+		FormatInfo.EventInfo.m_TransportStreamID=0;
+		FormatInfo.EventInfo.m_EventID=0;
+		FormatInfo.EventInfo.m_bValidStartTime=false;
+		FormatInfo.EventInfo.m_Duration=0;
+	}
+
+	return m_App.RecordManager.GenerateFileName(pszFileName,MaxFileName,&FormatInfo);
 }
 
 
