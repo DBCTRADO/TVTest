@@ -526,12 +526,10 @@ const CEventInfoData *CChannelMenuItem::GetEventInfo(int Index) const
 }
 
 
-CChannelMenu::CChannelMenu(CEpgProgramList *pProgramList,CLogoManager *pLogoManager)
+CChannelMenu::CChannelMenu()
 	: m_Flags(0)
 	, m_hwnd(NULL)
 	, m_hmenu(NULL)
-	, m_pProgramList(pProgramList)
-	, m_pLogoManager(pLogoManager)
 	, m_TextHeight(0)
 	, m_ChannelNameWidth(0)
 	, m_EventNameWidth(0)
@@ -575,6 +573,7 @@ bool CChannelMenu::Create(const CChannelList *pChannelList,int CurChannel,UINT C
 	CreateFont(hdc);
 	HFONT hfontOld=DrawUtil::SelectObject(hdc,m_Font);
 
+	CEpgProgramList &EpgProgramList=GetAppClass().EpgProgramList;
 	const bool fCurServices=(Flags & FLAG_CURSERVICES)!=0;
 	SYSTEMTIME st;
 	if (!fCurServices)
@@ -625,7 +624,8 @@ bool CChannelMenu::Create(const CChannelList *pChannelList,int CurChannel,UINT C
 		CChannelMenuItem *pItem=new CChannelMenuItem(pChInfo);
 		mii.dwItemData=reinterpret_cast<ULONG_PTR>(pItem);
 		if ((Flags&FLAG_SHOWEVENTINFO)!=0) {
-			const CEventInfoData *pEventInfo=pItem->GetEventInfo(m_pProgramList,0,fCurServices?NULL:&st);
+			const CEventInfoData *pEventInfo=
+				pItem->GetEventInfo(&EpgProgramList,0,fCurServices?NULL:&st);
 
 			if (pEventInfo!=NULL) {
 				GetEventText(pEventInfo,szText,lengthof(szText));
@@ -691,12 +691,12 @@ void CChannelMenu::Destroy()
 }
 
 
-bool CChannelMenu::Show(UINT Flags,int x,int y)
+int CChannelMenu::Show(UINT Flags,int x,int y,const RECT *pExcludeRect)
 {
 	if (m_hmenu==NULL)
 		return false;
-	::TrackPopupMenu(m_hmenu,Flags,x,y,0,m_hwnd,NULL);
-	return true;
+	POINT pt={x,y};
+	return MyTrackPopupMenu(m_hmenu,Flags,m_hwnd,&pt,pExcludeRect);
 }
 
 
@@ -746,7 +746,7 @@ bool CChannelMenu::OnDrawItem(HWND hwnd,WPARAM wParam,LPARAM lParam)
 	rc.bottom=pdis->rcItem.bottom-m_Margins.cyBottomHeight;
 
 	if ((m_Flags&FLAG_SHOWLOGO)!=0) {
-		HBITMAP hbmLogo=m_pLogoManager->GetAssociatedLogoBitmap(
+		HBITMAP hbmLogo=GetAppClass().LogoManager.GetAssociatedLogoBitmap(
 			pChInfo->GetNetworkID(),pChInfo->GetServiceID(),CLogoManager::LOGOTYPE_SMALL);
 		if (hbmLogo!=NULL) {
 			DrawUtil::CMemoryDC MemoryDC(pdis->hDC);
@@ -812,7 +812,7 @@ bool CChannelMenu::OnMenuSelect(HWND hwnd,WPARAM wParam,LPARAM lParam)
 			const CEventInfoData *pEventInfo1,*pEventInfo2;
 			pEventInfo1=pItem->GetEventInfo(0);
 			if (pEventInfo1==NULL) {
-				pEventInfo1=pItem->GetEventInfo(m_pProgramList,0);
+				pEventInfo1=pItem->GetEventInfo(&GetAppClass().EpgProgramList,0);
 			}
 			if (pEventInfo1!=NULL) {
 				TCHAR szText[256*2+1];
@@ -820,7 +820,7 @@ bool CChannelMenu::OnMenuSelect(HWND hwnd,WPARAM wParam,LPARAM lParam)
 				POINT pt;
 
 				Length=GetEventText(pEventInfo1,szText,lengthof(szText)/2);
-				pEventInfo2=pItem->GetEventInfo(m_pProgramList,1);
+				pEventInfo2=pItem->GetEventInfo(&GetAppClass().EpgProgramList,1);
 				if (pEventInfo2!=NULL) {
 					szText[Length++]=_T('\r');
 					szText[Length++]=_T('\n');
@@ -848,6 +848,45 @@ bool CChannelMenu::OnUninitMenuPopup(HWND hwnd,WPARAM wParam,LPARAM lParam)
 		Destroy();
 		return true;
 	}
+	return false;
+}
+
+
+bool CChannelMenu::HandleMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam,LRESULT *pResult)
+{
+	if (m_hwnd==NULL || hwnd!=m_hwnd)
+		return false;
+
+	switch (uMsg) {
+	case WM_MEASUREITEM:
+		if (OnMeasureItem(hwnd,wParam,lParam)) {
+			*pResult=TRUE;
+			return true;
+		}
+		break;
+
+	case WM_DRAWITEM:
+		if (OnDrawItem(hwnd,wParam,lParam)) {
+			*pResult=TRUE;
+			return true;
+		}
+		break;
+
+	case WM_UNINITMENUPOPUP:
+		if (OnUninitMenuPopup(hwnd,wParam,lParam)) {
+			*pResult=0;
+			return true;
+		}
+		break;
+
+	case WM_MENUSELECT:
+		if (OnMenuSelect(hwnd,wParam,lParam)) {
+			*pResult=0;
+			return true;
+		}
+		break;
+	}
+
 	return false;
 }
 

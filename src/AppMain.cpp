@@ -180,7 +180,6 @@ CAppMain::CAppMain()
 	, EpgProgramList(&CoreEngine.m_DtvEngine.m_EventManager)
 	, MainWindow(*this)
 	, SideBar(&CommandList)
-	, ChannelMenu(&EpgProgramList,&LogoManager)
 	, ChannelDisplay(&EpgProgramList)
 
 	, Epg(EpgProgramList,EventSearchOptions)

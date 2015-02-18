@@ -9,6 +9,7 @@
 #include "ChannelList.h"
 #include "Theme.h"
 #include "DrawUtil.h"
+#include "Menu.h"
 #include "EventInfoPopup.h"
 #include "WindowUtil.h"
 
@@ -40,6 +41,10 @@ class CProgramListPanel
 {
 public:
 	struct ProgramListPanelTheme {
+		TVTest::Theme::Style ChannelNameStyle;
+		TVTest::Theme::Style CurChannelNameStyle;
+		TVTest::Theme::Style ChannelButtonStyle;
+		TVTest::Theme::Style ChannelButtonHotStyle;
 		TVTest::Theme::Style EventNameStyle;
 		TVTest::Theme::Style CurEventNameStyle;
 		TVTest::Theme::Style EventTextStyle;
@@ -67,8 +72,9 @@ public:
 // CProgramListPanel
 	void SetEpgProgramList(CEpgProgramList *pList) { m_pProgramList=pList; }
 	bool UpdateProgramList(const CChannelInfo *pChannelInfo);
-	bool OnProgramListChanged();
 	void ClearProgramList();
+	void SelectChannel(const CChannelInfo *pChannelInfo,bool fUpdate=true);
+	void SetCurrentChannel(const CChannelInfo *pChannelInfo);
 	void SetCurrentEventID(int EventID);
 	bool SetProgramListPanelTheme(const ProgramListPanelTheme &Theme);
 	bool GetProgramListPanelTheme(ProgramListPanelTheme *pTheme) const;
@@ -82,6 +88,12 @@ public:
 private:
 	struct ProgramListPanelStyle
 	{
+		TVTest::Style::Margins ChannelPadding;
+		TVTest::Style::Margins ChannelLogoMargin;
+		TVTest::Style::Margins ChannelNameMargin;
+		TVTest::Style::Size ChannelButtonIconSize;
+		TVTest::Style::Margins ChannelButtonPadding;
+		TVTest::Style::IntValue ChannelButtonMargin;
 		TVTest::Style::Margins TitlePadding;
 		TVTest::Style::Size IconSize;
 		TVTest::Style::Margins IconMargin;
@@ -92,9 +104,15 @@ private:
 		void NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager);
 	};
 
+	enum {
+		ITEM_CHANNEL,
+		ITEM_CHANNELLISTBUTTON
+	};
+
 	CEpgProgramList *m_pProgramList;
 	DrawUtil::CFont m_Font;
 	DrawUtil::CFont m_TitleFont;
+	DrawUtil::CFont m_IconFont;
 	int m_FontHeight;
 	ProgramListPanelStyle m_Style;
 	ProgramListPanelTheme m_Theme;
@@ -102,11 +120,15 @@ private:
 	bool m_fUseEpgColorScheme;
 	CEpgIcons m_EpgIcons;
 	UINT m_VisibleEventIcons;
+	int m_ChannelHeight;
 	int m_TotalLines;
 	CProgramItemList m_ItemList;
+	CChannelInfo m_SelectedChannel;
 	CChannelInfo m_CurChannel;
 	int m_CurEventID;
 	int m_ScrollPos;
+	int m_HotItem;
+	CChannelMenu m_ChannelMenu;
 	CMouseWheelHandler m_MouseWheel;
 	//HWND m_hwndToolTip;
 	CEventInfoPopup m_EventInfoPopup;
@@ -125,15 +147,22 @@ private:
 	static const LPCTSTR m_pszClassName;
 	static HINSTANCE m_hinst;
 
-	void DrawProgramList(HDC hdc,const RECT *prcPaint);
+	void Draw(HDC hdc,const RECT *prcPaint);
 	bool UpdateListInfo(const CChannelInfo *pChannelInfo);
+	void GetHeaderRect(RECT *pRect) const;
+	void GetChannelButtonRect(RECT *pRect) const;
+	void GetProgramListRect(RECT *pRect) const;
+	void CalcChannelHeight();
 	void CalcDimensions();
 	void SetScrollPos(int Pos);
 	void SetScrollBar();
 	void CalcFontHeight();
 	int GetTextLeftMargin() const;
-	int HitTest(int x,int y) const;
+	int ItemHitTest(int x,int y) const;
+	int ProgramHitTest(int x,int y) const;
 	bool GetItemRect(int Item,RECT *pRect) const;
+	void SetHotItem(int Item);
+	void ShowChannelListMenu();
 	//void SetToolTip();
 
 // CCustomWindow

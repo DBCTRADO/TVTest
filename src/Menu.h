@@ -87,8 +87,6 @@ class CChannelMenu
 	unsigned int m_Flags;
 	HWND m_hwnd;
 	HMENU m_hmenu;
-	CEpgProgramList *m_pProgramList;
-	CLogoManager *m_pLogoManager;
 	CChannelList m_ChannelList;
 	int m_CurChannel;
 	UINT m_FirstCommand;
@@ -121,16 +119,17 @@ public:
 		FLAG_SHARED			=0x1000
 	};
 
-	CChannelMenu(CEpgProgramList *pProgramList,CLogoManager *pLogoManager);
+	CChannelMenu();
 	~CChannelMenu();
 	bool Create(const CChannelList *pChannelList,int CurChannel,UINT Command,
 				HMENU hmenu,HWND hwnd,unsigned int Flags,int MaxRows=0);
 	void Destroy();
-	bool Show(UINT Flags,int x,int y);
+	int Show(UINT Flags,int x,int y,const RECT *pExcludeRect=NULL);
 	bool OnMeasureItem(HWND hwnd,WPARAM wParam,LPARAM lParam);
 	bool OnDrawItem(HWND hwnd,WPARAM wParam,LPARAM lParam);
 	bool OnMenuSelect(HWND hwnd,WPARAM wParam,LPARAM lParam);
 	bool OnUninitMenuPopup(HWND hwnd,WPARAM wParam,LPARAM lParam);
+	bool HandleMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam,LRESULT *pResult);
 };
 
 class CPopupMenu

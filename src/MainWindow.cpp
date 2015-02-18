@@ -1441,6 +1441,7 @@ LRESULT CMainWindow::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 	case WM_APP_EPGLOADED:
 		// EPGÉtÉ@ÉCÉãÇ™ì«Ç›çûÇ‹ÇÍÇΩ
 		TRACE(TEXT("WM_APP_EPGLOADED\n"));
+		m_App.Panel.EnableProgramListUpdate(true);
 		if (IsPanelVisible()
 				&& (m_App.Panel.Form.GetCurPageID()==PANEL_ID_PROGRAMLIST
 				 || m_App.Panel.Form.GetCurPageID()==PANEL_ID_CHANNEL)) {
@@ -4116,18 +4117,20 @@ void CMainWindow::OnChannelChanged(unsigned int Status)
 	m_App.Panel.ControlPanel.UpdateItem(CONTROLPANEL_ITEM_TUNER);
 	if (pCurChannel!=nullptr && m_App.OSDOptions.IsOSDEnabled(COSDOptions::OSD_CHANNEL))
 		ShowChannelOSD();
-	m_App.Panel.ProgramListPanel.ClearProgramList();
-	m_App.Panel.EnableProgramListUpdate(false);
+	const bool fEpgLoading=
+		m_App.EpgOptions.IsEpgFileLoading() || m_App.EpgOptions.IsEDCBDataLoading();
+	m_App.Panel.EnableProgramListUpdate(!fEpgLoading);
 	::SetTimer(m_hwnd,TIMER_ID_PROGRAMLISTUPDATE,10000,nullptr);
 	m_ProgramListUpdateTimerCount=0;
 	m_App.Panel.InfoPanel.UpdateItem(CInformationPanel::ITEM_SERVICE);
 	m_App.Panel.InfoPanel.UpdateItem(CInformationPanel::ITEM_PROGRAMINFO);
 	m_App.Panel.ProgramListPanel.ShowRetrievingMessage(true);
+	m_App.Panel.ProgramListPanel.SetCurrentChannel(pCurChannel);
+	m_App.Panel.ProgramListPanel.SelectChannel(pCurChannel,!fEpgLoading);
 	if (fSpaceChanged) {
 		if (IsPanelVisible() && m_App.Panel.Form.GetCurPageID()==PANEL_ID_CHANNEL) {
 			m_App.Panel.ChannelPanel.SetChannelList(
-				m_App.ChannelManager.GetCurrentChannelList(),
-				!m_App.EpgOptions.IsEpgFileLoading());
+				m_App.ChannelManager.GetCurrentChannelList(),!fEpgLoading);
 			m_App.Panel.ChannelPanel.SetCurrentChannel(
 				m_App.ChannelManager.GetCurrentChannel());
 		} else {

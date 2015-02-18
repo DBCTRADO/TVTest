@@ -115,7 +115,7 @@ void CProgramItemInfo::GetEventTitleText(LPTSTR pszText,int MaxLength) const
 	TCHAR szTime[EpgUtil::MAX_EVENT_TIME_LENGTH];
 
 	EpgUtil::FormatEventTime(&m_EventInfo,szTime,lengthof(szTime),
-							 EpgUtil::EVENT_TIME_HOUR_2DIGITS | EpgUtil::EVENT_TIME_START_ONLY);
+							 EpgUtil::EVENT_TIME_HOUR_2DIGITS);
 	StdUtil::snprintf(pszText,MaxLength,TEXT("%s %s"),
 					  szTime,m_EventInfo.m_EventName.c_str());
 }
@@ -214,7 +214,7 @@ bool CProgramListPanel::Initialize(HINSTANCE hinst)
 		wc.cbWndExtra=0;
 		wc.hInstance=hinst;
 		wc.hIcon=NULL;
-		wc.hCursor=::LoadCursor(NULL,IDC_ARROW);
+		wc.hCursor=NULL;
 		wc.hbrBackground=NULL;
 		wc.lpszMenuName=NULL;
 		wc.lpszClassName=m_pszClassName;
@@ -233,6 +233,7 @@ CProgramListPanel::CProgramListPanel()
 	, m_FontHeight(0)
 	, m_fUseEpgColorScheme(false)
 	, m_VisibleEventIcons(((1<<(CEpgIcons::ICON_LAST+1))-1)^CEpgIcons::IconFlag(CEpgIcons::ICON_PAY))
+	, m_ChannelHeight(0)
 	, m_CurEventID(-1)
 	, m_ScrollPos(0)
 	//, m_hwndToolTip(NULL)
@@ -251,6 +252,10 @@ CProgramListPanel::CProgramListPanel()
 	m_Theme.EventTextStyle.Fore.Fill.Solid.Color.Set(255,255,255);
 	m_Theme.CurEventTextStyle=m_Theme.EventTextStyle;
 	m_Theme.MarginColor=RGB(0,0,0);
+	m_Theme.ChannelNameStyle=m_Theme.EventNameStyle;
+	m_Theme.CurChannelNameStyle=m_Theme.CurEventNameStyle;
+	m_Theme.ChannelButtonStyle=m_Theme.ChannelNameStyle;
+	m_Theme.ChannelButtonHotStyle=m_Theme.CurChannelNameStyle;
 }
 
 
@@ -283,6 +288,14 @@ void CProgramListPanel::SetTheme(const TVTest::Theme::CThemeManager *pThemeManag
 {
 	ProgramListPanelTheme Theme;
 
+	pThemeManager->GetStyle(TVTest::Theme::CThemeManager::STYLE_PROGRAMLISTPANEL_CHANNEL,
+							&Theme.ChannelNameStyle);
+	pThemeManager->GetStyle(TVTest::Theme::CThemeManager::STYLE_PROGRAMLISTPANEL_CURCHANNEL,
+							&Theme.CurChannelNameStyle);
+	pThemeManager->GetStyle(TVTest::Theme::CThemeManager::STYLE_PROGRAMLISTPANEL_CHANNELBUTTON,
+							&Theme.ChannelButtonStyle);
+	pThemeManager->GetStyle(TVTest::Theme::CThemeManager::STYLE_PROGRAMLISTPANEL_CHANNELBUTTON_HOT,
+							&Theme.ChannelButtonHotStyle);
 	pThemeManager->GetStyle(TVTest::Theme::CThemeManager::STYLE_PROGRAMLISTPANEL_EVENT,
 							&Theme.EventTextStyle);
 	pThemeManager->GetStyle(TVTest::Theme::CThemeManager::STYLE_PROGRAMLISTPANEL_CUREVENT,
@@ -318,9 +331,12 @@ bool CProgramListPanel::WriteSettings(CSettings &Settings)
 
 bool CProgramListPanel::UpdateProgramList(const CChannelInfo *pChannelInfo)
 {
-	if (m_pProgramList==NULL)
+	if (m_pProgramList==NULL || pChannelInfo==NULL)
 		return false;
-	if (m_hwnd!=NULL) {
+	if (m_hwnd!=NULL
+			&& m_SelectedChannel.GetNetworkID()==pChannelInfo->GetNetworkID()
+			&& m_SelectedChannel.GetTransportStreamID()==pChannelInfo->GetTransportStreamID()
+			&& m_SelectedChannel.GetServiceID()==pChannelInfo->GetServiceID()) {
 		const bool fRetrieving=m_fShowRetrievingMessage;
 
 		m_fShowRetrievingMessage=false;
@@ -328,26 +344,13 @@ bool CProgramListPanel::UpdateProgramList(const CChannelInfo *pChannelInfo)
 			CalcDimensions();
 			SetScrollBar();
 			//SetToolTip();
-			Invalidate();
+			RECT rc;
+			GetProgramListRect(&rc);
+			Invalidate(&rc);
 		} else if (fRetrieving) {
 			Invalidate();
 		}
 	}
-	return true;
-}
-
-
-bool CProgramListPanel::OnProgramListChanged()
-{
-	/*
-	if (m_hwnd!=NULL) {
-		if (UpdateListInfo(&m_CurChannel)) {
-			CalcDimensions();
-			SetScrollBar();
-			Invalidate();
-		}
-	}
-	*/
 	return true;
 }
 
@@ -357,15 +360,13 @@ bool CProgramListPanel::UpdateListInfo(const CChannelInfo *pChannelInfo)
 	if (m_pProgramList==NULL || pChannelInfo==NULL)
 		return false;
 
-	m_CurChannel=*pChannelInfo;
-
 	const CEpgServiceInfo *pServiceInfo=m_pProgramList->GetServiceInfo(
 		pChannelInfo->GetNetworkID(),
 		pChannelInfo->GetTransportStreamID(),
 		pChannelInfo->GetServiceID());
-	if (pServiceInfo==NULL)
-		return false;
-	int NumEvents=(int)pServiceInfo->m_EventList.EventDataMap.size();
+	int NumEvents=0;
+	if (pServiceInfo!=NULL)
+		NumEvents=(int)pServiceInfo->m_EventList.EventDataMap.size();
 	if (NumEvents==0) {
 		if (m_ItemList.NumItems()>0) {
 			m_ItemList.Clear();
@@ -425,7 +426,6 @@ void CProgramListPanel::ClearProgramList()
 {
 	if (m_ItemList.NumItems()>0) {
 		m_ItemList.Clear();
-		m_CurEventID=-1;
 		m_ScrollPos=0;
 		m_TotalLines=0;
 		if (m_hwnd!=NULL) {
@@ -434,8 +434,30 @@ void CProgramListPanel::ClearProgramList()
 			Invalidate();
 		}
 	}
-	//if (m_pProgramList!=NULL)
-	//	m_pProgramList->Clear();
+}
+
+
+void CProgramListPanel::SelectChannel(const CChannelInfo *pChannelInfo,bool fUpdate)
+{
+	ClearProgramList();
+	if (pChannelInfo!=NULL) {
+		m_SelectedChannel=*pChannelInfo;
+		if (fUpdate)
+			UpdateProgramList(pChannelInfo);
+	} else {
+		m_SelectedChannel=CChannelInfo();
+	}
+}
+
+
+void CProgramListPanel::SetCurrentChannel(const CChannelInfo *pChannelInfo)
+{
+	if (pChannelInfo!=NULL)
+		m_CurChannel=*pChannelInfo;
+	else
+		m_CurChannel=CChannelInfo();
+	m_CurEventID=-1;
+	Invalidate();
 }
 
 
@@ -447,6 +469,42 @@ void CProgramListPanel::SetCurrentEventID(int EventID)
 }
 
 
+void CProgramListPanel::GetHeaderRect(RECT *pRect) const
+{
+	GetClientRect(pRect);
+	pRect->bottom=m_ChannelHeight;
+}
+
+
+void CProgramListPanel::GetChannelButtonRect(RECT *pRect) const
+{
+	GetHeaderRect(pRect);
+	TVTest::Style::Subtract(pRect,m_Style.ChannelPadding);
+	int Width=m_Style.ChannelButtonIconSize.Width+m_Style.ChannelButtonPadding.Horz();
+	int Height=m_Style.ChannelButtonIconSize.Height+m_Style.ChannelButtonPadding.Vert();
+	pRect->left=pRect->right-Width;
+	pRect->top=pRect->top+((pRect->bottom-pRect->top)-Height)/2;
+	pRect->bottom=pRect->top+Height;
+}
+
+
+void CProgramListPanel::GetProgramListRect(RECT *pRect) const
+{
+	GetClientRect(pRect);
+	pRect->top=m_ChannelHeight;
+	if (pRect->bottom<pRect->top)
+		pRect->bottom=pRect->top;
+}
+
+
+void CProgramListPanel::CalcChannelHeight()
+{
+	int LabelHeight=m_FontHeight+m_Style.ChannelNameMargin.Vert();
+	int ButtonHeight=m_Style.ChannelButtonIconSize.Height+m_Style.ChannelButtonPadding.Vert();
+	m_ChannelHeight=max(LabelHeight,ButtonHeight)+m_Style.ChannelPadding.Vert();
+}
+
+
 void CProgramListPanel::CalcDimensions()
 {
 	HDC hdc=::GetDC(m_hwnd);
@@ -455,7 +513,7 @@ void CProgramListPanel::CalcDimensions()
 	RECT rc;
 	HFONT hfontOld;
 
-	GetClientRect(&rc);
+	GetProgramListRect(&rc);
 	hfontOld=static_cast<HFONT>(::GetCurrentObject(hdc,OBJ_FONT));
 	m_TotalLines=0;
 	for (int i=0;i<m_ItemList.NumItems();i++) {
@@ -475,12 +533,13 @@ void CProgramListPanel::SetScrollPos(int Pos)
 {
 	RECT rc;
 
-	GetClientRect(&rc);
+	GetProgramListRect(&rc);
+	const int Page=rc.bottom-rc.top;
 	if (Pos<0) {
 		Pos=0;
 	} else {
 		int Max=m_TotalLines*(m_FontHeight+m_Style.LineSpacing)+
-				m_ItemList.NumItems()*(m_Style.TitlePadding.Top+m_Style.TitlePadding.Bottom-m_Style.LineSpacing)-rc.bottom;
+				m_ItemList.NumItems()*(m_Style.TitlePadding.Top+m_Style.TitlePadding.Bottom-m_Style.LineSpacing)-Page;
 		if (Max<0)
 			Max=0;
 		if (Pos>Max)
@@ -495,11 +554,11 @@ void CProgramListPanel::SetScrollPos(int Pos)
 		si.fMask=SIF_POS;
 		si.nPos=Pos;
 		::SetScrollInfo(m_hwnd,SB_VERT,&si,TRUE);
-		if (abs(Offset)<rc.bottom) {
+		if (abs(Offset)<Page) {
 			::ScrollWindowEx(m_hwnd,0,-Offset,
-							 NULL,NULL,NULL,NULL,SW_ERASE | SW_INVALIDATE);
+							 &rc,&rc,NULL,NULL,SW_ERASE | SW_INVALIDATE);
 		} else {
-			Invalidate();
+			Invalidate(&rc);
 		}
 		//SetToolTip();
 	}
@@ -517,8 +576,8 @@ void CProgramListPanel::SetScrollBar()
 	si.nMax=m_TotalLines<1?0:
 		m_TotalLines*(m_FontHeight+m_Style.LineSpacing)+
 			m_ItemList.NumItems()*(m_Style.TitlePadding.Top+m_Style.TitlePadding.Bottom-m_Style.LineSpacing);
-	GetClientRect(&rc);
-	si.nPage=rc.bottom;
+	GetProgramListRect(&rc);
+	si.nPage=rc.bottom-rc.top;
 	si.nPos=m_ScrollPos;
 	::SetScrollInfo(m_hwnd,SB_VERT,&si,TRUE);
 }
@@ -615,17 +674,38 @@ void CProgramListPanel::SetUseEpgColorScheme(bool fUseEpgColorScheme)
 }
 
 
-int CProgramListPanel::HitTest(int x,int y) const
+int CProgramListPanel::ItemHitTest(int x,int y) const
+{
+	POINT pt={x,y};
+	RECT rcHeader;
+	int HotItem=-1;
+
+	GetHeaderRect(&rcHeader);
+	if (::PtInRect(&rcHeader,pt)) {
+		RECT rc;
+		GetChannelButtonRect(&rc);
+		if (::PtInRect(&rc,pt)) {
+			HotItem=ITEM_CHANNELLISTBUTTON;
+		} else if (pt.x<rc.left-m_Style.ChannelButtonMargin) {
+			HotItem=ITEM_CHANNEL;
+		}
+	}
+
+	return HotItem;
+}
+
+
+int CProgramListPanel::ProgramHitTest(int x,int y) const
 {
 	POINT pt;
 	RECT rc;
 
 	pt.x=x;
 	pt.y=y;
-	GetClientRect(&rc);
+	GetProgramListRect(&rc);
 	if (!::PtInRect(&rc,pt))
 		return -1;
-	rc.top=-m_ScrollPos;
+	rc.top-=m_ScrollPos;
 	for (int i=0;i<m_ItemList.NumItems();i++) {
 		const CProgramItemInfo *pItem=m_ItemList.GetItem(i);
 
@@ -646,8 +726,8 @@ bool CProgramListPanel::GetItemRect(int Item,RECT *pRect) const
 
 	RECT rc;
 
-	GetClientRect(&rc);
-	rc.top=-m_ScrollPos;
+	GetProgramListRect(&rc);
+	rc.top-=m_ScrollPos;
 	for (int i=0;;i++) {
 		const CProgramItemInfo *pItem=m_ItemList.GetItem(i);
 
@@ -661,6 +741,69 @@ bool CProgramListPanel::GetItemRect(int Item,RECT *pRect) const
 	*pRect=rc;
 
 	return true;
+}
+
+
+void CProgramListPanel::SetHotItem(int Item)
+{
+	if (m_HotItem!=Item) {
+		m_HotItem=Item;
+		RECT rc;
+		GetHeaderRect(&rc);
+		Invalidate(&rc);
+	}
+}
+
+
+void CProgramListPanel::ShowChannelListMenu()
+{
+	const CChannelList *pChannelList=
+		GetAppClass().ChannelManager.GetCurrentChannelList();
+	if (pChannelList==NULL)
+		return;
+
+	CChannelList ChannelList;
+
+	int ItemCount=0,SelectedChannel=-1;
+
+	for (int i=0;i<pChannelList->NumChannels();i++) {
+		const CChannelInfo *pChannelInfo=pChannelList->GetChannelInfo(i);
+
+		if (pChannelInfo->IsEnabled()) {
+			ChannelList.AddChannel(*pChannelInfo);
+
+			if (SelectedChannel<0
+					&& m_SelectedChannel.GetNetworkID()==pChannelInfo->GetNetworkID()
+					&& m_SelectedChannel.GetTransportStreamID()==pChannelInfo->GetTransportStreamID()
+					&& m_SelectedChannel.GetServiceID()==pChannelInfo->GetServiceID())
+				SelectedChannel=ItemCount;
+			ItemCount++;
+		}
+	}
+
+	if (ItemCount==0)
+		return;
+
+	m_ChannelMenu.Create(&ChannelList,SelectedChannel,1,NULL,m_hwnd,
+						 CChannelMenu::FLAG_SHOWLOGO | CChannelMenu::FLAG_SPACEBREAK,
+						 GetAppClass().MenuOptions.GetMaxChannelMenuRows());
+
+	RECT rc;
+
+	GetHeaderRect(&rc);
+	MapWindowRect(m_hwnd,NULL,&rc);
+
+	int Result=m_ChannelMenu.Show(TPM_RIGHTBUTTON | TPM_RETURNCMD | TPM_VERTICAL,
+								  rc.left,rc.bottom,&rc);
+	m_ChannelMenu.Destroy();
+
+	if (Result>0) {
+		const CChannelInfo *pChannelInfo=ChannelList.GetChannelInfo(Result-1);
+
+		if (pChannelInfo!=NULL) {
+			SelectChannel(pChannelInfo);
+		}
+	}
 }
 
 
@@ -721,7 +864,17 @@ LRESULT CProgramListPanel::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lP
 				lf.lfWeight=FW_BOLD;
 				m_TitleFont.Create(&lf);
 			}
+
+			LOGFONT lf;
+			::ZeroMemory(&lf,sizeof(lf));
+			lf.lfHeight=-m_Style.ChannelButtonIconSize.Height;
+			lf.lfCharSet=SYMBOL_CHARSET;
+			::lstrcpy(lf.lfFaceName,TEXT("Marlett"));
+			m_IconFont.Create(&lf);
+
 			CalcFontHeight();
+			CalcChannelHeight();
+
 			m_EpgIcons.Load();
 			/*
 			m_hwndToolTip=::CreateWindowEx(WS_EX_TOPMOST,TOOLTIPS_CLASS,NULL,
@@ -731,6 +884,8 @@ LRESULT CProgramListPanel::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lP
 			::SendMessage(m_hwndToolTip,TTM_SETDELAYTIME,TTDT_AUTOPOP,30000);
 			*/
 			m_EventInfoPopupManager.Initialize(hwnd,&m_EventInfoPopupHandler);
+
+			m_HotItem=-1;
 		}
 		return 0;
 
@@ -739,7 +894,7 @@ LRESULT CProgramListPanel::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lP
 			PAINTSTRUCT ps;
 
 			BeginPaint(hwnd,&ps);
-			DrawProgramList(ps.hdc,&ps.rcPaint);
+			Draw(ps.hdc,&ps.rcPaint);
 			EndPaint(hwnd,&ps);
 		}
 		return 0;
@@ -767,8 +922,8 @@ LRESULT CProgramListPanel::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lP
 			RECT rc;
 
 			Pos=m_ScrollPos;
-			GetClientRect(&rc);
-			Page=rc.bottom;
+			GetProgramListRect(&rc);
+			Page=rc.bottom-rc.top;
 			Max=m_TotalLines*LineHeight+
 				m_ItemList.NumItems()*(m_Style.TitlePadding.Top+m_Style.TitlePadding.Bottom-m_Style.LineSpacing)-Page;
 			if (Max<0)
@@ -788,8 +943,57 @@ LRESULT CProgramListPanel::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lP
 		}
 		return 0;
 
+	case WM_MOUSEMOVE:
+		{
+			int HotItem=ItemHitTest(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam));
+
+			if (HotItem!=m_HotItem) {
+				SetHotItem(HotItem);
+
+				if (m_HotItem>=0) {
+					TRACKMOUSEEVENT tme;
+
+					tme.cbSize=sizeof(tme);
+					tme.dwFlags=TME_LEAVE;
+					tme.hwndTrack=hwnd;
+					::TrackMouseEvent(&tme);
+				}
+			}
+		}
+		return 0;
+
+	case WM_MOUSELEAVE:
+		if (m_HotItem>=0)
+			SetHotItem(-1);
+		return 0;
+
 	case WM_LBUTTONDOWN:
-		SetFocus(hwnd);
+		{
+			::SetFocus(hwnd);
+
+			int HotItem=ItemHitTest(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam));
+			if (HotItem==m_HotItem) {
+				switch (HotItem) {
+				case ITEM_CHANNEL:
+					if (!IsStringEmpty(m_SelectedChannel.GetName())) {
+						CAppCore::ChannelSelectInfo ChSelInfo;
+
+						ChSelInfo.Channel=m_SelectedChannel;
+						ChSelInfo.fUseCurTuner=true;
+						ChSelInfo.fStrictService=false;
+						GetAppClass().Core.SelectChannel(ChSelInfo);
+					}
+					break;
+
+				case ITEM_CHANNELLISTBUTTON:
+					ShowChannelListMenu();
+					SetHotItem(-1);
+					break;
+				}
+			} else {
+				SetHotItem(HotItem);
+			}
+		}
 		return 0;
 
 	case WM_RBUTTONUP:
@@ -802,6 +1006,13 @@ LRESULT CProgramListPanel::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lP
 			Menu.Show(hwnd);
 		}
 		return 0;
+
+	case WM_SETCURSOR:
+		if ((HWND)wParam==hwnd) {
+			::SetCursor(::LoadCursor(NULL,LOWORD(lParam)==HTCLIENT && m_HotItem>=0?IDC_HAND:IDC_ARROW));
+			return TRUE;
+		}
+		break;
 
 	case WM_COMMAND:
 		switch (LOWORD(wParam)) {
@@ -891,12 +1102,22 @@ LRESULT CProgramListPanel::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lP
 		m_EpgIcons.Destroy();
 		//m_hwndToolTip=NULL;
 		return 0;
+
+	default:
+		{
+			LRESULT Result;
+
+			if (m_ChannelMenu.HandleMessage(hwnd,uMsg,wParam,lParam,&Result))
+				return Result;
+		}
+		break;
 	}
+
 	return ::DefWindowProc(hwnd,uMsg,wParam,lParam);
 }
 
 
-void CProgramListPanel::DrawProgramList(HDC hdc,const RECT *prcPaint)
+void CProgramListPanel::Draw(HDC hdc,const RECT *prcPaint)
 {
 	TVTest::CTextDraw DrawText;
 	DrawText.Begin(hdc,TVTest::CTextDraw::FLAG_JAPANESE_HYPHNATION);
@@ -904,27 +1125,82 @@ void CProgramListPanel::DrawProgramList(HDC hdc,const RECT *prcPaint)
 	const int LineHeight=m_FontHeight+m_Style.LineSpacing;
 	RECT rc,rcMargin;
 
-	HBRUSH hbr=::CreateSolidBrush(m_Theme.MarginColor);
 	HFONT hfontOld=static_cast<HFONT>(::GetCurrentObject(hdc,OBJ_FONT));
 	COLORREF crOldTextColor=::GetTextColor(hdc);
 	int OldBkMode=::SetBkMode(hdc,TRANSPARENT);
 
+	const bool fCurChannel=
+		m_CurChannel.GetServiceID()>0
+		&& m_SelectedChannel.GetNetworkID()==m_CurChannel.GetNetworkID()
+		&& m_SelectedChannel.GetTransportStreamID()==m_CurChannel.GetTransportStreamID()
+		&& m_SelectedChannel.GetServiceID()==m_CurChannel.GetServiceID();
+
+	GetHeaderRect(&rc);
+	if (IsRectIntersect(&rc,prcPaint)) {
+		const TVTest::Theme::Style &ChannelStyle=
+			fCurChannel?m_Theme.CurChannelNameStyle:m_Theme.ChannelNameStyle;
+
+		TVTest::Theme::Draw(hdc,rc,ChannelStyle.Back);
+
+		if (!IsStringEmpty(m_SelectedChannel.GetName())) {
+			TVTest::Style::Subtract(&rc,m_Style.ChannelPadding);
+
+			HBITMAP hbmLogo=GetAppClass().LogoManager.GetAssociatedLogoBitmap(
+				m_SelectedChannel.GetNetworkID(),m_SelectedChannel.GetServiceID(),
+				CLogoManager::LOGOTYPE_SMALL);
+			if (hbmLogo!=NULL) {
+				int LogoHeight=(rc.bottom-rc.top)-m_Style.ChannelLogoMargin.Vert();
+				int LogoWidth=LogoHeight*16/9;
+				rc.left+=m_Style.ChannelLogoMargin.Left;
+				DrawUtil::DrawBitmap(hdc,
+									 rc.left,rc.top+m_Style.ChannelLogoMargin.Top,
+									 LogoWidth,LogoHeight,
+									 hbmLogo);
+				rc.left+=LogoWidth+m_Style.ChannelLogoMargin.Right;
+			}
+
+			rc.right-=m_Style.ChannelButtonMargin+
+				m_Style.ChannelButtonIconSize.Width+
+				m_Style.ChannelButtonPadding.Horz();
+			TVTest::Style::Subtract(&rc,m_Style.ChannelNameMargin);
+			DrawUtil::SelectObject(hdc,m_TitleFont);
+			TVTest::Theme::Draw(hdc,rc,ChannelStyle.Fore,m_SelectedChannel.GetName(),
+								DT_LEFT | DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX | DT_END_ELLIPSIS);
+		}
+
+		GetChannelButtonRect(&rc);
+		const TVTest::Theme::Style &ButtonStyle=
+			m_HotItem==ITEM_CHANNELLISTBUTTON?
+				m_Theme.ChannelButtonHotStyle:m_Theme.ChannelButtonStyle;
+		if (ButtonStyle.Back.Border.Type!=TVTest::Theme::BORDER_NONE
+				|| ButtonStyle.Back.Fill!=ChannelStyle.Back.Fill)
+			TVTest::Theme::Draw(hdc,rc,ButtonStyle.Back);
+		TVTest::Style::Subtract(&rc,m_Style.ChannelButtonPadding);
+		DrawUtil::SelectObject(hdc,m_IconFont);
+		TVTest::Theme::Draw(hdc,rc,ButtonStyle.Fore,TEXT("6"),
+							DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+	}
+
 	HDC hdcIcons=::CreateCompatibleDC(hdc);
 	HBITMAP hbmOld=DrawUtil::SelectObject(hdcIcons,m_EpgIcons);
+	HBRUSH hbr=::CreateSolidBrush(m_Theme.MarginColor);
 
-	GetClientRect(&rc);
+	GetProgramListRect(&rc);
 
 	if (m_fShowRetrievingMessage && m_ItemList.NumItems()==0) {
-		::FillRect(hdc,prcPaint,hbr);
+		::FillRect(hdc,&rc,hbr);
 		DrawUtil::SelectObject(hdc,m_Font);
 		::SetTextColor(hdc,m_Theme.EventTextStyle.Fore.Fill.GetSolidColor());
 		TVTest::Style::Subtract(&rc,m_Style.TitlePadding);
 		DrawText.Draw(TEXT("”Ô‘g•\‚ÌŽæ“¾’†‚Å‚·..."),rc,LineHeight);
 	} else {
-		rc.top=-m_ScrollPos;
+		HRGN hrgn=::CreateRectRgnIndirect(&rc);
+		::SelectClipRgn(hdc,hrgn);
+
+		rc.top-=m_ScrollPos;
 		for (int i=0;i<m_ItemList.NumItems();i++) {
 			CProgramItemInfo *pItem=m_ItemList.GetItem(i);
-			const bool fCur=pItem->GetEventID()==m_CurEventID;
+			const bool fCur=fCurChannel && pItem->GetEventID()==m_CurEventID;
 			const int EventTextHeight=pItem->GetTextLines()*LineHeight;
 
 			rc.bottom=rc.top+pItem->GetTitleLines()*LineHeight+
@@ -1006,6 +1282,9 @@ void CProgramListPanel::DrawProgramList(HDC hdc,const RECT *prcPaint)
 			rcMargin.bottom=prcPaint->bottom;
 			::FillRect(hdc,&rcMargin,hbr);
 		}
+
+		::SelectClipRgn(hdc,NULL);
+		::DeleteObject(hrgn);
 	}
 
 	::SelectObject(hdcIcons,hbmOld);
@@ -1026,7 +1305,7 @@ CProgramListPanel::CEventInfoPopupHandler::CEventInfoPopupHandler(CProgramListPa
 
 bool CProgramListPanel::CEventInfoPopupHandler::HitTest(int x,int y,LPARAM *pParam)
 {
-	int Program=m_pPanel->HitTest(x,y);
+	int Program=m_pPanel->ProgramHitTest(x,y);
 
 	if (Program>=0) {
 		*pParam=Program;
@@ -1049,8 +1328,8 @@ bool CProgramListPanel::CEventInfoPopupHandler::ShowPopup(LPARAM Param,CEventInf
 	int IconWidth,IconHeight;
 	pPopup->GetPreferredIconSize(&IconWidth,&IconHeight);
 	HICON hIcon=GetAppClass().LogoManager.CreateLogoIcon(
-		m_pPanel->m_CurChannel.GetNetworkID(),
-		m_pPanel->m_CurChannel.GetServiceID(),
+		m_pPanel->m_SelectedChannel.GetNetworkID(),
+		m_pPanel->m_SelectedChannel.GetServiceID(),
 		IconWidth,IconHeight);
 
 	RECT rc;
@@ -1066,7 +1345,7 @@ bool CProgramListPanel::CEventInfoPopupHandler::ShowPopup(LPARAM Param,CEventInf
 	}
 
 	if (!pPopup->Show(&pItem->GetEventInfo(),&rc,
-					  hIcon,m_pPanel->m_CurChannel.GetName())) {
+					  hIcon,m_pPanel->m_SelectedChannel.GetName())) {
 		if (hIcon!=NULL)
 			::DestroyIcon(hIcon);
 		return false;
@@ -1079,7 +1358,13 @@ bool CProgramListPanel::CEventInfoPopupHandler::ShowPopup(LPARAM Param,CEventInf
 
 
 CProgramListPanel::ProgramListPanelStyle::ProgramListPanelStyle()
-	: TitlePadding(2)
+	: ChannelPadding(3,3,3,3)
+	, ChannelLogoMargin(0,0,3,0)
+	, ChannelNameMargin(0,2,0,2)
+	, ChannelButtonIconSize(12,12)
+	, ChannelButtonPadding(2)
+	, ChannelButtonMargin(12)
+	, TitlePadding(2)
 	, IconSize(CEpgIcons::ICON_WIDTH,CEpgIcons::ICON_HEIGHT)
 	, IconMargin(1)
 	, LineSpacing(1)
@@ -1089,6 +1374,12 @@ CProgramListPanel::ProgramListPanelStyle::ProgramListPanelStyle()
 
 void CProgramListPanel::ProgramListPanelStyle::SetStyle(const TVTest::Style::CStyleManager *pStyleManager)
 {
+	pStyleManager->Get(TEXT("program-list-panel.channel.padding"),&ChannelPadding);
+	pStyleManager->Get(TEXT("program-list-panel.channel.logo.margin"),&ChannelLogoMargin);
+	pStyleManager->Get(TEXT("program-list-panel.channel.channel-name.margin"),&ChannelNameMargin);
+	pStyleManager->Get(TEXT("program-list-panel.channel.button.icon"),&ChannelButtonIconSize);
+	pStyleManager->Get(TEXT("program-list-panel.channel.button.padding"),&ChannelButtonPadding);
+	pStyleManager->Get(TEXT("program-list-panel.channel.button.margin"),&ChannelButtonMargin);
 	pStyleManager->Get(TEXT("program-list-panel.title.padding"),&TitlePadding);
 	pStyleManager->Get(TEXT("program-list-panel.icon"),&IconSize);
 	pStyleManager->Get(TEXT("program-list-panel.icon.margin"),&IconMargin);
@@ -1098,6 +1389,12 @@ void CProgramListPanel::ProgramListPanelStyle::SetStyle(const TVTest::Style::CSt
 
 void CProgramListPanel::ProgramListPanelStyle::NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager)
 {
+	pStyleManager->ToPixels(&ChannelPadding);
+	pStyleManager->ToPixels(&ChannelLogoMargin);
+	pStyleManager->ToPixels(&ChannelNameMargin);
+	pStyleManager->ToPixels(&ChannelButtonIconSize);
+	pStyleManager->ToPixels(&ChannelButtonPadding);
+	pStyleManager->ToPixels(&ChannelButtonMargin);
 	pStyleManager->ToPixels(&TitlePadding);
 	pStyleManager->ToPixels(&IconSize);
 	pStyleManager->ToPixels(&IconMargin);
