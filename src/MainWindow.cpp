@@ -926,15 +926,34 @@ LRESULT CMainWindow::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 			pmmi->ptMinTrackSize.y=rc.bottom-rc.top;
 
 			if (!m_fShowTitleBar || m_fCustomTitleBar) {
-				HMONITOR hMonitor=::MonitorFromWindow(hwnd,MONITOR_DEFAULTTONEAREST);
+				HMONITOR hMonitor=::MonitorFromWindow(hwnd,MONITOR_DEFAULTTOPRIMARY);
 				MONITORINFO mi;
 
 				mi.cbSize=sizeof(MONITORINFO);
 				if (::GetMonitorInfo(hMonitor,&mi)) {
-					pmmi->ptMaxSize.x=mi.rcWork.right-mi.rcWork.left;
-					pmmi->ptMaxSize.y=mi.rcWork.bottom-mi.rcWork.top;
-					pmmi->ptMaxPosition.x=mi.rcWork.left;
-					pmmi->ptMaxPosition.y=mi.rcWork.top;
+					RECT Border;
+
+					if (m_fCustomFrame) {
+						Border.left=Border.top=Border.right=Border.bottom=m_CustomFrameWidth;
+					} else {
+						RECT rcClient,rcWindow;
+
+						::GetClientRect(hwnd,&rcClient);
+						MapWindowRect(hwnd,NULL,&rcClient);
+						::GetWindowRect(hwnd,&rcWindow);
+						Border.left=rcClient.left-rcWindow.left;
+						Border.top=rcClient.top-rcWindow.top;
+						Border.right=rcWindow.right-rcClient.right;
+						Border.bottom=rcWindow.bottom-rcClient.bottom;
+					}
+
+					pmmi->ptMaxSize.x=(mi.rcWork.right-mi.rcWork.left)+Border.left+Border.right;
+					pmmi->ptMaxSize.y=(mi.rcWork.bottom-mi.rcWork.top)+Border.top+Border.bottom;
+					pmmi->ptMaxPosition.x=mi.rcWork.left-mi.rcMonitor.left-Border.left;
+					pmmi->ptMaxPosition.y=mi.rcWork.top-mi.rcMonitor.top-Border.top;
+					// ウィンドウのあるモニタがプライマリモニタよりも大きい場合、
+					// ptMaxTrackSize を設定しないとサイズがおかしくなる
+					pmmi->ptMaxTrackSize=pmmi->ptMaxSize;
 				}
 			}
 		}
