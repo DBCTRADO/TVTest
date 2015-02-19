@@ -96,13 +96,22 @@ bool AdjustDialogPos(HWND hwndOwner,HWND hDlg)
 	RECT rcWork,rcWnd,rcDlg;
 	int x,y;
 
-	if (!SystemParametersInfo(SPI_GETWORKAREA,0,&rcWork,0))
-		return false;
-	if (hwndOwner)
-		GetWindowRect(hwndOwner,&rcWnd);
-	else
+	if (hwndOwner) {
+		HMONITOR hMonitor=::MonitorFromWindow(hwndOwner,MONITOR_DEFAULTTONEAREST);
+		MONITORINFO mi;
+
+		mi.cbSize=sizeof(mi);
+		if (!::GetMonitorInfo(hMonitor,&mi))
+			return false;
+		rcWork=mi.rcWork;
+		::GetWindowRect(hwndOwner,&rcWnd);
+	} else {
+		if (!::SystemParametersInfo(SPI_GETWORKAREA,0,&rcWork,0))
+			return false;
 		rcWnd=rcWork;
-	GetWindowRect(hDlg,&rcDlg);
+	}
+
+	::GetWindowRect(hDlg,&rcDlg);
 	x=((rcWnd.right-rcWnd.left)-(rcDlg.right-rcDlg.left))/2+rcWnd.left;
 	if (x<rcWork.left)
 		x=rcWork.left;
@@ -113,7 +122,8 @@ bool AdjustDialogPos(HWND hwndOwner,HWND hDlg)
 		y=rcWork.top;
 	else if (y+(rcDlg.bottom-rcDlg.top)>rcWork.bottom)
 		y=rcWork.bottom-(rcDlg.bottom-rcDlg.top);
-	return SetWindowPos(hDlg,NULL,x,y,0,0,SWP_NOSIZE | SWP_NOZORDER)!=FALSE;
+
+	return ::SetWindowPos(hDlg,NULL,x,y,0,0,SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE)!=FALSE;
 }
 
 
