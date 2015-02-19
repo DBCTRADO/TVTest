@@ -968,7 +968,7 @@ INT_PTR CALLBACK CRecordManager::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARA
 		case IDC_RECORD_WRITEPLUGINSETTING:
 			{
 				CRecordManager *pThis=GetThis(hDlg);
-				int Sel=DlgComboBox_GetCurSel(hDlg,IDC_RECORD_WRITEPLUGIN)-1;
+				LRESULT Sel=DlgComboBox_GetCurSel(hDlg,IDC_RECORD_WRITEPLUGIN)-1;
 
 				if (Sel>=0 && (size_t)Sel<pThis->m_WritePluginList.size()) {
 					ShowWritePluginSetting(hDlg,pThis->m_WritePluginList[Sel].c_str());

@@ -499,7 +499,7 @@ INT_PTR CRecordOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 
 		case IDC_RECORDOPTIONS_WRITEPLUGINSETTING:
 			{
-				int Sel=DlgComboBox_GetCurSel(hDlg,IDC_RECORDOPTIONS_WRITEPLUGIN)-1;
+				LRESULT Sel=DlgComboBox_GetCurSel(hDlg,IDC_RECORDOPTIONS_WRITEPLUGIN)-1;
 
 				if (Sel>=0 && (size_t)Sel<m_WritePluginList.size()) {
 					CRecordManager::ShowWritePluginSetting(hDlg,m_WritePluginList[Sel].c_str());

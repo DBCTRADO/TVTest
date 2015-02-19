@@ -184,7 +184,7 @@ bool CTSProcessorErrorDialog::SearchFilters()
 {
 	DlgListBox_Clear(m_hDlg,IDC_TSPROCESSORERROR_FILTERLIST);
 
-	int DeviceSel=DlgComboBox_GetCurSel(m_hDlg,IDC_TSPROCESSORERROR_DEVICELIST);
+	int DeviceSel=(int)DlgComboBox_GetCurSel(m_hDlg,IDC_TSPROCESSORERROR_DEVICELIST);
 	if (DeviceSel<0)
 		return false;
 	int Device=(int)DlgComboBox_GetItemData(m_hDlg,IDC_TSPROCESSORERROR_DEVICELIST,DeviceSel);

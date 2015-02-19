@@ -567,7 +567,7 @@ INT_PTR CPanelOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 					m_InitialTab=m_AvailItemList[InitialTab-1].ID;
 				}
 
-				int TabStyleSel=DlgComboBox_GetCurSel(hDlg,IDC_PANELOPTIONS_TABSTYLE);
+				int TabStyleSel=(int)DlgComboBox_GetCurSel(hDlg,IDC_PANELOPTIONS_TABSTYLE);
 				if (TabStyleSel>=0) {
 					m_TabStyle=static_cast<CPanelForm::TabStyle>(TabStyleSel);
 					pPanel->SetTabStyle(m_TabStyle);

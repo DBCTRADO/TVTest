@@ -292,7 +292,7 @@ void COperationOptions::InitWheelSettings(int ID,int CurCommand) const
 		int Command=m_WheelCommandManager.GetCommandID(i);
 		TCHAR szText[TVTest::CWheelCommandManager::MAX_COMMAND_TEXT];
 		m_WheelCommandManager.GetCommandText(Command,szText,lengthof(szText));
-		int Index=DlgComboBox_AddString(m_hDlg,ID,szText);
+		LRESULT Index=DlgComboBox_AddString(m_hDlg,ID,szText);
 		DlgComboBox_SetItemData(m_hDlg,ID,Index,Command);
 		if (Command==CurCommand)
 			Sel=i+1;

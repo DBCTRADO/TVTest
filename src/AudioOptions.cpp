@@ -435,7 +435,7 @@ INT_PTR CAudioOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 		case PSN_APPLY:
 			{
 				TVTest::String AudioDevice;
-				LRESULT Sel=DlgComboBox_GetCurSel(hDlg,IDC_OPTIONS_AUDIODEVICE);
+				int Sel=(int)DlgComboBox_GetCurSel(hDlg,IDC_OPTIONS_AUDIODEVICE);
 				if (Sel>0)
 					GetDlgComboBoxItemString(hDlg,IDC_OPTIONS_AUDIODEVICE,Sel,&AudioDevice);
 				if (TVTest::StringUtility::CompareNoCase(m_AudioDeviceName,AudioDevice)!=0) {
@@ -444,7 +444,7 @@ INT_PTR CAudioOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 				}
 
 				TVTest::String AudioFilter;
-				Sel=DlgComboBox_GetCurSel(hDlg,IDC_OPTIONS_AUDIOFILTER);
+				Sel=(int)DlgComboBox_GetCurSel(hDlg,IDC_OPTIONS_AUDIOFILTER);
 				if (Sel>0)
 					GetDlgComboBoxItemString(hDlg,IDC_OPTIONS_AUDIOFILTER,Sel,&AudioFilter);
 				if (TVTest::StringUtility::CompareNoCase(m_AudioFilterName,AudioFilter)!=0) {

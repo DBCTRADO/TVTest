@@ -592,8 +592,8 @@ void CTSProcessorOptions::UpdateDeviceFilterList(HWND hDlg,int ModuleID,int Devi
 	GetDlgItemString(hDlg,ModuleID,&ModuleName);
 	GetDlgItemString(hDlg,DeviceID,&DeviceName);
 	GetDlgItemString(hDlg,FilterID,&FilterName);
-	DeviceEditSel=::SendDlgItemMessage(hDlg,DeviceID,CB_GETEDITSEL,0,0);
-	FilterEditSel=::SendDlgItemMessage(hDlg,FilterID,CB_GETEDITSEL,0,0);
+	DeviceEditSel=(DWORD)::SendDlgItemMessage(hDlg,DeviceID,CB_GETEDITSEL,0,0);
+	FilterEditSel=(DWORD)::SendDlgItemMessage(hDlg,FilterID,CB_GETEDITSEL,0,0);
 	DlgComboBox_Clear(hDlg,DeviceID);
 	DlgComboBox_Clear(hDlg,FilterID);
 
@@ -608,9 +608,9 @@ void CTSProcessorOptions::UpdateDeviceFilterList(HWND hDlg,int ModuleID,int Devi
 				for (auto itDec=itDev->FilterList.begin();itDec!=itDev->FilterList.end();++itDec) {
 					DlgComboBox_AddString(hDlg,FilterID,itDec->c_str());
 					if (StringUtility::CompareNoCase(FilterName,*itDec)==0)
-						FilterSel=DlgComboBox_GetCount(hDlg,FilterID)-1;
+						FilterSel=(int)DlgComboBox_GetCount(hDlg,FilterID)-1;
 				}
-				DeviceSel=DlgComboBox_GetCount(hDlg,DeviceID)-1;
+				DeviceSel=(int)DlgComboBox_GetCount(hDlg,DeviceID)-1;
 			}
 		}
 
