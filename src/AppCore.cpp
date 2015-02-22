@@ -32,6 +32,20 @@ bool CAppCore::GetDriverDirectory(LPTSTR pszDirectory,int MaxLength) const
 }
 
 
+void CAppCore::OnError(LPCTSTR pszText, ...)
+{
+	va_list Args;
+	TCHAR szText[1024];
+
+	va_start(Args,pszText);
+	StdUtil::vsnprintf(szText,lengthof(szText),pszText,Args);
+	va_end(Args);
+	m_App.AddLog(CLogItem::TYPE_ERROR,TEXT("%s"),szText);
+	if (!m_fSilent)
+		m_App.UICore.GetSkin()->ShowErrorMessage(szText);
+}
+
+
 void CAppCore::OnError(const CBonErrorHandler *pErrorHandler,LPCTSTR pszTitle)
 {
 	if (pErrorHandler==nullptr)
@@ -1065,13 +1079,14 @@ bool CAppCore::SaveCurrentChannel()
 }
 
 
-bool CAppCore::GenerateRecordFileName(LPTSTR pszFileName,int MaxFileName) const
+bool CAppCore::GenerateRecordFileName(LPTSTR pszFileName,int MaxFileName)
 {
 	CRecordManager::FileNameFormatInfo FormatInfo;
 	const CChannelInfo *pChannelInfo=m_App.ChannelManager.GetCurrentChannelInfo();
 	WORD ServiceID;
 	TCHAR szServiceName[32];
 	bool fEventInfoValid=false;
+	TCHAR szPath[MAX_PATH];
 
 	FormatInfo.pszChannelName=nullptr;
 	FormatInfo.ChannelNo=0;
@@ -1110,8 +1125,25 @@ bool CAppCore::GenerateRecordFileName(LPTSTR pszFileName,int MaxFileName) const
 		FormatInfo.EventInfo.m_bValidStartTime=false;
 		FormatInfo.EventInfo.m_Duration=0;
 	}
+	if (!m_App.RecordManager.GenerateFileName(szPath,lengthof(szPath),&FormatInfo)) {
+		OnError(TEXT("録画ファイルのパスを作成できません。"));
+		return false;
+	}
+	if (!GetAbsolutePath(szPath,pszFileName,MaxFileName)) {
+		OnError(TEXT("録画ファイルの保存先フォルダの指定が正しくないか、パスが長過ぎます。"));
+		return false;
+	}
+	::lstrcpy(szPath,pszFileName);
+	::PathRemoveFileSpec(szPath);
+	if (!::PathIsDirectory(szPath)) {
+		int Result=::SHCreateDirectoryEx(NULL,szPath,NULL);
+		if (Result!=ERROR_SUCCESS && Result!=ERROR_ALREADY_EXISTS) {
+			OnError(TEXT("録画ファイルの保存先フォルダ \"%s\" を作成できません。"),szPath);
+			return false;
+		}
+	}
 
-	return m_App.RecordManager.GenerateFileName(pszFileName,MaxFileName,&FormatInfo);
+	return true;
 }
 
 

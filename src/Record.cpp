@@ -1046,15 +1046,17 @@ INT_PTR CALLBACK CRecordManager::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARA
 						SetDlgItemFocus(hDlg,IDC_RECORD_FILENAME);
 						return TRUE;
 					}
-					FilePath.GetDirectory(szFileName);
-					CAppMain::CreateDirectoryResult CreateDirResult=
-						GetAppClass().CreateDirectory(
-							hDlg,szFileName,
-							TEXT("録画ファイルの保存先フォルダ \"%s\" がありません。\n")
-							TEXT("作成しますか?"));
-					if (CreateDirResult==CAppMain::CREATEDIRECTORY_RESULT_ERROR) {
-						SetDlgItemFocus(hDlg,IDC_RECORD_FILENAME);
-						return TRUE;
+					if (StartTimeChecked!=IDC_RECORD_START_NOW) {
+						FilePath.GetDirectory(szFileName);
+						CAppMain::CreateDirectoryResult CreateDirResult=
+							GetAppClass().CreateDirectory(
+								hDlg,szFileName,
+								TEXT("録画ファイルの保存先フォルダ \"%s\" がありません。\n")
+								TEXT("作成しますか?"));
+						if (CreateDirResult==CAppMain::CREATEDIRECTORY_RESULT_ERROR) {
+							SetDlgItemFocus(hDlg,IDC_RECORD_FILENAME);
+							return TRUE;
+						}
 					}
 					pThis->SetFileName(FilePath.GetPath());
 					/*
@@ -1083,7 +1085,7 @@ INT_PTR CALLBACK CRecordManager::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARA
 							TimeSpec.Type=TIME_DURATION;
 							Hour=GetDlgItemInt(hDlg,IDC_RECORD_STARTTIME_HOUR,NULL,FALSE);
 							Minute=GetDlgItemInt(hDlg,IDC_RECORD_STARTTIME_MINUTE,NULL,FALSE);
-						Second=GetDlgItemInt(hDlg,IDC_RECORD_STARTTIME_SECOND,NULL,FALSE);
+							Second=GetDlgItemInt(hDlg,IDC_RECORD_STARTTIME_SECOND,NULL,FALSE);
 							TimeSpec.Time.Duration=(Hour*(60*60)+Minute*60+Second)*1000;
 							pThis->SetStartTimeSpec(&TimeSpec);
 						}

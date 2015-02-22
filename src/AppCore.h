@@ -46,6 +46,7 @@ public:
 
 	CAppCore(CAppMain &App);
 	bool GetDriverDirectory(LPTSTR pszDirectory,int MaxLength) const;
+	void OnError(LPCTSTR pszText, ...);
 	void OnError(const CBonErrorHandler *pErrorHandler,LPCTSTR pszTitle=NULL);
 	void SetSilent(bool fSilent);
 	bool IsSilent() const { return m_fSilent; }
@@ -121,7 +122,7 @@ private:
 	bool m_f1SegMode;
 
 	int GetCorresponding1SegService(int Space,WORD NetworkID,WORD TSID,WORD ServiceID) const;
-	bool GenerateRecordFileName(LPTSTR pszFileName,int MaxFileName) const;
+	bool GenerateRecordFileName(LPTSTR pszFileName,int MaxFileName);
 
 	// ÉRÉsÅ[ã÷é~
 	CAppCore(const CAppCore &) /* = delete */;

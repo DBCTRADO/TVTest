@@ -222,14 +222,6 @@ bool CRecordOptions::GenerateFilePath(LPTSTR pszFileName,int MaxLength,LPCTSTR *
 			*ppszErrorMessage=TEXT("設定で保存先フォルダを指定してください。");
 		return false;
 	}
-	if (!::PathIsDirectory(m_szSaveFolder)) {
-		int Result=::SHCreateDirectoryEx(NULL,m_szSaveFolder,NULL);
-		if (Result!=ERROR_SUCCESS && Result!=ERROR_ALREADY_EXISTS) {
-			if (ppszErrorMessage)
-				*ppszErrorMessage=TEXT("保存先フォルダが作成できません。");
-			return false;
-		}
-	}
 	if (m_szFileName[0]=='\0') {
 		if (ppszErrorMessage)
 			*ppszErrorMessage=TEXT("設定でファイル名を指定してください。");
