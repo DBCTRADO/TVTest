@@ -447,29 +447,17 @@ INT_PTR CCaptureOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam
 				TCHAR szSaveFolder[MAX_PATH],szFileName[MAX_PATH],szMessage[256];
 
 				GetDlgItemText(hDlg,IDC_CAPTUREOPTIONS_SAVEFOLDER,szSaveFolder,lengthof(szSaveFolder));
-				if (szSaveFolder[0]!='\0' && !::PathIsDirectory(szSaveFolder)) {
-					TCHAR szMessage[MAX_PATH+80];
-
-					StdUtil::snprintf(szMessage,lengthof(szMessage),
+				CAppMain::CreateDirectoryResult CreateDirResult=
+					GetAppClass().CreateDirectory(
+						hDlg,szSaveFolder,
 						TEXT("キャプチャ画像の保存先フォルダ \"%s\" がありません。\n")
-						TEXT("作成しますか?"),szSaveFolder);
-					if (::MessageBox(hDlg,szMessage,TEXT("フォルダ作成の確認"),
-									 MB_YESNO | MB_ICONQUESTION)==IDYES) {
-						int Result;
-
-						Result=::SHCreateDirectoryEx(hDlg,szSaveFolder,NULL);
-						if (Result!=ERROR_SUCCESS
-								&& Result!=ERROR_ALREADY_EXISTS) {
-							SettingError();
-							StdUtil::snprintf(szMessage,lengthof(szMessage),
-								TEXT("フォルダ \"%s\" を作成できません。"),szSaveFolder);
-							::MessageBox(hDlg,szMessage,
-										 NULL,MB_OK | MB_ICONEXCLAMATION);
-							SetDlgItemFocus(hDlg,IDC_CAPTUREOPTIONS_SAVEFOLDER);
-							return TRUE;
-						}
-					}
+						TEXT("作成しますか?"));
+				if (CreateDirResult==CAppMain::CREATEDIRECTORY_RESULT_ERROR) {
+					SettingError();
+					SetDlgItemFocus(hDlg,IDC_CAPTUREOPTIONS_SAVEFOLDER);
+					return TRUE;
 				}
+
 				GetDlgItemText(hDlg,IDC_CAPTUREOPTIONS_FILENAME,szFileName,lengthof(szFileName));
 				if (!IsValidFileName(szFileName,false,szMessage,lengthof(szMessage))) {
 					SettingError();

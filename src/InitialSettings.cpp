@@ -279,25 +279,14 @@ INT_PTR CInitialSettings::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPara
 				TCHAR szRecordFolder[MAX_PATH];
 				::GetDlgItemText(hDlg,IDC_INITIALSETTINGS_RECORDFOLDER,
 								 szRecordFolder,lengthof(szRecordFolder));
-				if (szRecordFolder[0]!='\0'
-						&& !::PathIsDirectory(szRecordFolder)) {
-					TCHAR szMessage[MAX_PATH+64];
-
-					StdUtil::snprintf(szMessage,lengthof(szMessage),
+				CAppMain::CreateDirectoryResult CreateDirResult=
+					GetAppClass().CreateDirectory(
+						hDlg,szRecordFolder,
 						TEXT("録画ファイルの保存先フォルダ \"%s\" がありません。\n")
-						TEXT("作成しますか?"),szRecordFolder);
-					if (::MessageBox(hDlg,szMessage,TEXT("フォルダ作成の確認"),
-									 MB_YESNO | MB_ICONQUESTION)==IDYES) {
-						int Result;
-
-						Result=::SHCreateDirectoryEx(hDlg,szRecordFolder,NULL);
-						if (Result!=ERROR_SUCCESS
-								&& Result!=ERROR_ALREADY_EXISTS) {
-							::MessageBox(hDlg,TEXT("フォルダが作成できません。"),
-										 NULL,MB_OK | MB_ICONEXCLAMATION);
-							return TRUE;
-						}
-					}
+						TEXT("作成しますか?"));
+				if (CreateDirResult==CAppMain::CREATEDIRECTORY_RESULT_ERROR) {
+					SetDlgItemFocus(hDlg,IDC_INITIALSETTINGS_RECORDFOLDER);
+					return TRUE;
 				}
 				m_RecordFolder=szRecordFolder;
 			}

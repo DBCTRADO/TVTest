@@ -1201,6 +1201,44 @@ bool CAppMain::ShowOptionDialog(HWND hwndOwner,int StartPage)
 }
 
 
+CAppMain::CreateDirectoryResult CAppMain::CreateDirectory(
+	HWND hwnd,LPCTSTR pszDirectory,LPCTSTR pszMessage)
+{
+	if (IsStringEmpty(pszDirectory))
+		return CREATEDIRECTORY_RESULT_NOPATH;
+
+	TCHAR szPath[MAX_PATH];
+	TCHAR szMessage[MAX_PATH+80];
+
+	if (!GetAbsolutePath(pszDirectory,szPath)) {
+		StdUtil::snprintf(szMessage,lengthof(szMessage),
+						  TEXT("フォルダ \"%s\" のパスが長過ぎます。"),szPath);
+		::MessageBox(hwnd,szMessage,nullptr,MB_OK | MB_ICONEXCLAMATION);
+		return CREATEDIRECTORY_RESULT_ERROR;
+	}
+
+	if (!::PathIsDirectory(szPath)) {
+		StdUtil::snprintf(szMessage,lengthof(szMessage),pszMessage,szPath);
+		if (::MessageBox(hwnd,szMessage,TEXT("フォルダ作成の確認"),
+						 MB_YESNO | MB_ICONQUESTION)!=IDYES)
+			return CREATEDIRECTORY_RESULT_CANCELLED;
+
+		int Result=::SHCreateDirectoryEx(hwnd,szPath,nullptr);
+		if (Result!=ERROR_SUCCESS && Result!=ERROR_ALREADY_EXISTS) {
+			StdUtil::snprintf(szMessage,lengthof(szMessage),
+							  TEXT("フォルダ \"%s\" を作成できません。(エラーコード %#x)"),szPath,Result);
+			AddLog(CLogItem::TYPE_ERROR,szMessage);
+			::MessageBox(hwnd,szMessage,nullptr,MB_OK | MB_ICONEXCLAMATION);
+			return CREATEDIRECTORY_RESULT_ERROR;
+		}
+
+		AddLog(CLogItem::TYPE_INFORMATION,TEXT("フォルダ \"%s\" を作成しました。"),szPath);
+	}
+
+	return CREATEDIRECTORY_RESULT_SUCCESS;
+}
+
+
 bool CAppMain::SendInterprocessMessage(HWND hwnd,UINT Message,const void *pParam,DWORD ParamSize)
 {
 	COPYDATASTRUCT cds;

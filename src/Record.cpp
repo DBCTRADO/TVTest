@@ -1047,25 +1047,14 @@ INT_PTR CALLBACK CRecordManager::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARA
 						return TRUE;
 					}
 					FilePath.GetDirectory(szFileName);
-					if (!::PathIsDirectory(szFileName)) {
-						TCHAR szMessage[MAX_PATH+64];
-
-						StdUtil::snprintf(szMessage,lengthof(szMessage),
+					CAppMain::CreateDirectoryResult CreateDirResult=
+						GetAppClass().CreateDirectory(
+							hDlg,szFileName,
 							TEXT("録画ファイルの保存先フォルダ \"%s\" がありません。\n")
-							TEXT("作成しますか?"),szFileName);
-						if (::MessageBox(hDlg,szMessage,TEXT("フォルダ作成の確認"),
-										 MB_YESNO | MB_ICONQUESTION)==IDYES) {
-							int Result;
-
-							Result=::SHCreateDirectoryEx(hDlg,szFileName,NULL);
-							if (Result!=ERROR_SUCCESS
-									&& Result!=ERROR_ALREADY_EXISTS) {
-								::MessageBox(hDlg,TEXT("フォルダが作成できません。"),
-											 NULL,MB_OK | MB_ICONEXCLAMATION);
-								SetDlgItemFocus(hDlg,IDC_RECORD_FILENAME);
-								return TRUE;
-							}
-						}
+							TEXT("作成しますか?"));
+					if (CreateDirResult==CAppMain::CREATEDIRECTORY_RESULT_ERROR) {
+						SetDlgItemFocus(hDlg,IDC_RECORD_FILENAME);
+						return TRUE;
 					}
 					pThis->SetFileName(FilePath.GetPath());
 					/*

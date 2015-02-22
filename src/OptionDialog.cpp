@@ -278,6 +278,17 @@ INT_PTR COptionDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 }
 
 
+void COptionDialog::ActivatePage(COptions *pOptions)
+{
+	for (int i=0;i<NUM_PAGES;i++) {
+		if (m_PageList[i].pOptions==pOptions) {
+			SetPage(i);
+			break;
+		}
+	}
+}
+
+
 void COptionDialog::OnSettingError(COptions *pOptions)
 {
 	for (int i=0;i<NUM_PAGES;i++) {

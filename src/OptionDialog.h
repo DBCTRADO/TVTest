@@ -62,6 +62,7 @@ private:
 	COLORREF GetTitleColor(int Page) const;
 
 // COptionFrame
+	void ActivatePage(COptions *pOptions) override;
 	void OnSettingError(COptions *pOptions) override;
 
 // CBasicDialog
