@@ -1768,6 +1768,10 @@ bool CMainWindow::OnCreate(const CREATESTRUCT *pcs)
 	m_pCore->SetCommandCheckedState(CM_SPDIF_TOGGLE,
 		m_App.CoreEngine.IsSpdifPassthroughEnabled());
 
+	m_pCore->SetCommandCheckedState(CM_TITLEBAR,m_fShowTitleBar);
+	m_pCore->SetCommandCheckedState(CM_STATUSBAR,m_fShowStatusBar);
+	m_pCore->SetCommandCheckedState(CM_SIDEBAR,m_fShowSideBar);
+
 	HMENU hSysMenu=::GetSystemMenu(m_hwnd,FALSE);
 	::InsertMenu(hSysMenu,0,MF_BYPOSITION | MF_STRING | MF_ENABLED,
 				 SC_ABOUT,TEXT("ƒo[ƒWƒ‡ƒ“î•ñ(&A)"));
