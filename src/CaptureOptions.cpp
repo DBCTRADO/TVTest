@@ -210,6 +210,16 @@ bool CCaptureOptions::GenerateFileName(LPTSTR pszFileName,int MaxLength,const SY
 	if (m_szSaveFolder[0]!='\0') {
 		if (!GetAbsolutePath(m_szSaveFolder,szSaveFolder,lengthof(szSaveFolder)))
 			return false;
+		if (!::PathIsDirectory(szSaveFolder)) {
+			int Result=::SHCreateDirectoryEx(NULL,szSaveFolder,NULL);
+			if (Result!=ERROR_SUCCESS && Result!=ERROR_ALREADY_EXISTS) {
+				GetAppClass().AddLog(
+					CLogItem::TYPE_ERROR,
+					TEXT("キャプチャの保存先フォルダ \"%s\" を作成できません。"),
+					szSaveFolder);
+				return false;
+			}
+		}
 	} else {
 		if (!GetAppClass().GetAppDirectory(szSaveFolder))
 			return false;
