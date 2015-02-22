@@ -1082,63 +1082,26 @@ bool CAppCore::SaveCurrentChannel()
 bool CAppCore::GenerateRecordFileName(LPTSTR pszFileName,int MaxFileName)
 {
 	CRecordManager::FileNameFormatInfo FormatInfo;
-	const CChannelInfo *pChannelInfo=m_App.ChannelManager.GetCurrentChannelInfo();
-	WORD ServiceID;
-	TCHAR szServiceName[32];
-	bool fEventInfoValid=false;
-	TCHAR szPath[MAX_PATH];
 
-	FormatInfo.pszChannelName=nullptr;
-	FormatInfo.ChannelNo=0;
-	FormatInfo.pszServiceName=nullptr;
-	if (pChannelInfo!=nullptr) {
-		FormatInfo.pszChannelName=pChannelInfo->GetName();
-		if (pChannelInfo->GetChannelNo()!=0)
-			FormatInfo.ChannelNo=pChannelInfo->GetChannelNo();
-		else if (pChannelInfo->GetServiceID()>0)
-			FormatInfo.ChannelNo=pChannelInfo->GetServiceID();
-	}
-	if (m_App.CoreEngine.m_DtvEngine.GetServiceID(&ServiceID)) {
-		int Index=m_App.CoreEngine.m_DtvEngine.m_TsAnalyzer.GetServiceIndexByID(ServiceID);
-		if (m_App.CoreEngine.m_DtvEngine.m_TsAnalyzer.GetServiceName(Index,szServiceName,lengthof(szServiceName)))
-			FormatInfo.pszServiceName=szServiceName;
-		bool fNext=false;
-		SYSTEMTIME stCur,stStart;
-		if (!m_App.CoreEngine.m_DtvEngine.m_TsAnalyzer.GetTotTime(&stCur))
-			GetCurrentEpgTime(&stCur);
-		FormatInfo.stTotTime=stCur;
-		if (m_App.CoreEngine.m_DtvEngine.GetEventTime(&stStart,nullptr,true)) {
-			LONGLONG Diff=DiffSystemTime(&stCur,&stStart);
-			if (Diff>=0 && Diff<TimeConsts::SYSTEMTIME_MINUTE)
-				fNext=true;
-		}
-		if (m_App.CoreEngine.m_DtvEngine.GetEventInfo(&FormatInfo.EventInfo,fNext))
-			fEventInfoValid=true;
-		FormatInfo.EventInfo.m_ServiceID=ServiceID;
-	} else {
-		FormatInfo.EventInfo.m_ServiceID=0;
-	}
-	if (!fEventInfoValid) {
-		FormatInfo.EventInfo.m_NetworkID=0;
-		FormatInfo.EventInfo.m_TransportStreamID=0;
-		FormatInfo.EventInfo.m_EventID=0;
-		FormatInfo.EventInfo.m_bValidStartTime=false;
-		FormatInfo.EventInfo.m_Duration=0;
-	}
-	if (!m_App.RecordManager.GenerateFileName(szPath,lengthof(szPath),&FormatInfo)) {
+	GetVariableStringEventInfo(&FormatInfo);
+
+	TVTest::String Path;
+	if (!m_App.RecordManager.GenerateFilePath(FormatInfo,NULL,&Path)) {
 		OnError(TEXT("録画ファイルのパスを作成できません。"));
 		return false;
 	}
-	if (!GetAbsolutePath(szPath,pszFileName,MaxFileName)) {
+	if (!GetAbsolutePath(Path.c_str(),pszFileName,MaxFileName)) {
 		OnError(TEXT("録画ファイルの保存先フォルダの指定が正しくないか、パスが長過ぎます。"));
 		return false;
 	}
-	::lstrcpy(szPath,pszFileName);
-	::PathRemoveFileSpec(szPath);
-	if (!::PathIsDirectory(szPath)) {
-		int Result=::SHCreateDirectoryEx(NULL,szPath,NULL);
+
+	TCHAR szDir[MAX_PATH];
+	::lstrcpy(szDir,pszFileName);
+	::PathRemoveFileSpec(szDir);
+	if (!::PathIsDirectory(szDir)) {
+		int Result=::SHCreateDirectoryEx(NULL,szDir,NULL);
 		if (Result!=ERROR_SUCCESS && Result!=ERROR_ALREADY_EXISTS) {
-			OnError(TEXT("録画ファイルの保存先フォルダ \"%s\" を作成できません。"),szPath);
+			OnError(TEXT("録画ファイルの保存先フォルダ \"%s\" を作成できません。"),szDir);
 			return false;
 		}
 	}
@@ -1401,4 +1364,56 @@ bool CAppCore::IsChannelScanning() const
 bool CAppCore::IsDriverNoSignalLevel(LPCTSTR pszFileName) const
 {
 	return m_App.DriverOptions.IsNoSignalLevel(pszFileName);
+}
+
+
+bool CAppCore::GetVariableStringEventInfo(
+	TVTest::CEventVariableStringMap::EventInfo *pInfo) const
+{
+	if (pInfo==nullptr)
+		return false;
+
+	const CChannelInfo *pChannelInfo=m_App.ChannelManager.GetCurrentChannelInfo();
+	bool fEventInfoValid=false;
+
+	if (pChannelInfo!=nullptr) {
+		pInfo->Channel=*pChannelInfo;
+		if (pInfo->Channel.GetChannelNo()==0
+				&& pInfo->Channel.GetServiceID()>0)
+			pInfo->Channel.SetChannelNo(pInfo->Channel.GetServiceID());
+	}
+
+	SYSTEMTIME stCur;
+	if (!m_App.CoreEngine.m_DtvEngine.m_TsAnalyzer.GetTotTime(&stCur))
+		GetCurrentEpgTime(&stCur);
+	pInfo->TotTime=stCur;
+
+	WORD ServiceID;
+	if (m_App.CoreEngine.m_DtvEngine.GetServiceID(&ServiceID)) {
+		int Index=m_App.CoreEngine.m_DtvEngine.m_TsAnalyzer.GetServiceIndexByID(ServiceID);
+		TCHAR szServiceName[32];
+		if (m_App.CoreEngine.m_DtvEngine.m_TsAnalyzer.GetServiceName(Index,szServiceName,lengthof(szServiceName)))
+			pInfo->ServiceName=szServiceName;
+		bool fNext=false;
+		SYSTEMTIME stStart;
+		if (m_App.CoreEngine.m_DtvEngine.GetEventTime(&stStart,nullptr,true)) {
+			LONGLONG Diff=DiffSystemTime(&stCur,&stStart);
+			if (Diff>=0 && Diff<TimeConsts::SYSTEMTIME_MINUTE)
+				fNext=true;
+		}
+		if (m_App.CoreEngine.m_DtvEngine.GetEventInfo(&pInfo->Event,fNext))
+			fEventInfoValid=true;
+		pInfo->Event.m_ServiceID=ServiceID;
+	} else {
+		pInfo->Event.m_ServiceID=0;
+	}
+	if (!fEventInfoValid) {
+		pInfo->Event.m_NetworkID=0;
+		pInfo->Event.m_TransportStreamID=0;
+		pInfo->Event.m_EventID=0;
+		pInfo->Event.m_bValidStartTime=false;
+		pInfo->Event.m_Duration=0;
+	}
+
+	return true;
 }

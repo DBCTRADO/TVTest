@@ -665,17 +665,17 @@ bool IsEqualFileName(LPCWSTR pszFileName1,LPCWSTR pszFileName2)
 #endif
 
 
-bool IsValidFileName(LPCTSTR pszFileName,bool fWildcard,LPTSTR pszMessage,int MaxMessage)
+bool IsValidFileName(LPCTSTR pszFileName,unsigned int Flags,TVTest::String *pMessage)
 {
 	if (pszFileName==NULL || pszFileName[0]==_T('\0')) {
-		if (pszMessage!=NULL)
-			lstrcpyn(pszMessage,TEXT("ファイル名が指定されていません。"),MaxMessage);
+		if (pMessage!=NULL)
+			*pMessage=TEXT("ファイル名が指定されていません。");
 		return false;
 	}
 	int Length=lstrlen(pszFileName);
 	if (Length>=MAX_PATH) {
-		if (pszMessage!=NULL)
-			lstrcpyn(pszMessage,TEXT("ファイル名が長すぎます。"),MaxMessage);
+		if (pMessage!=NULL)
+			*pMessage=TEXT("ファイル名が長すぎます。");
 		return false;
 	}
 	if (Length==3) {
@@ -684,8 +684,8 @@ bool IsValidFileName(LPCTSTR pszFileName,bool fWildcard,LPTSTR pszMessage,int Ma
 		};
 		for (int i=0;i<_countof(pszNGList);i++) {
 			if (lstrcmpi(pszNGList[i],pszFileName)==0) {
-				if (pszMessage!=NULL)
-					lstrcpyn(pszMessage,TEXT("仮想デバイス名はファイル名に使用できません。"),MaxMessage);
+				if (pMessage!=NULL)
+					*pMessage=TEXT("仮想デバイス名はファイル名に使用できません。");
 				return false;
 			}
 		}
@@ -695,38 +695,51 @@ bool IsValidFileName(LPCTSTR pszFileName,bool fWildcard,LPTSTR pszMessage,int Ma
 		for (int i=1;i<=9;i++) {
 			wsprintf(szName,TEXT("COM%d"),i);
 			if (lstrcmpi(szName,pszFileName)==0) {
-				if (pszMessage!=NULL)
-					lstrcpyn(pszMessage,TEXT("仮想デバイス名はファイル名に使用できません。"),MaxMessage);
+				if (pMessage!=NULL)
+					*pMessage=TEXT("仮想デバイス名はファイル名に使用できません。");
 				return false;
 			}
 		}
 		for (int i=1;i<=9;i++) {
 			wsprintf(szName,TEXT("LPT%d"),i);
 			if (lstrcmpi(szName,pszFileName)==0) {
-				if (pszMessage!=NULL)
-					lstrcpyn(pszMessage,TEXT("仮想デバイス名はファイル名に使用できません。"),MaxMessage);
+				if (pMessage!=NULL)
+					*pMessage=TEXT("仮想デバイス名はファイル名に使用できません。");
 				return false;
 			}
 		}
 	}
+
+	const bool fWildcard=(Flags & FILENAME_VALIDATE_WILDCARD)!=0;
+	const bool fAllowDelimiter=(Flags & FILENAME_VALIDATE_ALLOWDELIMITER)!=0;
 	LPCTSTR p=pszFileName;
+
 	while (*p!=_T('\0')) {
 		if (*p<=31 || *p==_T('<') || *p==_T('>') || *p==_T(':') || *p==_T('"')
-				|| *p==_T('/') || *p==_T('\\') || *p==_T('|')
-				|| (!fWildcard && (*p==_T('*') || *p==_T('?')))) {
-			if (pszMessage!=NULL)
-				lstrcpyn(pszMessage,TEXT("ファイル名に使用できない文字が含まれています。"),MaxMessage);
+				|| *p==_T('/') || *p==_T('|')
+				|| (!fWildcard && (*p==_T('*') || *p==_T('?')))
+				|| (!fAllowDelimiter && *p==_T('\\'))) {
+			if (pMessage!=NULL) {
+				if (*p<=31) {
+					TVTest::StringUtility::Format(*pMessage,
+						TEXT("ファイル名に使用できない文字 %#02x が含まれています。"),*p);
+				} else {
+					TVTest::StringUtility::Format(*pMessage,
+						TEXT("ファイル名に使用できない文字 %c が含まれています。"),*p);
+				}
+			}
 			return false;
 		}
 		if ((*p==_T(' ') || *p==_T('.')) && *(p+1)==_T('\0')) {
-			if (pszMessage!=NULL)
-				lstrcpyn(pszMessage,TEXT("ファイル名の末尾に半角空白及び . は使用できません。"),MaxMessage);
+			if (pMessage!=NULL)
+				*pMessage=TEXT("ファイル名の末尾に半角空白及び . は使用できません。");
 			return false;
 		}
 #ifndef UNICODE
 		if (IsDBCSLeadByteEx(CP_ACP,*p)) {
 			if (*(p+1)==_T('\0')) {
-				lstrcpyn(pszMessage,TEXT("2バイト文字の2バイト目が欠けています。"),MaxMessage);
+				if (pMessage!=NULL)
+					*pMessage=TEXT("2バイト文字の2バイト目が欠けています。");
 				return false;
 			}
 			p++;
@@ -734,6 +747,7 @@ bool IsValidFileName(LPCTSTR pszFileName,bool fWildcard,LPTSTR pszMessage,int Ma
 #endif
 		p++;
 	}
+
 	return true;
 }
 

@@ -443,19 +443,16 @@ INT_PTR CRecordOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 
 		case IDC_RECORDOPTIONS_FILENAME:
 			if (HIWORD(wParam)==EN_CHANGE) {
-				TCHAR szFormat[MAX_PATH],szFileName[MAX_PATH];
+				TCHAR szFormat[MAX_PATH];
+				TVTest::String FileName;
 
 				::GetDlgItemText(hDlg,IDC_RECORDOPTIONS_FILENAME,szFormat,lengthof(szFormat));
-				szFileName[0]='\0';
 				if (szFormat[0]!='\0') {
-					CRecordManager::FileNameFormatInfo FormatInfo;
-
-					CRecordManager::GetFileNameFormatInfoSample(&FormatInfo);
-					if (!GetAppClass().RecordManager.GenerateFileName(
-							szFileName,lengthof(szFileName),&FormatInfo,szFormat))
-						szFileName[0]='\0';
+					TVTest::CEventVariableStringMap EventVarStrMap;
+					EventVarStrMap.SetSampleEventInfo();
+					TVTest::FormatVariableString(&EventVarStrMap,szFormat,&FileName);
 				}
-				::SetDlgItemText(hDlg,IDC_RECORDOPTIONS_FILENAMEPREVIEW,szFileName);
+				::SetDlgItemText(hDlg,IDC_RECORDOPTIONS_FILENAMEPREVIEW,FileName.c_str());
 			}
 			return TRUE;
 
@@ -467,7 +464,8 @@ INT_PTR CRecordOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 				::GetWindowRect(::GetDlgItem(hDlg,IDC_RECORDOPTIONS_FILENAMEFORMAT),&rc);
 				pt.x=rc.left;
 				pt.y=rc.bottom;
-				CRecordManager::InsertFileNameParameter(hDlg,IDC_RECORDOPTIONS_FILENAME,&pt);
+				TVTest::CEventVariableStringMap EventVarStrMap;
+				EventVarStrMap.InputParameter(hDlg,IDC_RECORDOPTIONS_FILENAME,pt);
 			}
 			return TRUE;
 
@@ -529,12 +527,12 @@ INT_PTR CRecordOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 							NULL,MB_OK | MB_ICONEXCLAMATION);
 					}
 #else
-					TCHAR szMessage[256];
-					if (!IsValidFileName(szFileName,false,szMessage,lengthof(szMessage))) {
+					TVTest::String Message;
+					if (!IsValidFileName(szFileName,FILENAME_VALIDATE_ALLOWDELIMITER,&Message)) {
 						SettingError();
+						::SendDlgItemMessage(hDlg,IDC_RECORDOPTIONS_FILENAME,EM_SETSEL,0,-1);
+						::MessageBox(hDlg,Message.c_str(),NULL,MB_OK | MB_ICONEXCLAMATION);
 						SetDlgItemFocus(hDlg,IDC_RECORDOPTIONS_FILENAME);
-						SendDlgItemMessage(hDlg,IDC_RECORDOPTIONS_FILENAME,EM_SETSEL,0,-1);
-						::MessageBox(hDlg,szMessage,NULL,MB_OK | MB_ICONEXCLAMATION);
 						return TRUE;
 					}
 #endif

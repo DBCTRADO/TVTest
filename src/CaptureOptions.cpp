@@ -454,7 +454,7 @@ INT_PTR CCaptureOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam
 		switch (((LPNMHDR)lParam)->code) {
 		case PSN_APPLY:
 			{
-				TCHAR szSaveFolder[MAX_PATH],szFileName[MAX_PATH],szMessage[256];
+				TCHAR szSaveFolder[MAX_PATH],szFileName[MAX_PATH];
 
 				GetDlgItemText(hDlg,IDC_CAPTUREOPTIONS_SAVEFOLDER,szSaveFolder,lengthof(szSaveFolder));
 				CAppMain::CreateDirectoryResult CreateDirResult=
@@ -469,11 +469,12 @@ INT_PTR CCaptureOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam
 				}
 
 				GetDlgItemText(hDlg,IDC_CAPTUREOPTIONS_FILENAME,szFileName,lengthof(szFileName));
-				if (!IsValidFileName(szFileName,false,szMessage,lengthof(szMessage))) {
+				TVTest::String Message;
+				if (!IsValidFileName(szFileName,0,&Message)) {
 					SettingError();
+					::SendDlgItemMessage(hDlg,IDC_CAPTUREOPTIONS_FILENAME,EM_SETSEL,0,-1);
+					::MessageBox(hDlg,Message.c_str(),NULL,MB_OK | MB_ICONEXCLAMATION);
 					SetDlgItemFocus(hDlg,IDC_CAPTUREOPTIONS_FILENAME);
-					SendDlgItemMessage(hDlg,IDC_CAPTUREOPTIONS_FILENAME,EM_SETSEL,0,-1);
-					MessageBox(hDlg,szMessage,NULL,MB_OK | MB_ICONEXCLAMATION);
 					return TRUE;
 				}
 				lstrcpy(m_szSaveFolder,szSaveFolder);

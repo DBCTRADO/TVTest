@@ -892,19 +892,16 @@ INT_PTR CALLBACK CRecordManager::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARA
 				CRecordManager *pThis=GetThis(hDlg);
 				if (pThis==NULL)
 					break;
-				TCHAR szFormat[MAX_PATH],szFileName[MAX_PATH];
+				TCHAR szFormat[MAX_PATH];
+				TVTest::String FileName;
 
 				::GetDlgItemText(hDlg,IDC_RECORD_FILENAME,szFormat,lengthof(szFormat));
-				szFileName[0]='\0';
 				if (szFormat[0]!='\0') {
-					FileNameFormatInfo Info;
-
-					GetFileNameFormatInfoSample(&Info);
-					if (!pThis->GenerateFileName(szFileName,lengthof(szFileName),
-												 &Info,szFormat))
-						szFileName[0]='\0';
+					TVTest::CEventVariableStringMap EventVarStrMap;
+					EventVarStrMap.SetSampleEventInfo();
+					TVTest::FormatVariableString(&EventVarStrMap,szFormat,&FileName);
 				}
-				::SetDlgItemText(hDlg,IDC_RECORD_FILENAMEPREVIEW,szFileName);
+				::SetDlgItemText(hDlg,IDC_RECORD_FILENAMEPREVIEW,FileName.c_str());
 			}
 			return TRUE;
 
@@ -916,7 +913,8 @@ INT_PTR CALLBACK CRecordManager::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARA
 				::GetWindowRect(::GetDlgItem(hDlg,IDC_RECORD_FILENAMEFORMAT),&rc);
 				pt.x=rc.left;
 				pt.y=rc.bottom;
-				InsertFileNameParameter(hDlg,IDC_RECORD_FILENAME,&pt);
+				TVTest::CEventVariableStringMap EventVarStrMap;
+				EventVarStrMap.InputParameter(hDlg,IDC_RECORD_FILENAME,pt);
 			}
 			return TRUE;
 
@@ -1032,10 +1030,9 @@ INT_PTR CALLBACK CRecordManager::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARA
 						return TRUE;
 					}
 #else
-					TCHAR szMessage[256];
-					if (!IsValidFileName(FilePath.GetFileName(),false,
-										 szMessage,lengthof(szMessage))) {
-						MessageBox(hDlg,szMessage,NULL,MB_OK | MB_ICONEXCLAMATION);
+					TVTest::String Message;
+					if (!IsValidFileName(FilePath.GetFileName(),0,&Message)) {
+						MessageBox(hDlg,Message.c_str(),NULL,MB_OK | MB_ICONEXCLAMATION);
 						SetDlgItemFocus(hDlg,IDC_RECORD_FILENAME);
 						return TRUE;
 					}
@@ -1260,247 +1257,85 @@ bool CRecordManager::ChangeStopTimeDialog(HWND hwndOwner)
 #endif
 
 
-int CRecordManager::FormatFileName(
-	LPTSTR pszFileName,int MaxFileName,
-	const FileNameFormatInfo *pFormatInfo,LPCTSTR pszFormat) const
+bool CRecordManager::GenerateFilePath(
+	const FileNameFormatInfo &FormatInfo,LPCWSTR pszFormat,
+	TVTest::String *pFilePath) const
 {
-	SYSTEMTIME stStart;
-	LPCTSTR p;
-	int i;
+	if (pFilePath==NULL)
+		return false;
 
-	if (m_fReserved && m_StartTimeSpec.Type==TIME_DATETIME) {
-		::FileTimeToSystemTime(&m_StartTimeSpec.Time.DateTime,&stStart);
-	} else {
-		::GetLocalTime(&stStart);
-	}
-	p=pszFormat;
-	for (i=0;i<MaxFileName-1 && *p!=_T('\0');) {
-		if (*p==_T('%')) {
-			p++;
-			if (*p==_T('%')) {
-				pszFileName[i++]=_T('%');
-				p++;
-			} else {
-				TCHAR szKeyword[32];
-				size_t j;
+	pFilePath->clear();
 
-				for (j=0;p[j]!=_T('%') && p[j]!=_T('\0');j++) {
-					if (j<lengthof(szKeyword)-1)
-						szKeyword[j]=p[j];
-				}
-				if (j<=lengthof(szKeyword)-1 && p[j]==_T('%')) {
-					const int Remain=MaxFileName-i;
-
-					p+=j+1;
-					szKeyword[j]=_T('\0');
-					if (::lstrcmpi(szKeyword,TEXT("channel-name"))==0) {
-						if (pFormatInfo->pszChannelName!=NULL)
-							i+=MapFileNameCopy(&pszFileName[i],Remain,pFormatInfo->pszChannelName);
-					} else if (::lstrcmpi(szKeyword,TEXT("channel-no"))==0) {
-						if (pFormatInfo->ChannelNo!=0)
-							i+=StdUtil::snprintf(&pszFileName[i],Remain,TEXT("%d"),pFormatInfo->ChannelNo);
-					} else if (::lstrcmpi(szKeyword,TEXT("channel-no2"))==0) {
-						if (pFormatInfo->ChannelNo!=0)
-							i+=StdUtil::snprintf(&pszFileName[i],Remain,TEXT("%02d"),pFormatInfo->ChannelNo);
-					} else if (::lstrcmpi(szKeyword,TEXT("channel-no3"))==0) {
-						if (pFormatInfo->ChannelNo!=0)
-							i+=StdUtil::snprintf(&pszFileName[i],Remain,TEXT("%03d"),pFormatInfo->ChannelNo);
-					} else if (::lstrcmpi(szKeyword,TEXT("event-name"))==0) {
-						if (!pFormatInfo->EventInfo.m_EventName.empty())
-							i+=MapFileNameCopy(&pszFileName[i],Remain,pFormatInfo->EventInfo.m_EventName.c_str());
-					} else if (::lstrcmpi(szKeyword,TEXT("event-id"))==0) {
-						i+=StdUtil::snprintf(&pszFileName[i],Remain,TEXT("%04X"),pFormatInfo->EventInfo.m_EventID);
-					} else if (::lstrcmpi(szKeyword,TEXT("service-name"))==0) {
-						if (pFormatInfo->pszServiceName!=NULL)
-							i+=MapFileNameCopy(&pszFileName[i],Remain,pFormatInfo->pszServiceName);
-					} else if (::lstrcmpi(szKeyword,TEXT("service-id"))==0) {
-						if (pFormatInfo->EventInfo.m_ServiceID!=0)
-							i+=StdUtil::snprintf(&pszFileName[i],Remain,TEXT("%04X"),pFormatInfo->EventInfo.m_ServiceID);
-					} else if (::lstrcmpi(szKeyword,TEXT("event-duration-hour"))==0) {
-						i+=StdUtil::snprintf(&pszFileName[i],Remain,TEXT("%d"),
-											 (int)(pFormatInfo->EventInfo.m_Duration/(60*60)));
-					} else if (::lstrcmpi(szKeyword,TEXT("event-duration-hour2"))==0) {
-						i+=StdUtil::snprintf(&pszFileName[i],Remain,TEXT("%02d"),
-											 (int)(pFormatInfo->EventInfo.m_Duration/(60*60)));
-					} else if (::lstrcmpi(szKeyword,TEXT("event-duration-min"))==0) {
-						i+=StdUtil::snprintf(&pszFileName[i],Remain,TEXT("%d"),
-											 (int)(pFormatInfo->EventInfo.m_Duration/60%60));
-					} else if (::lstrcmpi(szKeyword,TEXT("event-duration-min2"))==0) {
-						i+=StdUtil::snprintf(&pszFileName[i],Remain,TEXT("%02d"),
-											 (int)(pFormatInfo->EventInfo.m_Duration/60%60));
-					} else if (::lstrcmpi(szKeyword,TEXT("event-duration-sec"))==0) {
-						i+=StdUtil::snprintf(&pszFileName[i],Remain,TEXT("%d"),
-											 (int)(pFormatInfo->EventInfo.m_Duration%60));
-					} else if (::lstrcmpi(szKeyword,TEXT("event-duration-sec2"))==0) {
-						i+=StdUtil::snprintf(&pszFileName[i],Remain,TEXT("%02d"),
-											 (int)(pFormatInfo->EventInfo.m_Duration%60));
-					} else if (IsDateTimeParameter(szKeyword)) {
-						i+=FormatDateTime(szKeyword,stStart,&pszFileName[i],Remain);
-					} else if (::StrCmpNI(szKeyword,TEXT("start-"),6)==0
-							&& IsDateTimeParameter(szKeyword+6)) {
-						if (pFormatInfo->EventInfo.m_bValidStartTime) {
-							i+=FormatDateTime(szKeyword+6,pFormatInfo->EventInfo.m_StartTime,
-											  &pszFileName[i],Remain);
-						}
-					} else if (::StrCmpNI(szKeyword,TEXT("end-"),4)==0
-							&& IsDateTimeParameter(szKeyword+4)) {
-						SYSTEMTIME EndTime;
-						if (pFormatInfo->EventInfo.GetEndTime(&EndTime))
-							i+=FormatDateTime(szKeyword+4,EndTime,&pszFileName[i],Remain);
-					} else if (::StrCmpNI(szKeyword,TEXT("tot-"),4)==0
-							&& IsDateTimeParameter(szKeyword+4)) {
-						i+=FormatDateTime(szKeyword+4,pFormatInfo->stTotTime,&pszFileName[i],Remain);
-					} else {
-						TRACE(TEXT("Unknown keyword %%%s%%\n"),szKeyword);
-						i+=StdUtil::snprintf(&pszFileName[i],Remain,TEXT("%%%s%%"),szKeyword);
-					}
-				} else {
-					pszFileName[i++]=_T('%');
-				}
-			}
-		} else {
-#ifndef UNICODE
-			if (::IsDBCSLeadByteEx(CP_ACP,*p)) {
-				if (i+1==MaxFileName || *(p+1)==_T('\0'))
-					break;
-				pszFileName[i++]=*p++;
-			}
-#endif
-			pszFileName[i++]=*p++;
-		}
-	}
-	pszFileName[i]=_T('\0');
-	return i;
-}
-
-
-int CRecordManager::MapFileNameCopy(LPWSTR pszFileName,int MaxFileName,LPCWSTR pszText)
-{
-	int i;
-	LPCWSTR p=pszText;
-
-	for (i=0;i<MaxFileName-1 && *p!='\0';i++) {
-		static const struct {
-			WCHAR From;
-			WCHAR To;
-		} CharMap[] = {
-			{L'\\',	L'￥'},
-			{L'/',	L'／'},
-			{L':',	L'：'},
-			{L'*',	L'＊'},
-			{L'?',	L'？'},
-			{L'"',	L'”'},
-			{L'<',	L'＜'},
-			{L'>',	L'＞'},
-			{L'|',	L'｜'},
-		};
-
-		for (int j=0;j<lengthof(CharMap);j++) {
-			if (CharMap[j].From==*p) {
-				pszFileName[i]=CharMap[j].To;
-				goto Next;
-			}
-		}
-		pszFileName[i]=*p;
-	Next:
-		p++;
-	}
-	pszFileName[i]='\0';
-	return i;
-}
-
-
-bool CRecordManager::IsDateTimeParameter(LPCTSTR pszKeyword)
-{
-	static const LPCTSTR ParameterList[] = {
-		TEXT("date"),
-		TEXT("year"),
-		TEXT("year2"),
-		TEXT("month"),
-		TEXT("month2"),
-		TEXT("day"),
-		TEXT("day2"),
-		TEXT("time"),
-		TEXT("hour"),
-		TEXT("hour2"),
-		TEXT("minute"),
-		TEXT("minute2"),
-		TEXT("second"),
-		TEXT("second2"),
-		TEXT("day-of-week"),
-	};
-
-	for (int i=0;i<lengthof(ParameterList);i++) {
-		if (::lstrcmpi(ParameterList[i],pszKeyword)==0)
-			return true;
-	}
-
-	return false;
-}
-
-
-int CRecordManager::FormatDateTime(LPCTSTR pszKeyword,const SYSTEMTIME &Time,LPTSTR pszText,int MaxText)
-{
-	if (::lstrcmpi(pszKeyword,TEXT("date"))==0)
-		return StdUtil::snprintf(pszText,MaxText,TEXT("%d%02d%02d"),
-								 Time.wYear,Time.wMonth,Time.wDay);
-	if (::lstrcmpi(pszKeyword,TEXT("year"))==0)
-		return StdUtil::snprintf(pszText,MaxText,TEXT("%d"),Time.wYear);
-	if (::lstrcmpi(pszKeyword,TEXT("year2"))==0)
-		return StdUtil::snprintf(pszText,MaxText,TEXT("%02d"),Time.wYear%100);
-	if (::lstrcmpi(pszKeyword,TEXT("month"))==0)
-		return StdUtil::snprintf(pszText,MaxText,TEXT("%d"),Time.wMonth);
-	if (::lstrcmpi(pszKeyword,TEXT("month2"))==0)
-		return StdUtil::snprintf(pszText,MaxText,TEXT("%02d"),Time.wMonth);
-	if (::lstrcmpi(pszKeyword,TEXT("day"))==0)
-		return StdUtil::snprintf(pszText,MaxText,TEXT("%d"),Time.wDay);
-	if (::lstrcmpi(pszKeyword,TEXT("day2"))==0)
-		return StdUtil::snprintf(pszText,MaxText,TEXT("%02d"),Time.wDay);
-	if (::lstrcmpi(pszKeyword,TEXT("time"))==0)
-		return StdUtil::snprintf(pszText,MaxText,TEXT("%02d%02d%02d"),
-								 Time.wHour,Time.wMinute,Time.wSecond);
-	if (::lstrcmpi(pszKeyword,TEXT("hour"))==0)
-		return StdUtil::snprintf(pszText,MaxText,TEXT("%d"),Time.wHour);
-	if (::lstrcmpi(pszKeyword,TEXT("hour2"))==0)
-		return StdUtil::snprintf(pszText,MaxText,TEXT("%02d"),Time.wHour);
-	if (::lstrcmpi(pszKeyword,TEXT("minute"))==0)
-		return StdUtil::snprintf(pszText,MaxText,TEXT("%d"),Time.wMinute);
-	if (::lstrcmpi(pszKeyword,TEXT("minute2"))==0)
-		return StdUtil::snprintf(pszText,MaxText,TEXT("%02d"),Time.wMinute);
-	if (::lstrcmpi(pszKeyword,TEXT("second"))==0)
-		return StdUtil::snprintf(pszText,MaxText,TEXT("%d"),Time.wSecond);
-	if (::lstrcmpi(pszKeyword,TEXT("second2"))==0)
-		return StdUtil::snprintf(pszText,MaxText,TEXT("%02d"),Time.wSecond);
-	if (::lstrcmpi(pszKeyword,TEXT("day-of-week"))==0)
-		return StdUtil::snprintf(pszText,MaxText,TEXT("%s"),
-								 GetDayOfWeekText(Time.wDayOfWeek));
-	return 0;
-}
-
-
-bool CRecordManager::GenerateFileName(
-	LPTSTR pszFileName,int MaxLength,
-	const FileNameFormatInfo *pFormatInfo,LPCTSTR pszFormat) const
-{
 	if (pszFormat==NULL) {
 		if (m_FileName.empty())
 			return false;
 	}
-	if (FormatFileName(pszFileName,MaxLength-5,pFormatInfo,
-					   pszFormat!=NULL?pszFormat:m_FileName.c_str())==0)
-		return false;
-	if (pszFormat==NULL && ::PathFileExists(pszFileName)) {
-		LPTSTR pszSeqNumber=::PathFindExtension(pszFileName);
-		LPCTSTR pszExtension=::PathFindExtension(m_FileName.c_str());
 
-		for (int i=2;i<1000;i++) {
-			::wsprintf(pszSeqNumber,TEXT("-%d%s"),i,pszExtension);
-			if (!::PathFileExists(pszFileName))
-				break;
-			if (i==999)
-				return false;
-		}
+	TVTest::CEventVariableStringMap VarStrMap(FormatInfo);
+	TVTest::String FileName;
+
+	if (m_fReserved && m_StartTimeSpec.Type==TIME_DATETIME) {
+		SYSTEMTIME st;
+		::FileTimeToSystemTime(&m_StartTimeSpec.Time.DateTime,&st);
+		VarStrMap.SetCurrentTime(&st);
 	}
+
+	if (!TVTest::FormatVariableString(
+				&VarStrMap,pszFormat!=NULL?pszFormat:m_FileName.c_str(),
+				&FileName)
+			|| FileName.empty())
+		return false;
+
+	LPCWSTR pszFileName=FileName.c_str();
+
+	if (!::PathIsRelativeW(pszFileName)) {
+		size_t DirLength=::PathFindFileNameW(pszFileName)-pszFileName;
+		if (DirLength>=MAX_PATH-1)
+			return false;
+
+		TVTest::String Path(FileName);
+
+		LPCWSTR pszExtension=::PathFindExtensionW(FileName.c_str());
+		size_t ExtensionLength=::lstrlenW(pszExtension);
+		size_t MaxFileName=MAX_PATH-1-DirLength;
+		if (Path.length()>=MAX_PATH) {
+			if (ExtensionLength<MaxFileName) {
+				Path.resize(MAX_PATH-1-ExtensionLength);
+				Path+=pszExtension;
+			} else {
+				Path.resize(MAX_PATH-1);
+			}
+		}
+
+		if (::PathFileExistsW(Path.c_str())) {
+			TVTest::String BaseName(
+				FileName.substr(DirLength,FileName.length()-DirLength-ExtensionLength));
+			TVTest::String Name;
+
+			for (int i=2;i<1000;i++) {
+				WCHAR szNumber[8];
+
+				::wsprintfW(szNumber,L"-%d",i);
+				Name=BaseName;
+				Name+=szNumber;
+				Name+=pszExtension;
+				Path=FileName.substr(0,DirLength);
+				if (Name.length()<=MaxFileName)
+					Path+=Name;
+				else
+					Path+=Name.substr(Name.length()-MaxFileName);
+				if (!::PathFileExistsW(Path.c_str()))
+					break;
+				if (i==999)
+					return false;
+			}
+		}
+
+		*pFilePath=Path;
+	} else {
+		*pFilePath=FileName;
+	}
+
 	return true;
 }
 
@@ -1576,156 +1411,6 @@ bool CRecordManager::SetBufferSize(DWORD BufferSize)
 {
 	m_Settings.m_BufferSize=BufferSize;
 	return true;
-}
-
-
-bool CRecordManager::InsertFileNameParameter(HWND hDlg,int ID,const POINT *pMenuPos)
-{
-	static const struct {
-		LPCTSTR pszParameter;
-		LPCTSTR pszText;
-	} ParameterList[] = {
-		{NULL,								TEXT("録画開始日時")},
-		{TEXT("%date%"),					TEXT("年月日")},
-		{TEXT("%year%"),					TEXT("年")},
-		{TEXT("%year2%"),					TEXT("年(下2桁)")},
-		{TEXT("%month%"),					TEXT("月")},
-		{TEXT("%month2%"),					TEXT("月(2桁)")},
-		{TEXT("%day%"),						TEXT("日")},
-		{TEXT("%day2%"),					TEXT("日(2桁)")},
-		{TEXT("%time%"),					TEXT("時刻(時+分+秒)")},
-		{TEXT("%hour%"),					TEXT("時")},
-		{TEXT("%hour2%"),					TEXT("時(2桁)")},
-		{TEXT("%minute%"),					TEXT("分")},
-		{TEXT("%minute2%"),					TEXT("分(2桁)")},
-		{TEXT("%second%"),					TEXT("秒")},
-		{TEXT("%second2%"),					TEXT("秒(2桁)")},
-		{TEXT("%day-of-week%"),				TEXT("曜日(漢字)")},
-		{NULL,								TEXT("番組開始日時")},
-		{TEXT("%start-date%"),				TEXT("年月日")},
-		{TEXT("%start-year%"),				TEXT("年")},
-		{TEXT("%start-year2%"),				TEXT("年(下2桁)")},
-		{TEXT("%start-month%"),				TEXT("月")},
-		{TEXT("%start-month2%"),			TEXT("月(2桁)")},
-		{TEXT("%start-day%"),				TEXT("日")},
-		{TEXT("%start-day2%"),				TEXT("日(2桁)")},
-		{TEXT("%start-time%"),				TEXT("時刻(時+分+秒)")},
-		{TEXT("%start-hour%"),				TEXT("時")},
-		{TEXT("%start-hour2%"),				TEXT("時(2桁)")},
-		{TEXT("%start-minute%"),			TEXT("分")},
-		{TEXT("%start-minute2%"),			TEXT("分(2桁)")},
-		{TEXT("%start-second%"),			TEXT("秒")},
-		{TEXT("%start-second2%"),			TEXT("秒(2桁)")},
-		{TEXT("%start-day-of-week%"),		TEXT("曜日(漢字)")},
-		{NULL,								TEXT("番組終了日時")},
-		{TEXT("%end-date%"),				TEXT("年月日")},
-		{TEXT("%end-year%"),				TEXT("年")},
-		{TEXT("%end-year2%"),				TEXT("年(下2桁)")},
-		{TEXT("%end-month%"),				TEXT("月")},
-		{TEXT("%end-month2%"),				TEXT("月(2桁)")},
-		{TEXT("%end-day%"),					TEXT("日")},
-		{TEXT("%end-day2%"),				TEXT("日(2桁)")},
-		{TEXT("%end-time%"),				TEXT("時刻(時+分+秒)")},
-		{TEXT("%end-hour%"),				TEXT("時")},
-		{TEXT("%end-hour2%"),				TEXT("時(2桁)")},
-		{TEXT("%end-minute%"),				TEXT("分")},
-		{TEXT("%end-minute2%"),				TEXT("分(2桁)")},
-		{TEXT("%end-second%"),				TEXT("秒")},
-		{TEXT("%end-second2%"),				TEXT("秒(2桁)")},
-		{TEXT("%end-day-of-week%"),			TEXT("曜日(漢字)")},
-		{NULL,								TEXT("TOT日時")},
-		{TEXT("%tot-date%"),				TEXT("年月日")},
-		{TEXT("%tot-year%"),				TEXT("年")},
-		{TEXT("%tot-year2%"),				TEXT("年(下2桁)")},
-		{TEXT("%tot-month%"),				TEXT("月")},
-		{TEXT("%tot-month2%"),				TEXT("月(2桁)")},
-		{TEXT("%tot-day%"),					TEXT("日")},
-		{TEXT("%tot-day2%"),				TEXT("日(2桁)")},
-		{TEXT("%tot-time%"),				TEXT("時刻(時+分+秒)")},
-		{TEXT("%tot-hour%"),				TEXT("時")},
-		{TEXT("%tot-hour2%"),				TEXT("時(2桁)")},
-		{TEXT("%tot-minute%"),				TEXT("分")},
-		{TEXT("%tot-minute2%"),				TEXT("分(2桁)")},
-		{TEXT("%tot-second%"),				TEXT("秒")},
-		{TEXT("%tot-second2%"),				TEXT("秒(2桁)")},
-		{TEXT("%tot-day-of-week%"),			TEXT("曜日(漢字)")},
-		{NULL,								TEXT("番組の長さ")},
-		{TEXT("%event-duration-hour%"),		TEXT("時間")},
-		{TEXT("%event-duration-hour2%"),	TEXT("時間(2桁)")},
-		{TEXT("%event-duration-min%"),		TEXT("分")},
-		{TEXT("%event-duration-min2%"),		TEXT("分(2桁)")},
-		{TEXT("%event-duration-sec%"),		TEXT("秒")},
-		{TEXT("%event-duration-sec2%"),		TEXT("秒(2桁)")},
-		{NULL,								NULL},
-		{TEXT("%channel-name%"),			TEXT("チャンネル名")},
-		{TEXT("%channel-no%"),				TEXT("チャンネル番号")},
-		{TEXT("%channel-no2%"),				TEXT("チャンネル番号(2桁)")},
-		{TEXT("%channel-no3%"),				TEXT("チャンネル番号(3桁)")},
-		{TEXT("%event-name%"),				TEXT("番組名")},
-		{TEXT("%event-id%"),				TEXT("イベントID")},
-		{TEXT("%service-name%"),			TEXT("サービス名")},
-		{TEXT("%service-id%"),				TEXT("サービスID")},
-	};
-	HMENU hmenuRoot=::CreatePopupMenu();
-	HMENU hmenu=hmenuRoot;
-	int Command;
-
-	for (int i=0;i<lengthof(ParameterList);i++) {
-		if (ParameterList[i].pszParameter==NULL) {
-			if (ParameterList[i].pszText!=NULL) {
-				hmenu=::CreatePopupMenu();
-				::AppendMenu(hmenuRoot,MF_POPUP | MF_STRING | MF_ENABLED,
-							 reinterpret_cast<UINT_PTR>(hmenu),
-							 ParameterList[i].pszText);
-			} else {
-				hmenu=hmenuRoot;
-			}
-		} else {
-			TCHAR szText[128];
-			StdUtil::snprintf(szText,lengthof(szText),TEXT("%s\t%s"),
-							  ParameterList[i].pszText,ParameterList[i].pszParameter);
-			::AppendMenu(hmenu,MF_STRING | MF_ENABLED,i+1,szText);
-		}
-	}
-	Command=::TrackPopupMenu(hmenuRoot,TPM_RETURNCMD,pMenuPos->x,pMenuPos->y,0,hDlg,NULL);
-	::DestroyMenu(hmenuRoot);
-	if (Command<=0)
-		return false;
-
-	DWORD Start,End;
-	::SendDlgItemMessage(hDlg,ID,EM_GETSEL,
-		reinterpret_cast<WPARAM>(&Start),reinterpret_cast<LPARAM>(&End));
-	::SendDlgItemMessage(hDlg,ID,EM_REPLACESEL,
-		TRUE,reinterpret_cast<LPARAM>(ParameterList[Command-1].pszParameter));
-	if (End<Start)
-		Start=End;
-	::SendDlgItemMessage(hDlg,ID,EM_SETSEL,
-		Start,Start+::lstrlen(ParameterList[Command-1].pszParameter));
-	return true;
-}
-
-
-void CRecordManager::GetFileNameFormatInfoSample(FileNameFormatInfo *pFormatInfo)
-{
-	SYSTEMTIME st;
-
-	::GetLocalTime(&st);
-	st.wMilliseconds=0;
-
-	pFormatInfo->pszChannelName=TEXT("アフリカ中央テレビ");
-	pFormatInfo->ChannelNo=13;
-	pFormatInfo->pszServiceName=TEXT("アフテレ1");
-	pFormatInfo->stTotTime=st;
-	pFormatInfo->stTotTime.wSecond=st.wSecond/5*5;
-	pFormatInfo->EventInfo.m_ServiceID=0x1234;
-	pFormatInfo->EventInfo.m_EventID=0xABCD;
-	pFormatInfo->EventInfo.m_EventName=TEXT("今日のニュース");
-	pFormatInfo->EventInfo.m_bValidStartTime=true;
-	OffsetSystemTime(&st,5*TimeConsts::SYSTEMTIME_MINUTE);
-	st.wMinute=st.wMinute/5*5;
-	st.wSecond=0;
-	pFormatInfo->EventInfo.m_StartTime=st;
-	pFormatInfo->EventInfo.m_Duration=60*60;
 }
 
 

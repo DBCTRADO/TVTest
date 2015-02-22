@@ -67,7 +67,11 @@ int CalcFontPointHeight(HDC hdc,const LOGFONT *pFont);
 int GetErrorText(DWORD ErrorCode,LPTSTR pszText,int MaxLength);
 
 bool IsEqualFileName(LPCWSTR pszFileName1,LPCWSTR pszFileName2);
-bool IsValidFileName(LPCTSTR pszFileName,bool fWildcard=false,LPTSTR pszMessage=NULL,int MaxMessage=0);
+enum {
+	FILENAME_VALIDATE_WILDCARD       = 0x0001U,
+	FILENAME_VALIDATE_ALLOWDELIMITER = 0x0002U
+};
+bool IsValidFileName(LPCTSTR pszFileName,unsigned int Flags=0,TVTest::String *pMessage=NULL);
 bool GetAbsolutePath(LPCTSTR pszFilePath,LPTSTR pszAbsolutePath,int MaxLength);
 
 HICON CreateIconFromBitmap(HBITMAP hbm,int IconWidth,int IconHeight,int ImageWidth=0,int ImageHeight=0);
