@@ -139,6 +139,7 @@ CCaptureOptions::CCaptureOptions()
 	, m_PNGCompressionLevel(6)
 	, m_fCaptureSaveToFile(true)
 	, m_fSetComment(false)
+	, m_CommentFormat(TEXT("%year%/%month%/%day% %hour%:%minute%:%second% %channel-name%\r\n%event-title%"))
 	, m_CaptureSizeType(SIZE_TYPE_ORIGINAL)
 	, m_CaptureSize(
 #ifndef TVTEST_FOR_1SEG
@@ -175,6 +176,9 @@ bool CCaptureOptions::ReadSettings(CSettings &Settings)
 	}
 	Settings.Read(TEXT("CaptureIconSaveFile"),&m_fCaptureSaveToFile);
 	Settings.Read(TEXT("CaptureSetComment"),&m_fSetComment);
+	TVTest::String CommentFormat;
+	if (Settings.Read(TEXT("CaptureCommentFormat"),&CommentFormat))
+		m_CommentFormat=TVTest::StringUtility::Decode(CommentFormat);
 	Settings.Read(TEXT("JpegQuality"),&m_JPEGQuality);
 	Settings.Read(TEXT("PngCompressionLevel"),&m_PNGCompressionLevel);
 	int Size;
@@ -217,6 +221,7 @@ bool CCaptureOptions::WriteSettings(CSettings &Settings)
 	Settings.Write(TEXT("CaptureSaveFormat"),m_ImageCodec.EnumSaveFormat(m_SaveFormat));
 	Settings.Write(TEXT("CaptureIconSaveFile"),m_fCaptureSaveToFile);
 	Settings.Write(TEXT("CaptureSetComment"),m_fSetComment);
+	Settings.Write(TEXT("CaptureCommentFormat"),TVTest::StringUtility::Encode(m_CommentFormat));
 	Settings.Write(TEXT("JpegQuality"),m_JPEGQuality);
 	Settings.Write(TEXT("PngCompressionLevel"),m_PNGCompressionLevel);
 	Settings.Write(TEXT("CaptureSizeType"),m_CaptureSizeType);
@@ -369,21 +374,19 @@ bool CCaptureOptions::GetOptionText(LPTSTR pszOption,int MaxLength) const
 }
 
 
-bool CCaptureOptions::GetCommentText(LPTSTR pszComment,int MaxComment,
-									LPCTSTR pszChannelName,LPCTSTR pszEventName)
+bool CCaptureOptions::GetCommentText(
+	TVTest::String *pComment,const CCaptureImage *pImage) const
 {
-	SYSTEMTIME st;
-	TCHAR szDate[64],szTime[64];
+	if (pComment==NULL || pImage==NULL)
+		return false;
 
-	::GetLocalTime(&st);
-	::GetDateFormat(LOCALE_USER_DEFAULT,DATE_SHORTDATE,&st,NULL,szDate,lengthof(szDate));
-	::GetTimeFormat(LOCALE_USER_DEFAULT,TIME_FORCE24HOURFORMAT,&st,NULL,szTime,lengthof(szTime));
-	int Length=StdUtil::snprintf(pszComment,MaxComment,TEXT("%s %s"),szDate,szTime);
-	if (!IsStringEmpty(pszChannelName))
-		Length+=StdUtil::snprintf(pszComment+Length,MaxComment-Length,TEXT(" %s"),pszChannelName);
-	if (!IsStringEmpty(pszEventName))
-		Length+=StdUtil::snprintf(pszComment+Length,MaxComment-Length,TEXT("\r\n%s"),pszEventName);
-	return true;
+	TVTest::CEventVariableStringMap::EventInfo EventInfo;
+	GetAppClass().Core.GetVariableStringEventInfo(&EventInfo);
+	TVTest::CCaptureVariableStringMap VarStrMap(EventInfo,pImage);
+
+	VarStrMap.SetCurrentTime(&pImage->GetCaptureTime());
+
+	return TVTest::FormatVariableString(&VarStrMap,m_CommentFormat.c_str(),pComment);
 }
 
 
@@ -508,6 +511,11 @@ INT_PTR CCaptureOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam
 
 			DlgCheckBox_Check(hDlg,IDC_CAPTUREOPTIONS_ICONSAVEFILE,m_fCaptureSaveToFile);
 			DlgCheckBox_Check(hDlg,IDC_CAPTUREOPTIONS_SETCOMMENT,m_fSetComment);
+			::SetDlgItemText(hDlg,IDC_CAPTUREOPTIONS_COMMENT,m_CommentFormat.c_str());
+			EnableDlgItems(hDlg,
+						   IDC_CAPTUREOPTIONS_COMMENT,
+						   IDC_CAPTUREOPTIONS_COMMENT_PARAMETERS,
+						   m_fSetComment);
 		}
 		return TRUE;
 
@@ -569,6 +577,26 @@ INT_PTR CCaptureOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam
 				SyncTrackBarWithEdit(hDlg,IDC_CAPTUREOPTIONS_PNGLEVEL_EDIT,
 										  IDC_CAPTUREOPTIONS_PNGLEVEL_TB);
 			return TRUE;
+
+		case IDC_CAPTUREOPTIONS_SETCOMMENT:
+			EnableDlgItemsSyncCheckBox(hDlg,
+				IDC_CAPTUREOPTIONS_COMMENT,
+				IDC_CAPTUREOPTIONS_COMMENT_PARAMETERS,
+				IDC_CAPTUREOPTIONS_SETCOMMENT);
+			return TRUE;
+
+		case IDC_CAPTUREOPTIONS_COMMENT_PARAMETERS:
+			{
+				RECT rc;
+				POINT pt;
+
+				::GetWindowRect(::GetDlgItem(hDlg,IDC_CAPTUREOPTIONS_COMMENT_PARAMETERS),&rc);
+				pt.x=rc.left;
+				pt.y=rc.bottom;
+				TVTest::CCaptureVariableStringMap VarStrMap;
+				VarStrMap.InputParameter(hDlg,IDC_CAPTUREOPTIONS_COMMENT,pt);
+			}
+			return TRUE;
 		}
 		return TRUE;
 
@@ -615,6 +643,7 @@ INT_PTR CCaptureOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam
 					DlgCheckBox_IsChecked(hDlg,IDC_CAPTUREOPTIONS_ICONSAVEFILE);
 				m_fSetComment=
 					DlgCheckBox_IsChecked(hDlg,IDC_CAPTUREOPTIONS_SETCOMMENT);
+				GetDlgItemString(hDlg,IDC_CAPTUREOPTIONS_COMMENT,&m_CommentFormat);
 
 				m_fChanged=true;
 			}

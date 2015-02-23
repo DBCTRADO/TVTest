@@ -2355,12 +2355,11 @@ void CMainWindow::OnCommand(HWND hwnd,int id,HWND hwndCtl,UINT codeNotify)
 				return;
 			}
 			CCaptureImage *pImage=new CCaptureImage(hGlobal);
-			const CChannelInfo *pChInfo=m_App.ChannelManager.GetCurrentChannelInfo();
-			TCHAR szComment[512],szEventName[256];
-			m_App.CaptureOptions.GetCommentText(szComment,lengthof(szComment),
-				pChInfo!=nullptr?pChInfo->GetName():nullptr,
-				m_App.CoreEngine.m_DtvEngine.GetEventName(szEventName,lengthof(szEventName))>0?szEventName:nullptr);
-			pImage->SetComment(szComment);
+			if (m_App.CaptureOptions.GetWriteComment()) {
+				String Comment;
+				if (m_App.CaptureOptions.GetCommentText(&Comment,pImage))
+					pImage->SetComment(Comment.c_str());
+			}
 			m_App.CaptureWindow.SetImage(pImage);
 			if (id==CM_COPY) {
 				if (!pImage->SetClipboard(hwnd)) {

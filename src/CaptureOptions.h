@@ -62,8 +62,7 @@ public:
 	bool GetCustomSize(int *pWidth,int *pHeight) const;
 	bool GenerateFileName(TVTest::String *pFileName,const CCaptureImage *pImage) const;
 	bool GetOptionText(LPTSTR pszOption,int MaxLength) const;
-	bool GetCommentText(LPTSTR pszComment,int MaxComment,
-						LPCTSTR pszChannelName,LPCTSTR pszEventName);
+	bool GetCommentText(TVTest::String *pComment,const CCaptureImage *pImage) const;
 	bool SaveImage(CCaptureImage *pImage);
 	int TranslateCommand(int Command);
 	bool OpenSaveFolder() const;
@@ -76,6 +75,7 @@ private:
 	int m_PNGCompressionLevel;
 	bool m_fCaptureSaveToFile;
 	bool m_fSetComment;
+	TVTest::String m_CommentFormat;
 	int m_CaptureSizeType;
 	int m_CaptureSize;
 	int m_CapturePercentage;
