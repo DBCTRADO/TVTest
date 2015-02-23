@@ -752,6 +752,65 @@ bool IsValidFileName(LPCTSTR pszFileName,unsigned int Flags,TVTest::String *pMes
 }
 
 
+bool MakeUniqueFileName(TVTest::String *pFileName,size_t MaxLength,LPCTSTR pszNumberFormat)
+{
+	if (pFileName==nullptr || pFileName->empty())
+		return false;
+
+	LPCTSTR pszFileName=pFileName->c_str();
+	size_t DirLength=::PathFindFileName(pszFileName)-pszFileName;
+	if (DirLength==0 || DirLength>MaxLength-1)
+		return false;
+
+	TVTest::String Path(*pFileName);
+
+	LPCTSTR pszExtension=::PathFindExtension(pszFileName);
+	size_t ExtensionLength=::lstrlen(pszExtension);
+	size_t MaxFileName=MaxLength-DirLength;
+	if (Path.length()>MaxLength) {
+		if (ExtensionLength<MaxFileName) {
+			Path.resize(MaxLength-ExtensionLength);
+			Path+=pszExtension;
+		} else {
+			Path.resize(MaxLength);
+		}
+	}
+
+	if (::PathFileExists(Path.c_str())) {
+		static const int MAX_NUMBER=1000;
+		TVTest::String BaseName(
+			pFileName->substr(DirLength,pFileName->length()-DirLength-ExtensionLength));
+		TVTest::String Name;
+
+		if (IsStringEmpty(pszNumberFormat))
+			pszNumberFormat=TEXT("-%d");
+
+		for (int i=2;;i++) {
+			if (i==MAX_NUMBER)
+				return false;
+
+			TCHAR szNumber[16];
+
+			::wsprintf(szNumber,pszNumberFormat,i);
+			Name=BaseName;
+			Name+=szNumber;
+			Name+=pszExtension;
+			Path=pFileName->substr(0,DirLength);
+			if (Name.length()<=MaxFileName)
+				Path+=Name;
+			else
+				Path+=Name.substr(Name.length()-MaxFileName);
+			if (!::PathFileExists(Path.c_str()))
+				break;
+		}
+	}
+
+	*pFileName=Path;
+
+	return true;
+}
+
+
 bool GetAbsolutePath(LPCTSTR pszFilePath,LPTSTR pszAbsolutePath,int MaxLength)
 {
 	if (pszAbsolutePath==NULL || MaxLength<1)

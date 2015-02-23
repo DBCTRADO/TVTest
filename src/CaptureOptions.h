@@ -60,7 +60,7 @@ public:
 	int GetCaptureSizeType() const { return m_CaptureSizeType; }
 	bool GetSizePercentage(int *pNum,int *pDenom) const;
 	bool GetCustomSize(int *pWidth,int *pHeight) const;
-	bool GenerateFileName(LPTSTR pszFileName,int MaxLength,const SYSTEMTIME *pst=NULL) const;
+	bool GenerateFileName(TVTest::String *pFileName,const CCaptureImage *pImage) const;
 	bool GetOptionText(LPTSTR pszOption,int MaxLength) const;
 	bool GetCommentText(LPTSTR pszComment,int MaxComment,
 						LPCTSTR pszChannelName,LPCTSTR pszEventName);
@@ -70,7 +70,7 @@ public:
 
 private:
 	TCHAR m_szSaveFolder[MAX_PATH];
-	TCHAR m_szFileName[MAX_PATH];
+	TVTest::String m_FileName;
 	int m_SaveFormat;
 	int m_JPEGQuality;
 	int m_PNGCompressionLevel;
@@ -83,6 +83,8 @@ private:
 
 // CBasicDialog
 	INT_PTR DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
+
+	void UpdateFileNamePreview();
 
 	static const SIZE m_SizeList[SIZE_LAST+1];
 	struct PercentageType {

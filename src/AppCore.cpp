@@ -1083,7 +1083,7 @@ bool CAppCore::GenerateRecordFileName(LPTSTR pszFileName,int MaxFileName)
 {
 	CRecordManager::FileNameFormatInfo FormatInfo;
 
-	GetVariableStringEventInfo(&FormatInfo);
+	GetVariableStringEventInfo(&FormatInfo,60*1000);
 
 	TVTest::String Path;
 	if (!m_App.RecordManager.GenerateFilePath(FormatInfo,NULL,&Path)) {
@@ -1368,7 +1368,7 @@ bool CAppCore::IsDriverNoSignalLevel(LPCTSTR pszFileName) const
 
 
 bool CAppCore::GetVariableStringEventInfo(
-	TVTest::CEventVariableStringMap::EventInfo *pInfo) const
+	TVTest::CEventVariableStringMap::EventInfo *pInfo,DWORD NextEventMargin) const
 {
 	if (pInfo==nullptr)
 		return false;
@@ -1395,11 +1395,13 @@ bool CAppCore::GetVariableStringEventInfo(
 		if (m_App.CoreEngine.m_DtvEngine.m_TsAnalyzer.GetServiceName(Index,szServiceName,lengthof(szServiceName)))
 			pInfo->ServiceName=szServiceName;
 		bool fNext=false;
-		SYSTEMTIME stStart;
-		if (m_App.CoreEngine.m_DtvEngine.GetEventTime(&stStart,nullptr,true)) {
-			LONGLONG Diff=DiffSystemTime(&stCur,&stStart);
-			if (Diff>=0 && Diff<TimeConsts::SYSTEMTIME_MINUTE)
-				fNext=true;
+		if (NextEventMargin>0) {
+			SYSTEMTIME stStart;
+			if (m_App.CoreEngine.m_DtvEngine.GetEventTime(&stStart,nullptr,true)) {
+				LONGLONG Diff=DiffSystemTime(&stCur,&stStart);
+				if (Diff>=0 && Diff<(LONGLONG)NextEventMargin)
+					fNext=true;
+			}
 		}
 		if (m_App.CoreEngine.m_DtvEngine.GetEventInfo(&pInfo->Event,fNext))
 			fEventInfoValid=true;

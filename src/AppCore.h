@@ -115,7 +115,8 @@ public:
 	bool IsChannelScanning() const;
 	bool IsDriverNoSignalLevel(LPCTSTR pszFileName) const;
 
-	bool GetVariableStringEventInfo(TVTest::CEventVariableStringMap::EventInfo *pInfo) const;
+	bool GetVariableStringEventInfo(TVTest::CEventVariableStringMap::EventInfo *pInfo,
+									DWORD NextEventMargin=0) const;
 
 private:
 	CAppMain &m_App;

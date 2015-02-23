@@ -1286,55 +1286,12 @@ bool CRecordManager::GenerateFilePath(
 			|| FileName.empty())
 		return false;
 
-	LPCWSTR pszFileName=FileName.c_str();
-
-	if (!::PathIsRelativeW(pszFileName)) {
-		size_t DirLength=::PathFindFileNameW(pszFileName)-pszFileName;
-		if (DirLength>=MAX_PATH-1)
+	if (!::PathIsRelativeW(FileName.c_str())) {
+		if (!MakeUniqueFileName(&FileName))
 			return false;
-
-		TVTest::String Path(FileName);
-
-		LPCWSTR pszExtension=::PathFindExtensionW(FileName.c_str());
-		size_t ExtensionLength=::lstrlenW(pszExtension);
-		size_t MaxFileName=MAX_PATH-1-DirLength;
-		if (Path.length()>=MAX_PATH) {
-			if (ExtensionLength<MaxFileName) {
-				Path.resize(MAX_PATH-1-ExtensionLength);
-				Path+=pszExtension;
-			} else {
-				Path.resize(MAX_PATH-1);
-			}
-		}
-
-		if (::PathFileExistsW(Path.c_str())) {
-			TVTest::String BaseName(
-				FileName.substr(DirLength,FileName.length()-DirLength-ExtensionLength));
-			TVTest::String Name;
-
-			for (int i=2;i<1000;i++) {
-				WCHAR szNumber[8];
-
-				::wsprintfW(szNumber,L"-%d",i);
-				Name=BaseName;
-				Name+=szNumber;
-				Name+=pszExtension;
-				Path=FileName.substr(0,DirLength);
-				if (Name.length()<=MaxFileName)
-					Path+=Name;
-				else
-					Path+=Name.substr(Name.length()-MaxFileName);
-				if (!::PathFileExistsW(Path.c_str()))
-					break;
-				if (i==999)
-					return false;
-			}
-		}
-
-		*pFilePath=Path;
-	} else {
-		*pFilePath=FileName;
 	}
+
+	*pFilePath=FileName;
 
 	return true;
 }

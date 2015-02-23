@@ -23,6 +23,7 @@ namespace TVTest
 		virtual bool GetString(LPCWSTR pszKeyword,String *pString) = 0;
 		virtual bool NormalizeString(String *pString) const { return false; }
 		virtual bool GetParameterInfo(int Index,ParameterInfo *pInfo) const = 0;
+		virtual int GetParameterCount() const = 0;
 		bool InputParameter(HWND hDlg,int EditID,const POINT &MenuPos);
 
 	protected:
@@ -49,6 +50,7 @@ namespace TVTest
 		bool GetString(LPCWSTR pszKeyword,String *pString) override;
 		bool NormalizeString(String *pString) const override;
 		bool GetParameterInfo(int Index,ParameterInfo *pInfo) const override;
+		int GetParameterCount() const override;
 		void SetCurrentTime(const SYSTEMTIME *pTime);
 		void SetSampleEventInfo();
 
@@ -56,6 +58,8 @@ namespace TVTest
 
 	private:
 		static void GetEventTitle(const String &EventName,String *pTitle);
+
+		static const ParameterInfo m_ParameterList[];
 
 		EventInfo m_EventInfo;
 		bool m_fCurrentTimeSet;
