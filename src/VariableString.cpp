@@ -187,7 +187,7 @@ bool CVariableStringMap::IsDateTimeParameter(LPCTSTR pszKeyword)
 
 const CVariableStringMap::ParameterInfo CEventVariableStringMap::m_ParameterList[] =
 {
-	{nullptr,							TEXT("録画開始日時")},
+	{nullptr,							TEXT("現在日時")},
 	{TEXT("%date%"),					TEXT("年月日")},
 	{TEXT("%year%"),					TEXT("年")},
 	{TEXT("%year2%"),					TEXT("年(下2桁)")},
