@@ -30,6 +30,7 @@ public:
 	int CalcTextLines(TVTest::CTextDraw &DrawText,int Width);
 	void DrawTitle(TVTest::CTextDraw &DrawText,const RECT &Rect,int LineHeight);
 	void DrawText(TVTest::CTextDraw &DrawText,const RECT &Rect,int LineHeight);
+	SIZE GetTimeSize(HDC hdc) const;
 	bool IsChanged(const CProgramItemInfo *pItem) const;
 
 private:
@@ -44,6 +45,7 @@ private:
 
 	LPCTSTR GetEventText() const;
 	void GetEventTitleText(LPTSTR pszText,int MaxLength) const;
+	void GetEventTimeText(LPTSTR pszText,int MaxLength) const;
 };
 
 
@@ -96,6 +98,17 @@ void CProgramItemInfo::DrawText(TVTest::CTextDraw &DrawText,const RECT &Rect,int
 }
 
 
+SIZE CProgramItemInfo::GetTimeSize(HDC hdc) const
+{
+	TCHAR szTime[EpgUtil::MAX_EVENT_TIME_LENGTH];
+	SIZE sz;
+
+	GetEventTimeText(szTime,lengthof(szTime));
+	::GetTextExtentPoint32(hdc,szTime,::lstrlen(szTime),&sz);
+	return sz;
+}
+
+
 bool CProgramItemInfo::IsChanged(const CProgramItemInfo *pItem) const
 {
 	return m_EventID!=pItem->m_EventID
@@ -114,10 +127,16 @@ void CProgramItemInfo::GetEventTitleText(LPTSTR pszText,int MaxLength) const
 {
 	TCHAR szTime[EpgUtil::MAX_EVENT_TIME_LENGTH];
 
-	EpgUtil::FormatEventTime(&m_EventInfo,szTime,lengthof(szTime),
-							 EpgUtil::EVENT_TIME_HOUR_2DIGITS);
+	GetEventTimeText(szTime,lengthof(szTime));
 	StdUtil::snprintf(pszText,MaxLength,TEXT("%s %s"),
 					  szTime,m_EventInfo.m_EventName.c_str());
+}
+
+
+void CProgramItemInfo::GetEventTimeText(LPTSTR pszText,int MaxLength) const
+{
+	EpgUtil::FormatEventTime(&m_EventInfo,pszText,MaxLength,
+							 EpgUtil::EVENT_TIME_HOUR_2DIGITS);
 }
 
 
@@ -232,6 +251,7 @@ CProgramListPanel::CProgramListPanel()
 	, m_pProgramList(NULL)
 	, m_FontHeight(0)
 	, m_fUseEpgColorScheme(false)
+	, m_fShowFeaturedMark(true)
 	, m_VisibleEventIcons(((1<<(CEpgIcons::ICON_LAST+1))-1)^CEpgIcons::IconFlag(CEpgIcons::ICON_PAY))
 	, m_ChannelHeight(0)
 	, m_CurEventID(-1)
@@ -306,6 +326,8 @@ void CProgramListPanel::SetTheme(const TVTest::Theme::CThemeManager *pThemeManag
 							&Theme.CurEventNameStyle);
 	Theme.MarginColor=
 		pThemeManager->GetColor(CColorScheme::COLOR_PANELBACK);
+	pThemeManager->GetBackgroundStyle(TVTest::Theme::CThemeManager::STYLE_PROGRAMGUIDE_FEATUREDMARK,
+									  &Theme.FeaturedMarkStyle);
 
 	SetProgramListPanelTheme(Theme);
 
@@ -316,6 +338,7 @@ void CProgramListPanel::SetTheme(const TVTest::Theme::CThemeManager *pThemeManag
 bool CProgramListPanel::ReadSettings(CSettings &Settings)
 {
 	Settings.Read(TEXT("ProgramListPanel.UseEpgColorScheme"),&m_fUseEpgColorScheme);
+	Settings.Read(TEXT("ProgramListPanel.ShowFeaturedMark"),&m_fShowFeaturedMark);
 
 	return true;
 }
@@ -324,6 +347,7 @@ bool CProgramListPanel::ReadSettings(CSettings &Settings)
 bool CProgramListPanel::WriteSettings(CSettings &Settings)
 {
 	Settings.Write(TEXT("ProgramListPanel.UseEpgColorScheme"),m_fUseEpgColorScheme);
+	Settings.Write(TEXT("ProgramListPanel.ShowFeaturedMark"),m_fShowFeaturedMark);
 
 	return true;
 }
@@ -674,6 +698,19 @@ void CProgramListPanel::SetUseEpgColorScheme(bool fUseEpgColorScheme)
 }
 
 
+void CProgramListPanel::SetShowFeaturedMark(bool fShowFeaturedMark)
+{
+	if (m_fShowFeaturedMark!=fShowFeaturedMark) {
+		m_fShowFeaturedMark=fShowFeaturedMark;
+		if (m_hwnd!=NULL) {
+			if (m_fShowFeaturedMark)
+				m_FeaturedEventsMatcher.BeginMatching(GetAppClass().FeaturedEvents.GetSettings());
+			Invalidate();
+		}
+	}
+}
+
+
 int CProgramListPanel::ItemHitTest(int x,int y) const
 {
 	POINT pt={x,y};
@@ -885,6 +922,11 @@ LRESULT CProgramListPanel::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lP
 			*/
 			m_EventInfoPopupManager.Initialize(hwnd,&m_EventInfoPopupHandler);
 
+			CFeaturedEvents &FeaturedEvents=GetAppClass().FeaturedEvents;
+			FeaturedEvents.AddEventHandler(this);
+			if (m_fShowFeaturedMark)
+				m_FeaturedEventsMatcher.BeginMatching(FeaturedEvents.GetSettings());
+
 			m_HotItem=-1;
 		}
 		return 0;
@@ -1003,6 +1045,7 @@ LRESULT CProgramListPanel::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lP
 			CPopupMenu Menu(GetAppClass().GetResourceInstance(),IDM_PROGRAMLISTPANEL);
 
 			Menu.CheckItem(CM_PROGRAMLISTPANEL_USEEPGCOLORSCHEME,m_fUseEpgColorScheme);
+			Menu.CheckItem(CM_PROGRAMLISTPANEL_SHOWFEATUREDMARK,m_fShowFeaturedMark);
 			Menu.Show(hwnd);
 		}
 		return 0;
@@ -1018,6 +1061,10 @@ LRESULT CProgramListPanel::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lP
 		switch (LOWORD(wParam)) {
 		case CM_PROGRAMLISTPANEL_USEEPGCOLORSCHEME:
 			SetUseEpgColorScheme(!m_fUseEpgColorScheme);
+			return 0;
+
+		case CM_PROGRAMLISTPANEL_SHOWFEATUREDMARK:
+			SetShowFeaturedMark(!m_fShowFeaturedMark);
 			return 0;
 		}
 		return 0;
@@ -1228,9 +1275,30 @@ void CProgramListPanel::Draw(HDC hdc,const RECT *prcPaint)
 					::SetTextColor(hdc,Style.Fore.Fill.GetSolidColor());
 					TVTest::Theme::Draw(hdc,rc,Style.Back);
 				}
-				DrawUtil::SelectObject(hdc,m_TitleFont);
+
 				RECT rcTitle=rc;
 				TVTest::Style::Subtract(&rcTitle,m_Style.TitlePadding);
+				DrawUtil::SelectObject(hdc,m_TitleFont);
+
+				if (m_fShowFeaturedMark
+						&& m_FeaturedEventsMatcher.IsMatch(pItem->GetEventInfo())) {
+					RECT rcMark;
+					SIZE sz=pItem->GetTimeSize(hdc);
+					if (m_fUseEpgColorScheme) {
+						rcMark.left=rcTitle.left;
+						rcMark.top=rcTitle.top;
+						rcMark.right=rcMark.left+sz.cx;
+						rcMark.bottom=rcMark.top+sz.cy;
+						TVTest::Style::Subtract(&rcMark,m_Style.FeaturedMarkMargin);
+					} else {
+						rcMark.left=rc.left+1;
+						rcMark.top=rc.top+1;
+						rcMark.right=rcMark.left+m_Style.FeaturedMarkSize.Width;
+						rcMark.bottom=rcMark.top+m_Style.FeaturedMarkSize.Height;
+					}
+					TVTest::Theme::Draw(hdc,rcMark,m_Theme.FeaturedMarkStyle);
+				}
+
 				pItem->DrawTitle(DrawText,rcTitle,LineHeight);
 			}
 
@@ -1294,6 +1362,15 @@ void CProgramListPanel::Draw(HDC hdc,const RECT *prcPaint)
 	::SetBkMode(hdc,OldBkMode);
 	::SelectObject(hdc,hfontOld);
 	::DeleteObject(hbr);
+}
+
+
+void CProgramListPanel::OnFeaturedEventsSettingsChanged(CFeaturedEvents &FeaturedEvents)
+{
+	if (m_fShowFeaturedMark) {
+		m_FeaturedEventsMatcher.BeginMatching(FeaturedEvents.GetSettings());
+		Invalidate();
+	}
 }
 
 
@@ -1368,6 +1445,8 @@ CProgramListPanel::ProgramListPanelStyle::ProgramListPanelStyle()
 	, IconSize(CEpgIcons::ICON_WIDTH,CEpgIcons::ICON_HEIGHT)
 	, IconMargin(1)
 	, LineSpacing(1)
+	, FeaturedMarkSize(5,5)
+	, FeaturedMarkMargin(0)
 {
 }
 
@@ -1384,6 +1463,8 @@ void CProgramListPanel::ProgramListPanelStyle::SetStyle(const TVTest::Style::CSt
 	pStyleManager->Get(TEXT("program-list-panel.icon"),&IconSize);
 	pStyleManager->Get(TEXT("program-list-panel.icon.margin"),&IconMargin);
 	pStyleManager->Get(TEXT("program-list-panel.line-spacing"),&LineSpacing);
+	pStyleManager->Get(TEXT("program-list-panel.featured-mark"),&FeaturedMarkSize);
+	pStyleManager->Get(TEXT("program-guide.event.featured-mark.margin"),&FeaturedMarkMargin);
 }
 
 
@@ -1399,4 +1480,6 @@ void CProgramListPanel::ProgramListPanelStyle::NormalizeStyle(const TVTest::Styl
 	pStyleManager->ToPixels(&IconSize);
 	pStyleManager->ToPixels(&IconMargin);
 	pStyleManager->ToPixels(&LineSpacing);
+	pStyleManager->ToPixels(&FeaturedMarkSize);
+	pStyleManager->ToPixels(&FeaturedMarkMargin);
 }

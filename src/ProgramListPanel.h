@@ -12,6 +12,7 @@
 #include "Menu.h"
 #include "EventInfoPopup.h"
 #include "WindowUtil.h"
+#include "FeaturedEvents.h"
 
 
 class CProgramItemInfo;
@@ -38,6 +39,7 @@ class CProgramListPanel
 	: public CPanelForm::CPage
 	, public TVTest::CUIBase
 	, public CSettingsBase
+	, protected CFeaturedEvents::CEventHandler
 {
 public:
 	struct ProgramListPanelTheme {
@@ -50,6 +52,7 @@ public:
 		TVTest::Theme::Style EventTextStyle;
 		TVTest::Theme::Style CurEventTextStyle;
 		TVTest::Theme::ThemeColor MarginColor;
+		TVTest::Theme::BackgroundStyle FeaturedMarkStyle;
 	};
 
 	static bool Initialize(HINSTANCE hinst);
@@ -84,6 +87,8 @@ public:
 	void SetVisibleEventIcons(UINT VisibleIcons);
 	void SetUseEpgColorScheme(bool fUseEpgColorScheme);
 	bool GetUseEpgColorScheme() const { return m_fUseEpgColorScheme; }
+	void SetShowFeaturedMark(bool fShowFeaturedMark);
+	bool GetShowFeaturedMark() const { return m_fShowFeaturedMark; }
 
 private:
 	struct ProgramListPanelStyle
@@ -98,6 +103,8 @@ private:
 		TVTest::Style::Size IconSize;
 		TVTest::Style::Margins IconMargin;
 		TVTest::Style::IntValue LineSpacing;
+		TVTest::Style::Size FeaturedMarkSize;
+		TVTest::Style::Margins FeaturedMarkMargin;
 
 		ProgramListPanelStyle();
 		void SetStyle(const TVTest::Style::CStyleManager *pStyleManager);
@@ -118,6 +125,7 @@ private:
 	ProgramListPanelTheme m_Theme;
 	CEpgTheme m_EpgTheme;
 	bool m_fUseEpgColorScheme;
+	bool m_fShowFeaturedMark;
 	CEpgIcons m_EpgIcons;
 	UINT m_VisibleEventIcons;
 	int m_ChannelHeight;
@@ -142,6 +150,7 @@ private:
 		bool ShowPopup(LPARAM Param,CEventInfoPopup *pPopup);
 	};
 	CEventInfoPopupHandler m_EventInfoPopupHandler;
+	CFeaturedEventsMatcher m_FeaturedEventsMatcher;
 	bool m_fShowRetrievingMessage;
 
 	static const LPCTSTR m_pszClassName;
@@ -170,6 +179,9 @@ private:
 
 // CPanelForm::CPage
 	bool NeedKeyboardFocus() const override { return true; }
+
+// CFeaturedEvents::CEventHandler
+	void OnFeaturedEventsSettingsChanged(CFeaturedEvents &FeaturedEvents) override;
 };
 
 
