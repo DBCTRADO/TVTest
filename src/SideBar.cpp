@@ -624,19 +624,6 @@ void CSideBar::UpdateTooltipsRect()
 }
 
 
-static TVTest::Theme::GradientDirection GetGradientDirection(bool fVertical,TVTest::Theme::GradientDirection Direction)
-{
-	if (fVertical)
-		return Direction;
-	switch (Direction) {
-	case TVTest::Theme::DIRECTION_HORZ:			Direction=TVTest::Theme::DIRECTION_VERT;		break;
-	case TVTest::Theme::DIRECTION_VERT:			Direction=TVTest::Theme::DIRECTION_HORZ;		break;
-	case TVTest::Theme::DIRECTION_HORZMIRROR:	Direction=TVTest::Theme::DIRECTION_VERTMIRROR;	break;
-	case TVTest::Theme::DIRECTION_VERTMIRROR:	Direction=TVTest::Theme::DIRECTION_HORZMIRROR;	break;
-	}
-	return Direction;
-}
-
 void CSideBar::Draw(HDC hdc,const RECT &PaintRect)
 {
 	RECT rcClient,rc;
@@ -653,9 +640,8 @@ void CSideBar::Draw(HDC hdc,const RECT &PaintRect)
 
 	TVTest::Theme::BackgroundStyle BackStyle;
 	BackStyle=m_Theme.ItemStyle.Back;
-	if (BackStyle.Fill.Type==TVTest::Theme::FILL_GRADIENT)
-		BackStyle.Fill.Gradient.Direction=
-			GetGradientDirection(m_fVertical,BackStyle.Fill.Gradient.Direction);
+	if (!m_fVertical && BackStyle.Fill.Type==TVTest::Theme::FILL_GRADIENT)
+		BackStyle.Fill.Gradient.Rotate(TVTest::Theme::GradientStyle::ROTATE_RIGHT);
 	TVTest::Theme::Draw(hdc,rc,BackStyle);
 
 	HDC hdcMemory=::CreateCompatibleDC(hdc);
@@ -673,9 +659,8 @@ void CSideBar::Draw(HDC hdc,const RECT &PaintRect)
 
 			if (fHot) {
 				TVTest::Theme::Style Style=m_Theme.HighlightItemStyle;
-				if (Style.Back.Fill.Type==TVTest::Theme::FILL_GRADIENT)
-					Style.Back.Fill.Gradient.Direction=
-						GetGradientDirection(m_fVertical,Style.Back.Fill.Gradient.Direction);
+				if (!m_fVertical && Style.Back.Fill.Type==TVTest::Theme::FILL_GRADIENT)
+					Style.Back.Fill.Gradient.Rotate(TVTest::Theme::GradientStyle::ROTATE_RIGHT);
 				if (m_ItemList[i].IsChecked())
 					Style.Back.Border=m_Theme.CheckItemStyle.Back.Border;
 				TVTest::Theme::Draw(hdc,rc,Style.Back);
@@ -683,9 +668,8 @@ void CSideBar::Draw(HDC hdc,const RECT &PaintRect)
 			} else {
 				if (m_ItemList[i].IsChecked()) {
 					TVTest::Theme::Style Style=m_Theme.CheckItemStyle;
-					if (Style.Back.Fill.Type==TVTest::Theme::FILL_GRADIENT)
-						Style.Back.Fill.Gradient.Direction=
-							GetGradientDirection(m_fVertical,Style.Back.Fill.Gradient.Direction);
+					if (!m_fVertical && Style.Back.Fill.Type==TVTest::Theme::FILL_GRADIENT)
+						Style.Back.Fill.Gradient.Rotate(TVTest::Theme::GradientStyle::ROTATE_RIGHT);
 					TVTest::Theme::Draw(hdc,rc,Style.Back);
 					ForeColor=m_Theme.CheckItemStyle.Fore.Fill.GetSolidColor();
 				} else {
