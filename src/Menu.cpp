@@ -700,6 +700,22 @@ int CChannelMenu::Show(UINT Flags,int x,int y,const RECT *pExcludeRect)
 }
 
 
+bool CChannelMenu::SetHighlightedItem(int Index)
+{
+	if (m_hmenu==NULL)
+		return false;
+
+	MENUITEMINFO mii;
+
+	mii.cbSize=sizeof(mii);
+	mii.fMask=MIIM_STATE;
+	if (!::GetMenuItemInfo(m_hmenu,Index,TRUE,&mii))
+		return false;
+	mii.fState|=MFS_HILITE;
+	return ::SetMenuItemInfo(m_hmenu,Index,TRUE,&mii)!=FALSE;
+}
+
+
 bool CChannelMenu::OnMeasureItem(HWND hwnd,WPARAM wParam,LPARAM lParam)
 {
 	LPMEASUREITEMSTRUCT pmis=reinterpret_cast<LPMEASUREITEMSTRUCT>(lParam);

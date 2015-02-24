@@ -125,6 +125,7 @@ public:
 				HMENU hmenu,HWND hwnd,unsigned int Flags,int MaxRows=0);
 	void Destroy();
 	int Show(UINT Flags,int x,int y,const RECT *pExcludeRect=NULL);
+	bool SetHighlightedItem(int Index);
 	bool OnMeasureItem(HWND hwnd,WPARAM wParam,LPARAM lParam);
 	bool OnDrawItem(HWND hwnd,WPARAM wParam,LPARAM lParam);
 	bool OnMenuSelect(HWND hwnd,WPARAM wParam,LPARAM lParam);

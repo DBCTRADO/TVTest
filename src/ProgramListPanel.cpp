@@ -801,7 +801,7 @@ void CProgramListPanel::ShowChannelListMenu()
 
 	CChannelList ChannelList;
 
-	int ItemCount=0,SelectedChannel=-1;
+	int ItemCount=0,CurChannel=-1,SelectedChannel=-1;
 
 	for (int i=0;i<pChannelList->NumChannels();i++) {
 		const CChannelInfo *pChannelInfo=pChannelList->GetChannelInfo(i);
@@ -809,6 +809,12 @@ void CProgramListPanel::ShowChannelListMenu()
 		if (pChannelInfo->IsEnabled()) {
 			ChannelList.AddChannel(*pChannelInfo);
 
+			if (CurChannel<0
+					&& m_CurChannel.GetServiceID()>0
+					&& m_CurChannel.GetNetworkID()==pChannelInfo->GetNetworkID()
+					&& m_CurChannel.GetTransportStreamID()==pChannelInfo->GetTransportStreamID()
+					&& m_CurChannel.GetServiceID()==pChannelInfo->GetServiceID())
+				CurChannel=ItemCount;
 			if (SelectedChannel<0
 					&& m_SelectedChannel.GetNetworkID()==pChannelInfo->GetNetworkID()
 					&& m_SelectedChannel.GetTransportStreamID()==pChannelInfo->GetTransportStreamID()
@@ -821,9 +827,11 @@ void CProgramListPanel::ShowChannelListMenu()
 	if (ItemCount==0)
 		return;
 
-	m_ChannelMenu.Create(&ChannelList,SelectedChannel,1,NULL,m_hwnd,
+	m_ChannelMenu.Create(&ChannelList,CurChannel,1,NULL,m_hwnd,
 						 CChannelMenu::FLAG_SHOWLOGO | CChannelMenu::FLAG_SPACEBREAK,
 						 GetAppClass().MenuOptions.GetMaxChannelMenuRows());
+	if (SelectedChannel>=0)
+		m_ChannelMenu.SetHighlightedItem(SelectedChannel);
 
 	RECT rc;
 
