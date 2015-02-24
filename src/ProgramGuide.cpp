@@ -5920,6 +5920,7 @@ public:
 
 	CTimeToolbar(CProgramGuide *pProgramGuide);
 	~CTimeToolbar();
+	void SetTheme(const ThemeInfo &Theme) override;
 	void OnDateChanged() override { ChangeTime(); }
 	void OnTimeRangeChanged() override { ChangeTime(); }
 	void SetSettings(const TimeBarSettings &Settings);
@@ -5933,6 +5934,7 @@ private:
 	};
 
 	CProgramGuideFrameSettings::TimeBarSettings m_Settings;
+	TVTest::Theme::Style m_ButtonStyle[CProgramGuide::TIME_BAR_BACK_COLORS];
 
 	void ChangeTime();
 	bool SetButtons(const TimeInfo *pTimeList,int TimeListLength);
@@ -5949,6 +5951,16 @@ CTimeToolbar::CTimeToolbar(CProgramGuide *pProgramGuide)
 CTimeToolbar::~CTimeToolbar()
 {
 	Destroy();
+}
+
+
+void CTimeToolbar::SetTheme(const ThemeInfo &Theme)
+{
+	for (int i=0;i<CProgramGuide::TIME_BAR_BACK_COLORS;i++)
+		m_ButtonStyle[i]=Theme.TimeStyle[i];
+
+	if (m_hwnd!=NULL)
+		::InvalidateRect(m_hwnd,NULL,TRUE);
 }
 
 
@@ -6098,39 +6110,39 @@ bool CTimeToolbar::SetButtons(const TimeInfo *pTimeList,int TimeListLength)
 void CTimeToolbar::OnCustomDraw(NMTBCUSTOMDRAW *pnmtb,HDC hdc)
 {
 	const bool fCurrent=pnmtb->nmcd.dwItemSpec==CM_PROGRAMGUIDE_TIME_CURRENT;
+	TVTest::Theme::Style Style;
 	int Hour;
 
-	COLORREF LightColor=RGB(255,255,255),DarkColor=RGB(220,220,220);
-	if (!fCurrent) {
+	if (fCurrent) {
+		Style.Back.Fill.Type=TVTest::Theme::FILL_GRADIENT;
+		Style.Back.Fill.Gradient=TVTest::Theme::GradientStyle(
+			TVTest::Theme::GRADIENT_NORMAL,
+			TVTest::Theme::DIRECTION_VERT,
+			TVTest::Theme::ThemeColor(255,255,255),
+			TVTest::Theme::ThemeColor(220,220,220));
+		Style.Fore.Fill.Type=TVTest::Theme::FILL_SOLID;
+		Style.Fore.Fill.Solid.Color.Set(0,0,0);
+	} else {
 		Hour=LOWORD(pnmtb->nmcd.lItemlParam);
-		LightColor=MixColor(RGB(192,216,255),LightColor,(BYTE)((Hour+1)*4));
-		DarkColor=MixColor(RGB(192,216,255),DarkColor,(BYTE)((Hour+1)*4));
+		Style=m_ButtonStyle[Hour/3];
+		if (Style.Back.Fill.Type==TVTest::Theme::FILL_GRADIENT)
+			Style.Back.Fill.Gradient.Rotate(TVTest::Theme::GradientStyle::ROTATE_RIGHT);
 	}
-
-	TVTest::Theme::BackgroundStyle Style;
-	Style.Fill.Type=TVTest::Theme::FILL_GRADIENT;
-	Style.Fill.Gradient.Type=TVTest::Theme::GRADIENT_NORMAL;
-	Style.Fill.Gradient.Direction=TVTest::Theme::DIRECTION_VERT;
-	if ((pnmtb->nmcd.uItemState&(CDIS_CHECKED | CDIS_HOT))!=0) {
-		Style.Fill.Gradient.Color1=DarkColor;
-		Style.Fill.Gradient.Color2=LightColor;
-	} else {
-		Style.Fill.Gradient.Color1=LightColor;
-		Style.Fill.Gradient.Color2=DarkColor;
+	Style.Back.Border.Type=
+		(pnmtb->nmcd.uItemState & (CDIS_CHECKED | CDIS_SELECTED))!=0?
+			TVTest::Theme::BORDER_SUNKEN:
+			TVTest::Theme::BORDER_RAISED;
+	Style.Back.Border.Color=Style.Back.Fill.GetSolidColor();
+	if ((pnmtb->nmcd.uItemState & (CDIS_CHECKED | CDIS_HOT))!=0
+			&& Style.Back.Fill.Type==TVTest::Theme::FILL_GRADIENT) {
+		std::swap(Style.Back.Fill.Gradient.Color1,
+				  Style.Back.Fill.Gradient.Color2);
 	}
-	if ((pnmtb->nmcd.uItemState&(CDIS_CHECKED | CDIS_SELECTED))!=0) {
-		Style.Border.Type=TVTest::Theme::BORDER_SUNKEN;
-		Style.Border.Color=DarkColor;
-	} else {
-		Style.Border.Type=TVTest::Theme::BORDER_RAISED;
-		Style.Border.Color=LightColor;
-	}
-	TVTest::Theme::Draw(hdc,pnmtb->nmcd.rc,Style);
+	TVTest::Theme::Draw(hdc,pnmtb->nmcd.rc,Style.Back);
 
 	HFONT hfont=reinterpret_cast<HFONT>(::SendMessage(m_hwnd,WM_GETFONT,0,0));
 	HGDIOBJ hOldFont=::SelectObject(hdc,hfont);
 	int OldBkMode=::SetBkMode(hdc,TRANSPARENT);
-	COLORREF OldTextColor=::SetTextColor(hdc,RGB(0,0,0));
 
 	TCHAR szText[32];
 	if (fCurrent) {
@@ -6140,10 +6152,9 @@ void CTimeToolbar::OnCustomDraw(NMTBCUSTOMDRAW *pnmtb,HDC hdc)
 	}
 	RECT rc=pnmtb->nmcd.rc;
 	TVTest::Style::Subtract(&rc,m_Padding);
-	::DrawText(hdc,szText,-1,&rc,
-			   DT_CENTER | DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX);
+	TVTest::Theme::Draw(hdc,rc,Style.Fore,szText,
+						DT_CENTER | DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX);
 
-	::SetTextColor(hdc,OldTextColor);
 	::SetBkMode(hdc,OldBkMode);
 	::SelectObject(hdc,hOldFont);
 }
@@ -6188,6 +6199,15 @@ void CProgramGuideFrameBase::SetTheme(const TVTest::Theme::CThemeManager *pTheme
 	CStatusView::GetStatusViewThemeFromThemeManager(pThemeManager,&Theme.StatusTheme);
 	pThemeManager->GetBorderStyle(TVTest::Theme::CThemeManager::STYLE_PROGRAMGUIDE_STATUS,
 								  &Theme.StatusTheme.Border);
+
+	TVTest::Theme::ThemeColor TimeTextColor(pThemeManager->GetColor(CColorScheme::COLOR_PROGRAMGUIDE_TIMETEXT));
+	for (int i=0;i<CProgramGuide::TIME_BAR_BACK_COLORS;i++) {
+		pThemeManager->GetFillStyle(
+			TVTest::Theme::CThemeManager::STYLE_PROGRAMGUIDE_TIMEBAR_0_2+i,
+			&Theme.TimeStyle[i].Back.Fill);
+		Theme.TimeStyle[i].Fore.Fill.Type=TVTest::Theme::FILL_SOLID;
+		Theme.TimeStyle[i].Fore.Fill.Solid.Color=TimeTextColor;
+	}
 
 	for (int i=0;i<lengthof(m_ToolbarList);i++)
 		m_ToolbarList[i]->SetTheme(Theme);

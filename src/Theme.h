@@ -39,6 +39,12 @@ namespace TVTest
 
 		struct GradientStyle
 		{
+			enum RotateType {
+				ROTATE_LEFT,
+				ROTATE_RIGHT,
+				ROTATE_180
+			};
+
 			GradientType Type;
 			GradientDirection Direction;
 			ThemeColor Color1;
@@ -64,6 +70,7 @@ namespace TVTest
 			}
 			bool operator!=(const GradientStyle &Op) const { return !(*this==Op); }
 			bool IsSolid() const { return Type==GRADIENT_NORMAL && Color1==Color2; }
+			void Rotate(RotateType Rotate);
 		};
 
 		enum FillType {

@@ -2,6 +2,7 @@
 #include "Theme.h"
 #include "DrawUtil.h"
 #include "Util.h"
+#include <utility>
 
 #ifdef _DEBUG
 #undef THIS_FILE
@@ -15,6 +16,24 @@ namespace TVTest
 
 namespace Theme
 {
+
+
+void GradientStyle::Rotate(RotateType Rotate)
+{
+	if (Rotate==ROTATE_LEFT || Rotate==ROTATE_RIGHT) {
+		switch (Direction) {
+		case DIRECTION_HORZ:		Direction=DIRECTION_VERT;		break;
+		case DIRECTION_VERT:		Direction=DIRECTION_HORZ;		break;
+		case DIRECTION_HORZMIRROR:	Direction=DIRECTION_VERTMIRROR;	break;
+		case DIRECTION_VERTMIRROR:	Direction=DIRECTION_HORZMIRROR;	break;
+		}
+	}
+	if ((Rotate==ROTATE_LEFT || Rotate==ROTATE_180)
+			&& (Direction==DIRECTION_HORZ || Direction==DIRECTION_VERT))
+		std::swap(Color1,Color2);
+}
+
+
 
 
 ThemeColor FillStyle::GetSolidColor() const

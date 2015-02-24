@@ -631,6 +631,7 @@ namespace ProgramGuideBar
 	public:
 		struct ThemeInfo {
 			CStatusView::StatusViewTheme StatusTheme;
+			TVTest::Theme::Style TimeStyle[CProgramGuide::TIME_BAR_BACK_COLORS];
 		};
 
 		CProgramGuideBar(CProgramGuide *pProgramGuide);
