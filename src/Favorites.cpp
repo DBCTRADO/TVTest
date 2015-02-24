@@ -1295,9 +1295,15 @@ namespace TVTest
 
 	bool COrganizeFavoritesDialog::Show(HWND hwndOwner)
 	{
-		return ShowDialog(hwndOwner,
-						  GetAppClass().GetResourceInstance(),
-						  MAKEINTRESOURCE(IDD_ORGANIZEFAVORITES))==IDOK;
+		m_Position=m_pManager->GetOrganizeDialogPos();
+
+		bool fResult=ShowDialog(hwndOwner,
+								GetAppClass().GetResourceInstance(),
+								MAKEINTRESOURCE(IDD_ORGANIZEFAVORITES))==IDOK;
+
+		m_pManager->SetOrganizeDialogPos(m_Position);
+
+		return fResult;
 	}
 
 	INT_PTR COrganizeFavoritesDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)

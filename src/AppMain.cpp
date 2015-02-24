@@ -468,6 +468,13 @@ bool CAppMain::LoadSettings()
 		StreamInfo.SetPosition(Left,Top,Width,Height);
 		//StreamInfo.MoveToMonitorInside();
 
+		CBasicDialog::Position Pos;
+		Settings.Read(TEXT("OrganizeFavoritesLeft"),&Pos.x);
+		Settings.Read(TEXT("OrganizeFavoritesTop"),&Pos.y);
+		Settings.Read(TEXT("OrganizeFavoritesWidth"),&Pos.Width);
+		Settings.Read(TEXT("OrganizeFavoritesHeight"),&Pos.Height);
+		FavoritesManager.SetOrganizeDialogPos(Pos);
+
 		Settings.Read(TEXT("ExitTimeout"),&m_ExitTimeout);
 		Settings.Read(TEXT("IncrementUDPPort"),&m_fIncrementNetworkPort);
 
@@ -577,6 +584,12 @@ bool CAppMain::SaveSettings(unsigned int Flags)
 			Settings.Write(TEXT("StreamInfoTop"),Top);
 			Settings.Write(TEXT("StreamInfoWidth"),Width);
 			Settings.Write(TEXT("StreamInfoHeight"),Height);
+
+			const CBasicDialog::Position Pos=FavoritesManager.GetOrganizeDialogPos();
+			Settings.Write(TEXT("OrganizeFavoritesLeft"),Pos.x);
+			Settings.Write(TEXT("OrganizeFavoritesTop"),Pos.y);
+			Settings.Write(TEXT("OrganizeFavoritesWidth"),Pos.Width);
+			Settings.Write(TEXT("OrganizeFavoritesHeight"),Pos.Height);
 
 			//Settings.Write(TEXT("ExitTimeout"),m_ExitTimeout);
 			//Settings.Write(TEXT("IncrementUDPPort"),m_fIncrementNetworkPort);

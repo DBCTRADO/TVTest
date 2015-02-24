@@ -62,6 +62,21 @@ bool CBasicDialog::SetVisible(bool fVisible)
 }
 
 
+bool CBasicDialog::GetPosition(Position *pPosition) const
+{
+	if (pPosition==NULL)
+		return false;
+	if (m_hDlg==NULL) {
+		*pPosition=m_Position;
+	} else {
+		RECT rc;
+		::GetWindowRect(m_hDlg,&rc);
+		pPosition->Set(&rc);
+	}
+	return true;
+}
+
+
 bool CBasicDialog::GetPosition(RECT *pPosition) const
 {
 	if (pPosition==NULL)
@@ -88,6 +103,12 @@ bool CBasicDialog::GetPosition(int *pLeft,int *pTop,int *pWidth,int *pHeight) co
 	if (pHeight!=NULL)
 		*pHeight=rc.bottom-rc.top;
 	return true;
+}
+
+
+bool CBasicDialog::SetPosition(const Position &Pos)
+{
+	return SetPosition(Pos.x,Pos.y,Pos.Width,Pos.Height);
 }
 
 

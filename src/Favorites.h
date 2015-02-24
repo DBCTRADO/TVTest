@@ -105,6 +105,8 @@ namespace TVTest
 		bool Save(LPCTSTR pszFileName) const;
 		bool GetModified() const { return m_fModified; }
 		void SetModified(bool fModified) { m_fModified=fModified; }
+		const CBasicDialog::Position &GetOrganizeDialogPos() const { return m_OrganizeDialogPos; }
+		void SetOrganizeDialogPos(const CBasicDialog::Position &Pos) { m_OrganizeDialogPos=Pos; }
 
 	private:
 		void SetFolderMenu(HMENU hmenu,int MenuPos,int *pCommand,const CFavoriteFolder *pFolder) const;
@@ -114,6 +116,7 @@ namespace TVTest
 
 		CFavoriteFolder m_RootFolder;
 		bool m_fModified;
+		CBasicDialog::Position m_OrganizeDialogPos;
 	};
 
 	class CFavoritesMenu

@@ -8,25 +8,6 @@
 class CBasicDialog
 {
 public:
-	CBasicDialog();
-	virtual ~CBasicDialog();
-	virtual bool Show(HWND hwndOwner) { return false; }
-	virtual bool Create(HWND hwndOwner) { return false; }
-	bool IsCreated() const;
-	bool Destroy();
-	bool IsModeless() const { return m_fModeless; }
-	bool ProcessMessage(LPMSG pMsg);
-	bool IsVisible() const;
-	bool SetVisible(bool fVisible);
-	bool GetPosition(RECT *pPosition) const;
-	bool GetPosition(int *pLeft,int *pTop,int *pWidth,int *pHeight) const;
-	bool SetPosition(const RECT *pPosition);
-	bool SetPosition(int Left,int Top,int Width,int Height);
-	LRESULT SendMessage(UINT uMsg,WPARAM wParam,LPARAM lParam);
-
-protected:
-	HWND m_hDlg;
-	bool m_fModeless;
 	struct Position {
 		int x,y;
 		int Width,Height;
@@ -44,6 +25,28 @@ protected:
 			pRect->bottom=y+Height;
 		}
 	};
+
+	CBasicDialog();
+	virtual ~CBasicDialog();
+	virtual bool Show(HWND hwndOwner) { return false; }
+	virtual bool Create(HWND hwndOwner) { return false; }
+	bool IsCreated() const;
+	bool Destroy();
+	bool IsModeless() const { return m_fModeless; }
+	bool ProcessMessage(LPMSG pMsg);
+	bool IsVisible() const;
+	bool SetVisible(bool fVisible);
+	bool GetPosition(Position *pPosition) const;
+	bool GetPosition(RECT *pPosition) const;
+	bool GetPosition(int *pLeft,int *pTop,int *pWidth,int *pHeight) const;
+	bool SetPosition(const Position &Pos);
+	bool SetPosition(const RECT *pPosition);
+	bool SetPosition(int Left,int Top,int Width,int Height);
+	LRESULT SendMessage(UINT uMsg,WPARAM wParam,LPARAM lParam);
+
+protected:
+	HWND m_hDlg;
+	bool m_fModeless;
 	Position m_Position;
 
 	static CBasicDialog *GetThis(HWND hDlg);
