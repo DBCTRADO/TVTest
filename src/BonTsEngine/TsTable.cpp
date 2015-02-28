@@ -79,7 +79,7 @@ CPsiTable::~CPsiTable()
 	ClearTable();
 }
 
-WORD CPsiTable::GetExtensionNum(void) const
+WORD CPsiTable::GetExtensionNum() const
 {
 	// テーブルの数を返す
 	return (WORD)m_TableArray.size();
@@ -96,6 +96,16 @@ bool CPsiTable::GetExtension(const WORD Index, WORD *pExtension) const
 	return true;
 }
 
+int CPsiTable::GetExtensionIndexByTableID(const WORD TableID) const
+{
+	for (size_t Index = 0; Index < m_TableArray.size(); Index++) {
+		if (m_TableArray[Index].TableIdExtension == TableID)
+			return static_cast<int>(Index);
+	}
+
+	return -1;
+}
+
 WORD CPsiTable::GetSectionNum(const WORD Index) const
 {
 	if (Index >= GetExtensionNum())
@@ -105,7 +115,7 @@ WORD CPsiTable::GetSectionNum(const WORD Index) const
 	return m_TableArray[Index].SectionNum;
 }
 
-const CPsiTableBase * CPsiTable::GetSection(const WORD Index, const BYTE SectionNo) const
+const CPsiTableBase * CPsiTable::GetSection(const WORD Index, const WORD SectionNo) const
 {
 	if (Index >= GetExtensionNum())
 		return NULL;
@@ -225,27 +235,9 @@ CPsiSingleTable::CPsiSingleTable(const bool bTargetSectionExt)
 
 }
 
-CPsiSingleTable::CPsiSingleTable(const CPsiSingleTable &Operand)
-{
-	// コピーコンストラクタ
-	*this = Operand;
-}
-
 CPsiSingleTable::~CPsiSingleTable()
 {
 
-}
-
-CPsiSingleTable & CPsiSingleTable::operator = (const CPsiSingleTable &Operand)
-{
-	// インスタンスのコピー
-	if (&Operand != this) {
-		CPsiTableBase::operator=(Operand);
-
-		m_CurSection = Operand.m_CurSection;
-	}
-
-	return *this;
 }
 
 void CPsiSingleTable::Reset()
@@ -288,27 +280,9 @@ CPsiStreamTable::CPsiStreamTable(ISectionHandler *pHandler, const bool bTargetSe
 
 }
 
-CPsiStreamTable::CPsiStreamTable(const CPsiStreamTable &Operand)
-{
-	// コピーコンストラクタ
-	*this = Operand;
-}
-
 CPsiStreamTable::~CPsiStreamTable()
 {
 
-}
-
-CPsiStreamTable & CPsiStreamTable::operator = (const CPsiStreamTable &Operand)
-{
-	// インスタンスのコピー
-	if (&Operand != this) {
-		CPsiTableBase::operator=(Operand);
-
-		m_pSectionHandler = Operand.m_pSectionHandler;
-	}
-
-	return *this;
 }
 
 void CPsiStreamTable::Reset()
@@ -351,23 +325,9 @@ CPsiNullTable::CPsiNullTable()
 
 }
 
-CPsiNullTable::CPsiNullTable(const CPsiNullTable &Operand)
-	: CTsPidMapTarget()
-{
-	// コピーコンストラクタ
-	*this = Operand;
-}
-
 CPsiNullTable::~CPsiNullTable()
 {
 
-}
-
-CPsiNullTable & CPsiNullTable::operator = (const CPsiNullTable &Operand)
-{
-	// インスタンスのコピー
-
-	return *this;
 }
 
 /* 純粋仮想関数として実装
@@ -388,128 +348,6 @@ void CPsiNullTable::OnPidUnmapped(const WORD wPID)
 /////////////////////////////////////////////////////////////////////////////
 // PSIテーブルセット抽象化クラス
 /////////////////////////////////////////////////////////////////////////////
-/*
-CPsiTableSuite::CPsiTableSuite()
-	: m_bTargetSectionExt(true)
-{
-	m_PsiSectionParser.SetRecvCallback(m_bTargetSectionExt, CPsiTableSuite::StoreSection, this);
-
-	Reset();
-}
-
-CPsiTableSuite::CPsiTableSuite(const CPsiTableSuite &Operand)
-{
-	*this = Operand;
-}
-
-CPsiTableSuite & CPsiTableSuite::operator = (const CPsiTableSuite &Operand)
-{
-	m_TableSet = Operand.m_TableSet;
-	m_bTargetSectionExt = Operand.m_bTargetSectionExt;
-	m_bTableUpdated = Operand.m_bTableUpdated;
-	m_PsiSectionParser = Operand.m_PsiSectionParser;
-
-	m_PsiSectionParser.SetRecvCallback(m_bTargetSectionExt, CPsiTableSuite::StoreSection, this);
-
-	return *this;
-}
-
-const bool CPsiTableSuite::StorePacket(const CTsPacket *pPacket)
-{
-	m_bTableUpdated = false;
-
-	// PSIセクションをテーブルに追加する
-	m_PsiSectionParser.StorePacket(pPacket);
-
-	return m_bTableUpdated;
-}
-
-void CPsiTableSuite::SetTargetSectionExt(const bool bTargetExt)
-{
-	// 処理対象とするセクションの種類を設定する(拡張 or 標準)
-	m_bTargetSectionExt = bTargetExt;
-	m_PsiSectionParser.SetRecvCallback(bTargetExt, CPsiTableSuite::StoreSection, this);
-}
-
-const bool CPsiTableSuite::AddTable(const BYTE byTableID)
-{
-	const WORD wNum = m_TableSet.size();
-
-	// 既存のIDをチェック
-	if(GetIndexByID(byTableID) < wNum)return false;
-
-	// 最後尾に要素を追加
-	m_TableSet.resize(wNum + 1U);
-
-	// IDをセット
-	m_TableSet[wNum].byTableID = byTableID;
-
-	return true;
-}
-
-const WORD CPsiTableSuite::GetIndexByID(const BYTE byTableID)
-{
-	// 既存のテーブルIDを検索する
-	for(WORD wIndex = 0U ; wIndex < m_TableSet.size() ; wIndex++){
-		if(m_TableSet[wIndex].byTableID == byTableID)return wIndex;
-		}
-
-	// エラー時は常にテーブルの最大数より大きいインデックスを返す
-	return 0x0100U;
-}
-
-const CPsiTable * CPsiTableSuite::GetTable(const WORD wIndex) const
-{
-	// テーブルを返す
-	return (wIndex < m_TableSet.size())? &m_TableSet[wIndex].PsiTable : NULL;
-}
-
-const CMediaData * CPsiTableSuite::GetSectionData(const WORD wIndex, const WORD wSubIndex, const BYTE bySectionNo) const
-{
-	// セクションデータを返す
-	const CPsiTable *pPsiTable = GetTable(wIndex);
-
-	// テーブルが見つからない
-	if(!pPsiTable)return NULL;
-
-	// データを返す
-	return pPsiTable->GetSectionData(wSubIndex, bySectionNo);
-}
-
-void CPsiTableSuite::Reset(void)
-{
-	m_bTableUpdated = false;
-
-	m_PsiSectionParser.Reset();
-	m_TableSet.clear();
-}
-
-const DWORD CPsiTableSuite::GetCrcErrorCount(void) const
-{
-	return m_PsiSectionParser.GetCrcErrorCount();
-}
-
-void CALLBACK CPsiTableSuite::StoreSection(const CPsiSection *pSection, const PVOID pParam)
-{
-	CPsiTableSuite *pThis = static_cast<CPsiTableSuite *>(pParam);
-
-	// 対象外のセクションは処理しない
-	if(pSection->IsExtendedSection() != pThis->m_bTargetSectionExt)return;
-
-	// テーブルIDを検索
-	const WORD wIndex = pThis->GetIndexByID(pSection->GetTableID());
-
-	// テーブルIDが見つからない
-	if(wIndex >= pThis->m_TableSet.size())return;
-
-	// テーブルにストアする
-	bool bUpdate = false;
-	pThis->m_TableSet[wIndex].PsiTable.StoreSection(pSection, &bUpdate);
-
-	if(bUpdate)pThis->m_bTableUpdated = true;
-}
-*/
-
 
 CPsiTableSet::CPsiTableSet(const bool bTargetSectionExt)
 	: CPsiTableBase(bTargetSectionExt)
@@ -576,6 +414,16 @@ CPsiTableBase * CPsiTableSet::GetTableByID(const BYTE TableID)
 	return itr->second;
 }
 
+const CPsiTableBase * CPsiTableSet::GetTableByID(const BYTE TableID) const
+{
+	SectionTableMap::const_iterator itr = m_TableMap.find(TableID);
+
+	if (itr == m_TableMap.end())
+		return NULL;
+
+	return itr->second;
+}
+
 BYTE CPsiTableSet::GetLastUpdatedTableID() const
 {
 	return m_LastUpdatedTableID;
@@ -614,24 +462,7 @@ CPatTable::CPatTable(
 	Reset();
 }
 
-CPatTable::CPatTable(const CPatTable &Operand)
-{
-	*this = Operand;
-}
-
-CPatTable & CPatTable::operator = (const CPatTable &Operand)
-{
-	if (&Operand != this) {
-		CPsiSingleTable::operator = (Operand);
-
-		m_NitPIDArray = Operand.m_NitPIDArray;
-		m_PmtPIDArray = Operand.m_PmtPIDArray;
-	}
-
-	return *this;
-}
-
-void CPatTable::Reset(void)
+void CPatTable::Reset()
 {
 	// 状態をクリアする
 	CPsiSingleTable::Reset();
@@ -640,7 +471,7 @@ void CPatTable::Reset(void)
 	m_PmtPIDArray.clear();
 }
 
-const WORD CPatTable::GetTransportStreamID(void) const
+const WORD CPatTable::GetTransportStreamID() const
 {
 	return m_CurSection.GetTableIdExtension();
 }
@@ -651,7 +482,7 @@ const WORD CPatTable::GetNitPID(const WORD wIndex) const
 	return (wIndex < m_NitPIDArray.size())? m_NitPIDArray[wIndex] : 0xFFFFU;	// 0xFFFFは未定義のPID
 }
 
-const WORD CPatTable::GetNitNum(void) const
+const WORD CPatTable::GetNitNum() const
 {
 	// NITの数を返す
 	return (WORD)m_NitPIDArray.size();
@@ -669,7 +500,7 @@ const WORD CPatTable::GetProgramID(const WORD wIndex) const
 	return (wIndex < m_PmtPIDArray.size())? m_PmtPIDArray[wIndex].wProgramID : 0x0000U;	// 0xFFFFは未定義のPID
 }
 
-const WORD CPatTable::GetProgramNum(void) const
+const WORD CPatTable::GetProgramNum() const
 {
 	// PMTの数を返す
 	return (WORD)m_PmtPIDArray.size();
@@ -744,20 +575,11 @@ CCatTable::CCatTable()
 	Reset();
 }
 
-CCatTable::~CCatTable(void)
+CCatTable::~CCatTable()
 {
 }
 
-CCatTable  & CCatTable::operator = (const CCatTable &Operand)
-{
-	if (this != &Operand) {
-		CPsiSingleTable::operator=(Operand);
-		m_DescBlock = Operand.m_DescBlock;
-	}
-	return *this;
-}
-
-void CCatTable::Reset(void)
+void CCatTable::Reset()
 {
 	// 状態をクリアする
 	m_DescBlock.Reset();
@@ -783,7 +605,7 @@ const CCaMethodDesc * CCatTable::GetCaDescBySystemID(const WORD SystemID) const
 
 WORD CCatTable::GetEmmPID() const
 {
-	const CCaMethodDesc *pCaDesc = dynamic_cast<const CCaMethodDesc*>(m_DescBlock.GetDescByTag(CCaMethodDesc::DESC_TAG));
+	const CCaMethodDesc *pCaDesc = m_DescBlock.GetDesc<CCaMethodDesc>();
 
 	if (pCaDesc != NULL)
 		return pCaDesc->GetCaPID();
@@ -801,7 +623,7 @@ WORD CCatTable::GetEmmPID(const WORD CASystemID) const
 	return 0xFFFF;
 }
 
-const CDescBlock * CCatTable::GetCatDesc(void) const
+const CDescBlock * CCatTable::GetCatDesc() const
 {
 	// 記述子領域を返す
 	return &m_DescBlock;
@@ -848,24 +670,7 @@ CPmtTable::CPmtTable(
 	Reset();
 }
 
-CPmtTable::CPmtTable(const CPmtTable &Operand)
-{
-	*this = Operand;
-}
-
-CPmtTable & CPmtTable::operator = (const CPmtTable &Operand)
-{
-	if (this != &Operand) {
-		CPsiSingleTable::operator=(Operand);
-		m_wPcrPID = Operand.m_wPcrPID;
-		m_TableDescBlock = Operand.m_TableDescBlock;
-		m_EsInfoArray = Operand.m_EsInfoArray;
-	}
-
-	return *this;
-}
-
-void CPmtTable::Reset(void)
+void CPmtTable::Reset()
 {
 	// 状態をクリアする
 	CPsiSingleTable::Reset();
@@ -875,27 +680,27 @@ void CPmtTable::Reset(void)
 	m_EsInfoArray.clear();
 }
 
-const WORD CPmtTable::GetProgramNumberID(void) const
+const WORD CPmtTable::GetProgramNumberID() const
 {
 	return m_CurSection.GetTableIdExtension();
 }
 
-const WORD CPmtTable::GetPcrPID(void) const
+const WORD CPmtTable::GetPcrPID() const
 {
 	// PCR_PID を返す
 	return m_wPcrPID;
 }
 
-const CDescBlock * CPmtTable::GetTableDesc(void) const
+const CDescBlock * CPmtTable::GetTableDesc() const
 {
 	// テーブルの記述子ブロックを返す
 	return &m_TableDescBlock;
 }
 
-const WORD CPmtTable::GetEcmPID(void) const
+const WORD CPmtTable::GetEcmPID() const
 {
 	// ECMのPIDを返す
-	const CCaMethodDesc *pCaMethodDesc = dynamic_cast<const CCaMethodDesc *>(m_TableDescBlock.GetDescByTag(CCaMethodDesc::DESC_TAG));
+	const CCaMethodDesc *pCaMethodDesc = m_TableDescBlock.GetDesc<CCaMethodDesc>();
 
 	return (pCaMethodDesc)? pCaMethodDesc->GetCaPID() : 0xFFFFU;
 }
@@ -917,7 +722,7 @@ const WORD CPmtTable::GetEcmPID(const WORD CASystemID) const
 	return 0xFFFF;
 }
 
-const WORD CPmtTable::GetEsInfoNum(void) const
+const WORD CPmtTable::GetEsInfoNum() const
 {
 	// ES情報の数を返す
 	return (WORD)m_EsInfoArray.size();
@@ -967,7 +772,7 @@ const bool CPmtTable::OnTableUpdate(const CPsiSection *pCurSection, const CPsiSe
 #ifdef _DEBUG
 	if (m_bDebugTrace)
 		TRACE(TEXT("\n------- PMT Table -------\nProgram Number ID = %04X(%d)\nPCR PID = %04X\nECM PID = %04X\n"),
-			pCurSection->GetTableIdExtension(), pCurSection->GetTableIdExtension(), m_wPcrPID , (m_TableDescBlock.GetDescByTag(CCaMethodDesc::DESC_TAG))? dynamic_cast<const CCaMethodDesc *>(m_TableDescBlock.GetDescByTag(CCaMethodDesc::DESC_TAG))->GetCaPID() : 0xFFFFU);
+			pCurSection->GetTableIdExtension(), pCurSection->GetTableIdExtension(), m_wPcrPID , m_TableDescBlock.GetDesc<CCaMethodDesc>() ? m_TableDescBlock.GetDesc<CCaMethodDesc>()->GetCaPID() : 0xFFFFU);
 #endif
 
 	// ストリーム情報を解析
@@ -1008,24 +813,7 @@ CSdtTable::CSdtTable(const BYTE TableID)
 
 }
 
-CSdtTable::CSdtTable(const CSdtTable &Operand)
-{
-	*this = Operand;
-}
-
-CSdtTable & CSdtTable::operator = (const CSdtTable &Operand)
-{
-	if (this != &Operand) {
-		CPsiSingleTable::operator = (Operand);
-		m_TableID = Operand.m_TableID;
-		m_wNetworkID = Operand.m_wNetworkID;
-		m_ServiceInfoArray = Operand.m_ServiceInfoArray;
-	}
-
-	return *this;
-}
-
-void CSdtTable::Reset(void)
+void CSdtTable::Reset()
 {
 	// 状態をクリアする
 	CPsiSingleTable::Reset();
@@ -1034,22 +822,22 @@ void CSdtTable::Reset(void)
 	m_ServiceInfoArray.clear();
 }
 
-const BYTE CSdtTable::GetTableID(void) const
+const BYTE CSdtTable::GetTableID() const
 {
 	return m_TableID;
 }
 
-const WORD CSdtTable::GetTransportStreamID(void) const
+const WORD CSdtTable::GetTransportStreamID() const
 {
 	return m_CurSection.GetTableIdExtension();
 }
 
-const WORD CSdtTable::GetNetworkID(void) const
+const WORD CSdtTable::GetNetworkID() const
 {
 	return m_wNetworkID;
 }
 
-const WORD CSdtTable::GetServiceNum(void) const
+const WORD CSdtTable::GetServiceNum() const
 {
 	// サービス数を返す
 	return (WORD)m_ServiceInfoArray.size();
@@ -1172,7 +960,7 @@ const bool CSdtTable::OnTableUpdate(const CPsiSection *pCurSection, const CPsiSe
 
 #ifdef _DEBUG
 		// デバッグ用ここから
-		const CServiceDesc *pServiceDesc = dynamic_cast<const CServiceDesc *>(SdtItem.DescBlock.GetDescByTag(CServiceDesc::DESC_TAG));
+		const CServiceDesc *pServiceDesc = SdtItem.DescBlock.GetDesc<CServiceDesc>();
 		if (pServiceDesc) {
 			TCHAR szServiceName[1024] = {TEXT('\0')};
 			pServiceDesc->GetServiceName(szServiceName,1024);
@@ -1202,6 +990,23 @@ CPsiTableBase * CSdtOtherTable::CreateSectionTable(const CPsiSection *pSection)
 }
 
 
+CSdtTableSet::CSdtTableSet()
+{
+	MapTable(CSdtTable::TABLE_ID_ACTUAL, new CSdtTable(CSdtTable::TABLE_ID_ACTUAL));
+	MapTable(CSdtTable::TABLE_ID_OTHER, new CSdtOtherTable());
+}
+
+CSdtTable *CSdtTableSet::GetActualSdtTable()
+{
+	return dynamic_cast<CSdtTable*>(GetTableByID(CSdtTable::TABLE_ID_ACTUAL));
+}
+
+CSdtOtherTable *CSdtTableSet::GetOtherSdtTable()
+{
+	return dynamic_cast<CSdtOtherTable*>(GetTableByID(CSdtTable::TABLE_ID_OTHER));
+}
+
+
 /////////////////////////////////////////////////////////////////////////////
 // NITテーブル抽象化クラス
 /////////////////////////////////////////////////////////////////////////////
@@ -1212,24 +1017,7 @@ CNitTable::CNitTable()
 	Reset();
 }
 
-CNitTable::CNitTable(const CNitTable &Operand)
-{
-	*this = Operand;
-}
-
-CNitTable & CNitTable::operator = (const CNitTable &Operand)
-{
-	if (this != &Operand) {
-		CPsiSingleTable::operator = (Operand);
-		m_wNetworkID = Operand.m_wNetworkID;
-		m_NetworkDescBlock = Operand.m_NetworkDescBlock;
-		m_TransportStreamArray = Operand.m_TransportStreamArray;
-	}
-
-	return *this;
-}
-
-void CNitTable::Reset(void)
+void CNitTable::Reset()
 {
 	CPsiSingleTable::Reset();
 	m_wNetworkID = 0xFFFF;
@@ -1237,17 +1025,17 @@ void CNitTable::Reset(void)
 	m_TransportStreamArray.clear();
 }
 
-const WORD CNitTable::GetNetworkID(void) const
+const WORD CNitTable::GetNetworkID() const
 {
 	return m_wNetworkID;
 }
 
-const CDescBlock * CNitTable::GetNetworkDesc(void) const
+const CDescBlock * CNitTable::GetNetworkDesc() const
 {
 	return &m_NetworkDescBlock;
 }
 
-const WORD CNitTable::GetTransportStreamNum(void) const
+const WORD CNitTable::GetTransportStreamNum() const
 {
 	return (WORD)m_TransportStreamArray.size();
 }
@@ -1318,191 +1106,235 @@ const bool CNitTable::OnTableUpdate(const CPsiSection *pCurSection, const CPsiSe
 }
 
 
+WORD CNitMultiTable::GetNitSectionNum() const
+{
+	return GetSectionNum(0);
+}
+
+const CNitTable * CNitMultiTable::GetNitTable(const WORD SectionNo) const
+{
+	return dynamic_cast<const CNitTable *>(GetSection(0, SectionNo));
+}
+
+bool CNitMultiTable::IsNitComplete() const
+{
+	return IsExtensionComplete(0);
+}
+
+CPsiTableBase * CNitMultiTable::CreateSectionTable(const CPsiSection *pSection)
+{
+	return new CNitTable;
+}
+
+
 /////////////////////////////////////////////////////////////////////////////
-// EIT[p/f]テーブル抽象化クラス
+// EITテーブル抽象化クラス
 /////////////////////////////////////////////////////////////////////////////
 
-CEitPfTable::CEitPfTable()
-	: CPsiStreamTable()
+CEitTable::CEitTable()
+	: CPsiSingleTable()
 {
-
+	Reset();
 }
 
-CEitPfTable::CEitPfTable(const CEitPfTable &Operand)
-{
-	*this = Operand;
-}
-
-CEitPfTable & CEitPfTable::operator = (const CEitPfTable &Operand)
-{
-	if (this != &Operand) {
-		CPsiStreamTable::operator = (Operand);
-		m_ServiceList = Operand.m_ServiceList;
-	}
-
-	return *this;
-}
-
-void CEitPfTable::Reset(void)
+void CEitTable::Reset()
 {
 	// 状態をクリアする
-	CPsiStreamTable::Reset();
+	CPsiSingleTable::Reset();
 
-	m_ServiceList.clear();
+	m_ServiceID = 0;
+	m_TransportStreamID = 0;
+	m_OriginalNetworkID = 0;
+	m_SegmentLastSectionNumber = 0;
+	m_LastTableID = 0;
+	m_EventList.clear();
 }
 
-const DWORD CEitPfTable::GetServiceNum(void) const
+WORD CEitTable::GetServiceID() const
 {
-	// サービス数を返す
-	return (DWORD)m_ServiceList.size();
+	return m_ServiceID;
 }
 
-const int CEitPfTable::GetServiceIndexByID(WORD ServiceID) const
+WORD CEitTable::GetTransportStreamID() const
 {
-	// サービスIDからインデックスを返す
-	for (DWORD Index = 0 ; Index < GetServiceNum() ; Index++) {
-		if (m_ServiceList[Index].ServiceID == ServiceID) {
-			return Index;
-		}
-	}
-
-	// サービスIDが見つからない
-	return -1;
+	return m_TransportStreamID;
 }
 
-const WORD CEitPfTable::GetServiceID(DWORD Index) const
+WORD CEitTable::GetOriginalNetworkID() const
 {
-	// サービスIDを返す
-	if (Index >= GetServiceNum())
-		return 0xFFFF;
-	return m_ServiceList[Index].ServiceID;
+	return m_OriginalNetworkID;
 }
 
-const WORD CEitPfTable::GetTransportStreamID(DWORD Index) const
+BYTE CEitTable::GetSegmentLastSectionNumber() const
 {
-	if (Index >= GetServiceNum())
-		return 0;
-	return m_ServiceList[Index].TransportStreamID;
+	return m_SegmentLastSectionNumber;
 }
 
-const WORD CEitPfTable::GetOriginalNetworkID(DWORD Index) const
+BYTE CEitTable::GetLastTableID() const
 {
-	if (Index >= GetServiceNum())
-		return 0;
-	return m_ServiceList[Index].OriginalNetworkID;
+	return m_LastTableID;
 }
 
-const WORD CEitPfTable::GetEventID(DWORD Index,DWORD EventIndex) const
+int CEitTable::GetEventNum() const
 {
-	if (Index >= GetServiceNum() || EventIndex > 1
-			|| !m_ServiceList[Index].EventList[EventIndex].bEnable)
-		return 0;
-	return m_ServiceList[Index].EventList[EventIndex].EventID;
+	return (int)m_EventList.size();
 }
 
-const SYSTEMTIME *CEitPfTable::GetStartTime(DWORD Index,DWORD EventIndex) const
+const CEitTable::EventInfo * CEitTable::GetEventInfo(const int Index) const
 {
-	if (Index >= GetServiceNum() || EventIndex > 1
-			|| !m_ServiceList[Index].EventList[EventIndex].bEnable
-			|| !m_ServiceList[Index].EventList[EventIndex].bValidStartTime)
+	if (Index < 0 || (size_t)Index >= m_EventList.size())
 		return NULL;
-	return &m_ServiceList[Index].EventList[EventIndex].StartTime;
+	return &m_EventList[Index];
 }
 
-const DWORD CEitPfTable::GetDuration(DWORD Index,DWORD EventIndex) const
+WORD CEitTable::GetEventID(const int Index) const
 {
-	if (Index >= GetServiceNum() || EventIndex > 1
-			|| !m_ServiceList[Index].EventList[EventIndex].bEnable)
+	if (Index < 0 || (size_t)Index >= m_EventList.size())
 		return 0;
-	return m_ServiceList[Index].EventList[EventIndex].Duration;
+	return m_EventList[Index].EventID;
 }
 
-const BYTE CEitPfTable::GetRunningStatus(DWORD Index,DWORD EventIndex) const
+const SYSTEMTIME * CEitTable::GetStartTime(const int Index) const
 {
-	if (Index >= GetServiceNum() || EventIndex > 1
-			|| !m_ServiceList[Index].EventList[EventIndex].bEnable)
-		return 0xFF;
-	return m_ServiceList[Index].EventList[EventIndex].RunningStatus;
+	if (Index < 0 || (size_t)Index >= m_EventList.size()
+			|| !m_EventList[Index].bValidStartTime)
+		return NULL;
+	return &m_EventList[Index].StartTime;
 }
 
-const bool CEitPfTable::GetFreeCaMode(DWORD Index,DWORD EventIndex) const
+DWORD CEitTable::GetDuration(const int Index) const
+{
+	if (Index < 0 || (size_t)Index >= m_EventList.size())
+		return 0;
+	return m_EventList[Index].Duration;
+}
+
+BYTE CEitTable::GetRunningStatus(const int Index) const
+{
+	if (Index < 0 || (size_t)Index >= m_EventList.size())
+		return 0;
+	return m_EventList[Index].RunningStatus;
+}
+
+bool CEitTable::GetFreeCaMode(const int Index) const
 {
 	// Free CA Modeを返す
-	if (Index >= GetServiceNum() || EventIndex > 1
-			|| !m_ServiceList[Index].EventList[EventIndex].bEnable)
-		return false;
-	return m_ServiceList[Index].EventList[EventIndex].FreeCaMode;
+	if (Index < 0 || (size_t)Index >= m_EventList.size())
+		return 0;
+	return m_EventList[Index].bFreeCaMode;
 }
 
-const CDescBlock * CEitPfTable::GetItemDesc(DWORD Index,DWORD EventIndex) const
+const CDescBlock * CEitTable::GetItemDesc(const int Index) const
 {
 	// アイテムの記述子ブロックを返す
-	if (Index >= GetServiceNum() || EventIndex > 1
-			|| !m_ServiceList[Index].EventList[EventIndex].bEnable)
+	if (Index < 0 || (size_t)Index >= m_EventList.size())
 		return NULL;
-	return &m_ServiceList[Index].EventList[EventIndex].DescBlock;
+	return &m_EventList[Index].DescBlock;
 }
 
-const bool CEitPfTable::OnTableUpdate(const CPsiSection *pCurSection)
+const bool CEitTable::OnTableUpdate(const CPsiSection *pCurSection, const CPsiSection *pOldSection)
 {
-	if (pCurSection->GetTableID() != 0x4E
-			|| pCurSection->GetSectionNumber() > 0x01)
+	const BYTE TableID = pCurSection->GetTableID();
+	if (TableID < 0x4E || TableID > 0x6F)
 		return false;
 
-	const WORD wDataSize = pCurSection->GetPayloadSize();
-	const BYTE *pHexData = pCurSection->GetPayloadData();
+	const WORD DataSize = pCurSection->GetPayloadSize();
+	const BYTE *pData = pCurSection->GetPayloadData();
 
-	if (wDataSize < 18)
+	if (DataSize < 6)
 		return false;
 
-	WORD ServiceID, TransportStreamID, OriginalNetworkID;
-	ServiceID = pCurSection->GetTableIdExtension();
-	TransportStreamID = ((WORD)pHexData[0] << 8) | (WORD)pHexData[1];
-	OriginalNetworkID = ((WORD)pHexData[2] << 8) | (WORD)pHexData[3];
+	m_ServiceID = pCurSection->GetTableIdExtension();
+	m_TransportStreamID = ((WORD)pData[0] << 8) | (WORD)pData[1];
+	m_OriginalNetworkID = ((WORD)pData[2] << 8) | (WORD)pData[3];
+	m_SegmentLastSectionNumber = pData[4];
+	m_LastTableID = pData[5];
 
-	/*
-	if (pHexData[4] != 0x01)	// segment_last_section_number
-		return false;
-	*/
-	if (pHexData[5] != 0x4E)	// last_table_id
-		return false;
+	m_EventList.clear();
+	WORD Pos = 6;
+	for (int i = 0; Pos + 12 <= DataSize; i++) {
+		m_EventList.push_back(EventInfo());
 
-	/*
-	TRACE(TEXT("------- EIT[p/f] Table -------\nSID = %04X / TSID = %04X / ONID = %04X\n"),
-		  ServiceID, TransportStreamID, OriginalNetworkID);
-	*/
+		EventInfo &Info = m_EventList.back();
 
-	int Index = GetServiceIndexByID(ServiceID);
-	if (Index < 0) {
-		ServiceInfo Service;
-
-		Service.ServiceID = ServiceID;
-		Service.TransportStreamID = TransportStreamID;
-		Service.OriginalNetworkID = OriginalNetworkID;
-		m_ServiceList.push_back(Service);
-		Index = (int)m_ServiceList.size() - 1;
+		Info.EventID = ((WORD)pData[Pos + 0] << 8) | (WORD)pData[Pos + 1];
+		Info.bValidStartTime = CAribTime::AribToSystemTime(&pData[Pos + 2], &Info.StartTime);
+		Info.Duration = CAribTime::AribBcdToSecond(&pData[Pos + 7]);
+		Info.RunningStatus = pData[Pos + 10] >> 5;
+		Info.bFreeCaMode = (pData[Pos + 10] & 0x10) != 0;
+		WORD DescLength = (((WORD)pData[Pos + 10] & 0x0F) << 8) | (WORD)pData[Pos + 11];
+		if (DescLength > 0 && Pos + 12 + DescLength <= DataSize)
+			Info.DescBlock.ParseBlock(&pData[Pos + 12], DescLength);
+		Pos += 12 + DescLength;
 	}
 
-	EventInfo &Info = m_ServiceList[Index].EventList[pCurSection->GetSectionNumber()];
-
-	Info.EventID = ((WORD)pHexData[6] << 8) | (WORD)pHexData[7];
-	Info.bValidStartTime = CAribTime::AribToSystemTime(&pHexData[8], &Info.StartTime);
-	Info.Duration = CAribTime::AribBcdToSecond(&pHexData[13]);
-	Info.RunningStatus = pHexData[16] >> 5;
-	Info.FreeCaMode = (pHexData[16] & 0x10) != 0;
-	WORD DescLength = (((WORD)pHexData[16] & 0x0F) << 8) | (WORD)pHexData[17];
-	if (DescLength > 0 && DescLength <= wDataSize - 18)
-		Info.DescBlock.ParseBlock(&pHexData[18], DescLength);
-	else
-		Info.DescBlock.Reset();
-	Info.bEnable = true;
-
-	/*
-	TRACE(TEXT("EventID = %02X / %04d/%d/%d %d:%02d %lu sec\n"),
-		  Info.EventID,Info.StartTime.wYear,Info.StartTime.wMonth,Info.StartTime.wDay,Info.StartTime.wHour,Info.StartTime.wMinute,Info.Duration);
-	*/
-
 	return true;
+}
+
+
+const CEitTable * CEitMultiTable::GetEitTable(const WORD ServiceID, const WORD SectionNo) const
+{
+	const int Index = GetExtensionIndexByTableID(ServiceID);
+	if (Index >= 0)
+		return dynamic_cast<const CEitTable *>(GetSection(Index, SectionNo));
+	return NULL;
+}
+
+CPsiTableBase * CEitMultiTable::CreateSectionTable(const CPsiSection *pSection)
+{
+	return new CEitTable;
+}
+
+
+CEitPfTable::CEitPfTable()
+{
+	MapTable(CEitTable::TABLE_ID_PF_ACTUAL, new CEitMultiTable);
+	MapTable(CEitTable::TABLE_ID_PF_OTHER, new CEitMultiTable);
+}
+
+const CEitMultiTable * CEitPfTable::GetPfActualTable() const
+{
+	return dynamic_cast<const CEitMultiTable *>(GetTableByID(CEitTable::TABLE_ID_PF_ACTUAL));
+}
+
+const CEitTable * CEitPfTable::GetPfActualTable(const WORD ServiceID, const bool bFollowing) const
+{
+	const CEitMultiTable *pTable = GetPfActualTable();
+	if (pTable)
+		return pTable->GetEitTable(ServiceID, bFollowing ? 1 : 0);
+	return NULL;
+}
+
+const CEitMultiTable * CEitPfTable::GetPfOtherTable() const
+{
+	return dynamic_cast<const CEitMultiTable *>(GetTableByID(CEitTable::TABLE_ID_PF_OTHER));
+}
+
+const CEitTable * CEitPfTable::GetPfOtherTable(const WORD ServiceID, const bool bFollowing) const
+{
+	const CEitMultiTable *pTable = GetPfOtherTable();
+	if (pTable)
+		return pTable->GetEitTable(ServiceID, bFollowing ? 1 : 0);
+	return NULL;
+}
+
+
+CEitPfActualTable::CEitPfActualTable()
+{
+	MapTable(CEitTable::TABLE_ID_PF_ACTUAL, new CEitMultiTable);
+}
+
+const CEitMultiTable * CEitPfActualTable::GetPfActualTable() const
+{
+	return dynamic_cast<const CEitMultiTable *>(GetTableByID(CEitTable::TABLE_ID_PF_ACTUAL));
+}
+
+const CEitTable * CEitPfActualTable::GetPfActualTable(const WORD ServiceID, const bool bFollowing) const
+{
+	const CEitMultiTable *pTable = GetPfActualTable();
+	if (pTable)
+		return pTable->GetEitTable(ServiceID, bFollowing ? 1 : 0);
+	return NULL;
 }
 
 
@@ -1520,7 +1352,7 @@ CTotTable::~CTotTable()
 {
 }
 
-void CTotTable::Reset(void)
+void CTotTable::Reset()
 {
 	CPsiSingleTable::Reset();
 	m_bValidDateTime = false;
@@ -1549,7 +1381,7 @@ const bool CTotTable::GetDateTime(SYSTEMTIME *pTime) const
 
 const int CTotTable::GetLocalTimeOffset() const
 {
-	const CLocalTimeOffsetDesc *pLocalTimeOffset = dynamic_cast<const CLocalTimeOffsetDesc*>(m_DescBlock.GetDescByTag(CLocalTimeOffsetDesc::DESC_TAG));
+	const CLocalTimeOffsetDesc *pLocalTimeOffset = m_DescBlock.GetDesc<CLocalTimeOffsetDesc>();
 
 	if (pLocalTimeOffset && pLocalTimeOffset->IsValid()) {
 		return pLocalTimeOffset->GetLocalTimeOffset();
@@ -1557,7 +1389,7 @@ const int CTotTable::GetLocalTimeOffset() const
 	return 0;
 }
 
-const CDescBlock * CTotTable::GetTotDesc(void) const
+const CDescBlock * CTotTable::GetTotDesc() const
 {
 	return &m_DescBlock;
 }
@@ -1608,7 +1440,7 @@ CCdtTable::~CCdtTable()
 {
 }
 
-void CCdtTable::Reset(void)
+void CCdtTable::Reset()
 {
 	CPsiStreamTable::Reset();
 	m_OriginalNetworkId = 0xFFFF;
@@ -1627,7 +1459,7 @@ const BYTE CCdtTable::GetDataType() const
 	return m_DataType;
 }
 
-const CDescBlock * CCdtTable::GetDesc(void) const
+const CDescBlock * CCdtTable::GetDesc() const
 {
 	return &m_DescBlock;
 }
@@ -1693,7 +1525,7 @@ CSdttTable::~CSdttTable()
 {
 }
 
-void CSdttTable::Reset(void)
+void CSdttTable::Reset()
 {
 	CPsiStreamTable::Reset();
 	m_MakerID = 0;
@@ -1845,61 +1677,32 @@ const bool CSdttTable::OnTableUpdate(const CPsiSection *pCurSection)
 // PCR抽象化クラス
 /////////////////////////////////////////////////////////////////////////////
 
-CPcrTable::CPcrTable(WORD wServiceIndex)
+CPcrTable::CPcrTable()
 	: CPsiNullTable()
-	, m_ui64_Pcr(0)
+	, m_Pcr(0)
 {
-	m_ServiceIndex.push_back(wServiceIndex);
-}
-
-CPcrTable::CPcrTable(const CPcrTable &Operand)
-{
-	*this = Operand;
-}
-
-CPcrTable & CPcrTable::operator = (const CPcrTable &Operand)
-{
-	if (this != &Operand) {
-		CPsiNullTable::operator = (Operand);
-		m_ServiceIndex = Operand.m_ServiceIndex;
-		m_ui64_Pcr = Operand.m_ui64_Pcr;
-	}
-
-	return *this;
 }
 
 const bool CPcrTable::StorePacket(const CTsPacket *pPacket)
 {
-	if(!pPacket)return false;
+	if (!pPacket)
+		return false;
 
-	if(pPacket->m_AdaptationField.bPcrFlag){
+	if (pPacket->m_AdaptationField.bPcrFlag) {
 		if (pPacket->m_AdaptationField.byOptionSize < 5)
 			return false;
-		m_ui64_Pcr = ((unsigned __int64)pPacket->m_AdaptationField.pOptionData[0] << 25 ) |
-			((unsigned __int64)pPacket->m_AdaptationField.pOptionData[1] << 17 ) |
-			((unsigned __int64)pPacket->m_AdaptationField.pOptionData[2] << 9 ) |
-			((unsigned __int64)pPacket->m_AdaptationField.pOptionData[3] << 1 ) |
-			((unsigned __int64)pPacket->m_AdaptationField.pOptionData[4] >> 7 );
-		}
+		m_Pcr =
+			((PcrType)pPacket->m_AdaptationField.pOptionData[0] << 25 ) |
+			((PcrType)pPacket->m_AdaptationField.pOptionData[1] << 17 ) |
+			((PcrType)pPacket->m_AdaptationField.pOptionData[2] << 9 ) |
+			((PcrType)pPacket->m_AdaptationField.pOptionData[3] << 1 ) |
+			((PcrType)pPacket->m_AdaptationField.pOptionData[4] >> 7 );
+	}
 
 	return true;
 }
 
-void CPcrTable::AddServiceIndex(WORD wServiceIndex)
+CPcrTable::PcrType CPcrTable::GetPcrTimeStamp() const
 {
-	m_ServiceIndex.push_back(wServiceIndex);
-}
-
-const WORD CPcrTable::GetServiceIndex(WORD *pwServiceIndex, WORD wIndex)
-{
-	if (wIndex < m_ServiceIndex.size() && pwServiceIndex) {
-		*pwServiceIndex = m_ServiceIndex[wIndex];
-		return true;
-	}
-	return false;
-}
-
-const unsigned __int64 CPcrTable::GetPcrTimeStamp()
-{
-	return m_ui64_Pcr;
+	return m_Pcr;
 }

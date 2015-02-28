@@ -1,5 +1,4 @@
 #include "stdafx.h"
-#include <psapi.h>	// for GetModuleFileNameEx
 #include "TVTest.h"
 #include "AppUtil.h"
 #include "AppMain.h"
@@ -11,7 +10,10 @@ static char THIS_FILE[]=__FILE__;
 #define new DEBUG_NEW
 #endif
 
+#ifdef WIN_XP_SUPPORT
+#include <psapi.h>	// for GetModuleFileNameEx
 #pragma comment(lib,"psapi.lib")
+#endif
 
 
 
@@ -119,12 +121,18 @@ BOOL CALLBACK CTVTestWindowFinder::FindWindowCallback(HWND hwnd,LPARAM lParam)
 		HANDLE hProcess;
 		::GetWindowThreadProcessId(hwnd,&ProcessId);
 		hProcess=::OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ,FALSE,ProcessId);
-		if (hProcess!=NULL
-				&& ::GetModuleFileNameEx(hProcess,NULL,szFileName,lengthof(szFileName))>0
-				&& IsEqualFileName(szFileName,pThis->m_szModuleFileName)) {
-			pThis->m_hwndFound=hwnd;
-			::CloseHandle(hProcess);
-			return FALSE;
+		if (hProcess!=NULL) {
+#ifdef WIN_XP_SUPPORT
+			if (::GetModuleFileNameEx(hProcess,NULL,szFileName,lengthof(szFileName))>0
+#else
+			DWORD FileNameSize=lengthof(szFileName);
+			if (::QueryFullProcessImageName(hProcess,0,szFileName,&FileNameSize)
+#endif
+					&& IsEqualFileName(szFileName,pThis->m_szModuleFileName)) {
+				pThis->m_hwndFound=hwnd;
+				::CloseHandle(hProcess);
+				return FALSE;
+			}
 		}
 		::CloseHandle(hProcess);
 	}
@@ -134,19 +142,12 @@ BOOL CALLBACK CTVTestWindowFinder::FindWindowCallback(HWND hwnd,LPARAM lParam)
 
 
 
-bool CPortQuery::Query(HWND hwnd,WORD *pUDPPort,WORD MaxPort
-#ifdef NETWORK_REMOCON_SUPPORT
-					   ,WORD *pRemoconPort
-#endif
-					   )
+bool CPortQuery::Query(HWND hwnd,WORD *pUDPPort,WORD MaxPort)
 {
 	size_t i;
 
 	m_hwndSelf=hwnd;
 	m_UDPPortList.clear();
-#ifdef NETWORK_REMOCON_SUPPORT
-	m_RemoconPortList.clear();
-#endif
 	::EnumWindows(EnumProc,reinterpret_cast<LPARAM>(this));
 	if (m_UDPPortList.size()>0) {
 		WORD UDPPort;
@@ -163,21 +164,6 @@ bool CPortQuery::Query(HWND hwnd,WORD *pUDPPort,WORD MaxPort
 			UDPPort=0;
 		*pUDPPort=UDPPort;
 	}
-#ifdef NETWORK_REMOCON_SUPPORT
-	if (m_RemoconPortList.size()>0) {
-		WORD RemoconPort;
-
-		for (RemoconPort=*pRemoconPort;;RemoconPort++) {
-			for (i=0;i<m_RemoconPortList.size();i++) {
-				if (m_RemoconPortList[i]==RemoconPort)
-					break;
-			}
-			if (i==m_RemoconPortList.size())
-				break;
-		}
-		*pRemoconPort=RemoconPort;
-	}
-#endif
 	return true;
 }
 
@@ -194,19 +180,9 @@ BOOL CALLBACK CPortQuery::EnumProc(HWND hwnd,LPARAM lParam)
 		if (::SendMessageTimeout(hwnd,WM_APP_QUERYPORT,0,0,
 								 SMTO_NORMAL | SMTO_ABORTIFHUNG,1000,&Result)) {
 			WORD UDPPort=LOWORD(Result);
-#ifdef NETWORK_REMOCON_SUPPORT
-			WORD RemoconPort=HIWORD(Result);
-#endif
 
-			TRACE(TEXT("CPortQuery::EnumProc %d %d\n"),UDPPort,RemoconPort);
 			pThis->m_UDPPortList.push_back(UDPPort);
-#ifdef NETWORK_REMOCON_SUPPORT
-			if (RemoconPort>0)
-				pThis->m_RemoconPortList.push_back(RemoconPort);
-			GetAppClass().AddLog(TEXT("既に起動している") APP_NAME TEXT("が見付かりました。(UDPポート %d / リモコンポート %d)"),UDPPort,RemoconPort);
-#else
 			GetAppClass().AddLog(TEXT("既に起動している") APP_NAME TEXT("が見付かりました。(UDPポート %d)"),UDPPort);
-#endif
 		}
 	}
 	return TRUE;

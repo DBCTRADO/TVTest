@@ -107,6 +107,49 @@ COLORREF HSVToRGB(double Hue,double Saturation,double Value)
 }
 
 
+void RGBToHSV(BYTE Red,BYTE Green,BYTE Blue,
+			  double *pHue,double *pSaturation,double *pValue)
+{
+	const double r=(double)Red/255.0,g=(double)Green/255.0,b=(double)Blue/255.0;
+	double h,s,v;
+	double Max,Min;
+
+	if (r>g) {
+		Max=max(r,b);
+		Min=min(g,b);
+	} else {
+		Max=max(g,b);
+		Min=min(r,b);
+	}
+	v=Max;
+	if (Max>Min) {
+		s=(Max-Min)/Max;
+		double Delta=Max-Min;
+		if (r==Max)
+			h=(g-b)/Delta;
+		else if (g==Max)
+			h=2.0+(b-r)/Delta;
+		else
+			h=4.0+(r-g)/Delta;
+		h/=6.0;
+		if (h<0.0)
+			h+=1.0;
+		else if (h>=1.0)
+			h-=1.0;
+	} else {
+		s=0.0;
+		h=0.0;
+	}
+
+	if (pHue!=NULL)
+		*pHue=h;
+	if (pSaturation!=NULL)
+		*pSaturation=s;
+	if (pValue!=NULL)
+		*pValue=v;
+}
+
+
 FILETIME &operator+=(FILETIME &ft,LONGLONG Offset)
 {
 	ULARGE_INTEGER Result;
@@ -181,20 +224,6 @@ LONGLONG DiffSystemTime(const SYSTEMTIME *pStartTime,const SYSTEMTIME *pEndTime)
 }
 
 
-bool SystemTimeToLocalTimeNoDST(const SYSTEMTIME *pUTCTime,SYSTEMTIME *pLocalTime)
-{
-	TIME_ZONE_INFORMATION tzi;
-
-	if (GetTimeZoneInformation(&tzi)!=TIME_ZONE_ID_INVALID) {
-		tzi.StandardDate.wMonth=0;
-		tzi.DaylightDate.wMonth=0;
-		if (SystemTimeToTzSpecificLocalTime(&tzi,pUTCTime,pLocalTime))
-			return true;
-	}
-	return SystemTimeToTzSpecificLocalTime(NULL,pUTCTime,pLocalTime)!=FALSE;
-}
-
-
 void GetLocalTimeAsFileTime(FILETIME *pTime)
 {
 	SYSTEMTIME st;
@@ -204,51 +233,84 @@ void GetLocalTimeAsFileTime(FILETIME *pTime)
 }
 
 
-void GetLocalTimeNoDST(SYSTEMTIME *pTime)
+void SystemTimeTruncateDay(SYSTEMTIME *pTime)
 {
-	TIME_ZONE_INFORMATION tzi;
+	pTime->wHour=0;
+	pTime->wMinute=0;
+	pTime->wSecond=0;
+	pTime->wMilliseconds=0;
+}
 
-	if (GetTimeZoneInformation(&tzi)!=TIME_ZONE_ID_INVALID) {
-		SYSTEMTIME stUTC;
 
-		tzi.StandardDate.wMonth=0;
-		tzi.DaylightDate.wMonth=0;
-		GetSystemTime(&stUTC);
-		if (SystemTimeToTzSpecificLocalTime(&tzi,&stUTC,pTime))
-			return;
+void SystemTimeTruncateHour(SYSTEMTIME *pTime)
+{
+	pTime->wMinute=0;
+	pTime->wSecond=0;
+	pTime->wMilliseconds=0;
+}
+
+
+void SystemTimeTruncateMinuite(SYSTEMTIME *pTime)
+{
+	pTime->wSecond=0;
+	pTime->wMilliseconds=0;
+}
+
+
+void SystemTimeTruncateSecond(SYSTEMTIME *pTime)
+{
+	pTime->wMilliseconds=0;
+}
+
+
+#include <pshpack1.h>
+struct REG_TZI_FORMAT
+{
+	LONG Bias;
+	LONG StandardBias;
+	LONG DaylightBias;
+	SYSTEMTIME StandardDate;
+	SYSTEMTIME DaylightDate;
+};
+#include <poppack.h>
+
+bool GetJSTTimeZoneInformation(TIME_ZONE_INFORMATION *pInfo)
+{
+	if (pInfo==NULL)
+		return false;
+
+	::ZeroMemory(pInfo,sizeof(TIME_ZONE_INFORMATION));
+
+	bool fOK=false;
+	HKEY hkey;
+
+	if (::RegOpenKeyEx(HKEY_LOCAL_MACHINE,
+			TEXT("SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Time Zones\\Tokyo Standard Time"),
+			0,KEY_QUERY_VALUE,&hkey)==ERROR_SUCCESS) {
+		REG_TZI_FORMAT TimeZoneInfo;
+		DWORD Type,Size=sizeof(REG_TZI_FORMAT);
+
+		if (::RegQueryValueEx(hkey,TEXT("TZI"),NULL,&Type,
+					pointer_cast<BYTE*>(&TimeZoneInfo),&Size)==ERROR_SUCCESS
+				&& Type==REG_BINARY
+				&& Size==sizeof(REG_TZI_FORMAT)) {
+			pInfo->Bias=TimeZoneInfo.Bias;
+			pInfo->StandardDate=TimeZoneInfo.StandardDate;
+			pInfo->StandardBias=TimeZoneInfo.StandardBias;
+			pInfo->DaylightDate=TimeZoneInfo.DaylightDate;
+			pInfo->DaylightBias=TimeZoneInfo.DaylightBias;
+			fOK=true;
+		}
+
+		::RegCloseKey(hkey);
 	}
-	GetLocalTime(pTime);
-}
 
+	if (!fOK) {
+		pInfo->Bias=-9*60;
+		pInfo->DaylightBias=-60;
+	}
 
-void GetLocalTimeNoDST(FILETIME *pTime)
-{
-	SYSTEMTIME st;
-
-	GetLocalTimeNoDST(&st);
-	SystemTimeToFileTime(&st,pTime);
-}
-
-
-bool UTCToJST(const SYSTEMTIME *pUTCTime,SYSTEMTIME *pJST)
-{
-	*pJST=*pUTCTime;
-	return UTCToJST(pJST);
-}
-
-
-void GetCurrentJST(SYSTEMTIME *pTime)
-{
-	::GetSystemTime(pTime);
-	if (!UTCToJST(pTime))
-		::GetLocalTime(pTime);
-}
-
-
-void GetCurrentJST(FILETIME *pTime)
-{
-	::GetSystemTimeAsFileTime(pTime);
-	UTCToJST(pTime);
+	return true;
 }
 
 
@@ -537,6 +599,8 @@ int GetErrorText(DWORD ErrorCode,LPTSTR pszText,int MaxLength)
 }
 
 
+#ifdef WIN_XP_SUPPORT
+
 class CFileNameCompare
 {
 public:
@@ -591,18 +655,27 @@ bool IsEqualFileName(LPCWSTR pszFileName1,LPCWSTR pszFileName2)
 	return g_FileNameCompare.IsEqual(pszFileName1,pszFileName2);
 }
 
+#else	// WIN_XP_SUPPORT
 
-bool IsValidFileName(LPCTSTR pszFileName,bool fWildcard,LPTSTR pszMessage,int MaxMessage)
+bool IsEqualFileName(LPCWSTR pszFileName1,LPCWSTR pszFileName2)
+{
+	return ::CompareStringOrdinal(pszFileName1,-1,pszFileName2,-1,TRUE)==CSTR_EQUAL;
+}
+
+#endif
+
+
+bool IsValidFileName(LPCTSTR pszFileName,unsigned int Flags,TVTest::String *pMessage)
 {
 	if (pszFileName==NULL || pszFileName[0]==_T('\0')) {
-		if (pszMessage!=NULL)
-			lstrcpyn(pszMessage,TEXT("ファイル名が指定されていません。"),MaxMessage);
+		if (pMessage!=NULL)
+			*pMessage=TEXT("ファイル名が指定されていません。");
 		return false;
 	}
 	int Length=lstrlen(pszFileName);
 	if (Length>=MAX_PATH) {
-		if (pszMessage!=NULL)
-			lstrcpyn(pszMessage,TEXT("ファイル名が長すぎます。"),MaxMessage);
+		if (pMessage!=NULL)
+			*pMessage=TEXT("ファイル名が長すぎます。");
 		return false;
 	}
 	if (Length==3) {
@@ -611,8 +684,8 @@ bool IsValidFileName(LPCTSTR pszFileName,bool fWildcard,LPTSTR pszMessage,int Ma
 		};
 		for (int i=0;i<_countof(pszNGList);i++) {
 			if (lstrcmpi(pszNGList[i],pszFileName)==0) {
-				if (pszMessage!=NULL)
-					lstrcpyn(pszMessage,TEXT("仮想デバイス名はファイル名に使用できません。"),MaxMessage);
+				if (pMessage!=NULL)
+					*pMessage=TEXT("仮想デバイス名はファイル名に使用できません。");
 				return false;
 			}
 		}
@@ -622,38 +695,51 @@ bool IsValidFileName(LPCTSTR pszFileName,bool fWildcard,LPTSTR pszMessage,int Ma
 		for (int i=1;i<=9;i++) {
 			wsprintf(szName,TEXT("COM%d"),i);
 			if (lstrcmpi(szName,pszFileName)==0) {
-				if (pszMessage!=NULL)
-					lstrcpyn(pszMessage,TEXT("仮想デバイス名はファイル名に使用できません。"),MaxMessage);
+				if (pMessage!=NULL)
+					*pMessage=TEXT("仮想デバイス名はファイル名に使用できません。");
 				return false;
 			}
 		}
 		for (int i=1;i<=9;i++) {
 			wsprintf(szName,TEXT("LPT%d"),i);
 			if (lstrcmpi(szName,pszFileName)==0) {
-				if (pszMessage!=NULL)
-					lstrcpyn(pszMessage,TEXT("仮想デバイス名はファイル名に使用できません。"),MaxMessage);
+				if (pMessage!=NULL)
+					*pMessage=TEXT("仮想デバイス名はファイル名に使用できません。");
 				return false;
 			}
 		}
 	}
+
+	const bool fWildcard=(Flags & FILENAME_VALIDATE_WILDCARD)!=0;
+	const bool fAllowDelimiter=(Flags & FILENAME_VALIDATE_ALLOWDELIMITER)!=0;
 	LPCTSTR p=pszFileName;
+
 	while (*p!=_T('\0')) {
 		if (*p<=31 || *p==_T('<') || *p==_T('>') || *p==_T(':') || *p==_T('"')
-				|| *p==_T('/') || *p==_T('\\') || *p==_T('|')
-				|| (!fWildcard && (*p==_T('*') || *p==_T('?')))) {
-			if (pszMessage!=NULL)
-				lstrcpyn(pszMessage,TEXT("ファイル名に使用できない文字が含まれています。"),MaxMessage);
+				|| *p==_T('/') || *p==_T('|')
+				|| (!fWildcard && (*p==_T('*') || *p==_T('?')))
+				|| (!fAllowDelimiter && *p==_T('\\'))) {
+			if (pMessage!=NULL) {
+				if (*p<=31) {
+					TVTest::StringUtility::Format(*pMessage,
+						TEXT("ファイル名に使用できない文字 %#02x が含まれています。"),*p);
+				} else {
+					TVTest::StringUtility::Format(*pMessage,
+						TEXT("ファイル名に使用できない文字 %c が含まれています。"),*p);
+				}
+			}
 			return false;
 		}
 		if ((*p==_T(' ') || *p==_T('.')) && *(p+1)==_T('\0')) {
-			if (pszMessage!=NULL)
-				lstrcpyn(pszMessage,TEXT("ファイル名の末尾に半角空白及び . は使用できません。"),MaxMessage);
+			if (pMessage!=NULL)
+				*pMessage=TEXT("ファイル名の末尾に半角空白及び . は使用できません。");
 			return false;
 		}
 #ifndef UNICODE
 		if (IsDBCSLeadByteEx(CP_ACP,*p)) {
 			if (*(p+1)==_T('\0')) {
-				lstrcpyn(pszMessage,TEXT("2バイト文字の2バイト目が欠けています。"),MaxMessage);
+				if (pMessage!=NULL)
+					*pMessage=TEXT("2バイト文字の2バイト目が欠けています。");
 				return false;
 			}
 			p++;
@@ -661,6 +747,66 @@ bool IsValidFileName(LPCTSTR pszFileName,bool fWildcard,LPTSTR pszMessage,int Ma
 #endif
 		p++;
 	}
+
+	return true;
+}
+
+
+bool MakeUniqueFileName(TVTest::String *pFileName,size_t MaxLength,LPCTSTR pszNumberFormat)
+{
+	if (pFileName==nullptr || pFileName->empty())
+		return false;
+
+	LPCTSTR pszFileName=pFileName->c_str();
+	size_t DirLength=::PathFindFileName(pszFileName)-pszFileName;
+	if (DirLength==0 || DirLength>MaxLength-1)
+		return false;
+
+	TVTest::String Path(*pFileName);
+
+	LPCTSTR pszExtension=::PathFindExtension(pszFileName);
+	size_t ExtensionLength=::lstrlen(pszExtension);
+	size_t MaxFileName=MaxLength-DirLength;
+	if (Path.length()>MaxLength) {
+		if (ExtensionLength<MaxFileName) {
+			Path.resize(MaxLength-ExtensionLength);
+			Path+=pszExtension;
+		} else {
+			Path.resize(MaxLength);
+		}
+	}
+
+	if (::PathFileExists(Path.c_str())) {
+		static const int MAX_NUMBER=1000;
+		TVTest::String BaseName(
+			pFileName->substr(DirLength,pFileName->length()-DirLength-ExtensionLength));
+		TVTest::String Name;
+
+		if (IsStringEmpty(pszNumberFormat))
+			pszNumberFormat=TEXT("-%d");
+
+		for (int i=2;;i++) {
+			if (i==MAX_NUMBER)
+				return false;
+
+			TCHAR szNumber[16];
+
+			::wsprintf(szNumber,pszNumberFormat,i);
+			Name=BaseName;
+			Name+=szNumber;
+			Name+=pszExtension;
+			Path=pFileName->substr(0,DirLength);
+			if (Name.length()<=MaxFileName)
+				Path+=Name;
+			else
+				Path+=Name.substr(Name.length()-MaxFileName);
+			if (!::PathFileExists(Path.c_str()))
+				break;
+		}
+	}
+
+	*pFileName=Path;
+
 	return true;
 }
 
@@ -816,182 +962,117 @@ HICON CreateEmptyIcon(int Width,int Height)
 }
 
 
-
-
-CDynamicString::CDynamicString()
-	: m_pszString(NULL)
+HICON LoadIconStandardSize(HINSTANCE hinst,LPCTSTR pszName,IconSizeType Size)
 {
-}
+	int Metric;
+	HICON hico;
 
-
-CDynamicString::CDynamicString(const CDynamicString &String)
-	: m_pszString(NULL)
-{
-	*this=String;
-}
-
-
-CDynamicString::CDynamicString(CDynamicString &&String)
-	: m_pszString(String.m_pszString)
-{
-	String.m_pszString=NULL;
-}
-
-
-CDynamicString::CDynamicString(LPCTSTR pszString)
-	: m_pszString(NULL)
-{
-	Set(pszString);
-}
-
-
-CDynamicString::~CDynamicString()
-{
-	Clear();
-}
-
-
-CDynamicString &CDynamicString::operator=(const CDynamicString &String)
-{
-	if (&String!=this) {
-		ReplaceString(&m_pszString,String.m_pszString);
+	switch (Size) {
+	case ICON_SIZE_SMALL:	Metric=LIM_SMALL;	break;
+	case ICON_SIZE_NORMAL:	Metric=LIM_LARGE;	break;
+	default:
+		return NULL;
 	}
-	return *this;
-}
 
-
-CDynamicString &CDynamicString::operator=(CDynamicString &&String)
-{
-	if (&String!=this) {
-		Clear();
-		m_pszString=String.m_pszString;
-		String.m_pszString=NULL;
+#ifdef WIN_XP_SUPPORT
+	auto pLoadIconMetric=GET_MODULE_FUNCTION(TEXT("comctl32.dll"),LoadIconMetric);
+	if (pLoadIconMetric!=NULL) {
+		if (SUCCEEDED(pLoadIconMetric(hinst,pszName,Metric,&hico)))
+			return hico;
 	}
-	return *this;
-}
+#else
+	if (SUCCEEDED(::LoadIconMetric(hinst,pszName,Metric,&hico)))
+		return hico;
+#endif
 
+	int Width,Height;
 
-CDynamicString &CDynamicString::operator+=(const CDynamicString &String)
-{
-	return *this+=String.m_pszString;
-}
-
-
-CDynamicString &CDynamicString::operator=(LPCTSTR pszString)
-{
-	ReplaceString(&m_pszString,pszString);
-	return *this;
-}
-
-
-CDynamicString &CDynamicString::operator+=(LPCTSTR pszString)
-{
-	int Length=0;
-	if (m_pszString!=NULL)
-		Length+=::lstrlen(m_pszString);
-	if (pszString!=NULL)
-		Length+=::lstrlen(pszString);
-	if (Length>0) {
-		LPTSTR pszOldString=m_pszString;
-
-		m_pszString=new TCHAR[Length+1];
-		m_pszString[0]='\0';
-		if (pszOldString!=NULL) {
-			::lstrcpy(m_pszString,pszOldString);
-			delete [] pszOldString;
-		}
-		if (pszString!=NULL)
-			::lstrcat(m_pszString,pszString);
+	switch (Size) {
+	case ICON_SIZE_SMALL:
+		Width=::GetSystemMetrics(SM_CXSMICON);
+		Height=::GetSystemMetrics(SM_CYSMICON);
+		break;
+	case ICON_SIZE_NORMAL:
+		Width=::GetSystemMetrics(SM_CXICON);
+		Height=::GetSystemMetrics(SM_CYICON);
+		break;
 	}
-	return *this;
+
+	return (HICON)::LoadImage(hinst,pszName,IMAGE_ICON,Width,Height,LR_DEFAULTCOLOR);
 }
 
 
-bool CDynamicString::operator==(const CDynamicString &String) const
+HICON LoadSystemIcon(LPCTSTR pszName,IconSizeType Size)
 {
-	return Compare(String.m_pszString)==0;
-}
+	int Metric;
+	HICON hico;
 
-
-bool CDynamicString::operator!=(const CDynamicString &String) const
-{
-	return Compare(String.m_pszString)!=0;
-}
-
-
-bool CDynamicString::Set(LPCTSTR pszString)
-{
-	return ReplaceString(&m_pszString,pszString);
-}
-
-
-bool CDynamicString::Set(LPCTSTR pszString,size_t Length)
-{
-	Clear();
-	if (pszString!=NULL && Length>0) {
-		Length=StdUtil::strnlen(pszString,Length);
-		m_pszString=new TCHAR[Length+1];
-		::CopyMemory(m_pszString,pszString,Length*sizeof(TCHAR));
-		m_pszString[Length]=_T('\0');
+	switch (Size) {
+	case ICON_SIZE_SMALL:	Metric=LIM_SMALL;	break;
+	case ICON_SIZE_NORMAL:	Metric=LIM_LARGE;	break;
+	default:
+		return NULL;
 	}
-	return true;
-}
 
-
-bool CDynamicString::Attach(LPTSTR pszString)
-{
-	Clear();
-	m_pszString=pszString;
-	return true;
-}
-
-
-int CDynamicString::Length() const
-{
-	if (m_pszString==NULL)
-		return 0;
-	return ::lstrlen(m_pszString);
-}
-
-
-void CDynamicString::Clear()
-{
-	if (m_pszString!=NULL) {
-		delete [] m_pszString;
-		m_pszString=NULL;
+#ifdef WIN_XP_SUPPORT
+	auto pLoadIconMetric=GET_MODULE_FUNCTION(TEXT("comctl32.dll"),LoadIconMetric);
+	if (pLoadIconMetric!=NULL) {
+		if (SUCCEEDED(pLoadIconMetric(NULL,pszName,Metric,&hico)))
+			return hico;
 	}
-}
+#else
+	if (SUCCEEDED(::LoadIconMetric(NULL,pszName,Metric,&hico)))
+		return hico;
+#endif
 
+	int Width,Height;
 
-bool CDynamicString::IsEmpty() const
-{
-	return IsStringEmpty(m_pszString);
-}
-
-
-int CDynamicString::Compare(LPCTSTR pszString) const
-{
-	if (IsEmpty()) {
-		if (IsStringEmpty(pszString))
-			return 0;
-		return -1;
+	switch (Size) {
+	case ICON_SIZE_SMALL:
+		Width=::GetSystemMetrics(SM_CXSMICON);
+		Height=::GetSystemMetrics(SM_CYSMICON);
+		break;
+	case ICON_SIZE_NORMAL:
+		Width=::GetSystemMetrics(SM_CXICON);
+		Height=::GetSystemMetrics(SM_CYICON);
+		break;
 	}
-	if (IsStringEmpty(pszString))
-		return 1;
-	return ::lstrcmp(m_pszString,pszString);
+
+	hico=::LoadIcon(NULL,pszName);
+	if (hico!=NULL)
+		hico=(HICON)::CopyImage(hico,IMAGE_ICON,Width,Height,0);
+	return hico;
 }
 
 
-int CDynamicString::CompareIgnoreCase(LPCTSTR pszString) const
+HICON LoadSystemIcon(LPCTSTR pszName,int Width,int Height)
 {
-	if (IsEmpty()) {
-		if (IsStringEmpty(pszString))
-			return 0;
-		return -1;
+	if (Width<=0 || Height<=0)
+		return NULL;
+
+	HICON hico;
+
+#ifdef WIN_XP_SUPPORT
+	auto pLoadIconWithScaleDown=
+		GET_MODULE_FUNCTION(TEXT("comctl32.dll"),LoadIconWithScaleDown);
+	if (pLoadIconWithScaleDown!=NULL) {
+		if (SUCCEEDED(pLoadIconWithScaleDown(NULL,pszName,Width,Height,&hico)))
+			return hico;
 	}
-	if (IsStringEmpty(pszString))
-		return 1;
-	return ::lstrcmpi(m_pszString,pszString);
+#else
+	if (SUCCEEDED(::LoadIconWithScaleDown(NULL,pszName,Width,Height,&hico)))
+		return hico;
+#endif
+
+	if (Width==::GetSystemMetrics(SM_CXICON) && Height==::GetSystemMetrics(SM_CYICON))
+		return LoadSystemIcon(pszName,ICON_SIZE_NORMAL);
+	if (Width==::GetSystemMetrics(SM_CXSMICON) && Height==::GetSystemMetrics(SM_CYSMICON))
+		return LoadSystemIcon(pszName,ICON_SIZE_SMALL);
+
+	hico=::LoadIcon(NULL,pszName);
+	if (hico!=NULL)
+		hico=(HICON)::CopyImage(hico,IMAGE_ICON,Width,Height,0);
+	return hico;
 }
 
 
@@ -1418,7 +1499,8 @@ namespace Util
 	namespace OS
 	{
 
-		bool GetVersion(DWORD *pMajor,DWORD *pMinor)
+#if 0
+		static bool GetVersion(DWORD *pMajor,DWORD *pMinor)
 		{
 			OSVERSIONINFO osvi;
 
@@ -1449,21 +1531,42 @@ namespace Util
 			return MajorVersion>Major
 				|| (MajorVersion==Major && MinorVersion>=Minor);
 		}
-
-		DWORD GetMajorVersion()
+#else
+		static bool VerifyOSVersion(DWORD Major,BYTE MajorOperator,
+									DWORD Minor,BYTE MinorOperator)
 		{
-			DWORD MajorVersion;
-			if (!GetVersion(&MajorVersion,nullptr))
-				return 0;
-			return MajorVersion;
+			OSVERSIONINFOEX osvi={sizeof(osvi)};
+
+			osvi.dwMajorVersion=Major;
+			osvi.dwMinorVersion=Minor;
+
+			return ::VerifyVersionInfo(&osvi,VER_MAJORVERSION | VER_MINORVERSION,
+				::VerSetConditionMask(
+					::VerSetConditionMask(0,VER_MAJORVERSION,MajorOperator),
+					VER_MINORVERSION,MinorOperator))!=FALSE;
 		}
+
+		static bool CheckOSVersion(DWORD Major,DWORD Minor)
+		{
+			return VerifyOSVersion(Major,VER_EQUAL,Minor,VER_EQUAL);
+		}
+
+		static bool CheckOSVersionLater(DWORD Major,DWORD Minor)
+		{
+			return VerifyOSVersion(Major,VER_GREATER_EQUAL,Minor,VER_GREATER_EQUAL);
+		}
+#endif
 
 		bool IsWindowsXP()
 		{
+#if 0
 			DWORD MajorVersion,MinorVersion;
 			if (!GetVersion(&MajorVersion,&MinorVersion))
 				return false;
 			return MajorVersion==5 && MinorVersion>=1;
+#else
+			return VerifyOSVersion(5,VER_EQUAL,1,VER_GREATER_EQUAL);
+#endif
 		}
 
 		bool IsWindowsVista()
@@ -1494,6 +1597,11 @@ namespace Util
 		bool IsWindows7OrLater()
 		{
 			return CheckOSVersionLater(6,1);
+		}
+
+		bool IsWindows8OrLater()
+		{
+			return CheckOSVersionLater(6,2);
 		}
 
 	}	// namespace OS

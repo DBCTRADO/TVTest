@@ -12,14 +12,6 @@ static char THIS_FILE[]=__FILE__;
 #endif
 
 
-static bool CompareText(LPCTSTR pszText1,LPCTSTR pszText2)
-{
-	return (pszText1==NULL && pszText2==NULL)
-			|| (pszText1!=NULL && pszText2!=NULL
-				&& ::lstrcmp(pszText1,pszText2)==0);
-}
-
-
 
 
 CServiceInfoData::CServiceInfoData()
@@ -46,33 +38,11 @@ bool CServiceInfoData::operator==(const CServiceInfoData &Info) const
 }
 
 
-bool CServiceInfoData::IsBS() const
-{
-	return IsBSNetworkID(m_NetworkID);
-}
-
-
-bool CServiceInfoData::IsCS() const
-{
-	return IsCSNetworkID(m_NetworkID);
-}
-
-
 
 
 CEventInfoData::CEventInfoData()
-	: m_fValidStartTime(false)
-	, m_fCommonEvent(false)
-	, m_UpdateTime(0)
-	, m_Type(0)
-	, m_fDatabase(false)
+	: m_fDatabase(false)
 {
-}
-
-
-CEventInfoData::CEventInfoData(const CEventInfoData &Info)
-{
-	*this=Info;
 }
 
 
@@ -82,7 +52,8 @@ CEventInfoData::CEventInfoData(CEventInfoData &&Info)
 }
 
 
-CEventInfoData::CEventInfoData(const CEventManager::CEventInfo &Info)
+CEventInfoData::CEventInfoData(const CEventInfo &Info)
+	: m_fDatabase(false)
 {
 	*this=Info;
 }
@@ -93,87 +64,24 @@ CEventInfoData::~CEventInfoData()
 }
 
 
-CEventInfoData &CEventInfoData::operator=(const CEventInfoData &Info)
-{
-	if (&Info!=this) {
-		m_NetworkID=Info.m_NetworkID;
-		m_TSID=Info.m_TSID;
-		m_ServiceID=Info.m_ServiceID;
-		m_EventID=Info.m_EventID;
-		m_EventName=Info.m_EventName;
-		m_EventText=Info.m_EventText;
-		m_EventExtText=Info.m_EventExtText;
-		m_fValidStartTime=Info.m_fValidStartTime;
-		if (m_fValidStartTime)
-			m_stStartTime=Info.m_stStartTime;
-		m_DurationSec=Info.m_DurationSec;
-		m_RunningStatus=Info.m_RunningStatus;
-		m_CaType=Info.m_CaType;
-		m_VideoInfo=Info.m_VideoInfo;
-		m_AudioList=Info.m_AudioList;
-		m_ContentNibble=Info.m_ContentNibble;
-		m_EventGroupList=Info.m_EventGroupList;
-		m_fCommonEvent=Info.m_fCommonEvent;
-		m_CommonEventInfo=Info.m_CommonEventInfo;
-		m_UpdateTime=Info.m_UpdateTime;
-		m_fDatabase=Info.m_fDatabase;
-	}
-	return *this;
-}
-
-
 CEventInfoData &CEventInfoData::operator=(CEventInfoData &&Info)
 {
 	if (&Info!=this) {
-		m_NetworkID=Info.m_NetworkID;
-		m_TSID=Info.m_TSID;
-		m_ServiceID=Info.m_ServiceID;
-		m_EventID=Info.m_EventID;
-		m_EventName=std::move(Info.m_EventName);
-		m_EventText=std::move(Info.m_EventText);
-		m_EventExtText=std::move(Info.m_EventExtText);
-		m_fValidStartTime=Info.m_fValidStartTime;
-		if (m_fValidStartTime)
-			m_stStartTime=Info.m_stStartTime;
-		m_DurationSec=Info.m_DurationSec;
-		m_RunningStatus=Info.m_RunningStatus;
-		m_CaType=Info.m_CaType;
-		m_VideoInfo=Info.m_VideoInfo;
-		m_AudioList=std::move(Info.m_AudioList);
-		m_ContentNibble=Info.m_ContentNibble;
-		m_EventGroupList=std::move(Info.m_EventGroupList);
-		m_fCommonEvent=Info.m_fCommonEvent;
-		m_CommonEventInfo=Info.m_CommonEventInfo;
-		m_UpdateTime=Info.m_UpdateTime;
+		*static_cast<CEventInfo*>(this)=std::move(Info);
 		m_fDatabase=Info.m_fDatabase;
 	}
 	return *this;
 }
 
 
-CEventInfoData &CEventInfoData::operator=(const CEventManager::CEventInfo &Info)
+CEventInfoData &CEventInfoData::operator=(const CEventInfo &Info)
 {
-	m_EventID=Info.GetEventID();
-	SetEventName(Info.GetEventName());
-	SetEventText(Info.GetEventText());
-	SetEventExtText(Info.GetEventExtendedText());
-	m_fValidStartTime=true;
-	m_stStartTime=Info.GetStartTime();
-	m_stStartTime.wDayOfWeek=CalcDayOfWeek(m_stStartTime.wYear,
-										   m_stStartTime.wMonth,
-										   m_stStartTime.wDay);
-	m_DurationSec=Info.GetDuration();
-	m_RunningStatus=Info.GetRunningStatus();
-	m_CaType=Info.GetFreeCaMode()?CA_TYPE_CHARGEABLE:CA_TYPE_FREE;
-	m_VideoInfo=Info.GetVideoInfo();
-	m_AudioList=Info.GetAudioList();
-	m_ContentNibble=Info.GetContentNibble();
-	m_EventGroupList=Info.GetEventGroupList();
-	m_fCommonEvent=Info.IsCommonEvent();
-	if (m_fCommonEvent)
-		m_CommonEventInfo=Info.GetCommonEvent();
-	m_UpdateTime=Info.GetUpdateTime();
-	m_Type=Info.GetType();
+	*static_cast<CEventInfo*>(this)=Info;
+
+	if (m_bValidStartTime) {
+		m_StartTime.wDayOfWeek=
+			CalcDayOfWeek(m_StartTime.wYear,m_StartTime.wMonth,m_StartTime.wDay);
+	}
 
 	return *this;
 }
@@ -181,67 +89,8 @@ CEventInfoData &CEventInfoData::operator=(const CEventManager::CEventInfo &Info)
 
 bool CEventInfoData::operator==(const CEventInfoData &Info) const
 {
-	return m_NetworkID==Info.m_NetworkID
-		&& m_TSID==Info.m_TSID
-		&& m_ServiceID==Info.m_ServiceID
-		&& m_EventID==Info.m_EventID
-		&& m_EventName==Info.m_EventName
-		&& m_EventText==Info.m_EventText
-		&& m_EventExtText==Info.m_EventExtText
-		&& m_fValidStartTime==Info.m_fValidStartTime
-		&& (!m_fValidStartTime
-			|| ::memcmp(&m_stStartTime,&Info.m_stStartTime,sizeof(SYSTEMTIME))==0)
-		&& m_DurationSec==Info.m_DurationSec
-		&& m_RunningStatus==Info.m_RunningStatus
-		&& m_CaType==Info.m_CaType
-		&& m_VideoInfo==Info.m_VideoInfo
-		&& m_AudioList==Info.m_AudioList
-		&& m_ContentNibble==Info.m_ContentNibble
-		&& m_EventGroupList==Info.m_EventGroupList
-		&& m_fCommonEvent==Info.m_fCommonEvent
-		&& (!m_fCommonEvent
-			|| m_CommonEventInfo==Info.m_CommonEventInfo);
-}
-
-
-bool CEventInfoData::SetEventName(LPCWSTR pszEventName)
-{
-	return m_EventName.Set(pszEventName);
-}
-
-
-bool CEventInfoData::SetEventText(LPCWSTR pszEventText)
-{
-	return m_EventText.Set(pszEventText);
-}
-
-
-bool CEventInfoData::SetEventExtText(LPCWSTR pszEventExtText)
-{
-	return m_EventExtText.Set(pszEventExtText);
-}
-
-
-bool CEventInfoData::GetStartTime(SYSTEMTIME *pTime) const
-{
-	if (m_fValidStartTime) {
-		*pTime=m_stStartTime;
-		return true;
-	}
-	::ZeroMemory(pTime,sizeof(SYSTEMTIME));
-	return false;
-}
-
-
-bool CEventInfoData::GetEndTime(SYSTEMTIME *pTime) const
-{
-	if (m_fValidStartTime) {
-		*pTime=m_stStartTime;
-		if (OffsetSystemTime(pTime,(LONGLONG)m_DurationSec*1000))
-			return true;
-	}
-	::ZeroMemory(pTime,sizeof(SYSTEMTIME));
-	return false;
+	return CEventInfo::operator==(Info)
+		&& m_fDatabase==Info.m_fDatabase;
 }
 
 
@@ -257,7 +106,7 @@ int CEventInfoData::GetMainAudioIndex() const
 
 const CEventInfoData::AudioInfo *CEventInfoData::GetMainAudioInfo() const
 {
-	if (m_AudioList.size()==0)
+	if (m_AudioList.empty())
 		return NULL;
 
 	const int MainAudioIndex=GetMainAudioIndex();
@@ -374,10 +223,11 @@ bool CEpgProgramList::UpdateService(CEventManager *pEventManager,
 		return false;
 
 	CEventManager::EventList EventList;
+	CEventManager::TimeEventMap EventTimeTable;
 	if (!pEventManager->GetEventList(pService->OriginalNetworkID,
 									 pService->TransportStreamID,
 									 pService->ServiceID,
-									 &EventList)
+									 &EventList,&EventTimeTable)
 			|| EventList.empty())
 		return false;
 
@@ -389,61 +239,36 @@ bool CEpgProgramList::UpdateService(CEventManager *pEventManager,
 	pServiceInfo->m_EventList.EventDataMap.rehash(max(EventList.size(),300));
 #endif
 
-	struct EventTime {
-		ULONGLONG StartTime;
-		DWORD Duration;
-		WORD EventID;
-		ULONGLONG UpdateTime;
-		EventTime(const CEventInfoData &Info)
-			: StartTime(CEventManager::SystemTimeToSeconds(Info.m_stStartTime))
-			, Duration(Info.m_DurationSec)
-			, EventID(Info.m_EventID)
-			, UpdateTime(Info.m_UpdateTime)
-		{
-		}
-		bool operator<(const EventTime &Obj) const {
-			return StartTime < Obj.StartTime;
-		}
-	};
-	std::set<EventTime> EventTimeTable;
-
-#ifdef _DEBUG
-	SYSTEMTIME stOldestTime,stNewestTime;
-	::FillMemory(&stOldestTime,sizeof(SYSTEMTIME),0xFF);
-	::FillMemory(&stNewestTime,sizeof(SYSTEMTIME),0x00);
-#endif
-
 	const bool fDatabase=(Flags & SERVICE_UPDATE_DATABASE)!=0;
 
 	for (CEventManager::EventList::const_iterator itrEvent=EventList.begin();itrEvent!=EventList.end();++itrEvent) {
 		CEventInfoData &EventData=
 			pServiceInfo->m_EventList.EventDataMap.insert(
-				std::pair<WORD,CEventInfoData>(itrEvent->GetEventID(),CEventInfoData())).first->second;
+				std::pair<WORD,CEventInfoData>(itrEvent->m_EventID,CEventInfoData(*itrEvent))).first->second;
 
-		EventData=*itrEvent;
-		EventData.m_NetworkID=ServiceData.m_NetworkID;
-		EventData.m_TSID=ServiceData.m_TSID;
-		EventData.m_ServiceID=ServiceData.m_ServiceID;
+		//EventData.m_NetworkID=ServiceData.m_NetworkID;
+		//EventData.m_TransportStreamID=ServiceData.m_TSID;
+		//EventData.m_ServiceID=ServiceData.m_ServiceID;
 		EventData.m_fDatabase=fDatabase;
-
-#ifdef _DEBUG
-		if (CompareSystemTime(&EventData.m_stStartTime,&stOldestTime)<0)
-			stOldestTime=EventData.m_stStartTime;
-		SYSTEMTIME stEnd;
-		EventData.GetEndTime(&stEnd);
-		if (CompareSystemTime(&stEnd,&stNewestTime)>0)
-			stNewestTime=EventData.m_stStartTime;
-#endif
-
-		EventTimeTable.insert(EventTime(EventData));
 	}
 
+	pServiceInfo->m_EventList.EventTimeMap=EventTimeTable;
+
 #ifdef _DEBUG
-	TRACE(TEXT("CEpgProgramList::UpdateService() [%d] %d/%d %d:%02d - %d/%d %d:%02d %u Events\n"),
-		  pService->ServiceID,
-		  stOldestTime.wMonth,stOldestTime.wDay,stOldestTime.wHour,stOldestTime.wMinute,
-		  stNewestTime.wMonth,stNewestTime.wDay,stNewestTime.wHour,stNewestTime.wMinute,
-		  (unsigned int)pServiceInfo->m_EventList.EventDataMap.size());
+	{
+		SYSTEMTIME stOldestTime,stNewestTime;
+
+		pServiceInfo->m_EventList.EventDataMap.find(
+			EventTimeTable.begin()->EventID)->second.GetStartTime(&stOldestTime);
+		pServiceInfo->m_EventList.EventDataMap.find(
+			EventTimeTable.rbegin()->EventID)->second.GetEndTime(&stNewestTime);
+
+		TRACE(TEXT("CEpgProgramList::UpdateService() [%d] %d/%d %d:%02d - %d/%d %d:%02d %u Events\n"),
+			  pService->ServiceID,
+			  stOldestTime.wMonth,stOldestTime.wDay,stOldestTime.wHour,stOldestTime.wMinute,
+			  stNewestTime.wMonth,stNewestTime.wDay,stNewestTime.wHour,stNewestTime.wMinute,
+			  (unsigned int)pServiceInfo->m_EventList.EventDataMap.size());
+	}
 #endif
 
 	const ServiceMapKey Key=GetServiceMapKey(ServiceData);
@@ -461,7 +286,7 @@ bool CEpgProgramList::UpdateService(CEventManager *pEventManager,
 			ULONGLONG CurTime;
 			if (fDiscardEndedEvents) {
 				SYSTEMTIME st;
-				GetCurrentJST(&st);
+				GetCurrentEpgTime(&st);
 				CurTime=CEventManager::SystemTimeToSeconds(st);
 			}
 
@@ -481,8 +306,8 @@ bool CEpgProgramList::UpdateService(CEventManager *pEventManager,
 					pServiceInfo->m_EventList.EventDataMap.find(itrEvent->second.m_EventID);
 				if (itrEventNew!=pServiceInfo->m_EventList.EventDataMap.end()) {
 					if (!itrEventNew->second.HasExtended()
-							&& CompareSystemTime(&itrEventNew->second.m_stStartTime,
-												 &itrEvent->second.m_stStartTime)==0
+							&& CompareSystemTime(&itrEventNew->second.m_StartTime,
+												 &itrEvent->second.m_StartTime)==0
 							&& CopyEventExtText(&itrEventNew->second,&itrEvent->second)) {
 						itrEventNew->second.m_fDatabase=true;
 						fMergeOldEvents=true;
@@ -493,16 +318,16 @@ bool CEpgProgramList::UpdateService(CEventManager *pEventManager,
 					continue;
 				}
 
-				EventTime Time(itrEvent->second);
+				CEventManager::TimeEventInfo Time(itrEvent->second);
 
 				if (fDiscardEndedEvents
 						&& Time.StartTime+Time.Duration<=CurTime)
 					continue;
 
-				std::set<EventTime>::iterator itrUpper=EventTimeTable.upper_bound(Time);
+				auto itrUpper=EventTimeTable.upper_bound(Time);
 				bool fSkip=false;
 				if (itrUpper!=EventTimeTable.begin()) {
-					std::set<EventTime>::iterator itr=itrUpper;
+					auto itr=itrUpper;
 					--itr;
 					if (itr->StartTime==Time.StartTime) {
 						fSkip=true;
@@ -522,7 +347,7 @@ bool CEpgProgramList::UpdateService(CEventManager *pEventManager,
 					}
 				}
 				if (!fSkip) {
-					for (std::set<EventTime>::iterator itr=itrUpper;itr!=EventTimeTable.end();) {
+					for (auto itr=itrUpper;itr!=EventTimeTable.end();) {
 						if (itr->StartTime>=Time.StartTime+Time.Duration)
 							break;
 						if (itr->UpdateTime>=Time.UpdateTime) {
@@ -536,6 +361,7 @@ bool CEpgProgramList::UpdateService(CEventManager *pEventManager,
 				if (!fSkip) {
 					pServiceInfo->m_EventList.EventDataMap.insert(
 						std::pair<WORD,CEventInfoData>(itrEvent->second.m_EventID,itrEvent->second));
+					pServiceInfo->m_EventList.EventTimeMap.insert(CEventManager::TimeEventInfo(itrEvent->second));
 					fMergeOldEvents=true;
 #ifdef _DEBUG
 					MergeEventCount++;
@@ -677,13 +503,15 @@ bool CEpgProgramList::GetEventInfo(WORD NetworkID,WORD TSID,WORD ServiceID,
 {
 	CBlockLock Lock(&m_Lock);
 
-	CEventManager::CEventInfo EventInfo;
+	CEventInfo EventInfo;
 	if (m_pEventManager->GetEventInfo(NetworkID,TSID,ServiceID,
 									  EventID,&EventInfo)) {
 		*pInfo=EventInfo;
+		/*
 		pInfo->m_NetworkID=NetworkID;
-		pInfo->m_TSID=TSID;
+		pInfo->m_TransportStreamID=TSID;
 		pInfo->m_ServiceID=ServiceID;
+		*/
 		SetCommonEventInfo(pInfo);
 		SetEventExtText(pInfo);
 	} else {
@@ -703,36 +531,38 @@ bool CEpgProgramList::GetEventInfo(WORD NetworkID,WORD TSID,WORD ServiceID,
 {
 	CBlockLock Lock(&m_Lock);
 
-	CEventManager::CEventInfo EventInfo;
+	CEventInfo EventInfo;
 	if (m_pEventManager->GetEventInfo(NetworkID,TSID,ServiceID,
 									  pTime,&EventInfo)) {
 		*pInfo=EventInfo;
+		/*
 		pInfo->m_NetworkID=NetworkID;
-		pInfo->m_TSID=TSID;
+		pInfo->m_TransportStreamID=TSID;
 		pInfo->m_ServiceID=ServiceID;
+		*/
 		SetCommonEventInfo(pInfo);
 		SetEventExtText(pInfo);
 		return true;
 	}
 
 	CEpgServiceInfo *pServiceInfo=GetServiceInfo(NetworkID,TSID,ServiceID);
-	if (pServiceInfo==NULL)
-		return NULL;
+	if (pServiceInfo==NULL || pServiceInfo->m_EventList.EventTimeMap.empty())
+		return false;
 
-	CEventInfoList::EventMap::iterator itrEvent;
-	for (itrEvent=pServiceInfo->m_EventList.EventDataMap.begin();
-			itrEvent!=pServiceInfo->m_EventList.EventDataMap.end();++itrEvent) {
-		SYSTEMTIME stStart,stEnd;
-
-		itrEvent->second.GetStartTime(&stStart);
-		itrEvent->second.GetEndTime(&stEnd);
-		if (CompareSystemTime(&stStart,pTime)<=0
-				&& CompareSystemTime(&stEnd,pTime)>0) {
-			*pInfo=itrEvent->second;
-			SetCommonEventInfo(pInfo);
-			return true;
+	CEventManager::TimeEventInfo Key(*pTime);
+	auto itrTime=pServiceInfo->m_EventList.EventTimeMap.upper_bound(Key);
+	if (itrTime!=pServiceInfo->m_EventList.EventTimeMap.begin()) {
+		--itrTime;
+		if (itrTime->StartTime+itrTime->Duration>Key.StartTime) {
+			auto itrEvent=pServiceInfo->m_EventList.EventDataMap.find(itrTime->EventID);
+			if (itrEvent!=pServiceInfo->m_EventList.EventDataMap.end()) {
+				*pInfo=itrEvent->second;
+				SetCommonEventInfo(pInfo);
+				return true;
+			}
 		}
 	}
+
 	return false;
 }
 
@@ -746,25 +576,17 @@ bool CEpgProgramList::GetNextEventInfo(WORD NetworkID,WORD TSID,WORD ServiceID,
 	if (pServiceInfo==NULL)
 		return NULL;
 
-	CEventInfoList::EventMap::iterator itrEvent;
-	const CEventInfoData *pNextEvent=NULL;
-	SYSTEMTIME stNearest;
-	for (itrEvent=pServiceInfo->m_EventList.EventDataMap.begin();
-			itrEvent!=pServiceInfo->m_EventList.EventDataMap.end();++itrEvent) {
-		SYSTEMTIME stStart;
-
-		itrEvent->second.GetStartTime(&stStart);
-		if (CompareSystemTime(&stStart,pTime)>0
-				&& (pNextEvent==NULL || CompareSystemTime(&stStart,&stNearest)<0)) {
-			pNextEvent=&itrEvent->second;
-			stNearest=stStart;
+	CEventManager::TimeEventInfo Key(*pTime);
+	auto itrTime=pServiceInfo->m_EventList.EventTimeMap.upper_bound(Key);
+	if (itrTime!=pServiceInfo->m_EventList.EventTimeMap.end()) {
+		auto itrEvent=pServiceInfo->m_EventList.EventDataMap.find(itrTime->EventID);
+		if (itrEvent!=pServiceInfo->m_EventList.EventDataMap.end()) {
+			*pInfo=itrEvent->second;
+			SetCommonEventInfo(pInfo);
+			return true;
 		}
 	}
-	if (pNextEvent!=NULL) {
-		*pInfo=*pNextEvent;
-		SetCommonEventInfo(pInfo);
-		return true;
-	}
+
 	return false;
 }
 
@@ -782,34 +604,32 @@ const CEventInfoData *CEpgProgramList::GetEventInfo(WORD NetworkID,WORD TSID,WOR
 bool CEpgProgramList::SetCommonEventInfo(CEventInfoData *pInfo)
 {
 	// イベント共有の参照先から情報を取得する
-	if (pInfo->m_fCommonEvent) {
-		CEventManager::CEventInfo EventInfo;
+	if (pInfo->m_bCommonEvent) {
+		CEventInfo EventInfo;
 		if (m_pEventManager->GetEventInfo(pInfo->m_NetworkID,
-										  pInfo->m_TSID,
+										  pInfo->m_TransportStreamID,
 										  pInfo->m_CommonEventInfo.ServiceID,
 										  pInfo->m_CommonEventInfo.EventID,
 										  &EventInfo)) {
-			pInfo->SetEventName(EventInfo.GetEventName());
-			pInfo->SetEventText(EventInfo.GetEventText());
-			pInfo->SetEventExtText(EventInfo.GetEventExtendedText());
-			pInfo->m_CaType=EventInfo.GetFreeCaMode()?
-								CEventInfoData::CA_TYPE_CHARGEABLE:
-								CEventInfoData::CA_TYPE_FREE;
-			pInfo->m_VideoInfo=EventInfo.GetVideoInfo();
-			pInfo->m_AudioList=EventInfo.GetAudioList();
-			pInfo->m_ContentNibble=EventInfo.GetContentNibble();
+			pInfo->m_EventName=std::move(EventInfo.m_EventName);
+			pInfo->m_EventText=std::move(EventInfo.m_EventText);
+			pInfo->m_EventExtendedText=std::move(EventInfo.m_EventExtendedText);
+			pInfo->m_bFreeCaMode=EventInfo.m_bFreeCaMode;
+			pInfo->m_VideoList=std::move(EventInfo.m_VideoList);
+			pInfo->m_AudioList=std::move(EventInfo.m_AudioList);
+			pInfo->m_ContentNibble=EventInfo.m_ContentNibble;
 		} else {
 			const CEventInfoData *pCommonEvent=GetEventInfo(pInfo->m_NetworkID,
-															pInfo->m_TSID,
+															pInfo->m_TransportStreamID,
 															pInfo->m_CommonEventInfo.ServiceID,
 															pInfo->m_CommonEventInfo.EventID);
 			if (pCommonEvent==NULL)
 				return false;
-			pInfo->SetEventName(pCommonEvent->GetEventName());
-			pInfo->SetEventText(pCommonEvent->GetEventText());
-			pInfo->SetEventExtText(pCommonEvent->GetEventExtText());
-			pInfo->m_CaType=pCommonEvent->m_CaType;
-			pInfo->m_VideoInfo=pCommonEvent->m_VideoInfo;
+			pInfo->m_EventName=pCommonEvent->m_EventName;
+			pInfo->m_EventText=pCommonEvent->m_EventText;
+			pInfo->m_EventExtendedText=pCommonEvent->m_EventExtendedText;
+			pInfo->m_bFreeCaMode=pCommonEvent->m_bFreeCaMode;
+			pInfo->m_VideoList=pCommonEvent->m_VideoList;
 			pInfo->m_AudioList=pCommonEvent->m_AudioList;
 			pInfo->m_ContentNibble=pCommonEvent->m_ContentNibble;
 		}
@@ -820,9 +640,9 @@ bool CEpgProgramList::SetCommonEventInfo(CEventInfoData *pInfo)
 
 bool CEpgProgramList::SetEventExtText(CEventInfoData *pInfo)
 {
-	if (IsStringEmpty(pInfo->GetEventExtText())) {
+	if (pInfo->m_EventExtendedText.empty()) {
 		const CEventInfoData *pEvent=GetEventInfo(pInfo->m_NetworkID,
-												  pInfo->m_TSID,
+												  pInfo->m_TransportStreamID,
 												  pInfo->m_CommonEventInfo.ServiceID,
 												  pInfo->m_CommonEventInfo.EventID);
 		if (pEvent==NULL)
@@ -835,10 +655,10 @@ bool CEpgProgramList::SetEventExtText(CEventInfoData *pInfo)
 
 bool CEpgProgramList::CopyEventExtText(CEventInfoData *pDstInfo,const CEventInfoData *pSrcInfo)
 {
-	if (IsStringEmpty(pDstInfo->GetEventExtText())
-			&& !IsStringEmpty(pSrcInfo->GetEventExtText())
-			&& CompareText(pDstInfo->GetEventName(),pSrcInfo->GetEventName())) {
-		pDstInfo->SetEventExtText(pSrcInfo->GetEventExtText());
+	if (pDstInfo->m_EventExtendedText.empty()
+			&& !pSrcInfo->m_EventExtendedText.empty()
+			&& pDstInfo->m_EventName==pSrcInfo->m_EventName) {
+		pDstInfo->m_EventExtendedText=pSrcInfo->m_EventExtendedText;
 		return true;
 	}
 	return false;
@@ -976,6 +796,12 @@ struct ServiceInfoHeader2 {
 #define EVENTINFO_FLAG_CATYPE_MASK			0x18
 #define EVENTINFO_FLAG_CATYPE_SHIFT			3
 
+enum {
+	CA_TYPE_UNKNOWN,
+	CA_TYPE_FREE,
+	CA_TYPE_CHARGEABLE
+};
+
 #define DATA_FLAG_EVENTNAME		0x80
 #define DATA_FLAG_EVENTTEXT		0x40
 #define DATA_FLAG_EVENTEXTTEXT	0x20
@@ -999,22 +825,23 @@ struct EventInfoHeader2 {
 	EventInfoHeader2() {}
 	EventInfoHeader2(const CEventInfoData &Data)
 		: EventID(Data.m_EventID)
-		, CommonServiceID(Data.m_fCommonEvent?Data.m_CommonEventInfo.ServiceID:0)
-		, CommonEventID(Data.m_fCommonEvent?Data.m_CommonEventInfo.EventID:0)
-		, Flags(Data.m_RunningStatus | (Data.m_CaType<<EVENTINFO_FLAG_CATYPE_SHIFT))
-		, VideoListCount(1)
-		, UpdateTime(Data.m_UpdateTime)
-		, StartTime(Data.m_stStartTime)
-		, Duration(Data.m_DurationSec)
-		, ComponentType(Data.m_VideoInfo.ComponentType)
+		, CommonServiceID(Data.m_bCommonEvent?Data.m_CommonEventInfo.ServiceID:0)
+		, CommonEventID(Data.m_bCommonEvent?Data.m_CommonEventInfo.EventID:0)
+		, Flags(Data.m_RunningStatus
+			| ((Data.m_bFreeCaMode?CA_TYPE_CHARGEABLE:CA_TYPE_FREE)<<EVENTINFO_FLAG_CATYPE_SHIFT))
+		, VideoListCount((BYTE)Data.m_VideoList.size())
+		, UpdateTime(Data.m_UpdatedTime)
+		, StartTime(Data.m_StartTime)
+		, Duration(Data.m_Duration)
+		, ComponentType(!Data.m_VideoList.empty()?Data.m_VideoList[0].ComponentType:0)
 		, AudioListCount((BYTE)Data.m_AudioList.size())
 		, ContentNibbleListCount((BYTE)min(Data.m_ContentNibble.NibbleCount,MAX_CONTENT_NIBBLE_COUNT))
-		, DataFlags((Data.GetEventName()!=NULL?DATA_FLAG_EVENTNAME:0) |
-					(Data.GetEventText()!=NULL?DATA_FLAG_EVENTTEXT:0) |
-					(Data.GetEventExtText()!=NULL?DATA_FLAG_EVENTEXTTEXT:0) |
-					(Data.m_AudioList.size()>0?DATA_FLAG_AUDIOINFO:0) |
-					DATA_FLAG_VIDEOINFO |
-					(Data.m_EventGroupList.size()>0?DATA_FLAG_GROUPINFO:0))
+		, DataFlags((!Data.m_EventName.empty()?DATA_FLAG_EVENTNAME:0) |
+					(!Data.m_EventText.empty()?DATA_FLAG_EVENTTEXT:0) |
+					(!Data.m_EventExtendedText.empty()?DATA_FLAG_EVENTEXTTEXT:0) |
+					(!Data.m_AudioList.empty()?DATA_FLAG_AUDIOINFO:0) |
+					(!Data.m_VideoList.empty()?DATA_FLAG_VIDEOINFO:0) |
+					(!Data.m_EventGroupList.empty()?DATA_FLAG_GROUPINFO:0))
 	{
 	}
 };
@@ -1062,44 +889,44 @@ static bool ReadData(CNFile *pFile,void *pData,DWORD DataSize,CCrc32 *pCrc)
 	return true;
 }
 
-static bool ReadString(CNFile *pFile,LPWSTR *ppszString,CCrc32 *pCrc)
+static bool ReadString(CNFile *pFile,TVTest::String *pString,CCrc32 *pCrc)
 {
 	WORD Length;
 
-	*ppszString=NULL;
+	pString->clear();
 	if (!ReadData(pFile,&Length,sizeof(WORD),pCrc)
 			|| Length>MAX_EPG_TEXT_LENGTH)
 		return false;
 	if (Length>0) {
-		*ppszString=new WCHAR[Length+1];
-		if (!ReadData(pFile,*ppszString,Length*sizeof(WCHAR),pCrc)) {
-			delete [] *ppszString;
-			*ppszString=NULL;
+		LPWSTR pBuffer=new WCHAR[Length];
+		if (!ReadData(pFile,pBuffer,Length*sizeof(WCHAR),pCrc)) {
+			delete [] pBuffer;
 			return false;
 		}
-		(*ppszString)[Length]=L'\0';
+		pString->assign(pBuffer,Length);
+		delete [] pBuffer;
 	}
 	return true;
 }
 
 #ifdef EPG_FILE_V0_SUPPORT
 // 旧形式用
-static bool ReadString(CNFile *pFile,LPWSTR *ppszString)
+static bool ReadString(CNFile *pFile,TVTest::String *pString)
 {
 	DWORD Length;
 
-	*ppszString=NULL;
+	pString->clear();
 	if (pFile->Read(&Length,sizeof(DWORD))!=sizeof(DWORD)
 			|| Length>MAX_EPG_TEXT_LENGTH)
 		return false;
 	if (Length>0) {
-		*ppszString=new WCHAR[Length+1];
-		if (pFile->Read(*ppszString,Length*sizeof(WCHAR))!=Length*sizeof(WCHAR)) {
-			delete [] *ppszString;
-			*ppszString=NULL;
+		LPWSTR pBuffer=new WCHAR[Length];
+		if (pFile->Read(pBuffer,Length*sizeof(WCHAR))!=Length*sizeof(WCHAR)) {
+			delete [] pBuffer;
 			return false;
 		}
-		(*ppszString)[Length]=L'\0';
+		pString->assign(pBuffer,Length);
+		delete [] pBuffer;
 	}
 	return true;
 }
@@ -1130,6 +957,20 @@ static bool WriteString(CNFile *pFile,LPCWSTR pszString,CCrc32 *pCrc)
 	return true;
 }
 
+static bool WriteString(CNFile *pFile,const TVTest::String &Str,CCrc32 *pCrc)
+{
+	WORD Length=(WORD)Str.length();
+	if (Length>MAX_EPG_TEXT_LENGTH)
+		Length=MAX_EPG_TEXT_LENGTH;
+	if (!WriteData(pFile,&Length,sizeof(WORD),pCrc))
+		return false;
+	if (Length>0) {
+		if (!WriteData(pFile,Str.data(),Length*sizeof(WCHAR),pCrc))
+			return false;
+	}
+	return true;
+}
+
 static bool WriteCRC(CNFile *pFile,const CCrc32 *pCrc)
 {
 	DWORD CRC32=pCrc->GetCrc();
@@ -1140,14 +981,15 @@ static bool WriteCRC(CNFile *pFile,const CCrc32 *pCrc)
 bool CEpgProgramList::LoadFromFile(LPCTSTR pszFileName)
 {
 	CBlockLock Lock(&m_Lock);
-	CAppMain &AppMain=GetAppClass();
+	CAppMain &App=GetAppClass();
 	CNFile File;
 
 	if (!File.Open(pszFileName,
 				   CNFile::CNF_READ | CNFile::CNF_SHAREREAD |
 				   CNFile::CNF_SEQUENTIALREAD | CNFile::CNF_PRIORITY_LOW)) {
-		AppMain.AddLog(TEXT("EPGファイルを開けません。(エラーコード 0x%lu)"),
-					   File.GetLastError());
+		App.AddLog(CLogItem::TYPE_ERROR,
+				   TEXT("EPGファイルを開けません。(エラーコード 0x%lu)"),
+				   File.GetLastError());
 		return false;
 	}
 
@@ -1159,19 +1001,19 @@ bool CEpgProgramList::LoadFromFile(LPCTSTR pszFileName)
 		return false;
 #ifndef EPG_FILE_V0_SUPPORT
 	if (FileHeader.Version==0) {
-		AppMain.AddLog(TEXT("EPGファイルが古い形式のため読み込めません。"));
+		App.AddLog(CLogItem::TYPE_ERROR,TEXT("EPGファイルが古い形式のため読み込めません。"));
 		return false;
 	}
 #endif
 	if (FileHeader.Version>EPGLISTFILEHEADER_VERSION) {
-		AppMain.AddLog(TEXT("EPGファイルが未知の形式のため読み込めません。"));
+		App.AddLog(CLogItem::TYPE_ERROR,TEXT("EPGファイルが未知の形式のため読み込めません。"));
 		return false;
 	}
 
 	Clear();
 
 	for (DWORD i=0;i<FileHeader.NumServices;i++) {
-		LPWSTR pszText;
+		TVTest::String Text;
 
 		ServiceInfoHeader2 ServiceHeader2;
 #ifdef EPG_FILE_V0_SUPPORT
@@ -1179,9 +1021,8 @@ bool CEpgProgramList::LoadFromFile(LPCTSTR pszFileName)
 			ServiceInfoHeader ServiceHeader;
 
 			if (File.Read(&ServiceHeader,sizeof(ServiceInfoHeader))!=sizeof(ServiceInfoHeader)
-					|| !ReadString(&File,&pszText))
+					|| !ReadString(&File,&Text))
 				goto OnError;
-			delete [] pszText;
 			if (ServiceHeader.NumEvents>0xFFFF)
 				goto OnError;
 			ServiceHeader2.NetworkID=ServiceHeader.NetworkID;
@@ -1195,7 +1036,7 @@ bool CEpgProgramList::LoadFromFile(LPCTSTR pszFileName)
 				goto OnError;
 			if (ServiceHeader2.CRC!=CCrcCalculator::CalcCrc32((const BYTE*)&ServiceHeader2,
 															  sizeof(ServiceInfoHeader2)-sizeof(DWORD))) {
-				AppMain.AddLog(TEXT("EPGファイルの破損が検出されました。"));
+				App.AddLog(CLogItem::TYPE_ERROR,TEXT("EPGファイルの破損が検出されました。"));
 				goto OnError;
 			}
 		}
@@ -1232,16 +1073,16 @@ bool CEpgProgramList::LoadFromFile(LPCTSTR pszFileName)
 						std::pair<WORD,CEventInfoData>(EventHeader.EventID,CEventInfoData())).first->second;
 
 				pEventData->m_NetworkID=ServiceHeader2.NetworkID;
-				pEventData->m_TSID=ServiceHeader2.TransportStreamID;
+				pEventData->m_TransportStreamID=ServiceHeader2.TransportStreamID;
 				pEventData->m_ServiceID=EventHeader.ServiceID;
 				pEventData->m_EventID=EventHeader.EventID;
-				pEventData->m_fValidStartTime=true;
-				pEventData->m_stStartTime=EventHeader.StartTime;
-				pEventData->m_DurationSec=EventHeader.DurationSec;
+				pEventData->m_bValidStartTime=true;
+				pEventData->m_StartTime=EventHeader.StartTime;
+				pEventData->m_Duration=EventHeader.DurationSec;
 				pEventData->m_RunningStatus=0;
-				pEventData->m_CaType=CEventInfoData::CA_TYPE_UNKNOWN;
-				::ZeroMemory(&pEventData->m_VideoInfo,sizeof(CEventInfoData::VideoInfo));
-				pEventData->m_VideoInfo.ComponentType=EventHeader.ComponentType;
+				pEventData->m_bFreeCaMode=false;
+				pEventData->m_VideoList.resize(1);
+				pEventData->m_VideoList[0].ComponentType=EventHeader.ComponentType;
 				pEventData->m_AudioList.resize(1);
 				pEventData->m_AudioList[0].ComponentType=EventHeader.AudioComponentType;
 				pEventData->m_AudioList[0].bESMultiLingualFlag=EventHeader.ESMultiLangFlag!=0;
@@ -1262,25 +1103,23 @@ bool CEpgProgramList::LoadFromFile(LPCTSTR pszFileName)
 						pEventData->m_ContentNibble.NibbleList[k]=Nibble;
 					}
 				}
-				pEventData->m_fCommonEvent=false;
-				pEventData->m_UpdateTime=0;
-				LPWSTR pszEventName=NULL,pszEventText=NULL,pszEventExtText=NULL;
-				if (!ReadString(&File,&pszEventName)
-						|| !ReadString(&File,&pszEventText)
-						|| !ReadString(&File,&pszEventExtText))
+				pEventData->m_bCommonEvent=false;
+				pEventData->m_UpdatedTime=0;
+				if (!ReadString(&File,&Text))
 					goto OnError;
-				pEventData->m_EventName.Attach(pszEventName);
-				pEventData->m_EventText.Attach(pszEventText);
-				pEventData->m_EventExtText.Attach(pszEventExtText);
-				if (!ReadString(&File,&pszText))	// Component type text
+				pEventData->m_EventName=Text;
+				if (!ReadString(&File,&Text))
 					goto OnError;
-				delete [] pszText;
-				if (!ReadString(&File,&pszText))
+				pEventData->m_EventText=Text;
+				if (!ReadString(&File,&Text))
 					goto OnError;
-				if (pszText!=NULL) {
-					::lstrcpyn(pEventData->m_AudioList[0].szText,pszText,CEventInfoData::AudioInfo::MAX_TEXT);
-					delete [] pszText;
-				}
+				pEventData->m_EventExtendedText=Text;
+				if (!ReadString(&File,&Text))	// Component type text
+					goto OnError;
+				if (!ReadString(&File,&Text))
+					goto OnError;
+				if (!Text.empty())
+					::lstrcpyn(pEventData->m_AudioList[0].szText,Text.c_str(),CEventInfoData::AudioInfo::MAX_TEXT);
 				pEventData->m_fDatabase=true;
 			} else
 #endif
@@ -1296,17 +1135,19 @@ bool CEpgProgramList::LoadFromFile(LPCTSTR pszFileName)
 				pEventData=&itrEvent->second;
 
 				pEventData->m_NetworkID=ServiceHeader2.NetworkID;
-				pEventData->m_TSID=ServiceHeader2.TransportStreamID;
+				pEventData->m_TransportStreamID=ServiceHeader2.TransportStreamID;
 				pEventData->m_ServiceID=ServiceHeader2.ServiceID;
 				pEventData->m_EventID=EventHeader2.EventID;
-				pEventData->m_fValidStartTime=true;
-				pEventData->m_stStartTime=EventHeader2.StartTime;
-				pEventData->m_DurationSec=EventHeader2.Duration;
+				pEventData->m_bValidStartTime=true;
+				pEventData->m_StartTime=EventHeader2.StartTime;
+				pEventData->m_Duration=EventHeader2.Duration;
 				pEventData->m_RunningStatus=EventHeader2.Flags&EVENTINFO_FLAG_RUNNINGSTATUSMASK;
-				pEventData->m_CaType=
-					(EventHeader2.Flags&EVENTINFO_FLAG_CATYPE_MASK)>>EVENTINFO_FLAG_CATYPE_SHIFT;
-				::ZeroMemory(&pEventData->m_VideoInfo,sizeof(CEventInfoData::VideoInfo));
-				pEventData->m_VideoInfo.ComponentType=EventHeader2.ComponentType;
+				pEventData->m_bFreeCaMode=
+					((EventHeader2.Flags&EVENTINFO_FLAG_CATYPE_MASK)>>EVENTINFO_FLAG_CATYPE_SHIFT)==CA_TYPE_CHARGEABLE;
+
+				pEventData->m_VideoList.resize(EventHeader2.VideoListCount);
+				if (EventHeader2.VideoListCount>0)
+					pEventData->m_VideoList[0].ComponentType=EventHeader2.ComponentType;
 
 				pEventData->m_AudioList.resize(EventHeader2.AudioListCount);
 				if (EventHeader2.AudioListCount>0) {
@@ -1323,12 +1164,10 @@ bool CEpgProgramList::LoadFromFile(LPCTSTR pszFileName)
 						AudioInfo.SamplingRate=AudioHeader.SamplingRate;
 						AudioInfo.LanguageCode=AudioHeader.LanguageCode;
 						AudioInfo.LanguageCode2=AudioHeader.LanguageCode2;
-						if (!ReadString(&File,&pszText,&CRC))
+						if (!ReadString(&File,&Text,&CRC))
 							goto OnError;
-						if (pszText!=NULL) {
-							::lstrcpyn(AudioInfo.szText,pszText,CEventInfoData::AudioInfo::MAX_TEXT);
-							delete [] pszText;
-						}
+						if (!Text.empty())
+							::lstrcpyn(AudioInfo.szText,Text.c_str(),CEventInfoData::AudioInfo::MAX_TEXT);
 					}
 				}
 
@@ -1346,14 +1185,14 @@ bool CEpgProgramList::LoadFromFile(LPCTSTR pszFileName)
 					pEventData->m_ContentNibble.NibbleCount=0;
 				}
 
-				pEventData->m_fCommonEvent=EventHeader2.CommonServiceID!=0
-											&& EventHeader2.CommonEventID!=0;
-				if (pEventData->m_fCommonEvent) {
+				pEventData->m_bCommonEvent=
+					EventHeader2.CommonServiceID!=0 && EventHeader2.CommonEventID!=0;
+				if (pEventData->m_bCommonEvent) {
 					pEventData->m_CommonEventInfo.ServiceID=EventHeader2.CommonServiceID;
 					pEventData->m_CommonEventInfo.EventID=EventHeader2.CommonEventID;
 				}
 
-				pEventData->m_UpdateTime=EventHeader2.UpdateTime;
+				pEventData->m_UpdatedTime=EventHeader2.UpdateTime;
 
 				for (BYTE Flag=0x80;Flag!=0;Flag>>=1) {
 					if ((EventHeader2.DataFlags&Flag)!=0) {
@@ -1381,18 +1220,17 @@ bool CEpgProgramList::LoadFromFile(LPCTSTR pszFileName)
 							for (int k=0;k<(int)EventHeader2.VideoListCount;k++) {
 								EventVideoInfo VideoInfo;
 								if (!ReadData(&File,&VideoInfo,sizeof(VideoInfo),&CRC)
-										|| !ReadString(&File,&pszText,&CRC))
+										|| !ReadString(&File,&Text,&CRC))
 									goto OnError;
-								if (k==0) {
-									pEventData->m_VideoInfo.StreamContent=VideoInfo.StreamContent;
-									pEventData->m_VideoInfo.ComponentType=VideoInfo.ComponentType;
-									pEventData->m_VideoInfo.ComponentTag=VideoInfo.ComponentTag;
-									pEventData->m_VideoInfo.LanguageCode=VideoInfo.LanguageCode;
-									if (pszText!=NULL)
-										::lstrcpyn(pEventData->m_VideoInfo.szText,pszText,
-												   CEventInfoData::VideoInfo::MAX_TEXT);
+								CEventInfoData::VideoInfo &Video=pEventData->m_VideoList[k];
+								Video.StreamContent=VideoInfo.StreamContent;
+								Video.ComponentType=VideoInfo.ComponentType;
+								Video.ComponentTag=VideoInfo.ComponentTag;
+								Video.LanguageCode=VideoInfo.LanguageCode;
+								if (!Text.empty()) {
+									::lstrcpyn(Video.szText,Text.c_str(),
+											   CEventInfoData::VideoInfo::MAX_TEXT);
 								}
-								delete [] pszText;
 							}
 						} else if (Flag==DATA_FLAG_GROUPINFO) {
 							WORD Size,GroupCount;
@@ -1416,21 +1254,19 @@ bool CEpgProgramList::LoadFromFile(LPCTSTR pszFileName)
 									goto OnError;
 							}
 						} else {
-							if (!ReadString(&File,&pszText,&CRC))
+							if (!ReadString(&File,&Text,&CRC))
 								goto OnError;
-							if (pszText!=NULL) {
+							if (!Text.empty()) {
 								switch (Flag) {
 								case DATA_FLAG_EVENTNAME:
-									pEventData->m_EventName.Attach(pszText);
+									pEventData->m_EventName=Text;
 									break;
 								case DATA_FLAG_EVENTTEXT:
-									pEventData->m_EventText.Attach(pszText);
+									pEventData->m_EventText=Text;
 									break;
 								case DATA_FLAG_EVENTEXTTEXT:
-									pEventData->m_EventExtText.Attach(pszText);
+									pEventData->m_EventExtendedText=Text;
 									break;
-								default:
-									delete [] pszText;
 								}
 							}
 						}
@@ -1445,13 +1281,14 @@ bool CEpgProgramList::LoadFromFile(LPCTSTR pszFileName)
 				if (CRC32!=CRC.GetCrc()) {
 					// 2回続けてCRCエラーの場合は読み込み中止
 					if (fCRCError) {
-						AppMain.AddLog(TEXT("EPGファイルの破損が検出されました。"));
+						App.AddLog(CLogItem::TYPE_ERROR,TEXT("EPGファイルの破損が検出されました。"));
 						goto OnError;
 					}
 					fCRCError=true;
 					pServiceInfo->m_EventList.EventDataMap.erase(itrEvent);
 				} else {
 					fCRCError=false;
+					pServiceInfo->m_EventList.EventTimeMap.insert(*pEventData);
 				}
 			}
 		}
@@ -1461,7 +1298,7 @@ bool CEpgProgramList::LoadFromFile(LPCTSTR pszFileName)
 	return true;
 
 OnError:
-	AppMain.AddLog(TEXT("EPGファイルの読み込みエラーが発生しました。"));
+	App.AddLog(CLogItem::TYPE_ERROR,TEXT("EPGファイルの読み込みエラーが発生しました。"));
 	Clear();
 	return false;
 }
@@ -1470,7 +1307,7 @@ OnError:
 bool CEpgProgramList::SaveToFile(LPCTSTR pszFileName)
 {
 	CBlockLock Lock(&m_Lock);
-	CAppMain &AppMain=GetAppClass();
+	CAppMain &App=GetAppClass();
 
 	TCHAR szName[MAX_PATH+8];
 	::lstrcpy(szName,pszFileName);
@@ -1483,7 +1320,7 @@ bool CEpgProgramList::SaveToFile(LPCTSTR pszFileName)
 	CGlobalLock GlobalLock;
 	if (GlobalLock.Create(szName)) {
 		if (!GlobalLock.Wait(10000)) {
-			AppMain.AddLog(TEXT("EPGファイルがロックされているため保存できません。"));
+			App.AddLog(CLogItem::TYPE_ERROR,TEXT("EPGファイルがロックされているため保存できません。"));
 			return false;
 		}
 	}
@@ -1507,13 +1344,14 @@ bool CEpgProgramList::SaveToFile(LPCTSTR pszFileName)
 
 	if (!File.Open(pszFileName,CNFile::CNF_WRITE | CNFile::CNF_NEW)) {
 		GlobalLock.Release();
-		AppMain.AddLog(TEXT("EPGファイルが開けません。(エラーコード 0x%lx)"),
-					   File.GetLastError());
+		App.AddLog(CLogItem::TYPE_ERROR,
+				   TEXT("EPGファイルが開けません。(エラーコード 0x%lx)"),
+				   File.GetLastError());
 		return false;
 	}
 
 	SYSTEMTIME stCurrent,st;
-	GetCurrentJST(&stCurrent);
+	GetCurrentEpgTime(&stCurrent);
 
 	WORD *pNumEvents=new WORD[m_ServiceMap.size()];
 	DWORD NumServices=0;
@@ -1604,11 +1442,11 @@ bool CEpgProgramList::SaveToFile(LPCTSTR pszFileName)
 				}
 
 				if (((EventHeader2.DataFlags&DATA_FLAG_EVENTNAME)!=0
-							&& !WriteString(&File,EventInfo.GetEventName(),&CRC))
+							&& !WriteString(&File,EventInfo.m_EventName,&CRC))
 						|| ((EventHeader2.DataFlags&DATA_FLAG_EVENTTEXT)!=0
-							&& !WriteString(&File,EventInfo.GetEventText(),&CRC))
+							&& !WriteString(&File,EventInfo.m_EventText,&CRC))
 						|| ((EventHeader2.DataFlags&DATA_FLAG_EVENTEXTTEXT)!=0
-							&& !WriteString(&File,EventInfo.GetEventExtText(),&CRC)))
+							&& !WriteString(&File,EventInfo.m_EventExtendedText,&CRC)))
 					goto OnError;
 
 				if (EventHeader2.AudioListCount>0) {
@@ -1628,19 +1466,24 @@ bool CEpgProgramList::SaveToFile(LPCTSTR pszFileName)
 					}
 				}
 
-				WORD Size=(WORD)(sizeof(EventVideoInfo)+
-								 sizeof(WORD)+::lstrlenW(EventInfo.m_VideoInfo.szText)*sizeof(WCHAR));
-				if (!WriteData(&File,&Size,sizeof(WORD),&CRC))
-					goto OnError;
-				EventVideoInfo VideoInfo;
-				VideoInfo.StreamContent=EventInfo.m_VideoInfo.StreamContent;
-				VideoInfo.ComponentType=EventInfo.m_VideoInfo.ComponentType;
-				VideoInfo.ComponentTag=EventInfo.m_VideoInfo.ComponentTag;
-				VideoInfo.Reserved=0;
-				VideoInfo.LanguageCode=EventInfo.m_VideoInfo.LanguageCode;
-				if (!WriteData(&File,&VideoInfo,sizeof(VideoInfo),&CRC)
-						|| !WriteString(&File,EventInfo.m_VideoInfo.szText,&CRC))
-					goto OnError;
+				if (EventHeader2.VideoListCount>0) {
+					WORD Size=(WORD)(EventHeader2.VideoListCount*sizeof(EventVideoInfo));
+					for (int i=0;i<EventHeader2.VideoListCount;i++)
+						Size+=(WORD)(sizeof(WORD)+::lstrlenW(EventInfo.m_VideoList[i].szText)*sizeof(WCHAR));
+					if (!WriteData(&File,&Size,sizeof(WORD),&CRC))
+						goto OnError;
+					for (int i=0;i<EventHeader2.VideoListCount;i++) {
+						EventVideoInfo VideoInfo;
+						VideoInfo.StreamContent=EventInfo.m_VideoList[i].StreamContent;
+						VideoInfo.ComponentType=EventInfo.m_VideoList[i].ComponentType;
+						VideoInfo.ComponentTag=EventInfo.m_VideoList[i].ComponentTag;
+						VideoInfo.Reserved=0;
+						VideoInfo.LanguageCode=EventInfo.m_VideoList[i].LanguageCode;
+						if (!WriteData(&File,&VideoInfo,sizeof(VideoInfo),&CRC)
+								|| !WriteString(&File,EventInfo.m_VideoList[i].szText,&CRC))
+							goto OnError;
+					}
+				}
 
 				if (EventInfo.m_EventGroupList.size()>0) {
 					WORD Size=sizeof(WORD);
@@ -1685,8 +1528,9 @@ bool CEpgProgramList::SaveToFile(LPCTSTR pszFileName)
 	return true;
 
 OnError:
-	AppMain.AddLog(TEXT("EPGファイルの書き出しエラーが発生しました。(エラーコード 0x%lx)"),
-				   File.GetLastError());
+	App.AddLog(CLogItem::TYPE_ERROR,
+			   TEXT("EPGファイルの書き出しエラーが発生しました。(エラーコード 0x%lx)"),
+			   File.GetLastError());
 	delete [] pNumEvents;
 	File.Close();
 	::DeleteFile(pszFileName);
@@ -1708,13 +1552,15 @@ bool CEpgProgramList::Merge(CEpgProgramList *pSrcList)
 			m_ServiceMap.insert(std::pair<ServiceMapKey,CEpgServiceInfo*>(Key,pSrcServiceInfo));
 			pSrcList->m_ServiceMap.erase(itrSrcService++);
 		} else {
+			CEventInfoList &DstList=itrDstService->second->m_EventList;
 			CEventInfoList::EventMap::iterator itrEvent;
 
 			for (itrEvent=pSrcServiceInfo->m_EventList.EventDataMap.begin();
 					itrEvent!=pSrcServiceInfo->m_EventList.EventDataMap.end();
 					++itrEvent) {
-				itrDstService->second->m_EventList.EventDataMap.insert(
+				DstList.EventDataMap.insert(
 					std::pair<WORD,CEventInfoData>(itrEvent->first,itrEvent->second));
+				DstList.EventTimeMap.insert(itrEvent->second);
 			}
 			++itrSrcService;
 		}

@@ -34,11 +34,7 @@ COSDOptions::COSDOptions()
 
 	, m_fEnableNotificationBar(true)
 	, m_NotificationBarDuration(3000)
-	, m_NotificationBarFlags(NOTIFY_EVENTNAME
-#ifndef TVH264_FOR_1SEG
-		 | NOTIFY_ECMERROR
-#endif
-		)
+	, m_NotificationBarFlags(NOTIFY_EVENTNAME | NOTIFY_TSPROCESSORERROR)
 	, m_fDisplayFontAutoSize(false)
 {
 	if (Util::OS::IsWindowsVistaOrLater()) {
@@ -54,7 +50,7 @@ COSDOptions::COSDOptions()
 
 	m_NotificationBarFont=lf;
 	m_NotificationBarFont.lfHeight=
-#ifndef TVH264_FOR_1SEG
+#ifndef TVTEST_FOR_1SEG
 		-14;
 #else
 		-12;
@@ -101,8 +97,8 @@ bool COSDOptions::ReadSettings(CSettings &Settings)
 	bool f;
 	if (Settings.Read(TEXT("NotifyEventName"),&f))
 		EnableNotify(NOTIFY_EVENTNAME,f);
-	if (Settings.Read(TEXT("NotifyEcmError"),&f))
-		EnableNotify(NOTIFY_ECMERROR,f);
+	if (Settings.Read(TEXT("NotifyTSProcessorError"),&f))
+		EnableNotify(NOTIFY_TSPROCESSORERROR,f);
 
 	if (!Settings.Read(TEXT("NotificationBarFont"),&m_NotificationBarFont)) {
 		// 過去のバージョンとの互換用(そのうち消す)
@@ -152,7 +148,7 @@ bool COSDOptions::WriteSettings(CSettings &Settings)
 	Settings.Write(TEXT("EnableNotificationBar"),m_fEnableNotificationBar);
 	Settings.Write(TEXT("NotificationBarDuration"),m_NotificationBarDuration);
 	Settings.Write(TEXT("NotifyEventName"),(m_NotificationBarFlags&NOTIFY_EVENTNAME)!=0);
-	Settings.Write(TEXT("NotifyEcmError"),(m_NotificationBarFlags&NOTIFY_ECMERROR)!=0);
+	Settings.Write(TEXT("NotifyTSProcessorError"),(m_NotificationBarFlags&NOTIFY_TSPROCESSORERROR)!=0);
 
 #if 0
 	Settings.Write(TEXT("NotificationBarFontName"),m_NotificationBarFont.lfFaceName);
@@ -254,7 +250,7 @@ INT_PTR COSDOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 
 			DlgCheckBox_Check(hDlg,IDC_NOTIFICATIONBAR_ENABLE,m_fEnableNotificationBar);
 			DlgCheckBox_Check(hDlg,IDC_NOTIFICATIONBAR_NOTIFYEVENTNAME,(m_NotificationBarFlags&NOTIFY_EVENTNAME)!=0);
-			DlgCheckBox_Check(hDlg,IDC_NOTIFICATIONBAR_NOTIFYECMERROR,(m_NotificationBarFlags&NOTIFY_ECMERROR)!=0);
+			DlgCheckBox_Check(hDlg,IDC_NOTIFICATIONBAR_NOTIFYTSPROCESSORERROR,(m_NotificationBarFlags&NOTIFY_TSPROCESSORERROR)!=0);
 			::SetDlgItemInt(hDlg,IDC_NOTIFICATIONBAR_DURATION,m_NotificationBarDuration/1000,FALSE);
 			DlgUpDown_SetRange(hDlg,IDC_NOTIFICATIONBAR_DURATION_UPDOWN,1,60);
 			m_CurNotificationBarFont=m_NotificationBarFont;
@@ -357,8 +353,8 @@ INT_PTR COSDOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 					DlgCheckBox_IsChecked(hDlg,IDC_NOTIFICATIONBAR_ENABLE);
 				EnableNotify(NOTIFY_EVENTNAME,
 					DlgCheckBox_IsChecked(hDlg,IDC_NOTIFICATIONBAR_NOTIFYEVENTNAME));
-				EnableNotify(NOTIFY_ECMERROR,
-					DlgCheckBox_IsChecked(hDlg,IDC_NOTIFICATIONBAR_NOTIFYECMERROR));
+				EnableNotify(NOTIFY_TSPROCESSORERROR,
+					DlgCheckBox_IsChecked(hDlg,IDC_NOTIFICATIONBAR_NOTIFYTSPROCESSORERROR));
 				m_NotificationBarDuration=
 					::GetDlgItemInt(hDlg,IDC_NOTIFICATIONBAR_DURATION,NULL,FALSE)*1000;
 				m_NotificationBarFont=m_CurNotificationBarFont;

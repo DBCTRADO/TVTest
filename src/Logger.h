@@ -4,26 +4,38 @@
 
 #include <vector>
 #include "Options.h"
-#include "TsUtilClass.h"
 
 
 class CLogItem
 {
-	FILETIME m_Time;
-	CDynamicString m_Text;
-
 public:
-	CLogItem(LPCTSTR pszText);
+	enum LogType {
+		TYPE_INFORMATION,
+		TYPE_WARNING,
+		TYPE_ERROR
+	};
+
+	CLogItem();
+	CLogItem(LogType Type,LPCTSTR pszText,DWORD SerialNumber);
 	~CLogItem();
-	LPCTSTR GetText() const { return m_Text.Get(); }
+	LPCTSTR GetText() const { return m_Text.c_str(); }
 	void GetTime(SYSTEMTIME *pTime) const;
+	LogType GetType() const { return m_Type; }
+	DWORD GetSerialNumber() const { return m_SerialNumber; }
 	int Format(char *pszText,int MaxLength) const;
 	int Format(WCHAR *pszText,int MaxLength) const;
 	int FormatTime(char *pszText,int MaxLength) const;
 	int FormatTime(WCHAR *pszText,int MaxLength) const;
+
+private:
+	FILETIME m_Time;
+	TVTest::String m_Text;
+	LogType m_Type;
+	DWORD m_SerialNumber;
 };
 
-class CLogger : public COptions, public CTracer
+class CLogger
+	: public COptions
 {
 public:
 	CLogger();
@@ -37,9 +49,13 @@ public:
 	bool Create(HWND hwndOwner) override;
 
 // CLogger
-	bool AddLog(LPCTSTR pszText, ...);
-	bool AddLogV(LPCTSTR pszText,va_list Args);
+	bool AddLog(CLogItem::LogType Type,LPCTSTR pszText, ...);
+	bool AddLogV(CLogItem::LogType Type,LPCTSTR pszText,va_list Args);
+	bool AddLogRaw(CLogItem::LogType Type,LPCTSTR pszText);
 	void Clear();
+	std::size_t GetLogCount() const;
+	bool GetLog(std::size_t Index,CLogItem *pItem) const;
+	bool GetLogBySerialNumber(DWORD SerialNumber,CLogItem *pItem) const;
 	bool SetOutputToFile(bool fOutput);
 	bool GetOutputToFile() const { return m_fOutputToFile; }
 	bool SaveToFile(LPCTSTR pszFileName,bool fAppend);
@@ -50,12 +66,10 @@ private:
 // CBasicDialog
 	INT_PTR DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
 
-// CTracer
-	void OnTrace(LPCTSTR pszOutput) override;
-
 	std::vector<CLogItem*> m_LogList;
+	DWORD m_SerialNumber;
 	bool m_fOutputToFile;
-	CCriticalLock m_Lock;
+	mutable CCriticalLock m_Lock;
 };
 
 

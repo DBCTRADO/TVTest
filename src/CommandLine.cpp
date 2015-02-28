@@ -24,7 +24,7 @@ public:
 	bool IsSwitch() const;
 	bool IsOption(LPCWSTR pszOption) const;
 	bool GetOption(LPCWSTR pszOption,bool *pValue);
-	bool GetOption(LPCWSTR pszOption,CDynamicString *pValue);
+	bool GetOption(LPCWSTR pszOption,TVTest::String *pValue);
 	bool GetOption(LPCWSTR pszOption,LPTSTR pszValue,int MaxLength);
 	bool GetOption(LPCWSTR pszOption,int *pValue);
 	bool GetOption(LPCWSTR pszOption,DWORD *pValue);
@@ -84,11 +84,13 @@ bool CArgsParser::GetOption(LPCWSTR pszOption,bool *pValue)
 }
 
 
-bool CArgsParser::GetOption(LPCWSTR pszOption,CDynamicString *pValue)
+bool CArgsParser::GetOption(LPCWSTR pszOption,TVTest::String *pValue)
 {
 	if (IsOption(pszOption)) {
-		if (Next())
-			return pValue->Set(GetText());
+		if (Next()) {
+			TVTest::StringUtility::Assign(*pValue,GetText());
+			return true;
+		}
 	}
 	return false;
 }
@@ -349,16 +351,16 @@ static bool GetIniEntry(LPCWSTR pszText,CCommandLineOptions::IniEntry *pEntry)
 		LPCWSTR pEnd=::StrChrW(p,L']');
 		if (pEnd==NULL)
 			return false;
-		pEntry->Section.Set(p,pEnd-p);
+		pEntry->Section.assign(p,pEnd-p);
 		p=pEnd+1;
 	}
 
 	LPCWSTR pEnd=::StrChrW(p,L'=');
 	if (pEnd==NULL || pEnd-p<1)
 		return false;
-	pEntry->Name.Set(p,pEnd-p);
+	pEntry->Name.assign(p,pEnd-p);
 	p=pEnd+1;
-	pEntry->Value.Set(p);
+	pEntry->Value.assign(p);
 
 	return true;
 }
@@ -368,15 +370,19 @@ static bool GetIniEntry(LPCWSTR pszText,CCommandLineOptions::IniEntry *pEntry)
 
 CCommandLineOptions::CCommandLineOptions()
 	: m_fNoDriver(false)
-	, m_fNoDescramble(false)
+	, m_fNoTSProcessor(false)
 	, m_fSingleTask(false)
 	, m_fStandby(false)
 	, m_fNoView(false)
 	, m_fNoDirectShow(false)
+	, m_fMpeg2(false)
+	, m_fH264(false)
+	, m_fH265(false)
 	, m_fSilent(false)
 	, m_fInitialSettings(false)
 	, m_fSaveLog(false)
 	, m_fNoEpg(false)
+	, m_f1Seg(false)
 	, m_TvRockDID(-1)
 
 	, m_Channel(0)
@@ -440,12 +446,16 @@ CCommandLineOptions::CCommandLineOptions()
 	/width			ウィンドウの幅の指定
 	/height			ウィンドウの高さの指定
 	/mute			消音
-	/nd				スクランブル解除しない
+	/nd				TSプロセッサーを無効にする
 	/nid			ネットワークID
 	/nodriver		BonDriverを読み込まない
 	/nodshow		DirectShowの初期化をしない
 	/noplugin		プラグインを読み込まない
 	/noview			プレビュー無効
+	/mpeg2			MPEG-2を有効
+	/h264			H.264を有効
+	/h265			H.265を有効
+	/1seg			ワンセグモード
 	/nr				ネットワークリモコンを使用する
 	/p /port		UDP のポート番号 (e.g. /p 1234)
 	/plugin-		指定されたプラグインを読み込まない
@@ -473,6 +483,7 @@ CCommandLineOptions::CCommandLineOptions()
 	/epgspace		EPG番組表のデフォルトチューニング空間
 	/home			ホーム画面表示
 	/chdisplay		チャンネル選択画面表示
+	/style			スタイルファイル名
 */
 void CCommandLineOptions::Parse(LPCWSTR pszCmdLine)
 {
@@ -482,7 +493,8 @@ void CCommandLineOptions::Parse(LPCWSTR pszCmdLine)
 		return;
 	do {
 		if (Args.IsSwitch()) {
-			if (!Args.GetOption(TEXT("ch"),&m_Channel)
+			if (!Args.GetOption(TEXT("1seg"),&m_f1Seg)
+					&& !Args.GetOption(TEXT("ch"),&m_Channel)
 					&& !Args.GetOption(TEXT("chdisplay"),&m_fChannelDisplay)
 					&& !Args.GetOption(TEXT("chspace"),&m_TuningSpace)
 					&& !Args.GetOption(TEXT("d"),&m_DriverName)
@@ -492,6 +504,8 @@ void CCommandLineOptions::Parse(LPCWSTR pszCmdLine)
 					&& !Args.GetOption(TEXT("epgtuner"),&m_ProgramGuideTuner)
 					&& !Args.GetOption(TEXT("f"),&m_fFullscreen)
 					&& !Args.GetOption(TEXT("fullscreen"),&m_fFullscreen)
+					&& !Args.GetOption(TEXT("h264"),&m_fH264)
+					&& !Args.GetOption(TEXT("h265"),&m_fH265)
 					&& !Args.GetOption(TEXT("height"),&m_WindowHeight)
 					&& !Args.GetOption(TEXT("home"),&m_fHomeDisplay)
 					&& !Args.GetOption(TEXT("ini"),&m_IniFileName)
@@ -499,8 +513,9 @@ void CCommandLineOptions::Parse(LPCWSTR pszCmdLine)
 					&& !Args.GetOption(TEXT("log"),&m_fSaveLog)
 					&& !Args.GetOption(TEXT("max"),&m_fMaximize)
 					&& !Args.GetOption(TEXT("min"),&m_fMinimize)
+					&& !Args.GetOption(TEXT("mpeg2"),&m_fMpeg2)
 					&& !Args.GetOption(TEXT("mute"),&m_fMute)
-					&& !Args.GetOption(TEXT("nd"),&m_fNoDescramble)
+					&& !Args.GetOption(TEXT("nd"),&m_fNoTSProcessor)
 					&& !Args.GetOption(TEXT("nodriver"),&m_fNoDriver)
 					&& !Args.GetOption(TEXT("nodshow"),&m_fNoDirectShow)
 					&& !Args.GetOption(TEXT("noepg"),&m_fNoEpg)
@@ -528,9 +543,9 @@ void CCommandLineOptions::Parse(LPCWSTR pszCmdLine)
 					&& !Args.GetOption(TEXT("sid"),&m_ServiceID)
 					&& !Args.GetOption(TEXT("silent"),&m_fSilent)
 					&& !Args.GetOption(TEXT("standby"),&m_fStandby)
+					&& !Args.GetOption(TEXT("style"),&m_StyleFileName)
 					&& !Args.GetOption(TEXT("tray"),&m_fTray)
 					&& !Args.GetOption(TEXT("tsid"),&m_TransportStreamID)
-					&& !Args.GetOption(TEXT("tvcas"),&m_CasLibraryName)
 					&& !Args.GetOption(TEXT("volume"),&m_Volume)
 					&& !Args.GetOption(TEXT("width"),&m_WindowWidth)) {
 				if (Args.IsOption(TEXT("inikey"))) {
@@ -543,7 +558,7 @@ void CCommandLineOptions::Parse(LPCWSTR pszCmdLine)
 					if (Args.Next()) {
 						TCHAR szPlugin[MAX_PATH];
 						if (Args.GetText(szPlugin,MAX_PATH))
-							m_NoLoadPlugins.push_back(CDynamicString(szPlugin));
+							m_NoLoadPlugins.push_back(TVTest::String(szPlugin));
 					}
 				} else if (Args.IsOption(TEXT("did"))) {
 					if (Args.Next()) {

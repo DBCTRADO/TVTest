@@ -678,7 +678,7 @@ namespace TVTest
 				if (pCurTime!=NULL)
 					st=*pCurTime;
 				else
-					GetCurrentJST(&st);
+					GetCurrentEpgTime(&st);
 			} else {
 				if (!m_EventList[Index-1].EventInfo.GetEndTime(&st))
 					return NULL;
@@ -839,7 +839,7 @@ namespace TVTest
 
 	void CFavoritesMenu::SetFolderMenu(HMENU hmenu,int MenuPos,HDC hdc,UINT *pCommand,const CFavoriteFolder *pFolder)
 	{
-		CEpgProgramList *pProgramList=GetAppClass().GetEpgProgramList();
+		CEpgProgramList &ProgramList=GetAppClass().EpgProgramList;
 
 		int ChannelNameWidth=0;
 		RECT rc;
@@ -913,7 +913,7 @@ namespace TVTest
 						MenuPos++;
 
 						if ((m_Flags&FLAG_SHOWEVENTINFO)!=0) {
-							const CEventInfoData *pEventInfo=pMenuItem->GetEventInfo(pProgramList,0,&m_BaseTime);
+							const CEventInfoData *pEventInfo=pMenuItem->GetEventInfo(&ProgramList,0,&m_BaseTime);
 							if (pEventInfo!=NULL) {
 								TCHAR szText[256];
 								GetEventText(pEventInfo,szText,lengthof(szText));
@@ -1032,7 +1032,7 @@ namespace TVTest
 
 			if ((m_Flags&FLAG_SHOWLOGO)!=0) {
 				const CChannelInfo &ChInfo=pItem->GetChannelInfo();
-				HBITMAP hbmLogo=GetAppClass().GetLogoManager()->GetAssociatedLogoBitmap(
+				HBITMAP hbmLogo=GetAppClass().LogoManager.GetAssociatedLogoBitmap(
 					ChInfo.GetNetworkID(),ChInfo.GetServiceID(),CLogoManager::LOGOTYPE_SMALL);
 				if (hbmLogo!=NULL) {
 					DrawUtil::CMemoryDC MemoryDC(pdis->hDC);
@@ -1124,7 +1124,7 @@ namespace TVTest
 				const CEventInfoData *pEventInfo1,*pEventInfo2;
 				pEventInfo1=pItem->GetEventInfo(0);
 				if (pEventInfo1==NULL) {
-					pEventInfo1=pItem->GetEventInfo(GetAppClass().GetEpgProgramList(),0);
+					pEventInfo1=pItem->GetEventInfo(&GetAppClass().EpgProgramList,0);
 				}
 				if (pEventInfo1!=NULL) {
 					TCHAR szText[256*2+1];
@@ -1132,7 +1132,7 @@ namespace TVTest
 					POINT pt;
 
 					Length=GetEventText(pEventInfo1,szText,lengthof(szText)/2);
-					pEventInfo2=pItem->GetEventInfo(GetAppClass().GetEpgProgramList(),1);
+					pEventInfo2=pItem->GetEventInfo(&GetAppClass().EpgProgramList,1);
 					if (pEventInfo2!=NULL) {
 						szText[Length++]=_T('\r');
 						szText[Length++]=_T('\n');
@@ -1165,18 +1165,13 @@ namespace TVTest
 	int CFavoritesMenu::GetEventText(const CEventInfoData *pEventInfo,
 									 LPTSTR pszText,int MaxLength) const
 	{
-		SYSTEMTIME stStart,stEnd;
-		TCHAR szEnd[16];
+		TCHAR szTime[EpgUtil::MAX_EVENT_TIME_LENGTH];
 
-		pEventInfo->GetStartTime(&stStart);
-		if (pEventInfo->GetEndTime(&stEnd))
-			StdUtil::snprintf(szEnd,lengthof(szEnd),
-							  TEXT("%02d:%02d"),stEnd.wHour,stEnd.wMinute);
-		else
-			szEnd[0]=_T('\0');
-		return StdUtil::snprintf(pszText,MaxLength,TEXT("%02d:%02d`%s %ls"),
-								 stStart.wHour,stStart.wMinute,szEnd,
-								 NullToEmptyString(pEventInfo->GetEventName()));
+		EpgUtil::FormatEventTime(
+			pEventInfo,szTime,lengthof(szTime),EpgUtil::EVENT_TIME_HOUR_2DIGITS);
+
+		return StdUtil::snprintf(pszText,MaxLength,TEXT("%s %s"),
+								 szTime,pEventInfo->m_EventName.c_str());
 	}
 
 	void CFavoritesMenu::CreateFont(HDC hdc)
@@ -1196,8 +1191,8 @@ namespace TVTest
 
 	void CFavoritesMenu::GetBaseTime(SYSTEMTIME *pTime)
 	{
-		GetCurrentJST(pTime);
-		OffsetSystemTime(pTime,120*1000);
+		GetCurrentEpgTime(pTime);
+		OffsetSystemTime(pTime,2*TimeConsts::SYSTEMTIME_MINUTE);
 	}
 
 
@@ -1240,9 +1235,9 @@ namespace TVTest
 
 				::SetDlgItemText(hDlg,IDC_FAVORITEPROP_NAME,m_pChannel->GetName());
 
-				const CDriverManager *pDriverManager=GetAppClass().GetDriverManager();
-				for (int i=0;i<pDriverManager->NumDrivers();i++) {
-					const CDriverInfo *pDriverInfo=pDriverManager->GetDriverInfo(i);
+				const CDriverManager &DriverManager=GetAppClass().DriverManager;
+				for (int i=0;i<DriverManager.NumDrivers();i++) {
+					const CDriverInfo *pDriverInfo=DriverManager.GetDriverInfo(i);
 					DlgComboBox_AddString(hDlg,IDC_INITIALSETTINGS_DRIVER,pDriverInfo->GetFileName());
 				}
 				::SetDlgItemText(hDlg,IDC_FAVORITEPROP_BONDRIVER,m_pChannel->GetBonDriverFileName());
@@ -1300,15 +1295,19 @@ namespace TVTest
 
 	bool COrganizeFavoritesDialog::Show(HWND hwndOwner)
 	{
-		return ShowDialog(hwndOwner,
-						  GetAppClass().GetResourceInstance(),
-						  MAKEINTRESOURCE(IDD_ORGANIZEFAVORITES))==IDOK;
+		m_Position=m_pManager->GetOrganizeDialogPos();
+
+		bool fResult=ShowDialog(hwndOwner,
+								GetAppClass().GetResourceInstance(),
+								MAKEINTRESOURCE(IDD_ORGANIZEFAVORITES))==IDOK;
+
+		m_pManager->SetOrganizeDialogPos(m_Position);
+
+		return fResult;
 	}
 
 	INT_PTR COrganizeFavoritesDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 	{
-		INT_PTR Result=CResizableDialog::DlgProc(hDlg,uMsg,wParam,lParam);
-
 		switch (uMsg) {
 		case WM_INITDIALOG:
 			{
@@ -1656,7 +1655,7 @@ namespace TVTest
 			return TRUE;
 		}
 
-		return Result;
+		return FALSE;
 	}
 
 	void COrganizeFavoritesDialog::InsertTreeItems(HWND hwndTree,HTREEITEM hParent,const CFavoriteFolder *pFolder)
@@ -1703,7 +1702,7 @@ namespace TVTest
 
 						const CChannelInfo &ChannelInfo=pChannel->GetChannelInfo();
 						if (ChannelInfo.GetNetworkID()!=0 && ChannelInfo.GetServiceID()!=0) {
-							HICON hico=GetAppClass().GetLogoManager()->CreateLogoIcon(
+							HICON hico=GetAppClass().LogoManager.CreateLogoIcon(
 								ChannelInfo.GetNetworkID(),ChannelInfo.GetServiceID(),16,16);
 							if (hico!=nullptr) {
 								tvis.item.iImage=ImageList_AddIcon(

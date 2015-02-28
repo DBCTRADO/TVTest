@@ -21,6 +21,12 @@
 
 #define _WIN32_DCOM	// for CoInitializeEx()
 
+#if defined(_MSC_VER) && (_MSC_VER <= 1800)
+#ifndef _ALLOW_KEYWORD_MACROS
+#define _ALLOW_KEYWORD_MACROS
+#endif
+#endif
+
 #include <stdio.h>
 #include <process.h>
 #include <windows.h>
@@ -101,15 +107,19 @@
 #define NULL nullptr
 #endif
 
+// アラインメント指定
+#if defined(_MSC_VER) && (_MSC_VER <= 1800)
+#define alignas(n) __declspec(align(n))
+#define alignof(t) __alignof(t)
+#endif
+
+#if !defined(WIN_XP_SUPPORT) && !defined(NO_WIN_XP_SUPPORT)
+// Windows XP 対応
+#define WIN_XP_SUPPORT
+#endif
+
 
 // BonTsEngine の設定
-#ifdef TVH264
-	#ifndef TVH264_FOR_HD
-	#define BONTSENGINE_1SEG_SUPPORT	// ワンセグ対応
-	#define BONTSENGINE_RADIO_SUPPORT	// 音声放送対応
-	#endif
-	#define BONTSENGINE_H264_SUPPORT	// H.264 対応
-#else	// TVH264
-	#define BONTSENGINE_MPEG2_SUPPORT	// MPEG-2 対応
-	#define BONTSENGINE_RADIO_SUPPORT	// 音声放送対応
-#endif
+#define BONTSENGINE_MPEG2_SUPPORT	// MPEG-2 対応
+#define BONTSENGINE_H264_SUPPORT	// H.264 対応
+#define BONTSENGINE_H265_SUPPORT	// H.265 対応

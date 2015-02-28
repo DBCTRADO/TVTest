@@ -22,6 +22,15 @@ public:
 
 	typedef CEpgDataLoader::CEventHandler CEDCBDataLoadEventHandler;
 
+	enum EpgTimeMode {
+		EPGTIME_RAW,
+		EPGTIME_JST,
+		EPGTIME_LOCAL,
+		EPGTIME_UTC
+	};
+	static const EpgTimeMode EPGTIME_FIRST = EPGTIME_RAW;
+	static const EpgTimeMode EPGTIME_LAST  = EPGTIME_UTC;
+
 	CEpgOptions();
 	~CEpgOptions();
 
@@ -53,6 +62,8 @@ public:
 	bool IsEDCBDataLoading() const;
 	bool WaitEDCBDataLoad(DWORD Timeout=INFINITE);
 
+	EpgTimeMode GetEpgTimeMode() const { return m_EpgTimeMode; }
+
 	bool LoadLogoFile();
 	bool SaveLogoFile();
 
@@ -64,6 +75,7 @@ private:
 	bool m_fUpdateCSExtended;
 	bool m_fUseEDCBData;
 	TCHAR m_szEDCBDataFolder[MAX_PATH];
+	EpgTimeMode m_EpgTimeMode;
 	bool m_fSaveLogoFile;
 	TCHAR m_szLogoFileName[MAX_PATH];
 	HANDLE m_hLoadThread;

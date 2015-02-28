@@ -14,10 +14,11 @@ static char THIS_FILE[]=__FILE__;
 #endif
 
 
-CCaptionParser::CCaptionParser()
+CCaptionParser::CCaptionParser(bool b1Seg)
 	: m_PesParser(this)
 	, m_pHandler(NULL)
 	, m_pDRCSMap(NULL)
+	, m_b1Seg(b1Seg)
 	, m_DataGroupVersion(0xFF)
 {
 }
@@ -237,7 +238,7 @@ bool CCaptionParser::ParseUnitData(const BYTE *pData, DWORD *pDataSize)
 		CAribString::FormatList FormatList;
 
 		if (CAribString::CaptionToString(szText, sizeof(szText) / sizeof(TCHAR), &pData[5], UnitSize,
-										 &FormatList, m_pDRCSMap) > 0) {
+										 m_b1Seg, &FormatList, m_pDRCSMap) > 0) {
 #ifdef TRACE_CAPTION_DATA
 			TCHAR szTrace[4096];
 			int Len = ::wsprintf(szTrace, TEXT("Caption %d : "), m_DataGroupID & 0x0F);

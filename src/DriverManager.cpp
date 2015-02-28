@@ -33,7 +33,7 @@ CDriverInfo::~CDriverInfo()
 bool CDriverInfo::LoadTuningSpaceList(LoadTuningSpaceListMode Mode)
 {
 	CAppMain &App=GetAppClass();
-	LPCTSTR pszFileName=m_FileName.Get();
+	LPCTSTR pszFileName=m_FileName.c_str();
 
 	bool fUseDriver;
 	if (Mode==LOADTUNINGSPACE_NOLOADDRIVER) {
@@ -50,7 +50,7 @@ bool CDriverInfo::LoadTuningSpaceList(LoadTuningSpaceListMode Mode)
 	if (!m_fChannelFileLoaded) {
 		TCHAR szChannelFileName[MAX_PATH];
 
-		App.GetChannelFileName(pszFileName,szChannelFileName,lengthof(szChannelFileName));
+		App.Core.GetChannelFileName(pszFileName,szChannelFileName,lengthof(szChannelFileName));
 		if (m_TuningSpaceList.LoadFromFile(szChannelFileName)) {
 #if 0
 			if (fUseDriver && Mode==LOADTUNINGSPACE_DEFAULT) {
@@ -80,7 +80,7 @@ bool CDriverInfo::LoadTuningSpaceList(LoadTuningSpaceListMode Mode)
 
 		if (::PathIsRelative(pszFileName)) {
 			TCHAR szTemp[MAX_PATH];
-			GetAppClass().GetDriverDirectory(szTemp,lengthof(szTemp));
+			App.Core.GetDriverDirectory(szTemp,lengthof(szTemp));
 			::PathAppend(szTemp,pszFileName);
 			::PathCanonicalize(szFilePath,szTemp);
 		} else {
@@ -91,9 +91,9 @@ bool CDriverInfo::LoadTuningSpaceList(LoadTuningSpaceListMode Mode)
 		if (hLib!=NULL) {
 			TCHAR szCurDriverPath[MAX_PATH];
 
-			if (App.GetCoreEngine()->GetDriverPath(szCurDriverPath,lengthof(szCurDriverPath))
+			if (App.CoreEngine.GetDriverPath(szCurDriverPath,lengthof(szCurDriverPath))
 					&& IsEqualFileName(szFilePath,szCurDriverPath)) {
-				m_DriverSpaceList=*App.GetChannelManager()->GetDriverTuningSpaceList();
+				m_DriverSpaceList=*App.ChannelManager.GetDriverTuningSpaceList();
 				m_fDriverSpaceLoaded=true;
 			}
 		} else if ((hLib=::LoadLibrary(szFilePath))!=NULL) {
@@ -109,7 +109,7 @@ bool CDriverInfo::LoadTuningSpaceList(LoadTuningSpaceListMode Mode)
 
 					for (NumSpaces=0;pBonDriver2->EnumTuningSpace(NumSpaces)!=NULL;NumSpaces++);
 					m_DriverSpaceList.Reserve(NumSpaces);
-					m_TunerName.Set(pBonDriver2->GetTunerName());
+					TVTest::StringUtility::Assign(m_TunerName,pBonDriver2->GetTunerName());
 					for (int i=0;i<NumSpaces;i++) {
 						CTuningSpaceInfo *pTuningSpaceInfo=m_DriverSpaceList.GetTuningSpaceInfo(i);
 						LPCTSTR pszName=pBonDriver2->EnumTuningSpace(i);
@@ -223,7 +223,7 @@ bool CDriverManager::Find(LPCTSTR pszDirectory)
 				  });
 	}
 
-	m_BaseDirectory.Set(pszDirectory);
+	m_BaseDirectory=pszDirectory;
 
 	return true;
 }

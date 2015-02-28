@@ -2,66 +2,71 @@
 #define TS_SRC_STREAM_H
 
 
-#include <list>
 #include "TsStream.h"
 #include "TsUtilClass.h"
+#include "RingBuffer.h"
 
 
 class CTsSrcStream
 {
 public:
-	CTsSrcStream(DWORD BufferLength);
+	static const size_t DEFAULT_QUEUE_SIZE = 0x1000;
+	static const size_t DEFAULT_POOL_SIZE  = 0x0800;
+
+	CTsSrcStream();
 	~CTsSrcStream();
-	bool InputMedia(const CMediaData *pMediaData);
-	bool GetData(BYTE *pData,DWORD *pSize);
+	bool Initialize();
+	bool InputMedia(CMediaData *pMediaData);
+	size_t GetData(BYTE *pData, size_t Size);
+	void Reset();
 	bool IsDataAvailable();
 	bool IsBufferFull();
-	void Reset();
-	bool EnableSync(bool bEnable);
+	bool IsBufferActuallyFull();
+	int GetFillPercentage();
+	bool SetQueueSize(size_t Size);
+	size_t GetQueueSize() const { return m_QueueSize; }
+	bool SetPoolSize(size_t Size);
+	size_t GetPoolSize() const { return m_PoolSize; }
+	bool EnableSync(bool bEnable, bool b1Seg = false);
 	bool IsSyncEnabled() const { return m_bEnableSync; }
+	bool IsSyncFor1Seg() const { return m_bSyncFor1Seg; }
 	void SetVideoPID(WORD PID);
 	void SetAudioPID(WORD PID);
+	void MapAudioPID(WORD AudioPID, WORD MapPID);
+	LONGLONG GetPTSDuration() const { return m_PTSDuration; }
 
 private:
+	enum { PACKET_SIZE = 188 };
+
+	struct PacketPtsData {
+		BYTE Data[PACKET_SIZE];
+		LONGLONG PTS;
+	};
+
 	void ResetSync();
+	void AddData(const BYTE *pData);
+	void AddData(const CMediaData *pMediaData) { AddData(pMediaData->GetData()); }
+	void AddPacket(const PacketPtsData *pPacket) { AddData(pPacket->Data); }
+	void AddPoolPacket();
+	void AddPoolPackets();
+	bool ResizeQueue(size_t QueueSize, size_t PoolSize);
 
 	CCriticalLock m_Lock;
-	BYTE *m_pBuffer;
-	DWORD m_BufferLength;
-	DWORD m_BufferUsed;
-	DWORD m_BufferPos;
+	CChunkedRingBuffer<BYTE,PACKET_SIZE,1024> m_PacketQueue;
+	CRingBuffer<PacketPtsData> m_PacketPool;
 
+	size_t m_QueueSize;
+	size_t m_PoolSize;
 	bool m_bEnableSync;
+	bool m_bSyncFor1Seg;
 	LONGLONG m_VideoPTS;
 	LONGLONG m_VideoPTSPrev;
 	LONGLONG m_AudioPTS;
 	LONGLONG m_AudioPTSPrev;
+	LONGLONG m_PTSDuration;
 	WORD m_VideoPID;
 	WORD m_AudioPID;
-	struct PacketData {
-		BYTE m_Data[188];
-		LONGLONG m_PTS;
-	};
-	std::list<PacketData*> m_PoolPacketList;
-	class CAllocator {
-		size_t m_BlockSize;
-		size_t m_BufferLength;
-		BYTE *m_pBuffer;
-		bool *m_pBlockUsed;
-		size_t m_AllocCount;
-		size_t m_AllocPos;
-	public:
-		CAllocator(size_t BlockSize,size_t BufferLength);
-		~CAllocator();
-		void *Allocate();
-		void Free(void *pBlock);
-		void FreeAll();
-	};
-	CAllocator m_Allocator;
-
-	void AddData(const CMediaData *pMediaData);
-	void AddPacket(const PacketData *pPacket);
-	void AddPoolPackets();
+	WORD m_MapAudioPID;
 };
 
 

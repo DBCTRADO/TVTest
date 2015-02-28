@@ -2,6 +2,8 @@
 #include "TVTest.h"
 #include "AppMain.h"
 #include "InformationPanel.h"
+#include "EpgUtil.h"
+#include "EventInfoUtil.h"
 #include "resource.h"
 
 #ifdef _DEBUG
@@ -12,12 +14,8 @@ static char THIS_FILE[]=__FILE__;
 
 
 #define IDC_PROGRAMINFO		1000
-#define IDC_PROGRAMINFOPREV	1001
-#define IDC_PROGRAMINFONEXT	1002
-
-#define PROGRAMINFO_BUTTON_SIZE	16
-
-#define ITEM_FLAG(item) (1<<(item))
+#define CM_PROGRAMINFOPREV	1001
+#define CM_PROGRAMINFONEXT	1002
 
 static const LPCTSTR SUBCLASS_PROP_NAME=APP_NAME TEXT("This");
 
@@ -28,25 +26,12 @@ const LPCTSTR CInformationPanel::m_pszClassName=APP_NAME TEXT(" Information Pane
 HINSTANCE CInformationPanel::m_hinst=NULL;
 
 
-const LPCTSTR CInformationPanel::m_pszItemNameList[] = {
-	TEXT("VideoInfo"),
-	TEXT("VideoDecoder"),
-	TEXT("VideoRenderer"),
-	TEXT("AudioDevice"),
-	TEXT("SignalLevel"),
-	TEXT("MediaBitRate"),
-	TEXT("Error"),
-	TEXT("Record"),
-	TEXT("ProgramInfo"),
-};
-
-
 bool CInformationPanel::Initialize(HINSTANCE hinst)
 {
 	if (m_hinst==NULL) {
 		WNDCLASS wc;
 
-		wc.style=CS_HREDRAW;
+		wc.style=CS_HREDRAW | CS_VREDRAW;
 		wc.lpfnWndProc=WndProc;
 		wc.cbClsExtra=0;
 		wc.cbWndExtra=0;
@@ -67,46 +52,33 @@ bool CInformationPanel::Initialize(HINSTANCE hinst)
 CInformationPanel::CInformationPanel()
 	: CSettingsBase(TEXT("InformationPanel"))
 
+	, m_FontHeight(0)
+
 	, m_hwndProgramInfo(NULL)
 	, m_pOldProgramInfoProc(NULL)
-	, m_hwndProgramInfoPrev(NULL)
-	, m_hwndProgramInfoNext(NULL)
-	, m_pEventHandler(NULL)
 	, m_fUseRichEdit(true)
-
-	, m_crBackColor(RGB(0,0,0))
-	, m_crTextColor(RGB(255,255,255))
-	, m_crProgramInfoBackColor(RGB(0,0,0))
-	, m_crProgramInfoTextColor(RGB(255,255,255))
-	, m_FontHeight(0)
-	, m_LineMargin(1)
-	, m_ItemVisibility(ITEM_FLAG(ITEM_VIDEO)
-					 | ITEM_FLAG(ITEM_DECODER)
-					 | ITEM_FLAG(ITEM_VIDEORENDERER)
-					 | ITEM_FLAG(ITEM_SIGNALLEVEL)
-					 | ITEM_FLAG(ITEM_ERROR)
-					 | ITEM_FLAG(ITEM_RECORD)
-					 | ITEM_FLAG(ITEM_PROGRAMINFO))
-
-	, m_OriginalVideoWidth(0)
-	, m_OriginalVideoHeight(0)
-	, m_DisplayVideoWidth(0)
-	, m_DisplayVideoHeight(0)
-	, m_AspectX(0)
-	, m_AspectY(0)
-	, m_fSignalLevel(false)
-	, m_VideoBitRate(0)
-	, m_AudioBitRate(0)
-	, m_fRecording(false)
 	, m_fProgramInfoCursorOverLink(false)
-	, m_fNextProgramInfo(false)
+	, m_HotButton(-1)
 {
+	RegisterItem<CVideoInfoItem>();
+	RegisterItem<CVideoDecoderItem>();
+	RegisterItem<CVideoRendererItem>();
+	RegisterItem<CAudioDeviceItem>(false);
+	RegisterItem<CSignalLevelItem>();
+	RegisterItem<CMediaBitRateItem>(false);
+	RegisterItem<CErrorItem>();
+	RegisterItem<CRecordItem>();
+	RegisterItem<CServiceItem>(false);
+	RegisterItem<CProgramInfoItem>();
 }
 
 
 CInformationPanel::~CInformationPanel()
 {
 	Destroy();
+
+	for (int i=0;i<NUM_ITEMS;i++)
+		delete m_ItemList[i];
 }
 
 
@@ -117,31 +89,49 @@ bool CInformationPanel::Create(HWND hwndParent,DWORD Style,DWORD ExStyle,int ID)
 }
 
 
-void CInformationPanel::ResetStatistics()
+void CInformationPanel::SetStyle(const TVTest::Style::CStyleManager *pStyleManager)
 {
-	/*
-	m_OriginalVideoWidth=0;
-	m_OriginalVideoHeight=0;
-	m_DisplayVideoWidth=0;
-	m_DisplayVideoHeight=0;
-	*/
-	m_AspectX=0;
-	m_AspectY=0;
-	/*
-	m_VideoDecoderName.Clear();
-	m_VideoRendererName.Clear();
-	m_AudioDeviceName.Clear();
-	*/
-	//m_fRecording=false;
-	m_ProgramInfo.Clear();
-	m_ProgramInfoLinkList.clear();
-	m_fNextProgramInfo=false;
+	m_Style.SetStyle(pStyleManager);
+}
+
+
+void CInformationPanel::NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager)
+{
+	m_Style.NormalizeStyle(pStyleManager);
+}
+
+
+void CInformationPanel::SetTheme(const TVTest::Theme::CThemeManager *pThemeManager)
+{
+	pThemeManager->GetStyle(TVTest::Theme::CThemeManager::STYLE_PANEL_CONTENT,
+							&m_Theme.Style);
+	pThemeManager->GetStyle(TVTest::Theme::CThemeManager::STYLE_INFORMATIONPANEL_EVENTINFO,
+							&m_Theme.ProgramInfoStyle);
+	pThemeManager->GetStyle(TVTest::Theme::CThemeManager::STYLE_INFORMATIONPANEL_BUTTON,
+							&m_Theme.ButtonStyle);
+	pThemeManager->GetStyle(TVTest::Theme::CThemeManager::STYLE_INFORMATIONPANEL_BUTTON_HOT,
+							&m_Theme.ButtonHotStyle);
 
 	if (m_hwnd!=NULL) {
-		InvalidateRect(m_hwnd,NULL,TRUE);
-		SetWindowText(m_hwndProgramInfo,TEXT(""));
-		EnableWindow(m_hwndProgramInfoPrev,FALSE);
-		EnableWindow(m_hwndProgramInfoNext,TRUE);
+		m_BackBrush.Create(m_Theme.Style.Back.Fill.GetSolidColor());
+		m_ProgramInfoBackBrush.Create(m_Theme.ProgramInfoStyle.Back.Fill.GetSolidColor());
+
+		Invalidate();
+
+		if (m_hwndProgramInfo!=NULL) {
+			if (m_fUseRichEdit) {
+				::SendMessage(m_hwndProgramInfo,EM_SETBKGNDCOLOR,0,
+							  (COLORREF)m_Theme.ProgramInfoStyle.Back.Fill.GetSolidColor());
+				POINT ptScroll;
+				::SendMessage(m_hwndProgramInfo,EM_GETSCROLLPOS,0,reinterpret_cast<LPARAM>(&ptScroll));
+				UpdateProgramInfoText();
+				::SendMessage(m_hwndProgramInfo,EM_SETSCROLLPOS,0,reinterpret_cast<LPARAM>(&ptScroll));
+			}
+			::InvalidateRect(m_hwndProgramInfo,NULL,TRUE);
+
+			if (IsItemVisible(ITEM_PROGRAMINFO))
+				SendSizeMessage();
+		}
 	}
 }
 
@@ -149,39 +139,6 @@ void CInformationPanel::ResetStatistics()
 bool CInformationPanel::IsVisible() const
 {
 	return m_hwnd!=NULL;
-}
-
-
-void CInformationPanel::SetColor(COLORREF crBackColor,COLORREF crTextColor)
-{
-	m_crBackColor=crBackColor;
-	m_crTextColor=crTextColor;
-	if (m_hwnd!=NULL) {
-		m_BackBrush.Create(crBackColor);
-		::InvalidateRect(m_hwnd,NULL,TRUE);
-		::InvalidateRect(m_hwndProgramInfoPrev,NULL,TRUE);
-		::InvalidateRect(m_hwndProgramInfoNext,NULL,TRUE);
-	}
-}
-
-
-void CInformationPanel::SetProgramInfoColor(COLORREF crBackColor,COLORREF crTextColor)
-{
-	m_crProgramInfoBackColor=crBackColor;
-	m_crProgramInfoTextColor=crTextColor;
-	if (m_hwnd!=NULL) {
-		m_ProgramInfoBackBrush.Create(crBackColor);
-		if (m_hwndProgramInfo!=NULL) {
-			if (m_fUseRichEdit) {
-				::SendMessage(m_hwndProgramInfo,EM_SETBKGNDCOLOR,0,m_crProgramInfoBackColor);
-				POINT ptScroll;
-				::SendMessage(m_hwndProgramInfo,EM_GETSCROLLPOS,0,reinterpret_cast<LPARAM>(&ptScroll));
-				UpdateProgramInfoText();
-				::SendMessage(m_hwndProgramInfo,EM_SETSCROLLPOS,0,reinterpret_cast<LPARAM>(&ptScroll));
-			}
-			::InvalidateRect(m_hwndProgramInfo,NULL,TRUE);
-		}
-	}
 }
 
 
@@ -204,106 +161,121 @@ bool CInformationPanel::SetFont(const LOGFONT *pFont)
 }
 
 
-void CInformationPanel::UpdateItem(int Item)
+
+CInformationPanel::CItem *CInformationPanel::GetItem(int Item)
+{
+	if (Item<0 || Item>=NUM_ITEMS)
+		return NULL;
+	return m_ItemList[Item];
+}
+
+
+const CInformationPanel::CItem *CInformationPanel::GetItem(int Item) const
+{
+	if (Item<0 || Item>=NUM_ITEMS)
+		return NULL;
+	return m_ItemList[Item];
+}
+
+
+bool CInformationPanel::SetItemVisible(int Item,bool fVisible)
+{
+	CItem *pItem=GetItem(Item);
+
+	if (pItem==NULL)
+		return false;
+
+	if (pItem->IsVisible()!=fVisible) {
+		pItem->SetVisible(fVisible);
+
+		if (m_hwnd!=NULL) {
+			if (IsItemVisible(ITEM_PROGRAMINFO))
+				SendSizeMessage();
+			if (Item==ITEM_PROGRAMINFO)
+				::ShowWindow(m_hwndProgramInfo,fVisible?SW_SHOW:SW_HIDE);
+			::InvalidateRect(m_hwnd,NULL,TRUE);
+		}
+	}
+
+	return true;
+}
+
+
+bool CInformationPanel::IsItemVisible(int Item) const
+{
+	const CItem *pItem=GetItem(Item);
+
+	return pItem!=NULL && pItem->IsVisible();
+}
+
+
+bool CInformationPanel::UpdateItem(int Item)
+{
+	CItem *pItem=GetItem(Item);
+
+	if (pItem==NULL || !pItem->Update())
+		return false;
+
+	if (m_hwnd!=NULL && pItem->IsVisible())
+		RedrawItem(Item);
+
+	return true;
+}
+
+
+void CInformationPanel::RedrawItem(int Item)
 {
 	if (m_hwnd!=NULL && IsItemVisible(Item)) {
 		RECT rc;
 
 		GetItemRect(Item,&rc);
-		::InvalidateRect(m_hwnd,&rc,TRUE);
+		Invalidate(&rc);
 	}
 }
 
 
-void CInformationPanel::SetVideoSize(int OriginalWidth,int OriginalHeight,int DisplayWidth,int DisplayHeight)
+bool CInformationPanel::ResetItem(int Item)
 {
-	if (OriginalWidth!=m_OriginalVideoWidth || OriginalHeight!=m_OriginalVideoHeight
-			|| DisplayWidth!=m_DisplayVideoWidth || DisplayHeight!=m_DisplayVideoHeight) {
-		m_OriginalVideoWidth=OriginalWidth;
-		m_OriginalVideoHeight=OriginalHeight;
-		m_DisplayVideoWidth=DisplayWidth;
-		m_DisplayVideoHeight=DisplayHeight;
-		UpdateItem(ITEM_VIDEO);
+	CItem *pItem=GetItem(Item);
+
+	if (pItem==NULL)
+		return false;
+
+	pItem->Reset();
+
+	if (Item==ITEM_PROGRAMINFO) {
+		m_ProgramInfoLinkList.clear();
+		m_fProgramInfoCursorOverLink=false;
+		if (m_hwnd!=NULL) {
+			::SetWindowText(m_hwndProgramInfo,TEXT(""));
+			RedrawButton(BUTTON_PROGRAMINFOPREV);
+			RedrawButton(BUTTON_PROGRAMINFONEXT);
+		}
 	}
+
+	if (m_hwnd!=NULL && pItem->IsVisible())
+		RedrawItem(Item);
+
+	return true;
 }
 
 
-void CInformationPanel::SetAspectRatio(int AspectX,int AspectY)
+bool CInformationPanel::UpdateAllItems()
 {
-	if (AspectX!=m_AspectX || AspectY!=m_AspectY) {
-		m_AspectX=AspectX;
-		m_AspectY=AspectY;
-		UpdateItem(ITEM_VIDEO);
+	bool fUpdated=false;
+
+	for (int i=0;i<NUM_ITEMS;i++) {
+		if (m_ItemList[i]->Update())
+			fUpdated=true;
 	}
-}
 
+	if (!fUpdated)
+		return false;
 
-void CInformationPanel::SetVideoDecoderName(LPCTSTR pszName)
-{
-	if (m_VideoDecoderName.Compare(pszName)!=0) {
-		m_VideoDecoderName.Set(pszName);
-		UpdateItem(ITEM_DECODER);
-	}
-}
+	if (m_hwnd!=NULL)
+		Invalidate();
 
-
-void CInformationPanel::SetVideoRendererName(LPCTSTR pszName)
-{
-	if (m_VideoRendererName.Compare(pszName)!=0) {
-		m_VideoRendererName.Set(pszName);
-		UpdateItem(ITEM_VIDEORENDERER);
-	}
-}
-
-
-void CInformationPanel::SetAudioDeviceName(LPCTSTR pszName)
-{
-	if (m_AudioDeviceName.Compare(pszName)!=0) {
-		m_AudioDeviceName.Set(pszName);
-		UpdateItem(ITEM_AUDIODEVICE);
-	}
-}
-
-
-void CInformationPanel::ShowSignalLevel(bool fShow)
-{
-	if (fShow!=m_fSignalLevel) {
-		m_fSignalLevel=fShow;
-		UpdateItem(ITEM_SIGNALLEVEL);
-	}
-}
-
-
-void CInformationPanel::SetMediaBitRate(DWORD VideoBitRate,DWORD AudioBitRate)
-{
-	if (VideoBitRate!=m_VideoBitRate || AudioBitRate!=m_AudioBitRate) {
-		m_VideoBitRate=VideoBitRate;
-		m_AudioBitRate=AudioBitRate;
-		UpdateItem(ITEM_MEDIABITRATE);
-	}
-}
-
-
-void CInformationPanel::SetRecordStatus(bool fRecording,LPCTSTR pszFileName,
-			ULONGLONG WroteSize,unsigned int RecordTime,ULONGLONG FreeSpace)
-{
-	m_fRecording=fRecording;
-	if (fRecording) {
-		m_RecordWroteSize=WroteSize;
-		m_RecordTime=RecordTime;
-		m_DiskFreeSpace=FreeSpace;
-	}
-	UpdateItem(ITEM_RECORD);
-}
-
-
-void CInformationPanel::SetProgramInfo(LPCTSTR pszInfo)
-{
-	if (m_ProgramInfo.Compare(pszInfo)!=0) {
-		m_ProgramInfo.Set(pszInfo);
-		if (m_hwndProgramInfo!=NULL)
-			UpdateProgramInfoText();
-	}
+	return true;
 }
 
 
@@ -330,10 +302,13 @@ bool CInformationPanel::SetProgramInfoRichEdit(bool fRichEdit)
 void CInformationPanel::UpdateProgramInfoText()
 {
 	if (m_hwndProgramInfo!=NULL) {
+		const TVTest::String &InfoText=
+			static_cast<const CProgramInfoItem*>(m_ItemList[ITEM_PROGRAMINFO])->GetInfoText();
+
 		if (m_fUseRichEdit) {
 			::SendMessage(m_hwndProgramInfo,WM_SETREDRAW,FALSE,0);
-			::SetWindowText(m_hwndProgramInfo,NULL);
-			if (!m_ProgramInfo.IsEmpty()) {
+			::SetWindowText(m_hwndProgramInfo,TEXT(""));
+			if (!InfoText.empty()) {
 				LOGFONT lf;
 				CHARFORMAT cf;
 				HDC hdc=::GetDC(m_hwndProgramInfo);
@@ -341,18 +316,19 @@ void CInformationPanel::UpdateProgramInfoText()
 				m_Font.GetLogFont(&lf);
 				CRichEditUtil::LogFontToCharFormat(hdc,&lf,&cf);
 				cf.dwMask|=CFM_COLOR;
-				cf.crTextColor=m_crProgramInfoTextColor;
+				cf.crTextColor=m_Theme.ProgramInfoStyle.Fore.Fill.GetSolidColor();
 				::ReleaseDC(m_hwndProgramInfo,hdc);
-				CRichEditUtil::AppendText(m_hwndProgramInfo,m_ProgramInfo.Get(),&cf);
+				CRichEditUtil::AppendText(m_hwndProgramInfo,InfoText.c_str(),&cf);
 				CRichEditUtil::DetectURL(m_hwndProgramInfo,&cf,0,-1,
-										 CRichEditUtil::URL_NO_LINK,&m_ProgramInfoLinkList);
+										 CRichEditUtil::URL_NO_LINK | CRichEditUtil::URL_TO_HALF_WIDTH,
+										 &m_ProgramInfoLinkList);
 				POINT pt={0,0};
 				::SendMessage(m_hwndProgramInfo,EM_SETSCROLLPOS,0,reinterpret_cast<LPARAM>(&pt));
 			}
 			::SendMessage(m_hwndProgramInfo,WM_SETREDRAW,TRUE,0);
 			::InvalidateRect(m_hwndProgramInfo,NULL,TRUE);
 		} else {
-			::SetWindowText(m_hwndProgramInfo,m_ProgramInfo.GetSafe());
+			::SetWindowText(m_hwndProgramInfo,InfoText.c_str());
 		}
 	}
 }
@@ -372,7 +348,8 @@ bool CInformationPanel::CreateProgramInfoEdit()
 		if (m_hwndProgramInfo==NULL)
 			return false;
 		::SendMessage(m_hwndProgramInfo,EM_SETEVENTMASK,0,ENM_MOUSEEVENTS | ENM_LINK);
-		::SendMessage(m_hwndProgramInfo,EM_SETBKGNDCOLOR,0,m_crProgramInfoBackColor);
+		::SendMessage(m_hwndProgramInfo,EM_SETBKGNDCOLOR,0,
+					  (COLORREF)m_Theme.ProgramInfoStyle.Back.Fill.GetSolidColor());
 		m_fProgramInfoCursorOverLink=false;
 	} else {
 		m_hwndProgramInfo=::CreateWindowEx(0,TEXT("EDIT"),TEXT(""),
@@ -385,16 +362,8 @@ bool CInformationPanel::CreateProgramInfoEdit()
 		m_pOldProgramInfoProc=SubclassWindow(m_hwndProgramInfo,ProgramInfoHookProc);
 	}
 	SetWindowFont(m_hwndProgramInfo,m_Font.GetHandle(),FALSE);
-	if (!m_ProgramInfo.IsEmpty())
-		UpdateProgramInfoText();
+	UpdateProgramInfoText();
 
-	return true;
-}
-
-
-bool CInformationPanel::SetEventHandler(CEventHandler *pHandler)
-{
-	m_pEventHandler=pHandler;
 	return true;
 }
 
@@ -404,39 +373,34 @@ LRESULT CInformationPanel::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lP
 	switch (uMsg) {
 	case WM_CREATE:
 		{
+			InitializeUI();
+
 			if (!m_Font.IsCreated())
 				CreateDefaultFont(&m_Font);
-			m_BackBrush.Create(m_crBackColor);
-			m_ProgramInfoBackBrush.Create(m_crProgramInfoBackColor);
+			m_BackBrush.Create(m_Theme.Style.Back.Fill.GetSolidColor());
+			m_ProgramInfoBackBrush.Create(m_Theme.ProgramInfoStyle.Back.Fill.GetSolidColor());
 			CalcFontHeight();
 
+			m_HotButton=-1;
+
+			CProgramInfoItem *pProgramInfoItem=
+				static_cast<CProgramInfoItem*>(GetItem(ITEM_PROGRAMINFO));
 			CreateProgramInfoEdit();
-			if (IsItemVisible(ITEM_PROGRAMINFO))
+			if (pProgramInfoItem->IsVisible())
 				::ShowWindow(m_hwndProgramInfo,SW_SHOW);
-			m_hwndProgramInfoPrev=CreateWindowEx(0,TEXT("BUTTON"),TEXT(""),
-				WS_CHILD | (IsItemVisible(ITEM_PROGRAMINFO)?WS_VISIBLE:0) | WS_CLIPSIBLINGS | (m_fNextProgramInfo?0:WS_DISABLED)
-												| BS_PUSHBUTTON | BS_OWNERDRAW,
-				0,0,0,0,hwnd,(HMENU)IDC_PROGRAMINFOPREV,m_hinst,NULL);
-			m_hwndProgramInfoNext=CreateWindowEx(0,TEXT("BUTTON"),TEXT(""),
-				WS_CHILD | (IsItemVisible(ITEM_PROGRAMINFO)?WS_VISIBLE:0) | WS_CLIPSIBLINGS | (m_fNextProgramInfo?WS_DISABLED:0)
-												| BS_PUSHBUTTON | BS_OWNERDRAW,
-				0,0,0,0,hwnd,(HMENU)IDC_PROGRAMINFONEXT,m_hinst,NULL);
 		}
 		return 0;
+
+	HANDLE_MSG(hwnd,WM_COMMAND,OnCommand);
 
 	case WM_SIZE:
 		if (IsItemVisible(ITEM_PROGRAMINFO)) {
 			RECT rc;
 
 			GetItemRect(ITEM_PROGRAMINFO,&rc);
-			MoveWindow(m_hwndProgramInfo,rc.left,rc.top,
-						rc.right-rc.left,rc.bottom-rc.top,TRUE);
-			MoveWindow(m_hwndProgramInfoPrev,
-						rc.right-PROGRAMINFO_BUTTON_SIZE*2,rc.bottom,
-						PROGRAMINFO_BUTTON_SIZE,PROGRAMINFO_BUTTON_SIZE,TRUE);
-			MoveWindow(m_hwndProgramInfoNext,
-						rc.right-PROGRAMINFO_BUTTON_SIZE,rc.bottom,
-						PROGRAMINFO_BUTTON_SIZE,PROGRAMINFO_BUTTON_SIZE,TRUE);
+			TVTest::Theme::SubtractBorderRect(m_Theme.ProgramInfoStyle.Back.Border,&rc);
+			::MoveWindow(m_hwndProgramInfo,rc.left,rc.top,
+						 rc.right-rc.left,rc.bottom-rc.top,TRUE);
 		}
 		return 0;
 
@@ -454,54 +418,42 @@ LRESULT CInformationPanel::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lP
 		{
 			HDC hdc=reinterpret_cast<HDC>(wParam);
 
-			SetTextColor(hdc,m_crProgramInfoTextColor);
-			SetBkColor(hdc,m_crProgramInfoBackColor);
+			::SetTextColor(hdc,m_Theme.ProgramInfoStyle.Fore.Fill.GetSolidColor());
+			::SetBkColor(hdc,m_Theme.ProgramInfoStyle.Back.Fill.GetSolidColor());
 			return reinterpret_cast<LRESULT>(m_ProgramInfoBackBrush.GetHandle());
 		}
 
-	case WM_DRAWITEM:
+	case WM_LBUTTONDOWN:
 		{
-			LPDRAWITEMSTRUCT pdis=reinterpret_cast<LPDRAWITEMSTRUCT>(lParam);
-			HBRUSH hbrOld,hbr;
-			HPEN hpen,hpenOld;
-			POINT Points[3];
+			int Button=ButtonHitTest(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam));
 
-			hpen=CreatePen(PS_SOLID,1,m_crTextColor);
-			hbrOld=DrawUtil::SelectObject(pdis->hDC,m_BackBrush);
-			hpenOld=SelectPen(pdis->hDC,hpen);
-			Rectangle(pdis->hDC,pdis->rcItem.left,pdis->rcItem.top,
-								pdis->rcItem.right,pdis->rcItem.bottom);
-			if (pdis->CtlID==IDC_PROGRAMINFOPREV) {
-				Points[0].x=pdis->rcItem.right-5;
-				Points[0].y=pdis->rcItem.top+3;
-				Points[1].x=Points[0].x;
-				Points[1].y=pdis->rcItem.bottom-4;
-				Points[2].x=pdis->rcItem.left+4;
-				Points[2].y=pdis->rcItem.top+(pdis->rcItem.bottom-pdis->rcItem.top)/2;
-			} else {
-				Points[0].x=pdis->rcItem.left+4;
-				Points[0].y=pdis->rcItem.top+3;
-				Points[1].x=Points[0].x;
-				Points[1].y=pdis->rcItem.bottom-4;
-				Points[2].x=pdis->rcItem.right-5;
-				Points[2].y=pdis->rcItem.top+(pdis->rcItem.bottom-pdis->rcItem.top)/2;
+			if (Button>=0) {
+				SetHotButton(Button);
+				::SetCapture(hwnd);
 			}
-			if ((pdis->itemState&ODS_DISABLED)!=0) {
-				hbr=CreateSolidBrush(MixColor(m_crBackColor,m_crTextColor));
-			} else {
-				hbr=CreateSolidBrush(m_crTextColor);
-			}
-			SelectBrush(pdis->hDC,hbr);
-			SelectObject(pdis->hDC,GetStockObject(NULL_PEN));
-			Polygon(pdis->hDC,Points,3);
-			SelectPen(pdis->hDC,hpenOld);
-			SelectBrush(pdis->hDC,hbrOld);
-			DeleteObject(hpen);
-			DeleteObject(hbr);
 		}
-		return TRUE;
+		return 0;
 
-	case WM_RBUTTONDOWN:
+	case WM_LBUTTONUP:
+		if (::GetCapture()==hwnd) {
+			if (m_HotButton>=0) {
+				SetHotButton(ButtonHitTest(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam)));
+
+				switch (m_HotButton) {
+				case BUTTON_PROGRAMINFOPREV:
+					::SendMessage(hwnd,WM_COMMAND,CM_PROGRAMINFOPREV,0);
+					break;
+				case BUTTON_PROGRAMINFONEXT:
+					::SendMessage(hwnd,WM_COMMAND,CM_PROGRAMINFONEXT,0);
+					break;
+				}
+			}
+
+			::ReleaseCapture();
+		}
+		return 0;
+
+	case WM_RBUTTONUP:
 		{
 			HMENU hmenu;
 			POINT pt;
@@ -518,49 +470,32 @@ LRESULT CInformationPanel::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lP
 		}
 		return TRUE;
 
-	case WM_COMMAND:
-		switch (LOWORD(wParam)) {
-		case CM_INFORMATIONPANEL_ITEM_VIDEO:
-		case CM_INFORMATIONPANEL_ITEM_VIDEODECODER:
-		case CM_INFORMATIONPANEL_ITEM_VIDEORENDERER:
-		case CM_INFORMATIONPANEL_ITEM_AUDIODEVICE:
-		case CM_INFORMATIONPANEL_ITEM_SIGNALLEVEL:
-		case CM_INFORMATIONPANEL_ITEM_MEDIABITRATE:
-		case CM_INFORMATIONPANEL_ITEM_ERROR:
-		case CM_INFORMATIONPANEL_ITEM_RECORD:
-		case CM_INFORMATIONPANEL_ITEM_PROGRAMINFO:
-			{
-				int Item=LOWORD(wParam)-CM_INFORMATIONPANEL_ITEM_FIRST;
+	case WM_MOUSEMOVE:
+		{
+			SetHotButton(ButtonHitTest(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam)));
 
-				SetItemVisible(Item,!IsItemVisible(Item));
+			if (::GetCapture()==NULL) {
+				TRACKMOUSEEVENT tme;
+				tme.cbSize=sizeof(TRACKMOUSEEVENT);
+				tme.dwFlags=TME_LEAVE;
+				tme.hwndTrack=hwnd;
+				::TrackMouseEvent(&tme);
 			}
-			return 0;
-
-		case IDC_PROGRAMINFOPREV:
-		case IDC_PROGRAMINFONEXT:
-			{
-				bool fNext=LOWORD(wParam)==IDC_PROGRAMINFONEXT;
-
-				if (fNext!=m_fNextProgramInfo) {
-					m_fNextProgramInfo=fNext;
-					m_ProgramInfo.Clear();
-					EnableWindow(m_hwndProgramInfoPrev,fNext);
-					EnableWindow(m_hwndProgramInfoNext,!fNext);
-					if (m_pEventHandler!=NULL)
-						m_pEventHandler->OnProgramInfoUpdate(fNext);
-					if (m_ProgramInfo.IsEmpty())
-						SetWindowText(m_hwndProgramInfo,TEXT(""));
-				}
-			}
-			return 0;
 		}
 		return 0;
 
+	case WM_MOUSELEAVE:
+	case WM_CAPTURECHANGED:
+		if (m_HotButton>=0)
+			SetHotButton(-1);
+		return 0;
+
 	case WM_SETCURSOR:
-		if ((HWND)wParam==m_hwndProgramInfoPrev
-				|| (HWND)wParam==m_hwndProgramInfoNext) {
-			::SetCursor(::LoadCursor(NULL,IDC_HAND));
-			return TRUE;
+		if ((HWND)wParam==hwnd) {
+			if (LOWORD(lParam)==HTCLIENT && m_HotButton>=0) {
+				::SetCursor(::LoadCursor(NULL,IDC_HAND));
+				return TRUE;
+			}
 		} else if ((HWND)wParam==m_hwndProgramInfo
 				&& LOWORD(lParam)==HTCLIENT
 				&& m_fUseRichEdit
@@ -577,29 +512,8 @@ LRESULT CInformationPanel::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lP
 				MSGFILTER *pMsgFilter=reinterpret_cast<MSGFILTER*>(lParam);
 
 				switch (pMsgFilter->msg) {
-				case WM_RBUTTONDOWN:
-					{
-						HMENU hmenu=::CreatePopupMenu();
-
-						::AppendMenu(hmenu,MF_STRING | MF_ENABLED,1,TEXT("ÉRÉsÅ[(&C)"));
-						::AppendMenu(hmenu,MF_STRING | MF_ENABLED,2,TEXT("Ç∑Ç◊ÇƒëIë(&A)"));
-						POINT pt;
-						::GetCursorPos(&pt);
-						int Command=::TrackPopupMenu(hmenu,TPM_RIGHTBUTTON | TPM_RETURNCMD,pt.x,pt.y,0,hwnd,NULL);
-						::DestroyMenu(hmenu);
-						switch (Command) {
-						case 1:
-							if (::SendMessage(m_hwndProgramInfo,EM_SELECTIONTYPE,0,0)==SEL_EMPTY) {
-								CRichEditUtil::CopyAllText(m_hwndProgramInfo);
-							} else {
-								::SendMessage(m_hwndProgramInfo,WM_COPY,0,0);
-							}
-							break;
-						case 2:
-							CRichEditUtil::SelectAll(m_hwndProgramInfo);
-							break;
-						}
-					}
+				case WM_RBUTTONUP:
+					TVTest::EventInfoUtil::EventInfoContextMenu(hwnd,m_hwndProgramInfo);
 					break;
 
 				case WM_LBUTTONDOWN:
@@ -656,8 +570,6 @@ LRESULT CInformationPanel::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lP
 		m_ProgramInfoBackBrush.Destroy();
 		m_Offscreen.Destroy();
 		m_hwndProgramInfo=NULL;
-		m_hwndProgramInfoPrev=NULL;
-		m_hwndProgramInfoNext=NULL;
 		return 0;
 	}
 
@@ -674,7 +586,10 @@ LRESULT CALLBACK CInformationPanel::ProgramInfoHookProc(HWND hwnd,UINT uMsg,WPAR
 
 	switch (uMsg) {
 	case WM_RBUTTONDOWN:
-		if (!pThis->m_ProgramInfo.IsEmpty()) {
+		return 0;
+
+	case WM_RBUTTONUP:
+		if (!static_cast<const CProgramInfoItem*>(pThis->GetItem(ITEM_PROGRAMINFO))->GetInfoText().empty()) {
 			HMENU hmenu=::CreatePopupMenu();
 			POINT pt;
 			int Command;
@@ -702,9 +617,6 @@ LRESULT CALLBACK CInformationPanel::ProgramInfoHookProc(HWND hwnd,UINT uMsg,WPAR
 		}
 		return 0;
 
-	case WM_RBUTTONUP:
-		return 0;
-
 	case WM_NCDESTROY:
 		SubclassWindow(hwnd,pThis->m_pOldProgramInfoProc);
 		::RemoveProp(hwnd,SUBCLASS_PROP_NAME);
@@ -716,6 +628,36 @@ LRESULT CALLBACK CInformationPanel::ProgramInfoHookProc(HWND hwnd,UINT uMsg,WPAR
 }
 
 
+void CInformationPanel::OnCommand(HWND hwnd,int id,HWND hwndCtl,UINT codeNotify)
+{
+	switch (id) {
+	case CM_PROGRAMINFOPREV:
+	case CM_PROGRAMINFONEXT:
+		{
+			bool fNext=id==CM_PROGRAMINFONEXT;
+			CProgramInfoItem *pItem=
+				static_cast<CProgramInfoItem*>(GetItem(ITEM_PROGRAMINFO));
+
+			if (fNext!=pItem->IsNext()) {
+				pItem->SetNext(fNext);
+				RedrawButton(BUTTON_PROGRAMINFOPREV);
+				RedrawButton(BUTTON_PROGRAMINFONEXT);
+			}
+		}
+		return;
+
+	default:
+		if (id>=CM_INFORMATIONPANEL_ITEM_FIRST
+				&& id<CM_INFORMATIONPANEL_ITEM_FIRST+NUM_ITEMS) {
+			int Item=id-CM_INFORMATIONPANEL_ITEM_FIRST;
+
+			SetItemVisible(Item,!IsItemVisible(Item));
+			return;
+		}
+	}
+}
+
+
 void CInformationPanel::GetItemRect(int Item,RECT *pRect) const
 {
 	int VisibleItemCount;
@@ -723,50 +665,18 @@ void CInformationPanel::GetItemRect(int Item,RECT *pRect) const
 	GetClientRect(pRect);
 	VisibleItemCount=0;
 	for (int i=0;i<Item;i++) {
-		if ((m_ItemVisibility&ITEM_FLAG(i))!=0)
+		if (IsItemVisible(i))
 			VisibleItemCount++;
 	}
-	pRect->top=(m_FontHeight+m_LineMargin)*VisibleItemCount;
-	if ((m_ItemVisibility&ITEM_FLAG(Item))==0) {
+	pRect->top=(m_FontHeight+m_Style.LineSpacing)*VisibleItemCount;
+	if (!IsItemVisible(Item)) {
 		pRect->bottom=pRect->top;
 	} else {
 		if (Item==ITEM_PROGRAMINFO)
-			pRect->bottom-=PROGRAMINFO_BUTTON_SIZE;
+			pRect->bottom-=m_Style.ButtonSize.Height;
 		if (Item!=ITEM_PROGRAMINFO || pRect->top>=pRect->bottom)
 			pRect->bottom=pRect->top+m_FontHeight;
 	}
-}
-
-
-bool CInformationPanel::SetItemVisible(int Item,bool fVisible)
-{
-	if (Item<0 || Item>=NUM_ITEMS)
-		return false;
-	if (IsItemVisible(Item)!=fVisible) {
-		m_ItemVisibility^=ITEM_FLAG(Item);
-		if (m_hwnd!=NULL) {
-			if (IsItemVisible(ITEM_PROGRAMINFO)) {
-				SendSizeMessage();
-			}
-			if (Item==ITEM_PROGRAMINFO) {
-				const int Show=fVisible?SW_SHOW:SW_HIDE;
-				::ShowWindow(m_hwndProgramInfo,Show);
-				::ShowWindow(m_hwndProgramInfoPrev,Show);
-				::ShowWindow(m_hwndProgramInfoNext,Show);
-			} else {
-				::InvalidateRect(m_hwnd,NULL,TRUE);
-			}
-		}
-	}
-	return true;
-}
-
-
-bool CInformationPanel::IsItemVisible(int Item) const
-{
-	if (Item<0 || Item>=NUM_ITEMS)
-		return false;
-	return (m_ItemVisibility&ITEM_FLAG(Item))!=0;
 }
 
 
@@ -786,98 +696,23 @@ void CInformationPanel::Draw(HDC hdc,const RECT &PaintRect)
 {
 	HDC hdcDst;
 	RECT rc;
-	TCHAR szText[256];
+//	TCHAR szText[256];
 
 	GetClientRect(&rc);
 	if (rc.right>m_Offscreen.GetWidth()
-			|| m_FontHeight+m_LineMargin>m_Offscreen.GetHeight())
-		m_Offscreen.Create(rc.right,m_FontHeight+m_LineMargin);
+			|| m_FontHeight+m_Style.LineSpacing>m_Offscreen.GetHeight())
+		m_Offscreen.Create(rc.right,m_FontHeight+m_Style.LineSpacing);
 	hdcDst=m_Offscreen.GetDC();
 	if (hdcDst==NULL)
 		hdcDst=hdc;
 
 	HFONT hfontOld=DrawUtil::SelectObject(hdcDst,m_Font);
-	COLORREF crOldTextColor=::SetTextColor(hdcDst,m_crTextColor);
+	COLORREF crOldTextColor=::SetTextColor(hdcDst,m_Theme.Style.Fore.Fill.GetSolidColor());
 	int OldBkMode=::SetBkMode(hdcDst,TRANSPARENT);
 
-	if (GetDrawItemRect(ITEM_VIDEO,&rc,PaintRect)) {
-		StdUtil::snprintf(szText,lengthof(szText),
-						  TEXT("%d x %d [%d x %d (%d:%d)]"),
-						  m_OriginalVideoWidth,m_OriginalVideoHeight,
-						  m_DisplayVideoWidth,m_DisplayVideoHeight,
-						  m_AspectX,m_AspectY);
-		DrawItem(hdc,szText,rc);
-	}
-
-	if (GetDrawItemRect(ITEM_DECODER,&rc,PaintRect)) {
-		DrawItem(hdc,m_VideoDecoderName.Get(),rc);
-	}
-
-	if (GetDrawItemRect(ITEM_VIDEORENDERER,&rc,PaintRect)) {
-		DrawItem(hdc,m_VideoRendererName.Get(),rc);
-	}
-
-	if (GetDrawItemRect(ITEM_AUDIODEVICE,&rc,PaintRect)) {
-		DrawItem(hdc,m_AudioDeviceName.Get(),rc);
-	}
-
-	if (GetDrawItemRect(ITEM_SIGNALLEVEL,&rc,PaintRect)) {
-		const CCoreEngine *pCoreEngine=GetAppClass().GetCoreEngine();
-		int Length=0;
-		if (m_fSignalLevel) {
-			TCHAR szSignalLevel[32];
-			pCoreEngine->GetSignalLevelText(szSignalLevel,lengthof(szSignalLevel));
-			Length=StdUtil::snprintf(szText,lengthof(szText),
-									 TEXT("%s / "),szSignalLevel);
-		}
-		pCoreEngine->GetBitRateText(szText+Length,lengthof(szText)-Length);
-		DrawItem(hdc,szText,rc);
-	}
-
-	if (GetDrawItemRect(ITEM_MEDIABITRATE,&rc,PaintRect)) {
-		/*
-		unsigned int VideoBitRate=m_VideoBitRate*100/1024;
-		unsigned int AudioBitRate=m_AudioBitRate*100/1024;
-		StdUtil::snprintf(szText,lengthof(szText),
-						  TEXT("âfëú %u.%02u Kbps / âπê∫ %u.%02u Kbps"),
-						  VideoBitRate/100,VideoBitRate%100,
-						  AudioBitRate/100,AudioBitRate%100);
-		*/
-		StdUtil::snprintf(szText,lengthof(szText),TEXT("âfëú %u Kbps / âπê∫ %u Kbps"),
-						  m_VideoBitRate/1024,m_AudioBitRate/1024);
-		DrawItem(hdc,szText,rc);
-	}
-
-	if (GetDrawItemRect(ITEM_ERROR,&rc,PaintRect)) {
-		const CCoreEngine *pCoreEngine=GetAppClass().GetCoreEngine();
-		int Length;
-
-		Length=StdUtil::snprintf(szText,lengthof(szText),TEXT("D %u / E %u"),
-								 pCoreEngine->GetContinuityErrorPacketCount(),
-								 pCoreEngine->GetErrorPacketCount());
-		if (pCoreEngine->GetDescramble()
-				&& pCoreEngine->GetCasDevice()>=0)
-			StdUtil::snprintf(szText+Length,lengthof(szText)-Length,TEXT(" / S %u"),
-							  pCoreEngine->GetScramblePacketCount());
-		DrawItem(hdc,szText,rc);
-	}
-
-	if (GetDrawItemRect(ITEM_RECORD,&rc,PaintRect)) {
-		if (m_fRecording) {
-			unsigned int RecordSec=m_RecordTime/1000;
-			unsigned int Size=
-				(unsigned int)(m_RecordWroteSize/(ULONGLONG)(1024*1024/100));
-			unsigned int FreeSpace=
-				(unsigned int)(m_DiskFreeSpace/(ULONGLONG)(1024*1024*1024/100));
-
-			StdUtil::snprintf(szText,lengthof(szText),
-				TEXT("Åú %d:%02d:%02d / %d.%02d MB / %d.%02d GBãÛÇ´"),
-				RecordSec/(60*60),(RecordSec/60)%60,RecordSec%60,
-				Size/100,Size%100,FreeSpace/100,FreeSpace%100);
-			DrawItem(hdc,szText,rc);
-		} else {
-			DrawItem(hdc,TEXT("Å° <ò^âÊÇµÇƒÇ¢Ç‹ÇπÇÒ>"),rc);
-		}
+	for (int i=0;i<ITEM_PROGRAMINFO;i++) {
+		if (GetDrawItemRect(i,&rc,PaintRect))
+			m_ItemList[i]->Draw(hdc,rc);
 	}
 
 	GetItemRect(ITEM_PROGRAMINFO-1,&rc);
@@ -887,6 +722,22 @@ void CInformationPanel::Draw(HDC hdc,const RECT &PaintRect)
 		rc.right=PaintRect.right;
 		rc.bottom=PaintRect.bottom;
 		::FillRect(hdc,&rc,m_BackBrush.GetHandle());
+	}
+
+	if (IsItemVisible(ITEM_PROGRAMINFO)) {
+		if (m_Theme.ProgramInfoStyle.Back.Border.Type!=TVTest::Theme::BORDER_NONE) {
+			GetItemRect(ITEM_PROGRAMINFO,&rc);
+			TVTest::Theme::Draw(hdc,rc,m_Theme.ProgramInfoStyle.Back.Border);
+		}
+
+		GetButtonRect(BUTTON_PROGRAMINFOPREV,&rc);
+		DrawProgramInfoPrevNextButton(
+			hdc,rc,false,IsButtonEnabled(BUTTON_PROGRAMINFOPREV),
+			m_HotButton==BUTTON_PROGRAMINFOPREV);
+		GetButtonRect(BUTTON_PROGRAMINFONEXT,&rc);
+		DrawProgramInfoPrevNextButton(
+			hdc,rc,true,IsButtonEnabled(BUTTON_PROGRAMINFONEXT),
+			m_HotButton==BUTTON_PROGRAMINFONEXT);
 	}
 
 	::SetBkMode(hdcDst,OldBkMode);
@@ -900,7 +751,7 @@ bool CInformationPanel::GetDrawItemRect(int Item,RECT *pRect,const RECT &PaintRe
 	if (!IsItemVisible(Item))
 		return false;
 	GetItemRect(Item,pRect);
-	pRect->bottom+=m_LineMargin;
+	pRect->bottom+=m_Style.LineSpacing;
 	return ::IsRectIntersect(&PaintRect,pRect)!=FALSE;
 }
 
@@ -925,13 +776,129 @@ void CInformationPanel::DrawItem(HDC hdc,LPCTSTR pszText,const RECT &Rect)
 }
 
 
+void CInformationPanel::DrawProgramInfoPrevNextButton(
+	HDC hdc,const RECT &Rect,bool fNext,bool fEnabled,bool fHot) const
+{
+	const TVTest::Theme::Style &Style=
+		fEnabled && fHot?m_Theme.ButtonHotStyle:m_Theme.ButtonStyle;
+
+	TVTest::Theme::Draw(hdc,Rect,Style.Back);
+
+	HBRUSH hbr;
+	POINT Points[3];
+
+	if (!fNext) {
+		Points[0].x=Rect.right-5;
+		Points[0].y=Rect.top+3;
+		Points[1].x=Points[0].x;
+		Points[1].y=Rect.bottom-4;
+		Points[2].x=Rect.left+4;
+		Points[2].y=Rect.top+(Rect.bottom-Rect.top)/2;
+	} else {
+		Points[0].x=Rect.left+4;
+		Points[0].y=Rect.top+3;
+		Points[1].x=Points[0].x;
+		Points[1].y=Rect.bottom-4;
+		Points[2].x=Rect.right-5;
+		Points[2].y=Rect.top+(Rect.bottom-Rect.top)/2;
+	}
+	if (fEnabled) {
+		hbr=::CreateSolidBrush(Style.Fore.Fill.GetSolidColor());
+	} else {
+		hbr=::CreateSolidBrush(MixColor(
+			Style.Back.Fill.GetSolidColor(),
+			Style.Fore.Fill.GetSolidColor()));
+	}
+	HGDIOBJ hOldBrush=::SelectObject(hdc,hbr);
+	HGDIOBJ hOldPen=::SelectObject(hdc,::GetStockObject(NULL_PEN));
+	::Polygon(hdc,Points,3);
+	::SelectObject(hdc,hOldPen);
+	::SelectObject(hdc,hOldBrush);
+	::DeleteObject(hbr);
+}
+
+
+bool CInformationPanel::GetButtonRect(int Button,RECT *pRect) const
+{
+	RECT rc;
+
+	GetItemRect(ITEM_PROGRAMINFO,&rc);
+	pRect->left=rc.right-m_Style.ButtonSize.Width*(2-Button);
+	pRect->right=pRect->left+m_Style.ButtonSize.Width;
+	pRect->top=rc.bottom;
+	if (!IsItemVisible(ITEM_PROGRAMINFO)) {
+		pRect->bottom=rc.bottom;
+		return false;
+	}
+	pRect->bottom=rc.bottom+m_Style.ButtonSize.Height;
+
+	return true;
+}
+
+
+void CInformationPanel::RedrawButton(int Button)
+{
+	RECT rc;
+
+	if (GetButtonRect(Button,&rc))
+		Invalidate(&rc);
+}
+
+
+int CInformationPanel::ButtonHitTest(int x,int y) const
+{
+	POINT pt={x,y};
+
+	for (int i=0;i<NUM_BUTTONS;i++) {
+		if (IsButtonEnabled(i)) {
+			RECT rc;
+
+			if (GetButtonRect(i,&rc) && ::PtInRect(&rc,pt))
+				return i;
+		}
+	}
+
+	return -1;
+}
+
+
+void CInformationPanel::SetHotButton(int Button)
+{
+	if (Button!=m_HotButton) {
+		if (m_HotButton>=0)
+			RedrawButton(m_HotButton);
+		m_HotButton=Button;
+		if (m_HotButton>=0)
+			RedrawButton(m_HotButton);
+	}
+}
+
+
+bool CInformationPanel::IsButtonEnabled(int Button) const
+{
+	const CProgramInfoItem *pProgramInfoItem=
+		static_cast<const CProgramInfoItem*>(GetItem(ITEM_PROGRAMINFO));
+
+	switch (Button) {
+	case BUTTON_PROGRAMINFOPREV:
+		return pProgramInfoItem->IsNext();
+
+	case BUTTON_PROGRAMINFONEXT:
+		return !pProgramInfoItem->IsNext();
+	}
+
+	return false;
+}
+
+
 bool CInformationPanel::ReadSettings(CSettings &Settings)
 {
-	for (int i=0;i<lengthof(m_pszItemNameList);i++) {
+	for (int i=0;i<NUM_ITEMS;i++) {
+		CItem *pItem=m_ItemList[i];
 		bool f;
 
-		if (Settings.Read(m_pszItemNameList[i],&f))
-			SetItemVisible(i,f);
+		if (Settings.Read(pItem->GetName(),&f))
+			pItem->SetVisible(f);
 	}
 	return true;
 }
@@ -939,7 +906,620 @@ bool CInformationPanel::ReadSettings(CSettings &Settings)
 
 bool CInformationPanel::WriteSettings(CSettings &Settings)
 {
-	for (int i=0;i<lengthof(m_pszItemNameList);i++)
-		Settings.Write(m_pszItemNameList[i],IsItemVisible(i));
+	for (int i=0;i<NUM_ITEMS;i++) {
+		const CItem *pItem=m_ItemList[i];
+		Settings.Write(pItem->GetName(),pItem->IsVisible());
+	}
 	return true;
+}
+
+
+
+
+CInformationPanel::InformationPanelStyle::InformationPanelStyle()
+	: ButtonSize(16,16)
+	, LineSpacing(1)
+{
+}
+
+
+void CInformationPanel::InformationPanelStyle::SetStyle(const TVTest::Style::CStyleManager *pStyleManager)
+{
+	pStyleManager->Get(TEXT("info-panel.button"),&ButtonSize);
+	pStyleManager->Get(TEXT("info-panel.line-spacing"),&LineSpacing);
+}
+
+
+void CInformationPanel::InformationPanelStyle::NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager)
+{
+	pStyleManager->ToPixels(&ButtonSize);
+	pStyleManager->ToPixels(&LineSpacing);
+}
+
+
+
+
+CInformationPanel::CItem::CItem(CInformationPanel *pPanel,bool fVisible)
+	: m_pPanel(pPanel)
+	, m_fVisible(fVisible)
+{
+}
+
+
+void CInformationPanel::CItem::DrawItem(HDC hdc,const RECT &Rect,LPCTSTR pszText)
+{
+	m_pPanel->DrawItem(hdc,pszText,Rect);
+}
+
+
+void CInformationPanel::CItem::UpdateItem()
+{
+	m_pPanel->UpdateItem(GetID());
+}
+
+
+void CInformationPanel::CItem::Redraw()
+{
+	m_pPanel->RedrawItem(GetID());
+}
+
+
+
+
+CInformationPanel::CVideoInfoItem::CVideoInfoItem(CInformationPanel *pPanel,bool fVisible)
+	: CItemTemplate(pPanel,fVisible)
+{
+	Reset();
+}
+
+
+void CInformationPanel::CVideoInfoItem::Reset()
+{
+	m_OriginalVideoWidth=0;
+	m_OriginalVideoHeight=0;
+	m_DisplayVideoWidth=0;
+	m_DisplayVideoHeight=0;
+	m_AspectX=0;
+	m_AspectY=0;
+}
+
+
+bool CInformationPanel::CVideoInfoItem::Update()
+{
+	const CCoreEngine &CoreEngine=GetAppClass().CoreEngine;
+	int OriginalVideoWidth,OriginalVideoHeight;
+	int DisplayVideoWidth,DisplayVideoHeight;
+	BYTE AspectX,AspectY;
+
+	OriginalVideoWidth=CoreEngine.GetOriginalVideoWidth();
+	OriginalVideoHeight=CoreEngine.GetOriginalVideoHeight();
+	DisplayVideoWidth=CoreEngine.GetDisplayVideoWidth();
+	DisplayVideoHeight=CoreEngine.GetDisplayVideoHeight();
+	if (!CoreEngine.m_DtvEngine.m_MediaViewer.GetEffectiveAspectRatio(&AspectX,&AspectY))
+		AspectX=AspectY=0;
+
+	if (OriginalVideoWidth==m_OriginalVideoWidth
+			&& OriginalVideoHeight==m_OriginalVideoHeight
+			&& DisplayVideoWidth==m_DisplayVideoWidth
+			&& DisplayVideoHeight==m_DisplayVideoHeight
+			&& AspectX==m_AspectX
+			&& AspectY==m_AspectY)
+		return false;
+
+	m_OriginalVideoWidth=OriginalVideoWidth;
+	m_OriginalVideoHeight=OriginalVideoHeight;
+	m_DisplayVideoWidth=DisplayVideoWidth;
+	m_DisplayVideoHeight=DisplayVideoHeight;
+	m_AspectX=AspectX;
+	m_AspectY=AspectY;
+
+	return true;
+}
+
+
+void CInformationPanel::CVideoInfoItem::Draw(HDC hdc,const RECT &Rect)
+{
+	TCHAR szText[256];
+
+	StdUtil::snprintf(szText,lengthof(szText),
+					  TEXT("%d x %d [%d x %d (%d:%d)]"),
+					  m_OriginalVideoWidth,m_OriginalVideoHeight,
+					  m_DisplayVideoWidth,m_DisplayVideoHeight,
+					  m_AspectX,m_AspectY);
+	DrawItem(hdc,Rect,szText);
+}
+
+
+
+
+CInformationPanel::CVideoDecoderItem::CVideoDecoderItem(CInformationPanel *pPanel,bool fVisible)
+	: CItemTemplate(pPanel,fVisible)
+{
+}
+
+
+void CInformationPanel::CVideoDecoderItem::Reset()
+{
+	m_VideoDecoderName.clear();
+}
+
+
+bool CInformationPanel::CVideoDecoderItem::Update()
+{
+	TCHAR szDecoder[256];
+
+	if (GetAppClass().CoreEngine.m_DtvEngine.m_MediaViewer.GetVideoDecoderName(
+			szDecoder,lengthof(szDecoder))) {
+		if (m_VideoDecoderName.compare(szDecoder)==0)
+			return false;
+		m_VideoDecoderName=szDecoder;
+	} else {
+		if (m_VideoDecoderName.empty())
+			return false;
+		m_VideoDecoderName.clear();
+	}
+
+	return true;
+}
+
+
+void CInformationPanel::CVideoDecoderItem::Draw(HDC hdc,const RECT &Rect)
+{
+	DrawItem(hdc,Rect,m_VideoDecoderName.c_str());
+}
+
+
+
+
+CInformationPanel::CVideoRendererItem::CVideoRendererItem(CInformationPanel *pPanel,bool fVisible)
+	: CItemTemplate(pPanel,fVisible)
+{
+}
+
+
+void CInformationPanel::CVideoRendererItem::Reset()
+{
+	m_VideoRendererName.clear();
+}
+
+
+bool CInformationPanel::CVideoRendererItem::Update()
+{
+	TCHAR szRenderer[256];
+
+	if (GetAppClass().CoreEngine.m_DtvEngine.m_MediaViewer.GetVideoRendererName(
+			szRenderer,lengthof(szRenderer))) {
+		if (m_VideoRendererName.compare(szRenderer)==0)
+			return false;
+		m_VideoRendererName=szRenderer;
+	} else {
+		if (m_VideoRendererName.empty())
+			return false;
+		m_VideoRendererName.clear();
+	}
+
+	return true;
+}
+
+
+void CInformationPanel::CVideoRendererItem::Draw(HDC hdc,const RECT &Rect)
+{
+	DrawItem(hdc,Rect,m_VideoRendererName.c_str());
+}
+
+
+
+
+CInformationPanel::CAudioDeviceItem::CAudioDeviceItem(CInformationPanel *pPanel,bool fVisible)
+	: CItemTemplate(pPanel,fVisible)
+{
+}
+
+
+void CInformationPanel::CAudioDeviceItem::Reset()
+{
+	m_AudioDeviceName.clear();
+}
+
+
+bool CInformationPanel::CAudioDeviceItem::Update()
+{
+	TCHAR szDevice[256];
+
+	if (GetAppClass().CoreEngine.m_DtvEngine.m_MediaViewer.GetAudioRendererName(
+			szDevice,lengthof(szDevice))) {
+		if (m_AudioDeviceName.compare(szDevice)==0)
+			return false;
+		m_AudioDeviceName=szDevice;
+	} else {
+		if (m_AudioDeviceName.empty())
+			return false;
+		m_AudioDeviceName.clear();
+	}
+
+	return true;
+}
+
+
+void CInformationPanel::CAudioDeviceItem::Draw(HDC hdc,const RECT &Rect)
+{
+	DrawItem(hdc,Rect,m_AudioDeviceName.c_str());
+}
+
+
+
+
+CInformationPanel::CSignalLevelItem::CSignalLevelItem(CInformationPanel *pPanel,bool fVisible)
+	: CItemTemplate(pPanel,fVisible)
+	, m_fShowSignalLevel(true)
+{
+	Reset();
+}
+
+
+void CInformationPanel::CSignalLevelItem::Reset()
+{
+	m_SignalLevel=0.0f;
+	m_BitRate=0;
+}
+
+
+bool CInformationPanel::CSignalLevelItem::Update()
+{
+	const CCoreEngine &CoreEngine=GetAppClass().CoreEngine;
+	const float SignalLevel=
+		m_fShowSignalLevel ? CoreEngine.GetSignalLevel() : 0.0f;
+	const DWORD BitRate=CoreEngine.GetBitRate();
+
+	if (SignalLevel==m_SignalLevel && BitRate==m_BitRate)
+		return false;
+
+	m_SignalLevel=SignalLevel;
+	m_BitRate=BitRate;
+
+	return true;
+}
+
+
+void CInformationPanel::CSignalLevelItem::Draw(HDC hdc,const RECT &Rect)
+{
+	const CCoreEngine &CoreEngine=GetAppClass().CoreEngine;
+	TCHAR szText[64];
+	int Length=0;
+
+	if (m_fShowSignalLevel) {
+		TCHAR szSignalLevel[32];
+		CoreEngine.GetSignalLevelText(m_SignalLevel,szSignalLevel,lengthof(szSignalLevel));
+		Length=StdUtil::snprintf(szText,lengthof(szText),TEXT("%s / "),szSignalLevel);
+	}
+	CoreEngine.GetBitRateText(m_BitRate,szText+Length,lengthof(szText)-Length);
+
+	DrawItem(hdc,Rect,szText);
+}
+
+
+void CInformationPanel::CSignalLevelItem::ShowSignalLevel(bool fShow)
+{
+	if (m_fShowSignalLevel!=fShow) {
+		m_fShowSignalLevel=fShow;
+		Update();
+		Redraw();
+	}
+}
+
+
+
+
+CInformationPanel::CMediaBitRateItem::CMediaBitRateItem(CInformationPanel *pPanel,bool fVisible)
+	: CItemTemplate(pPanel,fVisible)
+{
+	Reset();
+}
+
+
+void CInformationPanel::CMediaBitRateItem::Reset()
+{
+	m_VideoBitRate=0;
+	m_AudioBitRate=0;
+}
+
+
+bool CInformationPanel::CMediaBitRateItem::Update()
+{
+	const CMediaViewer &MediaViewer=GetAppClass().CoreEngine.m_DtvEngine.m_MediaViewer;
+	const DWORD VideoBitRate=MediaViewer.GetVideoBitRate();
+	const DWORD AudioBitRate=MediaViewer.GetAudioBitRate();
+
+	if (VideoBitRate==m_VideoBitRate && AudioBitRate==m_AudioBitRate)
+		return false;
+
+	m_VideoBitRate=VideoBitRate;
+	m_AudioBitRate=AudioBitRate;
+
+	return true;
+}
+
+
+void CInformationPanel::CMediaBitRateItem::Draw(HDC hdc,const RECT &Rect)
+{
+	TCHAR szText[64];
+	int Length;
+
+	if (m_VideoBitRate<1000*1000) {
+		Length=StdUtil::snprintf(szText,lengthof(szText),
+								 TEXT("âfëú %u kbps"),
+								 (m_VideoBitRate+500)/1000);
+	} else {
+		Length=StdUtil::snprintf(szText,lengthof(szText),
+								 TEXT("âfëú %.2f Mbps"),
+								 (double)(m_VideoBitRate)/(double)(1000*1000));
+	}
+	StdUtil::snprintf(szText+Length,lengthof(szText)-Length,
+					  TEXT(" / âπê∫ %u kbps"),
+					  (m_AudioBitRate+500)/1000);
+
+	DrawItem(hdc,Rect,szText);
+}
+
+
+
+
+CInformationPanel::CErrorItem::CErrorItem(CInformationPanel *pPanel,bool fVisible)
+	: CItemTemplate(pPanel,fVisible)
+{
+	Reset();
+}
+
+
+void CInformationPanel::CErrorItem::Reset()
+{
+	m_fShowScramble=true;
+	m_ContinuityErrorPacketCount=0;
+	m_ErrorPacketCount=0;
+	m_ScramblePacketCount=0;
+}
+
+
+bool CInformationPanel::CErrorItem::Update()
+{
+	const CCoreEngine &CoreEngine=GetAppClass().CoreEngine;
+	const ULONGLONG ContinuityErrorPacketCount=CoreEngine.GetContinuityErrorPacketCount();
+	const ULONGLONG ErrorPacketCount=CoreEngine.GetErrorPacketCount();
+	const ULONGLONG ScramblePacketCount=CoreEngine.GetScramblePacketCount();
+
+	if (ContinuityErrorPacketCount==m_ContinuityErrorPacketCount
+			&& ErrorPacketCount==m_ErrorPacketCount
+			&& ScramblePacketCount==m_ScramblePacketCount)
+		return false;
+
+	m_ContinuityErrorPacketCount=ContinuityErrorPacketCount;
+	m_ErrorPacketCount=ErrorPacketCount;
+	m_ScramblePacketCount=ScramblePacketCount;
+
+	return true;
+}
+
+
+void CInformationPanel::CErrorItem::Draw(HDC hdc,const RECT &Rect)
+{
+	TCHAR szText[256];
+	int Length;
+
+	Length=StdUtil::snprintf(szText,lengthof(szText),
+							 TEXT("D %llu / E %llu"),
+							 m_ContinuityErrorPacketCount,
+							 m_ErrorPacketCount);
+	if (m_fShowScramble) {
+		StdUtil::snprintf(szText+Length,lengthof(szText)-Length,
+						  TEXT(" / S %llu"),m_ScramblePacketCount);
+	}
+	DrawItem(hdc,Rect,szText);
+}
+
+
+
+
+CInformationPanel::CRecordItem::CRecordItem(CInformationPanel *pPanel,bool fVisible)
+	: CItemTemplate(pPanel,fVisible)
+{
+	Reset();
+}
+
+
+void CInformationPanel::CRecordItem::Reset()
+{
+	m_fRecording=false;
+}
+
+
+bool CInformationPanel::CRecordItem::Update()
+{
+	CAppMain &App=GetAppClass();
+	bool fRecording=App.RecordManager.IsRecording();
+	LONGLONG WroteSize;
+	CRecordTask::DurationType RecordTime;
+	LONGLONG DiskFreeSpace;
+
+	if (fRecording) {
+		const CRecordTask *pRecordTask=App.RecordManager.GetRecordTask();
+		WroteSize=pRecordTask->GetWroteSize();
+		RecordTime=pRecordTask->GetRecordTime();
+		DiskFreeSpace=pRecordTask->GetFreeSpace();
+	}
+
+	if (fRecording==m_fRecording
+			&& (!fRecording
+				|| (WroteSize==m_WroteSize
+					&& RecordTime==m_RecordTime
+					&& DiskFreeSpace==m_DiskFreeSpace)))
+		return false;
+
+	m_fRecording=fRecording;
+	if (fRecording) {
+		m_WroteSize=WroteSize;
+		m_RecordTime=RecordTime;
+		m_DiskFreeSpace=DiskFreeSpace;
+	}
+
+	return true;
+}
+
+
+void CInformationPanel::CRecordItem::Draw(HDC hdc,const RECT &Rect)
+{
+	if (m_fRecording) {
+		TCHAR szText[256];
+		int Length;
+
+		unsigned int RecordSec=(unsigned int)(m_RecordTime/1000);
+		Length=StdUtil::snprintf(szText,lengthof(szText),
+			TEXT("Åú %d:%02d:%02d"),
+			RecordSec/(60*60),(RecordSec/60)%60,RecordSec%60);
+		if (m_WroteSize>=0) {
+			unsigned int Size=
+				(unsigned int)(m_WroteSize/(ULONGLONG)(1024*1024/100));
+			Length+=StdUtil::snprintf(szText+Length,lengthof(szText)-Length,
+									  TEXT(" / %d.%02d MB"),
+									  Size/100,Size%100);
+		}
+		if (m_DiskFreeSpace>=0) {
+			unsigned int FreeSpace=
+				(unsigned int)(m_DiskFreeSpace/(ULONGLONG)(1024*1024*1024/100));
+			StdUtil::snprintf(szText+Length,lengthof(szText)-Length,
+							  TEXT(" / %d.%02d GBãÛÇ´"),
+							  FreeSpace/100,FreeSpace%100);
+		}
+		DrawItem(hdc,Rect,szText);
+	} else {
+		DrawItem(hdc,Rect,TEXT("Å° <ò^âÊÇµÇƒÇ¢Ç‹ÇπÇÒ>"));
+	}
+}
+
+
+
+
+CInformationPanel::CServiceItem::CServiceItem(CInformationPanel *pPanel,bool fVisible)
+	: CItemTemplate(pPanel,fVisible)
+{
+}
+
+
+void CInformationPanel::CServiceItem::Reset()
+{
+	m_ServiceName.clear();
+}
+
+
+bool CInformationPanel::CServiceItem::Update()
+{
+	const CCoreEngine &CoreEngine=GetAppClass().CoreEngine;
+	TCHAR szService[256];
+
+	if (CoreEngine.m_DtvEngine.m_TsAnalyzer.GetServiceName(
+			CoreEngine.m_DtvEngine.GetServiceIndex(),
+			szService,lengthof(szService))>0) {
+		if (m_ServiceName.compare(szService)==0)
+			return false;
+		m_ServiceName=szService;
+	} else {
+		if (m_ServiceName.empty())
+			return false;
+		m_ServiceName.clear();
+	}
+
+	return true;
+}
+
+
+void CInformationPanel::CServiceItem::Draw(HDC hdc,const RECT &Rect)
+{
+	DrawItem(hdc,Rect,m_ServiceName.c_str());
+}
+
+
+
+
+CInformationPanel::CProgramInfoItem::CProgramInfoItem(CInformationPanel *pPanel,bool fVisible)
+	: CItemTemplate(pPanel,fVisible)
+{
+	Reset();
+}
+
+
+void CInformationPanel::CProgramInfoItem::Reset()
+{
+	m_fNext=false;
+	m_InfoText.clear();
+}
+
+
+bool CInformationPanel::CProgramInfoItem::Update()
+{
+	CCoreEngine &CoreEngine=GetAppClass().CoreEngine;
+	TCHAR szText[4096],szTemp[256];
+	CStaticStringFormatter Formatter(szText,lengthof(szText));
+
+	if (m_fNext)
+		Formatter.Append(TEXT("éü : "));
+
+	CEventInfoData EventInfo;
+
+	if (CoreEngine.GetCurrentEventInfo(&EventInfo,0xFFFF,m_fNext)) {
+		if (EpgUtil::FormatEventTime(&EventInfo,szTemp,lengthof(szTemp),
+									 EpgUtil::EVENT_TIME_DATE |
+									 EpgUtil::EVENT_TIME_YEAR |
+									 EpgUtil::EVENT_TIME_UNDECIDED_TEXT)>0) {
+			Formatter.Append(szTemp);
+			Formatter.Append(TEXT("\r\n"));
+		}
+		if (!EventInfo.m_EventName.empty()) {
+			Formatter.Append(EventInfo.m_EventName.c_str());
+			Formatter.Append(TEXT("\r\n\r\n"));
+		}
+		if (!EventInfo.m_EventText.empty()) {
+			Formatter.Append(EventInfo.m_EventText.c_str());
+			Formatter.Append(TEXT("\r\n\r\n"));
+		}
+		if (!EventInfo.m_EventExtendedText.empty()) {
+			Formatter.Append(EventInfo.m_EventExtendedText.c_str());
+		}
+	}
+
+	CTsAnalyzer::EventSeriesInfo SeriesInfo;
+	if (CoreEngine.m_DtvEngine.GetEventSeriesInfo(&SeriesInfo,m_fNext)
+			&& SeriesInfo.EpisodeNumber!=0 && SeriesInfo.LastEpisodeNumber!=0) {
+		Formatter.Append(TEXT("\r\n\r\n(ÉVÉäÅ[ÉY"));
+		if (SeriesInfo.RepeatLabel!=0)
+			Formatter.Append(TEXT(" [çƒ]"));
+		if (SeriesInfo.EpisodeNumber!=0 && SeriesInfo.LastEpisodeNumber!=0)
+			Formatter.AppendFormat(TEXT(" ëÊ%dâÒ / ëS%dâÒ"),
+								   SeriesInfo.EpisodeNumber,SeriesInfo.LastEpisodeNumber);
+		// expire_date ÇÕé¿ç€ÇÃç≈èIâÒÇÃì˙éûÇ≈Ç»Ç¢ÇÃÇ≈ÅAï¥ÇÁÇÌÇµÇ¢ÇΩÇﬂï\é¶ÇµÇ»Ç¢
+		/*
+		if (SeriesInfo.bIsExpireDateValid)
+			Formatter.AppendFormat(TEXT(" èIóπó\íË%d/%d/%d"),
+								   SeriesInfo.ExpireDate.wYear,
+								   SeriesInfo.ExpireDate.wMonth,
+								   SeriesInfo.ExpireDate.wDay);
+		*/
+		Formatter.Append(TEXT(")"));
+	}
+
+	if (m_InfoText.compare(Formatter.GetString())==0)
+		return false;
+
+	m_InfoText=Formatter.GetString();
+
+	m_pPanel->UpdateProgramInfoText();
+
+	return true;
+}
+
+
+void CInformationPanel::CProgramInfoItem::SetNext(bool fNext)
+{
+	if (m_fNext!=fNext) {
+		m_fNext=fNext;
+		Update();
+	}
 }

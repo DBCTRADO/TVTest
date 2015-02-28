@@ -11,7 +11,7 @@ class CCaptureImage
 	HGLOBAL m_hData;
 	bool m_fLocked;
 	SYSTEMTIME m_stCaptureTime;
-	CDynamicString m_Comment;
+	TVTest::String m_Comment;
 
 public:
 	CCaptureImage(HGLOBAL hData);
@@ -22,8 +22,8 @@ public:
 	bool LockData(BITMAPINFO **ppbmi,BYTE **ppBits);
 	bool UnlockData();
 	const SYSTEMTIME &GetCaptureTime() const { return m_stCaptureTime; }
-	bool SetComment(LPCTSTR pszComment);
-	LPCTSTR GetComment() const { return m_Comment.Get(); }
+	void SetComment(LPCTSTR pszComment);
+	LPCTSTR GetComment() const;
 };
 
 class CCapturePreview : public CCustomWindow
@@ -36,7 +36,7 @@ public:
 		CEventHandler();
 		virtual ~CEventHandler()=0;
 		virtual void OnLButtonDown(int x,int y) {}
-		virtual void OnRButtonDown(int x,int y) {}
+		virtual void OnRButtonUp(int x,int y) {}
 		virtual bool OnKeyDown(UINT KeyCode,UINT Flags) { return false; }
 		friend class CCapturePreview;
 	};
@@ -64,7 +64,9 @@ private:
 	LRESULT OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
 };
 
-class CCaptureWindow : public CCustomWindow
+class CCaptureWindow
+	: public CCustomWindow
+	, public TVTest::CUIBase
 {
 public:
 	class ABSTRACT_CLASS(CEventHandler) {
@@ -85,9 +87,14 @@ public:
 
 	CCaptureWindow();
 	~CCaptureWindow();
+
 // CBasicWindow
 	bool Create(HWND hwndParent,DWORD Style,DWORD ExStyle=0,int ID=0) override;
-// CCustomWindow
+
+// CUIBase
+	void SetTheme(const TVTest::Theme::CThemeManager *pThemeManager) override;
+
+// CCaptureWindow
 	bool SetImage(const BITMAPINFO *pbmi,const void *pBits);
 	bool SetImage(CCaptureImage *pImage);
 	bool ClearImage();
@@ -95,7 +102,6 @@ public:
 	bool SetEventHandler(CEventHandler *pEventHandler);
 	void ShowStatusBar(bool fShow);
 	bool IsStatusBarVisible() const { return m_fShowStatusBar; }
-	void SetStatusTheme(const CStatusView::ThemeInfo *pTheme);
 
 private:
 	class CPreviewEventHandler : public CCapturePreview::CEventHandler
@@ -103,7 +109,7 @@ private:
 		CCaptureWindow *m_pCaptureWindow;
 	public:
 		CPreviewEventHandler(CCaptureWindow *pCaptureWindow);
-		void OnRButtonDown(int x,int y);
+		void OnRButtonUp(int x,int y);
 		bool OnKeyDown(UINT KeyCode,UINT Flags);
 	};
 
@@ -114,46 +120,37 @@ private:
 		STATUS_ITEM_COPY
 	};
 
-	class CCaptureStatusItem : public CStatusItem {
-		DrawUtil::CMonoColorBitmap &m_IconBitmap;
+	class CCaptureStatusItem : public CIconStatusItem {
+		DrawUtil::CMonoColorIconList &m_Icons;
 	public:
-		CCaptureStatusItem(DrawUtil::CMonoColorBitmap &IconBitmap);
-		LPCTSTR GetName() const { return TEXT("キャプチャ"); }
-		void Draw(HDC hdc,const RECT *pRect);
-		void OnLButtonDown(int x,int y);
-		void OnRButtonDown(int x,int y);
+		CCaptureStatusItem(DrawUtil::CMonoColorIconList &Icons);
+		LPCTSTR GetIDText() const override { return TEXT("Capture"); }
+		LPCTSTR GetName() const override { return TEXT("キャプチャ"); }
+		void Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect,unsigned int Flags) override;
+		void OnLButtonDown(int x,int y) override;
+		void OnRButtonDown(int x,int y) override;
 	};
 
-	/*
-	class CContinuousStatusItem : public CStatusItem {
-		DrawUtil::CMonoColorBitmap &m_IconBitmap;
-	public:
-		CContinuousStatusItem(DrawUtil::CMonoColorBitmap &IconBitmap);
-		LPCTSTR GetName() const { return TEXT("連写"); }
-		void Draw(HDC hdc,const RECT *pRect);
-		void OnLButtonDown(int x,int y);
-		void OnRButtonDown(int x,int y);
-	};
-	*/
-
-	class CSaveStatusItem : public CStatusItem {
+	class CSaveStatusItem : public CIconStatusItem {
 		CCaptureWindow *m_pCaptureWindow;
-		DrawUtil::CMonoColorBitmap &m_IconBitmap;
+		DrawUtil::CMonoColorIconList &m_Icons;
 	public:
-		CSaveStatusItem(CCaptureWindow *pCaptureWindow,DrawUtil::CMonoColorBitmap &IconBitmap);
-		LPCTSTR GetName() const { return TEXT("保存"); }
-		void Draw(HDC hdc,const RECT *pRect);
-		void OnLButtonDown(int x,int y);
+		CSaveStatusItem(CCaptureWindow *pCaptureWindow,DrawUtil::CMonoColorIconList &Icons);
+		LPCTSTR GetIDText() const override { return TEXT("Save"); }
+		LPCTSTR GetName() const override { return TEXT("保存"); }
+		void Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect,unsigned int Flags) override;
+		void OnLButtonDown(int x,int y) override;
 	};
 
-	class CCopyStatusItem : public CStatusItem {
+	class CCopyStatusItem : public CIconStatusItem {
 		CCaptureWindow *m_pCaptureWindow;
-		DrawUtil::CMonoColorBitmap &m_IconBitmap;
+		DrawUtil::CMonoColorIconList &m_Icons;
 	public:
-		CCopyStatusItem(CCaptureWindow *pCaptureWindow,DrawUtil::CMonoColorBitmap &IconBitmap);
-		LPCTSTR GetName() const { return TEXT("コピー"); }
-		void Draw(HDC hdc,const RECT *pRect);
-		void OnLButtonDown(int x,int y);
+		CCopyStatusItem(CCaptureWindow *pCaptureWindow,DrawUtil::CMonoColorIconList &Icons);
+		LPCTSTR GetIDText() const override { return TEXT("Copy"); }
+		LPCTSTR GetName() const override { return TEXT("コピー"); }
+		void Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect,unsigned int Flags) override;
+		void OnLButtonDown(int x,int y) override;
 	};
 
 	static HINSTANCE m_hinst;
@@ -162,7 +159,7 @@ private:
 	CPreviewEventHandler m_PreviewEventHandler;
 	CStatusView m_Status;
 	bool m_fShowStatusBar;
-	DrawUtil::CMonoColorBitmap m_StatusIcons;
+	DrawUtil::CMonoColorIconList m_StatusIcons;
 	CCaptureImage *m_pImage;
 	CEventHandler *m_pEventHandler;
 	bool m_fCreateFirst;

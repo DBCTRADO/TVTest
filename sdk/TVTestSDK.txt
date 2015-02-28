@@ -13,6 +13,53 @@
   です。
 
 
+◆ サンプル
+
+  Samples フォルダに以下のサンプルが含まれています。
+
+  ・AutoSnapShot
+  　一定間隔で画面キャプチャを行う
+
+  ・DiskRelay
+  　録画時に空き容量が少なくなった時、別のディスクに保存する
+
+  ・Equalizer
+  　イコライザー
+
+  ・GamePad
+  　ゲームパッドで操作できるようにする
+
+  ・HDUSRemocon
+  　HDUSリモコンで操作できるようにする
+
+  ・LogoList
+  　局ロゴの一覧を表示する
+
+  ・MiniProgramGuide
+  　小さい番組表を表示する
+
+  ・PacketCounter
+  　パケットの数をカウントする項目をステータスバーに追加する
+
+  ・SignalGraph
+  　信号レベルとビットレートをグラフ表示する
+
+  ・SkinController
+  　スキン風コントローラを表示する
+
+  ・SleepTimer
+  　指定時間後にスリープする
+
+  ・SpectrumAnalyzer
+  　簡単なスペクトラムアナライザーを表示する
+
+  ・TSInfo
+  　ストリームの情報を表示する
+
+  ・TunerPanel
+  　チューナー/チャンネルを選択するパネルを表示する
+
+
 ◆ ライセンス
 
   ・ヘッダ及びサンプルは自由に利用・改変・再配布できます。

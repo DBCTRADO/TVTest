@@ -23,15 +23,14 @@ public:
 		PAGE_CONTROLLER,
 		PAGE_DRIVER,
 		PAGE_AUDIO,
+		PAGE_PLAYBACK,
 		PAGE_RECORD,
 		PAGE_CAPTURE,
 		PAGE_CHANNELSCAN,
 		PAGE_EPG,
 		PAGE_PROGRAMGUIDE,
 		PAGE_PLUGIN,
-#ifdef NETWORK_REMOCON_SUPPORT
-		PAGE_NETWORKREMOCON,
-#endif
+		PAGE_TSPROCESSOR,
 		PAGE_LOG,
 		PAGE_LAST=PAGE_LOG
 	};
@@ -63,6 +62,7 @@ private:
 	COLORREF GetTitleColor(int Page) const;
 
 // COptionFrame
+	void ActivatePage(COptions *pOptions) override;
 	void OnSettingError(COptions *pOptions) override;
 
 // CBasicDialog

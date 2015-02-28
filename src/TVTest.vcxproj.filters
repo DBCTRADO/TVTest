@@ -62,9 +62,6 @@
     <ClCompile Include="BonTsEngine\BonSrcDecoder.cpp">
       <Filter>BonTsEngine\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="BonTsEngine\BufferedFileWriter.cpp">
-      <Filter>BonTsEngine\Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="BonTsEngine\CaptionDecoder.cpp">
       <Filter>BonTsEngine\Source Files</Filter>
     </ClCompile>
@@ -77,16 +74,7 @@
     <ClCompile Include="BonTsEngine\Exception.cpp">
       <Filter>BonTsEngine\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="BonTsEngine\FileReader.cpp">
-      <Filter>BonTsEngine\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="BonTsEngine\FileWriter.cpp">
-      <Filter>BonTsEngine\Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="BonTsEngine\LogoDownloader.cpp">
-      <Filter>BonTsEngine\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="BonTsEngine\MediaBuffer.cpp">
       <Filter>BonTsEngine\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="BonTsEngine\MediaData.cpp">
@@ -194,9 +182,6 @@
     <ClCompile Include="CaptureOptions.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="CardReaderDialog.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
     <ClCompile Include="ChannelHistory.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
@@ -299,9 +284,6 @@
     <ClCompile Include="MiscDialog.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="NetworkRemocon.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
     <ClCompile Include="NotificationBar.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
@@ -354,9 +336,6 @@
       <Filter>ソース ファイル</Filter>
     </ClCompile>
     <ClCompile Include="RecordOptions.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="ResidentManager.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
     <ClCompile Include="RichEditUtil.cpp">
@@ -440,9 +419,6 @@
     <ClCompile Include="EpgChannelSettings.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="BonTsEngine\CasProcessor.cpp">
-      <Filter>BonTsEngine\Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="RegExp.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
@@ -473,6 +449,123 @@
     <ClCompile Include="DirectShowFilter\VideoParser.cpp">
       <Filter>DirectShowFilter\Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="DirectShowFilter\H264ParserFilter.cpp">
+      <Filter>DirectShowFilter\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="BonTsEngine\PATGenerator.cpp">
+      <Filter>BonTsEngine\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="BonTsEngine\TsInformation.cpp">
+      <Filter>BonTsEngine\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="DirectShowFilter\H265ParserFilter.cpp">
+      <Filter>DirectShowFilter\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="MainWindow.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="AppCore.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="AppMain.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="UICore.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="UIBase.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="Style.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="Graphics.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="KeywordSearch.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="EventInfoUtil.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="ThemeManager.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="NetworkDefinition.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="BonTsEngine\EventInfo.cpp">
+      <Filter>BonTsEngine\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="AppEvent.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="BonTsEngine\TsRecorder.cpp">
+      <Filter>BonTsEngine\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="BonTsEngine\BasicFile.cpp">
+      <Filter>BonTsEngine\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="EpgCapture.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="ProgramGuideToolbarOptions.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="ListView.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="TSProcessorManager.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="TSProcessor.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="TSProcessorOptions.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="BonTsEngine\TsPacketCounter.cpp">
+      <Filter>BonTsEngine\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="TSProcessorErrorDialog.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="ComUtility.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="AudioOptions.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="AudioManager.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="WheelCommand.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="TaskTray.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="TextDraw.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="ChannelInput.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="MainPanel.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="Epg.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="MainDisplay.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="GUIUtil.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="VariableString.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="BonTsEngine\Bitstream.h">
@@ -482,9 +575,6 @@
       <Filter>BonTsEngine\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="BonTsEngine\BonSrcDecoder.h">
-      <Filter>BonTsEngine\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="BonTsEngine\BufferedFileWriter.h">
       <Filter>BonTsEngine\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="BonTsEngine\CaptionDecoder.h">
@@ -502,19 +592,10 @@
     <ClInclude Include="BonTsEngine\Exception.h">
       <Filter>BonTsEngine\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="BonTsEngine\FileReader.h">
-      <Filter>BonTsEngine\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="BonTsEngine\FileWriter.h">
-      <Filter>BonTsEngine\Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="BonTsEngine\IBonDriver.h">
       <Filter>BonTsEngine\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="BonTsEngine\LogoDownloader.h">
-      <Filter>BonTsEngine\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="BonTsEngine\MediaBuffer.h">
       <Filter>BonTsEngine\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="BonTsEngine\MediaData.h">
@@ -607,9 +688,6 @@
     <ClInclude Include="Aero.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="AppMain.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
     <ClInclude Include="AppUtil.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
@@ -623,9 +701,6 @@
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="CaptureOptions.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="CardReaderDialog.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="ChannelHistory.h">
@@ -733,9 +808,6 @@
     <ClInclude Include="MiscDialog.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="NetworkRemocon.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
     <ClInclude Include="NotificationBar.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
@@ -788,9 +860,6 @@
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="RecordOptions.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="ResidentManager.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="resource.h">
@@ -886,9 +955,6 @@
     <ClInclude Include="EpgChannelSettings.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="BonTsEngine\CasProcessor.h">
-      <Filter>BonTsEngine\Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="RegExp.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
@@ -922,10 +988,135 @@
     <ClInclude Include="DirectShowFilter\VideoParser.h">
       <Filter>DirectShowFilter\Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="DirectShowFilter\H264ParserFilter.h">
+      <Filter>DirectShowFilter\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="BonTsEngine\PATGenerator.h">
+      <Filter>BonTsEngine\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="BonTsEngine\TsInformation.h">
+      <Filter>BonTsEngine\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="DirectShowFilter\H265ParserFilter.h">
+      <Filter>DirectShowFilter\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="AppCore.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="AppMain.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="UIBase.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="Style.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="Graphics.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="KeywordSearch.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="EventInfoUtil.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="ThemeManager.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="NetworkDefinition.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="BonTsEngine\TsUtil.h">
+      <Filter>BonTsEngine\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="DirectShowFilter\RingBuffer.h">
+      <Filter>DirectShowFilter\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="BonTsEngine\EventInfo.h">
+      <Filter>BonTsEngine\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="AppEvent.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="BonTsEngine\TsRecorder.h">
+      <Filter>BonTsEngine\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="BonTsEngine\BasicFile.h">
+      <Filter>BonTsEngine\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="EpgCapture.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="ProgramGuideToolbarOptions.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="ListView.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="TVTestInterface.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="TSProcessorManager.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="TSProcessor.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="TSProcessorOptions.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="BonTsEngine\TsPacketCounter.h">
+      <Filter>BonTsEngine\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="TSProcessorErrorDialog.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="ComUtility.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="AudioOptions.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="AudioManager.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="WheelCommand.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="TaskTray.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="TextDraw.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="ChannelInput.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="MainPanel.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="Epg.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="MainDisplay.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="GUIUtil.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="VariableString.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="TVTest.rc">
       <Filter>リソース ファイル</Filter>
     </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Manifest Include="Resource\compatibility.manifest">
+      <Filter>リソース ファイル</Filter>
+    </Manifest>
   </ItemGroup>
 </Project>

@@ -2,12 +2,14 @@
 #define UI_SKIN_H
 
 
+#include "AppEvent.h"
+#include "NotificationBar.h"
 #include "BonTsEngine/Exception.h"
 
 
 class CUICore;
 
-class ABSTRACT_CLASS(CUISkin)
+class ABSTRACT_CLASS(CUISkin) : public TVTest::CAppEventHandler
 {
 protected:
 	enum {
@@ -21,6 +23,7 @@ protected:
 		TIMER_ID_RESETERRORCOUNT,
 		TIMER_ID_HIDETOOLTIP,
 		TIMER_ID_CHANNELNO,
+		TIMER_ID_HIDECURSOR,
 		TIMER_ID_USER=256
 	};
 
@@ -42,7 +45,7 @@ protected:
 	CUICore *m_pCore;
 	bool m_fWheelChannelChanging;
 
-	virtual bool InitializeViewer() = 0;
+	virtual bool InitializeViewer(BYTE VideoStreamType=0) = 0;
 	virtual bool FinalizeViewer() = 0;
 	virtual bool EnableViewer(bool fEnable) = 0;
 	virtual bool IsViewerEnabled() const = 0;
@@ -51,21 +54,11 @@ protected:
 	virtual bool GetZoomRate(int *pRate,int *pFactor) = 0;
 	virtual bool SetPanAndScan(const PanAndScanInfo &Info) = 0;
 	virtual bool GetPanAndScan(PanAndScanInfo *pInfo) const = 0;
-	virtual void OnVolumeChanged(bool fOSD) {}
-	virtual void OnMuteChanged() {}
-	virtual void OnStereoModeChanged() {}
-	virtual void OnAudioStreamChanged() {}
-	virtual bool OnStandbyChange(bool fStandby) { return true; }
-	virtual bool OnFullscreenChange(bool fFullscreen) = 0;
+	virtual bool SetLogo(HBITMAP hbm) = 0;
 	virtual bool SetAlwaysOnTop(bool fTop) = 0;
-	virtual void OnTunerChanged() {}
-	virtual void OnTunerOpened() {}
-	virtual void OnTunerClosed() {}
-	virtual void OnChannelListChanged() {}
-	virtual void OnChannelChanged(unsigned int Status) {}
-	virtual void OnServiceChanged() {}
-	virtual void OnRecordingStarted() {}
-	virtual void OnRecordingStopped() {}
+	virtual bool SetFullscreen(bool fFullscreen) = 0;
+	virtual bool SetStandby(bool fStandby) = 0;
+	virtual bool ShowVolumeOSD() = 0;
 
 	void SetWheelChannelChanging(bool fChanging,DWORD Delay=0);
 
@@ -79,6 +72,9 @@ public:
 	virtual void ShowErrorMessage(LPCTSTR pszText) const;
 	virtual void ShowErrorMessage(const CBonErrorHandler *pErrorHandler,
 								  LPCTSTR pszTitle=NULL) const;
+	virtual void ShowNotificationBar(LPCTSTR pszText,
+		CNotificationBar::MessageType Type=CNotificationBar::MESSAGE_INFO,
+		DWORD Duration=0,bool fSkippable=false) = 0;
 	bool IsWheelChannelChanging() const { return m_fWheelChannelChanging; }
 
 	friend CUICore;

@@ -25,22 +25,16 @@ static char THIS_FILE[]=__FILE__;
 //////////////////////////////////////////////////////////////////////
 
 CTsPacket::CTsPacket()
-	 //: CMediaData(TS_PACKETSIZE)
 {
-	_ASSERT(!m_pData);
-
+#ifdef TSPACKET_NEED_ALIGNED_PAYLOAD
 	GetBuffer(4 + 192);
+#else
+	GetBuffer(TS_PACKETSIZE);
+#endif
 
 	// 空のパケットを生成する
 	::ZeroMemory(&m_Header, sizeof(m_Header));
 	::ZeroMemory(&m_AdaptationField, sizeof(m_AdaptationField));
-}
-
-CTsPacket::CTsPacket(const BYTE *pHexData)
-	: CMediaData(pHexData, TS_PACKETSIZE)
-{
-	// バイナリデータからパケットを生成する
-	ParsePacket();
 }
 
 CTsPacket::CTsPacket(const CTsPacket &Operand)
@@ -202,9 +196,10 @@ void CTsPacket::RestoreFromBuffer(const void *pBuffer)
 		m_AdaptationField.pOptionData=&m_pData[6];
 }
 
+#ifdef TSPACKET_NEED_ALIGNED_PAYLOAD
+
 void *CTsPacket::Allocate(size_t Size)
 {
-	// スクランブル解除時に都合がいいように、ペイロードを16バイト境界に合わせる
 	return _aligned_offset_malloc(Size, 16, 4);
 }
 
@@ -217,6 +212,8 @@ void *CTsPacket::ReAllocate(void *pBuffer, size_t Size)
 {
 	return _aligned_offset_realloc(pBuffer, Size, 16, 4);
 }
+
+#endif	// TSPACKET_NEED_ALIGNED_PAYLOAD
 
 
 

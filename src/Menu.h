@@ -30,12 +30,13 @@ public:
 		SUBMENU_SPACE			= 7,
 		SUBMENU_FAVORITES		= 8,
 		SUBMENU_CHANNELHISTORY	= 9,
-		SUBMENU_VOLUME			= 11,
-		SUBMENU_AUDIO			= 12,
-		SUBMENU_RESET			= 22,
-		SUBMENU_BAR				= 26,
-		SUBMENU_PLUGIN			= 27,
-		SUBMENU_FILTERPROPERTY	= 29
+		SUBMENU_VOLUME			= 12,
+		SUBMENU_AUDIO			= 13,
+		SUBMENU_VIDEO			= 14,
+		SUBMENU_RESET			= 24,
+		SUBMENU_BAR				= 28,
+		SUBMENU_PLUGIN			= 29,
+		SUBMENU_FILTERPROPERTY	= 31
 	};
 
 	CMainMenu();
@@ -43,7 +44,8 @@ public:
 	bool Create(HINSTANCE hinst);
 	void Destroy();
 	bool Show(UINT Flags,int x,int y,HWND hwnd,bool fToggle=true,const std::vector<int> *pItemList=NULL);
-	bool PopupSubMenu(int SubMenu,UINT Flags,int x,int y,HWND hwnd,bool fToggle=true);
+	bool PopupSubMenu(int SubMenu,UINT Flags,HWND hwnd,const POINT *pPos=NULL,
+					  bool fToggle=true,const RECT *pExcludeRect=NULL);
 	void EnableItem(UINT ID,bool fEnable);
 	void CheckItem(UINT ID,bool fCheck);
 	void CheckRadioItem(UINT FirstID,UINT LastID,UINT CheckID);
@@ -85,9 +87,7 @@ class CChannelMenu
 	unsigned int m_Flags;
 	HWND m_hwnd;
 	HMENU m_hmenu;
-	CEpgProgramList *m_pProgramList;
-	CLogoManager *m_pLogoManager;
-	const CChannelList *m_pChannelList;
+	CChannelList m_ChannelList;
 	int m_CurChannel;
 	UINT m_FirstCommand;
 	UINT m_LastCommand;
@@ -115,19 +115,22 @@ public:
 		FLAG_SHOWLOGO		=0x0002,
 		FLAG_SHOWTOOLTIP	=0x0004,
 		FLAG_SPACEBREAK		=0x0008,
+		FLAG_CURSERVICES	=0x0010,
 		FLAG_SHARED			=0x1000
 	};
 
-	CChannelMenu(CEpgProgramList *pProgramList,CLogoManager *pLogoManager);
+	CChannelMenu();
 	~CChannelMenu();
 	bool Create(const CChannelList *pChannelList,int CurChannel,UINT Command,
 				HMENU hmenu,HWND hwnd,unsigned int Flags,int MaxRows=0);
 	void Destroy();
-	bool Show(UINT Flags,int x,int y);
+	int Show(UINT Flags,int x,int y,const RECT *pExcludeRect=NULL);
+	bool SetHighlightedItem(int Index);
 	bool OnMeasureItem(HWND hwnd,WPARAM wParam,LPARAM lParam);
 	bool OnDrawItem(HWND hwnd,WPARAM wParam,LPARAM lParam);
 	bool OnMenuSelect(HWND hwnd,WPARAM wParam,LPARAM lParam);
 	bool OnUninitMenuPopup(HWND hwnd,WPARAM wParam,LPARAM lParam);
+	bool HandleMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam,LRESULT *pResult);
 };
 
 class CPopupMenu
@@ -164,11 +167,14 @@ public:
 	bool CheckItem(UINT ID,bool fCheck);
 	bool CheckRadioItem(UINT FirstID,UINT LastID,UINT CheckID,UINT Flags=MF_BYCOMMAND);
 	HMENU GetSubMenu(int Pos) const;
-	bool Show(HWND hwnd,const POINT *pPos=NULL,UINT Flags=TPM_RIGHTBUTTON);
-	bool Show(HMENU hmenu,HWND hwnd,const POINT *pPos=NULL,UINT Flags=TPM_RIGHTBUTTON,bool fToggle=true);
-	bool Show(HINSTANCE hinst,LPCTSTR pszName,HWND hwnd,const POINT *pPos=NULL,UINT Flags=TPM_RIGHTBUTTON,bool fToggle=true);
-	bool Show(HINSTANCE hinst,int ID,HWND hwnd,const POINT *pPos=NULL,UINT Flags=TPM_RIGHTBUTTON,bool fToggle=true) {
-		return Show(hinst,MAKEINTRESOURCE(ID),hwnd,pPos,Flags,fToggle);
+	int Show(HWND hwnd,const POINT *pPos=NULL,UINT Flags=TPM_RIGHTBUTTON,const RECT *pExcludeRect=NULL);
+	int Show(HMENU hmenu,HWND hwnd,const POINT *pPos=NULL,UINT Flags=TPM_RIGHTBUTTON,
+			 bool fToggle=true,const RECT *pExcludeRect=NULL);
+	int Show(HINSTANCE hinst,LPCTSTR pszName,HWND hwnd,const POINT *pPos=NULL,
+			 UINT Flags=TPM_RIGHTBUTTON,bool fToggle=true,const RECT *pExcludeRect=NULL);
+	int Show(HINSTANCE hinst,int ID,HWND hwnd,const POINT *pPos=NULL,
+			 UINT Flags=TPM_RIGHTBUTTON,bool fToggle=true,const RECT *pExcludeRect=NULL) {
+		return Show(hinst,MAKEINTRESOURCE(ID),hwnd,pPos,Flags,fToggle,pExcludeRect);
 	}
 };
 
@@ -217,15 +223,15 @@ public:
 		CItem(int Command,LPCTSTR pszText);
 		virtual ~CItem();
 		int GetCommand() const { return m_Command; }
-		LPCTSTR GetText() const { return m_Text.Get(); }
-		bool SetText(LPCTSTR pszText);
+		LPCTSTR GetText() const { return m_Text.c_str(); }
+		void SetText(LPCTSTR pszText);
 		bool IsSeparator() const { return m_Command<0; }
 		virtual int GetWidth(HDC hdc);
 		virtual void Draw(HDC hdc,const RECT *pRect);
 
 	protected:
 		int m_Command;
-		CDynamicString m_Text;
+		TVTest::String m_Text;
 		int m_Width;
 	};
 

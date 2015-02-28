@@ -6,6 +6,7 @@
 #include <map>
 #include "BonTsEngine/CaptionDecoder.h"
 #include "PanelForm.h"
+#include "UIBase.h"
 #include "DrawUtil.h"
 
 
@@ -42,8 +43,31 @@ public:
 	bool Load(LPCTSTR pszFileName);
 };
 
-class CCaptionPanel : public CPanelForm::CPage, protected CCaptionDecoder::IHandler
+class CCaptionPanel
+	: public CPanelForm::CPage
+	, public TVTest::CUIBase
+	, protected CCaptionDecoder::IHandler
 {
+public:
+	CCaptionPanel();
+	~CCaptionPanel();
+
+// CBasicWindow
+	bool Create(HWND hwndParent,DWORD Style,DWORD ExStyle=0,int ID=0) override;
+	void SetVisible(bool fVisible) override;
+
+// CUIBase
+	void SetTheme(const TVTest::Theme::CThemeManager *pThemeManager) override;
+
+// CCaptionPanel
+	void SetColor(COLORREF BackColor,COLORREF TextColor);
+	bool SetFont(const LOGFONT *pFont);
+	void Clear();
+	bool LoadDRCSMap(LPCTSTR pszFileName);
+
+	static bool Initialize(HINSTANCE hinst);
+
+private:
 	COLORREF m_BackColor;
 	COLORREF m_TextColor;
 	DrawUtil::CBrush m_BackBrush;
@@ -52,9 +76,7 @@ class CCaptionPanel : public CPanelForm::CPage, protected CCaptionDecoder::IHand
 	WNDPROC m_pOldEditProc;
 	bool m_fEnable;
 	bool m_fAutoScroll;
-#ifndef TVH264_FOR_1SEG
 	bool m_fIgnoreSmall;
-#endif
 	BYTE m_Language;
 	bool m_fClearLast;
 	bool m_fContinue;
@@ -65,8 +87,9 @@ class CCaptionPanel : public CPanelForm::CPage, protected CCaptionDecoder::IHand
 	CCaptionDRCSMap m_DRCSMap;
 
 // CCaptionDecoder::IHandler
-	virtual void OnLanguageUpdate(CCaptionDecoder *pDecoder) override;
-	virtual void OnCaption(CCaptionDecoder *pDecoder,BYTE Language,LPCTSTR pszText,
+	virtual void OnLanguageUpdate(CCaptionDecoder *pDecoder,CCaptionParser *pParser) override;
+	virtual void OnCaption(CCaptionDecoder *pDecoder,CCaptionParser *pParser,
+						   BYTE Language,LPCTSTR pszText,
 						   const CAribString::FormatList *pFormatList) override;
 
 	void ClearCaptionList();
@@ -80,20 +103,6 @@ class CCaptionPanel : public CPanelForm::CPage, protected CCaptionDecoder::IHand
 
 // CCustomWindow
 	LRESULT OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
-
-public:
-	CCaptionPanel();
-	~CCaptionPanel();
-// CBasicWindow
-	bool Create(HWND hwndParent,DWORD Style,DWORD ExStyle=0,int ID=0) override;
-	void SetVisible(bool fVisible) override;
-// CCaptionPanel
-	void SetColor(COLORREF BackColor,COLORREF TextColor);
-	bool SetFont(const LOGFONT *pFont);
-	void Clear();
-	bool LoadDRCSMap(LPCTSTR pszFileName);
-
-	static bool Initialize(HINSTANCE hinst);
 };
 
 

@@ -4,48 +4,73 @@
 
 #include <vector>
 #include "PanelForm.h"
+#include "UIBase.h"
 #include "DrawUtil.h"
 #include "Theme.h"
 
 
 class CControlPanelItem;
 
-class CControlPanel : public CPanelForm::CPage
+class CControlPanel
+	: public CPanelForm::CPage
+	, public TVTest::CUIBase
 {
 public:
-	struct ThemeInfo {
-		Theme::Style ItemStyle;
-		Theme::Style OverItemStyle;
-		COLORREF MarginColor;
+	struct ControlPanelTheme {
+		TVTest::Theme::Style ItemStyle;
+		TVTest::Theme::Style OverItemStyle;
+		TVTest::Theme::Style CheckedItemStyle;
+		TVTest::Theme::ThemeColor MarginColor;
+
+		ControlPanelTheme();
 	};
 
 	static bool Initialize(HINSTANCE hinst);
 
 	CControlPanel();
 	~CControlPanel();
+
 // CBasicWindow
 	bool Create(HWND hwndParent,DWORD Style,DWORD ExStyle=0,int ID=0) override;
+
+// CUIBase
+	void SetStyle(const TVTest::Style::CStyleManager *pStyleManager) override;
+	void NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager) override;
+	void SetTheme(const TVTest::Theme::CThemeManager *pThemeManager) override;
+
 // CControlPanel
 	bool AddItem(CControlPanelItem *pItem);
 	CControlPanelItem *GetItem(int Index) const;
 	bool UpdateItem(int Index);
 	bool GetItemPosition(int Index,RECT *pRect) const;
 	void UpdateLayout();
-	bool SetTheme(const ThemeInfo *pTheme);
-	bool GetTheme(ThemeInfo *pTheme) const;
+	bool SetControlPanelTheme(const ControlPanelTheme &Theme);
+	bool GetControlPanelTheme(ControlPanelTheme *pTheme) const;
 	bool SetFont(const LOGFONT *pFont);
 	int GetFontHeight() const { return m_FontHeight; }
 	void SetSendMessageWindow(HWND hwnd);
 	bool CheckRadioItem(int FirstID,int LastID,int CheckID);
+	const TVTest::Style::Margins &GetItemPadding() const;
 
 	friend CControlPanelItem;
 
 private:
+	struct ControlPanelStyle
+	{
+		TVTest::Style::Margins Padding;
+		TVTest::Style::Margins ItemPadding;
+		TVTest::Style::IntValue TextExtraHeight;
+
+		ControlPanelStyle();
+		void SetStyle(const TVTest::Style::CStyleManager *pStyleManager);
+		void NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager);
+	};
+
 	std::vector<CControlPanelItem*> m_ItemList;
-	int m_MarginSize;
 	DrawUtil::CFont m_Font;
 	int m_FontHeight;
-	ThemeInfo m_Theme;
+	ControlPanelStyle m_Style;
+	ControlPanelTheme m_Theme;
 	DrawUtil::COffscreen m_Offscreen;
 	HWND m_hwndMessage;
 	int m_HotItem;
@@ -61,6 +86,7 @@ private:
 	void Draw(HDC hdc,const RECT &PaintRect);
 	void SendCommand(int Command);
 	bool CalcTextSize(LPCTSTR pszText,SIZE *pSize);
+	int GetTextItemHeight() const;
 };
 
 class ABSTRACT_CLASS(CControlPanelItem)
@@ -75,6 +101,7 @@ protected:
 	CControlPanel *m_pControlPanel;
 
 	bool CalcTextSize(LPCTSTR pszText,SIZE *pSize) const;
+	int GetTextItemHeight() const;
 	void GetMenuPos(POINT *pPos) const;
 
 public:
@@ -94,8 +121,12 @@ public:
 	virtual void CalcSize(int Width,SIZE *pSize);
 	virtual void Draw(HDC hdc,const RECT &Rect)=0;
 	virtual void OnLButtonDown(int x,int y);
+	virtual void OnLButtonUp(int x,int y) {}
 	virtual void OnRButtonDown(int x,int y) {}
+	virtual void OnRButtonUp(int x,int y) {}
 	virtual void OnMouseMove(int x,int y) {}
+	virtual void SetStyle(const TVTest::Style::CStyleManager *pStyleManager) {}
+	virtual void NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager) {}
 
 	friend CControlPanel;
 };

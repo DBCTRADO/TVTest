@@ -2,8 +2,9 @@
 
 
 #include "MediaData.h"
-#include "BonSrcPin.h"
 
+
+class CBonSrcPin;
 
 // ‚±‚ÌƒtƒBƒ‹ƒ^‚ÌGUID {DCA86296-964A-4e64-857D-8D140E630707}
 DEFINE_GUID(CLSID_BonSrcFilter, 0xdca86296, 0x964a, 0x4e64, 0x85, 0x7d, 0x8d, 0x14, 0x0e, 0x63, 0x07, 0x07);
@@ -33,11 +34,16 @@ public:
 
 	void Reset();
 	void Flush();
-	bool EnableSync(bool bEnable);
+	bool EnableSync(bool bEnable,bool b1Seg=false);
 	bool IsSyncEnabled() const;
 	void SetVideoPID(WORD PID);
 	void SetAudioPID(WORD PID);
 	void SetOutputWhenPaused(bool bOutput);
+	bool SetBufferSize(size_t Size);
+	bool SetInitialPoolPercentage(int Percentage);
+	int GetBufferFillPercentage() const;
+	bool SetInputWait(DWORD Wait);
+	bool MapAudioPID(WORD AudioPID, WORD MapPID);
 
 protected:
 	CBonSrcFilter(LPUNKNOWN pUnk, HRESULT *phr);

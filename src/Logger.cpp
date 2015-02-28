@@ -18,8 +18,15 @@ static char THIS_FILE[]=__FILE__;
 
 
 
-CLogItem::CLogItem(LPCTSTR pszText)
-	: m_Text(pszText)
+CLogItem::CLogItem()
+{
+}
+
+
+CLogItem::CLogItem(LogType Type,LPCTSTR pszText,DWORD SerialNumber)
+	: m_Type(Type)
+	, m_Text(pszText)
+	, m_SerialNumber(SerialNumber)
 {
 	::GetSystemTimeAsFileTime(&m_Time);
 }
@@ -45,7 +52,7 @@ int CLogItem::Format(char *pszText,int MaxLength) const
 
 	Length=FormatTime(pszText,MaxLength);
 	pszText[Length++]='>';
-	Length+=::WideCharToMultiByte(CP_ACP,0,m_Text.Get(),m_Text.Length(),
+	Length+=::WideCharToMultiByte(CP_ACP,0,m_Text.data(),(int)m_Text.length(),
 								  pszText+Length,MaxLength-Length-1,NULL,NULL);
 	pszText[Length]='\0';
 	return Length;
@@ -58,7 +65,7 @@ int CLogItem::Format(WCHAR *pszText,int MaxLength) const
 
 	Length=FormatTime(pszText,MaxLength);
 	pszText[Length++]=L'>';
-	::lstrcpynW(pszText+Length,m_Text.Get(),MaxLength-Length);
+	::lstrcpynW(pszText+Length,m_Text.c_str(),MaxLength-Length);
 	Length+=::lstrlenW(pszText+Length);
 	return Length;
 }
@@ -97,7 +104,8 @@ int CLogItem::FormatTime(WCHAR *pszText,int MaxLength) const
 
 
 CLogger::CLogger()
-	: m_fOutputToFile(false)
+	: m_SerialNumber(0)
+	, m_fOutputToFile(false)
 {
 }
 
@@ -138,31 +146,42 @@ bool CLogger::Create(HWND hwndOwner)
 }
 
 
-bool CLogger::AddLog(LPCTSTR pszText, ...)
+bool CLogger::AddLog(CLogItem::LogType Type,LPCTSTR pszText, ...)
 {
 	if (pszText==NULL)
 		return false;
 
 	va_list Args;
 	va_start(Args,pszText);
-	AddLogV(pszText,Args);
+	AddLogV(Type,pszText,Args);
 	va_end(Args);
 	return true;
 }
 
 
-bool CLogger::AddLogV(LPCTSTR pszText,va_list Args)
+bool CLogger::AddLogV(CLogItem::LogType Type,LPCTSTR pszText,va_list Args)
+{
+	if (pszText==NULL)
+		return false;
+
+	TCHAR szText[MAX_LOG_TEXT_LENGTH];
+	StdUtil::vsnprintf(szText,lengthof(szText),pszText,Args);
+	AddLogRaw(Type,szText);
+
+	return true;
+}
+
+
+bool CLogger::AddLogRaw(CLogItem::LogType Type,LPCTSTR pszText)
 {
 	if (pszText==NULL)
 		return false;
 
 	CBlockLock Lock(&m_Lock);
 
-	TCHAR szText[MAX_LOG_TEXT_LENGTH];
-	StdUtil::vsnprintf(szText,lengthof(szText),pszText,Args);
-	CLogItem *pLogItem=new CLogItem(szText);
+	CLogItem *pLogItem=new CLogItem(Type,pszText,m_SerialNumber++);
 	m_LogList.push_back(pLogItem);
-	TRACE(TEXT("Log : %s\n"),szText);
+	TRACE(TEXT("Log : %s\n"),pszText);
 
 	if (m_fOutputToFile) {
 		TCHAR szFileName[MAX_PATH];
@@ -195,6 +214,50 @@ void CLogger::Clear()
 	for (auto itr=m_LogList.begin();itr!=m_LogList.end();++itr)
 		delete *itr;
 	m_LogList.clear();
+}
+
+
+std::size_t CLogger::GetLogCount() const
+{
+	CBlockLock Lock(&m_Lock);
+
+	return m_LogList.size();
+}
+
+
+bool CLogger::GetLog(std::size_t Index,CLogItem *pItem) const
+{
+	if (pItem==NULL)
+		return false;
+
+	CBlockLock Lock(&m_Lock);
+
+	if (Index>=m_LogList.size())
+		return false;
+
+	*pItem=*m_LogList[Index];
+
+	return true;
+}
+
+
+bool CLogger::GetLogBySerialNumber(DWORD SerialNumber,CLogItem *pItem) const
+{
+	if (pItem==NULL)
+		return false;
+
+	CBlockLock Lock(&m_Lock);
+
+	if (m_LogList.empty())
+		return false;
+
+	DWORD FirstSerial=m_LogList.front()->GetSerialNumber();
+	if (SerialNumber<FirstSerial || SerialNumber>=FirstSerial+m_LogList.size())
+		return false;
+
+	*pItem=*m_LogList[SerialNumber-FirstSerial];
+
+	return true;
 }
 
 
@@ -272,36 +335,68 @@ INT_PTR CLogger::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 	case WM_INITDIALOG:
 		{
 			HWND hwndList=GetDlgItem(hDlg,IDC_LOG_LIST);
-			LVCOLUMN lvc;
-			LVITEM lvi;
 
-			ListView_SetExtendedListViewStyle(hwndList,LVS_EX_FULLROWSELECT | LVS_EX_LABELTIP);
+			ListView_SetExtendedListViewStyle(
+				hwndList,LVS_EX_FULLROWSELECT | LVS_EX_LABELTIP | LVS_EX_SUBITEMIMAGES);
+
+			static const LPCTSTR IconList[] = {
+				IDI_INFORMATION,
+				IDI_WARNING,
+				IDI_ERROR
+			};
+			HIMAGELIST himl=::ImageList_Create(
+				::GetSystemMetrics(SM_CXSMICON),
+				::GetSystemMetrics(SM_CYSMICON),
+				ILC_COLOR32,lengthof(IconList),1);
+			for (int i=0;i<lengthof(IconList);i++) {
+				HICON hico=LoadSystemIcon(IconList[i],ICON_SIZE_SMALL);
+				::ImageList_AddIcon(himl,hico);
+				::DestroyIcon(hico);
+			}
+			ListView_SetImageList(hwndList,himl,LVSIL_SMALL);
+
+			// LVS_EX_SUBITEMIMAGES を指定すると、最初のカラムにもアイコン用のスペースが
+			// 確保されてしまうので、幅0のダミーのカラムを作成して回避する
+			LVCOLUMN lvc;
 			lvc.mask=LVCF_FMT | LVCF_WIDTH | LVCF_TEXT;
 			lvc.fmt=LVCFMT_LEFT;
+			lvc.cx=0;
+			lvc.pszText=TEXT("");
+			ListView_InsertColumn(hwndList,0,&lvc);
 			lvc.cx=80;
 			lvc.pszText=TEXT("日時");
-			ListView_InsertColumn(hwndList,0,&lvc);
-			lvc.pszText=TEXT("内容");
 			ListView_InsertColumn(hwndList,1,&lvc);
+			lvc.pszText=TEXT("内容");
+			ListView_InsertColumn(hwndList,2,&lvc);
 
+			LVITEM lvi;
 			lvi.iItem=0;
-			lvi.mask=LVIF_TEXT;
 			m_Lock.Lock();
 			ListView_SetItemCount(hwndList,(int)m_LogList.size());
 			for (auto itr=m_LogList.begin();itr!=m_LogList.end();++itr) {
 				const CLogItem *pLogItem=*itr;
 				TCHAR szTime[64];
 
+				lvi.mask=LVIF_TEXT;
 				lvi.iSubItem=0;
+				lvi.pszText=TEXT("");
+				ListView_InsertItem(hwndList,&lvi);
+
+				lvi.mask=LVIF_TEXT;
+				lvi.iSubItem=1;
 				pLogItem->FormatTime(szTime,lengthof(szTime));
 				lvi.pszText=szTime;
-				ListView_InsertItem(hwndList,&lvi);
-				lvi.iSubItem=1;
+				ListView_SetItem(hwndList,&lvi);
+
+				lvi.mask=LVIF_TEXT | LVIF_IMAGE;
+				lvi.iSubItem=2;
+				lvi.iImage=(int)pLogItem->GetType();
 				lvi.pszText=const_cast<LPTSTR>(pLogItem->GetText());
 				ListView_SetItem(hwndList,&lvi);
+
 				lvi.iItem++;
 			}
-			for (int i=0;i<2;i++)
+			for (int i=1;i<=2;i++)
 				ListView_SetColumnWidth(hwndList,i,LVSCW_AUTOSIZE_USEHEADER);
 			if (!m_LogList.empty())
 				ListView_EnsureVisible(hwndList,(int)m_LogList.size()-1,FALSE);
@@ -319,7 +414,7 @@ INT_PTR CLogger::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 			return TRUE;
 
 		case IDC_LOG_COPY:
-			CopyToClipboard(GetAppClass().GetUICore()->GetMainWindow());
+			CopyToClipboard(GetAppClass().UICore.GetMainWindow());
 			return TRUE;
 
 		case IDC_LOG_SAVE:
@@ -343,6 +438,35 @@ INT_PTR CLogger::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 
 	case WM_NOTIFY:
 		switch (((LPNMHDR)lParam)->code) {
+		case NM_CUSTOMDRAW:
+			// ダミーの列が描画されないようにする
+			{
+				LPNMLVCUSTOMDRAW pnmlvcd=reinterpret_cast<LPNMLVCUSTOMDRAW>(lParam);
+
+				if (pnmlvcd->nmcd.hdr.idFrom==IDC_LOG_LIST) {
+					LRESULT Result=CDRF_DODEFAULT;
+
+					switch (pnmlvcd->nmcd.dwDrawStage) {
+					case CDDS_PREPAINT:
+						Result=CDRF_NOTIFYITEMDRAW;
+						break;
+
+					case CDDS_ITEMPREPAINT:
+						Result=CDRF_NOTIFYSUBITEMDRAW;
+						break;
+
+					case CDDS_ITEMPREPAINT | CDDS_SUBITEM:
+						if (pnmlvcd->iSubItem==0)
+							Result=CDRF_SKIPDEFAULT;
+						break;
+					}
+
+					::SetWindowLongPtr(hDlg,DWLP_MSGRESULT,Result);
+					return TRUE;
+				}
+			}
+			break;
+
 		case PSN_APPLY:
 			{
 				bool fOutput=DlgCheckBox_IsChecked(hDlg,IDC_LOG_OUTPUTTOFILE);
@@ -367,10 +491,4 @@ INT_PTR CLogger::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 	}
 
 	return FALSE;
-}
-
-
-void CLogger::OnTrace(LPCTSTR pszOutput)
-{
-	AddLog(pszOutput);
 }

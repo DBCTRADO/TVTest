@@ -6,6 +6,7 @@
 #include "EpgProgramList.h"
 #include "DrawUtil.h"
 #include "RichEditUtil.h"
+#include "GUIUtil.h"
 
 
 class CEventInfoPopup : protected CCustomWindow
@@ -41,6 +42,10 @@ public:
 	bool IsSelected() const;
 	LPTSTR GetSelectedText() const;
 	void GetPreferredIconSize(int *pWidth,int *pHeight) const;
+	bool GetPopupPosition(int x,int y,RECT *pPos) const;
+	bool AdjustPopupPosition(POINT *pPos) const;
+	bool GetDefaultPopupPosition(RECT *pPos) const;
+	bool GetDefaultPopupPosition(POINT *pPos) const;
 
 	static bool Initialize(HINSTANCE hinst);
 
@@ -61,7 +66,7 @@ private:
 	int m_ButtonMargin;
 	bool m_fDetailInfo;
 	TVTest::String m_TitleText;
-	HICON m_hTitleIcon;
+	TVTest::CIcon m_TitleIcon;
 	CEventHandler *m_pEventHandler;
 
 	static const LPCTSTR m_pszWindowClass;

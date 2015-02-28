@@ -5,6 +5,8 @@
 #include "Options.h"
 #include "Panel.h"
 #include "PanelForm.h"
+#include "ListView.h"
+#include <vector>
 
 
 enum {
@@ -38,10 +40,27 @@ public:
 	int GetSnapMargin() const { return m_SnapMargin; }
 	bool GetAttachToMainWindow() const { return m_fAttachToMainWindow; }
 	const LOGFONT *GetFont() const { return &m_Font; }
-	int GetFirstTab() const;
+	int GetInitialTab() const;
+	CPanelForm::TabStyle GetTabStyle() const { return m_TabStyle; }
 	bool GetProgramInfoUseRichEdit() const { return m_fProgramInfoUseRichEdit; }
+	int RegisterPanelItem(LPCTSTR pszID,LPCTSTR pszTitle);
+	bool SetPanelItemVisibility(int ID,bool fVisible);
+	bool GetPanelItemVisibility(int ID) const;
+	bool ApplyItemList(CPanelForm *pPanelForm) const;
 
 private:
+	struct PanelItemInfo {
+		TVTest::String ID;
+		TVTest::String Title;
+		bool fVisible;
+	};
+
+	typedef std::vector<PanelItemInfo> PanelItemInfoList;
+
+	static bool CompareID(const TVTest::String &ID1,const TVTest::String &ID2) {
+		return TVTest::StringUtility::CompareNoCase(ID1,ID2)==0;
+	}
+
 	CPanelFrame *m_pPanelFrame;
 	bool m_fSnapAtMainWindow;
 	int m_SnapMargin;
@@ -52,19 +71,20 @@ private:
 	bool m_fSpecCaptionFont;
 	LOGFONT m_CaptionFont;
 	LOGFONT m_CurSettingCaptionFont;
-	int m_FirstTab;
-	int m_LastTab;
-	struct TabInfo {
-		int ID;
-		bool fVisible;
-	};
-	TabInfo m_TabList[NUM_PANELS];
+	TVTest::String m_InitialTab;
+	TVTest::String m_LastTab;
+	PanelItemInfoList m_AvailItemList;
+	PanelItemInfoList m_ItemList;
+	CPanelForm::TabStyle m_TabStyle;
+	bool m_fTabTooltip;
 	bool m_fProgramInfoUseRichEdit;
+	TVTest::CListView m_ItemListView;
 
 // CBasicDialog
 	INT_PTR DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
 
-	static LRESULT CALLBACK TabListProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam);
+	void UpdateItemListControlsState();
+	int GetItemIDFromIDText(const TVTest::String &IDText) const;
 };
 
 

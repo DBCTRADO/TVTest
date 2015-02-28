@@ -78,19 +78,19 @@ bool CFeaturedEventsSettings::WriteSettings(CSettings &Settings)
 
 
 
-CFeaturedEvents::CFeaturedEvents(const CFeaturedEventsSettings &Settings)
+CFeaturedEventsSearcher::CFeaturedEventsSearcher(const CFeaturedEventsSettings &Settings)
 	: m_Settings(Settings)
 {
 }
 
 
-CFeaturedEvents::~CFeaturedEvents()
+CFeaturedEventsSearcher::~CFeaturedEventsSearcher()
 {
 	Clear();
 }
 
 
-void CFeaturedEvents::Clear()
+void CFeaturedEventsSearcher::Clear()
 {
 	for (auto it=m_EventList.begin();it!=m_EventList.end();++it)
 		delete *it;
@@ -98,14 +98,14 @@ void CFeaturedEvents::Clear()
 }
 
 
-bool CFeaturedEvents::Update()
+bool CFeaturedEventsSearcher::Update()
 {
 	Clear();
 
 	SYSTEMTIME StartTime,PeriodTime;
-	GetCurrentJST(&StartTime);
+	GetCurrentEpgTime(&StartTime);
 	PeriodTime=StartTime;
-	OffsetSystemTime(&PeriodTime,(LONGLONG)m_Settings.GetPeriodSeconds()*1000);
+	OffsetSystemTime(&PeriodTime,(LONGLONG)m_Settings.GetPeriodSeconds()*TimeConsts::SYSTEMTIME_SECOND);
 
 	const CEventSearchServiceList &DefaultServiceList=m_Settings.GetDefaultServiceList();
 	CEventSearchServiceList ServiceIDList(DefaultServiceList);
@@ -126,19 +126,19 @@ bool CFeaturedEvents::Update()
 		}
 	}
 
-	CEpgProgramList *pEpgProgramList=GetAppClass().GetEpgProgramList();
+	CEpgProgramList &EpgProgramList=GetAppClass().EpgProgramList;
 
 	for (auto itService=ServiceIDList.Begin();itService!=ServiceIDList.End();++itService) {
-		const CEpgServiceInfo *pServiceInfo=pEpgProgramList->GetServiceInfo(
+		const CEpgServiceInfo *pServiceInfo=EpgProgramList.GetServiceInfo(
 			CEventSearchServiceList::ServiceKey_GetNetworkID(*itService),
 			CEventSearchServiceList::ServiceKey_GetTransportStreamID(*itService),
 			CEventSearchServiceList::ServiceKey_GetServiceID(*itService));
 		if (pServiceInfo!=NULL) {
 			const CEventInfoList &EventList=pServiceInfo->m_EventList;
 			for (auto itEvent=EventList.EventDataMap.begin();itEvent!=EventList.EventDataMap.end();++itEvent) {
-				if (itEvent->second.m_fCommonEvent)
+				if (itEvent->second.m_bCommonEvent)
 					continue;
-				if (CompareSystemTime(&itEvent->second.m_stStartTime,&PeriodTime)>=0)
+				if (CompareSystemTime(&itEvent->second.m_StartTime,&PeriodTime)>=0)
 					continue;
 				SYSTEMTIME stEnd;
 				itEvent->second.GetEndTime(&stEnd);
@@ -162,18 +162,64 @@ bool CFeaturedEvents::Update()
 }
 
 
-size_t CFeaturedEvents::GetEventCount() const
+size_t CFeaturedEventsSearcher::GetEventCount() const
 {
 	return m_EventList.size();
 }
 
 
-const CEventInfoData *CFeaturedEvents::GetEventInfo(size_t Index) const
+const CEventInfoData *CFeaturedEventsSearcher::GetEventInfo(size_t Index) const
 {
 	if (Index>=m_EventList.size())
 		return NULL;
 
 	return m_EventList[Index];
+}
+
+
+
+
+bool CFeaturedEventsMatcher::BeginMatching(const CFeaturedEventsSettings &Settings)
+{
+	m_DefaultServiceList=Settings.GetDefaultServiceList();
+
+	const CEventSearchSettingsList &SearchSettingsList=Settings.GetSearchSettingsList();
+	m_SearcherList.resize(SearchSettingsList.GetEnabledCount());
+
+	for (size_t i=0;i<SearchSettingsList.GetCount();i++) {
+		const CEventSearchSettings *pSettings=SearchSettingsList.Get(i);
+
+		if (!pSettings->fDisabled) {
+			m_SearcherList[i].BeginSearch(*pSettings);
+		}
+	}
+
+	return true;
+}
+
+
+void CFeaturedEventsMatcher::EndMatching()
+{
+	m_DefaultServiceList.Clear();
+	m_SearcherList.clear();
+}
+
+
+bool CFeaturedEventsMatcher::IsMatch(const CEventInfoData &EventInfo)
+{
+	for (auto itSearcher=m_SearcherList.begin();itSearcher!=m_SearcherList.end();++itSearcher) {
+		if (!itSearcher->GetSearchSettings().fServiceList) {
+			if (!m_DefaultServiceList.IsExists(EventInfo.m_NetworkID,
+											   EventInfo.m_TransportStreamID,
+											   EventInfo.m_ServiceID))
+				continue;
+		}
+		if (itSearcher->Match(&EventInfo)) {
+			return true;
+		}
+	}
+
+	return false;
 }
 
 
@@ -195,9 +241,12 @@ static void InitServiceListView(
 	const int IconHeight=::GetSystemMetrics(SM_CYSMICON);
 	HIMAGELIST himl=::ImageList_Create(IconWidth,IconHeight,ILC_COLOR24 | ILC_MASK,
 									   ServiceList.NumChannels()+1,100);
-	ImageList_AddIcon(himl,CreateEmptyIcon(IconWidth,IconHeight));
+	HICON hico=CreateEmptyIcon(IconWidth,IconHeight);
+	ImageList_AddIcon(himl,hico);
+	::DestroyIcon(hico);
 	ListView_SetImageList(hwndList,himl,LVSIL_SMALL);
-	CLogoManager *pLogoManager=GetAppClass().GetLogoManager();
+	CAppMain &App=GetAppClass();
+	CLogoManager &LogoManager=App.LogoManager;
 
 	enum {
 		GROUP_ID_TERRESTRIAL=1,
@@ -252,7 +301,7 @@ static void InitServiceListView(
 		lvi.iItem=i;
 		lvi.pszText=const_cast<LPTSTR>(pChannelInfo->GetName());
 
-		HICON hico=pLogoManager->CreateLogoIcon(
+		HICON hico=LogoManager.CreateLogoIcon(
 			pChannelInfo->GetNetworkID(),
 			pChannelInfo->GetServiceID(),
 			IconWidth,IconHeight);
@@ -265,10 +314,17 @@ static void InitServiceListView(
 
 		lvi.lParam=i;
 
-		switch (GetNetworkType(pChannelInfo->GetNetworkID())) {
-		case NETWORK_TERRESTRIAL:	lvi.iGroupId=GROUP_ID_TERRESTRIAL;	break;
-		case NETWORK_BS:			lvi.iGroupId=GROUP_ID_BS;			break;
-		case NETWORK_CS:			lvi.iGroupId=GROUP_ID_CS;			break;
+		switch (App.NetworkDefinition.GetNetworkType(pChannelInfo->GetNetworkID())) {
+		default:
+		case TVTest::CNetworkDefinition::NETWORK_TERRESTRIAL:
+			lvi.iGroupId=GROUP_ID_TERRESTRIAL;
+			break;
+		case TVTest::CNetworkDefinition::NETWORK_BS:
+			lvi.iGroupId=GROUP_ID_BS;
+			break;
+		case TVTest::CNetworkDefinition::NETWORK_CS:
+			lvi.iGroupId=GROUP_ID_CS;
+			break;
 		}
 
 		int Index=ListView_InsertItem(hwndList,&lvi);
@@ -572,8 +628,6 @@ INT_PTR CFeaturedEventsDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM 
 {
 	static const int PERIOD_UNIT=60*60;
 
-	INT_PTR Result=CResizableDialog::DlgProc(hDlg,uMsg,wParam,lParam);
-
 	switch (uMsg) {
 	case WM_INITDIALOG:
 		AddControl(IDC_FEATUREDEVENTS_SERVICELIST,ALIGN_VERT);
@@ -593,7 +647,7 @@ INT_PTR CFeaturedEventsDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM 
 		AddControl(IDOK,ALIGN_BOTTOM_RIGHT);
 		AddControl(IDCANCEL,ALIGN_BOTTOM_RIGHT);
 
-		GetAppClass().GetDriverManager()->GetAllServiceList(&m_ServiceList);
+		GetAppClass().DriverManager.GetAllServiceList(&m_ServiceList);
 		InitServiceListView(::GetDlgItem(hDlg,IDC_FEATUREDEVENTS_SERVICELIST),
 							m_ServiceList,m_Settings.GetDefaultServiceList());
 
@@ -896,10 +950,10 @@ INT_PTR CFeaturedEventsDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM 
 			}
 			ListView_DeleteAllItems(hwndList);
 		}
-		break;
+		return TRUE;
 	}
 
-	return Result;
+	return FALSE;
 }
 
 
@@ -981,4 +1035,60 @@ void CFeaturedEventsDialog::UpdateSearchSettingsItem(HWND hDlg,int Item)
 	}
 
 	ListView_SetItemText(hwndList,Item,2,const_cast<LPTSTR>(Genre.c_str()));
+}
+
+
+
+
+CFeaturedEvents::CFeaturedEvents(CEventSearchOptions &EventSearchOptions)
+	: m_Dialog(m_Settings,EventSearchOptions)
+{
+}
+
+
+bool CFeaturedEvents::LoadSettings(CSettings &Settings)
+{
+	return m_Settings.LoadSettings(Settings);
+}
+
+
+bool CFeaturedEvents::SaveSettings(CSettings &Settings)
+{
+	return m_Settings.SaveSettings(Settings);
+}
+
+
+bool CFeaturedEvents::AddEventHandler(CEventHandler *pEventHandler)
+{
+	if (pEventHandler==nullptr)
+		return false;
+
+	m_EventHandlerList.push_back(pEventHandler);
+
+	return true;
+}
+
+
+bool CFeaturedEvents::RemoveEventHandler(CEventHandler *pEventHandler)
+{
+	for (auto itr=m_EventHandlerList.begin();itr!=m_EventHandlerList.end();++itr) {
+		if (*itr==pEventHandler) {
+			m_EventHandlerList.erase(itr);
+			return true;
+		}
+	}
+
+	return false;
+}
+
+
+bool CFeaturedEvents::ShowDialog(HWND hwndOwner)
+{
+	if (!m_Dialog.Show(hwndOwner))
+		return false;
+
+	for (auto itr=m_EventHandlerList.begin();itr!=m_EventHandlerList.end();++itr)
+		(*itr)->OnFeaturedEventsSettingsChanged(*this);
+
+	return true;
 }

@@ -17,11 +17,12 @@ static char THIS_FILE[]=__FILE__;
 COperationOptions::COperationOptions()
 	: m_pCommandList(NULL)
 	, m_fDisplayDragMove(true)
+	, m_fHideCursor(false)
 	, m_VolumeStep(5)
-	, m_WheelMode(WHEEL_MODE_VOLUME)
-	, m_WheelShiftMode(WHEEL_MODE_CHANNEL)
-	, m_WheelCtrlMode(WHEEL_MODE_AUDIO)
-	, m_WheelTiltMode(WHEEL_MODE_NONE)
+	, m_WheelCommand(CM_WHEEL_VOLUME)
+	, m_WheelShiftCommand(CM_WHEEL_CHANNEL)
+	, m_WheelCtrlCommand(CM_WHEEL_AUDIO)
+	, m_WheelTiltCommand(0)
 	, m_fStatusBarWheel(true)
 	, m_fWheelVolumeReverse(false)
 	, m_fWheelChannelReverse(false)
@@ -45,20 +46,43 @@ bool COperationOptions::ReadSettings(CSettings &Settings)
 	int Value;
 
 	Settings.Read(TEXT("DisplayDragMove"),&m_fDisplayDragMove);
+	Settings.Read(TEXT("HideCursor"),&m_fHideCursor);
 	Settings.Read(TEXT("VolumeStep"),&m_VolumeStep);
 
-	if (Settings.Read(TEXT("WheelMode"),&Value)
-			&& Value>=WHEEL_MODE_FIRST && Value<=WHEEL_MODE_LAST)
-		m_WheelMode=(WheelMode)Value;
-	if (Settings.Read(TEXT("WheelShiftMode"),&Value)
-			&& Value>=WHEEL_MODE_FIRST && Value<=WHEEL_MODE_LAST)
-		m_WheelShiftMode=(WheelMode)Value;
-	if (Settings.Read(TEXT("WheelCtrlMode"),&Value)
-			&& Value>=WHEEL_MODE_FIRST && Value<=WHEEL_MODE_LAST)
-		m_WheelCtrlMode=(WheelMode)Value;
-	if (Settings.Read(TEXT("WheelTiltMode"),&Value)
-			&& Value>=WHEEL_MODE_FIRST && Value<=WHEEL_MODE_LAST)
-		m_WheelTiltMode=(WheelMode)Value;
+	// ver.0.9.0 より前との互換用
+	static const int WheelModeList[] = {
+		0,
+		CM_WHEEL_VOLUME,
+		CM_WHEEL_CHANNEL,
+		CM_WHEEL_AUDIO,
+		CM_WHEEL_ZOOM,
+		CM_WHEEL_ASPECTRATIO,
+	};
+	TVTest::String Command;
+	if (Settings.Read(TEXT("WheelCommand"),&Command)) {
+		m_WheelCommand=m_WheelCommandManager.ParseCommand(Command.c_str());
+	} else if (Settings.Read(TEXT("WheelMode"),&Value)
+			&& Value>=0 && Value<lengthof(WheelModeList)) {
+		m_WheelCommand=WheelModeList[Value];
+	}
+	if (Settings.Read(TEXT("WheelShiftCommand"),&Command)) {
+		m_WheelShiftCommand=m_WheelCommandManager.ParseCommand(Command.c_str());
+	} else if (Settings.Read(TEXT("WheelShiftMode"),&Value)
+			&& Value>=0 && Value<lengthof(WheelModeList)) {
+		m_WheelShiftCommand=WheelModeList[Value];
+	}
+	if (Settings.Read(TEXT("WheelCtrlCommand"),&Command)) {
+		m_WheelCtrlCommand=m_WheelCommandManager.ParseCommand(Command.c_str());
+	} else if (Settings.Read(TEXT("WheelCtrlMode"),&Value)
+			&& Value>=0 && Value<lengthof(WheelModeList)) {
+		m_WheelCtrlCommand=WheelModeList[Value];
+	}
+	if (Settings.Read(TEXT("WheelTiltCommand"),&Command)) {
+		m_WheelTiltCommand=m_WheelCommandManager.ParseCommand(Command.c_str());
+	} else if (Settings.Read(TEXT("WheelTiltMode"),&Value)
+			&& Value>=0 && Value<lengthof(WheelModeList)) {
+		m_WheelTiltCommand=WheelModeList[Value];
+	}
 
 	Settings.Read(TEXT("StatusBarWheel"),&m_fStatusBarWheel);
 	Settings.Read(TEXT("ReverseWheelChannel"),&m_fWheelChannelReverse);
@@ -98,11 +122,19 @@ static LPCTSTR GetCommandText(const CCommandList *pCommandList,int Command)
 bool COperationOptions::WriteSettings(CSettings &Settings)
 {
 	Settings.Write(TEXT("DisplayDragMove"),m_fDisplayDragMove);
+	Settings.Write(TEXT("HideCursor"),m_fHideCursor);
 	Settings.Write(TEXT("VolumeStep"),m_VolumeStep);
-	Settings.Write(TEXT("WheelMode"),(int)m_WheelMode);
-	Settings.Write(TEXT("WheelShiftMode"),(int)m_WheelShiftMode);
-	Settings.Write(TEXT("WheelCtrlMode"),(int)m_WheelCtrlMode);
-	Settings.Write(TEXT("WheelTiltMode"),(int)m_WheelTiltMode);
+
+	TCHAR szCommand[TVTest::CWheelCommandManager::MAX_COMMAND_PARSABLE_NAME];
+	m_WheelCommandManager.GetCommandParsableName(m_WheelCommand,szCommand,lengthof(szCommand));
+	Settings.Write(TEXT("WheelCommand"),szCommand);
+	m_WheelCommandManager.GetCommandParsableName(m_WheelShiftCommand,szCommand,lengthof(szCommand));
+	Settings.Write(TEXT("WheelShiftCommand"),szCommand);
+	m_WheelCommandManager.GetCommandParsableName(m_WheelCtrlCommand,szCommand,lengthof(szCommand));
+	Settings.Write(TEXT("WheelCtrlCommand"),szCommand);
+	m_WheelCommandManager.GetCommandParsableName(m_WheelTiltCommand,szCommand,lengthof(szCommand));
+	Settings.Write(TEXT("WheelTiltCommand"),szCommand);
+
 	Settings.Write(TEXT("StatusBarWheel"),m_fStatusBarWheel);
 	Settings.Write(TEXT("ReverseWheelChannel"),m_fWheelChannelReverse);
 	Settings.Write(TEXT("ReverseWheelVolume"),m_fWheelVolumeReverse);
@@ -135,12 +167,12 @@ bool COperationOptions::Initialize(CSettings &Settings,const CCommandList *pComm
 }
 
 
-bool COperationOptions::IsWheelModeReverse(WheelMode Mode) const
+bool COperationOptions::IsWheelCommandReverse(int Command) const
 {
-	switch (Mode) {
-	case WHEEL_MODE_VOLUME:
+	switch (Command) {
+	case CM_WHEEL_VOLUME:
 		return m_fWheelVolumeReverse;
-	case WHEEL_MODE_CHANNEL:
+	case CM_WHEEL_CHANNEL:
 		return m_fWheelChannelReverse;
 	}
 	return false;
@@ -153,11 +185,12 @@ INT_PTR COperationOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPar
 	case WM_INITDIALOG:
 		{
 			DlgCheckBox_Check(hDlg,IDC_OPTIONS_DISPLAYDRAGMOVE,m_fDisplayDragMove);
+			DlgCheckBox_Check(hDlg,IDC_OPTIONS_HIDECURSOR,m_fHideCursor);
 
-			InitWheelSettings(IDC_OPTIONS_WHEELMODE,m_WheelMode);
-			InitWheelSettings(IDC_OPTIONS_WHEELSHIFTMODE,m_WheelShiftMode);
-			InitWheelSettings(IDC_OPTIONS_WHEELCTRLMODE,m_WheelCtrlMode);
-			InitWheelSettings(IDC_OPTIONS_WHEELTILTMODE,m_WheelTiltMode);
+			InitWheelSettings(IDC_OPTIONS_WHEELMODE,m_WheelCommand);
+			InitWheelSettings(IDC_OPTIONS_WHEELSHIFTMODE,m_WheelShiftCommand);
+			InitWheelSettings(IDC_OPTIONS_WHEELCTRLMODE,m_WheelCtrlCommand);
+			InitWheelSettings(IDC_OPTIONS_WHEELTILTMODE,m_WheelTiltCommand);
 
 			DlgCheckBox_Check(hDlg,IDC_OPTIONS_WHEELVOLUMEREVERSE,m_fWheelVolumeReverse);
 			DlgCheckBox_Check(hDlg,IDC_OPTIONS_WHEELCHANNELREVERSE,m_fWheelChannelReverse);
@@ -201,11 +234,21 @@ INT_PTR COperationOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPar
 			{
 				m_fDisplayDragMove=
 					DlgCheckBox_IsChecked(hDlg,IDC_OPTIONS_DISPLAYDRAGMOVE);
+				m_fHideCursor=
+					DlgCheckBox_IsChecked(hDlg,IDC_OPTIONS_HIDECURSOR);
 
-				m_WheelMode=(WheelMode)DlgComboBox_GetCurSel(hDlg,IDC_OPTIONS_WHEELMODE);
-				m_WheelShiftMode=(WheelMode)DlgComboBox_GetCurSel(hDlg,IDC_OPTIONS_WHEELSHIFTMODE);
-				m_WheelCtrlMode=(WheelMode)DlgComboBox_GetCurSel(hDlg,IDC_OPTIONS_WHEELCTRLMODE);
-				m_WheelTiltMode=(WheelMode)DlgComboBox_GetCurSel(hDlg,IDC_OPTIONS_WHEELTILTMODE);
+				m_WheelCommand=
+					(int)DlgComboBox_GetItemData(hDlg,IDC_OPTIONS_WHEELMODE,
+						DlgComboBox_GetCurSel(hDlg,IDC_OPTIONS_WHEELMODE));
+				m_WheelShiftCommand=
+					(int)DlgComboBox_GetItemData(hDlg,IDC_OPTIONS_WHEELSHIFTMODE,
+						DlgComboBox_GetCurSel(hDlg,IDC_OPTIONS_WHEELSHIFTMODE));
+				m_WheelCtrlCommand=
+					(int)DlgComboBox_GetItemData(hDlg,IDC_OPTIONS_WHEELCTRLMODE,
+						DlgComboBox_GetCurSel(hDlg,IDC_OPTIONS_WHEELCTRLMODE));
+				m_WheelTiltCommand=
+					(int)DlgComboBox_GetItemData(hDlg,IDC_OPTIONS_WHEELTILTMODE,
+						DlgComboBox_GetCurSel(hDlg,IDC_OPTIONS_WHEELTILTMODE));
 
 				m_fWheelVolumeReverse=DlgCheckBox_IsChecked(hDlg,IDC_OPTIONS_WHEELVOLUMEREVERSE);
 				m_fWheelChannelReverse=DlgCheckBox_IsChecked(hDlg,IDC_OPTIONS_WHEELCHANNELREVERSE);
@@ -237,18 +280,23 @@ INT_PTR COperationOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPar
 }
 
 
-void COperationOptions::InitWheelSettings(int ID,WheelMode Mode) const
+void COperationOptions::InitWheelSettings(int ID,int CurCommand) const
 {
-	static const LPCTSTR pszWheelMode[] = {
-		TEXT("なし"),
-		TEXT("音量"),
-		TEXT("チャンネル"),
-		TEXT("音声"),
-		TEXT("表示倍率"),
-		TEXT("比率"),
-	};
+	const int CommandCount=m_WheelCommandManager.GetCommandCount();
+	int Sel=0;
 
-	for (int i=0;i<lengthof(pszWheelMode);i++)
-		DlgComboBox_AddString(m_hDlg,ID,pszWheelMode[i]);
-	DlgComboBox_SetCurSel(m_hDlg,ID,Mode);
+	DlgComboBox_AddString(m_hDlg,ID,TEXT("何もしない"));
+	DlgComboBox_SetItemData(m_hDlg,ID,0,0);
+
+	for (int i=0;i<CommandCount;i++) {
+		int Command=m_WheelCommandManager.GetCommandID(i);
+		TCHAR szText[TVTest::CWheelCommandManager::MAX_COMMAND_TEXT];
+		m_WheelCommandManager.GetCommandText(Command,szText,lengthof(szText));
+		LRESULT Index=DlgComboBox_AddString(m_hDlg,ID,szText);
+		DlgComboBox_SetItemData(m_hDlg,ID,Index,Command);
+		if (Command==CurCommand)
+			Sel=i+1;
+	}
+
+	DlgComboBox_SetCurSel(m_hDlg,ID,Sel);
 }

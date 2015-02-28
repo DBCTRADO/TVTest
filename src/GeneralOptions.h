@@ -16,7 +16,7 @@ public:
 		DEFAULT_DRIVER_CUSTOM
 	};
 	enum {
-		MAX_MPEG2_DECODER_NAME=128
+		MAX_VIDEO_DECODER_NAME=128
 	};
 
 	CGeneralOptions();
@@ -39,30 +39,29 @@ public:
 	bool GetFirstDriverName(LPTSTR pszDriverName) const;
 	LPCTSTR GetMpeg2DecoderName() const;
 	bool SetMpeg2DecoderName(LPCTSTR pszDecoderName);
+	LPCTSTR GetH264DecoderName() const;
+	bool SetH264DecoderName(LPCTSTR pszDecoderName);
+	LPCTSTR GetH265DecoderName() const;
+	bool SetH265DecoderName(LPCTSTR pszDecoderName);
 	CVideoRenderer::RendererType GetVideoRendererType() const;
 	bool SetVideoRendererType(CVideoRenderer::RendererType Renderer);
-	int GetCasDevice(bool fUseName);
-	bool SetCasDevice(int Device);
-	void SetTemporaryNoDescramble(bool fNoDescramble);
 	bool GetResident() const;
 	bool GetKeepSingleTask() const;
-	int GetDescrambleInstruction() const { return m_DescrambleInstruction; }
-	bool GetDescrambleCurServiceOnly() const;
-	bool GetEnableEmmProcess() const;
+	bool GetStandaloneProgramGuide() const { return m_fStandaloneProgramGuide; }
 
 private:
 // CBasicDialog
 	INT_PTR DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
 
-	void DescrambleBenchmarkTest(HWND hwndOwner);
+	void SetVideoDecoderList(
+		int ID,const GUID &SubType,BYTE StreamType,const TVTest::String &DecoderName);
+	void GetVideoDecoderSetting(int ID,BYTE StreamType,TVTest::String *pDecoderName);
 
 	enum {
 		UPDATE_DECODER				= 0x00000001UL,
 		UPDATE_RENDERER				= 0x00000002UL,
-		UPDATE_CARDREADER			= 0x00000004UL,
-		UPDATE_RESIDENT				= 0x00000008UL,
-		UPDATE_DESCRAMBLECURONLY	= 0x00000010UL,
-		UPDATE_ENABLEEMMPROCESS		= 0x00000020UL
+		UPDATE_RESIDENT				= 0x00000004UL,
+		UPDATE_1SEGFALLBACK			= 0x00000008UL
 	};
 
 	TVTest::String m_BonDriverDirectory;
@@ -70,15 +69,13 @@ private:
 	TVTest::String m_DefaultBonDriverName;
 	TVTest::String m_LastBonDriverName;
 	TVTest::String m_Mpeg2DecoderName;
+	TVTest::String m_H264DecoderName;
+	TVTest::String m_H265DecoderName;
 	CVideoRenderer::RendererType m_VideoRendererType;
-	TVTest::String m_CasDeviceName;
-	int m_CasDevice;
-	bool m_fTemporaryNoDescramble;
 	bool m_fResident;
 	bool m_fKeepSingleTask;
-	int m_DescrambleInstruction;
-	bool m_fDescrambleCurServiceOnly;
-	bool m_fEnableEmmProcess;
+	bool m_fStandaloneProgramGuide;
+	bool m_fEnable1SegFallback;
 };
 
 

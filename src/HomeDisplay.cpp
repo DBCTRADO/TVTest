@@ -3,6 +3,7 @@
 #include <algorithm>
 #include "TVTest.h"
 #include "HomeDisplay.h"
+#include "AppMain.h"
 #include "Favorites.h"
 #include "EpgProgramList.h"
 #include "EpgUtil.h"
@@ -10,6 +11,7 @@
 #include "ChannelHistory.h"
 #include "FeaturedEvents.h"
 #include "DriverManager.h"
+#include "TextDraw.h"
 #include "resource.h"
 
 #ifdef _DEBUG
@@ -110,7 +112,7 @@ CChannelListCategoryBase::~CChannelListCategoryBase()
 
 void CChannelListCategoryBase::LayOut(const CHomeDisplay::StyleInfo &Style,HDC hdc,const RECT &ContentRect)
 {
-	m_ItemHeight=Style.FontHeight*2+Style.ItemMargins.top+Style.ItemMargins.bottom;
+	m_ItemHeight=Style.FontHeight*2+Style.ItemMargins.Vert();
 	m_Height=(int)m_ItemList.size()*m_ItemHeight;
 	m_Rect=ContentRect;
 
@@ -139,19 +141,18 @@ void CChannelListCategoryBase::Draw(HDC hdc,const CHomeDisplay::StyleInfo &Style
 		if (!IsRectIntersect(&rcItem,&PaintRect))
 			continue;
 		const CChannelItemBase *pItem=m_ItemList[i];
-		const Theme::Style *pItemStyle;
+		const TVTest::Theme::Style *pItemStyle;
 		if (i==m_HotItem) {
 			pItemStyle=&Style.ItemHotStyle;
 		} else {
 			pItemStyle=&Style.ItemStyle[i%2];
 		}
-		Theme::DrawStyleBackground(hdc,&rcItem,pItemStyle);
-		::SetTextColor(hdc,pItemStyle->TextColor);
+		TVTest::Theme::Draw(hdc,rcItem,pItemStyle->Back);
 		rc=rcItem;
-		rc.left+=Style.ItemMargins.left;
-		rc.top+=Style.ItemMargins.top;
+		rc.left+=Style.ItemMargins.Left;
+		rc.top+=Style.ItemMargins.Top;
 		rc.right=rc.left+m_ChannelNameWidth;
-		rc.bottom-=Style.ItemMargins.bottom;
+		rc.bottom-=Style.ItemMargins.Bottom;
 		HBITMAP hbmLogo=pItem->GetStretchedLogo(m_LogoWidth,m_LogoHeight);
 		if (hbmLogo!=NULL) {
 			DrawUtil::DrawBitmap(hdc,rc.left,rc.top+(Style.FontHeight-m_LogoHeight)/2,
@@ -159,12 +160,12 @@ void CChannelListCategoryBase::Draw(HDC hdc,const CHomeDisplay::StyleInfo &Style
 								 i==m_HotItem?255:224);
 			rc.top+=Style.FontHeight;
 		}
-		::DrawText(hdc,pItem->GetName(),-1,&rc,
+		TVTest::Theme::Draw(hdc,rc,pItemStyle->Fore,pItem->GetName(),
 			DT_LEFT | DT_SINGLELINE | DT_VCENTER | DT_NOPREFIX | DT_END_ELLIPSIS);
 
 		rc.left=rc.right+8;
-		rc.top=rcItem.top+Style.ItemMargins.top;
-		rc.right=rcItem.right-Style.ItemMargins.right;
+		rc.top=rcItem.top+Style.ItemMargins.Top;
+		rc.right=rcItem.right-Style.ItemMargins.Right;
 		rc.bottom=rc.top+Style.FontHeight;
 
 		for (int j=0;j<2;j++) {
@@ -176,15 +177,15 @@ void CChannelListCategoryBase::Draw(HDC hdc,const CHomeDisplay::StyleInfo &Style
 
 				Length=EpgUtil::FormatEventTime(pEventInfo,szText,lengthof(szText),
 					EpgUtil::EVENT_TIME_HOUR_2DIGITS | EpgUtil::EVENT_TIME_START_ONLY);
-				if (!IsStringEmpty(pEventInfo->GetEventName())) {
+				if (!pEventInfo->m_EventName.empty()) {
 					Length+=StdUtil::snprintf(
 						szText+Length,lengthof(szText)-Length,
 						TEXT("%s%s"),
 						Length>0?TEXT(" "):TEXT(""),
-						pEventInfo->GetEventName());
+						pEventInfo->m_EventName.c_str());
 				}
 				if (Length>0) {
-					::DrawText(hdc,szText,Length,&rc,
+					TVTest::Theme::Draw(hdc,rc,pItemStyle->Fore,szText,
 						DT_LEFT | DT_SINGLELINE | DT_VCENTER | DT_NOPREFIX | DT_END_ELLIPSIS);
 				}
 			}
@@ -287,27 +288,27 @@ void CChannelListCategoryBase::Clear()
 
 void CChannelListCategoryBase::UpdateChannelInfo()
 {
-	CEpgProgramList *pEpgProgramList=GetAppClass().GetEpgProgramList();
-	CLogoManager *pLogoManager=GetAppClass().GetLogoManager();
+	CEpgProgramList &EpgProgramList=GetAppClass().EpgProgramList;
+	CLogoManager &LogoManager=GetAppClass().LogoManager;
 	SYSTEMTIME stCurTime;
 
-	GetCurrentJST(&stCurTime);
+	GetCurrentEpgTime(&stCurTime);
 
 	for (size_t i=0;i<m_ItemList.size();i++) {
 		CChannelItemBase *pItem=m_ItemList[i];
 		CEventInfoData EventInfo;
 
-		if (pEpgProgramList->GetEventInfo(
+		if (EpgProgramList.GetEventInfo(
 				pItem->GetNetworkID(),
 				pItem->GetTransportStreamID(),
 				pItem->GetServiceID(),
 				&stCurTime,&EventInfo)) {
 			pItem->SetEvent(0,&EventInfo);
 			SYSTEMTIME st;
-			if (EventInfo.m_fValidStartTime
-					&& EventInfo.m_DurationSec>0
+			if (EventInfo.m_bValidStartTime
+					&& EventInfo.m_Duration>0
 					&& EventInfo.GetEndTime(&st)
-					&& pEpgProgramList->GetEventInfo(
+					&& EpgProgramList.GetEventInfo(
 						pItem->GetNetworkID(),
 						pItem->GetTransportStreamID(),
 						pItem->GetServiceID(),
@@ -318,23 +319,23 @@ void CChannelListCategoryBase::UpdateChannelInfo()
 			}
 		} else {
 			pItem->SetEvent(0,NULL);
-			if (pEpgProgramList->GetNextEventInfo(
+			if (EpgProgramList.GetNextEventInfo(
 						pItem->GetNetworkID(),
 						pItem->GetTransportStreamID(),
 						pItem->GetServiceID(),
 						&stCurTime,&EventInfo)
-					&& DiffSystemTime(&stCurTime,&EventInfo.m_stStartTime)<8*60*60*1000) {
+					&& DiffSystemTime(&stCurTime,&EventInfo.m_StartTime)<8*TimeConsts::SYSTEMTIME_HOUR) {
 				pItem->SetEvent(1,&EventInfo);
 			} else {
 				pItem->SetEvent(1,NULL);
 			}
 		}
 
-		HBITMAP hbmLogo=pLogoManager->GetAssociatedLogoBitmap(
+		HBITMAP hbmLogo=LogoManager.GetAssociatedLogoBitmap(
 			pItem->GetNetworkID(),pItem->GetServiceID(),CLogoManager::LOGOTYPE_SMALL);
 		if (hbmLogo!=NULL)
 			pItem->SetSmallLogo(hbmLogo);
-		hbmLogo=pLogoManager->GetAssociatedLogoBitmap(
+		hbmLogo=LogoManager.GetAssociatedLogoBitmap(
 			pItem->GetNetworkID(),pItem->GetServiceID(),CLogoManager::LOGOTYPE_BIG);
 		if (hbmLogo!=NULL)
 			pItem->SetBigLogo(hbmLogo);
@@ -439,7 +440,7 @@ bool CChannelListCategoryBase::CChannelItemBase::SetEvent(int Index,const CEvent
 	if (pEvent!=NULL)
 		m_Event[Index]=*pEvent;
 	else
-		m_Event[Index].SetEventName(NULL);
+		m_Event[Index].m_EventName.clear();
 	return true;
 }
 
@@ -448,7 +449,7 @@ const CEventInfoData *CChannelListCategoryBase::CChannelItemBase::GetEvent(int I
 {
 	if (Index<0 || Index>1)
 		return NULL;
-	if (m_Event[Index].GetEventName()==NULL)
+	if (m_Event[Index].m_EventName.empty())
 		return NULL;
 	return &m_Event[Index];
 }
@@ -514,11 +515,11 @@ bool CFavoritesCategory::Create()
 		}
 	};
 
-	TVTest::CFavoritesManager *pFavoritesManager=GetAppClass().GetFavoritesManager();
+	TVTest::CFavoritesManager &FavoritesManager=GetAppClass().FavoritesManager;
 	CItemEnumerator ItemEnumerator(m_ItemList);
 
 	Clear();
-	ItemEnumerator.EnumItems(pFavoritesManager->GetRootFolder());
+	ItemEnumerator.EnumItems(FavoritesManager.GetRootFolder());
 
 	UpdateChannelInfo();
 
@@ -530,13 +531,14 @@ bool CFavoritesCategory::OnDecide()
 {
 	if (m_HotItem>=0) {
 		const CChannelItem *pItem=static_cast<CChannelItem*>(m_ItemList[m_HotItem]);
-		CAppMain::ChannelSelectInfo ChSelInfo;
+		CAppCore::ChannelSelectInfo ChSelInfo;
 
 		ChSelInfo.Channel=*static_cast<const CChannelInfo*>(pItem);
 		ChSelInfo.TunerName=pItem->GetBonDriverFileName();
 		ChSelInfo.fUseCurTuner=!pItem->GetForceBonDriverChange();
+		ChSelInfo.fStrictService=false;
 
-		return GetAppClass().SelectChannel(ChSelInfo);
+		return GetAppClass().Core.SelectChannel(ChSelInfo);
 	}
 
 	return false;
@@ -565,9 +567,9 @@ private:
 		TVTest::String m_BonDriverFileName;
 
 	public:
-		CChannelItem(const CRecentChannelList::CChannel *pChannel)
+		CChannelItem(const CTunerChannelInfo *pChannel)
 			: CChannelItemBase(*pChannel)
-			, m_BonDriverFileName(pChannel->GetDriverFileName())
+			, m_BonDriverFileName(pChannel->GetTunerName())
 		{
 		}
 
@@ -589,12 +591,12 @@ bool CRecentChannelsCategory::Create()
 {
 	Clear();
 
-	CRecentChannelList *pRecentChannelList=GetAppClass().GetRecentChannelList();
-	int NumChannels=pRecentChannelList->NumChannels();
+	CRecentChannelList &RecentChannelList=GetAppClass().RecentChannelList;
+	int NumChannels=RecentChannelList.NumChannels();
 	if (NumChannels>m_MaxChannels)
 		NumChannels=m_MaxChannels;
 	for (int i=0;i<NumChannels;i++) {
-		m_ItemList.push_back(new CChannelItem(pRecentChannelList->GetChannelInfo(i)));
+		m_ItemList.push_back(new CChannelItem(RecentChannelList.GetChannelInfo(i)));
 	}
 
 	UpdateChannelInfo();
@@ -617,13 +619,14 @@ bool CRecentChannelsCategory::OnDecide()
 {
 	if (m_HotItem>=0) {
 		const CChannelItem *pItem=static_cast<CChannelItem*>(m_ItemList[m_HotItem]);
-		CAppMain::ChannelSelectInfo ChSelInfo;
+		CAppCore::ChannelSelectInfo ChSelInfo;
 
 		ChSelInfo.Channel=*static_cast<const CChannelInfo*>(pItem);
 		ChSelInfo.TunerName=pItem->GetBonDriverFileName();
 		ChSelInfo.fUseCurTuner=false;
+		ChSelInfo.fStrictService=false;
 
-		return GetAppClass().SelectChannel(ChSelInfo);
+		return GetAppClass().Core.SelectChannel(ChSelInfo);
 	}
 
 	return false;
@@ -632,10 +635,12 @@ bool CRecentChannelsCategory::OnDecide()
 
 
 
-class CFeaturedEventsCategory : public CHomeDisplay::CCategory
+class CFeaturedEventsCategory
+	: public CHomeDisplay::CCategory
+	, public CFeaturedEvents::CEventHandler
 {
 public:
-	CFeaturedEventsCategory(CHomeDisplay *pHomeDisplay,CEventSearchOptions &EventSearchOptions);
+	CFeaturedEventsCategory(CHomeDisplay *pHomeDisplay);
 	~CFeaturedEventsCategory();
 
 // CHomeDisplay::CCategory
@@ -644,18 +649,18 @@ public:
 	int GetIconIndex() const override { return CATEGORY_ICON_FEATURED_EVENTS; }
 	int GetHeight() const override { return m_Height; }
 	bool Create() override;
-	void ReadSettings(CSettings &Settings) override;
-	void WriteSettings(CSettings &Settings) override;
 	void LayOut(const CHomeDisplay::StyleInfo &Style,HDC hdc,const RECT &ContentRect) override;
 	void Draw(HDC hdc,const CHomeDisplay::StyleInfo &Style,const RECT &ContentRect,const RECT &PaintRect) const override;
 	bool GetCurItemRect(RECT *pRect) const override;
 	bool SetFocus(bool fFocus) override;
 	bool IsFocused() const override { return m_HotItem>=0; }
 	bool OnDecide() override;
+	void OnWindowCreate() override;
+	void OnWindowDestroy() override;
 	void OnCursorMove(int x,int y) override;
 	void OnCursorLeave() override;
 	bool OnClick(int x,int y) override;
-	bool OnRButtonDown(int x,int y) override;
+	bool OnRButtonUp(int x,int y) override;
 	bool OnSetCursor() override { return false; }
 	bool OnCursorKey(WPARAM KeyCode) override;
 
@@ -685,9 +690,6 @@ private:
 		static void AppendEventText(TVTest::String *pString,LPCWSTR pszText);
 	};
 
-	CFeaturedEventsSettings m_Settings;
-	CEventSearchOptions &m_EventSearchOptions;
-	CFeaturedEventsDialog m_Dialog;
 	RECT m_Rect;
 	int m_Height;
 	int m_ItemHeight;
@@ -704,13 +706,14 @@ private:
 	int GetItemByPosition(int x,int y) const;
 	void RedrawItem(int Item);
 	bool SetHotItem(int Item);
+
+// CFeaturedEvents::CEventHandler
+	void OnFeaturedEventsSettingsChanged(CFeaturedEvents &FeaturedEvents) override;
 };
 
 
-CFeaturedEventsCategory::CFeaturedEventsCategory(CHomeDisplay *pHomeDisplay,CEventSearchOptions &EventSearchOptions)
+CFeaturedEventsCategory::CFeaturedEventsCategory(CHomeDisplay *pHomeDisplay)
 	: CCategory(pHomeDisplay)
-	, m_EventSearchOptions(EventSearchOptions)
-	, m_Dialog(m_Settings,m_EventSearchOptions)
 	, m_Height(0)
 	, m_HotItem(-1)
 {
@@ -727,57 +730,54 @@ bool CFeaturedEventsCategory::Create()
 {
 	Clear();
 
+	CAppMain &App=GetAppClass();
+
 	CChannelList ServiceList;
-	GetAppClass().GetDriverManager()->GetAllServiceList(&ServiceList);
+	App.DriverManager.GetAllServiceList(&ServiceList);
 
-	CFeaturedEvents FeaturedEvents(m_Settings);
-	FeaturedEvents.Update();
+	const CFeaturedEventsSettings &Settings=App.FeaturedEvents.GetSettings();
+	CFeaturedEventsSearcher Searcher(Settings);
+	Searcher.Update();
 
-	const size_t EventCount=FeaturedEvents.GetEventCount();
+	const size_t EventCount=Searcher.GetEventCount();
 	for (size_t i=0;i<EventCount;i++) {
-		const CEventInfoData *pEventInfo=FeaturedEvents.GetEventInfo(i);
+		const CEventInfoData *pEventInfo=Searcher.GetEventInfo(i);
 		int Index=ServiceList.FindByIDs(
-			pEventInfo->m_NetworkID,pEventInfo->m_TSID,pEventInfo->m_ServiceID);
+			pEventInfo->m_NetworkID,pEventInfo->m_TransportStreamID,pEventInfo->m_ServiceID);
 
 		if (Index>=0)
 			m_ItemList.push_back(new CEventItem(*ServiceList.GetChannelInfo(Index),*pEventInfo));
 	}
 
-	SortItems(m_Settings.GetSortType());
+	SortItems(Settings.GetSortType());
 
 	return true;
 }
 
 
-void CFeaturedEventsCategory::ReadSettings(CSettings &Settings)
-{
-	m_Settings.LoadSettings(Settings);
-}
-
-
-void CFeaturedEventsCategory::WriteSettings(CSettings &Settings)
-{
-	m_Settings.SaveSettings(Settings);
-}
-
-
 void CFeaturedEventsCategory::LayOut(const CHomeDisplay::StyleInfo &Style,HDC hdc,const RECT &ContentRect)
 {
-	int ItemBaseHeight=2*Style.FontHeight+Style.ItemMargins.top+Style.ItemMargins.bottom;
+	TVTest::CTextDraw DrawText;
+	DrawText.Begin(hdc,TVTest::CTextDraw::FLAG_JAPANESE_HYPHNATION);
+
+	const CFeaturedEventsSettings &Settings=GetAppClass().FeaturedEvents.GetSettings();
+	int ItemBaseHeight=2*Style.FontHeight+Style.ItemMargins.Vert();
 	m_ItemHeight=ItemBaseHeight;
-	if (m_Settings.GetShowEventText())
-		m_ItemHeight+=m_Settings.GetEventTextLines()*Style.FontHeight;
+	if (Settings.GetShowEventText())
+		m_ItemHeight+=Settings.GetEventTextLines()*Style.FontHeight;
 	m_Height=(int)m_ItemList.size()*m_ItemHeight;
 	m_Rect=ContentRect;
 
 	m_LogoHeight=min(Style.FontHeight,36);
 	m_LogoWidth=(m_LogoHeight*16+4)/9;
-	CLogoManager *pLogoManager=GetAppClass().GetLogoManager();
+	CLogoManager &LogoManager=GetAppClass().LogoManager;
 
 	const int EventTextWidth=(ContentRect.right-ContentRect.left)-
-		(Style.ItemMargins.left+Style.ItemMargins.top)-Style.FontHeight;
+		Style.ItemMargins.Horz()-Style.FontHeight;
 	TVTest::String Text;
+
 	m_ChannelNameWidth=0;
+
 	for (size_t i=0;i<m_ItemList.size();i++) {
 		CEventItem *pItem=m_ItemList[i];
 
@@ -787,16 +787,16 @@ void CFeaturedEventsCategory::LayOut(const CHomeDisplay::StyleInfo &Style,HDC hd
 				&& sz.cx>m_ChannelNameWidth)
 			m_ChannelNameWidth=sz.cx;
 
-		pItem->SetLogo(pLogoManager->GetAssociatedLogoBitmap(
+		pItem->SetLogo(LogoManager.GetAssociatedLogoBitmap(
 			pItem->GetChannelInfo().GetNetworkID(),
 			pItem->GetChannelInfo().GetServiceID(),
 			m_LogoHeight<=14?CLogoManager::LOGOTYPE_SMALL:CLogoManager::LOGOTYPE_BIG));
 
 		int Height=m_ItemHeight;
 		if (pItem->GetEventText(&Text)) {
-			int Lines=DrawUtil::CalcWrapTextLines(hdc,Text.c_str(),EventTextWidth);
-			if (!m_Settings.GetShowEventText()
-					|| Lines>m_Settings.GetEventTextLines()) {
+			int Lines=DrawText.CalcLineCount(Text.c_str(),EventTextWidth);
+			if (!Settings.GetShowEventText()
+					|| Lines>Settings.GetEventTextLines()) {
 				Height=ItemBaseHeight+Lines*Style.FontHeight;
 				if (pItem->IsExpanded()) {
 					m_Height+=Height-m_ItemHeight;
@@ -810,22 +810,26 @@ void CFeaturedEventsCategory::LayOut(const CHomeDisplay::StyleInfo &Style,HDC hd
 
 void CFeaturedEventsCategory::Draw(HDC hdc,const CHomeDisplay::StyleInfo &Style,const RECT &ContentRect,const RECT &PaintRect) const
 {
+	const CFeaturedEventsSettings &Settings=GetAppClass().FeaturedEvents.GetSettings();
+
 	if (m_ItemList.empty()) {
 		LPCTSTR pszText;
-		if (m_Settings.GetSearchSettingsList().GetCount()==0) {
+		if (Settings.GetSearchSettingsList().GetCount()==0) {
 			pszText=TEXT("注目の番組を表示するには、右クリックメニューの [注目の番組の設定] から検索条件を登録します。");
 		} else {
 			pszText=TEXT("検索された番組はありません。");
 		}
 		RECT rc=ContentRect;
-		rc.left+=Style.ItemMargins.left;
-		rc.top+=Style.ItemMargins.top;
-		rc.right-=Style.ItemMargins.right;
-		rc.bottom-=Style.ItemMargins.bottom;
+		TVTest::Style::Subtract(&rc,Style.ItemMargins);
 		::SetTextColor(hdc,Style.BannerTextColor);
 		::DrawText(hdc,pszText,-1,&rc,DT_LEFT | DT_NOPREFIX | DT_WORDBREAK);
 		return;
 	}
+
+	TVTest::CTextDraw DrawText;
+	DrawText.Begin(hdc,
+				   TVTest::CTextDraw::FLAG_END_ELLIPSIS |
+				   TVTest::CTextDraw::FLAG_JAPANESE_HYPHNATION);
 
 	HFONT hfontText=static_cast<HFONT>(::GetCurrentObject(hdc,OBJ_FONT));
 	LOGFONT lf;
@@ -841,17 +845,17 @@ void CFeaturedEventsCategory::Draw(HDC hdc,const CHomeDisplay::StyleInfo &Style,
 			continue;
 		const CEventItem *pItem=m_ItemList[i];
 		const CChannelInfo &ChannelInfo=pItem->GetChannelInfo();
-		const Theme::Style *pItemStyle;
+		const TVTest::Theme::Style *pItemStyle;
 		if (i==m_HotItem) {
 			pItemStyle=&Style.ItemHotStyle;
 		} else {
 			pItemStyle=&Style.ItemStyle[i%2];
 		}
-		Theme::DrawStyleBackground(hdc,&rcItem,pItemStyle);
-		::SetTextColor(hdc,pItemStyle->TextColor);
+		TVTest::Theme::Draw(hdc,rcItem,pItemStyle->Back);
+		::SetTextColor(hdc,pItemStyle->Fore.Fill.GetSolidColor());
 		rc=rcItem;
-		rc.left+=Style.ItemMargins.left;
-		rc.top+=Style.ItemMargins.top;
+		rc.left+=Style.ItemMargins.Left;
+		rc.top+=Style.ItemMargins.Top;
 		rc.bottom=rc.top+Style.FontHeight;
 		HBITMAP hbmLogo=pItem->GetStretchedLogo(m_LogoWidth,m_LogoHeight);
 		if (hbmLogo!=NULL) {
@@ -859,13 +863,13 @@ void CFeaturedEventsCategory::Draw(HDC hdc,const CHomeDisplay::StyleInfo &Style,
 								 m_LogoWidth,m_LogoHeight,hbmLogo,NULL,
 								 i==m_HotItem?255:224);
 		}
-		rc.left+=m_LogoWidth+Style.ItemMargins.left;
+		rc.left+=m_LogoWidth+Style.ItemMargins.Left;
 		rc.right=rc.left+m_ChannelNameWidth;
 		::DrawText(hdc,ChannelInfo.GetName(),-1,&rc,
 			DT_LEFT | DT_SINGLELINE | DT_VCENTER | DT_NOPREFIX | DT_END_ELLIPSIS);
 
 		rc.left=rc.right+Style.FontHeight;
-		rc.right=rcItem.right-Style.ItemMargins.right;
+		rc.right=rcItem.right-Style.ItemMargins.Right;
 
 		const CEventInfoData &EventInfo=pItem->GetEventInfo();
 		TCHAR szText[1024];
@@ -875,25 +879,25 @@ void CFeaturedEventsCategory::Draw(HDC hdc,const CHomeDisplay::StyleInfo &Style,
 			::DrawText(hdc,szText,Length,&rc,
 				DT_LEFT | DT_SINGLELINE | DT_VCENTER | DT_NOPREFIX | DT_END_ELLIPSIS);
 		}
-		rc.left=rcItem.left+Style.ItemMargins.left;
+		rc.left=rcItem.left+Style.ItemMargins.Left;
 		rc.top=rc.bottom;
 		rc.bottom=rc.top+Style.FontHeight;
-		if (!IsStringEmpty(EventInfo.GetEventName())) {
+		if (!EventInfo.m_EventName.empty()) {
 			::SelectObject(hdc,hfontTitle);
-			::DrawText(hdc,EventInfo.GetEventName(),-1,&rc,
+			::DrawText(hdc,
+				EventInfo.m_EventName.data(),(int)EventInfo.m_EventName.length(),&rc,
 				DT_LEFT | DT_SINGLELINE | DT_VCENTER | DT_NOPREFIX | DT_END_ELLIPSIS);
 			::SelectObject(hdc,hfontText);
 		}
 
-		if (m_Settings.GetShowEventText() || pItem->IsExpanded()) {
+		if (Settings.GetShowEventText() || pItem->IsExpanded()) {
 			TVTest::String Text;
 
 			if (pItem->GetEventText(&Text)) {
-				rc.left=rcItem.left+Style.ItemMargins.left+Style.FontHeight;
+				rc.left=rcItem.left+Style.ItemMargins.Left+Style.FontHeight;
 				rc.top=rc.bottom;
-				rc.bottom=rcItem.bottom-Style.ItemMargins.bottom;
-				DrawUtil::DrawWrapText(hdc,Text.c_str(),&rc,Style.FontHeight,
-									   DrawUtil::DRAW_TEXT_ELLIPSIS);
+				rc.bottom=rcItem.bottom-Style.ItemMargins.Bottom;
+				DrawText.Draw(Text.c_str(),rc,Style.FontHeight);
 			}
 		}
 	}
@@ -932,6 +936,18 @@ bool CFeaturedEventsCategory::OnDecide()
 }
 
 
+void CFeaturedEventsCategory::OnWindowCreate()
+{
+	GetAppClass().FeaturedEvents.AddEventHandler(this);
+}
+
+
+void CFeaturedEventsCategory::OnWindowDestroy()
+{
+	GetAppClass().FeaturedEvents.RemoveEventHandler(this);
+}
+
+
 void CFeaturedEventsCategory::OnCursorMove(int x,int y)
 {
 	SetHotItem(GetItemByPosition(x,y));
@@ -951,21 +967,23 @@ bool CFeaturedEventsCategory::OnClick(int x,int y)
 }
 
 
-bool CFeaturedEventsCategory::OnRButtonDown(int x,int y)
+bool CFeaturedEventsCategory::OnRButtonUp(int x,int y)
 {
 	enum {
 		ID_SETTINGS=1
 	};
 
+	CFeaturedEvents &FeaturedEvents=GetAppClass().FeaturedEvents;
+	CFeaturedEventsSettings &Settings=FeaturedEvents.GetSettings();
 	HMENU hmenu=::LoadMenu(GetAppClass().GetResourceInstance(),
 						   MAKEINTRESOURCE(IDM_FEATUREDEVENTS));
 
 	::CheckMenuItem(hmenu,CM_FEATUREDEVENTS_SHOWEVENTTEXT,
-					MF_BYCOMMAND | (m_Settings.GetShowEventText()?MF_CHECKED:MF_UNCHECKED));
+					MF_BYCOMMAND | (Settings.GetShowEventText()?MF_CHECKED:MF_UNCHECKED));
 	::CheckMenuRadioItem(hmenu,
 						 CM_FEATUREDEVENTS_SORT_FIRST,
 						 CM_FEATUREDEVENTS_SORT_LAST,
-						 CM_FEATUREDEVENTS_SORT_FIRST+(int)m_Settings.GetSortType(),
+						 CM_FEATUREDEVENTS_SORT_FIRST+(int)Settings.GetSortType(),
 						 MF_BYCOMMAND);
 
 	POINT pt;
@@ -976,13 +994,11 @@ bool CFeaturedEventsCategory::OnRButtonDown(int x,int y)
 
 	switch (Result) {
 	case CM_FEATUREDEVENTS_SETTINGS:
-		if (m_Dialog.Show(m_pHomeDisplay->GetHandle())) {
-			m_pHomeDisplay->UpdateCurContent();
-		}
+		FeaturedEvents.ShowDialog(m_pHomeDisplay->GetHandle());
 		break;
 
 	case CM_FEATUREDEVENTS_SHOWEVENTTEXT:
-		m_Settings.SetShowEventText(!m_Settings.GetShowEventText());
+		Settings.SetShowEventText(!Settings.GetShowEventText());
 		m_pHomeDisplay->UpdateCurContent();
 		break;
 
@@ -991,8 +1007,8 @@ bool CFeaturedEventsCategory::OnRButtonDown(int x,int y)
 				&& Result<=CM_FEATUREDEVENTS_SORT_LAST) {
 			CFeaturedEventsSettings::SortType SortType=
 				(CFeaturedEventsSettings::SortType)(Result-CM_FEATUREDEVENTS_SORT_FIRST);
-			if (SortType!=m_Settings.GetSortType()) {
-				m_Settings.SetSortType(SortType);
+			if (SortType!=Settings.GetSortType()) {
+				Settings.SetSortType(SortType);
 				SortItems(SortType);
 				m_pHomeDisplay->SetScrollPos(0,false);
 				m_pHomeDisplay->Invalidate();
@@ -1079,11 +1095,11 @@ void CFeaturedEventsCategory::SortItems(CFeaturedEventsSettings::SortType SortTy
 		{
 			int Cmp;
 
-			Cmp=CompareSystemTime(&pItem1->GetEventInfo().m_stStartTime,
-								  &pItem2->GetEventInfo().m_stStartTime);
+			Cmp=CompareSystemTime(&pItem1->GetEventInfo().m_StartTime,
+								  &pItem2->GetEventInfo().m_StartTime);
 			if (Cmp==0) {
-				Cmp=(int)pItem1->GetEventInfo().m_DurationSec-
-					(int)pItem2->GetEventInfo().m_DurationSec;
+				Cmp=(int)pItem1->GetEventInfo().m_Duration-
+					(int)pItem2->GetEventInfo().m_Duration;
 			}
 			return Cmp;
 		}
@@ -1092,12 +1108,10 @@ void CFeaturedEventsCategory::SortItems(CFeaturedEventsSettings::SortType SortTy
 		{
 			const CChannelInfo &ChannelInfo1=pItem1->GetChannelInfo();
 			const CChannelInfo &ChannelInfo2=pItem2->GetChannelInfo();
-			NetworkType Network1=GetNetworkType(ChannelInfo1.GetNetworkID());
-			NetworkType Network2=GetNetworkType(ChannelInfo2.GetNetworkID());
 			int Cmp;
-			if (Network1!=Network2) {
-				Cmp=(int)Network1-(int)Network2;
-			} else {
+			Cmp=GetAppClass().NetworkDefinition.GetNetworkTypeOrder(
+				ChannelInfo1.GetNetworkID(),ChannelInfo2.GetNetworkID());
+			if (Cmp==0) {
 				int Channel1=ChannelInfo1.GetChannelNo();
 				if (Channel1<=0)
 					Channel1=ChannelInfo1.GetServiceID();
@@ -1231,6 +1245,13 @@ bool CFeaturedEventsCategory::SetHotItem(int Item)
 }
 
 
+void CFeaturedEventsCategory::OnFeaturedEventsSettingsChanged(CFeaturedEvents &FeaturedEvents)
+{
+	if (m_pHomeDisplay->GetCurCategoryID()==CATEGORY_ID_FEATURED_EVENTS)
+		m_pHomeDisplay->UpdateCurContent();
+}
+
+
 CFeaturedEventsCategory::CEventItem::CEventItem(const CChannelInfo &ChannelInfo,const CEventInfoData &EventInfo)
 	: m_ChannelInfo(ChannelInfo)
 	, m_EventInfo(EventInfo)
@@ -1271,10 +1292,10 @@ HBITMAP CFeaturedEventsCategory::CEventItem::GetStretchedLogo(int Width,int Heig
 bool CFeaturedEventsCategory::CEventItem::GetEventText(TVTest::String *pText) const
 {
 	pText->clear();
-	if (!IsStringEmpty(m_EventInfo.GetEventText()))
-		AppendEventText(pText,m_EventInfo.GetEventText());
-	if (!IsStringEmpty(m_EventInfo.GetEventExtText()))
-		AppendEventText(pText,m_EventInfo.GetEventExtText());
+	if (!m_EventInfo.m_EventText.empty())
+		AppendEventText(pText,m_EventInfo.m_EventText.c_str());
+	if (!m_EventInfo.m_EventExtendedText.empty())
+		AppendEventText(pText,m_EventInfo.m_EventExtendedText.c_str());
 	return !pText->empty();
 }
 
@@ -1343,17 +1364,17 @@ bool CHomeDisplay::Initialize(HINSTANCE hinst)
 }
 
 
-CHomeDisplay::CHomeDisplay(CEventSearchOptions &EventSearchOptions)
+CHomeDisplay::CHomeDisplay()
 	: m_fAutoFontSize(true)
 	, m_ContentHeight(0)
-	, m_pEventHandler(NULL)
+	, m_pHomeDisplayEventHandler(NULL)
 	, m_CurCategory(0)
 	, m_hwndScroll(NULL)
 	, m_ScrollPos(0)
 	, m_himlIcons(NULL)
 {
-	GetBackgroundStyle(BACKGROUND_STYLE_CATEGORIES,&m_Style.CategoriesBackGradient);
-	GetBackgroundStyle(BACKGROUND_STYLE_CONTENT,&m_Style.ContentBackGradient);
+	GetBackgroundStyle(BACKGROUND_STYLE_CATEGORIES,&m_Style.CategoriesBackStyle);
+	GetBackgroundStyle(BACKGROUND_STYLE_CONTENT,&m_Style.ContentBackStyle);
 	GetItemStyle(ITEM_STYLE_NORMAL,&m_Style.CategoryItemStyle);
 	GetItemStyle(ITEM_STYLE_SELECTED,&m_Style.CategoryItemSelStyle);
 	GetItemStyle(ITEM_STYLE_CURRENT,&m_Style.CategoryItemCurStyle);
@@ -1362,28 +1383,28 @@ CHomeDisplay::CHomeDisplay(CEventSearchOptions &EventSearchOptions)
 	GetItemStyle(ITEM_STYLE_HOT,&m_Style.ItemHotStyle);
 	m_Style.BannerTextColor=RGB(255,255,255);
 
-	m_Style.ContentMargins.left=16;
-	m_Style.ContentMargins.top=16;
-	m_Style.ContentMargins.right=32;
-	m_Style.ContentMargins.bottom=16;
-	m_Style.ItemMargins.left=4;
-	m_Style.ItemMargins.top=2;
-	m_Style.ItemMargins.right=4;
-	m_Style.ItemMargins.bottom=2;
-	m_Style.CategoryItemMargins.left=4;
-	m_Style.CategoryItemMargins.top=4;
-	m_Style.CategoryItemMargins.right=6;
-	m_Style.CategoryItemMargins.bottom=4;
+	m_Style.ContentMargins.Left=16;
+	m_Style.ContentMargins.Top=16;
+	m_Style.ContentMargins.Right=32;
+	m_Style.ContentMargins.Bottom=16;
+	m_Style.ItemMargins.Left=4;
+	m_Style.ItemMargins.Top=2;
+	m_Style.ItemMargins.Right=4;
+	m_Style.ItemMargins.Bottom=2;
+	m_Style.CategoryItemMargins.Left=4;
+	m_Style.CategoryItemMargins.Top=4;
+	m_Style.CategoryItemMargins.Right=6;
+	m_Style.CategoryItemMargins.Bottom=4;
 	m_Style.CategoryIconMargin=6;
-	m_Style.CategoriesMargins.left=8;
-	m_Style.CategoriesMargins.top=16;
-	m_Style.CategoriesMargins.right=8;
-	m_Style.CategoriesMargins.bottom=16;
+	m_Style.CategoriesMargins.Left=8;
+	m_Style.CategoriesMargins.Top=16;
+	m_Style.CategoriesMargins.Right=8;
+	m_Style.CategoriesMargins.Bottom=16;
 
 	m_CategoryList.reserve(3);
 	m_CategoryList.push_back(new CFavoritesCategory(this));
 	m_CategoryList.push_back(new CRecentChannelsCategory(this));
-	m_CategoryList.push_back(new CFeaturedEventsCategory(this,EventSearchOptions));
+	m_CategoryList.push_back(new CFeaturedEventsCategory(this));
 }
 
 
@@ -1402,8 +1423,8 @@ bool CHomeDisplay::Create(HWND hwndParent,DWORD Style,DWORD ExStyle,int ID)
 
 bool CHomeDisplay::Close()
 {
-	if (m_pEventHandler!=NULL) {
-		m_pEventHandler->OnClose();
+	if (m_pHomeDisplayEventHandler!=NULL) {
+		m_pHomeDisplayEventHandler->OnClose();
 		return true;
 	}
 	return false;
@@ -1552,13 +1573,14 @@ bool CHomeDisplay::UpdateContents()
 }
 
 
-void CHomeDisplay::SetEventHandler(CEventHandler *pEventHandler)
+void CHomeDisplay::SetEventHandler(CHomeDisplayEventHandler *pEventHandler)
 {
-	if (m_pEventHandler!=NULL)
-		m_pEventHandler->m_pHomeDisplay=NULL;
+	if (m_pHomeDisplayEventHandler!=NULL)
+		m_pHomeDisplayEventHandler->m_pHomeDisplay=NULL;
 	if (pEventHandler!=NULL)
 		pEventHandler->m_pHomeDisplay=this;
-	m_pEventHandler=pEventHandler;
+	m_pHomeDisplayEventHandler=pEventHandler;
+	CDisplayView::SetEventHandler(pEventHandler);
 }
 
 
@@ -1630,6 +1652,14 @@ bool CHomeDisplay::SetCurCategory(int Category)
 }
 
 
+int CHomeDisplay::GetCurCategoryID() const
+{
+	if (m_CurCategory<0 || (size_t)m_CurCategory>=m_CategoryList.size())
+		return -1;
+	return m_CategoryList[m_CurCategory]->GetID();
+}
+
+
 bool CHomeDisplay::UpdateCurContent()
 {
 	if (m_CurCategory<0)
@@ -1671,6 +1701,7 @@ LRESULT CHomeDisplay::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 {
 	switch (uMsg) {
 	case WM_CREATE:
+		InitializeUI();
 		if (!m_Font.IsCreated())
 			m_Font.Create(DrawUtil::FONT_MESSAGE);
 		m_hwndScroll=::CreateWindowEx(0,TEXT("SCROLLBAR"),TEXT(""),
@@ -1682,6 +1713,9 @@ LRESULT CHomeDisplay::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 		m_CursorPart=PART_MARGIN;
 		m_himlIcons=::ImageList_LoadImage(m_hinst,MAKEINTRESOURCE(IDB_HOME),
 										  CATEGORY_ICON_WIDTH,1,0,IMAGE_BITMAP,LR_CREATEDIBSECTION);
+
+		for (auto itr=m_CategoryList.begin();itr!=m_CategoryList.end();++itr)
+			(*itr)->OnWindowCreate();
 		return 0;
 
 	case WM_SIZE:
@@ -1773,27 +1807,19 @@ LRESULT CHomeDisplay::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 		}
 		return 0;
 
-	case WM_RBUTTONDOWN:
+	case WM_RBUTTONUP:
 		{
 			POINT pt={GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam)};
 			RECT rc;
 
 			GetContentAreaRect(&rc);
-			if (m_CurCategory<0
-					|| !::PtInRect(&rc,pt)
-					|| !m_CategoryList[m_CurCategory]->OnRButtonDown(pt.x,pt.y)) {
-				if (m_pEventHandler!=NULL) {
-					m_pEventHandler->OnRButtonDown(pt.x,pt.y);
-				}
+			if (m_CurCategory>=0
+					&& ::PtInRect(&rc,pt)
+					&& m_CategoryList[m_CurCategory]->OnRButtonUp(pt.x,pt.y)) {
+				return 0;
 			}
 		}
-		return 0;
-
-	case WM_LBUTTONDBLCLK:
-		if (m_pEventHandler!=NULL) {
-			m_pEventHandler->OnLButtonDoubleClick(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam));
-		}
-		return 0;
+		break;
 
 	case WM_SETCURSOR:
 		if (reinterpret_cast<HWND>(wParam)==hwnd
@@ -1930,6 +1956,9 @@ LRESULT CHomeDisplay::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 		return 0;
 
 	case WM_DESTROY:
+		for (auto itr=m_CategoryList.begin();itr!=m_CategoryList.end();++itr)
+			(*itr)->OnWindowDestroy();
+
 		if (m_himlIcons!=NULL) {
 			::ImageList_Destroy(m_himlIcons);
 			m_himlIcons=NULL;
@@ -1937,7 +1966,7 @@ LRESULT CHomeDisplay::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 		return 0;
 	}
 
-	return ::DefWindowProc(hwnd,uMsg,wParam,lParam);
+	return CDisplayView::OnMessage(hwnd,uMsg,wParam,lParam);
 }
 
 
@@ -1957,32 +1986,29 @@ void CHomeDisplay::Draw(HDC hdc,const RECT &PaintRect)
 	if (PaintRect.left<m_CategoriesAreaWidth) {
 		RECT rcCategories=rcClient;
 		rcCategories.right=m_CategoriesAreaWidth;
-		Theme::FillGradient(hdc,&rcCategories,&m_Style.CategoriesBackGradient);
+		TVTest::Theme::Draw(hdc,rcCategories,m_Style.CategoriesBackStyle);
 
 		RECT rcItem;
-		rcItem.left=rcCategories.left+m_Style.CategoriesMargins.left;
+		rcItem.left=rcCategories.left+m_Style.CategoriesMargins.Left;
 		rcItem.right=rcItem.left+m_CategoryItemWidth;
-		rcItem.top=rcCategories.top+m_Style.CategoriesMargins.top;
+		rcItem.top=rcCategories.top+m_Style.CategoriesMargins.Top;
 
 		for (size_t i=0;i<m_CategoryList.size();i++) {
 			const CCategory *pCategory=m_CategoryList[i];
-			const Theme::Style *pStyle=
+			const TVTest::Theme::Style *pStyle=
 				((int)i==m_CurCategory)?
 					(pCategory->IsFocused()?&m_Style.CategoryItemSelStyle:&m_Style.CategoryItemCurStyle):
 					(&m_Style.CategoryItemStyle);
 
 			rcItem.bottom=rcItem.top+m_CategoryItemHeight;
-			Theme::DrawStyleBackground(hdc,&rcItem,pStyle);
+			TVTest::Theme::Draw(hdc,rcItem,pStyle->Back);
 			RECT rc=rcItem;
-			rc.left+=m_Style.CategoryItemMargins.left;
-			rc.top+=m_Style.CategoryItemMargins.top;
-			rc.right-=m_Style.CategoryItemMargins.right;
-			rc.bottom-=m_Style.CategoryItemMargins.bottom;
+			TVTest::Style::Subtract(&rc,m_Style.CategoryItemMargins);
 			::ImageList_Draw(m_himlIcons,pCategory->GetIconIndex(),
 							 hdc,rc.left,rc.top+((rc.bottom-rc.top)-CATEGORY_ICON_HEIGHT)/2,ILD_TRANSPARENT);
 			rc.left+=CATEGORY_ICON_WIDTH+m_Style.CategoryIconMargin;
-			::SetTextColor(hdc,pStyle->TextColor);
-			::DrawText(hdc,pCategory->GetTitle(),-1,&rc,DT_NOPREFIX | DT_SINGLELINE | DT_VCENTER);
+			TVTest::Theme::Draw(hdc,rc,pStyle->Fore,pCategory->GetTitle(),
+								DT_NOPREFIX | DT_SINGLELINE | DT_VCENTER);
 			rcItem.top=rcItem.bottom;
 		}
 	}
@@ -1990,14 +2016,10 @@ void CHomeDisplay::Draw(HDC hdc,const RECT &PaintRect)
 	if (PaintRect.right>m_CategoriesAreaWidth) {
 		RECT rcContent=rcClient;
 		rcContent.left=m_CategoriesAreaWidth;
-		Theme::FillGradient(hdc,&rcContent,&m_Style.ContentBackGradient);
+		TVTest::Theme::Draw(hdc,rcContent,m_Style.ContentBackStyle);
 
 		if (pCategory!=NULL) {
-			rcContent.left+=m_Style.ContentMargins.left;
-			rcContent.top+=m_Style.ContentMargins.top;
-			rcContent.right-=m_Style.ContentMargins.right;
-			rcContent.bottom-=m_Style.ContentMargins.bottom;
-
+			TVTest::Style::Subtract(&rcContent,m_Style.ContentMargins);
 			if (rcContent.left<rcContent.right) {
 				HRGN hrgn=::CreateRectRgnIndirect(&rcContent);
 				::SelectClipRgn(hdc,hrgn);
@@ -2045,17 +2067,14 @@ void CHomeDisplay::LayOut()
 			CategoryTextWidth=rc.right;
 	}
 	m_CategoryItemWidth=CategoryTextWidth+CATEGORY_ICON_WIDTH+m_Style.CategoryIconMargin+
-		m_Style.CategoryItemMargins.left+m_Style.CategoryItemMargins.right;
+		m_Style.CategoryItemMargins.Horz();
 	m_CategoryItemHeight=max(m_Style.FontHeight,CATEGORY_ICON_HEIGHT)+
-		m_Style.CategoryItemMargins.top+m_Style.CategoryItemMargins.bottom;
-	m_CategoriesAreaWidth=m_CategoryItemWidth+
-		m_Style.CategoriesMargins.left+m_Style.CategoriesMargins.right;
+		m_Style.CategoryItemMargins.Vert();
+	m_CategoriesAreaWidth=m_CategoryItemWidth+m_Style.CategoriesMargins.Horz();
 
 	RECT rcContent=rcClient;
-	rcContent.left+=m_CategoriesAreaWidth+m_Style.ContentMargins.left;
-	rcContent.top+=m_Style.ContentMargins.top;
-	rcContent.right-=m_Style.ContentMargins.right;
-	rcContent.bottom-=m_Style.ContentMargins.bottom;
+	TVTest::Style::Subtract(&rcContent,m_Style.ContentMargins);
+	rcContent.left+=m_CategoriesAreaWidth;
 
 	CCategory *pCategory=m_CategoryList[m_CurCategory];
 	pCategory->LayOut(m_Style,hdc,rcContent);
@@ -2101,10 +2120,8 @@ void CHomeDisplay::SetScrollBar()
 void CHomeDisplay::GetContentAreaRect(RECT *pRect) const
 {
 	GetClientRect(pRect);
-	pRect->left+=m_CategoriesAreaWidth+m_Style.ContentMargins.left;
-	pRect->top+=m_Style.ContentMargins.top;
-	pRect->right-=m_Style.ContentMargins.right;
-	pRect->bottom-=m_Style.ContentMargins.bottom;
+	TVTest::Style::Subtract(pRect,m_Style.ContentMargins);
+	pRect->left+=m_CategoriesAreaWidth;
 	if (pRect->right<pRect->left)
 		pRect->right=pRect->left;
 	if (pRect->bottom<pRect->top)
@@ -2117,8 +2134,8 @@ CHomeDisplay::PartType CHomeDisplay::HitTest(int x,int y,int *pCategoryIndex) co
 	POINT pt={x,y};
 
 	RECT rcCategories;
-	rcCategories.left=m_Style.CategoriesMargins.left;
-	rcCategories.top=m_Style.CategoriesMargins.top;
+	rcCategories.left=m_Style.CategoriesMargins.Left;
+	rcCategories.top=m_Style.CategoriesMargins.Top;
 	rcCategories.right=rcCategories.left+m_CategoriesAreaWidth;
 	rcCategories.bottom=rcCategories.top+m_CategoryItemHeight*(int)m_CategoryList.size();
 	if (::PtInRect(&rcCategories,pt)) {
@@ -2168,8 +2185,8 @@ bool CHomeDisplay::GetCategoryItemRect(int Category,RECT *pRect) const
 	if (Category<0 || (size_t)Category>=m_CategoryList.size())
 		return false;
 
-	pRect->left=m_Style.CategoriesMargins.left;
-	pRect->top=m_Style.CategoriesMargins.top+(Category*m_CategoryItemHeight);
+	pRect->left=m_Style.CategoriesMargins.Left;
+	pRect->top=m_Style.CategoriesMargins.Top+(Category*m_CategoryItemHeight);
 	pRect->right=pRect->left+m_CategoryItemWidth;
 	pRect->bottom=pRect->top+m_CategoryItemHeight;
 
@@ -2190,13 +2207,8 @@ bool CHomeDisplay::RedrawCategoryItem(int Category)
 
 
 
-CHomeDisplay::CEventHandler::CEventHandler()
+CHomeDisplay::CHomeDisplayEventHandler::CHomeDisplayEventHandler()
 	: m_pHomeDisplay(NULL)
-{
-}
-
-
-CHomeDisplay::CEventHandler::~CEventHandler()
 {
 }
 

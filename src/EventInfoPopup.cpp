@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "TVTest.h"
+#include "AppMain.h"
 #include "EventInfoPopup.h"
 #include "EpgUtil.h"
 #include "Aero.h"
@@ -51,7 +52,6 @@ CEventInfoPopup::CEventInfoPopup()
 	, m_TitleIconTextMargin(4)
 	, m_ButtonSize(14)
 	, m_ButtonMargin(3)
-	, m_hTitleIcon(NULL)
 	, m_pEventHandler(NULL)
 	, m_fDetailInfo(
 #ifdef _DEBUG
@@ -82,7 +82,7 @@ bool CEventInfoPopup::Create(HWND hwndParent,DWORD Style,DWORD ExStyle,int ID)
 
 void CEventInfoPopup::SetEventInfo(const CEventInfoData *pEventInfo)
 {
-	if (m_EventInfo==*pEventInfo)
+	if (m_EventInfo.IsEqual(*pEventInfo))
 		return;
 
 	m_EventInfo=*pEventInfo;
@@ -110,8 +110,8 @@ void CEventInfoPopup::SetEventInfo(const CEventInfoData *pEventInfo)
 		}
 	}
 
-	if (!IsStringEmpty(m_EventInfo.GetEventName())) {
-		Formatter.Append(m_EventInfo.GetEventName());
+	if (!m_EventInfo.m_EventName.empty()) {
+		Formatter.Append(m_EventInfo.m_EventName.c_str());
 		Formatter.Append(TEXT("\r\n"));
 	}
 
@@ -124,22 +124,27 @@ void CEventInfoPopup::SetEventInfo(const CEventInfoData *pEventInfo)
 		Formatter.Clear();
 	}
 
-	if (!IsStringEmpty(m_EventInfo.GetEventText())) {
-		Formatter.Append(m_EventInfo.GetEventText());
+	if (!m_EventInfo.m_EventText.empty()) {
+		Formatter.Append(m_EventInfo.m_EventText.c_str());
 		Formatter.RemoveTrailingWhitespace();
 	}
-	if (!IsStringEmpty(m_EventInfo.GetEventExtText())) {
-		if (!IsStringEmpty(m_EventInfo.GetEventText()))
+	if (!m_EventInfo.m_EventExtendedText.empty()) {
+		if (!m_EventInfo.m_EventText.empty())
 			Formatter.Append(TEXT("\r\n\r\n"));
-		Formatter.Append(m_EventInfo.GetEventExtText());
+		Formatter.Append(m_EventInfo.m_EventExtendedText.c_str());
 		Formatter.RemoveTrailingWhitespace();
 	}
 
 	Formatter.Append(TEXT("\r\n"));
 
-	LPCTSTR pszVideo=EpgUtil::GetVideoComponentTypeText(m_EventInfo.m_VideoInfo.ComponentType);
-	if (pszVideo!=NULL) {
-		Formatter.AppendFormat(TEXT("\r\n■ 映像： %s"),pszVideo);
+	if (!m_EventInfo.m_VideoList.empty()) {
+		// TODO: 複数映像対応
+		LPCTSTR pszVideo=EpgUtil::GetComponentTypeText(
+			m_EventInfo.m_VideoList[0].StreamContent,
+			m_EventInfo.m_VideoList[0].ComponentType);
+		if (pszVideo!=NULL) {
+			Formatter.AppendFormat(TEXT("\r\n■ 映像： %s"),pszVideo);
+		}
 	}
 
 	if (!m_EventInfo.m_AudioList.empty()) {
@@ -165,25 +170,21 @@ void CEventInfoPopup::SetEventInfo(const CEventInfoData *pEventInfo)
 		}
 	}
 
-	for (int i=0;i<m_EventInfo.m_ContentNibble.NibbleCount;i++) {
-		if (m_EventInfo.m_ContentNibble.NibbleList[i].ContentNibbleLevel1!=0xE) {
-			CEpgGenre EpgGenre;
-			LPCTSTR pszGenre=EpgGenre.GetText(m_EventInfo.m_ContentNibble.NibbleList[i].ContentNibbleLevel1,-1);
-			if (pszGenre!=NULL) {
-				Formatter.AppendFormat(TEXT("\r\n■ ジャンル： %s"),pszGenre);
-				pszGenre=EpgGenre.GetText(
-					m_EventInfo.m_ContentNibble.NibbleList[i].ContentNibbleLevel1,
-					m_EventInfo.m_ContentNibble.NibbleList[i].ContentNibbleLevel2);
-				if (pszGenre!=NULL)
-					Formatter.AppendFormat(TEXT(" - %s"),pszGenre);
-			}
-			break;
+	int Genre1,Genre2;
+	if (EpgUtil::GetEventGenre(m_EventInfo,&Genre1,&Genre2)) {
+		CEpgGenre EpgGenre;
+		LPCTSTR pszGenre=EpgGenre.GetText(Genre1,-1);
+		if (pszGenre!=NULL) {
+			Formatter.AppendFormat(TEXT("\r\n■ ジャンル： %s"),pszGenre);
+			pszGenre=EpgGenre.GetText(Genre1,Genre2);
+			if (pszGenre!=NULL)
+				Formatter.AppendFormat(TEXT(" - %s"),pszGenre);
 		}
 	}
 
 	if (m_fDetailInfo) {
 		Formatter.AppendFormat(TEXT("\r\n■ イベントID： 0x%04X"),m_EventInfo.m_EventID);
-		if (m_EventInfo.m_fCommonEvent)
+		if (m_EventInfo.m_bCommonEvent)
 			Formatter.AppendFormat(TEXT(" (イベント共有 サービスID 0x%04X / イベントID 0x%04X)"),
 								   m_EventInfo.m_CommonEventInfo.ServiceID,
 								   m_EventInfo.m_CommonEventInfo.EventID);
@@ -218,7 +219,8 @@ void CEventInfoPopup::FormatAudioInfo(
 		pszAudio=TEXT("Mono 二カ国語");
 		fBilingual=true;
 	} else {
-		pszAudio=EpgUtil::GetAudioComponentTypeText(pAudioInfo->ComponentType);
+		pszAudio=EpgUtil::GetComponentTypeText(
+			pAudioInfo->StreamContent,pAudioInfo->ComponentType);
 	}
 
 	LPCTSTR p=pAudioInfo->szText;
@@ -241,10 +243,17 @@ void CEventInfoPopup::FormatAudioInfo(
 		szAudioComponent[i+0]=_T(']');
 		szAudioComponent[i+1]=_T('\0');
 	} else if (fBilingual) {
+		TCHAR szLang1[EpgUtil::MAX_LANGUAGE_TEXT_LENGTH];
+		TCHAR szLang2[EpgUtil::MAX_LANGUAGE_TEXT_LENGTH];
+		EpgUtil::GetLanguageText(pAudioInfo->LanguageCode,szLang1,lengthof(szLang1));
+		EpgUtil::GetLanguageText(pAudioInfo->LanguageCode2,szLang2,lengthof(szLang2));
 		StdUtil::snprintf(szAudioComponent,lengthof(szAudioComponent),
-						  TEXT(" [%s/%s]"),
-						  EpgUtil::GetLanguageText(pAudioInfo->LanguageCode),
-						  EpgUtil::GetLanguageText(pAudioInfo->LanguageCode2));
+						  TEXT(" [%s/%s]"),szLang1,szLang2);
+	} else {
+		TCHAR szLang[EpgUtil::MAX_LANGUAGE_TEXT_LENGTH];
+		EpgUtil::GetLanguageText(pAudioInfo->LanguageCode,szLang,lengthof(szLang));
+		StdUtil::snprintf(szAudioComponent,lengthof(szAudioComponent),
+						  TEXT(" [%s]"),szLang);
 	}
 
 	StdUtil::snprintf(pszText,MaxLength,TEXT("%s%s"),
@@ -279,41 +288,23 @@ bool CEventInfoPopup::Show(const CEventInfoData *pEventInfo,const RECT *pPos,
 {
 	if (pEventInfo==NULL)
 		return false;
-	bool fExists=m_hwnd!=NULL;
-	if (!fExists) {
+
+	if (m_hwnd==NULL) {
 		if (!Create(NULL,WS_POPUP | WS_CLIPCHILDREN | WS_THICKFRAME,WS_EX_TOPMOST | WS_EX_NOACTIVATE,0))
 			return false;
 	}
-	if (pPos!=NULL) {
-		if (!GetVisible())
+
+	if (!GetVisible() || m_EventInfo!=*pEventInfo) {
+		if (pPos!=NULL) {
 			SetPosition(pPos);
-	} else if (!IsVisible() || m_EventInfo!=*pEventInfo) {
-		RECT rc;
-		POINT pt;
-		int Width,Height;
+		} else {
+			RECT rc;
 
-		GetPosition(&rc);
-		Width=rc.right-rc.left;
-		Height=rc.bottom-rc.top;
-		::GetCursorPos(&pt);
-		pt.y+=16;
-		HMONITOR hMonitor=::MonitorFromPoint(pt,MONITOR_DEFAULTTONEAREST);
-		if (hMonitor!=NULL) {
-			MONITORINFO mi;
-
-			mi.cbSize=sizeof(mi);
-			if (::GetMonitorInfo(hMonitor,&mi)) {
-				if (pt.x+Width>mi.rcMonitor.right)
-					pt.x=mi.rcMonitor.right-Width;
-				if (pt.y+Height>mi.rcMonitor.bottom) {
-					pt.y=mi.rcMonitor.bottom-Height;
-					if (pt.x+Width<mi.rcMonitor.right)
-						pt.x+=min(16,mi.rcMonitor.right-(pt.x+Width));
-				}
-			}
+			GetDefaultPopupPosition(&rc);
+			::SetWindowPos(m_hwnd,HWND_TOPMOST,
+						   rc.left,rc.top,rc.right-rc.left,rc.bottom-rc.top,
+						   SWP_NOACTIVATE);
 		}
-		::SetWindowPos(m_hwnd,HWND_TOPMOST,pt.x,pt.y,Width,Height,
-					   SWP_NOACTIVATE);
 	}
 
 	SetEventInfo(pEventInfo);
@@ -323,9 +314,7 @@ bool CEventInfoPopup::Show(const CEventInfoData *pEventInfo,const RECT *pPos,
 	else
 		m_TitleText.clear();
 
-	if (m_hTitleIcon!=NULL)
-		::DestroyIcon(m_hTitleIcon);
-	m_hTitleIcon=hIcon;
+	m_TitleIcon.Attach(hIcon);
 
 	::ShowWindow(m_hwnd,SW_SHOWNA);
 
@@ -400,6 +389,7 @@ void CEventInfoPopup::SetTitleColor(COLORREF BackColor,COLORREF TextColor)
 		GetClientRect(&rc);
 		rc.bottom=m_TitleHeight;
 		::InvalidateRect(m_hwnd,&rc,TRUE);
+		::RedrawWindow(m_hwnd,NULL,NULL,RDW_FRAME | RDW_INVALIDATE);
 	}
 }
 
@@ -455,6 +445,88 @@ void CEventInfoPopup::GetPreferredIconSize(int *pWidth,int *pHeight) const
 }
 
 
+bool CEventInfoPopup::GetPopupPosition(int x,int y,RECT *pPos) const
+{
+	if (pPos==NULL)
+		return false;
+
+	RECT rc;
+	int Width,Height;
+
+	GetPosition(&rc);
+	Width=rc.right-rc.left;
+	Height=rc.bottom-rc.top;
+
+	POINT pt={x,y};
+	HMONITOR hMonitor=::MonitorFromPoint(pt,MONITOR_DEFAULTTONEAREST);
+	if (hMonitor!=NULL) {
+		MONITORINFO mi;
+
+		mi.cbSize=sizeof(mi);
+		if (::GetMonitorInfo(hMonitor,&mi)) {
+			if (x+Width>mi.rcMonitor.right)
+				x=mi.rcMonitor.right-Width;
+			if (y+Height>mi.rcMonitor.bottom) {
+				y=mi.rcMonitor.bottom-Height;
+				if (x+Width<mi.rcMonitor.right)
+					x+=min(16,mi.rcMonitor.right-(x+Width));
+			}
+		}
+	}
+
+	pPos->left=x;
+	pPos->right=x+Width;
+	pPos->top=y;
+	pPos->bottom=y+Height;
+
+	return true;
+}
+
+
+bool CEventInfoPopup::AdjustPopupPosition(POINT *pPos) const
+{
+	if (pPos==NULL)
+		return false;
+
+	RECT rc;
+	if (!GetPopupPosition(pPos->x,pPos->y,&rc))
+		return false;
+
+	pPos->x=rc.left;
+	pPos->y=rc.top;
+
+	return true;
+}
+
+
+bool CEventInfoPopup::GetDefaultPopupPosition(RECT *pPos) const
+{
+	if (pPos==NULL)
+		return false;
+
+	POINT pt;
+	::GetCursorPos(&pt);
+
+	return GetPopupPosition(pt.x,pt.y+16,pPos);
+}
+
+
+bool CEventInfoPopup::GetDefaultPopupPosition(POINT *pPos) const
+{
+	if (pPos==NULL)
+		return false;
+
+	RECT rc;
+	if (!GetDefaultPopupPosition(&rc))
+		return false;
+
+	pPos->x=rc.left;
+	pPos->y=rc.top;
+
+	return true;
+}
+
+
 LRESULT CEventInfoPopup::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 {
 	switch (uMsg) {
@@ -497,13 +569,13 @@ LRESULT CEventInfoPopup::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lPar
 
 			rc.left+=m_TitleLeftMargin;
 
-			if (m_hTitleIcon!=NULL) {
+			if (m_TitleIcon) {
 				int IconWidth=::GetSystemMetrics(SM_CXSMICON);
 				int IconHeight=::GetSystemMetrics(SM_CYSMICON);
 
 				::DrawIconEx(ps.hdc,
 					rc.left,rc.top+(m_TitleHeight-IconHeight)/2,
-					m_hTitleIcon,IconWidth,IconHeight,0,NULL,DI_NORMAL);
+					m_TitleIcon,IconWidth,IconHeight,0,NULL,DI_NORMAL);
 				rc.left+=IconWidth+m_TitleIconTextMargin;
 			}
 
@@ -575,7 +647,7 @@ LRESULT CEventInfoPopup::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lPar
 			::DestroyMenu(hmenu);
 			switch (Command) {
 			case 1:
-				CopyTextToClipboard(hwnd,m_EventInfo.GetEventName());
+				CopyTextToClipboard(hwnd,m_EventInfo.m_EventName.c_str());
 				break;
 			}
 			return 0;
@@ -643,35 +715,60 @@ LRESULT CEventInfoPopup::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lPar
 	case WM_NOTIFY:
 		switch (((LPNMHDR)lParam)->code) {
 		case EN_MSGFILTER:
-			if (reinterpret_cast<MSGFILTER*>(lParam)->msg==WM_RBUTTONDOWN) {
+			if (reinterpret_cast<MSGFILTER*>(lParam)->msg==WM_RBUTTONUP) {
+				enum {
+					COMMAND_COPY=1,
+					COMMAND_SELECTALL,
+					COMMAND_COPYEVENTNAME,
+					COMMAND_SEARCH
+				};
 				HMENU hmenu=::CreatePopupMenu();
 
-				::AppendMenu(hmenu,MF_STRING | MF_ENABLED,1,TEXT("コピー(&C)"));
-				::AppendMenu(hmenu,MF_STRING | MF_ENABLED,2,TEXT("すべて選択(&A)"));
-				::AppendMenu(hmenu,MF_STRING | MF_ENABLED,3,TEXT("番組名をコピー(&E)"));
+				::AppendMenu(hmenu,MF_STRING | MF_ENABLED,COMMAND_COPY,TEXT("コピー(&C)"));
+				::AppendMenu(hmenu,MF_STRING | MF_ENABLED,COMMAND_SELECTALL,TEXT("すべて選択(&A)"));
+				::AppendMenu(hmenu,MF_STRING | MF_ENABLED,COMMAND_COPYEVENTNAME,TEXT("番組名をコピー(&E)"));
 				if (m_pEventHandler!=NULL)
 					m_pEventHandler->OnMenuPopup(hmenu);
+				if (CRichEditUtil::IsSelected(m_hwndEdit)) {
+					const TVTest::CKeywordSearch &KeywordSearch=GetAppClass().KeywordSearch;
+					if (KeywordSearch.GetSearchEngineCount()>0) {
+						::AppendMenu(hmenu,MF_SEPARATOR,0,NULL);
+						KeywordSearch.InitializeMenu(hmenu,COMMAND_SEARCH,CEventHandler::COMMAND_FIRST-COMMAND_SEARCH);
+					}
+				}
+
 				POINT pt;
 				::GetCursorPos(&pt);
 				int Command=::TrackPopupMenu(hmenu,TPM_RIGHTBUTTON | TPM_RETURNCMD,pt.x,pt.y,0,hwnd,NULL);
 				::DestroyMenu(hmenu);
+
 				switch (Command) {
-				case 1:
+				case COMMAND_COPY:
 					if (::SendMessage(m_hwndEdit,EM_SELECTIONTYPE,0,0)==SEL_EMPTY) {
 						CRichEditUtil::CopyAllText(m_hwndEdit);
 					} else {
 						::SendMessage(m_hwndEdit,WM_COPY,0,0);
 					}
 					break;
-				case 2:
+
+				case COMMAND_SELECTALL:
 					CRichEditUtil::SelectAll(m_hwndEdit);
 					break;
-				case 3:
-					CopyTextToClipboard(hwnd,m_EventInfo.GetEventName());
+
+				case COMMAND_COPYEVENTNAME:
+					CopyTextToClipboard(hwnd,m_EventInfo.m_EventName.c_str());
 					break;
+
 				default:
-					if (Command>=CEventHandler::COMMAND_FIRST)
+					if (Command>=CEventHandler::COMMAND_FIRST) {
 						m_pEventHandler->OnMenuSelected(Command);
+					} else if (Command>=COMMAND_SEARCH) {
+						LPTSTR pszKeyword=CRichEditUtil::GetSelectedText(m_hwndEdit);
+						if (pszKeyword!=NULL) {
+							GetAppClass().KeywordSearch.Search(Command-COMMAND_SEARCH,pszKeyword);
+							delete [] pszKeyword;
+						}
+					}
 					break;
 				}
 			}
@@ -693,10 +790,7 @@ LRESULT CEventInfoPopup::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lPar
 		return 0;
 
 	case WM_DESTROY:
-		if (m_hTitleIcon!=NULL) {
-			::DestroyIcon(m_hTitleIcon);
-			m_hTitleIcon=NULL;
-		}
+		m_TitleIcon.Destroy();
 		return 0;
 	}
 

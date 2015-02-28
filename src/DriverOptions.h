@@ -29,18 +29,6 @@ public:
 
 class CDriverOptions : public COptions
 {
-	CDriverManager *m_pDriverManager;
-	CDriverSettingList m_SettingList;
-	CDriverSettingList m_CurSettingList;
-
-// CBasicDialog
-	INT_PTR DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
-
-	void InitDlgItem(int Driver);
-	void SetChannelList(int Driver);
-	void AddChannelList(const CChannelList *pChannelList);
-	CDriverSettings *GetCurSelDriverSettings() const;
-
 public:
 	struct ChannelInfo {
 		int Space;
@@ -51,11 +39,11 @@ public:
 	};
 
 	struct BonDriverOptions {
-		bool fNoDescramble;
 		bool fNoSignalLevel;
 		bool fIgnoreInitialStream;
 		bool fPurgeStreamOnChannelChange;
 		bool fResetChannelChangeErrorCount;
+		bool fPumpStreamSyncPlayback;
 		DWORD FirstChannelSetDelay;
 		DWORD MinChannelChangeInterval;
 
@@ -74,10 +62,26 @@ public:
 	bool Initialize(CDriverManager *pDriverManager);
 	bool GetInitialChannel(LPCTSTR pszFileName,ChannelInfo *pChannelInfo) const;
 	bool SetLastChannel(LPCTSTR pszFileName,const ChannelInfo *pChannelInfo);
-	bool IsNoDescramble(LPCTSTR pszFileName) const;
 	bool IsNoSignalLevel(LPCTSTR pszFileName) const;
 	bool IsResetChannelChangeErrorCount(LPCTSTR pszFileName) const;
 	bool GetBonDriverOptions(LPCTSTR pszFileName,BonDriverOptions *pOptions) const;
+
+private:
+	CDriverManager *m_pDriverManager;
+	CDriverSettingList m_SettingList;
+	CDriverSettingList m_CurSettingList;
+	CChannelList m_InitChannelList;
+
+	CDriverSettings *GetBonDriverSettings(LPCTSTR pszFileName);
+	const CDriverSettings *GetBonDriverSettings(LPCTSTR pszFileName) const;
+
+// CBasicDialog
+	INT_PTR DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
+
+	void InitDlgItem(int Driver);
+	void SetChannelList(int Driver);
+	void AddChannelList(const CChannelList *pChannelList);
+	CDriverSettings *GetCurSelDriverSettings() const;
 };
 
 

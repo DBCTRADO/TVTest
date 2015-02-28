@@ -35,12 +35,6 @@ void CChannelManager::Reset()
 	m_fUseDriverChannelList=false;
 	m_fChannelFileHasStreamIDs=false;
 	m_ChannelFileName.clear();
-
-#ifdef NETWORK_REMOCON_SUPPORT
-	m_fNetworkRemocon=false;
-	m_pNetworkRemoconChannelList=NULL;
-	m_NetworkRemoconCurrentChannel=-1;
-#endif
 }
 
 
@@ -169,14 +163,9 @@ bool CChannelManager::SetUseDriverChannelList(bool fUse)
 
 bool CChannelManager::SetCurrentChannel(int Space,int Channel)
 {
-#ifdef NETWORK_REMOCON_SUPPORT
-	if (!m_fNetworkRemocon)
-#endif
-	{
-		if (Space!=SPACE_ALL && Space!=SPACE_INVALID) {
-			if (Space<0 || Space>=NumSpaces())
-				return false;
-		}
+	if (Space!=SPACE_ALL && Space!=SPACE_INVALID) {
+		if (Space<0 || Space>=NumSpaces())
+			return false;
 	}
 	if (Space!=SPACE_INVALID) {
 		const CChannelList *pList=GetChannelList(Space);
@@ -211,20 +200,6 @@ const CChannelInfo *CChannelManager::GetCurrentChannelInfo() const
 
 	if (pList==NULL)
 		return NULL;
-	return pList->GetChannelInfo(
-#ifdef NETWORK_REMOCON_SUPPORT
-		m_fNetworkRemocon?m_NetworkRemoconCurrentChannel:
-#endif
-		m_CurrentChannel);
-}
-
-
-const CChannelInfo *CChannelManager::GetCurrentRealChannelInfo() const
-{
-	const CChannelList *pList=GetChannelList(m_CurrentSpace);
-
-	if (pList==NULL)
-		return NULL;
 	return pList->GetChannelInfo(m_CurrentChannel);
 }
 
@@ -250,50 +225,35 @@ int CChannelManager::GetNextChannel(bool fNext) const
 	if (m_ChangingChannel>=0)
 		Channel=m_ChangingChannel;
 
-#ifdef NETWORK_REMOCON_SUPPORT
-	if (m_fNetworkRemocon) {
-		if (Channel<0) {
-			if (m_NetworkRemoconCurrentChannel<0)
-				return -1;
-			Channel=m_NetworkRemoconCurrentChannel;
-		}
+	if (Channel<0) {
+		if (m_CurrentChannel<0)
+			return -1;
+		Channel=m_CurrentChannel;
+	}
+	//if (pList->HasRemoteControlKeyID()) {
+	if (pList->GetChannelNo(Channel)>0) {
 		if (fNext)
 			Channel=pList->GetNextChannel(Channel,true);
 		else
 			Channel=pList->GetPrevChannel(Channel,true);
-	} else
-#endif
-	{
-		if (Channel<0) {
-			if (m_CurrentChannel<0)
-				return -1;
-			Channel=m_CurrentChannel;
-		}
-		//if (pList->HasRemoteControlKeyID()) {
-		if (pList->GetChannelNo(Channel)>0) {
-			if (fNext)
-				Channel=pList->GetNextChannel(Channel,true);
-			else
-				Channel=pList->GetPrevChannel(Channel,true);
-		} else {
-			int i;
+	} else {
+		int i;
 
-			for (i=pList->NumChannels();i>0;i--) {
-				if (fNext) {
-					Channel++;
-					if (Channel>=pList->NumChannels())
-						Channel=0;
-				} else {
-					Channel--;
-					if (Channel<0)
-						Channel=pList->NumChannels()-1;
-				}
-				if (pList->IsEnabled(Channel))
-					break;
+		for (i=pList->NumChannels();i>0;i--) {
+			if (fNext) {
+				Channel++;
+				if (Channel>=pList->NumChannels())
+					Channel=0;
+			} else {
+				Channel--;
+				if (Channel<0)
+					Channel=pList->NumChannels()-1;
 			}
-			if (i==0)
-				return -1;
+			if (pList->IsEnabled(Channel))
+				break;
 		}
+		if (i==0)
+			return -1;
 	}
 
 	return Channel;
@@ -310,16 +270,6 @@ const CChannelInfo *CChannelManager::GetNextChannelInfo(bool fNext) const
 
 
 const CChannelList *CChannelManager::GetCurrentChannelList() const
-{
-#ifdef NETWORK_REMOCON_SUPPORT
-	if (m_fNetworkRemocon)
-		return m_pNetworkRemoconChannelList;
-#endif
-	return GetChannelList(m_CurrentSpace);
-}
-
-
-const CChannelList *CChannelManager::GetCurrentRealChannelList() const
 {
 	return GetChannelList(m_CurrentSpace);
 }
@@ -402,7 +352,8 @@ int CChannelManager::FindChannelInfo(const CChannelInfo *pInfo) const
 }
 
 
-int CChannelManager::FindChannelByIDs(int Space,WORD NetworkID,WORD TransportStreamID,WORD ServiceID) const
+int CChannelManager::FindChannelByIDs(int Space,WORD NetworkID,WORD TransportStreamID,WORD ServiceID,
+									  bool fEnabledOnly) const
 {
 	const CChannelList *pChannelList;
 
@@ -413,7 +364,7 @@ int CChannelManager::FindChannelByIDs(int Space,WORD NetworkID,WORD TransportStr
 	if (pChannelList==nullptr)
 		return -1;
 
-	return pChannelList->FindByIDs(NetworkID,TransportStreamID,ServiceID);
+	return pChannelList->FindByIDs(NetworkID,TransportStreamID,ServiceID,fEnabledOnly);
 }
 
 
@@ -434,171 +385,6 @@ bool CChannelManager::GetChannelFileName(LPTSTR pszFileName,int MaxLength) const
 
 	::lstrcpy(pszFileName,m_ChannelFileName.c_str());
 
-	return true;
-}
-
-
-#ifdef NETWORK_REMOCON_SUPPORT
-
-bool CChannelManager::SetNetworkRemoconMode(bool fNetworkRemocon,CChannelList *pList)
-{
-	if (fNetworkRemocon && pList==NULL)
-		return false;
-	m_fNetworkRemocon=fNetworkRemocon;
-	m_pNetworkRemoconChannelList=pList;
-	m_NetworkRemoconCurrentChannel=-1;
-	return true;
-}
-
-
-bool CChannelManager::SetNetworkRemoconCurrentChannel(int Channel)
-{
-	if (m_pNetworkRemoconChannelList==NULL
-			|| Channel<-1 || Channel>=m_pNetworkRemoconChannelList->NumChannels())
-		return false;
-	m_NetworkRemoconCurrentChannel=Channel;
-	return true;
-}
-
-#endif	// NETWORK_REMOCON_SUPPORT
-
-
-bool CChannelManager::UpdateStreamInfo(int Space,int ChannelIndex,
-						WORD NetworkID,WORD TransportStreamID,WORD ServiceID)
-{
-#ifdef NETWORK_REMOCON_SUPPORT
-	if (m_fNetworkRemocon) {
-		m_pNetworkRemoconChannelList->UpdateStreamInfo(Space,ChannelIndex,
-										NetworkID,TransportStreamID,ServiceID);
-	} else
-#endif
-	{
-		if (!m_fChannelFileHasStreamIDs)
-			m_TuningSpaceList.UpdateStreamInfo(Space,ChannelIndex,
-											   NetworkID,TransportStreamID,ServiceID);
-	}
-	return true;
-}
-
-
-bool CChannelManager::LoadChannelSettings(LPCTSTR pszFileName,LPCTSTR pszDriverName)
-{
-	if (m_TuningSpaceList.IsEmpty() || m_fChannelFileHasStreamIDs)
-		return true;
-
-	CSettings Settings;
-	int SpaceCount;
-
-	TRACE(TEXT("ストリーム情報の読み込み : \"%s\" [%s]\n"),pszFileName,pszDriverName);
-	if (!Settings.Open(pszFileName,CSettings::OPEN_READ)
-			|| !Settings.SetSection(::PathFindFileName(pszDriverName)))
-		return false;
-	if (Settings.Read(TEXT("SpaceCount"),&SpaceCount) && SpaceCount>0) {
-		for (int i=0;i<SpaceCount;i++) {
-			int NumChannels;
-			TCHAR szName[64];
-
-			::wsprintf(szName,TEXT("Space%d_Count"),i);
-			if (Settings.Read(szName,&NumChannels) && NumChannels>0) {
-				for (int j=0;j<NumChannels;j++) {
-					int ChannelIndex;
-					int NumServices;
-					unsigned int NetworkID,TSID,ServiceID;
-
-					::wsprintf(szName,TEXT("Space%d_ChannelMap%d"),i,j);
-					if (Settings.Read(szName,&ChannelIndex)) {
-						::wsprintf(szName,TEXT("Space%d_Channel%d_NID"),i,ChannelIndex);
-						if (!Settings.Read(szName,&NetworkID))
-							NetworkID=0;
-						::wsprintf(szName,TEXT("Space%d_Channel%d_TSID"),i,ChannelIndex);
-						if (!Settings.Read(szName,&TSID))
-							TSID=0;
-						if (NetworkID!=0 || TSID!=0) {
-							::wsprintf(szName,TEXT("Space%d_Channel%d_Count"),i,ChannelIndex);
-							if (Settings.Read(szName,&NumServices) && NumServices>0) {
-								for (int k=0;k<NumServices;k++) {
-									::wsprintf(szName,TEXT("Space%d_Channel%d_Service%d_SID"),i,ChannelIndex,k);
-									if (Settings.Read(szName,&ServiceID) && ServiceID!=0)
-										UpdateStreamInfo(i,ChannelIndex,NetworkID,TSID,ServiceID);
-								}
-							}
-						}
-					}
-				}
-			}
-		}
-	}
-	return true;
-}
-
-
-bool CChannelManager::SaveChannelSettings(LPCTSTR pszFileName,LPCTSTR pszDriverName)
-{
-	if (m_TuningSpaceList.IsEmpty() || m_fChannelFileHasStreamIDs)
-		return true;
-
-	CSettings Settings;
-	int SpaceCount;
-
-	TRACE(TEXT("ストリーム情報の保存 : \"%s\" [%s]\n"),pszFileName,pszDriverName);
-	if (!Settings.Open(pszFileName,CSettings::OPEN_WRITE)
-			|| !Settings.SetSection(::PathFindFileName(pszDriverName)))
-		return false;
-	SpaceCount=m_TuningSpaceList.NumSpaces();
-	Settings.Clear();
-	Settings.Write(TEXT("SpaceCount"),SpaceCount);
-	for (int i=0;i<SpaceCount;i++) {
-		const CChannelList *pList=m_TuningSpaceList.GetChannelList(i);
-		int NumChannels=pList->NumChannels();
-		TCHAR szName[64];
-
-		::wsprintf(szName,TEXT("Space%d_Count"),i);
-		Settings.Write(szName,NumChannels);
-		int LastIndex=0;
-		for (int j=0;j<NumChannels;j++) {
-			int Index=pList->GetChannelIndex(j);
-			if (Index>LastIndex)
-				LastIndex=Index;
-		}
-		int *pServiceCount=new int[LastIndex+1];
-		int Map=0;
-		for (int j=0;j<=LastIndex;j++) {
-			int NumServices=0;
-			for (int k=0;k<NumChannels;k++) {
-				if (pList->GetChannelIndex(k)==j)
-					NumServices++;
-			}
-			if (NumServices>0) {
-				::wsprintf(szName,TEXT("Space%d_ChannelMap%d"),i,Map++);
-				Settings.Write(szName,j);
-				::wsprintf(szName,TEXT("Space%d_Channel%d_Count"),i,j);
-				Settings.Write(szName,NumServices);
-			}
-			pServiceCount[j]=0;
-		}
-		for (int j=0;j<NumChannels;j++) {
-			const CChannelInfo *pChInfo=pList->GetChannelInfo(j);
-
-			if (pChInfo->GetNetworkID()!=0) {
-				::wsprintf(szName,TEXT("Space%d_Channel%d_NID"),
-					pChInfo->GetSpace(),pChInfo->GetChannelIndex());
-				Settings.Write(szName,pChInfo->GetNetworkID());
-			}
-			if (pChInfo->GetTransportStreamID()!=0) {
-				::wsprintf(szName,TEXT("Space%d_Channel%d_TSID"),
-					pChInfo->GetSpace(),pChInfo->GetChannelIndex());
-				Settings.Write(szName,pChInfo->GetTransportStreamID());
-			}
-			if (pChInfo->GetServiceID()!=0) {
-				::wsprintf(szName,TEXT("Space%d_Channel%d_Service%d_SID"),
-					pChInfo->GetSpace(),pChInfo->GetChannelIndex(),
-					pServiceCount[pChInfo->GetChannelIndex()]);
-				Settings.Write(szName,pChInfo->GetServiceID());
-			}
-			pServiceCount[pChInfo->GetChannelIndex()]++;
-		}
-		delete [] pServiceCount;
-	}
 	return true;
 }
 

@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "TVTest.h"
 #include "Settings.h"
+#include <utility>
 
 #ifdef _DEBUG
 #undef THIS_FILE
@@ -84,6 +85,27 @@ bool CSettings::SetSection(LPCTSTR pszSection)
 		return false;
 
 	return m_IniFile.SelectSection(pszSection);
+}
+
+
+bool CSettings::GetEntries(EntryList *pEntries)
+{
+	return m_IniFile.GetEntries(pEntries);
+}
+
+
+bool CSettings::IsValueExists(LPCTSTR pszValueName)
+{
+	return m_IniFile.IsValueExists(pszValueName);
+}
+
+
+bool CSettings::DeleteValue(LPCTSTR pszValueName)
+{
+	if ((m_OpenFlags&OPEN_WRITE)==0)
+		return false;
+
+	return m_IniFile.DeleteValue(pszValueName);
 }
 
 
@@ -175,7 +197,13 @@ bool CSettings::Read(LPCTSTR pszValueName,TVTest::String *pValue)
 	if (pValue==NULL)
 		return false;
 
-	return m_IniFile.GetValue(pszValueName,pValue);
+	TVTest::String Value;
+	if (!m_IniFile.GetValue(pszValueName,&Value))
+		return false;
+
+	*pValue=std::move(Value);
+
+	return true;
 }
 
 

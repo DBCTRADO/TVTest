@@ -5,27 +5,6 @@
 #include <vector>
 
 
-// iniファイルなどで設定できた方がいいと思われる
-inline bool IsBSNetworkID(WORD NetworkID) { return NetworkID==4; }
-inline bool IsCSNetworkID(WORD NetworkID) { return NetworkID>=6 && NetworkID<=10; }
-
-enum NetworkType
-{
-	NETWORK_TERRESTRIAL,
-	NETWORK_BS,
-	NETWORK_CS
-};
-
-inline NetworkType GetNetworkType(WORD NetworkID)
-{
-	if (IsBSNetworkID(NetworkID))
-		return NETWORK_BS;
-	if (IsCSNetworkID(NetworkID))
-		return NETWORK_CS;
-	return NETWORK_TERRESTRIAL;
-}
-
-
 #define FIRST_UHF_CHANNEL 13
 #define MAX_CHANNEL_NAME 64
 
@@ -69,6 +48,18 @@ public:
 	bool IsEnabled() const { return m_fEnabled; }
 };
 
+class CTunerChannelInfo : public CChannelInfo
+{
+public:
+	CTunerChannelInfo();
+	CTunerChannelInfo(const CChannelInfo &ChannelInfo,LPCTSTR pszTunerName=NULL);
+	void SetTunerName(LPCTSTR pszName);
+	LPCTSTR GetTunerName() const { return m_TunerName.c_str(); }
+
+protected:
+	TVTest::String m_TunerName;
+};
+
 class CChannelList
 {
 public:
@@ -92,11 +83,11 @@ public:
 	bool DeleteChannel(int Index);
 	void Clear();
 	int Find(const CChannelInfo *pInfo) const;
-	int Find(int Space,int ChannelIndex,int ServiceID=-1) const;
+	int FindByIndex(int Space,int ChannelIndex,int ServiceID=-1,bool fEnabledOnly=true) const;
 	int FindPhysicalChannel(int Channel) const;
 	int FindChannelNo(int No,bool fEnabledOnly=true) const;
 	int FindServiceID(WORD ServiceID) const;
-	int FindByIDs(WORD NetworkID,WORD TransportStreamID,WORD ServiceID) const;
+	int FindByIDs(WORD NetworkID,WORD TransportStreamID,WORD ServiceID,bool fEnabledOnly=true) const;
 	int FindByName(LPCTSTR pszName) const;
 	int GetNextChannel(int Index,bool fWrap=false) const;
 	int GetPrevChannel(int Index,bool fWrap=false) const;
@@ -112,8 +103,6 @@ public:
 		SORT_TRAILER
 	};
 	bool Sort(SortType Type,bool fDescending=false);
-	bool UpdateStreamInfo(int Space,int ChannelIndex,
-		WORD NetworkID,WORD TransportStreamID,WORD ServiceID);
 	bool HasRemoteControlKeyID() const;
 	bool HasMultiService() const;
 
@@ -175,8 +164,6 @@ public:
 	void Clear();
 	bool SaveToFile(LPCTSTR pszFileName) const;
 	bool LoadFromFile(LPCTSTR pszFileName);
-	bool UpdateStreamInfo(int Space,int ChannelIndex,
-		WORD NetworkID,WORD TransportStreamID,WORD ServiceID);
 
 private:
 	std::vector<CTuningSpaceInfo*> m_TuningSpaceList;

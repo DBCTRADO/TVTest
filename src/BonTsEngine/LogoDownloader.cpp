@@ -447,7 +447,7 @@ void CALLBACK CLogoDownloader::OnPatUpdated(const WORD wPID, CTsPidMapTarget *pM
 		pMapManager->MapTarget(pPatTable->GetPmtPID((WORD)i), new CPmtTable, OnPmtUpdated, pParam);
 	}
 
-	pMapManager->MapTarget(PID_NIT, new CNitTable, OnNitUpdated, pThis);
+	pMapManager->MapTarget(PID_NIT, new CNitMultiTable, OnNitUpdated, pThis);
 }
 
 
@@ -474,7 +474,7 @@ void CALLBACK CLogoDownloader::OnPmtUpdated(const WORD wPID, CTsPidMapTarget *pM
 		if (pPmtTable->GetStreamTypeID(EsIndex) == STREAM_TYPE_DATACARROUSEL) {
 			const CDescBlock *pDescBlock = pPmtTable->GetItemDesc(EsIndex);
 			if (pDescBlock) {
-				const CStreamIdDesc *pStreamIdDesc = dynamic_cast<const CStreamIdDesc*>(pDescBlock->GetDescByTag(CStreamIdDesc::DESC_TAG));
+				const CStreamIdDesc *pStreamIdDesc = pDescBlock->GetDesc<CStreamIdDesc>();
 
 				if (pStreamIdDesc
 						&& (pStreamIdDesc->GetComponentTag() == 0x79
@@ -496,30 +496,36 @@ void CALLBACK CLogoDownloader::OnNitUpdated(const WORD wPID, CTsPidMapTarget *pM
 {
 	// NITÇ™çXêVÇ≥ÇÍÇΩ
 	CLogoDownloader *pThis = static_cast<CLogoDownloader*>(pParam);
-	CNitTable *pNitTable = dynamic_cast<CNitTable*>(pMapTarget);
-	if (pNitTable == NULL)
+	CNitMultiTable *pNitMultiTable = dynamic_cast<CNitMultiTable*>(pMapTarget);
+	if (pNitMultiTable == NULL || !pNitMultiTable->IsNitComplete())
 		return;
 
-	for (WORD i = 0; i < pNitTable->GetTransportStreamNum(); i++) {
-		const CDescBlock *pDescBlock = pNitTable->GetItemDesc(i);
+	for (WORD SectionNo = 0; SectionNo < pNitMultiTable->GetNitSectionNum(); SectionNo++) {
+		const CNitTable *pNitTable = pNitMultiTable->GetNitTable(SectionNo);
 
-		if (pDescBlock) {
-			const CServiceListDesc *pServiceListDesc = dynamic_cast<const CServiceListDesc*>(pDescBlock->GetDescByTag(CServiceListDesc::DESC_TAG));
-			if (pServiceListDesc) {
-				for (int j = 0; j < pServiceListDesc->GetServiceNum(); j++) {
-					CServiceListDesc::ServiceInfo Info;
+		if (pNitTable) {
+			for (WORD i = 0; i < pNitTable->GetTransportStreamNum(); i++) {
+				const CDescBlock *pDescBlock = pNitTable->GetItemDesc(i);
 
-					if (pServiceListDesc->GetServiceInfo(j, &Info)) {
-						int Index = pThis->GetServiceIndexByID(Info.ServiceID);
-						if (Index >= 0) {
-							const BYTE ServiceType = Info.ServiceType;
-							if (pThis->m_ServiceList[Index].ServiceType != ServiceType) {
-								if (ServiceType == SERVICE_TYPE_ENGINEERING) {
-									pThis->MapDataEs(Index);
-								} else if (pThis->m_ServiceList[Index].ServiceType == SERVICE_TYPE_ENGINEERING) {
-									pThis->UnmapDataEs(Index);
+				if (pDescBlock) {
+					const CServiceListDesc *pServiceListDesc = pDescBlock->GetDesc<CServiceListDesc>();
+					if (pServiceListDesc) {
+						for (int j = 0; j < pServiceListDesc->GetServiceNum(); j++) {
+							CServiceListDesc::ServiceInfo Info;
+
+							if (pServiceListDesc->GetServiceInfo(j, &Info)) {
+								int Index = pThis->GetServiceIndexByID(Info.ServiceID);
+								if (Index >= 0) {
+									const BYTE ServiceType = Info.ServiceType;
+									if (pThis->m_ServiceList[Index].ServiceType != ServiceType) {
+										if (ServiceType == SERVICE_TYPE_ENGINEERING) {
+											pThis->MapDataEs(Index);
+										} else if (pThis->m_ServiceList[Index].ServiceType == SERVICE_TYPE_ENGINEERING) {
+											pThis->UnmapDataEs(Index);
+										}
+										pThis->m_ServiceList[Index].ServiceType = ServiceType;
+									}
 								}
-								pThis->m_ServiceList[Index].ServiceType = ServiceType;
 							}
 						}
 					}

@@ -323,19 +323,21 @@ void CDateTime::Get(SYSTEMTIME *pTime) const
 // トレースクラス
 /////////////////////////////////////////////////////////////////////////////
 
-void CTracer::Trace(LPCTSTR pszOutput, ...)
+void CTracer::Trace(TraceType Type, LPCTSTR pszOutput, ...)
 {
 	va_list Args;
 
 	va_start(Args,pszOutput);
-	TraceV(pszOutput,Args);
+	TraceV(Type,pszOutput,Args);
 	va_end(Args);
 }
 
-void CTracer::TraceV(LPCTSTR pszOutput,va_list Args)
+void CTracer::TraceV(TraceType Type, LPCTSTR pszOutput, va_list Args)
 {
-	StdUtil::vsnprintf(m_szBuffer,sizeof(m_szBuffer)/sizeof(TCHAR),pszOutput,Args);
-	OnTrace(m_szBuffer);
+	TCHAR szBuffer[512];
+
+	StdUtil::vsnprintf(szBuffer,sizeof(szBuffer)/sizeof(TCHAR),pszOutput,Args);
+	OnTrace(Type,szBuffer);
 }
 
 

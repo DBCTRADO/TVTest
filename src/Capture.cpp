@@ -18,6 +18,12 @@ static char THIS_FILE[]=__FILE__;
 #define CAPTURE_PREVIEW_WINDOW_CLASS	APP_NAME TEXT(" Capture Preview")
 #define CAPTURE_TITLE_TEXT TEXT("キャプチャ")
 
+enum {
+	CAPTURE_ICON_CAPTURE,
+	CAPTURE_ICON_SAVE,
+	CAPTURE_ICON_COPY
+};
+
 
 
 
@@ -134,9 +140,15 @@ bool CCaptureImage::UnlockData()
 }
 
 
-bool CCaptureImage::SetComment(LPCTSTR pszComment)
+void CCaptureImage::SetComment(LPCTSTR pszComment)
 {
-	return m_Comment.Set(pszComment);
+	TVTest::StringUtility::Assign(m_Comment,pszComment);
+}
+
+
+LPCTSTR CCaptureImage::GetComment() const
+{
+	return TVTest::StringUtility::GetCStrOrNull(m_Comment);
 }
 
 
@@ -295,9 +307,9 @@ LRESULT CCapturePreview::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lPar
 			m_pEventHandler->OnLButtonDown(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam));
 		return TRUE;
 
-	case WM_RBUTTONDOWN:
+	case WM_RBUTTONUP:
 		if (m_pEventHandler!=NULL)
-			m_pEventHandler->OnRButtonDown(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam));
+			m_pEventHandler->OnRButtonUp(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam));
 		return TRUE;
 
 	case WM_KEYDOWN:
@@ -386,6 +398,12 @@ bool CCaptureWindow::Create(HWND hwndParent,DWORD Style,DWORD ExStyle,int ID)
 }
 
 
+void CCaptureWindow::SetTheme(const TVTest::Theme::CThemeManager *pThemeManager)
+{
+	m_Status.SetTheme(pThemeManager);
+}
+
+
 bool CCaptureWindow::SetImage(const BITMAPINFO *pbmi,const void *pBits)
 {
 	ClearImage();
@@ -454,12 +472,6 @@ void CCaptureWindow::ShowStatusBar(bool fShow)
 }
 
 
-void CCaptureWindow::SetStatusTheme(const CStatusView::ThemeInfo *pTheme)
-{
-	m_Status.SetTheme(pTheme);
-}
-
-
 void CCaptureWindow::SetTitle()
 {
 	if (m_hwnd!=NULL) {
@@ -492,7 +504,7 @@ LRESULT CCaptureWindow::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lPara
 		//m_Status.SetEventHandler(pThis);
 		if (m_Status.NumItems()==0) {
 			if (!m_StatusIcons.IsCreated()) {
-				m_StatusIcons.Load(GetAppClass().GetResourceInstance(),IDB_CAPTURE);
+				m_StatusIcons.Load(GetAppClass().GetResourceInstance(),IDB_CAPTURE,16,16);
 			}
 			m_Status.AddItem(new CCaptureStatusItem(m_StatusIcons));
 			//m_Status.AddItem(new CContinuousStatusItem(m_StatusIcons));
@@ -573,7 +585,7 @@ CCaptureWindow::CPreviewEventHandler::CPreviewEventHandler(CCaptureWindow *pCapt
 }
 
 
-void CCaptureWindow::CPreviewEventHandler::OnRButtonDown(int x,int y)
+void CCaptureWindow::CPreviewEventHandler::OnRButtonUp(int x,int y)
 {
 	CPopupMenu Menu(GetAppClass().GetResourceInstance(),IDM_CAPTUREPREVIEW);
 
@@ -595,97 +607,46 @@ bool CCaptureWindow::CPreviewEventHandler::OnKeyDown(UINT KeyCode,UINT Flags)
 
 
 
-CCaptureWindow::CCaptureStatusItem::CCaptureStatusItem(DrawUtil::CMonoColorBitmap &IconBitmap)
-	: CStatusItem(STATUS_ITEM_CAPTURE,16)
-	, m_IconBitmap(IconBitmap)
+CCaptureWindow::CCaptureStatusItem::CCaptureStatusItem(DrawUtil::CMonoColorIconList &Icons)
+	: CIconStatusItem(STATUS_ITEM_CAPTURE,16)
+	, m_Icons(Icons)
 {
-	m_MinWidth=16;
 }
 
-void CCaptureWindow::CCaptureStatusItem::Draw(HDC hdc,const RECT *pRect)
+void CCaptureWindow::CCaptureStatusItem::Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect,unsigned int Flags)
 {
-	DrawIcon(hdc,pRect,m_IconBitmap);
+	DrawIcon(hdc,DrawRect,m_Icons,CAPTURE_ICON_CAPTURE);
 }
 
 void CCaptureWindow::CCaptureStatusItem::OnLButtonDown(int x,int y)
 {
-	GetAppClass().GetUICore()->DoCommand(CM_CAPTURE);
+	GetAppClass().UICore.DoCommand(CM_CAPTURE);
 }
 
 void CCaptureWindow::CCaptureStatusItem::OnRButtonDown(int x,int y)
 {
 	/*
-	HMENU hmenu;
 	POINT pt;
+	UINT Flags;
 
-	hmenu=LoadMenu(hInst,MAKEINTRESOURCE(IDM_CAPTURE));
-	CheckMenuRadioItem(hmenu,CM_CAPTURESIZE_FIRST,CM_CAPTURESIZE_LAST,
-		CM_CAPTURESIZE_FIRST+CaptureOptions.GetPresetCaptureSize(),MF_BYCOMMAND);
-	if (fShowCapturePreview)
-		CheckMenuItem(hmenu,CM_CAPTUREPREVIEW,MF_BYCOMMAND | MFS_CHECKED);
-	Accelerator.SetMenuAccel(GetSubMenu(hmenu,0));
-	GetMenuPos(&pt);
-	TrackPopupMenu(GetSubMenu(hmenu,0),TPM_RIGHTBUTTON,pt.x,pt.y,0,
-												MainWindow.GetHandle(),NULL);
-	DestroyMenu(hmenu);
+	GetMenuPos(&pt,&Flags);
+	GetAppClass().UICore.ShowSpecialMenu(CUICore::MENU_CAPTURE,
+										 &pt,Flags | TPM_RIGHTBUTTON);
 	*/
 }
-
-
-// その昔に連写機能を付けようとした名残…
-#if 0
-
-CCaptureWindow::CContinuousStatusItem::CContinuousStatusItem(DrawUtil::CMonoColorBitmap &IconBitmap)
-	: CStatusItem(STATUS_ITEM_CONTINUOUS,16)
-	, m_IconBitmap(IconBitmap)
-{
-	m_MinWidth=16;
-}
-
-void CCaptureWindow::CContinuousStatusItem::Draw(HDC hdc,const RECT *pRect)
-{
-	DrawIcon(hdc,pRect,m_IconBitmap,16);
-}
-
-void CCaptureWindow::CContinuousStatusItem::OnLButtonDown(int x,int y)
-{
-	GetAppClass().GetMainWindow()->SendCommand(CM_CONTINUOUSSHOOTING);
-}
-
-void CCaptureWindow::CContinuousStatusItem::OnRButtonDown(int x,int y)
-{
-	/*
-	HMENU hmenu;
-	POINT pt;
-
-	hmenu=LoadMenu(hInst,MAKEINTRESOURCE(IDM_CAPTURE));
-	CheckMenuRadioItem(hmenu,CM_CAPTURESIZE_FIRST,CM_CAPTURESIZE_LAST,
-		CM_CAPTURESIZE_FIRST+CaptureOptions.GetPresetCaptureSize(),MF_BYCOMMAND);
-	if (fShowCapturePreview)
-		CheckMenuItem(hmenu,CM_CAPTUREPREVIEW,MF_BYCOMMAND | MFS_CHECKED);
-	Accelerator.SetMenuAccel(GetSubMenu(hmenu,0));
-	GetMenuPos(&pt);
-	TrackPopupMenu(GetSubMenu(hmenu,0),TPM_RIGHTBUTTON,pt.x,pt.y,0,
-												MainWindow.GetHandle(),NULL);
-	DestroyMenu(hmenu);
-	*/
-}
-
-#endif
 
 
 CCaptureWindow::CSaveStatusItem::CSaveStatusItem(CCaptureWindow *pCaptureWindow,
-												 DrawUtil::CMonoColorBitmap &IconBitmap)
-	: CStatusItem(STATUS_ITEM_SAVE,16)
+												 DrawUtil::CMonoColorIconList &Icons)
+	: CIconStatusItem(STATUS_ITEM_SAVE,16)
 	, m_pCaptureWindow(pCaptureWindow)
-	, m_IconBitmap(IconBitmap)
+	, m_Icons(Icons)
 {
-	m_MinWidth=16;
 }
 
-void CCaptureWindow::CSaveStatusItem::Draw(HDC hdc,const RECT *pRect)
+void CCaptureWindow::CSaveStatusItem::Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect,unsigned int Flags)
 {
-	DrawIcon(hdc,pRect,m_IconBitmap,32);
+	DrawIcon(hdc,DrawRect,m_Icons,CAPTURE_ICON_SAVE);
 }
 
 void CCaptureWindow::CSaveStatusItem::OnLButtonDown(int x,int y)
@@ -695,17 +656,16 @@ void CCaptureWindow::CSaveStatusItem::OnLButtonDown(int x,int y)
 
 
 CCaptureWindow::CCopyStatusItem::CCopyStatusItem(CCaptureWindow *pCaptureWindow,
-												 DrawUtil::CMonoColorBitmap &IconBitmap)
-	: CStatusItem(STATUS_ITEM_COPY,16)
+												 DrawUtil::CMonoColorIconList &Icons)
+	: CIconStatusItem(STATUS_ITEM_COPY,16)
 	, m_pCaptureWindow(pCaptureWindow)
-	, m_IconBitmap(IconBitmap)
+	, m_Icons(Icons)
 {
-	m_MinWidth=16;
 }
 
-void CCaptureWindow::CCopyStatusItem::Draw(HDC hdc,const RECT *pRect)
+void CCaptureWindow::CCopyStatusItem::Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect,unsigned int Flags)
 {
-	DrawIcon(hdc,pRect,m_IconBitmap,48);
+	DrawIcon(hdc,DrawRect,m_Icons,CAPTURE_ICON_COPY);
 }
 
 void CCaptureWindow::CCopyStatusItem::OnLButtonDown(int x,int y)

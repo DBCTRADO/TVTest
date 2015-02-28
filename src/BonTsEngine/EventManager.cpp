@@ -14,18 +14,15 @@ static char THIS_FILE[]=__FILE__;
 // EITテーブル解析クラス
 /////////////////////////////////////////////////////////////////////////////
 
-class CEitTable : public CPsiStreamTable
+class CEitParserTable : public CPsiStreamTable
 {
 public:
-	CEitTable(ISectionHandler *pHandler = NULL);
-	CEitTable(const CEitTable &Operand);
-
-	CEitTable & operator = (const CEitTable &Operand);
+	CEitParserTable(ISectionHandler *pHandler = NULL);
 
 // CPsiStreamTable
-	virtual void Reset(void);
+	void Reset() override;
 
-// CEitTable
+// CEitParserTable
 	struct EventInfo {
 		WORD EventID;
 		bool bValidStartTime;
@@ -36,22 +33,22 @@ public:
 		CDescBlock DescBlock;
 	};
 
-	const WORD GetServiceID() const;
-	const WORD GetTransportStreamID() const;
-	const WORD GetOriginalNetworkID() const;
-	const BYTE GetSegmentLastSectionNumber() const;
-	const BYTE GetLastTableID() const;
-	const int GetEventNum() const;
+	WORD GetServiceID() const;
+	WORD GetTransportStreamID() const;
+	WORD GetOriginalNetworkID() const;
+	BYTE GetSegmentLastSectionNumber() const;
+	BYTE GetLastTableID() const;
+	int GetEventNum() const;
 	const EventInfo * GetEventInfo(const int Index) const;
-	const WORD GetEventID(const int Index) const;
+	WORD GetEventID(const int Index) const;
 	const SYSTEMTIME * GetStartTime(const int Index) const;
-	const DWORD GetDuration(const int Index) const;
-	const BYTE GetRunningStatus(const int Index) const;
-	const bool GetFreeCaMode(const int Index) const;
+	DWORD GetDuration(const int Index) const;
+	BYTE GetRunningStatus(const int Index) const;
+	bool GetFreeCaMode(const int Index) const;
 	const CDescBlock * GetItemDesc(const int Index) const;
 
 protected:
-	virtual const bool OnTableUpdate(const CPsiSection *pCurSection);
+	const bool OnTableUpdate(const CPsiSection *pCurSection) override;
 
 	WORD m_ServiceID;
 	WORD m_TransportStreamID;
@@ -62,31 +59,13 @@ protected:
 	std::vector<EventInfo> m_EventList;
 };
 
-CEitTable::CEitTable(ISectionHandler *pHandler)
+CEitParserTable::CEitParserTable(ISectionHandler *pHandler)
 	: CPsiStreamTable(pHandler)
 {
 	Reset();
 }
 
-CEitTable::CEitTable(const CEitTable &Operand)
-{
-	*this = Operand;
-}
-
-CEitTable & CEitTable::operator = (const CEitTable &Operand)
-{
-	if (this != &Operand) {
-		CPsiStreamTable::operator = (Operand);
-		m_ServiceID = Operand.m_ServiceID;
-		m_TransportStreamID = Operand.m_TransportStreamID;
-		m_OriginalNetworkID = Operand.m_OriginalNetworkID;
-		m_EventList = Operand.m_EventList;
-	}
-
-	return *this;
-}
-
-void CEitTable::Reset(void)
+void CEitParserTable::Reset(void)
 {
 	// 状態をクリアする
 	CPsiStreamTable::Reset();
@@ -94,78 +73,80 @@ void CEitTable::Reset(void)
 	m_ServiceID = 0;
 	m_TransportStreamID = 0;
 	m_OriginalNetworkID = 0;
+	m_SegmentLastSectionNumber = 0;
+	m_LastTableID = 0;
 	m_EventList.clear();
 }
 
-const WORD CEitTable::GetServiceID() const
+WORD CEitParserTable::GetServiceID() const
 {
 	return m_ServiceID;
 }
 
-const WORD CEitTable::GetTransportStreamID() const
+WORD CEitParserTable::GetTransportStreamID() const
 {
 	return m_TransportStreamID;
 }
 
-const WORD CEitTable::GetOriginalNetworkID() const
+WORD CEitParserTable::GetOriginalNetworkID() const
 {
 	return m_OriginalNetworkID;
 }
 
 
-const BYTE CEitTable::GetSegmentLastSectionNumber() const
+BYTE CEitParserTable::GetSegmentLastSectionNumber() const
 {
 	return m_SegmentLastSectionNumber;
 }
 
 
-const BYTE CEitTable::GetLastTableID() const
+BYTE CEitParserTable::GetLastTableID() const
 {
 	return m_LastTableID;
 }
 
 
-const int CEitTable::GetEventNum() const
+int CEitParserTable::GetEventNum() const
 {
 	return (int)m_EventList.size();
 }
 
-const CEitTable::EventInfo * CEitTable::GetEventInfo(const int Index) const
+const CEitParserTable::EventInfo * CEitParserTable::GetEventInfo(const int Index) const
 {
 	if (Index < 0 || (size_t)Index >= m_EventList.size())
 		return NULL;
 	return &m_EventList[Index];
 }
 
-const WORD CEitTable::GetEventID(const int Index) const
+WORD CEitParserTable::GetEventID(const int Index) const
 {
 	if (Index < 0 || (size_t)Index >= m_EventList.size())
 		return 0;
 	return m_EventList[Index].EventID;
 }
 
-const SYSTEMTIME * CEitTable::GetStartTime(const int Index) const
+const SYSTEMTIME * CEitParserTable::GetStartTime(const int Index) const
 {
 	if (Index < 0 || (size_t)Index >= m_EventList.size())
 		return NULL;
 	return &m_EventList[Index].StartTime;
 }
 
-const DWORD CEitTable::GetDuration(const int Index) const
+DWORD CEitParserTable::GetDuration(const int Index) const
 {
 	if (Index < 0 || (size_t)Index >= m_EventList.size())
 		return 0;
 	return m_EventList[Index].Duration;
 }
 
-const BYTE CEitTable::GetRunningStatus(const int Index) const
+BYTE CEitParserTable::GetRunningStatus(const int Index) const
 {
 	if (Index < 0 || (size_t)Index >= m_EventList.size())
 		return 0;
 	return m_EventList[Index].RunningStatus;
 }
 
-const bool CEitTable::GetFreeCaMode(const int Index) const
+bool CEitParserTable::GetFreeCaMode(const int Index) const
 {
 	// Free CA Modeを返す
 	if (Index < 0 || (size_t)Index >= m_EventList.size())
@@ -173,7 +154,7 @@ const bool CEitTable::GetFreeCaMode(const int Index) const
 	return m_EventList[Index].bFreeCaMode;
 }
 
-const CDescBlock * CEitTable::GetItemDesc(const int Index) const
+const CDescBlock * CEitParserTable::GetItemDesc(const int Index) const
 {
 	// アイテムの記述子ブロックを返す
 	if (Index < 0 || (size_t)Index >= m_EventList.size())
@@ -181,7 +162,7 @@ const CDescBlock * CEitTable::GetItemDesc(const int Index) const
 	return &m_EventList[Index].DescBlock;
 }
 
-const bool CEitTable::OnTableUpdate(const CPsiSection *pCurSection)
+const bool CEitParserTable::OnTableUpdate(const CPsiSection *pCurSection)
 {
 	const BYTE TableID = pCurSection->GetTableID();
 	if (TableID < 0x4E || TableID > 0x6F
@@ -243,114 +224,6 @@ static ULONGLONG GetScheduleTime(ULONGLONG CurTime, WORD TableID, BYTE SectionNu
 	return (CurTime / (24 * HOUR) * (24 * HOUR)) +
 			((TableID & 0x07) * (4 * 24 * HOUR)) +
 			((SectionNumber >> 3) * (3 * HOUR));
-}
-
-// 拡張テキストを取得する
-static int GetExtendedEventText(const CDescBlock *pDescBlock, LPTSTR pszText, int MaxLength)
-{
-	pszText[0] = '\0';
-
-	std::vector<const CExtendedEventDesc *> DescList;
-	for (int i = 0; i < pDescBlock->GetDescNum(); i++) {
-		const CBaseDesc *pDesc = pDescBlock->GetDescByIndex(i);
-		if (pDesc != NULL && pDesc->GetTag() == CExtendedEventDesc::DESC_TAG) {
-			const CExtendedEventDesc *pExtendedEvent = dynamic_cast<const CExtendedEventDesc *>(pDesc);
-			if (pExtendedEvent != NULL) {
-				DescList.push_back(pExtendedEvent);
-			}
-		}
-	}
-	if (DescList.size() == 0)
-		return 0;
-
-	// descriptor_number 順にソートする
-	for (int i = (int)DescList.size() - 2; i >= 0; i--) {
-		const CExtendedEventDesc *pKey = DescList[i];
-		int j;
-		for (j = i + 1; j < (int)DescList.size() && DescList[j]->GetDescriptorNumber() < pKey->GetDescriptorNumber(); j++)
-			DescList[j - 1] = DescList[j];
-		DescList[j - 1] = pKey;
-	}
-
-	struct ItemInfo {
-		BYTE DescriptorNumber;
-		LPCTSTR pszDescription;
-		int Data1Length;
-		const BYTE *pData1;
-		int Data2Length;
-		const BYTE *pData2;
-	};
-	std::vector<ItemInfo> ItemList;
-	for (int i = 0; i < (int)DescList.size(); i++) {
-		const CExtendedEventDesc *pExtendedEvent = DescList[i];
-		for (int j = 0; j < pExtendedEvent->GetItemCount(); j++) {
-			const CExtendedEventDesc::ItemInfo *pItem = pExtendedEvent->GetItem(j);
-			if (pItem == NULL)
-				continue;
-			if (pItem->szDescription[0] != '\0') {
-				// 新規項目
-				ItemInfo Item;
-				Item.DescriptorNumber = pExtendedEvent->GetDescriptorNumber();
-				Item.pszDescription = pItem->szDescription;
-				Item.Data1Length = pItem->ItemLength;
-				Item.pData1 = pItem->ItemChar;
-				Item.Data2Length = 0;
-				Item.pData2 = NULL;
-				ItemList.push_back(Item);
-			} else if (ItemList.size() > 0) {
-				// 前の項目の続き
-				ItemInfo &Item = ItemList[ItemList.size() - 1];
-				if (Item.DescriptorNumber == pExtendedEvent->GetDescriptorNumber() - 1
-						&& Item.pData2 == NULL) {
-					Item.Data2Length = pItem->ItemLength;
-					Item.pData2 = pItem->ItemChar;
-				}
-			}
-		}
-	}
-
-	TCHAR szText[1024];
-	int Length;
-	int Pos = 0;
-	for (int i = 0; i < (int)ItemList.size(); i++) {
-		ItemInfo &Item = ItemList[i];
-		Length = ::lstrlen(Item.pszDescription);
-		if (Length + 2 >= MaxLength - Pos)
-			break;
-		::lstrcpy(&pszText[Pos], Item.pszDescription);
-		Pos += Length;
-		pszText[Pos++] = '\r';
-		pszText[Pos++] = '\n';
-		if (Item.pData2 == NULL) {
-			CAribString::AribToString(szText, 1024, Item.pData1, Item.Data1Length);
-		} else {
-			BYTE Buffer[220 * 2];
-			::CopyMemory(Buffer, Item.pData1, Item.Data1Length);
-			::CopyMemory(Buffer + Item.Data1Length, Item.pData2, Item.Data2Length);
-			CAribString::AribToString(szText, 1024, Buffer, Item.Data1Length + Item.Data2Length);
-		}
-		LPTSTR p = szText;
-		while (*p != '\0') {
-			if (Pos >= MaxLength - 1)
-				break;
-			pszText[Pos++] = *p;
-			if (*p == '\r') {
-				if (*(p + 1) != '\n') {
-					if (Pos == MaxLength - 1)
-						break;
-					pszText[Pos++] = '\n';
-				}
-			}
-			p++;
-		}
-		if (Pos + 2 >= MaxLength)
-			break;
-		pszText[Pos++] = '\r';
-		pszText[Pos++] = '\n';
-	}
-	pszText[Pos] = '\0';
-
-	return Pos;
 }
 
 
@@ -479,13 +352,13 @@ void CEventManager::Reset()
 	m_PidMapManager.UnmapAllTarget();
 
 	// H-EITテーブルPIDマップ追加
-	m_PidMapManager.MapTarget(PID_HEIT, new CEitTable(this));
+	m_PidMapManager.MapTarget(PID_HEIT, new CEitParserTable(this));
 
 	// M-EITテーブルPIDマップ追加
-	//m_PidMapManager.MapTarget(PID_MEIT, new CEitTable(this));
+	//m_PidMapManager.MapTarget(PID_MEIT, new CEitParserTable(this));
 
 	// L-EITテーブルPIDマップ追加
-	m_PidMapManager.MapTarget(PID_LEIT, new CEitTable(this));
+	m_PidMapManager.MapTarget(PID_LEIT, new CEitParserTable(this));
 
 	// TOTテーブルPIDマップ追加
 	m_PidMapManager.MapTarget(PID_TOT, new CTotTable, OnTotUpdated, this);
@@ -540,34 +413,46 @@ bool CEventManager::IsServiceUpdated(const WORD NetworkID, const WORD TransportS
 }
 
 
-static bool IsEventValid(const CEventManager::CEventInfo &Event)
+static bool IsEventValid(const CEventInfo &Event)
 {
-	return Event.GetEventName() != NULL || Event.IsCommonEvent();
+	return !Event.m_EventName.empty() || Event.m_bCommonEvent;
 }
 
-bool CEventManager::GetEventList(const WORD NetworkID, const WORD TransportStreamID, const WORD ServiceID, EventList *pList)
+bool CEventManager::GetEventList(const WORD NetworkID, const WORD TransportStreamID, const WORD ServiceID,
+								 EventList *pList, TimeEventMap *pTimeEventMap)
 {
 	if (!pList)
 		return false;
+
+	pList->clear();
 
 	CBlockLock Lock(&m_DecoderLock);
 
 	ServiceMapKey Key = GetServiceMapKey(NetworkID, TransportStreamID, ServiceID);
 	ServiceMap::iterator itrService = m_ServiceMap.find(Key);
-	if (itrService == m_ServiceMap.end()) {
-		pList->clear();
+	if (itrService == m_ServiceMap.end())
 		return false;
-	}
 
-	pList->resize(itrService->second.EventMap.size());
-	EventMap::iterator itrEvent = itrService->second.EventMap.begin();
-	size_t i;
-	for (i = 0; itrEvent != itrService->second.EventMap.end(); ++itrEvent) {
-		if (IsEventValid(itrEvent->second))
-			(*pList)[i++] = itrEvent->second;
+	const ServiceEventMap &Service = itrService->second;
+
+	pList->reserve(Service.EventMap.size());
+
+	if (pTimeEventMap) {
+		pTimeEventMap->clear();
+		for (auto itrTime = Service.TimeMap.begin(); itrTime != Service.TimeMap.end(); ++itrTime) {
+			auto itrEvent = Service.EventMap.find(itrTime->EventID);
+			if (itrEvent != Service.EventMap.end()
+					&& IsEventValid(itrEvent->second)) {
+				pList->push_back(itrEvent->second);
+				pTimeEventMap->insert(*itrTime);
+			}
+		}
+	} else {
+		for (auto itrEvent = Service.EventMap.begin(); itrEvent != Service.EventMap.end(); ++itrEvent) {
+			if (IsEventValid(itrEvent->second))
+				pList->push_back(itrEvent->second);
+		}
 	}
-	if (i < pList->size())
-		pList->resize(i);
 
 	itrService->second.bUpdated = false;
 
@@ -668,7 +553,7 @@ bool CEventManager::RemoveEvent(EventMap *pMap, const WORD EventID)
 
 void CEventManager::OnSection(CPsiStreamTable *pTable, const CPsiSection *pSection)
 {
-	const CEitTable *pEitTable = dynamic_cast<const CEitTable *>(pTable);
+	const CEitParserTable *pEitTable = dynamic_cast<const CEitParserTable *>(pTable);
 
 	ServiceMapKey Key = GetServiceMapKey(pEitTable->GetOriginalNetworkID(),
 										 pEitTable->GetTransportStreamID(),
@@ -691,20 +576,7 @@ void CEventManager::OnSection(CPsiStreamTable *pTable, const CPsiSection *pSecti
 	ServiceEventMap &Service = itrService->second;
 
 	SYSTEMTIME CurSysTime;
-#if 0
-	::GetLocalTime(&CurSysTime);
-#else
-	// UTC+9の現在日時を取得
-	FILETIME ft;
-	ULARGE_INTEGER uli;
-	::GetSystemTimeAsFileTime(&ft);
-	uli.LowPart  = ft.dwLowDateTime;
-	uli.HighPart = ft.dwHighDateTime;
-	uli.QuadPart += 9LL * 60LL * 60LL * 10000000LL;
-	ft.dwLowDateTime  = uli.LowPart;
-	ft.dwHighDateTime = uli.HighPart;
-	::FileTimeToSystemTime(&ft, &CurSysTime);
-#endif
+	GetCurrentEpgTime(&CurSysTime);
 
 	const ULONGLONG CurTotTime = m_CurTotSeconds;
 	bool bUpdated = false;
@@ -713,8 +585,12 @@ void CEventManager::OnSection(CPsiStreamTable *pTable, const CPsiSection *pSecti
 	const int NumEvents = pEitTable->GetEventNum();
 
 	if (NumEvents > 0) {
+		const WORD NetworkID = pEitTable->GetOriginalNetworkID();
+		const WORD TransportStreamID = pEitTable->GetTransportStreamID();
+		const WORD ServiceID = pEitTable->GetServiceID();
+
 		for (int i = 0; i < NumEvents; i++) {
-			const CEitTable::EventInfo *pEventInfo = pEitTable->GetEventInfo(i);
+			const CEitParserTable::EventInfo *pEventInfo = pEitTable->GetEventInfo(i);
 
 			// 開始/終了時刻が未定義のものは除外する
 			if (!pEventInfo->bValidStartTime || pEventInfo->Duration == 0)
@@ -801,7 +677,7 @@ void CEventManager::OnSection(CPsiStreamTable *pTable, const CPsiSection *pSecti
 				Service.EventMap.insert(std::pair<WORD, CEventInfo>(pEventInfo->EventID, CEventInfo()));
 			CEventInfo *pEvent = &EventResult.first->second;
 			if (!EventResult.second) {
-				if (pEvent->m_UpdateTime > CurTotTime)
+				if (pEvent->m_UpdatedTime > CurTotTime)
 					continue;
 
 				if (DiffSystemTime(&pEvent->m_StartTime, &pEventInfo->StartTime) != 0) {
@@ -814,8 +690,12 @@ void CEventManager::OnSection(CPsiStreamTable *pTable, const CPsiSection *pSecti
 				}
 			}
 
-			pEvent->m_UpdateTime = CurTotTime;
+			pEvent->m_UpdatedTime = CurTotTime;
+			pEvent->m_NetworkID = NetworkID;
+			pEvent->m_TransportStreamID = TransportStreamID;
+			pEvent->m_ServiceID = ServiceID;
 			pEvent->m_EventID = pEventInfo->EventID;
+			pEvent->m_bValidStartTime = true;
 			pEvent->m_StartTime = pEventInfo->StartTime;
 			pEvent->m_Duration = pEventInfo->Duration;
 			pEvent->m_RunningStatus = pEventInfo->RunningStatus;
@@ -837,30 +717,40 @@ void CEventManager::OnSection(CPsiStreamTable *pTable, const CPsiSection *pSecti
 			int Length;
 			TCHAR szText[2048];
 
-			const CShortEventDesc *pShortEvent =
-				dynamic_cast<const CShortEventDesc*>(pDescBlock->GetDescByTag(CShortEventDesc::DESC_TAG));
+			const CShortEventDesc *pShortEvent = pDescBlock->GetDesc<CShortEventDesc>();
 			if (pShortEvent) {
 				Length = (int)pShortEvent->GetEventName(szText, _countof(szText));
 				if (Length > 0)
-					pEvent->SetEventName(szText);
+					pEvent->m_EventName = szText;
 				Length = (int)pShortEvent->GetEventDesc(szText, _countof(szText));
 				if (Length > 0)
-					pEvent->SetEventText(szText);
+					pEvent->m_EventText = szText;
 			}
 
-			Length = GetExtendedEventText(pDescBlock, szText, _countof(szText));
+			Length = GetEventExtendedText(pDescBlock, szText, _countof(szText));
 			if (Length > 0)
-				pEvent->SetEventExtendedText(szText);
+				pEvent->m_EventExtendedText = szText;
 
-			const CComponentDesc *pComponentDesc =
-				dynamic_cast<const CComponentDesc*>(pDescBlock->GetDescByTag(CComponentDesc::DESC_TAG));
-			if (pComponentDesc) {
-				pEvent->m_VideoInfo.StreamContent = pComponentDesc->GetStreamContent();
-				pEvent->m_VideoInfo.ComponentType = pComponentDesc->GetComponentType();
-				pEvent->m_VideoInfo.ComponentTag = pComponentDesc->GetComponentTag();
-				pEvent->m_VideoInfo.LanguageCode = pComponentDesc->GetLanguageCode();
-				pEvent->m_VideoInfo.szText[0] = _T('\0');
-				pComponentDesc->GetText(pEvent->m_VideoInfo.szText, CEventInfo::VideoInfo::MAX_TEXT);
+			if (pDescBlock->GetDescByTag(CComponentDesc::DESC_TAG) != NULL) {
+				pEvent->m_VideoList.clear();
+				for (WORD j = 0; j < pDescBlock->GetDescNum(); j++) {
+					const CBaseDesc *pDesc = pDescBlock->GetDescByIndex(j);
+					if (pDesc->GetTag() == CComponentDesc::DESC_TAG) {
+						const CComponentDesc *pComponentDesc =
+							dynamic_cast<const CComponentDesc*>(pDesc);
+						if (pComponentDesc) {
+							CEventInfo::VideoInfo Info;
+
+							Info.StreamContent = pComponentDesc->GetStreamContent();
+							Info.ComponentType = pComponentDesc->GetComponentType();
+							Info.ComponentTag = pComponentDesc->GetComponentTag();
+							Info.LanguageCode = pComponentDesc->GetLanguageCode();
+							Info.szText[0] = _T('\0');
+							pComponentDesc->GetText(Info.szText, CEventInfo::VideoInfo::MAX_TEXT);
+							pEvent->m_VideoList.push_back(Info);
+						}
+					}
+				}
 			}
 
 			if (pDescBlock->GetDescByTag(CAudioComponentDesc::DESC_TAG) != NULL) {
@@ -891,19 +781,17 @@ void CEventManager::OnSection(CPsiStreamTable *pTable, const CPsiSection *pSecti
 				}
 			}
 
-			const CContentDesc *pContentDesc =
-				dynamic_cast<const CContentDesc *>(pDescBlock->GetDescByTag(CContentDesc::DESC_TAG));
+			const CContentDesc *pContentDesc = pDescBlock->GetDesc<CContentDesc>();
 			if (pContentDesc) {
 				int NibbleCount = pContentDesc->GetNibbleCount();
 				if (NibbleCount > 7)
 					NibbleCount = 7;
 				pEvent->m_ContentNibble.NibbleCount = NibbleCount;
-				for (int i = 0; i < NibbleCount; i++)
-					pContentDesc->GetNibble(i, &pEvent->m_ContentNibble.NibbleList[i]);
+				for (int j = 0; j < NibbleCount; j++)
+					pContentDesc->GetNibble(j, &pEvent->m_ContentNibble.NibbleList[j]);
 			}
 
-			const CEventGroupDesc *pGroupDesc =
-				dynamic_cast<const CEventGroupDesc*>(pDescBlock->GetDescByTag(CEventGroupDesc::DESC_TAG));
+			const CEventGroupDesc *pGroupDesc = pDescBlock->GetDesc<CEventGroupDesc>();
 			if (pGroupDesc) {
 				pEvent->m_EventGroupList.resize(1);
 				CEventInfo::EventGroupInfo &GroupInfo = pEvent->m_EventGroupList[0];
@@ -911,8 +799,8 @@ void CEventManager::OnSection(CPsiStreamTable *pTable, const CPsiSection *pSecti
 				GroupInfo.GroupType = pGroupDesc->GetGroupType();
 				const int NumEvents = pGroupDesc->GetEventNum();
 				GroupInfo.EventList.resize(NumEvents);
-				for (int i = 0; i < NumEvents; i++)
-					pGroupDesc->GetEventInfo(i, &GroupInfo.EventList[i]);
+				for (int j = 0; j < NumEvents; j++)
+					pGroupDesc->GetEventInfo(j, &GroupInfo.EventList[j]);
 
 				if (GroupInfo.GroupType == CEventGroupDesc::GROUPTYPE_COMMON
 						&& NumEvents == 1) {
@@ -980,104 +868,6 @@ void CALLBACK CEventManager::OnTotUpdated(const WORD wPID, CTsPidMapTarget *pMap
 
 
 
-CEventManager::CEventInfo::CEventInfo()
-	: m_UpdateTime(0)
-	, m_Type(0)
-	, m_pszEventName(NULL)
-	, m_pszEventText(NULL)
-	, m_pszEventExtendedText(NULL)
-	, m_bCommonEvent(false)
-{
-	m_ContentNibble.NibbleCount = 0;
-}
-
-
-CEventManager::CEventInfo::CEventInfo(const CEventInfo &Src)
-	: m_pszEventName(NULL)
-	, m_pszEventText(NULL)
-	, m_pszEventExtendedText(NULL)
-{
-	*this = Src;
-}
-
-
-CEventManager::CEventInfo::~CEventInfo()
-{
-	delete [] m_pszEventName;
-	delete [] m_pszEventText;
-	delete [] m_pszEventExtendedText;
-}
-
-
-CEventManager::CEventInfo &CEventManager::CEventInfo::operator=(const CEventInfo &Src)
-{
-	if (&Src != this) {
-		m_UpdateTime = Src.m_UpdateTime;
-		m_Type = Src.m_Type;
-		m_EventID = Src.m_EventID;
-		m_StartTime = Src.m_StartTime;
-		m_Duration = Src.m_Duration;
-		m_RunningStatus = Src.m_RunningStatus;
-		m_bFreeCaMode = Src.m_bFreeCaMode;
-		SetEventName(Src.m_pszEventName);
-		SetEventText(Src.m_pszEventText);
-		SetEventExtendedText(Src.m_pszEventExtendedText);
-		m_VideoInfo = Src.m_VideoInfo;
-		m_AudioList = Src.m_AudioList;
-		m_ContentNibble = Src.m_ContentNibble;
-		m_EventGroupList = Src.m_EventGroupList;
-		m_bCommonEvent = Src.m_bCommonEvent;
-		m_CommonEventInfo = Src.m_CommonEventInfo;
-	}
-	return *this;
-}
-
-
-bool CEventManager::CEventInfo::GetEndTime(SYSTEMTIME *pTime) const
-{
-	CDateTime Time(m_StartTime);
-	if (!Time.Offset(CDateTime::SECONDS(m_Duration)))
-		return false;
-	Time.Get(pTime);
-	return true;
-}
-
-
-void CEventManager::CEventInfo::SetEventName(LPCTSTR pszEventName)
-{
-	SetText(&m_pszEventName, pszEventName);
-}
-
-
-void CEventManager::CEventInfo::SetEventText(LPCTSTR pszEventText)
-{
-	SetText(&m_pszEventText, pszEventText);
-}
-
-
-void CEventManager::CEventInfo::SetEventExtendedText(LPCTSTR pszEventExtendedText)
-{
-	SetText(&m_pszEventExtendedText, pszEventExtendedText);
-}
-
-
-void CEventManager::CEventInfo::SetText(LPTSTR *ppszText, LPCTSTR pszNewText)
-{
-	if (*ppszText != NULL) {
-		if (pszNewText != NULL && ::lstrcmp(*ppszText, pszNewText) == 0)
-			return;
-		delete [] *ppszText;
-		*ppszText = NULL;
-	}
-	if (pszNewText != NULL) {
-		*ppszText = new TCHAR[::lstrlen(pszNewText) + 1];
-		::lstrcpy(*ppszText, pszNewText);
-	}
-}
-
-
-
-
 CEventManager::TimeEventInfo::TimeEventInfo(ULONGLONG Time)
 	: StartTime(Time)
 {
@@ -1086,6 +876,15 @@ CEventManager::TimeEventInfo::TimeEventInfo(ULONGLONG Time)
 
 CEventManager::TimeEventInfo::TimeEventInfo(const SYSTEMTIME &StartTime)
 	: StartTime(SystemTimeToSeconds(StartTime))
+{
+}
+
+
+CEventManager::TimeEventInfo::TimeEventInfo(const CEventInfo &Info)
+	: StartTime(SystemTimeToSeconds(Info.m_StartTime))
+	, Duration(Info.m_Duration)
+	, EventID(Info.m_EventID)
+	, UpdateTime(Info.m_UpdatedTime)
 {
 }
 
@@ -1151,7 +950,7 @@ bool CEventManager::CScheduleInfo::HasSchedule(const bool bExtended) const
 }
 
 
-bool CEventManager::CScheduleInfo::OnSection(const CEitTable *pTable, const CPsiSection *pSection)
+bool CEventManager::CScheduleInfo::OnSection(const CEitParserTable *pTable, const CPsiSection *pSection)
 {
 	const BYTE TableID = pSection->GetTableID();
 	const BYTE LastTableID = pTable->GetLastTableID();

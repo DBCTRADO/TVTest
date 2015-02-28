@@ -3,7 +3,6 @@
 
 
 #include <vector>
-#include "AppMain.h"
 #include "View.h"
 #include "DrawUtil.h"
 #include "Theme.h"
@@ -19,30 +18,27 @@ class CHomeDisplay
 {
 public:
 	struct StyleInfo {
-		Theme::GradientInfo CategoriesBackGradient;
-		Theme::GradientInfo ContentBackGradient;
-		Theme::Style CategoryItemStyle;
-		Theme::Style CategoryItemSelStyle;
-		Theme::Style CategoryItemCurStyle;
-		Theme::Style ItemStyle[2];
-		Theme::Style ItemHotStyle;
+		TVTest::Theme::BackgroundStyle CategoriesBackStyle;
+		TVTest::Theme::BackgroundStyle ContentBackStyle;
+		TVTest::Theme::Style CategoryItemStyle;
+		TVTest::Theme::Style CategoryItemSelStyle;
+		TVTest::Theme::Style CategoryItemCurStyle;
+		TVTest::Theme::Style ItemStyle[2];
+		TVTest::Theme::Style ItemHotStyle;
 		COLORREF BannerTextColor;
-		RECT ContentMargins;
+		TVTest::Style::Margins ContentMargins;
 		int FontHeight;
-		RECT ItemMargins;
-		RECT CategoryItemMargins;
-		int CategoryIconMargin;
-		RECT CategoriesMargins;
+		TVTest::Style::Margins ItemMargins;
+		TVTest::Style::Margins CategoryItemMargins;
+		TVTest::Style::IntValue CategoryIconMargin;
+		TVTest::Style::Margins CategoriesMargins;
 	};
 
-	class ABSTRACT_CLASS(CEventHandler)
+	class ABSTRACT_CLASS(CHomeDisplayEventHandler) : public CDisplayView::CEventHandler
 	{
 	public:
-		CEventHandler();
-		virtual ~CEventHandler();
+		CHomeDisplayEventHandler();
 		virtual void OnClose() = 0;
-		virtual void OnRButtonDown(int x,int y) {}
-		virtual void OnLButtonDoubleClick(int x,int y) {}
 
 		friend class CHomeDisplay;
 
@@ -68,10 +64,12 @@ public:
 		virtual bool SetFocus(bool fFocus) {}
 		virtual bool IsFocused() const = 0;
 		virtual bool OnDecide() { return false; }
+		virtual void OnWindowCreate() {}
+		virtual void OnWindowDestroy() {}
 		virtual void OnCursorMove(int x,int y) {}
 		virtual void OnCursorLeave() {}
 		virtual bool OnClick(int x,int y) { return false; }
-		virtual bool OnRButtonDown(int x,int y) { return false; }
+		virtual bool OnRButtonUp(int x,int y) { return false; }
 		virtual bool OnSetCursor() { return false; }
 		virtual bool OnCursorKey(WPARAM KeyCode) { return false; }
 
@@ -79,7 +77,7 @@ public:
 		class CHomeDisplay *m_pHomeDisplay;
 	};
 
-	CHomeDisplay(CEventSearchOptions &EventSearchOptions);
+	CHomeDisplay();
 	~CHomeDisplay();
 
 // CBasicWindow
@@ -97,11 +95,12 @@ public:
 // CHomeDisplay
 	void Clear();
 	bool UpdateContents();
-	void SetEventHandler(CEventHandler *pEventHandler);
+	void SetEventHandler(CHomeDisplayEventHandler *pEventHandler);
 	bool SetFont(const LOGFONT *pFont,bool fAutoSize);
 	int GetScrollPos() const { return m_ScrollPos; }
 	bool SetScrollPos(int Pos,bool fScroll=true);
 	bool SetCurCategory(int Category);
+	int GetCurCategoryID() const;
 	bool UpdateCurContent();
 	bool OnContentChanged();
 
@@ -123,7 +122,7 @@ private:
 	int m_ContentHeight;
 
 	std::vector<CCategory*> m_CategoryList;
-	CEventHandler *m_pEventHandler;
+	CHomeDisplayEventHandler *m_pHomeDisplayEventHandler;
 	int m_CurCategory;
 	HWND m_hwndScroll;
 	int m_ScrollPos;

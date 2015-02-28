@@ -12,19 +12,22 @@ public:
 	void Parse(LPCWSTR pszCmdLine);
 	bool IsChannelSpecified() const;
 
-	CDynamicString m_IniFileName;
-	CDynamicString m_DriverName;
-	CDynamicString m_CasLibraryName;
+	TVTest::String m_IniFileName;
+	TVTest::String m_DriverName;
 	bool m_fNoDriver;
-	bool m_fNoDescramble;
+	bool m_fNoTSProcessor;
 	bool m_fSingleTask;
 	bool m_fStandby;
 	bool m_fNoView;
 	bool m_fNoDirectShow;
+	bool m_fMpeg2;
+	bool m_fH264;
+	bool m_fH265;
 	bool m_fSilent;
 	bool m_fInitialSettings;
 	bool m_fSaveLog;
 	bool m_fNoEpg;
+	bool m_f1Seg;
 	int m_TvRockDID;
 
 	int m_Channel;
@@ -42,7 +45,7 @@ public:
 	FILETIME m_RecordStartTime;
 	int m_RecordDelay;
 	int m_RecordDuration;
-	CDynamicString m_RecordFileName;
+	TVTest::String m_RecordFileName;
 	bool m_fRecordCurServiceOnly;
 	bool m_fExitOnRecordEnd;
 	bool m_fRecordOnly;
@@ -61,21 +64,23 @@ public:
 	bool m_fMute;
 
 	bool m_fNoPlugin;
-	std::vector<CDynamicString> m_NoLoadPlugins;
-	CDynamicString m_PluginsDirectory;
+	std::vector<TVTest::String> m_NoLoadPlugins;
+	TVTest::String m_PluginsDirectory;
 
 	bool m_fShowProgramGuide;
 	bool m_fProgramGuideOnly;
-	CDynamicString m_ProgramGuideTuner;
-	CDynamicString m_ProgramGuideSpace;
+	TVTest::String m_ProgramGuideTuner;
+	TVTest::String m_ProgramGuideSpace;
 
 	bool m_fHomeDisplay;
 	bool m_fChannelDisplay;
 
+	TVTest::String m_StyleFileName;
+
 	struct IniEntry {
-		CDynamicString Section;
-		CDynamicString Name;
-		CDynamicString Value;
+		TVTest::String Section;
+		TVTest::String Name;
+		TVTest::String Value;
 	};
 	std::vector<IniEntry> m_IniValueList;
 };

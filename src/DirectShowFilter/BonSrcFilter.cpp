@@ -1,6 +1,7 @@
 #include "StdAfx.h"
 #include <initguid.h>
 #include "BonSrcFilter.h"
+#include "BonSrcPin.h"
 
 #ifdef _DEBUG
 #undef THIS_FILE
@@ -136,10 +137,10 @@ void CBonSrcFilter::Flush()
 }
 
 
-bool CBonSrcFilter::EnableSync(bool bEnable)
+bool CBonSrcFilter::EnableSync(bool bEnable,bool b1Seg)
 {
 	if (m_pSrcPin)
-		return m_pSrcPin->EnableSync(bEnable);
+		return m_pSrcPin->EnableSync(bEnable,b1Seg);
 	return false;
 }
 
@@ -171,4 +172,44 @@ void CBonSrcFilter::SetOutputWhenPaused(bool bOutput)
 	m_bOutputWhenPaused=bOutput;
 	if (m_pSrcPin)
 		m_pSrcPin->SetOutputWhenPaused(bOutput);
+}
+
+
+bool CBonSrcFilter::SetBufferSize(size_t Size)
+{
+	if (m_pSrcPin)
+		return m_pSrcPin->SetBufferSize(Size);
+	return false;
+}
+
+
+bool CBonSrcFilter::SetInitialPoolPercentage(int Percentage)
+{
+	if (m_pSrcPin)
+		return m_pSrcPin->SetInitialPoolPercentage(Percentage);
+	return false;
+}
+
+
+int CBonSrcFilter::GetBufferFillPercentage() const
+{
+	if (m_pSrcPin)
+		return m_pSrcPin->GetBufferFillPercentage();
+	return 0;
+}
+
+
+bool CBonSrcFilter::SetInputWait(DWORD Wait)
+{
+	if (m_pSrcPin)
+		return m_pSrcPin->SetInputWait(Wait);
+	return false;
+}
+
+
+bool CBonSrcFilter::MapAudioPID(WORD AudioPID, WORD MapPID)
+{
+	if (m_pSrcPin)
+		return m_pSrcPin->MapAudioPID(AudioPID, MapPID);
+	return false;
 }

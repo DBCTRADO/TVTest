@@ -129,13 +129,19 @@ public:
 
 class CTracer
 {
-	TCHAR m_szBuffer[256];
 public:
+	enum TraceType {
+		TYPE_INFORMATION,
+		TYPE_WARNING,
+		TYPE_ERROR
+	};
+
 	virtual ~CTracer() {}
-	void Trace(LPCTSTR pszOutput, ...);
-	void TraceV(LPCTSTR pszOutput,va_list Args);
+	void Trace(TraceType Type, LPCTSTR pszOutput, ...);
+	void TraceV(TraceType Type, LPCTSTR pszOutput, va_list Args);
+
 protected:
-	virtual void OnTrace(LPCTSTR pszOutput)=0;
+	virtual void OnTrace(TraceType Type, LPCTSTR pszOutput) = 0;
 };
 
 
@@ -189,3 +195,69 @@ public:
 	bool Update(SIZE_T Size);
 	DWORD GetBitRate() const { return m_BitRate; }
 };
+
+
+/////////////////////////////////////////////////////////////////////////////
+// カウンタークラス
+/////////////////////////////////////////////////////////////////////////////
+
+template<typename T> class CCounter32
+{
+public:
+	CCounter32() : m_Counter(0) {}
+	void Reset() { ::InterlockedExchange((LONG*)&m_Counter, 0); }
+	T Increment() { return ::InterlockedIncrement((LONG*)&m_Counter); }
+	T Decrement() { return ::InterlockedDecrement((LONG*)&m_Counter); }
+	T Get() const { return m_Counter; }
+
+private:
+	T m_Counter;
+};
+
+template<typename T> class CCounter64
+{
+public:
+	CCounter64() : m_Counter(0) {}
+
+#ifdef _WIN64
+	void Reset() { ::_InterlockedExchange64((__int64*)&m_Counter, 0); }
+	T Increment() { return ::_InterlockedIncrement64((__int64*)&m_Counter); }
+	T Decrement() { return ::_InterlockedDecrement64((__int64*)&m_Counter); }
+	T Get() const { return m_Counter; }
+#else
+	void Reset() {
+		m_Lock.Lock();
+		m_Counter = 0;
+		m_Lock.Unlock();
+	}
+	T Increment() {
+		m_Lock.Lock();
+		T Count = ++m_Counter;
+		m_Lock.Unlock();
+		return Count;
+	}
+	T Decrement() {
+		m_Lock.Lock();
+		T Count = --m_Counter;
+		m_Lock.Unlock();
+		return Count;
+	}
+	T Get() const {
+		m_Lock.Lock();
+		UINT64 Count = m_Counter;
+		m_Lock.Unlock();
+		return Count;
+	}
+#endif
+
+private:
+	T m_Counter;
+#ifndef _WIN64
+	mutable CCriticalLock m_Lock;
+#endif
+};
+
+typedef CCounter32<INT32> CInt32Counter;
+typedef CCounter32<UINT32> CUInt32Counter;
+typedef CCounter64<INT64> CInt64Counter;
+typedef CCounter64<UINT64> CUInt64Counter;

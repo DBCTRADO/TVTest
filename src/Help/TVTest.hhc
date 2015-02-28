@@ -118,7 +118,14 @@
 		<LI> <OBJECT type="text/sitemap">
 			<param name="Name" value="キー割り当て">
 			<param name="Local" value="options\accelerator.html">
+			<param name="ImageNumber" value="11">
 			</OBJECT>
+		<UL>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="チャンネル番号入力の設定">
+				<param name="Local" value="options\channelinput.html">
+				</OBJECT>
+		</UL>
 		<LI> <OBJECT type="text/sitemap">
 			<param name="Name" value="リモコン">
 			<param name="Local" value="options\controller.html">
@@ -126,6 +133,10 @@
 		<LI> <OBJECT type="text/sitemap">
 			<param name="Name" value="BonDriver設定">
 			<param name="Local" value="options\driver.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="音声">
+			<param name="Local" value="options\audio.html">
 			</OBJECT>
 		<LI> <OBJECT type="text/sitemap">
 			<param name="Name" value="再生">
@@ -163,9 +174,20 @@
 			<param name="Local" value="options\plugin.html">
 			</OBJECT>
 		<LI> <OBJECT type="text/sitemap">
-			<param name="Name" value="ネットワークリモコン">
-			<param name="Local" value="options\networkremocon.html">
+			<param name="Name" value="TSプロセッサー">
+			<param name="Local" value="options\tsprocessor.html">
+			<param name="ImageNumber" value="11">
 			</OBJECT>
+		<UL>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="チューナーマップ">
+				<param name="Local" value="options\tsprocessor_tunermap.html">
+				</OBJECT>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="ネットワークマップ">
+				<param name="Local" value="options\tsprocessor_networkmap.html">
+				</OBJECT>
+		</UL>
 		<LI> <OBJECT type="text/sitemap">
 			<param name="Name" value="ログ">
 			<param name="Local" value="options\log.html">

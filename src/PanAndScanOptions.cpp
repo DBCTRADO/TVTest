@@ -112,29 +112,21 @@ static bool ParsePanAndScanInfo(CUICore::PanAndScanInfo *pInfo,LPTSTR pszText)
 }
 
 
-#ifndef TVH264
 // ê›íËÉTÉìÉvÉã
 static const CPanAndScanOptions::PanAndScanInfo DefaultPresetList[] = {
 	{1350, 0, 8650, 8650, HORZ_FACTOR, VERT_FACTOR, 16, 9, TEXT("Léö MX"), 1},
 	{1500, 0, 8500, 8500, HORZ_FACTOR, VERT_FACTOR, 16, 9, TEXT("Léö TX"), 1},
 };
-#endif
 
 
 CPanAndScanOptions::CPanAndScanOptions()
 	: CSettingsBase(TEXT("PanAndScan"))
 	, CCommandCustomizer(CM_PANANDSCAN_PRESET_FIRST,CM_PANANDSCAN_PRESET_LAST)
 	, m_fStateChanging(false)
-#ifndef TVH264
 	, m_PresetID(lengthof(DefaultPresetList)+1)
-#else
-	, m_PresetID(1)
-#endif
 {
-#ifndef TVH264
 	for (size_t i=0;i<lengthof(DefaultPresetList);i++)
 		m_PresetList.push_back(DefaultPresetList[i]);
-#endif
 }
 
 
@@ -563,11 +555,11 @@ INT_PTR CPanAndScanOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPa
 				PanAndScanInfo Info;
 
 				if (GetSettings(&Info)) {
-					CUICore *pUICore=GetAppClass().GetUICore();
+					CUICore &UICore=GetAppClass().UICore;
 					CUICore::PanAndScanInfo OldInfo;
 
-					pUICore->GetPanAndScan(&OldInfo);
-					pUICore->SetPanAndScan(Info.Info);
+					UICore.GetPanAndScan(&OldInfo);
+					UICore.SetPanAndScan(Info.Info);
 					m_fTested=true;
 					m_OldPanAndScanInfo=OldInfo;
 				}
@@ -590,7 +582,7 @@ INT_PTR CPanAndScanOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPa
 			}
 		case IDCANCEL:
 			if (m_fTested)
-				GetAppClass().GetUICore()->SetPanAndScan(m_OldPanAndScanInfo);
+				GetAppClass().UICore.SetPanAndScan(m_OldPanAndScanInfo);
 
 			::EndDialog(hDlg,LOWORD(wParam));
 			return TRUE;

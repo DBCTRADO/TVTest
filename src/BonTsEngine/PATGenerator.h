@@ -17,13 +17,13 @@ public:
 
 protected:
 	static void CALLBACK OnNitUpdated(const WORD wPID, CTsPidMapTarget *pMapTarget, CTsPidMapManager *pMapManager, const PVOID pParam);
-	static void CALLBACK OnPmtUpdated(const WORD wPID, CTsPidMapTarget *pMapTarget, CTsPidMapManager *pMapManager, const PVOID pParam);
 
 	WORD m_TransportStreamID;
 	bool m_bHasPAT;
+	bool m_bGeneratePAT;
 	CTsPidMapManager m_PidMapManager;
 	BYTE m_ContinuityCounter;
-	bool m_bUpdated;
+	DWORD m_PmtCount[ONESEG_PMT_PID_NUM];
 };
 
 

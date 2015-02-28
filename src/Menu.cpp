@@ -13,6 +13,28 @@ static char THIS_FILE[]=__FILE__;
 
 
 
+static int MyTrackPopupMenu(
+	HMENU hmenu,UINT Flags,HWND hwnd,const POINT *pPos=NULL,const RECT *pExcludeRect=NULL)
+{
+	POINT pt;
+	TPMPARAMS tpm;
+
+	if (pPos!=NULL)
+		pt=*pPos;
+	else
+		::GetCursorPos(&pt);
+
+	if (pExcludeRect!=NULL) {
+		tpm.cbSize=sizeof(TPMPARAMS);
+		tpm.rcExclude=*pExcludeRect;
+	}
+
+	return ::TrackPopupMenuEx(hmenu,Flags,pt.x,pt.y,hwnd,pExcludeRect!=NULL?&tpm:NULL);
+}
+
+
+
+
 CMainMenu::CMainMenu()
 	: m_hmenu(NULL)
 	, m_hmenuPopup(NULL)
@@ -126,7 +148,8 @@ bool CMainMenu::Show(UINT Flags,int x,int y,HWND hwnd,bool fToggle,const std::ve
 }
 
 
-bool CMainMenu::PopupSubMenu(int SubMenu,UINT Flags,int x,int y,HWND hwnd,bool fToggle)
+bool CMainMenu::PopupSubMenu(
+	int SubMenu,UINT Flags,HWND hwnd,const POINT *pPos,bool fToggle,const RECT *pExcludeRect)
 {
 	HMENU hmenu=GetSubMenu(SubMenu);
 
@@ -137,7 +160,7 @@ bool CMainMenu::PopupSubMenu(int SubMenu,UINT Flags,int x,int y,HWND hwnd,bool f
 			::EndMenu();
 		m_fPopup=true;
 		m_PopupMenu=SubMenu;
-		::TrackPopupMenu(hmenu,Flags,x,y,0,hwnd,NULL);
+		MyTrackPopupMenu(hmenu,Flags,hwnd,pPos,pExcludeRect);
 		m_fPopup=false;
 	} else {
 		::EndMenu();
@@ -381,7 +404,7 @@ void CMenuPainter::DrawBorder(HDC hdc,const RECT &Rect)
 		m_UxTheme.DrawBackground(hdc,MENU_POPUPBORDERS,0,
 								 MENU_POPUPBACKGROUND,0,&Rect);
 	} else {
-		Theme::DrawBorder(hdc,Rect,Theme::BORDER_RAISED);
+		TVTest::Theme::Draw(hdc,Rect,TVTest::Theme::BORDER_RAISED);
 	}
 }
 
@@ -459,18 +482,39 @@ const CEventInfoData *CChannelMenuItem::GetEventInfo(CEpgProgramList *pProgramLi
 			if (pCurTime!=NULL)
 				st=*pCurTime;
 			else
-				GetCurrentJST(&st);
+				GetCurrentEpgTime(&st);
 		} else {
 			if (!m_EventList[Index-1].EventInfo.GetEndTime(&st))
 				return NULL;
 		}
-		if (!pProgramList->GetEventInfo(m_pChannelInfo->GetNetworkID(),
-										m_pChannelInfo->GetTransportStreamID(),
-										m_pChannelInfo->GetServiceID(),
-										&st,&m_EventList[Index].EventInfo))
-			return NULL;
+
+		bool fCurrent=false;
+		if (pCurTime==NULL && Index<=1) {
+			CAppMain &App=GetAppClass();
+			CAppCore::StreamIDInfo StreamID;
+
+			if (App.Core.GetCurrentStreamIDInfo(&StreamID)
+					&& m_pChannelInfo->GetNetworkID()==StreamID.NetworkID
+					&& m_pChannelInfo->GetTransportStreamID()==StreamID.TransportStreamID) {
+				if (!App.CoreEngine.GetCurrentEventInfo(&m_EventList[Index].EventInfo,
+														m_pChannelInfo->GetServiceID(),
+														Index>0))
+					return NULL;
+				fCurrent=true;
+			}
+		}
+
+		if (!fCurrent) {
+			if (!pProgramList->GetEventInfo(m_pChannelInfo->GetNetworkID(),
+											m_pChannelInfo->GetTransportStreamID(),
+											m_pChannelInfo->GetServiceID(),
+											&st,&m_EventList[Index].EventInfo))
+				return NULL;
+		}
+
 		m_EventList[Index].fValid=true;
 	}
+
 	return &m_EventList[Index].EventInfo;
 }
 
@@ -482,13 +526,10 @@ const CEventInfoData *CChannelMenuItem::GetEventInfo(int Index) const
 }
 
 
-CChannelMenu::CChannelMenu(CEpgProgramList *pProgramList,CLogoManager *pLogoManager)
+CChannelMenu::CChannelMenu()
 	: m_Flags(0)
 	, m_hwnd(NULL)
 	, m_hmenu(NULL)
-	, m_pProgramList(pProgramList)
-	, m_pLogoManager(pLogoManager)
-	, m_pChannelList(NULL)
 	, m_TextHeight(0)
 	, m_ChannelNameWidth(0)
 	, m_EventNameWidth(0)
@@ -510,10 +551,13 @@ bool CChannelMenu::Create(const CChannelList *pChannelList,int CurChannel,UINT C
 {
 	Destroy();
 
-	m_pChannelList=pChannelList;
+	if (pChannelList==NULL)
+		return false;
+
+	m_ChannelList=*pChannelList;
 	m_CurChannel=CurChannel;
 	m_FirstCommand=Command;
-	m_LastCommand=Command+pChannelList->NumChannels()-1;
+	m_LastCommand=Command+m_ChannelList.NumChannels()-1;
 	m_Flags=Flags;
 	m_hwnd=hwnd;
 
@@ -529,8 +573,11 @@ bool CChannelMenu::Create(const CChannelList *pChannelList,int CurChannel,UINT C
 	CreateFont(hdc);
 	HFONT hfontOld=DrawUtil::SelectObject(hdc,m_Font);
 
+	CEpgProgramList &EpgProgramList=GetAppClass().EpgProgramList;
+	const bool fCurServices=(Flags & FLAG_CURSERVICES)!=0;
 	SYSTEMTIME st;
-	GetBaseTime(&st);
+	if (!fCurServices)
+		GetBaseTime(&st);
 	m_ChannelNameWidth=0;
 	m_EventNameWidth=0;
 	if (hmenu==NULL) {
@@ -544,8 +591,8 @@ bool CChannelMenu::Create(const CChannelList *pChannelList,int CurChannel,UINT C
 	mii.cbSize=sizeof(MENUITEMINFO);
 	mii.fMask=MIIM_FTYPE | MIIM_STATE | MIIM_ID | MIIM_DATA;
 	int PrevSpace=-1;
-	for (int i=0,j=0;i<pChannelList->NumChannels();i++) {
-		const CChannelInfo *pChInfo=pChannelList->GetChannelInfo(i);
+	for (int i=0,j=0;i<m_ChannelList.NumChannels();i++) {
+		const CChannelInfo *pChInfo=m_ChannelList.GetChannelInfo(i);
 		if (!pChInfo->IsEnabled())
 			continue;
 
@@ -577,7 +624,8 @@ bool CChannelMenu::Create(const CChannelList *pChannelList,int CurChannel,UINT C
 		CChannelMenuItem *pItem=new CChannelMenuItem(pChInfo);
 		mii.dwItemData=reinterpret_cast<ULONG_PTR>(pItem);
 		if ((Flags&FLAG_SHOWEVENTINFO)!=0) {
-			const CEventInfoData *pEventInfo=pItem->GetEventInfo(m_pProgramList,0,&st);
+			const CEventInfoData *pEventInfo=
+				pItem->GetEventInfo(&EpgProgramList,0,fCurServices?NULL:&st);
 
 			if (pEventInfo!=NULL) {
 				GetEventText(pEventInfo,szText,lengthof(szText));
@@ -636,18 +684,35 @@ void CChannelMenu::Destroy()
 			ClearMenu(m_hmenu);
 		m_hmenu=NULL;
 	}
+	m_ChannelList.Clear();
 	m_MenuPainter.Finalize();
 	m_Tooltip.Destroy();
 	m_hwnd=NULL;
 }
 
 
-bool CChannelMenu::Show(UINT Flags,int x,int y)
+int CChannelMenu::Show(UINT Flags,int x,int y,const RECT *pExcludeRect)
 {
 	if (m_hmenu==NULL)
 		return false;
-	::TrackPopupMenu(m_hmenu,Flags,x,y,0,m_hwnd,NULL);
-	return true;
+	POINT pt={x,y};
+	return MyTrackPopupMenu(m_hmenu,Flags,m_hwnd,&pt,pExcludeRect);
+}
+
+
+bool CChannelMenu::SetHighlightedItem(int Index)
+{
+	if (m_hmenu==NULL)
+		return false;
+
+	MENUITEMINFO mii;
+
+	mii.cbSize=sizeof(mii);
+	mii.fMask=MIIM_STATE;
+	if (!::GetMenuItemInfo(m_hmenu,Index,TRUE,&mii))
+		return false;
+	mii.fState|=MFS_HILITE;
+	return ::SetMenuItemInfo(m_hmenu,Index,TRUE,&mii)!=FALSE;
 }
 
 
@@ -697,7 +762,7 @@ bool CChannelMenu::OnDrawItem(HWND hwnd,WPARAM wParam,LPARAM lParam)
 	rc.bottom=pdis->rcItem.bottom-m_Margins.cyBottomHeight;
 
 	if ((m_Flags&FLAG_SHOWLOGO)!=0) {
-		HBITMAP hbmLogo=m_pLogoManager->GetAssociatedLogoBitmap(
+		HBITMAP hbmLogo=GetAppClass().LogoManager.GetAssociatedLogoBitmap(
 			pChInfo->GetNetworkID(),pChInfo->GetServiceID(),CLogoManager::LOGOTYPE_SMALL);
 		if (hbmLogo!=NULL) {
 			DrawUtil::CMemoryDC MemoryDC(pdis->hDC);
@@ -763,7 +828,7 @@ bool CChannelMenu::OnMenuSelect(HWND hwnd,WPARAM wParam,LPARAM lParam)
 			const CEventInfoData *pEventInfo1,*pEventInfo2;
 			pEventInfo1=pItem->GetEventInfo(0);
 			if (pEventInfo1==NULL) {
-				pEventInfo1=pItem->GetEventInfo(m_pProgramList,0);
+				pEventInfo1=pItem->GetEventInfo(&GetAppClass().EpgProgramList,0);
 			}
 			if (pEventInfo1!=NULL) {
 				TCHAR szText[256*2+1];
@@ -771,7 +836,7 @@ bool CChannelMenu::OnMenuSelect(HWND hwnd,WPARAM wParam,LPARAM lParam)
 				POINT pt;
 
 				Length=GetEventText(pEventInfo1,szText,lengthof(szText)/2);
-				pEventInfo2=pItem->GetEventInfo(m_pProgramList,1);
+				pEventInfo2=pItem->GetEventInfo(&GetAppClass().EpgProgramList,1);
 				if (pEventInfo2!=NULL) {
 					szText[Length++]=_T('\r');
 					szText[Length++]=_T('\n');
@@ -803,21 +868,55 @@ bool CChannelMenu::OnUninitMenuPopup(HWND hwnd,WPARAM wParam,LPARAM lParam)
 }
 
 
+bool CChannelMenu::HandleMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam,LRESULT *pResult)
+{
+	if (m_hwnd==NULL || hwnd!=m_hwnd)
+		return false;
+
+	switch (uMsg) {
+	case WM_MEASUREITEM:
+		if (OnMeasureItem(hwnd,wParam,lParam)) {
+			*pResult=TRUE;
+			return true;
+		}
+		break;
+
+	case WM_DRAWITEM:
+		if (OnDrawItem(hwnd,wParam,lParam)) {
+			*pResult=TRUE;
+			return true;
+		}
+		break;
+
+	case WM_UNINITMENUPOPUP:
+		if (OnUninitMenuPopup(hwnd,wParam,lParam)) {
+			*pResult=0;
+			return true;
+		}
+		break;
+
+	case WM_MENUSELECT:
+		if (OnMenuSelect(hwnd,wParam,lParam)) {
+			*pResult=0;
+			return true;
+		}
+		break;
+	}
+
+	return false;
+}
+
+
 int CChannelMenu::GetEventText(const CEventInfoData *pEventInfo,
 							   LPTSTR pszText,int MaxLength) const
 {
-	SYSTEMTIME stStart,stEnd;
-	TCHAR szEnd[16];
+	TCHAR szTime[EpgUtil::MAX_EVENT_TIME_LENGTH];
 
-	pEventInfo->GetStartTime(&stStart);
-	if (pEventInfo->GetEndTime(&stEnd))
-		StdUtil::snprintf(szEnd,lengthof(szEnd),
-						  TEXT("%02d:%02d"),stEnd.wHour,stEnd.wMinute);
-	else
-		szEnd[0]='\0';
-	return StdUtil::snprintf(pszText,MaxLength,TEXT("%02d:%02d`%s %ls"),
-							 stStart.wHour,stStart.wMinute,szEnd,
-							 NullToEmptyString(pEventInfo->GetEventName()));
+	EpgUtil::FormatEventTime(
+		pEventInfo,szTime,lengthof(szTime),EpgUtil::EVENT_TIME_HOUR_2DIGITS);
+
+	return StdUtil::snprintf(pszText,MaxLength,TEXT("%s %s"),
+							 szTime,pEventInfo->m_EventName.c_str());
 }
 
 
@@ -843,8 +942,8 @@ void CChannelMenu::CreateFont(HDC hdc)
 
 void CChannelMenu::GetBaseTime(SYSTEMTIME *pTime)
 {
-	GetCurrentJST(pTime);
-	OffsetSystemTime(pTime,120*1000);
+	GetCurrentEpgTime(pTime);
+	OffsetSystemTime(pTime,2*TimeConsts::SYSTEMTIME_MINUTE);
 }
 
 
@@ -1020,57 +1119,52 @@ HMENU CPopupMenu::GetSubMenu(int Pos) const
 }
 
 
-bool CPopupMenu::Show(HWND hwnd,const POINT *pPos,UINT Flags)
+int CPopupMenu::Show(HWND hwnd,const POINT *pPos,UINT Flags,const RECT *pExcludeRect)
 {
 	if (m_hmenu==NULL)
-		return false;
-	POINT pt;
-	if (pPos!=NULL)
-		pt=*pPos;
-	else
-		::GetCursorPos(&pt);
-	::TrackPopupMenu(GetPopupHandle(),Flags,pt.x,pt.y,0,hwnd,NULL);
-	return true;
+		return 0;
+
+	return MyTrackPopupMenu(GetPopupHandle(),Flags,hwnd,pPos,pExcludeRect);
 }
 
 
-bool CPopupMenu::Show(HMENU hmenu,HWND hwnd,const POINT *pPos,UINT Flags,bool fToggle)
+int CPopupMenu::Show(HMENU hmenu,HWND hwnd,const POINT *pPos,
+					 UINT Flags,bool fToggle,const RECT *pExcludeRect)
 {
+	int Result;
+
 	if (m_hmenu==NULL) {
 		m_hmenu=hmenu;
 		m_Type=TYPE_ATTACHED;
-		POINT pt;
-		if (pPos!=NULL)
-			pt=*pPos;
-		else
-			::GetCursorPos(&pt);
-		::TrackPopupMenu(m_hmenu,Flags,pt.x,pt.y,0,hwnd,NULL);
+		Result=MyTrackPopupMenu(m_hmenu,Flags,hwnd,pPos,pExcludeRect);
 		m_hmenu=NULL;
 	} else {
 		if (fToggle)
 			::EndMenu();
+		Result=0;
 	}
-	return true;
+
+	return Result;
 }
 
 
-bool CPopupMenu::Show(HINSTANCE hinst,LPCTSTR pszName,HWND hwnd,const POINT *pPos,UINT Flags,bool fToggle)
+int CPopupMenu::Show(HINSTANCE hinst,LPCTSTR pszName,HWND hwnd,const POINT *pPos,
+					 UINT Flags,bool fToggle,const RECT *pExcludeRect)
 {
+	int Result;
+
 	if (m_hmenu==NULL) {
 		if (!Load(hinst,pszName))
-			return false;
-		POINT pt;
-		if (pPos!=NULL)
-			pt=*pPos;
-		else
-			::GetCursorPos(&pt);
-		::TrackPopupMenu(GetPopupHandle(),Flags,pt.x,pt.y,0,hwnd,NULL);
+			return 0;
+		Result=MyTrackPopupMenu(GetPopupHandle(),Flags,hwnd,pPos,pExcludeRect);
 		Destroy();
 	} else {
 		if (fToggle)
 			::EndMenu();
+		Result=0;
 	}
-	return true;
+
+	return Result;
 }
 
 
@@ -1449,7 +1543,8 @@ bool CDropDownMenu::SetItemText(int Command,LPCTSTR pszText)
 
 	if (Index<0)
 		return false;
-	return m_ItemList[Index]->SetText(pszText);
+	m_ItemList[Index]->SetText(pszText);
+	return true;
 }
 
 
@@ -1736,7 +1831,7 @@ LRESULT CALLBACK CDropDownMenu::WndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM
 
 CDropDownMenu::CItem::CItem(int Command,LPCTSTR pszText)
 	: m_Command(Command)
-	, m_Text(pszText)
+	, m_Text(TVTest::StringFromCStr(pszText))
 	, m_Width(0)
 {
 }
@@ -1747,18 +1842,18 @@ CDropDownMenu::CItem::~CItem()
 }
 
 
-bool CDropDownMenu::CItem::SetText(LPCTSTR pszText)
+void CDropDownMenu::CItem::SetText(LPCTSTR pszText)
 {
-	return m_Text.Set(pszText);
+	TVTest::StringUtility::Assign(m_Text,pszText);
 }
 
 
 int CDropDownMenu::CItem::GetWidth(HDC hdc)
 {
-	if (!m_Text.IsEmpty() && m_Width==0) {
+	if (!m_Text.empty() && m_Width==0) {
 		SIZE sz;
 
-		::GetTextExtentPoint32(hdc,m_Text.Get(),m_Text.Length(),&sz);
+		::GetTextExtentPoint32(hdc,m_Text.data(),(int)m_Text.length(),&sz);
 		m_Width=sz.cx;
 	}
 	return m_Width;
@@ -1767,9 +1862,10 @@ int CDropDownMenu::CItem::GetWidth(HDC hdc)
 
 void CDropDownMenu::CItem::Draw(HDC hdc,const RECT *pRect)
 {
-	if (!m_Text.IsEmpty()) {
+	if (!m_Text.empty()) {
 		RECT rc=*pRect;
 
-		::DrawText(hdc,m_Text.Get(),-1,&rc,DT_LEFT | DT_SINGLELINE | DT_VCENTER | DT_NOPREFIX);
+		::DrawText(hdc,m_Text.data(),(int)m_Text.length(),&rc,
+				   DT_LEFT | DT_SINGLELINE | DT_VCENTER | DT_NOPREFIX);
 	}
 }

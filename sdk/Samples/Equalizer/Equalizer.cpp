@@ -1,7 +1,7 @@
 /*
 	TVTest プラグインサンプル
 
-	簡易イコライザ
+	簡易イコライザー
 */
 
 
@@ -12,6 +12,7 @@
 #include <math.h>
 #define TVTEST_PLUGIN_CLASS_IMPLEMENT	// クラスとして実装
 #include "TVTestPlugin.h"
+#include "resource.h"
 
 #pragma comment(lib,"shlwapi.lib")
 
@@ -150,10 +151,19 @@ void CBandPass::ProcessSamples(short *pData, DWORD Samples, int Channels)
 // プラグインクラス
 class CEqualizer : public TVTest::CTVTestPlugin
 {
+	// コマンド
+	enum {
+		COMMAND_SHOW	= 1,	// 表示/非表示
+		COMMAND_ONOFF	= 2		// On/Off
+	};
+
 	enum {
 		NUM_FREQUENCY = 10,
 		NUM_CUSTOM_PRESETS = 10
 	};
+
+	// 各部のサイズ
+	// 本来はモニタDPIに応じてスケーリングした方が良い
 	enum {
 		SLIDER_WIDTH			= 16,
 		SLIDER_HEIGHT			= 80,
@@ -169,6 +179,7 @@ class CEqualizer : public TVTest::CTVTestPlugin
 		WINDOW_WIDTH	= (NUM_FREQUENCY + 2) * (SLIDER_WIDTH + SLIDER_MARGIN) - SLIDER_MARGIN + WINDOW_MARGIN * 2,
 		WINDOW_HEIGHT	= SLIDER_HEIGHT + SLIDER_TEXT_MARGIN + TEXT_HEIGHT + SLIDER_BUTTON_MARGIN + BUTTON_HEIGHT + WINDOW_MARGIN * 2
 	};
+
 	enum {
 		BUTTON_ENABLE,
 		BUTTON_RESET,
@@ -176,6 +187,7 @@ class CEqualizer : public TVTest::CTVTestPlugin
 		BUTTON_SAVE,
 		NUM_BUTTONS
 	};
+
 	struct EqualizerSettings {
 		int PreAmplifier;
 		int Frequency[NUM_FREQUENCY];
@@ -272,9 +284,9 @@ bool CEqualizer::GetPluginInfo(TVTest::PluginInfo *pInfo)
 {
 	pInfo->Type           = TVTest::PLUGIN_TYPE_NORMAL;
 	pInfo->Flags          = 0;
-	pInfo->pszPluginName  = L"Equalizer";
+	pInfo->pszPluginName  = L"イコライザー";
 	pInfo->pszCopyright   = L"Public Domain";
-	pInfo->pszDescription = L"簡易イコライザ";
+	pInfo->pszDescription = L"簡易イコライザー";
 	return true;
 }
 
@@ -301,11 +313,40 @@ bool CEqualizer::Initialize()
 	if (::RegisterClass(&wc)==0)
 		return false;
 
-	// イコライザ初期化
+	// イコライザー初期化
 	m_BandPass.Initialize(m_FreqTable,NUM_FREQUENCY-1,48000);
 
 	// コマンドを登録
-	m_pApp->RegisterCommand(1, L"Enable", L"イコライザOn/Off");
+	TVTest::HostInfo Host;
+	if (m_pApp->GetHostInfo(&Host)
+			&& Host.SupportedPluginVersion >= TVTEST_PLUGIN_VERSION_(0,0,14)) {
+		// アイコン付きコマンド登録
+		TVTest::PluginCommandInfo CommandInfo;
+		CommandInfo.Size           = sizeof(CommandInfo);
+		CommandInfo.Flags          = TVTest::PLUGIN_COMMAND_FLAG_ICONIZE;
+		CommandInfo.State          = 0;
+		CommandInfo.ID             = COMMAND_SHOW;
+		CommandInfo.pszText        = L"Show";
+		CommandInfo.pszName        = L"イコライザー 表示/非表示";
+		CommandInfo.pszDescription = L"イコライザーの表示/非表示を切り替えます。";
+		CommandInfo.hbmIcon        =
+			(HBITMAP)::LoadImage(g_hinstDLL, MAKEINTRESOURCE(IDB_SHOW),
+								 IMAGE_BITMAP, 0, 0, LR_CREATEDIBSECTION);
+		m_pApp->RegisterPluginCommand(&CommandInfo);
+		::DeleteObject(CommandInfo.hbmIcon);
+		CommandInfo.ID             = COMMAND_ONOFF;
+		CommandInfo.pszText        = L"Enable";
+		CommandInfo.pszName        = L"イコライザー 入/切";
+		CommandInfo.pszDescription = L"イコライザーの有効/無効を切り替えます。";
+		CommandInfo.hbmIcon        =
+			(HBITMAP)::LoadImage(g_hinstDLL, MAKEINTRESOURCE(IDB_ONOFF),
+								 IMAGE_BITMAP, 0, 0, LR_CREATEDIBSECTION);
+		m_pApp->RegisterPluginCommand(&CommandInfo);
+		::DeleteObject(CommandInfo.hbmIcon);
+	} else {
+		// 旧バージョン用コマンド登録
+		m_pApp->RegisterCommand(COMMAND_ONOFF, L"Enable", L"イコライザー 入/切");
+	}
 
 	// イベントコールバック関数を登録
 	m_pApp->SetEventCallback(EventCallback,this);
@@ -443,7 +484,7 @@ void CEqualizer::SaveSettings() const
 }
 
 
-// イコライザのOn/Off切り替え
+// イコライザーのOn/Off切り替え
 void CEqualizer::EnableEqualizer(bool fEnable)
 {
 	if (m_fEnable!=fEnable) {
@@ -456,14 +497,19 @@ void CEqualizer::EnableEqualizer(bool fEnable)
 			// 音声コールバックを登録解除
 			m_pApp->SetAudioCallback(NULL);
 		}
+
 		m_fEnable=fEnable;
+
 		if (m_hwnd!=NULL)
 			::InvalidateRect(m_hwnd,NULL,TRUE);
+
+		m_pApp->SetPluginCommandState(COMMAND_ONOFF,
+									  fEnable?TVTest::PLUGIN_COMMAND_STATE_CHECKED:0);
 	}
 }
 
 
-// イコライザの設定を初期化
+// イコライザーの設定を初期化
 void CEqualizer::ResetSettings()
 {
 	m_CurSettings.PreAmplifier=0;
@@ -472,7 +518,7 @@ void CEqualizer::ResetSettings()
 }
 
 
-// イコライザの設定を適用
+// イコライザーの設定を適用
 void CEqualizer::ApplySettings()
 {
 	m_BandPass.SetPreAmplifier((double)(m_CurSettings.PreAmplifier+10)*0.1);
@@ -643,6 +689,8 @@ LRESULT CALLBACK CEqualizer::EventCallback(UINT Event,LPARAM lParam1,LPARAM lPar
 			if (pThis->m_hwnd!=NULL)
 				::DestroyWindow(pThis->m_hwnd);
 		}
+		pThis->m_pApp->SetPluginCommandState(COMMAND_SHOW,
+											 lParam1!=0?TVTest::PLUGIN_COMMAND_STATE_CHECKED:0);
 		return TRUE;
 
 	case TVTest::EVENT_STANDBY:
@@ -655,8 +703,16 @@ LRESULT CALLBACK CEqualizer::EventCallback(UINT Event,LPARAM lParam1,LPARAM lPar
 
 	case TVTest::EVENT_COMMAND:
 		// コマンドが選択された
-		pThis->EnableEqualizer(!pThis->m_fEnable);
-		return TRUE;
+		switch ((int)lParam1) {
+		case COMMAND_SHOW:
+			pThis->m_pApp->EnablePlugin(!pThis->m_pApp->IsPluginEnabled());
+			return TRUE;
+
+		case  COMMAND_ONOFF:
+			pThis->EnableEqualizer(!pThis->m_fEnable);
+			return TRUE;
+		}
+		return FALSE;
 
 	case TVTest::EVENT_COLORCHANGE:
 		// 色の設定が変化した

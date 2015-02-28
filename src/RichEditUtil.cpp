@@ -11,6 +11,18 @@ static char THIS_FILE[]=__FILE__;
 
 
 
+const LPCTSTR CRichEditUtil::m_pszURLChars=
+	TEXT("0123456789")
+	TEXT("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
+	TEXT("abcdefghijklmnopqrstuvwxyz")
+	TEXT("!#$%&'()*+,-./:;=?@[]_~");
+const LPCTSTR CRichEditUtil::m_pszURLFullWidthChars=
+	TEXT("‚O‚P‚Q‚R‚S‚T‚U‚V‚W‚X")
+	TEXT("‚`‚a‚b‚c‚d‚e‚f‚g‚h‚i‚j‚k‚l‚m‚n‚o‚p‚q‚r‚s‚t‚u‚v‚w‚x‚y")
+	TEXT("‚‚‚‚ƒ‚„‚…‚†‚‡‚ˆ‚‰‚Š‚‹‚Œ‚‚Ž‚‚‚‘‚’‚“‚”‚•‚–‚—‚˜‚™‚š")
+	TEXT("I”“•fij–{C|D^FGH—mnQ`");
+
+
 CRichEditUtil::CRichEditUtil()
 	: m_hLib(NULL)
 {
@@ -26,7 +38,7 @@ CRichEditUtil::~CRichEditUtil()
 bool CRichEditUtil::LoadRichEditLib()
 {
 	if (m_hLib==NULL) {
-		m_hLib=::LoadLibrary(TEXT("Riched32.dll"));
+		m_hLib=::LoadLibrary(TEXT("Riched20.dll"));
 		if (m_hLib==NULL)
 			return false;
 	}
@@ -259,15 +271,28 @@ bool CRichEditUtil::DetectURL(HWND hwndEdit,const CHARFORMAT *pcf,int FirstLine,
 		if (TotalLength>0) {
 			szText[TotalLength]=_T('\0');
 			LPCTSTR q=szText;
+			Length=TotalLength;
 			while (SearchNextURL(&q,&Length)) {
 				cr.cpMin=LineIndex+(LONG)(q-szText);
 				cr.cpMax=cr.cpMin+Length;
 				::SendMessage(hwndEdit,EM_EXSETSEL,0,reinterpret_cast<LPARAM>(&cr));
+#ifdef UNICODE
+				if ((Flags & URL_TO_HALF_WIDTH)!=0 && *q>=0xFF01) {
+					LPWSTR pszURL=new WCHAR[Length+1];
+					for (int j=0;j<Length;j++)
+						pszURL[j]=q[j]-0xFEE0;
+					pszURL[Length]=L'\0';
+					::SendMessage(hwndEdit,EM_REPLACESEL,0,reinterpret_cast<LPARAM>(pszURL));
+					delete [] pszURL;
+					::SendMessage(hwndEdit,EM_EXSETSEL,0,reinterpret_cast<LPARAM>(&cr));
+				}
+#endif
 				::SendMessage(hwndEdit,EM_SETCHARFORMAT,SCF_SELECTION,reinterpret_cast<LPARAM>(&cfLink));
 				if (pCharRangeList!=NULL)
 					pCharRangeList->push_back(cr);
 				fDetect=true;
 				q+=Length;
+				Length=TotalLength-(int)(q-szText);
 			}
 		}
 	}
@@ -292,20 +317,19 @@ bool CRichEditUtil::SearchNextURL(LPCTSTR *ppszText,int *pLength)
 	};
 
 	LPCTSTR p=*ppszText;
-	const int TextLength=::lstrlen(p);
+	const int TextLength=*pLength;
 
 	for (int i=0;i<TextLength-4;i++) {
 		for (int j=0;j<lengthof(URLPrefixList);j++) {
-			if (i+URLPrefixList[j].Length<TextLength
+			int URLLength=URLPrefixList[j].Length;
+			if (i+URLLength<TextLength
 					&& ::CompareString(LOCALE_USER_DEFAULT,NORM_IGNOREWIDTH,
-							&p[i],URLPrefixList[j].Length,
-							URLPrefixList[j].pszPrefix,URLPrefixList[j].Length)==CSTR_EQUAL) {
-				int URLLength=URLPrefixList[j].Length;
+							&p[i],URLLength,URLPrefixList[j].pszPrefix,URLLength)==CSTR_EQUAL) {
 				if (p[i]<0x0080) {
-					while (i+URLLength<TextLength && p[i+URLLength]>0x0020 && p[i+URLLength]<0x0080)
+					while (i+URLLength<TextLength && ::StrChr(m_pszURLChars,p[i+URLLength])!=NULL)
 						URLLength++;
 				} else {
-					while (i+URLLength<TextLength && p[i+URLLength]>0xFF00 && p[i+URLLength]<=0xFF5E)
+					while (i+URLLength<TextLength && ::StrChr(m_pszURLFullWidthChars,p[i+URLLength])!=NULL)
 						URLLength++;
 				}
 				*ppszText=p+i;

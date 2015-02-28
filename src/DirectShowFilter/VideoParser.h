@@ -70,6 +70,12 @@ public:
 		}
 	};
 
+	enum {
+		ADJUST_SAMPLE_TIME       = 0x0001U,
+		ADJUST_SAMPLE_FRAME_RATE = 0x0002U,
+		ADJUST_SAMPLE_1SEG       = 0x0004U
+	};
+
 	CVideoParser();
 	virtual ~CVideoParser();
 
@@ -81,12 +87,18 @@ public:
 
 	DWORD GetBitRate() const;
 
+	void SetAttachMediaType(bool bAttach);
+	virtual bool SetAdjustSampleOptions(unsigned int Flags) { return false; }
+
 protected:
 	void NotifyVideoInfo() const;
+	static bool SARToDAR(WORD SarX, WORD SarY, WORD Width, WORD Height,
+						 BYTE *pDarX, BYTE *pDarY);
 
 	VideoInfo m_VideoInfo;
 	VideoInfoCallback m_pVideoInfoCallback;
 	PVOID m_pCallbackParam;
 	mutable CCritSec m_ParserLock;
 	CBitRateCalculator m_BitRateCalculator;
+	bool m_bAttachMediaType;
 };

@@ -19,7 +19,6 @@ class CTsPacket : public CMediaData
 {
 public:
 	CTsPacket();
-	CTsPacket(const BYTE *pHexData);
 	CTsPacket(const CTsPacket &Operand);
 	CTsPacket & operator = (const CTsPacket &Operand);
 	~CTsPacket();
@@ -72,10 +71,12 @@ public:
 	void RestoreFromBuffer(const void *pBuffer);
 
 private:
+#ifdef TSPACKET_NEED_ALIGNED_PAYLOAD
 // CMediaData
 	void *Allocate(size_t Size) override;
 	void Free(void *pBuffer) override;
 	void *ReAllocate(void *pBuffer, size_t Size) override;
+#endif
 };
 
 

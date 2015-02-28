@@ -12,9 +12,6 @@ static char THIS_FILE[]=__FILE__;
 
 #define NOTIFICATION_BAR_WINDOW_CLASS APP_NAME TEXT(" Notification Bar")
 
-#define BAR_MARGIN			4
-#define ICON_TEXT_MARGIN	4
-
 
 
 
@@ -49,10 +46,11 @@ CNotificationBar::CNotificationBar()
 	, m_BarHeight(0)
 	, m_TimerCount(0)
 {
-	m_BackGradient.Type=Theme::GRADIENT_NORMAL;
-	m_BackGradient.Direction=Theme::DIRECTION_VERT;
-	m_BackGradient.Color1=RGB(128,128,128);
-	m_BackGradient.Color2=RGB(64,64,64);
+	m_BackStyle.Fill.Type=TVTest::Theme::FILL_GRADIENT;
+	m_BackStyle.Fill.Gradient.Type=TVTest::Theme::GRADIENT_NORMAL;
+	m_BackStyle.Fill.Gradient.Direction=TVTest::Theme::DIRECTION_VERT;
+	m_BackStyle.Fill.Gradient.Color1.Set(128,128,128);
+	m_BackStyle.Fill.Gradient.Color2.Set(64,64,64);
 	m_TextColor[MESSAGE_INFO]=RGB(224,224,224);
 	m_TextColor[MESSAGE_WARNING]=RGB(255,160,64);
 	m_TextColor[MESSAGE_ERROR]=RGB(224,64,64);
@@ -71,24 +69,42 @@ bool CNotificationBar::Create(HWND hwndParent,DWORD Style,DWORD ExStyle,int ID)
 }
 
 
+void CNotificationBar::SetStyle(const TVTest::Style::CStyleManager *pStyleManager)
+{
+	m_Style.SetStyle(pStyleManager);
+}
+
+
+void CNotificationBar::NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager)
+{
+	m_Style.NormalizeStyle(pStyleManager);
+}
+
+
+void CNotificationBar::SetTheme(const TVTest::Theme::CThemeManager *pThemeManager)
+{
+	pThemeManager->GetBackgroundStyle(TVTest::Theme::CThemeManager::STYLE_NOTIFICATIONBAR,&m_BackStyle);
+
+	m_TextColor[MESSAGE_INFO]=
+		pThemeManager->GetColor(CColorScheme::COLOR_NOTIFICATIONBARTEXT);
+	m_TextColor[MESSAGE_WARNING]=
+		pThemeManager->GetColor(CColorScheme::COLOR_NOTIFICATIONBARWARNINGTEXT);
+	m_TextColor[MESSAGE_ERROR]=
+		pThemeManager->GetColor(CColorScheme::COLOR_NOTIFICATIONBARERRORTEXT);
+
+	if (m_hwnd!=NULL)
+		Invalidate();
+}
+
+
 bool CNotificationBar::Show(LPCTSTR pszText,MessageType Type,DWORD Timeout,bool fSkippable)
 {
 	if (m_hwnd==NULL || pszText==NULL)
 		return false;
 
 	MessageInfo Info;
-	Info.Text.Set(pszText);
+	Info.Text=pszText;
 	Info.Type=Type;
-	if (Type==MESSAGE_WARNING || Type==MESSAGE_ERROR) {
-		Info.hIcon=static_cast<HICON>(
-			::LoadImage(NULL,Type==MESSAGE_WARNING?IDI_WARNING:IDI_ERROR,
-						IMAGE_ICON,
-						::GetSystemMetrics(SM_CXSMICON),
-						::GetSystemMetrics(SM_CYSMICON),
-						LR_SHARED));
-	} else {
-		Info.hIcon=NULL;
-	}
 	Info.Timeout=Timeout;
 	Info.fSkippable=fSkippable;
 	m_MessageQueue.push_back(Info);
@@ -159,19 +175,6 @@ bool CNotificationBar::Hide()
 }
 
 
-bool CNotificationBar::SetColors(const Theme::GradientInfo *pBackGradient,
-	COLORREF crTextColor,COLORREF crWarningTextColor,COLORREF crErrorTextColor)
-{
-	m_BackGradient=*pBackGradient;
-	m_TextColor[MESSAGE_INFO]=crTextColor;
-	m_TextColor[MESSAGE_WARNING]=crWarningTextColor;
-	m_TextColor[MESSAGE_ERROR]=crErrorTextColor;
-	if (m_hwnd!=NULL)
-		Invalidate();
-	return true;
-}
-
-
 bool CNotificationBar::SetFont(const LOGFONT *pFont)
 {
 	if (!m_Font.Create(pFont))
@@ -185,12 +188,13 @@ bool CNotificationBar::SetFont(const LOGFONT *pFont)
 void CNotificationBar::CalcBarHeight()
 {
 	HDC hdc=::GetDC(m_hwnd);
-
-	m_BarHeight=m_Font.GetHeight(hdc,false)+BAR_MARGIN*2;
+	int FontHeight=m_Font.GetHeight(hdc,false);
 	::ReleaseDC(m_hwnd,hdc);
-	int IconHeight=::GetSystemMetrics(SM_CYSMICON);
-	if (m_BarHeight<IconHeight+2)
-		m_BarHeight=IconHeight+2;
+
+	int IconHeight=m_Style.IconSize.Height+m_Style.IconMargin.Vert();
+	int TextHeight=FontHeight+m_Style.TextExtraHeight+m_Style.TextMargin.Vert();
+
+	m_BarHeight=max(IconHeight,TextHeight)+m_Style.Padding.Vert();
 }
 
 
@@ -225,12 +229,23 @@ LRESULT CNotificationBar::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lPa
 	switch (uMsg) {
 	case WM_CREATE:
 		{
+			InitializeUI();
+
 			if (!m_Font.IsCreated()) {
 				LOGFONT lf;
 				DrawUtil::GetSystemFont(DrawUtil::FONT_MESSAGE,&lf);
-				lf.lfHeight=-14;
+				lf.lfHeight=lf.lfHeight*12/10;
 				m_Font.Create(&lf);
 			}
+
+			/*
+			m_Icons[MESSAGE_INFO].Attach(
+				LoadSystemIcon(IDI_INFORMATION,m_Style.IconSize.Width,m_Style.IconSize.Height));
+			*/
+			m_Icons[MESSAGE_WARNING].Attach(
+				LoadSystemIcon(IDI_WARNING,m_Style.IconSize.Width,m_Style.IconSize.Height));
+			m_Icons[MESSAGE_ERROR].Attach(
+				LoadSystemIcon(IDI_ERROR,m_Style.IconSize.Width,m_Style.IconSize.Height));
 
 			CalcBarHeight();
 
@@ -245,26 +260,34 @@ LRESULT CNotificationBar::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lPa
 			RECT rc;
 
 			::BeginPaint(hwnd,&ps);
+
 			::GetClientRect(hwnd,&rc);
-			Theme::FillGradient(ps.hdc,&rc,&m_BackGradient);
+			TVTest::Theme::Draw(ps.hdc,rc,m_BackStyle);
+
 			if (!m_MessageQueue.empty()) {
 				const MessageInfo &Info=m_MessageQueue.front();
 
-				rc.left+=BAR_MARGIN;
-				rc.right-=BAR_MARGIN;
+				TVTest::Style::Subtract(&rc,m_Style.Padding);
 				if (rc.left<rc.right) {
-					if (Info.hIcon!=NULL) {
-						int IconWidth=::GetSystemMetrics(SM_CXSMICON);
-						int IconHeight=::GetSystemMetrics(SM_CYSMICON);
-						::DrawIconEx(ps.hdc,rc.left,(rc.bottom-IconHeight)/2,
-									 Info.hIcon,IconWidth,IconHeight,0,NULL,DI_NORMAL);
-						rc.left+=IconWidth+ICON_TEXT_MARGIN;
+					if (Info.Type>=0 && Info.Type<lengthof(m_Icons) && m_Icons[Info.Type]) {
+						rc.left+=m_Style.IconMargin.Left;
+						::DrawIconEx(
+							ps.hdc,
+							rc.left,
+							rc.top+m_Style.IconMargin.Top+
+								((rc.bottom-rc.top)-m_Style.IconMargin.Vert()-m_Style.IconSize.Height)/2,
+							m_Icons[Info.Type],
+							m_Style.IconSize.Width,m_Style.IconSize.Height,
+							0,NULL,DI_NORMAL);
+						rc.left+=m_Style.IconSize.Width+m_Style.IconMargin.Right;
 					}
-					DrawUtil::DrawText(ps.hdc,Info.Text.Get(),rc,
+					TVTest::Style::Subtract(&rc,m_Style.TextMargin);
+					DrawUtil::DrawText(ps.hdc,Info.Text.c_str(),rc,
 						DT_SINGLELINE | DT_LEFT | DT_VCENTER | DT_NOPREFIX | DT_END_ELLIPSIS,
 						&m_Font,m_TextColor[Info.Type]);
 				}
 			}
+
 			::EndPaint(hwnd,&ps);
 		}
 		return 0;
@@ -340,4 +363,36 @@ LRESULT CNotificationBar::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lPa
 	}
 
 	return CCustomWindow::OnMessage(hwnd,uMsg,wParam,lParam);
+}
+
+
+
+
+CNotificationBar::NotificationBarStyle::NotificationBarStyle()
+	: Padding(4,2,4,2)
+	, IconSize(::GetSystemMetrics(SM_CXSMICON),::GetSystemMetrics(SM_CYSMICON))
+	, IconMargin(0,0,4,0)
+	, TextMargin(0)
+	, TextExtraHeight(4)
+{
+}
+
+
+void CNotificationBar::NotificationBarStyle::SetStyle(const TVTest::Style::CStyleManager *pStyleManager)
+{
+	pStyleManager->Get(TEXT("notification-bar.padding"),&Padding);
+	pStyleManager->Get(TEXT("notification-bar.icon"),&IconSize);
+	pStyleManager->Get(TEXT("notification-bar.icon.margin"),&IconMargin);
+	pStyleManager->Get(TEXT("notification-bar.text.margin"),&TextMargin);
+	pStyleManager->Get(TEXT("notification-bar.text.extra-height"),&TextExtraHeight);
+}
+
+
+void CNotificationBar::NotificationBarStyle::NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager)
+{
+	pStyleManager->ToPixels(&Padding);
+	pStyleManager->ToPixels(&IconSize);
+	pStyleManager->ToPixels(&IconMargin);
+	pStyleManager->ToPixels(&TextMargin);
+	pStyleManager->ToPixels(&TextExtraHeight);
 }

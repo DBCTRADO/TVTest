@@ -18,6 +18,7 @@
 #include <mferror.h>
 #include <evr9.h>
 #endif
+#include <string>
 
 
 // guid‚É“ü‚Á‚Ä‚¢‚È‚¢’Ç‰Á•ªGUID
@@ -26,9 +27,7 @@
 #endif
 
 // AAC Mediatype {000000FF-0000-0010-8000-00AA00389B71}
-#ifndef MEDIASUBTYPE_AAC
 DEFINE_GUID(MEDIASUBTYPE_AAC,WAVE_FORMAT_AAC, 0x0000, 0x0010, 0x80, 0x00, 0x00, 0xaa, 0x00, 0x38, 0x9b, 0x71);
-#endif
 
 // ColorSpace Converter {1643E180-90F5-11CE-97D5-00AA0055595A}
 #ifndef CLSID_ColorSpaceConverter
@@ -42,7 +41,6 @@ DEFINE_GUID(IID_IMFGetService , 0xFA993888, 0x4383, 0x415A, 0xA9, 0x30, 0xDD, 0x
 #endif
 #endif
 
-#ifdef TVH264
 //DEFINE_GUID(MEDIASUBTYPE_H264,
 //0x34363248, 0x0000, 0x0010, 0x80, 0x00, 0x00, 0xAA, 0x00, 0x38, 0x9B, 0x71);
 
@@ -57,7 +55,9 @@ DEFINE_GUID(MEDIASUBTYPE_AVC1,
 
 DEFINE_GUID(MEDIASUBTYPE_avc1,
 0x31637661, 0x0000, 0x0010, 0x80, 0x00, 0x00, 0xAA, 0x00, 0x38, 0x9B, 0x71);
-#endif
+
+DEFINE_GUID(MEDIASUBTYPE_HEVC,
+0x43564548, 0x0000, 0x0010, 0x80, 0x00, 0x00, 0xAA, 0x00, 0x38, 0x9B, 0x71);
 
 // Release
 #ifndef SAFE_RELEASE
@@ -82,8 +82,9 @@ public:
 					DWORD Merit=MERIT_DO_NOT_USE+1);
 	bool PriorityFilterGoToHead(const CLSID idPriorityClass);
 	bool IgnoreFilterGoToTail(const CLSID idIgnoreClass,bool bRemoveIt=false);
-	int GetFilterCount();
-	bool GetFilterInfo(const int iIndex,CLSID *pidClass=NULL,LPWSTR pwszFriendlyName=NULL,int iBufLen=0);
+	int GetFilterCount() const;
+	bool GetFilterInfo(const int iIndex,CLSID *pidClass=NULL,LPWSTR pwszFriendlyName=NULL,int iBufLen=0) const;
+	bool GetFilterInfo(const int iIndex,CLSID *pidClass=NULL,std::wstring *pFriendlyName=NULL) const;
 protected:
 	class CFilterInfo {
 	public:

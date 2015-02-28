@@ -26,7 +26,9 @@ record.html
 commandline.html
 options.html
 options\accelerator.html
+options\audio.html
 options\capture.html
+options\channelinput.html
 options\channelscan.html
 options\colorscheme.html
 options\controller.html
@@ -35,7 +37,6 @@ options\epg.html
 options\general.html
 options\log.html
 options\menu.html
-options\networkremocon.html
 options\operation.html
 options\osd.html
 options\panel.html
@@ -45,6 +46,9 @@ options\programguide.html
 options\programguidetool.html
 options\statusbar.html
 options\sidebar.html
+options\tsprocessor.html
+options\tsprocessor_networkmap.html
+options\tsprocessor_tunermap.html
 options\view.html
 options\record.html
 hint.html
@@ -57,6 +61,7 @@ programguide\search.html
 
 [ALIAS]
 HELP_ID_OPTIONS_ACCELERATOR=options\accelerator.html
+HELP_ID_OPTIONS_AUDIO=options\audio.html
 HELP_ID_OPTIONS_CAPTURE=options\capture.html
 HELP_ID_OPTIONS_CHANNELSCAN=options\channelscan.html
 HELP_ID_OPTIONS_COLORSCHEME=options\colorscheme.html
@@ -66,7 +71,6 @@ HELP_ID_OPTIONS_EPG=options\epg.html
 HELP_ID_OPTIONS_GENERAL=options\general.html
 HELP_ID_OPTIONS_LOG=options\log.html
 HELP_ID_OPTIONS_MENU=options\menu.html
-HELP_ID_OPTIONS_NETWORKREMOCON=options\networkremocon.html
 HELP_ID_OPTIONS_OPERATION=options\operation.html
 HELP_ID_OPTIONS_OSD=options\osd.html
 HELP_ID_OPTIONS_PANEL=options\panel.html
@@ -76,8 +80,12 @@ HELP_ID_OPTIONS_PROGRAMGUIDE=options\programguide.html
 HELP_ID_OPTIONS_RECORD=options\record.html
 HELP_ID_OPTIONS_SIDEBAR=options\sidebar.html
 HELP_ID_OPTIONS_STATUSBAR=options\statusbar.html
+HELP_ID_OPTIONS_TSPROCESSOR=options\tsprocessor.html
 HELP_ID_OPTIONS_VIEW=options\view.html
 HELP_ID_PROGRAMGUIDETOOL=options\programguidetool.html
+HELP_ID_CHANNELINPUTOPTIONS=options\channelinput.html
+HELP_ID_TSPROCESSOR_NETWORKMAP=options\tsprocessor_networkmap.html
+HELP_ID_TSPROCESSOR_TUNERMAP=options\tsprocessor_tunermap.html
 HELP_ID_INITIALSETTINGS=initialsettings.html
 
 [MAP]

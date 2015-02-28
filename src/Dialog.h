@@ -8,25 +8,6 @@
 class CBasicDialog
 {
 public:
-	CBasicDialog();
-	virtual ~CBasicDialog();
-	virtual bool Show(HWND hwndOwner) { return false; }
-	virtual bool Create(HWND hwndOwner) { return false; }
-	bool IsCreated() const;
-	bool Destroy();
-	bool IsModeless() const { return m_fModeless; }
-	bool ProcessMessage(LPMSG pMsg);
-	bool IsVisible() const;
-	bool SetVisible(bool fVisible);
-	bool GetPosition(RECT *pPosition) const;
-	bool GetPosition(int *pLeft,int *pTop,int *pWidth,int *pHeight) const;
-	bool SetPosition(const RECT *pPosition);
-	bool SetPosition(int Left,int Top,int Width,int Height);
-	LRESULT SendMessage(UINT uMsg,WPARAM wParam,LPARAM lParam);
-
-protected:
-	HWND m_hDlg;
-	bool m_fModeless;
 	struct Position {
 		int x,y;
 		int Width,Height;
@@ -44,12 +25,35 @@ protected:
 			pRect->bottom=y+Height;
 		}
 	};
+
+	CBasicDialog();
+	virtual ~CBasicDialog();
+	virtual bool Show(HWND hwndOwner) { return false; }
+	virtual bool Create(HWND hwndOwner) { return false; }
+	bool IsCreated() const;
+	bool Destroy();
+	bool IsModeless() const { return m_fModeless; }
+	bool ProcessMessage(LPMSG pMsg);
+	bool IsVisible() const;
+	bool SetVisible(bool fVisible);
+	bool GetPosition(Position *pPosition) const;
+	bool GetPosition(RECT *pPosition) const;
+	bool GetPosition(int *pLeft,int *pTop,int *pWidth,int *pHeight) const;
+	bool SetPosition(const Position &Pos);
+	bool SetPosition(const RECT *pPosition);
+	bool SetPosition(int Left,int Top,int Width,int Height);
+	LRESULT SendMessage(UINT uMsg,WPARAM wParam,LPARAM lParam);
+
+protected:
+	HWND m_hDlg;
+	bool m_fModeless;
 	Position m_Position;
 
 	static CBasicDialog *GetThis(HWND hDlg);
 	static INT_PTR CALLBACK DialogProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam);
 	int ShowDialog(HWND hwndOwner,HINSTANCE hinst,LPCTSTR pszTemplate);
 	bool CreateDialogWindow(HWND hwndOwner,HINSTANCE hinst,LPCTSTR pszTemplate);
+	virtual INT_PTR HandleMessage(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam);
 	virtual INT_PTR DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam);
 };
 
@@ -86,10 +90,12 @@ protected:
 	HWND m_hwndSizeGrip;
 	std::vector<LayoutItem> m_ControlList;
 
-	virtual INT_PTR DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam);
+	INT_PTR HandleMessage(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
 	void DoLayout();
 	bool AddControl(int ID,unsigned int Align);
 	bool AddControls(int FirstID,int LastID,unsigned int Align);
+	bool UpdateControlPosition(int ID);
+	void UpdateLayout();
 	void ApplyPosition();
 };
 

@@ -27,10 +27,14 @@ CEpgDataLoader::~CEpgDataLoader()
 			if (m_hAbortEvent!=NULL)
 				::SetEvent(m_hAbortEvent);
 
+#ifdef WIN_XP_SUPPORT
 			auto pCancelSynchronousIo=
 				GET_MODULE_FUNCTION(TEXT("kernel32.dll"),CancelSynchronousIo);
 			if (pCancelSynchronousIo!=NULL)
 				pCancelSynchronousIo(m_hThread);
+#else
+			::CancelSynchronousIo(m_hThread);
+#endif
 
 			if (::WaitForSingleObject(m_hThread,10000)==WAIT_TIMEOUT) {
 				TRACE(TEXT("Terminate EPG data loading thread\n"));
@@ -152,7 +156,7 @@ bool CEpgDataLoader::LoadAsync(LPCTSTR pszFolder,CEventHandler *pEventHandler)
 		m_hThread=NULL;
 	}
 
-	m_Folder.Set(pszFolder);
+	m_Folder=pszFolder;
 	m_pEventHandler=pEventHandler;
 	if (m_hAbortEvent==NULL)
 		m_hAbortEvent=::CreateEvent(NULL,FALSE,FALSE,NULL);
@@ -202,11 +206,11 @@ unsigned int __stdcall CEpgDataLoader::LoadThread(void *pParameter)
 	if (pThis->m_pEventHandler!=NULL)
 		pThis->m_pEventHandler->OnStart();
 	::SetThreadPriority(::GetCurrentThread(),THREAD_PRIORITY_LOWEST);
-	bool fSuccess=pThis->Load(pThis->m_Folder.Get(),pThis->m_hAbortEvent);
+	bool fSuccess=pThis->Load(pThis->m_Folder.c_str(),pThis->m_hAbortEvent);
 	if (pThis->m_pEventHandler!=NULL)
 		pThis->m_pEventHandler->OnEnd(fSuccess,&pThis->m_EventManager);
 	pThis->m_EventManager.Clear();
-	pThis->m_Folder.Clear();
+	pThis->m_Folder.clear();
 	return 0;
 }
 

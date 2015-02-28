@@ -10,6 +10,7 @@
 #include <deque>
 #define TVTEST_PLUGIN_CLASS_IMPLEMENT	// クラスとして実装
 #include "TVTestPlugin.h"
+#include "resource.h"
 
 
 // ウィンドウクラス名
@@ -27,6 +28,7 @@ class CSignalGraph : public TVTest::CTVTestPlugin
 		DWORD SignalLevel;
 		DWORD BitRate;
 	};
+
 	std::deque<SignalInfo> m_List;
 	HWND m_hwnd;
 	COLORREF m_crBackColor;
@@ -71,6 +73,9 @@ bool CSignalGraph::GetPluginInfo(TVTest::PluginInfo *pInfo)
 // 初期化処理
 bool CSignalGraph::Initialize()
 {
+	// アイコンを登録
+	m_pApp->RegisterPluginIconFromResource(g_hinstDLL,MAKEINTRESOURCE(IDB_ICON));
+
 	// イベントコールバック関数を登録
 	m_pApp->SetEventCallback(EventCallback,this);
 
@@ -279,7 +284,6 @@ LRESULT CALLBACK CSignalGraph::WndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM 
 		{
 			CSignalGraph *pThis=GetThis(hwnd);
 
-			::KillTimer(hwnd,1);	// 別にしなくてもいいけど...
 			pThis->m_hwnd=NULL;
 		}
 		return 0;

@@ -29,7 +29,7 @@ private:
 	CEventManager m_EventManager;
 	HANDLE m_hThread;
 	HANDLE m_hAbortEvent;
-	CDynamicString m_Folder;
+	TVTest::String m_Folder;
 	CEventHandler *m_pEventHandler;
 
 	bool LoadFromFile(LPCTSTR pszFileName);

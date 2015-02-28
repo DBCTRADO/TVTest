@@ -47,6 +47,13 @@ DWORD COptions::SetGeneralUpdateFlag(DWORD Flag)
 }
 
 
+void COptions::ActivatePage()
+{
+	if (m_pFrame!=NULL)
+		m_pFrame->ActivatePage(this);
+}
+
+
 void COptions::SettingError()
 {
 	if (m_pFrame!=NULL)

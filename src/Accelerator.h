@@ -6,12 +6,47 @@
 #include "Options.h"
 #include "Command.h"
 #include "RawInput.h"
+#include "ChannelInput.h"
+#include "ListView.h"
 
 
 class CMainMenu;
 
-class CAccelerator : public COptions, public CRawInput::CEventHandler
+class CAccelerator
+	: public COptions
+	, public CRawInput::CEventHandler
 {
+public:
+	CAccelerator();
+	~CAccelerator();
+
+// COptions
+	bool LoadSettings(CSettings &Settings) override;
+	bool SaveSettings(CSettings &Settings) override;
+
+// CBasicDialog
+	bool Create(HWND hwndOwner) override;
+
+// CAccelerator
+	bool Initialize(HWND hwndHotKey,CMainMenu *pMainMenu,
+					CSettings &Settings,const CCommandList *pCommandList);
+	void Finalize();
+	bool TranslateMessage(HWND hwnd,LPMSG pmsg);
+	int TranslateHotKey(WPARAM wParam,LPARAM lParam) const;
+	int TranslateAppCommand(WPARAM wParam,LPARAM lParam) const;
+	LRESULT OnInput(HWND hwnd,WPARAM wParam,LPARAM lParam) {
+		return m_RawInput.OnInput(hwnd,wParam,lParam);
+	}
+	void SetMenuAccel(HMENU hmenu);
+	const TVTest::CChannelInputOptions &GetChannelInputOptions() const { return m_ChannelInputOptions; }
+
+private:
+	enum {
+		COLUMN_COMMAND,
+		COLUMN_KEY,
+		COLUMN_APPCOMMAND
+	};
+
 	HACCEL m_hAccel;
 	struct KeyInfo {
 		WORD Command;
@@ -48,12 +83,12 @@ class CAccelerator : public COptions, public CRawInput::CEventHandler
 	const CCommandList *m_pCommandList;
 	CRawInput m_RawInput;
 	bool m_fRegisterHotKey;
-	bool m_fFunctionKeyChangeChannel;
-	bool m_fDigitKeyChangeChannel;
-	bool m_fNumPadChangeChannel;
+	TVTest::CChannelInputOptions m_ChannelInputOptions;
+	TVTest::CListView m_ListView;
 
 // CBasicDialog
 	INT_PTR DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
+
 // CAccelerator
 	static const KeyInfo m_DefaultAccelList[];
 	static const AppCommandInfo m_DefaultAppCommandList[];
@@ -62,36 +97,14 @@ class CAccelerator : public COptions, public CRawInput::CEventHandler
 	HACCEL CreateAccel();
 	bool RegisterHotKey();
 	bool UnregisterHotKey();
-	static int CheckAccelKey(HWND hwndList,BYTE Mod,WORD Key);
-	static int CheckAppCommand(HWND hwndList,int AppCommand);
-	void SetAccelItem(HWND hwndList,int Index,BYTE Mod,WORD Key,bool fGlobal,BYTE AppCommand);
-	static void SetDlgItemStatus(HWND hDlg);
+	int CheckAccelKey(BYTE Mod,WORD Key);
+	int CheckAppCommand(int AppCommand);
+	void SetAccelItem(int Index,BYTE Mod,WORD Key,bool fGlobal,BYTE AppCommand);
+	void SetDlgItemStatus(HWND hDlg);
+
 // CRawInput::CEventHandler
 	void OnInput(int Type) override;
 	void OnUnknownInput(const BYTE *pData,int Size) override;
-
-public:
-	CAccelerator();
-	~CAccelerator();
-// COptions
-	bool LoadSettings(CSettings &Settings) override;
-	bool SaveSettings(CSettings &Settings) override;
-// CBasicDialog
-	bool Create(HWND hwndOwner) override;
-// CAccelerator
-	bool Initialize(HWND hwndHotKey,CMainMenu *pMainMenu,
-					CSettings &Settings,const CCommandList *pCommandList);
-	void Finalize();
-	bool TranslateMessage(HWND hwnd,LPMSG pmsg);
-	int TranslateHotKey(WPARAM wParam,LPARAM lParam) const;
-	int TranslateAppCommand(WPARAM wParam,LPARAM lParam) const;
-	LRESULT OnInput(HWND hwnd,WPARAM wParam,LPARAM lParam) {
-		return m_RawInput.OnInput(hwnd,wParam,lParam);
-	}
-	void SetMenuAccel(HMENU hmenu);
-	bool IsFunctionKeyChannelChange() const { return m_fFunctionKeyChangeChannel; }
-	bool IsDigitKeyChannelChange() const { return m_fDigitKeyChangeChannel; }
-	bool IsNumPadChannelChange() const { return m_fNumPadChangeChannel; }
 };
 
 

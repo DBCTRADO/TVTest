@@ -15,8 +15,12 @@ float LevelToDeciBel(int Level);
 
 COLORREF MixColor(COLORREF Color1,COLORREF Color2,BYTE Ratio=128);
 COLORREF HSVToRGB(double Hue,double Saturation,double Value);
+void RGBToHSV(BYTE Red,BYTE Green,BYTE Blue,
+			  double *pHue,double *pSaturation,double *pValue);
 
 inline DWORD TickTimeSpan(DWORD Start,DWORD End) { return End-Start; }
+inline ULONGLONG TickTimeSpan(ULONGLONG Start,ULONGLONG End) { _ASSERT(Start<=End); return End-Start; }
+
 extern __declspec(selectany) const FILETIME FILETIME_NULL={0,0};
 #define FILETIME_MILLISECOND	10000LL
 #define FILETIME_SECOND			(1000LL*FILETIME_MILLISECOND)
@@ -24,18 +28,21 @@ extern __declspec(selectany) const FILETIME FILETIME_NULL={0,0};
 #define FILETIME_HOUR			(60LL*FILETIME_MINUTE)
 FILETIME &operator+=(FILETIME &ft,LONGLONG Offset);
 LONGLONG operator-(const FILETIME &ft1,const FILETIME &ft2);
+struct TimeConsts {
+	static const LONGLONG SYSTEMTIME_SECOND=1000LL;
+	static const LONGLONG SYSTEMTIME_MINUTE=60LL*SYSTEMTIME_SECOND;
+	static const LONGLONG SYSTEMTIME_HOUR  =60LL*SYSTEMTIME_MINUTE;
+	static const LONGLONG SYSTEMTIME_DAY   =24LL*SYSTEMTIME_HOUR;
+};
 int CompareSystemTime(const SYSTEMTIME *pTime1,const SYSTEMTIME *pTime2);
 bool OffsetSystemTime(SYSTEMTIME *pTime,LONGLONG Offset);
 LONGLONG DiffSystemTime(const SYSTEMTIME *pStartTime,const SYSTEMTIME *pEndTime);
-bool SystemTimeToLocalTimeNoDST(const SYSTEMTIME *pUTCTime,SYSTEMTIME *pLocalTime);
 void GetLocalTimeAsFileTime(FILETIME *pTime);
-void GetLocalTimeNoDST(SYSTEMTIME *pTime);
-void GetLocalTimeNoDST(FILETIME *pTime);
-inline bool UTCToJST(SYSTEMTIME *pTime) { return OffsetSystemTime(pTime,9*60*60*1000); }
-bool UTCToJST(const SYSTEMTIME *pUTCTime,SYSTEMTIME *pJST);
-inline void UTCToJST(FILETIME *pTime) { *pTime+=9LL*FILETIME_HOUR; }
-void GetCurrentJST(SYSTEMTIME *pTime);
-void GetCurrentJST(FILETIME *pTime);
+void SystemTimeTruncateDay(SYSTEMTIME *pTime);
+void SystemTimeTruncateHour(SYSTEMTIME *pTime);
+void SystemTimeTruncateMinute(SYSTEMTIME *pTime);
+void SystemTimeTruncateSecond(SYSTEMTIME *pTime);
+bool GetJSTTimeZoneInformation(TIME_ZONE_INFORMATION *pInfo);
 int CalcDayOfWeek(int Year,int Month,int Day);
 LPCTSTR GetDayOfWeekText(int DayOfWeek);
 
@@ -60,39 +67,24 @@ int CalcFontPointHeight(HDC hdc,const LOGFONT *pFont);
 int GetErrorText(DWORD ErrorCode,LPTSTR pszText,int MaxLength);
 
 bool IsEqualFileName(LPCWSTR pszFileName1,LPCWSTR pszFileName2);
-bool IsValidFileName(LPCTSTR pszFileName,bool fWildcard=false,LPTSTR pszMessage=NULL,int MaxMessage=0);
+enum {
+	FILENAME_VALIDATE_WILDCARD       = 0x0001U,
+	FILENAME_VALIDATE_ALLOWDELIMITER = 0x0002U
+};
+bool IsValidFileName(LPCTSTR pszFileName,unsigned int Flags=0,TVTest::String *pMessage=NULL);
+bool MakeUniqueFileName(TVTest::String *pFileName,size_t MaxLength=MAX_PATH-1,
+						LPCTSTR pszNumberFormat=NULL);
 bool GetAbsolutePath(LPCTSTR pszFilePath,LPTSTR pszAbsolutePath,int MaxLength);
 
 HICON CreateIconFromBitmap(HBITMAP hbm,int IconWidth,int IconHeight,int ImageWidth=0,int ImageHeight=0);
 HICON CreateEmptyIcon(int Width,int Height);
-
-class CDynamicString {
-protected:
-	LPTSTR m_pszString;
-public:
-	CDynamicString();
-	CDynamicString(const CDynamicString &String);
-	CDynamicString(CDynamicString &&String);
-	explicit CDynamicString(LPCTSTR pszString);
-	virtual ~CDynamicString();
-	CDynamicString &operator=(const CDynamicString &String);
-	CDynamicString &operator=(CDynamicString &&String);
-	CDynamicString &operator+=(const CDynamicString &String);
-	CDynamicString &operator=(LPCTSTR pszString);
-	CDynamicString &operator+=(LPCTSTR pszString);
-	bool operator==(const CDynamicString &String) const;
-	bool operator!=(const CDynamicString &String) const;
-	LPCTSTR Get() const { return m_pszString; }
-	LPCTSTR GetSafe() const { return NullToEmptyString(m_pszString); }
-	bool Set(LPCTSTR pszString);
-	bool Set(LPCTSTR pszString,size_t Length);
-	bool Attach(LPTSTR pszString);
-	int Length() const;
-	void Clear();
-	bool IsEmpty() const;
-	int Compare(LPCTSTR pszString) const;
-	int CompareIgnoreCase(LPCTSTR pszString) const;
+enum IconSizeType {
+	ICON_SIZE_SMALL,
+	ICON_SIZE_NORMAL
 };
+HICON LoadIconStandardSize(HINSTANCE hinst,LPCTSTR pszName,IconSizeType Size);
+HICON LoadSystemIcon(LPCTSTR pszName,IconSizeType Size);
+HICON LoadSystemIcon(LPCTSTR pszName,int Width,int Height);
 
 class CStaticStringFormatter
 {
@@ -200,11 +192,17 @@ namespace Util
 #define GET_MODULE_FUNCTION(pszModule,Func) \
 	Util::GetModuleFunction<decltype(Func)>(pszModule,#Func)
 
+#ifdef WIN_XP_SUPPORT
+	typedef DWORD TickCountType;
+	inline TickCountType GetTickCount() { return ::GetTickCount(); }
+#else
+	typedef ULONGLONG TickCountType;
+	inline TickCountType GetTickCount() { return ::GetTickCount64(); }
+#endif
+
 	namespace OS
 	{
 
-		bool GetVersion(DWORD *pMajor,DWORD *pMinor);
-		DWORD GetMajorVersion();
 		bool IsWindowsXP();
 		bool IsWindowsVista();
 		bool IsWindows7();
@@ -212,6 +210,7 @@ namespace Util
 		bool IsWindowsXPOrLater();
 		bool IsWindowsVistaOrLater();
 		bool IsWindows7OrLater();
+		bool IsWindows8OrLater();
 
 	}	// namespace OS
 

@@ -3,11 +3,14 @@
 
 
 #include "Layout.h"
+#include "UIBase.h"
 #include "DrawUtil.h"
 #include "Theme.h"
 
 
-class CPanel : public CCustomWindow
+class CPanel
+	: public CCustomWindow
+	, public TVTest::CUIBase
 {
 public:
 	class ABSTRACT_CLASS(CEventHandler) {
@@ -22,39 +25,70 @@ public:
 		virtual bool OnMenuPopup(HMENU hmenu) { return true; }
 		virtual bool OnMenuSelected(int Command) { return false; }
 	};
+
 	enum { MENU_USER=100 };
-	struct ThemeInfo {
-		Theme::Style TitleStyle;
+
+	struct PanelTheme {
+		TVTest::Theme::Style TitleStyle;
+		TVTest::Theme::Style TitleIconStyle;
+		TVTest::Theme::Style TitleIconHighlightStyle;
 	};
 
 	static bool Initialize(HINSTANCE hinst);
 
 	CPanel();
 	~CPanel();
+
 // CBasicWindow
 	bool Create(HWND hwndParent,DWORD Style,DWORD ExStyle=0,int ID=0) override;
+
+// CUIBase
+	void SetStyle(const TVTest::Style::CStyleManager *pStyleManager) override;
+	void NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager) override;
+	void SetTheme(const TVTest::Theme::CThemeManager *pThemeManager) override;
+
 // CPanel
 	bool SetWindow(CBasicWindow *pWindow,LPCTSTR pszTitle);
 	void ShowTitle(bool fShow);
 	void EnableFloating(bool fEnable);
 	void SetEventHandler(CEventHandler *pHandler);
 	CBasicWindow *GetWindow() { return m_pWindow; }
-	bool SetTheme(const ThemeInfo *pTheme);
-	bool GetTheme(ThemeInfo *pTheme) const;
+	bool SetPanelTheme(const PanelTheme &Theme);
+	bool GetPanelTheme(PanelTheme *pTheme) const;
 	bool GetTitleRect(RECT *pRect) const;
 	bool GetContentRect(RECT *pRect) const;
 
 private:
-	int m_TitleMargin;
-	int m_ButtonSize;
+	struct PanelStyle
+	{
+		TVTest::Style::Margins TitlePadding;
+		TVTest::Style::Margins TitleLabelMargin;
+		TVTest::Style::IntValue TitleLabelExtraHeight;
+		TVTest::Style::Size TitleButtonIconSize;
+		TVTest::Style::Margins TitleButtonPadding;
+
+		PanelStyle();
+		void SetStyle(const TVTest::Style::CStyleManager *pStyleManager);
+		void NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager);
+	};
+
+	enum ItemType {
+		ITEM_NONE,
+		ITEM_CLOSE
+	};
+
 	DrawUtil::CFont m_Font;
+	DrawUtil::CFont m_IconFont;
+	int m_FontHeight;
 	int m_TitleHeight;
 	CBasicWindow *m_pWindow;
-	CDynamicString m_Title;
+	TVTest::String m_Title;
 	bool m_fShowTitle;
 	bool m_fEnableFloating;
-	ThemeInfo m_Theme;
+	PanelStyle m_Style;
+	PanelTheme m_Theme;
 	CEventHandler *m_pEventHandler;
+	ItemType m_HotItem;
 	bool m_fCloseButtonPushed;
 	POINT m_ptDragStartPos;
 	POINT m_ptMovingWindowPos;
@@ -64,6 +98,7 @@ private:
 	void Draw(HDC hdc,const RECT &PaintRect) const;
 	void OnSize(int Width,int Height);
 	void GetCloseButtonRect(RECT *pRect) const;
+	void SetHotItem(ItemType Item);
 // CCustomWindow
 	LRESULT OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
 };
@@ -87,7 +122,10 @@ public:
 	bool Hide();
 };
 
-class CPanelFrame : public CCustomWindow, public CPanel::CEventHandler
+class CPanelFrame
+	: public CCustomWindow
+	, public TVTest::CUIBase
+	, public CPanel::CEventHandler
 {
 public:
 	class ABSTRACT_CLASS(CEventHandler) {
@@ -117,8 +155,8 @@ public:
 	bool SetPanelVisible(bool fVisible,bool fNoActivate=false);
 	int GetDockingWidth() const { return m_DockingWidth; }
 	bool SetDockingWidth(int Width);
-	bool SetTheme(const CPanel::ThemeInfo *pTheme);
-	bool GetTheme(CPanel::ThemeInfo *pTheme) const;
+	bool SetPanelTheme(const CPanel::PanelTheme &Theme);
+	bool GetPanelTheme(CPanel::PanelTheme *pTheme) const;
 	bool SetOpacity(int Opacity);
 	int GetOpacity() const { return m_Opacity; }
 	Layout::CSplitter *m_pSplitter;
@@ -134,6 +172,9 @@ public:
 		DOCKING_LEFT,
 		DOCKING_RIGHT
 	};
+
+// CUIBase
+	void SetTheme(const TVTest::Theme::CThemeManager *pThemeManager) override;
 
 private:
 	DockingPlace m_DragDockingTarget;

@@ -6,7 +6,7 @@
 #include "CoreEngine.h"
 #include "Dialog.h"
 #include "Aero.h"
-#include "DrawUtil.h"
+#include "Graphics.h"
 
 
 class CInitialSettings : public CBasicDialog
@@ -22,25 +22,29 @@ public:
 
 	LPCTSTR GetDriverFileName() const { return m_szDriverFileName; }
 	bool GetDriverFileName(LPTSTR pszFileName,int MaxLength) const;
-	LPCTSTR GetMpeg2DecoderName() const { return m_szMpeg2DecoderName; }
-	bool GetMpeg2DecoderName(LPTSTR pszDecoderName,int MaxLength) const;
+	LPCTSTR GetMpeg2DecoderName() const { return m_Mpeg2DecoderName.c_str(); }
+	LPCTSTR GetH264DecoderName() const { return m_H264DecoderName.c_str(); }
+	LPCTSTR GetH265DecoderName() const { return m_H265DecoderName.c_str(); }
 	CVideoRenderer::RendererType GetVideoRenderer() const { return m_VideoRenderer; }
-	int GetCasDevice() const { return m_CasDevice; }
-	LPCTSTR GetRecordFolder() const { return m_szRecordFolder; }
+	LPCTSTR GetRecordFolder() const { return m_RecordFolder.c_str(); }
 
 private:
 	const CDriverManager *m_pDriverManager;
 	TCHAR m_szDriverFileName[MAX_PATH];
-	TCHAR m_szMpeg2DecoderName[MAX_DECODER_NAME];
+	TVTest::String m_Mpeg2DecoderName;
+	TVTest::String m_H264DecoderName;
+	TVTest::String m_H265DecoderName;
 	CVideoRenderer::RendererType m_VideoRenderer;
-	int m_CasDevice;
-	TCHAR m_szRecordFolder[MAX_PATH];
+	TVTest::String m_RecordFolder;
 	CAeroGlass m_AeroGlass;
-	CGdiPlus m_GdiPlus;
-	CGdiPlus::CImage m_LogoImage;
+	TVTest::Graphics::CImage m_LogoImage;
+	bool m_fDrawLogo;
 
 // CBasicDialog
 	INT_PTR DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
+
+	void InitDecoderList(int ID,const GUID &SubType,LPCTSTR pszDecoderName);
+	void GetDecoderSetting(int ID,TVTest::String *pDecoderName) const;
 };
 
 

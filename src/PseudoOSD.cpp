@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "TVTest.h"
 #include "PseudoOSD.h"
+#include "Graphics.h"
 
 #ifdef _DEBUG
 #undef THIS_FILE
@@ -15,6 +16,14 @@ static char THIS_FILE[]=__FILE__;
 
 #define ANIMATION_FRAMES	4	// アニメーションの段階数
 #define ANIMATION_INTERVAL	50	// アニメーションの間隔
+
+
+
+
+static float GetOutlineWidth(int FontSize)
+{
+	return (float)FontSize/5.0f;
+}
 
 
 
@@ -59,13 +68,13 @@ CPseudoOSD::CPseudoOSD()
 	: m_hwnd(NULL)
 	, m_crBackColor(RGB(16,0,16))
 	, m_crTextColor(RGB(0,255,128))
+	, m_TextStyle(TEXT_STYLE_OUTLINE)
 	, m_hbmIcon(NULL)
 	, m_IconWidth(0)
 	, m_IconHeight(0)
 	, m_hbm(NULL)
 	, m_ImageEffect(0)
 	, m_TimerID(0)
-	, m_Opacity(80)
 {
 	LOGFONT lf;
 	DrawUtil::GetSystemFont(DrawUtil::FONT_DEFAULT,&lf);
@@ -94,9 +103,13 @@ bool CPseudoOSD::Create(HWND hwndParent,bool fLayeredWindow)
 			return true;
 		Destroy();
 	}
+
 	m_fLayeredWindow=fLayeredWindow;
+	m_fPopupLayeredWindow=
+		fLayeredWindow && !Util::OS::IsWindows8OrLater();
 	m_hwndParent=hwndParent;
-	if (fLayeredWindow) {
+
+	if (m_fPopupLayeredWindow) {
 		POINT pt;
 		RECT rc;
 
@@ -108,16 +121,14 @@ bool CPseudoOSD::Create(HWND hwndParent,bool fLayeredWindow)
 							 pt.x,pt.y,m_Position.Width,m_Position.Height,
 							 hwndParent,NULL,m_hinst,this)==NULL)
 			return false;
-		/*
-		::SetLayeredWindowAttributes(m_hwnd,m_crBackColor,m_Opacity*255/100,
-									 LWA_COLORKEY | LWA_ALPHA);
-		*/
 		::GetWindowRect(hwndParent,&rc);
 		m_ParentPosition.x=rc.left;
 		m_ParentPosition.y=rc.top;
 		return true;
 	}
-	return ::CreateWindowEx(0,m_pszWindowClass,NULL,WS_CHILD,
+
+	return ::CreateWindowEx(fLayeredWindow?(WS_EX_LAYERED | WS_EX_TRANSPARENT):0,
+							m_pszWindowClass,NULL,WS_CHILD,
 							m_Position.Left,m_Position.Top,
 							m_Position.Width,m_Position.Height,
 							hwndParent,NULL,m_hinst,this)!=NULL;
@@ -137,7 +148,7 @@ bool CPseudoOSD::Show(DWORD Time,bool fAnimation)
 	if (m_hwnd==NULL)
 		return false;
 
-	if (m_fLayeredWindow) {
+	if (m_fPopupLayeredWindow) {
 		if (Time>0) {
 			POINT pt;
 
@@ -182,13 +193,21 @@ bool CPseudoOSD::Show(DWORD Time,bool fAnimation)
 		::KillTimer(m_hwnd,TIMER_ID_HIDE);
 		m_TimerID&=~TIMER_ID_HIDE;
 	}
-	if (::IsWindowVisible(m_hwnd)) {
-		::RedrawWindow(m_hwnd,NULL,NULL,RDW_INVALIDATE | RDW_UPDATENOW);
-	} else {
+	if (m_fLayeredWindow) {
+		UpdateLayeredWindow();
 		::ShowWindow(m_hwnd,SW_SHOW);
 		::BringWindowToTop(m_hwnd);
 		::UpdateWindow(m_hwnd);
+	} else {
+		if (::IsWindowVisible(m_hwnd)) {
+			::RedrawWindow(m_hwnd,NULL,NULL,RDW_INVALIDATE | RDW_UPDATENOW);
+		} else {
+			::ShowWindow(m_hwnd,SW_SHOW);
+			::BringWindowToTop(m_hwnd);
+			::UpdateWindow(m_hwnd);
+		}
 	}
+
 	return true;
 }
 
@@ -198,7 +217,7 @@ bool CPseudoOSD::Hide()
 	if (m_hwnd==NULL)
 		return false;
 	::ShowWindow(m_hwnd,SW_HIDE);
-	m_Text.Clear();
+	m_Text.clear();
 	m_hbm=NULL;
 	return true;
 }
@@ -214,7 +233,7 @@ bool CPseudoOSD::IsVisible() const
 
 bool CPseudoOSD::SetText(LPCTSTR pszText,HBITMAP hbmIcon,int IconWidth,int IconHeight,unsigned int ImageEffect)
 {
-	m_Text.Set(pszText);
+	TVTest::StringUtility::Assign(m_Text,pszText);
 	m_hbmIcon=hbmIcon;
 	if (hbmIcon!=NULL) {
 		m_IconWidth=IconWidth;
@@ -241,12 +260,14 @@ bool CPseudoOSD::SetPosition(int Left,int Top,int Width,int Height)
 {
 	if (Width<=0 || Height<=0)
 		return false;
+
 	m_Position.Left=Left;
 	m_Position.Top=Top;
 	m_Position.Width=Width;
 	m_Position.Height=Height;
+
 	if (m_hwnd!=NULL) {
-		if (m_fLayeredWindow) {
+		if (m_fPopupLayeredWindow) {
 			POINT pt;
 
 			pt.x=Left;
@@ -258,6 +279,7 @@ bool CPseudoOSD::SetPosition(int Left,int Top,int Width,int Height)
 			::SetWindowPos(m_hwnd,HWND_TOP,Left,Top,Width,Height,0);
 		}
 	}
+
 	return true;
 }
 
@@ -297,43 +319,74 @@ bool CPseudoOSD::SetTextHeight(int Height)
 }
 
 
+bool CPseudoOSD::SetTextStyle(unsigned int Style)
+{
+	m_TextStyle=Style;
+	return true;
+}
+
+
 bool CPseudoOSD::SetFont(const LOGFONT &Font)
 {
+#if 0
 	LOGFONT lf;
 
 	lf=Font;
 	lf.lfQuality=NONANTIALIASED_QUALITY;
 	return m_Font.Create(&lf);
+#else
+	return m_Font.Create(&Font);
+#endif
 }
 
 
 bool CPseudoOSD::CalcTextSize(SIZE *pSize)
 {
+	pSize->cx=0;
+	pSize->cy=0;
+
+	if (m_Text.empty())
+		return true;
+
 	HDC hdc;
-	HFONT hfontOld;
 	bool fResult;
 
-	if (m_Text.IsEmpty()) {
-		pSize->cx=0;
-		pSize->cy=0;
-		return true;
-	}
 	if (m_hwnd!=NULL)
 		hdc=::GetDC(m_hwnd);
 	else
 		hdc=::CreateCompatibleDC(NULL);
-	hfontOld=DrawUtil::SelectObject(hdc,m_Font);
-	RECT rc={0,0,0,0};
-	fResult=::DrawText(hdc,m_Text.Get(),-1,&rc,DT_CALCRECT | DT_NOPREFIX)!=0;
-	if (fResult) {
-		pSize->cx=rc.right-rc.left;
-		pSize->cy=rc.bottom-rc.top;
+
+	if (!m_fLayeredWindow) {
+		HFONT hfontOld=DrawUtil::SelectObject(hdc,m_Font);
+		RECT rc={0,0,0,0};
+		fResult=::DrawText(hdc,m_Text.data(),(int)m_Text.length(),&rc,DT_CALCRECT | DT_NOPREFIX)!=0;
+		if (fResult) {
+			pSize->cx=rc.right-rc.left;
+			pSize->cy=rc.bottom-rc.top;
+		}
+		::SelectObject(hdc,hfontOld);
+	} else {
+		TVTest::Graphics::CCanvas Canvas(hdc);
+		LOGFONT lf;
+		m_Font.GetLogFont(&lf);
+		if ((m_TextStyle & TEXT_STYLE_OUTLINE)!=0) {
+			fResult=Canvas.GetOutlineTextSize(
+				m_Text.c_str(),lf,GetOutlineWidth(abs(lf.lfHeight)),
+				TVTest::Graphics::TEXT_DRAW_ANTIALIAS | TVTest::Graphics::TEXT_DRAW_HINTING,
+				pSize);
+		} else {
+			fResult=Canvas.GetTextSize(
+				m_Text.c_str(),lf,
+				TVTest::Graphics::TEXT_DRAW_ANTIALIAS | TVTest::Graphics::TEXT_DRAW_HINTING,
+				pSize);
+		}
 	}
-	::SelectObject(hdc,hfontOld);
+
 	if (m_hwnd!=NULL)
 		::ReleaseDC(m_hwnd,hdc);
 	else
 		::DeleteDC(hdc);
+
 	return fResult;
 }
 
@@ -341,7 +394,7 @@ bool CPseudoOSD::CalcTextSize(SIZE *pSize)
 bool CPseudoOSD::SetImage(HBITMAP hbm,unsigned int ImageEffect)
 {
 	m_hbm=hbm;
-	m_Text.Clear();
+	m_Text.clear();
 	m_hbmIcon=NULL;
 	m_ImageEffect=ImageEffect;
 #if 0
@@ -364,25 +417,9 @@ bool CPseudoOSD::SetImage(HBITMAP hbm,unsigned int ImageEffect)
 }
 
 
-bool CPseudoOSD::SetOpacity(int Opacity)
-{
-	if (m_Opacity!=Opacity) {
-		if (m_fLayeredWindow && IsVisible()) {
-			/*
-			::SetLayeredWindowAttributes(m_hwnd,m_crBackColor,m_Opacity*255/100,
-										 LWA_COLORKEY | LWA_ALPHA);
-			*/
-			UpdateLayeredWindow();
-		}
-		m_Opacity=Opacity;
-	}
-	return true;
-}
-
-
 void CPseudoOSD::OnParentMove()
 {
-	if (m_hwnd!=NULL && m_fLayeredWindow) {
+	if (m_hwnd!=NULL && m_fPopupLayeredWindow) {
 		RECT rcParent,rc;
 
 		::GetWindowRect(m_hwndParent,&rcParent);
@@ -404,7 +441,7 @@ void CPseudoOSD::Draw(HDC hdc,const RECT &PaintRect) const
 	RECT rc;
 
 	::GetClientRect(m_hwnd,&rc);
-	if (!m_Text.IsEmpty()) {
+	if (!m_Text.empty()) {
 		HFONT hfontOld;
 		COLORREF crOldTextColor;
 		int OldBkMode;
@@ -431,7 +468,7 @@ void CPseudoOSD::Draw(HDC hdc,const RECT &PaintRect) const
 		hfontOld=DrawUtil::SelectObject(hdc,m_Font);
 		crOldTextColor=::SetTextColor(hdc,m_crTextColor);
 		OldBkMode=::SetBkMode(hdc,TRANSPARENT);
-		::DrawText(hdc,m_Text.Get(),-1,&rc,
+		::DrawText(hdc,m_Text.data(),(int)m_Text.length(),&rc,
 				   DT_CENTER | DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX);
 		::SetBkMode(hdc,OldBkMode);
 		::SetTextColor(hdc,crOldTextColor);
@@ -456,47 +493,6 @@ void CPseudoOSD::DrawImageEffect(HDC hdc,const RECT *pRect) const
 }
 
 
-static void SetBitmapOpacity(void *pBits,int Width,int Height,const RECT &Rect,BYTE Opacity)
-{
-	const unsigned int Alpha=Opacity*256/255;
-
-	for (int y=Rect.top;y<Rect.bottom;y++) {
-		BYTE *p=static_cast<BYTE*>(pBits)+(y*Width+Rect.left)*4;
-		for (int x=Rect.left;x<Rect.right;x++) {
-			p[0]=((unsigned int)p[0]*Alpha)>>8;
-			p[1]=((unsigned int)p[1]*Alpha)>>8;
-			p[2]=((unsigned int)p[2]*Alpha)>>8;
-			p[3]=Opacity;
-			p+=4;
-		}
-	}
-}
-
-static void SetBitmapTextOpacity(void *pBits,int Width,int Height,const RECT &Rect,BYTE TextOpacity,BYTE BackOpacity)
-{
-	for (int y=Rect.top;y<Rect.bottom;y++) {
-		BYTE *p=static_cast<BYTE*>(pBits)+(y*Width+Rect.left)*4;
-		for (int x=Rect.left;x<Rect.right;x++) {
-			unsigned int Opacity;
-
-			if (p[0]==0 && p[1]==0 && p[2]==0)
-				Opacity=BackOpacity;
-			else
-				Opacity=TextOpacity;
-			/*
-			p[0]=p[0]*Opacity/255;
-			p[1]=p[1]*Opacity/255;
-			p[2]=p[2]*Opacity/255;
-			*/
-			p[0]=(p[0]*Opacity+255)>>8;
-			p[1]=(p[1]*Opacity+255)>>8;
-			p[2]=(p[2]*Opacity+255)>>8;
-			p[3]=Opacity;
-			p+=4;
-		}
-	}
-}
-
 void CPseudoOSD::UpdateLayeredWindow()
 {
 	RECT rc;
@@ -508,17 +504,8 @@ void CPseudoOSD::UpdateLayeredWindow()
 	if (Width<1 || Height<1)
 		return;
 
-	BITMAPINFO bmi;
-	::ZeroMemory(&bmi,sizeof(bmi));
-	bmi.bmiHeader.biSize=sizeof(BITMAPINFOHEADER);
-	bmi.bmiHeader.biWidth=Width;
-	bmi.bmiHeader.biHeight=-Height;
-	bmi.bmiHeader.biPlanes=1;
-	bmi.bmiHeader.biBitCount=32;
-	bmi.bmiHeader.biCompression=BI_RGB;
-	HBITMAP hbmSurface;
 	void *pBits;
-	hbmSurface=::CreateDIBSection(NULL,&bmi,DIB_RGB_COLORS,&pBits,NULL,0);
+	HBITMAP hbmSurface=DrawUtil::CreateDIB(Width,Height,32,&pBits);
 	if (hbmSurface==NULL)
 		return;
 	::ZeroMemory(pBits,Width*4*Height);
@@ -527,53 +514,83 @@ void CPseudoOSD::UpdateLayeredWindow()
 	HDC hdcSrc=::CreateCompatibleDC(hdc);
 	HBITMAP hbmOld=static_cast<HBITMAP>(::SelectObject(hdcSrc,hbmSurface));
 
-	::SetRect(&rc,0,0,Width,Height);
-	if (!m_Text.IsEmpty()) {
-		HFONT hfontOld;
-		COLORREF crOldTextColor;
-		int OldBkMode;
+	{
+		TVTest::Graphics::CCanvas Canvas(hdcSrc);
 
-		if (m_hbmIcon!=NULL) {
-			int IconWidth;
-			if ((m_TimerID&TIMER_ID_ANIMATION)!=0)
-				IconWidth=m_IconWidth*(m_AnimationCount+1)/ANIMATION_FRAMES;
-			else
-				IconWidth=m_IconWidth;
-			DrawUtil::DrawBitmap(hdcSrc,
-								 0,(Height-m_IconHeight)/2,
+		::SetRect(&rc,0,0,Width,Height);
+
+		if (!m_Text.empty()) {
+			if (m_hbmIcon!=NULL) {
+				TVTest::Graphics::CImage Image;
+
+				Image.CreateFromBitmap(m_hbmIcon);
+				int IconWidth;
+				if ((m_TimerID&TIMER_ID_ANIMATION)!=0)
+					IconWidth=m_IconWidth*(m_AnimationCount+1)/ANIMATION_FRAMES;
+				else
+					IconWidth=m_IconWidth;
+				Canvas.DrawImage(0,(Height-m_IconHeight)/2,
 								 IconWidth,m_IconHeight,
-								 m_hbmIcon);
-			RECT rcIcon;
-			rcIcon.left=0;
-			rcIcon.top=(Height-m_IconHeight)/2;
-			rcIcon.right=rcIcon.left+IconWidth;
-			rcIcon.bottom=rcIcon.top+m_IconHeight;
-			if (rcIcon.top<0)
-				rcIcon.top=0;
-			if (rcIcon.right>Width)
-				rcIcon.right=Width;
-			if (rcIcon.bottom>Height)
-				rcIcon.bottom=Height;
-			DrawImageEffect(hdcSrc,&rcIcon);
-			SetBitmapOpacity(pBits,Width,Height,rcIcon,255);
-			rc.left+=IconWidth;
+								 &Image,0,0,m_IconWidth,m_IconHeight);
+				RECT rcIcon;
+				rcIcon.left=0;
+				rcIcon.top=(Height-m_IconHeight)/2;
+				rcIcon.right=rcIcon.left+IconWidth;
+				rcIcon.bottom=rcIcon.top+m_IconHeight;
+				if (rcIcon.top<0)
+					rcIcon.top=0;
+				if (rcIcon.right>Width)
+					rcIcon.right=Width;
+				if (rcIcon.bottom>Height)
+					rcIcon.bottom=Height;
+				DrawImageEffect(hdcSrc,&rcIcon);
+				rc.left+=IconWidth;
+			}
+
+			if ((m_TextStyle & TEXT_STYLE_FILL_BACKGROUND)!=0) {
+				TVTest::Graphics::CBrush BackBrush(0,0,0,128);
+				Canvas.FillRect(&BackBrush,rc);
+			}
+
+			TVTest::Graphics::CBrush TextBrush(
+				GetRValue(m_crTextColor),
+				GetGValue(m_crTextColor),
+				GetBValue(m_crTextColor),
+				254);	// 255にすると描画がおかしくなる
+			LOGFONT lf;
+			m_Font.GetLogFont(&lf);
+
+			UINT DrawTextFlags=
+				TVTest::Graphics::TEXT_FORMAT_NO_WRAP |
+				TVTest::Graphics::TEXT_DRAW_ANTIALIAS | TVTest::Graphics::TEXT_DRAW_HINTING;
+			if ((m_TextStyle & TEXT_STYLE_RIGHT)!=0)
+				DrawTextFlags|=TVTest::Graphics::TEXT_FORMAT_RIGHT;
+			else if ((m_TextStyle & TEXT_STYLE_HORZ_CENTER)!=0)
+				DrawTextFlags|=TVTest::Graphics::TEXT_FORMAT_HORZ_CENTER;
+			if ((m_TextStyle & TEXT_STYLE_BOTTOM)!=0)
+				DrawTextFlags|=TVTest::Graphics::TEXT_FORMAT_BOTTOM;
+			if ((m_TextStyle & TEXT_STYLE_VERT_CENTER)!=0)
+				DrawTextFlags|=TVTest::Graphics::TEXT_FORMAT_VERT_CENTER;
+
+			if ((m_TextStyle & TEXT_STYLE_OUTLINE)!=0) {
+				Canvas.DrawOutlineText(
+					m_Text.c_str(),lf,rc,&TextBrush,
+					TVTest::Graphics::CColor(0,0,0,160),
+					GetOutlineWidth(abs(lf.lfHeight)),
+					DrawTextFlags);
+			} else {
+				Canvas.DrawText(m_Text.c_str(),lf,rc,&TextBrush,DrawTextFlags);
+			}
+		} else if (m_hbm!=NULL) {
+			TVTest::Graphics::CImage Image;
+			if (Image.CreateFromBitmap(m_hbm)) {
+				Canvas.DrawImage(&Image,0,0);
+				BITMAP bm;
+				::GetObject(m_hbm,sizeof(BITMAP),&bm);
+				RECT rcBitmap={0,0,bm.bmWidth,bm.bmHeight};
+				DrawImageEffect(hdcSrc,&rcBitmap);
+			}
 		}
-		hfontOld=DrawUtil::SelectObject(hdcSrc,m_Font);
-		crOldTextColor=::SetTextColor(hdcSrc,m_crTextColor);
-		OldBkMode=::SetBkMode(hdcSrc,TRANSPARENT);
-		::DrawText(hdcSrc,m_Text.Get(),-1,&rc,
-				   DT_CENTER | DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX);
-		SetBitmapTextOpacity(pBits,Width,Height,rc,m_Opacity*255/100,128);
-		::SetBkMode(hdcSrc,OldBkMode);
-		::SetTextColor(hdcSrc,crOldTextColor);
-		::SelectObject(hdcSrc,hfontOld);
-	} else if (m_hbm!=NULL) {
-		BITMAP bm;
-		::GetObject(m_hbm,sizeof(BITMAP),&bm);
-		RECT rcBitmap={0,0,bm.bmWidth,bm.bmHeight};
-		DrawUtil::DrawBitmap(hdcSrc,0,0,Width,Height,m_hbm,&rcBitmap);
-		DrawImageEffect(hdcSrc,&rc);
-		SetBitmapOpacity(pBits,Width,Height,rc,255);
 	}
 
 	SIZE sz={Width,Height};
@@ -594,8 +611,7 @@ CPseudoOSD *CPseudoOSD::GetThis(HWND hwnd)
 }
 
 
-LRESULT CALLBACK CPseudoOSD::WndProc(HWND hwnd,UINT uMsg,
-												WPARAM wParam,LPARAM lParam)
+LRESULT CALLBACK CPseudoOSD::WndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 {
 	switch (uMsg) {
 	case WM_CREATE:
@@ -646,7 +662,7 @@ LRESULT CALLBACK CPseudoOSD::WndProc(HWND hwnd,UINT uMsg,
 
 			case TIMER_ID_ANIMATION:
 				pThis->m_AnimationCount++;
-				if (pThis->m_fLayeredWindow) {
+				if (pThis->m_fPopupLayeredWindow) {
 					RECT rc;
 
 					::GetWindowRect(hwnd,&rc);
@@ -709,5 +725,6 @@ LRESULT CALLBACK CPseudoOSD::WndProc(HWND hwnd,UINT uMsg,
 		}
 		return 0;
 	}
-	return DefWindowProc(hwnd,uMsg,wParam,lParam);
+
+	return ::DefWindowProc(hwnd,uMsg,wParam,lParam);
 }

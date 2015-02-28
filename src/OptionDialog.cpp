@@ -233,7 +233,7 @@ INT_PTR COptionDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 			return TRUE;
 
 		case IDC_OPTIONS_HELP:
-			GetAppClass().ShowHelpContent(m_PageList[m_CurrentPage].HelpID);
+			GetAppClass().UICore.ShowHelpContent(m_PageList[m_CurrentPage].HelpID);
 			return TRUE;
 
 		case IDOK:
@@ -275,6 +275,17 @@ INT_PTR COptionDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 	}
 
 	return FALSE;
+}
+
+
+void COptionDialog::ActivatePage(COptions *pOptions)
+{
+	for (int i=0;i<NUM_PAGES;i++) {
+		if (m_PageList[i].pOptions==pOptions) {
+			SetPage(i);
+			break;
+		}
+	}
 }
 
 

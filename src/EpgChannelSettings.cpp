@@ -37,8 +37,6 @@ bool CEpgChannelSettings::Show(HWND hwndOwner)
 
 INT_PTR CEpgChannelSettings::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 {
-	INT_PTR Result=CResizableDialog::DlgProc(hDlg,uMsg,wParam,lParam);
-
 	switch (uMsg) {
 	case WM_INITDIALOG:
 		{
@@ -54,9 +52,11 @@ INT_PTR CEpgChannelSettings::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lP
 			const int IconHeight=::GetSystemMetrics(SM_CYSMICON);
 			HIMAGELIST himl=::ImageList_Create(IconWidth,IconHeight,ILC_COLOR24 | ILC_MASK,
 											   m_ChannelList.NumChannels()+1,100);
-			ImageList_AddIcon(himl,CreateEmptyIcon(IconWidth,IconHeight));
+			HICON hico=CreateEmptyIcon(IconWidth,IconHeight);
+			ImageList_AddIcon(himl,hico);
+			::DestroyIcon(hico);
 			ListView_SetImageList(hwndList,himl,LVSIL_SMALL);
-			CLogoManager *pLogoManager=GetAppClass().GetLogoManager();
+			CLogoManager &LogoManager=GetAppClass().LogoManager;
 
 			RECT rc;
 			::GetClientRect(hwndList,&rc);
@@ -75,7 +75,7 @@ INT_PTR CEpgChannelSettings::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lP
 				const CChannelInfo *pChannelInfo=m_ChannelList.GetChannelInfo(i);
 				lvi.iItem=i;
 				lvi.pszText=const_cast<LPTSTR>(pChannelInfo->GetName());
-				HICON hico=pLogoManager->CreateLogoIcon(
+				HICON hico=LogoManager.CreateLogoIcon(
 					pChannelInfo->GetNetworkID(),
 					pChannelInfo->GetServiceID(),
 					IconWidth,IconHeight);
@@ -171,5 +171,5 @@ INT_PTR CEpgChannelSettings::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lP
 		return TRUE;
 	}
 
-	return Result;
+	return FALSE;
 }

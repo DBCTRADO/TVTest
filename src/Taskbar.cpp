@@ -33,11 +33,15 @@ bool CTaskbarManager::Initialize(HWND hwnd)
 		if (Util::OS::IsWindows7OrLater()) {
 			m_TaskbarButtonCreatedMessage=::RegisterWindowMessage(TEXT("TaskbarButtonCreated"));
 
+#ifdef WIN_XP_SUPPORT
 			auto pChangeWindowMessageFilter=
 				GET_MODULE_FUNCTION(TEXT("user32.dll"),ChangeWindowMessageFilter);
 			if (pChangeWindowMessageFilter!=NULL) {
 				pChangeWindowMessageFilter(m_TaskbarButtonCreatedMessage,MSGFLT_ADD);
 			}
+#else
+			::ChangeWindowMessageFilter(m_TaskbarButtonCreatedMessage,MSGFLT_ADD);
+#endif
 
 			m_hwnd=hwnd;
 		}

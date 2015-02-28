@@ -20,7 +20,6 @@ CMpeg2ParserFilter::CMpeg2ParserFilter(LPUNKNOWN pUnk, HRESULT *phr)
 	: CTransInPlaceFilter(MPEG2PARSERFILTER_NAME, pUnk, CLSID_Mpeg2ParserFilter, phr, FALSE)
 #endif
 	, m_Mpeg2Parser(this)
-	, m_bAttachMediaType(false)
 	, m_pOutSample(NULL)
 {
 	TRACE(TEXT("CMpeg2ParserFilter::CMpeg2ParserFilter() %p\n"), this);
@@ -244,14 +243,6 @@ HRESULT CMpeg2ParserFilter::BeginFlush()
 	m_VideoInfo.Reset();
 
 	return hr;
-}
-
-
-void CMpeg2ParserFilter::SetAttachMediaType(bool bAttach)
-{
-	CAutoLock Lock(&m_ParserLock);
-
-	m_bAttachMediaType = bAttach;
 }
 
 

@@ -2,19 +2,29 @@
 #define TVTEST_OSD_MANAGER_H
 
 
+#include "UIBase.h"
 #include "OSDOptions.h"
 #include "PseudoOSD.h"
 #include "ChannelList.h"
 
 
 class COSDManager
+	: public TVTest::CUIBase
 {
 public:
+	struct OSDClientInfo
+	{
+		HWND hwndParent;
+		RECT ClientRect;
+		bool fForcePseudoOSD;
+		bool fAnimation;
+	};
+
 	class ABSTRACT_CLASS(CEventHandler)
 	{
 	public:
 		virtual ~CEventHandler() {}
-		virtual bool GetOSDWindow(HWND *phwndParent,RECT *pRect,bool *pfForcePseudoOSD)=0;
+		virtual bool GetOSDClientInfo(OSDClientInfo *pInfo)=0;
 		virtual bool SetOSDHideTimer(DWORD Delay)=0;
 	};
 
@@ -25,6 +35,7 @@ public:
 
 	COSDManager(const COSDOptions *pOptions);
 	~COSDManager();
+	bool Initialize();
 	void SetEventHandler(CEventHandler *pEventHandler);
 	void Reset();
 	void ClearOSD();
@@ -37,10 +48,33 @@ public:
 	void HideVolumeOSD();
 
 private:
+	struct OSDStyle
+	{
+		TVTest::Style::Margins Margin;
+		TVTest::Style::IntValue TextSizeRatio;
+		TVTest::Style::IntValue CompositeTextSizeRatio;
+		TVTest::Style::Size LogoSize;
+		TVTest::String LogoEffect;
+		bool fChannelAnimation;
+		TVTest::Style::Margins VolumeMargin;
+		TVTest::Style::IntValue VolumeTextSizeMin;
+
+		OSDStyle();
+		void SetStyle(const TVTest::Style::CStyleManager *pStyleManager);
+		void NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager);
+	};
+
 	const COSDOptions *m_pOptions;
+	OSDStyle m_Style;
 	CEventHandler *m_pEventHandler;
 	CPseudoOSD m_OSD;
 	CPseudoOSD m_VolumeOSD;
+
+	bool CompositeText(LPCTSTR pszText,const RECT &rcClient,int LeftOffset,DWORD FadeTime);
+
+// CUIBase
+	void SetStyle(const TVTest::Style::CStyleManager *pStyleManager) override;
+	void NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager) override;
 };
 
 

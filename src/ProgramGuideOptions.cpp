@@ -26,7 +26,6 @@ CProgramGuideOptions::CProgramGuideOptions(CProgramGuide *pProgramGuide,CPluginM
 	, m_ViewHours(26)
 	, m_ItemWidth(pProgramGuide->GetItemWidth())
 	, m_LinesPerHour(pProgramGuide->GetLinesPerHour())
-	, m_LineMargin(1)
 	, m_VisibleEventIcons(m_pProgramGuide->GetVisibleEventIcons())
 	, m_himlEventIcons(NULL)
 	, m_WheelScrollLines(pProgramGuide->GetWheelScrollLines())
@@ -77,9 +76,7 @@ bool CProgramGuideOptions::LoadSettings(CSettings &Settings)
 				&& Value>=CProgramGuide::MIN_LINES_PER_HOUR
 				&& Value<=CProgramGuide::MAX_LINES_PER_HOUR)
 			m_LinesPerHour=Value;
-		if (Settings.Read(TEXT("LineMargin"),&Value))
-			m_LineMargin=max(Value,0);
-		m_pProgramGuide->SetUIOptions(m_LinesPerHour,m_ItemWidth,m_LineMargin);
+		m_pProgramGuide->SetUIOptions(m_LinesPerHour,m_ItemWidth);
 
 		Settings.Read(TEXT("EventIcons"),&m_VisibleEventIcons);
 		m_pProgramGuide->SetVisibleEventIcons(m_VisibleEventIcons);
@@ -88,13 +85,7 @@ bool CProgramGuideOptions::LoadSettings(CSettings &Settings)
 			m_WheelScrollLines=Value;
 		m_pProgramGuide->SetWheelScrollLines(m_WheelScrollLines);
 
-		TCHAR szText[512];
-		if (Settings.Read(TEXT("ProgramLDoubleClick"),szText,lengthof(szText))) {
-			if (szText[0]!=_T('\0'))
-				m_ProgramLDoubleClickCommand.Set(szText);
-			else
-				m_ProgramLDoubleClickCommand.Clear();
-		}
+		Settings.Read(TEXT("ProgramLDoubleClick"),&m_ProgramLDoubleClickCommand);
 
 		if (Settings.Read(TEXT("ShowToolTip"),&f))
 			m_pProgramGuide->SetShowToolTip(f);
@@ -134,6 +125,10 @@ bool CProgramGuideOptions::LoadSettings(CSettings &Settings)
 		bool fKeepTimePos;
 		if (Settings.Read(TEXT("KeepTimePos"),&fKeepTimePos))
 			m_pProgramGuide->SetKeepTimePos(fKeepTimePos);
+
+		bool fShowFeaturedMark;
+		if (Settings.Read(TEXT("ShowFeaturedMark"),&fShowFeaturedMark))
+			m_pProgramGuide->SetShowFeaturedMark(fShowFeaturedMark);
 
 		bool fExcludeNoEvent;
 		if (Settings.Read(TEXT("ExcludeNoEventServices"),&fExcludeNoEvent))
@@ -179,6 +174,9 @@ bool CProgramGuideOptions::LoadSettings(CSettings &Settings)
 			if (Settings.Read(szName,&Value))
 				pProgramSearch->SetColumnWidth(i,Value);
 		}
+
+		if (Settings.Read(TEXT("SearchResultListHeight"),&Value))
+			pProgramSearch->SetResultListHeight(Value);
 
 		int Left,Top;
 		pProgramSearch->GetPosition(&Left,&Top,&Width,&Height);
@@ -308,10 +306,9 @@ bool CProgramGuideOptions::SaveSettings(CSettings &Settings)
 		Settings.Write(TEXT("ViewHours"),m_ViewHours);
 		Settings.Write(TEXT("ItemWidth"),m_ItemWidth);
 		Settings.Write(TEXT("LinesPerHour"),m_LinesPerHour);
-		Settings.Write(TEXT("LineMargin"),m_LineMargin);
 		Settings.Write(TEXT("EventIcons"),m_VisibleEventIcons);
 		Settings.Write(TEXT("WheelScrollLines"),m_WheelScrollLines);
-		Settings.Write(TEXT("ProgramLDoubleClick"),m_ProgramLDoubleClickCommand.GetSafe());
+		Settings.Write(TEXT("ProgramLDoubleClick"),m_ProgramLDoubleClickCommand);
 
 		// Font
 		Settings.Write(TEXT("FontName"),m_Font.lfFaceName);
@@ -323,6 +320,7 @@ bool CProgramGuideOptions::SaveSettings(CSettings &Settings)
 		Settings.Write(TEXT("ShowToolTip"),m_pProgramGuide->GetShowToolTip());
 		Settings.Write(TEXT("Filter"),m_pProgramGuide->GetFilter());
 		Settings.Write(TEXT("KeepTimePos"),m_pProgramGuide->GetKeepTimePos());
+		Settings.Write(TEXT("ShowFeaturedMark"),m_pProgramGuide->GetShowFeaturedMark());
 		Settings.Write(TEXT("ExcludeNoEventServices"),m_pProgramGuide->GetExcludeNoEventServices());
 
 		int Width,Height;
@@ -347,6 +345,8 @@ bool CProgramGuideOptions::SaveSettings(CSettings &Settings)
 			::wsprintf(szName,TEXT("SearchColumn%d_Width"),i);
 			Settings.Write(szName,pProgramSearch->GetColumnWidth(i));
 		}
+
+		Settings.Write(TEXT("SearchResultListHeight"),pProgramSearch->GetResultListHeight());
 
 		int Left,Top;
 		pProgramSearch->GetPosition(&Left,&Top,&Width,&Height);
@@ -435,12 +435,10 @@ bool CProgramGuideOptions::GetTimeRange(SYSTEMTIME *pstFirst,SYSTEMTIME *pstLast
 {
 	SYSTEMTIME st;
 
-	::GetLocalTime(&st);
-	st.wMinute=0;
-	st.wSecond=0;
-	st.wMilliseconds=0;
+	GetCurrentEpgTime(&st);
+	SystemTimeTruncateHour(&st);
 	*pstFirst=st;
-	OffsetSystemTime(&st,(LONGLONG)m_ViewHours*(60*60*1000));
+	OffsetSystemTime(&st,(LONGLONG)m_ViewHours*TimeConsts::SYSTEMTIME_HOUR);
 	*pstLast=st;
 	return true;
 }
@@ -492,8 +490,6 @@ INT_PTR CProgramGuideOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM l
 			DlgEdit_SetInt(hDlg,IDC_PROGRAMGUIDEOPTIONS_LINESPERHOUR,m_LinesPerHour);
 			DlgUpDown_SetRange(hDlg,IDC_PROGRAMGUIDEOPTIONS_LINESPERHOUR_UD,
 				CProgramGuide::MIN_LINES_PER_HOUR,CProgramGuide::MAX_LINES_PER_HOUR);
-			DlgEdit_SetInt(hDlg,IDC_PROGRAMGUIDEOPTIONS_LINEMARGIN,m_LineMargin);
-			DlgUpDown_SetRange(hDlg,IDC_PROGRAMGUIDEOPTIONS_LINEMARGIN_UD,0,100);
 
 			m_CurSettingFont=m_Font;
 			SetFontInfo(hDlg,&m_CurSettingFont);
@@ -531,10 +527,10 @@ INT_PTR CProgramGuideOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM l
 			DlgEdit_SetInt(hDlg,IDC_PROGRAMGUIDEOPTIONS_WHEELSCROLLLINES,m_WheelScrollLines);
 			DlgUpDown_SetRange(hDlg,IDC_PROGRAMGUIDEOPTIONS_WHEELSCROLLLINES_UD,0,100);
 
-			int Sel=m_ProgramLDoubleClickCommand.IsEmpty()?0:-1;
+			int Sel=m_ProgramLDoubleClickCommand.empty()?0:-1;
 			DlgComboBox_AddString(hDlg,IDC_PROGRAMGUIDEOPTIONS_PROGRAMLDOUBLECLICK,TEXT("âΩÇ‡ÇµÇ»Ç¢"));
 			DlgComboBox_AddString(hDlg,IDC_PROGRAMGUIDEOPTIONS_PROGRAMLDOUBLECLICK,TEXT("iEPGä÷òAïtÇØé¿çs"));
-			if (Sel<0 && m_ProgramLDoubleClickCommand.Compare(IEPG_ASSOCIATE_COMMAND)==0)
+			if (Sel<0 && m_ProgramLDoubleClickCommand.compare(IEPG_ASSOCIATE_COMMAND)==0)
 				Sel=1;
 			for (int i=0;i<m_pPluginManager->NumPlugins();i++) {
 				const CPlugin *pPlugin=m_pPluginManager->GetPlugin(i);
@@ -553,8 +549,8 @@ INT_PTR CProgramGuideOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM l
 															CommandInfo.pszName);
 						DlgComboBox_SetItemData(hDlg,IDC_PROGRAMGUIDEOPTIONS_PROGRAMLDOUBLECLICK,
 												Index,reinterpret_cast<LPARAM>(DuplicateString(szCommand)));
-						if (Sel<0 && !m_ProgramLDoubleClickCommand.IsEmpty()
-								&& ::lstrcmpi(szCommand,m_ProgramLDoubleClickCommand.Get())==0)
+						if (Sel<0 && !m_ProgramLDoubleClickCommand.empty()
+								&& TVTest::StringUtility::CompareNoCase(m_ProgramLDoubleClickCommand,szCommand)==0)
 							Sel=(int)Index;
 					}
 				}
@@ -820,7 +816,7 @@ INT_PTR CProgramGuideOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM l
 					m_ViewHours=Value;
 					m_pProgramGuide->GetTimeRange(&stFirst,NULL);
 					stLast=stFirst;
-					OffsetSystemTime(&stLast,(LONGLONG)m_ViewHours*(60*60*1000));
+					OffsetSystemTime(&stLast,(LONGLONG)m_ViewHours*TimeConsts::SYSTEMTIME_HOUR);
 					m_pProgramGuide->SetTimeRange(&stFirst,&stLast);
 					fUpdate=true;
 				}
@@ -832,8 +828,7 @@ INT_PTR CProgramGuideOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM l
 				Value=::GetDlgItemInt(hDlg,IDC_PROGRAMGUIDEOPTIONS_LINESPERHOUR,NULL,TRUE);
 				m_LinesPerHour=CLAMP(Value,
 					(int)CProgramGuide::MIN_LINES_PER_HOUR,(int)CProgramGuide::MAX_LINES_PER_HOUR);
-				m_LineMargin=::GetDlgItemInt(hDlg,IDC_PROGRAMGUIDEOPTIONS_LINEMARGIN,NULL,TRUE);
-				m_pProgramGuide->SetUIOptions(m_LinesPerHour,m_ItemWidth,m_LineMargin);
+				m_pProgramGuide->SetUIOptions(m_LinesPerHour,m_ItemWidth);
 
 				if (!CompareLogFont(&m_Font,&m_CurSettingFont)) {
 					m_Font=m_CurSettingFont;
@@ -857,13 +852,13 @@ INT_PTR CProgramGuideOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM l
 				LRESULT Sel=DlgComboBox_GetCurSel(hDlg,IDC_PROGRAMGUIDEOPTIONS_PROGRAMLDOUBLECLICK);
 				if (Sel>=0) {
 					if (Sel==0) {
-						m_ProgramLDoubleClickCommand.Clear();
+						m_ProgramLDoubleClickCommand.clear();
 					} else if (Sel==1) {
-						m_ProgramLDoubleClickCommand.Set(IEPG_ASSOCIATE_COMMAND);
+						m_ProgramLDoubleClickCommand=IEPG_ASSOCIATE_COMMAND;
 					} else {
-						m_ProgramLDoubleClickCommand.Set(
+						m_ProgramLDoubleClickCommand=
 							reinterpret_cast<LPCTSTR>(
-								DlgComboBox_GetItemData(hDlg,IDC_PROGRAMGUIDEOPTIONS_PROGRAMLDOUBLECLICK,Sel)));
+								DlgComboBox_GetItemData(hDlg,IDC_PROGRAMGUIDEOPTIONS_PROGRAMLDOUBLECLICK,Sel));
 					}
 				}
 

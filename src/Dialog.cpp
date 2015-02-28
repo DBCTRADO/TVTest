@@ -1,5 +1,7 @@
 #include "stdafx.h"
+#include "TVTest.h"
 #include "Dialog.h"
+#include "DialogUtil.h"
 
 #ifdef _DEBUG
 #undef THIS_FILE
@@ -60,6 +62,21 @@ bool CBasicDialog::SetVisible(bool fVisible)
 }
 
 
+bool CBasicDialog::GetPosition(Position *pPosition) const
+{
+	if (pPosition==NULL)
+		return false;
+	if (m_hDlg==NULL) {
+		*pPosition=m_Position;
+	} else {
+		RECT rc;
+		::GetWindowRect(m_hDlg,&rc);
+		pPosition->Set(&rc);
+	}
+	return true;
+}
+
+
 bool CBasicDialog::GetPosition(RECT *pPosition) const
 {
 	if (pPosition==NULL)
@@ -86,6 +103,12 @@ bool CBasicDialog::GetPosition(int *pLeft,int *pTop,int *pWidth,int *pHeight) co
 	if (pHeight!=NULL)
 		*pHeight=rc.bottom-rc.top;
 	return true;
+}
+
+
+bool CBasicDialog::SetPosition(const Position &Pos)
+{
+	return SetPosition(Pos.x,Pos.y,Pos.Width,Pos.Height);
 }
 
 
@@ -162,7 +185,7 @@ INT_PTR CALLBACK CBasicDialog::DialogProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPAR
 		pThis=GetThis(hDlg);
 		if (uMsg==WM_NCDESTROY) {
 			if (pThis!=NULL) {
-				pThis->DlgProc(hDlg,uMsg,wParam,lParam);
+				pThis->HandleMessage(hDlg,uMsg,wParam,lParam);
 				pThis->m_hDlg=NULL;
 			}
 			::RemoveProp(hDlg,TEXT("This"));
@@ -170,8 +193,14 @@ INT_PTR CALLBACK CBasicDialog::DialogProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPAR
 		}
 	}
 	if (pThis!=NULL)
-		return pThis->DlgProc(hDlg,uMsg,wParam,lParam);
+		return pThis->HandleMessage(hDlg,uMsg,wParam,lParam);
 	return FALSE;
+}
+
+
+INT_PTR CBasicDialog::HandleMessage(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
+{
+	return DlgProc(hDlg,uMsg,wParam,lParam);
 }
 
 
@@ -199,7 +228,7 @@ CResizableDialog::~CResizableDialog()
 }
 
 
-INT_PTR CResizableDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
+INT_PTR CResizableDialog::HandleMessage(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 {
 	switch (uMsg) {
 	case WM_INITDIALOG:
@@ -223,7 +252,7 @@ INT_PTR CResizableDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPara
 				m_hwndSizeGrip=NULL;
 			}
 		}
-		return TRUE;
+		break;
 
 	case WM_GETMINMAXINFO:
 		{
@@ -236,7 +265,7 @@ INT_PTR CResizableDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPara
 
 	case WM_SIZE:
 		DoLayout();
-		return TRUE;
+		break;
 
 	case WM_DESTROY:
 		{
@@ -245,9 +274,10 @@ INT_PTR CResizableDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPara
 			::GetWindowRect(hDlg,&rc);
 			m_Position.Set(&rc);
 		}
-		return TRUE;
+		break;
 	}
-	return FALSE;
+
+	return DlgProc(hDlg,uMsg,wParam,lParam);
 }
 
 
@@ -265,11 +295,15 @@ void CResizableDialog::DoLayout()
 			rc.right+=Width-m_OriginalClientSize.cx;
 			if ((m_ControlList[i].Align&ALIGN_LEFT)==0)
 				rc.left+=Width-m_OriginalClientSize.cx;
+			if (rc.right<rc.left)
+				rc.right=rc.left;
 		}
 		if ((m_ControlList[i].Align&ALIGN_BOTTOM)!=0) {
 			rc.bottom+=Height-m_OriginalClientSize.cy;
 			if ((m_ControlList[i].Align&ALIGN_TOP)==0)
 				rc.top+=Height-m_OriginalClientSize.cy;
+			if (rc.bottom<rc.top)
+				rc.bottom=rc.top;
 		}
 		::MoveWindow(::GetDlgItem(m_hDlg,m_ControlList[i].ID),
 					 rc.left,rc.top,rc.right-rc.left,rc.bottom-rc.top,TRUE);
@@ -309,6 +343,32 @@ bool CResizableDialog::AddControls(int FirstID,int LastID,unsigned int Align)
 			return false;
 	}
 	return true;
+}
+
+
+bool CResizableDialog::UpdateControlPosition(int ID)
+{
+	for (size_t i=0;i<m_ControlList.size();i++) {
+		if (m_ControlList[i].ID==ID) {
+			GetDlgItemRect(m_hDlg,ID,&m_ControlList[i].rcOriginal);
+			return true;
+		}
+	}
+
+	return false;
+}
+
+
+void CResizableDialog::UpdateLayout()
+{
+	RECT rc;
+
+	::GetClientRect(m_hDlg,&rc);
+	m_OriginalClientSize.cx=rc.right;
+	m_OriginalClientSize.cy=rc.bottom;
+
+	for (size_t i=0;i<m_ControlList.size();i++)
+		GetDlgItemRect(m_hDlg,m_ControlList[i].ID,&m_ControlList[i].rcOriginal);
 }
 
 

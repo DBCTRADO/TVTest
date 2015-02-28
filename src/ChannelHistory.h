@@ -10,24 +10,15 @@
 class CChannelHistory
 {
 public:
-	class CChannel : public CChannelInfo
-	{
-		CDynamicString m_DriverName;
-
-	public:
-		CChannel(LPCTSTR pszDriverName,const CChannelInfo *pChannelInfo);
-		LPCTSTR GetDriverFileName() const { return m_DriverName.Get(); }
-	};
-
 	CChannelHistory();
 	~CChannelHistory();
 	void Clear();
 	bool SetCurrentChannel(LPCTSTR pszDriverName,const CChannelInfo *pChannelInfo);
-	const CChannel *Forward();
-	const CChannel *Backward();
+	const CTunerChannelInfo *Forward();
+	const CTunerChannelInfo *Backward();
 
 private:
-	std::deque<CChannel*> m_ChannelList;
+	std::deque<CTunerChannelInfo*> m_ChannelList;
 	int m_MaxChannelHistory;
 	int m_CurrentChannel;
 };
@@ -35,20 +26,11 @@ private:
 class CRecentChannelList : public CSettingsBase
 {
 public:
-	class CChannel : public ::CChannelInfo
-	{
-		CDynamicString m_DriverName;
-
-	public:
-		CChannel(LPCTSTR pszDriverName,const CChannelInfo *pChannelInfo);
-		LPCTSTR GetDriverFileName() const { return m_DriverName.Get(); }
-	};
-
 	CRecentChannelList();
 	~CRecentChannelList();
 	int NumChannels() const;
 	void Clear();
-	const CChannel *GetChannelInfo(int Index) const;
+	const CTunerChannelInfo *GetChannelInfo(int Index) const;
 	bool Add(LPCTSTR pszDriverName,const CChannelInfo *pChannelInfo);
 	bool SetMenu(HMENU hmenu,bool fClear=true) const;
 // CSettingsBase
@@ -56,7 +38,7 @@ public:
 	bool WriteSettings(CSettings &Settings) override;
 
 private:
-	std::deque<CChannel*> m_ChannelList;
+	std::deque<CTunerChannelInfo*> m_ChannelList;
 	int m_MaxChannelHistory;
 	int m_MaxChannelHistoryMenu;
 };

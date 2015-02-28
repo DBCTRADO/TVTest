@@ -4,6 +4,7 @@
 
 #include "stdafx.h"
 #include "TsMedia.h"
+#include "Bitstream.h"
 
 #ifdef _DEBUG
 #undef THIS_FILE
@@ -702,6 +703,16 @@ inline const bool CAdtsParser::SyncFrame(const BYTE byData)
 }
 
 
+/////////////////////////////////////////////////////////////////////////////
+// 映像ストリーム解析クラス
+/////////////////////////////////////////////////////////////////////////////
+
+bool CVideoStreamParser::StorePacket(const CPesPacket *pPacket)
+{
+	return StoreEs(pPacket->GetPayloadData(), pPacket->GetPayloadSize());
+}
+
+
 //////////////////////////////////////////////////////////////////////
 // CMpeg2Sequenceクラスの構築/消滅
 //////////////////////////////////////////////////////////////////////
@@ -713,26 +724,7 @@ CMpeg2Sequence::CMpeg2Sequence()
 	Reset();
 }
 
-CMpeg2Sequence::CMpeg2Sequence(const CMpeg2Sequence &Operand)
-{
-	Reset();
-
-	*this = Operand;
-}
-
-CMpeg2Sequence & CMpeg2Sequence::operator = (const CMpeg2Sequence &Operand)
-{
-	if (&Operand != this) {
-		// インスタンスのコピー
-		CMediaData::operator = (Operand);
-		m_Header = Operand.m_Header;
-		m_bFixSquareDisplay = Operand.m_bFixSquareDisplay;
-	}
-
-	return *this;
-}
-
-const bool CMpeg2Sequence::ParseHeader(void)
+bool CMpeg2Sequence::ParseHeader()
 {
 	// ここではStart Code PrifixとStart Codeしかチェックしない。(シーケンスの同期のみを目的とする)
 
@@ -838,32 +830,32 @@ const bool CMpeg2Sequence::ParseHeader(void)
 	return true;
 }
 
-void CMpeg2Sequence::Reset(void)
+void CMpeg2Sequence::Reset()
 {
 	// データをクリアする
 	ClearSize();
 	::ZeroMemory(&m_Header, sizeof(m_Header));
 }
 
-const WORD CMpeg2Sequence::GetHorizontalSize(void) const
+WORD CMpeg2Sequence::GetHorizontalSize() const
 {
 	// Horizontal Size Value を返す
 	return m_Header.wHorizontalSize;
 }
 
-const WORD CMpeg2Sequence::GetVerticalSize(void) const
+WORD CMpeg2Sequence::GetVerticalSize() const
 {
 	// Vertical Size Value を返す
 	return m_Header.wVerticalSize;
 }
 
-const BYTE CMpeg2Sequence::GetAspectRatioInfo(void) const
+BYTE CMpeg2Sequence::GetAspectRatioInfo() const
 {
 	// Aspect Ratio Information を返す
 	return m_Header.byAspectRatioInfo;
 }
 
-const bool CMpeg2Sequence::GetAspectRatio(BYTE *pAspectX, BYTE *pAspectY) const
+bool CMpeg2Sequence::GetAspectRatio(BYTE *pAspectX, BYTE *pAspectY) const
 {
 	BYTE AspectX, AspectY;
 
@@ -894,13 +886,13 @@ const bool CMpeg2Sequence::GetAspectRatio(BYTE *pAspectX, BYTE *pAspectY) const
 	return true;
 }
 
-const BYTE CMpeg2Sequence::GetFrameRateCode(void) const
+BYTE CMpeg2Sequence::GetFrameRateCode(void) const
 {
 	// Frame Rate Code を返す
 	return m_Header.byFrameRateCode;
 }
 
-const bool CMpeg2Sequence::GetFrameRate(DWORD *pNum, DWORD *pDenom) const
+bool CMpeg2Sequence::GetFrameRate(DWORD *pNum, DWORD *pDenom) const
 {
 	static const struct {
 		WORD Num, Denom;
@@ -924,49 +916,49 @@ const bool CMpeg2Sequence::GetFrameRate(DWORD *pNum, DWORD *pDenom) const
 	return true;
 }
 
-const DWORD CMpeg2Sequence::GetBitRate(void) const
+DWORD CMpeg2Sequence::GetBitRate() const
 {
 	// Bit Rate Value を返す
 	return m_Header.dwBitRate;
 }
 
-const bool CMpeg2Sequence::IsMarkerBit(void) const
+bool CMpeg2Sequence::IsMarkerBit() const
 {
 	// Marker Bit を返す
 	return m_Header.bMarkerBit;
 }
 
-const DWORD CMpeg2Sequence::GetVbvBufferSize(void) const
+DWORD CMpeg2Sequence::GetVbvBufferSize() const
 {
 	// VBV Buffer Size Value を返す
 	return m_Header.dwVbvBufferSize;
 }
 
-const bool CMpeg2Sequence::IsConstrainedParamFlag(void) const
+bool CMpeg2Sequence::IsConstrainedParamFlag() const
 {
 	// Constrained Parameters Flag を返す
 	return m_Header.bConstrainedParamFlag;
 }
 
-const bool CMpeg2Sequence::IsLoadIntraQuantiserMatrix(void) const
+bool CMpeg2Sequence::IsLoadIntraQuantiserMatrix() const
 {
 	// Load Intra Quantiser Matrix を返す
 	return m_Header.bLoadIntraQuantiserMatrix;
 }
 
-const bool CMpeg2Sequence::GetExtendDisplayInfo() const
+bool CMpeg2Sequence::GetExtendDisplayInfo() const
 {
 	// Extention Sequence Display があるかを返す
 	return m_Header.Extention.Display.bHave;
 }
 
-const WORD CMpeg2Sequence::GetExtendDisplayHorizontalSize(void) const
+WORD CMpeg2Sequence::GetExtendDisplayHorizontalSize() const
 {
 	// Horizontal Size Value を返す
 	return m_Header.Extention.Display.wDisplayHorizontalSize;
 }
 
-const WORD CMpeg2Sequence::GetExtendDisplayVerticalSize(void) const
+WORD CMpeg2Sequence::GetExtendDisplayVerticalSize() const
 {
 	// Vertical Size Value を返す
 	return m_Header.Extention.Display.wDisplayVerticalSize;
@@ -988,30 +980,7 @@ CMpeg2Parser::CMpeg2Parser(ISequenceHandler *pSequenceHandler)
 	Reset();
 }
 
-CMpeg2Parser::CMpeg2Parser(const CMpeg2Parser &Operand)
-{
-	*this = Operand;
-}
-
-CMpeg2Parser & CMpeg2Parser::operator = (const CMpeg2Parser &Operand)
-{
-	// インスタンスのコピー
-	if (&Operand != this) {
-		m_pSequenceHandler = Operand.m_pSequenceHandler;
-		m_Mpeg2Sequence = Operand.m_Mpeg2Sequence;
-		//m_bIsStoring = Operand.m_bIsStoring;
-		m_dwSyncState = Operand.m_dwSyncState;
-	}
-
-	return *this;
-}
-
-const bool CMpeg2Parser::StorePacket(const CPesPacket *pPacket)
-{
-	return StoreEs(pPacket->GetPayloadData(), pPacket->GetPayloadSize());
-}
-
-const bool CMpeg2Parser::StoreEs(const BYTE *pData, const DWORD dwSize)
+bool CMpeg2Parser::StoreEs(const BYTE *pData, const DWORD dwSize)
 {
 	static const BYTE StartCode[] = {0x00U, 0x00U, 0x01U, 0xB3U};
 	bool bTrigger = false;
@@ -1065,7 +1034,7 @@ const bool CMpeg2Parser::StoreEs(const BYTE *pData, const DWORD dwSize)
 	return bTrigger;
 }
 
-void CMpeg2Parser::Reset(void)
+void CMpeg2Parser::Reset()
 {
 	// 状態を初期化する
 	//m_bIsStoring = false;
@@ -1115,32 +1084,6 @@ inline const DWORD CMpeg2Parser::FindStartCode(const BYTE *pData, const DWORD dw
 
 
 
-//////////////////////////////////////////////////////////////////////
-// CH264AccessUnitクラスの構築/消滅
-//////////////////////////////////////////////////////////////////////
-
-#include "Bitstream.h"
-
-//#define STRICT_1SEG	// ワンセグ規格準拠
-
-CH264AccessUnit::CH264AccessUnit()
-{
-	Reset();
-}
-
-CH264AccessUnit::CH264AccessUnit(const CH264AccessUnit &Operand)
-{
-	*this = Operand;
-}
-
-CH264AccessUnit & CH264AccessUnit::operator = (const CH264AccessUnit &Operand)
-{
-	if (this != &Operand) {
-		m_Header = Operand.m_Header;
-	}
-	return *this;
-}
-
 static DWORD EBSPToRBSP(BYTE *pData, DWORD DataSize)
 {
 	DWORD j = 0;
@@ -1167,7 +1110,19 @@ static DWORD EBSPToRBSP(BYTE *pData, DWORD DataSize)
 	return j;
 }
 
-const bool CH264AccessUnit::ParseHeader(void)
+
+//////////////////////////////////////////////////////////////////////
+// CH264AccessUnitクラスの構築/消滅
+//////////////////////////////////////////////////////////////////////
+
+//#define STRICT_1SEG	// ワンセグ規格準拠
+
+CH264AccessUnit::CH264AccessUnit()
+{
+	Reset();
+}
+
+bool CH264AccessUnit::ParseHeader()
 {
 	if (m_dwDataSize < 5
 			|| m_pData[0] != 0 || m_pData[1] != 0 || m_pData[2] != 0x01)
@@ -1311,9 +1266,9 @@ const bool CH264AccessUnit::ParseHeader(void)
 				// 以下まだまだあるが省略
 			}
 			if (m_Header.SPS.bSeparateColourPlaneFlag)
-				m_Header.SPS.ChromaArrayType = m_Header.SPS.ChromaFormatIdc;
-			else
 				m_Header.SPS.ChromaArrayType = 0;
+			else
+				m_Header.SPS.ChromaArrayType = m_Header.SPS.ChromaFormatIdc;
 #ifdef STRICT_1SEG
 			// ワンセグ規格に合致している?
 			if (m_Header.SPS.ProfileIdc != 66
@@ -1367,43 +1322,43 @@ const bool CH264AccessUnit::ParseHeader(void)
 	return m_bFoundSPS;
 }
 
-void CH264AccessUnit::Reset(void)
+void CH264AccessUnit::Reset()
 {
 	m_bFoundSPS = false;
-	::ZeroMemory(&m_Header, sizeof(TAG_H264ACCESSUNIT));
+	::ZeroMemory(&m_Header, sizeof(m_Header));
 }
 
-const WORD CH264AccessUnit::GetHorizontalSize() const
+WORD CH264AccessUnit::GetHorizontalSize() const
 {
 	WORD Width = (m_Header.SPS.PicWidthInMbsMinus1 + 1) * 16;
-	WORD Crop = m_Header.SPS.bFrameCroppingFlag ?
-		m_Header.SPS.FrameCropLeftOffset + m_Header.SPS.FrameCropRightOffset : 0;
-	/*
-	if (m_Header.SPS.ChromaArrayType != 0)
-		Crop *= SubWidthC;
-	*/
-	return Width - Crop;
+	if (m_Header.SPS.bFrameCroppingFlag) {
+		WORD Crop = m_Header.SPS.FrameCropLeftOffset + m_Header.SPS.FrameCropRightOffset;
+		if (m_Header.SPS.ChromaArrayType != 0)
+			Crop *= GetSubWidthC();
+		if (Crop < Width)
+			Width -= Crop;
+	}
+	return Width;
 }
 
-const WORD CH264AccessUnit::GetVerticalSize() const
+WORD CH264AccessUnit::GetVerticalSize() const
 {
 	WORD Height = (m_Header.SPS.PicHeightInMapUnitsMinus1 + 1) * 16;
-	WORD Crop = m_Header.SPS.bFrameCroppingFlag ?
-		m_Header.SPS.FrameCropTopOffset + m_Header.SPS.FrameCropBottomOffset : 0;
 	if (!m_Header.SPS.bFrameMbsOnlyFlag)
 		Height *= 2;
-	/*
-	if (m_Header.SPS.ChromaArrayType != 0)
-		 Crop *= SubHeightC;
-	*/
-	if (m_Header.SPS.bFrameMbsOnlyFlag)
-		Crop *= 2;
-	else
-		Crop *= 4;
-	return Height - Crop;
+	if (m_Header.SPS.bFrameCroppingFlag) {
+		WORD Crop = m_Header.SPS.FrameCropTopOffset + m_Header.SPS.FrameCropBottomOffset;
+		if (m_Header.SPS.ChromaArrayType != 0)
+			 Crop *= GetSubHeightC();
+		if (!m_Header.SPS.bFrameMbsOnlyFlag)
+			Crop *= 2;
+		if (Crop < Height)
+			Height -= Crop;
+	}
+	return Height;
 }
 
-const bool CH264AccessUnit::GetSAR(WORD *pHorz, WORD *pVert) const
+bool CH264AccessUnit::GetSAR(WORD *pHorz, WORD *pVert) const
 {
 	static const struct {
 		BYTE Horz, Vert;
@@ -1432,7 +1387,7 @@ const bool CH264AccessUnit::GetSAR(WORD *pHorz, WORD *pVert) const
 		return false;
 
 	WORD Horz, Vert;
-	if (m_Header.SPS.VUI.AspectRatioIdc <= 16) {
+	if (m_Header.SPS.VUI.AspectRatioIdc < _countof(SarList)) {
 		Horz = SarList[m_Header.SPS.VUI.AspectRatioIdc].Horz;
 		Vert = SarList[m_Header.SPS.VUI.AspectRatioIdc].Vert;
 	} else if (m_Header.SPS.VUI.AspectRatioIdc == 255) {	// Extended_SAR
@@ -1448,7 +1403,7 @@ const bool CH264AccessUnit::GetSAR(WORD *pHorz, WORD *pVert) const
 	return true;
 }
 
-const bool CH264AccessUnit::GetTimingInfo(TimingInfo *pInfo) const
+bool CH264AccessUnit::GetTimingInfo(TimingInfo *pInfo) const
 {
 	if (!m_Header.SPS.bVuiParametersPresentFlag
 			|| !m_Header.SPS.VUI.bTimingInfoPresentFlag)
@@ -1461,13 +1416,21 @@ const bool CH264AccessUnit::GetTimingInfo(TimingInfo *pInfo) const
 	return true;
 }
 
+int CH264AccessUnit::GetSubWidthC() const
+{
+	return (m_Header.SPS.ChromaFormatIdc == 1
+			|| m_Header.SPS.ChromaFormatIdc == 2) ? 2 : 1;
+}
 
+int CH264AccessUnit::GetSubHeightC() const
+{
+	return (m_Header.SPS.ChromaFormatIdc == 1) ? 2 : 1;
+}
 
 
 //////////////////////////////////////////////////////////////////////
 // CH264Parserクラスの構築/消滅
 //////////////////////////////////////////////////////////////////////
-
 
 CH264Parser::CH264Parser(IAccessUnitHandler *pAccessUnitHandler)
 	: m_pAccessUnitHandler(pAccessUnitHandler)
@@ -1475,29 +1438,7 @@ CH264Parser::CH264Parser(IAccessUnitHandler *pAccessUnitHandler)
 	Reset();
 }
 
-CH264Parser::CH264Parser(const CH264Parser &Operand)
-{
-	*this = Operand;
-}
-
-CH264Parser & CH264Parser::operator = (const CH264Parser &Operand)
-{
-	// インスタンスのコピー
-	if (&Operand != this) {
-		m_pAccessUnitHandler = Operand.m_pAccessUnitHandler;
-		m_AccessUnit = Operand.m_AccessUnit;
-		m_dwSyncState = Operand.m_dwSyncState;
-	}
-
-	return *this;
-}
-
-const bool CH264Parser::StorePacket(const CPesPacket *pPacket)
-{
-	return StoreEs(pPacket->GetPayloadData(), pPacket->GetPayloadSize());
-}
-
-const bool CH264Parser::StoreEs(const BYTE *pData, const DWORD dwSize)
+bool CH264Parser::StoreEs(const BYTE *pData, const DWORD dwSize)
 {
 	bool bTrigger = false;
 	DWORD dwPos,dwStart;
@@ -1552,7 +1493,7 @@ const bool CH264Parser::StoreEs(const BYTE *pData, const DWORD dwSize)
 	return bTrigger;
 }
 
-void CH264Parser::Reset(void)
+void CH264Parser::Reset()
 {
 	// 状態を初期化する
 	m_dwSyncState = 0xFFFFFFFFUL;
@@ -1567,6 +1508,469 @@ void CH264Parser::OnPesPacket(const CPesParser *pPesParser, const CPesPacket *pP
 }
 
 void CH264Parser::OnAccessUnit(const CH264AccessUnit *pAccessUnit) const
+{
+	// ハンドラ呼び出し
+	if (m_pAccessUnitHandler)
+		m_pAccessUnitHandler->OnAccessUnit(this, pAccessUnit);
+}
+
+
+//////////////////////////////////////////////////////////////////////
+// CH265AccessUnitクラスの構築/消滅
+//////////////////////////////////////////////////////////////////////
+
+CH265AccessUnit::CH265AccessUnit()
+{
+	Reset();
+}
+
+bool CH265AccessUnit::ParseHeader()
+{
+	if (m_dwDataSize < 6
+			|| m_pData[0] != 0 || m_pData[1] != 0 || m_pData[2] != 0x01)
+		return false;
+
+	DWORD Pos = 3;
+	while (true) {
+		DWORD SyncState = 0xFFFFFFFFUL;
+		DWORD NextPos = Pos + 1;
+		bool bFoundStartCode = false;
+		for (; NextPos < m_dwDataSize - 3; NextPos++) {
+			SyncState = (SyncState << 8) | (DWORD)m_pData[NextPos];
+			if ((SyncState & 0x00FFFFFF) == 0x00000001UL) {
+				bFoundStartCode = true;
+				NextPos++;
+				break;
+			}
+		}
+		if (!bFoundStartCode)
+			break;
+
+		if (m_pData[Pos] & 0x80)								// forbidden_zero_bit		f(1)
+			break;
+		const BYTE NALUnitType = (m_pData[Pos] & 0x7E) >> 1;	// nal_unit_type			u(6)
+																// nuh_layer_id				u(6)
+																// nuh_temporal_id_plus1	u(3)
+		Pos += 2;
+		DWORD NALUnitSize = NextPos - 3 - Pos;
+
+		NALUnitSize = EBSPToRBSP(&m_pData[Pos], NALUnitSize);
+		if (NALUnitSize == (DWORD)-1)
+			break;
+
+		if (NALUnitType == 0x21) {
+			// Sequence parameter set
+			CBitstream Bitstream(&m_pData[Pos], NALUnitSize);
+
+			m_Header.SPS.SpsVideoParameterSetId = (BYTE)Bitstream.GetBits(4);
+			m_Header.SPS.SpsMaxSubLayersMinus1 = (BYTE)Bitstream.GetBits(3);
+			m_Header.SPS.bSpsTemporalIdNestingFlag = Bitstream.GetFlag();
+			// profile_tier_level
+			m_Header.SPS.PTL.GeneralProfileSpace = (BYTE)Bitstream.GetBits(2);
+			m_Header.SPS.PTL.bGeneralTierFlag = Bitstream.GetFlag();
+			m_Header.SPS.PTL.GeneralProfileIdc = (BYTE)Bitstream.GetBits(5);
+			for (int i = 0; i < 32; i++)
+				m_Header.SPS.PTL.bGeneralProfileCompatibilityFlag[i] = Bitstream.GetFlag();
+			m_Header.SPS.PTL.bGeneralProgressiveSourceFlag = Bitstream.GetFlag();
+			m_Header.SPS.PTL.bGeneralInterlacedSourceFlag = Bitstream.GetFlag();
+			m_Header.SPS.PTL.bGeneralNonPackedConstraintFlag = Bitstream.GetFlag();
+			m_Header.SPS.PTL.bGeneralFrameOnlyConstraintFlag = Bitstream.GetFlag();
+			Bitstream.Skip(44);	// general_reserved_zero_44bits
+			m_Header.SPS.PTL.GeneralLevelIdc = (BYTE)Bitstream.GetBits(8);
+			for (int i = 0; i < m_Header.SPS.SpsMaxSubLayersMinus1; i++) {
+				m_Header.SPS.PTL.SubLayer[i].bSubLayerProfilePresentFlag = Bitstream.GetFlag();
+				m_Header.SPS.PTL.SubLayer[i].bSubLayerLevelPresentFlag = Bitstream.GetFlag();
+			}
+			if (m_Header.SPS.SpsMaxSubLayersMinus1 > 0)
+				Bitstream.Skip((8 - m_Header.SPS.SpsMaxSubLayersMinus1) * 2);	// reserved_zero_2bits
+			for (int i = 0; i < m_Header.SPS.SpsMaxSubLayersMinus1; i++) {
+				if (m_Header.SPS.PTL.SubLayer[i].bSubLayerProfilePresentFlag) {
+					m_Header.SPS.PTL.SubLayer[i].SubLayerProfileSpace = (BYTE)Bitstream.GetBits(2);
+					m_Header.SPS.PTL.SubLayer[i].bSubLayerTierFlag = Bitstream.GetFlag();
+					m_Header.SPS.PTL.SubLayer[i].SubLayerProfileIdc = (BYTE)Bitstream.GetBits(5);
+					for (int j = 0; j < 32; j++)
+						m_Header.SPS.PTL.SubLayer[i].bSubLayerProfileCompatibilityFlag[j] = Bitstream.GetFlag();
+					m_Header.SPS.PTL.SubLayer[i].bSubLayerProgressiveSourceFlag = Bitstream.GetFlag();
+					m_Header.SPS.PTL.SubLayer[i].bSubLayerInterlacedSourceFlag = Bitstream.GetFlag();
+					m_Header.SPS.PTL.SubLayer[i].bSubLayerNonPackedConstraintFlag = Bitstream.GetFlag();
+					m_Header.SPS.PTL.SubLayer[i].bSubLayerFrameOnlyConstraintFlag = Bitstream.GetFlag();
+					Bitstream.Skip(44);	// sub_layer_reserved_zero_44bits
+				}
+				if (m_Header.SPS.PTL.SubLayer[i].bSubLayerLevelPresentFlag) {
+					m_Header.SPS.PTL.SubLayer[i].SubLayerLevelIdc = (BYTE)Bitstream.GetBits(8);
+				}
+			}
+			m_Header.SPS.SpsSeqParameterSetId = Bitstream.GetUE_V();
+			m_Header.SPS.ChromaFormatIdc = Bitstream.GetUE_V();
+			if (m_Header.SPS.ChromaFormatIdc == 3)
+				m_Header.SPS.bSeparateColourPlaneFlag = Bitstream.GetFlag();
+			m_Header.SPS.PicWidthInLumaSamples = Bitstream.GetUE_V();
+			m_Header.SPS.PicHeightInLumaSamples = Bitstream.GetUE_V();
+			m_Header.SPS.bConformanceWindowFlag = Bitstream.GetFlag();
+			if (m_Header.SPS.bConformanceWindowFlag) {
+				m_Header.SPS.ConfWinLeftOffset = Bitstream.GetUE_V();
+				m_Header.SPS.ConfWinRightOffset = Bitstream.GetUE_V();
+				m_Header.SPS.ConfWinTopOffset = Bitstream.GetUE_V();
+				m_Header.SPS.ConfWinBottomOffset = Bitstream.GetUE_V();
+			}
+			m_Header.SPS.BitDepthLumaMinus8 = Bitstream.GetUE_V();
+			m_Header.SPS.BitDepthChromaMinus8 = Bitstream.GetUE_V();
+			m_Header.SPS.Log2MaxPicOrderCntLsbMinus4 = Bitstream.GetUE_V();
+			m_Header.SPS.bSpsSubLayerOrderingInfoPresentFlag = Bitstream.GetFlag();
+			for (int i = m_Header.SPS.bSpsSubLayerOrderingInfoPresentFlag ? 0 : m_Header.SPS.SpsMaxSubLayersMinus1;
+					i <= m_Header.SPS.SpsMaxSubLayersMinus1; i++) {
+				m_Header.SPS.SubLayerOrderingInfo[i].SpsMaxDecPicBufferingMinus1 = Bitstream.GetUE_V();
+				m_Header.SPS.SubLayerOrderingInfo[i].SpsMaxNumReorderPics = Bitstream.GetUE_V();
+				m_Header.SPS.SubLayerOrderingInfo[i].SpsMaxLatencyIncreasePlus1 = Bitstream.GetUE_V();
+			}
+			m_Header.SPS.Log2MinLumaCodingBlockSizeMinus3 = Bitstream.GetUE_V();
+			m_Header.SPS.Log2DiffMaxMinLumaCodingBlockSize = Bitstream.GetUE_V();
+			m_Header.SPS.Log2MinTransformBlockSizeMinus2 = Bitstream.GetUE_V();
+			m_Header.SPS.Log2DiffMaxMinTransformBlockSize = Bitstream.GetUE_V();
+			m_Header.SPS.MaxTransformHierarchyDepthInter = Bitstream.GetUE_V();
+			m_Header.SPS.MaxTransformHierarchyDepthIntra = Bitstream.GetUE_V();
+			m_Header.SPS.bScalingListEnabledFlag = Bitstream.GetFlag();
+			if (m_Header.SPS.bScalingListEnabledFlag) {
+				m_Header.SPS.bSpsScalingListDataPresentFlag = Bitstream.GetFlag();
+				if (m_Header.SPS.bSpsScalingListDataPresentFlag) {
+					// scaling_list_data
+					for (int SizeId = 0; SizeId < 4; SizeId++) {
+						for (int MatrixId = 0; MatrixId < ((SizeId == 3) ? 2 : 6); MatrixId++) {
+							bool bScalingListPredModeFlag = Bitstream.GetFlag();
+							if (!bScalingListPredModeFlag) {
+								Bitstream.GetUE_V();	// scaling_list_pred_matrix_id_delta
+							} else {
+								int NextCoef = 8, CoefNum = min(64, 1 << (4 + (SizeId << 1)));
+								if (SizeId > 1) {
+									int ScalingListDcCoefMinus8 = Bitstream.GetSE_V();
+									NextCoef = ScalingListDcCoefMinus8 + 8;
+								}
+								for (int i = 0; i < CoefNum; i++) {
+									int ScalingListDeltaCoef = Bitstream.GetSE_V();
+									NextCoef = (NextCoef + ScalingListDeltaCoef + 256) % 256;
+								}
+							}
+						}
+					}
+				}
+			}
+			m_Header.SPS.bAmpEnabledFlag = Bitstream.GetFlag();
+			m_Header.SPS.bSampleAdaptiveOffsetEnabledFlag = Bitstream.GetFlag();
+			m_Header.SPS.bPcmEnabledFlag = Bitstream.GetFlag();
+			if (m_Header.SPS.bPcmEnabledFlag) {
+				m_Header.SPS.PcmSampleBitDepthLumaMinus1 = (BYTE)Bitstream.GetBits(4);
+				m_Header.SPS.PcmSampleBitDepthChromaMinus1 = (BYTE)Bitstream.GetBits(4);
+				m_Header.SPS.Log2MinPcmLumaCodingBlockSizeMinus3 = Bitstream.GetUE_V();
+				m_Header.SPS.Log2DiffMaxMinPcmLumaCodingBlockSize = Bitstream.GetUE_V();
+				m_Header.SPS.bPcmLoopFilterDisabledFlag = Bitstream.GetFlag();
+			}
+			m_Header.SPS.NumShortTermRefPicSets = Bitstream.GetUE_V();
+			int NumPics = 0;
+			for (int i = 0; i < m_Header.SPS.NumShortTermRefPicSets; i++) {
+				// short_term_ref_pic_set
+				bool bInterRefPicSetPredictionFlag = false;
+				if (i != 0)
+					bInterRefPicSetPredictionFlag = Bitstream.GetFlag();
+				if (bInterRefPicSetPredictionFlag) {
+					Bitstream.GetFlag();	// delta_rps_sign
+					Bitstream.GetUE_V();	// abs_delta_rps_minus1
+					int NumPicsNew = 0;
+					for (int j = 0; j <= NumPics; j++) {
+						bool bUsedByCurrPicFlag = Bitstream.GetFlag();
+						if (bUsedByCurrPicFlag) {
+							NumPicsNew++;
+						} else {
+							bool bUseDeltaFlag = Bitstream.GetFlag();
+							if (bUseDeltaFlag)
+								NumPicsNew++;
+						}
+					}
+					NumPics = NumPicsNew;
+				} else {
+					int NumNegativePics = Bitstream.GetUE_V();
+					int NumPositivePics = Bitstream.GetUE_V();
+					NumPics = NumNegativePics + NumPositivePics;
+					for (int j = 0; j < NumNegativePics; j++) {
+						Bitstream.GetUE_V();	// delta_poc_s0_minus1
+						Bitstream.GetFlag();	// used_by_curr_pic_s0_flag
+					}
+					for (int j = 0; j < NumPositivePics; j++) {
+						Bitstream.GetUE_V();	// delta_poc_s1_minus1
+						Bitstream.GetFlag();	// used_by_curr_pic_s1_flag
+					}
+				}
+			}
+			m_Header.SPS.bLongTermRefPicsPresentFlag = Bitstream.GetFlag();
+			if (m_Header.SPS.bLongTermRefPicsPresentFlag) {
+				m_Header.SPS.NumLongTermRefPicsSps = Bitstream.GetUE_V();
+				for (int i = 0; i < m_Header.SPS.NumLongTermRefPicsSps; i++) {
+					Bitstream.Skip(m_Header.SPS.Log2MaxPicOrderCntLsbMinus4 + 4);	// lt_ref_pic_poc_lsb_sps
+					Bitstream.GetFlag();											// used_by_curr_pic_lt_sps_flag
+				}
+			}
+			m_Header.SPS.bSpsTemporalMvpEnabledFlag = Bitstream.GetFlag();
+			m_Header.SPS.bStrongIntraSmoothingEnabledFlag = Bitstream.GetFlag();
+			m_Header.SPS.bVuiParametersPresentFlag = Bitstream.GetFlag();
+			if (m_Header.SPS.bVuiParametersPresentFlag) {
+				// vui_parameters
+				m_Header.SPS.VUI.bAspectRatioInfoPresentFlag = Bitstream.GetFlag();
+				if (m_Header.SPS.VUI.bAspectRatioInfoPresentFlag) {
+					m_Header.SPS.VUI.AspectRatioIdc = (BYTE)Bitstream.GetBits(8);
+					if (m_Header.SPS.VUI.AspectRatioIdc == 0xFF) {	// EXTENDED_SAR
+						m_Header.SPS.VUI.SarWidth = (WORD)Bitstream.GetBits(16);
+						m_Header.SPS.VUI.SarHeight = (WORD)Bitstream.GetBits(16);
+					}
+				}
+				m_Header.SPS.VUI.bOverscanInfoPresentFlag = Bitstream.GetFlag();
+				if (m_Header.SPS.VUI.bOverscanInfoPresentFlag)
+					m_Header.SPS.VUI.bOverscanAppropriateFlag = Bitstream.GetFlag();
+				m_Header.SPS.VUI.bVideoSignalTypePresentFlag = Bitstream.GetFlag();
+				if (m_Header.SPS.VUI.bVideoSignalTypePresentFlag) {
+					m_Header.SPS.VUI.VideoFormat = (BYTE)Bitstream.GetBits(3);
+					m_Header.SPS.VUI.bVideoFullRangeFlag = Bitstream.GetFlag();
+					m_Header.SPS.VUI.bColourDescriptionPresentFlag = Bitstream.GetFlag();
+					if (m_Header.SPS.VUI.bColourDescriptionPresentFlag) {
+						m_Header.SPS.VUI.ColourPrimaries = (BYTE)Bitstream.GetBits(8);
+						m_Header.SPS.VUI.TransferCharacteristics = (BYTE)Bitstream.GetBits(8);
+						m_Header.SPS.VUI.MatrixCoeffs = (BYTE)Bitstream.GetBits(8);
+					}
+				}
+				m_Header.SPS.VUI.bChromaLocInfoPresentFlag = Bitstream.GetFlag();
+				if (m_Header.SPS.VUI.bChromaLocInfoPresentFlag) {
+					m_Header.SPS.VUI.ChromaSampleLocTypeTopField = Bitstream.GetUE_V();
+					m_Header.SPS.VUI.ChromaSampleLocTypeBottomField = Bitstream.GetUE_V();
+				}
+				m_Header.SPS.VUI.bNeutralChromaIndicationFlag = Bitstream.GetFlag();
+				m_Header.SPS.VUI.bFieldSeqFlag = Bitstream.GetFlag();
+				m_Header.SPS.VUI.bFrameFieldInfoPresentFlag = Bitstream.GetFlag();
+				m_Header.SPS.VUI.bDefaultDisplayWindowFlag = Bitstream.GetFlag();
+				if (m_Header.SPS.VUI.bDefaultDisplayWindowFlag) {
+					m_Header.SPS.VUI.DefDispWinLeftOffset = Bitstream.GetUE_V();
+					m_Header.SPS.VUI.DefDispWinRightOffset = Bitstream.GetUE_V();
+					m_Header.SPS.VUI.DefDispWinTopOffset = Bitstream.GetUE_V();
+					m_Header.SPS.VUI.DefDispWinBottomOffset = Bitstream.GetUE_V();
+				}
+				m_Header.SPS.VUI.bVuiTimingInfoPresentFlag = Bitstream.GetFlag();
+				if (m_Header.SPS.VUI.bVuiTimingInfoPresentFlag) {
+					m_Header.SPS.VUI.VuiNumUnitsInTick = Bitstream.GetBits(32);
+					m_Header.SPS.VUI.VuiTimeScale = Bitstream.GetBits(32);
+					m_Header.SPS.VUI.bVuiPocProportionalToTimingFlag = Bitstream.GetFlag();
+					if (m_Header.SPS.VUI.bVuiPocProportionalToTimingFlag)
+						m_Header.SPS.VUI.VuiNumTicksPocDiffOneMinus1 = Bitstream.GetUE_V();
+					m_Header.SPS.VUI.bVuiHrdParametersPresentFlag = Bitstream.GetFlag();
+#if 0	// 割愛…
+					if (m_Header.SPS.VUI.bVuiHrdParametersPresentFlag) {
+						// hrd_parameters
+					}
+#endif
+				}
+#if 0
+				m_Header.SPS.VUI.bBitstreamRestrictionFlag = Bitstream.GetFlag();
+				if (m_Header.SPS.VUI.bBitstreamRestrictionFlag) {
+					m_Header.SPS.VUI.bTilesFixedStructureFlag = Bitstream.GetFlag();
+					m_Header.SPS.VUI.bMotionVectorsOverPicBoundariesFlag = Bitstream.GetFlag();
+					m_Header.SPS.VUI.bRestrictedRefPicListsFlag = Bitstream.GetFlag();
+					m_Header.SPS.VUI.MinSpatialSegmentationIdc = Bitstream.GetUE_V();
+					m_Header.SPS.VUI.MaxBytesPerPicDenom = Bitstream.GetUE_V();
+					m_Header.SPS.VUI.MaxBitsPerMinCuDenom = Bitstream.GetUE_V();
+					m_Header.SPS.VUI.Log2MaxMvLengthHorizontal = Bitstream.GetUE_V();
+					m_Header.SPS.VUI.Log2MaxMvLengthVertical = Bitstream.GetUE_V();
+				}
+#endif
+			}
+
+			m_bFoundSPS = true;
+		} else if (NALUnitType == 0x23) {
+			// Access unit delimiter
+			m_Header.AUD.PicType = m_pData[Pos] >> 5;
+		} else if (NALUnitType == 0x24) {
+			// End of sequence
+			break;
+		}
+
+		Pos = NextPos;
+	}
+
+	return m_bFoundSPS;
+}
+
+void CH265AccessUnit::Reset(void)
+{
+	m_bFoundSPS = false;
+	::ZeroMemory(&m_Header, sizeof(m_Header));
+}
+
+WORD CH265AccessUnit::GetHorizontalSize() const
+{
+	WORD Width = m_Header.SPS.PicWidthInLumaSamples;
+	if (m_Header.SPS.bConformanceWindowFlag) {
+		WORD Crop = (m_Header.SPS.ConfWinLeftOffset + m_Header.SPS.ConfWinRightOffset) * GetSubWidthC();
+		if (Crop < Width)
+			Width -= Crop;
+	}
+	return Width;
+}
+
+WORD CH265AccessUnit::GetVerticalSize() const
+{
+	WORD Height = m_Header.SPS.PicHeightInLumaSamples;
+	if (m_Header.SPS.bConformanceWindowFlag) {
+		WORD Crop = (m_Header.SPS.ConfWinTopOffset + m_Header.SPS.ConfWinBottomOffset) * GetSubHeightC();
+		if (Crop < Height)
+			Height -= Crop;
+	}
+	return Height;
+}
+
+bool CH265AccessUnit::GetSAR(WORD *pHorz, WORD *pVert) const
+{
+	static const struct {
+		BYTE Horz, Vert;
+	} SarList[] = {
+		{  0,   0},
+		{  1,   1},
+		{ 12,  11},
+		{ 10,  11},
+		{ 16,  11},
+		{ 40,  33},
+		{ 24,  11},
+		{ 20,  11},
+		{ 32,  11},
+		{ 80,  33},
+		{ 18,  11},
+		{ 15,  11},
+		{ 64,  33},
+		{160,  99},
+		{  4,   3},
+		{  3,   2},
+		{  2,   1},
+	};
+
+	if (!m_Header.SPS.bVuiParametersPresentFlag
+			|| !m_Header.SPS.VUI.bAspectRatioInfoPresentFlag)
+		return false;
+
+	WORD Horz, Vert;
+	if (m_Header.SPS.VUI.AspectRatioIdc < _countof(SarList)) {
+		Horz = SarList[m_Header.SPS.VUI.AspectRatioIdc].Horz;
+		Vert = SarList[m_Header.SPS.VUI.AspectRatioIdc].Vert;
+	} else if (m_Header.SPS.VUI.AspectRatioIdc == 255) {	// EXTENDED_SAR
+		Horz = m_Header.SPS.VUI.SarWidth;
+		Vert = m_Header.SPS.VUI.SarHeight;
+	} else {
+		return false;
+	}
+	if (pHorz)
+		*pHorz = Horz;
+	if (pVert)
+		*pVert = Vert;
+	return true;
+}
+
+bool CH265AccessUnit::GetTimingInfo(TimingInfo *pInfo) const
+{
+	if (!m_Header.SPS.bVuiParametersPresentFlag
+			|| !m_Header.SPS.VUI.bVuiTimingInfoPresentFlag)
+		return false;
+	if (pInfo) {
+		pInfo->NumUnitsInTick = m_Header.SPS.VUI.VuiNumUnitsInTick;
+		pInfo->TimeScale = m_Header.SPS.VUI.VuiTimeScale;
+	}
+	return true;
+}
+
+int CH265AccessUnit::GetSubWidthC() const
+{
+	return (m_Header.SPS.ChromaFormatIdc == 1
+			|| m_Header.SPS.ChromaFormatIdc == 2) ? 2 : 1;
+}
+
+int CH265AccessUnit::GetSubHeightC() const
+{
+	return (m_Header.SPS.ChromaFormatIdc == 1) ? 2 : 1;
+}
+
+
+//////////////////////////////////////////////////////////////////////
+// CH265Parserクラスの構築/消滅
+//////////////////////////////////////////////////////////////////////
+
+CH265Parser::CH265Parser(IAccessUnitHandler *pAccessUnitHandler)
+	: m_pAccessUnitHandler(pAccessUnitHandler)
+{
+	Reset();
+}
+
+bool CH265Parser::StoreEs(const BYTE *pData, const DWORD dwSize)
+{
+	bool bTrigger = false;
+	DWORD dwPos,dwStart;
+
+	for (dwPos = 0UL ; dwPos < dwSize ; dwPos += dwStart) {
+		// Access unit delimiterを検索する
+		DWORD Remain = dwSize - dwPos;
+		DWORD SyncState = m_dwSyncState;
+		for (dwStart = 0UL ; dwStart < Remain ; dwStart++) {
+			SyncState = (SyncState << 8) | (DWORD)pData[dwStart + dwPos];
+			if ((SyncState & 0xFFFFFFFE) == 0x00000146UL) {
+				// Access unit delimiter発見
+				break;
+			}
+		}
+
+		if (dwStart < Remain) {
+			dwStart++;
+			if (m_AccessUnit.GetSize() >= 4) {
+				if (dwStart > 4) {
+					m_AccessUnit.AddData(&pData[dwPos], dwStart - 4);
+				} else if (dwStart < 4) {
+					// スタートコードの断片を取り除く
+					m_AccessUnit.TrimTail(4 - dwStart);
+				}
+
+				// シーケンスを出力する
+				if (m_AccessUnit.ParseHeader())
+					OnAccessUnit(&m_AccessUnit);
+			}
+
+			// スタートコードをセットする
+			BYTE StartCode[4];
+			StartCode[0] = (BYTE)(SyncState >> 24);
+			StartCode[1] = (BYTE)((SyncState >> 16) & 0xFF);
+			StartCode[2] = (BYTE)((SyncState >> 8) & 0xFF);
+			StartCode[3] = (BYTE)(SyncState & 0xFF);
+			m_AccessUnit.SetData(StartCode, 4);
+
+			// シフトレジスタを初期化する
+			m_dwSyncState = 0xFFFFFFFFUL;
+			bTrigger = true;
+		} else if (m_AccessUnit.GetSize() >= 4) {
+			// シーケンスストア
+			if (m_AccessUnit.AddData(&pData[dwPos], Remain) >= 0x1000000UL) {
+				// 例外(シーケンスが16MBを超える)
+				m_AccessUnit.ClearSize();
+			}
+		}
+	}
+
+	return bTrigger;
+}
+
+void CH265Parser::Reset()
+{
+	// 状態を初期化する
+	m_dwSyncState = 0xFFFFFFFFUL;
+
+	m_AccessUnit.Reset();
+}
+
+void CH265Parser::OnPesPacket(const CPesParser *pPesParser, const CPesPacket *pPacket)
+{
+	// CPesParser::IPacketHandlerインタフェースの実装
+	StorePacket(pPacket);
+}
+
+void CH265Parser::OnAccessUnit(const CH265AccessUnit *pAccessUnit) const
 {
 	// ハンドラ呼び出し
 	if (m_pAccessUnitHandler)

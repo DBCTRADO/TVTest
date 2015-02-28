@@ -1,4 +1,5 @@
 #include "stdafx.h"
+#include <cwctype>
 #include "StringUtility.h"
 #include "Util.h"
 
@@ -159,6 +160,21 @@ namespace TVTest
 				Str.reserve(Size);
 		}
 
+		void Assign(String &Str,const String::value_type *pszSrc)
+		{
+			if (IsStringEmpty(pszSrc))
+				Str.clear();
+			else
+				Str=pszSrc;
+		}
+
+		const String::value_type *GetCStrOrNull(const String &Str)
+		{
+			if (Str.empty())
+				return nullptr;
+			return Str.c_str();
+		}
+
 		int Format(String &Str,LPCWSTR pszFormat, ...)
 		{
 			va_list Args;
@@ -285,6 +301,57 @@ namespace TVTest
 			::CharLowerBuff(&Str[0],static_cast<DWORD>(Str.length()));
 		}
 
+		bool ToHalfWidthNoKatakana(LPCWSTR pSrc,String::size_type SrcLength,String *pDst)
+		{
+			if (pSrc==nullptr || pDst==nullptr)
+				return false;
+
+			pDst->clear();
+
+			for (String::size_type i=0;i<SrcLength;i++) {
+				WORD Type;
+				if (::GetStringTypeExW(LOCALE_USER_DEFAULT,CT_CTYPE3,&pSrc[i],1,&Type)
+						&& (Type & (C3_FULLWIDTH | C3_KATAKANA))==C3_FULLWIDTH) {
+					WCHAR Buff[4];
+					int Length=::LCMapStringW(LOCALE_USER_DEFAULT,LCMAP_HALFWIDTH,
+											  &pSrc[i],1,Buff,_countof(Buff));
+					if (Length>0) {
+						pDst->append(Buff,Length);
+						continue;
+					}
+				}
+
+				pDst->push_back(pSrc[i]);
+			}
+
+			return true;
+		}
+
+		bool ToHalfWidthNoKatakana(const String &Src,String *pDst)
+		{
+			return ToHalfWidthNoKatakana(Src.data(),Src.length(),pDst);
+		}
+
+		bool ToHalfWidthNoKatakana(LPCWSTR pszSrc,String *pDst)
+		{
+			if (pszSrc==nullptr)
+				return false;
+			return ToHalfWidthNoKatakana(pszSrc,::lstrlenW(pszSrc),pDst);
+		}
+
+		bool ToHalfWidthNoKatakana(LPCWSTR pszSrc,LPWSTR pszDst,String::size_type DstLength)
+		{
+			if (pszDst==nullptr || DstLength<1)
+				return false;
+			String Buf;
+			if (!ToHalfWidthNoKatakana(pszSrc,&Buf)) {
+				pszDst[0]=L'\0';
+				return false;
+			}
+			StdUtil::strncpy(pszDst,DstLength,Buf.c_str());
+			return true;
+		}
+
 		bool ToAnsi(const String &Src,AnsiString *pDst)
 		{
 			if (pDst==nullptr)
@@ -377,6 +444,15 @@ namespace TVTest
 			return true;
 		}
 
+		String Encode(const String &Src,LPCWSTR pszEncodeChars)
+		{
+			String Dst;
+
+			Encode(Src.c_str(),&Dst,pszEncodeChars);
+
+			return Dst;
+		}
+
 		bool Decode(LPCWSTR pszSrc,String *pDst)
 		{
 			if (pszSrc==nullptr || pDst==nullptr)
@@ -397,6 +473,64 @@ namespace TVTest
 			}
 
 			return true;
+		}
+
+		String Decode(const String &Src)
+		{
+			String Dst;
+
+			Decode(Src.c_str(),&Dst);
+
+			return Dst;
+		}
+
+
+		// FNV hash parameters
+		static const UINT32 FNV_PRIME_32=16777619UL;
+		static const UINT32 FNV_OFFSET_BASIS_32=2166136261UL;
+		static const UINT64 FNV_PRIME_64=1099511628211ULL;
+		static const UINT64 FNV_OFFSET_BASIS_64=14695981039346656037ULL;
+
+		template<typename TIterator,typename THash> THash FNVHash(
+			const TIterator &begin,const TIterator &end,
+			const THash OffsetBasis,const THash Prime)
+		{
+			THash Hash=OffsetBasis;
+
+			for (auto i=begin;i!=end;++i)
+				Hash=(Prime*Hash)^(*i);
+			return Hash;
+		}
+
+		template<typename TIterator,typename TTransform,typename THash> THash FNVHash(
+			const TIterator &begin,const TIterator &end,TTransform Transform,
+			const THash OffsetBasis,const THash Prime)
+		{
+			THash Hash=OffsetBasis;
+
+			for (auto i=begin;i!=end;++i)
+				Hash=(Prime*Hash)^Transform(*i);
+			return Hash;
+		}
+
+		UINT32 Hash32(const String &Str)
+		{
+			return FNVHash(Str.begin(),Str.end(),FNV_OFFSET_BASIS_32,FNV_PRIME_32);
+		}
+
+		UINT64 Hash64(const String &Str)
+		{
+			return FNVHash(Str.begin(),Str.end(),FNV_OFFSET_BASIS_64,FNV_PRIME_64);
+		}
+
+		UINT32 HashNoCase32(const String &Str)
+		{
+			return FNVHash(Str.begin(),Str.end(),std::towlower,FNV_OFFSET_BASIS_32,FNV_PRIME_32);
+		}
+
+		UINT64 HashNoCase64(const String &Str)
+		{
+			return FNVHash(Str.begin(),Str.end(),std::towlower,FNV_OFFSET_BASIS_64,FNV_PRIME_64);
 		}
 
 	}

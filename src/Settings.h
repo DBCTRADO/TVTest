@@ -2,6 +2,7 @@
 #define TVTEST_SETTINGS_H
 
 
+#include <vector>
 #include "IniFile.h"
 
 
@@ -17,6 +18,9 @@ public:
 		OPEN_WRITE_VOLATILE = 0x00000004U
 	};
 
+	typedef TVTest::CIniFile::CEntry CEntry;
+	typedef TVTest::CIniFile::EntryArray EntryList;
+
 	CSettings();
 	~CSettings();
 	bool Open(LPCTSTR pszFileName,unsigned int Flags);
@@ -24,6 +28,9 @@ public:
 	bool IsOpened() const;
 	bool Clear();
 	bool SetSection(LPCTSTR pszSection);
+	bool GetEntries(EntryList *pEntries);
+	bool IsValueExists(LPCTSTR pszValueName);
+	bool DeleteValue(LPCTSTR pszValueName);
 	bool Read(LPCTSTR pszValueName,int *pData);
 	bool Write(LPCTSTR pszValueName,int Data);
 	bool Read(LPCTSTR pszValueName,unsigned int *pData);

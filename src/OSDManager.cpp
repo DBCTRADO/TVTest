@@ -25,6 +25,14 @@ COSDManager::~COSDManager()
 }
 
 
+bool COSDManager::Initialize()
+{
+	InitializeUI();
+
+	return true;
+}
+
+
 void COSDManager::SetEventHandler(CEventHandler *pEventHandler)
 {
 	m_pEventHandler=pEventHandler;
@@ -40,7 +48,7 @@ void COSDManager::Reset()
 
 void COSDManager::ClearOSD()
 {
-	GetAppClass().GetCoreEngine()->m_DtvEngine.m_MediaViewer.ClearOSD();
+	GetAppClass().CoreEngine.m_DtvEngine.m_MediaViewer.ClearOSD();
 	m_OSD.Hide();
 	m_VolumeOSD.Hide();
 }
@@ -59,15 +67,14 @@ bool COSDManager::ShowOSD(LPCTSTR pszText,unsigned int Flags)
 		return false;
 
 	CAppMain &App=GetAppClass();
-	CCoreEngine &CoreEngine=*App.GetCoreEngine();
+	CCoreEngine &CoreEngine=App.CoreEngine;
 
-	HWND hwnd;
-	RECT rc;
-	bool fForcePseudoOSD=false;
-	if (!m_pEventHandler->GetOSDWindow(&hwnd,&rc,&fForcePseudoOSD))
+	OSDClientInfo ClientInfo;
+	ClientInfo.fForcePseudoOSD=false;
+	if (!m_pEventHandler->GetOSDClientInfo(&ClientInfo))
 		return false;
 	if ((Flags & SHOW_PSEUDO)!=0)
-		fForcePseudoOSD=true;
+		ClientInfo.fForcePseudoOSD=true;
 
 	DWORD FadeTime;
 	if ((Flags & SHOW_NO_FADE)!=0)
@@ -75,59 +82,28 @@ bool COSDManager::ShowOSD(LPCTSTR pszText,unsigned int Flags)
 	else
 		FadeTime=m_pOptions->GetFadeTime();
 
-	if (!m_pOptions->GetPseudoOSD() && !fForcePseudoOSD
+	if (!m_pOptions->GetPseudoOSD() && !ClientInfo.fForcePseudoOSD
 			&& CoreEngine.m_DtvEngine.m_MediaViewer.IsDrawTextSupported()) {
-		RECT rcSrc;
-		if (CoreEngine.m_DtvEngine.m_MediaViewer.GetSourceRect(&rcSrc)) {
-			LOGFONT lf;
-			HFONT hfont;
-
-			lf=*m_pOptions->GetOSDFont();
-			lf.lfHeight=(rcSrc.right-rcSrc.left)/20;
-			lf.lfWidth=0;
-			lf.lfQuality=NONANTIALIASED_QUALITY;
-			hfont=::CreateFontIndirect(&lf);
-			int Rate,Factor;
-			if (!App.GetUICore()->GetZoomRate(&Rate,&Factor)) {
-				if ((rc.right-rc.left)/(rcSrc.right-rcSrc.left)<
-						(rc.bottom-rc.top)/(rcSrc.bottom-rcSrc.top)) {
-					Rate=rc.right-rc.left;
-					Factor=rcSrc.right-rcSrc.left;
-				} else {
-					Rate=rc.bottom-rc.top;
-					Factor=rcSrc.bottom-rcSrc.top;
-				}
-			}
-			if (Rate!=0) {
-				rcSrc.left+=8*Factor/Rate;
-				rcSrc.top+=(rc.top+8)*Factor/Rate;
-			} else {
-				rcSrc.left+=16;
-				rcSrc.top+=48;
-			}
-			if (CoreEngine.m_DtvEngine.m_MediaViewer.DrawText(pszText,
-					rcSrc.left,rcSrc.top,hfont,
-					m_pOptions->GetTextColor(),m_pOptions->GetOpacity())) {
-				if (FadeTime>0)
-					m_pEventHandler->SetOSDHideTimer(FadeTime);
-			}
-			::DeleteObject(hfont);
-		}
+		CompositeText(pszText,ClientInfo.ClientRect,0,FadeTime);
 	} else {
-		int TextHeight=max((rc.right-rc.left)/24,12);
+		int FontSize=max((ClientInfo.ClientRect.right-ClientInfo.ClientRect.left)/m_Style.TextSizeRatio,12);
 		LOGFONT lf;
 		SIZE sz;
 
 		lf=*m_pOptions->GetOSDFont();
-		lf.lfHeight=-TextHeight;
-		m_OSD.Create(hwnd,m_pOptions->GetLayeredWindow());
-		//m_OSD.SetTextHeight(TextHeight);
+		lf.lfHeight=-FontSize;
+		m_OSD.Create(ClientInfo.hwndParent,m_pOptions->GetLayeredWindow());
+		//m_OSD.SetTextHeight(FontSize);
 		m_OSD.SetFont(lf);
 		m_OSD.SetText(pszText);
 		m_OSD.CalcTextSize(&sz);
-		m_OSD.SetPosition(rc.left+8,rc.top+8,sz.cx,sz.cy);
+		m_OSD.SetPosition(ClientInfo.ClientRect.left+m_Style.Margin.Left,
+						  ClientInfo.ClientRect.top+m_Style.Margin.Top,
+						  sz.cx+FontSize/4,sz.cy);
+		m_OSD.SetTextStyle(
+			CPseudoOSD::TEXT_STYLE_HORZ_CENTER | CPseudoOSD::TEXT_STYLE_VERT_CENTER |
+			CPseudoOSD::TEXT_STYLE_OUTLINE | CPseudoOSD::TEXT_STYLE_FILL_BACKGROUND);
 		m_OSD.SetTextColor(m_pOptions->GetTextColor());
-		m_OSD.SetOpacity(m_pOptions->GetOpacity());
 		m_OSD.Show(FadeTime,false);
 	}
 
@@ -147,40 +123,37 @@ bool COSDManager::ShowChannelOSD(const CChannelInfo *pInfo,bool fChanging)
 		return false;
 
 	CAppMain &App=GetAppClass();
-	CCoreEngine &CoreEngine=*App.GetCoreEngine();
+	CCoreEngine &CoreEngine=App.CoreEngine;
 
-	HWND hwnd;
-	RECT rc;
-	bool fForcePseudoOSD=false;
-	if (!m_pEventHandler->GetOSDWindow(&hwnd,&rc,&fForcePseudoOSD))
+	OSDClientInfo ClientInfo;
+	ClientInfo.fForcePseudoOSD=false;
+	ClientInfo.fAnimation=m_Style.fChannelAnimation && !fChanging;
+	if (!m_pEventHandler->GetOSDClientInfo(&ClientInfo))
 		return false;
+	if (!m_Style.fChannelAnimation || m_OSD.IsVisible())
+		ClientInfo.fAnimation=false;
 
 	COSDOptions::ChannelChangeType ChangeType=m_pOptions->GetChannelChangeType();
 
 	HBITMAP hbmLogo=NULL;
-	int LogoWidth=0,LogoHeight=0;
 	unsigned int ImageEffect=0;
 	if (ChangeType!=COSDOptions::CHANNELCHANGE_TEXTONLY) {
-		hbmLogo=App.GetLogoManager()->GetAssociatedLogoBitmap(
+		hbmLogo=App.LogoManager.GetAssociatedLogoBitmap(
 			pInfo->GetNetworkID(),pInfo->GetServiceID(),CLogoManager::LOGOTYPE_BIG);
 		if (hbmLogo!=NULL) {
-#ifndef TVH264_FOR_1SEG
-			LogoHeight=36;
-#else
-			LogoHeight=18;
-#endif
-			LogoWidth=LogoHeight*16/9;
-			ImageEffect=fChanging?
-				CPseudoOSD::IMAGEEFFECT_DARK:CPseudoOSD::IMAGEEFFECT_GLOSS;
+			if (fChanging)
+				ImageEffect=CPseudoOSD::IMAGEEFFECT_DARK;
+			else if (TVTest::StringUtility::CompareNoCase(m_Style.LogoEffect,TEXT("gloss"))==0)
+				ImageEffect=CPseudoOSD::IMAGEEFFECT_GLOSS;
 		}
 
 		if (ChangeType==COSDOptions::CHANNELCHANGE_LOGOONLY && hbmLogo!=NULL) {
-			m_OSD.Create(hwnd,m_pOptions->GetLayeredWindow());
+			m_OSD.Create(ClientInfo.hwndParent,m_pOptions->GetLayeredWindow());
 			m_OSD.SetImage(hbmLogo,ImageEffect);
-			m_OSD.SetPosition(rc.left+8,rc.top+8,LogoWidth,LogoHeight);
-			m_OSD.SetOpacity(m_pOptions->GetOpacity());
-			m_OSD.Show(m_pOptions->GetFadeTime(),
-					   !fChanging && !m_OSD.IsVisible());
+			m_OSD.SetPosition(ClientInfo.ClientRect.left+m_Style.Margin.Left,
+							  ClientInfo.ClientRect.top+m_Style.Margin.Top,
+							  m_Style.LogoSize.Width,m_Style.LogoSize.Height);
+			m_OSD.Show(m_pOptions->GetFadeTime(),ClientInfo.fAnimation);
 			return true;
 		}
 	}
@@ -191,80 +164,46 @@ bool COSDManager::ShowChannelOSD(const CChannelInfo *pInfo,bool fChanging)
 		Length=StdUtil::snprintf(szText,lengthof(szText),TEXT("%d "),pInfo->GetChannelNo());
 	StdUtil::snprintf(szText+Length,lengthof(szText)-Length,TEXT("%s"),pInfo->GetName());
 
-	if (!m_pOptions->GetPseudoOSD() && !fForcePseudoOSD
+	if (!m_pOptions->GetPseudoOSD() && !ClientInfo.fForcePseudoOSD
 			&& CoreEngine.m_DtvEngine.m_MediaViewer.IsDrawTextSupported()) {
 		if (hbmLogo!=NULL) {
-			m_OSD.Create(hwnd,m_pOptions->GetLayeredWindow());
+			m_OSD.Create(ClientInfo.hwndParent,m_pOptions->GetLayeredWindow());
 			m_OSD.SetImage(hbmLogo,ImageEffect);
-			m_OSD.SetPosition(rc.left+8,rc.top+8,LogoWidth,LogoHeight);
-			m_OSD.SetOpacity(m_pOptions->GetOpacity());
-			m_OSD.Show(m_pOptions->GetFadeTime(),
-					   !fChanging && !m_OSD.IsVisible());
+			m_OSD.SetPosition(ClientInfo.ClientRect.left+m_Style.Margin.Left,
+							  ClientInfo.ClientRect.top+m_Style.Margin.Top,
+							  m_Style.LogoSize.Width,m_Style.LogoSize.Height);
+			m_OSD.Show(m_pOptions->GetFadeTime(),ClientInfo.fAnimation);
 		}
 
 		if (ChangeType!=COSDOptions::CHANNELCHANGE_LOGOONLY) {
-			RECT rcSrc;
-			if (CoreEngine.m_DtvEngine.m_MediaViewer.GetSourceRect(&rcSrc)) {
-				LOGFONT lf;
-				HFONT hfont;
-
-				lf=*m_pOptions->GetOSDFont();
-				lf.lfHeight=(rcSrc.right-rcSrc.left)/20;
-				lf.lfWidth=0;
-				lf.lfQuality=NONANTIALIASED_QUALITY;
-				hfont=::CreateFontIndirect(&lf);
-				int Rate,Factor;
-				if (!App.GetUICore()->GetZoomRate(&Rate,&Factor)) {
-					if ((rc.right-rc.left)/(rcSrc.right-rcSrc.left)<
-							(rc.bottom-rc.top)/(rcSrc.bottom-rcSrc.top)) {
-						Rate=rc.right-rc.left;
-						Factor=rcSrc.right-rcSrc.left;
-					} else {
-						Rate=rc.bottom-rc.top;
-						Factor=rcSrc.bottom-rcSrc.top;
-					}
-				}
-				if (Rate!=0) {
-					rcSrc.left+=8*Factor/Rate;
-					rcSrc.top+=(rc.top+8)*Factor/Rate;
-					if (hbmLogo!=NULL)
-						rcSrc.left+=LogoWidth*Factor/Rate;
-				} else {
-					rcSrc.left+=16;
-					rcSrc.top+=48;
-				}
-				if (CoreEngine.m_DtvEngine.m_MediaViewer.DrawText(szText,
-						rcSrc.left,rcSrc.top,hfont,
-						m_pOptions->GetTextColor(),m_pOptions->GetOpacity())) {
-					if (m_pOptions->GetFadeTime()>0)
-						m_pEventHandler->SetOSDHideTimer(m_pOptions->GetFadeTime());
-				}
-				::DeleteObject(hfont);
-			}
+			CompositeText(szText,ClientInfo.ClientRect,hbmLogo!=NULL?m_Style.LogoSize.Width:0,m_pOptions->GetFadeTime());
 		}
 	} else {
-		int TextHeight=max((rc.right-rc.left)/24,12);
+		int FontSize=max((ClientInfo.ClientRect.right-ClientInfo.ClientRect.left)/m_Style.TextSizeRatio,12);
 		LOGFONT lf;
 		SIZE sz;
 		COLORREF cr;
 
 		lf=*m_pOptions->GetOSDFont();
-		lf.lfHeight=-TextHeight;
-		m_OSD.Create(hwnd,m_pOptions->GetLayeredWindow());
-		//m_OSD.SetTextHeight(TextHeight);
+		lf.lfHeight=-FontSize;
+		m_OSD.Create(ClientInfo.hwndParent,m_pOptions->GetLayeredWindow());
+		//m_OSD.SetTextHeight(FontSize);
 		m_OSD.SetFont(lf);
-		m_OSD.SetText(szText,hbmLogo,LogoWidth,LogoHeight,ImageEffect);
+		m_OSD.SetText(szText,hbmLogo,m_Style.LogoSize.Width,m_Style.LogoSize.Height,ImageEffect);
 		m_OSD.CalcTextSize(&sz);
-		m_OSD.SetPosition(rc.left+8,rc.top+8,
-						  sz.cx+8+LogoWidth,max(sz.cy+8,LogoHeight));
+		m_OSD.SetPosition(ClientInfo.ClientRect.left+m_Style.Margin.Left,
+						  ClientInfo.ClientRect.top+m_Style.Margin.Top,
+						  sz.cx+FontSize/4+m_Style.LogoSize.Width,
+						  max(sz.cy,m_Style.LogoSize.Height));
+		m_OSD.SetTextStyle(
+			CPseudoOSD::TEXT_STYLE_HORZ_CENTER | CPseudoOSD::TEXT_STYLE_VERT_CENTER |
+			CPseudoOSD::TEXT_STYLE_OUTLINE | CPseudoOSD::TEXT_STYLE_FILL_BACKGROUND);
 		if (fChanging)
 			cr=MixColor(m_pOptions->GetTextColor(),RGB(0,0,0),160);
 		else
 			cr=m_pOptions->GetTextColor();
 		m_OSD.SetTextColor(cr);
-		m_OSD.SetOpacity(m_pOptions->GetOpacity());
-		m_OSD.Show(m_pOptions->GetFadeTime(),
-				   !fChanging && !m_OSD.IsVisible());
+		m_OSD.Show(m_pOptions->GetFadeTime(),ClientInfo.fAnimation);
 	}
 
 	return true;
@@ -283,12 +222,11 @@ bool COSDManager::ShowVolumeOSD(int Volume)
 		return false;
 
 	CAppMain &App=GetAppClass();
-	CCoreEngine &CoreEngine=*App.GetCoreEngine();
+	CCoreEngine &CoreEngine=App.CoreEngine;
 
-	HWND hwnd;
-	RECT rc;
-	bool fForcePseudoOSD=false;
-	if (!m_pEventHandler->GetOSDWindow(&hwnd,&rc,&fForcePseudoOSD))
+	OSDClientInfo ClientInfo;
+	ClientInfo.fForcePseudoOSD=false;
+	if (!m_pEventHandler->GetOSDClientInfo(&ClientInfo))
 		return false;
 
 	static const int VolumeSteps=20;
@@ -301,20 +239,27 @@ bool COSDManager::ShowVolumeOSD(int Volume)
 	for (;i<VolumeSteps;i++)
 		::lstrcat(szText,TEXT(" "));
 	::wsprintf(szText+::lstrlen(szText),TEXT(" %d"),Volume);
-	if (!m_pOptions->GetPseudoOSD() && !fForcePseudoOSD
+
+	if (!m_pOptions->GetPseudoOSD() && !ClientInfo.fForcePseudoOSD
 			&& CoreEngine.m_DtvEngine.m_MediaViewer.IsDrawTextSupported()) {
 		RECT rcSrc;
 
 		if (CoreEngine.m_DtvEngine.m_MediaViewer.GetSourceRect(&rcSrc)) {
+			int FontSize=((rcSrc.right-rcSrc.left)-m_Style.VolumeMargin.Horz())/(VolumeSteps*2);
+			if (FontSize<m_Style.VolumeTextSizeMin)
+				FontSize=m_Style.VolumeTextSizeMin;
 			LOGFONT lf;
 			HFONT hfont;
 
 			lf=*m_pOptions->GetOSDFont();
-			lf.lfHeight=(rcSrc.right-rcSrc.left)/(VolumeSteps*2);
+			lf.lfHeight=-FontSize;
 			lf.lfQuality=NONANTIALIASED_QUALITY;
 			hfont=::CreateFontIndirect(&lf);
-			rcSrc.left+=16;
-			rcSrc.top=rcSrc.bottom-(lf.lfHeight+16);
+			rcSrc.left+=m_Style.VolumeMargin.Left*(rcSrc.right-rcSrc.left)/
+				(ClientInfo.ClientRect.right-ClientInfo.ClientRect.left);
+			rcSrc.top=rcSrc.bottom-FontSize-
+				m_Style.VolumeMargin.Bottom*(rcSrc.bottom-rcSrc.top)/
+					(ClientInfo.ClientRect.bottom-ClientInfo.ClientRect.top);
 			if (CoreEngine.m_DtvEngine.m_MediaViewer.DrawText(szText,
 					rcSrc.left,rcSrc.top,hfont,
 					m_pOptions->GetTextColor(),m_pOptions->GetOpacity())) {
@@ -324,20 +269,26 @@ bool COSDManager::ShowVolumeOSD(int Volume)
 			::DeleteObject(hfont);
 		}
 	} else {
-		int TextHeight=CLAMP((int)(rc.right-rc.left-32)/VolumeSteps,6,16);
+		int FontSize=((ClientInfo.ClientRect.right-ClientInfo.ClientRect.left)-m_Style.VolumeMargin.Horz())/(VolumeSteps*2);
+		if (FontSize<m_Style.VolumeTextSizeMin)
+			FontSize=m_Style.VolumeTextSizeMin;
 		LOGFONT lf;
 		SIZE sz;
 
 		lf=*m_pOptions->GetOSDFont();
-		lf.lfHeight=-TextHeight;
-		m_VolumeOSD.Create(hwnd,m_pOptions->GetLayeredWindow());
-		//m_VolumeOSD.SetTextHeight(TextHeight);
+		lf.lfHeight=-FontSize;
+		m_VolumeOSD.Create(ClientInfo.hwndParent,m_pOptions->GetLayeredWindow());
+		//m_VolumeOSD.SetTextHeight(FontSize);
 		m_VolumeOSD.SetFont(lf);
 		m_VolumeOSD.SetText(szText);
 		m_VolumeOSD.CalcTextSize(&sz);
-		m_VolumeOSD.SetPosition(rc.left+8,rc.bottom-sz.cy-8,sz.cx,sz.cy);
+		m_VolumeOSD.SetPosition(ClientInfo.ClientRect.left+m_Style.VolumeMargin.Left,
+								ClientInfo.ClientRect.bottom-sz.cy-m_Style.VolumeMargin.Bottom,
+								sz.cx+FontSize/4,sz.cy);
+		m_VolumeOSD.SetTextStyle(
+			CPseudoOSD::TEXT_STYLE_LEFT | CPseudoOSD::TEXT_STYLE_VERT_CENTER |
+			CPseudoOSD::TEXT_STYLE_FILL_BACKGROUND);
 		m_VolumeOSD.SetTextColor(m_pOptions->GetTextColor());
-		m_VolumeOSD.SetOpacity(m_pOptions->GetOpacity());
 		m_VolumeOSD.Show(m_pOptions->GetFadeTime());
 	}
 
@@ -348,4 +299,105 @@ bool COSDManager::ShowVolumeOSD(int Volume)
 void COSDManager::HideVolumeOSD()
 {
 	m_VolumeOSD.Hide();
+}
+
+
+bool COSDManager::CompositeText(
+	LPCTSTR pszText,const RECT &rcClient,int LeftOffset,DWORD FadeTime)
+{
+	CAppMain &App=GetAppClass();
+
+	RECT rcSrc;
+	if (!App.CoreEngine.m_DtvEngine.m_MediaViewer.GetSourceRect(&rcSrc))
+		return false;
+
+	LOGFONT lf=*m_pOptions->GetOSDFont();
+	int FontSize=max((rcSrc.right-rcSrc.left)/m_Style.CompositeTextSizeRatio,12);
+	lf.lfHeight=-FontSize;
+	lf.lfWidth=0;
+	lf.lfQuality=NONANTIALIASED_QUALITY;
+	HFONT hfont=::CreateFontIndirect(&lf);
+
+	int Rate,Factor;
+	if (!App.UICore.GetZoomRate(&Rate,&Factor)) {
+		if ((rcClient.right-rcClient.left)/(rcSrc.right-rcSrc.left)<
+				(rcClient.bottom-rcClient.top)/(rcSrc.bottom-rcSrc.top)) {
+			Rate=rcClient.right-rcClient.left;
+			Factor=rcSrc.right-rcSrc.left;
+		} else {
+			Rate=rcClient.bottom-rcClient.top;
+			Factor=rcSrc.bottom-rcSrc.top;
+		}
+	}
+	if (Rate!=0) {
+		rcSrc.left+=(m_Style.Margin.Left+LeftOffset)*Factor/Rate;
+		rcSrc.top+=(rcClient.top+m_Style.Margin.Top)*Factor/Rate;
+	} else {
+		rcSrc.left+=16;
+		rcSrc.top+=48;
+	}
+	bool fOK=false;
+	if (App.CoreEngine.m_DtvEngine.m_MediaViewer.DrawText(pszText,
+			rcSrc.left,rcSrc.top,hfont,
+			m_pOptions->GetTextColor(),m_pOptions->GetOpacity())) {
+		fOK=true;
+		if (FadeTime>0)
+			m_pEventHandler->SetOSDHideTimer(FadeTime);
+	}
+	::DeleteObject(hfont);
+
+	return fOK;
+}
+
+
+void COSDManager::SetStyle(const TVTest::Style::CStyleManager *pStyleManager)
+{
+	m_Style.SetStyle(pStyleManager);
+}
+
+
+void COSDManager::NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager)
+{
+	m_Style.NormalizeStyle(pStyleManager);
+}
+
+
+
+
+COSDManager::OSDStyle::OSDStyle()
+	: Margin(8)
+	, TextSizeRatio(24)
+	, CompositeTextSizeRatio(20)
+	, LogoSize(64,36)
+	, LogoEffect(TEXT("gloss"))
+	, fChannelAnimation(true)
+	, VolumeMargin(16)
+	, VolumeTextSizeMin(10)
+{
+}
+
+
+void COSDManager::OSDStyle::SetStyle(const TVTest::Style::CStyleManager *pStyleManager)
+{
+	TVTest::Style::IntValue Value;
+
+	pStyleManager->Get(TEXT("osd.margin"),&Margin);
+	if (pStyleManager->Get(TEXT("osd.text-size-ratio"),&Value) && Value.Value>0)
+		TextSizeRatio=Value;
+	if (pStyleManager->Get(TEXT("osd.composite-text-size-ratio"),&Value) && Value.Value>0)
+		CompositeTextSizeRatio=Value;
+	pStyleManager->Get(TEXT("channel-osd.logo"),&LogoSize);
+	pStyleManager->Get(TEXT("channel-osd.logo.effect"),&LogoEffect);
+	pStyleManager->Get(TEXT("channel-osd.animation"),&fChannelAnimation);
+	pStyleManager->Get(TEXT("volume-osd.margin"),&VolumeMargin);
+	pStyleManager->Get(TEXT("volume-osd.text-size-min"),&VolumeTextSizeMin);
+}
+
+
+void COSDManager::OSDStyle::NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager)
+{
+	pStyleManager->ToPixels(&Margin);
+	pStyleManager->ToPixels(&LogoSize);
+	pStyleManager->ToPixels(&VolumeMargin);
+	pStyleManager->ToPixels(&VolumeTextSizeMin);
 }

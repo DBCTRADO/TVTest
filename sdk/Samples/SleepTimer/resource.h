@@ -1,3 +1,5 @@
+#define IDB_ICON							1
+
 #define IDD_SETTINGS						10
 #define IDD_CONFIRM							11
 

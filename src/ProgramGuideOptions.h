@@ -29,8 +29,9 @@ public:
 	bool GetTimeRange(SYSTEMTIME *pstFirst,SYSTEMTIME *pstLast);
 	bool GetOnScreen() const { return m_fOnScreen; }
 	bool ScrollToCurChannel() const { return m_fScrollToCurChannel; }
+	const LOGFONT &GetFont() const { return m_Font; }
 	UINT GetVisibleEventIcons() const { return m_VisibleEventIcons; }
-	LPCTSTR GetProgramLDoubleClickCommand() const { return m_ProgramLDoubleClickCommand.Get(); }
+	LPCTSTR GetProgramLDoubleClickCommand() const { return TVTest::StringUtility::GetCStrOrNull(m_ProgramLDoubleClickCommand); }
 	int ParseCommand(LPCTSTR pszCommand) const;
 
 private:
@@ -47,14 +48,13 @@ private:
 	int m_ViewHours;
 	int m_ItemWidth;
 	int m_LinesPerHour;
-	int m_LineMargin;
 	LOGFONT m_Font;
 	LOGFONT m_CurSettingFont;
 	UINT m_VisibleEventIcons;
 	CProgramGuideToolList m_ToolList;
 	HIMAGELIST m_himlEventIcons;
 	int m_WheelScrollLines;
-	CDynamicString m_ProgramLDoubleClickCommand;
+	TVTest::String m_ProgramLDoubleClickCommand;
 	CTooltip m_Tooltip;
 
 // CBasicDialog
