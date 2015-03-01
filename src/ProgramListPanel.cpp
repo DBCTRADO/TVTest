@@ -250,6 +250,7 @@ CProgramListPanel::CProgramListPanel()
 	, m_EventInfoPopupHandler(this)
 	, m_pProgramList(NULL)
 	, m_FontHeight(0)
+	, m_fMouseOverEventInfo(true)
 	, m_fUseEpgColorScheme(false)
 	, m_fShowFeaturedMark(true)
 	, m_VisibleEventIcons(((1<<(CEpgIcons::ICON_LAST+1))-1)^CEpgIcons::IconFlag(CEpgIcons::ICON_PAY))
@@ -337,6 +338,7 @@ void CProgramListPanel::SetTheme(const TVTest::Theme::CThemeManager *pThemeManag
 
 bool CProgramListPanel::ReadSettings(CSettings &Settings)
 {
+	Settings.Read(TEXT("ProgramListPanel.MouseOverEventInfo"),&m_fMouseOverEventInfo);
 	Settings.Read(TEXT("ProgramListPanel.UseEpgColorScheme"),&m_fUseEpgColorScheme);
 	Settings.Read(TEXT("ProgramListPanel.ShowFeaturedMark"),&m_fShowFeaturedMark);
 
@@ -346,6 +348,7 @@ bool CProgramListPanel::ReadSettings(CSettings &Settings)
 
 bool CProgramListPanel::WriteSettings(CSettings &Settings)
 {
+	Settings.Write(TEXT("ProgramListPanel.MouseOverEventInfo"),m_fMouseOverEventInfo);
 	Settings.Write(TEXT("ProgramListPanel.UseEpgColorScheme"),m_fUseEpgColorScheme);
 	Settings.Write(TEXT("ProgramListPanel.ShowFeaturedMark"),m_fShowFeaturedMark);
 
@@ -688,6 +691,15 @@ void CProgramListPanel::SetVisibleEventIcons(UINT VisibleIcons)
 }
 
 
+void CProgramListPanel::SetMouseOverEventInfo(bool fMouseOverEventInfo)
+{
+	if (m_fMouseOverEventInfo!=fMouseOverEventInfo) {
+		m_fMouseOverEventInfo=fMouseOverEventInfo;
+		m_EventInfoPopupManager.SetEnable(fMouseOverEventInfo);
+	}
+}
+
+
 void CProgramListPanel::SetUseEpgColorScheme(bool fUseEpgColorScheme)
 {
 	if (m_fUseEpgColorScheme!=fUseEpgColorScheme) {
@@ -929,6 +941,7 @@ LRESULT CProgramListPanel::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lP
 			::SendMessage(m_hwndToolTip,TTM_SETDELAYTIME,TTDT_AUTOPOP,30000);
 			*/
 			m_EventInfoPopupManager.Initialize(hwnd,&m_EventInfoPopupHandler);
+			m_EventInfoPopupManager.SetEnable(m_fMouseOverEventInfo);
 
 			CFeaturedEvents &FeaturedEvents=GetAppClass().FeaturedEvents;
 			FeaturedEvents.AddEventHandler(this);
@@ -1021,7 +1034,8 @@ LRESULT CProgramListPanel::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lP
 		{
 			::SetFocus(hwnd);
 
-			int HotItem=ItemHitTest(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam));
+			int x=GET_X_LPARAM(lParam),y=GET_Y_LPARAM(lParam);
+			int HotItem=ItemHitTest(x,y);
 			if (HotItem==m_HotItem) {
 				switch (HotItem) {
 				case ITEM_CHANNEL:
@@ -1043,6 +1057,10 @@ LRESULT CProgramListPanel::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lP
 			} else {
 				SetHotItem(HotItem);
 			}
+
+			if (HotItem<0 && !m_fMouseOverEventInfo) {
+				m_EventInfoPopupManager.Popup(x,y);
+			}
 		}
 		return 0;
 
@@ -1052,6 +1070,7 @@ LRESULT CProgramListPanel::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lP
 
 			CPopupMenu Menu(GetAppClass().GetResourceInstance(),IDM_PROGRAMLISTPANEL);
 
+			Menu.CheckItem(CM_PROGRAMLISTPANEL_MOUSEOVEREVENTINFO,m_fMouseOverEventInfo);
 			Menu.CheckItem(CM_PROGRAMLISTPANEL_USEEPGCOLORSCHEME,m_fUseEpgColorScheme);
 			Menu.CheckItem(CM_PROGRAMLISTPANEL_SHOWFEATUREDMARK,m_fShowFeaturedMark);
 			Menu.Show(hwnd);
@@ -1067,6 +1086,10 @@ LRESULT CProgramListPanel::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lP
 
 	case WM_COMMAND:
 		switch (LOWORD(wParam)) {
+		case CM_PROGRAMLISTPANEL_MOUSEOVEREVENTINFO:
+			SetMouseOverEventInfo(!m_fMouseOverEventInfo);
+			return 0;
+
 		case CM_PROGRAMLISTPANEL_USEEPGCOLORSCHEME:
 			SetUseEpgColorScheme(!m_fUseEpgColorScheme);
 			return 0;

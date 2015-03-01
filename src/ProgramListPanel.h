@@ -85,6 +85,8 @@ public:
 	bool SetEventInfoFont(const LOGFONT *pFont);
 	void ShowRetrievingMessage(bool fShow);
 	void SetVisibleEventIcons(UINT VisibleIcons);
+	void SetMouseOverEventInfo(bool fMouseOverEventInfo);
+	bool GetMouseOverEventInfo() const { return m_fMouseOverEventInfo; }
 	void SetUseEpgColorScheme(bool fUseEpgColorScheme);
 	bool GetUseEpgColorScheme() const { return m_fUseEpgColorScheme; }
 	void SetShowFeaturedMark(bool fShowFeaturedMark);
@@ -124,6 +126,7 @@ private:
 	ProgramListPanelStyle m_Style;
 	ProgramListPanelTheme m_Theme;
 	CEpgTheme m_EpgTheme;
+	bool m_fMouseOverEventInfo;
 	bool m_fUseEpgColorScheme;
 	bool m_fShowFeaturedMark;
 	CEpgIcons m_EpgIcons;
