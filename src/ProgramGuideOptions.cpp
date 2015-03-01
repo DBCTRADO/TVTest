@@ -27,7 +27,6 @@ CProgramGuideOptions::CProgramGuideOptions(CProgramGuide *pProgramGuide,CPluginM
 	, m_ItemWidth(pProgramGuide->GetItemWidth())
 	, m_LinesPerHour(pProgramGuide->GetLinesPerHour())
 	, m_VisibleEventIcons(m_pProgramGuide->GetVisibleEventIcons())
-	, m_himlEventIcons(NULL)
 	, m_WheelScrollLines(pProgramGuide->GetWheelScrollLines())
 {
 	m_pProgramGuide->GetFont(&m_Font);
@@ -495,24 +494,18 @@ INT_PTR CProgramGuideOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM l
 			SetFontInfo(hDlg,&m_CurSettingFont);
 
 			m_Tooltip.Create(hDlg);
-			m_himlEventIcons=::ImageList_LoadImage(
-				GetAppClass().GetResourceInstance(),MAKEINTRESOURCE(IDB_PROGRAMGUIDEICONS),
-				CEpgIcons::ICON_WIDTH,1,CLR_NONE,IMAGE_BITMAP,LR_CREATEDIBSECTION);
+
 			HDC hdc=::GetDC(hDlg);
 			HDC hdcMem=::CreateCompatibleDC(hdc);
+			CEpgIcons EpgIcons;
+			EpgIcons.Load();
+			EpgIcons.BeginDraw(hdc);
 			for (int i=0;i<=CEpgIcons::ICON_LAST;i++) {
 				DlgCheckBox_Check(hDlg,IDC_PROGRAMGUIDEOPTIONS_ICON_FIRST+i,
 								  (m_VisibleEventIcons&CEpgIcons::IconFlag(i))!=0);
-				// ImageList_ExtractIcon()だとなぜか色が化ける
-				// (4ビットのアイコンはシステムパレットが前提なのかも)
-				/*
-				::SendDlgItemMessage(hDlg,IDC_PROGRAMGUIDEOPTIONS_ICON_FIRST+i,
-									 BM_SETIMAGE,IMAGE_ICON,
-									 reinterpret_cast<LPARAM>(::ImageList_ExtractIcon(NULL,m_himlEventIcons,i)));
-				*/
-				HBITMAP hbm=::CreateCompatibleBitmap(hdc,CEpgIcons::ICON_WIDTH,CEpgIcons::ICON_HEIGHT);
+				HBITMAP hbm=::CreateCompatibleBitmap(hdc,CEpgIcons::DEFAULT_ICON_WIDTH,CEpgIcons::DEFAULT_ICON_HEIGHT);
 				HGDIOBJ hOldBmp=::SelectObject(hdcMem,hbm);
-				::ImageList_Draw(m_himlEventIcons,i,hdcMem,0,0,ILD_NORMAL);
+				EpgIcons.DrawIcon(hdcMem,0,0,CEpgIcons::DEFAULT_ICON_WIDTH,CEpgIcons::DEFAULT_ICON_HEIGHT,i);
 				::SelectObject(hdcMem,hOldBmp);
 				::SendDlgItemMessage(hDlg,IDC_PROGRAMGUIDEOPTIONS_ICON_FIRST+i,
 									 BM_SETIMAGE,IMAGE_BITMAP,
@@ -521,6 +514,7 @@ INT_PTR CProgramGuideOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM l
 				::GetDlgItemText(hDlg,IDC_PROGRAMGUIDEOPTIONS_ICON_FIRST+i,szText,lengthof(szText));
 				m_Tooltip.AddTool(::GetDlgItem(hDlg,IDC_PROGRAMGUIDEOPTIONS_ICON_FIRST+i),szText);
 			}
+			EpgIcons.EndDraw();
 			::DeleteDC(hdcMem);
 			::ReleaseDC(hDlg,hdc);
 
@@ -898,25 +892,12 @@ INT_PTR CProgramGuideOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM l
 			}
 
 			for (int i=0;i<=CEpgIcons::ICON_LAST;i++) {
-				/*
-				HICON hico=reinterpret_cast<HICON>(
-					::SendDlgItemMessage(hDlg,IDC_PROGRAMGUIDEOPTIONS_ICON_FIRST+i,
-										 BM_SETIMAGE,IMAGE_ICON,
-										 reinterpret_cast<LPARAM>((HICON)NULL)));
-				if (hico!=NULL)
-					::DestroyIcon(hico);
-				*/
 				HBITMAP hbm=reinterpret_cast<HBITMAP>(
 					::SendDlgItemMessage(hDlg,IDC_PROGRAMGUIDEOPTIONS_ICON_FIRST+i,
 										 BM_SETIMAGE,IMAGE_BITMAP,
 										 reinterpret_cast<LPARAM>((HBITMAP)NULL)));
 				if (hbm!=NULL)
 					::DeleteObject(hbm);
-			}
-
-			if (m_himlEventIcons!=NULL) {
-				::ImageList_Destroy(m_himlEventIcons);
-				m_himlEventIcons=NULL;
 			}
 
 			m_Tooltip.Destroy();

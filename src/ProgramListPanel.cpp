@@ -1259,8 +1259,6 @@ void CProgramListPanel::Draw(HDC hdc,const RECT *prcPaint)
 							DT_CENTER | DT_VCENTER | DT_SINGLELINE);
 	}
 
-	HDC hdcIcons=::CreateCompatibleDC(hdc);
-	HBITMAP hbmOld=DrawUtil::SelectObject(hdcIcons,m_EpgIcons);
 	HBRUSH hbr=::CreateSolidBrush(m_Theme.MarginColor);
 
 	GetProgramListRect(&rc);
@@ -1274,6 +1272,8 @@ void CProgramListPanel::Draw(HDC hdc,const RECT *prcPaint)
 	} else {
 		HRGN hrgn=::CreateRectRgnIndirect(&rc);
 		::SelectClipRgn(hdc,hrgn);
+
+		m_EpgIcons.BeginDraw(hdc,m_Style.IconSize.Width,m_Style.IconSize.Height);
 
 		rc.top-=m_ScrollPos;
 		for (int i=0;i<m_ItemList.NumItems();i++) {
@@ -1353,19 +1353,12 @@ void CProgramListPanel::Draw(HDC hdc,const RECT *prcPaint)
 					CEpgIcons::GetEventIcons(&pItem->GetEventInfo()) & m_VisibleEventIcons;
 				if (ShowIcons!=0) {
 					rc.left=0;
-					int y=rc.top+m_Style.IconMargin.Top;
-					int Icon=0;
-					for (unsigned int Flag=ShowIcons;Flag!=0;Flag>>=1) {
-						if (y>=rc.bottom)
-							break;
-						if ((Flag&1)!=0) {
-							CEpgIcons::Draw(hdc,m_Style.IconMargin.Left,y,
-											m_Style.IconSize.Width,m_Style.IconSize.Height,
-											hdcIcons,Icon,192,&rc);
-							y+=m_Style.IconSize.Height+m_Style.IconMargin.Bottom;
-						}
-						Icon++;
-					}
+					m_EpgIcons.DrawIcons(
+						ShowIcons,hdc,
+						m_Style.IconMargin.Left,rc.top+m_Style.IconMargin.Top,
+						m_Style.IconSize.Width,m_Style.IconSize.Height,
+						0,m_Style.IconSize.Height+m_Style.IconMargin.Bottom,
+						m_fUseEpgColorScheme?255:192,&rc);
 				}
 			}
 
@@ -1382,12 +1375,11 @@ void CProgramListPanel::Draw(HDC hdc,const RECT *prcPaint)
 			::FillRect(hdc,&rcMargin,hbr);
 		}
 
+		m_EpgIcons.EndDraw();
+
 		::SelectClipRgn(hdc,NULL);
 		::DeleteObject(hrgn);
 	}
-
-	::SelectObject(hdcIcons,hbmOld);
-	::DeleteDC(hdcIcons);
 
 	::SetTextColor(hdc,crOldTextColor);
 	::SetBkMode(hdc,OldBkMode);
@@ -1473,7 +1465,7 @@ CProgramListPanel::ProgramListPanelStyle::ProgramListPanelStyle()
 	, ChannelButtonPadding(2)
 	, ChannelButtonMargin(12)
 	, TitlePadding(2)
-	, IconSize(CEpgIcons::ICON_WIDTH,CEpgIcons::ICON_HEIGHT)
+	, IconSize(CEpgIcons::DEFAULT_ICON_WIDTH,CEpgIcons::DEFAULT_ICON_HEIGHT)
 	, IconMargin(1)
 	, LineSpacing(1)
 	, FeaturedMarkSize(5,5)

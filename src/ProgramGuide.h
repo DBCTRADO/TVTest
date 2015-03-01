@@ -572,7 +572,7 @@ private:
 	void CalcLayout();
 	void DrawEvent(ProgramGuide::CEventItem *pItem,
 				   HDC hdc,const RECT &Rect,TVTest::CTextDraw &TextDraw,int LineHeight,
-				   HDC hdcIcons,int CurTimePos);
+				   int CurTimePos);
 	void DrawEventList(ProgramGuide::CEventLayout *pLayout,
 					   HDC hdc,const RECT &Rect,const RECT &PaintRect,
 					   TVTest::CTextDraw &TextDraw);

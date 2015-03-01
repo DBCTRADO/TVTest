@@ -52,7 +52,6 @@ private:
 	LOGFONT m_CurSettingFont;
 	UINT m_VisibleEventIcons;
 	CProgramGuideToolList m_ToolList;
-	HIMAGELIST m_himlEventIcons;
 	int m_WheelScrollLines;
 	TVTest::String m_ProgramLDoubleClickCommand;
 	CTooltip m_Tooltip;

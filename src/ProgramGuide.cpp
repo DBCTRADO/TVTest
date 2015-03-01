@@ -1492,7 +1492,7 @@ void CProgramGuide::CalcLayout()
 void CProgramGuide::DrawEvent(
 	ProgramGuide::CEventItem *pItem,
 	HDC hdc,const RECT &Rect,TVTest::CTextDraw &TextDraw,int LineHeight,
-	HDC hdcIcons,int CurTimePos)
+	int CurTimePos)
 {
 	const CEventInfoData *pEventInfo=pItem->GetEventInfo();
 	const CEventInfoData *pOrigEventInfo=pEventInfo;
@@ -1669,22 +1669,15 @@ void CProgramGuide::DrawEvent(
 		const unsigned int ShowIcons=
 			CEpgIcons::GetEventIcons(pEventInfo) & m_VisibleEventIcons;
 		if (ShowIcons!=0) {
-			int y=rcText.top+m_Style.EventIconMargin.Top;
-			int Icon=0;
-			for (unsigned int Flag=ShowIcons;Flag!=0;Flag>>=1) {
-				if (y>=rcText.bottom)
-					break;
-				if ((Flag&1)!=0) {
-					CEpgIcons::Draw(hdc,Rect.left+m_Style.EventIconMargin.Left,y,
-									m_Style.EventIconSize.Width,
-									m_Style.EventIconSize.Height,
-									hdcIcons,Icon,
-									(!fCurrent && (fCommonEvent || fFilter))?128:255,
-									&Rect);
-					y+=m_Style.EventIconSize.Height+m_Style.EventIconMargin.Bottom;
-				}
-				Icon++;
-			}
+			m_EpgIcons.DrawIcons(
+				ShowIcons,hdc,
+				Rect.left+m_Style.EventIconMargin.Left,
+				rcText.top+m_Style.EventIconMargin.Top,
+				m_Style.EventIconSize.Width,
+				m_Style.EventIconSize.Height,
+				0,m_Style.EventIconSize.Height+m_Style.EventIconMargin.Bottom,
+				(!fCurrent && (fCommonEvent || fFilter))?128:255,
+				&Rect);
 		}
 	}
 }
@@ -1701,8 +1694,7 @@ void CProgramGuide::DrawEventList(
 	HFONT hfontOld=static_cast<HFONT>(::GetCurrentObject(hdc,OBJ_FONT));
 	COLORREF OldTextColor=::GetTextColor(hdc);
 
-	HDC hdcIcons=::CreateCompatibleDC(hdc);
-	HBITMAP hbmOld=DrawUtil::SelectObject(hdcIcons,m_EpgIcons);
+	m_EpgIcons.BeginDraw(hdc,m_Style.EventIconSize.Width,m_Style.EventIconSize.Height);
 
 	RECT rcItem;
 	rcItem.left=Rect.left;
@@ -1719,12 +1711,11 @@ void CProgramGuide::DrawEventList(
 			if (rcItem.bottom<=PaintRect.top)
 				continue;
 
-			DrawEvent(pItem,hdc,rcItem,TextDraw,LineHeight,hdcIcons,CurTimePos);
+			DrawEvent(pItem,hdc,rcItem,TextDraw,LineHeight,CurTimePos);
 		}
 	}
 
-	::SelectObject(hdcIcons,hbmOld);
-	::DeleteDC(hdcIcons);
+	m_EpgIcons.EndDraw();
 
 	::SetTextColor(hdc,OldTextColor);
 	::SelectObject(hdc,hfontOld);
@@ -4855,7 +4846,7 @@ CProgramGuide::ProgramGuideStyle::ProgramGuideStyle()
 	, HeaderShadowHeight(8)
 	, EventLeading(1)
 	, EventLineSpacing(0)
-	, EventIconSize(CEpgIcons::ICON_WIDTH,CEpgIcons::ICON_HEIGHT)
+	, EventIconSize(CEpgIcons::DEFAULT_ICON_WIDTH,CEpgIcons::DEFAULT_ICON_HEIGHT)
 	, EventIconMargin(1)
 	, FeaturedMarkMargin(0)
 	, HighlightBorder(3)

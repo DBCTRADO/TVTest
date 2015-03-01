@@ -98,8 +98,10 @@ class CEpgIcons : public DrawUtil::CBitmap
 {
 public:
 	enum {
-		ICON_WIDTH	=11,
-		ICON_HEIGHT	=11
+		ICON_WIDTH  = 22,
+		ICON_HEIGHT = 22,
+		DEFAULT_ICON_WIDTH  = 11,
+		DEFAULT_ICON_HEIGHT = 11
 	};
 
 	enum {
@@ -115,10 +117,29 @@ public:
 
 	static UINT IconFlag(int Icon) { return 1<<Icon; }
 
+	CEpgIcons();
+	~CEpgIcons();
 	bool Load();
-	static bool Draw(HDC hdcDst,int DstX,int DstY,int Width,int Height,
-					 HDC hdcSrc,int Icon,BYTE Opacity=255,const RECT *pClipping=nullptr);
+	bool BeginDraw(HDC hdc,int IconWidth=0,int IconHeight=0);
+	void EndDraw();
+	bool DrawIcon(
+		HDC hdcDst,int DstX,int DstY,int Width,int Height,
+		int Icon,BYTE Opacity=255,const RECT *pClipping=nullptr);
+	bool DrawIcons(
+		unsigned int IconFlags,
+		HDC hdcDst,int DstX,int DstY,int Width,int Height,
+		int IntervalX,int IntervalY,
+		BYTE Opacity=255,const RECT *pClipping=nullptr);
+
 	static unsigned int GetEventIcons(const CEventInfoData *pEventInfo);
+
+protected:
+	HDC m_hdc;
+	HBITMAP m_hbmOld;
+	int m_IconWidth;
+	int m_IconHeight;
+	DrawUtil::COffscreen m_StretchBuffer;
+	unsigned int m_StretchedIcons;
 };
 
 class CEpgTheme

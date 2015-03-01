@@ -694,19 +694,94 @@ LPCTSTR CEpgGenre::GetText(int Level1,int Level2) const
 
 
 
+CEpgIcons::CEpgIcons()
+	: m_hdc(NULL)
+	, m_hbmOld(NULL)
+{
+}
+
+
+CEpgIcons::~CEpgIcons()
+{
+	EndDraw();
+}
+
+
 bool CEpgIcons::Load()
 {
 	return CBitmap::Load(GetAppClass().GetInstance(),IDB_PROGRAMGUIDEICONS,LR_DEFAULTCOLOR);
 }
 
 
-bool CEpgIcons::Draw(HDC hdcDst,int DstX,int DstY,int Width,int Height,
-					 HDC hdcSrc,int Icon,BYTE Opacity,const RECT *pClipping)
+bool CEpgIcons::BeginDraw(HDC hdc,int IconWidth,int IconHeight)
 {
-	if (hdcDst==NULL || hdcSrc==NULL
+	if (!IsCreated())
+		return false;
+
+	EndDraw();
+
+	m_hdc=::CreateCompatibleDC(hdc);
+	if (m_hdc==NULL)
+		return false;
+	m_hbmOld=DrawUtil::SelectObject(m_hdc,*this);
+
+	if (IconWidth>0 && IconHeight>0
+			&& (IconWidth!=ICON_WIDTH || IconHeight!=ICON_HEIGHT)) {
+		m_StretchBuffer.Create((ICON_LAST+1)*IconWidth,IconHeight,hdc);
+		m_StretchedIcons=0;
+	}
+
+	m_IconWidth=IconWidth;
+	m_IconHeight=IconHeight;
+
+	return true;
+}
+
+
+void CEpgIcons::EndDraw()
+{
+	if (m_hdc!=NULL) {
+		::SelectObject(m_hdc,m_hbmOld);
+		::DeleteDC(m_hdc);
+		m_hdc=NULL;
+		m_hbmOld=NULL;
+	}
+	m_StretchBuffer.Destroy();
+}
+
+
+bool CEpgIcons::DrawIcon(
+	HDC hdcDst,int DstX,int DstY,int Width,int Height,
+	int Icon,BYTE Opacity,const RECT *pClipping)
+{
+	if (m_hdc==NULL
+			|| hdcDst==NULL
 			|| Width<=0 || Height<=0
 			|| Icon<0 || Icon>ICON_LAST)
 		return false;
+
+	HDC hdcSrc;
+	int IconWidth,IconHeight;
+
+	if ((Width!=ICON_WIDTH || Height!=ICON_HEIGHT)
+			&& Opacity<255
+			&& m_StretchBuffer.IsCreated()) {
+		hdcSrc=m_StretchBuffer.GetDC();
+		IconWidth=m_IconWidth;
+		IconHeight=m_IconHeight;
+		if ((m_StretchedIcons & IconFlag(Icon))==0) {
+			int OldStretchMode=::SetStretchBltMode(hdcSrc,STRETCH_HALFTONE);
+			::StretchBlt(hdcSrc,Icon*IconWidth,0,IconWidth,IconHeight,
+						 m_hdc,Icon*ICON_WIDTH,0,ICON_WIDTH,ICON_HEIGHT,
+						 SRCCOPY);
+			::SetStretchBltMode(hdcSrc,OldStretchMode);
+			m_StretchedIcons|=IconFlag(Icon);
+		}
+	} else {
+		hdcSrc=m_hdc;
+		IconWidth=ICON_WIDTH;
+		IconHeight=ICON_HEIGHT;
+	}
 
 	RECT rcDraw,rcDst;
 
@@ -720,31 +795,59 @@ bool CEpgIcons::Draw(HDC hdcDst,int DstX,int DstY,int Width,int Height,
 
 	int DstWidth=rcDraw.right-rcDraw.left;
 	int DstHeight=rcDraw.bottom-rcDraw.top;
-	int SrcX=(ICON_WIDTH*(rcDraw.left-DstX)+Width/2)/Width;
-	int SrcY=(ICON_HEIGHT*(rcDraw.top-DstY)+Height/2)/Height;
-	int SrcWidth=(ICON_WIDTH*(rcDraw.right-DstX)+Width/2)/Width-SrcX;
+	int SrcX=(IconWidth*(rcDraw.left-DstX)+Width/2)/Width;
+	int SrcY=(IconHeight*(rcDraw.top-DstY)+Height/2)/Height;
+	int SrcWidth=(IconWidth*(rcDraw.right-DstX)+Width/2)/Width-SrcX;
 	if (SrcWidth<1)
 		SrcWidth=1;
-	int SrcHeight=(ICON_HEIGHT*(rcDraw.bottom-DstY)+Height/2)/Height-SrcY;
+	int SrcHeight=(IconHeight*(rcDraw.bottom-DstY)+Height/2)/Height-SrcY;
 	if (SrcHeight<1)
 		SrcHeight=1;
 
 	if (Opacity==255) {
 		if (DstWidth==SrcWidth && DstHeight==SrcHeight) {
 			::BitBlt(hdcDst,rcDraw.left,rcDraw.top,DstWidth,DstHeight,
-					 hdcSrc,Icon*ICON_WIDTH+SrcX,SrcY,SRCCOPY);
+					 hdcSrc,Icon*IconWidth+SrcX,SrcY,SRCCOPY);
 		} else {
 			int OldStretchMode=::SetStretchBltMode(hdcDst,STRETCH_HALFTONE);
 			::StretchBlt(hdcDst,rcDraw.left,rcDraw.top,DstWidth,DstHeight,
-						 hdcSrc,Icon*ICON_WIDTH+SrcX,SrcY,SrcWidth,SrcHeight,
+						 hdcSrc,Icon*IconWidth+SrcX,SrcY,SrcWidth,SrcHeight,
 						 SRCCOPY);
 			::SetStretchBltMode(hdcDst,OldStretchMode);
 		}
 	} else {
 		BLENDFUNCTION bf={AC_SRC_OVER,0,Opacity,0};
 		::GdiAlphaBlend(hdcDst,rcDraw.left,rcDraw.top,DstWidth,DstHeight,
-						hdcSrc,Icon*ICON_WIDTH+SrcX,SrcY,SrcWidth,SrcHeight,
+						hdcSrc,Icon*IconWidth+SrcX,SrcY,SrcWidth,SrcHeight,
 						bf);
+	}
+
+	return true;
+}
+
+
+bool CEpgIcons::DrawIcons(
+	unsigned int IconFlags,
+	HDC hdcDst,int DstX,int DstY,int Width,int Height,
+	int IntervalX,int IntervalY,
+	BYTE Opacity,const RECT *pClipping)
+{
+	if (IconFlags==0)
+		return false;
+
+	int x=DstX,y=DstY;
+	int Icon=0;
+
+	for (unsigned int Flag=IconFlags;Flag!=0;Flag>>=1) {
+		if (pClipping!=nullptr
+				&& (x>=pClipping->right || y>=pClipping->bottom))
+			break;
+		if ((Flag&1)!=0) {
+			DrawIcon(hdcDst,x,y,Width,Height,Icon,Opacity,pClipping);
+			x+=IntervalX;
+			y+=IntervalY;
+		}
+		Icon++;
 	}
 
 	return true;
