@@ -25,20 +25,6 @@ static char THIS_FILE[]=__FILE__;
 
 
 
-static bool IsBonDriverSpinel(LPCTSTR pszFileName)
-{
-	return ::StrStrI(::PathFindFileName(pszFileName),TEXT("Spinel"))!=NULL;
-}
-
-static bool IsFileBonDriver(LPCTSTR pszFileName)
-{
-	return ::PathMatchSpec(pszFileName,TEXT("*_File.dll"))
-		|| ::PathMatchSpec(pszFileName,TEXT("*_Pipe.dll"));
-}
-
-
-
-
 class CDriverSettings
 {
 	TVTest::String m_FileName;
@@ -893,13 +879,21 @@ CDriverOptions::BonDriverOptions::BonDriverOptions()
 
 
 CDriverOptions::BonDriverOptions::BonDriverOptions(LPCTSTR pszBonDriverName)
-	: fNoSignalLevel(GetAppClass().CoreEngine.IsNetworkDriverFileName(pszBonDriverName)
-					 || IsFileBonDriver(pszBonDriverName))
-	, fIgnoreInitialStream(!IsBonDriverSpinel(pszBonDriverName))
-	, fPurgeStreamOnChannelChange(true)
-	, fResetChannelChangeErrorCount(true)
-	, fPumpStreamSyncPlayback(IsFileBonDriver(pszBonDriverName))
-	, FirstChannelSetDelay(0)
-	, MinChannelChangeInterval(0)
 {
+	*this=BonDriverOptions();
+
+	CDriverManager::TunerSpec Spec;
+	if (GetAppClass().DriverManager.GetTunerSpec(pszBonDriverName,&Spec)) {
+		if ((Spec.Flags &
+				(CDriverManager::TunerSpec::FLAG_NETWORK |
+				 CDriverManager::TunerSpec::FLAG_FILE))!=0)
+			fNoSignalLevel=true;
+		if ((Spec.Flags &
+				(CDriverManager::TunerSpec::FLAG_NETWORK |
+				 CDriverManager::TunerSpec::FLAG_FILE |
+				 CDriverManager::TunerSpec::FLAG_VOLATILE))!=0)
+			fIgnoreInitialStream=false;
+		if ((Spec.Flags & CDriverManager::TunerSpec::FLAG_FILE)!=0)
+			fPumpStreamSyncPlayback=true;
+	}
 }

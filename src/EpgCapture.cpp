@@ -52,14 +52,19 @@ bool CEpgCaptureManager::BeginCapture(
 		}
 		return false;
 	}
-	if (!IsStringEmpty(pszTuner)
-			&& App.CoreEngine.IsNetworkDriverFileName(pszTuner)) {
-		if (!fNoUI) {
-			App.UICore.GetSkin()->ShowMessage(
-				TEXT("UDP/TCPでは番組表の取得はできません。"),
-				TEXT("お知らせ"),MB_OK | MB_ICONINFORMATION);
+	if (!IsStringEmpty(pszTuner)) {
+		CDriverManager::TunerSpec Spec;
+		if (App.DriverManager.GetTunerSpec(pszTuner,&Spec)
+				&& (Spec.Flags &
+					(CDriverManager::TunerSpec::FLAG_NETWORK |
+					 CDriverManager::TunerSpec::FLAG_FILE))!=0) {
+			if (!fNoUI) {
+				App.UICore.GetSkin()->ShowMessage(
+					TEXT("ネットワーク再生及びファイル再生では番組表の取得はできません。"),
+					TEXT("お知らせ"),MB_OK | MB_ICONINFORMATION);
+			}
+			return false;
 		}
-		return false;
 	}
 
 	const bool fTunerAlreadyOpened=App.CoreEngine.IsTunerOpen();

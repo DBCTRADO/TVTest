@@ -41,10 +41,12 @@ bool CDriverInfo::LoadTuningSpaceList(LoadTuningSpaceListMode Mode)
 	} else if (Mode==LOADTUNINGSPACE_USEDRIVER) {
 		fUseDriver=true;
 	} else {
-		// チューナを開かずにチューニング空間とチャンネルを取得できない
-		// ドライバはロードしないようにする
-		fUseDriver=!::PathMatchSpec(pszFileName,TEXT("BonDriver_Spinel*.dll"))
-				&& !::PathMatchSpec(pszFileName,TEXT("BonDriver_Friio*.dll"));
+		CDriverManager::TunerSpec Spec;
+		if (App.DriverManager.GetTunerSpec(pszFileName,&Spec)
+				&& (Spec.Flags & CDriverManager::TunerSpec::FLAG_NOENUMCHANNEL)!=0)
+			fUseDriver=false;
+		else
+			fUseDriver=true;
 	}
 
 	if (!m_fChannelFileLoaded) {
@@ -299,4 +301,72 @@ bool CDriverManager::GetAllServiceList(CChannelList *pList) const
 	}
 
 	return true;
+}
+
+
+bool CDriverManager::LoadTunerSpec(LPCTSTR pszFileName)
+{
+	CSettings Settings;
+
+	if (!Settings.Open(pszFileName,CSettings::OPEN_READ)
+			|| !Settings.SetSection(TEXT("TunerSpec")))
+		return false;
+
+	CSettings::EntryList Entries;
+	if (!Settings.GetEntries(&Entries))
+		return false;
+
+	for (auto it=Entries.begin();it!=Entries.end();++it) {
+		TunerSpecInfo Info;
+
+		Info.TunerMask=it->Name;
+		Info.Spec.Flags=0;
+
+		std::vector<TVTest::String> Attributes;
+		if (TVTest::StringUtility::Split(it->Value,TEXT("|"),&Attributes)) {
+			static const struct {
+				LPCTSTR pszName;
+				unsigned int Flag;
+			} FlagList[] = {
+				{TEXT("network"),			TunerSpec::FLAG_NETWORK},
+				{TEXT("file"),				TunerSpec::FLAG_FILE},
+				{TEXT("virtual"),			TunerSpec::FLAG_VIRTUAL},
+				{TEXT("volatile"),			TunerSpec::FLAG_VOLATILE},
+				{TEXT("no-enum-channel"),	TunerSpec::FLAG_NOENUMCHANNEL},
+			};
+			for (int i=0;i<lengthof(FlagList);i++) {
+				for (auto itAttr=Attributes.begin();itAttr!=Attributes.end();++itAttr) {
+					TVTest::StringUtility::Trim(*itAttr);
+					if (TVTest::StringUtility::CompareNoCase(*itAttr,FlagList[i].pszName)==0) {
+						Info.Spec.Flags|=FlagList[i].Flag;
+						break;
+					}
+				}
+			}
+		}
+
+		m_TunerSpecList.push_back(Info);
+	}
+
+	return true;
+}
+
+
+bool CDriverManager::GetTunerSpec(LPCTSTR pszTunerName,TunerSpec *pSpec) const
+{
+	if (IsStringEmpty(pszTunerName) || pSpec==nullptr)
+		return false;
+
+	LPCTSTR pszName=::PathFindFileName(pszTunerName);
+	if (pszName[0]==_T('\0'))
+		return false;
+
+	for (auto it=m_TunerSpecList.begin();it!=m_TunerSpecList.end();++it) {
+		if (::PathMatchSpec(it->TunerMask.c_str(),pszName)) {
+			*pSpec=it->Spec;
+			return true;
+		}
+	}
+
+	return false;
 }

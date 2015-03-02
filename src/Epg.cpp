@@ -97,11 +97,17 @@ bool CEpg::CChannelProviderManager::Create(LPCTSTR pszDefaultTuner)
 				m_CurChannelProvider=(int)m_ChannelProviderList.size();
 				m_ChannelProviderList.push_back(pCurChannelProvider);
 				pCurChannelProvider=NULL;
-			} else if (!CCoreEngine::IsNetworkDriverFileName(pDriverInfo->GetFileName())) {
-				CBonDriverChannelProvider *pDriverChannelProvider=
-					new CBonDriverChannelProvider(pDriverInfo->GetFileName());
+			} else {
+				CDriverManager::TunerSpec Spec;
+				if (!App.DriverManager.GetTunerSpec(pDriverInfo->GetFileName(),&Spec)
+						|| (Spec.Flags &
+							(CDriverManager::TunerSpec::FLAG_NETWORK |
+							 CDriverManager::TunerSpec::FLAG_FILE))==0) {
+					CBonDriverChannelProvider *pDriverChannelProvider=
+						new CBonDriverChannelProvider(pDriverInfo->GetFileName());
 
-				m_ChannelProviderList.push_back(pDriverChannelProvider);
+					m_ChannelProviderList.push_back(pDriverChannelProvider);
+				}
 			}
 		}
 	}

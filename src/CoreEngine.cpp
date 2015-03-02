@@ -367,20 +367,6 @@ bool CCoreEngine::IsTunerOpen() const
 }
 
 
-bool CCoreEngine::IsNetworkDriverFileName(LPCTSTR pszFileName)
-{
-	if (pszFileName==NULL)
-		return false;
-
-	LPCTSTR pszName=::PathFindFileName(pszFileName);
-
-	if (IsEqualFileName(pszName,TEXT("BonDriver_UDP.dll"))
-			|| IsEqualFileName(pszName,TEXT("BonDriver_TCP.dll")))
-		return true;
-	return false;
-}
-
-
 bool CCoreEngine::SetPacketBufferLength(DWORD BufferLength)
 {
 	return m_DtvEngine.m_MediaViewer.SetBufferSize(BufferLength);

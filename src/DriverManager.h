@@ -44,6 +44,19 @@ private:
 class CDriverManager
 {
 public:
+	struct TunerSpec
+	{
+		enum {
+			FLAG_NETWORK       = 0x00000001U,
+			FLAG_FILE          = 0x00000002U,
+			FLAG_VIRTUAL       = 0x00000004U,
+			FLAG_VOLATILE      = 0x00000008U,
+			FLAG_NOENUMCHANNEL = 0x00000010U
+		};
+
+		unsigned int Flags;
+	};
+
 	CDriverManager();
 	~CDriverManager();
 	void Clear();
@@ -55,9 +68,19 @@ public:
 	int FindByFileName(LPCTSTR pszFileName) const;
 	bool GetAllServiceList(CChannelList *pList) const;
 
+	bool LoadTunerSpec(LPCTSTR pszFileName);
+	bool GetTunerSpec(LPCTSTR pszTunerName,TunerSpec *pSpec) const;
+
 private:
+	struct TunerSpecInfo
+	{
+		TVTest::String TunerMask;
+		TunerSpec Spec;
+	};
+
 	std::vector<CDriverInfo*> m_DriverList;
 	TVTest::String m_BaseDirectory;
+	std::vector<TunerSpecInfo> m_TunerSpecList;
 };
 
 

@@ -57,7 +57,6 @@ public:
 	bool IsUDPDriver() const { return m_DriverType==DRIVER_UDP; }
 	bool IsTCPDriver() const { return m_DriverType==DRIVER_TCP; }
 	bool IsNetworkDriver() const { return IsUDPDriver() || IsTCPDriver(); }
-	static bool IsNetworkDriverFileName(LPCTSTR pszFileName);
 
 	bool SetPacketBufferLength(DWORD BufferLength);
 	bool GetPacketBuffering() const { return m_fPacketBuffering; }

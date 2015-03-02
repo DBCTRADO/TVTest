@@ -68,6 +68,7 @@
   ・TVTest.exe          本体
   ・TVTest.style.ini    スタイル設定ファイル
   ・TVTest.search.ini   検索設定ファイル
+  ・TVTest.tuner.ini    チューナー仕様定義ファイル
   ・TVTest.chm          ヘルプファイル
   ・TVTest_Image.dll    画像保存用 DLL
   ・TVTest_Logo.bmp     ロゴ画像

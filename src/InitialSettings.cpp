@@ -102,9 +102,14 @@ INT_PTR CInitialSettings::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPara
 				DlgComboBox_LimitText(hDlg,IDC_INITIALSETTINGS_DRIVER,MAX_PATH-1);
 				for (int i=0;i<m_pDriverManager->NumDrivers();i++) {
 					const CDriverInfo *pDriverInfo=m_pDriverManager->GetDriverInfo(i);
+					CDriverManager::TunerSpec Spec;
 					int Index;
 
-					if (CCoreEngine::IsNetworkDriverFileName(pDriverInfo->GetFileName())) {
+					// ネットワークやファイル再生用の特殊なBonDriverは後になるようにする
+					if (m_pDriverManager->GetTunerSpec(pDriverInfo->GetFileName(),&Spec)
+							&& (Spec.Flags &
+								(CDriverManager::TunerSpec::FLAG_NETWORK |
+								 CDriverManager::TunerSpec::FLAG_FILE))!=0) {
 						Index=i;
 					} else {
 						Index=NormalDriverCount++;

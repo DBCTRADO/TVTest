@@ -731,6 +731,16 @@ int CAppMain::Main(HINSTANCE hInstance,LPCTSTR pszCmdLine,int nCmdShow)
 		CoreEngine.GetDriverDirectory(szDirectory,lengthof(szDirectory));
 		DriverManager.Find(szDirectory);
 	}
+	// チューナー仕様定義の読み込み
+	{
+		TCHAR szTunerSpecFileName[MAX_PATH];
+		::GetModuleFileName(nullptr,szTunerSpecFileName,lengthof(szTunerSpecFileName));
+		::PathRenameExtension(szTunerSpecFileName,TEXT(".tuner.ini"));
+		if (::PathFileExists(szTunerSpecFileName)) {
+			AddLog(TEXT("チューナー仕様定義を \"%s\" から読み込みます..."),szTunerSpecFileName);
+			DriverManager.LoadTunerSpec(szTunerSpecFileName);
+		}
+	}
 	DriverOptions.Initialize(&DriverManager);
 
 	// 初期設定ダイアログを表示するか
