@@ -114,8 +114,10 @@ static bool ParsePanAndScanInfo(CUICore::PanAndScanInfo *pInfo,LPTSTR pszText)
 
 // 設定サンプル
 static const CPanAndScanOptions::PanAndScanInfo DefaultPresetList[] = {
-	{1350, 0, 8650, 8650, HORZ_FACTOR, VERT_FACTOR, 16, 9, TEXT("L字 MX"), 1},
-	{1500, 0, 8500, 8500, HORZ_FACTOR, VERT_FACTOR, 16, 9, TEXT("L字 TX"), 1},
+	{   0, 1281, 10000,  7438, HORZ_FACTOR, VERT_FACTOR, 239, 100, TEXT("2.39:1 シネスコ"),   1},
+	{   0, 1218, 10000,  7565, HORZ_FACTOR, VERT_FACTOR, 235, 100, TEXT("2.35:1 シネスコ"),   2},
+	{   0,  195, 10000,  9610, HORZ_FACTOR, VERT_FACTOR, 185, 100, TEXT("1.85:1 ビスタ(米)"), 3},
+	{ 331,    0,  9338, 10000, HORZ_FACTOR, VERT_FACTOR, 166, 100, TEXT("1.66:1 ビスタ(欧)"), 4},
 };
 
 
