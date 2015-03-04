@@ -560,10 +560,13 @@ INT_PTR CPanAndScanOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPa
 					CUICore &UICore=GetAppClass().UICore;
 					CUICore::PanAndScanInfo OldInfo;
 
-					UICore.GetPanAndScan(&OldInfo);
+					if (!m_fTested)
+						UICore.GetPanAndScan(&OldInfo);
 					UICore.SetPanAndScan(Info.Info);
-					m_fTested=true;
-					m_OldPanAndScanInfo=OldInfo;
+					if (!m_fTested) {
+						m_fTested=true;
+						m_OldPanAndScanInfo=OldInfo;
+					}
 				}
 			}
 			return TRUE;
