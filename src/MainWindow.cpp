@@ -1135,7 +1135,7 @@ LRESULT CMainWindow::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 		break;
 
 	case WM_NCHITTEST:
-		if (m_fCustomFrame) {
+		if (m_fCustomFrame && !::IsZoomed(hwnd)) {
 			int x=GET_X_LPARAM(lParam),y=GET_Y_LPARAM(lParam);
 			int BorderWidth=m_CustomFrameWidth;
 			RECT rc;
@@ -5039,7 +5039,8 @@ LRESULT CALLBACK CMainWindow::ChildHookProc(HWND hwnd,UINT uMsg,WPARAM wParam,LP
 		{
 			CMainWindow *pThis=static_cast<CMainWindow*>(::GetProp(hwnd,CHILD_PROP_THIS));
 
-			if (pThis!=nullptr && pThis->m_fCustomFrame && ::GetAncestor(hwnd,GA_ROOT)==pThis->m_hwnd) {
+			if (pThis!=nullptr && pThis->m_fCustomFrame && !::IsZoomed(pThis->m_hwnd)
+					&& ::GetAncestor(hwnd,GA_ROOT)==pThis->m_hwnd) {
 				POINT pt={GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam)};
 				RECT rc;
 
