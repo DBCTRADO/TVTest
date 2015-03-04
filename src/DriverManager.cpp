@@ -4,12 +4,7 @@
 #include "DriverManager.h"
 #include "IBonDriver2.h"
 #include <algorithm>
-
-#ifdef _DEBUG
-#undef THIS_FILE
-static char THIS_FILE[]=__FILE__;
-#define new DEBUG_NEW
-#endif
+#include "Common/DebugDef.h"
 
 
 typedef IBonDriver *(*CreateBonDriverFunc)();

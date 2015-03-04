@@ -6,12 +6,7 @@
 #include "DrawUtil.h"
 #include "Menu.h"
 #include "resource.h"
-
-#ifdef _DEBUG
-#undef THIS_FILE
-static char THIS_FILE[]=__FILE__;
-#define new DEBUG_NEW
-#endif
+#include "Common/DebugDef.h"
 
 
 #define CAPTURE_WINDOW_CLASS			APP_NAME TEXT(" Capture Window")

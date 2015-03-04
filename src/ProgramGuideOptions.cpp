@@ -4,12 +4,7 @@
 #include "ProgramGuideOptions.h"
 #include "DialogUtil.h"
 #include "resource.h"
-
-#ifdef _DEBUG
-#undef THIS_FILE
-static char THIS_FILE[]=__FILE__;
-#define new DEBUG_NEW
-#endif
+#include "Common/DebugDef.h"
 
 
 #define IEPG_ASSOCIATE_COMMAND TEXT("iEpgAssociate")

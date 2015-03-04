@@ -51,6 +51,9 @@
     <Filter Include="HelperClass\Source Files">
       <UniqueIdentifier>{53948db7-4ab4-486e-b666-8d24470b2483}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Common">
+      <UniqueIdentifier>{1fa25962-066c-4495-84de-0f33b8089366}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="BonTsEngine\Bitstream.cpp">
@@ -1107,6 +1110,9 @@
     </ClInclude>
     <ClInclude Include="VariableString.h">
       <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="Common\DebugDef.h">
+      <Filter>Common</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

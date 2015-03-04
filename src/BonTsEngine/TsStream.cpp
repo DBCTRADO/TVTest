@@ -5,14 +5,8 @@
 #include "stdafx.h"
 #include "TsStream.h"
 #include "TsUtilClass.h"
-
 #include <mmsystem.h>
-
-#ifdef _DEBUG
-#undef THIS_FILE
-static char THIS_FILE[]=__FILE__;
-#define new DEBUG_NEW
-#endif
+#include "../Common/DebugDef.h"
 
 
 #pragma comment(lib, "winmm.lib")

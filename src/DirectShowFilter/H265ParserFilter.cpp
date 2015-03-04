@@ -2,12 +2,7 @@
 #include <initguid.h>
 #include "H265ParserFilter.h"
 #include "DirectShowUtil.h"
-
-#ifdef _DEBUG
-#undef THIS_FILE
-static char THIS_FILE[]=__FILE__;
-#define new DEBUG_NEW
-#endif
+#include "../Common/DebugDef.h"
 
 
 CH265ParserFilter::CH265ParserFilter(LPUNKNOWN pUnk, HRESULT *phr)

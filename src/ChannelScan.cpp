@@ -5,12 +5,7 @@
 #include "DialogUtil.h"
 #include "MessageDialog.h"
 #include "resource.h"
-
-#ifdef _DEBUG
-#undef THIS_FILE
-static char THIS_FILE[]=__FILE__;
-#define new DEBUG_NEW
-#endif
+#include "Common/DebugDef.h"
 
 
 // スキャンスレッドから送られるメッセージ

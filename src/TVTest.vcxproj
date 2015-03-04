@@ -1108,6 +1108,7 @@
     <ClInclude Include="Capture.h" />
     <ClInclude Include="CaptureOptions.h" />
     <ClInclude Include="ChannelInput.h" />
+    <ClInclude Include="Common\DebugDef.h" />
     <ClInclude Include="ComUtility.h" />
     <ClInclude Include="Epg.h" />
     <ClInclude Include="GUIUtil.h" />

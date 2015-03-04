@@ -13,12 +13,7 @@
 #include "DriverManager.h"
 #include "TextDraw.h"
 #include "resource.h"
-
-#ifdef _DEBUG
-#undef THIS_FILE
-static char THIS_FILE[]=__FILE__;
-#define new DEBUG_NEW
-#endif
+#include "Common/DebugDef.h"
 
 
 static const int CATEGORY_ICON_WIDTH=32,CATEGORY_ICON_HEIGHT=32;

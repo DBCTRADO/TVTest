@@ -2,12 +2,7 @@
 #include <dvdmedia.h>
 #include <initguid.h>
 #include "Mpeg2ParserFilter.h"
-
-#ifdef _DEBUG
-#undef THIS_FILE
-static char THIS_FILE[]=__FILE__;
-#define new DEBUG_NEW
-#endif
+#include "../Common/DebugDef.h"
 
 
 static const long SAMPLE_BUFFER_SIZE = 0x800000L;	// 8MiB

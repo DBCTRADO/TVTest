@@ -3,15 +3,10 @@
 #include <uxtheme.h>
 #include "TVTest.h"
 #include "Aero.h"
+#include "Common/DebugDef.h"
 
 #ifndef WIN_XP_SUPPORT
 #pragma comment(lib,"dwmapi.lib")
-#endif
-
-#ifdef _DEBUG
-#undef THIS_FILE
-static char THIS_FILE[]=__FILE__;
-#define new DEBUG_NEW
 #endif
 
 

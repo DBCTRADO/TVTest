@@ -2,12 +2,7 @@
 #include "DrawUtil.h"
 #include "Graphics.h"
 #include "Util.h"
-
-#ifdef _DEBUG
-#undef THIS_FILE
-static char THIS_FILE[]=__FILE__;
-#define new DEBUG_NEW
-#endif
+#include "Common/DebugDef.h"
 
 
 #define DIVIDE_BY_255(v) ((((v)+1)*257)>>16)

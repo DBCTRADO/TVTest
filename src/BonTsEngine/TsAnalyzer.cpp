@@ -6,12 +6,7 @@
 #include "TsEncode.h"
 #endif
 #include "TsUtil.h"
-
-#ifdef _DEBUG
-#undef THIS_FILE
-static char THIS_FILE[]=__FILE__;
-#define new DEBUG_NEW
-#endif
+#include "../Common/DebugDef.h"
 
 #ifdef _DEBUG
 #define TABLE_DEBUG	true

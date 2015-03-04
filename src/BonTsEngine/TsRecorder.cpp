@@ -1,12 +1,7 @@
 #include "stdafx.h"
 #include "TsRecorder.h"
 #include "BasicFile.h"
-
-#ifdef _DEBUG
-#undef THIS_FILE
-static char THIS_FILE[]=__FILE__;
-#define new DEBUG_NEW
-#endif
+#include "../Common/DebugDef.h"
 
 
 template<typename T> T ROUND_PACKET_SIZE(T Size)

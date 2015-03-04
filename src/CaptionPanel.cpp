@@ -3,12 +3,7 @@
 #include "AppMain.h"
 #include "CaptionPanel.h"
 #include "resource.h"
-
-#ifdef _DEBUG
-#undef THIS_FILE
-static char THIS_FILE[]=__FILE__;
-#define new DEBUG_NEW
-#endif
+#include "Common/DebugDef.h"
 
 
 #define WM_APP_ADD_CAPTION WM_APP

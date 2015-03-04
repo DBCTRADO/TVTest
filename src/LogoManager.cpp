@@ -3,12 +3,7 @@
 #include "AppMain.h"
 #include "LogoManager.h"
 #include "HelperClass/NFile.h"
-
-#ifdef _DEBUG
-#undef THIS_FILE
-static char THIS_FILE[]=__FILE__;
-#define new DEBUG_NEW
-#endif
+#include "Common/DebugDef.h"
 
 
 #define MAX_LOGO_BYTES 1296

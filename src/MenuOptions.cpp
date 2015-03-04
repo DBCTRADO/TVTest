@@ -6,12 +6,7 @@
 #include "Command.h"
 #include "DialogUtil.h"
 #include "resource.h"
-
-#ifdef _DEBUG
-#undef THIS_FILE
-static char THIS_FILE[]=__FILE__;
-#define new DEBUG_NEW
-#endif
+#include "Common/DebugDef.h"
 
 
 #define ITEM_STATE_VISIBLE 0x0001

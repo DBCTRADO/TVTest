@@ -7,12 +7,7 @@
 #include "EpgUtil.h"
 #include "resource.h"
 #include <algorithm>
-
-#ifdef _DEBUG
-#undef THIS_FILE
-static char THIS_FILE[]=__FILE__;
-#define new DEBUG_NEW
-#endif
+#include "Common/DebugDef.h"
 
 
 static const int MAX_LANGUAGE_TEXT_LENGTH=EpgUtil::MAX_LANGUAGE_TEXT_LENGTH+16;

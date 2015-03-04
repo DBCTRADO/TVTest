@@ -5,12 +5,7 @@
 #include "TSProcessorErrorDialog.h"
 #include <algorithm>
 #include <utility>
-
-#ifdef _DEBUG
-#undef THIS_FILE
-static char THIS_FILE[]=__FILE__;
-#define new DEBUG_NEW
-#endif
+#include "Common/DebugDef.h"
 
 
 namespace TVTest

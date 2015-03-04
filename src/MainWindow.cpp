@@ -10,14 +10,9 @@
 #include "ToolTip.h"
 #include "HelperClass/StdUtil.h"
 #include "resource.h"
+#include "Common/DebugDef.h"
 
 #pragma comment(lib,"imm32.lib")	// for ImmAssociateContext(Ex)
-
-#ifdef _DEBUG
-#undef THIS_FILE
-static char THIS_FILE[]=__FILE__;
-#define new DEBUG_NEW
-#endif
 
 
 #define MAIN_TITLE_TEXT APP_NAME

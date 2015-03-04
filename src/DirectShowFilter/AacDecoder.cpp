@@ -4,12 +4,7 @@
 
 #include "stdafx.h"
 #include "AacDecoder.h"
-
-#ifdef _DEBUG
-#undef THIS_FILE
-static char THIS_FILE[]=__FILE__;
-#define new DEBUG_NEW
-#endif
+#include "../Common/DebugDef.h"
 
 
 // "Code from FAAD2 is copyright (c) Nero AG, www.nero.com"

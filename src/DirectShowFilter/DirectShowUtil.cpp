@@ -8,12 +8,7 @@
 #pragma comment(lib,"mfplat.lib")
 #pragma comment(lib,"mfuuid.lib")
 #endif
-
-#ifdef _DEBUG
-#undef THIS_FILE
-static char THIS_FILE[]=__FILE__;
-#define new DEBUG_NEW
-#endif
+#include "../Common/DebugDef.h"
 
 
 

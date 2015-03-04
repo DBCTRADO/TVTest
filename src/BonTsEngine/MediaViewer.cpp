@@ -16,12 +16,7 @@
 #ifdef BONTSENGINE_H265_SUPPORT
 #include "../DirectShowFilter/H265ParserFilter.h"
 #endif
-
-#ifdef _DEBUG
-#undef THIS_FILE
-static char THIS_FILE[]=__FILE__;
-#define new DEBUG_NEW
-#endif
+#include "../Common/DebugDef.h"
 
 #pragma comment(lib,"quartz.lib")
 
