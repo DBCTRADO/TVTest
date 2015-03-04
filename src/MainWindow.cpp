@@ -946,9 +946,14 @@ LRESULT CMainWindow::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 					pmmi->ptMaxSize.y=(mi.rcWork.bottom-mi.rcWork.top)+Border.top+Border.bottom;
 					pmmi->ptMaxPosition.x=mi.rcWork.left-mi.rcMonitor.left-Border.left;
 					pmmi->ptMaxPosition.y=mi.rcWork.top-mi.rcMonitor.top-Border.top;
-					// ウィンドウのあるモニタがプライマリモニタよりも大きい場合、
-					// ptMaxTrackSize を設定しないとサイズがおかしくなる
-					pmmi->ptMaxTrackSize=pmmi->ptMaxSize;
+					if (::IsZoomed(hwnd)) {
+						// ウィンドウのあるモニタがプライマリモニタよりも大きい場合、
+						// ptMaxTrackSize を設定しないとサイズがおかしくなる
+						pmmi->ptMaxTrackSize=pmmi->ptMaxSize;
+					} else {
+						pmmi->ptMaxTrackSize.x=::GetSystemMetrics(SM_CXVIRTUALSCREEN);
+						pmmi->ptMaxTrackSize.y=::GetSystemMetrics(SM_CYVIRTUALSCREEN);
+					}
 				}
 			}
 		}
