@@ -665,8 +665,7 @@ bool GetDefaultUIFont(LOGFONT *pFont)
 		// メイリオだと行間が空きすぎるのが…
 		if (::lstrcmp(MessageFont.lfFaceName,TEXT("メイリオ"))==0
 				|| ::lstrcmpi(MessageFont.lfFaceName,TEXT("Meiryo"))==0) {
-			//pFont->lfHeight=MessageFont.lfHeight;
-			pFont->lfHeight=-12;
+			pFont->lfHeight=-abs(MessageFont.lfHeight);
 			pFont->lfWeight=FW_NORMAL;
 			::lstrcpy(pFont->lfFaceName,TEXT("Meiryo UI"));
 			if (IsFontAvailable(*pFont))
