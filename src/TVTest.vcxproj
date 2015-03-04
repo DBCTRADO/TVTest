@@ -1108,6 +1108,7 @@
     <ClInclude Include="Capture.h" />
     <ClInclude Include="CaptureOptions.h" />
     <ClInclude Include="ChannelInput.h" />
+    <ClInclude Include="Common\Common.h" />
     <ClInclude Include="Common\DebugDef.h" />
     <ClInclude Include="ComUtility.h" />
     <ClInclude Include="Epg.h" />
@@ -1129,7 +1130,6 @@
     <ClInclude Include="ColorScheme.h" />
     <ClInclude Include="Command.h" />
     <ClInclude Include="CommandLine.h" />
-    <ClInclude Include="Common.h" />
     <ClInclude Include="Controller.h" />
     <ClInclude Include="ControlPanel.h" />
     <ClInclude Include="ControlPanelItems.h" />

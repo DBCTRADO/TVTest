@@ -982,9 +982,6 @@
     <ClInclude Include="DirectShowFilter\AudioDecFilter.h">
       <Filter>DirectShowFilter\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Common.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
     <ClInclude Include="DirectShowFilter\Mpeg2ParserFilter.h">
       <Filter>DirectShowFilter\Header Files</Filter>
     </ClInclude>
@@ -1112,6 +1109,9 @@
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="Common\DebugDef.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="Common\Common.h">
       <Filter>Common</Filter>
     </ClInclude>
   </ItemGroup>

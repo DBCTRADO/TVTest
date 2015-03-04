@@ -49,7 +49,7 @@
 
 #undef _WINSOCKAPI_
 
-#include "Common.h"
+#include "Common/Common.h"
 
 #ifdef _UNICODE
 #if defined _M_IX86
