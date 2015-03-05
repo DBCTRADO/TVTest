@@ -55,4 +55,5 @@ protected:
 	bool m_bOutputWhenPaused;
 	DWORD m_InputWait;
 	bool m_bInputTimeout;
+	volatile bool m_bNewSegment;
 };

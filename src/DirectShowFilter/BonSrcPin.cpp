@@ -24,6 +24,7 @@ CBonSrcPin::CBonSrcPin(HRESULT *phr, CBonSrcFilter *pFilter)
 	, m_bOutputWhenPaused(false)
 	, m_InputWait(0)
 	, m_bInputTimeout(false)
+	, m_bNewSegment(true)
 {
 	TRACE(TEXT("CBonSrcPin::CBonSrcPin() %p\n"), this);
 
@@ -205,6 +206,7 @@ bool CBonSrcPin::InputMedia(CMediaData *pMediaData)
 void CBonSrcPin::Reset()
 {
 	m_SrcStream.Reset();
+	m_bNewSegment = true;
 }
 
 
@@ -286,6 +288,8 @@ unsigned int __stdcall CBonSrcPin::StreamThread(LPVOID lpParameter)
 
 	::CoInitialize(NULL);
 
+	pThis->m_bNewSegment = true;
+
 	DWORD Wait = 0;
 
 	while (::WaitForSingleObject(pThis->m_hEndEvent, Wait) == WAIT_TIMEOUT) {
@@ -306,6 +310,14 @@ unsigned int __stdcall CBonSrcPin::StreamThread(LPVOID lpParameter)
 		}
 
 		if (pThis->m_SrcStream.IsDataAvailable()) {
+			bool bDiscontinuity = false;
+
+			if (pThis->m_bNewSegment) {
+				pThis->DeliverNewSegment(0, LONGLONG_MAX, 1.0);
+				pThis->m_bNewSegment = false;
+				bDiscontinuity = true;
+			}
+
 			// 空のメディアサンプルを要求する
 			IMediaSample *pSample = NULL;
 			HRESULT hr = pThis->GetDeliveryBuffer(&pSample, NULL, NULL, 0);
@@ -317,6 +329,7 @@ unsigned int __stdcall CBonSrcPin::StreamThread(LPVOID lpParameter)
 					size_t Size = pThis->m_SrcStream.GetData(pSampleData, SAMPLE_PACKETS);
 					if (Size != 0) {
 						pSample->SetActualDataLength(static_cast<long>(Size * TS_PACKETSIZE));
+						pSample->SetDiscontinuity(bDiscontinuity);
 						pThis->Deliver(pSample);
 					}
 					pSample->Release();
@@ -327,6 +340,8 @@ unsigned int __stdcall CBonSrcPin::StreamThread(LPVOID lpParameter)
 			Wait = 10;
 		}
 	}
+
+	pThis->DeliverEndOfStream();
 
 	::CoUninitialize();
 
