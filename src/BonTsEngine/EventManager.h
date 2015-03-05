@@ -67,6 +67,8 @@ public:
 					  const SYSTEMTIME *pTime, CEventInfo *pInfo);
 	bool IsScheduleComplete(const WORD NetworkID, const WORD TransportStreamID, const WORD ServiceID, const bool bExtended = false);
 	bool HasSchedule(const WORD NetworkID, const WORD TransportStreamID, const WORD ServiceID, const bool bExtended = false);
+	void SetScheduleOnly(const bool bScheduleOnly);
+	bool IsScheduleOnly() const { return m_bScheduleOnly; }
 
 	static ULONGLONG SystemTimeToSeconds(const SYSTEMTIME &Time)
 	{
@@ -133,6 +135,7 @@ protected:
 	ServiceMap m_ServiceMap;
 	SYSTEMTIME m_CurTotTime;
 	ULONGLONG m_CurTotSeconds;
+	bool m_bScheduleOnly;
 
 	static bool RemoveEvent(EventMap *pMap, const WORD EventID);
 

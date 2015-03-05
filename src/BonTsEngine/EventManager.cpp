@@ -226,6 +226,7 @@ static ULONGLONG GetScheduleTime(ULONGLONG CurTime, WORD TableID, BYTE SectionNu
 
 CEventManager::CEventManager(IEventHandler *pEventHandler)
 	: CMediaDecoder(pEventHandler, 1, 1)
+	, m_bScheduleOnly(false)
 {
 	Reset();
 }
@@ -535,6 +536,12 @@ bool CEventManager::HasSchedule(const WORD NetworkID, const WORD TransportStream
 }
 
 
+void CEventManager::SetScheduleOnly(const bool bScheduleOnly)
+{
+	m_bScheduleOnly = bScheduleOnly;
+}
+
+
 bool CEventManager::RemoveEvent(EventMap *pMap, const WORD EventID)
 {
 	EventMap::iterator itr = pMap->find(EventID);
@@ -548,6 +555,10 @@ bool CEventManager::RemoveEvent(EventMap *pMap, const WORD EventID)
 
 void CEventManager::OnSection(CPsiStreamTable *pTable, const CPsiSection *pSection)
 {
+	const WORD TableID = pSection->GetTableID();
+	if (m_bScheduleOnly && (TableID == 0x4E || TableID == 0x4F))
+		return;
+
 	const CEitParserTable *pEitTable = dynamic_cast<const CEitParserTable *>(pTable);
 
 	ServiceMapKey Key = GetServiceMapKey(pEitTable->GetOriginalNetworkID(),
@@ -576,7 +587,6 @@ void CEventManager::OnSection(CPsiStreamTable *pTable, const CPsiSection *pSecti
 	const ULONGLONG CurTotTime = m_CurTotSeconds;
 	bool bUpdated = false;
 
-	const WORD TableID = pSection->GetTableID();
 	const int NumEvents = pEitTable->GetEventNum();
 
 	if (NumEvents > 0) {
