@@ -115,6 +115,8 @@
 	(::SendDlgItemMessage(hwndDlg,ID,CB_SETITEMHEIGHT,Index,Height)!=CB_ERR)
 #define DlgComboBox_SetCueBanner(hwndDlg,ID,pszString) \
 	::SendDlgItemMessage(hwndDlg,ID,CB_SETCUEBANNER,0,(LPARAM)(pszString))
+#define DlgComboBox_GetDroppedState(hwndDlg,ID) \
+	(::SendDlgItemMessage(hwndDlg,ID,CB_GETDROPPEDSTATE,0,0)!=FALSE)
 
 #define DlgUpDown_SetRange(hwndDlg,ID,Low,High) \
 	::SendDlgItemMessage(hwndDlg,ID,UDM_SETRANGE32,Low,High)

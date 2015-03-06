@@ -895,7 +895,7 @@ bool CEventSearchOptions::AddKeywordHistory(LPCTSTR pszKeyword)
 		return false;
 
 	for (auto it=m_KeywordHistory.begin();it!=m_KeywordHistory.end();++it) {
-		if (it->compare(pszKeyword)==0) {
+		if (TVTest::StringUtility::CompareNoCase(*it,pszKeyword)==0) {
 			if (it==m_KeywordHistory.begin())
 				return true;
 			m_KeywordHistory.erase(it);
@@ -908,6 +908,17 @@ bool CEventSearchOptions::AddKeywordHistory(LPCTSTR pszKeyword)
 	if (m_KeywordHistory.size()>(size_t)m_MaxKeywordHistory) {
 		m_KeywordHistory.erase(m_KeywordHistory.begin()+m_MaxKeywordHistory,m_KeywordHistory.end());
 	}
+
+	return true;
+}
+
+
+bool CEventSearchOptions::DeleteKeywordHistory(int Index)
+{
+	if (Index<0 || (size_t)Index>=m_KeywordHistory.size())
+		return false;
+
+	m_KeywordHistory.erase(m_KeywordHistory.begin()+Index);
 
 	return true;
 }
@@ -1291,6 +1302,7 @@ INT_PTR CEventSearchSettingsDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LP
 	switch (uMsg) {
 	case WM_INITDIALOG:
 		AddControl(IDC_EVENTSEARCH_KEYWORD,ALIGN_HORZ);
+		AddControl(IDC_EVENTSEARCH_KEYWORDMENU,ALIGN_RIGHT);
 		AddControl(IDC_EVENTSEARCH_SETTINGSLIST,ALIGN_HORZ);
 		AddControl(IDC_EVENTSEARCH_SETTINGSLIST_SAVE,ALIGN_RIGHT);
 		AddControl(IDC_EVENTSEARCH_SETTINGSLIST_DELETE,ALIGN_RIGHT);
@@ -1542,6 +1554,52 @@ INT_PTR CEventSearchSettingsDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LP
 					}
 				}
 			}
+			return TRUE;
+
+		case IDC_EVENTSEARCH_KEYWORDMENU:
+			{
+				CPopupMenu Menu(GetAppClass().GetResourceInstance(),
+								MAKEINTRESOURCE(IDM_EVENTSEARCHKEYWORD));
+				TCHAR szKeyword[CEventSearchSettings::MAX_KEYWORD_LENGTH];
+				RECT rc;
+				POINT pt;
+
+				::GetDlgItemText(hDlg,IDC_EVENTSEARCH_KEYWORD,szKeyword,lengthof(szKeyword));
+				Menu.EnableItem(IDC_EVENTSEARCH_DELETEKEYWORD,
+					szKeyword[0]!=_T('\0') &&
+						DlgComboBox_FindStringExact(hDlg,IDC_EVENTSEARCH_KEYWORD,-1,szKeyword)>=0);
+				::GetWindowRect(::GetDlgItem(hDlg,IDC_EVENTSEARCH_KEYWORDMENU),&rc);
+				pt.x=rc.right;
+				pt.y=rc.bottom;
+				Menu.Show(hDlg,&pt,TPM_RIGHTALIGN);
+			}
+			return TRUE;
+
+		case IDC_EVENTSEARCH_DELETEKEYWORD:
+			{
+				int Index=-1;
+
+				if (DlgComboBox_GetDroppedState(hDlg,IDC_EVENTSEARCH_KEYWORD)) {
+					Index=(int)DlgComboBox_GetCurSel(hDlg,IDC_EVENTSEARCH_KEYWORD);
+				} else {
+					TCHAR szKeyword[CEventSearchSettings::MAX_KEYWORD_LENGTH];
+
+					if (::GetDlgItemText(hDlg,IDC_EVENTSEARCH_KEYWORD,szKeyword,lengthof(szKeyword))>0) {
+						Index=(int)DlgComboBox_FindStringExact(hDlg,IDC_EVENTSEARCH_KEYWORD,-1,szKeyword);
+						if (Index>=0)
+							::SetDlgItemText(hDlg,IDC_EVENTSEARCH_KEYWORD,TEXT(""));
+					}
+				}
+				if (Index>=0) {
+					DlgComboBox_DeleteItem(hDlg,IDC_EVENTSEARCH_KEYWORD,Index);
+					m_Options.DeleteKeywordHistory(Index);
+				}
+			}
+			return TRUE;
+
+		case IDC_EVENTSEARCH_CLEARKEYWORDHISTORY:
+			DlgComboBox_Clear(hDlg,IDC_EVENTSEARCH_KEYWORD);
+			m_Options.ClearKeywordHistory();
 			return TRUE;
 		}
 		return TRUE;

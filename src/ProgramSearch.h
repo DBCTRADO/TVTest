@@ -189,6 +189,7 @@ public:
 	int GetKeywordHistoryCount() const;
 	LPCTSTR GetKeywordHistory(int Index) const;
 	bool AddKeywordHistory(LPCTSTR pszKeyword);
+	bool DeleteKeywordHistory(int Index);
 	void ClearKeywordHistory();
 	int GetMaxKeywordHistory() const { return m_MaxKeywordHistory; }
 	bool SetMaxKeywordHistory(int Max);
