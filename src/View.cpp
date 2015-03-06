@@ -649,7 +649,9 @@ bool CDisplayView::HandleMessage(HWND hwnd,UINT Msg,WPARAM wParam,LPARAM lParam,
 
 	switch (Msg) {
 	case WM_RBUTTONDOWN:
+	case WM_RBUTTONUP:
 	case WM_MBUTTONDOWN:
+	case WM_MBUTTONUP:
 	case WM_LBUTTONDBLCLK:
 		m_pEventHandler->OnMouseMessage(Msg,GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam));
 		return true;
