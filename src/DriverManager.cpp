@@ -357,7 +357,7 @@ bool CDriverManager::GetTunerSpec(LPCTSTR pszTunerName,TunerSpec *pSpec) const
 		return false;
 
 	for (auto it=m_TunerSpecList.begin();it!=m_TunerSpecList.end();++it) {
-		if (::PathMatchSpec(it->TunerMask.c_str(),pszName)) {
+		if (::PathMatchSpec(pszName,it->TunerMask.c_str())) {
 			*pSpec=it->Spec;
 			return true;
 		}
