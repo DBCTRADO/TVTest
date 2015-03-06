@@ -14,7 +14,6 @@
 
 
 const LPCTSTR CCaptionPanel::m_pszClassName=APP_NAME TEXT(" Caption Panel");
-const LPCTSTR CCaptionPanel::m_pszPropName=TEXT("CaptionPanel");
 HINSTANCE CCaptionPanel::m_hinst=NULL;
 
 
@@ -45,7 +44,7 @@ CCaptionPanel::CCaptionPanel()
 	: m_BackColor(RGB(0,0,0))
 	, m_TextColor(RGB(255,255,255))
 	, m_hwndEdit(NULL)
-	, m_pOldEditProc(NULL)
+	, m_EditSubclass(this)
 	, m_fEnable(true)
 	, m_fAutoScroll(true)
 	, m_fIgnoreSmall(true)
@@ -193,8 +192,7 @@ LRESULT CCaptionPanel::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam
 				0,0,0,0,hwnd,(HMENU)IDC_EDIT,m_hinst,NULL);
 			Edit_LimitText(m_hwndEdit,8*1024*1024);
 			SetWindowFont(m_hwndEdit,m_Font.GetHandle(),FALSE);
-			::SetProp(m_hwndEdit,m_pszPropName,this);
-			m_pOldEditProc=SubclassWindow(m_hwndEdit,EditWndProc);
+			m_EditSubclass.SetSubclass(m_hwndEdit);
 
 			m_fClearLast=true;
 			m_fContinue=false;
@@ -297,51 +295,11 @@ LRESULT CCaptionPanel::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam
 
 			ClearCaptionList();
 			m_hwndEdit=NULL;
-			m_pOldEditProc=NULL;
 		}
 		return 0;
 	}
 
 	return ::DefWindowProc(hwnd,uMsg,wParam,lParam);
-}
-
-
-LRESULT CALLBACK CCaptionPanel::EditWndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
-{
-	CCaptionPanel *pThis=static_cast<CCaptionPanel*>(::GetProp(hwnd,m_pszPropName));
-
-	if (pThis==NULL)
-		return ::DefWindowProc(hwnd,uMsg,wParam,lParam);
-
-	switch (uMsg) {
-	case WM_RBUTTONDOWN:
-		return 0;
-
-	case WM_RBUTTONUP:
-		{
-			HMENU hmenu=::LoadMenu(GetAppClass().GetResourceInstance(),MAKEINTRESOURCE(IDM_CAPTIONPANEL));
-
-			::CheckMenuItem(hmenu,CM_CAPTIONPANEL_ENABLE,
-							MF_BYCOMMAND | (pThis->m_fEnable?MF_CHECKED:MF_UNCHECKED));
-			::CheckMenuItem(hmenu,CM_CAPTIONPANEL_AUTOSCROLL,
-							MF_BYCOMMAND | (pThis->m_fAutoScroll?MF_CHECKED:MF_UNCHECKED));
-			::CheckMenuItem(hmenu,CM_CAPTIONPANEL_IGNORESMALL,
-							MF_BYCOMMAND | (pThis->m_fIgnoreSmall?MF_CHECKED:MF_UNCHECKED));
-			POINT pt={GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam)};
-			::ClientToScreen(hwnd,&pt);
-			::TrackPopupMenu(::GetSubMenu(hmenu,0),TPM_RIGHTBUTTON,pt.x,pt.y,0,pThis->m_hwnd,NULL);
-			::DestroyMenu(hmenu);
-		}
-		return 0;
-
-	case WM_NCDESTROY:
-		SubclassWindow(hwnd,pThis->m_pOldEditProc);
-		::RemoveProp(hwnd,m_pszPropName);
-		pThis->m_hwndEdit=NULL;
-		break;
-	}
-
-	return ::CallWindowProc(pThis->m_pOldEditProc,hwnd,uMsg,wParam,lParam);
 }
 
 
@@ -433,6 +391,41 @@ void CCaptionPanel::OnCaption(CCaptionDecoder *pDecoder,CCaptionParser *pParser,
 			delete [] pszBuff;
 		}
 	}
+}
+
+
+CCaptionPanel::CEditSubclass::CEditSubclass(CCaptionPanel *pCaptionPanel)
+	: m_pCaptionPanel(pCaptionPanel)
+{
+}
+
+
+LRESULT CCaptionPanel::CEditSubclass::OnMessage(
+	HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
+{
+	switch (uMsg) {
+	case WM_RBUTTONDOWN:
+		return 0;
+
+	case WM_RBUTTONUP:
+		{
+			CPopupMenu Menu(GetAppClass().GetResourceInstance(),MAKEINTRESOURCE(IDM_CAPTIONPANEL));
+
+			Menu.CheckItem(CM_CAPTIONPANEL_ENABLE,m_pCaptionPanel->m_fEnable);
+			Menu.CheckItem(CM_CAPTIONPANEL_AUTOSCROLL,m_pCaptionPanel->m_fAutoScroll);
+			Menu.CheckItem(CM_CAPTIONPANEL_IGNORESMALL,m_pCaptionPanel->m_fIgnoreSmall);
+			POINT pt={GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam)};
+			::ClientToScreen(hwnd,&pt);
+			Menu.Show(m_pCaptionPanel->m_hwnd,&pt,TPM_RIGHTBUTTON);
+		}
+		return 0;
+
+	case WM_NCDESTROY:
+		m_pCaptionPanel->m_hwndEdit=NULL;
+		break;
+	}
+
+	return CWindowSubclass::OnMessage(hwnd,uMsg,wParam,lParam);
 }
 
 

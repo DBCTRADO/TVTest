@@ -63,5 +63,23 @@ protected:
 	unsigned int m_TimerIDs;
 };
 
+class CWindowSubclass
+{
+public:
+	CWindowSubclass();
+	virtual ~CWindowSubclass();
+	bool SetSubclass(HWND hwnd);
+	void RemoveSubclass();
+
+protected:
+	HWND m_hwnd;
+
+	static LRESULT CALLBACK SubclassProc(
+		HWND hWnd,UINT uMsg,WPARAM wParam,LPARAM lParam,
+		UINT_PTR uIdSubclass,DWORD_PTR dwRefData);
+	virtual LRESULT OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam);
+	virtual void OnSubclassRemoved() {}
+};
+
 
 #endif

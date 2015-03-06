@@ -1043,13 +1043,10 @@ static ULONGLONG GetResultMapKey(const CEventInfoData *pEventInfo)
 
 
 
-const LPCTSTR CEventSearchSettingsDialog::m_pszPropName=TEXT("ProgramSearch");
-
 
 CEventSearchSettingsDialog::CEventSearchSettingsDialog(CEventSearchOptions &Options)
 	: m_pEventHandler(NULL)
 	, m_Options(Options)
-	, m_pOldEditProc(NULL)
 {
 	for (int i=0;i<lengthof(m_fGenreExpanded);i++)
 		m_fGenreExpanded[i]=false;
@@ -1319,8 +1316,7 @@ INT_PTR CEventSearchSettingsDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LP
 			COMBOBOXINFO cbi;
 			cbi.cbSize=sizeof(cbi);
 			::GetComboBoxInfo(::GetDlgItem(hDlg,IDC_EVENTSEARCH_KEYWORD),&cbi);
-			m_pOldEditProc=SubclassWindow(cbi.hwndItem,EditProc);
-			::SetProp(cbi.hwndItem,m_pszPropName,m_pOldEditProc);
+			m_KeywordEditSubclass.SetSubclass(cbi.hwndItem);
 		}
 
 		// キーワード検索対象
@@ -1739,13 +1735,9 @@ void CEventSearchSettingsDialog::SetGenreStatus()
 }
 
 
-LRESULT CALLBACK CEventSearchSettingsDialog::EditProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
+LRESULT CEventSearchSettingsDialog::CKeywordEditSubclass::OnMessage(
+	HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 {
-	WNDPROC pOldWndProc=static_cast<WNDPROC>(::GetProp(hwnd,m_pszPropName));
-
-	if (pOldWndProc==NULL)
-		return ::DefWindowProc(hwnd,uMsg,wParam,lParam);
-
 	switch (uMsg) {
 	case WM_GETDLGCODE:
 		if (wParam==VK_RETURN)
@@ -1763,13 +1755,9 @@ LRESULT CALLBACK CEventSearchSettingsDialog::EditProc(HWND hwnd,UINT uMsg,WPARAM
 		if (wParam=='\r' || wParam=='\n')
 			return 0;
 		break;
-
-	case WM_NCDESTROY:
-		::RemoveProp(hwnd,m_pszPropName);
-		break;
 	}
 
-	return ::CallWindowProc(pOldWndProc,hwnd,uMsg,wParam,lParam);
+	return CWindowSubclass::OnMessage(hwnd,uMsg,wParam,lParam);
 }
 
 

@@ -5,6 +5,7 @@
 #include <vector>
 #include "Options.h"
 #include "StatusItems.h"
+#include "WindowUtil.h"
 
 
 class CStatusOptions : public COptions
@@ -41,6 +42,17 @@ private:
 
 	typedef std::vector<StatusItemInfo> StatusItemInfoList;
 
+	class CItemListSubclass : public CWindowSubclass
+	{
+	public:
+		CItemListSubclass(CStatusOptions *pStatusOptions);
+
+	private:
+		LRESULT OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
+
+		CStatusOptions *m_pStatusOptions;
+	};
+
 	CStatusView *m_pStatusView;
 	StatusItemInfoList m_AvailItemList;
 	StatusItemInfoList m_ItemList;
@@ -51,7 +63,7 @@ private:
 	int m_MaxRows;
 
 	LOGFONT m_CurSettingFont;
-	WNDPROC m_pOldListProc;
+	CItemListSubclass m_ItemListSubclass;
 	int m_ItemHeight;
 	int m_TextWidth;
 	TVTest::Style::Margins m_ItemMargin;
@@ -74,9 +86,6 @@ private:
 	bool GetItemPreviewRect(HWND hwndList,int Index,RECT *pRect);
 	bool IsCursorResize(HWND hwndList,int x,int y);
 	void MakeItemList(StatusItemInfoList *pList) const;
-
-	static LRESULT CALLBACK ItemListProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam);
-
 };
 
 

@@ -12,8 +12,6 @@
 #define CM_PROGRAMINFOPREV	1001
 #define CM_PROGRAMINFONEXT	1002
 
-static const LPCTSTR SUBCLASS_PROP_NAME=APP_NAME TEXT("This");
-
 
 
 
@@ -50,7 +48,7 @@ CInformationPanel::CInformationPanel()
 	, m_FontHeight(0)
 
 	, m_hwndProgramInfo(NULL)
-	, m_pOldProgramInfoProc(NULL)
+	, m_ProgramInfoSubclass(this)
 	, m_fUseRichEdit(true)
 	, m_fProgramInfoCursorOverLink(false)
 	, m_HotButton(-1)
@@ -353,8 +351,7 @@ bool CInformationPanel::CreateProgramInfoEdit()
 			0,0,0,0,m_hwnd,reinterpret_cast<HMENU>(IDC_PROGRAMINFO),m_hinst,NULL);
 		if (m_hwndProgramInfo==NULL)
 			return false;
-		::SetProp(m_hwndProgramInfo,SUBCLASS_PROP_NAME,this);
-		m_pOldProgramInfoProc=SubclassWindow(m_hwndProgramInfo,ProgramInfoHookProc);
+		m_ProgramInfoSubclass.SetSubclass(m_hwndProgramInfo);
 	}
 	SetWindowFont(m_hwndProgramInfo,m_Font.GetHandle(),FALSE);
 	UpdateProgramInfoText();
@@ -569,57 +566,6 @@ LRESULT CInformationPanel::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lP
 	}
 
 	return ::DefWindowProc(hwnd,uMsg,wParam,lParam);
-}
-
-
-LRESULT CALLBACK CInformationPanel::ProgramInfoHookProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
-{
-	CInformationPanel *pThis=static_cast<CInformationPanel*>(::GetProp(hwnd,SUBCLASS_PROP_NAME));
-
-	if (pThis==NULL)
-		return ::DefWindowProc(hwnd,uMsg,wParam,lParam);
-
-	switch (uMsg) {
-	case WM_RBUTTONDOWN:
-		return 0;
-
-	case WM_RBUTTONUP:
-		if (!static_cast<const CProgramInfoItem*>(pThis->GetItem(ITEM_PROGRAMINFO))->GetInfoText().empty()) {
-			HMENU hmenu=::CreatePopupMenu();
-			POINT pt;
-			int Command;
-
-			::AppendMenu(hmenu,MFT_STRING | MFS_ENABLED,1,TEXT("コピー(&C)"));
-			::AppendMenu(hmenu,MFT_STRING | MFS_ENABLED,2,TEXT("すべて選択(&A)"));
-
-			::GetCursorPos(&pt);
-			Command=::TrackPopupMenu(hmenu,TPM_RETURNCMD,pt.x,pt.y,0,hwnd,NULL);
-			if (Command==1) {
-				DWORD Start,End;
-
-				::SendMessage(hwnd,WM_SETREDRAW,FALSE,0);
-				::SendMessage(hwnd,EM_GETSEL,(WPARAM)&Start,(LPARAM)&End);
-				if (Start==End)
-					::SendMessage(hwnd,EM_SETSEL,0,-1);
-				::SendMessage(hwnd,WM_COPY,0,0);
-				if (Start==End)
-					::SendMessage(hwnd,EM_SETSEL,Start,End);
-				::SendMessage(hwnd,WM_SETREDRAW,TRUE,0);
-			} else if (Command==2) {
-				::SendMessage(hwnd,EM_SETSEL,0,-1);
-			}
-			::DestroyMenu(hmenu);
-		}
-		return 0;
-
-	case WM_NCDESTROY:
-		SubclassWindow(hwnd,pThis->m_pOldProgramInfoProc);
-		::RemoveProp(hwnd,SUBCLASS_PROP_NAME);
-		pThis->m_hwndProgramInfo=NULL;
-		break;
-	}
-
-	return ::CallWindowProc(pThis->m_pOldProgramInfoProc,hwnd,uMsg,wParam,lParam);
 }
 
 
@@ -906,6 +852,57 @@ bool CInformationPanel::WriteSettings(CSettings &Settings)
 		Settings.Write(pItem->GetName(),pItem->IsVisible());
 	}
 	return true;
+}
+
+
+CInformationPanel::CProgramInfoSubclass::CProgramInfoSubclass(CInformationPanel *pInfoPanel)
+	: m_pInfoPanel(pInfoPanel)
+{
+}
+
+
+LRESULT CInformationPanel::CProgramInfoSubclass::OnMessage(
+	HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
+{
+	switch (uMsg) {
+	case WM_RBUTTONDOWN:
+		return 0;
+
+	case WM_RBUTTONUP:
+		if (!static_cast<const CProgramInfoItem*>(m_pInfoPanel->GetItem(ITEM_PROGRAMINFO))->GetInfoText().empty()) {
+			HMENU hmenu=::CreatePopupMenu();
+			POINT pt;
+			int Command;
+
+			::AppendMenu(hmenu,MFT_STRING | MFS_ENABLED,1,TEXT("コピー(&C)"));
+			::AppendMenu(hmenu,MFT_STRING | MFS_ENABLED,2,TEXT("すべて選択(&A)"));
+
+			::GetCursorPos(&pt);
+			Command=::TrackPopupMenu(hmenu,TPM_RETURNCMD,pt.x,pt.y,0,hwnd,NULL);
+			if (Command==1) {
+				DWORD Start,End;
+
+				::SendMessage(hwnd,WM_SETREDRAW,FALSE,0);
+				::SendMessage(hwnd,EM_GETSEL,(WPARAM)&Start,(LPARAM)&End);
+				if (Start==End)
+					::SendMessage(hwnd,EM_SETSEL,0,-1);
+				::SendMessage(hwnd,WM_COPY,0,0);
+				if (Start==End)
+					::SendMessage(hwnd,EM_SETSEL,Start,End);
+				::SendMessage(hwnd,WM_SETREDRAW,TRUE,0);
+			} else if (Command==2) {
+				::SendMessage(hwnd,EM_SETSEL,0,-1);
+			}
+			::DestroyMenu(hmenu);
+		}
+		return 0;
+
+	case WM_NCDESTROY:
+		m_pInfoPanel->m_hwndProgramInfo=NULL;
+		break;
+	}
+
+	return CWindowSubclass::OnMessage(hwnd,uMsg,wParam,lParam);
 }
 
 

@@ -7,6 +7,7 @@
 #include "Settings.h"
 #include "DrawUtil.h"
 #include "RichEditUtil.h"
+#include "WindowUtil.h"
 
 
 class CInformationPanel
@@ -270,6 +271,17 @@ private:
 		NUM_BUTTONS
 	};
 
+	class CProgramInfoSubclass : public CWindowSubclass
+	{
+	public:
+		CProgramInfoSubclass(CInformationPanel *pInfoPanel);
+
+	private:
+		LRESULT OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
+
+		CInformationPanel *m_pInfoPanel;
+	};
+
 	static const LPCTSTR m_pszClassName;
 	static HINSTANCE m_hinst;
 
@@ -287,15 +299,13 @@ private:
 	DrawUtil::COffscreen m_Offscreen;
 
 	HWND m_hwndProgramInfo;
-	WNDPROC m_pOldProgramInfoProc;
+	CProgramInfoSubclass m_ProgramInfoSubclass;
 	CRichEditUtil m_RichEditUtil;
 	bool m_fUseRichEdit;
 	CRichEditUtil::CharRangeList m_ProgramInfoLinkList;
 	POINT m_ProgramInfoClickPos;
 	bool m_fProgramInfoCursorOverLink;
 	int m_HotButton;
-
-	static LRESULT CALLBACK ProgramInfoHookProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam);
 
 	void UpdateProgramInfoText();
 	bool CreateProgramInfoEdit();

@@ -10,6 +10,7 @@
 #include "RichEditUtil.h"
 #include "RegExp.h"
 #include "Settings.h"
+#include "WindowUtil.h"
 
 
 class CEventSearchServiceList
@@ -240,6 +241,11 @@ public:
 	void SetFocus(int ID);
 
 private:
+	class CKeywordEditSubclass : public CWindowSubclass
+	{
+		LRESULT OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
+	};
+
 // CBasicDialog
 	INT_PTR DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
 
@@ -247,7 +253,6 @@ private:
 	void SetGenreStatus();
 
 	static LRESULT CALLBACK EditProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam);
-	static const LPCTSTR m_pszPropName;
 
 	enum {
 		KEYWORDTARGET_EVENTNAME_AND_EVENTTEXT,
@@ -258,7 +263,7 @@ private:
 	CEventSearchSettings m_SearchSettings;
 	CEventHandler *m_pEventHandler;
 	CEventSearchOptions &m_Options;
-	WNDPROC m_pOldEditProc;
+	CKeywordEditSubclass m_KeywordEditSubclass;
 	bool m_fGenreExpanded[16];
 };
 

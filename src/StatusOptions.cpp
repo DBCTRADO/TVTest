@@ -32,6 +32,7 @@ CStatusOptions::CStatusOptions(CStatusView *pStatusView)
 	, m_fMultiRow(!IS_HD)
 	, m_MaxRows(2)
 
+	, m_ItemListSubclass(this)
 	, m_ItemMargin(3)
 	, m_CheckSize(14,14)
 {
@@ -348,7 +349,7 @@ INT_PTR CStatusOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 			CalcTextWidth(hDlg);
 			SetListHExtent(hDlg);
 
-			m_pOldListProc=SubclassWindow(GetDlgItem(hDlg,IDC_STATUSOPTIONS_ITEMLIST),ItemListProc);
+			m_ItemListSubclass.SetSubclass(::GetDlgItem(hDlg,IDC_STATUSOPTIONS_ITEMLIST));
 
 			m_CurSettingFont=m_lfItemFont;
 			SetFontInfo(hDlg,&m_CurSettingFont);
@@ -518,10 +519,6 @@ INT_PTR CStatusOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 			break;
 		}
 		break;
-
-	case WM_DESTROY:
-		SubclassWindow(GetDlgItem(hDlg,IDC_STATUSOPTIONS_ITEMLIST),m_pOldListProc);
-		return TRUE;
 	}
 
 	return FALSE;
@@ -666,177 +663,6 @@ bool CStatusOptions::IsCursorResize(HWND hwndList,int x,int y)
 }
 
 
-LRESULT CALLBACK CStatusOptions::ItemListProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
-{
-	CStatusOptions *pThis=static_cast<CStatusOptions*>(GetThis(GetParent(hwnd)));
-
-	switch (uMsg) {
-	case WM_LBUTTONDOWN:
-		{
-			int x=GET_X_LPARAM(lParam),y=GET_Y_LPARAM(lParam);
-			int Sel;
-
-			SetFocus(hwnd);
-			Sel=ListBox_GetHitItem(hwnd,x,y);
-			if (Sel>=0) {
-				RECT rc;
-
-				ListBox_GetItemRect(hwnd,Sel,&rc);
-				OffsetRect(&rc,-GetScrollPos(hwnd,SB_HORZ),0);
-				if (x>=rc.left+pThis->m_ItemMargin.Left
-						&& x<rc.left+pThis->m_ItemMargin.Left+pThis->m_CheckSize.Width) {
-					StatusItemInfo *pItemInfo=reinterpret_cast<StatusItemInfo*>(ListBox_GetItemData(hwnd,Sel));
-					RECT rc;
-
-					pItemInfo->fVisible=!pItemInfo->fVisible;
-					ListBox_GetItemRect(hwnd,Sel,&rc);
-					InvalidateRect(hwnd,&rc,TRUE);
-				} else {
-					if (ListBox_GetCurSel(hwnd)!=Sel)
-						ListBox_SetCurSel(hwnd,Sel);
-					SetCapture(hwnd);
-					pThis->m_fDragResize=pThis->IsCursorResize(hwnd,x,y);
-				}
-			}
-		}
-		return 0;
-
-	case WM_LBUTTONUP:
-		if (GetCapture()==hwnd)
-			ReleaseCapture();
-		return 0;
-
-	case WM_CAPTURECHANGED:
-		if (pThis->m_DragTimerID!=0) {
-			KillTimer(hwnd,pThis->m_DragTimerID);
-			pThis->m_DragTimerID=0;
-		}
-		if (pThis->m_DropInsertPos>=0) {
-			int From=ListBox_GetCurSel(hwnd),To;
-
-			pThis->DrawInsertMark(hwnd,pThis->m_DropInsertPos);
-			To=pThis->m_DropInsertPos;
-			if (To>From)
-				To--;
-			SetWindowRedraw(hwnd,FALSE);
-			ListBox_MoveItem(hwnd,From,To);
-			SetWindowRedraw(hwnd,TRUE);
-			pThis->m_DropInsertPos=-1;
-		}
-		return 0;
-
-	case WM_MOUSEMOVE:
-		if (GetCapture()==hwnd) {
-			int y=GET_Y_LPARAM(lParam);
-			RECT rc;
-
-			GetClientRect(hwnd,&rc);
-			if (pThis->m_fDragResize) {
-				int x=GET_X_LPARAM(lParam);
-				int Sel=ListBox_GetCurSel(hwnd);
-				RECT rc;
-
-				if (pThis->GetItemPreviewRect(hwnd,Sel,&rc)) {
-					StatusItemInfo *pItemInfo=reinterpret_cast<StatusItemInfo*>(ListBox_GetItemData(hwnd,Sel));
-					int Width=(x-rc.left)-pThis->m_pStatusView->GetItemPadding().Horz();
-					const CStatusItem *pItem=pThis->m_pStatusView->GetItemByID(pItemInfo->ID);
-					int MinWidth=pItem->GetMinWidth();
-					int MaxWidth=pItem->GetMaxWidth();
-
-					if (Width<MinWidth)
-						Width=MinWidth;
-					else if (MaxWidth>0 && Width>MaxWidth)
-						Width=MaxWidth;
-					pItemInfo->Width=Width;
-					ListBox_GetItemRect(hwnd,Sel,&rc);
-					InvalidateRect(hwnd,&rc,TRUE);
-					pThis->SetListHExtent(GetParent(hwnd));
-				}
-			} else if (y>=0 && y<rc.bottom) {
-				int Insert,Count,Sel;
-
-				if (pThis->m_DragTimerID!=0) {
-					KillTimer(hwnd,pThis->m_DragTimerID);
-					pThis->m_DragTimerID=0;
-				}
-				Insert=ListBox_GetTopIndex(hwnd)+
-								(y+pThis->m_ItemHeight/2)/pThis->m_ItemHeight;
-				Count=ListBox_GetCount(hwnd);
-				if (Insert>Count) {
-					Insert=Count;
-				} else {
-					Sel=ListBox_GetCurSel(hwnd);
-					if (Insert==Sel || Insert==Sel+1)
-						Insert=-1;
-				}
-				if (pThis->m_DropInsertPos>=0)
-					pThis->DrawInsertMark(hwnd,pThis->m_DropInsertPos);
-				pThis->m_DropInsertPos=Insert;
-				if (pThis->m_DropInsertPos>=0)
-					pThis->DrawInsertMark(hwnd,pThis->m_DropInsertPos);
-				SetCursor(LoadCursor(NULL,IDC_ARROW));
-			} else {
-				UINT TimerID;
-
-				if (pThis->m_DropInsertPos>=0) {
-					pThis->DrawInsertMark(hwnd,pThis->m_DropInsertPos);
-					pThis->m_DropInsertPos=-1;
-				}
-				if (y<0)
-					TimerID=TIMER_ID_UP;
-				else
-					TimerID=TIMER_ID_DOWN;
-				if (TimerID!=pThis->m_DragTimerID) {
-					if (pThis->m_DragTimerID!=0)
-						KillTimer(hwnd,pThis->m_DragTimerID);
-					pThis->m_DragTimerID=(UINT)SetTimer(hwnd,TimerID,100,NULL);
-				}
-				SetCursor(LoadCursor(NULL,IDC_NO));
-			}
-		} else {
-			int x=GET_X_LPARAM(lParam),y=GET_Y_LPARAM(lParam);
-
-			SetCursor(LoadCursor(NULL,pThis->IsCursorResize(hwnd,x,y)?IDC_SIZEWE:IDC_ARROW));
-		}
-		return 0;
-
-	case WM_RBUTTONDOWN:
-		if (GetCapture()==hwnd) {
-			ReleaseCapture();
-			if (pThis->m_DragTimerID!=0) {
-				KillTimer(hwnd,pThis->m_DragTimerID);
-				pThis->m_DragTimerID=0;
-			}
-			if (pThis->m_DropInsertPos>=0) {
-				pThis->DrawInsertMark(hwnd,pThis->m_DropInsertPos);
-				pThis->m_DropInsertPos=-1;
-			}
-		}
-		return 0;
-
-	case WM_TIMER:
-		{
-			int Pos;
-
-			Pos=ListBox_GetTopIndex(hwnd);
-			if (wParam==TIMER_ID_UP) {
-				if (Pos>0)
-					Pos--;
-			} else
-				Pos++;
-			ListBox_SetTopIndex(hwnd,Pos);
-		}
-		return 0;
-
-	case WM_SETCURSOR:
-		if (LOWORD(lParam)==HTCLIENT)
-			return TRUE;
-		break;
-	}
-	return CallWindowProc(pThis->m_pOldListProc,hwnd,uMsg,wParam,lParam);
-}
-
-
 void CStatusOptions::MakeItemList(StatusItemInfoList *pList) const
 {
 	pList->clear();
@@ -865,4 +691,181 @@ void CStatusOptions::MakeItemList(StatusItemInfoList *pList) const
 			}
 		}
 	}
+}
+
+
+CStatusOptions::CItemListSubclass::CItemListSubclass(CStatusOptions *pStatusOptions)
+	: m_pStatusOptions(pStatusOptions)
+{
+}
+
+
+LRESULT CStatusOptions::CItemListSubclass::OnMessage(
+	HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
+{
+	switch (uMsg) {
+	case WM_LBUTTONDOWN:
+		{
+			int x=GET_X_LPARAM(lParam),y=GET_Y_LPARAM(lParam);
+			int Sel;
+
+			SetFocus(hwnd);
+			Sel=ListBox_GetHitItem(hwnd,x,y);
+			if (Sel>=0) {
+				RECT rc;
+
+				ListBox_GetItemRect(hwnd,Sel,&rc);
+				OffsetRect(&rc,-GetScrollPos(hwnd,SB_HORZ),0);
+				if (x>=rc.left+m_pStatusOptions->m_ItemMargin.Left
+						&& x<rc.left+m_pStatusOptions->m_ItemMargin.Left+m_pStatusOptions->m_CheckSize.Width) {
+					StatusItemInfo *pItemInfo=reinterpret_cast<StatusItemInfo*>(ListBox_GetItemData(hwnd,Sel));
+					RECT rc;
+
+					pItemInfo->fVisible=!pItemInfo->fVisible;
+					ListBox_GetItemRect(hwnd,Sel,&rc);
+					InvalidateRect(hwnd,&rc,TRUE);
+				} else {
+					if (ListBox_GetCurSel(hwnd)!=Sel)
+						ListBox_SetCurSel(hwnd,Sel);
+					SetCapture(hwnd);
+					m_pStatusOptions->m_fDragResize=m_pStatusOptions->IsCursorResize(hwnd,x,y);
+				}
+			}
+		}
+		return 0;
+
+	case WM_LBUTTONUP:
+		if (GetCapture()==hwnd)
+			ReleaseCapture();
+		return 0;
+
+	case WM_CAPTURECHANGED:
+		if (m_pStatusOptions->m_DragTimerID!=0) {
+			KillTimer(hwnd,m_pStatusOptions->m_DragTimerID);
+			m_pStatusOptions->m_DragTimerID=0;
+		}
+		if (m_pStatusOptions->m_DropInsertPos>=0) {
+			int From=ListBox_GetCurSel(hwnd),To;
+
+			m_pStatusOptions->DrawInsertMark(hwnd,m_pStatusOptions->m_DropInsertPos);
+			To=m_pStatusOptions->m_DropInsertPos;
+			if (To>From)
+				To--;
+			SetWindowRedraw(hwnd,FALSE);
+			ListBox_MoveItem(hwnd,From,To);
+			SetWindowRedraw(hwnd,TRUE);
+			m_pStatusOptions->m_DropInsertPos=-1;
+		}
+		return 0;
+
+	case WM_MOUSEMOVE:
+		if (GetCapture()==hwnd) {
+			int y=GET_Y_LPARAM(lParam);
+			RECT rc;
+
+			GetClientRect(hwnd,&rc);
+			if (m_pStatusOptions->m_fDragResize) {
+				int x=GET_X_LPARAM(lParam);
+				int Sel=ListBox_GetCurSel(hwnd);
+				RECT rc;
+
+				if (m_pStatusOptions->GetItemPreviewRect(hwnd,Sel,&rc)) {
+					StatusItemInfo *pItemInfo=reinterpret_cast<StatusItemInfo*>(ListBox_GetItemData(hwnd,Sel));
+					int Width=(x-rc.left)-m_pStatusOptions->m_pStatusView->GetItemPadding().Horz();
+					const CStatusItem *pItem=m_pStatusOptions->m_pStatusView->GetItemByID(pItemInfo->ID);
+					int MinWidth=pItem->GetMinWidth();
+					int MaxWidth=pItem->GetMaxWidth();
+
+					if (Width<MinWidth)
+						Width=MinWidth;
+					else if (MaxWidth>0 && Width>MaxWidth)
+						Width=MaxWidth;
+					pItemInfo->Width=Width;
+					ListBox_GetItemRect(hwnd,Sel,&rc);
+					InvalidateRect(hwnd,&rc,TRUE);
+					m_pStatusOptions->SetListHExtent(GetParent(hwnd));
+				}
+			} else if (y>=0 && y<rc.bottom) {
+				int Insert,Count,Sel;
+
+				if (m_pStatusOptions->m_DragTimerID!=0) {
+					KillTimer(hwnd,m_pStatusOptions->m_DragTimerID);
+					m_pStatusOptions->m_DragTimerID=0;
+				}
+				Insert=ListBox_GetTopIndex(hwnd)+
+								(y+m_pStatusOptions->m_ItemHeight/2)/m_pStatusOptions->m_ItemHeight;
+				Count=ListBox_GetCount(hwnd);
+				if (Insert>Count) {
+					Insert=Count;
+				} else {
+					Sel=ListBox_GetCurSel(hwnd);
+					if (Insert==Sel || Insert==Sel+1)
+						Insert=-1;
+				}
+				if (m_pStatusOptions->m_DropInsertPos>=0)
+					m_pStatusOptions->DrawInsertMark(hwnd,m_pStatusOptions->m_DropInsertPos);
+				m_pStatusOptions->m_DropInsertPos=Insert;
+				if (m_pStatusOptions->m_DropInsertPos>=0)
+					m_pStatusOptions->DrawInsertMark(hwnd,m_pStatusOptions->m_DropInsertPos);
+				SetCursor(LoadCursor(NULL,IDC_ARROW));
+			} else {
+				UINT TimerID;
+
+				if (m_pStatusOptions->m_DropInsertPos>=0) {
+					m_pStatusOptions->DrawInsertMark(hwnd,m_pStatusOptions->m_DropInsertPos);
+					m_pStatusOptions->m_DropInsertPos=-1;
+				}
+				if (y<0)
+					TimerID=TIMER_ID_UP;
+				else
+					TimerID=TIMER_ID_DOWN;
+				if (TimerID!=m_pStatusOptions->m_DragTimerID) {
+					if (m_pStatusOptions->m_DragTimerID!=0)
+						KillTimer(hwnd,m_pStatusOptions->m_DragTimerID);
+					m_pStatusOptions->m_DragTimerID=(UINT)SetTimer(hwnd,TimerID,100,NULL);
+				}
+				SetCursor(LoadCursor(NULL,IDC_NO));
+			}
+		} else {
+			int x=GET_X_LPARAM(lParam),y=GET_Y_LPARAM(lParam);
+
+			SetCursor(LoadCursor(NULL,m_pStatusOptions->IsCursorResize(hwnd,x,y)?IDC_SIZEWE:IDC_ARROW));
+		}
+		return 0;
+
+	case WM_RBUTTONDOWN:
+		if (GetCapture()==hwnd) {
+			ReleaseCapture();
+			if (m_pStatusOptions->m_DragTimerID!=0) {
+				KillTimer(hwnd,m_pStatusOptions->m_DragTimerID);
+				m_pStatusOptions->m_DragTimerID=0;
+			}
+			if (m_pStatusOptions->m_DropInsertPos>=0) {
+				m_pStatusOptions->DrawInsertMark(hwnd,m_pStatusOptions->m_DropInsertPos);
+				m_pStatusOptions->m_DropInsertPos=-1;
+			}
+		}
+		return 0;
+
+	case WM_TIMER:
+		{
+			int Pos;
+
+			Pos=ListBox_GetTopIndex(hwnd);
+			if (wParam==TIMER_ID_UP) {
+				if (Pos>0)
+					Pos--;
+			} else
+				Pos++;
+			ListBox_SetTopIndex(hwnd,Pos);
+		}
+		return 0;
+
+	case WM_SETCURSOR:
+		if (LOWORD(lParam)==HTCLIENT)
+			return TRUE;
+		break;
+	}
+
+	return CWindowSubclass::OnMessage(hwnd,uMsg,wParam,lParam);
 }

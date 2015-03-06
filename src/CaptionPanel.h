@@ -8,6 +8,7 @@
 #include "PanelForm.h"
 #include "UIBase.h"
 #include "DrawUtil.h"
+#include "WindowUtil.h"
 
 
 class CCaptionDRCSMap : public CCaptionDecoder::IDRCSMap
@@ -68,12 +69,23 @@ public:
 	static bool Initialize(HINSTANCE hinst);
 
 private:
+	class CEditSubclass : public CWindowSubclass
+	{
+	public:
+		CEditSubclass(CCaptionPanel *pCaptionPanel);
+
+	private:
+		LRESULT OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
+
+		CCaptionPanel *m_pCaptionPanel;
+	};
+
 	COLORREF m_BackColor;
 	COLORREF m_TextColor;
 	DrawUtil::CBrush m_BackBrush;
 	DrawUtil::CFont m_Font;
 	HWND m_hwndEdit;
-	WNDPROC m_pOldEditProc;
+	CEditSubclass m_EditSubclass;
 	bool m_fEnable;
 	bool m_fAutoScroll;
 	bool m_fIgnoreSmall;
@@ -96,10 +108,7 @@ private:
 	void AppendText(LPCTSTR pszText);
 
 	static const LPCTSTR m_pszClassName;
-	static const LPCTSTR m_pszPropName;
 	static HINSTANCE m_hinst;
-
-	static LRESULT CALLBACK EditWndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam);
 
 // CCustomWindow
 	LRESULT OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam) override;

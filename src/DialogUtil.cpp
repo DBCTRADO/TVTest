@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "TVTest.h"
 #include "DialogUtil.h"
+#include "WindowUtil.h"
 #include "Common/DebugDef.h"
 
 
@@ -377,12 +378,14 @@ bool PopupMenuFromControls(HWND hDlg,const int *pIDList,int IDListLength,
 }
 
 
-static LRESULT CALLBACK ListBoxHookProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
+class CListBoxSubclass : public CWindowSubclass
 {
-	WNDPROC pOldWndProc=static_cast<WNDPROC>(GetProp(hwnd,TEXT("ExListBox")));
+	LRESULT OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
+	void OnSubclassRemoved() override { delete this; }
+};
 
-	if (pOldWndProc==NULL)
-		return DefWindowProc(hwnd,uMsg,wParam,lParam);
+LRESULT CListBoxSubclass::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
+{
 	switch (uMsg) {
 	case WM_RBUTTONDOWN:
 		{
@@ -419,21 +422,22 @@ static LRESULT CALLBACK ListBoxHookProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM
 					MAKEWPARAM(GetWindowID(hwnd),LBN_EX_RBUTTONUP),
 					reinterpret_cast<LPARAM>(hwnd));
 		return 0;
-
-	case WM_NCDESTROY:
-		CallWindowProc(pOldWndProc,hwnd,uMsg,wParam,lParam);
-		RemoveProp(hwnd,TEXT("ExListBox"));
-		return 0;
 	}
-	return CallWindowProc(pOldWndProc,hwnd,uMsg,wParam,lParam);
+
+	return CWindowSubclass::OnMessage(hwnd,uMsg,wParam,lParam);
 }
 
 bool ExtendListBox(HWND hwndList,unsigned int Flags)
 {
-	WNDPROC pOldProc;
+	if (hwndList==NULL)
+		return false;
 
-	pOldProc=SubclassWindow(hwndList,ListBoxHookProc);
-	SetProp(hwndList,TEXT("ExListBox"),pOldProc);
+	CListBoxSubclass *pSubclass=new CListBoxSubclass;
+	if (!pSubclass->SetSubclass(hwndList)) {
+		delete pSubclass;
+		return false;
+	}
+
 	return true;
 }
 
