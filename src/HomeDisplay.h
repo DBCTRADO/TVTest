@@ -26,12 +26,10 @@ public:
 		TVTest::Theme::Style ItemStyle[2];
 		TVTest::Theme::Style ItemHotStyle;
 		COLORREF BannerTextColor;
-		TVTest::Style::Margins ContentMargins;
 		int FontHeight;
 		TVTest::Style::Margins ItemMargins;
 		TVTest::Style::Margins CategoryItemMargins;
 		TVTest::Style::IntValue CategoryIconMargin;
-		TVTest::Style::Margins CategoriesMargins;
 	};
 
 	class ABSTRACT_CLASS(CHomeDisplayEventHandler) : public CDisplayView::CEventHandler
@@ -115,7 +113,7 @@ private:
 
 	DrawUtil::CFont m_Font;
 	bool m_fAutoFontSize;
-	StyleInfo m_Style;
+	StyleInfo m_HomeDisplayStyle;
 	int m_CategoriesAreaWidth;
 	int m_CategoryItemWidth;
 	int m_CategoryItemHeight;

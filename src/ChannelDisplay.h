@@ -38,6 +38,10 @@ public:
 // CBasicWindow
 	bool Create(HWND hwndParent,DWORD Style,DWORD ExStyle=0,int ID=0) override;
 
+// CUIBase
+	void SetStyle(const TVTest::Style::CStyleManager *pStyleManager) override;
+	void NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager) override;
+
 // CDisplayView
 	bool Close() override;
 	bool IsMessageNeed(const MSG *pMsg) const override;
@@ -95,6 +99,21 @@ private:
 		TVTest::CIcon m_Icon;
 	};
 
+	struct ChannelDisplayStyle
+	{
+		TVTest::Style::Margins TunerItemPadding;
+		TVTest::Style::Size TunerIconSize;
+		TVTest::Style::Margins ChannelItemPadding;
+		TVTest::Style::IntValue ChannelEventMargin;
+		TVTest::Style::Margins ClockPadding;
+		TVTest::Style::Margins ClockMargin;
+
+		ChannelDisplayStyle();
+		void SetStyle(const TVTest::Style::CStyleManager *pStyleManager);
+		void NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager);
+	};
+
+	ChannelDisplayStyle m_ChannelDisplayStyle;
 	TVTest::Theme::BackgroundStyle m_TunerAreaBackStyle;
 	TVTest::Theme::BackgroundStyle m_ChannelAreaBackStyle;
 	TVTest::Theme::Style m_TunerItemStyle;
@@ -168,6 +187,7 @@ private:
 	void DrawClock(HDC hdc) const;
 	void NotifyTunerSelect() const;
 	void NotifyChannelSelect() const;
+
 // CCustomWindow
 	LRESULT OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
 };

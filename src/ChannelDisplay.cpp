@@ -77,6 +77,20 @@ bool CChannelDisplay::Create(HWND hwndParent,DWORD Style,DWORD ExStyle,int ID)
 }
 
 
+void CChannelDisplay::SetStyle(const TVTest::Style::CStyleManager *pStyleManager)
+{
+	CDisplayView::SetStyle(pStyleManager);
+	m_ChannelDisplayStyle.SetStyle(pStyleManager);
+}
+
+
+void CChannelDisplay::NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager)
+{
+	CDisplayView::NormalizeStyle(pStyleManager);
+	m_ChannelDisplayStyle.NormalizeStyle(pStyleManager);
+}
+
+
 bool CChannelDisplay::Close()
 {
 	if (m_pChannelDisplayEventHandler!=NULL) {
@@ -326,16 +340,19 @@ void CChannelDisplay::Layout()
 	HFONT hfontOld=SelectFont(hdc,m_Font.GetHandle());
 	m_FontHeight=m_Font.GetHeight(hdc);
 
-	m_TunerItemWidth=m_FontHeight*10;
-	m_TunerItemHeight=max(32,m_FontHeight)+8;
-	m_VisibleTunerItems=(rc.bottom-32*2)/m_TunerItemHeight;
+	m_TunerItemWidth=m_FontHeight*10+m_ChannelDisplayStyle.TunerItemPadding.Horz();
+	m_TunerItemHeight=max(m_ChannelDisplayStyle.TunerIconSize.Height,m_FontHeight)+
+		m_ChannelDisplayStyle.TunerItemPadding.Vert();
+	int CategoriesHeight=rc.bottom-m_Style.CategoriesMargin.Vert();
+	m_VisibleTunerItems=CategoriesHeight/m_TunerItemHeight;
 	if (m_VisibleTunerItems<1)
 		m_VisibleTunerItems=1;
 	else if (m_VisibleTunerItems>m_TotalTuningSpaces)
 		m_VisibleTunerItems=m_TotalTuningSpaces;
-	m_TunerItemLeft=8;
-	m_TunerItemTop=max((rc.bottom-m_VisibleTunerItems*m_TunerItemHeight)/2,0);
-	m_TunerAreaWidth=m_TunerItemLeft+m_TunerItemWidth+8;
+	m_TunerItemLeft=m_Style.CategoriesMargin.Left;
+	m_TunerItemTop=m_Style.CategoriesMargin.Top+
+		max((CategoriesHeight-m_VisibleTunerItems*m_TunerItemHeight)/2,0);
+	m_TunerAreaWidth=m_TunerItemLeft+m_TunerItemWidth+m_Style.CategoriesMargin.Right;
 	int ScrollWidth=::GetSystemMetrics(SM_CXVSCROLL);
 	if (m_TotalTuningSpaces>m_VisibleTunerItems) {
 		SCROLLINFO si;
@@ -379,15 +396,22 @@ void CChannelDisplay::Layout()
 			}
 		}
 	}
-	m_ChannelNameWidth+=8*2;
-	m_ChannelItemLeft=m_TunerAreaWidth+8;
-	m_ChannelItemWidth=max(rc.right-m_ChannelItemLeft-8,m_ChannelNameWidth+80);
-	m_ChannelItemHeight=m_FontHeight*2;
-	m_VisibleChannelItems=max((rc.bottom-16*2-m_FontHeight)/m_ChannelItemHeight,1);
+	m_ChannelItemLeft=m_TunerAreaWidth+m_Style.ContentMargin.Left;
+	m_ChannelItemWidth=max(
+		rc.right-m_ChannelItemLeft-m_Style.ContentMargin.Right,
+		m_ChannelNameWidth+m_ChannelDisplayStyle.ChannelItemPadding.Horz()+
+			m_ChannelDisplayStyle.ChannelEventMargin+m_FontHeight*8);
+	m_ChannelItemHeight=m_FontHeight*2+m_ChannelDisplayStyle.ChannelItemPadding.Vert();
+	int ContentTop=m_FontHeight+
+		m_ChannelDisplayStyle.ClockPadding.Vert()+
+		m_ChannelDisplayStyle.ClockMargin.Vert();
+	if (ContentTop<m_Style.ContentMargin.Top)
+		ContentTop=m_Style.ContentMargin.Top;
+	int ContentHeight=rc.bottom-m_Style.ContentMargin.Bottom-ContentTop;
+	m_VisibleChannelItems=max(ContentHeight/m_ChannelItemHeight,1);
 	if (m_VisibleChannelItems>NumChannels)
 		m_VisibleChannelItems=NumChannels;
-	m_ChannelItemTop=8+m_FontHeight;
-	m_ChannelItemTop+=max((rc.bottom-m_ChannelItemTop-m_VisibleChannelItems*m_ChannelItemHeight)/2,8);
+	m_ChannelItemTop=ContentTop+max((ContentHeight-m_VisibleChannelItems*m_ChannelItemHeight)/2,0);
 	if (NumChannels>m_VisibleChannelItems) {
 		SCROLLINFO si;
 
@@ -717,6 +741,7 @@ void CChannelDisplay::Draw(HDC hdc,const RECT *pPaintRect)
 		rc.right=m_TunerAreaWidth;
 		rc.bottom=rcClient.bottom;
 		TVTest::Theme::Draw(hdc,rc,m_TunerAreaBackStyle);
+
 		int TunerIndex=0;
 		for (size_t i=0;i<m_TunerList.size();i++) {
 			const CTuner *pTuner=m_TunerList[i];
@@ -733,12 +758,15 @@ void CChannelDisplay::Draw(HDC hdc,const RECT *pPaintRect)
 					}
 					GetTunerItemRect(TunerIndex,&rc);
 					TVTest::Theme::Draw(hdc,rc,pStyle->Back);
+					TVTest::Style::Subtract(&rc,m_ChannelDisplayStyle.TunerItemPadding);
 					if (pTuner->GetIcon()!=NULL) {
 						::DrawIconEx(hdc,
-									 rc.left+8,
-									 rc.top+((rc.bottom-rc.top)-32)/2,
+									 rc.left,
+									 rc.top+((rc.bottom-rc.top)-m_ChannelDisplayStyle.TunerIconSize.Height)/2,
 									 pTuner->GetIcon(),
-									 32,32,0,NULL,DI_NORMAL);
+									 m_ChannelDisplayStyle.TunerIconSize.Width,
+									 m_ChannelDisplayStyle.TunerIconSize.Height,
+									 0,NULL,DI_NORMAL);
 					}
 					if (!IsStringEmpty(pTuner->GetDisplayName())) {
 						::lstrcpyn(szText,pTuner->GetDisplayName(),lengthof(szText));
@@ -772,7 +800,9 @@ void CChannelDisplay::Draw(HDC hdc,const RECT *pPaintRect)
 		rc.right=rcClient.right;
 		rc.bottom=rcClient.bottom;
 		TVTest::Theme::Draw(hdc,rc,m_ChannelAreaBackStyle);
+
 		DrawClock(hdc);
+
 		if (m_CurTuner>=0) {
 			const CTuningSpaceInfo *pTuningSpace=GetTuningSpaceInfo(m_CurTuner);
 
@@ -789,9 +819,9 @@ void CChannelDisplay::Draw(HDC hdc,const RECT *pPaintRect)
 					RECT rcItem;
 					GetChannelItemRect(i,&rcItem);
 					TVTest::Theme::Draw(hdc,rcItem,pStyle->Back);
+					TVTest::Style::Subtract(&rcItem,m_ChannelDisplayStyle.ChannelItemPadding);
 					rc=rcItem;
 					rc.right=rc.left+m_ChannelNameWidth;
-					rc.left+=8;
 					if (pChannel->HasLogo()) {
 						int LogoWidth,LogoHeight;
 						LogoHeight=min(m_FontHeight-4,36);
@@ -805,7 +835,7 @@ void CChannelDisplay::Draw(HDC hdc,const RECT *pPaintRect)
 					TVTest::Theme::Draw(hdc,rc,pStyle->Fore,pChannel->GetName(),
 						DT_LEFT | DT_SINGLELINE | DT_VCENTER | DT_NOPREFIX | DT_END_ELLIPSIS);
 					rc=rcItem;
-					rc.left+=m_ChannelNameWidth;
+					rc.left+=m_ChannelNameWidth+m_ChannelDisplayStyle.ChannelEventMargin;
 					rc.bottom=(rc.top+rc.bottom)/2;
 					for (int j=0;j<2;j++) {
 						const CEventInfoData *pEventInfo=pChannel->GetEvent(j);
@@ -851,11 +881,12 @@ void CChannelDisplay::DrawClock(HDC hdc) const
 
 	hfontOld=SelectFont(hdc,m_Font.GetHandle());
 	GetTextExtentPoint32(hdc,TEXT("88:88"),5,&sz);
-	rc.left=m_ChannelItemLeft;
-	rc.top=8;
-	rc.right=rc.left+sz.cx+8;
-	rc.bottom=rc.top+max(m_FontHeight,sz.cy);
+	rc.left=m_ChannelItemLeft+m_ChannelDisplayStyle.ClockMargin.Left;
+	rc.top=m_ChannelDisplayStyle.ClockMargin.Top;
+	rc.right=rc.left+sz.cx+m_ChannelDisplayStyle.ClockPadding.Horz();
+	rc.bottom=rc.top+m_FontHeight+m_ChannelDisplayStyle.ClockPadding.Vert();
 	TVTest::Theme::Draw(hdc,rc,m_ClockStyle.Back);
+	TVTest::Style::Subtract(&rc,m_ChannelDisplayStyle.ClockPadding);
 	OldBkMode=SetBkMode(hdc,TRANSPARENT);
 	::wsprintf(szText,TEXT("%d:%02d"),m_ClockTime.wHour,m_ClockTime.wMinute);
 	TVTest::Theme::Draw(hdc,rc,m_ClockStyle.Fore,szText,
@@ -1289,4 +1320,39 @@ const CEventInfoData *CChannelDisplay::CTuner::CChannel::GetEvent(int Index) con
 	if (m_Event[Index].m_EventName.empty())
 		return NULL;
 	return &m_Event[Index];
+}
+
+
+
+
+CChannelDisplay::ChannelDisplayStyle::ChannelDisplayStyle()
+	: TunerItemPadding(4,4,4,4)
+	, TunerIconSize(32,32)
+	, ChannelItemPadding(8,2,4,2)
+	, ChannelEventMargin(8)
+	, ClockPadding(2)
+	, ClockMargin(6)
+{
+}
+
+
+void CChannelDisplay::ChannelDisplayStyle::SetStyle(const TVTest::Style::CStyleManager *pStyleManager)
+{
+	pStyleManager->Get(TEXT("channel-display.tuner.padding"),&TunerItemPadding);
+	pStyleManager->Get(TEXT("channel-display.tuner.icon"),&TunerIconSize);
+	pStyleManager->Get(TEXT("channel-display.channel.padding"),&ChannelItemPadding);
+	pStyleManager->Get(TEXT("channel-display.channel.event-margin"),&ChannelEventMargin);
+	pStyleManager->Get(TEXT("channel-display.clock.padding"),&ClockPadding);
+	pStyleManager->Get(TEXT("channel-display.clock.margin"),&ClockMargin);
+}
+
+
+void CChannelDisplay::ChannelDisplayStyle::NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager)
+{
+	pStyleManager->ToPixels(&TunerItemPadding);
+	pStyleManager->ToPixels(&TunerIconSize);
+	pStyleManager->ToPixels(&ChannelItemPadding);
+	pStyleManager->ToPixels(&ChannelEventMargin);
+	pStyleManager->ToPixels(&ClockPadding);
+	pStyleManager->ToPixels(&ClockMargin);
 }

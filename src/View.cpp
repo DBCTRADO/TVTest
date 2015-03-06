@@ -516,10 +516,10 @@ bool CDisplayView::GetCloseButtonRect(RECT *pRect) const
 
 	if (!GetClientRect(&rc))
 		return false;
-	pRect->right=rc.right-1;
-	pRect->left=pRect->right-14;
-	pRect->top=1;
-	pRect->bottom=pRect->top+14;
+	pRect->right=rc.right-m_Style.CloseButtonMargin.Right;
+	pRect->left=pRect->right-m_Style.CloseButtonSize.Width;
+	pRect->top=m_Style.CloseButtonMargin.Top;
+	pRect->bottom=pRect->top+m_Style.CloseButtonSize.Height;
 	return true;
 }
 
@@ -678,6 +678,10 @@ CDisplayView::DisplayViewStyle::DisplayViewStyle()
 	: TextSizeRatioHorz(40)
 	, TextSizeRatioVert(24)
 	, TextSizeMin(12)
+	, ContentMargin(8,16,18,16)
+	, CategoriesMargin(8,32,8,32)
+	, CloseButtonSize(14,14)
+	, CloseButtonMargin(2)
 {
 }
 
@@ -691,12 +695,20 @@ void CDisplayView::DisplayViewStyle::SetStyle(const TVTest::Style::CStyleManager
 	if (pStyleManager->Get(TEXT("display.text-size-ratio.vert"),&Value) && Value.Value>0)
 		TextSizeRatioVert=Value;
 	pStyleManager->Get(TEXT("display.text-size-min"),&TextSizeMin);
+	pStyleManager->Get(TEXT("display.content.margin"),&ContentMargin);
+	pStyleManager->Get(TEXT("display.categories.margin"),&CategoriesMargin);
+	pStyleManager->Get(TEXT("display.close-button"),&CloseButtonSize);
+	pStyleManager->Get(TEXT("display.close-button.margin"),&CloseButtonMargin);
 }
 
 
 void CDisplayView::DisplayViewStyle::NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager)
 {
 	pStyleManager->ToPixels(&TextSizeMin);
+	pStyleManager->ToPixels(&ContentMargin);
+	pStyleManager->ToPixels(&CategoriesMargin);
+	pStyleManager->ToPixels(&CloseButtonSize);
+	pStyleManager->ToPixels(&CloseButtonMargin);
 }
 
 

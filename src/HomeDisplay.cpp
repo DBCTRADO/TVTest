@@ -1368,33 +1368,25 @@ CHomeDisplay::CHomeDisplay()
 	, m_ScrollPos(0)
 	, m_himlIcons(NULL)
 {
-	GetBackgroundStyle(BACKGROUND_STYLE_CATEGORIES,&m_Style.CategoriesBackStyle);
-	GetBackgroundStyle(BACKGROUND_STYLE_CONTENT,&m_Style.ContentBackStyle);
-	GetItemStyle(ITEM_STYLE_NORMAL,&m_Style.CategoryItemStyle);
-	GetItemStyle(ITEM_STYLE_SELECTED,&m_Style.CategoryItemSelStyle);
-	GetItemStyle(ITEM_STYLE_CURRENT,&m_Style.CategoryItemCurStyle);
-	GetItemStyle(ITEM_STYLE_NORMAL_1,&m_Style.ItemStyle[0]);
-	GetItemStyle(ITEM_STYLE_NORMAL_2,&m_Style.ItemStyle[1]);
-	GetItemStyle(ITEM_STYLE_HOT,&m_Style.ItemHotStyle);
-	m_Style.BannerTextColor=RGB(255,255,255);
+	GetBackgroundStyle(BACKGROUND_STYLE_CATEGORIES,&m_HomeDisplayStyle.CategoriesBackStyle);
+	GetBackgroundStyle(BACKGROUND_STYLE_CONTENT,&m_HomeDisplayStyle.ContentBackStyle);
+	GetItemStyle(ITEM_STYLE_NORMAL,&m_HomeDisplayStyle.CategoryItemStyle);
+	GetItemStyle(ITEM_STYLE_SELECTED,&m_HomeDisplayStyle.CategoryItemSelStyle);
+	GetItemStyle(ITEM_STYLE_CURRENT,&m_HomeDisplayStyle.CategoryItemCurStyle);
+	GetItemStyle(ITEM_STYLE_NORMAL_1,&m_HomeDisplayStyle.ItemStyle[0]);
+	GetItemStyle(ITEM_STYLE_NORMAL_2,&m_HomeDisplayStyle.ItemStyle[1]);
+	GetItemStyle(ITEM_STYLE_HOT,&m_HomeDisplayStyle.ItemHotStyle);
+	m_HomeDisplayStyle.BannerTextColor=RGB(255,255,255);
 
-	m_Style.ContentMargins.Left=16;
-	m_Style.ContentMargins.Top=16;
-	m_Style.ContentMargins.Right=32;
-	m_Style.ContentMargins.Bottom=16;
-	m_Style.ItemMargins.Left=4;
-	m_Style.ItemMargins.Top=2;
-	m_Style.ItemMargins.Right=4;
-	m_Style.ItemMargins.Bottom=2;
-	m_Style.CategoryItemMargins.Left=4;
-	m_Style.CategoryItemMargins.Top=4;
-	m_Style.CategoryItemMargins.Right=6;
-	m_Style.CategoryItemMargins.Bottom=4;
-	m_Style.CategoryIconMargin=6;
-	m_Style.CategoriesMargins.Left=8;
-	m_Style.CategoriesMargins.Top=16;
-	m_Style.CategoriesMargins.Right=8;
-	m_Style.CategoriesMargins.Bottom=16;
+	m_HomeDisplayStyle.ItemMargins.Left=4;
+	m_HomeDisplayStyle.ItemMargins.Top=2;
+	m_HomeDisplayStyle.ItemMargins.Right=4;
+	m_HomeDisplayStyle.ItemMargins.Bottom=2;
+	m_HomeDisplayStyle.CategoryItemMargins.Left=4;
+	m_HomeDisplayStyle.CategoryItemMargins.Top=4;
+	m_HomeDisplayStyle.CategoryItemMargins.Right=6;
+	m_HomeDisplayStyle.CategoryItemMargins.Bottom=4;
+	m_HomeDisplayStyle.CategoryIconMargin=6;
 
 	m_CategoryList.reserve(3);
 	m_CategoryList.push_back(new CFavoritesCategory(this));
@@ -1453,7 +1445,7 @@ bool CHomeDisplay::OnMouseWheel(UINT Msg,WPARAM wParam,LPARAM lParam)
 {
 	if (Msg==WM_MOUSEWHEEL && m_hwnd!=NULL) {
 		int Delta=m_MouseWheel.OnMouseWheel(wParam,
-			m_Style.FontHeight*m_MouseWheel.GetDefaultScrollLines());
+			m_HomeDisplayStyle.FontHeight*m_MouseWheel.GetDefaultScrollLines());
 		if (Delta!=0)
 			SetScrollPos(m_ScrollPos-Delta,true);
 		return true;
@@ -1981,27 +1973,27 @@ void CHomeDisplay::Draw(HDC hdc,const RECT &PaintRect)
 	if (PaintRect.left<m_CategoriesAreaWidth) {
 		RECT rcCategories=rcClient;
 		rcCategories.right=m_CategoriesAreaWidth;
-		TVTest::Theme::Draw(hdc,rcCategories,m_Style.CategoriesBackStyle);
+		TVTest::Theme::Draw(hdc,rcCategories,m_HomeDisplayStyle.CategoriesBackStyle);
 
 		RECT rcItem;
-		rcItem.left=rcCategories.left+m_Style.CategoriesMargins.Left;
+		rcItem.left=rcCategories.left+m_Style.CategoriesMargin.Left;
 		rcItem.right=rcItem.left+m_CategoryItemWidth;
-		rcItem.top=rcCategories.top+m_Style.CategoriesMargins.Top;
+		rcItem.top=rcCategories.top+m_Style.CategoriesMargin.Top;
 
 		for (size_t i=0;i<m_CategoryList.size();i++) {
 			const CCategory *pCategory=m_CategoryList[i];
 			const TVTest::Theme::Style *pStyle=
 				((int)i==m_CurCategory)?
-					(pCategory->IsFocused()?&m_Style.CategoryItemSelStyle:&m_Style.CategoryItemCurStyle):
-					(&m_Style.CategoryItemStyle);
+					(pCategory->IsFocused()?&m_HomeDisplayStyle.CategoryItemSelStyle:&m_HomeDisplayStyle.CategoryItemCurStyle):
+					(&m_HomeDisplayStyle.CategoryItemStyle);
 
 			rcItem.bottom=rcItem.top+m_CategoryItemHeight;
 			TVTest::Theme::Draw(hdc,rcItem,pStyle->Back);
 			RECT rc=rcItem;
-			TVTest::Style::Subtract(&rc,m_Style.CategoryItemMargins);
+			TVTest::Style::Subtract(&rc,m_HomeDisplayStyle.CategoryItemMargins);
 			::ImageList_Draw(m_himlIcons,pCategory->GetIconIndex(),
 							 hdc,rc.left,rc.top+((rc.bottom-rc.top)-CATEGORY_ICON_HEIGHT)/2,ILD_TRANSPARENT);
-			rc.left+=CATEGORY_ICON_WIDTH+m_Style.CategoryIconMargin;
+			rc.left+=CATEGORY_ICON_WIDTH+m_HomeDisplayStyle.CategoryIconMargin;
 			TVTest::Theme::Draw(hdc,rc,pStyle->Fore,pCategory->GetTitle(),
 								DT_NOPREFIX | DT_SINGLELINE | DT_VCENTER);
 			rcItem.top=rcItem.bottom;
@@ -2011,16 +2003,16 @@ void CHomeDisplay::Draw(HDC hdc,const RECT &PaintRect)
 	if (PaintRect.right>m_CategoriesAreaWidth) {
 		RECT rcContent=rcClient;
 		rcContent.left=m_CategoriesAreaWidth;
-		TVTest::Theme::Draw(hdc,rcContent,m_Style.ContentBackStyle);
+		TVTest::Theme::Draw(hdc,rcContent,m_HomeDisplayStyle.ContentBackStyle);
 
 		if (pCategory!=NULL) {
-			TVTest::Style::Subtract(&rcContent,m_Style.ContentMargins);
+			TVTest::Style::Subtract(&rcContent,m_Style.ContentMargin);
 			if (rcContent.left<rcContent.right) {
 				HRGN hrgn=::CreateRectRgnIndirect(&rcContent);
 				::SelectClipRgn(hdc,hrgn);
 
 				::OffsetRect(&rcContent,0,-m_ScrollPos);
-				pCategory->Draw(hdc,m_Style,rcContent,PaintRect);
+				pCategory->Draw(hdc,m_HomeDisplayStyle,rcContent,PaintRect);
 
 				::SelectClipRgn(hdc,NULL);
 				::DeleteObject(hrgn);
@@ -2052,7 +2044,7 @@ void CHomeDisplay::LayOut()
 	HDC hdc=::GetDC(m_hwnd);
 	HFONT hfontOld=DrawUtil::SelectObject(hdc,m_Font);
 
-	m_Style.FontHeight=m_Font.GetHeight(hdc);
+	m_HomeDisplayStyle.FontHeight=m_Font.GetHeight(hdc);
 
 	int CategoryTextWidth=0;
 	for (size_t i=0;i<m_CategoryList.size();i++) {
@@ -2061,18 +2053,16 @@ void CHomeDisplay::LayOut()
 		if (rc.right>CategoryTextWidth)
 			CategoryTextWidth=rc.right;
 	}
-	m_CategoryItemWidth=CategoryTextWidth+CATEGORY_ICON_WIDTH+m_Style.CategoryIconMargin+
-		m_Style.CategoryItemMargins.Horz();
-	m_CategoryItemHeight=max(m_Style.FontHeight,CATEGORY_ICON_HEIGHT)+
-		m_Style.CategoryItemMargins.Vert();
-	m_CategoriesAreaWidth=m_CategoryItemWidth+m_Style.CategoriesMargins.Horz();
-
-	RECT rcContent=rcClient;
-	TVTest::Style::Subtract(&rcContent,m_Style.ContentMargins);
-	rcContent.left+=m_CategoriesAreaWidth;
+	m_CategoryItemWidth=CategoryTextWidth+CATEGORY_ICON_WIDTH+m_HomeDisplayStyle.CategoryIconMargin+
+		m_HomeDisplayStyle.CategoryItemMargins.Horz();
+	m_CategoryItemHeight=max(m_HomeDisplayStyle.FontHeight,CATEGORY_ICON_HEIGHT)+
+		m_HomeDisplayStyle.CategoryItemMargins.Vert();
+	m_CategoriesAreaWidth=m_CategoryItemWidth+m_Style.CategoriesMargin.Horz();
 
 	CCategory *pCategory=m_CategoryList[m_CurCategory];
-	pCategory->LayOut(m_Style,hdc,rcContent);
+	RECT rcContent;
+	GetContentAreaRect(&rcContent);
+	pCategory->LayOut(m_HomeDisplayStyle,hdc,rcContent);
 	m_ContentHeight=pCategory->GetHeight();
 
 	::SelectObject(hdc,hfontOld);
@@ -2115,8 +2105,9 @@ void CHomeDisplay::SetScrollBar()
 void CHomeDisplay::GetContentAreaRect(RECT *pRect) const
 {
 	GetClientRect(pRect);
-	TVTest::Style::Subtract(pRect,m_Style.ContentMargins);
+	TVTest::Style::Subtract(pRect,m_Style.ContentMargin);
 	pRect->left+=m_CategoriesAreaWidth;
+	pRect->right-=::GetSystemMetrics(SM_CXVSCROLL);
 	if (pRect->right<pRect->left)
 		pRect->right=pRect->left;
 	if (pRect->bottom<pRect->top)
@@ -2129,8 +2120,8 @@ CHomeDisplay::PartType CHomeDisplay::HitTest(int x,int y,int *pCategoryIndex) co
 	POINT pt={x,y};
 
 	RECT rcCategories;
-	rcCategories.left=m_Style.CategoriesMargins.Left;
-	rcCategories.top=m_Style.CategoriesMargins.Top;
+	rcCategories.left=m_Style.CategoriesMargin.Left;
+	rcCategories.top=m_Style.CategoriesMargin.Top;
 	rcCategories.right=rcCategories.left+m_CategoriesAreaWidth;
 	rcCategories.bottom=rcCategories.top+m_CategoryItemHeight*(int)m_CategoryList.size();
 	if (::PtInRect(&rcCategories,pt)) {
@@ -2180,8 +2171,8 @@ bool CHomeDisplay::GetCategoryItemRect(int Category,RECT *pRect) const
 	if (Category<0 || (size_t)Category>=m_CategoryList.size())
 		return false;
 
-	pRect->left=m_Style.CategoriesMargins.Left;
-	pRect->top=m_Style.CategoriesMargins.Top+(Category*m_CategoryItemHeight);
+	pRect->left=m_Style.CategoriesMargin.Left;
+	pRect->top=m_Style.CategoriesMargin.Top+(Category*m_CategoryItemHeight);
 	pRect->right=pRect->left+m_CategoryItemWidth;
 	pRect->bottom=pRect->top+m_CategoryItemHeight;
 

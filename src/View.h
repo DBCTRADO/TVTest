@@ -28,10 +28,10 @@ public:
 
 // CBasicWindow
 	void SetVisible(bool fVisible) override;
-	void NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager) override;
 
 // CUIBase
 	void SetStyle(const TVTest::Style::CStyleManager *pStyleManager) override;
+	void NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager) override;
 
 protected:
 	enum ItemType {
@@ -53,6 +53,10 @@ protected:
 		TVTest::Style::IntValue TextSizeRatioHorz;
 		TVTest::Style::IntValue TextSizeRatioVert;
 		TVTest::Style::IntValue TextSizeMin;
+		TVTest::Style::Margins ContentMargin;
+		TVTest::Style::Margins CategoriesMargin;
+		TVTest::Style::Size CloseButtonSize;
+		TVTest::Style::Margins CloseButtonMargin;
 
 		DisplayViewStyle();
 		void SetStyle(const TVTest::Style::CStyleManager *pStyleManager);
