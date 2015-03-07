@@ -648,6 +648,7 @@ INT_PTR CALLBACK CRecordManager::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARA
 			::SendDlgItemMessage(hDlg,IDC_RECORD_FILENAME,EM_LIMITTEXT,MAX_PATH-1,0);
 			if (!pThis->m_FileName.empty())
 				::SetDlgItemText(hDlg,IDC_RECORD_FILENAME,pThis->m_FileName.c_str());
+			InitDropDownButton(hDlg,IDC_RECORD_FILENAMEFORMAT);
 			/*
 			static const LPCTSTR pszExistsOperation[] = {
 				TEXT("上書きする"),TEXT("確認を取る"),TEXT("連番を付加する")

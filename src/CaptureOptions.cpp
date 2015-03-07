@@ -438,6 +438,7 @@ INT_PTR CCaptureOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam
 			SendDlgItemMessage(hDlg,IDC_CAPTUREOPTIONS_SAVEFOLDER,EM_LIMITTEXT,MAX_PATH-1,0);
 			SetDlgItemText(hDlg,IDC_CAPTUREOPTIONS_SAVEFOLDER,m_szSaveFolder);
 			SetDlgItemText(hDlg,IDC_CAPTUREOPTIONS_FILENAME,m_FileName.c_str());
+			InitDropDownButton(hDlg,IDC_CAPTUREOPTIONS_FILENAME_PARAMETERS);
 
 			static const LPCTSTR SizeTypeText[] = {
 				TEXT("Œ³‚Ì‘å‚«‚³"),
@@ -507,6 +508,7 @@ INT_PTR CCaptureOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam
 			DlgCheckBox_Check(hDlg,IDC_CAPTUREOPTIONS_ICONSAVEFILE,m_fCaptureSaveToFile);
 			DlgCheckBox_Check(hDlg,IDC_CAPTUREOPTIONS_SETCOMMENT,m_fSetComment);
 			::SetDlgItemText(hDlg,IDC_CAPTUREOPTIONS_COMMENT,m_CommentFormat.c_str());
+			InitDropDownButton(hDlg,IDC_CAPTUREOPTIONS_COMMENT_PARAMETERS);
 			EnableDlgItems(hDlg,
 						   IDC_CAPTUREOPTIONS_COMMENT,
 						   IDC_CAPTUREOPTIONS_COMMENT_PARAMETERS,

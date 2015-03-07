@@ -1317,6 +1317,8 @@ INT_PTR CEventSearchSettingsDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LP
 			cbi.cbSize=sizeof(cbi);
 			::GetComboBoxInfo(::GetDlgItem(hDlg,IDC_EVENTSEARCH_KEYWORD),&cbi);
 			m_KeywordEditSubclass.SetSubclass(cbi.hwndItem);
+
+			InitDropDownButton(hDlg,IDC_EVENTSEARCH_KEYWORDMENU);
 		}
 
 		// キーワード検索対象

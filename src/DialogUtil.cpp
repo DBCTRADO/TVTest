@@ -494,3 +494,30 @@ bool AdjustListViewColumnWidth(HWND hwndList,bool fUseHeader)
 
 	return true;
 }
+
+
+// ボタンをドロップダウンメニュー表示用に初期化する
+bool InitDropDownButton(HWND hDlg,int ID)
+{
+#ifdef WIN_XP_SUPPORT
+	if (!Util::OS::IsWindowsVistaOrLater())
+		return false;
+#endif
+
+	HWND hwnd=::GetDlgItem(hDlg,ID);
+	if (hwnd==NULL)
+		return false;
+
+	::SetWindowLong(hwnd,GWL_STYLE,::GetWindowLong(hwnd,GWL_STYLE) | BS_SPLITBUTTON);
+	::SetWindowText(hwnd,TEXT(""));
+	RECT rc;
+	::GetClientRect(hwnd,&rc);
+	BUTTON_SPLITINFO bsi;
+	bsi.mask=BCSIF_STYLE | BCSIF_SIZE;
+	bsi.uSplitStyle=BCSS_NOSPLIT | BCSS_STRETCH | BCSS_ALIGNLEFT;
+	bsi.size.cx=rc.right;
+	bsi.size.cy=rc.bottom;
+	::SendMessage(hwnd,BCM_SETSPLITINFO,0,reinterpret_cast<LPARAM>(&bsi));
+
+	return true;
+}

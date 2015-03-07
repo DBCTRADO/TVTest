@@ -355,6 +355,7 @@ INT_PTR CRecordOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 			::SetDlgItemText(hDlg,IDC_RECORDOPTIONS_SAVEFOLDER,m_szSaveFolder);
 			::SendDlgItemMessage(hDlg,IDC_RECORDOPTIONS_FILENAME,EM_LIMITTEXT,MAX_PATH-1,0);
 			::SetDlgItemText(hDlg,IDC_RECORDOPTIONS_FILENAME,m_szFileName);
+			InitDropDownButton(hDlg,IDC_RECORDOPTIONS_FILENAMEFORMAT);
 			DlgCheckBox_Check(hDlg,IDC_RECORDOPTIONS_CONFIRMCHANNELCHANGE,
 							  m_fConfirmChannelChange);
 			DlgCheckBox_Check(hDlg,IDC_RECORDOPTIONS_CONFIRMEXIT,
