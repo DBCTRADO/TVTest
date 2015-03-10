@@ -379,33 +379,14 @@ void CMainPanel::CFrameEventHandler::OnVisibleChange(bool fVisible)
 
 bool CMainPanel::CFrameEventHandler::OnFloatingChange(bool fFloating)
 {
-	CMainWindow &MainWindow=GetAppClass().MainWindow;
-	Layout::CSplitter *pSplitter=
-		dynamic_cast<Layout::CSplitter*>(MainWindow.GetLayoutBase().GetContainerByID(CONTAINER_ID_PANELSPLITTER));
-	int Size;
-	RECT rc;
-
-	int PanelPaneIndex=pSplitter->IDToIndex(CONTAINER_ID_PANEL);
-	if (fFloating)
-		pSplitter->GetPane(PanelPaneIndex)->SetVisible(false);
-	MainWindow.GetPosition(&rc);
-	Size=m_pFrame->GetDockingWidth()+pSplitter->GetBarWidth();
-	if (!fFloating || rc.right-rc.left>Size) {
-		if (PanelPaneIndex==0) {
-			if (fFloating)
-				rc.left+=Size;
-			else
-				rc.left-=Size;
-		} else {
-			if (fFloating)
-				rc.right-=Size;
-			else
-				rc.right+=Size;
-		}
-		MainWindow.SetPosition(&rc);
-	}
-
+	GetAppClass().MainWindow.OnPanelFloating(fFloating);
 	return true;
+}
+
+
+void CMainPanel::CFrameEventHandler::OnDocking(CPanelFrame::DockingPlace Place)
+{
+	GetAppClass().MainWindow.OnPanelDocking(Place);
 }
 
 

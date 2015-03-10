@@ -85,6 +85,7 @@ CMainWindow::CMainWindow(CAppMain &App)
 	, m_fSplitTitleBar(true)
 	, m_fShowSideBar(false)
 	, m_PanelPaneIndex(1)
+	, m_fPanelVerticalAlign(false)
 	, m_fCustomFrame(false)
 	, m_CustomFrameWidth(0)
 	, m_ThinFrameWidth(1)
@@ -355,7 +356,10 @@ void CMainWindow::AdjustWindowSize(int Width,int Height,bool fScreenSize)
 		if (m_App.Panel.fShowPanelWindow && !m_App.Panel.IsFloating()) {
 			Layout::CSplitter *pSplitter=dynamic_cast<Layout::CSplitter*>(
 				m_LayoutBase.GetContainerByID(CONTAINER_ID_PANELSPLITTER));
-			rc.right+=pSplitter->GetBarWidth()+pSplitter->GetPaneSize(CONTAINER_ID_PANEL);
+			if (m_App.Panel.Frame.IsDockingVertical())
+				rc.bottom+=pSplitter->GetBarWidth()+pSplitter->GetPaneSize(CONTAINER_ID_PANEL);
+			else
+				rc.right+=pSplitter->GetBarWidth()+pSplitter->GetPaneSize(CONTAINER_ID_PANEL);
 		}
 		if (m_fShowStatusBar)
 			rc.bottom+=m_App.StatusView.CalcHeight(rc.right-rc.left);
@@ -438,8 +442,13 @@ bool CMainWindow::ReadSettings(CSettings &Settings)
 	if (Settings.Read(TEXT("PanelDockingIndex"),&Value)
 			&& (Value==0 || Value==1))
 		m_PanelPaneIndex=Value;
+	Settings.Read(TEXT("PanelVerticalAlign"),&m_fPanelVerticalAlign);
 	if (Settings.Read(TEXT("FullscreenPanelWidth"),&Value))
 		m_Fullscreen.SetPanelWidth(Value);
+	if (Settings.Read(TEXT("FullscreenPanelHeight"),&Value))
+		m_Fullscreen.SetPanelHeight(Value);
+	if (Settings.Read(TEXT("FullscreenPanelPlace"),&Value))
+		m_Fullscreen.SetPanelPlace((CPanelFrame::DockingPlace)Value);
 	if (Settings.Read(TEXT("ThinFrameWidth"),&Value))
 		m_ThinFrameWidth=max(Value,1);
 	Value=FRAME_NORMAL;
@@ -480,7 +489,10 @@ bool CMainWindow::WriteSettings(CSettings &Settings)
 	Settings.Write(TEXT("ShowTitleBar"),m_fShowTitleBar);
 //	Settings.Write(TEXT("PopupTitleBar"),m_fPopupTitleBar);
 	Settings.Write(TEXT("PanelDockingIndex"),m_PanelPaneIndex);
+	Settings.Write(TEXT("PanelVerticalAlign"),m_fPanelVerticalAlign);
 	Settings.Write(TEXT("FullscreenPanelWidth"),m_Fullscreen.GetPanelWidth());
+	Settings.Write(TEXT("FullscreenPanelHeight"),m_Fullscreen.GetPanelHeight());
+	Settings.Write(TEXT("FullscreenPanelPlace"),(int)m_Fullscreen.GetPanelPlace());
 	Settings.Write(TEXT("FrameType"),
 		!m_fCustomFrame?FRAME_NORMAL:(m_CustomFrameWidth==0?FRAME_NONE:FRAME_CUSTOM));
 //	Settings.Write(TEXT("ThinFrameWidth"),m_ThinFrameWidth);
@@ -523,27 +535,7 @@ void CMainWindow::ShowPanel(bool fShow)
 	}
 
 	if (!m_App.Panel.IsFloating()) {
-		// パネルの幅に合わせてウィンドウサイズを拡縮
-		Layout::CSplitter *pSplitter=
-			dynamic_cast<Layout::CSplitter*>(m_LayoutBase.GetContainerByID(CONTAINER_ID_PANELSPLITTER));
-		const int Width=m_App.Panel.Frame.GetDockingWidth()+pSplitter->GetBarWidth();
-		RECT rc;
-
-		GetPosition(&rc);
-		if (pSplitter->GetPane(0)->GetID()==CONTAINER_ID_PANEL) {
-			if (fShow)
-				rc.left-=Width;
-			else
-				rc.left+=Width;
-		} else {
-			if (fShow)
-				rc.right+=Width;
-			else
-				rc.right-=Width;
-		}
-		SetPosition(&rc);
-		if (!fShow)
-			::SetFocus(m_hwnd);
+		AdjustWindowSizeOnDockPanel(fShow);
 	}
 
 	UpdateLayout();
@@ -719,39 +711,8 @@ void CMainWindow::SetSplitTitleBar(bool fSplit)
 {
 	if (m_fSplitTitleBar!=fSplit) {
 		m_fSplitTitleBar=fSplit;
-		if (m_fCustomTitleBar && m_hwnd!=nullptr) {
-			Layout::CSplitter *pSideBarSplitter,*pTitleBarSplitter,*pPanelSplitter;
-			Layout::CSplitter *pStatusSplitter,*pParentSplitter;
-
-			pSideBarSplitter=dynamic_cast<Layout::CSplitter*>(
-				m_LayoutBase.GetContainerByID(CONTAINER_ID_SIDEBARSPLITTER));
-			pTitleBarSplitter=dynamic_cast<Layout::CSplitter*>(
-				m_LayoutBase.GetContainerByID(CONTAINER_ID_TITLEBARSPLITTER));
-			pPanelSplitter=dynamic_cast<Layout::CSplitter*>(
-				m_LayoutBase.GetContainerByID(CONTAINER_ID_PANELSPLITTER));
-			pStatusSplitter=dynamic_cast<Layout::CSplitter*>(
-				m_LayoutBase.GetContainerByID(CONTAINER_ID_STATUSSPLITTER));
-			if (pSideBarSplitter==nullptr || pTitleBarSplitter==nullptr
-					|| pPanelSplitter==nullptr || pStatusSplitter==nullptr)
-				return;
-			const int PanelPane=GetPanelPaneIndex();
-			if (fSplit) {
-				pTitleBarSplitter->ReplacePane(1,pSideBarSplitter);
-				pTitleBarSplitter->SetAdjustPane(CONTAINER_ID_SIDEBARSPLITTER);
-				pPanelSplitter->ReplacePane(1-PanelPane,pTitleBarSplitter);
-				pPanelSplitter->SetAdjustPane(CONTAINER_ID_TITLEBARSPLITTER);
-				pParentSplitter=pPanelSplitter;
-			} else {
-				pPanelSplitter->ReplacePane(1-PanelPane,pSideBarSplitter);
-				pPanelSplitter->SetAdjustPane(CONTAINER_ID_SIDEBARSPLITTER);
-				pTitleBarSplitter->ReplacePane(1,pPanelSplitter);
-				pTitleBarSplitter->SetAdjustPane(CONTAINER_ID_PANELSPLITTER);
-				pParentSplitter=pTitleBarSplitter;
-			}
-			pStatusSplitter->ReplacePane(0,pParentSplitter);
-			pStatusSplitter->SetAdjustPane(pParentSplitter->GetID());
-			m_LayoutBase.Adjust();
-		}
+		if (m_hwnd!=nullptr)
+			UpdateLayoutStructure();
 	}
 }
 
@@ -890,6 +851,57 @@ bool CMainWindow::IsPanelVisible() const
 bool CMainWindow::IsPanelPresent() const
 {
 	return m_pCore->GetFullscreen()?IsFullscreenPanelVisible():m_App.Panel.fShowPanelWindow;
+}
+
+
+void CMainWindow::OnPanelFloating(bool fFloating)
+{
+	if (fFloating)
+		m_LayoutBase.SetContainerVisible(CONTAINER_ID_PANEL,false);
+	AdjustWindowSizeOnDockPanel(!fFloating);
+}
+
+
+void CMainWindow::OnPanelDocking(CPanelFrame::DockingPlace Place)
+{
+	const bool fMove=m_LayoutBase.GetContainerVisible(CONTAINER_ID_PANEL);
+	RECT rcCur,rcAdjusted;
+
+	LockLayout();
+
+	if (fMove) {
+		GetPosition(&rcCur);
+		rcAdjusted=rcCur;
+		GetPanelDockingAdjustedPos(false,&rcAdjusted);
+		m_LayoutBase.SetContainerVisible(CONTAINER_ID_PANEL,false);
+	}
+
+	m_fPanelVerticalAlign=
+		Place==CPanelFrame::DOCKING_TOP || Place==CPanelFrame::DOCKING_BOTTOM;
+
+	UpdateLayoutStructure();
+
+	Layout::CSplitter *pPanelSplitter=dynamic_cast<Layout::CSplitter*>(
+		m_LayoutBase.GetContainerByID(CONTAINER_ID_PANELSPLITTER));
+
+	const int Index=
+		(Place==CPanelFrame::DOCKING_LEFT || Place==CPanelFrame::DOCKING_TOP)?0:1;
+	if (pPanelSplitter->IDToIndex(CONTAINER_ID_PANEL)!=Index)
+		pPanelSplitter->SwapPane();
+
+	if (fMove) {
+		GetPanelDockingAdjustedPos(true,&rcAdjusted);
+		if (rcCur.right-rcCur.left!=rcAdjusted.right-rcAdjusted.left
+				|| rcCur.bottom-rcCur.top!=rcAdjusted.bottom-rcAdjusted.top)
+			SetPosition(&rcAdjusted);
+		pPanelSplitter->SetPaneSize(CONTAINER_ID_PANEL,
+			m_fPanelVerticalAlign?
+				m_App.Panel.Frame.GetDockingHeight():
+				m_App.Panel.Frame.GetDockingWidth());
+		m_LayoutBase.SetContainerVisible(CONTAINER_ID_PANEL,true);
+	}
+
+	UpdateLayout();
 }
 
 
@@ -1680,31 +1692,22 @@ bool CMainWindow::OnCreate(const CREATESTRUCT *pcs)
 	pTitleBarSplitter->SetPaneSize(CONTAINER_ID_TITLEBAR,m_TitleBar.GetHeight());
 
 	Layout::CSplitter *pPanelSplitter=new Layout::CSplitter(CONTAINER_ID_PANELSPLITTER);
+	pPanelSplitter->SetStyle(
+		m_fPanelVerticalAlign ? Layout::CSplitter::STYLE_VERT : Layout::CSplitter::STYLE_HORZ);
 	pPanelSplitter->SetVisible(true);
 	Layout::CWindowContainer *pPanelContainer=new Layout::CWindowContainer(CONTAINER_ID_PANEL);
-	pPanelContainer->SetMinSize(64,0);
+	pPanelContainer->SetMinSize(32,32);
 	pPanelSplitter->SetPane(m_PanelPaneIndex,pPanelContainer);
-
-	Layout::CSplitter *pParentSplitter;
-	if (m_fSplitTitleBar) {
-		pTitleBarSplitter->SetPane(1,pSideBarSplitter);
-		pTitleBarSplitter->SetAdjustPane(CONTAINER_ID_SIDEBARSPLITTER);
-		pPanelSplitter->SetPane(1-m_PanelPaneIndex,pTitleBarSplitter);
-		pPanelSplitter->SetAdjustPane(CONTAINER_ID_TITLEBARSPLITTER);
-		pParentSplitter=pPanelSplitter;
-	} else {
-		pPanelSplitter->SetPane(1-m_PanelPaneIndex,pSideBarSplitter);
-		pPanelSplitter->SetAdjustPane(CONTAINER_ID_SIDEBARSPLITTER);
-		pTitleBarSplitter->SetPane(1,pPanelSplitter);
-		pTitleBarSplitter->SetAdjustPane(CONTAINER_ID_PANELSPLITTER);
-		pParentSplitter=pTitleBarSplitter;
-	}
+	pPanelSplitter->SetPane(1-m_PanelPaneIndex,pSideBarSplitter);
+	pPanelSplitter->SetAdjustPane(CONTAINER_ID_SIDEBARSPLITTER);
+	pTitleBarSplitter->SetPane(1,pPanelSplitter);
+	pTitleBarSplitter->SetAdjustPane(CONTAINER_ID_PANELSPLITTER);
 
 	Layout::CSplitter *pStatusSplitter=new Layout::CSplitter(CONTAINER_ID_STATUSSPLITTER);
 	pStatusSplitter->SetStyle(Layout::CSplitter::STYLE_VERT | Layout::CSplitter::STYLE_FIXED);
 	pStatusSplitter->SetVisible(true);
-	pStatusSplitter->SetPane(0,pParentSplitter);
-	pStatusSplitter->SetAdjustPane(pParentSplitter->GetID());
+	pStatusSplitter->SetPane(0,pTitleBarSplitter);
+	pStatusSplitter->SetAdjustPane(CONTAINER_ID_TITLEBARSPLITTER);
 	pWindowContainer=new Layout::CWindowContainer(CONTAINER_ID_STATUS);
 	pWindowContainer->SetWindow(&m_App.StatusView);
 	pWindowContainer->SetMinSize(0,m_App.StatusView.GetHeight());
@@ -1712,7 +1715,10 @@ bool CMainWindow::OnCreate(const CREATESTRUCT *pcs)
 	pStatusSplitter->SetPane(1,pWindowContainer);
 	pStatusSplitter->SetPaneSize(CONTAINER_ID_STATUS,m_App.StatusView.GetHeight());
 
+	m_LayoutBase.LockLayout();
 	m_LayoutBase.SetTopContainer(pStatusSplitter);
+	m_LayoutBase.UnlockLayout();
+	UpdateLayoutStructure();
 
 	// 起動状況を表示するために、起動時は常にステータスバーを表示する
 	if (!m_fShowStatusBar) {
@@ -1915,7 +1921,10 @@ bool CMainWindow::OnSizeChanging(UINT Edge,RECT *pRect)
 			if (m_App.Panel.fShowPanelWindow && !m_App.Panel.IsFloating()) {
 				Layout::CSplitter *pSplitter=dynamic_cast<Layout::CSplitter*>(
 					m_LayoutBase.GetContainerByID(CONTAINER_ID_PANELSPLITTER));
-				rcClient.right-=pSplitter->GetPaneSize(CONTAINER_ID_PANEL)+pSplitter->GetBarWidth();
+				if (m_App.Panel.Frame.IsDockingVertical())
+					rcClient.bottom-=pSplitter->GetPaneSize(CONTAINER_ID_PANEL)+pSplitter->GetBarWidth();
+				else
+					rcClient.right-=pSplitter->GetPaneSize(CONTAINER_ID_PANEL)+pSplitter->GetBarWidth();
 			}
 			::OffsetRect(&rcClient,-rcClient.left,-rcClient.top);
 			if (rcClient.right<=0 || rcClient.bottom<=0)
@@ -4221,6 +4230,136 @@ void CMainWindow::UpdateLayout()
 }
 
 
+void CMainWindow::UpdateLayoutStructure()
+{
+	Layout::CSplitter *pSideBarSplitter,*pTitleSplitter,*pPanelSplitter,*pStatusSplitter;
+
+	pSideBarSplitter=dynamic_cast<Layout::CSplitter*>(
+		m_LayoutBase.GetContainerByID(CONTAINER_ID_SIDEBARSPLITTER));
+	pTitleSplitter=dynamic_cast<Layout::CSplitter*>(
+		m_LayoutBase.GetContainerByID(CONTAINER_ID_TITLEBARSPLITTER));
+	pPanelSplitter=dynamic_cast<Layout::CSplitter*>(
+		m_LayoutBase.GetContainerByID(CONTAINER_ID_PANELSPLITTER));
+	pStatusSplitter=dynamic_cast<Layout::CSplitter*>(
+		m_LayoutBase.GetContainerByID(CONTAINER_ID_STATUSSPLITTER));
+	if (pSideBarSplitter==nullptr || pTitleSplitter==nullptr
+			|| pPanelSplitter==nullptr || pStatusSplitter==nullptr)
+		return;
+
+	const int PanelPane=GetPanelPaneIndex();
+	Layout::CSplitter *pRoot;
+
+	pPanelSplitter->SetStyle(
+		m_fPanelVerticalAlign ? Layout::CSplitter::STYLE_VERT : Layout::CSplitter::STYLE_HORZ,
+		false);
+	pPanelSplitter->ReplacePane(PanelPane,m_LayoutBase.GetContainerByID(CONTAINER_ID_PANEL));
+
+	if (m_fPanelVerticalAlign) {
+		pStatusSplitter->ReplacePane(0,pSideBarSplitter);
+		pStatusSplitter->SetAdjustPane(CONTAINER_ID_SIDEBARSPLITTER);
+		pPanelSplitter->ReplacePane(1-PanelPane,pStatusSplitter);
+		pPanelSplitter->SetAdjustPane(CONTAINER_ID_STATUSSPLITTER);
+		pTitleSplitter->ReplacePane(1,pPanelSplitter);
+		pTitleSplitter->SetAdjustPane(CONTAINER_ID_PANELSPLITTER);
+		pRoot=pTitleSplitter;
+	} else if (m_fSplitTitleBar) {
+		pTitleSplitter->ReplacePane(1,pSideBarSplitter);
+		pTitleSplitter->SetAdjustPane(CONTAINER_ID_SIDEBARSPLITTER);
+		pPanelSplitter->ReplacePane(1-PanelPane,pTitleSplitter);
+		pPanelSplitter->SetAdjustPane(CONTAINER_ID_TITLEBARSPLITTER);
+		pStatusSplitter->ReplacePane(0,pPanelSplitter);
+		pStatusSplitter->SetAdjustPane(CONTAINER_ID_PANELSPLITTER);
+		pRoot=pStatusSplitter;
+	} else {
+		pPanelSplitter->ReplacePane(1-PanelPane,pSideBarSplitter);
+		pPanelSplitter->SetAdjustPane(CONTAINER_ID_SIDEBARSPLITTER);
+		pTitleSplitter->ReplacePane(1,pPanelSplitter);
+		pTitleSplitter->SetAdjustPane(CONTAINER_ID_PANELSPLITTER);
+		pStatusSplitter->ReplacePane(0,pTitleSplitter);
+		pStatusSplitter->SetAdjustPane(CONTAINER_ID_PANELSPLITTER);
+		pRoot=pStatusSplitter;
+	}
+
+	m_LayoutBase.SetTopContainer(pRoot);
+}
+
+
+void CMainWindow::AdjustWindowSizeOnDockPanel(bool fDock)
+{
+	// パネルの幅に合わせてウィンドウサイズを拡縮
+	RECT rc;
+
+	GetPosition(&rc);
+	GetPanelDockingAdjustedPos(fDock,&rc);
+	SetPosition(&rc);
+	if (!fDock)
+		::SetFocus(m_hwnd);
+}
+
+
+void CMainWindow::GetPanelDockingAdjustedPos(bool fDock,RECT *pPos) const
+{
+	Layout::CSplitter *pSplitter=
+		dynamic_cast<Layout::CSplitter*>(m_LayoutBase.GetContainerByID(CONTAINER_ID_PANELSPLITTER));
+	int Width=m_App.Panel.Frame.GetDockingWidth()+pSplitter->GetBarWidth();
+	int Height=m_App.Panel.Frame.GetDockingHeight()+pSplitter->GetBarWidth();
+
+	if (!fDock) {
+		Width=-Width;
+		Height=-Height;
+	}
+	if (pSplitter->GetPane(0)->GetID()==CONTAINER_ID_PANEL) {
+		if (m_App.Panel.Frame.IsDockingVertical())
+			pPos->top-=Height;
+		else
+			pPos->left-=Width;
+	} else {
+		if (m_App.Panel.Frame.IsDockingVertical())
+			pPos->bottom+=Height;
+		else
+			pPos->right+=Width;
+	}
+
+	if (fDock) {
+		HMONITOR hMonitor=::MonitorFromRect(pPos,MONITOR_DEFAULTTONEAREST);
+		MONITORINFO mi;
+
+		mi.cbSize=sizeof(MONITORINFO);
+		if (::GetMonitorInfo(hMonitor,&mi)) {
+			int XOffset=0,YOffset=0;
+			POINT pt;
+
+			pt.x=pPos->left;
+			pt.y=pPos->top;
+			if (::MonitorFromPoint(pt,MONITOR_DEFAULTTONULL)==nullptr) {
+				if (pPos->left<mi.rcWork.left)
+					XOffset=mi.rcWork.left-pPos->left;
+				if (pPos->top<mi.rcWork.top)
+					YOffset=mi.rcWork.top-pPos->top;
+			}
+			if (XOffset==0 || YOffset==0) {
+				pt.x=pPos->right;
+				pt.y=pPos->bottom;
+				if (::MonitorFromPoint(pt,MONITOR_DEFAULTTONULL)==nullptr) {
+					if (XOffset==0 && pPos->right>mi.rcWork.right) {
+						XOffset=mi.rcWork.right-pPos->right;
+						if (pPos->left+XOffset<mi.rcWork.left)
+							XOffset=mi.rcWork.left-pPos->left;
+					}
+					if (YOffset==0 && pPos->bottom>mi.rcWork.bottom) {
+						YOffset=mi.rcWork.bottom-pPos->bottom;
+						if (pPos->top+YOffset<mi.rcWork.top)
+							YOffset=mi.rcWork.top-pPos->top;
+					}
+				}
+			}
+			if (XOffset!=0 || YOffset!=0)
+				::OffsetRect(pPos,XOffset,YOffset);
+		}
+	}
+}
+
+
 void CMainWindow::ShowCursor(bool fShow)
 {
 	m_App.CoreEngine.m_DtvEngine.m_MediaViewer.HideCursor(!fShow);
@@ -5616,8 +5755,10 @@ CMainWindow::CFullscreen::CFullscreen(CMainWindow &MainWindow)
 	, m_App(MainWindow.m_App)
 	, m_pDisplay(nullptr)
 	, m_TitleBarManager(&MainWindow,false)
-	, m_PanelEventHandler(&MainWindow)
+	, m_PanelEventHandler(*this)
 	, m_PanelWidth(-1)
+	, m_PanelHeight(-1)
+	, m_PanelPlace(CPanelFrame::DOCKING_NONE)
 {
 }
 
@@ -5758,6 +5899,8 @@ LRESULT CMainWindow::CFullscreen::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LP
 	case WM_DESTROY:
 		m_pDisplay->GetVideoContainer().SetParent(&m_pDisplay->GetViewWindow());
 		m_pDisplay->GetViewWindow().SendSizeMessage();
+		delete m_LayoutBase.GetTopContainer();
+		m_LayoutBase.SetTopContainer(nullptr);
 		ShowCursor(true);
 		m_pDisplay->GetDisplayBase().AdjustPosition();
 		m_TitleBar.Destroy();
@@ -5858,7 +6001,17 @@ bool CMainWindow::CFullscreen::OnCreate()
 
 	Layout::CSplitter *pSplitter=new Layout::CSplitter(CONTAINER_ID_PANELSPLITTER);
 	pSplitter->SetVisible(true);
-	int PanelPaneIndex=m_MainWindow.GetPanelPaneIndex();
+	if (m_PanelPlace==CPanelFrame::DOCKING_NONE) {
+		if (!m_App.Panel.Frame.IsDockingVertical()) {
+			m_PanelPlace=
+				m_MainWindow.GetPanelPaneIndex()==0 ?
+					CPanelFrame::DOCKING_LEFT : CPanelFrame::DOCKING_RIGHT;
+		} else {
+			m_PanelPlace=CPanelFrame::DOCKING_RIGHT;
+		}
+	}
+	int PanelPaneIndex=
+		m_PanelPlace==CPanelFrame::DOCKING_LEFT || m_PanelPlace==CPanelFrame::DOCKING_TOP?0:1;
 	Layout::CWindowContainer *pViewContainer=new Layout::CWindowContainer(CONTAINER_ID_VIEW);
 	pViewContainer->SetWindow(&m_ViewWindow);
 	pViewContainer->SetMinSize(32,32);
@@ -5866,7 +6019,7 @@ bool CMainWindow::CFullscreen::OnCreate()
 	pSplitter->SetPane(1-PanelPaneIndex,pViewContainer);
 	Layout::CWindowContainer *pPanelContainer=new Layout::CWindowContainer(CONTAINER_ID_PANEL);
 	pPanelContainer->SetWindow(&m_Panel);
-	pPanelContainer->SetMinSize(64,32);
+	pPanelContainer->SetMinSize(32,32);
 	pSplitter->SetPane(PanelPaneIndex,pPanelContainer);
 	pSplitter->SetAdjustPane(CONTAINER_ID_VIEW);
 	m_LayoutBase.SetTopContainer(pSplitter);
@@ -5916,21 +6069,32 @@ void CMainWindow::CFullscreen::ShowPanel(bool fShow)
 	if (m_fShowPanel!=fShow) {
 		Layout::CSplitter *pSplitter=
 			dynamic_cast<Layout::CSplitter*>(m_LayoutBase.GetContainerByID(CONTAINER_ID_PANELSPLITTER));
+		const bool fVertical=
+			m_PanelPlace==CPanelFrame::DOCKING_TOP ||
+			m_PanelPlace==CPanelFrame::DOCKING_BOTTOM;
 
 		if (fShow) {
 			if (m_Panel.GetWindow()==nullptr) {
 				if (m_PanelWidth<0)
 					m_PanelWidth=m_App.Panel.Frame.GetDockingWidth();
+				if (m_PanelHeight<0)
+					m_PanelHeight=m_App.Panel.Frame.GetDockingHeight();
 				m_App.Panel.Frame.SetPanelVisible(false);
 				m_App.Panel.Frame.GetPanel()->SetWindow(nullptr,nullptr);
 				m_Panel.SetWindow(&m_App.Panel.Form,TEXT("パネル"));
-				pSplitter->SetPaneSize(CONTAINER_ID_PANEL,m_PanelWidth);
+				pSplitter->SetStyle(
+					fVertical ? Layout::CSplitter::STYLE_VERT : Layout::CSplitter::STYLE_HORZ);
+				pSplitter->SetPaneSize(CONTAINER_ID_PANEL,
+									   fVertical?m_PanelHeight:m_PanelWidth);
 			}
 			m_Panel.SendSizeMessage();
 			m_LayoutBase.SetContainerVisible(CONTAINER_ID_PANEL,true);
 			m_App.Panel.UpdateContent();
 		} else {
-			m_PanelWidth=m_Panel.GetWidth();
+			if (fVertical)
+				m_PanelHeight=m_Panel.GetHeight();
+			else
+				m_PanelWidth=m_Panel.GetWidth();
 			m_LayoutBase.SetContainerVisible(CONTAINER_ID_PANEL,false);
 			m_Panel.SetWindow(nullptr,nullptr);
 			CPanel *pPanel=m_App.Panel.Frame.GetPanel();
@@ -5951,6 +6115,53 @@ void CMainWindow::CFullscreen::ShowPanel(bool fShow)
 bool CMainWindow::CFullscreen::SetPanelWidth(int Width)
 {
 	m_PanelWidth=Width;
+	return true;
+}
+
+
+bool CMainWindow::CFullscreen::SetPanelHeight(int Height)
+{
+	m_PanelHeight=Height;
+	return true;
+}
+
+
+bool CMainWindow::CFullscreen::SetPanelPlace(CPanelFrame::DockingPlace Place)
+{
+	if (m_PanelPlace==Place)
+		return true;
+
+	if (m_Panel.GetWindow()!=nullptr) {
+		Layout::CSplitter *pSplitter=dynamic_cast<Layout::CSplitter*>(
+			m_LayoutBase.GetContainerByID(CONTAINER_ID_PANELSPLITTER));
+		const bool fVerticalOld=
+			m_PanelPlace==CPanelFrame::DOCKING_TOP ||
+			m_PanelPlace==CPanelFrame::DOCKING_BOTTOM;
+		const bool fVerticalNew=
+			Place==CPanelFrame::DOCKING_TOP ||
+			Place==CPanelFrame::DOCKING_BOTTOM;
+		const int Index=
+			Place==CPanelFrame::DOCKING_LEFT ||
+			Place==CPanelFrame::DOCKING_TOP?0:1;
+
+		if (fVerticalOld)
+			m_PanelHeight=pSplitter->GetPaneSize(CONTAINER_ID_PANEL);
+		else
+			m_PanelWidth=pSplitter->GetPaneSize(CONTAINER_ID_PANEL);
+		m_LayoutBase.LockLayout();
+		if (fVerticalNew!=fVerticalOld) {
+			pSplitter->SetStyle(
+				fVerticalNew ? Layout::CSplitter::STYLE_VERT : Layout::CSplitter::STYLE_HORZ);
+		}
+		pSplitter->SetPaneSize(CONTAINER_ID_PANEL,
+							   fVerticalNew?m_PanelHeight:m_PanelWidth);
+		if (pSplitter->IDToIndex(CONTAINER_ID_PANEL)!=Index)
+			pSplitter->SwapPane();
+		m_LayoutBase.UnlockLayout();
+	}
+
+	m_PanelPlace=Place;
+
 	return true;
 }
 
@@ -6175,15 +6386,59 @@ void CMainWindow::CFullscreen::ShowSideBar(bool fShow)
 }
 
 
-CMainWindow::CFullscreen::CPanelEventHandler::CPanelEventHandler(CMainWindow *pMainWindow)
-	: m_pMainWindow(pMainWindow)
+CMainWindow::CFullscreen::CPanelEventHandler::CPanelEventHandler(CFullscreen &Fullscreen)
+	: m_Fullscreen(Fullscreen)
 {
 }
 
 bool CMainWindow::CFullscreen::CPanelEventHandler::OnClose()
 {
-	m_pMainWindow->SendCommand(CM_PANEL);
+	m_Fullscreen.m_MainWindow.SendCommand(CM_PANEL);
 	return true;
+}
+
+
+enum {
+	PANEL_MENU_LEFT=CPanel::MENU_USER,
+	PANEL_MENU_RIGHT,
+	PANEL_MENU_TOP,
+	PANEL_MENU_BOTTOM
+};
+
+bool CMainWindow::CFullscreen::CPanelEventHandler::OnMenuPopup(HMENU hmenu)
+{
+	::AppendMenu(hmenu,MF_SEPARATOR,0,NULL);
+	::AppendMenu(hmenu,MF_STRING | MF_ENABLED,PANEL_MENU_LEFT,TEXT("左へ(&L)"));
+	::AppendMenu(hmenu,MF_STRING | MF_ENABLED,PANEL_MENU_RIGHT,TEXT("右へ(&R)"));
+	::AppendMenu(hmenu,MF_STRING | MF_ENABLED,PANEL_MENU_TOP,TEXT("上へ(&T)"));
+	::AppendMenu(hmenu,MF_STRING | MF_ENABLED,PANEL_MENU_BOTTOM,TEXT("下へ(&B)"));
+	::EnableMenuItem(hmenu,
+		m_Fullscreen.m_PanelPlace==CPanelFrame::DOCKING_LEFT?PANEL_MENU_LEFT:
+		m_Fullscreen.m_PanelPlace==CPanelFrame::DOCKING_RIGHT?PANEL_MENU_RIGHT:
+		m_Fullscreen.m_PanelPlace==CPanelFrame::DOCKING_TOP?PANEL_MENU_TOP:PANEL_MENU_BOTTOM,
+		MF_BYCOMMAND | MF_GRAYED);
+	return true;
+}
+
+
+bool CMainWindow::CFullscreen::CPanelEventHandler::OnMenuSelected(int Command)
+{
+	switch (Command) {
+	case PANEL_MENU_LEFT:
+		m_Fullscreen.SetPanelPlace(CPanelFrame::DOCKING_LEFT);
+		return true;
+	case PANEL_MENU_RIGHT:
+		m_Fullscreen.SetPanelPlace(CPanelFrame::DOCKING_RIGHT);
+		return true;
+	case PANEL_MENU_TOP:
+		m_Fullscreen.SetPanelPlace(CPanelFrame::DOCKING_TOP);
+		return true;
+	case PANEL_MENU_BOTTOM:
+		m_Fullscreen.SetPanelPlace(CPanelFrame::DOCKING_BOTTOM);
+		return true;
+	}
+
+	return false;
 }
 
 

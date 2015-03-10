@@ -55,6 +55,7 @@ public:
 	CBasicWindow *GetWindow() { return m_pWindow; }
 	bool SetPanelTheme(const PanelTheme &Theme);
 	bool GetPanelTheme(PanelTheme *pTheme) const;
+	int GetTitleHeight() const { return m_TitleHeight; }
 	bool GetTitleRect(RECT *pRect) const;
 	bool GetContentRect(RECT *pRect) const;
 
@@ -128,6 +129,14 @@ class CPanelFrame
 	, public CPanel::CEventHandler
 {
 public:
+	enum DockingPlace {
+		DOCKING_NONE,
+		DOCKING_LEFT,
+		DOCKING_RIGHT,
+		DOCKING_TOP,
+		DOCKING_BOTTOM
+	};
+
 	class ABSTRACT_CLASS(CEventHandler) {
 	public:
 		virtual ~CEventHandler() {}
@@ -138,6 +147,7 @@ public:
 		virtual bool OnMouseWheel(WPARAM wParam,LPARAM lParam) { return false; }
 		virtual void OnVisibleChange(bool fVisible) {}
 		virtual bool OnFloatingChange(bool fFloating) { return true; }
+		virtual void OnDocking(DockingPlace Place) {}
 		virtual bool OnActivate(bool fActive) { return false; }
 	};
 
@@ -155,28 +165,28 @@ public:
 	bool SetPanelVisible(bool fVisible,bool fNoActivate=false);
 	int GetDockingWidth() const { return m_DockingWidth; }
 	bool SetDockingWidth(int Width);
+	int GetDockingHeight() const { return m_DockingHeight; }
+	bool SetDockingHeight(int Height);
+	bool IsDockingVertical() const;
+	bool SetDockingPlace(DockingPlace Place);
 	bool SetPanelTheme(const CPanel::PanelTheme &Theme);
 	bool GetPanelTheme(CPanel::PanelTheme *pTheme) const;
 	bool SetOpacity(int Opacity);
 	int GetOpacity() const { return m_Opacity; }
-	Layout::CSplitter *m_pSplitter;
-	int m_PanelID;
-	CPanel m_Panel;
-	bool m_fFloating;
-	int m_DockingWidth;
-	bool m_fKeepWidth;
-	int m_Opacity;
-	CDropHelper m_DropHelper;
-	enum DockingPlace {
-		DOCKING_NONE,
-		DOCKING_LEFT,
-		DOCKING_RIGHT
-	};
 
 // CUIBase
 	void SetTheme(const TVTest::Theme::CThemeManager *pThemeManager) override;
 
 private:
+	Layout::CSplitter *m_pSplitter;
+	int m_PanelID;
+	CPanel m_Panel;
+	bool m_fFloating;
+	bool m_fFloatingTransition;
+	int m_DockingWidth;
+	int m_DockingHeight;
+	int m_Opacity;
+	CDropHelper m_DropHelper;
 	DockingPlace m_DragDockingTarget;
 	bool m_fDragMoving;
 	CEventHandler *m_pEventHandler;

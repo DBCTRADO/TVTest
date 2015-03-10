@@ -432,6 +432,8 @@ bool CAppMain::LoadSettings()
 			Panel.Frame.SetFloating(f);
 		if (Settings.Read(TEXT("PanelDockingWidth"),&Value))
 			Panel.Frame.SetDockingWidth(Value);
+		if (Settings.Read(TEXT("PanelDockingHeight"),&Value))
+			Panel.Frame.SetDockingHeight(Value);
 
 		Epg.ProgramGuideFrame.GetPosition(&Left,&Top,&Width,&Height);
 		Settings.Read(TEXT("ProgramGuideLeft"),&Left);
@@ -558,6 +560,7 @@ bool CAppMain::SaveSettings(unsigned int Flags)
 			Settings.Write(TEXT("InfoHeight"),Height);
 			Settings.Write(TEXT("PanelFloating"),Panel.Frame.GetFloating());
 			Settings.Write(TEXT("PanelDockingWidth"),Panel.Frame.GetDockingWidth());
+			Settings.Write(TEXT("PanelDockingHeight"),Panel.Frame.GetDockingHeight());
 
 			Epg.ProgramGuideFrame.GetPosition(&Left,&Top,&Width,&Height);
 			Settings.Write(TEXT("ProgramGuideLeft"),Left);

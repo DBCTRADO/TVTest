@@ -335,8 +335,7 @@ void CSplitter::SwapPane()
 		m_BarPos=(m_Position.bottom-m_Position.top)-(m_BarPos+m_BarWidth);
 	if (m_BarPos<0)
 		m_BarPos=0;
-	if (m_pBase!=NULL)
-		Adjust();
+	Adjust();
 }
 
 
@@ -368,8 +367,7 @@ bool CSplitter::SetPaneSize(int ID,int Size)
 		}
 	}
 	m_PaneList[Index].FixedSize=Size;
-	if (m_pBase!=NULL)
-		Adjust();
+	Adjust();
 	return true;
 }
 
@@ -417,7 +415,7 @@ bool CSplitter::SetStyle(unsigned int Style,bool fAdjust)
 			}
 		}
 		m_Style=Style;
-		if (fAdjust && m_pBase!=NULL)
+		if (fAdjust)
 			Adjust();
 	}
 	return true;
@@ -440,6 +438,9 @@ bool CSplitter::SetBarPos(int Pos)
 
 void CSplitter::Adjust()
 {
+	if (m_pBase==NULL || m_pBase->IsLayoutLocked())
+		return;
+
 	if (m_PaneList[0].pContainer==NULL || !m_PaneList[0].pContainer->GetVisible()
 			|| m_PaneList[1].pContainer==NULL || !m_PaneList[1].pContainer->GetVisible()) {
 		if (m_PaneList[0].pContainer!=NULL && m_PaneList[0].pContainer->GetVisible())
@@ -674,8 +675,6 @@ LRESULT CLayoutBase::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 
 bool CLayoutBase::SetTopContainer(CContainer *pContainer)
 {
-	if (m_pContainer!=NULL)
-		delete m_pContainer;
 	m_pContainer=pContainer;
 	m_pFocusContainer=NULL;
 	if (pContainer!=NULL) {

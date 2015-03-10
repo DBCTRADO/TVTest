@@ -21,7 +21,7 @@ bool CPanel::Initialize(HINSTANCE hinst)
 	if (m_hinst==NULL) {
 		WNDCLASS wc;
 
-		wc.style=CS_HREDRAW;
+		wc.style=CS_HREDRAW | CS_VREDRAW;
 		wc.lpfnWndProc=WndProc;
 		wc.cbClsExtra=0;
 		wc.cbWndExtra=0;
@@ -527,8 +527,9 @@ bool CPanelFrame::Initialize(HINSTANCE hinst)
 
 CPanelFrame::CPanelFrame()
 	: m_fFloating(true)
+	, m_fFloatingTransition(false)
 	, m_DockingWidth(-1)
-	, m_fKeepWidth(true)
+	, m_DockingHeight(-1)
 	, m_Opacity(255)
 	, m_DragDockingTarget(DOCKING_NONE)
 	, m_pEventHandler(NULL)
@@ -570,14 +571,23 @@ bool CPanelFrame::Create(HWND hwndOwner,Layout::CSplitter *pSplitter,int PanelID
 				WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME | WS_CLIPCHILDREN,
 				WS_EX_TOOLWINDOW))
 		return false;
-	m_Panel.Create(m_hwnd,WS_CHILD | WS_VISIBLE | WS_CLIPCHILDREN);
+	m_Panel.Create(m_hwnd,WS_CHILD | WS_CLIPCHILDREN);
 	m_Panel.SetWindow(pWindow,pszTitle);
 	m_Panel.SetEventHandler(this);
 	m_Panel.GetPosition(&rc);
-	if (m_DockingWidth<0)
-		m_DockingWidth=rc.right;
+	if (IsDockingVertical()) {
+		if (m_DockingHeight<0)
+			m_DockingHeight=rc.bottom;
+		if (m_DockingWidth<0)
+			m_DockingWidth=m_DockingHeight;
+	} else {
+		if (m_DockingWidth<0)
+			m_DockingWidth=rc.right;
+		if (m_DockingHeight<0)
+			m_DockingHeight=m_DockingWidth;
+	}
+
 	if (m_fFloating) {
-		m_Panel.SetVisible(false);
 		m_Panel.SetParent(this);
 		GetClientRect(&rc);
 		m_Panel.SetPosition(&rc);
@@ -588,11 +598,17 @@ bool CPanelFrame::Create(HWND hwndOwner,Layout::CSplitter *pSplitter,int PanelID
 			dynamic_cast<Layout::CWindowContainer*>(m_pSplitter->GetPaneByID(PanelID));
 
 		pContainer->SetWindow(&m_Panel);
-		m_pSplitter->SetPaneSize(PanelID,m_DockingWidth);
-		rc.right=rc.left+m_DockingWidth;
+		if (IsDockingVertical()) {
+			m_pSplitter->SetPaneSize(PanelID,m_DockingHeight);
+			rc.bottom=rc.top+m_DockingHeight;
+		} else {
+			m_pSplitter->SetPaneSize(PanelID,m_DockingWidth);
+			rc.right=rc.left+m_DockingWidth;
+		}
 		m_Panel.SetPosition(&rc);
 		m_Panel.ShowTitle(true);
 	}
+
 	return true;
 }
 
@@ -605,6 +621,7 @@ bool CPanelFrame::SetFloating(bool fFloating)
 				dynamic_cast<Layout::CWindowContainer*>(m_pSplitter->GetPaneByID(m_PanelID));
 			RECT rc;
 
+			m_fFloatingTransition=true;
 			if (fFloating) {
 				pContainer->SetVisible(false);
 				pContainer->SetWindow(NULL);
@@ -615,20 +632,27 @@ bool CPanelFrame::SetFloating(bool fFloating)
 				m_Panel.ShowTitle(false);
 				SetVisible(true);
 			} else {
-				if (m_fKeepWidth) {
-					m_Panel.GetClientRect(&rc);
-					m_DockingWidth=rc.right;
-				}
+				/*
+				m_Panel.GetContentRect(&rc);
+				if (IsDockingVertical())
+					m_DockingHeight=(rc.bottom-rc.top)+m_Panel.GetTitleHeight();
+				else
+					m_DockingWidth=rc.right-rc.left;
+				*/
 				SetVisible(false);
 				m_Panel.SetVisible(false);
 				m_Panel.ShowTitle(true);
 				pContainer->SetWindow(&m_Panel);
-				m_pSplitter->SetPaneSize(m_PanelID,m_DockingWidth);
+				m_pSplitter->SetPaneSize(m_PanelID,
+					IsDockingVertical()?m_DockingHeight:m_DockingWidth);
 				pContainer->SetVisible(true);
 			}
+			m_fFloatingTransition=false;
 		}
+
 		m_fFloating=fFloating;
 	}
+
 	return true;
 }
 
@@ -636,6 +660,22 @@ bool CPanelFrame::SetFloating(bool fFloating)
 bool CPanelFrame::SetDockingWidth(int Width)
 {
 	m_DockingWidth=Width;
+	return true;
+}
+
+
+bool CPanelFrame::SetDockingHeight(int Height)
+{
+	m_DockingHeight=Height;
+	return true;
+}
+
+
+bool CPanelFrame::SetDockingPlace(DockingPlace Place)
+{
+	if (m_pEventHandler!=NULL)
+		m_pEventHandler->OnDocking(Place);
+
 	return true;
 }
 
@@ -669,6 +709,12 @@ bool CPanelFrame::SetPanelVisible(bool fVisible,bool fNoActivate)
 		pContainer->SetVisible(fVisible);
 	}
 	return true;
+}
+
+
+bool CPanelFrame::IsDockingVertical() const
+{
+	return (m_pSplitter->GetStyle() & Layout::CSplitter::STYLE_VERT)!=0;
 }
 
 
@@ -755,45 +801,60 @@ LRESULT CPanelFrame::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 		break;
 
 	case WM_MOVE:
-		{
+		if (m_fDragMoving) {
+			const int Margin=::GetSystemMetrics(SM_CYCAPTION);
 			POINT pt;
 			RECT rcTarget,rc;
 			DockingPlace Target;
 
-			if (!m_fDragMoving)
-				break;
 			::GetCursorPos(&pt);
 			m_pSplitter->GetLayoutBase()->GetScreenPosition(&rcTarget);
 			Target=DOCKING_NONE;
 			rc=rcTarget;
-			rc.right=rc.left+16;
+			rc.right=rc.left+Margin;
 			if (::PtInRect(&rc,pt)) {
 				Target=DOCKING_LEFT;
 			} else {
 				rc.right=rcTarget.right;
-				rc.left=rc.right-16;
-				if (PtInRect(&rc,pt))
+				rc.left=rc.right-Margin;
+				if (::PtInRect(&rc,pt)) {
 					Target=DOCKING_RIGHT;
+				} else {
+					rc.left=rcTarget.left;
+					rc.right=rcTarget.right;
+					rc.top=rcTarget.top;
+					rc.bottom=rc.top+Margin;
+					if (::PtInRect(&rc,pt)) {
+						Target=DOCKING_TOP;
+					} else {
+						rc.bottom=rcTarget.bottom;
+						rc.top=rc.bottom-Margin;
+						if (::PtInRect(&rc,pt))
+							Target=DOCKING_BOTTOM;
+					}
+				}
 			}
 			if (Target!=m_DragDockingTarget) {
 				if (Target==DOCKING_NONE) {
 					m_DropHelper.Hide();
 				} else {
-					int DockingWidth;
-
-					if (m_fKeepWidth) {
-						SIZE sz;
-						m_Panel.GetClientSize(&sz);
-						DockingWidth=sz.cx;
-					} else {
-						DockingWidth=m_DockingWidth;
-					}
-					if (Target==DOCKING_LEFT) {
+					switch (Target) {
+					case DOCKING_LEFT:
 						rc.right=rcTarget.left;
-						rc.left=rc.right-DockingWidth;
-					} else if (Target==DOCKING_RIGHT) {
+						rc.left=rc.right-m_DockingWidth;
+						break;
+					case DOCKING_RIGHT:
 						rc.left=rcTarget.right;
-						rc.right=rc.left+DockingWidth;
+						rc.right=rc.left+m_DockingWidth;
+						break;
+					case DOCKING_TOP:
+						rc.bottom=rcTarget.top;
+						rc.top=rc.bottom-m_DockingHeight;
+						break;
+					case DOCKING_BOTTOM:
+						rc.top=rcTarget.bottom;
+						rc.bottom=rc.top+m_DockingHeight;
+						break;
 					}
 					m_DropHelper.Show(&rc);
 				}
@@ -804,16 +865,9 @@ LRESULT CPanelFrame::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 
 	case WM_EXITSIZEMOVE:
 		if (m_DragDockingTarget!=DOCKING_NONE) {
-			int Index;
-
 			m_DropHelper.Hide();
-			if (m_DragDockingTarget==DOCKING_LEFT)
-				Index=0;
-			else
-				Index=1;
-			//if (m_pSplitter->IDToIndex(m_PanelID)!=Index)
-			if (m_pSplitter->GetPane(Index)->GetID()!=m_PanelID)
-				m_pSplitter->SwapPane();
+			if (m_pEventHandler!=NULL)
+				m_pEventHandler->OnDocking(m_DragDockingTarget);
 			::SendMessage(hwnd,WM_SYSCOMMAND,SC_DOCKING,0);
 		}
 		m_fDragMoving=false;
@@ -892,17 +946,35 @@ bool CPanelFrame::OnKeyDown(UINT KeyCode,UINT Flags)
 
 void CPanelFrame::OnSizeChanged(int Width,int Height)
 {
-	if (!m_fFloating)
-		m_DockingWidth=Width;
+	if (!m_fFloating && !m_fFloatingTransition) {
+		if (IsDockingVertical())
+			m_DockingHeight=Height;
+		else
+			m_DockingWidth=Width;
+	}
 }
 
 
-#define PANEL_MENU_PLACEMENT	CPanel::MENU_USER
+enum {
+	PANEL_MENU_LEFT=CPanel::MENU_USER,
+	PANEL_MENU_RIGHT,
+	PANEL_MENU_TOP,
+	PANEL_MENU_BOTTOM
+};
 
 bool CPanelFrame::OnMenuPopup(HMENU hmenu)
 {
-	::AppendMenu(hmenu,MF_STRING | MF_ENABLED,PANEL_MENU_PLACEMENT,
-				 m_pSplitter->IDToIndex(m_PanelID)==0?TEXT("‰E‚Ö(&R)"):TEXT("¶‚Ö(&L)"));
+	::AppendMenu(hmenu,MF_SEPARATOR,0,NULL);
+	::AppendMenu(hmenu,MF_STRING | MF_ENABLED,PANEL_MENU_LEFT,TEXT("¶‚Ö(&L)"));
+	::AppendMenu(hmenu,MF_STRING | MF_ENABLED,PANEL_MENU_RIGHT,TEXT("‰E‚Ö(&R)"));
+	::AppendMenu(hmenu,MF_STRING | MF_ENABLED,PANEL_MENU_TOP,TEXT("ã‚Ö(&T)"));
+	::AppendMenu(hmenu,MF_STRING | MF_ENABLED,PANEL_MENU_BOTTOM,TEXT("‰º‚Ö(&B)"));
+	int Index=m_pSplitter->IDToIndex(m_PanelID);
+	::EnableMenuItem(hmenu,
+		IsDockingVertical()?
+			(Index==0?PANEL_MENU_TOP:PANEL_MENU_BOTTOM):
+			(Index==0?PANEL_MENU_LEFT:PANEL_MENU_RIGHT),
+		MF_BYCOMMAND | MF_GRAYED);
 	return true;
 }
 
@@ -910,13 +982,21 @@ bool CPanelFrame::OnMenuPopup(HMENU hmenu)
 bool CPanelFrame::OnMenuSelected(int Command)
 {
 	switch (Command) {
-	case PANEL_MENU_PLACEMENT:
-		m_pSplitter->SwapPane();
-		break;
-	default:
-		return false;
+	case PANEL_MENU_LEFT:
+		SetDockingPlace(DOCKING_LEFT);
+		return true;
+	case PANEL_MENU_RIGHT:
+		SetDockingPlace(DOCKING_RIGHT);
+		return true;
+	case PANEL_MENU_TOP:
+		SetDockingPlace(DOCKING_TOP);
+		return true;
+	case PANEL_MENU_BOTTOM:
+		SetDockingPlace(DOCKING_BOTTOM);
+		return true;
 	}
-	return true;
+
+	return false;
 }
 
 

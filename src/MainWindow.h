@@ -118,6 +118,8 @@ public:
 	bool IsPanelVisible() const;
 	bool IsPanelPresent() const;
 	bool IsFullscreenPanelVisible() const { return m_Fullscreen.IsPanelVisible(); }
+	void OnPanelFloating(bool fFloating);
+	void OnPanelDocking(CPanelFrame::DockingPlace Place);
 	int GetAspectRatioType() const { return m_AspectRatioType; }
 
 	bool EnablePlayback(bool fEnable);
@@ -271,6 +273,10 @@ private:
 		bool IsPanelVisible() const { return m_fShowPanel; }
 		bool SetPanelWidth(int Width);
 		int GetPanelWidth() const { return m_PanelWidth; }
+		bool SetPanelHeight(int Height);
+		int GetPanelHeight() const { return m_PanelHeight; }
+		bool SetPanelPlace(CPanelFrame::DockingPlace Place);
+		CPanelFrame::DockingPlace GetPanelPlace() const { return m_PanelPlace; }
 		void HideAllBars();
 		void OnRButtonUp();
 		void OnMButtonUp();
@@ -285,11 +291,13 @@ private:
 	private:
 		class CPanelEventHandler : public CPanel::CEventHandler {
 		public:
-			CPanelEventHandler(CMainWindow *pMainWindow);
+			CPanelEventHandler(CFullscreen &Fullscreen);
 			bool OnClose() override;
+			bool OnMenuPopup(HMENU hmenu) override;
+			bool OnMenuSelected(int Command) override;
 
 		private:
-			CMainWindow *m_pMainWindow;
+			CFullscreen &m_Fullscreen;
 		};
 
 		CMainWindow &m_MainWindow;
@@ -308,7 +316,9 @@ private:
 		bool m_fShowTitleBar;
 		bool m_fShowSideBar;
 		bool m_fShowPanel;
+		CPanelFrame::DockingPlace m_PanelPlace;
 		int m_PanelWidth;
+		int m_PanelHeight;
 		CShowCursorManager m_ShowCursorManager;
 
 		bool OnCreate();
@@ -409,6 +419,7 @@ private:
 	bool m_fSplitTitleBar;
 	bool m_fShowSideBar;
 	int m_PanelPaneIndex;
+	bool m_fPanelVerticalAlign;
 	bool m_fCustomFrame;
 	int m_CustomFrameWidth;
 	int m_ThinFrameWidth;
@@ -587,6 +598,9 @@ private:
 	bool SetPanAndScan(int Command);
 	void LockLayout();
 	void UpdateLayout();
+	void UpdateLayoutStructure();
+	void AdjustWindowSizeOnDockPanel(bool fDock);
+	void GetPanelDockingAdjustedPos(bool fDock,RECT *pPos) const;
 	void ShowCursor(bool fShow);
 	void ShowChannelOSD();
 	void ShowAudioOSD();

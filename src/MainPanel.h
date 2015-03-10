@@ -61,6 +61,7 @@ private:
 		bool OnMouseWheel(WPARAM wParam,LPARAM lParam) override;
 		void OnVisibleChange(bool fVisible) override;
 		bool OnFloatingChange(bool fFloating) override;
+		void OnDocking(CPanelFrame::DockingPlace Place) override;
 	};
 
 	class CFormEventHandler : public CPanelForm::CEventHandler
