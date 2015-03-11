@@ -7,6 +7,7 @@
 #include "LogoManager.h"
 #include "EpgChannelSettings.h"
 #include "ProgramGuideToolbarOptions.h"
+#include "VariableString.h"
 #include "Help/HelpID.h"
 #include "BonTsEngine/TsUtil.h"
 #include "resource.h"
@@ -7099,6 +7100,103 @@ CProgramGuideDisplay::CProgramGuideDisplayEventHandler::CProgramGuideDisplayEven
 
 
 
+class CEpgVariableStringMap : public TVTest::CEventVariableStringMap
+{
+public:
+	CEpgVariableStringMap();
+	CEpgVariableStringMap(const EventInfo &Info);
+	bool GetString(LPCWSTR pszKeyword,TVTest::String *pString) override;
+	bool NormalizeString(TVTest::String *pString) const override { return false; }
+	bool GetParameterInfo(int Index,ParameterInfo *pInfo) const override;
+	int GetParameterCount() const override;
+	const TVTest::String &GetiEpgFileName() const { return m_iEpgFileName; }
+
+private:
+	static const ParameterInfo m_EpgParameterList[];
+
+	TVTest::String m_iEpgFileName;
+};
+
+
+const CEpgVariableStringMap::ParameterInfo CEpgVariableStringMap::m_EpgParameterList[] = {
+//	{TEXT("%eid%"),				TEXT("イベントID")},
+	{TEXT("%nid%"),				TEXT("ネットワークID")},
+	{TEXT("%tsid%"),			TEXT("ストリームID")},
+//	{TEXT("%sid%"),				TEXT("サービスID")},
+	{TEXT("%tvpid%"),			TEXT("iEPGファイル")},
+	{TEXT("%duration-sec%"),	TEXT("番組の長さ(秒単位)")},
+	{TEXT("%duration-min%"),	TEXT("番組の長さ(分単位)")},
+};
+
+
+CEpgVariableStringMap::CEpgVariableStringMap()
+{
+}
+
+
+CEpgVariableStringMap::CEpgVariableStringMap(const EventInfo &Info)
+	: CEventVariableStringMap(Info)
+{
+}
+
+
+bool CEpgVariableStringMap::GetString(LPCWSTR pszKeyword,TVTest::String *pString)
+{
+	if (::lstrcmpi(pszKeyword,TEXT("tvpid"))==0) {
+		if (m_iEpgFileName.empty()) {
+			TCHAR sziEpgFileName[MAX_PATH+11];
+
+			GetAppClass().GetAppDirectory(sziEpgFileName);
+			::PathAppend(sziEpgFileName,TEXT("iepg.tvpid"));
+			m_iEpgFileName=sziEpgFileName;
+		}
+		*pString=m_iEpgFileName;
+	} else if (::lstrcmpi(pszKeyword,TEXT("eid"))==0) {
+		TVTest::StringUtility::Format(*pString,TEXT("%d"),m_EventInfo.Event.m_EventID);
+	} else if (::lstrcmpi(pszKeyword,TEXT("nid"))==0) {
+		TVTest::StringUtility::Format(*pString,TEXT("%d"),m_EventInfo.Channel.GetNetworkID());
+	} else if (::lstrcmpi(pszKeyword,TEXT("tsid"))==0) {
+		TVTest::StringUtility::Format(*pString,TEXT("%d"),m_EventInfo.Channel.GetTransportStreamID());
+	} else if (::lstrcmpi(pszKeyword,TEXT("sid"))==0) {
+		TVTest::StringUtility::Format(*pString,TEXT("%d"),m_EventInfo.Channel.GetServiceID());
+	} else if (::lstrcmpi(pszKeyword,TEXT("duration-sec"))==0) {
+		TVTest::StringUtility::Format(*pString,TEXT("%d"),m_EventInfo.Event.m_Duration);
+	} else if (::lstrcmpi(pszKeyword,TEXT("duration-min"))==0) {
+		TVTest::StringUtility::Format(*pString,TEXT("%d"),(m_EventInfo.Event.m_Duration+59)/60);
+	} else {
+		return CEventVariableStringMap::GetString(pszKeyword,pString);
+	}
+
+	return true;
+}
+
+
+bool CEpgVariableStringMap::GetParameterInfo(int Index,ParameterInfo *pInfo) const
+{
+	if (pInfo==NULL)
+		return false;
+
+	if (CEventVariableStringMap::GetParameterInfo(Index,pInfo))
+		return true;
+
+	Index-=CEventVariableStringMap::GetParameterCount();
+	if (Index>=0 && Index<lengthof(m_EpgParameterList)) {
+		*pInfo=m_EpgParameterList[Index];
+		return true;
+	}
+
+	return false;
+}
+
+
+int CEpgVariableStringMap::GetParameterCount() const
+{
+	return CEventVariableStringMap::GetParameterCount()+lengthof(m_EpgParameterList);
+}
+
+
+
+
 CProgramGuideTool::CProgramGuideTool()
 {
 	m_szName[0]='\0';
@@ -7167,9 +7265,8 @@ bool CProgramGuideTool::Execute(const ProgramGuide::CServiceInfo *pServiceInfo,
 		return false;
 
 	SYSTEMTIME stStart,stEnd;
-	TCHAR szFileName[MAX_PATH],szCommand[2048];
+	TCHAR szFileName[MAX_PATH];
 	LPCTSTR p;
-	LPTSTR q,pEnd;
 
 	pEventInfo->GetStartTime(&stStart);
 	pEventInfo->GetEndTime(&stEnd);
@@ -7181,99 +7278,28 @@ bool CProgramGuideTool::Execute(const ProgramGuide::CServiceInfo *pServiceInfo,
 
 	while (*p==_T(' '))
 		p++;
-	q=szCommand;
-	pEnd=q+lengthof(szCommand);
-	while (*p!=_T('\0')) {
-		if (q>=pEnd) {
-			::MessageBox(hwnd,TEXT("コマンドが長すぎます。"),NULL,MB_OK | MB_ICONEXCLAMATION);
+
+	TVTest::CEventVariableStringMap::EventInfo Info;
+	Info.Channel=pServiceInfo->GetChannelInfo();
+	Info.Event=*pEventInfo;
+	Info.ServiceName=pServiceInfo->GetServiceName();
+	::GetLocalTime(&Info.TotTime);
+
+	CEpgVariableStringMap VarStrMap(Info);
+	TVTest::String Parameter;
+	TVTest::FormatVariableString(&VarStrMap,p,&Parameter);
+	const TVTest::String &iEpgFileName=VarStrMap.GetiEpgFileName();
+	if (!iEpgFileName.empty()) {
+		if (!pServiceInfo->SaveiEpgFile(pEventInfo,iEpgFileName.c_str(),true)) {
+			::MessageBox(hwnd,TEXT("iEPGファイルの書き出しができません。"),NULL,
+						 MB_OK | MB_ICONEXCLAMATION);
 			return false;
 		}
-
-		if (*p==_T('%')) {
-			p++;
-			if (*p==_T('%')) {
-				*q++=_T('%');
-				p++;
-			} else {
-				TCHAR szKeyword[32];
-				int i;
-
-				for (i=0;*p!=_T('%') && *p!=_T('\0');i++) {
-					if (i<lengthof(szKeyword)-1)
-						szKeyword[i]=*p;
-					p++;
-				}
-				if (*p==_T('%'))
-					p++;
-				szKeyword[i]=_T('\0');
-				if (::lstrcmpi(szKeyword,TEXT("tvpid"))==0) {
-					TCHAR sziEpgFileName[MAX_PATH+11];
-
-					GetAppClass().GetAppDirectory(sziEpgFileName);
-					::PathAppend(sziEpgFileName,TEXT("iepg.tvpid"));
-					if (!pServiceInfo->SaveiEpgFile(pEventInfo,sziEpgFileName,true)) {
-						::MessageBox(hwnd,TEXT("iEPGファイルの書き出しができません。"),NULL,
-									 MB_OK | MB_ICONEXCLAMATION);
-						return false;
-					}
-					size_t Length=::lstrlen(sziEpgFileName);
-					if (Length>=(size_t)(pEnd-q)) {
-						::MessageBox(hwnd,TEXT("コマンドが長すぎます。"),NULL,
-									 MB_OK | MB_ICONEXCLAMATION);
-						return false;
-					}
-					::lstrcpy(q,sziEpgFileName);
-					q+=Length;
-				} else if (::lstrcmpi(szKeyword,TEXT("eid"))==0) {
-					q+=StdUtil::snprintf(q,pEnd-q,TEXT("%d"),pEventInfo->m_EventID);
-				} else if (::lstrcmpi(szKeyword,TEXT("nid"))==0) {
-					q+=StdUtil::snprintf(q,pEnd-q,TEXT("%d"),pServiceInfo->GetNetworkID());
-				} else if (::lstrcmpi(szKeyword,TEXT("tsid"))==0) {
-					q+=StdUtil::snprintf(q,pEnd-q,TEXT("%d"),pServiceInfo->GetTSID());
-				} else if (::lstrcmpi(szKeyword,TEXT("sid"))==0) {
-					q+=StdUtil::snprintf(q,pEnd-q,TEXT("%d"),pServiceInfo->GetServiceID());
-				} else if (::lstrcmpi(szKeyword,TEXT("start-year"))==0) {
-					q+=StdUtil::snprintf(q,pEnd-q,TEXT("%d"),stStart.wYear);
-				} else if (::lstrcmpi(szKeyword,TEXT("start-month"))==0) {
-					q+=StdUtil::snprintf(q,pEnd-q,TEXT("%d"),stStart.wMonth);
-				} else if (::lstrcmpi(szKeyword,TEXT("start-day"))==0) {
-					q+=StdUtil::snprintf(q,pEnd-q,TEXT("%d"),stStart.wDay);
-				} else if (::lstrcmpi(szKeyword,TEXT("start-hour"))==0) {
-					q+=StdUtil::snprintf(q,pEnd-q,TEXT("%d"),stStart.wHour);
-				} else if (::lstrcmpi(szKeyword,TEXT("start-minute"))==0) {
-					q+=StdUtil::snprintf(q,pEnd-q,TEXT("%02d"),stStart.wMinute);
-				} else if (::lstrcmpi(szKeyword,TEXT("end-year"))==0) {
-					q+=StdUtil::snprintf(q,pEnd-q,TEXT("%d"),stEnd.wYear);
-				} else if (::lstrcmpi(szKeyword,TEXT("end-month"))==0) {
-					q+=StdUtil::snprintf(q,pEnd-q,TEXT("%d"),stEnd.wMonth);
-				} else if (::lstrcmpi(szKeyword,TEXT("end-day"))==0) {
-					q+=StdUtil::snprintf(q,pEnd-q,TEXT("%d"),stEnd.wDay);
-				} else if (::lstrcmpi(szKeyword,TEXT("end-hour"))==0) {
-					q+=StdUtil::snprintf(q,pEnd-q,TEXT("%d"),stEnd.wHour);
-				} else if (::lstrcmpi(szKeyword,TEXT("end-minute"))==0) {
-					q+=StdUtil::snprintf(q,pEnd-q,TEXT("%02d"),stEnd.wMinute);
-				} else if (::lstrcmpi(szKeyword,TEXT("duration-sec"))==0) {
-					q+=StdUtil::snprintf(q,pEnd-q,TEXT("%d"),pEventInfo->m_Duration);
-				} else if (::lstrcmpi(szKeyword,TEXT("duration-min"))==0) {
-					q+=StdUtil::snprintf(q,pEnd-q,TEXT("%d"),(pEventInfo->m_Duration+59)/60);
-				} else if (::lstrcmpi(szKeyword,TEXT("event-name"))==0) {
-					if (!pEventInfo->m_EventName.empty())
-						q+=StdUtil::snprintf(q,pEnd-q,TEXT("%s"),pEventInfo->m_EventName.c_str());
-				} else if (::lstrcmpi(szKeyword,TEXT("service-name"))==0) {
-					q+=StdUtil::snprintf(q,pEnd-q,TEXT("%s"),pServiceInfo->GetServiceName());
-				}
-			}
-		} else {
-#ifndef UNICODE
-			if (::IsDBCSLeadByteEx(CP_ACP,*p) && *(p+1)!='\0')
-				*q++=*p++;
-#endif
-			*q++=*p++;
-		}
 	}
-	*q=_T('\0');
-	TRACE(TEXT("外部ツール実行 : %s, %s\n"),szFileName,szCommand);
-	return ::ShellExecute(NULL,NULL,szFileName,szCommand,NULL,SW_SHOWNORMAL)>=(HINSTANCE)32;
+
+	TRACE(TEXT("外部ツール実行 : %s, %s\n"),szFileName,Parameter.c_str());
+
+	return ::ShellExecute(NULL,NULL,szFileName,Parameter.c_str(),NULL,SW_SHOWNORMAL)>=(HINSTANCE)32;
 }
 
 
@@ -7362,59 +7388,14 @@ INT_PTR CALLBACK CProgramGuideTool::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LP
 
 			case IDC_PROGRAMGUIDETOOL_PARAMETER:
 				{
-					static const struct {
-						LPCTSTR pszParameter;
-						LPCTSTR pszText;
-					} ParameterList[] = {
-						{TEXT("%tvpid%"),			TEXT("iEPGファイル")},
-						{TEXT("%eid%"),				TEXT("イベントID")},
-						{TEXT("%nid%"),				TEXT("ネットワークID")},
-						{TEXT("%tsid%"),			TEXT("ストリームID")},
-						{TEXT("%sid%"),				TEXT("サービスID")},
-						{TEXT("%start-year%"),		TEXT("開始年")},
-						{TEXT("%start-month%"),		TEXT("開始月")},
-						{TEXT("%start-day%"),		TEXT("開始日")},
-						{TEXT("%start-hour%"),		TEXT("開始時間")},
-						{TEXT("%start-minute%"),	TEXT("開始分")},
-						{TEXT("%end-year%"),		TEXT("終了年")},
-						{TEXT("%end-month%"),		TEXT("終了月")},
-						{TEXT("%end-day%"),			TEXT("終了日")},
-						{TEXT("%end-hour%"),		TEXT("終了時間")},
-						{TEXT("%end-minute%"),		TEXT("終了分")},
-						{TEXT("%duration-sec%"),	TEXT("秒単位の長さ")},
-						{TEXT("%duration-min%"),	TEXT("分単位の長さ")},
-						{TEXT("%event-name%"),		TEXT("イベント名")},
-						{TEXT("%service-name%"),	TEXT("サービス名")},
-					};
-					HMENU hmenu=::CreatePopupMenu();
+					CEpgVariableStringMap VarStrMap;
 					RECT rc;
-					int Command;
+					POINT pt;
 
-					for (int i=0;i<lengthof(ParameterList);i++) {
-						TCHAR szText[128];
-
-						StdUtil::snprintf(szText,lengthof(szText),TEXT("%s (%s)"),
-										  ParameterList[i].pszParameter,
-										  ParameterList[i].pszText);
-						::AppendMenu(hmenu,MF_STRING | MF_ENABLED,i+1,szText);
-					}
 					::GetWindowRect(::GetDlgItem(hDlg,IDC_PROGRAMGUIDETOOL_PARAMETER),&rc);
-					Command=::TrackPopupMenu(hmenu,TPM_RETURNCMD,
-											 rc.left,rc.bottom,0,hDlg,NULL);
-					::DestroyMenu(hmenu);
-					if (Command>0) {
-						DWORD Start,End;
-
-						::SendDlgItemMessage(hDlg,IDC_PROGRAMGUIDETOOL_COMMAND,EM_GETSEL,
-							reinterpret_cast<LPARAM>(&Start),
-							reinterpret_cast<LPARAM>(&End));
-						::SendDlgItemMessage(hDlg,IDC_PROGRAMGUIDETOOL_COMMAND,EM_REPLACESEL,
-							TRUE,reinterpret_cast<LPARAM>(ParameterList[Command-1].pszParameter));
-						if (End<Start)
-							Start=End;
-						::SendDlgItemMessage(hDlg,IDC_PROGRAMGUIDETOOL_COMMAND,EM_SETSEL,
-							Start,Start+::lstrlen(ParameterList[Command-1].pszParameter));
-					}
+					pt.x=rc.left;
+					pt.y=rc.bottom;
+					VarStrMap.InputParameter(hDlg,IDC_PROGRAMGUIDETOOL_COMMAND,pt);
 				}
 				return TRUE;
 			}

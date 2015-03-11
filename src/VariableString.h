@@ -56,7 +56,7 @@ namespace TVTest
 
 		static bool GetSampleEventInfo(EventInfo *pInfo);
 
-	private:
+	protected:
 		static void GetEventTitle(const String &EventName,String *pTitle);
 
 		static const ParameterInfo m_ParameterList[];
