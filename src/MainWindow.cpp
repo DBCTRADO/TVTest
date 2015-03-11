@@ -89,7 +89,6 @@ CMainWindow::CMainWindow(CAppMain &App)
 	, m_fCustomFrame(false)
 	, m_CustomFrameWidth(0)
 	, m_ThinFrameWidth(1)
-	, m_fViewWindowEdge(true)
 
 	, m_fEnablePlayback(true)
 
@@ -460,7 +459,6 @@ bool CMainWindow::ReadSettings(CSettings &Settings)
 	if (!m_fCustomFrame && Settings.Read(TEXT("CustomTitleBar"),&f))
 		SetCustomTitleBar(f);
 	Settings.Read(TEXT("SplitTitleBar"),&m_fSplitTitleBar);
-	Settings.Read(TEXT("ClientEdge"),&m_fViewWindowEdge);
 	if (Settings.Read(TEXT("ShowSideBar"),&f))
 		SetSideBarVisible(f);
 	Settings.Read(TEXT("FrameCut"),&m_fFrameCut);
@@ -498,7 +496,6 @@ bool CMainWindow::WriteSettings(CSettings &Settings)
 //	Settings.Write(TEXT("ThinFrameWidth"),m_ThinFrameWidth);
 	Settings.Write(TEXT("CustomTitleBar"),m_fCustomTitleBar);
 	Settings.Write(TEXT("SplitTitleBar"),m_fSplitTitleBar);
-	Settings.Write(TEXT("ClientEdge"),m_fViewWindowEdge);
 	Settings.Write(TEXT("ShowSideBar"),m_fShowSideBar);
 	Settings.Write(TEXT("FrameCut"),m_fFrameCut);
 
@@ -2592,10 +2589,6 @@ void CMainWindow::OnCommand(HWND hwnd,int id,HWND hwndCtl,UINT codeNotify)
 		SetSplitTitleBar(!m_fSplitTitleBar);
 		return;
 
-	case CM_VIDEOEDGE:
-		SetViewWindowEdge(!m_fViewWindowEdge);
-		return;
-
 	case CM_VIDEODECODERPROPERTY:
 	case CM_VIDEORENDERERPROPERTY:
 	case CM_AUDIOFILTERPROPERTY:
@@ -4027,7 +4020,6 @@ bool CMainWindow::OnInitMenuPopup(HMENU hmenu)
 		m_App.MainMenu.EnableItem(CM_CUSTOMTITLEBAR,!m_fCustomFrame);
 		m_App.MainMenu.CheckItem(CM_SPLITTITLEBAR,m_fSplitTitleBar);
 		m_App.MainMenu.EnableItem(CM_SPLITTITLEBAR,m_fCustomFrame || m_fCustomTitleBar);
-		m_App.MainMenu.CheckItem(CM_VIDEOEDGE,m_fViewWindowEdge);
 	} else {
 		if (m_pCore->HandleInitMenuPopup(hmenu))
 			return true;
@@ -5658,29 +5650,11 @@ void CMainWindow::SetTheme(const TVTest::Theme::CThemeManager *pThemeManager)
 
 	Theme::BorderStyle Border;
 	pThemeManager->GetBorderStyle(TVTest::Theme::CThemeManager::STYLE_SCREEN,&Border);
-	if (!m_fViewWindowEdge)
-		Border.Type=Theme::BORDER_NONE;
 	m_Display.GetViewWindow().SetBorder(Border);
 
 	m_TitleBar.SetTheme(pThemeManager);
 	m_NotificationBar.SetTheme(pThemeManager);
 	m_Fullscreen.SetTheme(pThemeManager);
-}
-
-
-bool CMainWindow::SetViewWindowEdge(bool fEdge)
-{
-	if (m_fViewWindowEdge!=fEdge) {
-		const CColorScheme *pColorScheme=m_pCore->GetCurrentColorScheme();
-		Theme::BorderStyle Border;
-
-		pColorScheme->GetBorderStyle(CColorScheme::BORDER_SCREEN,&Border);
-		if (!fEdge)
-			Border.Type=Theme::BORDER_NONE;
-		m_Display.GetViewWindow().SetBorder(Border);
-		m_fViewWindowEdge=fEdge;
-	}
-	return true;
 }
 
 

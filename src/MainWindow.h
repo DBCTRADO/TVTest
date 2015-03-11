@@ -136,9 +136,6 @@ public:
 	bool BeginChannelNoInput(int Digits);
 	void EndChannelNoInput(bool fDetermine=false);
 
-	bool SetViewWindowEdge(bool fEdge);
-	bool GetViewWindowEdge() const { return m_fViewWindowEdge; }
-
 	Layout::CLayoutBase &GetLayoutBase() { return m_LayoutBase; }
 	CDisplayBase &GetDisplayBase() { return m_Display.GetDisplayBase(); }
 	CTitleBar &GetTitleBar() { return m_TitleBar; }
@@ -428,7 +425,6 @@ private:
 		FRAME_CUSTOM,
 		FRAME_NONE
 	};
-	bool m_fViewWindowEdge;
 
 	bool m_fEnablePlayback;
 

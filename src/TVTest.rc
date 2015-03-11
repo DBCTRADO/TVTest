@@ -161,8 +161,6 @@ BEGIN
 			MENUITEM SEPARATOR
 			MENUITEM "独自タイトルバーを使用(&C)",CM_CUSTOMTITLEBAR
 			MENUITEM "パネルドッキング時にタイトルバーを分割(&P)",CM_SPLITTITLEBAR
-			MENUITEM SEPARATOR
-			MENUITEM "映像表示部の枠(&V)",CM_VIDEOEDGE
 		END
 		POPUP "プラグイン(&U)"
 		BEGIN
@@ -654,7 +652,6 @@ BEGIN
 	CM_WINDOWFRAME_NONE,		"ウィンドウ枠 : なくす"
 	CM_CUSTOMTITLEBAR,			"独自タイトルバーを使用"
 	CM_SPLITTITLEBAR,			"パネルドッキング時にタイトルバーを分割"
-	CM_VIDEOEDGE,				"映像表示部の枠"
 	CM_VIDEODECODERPROPERTY,	"映像デコーダのプロパティ"
 	CM_VIDEORENDERERPROPERTY,	"映像レンダラのプロパティ"
 	CM_AUDIOFILTERPROPERTY,		"音声フィルタのプロパティ"

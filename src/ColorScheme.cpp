@@ -347,8 +347,8 @@ const CColorScheme::GradientInfo CColorScheme::m_GradientInfoList[NUM_GRADIENTS]
 };
 
 const CColorScheme::BorderInfo CColorScheme::m_BorderInfoList[NUM_BORDERS] = {
-	{TEXT("ScreenBorder"),						Theme::BORDER_SUNKEN,
-		COLOR_SCREENBORDER,							true},
+	{TEXT("ScreenBorder"),						Theme::BORDER_NONE,
+		COLOR_SCREENBORDER,							false},
 	{TEXT("WindowFrameBorder"),					Theme::BORDER_NONE,
 		COLOR_WINDOWFRAMEBORDER,					false},
 	{TEXT("WindowActiveFrameBorder"),			Theme::BORDER_NONE,
@@ -442,7 +442,7 @@ const CColorScheme::BorderInfo CColorScheme::m_BorderInfoList[NUM_BORDERS] = {
 };
 
 const Theme::BorderType CColorScheme::m_CustomDefaultBorderList[NUM_BORDERS] = {
-	Theme::BORDER_SOLID,
+	Theme::BORDER_NONE,
 	Theme::BORDER_NONE,
 	Theme::BORDER_NONE,
 	Theme::BORDER_RAISED,
