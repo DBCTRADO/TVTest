@@ -6,8 +6,8 @@
 
 
 // タイマーの識別子
-#define TIMER_ID_HIDE		1
-#define TIMER_ID_ANIMATION	2
+#define TIMER_ID_HIDE		0x0001U
+#define TIMER_ID_ANIMATION	0x0002U
 
 #define ANIMATION_FRAMES	4	// アニメーションの段階数
 #define ANIMATION_INTERVAL	50	// アニメーションの間隔
@@ -69,7 +69,6 @@ CPseudoOSD::CPseudoOSD()
 	, m_IconHeight(0)
 	, m_hbm(NULL)
 	, m_ImageEffect(0)
-	, m_TimerID(0)
 {
 	LOGFONT lf;
 	DrawUtil::GetSystemFont(DrawUtil::FONT_DEFAULT,&lf);
@@ -150,21 +149,20 @@ bool CPseudoOSD::Show(DWORD Time,bool fAnimation)
 			pt.x=m_Position.Left;
 			pt.y=m_Position.Top;
 			::ClientToScreen(m_hwndParent,&pt);
-			m_TimerID|=::SetTimer(m_hwnd,TIMER_ID_HIDE,Time,NULL);
+			m_Timer.BeginTimer(TIMER_ID_HIDE,Time);
 			if (fAnimation) {
 				m_AnimationCount=0;
 				::SetWindowPos(m_hwnd,NULL,pt.x,pt.y,
 							   m_Position.Width/ANIMATION_FRAMES,m_Position.Height,
 							   SWP_NOZORDER | SWP_NOACTIVATE);
-				m_TimerID|=::SetTimer(m_hwnd,TIMER_ID_ANIMATION,ANIMATION_INTERVAL,NULL);
+				m_Timer.BeginTimer(TIMER_ID_ANIMATION,ANIMATION_INTERVAL);
 			} else {
 				::SetWindowPos(m_hwnd,NULL,pt.x,pt.y,
 							   m_Position.Width,m_Position.Height,
 							   SWP_NOZORDER | SWP_NOACTIVATE);
 			}
-		} else if ((m_TimerID&TIMER_ID_HIDE)!=0) {
-			::KillTimer(m_hwnd,TIMER_ID_HIDE);
-			m_TimerID&=~TIMER_ID_HIDE;
+		} else {
+			m_Timer.EndTimer(TIMER_ID_HIDE);
 		}
 		UpdateLayeredWindow();
 		::ShowWindow(m_hwnd,SW_SHOWNA);
@@ -173,20 +171,19 @@ bool CPseudoOSD::Show(DWORD Time,bool fAnimation)
 	}
 
 	if (Time>0) {
-		m_TimerID|=::SetTimer(m_hwnd,TIMER_ID_HIDE,Time,NULL);
+		m_Timer.BeginTimer(TIMER_ID_HIDE,Time);
 		if (fAnimation) {
 			m_AnimationCount=0;
 			::MoveWindow(m_hwnd,m_Position.Left,m_Position.Top,
 						 m_Position.Width/ANIMATION_FRAMES,m_Position.Height,
 						 TRUE);
-			m_TimerID|=::SetTimer(m_hwnd,TIMER_ID_ANIMATION,ANIMATION_INTERVAL,NULL);
+			m_Timer.BeginTimer(TIMER_ID_ANIMATION,ANIMATION_INTERVAL);
 		} else {
 			::MoveWindow(m_hwnd,m_Position.Left,m_Position.Top,
 						 m_Position.Width,m_Position.Height,TRUE);
 		}
-	} else if ((m_TimerID&TIMER_ID_HIDE)!=0) {
-		::KillTimer(m_hwnd,TIMER_ID_HIDE);
-		m_TimerID&=~TIMER_ID_HIDE;
+	} else {
+		m_Timer.EndTimer(TIMER_ID_HIDE);
 	}
 	if (m_fLayeredWindow) {
 		UpdateLayeredWindow();
@@ -444,7 +441,7 @@ void CPseudoOSD::Draw(HDC hdc,const RECT &PaintRect) const
 		DrawUtil::Fill(hdc,&PaintRect,m_crBackColor);
 		if (m_hbmIcon!=NULL) {
 			int IconWidth;
-			if ((m_TimerID&TIMER_ID_ANIMATION)!=0)
+			if (m_Timer.IsTimerEnabled(TIMER_ID_ANIMATION))
 				IconWidth=m_IconWidth*(m_AnimationCount+1)/ANIMATION_FRAMES;
 			else
 				IconWidth=m_IconWidth;
@@ -520,7 +517,7 @@ void CPseudoOSD::UpdateLayeredWindow()
 
 				Image.CreateFromBitmap(m_hbmIcon);
 				int IconWidth;
-				if ((m_TimerID&TIMER_ID_ANIMATION)!=0)
+				if (m_Timer.IsTimerEnabled(TIMER_ID_ANIMATION))
 					IconWidth=m_IconWidth*(m_AnimationCount+1)/ANIMATION_FRAMES;
 				else
 					IconWidth=m_IconWidth;
@@ -616,6 +613,8 @@ LRESULT CALLBACK CPseudoOSD::WndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lP
 
 			pThis->m_hwnd=hwnd;
 			::SetWindowLongPtr(hwnd,GWLP_USERDATA,reinterpret_cast<LONG_PTR>(pThis));
+
+			pThis->m_Timer.InitializeTimer(hwnd);
 		}
 		return 0;
 
@@ -647,12 +646,8 @@ LRESULT CALLBACK CPseudoOSD::WndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lP
 			switch (wParam) {
 			case TIMER_ID_HIDE:
 				pThis->Hide();
-				::KillTimer(hwnd,TIMER_ID_HIDE);
-				pThis->m_TimerID&=~TIMER_ID_HIDE;
-				if ((pThis->m_TimerID&TIMER_ID_ANIMATION)!=0) {
-					::KillTimer(hwnd,TIMER_ID_ANIMATION);
-					pThis->m_TimerID&=~TIMER_ID_ANIMATION;
-				}
+				pThis->m_Timer.EndTimer(TIMER_ID_HIDE);
+				pThis->m_Timer.EndTimer(TIMER_ID_ANIMATION);
 				break;
 
 			case TIMER_ID_ANIMATION:
@@ -673,8 +668,7 @@ LRESULT CALLBACK CPseudoOSD::WndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lP
 				}
 				::UpdateWindow(hwnd);
 				if (pThis->m_AnimationCount+1==ANIMATION_FRAMES) {
-					::KillTimer(hwnd,TIMER_ID_ANIMATION);
-					pThis->m_TimerID&=~TIMER_ID_ANIMATION;
+					pThis->m_Timer.EndTimer(TIMER_ID_ANIMATION);
 				}
 				break;
 			}

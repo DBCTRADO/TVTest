@@ -3,6 +3,7 @@
 
 
 #include "DrawUtil.h"
+#include "WindowUtil.h"
 
 
 class CPseudoOSD
@@ -62,7 +63,7 @@ private:
 	struct {
 		int Left,Top,Width,Height;
 	} m_Position;
-	UINT_PTR m_TimerID;
+	CWindowTimerManager m_Timer;
 	int m_AnimationCount;
 	bool m_fLayeredWindow;
 	bool m_fPopupLayeredWindow;
