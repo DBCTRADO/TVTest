@@ -255,23 +255,6 @@ CProgramListPanel::CProgramListPanel()
 	//, m_hwndToolTip(NULL)
 	, m_fShowRetrievingMessage(false)
 {
-	m_Theme.EventNameStyle.Back.Fill.Type=TVTest::Theme::FILL_SOLID;
-	m_Theme.EventNameStyle.Back.Fill.Solid.Color.Set(0,0,0);
-	m_Theme.EventNameStyle.Back.Border.Type=TVTest::Theme::BORDER_NONE;
-	m_Theme.EventNameStyle.Fore.Fill.Type=TVTest::Theme::FILL_SOLID;
-	m_Theme.EventNameStyle.Fore.Fill.Solid.Color.Set(255,255,255);
-	m_Theme.CurEventNameStyle=m_Theme.EventNameStyle;
-	m_Theme.EventTextStyle.Back.Fill.Type=TVTest::Theme::FILL_SOLID;
-	m_Theme.EventTextStyle.Back.Fill.Solid.Color.Set(128,128,128);
-	m_Theme.EventTextStyle.Back.Border.Type=TVTest::Theme::BORDER_NONE;
-	m_Theme.EventTextStyle.Fore.Fill.Type=TVTest::Theme::FILL_SOLID;
-	m_Theme.EventTextStyle.Fore.Fill.Solid.Color.Set(255,255,255);
-	m_Theme.CurEventTextStyle=m_Theme.EventTextStyle;
-	m_Theme.MarginColor=RGB(0,0,0);
-	m_Theme.ChannelNameStyle=m_Theme.EventNameStyle;
-	m_Theme.CurChannelNameStyle=m_Theme.CurEventNameStyle;
-	m_Theme.ChannelButtonStyle=m_Theme.ChannelNameStyle;
-	m_Theme.ChannelButtonHotStyle=m_Theme.CurChannelNameStyle;
 }
 
 

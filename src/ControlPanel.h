@@ -21,8 +21,6 @@ public:
 		TVTest::Theme::Style OverItemStyle;
 		TVTest::Theme::Style CheckedItemStyle;
 		TVTest::Theme::ThemeColor MarginColor;
-
-		ControlPanelTheme();
 	};
 
 	static bool Initialize(HINSTANCE hinst);

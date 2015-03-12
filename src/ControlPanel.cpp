@@ -531,25 +531,6 @@ LRESULT CControlPanel::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam
 
 
 
-CControlPanel::ControlPanelTheme::ControlPanelTheme()
-{
-	ItemStyle.Back.Fill.Type=TVTest::Theme::FILL_SOLID;
-	ItemStyle.Back.Fill.Solid.Color.Set(0,0,0);
-	ItemStyle.Back.Border.Type=TVTest::Theme::BORDER_NONE;
-	ItemStyle.Fore.Fill.Type=TVTest::Theme::FILL_SOLID;
-	ItemStyle.Fore.Fill.Solid.Color.Set(255,255,255);
-	OverItemStyle.Back.Fill.Type=TVTest::Theme::FILL_SOLID;
-	OverItemStyle.Back.Fill.Solid.Color.Set(255,255,255);
-	OverItemStyle.Back.Border.Type=TVTest::Theme::BORDER_NONE;
-	OverItemStyle.Fore.Fill.Type=TVTest::Theme::FILL_SOLID;
-	OverItemStyle.Fore.Fill.Solid.Color.Set(0,0,0);
-	CheckedItemStyle=OverItemStyle;
-	MarginColor.Set(0,0,0);
-}
-
-
-
-
 CControlPanel::ControlPanelStyle::ControlPanelStyle()
 	: Padding(2)
 	, ItemPadding(4,2,4,2)

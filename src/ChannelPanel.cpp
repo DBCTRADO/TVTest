@@ -1495,31 +1495,6 @@ void CChannelPanel::CChannelEventInfo::DrawEventName(
 
 
 
-CChannelPanel::ChannelPanelTheme::ChannelPanelTheme()
-{
-	ChannelNameStyle.Back.Fill.Type=TVTest::Theme::FILL_SOLID;
-	ChannelNameStyle.Back.Fill.Solid.Color.Set(128,128,128);
-	ChannelNameStyle.Fore.Fill.Type=TVTest::Theme::FILL_SOLID;
-	ChannelNameStyle.Fore.Fill.Solid.Color.Set(255,255,255);
-	CurChannelNameStyle=ChannelNameStyle;
-	EventStyle[0].Back.Fill.Type=TVTest::Theme::FILL_SOLID;
-	EventStyle[0].Back.Fill.Solid.Color.Set(0,0,0);
-	EventStyle[0].Fore.Fill.Type=TVTest::Theme::FILL_SOLID;
-	EventStyle[0].Fore.Fill.Solid.Color.Set(255,255,255);
-	EventStyle[1]=EventStyle[0];
-	CurChannelEventStyle[0]=EventStyle[0];
-	CurChannelEventStyle[1]=CurChannelEventStyle[0];
-	MarginColor.Set(0,0,0);
-	FeaturedMarkStyle.Fill.Type=TVTest::Theme::FILL_SOLID;
-	FeaturedMarkStyle.Fill.Solid.Color.Set(0,255,0);
-	ProgressStyle.Fill.Type=TVTest::Theme::FILL_SOLID;
-	ProgressStyle.Fill.Solid.Color.Set(160,160,160);
-	CurProgressStyle=ProgressStyle;
-}
-
-
-
-
 CChannelPanel::ChannelPanelStyle::ChannelPanelStyle()
 	: ChannelNameMargin(2,2,2,2)
 	, ChannelLogoMargin(0,0,3,0)

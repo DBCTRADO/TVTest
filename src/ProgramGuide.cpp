@@ -1151,38 +1151,6 @@ CProgramGuide::CProgramGuide(CEventSearchOptions &EventSearchOptions)
 
 	m_CurEventItem.fSelected=false;
 
-	const COLORREF WindowTextColor=::GetSysColor(COLOR_WINDOWTEXT);
-	m_ColorList[COLOR_BACK]=::GetSysColor(COLOR_WINDOW);
-	m_ColorList[COLOR_CHANNELNAMETEXT]=WindowTextColor;
-	m_ColorList[COLOR_TIMETEXT]=WindowTextColor;
-	m_ColorList[COLOR_TIMELINE]=m_ColorList[COLOR_TIMETEXT];
-	m_ColorList[COLOR_CURTIMELINE]=RGB(255,64,0);
-	m_ColorList[COLOR_HIGHLIGHT_TITLE]=RGB(0,0,224);
-	m_ColorList[COLOR_HIGHLIGHT_TEXT]=RGB(0,0,128);
-	m_ColorList[COLOR_HIGHLIGHT_BACK]=RGB(255,255,255);
-	m_ColorList[COLOR_HIGHLIGHT_BORDER]=RGB(128,128,255);
-
-	m_ChannelNameBackStyle.Type=TVTest::Theme::FILL_GRADIENT;
-	m_ChannelNameBackStyle.Gradient.Type=TVTest::Theme::GRADIENT_NORMAL;
-	m_ChannelNameBackStyle.Gradient.Direction=TVTest::Theme::DIRECTION_VERT;
-	m_ChannelNameBackStyle.Gradient.Color1=::GetSysColor(COLOR_3DFACE);
-	m_ChannelNameBackStyle.Gradient.Color2=m_ChannelNameBackStyle.Gradient.Color1;
-	m_CurChannelNameBackStyle=m_ChannelNameBackStyle;
-	m_TimeBarMarginStyle.Type=TVTest::Theme::FILL_GRADIENT;
-	m_TimeBarMarginStyle.Gradient.Type=TVTest::Theme::GRADIENT_NORMAL;
-	m_TimeBarMarginStyle.Gradient.Direction=TVTest::Theme::DIRECTION_HORZ;
-	m_TimeBarMarginStyle.Gradient.Color1=::GetSysColor(COLOR_3DFACE);
-	m_TimeBarMarginStyle.Gradient.Color2=m_TimeBarMarginStyle.Gradient.Color1;
-	for (int i=0;i<TIME_BAR_BACK_COLORS;i++) {
-		m_TimeBarBackStyle[i].Type=TVTest::Theme::FILL_GRADIENT;
-		m_TimeBarBackStyle[i].Gradient.Type=TVTest::Theme::GRADIENT_NORMAL;
-		m_TimeBarBackStyle[i].Gradient.Direction=TVTest::Theme::DIRECTION_HORZ;
-		m_TimeBarBackStyle[i].Gradient.Color1=m_TimeBarMarginStyle.Gradient.Color1;
-		m_TimeBarBackStyle[i].Gradient.Color2=m_TimeBarMarginStyle.Gradient.Color2;
-	}
-	m_FeaturedMarkStyle.Fill.Type=TVTest::Theme::FILL_SOLID;
-	m_FeaturedMarkStyle.Fill.Solid.Color.Set(0,255,0);
-
 	m_EventInfoPopup.SetEventHandler(&m_EventInfoPopupHandler);
 }
 

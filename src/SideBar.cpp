@@ -44,21 +44,6 @@ CSideBar::CSideBar(const CCommandList *pCommandList)
 	, m_pEventHandler(NULL)
 	, m_pCommandList(pCommandList)
 {
-	m_Theme.ItemStyle.Back.Fill.Type=TVTest::Theme::FILL_SOLID;
-	m_Theme.ItemStyle.Back.Fill.Solid.Color.Set(192,192,192);
-	m_Theme.ItemStyle.Back.Border.Type=TVTest::Theme::BORDER_NONE;
-	m_Theme.ItemStyle.Fore.Fill.Type=TVTest::Theme::FILL_SOLID;
-	m_Theme.ItemStyle.Fore.Fill.Solid.Color.Set(0,0,0);
-	m_Theme.HighlightItemStyle.Back.Fill.Type=TVTest::Theme::FILL_SOLID;
-	m_Theme.HighlightItemStyle.Back.Fill.Solid.Color.Set(128,128,128);
-	m_Theme.HighlightItemStyle.Back.Border.Type=TVTest::Theme::BORDER_NONE;
-	m_Theme.HighlightItemStyle.Fore.Fill.Type=TVTest::Theme::FILL_SOLID;
-	m_Theme.HighlightItemStyle.Fore.Fill.Solid.Color.Set(255,255,255);
-	m_Theme.CheckItemStyle=m_Theme.ItemStyle;
-	m_Theme.CheckItemStyle.Back.Border.Type=TVTest::Theme::BORDER_SUNKEN;
-	m_Theme.CheckItemStyle.Back.Border.Color.Set(192,192,192);
-	m_Theme.Border.Type=TVTest::Theme::BORDER_RAISED;
-	m_Theme.Border.Color.Set(192,192,192);
 }
 
 

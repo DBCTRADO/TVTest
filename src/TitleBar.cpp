@@ -59,19 +59,6 @@ CTitleBar::CTitleBar()
 	, m_fFullscreen(false)
 	, m_pEventHandler(NULL)
 {
-	m_Theme.CaptionStyle.Back.Fill.Type=TVTest::Theme::FILL_SOLID;
-	m_Theme.CaptionStyle.Back.Fill.Solid.Color.Set(192,192,192);
-	m_Theme.CaptionStyle.Back.Border.Type=TVTest::Theme::BORDER_NONE;
-	m_Theme.CaptionStyle.Fore.Fill.Type=TVTest::Theme::FILL_SOLID;
-	m_Theme.CaptionStyle.Fore.Fill.Solid.Color.Set(255,255,255);
-	m_Theme.IconStyle=m_Theme.CaptionStyle;
-	m_Theme.HighlightIconStyle.Back.Fill.Type=TVTest::Theme::FILL_SOLID;
-	m_Theme.HighlightIconStyle.Back.Fill.Solid.Color.Set(0,0,128);
-	m_Theme.HighlightIconStyle.Back.Border.Type=TVTest::Theme::BORDER_NONE;
-	m_Theme.HighlightIconStyle.Fore.Fill.Type=TVTest::Theme::FILL_SOLID;
-	m_Theme.HighlightIconStyle.Fore.Fill.Solid.Color.Set(255,255,255);
-	m_Theme.Border.Type=TVTest::Theme::BORDER_RAISED;
-	m_Theme.Border.Color.Set(192,192,192);
 }
 
 

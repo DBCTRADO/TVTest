@@ -46,23 +46,6 @@ CPanelForm::CPanelForm()
 {
 	m_WindowPosition.Width=200;
 	m_WindowPosition.Height=240;
-
-	m_Theme.TabStyle.Back.Fill.Type=TVTest::Theme::FILL_SOLID;
-	m_Theme.TabStyle.Back.Fill.Solid.Color.Set(192,192,192);
-	m_Theme.TabStyle.Back.Border.Type=TVTest::Theme::BORDER_SOLID;
-	m_Theme.TabStyle.Back.Border.Color.Set(128,128,128);
-	m_Theme.TabStyle.Fore.Fill.Type=TVTest::Theme::FILL_SOLID;
-	m_Theme.TabStyle.Fore.Fill.Solid.Color.Set(0,0,0);
-	m_Theme.CurTabStyle.Back.Fill.Type=TVTest::Theme::FILL_SOLID;
-	m_Theme.CurTabStyle.Back.Fill.Solid.Color.Set(224,224,224);
-	m_Theme.CurTabStyle.Back.Border.Type=TVTest::Theme::BORDER_SOLID;
-	m_Theme.CurTabStyle.Back.Border.Color.Set(128,128,128);
-	m_Theme.CurTabStyle.Fore.Fill.Type=TVTest::Theme::FILL_SOLID;
-	m_Theme.CurTabStyle.Fore.Fill.Solid.Color.Set(0,0,0);
-	m_Theme.TabMarginStyle=m_Theme.TabStyle;
-	m_Theme.TabMarginStyle.Back.Border.Type=TVTest::Theme::BORDER_NONE;
-	m_Theme.BackColor=RGB(192,192,192);
-	m_Theme.BorderColor=RGB(128,128,128);
 }
 
 

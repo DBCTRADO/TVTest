@@ -47,16 +47,6 @@ CPanel::CPanel()
 	, m_pEventHandler(NULL)
 	, m_HotItem(ITEM_NONE)
 {
-	m_Theme.TitleStyle.Back.Fill.Type=TVTest::Theme::FILL_SOLID;
-	m_Theme.TitleStyle.Back.Fill.Solid.Color=::GetSysColor(COLOR_INACTIVECAPTION);
-	m_Theme.TitleStyle.Fore.Fill.Type=TVTest::Theme::FILL_SOLID;
-	m_Theme.TitleStyle.Fore.Fill.Solid.Color=::GetSysColor(COLOR_INACTIVECAPTIONTEXT);
-	m_Theme.TitleIconStyle=m_Theme.TitleStyle;
-	m_Theme.TitleIconHighlightStyle.Back.Fill.Type=TVTest::Theme::FILL_SOLID;
-	m_Theme.TitleIconHighlightStyle.Back.Fill.Solid.Color.Set(0,0,128);
-	m_Theme.TitleIconHighlightStyle.Back.Border.Type=TVTest::Theme::BORDER_NONE;
-	m_Theme.TitleIconHighlightStyle.Fore.Fill.Type=TVTest::Theme::FILL_SOLID;
-	m_Theme.TitleIconHighlightStyle.Fore.Fill.Solid.Color.Set(255,255,255);
 }
 
 

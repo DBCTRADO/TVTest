@@ -41,14 +41,6 @@ CNotificationBar::CNotificationBar()
 	, m_BarHeight(0)
 	, m_TimerCount(0)
 {
-	m_BackStyle.Fill.Type=TVTest::Theme::FILL_GRADIENT;
-	m_BackStyle.Fill.Gradient.Type=TVTest::Theme::GRADIENT_NORMAL;
-	m_BackStyle.Fill.Gradient.Direction=TVTest::Theme::DIRECTION_VERT;
-	m_BackStyle.Fill.Gradient.Color1.Set(128,128,128);
-	m_BackStyle.Fill.Gradient.Color2.Set(64,64,64);
-	m_TextColor[MESSAGE_INFO]=RGB(224,224,224);
-	m_TextColor[MESSAGE_WARNING]=RGB(255,160,64);
-	m_TextColor[MESSAGE_ERROR]=RGB(224,64,64);
 }
 
 

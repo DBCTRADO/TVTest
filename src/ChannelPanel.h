@@ -35,8 +35,6 @@ public:
 		TVTest::Theme::BackgroundStyle FeaturedMarkStyle;
 		TVTest::Theme::BackgroundStyle ProgressStyle;
 		TVTest::Theme::BackgroundStyle CurProgressStyle;
-
-		ChannelPanelTheme();
 	};
 
 	class CEventHandler {
