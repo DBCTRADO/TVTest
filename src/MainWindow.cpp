@@ -104,6 +104,8 @@ CMainWindow::CMainWindow(CAppMain &App)
 	, m_fNoHideCursor(false)
 
 	, m_fDragging(false)
+	, m_fEnterSizeMove(false)
+	, m_fResizePanel(false)
 
 	, m_fClosing(false)
 
@@ -970,6 +972,21 @@ LRESULT CMainWindow::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 
 	case WM_MOVE:
 		m_App.OSDManager.OnParentMove();
+		return 0;
+
+	case WM_ENTERSIZEMOVE:
+		m_fEnterSizeMove=true;
+		m_fResizePanel=false;
+		return 0;
+
+	case WM_EXITSIZEMOVE:
+		if (m_fResizePanel) {
+			m_fResizePanel=false;
+
+			Layout::CSplitter *pSplitter=dynamic_cast<Layout::CSplitter*>(
+				m_LayoutBase.GetContainerByID(CONTAINER_ID_PANELSPLITTER));
+			pSplitter->SetAdjustPane(pSplitter->GetPane(!pSplitter->IDToIndex(CONTAINER_ID_PANEL))->GetID());
+		}
 		return 0;
 
 	case WM_SHOWWINDOW:
@@ -1893,12 +1910,31 @@ void CMainWindow::OnSizeChanged(UINT State,int Width,int Height)
 bool CMainWindow::OnSizeChanging(UINT Edge,RECT *pRect)
 {
 	RECT rcOld;
-	bool fChanged=false;
+	bool fResizePanel=false,fChanged=false;
 
 	GetPosition(&rcOld);
-	bool fKeepRatio=m_App.ViewOptions.GetAdjustAspectResizing();
-	if (::GetKeyState(VK_SHIFT)<0)
-		fKeepRatio=!fKeepRatio;
+
+	if (m_fEnterSizeMove) {
+		if (::GetKeyState(VK_CONTROL)<0)
+			fResizePanel=true;
+		if (m_fResizePanel!=fResizePanel) {
+			Layout::CSplitter *pSplitter=dynamic_cast<Layout::CSplitter*>(
+				m_LayoutBase.GetContainerByID(CONTAINER_ID_PANELSPLITTER));
+
+			if (fResizePanel)
+				pSplitter->SetAdjustPane(CONTAINER_ID_PANEL);
+			else
+				pSplitter->SetAdjustPane(pSplitter->GetPane(!pSplitter->IDToIndex(CONTAINER_ID_PANEL))->GetID());
+			m_fResizePanel=fResizePanel;
+		}
+	}
+
+	bool fKeepRatio=false;
+	if (!fResizePanel) {
+		fKeepRatio=m_App.ViewOptions.GetAdjustAspectResizing();
+		if (::GetKeyState(VK_SHIFT)<0)
+			fKeepRatio=!fKeepRatio;
+	}
 	if (fKeepRatio) {
 		BYTE XAspect,YAspect;
 

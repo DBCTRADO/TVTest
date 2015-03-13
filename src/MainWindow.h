@@ -461,6 +461,8 @@ private:
 	bool m_fDragging;
 	POINT m_ptDragStartPos;
 	RECT m_rcDragStart;
+	bool m_fEnterSizeMove;
+	bool m_fResizePanel;
 	bool m_fClosing;
 
 	CMouseWheelHandler m_WheelHandler;
