@@ -197,6 +197,7 @@ const CColorScheme::ColorInfo CColorScheme::m_ColorInfoList[NUM_COLORS] = {
 	{HEXRGB(0x000000),	TEXT("ProgramGuideEventTitle"),				TEXT("EPG番組表 番組名")},
 	{HEXRGB(0x0000BF),	TEXT("ProgramGuideHighlightText"),			TEXT("EPG番組表 検索番組内容")},
 	{HEXRGB(0x0000FF),	TEXT("ProgramGuideHighlightTitle"),			TEXT("EPG番組表 検索番組名")},
+	{HEXRGB(0x9999FF),	TEXT("ProgramGuideHighlightBack"),			TEXT("EPG番組表 検索番組背景")},
 	{HEXRGB(0x6666FF),	TEXT("ProgramGuideHighlightBorder"),		TEXT("EPG番組表 検索番組枠")},
 	{HEXRGB(0xCCFFCC),	TEXT("ProgramGuideFeaturedMark"),			TEXT("EPG番組表 注目マーク背景1")},
 	{HEXRGB(0x99FF99),	TEXT("ProgramGuideFeaturedMark2"),			TEXT("EPG番組表 注目マーク背景2")},
