@@ -378,10 +378,10 @@ INT_PTR CPanAndScanOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPa
 					HGDIOBJ hOldPen=::SelectObject(pdis->hDC,hpen);
 
 					::Rectangle(pdis->hDC,
-								rcScreen.left+(PanScan.XPos*ScreenWidth/PanScan.XFactor),
-								rcScreen.top+(PanScan.YPos*ScreenHeight/PanScan.YFactor),
-								rcScreen.left+((PanScan.XPos+PanScan.Width)*ScreenWidth/PanScan.XFactor),
-								rcScreen.top+((PanScan.YPos+PanScan.Height)*ScreenHeight/PanScan.YFactor));
+								rcScreen.left+::MulDiv(PanScan.XPos,ScreenWidth,PanScan.XFactor),
+								rcScreen.top+::MulDiv(PanScan.YPos,ScreenHeight,PanScan.YFactor),
+								rcScreen.left+::MulDiv(PanScan.XPos+PanScan.Width,ScreenWidth,PanScan.XFactor),
+								rcScreen.top+::MulDiv(PanScan.YPos+PanScan.Height,ScreenHeight,PanScan.YFactor));
 					::SelectObject(pdis->hDC,hOldBrush);
 					::SelectObject(pdis->hDC,hOldPen);
 					::DeleteObject(hbr);
