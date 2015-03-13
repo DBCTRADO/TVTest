@@ -3863,8 +3863,12 @@ bool CMainWindow::OnInitMenuPopup(HMENU hmenu)
 				CurDualMonoMode==CAudioDecFilter::DUALMONO_SUB?CM_DUALMONO_SUB:CM_DUALMONO_BOTH);
 		}
 
-		if (Menu.GetItemCount()>0)
+		if (Menu.GetItemCount()>0) {
 			Menu.AppendSeparator();
+		} else {
+			Menu.Append(0U,TEXT("âπê∫Ç»Çµ"),MF_GRAYED);
+			Menu.AppendSeparator();
+		}
 		static const int SpdifMenuList[] = {
 			CM_SPDIF_DISABLED,
 			CM_SPDIF_PASSTHROUGH,
