@@ -45,6 +45,7 @@ CCaptionPanel::CCaptionPanel()
 	, m_TextColor(RGB(255,255,255))
 	, m_hwndEdit(NULL)
 	, m_EditSubclass(this)
+	, m_fActive(false)
 	, m_fEnable(true)
 	, m_fAutoScroll(true)
 	, m_fIgnoreSmall(true)
@@ -72,27 +73,6 @@ void CCaptionPanel::SetTheme(const TVTest::Theme::CThemeManager *pThemeManager)
 	SetColor(
 		pThemeManager->GetColor(CColorScheme::COLOR_CAPTIONPANELBACK),
 		pThemeManager->GetColor(CColorScheme::COLOR_CAPTIONPANELTEXT));
-}
-
-
-void CCaptionPanel::SetVisible(bool fVisible)
-{
-	if (m_hwnd!=NULL) {
-		if (fVisible) {
-			CBlockLock Lock(&m_Lock);
-
-			if (!m_CaptionList.empty()) {
-				TVTest::String Text;
-
-				for (std::deque<LPTSTR>::iterator itr=m_CaptionList.begin();itr!=m_CaptionList.end();++itr)
-					Text+=*itr;
-				Text+=m_NextCaption;
-				AppendText(Text.c_str());
-				ClearCaptionList();
-			}
-		}
-		CPanelForm::CPage::SetVisible(fVisible);
-	}
 }
 
 
@@ -222,12 +202,13 @@ LRESULT CCaptionPanel::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam
 
 			if (!m_NextCaption.empty()) {
 				if (m_fEnable) {
-					if (GetVisible()) {
+					if (m_fActive) {
 						::SendMessage(m_hwndEdit,WM_SETREDRAW,FALSE,0);
 						AppendText(m_NextCaption.c_str());
 						::SendMessage(m_hwndEdit,WM_SETREDRAW,TRUE,0);
+						::InvalidateRect(m_hwndEdit,NULL,TRUE);
 					} else {
-						// 非表示の場合はキューに溜める
+						// 非アクティブの場合はキューに溜める
 						if (m_CaptionList.size()>=MAX_QUEUE_TEXT) {
 							delete [] m_CaptionList.front();
 							m_CaptionList.pop_front();
@@ -300,6 +281,30 @@ LRESULT CCaptionPanel::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam
 	}
 
 	return ::DefWindowProc(hwnd,uMsg,wParam,lParam);
+}
+
+
+void CCaptionPanel::OnActivate()
+{
+	CBlockLock Lock(&m_Lock);
+
+	if (!m_CaptionList.empty()) {
+		TVTest::String Text;
+
+		for (std::deque<LPTSTR>::iterator itr=m_CaptionList.begin();itr!=m_CaptionList.end();++itr)
+			Text+=*itr;
+		Text+=m_NextCaption;
+		AppendText(Text.c_str());
+		ClearCaptionList();
+	}
+
+	m_fActive=true;
+}
+
+
+void CCaptionPanel::OnDeactivate()
+{
+	m_fActive=false;
 }
 
 

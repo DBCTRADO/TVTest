@@ -55,7 +55,6 @@ public:
 
 // CBasicWindow
 	bool Create(HWND hwndParent,DWORD Style,DWORD ExStyle=0,int ID=0) override;
-	void SetVisible(bool fVisible) override;
 
 // CUIBase
 	void SetTheme(const TVTest::Theme::CThemeManager *pThemeManager) override;
@@ -86,6 +85,7 @@ private:
 	DrawUtil::CFont m_Font;
 	HWND m_hwndEdit;
 	CEditSubclass m_EditSubclass;
+	bool m_fActive;
 	bool m_fEnable;
 	bool m_fAutoScroll;
 	bool m_fIgnoreSmall;
@@ -112,6 +112,11 @@ private:
 
 // CCustomWindow
 	LRESULT OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
+
+// CPanelForm::CPage
+	void OnActivate() override;
+	void OnDeactivate() override;
+
 };
 
 
