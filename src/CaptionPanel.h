@@ -7,6 +7,7 @@
 #include "BonTsEngine/CaptionDecoder.h"
 #include "PanelForm.h"
 #include "UIBase.h"
+#include "Settings.h"
 #include "DrawUtil.h"
 #include "WindowUtil.h"
 
@@ -48,6 +49,7 @@ class CCaptionPanel
 	: public CPanelForm::CPage
 	, public TVTest::CUIBase
 	, protected CCaptionDecoder::IHandler
+	, public CSettingsBase
 {
 public:
 	CCaptionPanel();
@@ -58,6 +60,10 @@ public:
 
 // CUIBase
 	void SetTheme(const TVTest::Theme::CThemeManager *pThemeManager) override;
+
+// CSettingsBase
+	bool ReadSettings(CSettings &Settings) override;
+	bool WriteSettings(CSettings &Settings) override;
 
 // CCaptionPanel
 	void SetColor(COLORREF BackColor,COLORREF TextColor);
@@ -79,6 +85,15 @@ private:
 		CCaptionPanel *m_pCaptionPanel;
 	};
 
+	enum CharEncoding
+	{
+		CHARENCODING_UTF16,
+		CHARENCODING_UTF8,
+		CHARENCODING_SHIFTJIS
+	};
+	static const CharEncoding CHARENCODING_FIRST = CHARENCODING_UTF16;
+	static const CharEncoding CHARENCODING_LAST  = CHARENCODING_SHIFTJIS;
+
 	COLORREF m_BackColor;
 	COLORREF m_TextColor;
 	DrawUtil::CBrush m_BackBrush;
@@ -97,6 +112,7 @@ private:
 	TVTest::String m_NextCaption;
 	CCriticalLock m_Lock;
 	CCaptionDRCSMap m_DRCSMap;
+	CharEncoding m_SaveCharEncoding;
 
 // CCaptionDecoder::IHandler
 	virtual void OnLanguageUpdate(CCaptionDecoder *pDecoder,CCaptionParser *pParser) override;

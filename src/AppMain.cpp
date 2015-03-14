@@ -503,6 +503,7 @@ bool CAppMain::LoadSettings()
 	Panel.InfoPanel.LoadSettings(Settings);
 	Panel.ProgramListPanel.LoadSettings(Settings);
 	Panel.ChannelPanel.LoadSettings(Settings);
+	Panel.CaptionPanel.LoadSettings(Settings);
 	PanAndScanOptions.LoadSettings(Settings);
 	HomeDisplay.LoadSettings(Settings);
 	NetworkDefinition.LoadSettings(Settings);
@@ -643,6 +644,7 @@ bool CAppMain::SaveSettings(unsigned int Flags)
 		Panel.InfoPanel.SaveSettings(Settings);
 		Panel.ProgramListPanel.SaveSettings(Settings);
 		Panel.ChannelPanel.SaveSettings(Settings);
+		Panel.CaptionPanel.SaveSettings(Settings);
 	}
 
 	return true;

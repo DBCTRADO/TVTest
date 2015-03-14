@@ -50,6 +50,7 @@ CCaptionPanel::CCaptionPanel()
 	, m_fAutoScroll(true)
 	, m_fIgnoreSmall(true)
 	, m_Language(0)
+	, m_SaveCharEncoding(CHARENCODING_UTF16)
 {
 }
 
@@ -73,6 +74,28 @@ void CCaptionPanel::SetTheme(const TVTest::Theme::CThemeManager *pThemeManager)
 	SetColor(
 		pThemeManager->GetColor(CColorScheme::COLOR_CAPTIONPANELBACK),
 		pThemeManager->GetColor(CColorScheme::COLOR_CAPTIONPANELTEXT));
+}
+
+
+bool CCaptionPanel::ReadSettings(CSettings &Settings)
+{
+	int Value;
+
+	Settings.Read(TEXT("CaptionPanel.AutoScroll"),&m_fAutoScroll);
+	Settings.Read(TEXT("CaptionPanel.IgnoreSmall"),&m_fIgnoreSmall);
+	if (Settings.Read(TEXT("CaptionPanel.SaveCharEncoding"),&Value)
+			&& Value>=CHARENCODING_FIRST && Value<=CHARENCODING_LAST)
+		m_SaveCharEncoding=(CharEncoding)Value;
+	return true;
+}
+
+
+bool CCaptionPanel::WriteSettings(CSettings &Settings)
+{
+	Settings.Write(TEXT("CaptionPanel.AutoScroll"),m_fAutoScroll);
+	Settings.Write(TEXT("CaptionPanel.IgnoreSmall"),m_fIgnoreSmall);
+	Settings.Write(TEXT("CaptionPanel.SaveCharEncoding"),(int)m_SaveCharEncoding);
+	return true;
 }
 
 
@@ -168,7 +191,8 @@ LRESULT CCaptionPanel::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam
 				CreateDefaultFont(&m_Font);
 
 			m_hwndEdit=CreateWindowEx(0,TEXT("EDIT"),TEXT(""),
-				WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_VSCROLL | ES_MULTILINE | ES_READONLY | ES_AUTOVSCROLL,
+				WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_VSCROLL |
+					ES_MULTILINE | ES_READONLY | ES_AUTOVSCROLL | ES_NOHIDESEL,
 				0,0,0,0,hwnd,(HMENU)IDC_EDIT,m_hinst,NULL);
 			Edit_LimitText(m_hwndEdit,8*1024*1024);
 			SetWindowFont(m_hwndEdit,m_Font.GetHandle(),FALSE);
@@ -246,6 +270,83 @@ LRESULT CCaptionPanel::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam
 
 		case CM_CAPTIONPANEL_CLEAR:
 			::SetWindowText(m_hwndEdit,TEXT(""));
+			break;
+
+		case CM_CAPTIONPANEL_SAVE:
+			{
+				int Length=::GetWindowTextLengthW(m_hwndEdit);
+				if (Length>0) {
+					LPWSTR pszText=new WCHAR[Length+1];
+					DWORD Start,End;
+
+					::GetWindowTextW(m_hwndEdit,pszText,Length+1);
+					::SendMessageW(m_hwndEdit,EM_GETSEL,(WPARAM)&Start,(LPARAM)&End);
+
+					OPENFILENAME ofn;
+					TCHAR szFileName[MAX_PATH];
+
+					szFileName[0]=_T('\0');
+					InitOpenFileName(&ofn);
+					ofn.hwndOwner=hwnd;
+					ofn.lpstrFilter=
+						TEXT("テキストファイル(UTF-16 LE)(*.*)\0*.*\0")
+						TEXT("テキストファイル(UTF-8)(*.*)\0*.*\0")
+						TEXT("テキストファイル(Shift_JIS)(*.*)\0*.*\0");
+					ofn.nFilterIndex=(int)m_SaveCharEncoding+1;
+					ofn.lpstrFile=szFileName;
+					ofn.nMaxFile=lengthof(szFileName);
+					ofn.lpstrTitle=TEXT("字幕の保存");
+					ofn.Flags=OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT | OFN_EXPLORER;
+					if (::GetSaveFileName(&ofn)) {
+						m_SaveCharEncoding=(CharEncoding)(ofn.nFilterIndex-1);
+
+						bool fOK=false;
+						HANDLE hFile=::CreateFile(
+							szFileName,GENERIC_WRITE,0,NULL,CREATE_ALWAYS,FILE_ATTRIBUTE_NORMAL,NULL);
+
+						if (hFile!=INVALID_HANDLE_VALUE) {
+							LPCWSTR pSrcText;
+							DWORD SrcLength;
+							DWORD Write;
+
+							if (Start<End) {
+								pSrcText=pszText+Start;
+								SrcLength=End-Start;
+							} else {
+								pSrcText=pszText;
+								SrcLength=Length;
+							}
+							if (m_SaveCharEncoding==CHARENCODING_UTF16) {
+								const WCHAR BOM=0xFEFF;
+								fOK=::WriteFile(hFile,&BOM,sizeof(BOM),&Write,NULL)
+										&& Write==sizeof(BOM)
+									&& ::WriteFile(hFile,pSrcText,SrcLength*sizeof(WCHAR),&Write,NULL)
+										&& Write==SrcLength*sizeof(WCHAR);
+							} else {
+								const UINT CodePage=
+									m_SaveCharEncoding==CHARENCODING_UTF8?CP_UTF8:932;
+								int EncodedLen=::WideCharToMultiByte(CodePage,0,pSrcText,SrcLength,NULL,0,NULL,NULL);
+								if (EncodedLen>0) {
+									char *pEncodedText=new char[EncodedLen];
+									::WideCharToMultiByte(CodePage,0,pSrcText,SrcLength,pEncodedText,EncodedLen,NULL,NULL);
+									fOK=::WriteFile(hFile,pEncodedText,EncodedLen,&Write,NULL)
+										&& Write==(DWORD)EncodedLen;
+									delete [] pEncodedText;
+								}
+							}
+
+							::CloseHandle(hFile);
+						}
+
+						if (!fOK) {
+							::MessageBox(hwnd,TEXT("ファイルを保存できません。"),NULL,
+										 MB_OK | MB_ICONEXCLAMATION);
+						}
+					}
+
+					delete [] pszText;
+				}
+			}
 			break;
 
 		case CM_CAPTIONPANEL_ENABLE:
