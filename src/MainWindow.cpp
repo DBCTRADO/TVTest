@@ -78,7 +78,6 @@ CMainWindow::CMainWindow(CAppMain &App)
 	, m_CommandEventHandler(this)
 
 	, m_fShowStatusBar(true)
-	, m_fPopupStatusBar(true)
 	, m_fShowTitleBar(true)
 	, m_fCustomTitleBar(true)
 	, m_fPopupTitleBar(true)
@@ -436,7 +435,6 @@ bool CMainWindow::ReadSettings(CSettings &Settings)
 		m_pCore->SetAlwaysOnTop(f);
 	if (Settings.Read(TEXT("ShowStatusBar"),&f))
 		SetStatusBarVisible(f);
-	Settings.Read(TEXT("PopupStatusBar"),&m_fPopupStatusBar);
 	if (Settings.Read(TEXT("ShowTitleBar"),&f))
 		SetTitleBarVisible(f);
 	Settings.Read(TEXT("PopupTitleBar"),&m_fPopupTitleBar);
@@ -485,7 +483,6 @@ bool CMainWindow::WriteSettings(CSettings &Settings)
 	Settings.Write(TEXT("WindowSize.1Seg.Height"),m_1SegWindowSize.Height);
 	Settings.Write(TEXT("AlwaysOnTop"),m_pCore->GetAlwaysOnTop());
 	Settings.Write(TEXT("ShowStatusBar"),m_fShowStatusBar);
-//	Settings.Write(TEXT("PopupStatusBar"),m_fPopupStatusBar);
 	Settings.Write(TEXT("ShowTitleBar"),m_fShowTitleBar);
 //	Settings.Write(TEXT("PopupTitleBar"),m_fPopupTitleBar);
 	Settings.Write(TEXT("PanelDockingIndex"),m_PanelPaneIndex);
@@ -643,6 +640,14 @@ void CMainWindow::OnStatusBarInitialized()
 }
 
 
+void CMainWindow::OnStatusBarTraceEnd()
+{
+	// 起動時に一時的に表示していたステータスバーを非表示にする
+	if (!m_fShowStatusBar)
+		ShowPopupStatusBar(false);
+}
+
+
 void CMainWindow::SetTitleBarVisible(bool fVisible)
 {
 	if (m_fShowTitleBar!=fVisible) {
@@ -797,7 +802,7 @@ bool CMainWindow::OnBarMouseLeave(HWND hwnd)
 			}
 			m_TitleBar.SetVisible(false);
 			if (!m_fShowSideBar && m_App.SideBar.GetVisible())
-				m_App.SideBar.SetVisible(false);
+				ShowPopupSideBar(false);
 			return true;
 		}
 	} else if (hwnd==m_App.StatusView.GetHandle()) {
@@ -807,20 +812,20 @@ bool CMainWindow::OnBarMouseLeave(HWND hwnd)
 				if (::RealChildWindowFromPoint(m_App.SideBar.GetParent(),pt)==m_App.SideBar.GetHandle())
 					return false;
 			}
-			m_App.StatusView.SetVisible(false);
+			ShowPopupStatusBar(false);
 			if (!m_fShowSideBar && m_App.SideBar.GetVisible())
-				m_App.SideBar.SetVisible(false);
+				ShowPopupSideBar(false);
 			return true;
 		}
 	} else if (hwnd==m_App.SideBar.GetHandle()) {
 		if (!m_fShowSideBar) {
-			m_App.SideBar.SetVisible(false);
+			ShowPopupSideBar(false);
 			if (!m_fShowTitleBar && m_TitleBar.GetVisible()
 					&& ::RealChildWindowFromPoint(m_TitleBar.GetParent(),pt)!=m_TitleBar.GetHandle())
 				m_TitleBar.SetVisible(false);
 			if (!m_fShowStatusBar && m_App.StatusView.GetVisible()
 					&& ::RealChildWindowFromPoint(m_App.StatusView.GetParent(),pt)!=m_App.StatusView.GetHandle())
-				m_App.StatusView.SetVisible(false);
+				ShowPopupStatusBar(false);
 			return true;
 		}
 	}
@@ -1741,8 +1746,7 @@ bool CMainWindow::OnCreate(const CREATESTRUCT *pcs)
 		GetClientRect(&rc);
 		rc.top=rc.bottom-m_App.StatusView.GetHeight();
 		m_App.StatusView.SetPosition(&rc);
-		m_App.StatusView.SetVisible(true);
-		::BringWindowToTop(m_App.StatusView.GetHandle());
+		ShowPopupStatusBar(true);
 	}
 	m_App.StatusView.SetSingleText(TEXT("起動中..."));
 
@@ -2033,7 +2037,7 @@ void CMainWindow::OnMouseMove(int x,int y)
 			if (::PtInRect(&rcTitle,pt))
 				fShowTitleBar=true;
 		}
-		if (!m_fShowStatusBar && m_fPopupStatusBar) {
+		if (!m_fShowStatusBar && m_App.StatusOptions.GetShowPopup()) {
 			rcStatus=rcClient;
 			rcStatus.top=rcStatus.bottom-m_App.StatusView.CalcHeight(rcClient.right-rcClient.left);
 			if (::PtInRect(&rcStatus,pt))
@@ -2060,12 +2064,12 @@ void CMainWindow::OnMouseMove(int x,int y)
 				}
 				break;
 			case CSideBarOptions::PLACE_BOTTOM:
-				if (!m_fShowStatusBar && m_fPopupStatusBar)
+				if (!m_fShowStatusBar && m_App.StatusOptions.GetShowPopup())
 					rcClient.bottom=rcStatus.top;
 				m_SideBarManager.Layout(&rcClient,&rcSideBar);
 				if (::PtInRect(&rcSideBar,pt)) {
 					fShowSideBar=true;
-					if (!m_fShowStatusBar && m_fPopupStatusBar)
+					if (!m_fShowStatusBar && m_App.StatusOptions.GetShowPopup())
 						fShowStatusBar=true;
 				}
 				break;
@@ -2084,20 +2088,18 @@ void CMainWindow::OnMouseMove(int x,int y)
 		if (fShowStatusBar) {
 			if (!m_App.StatusView.GetVisible()) {
 				m_App.StatusView.SetPosition(&rcStatus);
-				m_App.StatusView.SetVisible(true);
-				::BringWindowToTop(m_App.StatusView.GetHandle());
+				ShowPopupStatusBar(true);
 			}
 		} else if (!m_fShowStatusBar && m_App.StatusView.GetVisible()) {
-			m_App.StatusView.SetVisible(false);
+			ShowPopupStatusBar(false);
 		}
 		if (fShowSideBar) {
 			if (!m_App.SideBar.GetVisible()) {
 				m_App.SideBar.SetPosition(&rcSideBar);
-				m_App.SideBar.SetVisible(true);
-				::BringWindowToTop(m_App.SideBar.GetHandle());
+				ShowPopupSideBar(true);
 			}
 		} else if (!m_fShowSideBar && m_App.SideBar.GetVisible()) {
-			m_App.SideBar.SetVisible(false);
+			ShowPopupSideBar(false);
 		}
 
 		if (m_ShowCursorManager.OnCursorMove(x,y)) {
@@ -4392,6 +4394,32 @@ void CMainWindow::GetPanelDockingAdjustedPos(bool fDock,RECT *pPos) const
 }
 
 
+void CMainWindow::ShowPopupStatusBar(bool fShow)
+{
+	if (fShow) {
+		m_App.StatusView.SetOpacity(m_App.StatusOptions.GetPopupOpacity()*255/CStatusOptions::OPACITY_MAX);
+		m_App.StatusView.SetVisible(true);
+		::BringWindowToTop(m_App.StatusView.GetHandle());
+	} else {
+		m_App.StatusView.SetVisible(false);
+		m_App.StatusView.SetOpacity(255);
+	}
+}
+
+
+void CMainWindow::ShowPopupSideBar(bool fShow)
+{
+	if (fShow) {
+		m_App.SideBar.SetOpacity(m_App.SideBarOptions.GetPopupOpacity()*255/CSideBarOptions::OPACITY_MAX);
+		m_App.SideBar.SetVisible(true);
+		::BringWindowToTop(m_App.SideBar.GetHandle());
+	} else {
+		m_App.SideBar.SetVisible(false);
+		m_App.SideBar.SetOpacity(255);
+	}
+}
+
+
 void CMainWindow::ShowCursor(bool fShow)
 {
 	m_App.CoreEngine.m_DtvEngine.m_MediaViewer.HideCursor(!fShow);
@@ -5718,7 +5746,7 @@ bool CMainWindow::GetOSDClientInfo(COSDManager::OSDClientInfo *pInfo)
 	RECT rc;
 	::GetClientRect(pInfo->hwndParent,&rc);
 	rc.top+=m_NotificationBar.GetBarHeight();
-	if (!m_fShowStatusBar && m_fPopupStatusBar)
+	if (!m_fShowStatusBar && m_App.StatusOptions.GetShowPopup())
 		rc.bottom-=m_App.StatusView.GetHeight();
 	pInfo->ClientRect=rc;
 
@@ -6317,18 +6345,12 @@ void CMainWindow::CFullscreen::ShowStatusView(bool fShow)
 		LayoutBase.SetContainerVisible(CONTAINER_ID_STATUS,false);
 		m_App.StatusView.SetParent(&m_ViewWindow);
 		m_App.StatusView.SetPosition(&rc);
-		m_App.StatusView.SetVisible(true);
-		::BringWindowToTop(m_App.StatusView.GetHandle());
+		m_MainWindow.ShowPopupStatusBar(true);
 	} else {
-		m_App.StatusView.SetVisible(false);
+		m_MainWindow.ShowPopupStatusBar(false);
 		m_App.StatusView.SetParent(&LayoutBase);
-		if (m_MainWindow.GetStatusBarVisible()) {
-			/*
-			LayoutBase.Adjust();
-			m_App.StatusView.SetVisible(true);
-			*/
+		if (m_MainWindow.GetStatusBarVisible())
 			LayoutBase.SetContainerVisible(CONTAINER_ID_STATUS,true);
-		}
 	}
 
 	m_fShowStatusView=fShow;
@@ -6382,18 +6404,12 @@ void CMainWindow::CFullscreen::ShowSideBar(bool fShow)
 		LayoutBase.SetContainerVisible(CONTAINER_ID_SIDEBAR,false);
 		m_App.SideBar.SetParent(&m_ViewWindow);
 		m_App.SideBar.SetPosition(&rcBar);
-		m_App.SideBar.SetVisible(true);
-		::BringWindowToTop(m_App.SideBar.GetHandle());
+		m_MainWindow.ShowPopupSideBar(true);
 	} else {
-		m_App.SideBar.SetVisible(false);
+		m_MainWindow.ShowPopupSideBar(false);
 		m_App.SideBar.SetParent(&LayoutBase);
-		if (m_MainWindow.GetSideBarVisible()) {
-			/*
-			LayoutBase.Adjust();
-			m_App.SideBar.SetVisible(true);
-			*/
+		if (m_MainWindow.GetSideBarVisible())
 			LayoutBase.SetContainerVisible(CONTAINER_ID_SIDEBAR,true);
-		}
 	}
 
 	m_fShowSideBar=fShow;

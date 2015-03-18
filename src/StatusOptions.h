@@ -11,6 +11,9 @@
 class CStatusOptions : public COptions
 {
 public:
+	static const int OPACITY_MIN = 20;
+	static const int OPACITY_MAX = 100;
+
 	CStatusOptions(CStatusView *pStatusView);
 	~CStatusOptions();
 // CSettingsBase
@@ -24,6 +27,8 @@ public:
 	int RegisterItem(LPCTSTR pszID);
 	bool SetItemVisibility(int ID,bool fVisible);
 	const LOGFONT &GetFont() const { return m_lfItemFont; }
+	bool GetShowPopup() const { return m_fShowPopup; }
+	int GetPopupOpacity() const { return m_PopupOpacity; }
 	bool GetShowTOTTime() const { return m_fShowTOTTime; }
 	void SetShowTOTTime(bool fShow) { m_fShowTOTTime=fShow; }
 	bool IsPopupProgramInfoEnabled() const { return m_fEnablePopupProgramInfo; }
@@ -61,6 +66,8 @@ private:
 	LOGFONT m_lfItemFont;
 	bool m_fMultiRow;
 	int m_MaxRows;
+	bool m_fShowPopup;
+	int m_PopupOpacity;
 
 	LOGFONT m_CurSettingFont;
 	CItemListSubclass m_ItemListSubclass;

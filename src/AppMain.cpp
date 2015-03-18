@@ -1021,8 +1021,7 @@ int CAppMain::Main(HINSTANCE hInstance,LPCTSTR pszCmdLine,int nCmdShow)
 		}
 	}
 
-	if (!MainWindow.GetStatusBarVisible())
-		StatusView.SetVisible(false);
+	MainWindow.OnStatusBarTraceEnd();
 	UICore.SetStatusBarTrace(false);
 
 	MainWindow.CreatePanel();

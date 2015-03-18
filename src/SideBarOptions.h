@@ -12,6 +12,9 @@
 class CSideBarOptions : public COptions
 {
 public:
+	static const int OPACITY_MIN = 20;
+	static const int OPACITY_MAX = 100;
+
 	enum PlaceType {
 		PLACE_LEFT,
 		PLACE_RIGHT,
@@ -34,6 +37,7 @@ public:
 	bool SetSideBarImage();
 	bool RegisterCommand(int ID);
 	bool ShowPopup() const { return m_fShowPopup; }
+	int GetPopupOpacity() const { return m_PopupOpacity; }
 	PlaceType GetPlace() const { return m_Place; }
 	bool SetPlace(PlaceType Place);
 	bool GetShowChannelLogo() const { return m_fShowChannelLogo; }
@@ -54,6 +58,7 @@ protected:
 	bool m_fShowPopup;
 	bool m_fShowToolTips;
 	bool m_fShowChannelLogo;
+	int m_PopupOpacity;
 	PlaceType m_Place;
 	HIMAGELIST m_himlIcons;
 	std::map<int,int> m_IconIDMap;

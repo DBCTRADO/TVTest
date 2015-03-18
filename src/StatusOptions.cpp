@@ -31,6 +31,8 @@ CStatusOptions::CStatusOptions(CStatusView *pStatusView)
 	, m_fShowEventProgress(true)
 	, m_fMultiRow(!IS_HD)
 	, m_MaxRows(2)
+	, m_fShowPopup(true)
+	, m_PopupOpacity(OPACITY_MAX)
 
 	, m_ItemListSubclass(this)
 	, m_ItemMargin(3)
@@ -183,6 +185,9 @@ bool CStatusOptions::ReadSettings(CSettings &Settings)
 
 	Settings.Read(TEXT("MultiRow"),&m_fMultiRow);
 	Settings.Read(TEXT("MaxRows"),&m_MaxRows);
+	Settings.Read(TEXT("ShowPopup"),&m_fShowPopup);
+	if (Settings.Read(TEXT("PopupOpacity"),&Value))
+		m_PopupOpacity=CLAMP(Value,OPACITY_MIN,OPACITY_MAX);
 
 	Settings.Read(TEXT("TOTTime"),&m_fShowTOTTime);
 	Settings.Read(TEXT("PopupProgramInfo"),&m_fEnablePopupProgramInfo);
@@ -219,6 +224,8 @@ bool CStatusOptions::WriteSettings(CSettings &Settings)
 
 	Settings.Write(TEXT("MultiRow"),m_fMultiRow);
 	Settings.Write(TEXT("MaxRows"),m_MaxRows);
+	Settings.Write(TEXT("ShowPopup"),m_fShowPopup);
+	Settings.Write(TEXT("PopupOpacity"),m_PopupOpacity);
 
 	Settings.Write(TEXT("TOTTime"),m_fShowTOTTime);
 	Settings.Write(TEXT("PopupProgramInfo"),m_fEnablePopupProgramInfo);
@@ -360,6 +367,21 @@ INT_PTR CStatusOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 						   IDC_STATUSOPTIONS_MAXROWS_LABEL,
 						   IDC_STATUSOPTIONS_MAXROWS_UPDOWN,
 						   m_fMultiRow);
+
+			DlgCheckBox_Check(hDlg,IDC_STATUSOPTIONS_SHOWPOPUP,m_fShowPopup);
+
+			::SendDlgItemMessage(hDlg,IDC_STATUSOPTIONS_OPACITY_SLIDER,
+								 TBM_SETRANGE,TRUE,MAKELPARAM(OPACITY_MIN,OPACITY_MAX));
+			::SendDlgItemMessage(hDlg,IDC_STATUSOPTIONS_OPACITY_SLIDER,
+								 TBM_SETPOS,TRUE,m_PopupOpacity);
+			::SendDlgItemMessage(hDlg,IDC_STATUSOPTIONS_OPACITY_SLIDER,
+								 TBM_SETPAGESIZE,0,10);
+			::SendDlgItemMessage(hDlg,IDC_STATUSOPTIONS_OPACITY_SLIDER,
+								 TBM_SETTICFREQ,10,0);
+			DlgEdit_SetInt(hDlg,IDC_STATUSOPTIONS_OPACITY_INPUT,m_PopupOpacity);
+			DlgUpDown_SetRange(hDlg,IDC_STATUSOPTIONS_OPACITY_SPIN,OPACITY_MIN,OPACITY_MAX);
+			EnableDlgItems(hDlg,IDC_STATUSOPTIONS_OPACITY_LABEL,IDC_STATUSOPTIONS_OPACITY_UNIT,
+						   m_fShowPopup && Util::OS::IsWindows8OrLater());
 		}
 		return TRUE;
 
@@ -441,6 +463,14 @@ INT_PTR CStatusOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 		}
 		return TRUE;
 
+	case WM_HSCROLL:
+		if (reinterpret_cast<HWND>(lParam)==::GetDlgItem(hDlg,IDC_STATUSOPTIONS_OPACITY_SLIDER)) {
+			SyncEditWithTrackBar(hDlg,
+								 IDC_STATUSOPTIONS_OPACITY_SLIDER,
+								 IDC_STATUSOPTIONS_OPACITY_INPUT);
+		}
+		return TRUE;
+
 	case WM_COMMAND:
 		switch (LOWORD(wParam)) {
 		case IDC_STATUSOPTIONS_DEFAULT:
@@ -472,6 +502,19 @@ INT_PTR CStatusOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 									   IDC_STATUSOPTIONS_MAXROWS_LABEL,
 									   IDC_STATUSOPTIONS_MAXROWS_UPDOWN,
 									   IDC_STATUSOPTIONS_MULTIROW);
+			return TRUE;
+
+		case IDC_STATUSOPTIONS_SHOWPOPUP:
+			EnableDlgItems(hDlg,IDC_STATUSOPTIONS_OPACITY_LABEL,IDC_STATUSOPTIONS_OPACITY_UNIT,
+				DlgCheckBox_IsChecked(hDlg,IDC_STATUSOPTIONS_SHOWPOPUP) && Util::OS::IsWindows8OrLater());
+			return TRUE;
+
+		case IDC_STATUSOPTIONS_OPACITY_INPUT:
+			if (HIWORD(wParam)==EN_CHANGE) {
+				SyncTrackBarWithEdit(hDlg,
+									 IDC_STATUSOPTIONS_OPACITY_INPUT,
+									 IDC_STATUSOPTIONS_OPACITY_SLIDER);
+			}
 			return TRUE;
 		}
 		return TRUE;
@@ -510,6 +553,12 @@ INT_PTR CStatusOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 				if (m_MaxRows!=MaxRows) {
 					m_MaxRows=MaxRows;
 					m_pStatusView->SetMaxRows(MaxRows);
+				}
+
+				m_fShowPopup=DlgCheckBox_IsChecked(hDlg,IDC_STATUSOPTIONS_SHOWPOPUP);
+				if (Util::OS::IsWindows8OrLater()) {
+					int Opacity=DlgEdit_GetInt(hDlg,IDC_STATUSOPTIONS_OPACITY_INPUT);
+					m_PopupOpacity=CLAMP(Opacity,OPACITY_MIN,OPACITY_MAX);
 				}
 
 				m_pStatusView->EnableSizeAdjustment(true);

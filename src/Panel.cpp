@@ -542,10 +542,8 @@ bool CPanelFrame::Create(HWND hwndParent,DWORD Style,DWORD ExStyle,int ID)
 	if (!CreateBasicWindow(hwndParent,Style,ExStyle,ID,
 						   PANEL_FRAME_WINDOW_CLASS,TEXT("ƒpƒlƒ‹"),m_hinst))
 		return false;
-	if (m_Opacity<255) {
-		SetWindowExStyle(ExStyle | WS_EX_LAYERED);
-		::SetLayeredWindowAttributes(m_hwnd,0,m_Opacity,LWA_ALPHA);
-	}
+	if (m_Opacity<255)
+		SetOpacity(m_Opacity);
 	return true;
 }
 
@@ -720,22 +718,14 @@ bool CPanelFrame::GetPanelTheme(CPanel::PanelTheme *pTheme) const
 }
 
 
-bool CPanelFrame::SetOpacity(int Opacity)
+bool CPanelFrame::SetPanelOpacity(int Opacity)
 {
 	if (Opacity<0 || Opacity>255)
 		return false;
 	if (Opacity!=m_Opacity) {
 		if (m_hwnd!=NULL) {
-			DWORD ExStyle=GetWindowExStyle();
-
-			if (Opacity<255) {
-				if ((ExStyle&WS_EX_LAYERED)==0)
-					SetWindowExStyle(ExStyle|WS_EX_LAYERED);
-				::SetLayeredWindowAttributes(m_hwnd,0,Opacity,LWA_ALPHA);
-			} else {
-				if ((ExStyle&WS_EX_LAYERED)!=0)
-					SetWindowExStyle(ExStyle^WS_EX_LAYERED);
-			}
+			if (!SetOpacity(Opacity))
+				return false;
 		}
 		m_Opacity=Opacity;
 	}

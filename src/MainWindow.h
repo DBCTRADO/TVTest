@@ -103,6 +103,7 @@ public:
 	bool GetStatusBarVisible() const { return m_fShowStatusBar; }
 	bool ShowStatusBarItem(int ID,bool fShow);
 	void OnStatusBarInitialized();
+	void OnStatusBarTraceEnd();
 	void SetTitleBarVisible(bool fVisible);
 	bool GetTitleBarVisible() const { return m_fShowTitleBar; }
 	void SetCustomTitleBar(bool fCustom);
@@ -409,7 +410,6 @@ private:
 	MainWindowStyle m_Style;
 	MainWindowTheme m_Theme;
 	bool m_fShowStatusBar;
-	bool m_fPopupStatusBar;
 	bool m_fShowTitleBar;
 	bool m_fCustomTitleBar;
 	bool m_fPopupTitleBar;
@@ -599,6 +599,8 @@ private:
 	void UpdateLayoutStructure();
 	void AdjustWindowSizeOnDockPanel(bool fDock);
 	void GetPanelDockingAdjustedPos(bool fDock,RECT *pPos) const;
+	void ShowPopupStatusBar(bool fShow);
+	void ShowPopupSideBar(bool fShow);
 	void ShowCursor(bool fShow);
 	void ShowChannelOSD();
 	void ShowAudioOSD();

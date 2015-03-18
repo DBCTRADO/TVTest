@@ -81,7 +81,7 @@ bool CPanelOptions::ReadSettings(CSettings &Settings)
 	Settings.Read(TEXT("PanelSnapAtMainWindow"),&m_fSnapAtMainWindow);
 	Settings.Read(TEXT("PanelAttachToMainWindow"),&m_fAttachToMainWindow);
 	if (Settings.Read(TEXT("PanelOpacity"),&m_Opacity))
-		m_pPanelFrame->SetOpacity(m_Opacity*255/100);
+		m_pPanelFrame->SetPanelOpacity(m_Opacity*255/100);
 
 	// Font
 	TCHAR szFont[LF_FACESIZE];
@@ -513,7 +513,7 @@ INT_PTR CPanelOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 				m_fAttachToMainWindow=
 					DlgCheckBox_IsChecked(hDlg,IDC_PANELOPTIONS_ATTACHTOMAINWINDOW);
 				m_Opacity=::GetDlgItemInt(hDlg,IDC_PANELOPTIONS_OPACITY_EDIT,NULL,TRUE);
-				m_pPanelFrame->SetOpacity(m_Opacity*255/100);
+				m_pPanelFrame->SetPanelOpacity(m_Opacity*255/100);
 
 				bool fFontChanged=!CompareLogFont(&m_Font,&m_CurSettingFont);
 				if (fFontChanged) {

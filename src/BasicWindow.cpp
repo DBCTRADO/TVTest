@@ -425,6 +425,37 @@ bool CBasicWindow::SendSizeMessage()
 }
 
 
+bool CBasicWindow::SetOpacity(int Opacity,bool fClearLayered)
+{
+	if (Opacity<0 || Opacity>255 || m_hwnd==NULL)
+		return false;
+
+	// 子ウィンドウをレイヤードウィンドウにできるのは Windows 8 以降
+	if ((GetWindowStyle() & WS_CHILD)!=0 && !Util::OS::IsWindows8OrLater())
+		return false;
+
+	DWORD ExStyle=GetWindowExStyle();
+
+	if (Opacity<255) {
+		if ((ExStyle & WS_EX_LAYERED)==0)
+			SetWindowExStyle(ExStyle | WS_EX_LAYERED);
+		if (!::SetLayeredWindowAttributes(m_hwnd,0,(BYTE)Opacity,LWA_ALPHA))
+			return false;
+	} else {
+		if ((ExStyle & WS_EX_LAYERED)!=0) {
+			if (fClearLayered) {
+				SetWindowExStyle(ExStyle ^ WS_EX_LAYERED);
+				Redraw(NULL,RDW_ERASE | RDW_INVALIDATE | RDW_FRAME | RDW_ALLCHILDREN);
+			} else {
+				::SetLayeredWindowAttributes(m_hwnd,0,255,LWA_ALPHA);
+			}
+		}
+	}
+
+	return true;
+}
+
+
 
 
 CCustomWindow::CCustomWindow()

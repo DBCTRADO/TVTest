@@ -100,6 +100,7 @@ CSideBarOptions::CSideBarOptions(CSideBar *pSideBar,const CZoomOptions *pZoomOpt
 	, m_fShowPopup(true)
 	, m_fShowToolTips(true)
 	, m_fShowChannelLogo(true)
+	, m_PopupOpacity(OPACITY_MAX)
 	, m_Place(PLACE_LEFT)
 	, m_himlIcons(NULL)
 {
@@ -126,6 +127,8 @@ bool CSideBarOptions::ReadSettings(CSettings &Settings)
 	Settings.Read(TEXT("ShowPopup"),&m_fShowPopup);
 	Settings.Read(TEXT("ShowToolTips"),&m_fShowToolTips);
 	Settings.Read(TEXT("ShowChannelLogo"),&m_fShowChannelLogo);
+	if (Settings.Read(TEXT("PopupOpacity"),&Value))
+		m_PopupOpacity=CLAMP(Value,OPACITY_MIN,OPACITY_MAX);
 	if (Settings.Read(TEXT("Place"),&Value)
 			&& Value>=PLACE_FIRST && Value<=PLACE_LAST)
 		m_Place=(PlaceType)Value;
@@ -177,6 +180,7 @@ bool CSideBarOptions::WriteSettings(CSettings &Settings)
 	Settings.Write(TEXT("ShowPopup"),m_fShowPopup);
 	Settings.Write(TEXT("ShowToolTips"),m_fShowToolTips);
 	Settings.Write(TEXT("ShowChannelLogo"),m_fShowChannelLogo);
+	Settings.Write(TEXT("PopupOpacity"),m_PopupOpacity);
 	Settings.Write(TEXT("Place"),(int)m_Place);
 
 	Settings.Write(TEXT("ItemCount"),(int)m_ItemNameList.size());
@@ -439,7 +443,21 @@ INT_PTR CSideBarOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam
 	switch (uMsg) {
 	case WM_INITDIALOG:
 		{
-			DlgCheckBox_Check(hDlg,IDC_SIDEBAR_SHOW,m_fShowPopup);
+			DlgCheckBox_Check(hDlg,IDC_SIDEBAR_SHOWPOPUP,m_fShowPopup);
+
+			::SendDlgItemMessage(hDlg,IDC_SIDEBAR_OPACITY_SLIDER,
+								 TBM_SETRANGE,TRUE,MAKELPARAM(OPACITY_MIN,OPACITY_MAX));
+			::SendDlgItemMessage(hDlg,IDC_SIDEBAR_OPACITY_SLIDER,
+								 TBM_SETPOS,TRUE,m_PopupOpacity);
+			::SendDlgItemMessage(hDlg,IDC_SIDEBAR_OPACITY_SLIDER,
+								 TBM_SETPAGESIZE,0,10);
+			::SendDlgItemMessage(hDlg,IDC_SIDEBAR_OPACITY_SLIDER,
+								 TBM_SETTICFREQ,10,0);
+			DlgEdit_SetInt(hDlg,IDC_SIDEBAR_OPACITY_INPUT,m_PopupOpacity);
+			DlgUpDown_SetRange(hDlg,IDC_SIDEBAR_OPACITY_SPIN,OPACITY_MIN,OPACITY_MAX);
+			EnableDlgItems(hDlg,IDC_SIDEBAR_OPACITY_LABEL,IDC_SIDEBAR_OPACITY_UNIT,
+						   m_fShowPopup && Util::OS::IsWindows8OrLater());
+
 			DlgCheckBox_Check(hDlg,IDC_SIDEBAR_SHOWTOOLTIPS,m_fShowToolTips);
 			DlgCheckBox_Check(hDlg,IDC_SIDEBAR_SHOWCHANNELLOGO,m_fShowChannelLogo);
 
@@ -515,8 +533,29 @@ INT_PTR CSideBarOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam
 		}
 		return TRUE;
 
+	case WM_HSCROLL:
+		if (reinterpret_cast<HWND>(lParam)==::GetDlgItem(hDlg,IDC_SIDEBAR_OPACITY_SLIDER)) {
+			SyncEditWithTrackBar(hDlg,
+								 IDC_SIDEBAR_OPACITY_SLIDER,
+								 IDC_SIDEBAR_OPACITY_INPUT);
+		}
+		return TRUE;
+
 	case WM_COMMAND:
 		switch (LOWORD(wParam)) {
+		case IDC_SIDEBAR_SHOWPOPUP:
+			EnableDlgItems(hDlg,IDC_SIDEBAR_OPACITY_LABEL,IDC_SIDEBAR_OPACITY_UNIT,
+				DlgCheckBox_IsChecked(hDlg,IDC_SIDEBAR_SHOWPOPUP) && Util::OS::IsWindows8OrLater());
+			return TRUE;
+
+		case IDC_SIDEBAR_OPACITY_INPUT:
+			if (HIWORD(wParam)==EN_CHANGE) {
+				SyncTrackBarWithEdit(hDlg,
+									 IDC_SIDEBAR_OPACITY_INPUT,
+									 IDC_SIDEBAR_OPACITY_SLIDER);
+			}
+			return TRUE;
+
 		case IDC_SIDEBAR_UP:
 		case IDC_SIDEBAR_DOWN:
 			{
@@ -647,7 +686,11 @@ INT_PTR CSideBarOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam
 
 		case PSN_APPLY:
 			{
-				m_fShowPopup=DlgCheckBox_IsChecked(hDlg,IDC_SIDEBAR_SHOW);
+				m_fShowPopup=DlgCheckBox_IsChecked(hDlg,IDC_SIDEBAR_SHOWPOPUP);
+				if (Util::OS::IsWindows8OrLater()) {
+					int Opacity=DlgEdit_GetInt(hDlg,IDC_SIDEBAR_OPACITY_INPUT);
+					m_PopupOpacity=CLAMP(Opacity,OPACITY_MIN,OPACITY_MAX);
+				}
 				m_fShowToolTips=DlgCheckBox_IsChecked(hDlg,IDC_SIDEBAR_SHOWTOOLTIPS);
 				m_pSideBar->ShowToolTips(m_fShowToolTips);
 				bool fShowChannelLogo=DlgCheckBox_IsChecked(hDlg,IDC_SIDEBAR_SHOWCHANNELLOGO);

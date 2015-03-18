@@ -171,8 +171,8 @@ public:
 	bool SetDockingPlace(DockingPlace Place);
 	bool SetPanelTheme(const CPanel::PanelTheme &Theme);
 	bool GetPanelTheme(CPanel::PanelTheme *pTheme) const;
-	bool SetOpacity(int Opacity);
-	int GetOpacity() const { return m_Opacity; }
+	bool SetPanelOpacity(int Opacity);
+	int GetPanelOpacity() const { return m_Opacity; }
 
 // CUIBase
 	void SetTheme(const TVTest::Theme::CThemeManager *pThemeManager) override;

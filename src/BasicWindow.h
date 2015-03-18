@@ -65,6 +65,7 @@ public:
 	LRESULT SendMessage(UINT Msg,WPARAM wParam,LPARAM lParam);
 	bool PostMessage(UINT Msg,WPARAM wParam,LPARAM lParam);
 	bool SendSizeMessage();
+	bool SetOpacity(int Opacity,bool fClearLayered=true);
 };
 
 class ABSTRACT_CLASS(CCustomWindow) : public CBasicWindow
