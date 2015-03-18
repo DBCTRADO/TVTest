@@ -1751,6 +1751,36 @@ LRESULT CEventSearchSettingsDialog::CKeywordEditSubclass::OnMessage(
 			::SendMessage(::GetParent(::GetParent(hwnd)),WM_COMMAND,IDC_EVENTSEARCH_SEARCH,0);
 			return 0;
 		}
+		if (wParam==VK_DELETE) {
+			int Length=::GetWindowTextLength(hwnd);
+
+			if (Length>0) {
+				HWND hwndComboBox=::GetParent(hwnd);
+
+				if (ComboBox_GetDroppedState(hwndComboBox)) {
+					int Sel=ComboBox_GetCurSel(hwndComboBox);
+
+					if (Sel>=0) {
+						DWORD Start,End;
+
+						::SendMessage(hwnd,EM_GETSEL,
+									  reinterpret_cast<WPARAM>(&Start),
+									  reinterpret_cast<LPARAM>(&End));
+						if (Start==0 && End==(DWORD)Length) {
+							TCHAR szKeyword[CEventSearchSettings::MAX_KEYWORD_LENGTH];
+
+							if (::GetWindowText(hwnd,szKeyword,lengthof(szKeyword))==Length
+									&& ComboBox_FindStringExact(hwndComboBox,Sel-1,szKeyword)==Sel) {
+								::SendMessage(::GetParent(hwndComboBox),WM_COMMAND,
+											  IDC_EVENTSEARCH_DELETEKEYWORD,0);
+								return 0;
+							}
+						}
+					}
+				}
+			}
+			break;
+		}
 		break;
 
 	case WM_CHAR:
