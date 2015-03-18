@@ -896,7 +896,8 @@ bool CEventSearchOptions::AddKeywordHistory(LPCTSTR pszKeyword)
 
 	for (auto it=m_KeywordHistory.begin();it!=m_KeywordHistory.end();++it) {
 		if (TVTest::StringUtility::CompareNoCase(*it,pszKeyword)==0) {
-			if (it==m_KeywordHistory.begin())
+			if (it==m_KeywordHistory.begin()
+					&& it->compare(pszKeyword)==0)
 				return true;
 			m_KeywordHistory.erase(it);
 			break;
