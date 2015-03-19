@@ -485,14 +485,14 @@ LRESULT CInformationPanel::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lP
 	case WM_SETCURSOR:
 		if ((HWND)wParam==hwnd) {
 			if (LOWORD(lParam)==HTCLIENT && m_HotButton>=0) {
-				::SetCursor(::LoadCursor(NULL,IDC_HAND));
+				::SetCursor(GetActionCursor());
 				return TRUE;
 			}
 		} else if ((HWND)wParam==m_hwndProgramInfo
 				&& LOWORD(lParam)==HTCLIENT
 				&& m_fUseRichEdit
 				&& m_fProgramInfoCursorOverLink) {
-			::SetCursor(::LoadCursor(NULL,IDC_HAND));
+			::SetCursor(GetLinkCursor());
 			return TRUE;
 		}
 		break;
@@ -521,7 +521,7 @@ LRESULT CInformationPanel::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lP
 
 						if (CRichEditUtil::LinkHitTest(m_hwndProgramInfo,pt,m_ProgramInfoLinkList)>=0) {
 							m_fProgramInfoCursorOverLink=true;
-							::SetCursor(::LoadCursor(NULL,IDC_HAND));
+							::SetCursor(GetLinkCursor());
 						} else {
 							m_fProgramInfoCursorOverLink=false;
 						}

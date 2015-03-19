@@ -514,7 +514,7 @@ LRESULT CControlPanel::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam
 	case WM_SETCURSOR:
 		if (LOWORD(lParam)==HTCLIENT) {
 			if (m_HotItem>=0) {
-				::SetCursor(LoadCursor(NULL,IDC_HAND));
+				::SetCursor(GetActionCursor());
 				return TRUE;
 			}
 		}

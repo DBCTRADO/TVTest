@@ -134,6 +134,9 @@ public:
 	COLORREF GetColor(LPCTSTR pszText) const;
 	const CColorScheme *GetCurrentColorScheme() const;
 
+	HCURSOR GetActionCursor() const;
+	HCURSOR GetLinkCursor() const;
+
 	bool ShowHelpContent(int ID);
 
 	void SetProgress(int Pos,int Max);

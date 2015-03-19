@@ -21,6 +21,8 @@ namespace TVTest
 		void InitializeUI();
 		const Style::CStyleManager *GetStyleManager() const;
 		void UpdateStyle();
+		HCURSOR GetActionCursor() const;
+		HCURSOR GetLinkCursor() const;
 	};
 
 }	// namespace TVTest

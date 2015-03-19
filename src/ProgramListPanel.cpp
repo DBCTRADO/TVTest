@@ -1057,7 +1057,10 @@ LRESULT CProgramListPanel::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lP
 
 	case WM_SETCURSOR:
 		if ((HWND)wParam==hwnd) {
-			::SetCursor(::LoadCursor(NULL,LOWORD(lParam)==HTCLIENT && m_HotItem>=0?IDC_HAND:IDC_ARROW));
+			if (LOWORD(lParam)==HTCLIENT && m_HotItem>=0)
+				::SetCursor(GetActionCursor());
+			else
+				::SetCursor(::LoadCursor(NULL,IDC_ARROW));
 			return TRUE;
 		}
 		break;

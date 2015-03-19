@@ -258,7 +258,7 @@ INT_PTR CAboutDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 
 	case WM_SETCURSOR:
 		if ((HWND)wParam==::GetDlgItem(hDlg,IDC_ABOUT_LINK)) {
-			::SetCursor(::LoadCursor(NULL,IDC_HAND));
+			::SetCursor(GetAppClass().UICore.GetLinkCursor());
 			::SetWindowLongPtr(hDlg,DWLP_MSGRESULT,TRUE);
 			return TRUE;
 		}

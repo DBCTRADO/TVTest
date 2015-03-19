@@ -49,4 +49,16 @@ namespace TVTest
 	}
 
 
+	HCURSOR CUIBase::GetActionCursor() const
+	{
+		return GetAppClass().UICore.GetActionCursor();
+	}
+
+
+	HCURSOR CUIBase::GetLinkCursor() const
+	{
+		return GetAppClass().UICore.GetLinkCursor();
+	}
+
+
 }	// namespace TVTest

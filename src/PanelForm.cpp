@@ -504,7 +504,7 @@ LRESULT CPanelForm::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 			::ScreenToClient(hwnd,&pt);
 			int Index=HitTest(pt.x,pt.y);
 			if (Index>=0) {
-				::SetCursor(::LoadCursor(NULL,IDC_HAND));
+				::SetCursor(GetActionCursor());
 				return TRUE;
 			}
 		}

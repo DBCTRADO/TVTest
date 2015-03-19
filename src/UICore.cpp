@@ -1352,6 +1352,18 @@ bool CUICore::ApplyColorScheme(const CColorScheme *pColorScheme)
 }
 
 
+HCURSOR CUICore::GetActionCursor() const
+{
+	return ::LoadCursor(NULL,IDC_HAND);
+}
+
+
+HCURSOR CUICore::GetLinkCursor() const
+{
+	return ::LoadCursor(NULL,IDC_HAND);
+}
+
+
 bool CUICore::ShowHelpContent(int ID)
 {
 	return m_App.HtmlHelpClass.ShowContent(ID);

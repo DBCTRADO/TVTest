@@ -766,7 +766,7 @@ LRESULT CChannelPanel::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam
 
 			Channel=HitTest(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam),&Type);
 			if (Channel>=0 && Type!=HIT_MARGIN)
-				::SetCursor(::LoadCursor(NULL,IDC_HAND));
+				::SetCursor(GetActionCursor());
 			else
 				::SetCursor(::LoadCursor(NULL,IDC_ARROW));
 		}

@@ -399,7 +399,7 @@ LRESULT CPanel::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 
 	case WM_SETCURSOR:
 		if ((HWND)wParam==hwnd && LOWORD(lParam)==HTCLIENT && m_HotItem!=ITEM_NONE) {
-			::SetCursor(::LoadCursor(NULL,IDC_HAND));
+			::SetCursor(GetActionCursor());
 			return TRUE;
 		}
 		break;

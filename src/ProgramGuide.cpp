@@ -3979,11 +3979,11 @@ LRESULT CProgramGuide::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam
 					if (x<(int)m_EventLayoutList.Length()*HeaderWidth
 							&& (x%HeaderWidth<HeaderWidth-(m_Style.HeaderChevronMargin.Left+ChevronArea)
 								|| x%HeaderWidth>=HeaderWidth-ChevronArea)) {
-						::SetCursor(::LoadCursor(NULL,IDC_HAND));
+						::SetCursor(GetActionCursor());
 						return TRUE;
 					}
 				} else if (m_ListMode==LIST_WEEK) {
-					::SetCursor(::LoadCursor(NULL,IDC_HAND));
+					::SetCursor(GetActionCursor());
 					return TRUE;
 				}
 			} else if (pt.x<m_TimeBarWidth
@@ -3991,14 +3991,14 @@ LRESULT CProgramGuide::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam
 				if (m_ListMode==LIST_SERVICES) {
 					if (m_Day>DAY_FIRST
 							&& pt.y<m_HeaderHeight) {
-						::SetCursor(::LoadCursor(NULL,IDC_HAND));
+						::SetCursor(GetActionCursor());
 						return TRUE;
 					}
 					int y=(m_Hours*m_LinesPerHour-m_ScrollPos.y)*GetLineHeight();
 					if (m_Day<DAY_LAST
 							&& pt.y-m_HeaderHeight>=y-m_TimeBarWidth
 							&& pt.y-m_HeaderHeight<y) {
-						::SetCursor(::LoadCursor(NULL,IDC_HAND));
+						::SetCursor(GetActionCursor());
 						return TRUE;
 					}
 				}
@@ -5313,7 +5313,7 @@ void CProgramGuideToolbar::SetBarPosition(int x,int y,int Width,int Height)
 bool CProgramGuideToolbar::OnSetCursor(HWND hwnd,int HitTestCode)
 {
 	if (hwnd==m_hwnd && HitTestCode==HTCLIENT) {
-		::SetCursor(::LoadCursor(NULL,IDC_HAND));
+		::SetCursor(GetAppClass().UICore.GetActionCursor());
 		return true;
 	}
 

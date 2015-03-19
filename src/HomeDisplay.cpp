@@ -235,7 +235,7 @@ bool CChannelListCategoryBase::OnClick(int x,int y)
 bool CChannelListCategoryBase::OnSetCursor()
 {
 	if (m_HotItem>=0) {
-		::SetCursor(::LoadCursor(NULL,IDC_HAND));
+		::SetCursor(GetAppClass().UICore.GetActionCursor());
 		return true;
 	}
 	return false;

@@ -1067,7 +1067,7 @@ LRESULT CChannelDisplay::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lPar
 				&& LOWORD(lParam)==HTCLIENT) {
 			DWORD Pos=::GetMessagePos();
 			POINT pt;
-			LPCTSTR pszCursor;
+			HCURSOR hCursor;
 
 			pt.x=(SHORT)LOWORD(Pos);
 			pt.y=(SHORT)HIWORD(Pos);
@@ -1075,11 +1075,11 @@ LRESULT CChannelDisplay::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lPar
 			if (TunerItemHitTest(pt.x,pt.y)>=0
 					|| ChannelItemHitTest(pt.x,pt.y)>=0
 					|| CloseButtonHitTest(pt.x,pt.y)) {
-				pszCursor=IDC_HAND;
+				hCursor=GetActionCursor();
 			} else {
-				pszCursor=IDC_ARROW;
+				hCursor=::LoadCursor(NULL,IDC_ARROW);
 			}
-			::SetCursor(::LoadCursor(NULL,pszCursor));
+			::SetCursor(hCursor);
 			return TRUE;
 		}
 		break;
