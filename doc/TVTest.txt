@@ -26,7 +26,7 @@
 
 ◆ ビルド
 
-  Visual Studio 2010 のプロジェクトファイルが付属しています。
+  Visual Studio 2010/2013 のプロジェクトファイルが付属しています。
   C++11 の機能を利用しているため、2010 より前の Visual Studio ではビルドできませ
   ん。Express Edition でもビルドできると思いますが、確認はしていません。
   TVTest のビルドには以下の SDK/ライブラリが必要になります。
@@ -49,6 +49,9 @@
   ・TVTest.sln        TVTest.exe のソリューション
   ・TVTest_Image.sln  TVTest_Image.dll のソリューション
   ・TVTest_All.sln    TVTest.exe と TVTest_Image.dll 両方のソリューション
+
+  ファイル名に VS2013 の付いたものは Visual Studio 2013 用、付いていないものは
+  Visual Studio 2010 用です。
 
   ソリューション構成の名称に _XP が付いたものは Windows XP 対応版、_MD が付いた
   ものはランタイムライブラリ動的リンク版です。
