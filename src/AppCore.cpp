@@ -514,6 +514,8 @@ bool CAppCore::SetCommandLineChannel(const CCommandLineOptions *pCmdLine)
 
 				if ((pCmdLine->m_Channel==0
 						|| pCmdLine->m_Channel==pChannelInfo->GetPhysicalChannel())
+					&& (pCmdLine->m_ChannelIndex<0
+						|| pCmdLine->m_ChannelIndex==pChannelInfo->GetChannelIndex())
 					&& (pCmdLine->m_ControllerChannel==0
 						|| pCmdLine->m_ControllerChannel==pChannelInfo->GetChannelNo())
 					&& (pCmdLine->m_ServiceID==0
@@ -529,7 +531,8 @@ bool CAppCore::SetCommandLineChannel(const CCommandLineOptions *pCmdLine)
 	}
 
 	if (pCmdLine->m_ServiceID>0
-			&& (pCmdLine->m_Channel>0 || pCmdLine->m_ControllerChannel>0
+			&& (pCmdLine->m_Channel>0 || pCmdLine->m_ChannelIndex>=0
+				|| pCmdLine->m_ControllerChannel>0
 				|| pCmdLine->m_NetworkID>0 || pCmdLine->m_TransportStreamID>0)) {
 		for (int i=0;(pChannelList=m_App.ChannelManager.GetChannelList(i))!=nullptr;i++) {
 			if (pCmdLine->m_TuningSpace<0 || i==pCmdLine->m_TuningSpace) {
@@ -538,6 +541,8 @@ bool CAppCore::SetCommandLineChannel(const CCommandLineOptions *pCmdLine)
 
 					if ((pCmdLine->m_Channel==0
 							|| pCmdLine->m_Channel==pChannelInfo->GetPhysicalChannel())
+						&& (pCmdLine->m_ChannelIndex<0
+							|| pCmdLine->m_ChannelIndex==pChannelInfo->GetChannelIndex())
 						&& (pCmdLine->m_ControllerChannel==0
 							|| pCmdLine->m_ControllerChannel==pChannelInfo->GetChannelNo())
 						&& (pCmdLine->m_NetworkID==0

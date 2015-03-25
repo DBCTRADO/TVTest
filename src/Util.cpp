@@ -944,6 +944,159 @@ HICON CreateIconFromBitmap(HBITMAP hbm,int IconWidth,int IconHeight,int ImageWid
 }
 
 
+#include <pshpack1.h>
+
+struct ICONDIRENTRY
+{
+	BYTE bWidth;
+	BYTE bHeight;
+	BYTE bColorCount;
+	BYTE bReserved;
+	WORD wPlanes;
+	WORD wBitCount;
+	DWORD dwBytesInRes;
+	DWORD dwImageOffset;
+};
+
+struct ICONDIR
+{
+	WORD idReserved;
+	WORD idType;
+	WORD idCount;
+	ICONDIRENTRY idEntries[1];
+};
+
+#include <poppack.h>
+
+/*
+	アイコンをファイルに保存する
+	保存されるアイコンは24ビット固定
+*/
+bool SaveIconFromBitmap(LPCTSTR pszFileName,HBITMAP hbm,
+						int IconWidth,int IconHeight,int ImageWidth,int ImageHeight)
+{
+	if (IsStringEmpty(pszFileName) || hbm==NULL
+			|| IconWidth<=0 || IconHeight<=0
+			|| ImageWidth<0 || ImageWidth>IconWidth
+			|| ImageHeight<0 || ImageHeight>IconHeight)
+		return false;
+
+	BITMAP bm;
+	if (::GetObject(hbm,sizeof(bm),&bm)!=sizeof(bm))
+		return false;
+
+	if (ImageWidth==0 || ImageHeight==0) {
+		if (bm.bmWidth<=IconWidth && bm.bmHeight<=IconHeight) {
+			ImageWidth=bm.bmWidth;
+			ImageHeight=bm.bmHeight;
+		} else {
+			ImageWidth=min(bm.bmWidth*IconHeight/bm.bmHeight,IconWidth);
+			if (ImageWidth<1)
+				ImageWidth=1;
+			ImageHeight=min(bm.bmHeight*IconWidth/bm.bmWidth,IconHeight);
+			if (ImageHeight<1)
+				ImageHeight=1;
+		}
+	}
+
+	int BitCount=24;
+	DWORD PixelRowBytes=(IconWidth*BitCount+31)/32*4;
+	DWORD PixelBytes=PixelRowBytes*IconHeight;
+	DWORD MaskRowBytes=(IconWidth+31)/32*4;
+	DWORD MaskBytes=MaskRowBytes*IconHeight;
+
+	ICONDIR id;
+	id.idReserved=0;
+	id.idType=1;
+	id.idCount=1;
+	id.idEntries[0].bWidth=IconWidth;
+	id.idEntries[0].bHeight=IconHeight;
+	id.idEntries[0].bColorCount=0;
+	id.idEntries[0].bReserved=0;
+	id.idEntries[0].wPlanes=1;
+	id.idEntries[0].wBitCount=BitCount;
+	id.idEntries[0].dwBytesInRes=sizeof(BITMAPINFOHEADER)+PixelBytes+MaskBytes;
+	id.idEntries[0].dwImageOffset=sizeof(ICONDIR);
+
+	BITMAPINFOHEADER bmih;
+	bmih.biSize=sizeof(BITMAPINFOHEADER);
+	bmih.biWidth=IconWidth;
+	bmih.biHeight=IconHeight;
+	bmih.biPlanes=1;
+	bmih.biBitCount=BitCount;
+	bmih.biCompression=BI_RGB;
+	bmih.biSizeImage=0;
+	bmih.biXPelsPerMeter=0;
+	bmih.biYPelsPerMeter=0;
+	bmih.biClrUsed=0;
+	bmih.biClrImportant=0;
+
+	bool fOK=false;
+	void *pColorBits;
+	HBITMAP hbmColor=::CreateDIBSection(
+		NULL,pointer_cast<BITMAPINFO*>(&bmih),DIB_RGB_COLORS,&pColorBits,NULL,0);
+	if (hbmColor!=NULL) {
+		HDC hdcSrc=::CreateCompatibleDC(NULL);
+		HBITMAP hbmSrcOld=static_cast<HBITMAP>(::SelectObject(hdcSrc,hbm));
+		HDC hdcDst=::CreateCompatibleDC(NULL);
+		HBITMAP hbmDstOld=static_cast<HBITMAP>(::SelectObject(hdcDst,hbmColor));
+
+		if (ImageWidth<IconWidth || ImageHeight<IconHeight) {
+			RECT rc={0,0,IconWidth,IconHeight};
+			::FillRect(hdcDst,&rc,static_cast<HBRUSH>(::GetStockObject(BLACK_BRUSH)));
+		}
+		int OldStretchMode=::SetStretchBltMode(hdcDst,STRETCH_HALFTONE);
+		::StretchBlt(hdcDst,
+					 (IconWidth-ImageWidth)/2,(IconHeight-ImageHeight)/2,
+					 ImageWidth,ImageHeight,
+					 hdcSrc,0,0,bm.bmWidth,bm.bmHeight,SRCCOPY);
+		::SetStretchBltMode(hdcDst,OldStretchMode);
+		::SelectObject(hdcDst,hbmDstOld);
+		::SelectObject(hdcSrc,hbmSrcOld);
+
+		HBITMAP hbmMask=CreateIconMaskBitmap(IconWidth,IconHeight,ImageWidth,ImageHeight);
+		if (hbmMask!=NULL) {
+			BYTE MaskInfoBuff[sizeof(BITMAPINFOHEADER)+sizeof(RGBQUAD)*2];
+			BITMAPINFO *pbmiMask=pointer_cast<BITMAPINFO*>(MaskInfoBuff);
+			::CopyMemory(pbmiMask,&bmih,sizeof(BITMAPINFOHEADER));
+			pbmiMask->bmiHeader.biBitCount=1;
+			static const RGBQUAD Palette[2]={{0,0,0,0},{255,255,255,0}};
+			pbmiMask->bmiColors[0]=Palette[0];
+			pbmiMask->bmiColors[1]=Palette[1];
+			BYTE *pMaskBits=new BYTE[MaskBytes];
+			::GetDIBits(hdcSrc,hbmMask,0,IconHeight,pMaskBits,pbmiMask,DIB_RGB_COLORS);
+
+			HANDLE hFile=::CreateFile(pszFileName,GENERIC_WRITE,0,NULL,
+									  CREATE_ALWAYS,FILE_ATTRIBUTE_NORMAL,NULL);
+			if (hFile!=INVALID_HANDLE_VALUE) {
+				DWORD Write;
+
+				bmih.biHeight*=2;
+				if (::WriteFile(hFile,&id,sizeof(ICONDIR),&Write,NULL)
+						&& Write==sizeof(ICONDIR)
+						&& ::WriteFile(hFile,&bmih,sizeof(BITMAPINFOHEADER),&Write,NULL)
+						&& Write==sizeof(BITMAPINFOHEADER)
+						&& ::WriteFile(hFile,pColorBits,PixelBytes,&Write,NULL)
+						&& Write==PixelBytes
+						&& ::WriteFile(hFile,pMaskBits,MaskBytes,&Write,NULL)
+						&& Write==MaskBytes)
+					fOK=true;
+				::CloseHandle(hFile);
+			}
+
+			delete [] pMaskBits;
+			::DeleteObject(hbmMask);
+		}
+
+		::DeleteDC(hdcDst);
+		::DeleteDC(hdcSrc);
+		::DeleteObject(hbmColor);
+	}
+
+	return fOK;
+}
+
+
 HICON CreateEmptyIcon(int Width,int Height)
 {
 	size_t Size=(Width+7)/8*Height;

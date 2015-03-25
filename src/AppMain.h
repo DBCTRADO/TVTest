@@ -35,6 +35,7 @@
 #include "EpgOptions.h"
 #include "ProgramGuideOptions.h"
 #include "TSProcessorOptions.h"
+#include "TaskbarOptions.h"
 #include "Plugin.h"
 #include "Logger.h"
 #include "CommandLine.h"
@@ -182,6 +183,7 @@ public:
 	CProgramGuideOptions ProgramGuideOptions;
 	TVTest::CTSProcessorOptions TSProcessorOptions;
 	CPluginOptions PluginOptions;
+	CTaskbarOptions TaskbarOptions;
 	CRecentChannelList RecentChannelList;
 	CChannelHistory ChannelHistory;
 	TVTest::CFavoritesManager FavoritesManager;

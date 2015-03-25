@@ -378,10 +378,12 @@ CCommandLineOptions::CCommandLineOptions()
 	, m_fSaveLog(false)
 	, m_fNoEpg(false)
 	, m_f1Seg(false)
+	, m_fJumpList(false)
 	, m_TvRockDID(-1)
 
 	, m_Channel(0)
 	, m_ControllerChannel(0)
+	, m_ChannelIndex(-1)
 	, m_TuningSpace(-1)
 	, m_ServiceID(0)
 	, m_NetworkID(0)
@@ -425,7 +427,8 @@ CCommandLineOptions::CCommandLineOptions()
 /*
 	利用可能なコマンドラインオプション
 
-	/ch				チャンネル (e.g. /ch 13)
+	/ch				物理チャンネル (e.g. /ch 13)
+	/chi			チャンネルインデックス
 	/chspace		チューニング空間 (e.g. /chspace 1)
 	/d				ドライバの指定 (e.g. /d BonDriver.dll)
 	/f /fullscreen	フルスクリーン
@@ -479,6 +482,8 @@ CCommandLineOptions::CCommandLineOptions()
 	/home			ホーム画面表示
 	/chdisplay		チャンネル選択画面表示
 	/style			スタイルファイル名
+	/command		コマンド実行
+	/jumplist		ジャンプリストからの起動
 */
 void CCommandLineOptions::Parse(LPCWSTR pszCmdLine)
 {
@@ -491,7 +496,9 @@ void CCommandLineOptions::Parse(LPCWSTR pszCmdLine)
 			if (!Args.GetOption(TEXT("1seg"),&m_f1Seg)
 					&& !Args.GetOption(TEXT("ch"),&m_Channel)
 					&& !Args.GetOption(TEXT("chdisplay"),&m_fChannelDisplay)
+					&& !Args.GetOption(TEXT("chi"),&m_ChannelIndex)
 					&& !Args.GetOption(TEXT("chspace"),&m_TuningSpace)
+					&& !Args.GetOption(TEXT("command"),&m_Command)
 					&& !Args.GetOption(TEXT("d"),&m_DriverName)
 					&& !Args.GetOption(TEXT("epg"),&m_fShowProgramGuide)
 					&& !Args.GetOption(TEXT("epgonly"),&m_fProgramGuideOnly)
@@ -505,6 +512,7 @@ void CCommandLineOptions::Parse(LPCWSTR pszCmdLine)
 					&& !Args.GetOption(TEXT("home"),&m_fHomeDisplay)
 					&& !Args.GetOption(TEXT("ini"),&m_IniFileName)
 					&& !Args.GetOption(TEXT("init"),&m_fInitialSettings)
+					&& !Args.GetOption(TEXT("jumplist"),&m_fJumpList)
 					&& !Args.GetOption(TEXT("log"),&m_fSaveLog)
 					&& !Args.GetOption(TEXT("max"),&m_fMaximize)
 					&& !Args.GetOption(TEXT("min"),&m_fMinimize)
@@ -612,6 +620,7 @@ void CCommandLineOptions::Parse(LPCWSTR pszCmdLine)
 
 bool CCommandLineOptions::IsChannelSpecified() const
 {
-	return m_Channel>0 || m_ControllerChannel>0 || m_ServiceID>0
-		|| m_NetworkID>0 || m_TransportStreamID>0;
+	return m_Channel>0 || m_ControllerChannel>0
+		|| (m_ChannelIndex>=0 && m_TuningSpace>=0)
+		|| m_ServiceID>0 || m_NetworkID>0 || m_TransportStreamID>0;
 }

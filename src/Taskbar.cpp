@@ -1,4 +1,6 @@
 #include "stdafx.h"
+#include <propvarutil.h>
+#include <propkey.h>
 #include "TVTest.h"
 #include "Taskbar.h"
 #include "AppMain.h"
@@ -8,10 +10,19 @@
 
 
 
+const CTaskbarManager::CommandIconInfo CTaskbarManager::m_CommandIconList[] =
+{
+	{CM_FULLSCREEN,		IDI_TASK_FULLSCREEN},
+	{CM_DISABLEVIEWER,	IDI_TASK_DISABLEVIEWER},
+	{CM_PROGRAMGUIDE,	IDI_TASK_PROGRAMGUIDE},
+};
+
+
 CTaskbarManager::CTaskbarManager()
 	: m_hwnd(NULL)
 	, m_TaskbarButtonCreatedMessage(0)
 	, m_pTaskbarList(NULL)
+	, m_fJumpListInitialized(false)
 {
 }
 
@@ -39,6 +50,24 @@ bool CTaskbarManager::Initialize(HWND hwnd)
 #endif
 
 			m_hwnd=hwnd;
+
+			m_AppID=GetAppClass().TaskbarOptions.GetAppID();
+			if (!m_AppID.empty()) {
+				auto pSetCurrentProcessExplicitAppUserModelID=
+					GET_MODULE_FUNCTION(TEXT("shell32.dll"),SetCurrentProcessExplicitAppUserModelID);
+				if (pSetCurrentProcessExplicitAppUserModelID!=NULL) {
+					HRESULT hr=pSetCurrentProcessExplicitAppUserModelID(m_AppID.c_str());
+					if (hr==S_OK) {
+						if (GetAppClass().TaskbarOptions.IsJumpListEnabled()) {
+							hr=InitializeJumpList();
+							if (SUCCEEDED(hr))
+								m_fJumpListInitialized=true;
+						} else {
+							ClearJumpList();
+						}
+					}
+				}
+			}
 		}
 	}
 	return true;
@@ -65,26 +94,31 @@ bool CTaskbarManager::HandleMessage(UINT uMsg,WPARAM wParam,LPARAM lParam)
 										  reinterpret_cast<void**>(&m_pTaskbarList))))
 				return true;
 		}
-		HINSTANCE hinst=GetAppClass().GetResourceInstance();
-		HIMAGELIST himl=::ImageList_LoadBitmap(hinst,
-											   MAKEINTRESOURCE(IDB_THUMBBAR),
-											   16,1,RGB(192,192,192));
-		if (himl!=NULL) {
-			m_pTaskbarList->ThumbBarSetImageList(m_hwnd,himl);
-			THUMBBUTTON tb[3];
-			tb[0].iId=CM_FULLSCREEN;
-			tb[1].iId=CM_DISABLEVIEWER;
-			tb[2].iId=CM_PROGRAMGUIDE;
-			for (int i=0;i<lengthof(tb);i++) {
-				tb[i].dwMask=(THUMBBUTTONMASK)(THB_BITMAP | THB_TOOLTIP | THB_FLAGS);
-				tb[i].iBitmap=i;
-				::LoadStringW(hinst,tb[i].iId,tb[i].szTip,lengthof(tb[0].szTip));
-				tb[i].dwFlags=(THUMBBUTTONFLAGS)(THBF_ENABLED | THBF_DISMISSONCLICK);
-			}
-			m_pTaskbarList->ThumbBarAddButtons(m_hwnd,lengthof(tb),tb);
+
+		static const int ButtonList[] = {
+			CM_FULLSCREEN,
+			CM_DISABLEVIEWER,
+			CM_PROGRAMGUIDE,
+		};
+		THUMBBUTTON tb[lengthof(ButtonList)];
+		const CAppMain &App=GetAppClass();
+		HINSTANCE hinst=App.GetResourceInstance();
+
+		for (int i=0;i<lengthof(tb);i++) {
+			const int Command=ButtonList[i];
+
+			tb[i].dwMask=(THUMBBUTTONMASK)(THB_ICON | THB_TOOLTIP | THB_FLAGS);
+			tb[i].iId=Command;
+			tb[i].hIcon=::LoadIcon(hinst,MAKEINTRESOURCE(GetCommandIcon(Command)));
+			App.CommandList.GetCommandNameByID(Command,tb[i].szTip,lengthof(tb[0].szTip));
+			tb[i].dwFlags=(THUMBBUTTONFLAGS)(THBF_ENABLED | THBF_DISMISSONCLICK);
 		}
+
+		m_pTaskbarList->ThumbBarAddButtons(m_hwnd,lengthof(tb),tb);
+
 		return true;
 	}
+
 	return false;
 }
 
@@ -129,4 +163,403 @@ bool CTaskbarManager::EndProgress()
 	if (m_pTaskbarList!=NULL)
 		m_pTaskbarList->SetProgressState(m_hwnd,TBPF_NOPROGRESS);
 	return true;
+}
+
+
+bool CTaskbarManager::UpdateJumpList()
+{
+	if (!m_fJumpListInitialized)
+		return false;
+	return SUCCEEDED(InitializeJumpList());
+}
+
+
+bool CTaskbarManager::ClearJumpList()
+{
+	if (m_AppID.empty())
+		return false;
+
+	HRESULT hr;
+	ICustomDestinationList *pcdl;
+
+	hr=::CoCreateInstance(CLSID_DestinationList,NULL,
+						  CLSCTX_INPROC_SERVER,IID_PPV_ARGS(&pcdl));
+	if (FAILED(hr))
+		return false;
+
+	hr=pcdl->DeleteList(m_AppID.c_str());
+	pcdl->Release();
+
+	return SUCCEEDED(hr);
+}
+
+
+HRESULT CTaskbarManager::InitializeJumpList()
+{
+	HRESULT hr;
+	ICustomDestinationList *pcdl;
+
+	hr=::CoCreateInstance(CLSID_DestinationList,NULL,
+						  CLSCTX_INPROC_SERVER,IID_PPV_ARGS(&pcdl));
+	if (FAILED(hr))
+		return hr;
+
+	if (!m_AppID.empty())
+		pcdl->SetAppID(m_AppID.c_str());
+
+	UINT MinSlots;
+	IObjectArray *pRemovedList;
+
+	hr=pcdl->BeginList(&MinSlots,IID_PPV_ARGS(&pRemovedList));
+	if (SUCCEEDED(hr)) {
+		const CTaskbarOptions &TaskbarOptions=GetAppClass().TaskbarOptions;
+
+		if (TaskbarOptions.GetShowTasks())
+			hr=AddTaskList(pcdl);
+		if (SUCCEEDED(hr)) {
+			if (TaskbarOptions.GetShowRecentChannels())
+				hr=AddRecentChannelsCategory(pcdl);
+		}
+
+		pRemovedList->Release();
+	}
+
+	if (SUCCEEDED(hr))
+		hr=pcdl->CommitList();
+
+	pcdl->Release();
+
+	return hr;
+}
+
+
+HRESULT CTaskbarManager::AddTaskList(ICustomDestinationList *pcdl)
+{
+	CAppMain &App=GetAppClass();
+	const CTaskbarOptions::TaskList &TaskList=App.TaskbarOptions.GetTaskList();
+
+	if (TaskList.empty())
+		return S_FALSE;
+
+	HRESULT hr;
+	IObjectCollection *pCollection;
+
+	hr=::CoCreateInstance(CLSID_EnumerableObjectCollection,NULL,
+						  CLSCTX_INPROC_SERVER,IID_PPV_ARGS(&pCollection));
+	if (SUCCEEDED(hr)) {
+		WCHAR szIconPath[MAX_PATH];
+
+		::GetModuleFileNameW(NULL,szIconPath,lengthof(szIconPath));
+
+		for (auto it=TaskList.begin();it!=TaskList.end();++it) {
+			const int Command=*it;
+			IShellLink *pShellLink;
+
+			if (Command==0) {
+				hr=CreateSeparatorShellLink(&pShellLink);
+			} else {
+				WCHAR szArgs[CCommandList::MAX_COMMAND_TEXT+32];
+				WCHAR szTitle[CCommandList::MAX_COMMAND_NAME];
+
+				if (Command==CM_PROGRAMGUIDE) {
+					StdUtil::strncpy(szArgs,lengthof(szArgs),L"/jumplist /s /epgonly");
+				} else {
+					StdUtil::snprintf(
+						szArgs,lengthof(szArgs),L"/jumplist /s /command %s",
+						App.CommandList.GetCommandTextByID(Command));
+				}
+				App.CommandList.GetCommandNameByID(Command,szTitle,lengthof(szTitle));
+				int Icon=GetCommandIcon(Command);
+				hr=CreateAppShellLink(szArgs,szTitle,NULL,Icon!=0?szIconPath:NULL,-Icon,&pShellLink);
+			}
+
+			if (SUCCEEDED(hr)) {
+				pCollection->AddObject(pShellLink);
+				pShellLink->Release();
+			}
+		}
+
+		IObjectArray *pArray;
+		hr=pCollection->QueryInterface(IID_PPV_ARGS(&pArray));
+		if (SUCCEEDED(hr)) {
+			hr=pcdl->AddUserTasks(pArray);
+			pArray->Release();
+		}
+
+		pCollection->Release();
+	}
+
+	return hr;
+}
+
+
+HRESULT CTaskbarManager::CreateAppShellLink(
+	PCWSTR pszArgs,PCWSTR pszTitle,PCWSTR pszDescription,
+	PCWSTR pszIconPath,int IconIndex,
+	IShellLink **ppShellLink)
+{
+	WCHAR szAppPath[MAX_PATH];
+	DWORD Length=::GetModuleFileNameW(NULL,szAppPath,lengthof(szAppPath));
+	if (Length==0 || Length>=lengthof(szAppPath)-1)
+		return E_FAIL;
+
+	HRESULT hr;
+	IShellLink *pShellLink;
+
+	hr=::CoCreateInstance(CLSID_ShellLink,NULL,CLSCTX_INPROC_SERVER,
+						  IID_PPV_ARGS(&pShellLink));
+	if (SUCCEEDED(hr)) {
+		hr=pShellLink->SetPath(szAppPath);
+		if (SUCCEEDED(hr)) {
+			hr=pShellLink->SetArguments(pszArgs);
+			if (SUCCEEDED(hr)) {
+				if (!IsStringEmpty(pszDescription))
+					pShellLink->SetDescription(pszDescription);
+				if (!IsStringEmpty(pszIconPath))
+					pShellLink->SetIconLocation(pszIconPath,IconIndex);
+
+				IPropertyStore *pPropStore;
+
+				hr=pShellLink->QueryInterface(IID_PPV_ARGS(&pPropStore));
+				if (SUCCEEDED(hr)) {
+					PROPVARIANT PropVar;
+
+					hr=::InitPropVariantFromString(pszTitle,&PropVar);
+					if (SUCCEEDED(hr)) {
+						hr=pPropStore->SetValue(PKEY_Title,PropVar);
+						if (SUCCEEDED(hr)) {
+							hr=pPropStore->Commit();
+							if (SUCCEEDED(hr)) {
+								pShellLink->AddRef();
+								*ppShellLink=pShellLink;
+							}
+						}
+						::PropVariantClear(&PropVar);
+					}
+					pPropStore->Release();
+				}
+			}
+		}
+		pShellLink->Release();
+	}
+
+	return hr;
+}
+
+
+HRESULT CTaskbarManager::CreateSeparatorShellLink(IShellLink **ppShellLink)
+{
+	HRESULT hr;
+	IShellLink *pShellLink;
+
+	hr=::CoCreateInstance(CLSID_ShellLink,NULL,
+						  CLSCTX_INPROC_SERVER,IID_PPV_ARGS(&pShellLink));
+	if (SUCCEEDED(hr)) {
+		IPropertyStore *pPropStore;
+
+		hr=pShellLink->QueryInterface(IID_PPV_ARGS(&pPropStore));
+		if (SUCCEEDED(hr)) {
+			PROPVARIANT PropVar;
+
+			hr=::InitPropVariantFromBoolean(TRUE,&PropVar);
+			if (SUCCEEDED(hr)) {
+				hr=pPropStore->SetValue(PKEY_AppUserModel_IsDestListSeparator,PropVar);
+				if (SUCCEEDED(hr)) {
+					hr=pPropStore->Commit();
+					if (SUCCEEDED(hr)) {
+						pShellLink->AddRef();
+						*ppShellLink=pShellLink;
+					}
+				}
+				::PropVariantClear(&PropVar);
+			}
+			pPropStore->Release();
+		}
+		pShellLink->Release();
+	}
+
+	return hr;
+}
+
+
+HRESULT CTaskbarManager::AddJumpListCategory(
+	ICustomDestinationList *pcdl,
+	PCWSTR pszTitle,const JumpListItemList &ItemList)
+{
+	HRESULT hr;
+	IObjectCollection *pCollection;
+
+	hr=::CoCreateInstance(CLSID_EnumerableObjectCollection,NULL,
+						  CLSCTX_INPROC_SERVER,IID_PPV_ARGS(&pCollection));
+	if (SUCCEEDED(hr)) {
+		CAppMain &App=GetAppClass();
+
+		for (auto it=ItemList.begin();it!=ItemList.end();++it) {
+			IShellLink *pShellLink;
+
+			hr=CreateAppShellLink(
+				it->Args.c_str(),it->Title.c_str(),it->Description.c_str(),
+				it->IconPath.c_str(),it->IconIndex,
+				&pShellLink);
+			if (SUCCEEDED(hr)) {
+				pCollection->AddObject(pShellLink);
+				pShellLink->Release();
+			}
+		}
+
+		IObjectArray *pArray;
+
+		hr=pCollection->QueryInterface(IID_PPV_ARGS(&pArray));
+		if (SUCCEEDED(hr)) {
+			hr=pcdl->AppendCategory(pszTitle,pArray);
+			pArray->Release();
+		}
+
+		pCollection->Release();
+	}
+
+	return hr;
+}
+
+
+HRESULT CTaskbarManager::AddRecentChannelsCategory(ICustomDestinationList *pcdl)
+{
+	CAppMain &App=GetAppClass();
+	const CRecentChannelList &RecentChannels=App.RecentChannelList;
+	int NumChannels=RecentChannels.NumChannels();
+
+	if (NumChannels==0)
+		return S_FALSE;
+
+	if (NumChannels>App.TaskbarOptions.GetMaxRecentChannels())
+		NumChannels=App.TaskbarOptions.GetMaxRecentChannels();
+
+	bool fShowIcon=App.TaskbarOptions.GetShowChannelIcon();
+	TCHAR szIconDir[MAX_PATH];
+	if (fShowIcon) {
+		if (GetAbsolutePath(App.TaskbarOptions.GetIconDirectory().c_str(),
+							szIconDir,lengthof(szIconDir)-13)) {
+			if (!::PathIsDirectory(szIconDir)) {
+				int Result=::SHCreateDirectoryEx(NULL,szIconDir,NULL);
+				if (Result!=ERROR_SUCCESS && Result!=ERROR_ALREADY_EXISTS) {
+					App.AddLog(
+						CLogItem::TYPE_ERROR,
+						TEXT("ジャンプリストアイコンフォルダ \"%s\" が作成できません。"),
+						szIconDir);
+					fShowIcon=false;
+				} else if (Result==ERROR_SUCCESS) {
+					App.AddLog(
+						CLogItem::TYPE_INFORMATION,
+						TEXT("ジャンプリストアイコンフォルダ \"%s\" を作成しました。"),
+						szIconDir);
+				}
+			}
+		} else {
+			fShowIcon=false;
+		}
+	}
+
+	JumpListItemList List;
+
+	for (int i=0;i<NumChannels;i++) {
+		const CTunerChannelInfo *pChannel=RecentChannels.GetChannelInfo(i);
+		const WORD NetworkID=pChannel->GetNetworkID();
+		const WORD ServiceID=pChannel->GetServiceID();
+		JumpListItem Item;
+		WCHAR szTuner[MAX_PATH];
+
+		Item.Title=pChannel->GetName();
+		TVTest::StringUtility::Format(
+			Item.Args,L"/jumplist /d %s /chspace %d /chi %d /nid %d /sid %d",
+			pChannel->GetTunerName(),
+			pChannel->GetSpace(),
+			pChannel->GetChannelIndex(),
+			NetworkID,ServiceID);
+		::lstrcpynW(szTuner,pChannel->GetTunerName(),lengthof(szTuner));
+		::PathRemoveExtensionW(szTuner);
+		TVTest::StringUtility::Format(
+			Item.Description,L"%s (%s)",
+			pChannel->GetName(),
+			::StrCmpNIW(szTuner,L"BonDriver_",10)==0 ? szTuner+10 : szTuner);
+
+		if (fShowIcon && NetworkID!=0 && ServiceID!=0) {
+			TCHAR szIconPath[MAX_PATH];
+			TCHAR szFileName[16];
+
+			StdUtil::snprintf(
+				szFileName,lengthof(szFileName),
+				TEXT("%04x%04x.ico"),NetworkID,ServiceID);
+			::PathCombine(szIconPath,szIconDir,szFileName);
+
+			bool fUseIcon=true;
+			const DWORD MapKey=ChannelIconMapKey(NetworkID,ServiceID);
+			const BYTE LogoType=CLogoManager::LOGOTYPE_48x24;
+			CLogoManager::LogoInfo LogoInfo;
+			if (App.LogoManager.GetLogoInfo(NetworkID,ServiceID,LogoType,&LogoInfo)) {
+				bool fSave;
+				auto it=m_ChannelIconMap.find(MapKey);
+				if (it!=m_ChannelIconMap.end())
+					fSave=CompareFileTime(&it->second.UpdatedTime,&LogoInfo.UpdatedTime)<0;
+				else
+					fSave=true;
+				if (fSave) {
+					WIN32_FIND_DATA FindData;
+					HANDLE hFind=::FindFirstFile(szIconPath,&FindData);
+					const bool fFound=hFind!=INVALID_HANDLE_VALUE;
+					if (fFound)
+						::FindClose(hFind);
+					if (!fFound
+							|| CompareFileTime(&FindData.ftLastWriteTime,&LogoInfo.UpdatedTime)<0) {
+						if (App.LogoManager.SaveLogoIcon(NetworkID,ServiceID,LogoType,
+														 ::GetSystemMetrics(SM_CXSMICON),
+														 ::GetSystemMetrics(SM_CYSMICON),
+														 szIconPath)) {
+							m_ChannelIconMap[MapKey]=ChannelIconInfo(LogoInfo.UpdatedTime);
+						} else {
+							fUseIcon=false;
+						}
+					} else if (fFound) {
+						m_ChannelIconMap[MapKey]=ChannelIconInfo(FindData.ftLastWriteTime);
+					}
+				}
+			} else {
+				auto it=m_ChannelIconMap.find(MapKey);
+				if (it==m_ChannelIconMap.end()) {
+					WIN32_FIND_DATA FindData;
+					HANDLE hFind=::FindFirstFile(szIconPath,&FindData);
+					if (hFind!=INVALID_HANDLE_VALUE) {
+						::FindClose(hFind);
+						m_ChannelIconMap[MapKey]=ChannelIconInfo(FindData.ftLastWriteTime);
+					} else {
+						fUseIcon=false;
+					}
+				}
+			}
+
+			if (fUseIcon) {
+				Item.IconPath=szIconPath;
+				Item.IconIndex=0;
+			}
+		}
+
+		List.push_back(Item);
+	}
+
+	WCHAR szTitle[64];
+
+	::LoadStringW(App.GetResourceInstance(),IDS_MENU_CHANNELHISTORY,
+				  szTitle,lengthof(szTitle));
+
+	return AddJumpListCategory(pcdl,szTitle,List);
+}
+
+
+int CTaskbarManager::GetCommandIcon(int Command) const
+{
+	for (int i=0;i<lengthof(m_CommandIconList);i++) {
+		if (m_CommandIconList[i].Command==Command)
+			return m_CommandIconList[i].Icon;
+	}
+
+	return 0;
 }

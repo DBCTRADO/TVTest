@@ -77,6 +77,8 @@ bool MakeUniqueFileName(TVTest::String *pFileName,size_t MaxLength=MAX_PATH-1,
 bool GetAbsolutePath(LPCTSTR pszFilePath,LPTSTR pszAbsolutePath,int MaxLength);
 
 HICON CreateIconFromBitmap(HBITMAP hbm,int IconWidth,int IconHeight,int ImageWidth=0,int ImageHeight=0);
+bool SaveIconFromBitmap(LPCTSTR pszFileName,HBITMAP hbm,
+						int IconWidth,int IconHeight,int ImageWidth=0,int ImageHeight=0);
 HICON CreateEmptyIcon(int Width,int Height);
 enum IconSizeType {
 	ICON_SIZE_SMALL,

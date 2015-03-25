@@ -28,10 +28,12 @@ public:
 	bool m_fSaveLog;
 	bool m_fNoEpg;
 	bool m_f1Seg;
+	bool m_fJumpList;
 	int m_TvRockDID;
 
 	int m_Channel;
 	int m_ControllerChannel;
+	int m_ChannelIndex;
 	int m_TuningSpace;
 	int m_ServiceID;
 	int m_NetworkID;
@@ -83,6 +85,8 @@ public:
 		TVTest::String Value;
 	};
 	std::vector<IniEntry> m_IniValueList;
+
+	TVTest::String m_Command;
 };
 
 

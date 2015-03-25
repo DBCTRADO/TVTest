@@ -11,6 +11,15 @@
 class CLogoManager : public CLogoDownloader::ILogoHandler
 {
 public:
+	struct LogoInfo
+	{
+		WORD NetworkID;
+		WORD LogoID;
+		WORD LogoVersion;
+		BYTE LogoType;
+		FILETIME UpdatedTime;
+	};
+
 	CLogoManager();
 	~CLogoManager();
 	void Clear();
@@ -32,10 +41,21 @@ public:
 	const TVTest::Graphics::CImage *GetLogoImage(WORD NetworkID,WORD LogoID,BYTE LogoType);
 	const TVTest::Graphics::CImage *GetAssociatedLogoImage(WORD NetworkID,WORD ServiceID,BYTE LogoType);
 	HICON CreateLogoIcon(WORD NetworkID,WORD ServiceID,int Width,int Height);
-	bool IsLogoAvailable(WORD NetworkID,WORD ServiceID,BYTE LogoType);
-	DWORD GetAvailableLogoType(WORD NetworkID,WORD ServiceID);
+	bool SaveLogoIcon(WORD NetworkID,WORD ServiceID,BYTE LogoType,
+					  int Width,int Height,LPCTSTR pszFileName);
+	bool IsLogoAvailable(WORD NetworkID,WORD ServiceID,BYTE LogoType) const;
+	DWORD GetAvailableLogoType(WORD NetworkID,WORD ServiceID) const;
+	bool GetLogoInfo(WORD NetworkID,WORD ServiceID,BYTE LogoType,LogoInfo *pInfo) const;
 
 	enum {
+		LOGOTYPE_48x24,
+		LOGOTYPE_36x24,
+		LOGOTYPE_48x27,
+		LOGOTYPE_72x36,
+		LOGOTYPE_54x36,
+		LOGOTYPE_64x36,
+		LOGOTYPE_FIRST	=LOGOTYPE_48x24,
+		LOGOTYPE_LAST	=LOGOTYPE_64x36,
 		LOGOTYPE_SMALL	=0xFF,	// éÊìæÇ≈Ç´ÇÈíÜÇ©ÇÁè¨Ç≥Ç¢Ç‡ÇÃóDêÊ
 		LOGOTYPE_BIG	=0xFE	// éÊìæÇ≈Ç´ÇÈíÜÇ©ÇÁëÂÇ´Ç¢Ç‡ÇÃóDêÊ
 	};
@@ -72,11 +92,11 @@ private:
 		bool SaveBmpToFile(CImageCodec *pCodec,LPCTSTR pszFileName) const;
 	};
 
-	inline ULONGLONG GetMapKey(WORD NID,WORD LogoID,BYTE LogoType) {
+	static inline ULONGLONG GetMapKey(WORD NID,WORD LogoID,BYTE LogoType) {
 		return ((ULONGLONG)NID<<24) | ((ULONGLONG)LogoID<<8) | LogoType;
 	}
 	typedef std::map<ULONGLONG,CLogoData*> LogoMap;
-	inline DWORD GetIDMapKey(WORD NID,WORD SID) {
+	static inline DWORD GetIDMapKey(WORD NID,WORD SID) {
 		return ((DWORD)NID<<16) | (DWORD)SID;
 	}
 	typedef std::map<DWORD,WORD> LogoIDMap;
@@ -87,7 +107,7 @@ private:
 	LogoMap m_LogoMap;
 	LogoIDMap m_LogoIDMap;
 	CImageCodec m_ImageCodec;
-	CCriticalLock m_Lock;
+	mutable CCriticalLock m_Lock;
 	bool m_fLogoUpdated;
 	bool m_fLogoIDMapUpdated;
 	FILETIME m_LogoFileLastWriteTime;

@@ -52,8 +52,8 @@
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{88CAD0EE-D7F6-412D-8691-D1FF19534587}</ProjectGuid>
-    <RootNamespace>BonTest</RootNamespace>
-    <Keyword>MFCProj</Keyword>
+    <RootNamespace>TVTest</RootNamespace>
+    <Keyword>Win32Proj</Keyword>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
@@ -1043,6 +1043,7 @@
     <ClCompile Include="StringUtility.cpp" />
     <ClCompile Include="Style.cpp" />
     <ClCompile Include="Taskbar.cpp" />
+    <ClCompile Include="TaskbarOptions.cpp" />
     <ClCompile Include="Theme.cpp" />
     <ClCompile Include="ThemeManager.cpp" />
     <ClCompile Include="TitleBar.cpp" />
@@ -1224,6 +1225,7 @@
     <ClInclude Include="StringUtility.h" />
     <ClInclude Include="Style.h" />
     <ClInclude Include="Taskbar.h" />
+    <ClInclude Include="TaskbarOptions.h" />
     <ClInclude Include="Theme.h" />
     <ClInclude Include="ThemeManager.h" />
     <ClInclude Include="TitleBar.h" />
@@ -1255,9 +1257,4 @@
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
-  <ProjectExtensions>
-    <VisualStudio>
-      <UserProperties RESOURCE_FILE="BonTest.rc" />
-    </VisualStudio>
-  </ProjectExtensions>
 </Project>

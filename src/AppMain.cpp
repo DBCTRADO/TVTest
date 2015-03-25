@@ -499,6 +499,7 @@ bool CAppMain::LoadSettings()
 	ProgramGuideOptions.LoadSettings(Settings);
 	Epg.ProgramGuideFrameSettings.LoadSettings(Settings);
 	PluginOptions.LoadSettings(Settings);
+	TaskbarOptions.LoadSettings(Settings);
 	RecentChannelList.LoadSettings(Settings);
 	Panel.InfoPanel.LoadSettings(Settings);
 	Panel.ProgramListPanel.LoadSettings(Settings);
@@ -622,6 +623,7 @@ bool CAppMain::SaveSettings(unsigned int Flags)
 		{&EpgOptions,						false},
 		{&ProgramGuideOptions,				true},
 		{&TSProcessorOptions,				true},
+		{&TaskbarOptions,					false},
 		{&Logger,							false},
 	//	{&ZoomOptions,						false},
 	//	{&PanAndScanOptions,				false},
@@ -686,6 +688,9 @@ int CAppMain::Main(HINSTANCE hInstance,LPCTSTR pszCmdLine,int nCmdShow)
 	Initialize();
 
 	CAppMutex AppMutex(true);
+
+	if (CmdLineOptions.m_fJumpList && TaskbarOptions.GetJumpListKeepSingleTask())
+		CmdLineOptions.m_fSingleTask=true;
 
 	// 複数起動のチェック
 	if (AppMutex.AlreadyExists()
@@ -1490,6 +1495,17 @@ bool CAppMain::ProcessCommandLine(LPCTSTR pszCmdLine)
 		UICore.DoCommandAsync(CM_HOMEDISPLAY);
 	else if (CmdLine.m_fChannelDisplay)
 		UICore.DoCommandAsync(CM_CHANNELDISPLAY);
+
+	if (!CmdLine.m_Command.empty()) {
+		int Command=CommandList.ParseText(CmdLine.m_Command.c_str());
+		if (Command!=0) {
+			UICore.DoCommand(Command);
+		} else {
+			AddLog(CLogItem::TYPE_ERROR,
+				   TEXT("指定されたコマンド \"%s\" は無効です。"),
+				   CmdLine.m_Command.c_str());
+		}
+	}
 
 	return true;
 }
