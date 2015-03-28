@@ -882,6 +882,17 @@ public:
 	template<typename T> const T * GetDesc() const {
 		return dynamic_cast<const T *>(GetDescByTag(T::DESC_TAG));
 	}
+	template<typename TDesc, typename TPred> void EnumDesc(TPred Pred) const {
+		const WORD DescNum = GetDescNum();
+		for (WORD i = 0; i < DescNum; i++) {
+			const CBaseDesc *pBaseDesc = GetDescByIndex(i);
+			if (pBaseDesc->GetTag() == TDesc::DESC_TAG) {
+				const TDesc *pDesc = dynamic_cast<const TDesc *>(pBaseDesc);
+				if (pDesc)
+					Pred(pDesc);
+			}
+		}
+	}
 
 protected:
 	CBaseDesc * ParseDesc(const BYTE *pHexData, const WORD wDataLength);
