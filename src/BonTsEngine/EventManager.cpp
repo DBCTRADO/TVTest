@@ -2,6 +2,7 @@
 #include "Common.h"
 #include "EventManager.h"
 #include "TsEncode.h"
+#include <algorithm>
 #include "../Common/DebugDef.h"
 
 
@@ -796,26 +797,36 @@ void CEventManager::OnSection(CPsiStreamTable *pTable, const CPsiSection *pSecti
 					pContentDesc->GetNibble(j, &pEvent->m_ContentNibble.NibbleList[j]);
 			}
 
-			const CEventGroupDesc *pGroupDesc = pDescBlock->GetDesc<CEventGroupDesc>();
-			if (pGroupDesc) {
-				pEvent->m_EventGroupList.resize(1);
-				CEventInfo::EventGroupInfo &GroupInfo = pEvent->m_EventGroupList[0];
+			if (pDescBlock->GetDescByTag(CEventGroupDesc::DESC_TAG) != NULL) {
+				pEvent->m_EventGroupList.clear();
 
-				GroupInfo.GroupType = pGroupDesc->GetGroupType();
-				const int NumEvents = pGroupDesc->GetEventNum();
-				GroupInfo.EventList.resize(NumEvents);
-				for (int j = 0; j < NumEvents; j++)
-					pGroupDesc->GetEventInfo(j, &GroupInfo.EventList[j]);
+				pDescBlock->EnumDesc<CEventGroupDesc>(
+					[&](const CEventGroupDesc *pGroupDesc) {
+						CEventInfo::EventGroupInfo GroupInfo;
+						GroupInfo.GroupType = pGroupDesc->GetGroupType();
+						const int NumEvents = pGroupDesc->GetEventNum();
+						GroupInfo.EventList.resize(NumEvents);
+						for (int j = 0; j < NumEvents; j++)
+							pGroupDesc->GetEventInfo(j, &GroupInfo.EventList[j]);
 
-				if (GroupInfo.GroupType == CEventGroupDesc::GROUPTYPE_COMMON
-						&& NumEvents == 1) {
-					const CEventGroupDesc::EventInfo &Info = GroupInfo.EventList[0];
-					if (Info.ServiceID != pEitTable->GetServiceID()) {
-						pEvent->m_bCommonEvent = true;
-						pEvent->m_CommonEventInfo.ServiceID = Info.ServiceID;
-						pEvent->m_CommonEventInfo.EventID = Info.EventID;
-					}
-				}
+						auto it = std::find(
+							pEvent->m_EventGroupList.begin(),
+							pEvent->m_EventGroupList.end(),
+							GroupInfo);
+						if (it == pEvent->m_EventGroupList.end()) {
+							pEvent->m_EventGroupList.push_back(GroupInfo);
+
+							if (GroupInfo.GroupType == CEventGroupDesc::GROUPTYPE_COMMON
+									&& NumEvents == 1) {
+								const CEventGroupDesc::EventInfo &Info = GroupInfo.EventList.front();
+								if (Info.ServiceID != pEitTable->GetServiceID()) {
+									pEvent->m_bCommonEvent = true;
+									pEvent->m_CommonEventInfo.ServiceID = Info.ServiceID;
+									pEvent->m_CommonEventInfo.EventID = Info.EventID;
+								}
+							}
+						}
+					});
 			}
 
 			bUpdated = true;
