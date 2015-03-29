@@ -31,6 +31,10 @@
 #endif
 #endif
 
+#ifdef WIN_XP_SUPPORT
+#define PSAPI_VERSION 1
+#endif
+
 #include <stdio.h>
 #include <process.h>
 #include <windows.h>
