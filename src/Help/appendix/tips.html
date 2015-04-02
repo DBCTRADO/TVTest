@@ -26,13 +26,27 @@
 また、[映像表示部の枠] のチェックを外すと、映像の周囲の窪みも無くなってよりシンプルになります。<br>
 ウィンドウ枠を細くした場合の幅は、設定ファイル(TVTest.ini)の [Settings] に ThinFrameWidth=x の形で設定できます。</p>
 
-<h2>ステータスバーやタイトルバーを非表示にした時、マウスオーバーで自動表示されないようにする</h2>
-<p class="descript">ステータスバーやタイトルバーを非表示にした際は、ウィンドウの上下にカーソルを持っていくと一時的に表示されますが、それを抑止したい場合は設定ファイル(TVTest.ini)の [Settings] に以下の設定を追加してください。<br>
-; ステータスバーの自動表示を抑止<br>
-PopupStatusBar=no<br>
+<h2>タイトルバーを非表示にした時、マウスオーバーで自動表示されないようにする</h2>
+<p class="descript">タイトルバーを非表示にした際は、ウィンドウの上にカーソルを持っていくと一時的に表示されますが、それを抑止したい場合は設定ファイル(TVTest.ini)の [Settings] に以下の設定を追加してください。<br>
 ; タイトルバーの自動表示を抑止<br>
 PopupTitleBar=no<br>
-これらの設定は全画面表示時には適用されません。</p>
+この設定は全画面表示時には適用されません。</p>
+
+<h2>EPG の表示日時を Windows のタイムゾーンの設定に合わせる</h2>
+<p class="descript">デフォルトでは、EPG の番組情報の日時は日本時間(UTC+9)になっています。<br>
+設定ファイル(TVTest.ini)の [Settings] にある EpgTimeMode で以下のように設定を変更することができます。<br>
+</p>
+<div class="group">
+<table class="info">
+<tr><th>EpgTimeMode=0</th><td>EPG の日時(基本的に日本時間)</td></tr>
+<tr><th>EpgTimeMode=1</th><td>日本時間(UTC+9)</td></tr>
+<tr><th>EpgTimeMode=2</th><td>Windows のタイムゾーンの設定に合わせた日時</td></tr>
+<tr><th>EpgTimeMode=3</th><td>UTC(協定世界時)</td></tr>
+</table>
+</div>
+<p class="descript">
+0 と 1 は現在のところ通常同じですが、0 の場合は夏時間が反映されませんので、日本に夏時間制度が導入された場合は変わってきます。
+</p>
 
 </body>
 </html>

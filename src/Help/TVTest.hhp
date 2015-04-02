@@ -49,6 +49,7 @@ options\sidebar.html
 options\tsprocessor.html
 options\tsprocessor_networkmap.html
 options\tsprocessor_tunermap.html
+options\video.html
 options\view.html
 options\record.html
 hint.html
@@ -81,6 +82,7 @@ HELP_ID_OPTIONS_RECORD=options\record.html
 HELP_ID_OPTIONS_SIDEBAR=options\sidebar.html
 HELP_ID_OPTIONS_STATUSBAR=options\statusbar.html
 HELP_ID_OPTIONS_TSPROCESSOR=options\tsprocessor.html
+HELP_ID_OPTIONS_VIDEO=options\video.html
 HELP_ID_OPTIONS_VIEW=options\view.html
 HELP_ID_PROGRAMGUIDETOOL=options\programguidetool.html
 HELP_ID_CHANNELINPUTOPTIONS=options\channelinput.html
