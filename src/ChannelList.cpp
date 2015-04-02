@@ -925,10 +925,11 @@ bool CTuningSpaceList::SaveToFile(LPCTSTR pszFileName) const
 
 	if (fUnicode) {
 		static const WCHAR BOM=0xFEFF;
+		const DWORD Size=static_cast<DWORD>(Buffer.length())*sizeof(WCHAR);
 		if (!::WriteFile(hFile,&BOM,sizeof(BOM),&Write,NULL)
 					|| Write!=sizeof(BOM)
-				|| !::WriteFile(hFile,Buffer.data(),static_cast<DWORD>(Buffer.length()),&Write,NULL)
-					|| Write!=static_cast<DWORD>(Buffer.length())) {
+				|| !::WriteFile(hFile,Buffer.data(),Size,&Write,NULL)
+					|| Write!=Size) {
 			::CloseHandle(hFile);
 			return false;
 		}
