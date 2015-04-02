@@ -1071,6 +1071,7 @@
     <ClCompile Include="UISkin.cpp" />
     <ClCompile Include="Util.cpp" />
     <ClCompile Include="VariableString.cpp" />
+    <ClCompile Include="VideoOptions.cpp" />
     <ClCompile Include="View.cpp" />
     <ClCompile Include="ViewOptions.cpp" />
     <ClCompile Include="WheelCommand.cpp" />
@@ -1255,6 +1256,7 @@
     <ClInclude Include="UISkin.h" />
     <ClInclude Include="Util.h" />
     <ClInclude Include="VariableString.h" />
+    <ClInclude Include="VideoOptions.h" />
     <ClInclude Include="View.h" />
     <ClInclude Include="ViewOptions.h" />
     <ClInclude Include="WheelCommand.h" />

@@ -23,12 +23,6 @@ CViewOptions::CViewOptions()
 	, m_fShowTitleEventTime(false)
 	, m_fShowLogo(true)
 
-	, m_fResetPanScanEventChange(true)
-	, m_fNoMaskSideCut(true)
-	, m_FullscreenStretchMode(CMediaViewer::STRETCH_KEEPASPECTRATIO)
-	, m_MaximizeStretchMode(CMediaViewer::STRETCH_KEEPASPECTRATIO)
-	, m_fIgnoreDisplayExtension(false)
-
 	, m_fNoScreenSaver(false)
 	, m_fNoMonitorLowPower(false)
 	, m_fNoMonitorLowPowerActiveOnly(false)
@@ -46,14 +40,6 @@ CViewOptions::~CViewOptions()
 bool CViewOptions::Apply(DWORD Flags)
 {
 	CAppMain &App=GetAppClass();
-
-	if ((Flags&UPDATE_MASKCUTAREA)!=0) {
-		App.CoreEngine.m_DtvEngine.m_MediaViewer.SetNoMaskSideCut(m_fNoMaskSideCut);
-	}
-
-	if ((Flags&UPDATE_IGNOREDISPLAYEXTENSION)!=0) {
-		App.CoreEngine.m_DtvEngine.m_MediaViewer.SetIgnoreDisplayExtension(m_fIgnoreDisplayExtension);
-	}
 
 	if ((Flags&UPDATE_LOGO)!=0) {
 		App.UICore.SetLogo(m_fShowLogo?m_szLogoFileName:NULL);
@@ -87,15 +73,6 @@ bool CViewOptions::ReadSettings(CSettings &Settings)
 	Settings.Read(TEXT("TitleEventTime"),&m_fShowTitleEventTime);
 	Settings.Read(TEXT("ShowLogo"),&m_fShowLogo);
 	Settings.Read(TEXT("LogoFileName"),m_szLogoFileName,lengthof(m_szLogoFileName));
-	Settings.Read(TEXT("ResetPanScanEventChange"),&m_fResetPanScanEventChange);
-	Settings.Read(TEXT("NoMaskSideCut"),&m_fNoMaskSideCut);
-	if (Settings.Read(TEXT("FullscreenStretchMode"),&Value))
-		m_FullscreenStretchMode=Value==1?CMediaViewer::STRETCH_CUTFRAME:
-										 CMediaViewer::STRETCH_KEEPASPECTRATIO;
-	if (Settings.Read(TEXT("MaximizeStretchMode"),&Value))
-		m_MaximizeStretchMode=Value==1?CMediaViewer::STRETCH_CUTFRAME:
-									   CMediaViewer::STRETCH_KEEPASPECTRATIO;
-	Settings.Read(TEXT("IgnoreDisplayExtension"),&m_fIgnoreDisplayExtension);
 	Settings.Read(TEXT("NoScreenSaver"),&m_fNoScreenSaver);
 	Settings.Read(TEXT("NoMonitorLowPower"),&m_fNoMonitorLowPower);
 	Settings.Read(TEXT("NoMonitorLowPowerActiveOnly"),&m_fNoMonitorLowPowerActiveOnly);
@@ -118,11 +95,6 @@ bool CViewOptions::WriteSettings(CSettings &Settings)
 	Settings.Write(TEXT("TitleEventTime"),m_fShowTitleEventTime);
 	Settings.Write(TEXT("ShowLogo"),m_fShowLogo);
 	Settings.Write(TEXT("LogoFileName"),m_szLogoFileName);
-	Settings.Write(TEXT("ResetPanScanEventChange"),m_fResetPanScanEventChange);
-	Settings.Write(TEXT("NoMaskSideCut"),m_fNoMaskSideCut);
-	Settings.Write(TEXT("FullscreenStretchMode"),(int)m_FullscreenStretchMode);
-	Settings.Write(TEXT("MaximizeStretchMode"),(int)m_MaximizeStretchMode);
-	Settings.Write(TEXT("IgnoreDisplayExtension"),m_fIgnoreDisplayExtension);
 	Settings.Write(TEXT("NoScreenSaver"),m_fNoScreenSaver);
 	Settings.Write(TEXT("NoMonitorLowPower"),m_fNoMonitorLowPower);
 	Settings.Write(TEXT("NoMonitorLowPowerActiveOnly"),m_fNoMonitorLowPowerActiveOnly);
@@ -177,18 +149,6 @@ INT_PTR CViewOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 			::SendDlgItemMessage(hDlg,IDC_OPTIONS_LOGOFILENAME,EM_LIMITTEXT,MAX_PATH-1,0);
 			::EnableDlgItems(hDlg,IDC_OPTIONS_LOGOFILENAME,IDC_OPTIONS_LOGOFILENAME_BROWSE,
 							 m_fShowLogo);
-
-			// âfëúï\é¶ê›íË
-			DlgCheckBox_Check(hDlg,IDC_OPTIONS_RESETPANSCANEVENTCHANGE,
-							  m_fResetPanScanEventChange);
-			DlgCheckBox_Check(hDlg,IDC_OPTIONS_NOMASKSIDECUT,
-							  m_fNoMaskSideCut);
-			DlgCheckBox_Check(hDlg,IDC_OPTIONS_FULLSCREENCUTFRAME,
-				m_FullscreenStretchMode==CMediaViewer::STRETCH_CUTFRAME);
-			DlgCheckBox_Check(hDlg,IDC_OPTIONS_MAXIMIZECUTFRAME,
-				m_MaximizeStretchMode==CMediaViewer::STRETCH_CUTFRAME);
-			DlgCheckBox_Check(hDlg,IDC_OPTIONS_IGNOREDISPLAYSIZE,
-							  m_fIgnoreDisplayExtension);
 
 			// ó}é~ê›íË
 			DlgCheckBox_Check(hDlg,IDC_OPTIONS_NOSCREENSAVER,m_fNoScreenSaver);
@@ -286,29 +246,6 @@ INT_PTR CViewOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 						::lstrcpy(m_szLogoFileName,szFileName);
 						SetUpdateFlag(UPDATE_LOGO);
 					}
-				}
-
-				m_fResetPanScanEventChange=
-					DlgCheckBox_IsChecked(hDlg,IDC_OPTIONS_RESETPANSCANEVENTCHANGE);
-				f=DlgCheckBox_IsChecked(hDlg,IDC_OPTIONS_NOMASKSIDECUT);
-				if (m_fNoMaskSideCut!=f) {
-					m_fNoMaskSideCut=f;
-					SetUpdateFlag(UPDATE_MASKCUTAREA);
-				}
-				m_FullscreenStretchMode=
-					DlgCheckBox_IsChecked(hDlg,IDC_OPTIONS_FULLSCREENCUTFRAME)?
-					CMediaViewer::STRETCH_CUTFRAME:CMediaViewer::STRETCH_KEEPASPECTRATIO;
-				if (App.UICore.GetFullscreen())
-					App.CoreEngine.m_DtvEngine.m_MediaViewer.SetViewStretchMode(m_FullscreenStretchMode);
-				m_MaximizeStretchMode=
-					DlgCheckBox_IsChecked(hDlg,IDC_OPTIONS_MAXIMIZECUTFRAME)?
-					CMediaViewer::STRETCH_CUTFRAME:CMediaViewer::STRETCH_KEEPASPECTRATIO;
-				if (::IsZoomed(App.UICore.GetMainWindow()))
-					App.CoreEngine.m_DtvEngine.m_MediaViewer.SetViewStretchMode(m_MaximizeStretchMode);
-				f=DlgCheckBox_IsChecked(hDlg,IDC_OPTIONS_IGNOREDISPLAYSIZE);
-				if (m_fIgnoreDisplayExtension!=f) {
-					m_fIgnoreDisplayExtension=f;
-					SetUpdateFlag(UPDATE_IGNOREDISPLAYEXTENSION);
 				}
 
 				m_fNoScreenSaver=

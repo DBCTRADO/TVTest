@@ -66,19 +66,19 @@ bool CMainDisplay::BuildViewer(BYTE VideoStreamType)
 	switch (VideoStreamType) {
 #ifdef BONTSENGINE_MPEG2_SUPPORT
 	case STREAM_TYPE_MPEG2_VIDEO:
-		pszVideoDecoder=m_App.GeneralOptions.GetMpeg2DecoderName();
+		pszVideoDecoder=m_App.VideoOptions.GetMpeg2DecoderName();
 		break;
 #endif
 
 #ifdef BONTSENGINE_H264_SUPPORT
 	case STREAM_TYPE_H264:
-		pszVideoDecoder=m_App.GeneralOptions.GetH264DecoderName();
+		pszVideoDecoder=m_App.VideoOptions.GetH264DecoderName();
 		break;
 #endif
 
 #ifdef BONTSENGINE_H265_SUPPORT
 	case STREAM_TYPE_H265:
-		pszVideoDecoder=m_App.GeneralOptions.GetH265DecoderName();
+		pszVideoDecoder=m_App.VideoOptions.GetH265DecoderName();
 		break;
 #endif
 
@@ -102,7 +102,7 @@ bool CMainDisplay::BuildViewer(BYTE VideoStreamType)
 	if (!m_App.CoreEngine.BuildMediaViewer(
 			m_VideoContainer.GetHandle(),
 			m_VideoContainer.GetHandle(),
-			m_App.GeneralOptions.GetVideoRendererType(),
+			m_App.VideoOptions.GetVideoRendererType(),
 			VideoStreamType,pszVideoDecoder,
 			m_App.AudioOptions.GetAudioDeviceName())) {
 		m_App.Core.OnError(&m_App.CoreEngine,TEXT("DirectShowÇÃèâä˙âªÇ™Ç≈Ç´Ç‹ÇπÇÒÅB"));

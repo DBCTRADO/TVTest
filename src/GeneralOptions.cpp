@@ -6,7 +6,6 @@
 #include "DialogUtil.h"
 #include "MessageDialog.h"
 #include "resource.h"
-#include <algorithm>
 #include "Common/DebugDef.h"
 
 
@@ -14,7 +13,6 @@
 
 CGeneralOptions::CGeneralOptions()
 	: m_DefaultDriverType(DEFAULT_DRIVER_LAST)
-	, m_VideoRendererType(CVideoRenderer::RENDERER_DEFAULT)
 	, m_fResident(false)
 	, m_fKeepSingleTask(false)
 	, m_fStandaloneProgramGuide(false)
@@ -62,21 +60,6 @@ bool CGeneralOptions::ReadSettings(CSettings &Settings)
 	Settings.Read(TEXT("DefaultDriver"),&m_DefaultBonDriverName);
 	Settings.Read(TEXT("Driver"),&m_LastBonDriverName);
 
-	Settings.Read(TEXT("Mpeg2Decoder"),&m_Mpeg2DecoderName);
-	Settings.Read(TEXT("H264Decoder"),&m_H264DecoderName);
-	Settings.Read(TEXT("H265Decoder"),&m_H265DecoderName);
-
-	TCHAR szRenderer[16];
-	if (Settings.Read(TEXT("Renderer"),szRenderer,lengthof(szRenderer))) {
-		if (szRenderer[0]=='\0') {
-			m_VideoRendererType=CVideoRenderer::RENDERER_DEFAULT;
-		} else {
-			CVideoRenderer::RendererType Renderer=CVideoRenderer::ParseName(szRenderer);
-			if (Renderer!=CVideoRenderer::RENDERER_UNDEFINED)
-				m_VideoRendererType=Renderer;
-		}
-	}
-
 	Settings.Read(TEXT("Resident"),&m_fResident);
 	Settings.Read(TEXT("KeepSingleTask"),&m_fKeepSingleTask);
 	Settings.Read(TEXT("StandaloneProgramGuide"),&m_fStandaloneProgramGuide);
@@ -92,11 +75,6 @@ bool CGeneralOptions::WriteSettings(CSettings &Settings)
 	Settings.Write(TEXT("DefaultDriverType"),(int)m_DefaultDriverType);
 	Settings.Write(TEXT("DefaultDriver"),m_DefaultBonDriverName);
 	Settings.Write(TEXT("Driver"),GetAppClass().CoreEngine.GetDriverFileName());
-	Settings.Write(TEXT("Mpeg2Decoder"),m_Mpeg2DecoderName);
-	Settings.Write(TEXT("H264Decoder"),m_H264DecoderName);
-	Settings.Write(TEXT("H265Decoder"),m_H265DecoderName);
-	Settings.Write(TEXT("Renderer"),
-				   CVideoRenderer::EnumRendererName((int)m_VideoRendererType));
 	Settings.Write(TEXT("Resident"),m_fResident);
 	Settings.Write(TEXT("KeepSingleTask"),m_fKeepSingleTask);
 	Settings.Write(TEXT("StandaloneProgramGuide"),m_fStandaloneProgramGuide);
@@ -158,69 +136,6 @@ bool CGeneralOptions::GetFirstDriverName(LPTSTR pszDriverName) const
 }
 
 
-LPCTSTR CGeneralOptions::GetMpeg2DecoderName() const
-{
-	return m_Mpeg2DecoderName.c_str();
-}
-
-
-bool CGeneralOptions::SetMpeg2DecoderName(LPCTSTR pszDecoderName)
-{
-	if (pszDecoderName==NULL)
-		m_Mpeg2DecoderName.clear();
-	else
-		m_Mpeg2DecoderName=pszDecoderName;
-	return true;
-}
-
-
-LPCTSTR CGeneralOptions::GetH264DecoderName() const
-{
-	return m_H264DecoderName.c_str();
-}
-
-
-bool CGeneralOptions::SetH264DecoderName(LPCTSTR pszDecoderName)
-{
-	if (pszDecoderName==NULL)
-		m_H264DecoderName.clear();
-	else
-		m_H264DecoderName=pszDecoderName;
-	return true;
-}
-
-
-LPCTSTR CGeneralOptions::GetH265DecoderName() const
-{
-	return m_H265DecoderName.c_str();
-}
-
-
-bool CGeneralOptions::SetH265DecoderName(LPCTSTR pszDecoderName)
-{
-	if (pszDecoderName==NULL)
-		m_H265DecoderName.clear();
-	else
-		m_H265DecoderName=pszDecoderName;
-	return true;
-}
-
-
-CVideoRenderer::RendererType CGeneralOptions::GetVideoRendererType() const
-{
-	return m_VideoRendererType;
-}
-
-
-bool CGeneralOptions::SetVideoRendererType(CVideoRenderer::RendererType Renderer)
-{
-	if (CVideoRenderer::EnumRendererName((int)Renderer)==NULL)
-		return false;
-	m_VideoRendererType=Renderer;
-	return true;
-}
-
-
 bool CGeneralOptions::GetResident() const
 {
 	return m_fResident;
@@ -258,29 +173,6 @@ INT_PTR CGeneralOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam
 									  DriverManager.GetDriverInfo(i)->GetFileName());
 			}
 			::SetDlgItemText(hDlg,IDC_OPTIONS_DEFAULTDRIVER,m_DefaultBonDriverName.c_str());
-
-			// MPEG-2 デコーダ
-			SetVideoDecoderList(IDC_OPTIONS_MPEG2DECODER,
-								MEDIASUBTYPE_MPEG2_VIDEO,
-								STREAM_TYPE_MPEG2_VIDEO,
-								m_Mpeg2DecoderName);
-			// H.264 デコーダ
-			SetVideoDecoderList(IDC_OPTIONS_H264DECODER,
-								MEDIASUBTYPE_H264,
-								STREAM_TYPE_H264,
-								m_H264DecoderName);
-			// H.265 デコーダ
-			SetVideoDecoderList(IDC_OPTIONS_H265DECODER,
-								MEDIASUBTYPE_HEVC,
-								STREAM_TYPE_H265,
-								m_H265DecoderName);
-
-			// 映像レンダラ
-			LPCTSTR pszRenderer;
-			DlgComboBox_AddString(hDlg,IDC_OPTIONS_RENDERER,TEXT("デフォルト"));
-			for (int i=1;(pszRenderer=CVideoRenderer::EnumRendererName(i))!=NULL;i++)
-				DlgComboBox_AddString(hDlg,IDC_OPTIONS_RENDERER,pszRenderer);
-			DlgComboBox_SetCurSel(hDlg,IDC_OPTIONS_RENDERER,m_VideoRendererType);
 
 			DlgCheckBox_Check(hDlg,IDC_OPTIONS_RESIDENT,m_fResident);
 			DlgCheckBox_Check(hDlg,IDC_OPTIONS_KEEPSINGLETASK,m_fKeepSingleTask);
@@ -353,20 +245,6 @@ INT_PTR CGeneralOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam
 		switch (((LPNMHDR)lParam)->code) {
 		case PSN_APPLY:
 			{
-				CVideoRenderer::RendererType Renderer=(CVideoRenderer::RendererType)
-					DlgComboBox_GetCurSel(hDlg,IDC_OPTIONS_RENDERER);
-				if (Renderer!=m_VideoRendererType) {
-					if (!CVideoRenderer::IsAvailable(Renderer)) {
-						SettingError();
-						::MessageBox(hDlg,TEXT("選択されたレンダラはこの環境で利用可能になっていません。"),
-									 NULL,MB_OK | MB_ICONEXCLAMATION);
-						return TRUE;
-					}
-					m_VideoRendererType=Renderer;
-					SetUpdateFlag(UPDATE_RENDERER);
-					SetGeneralUpdateFlag(UPDATE_GENERAL_BUILDMEDIAVIEWER);
-				}
-
 				TCHAR szDirectory[MAX_PATH];
 				::GetDlgItemText(hDlg,IDC_OPTIONS_DRIVERDIRECTORY,
 								 szDirectory,lengthof(szDirectory));
@@ -381,16 +259,6 @@ INT_PTR CGeneralOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam
 				::GetDlgItemText(hDlg,IDC_OPTIONS_DEFAULTDRIVER,
 								 szDefaultBonDriver,lengthof(szDefaultBonDriver));
 				m_DefaultBonDriverName=szDefaultBonDriver;
-
-				GetVideoDecoderSetting(IDC_OPTIONS_MPEG2DECODER,
-									   STREAM_TYPE_MPEG2_VIDEO,
-									   &m_Mpeg2DecoderName);
-				GetVideoDecoderSetting(IDC_OPTIONS_H264DECODER,
-									   STREAM_TYPE_H264,
-									   &m_H264DecoderName);
-				GetVideoDecoderSetting(IDC_OPTIONS_H265DECODER,
-									   STREAM_TYPE_H265,
-									   &m_H265DecoderName);
 
 				bool fResident=DlgCheckBox_IsChecked(hDlg,IDC_OPTIONS_RESIDENT);
 				if (fResident!=m_fResident) {
@@ -419,72 +287,4 @@ INT_PTR CGeneralOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam
 	}
 
 	return FALSE;
-}
-
-
-void CGeneralOptions::SetVideoDecoderList(
-	int ID,const GUID &SubType,BYTE StreamType,const TVTest::String &DecoderName)
-{
-	CDirectShowFilterFinder FilterFinder;
-	std::vector<TVTest::String> FilterList;
-	if (FilterFinder.FindFilter(&MEDIATYPE_Video,&SubType)) {
-		FilterList.reserve(FilterFinder.GetFilterCount());
-		for (int i=0;i<FilterFinder.GetFilterCount();i++) {
-			WCHAR szFilterName[MAX_VIDEO_DECODER_NAME];
-
-			if (FilterFinder.GetFilterInfo(i,NULL,szFilterName,lengthof(szFilterName))) {
-				FilterList.push_back(TVTest::String(szFilterName));
-			}
-		}
-	}
-	int Sel=0;
-	if (FilterList.empty()) {
-		DlgComboBox_AddString(m_hDlg,ID,TEXT("<デコーダが見付かりません>"));
-	} else {
-		if (FilterList.size()>1) {
-			std::sort(FilterList.begin(),FilterList.end(),
-				[](const TVTest::String Filter1,const TVTest::String &Filter2) {
-					return ::CompareString(LOCALE_USER_DEFAULT,
-										   NORM_IGNORECASE | NORM_IGNORESYMBOLS,
-										   Filter1.data(),(int)Filter1.length(),
-										   Filter2.data(),(int)Filter2.length())==CSTR_LESS_THAN;
-				});
-		}
-		for (size_t i=0;i<FilterList.size();i++) {
-			DlgComboBox_AddString(m_hDlg,ID,FilterList[i].c_str());
-		}
-
-		CMediaViewer &MediaViewer=GetAppClass().CoreEngine.m_DtvEngine.m_MediaViewer;
-		TCHAR szText[32+MAX_VIDEO_DECODER_NAME];
-
-		::lstrcpy(szText,TEXT("自動"));
-		if (!DecoderName.empty()) {
-			Sel=(int)DlgComboBox_FindStringExact(m_hDlg,ID,-1,DecoderName.c_str())+1;
-		} else if (MediaViewer.IsOpen()
-				&& StreamType==MediaViewer.GetVideoStreamType()) {
-			::lstrcat(szText,TEXT(" ("));
-			MediaViewer.GetVideoDecoderName(szText+::lstrlen(szText),MAX_VIDEO_DECODER_NAME);
-			::lstrcat(szText,TEXT(")"));
-		}
-		DlgComboBox_InsertString(m_hDlg,ID,0,szText);
-	}
-	DlgComboBox_SetCurSel(m_hDlg,ID,Sel);
-}
-
-
-void CGeneralOptions::GetVideoDecoderSetting(
-	int ID,BYTE StreamType,TVTest::String *pDecoderName)
-{
-	TCHAR szDecoder[MAX_VIDEO_DECODER_NAME];
-	int Sel=(int)DlgComboBox_GetCurSel(m_hDlg,ID);
-	if (Sel>0)
-		DlgComboBox_GetLBString(m_hDlg,ID,Sel,szDecoder);
-	else
-		szDecoder[0]='\0';
-	if (::lstrcmpi(szDecoder,pDecoderName->c_str())!=0) {
-		*pDecoderName=szDecoder;
-		SetUpdateFlag(UPDATE_DECODER);
-		if (StreamType==GetAppClass().CoreEngine.m_DtvEngine.m_MediaViewer.GetVideoStreamType())
-			SetGeneralUpdateFlag(UPDATE_GENERAL_BUILDMEDIAVIEWER);
-	}
 }

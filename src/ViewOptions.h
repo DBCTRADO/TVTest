@@ -48,11 +48,6 @@ public:
 	bool GetShowTitleEventTime() const { return m_fShowTitleEventTime; }
 	bool GetShowLogo() const { return m_fShowLogo; }
 	LPCTSTR GetLogoFileName() const { return m_szLogoFileName; }
-	bool GetResetPanScanEventChange() const { return m_fResetPanScanEventChange; }
-	bool GetNoMaskSideCut() const { return m_fNoMaskSideCut; }
-	CMediaViewer::ViewStretchMode GetFullscreenStretchMode() const { return m_FullscreenStretchMode; }
-	CMediaViewer::ViewStretchMode GetMaximizeStretchMode() const { return m_MaximizeStretchMode; }
-	bool GetIgnoreDisplayExtension() const { return m_fIgnoreDisplayExtension; }
 	bool GetNoScreenSaver() const { return m_fNoScreenSaver; }
 	bool GetNoMonitorLowPower() const { return m_fNoMonitorLowPower; }
 	bool GetNoMonitorLowPowerActiveOnly() const { return m_fNoMonitorLowPowerActiveOnly; }
@@ -74,12 +69,6 @@ private:
 	bool m_fShowTitleEventTime;
 	bool m_fShowLogo;
 	TCHAR m_szLogoFileName[MAX_PATH];
-
-	bool m_fResetPanScanEventChange;
-	bool m_fNoMaskSideCut;
-	CMediaViewer::ViewStretchMode m_FullscreenStretchMode;
-	CMediaViewer::ViewStretchMode m_MaximizeStretchMode;
-	bool m_fIgnoreDisplayExtension;
 
 	bool m_fNoScreenSaver;
 	bool m_fNoMonitorLowPower;

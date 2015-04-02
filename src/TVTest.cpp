@@ -24,6 +24,7 @@ const COptionDialog::PageInfo COptionDialog::m_PageList[] = {
 	{TEXT("ÉLÅ[äÑÇËìñÇƒ"),			&g_App.Accelerator,				HELP_ID_OPTIONS_ACCELERATOR},
 	{TEXT("ÉäÉÇÉRÉì"),				&g_App.ControllerManager,		HELP_ID_OPTIONS_CONTROLLER},
 	{TEXT("BonDriverê›íË"),			&g_App.DriverOptions,			HELP_ID_OPTIONS_DRIVER},
+	{TEXT("âfëú"),					&g_App.VideoOptions,			HELP_ID_OPTIONS_VIDEO},
 	{TEXT("âπê∫"),					&g_App.AudioOptions,			HELP_ID_OPTIONS_AUDIO},
 	{TEXT("çƒê∂"),					&g_App.PlaybackOptions,			HELP_ID_OPTIONS_PLAYBACK},
 	{TEXT("ò^âÊ"),					&g_App.RecordOptions,			HELP_ID_OPTIONS_RECORD},

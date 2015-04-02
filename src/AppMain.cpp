@@ -481,6 +481,7 @@ bool CAppMain::LoadSettings()
 		OSDOptions.ReadSettings(Settings);
 		PanelOptions.ReadSettings(Settings);
 		PlaybackOptions.ReadSettings(Settings);
+		VideoOptions.ReadSettings(Settings);
 		AudioOptions.ReadSettings(Settings);
 		RecordOptions.ReadSettings(Settings);
 		CaptureOptions.ReadSettings(Settings);
@@ -607,6 +608,7 @@ bool CAppMain::SaveSettings(unsigned int Flags)
 		{&SideBarOptions,					true},
 		{&PanelOptions,						true},
 		{&DriverOptions,					true},
+		{&VideoOptions,						false},
 		{&AudioOptions,						false},
 		{&PlaybackOptions,					true},
 		{&RecordOptions,					true},
@@ -765,10 +767,10 @@ int CAppMain::Main(HINSTANCE hInstance,LPCTSTR pszCmdLine,int nCmdShow)
 			return 0;
 		InitialSettings.GetDriverFileName(szDriverFileName,lengthof(szDriverFileName));
 		GeneralOptions.SetDefaultDriverName(szDriverFileName);
-		GeneralOptions.SetMpeg2DecoderName(InitialSettings.GetMpeg2DecoderName());
-		GeneralOptions.SetH264DecoderName(InitialSettings.GetH264DecoderName());
-		GeneralOptions.SetH265DecoderName(InitialSettings.GetH265DecoderName());
-		GeneralOptions.SetVideoRendererType(InitialSettings.GetVideoRenderer());
+		VideoOptions.SetMpeg2DecoderName(InitialSettings.GetMpeg2DecoderName());
+		VideoOptions.SetH264DecoderName(InitialSettings.GetH264DecoderName());
+		VideoOptions.SetH265DecoderName(InitialSettings.GetH265DecoderName());
+		VideoOptions.SetVideoRendererType(InitialSettings.GetVideoRenderer());
 		RecordOptions.SetSaveFolder(InitialSettings.GetRecordFolder());
 	} else if (!CmdLineOptions.m_DriverName.empty()) {
 		::lstrcpy(szDriverFileName,CmdLineOptions.m_DriverName.c_str());
@@ -871,6 +873,7 @@ int CAppMain::Main(HINSTANCE hInstance,LPCTSTR pszCmdLine,int nCmdShow)
 		MainWindow.InitMinimize();
 
 	ViewOptions.Apply(COptions::UPDATE_ALL);
+	VideoOptions.Apply(COptions::UPDATE_ALL);
 
 	if (CmdLineOptions.m_f1Seg)
 		Core.Set1SegMode(true,false);

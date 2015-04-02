@@ -1831,7 +1831,7 @@ bool CMainWindow::OnCreate(const CREATESTRUCT *pcs)
 
 	m_App.CoreEngine.m_DtvEngine.m_MediaViewer.SetViewStretchMode(
 		(pcs->style&WS_MAXIMIZE)!=0?
-			m_App.ViewOptions.GetMaximizeStretchMode():
+			m_App.VideoOptions.GetMaximizeStretchMode():
 			m_fFrameCut?CMediaViewer::STRETCH_CUTFRAME:
 						CMediaViewer::STRETCH_KEEPASPECTRATIO);
 
@@ -1898,7 +1898,7 @@ void CMainWindow::OnSizeChanged(UINT State,int Width,int Height)
 	if (!m_pCore->GetFullscreen()) {
 		if (State==SIZE_MAXIMIZED) {
 			m_App.CoreEngine.m_DtvEngine.m_MediaViewer.SetViewStretchMode(
-				m_App.ViewOptions.GetMaximizeStretchMode());
+				m_App.VideoOptions.GetMaximizeStretchMode());
 		} else if (State==SIZE_RESTORED) {
 			m_App.CoreEngine.m_DtvEngine.m_MediaViewer.SetViewStretchMode(
 				m_fFrameCut?CMediaViewer::STRETCH_CUTFRAME:
@@ -4509,7 +4509,7 @@ void CMainWindow::OnEventChanged()
 
 	if (m_AspectRatioType!=ASPECTRATIO_DEFAULT
 			&& (m_fForceResetPanAndScan
-			|| (m_App.ViewOptions.GetResetPanScanEventChange()
+			|| (m_App.VideoOptions.GetResetPanScanEventChange()
 				&& m_AspectRatioType<ASPECTRATIO_CUSTOM))) {
 		m_App.CoreEngine.m_DtvEngine.m_MediaViewer.SetPanAndScan(0,0);
 		if (!m_pCore->GetFullscreen()
@@ -6084,7 +6084,7 @@ bool CMainWindow::CFullscreen::OnCreate()
 	m_App.OSDManager.Reset();
 
 	m_App.CoreEngine.m_DtvEngine.m_MediaViewer.SetViewStretchMode(
-		m_App.ViewOptions.GetFullscreenStretchMode());
+		m_App.VideoOptions.GetFullscreenStretchMode());
 
 	m_fShowCursor=true;
 	m_fMenu=false;
