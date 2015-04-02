@@ -1097,7 +1097,6 @@
     <ClInclude Include="BonTsEngine\EventInfo.h" />
     <ClInclude Include="BonTsEngine\EventManager.h" />
     <ClInclude Include="BonTsEngine\Exception.h" />
-    <ClInclude Include="BonTsEngine\IBonDriver.h" />
     <ClInclude Include="BonTsEngine\LogoDownloader.h" />
     <ClInclude Include="BonTsEngine\MediaData.h" />
     <ClInclude Include="BonTsEngine\MediaDecoder.h" />

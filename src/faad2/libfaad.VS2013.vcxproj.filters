@@ -145,9 +145,6 @@
     <ClInclude Include="libfaad\common.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="libfaad\decoder.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="libfaad\drc.h">
       <Filter>Header Files</Filter>
     </ClInclude>

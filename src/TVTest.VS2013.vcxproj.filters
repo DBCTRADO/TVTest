@@ -601,9 +601,6 @@
     <ClInclude Include="BonTsEngine\Exception.h">
       <Filter>BonTsEngine\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="BonTsEngine\IBonDriver.h">
-      <Filter>BonTsEngine\Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="BonTsEngine\LogoDownloader.h">
       <Filter>BonTsEngine\Header Files</Filter>
     </ClInclude>

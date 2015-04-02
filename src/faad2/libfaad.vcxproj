@@ -714,7 +714,6 @@
     <ClInclude Include="libfaad\cfft.h" />
     <ClInclude Include="libfaad\cfft_tab.h" />
     <ClInclude Include="libfaad\common.h" />
-    <ClInclude Include="libfaad\decoder.h" />
     <ClInclude Include="libfaad\drc.h" />
     <ClInclude Include="libfaad\drm_dec.h" />
     <ClInclude Include="libfaad\error.h" />
