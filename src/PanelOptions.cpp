@@ -10,9 +10,8 @@
 
 
 
-CPanelOptions::CPanelOptions(CPanelFrame *pPanelFrame)
-	: m_pPanelFrame(pPanelFrame)
-	, m_fSnapAtMainWindow(true)
+CPanelOptions::CPanelOptions()
+	: m_fSnapAtMainWindow(true)
 	, m_SnapMargin(4)
 	, m_fAttachToMainWindow(true)
 	, m_Opacity(100)
@@ -81,7 +80,7 @@ bool CPanelOptions::ReadSettings(CSettings &Settings)
 	Settings.Read(TEXT("PanelSnapAtMainWindow"),&m_fSnapAtMainWindow);
 	Settings.Read(TEXT("PanelAttachToMainWindow"),&m_fAttachToMainWindow);
 	if (Settings.Read(TEXT("PanelOpacity"),&m_Opacity))
-		m_pPanelFrame->SetPanelOpacity(m_Opacity*255/100);
+		GetAppClass().Panel.Frame.SetPanelOpacity(m_Opacity*255/100);
 
 	// Font
 	TCHAR szFont[LF_FACESIZE];
@@ -177,12 +176,9 @@ bool CPanelOptions::ReadSettings(CSettings &Settings)
 
 bool CPanelOptions::WriteSettings(CSettings &Settings)
 {
-	CPanelForm *pPanelForm=dynamic_cast<CPanelForm*>(m_pPanelFrame->GetWindow());
-	if (pPanelForm!=NULL) {
-		int CurPage=pPanelForm->GetCurPageID();
-		if (CurPage>=0 && (size_t)CurPage<m_AvailItemList.size())
-			Settings.Write(TEXT("InfoCurTab"),m_AvailItemList[CurPage].ID);
-	}
+	int CurPage=GetAppClass().Panel.Form.GetCurPageID();
+	if (CurPage>=0 && (size_t)CurPage<m_AvailItemList.size())
+		Settings.Write(TEXT("InfoCurTab"),m_AvailItemList[CurPage].ID);
 	Settings.Write(TEXT("PanelFirstTab"),m_InitialTab);
 	Settings.Write(TEXT("PanelSnapAtMainWindow"),m_fSnapAtMainWindow);
 	Settings.Write(TEXT("PanelAttachToMainWindow"),m_fAttachToMainWindow);
@@ -294,9 +290,7 @@ bool CPanelOptions::SetPanelItemVisibility(int ID,bool fVisible)
 		}
 	}
 
-	CPanelForm *pForm=dynamic_cast<CPanelForm*>(m_pPanelFrame->GetWindow());
-	if (pForm!=NULL)
-		pForm->SetTabVisible(ID,fVisible);
+	GetAppClass().Panel.Form.SetTabVisible(ID,fVisible);
 
 	return true;
 }
@@ -506,22 +500,20 @@ INT_PTR CPanelOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 		switch (((LPNMHDR)lParam)->code) {
 		case PSN_APPLY:
 			{
-				CPanelForm *pPanel=dynamic_cast<CPanelForm*>(m_pPanelFrame->GetWindow());
+				CMainPanel &Panel=GetAppClass().Panel;
 
 				m_fSnapAtMainWindow=
 					DlgCheckBox_IsChecked(hDlg,IDC_PANELOPTIONS_SNAPATMAINWINDOW);
 				m_fAttachToMainWindow=
 					DlgCheckBox_IsChecked(hDlg,IDC_PANELOPTIONS_ATTACHTOMAINWINDOW);
 				m_Opacity=::GetDlgItemInt(hDlg,IDC_PANELOPTIONS_OPACITY_EDIT,NULL,TRUE);
-				m_pPanelFrame->SetPanelOpacity(m_Opacity*255/100);
+				Panel.Frame.SetPanelOpacity(m_Opacity*255/100);
 
 				bool fFontChanged=!CompareLogFont(&m_Font,&m_CurSettingFont);
 				if (fFontChanged) {
 					m_Font=m_CurSettingFont;
-					if (pPanel!=NULL) {
-						pPanel->SetTabFont(&m_Font);
-						pPanel->SetPageFont(&m_Font);
-					}
+					Panel.Form.SetTabFont(&m_Font);
+					Panel.Form.SetPageFont(&m_Font);
 				}
 
 				bool fChangeCaptionFont=false;
@@ -538,7 +530,7 @@ INT_PTR CPanelOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 					fChangeCaptionFont=true;
 				}
 				if (fChangeCaptionFont) {
-					CPanelForm::CPage *pCaptionPanel=pPanel->GetPageByID(PANEL_ID_CAPTION);
+					CPanelForm::CPage *pCaptionPanel=Panel.Form.GetPageByID(PANEL_ID_CAPTION);
 					if (pCaptionPanel!=NULL)
 						pCaptionPanel->SetFont(m_fSpecCaptionFont?
 											   &m_CaptionFont:&m_Font);
@@ -552,8 +544,7 @@ INT_PTR CPanelOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 					m_ItemList[i].ID=ItemInfo.ID;
 					m_ItemList[i].fVisible=m_ItemListView.IsItemChecked(i);
 				}
-				if (pPanel!=NULL)
-					ApplyItemList(pPanel);
+				ApplyItemList(&Panel.Form);
 
 				int InitialTab=(int)DlgComboBox_GetCurSel(hDlg,IDC_PANELOPTIONS_FIRSTTAB);
 				if (InitialTab==0) {
@@ -565,12 +556,12 @@ INT_PTR CPanelOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 				int TabStyleSel=(int)DlgComboBox_GetCurSel(hDlg,IDC_PANELOPTIONS_TABSTYLE);
 				if (TabStyleSel>=0) {
 					m_TabStyle=static_cast<CPanelForm::TabStyle>(TabStyleSel);
-					pPanel->SetTabStyle(m_TabStyle);
+					Panel.Form.SetTabStyle(m_TabStyle);
 				}
 
 				m_fTabTooltip=
 					DlgCheckBox_IsChecked(hDlg,IDC_PANELOPTIONS_TABTOOLTIP);
-				pPanel->EnableTooltip(m_fTabTooltip);
+				Panel.Form.EnableTooltip(m_fTabTooltip);
 
 				m_fChanged=true;
 			}

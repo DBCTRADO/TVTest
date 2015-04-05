@@ -24,7 +24,7 @@ enum {
 class CPanelOptions : public COptions
 {
 public:
-	CPanelOptions(CPanelFrame *pPanelFrame);
+	CPanelOptions();
 	~CPanelOptions();
 
 // CSettingsBase
@@ -61,7 +61,6 @@ private:
 		return TVTest::StringUtility::CompareNoCase(ID1,ID2)==0;
 	}
 
-	CPanelFrame *m_pPanelFrame;
 	bool m_fSnapAtMainWindow;
 	int m_SnapMargin;
 	bool m_fAttachToMainWindow;
