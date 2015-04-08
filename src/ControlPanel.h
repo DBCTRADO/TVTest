@@ -84,6 +84,7 @@ private:
 	void Draw(HDC hdc,const RECT &PaintRect);
 	void SendCommand(int Command);
 	bool CalcTextSize(LPCTSTR pszText,SIZE *pSize);
+	int CalcFontHeight() const;
 	int GetTextItemHeight() const;
 };
 

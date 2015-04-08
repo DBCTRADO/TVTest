@@ -1286,10 +1286,7 @@ int CStatusView::CalcRows(const std::vector<CStatusItem*> &ItemList,int MaxRowWi
 
 int CStatusView::CalcFontHeight(const DrawUtil::CFont &Font) const
 {
-	HDC hdc=::GetDC(m_hwnd);
-	int FontHeight=Font.GetHeight(hdc,false);
-	::ReleaseDC(m_hwnd,hdc);
-	return FontHeight;
+	return TVTest::Style::GetFontHeight(m_hwnd,Font.GetHandle(),m_Style.TextExtraHeight);
 }
 
 
@@ -1301,7 +1298,7 @@ int CStatusView::CalcFontHeight() const
 
 int CStatusView::CalcItemHeight(int FontHeight) const
 {
-	return max(FontHeight+m_Style.TextExtraHeight,m_Style.IconSize.Height)+m_Style.ItemPadding.Vert();
+	return max(FontHeight,m_Style.IconSize.Height)+m_Style.ItemPadding.Vert();
 }
 
 

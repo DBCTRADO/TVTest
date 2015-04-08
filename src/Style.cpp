@@ -484,6 +484,38 @@ void Subtract(RECT *pRect,const Margins &margins)
 }
 
 
+int GetFontHeight(HDC hdc,HFONT hfont,const IntValue &Extra)
+{
+	if (hdc==nullptr || hfont==nullptr)
+		return 0;
+
+	HGDIOBJ hOldFont=::SelectObject(hdc,hfont);
+	TEXTMETRIC tm;
+	::GetTextMetrics(hdc,&tm);
+	::SelectObject(hdc,hOldFont);
+
+	if (tm.tmInternalLeading<Extra)
+		tm.tmHeight+=Extra-tm.tmInternalLeading;
+
+	return tm.tmHeight;
+}
+
+
+int GetFontHeight(HWND hwnd,HFONT hfont,const IntValue &Extra)
+{
+	if (hwnd==nullptr || hfont==nullptr)
+		return 0;
+
+	HDC hdc=::GetDC(hwnd);
+	if (hdc==nullptr)
+		return 0;
+	int Height=GetFontHeight(hdc,hfont,Extra);
+	::ReleaseDC(hwnd,hdc);
+
+	return Height;
+}
+
+
 }	// namespace Style
 
 }	// namespace TVTest

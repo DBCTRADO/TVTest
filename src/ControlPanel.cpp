@@ -35,13 +35,10 @@ bool CControlPanel::Initialize(HINSTANCE hinst)
 
 
 CControlPanel::CControlPanel()
-	: m_hwndMessage(NULL)
+	: m_FontHeight(0)
+	, m_hwndMessage(NULL)
 	, m_HotItem(-1)
 {
-	LOGFONT lf;
-	GetDefaultFont(&lf);
-	m_Font.Create(&lf);
-	m_FontHeight=abs(lf.lfHeight);
 }
 
 
@@ -194,6 +191,7 @@ bool CControlPanel::SetFont(const LOGFONT *pFont)
 	if (!m_Font.Create(pFont))
 		return false;
 	if (m_hwnd!=NULL) {
+		m_FontHeight=CalcFontHeight();
 		UpdateLayout();
 		Invalidate();
 	}
@@ -256,9 +254,16 @@ bool CControlPanel::CalcTextSize(LPCTSTR pszText,SIZE *pSize)
 }
 
 
+int CControlPanel::CalcFontHeight() const
+{
+	return TVTest::Style::GetFontHeight(
+		m_hwnd,m_Font.GetHandle(),m_Style.TextExtraHeight);
+}
+
+
 int CControlPanel::GetTextItemHeight() const
 {
-	return m_FontHeight+m_Style.TextExtraHeight+m_Style.ItemPadding.Vert();
+	return m_FontHeight+m_Style.ItemPadding.Vert();
 }
 
 
@@ -369,6 +374,13 @@ LRESULT CControlPanel::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam
 	switch (uMsg) {
 	case WM_CREATE:
 		InitializeUI();
+
+		if (!m_Font.IsCreated()) {
+			LOGFONT lf;
+			GetDefaultFont(&lf);
+			m_Font.Create(&lf);
+		}
+		m_FontHeight=CalcFontHeight();
 
 		m_HotItem=-1;
 		m_fTrackMouseEvent=false;

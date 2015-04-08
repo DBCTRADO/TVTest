@@ -129,6 +129,8 @@ namespace TVTest
 
 		void Add(RECT *pRect,const Margins &margins);
 		void Subtract(RECT *pRect,const Margins &margins);
+		int GetFontHeight(HDC hdc,HFONT hfont,const IntValue &Extra=IntValue());
+		int GetFontHeight(HWND hwnd,HFONT hfont,const IntValue &Extra=IntValue());
 
 	}	// namespace Style
 

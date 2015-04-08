@@ -174,12 +174,10 @@ bool CNotificationBar::SetFont(const LOGFONT *pFont)
 
 void CNotificationBar::CalcBarHeight()
 {
-	HDC hdc=::GetDC(m_hwnd);
-	int FontHeight=m_Font.GetHeight(hdc,false);
-	::ReleaseDC(m_hwnd,hdc);
-
+	int FontHeight=TVTest::Style::GetFontHeight(
+		m_hwnd,m_Font.GetHandle(),m_Style.TextExtraHeight);
 	int IconHeight=m_Style.IconSize.Height+m_Style.IconMargin.Vert();
-	int TextHeight=FontHeight+m_Style.TextExtraHeight+m_Style.TextMargin.Vert();
+	int TextHeight=FontHeight+m_Style.TextMargin.Vert();
 
 	m_BarHeight=max(IconHeight,TextHeight)+m_Style.Padding.Vert();
 }

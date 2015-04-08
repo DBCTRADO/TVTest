@@ -276,11 +276,10 @@ LRESULT CPanel::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 				m_IconFont.Create(&lf);
 			}
 
-			HDC hdc=::GetDC(hwnd);
-			m_FontHeight=m_Font.GetHeight(hdc,false);
+			m_FontHeight=TVTest::Style::GetFontHeight(
+				hwnd,m_Font.GetHandle(),m_Style.TitleLabelExtraHeight);
 			int LabelHeight=m_FontHeight+
-				m_Style.TitleLabelMargin.Vert()+
-				m_Style.TitleLabelExtraHeight;
+				m_Style.TitleLabelMargin.Vert();
 			int ButtonHeight=
 				m_Style.TitleButtonIconSize.Height+
 				m_Style.TitleButtonPadding.Vert();
@@ -288,7 +287,6 @@ LRESULT CPanel::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 			TVTest::Theme::GetBorderWidths(m_Theme.TitleStyle.Back.Border,&Border);
 			m_TitleHeight=max(LabelHeight,ButtonHeight)+m_Style.TitlePadding.Vert()+
 				Border.top+Border.bottom;
-			::ReleaseDC(hwnd,hdc);
 
 			m_HotItem=ITEM_NONE;
 			m_fCloseButtonPushed=false;

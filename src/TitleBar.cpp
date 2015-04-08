@@ -115,7 +115,7 @@ void CTitleBar::SetTheme(const TVTest::Theme::CThemeManager *pThemeManager)
 
 int CTitleBar::CalcHeight() const
 {
-	int LabelHeight=m_FontHeight+m_Style.LabelMargin.Vert()+m_Style.LabelExtraHeight;
+	int LabelHeight=m_FontHeight+m_Style.LabelMargin.Vert();
 	int IconHeight=m_Style.IconSize.Height+m_Style.IconMargin.Vert();
 	int ButtonHeight=GetButtonHeight();
 	int Height=max(LabelHeight,IconHeight);
@@ -462,10 +462,7 @@ LRESULT CTitleBar::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 
 int CTitleBar::CalcFontHeight() const
 {
-	HDC hdc=::GetDC(m_hwnd);
-	int FontHeight=m_Font.GetHeight(hdc,false);
-	::ReleaseDC(m_hwnd,hdc);
-	return FontHeight;
+	return TVTest::Style::GetFontHeight(m_hwnd,m_Font.GetHandle(),m_Style.LabelExtraHeight);
 }
 
 
