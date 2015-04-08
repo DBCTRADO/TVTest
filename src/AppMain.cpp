@@ -837,6 +837,9 @@ int CAppMain::Main(HINSTANCE hInstance,LPCTSTR pszCmdLine,int nCmdShow)
 		MainWindow.SetPosition(Left,Top,Width,Height);
 	}
 
+	ColorSchemeOptions.SetEventHandler(&UICore);
+	ColorSchemeOptions.ApplyColorScheme();
+
 	// ウィンドウの作成
 	if (!MainWindow.Create(nullptr,WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN)) {
 		AddLog(CLogItem::TYPE_ERROR,TEXT("ウィンドウが作成できません。"));
@@ -844,9 +847,6 @@ int CAppMain::Main(HINSTANCE hInstance,LPCTSTR pszCmdLine,int nCmdShow)
 			MessageBox(nullptr,TEXT("ウィンドウが作成できません。"),nullptr,MB_OK | MB_ICONSTOP);
 		return 0;
 	}
-
-	ColorSchemeOptions.SetEventHandler(&UICore);
-	ColorSchemeOptions.ApplyColorScheme();
 
 	if (nCmdShow==SW_SHOWMINIMIZED || nCmdShow==SW_SHOWMINNOACTIVE || nCmdShow==SW_MINIMIZE)
 		CmdLineOptions.m_fMinimize=true;
