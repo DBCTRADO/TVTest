@@ -1196,22 +1196,25 @@ void CProgramGuide::SetTheme(const TVTest::Theme::CThemeManager *pThemeManager)
 		{CColorScheme::COLOR_PROGRAMGUIDE_TIMELINE,			COLOR_TIMELINE},
 		{CColorScheme::COLOR_PROGRAMGUIDE_CURTIMELINE,		COLOR_CURTIMELINE},
 	};
-	for (int i=0;i<lengthof(ProgramGuideColorMap);i++)
-		SetColor(ProgramGuideColorMap[i].To,
-				 pThemeManager->GetColor(ProgramGuideColorMap[i].From));
+	for (int i=0;i<lengthof(ProgramGuideColorMap);i++) {
+		m_Theme.ColorList[ProgramGuideColorMap[i].To]=
+			pThemeManager->GetColor(ProgramGuideColorMap[i].From);
+	}
 
-	TVTest::Theme::FillStyle ChBackStyle,CurChBackStyle,TimeBarMarginStyle;
-	pThemeManager->GetFillStyle(TVTest::Theme::CThemeManager::STYLE_PROGRAMGUIDE_CHANNEL,&ChBackStyle);
-	pThemeManager->GetFillStyle(TVTest::Theme::CThemeManager::STYLE_PROGRAMGUIDE_CURCHANNEL,&CurChBackStyle);
-	pThemeManager->GetFillStyle(TVTest::Theme::CThemeManager::STYLE_PROGRAMGUIDE_TIMEBAR,&TimeBarMarginStyle);
+	pThemeManager->GetFillStyle(TVTest::Theme::CThemeManager::STYLE_PROGRAMGUIDE_CHANNEL,
+								&m_Theme.ChannelNameBackStyle);
+	pThemeManager->GetFillStyle(TVTest::Theme::CThemeManager::STYLE_PROGRAMGUIDE_CURCHANNEL,
+								&m_Theme.CurChannelNameBackStyle);
+	pThemeManager->GetFillStyle(TVTest::Theme::CThemeManager::STYLE_PROGRAMGUIDE_TIMEBAR,
+								&m_Theme.TimeBarMarginStyle);
 	pThemeManager->GetBackgroundStyle(TVTest::Theme::CThemeManager::STYLE_PROGRAMGUIDE_FEATUREDMARK,
-									  &m_FeaturedMarkStyle);
+									  &m_Theme.FeaturedMarkStyle);
 
-	TVTest::Theme::FillStyle TimeStyles[CProgramGuide::TIME_BAR_BACK_COLORS];
-	for (int i=0;i<CProgramGuide::TIME_BAR_BACK_COLORS;i++)
-		pThemeManager->GetFillStyle(TVTest::Theme::CThemeManager::STYLE_PROGRAMGUIDE_TIMEBAR_0_2+i,&TimeStyles[i]);
-
-	SetBackColors(ChBackStyle,CurChBackStyle,TimeBarMarginStyle,TimeStyles);
+	for (int i=0;i<CProgramGuide::TIME_BAR_BACK_COLORS;i++) {
+		pThemeManager->GetFillStyle(
+			TVTest::Theme::CThemeManager::STYLE_PROGRAMGUIDE_TIMEBAR_0_2+i,
+			&m_Theme.TimeBarBackStyle[i]);
+	}
 
 	m_EpgTheme.SetTheme(pThemeManager);
 
@@ -1474,8 +1477,8 @@ void CProgramGuide::DrawEvent(
 		m_ProgramSearch.GetHighlightResult()
 			&& m_ProgramSearch.IsHitEvent(pEventInfo);
 	if (fHighlight) {
-		TitleColor=m_ColorList[COLOR_HIGHLIGHT_TITLE];
-		TextColor=m_ColorList[COLOR_HIGHLIGHT_TEXT];
+		TitleColor=m_Theme.ColorList[COLOR_HIGHLIGHT_TITLE];
+		TextColor=m_Theme.ColorList[COLOR_HIGHLIGHT_TEXT];
 	}
 
 	const bool fCurrent=
@@ -1516,18 +1519,18 @@ void CProgramGuide::DrawEvent(
 
 	if (!fCurrent) {
 		if (fFilter) {
-			BackColor=MixColor(BackColor,m_ColorList[COLOR_BACK],96);
-			TitleColor=MixColor(TitleColor,m_ColorList[COLOR_BACK],96);
-			TextColor=MixColor(TextColor,m_ColorList[COLOR_BACK],96);
+			BackColor=MixColor(BackColor,m_Theme.ColorList[COLOR_BACK],96);
+			TitleColor=MixColor(TitleColor,m_Theme.ColorList[COLOR_BACK],96);
+			TextColor=MixColor(TextColor,m_Theme.ColorList[COLOR_BACK],96);
 		} else {
 			if (fCommonEvent)
-				BackColor=MixColor(BackColor,m_ColorList[COLOR_BACK],192);
+				BackColor=MixColor(BackColor,m_Theme.ColorList[COLOR_BACK],192);
 		}
 	}
 
 	if (fHighlight) {
 		DrawUtil::FillGradient(hdc,&Rect,
-			MixColor(m_ColorList[COLOR_HIGHLIGHT_BACK],BackColor,128),
+			MixColor(m_Theme.ColorList[COLOR_HIGHLIGHT_BACK],BackColor,128),
 			BackColor,
 			DrawUtil::DIRECTION_VERT);
 	} else if (fCurrent) {
@@ -1551,7 +1554,7 @@ void CProgramGuide::DrawEvent(
 		LOGBRUSH lb;
 
 		lb.lbStyle=BS_SOLID;
-		lb.lbColor=MixColor(m_ColorList[COLOR_CURTIMELINE],BackColor,64);
+		lb.lbColor=MixColor(m_Theme.ColorList[COLOR_CURTIMELINE],BackColor,64);
 		hpen=::ExtCreatePen(PS_GEOMETRIC | PS_SOLID | PS_ENDCAP_FLAT,
 							m_Style.CurTimeLineWidth,&lb,0,NULL);
 		::SelectObject(hdc,hpen);
@@ -1582,14 +1585,14 @@ void CProgramGuide::DrawEvent(
 	}
 
 	if (fHighlight) {
-		HBRUSH hbr=::CreateSolidBrush(MixColor(m_ColorList[COLOR_HIGHLIGHT_BORDER],BackColor,80));
+		HBRUSH hbr=::CreateSolidBrush(MixColor(m_Theme.ColorList[COLOR_HIGHLIGHT_BORDER],BackColor,80));
 		RECT rc=Rect;
 		TVTest::Style::Subtract(&rc,m_Style.HighlightBorder);
 		DrawUtil::FillBorder(hdc,&Rect,&rc,&Rect,hbr);
 		::DeleteObject(hbr);
 	}
 	if (pItem->IsSelected()) {
-		HBRUSH hbr=::CreateSolidBrush(MixColor(m_ColorList[COLOR_HIGHLIGHT_BORDER],BackColor,128));
+		HBRUSH hbr=::CreateSolidBrush(MixColor(m_Theme.ColorList[COLOR_HIGHLIGHT_BORDER],BackColor,128));
 		RECT rcOuter=Rect;
 		rcOuter.left-=m_Style.SelectedBorder.Left;
 		rcOuter.right+=m_Style.SelectedBorder.Right;
@@ -1599,7 +1602,7 @@ void CProgramGuide::DrawEvent(
 		DrawUtil::FillBorder(hdc,&rcOuter,&rcInner,&rcOuter,hbr);
 		::DeleteObject(hbr);
 	} else if (fCurrent) {
-		HBRUSH hbr=::CreateSolidBrush(m_ColorList[COLOR_CURTIMELINE]);
+		HBRUSH hbr=::CreateSolidBrush(m_Theme.ColorList[COLOR_CURTIMELINE]);
 		RECT rcOuter=Rect;
 		rcOuter.left-=m_Style.SelectedBorder.Left;
 		rcOuter.right+=m_Style.SelectedBorder.Right;
@@ -1617,7 +1620,7 @@ void CProgramGuide::DrawEvent(
 		rcMark.right=rcMark.left+sz.cx;
 		rcMark.bottom=rcMark.top+sz.cy;
 		TVTest::Style::Subtract(&rcMark,m_Style.FeaturedMarkMargin);
-		TVTest::Theme::Draw(hdc,rcMark,m_FeaturedMarkStyle);
+		TVTest::Theme::Draw(hdc,rcMark,m_Theme.FeaturedMarkStyle);
 	}
 
 	::SetTextColor(hdc,TitleColor);
@@ -1690,7 +1693,7 @@ void CProgramGuide::DrawEventList(
 void CProgramGuide::DrawHeaderBackground(HDC hdc,const RECT &Rect,bool fCur) const
 {
 	const TVTest::Theme::FillStyle &Style=
-		fCur?m_CurChannelNameBackStyle:m_ChannelNameBackStyle;
+		fCur?m_Theme.CurChannelNameBackStyle:m_Theme.ChannelNameBackStyle;
 	RECT rc;
 
 	rc=Rect;
@@ -1731,7 +1734,7 @@ void CProgramGuide::DrawServiceHeader(ProgramGuide::CServiceInfo *pServiceInfo,
 	DrawHeaderBackground(hdc,Rect,fCur);
 
 	HFONT hfontOld=DrawUtil::SelectObject(hdc,m_TitleFont);
-	COLORREF TextColor=m_ColorList[fCur?COLOR_CURCHANNELNAMETEXT:COLOR_CHANNELNAMETEXT];
+	COLORREF TextColor=m_Theme.ColorList[fCur?COLOR_CURCHANNELNAMETEXT:COLOR_CHANNELNAMETEXT];
 	COLORREF OldTextColor=::SetTextColor(hdc,TextColor);
 
 	RECT rc=Rect;
@@ -1783,7 +1786,7 @@ void CProgramGuide::DrawDayHeader(int Day,HDC hdc,const RECT &Rect) const
 	DrawHeaderBackground(hdc,Rect,false);
 
 	HFONT hfontOld=DrawUtil::SelectObject(hdc,m_TitleFont);
-	COLORREF OldTextColor=::SetTextColor(hdc,m_ColorList[COLOR_CHANNELNAMETEXT]);
+	COLORREF OldTextColor=::SetTextColor(hdc,m_Theme.ColorList[COLOR_CHANNELNAMETEXT]);
 	TCHAR szText[64];
 	StdUtil::snprintf(szText,lengthof(szText),TEXT("%d/%d(%s)"),
 					  st.wMonth,st.wDay,GetDayOfWeekText(st.wDayOfWeek));
@@ -1807,8 +1810,8 @@ void CProgramGuide::DrawTimeBar(HDC hdc,const RECT &Rect,bool fRight)
 	RECT rc;
 
 	hfontOld=DrawUtil::SelectObject(hdc,m_TimeFont);
-	crOldTextColor=::SetTextColor(hdc,m_ColorList[COLOR_TIMETEXT]);
-	hpen=::CreatePen(PS_SOLID,0,m_ColorList[COLOR_TIMETEXT]);
+	crOldTextColor=::SetTextColor(hdc,m_Theme.ColorList[COLOR_TIMETEXT]);
+	hpen=::CreatePen(PS_SOLID,0,m_Theme.ColorList[COLOR_TIMETEXT]);
 	hpenOld=SelectPen(hdc,hpen);
 	rc.left=Rect.left;
 	rc.top=Rect.top;
@@ -1825,7 +1828,7 @@ void CProgramGuide::DrawTimeBar(HDC hdc,const RECT &Rect,bool fRight)
 		EpgUtil::EpgTimeToDisplayTime(Time,&DispTime);
 
 		rc.bottom=rc.top+PixelsPerHour;
-		TVTest::Theme::Draw(hdc,rc,m_TimeBarBackStyle[DispTime.wHour/3]);
+		TVTest::Theme::Draw(hdc,rc,m_Theme.TimeBarBackStyle[DispTime.wHour/3]);
 		::MoveToEx(hdc,rc.left,rc.top,NULL);
 		::LineTo(hdc,rc.right,rc.top);
 
@@ -1836,9 +1839,9 @@ void CProgramGuide::DrawTimeBar(HDC hdc,const RECT &Rect,bool fRight)
 			POINT ptTriangle[3];
 			HBRUSH hbr,hbrOld;
 
-			hbr=::CreateSolidBrush(m_ColorList[COLOR_CURTIMELINE]);
+			hbr=::CreateSolidBrush(m_Theme.ColorList[COLOR_CURTIMELINE]);
 			hbrOld=SelectBrush(hdc,hbr);
-			SelectObject(hdc,::CreatePen(PS_SOLID,1,m_ColorList[COLOR_CURTIMELINE]));
+			SelectObject(hdc,::CreatePen(PS_SOLID,1,m_Theme.ColorList[COLOR_CURTIMELINE]));
 			if (fRight) {
 				ptTriangle[0].x=rc.left;
 				ptTriangle[0].y=CurTimePos;
@@ -1887,7 +1890,7 @@ void CProgramGuide::DrawTimeBar(HDC hdc,const RECT &Rect,bool fRight)
 			POINT ptTriangle[3];
 			HBRUSH hbr,hbrOld;
 
-			hbr=::CreateSolidBrush(m_ColorList[COLOR_TIMETEXT]);
+			hbr=::CreateSolidBrush(m_Theme.ColorList[COLOR_TIMETEXT]);
 			hbrOld=SelectBrush(hdc,hbr);
 			ptTriangle[0].x=m_TimeBarWidth/2;
 			ptTriangle[0].y=rc.top-(m_TimeBarWidth-TriangleHeight)/2;
@@ -1973,7 +1976,7 @@ void CProgramGuide::Draw(HDC hdc,const RECT &PaintRect)
 	GetProgramGuideRect(&rcGuide);
 
 	if (::IntersectRect(&rc,&rcGuide,&PaintRect)) {
-		HBRUSH hbr=::CreateSolidBrush(m_ColorList[COLOR_BACK]);
+		HBRUSH hbr=::CreateSolidBrush(m_Theme.ColorList[COLOR_BACK]);
 		::FillRect(hdc,&rc,hbr);
 		::DeleteObject(hbr);
 	}
@@ -2015,7 +2018,7 @@ void CProgramGuide::Draw(HDC hdc,const RECT &PaintRect)
 			}
 			if (rc.left<PaintRect.right) {
 				rc.right=PaintRect.right;
-				TVTest::Theme::Draw(hdc,rc,m_ChannelNameBackStyle);
+				TVTest::Theme::Draw(hdc,rc,m_Theme.ChannelNameBackStyle);
 			}
 			::SelectClipRgn(hdc,NULL);
 			::DeleteObject(hrgn);
@@ -2032,7 +2035,7 @@ void CProgramGuide::Draw(HDC hdc,const RECT &PaintRect)
 		rc.top=HeaderHeight-m_ScrollPos.y*GetLineHeight();
 		rc.left=m_TimeBarWidth+m_Style.ColumnMargin-m_ScrollPos.x;
 		HPEN hpen,hpenOld;
-		hpen=::CreatePen(PS_SOLID,0,m_ColorList[COLOR_TIMELINE]);
+		hpen=::CreatePen(PS_SOLID,0,m_Theme.ColorList[COLOR_TIMELINE]);
 		hpenOld=SelectPen(hdc,hpen);
 		int PixelsPerHour=GetLineHeight()*m_LinesPerHour;
 		int CurTimePos=rc.top+GetCurTimeLinePos();
@@ -2058,7 +2061,7 @@ void CProgramGuide::Draw(HDC hdc,const RECT &PaintRect)
 						LOGBRUSH lb;
 
 						lb.lbStyle=BS_SOLID;
-						lb.lbColor=m_ColorList[COLOR_CURTIMELINE];
+						lb.lbColor=m_Theme.ColorList[COLOR_CURTIMELINE];
 						hpenCurTime=::ExtCreatePen(
 							PS_GEOMETRIC | PS_SOLID | PS_ENDCAP_FLAT,
 							m_Style.CurTimeLineWidth,&lb,0,NULL);
@@ -2085,7 +2088,7 @@ void CProgramGuide::Draw(HDC hdc,const RECT &PaintRect)
 			if (rc.left<rc.right) {
 				rc.top=0;
 				rc.bottom=m_HeaderHeight;
-				TVTest::Theme::Draw(hdc,rc,m_ChannelNameBackStyle);
+				TVTest::Theme::Draw(hdc,rc,m_Theme.ChannelNameBackStyle);
 			}
 		}
 	}
@@ -2113,15 +2116,15 @@ void CProgramGuide::Draw(HDC hdc,const RECT &PaintRect)
 
 	if (rc.bottom<PaintRect.bottom) {
 		::SetRect(&rc,0,rc.bottom,m_TimeBarWidth,rcClient.bottom);
-		TVTest::Theme::Draw(hdc,rc,m_TimeBarMarginStyle);
+		TVTest::Theme::Draw(hdc,rc,m_Theme.TimeBarMarginStyle);
 		::OffsetRect(&rc,rcGuide.right,0);
-		TVTest::Theme::Draw(hdc,rc,m_TimeBarMarginStyle);
+		TVTest::Theme::Draw(hdc,rc,m_Theme.TimeBarMarginStyle);
 	}
 	if (PaintRect.top<HeaderHeight) {
 		::SetRect(&rc,0,0,m_TimeBarWidth,HeaderHeight);
-		TVTest::Theme::Draw(hdc,rc,m_TimeBarMarginStyle);
+		TVTest::Theme::Draw(hdc,rc,m_Theme.TimeBarMarginStyle);
 		::OffsetRect(&rc,rcGuide.right,0);
-		TVTest::Theme::Draw(hdc,rc,m_TimeBarMarginStyle);
+		TVTest::Theme::Draw(hdc,rc,m_Theme.TimeBarMarginStyle);
 	}
 
 	if (m_ListMode==LIST_SERVICES && m_Day!=DAY_TODAY
@@ -2133,8 +2136,8 @@ void CProgramGuide::Draw(HDC hdc,const RECT &PaintRect)
 		HPEN hpen,hpenOld;
 		HBRUSH hbr,hbrOld;
 
-		hbr=::CreateSolidBrush(m_ColorList[COLOR_TIMETEXT]);
-		hpen=::CreatePen(PS_SOLID,0,m_ColorList[COLOR_TIMETEXT]);
+		hbr=::CreateSolidBrush(m_Theme.ColorList[COLOR_TIMETEXT]);
+		hpen=::CreatePen(PS_SOLID,0,m_Theme.ColorList[COLOR_TIMETEXT]);
 		hbrOld=SelectBrush(hdc,hbr);
 		hpenOld=SelectPen(hdc,hpen);
 		ptTriangle[0].x=m_TimeBarWidth/2;
@@ -3211,30 +3214,6 @@ bool CProgramGuide::SetUIOptions(int LinesPerHour,int ItemWidth)
 		}
 	}
 	return true;
-}
-
-
-bool CProgramGuide::SetColor(int Type,COLORREF Color)
-{
-	if (Type<0 || Type>COLOR_LAST)
-		return false;
-	m_ColorList[Type]=Color;
-	return true;
-}
-
-
-void CProgramGuide::SetBackColors(const TVTest::Theme::FillStyle &ChannelBackStyle,
-								  const TVTest::Theme::FillStyle &CurChannelBackStyle,
-								  const TVTest::Theme::FillStyle &TimeBarMarginStyle,
-								  const TVTest::Theme::FillStyle *pTimeBarBackStyles)
-{
-	m_ChannelNameBackStyle=ChannelBackStyle;
-	m_CurChannelNameBackStyle=CurChannelBackStyle;
-	m_TimeBarMarginStyle=TimeBarMarginStyle;
-	for (int i=0;i<TIME_BAR_BACK_COLORS;i++)
-		m_TimeBarBackStyle[i]=pTimeBarBackStyles[i];
-	if (m_hwnd!=NULL)
-		Invalidate();
 }
 
 

@@ -367,11 +367,6 @@ public:
 	int GetLinesPerHour() const { return m_LinesPerHour; }
 	int GetItemWidth() const { return m_ItemWidth; }
 	bool SetUIOptions(int LinesPerHour,int ItemWidth);
-	bool SetColor(int Type,COLORREF Color);
-	void SetBackColors(const TVTest::Theme::FillStyle &ChannelBackStyle,
-					   const TVTest::Theme::FillStyle &CurChannelBackStyle,
-					   const TVTest::Theme::FillStyle &TimeBarMarginStyle,
-					   const TVTest::Theme::FillStyle *pTimeBarBackStyles);
 	bool SetFont(const LOGFONT *pFont);
 	bool GetFont(LOGFONT *pFont) const;
 	bool SetEventInfoFont(const LOGFONT *pFont);
@@ -437,6 +432,16 @@ private:
 		ProgramGuideStyle();
 		void SetStyle(const TVTest::Style::CStyleManager *pStyleManager);
 		void NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager);
+	};
+
+	struct ProgramGuideTheme
+	{
+		TVTest::Theme::ThemeColor ColorList[NUM_COLORS];
+		TVTest::Theme::FillStyle ChannelNameBackStyle;
+		TVTest::Theme::FillStyle CurChannelNameBackStyle;
+		TVTest::Theme::FillStyle TimeBarMarginStyle;
+		TVTest::Theme::FillStyle TimeBarBackStyle[TIME_BAR_BACK_COLORS];
+		TVTest::Theme::BackgroundStyle FeaturedMarkStyle;
 	};
 
 	CEpgProgramList *m_pProgramList;
@@ -518,12 +523,8 @@ private:
 	CEventHandler *m_pEventHandler;
 	CFrame *m_pFrame;
 	CProgramCustomizer *m_pProgramCustomizer;
+	ProgramGuideTheme m_Theme;
 	CEpgTheme m_EpgTheme;
-	COLORREF m_ColorList[NUM_COLORS];
-	TVTest::Theme::FillStyle m_ChannelNameBackStyle;
-	TVTest::Theme::FillStyle m_CurChannelNameBackStyle;
-	TVTest::Theme::FillStyle m_TimeBarMarginStyle;
-	TVTest::Theme::FillStyle m_TimeBarBackStyle[TIME_BAR_BACK_COLORS];
 	TVTest::Theme::BackgroundStyle m_FeaturedMarkStyle;
 	CProgramGuideToolList m_ToolList;
 	int m_WheelScrollLines;
