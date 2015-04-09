@@ -1659,6 +1659,8 @@ bool CMainWindow::OnCreate(const CREATESTRUCT *pcs)
 	m_App.StatusView.AddItem(new CTunerStatusItem);
 	m_App.StatusView.AddItem(new CMediaBitRateStatusItem);
 	m_App.StatusView.AddItem(new CFavoritesStatusItem);
+	Theme::CThemeManager ThemeManager(m_pCore->GetCurrentColorScheme());
+	m_App.StatusView.SetItemTheme(&ThemeManager);
 	m_App.StatusView.Create(m_LayoutBase.GetHandle(),
 		//WS_CHILD | (m_fShowStatusBar?WS_VISIBLE:0) | WS_CLIPSIBLINGS,
 		WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS,0,IDC_STATUS);

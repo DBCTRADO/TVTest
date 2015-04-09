@@ -299,8 +299,7 @@ void CStatusView::SetTheme(const TVTest::Theme::CThemeManager *pThemeManager)
 	GetStatusViewThemeFromThemeManager(pThemeManager,&Theme);
 	SetStatusViewTheme(Theme);
 
-	for (auto itr=m_ItemList.begin();itr!=m_ItemList.end();++itr)
-		(*itr)->SetTheme(pThemeManager);
+	SetItemTheme(pThemeManager);
 }
 
 
@@ -864,6 +863,13 @@ bool CStatusView::GetStatusViewTheme(StatusViewTheme *pTheme) const
 		return false;
 	*pTheme=m_Theme;
 	return true;
+}
+
+
+void CStatusView::SetItemTheme(const TVTest::Theme::CThemeManager *pThemeManager)
+{
+	for (auto itr=m_ItemList.begin();itr!=m_ItemList.end();++itr)
+		(*itr)->SetTheme(pThemeManager);
 }
 
 

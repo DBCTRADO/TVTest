@@ -187,6 +187,7 @@ public:
 		const TVTest::Theme::CThemeManager *pThemeManager,StatusViewTheme *pTheme);
 	bool SetStatusViewTheme(const StatusViewTheme &Theme);
 	bool GetStatusViewTheme(StatusViewTheme *pTheme) const;
+	void SetItemTheme(const TVTest::Theme::CThemeManager *pThemeManager);
 	bool SetFont(const LOGFONT *pFont);
 	bool GetFont(LOGFONT *pFont) const;
 	bool SetMultiRow(bool fMultiRow);
