@@ -218,6 +218,7 @@ private:
 	StatusViewStyle m_Style;
 	DrawUtil::CFont m_Font;
 	int m_FontHeight;
+	int m_TextHeight;
 	int m_ItemHeight;
 	bool m_fMultiRow;
 	int m_MaxRows;
@@ -241,9 +242,9 @@ private:
 	void CalcLayout();
 	int CalcRows(const std::vector<const CStatusItem*> &ItemList,int MaxRowWidth) const;
 	int CalcRows(const std::vector<CStatusItem*> &ItemList,int MaxRowWidth);
-	int CalcFontHeight(const DrawUtil::CFont &Font) const;
-	int CalcFontHeight() const;
-	int CalcItemHeight(int FontHeight) const;
+	int CalcTextHeight(const DrawUtil::CFont &Font,int *pFontHeight=nullptr) const;
+	int CalcTextHeight(int *pFontHeight=nullptr) const;
+	int CalcItemHeight(int TextHeight) const;
 	int CalcItemHeight() const;
 	int CalcItemPixelSize(const CStatusItem::SizeValue &Size) const;
 

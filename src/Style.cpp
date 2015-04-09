@@ -484,7 +484,7 @@ void Subtract(RECT *pRect,const Margins &margins)
 }
 
 
-int GetFontHeight(HDC hdc,HFONT hfont,const IntValue &Extra)
+int GetFontHeight(HDC hdc,HFONT hfont,const IntValue &Extra,TEXTMETRIC *pTextMetric)
 {
 	if (hdc==nullptr || hfont==nullptr)
 		return 0;
@@ -494,6 +494,9 @@ int GetFontHeight(HDC hdc,HFONT hfont,const IntValue &Extra)
 	::GetTextMetrics(hdc,&tm);
 	::SelectObject(hdc,hOldFont);
 
+	if (pTextMetric!=nullptr)
+		*pTextMetric=tm;
+
 	if (tm.tmInternalLeading<Extra)
 		tm.tmHeight+=Extra-tm.tmInternalLeading;
 
@@ -501,7 +504,7 @@ int GetFontHeight(HDC hdc,HFONT hfont,const IntValue &Extra)
 }
 
 
-int GetFontHeight(HWND hwnd,HFONT hfont,const IntValue &Extra)
+int GetFontHeight(HWND hwnd,HFONT hfont,const IntValue &Extra,TEXTMETRIC *pTextMetric)
 {
 	if (hwnd==nullptr || hfont==nullptr)
 		return 0;
@@ -509,7 +512,7 @@ int GetFontHeight(HWND hwnd,HFONT hfont,const IntValue &Extra)
 	HDC hdc=::GetDC(hwnd);
 	if (hdc==nullptr)
 		return 0;
-	int Height=GetFontHeight(hdc,hfont,Extra);
+	int Height=GetFontHeight(hdc,hfont,Extra,pTextMetric);
 	::ReleaseDC(hwnd,hdc);
 
 	return Height;

@@ -239,6 +239,7 @@ bool CStatusView::Initialize(HINSTANCE hinst)
 CStatusView::CStatusView()
 	: m_Font(/*DrawUtil::FONT_STATUS*/DrawUtil::FONT_DEFAULT)
 	, m_FontHeight(0)
+	, m_TextHeight(0)
 	, m_ItemHeight(0)
 	, m_fMultiRow(false)
 	, m_MaxRows(2)
@@ -381,7 +382,7 @@ LRESULT CStatusView::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 		{
 			InitializeUI();
 
-			m_FontHeight=CalcFontHeight();
+			m_TextHeight=CalcTextHeight(&m_FontHeight);
 			m_ItemHeight=CalcItemHeight();
 
 			for (auto itr=m_ItemList.begin();itr!=m_ItemList.end();++itr) {
@@ -738,7 +739,7 @@ int CStatusView::GetItemHeight() const
 
 int CStatusView::CalcItemHeight(const DrawUtil::CFont &Font) const
 {
-	return CalcItemHeight(CalcFontHeight(Font));
+	return CalcItemHeight(CalcTextHeight(Font));
 }
 
 
@@ -869,7 +870,7 @@ bool CStatusView::SetFont(const LOGFONT *pFont)
 	if (!m_Font.Create(pFont))
 		return false;
 	if (m_hwnd!=NULL) {
-		m_FontHeight=CalcFontHeight();
+		m_TextHeight=CalcTextHeight(&m_FontHeight);
 		m_ItemHeight=CalcItemHeight();
 		AdjustSize();
 		Invalidate();
@@ -1284,27 +1285,32 @@ int CStatusView::CalcRows(const std::vector<CStatusItem*> &ItemList,int MaxRowWi
 }
 
 
-int CStatusView::CalcFontHeight(const DrawUtil::CFont &Font) const
+int CStatusView::CalcTextHeight(const DrawUtil::CFont &Font,int *pFontHeight) const
 {
-	return TVTest::Style::GetFontHeight(m_hwnd,Font.GetHandle(),m_Style.TextExtraHeight);
+	TEXTMETRIC tm;
+	int TextHeight=TVTest::Style::GetFontHeight(
+		m_hwnd,Font.GetHandle(),m_Style.TextExtraHeight,&tm);
+	if (pFontHeight!=nullptr)
+		*pFontHeight=tm.tmHeight-tm.tmInternalLeading;
+	return TextHeight;
 }
 
 
-int CStatusView::CalcFontHeight() const
+int CStatusView::CalcTextHeight(int *pFontHeight) const
 {
-	return CalcFontHeight(m_Font);
+	return CalcTextHeight(m_Font,pFontHeight);
 }
 
 
-int CStatusView::CalcItemHeight(int FontHeight) const
+int CStatusView::CalcItemHeight(int TextHeight) const
 {
-	return max(FontHeight,m_Style.IconSize.Height)+m_Style.ItemPadding.Vert();
+	return max(TextHeight,m_Style.IconSize.Height)+m_Style.ItemPadding.Vert();
 }
 
 
 int CStatusView::CalcItemHeight() const
 {
-	return CalcItemHeight(m_FontHeight);
+	return CalcItemHeight(m_TextHeight);
 }
 
 
