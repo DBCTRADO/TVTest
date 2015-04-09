@@ -76,7 +76,7 @@ bool CChannelStatusItem::OnMouseWheel(int x,int y,bool fHorz,int Delta,int *pCom
 
 
 CVideoSizeStatusItem::CVideoSizeStatusItem()
-	: CStatusItem(STATUS_ITEM_VIDEOSIZE,SizeValue(10*EM_FACTOR,SIZE_EM))
+	: CStatusItem(STATUS_ITEM_VIDEOSIZE,SizeValue(11*EM_FACTOR,SIZE_EM))
 	, m_OriginalVideoWidth(0)
 	, m_OriginalVideoHeight(0)
 	, m_ZoomPercentage(0)
@@ -601,7 +601,7 @@ void CErrorStatusItem::OnRButtonDown(int x,int y)
 
 
 CSignalLevelStatusItem::CSignalLevelStatusItem()
-	: CStatusItem(STATUS_ITEM_SIGNALLEVEL,SizeValue(10*EM_FACTOR,SIZE_EM))
+	: CStatusItem(STATUS_ITEM_SIGNALLEVEL,SizeValue(11*EM_FACTOR,SIZE_EM))
 	, m_fShowSignalLevel(true)
 	, m_SignalLevel(0.0f)
 	, m_BitRate(0)
@@ -1094,7 +1094,7 @@ void CTunerStatusItem::OnRButtonDown(int x,int y)
 
 
 CMediaBitRateStatusItem::CMediaBitRateStatusItem()
-	: CStatusItem(STATUS_ITEM_MEDIABITRATE,SizeValue(12*EM_FACTOR,SIZE_EM))
+	: CStatusItem(STATUS_ITEM_MEDIABITRATE,SizeValue(13*EM_FACTOR,SIZE_EM))
 	, m_VideoBitRate(0)
 	, m_AudioBitRate(0)
 {

@@ -237,8 +237,7 @@ bool CStatusView::Initialize(HINSTANCE hinst)
 
 
 CStatusView::CStatusView()
-	: m_Font(/*DrawUtil::FONT_STATUS*/DrawUtil::FONT_DEFAULT)
-	, m_FontHeight(0)
+	: m_FontHeight(0)
 	, m_TextHeight(0)
 	, m_ItemHeight(0)
 	, m_fMultiRow(false)
@@ -251,6 +250,9 @@ CStatusView::CStatusView()
 	, m_fBufferedPaint(false)
 	, m_fAdjustSize(true)
 {
+	LOGFONT lf;
+	DrawUtil::GetDefaultUIFont(&lf);
+	m_Font.Create(&lf);
 }
 
 
