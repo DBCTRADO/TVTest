@@ -349,97 +349,97 @@ const CColorScheme::GradientInfo CColorScheme::m_GradientInfoList[NUM_GRADIENTS]
 
 const CColorScheme::BorderInfo CColorScheme::m_BorderInfoList[NUM_BORDERS] = {
 	{TEXT("ScreenBorder"),						Theme::BORDER_NONE,
-		COLOR_SCREENBORDER,							false},
+		COLOR_SCREENBORDER},
 	{TEXT("WindowFrameBorder"),					Theme::BORDER_NONE,
-		COLOR_WINDOWFRAMEBORDER,					false},
+		COLOR_WINDOWFRAMEBORDER},
 	{TEXT("WindowActiveFrameBorder"),			Theme::BORDER_NONE,
-		COLOR_WINDOWACTIVEFRAMEBORDER,				false},
+		COLOR_WINDOWACTIVEFRAMEBORDER},
 	{TEXT("StatusBorder"),						Theme::BORDER_RAISED,
-		COLOR_STATUSBORDER,							false},
+		COLOR_STATUSBORDER},
 	{TEXT("StatusItemBorder"),					Theme::BORDER_NONE,
-		COLOR_STATUSITEMBORDER,						false},
+		COLOR_STATUSITEMBORDER},
 	{TEXT("StatusBottomItemBorder"),			Theme::BORDER_NONE,
-		COLOR_STATUSBOTTOMITEMBORDER,				false},
+		COLOR_STATUSBOTTOMITEMBORDER},
 	{TEXT("StatusHighlightBorder"),				Theme::BORDER_NONE,
-		COLOR_STATUSHIGHLIGHTBORDER,				false},
+		COLOR_STATUSHIGHLIGHTBORDER},
 	{TEXT("StatusEventProgressBorder"),			Theme::BORDER_NONE,
-		COLOR_STATUSEVENTPROGRESSBORDER,			false},
+		COLOR_STATUSEVENTPROGRESSBORDER},
 	{TEXT("StatusEventProgressElapsedBorder"),	Theme::BORDER_NONE,
-		COLOR_STATUSEVENTPROGRESSELAPSEDBORDER,		false},
+		COLOR_STATUSEVENTPROGRESSELAPSEDBORDER},
 	{TEXT("TitleBarBorder"),					Theme::BORDER_RAISED,
-		COLOR_TITLEBARBORDER,						true},
+		COLOR_TITLEBARBORDER},
 	{TEXT("TitleBarCaptionBorder"),				Theme::BORDER_NONE,
-		COLOR_TITLEBARTEXTBORDER,					false},
+		COLOR_TITLEBARTEXTBORDER},
 	{TEXT("TitleBarIconBorder"),				Theme::BORDER_NONE,
-		COLOR_TITLEBARICONBORDER,					false},
+		COLOR_TITLEBARICONBORDER},
 	{TEXT("TitleBarHighlightBorder"),			Theme::BORDER_NONE,
-		COLOR_TITLEBARHIGHLIGHTBORDER,				false},
+		COLOR_TITLEBARHIGHLIGHTBORDER},
 	{TEXT("SideBarBorder"),						Theme::BORDER_RAISED,
-		COLOR_SIDEBARBORDER,						true},
+		COLOR_SIDEBARBORDER},
 	{TEXT("SideBarItemBorder"),					Theme::BORDER_NONE,
-		COLOR_SIDEBARITEMBORDER,					false},
+		COLOR_SIDEBARITEMBORDER},
 	{TEXT("SideBarHighlightBorder"),			Theme::BORDER_NONE,
-		COLOR_SIDEBARHIGHLIGHTBORDER,				false},
+		COLOR_SIDEBARHIGHLIGHTBORDER},
 	{TEXT("SideBarCheckBorder"),				Theme::BORDER_SUNKEN,
-		COLOR_SIDEBARCHECKBORDER,					false},
+		COLOR_SIDEBARCHECKBORDER},
 	{TEXT("ProgramGuideStatusBorder"),			Theme::BORDER_SUNKEN,
-		COLOR_STATUSBORDER,							true},
+		COLOR_STATUSBORDER},
 	{TEXT("PanelTabBorder"),					Theme::BORDER_SOLID,
-		COLOR_PANELTABBORDER,						false},
+		COLOR_PANELTABBORDER},
 	{TEXT("PanelCurTabBorder"),					Theme::BORDER_SOLID,
-		COLOR_PANELCURTABBORDER,					false},
+		COLOR_PANELCURTABBORDER},
 	{TEXT("PanelTabMarginBorder"),				Theme::BORDER_NONE,
-		COLOR_PANELTABMARGINBORDER,					false},
+		COLOR_PANELTABMARGINBORDER},
 	{TEXT("PanelTitleBorder"),					Theme::BORDER_RAISED,
-		COLOR_PANELTITLEBORDER,						false},
+		COLOR_PANELTITLEBORDER},
 	{TEXT("InformationPanelEventInfoBorder"),	Theme::BORDER_NONE,
-		COLOR_INFORMATIONPANEL_EVENTINFOBORDER,		false},
+		COLOR_INFORMATIONPANEL_EVENTINFOBORDER},
 	{TEXT("InformationPanelButtonBorder"),		Theme::BORDER_NONE,
-		COLOR_INFORMATIONPANEL_BUTTONBORDER,		false},
+		COLOR_INFORMATIONPANEL_BUTTONBORDER},
 	{TEXT("InformationPanelHotButtonBorder"),	Theme::BORDER_NONE,
-		COLOR_INFORMATIONPANEL_HOTBUTTONBORDER,		false},
+		COLOR_INFORMATIONPANEL_HOTBUTTONBORDER},
 	{TEXT("ProgramListPanelChannelBorder"),		Theme::BORDER_NONE,
-		COLOR_PROGRAMLISTPANEL_CHANNELBORDER,		false},
+		COLOR_PROGRAMLISTPANEL_CHANNELBORDER},
 	{TEXT("ProgramListPanelCurChannelBorder"),	Theme::BORDER_NONE,
-		COLOR_PROGRAMLISTPANEL_CURCHANNELBORDER,	false},
+		COLOR_PROGRAMLISTPANEL_CURCHANNELBORDER},
 	{TEXT("ProgramListPanelChannelButtonBorder"),	Theme::BORDER_NONE,
-		COLOR_PROGRAMLISTPANEL_CHANNELBUTTONBORDER,	false},
+		COLOR_PROGRAMLISTPANEL_CHANNELBUTTONBORDER},
 	{TEXT("ProgramListPanelChannelButtonHotBorder"),	Theme::BORDER_NONE,
-		COLOR_PROGRAMLISTPANEL_CHANNELBUTTONHOTBORDER,	false},
+		COLOR_PROGRAMLISTPANEL_CHANNELBUTTONHOTBORDER},
 	{TEXT("ProgramListPanelEventBorder"),		Theme::BORDER_NONE,
-		COLOR_PROGRAMLISTPANEL_EVENTBORDER,			false},
+		COLOR_PROGRAMLISTPANEL_EVENTBORDER},
 	{TEXT("ProgramListPanelCurEventBorder"),	Theme::BORDER_NONE,
-		COLOR_PROGRAMLISTPANEL_CUREVENTBORDER,		false},
+		COLOR_PROGRAMLISTPANEL_CUREVENTBORDER},
 	{TEXT("ProgramListPanelTitleBorder"),		Theme::BORDER_NONE,
-		COLOR_PROGRAMLISTPANEL_TITLEBORDER,			false},
+		COLOR_PROGRAMLISTPANEL_TITLEBORDER},
 	{TEXT("ProgramListPanelCurTitleBorder"),	Theme::BORDER_NONE,
-		COLOR_PROGRAMLISTPANEL_CURTITLEBORDER,		false},
+		COLOR_PROGRAMLISTPANEL_CURTITLEBORDER},
 	{TEXT("ChannelPanelChannelNameBorder"),		Theme::BORDER_NONE,
-		COLOR_CHANNELPANEL_CHANNELNAMEBORDER,		false},
+		COLOR_CHANNELPANEL_CHANNELNAMEBORDER},
 	{TEXT("ChannelPanelCurChannelNameBorder"),	Theme::BORDER_NONE,
-		COLOR_CHANNELPANEL_CURCHANNELNAMEBORDER,	false},
+		COLOR_CHANNELPANEL_CURCHANNELNAMEBORDER},
 	{TEXT("ChannelPanelEventNameBorder"),		Theme::BORDER_NONE,
-		COLOR_CHANNELPANEL_EVENTNAME1BORDER,		false},
+		COLOR_CHANNELPANEL_EVENTNAME1BORDER},
 	{TEXT("ChannelPanelEventName2Border"),		Theme::BORDER_NONE,
-		COLOR_CHANNELPANEL_EVENTNAME2BORDER,		false},
+		COLOR_CHANNELPANEL_EVENTNAME2BORDER},
 	{TEXT("ChannelPanelCurEventNameBorder"),	Theme::BORDER_NONE,
-		COLOR_CHANNELPANEL_CUREVENTNAME1BORDER,		false},
+		COLOR_CHANNELPANEL_CUREVENTNAME1BORDER},
 	{TEXT("ChannelPanelCurEventName2Border"),	Theme::BORDER_NONE,
-		COLOR_CHANNELPANEL_CUREVENTNAME2BORDER,		false},
+		COLOR_CHANNELPANEL_CUREVENTNAME2BORDER},
 	{TEXT("ChannelPanelFeaturedMarkBorder"),	Theme::BORDER_SOLID,
-		COLOR_CHANNELPANEL_FEATUREDMARKBORDER,		false},
+		COLOR_CHANNELPANEL_FEATUREDMARKBORDER},
 	{TEXT("ChannelPanelProgressBorder"),		Theme::BORDER_NONE,
-		COLOR_CHANNELPANEL_PROGRESSBORDER,			false},
+		COLOR_CHANNELPANEL_PROGRESSBORDER},
 	{TEXT("ChannelPanelCurProgressBorder"),		Theme::BORDER_NONE,
-		COLOR_CHANNELPANEL_CURPROGRESSBORDER,		false},
+		COLOR_CHANNELPANEL_CURPROGRESSBORDER},
 	{TEXT("ControlPanelItemBorder"),			Theme::BORDER_NONE,
-		COLOR_CONTROLPANELITEMBORDER,				false},
+		COLOR_CONTROLPANELITEMBORDER},
 	{TEXT("ControlPanelHighlightBorder"),		Theme::BORDER_NONE,
-		COLOR_CONTROLPANELHIGHLIGHTBORDER,			false},
+		COLOR_CONTROLPANELHIGHLIGHTBORDER},
 	{TEXT("ControlPanelCheckedBorder"),			Theme::BORDER_NONE,
-		COLOR_CONTROLPANELCHECKEDBORDER,			false},
+		COLOR_CONTROLPANELCHECKEDBORDER},
 	{TEXT("ProgramGuideFeaturedMarkBorder"),	Theme::BORDER_SOLID,
-		COLOR_PROGRAMGUIDE_FEATUREDMARKBORDER,		false},
+		COLOR_PROGRAMGUIDE_FEATUREDMARKBORDER},
 };
 
 const Theme::BorderType CColorScheme::m_CustomDefaultBorderList[NUM_BORDERS] = {
@@ -830,8 +830,7 @@ bool CColorScheme::Load(CSettings &Settings)
 			if (Settings.Read(m_BorderInfoList[i].pszText,szText,lengthof(szText))) {
 				bool fLoaded=true;
 				if (::lstrcmpi(szText,TEXT("none"))==0) {
-					if (!m_BorderInfoList[i].fAlways)
-						m_BorderList[i]=Theme::BORDER_NONE;
+					m_BorderList[i]=Theme::BORDER_NONE;
 				} else if (::lstrcmpi(szText,TEXT("solid"))==0)
 					m_BorderList[i]=Theme::BORDER_SOLID;
 				else if (::lstrcmpi(szText,TEXT("sunken"))==0)
@@ -1078,14 +1077,6 @@ int CColorScheme::GetColorBorder(int Type)
 			return i;
 	}
 	return -1;
-}
-
-
-bool CColorScheme::IsBorderAlways(int Border)
-{
-	if (Border<0 || Border>=NUM_BORDERS)
-		return false;
-	return m_BorderInfoList[Border].fAlways;
 }
 
 
@@ -1785,8 +1776,6 @@ INT_PTR CColorSchemeOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lP
 						Border=CColorScheme::GetColorBorder(Sel);
 						if (Border>=0) {
 							::EnableMenuItem(::GetSubMenu(hmenu,0),4,MF_BYPOSITION | MFS_ENABLED);
-							::EnableMenuItem(hmenu,IDC_COLORSCHEME_BORDER_NONE,
-											 MF_BYCOMMAND | (CColorScheme::IsBorderAlways(Border)?MFS_GRAYED:MFS_ENABLED));
 							::CheckMenuRadioItem(hmenu,
 												 IDC_COLORSCHEME_BORDER_NONE,IDC_COLORSCHEME_BORDER_RAISED,
 												 IDC_COLORSCHEME_BORDER_NONE+(int)m_BorderList[Border],

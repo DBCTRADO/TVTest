@@ -290,9 +290,21 @@ bool CSideBar::RedrawItem(int Command)
 
 bool CSideBar::SetSideBarTheme(const SideBarTheme &Theme)
 {
+	int OldBarWidth;
+	if (m_hwnd!=NULL && m_pEventHandler!=NULL)
+		OldBarWidth=GetBarWidth();
+
 	m_Theme=Theme;
-	if (m_hwnd!=NULL)
+
+	if (m_hwnd!=NULL) {
+		if (m_pEventHandler!=NULL) {
+			int NewBarWidth=GetBarWidth();
+			if (NewBarWidth!=OldBarWidth)
+				m_pEventHandler->OnBarWidthChanged(NewBarWidth);
+		}
 		Invalidate();
+	}
+
 	return true;
 }
 

@@ -96,6 +96,7 @@ private:
 
 	static HINSTANCE m_hinst;
 
+	void CalcDimensions();
 	void Draw(HDC hdc,const RECT &PaintRect) const;
 	void OnSize(int Width,int Height);
 	void GetCloseButtonRect(RECT *pRect) const;

@@ -388,7 +388,6 @@ public:
 	static TVTest::Theme::BorderType GetDefaultBorderType(int Border);
 	static int GetColorGradient(int Type);
 	static int GetColorBorder(int Type);
-	static bool IsBorderAlways(int Border);
 
 private:
 	COLORREF m_ColorList[NUM_COLORS];
@@ -412,7 +411,6 @@ private:
 		LPCTSTR pszText;
 		TVTest::Theme::BorderType DefaultType;
 		int Color;
-		bool fAlways;
 	};
 
 	DWORD m_LoadedFlags[(NUM_COLORS+31)/32];

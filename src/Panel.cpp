@@ -137,10 +137,15 @@ void CPanel::SetEventHandler(CEventHandler *pHandler)
 bool CPanel::SetPanelTheme(const PanelTheme &Theme)
 {
 	m_Theme=Theme;
+
 	if (m_hwnd!=NULL && m_fShowTitle) {
+		const int OldTitleHeight=m_TitleHeight;
 		RECT rc;
 
+		CalcDimensions();
 		GetTitleRect(&rc);
+		if (m_TitleHeight!=OldTitleHeight)
+			OnSize(rc.right,rc.bottom);
 		Invalidate(&rc);
 	}
 	return true;
@@ -179,6 +184,22 @@ bool CPanel::GetContentRect(RECT *pRect) const
 			pRect->bottom=pRect->top;
 	}
 	return true;
+}
+
+
+void CPanel::CalcDimensions()
+{
+	m_FontHeight=TVTest::Style::GetFontHeight(
+		m_hwnd,m_Font.GetHandle(),m_Style.TitleLabelExtraHeight);
+	int LabelHeight=m_FontHeight+
+		m_Style.TitleLabelMargin.Vert();
+	int ButtonHeight=
+		m_Style.TitleButtonIconSize.Height+
+		m_Style.TitleButtonPadding.Vert();
+	RECT Border;
+	TVTest::Theme::GetBorderWidths(m_Theme.TitleStyle.Back.Border,&Border);
+	m_TitleHeight=max(LabelHeight,ButtonHeight)+m_Style.TitlePadding.Vert()+
+		Border.top+Border.bottom;
 }
 
 
@@ -276,17 +297,7 @@ LRESULT CPanel::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 				m_IconFont.Create(&lf);
 			}
 
-			m_FontHeight=TVTest::Style::GetFontHeight(
-				hwnd,m_Font.GetHandle(),m_Style.TitleLabelExtraHeight);
-			int LabelHeight=m_FontHeight+
-				m_Style.TitleLabelMargin.Vert();
-			int ButtonHeight=
-				m_Style.TitleButtonIconSize.Height+
-				m_Style.TitleButtonPadding.Vert();
-			RECT Border;
-			TVTest::Theme::GetBorderWidths(m_Theme.TitleStyle.Back.Border,&Border);
-			m_TitleHeight=max(LabelHeight,ButtonHeight)+m_Style.TitlePadding.Vert()+
-				Border.top+Border.bottom;
+			CalcDimensions();
 
 			m_HotItem=ITEM_NONE;
 			m_fCloseButtonPushed=false;

@@ -38,6 +38,7 @@ public:
 		virtual void OnLabelRButtonUp(int x,int y) {}
 		virtual void OnIconLButtonDown(int x,int y) {}
 		virtual void OnIconLButtonDoubleClick(int x,int y) {}
+		virtual void OnHeightChanged(int Height) {}
 		friend class CTitleBar;
 	};
 

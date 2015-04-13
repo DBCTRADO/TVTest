@@ -4398,6 +4398,24 @@ void CMainWindow::GetPanelDockingAdjustedPos(bool fDock,RECT *pPos) const
 }
 
 
+void CMainWindow::SetFixedPaneSize(int SplitterID,int ContainerID,int Width,int Height)
+{
+	Layout::CWindowContainer *pContainer=
+		dynamic_cast<Layout::CWindowContainer*>(m_LayoutBase.GetContainerByID(ContainerID));
+
+	if (pContainer!=nullptr) {
+		pContainer->SetMinSize(Width,Height);
+
+		Layout::CSplitter *pSplitter=
+			dynamic_cast<Layout::CSplitter*>(m_LayoutBase.GetContainerByID(SplitterID));
+		if (pSplitter!=nullptr) {
+			pSplitter->SetPaneSize(ContainerID,
+				(pSplitter->GetStyle() & Layout::CSplitter::STYLE_VERT)!=0 ? Height : Width);
+		}
+	}
+}
+
+
 void CMainWindow::ShowPopupStatusBar(bool fShow)
 {
 	if (fShow) {
@@ -6632,6 +6650,11 @@ void CMainWindow::CTitleBarManager::OnIconLButtonDoubleClick(int x,int y)
 	m_pMainWindow->PostCommand(CM_CLOSE);
 }
 
+void CMainWindow::CTitleBarManager::OnHeightChanged(int Height)
+{
+	m_pMainWindow->SetFixedPaneSize(CONTAINER_ID_TITLEBARSPLITTER,CONTAINER_ID_TITLEBAR,0,Height);
+}
+
 void CMainWindow::CTitleBarManager::Layout(RECT *pArea,RECT *pBarRect)
 {
 	pBarRect->left=pArea->left;
@@ -6868,6 +6891,20 @@ bool CMainWindow::CSideBarManager::DrawIcon(const CSideBar::DrawIconInfo *pInfo)
 	return false;
 }
 
+void CMainWindow::CSideBarManager::OnBarWidthChanged(int BarWidth)
+{
+	int Width,Height;
+
+	if (m_pMainWindow->m_App.SideBar.GetVertical()) {
+		Width=BarWidth;
+		Height=0;
+	} else {
+		Width=0;
+		Height=BarWidth;
+	}
+	m_pMainWindow->SetFixedPaneSize(CONTAINER_ID_SIDEBARSPLITTER,CONTAINER_ID_SIDEBAR,Width,Height);
+}
+
 
 CMainWindow::CStatusViewEventHandler::CStatusViewEventHandler(CMainWindow *pMainWindow)
 	: m_pMainWindow(pMainWindow)
@@ -6881,15 +6918,7 @@ void CMainWindow::CStatusViewEventHandler::OnMouseLeave()
 
 void CMainWindow::CStatusViewEventHandler::OnHeightChanged(int Height)
 {
-	Layout::CWindowContainer *pContainer=
-		dynamic_cast<Layout::CWindowContainer*>(m_pMainWindow->GetLayoutBase().GetContainerByID(CONTAINER_ID_STATUS));
-	Layout::CSplitter *pSplitter=
-		dynamic_cast<Layout::CSplitter*>(m_pMainWindow->GetLayoutBase().GetContainerByID(CONTAINER_ID_STATUSSPLITTER));
-
-	if (pContainer!=nullptr)
-		pContainer->SetMinSize(0,Height);
-	if (pSplitter!=nullptr)
-		pSplitter->SetPaneSize(CONTAINER_ID_STATUS,Height);
+	m_pMainWindow->SetFixedPaneSize(CONTAINER_ID_STATUSSPLITTER,CONTAINER_ID_STATUS,0,Height);
 }
 
 

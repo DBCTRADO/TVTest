@@ -216,6 +216,7 @@ private:
 		void OnLabelRButtonUp(int x,int y) override;
 		void OnIconLButtonDown(int x,int y) override;
 		void OnIconLButtonDoubleClick(int x,int y) override;
+		void OnHeightChanged(int Height) override;
 	// CTitleBarManager
 		void ShowSystemMenu(int x,int y);
 
@@ -243,6 +244,7 @@ private:
 		void OnMouseLeave() override;
 		bool GetTooltipText(int Command,LPTSTR pszText,int MaxText) override;
 		bool DrawIcon(const CSideBar::DrawIconInfo *pInfo) override;
+		void OnBarWidthChanged(int BarWidth) override;
 	};
 
 	class CShowCursorManager
@@ -599,6 +601,7 @@ private:
 	void UpdateLayoutStructure();
 	void AdjustWindowSizeOnDockPanel(bool fDock);
 	void GetPanelDockingAdjustedPos(bool fDock,RECT *pPos) const;
+	void SetFixedPaneSize(int SplitterID,int ContainerID,int Width,int Height);
 	void ShowPopupStatusBar(bool fShow);
 	void ShowPopupSideBar(bool fShow);
 	void ShowCursor(bool fShow);

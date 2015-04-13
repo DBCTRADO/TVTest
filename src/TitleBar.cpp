@@ -183,8 +183,20 @@ bool CTitleBar::SetEventHandler(CEventHandler *pHandler)
 bool CTitleBar::SetTitleBarTheme(const TitleBarTheme &Theme)
 {
 	m_Theme=Theme;
-	if (m_hwnd!=NULL)
+
+	if (m_hwnd!=NULL) {
+		RECT rc;
+		GetClientRect(&rc);
+		int Height=CalcHeight();
+		if (Height!=rc.bottom) {
+			rc.bottom=Height;
+			SetPosition(&rc);
+			if (m_pEventHandler!=NULL)
+				m_pEventHandler->OnHeightChanged(Height);
+		}
 		Invalidate();
+	}
+
 	return true;
 }
 

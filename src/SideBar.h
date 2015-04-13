@@ -65,6 +65,7 @@ public:
 		virtual void OnMouseLeave() {}
 		virtual bool GetTooltipText(int Command,LPTSTR pszText,int MaxText) { return false; }
 		virtual bool DrawIcon(const DrawIconInfo *pInfo) { return false; }
+		virtual void OnBarWidthChanged(int BarWidth) {}
 		friend class CSideBar;
 	};
 
@@ -103,6 +104,7 @@ public:
 	bool GetSideBarTheme(SideBarTheme *pTheme) const;
 	void ShowToolTips(bool fShow);
 	void SetVertical(bool fVertical);
+	bool GetVertical() const { return m_fVertical; }
 	void SetEventHandler(CEventHandler *pHandler);
 	const CCommandList *GetCommandList() const { return m_pCommandList; }
 	TVTest::Style::Size GetIconDrawSize() const;
