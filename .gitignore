@@ -12,10 +12,13 @@
 
 # Build results
 [Dd]ebug/
+[Dd]ebug_XP/
 [Dd]ebugPublic/
 [Rr]elease/
 [Rr]elease_[Ss]tatic/
 [Rr]elease_MD/
+[Rr]elease_XP/
+[Rr]elease_XP_MD/
 [Rr]eleases/
 x64/
 x86/
