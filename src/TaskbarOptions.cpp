@@ -24,6 +24,7 @@ CTaskbarOptions::CTaskbarOptions()
 	, m_fShowChannelIcon(true)
 	, m_IconDirectory(TEXT(".\\JumpListIcons"))
 	, m_fJumpListKeepSingleTask(false)
+	, m_fUseUniqueAppID(false)
 	, m_AppID(TEXT("DBCTRADO.") APP_NAME)
 {
 	m_TaskList.resize(lengthof(m_DefaultTaskList));
@@ -46,6 +47,7 @@ bool CTaskbarOptions::ReadSettings(CSettings &Settings)
 	Settings.Read(TEXT("ShowChannelIcon"),&m_fShowChannelIcon);
 	Settings.Read(TEXT("IconDirectory"),&m_IconDirectory);
 	Settings.Read(TEXT("JumpListKeepSingleTask"),&m_fJumpListKeepSingleTask);
+	Settings.Read(TEXT("UseUniqueAppID"),&m_fUseUniqueAppID);
 	Settings.Read(TEXT("AppID"),&m_AppID);
 
 	int TaskCount;
@@ -95,6 +97,7 @@ bool CTaskbarOptions::WriteSettings(CSettings &Settings)
 
 	Settings.Write(TEXT("EnableJumpList"),m_fEnableJumpList);
 	Settings.Write(TEXT("JumpListKeepSingleTask"),m_fJumpListKeepSingleTask);
+	Settings.Write(TEXT("UseUniqueAppID"),m_fUseUniqueAppID);
 
 	return true;
 }

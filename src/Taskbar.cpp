@@ -34,6 +34,12 @@ CTaskbarManager::~CTaskbarManager()
 }
 
 
+void CTaskbarManager::SetAppID(LPCTSTR pszID)
+{
+	TVTest::StringUtility::Assign(m_AppID,pszID);
+}
+
+
 bool CTaskbarManager::Initialize(HWND hwnd)
 {
 	if (m_TaskbarButtonCreatedMessage==0) {
@@ -55,7 +61,6 @@ bool CTaskbarManager::Initialize(HWND hwnd)
 			CAppMain &App=GetAppClass();
 			HRESULT hr=S_OK;
 
-			m_AppID=App.TaskbarOptions.GetAppID();
 			if (!m_AppID.empty()) {
 				auto pSetCurrentProcessExplicitAppUserModelID=
 					GET_MODULE_FUNCTION(TEXT("shell32.dll"),SetCurrentProcessExplicitAppUserModelID);

@@ -30,6 +30,8 @@ public:
 	const TVTest::String &GetIconDirectory() const { return m_IconDirectory; }
 	void SetJumpListKeepSingleTask(bool fSingleTask) { m_fJumpListKeepSingleTask=fSingleTask; }
 	bool GetJumpListKeepSingleTask() const { return m_fJumpListKeepSingleTask; }
+	void SetUseUniqueAppID(bool fUnique) { m_fUseUniqueAppID=fUnique; }
+	bool GetUseUniqueAppID() const { return m_fUseUniqueAppID; }
 	const TVTest::String &GetAppID() const { return m_AppID; }
 
 private:
@@ -41,6 +43,7 @@ private:
 	bool m_fShowChannelIcon;
 	TVTest::String m_IconDirectory;
 	bool m_fJumpListKeepSingleTask;
+	bool m_fUseUniqueAppID;
 	TVTest::String m_AppID;
 
 	static const int m_DefaultTaskList[];

@@ -1827,6 +1827,8 @@ bool CMainWindow::OnCreate(const CREATESTRUCT *pcs)
 	}
 	m_DefaultAspectRatioMenuItemCount=::GetMenuItemCount(hmenuAspectRatio);
 
+	if (!m_App.TaskbarOptions.GetUseUniqueAppID())
+		m_App.TaskbarManager.SetAppID(m_App.TaskbarOptions.GetAppID().c_str());
 	m_App.TaskbarManager.Initialize(m_hwnd);
 
 	m_App.NotifyBalloonTip.Initialize(m_hwnd);

@@ -11,6 +11,7 @@ class CTaskbarManager
 public:
 	CTaskbarManager();
 	~CTaskbarManager();
+	void SetAppID(LPCTSTR pszID);
 	bool Initialize(HWND hwnd);
 	void Finalize();
 	bool HandleMessage(UINT uMsg,WPARAM wParam,LPARAM lParam);
