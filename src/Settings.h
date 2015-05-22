@@ -60,6 +60,7 @@ public:
 	bool LoadSettings(LPCTSTR pszFileName);
 	bool SaveSettings(LPCTSTR pszFileName);
 	bool IsChanged() const { return m_fChanged; }
+	void SetChanged() { m_fChanged=true; }
 	void ClearChanged() { m_fChanged=false; }
 
 protected:

@@ -78,13 +78,11 @@ bool CTaskbarOptions::WriteSettings(CSettings &Settings)
 #if 0	// まだ設定インターフェースが無い
 	Settings.Clear();
 
-	Settings.Write(TEXT("EnableJumpList"),m_fEnableJumpList);
 	Settings.Write(TEXT("ShowTasks"),m_fShowTasks);
 	Settings.Write(TEXT("ShowRecentChannels"),m_fShowRecentChannels);
 	Settings.Write(TEXT("MaxRecentChannels"),m_MaxRecentChannels);
 	Settings.Write(TEXT("ShowChannelIcon"),m_fShowChannelIcon);
 	Settings.Write(TEXT("IconDirectory"),m_IconDirectory);
-	Settings.Write(TEXT("JumpListKeepSingleTask"),m_fJumpListKeepSingleTask);
 
 	Settings.Write(TEXT("TaskCount"),(int)m_TaskList.size());
 	const CCommandList &CommandList=GetAppClass().CommandList;
@@ -95,6 +93,9 @@ bool CTaskbarOptions::WriteSettings(CSettings &Settings)
 	}
 #endif
 
+	Settings.Write(TEXT("EnableJumpList"),m_fEnableJumpList);
+	Settings.Write(TEXT("JumpListKeepSingleTask"),m_fJumpListKeepSingleTask);
+
 	return true;
 }
 
@@ -104,4 +105,13 @@ bool CTaskbarOptions::IsJumpListEnabled() const
 	return m_fEnableJumpList
 		&& ((m_fShowTasks && !m_TaskList.empty()) ||
 			(m_fShowRecentChannels && m_MaxRecentChannels>0));
+}
+
+
+void CTaskbarOptions::SetEnableJumpList(bool fEnable)
+{
+	if (m_fEnableJumpList!=fEnable) {
+		m_fEnableJumpList=fEnable;
+		GetAppClass().TaskbarManager.ReinitializeJumpList();
+	}
 }

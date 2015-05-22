@@ -22,6 +22,7 @@ CTaskbarManager::CTaskbarManager()
 	: m_hwnd(NULL)
 	, m_TaskbarButtonCreatedMessage(0)
 	, m_pTaskbarList(NULL)
+	, m_fAppIDInvalid(false)
 	, m_fJumpListInitialized(false)
 {
 }
@@ -51,21 +52,31 @@ bool CTaskbarManager::Initialize(HWND hwnd)
 
 			m_hwnd=hwnd;
 
-			m_AppID=GetAppClass().TaskbarOptions.GetAppID();
+			CAppMain &App=GetAppClass();
+			HRESULT hr=S_OK;
+
+			m_AppID=App.TaskbarOptions.GetAppID();
 			if (!m_AppID.empty()) {
 				auto pSetCurrentProcessExplicitAppUserModelID=
 					GET_MODULE_FUNCTION(TEXT("shell32.dll"),SetCurrentProcessExplicitAppUserModelID);
 				if (pSetCurrentProcessExplicitAppUserModelID!=NULL) {
-					HRESULT hr=pSetCurrentProcessExplicitAppUserModelID(m_AppID.c_str());
-					if (hr==S_OK) {
-						if (GetAppClass().TaskbarOptions.IsJumpListEnabled()) {
-							hr=InitializeJumpList();
-							if (SUCCEEDED(hr))
-								m_fJumpListInitialized=true;
-						} else {
-							ClearJumpList();
-						}
+					hr=pSetCurrentProcessExplicitAppUserModelID(m_AppID.c_str());
+					if (FAILED(hr)) {
+						m_fAppIDInvalid=true;
+						App.AddLog(
+							CLogItem::TYPE_ERROR,
+							TEXT("AppID \"%s\" ‚ðÝ’è‚Å‚«‚Ü‚¹‚ñB(%08x)"),
+							m_AppID.c_str(),hr);
 					}
+				}
+			}
+			if (SUCCEEDED(hr)) {
+				if (App.TaskbarOptions.IsJumpListEnabled()) {
+					hr=InitializeJumpList();
+					if (SUCCEEDED(hr))
+						m_fJumpListInitialized=true;
+				} else {
+					ClearJumpList();
 				}
 			}
 		}
@@ -166,6 +177,23 @@ bool CTaskbarManager::EndProgress()
 }
 
 
+bool CTaskbarManager::ReinitializeJumpList()
+{
+	if (m_fAppIDInvalid)
+		return false;
+	if (GetAppClass().TaskbarOptions.IsJumpListEnabled()) {
+		HRESULT hr=InitializeJumpList();
+		if (FAILED(hr))
+			return false;
+		m_fJumpListInitialized=true;
+	} else {
+		ClearJumpList();
+	}
+
+	return true;
+}
+
+
 bool CTaskbarManager::UpdateJumpList()
 {
 	if (!m_fJumpListInitialized)
@@ -176,9 +204,6 @@ bool CTaskbarManager::UpdateJumpList()
 
 bool CTaskbarManager::ClearJumpList()
 {
-	if (m_AppID.empty())
-		return false;
-
 	HRESULT hr;
 	ICustomDestinationList *pcdl;
 
@@ -187,7 +212,7 @@ bool CTaskbarManager::ClearJumpList()
 	if (FAILED(hr))
 		return false;
 
-	hr=pcdl->DeleteList(m_AppID.c_str());
+	hr=pcdl->DeleteList(m_AppID.empty()?nullptr:m_AppID.c_str());
 	pcdl->Release();
 
 	return SUCCEEDED(hr);

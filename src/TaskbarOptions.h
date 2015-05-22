@@ -20,12 +20,15 @@ public:
 
 // CTaskbarOptions
 	bool IsJumpListEnabled() const;
+	void SetEnableJumpList(bool fEnable);
+	bool GetEnableJumpList() const { return m_fEnableJumpList; }
 	bool GetShowTasks() const { return m_fShowTasks; }
 	const TaskList &GetTaskList() const { return m_TaskList; }
 	bool GetShowRecentChannels() const { return m_fShowRecentChannels; }
 	int GetMaxRecentChannels() const { return m_MaxRecentChannels; }
 	bool GetShowChannelIcon() const { return m_fShowChannelIcon; }
 	const TVTest::String &GetIconDirectory() const { return m_IconDirectory; }
+	void SetJumpListKeepSingleTask(bool fSingleTask) { m_fJumpListKeepSingleTask=fSingleTask; }
 	bool GetJumpListKeepSingleTask() const { return m_fJumpListKeepSingleTask; }
 	const TVTest::String &GetAppID() const { return m_AppID; }
 

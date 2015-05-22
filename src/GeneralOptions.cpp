@@ -178,6 +178,20 @@ INT_PTR CGeneralOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam
 			DlgCheckBox_Check(hDlg,IDC_OPTIONS_KEEPSINGLETASK,m_fKeepSingleTask);
 			DlgCheckBox_Check(hDlg,IDC_OPTIONS_STANDALONEPROGRAMGUIDE,m_fStandaloneProgramGuide);
 			DlgCheckBox_Check(hDlg,IDC_OPTIONS_ENABLE1SEGFALLBACK,m_fEnable1SegFallback);
+
+			if (Util::OS::IsWindows7OrLater()) {
+				DlgCheckBox_Check(hDlg,IDC_OPTIONS_ENABLEJUMPLIST,
+								  App.TaskbarOptions.GetEnableJumpList());
+				DlgCheckBox_Check(hDlg,IDC_OPTIONS_JUMPLISTKEEPSINGLETASK,
+								  App.TaskbarOptions.GetJumpListKeepSingleTask());
+				EnableDlgItem(hDlg,IDC_OPTIONS_JUMPLISTKEEPSINGLETASK,
+							  App.TaskbarOptions.GetEnableJumpList());
+			} else {
+				EnableDlgItems(hDlg,
+							   IDC_OPTIONS_ENABLEJUMPLIST,
+							   IDC_OPTIONS_JUMPLISTKEEPSINGLETASK,
+							   false);
+			}
 		}
 		return TRUE;
 
@@ -238,6 +252,12 @@ INT_PTR CGeneralOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam
 					::SetDlgItemText(hDlg,IDC_OPTIONS_DEFAULTDRIVER,szFileName);
 			}
 			return TRUE;
+
+		case IDC_OPTIONS_ENABLEJUMPLIST:
+			EnableDlgItemSyncCheckBox(hDlg,
+									  IDC_OPTIONS_JUMPLISTKEEPSINGLETASK,
+									  IDC_OPTIONS_ENABLEJUMPLIST);
+			return TRUE;
 		}
 		return TRUE;
 
@@ -277,6 +297,16 @@ INT_PTR CGeneralOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam
 				if (fEnable1SegFallback!=m_fEnable1SegFallback) {
 					m_fEnable1SegFallback=fEnable1SegFallback;
 					SetUpdateFlag(UPDATE_1SEGFALLBACK);
+				}
+
+				if (Util::OS::IsWindows7OrLater()) {
+					CTaskbarOptions &TaskbarOptions=GetAppClass().TaskbarOptions;
+
+					TaskbarOptions.SetEnableJumpList(
+						DlgCheckBox_IsChecked(hDlg,IDC_OPTIONS_ENABLEJUMPLIST));
+					TaskbarOptions.SetJumpListKeepSingleTask(
+						DlgCheckBox_IsChecked(hDlg,IDC_OPTIONS_JUMPLISTKEEPSINGLETASK));
+					TaskbarOptions.SetChanged();
 				}
 
 				m_fChanged=true;
