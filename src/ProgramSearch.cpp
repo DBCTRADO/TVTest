@@ -2122,7 +2122,8 @@ INT_PTR CProgramSearchDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM l
 				::SetWindowText(hwndInfo,TEXT(""));
 				if (Sel>=0) {
 					LVITEM lvi;
-					TCHAR szText[2048];
+					TCHAR szText[256];
+					TVTest::String Text;
 
 					lvi.mask=LVIF_PARAM;
 					lvi.iItem=Sel;
@@ -2132,8 +2133,8 @@ INT_PTR CProgramSearchDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM l
 					const CSearchEventInfo *pEventInfo=reinterpret_cast<const CSearchEventInfo*>(lvi.lParam);
 					FormatEventTimeText(pEventInfo,szText,lengthof(szText));
 					CRichEditUtil::AppendText(hwndInfo,szText,&m_InfoTextFormat);
-					FormatEventInfoText(pEventInfo,szText,lengthof(szText));
-					CRichEditUtil::AppendText(hwndInfo,szText,&m_InfoTextFormat);
+					FormatEventInfoText(pEventInfo,&Text);
+					CRichEditUtil::AppendText(hwndInfo,Text.c_str(),&m_InfoTextFormat);
 					HighlightKeyword();
 					CRichEditUtil::DetectURL(hwndInfo,&m_InfoTextFormat,1);
 					POINT pt={0,0};
@@ -2327,21 +2328,28 @@ int CProgramSearchDialog::FormatEventTimeText(const CEventInfoData *pEventInfo,L
 }
 
 
-int CProgramSearchDialog::FormatEventInfoText(const CEventInfoData *pEventInfo,LPTSTR pszText,int MaxLength) const
+void CProgramSearchDialog::FormatEventInfoText(const CEventInfoData *pEventInfo,TVTest::String *pText) const
 {
-	if (pEventInfo==NULL) {
-		pszText[0]='\0';
-		return 0;
+	pText->clear();
+
+	if (pEventInfo==NULL)
+		return;
+
+	*pText=pEventInfo->m_EventName;
+	*pText+=TEXT("\r\n\r\n");
+	if (!pEventInfo->m_EventText.empty()) {
+		*pText+=pEventInfo->m_EventText;
+		*pText+=TEXT("\r\n");
+	}
+	if (!pEventInfo->m_EventExtendedText.empty()) {
+		if (!pEventInfo->m_EventText.empty())
+			*pText+=TEXT("\r\n");
+		*pText+=pEventInfo->m_EventExtendedText;
 	}
 
-	return StdUtil::snprintf(
-		pszText,MaxLength,
-		TEXT("%s\r\n\r\n%s%s%s%s"),
-		pEventInfo->m_EventName.c_str(),
-		pEventInfo->m_EventText.c_str(),
-		!pEventInfo->m_EventText.empty()?TEXT("\r\n\r\n"):TEXT(""),
-		pEventInfo->m_EventExtendedText.c_str(),
-		!pEventInfo->m_EventExtendedText.empty()?TEXT("\r\n\r\n"):TEXT(""));
+	TVTest::String::size_type Pos=pText->find_last_not_of(TEXT("\r\n"));
+	if (Pos!=TVTest::String::npos && pText->length()>Pos+2)
+		pText->resize(Pos+2);
 }
 
 

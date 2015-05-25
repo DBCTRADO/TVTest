@@ -358,7 +358,7 @@ private:
 	void ClearSearchResult();
 	void SortSearchResult();
 	int FormatEventTimeText(const CEventInfoData *pEventInfo,LPTSTR pszText,int MaxLength) const;
-	int FormatEventInfoText(const CEventInfoData *pEventInfo,LPTSTR pszText,int MaxLength) const;
+	void FormatEventInfoText(const CEventInfoData *pEventInfo,TVTest::String *pText) const;
 	void HighlightKeyword();
 	bool SearchNextKeyword(LPCTSTR *ppszText,LPCTSTR pKeyword,int KeywordLength,int *pLength) const;
 	bool IsSplitterPos(int x,int y) const;
