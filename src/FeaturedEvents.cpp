@@ -473,6 +473,7 @@ INT_PTR CFeaturedEventsSearchDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,L
 		m_SearchSettingsDialog.SetSettings(m_SearchSettings);
 		m_SearchSettingsDialog.Create(hDlg);
 		m_SearchSettingsDialog.ShowButton(IDC_EVENTSEARCH_HIGHLIGHT,false);
+		m_SearchSettingsDialog.ShowButton(IDC_EVENTSEARCH_SEARCHTARGET,false);
 		m_SearchSettingsDialog.ShowButton(IDC_EVENTSEARCH_SEARCH,false);
 		{
 			RECT rc;

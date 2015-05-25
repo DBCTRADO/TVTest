@@ -289,7 +289,7 @@ bool CDriverManager::GetAllServiceList(CChannelList *pList) const
 							pChannelInfo->GetNetworkID(),
 							pChannelInfo->GetTransportStreamID(),
 							pChannelInfo->GetServiceID())<0) {
-					pList->AddChannel(*pChannelInfo);
+					pList->AddChannel(new CTunerChannelInfo(*pChannelInfo,(*it)->GetFileName()));
 				}
 			}
 		}

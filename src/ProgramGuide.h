@@ -323,6 +323,8 @@ public:
 	bool UpdateProgramGuide(bool fUpdateList=false);
 	bool SetChannelProviderManager(CProgramGuideChannelProviderManager *pManager);
 	bool EnumChannelProvider(int Index,LPTSTR pszName,int MaxName) const;
+	bool SetChannelProvider(int Provider,int Group);
+	bool SetChannelProvider(int Provider,LPCTSTR pszGroupID);
 	bool SetCurrentChannelProvider(int Provider,int Group);
 	bool SetCurrentChannelProvider(int Provider,LPCTSTR pszGroupID);
 	int GetCurrentChannelProvider() const { return m_CurrentChannelProvider; }
@@ -546,14 +548,18 @@ private:
 		bool OnSearch() override;
 		void OnEndSearch() override;
 		bool OnClose() override;
-		bool OnLDoubleClick(const CEventInfoData *pEventInfo,LPARAM Param) override;
-		bool OnRButtonClick(const CEventInfoData *pEventInfo,LPARAM Param) override;
+		bool OnLDoubleClick(const CSearchEventInfo *pEventInfo) override;
+		bool OnRButtonClick(const CSearchEventInfo *pEventInfo) override;
 		void OnHighlightChange(bool fHighlight) override;
 	private:
-		void DoCommand(int Command,const CEventInfoData *pEventInfo);
+		void DoCommand(int Command,const CSearchEventInfo *pEventInfo);
 		CProgramGuide *m_pProgramGuide;
 	};
 	CProgramSearchEventHandler m_ProgramSearchEventHandler;
+	enum {
+		SEARCH_TARGET_CURRENT,
+		SEARCH_TARGET_ALL
+	};
 
 	TVTest::String m_Message;
 

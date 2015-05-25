@@ -1152,6 +1152,12 @@ CProgramGuide::CProgramGuide(CEventSearchOptions &EventSearchOptions)
 	m_CurEventItem.fSelected=false;
 
 	m_EventInfoPopup.SetEventHandler(&m_EventInfoPopupHandler);
+
+	static const LPCTSTR SearchTargetList[] = {
+		TEXT("この番組表から"),
+		TEXT("全ての番組から"),
+	};
+	m_ProgramSearch.SetSearchTargetList(SearchTargetList,lengthof(SearchTargetList));
 }
 
 
@@ -2559,6 +2565,26 @@ bool CProgramGuide::EnumChannelProvider(int Index,LPTSTR pszName,int MaxName) co
 
 	pChannelProvider->GetName(pszName,MaxName);
 
+	return true;
+}
+
+
+bool CProgramGuide::SetChannelProvider(int Provider,int Group)
+{
+	StoreTimePos();
+	if (!SetCurrentChannelProvider(Provider,Group))
+		return false;
+	UpdateServiceList();
+	return true;
+}
+
+
+bool CProgramGuide::SetChannelProvider(int Provider,LPCTSTR pszGroupID)
+{
+	StoreTimePos();
+	if (!SetCurrentChannelProvider(Provider,pszGroupID))
+		return false;
+	UpdateServiceList();
 	return true;
 }
 
@@ -4239,13 +4265,7 @@ void CProgramGuide::OnCommand(int id)
 				&& id<=CM_PROGRAMGUIDE_CHANNELPROVIDER_LAST) {
 			if (m_fEpgUpdating)
 				OnCommand(CM_PROGRAMGUIDE_ENDUPDATE);
-			if (m_pChannelProviderManager!=NULL) {
-				const int Provider=id-CM_PROGRAMGUIDE_CHANNELPROVIDER_FIRST;
-
-				StoreTimePos();
-				if (SetCurrentChannelProvider(Provider,0))
-					UpdateServiceList();
-			}
+			SetChannelProvider(id-CM_PROGRAMGUIDE_CHANNELPROVIDER_FIRST,0);
 			return;
 		}
 
@@ -4293,9 +4313,7 @@ void CProgramGuide::OnCommand(int id)
 
 				for (int i=0;EnumChannelProvider(i,szName,lengthof(szName));i++) {
 					if (::lstrcmpi(szName,pInfo->Name.c_str())==0) {
-						StoreTimePos();
-						if (SetCurrentChannelProvider(i,pInfo->GroupID.c_str()))
-							UpdateServiceList();
+						SetChannelProvider(i,pInfo->GroupID.c_str());
 						return;
 					}
 				}
@@ -4683,9 +4701,58 @@ bool CProgramGuide::CProgramSearchEventHandler::OnSearch()
 
 		for (;j<pServiceInfo->NumEvents();j++) {
 			pEventInfo=pServiceInfo->GetEvent(j);
-			if (!pEventInfo->m_bCommonEvent
-					&& Match(pEventInfo))
-				AddSearchResult(pEventInfo,pServiceInfo->GetServiceName());
+			if (!pEventInfo->m_bCommonEvent && Match(pEventInfo)) {
+				AddSearchResult(
+					new CSearchEventInfo(
+						*pEventInfo,
+						CTunerChannelInfo(pServiceInfo->GetChannelInfo(),
+										  pServiceInfo->GetBonDriverFileName())));
+			}
+		}
+	}
+
+	if (m_pSearchDialog->GetSearchTarget()==SEARCH_TARGET_ALL) {
+		// 全ての番組から検索
+		CAppMain &App=GetAppClass();
+		CChannelList ServiceList;
+
+		App.DriverManager.GetAllServiceList(&ServiceList);
+
+		for (int i=0;i<ServiceList.NumChannels();i++) {
+			const CTunerChannelInfo *pChInfo=
+				static_cast<const CTunerChannelInfo*>(ServiceList.GetChannelInfo(i));
+
+			if (m_pProgramGuide->m_ServiceList.GetItemByIDs(
+					pChInfo->GetTransportStreamID(),pChInfo->GetServiceID())==NULL) {
+				m_pProgramGuide->m_pProgramList->UpdateService(
+					pChInfo->GetNetworkID(),pChInfo->GetTransportStreamID(),pChInfo->GetServiceID());
+
+				const CEpgServiceInfo *pServiceInfo=
+					m_pProgramGuide->m_pProgramList->GetServiceInfo(
+						pChInfo->GetNetworkID(),pChInfo->GetTransportStreamID(),pChInfo->GetServiceID());
+				if (pServiceInfo!=NULL && !pServiceInfo->m_EventList.EventTimeMap.empty()) {
+					const CEventInfoList &EventList=pServiceInfo->m_EventList;
+					CEventManager::TimeEventInfo Key(stFirst);
+					auto itrTime=EventList.EventTimeMap.upper_bound(Key);
+
+					if (itrTime!=EventList.EventTimeMap.begin()) {
+						auto itrPrev=itrTime;
+						--itrPrev;
+						if (itrPrev->StartTime+itrPrev->Duration>Key.StartTime)
+							itrTime=itrPrev;
+					}
+
+					for (;itrTime!=EventList.EventTimeMap.end();++itrTime) {
+						auto itrEvent=EventList.EventDataMap.find(itrTime->EventID);
+						if (itrEvent!=EventList.EventDataMap.end()) {
+							const CEventInfoData &EventInfo=itrEvent->second;
+							if (!EventInfo.m_bCommonEvent && Match(&EventInfo)) {
+								AddSearchResult(new CSearchEventInfo(EventInfo,*pChInfo));
+							}
+						}
+					}
+				}
+			}
 		}
 	}
 
@@ -4709,7 +4776,7 @@ bool CProgramGuide::CProgramSearchEventHandler::OnClose()
 
 
 bool CProgramGuide::CProgramSearchEventHandler::OnLDoubleClick(
-	const CEventInfoData *pEventInfo,LPARAM Param)
+	const CSearchEventInfo *pEventInfo)
 {
 	// 検索結果の一覧のダブルクリック
 	// TODO: 動作をカスタマイズできるようにする
@@ -4719,7 +4786,7 @@ bool CProgramGuide::CProgramSearchEventHandler::OnLDoubleClick(
 
 
 bool CProgramGuide::CProgramSearchEventHandler::OnRButtonClick(
-	const CEventInfoData *pEventInfo,LPARAM Param)
+	const CSearchEventInfo *pEventInfo)
 {
 	// 検索結果の一覧の右クリックメニューを表示
 	HMENU hmenu=::LoadMenu(GetAppClass().GetResourceInstance(),MAKEINTRESOURCE(IDM_PROGRAMSEARCH));
@@ -4754,26 +4821,88 @@ void CProgramGuide::CProgramSearchEventHandler::OnHighlightChange(bool fHighligh
 }
 
 
+static int FindChannelFromChannelProvider(
+	const CProgramGuideChannelProvider *pChannelProvider,
+	const CChannelInfo &ChannelInfo)
+{
+	const size_t GroupCount=pChannelProvider->GetGroupCount();
+
+	for (size_t i=0;i<GroupCount;i++) {
+		const size_t ChannelCount=pChannelProvider->GetChannelCount(i);
+
+		for (size_t j=0;j<ChannelCount;j++) {
+			const CChannelInfo *pChInfo=pChannelProvider->GetChannelInfo(i,j);
+
+			if (pChInfo->GetNetworkID()==ChannelInfo.GetNetworkID()
+					&& pChInfo->GetTransportStreamID()==ChannelInfo.GetTransportStreamID()
+					&& pChInfo->GetServiceID()==ChannelInfo.GetServiceID()) {
+				return (int)i;
+			}
+		}
+	}
+
+	return -1;
+}
+
 void CProgramGuide::CProgramSearchEventHandler::DoCommand(
-	int Command,const CEventInfoData *pEventInfo)
+	int Command,const CSearchEventInfo *pEventInfo)
 {
 	ProgramGuide::CServiceInfo *pServiceInfo=
 		m_pProgramGuide->m_ServiceList.GetItemByIDs(pEventInfo->m_TransportStreamID,pEventInfo->m_ServiceID);
 
 	if (Command==CM_PROGRAMGUIDE_JUMPEVENT) {
-		m_pProgramGuide->JumpEvent(*pEventInfo);
+		if (pServiceInfo!=NULL) {
+			m_pProgramGuide->JumpEvent(*pEventInfo);
+		} else if (m_pProgramGuide->m_pChannelProviderManager!=NULL) {
+			if (m_pProgramGuide->m_pChannelProvider!=NULL) {
+				const int Group=FindChannelFromChannelProvider(
+					m_pProgramGuide->m_pChannelProvider,pEventInfo->GetChannelInfo());
+				if (Group>=0) {
+					m_pProgramGuide->SetChannelProvider(
+						m_pProgramGuide->GetCurrentChannelProvider(),Group);
+					m_pProgramGuide->JumpEvent(*pEventInfo);
+					return;
+				}
+			}
+
+			const size_t ProviderCount=m_pProgramGuide->m_pChannelProviderManager->GetChannelProviderCount();
+			for (size_t i=0;i<ProviderCount;i++) {
+				if ((int)i!=m_pProgramGuide->GetCurrentChannelProvider()) {
+					CProgramGuideChannelProvider *pChannelProvider=
+						m_pProgramGuide->m_pChannelProviderManager->GetChannelProvider(i);
+					pChannelProvider->Update();
+					const int Group=FindChannelFromChannelProvider(
+						pChannelProvider,pEventInfo->GetChannelInfo());
+					if (Group>=0) {
+						m_pProgramGuide->SetChannelProvider((int)i,Group);
+						m_pProgramGuide->JumpEvent(*pEventInfo);
+						return;
+					}
+				}
+			}
+		}
 	} else if (Command==CM_PROGRAMGUIDE_IEPGASSOCIATE) {
-		if (pServiceInfo!=NULL)
+		if (pServiceInfo!=NULL) {
 			m_pProgramGuide->ExecuteiEpgAssociate(pServiceInfo,pEventInfo);
+		} else {
+			ProgramGuide::CServiceInfo ServiceInfo(pEventInfo->GetChannelInfo(),
+												   pEventInfo->GetChannelInfo().GetTunerName());
+			m_pProgramGuide->ExecuteiEpgAssociate(&ServiceInfo,pEventInfo);
+		}
 	} else if (Command>=CM_PROGRAMGUIDE_CUSTOM_FIRST
 			&& Command<=CM_PROGRAMGUIDE_CUSTOM_LAST) {
 		if (m_pProgramGuide->m_pProgramCustomizer!=NULL)
 			m_pProgramGuide->m_pProgramCustomizer->ProcessMenu(*pEventInfo,Command);
 	} else if (Command>=CM_PROGRAMGUIDETOOL_FIRST
 			&& Command<=CM_PROGRAMGUIDETOOL_LAST) {
-		if (pServiceInfo!=NULL)
-			m_pProgramGuide->ExecuteTool(Command-CM_PROGRAMGUIDETOOL_FIRST,
-										 pServiceInfo,pEventInfo);
+		const int Tool=Command-CM_PROGRAMGUIDETOOL_FIRST;
+		if (pServiceInfo!=NULL) {
+			m_pProgramGuide->ExecuteTool(Tool,pServiceInfo,pEventInfo);
+		} else {
+			ProgramGuide::CServiceInfo ServiceInfo(pEventInfo->GetChannelInfo(),
+												   pEventInfo->GetChannelInfo().GetTunerName());
+			m_pProgramGuide->ExecuteTool(Tool,&ServiceInfo,pEventInfo);
+		}
 	}
 }
 

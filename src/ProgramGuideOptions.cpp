@@ -172,6 +172,9 @@ bool CProgramGuideOptions::LoadSettings(CSettings &Settings)
 		if (Settings.Read(TEXT("SearchResultListHeight"),&Value))
 			pProgramSearch->SetResultListHeight(Value);
 
+		if (Settings.Read(TEXT("SearchTarget"),&Value))
+			pProgramSearch->SetSearchTarget(Value);
+
 		int Left,Top;
 		pProgramSearch->GetPosition(&Left,&Top,&Width,&Height);
 		Settings.Read(TEXT("SearchLeft"),&Left);
@@ -341,6 +344,7 @@ bool CProgramGuideOptions::SaveSettings(CSettings &Settings)
 		}
 
 		Settings.Write(TEXT("SearchResultListHeight"),pProgramSearch->GetResultListHeight());
+		Settings.Write(TEXT("SearchTarget"),pProgramSearch->GetSearchTarget());
 
 		int Left,Top;
 		pProgramSearch->GetPosition(&Left,&Top,&Width,&Height);
