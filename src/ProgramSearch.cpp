@@ -1828,9 +1828,9 @@ CProgramSearchDialog::CProgramSearchDialog(CEventSearchOptions &Options)
 	, m_fHighlightResult(true)
 	, m_ResultListHeight(-1)
 {
-	m_ColumnWidth[0]=100;
-	m_ColumnWidth[1]=136;
-	m_ColumnWidth[2]=240;
+	m_ColumnWidth[COLUMN_CHANNEL]=100;
+	m_ColumnWidth[COLUMN_TIME]=136;
+	m_ColumnWidth[COLUMN_EVENTNAME]=240;
 }
 
 
@@ -1952,15 +1952,15 @@ INT_PTR CProgramSearchDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM l
 			LVCOLUMN lvc;
 			lvc.mask=LVCF_FMT | LVCF_WIDTH | LVCF_TEXT;
 			lvc.fmt=LVCFMT_LEFT;
-			lvc.cx=m_ColumnWidth[0];
+			lvc.cx=m_ColumnWidth[COLUMN_CHANNEL];
 			lvc.pszText=TEXT("チャンネル");
-			ListView_InsertColumn(hwndList,0,&lvc);
-			lvc.cx=m_ColumnWidth[1];
+			ListView_InsertColumn(hwndList,COLUMN_CHANNEL,&lvc);
+			lvc.cx=m_ColumnWidth[COLUMN_TIME];
 			lvc.pszText=TEXT("日時");
-			ListView_InsertColumn(hwndList,1,&lvc);
-			lvc.cx=m_ColumnWidth[2];
+			ListView_InsertColumn(hwndList,COLUMN_TIME,&lvc);
+			lvc.cx=m_ColumnWidth[COLUMN_EVENTNAME];
 			lvc.pszText=TEXT("番組名");
-			ListView_InsertColumn(hwndList,2,&lvc);
+			ListView_InsertColumn(hwndList,COLUMN_EVENTNAME,&lvc);
 
 			m_SortColumn=-1;
 			m_fSortDescending=false;
@@ -2205,13 +2205,13 @@ int CALLBACK CProgramSearchDialog::ResultCompareFunc(LPARAM lParam1,LPARAM lPara
 	int Cmp;
 
 	switch (LOWORD(lParamSort)) {
-	case 0:	// チャンネル
+	case COLUMN_CHANNEL:	// チャンネル
 		Cmp=::lstrcmpi(pInfo1->GetChannelInfo().GetName(),pInfo2->GetChannelInfo().GetName());
 		break;
-	case 1:	// 日時
+	case COLUMN_TIME:		// 日時
 		Cmp=CompareSystemTime(&pInfo1->m_StartTime,&pInfo2->m_StartTime);
 		break;
-	case 2:	// 番組名
+	case COLUMN_EVENTNAME:	// 番組名
 		if (pInfo1->m_EventName.empty()) {
 			if (pInfo2->m_EventName.empty())
 				Cmp=0;
@@ -2240,7 +2240,7 @@ bool CProgramSearchDialog::AddSearchResult(CSearchEventInfo *pEventInfo)
 
 	lvi.mask=LVIF_TEXT | LVIF_PARAM;
 	lvi.iItem=ListView_GetItemCount(hwndList);
-	lvi.iSubItem=0;
+	lvi.iSubItem=COLUMN_CHANNEL;
 	::lstrcpyn(szText,pEventInfo->GetChannelInfo().GetName(),lengthof(szText));
 	lvi.pszText=szText;
 	lvi.lParam=reinterpret_cast<LPARAM>(pEventInfo);
@@ -2256,11 +2256,11 @@ bool CProgramSearchDialog::AddSearchResult(CSearchEventInfo *pEventInfo)
 					  stStart.wHour,stStart.wMinute,
 					  stEnd.wHour,stEnd.wMinute);
 	lvi.mask=LVIF_TEXT;
-	lvi.iSubItem=1;
+	lvi.iSubItem=COLUMN_TIME;
 	//lvi.pszText=szText;
 	ListView_SetItem(hwndList,&lvi);
 	//lvi.mask=LVIF_TEXT;
-	lvi.iSubItem=2;
+	lvi.iSubItem=COLUMN_EVENTNAME;
 	::lstrcpyn(szText,pEventInfo->m_EventName.c_str(),lengthof(szText));
 	//lvi.pszText=szText;
 	ListView_SetItem(hwndList,&lvi);

@@ -290,8 +290,13 @@ class CProgramSearchDialog
 {
 public:
 	enum {
-		MAX_KEYWORD_HISTORY=50,
-		NUM_COLUMNS=3
+		MAX_KEYWORD_HISTORY=50
+	};
+	enum {
+		COLUMN_CHANNEL,
+		COLUMN_TIME,
+		COLUMN_EVENTNAME,
+		NUM_COLUMNS
 	};
 
 	class CEventHandler
