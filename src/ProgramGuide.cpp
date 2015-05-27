@@ -4780,7 +4780,11 @@ bool CProgramGuide::CProgramSearchEventHandler::OnLDoubleClick(
 {
 	// 検索結果の一覧のダブルクリック
 	// TODO: 動作をカスタマイズできるようにする
-	DoCommand(CM_PROGRAMGUIDE_JUMPEVENT,pEventInfo);
+	if (!m_pProgramGuide->IsExcludeService(
+			pEventInfo->m_NetworkID,
+			pEventInfo->m_TransportStreamID,
+			pEventInfo->m_ServiceID))
+		DoCommand(CM_PROGRAMGUIDE_JUMPEVENT,pEventInfo);
 	return true;
 }
 
@@ -4791,6 +4795,12 @@ bool CProgramGuide::CProgramSearchEventHandler::OnRButtonClick(
 	// 検索結果の一覧の右クリックメニューを表示
 	HMENU hmenu=::LoadMenu(GetAppClass().GetResourceInstance(),MAKEINTRESOURCE(IDM_PROGRAMSEARCH));
 	HMENU hmenuPopup=::GetSubMenu(hmenu,0);
+
+	if (m_pProgramGuide->IsExcludeService(
+			pEventInfo->m_NetworkID,
+			pEventInfo->m_TransportStreamID,
+			pEventInfo->m_ServiceID))
+		::EnableMenuItem(hmenu,CM_PROGRAMGUIDE_JUMPEVENT,MF_BYCOMMAND | MF_GRAYED);
 
 	if (m_pProgramGuide->m_pProgramCustomizer!=NULL) {
 		POINT pt={50,50};
