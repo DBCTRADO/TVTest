@@ -176,6 +176,19 @@ public:
 	void Release();
 };
 
+class CBasicSecurityAttributes : public SECURITY_ATTRIBUTES
+{
+public:
+	CBasicSecurityAttributes();
+	bool Initialize();
+
+private:
+	SECURITY_DESCRIPTOR m_SecurityDescriptor;
+
+	CBasicSecurityAttributes(const CBasicSecurityAttributes &) /* = delete */;
+	CBasicSecurityAttributes &operator=(const CBasicSecurityAttributes &) /* = delete */;
+};
+
 namespace Util
 {
 

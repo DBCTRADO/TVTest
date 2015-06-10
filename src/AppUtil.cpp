@@ -61,15 +61,11 @@ CAppMutex::CAppMutex(bool fEnable)
 			if (szName[i]=='\\')
 				szName[i]=':';
 		}
-		SECURITY_DESCRIPTOR sd;
-		SECURITY_ATTRIBUTES sa;
-		::ZeroMemory(&sd,sizeof(sd));
-		::InitializeSecurityDescriptor(&sd,SECURITY_DESCRIPTOR_REVISION);
-		::SetSecurityDescriptorDacl(&sd,TRUE,NULL,FALSE);
-		::ZeroMemory(&sa,sizeof(sa));
-		sa.nLength=sizeof(sa);
-		sa.lpSecurityDescriptor=&sd;
-		m_hMutex=::CreateMutex(&sa,FALSE,szName);
+
+		CBasicSecurityAttributes SecAttributes;
+		SecAttributes.Initialize();
+
+		m_hMutex=::CreateMutex(&SecAttributes,FALSE,szName);
 		m_fAlreadyExists=m_hMutex!=NULL && ::GetLastError()==ERROR_ALREADY_EXISTS;
 	} else {
 		m_hMutex=NULL;

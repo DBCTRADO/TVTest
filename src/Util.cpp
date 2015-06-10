@@ -1600,16 +1600,15 @@ bool CGlobalLock::Create(LPCTSTR pszName)
 {
 	if (m_hMutex!=NULL)
 		return false;
-	SECURITY_DESCRIPTOR sd;
-	SECURITY_ATTRIBUTES sa;
-	::ZeroMemory(&sd,sizeof(sd));
-	::InitializeSecurityDescriptor(&sd,SECURITY_DESCRIPTOR_REVISION);
-	::SetSecurityDescriptorDacl(&sd,TRUE,NULL,FALSE);
-	::ZeroMemory(&sa,sizeof(sa));
-	sa.nLength=sizeof(sa);
-	sa.lpSecurityDescriptor=&sd;
-	m_hMutex=::CreateMutex(&sa,FALSE,pszName);
+
+	CBasicSecurityAttributes SecAttributes;
+
+	if (!SecAttributes.Initialize())
+		return false;
+
+	m_hMutex=::CreateMutex(&SecAttributes,FALSE,pszName);
 	m_fOwner=false;
+
 	return m_hMutex!=NULL;
 }
 
@@ -1638,6 +1637,24 @@ void CGlobalLock::Release()
 		::ReleaseMutex(m_hMutex);
 		m_fOwner=false;
 	}
+}
+
+
+CBasicSecurityAttributes::CBasicSecurityAttributes()
+{
+	nLength=sizeof(SECURITY_ATTRIBUTES);
+	lpSecurityDescriptor=nullptr;
+	bInheritHandle=FALSE;
+}
+
+bool CBasicSecurityAttributes::Initialize()
+{
+	if (!::InitializeSecurityDescriptor(&m_SecurityDescriptor,SECURITY_DESCRIPTOR_REVISION))
+		return false;
+	if (!::SetSecurityDescriptorDacl(&m_SecurityDescriptor,TRUE,nullptr,FALSE))
+		return false;
+	lpSecurityDescriptor=&m_SecurityDescriptor;
+	return true;
 }
 
 
