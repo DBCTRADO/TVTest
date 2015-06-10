@@ -510,6 +510,7 @@ bool CAppMain::LoadSettings()
 	NetworkDefinition.LoadSettings(Settings);
 	TSProcessorOptions.LoadSettings(Settings);
 	FeaturedEvents.LoadSettings(Settings);
+	TaskbarManager.LoadSettings(Settings);
 
 	return true;
 }
@@ -648,6 +649,7 @@ bool CAppMain::SaveSettings(unsigned int Flags)
 		Panel.ProgramListPanel.SaveSettings(Settings);
 		Panel.ChannelPanel.SaveSettings(Settings);
 		Panel.CaptionPanel.SaveSettings(Settings);
+		TaskbarManager.SaveSettings(Settings);
 	}
 
 	return true;

@@ -83,6 +83,12 @@ bool CSettings::SetSection(LPCTSTR pszSection)
 }
 
 
+bool CSettings::IsSectionExists(LPCTSTR pszSection)
+{
+	return m_IniFile.IsSectionExists(pszSection);
+}
+
+
 bool CSettings::GetEntries(EntryList *pEntries)
 {
 	return m_IniFile.GetEntries(pEntries);

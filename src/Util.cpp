@@ -1596,7 +1596,7 @@ CGlobalLock::~CGlobalLock()
 	Close();
 }
 
-bool CGlobalLock::Create(LPCTSTR pszName)
+bool CGlobalLock::Create(LPCTSTR pszName,bool fInheritHandle)
 {
 	if (m_hMutex!=NULL)
 		return false;
@@ -1606,10 +1606,21 @@ bool CGlobalLock::Create(LPCTSTR pszName)
 	if (!SecAttributes.Initialize())
 		return false;
 
-	m_hMutex=::CreateMutex(&SecAttributes,FALSE,pszName);
+	m_hMutex=::CreateMutex(&SecAttributes,fInheritHandle,pszName);
 	m_fOwner=false;
 
 	return m_hMutex!=NULL;
+}
+
+bool CGlobalLock::Open(LPCTSTR pszName,DWORD DesiredAccess,bool fInheritHandle)
+{
+	if (m_hMutex!=NULL)
+		return false;
+
+	m_hMutex=::OpenMutex(DesiredAccess,fInheritHandle,pszName);
+	m_fOwner=false;
+
+	return m_hMutex!=nullptr;
 }
 
 bool CGlobalLock::Wait(DWORD Timeout)

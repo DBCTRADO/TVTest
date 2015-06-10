@@ -147,6 +147,12 @@ bool CRecentChannelList::Add(LPCTSTR pszDriverName,const CChannelInfo *pChannelI
 }
 
 
+bool CRecentChannelList::Add(const CTunerChannelInfo &ChannelInfo)
+{
+	return Add(ChannelInfo.GetTunerName(),&ChannelInfo);
+}
+
+
 bool CRecentChannelList::SetMenu(HMENU hmenu,bool fClear) const
 {
 	ClearMenu(hmenu);
@@ -180,39 +186,42 @@ bool CRecentChannelList::ReadSettings(CSettings &Settings)
 
 	int Count;
 
-	if (Settings.Read(TEXT("Count"),&Count) && Count>0) {
-		if (Count>m_MaxChannelHistory)
-			Count=m_MaxChannelHistory;
-		for (int i=0;i<Count;i++) {
-			TCHAR szName[32],szDriverName[MAX_PATH],szChannelName[MAX_CHANNEL_NAME];
-			int Space,Channel,ServiceID,NetworkID;
+	if (!Settings.Read(TEXT("Count"),&Count))
+		return false;
 
-			::wsprintf(szName,TEXT("History%d_Driver"),i);
-			if (!Settings.Read(szName,szDriverName,lengthof(szDriverName))
-					|| szDriverName[0]=='\0')
-				break;
-			::wsprintf(szName,TEXT("History%d_Name"),i);
-			if (!Settings.Read(szName,szChannelName,lengthof(szChannelName))
-					|| szChannelName[0]=='\0')
-				break;
-			::wsprintf(szName,TEXT("History%d_Space"),i);
-			if (!Settings.Read(szName,&Space))
-				break;
-			::wsprintf(szName,TEXT("History%d_Channel"),i);
-			if (!Settings.Read(szName,&Channel))
-				break;
-			::wsprintf(szName,TEXT("History%d_ServiceID"),i);
-			if (!Settings.Read(szName,&ServiceID))
-				break;
-			::wsprintf(szName,TEXT("History%d_NetworkID"),i);
-			if (!Settings.Read(szName,&NetworkID))
-				NetworkID=0;
-			CChannelInfo ChannelInfo(Space,Channel,0,szChannelName);
-			ChannelInfo.SetServiceID(ServiceID);
-			ChannelInfo.SetNetworkID(NetworkID);
-			m_ChannelList.push_back(new CTunerChannelInfo(ChannelInfo,szDriverName));
-		}
+	if (Count>m_MaxChannelHistory)
+		Count=m_MaxChannelHistory;
+
+	for (int i=0;i<Count;i++) {
+		TCHAR szName[32],szDriverName[MAX_PATH],szChannelName[MAX_CHANNEL_NAME];
+		int Space,Channel,ServiceID,NetworkID;
+
+		::wsprintf(szName,TEXT("History%d_Driver"),i);
+		if (!Settings.Read(szName,szDriverName,lengthof(szDriverName))
+				|| szDriverName[0]=='\0')
+			break;
+		::wsprintf(szName,TEXT("History%d_Name"),i);
+		if (!Settings.Read(szName,szChannelName,lengthof(szChannelName))
+				|| szChannelName[0]=='\0')
+			break;
+		::wsprintf(szName,TEXT("History%d_Space"),i);
+		if (!Settings.Read(szName,&Space))
+			break;
+		::wsprintf(szName,TEXT("History%d_Channel"),i);
+		if (!Settings.Read(szName,&Channel))
+			break;
+		::wsprintf(szName,TEXT("History%d_ServiceID"),i);
+		if (!Settings.Read(szName,&ServiceID))
+			break;
+		::wsprintf(szName,TEXT("History%d_NetworkID"),i);
+		if (!Settings.Read(szName,&NetworkID))
+			NetworkID=0;
+		CChannelInfo ChannelInfo(Space,Channel,0,szChannelName);
+		ChannelInfo.SetServiceID(ServiceID);
+		ChannelInfo.SetNetworkID(NetworkID);
+		m_ChannelList.push_back(new CTunerChannelInfo(ChannelInfo,szDriverName));
 	}
+
 	return true;
 }
 

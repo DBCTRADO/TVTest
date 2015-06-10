@@ -28,6 +28,7 @@ public:
 	bool IsOpened() const;
 	bool Clear();
 	bool SetSection(LPCTSTR pszSection);
+	bool IsSectionExists(LPCTSTR pszSection);
 	bool GetEntries(EntryList *pEntries);
 	bool IsValueExists(LPCTSTR pszValueName);
 	bool DeleteValue(LPCTSTR pszValueName);

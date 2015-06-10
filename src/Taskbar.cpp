@@ -24,6 +24,7 @@ CTaskbarManager::CTaskbarManager()
 	, m_pTaskbarList(NULL)
 	, m_fAppIDInvalid(false)
 	, m_fJumpListInitialized(false)
+	, m_fSaveRecentChannelList(false)
 {
 }
 
@@ -96,6 +97,13 @@ void CTaskbarManager::Finalize()
 		m_pTaskbarList->Release();
 		m_pTaskbarList=NULL;
 	}
+
+	if (m_SharedProperties.IsOpened()) {
+		if (m_SharedProperties.GetRecentChannelList(&m_RecentChannelList))
+			m_fSaveRecentChannelList=true;
+		m_SharedProperties.Close();
+	}
+
 	m_hwnd=NULL;
 }
 
@@ -224,8 +232,67 @@ bool CTaskbarManager::ClearJumpList()
 }
 
 
+bool CTaskbarManager::AddRecentChannel(const CTunerChannelInfo &Info)
+{
+	return m_SharedProperties.AddRecentChannel(Info);
+}
+
+
+bool CTaskbarManager::ClearRecentChannelList()
+{
+	return m_SharedProperties.ClearRecentChannelList();
+}
+
+
+bool CTaskbarManager::LoadSettings(CSettings &Settings)
+{
+	if (Settings.IsSectionExists(TEXT("TaskbarRecentChannels"))) {
+		if (Settings.SetSection(TEXT("TaskbarRecentChannels")))
+			m_RecentChannelList.ReadSettings(Settings);
+	} else {
+		if (Settings.SetSection(TEXT("RecentChannel")))
+			m_RecentChannelList.ReadSettings(Settings);
+	}
+
+	return true;
+}
+
+
+bool CTaskbarManager::SaveSettings(CSettings &Settings)
+{
+	if (m_fSaveRecentChannelList) {
+		if (Settings.SetSection(TEXT("TaskbarRecentChannels")))
+			m_RecentChannelList.WriteSettings(Settings);
+	}
+
+	return true;
+}
+
+
 HRESULT CTaskbarManager::InitializeJumpList()
 {
+	if (!m_SharedProperties.IsOpened()) {
+		TVTest::String PropName;
+
+		if (m_AppID.empty()) {
+			TCHAR szAppPath[MAX_PATH];
+			DWORD Length=::GetModuleFileName(NULL,szAppPath,lengthof(szAppPath));
+			::CharLowerBuff(szAppPath,Length);
+			BYTE Hash[16];
+			CMD5Calculator::CalcMD5(szAppPath,Length*sizeof(TCHAR),Hash);
+			TVTest::StringUtility::Format(
+				PropName,
+				APP_NAME TEXT("_%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x_TaskbarProp"),
+				Hash[ 0],Hash[ 1],Hash[ 2],Hash[ 3],Hash[ 4],Hash[ 5],Hash[ 6],Hash[ 7],
+				Hash[ 8],Hash[ 9],Hash[10],Hash[11],Hash[12],Hash[13],Hash[14],Hash[15]);
+		} else {
+			PropName=m_AppID;
+			PropName+=TEXT("_TaskbarProp");
+		}
+
+		m_SharedProperties.Open(PropName.c_str(),&m_RecentChannelList);
+	}
+
 	HRESULT hr;
 	ICustomDestinationList *pcdl;
 
@@ -455,8 +522,15 @@ HRESULT CTaskbarManager::AddJumpListCategory(
 HRESULT CTaskbarManager::AddRecentChannelsCategory(ICustomDestinationList *pcdl)
 {
 	CAppMain &App=GetAppClass();
-	const CRecentChannelList &RecentChannels=App.RecentChannelList;
-	int NumChannels=RecentChannels.NumChannels();
+	const CRecentChannelList *pRecentChannels;
+	CRecentChannelList SharedRecentChannels;
+
+	if (m_SharedProperties.GetRecentChannelList(&SharedRecentChannels))
+		pRecentChannels=&SharedRecentChannels;
+	else
+		pRecentChannels=&App.RecentChannelList;
+
+	int NumChannels=pRecentChannels->NumChannels();
 
 	if (NumChannels==0)
 		return S_FALSE;
@@ -492,7 +566,7 @@ HRESULT CTaskbarManager::AddRecentChannelsCategory(ICustomDestinationList *pcdl)
 	JumpListItemList List;
 
 	for (int i=0;i<NumChannels;i++) {
-		const CTunerChannelInfo *pChannel=RecentChannels.GetChannelInfo(i);
+		const CTunerChannelInfo *pChannel=pRecentChannels->GetChannelInfo(i);
 		const WORD NetworkID=pChannel->GetNetworkID();
 		const WORD ServiceID=pChannel->GetServiceID();
 		JumpListItem Item;

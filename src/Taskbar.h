@@ -4,6 +4,8 @@
 
 #include <vector>
 #include <map>
+#include "TaskbarSharedProperties.h"
+#include "Settings.h"
 
 
 class CTaskbarManager
@@ -21,6 +23,10 @@ public:
 	bool ReinitializeJumpList();
 	bool UpdateJumpList();
 	bool ClearJumpList();
+	bool AddRecentChannel(const CTunerChannelInfo &Info);
+	bool ClearRecentChannelList();
+	bool LoadSettings(CSettings &Settings);
+	bool SaveSettings(CSettings &Settings);
 
 private:
 	struct JumpListItem
@@ -59,6 +65,9 @@ private:
 	TVTest::String m_AppID;
 	bool m_fAppIDInvalid;
 	bool m_fJumpListInitialized;
+	TVTest::CTaskbarSharedProperties m_SharedProperties;
+	CRecentChannelList m_RecentChannelList;
+	bool m_fSaveRecentChannelList;
 	std::map<DWORD,ChannelIconInfo> m_ChannelIconMap;
 
 	HRESULT InitializeJumpList();

@@ -3025,6 +3025,7 @@ void CMainWindow::OnCommand(HWND hwnd,int id,HWND hwndCtl,UINT codeNotify)
 
 	case CM_CHANNELHISTORY_CLEAR:
 		m_App.RecentChannelList.Clear();
+		m_App.TaskbarManager.ClearRecentChannelList();
 		m_App.TaskbarManager.UpdateJumpList();
 		return;
 
@@ -4235,6 +4236,7 @@ void CMainWindow::OnChannelChanged(unsigned int Status)
 	if (pCurChannel!=nullptr) {
 		m_App.RecentChannelList.Add(pszDriverFileName,pCurChannel);
 		m_App.ChannelHistory.SetCurrentChannel(pszDriverFileName,pCurChannel);
+		m_App.TaskbarManager.AddRecentChannel(CTunerChannelInfo(*pCurChannel,pszDriverFileName));
 		m_App.TaskbarManager.UpdateJumpList();
 	}
 	if (m_App.DriverOptions.IsResetChannelChangeErrorCount(pszDriverFileName))

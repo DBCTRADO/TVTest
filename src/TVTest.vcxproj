@@ -932,6 +932,8 @@
     <ClCompile Include="GUIUtil.cpp" />
     <ClCompile Include="MainDisplay.cpp" />
     <ClCompile Include="MainPanel.cpp" />
+    <ClCompile Include="SharedMemory.cpp" />
+    <ClCompile Include="TaskbarSharedProperties.cpp" />
     <ClCompile Include="TextDraw.cpp" />
     <ClCompile Include="TSProcessorErrorDialog.cpp" />
     <ClCompile Include="EpgCapture.cpp" />
@@ -1116,6 +1118,8 @@
     <ClInclude Include="GUIUtil.h" />
     <ClInclude Include="MainDisplay.h" />
     <ClInclude Include="MainPanel.h" />
+    <ClInclude Include="SharedMemory.h" />
+    <ClInclude Include="TaskbarSharedProperties.h" />
     <ClInclude Include="TextDraw.h" />
     <ClInclude Include="TSProcessorErrorDialog.h" />
     <ClInclude Include="DirectShowFilter\RingBuffer.h" />

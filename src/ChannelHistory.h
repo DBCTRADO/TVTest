@@ -31,6 +31,7 @@ public:
 	int NumChannels() const;
 	void Clear();
 	const CTunerChannelInfo *GetChannelInfo(int Index) const;
+	bool Add(const CTunerChannelInfo &ChannelInfo);
 	bool Add(LPCTSTR pszDriverName,const CChannelInfo *pChannelInfo);
 	bool SetMenu(HMENU hmenu,bool fClear=true) const;
 // CSettingsBase
