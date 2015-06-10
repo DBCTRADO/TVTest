@@ -569,17 +569,24 @@ HRESULT CTaskbarManager::AddRecentChannelsCategory(ICustomDestinationList *pcdl)
 		const CTunerChannelInfo *pChannel=pRecentChannels->GetChannelInfo(i);
 		const WORD NetworkID=pChannel->GetNetworkID();
 		const WORD ServiceID=pChannel->GetServiceID();
+		LPCWSTR pszTunerName=pChannel->GetTunerName();
 		JumpListItem Item;
+		TVTest::String Driver;
 		WCHAR szTuner[MAX_PATH];
 
 		Item.Title=pChannel->GetName();
+		if (::StrChrW(pszTunerName,L' ')!=NULL) {
+			Driver=L'"';
+			Driver+=pszTunerName;
+			Driver+=L'"';
+		}
 		TVTest::StringUtility::Format(
 			Item.Args,L"/jumplist /d %s /chspace %d /chi %d /nid %d /sid %d",
-			pChannel->GetTunerName(),
+			!Driver.empty()?Driver.c_str():pszTunerName,
 			pChannel->GetSpace(),
 			pChannel->GetChannelIndex(),
 			NetworkID,ServiceID);
-		::lstrcpynW(szTuner,pChannel->GetTunerName(),lengthof(szTuner));
+		::lstrcpynW(szTuner,pszTunerName,lengthof(szTuner));
 		::PathRemoveExtensionW(szTuner);
 		TVTest::StringUtility::Format(
 			Item.Description,L"%s (%s)",
