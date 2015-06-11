@@ -170,7 +170,10 @@ class CGlobalLock
 public:
 	CGlobalLock();
 	~CGlobalLock();
-	bool Create(LPCTSTR pszName);
+	bool Create(LPCTSTR pszName,bool fInheritHandle=false);
+	bool Open(LPCTSTR pszName,
+			  DWORD DesiredAccess=MUTEX_ALL_ACCESS,
+			  bool fInheritHandle=false);
 	bool Wait(DWORD Timeout=INFINITE);
 	void Close();
 	void Release();
