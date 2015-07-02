@@ -132,13 +132,11 @@ bool CUICore::GetZoomRate(int *pRate,int *pFactor) const
 
 int CUICore::GetZoomPercentage() const
 {
-	if (m_pSkin==nullptr)
-		return 0;
 	int Rate,Factor;
-	if (!m_pSkin->GetZoomRate(&Rate,&Factor) || Factor==0)
-		return false;
-	//return ::MulDiv(Rate,100,Factor);
-	return Rate*100/Factor;
+
+	if (!GetZoomRate(&Rate,&Factor))
+		return 0;
+	return ::MulDiv(Rate,100,Factor);
 }
 
 

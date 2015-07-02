@@ -448,8 +448,15 @@ INT_PTR CCaptureOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam
 			for (i=0;i<lengthof(SizeTypeText);i++)
 				DlgComboBox_AddString(hDlg,IDC_CAPTUREOPTIONS_SIZE,SizeTypeText[i]);
 			for (i=0;i<=PERCENTAGE_LAST;i++) {
-				StdUtil::snprintf(szText,lengthof(szText),TEXT("%d %%"),
-								  m_PercentageList[i].Num*100/m_PercentageList[i].Denom);
+				const PercentageType &Ratio=m_PercentageList[i];
+				int Length=StdUtil::snprintf(
+					szText,lengthof(szText),TEXT("%d %%"),
+					::MulDiv(Ratio.Num,100,Ratio.Denom));
+				if (Ratio.Num*100%Ratio.Denom!=0) {
+					StdUtil::snprintf(
+						szText+Length,lengthof(szText)-Length,TEXT(" (%d/%d)"),
+						Ratio.Num,Ratio.Denom);
+				}
 				DlgComboBox_AddString(hDlg,IDC_CAPTUREOPTIONS_SIZE,szText);
 			}
 			for (i=0;i<=SIZE_LAST;i++) {

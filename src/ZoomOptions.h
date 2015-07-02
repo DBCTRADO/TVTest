@@ -23,7 +23,7 @@ public:
 		int Rate;
 		int Factor;
 
-		int GetPercentage() const { return Factor!=0?Rate*100/Factor:0; }
+		int GetPercentage() const { return Factor!=0?::MulDiv(Rate,100,Factor):0; }
 	};
 
 	struct ZoomSize {

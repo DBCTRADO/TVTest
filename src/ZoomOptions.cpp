@@ -190,8 +190,14 @@ bool CZoomOptions::SetMenu(HMENU hmenu,const ZoomInfo *pCurZoom) const
 			UINT Flags=MF_BYPOSITION | MF_STRING | MF_ENABLED;
 
 			if (Info.Type==ZOOM_RATE) {
-				StdUtil::snprintf(szText,lengthof(szText),TEXT("%d%%"),
-								  Info.Rate.GetPercentage());
+				int Length=StdUtil::snprintf(
+					szText,lengthof(szText),TEXT("%d%%"),
+					Info.Rate.GetPercentage());
+				if (Info.Rate.Rate*100%Info.Rate.Factor!=0) {
+					StdUtil::snprintf(
+						szText+Length,lengthof(szText)-Length,TEXT(" (%d/%d)"),
+						Info.Rate.Rate,Info.Rate.Factor);
+				}
 				if (!fRateCheck
 						&& pCurZoom!=NULL
 						&& pCurZoom->Rate.GetPercentage()==Info.Rate.GetPercentage()) {
