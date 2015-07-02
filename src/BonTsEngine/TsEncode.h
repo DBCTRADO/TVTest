@@ -15,9 +15,10 @@ class CAribString
 {
 public:
 	enum {
-		FLAG_CAPTION		= 0x0001U,
-		FLAG_1SEG			= 0x0002U,
-		FLAG_USE_CHAR_SIZE	= 0x0004U
+		FLAG_CAPTION		= 0x0001U,	// 字幕
+		FLAG_1SEG			= 0x0002U,	// ワンセグ
+		FLAG_USE_CHAR_SIZE	= 0x0004U,	// 文字サイズを反映
+		FLAG_UNICODE_SYMBOL	= 0x0008U	// Unicodeの記号を利用(Unicode 5.2以降)
 	};
 
 	enum CHAR_SIZE {
@@ -119,6 +120,7 @@ private:
 
 	bool m_bCaption;
 	bool m_bUseCharSize;
+	bool m_bUnicodeSymbol;
 
 	const DWORD AribToStringInternal(TCHAR *lpszDst, const DWORD dwDstLen, const BYTE *pSrcData, const DWORD dwSrcLen,
 		const unsigned int Flags, FormatList *pFormatList = NULL, IDRCSMap *pDRCSMap = NULL);

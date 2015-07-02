@@ -8,9 +8,6 @@
 
 
 #ifdef _UNICODE
-// Unicode ‚É‚µ‚©–³‚¢•¶Žš‚ðŽg—p‚·‚é
-// ŒÝŠ·«‚Íã‚ª‚é‚ª¬‚³‚¢•¶Žš‚Ì•\Ž¦‚ª‰˜‚¢‚Ì‚Å‚¢‚Ü‚¢‚¿c
-//#define USE_UNICODE_CHAR
 #define MB_CHAR_LENGTH 1
 #else
 #define MB_CHAR_LENGTH 2
@@ -135,6 +132,7 @@ const DWORD CAribString::AribToStringInternal(TCHAR *lpszDst, const DWORD dwDstL
 	m_pDRCSMap = pDRCSMap;
 
 	m_bUseCharSize = (Flags & FLAG_USE_CHAR_SIZE) != 0;
+	m_bUnicodeSymbol = (Flags & FLAG_UNICODE_SYMBOL) != 0;
 
 	return ProcessString(lpszDst, dwDstLen, pSrcData, dwSrcLen);
 }
@@ -567,18 +565,46 @@ inline const int CAribString::PutJisKatakanaChar(TCHAR *lpszDst, const DWORD dwD
 
 inline const int CAribString::PutSymbolsChar(TCHAR *lpszDst, const DWORD dwDstLen, const WORD wCode)
 {
-	// ’Ç‰ÁƒVƒ“ƒ{ƒ‹•¶ŽšƒR[ƒh•ÏŠ·(‚Æ‚è‚ ‚¦‚¸•K—v‚»‚¤‚È‚à‚Ì‚¾‚¯)
-	static const LPCTSTR aszSymbolsTable1[] =
+	// ’Ç‰ÁƒVƒ“ƒ{ƒ‹•¶ŽšƒR[ƒh•ÏŠ·
+
+	static const LPCWSTR SymbolsTable_90_01[] =
 	{
-		_T("[HV]"),		_T("[SD]"),		_T("[‚o]"),		_T("[‚v]"),		_T("[MV]"),		_T("[Žè]"),		_T("[Žš]"),		_T("[‘o]"),			// 0x7A50 - 0x7A57	90/48 - 90/55
-		_T("[ƒf]"),		_T("[‚r]"),		_T("[“ñ]"),		_T("[‘½]"),		_T("[‰ð]"),		_T("[SS]"),		_T("[‚a]"),		_T("[‚m]"),			// 0x7A58 - 0x7A5F	90/56 - 90/63
-		_T("¡"),		_T("œ"),		_T("[“V]"),		_T("[Œð]"),		_T("[‰f]"),		_T("[–³]"),		_T("[—¿]"),		_T("[”N—î§ŒÀ]"),	// 0x7A60 - 0x7A67	90/64 - 90/71
-		_T("[‘O]"),		_T("[Œã]"),		_T("[Ä]"),		_T("[V]"),		_T("[‰]"),		_T("[I]"),		_T("[¶]"),		_T("[”Ì]"),			// 0x7A68 - 0x7A6F	90/72 - 90/79
-		_T("[º]"),		_T("[]"),		_T("[PPV]"),	_T("(”é)"),		_T("‚Ù‚©")															// 0x7A70 - 0x7A74	90/80 - 90/84
+		L"\u26cc",		L"\u26cd",		L"\u2757",		L"\u26cf",		L"\u26d0",		L"\u26d1",		nullptr,		L"\u26d2",			// 0x7A21 - 0x7A28	90/01 - 90/08
+		L"\u26d5",		L"\u26d3",		L"\u26d4",		nullptr,		nullptr,		nullptr,		nullptr,		L"\U0001f17f",		// 0x7A29 - 0x7A30	90/09 - 90/16
+		L"\U0001f18a",	nullptr,		nullptr,		L"\u26d6",		L"\u26d7",		L"\u26d8",		L"\u26d9",		L"\u26da",			// 0x7A31 - 0x7A38	90/17 - 90/24
+		L"\u26db",		L"\u26dc",		L"\u26dd",		L"\u26de",		L"\u26df",		L"\u26e0",		L"\u26e1",		L"\u2b55",			// 0x7A39 - 0x7A40	90/18 - 90/32
+		L"\u3248",		L"\u3249",		L"\u324a",		L"\u324b",		L"\u324c",		L"\u324d",		L"\u324e",		L"\u324f"			// 0x7A41 - 0x7A48	90/33 - 90/40
 	};
 
-#ifndef USE_UNICODE_CHAR
-	static const LPCTSTR aszSymbolsTable2[] =
+	static const LPCTSTR SymbolsTable_90_45[] =
+	{
+		_T("10."),		_T("11."),		_T("12."),			_T("[HV]"),		_T("[SD]"),		_T("[‚o]"),		_T("[‚v]"),		_T("[MV]"),		// 0x7A4D - 0x7A54	90/45 - 90/52
+		_T("[Žè]"),		_T("[Žš]"),		_T("[‘o]"),			_T("[ƒf]"),		_T("[‚r]"),		_T("[“ñ]"),		_T("[‘½]"),		_T("[‰ð]"),		// 0x7A55 - 0x7A5C	90/53 - 90/60
+		_T("[SS]"),		_T("[‚a]"),		_T("[‚m]"),			_T("¡"),		_T("œ"),		_T("[“V]"),		_T("[Œð]"),		_T("[‰f]"),		// 0x7A5D - 0x7A64	90/61 - 90/68
+		_T("[–³]"),		_T("[—¿]"),		_T("[”N—î§ŒÀ]"),	_T("[‘O]"),		_T("[Œã]"),		_T("[Ä]"),		_T("[V]"),		_T("[‰]"),		// 0x7A65 - 0x7A6C	90/69 - 90/76
+		_T("[I]"),		_T("[¶]"),		_T("[”Ì]"),			_T("[º]"),		_T("[]"),		_T("[PPV]"),	_T("(”é)"),		_T("‚Ù‚©")		// 0x7A6D - 0x7A74	90/77 - 90/84
+	};
+	static const LPCWSTR SymbolsTable_90_45_U[] =
+	{
+		L"\u2491",		L"\u2492",		L"\u2493",		L"\U0001f14a",	L"\U0001f14c",	L"\U0001f13f",	L"\U0001f146",	L"\U0001f14b",		// 0x7A4D - 0x7A54	90/45 - 90/52
+		L"\U0001f210",	L"\U0001f211",	L"\U0001f212",	L"\U0001f213",	L"\U0001f142",	L"\U0001f214",	L"\U0001f215",	L"\U0001f216",		// 0x7A55 - 0x7A5C	90/53 - 90/60
+		L"\U0001f14d",	L"\U0001f131",	L"\U0001f13d",	L"\u2b1b",		L"\u2b24",		L"\U0001f217",	L"\U0001f218",	L"\U0001f219",		// 0x7A5D - 0x7A64	90/61 - 90/68
+		L"\U0001f21a",	L"\U0001f21b",	L"\u26bf",		L"\U0001f21c",	L"\U0001f21d",	L"\U0001f21e",	L"\U0001f21f",	L"\U0001f220",		// 0x7A65 - 0x7A6C	90/69 - 90/76
+		L"\U0001f221",	L"\U0001f222",	L"\U0001f223",	L"\U0001f224",	L"\U0001f225",	L"\U0001f14e",	L"\u3299",		L"\U0001f200"		// 0x7A6D - 0x7A74	90/77 - 90/84
+	};
+
+	static const LPCWSTR SymbolsTable_91[] =
+	{
+		L"\u26e3",		L"\u2b56",		L"\u2b57",		L"\u2b58",		L"\u2b59",		L"\u2613",		L"\u328b",		L"\u3012",			// 0x7B21 - 0x7B28	91/01 - 91/08
+		L"\u26e8",		L"\u3246",		L"\u3245",		L"\u26e9",		L"\u0fd6",		L"\u26ea",		L"\u26eb",		L"\u26ec",			// 0x7B29 - 0x7B30	91/09 - 91/16
+		L"\u2668",		L"\u26ed",		L"\u26ee",		L"\u26ef",		L"\u2693",		L"\u2708",		L"\u26f0",		L"\u26f1",			// 0x7B31 - 0x7B38	91/17 - 91/24
+		L"\u26f2",		L"\u26f3",		L"\u26f4",		L"\u26f5",		L"\U0001f157",	L"\u24b9",		L"\u24c8",		L"\u26f6",			// 0x7B39 - 0x7B40	91/25 - 91/32
+		L"\U0001f15f",	L"\U0001f18b",	L"\U0001f18d",	L"\U0001f18c",	L"\U0001f179",	L"\u26f7",		L"\u26f8",		L"\u26f9",			// 0x7B41 - 0x7B48	91/33 - 91/40
+		L"\u26fa",		L"\U0001f17b",	L"\u260e",		L"\u26fb",		L"\u26fc",		L"\u26fd",		L"\u26fe",		L"\U0001f17c",		// 0x7B49 - 0x7B50	91/41 - 91/48
+		L"\u26ff"																															// 0x7B51 - 0x7B51	91/49 - 91/49
+	};
+
+	static const LPCTSTR SymbolsTable_92[] =
 	{
 		_T("¨"),		_T("©"),		_T("ª"),		_T("«"),		_T("›"),		_T("œ"),		_T("”N"),		_T("ŒŽ"),			// 0x7C21 - 0x7C28	92/01 - 92/08
 		_T("“ú"),		_T("‰~"),		_T("‡u"),		_T("—§•û‚"),	_T("‡p"),		_T("•½•û‡p"),	_T("—§•û‡p"),	_T("‚O."),			// 0x7C29 - 0x7C30	92/09 - 92/16
@@ -593,33 +619,30 @@ inline const int CAribString::PutSymbolsChar(TCHAR *lpszDst, const DWORD dwDstLe
 		_T("n)"),		_T("(or"),		_T("g)"),		_T("(pe"),		_T("r)"),		_T("(R)"),		_T("(C)"),		_T("(âµ)"),			// 0x7C71 - 0x7C78	92/81 - 92/88
 		_T("DJ"),		_T("[‰‰]"),		_T("Fax")																							// 0x7C79 - 0x7C7B	92/89 - 92/91
 	};
-#else
-	static const LPCWSTR aszSymbolsTable2[] =
+	static const LPCWSTR SymbolsTable_92_U[] =
 	{
-		L"¨",			L"©",			L"ª",			L"«",			L"›",			L"œ",			L"”N",			L"ŒŽ",				// 0x7C21 - 0x7C28	92/01 - 92/08
-		L"“ú",			L"‰~",			L"‡u",			L"\u33a5",		L"‡p",			L"\u33a0",		L"\u33a4",		L"‚O.",				// 0x7C29 - 0x7C30	92/09 - 92/16
+		L"\u27a1",		L"\u2b05",		L"\u2b06",		L"\u2b07",		L"\u2b2f",		L"\u2b2e",		L"”N",			L"ŒŽ",				// 0x7C21 - 0x7C28	92/01 - 92/08
+		L"“ú",			L"‰~",			L"‡u",			L"\u33a5",		L"‡p",			L"\u33a0",		L"\u33a4",		L"\U0001f100",		// 0x7C29 - 0x7C30	92/09 - 92/16
 		L"\u2488",		L"\u2489",		L"\u248a",		L"\u248b",		L"\u248c",		L"\u248d",		L"\u248e",		L"\u248f",			// 0x7C31 - 0x7C38	92/17 - 92/24
-		L"\u2490",		L"Ž",			L"•›",			L"Œ³",			L"ŒÌ",			L"‘O",			L"V",			L"‚O,",				// 0x7C39 - 0x7C40	92/25 - 92/32
-		L"‚P,",			L"‚Q,",			L"‚R,",			L"‚S,",			L"‚T,",			L"‚U,",			L"‚V,",			L"‚W,",				// 0x7C41 - 0x7C48	92/33 - 92/40
-		L"‚X,",			L"(ŽÐ)",		L"(à)",		L"(—L)",		L"(Š”)",		L"(‘ã)",		L"(–â)",		L"\u25b6",			// 0x7C49 - 0x7C50	92/41 - 92/48
-		L"\u25c0",		L"\u3016",		L"\u3017",		L"ž",			L"^2",			L"^3",			L"(CD)",		L"(vn)",			// 0x7C51 - 0x7C58	92/49 - 92/56
+		L"\u2490",		L"Ž",			L"•›",			L"Œ³",			L"ŒÌ",			L"‘O",			L"V",			L"\U0001f101",		// 0x7C39 - 0x7C40	92/25 - 92/32
+		L"\U0001f102",	L"\U0001f103",	L"\U0001f104",	L"\U0001f105",	L"\U0001f106",	L"\U0001f107",	L"\U0001f108",	L"\U0001f109",		// 0x7C41 - 0x7C48	92/33 - 92/40
+		L"\U0001f10a",	L"\u3233",		L"\u3236",		L"\u3232",		L"\u3231",		L"\u3239",		L"\u3244",		L"\u25b6",			// 0x7C49 - 0x7C50	92/41 - 92/48
+		L"\u25c0",		L"\u3016",		L"\u3017",		L"\u27d0",		L"\u00b2",		L"\u00b3",		L"\U0001f12d",	L"(vn)",			// 0x7C51 - 0x7C58	92/49 - 92/56
 		L"(ob)",		L"(cb)",		L"(ce",			L"mb)",			L"(hp)",		L"(br)",		L"(p)",			L"(s)",				// 0x7C59 - 0x7C60	92/57 - 92/64
 		L"(ms)",		L"(t)",			L"(bs)",		L"(b)",			L"(tb)",		L"(tp)",		L"(ds)",		L"(ag)",			// 0x7C61 - 0x7C68	92/65 - 92/72
 		L"(eg)",		L"(vo)",		L"(fl)",		L"(ke",			L"y)",			L"(sa",			L"x)",			L"(sy",				// 0x7C69 - 0x7C70	92/73 - 92/80
-		L"n)",			L"(or",			L"g)",			L"(pe",			L"r)",			L"\u24c7",		L"\u24b8",		L"(âµ)",			// 0x7C71 - 0x7C78	92/81 - 92/88
-		L"DJ",			L"[‰‰]",		L"Fax"																								// 0x7C79 - 0x7C7B	92/89 - 92/91
+		L"n)",			L"(or",			L"g)",			L"(pe",			L"r)",			L"\U0001f12c",	L"\U0001f12b",	L"\u3247",			// 0x7C71 - 0x7C78	92/81 - 92/88
+		L"\U0001f190",	L"\U0001f226",	L"\u213b"																							// 0x7C79 - 0x7C7B	92/89 - 92/91
 	};
-#endif
 
-#ifndef USE_UNICODE_CHAR
-	static const LPCTSTR aszSymbolsTable3[] =
+	static const LPCTSTR SymbolsTable_93[] =
 	{
 		_T("(ŒŽ)"),		_T("(‰Î)"),		_T("(…)"),		_T("(–Ø)"),		_T("(‹à)"),		_T("(“y)"),		_T("(“ú)"),		_T("(j)"),			// 0x7D21 - 0x7D28	93/01 - 93/08
 		_T("‡"),		_T("‡Ž"),		_T("‡"),		_T("‡~"),		_T("‡‚"),		_T("‡„"),		_T("(§)"),		_T("›"),			// 0x7D29 - 0x7D30	93/09 - 93/16
 		_T("k–{l"),	_T("kŽOl"),	_T("k“ñl"),	_T("kˆÀl"),	_T("k“_l"),	_T("k‘Ål"),	_T("k“l"),	_T("kŸl"),		// 0x7D31 - 0x7D38	93/17 - 93/24
 		_T("k”sl"),	_T("k‚rl"),	_T("m“Šn"),	_T("m•ßn"),	_T("mˆên"),	_T("m“ñn"),	_T("mŽOn"),	_T("m—Vn"),		// 0x7D39 - 0x7D40	93/25 - 93/32
 		_T("m¶n"),	_T("m’†n"),	_T("m‰En"),	_T("mŽwn"),	_T("m‘–n"),	_T("m‘Ån"),	_T("‡g"),		_T("‡s"),			// 0x7D41 - 0x7D48	93/33 - 93/40
-		_T("Hz"),		_T("ha"),		_T("km"),		_T("•½•ûkm"),	_T("hPa"),		_T("E"),		_T("E"),		_T("1/2"),			// 0x7D49 - 0x7D50	93/41 - 93/48
+		_T("Hz"),		_T("ha"),		_T("km"),		_T("•½•ûkm"),	_T("hPa"),		nullptr,		nullptr,		_T("1/2"),			// 0x7D49 - 0x7D50	93/41 - 93/48
 		_T("0/3"),		_T("1/3"),		_T("2/3"),		_T("1/4"),		_T("3/4"),		_T("1/5"),		_T("2/5"),		_T("3/5"),			// 0x7D51 - 0x7D58	93/49 - 93/56
 		_T("4/5"),		_T("1/6"),		_T("5/6"),		_T("1/7"),		_T("1/8"),		_T("1/9"),		_T("1/10"),		_T("°‚ê"),			// 0x7D59 - 0x7D60	93/57 - 93/64
 		_T("“Ü‚è"),		_T("‰J"),		_T("á"),		_T("¢"),		_T("£"),		_T("¤"),		_T("¥"),		_T("Ÿ"),			// 0x7D61 - 0x7D68	93/65 - 93/72
@@ -627,26 +650,23 @@ inline const int CAribString::PutSymbolsChar(TCHAR *lpszDst, const DWORD dwDstLe
 		_T("‰J"),		_T("‰J"),		_T("á"),		_T("‘åá"),		_T("—‹"),		_T("—‹‰J"),		_T("@"),		_T("E"),			// 0x7D71 - 0x7D78	93/81 - 93/88
 		_T("E"),		_T("ô"),		_T("‡„")																							// 0x7D79 - 0x7D7B	93/89 - 93/91
 	};
-#else
-	static const LPCWSTR aszSymbolsTable3[] =
+	static const LPCWSTR SymbolsTable_93_U[] =
 	{
 		L"\u322a",		L"\u322b",		L"\u322c",		L"\u322d",		L"\u322e",		L"\u322f",		L"\u3230",		L"\u3237",			// 0x7D21 - 0x7D28	93/01 - 93/08
-		L"‡",			L"‡Ž",			L"‡",			L"‡~",			L"‡‚",			L"‡„",			L"(§)",		L"›",				// 0x7D29 - 0x7D30	93/09 - 93/16
-		L"k–{l",		L"kŽOl",		L"k“ñl",		L"kˆÀl",		L"k“_l",		L"k‘Ål",		L"k“l",		L"kŸl",			// 0x7D31 - 0x7D38	93/17 - 93/24
-		L"k”sl",		L"k‚rl",		L"m“Šn",		L"m•ßn",		L"mˆên",		L"m“ñn",		L"mŽOn",		L"m—Vn",			// 0x7D39 - 0x7D40	93/25 - 93/32
-		L"m¶n",		L"m’†n",		L"m‰En",		L"mŽwn",		L"m‘–n",		L"m‘Ån",		L"‡g",			L"‡s",				// 0x7D41 - 0x7D48	93/33 - 93/40
-		L"\u3390",		L"\u33ca",		L"\u339e",		L"\u33a2",		L"\u3371",		L"E",			L"E",			L"1/2",				// 0x7D49 - 0x7D50	93/41 - 93/48
-		L"0/3",			L"\u2153",		L"\u2154",		L"1/4",			L"3/4",			L"\u2155",		L"\u2156",		L"\u2157",			// 0x7D51 - 0x7D58	93/49 - 93/56
-		L"\u2158",		L"\u2159",		L"\u215a",		L"1/7",			L"1/8",			L"1/9",			L"1/10",		L"\u2600",			// 0x7D59 - 0x7D60	93/57 - 93/64
-		L"\u2601",		L"\u2602",		L"\u2603",		L"\u2302",		L"£",			L"¤",			L"¥",			L"\u2666",			// 0x7D61 - 0x7D68	93/65 - 93/72
-		L"\u2665",		L"\u2663",		L"\u2660",		L"ž",			L"\u2609",		L"!!",			L"\u2049",		L"“Ü/°",			// 0x7D69 - 0x7D70	93/73 - 93/80
-		L"‰J",			L"‰J",			L"á",			L"‘åá",		L"—‹",			L"—‹‰J",		L"@",			L"E",				// 0x7D71 - 0x7D78	93/81 - 93/88
-		L"E",			L"\u266c",		L"\u260e"																							// 0x7D79 - 0x7D7B	93/89 - 93/91
+		L"‡",			L"‡Ž",			L"‡",			L"‡~",			L"‡‚",			L"‡„",			L"\u3036",		L"\u26be",			// 0x7D29 - 0x7D30	93/09 - 93/16
+		L"\U0001f240",	L"\U0001f241",	L"\U0001f242",	L"\U0001f243",	L"\U0001f244",	L"\U0001f245",	L"\U0001f246",	L"\U0001f247",		// 0x7D31 - 0x7D38	93/17 - 93/24
+		L"\U0001f248",	L"\U0001f12a",	L"\U0001f227",	L"\U0001f228",	L"\U0001f229",	L"\U0001f214",	L"\U0001f22a",	L"\U0001f22b",		// 0x7D39 - 0x7D40	93/25 - 93/32
+		L"\U0001f22c",	L"\U0001f22d",	L"\U0001f22e",	L"\U0001f22f",	L"\U0001f230",	L"\U0001f231",	L"\u2113",		L"‡s",				// 0x7D41 - 0x7D48	93/33 - 93/40
+		L"\u3390",		L"\u33ca",		L"\u339e",		L"\u33a2",		L"\u3371",		nullptr,		nullptr,		L"\u00bd",			// 0x7D49 - 0x7D50	93/41 - 93/48
+		L"\u2189",		L"\u2153",		L"\u2154",		L"\u00bc",		L"\u00be",		L"\u2155",		L"\u2156",		L"\u2157",			// 0x7D51 - 0x7D58	93/49 - 93/56
+		L"\u2158",		L"\u2159",		L"\u215a",		L"\u2150",		L"\u215b",		L"\u2151",		L"\u2152",		L"\u2600",			// 0x7D59 - 0x7D60	93/57 - 93/64
+		L"\u2601",		L"\u2602",		L"\u26c4",		L"\u2616",		L"\u2617",		L"\u26c9",		L"\u26ca",		L"\u2666",			// 0x7D61 - 0x7D68	93/65 - 93/72
+		L"\u2665",		L"\u2663",		L"\u2660",		L"\u26cb",		L"\u2a00",		L"\u203c",		L"\u2049",		L"\u26c5",			// 0x7D69 - 0x7D70	93/73 - 93/80
+		L"\u2614",		L"\u26c6",		L"\u2603",		L"\u26c7",		L"\u26a1",		L"\u26c8",		L"@",			L"\u269e",			// 0x7D71 - 0x7D78	93/81 - 93/88
+		L"\u269f",		L"\u266c",		L"\u260e"																							// 0x7D79 - 0x7D7B	93/89 - 93/91
 	};
-#endif
 
-#ifndef USE_UNICODE_CHAR
-	static const LPCTSTR aszSymbolsTable4[] =
+	static const LPCTSTR SymbolsTable_94[] =
 	{
 		_T("‡T"),		_T("‡U"),		_T("‡V"),		_T("‡W"),		_T("‡X"),		_T("‡Y"),		_T("‡Z"),		_T("‡["),			// 0x7E21 - 0x7E28	94/01 - 94/08
 		_T("‡\"),		_T("‡]"),		_T("XI"),		_T("X‡U"),		_T("‡P"),		_T("‡Q"),		_T("‡R"),		_T("‡S"),			// 0x7E29 - 0x7E30	94/09 - 94/16
@@ -661,24 +681,23 @@ inline const int CAribString::PutSymbolsChar(TCHAR *lpszDst, const DWORD dwDstLe
 		_T("‡@"),		_T("‡A"),		_T("‡B"),		_T("‡C"),		_T("‡D"),		_T("‡E"),		_T("‡F"),		_T("‡G"),			// 0x7E71 - 0x7E78	94/81 - 94/88
 		_T("‡H"),		_T("‡I"),		_T("‡J"),		_T("‡K"),		_T("(31)")															// 0x7E79 - 0x7E7D	94/89 - 94/93
 	};
-#else
-	static const LPCWSTR aszSymbolsTable4[] =
+	static const LPCWSTR SymbolsTable_94_U[] =
 	{
 		L"‡T",			L"‡U",			L"‡V",			L"‡W",			L"‡X",			L"‡Y",			L"‡Z",			L"‡[",				// 0x7E21 - 0x7E28	94/01 - 94/08
-		L"‡\",			L"‡]",			L"XI",			L"X‡U",			L"‡P",			L"‡Q",			L"‡R",			L"‡S",				// 0x7E29 - 0x7E30	94/09 - 94/16
+		L"‡\",			L"‡]",			L"\u216a",		L"\u216b",		L"‡P",			L"‡Q",			L"‡R",			L"‡S",				// 0x7E29 - 0x7E30	94/09 - 94/16
 		L"\u2474",		L"\u2475",		L"\u2476",		L"\u2477",		L"\u2478",		L"\u2479",		L"\u247a",		L"\u247b",			// 0x7E31 - 0x7E38	94/17 - 94/24
-		L"\u247c",		L"\u247d",		L"\u247e",		L"\u247f",		L"\u3251",		L"\u3252",		L"\u2353",		L"\u3254",			// 0x7E39 - 0x7E40	94/25 - 94/32
-		L"(A)",			L"(B)",			L"(C)",			L"(D)",			L"(E)",			L"(F)",			L"(G)",			L"(H)",				// 0x7E41 - 0x7E48	94/33 - 94/40
-		L"(I)",			L"(J)",			L"(K)",			L"(L)",			L"(M)",			L"(N)",			L"(O)",			L"(P)",				// 0x7E49 - 0x7E50	94/41 - 94/48
-		L"(Q)",			L"(R)",			L"(S)",			L"(T)",			L"(U)",			L"(V)",			L"(W)",			L"(X)",				// 0x7E51 - 0x7E58	94/49 - 94/56
-		L"(Y)",			L"(Z)",			L"\u3255",		L"\u3256",		L"\u3257",		L"\u3258",		L"\u3259",		L"\u325a",			// 0x7E59 - 0x7E60	94/57 - 94/64
+		L"\u247c",		L"\u247d",		L"\u247e",		L"\u247f",		L"\u3251",		L"\u3252",		L"\u3253",		L"\u3254",			// 0x7E39 - 0x7E40	94/25 - 94/32
+		L"\U0001f1110",	L"\U0001f111",	L"\U0001f112",	L"\U0001f113",	L"\U0001f114",	L"\U0001f115",	L"\U0001f116",	L"\U0001f117",		// 0x7E41 - 0x7E48	94/33 - 94/40
+		L"\U0001f1118",	L"\U0001f119",	L"\U0001f11a",	L"\U0001f11b",	L"\U0001f11c",	L"\U0001f11d",	L"\U0001f11e",	L"\U0001f11f",		// 0x7E49 - 0x7E50	94/41 - 94/48
+		L"\U0001f120",	L"\U0001f121",	L"\U0001f122",	L"\U0001f123",	L"\U0001f124",	L"\U0001f125",	L"\U0001f126",	L"\U0001f127",		// 0x7E51 - 0x7E58	94/49 - 94/56
+		L"\U0001f128",	L"\U0001f129",	L"\u3255",		L"\u3256",		L"\u3257",		L"\u3258",		L"\u3259",		L"\u325a",			// 0x7E59 - 0x7E60	94/57 - 94/64
 		L"‡@",			L"‡A",			L"‡B",			L"‡C",			L"‡D",			L"‡E",			L"‡F",			L"‡G",				// 0x7E61 - 0x7E68	94/65 - 94/72
 		L"‡H",			L"‡I",			L"‡J",			L"‡K",			L"‡L",			L"‡M",			L"‡N",			L"‡O",				// 0x7E69 - 0x7E70	94/73 - 94/80
 		L"\u2776",		L"\u2777",		L"\u2778",		L"\u2779",		L"\u277a",		L"\u277b",		L"\u277c",		L"\u277d",			// 0x7E71 - 0x7E78	94/81 - 94/88
 		L"\u277e",		L"\u277f",		L"\u24eb",		L"\u24ec",		L"\u325b"															// 0x7E79 - 0x7E7D	94/89 - 94/93
 	};
-#endif
-	static const LPCWSTR aszKanjiTable1[] = {
+
+	static const LPCWSTR KanjiTable1[] = {
 		L"\u3402",		L"\U00020158",	L"\u4efd",		L"\u4eff",		L"\u4f9a",		L"\u4fc9",		L"\u509c",		L"\u511e",			// 0x7521 - 0x7528
 		L"\u51bc",		L"\u351f",		L"\u5307",		L"\u5361",		L"\u536c",		L"\u8a79",		L"\U00020bb7",	L"\u544d",			// 0x7529 - 0x7530
 		L"\u5496",		L"\u549c",		L"\u54a9",		L"\u550e",		L"\u554a",		L"\u5672",		L"\u56e4",		L"\u5733",			// 0x7531 - 0x7538
@@ -690,34 +709,52 @@ inline const int CAribString::PutSymbolsChar(TCHAR *lpszDst, const DWORD dwDstLe
 		L"\u6ff9",		L"\u7064",		L"\ufa6c",		L"\U000242ee",	L"\u7147",		L"\u71c1",		L"\u7200",		L"\u739f",			// 0x7561 - 0x7568
 		L"\u73a8",		L"\u73c9",		L"\u73d6",		L"\u741b",		L"\u7421",		L"\ufa4a",		L"\u7426",		L"\u742a",			// 0x7569 - 0x7570
 		L"\u742c",		L"\u7439",		L"\u744b",		L"\u3eda",		L"\u7575",		L"\u7581",		L"\u7772",		L"\u4093",			// 0x7571 - 0x7578
-		L"\u78c8",		L"\u78e0",		L"\u7947",		L"\u79ae",		L"\u9fc6E",	L"\u4103",											// 0x7579 - 0x757E
+		L"\u78c8",		L"\u78e0",		L"\u7947",		L"\u79ae",		L"\u9fc6",		L"\u4103",											// 0x7579 - 0x757E
 	};
-	static const LPCWSTR aszKanjiTable2[] = {
+	static const LPCWSTR KanjiTable2[] = {
 		L"\u9fc5",		L"\u79da",		L"\u7a1e",		L"\u7b7f",		L"\u7c31",		L"\u4264",		L"\u7d8b",		L"\u7fa1",			// 0x7621 - 0x7628
 		L"\u8118",		L"\u813a",		L"\ufa6d",		L"\u82ae",		L"\u845b",		L"\u84dc",		L"\u84ec",		L"\u8559",			// 0x7629 - 0x7630
-		L"\u85ce",		L"\u8755",		L"\u87ec",		L"\u880b",		L"\u88f5",		L"\u89d2",		L"\u8af6",		L"\n8dce",			// 0x7631 - 0x7638
+		L"\u85ce",		L"\u8755",		L"\u87ec",		L"\u880b",		L"\u88f5",		L"\u89d2",		L"\u8af6",		L"\u8dce",			// 0x7631 - 0x7638
 		L"\u8fbb",		L"\u8ff6",		L"\u90dd",		L"\u9127",		L"\u912d",		L"\u91b2",		L"\u9233",		L"\u9288",			// 0x7639 - 0x7640
 		L"\u9321",		L"\u9348",		L"\u9592",		L"\u96de",		L"\u9903",		L"\u9940",		L"\u9ad9",		L"\u9bd6",			// 0x7641 - 0x7648
 		L"\u9dd7",		L"\u9eb4",		L"\u9eb5",																							// 0x7649 - 0x764B
 	};
 
+	static const struct {
+		WORD First;
+		WORD Last;
+		const LPCTSTR *Table;
+		const LPCWSTR *TableU;
+	} SymbolTable[] =
+	{
+		{0x7521,	0x757E,	nullptr,			KanjiTable1},
+		{0x7621,	0x764B,	nullptr,			KanjiTable2},
+		{0x7A21,	0x7A48,	nullptr,			SymbolsTable_90_01},
+		{0x7A4D,	0x7A74,	SymbolsTable_90_45,	SymbolsTable_90_45_U},
+		{0x7B21,	0x7B51,	nullptr,			SymbolsTable_91},
+		{0x7C21,	0x7C7B,	SymbolsTable_92,	SymbolsTable_92_U},
+		{0x7D21,	0x7D7B,	SymbolsTable_93,	SymbolsTable_93_U},
+		{0x7E21,	0x7E7D,	SymbolsTable_94,	SymbolsTable_94_U},
+	};
+
 	// ƒVƒ“ƒ{ƒ‹‚ð•ÏŠ·‚·‚é
-	LPCTSTR pszSrc;
-	if ((wCode >= 0x7521) && (wCode <= 0x757E)) {
-		pszSrc = aszKanjiTable1[wCode - 0x7521];
-	} else if ((wCode >= 0x7621) && (wCode <= 0x764B)) {
-		pszSrc = aszKanjiTable2[wCode - 0x7621];
-	} else if ((wCode >= 0x7A50U) && (wCode <= 0x7A74U)) {
-		pszSrc = aszSymbolsTable1[wCode - 0x7A50U];
-	} else if ((wCode >= 0x7C21U) && (wCode <= 0x7C7BU)) {
-		pszSrc = aszSymbolsTable2[wCode - 0x7C21U];
-	} else if((wCode >= 0x7D21U) && (wCode <= 0x7D7BU)) {
-		pszSrc = aszSymbolsTable3[wCode - 0x7D21U];
-	} else if((wCode >= 0x7E21U) && (wCode <= 0x7E7DU)) {
-		pszSrc = aszSymbolsTable4[wCode - 0x7E21U];
-	} else {
-		pszSrc = TEXT(" ");
+	LPCTSTR pszSrc = nullptr;
+	for (int i = 0; i < _countof(SymbolTable); i++) {
+		if ((wCode >= SymbolTable[i].First) && (wCode <= SymbolTable[i].Last)) {
+#ifdef _UNICODE
+			if (!SymbolTable[i].Table || m_bUnicodeSymbol)
+				pszSrc = SymbolTable[i].TableU[wCode - SymbolTable[i].First];
+			else
+				pszSrc = SymbolTable[i].Table[wCode - SymbolTable[i].First];
+#else
+			if (SymbolTable[i].Table)
+				pszSrc = SymbolTable[i].Table[wCode - SymbolTable[i].First];
+#endif
+			break;
+		}
 	}
+	if (!pszSrc)
+		pszSrc = TEXT(" ");
 	DWORD Length = ::lstrlen(pszSrc);
 	if (dwDstLen < Length)
 		return -1;
