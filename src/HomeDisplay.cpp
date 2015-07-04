@@ -526,14 +526,12 @@ bool CFavoritesCategory::OnDecide()
 {
 	if (m_HotItem>=0) {
 		const CChannelItem *pItem=static_cast<CChannelItem*>(m_ItemList[m_HotItem]);
-		CAppCore::ChannelSelectInfo ChSelInfo;
 
-		ChSelInfo.Channel=*static_cast<const CChannelInfo*>(pItem);
-		ChSelInfo.TunerName=pItem->GetBonDriverFileName();
-		ChSelInfo.fUseCurTuner=!pItem->GetForceBonDriverChange();
-		ChSelInfo.fStrictService=false;
-
-		return GetAppClass().Core.SelectChannel(ChSelInfo);
+		return GetAppClass().Core.SelectChannel(
+			pItem->GetBonDriverFileName(),
+			*static_cast<const CChannelInfo*>(pItem),
+			pItem->GetForceBonDriverChange()?
+				0 : CAppCore::SELECT_CHANNEL_USE_CUR_TUNER);
 	}
 
 	return false;
@@ -614,14 +612,10 @@ bool CRecentChannelsCategory::OnDecide()
 {
 	if (m_HotItem>=0) {
 		const CChannelItem *pItem=static_cast<CChannelItem*>(m_ItemList[m_HotItem]);
-		CAppCore::ChannelSelectInfo ChSelInfo;
 
-		ChSelInfo.Channel=*static_cast<const CChannelInfo*>(pItem);
-		ChSelInfo.TunerName=pItem->GetBonDriverFileName();
-		ChSelInfo.fUseCurTuner=false;
-		ChSelInfo.fStrictService=false;
-
-		return GetAppClass().Core.SelectChannel(ChSelInfo);
+		return GetAppClass().Core.SelectChannel(
+			pItem->GetBonDriverFileName(),
+			*static_cast<const CChannelInfo*>(pItem));
 	}
 
 	return false;

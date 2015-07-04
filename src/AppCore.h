@@ -25,13 +25,6 @@ namespace TVTest
 class CAppCore
 {
 public:
-	struct ChannelSelectInfo {
-		CChannelInfo Channel;
-		TVTest::String TunerName;
-		bool fUseCurTuner;
-		bool fStrictService;
-	};
-
 	struct StreamIDInfo {
 		WORD NetworkID;
 		WORD TransportStreamID;
@@ -61,7 +54,11 @@ public:
 	const CChannelInfo *GetCurrentChannelInfo() const;
 	bool SetChannel(int Space,int Channel,int ServiceID=-1,bool fStrictService=false);
 	bool SetChannelByIndex(int Space,int Channel,int ServiceID=-1);
-	bool SelectChannel(const ChannelSelectInfo &SelInfo);
+	enum {
+		SELECT_CHANNEL_USE_CUR_TUNER  = 0x0001U,
+		SELECT_CHANNEL_STRICT_SERVICE = 0x0002U
+	};
+	bool SelectChannel(LPCTSTR pszTunerName,const CChannelInfo &ChannelInfo,unsigned int Flags=0);
 	bool SwitchChannel(int Channel);
 	bool SwitchChannelByNo(int ChannelNo,bool fSwitchService);
 	bool SetCommandLineChannel(const CCommandLineOptions *pCmdLine);
@@ -77,9 +74,6 @@ public:
 	bool GetCurrentServiceName(LPTSTR pszName,int MaxLength,bool fUseChannelName=true);
 
 	bool OpenTuner(LPCTSTR pszFileName);
-	bool OpenTunerAndSetChannel(LPCTSTR pszDriverFileName,
-								const CChannelInfo *pChannelInfo,
-								bool fStrictService=false);
 	bool OpenTuner();
 	bool OpenAndInitializeTuner(unsigned int OpenFlags=0);
 	bool CloseTuner();

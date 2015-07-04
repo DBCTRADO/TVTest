@@ -3098,23 +3098,21 @@ LRESULT CPlugin::OnPluginMessage(WPARAM wParam,LPARAM lParam)
 			if (pInfo==NULL || pInfo->Size!=sizeof(TVTest::ChannelSelectInfo))
 				return FALSE;
 
-			CAppCore::ChannelSelectInfo SelInfo;
+			CChannelInfo Channel;
+			unsigned int Flags;
 
-			SelInfo.Channel.SetSpace(pInfo->Space);
-			SelInfo.Channel.SetChannelIndex(pInfo->Channel);
-			SelInfo.Channel.SetNetworkID(pInfo->NetworkID);
-			SelInfo.Channel.SetTransportStreamID(pInfo->TransportStreamID);
-			SelInfo.Channel.SetServiceID(pInfo->ServiceID);
-			if (pInfo->pszTuner!=NULL) {
-				SelInfo.TunerName=pInfo->pszTuner;
-				SelInfo.fUseCurTuner=false;
-			} else {
-				SelInfo.fUseCurTuner=true;
-			}
-			SelInfo.fStrictService=
-				(pInfo->Flags & TVTest::CHANNEL_SELECT_FLAG_STRICTSERVICE)!=0;
+			Channel.SetSpace(pInfo->Space);
+			Channel.SetChannelIndex(pInfo->Channel);
+			Channel.SetNetworkID(pInfo->NetworkID);
+			Channel.SetTransportStreamID(pInfo->TransportStreamID);
+			Channel.SetServiceID(pInfo->ServiceID);
+			Flags=0;
+			if (pInfo->pszTuner==NULL)
+				Flags|=CAppCore::SELECT_CHANNEL_USE_CUR_TUNER;
+			if ((pInfo->Flags & TVTest::CHANNEL_SELECT_FLAG_STRICTSERVICE)!=0)
+				Flags|=CAppCore::SELECT_CHANNEL_STRICT_SERVICE;
 
-			return GetAppClass().Core.SelectChannel(SelInfo);
+			return GetAppClass().Core.SelectChannel(pInfo->pszTuner,Channel,Flags);
 		}
 
 	case TVTest::MESSAGE_SET1SEGMODE:

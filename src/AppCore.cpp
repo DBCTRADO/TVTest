@@ -411,22 +411,22 @@ bool CAppCore::SetChannelByIndex(int Space,int Channel,int ServiceID)
 }
 
 
-bool CAppCore::SelectChannel(const ChannelSelectInfo &SelInfo)
+bool CAppCore::SelectChannel(LPCTSTR pszTunerName,const CChannelInfo &ChannelInfo,unsigned int Flags)
 {
-	if (SelInfo.fUseCurTuner
+	if ((Flags & SELECT_CHANNEL_USE_CUR_TUNER)!=0
 			&& m_App.CoreEngine.IsTunerOpen()) {
 		int Space=m_App.ChannelManager.GetCurrentSpace();
 		if (Space!=CChannelManager::SPACE_INVALID) {
 			int Index=m_App.ChannelManager.FindChannelByIDs(Space,
-				SelInfo.Channel.GetNetworkID(),
-				SelInfo.Channel.GetTransportStreamID(),
-				SelInfo.Channel.GetServiceID());
+				ChannelInfo.GetNetworkID(),
+				ChannelInfo.GetTransportStreamID(),
+				ChannelInfo.GetServiceID());
 			if (Index<0 && Space!=CChannelManager::SPACE_ALL) {
 				for (Space=0;Space<m_App.ChannelManager.NumSpaces();Space++) {
 					Index=m_App.ChannelManager.FindChannelByIDs(Space,
-						SelInfo.Channel.GetNetworkID(),
-						SelInfo.Channel.GetTransportStreamID(),
-						SelInfo.Channel.GetServiceID());
+						ChannelInfo.GetNetworkID(),
+						ChannelInfo.GetTransportStreamID(),
+						ChannelInfo.GetServiceID());
 					if (Index>=0)
 						break;
 				}
@@ -434,15 +434,72 @@ bool CAppCore::SelectChannel(const ChannelSelectInfo &SelInfo)
 			if (Index>=0) {
 				if (!m_App.UICore.ConfirmChannelChange())
 					return false;
-				return SetChannel(Space,Index,-1,SelInfo.fStrictService);
+				return SetChannel(Space,Index,-1,(Flags & SELECT_CHANNEL_STRICT_SERVICE)!=0);
 			}
 		}
-	} else if (SelInfo.TunerName.empty()) {
-		return false;
 	}
 
-	return OpenTunerAndSetChannel(SelInfo.TunerName.c_str(),
-								  &SelInfo.Channel,SelInfo.fStrictService);
+	if (IsStringEmpty(pszTunerName))
+		return false;
+
+	if (!m_App.UICore.ConfirmChannelChange())
+		return false;
+
+	if (!OpenTuner(pszTunerName))
+		return false;
+
+	int Space=CChannelManager::SPACE_INVALID,Channel=-1;
+	const CChannelList *pChannelList;
+
+	pChannelList=m_App.ChannelManager.GetCurrentChannelList();
+	if (pChannelList!=nullptr) {
+		if (ChannelInfo.GetChannelIndex()>=0) {
+			Channel=pChannelList->FindByIndex(
+				ChannelInfo.GetSpace(),
+				ChannelInfo.GetChannelIndex(),
+				ChannelInfo.GetServiceID());
+		} else if (ChannelInfo.GetServiceID()>0
+				&& (ChannelInfo.GetNetworkID()>0
+					|| ChannelInfo.GetTransportStreamID()>0)) {
+			Channel=pChannelList->FindByIDs(
+				ChannelInfo.GetNetworkID(),
+				ChannelInfo.GetTransportStreamID(),
+				ChannelInfo.GetServiceID());
+		}
+		if (Channel>=0)
+			Space=m_App.ChannelManager.GetCurrentSpace();
+	}
+
+	if (Channel<0) {
+		if (m_App.ChannelManager.GetCurrentSpace()==CChannelManager::SPACE_ALL
+				|| ChannelInfo.GetSpace()==m_App.ChannelManager.GetCurrentSpace())
+			return false;
+		pChannelList=m_App.ChannelManager.GetChannelList(ChannelInfo.GetSpace());
+		if (pChannelList==nullptr)
+			return false;
+
+		if (ChannelInfo.GetChannelIndex()>=0) {
+			Channel=pChannelList->FindByIndex(
+				ChannelInfo.GetSpace(),
+				ChannelInfo.GetChannelIndex(),
+				ChannelInfo.GetServiceID());
+		}
+		if (Channel<0) {
+			if (ChannelInfo.GetServiceID()>0
+					&& (ChannelInfo.GetNetworkID()>0
+						|| ChannelInfo.GetTransportStreamID()>0)) {
+				Channel=pChannelList->FindByIDs(
+					ChannelInfo.GetNetworkID(),
+					ChannelInfo.GetTransportStreamID(),
+					ChannelInfo.GetServiceID());
+			}
+			if (Channel<0)
+				return false;
+		}
+		Space=ChannelInfo.GetSpace();
+	}
+
+	return SetChannel(Space,Channel,-1,(Flags & SELECT_CHANNEL_STRICT_SERVICE)!=0);
 }
 
 
@@ -842,45 +899,6 @@ bool CAppCore::OpenTuner(LPCTSTR pszFileName)
 	m_App.AppEventManager.OnTunerChanged();
 
 	return fOK;
-}
-
-
-bool CAppCore::OpenTunerAndSetChannel(
-	LPCTSTR pszDriverFileName,const CChannelInfo *pChannelInfo,bool fStrictService)
-{
-	if (IsStringEmpty(pszDriverFileName) || pChannelInfo==nullptr)
-		return false;
-
-	if (!m_App.UICore.ConfirmChannelChange())
-		return false;
-
-	if (!OpenTuner(pszDriverFileName))
-		return false;
-
-	const CChannelList *pList=m_App.ChannelManager.GetChannelList(pChannelInfo->GetSpace());
-	if (pList==nullptr)
-		return false;
-
-	int Channel=-1;
-
-	if (pChannelInfo->GetChannelIndex()>=0) {
-		Channel=pList->FindByIndex(-1,
-								   pChannelInfo->GetChannelIndex(),
-								   pChannelInfo->GetServiceID());
-	}
-	if (Channel<0) {
-		if (pChannelInfo->GetServiceID()>0
-				&& (pChannelInfo->GetNetworkID()>0
-					|| pChannelInfo->GetTransportStreamID()>0)) {
-			Channel=pList->FindByIDs(pChannelInfo->GetNetworkID(),
-									 pChannelInfo->GetTransportStreamID(),
-									 pChannelInfo->GetServiceID());
-		}
-		if (Channel<0)
-			return false;
-	}
-
-	return SetChannel(pChannelInfo->GetSpace(),Channel,-1,fStrictService);
 }
 
 

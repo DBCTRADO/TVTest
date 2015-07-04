@@ -2720,7 +2720,7 @@ void CMainWindow::OnCommand(HWND hwnd,int id,HWND hwndCtl,UINT codeNotify)
 			else
 				pChannel=m_App.ChannelHistory.Forward();
 			if (pChannel!=nullptr) {
-				m_App.Core.OpenTunerAndSetChannel(pChannel->GetTunerName(),pChannel);
+				m_App.Core.SelectChannel(pChannel->GetTunerName(),*pChannel);
 			}
 		}
 		return;
@@ -2730,7 +2730,7 @@ void CMainWindow::OnCommand(HWND hwnd,int id,HWND hwndCtl,UINT codeNotify)
 			const CTunerChannelInfo *pChannel=
 				m_App.RecentChannelList.GetChannelInfo(1);
 			if (pChannel!=nullptr) {
-				m_App.Core.OpenTunerAndSetChannel(pChannel->GetTunerName(),pChannel);
+				m_App.Core.SelectChannel(pChannel->GetTunerName(),*pChannel);
 			}
 		}
 		return;
@@ -3193,7 +3193,7 @@ void CMainWindow::OnCommand(HWND hwnd,int id,HWND hwndCtl,UINT codeNotify)
 				m_App.RecentChannelList.GetChannelInfo(id-CM_CHANNELHISTORY_FIRST);
 
 			if (pChannel!=nullptr)
-				m_App.Core.OpenTunerAndSetChannel(pChannel->GetTunerName(),pChannel);
+				m_App.Core.SelectChannel(pChannel->GetTunerName(),*pChannel);
 			return;
 		}
 
@@ -3201,13 +3201,11 @@ void CMainWindow::OnCommand(HWND hwnd,int id,HWND hwndCtl,UINT codeNotify)
 			CFavoritesManager::ChannelInfo ChannelInfo;
 
 			if (m_App.FavoritesManager.GetChannelByCommand(id,&ChannelInfo)) {
-				CAppCore::ChannelSelectInfo SelInfo;
-
-				SelInfo.Channel=ChannelInfo.Channel;
-				SelInfo.TunerName=ChannelInfo.BonDriverFileName;
-				SelInfo.fUseCurTuner=!ChannelInfo.fForceBonDriverChange;
-				SelInfo.fStrictService=false;
-				m_App.Core.SelectChannel(SelInfo);
+				m_App.Core.SelectChannel(
+					ChannelInfo.BonDriverFileName.c_str(),
+					ChannelInfo.Channel,
+					ChannelInfo.fForceBonDriverChange?
+						0 : CAppCore::SELECT_CHANNEL_USE_CUR_TUNER);
 			}
 			return;
 		}

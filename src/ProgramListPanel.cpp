@@ -1018,12 +1018,8 @@ LRESULT CProgramListPanel::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lP
 				switch (HotItem) {
 				case ITEM_CHANNEL:
 					if (!IsStringEmpty(m_SelectedChannel.GetName())) {
-						CAppCore::ChannelSelectInfo ChSelInfo;
-
-						ChSelInfo.Channel=m_SelectedChannel;
-						ChSelInfo.fUseCurTuner=true;
-						ChSelInfo.fStrictService=false;
-						GetAppClass().Core.SelectChannel(ChSelInfo);
+						GetAppClass().Core.SelectChannel(
+							nullptr,m_SelectedChannel,CAppCore::SELECT_CHANNEL_USE_CUR_TUNER);
 					}
 					break;
 
