@@ -72,8 +72,6 @@ CPseudoOSD::CPseudoOSD()
 {
 	LOGFONT lf;
 	DrawUtil::GetSystemFont(DrawUtil::FONT_DEFAULT,&lf);
-	lf.lfHeight=32;
-	lf.lfQuality=NONANTIALIASED_QUALITY;
 	m_Font.Create(&lf);
 
 	m_Position.Left=0;
@@ -320,15 +318,7 @@ bool CPseudoOSD::SetTextStyle(unsigned int Style)
 
 bool CPseudoOSD::SetFont(const LOGFONT &Font)
 {
-#if 0
-	LOGFONT lf;
-
-	lf=Font;
-	lf.lfQuality=NONANTIALIASED_QUALITY;
-	return m_Font.Create(&lf);
-#else
 	return m_Font.Create(&Font);
-#endif
 }
 
 
