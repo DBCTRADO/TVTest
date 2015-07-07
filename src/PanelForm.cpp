@@ -34,8 +34,7 @@ bool CPanelForm::Initialize(HINSTANCE hinst)
 
 
 CPanelForm::CPanelForm()
-	: m_Font(DrawUtil::FONT_DEFAULT)
-	, m_TabStyle(TABSTYLE_TEXT_ONLY)
+	: m_TabStyle(TABSTYLE_TEXT_ONLY)
 	, m_TabHeight(0)
 	, m_TabWidth(0)
 	, m_fFitTabWidth(true)
@@ -430,6 +429,11 @@ LRESULT CPanelForm::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 	case WM_CREATE:
 		{
 			InitializeUI();
+			if (!m_Font.IsCreated()) {
+				LOGFONT lf;
+				DrawUtil::GetDefaultUIFont(&lf);
+				m_Font.Create(&lf);
+			}
 			CalcTabSize();
 
 			m_Tooltip.Create(hwnd);
@@ -804,7 +808,7 @@ CPanelForm::CPage::~CPage()
 
 bool CPanelForm::CPage::GetDefaultFont(LOGFONT *pFont)
 {
-	return ::GetObject(::GetStockObject(DEFAULT_GUI_FONT),sizeof(LOGFONT),pFont)==sizeof(LOGFONT);
+	return DrawUtil::GetDefaultUIFont(pFont);
 }
 
 
