@@ -44,11 +44,8 @@ COSDOptions::COSDOptions()
 	DrawUtil::GetSystemFont(DrawUtil::FONT_MESSAGE,&lf);
 
 	m_NotificationBarFont=lf;
-	m_NotificationBarFont.lfHeight=
 #ifndef TVTEST_FOR_1SEG
-		-14;
-#else
-		-12;
+	m_NotificationBarFont.lfHeight=lf.lfHeight*12/10;
 #endif
 
 	m_DisplayFont=lf;
