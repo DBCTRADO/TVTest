@@ -190,8 +190,33 @@ bool CUICore::SetMute(bool fMute)
 }
 
 
-bool CUICore::SetDualMonoMode(CAudioDecFilter::DualMonoMode Mode)
+bool CUICore::SetDualMonoMode(CAudioDecFilter::DualMonoMode Mode,bool fApplyStereo)
 {
+	if (fApplyStereo) {
+		const BYTE ComponentType=m_App.CoreEngine.m_DtvEngine.GetAudioComponentType();
+
+		if (ComponentType==0x03	// 0x03 = Stereo
+				|| (ComponentType==0 && m_App.CoreEngine.m_DtvEngine.GetAudioChannelNum()==2)) {
+			CAudioDecFilter::StereoMode StereoMode;
+
+			switch (Mode) {
+			case CAudioDecFilter::DUALMONO_MAIN:
+				StereoMode=CAudioDecFilter::STEREOMODE_STEREO;
+				break;
+			case CAudioDecFilter::DUALMONO_SUB:
+				StereoMode=CAudioDecFilter::STEREOMODE_LEFT;
+				break;
+			case CAudioDecFilter::DUALMONO_BOTH:
+				StereoMode=CAudioDecFilter::STEREOMODE_RIGHT;
+				break;
+			default:
+				return false;
+			}
+
+			SetStereoMode(StereoMode);
+		}
+	}
+
 	return SelectDualMonoMode(Mode);
 }
 
@@ -323,6 +348,7 @@ bool CUICore::SelectAudio(const TVTest::CAudioManager::AudioSelectInfo &Info,boo
 		}
 
 		SelectAudioStream(AudioIndex);
+		SetStereoMode(CAudioDecFilter::STEREOMODE_STEREO);
 		if (DualMonoMode!=CAudioDecFilter::DUALMONO_INVALID)
 			SelectDualMonoMode(DualMonoMode,fUpdate);
 	}
@@ -620,6 +646,13 @@ bool CUICore::GetSelectedAudioText(LPTSTR pszText,int MaxLength) const
 			StdUtil::snprintf(pszText,MaxLength,TEXT("音声%d: %s"),
 							  GetAudioStream()+1,AudioInfo.szText);
 		}
+	} else if (m_App.CoreEngine.m_DtvEngine.GetAudioChannelNum()==2
+			&& GetStereoMode()!=CAudioDecFilter::STEREOMODE_STEREO) {
+		int Pos=0;
+		if (GetNumAudioStreams()>1)
+			Pos=StdUtil::snprintf(pszText,MaxLength,TEXT("音声%d: "),GetAudioStream()+1);
+		StdUtil::snprintf(pszText+Pos,MaxLength-Pos,TEXT("ステレオ%s"),
+						  GetStereoMode()==CAudioDecFilter::STEREOMODE_LEFT?TEXT("左"):TEXT("右"));
 	} else {
 		StdUtil::snprintf(pszText,MaxLength,TEXT("音声%d"),GetAudioStream()+1);
 	}

@@ -736,6 +736,10 @@ BEGIN
 	CM_VIDEOSTREAM_SWITCH,		"映像ストリーム切替"
 	CM_MULTIVIEW_SWITCH,		"マルチビュー切替"
 
+	CM_STEREOMODE_STEREO		"ステレオ(左+右)"
+	CM_STEREOMODE_LEFT			"ステレオ(左)"
+	CM_STEREOMODE_RIGHT			"ステレオ(右)"
+
 	CM_WHEEL_VOLUME,			"音量"
 	CM_WHEEL_CHANNEL,			"チャンネル"
 	CM_WHEEL_AUDIO,				"音声"

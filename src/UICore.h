@@ -72,7 +72,7 @@ public:
 	bool SetVolume(int Volume,bool fOSD=true);
 	bool GetMute() const;
 	bool SetMute(bool fMute);
-	bool SetDualMonoMode(CAudioDecFilter::DualMonoMode Mode);
+	bool SetDualMonoMode(CAudioDecFilter::DualMonoMode Mode,bool fApplyStereo=true);
 	CAudioDecFilter::DualMonoMode GetDualMonoMode() const;
 	CAudioDecFilter::DualMonoMode GetActualDualMonoMode() const;
 	bool SetStereoMode(CAudioDecFilter::StereoMode Mode);

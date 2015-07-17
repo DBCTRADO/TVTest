@@ -2274,6 +2274,16 @@ void CMainWindow::OnCommand(HWND hwnd,int id,HWND hwndCtl,UINT codeNotify)
 		ShowAudioOSD();
 		return;
 
+	case CM_STEREOMODE_STEREO:
+	case CM_STEREOMODE_LEFT:
+	case CM_STEREOMODE_RIGHT:
+		m_pCore->SetStereoMode(
+			id==CM_STEREOMODE_STEREO?CAudioDecFilter::STEREOMODE_STEREO:
+			id==CM_STEREOMODE_LEFT  ?CAudioDecFilter::STEREOMODE_LEFT:
+			                         CAudioDecFilter::STEREOMODE_RIGHT);
+		ShowAudioOSD();
+		return;
+
 	case CM_SWITCHAUDIO:
 		m_pCore->SwitchAudio();
 		ShowAudioOSD();
@@ -3887,22 +3897,46 @@ bool CMainWindow::OnInitMenuPopup(HMENU hmenu)
 
 		HINSTANCE hinstRes=m_App.GetResourceInstance();
 
-		if (!fDualMono && DtvEngine.GetAudioChannelNum()==CMediaViewer::AUDIO_CHANNEL_DUALMONO) {
-			if (Menu.GetItemCount()>0)
-				Menu.AppendSeparator();
-			static const int DualMonoMenuList[] = {
-				CM_DUALMONO_MAIN,
-				CM_DUALMONO_SUB,
-				CM_DUALMONO_BOTH
-			};
-			for (int i=0;i<lengthof(DualMonoMenuList);i++) {
-				TCHAR szText[64];
-				::LoadString(hinstRes,DualMonoMenuList[i],szText,lengthof(szText));
-				Menu.Append(DualMonoMenuList[i],szText);
+		if (!fDualMono) {
+			const BYTE Channels=DtvEngine.GetAudioChannelNum();
+
+			if (Channels==CMediaViewer::AUDIO_CHANNEL_DUALMONO) {
+				if (Menu.GetItemCount()>0)
+					Menu.AppendSeparator();
+				static const int DualMonoMenuList[] = {
+					CM_DUALMONO_MAIN,
+					CM_DUALMONO_SUB,
+					CM_DUALMONO_BOTH
+				};
+				for (int i=0;i<lengthof(DualMonoMenuList);i++) {
+					TCHAR szText[64];
+					::LoadString(hinstRes,DualMonoMenuList[i],szText,lengthof(szText));
+					Menu.Append(DualMonoMenuList[i],szText);
+				}
+				Menu.CheckRadioItem(CM_DUALMONO_MAIN,CM_DUALMONO_BOTH,
+					CurDualMonoMode==CAudioDecFilter::DUALMONO_MAIN?CM_DUALMONO_MAIN:
+					CurDualMonoMode==CAudioDecFilter::DUALMONO_SUB?CM_DUALMONO_SUB:CM_DUALMONO_BOTH);
+			} else if (Channels==2 && DtvEngine.GetAudioComponentType()==0) {
+				if (Menu.GetItemCount()>0)
+					Menu.AppendSeparator();
+				static const int StereoModeMenuList[] = {
+					CM_STEREOMODE_STEREO,
+					CM_STEREOMODE_LEFT,
+					CM_STEREOMODE_RIGHT
+				};
+				for (int i=0;i<lengthof(StereoModeMenuList);i++) {
+					TCHAR szText[64];
+					::LoadString(hinstRes,StereoModeMenuList[i],szText,lengthof(szText));
+					Menu.Append(StereoModeMenuList[i],szText);
+				}
+				const CAudioDecFilter::StereoMode CurStereoMode=m_pCore->GetStereoMode();
+				Menu.CheckRadioItem(CM_STEREOMODE_STEREO,CM_STEREOMODE_RIGHT,
+					CurStereoMode==CAudioDecFilter::STEREOMODE_STEREO?
+						CM_STEREOMODE_STEREO:
+					CurStereoMode==CAudioDecFilter::STEREOMODE_LEFT?
+						CM_STEREOMODE_LEFT:
+						CM_STEREOMODE_RIGHT);
 			}
-			Menu.CheckRadioItem(CM_DUALMONO_MAIN,CM_DUALMONO_BOTH,
-				CurDualMonoMode==CAudioDecFilter::DUALMONO_MAIN?CM_DUALMONO_MAIN:
-				CurDualMonoMode==CAudioDecFilter::DUALMONO_SUB?CM_DUALMONO_SUB:CM_DUALMONO_BOTH);
 		}
 
 		if (Menu.GetItemCount()>0) {
