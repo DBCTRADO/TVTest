@@ -1610,7 +1610,7 @@ void CProgramGuide::DrawEventBackground(
 	rcTitle.bottom=min(Rect.bottom,Rect.top+pItem->GetTitleLines()*LineHeight);
 	rcText.left=Rect.left+m_TextLeftMargin;
 	rcText.top=rcTitle.bottom;
-	rcText.right=Rect.right;
+	rcText.right=Rect.right-m_Style.EventPadding.Right;
 	rcText.bottom=Rect.bottom;
 
 	if (m_pProgramCustomizer!=NULL) {
@@ -1709,7 +1709,7 @@ void CProgramGuide::DrawEventText(
 	rcTitle.bottom=min(Rect.bottom,Rect.top+pItem->GetTitleLines()*LineHeight);
 	rcText.left=Rect.left+m_TextLeftMargin;
 	rcText.top=rcTitle.bottom;
-	rcText.right=Rect.right;
+	rcText.right=Rect.right-m_Style.EventPadding.Right;
 	rcText.bottom=Rect.bottom;
 
 	rcTitle.top+=m_Style.EventLeading;
@@ -5093,6 +5093,7 @@ CProgramGuide::ProgramGuideStyle::ProgramGuideStyle()
 	, HeaderShadowHeight(8)
 	, EventLeading(1)
 	, EventLineSpacing(0)
+	, EventPadding(0,0,2,0)
 	, EventIconSize(CEpgIcons::DEFAULT_ICON_WIDTH,CEpgIcons::DEFAULT_ICON_HEIGHT)
 	, EventIconMargin(1)
 	, FeaturedMarkMargin(0)
@@ -5117,6 +5118,7 @@ void CProgramGuide::ProgramGuideStyle::SetStyle(const TVTest::Style::CStyleManag
 	pStyleManager->Get(TEXT("program-guide.header.shadow.height"),&HeaderShadowHeight);
 	pStyleManager->Get(TEXT("program-guide.event.leading"),&EventLeading);
 	pStyleManager->Get(TEXT("program-guide.event.line-spacing"),&EventLineSpacing);
+	pStyleManager->Get(TEXT("program-guide.event.padding"),&EventPadding);
 	pStyleManager->Get(TEXT("program-guide.event.icon"),&EventIconSize);
 	pStyleManager->Get(TEXT("program-guide.event.icon.margin"),&EventIconMargin);
 	pStyleManager->Get(TEXT("program-guide.event.featured-mark.margin"),&FeaturedMarkMargin);
@@ -5140,6 +5142,7 @@ void CProgramGuide::ProgramGuideStyle::NormalizeStyle(const TVTest::Style::CStyl
 	pStyleManager->ToPixels(&HeaderShadowHeight);
 	pStyleManager->ToPixels(&EventLeading);
 	pStyleManager->ToPixels(&EventLineSpacing);
+	pStyleManager->ToPixels(&EventPadding);
 	pStyleManager->ToPixels(&EventIconSize);
 	pStyleManager->ToPixels(&EventIconMargin);
 	pStyleManager->ToPixels(&FeaturedMarkMargin);
