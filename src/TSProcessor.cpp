@@ -10,17 +10,6 @@ namespace TVTest
 {
 
 
-template<typename T> void SafeRelease(T **ppT)
-{
-	if (*ppT != nullptr) {
-		(*ppT)->Release();
-		*ppT = nullptr;
-	}
-}
-
-
-
-
 CTSPacketInterface::CTSPacketInterface()
 	: m_pMediaData(nullptr)
 	, m_fModified(false)

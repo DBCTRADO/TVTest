@@ -8,6 +8,14 @@
 namespace TVTest
 {
 
+	template<typename T> inline void SafeRelease(T **ppObj)
+	{
+		if (*ppObj != nullptr) {
+			(*ppObj)->Release();
+			*ppObj = nullptr;
+		}
+	}
+
 	class CIUnknownImpl
 	{
 	public:
