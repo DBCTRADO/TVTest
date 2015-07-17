@@ -9,7 +9,7 @@
 #include "UIBase.h"
 #include "Theme.h"
 #include "DrawUtil.h"
-#include "TextDraw.h"
+#include "TextDrawClient.h"
 #include "ProgramSearch.h"
 #include "ProgramGuideFavorites.h"
 #include "FeaturedEvents.h"
@@ -369,6 +369,9 @@ public:
 	int GetLinesPerHour() const { return m_LinesPerHour; }
 	int GetItemWidth() const { return m_ItemWidth; }
 	bool SetUIOptions(int LinesPerHour,int ItemWidth);
+	bool SetTextDrawEngine(TVTest::CTextDrawClient::TextDrawEngine Engine);
+	TVTest::CTextDrawClient::TextDrawEngine GetTextDrawEngine() const { return m_TextDrawEngine; }
+	bool SetDirectWriteRenderingParams(const TVTest::CDirectWriteRenderer::RenderingParams &Params);
 	bool SetFont(const LOGFONT *pFont);
 	bool GetFont(LOGFONT *pFont) const;
 	bool SetEventInfoFont(const LOGFONT *pFont);
@@ -456,7 +459,10 @@ private:
 	DrawUtil::CFont m_Font;
 	DrawUtil::CFont m_TitleFont;
 	DrawUtil::CFont m_TimeFont;
+	TVTest::CTextDrawClient::TextDrawEngine m_TextDrawEngine;
+	TVTest::CTextDrawClient m_TextDrawClient;
 	int m_FontHeight;
+	int m_GDIFontHeight;
 	int m_LineMargin;
 	int m_ItemWidth;
 	int m_TextLeftMargin;
@@ -577,12 +583,23 @@ private:
 	bool UpdateService(ProgramGuide::CServiceInfo *pService,bool fUpdateEpg);
 	void UpdateServiceList();
 	void CalcLayout();
-	void DrawEvent(ProgramGuide::CEventItem *pItem,
-				   HDC hdc,const RECT &Rect,TVTest::CTextDraw &TextDraw,int LineHeight,
-				   int CurTimePos);
-	void DrawEventList(ProgramGuide::CEventLayout *pLayout,
-					   HDC hdc,const RECT &Rect,const RECT &PaintRect,
-					   TVTest::CTextDraw &TextDraw);
+	enum {
+		EVENT_ITEM_STATUS_CURRENT     = 0x0001U,
+		EVENT_ITEM_STATUS_HIGHLIGHTED = 0x0002U,
+		EVENT_ITEM_STATUS_FILTERED    = 0x0004U,
+		EVENT_ITEM_STATUS_COMMON      = 0x0008U
+	};
+	unsigned int GetEventItemStatus(const ProgramGuide::CEventItem *pItem,unsigned int Mask) const;
+	void DrawEventBackground(
+		ProgramGuide::CEventItem *pItem,
+		HDC hdc,const RECT &Rect,TVTest::CTextDraw &TextDraw,int LineHeight,int CurTimePos);
+	void DrawEventText(
+		ProgramGuide::CEventItem *pItem,
+		HDC hdc,const RECT &Rect,TVTest::CTextDraw &TextDraw,int LineHeight);
+	void DrawEventList(
+		ProgramGuide::CEventLayout *pLayout,
+		HDC hdc,const RECT &Rect,const RECT &PaintRect,
+		TVTest::CTextDraw &TextDraw,bool fBackground);
 	void DrawHeaderBackground(HDC hdc,const RECT &Rect,bool fCur) const;
 	void DrawServiceHeader(ProgramGuide::CServiceInfo *pServiceInfo,
 						   HDC hdc,const RECT &Rect,int Chevron,
@@ -591,6 +608,7 @@ private:
 	void DrawTimeBar(HDC hdc,const RECT &Rect,bool fRight);
 	void Draw(HDC hdc,const RECT &PaintRect);
 	void DrawMessage(HDC hdc,const RECT &ClientRect) const;
+	void CalcFontMetrics();
 	int GetLineHeight() const;
 	int CalcHeaderHeight() const;
 	int GetCurTimeLinePos() const;
@@ -606,6 +624,7 @@ private:
 	void RestoreTimePos();
 	void SetCaption();
 	void SetTooltip();
+	void OnFontChanged();
 	ProgramGuide::CEventItem *GetEventItem(int ListIndex,int EventIndex);
 	const ProgramGuide::CEventItem *GetEventItem(int ListIndex,int EventIndex) const;
 	bool GetEventRect(int ListIndex,int EventIndex,RECT *pRect) const;

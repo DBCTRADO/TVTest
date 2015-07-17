@@ -42,6 +42,9 @@ public:
 	bool Write(LPCTSTR pszValueName,const TVTest::String &Value);
 	bool Read(LPCTSTR pszValueName,bool *pfData);
 	bool Write(LPCTSTR pszValueName,bool fData);
+	bool Read(LPCTSTR pszValueName,double *pData);
+	bool Write(LPCTSTR pszValueName,double Data,int Digits);
+	bool Read(LPCTSTR pszValueName,float *pData);
 	bool ReadColor(LPCTSTR pszValueName,COLORREF *pcrData);
 	bool WriteColor(LPCTSTR pszValueName,COLORREF crData);
 	bool Read(LPCTSTR pszValueName,LOGFONT *pFont);

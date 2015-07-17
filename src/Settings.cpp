@@ -238,6 +238,47 @@ bool CSettings::Write(LPCTSTR pszValueName,bool fData)
 }
 
 
+bool CSettings::Read(LPCTSTR pszValueName,double *pData)
+{
+	if (pData==NULL)
+		return false;
+
+	TVTest::String Value;
+
+	if (!Read(pszValueName,&Value))
+		return false;
+
+	*pData=std::_tcstod(Value.c_str(),NULL);
+
+	return true;
+}
+
+
+bool CSettings::Write(LPCTSTR pszValueName,double Data,int Digits)
+{
+	TCHAR szText[64];
+
+	StdUtil::snprintf(szText,lengthof(szText),TEXT("%.*f"),Digits,Data);
+	return Write(pszValueName,szText);
+}
+
+
+bool CSettings::Read(LPCTSTR pszValueName,float *pData)
+{
+	if (pData==NULL)
+		return false;
+
+	double Value;
+
+	if (!Read(pszValueName,&Value))
+		return false;
+
+	*pData=static_cast<float>(Value);
+
+	return true;
+}
+
+
 bool CSettings::ReadColor(LPCTSTR pszValueName,COLORREF *pcrData)
 {
 	TCHAR szText[8];

@@ -514,12 +514,11 @@ void CProgramListPanel::CalcDimensions()
 {
 	HDC hdc=::GetDC(m_hwnd);
 	TVTest::CTextDraw DrawText;
-	DrawText.Begin(hdc,TVTest::CTextDraw::FLAG_JAPANESE_HYPHNATION);
 	RECT rc;
-	HFONT hfontOld;
-
+	GetClientRect(&rc);
+	DrawText.Begin(hdc,rc,TVTest::CTextDraw::FLAG_JAPANESE_HYPHNATION);
 	GetProgramListRect(&rc);
-	hfontOld=static_cast<HFONT>(::GetCurrentObject(hdc,OBJ_FONT));
+	HFONT hfontOld=static_cast<HFONT>(::GetCurrentObject(hdc,OBJ_FONT));
 	m_TotalLines=0;
 	for (int i=0;i<m_ItemList.NumItems();i++) {
 		CProgramItemInfo *pItem=m_ItemList.GetItem(i);
@@ -530,6 +529,7 @@ void CProgramListPanel::CalcDimensions()
 		m_TotalLines+=pItem->CalcTextLines(DrawText,rc.right-GetTextLeftMargin());
 	}
 	::SelectObject(hdc,hfontOld);
+	DrawText.End();
 	::ReleaseDC(m_hwnd,hdc);
 }
 
@@ -1174,11 +1174,12 @@ LRESULT CProgramListPanel::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lP
 
 void CProgramListPanel::Draw(HDC hdc,const RECT *prcPaint)
 {
+	RECT rc,rcMargin;
 	TVTest::CTextDraw DrawText;
-	DrawText.Begin(hdc,TVTest::CTextDraw::FLAG_JAPANESE_HYPHNATION);
+	GetClientRect(&rc);
+	DrawText.Begin(hdc,rc,TVTest::CTextDraw::FLAG_JAPANESE_HYPHNATION);
 
 	const int LineHeight=m_FontHeight+m_Style.LineSpacing;
-	RECT rc,rcMargin;
 
 	HFONT hfontOld=static_cast<HFONT>(::GetCurrentObject(hdc,OBJ_FONT));
 	COLORREF crOldTextColor=::GetTextColor(hdc);
@@ -1362,6 +1363,7 @@ void CProgramListPanel::Draw(HDC hdc,const RECT *prcPaint)
 	::SetBkMode(hdc,OldBkMode);
 	::SelectObject(hdc,hfontOld);
 	::DeleteObject(hbr);
+	DrawText.End();
 }
 
 

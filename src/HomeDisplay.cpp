@@ -747,7 +747,9 @@ bool CFeaturedEventsCategory::Create()
 void CFeaturedEventsCategory::LayOut(const CHomeDisplay::StyleInfo &Style,HDC hdc,const RECT &ContentRect)
 {
 	TVTest::CTextDraw DrawText;
-	DrawText.Begin(hdc,TVTest::CTextDraw::FLAG_JAPANESE_HYPHNATION);
+	RECT rc;
+	m_pHomeDisplay->GetClientRect(&rc);
+	DrawText.Begin(hdc,rc,TVTest::CTextDraw::FLAG_JAPANESE_HYPHNATION);
 
 	const CFeaturedEventsSettings &Settings=GetAppClass().FeaturedEvents.GetSettings();
 	int ItemBaseHeight=2*Style.FontHeight+Style.ItemMargins.Vert();
@@ -794,6 +796,8 @@ void CFeaturedEventsCategory::LayOut(const CHomeDisplay::StyleInfo &Style,HDC hd
 		}
 		pItem->SetExpandedHeight(Height);
 	}
+
+	DrawText.End();
 }
 
 
@@ -816,7 +820,9 @@ void CFeaturedEventsCategory::Draw(HDC hdc,const CHomeDisplay::StyleInfo &Style,
 	}
 
 	TVTest::CTextDraw DrawText;
-	DrawText.Begin(hdc,
+	RECT rcClient;
+	m_pHomeDisplay->GetClientRect(&rcClient);
+	DrawText.Begin(hdc,rcClient,
 				   TVTest::CTextDraw::FLAG_END_ELLIPSIS |
 				   TVTest::CTextDraw::FLAG_JAPANESE_HYPHNATION);
 
@@ -892,6 +898,7 @@ void CFeaturedEventsCategory::Draw(HDC hdc,const CHomeDisplay::StyleInfo &Style,
 	}
 
 	::DeleteObject(hfontTitle);
+	DrawText.End();
 }
 
 

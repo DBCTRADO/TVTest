@@ -867,7 +867,7 @@ void CChannelPanel::Draw(HDC hdc,const RECT *prcPaint)
 	int OldBkMode=::SetBkMode(hdcDst,TRANSPARENT);
 
 	TVTest::CTextDraw TextDraw;
-	TextDraw.Begin(hdcDst,
+	TextDraw.Begin(hdcDst,rcClient,
 				   TVTest::CTextDraw::FLAG_JAPANESE_HYPHNATION |
 				   TVTest::CTextDraw::FLAG_END_ELLIPSIS);
 
@@ -989,6 +989,7 @@ void CChannelPanel::Draw(HDC hdc,const RECT *prcPaint)
 	::SetTextColor(hdcDst,crOldTextColor);
 	::SetBkMode(hdcDst,OldBkMode);
 	SelectFont(hdcDst,hfontOld);
+	TextDraw.End();
 
 	if (rcItem.top<prcPaint->bottom) {
 		rcItem.left=prcPaint->left;

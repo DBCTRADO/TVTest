@@ -125,6 +125,7 @@ public:
 	CLogger Logger;
 	TVTest::Graphics::CGraphicsCore GraphicsCore;
 	TVTest::Style::CStyleManager StyleManager;
+	TVTest::CDirectWriteSystem DirectWriteSystem;
 	CMainMenu MainMenu;
 	CCommandList CommandList;
 	CCommandLineOptions CmdLineOptions;

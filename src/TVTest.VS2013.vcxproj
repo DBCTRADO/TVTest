@@ -941,6 +941,8 @@
     <ClCompile Include="CaptureOptions.cpp" />
     <ClCompile Include="ChannelInput.cpp" />
     <ClCompile Include="ComUtility.cpp" />
+    <ClCompile Include="DirectWrite.cpp" />
+    <ClCompile Include="DirectWriteOptionsDialog.cpp" />
     <ClCompile Include="Epg.cpp" />
     <ClCompile Include="GUIUtil.cpp" />
     <ClCompile Include="MainDisplay.cpp" />
@@ -949,6 +951,7 @@
     <ClCompile Include="TaskbarOptions.cpp" />
     <ClCompile Include="TaskbarSharedProperties.cpp" />
     <ClCompile Include="TextDraw.cpp" />
+    <ClCompile Include="TextDrawClient.cpp" />
     <ClCompile Include="TSProcessorErrorDialog.cpp" />
     <ClCompile Include="EpgCapture.cpp" />
     <ClCompile Include="ListView.cpp" />
@@ -1127,6 +1130,8 @@
     <ClInclude Include="Common\Common.h" />
     <ClInclude Include="Common\DebugDef.h" />
     <ClInclude Include="ComUtility.h" />
+    <ClInclude Include="DirectWrite.h" />
+    <ClInclude Include="DirectWriteOptionsDialog.h" />
     <ClInclude Include="Epg.h" />
     <ClInclude Include="GUIUtil.h" />
     <ClInclude Include="MainDisplay.h" />
@@ -1135,6 +1140,7 @@
     <ClInclude Include="TaskbarOptions.h" />
     <ClInclude Include="TaskbarSharedProperties.h" />
     <ClInclude Include="TextDraw.h" />
+    <ClInclude Include="TextDrawClient.h" />
     <ClInclude Include="TSProcessorErrorDialog.h" />
     <ClInclude Include="DirectShowFilter\RingBuffer.h" />
     <ClInclude Include="EpgCapture.h" />

@@ -50,6 +50,8 @@ private:
 	int m_LinesPerHour;
 	LOGFONT m_Font;
 	LOGFONT m_CurSettingFont;
+	bool m_fUseDirectWrite;
+	TVTest::CDirectWriteRenderer::RenderingParams m_DirectWriteRenderingParams;
 	UINT m_VisibleEventIcons;
 	CProgramGuideToolList m_ToolList;
 	int m_WheelScrollLines;

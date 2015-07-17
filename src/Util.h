@@ -318,6 +318,40 @@ namespace Util
 		HCURSOR m_hcurOld;
 	};
 
+	template<typename T,std::size_t N> class CTempBuffer
+	{
+	public:
+		CTempBuffer() : m_pBuffer(m_FixedBuffer) {}
+		CTempBuffer(std::size_t Elements) { Allocate_(Elements); }
+		~CTempBuffer() { Free(); }
+		T &operator[](std::size_t i) { return m_pBuffer[i]; }
+		const T &operator[](std::size_t i) const { return m_pBuffer[i]; }
+		void Allocate(std::size_t Elements) {
+			Free();
+			Allocate_(Elements);
+		}
+		void Free() {
+			if (m_pBuffer!=m_FixedBuffer) {
+				delete [] m_pBuffer;
+				m_pBuffer=m_FixedBuffer;
+			}
+		}
+		T *GetBuffer() { return m_pBuffer; }
+		const T *GetBuffer() const { return m_pBuffer; }
+
+	private:
+		void Allocate_(std::size_t Elements) {
+			if (Elements<=N) {
+				m_pBuffer=m_FixedBuffer;
+			} else {
+				m_pBuffer=new T[Elements];
+			}
+		}
+
+		T *m_pBuffer;
+		T m_FixedBuffer[N];
+	};
+
 }	// namespace Util
 
 
