@@ -399,6 +399,16 @@ bool FillBorder(HDC hdc,const RECT *pBorderRect,const RECT *pEmptyRect,const REC
 }
 
 
+bool FillBorder(HDC hdc,const RECT *pBorderRect,const RECT *pEmptyRect,const RECT *pPaintRect,COLORREF Color)
+{
+	COLORREF OldColor=::SetDCBrushColor(hdc,Color);
+	bool fResult=FillBorder(hdc,pBorderRect,pEmptyRect,pPaintRect,
+							static_cast<HBRUSH>(::GetStockObject(DC_BRUSH)));
+	::SetDCBrushColor(hdc,OldColor);
+	return fResult;
+}
+
+
 // ビットマップを描画する
 bool DrawBitmap(HDC hdc,int DstX,int DstY,int DstWidth,int DstHeight,
 				HBITMAP hbm,const RECT *pSrcRect,BYTE Opacity)
