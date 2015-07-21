@@ -16,13 +16,12 @@ namespace DrawUtil {
 // íPêFÇ≈ìhÇËÇ¬Ç‘Ç∑
 bool Fill(HDC hdc,const RECT *pRect,COLORREF Color)
 {
-	HBRUSH hbr=::CreateSolidBrush(Color);
-
-	if (hbr==NULL)
+	if (hdc==NULL || pRect==NULL)
 		return false;
-	::FillRect(hdc,pRect,hbr);
-	::DeleteObject(hbr);
-	return true;
+	COLORREF OldColor=::SetDCBrushColor(hdc,Color);
+	BOOL fResult=::FillRect(hdc,pRect,static_cast<HBRUSH>(::GetStockObject(DC_BRUSH)));
+	::SetDCBrushColor(hdc,OldColor);
+	return fResult!=FALSE;
 }
 
 
