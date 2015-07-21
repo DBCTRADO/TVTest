@@ -688,9 +688,7 @@ LRESULT CEventInfoPopup::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lPar
 			MapWindowRect(hwnd,NULL,&rcClient);
 			::OffsetRect(&rcClient,-rcWindow.left,-rcWindow.top);
 			::OffsetRect(&rcWindow,-rcWindow.left,-rcWindow.top);
-			HBRUSH hbr=::CreateSolidBrush(m_TitleBackColor);
-			DrawUtil::FillBorder(hdc,&rcWindow,&rcClient,&rcWindow,hbr);
-			::DeleteObject(hbr);
+			DrawUtil::FillBorder(hdc,&rcWindow,&rcClient,&rcWindow,m_TitleBackColor);
 			HPEN hpen=::CreatePen(PS_SOLID,1,MixColor(m_TitleBackColor,RGB(0,0,0),192));
 			HGDIOBJ hOldPen=::SelectObject(hdc,hpen);
 			HGDIOBJ hOldBrush=::SelectObject(hdc,::GetStockObject(NULL_BRUSH));

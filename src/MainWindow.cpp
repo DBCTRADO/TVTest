@@ -5450,9 +5450,7 @@ void CMainWindow::DrawCustomFrame(bool fActive)
 	rcEmpty=rc;
 	::InflateRect(&rcEmpty,-m_CustomFrameWidth,-m_CustomFrameWidth);
 	TVTest::Theme::Draw(hdc,&rc,Style.Border);
-	HBRUSH hbr=::CreateSolidBrush(Style.Fill.GetSolidColor());
-	DrawUtil::FillBorder(hdc,&rc,&rcEmpty,&rc,hbr);
-	::DeleteObject(hbr);
+	DrawUtil::FillBorder(hdc,&rc,&rcEmpty,&rc,Style.Fill.GetSolidColor());
 	::ReleaseDC(m_hwnd,hdc);
 }
 

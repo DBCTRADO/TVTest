@@ -1621,29 +1621,25 @@ void CProgramGuide::DrawEventBackground(
 	}
 
 	if (fHighlighted) {
-		HBRUSH hbr=::CreateSolidBrush(MixColor(m_Theme.ColorList[COLOR_HIGHLIGHT_BORDER],BackColor,80));
 		RECT rc=Rect;
 		TVTest::Style::Subtract(&rc,m_Style.HighlightBorder);
-		DrawUtil::FillBorder(hdc,&Rect,&rc,&Rect,hbr);
-		::DeleteObject(hbr);
+		DrawUtil::FillBorder(hdc,&Rect,&rc,&Rect,
+							 MixColor(m_Theme.ColorList[COLOR_HIGHLIGHT_BORDER],BackColor,80));
 	}
 	if (pItem->IsSelected()) {
-		HBRUSH hbr=::CreateSolidBrush(MixColor(m_Theme.ColorList[COLOR_HIGHLIGHT_BORDER],BackColor,128));
 		RECT rcOuter=Rect;
 		rcOuter.left-=m_Style.SelectedBorder.Left;
 		rcOuter.right+=m_Style.SelectedBorder.Right;
 		RECT rcInner=Rect;
 		rcInner.top+=m_Style.SelectedBorder.Top;
 		rcInner.bottom-=m_Style.SelectedBorder.Bottom;
-		DrawUtil::FillBorder(hdc,&rcOuter,&rcInner,&rcOuter,hbr);
-		::DeleteObject(hbr);
+		DrawUtil::FillBorder(hdc,&rcOuter,&rcInner,&rcOuter,
+							 MixColor(m_Theme.ColorList[COLOR_HIGHLIGHT_BORDER],BackColor,128));
 	} else if (fCurrent) {
-		HBRUSH hbr=::CreateSolidBrush(m_Theme.ColorList[COLOR_CURTIMELINE]);
 		RECT rcOuter=Rect;
 		rcOuter.left-=m_Style.SelectedBorder.Left;
 		rcOuter.right+=m_Style.SelectedBorder.Right;
-		DrawUtil::FillBorder(hdc,&rcOuter,&Rect,&rcOuter,hbr);
-		::DeleteObject(hbr);
+		DrawUtil::FillBorder(hdc,&rcOuter,&Rect,&rcOuter,m_Theme.ColorList[COLOR_CURTIMELINE]);
 	}
 
 	if (m_fShowFeaturedMark

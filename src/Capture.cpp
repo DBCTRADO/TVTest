@@ -256,13 +256,11 @@ LRESULT CCapturePreview::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lPar
 	case WM_PAINT:
 		{
 			PAINTSTRUCT ps;
-			HBRUSH hbr;
 			RECT rc;
 			BITMAPINFO *pbmi;
 			BYTE *pBits;
 
 			::BeginPaint(hwnd,&ps);
-			hbr=::CreateSolidBrush(m_crBackColor);
 			GetClientRect(&rc);
 			if (m_pImage!=NULL && m_pImage->LockData(&pbmi,&pBits)) {
 				int DstX,DstY,DstWidth,DstHeight;
@@ -290,9 +288,10 @@ LRESULT CCapturePreview::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lPar
 				rcDest.top=DstY;
 				rcDest.right=DstX+DstWidth;
 				rcDest.bottom=DstY+DstHeight;
-				DrawUtil::FillBorder(ps.hdc,&rc,&rcDest,&ps.rcPaint,hbr);
-			} else
-				::FillRect(ps.hdc,&rc,hbr);
+				DrawUtil::FillBorder(ps.hdc,&rc,&rcDest,&ps.rcPaint,m_crBackColor);
+			} else {
+				DrawUtil::Fill(ps.hdc,&rc,m_crBackColor);
+			}
 			::EndPaint(hwnd,&ps);
 		}
 		return 0;
