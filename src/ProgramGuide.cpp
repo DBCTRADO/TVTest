@@ -1590,17 +1590,14 @@ void CProgramGuide::DrawEventBackground(
 	// Œ»ÝŽž‚Ìü
 	if (((m_ListMode==LIST_SERVICES && m_Day==DAY_TODAY) || m_ListMode==LIST_WEEK)
 			&& CurTimePos>=Rect.top && CurTimePos<Rect.bottom) {
-		LOGBRUSH lb;
+		RECT rcCurTime;
 
-		lb.lbStyle=BS_SOLID;
-		lb.lbColor=MixColor(m_Theme.ColorList[COLOR_CURTIMELINE],BackColor,64);
-		hpen=::ExtCreatePen(PS_GEOMETRIC | PS_SOLID | PS_ENDCAP_FLAT,
-							m_Style.CurTimeLineWidth,&lb,0,NULL);
-		::SelectObject(hdc,hpen);
-		::MoveToEx(hdc,Rect.left,CurTimePos,NULL);
-		::LineTo(hdc,Rect.right,CurTimePos);
-		::SelectObject(hdc,hpenOld);
-		::DeleteObject(hpen);
+		rcCurTime.left=Rect.left;
+		rcCurTime.right=Rect.right;
+		rcCurTime.top=CurTimePos-m_Style.CurTimeLineWidth/2;
+		rcCurTime.bottom=rcCurTime.top+m_Style.CurTimeLineWidth;
+		DrawUtil::Fill(hdc,&rcCurTime,
+					   MixColor(m_Theme.ColorList[COLOR_CURTIMELINE],BackColor,64));
 	}
 
 	RECT rcTitle,rcText;
@@ -2056,11 +2053,8 @@ void CProgramGuide::Draw(HDC hdc,const RECT &PaintRect)
 	::GetClientRect(m_hwnd,&rcClient);
 	GetProgramGuideRect(&rcGuide);
 
-	if (::IntersectRect(&rc,&rcGuide,&PaintRect)) {
-		HBRUSH hbr=::CreateSolidBrush(m_Theme.ColorList[COLOR_BACK]);
-		::FillRect(hdc,&rc,hbr);
-		::DeleteObject(hbr);
-	}
+	if (::IntersectRect(&rc,&rcGuide,&PaintRect))
+		DrawUtil::Fill(hdc,&rc,m_Theme.ColorList[COLOR_BACK]);
 
 	int OldBkMode=::SetBkMode(hdc,TRANSPARENT);
 
@@ -2141,19 +2135,13 @@ void CProgramGuide::Draw(HDC hdc,const RECT &PaintRect)
 					}
 					if (((m_ListMode==LIST_SERVICES && m_Day==DAY_TODAY) || m_ListMode==LIST_WEEK)
 							&& CurTimePos>=y && CurTimePos<y+PixelsPerHour) {
-						HPEN hpenCurTime;
-						LOGBRUSH lb;
+						RECT rcCurTime;
 
-						lb.lbStyle=BS_SOLID;
-						lb.lbColor=m_Theme.ColorList[COLOR_CURTIMELINE];
-						hpenCurTime=::ExtCreatePen(
-							PS_GEOMETRIC | PS_SOLID | PS_ENDCAP_FLAT,
-							m_Style.CurTimeLineWidth,&lb,0,NULL);
-						::SelectObject(hdc,hpenCurTime);
-						::MoveToEx(hdc,rc.left-m_Style.ColumnMargin,CurTimePos,NULL);
-						::LineTo(hdc,rc.right+m_Style.ColumnMargin,CurTimePos);
-						::SelectObject(hdc,hpen);
-						::DeleteObject(hpenCurTime);
+						rcCurTime.left=rc.left-m_Style.ColumnMargin;
+						rcCurTime.right=rc.right+m_Style.ColumnMargin;
+						rcCurTime.top=CurTimePos-m_Style.CurTimeLineWidth/2;
+						rcCurTime.bottom=rcCurTime.top+m_Style.CurTimeLineWidth;
+						DrawUtil::Fill(hdc,&rcCurTime,m_Theme.ColorList[COLOR_CURTIMELINE]);
 					}
 				}
 				if (rc.left<PaintRect.right && rc.right>PaintRect.left)

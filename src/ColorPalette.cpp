@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "TVTest.h"
 #include "ColorPalette.h"
+#include "DrawUtil.h"
 
 
 #define PALETTE_WINDOW_CLASS APP_NAME TEXT(" Color Palette")
@@ -241,7 +242,6 @@ LRESULT CColorPalette::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam
 			PAINTSTRUCT ps;
 			int x,y;
 			int i;
-			HBRUSH hbr;
 			RECT rc;
 
 			::BeginPaint(hwnd,&ps);
@@ -254,11 +254,10 @@ LRESULT CColorPalette::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam
 				rc.bottom=rc.top+m_ItemHeight-4;
 				if (rc.left<ps.rcPaint.right && rc.top<ps.rcPaint.bottom
 						&& rc.right>ps.rcPaint.left && rc.bottom>ps.rcPaint.top) {
-					hbr=::CreateSolidBrush(RGB(m_pPalette[i].rgbRed,
-											   m_pPalette[i].rgbGreen,
-											   m_pPalette[i].rgbBlue));
-					::FillRect(ps.hdc,&rc,hbr);
-					::DeleteObject(hbr);
+					DrawUtil::Fill(ps.hdc,&rc,
+								   RGB(m_pPalette[i].rgbRed,
+								       m_pPalette[i].rgbGreen,
+								       m_pPalette[i].rgbBlue));
 				}
 			}
 			if (m_SelColor>=0)

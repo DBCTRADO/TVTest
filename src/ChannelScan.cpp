@@ -1332,9 +1332,7 @@ INT_PTR CChannelScan::ScanDlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPara
 							rcFill.right=x+CellWidth;
 							rcFill.top=rcGraph.bottom-3-(int)(SignalLevel*(float)(rcGraph.bottom-rcGraph.top-4)/SignalScale);
 							rcFill.bottom=rcGraph.bottom-1;
-							HBRUSH hbr=::CreateSolidBrush(HSVToRGB(0.6-SignalLevel/SignalScale*0.6,0.8,1.0));
-							::FillRect(pdis->hDC,&rcFill,hbr);
-							::DeleteObject(hbr);
+							DrawUtil::Fill(pdis->hDC,&rcFill,HSVToRGB(0.6-SignalLevel/SignalScale*0.6,0.8,1.0));
 						}
 					}
 				}
