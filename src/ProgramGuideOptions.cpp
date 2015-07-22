@@ -213,21 +213,18 @@ bool CProgramGuideOptions::LoadSettings(CSettings &Settings)
 
 		if (Settings.Read(TEXT("ToolCount"),&NumTools) && NumTools>0) {
 			CProgramGuideToolList *pToolList=m_pProgramGuide->GetToolList();
+			TVTest::String ToolName,Command;
 
 			for (unsigned int i=0;i<NumTools;i++) {
 				TCHAR szName[32];
-				TCHAR szToolName[CProgramGuideTool::MAX_NAME];
-				TCHAR szCommand[CProgramGuideTool::MAX_COMMAND];
 
 				wsprintf(szName,TEXT("Tool%u_Name"),i);
-				if (!Settings.Read(szName,szToolName,lengthof(szToolName))
-						|| szToolName[0]=='\0')
+				if (!Settings.Read(szName,&ToolName) || ToolName.empty())
 					break;
 				wsprintf(szName,TEXT("Tool%u_Command"),i);
-				if (!Settings.Read(szName,szCommand,lengthof(szCommand))
-						|| szCommand[0]=='\0')
+				if (!Settings.Read(szName,&Command) || Command.empty())
 					break;
-				pToolList->Add(new CProgramGuideTool(szToolName,szCommand));
+				pToolList->Add(new CProgramGuideTool(ToolName,Command));
 			}
 		}
 	}

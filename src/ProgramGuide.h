@@ -12,6 +12,7 @@
 #include "TextDrawClient.h"
 #include "ProgramSearch.h"
 #include "ProgramGuideFavorites.h"
+#include "ProgramGuideTool.h"
 #include "FeaturedEvents.h"
 #include "EventInfoPopup.h"
 #include "Tooltip.h"
@@ -26,7 +27,7 @@ namespace ProgramGuide
 
 	class CEventItem;
 	class CEventLayout;
-	class CServiceInfo;
+	class CServiceList;
 
 	class CEventLayoutList
 	{
@@ -39,6 +40,43 @@ namespace ProgramGuide
 		void Add(CEventLayout *pLayout);
 		CEventLayout *operator[](size_t Index);
 		const CEventLayout *operator[](size_t Index) const;
+	};
+
+	class CServiceInfo
+	{
+		CChannelInfo m_ChannelInfo;
+		CServiceInfoData m_ServiceData;
+		LPTSTR m_pszBonDriverFileName;
+		HBITMAP m_hbmLogo;
+		DrawUtil::CBitmap m_StretchedLogo;
+		std::vector<CEventInfoData*> m_EventList;
+		typedef std::map<WORD,CEventInfoData*> EventIDMap;
+		EventIDMap m_EventIDMap;
+
+	public:
+		CServiceInfo(const CChannelInfo &ChannelInfo,LPCTSTR pszBonDriver);
+		CServiceInfo(const CChannelInfo &ChannelInfo,const CEpgServiceInfo &Info,LPCTSTR pszBonDriver);
+		~CServiceInfo();
+		const CChannelInfo &GetChannelInfo() const { return m_ChannelInfo; }
+		const CServiceInfoData &GetServiceInfoData() const { return m_ServiceData; }
+		WORD GetNetworkID() const { return m_ServiceData.m_NetworkID; }
+		WORD GetTSID() const { return m_ServiceData.m_TSID; }
+		WORD GetServiceID() const { return m_ServiceData.m_ServiceID; }
+		LPCTSTR GetServiceName() const { return m_ChannelInfo.GetName(); }
+		LPCTSTR GetBonDriverFileName() const { return m_pszBonDriverFileName; }
+		void SetLogo(HBITMAP hbm) { m_hbmLogo=hbm; }
+		HBITMAP GetLogo() const { return m_hbmLogo; }
+		HBITMAP GetStretchedLogo(int Width,int Height);
+		int NumEvents() const { return (int)m_EventList.size(); }
+		CEventInfoData *GetEvent(int Index);
+		const CEventInfoData *GetEvent(int Index) const;
+		CEventInfoData *GetEventByEventID(WORD EventID);
+		const CEventInfoData *GetEventByEventID(WORD EventID) const;
+		bool AddEvent(CEventInfoData *pEvent);
+		void ClearEvents();
+		void CalcLayout(CEventLayout *pEventList,const CServiceList *pServiceList,
+			const SYSTEMTIME &FirstTime,const SYSTEMTIME &LastTime,int LinesPerHour);
+		bool SaveiEpgFile(const CEventInfoData *pEventInfo,LPCTSTR pszFileName,bool fVersion2) const;
 	};
 
 	class CServiceList
@@ -111,51 +149,6 @@ public:
 	virtual ~CProgramGuideChannelProviderManager();
 	virtual size_t GetChannelProviderCount() const = 0;
 	virtual CProgramGuideChannelProvider *GetChannelProvider(size_t Index) const = 0;
-};
-
-class CProgramGuideTool
-{
-public:
-	enum { MAX_NAME=64, MAX_COMMAND=MAX_PATH*2 };
-
-private:
-	TCHAR m_szName[MAX_NAME];
-	TCHAR m_szCommand[MAX_COMMAND];
-	TVTest::CIcon m_Icon;
-
-	static bool GetCommandFileName(LPCTSTR *ppszCommand,LPTSTR pszFileName,int MaxFileName);
-	static CProgramGuideTool *GetThis(HWND hDlg);
-	static INT_PTR CALLBACK DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam);
-
-public:
-	CProgramGuideTool();
-	CProgramGuideTool(const CProgramGuideTool &Tool);
-	CProgramGuideTool(LPCTSTR pszName,LPCTSTR pszCommand);
-	~CProgramGuideTool();
-	CProgramGuideTool &operator=(const CProgramGuideTool &Tool);
-	LPCTSTR GetName() const { return m_szName; }
-	LPCTSTR GetCommand() const { return m_szCommand; }
-	bool GetPath(LPTSTR pszPath,int MaxLength) const;
-	HICON GetIcon();
-	bool Execute(const ProgramGuide::CServiceInfo *pServiceInfo,
-				 const CEventInfoData *pEventInfo,HWND hwnd);
-	bool ShowDialog(HWND hwndOwner);
-};
-
-class CProgramGuideToolList
-{
-	std::vector<CProgramGuideTool*> m_ToolList;
-
-public:
-	CProgramGuideToolList();
-	CProgramGuideToolList(const CProgramGuideToolList &Src);
-	~CProgramGuideToolList();
-	CProgramGuideToolList &operator=(const CProgramGuideToolList &Src);
-	void Clear();
-	bool Add(CProgramGuideTool *pTool);
-	CProgramGuideTool *GetTool(size_t Index);
-	const CProgramGuideTool *GetTool(size_t Index) const;
-	size_t NumTools() const { return m_ToolList.size(); }
 };
 
 class CProgramGuide
