@@ -2,7 +2,7 @@
 #include <tchar.h>
 #include "libpng/png.h"
 #include "zlib/zlib.h"
-#include "TVTest_Image.h"
+#include "ImageLib.h"
 #include "Codec_PNG.h"
 #include "ImageUtil.h"
 
@@ -12,6 +12,11 @@
 #endif
 
 
+namespace TVTest
+{
+
+namespace ImageLib
+{
 
 
 static void WriteData(png_structp pPNG,png_bytep pbData,png_size_t Length)
@@ -549,3 +554,8 @@ Decode:
 
 	return hDIB;
 }
+
+
+}	// namespace ImageLib
+
+}	// namespace TVTest

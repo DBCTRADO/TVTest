@@ -1,6 +1,14 @@
 #include "stdafx.h"
 #include "Image.h"
+#include "Util.h"
 #include "Common/DebugDef.h"
+
+#ifdef TVTEST_IMAGE_STATIC
+#pragma comment(lib,"ImageLib.lib")
+#pragma comment(lib,"libpng.lib")
+#pragma comment(lib,"libjpeg.lib")
+#pragma comment(lib,"zlib.lib")
+#endif
 
 
 
@@ -173,31 +181,37 @@ HGLOBAL ResizeImage(const BITMAPINFO *pbmiSrc,const void *pSrcData,
 
 
 CImageCodec::CImageCodec()
+#ifndef TVTEST_IMAGE_STATIC
+	: m_hLib(NULL)
+#endif
 {
-	m_hLib=NULL;
 }
 
 
 CImageCodec::~CImageCodec()
 {
-	if (m_hLib==NULL)
-		FreeLibrary(m_hLib);
+#ifndef TVTEST_IMAGE_STATIC
+	if (m_hLib!=NULL)
+		::FreeLibrary(m_hLib);
+#endif
 }
 
 
 bool CImageCodec::Init()
 {
+#ifndef TVTEST_IMAGE_STATIC
 	if (m_hLib==NULL) {
-		m_hLib=LoadLibrary(TEXT("TVTest_Image.dll"));
+		m_hLib=::LoadLibrary(TEXT("TVTest_Image.dll"));
 		if (m_hLib==NULL)
 			return false;
-		m_pSaveImage=(SaveImageFunc)GetProcAddress(m_hLib,"SaveImage");
+		m_pSaveImage=reinterpret_cast<SaveImageFunc>(::GetProcAddress(m_hLib,"SaveImage"));
 		if (m_pSaveImage==NULL) {
-			FreeLibrary(m_hLib);
+			::FreeLibrary(m_hLib);
 			m_hLib=NULL;
 			return false;
 		}
 	}
+#endif
 	return true;
 }
 
@@ -205,17 +219,25 @@ bool CImageCodec::Init()
 bool CImageCodec::SaveImage(LPCTSTR pszFileName,int Format,LPCTSTR pszOption,
 				const BITMAPINFO *pbmi,const void *pBits,LPCTSTR pszComment)
 {
-	ImageSaveInfo Info;
-
+#ifndef TVTEST_IMAGE_STATIC
 	if (m_hLib==NULL && !Init())
 		return false;
+#endif
+
+	TVTest::ImageLib::ImageSaveInfo Info;
+
 	Info.pszFileName=pszFileName;
 	Info.pszFormat=EnumSaveFormat(Format);
 	Info.pszOption=pszOption;
 	Info.pbmi=pbmi;
 	Info.pBits=pBits;
 	Info.pszComment=pszComment;
-	return m_pSaveImage(&Info)==TRUE;
+
+#ifndef TVTEST_IMAGE_STATIC
+	return m_pSaveImage(&Info)!=FALSE;
+#else
+	return TVTest::ImageLib::SaveImage(&Info)!=FALSE;
+#endif
 }
 
 
@@ -256,21 +278,31 @@ int CImageCodec::FormatNameToIndex(LPCTSTR pszName) const
 
 HGLOBAL CImageCodec::LoadAribPngFromMemory(const void *pData,SIZE_T DataSize)
 {
+#ifndef TVTEST_IMAGE_STATIC
 	if (m_hLib==NULL && !Init())
 		return NULL;
-	LoadAribPngFromMemoryFunc pLoadAribPngFromMemory=reinterpret_cast<LoadAribPngFromMemoryFunc>(::GetProcAddress(m_hLib,"LoadAribPngFromMemory"));
+	auto pLoadAribPngFromMemory=
+		reinterpret_cast<LoadAribPngFromMemoryFunc>(::GetProcAddress(m_hLib,"LoadAribPngFromMemory"));
 	if (pLoadAribPngFromMemory==NULL)
 		return NULL;
 	return pLoadAribPngFromMemory(pData,DataSize);
+#else
+	return TVTest::ImageLib::LoadAribPngFromMemory(pData,DataSize);
+#endif
 }
 
 
 HGLOBAL CImageCodec::LoadAribPngFromFile(LPCTSTR pszFileName)
 {
+#ifndef TVTEST_IMAGE_STATIC
 	if (m_hLib==NULL && !Init())
 		return NULL;
-	LoadAribPngFromFileFunc pLoadAribPngFromFile=reinterpret_cast<LoadAribPngFromFileFunc>(::GetProcAddress(m_hLib,"LoadAribPngFromFile"));
+	auto pLoadAribPngFromFile=
+		reinterpret_cast<LoadAribPngFromFileFunc>(::GetProcAddress(m_hLib,"LoadAribPngFromFile"));
 	if (pLoadAribPngFromFile==NULL)
 		return NULL;
 	return pLoadAribPngFromFile(pszFileName);
+#else
+	return TVTest::ImageLib::LoadAribPngFromFile(pszFileName);
+#endif
 }

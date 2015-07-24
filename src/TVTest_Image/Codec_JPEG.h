@@ -2,7 +2,15 @@
 #define TVTEST_JPGE_H
 
 
-bool SaveJPEGFile(const ImageSaveInfo *pInfo);
+namespace TVTest
+{
+	namespace ImageLib
+	{
+
+		bool SaveJPEGFile(const ImageSaveInfo *pInfo);
+
+	}
+}
 
 
 #endif
