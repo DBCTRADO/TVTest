@@ -443,7 +443,6 @@
     <ClInclude Include="inftrees.h" />
     <ClInclude Include="trees.h" />
     <ClInclude Include="zconf.h" />
-    <ClInclude Include="zconf.in.h" />
     <ClInclude Include="zlib.h" />
     <ClInclude Include="zutil.h" />
   </ItemGroup>

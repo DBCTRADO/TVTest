@@ -70,9 +70,6 @@
     <ClInclude Include="zconf.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="zconf.in.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
     <ClInclude Include="zlib.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
