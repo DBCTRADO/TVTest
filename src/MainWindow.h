@@ -587,11 +587,15 @@ private:
 	void OnDestroy();
 	void OnSizeChanged(UINT State,int Width,int Height);
 	bool OnSizeChanging(UINT Edge,RECT *pRect);
+	void OnGetMinMaxInfo(HWND hwnd,LPMINMAXINFO pmmi);
 	void OnMouseMove(int x,int y);
 	bool OnSetCursor(HWND hwndCursor,int HitTestCode,int MouseMessage);
+	bool OnKeyDown(WPARAM KeyCode);
 	void OnCommand(HWND hwnd,int id,HWND hwndCtl,UINT codeNotify);
+	bool OnSysCommand(UINT Command);
 	void OnTimer(HWND hwnd,UINT id);
 	bool OnInitMenuPopup(HMENU hmenu);
+	bool OnClose(HWND hwnd);
 	void OnRecordingStateChanged();
 	void OnEventChanged();
 	bool AutoFitWindowToVideo();

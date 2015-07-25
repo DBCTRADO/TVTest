@@ -914,6 +914,7 @@ LRESULT CMainWindow::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 	switch (uMsg) {
 	HANDLE_MSG(hwnd,WM_COMMAND,OnCommand);
 	HANDLE_MSG(hwnd,WM_TIMER,OnTimer);
+	HANDLE_MSG(hwnd,WM_GETMINMAXINFO,OnGetMinMaxInfo);
 
 	case WM_SIZE:
 		OnSizeChanged((UINT)wParam,LOWORD(lParam),HIWORD(lParam));
@@ -923,57 +924,6 @@ LRESULT CMainWindow::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 		if (OnSizeChanging((UINT)wParam,reinterpret_cast<LPRECT>(lParam)))
 			return TRUE;
 		break;
-
-	case WM_GETMINMAXINFO:
-		{
-			LPMINMAXINFO pmmi=reinterpret_cast<LPMINMAXINFO>(lParam);
-			SIZE sz;
-			RECT rc;
-
-			m_LayoutBase.GetMinSize(&sz);
-			::SetRect(&rc,0,0,sz.cx,sz.cy);
-			CalcPositionFromClientRect(&rc);
-			pmmi->ptMinTrackSize.x=rc.right-rc.left;
-			pmmi->ptMinTrackSize.y=rc.bottom-rc.top;
-
-			if (!m_fShowTitleBar || m_fCustomTitleBar) {
-				HMONITOR hMonitor=::MonitorFromWindow(hwnd,MONITOR_DEFAULTTOPRIMARY);
-				MONITORINFO mi;
-
-				mi.cbSize=sizeof(MONITORINFO);
-				if (::GetMonitorInfo(hMonitor,&mi)) {
-					RECT Border;
-
-					if (m_fCustomFrame) {
-						Border.left=Border.top=Border.right=Border.bottom=m_CustomFrameWidth;
-					} else {
-						RECT rcClient,rcWindow;
-
-						::GetClientRect(hwnd,&rcClient);
-						MapWindowRect(hwnd,NULL,&rcClient);
-						::GetWindowRect(hwnd,&rcWindow);
-						Border.left=rcClient.left-rcWindow.left;
-						Border.top=rcClient.top-rcWindow.top;
-						Border.right=rcWindow.right-rcClient.right;
-						Border.bottom=rcWindow.bottom-rcClient.bottom;
-					}
-
-					pmmi->ptMaxSize.x=(mi.rcWork.right-mi.rcWork.left)+Border.left+Border.right;
-					pmmi->ptMaxSize.y=(mi.rcWork.bottom-mi.rcWork.top)+Border.top+Border.bottom;
-					pmmi->ptMaxPosition.x=mi.rcWork.left-mi.rcMonitor.left-Border.left;
-					pmmi->ptMaxPosition.y=mi.rcWork.top-mi.rcMonitor.top-Border.top;
-					if (::IsZoomed(hwnd)) {
-						// ウィンドウのあるモニタがプライマリモニタよりも大きい場合、
-						// ptMaxTrackSize を設定しないとサイズがおかしくなる
-						pmmi->ptMaxTrackSize=pmmi->ptMaxSize;
-					} else {
-						pmmi->ptMaxTrackSize.x=::GetSystemMetrics(SM_CXVIRTUALSCREEN);
-						pmmi->ptMaxTrackSize.y=::GetSystemMetrics(SM_CYVIRTUALSCREEN);
-					}
-				}
-			}
-		}
-		return 0;
 
 	case WM_MOVE:
 		m_App.OSDManager.OnParentMove();
@@ -1074,35 +1024,9 @@ LRESULT CMainWindow::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 		if (wParam!=VK_F10)
 			break;
 	case WM_KEYDOWN:
-		{
-			CChannelInput::KeyDownResult Result=m_ChannelInput.OnKeyDown(wParam);
-
-			if (Result!=CChannelInput::KEYDOWN_NOTPROCESSED) {
-				switch (Result) {
-				case CChannelInput::KEYDOWN_COMPLETED:
-					EndChannelNoInput(true);
-					break;
-
-				case CChannelInput::KEYDOWN_CANCELLED:
-					EndChannelNoInput(false);
-					break;
-
-				case CChannelInput::KEYDOWN_BEGIN:
-				case CChannelInput::KEYDOWN_CONTINUE:
-					OnChannelNoInput();
-					break;
-				}
-			} else if (wParam>=VK_F13 && wParam<=VK_F24
-					&& !m_App.ControllerManager.IsControllerEnabled(TEXT("HDUS Remocon"))
-					&& (::GetKeyState(VK_SHIFT)<0 || ::GetKeyState(VK_CONTROL)<0)) {
-				ShowMessage(TEXT("リモコンを使用するためには、メニューの [プラグイン] -> [HDUSリモコン] でリモコンを有効にしてください。"),
-							TEXT("お知らせ"),MB_OK | MB_ICONINFORMATION);
-				break;
-			} else {
-				break;
-			}
-		}
-		return 0;
+		if (OnKeyDown(wParam))
+			return 0;
+		break;
 
 	case WM_MOUSEWHEEL:
 	case WM_MOUSEHWHEEL:
@@ -1233,38 +1157,8 @@ LRESULT CMainWindow::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 		return 0;
 
 	case WM_SYSCOMMAND:
-		switch ((wParam&0xFFFFFFF0UL)) {
-		case SC_MONITORPOWER:
-			if (m_App.ViewOptions.GetNoMonitorLowPower()
-					&& m_pCore->IsViewerEnabled())
-				return 0;
-			break;
-
-		case SC_SCREENSAVE:
-			if (m_App.ViewOptions.GetNoScreenSaver()
-					&& m_pCore->IsViewerEnabled())
-				return 0;
-			break;
-
-		case SC_ABOUT:
-			{
-				CAboutDialog AboutDialog;
-
-				AboutDialog.Show(GetVideoHostWindow());
-			}
+		if (OnSysCommand(static_cast<UINT>(wParam)))
 			return 0;
-
-		case SC_MINIMIZE:
-		case SC_MAXIMIZE:
-		case SC_RESTORE:
-			if (m_pCore->GetFullscreen())
-				m_pCore->SetFullscreen(false);
-			break;
-
-		case SC_CLOSE:
-			SendCommand(CM_CLOSE);
-			return 0;
-		}
 		break;
 
 	case WM_APPCOMMAND:
@@ -1571,24 +1465,8 @@ LRESULT CMainWindow::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 		return 0;
 
 	case WM_CLOSE:
-		if (!ConfirmExit())
+		if (!OnClose(hwnd))
 			return 0;
-
-		m_fClosing=true;
-
-		::SetCursor(::LoadCursor(nullptr,IDC_WAIT));
-
-		m_App.AddLog(TEXT("ウィンドウを閉じています..."));
-
-		::KillTimer(hwnd,TIMER_ID_UPDATE);
-
-		//m_App.CoreEngine.EnableMediaViewer(false);
-
-		m_App.AppEventManager.OnClose();
-
-		m_Fullscreen.Destroy();
-
-		ShowFloatingWindows(false);
 		break;
 
 	case WM_ENDSESSION:
@@ -2001,6 +1879,56 @@ SizingEnd:
 }
 
 
+void CMainWindow::OnGetMinMaxInfo(HWND hwnd,LPMINMAXINFO pmmi)
+{
+	SIZE sz;
+	RECT rc;
+
+	m_LayoutBase.GetMinSize(&sz);
+	::SetRect(&rc,0,0,sz.cx,sz.cy);
+	CalcPositionFromClientRect(&rc);
+	pmmi->ptMinTrackSize.x=rc.right-rc.left;
+	pmmi->ptMinTrackSize.y=rc.bottom-rc.top;
+
+	if (!m_fShowTitleBar || m_fCustomTitleBar) {
+		HMONITOR hMonitor=::MonitorFromWindow(hwnd,MONITOR_DEFAULTTOPRIMARY);
+		MONITORINFO mi;
+
+		mi.cbSize=sizeof(MONITORINFO);
+		if (::GetMonitorInfo(hMonitor,&mi)) {
+			RECT Border;
+
+			if (m_fCustomFrame) {
+				Border.left=Border.top=Border.right=Border.bottom=m_CustomFrameWidth;
+			} else {
+				RECT rcClient,rcWindow;
+
+				::GetClientRect(hwnd,&rcClient);
+				MapWindowRect(hwnd,NULL,&rcClient);
+				::GetWindowRect(hwnd,&rcWindow);
+				Border.left=rcClient.left-rcWindow.left;
+				Border.top=rcClient.top-rcWindow.top;
+				Border.right=rcWindow.right-rcClient.right;
+				Border.bottom=rcWindow.bottom-rcClient.bottom;
+			}
+
+			pmmi->ptMaxSize.x=(mi.rcWork.right-mi.rcWork.left)+Border.left+Border.right;
+			pmmi->ptMaxSize.y=(mi.rcWork.bottom-mi.rcWork.top)+Border.top+Border.bottom;
+			pmmi->ptMaxPosition.x=mi.rcWork.left-mi.rcMonitor.left-Border.left;
+			pmmi->ptMaxPosition.y=mi.rcWork.top-mi.rcMonitor.top-Border.top;
+			if (::IsZoomed(hwnd)) {
+				// ウィンドウのあるモニタがプライマリモニタよりも大きい場合、
+				// ptMaxTrackSize を設定しないとサイズがおかしくなる
+				pmmi->ptMaxTrackSize=pmmi->ptMaxSize;
+			} else {
+				pmmi->ptMaxTrackSize.x=::GetSystemMetrics(SM_CXVIRTUALSCREEN);
+				pmmi->ptMaxTrackSize.y=::GetSystemMetrics(SM_CYVIRTUALSCREEN);
+			}
+		}
+	}
+}
+
+
 void CMainWindow::OnMouseMove(int x,int y)
 {
 	if (m_fDragging) {
@@ -2129,6 +2057,40 @@ bool CMainWindow::OnSetCursor(HWND hwndCursor,int HitTestCode,int MouseMessage)
 			::SetCursor(m_fShowCursor?::LoadCursor(nullptr,IDC_ARROW):nullptr);
 			return true;
 		}
+	}
+
+	return false;
+}
+
+
+bool CMainWindow::OnKeyDown(WPARAM KeyCode)
+{
+	CChannelInput::KeyDownResult Result=m_ChannelInput.OnKeyDown(KeyCode);
+
+	if (Result!=CChannelInput::KEYDOWN_NOTPROCESSED) {
+		switch (Result) {
+		case CChannelInput::KEYDOWN_COMPLETED:
+			EndChannelNoInput(true);
+			break;
+
+		case CChannelInput::KEYDOWN_CANCELLED:
+			EndChannelNoInput(false);
+			break;
+
+		case CChannelInput::KEYDOWN_BEGIN:
+		case CChannelInput::KEYDOWN_CONTINUE:
+			OnChannelNoInput();
+			break;
+		}
+
+		return true;
+	}
+
+	if (KeyCode>=VK_F13 && KeyCode<=VK_F24
+			&& (::GetKeyState(VK_SHIFT)<0 || ::GetKeyState(VK_CONTROL)<0)
+			&& !m_App.ControllerManager.IsControllerEnabled(TEXT("HDUS Remocon"))) {
+		ShowMessage(TEXT("リモコンを使用するためには、メニューの [プラグイン] -> [HDUSリモコン] でリモコンを有効にしてください。"),
+					TEXT("お知らせ"),MB_OK | MB_ICONINFORMATION);
 	}
 
 	return false;
@@ -3288,6 +3250,45 @@ void CMainWindow::OnCommand(HWND hwnd,int id,HWND hwndCtl,UINT codeNotify)
 }
 
 
+bool CMainWindow::OnSysCommand(UINT Command)
+{
+	switch ((Command & 0xFFFFFFF0UL)) {
+	case SC_MONITORPOWER:
+		if (m_App.ViewOptions.GetNoMonitorLowPower()
+				&& m_pCore->IsViewerEnabled())
+			return true;
+		break;
+
+	case SC_SCREENSAVE:
+		if (m_App.ViewOptions.GetNoScreenSaver()
+				&& m_pCore->IsViewerEnabled())
+			return true;
+		break;
+
+	case SC_ABOUT:
+		{
+			CAboutDialog AboutDialog;
+
+			AboutDialog.Show(GetVideoHostWindow());
+		}
+		return true;
+
+	case SC_MINIMIZE:
+	case SC_MAXIMIZE:
+	case SC_RESTORE:
+		if (m_pCore->GetFullscreen())
+			m_pCore->SetFullscreen(false);
+		break;
+
+	case SC_CLOSE:
+		SendCommand(CM_CLOSE);
+		return true;
+	}
+
+	return false;
+}
+
+
 void CMainWindow::OnTimer(HWND hwnd,UINT id)
 {
 	switch (id) {
@@ -4106,6 +4107,31 @@ bool CMainWindow::OnInitMenuPopup(HMENU hmenu)
 
 		return false;
 	}
+
+	return true;
+}
+
+
+bool CMainWindow::OnClose(HWND hwnd)
+{
+	if (!ConfirmExit())
+		return false;
+
+	m_fClosing=true;
+
+	::SetCursor(::LoadCursor(nullptr,IDC_WAIT));
+
+	m_App.AddLog(TEXT("ウィンドウを閉じています..."));
+
+	::KillTimer(hwnd,TIMER_ID_UPDATE);
+
+	//m_App.CoreEngine.EnableMediaViewer(false);
+
+	m_App.AppEventManager.OnClose();
+
+	m_Fullscreen.Destroy();
+
+	ShowFloatingWindows(false);
 
 	return true;
 }
