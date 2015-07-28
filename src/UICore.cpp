@@ -140,19 +140,18 @@ int CUICore::GetZoomPercentage() const
 }
 
 
-bool CUICore::GetPanAndScan(PanAndScanInfo *pInfo) const
+bool CUICore::SetPanAndScan(const CCoreEngine::PanAndScanInfo &Info)
 {
-	if (m_pSkin==nullptr || pInfo==nullptr)
+	if (!m_App.CoreEngine.SetPanAndScan(Info))
 		return false;
-	return m_pSkin->GetPanAndScan(pInfo);
+	m_App.AppEventManager.OnPanAndScanChanged();
+	return true;
 }
 
 
-bool CUICore::SetPanAndScan(const PanAndScanInfo &Info)
+bool CUICore::GetPanAndScan(CCoreEngine::PanAndScanInfo *pInfo) const
 {
-	if (m_pSkin==nullptr)
-		return false;
-	return m_pSkin->SetPanAndScan(Info);
+	return m_App.CoreEngine.GetPanAndScan(pInfo);
 }
 
 

@@ -403,6 +403,43 @@ bool CCoreEngine::GetVideoViewSize(int *pWidth,int *pHeight)
 }
 
 
+bool CCoreEngine::SetPanAndScan(const PanAndScanInfo &Info)
+{
+	CMediaViewer::ClippingInfo Clipping;
+
+	Clipping.Left=Info.XPos;
+	Clipping.Right=Info.XFactor-(Info.XPos+Info.Width);
+	Clipping.HorzFactor=Info.XFactor;
+	Clipping.Top=Info.YPos;
+	Clipping.Bottom=Info.YFactor-(Info.YPos+Info.Height);
+	Clipping.VertFactor=Info.YFactor;
+
+	return m_DtvEngine.m_MediaViewer.SetPanAndScan(Info.XAspect,Info.YAspect,&Clipping);
+}
+
+
+bool CCoreEngine::GetPanAndScan(PanAndScanInfo *pInfo) const
+{
+	if (pInfo==nullptr)
+		return false;
+
+	const CMediaViewer &MediaViewer=m_DtvEngine.m_MediaViewer;
+	CMediaViewer::ClippingInfo Clipping;
+
+	MediaViewer.GetForceAspectRatio(&pInfo->XAspect,&pInfo->YAspect);
+	MediaViewer.GetClippingInfo(&Clipping);
+
+	pInfo->XPos=Clipping.Left;
+	pInfo->YPos=Clipping.Top;
+	pInfo->Width=Clipping.HorzFactor-(Clipping.Left+Clipping.Right);
+	pInfo->Height=Clipping.VertFactor-(Clipping.Top+Clipping.Bottom);
+	pInfo->XFactor=Clipping.HorzFactor;
+	pInfo->YFactor=Clipping.VertFactor;
+
+	return true;
+}
+
+
 bool CCoreEngine::SetVolume(int Volume)
 {
 	if (Volume<0 || Volume>MAX_VOLUME)

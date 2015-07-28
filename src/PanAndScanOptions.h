@@ -5,7 +5,7 @@
 #include <vector>
 #include "Settings.h"
 #include "Dialog.h"
-#include "UICore.h"
+#include "CoreEngine.h"
 #include "Command.h"
 
 
@@ -18,7 +18,7 @@ public:
 	enum { MAX_NAME=64 };
 	struct PanAndScanInfo
 	{
-		CUICore::PanAndScanInfo Info;
+		CCoreEngine::PanAndScanInfo Info;
 		TCHAR szName[MAX_NAME];
 		UINT ID;
 	};
@@ -43,7 +43,7 @@ private:
 
 	void SetItemStatus() const;
 	bool GetSettings(PanAndScanInfo *pInfo) const;
-	bool GetPanAndScanSettings(CUICore::PanAndScanInfo *pInfo) const;
+	bool GetPanAndScanSettings(CCoreEngine::PanAndScanInfo *pInfo) const;
 	bool IsSettingsValid() const;
 	bool Import(LPCTSTR pszFileName);
 	bool Export(LPCTSTR pszFileName) const;
@@ -55,7 +55,7 @@ private:
 	UINT m_PresetID;
 	bool m_fStateChanging;
 	bool m_fTested;
-	CUICore::PanAndScanInfo m_OldPanAndScanInfo;
+	CCoreEngine::PanAndScanInfo m_OldPanAndScanInfo;
 };
 
 

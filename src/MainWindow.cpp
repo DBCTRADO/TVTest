@@ -5017,19 +5017,8 @@ bool CMainWindow::AutoFitWindowToVideo()
 }
 
 
-bool CMainWindow::SetPanAndScan(const PanAndScanInfo &Info)
+void CMainWindow::OnPanAndScanChanged()
 {
-	CMediaViewer::ClippingInfo Clipping;
-
-	Clipping.Left=Info.XPos;
-	Clipping.Right=Info.XFactor-(Info.XPos+Info.Width);
-	Clipping.HorzFactor=Info.XFactor;
-	Clipping.Top=Info.YPos;
-	Clipping.Bottom=Info.YFactor-(Info.YPos+Info.Height);
-	Clipping.VertFactor=Info.YFactor;
-
-	m_App.CoreEngine.m_DtvEngine.m_MediaViewer.SetPanAndScan(Info.XAspect,Info.YAspect,&Clipping);
-
 	if (!m_pCore->GetFullscreen()) {
 		switch (m_App.ViewOptions.GetPanScanAdjustWindowMode()) {
 		case CViewOptions::ADJUSTWINDOW_FIT:
@@ -5065,40 +5054,16 @@ bool CMainWindow::SetPanAndScan(const PanAndScanInfo &Info)
 
 	m_App.StatusView.UpdateItem(STATUS_ITEM_VIDEOSIZE);
 	m_App.Panel.ControlPanel.UpdateItem(CONTROLPANEL_ITEM_VIDEO);
-
-	return true;
-}
-
-
-bool CMainWindow::GetPanAndScan(PanAndScanInfo *pInfo) const
-{
-	if (pInfo==nullptr)
-		return false;
-
-	const CMediaViewer &MediaViewer=m_App.CoreEngine.m_DtvEngine.m_MediaViewer;
-	CMediaViewer::ClippingInfo Clipping;
-
-	MediaViewer.GetForceAspectRatio(&pInfo->XAspect,&pInfo->YAspect);
-	MediaViewer.GetClippingInfo(&Clipping);
-
-	pInfo->XPos=Clipping.Left;
-	pInfo->YPos=Clipping.Top;
-	pInfo->Width=Clipping.HorzFactor-(Clipping.Left+Clipping.Right);
-	pInfo->Height=Clipping.VertFactor-(Clipping.Top+Clipping.Bottom);
-	pInfo->XFactor=Clipping.HorzFactor;
-	pInfo->YFactor=Clipping.VertFactor;
-
-	return true;
 }
 
 
 bool CMainWindow::SetPanAndScan(int Command)
 {
-	PanAndScanInfo Info;
+	CCoreEngine::PanAndScanInfo Info;
 	int Type;
 
 	if (Command>=CM_ASPECTRATIO_FIRST && Command<=CM_ASPECTRATIO_3D_LAST) {
-		static const CUICore::PanAndScanInfo PanAndScanList[] = {
+		static const CCoreEngine::PanAndScanInfo PanAndScanList[] = {
 			{0, 0,  0,  0,  0,  0,  0,  0},	// デフォルト
 			{0, 0,  1,  1,  1,  1, 16,  9},	// 16:9
 			{0, 3,  1, 18,  1, 24, 16,  9},	// 16:9 レターボックス
@@ -5122,7 +5087,7 @@ bool CMainWindow::SetPanAndScan(int Command)
 		return false;
 	}
 
-	SetPanAndScan(Info);
+	m_pCore->SetPanAndScan(Info);
 
 	m_AspectRatioType=Type;
 	m_AspectRatioResetTime=0;

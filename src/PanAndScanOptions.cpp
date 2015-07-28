@@ -53,7 +53,7 @@ static int GetValue(LPCTSTR pszValue,int Factor)
 }
 
 
-static int FormatPanAndScanInfo(const CUICore::PanAndScanInfo &Info,LPTSTR pszText,int MaxLength)
+static int FormatPanAndScanInfo(const CCoreEngine::PanAndScanInfo &Info,LPTSTR pszText,int MaxLength)
 {
 	TCHAR szXPos[32],szYPos[32],szWidth[32],szHeight[32];
 
@@ -66,7 +66,7 @@ static int FormatPanAndScanInfo(const CUICore::PanAndScanInfo &Info,LPTSTR pszTe
 }
 
 
-static bool ParsePanAndScanInfo(CUICore::PanAndScanInfo *pInfo,LPTSTR pszText)
+static bool ParsePanAndScanInfo(CCoreEngine::PanAndScanInfo *pInfo,LPTSTR pszText)
 {
 	LPTSTR p=pszText;
 	int j;
@@ -359,7 +359,7 @@ INT_PTR CPanAndScanOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPa
 			if (pdis->CtlID==IDC_PANANDSCAN_PREVIEW) {
 				int ItemWidth,ItemHeight,ScreenWidth,ScreenHeight;
 				RECT rcScreen;
-				CUICore::PanAndScanInfo PanScan;
+				CCoreEngine::PanAndScanInfo PanScan;
 
 				ItemWidth=pdis->rcItem.right-pdis->rcItem.left;
 				ItemHeight=pdis->rcItem.bottom-pdis->rcItem.top;
@@ -553,7 +553,7 @@ INT_PTR CPanAndScanOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPa
 
 				if (GetSettings(&Info)) {
 					CUICore &UICore=GetAppClass().UICore;
-					CUICore::PanAndScanInfo OldInfo;
+					CCoreEngine::PanAndScanInfo OldInfo;
 
 					if (!m_fTested)
 						UICore.GetPanAndScan(&OldInfo);
@@ -682,7 +682,7 @@ bool CPanAndScanOptions::GetSettings(CPanAndScanOptions::PanAndScanInfo *pInfo) 
 }
 
 
-bool CPanAndScanOptions::GetPanAndScanSettings(CUICore::PanAndScanInfo *pInfo) const
+bool CPanAndScanOptions::GetPanAndScanSettings(CCoreEngine::PanAndScanInfo *pInfo) const
 {
 	pInfo->XFactor=HORZ_FACTOR;
 	pInfo->YFactor=VERT_FACTOR;

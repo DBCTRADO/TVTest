@@ -142,6 +142,12 @@ void CAppEventManager::OnPlaybackStateChanged(bool fPlayback)
 }
 
 
+void CAppEventManager::OnPanAndScanChanged()
+{
+	CALL_HANDLERS(OnPanAndScanChanged());
+}
+
+
 void CAppEventManager::OnVolumeChanged(int Volume)
 {
 	CALL_HANDLERS(OnVolumeChanged(Volume));

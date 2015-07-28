@@ -550,8 +550,6 @@ private:
 	HWND GetViewerWindow() const override;
 	bool SetZoomRate(int Rate,int Factor) override;
 	bool GetZoomRate(int *pRate,int *pFactor) override;
-	bool SetPanAndScan(const PanAndScanInfo &Info) override;
-	bool GetPanAndScan(PanAndScanInfo *pInfo) const override;
 	bool SetLogo(HBITMAP hbm) override;
 	bool SetAlwaysOnTop(bool fTop) override;
 	bool SetFullscreen(bool fFullscreen) override;
@@ -571,6 +569,7 @@ private:
 	void OnRecordingPaused() override;
 	void OnRecordingResumed() override;
 	void On1SegModeChanged(bool f1SegMode) override;
+	void OnPanAndScanChanged() override;
 	void OnVolumeChanged(int Volume) override;
 	void OnMuteChanged(bool fMute) override;
 	void OnDualMonoModeChanged(CAudioDecFilter::DualMonoMode Mode) override;

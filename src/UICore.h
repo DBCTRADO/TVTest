@@ -5,6 +5,7 @@
 #include <vector>
 #include "UISkin.h"
 #include "ColorScheme.h"
+#include "CoreEngine.h"
 #include "AudioManager.h"
 #include "Menu.h"
 #include "GUIUtil.h"
@@ -33,21 +34,6 @@ public:
 		MENU_PROGRAMINFO
 	};
 
-	typedef CUISkin::PanAndScanInfo PanAndScanInfo;
-
-	enum {
-		PANANDSCAN_DEFAULT,
-		PANANDSCAN_16x9,
-		PANANDSCAN_LETTERBOX,
-		PANANDSCAN_SUPERFRAME,
-		PANANDSCAN_SIDECUT,
-		PANANDSCAN_4x3,
-		PANANDSCAN_32x9,
-		PANANDSCAN_16x9_LEFT,
-		PANANDSCAN_16x9_RIGHT,
-		PANANDSCAN_CUSTOM
-	};
-
 	CUICore(CAppMain &App);
 	~CUICore();
 	bool SetSkin(CUISkin *pSkin);
@@ -65,8 +51,8 @@ public:
 	bool SetZoomRate(int Rate,int Factor=100);
 	bool GetZoomRate(int *pRate,int *pFactor) const;
 	int GetZoomPercentage() const;
-	bool GetPanAndScan(PanAndScanInfo *pInfo) const;
-	bool SetPanAndScan(const PanAndScanInfo &Info);
+	bool GetPanAndScan(CCoreEngine::PanAndScanInfo *pInfo) const;
+	bool SetPanAndScan(const CCoreEngine::PanAndScanInfo &Info);
 
 	int GetVolume() const;
 	bool SetVolume(int Volume,bool fOSD=true);

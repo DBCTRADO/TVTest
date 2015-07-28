@@ -26,6 +26,22 @@ public:
 
 	enum { MAX_VOLUME=100 };
 
+	struct PanAndScanInfo
+	{
+		int XPos,YPos;
+		int Width,Height;
+		int XFactor,YFactor;
+		int XAspect,YAspect;
+
+		bool operator==(const PanAndScanInfo &Op) const {
+			return XPos==Op.XPos && YPos==Op.YPos
+				&& Width==Op.Width && Height==Op.Height
+				&& XFactor==Op.XFactor && YFactor==Op.YFactor
+				&& XAspect==Op.XAspect && YAspect==Op.YAspect;
+		}
+		bool operator!=(const PanAndScanInfo &Op) const { return !(*this==Op); }
+	};
+
 	CCoreEngine();
 	~CCoreEngine();
 	void Close();
@@ -68,6 +84,8 @@ public:
 	int GetOriginalVideoHeight() const { return m_OriginalVideoHeight; }
 	int GetDisplayVideoWidth() const { return m_DisplayVideoWidth; }
 	int GetDisplayVideoHeight() const { return m_DisplayVideoHeight; }
+	bool SetPanAndScan(const PanAndScanInfo &Info);
+	bool GetPanAndScan(PanAndScanInfo *pInfo) const;
 
 	bool SetVolume(int Volume);
 	int GetVolume() const { return m_Volume; }

@@ -48,6 +48,7 @@ namespace TVTest
 		virtual void On1SegModeChanged(bool f1SegMode) {}
 		virtual void OnFullscreenChanged(bool fFullscreen) {}
 		virtual void OnPlaybackStateChanged(bool fPlayback) {}
+		virtual void OnPanAndScanChanged() {}
 		virtual void OnVolumeChanged(int Volume) {}
 		virtual void OnMuteChanged(bool fMute) {}
 		virtual void OnDualMonoModeChanged(CAudioDecFilter::DualMonoMode Mode) {}
@@ -88,6 +89,7 @@ namespace TVTest
 		void On1SegModeChanged(bool f1SegMode);
 		void OnFullscreenChanged(bool fFullscreen);
 		void OnPlaybackStateChanged(bool fPlayback);
+		void OnPanAndScanChanged();
 		void OnVolumeChanged(int Volume);
 		void OnMuteChanged(bool fMute);
 		void OnDualMonoModeChanged(CAudioDecFilter::DualMonoMode Mode);

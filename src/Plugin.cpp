@@ -1265,7 +1265,7 @@ LRESULT CPlugin::OnCallback(TVTest::PluginParam *pParam,UINT Message,LPARAM lPar
 			if (pInfo==NULL || pInfo->Size!=sizeof(TVTest::PanScanInfo))
 				return FALSE;
 
-			CUICore::PanAndScanInfo PanScan;
+			CCoreEngine::PanAndScanInfo PanScan;
 			if (!GetAppClass().UICore.GetPanAndScan(&PanScan))
 				return FALSE;
 
