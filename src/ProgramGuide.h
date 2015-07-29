@@ -417,6 +417,7 @@ private:
 		TVTest::Style::IntValue HeaderShadowHeight;
 		TVTest::Style::IntValue EventLeading;
 		TVTest::Style::IntValue EventLineSpacing;
+		bool fEventJustify;
 		TVTest::Style::Margins EventPadding;
 		TVTest::Style::Size EventIconSize;
 		TVTest::Style::Margins EventIconMargin;

@@ -69,7 +69,7 @@ public:
 	void CalcTitleLines(TVTest::CTextDraw &TextDraw,int Width);
 	void ResetTitleLines() { m_TitleLines=0; }
 	void DrawTitle(TVTest::CTextDraw &TextDraw,const RECT &Rect,int LineHeight) const;
-	void DrawText(TVTest::CTextDraw &TextDraw,const RECT &Rect,int LineHeight) const;
+	void DrawText(TVTest::CTextDraw &TextDraw,const RECT &Rect,int LineHeight,unsigned int TextDrawFlags) const;
 	void GetTimeSize(TVTest::CTextDraw &TextDraw,SIZE *pSize) const;
 	int GetItemPos() const { return m_ItemPos; }
 	void SetItemPos(int Pos) { m_ItemPos=Pos; }
@@ -235,11 +235,11 @@ void CEventItem::DrawTitle(TVTest::CTextDraw &TextDraw,const RECT &Rect,int Line
 }
 
 
-void CEventItem::DrawText(TVTest::CTextDraw &TextDraw,const RECT &Rect,int LineHeight) const
+void CEventItem::DrawText(TVTest::CTextDraw &TextDraw,const RECT &Rect,int LineHeight,unsigned int TextDrawFlags) const
 {
 	LPCTSTR pszEventText=GetEventText();
 	if (!IsStringEmpty(pszEventText))
-		TextDraw.Draw(pszEventText,Rect,LineHeight,TVTest::CTextDraw::DRAW_FLAG_JUSTIFY_MULTI_LINE);
+		TextDraw.Draw(pszEventText,Rect,LineHeight,TextDrawFlags);
 }
 
 
@@ -1674,7 +1674,8 @@ void CProgramGuide::DrawEventText(
 		rc.top+=m_Style.EventLeading;
 		TextDraw.SetFont(m_Font.GetHandle());
 		TextDraw.SetTextColor(TextColor);
-		pItem->DrawText(TextDraw,rc,LineHeight);
+		pItem->DrawText(TextDraw,rc,LineHeight,
+						m_Style.fEventJustify ? TVTest::CTextDraw::DRAW_FLAG_JUSTIFY_MULTI_LINE : 0);
 	}
 }
 
@@ -5036,6 +5037,7 @@ CProgramGuide::ProgramGuideStyle::ProgramGuideStyle()
 	, HeaderShadowHeight(8)
 	, EventLeading(1)
 	, EventLineSpacing(0)
+	, fEventJustify(true)
 	, EventPadding(0,0,2,0)
 	, EventIconSize(CEpgIcons::DEFAULT_ICON_WIDTH,CEpgIcons::DEFAULT_ICON_HEIGHT)
 	, EventIconMargin(1)
@@ -5061,6 +5063,7 @@ void CProgramGuide::ProgramGuideStyle::SetStyle(const TVTest::Style::CStyleManag
 	pStyleManager->Get(TEXT("program-guide.header.shadow.height"),&HeaderShadowHeight);
 	pStyleManager->Get(TEXT("program-guide.event.leading"),&EventLeading);
 	pStyleManager->Get(TEXT("program-guide.event.line-spacing"),&EventLineSpacing);
+	pStyleManager->Get(TEXT("program-guide.event.justify"),&fEventJustify);
 	pStyleManager->Get(TEXT("program-guide.event.padding"),&EventPadding);
 	pStyleManager->Get(TEXT("program-guide.event.icon"),&EventIconSize);
 	pStyleManager->Get(TEXT("program-guide.event.icon.margin"),&EventIconMargin);
