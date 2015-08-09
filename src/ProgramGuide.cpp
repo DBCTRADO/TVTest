@@ -4609,7 +4609,7 @@ bool CProgramGuide::ExecuteiEpgAssociate(const ProgramGuide::CServiceInfo *pServ
 	if (!pServiceInfo->SaveiEpgFile(pEventInfo,szFileName,true))
 		return false;
 
-	return (int)::ShellExecute(NULL,NULL,szFileName,NULL,NULL,SW_SHOWNORMAL)>32;
+	return (INT_PTR)::ShellExecute(NULL,NULL,szFileName,NULL,NULL,SW_SHOWNORMAL)>32;
 }
 
 

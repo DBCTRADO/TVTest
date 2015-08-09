@@ -283,12 +283,12 @@ void CMenuPainter::DrawItemBackground(HDC hdc,const RECT &Rect,UINT State)
 		bool fSelected=(State & ODS_SELECTED)!=0;
 		if (m_fFlatMenu) {
 			::FillRect(hdc,&Rect,
-				reinterpret_cast<HBRUSH>(fSelected?COLOR_MENUHILIGHT+1:COLOR_MENU+1));
+				reinterpret_cast<HBRUSH>(static_cast<INT_PTR>(fSelected?COLOR_MENUHILIGHT+1:COLOR_MENU+1)));
 			if (fSelected)
 				::FrameRect(hdc,&Rect,::GetSysColorBrush(COLOR_HIGHLIGHT));
 		} else {
 			::FillRect(hdc,&Rect,
-				reinterpret_cast<HBRUSH>(fSelected?COLOR_HIGHLIGHT+1:COLOR_MENU+1));
+				reinterpret_cast<HBRUSH>(static_cast<INT_PTR>(fSelected?COLOR_HIGHLIGHT+1:COLOR_MENU+1)));
 		}
 	}
 }

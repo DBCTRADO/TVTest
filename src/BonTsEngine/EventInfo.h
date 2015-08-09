@@ -189,6 +189,10 @@ public:
 	CEventInfo();
 	CEventInfo(CEventInfo &&Src);
 	CEventInfo &operator=(CEventInfo &&Op);
+#if defined(_MSC_VER) && (_MSC_VER >= 1800)
+	CEventInfo(const CEventInfo &) = default;
+	CEventInfo &operator=(const CEventInfo &) = default;
+#endif
 	bool operator==(const CEventInfo &Op) const;
 	bool operator!=(const CEventInfo &Op) const { return !(*this == Op); }
 	bool IsEqual(const CEventInfo &Op) const;

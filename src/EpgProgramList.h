@@ -65,6 +65,10 @@ public:
 	~CEventInfoData();
 	CEventInfoData &operator=(CEventInfoData &&Info);
 	CEventInfoData &operator=(const CEventInfo &Info);
+#if defined(_MSC_VER) && (_MSC_VER >= 1800)
+	CEventInfoData(const CEventInfoData &) = default;
+	CEventInfoData &operator=(const CEventInfoData &) = default;
+#endif
 	bool operator==(const CEventInfoData &Info) const;
 	bool operator!=(const CEventInfoData &Info) const { return !(*this==Info); }
 	int GetMainAudioIndex() const;

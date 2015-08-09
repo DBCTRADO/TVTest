@@ -391,7 +391,7 @@ HRESULT DirectShowUtil::AddToRot(IUnknown *pUnkGraph, DWORD *pdwRegister)
 		return E_FAIL;
 
 	wchar_t wsz[256];
-	swprintf_s(wsz,256, L"FilterGraph %08p pid %08x", (DWORD_PTR)pUnkGraph, ::GetCurrentProcessId());
+	swprintf_s(wsz,256, L"FilterGraph %08p pid %08x", pUnkGraph, ::GetCurrentProcessId());
 
 	HRESULT hr = ::CreateItemMoniker(L"!", wsz, &pMoniker);
 

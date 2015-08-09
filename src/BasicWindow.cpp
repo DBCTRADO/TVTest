@@ -364,7 +364,7 @@ bool CBasicWindow::CreateBasicWindow(HWND hwndParent,DWORD Style,DWORD ExStyle,
 	m_hwnd=::CreateWindowEx(ExStyle,pszClassName,pszText,Style,
 		m_WindowPosition.Left,m_WindowPosition.Top,
 		m_WindowPosition.Width,m_WindowPosition.Height,
-		hwndParent,reinterpret_cast<HMENU>(ID),hinst,this);
+		hwndParent,reinterpret_cast<HMENU>(static_cast<INT_PTR>(ID)),hinst,this);
 	return m_hwnd!=NULL;
 }
 

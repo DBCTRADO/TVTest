@@ -408,7 +408,7 @@ INT_PTR CStatusOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 						BackColor=COLOR_HIGHLIGHT;
 					}
 					::FillRect(pdis->hDC,&pdis->rcItem,
-							   reinterpret_cast<HBRUSH>(BackColor+1));
+							   reinterpret_cast<HBRUSH>(static_cast<INT_PTR>(BackColor+1)));
 					OldBkMode=::SetBkMode(pdis->hDC,TRANSPARENT);
 					crTextColor=::GetSysColor(TextColor);
 					if (!pItemInfo->fVisible)

@@ -1520,7 +1520,8 @@ INT_PTR CColorSchemeOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lP
 						int Border=CColorScheme::GetColorBorder((int)pdis->itemID);
 						if (Border>=0 && m_BorderList[Border]==Theme::BORDER_NONE)
 							TextColor=MixColor(TextColor,BackColor);
-						::FillRect(pdis->hDC,&pdis->rcItem,reinterpret_cast<HBRUSH>(BackSysColor+1));
+						::FillRect(pdis->hDC,&pdis->rcItem,
+							reinterpret_cast<HBRUSH>(static_cast<INT_PTR>(BackSysColor+1)));
 						hbr=::CreateSolidBrush((COLORREF)pdis->itemData);
 						hbrOld=SelectBrush(pdis->hDC,hbr);
 						hpenOld=SelectPen(pdis->hDC,::GetStockObject(BLACK_PEN));
