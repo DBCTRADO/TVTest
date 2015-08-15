@@ -47,15 +47,24 @@ bool CTaskbarManager::Initialize(HWND hwnd)
 		if (Util::OS::IsWindows7OrLater()) {
 			m_TaskbarButtonCreatedMessage=::RegisterWindowMessage(TEXT("TaskbarButtonCreated"));
 
+			auto pChangeWindowMessageFilterEx=
+				GET_MODULE_FUNCTION(TEXT("user32.dll"),ChangeWindowMessageFilterEx);
+			if (pChangeWindowMessageFilterEx!=NULL) {
+				pChangeWindowMessageFilterEx(hwnd,m_TaskbarButtonCreatedMessage,MSGFLT_ALLOW,NULL);
+				pChangeWindowMessageFilterEx(hwnd,WM_COMMAND,MSGFLT_ALLOW,NULL);
+			} else {
 #ifdef WIN_XP_SUPPORT
-			auto pChangeWindowMessageFilter=
-				GET_MODULE_FUNCTION(TEXT("user32.dll"),ChangeWindowMessageFilter);
-			if (pChangeWindowMessageFilter!=NULL) {
-				pChangeWindowMessageFilter(m_TaskbarButtonCreatedMessage,MSGFLT_ADD);
-			}
+				auto pChangeWindowMessageFilter=
+					GET_MODULE_FUNCTION(TEXT("user32.dll"),ChangeWindowMessageFilter);
+				if (pChangeWindowMessageFilter!=NULL) {
+					pChangeWindowMessageFilter(m_TaskbarButtonCreatedMessage,MSGFLT_ADD);
+					pChangeWindowMessageFilter(WM_COMMAND,MSGFLT_ADD);
+				}
 #else
-			::ChangeWindowMessageFilter(m_TaskbarButtonCreatedMessage,MSGFLT_ADD);
+				::ChangeWindowMessageFilter(m_TaskbarButtonCreatedMessage,MSGFLT_ADD);
+				::ChangeWindowMessageFilter(WM_COMMAND,MSGFLT_ADD);
 #endif
+			}
 
 			m_hwnd=hwnd;
 
