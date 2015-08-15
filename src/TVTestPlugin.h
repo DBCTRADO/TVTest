@@ -1479,12 +1479,12 @@ inline DWORD MsgGetSetting(PluginParam *pParam,LPCWSTR pszName,LPWSTR pszString,
 }
 
 // ƒtƒHƒ“ƒg‚ÌÝ’è‚ðŽæ“¾‚·‚é
-inline bool MsgGetSetting(PluginParam *pParam,LPCWSTR pszName,LOGFONT *pFont)
+inline bool MsgGetSetting(PluginParam *pParam,LPCWSTR pszName,LOGFONTW *pFont)
 {
 	SettingInfo Info;
 	Info.pszName=pszName;
 	Info.Type=SETTING_TYPE_DATA;
-	Info.ValueSize=sizeof(LOGFONT);
+	Info.ValueSize=sizeof(LOGFONTW);
 	Info.Value.pData=pFont;
 	return (*pParam->Callback)(pParam,MESSAGE_GETSETTING,(LPARAM)&Info,0)!=FALSE;
 }
@@ -3149,7 +3149,7 @@ public:
 	DWORD GetSetting(LPCWSTR pszName,LPWSTR pszString,DWORD MaxLength) {
 		return MsgGetSetting(m_pParam,pszName,pszString,MaxLength);
 	}
-	bool GetSetting(LPCWSTR pszName,LOGFONT *pFont) {
+	bool GetSetting(LPCWSTR pszName,LOGFONTW *pFont) {
 		return MsgGetSetting(m_pParam,pszName,pFont);
 	}
 	int GetDriverFullPathName(LPWSTR pszPath,int MaxLength) {
