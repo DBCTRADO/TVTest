@@ -445,6 +445,12 @@ int CStyleManager::ConvertUnit(int Value,UnitType SrcUnit,UnitType DstUnit) cons
 }
 
 
+int CStyleManager::GetDPI() const
+{
+	return m_ResolutionY;
+}
+
+
 UnitType CStyleManager::ParseUnit(LPCTSTR pszUnit)
 {
 	if (IsStringEmpty(pszUnit))

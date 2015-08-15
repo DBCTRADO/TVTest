@@ -3169,6 +3169,16 @@ static bool GetSettingFont(TVTest::SettingInfo *pSetting,const LOGFONT *pFont)
 	return true;
 }
 
+static bool GetSettingInt(TVTest::SettingInfo *pSetting,int Value)
+{
+	if (pSetting->Type!=TVTest::SETTING_TYPE_INT)
+		return false;
+	if (pSetting->ValueSize!=sizeof(int))
+		return false;
+	pSetting->Value.Int=Value;
+	return true;
+}
+
 bool CPlugin::OnGetSetting(TVTest::SettingInfo *pSetting) const
 {
 	if (pSetting==NULL || pSetting->pszName==NULL)
@@ -3192,7 +3202,14 @@ bool CPlugin::OnGetSetting(TVTest::SettingInfo *pSetting) const
 		return GetSettingFont(pSetting,&App.ProgramGuideOptions.GetFont());
 	} else if (::lstrcmpiW(pSetting->pszName,L"StatusBarFont")==0) {
 		return GetSettingFont(pSetting,&App.StatusOptions.GetFont());
+	} else if (::lstrcmpiW(pSetting->pszName,L"DPI")==0) {
+		return GetSettingInt(pSetting,App.StyleManager.GetDPI());
 	}
+#ifdef _DEBUG
+	else {
+		TRACE(TEXT("CPlugin::OnGetSettings() : Unknown setting \"%s\"\n"),pSetting->pszName);
+	}
+#endif
 
 	return false;
 }

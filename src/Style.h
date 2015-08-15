@@ -115,6 +115,7 @@ namespace TVTest
 			int PointsToPixels(int Points) const;
 			int DipToPixels(int Dip) const;
 			int ConvertUnit(int Value,UnitType SrcUnit,UnitType DstUnit) const;
+			int GetDPI() const;
 
 		private:
 			typedef std::unordered_map<String,StyleInfo> StyleMap;

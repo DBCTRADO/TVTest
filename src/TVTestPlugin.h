@@ -139,6 +139,7 @@
 	  ・PanelFont
 	  ・ProgramGuideFont
 	  ・StatusBarFont
+	  ・DPI
 	・プラグインのフラグに PLUGIN_FLAG_NOENABLEDDISABLED を追加した
 
 	ver.0.0.13 (TVTest ver.0.7.16 or later)
@@ -1418,6 +1419,7 @@ enum SettingType {
 	PanelFont             パネルのフォント                    データ(LOGFONT)
 	ProgramGuideFont      番組表のフォント                    データ(LOGFONT)
 	StatusBarFont         ステータスバーのフォント            データ(LOGFONT)
+	DPI                   UIのDPI                             int
 */
 
 // 設定を取得する
