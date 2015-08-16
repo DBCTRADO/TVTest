@@ -139,6 +139,7 @@
 	  ・PanelFont
 	  ・ProgramGuideFont
 	  ・StatusBarFont
+	  ・DPI
 	・プラグインのフラグに PLUGIN_FLAG_NOENABLEDDISABLED を追加した
 
 	ver.0.0.13 (TVTest ver.0.7.16 or later)
@@ -1418,6 +1419,7 @@ enum SettingType {
 	PanelFont             パネルのフォント                    データ(LOGFONT)
 	ProgramGuideFont      番組表のフォント                    データ(LOGFONT)
 	StatusBarFont         ステータスバーのフォント            データ(LOGFONT)
+	DPI                   UIのDPI                             int
 */
 
 // 設定を取得する
@@ -1479,12 +1481,12 @@ inline DWORD MsgGetSetting(PluginParam *pParam,LPCWSTR pszName,LPWSTR pszString,
 }
 
 // フォントの設定を取得する
-inline bool MsgGetSetting(PluginParam *pParam,LPCWSTR pszName,LOGFONT *pFont)
+inline bool MsgGetSetting(PluginParam *pParam,LPCWSTR pszName,LOGFONTW *pFont)
 {
 	SettingInfo Info;
 	Info.pszName=pszName;
 	Info.Type=SETTING_TYPE_DATA;
-	Info.ValueSize=sizeof(LOGFONT);
+	Info.ValueSize=sizeof(LOGFONTW);
 	Info.Value.pData=pFont;
 	return (*pParam->Callback)(pParam,MESSAGE_GETSETTING,(LPARAM)&Info,0)!=FALSE;
 }
@@ -3149,7 +3151,7 @@ public:
 	DWORD GetSetting(LPCWSTR pszName,LPWSTR pszString,DWORD MaxLength) {
 		return MsgGetSetting(m_pParam,pszName,pszString,MaxLength);
 	}
-	bool GetSetting(LPCWSTR pszName,LOGFONT *pFont) {
+	bool GetSetting(LPCWSTR pszName,LOGFONTW *pFont) {
 		return MsgGetSetting(m_pParam,pszName,pFont);
 	}
 	int GetDriverFullPathName(LPWSTR pszPath,int MaxLength) {
