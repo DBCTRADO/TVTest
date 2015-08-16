@@ -7,53 +7,112 @@
 
 #include <windows.h>
 #include <tchar.h>
+#include <gdiplus.h>
+#include <shlwapi.h>
+#include <cmath>
+#include <cstddef>
 #include <deque>
+#include <strsafe.h>
 #define TVTEST_PLUGIN_CLASS_IMPLEMENT	// クラスとして実装
 #include "TVTestPlugin.h"
 #include "resource.h"
 
+#pragma comment(lib, "gdiplus.lib")
+#pragma comment(lib, "shlwapi.lib")
 
-// ウィンドウクラス名
-#define SIGNAL_GRAPH_WINDOW_CLASS TEXT("Signal Graph Window")
 
-// ウィンドウのクライアント領域の大きさ
-#define WINDOW_WIDTH	300
-#define WINDOW_HEIGHT	200
+// グラフの大きさ
+#define GRAPH_WIDTH		300
+#define GRAPH_HEIGHT	200
 
 
 // プラグインクラス
 class CSignalGraph : public TVTest::CTVTestPlugin
 {
-	struct SignalInfo {
-		DWORD SignalLevel;
-		DWORD BitRate;
-	};
-
-	std::deque<SignalInfo> m_List;
-	HWND m_hwnd;
-	COLORREF m_crBackColor;
-	COLORREF m_crSignalLevelColor;
-	COLORREF m_crBitRateColor;
-	COLORREF m_crGridColor;
-
-	static LRESULT CALLBACK EventCallback(UINT Event,LPARAM lParam1,LPARAM lParam2,void *pClientData);
-	static CSignalGraph *GetThis(HWND hwnd);
-	static LRESULT CALLBACK WndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam);
-
 public:
 	CSignalGraph();
 	virtual bool GetPluginInfo(TVTest::PluginInfo *pInfo);
 	virtual bool Initialize();
 	virtual bool Finalize();
+
+private:
+	struct Position
+	{
+		int Left, Top, Width, Height;
+		Position() : Left(0), Top(0), Width(0), Height(0) {}
+	};
+
+	struct SignalInfo
+	{
+		float SignalLevel;
+		DWORD BitRate;
+
+		SignalInfo() : SignalLevel(0.0f), BitRate(0) {}
+		SignalInfo(float level, DWORD rate) : SignalLevel(level), BitRate(rate) {}
+	};
+
+	bool m_fInitialized;
+	std::deque<SignalInfo> m_List;
+	HWND m_hwnd;
+	Position m_WindowPosition;
+	Gdiplus::Color m_BackColor;
+	Gdiplus::Color m_SignalLevelColor;
+	Gdiplus::Color m_BitRateColor;
+	Gdiplus::Color m_GridColor;
+	Gdiplus::Pen *m_pGridPen;
+	Gdiplus::Pen *m_pSignalLevelPen;
+	Gdiplus::Pen *m_pBitRatePen;
+	Gdiplus::SolidBrush *m_pBrush;
+	LOGFONT m_Font;
+	Gdiplus::Font *m_pFont;
+	Gdiplus::Graphics *m_pOffscreen;
+	Gdiplus::Bitmap *m_pOffscreenImage;
+	float m_SignalLevelScale;
+	float m_ActualSignalLevelScale;
+	DWORD m_BitRateScale;
+
+	static const LPCTSTR WINDOW_CLASS_NAME;
+
+	bool EnablePlugin(bool fEnable);
+	void DrawGraph(Gdiplus::Graphics &Graphics, int Width, int Height);
+	void OnPaint(HWND hwnd);
+	void FreeResources();
+	void AdjustSignalLevelScale();
+
+	static LRESULT CALLBACK EventCallback(UINT Event, LPARAM lParam1, LPARAM lParam2, void *pClientData);
+	static CSignalGraph *GetThis(HWND hwnd);
+	static LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+
+	template<typename T> static inline void SafeDelete(T *&p)
+	{
+		if (p != nullptr) {
+			delete p;
+			p = nullptr;
+		}
+	}
 };
 
 
+// ウィンドウクラス名
+const LPCTSTR CSignalGraph::WINDOW_CLASS_NAME = TEXT("TVTest Signal Graph Window");
+
+
 CSignalGraph::CSignalGraph()
-	: m_hwnd(NULL)
-	, m_crBackColor(RGB(0,0,0))
-	, m_crSignalLevelColor(RGB(0,255,0))
-	, m_crBitRateColor(RGB(0,0,255))
-	, m_crGridColor(RGB(128,128,128))
+	: m_fInitialized(false)
+	, m_hwnd(nullptr)
+	, m_BackColor(255, 0, 0, 0)
+	, m_SignalLevelColor(255, 0, 255, 128)
+	, m_BitRateColor(192, 0, 160, 255)
+	, m_GridColor(255, 64, 64, 64)
+	, m_pGridPen(nullptr)
+	, m_pSignalLevelPen(nullptr)
+	, m_pBitRatePen(nullptr)
+	, m_pBrush(nullptr)
+	, m_pFont(nullptr)
+	, m_pOffscreen(nullptr)
+	, m_pOffscreenImage(nullptr)
+	, m_SignalLevelScale(80.0f)
+	, m_BitRateScale(40 * 1000 * 1000)
 {
 }
 
@@ -74,10 +133,10 @@ bool CSignalGraph::GetPluginInfo(TVTest::PluginInfo *pInfo)
 bool CSignalGraph::Initialize()
 {
 	// アイコンを登録
-	m_pApp->RegisterPluginIconFromResource(g_hinstDLL,MAKEINTRESOURCE(IDB_ICON));
+	m_pApp->RegisterPluginIconFromResource(g_hinstDLL, MAKEINTRESOURCE(IDB_ICON));
 
 	// イベントコールバック関数を登録
-	m_pApp->SetEventCallback(EventCallback,this);
+	m_pApp->SetEventCallback(EventCallback, this);
 
 	return true;
 }
@@ -87,70 +146,336 @@ bool CSignalGraph::Initialize()
 bool CSignalGraph::Finalize()
 {
 	// ウィンドウの破棄
-	if (m_hwnd!=NULL)
+	if (m_hwnd != nullptr)
 		::DestroyWindow(m_hwnd);
+
+	// 設定を保存
+	if (m_fInitialized) {
+		TCHAR szIniFileName[MAX_PATH];
+
+		::GetModuleFileName(g_hinstDLL, szIniFileName, _countof(szIniFileName));
+		::PathRenameExtension(szIniFileName, TEXT(".ini"));
+
+		struct IntString {
+			IntString(int Value) { ::StringCchPrintf(m_szBuffer, _countof(m_szBuffer), TEXT("%d"), Value); }
+			operator LPCTSTR() const { return m_szBuffer; }
+			TCHAR m_szBuffer[16];
+		};
+
+		::WritePrivateProfileString(TEXT("Settings"), TEXT("WindowLeft"),
+									IntString(m_WindowPosition.Left), szIniFileName);
+		::WritePrivateProfileString(TEXT("Settings"), TEXT("WindowTop"),
+									IntString(m_WindowPosition.Top), szIniFileName);
+		::WritePrivateProfileString(TEXT("Settings"), TEXT("WindowWidth"),
+									IntString(m_WindowPosition.Width), szIniFileName);
+		::WritePrivateProfileString(TEXT("Settings"), TEXT("WindowHeight"),
+									IntString(m_WindowPosition.Height), szIniFileName);
+	}
 
 	return true;
 }
 
 
+// プラグインの有効/無効の切り替え
+bool CSignalGraph::EnablePlugin(bool fEnable)
+{
+	if (fEnable) {
+		// ウィンドウクラスの登録
+		if (!m_fInitialized) {
+			WNDCLASS wc;
+
+			wc.style = CS_HREDRAW | CS_VREDRAW;
+			wc.lpfnWndProc = WndProc;
+			wc.cbClsExtra = 0;
+			wc.cbWndExtra = 0;
+			wc.hInstance = g_hinstDLL;
+			wc.hIcon = nullptr;
+			wc.hCursor = ::LoadCursor(nullptr, IDC_ARROW);
+			wc.hbrBackground = nullptr;
+			wc.lpszMenuName = nullptr;
+			wc.lpszClassName = WINDOW_CLASS_NAME;
+			if (::RegisterClass(&wc) == 0)
+				return false;
+
+			// 設定の読み込み
+			TCHAR szIniFileName[MAX_PATH];
+			::GetModuleFileName(g_hinstDLL, szIniFileName, _countof(szIniFileName));
+			::PathRenameExtension(szIniFileName, TEXT(".ini"));
+			m_WindowPosition.Left =
+				::GetPrivateProfileInt(TEXT("Settings"), TEXT("WindowLeft"), m_WindowPosition.Left, szIniFileName);
+			m_WindowPosition.Top =
+				::GetPrivateProfileInt(TEXT("Settings"), TEXT("WindowTop"), m_WindowPosition.Top, szIniFileName);
+			m_WindowPosition.Width =
+				::GetPrivateProfileInt(TEXT("Settings"), TEXT("WindowWidth"), m_WindowPosition.Width, szIniFileName);
+			m_WindowPosition.Height =
+				::GetPrivateProfileInt(TEXT("Settings"), TEXT("WindowHeight"), m_WindowPosition.Height, szIniFileName);
+
+			m_fInitialized = true;
+		}
+
+		if (m_hwnd == nullptr) {
+			static const DWORD Style = WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME;
+			static const DWORD ExStyle = WS_EX_TOOLWINDOW;
+
+			// デフォルトのウィンドウサイズを取得
+			if (m_WindowPosition.Width <= 0 || m_WindowPosition.Height <= 0) {
+				int Width = GRAPH_WIDTH, Height = GRAPH_HEIGHT;
+				// DPI設定に合わせてスケーリング
+				int DPI;
+				if (m_pApp->GetSetting(L"DPI", &DPI) && DPI != 96) {
+					Width = ::MulDiv(Width, DPI, 96);
+					Height = ::MulDiv(Height, DPI, 96);
+				}
+				RECT rc = {0, 0, Width, Height};
+				::AdjustWindowRectEx(&rc, Style, FALSE, ExStyle);
+				if (m_WindowPosition.Width <= 0)
+					m_WindowPosition.Width = rc.right - rc.left;
+				if (m_WindowPosition.Height <= 0)
+					m_WindowPosition.Height = rc.bottom - rc.top;
+			}
+
+			// ウィンドウの作成
+			if (::CreateWindowEx(
+					ExStyle, WINDOW_CLASS_NAME, TEXT("Signal Graph"), Style,
+					0, 0, m_WindowPosition.Width, m_WindowPosition.Height,
+					m_pApp->GetAppWindow(), nullptr, g_hinstDLL, this) == nullptr)
+				return false;
+
+			WINDOWPLACEMENT wp;
+			wp.length = sizeof(WINDOWPLACEMENT);
+			::GetWindowPlacement(m_hwnd, &wp);
+			wp.flags = 0;
+			wp.showCmd = SW_SHOWNOACTIVATE;
+			wp.rcNormalPosition.left = m_WindowPosition.Left;
+			wp.rcNormalPosition.top = m_WindowPosition.Top;
+			wp.rcNormalPosition.right = m_WindowPosition.Left + m_WindowPosition.Width;
+			wp.rcNormalPosition.bottom = m_WindowPosition.Top + m_WindowPosition.Height;
+			::SetWindowPlacement(m_hwnd, &wp);
+		} else {
+			AdjustSignalLevelScale();
+			::ShowWindow(m_hwnd, SW_SHOWNOACTIVATE);
+		}
+		::UpdateWindow(m_hwnd);
+	} else {
+		if (m_hwnd != nullptr)
+			::ShowWindow(m_hwnd, SW_HIDE);
+	}
+
+	return true;
+}
+
+
+// グラフを描画
+void CSignalGraph::DrawGraph(Gdiplus::Graphics &Graphics, int Width, int Height)
+{
+	Graphics.Clear(m_BackColor);
+
+	const float PenScale = (float)Height / (float)GRAPH_HEIGHT;
+
+	// グリッドを描画
+	if (m_pGridPen == nullptr)
+		m_pGridPen = new Gdiplus::Pen(m_GridColor, PenScale);
+	else
+		m_pGridPen->SetWidth(PenScale);
+	for (int i = 0; i < 10; i++) {
+		float y = (float)(Height * (i + 1)) / 10.0f - 1.0f;
+		Graphics.DrawLine(m_pGridPen, 0.0f, y, (float)Width, y);
+	}
+
+	const int ListSize = (int)m_List.size();
+	const int NumPoints = min(ListSize, GRAPH_WIDTH);
+	Gdiplus::PointF *pPoints = new Gdiplus::PointF[NumPoints + 3];
+	const float XScale = (float)Width / (float)GRAPH_WIDTH;
+	const float YScale = (float)(Height - 1);
+	int i, x;
+
+	// ビットレートを描画
+	if (GRAPH_WIDTH > ListSize) {
+		x = GRAPH_WIDTH - ListSize;
+		i = 0;
+	} else {
+		x = 0;
+		i = ListSize - GRAPH_WIDTH;
+	}
+	const float BitRateScale = YScale / (float)m_BitRateScale;
+	for (int j = 0; i < ListSize; i++, j++) {
+		float y = (float)min(m_List[i].BitRate, m_BitRateScale) * BitRateScale;
+		pPoints[j].X = (float)x * XScale;
+		if (j == 0) {
+			pPoints[0].Y = (float)Height;
+			pPoints[1].X = pPoints[0].X;
+			j++;
+		}
+		pPoints[j].Y = YScale - y;
+		x++;
+	}
+	pPoints[NumPoints + 1] = pPoints[NumPoints];
+	pPoints[NumPoints + 1].X += XScale;
+	pPoints[NumPoints + 2].X = pPoints[NumPoints + 1].X;
+	pPoints[NumPoints + 2].Y = (float)Height;
+	Gdiplus::GraphicsPath Path(Gdiplus::FillModeAlternate);
+	Path.AddLines(pPoints, NumPoints + 3);
+	if (m_pBrush == nullptr)
+		m_pBrush = new Gdiplus::SolidBrush(m_BitRateColor);
+	else
+		m_pBrush->SetColor(m_BitRateColor);
+	Graphics.FillPath(m_pBrush, &Path);
+	if (m_pBitRatePen == nullptr) {
+		m_pBitRatePen = new Gdiplus::Pen(m_BitRateColor, PenScale);
+		m_pBitRatePen->SetStartCap(Gdiplus::LineCapRound);
+		m_pBitRatePen->SetEndCap(Gdiplus::LineCapRound);
+		m_pBitRatePen->SetLineJoin(Gdiplus::LineJoinMiter);
+	} else {
+		m_pBitRatePen->SetWidth(PenScale);
+	}
+	Graphics.DrawLines(m_pBitRatePen, &pPoints[1], NumPoints + 1);
+
+	// 信号レベルを描画
+	if (GRAPH_WIDTH > ListSize) {
+		x = GRAPH_WIDTH - ListSize;
+		i = 0;
+	} else {
+		x = 0;
+		i = ListSize - GRAPH_WIDTH;
+	}
+	const float SignalLevelScale = YScale / m_ActualSignalLevelScale;
+	for (int j = 0; i < ListSize; i++, j++) {
+		float y = min(m_List[i].SignalLevel, m_ActualSignalLevelScale) * SignalLevelScale;
+		pPoints[j].X = (float)x * XScale;
+		pPoints[j].Y = YScale - y;
+		x++;
+	}
+	pPoints[NumPoints] = pPoints[NumPoints - 1];
+	pPoints[NumPoints].X += XScale;
+	if (m_pSignalLevelPen == nullptr) {
+		m_pSignalLevelPen = new Gdiplus::Pen(m_SignalLevelColor, PenScale);
+		m_pSignalLevelPen->SetStartCap(Gdiplus::LineCapRound);
+		m_pSignalLevelPen->SetEndCap(Gdiplus::LineCapRound);
+		m_pSignalLevelPen->SetLineJoin(Gdiplus::LineJoinMiter);
+	} else {
+		m_pSignalLevelPen->SetWidth(PenScale);
+	}
+	Graphics.DrawLines(m_pSignalLevelPen, pPoints, NumPoints + 1);
+
+	delete [] pPoints;
+
+	// ビットレートと信号レベルの文字列を描画
+	const Gdiplus::REAL FontHeight = m_pFont->GetHeight(96.0f);
+	const Gdiplus::REAL TextMargin = (Gdiplus::REAL)std::floor(FontHeight / 8.0f);
+	Gdiplus::PointF Pos(TextMargin, TextMargin);
+	const SignalInfo &Info = m_List.back();
+	WCHAR szText[64];
+	::StringCchPrintf(szText, _countof(szText), L"%.2f dB", Info.SignalLevel);
+	m_pBrush->SetColor(Gdiplus::Color(m_SignalLevelColor.GetValue() | 0xFF000000U));
+	Graphics.DrawString(szText, -1, m_pFont, Pos, m_pBrush);
+	::StringCchPrintf(szText, _countof(szText), L"%.2f Mbps", (double)Info.BitRate / (double)(1000 * 1000));
+	Pos.Y += FontHeight;
+	m_pBrush->SetColor(Gdiplus::Color(m_BitRateColor.GetValue() | 0xFF000000U));
+	Graphics.DrawString(szText, -1, m_pFont, Pos, m_pBrush);
+}
+
+
+// WM_PAINT の処理
+void CSignalGraph::OnPaint(HWND hwnd)
+{
+	PAINTSTRUCT ps;
+	RECT rcClient;
+
+	::BeginPaint(hwnd, &ps);
+	::GetClientRect(hwnd, &rcClient);
+
+	if (m_pOffscreenImage == nullptr
+			|| m_pOffscreenImage->GetWidth() < (UINT)rcClient.right
+			|| m_pOffscreenImage->GetHeight() < (UINT)rcClient.bottom) {
+		SafeDelete(m_pOffscreen);
+		delete m_pOffscreenImage;
+		m_pOffscreenImage = new Gdiplus::Bitmap(rcClient.right, rcClient.bottom, PixelFormat32bppPARGB);
+		if (m_pOffscreenImage != nullptr)
+			m_pOffscreen = new Gdiplus::Graphics(m_pOffscreenImage);
+	}
+
+	if (m_pFont == nullptr)
+		m_pFont = new Gdiplus::Font(ps.hdc, &m_Font);
+
+	const Gdiplus::Rect PaintRect(
+		ps.rcPaint.left, ps.rcPaint.top,
+		ps.rcPaint.right - ps.rcPaint.left,
+		ps.rcPaint.bottom - ps.rcPaint.top);
+
+	if (m_pOffscreen != nullptr) {
+		m_pOffscreen->SetPageUnit(Gdiplus::UnitPixel);
+		m_pOffscreen->SetSmoothingMode(Gdiplus::SmoothingModeAntiAlias);
+		m_pOffscreen->SetTextRenderingHint(Gdiplus::TextRenderingHintSystemDefault);
+		m_pOffscreen->SetClip(PaintRect);
+
+		DrawGraph(*m_pOffscreen, rcClient.right, rcClient.bottom);
+
+		Gdiplus::Graphics Graphics(ps.hdc);
+
+		Graphics.SetCompositingMode(Gdiplus::CompositingModeSourceCopy);
+		Graphics.DrawImage(
+			m_pOffscreenImage,
+			PaintRect.X, PaintRect.Y,
+			PaintRect.X, PaintRect.Y,
+			PaintRect.Width, PaintRect.Height,
+			Gdiplus::UnitPixel);
+	} else {
+		Gdiplus::Graphics Graphics(ps.hdc);
+
+		Graphics.SetClip(PaintRect);
+		DrawGraph(Graphics, rcClient.right, rcClient.bottom);
+	}
+
+	::EndPaint(hwnd, &ps);
+}
+
+
+// リソースを解放
+void CSignalGraph::FreeResources()
+{
+	SafeDelete(m_pGridPen);
+	SafeDelete(m_pSignalLevelPen);
+	SafeDelete(m_pBitRatePen);
+	SafeDelete(m_pBrush);
+	SafeDelete(m_pFont);
+	SafeDelete(m_pOffscreen);
+	SafeDelete(m_pOffscreenImage);
+}
+
+
+// 信号レベルのスケールを調整
+void CSignalGraph::AdjustSignalLevelScale()
+{
+	double MaxLevel = 0.0;
+
+	for (auto it = m_List.begin(); it != m_List.end(); ++it) {
+		if (it->SignalLevel > MaxLevel)
+			MaxLevel = it->SignalLevel;
+	}
+
+	if (m_SignalLevelScale > MaxLevel)
+		m_ActualSignalLevelScale = m_SignalLevelScale;
+	else
+		m_ActualSignalLevelScale = (float)std::ceil(MaxLevel * 0.1f) * 10.0f;
+}
+
+
 // イベントコールバック関数
 // 何かイベントが起きると呼ばれる
-LRESULT CALLBACK CSignalGraph::EventCallback(UINT Event,LPARAM lParam1,LPARAM lParam2,void *pClientData)
+LRESULT CALLBACK CSignalGraph::EventCallback(UINT Event, LPARAM lParam1, LPARAM lParam2, void *pClientData)
 {
-	CSignalGraph *pThis=static_cast<CSignalGraph*>(pClientData);
+	CSignalGraph *pThis = static_cast<CSignalGraph*>(pClientData);
 
 	switch (Event) {
 	case TVTest::EVENT_PLUGINENABLE:
 		// プラグインの有効状態が変化した
-		{
-			bool fEnable=lParam1!=0;
-
-			if (fEnable) {
-				// ウィンドウクラスの登録
-				static bool fInitialized=false;
-				if (!fInitialized) {
-					WNDCLASS wc;
-
-					wc.style=0;
-					wc.lpfnWndProc=WndProc;
-					wc.cbClsExtra=0;
-					wc.cbWndExtra=0;
-					wc.hInstance=g_hinstDLL;
-					wc.hIcon=NULL;
-					wc.hCursor=::LoadCursor(NULL,IDC_ARROW);
-					wc.hbrBackground=NULL;
-					wc.lpszMenuName=NULL;
-					wc.lpszClassName=SIGNAL_GRAPH_WINDOW_CLASS;
-					if (::RegisterClass(&wc)==0)
-						return FALSE;
-					fInitialized=true;
-				}
-
-				if (pThis->m_hwnd==NULL) {
-					// ウィンドウの作成
-					RECT rc={0,0,WINDOW_WIDTH,WINDOW_HEIGHT};
-					::AdjustWindowRectEx(&rc,WS_POPUP | WS_CAPTION | WS_SYSMENU,
-										 FALSE,WS_EX_TOOLWINDOW);
-					if (::CreateWindowEx(WS_EX_TOOLWINDOW,SIGNAL_GRAPH_WINDOW_CLASS,
-										 TEXT("Signal Graph"),
-										 WS_POPUP | WS_CAPTION | WS_SYSMENU,
-										 0,0,rc.right-rc.left,rc.bottom-rc.top,
-										 pThis->m_pApp->GetAppWindow(),
-										 NULL,g_hinstDLL,pThis)==NULL)
-						return FALSE;
-				}
-			}
-
-			::ShowWindow(pThis->m_hwnd,fEnable?SW_SHOW:SW_HIDE);
-		}
-		return TRUE;
+		return pThis->EnablePlugin(lParam1 != 0);
 
 	case TVTest::EVENT_STANDBY:
 		// 待機状態が変化した
 		if (pThis->m_pApp->IsPluginEnabled()) {
 			// 待機状態の時はウィンドウを隠す
-			::ShowWindow(pThis->m_hwnd,lParam1!=0?SW_HIDE:SW_SHOW);
+			::ShowWindow(pThis->m_hwnd, lParam1 != 0 ? SW_HIDE : SW_SHOW);
 		}
 		return TRUE;
 	}
@@ -162,118 +487,76 @@ LRESULT CALLBACK CSignalGraph::EventCallback(UINT Event,LPARAM lParam1,LPARAM lP
 // ウィンドウハンドルからthisを取得する
 CSignalGraph *CSignalGraph::GetThis(HWND hwnd)
 {
-	return reinterpret_cast<CSignalGraph*>(::GetWindowLongPtr(hwnd,GWLP_USERDATA));
+	return reinterpret_cast<CSignalGraph*>(::GetWindowLongPtr(hwnd, GWLP_USERDATA));
 }
 
 
 // ウィンドウプロシージャ
-LRESULT CALLBACK CSignalGraph::WndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
+LRESULT CALLBACK CSignalGraph::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	switch (uMsg) {
 	case WM_CREATE:
 		{
-			LPCREATESTRUCT pcs=reinterpret_cast<LPCREATESTRUCT>(lParam);
-			CSignalGraph *pThis=static_cast<CSignalGraph*>(pcs->lpCreateParams);
+			LPCREATESTRUCT pcs = reinterpret_cast<LPCREATESTRUCT>(lParam);
+			CSignalGraph *pThis = static_cast<CSignalGraph*>(pcs->lpCreateParams);
 
-			::SetWindowLongPtr(hwnd,GWLP_USERDATA,reinterpret_cast<LONG_PTR>(pThis));
-			pThis->m_hwnd=hwnd;
+			::SetWindowLongPtr(hwnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(pThis));
+			pThis->m_hwnd = hwnd;
+
+			// フォントを取得
+			if (!pThis->m_pApp->GetSetting(L"StatusBarFont", &pThis->m_Font)) {
+				NONCLIENTMETRICS ncm;
+#if WINVER >= 0x0600
+				ncm.cbSize = offsetof(NONCLIENTMETRICS, iPaddedBorderWidth);
+#else
+				ncm.cbSize = sizeof(NONCLIENTMETRICS);
+#endif
+				::SystemParametersInfo(SPI_GETNONCLIENTMETRICS, ncm.cbSize, &ncm, 0);
+				pThis->m_Font = ncm.lfStatusFont;
+			}
+
+			pThis->m_ActualSignalLevelScale = pThis->m_SignalLevelScale;
+
+			pThis->m_List.clear();
+			pThis->m_List.push_back(SignalInfo());
 
 			// 更新用タイマの設定
-			::SetTimer(hwnd,1,1000,NULL);
+			::SetTimer(hwnd, 1, 1000, nullptr);
 		}
 		return 0;
 
 	case WM_PAINT:
 		{
-			CSignalGraph *pThis=GetThis(hwnd);
-			PAINTSTRUCT ps;
-			HBRUSH hbr;
-			HPEN hpen,hpenOld;
-			const int ListSize=(int)pThis->m_List.size();
-			int x,y,i;
+			CSignalGraph *pThis = GetThis(hwnd);
 
-			::BeginPaint(hwnd,&ps);
-			hbr=::CreateSolidBrush(pThis->m_crBackColor);
-			::FillRect(ps.hdc,&ps.rcPaint,hbr);
-			::DeleteObject(hbr);
-			hpenOld=static_cast<HPEN>(::GetCurrentObject(ps.hdc,OBJ_PEN));
-
-			// グリッドを描く
-			hpen=::CreatePen(PS_SOLID,1,pThis->m_crGridColor);
-			::SelectObject(ps.hdc,hpen);
-			for (y=ps.rcPaint.top/10*10;y<ps.rcPaint.bottom;y+=10) {
-				::MoveToEx(ps.hdc,ps.rcPaint.left,y,NULL);
-				::LineTo(ps.hdc,ps.rcPaint.right,y);
-			}
-
-			// ビットレートを描く
-			hpen=::CreatePen(PS_SOLID,1,pThis->m_crBitRateColor);
-			::DeleteObject(::SelectObject(ps.hdc,hpen));
-			if (ps.rcPaint.left<WINDOW_WIDTH-ListSize) {
-				x=WINDOW_WIDTH-ListSize;
-				i=0;
-			} else {
-				x=ps.rcPaint.left;
-				i=ps.rcPaint.left-(WINDOW_WIDTH-ListSize);
-			}
-			for (;x<min(ps.rcPaint.right,WINDOW_WIDTH);x++) {
-				y=min(pThis->m_List[i].BitRate,40*1024*1024)*WINDOW_HEIGHT/(40*1024*1024);
-				if (y>0) {
-					::MoveToEx(ps.hdc,x,WINDOW_HEIGHT-y,NULL);
-					::LineTo(ps.hdc,x,WINDOW_HEIGHT);
-				}
-				i++;
-			}
-
-			// 信号レベルを描く
-			hpen=::CreatePen(PS_SOLID,1,pThis->m_crSignalLevelColor);
-			::DeleteObject(::SelectObject(ps.hdc,hpen));
-			if (max(ps.rcPaint.left-1,0)<WINDOW_WIDTH-ListSize) {
-				x=WINDOW_WIDTH-ListSize;
-				i=0;
-			} else {
-				x=max(ps.rcPaint.left-1,0);
-				i=x-(WINDOW_WIDTH-ListSize);
-			}
-			for (;x<min(ps.rcPaint.right,WINDOW_WIDTH);x++) {
-				y=min(pThis->m_List[i].SignalLevel,800)*(WINDOW_HEIGHT-1)/800;
-				::MoveToEx(ps.hdc,x,WINDOW_HEIGHT-1-y,NULL);
-				i++;
-				if (i<ListSize) {
-					y=min(pThis->m_List[i].SignalLevel,800)*(WINDOW_HEIGHT-1)/800;
-				}
-				::LineTo(ps.hdc,x+1,WINDOW_HEIGHT-1-y);
-			}
-			::DeleteObject(::SelectObject(ps.hdc,hpenOld));
-			::EndPaint(hwnd,&ps);
+			pThis->OnPaint(hwnd);
 		}
 		return 0;
 
 	case WM_TIMER:
 		{
-			CSignalGraph *pThis=GetThis(hwnd);
-			TVTest::StatusInfo Status;
-			SignalInfo Info;
-			RECT rc;
+			CSignalGraph *pThis = GetThis(hwnd);
 
 			// 情報取得&表示更新
+			TVTest::StatusInfo Status;
 			pThis->m_pApp->GetStatus(&Status);
-			Info.SignalLevel=(DWORD)(max(Status.SignalLevel,0.0f)*10.0f);
-			Info.BitRate=Status.BitRate;
-			if (pThis->m_List.size()==WINDOW_WIDTH)
+			if (Status.SignalLevel < 0.0f)
+				Status.SignalLevel = 0.0f;
+			if (pThis->m_List.size() == GRAPH_WIDTH)
 				pThis->m_List.pop_front();
-			pThis->m_List.push_back(Info);
-			::ScrollWindowEx(hwnd,-1,0,NULL,NULL,NULL,NULL,0/*SW_INVALIDATE*/);
-			::GetClientRect(hwnd,&rc);
-			rc.left=rc.right-2;
-			::InvalidateRect(hwnd,&rc,TRUE);
+			pThis->m_List.push_back(SignalInfo(Status.SignalLevel, Status.BitRate));
+
+			if (pThis->m_ActualSignalLevelScale < Status.SignalLevel)
+				pThis->m_ActualSignalLevelScale = (float)std::ceil(Status.SignalLevel * 0.1f) * 10.0f;
+
+			::InvalidateRect(hwnd, nullptr, FALSE);
 		}
 		return 0;
 
 	case WM_SYSCOMMAND:
-		if ((wParam&0xFFF0)==SC_CLOSE) {
+		if ((wParam & 0xFFF0) == SC_CLOSE) {
 			// 閉じる時はプラグインを無効にする
-			CSignalGraph *pThis=GetThis(hwnd);
+			CSignalGraph *pThis = GetThis(hwnd);
 
 			pThis->m_pApp->EnablePlugin(false);
 			return TRUE;
@@ -282,14 +565,26 @@ LRESULT CALLBACK CSignalGraph::WndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM 
 
 	case WM_DESTROY:
 		{
-			CSignalGraph *pThis=GetThis(hwnd);
+			CSignalGraph *pThis = GetThis(hwnd);
 
-			pThis->m_hwnd=NULL;
+			pThis->FreeResources();
+
+			// ウィンドウ位置保存
+			WINDOWPLACEMENT wp;
+			wp.length = sizeof (WINDOWPLACEMENT);
+			if (::GetWindowPlacement(hwnd, &wp)) {
+				pThis->m_WindowPosition.Left = wp.rcNormalPosition.left;
+				pThis->m_WindowPosition.Top = wp.rcNormalPosition.top;
+				pThis->m_WindowPosition.Width = wp.rcNormalPosition.right - wp.rcNormalPosition.left;
+				pThis->m_WindowPosition.Height = wp.rcNormalPosition.bottom - wp.rcNormalPosition.top;
+			}
+
+			pThis->m_hwnd = nullptr;
 		}
 		return 0;
 	}
 
-	return ::DefWindowProc(hwnd,uMsg,wParam,lParam);
+	return ::DefWindowProc(hwnd, uMsg, wParam, lParam);
 }
 
 
