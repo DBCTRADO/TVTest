@@ -26,6 +26,7 @@ public:
 	bool GetDisplayDragMove() const { return m_fDisplayDragMove; }
 	bool GetHideCursor() const { return m_fHideCursor; }
 	int GetVolumeStep() const { return m_VolumeStep; }
+	int GetAudioDelayStep() const { return m_AudioDelayStep; }
 	int GetWheelCommand() const { return m_WheelCommand; }
 	int GetWheelShiftCommand() const { return m_WheelShiftCommand; }
 	int GetWheelCtrlCommand() const { return m_WheelCtrlCommand; }
@@ -45,6 +46,7 @@ private:
 	bool m_fDisplayDragMove;
 	bool m_fHideCursor;
 	int m_VolumeStep;
+	int m_AudioDelayStep;
 	int m_WheelCommand;
 	int m_WheelShiftCommand;
 	int m_WheelCtrlCommand;

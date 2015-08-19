@@ -1621,6 +1621,22 @@ bool CMediaViewer::SetAudioGainControl(bool bGainControl, float Gain, float Surr
 }
 
 
+bool CMediaViewer::SetAudioDelay(LONGLONG Delay)
+{
+	if (m_pAudioDecoder == NULL)
+		return false;
+	return m_pAudioDecoder->SetDelay(Delay);
+}
+
+
+LONGLONG CMediaViewer::GetAudioDelay() const
+{
+	if (m_pAudioDecoder == NULL)
+		return 0;
+	return m_pAudioDecoder->GetDelay();
+}
+
+
 bool CMediaViewer::GetAudioDecFilter(CAudioDecFilter **ppFilter)
 {
 	if (ppFilter == NULL)

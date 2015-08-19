@@ -2226,6 +2226,31 @@ void CMainWindow::OnCommand(HWND hwnd,int id,HWND hwndCtl,UINT codeNotify)
 		}
 		return;
 
+	case CM_AUDIODELAY_MINUS:
+	case CM_AUDIODELAY_PLUS:
+	case CM_AUDIODELAY_RESET:
+		{
+			CMediaViewer &MediaViewer=m_App.CoreEngine.m_DtvEngine.m_MediaViewer;
+			static const LONGLONG MaxDelay=10000000LL;
+			const LONGLONG Step=m_App.OperationOptions.GetAudioDelayStep()*10000LL;
+			LONGLONG Delay;
+
+			switch (id) {
+			case CM_AUDIODELAY_MINUS:
+				Delay=MediaViewer.GetAudioDelay()-Step;
+				break;
+			case CM_AUDIODELAY_PLUS:
+				Delay=MediaViewer.GetAudioDelay()+Step;
+				break;
+			case CM_AUDIODELAY_RESET:
+				Delay=0;
+				break;
+			}
+
+			MediaViewer.SetAudioDelay(CLAMP(Delay,-MaxDelay,MaxDelay));
+		}
+		return;
+
 	case CM_DUALMONO_MAIN:
 	case CM_DUALMONO_SUB:
 	case CM_DUALMONO_BOTH:
@@ -3946,20 +3971,29 @@ bool CMainWindow::OnInitMenuPopup(HMENU hmenu)
 			Menu.Append(0U,TEXT("âπê∫Ç»Çµ"),MF_GRAYED);
 			Menu.AppendSeparator();
 		}
-		static const int SpdifMenuList[] = {
+		static const int AdditionalMenuList[] = {
 			CM_SPDIF_DISABLED,
 			CM_SPDIF_PASSTHROUGH,
-			CM_SPDIF_AUTO
+			CM_SPDIF_AUTO,
+			0,
+			CM_AUDIODELAY_MINUS,
+			CM_AUDIODELAY_PLUS,
+			CM_AUDIODELAY_RESET,
 		};
-		for (int i=0;i<lengthof(SpdifMenuList);i++) {
-			TCHAR szText[64];
-			::LoadString(hinstRes,SpdifMenuList[i],szText,lengthof(szText));
-			Menu.Append(SpdifMenuList[i],szText);
+		for (int i=0;i<lengthof(AdditionalMenuList);i++) {
+			if (AdditionalMenuList[i]!=0) {
+				TCHAR szText[64];
+				::LoadString(hinstRes,AdditionalMenuList[i],szText,lengthof(szText));
+				Menu.Append(AdditionalMenuList[i],szText);
+			} else {
+				Menu.AppendSeparator();
+			}
 		}
 		CAudioDecFilter::SpdifOptions SpdifOptions;
 		m_App.CoreEngine.GetSpdifOptions(&SpdifOptions);
 		Menu.CheckRadioItem(CM_SPDIF_DISABLED,CM_SPDIF_AUTO,
 							CM_SPDIF_DISABLED+(int)SpdifOptions.Mode);
+		m_App.Accelerator.SetMenuAccel(hmenu);
 	} else if (hmenu==m_App.MainMenu.GetSubMenu(CMainMenu::SUBMENU_VIDEO)) {
 		CPopupMenu Menu(hmenu);
 		Menu.Clear();
@@ -4821,6 +4855,11 @@ void CMainWindow::OnMouseWheel(WPARAM wParam,LPARAM lParam,bool fHorz)
 			SendCommand(CM_ASPECTRATIO);
 			fProcessed=true;
 		}
+		break;
+
+	case CM_WHEEL_AUDIODELAY:
+		SendCommand(Delta>0?CM_AUDIODELAY_MINUS:CM_AUDIODELAY_PLUS);
+		fProcessed=true;
 		break;
 	}
 

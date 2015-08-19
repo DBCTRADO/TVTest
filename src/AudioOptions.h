@@ -42,6 +42,7 @@ public:
 	bool GetDownMixSurround() const { return m_fDownMixSurround; }
 	bool GetEnableLanguagePriority() const { return m_fEnableLanguagePriority; }
 	const AudioLanguageList &GetLanguagePriority() const { return m_LanguagePriority; }
+	bool GetResetAudioDelayOnChannelChange() const { return m_fResetAudioDelayOnChannelChange; }
 
 private:
 	class CSurroundOptionsDialog : public CBasicDialog
@@ -73,6 +74,7 @@ private:
 	CAudioDecFilter::DownMixMatrix m_DownMixMatrix;
 	bool m_fEnableLanguagePriority;
 	AudioLanguageList m_LanguagePriority;
+	bool m_fResetAudioDelayOnChannelChange;
 
 // CBasicDialog
 	INT_PTR DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam) override;

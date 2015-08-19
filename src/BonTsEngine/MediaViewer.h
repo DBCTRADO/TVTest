@@ -116,6 +116,8 @@ public:
 	bool SetDownMixSurround(bool bDownMix);
 	bool GetDownMixSurround() const;
 	bool SetAudioGainControl(bool bGainControl, float Gain = 1.0f, float SurroundGain = 1.0f);
+	bool SetAudioDelay(LONGLONG Delay);
+	LONGLONG GetAudioDelay() const;
 	bool GetAudioDecFilter(CAudioDecFilter **ppFilter);
 
 	bool GetVideoDecoderName(LPWSTR pszName,int Length) const;

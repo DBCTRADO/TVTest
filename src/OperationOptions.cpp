@@ -14,6 +14,7 @@ COperationOptions::COperationOptions()
 	, m_fDisplayDragMove(true)
 	, m_fHideCursor(false)
 	, m_VolumeStep(5)
+	, m_AudioDelayStep(50)
 	, m_WheelCommand(CM_WHEEL_VOLUME)
 	, m_WheelShiftCommand(CM_WHEEL_CHANNEL)
 	, m_WheelCtrlCommand(CM_WHEEL_AUDIO)
@@ -43,6 +44,7 @@ bool COperationOptions::ReadSettings(CSettings &Settings)
 	Settings.Read(TEXT("DisplayDragMove"),&m_fDisplayDragMove);
 	Settings.Read(TEXT("HideCursor"),&m_fHideCursor);
 	Settings.Read(TEXT("VolumeStep"),&m_VolumeStep);
+	Settings.Read(TEXT("AudioDelayStep"),&m_AudioDelayStep);
 
 	// ver.0.9.0 ‚æ‚è‘O‚Æ‚ÌŒÝŠ·—p
 	static const int WheelModeList[] = {
@@ -119,6 +121,7 @@ bool COperationOptions::WriteSettings(CSettings &Settings)
 	Settings.Write(TEXT("DisplayDragMove"),m_fDisplayDragMove);
 	Settings.Write(TEXT("HideCursor"),m_fHideCursor);
 	Settings.Write(TEXT("VolumeStep"),m_VolumeStep);
+	Settings.Write(TEXT("AudioDelayStep"),m_AudioDelayStep);
 
 	TCHAR szCommand[TVTest::CWheelCommandManager::MAX_COMMAND_PARSABLE_NAME];
 	m_WheelCommandManager.GetCommandParsableName(m_WheelCommand,szCommand,lengthof(szCommand));
@@ -220,6 +223,9 @@ INT_PTR COperationOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPar
 
 			DlgEdit_SetInt(hDlg,IDC_OPTIONS_VOLUMESTEP,m_VolumeStep);
 			DlgUpDown_SetRange(hDlg,IDC_OPTIONS_VOLUMESTEP_UD,1,100);
+
+			DlgEdit_SetInt(hDlg,IDC_OPTIONS_AUDIODELAYSTEP,m_AudioDelayStep);
+			DlgUpDown_SetRange(hDlg,IDC_OPTIONS_AUDIODELAYSTEP_UD,1,1000);
 		}
 		return TRUE;
 
@@ -263,6 +269,7 @@ INT_PTR COperationOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPar
 						DlgComboBox_GetCurSel(hDlg,IDC_OPTIONS_MIDDLECLICKCOMMAND));
 
 				m_VolumeStep=DlgEdit_GetInt(hDlg,IDC_OPTIONS_VOLUMESTEP);
+				m_AudioDelayStep=DlgEdit_GetInt(hDlg,IDC_OPTIONS_AUDIODELAYSTEP);
 
 				m_fChanged=true;
 			}

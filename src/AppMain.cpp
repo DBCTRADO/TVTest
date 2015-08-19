@@ -1590,6 +1590,8 @@ void CAppMain::CDtvEngineEventHandler::OnServiceChanged(WORD ServiceID)
 	m_App.MainWindow.PostMessage(WM_APP_SERVICECHANGED,ServiceID,0);
 	if (m_App.AudioManager.OnServiceUpdated())
 		m_App.MainWindow.PostMessage(WM_APP_AUDIOLISTCHANGED,0,0);
+	if (m_App.AudioOptions.GetResetAudioDelayOnChannelChange())
+		m_App.CoreEngine.m_DtvEngine.m_MediaViewer.SetAudioDelay(0);
 }
 
 void CAppMain::CDtvEngineEventHandler::OnFileWriteError(CTsRecorder *pTsRecorder)

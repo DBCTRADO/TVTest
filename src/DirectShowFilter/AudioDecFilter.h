@@ -101,6 +101,8 @@ public:
 	bool GetGainControl(float *pGain = NULL, float *pSurroundGain = NULL) const;
 	bool SetJitterCorrection(bool bEnable);
 	bool GetJitterCorrection() const { return m_bJitterCorrection; }
+	bool SetDelay(LONGLONG Delay);
+	LONGLONG GetDelay() const { return m_Delay; }
 	bool SetSpdifOptions(const SpdifOptions *pOptions);
 	bool GetSpdifOptions(SpdifOptions *pOptions) const;
 	bool IsSpdifPassthrough() const { return m_bPassthrough; }
@@ -164,6 +166,8 @@ private:
 	float m_SurroundGain;
 
 	bool m_bJitterCorrection;
+	LONGLONG m_Delay;
+	LONGLONG m_DelayAdjustment;
 	REFERENCE_TIME m_StartTime;
 	LONGLONG m_SampleCount;
 	bool m_bDiscontinuity;

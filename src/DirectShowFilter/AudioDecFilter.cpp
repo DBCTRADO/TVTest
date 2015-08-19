@@ -103,6 +103,8 @@ CAudioDecFilter::CAudioDecFilter(LPUNKNOWN pUnk, HRESULT *phr)
 	, m_SurroundGain(1.0f)
 
 	, m_bJitterCorrection(false)
+	, m_Delay(0)
+	, m_DelayAdjustment(0)
 	, m_StartTime(-1)
 	, m_SampleCount(0)
 	, m_bDiscontinuity(true)
@@ -450,11 +452,34 @@ HRESULT CAudioDecFilter::Transform(IMediaSample *pIn, IMediaSample *pOut)
 			pOutSample->SetActualDataLength(m_OutData.GetSize());
 
 			if (m_StartTime >= 0) {
-				REFERENCE_TIME rtDuration, rtEnd;
+				REFERENCE_TIME rtDuration, rtStart, rtEnd;
 				rtDuration = REFERENCE_TIME_SECOND * (LONGLONG)SampleInfo.Samples / FREQUENCY;
-				rtEnd = m_StartTime + rtDuration;
-				pOutSample->SetTime(&m_StartTime, &rtEnd);
-				m_StartTime = rtEnd;
+				rtStart = m_StartTime;
+				m_StartTime += rtDuration;
+				// ‰¹‚¸‚ê•â³—pŽžŠÔƒVƒtƒg
+				if (m_DelayAdjustment > 0) {
+					// Å‘å2”{‚Ü‚ÅŽžŠÔ‚ð’x‚ç‚¹‚é
+					if (rtDuration >= m_DelayAdjustment) {
+						rtDuration += m_DelayAdjustment;
+						m_DelayAdjustment = 0;
+					} else {
+						m_DelayAdjustment -= rtDuration;
+						rtDuration *= 2;
+					}
+				} else if (m_DelayAdjustment < 0) {
+					// Å’Z1/2‚Ü‚ÅŽžŠÔ‚ð‘‚ß‚é
+					if (rtDuration >= -m_DelayAdjustment * 2) {
+						rtDuration += m_DelayAdjustment;
+						m_DelayAdjustment = 0;
+					} else {
+						m_DelayAdjustment += rtDuration;
+						rtDuration /= 2;
+					}
+				} else {
+					rtStart += m_Delay;
+				}
+				rtEnd = rtStart + rtDuration;
+				pOutSample->SetTime(&rtStart, &rtEnd);
 			}
 			pOutSample->SetMediaTime(NULL, NULL);
 			pOutSample->SetPreroll(FALSE);
@@ -652,6 +677,19 @@ bool CAudioDecFilter::SetJitterCorrection(bool bEnable)
 
 	m_StartTime = -1;
 	m_SampleCount = 0;
+
+	return true;
+}
+
+
+bool CAudioDecFilter::SetDelay(LONGLONG Delay)
+{
+	CAutoLock AutoLock(&m_cPropLock);
+
+	TRACE(TEXT("CAudioDecFilter::SetDelay() : %lld\n"), Delay);
+
+	m_DelayAdjustment += Delay - m_Delay;
+	m_Delay = Delay;
 
 	return true;
 }
@@ -1001,6 +1039,7 @@ HRESULT CAudioDecFilter::ReconnectOutput(long BufferSize, const CMediaType &mt)
 
 void CAudioDecFilter::ResetSync()
 {
+	m_DelayAdjustment = 0;
 	m_StartTime = -1;
 	m_SampleCount = 0;
 	m_bDiscontinuity = true;

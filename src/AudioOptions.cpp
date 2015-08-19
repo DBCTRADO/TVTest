@@ -74,6 +74,7 @@ CAudioOptions::CAudioOptions()
 	, m_fUseCustomDownMixMatrix(false)
 	, m_DownMixMatrix(m_DefaultDownMixMatrix)
 	, m_fEnableLanguagePriority(false)
+	, m_fResetAudioDelayOnChannelChange(true)
 {
 }
 
@@ -140,6 +141,8 @@ bool CAudioOptions::ReadSettings(CSettings &Settings)
 		m_LanguagePriority.push_back(Info);
 	}
 
+	Settings.Read(TEXT("ResetAudioDelayOnChannelChange"),&m_fResetAudioDelayOnChannelChange);
+
 	return true;
 }
 
@@ -195,6 +198,8 @@ bool CAudioOptions::WriteSettings(CSettings &Settings)
 				break;
 		}
 	}
+
+	Settings.Write(TEXT("ResetAudioDelayOnChannelChange"),m_fResetAudioDelayOnChannelChange);
 
 	return true;
 }
