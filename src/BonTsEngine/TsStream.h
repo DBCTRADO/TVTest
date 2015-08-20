@@ -169,8 +169,9 @@ protected:
 		CTsPidMapTarget *pMapTarget;
 		PIDMAPHANDLERFUNC pMapCallback;
 		PVOID pMapParam;
-	} m_PidMap[0x2000];
-	
+	};
+
+	TAG_MAPTARGETITEM *m_PidMap[0x2000];
 	WORD m_wMapCount;
 };
 

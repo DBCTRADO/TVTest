@@ -456,15 +456,18 @@ const bool CTsPidMapManager::StorePacket(const CTsPacket *pPacket)
 
 	if(wPID > 0x1FFFU)return false;					// PID範囲外
 
-	if(!m_PidMap[wPID].pMapTarget)return false;		// PIDマップターゲットなし
+	TAG_MAPTARGETITEM *pItem = m_PidMap[wPID];
 
-	if(m_PidMap[wPID].pMapTarget->StorePacket(pPacket)){
+	if (!pItem)
+		return false;		// PIDマップターゲットなし
+
+	if (pItem->pMapTarget->StorePacket(pPacket)) {
 		// ターゲットの更新があったときはコールバックを呼び出す
 
-		if(m_PidMap[wPID].pMapCallback){
-			m_PidMap[wPID].pMapCallback(wPID, m_PidMap[wPID].pMapTarget, this, m_PidMap[wPID].pMapParam);
-			}
+		if (pItem->pMapCallback) {
+			pItem->pMapCallback(wPID, pItem->pMapTarget, this, pItem->pMapParam);
 		}
+	}
 
 	return true;
 }
@@ -477,9 +480,11 @@ const bool CTsPidMapManager::MapTarget(const WORD wPID, CTsPidMapTarget *pMapTar
 	UnmapTarget(wPID);
 
 	// 新しいターゲットをマップ
-	m_PidMap[wPID].pMapTarget = pMapTarget;
-	m_PidMap[wPID].pMapCallback = pMapCallback;
-	m_PidMap[wPID].pMapParam = pMapParam;
+	TAG_MAPTARGETITEM *pItem = new TAG_MAPTARGETITEM;
+	pItem->pMapTarget = pMapTarget;
+	pItem->pMapCallback = pMapCallback;
+	pItem->pMapParam = pMapParam;
+	m_PidMap[wPID] = pItem;
 	m_wMapCount++;
 
 	pMapTarget->OnPidMapped(wPID, pMapParam);
@@ -491,14 +496,17 @@ const bool CTsPidMapManager::UnmapTarget(const WORD wPID)
 {
 	if(wPID > 0x1FFFU)return false;
 
-	if(!m_PidMap[wPID].pMapTarget)return false;
+	TAG_MAPTARGETITEM *pItem = m_PidMap[wPID];
+
+	if (!pItem)
+		return false;
 
 	// 現在のターゲットをアンマップ
-	CTsPidMapTarget *pTarget = m_PidMap[wPID].pMapTarget;
-	::ZeroMemory(&m_PidMap[wPID], sizeof(m_PidMap[wPID]));
+	m_PidMap[wPID] = NULL;
 	m_wMapCount--;
 
-	pTarget->OnPidUnmapped(wPID);
+	pItem->pMapTarget->OnPidUnmapped(wPID);
+	delete pItem;
 
 	return true;
 }
@@ -514,7 +522,15 @@ void CTsPidMapManager::UnmapAllTarget(void)
 CTsPidMapTarget * CTsPidMapManager::GetMapTarget(const WORD wPID) const
 {
 	// マップされているターゲットを返す
-	return (wPID <= 0x1FFFU)? m_PidMap[wPID].pMapTarget : NULL;
+	if (wPID > 0x1FFF)
+		return NULL;
+
+	TAG_MAPTARGETITEM *pItem = m_PidMap[wPID];
+
+	if (!pItem)
+		return NULL;
+
+	return pItem->pMapTarget;
 }
 
 const WORD CTsPidMapManager::GetMapCount(void) const
