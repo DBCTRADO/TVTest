@@ -268,7 +268,7 @@ const bool CPesParser::StorePacket(const CTsPacket *pPacket)
 	bool bTrigger = false;
 	BYTE byPos = 0U;
 
-	if(pPacket->m_Header.bPayloadUnitStartIndicator){
+	if (pPacket->GetPayloadUnitStartIndicator()) {
 		// ヘッダ先頭 + [ペイロード断片]
 
 		// PESパケット境界なしのストアを完了する

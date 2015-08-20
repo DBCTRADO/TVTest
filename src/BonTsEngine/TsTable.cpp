@@ -1683,15 +1683,17 @@ const bool CPcrTable::StorePacket(const CTsPacket *pPacket)
 	if (!pPacket)
 		return false;
 
-	if (pPacket->m_AdaptationField.bPcrFlag) {
-		if (pPacket->m_AdaptationField.byOptionSize < 5)
+	if (pPacket->GetPcrFlag()) {
+		if (pPacket->GetOptionSize() < 5)
 			return false;
+
+		const BYTE *pOptionData = pPacket->GetOptionData();
 		m_Pcr =
-			((PcrType)pPacket->m_AdaptationField.pOptionData[0] << 25 ) |
-			((PcrType)pPacket->m_AdaptationField.pOptionData[1] << 17 ) |
-			((PcrType)pPacket->m_AdaptationField.pOptionData[2] << 9 ) |
-			((PcrType)pPacket->m_AdaptationField.pOptionData[3] << 1 ) |
-			((PcrType)pPacket->m_AdaptationField.pOptionData[4] >> 7 );
+			((PcrType)pOptionData[0] << 25 ) |
+			((PcrType)pOptionData[1] << 17 ) |
+			((PcrType)pOptionData[2] << 9 ) |
+			((PcrType)pOptionData[3] << 1 ) |
+			((PcrType)pOptionData[4] >> 7 );
 	}
 
 	return true;

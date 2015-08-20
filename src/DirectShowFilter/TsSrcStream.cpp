@@ -92,11 +92,10 @@ bool CTsSrcStream::InputMedia(CMediaData *pMediaData)
 	const bool bVideoPacket = (PID == m_VideoPID);
 
 	if (!bVideoPacket && m_MapAudioPID != PID_INVALID) {
-		pPacket->SetAt(1, (pPacket->GetAt(1) & 0xE0) | ((m_MapAudioPID >> 8) & 0x1F));
-		pPacket->SetAt(2, m_MapAudioPID & 0xFF);
+		pPacket->SetPID(m_MapAudioPID);
 	}
 
-	if (pPacket->m_Header.bPayloadUnitStartIndicator) {
+	if (pPacket->GetPayloadUnitStartIndicator()) {
 		const LONGLONG PTS = GetPacketPTS(pPacket);
 		if (PTS >= 0) {
 			if (bVideoPacket) {

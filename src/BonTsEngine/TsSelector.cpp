@@ -333,7 +333,7 @@ bool CTsSelector::MakePat(const CTsPacket *pSrcPacket, CTsPacket *pDstPacket)
 	BYTE *pDstData = pDstPacket->GetData();
 	SIZE_T HeaderSize = pPayloadData-pSrcData;
 
-	if (!pSrcPacket->m_Header.bPayloadUnitStartIndicator)
+	if (!pSrcPacket->GetPayloadUnitStartIndicator())
 		return false;
 	SIZE_T UnitStartPos = pPayloadData[0] + 1;
 	pPayloadData += UnitStartPos;
