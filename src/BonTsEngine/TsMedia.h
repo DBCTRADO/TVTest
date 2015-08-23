@@ -200,9 +200,19 @@ private:
 class CVideoStreamParser : public CPesParser::IPacketHandler
 {
 public:
+	CVideoStreamParser();
 	bool StorePacket(const CPesPacket *pPacket);
 	virtual bool StoreEs(const BYTE *pData, const DWORD dwSize) = 0;
-	virtual void Reset() = 0;
+	virtual void Reset();
+
+// CPesParser::IPacketHandler
+	void OnPesPacket(const CPesParser *pPesParser, const CPesPacket *pPacket) override;
+
+protected:
+	bool ParseSequence(const BYTE *pData, const DWORD Size, const DWORD StartCode, const DWORD StartCodeMask, CMediaData *pSequenceData);
+	virtual void OnSequence(CMediaData *pSequenceData) {}
+
+	DWORD m_SyncState;
 };
 
 
@@ -300,19 +310,11 @@ public:
 	void SetFixSquareDisplay(bool bFix);
 
 protected:
-// CPesParser::IPacketHandler
-	void OnPesPacket(const CPesParser *pPesParser, const CPesPacket *pPacket) override;
-
-	virtual void OnMpeg2Sequence(const CMpeg2Sequence *pSequence) const;
+// CVideoStreamParser
+	void OnSequence(CMediaData *pSequenceData) override;
 
 	ISequenceHandler *m_pSequenceHandler;
 	CMpeg2Sequence m_Mpeg2Sequence;
-
-private:
-	//inline const DWORD FindStartCode(const BYTE *pData, const DWORD dwDataSize);
-
-	//bool m_bIsStoring;
-	DWORD m_dwSyncState;
 };
 
 
@@ -433,16 +435,11 @@ public:
 	void Reset() override;
 
 protected:
-// CPesParser::IPacketHandler
-	void OnPesPacket(const CPesParser *pPesParser, const CPesPacket *pPacket) override;
-
-	virtual void OnAccessUnit(const CH264AccessUnit *pAccessUnit) const;
+// CVideoStreamParser
+	void OnSequence(CMediaData *pSequenceData) override;
 
 	IAccessUnitHandler *m_pAccessUnitHandler;
 	CH264AccessUnit m_AccessUnit;
-
-private:
-	DWORD m_dwSyncState;
 };
 
 
@@ -615,14 +612,9 @@ public:
 	void Reset() override;
 
 protected:
-// CPesParser::IPacketHandler
-	void OnPesPacket(const CPesParser *pPesParser, const CPesPacket *pPacket) override;
-
-	virtual void OnAccessUnit(const CH265AccessUnit *pAccessUnit) const;
+// CVideoStreamParser
+	void OnSequence(CMediaData *pSequenceData) override;
 
 	IAccessUnitHandler *m_pAccessUnitHandler;
 	CH265AccessUnit m_AccessUnit;
-
-private:
-	DWORD m_dwSyncState;
 };

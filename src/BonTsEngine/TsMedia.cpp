@@ -702,9 +702,96 @@ inline const bool CAdtsParser::SyncFrame(const BYTE byData)
 // 映像ストリーム解析クラス
 /////////////////////////////////////////////////////////////////////////////
 
+CVideoStreamParser::CVideoStreamParser()
+	: m_SyncState(0xFFFFFFFFUL)
+{
+}
+
 bool CVideoStreamParser::StorePacket(const CPesPacket *pPacket)
 {
 	return StoreEs(pPacket->GetPayloadData(), pPacket->GetPayloadSize());
+}
+
+void CVideoStreamParser::Reset()
+{
+	m_SyncState = 0xFFFFFFFFUL;
+}
+
+void CVideoStreamParser::OnPesPacket(const CPesParser *pPesParser, const CPesPacket *pPacket)
+{
+	// CPesParser::IPacketHandlerインタフェースの実装
+	StorePacket(pPacket);
+}
+
+bool CVideoStreamParser::ParseSequence(
+	const BYTE *pData, const DWORD Size, const DWORD StartCode, const DWORD StartCodeMask, CMediaData *pSequenceData)
+{
+	bool bTrigger = false;
+	DWORD Pos, Start;
+	DWORD SyncState = m_SyncState;
+
+	for (Pos = 0UL; Pos < Size; Pos += Start) {
+		// スタートコードを検索する
+		const DWORD Remain = Size - Pos;
+
+		if (StartCodeMask == 0xFFFFFFFFUL) {
+			for (Start = 0UL; Start < Remain; Start++) {
+				SyncState = (SyncState << 8) | (DWORD)pData[Start + Pos];
+				if (SyncState == StartCode) {
+					// スタートコード発見
+					break;
+				}
+			}
+		} else {
+			for (Start = 0UL; Start < Remain; Start++) {
+				SyncState = (SyncState << 8) | (DWORD)pData[Start + Pos];
+				if ((SyncState & StartCodeMask) == StartCode) {
+					// スタートコード発見
+					break;
+				}
+			}
+		}
+
+		if (Start < Remain) {
+			Start++;
+			if (pSequenceData->GetSize() >= 4) {
+				if (Start > 4) {
+					pSequenceData->AddData(&pData[Pos], Start - 4);
+				} else if (Start < 4) {
+					// スタートコードの断片を取り除く
+					pSequenceData->TrimTail(4 - Start);
+				}
+
+				// シーケンスを出力する
+				OnSequence(pSequenceData);
+			}
+
+			// スタートコードをセットする
+			BYTE StartCode[4];
+			StartCode[0] = (BYTE)(SyncState >> 24);
+			StartCode[1] = (BYTE)((SyncState >> 16) & 0xFF);
+			StartCode[2] = (BYTE)((SyncState >> 8) & 0xFF);
+			StartCode[3] = (BYTE)(SyncState & 0xFF);
+			pSequenceData->SetData(StartCode, 4);
+
+			// シフトレジスタを初期化する
+			SyncState = 0xFFFFFFFFUL;
+			bTrigger = true;
+		} else {
+			if (pSequenceData->GetSize() >= 4) {
+				// シーケンスストア
+				if (pSequenceData->AddData(&pData[Pos], Remain) >= 0x1000000UL) {
+					// 例外(シーケンスが16MBを超える)
+					pSequenceData->ClearSize();
+				}
+			}
+			break;
+		}
+	}
+
+	m_SyncState = SyncState;
+
+	return bTrigger;
 }
 
 
@@ -975,65 +1062,15 @@ CMpeg2Parser::CMpeg2Parser(ISequenceHandler *pSequenceHandler)
 	Reset();
 }
 
-bool CMpeg2Parser::StoreEs(const BYTE *pData, const DWORD dwSize)
+bool CMpeg2Parser::StoreEs(const BYTE *pData, const DWORD Size)
 {
-	static const BYTE StartCode[] = {0x00U, 0x00U, 0x01U, 0xB3U};
-	bool bTrigger = false;
-	DWORD dwPos,dwStart;
-
-	for (dwPos = 0UL; dwPos < dwSize; dwPos += dwStart) {
-		// スタートコードを検索する
-		//dwStart = FindStartCode(&pData[dwPos], dwSize - dwPos);
-		DWORD Remain = dwSize - dwPos;
-		DWORD SyncState = m_dwSyncState;
-		for (dwStart = 0UL; dwStart < Remain; dwStart++) {
-			SyncState=(SyncState<<8) | (DWORD)pData[dwPos + dwStart];
-			if (SyncState == 0x000001B3UL) {
-				// スタートコード発見、シフトレジスタを初期化する
-				SyncState = 0xFFFFFFFFUL;
-				break;
-			}
-		}
-		m_dwSyncState = SyncState;
-
-		if (dwStart < Remain) {
-			dwStart++;
-			if (m_Mpeg2Sequence.GetSize() >= 4UL) {
-				if (dwStart < 4UL) {
-					// スタートコードの断片を取り除く
-					m_Mpeg2Sequence.TrimTail(4UL - dwStart);
-				} else if (dwStart > 4UL) {
-					m_Mpeg2Sequence.AddData(&pData[dwPos], dwStart - 4);
-				}
-
-				// シーケンスを出力する
-				if (m_Mpeg2Sequence.ParseHeader())
-					OnMpeg2Sequence(&m_Mpeg2Sequence);
-			}
-
-			// スタートコードをセットする
-			m_Mpeg2Sequence.SetData(StartCode, 4UL);
-			bTrigger = true;
-		} else {
-			if (m_Mpeg2Sequence.GetSize() >= 4UL) {
-				// シーケンスストア
-				if (m_Mpeg2Sequence.AddData(&pData[dwPos], Remain) >= 0x1000000UL) {
-					// 例外(シーケンスが16MBを超える)
-					m_Mpeg2Sequence.ClearSize();
-				}
-			}
-			break;
-		}
-	}
-
-	return bTrigger;
+	return ParseSequence(pData, Size, 0x000001B3UL, 0xFFFFFFFFUL, &m_Mpeg2Sequence);
 }
 
 void CMpeg2Parser::Reset()
 {
 	// 状態を初期化する
-	//m_bIsStoring = false;
-	m_dwSyncState = 0xFFFFFFFFUL;
+	CVideoStreamParser::Reset();
 
 	m_Mpeg2Sequence.Reset();
 }
@@ -1043,38 +1080,16 @@ void CMpeg2Parser::SetFixSquareDisplay(bool bFix)
 	m_Mpeg2Sequence.SetFixSquareDisplay(bFix);
 }
 
-void CMpeg2Parser::OnPesPacket(const CPesParser *pPesParser, const CPesPacket *pPacket)
+void CMpeg2Parser::OnSequence(CMediaData *pSequenceData)
 {
-	// CPesParser::IPacketHandlerインタフェースの実装
-	StorePacket(pPacket);
+	CMpeg2Sequence *pMpeg2Sequence = static_cast<CMpeg2Sequence *>(pSequenceData);
+
+	if (pMpeg2Sequence->ParseHeader()) {
+		// ハンドラ呼び出し
+		if (m_pSequenceHandler)
+			m_pSequenceHandler->OnMpeg2Sequence(this, pMpeg2Sequence);
+	}
 }
-
-void CMpeg2Parser::OnMpeg2Sequence(const CMpeg2Sequence *pSequence) const
-{
-	// ハンドラ呼び出し
-	if(m_pSequenceHandler)m_pSequenceHandler->OnMpeg2Sequence(this, pSequence);
-}
-
-/*
-inline const DWORD CMpeg2Parser::FindStartCode(const BYTE *pData, const DWORD dwDataSize)
-{
-	// Sequence Header Code (0x000001B3) を検索する
-	DWORD dwPos;
-
-	for(dwPos = 0UL ; dwPos < dwDataSize ; dwPos++){
-		m_dwSyncState <<= 8;
-		m_dwSyncState |= (DWORD)pData[dwPos];
-
-		if(m_dwSyncState == 0x000001B3UL){
-			// スタートコード発見、シフトレジスタを初期化する
-			m_dwSyncState = 0xFFFFFFFFUL;
-			break;
-			}
-		}
-
-	return dwPos;
-}
-*/
 
 
 
@@ -1433,80 +1448,28 @@ CH264Parser::CH264Parser(IAccessUnitHandler *pAccessUnitHandler)
 	Reset();
 }
 
-bool CH264Parser::StoreEs(const BYTE *pData, const DWORD dwSize)
+bool CH264Parser::StoreEs(const BYTE *pData, const DWORD Size)
 {
-	bool bTrigger = false;
-	DWORD dwPos,dwStart;
-
-	for (dwPos = 0UL ; dwPos < dwSize ; dwPos += dwStart) {
-		// Access unit delimiterを検索する
-		DWORD Remain = dwSize - dwPos;
-		DWORD SyncState = m_dwSyncState;
-		for (dwStart = 0UL ; dwStart < Remain ; dwStart++) {
-			SyncState = (SyncState << 8) | (DWORD)pData[dwStart + dwPos];
-			if ((SyncState & 0xFFFFFF1F) == 0x00000109UL) {
-				// Access unit delimiter発見
-				break;
-			}
-		}
-
-		if (dwStart < Remain) {
-			dwStart++;
-			if (m_AccessUnit.GetSize() >= 4) {
-				if (dwStart > 4) {
-					m_AccessUnit.AddData(&pData[dwPos], dwStart - 4);
-				} else if (dwStart < 4) {
-					// スタートコードの断片を取り除く
-					m_AccessUnit.TrimTail(4 - dwStart);
-				}
-
-				// シーケンスを出力する
-				if (m_AccessUnit.ParseHeader())
-					OnAccessUnit(&m_AccessUnit);
-			}
-
-			// スタートコードをセットする
-			BYTE StartCode[4];
-			StartCode[0] = (BYTE)(SyncState >> 24);
-			StartCode[1] = (BYTE)((SyncState >> 16) & 0xFF);
-			StartCode[2] = (BYTE)((SyncState >> 8) & 0xFF);
-			StartCode[3] = (BYTE)(SyncState & 0xFF);
-			m_AccessUnit.SetData(StartCode, 4);
-
-			// シフトレジスタを初期化する
-			m_dwSyncState = 0xFFFFFFFFUL;
-			bTrigger = true;
-		} else if (m_AccessUnit.GetSize() >= 4) {
-			// シーケンスストア
-			if (m_AccessUnit.AddData(&pData[dwPos], Remain) >= 0x1000000UL) {
-				// 例外(シーケンスが16MBを超える)
-				m_AccessUnit.ClearSize();
-			}
-		}
-	}
-
-	return bTrigger;
+	return ParseSequence(pData, Size, 0x00000109UL, 0xFFFFFF1F, &m_AccessUnit);
 }
 
 void CH264Parser::Reset()
 {
 	// 状態を初期化する
-	m_dwSyncState = 0xFFFFFFFFUL;
+	CVideoStreamParser::Reset();
 
 	m_AccessUnit.Reset();
 }
 
-void CH264Parser::OnPesPacket(const CPesParser *pPesParser, const CPesPacket *pPacket)
+void CH264Parser::OnSequence(CMediaData *pSequenceData)
 {
-	// CPesParser::IPacketHandlerインタフェースの実装
-	StorePacket(pPacket);
-}
+	CH264AccessUnit *pAccessUnit = static_cast<CH264AccessUnit *>(pSequenceData);
 
-void CH264Parser::OnAccessUnit(const CH264AccessUnit *pAccessUnit) const
-{
-	// ハンドラ呼び出し
-	if (m_pAccessUnitHandler)
-		m_pAccessUnitHandler->OnAccessUnit(this, pAccessUnit);
+	if (pAccessUnit->ParseHeader()) {
+		// ハンドラ呼び出し
+		if (m_pAccessUnitHandler)
+			m_pAccessUnitHandler->OnAccessUnit(this, pAccessUnit);
+	}
 }
 
 
@@ -1896,78 +1859,26 @@ CH265Parser::CH265Parser(IAccessUnitHandler *pAccessUnitHandler)
 	Reset();
 }
 
-bool CH265Parser::StoreEs(const BYTE *pData, const DWORD dwSize)
+bool CH265Parser::StoreEs(const BYTE *pData, const DWORD Size)
 {
-	bool bTrigger = false;
-	DWORD dwPos,dwStart;
-
-	for (dwPos = 0UL ; dwPos < dwSize ; dwPos += dwStart) {
-		// Access unit delimiterを検索する
-		DWORD Remain = dwSize - dwPos;
-		DWORD SyncState = m_dwSyncState;
-		for (dwStart = 0UL ; dwStart < Remain ; dwStart++) {
-			SyncState = (SyncState << 8) | (DWORD)pData[dwStart + dwPos];
-			if ((SyncState & 0xFFFFFFFE) == 0x00000146UL) {
-				// Access unit delimiter発見
-				break;
-			}
-		}
-
-		if (dwStart < Remain) {
-			dwStart++;
-			if (m_AccessUnit.GetSize() >= 4) {
-				if (dwStart > 4) {
-					m_AccessUnit.AddData(&pData[dwPos], dwStart - 4);
-				} else if (dwStart < 4) {
-					// スタートコードの断片を取り除く
-					m_AccessUnit.TrimTail(4 - dwStart);
-				}
-
-				// シーケンスを出力する
-				if (m_AccessUnit.ParseHeader())
-					OnAccessUnit(&m_AccessUnit);
-			}
-
-			// スタートコードをセットする
-			BYTE StartCode[4];
-			StartCode[0] = (BYTE)(SyncState >> 24);
-			StartCode[1] = (BYTE)((SyncState >> 16) & 0xFF);
-			StartCode[2] = (BYTE)((SyncState >> 8) & 0xFF);
-			StartCode[3] = (BYTE)(SyncState & 0xFF);
-			m_AccessUnit.SetData(StartCode, 4);
-
-			// シフトレジスタを初期化する
-			m_dwSyncState = 0xFFFFFFFFUL;
-			bTrigger = true;
-		} else if (m_AccessUnit.GetSize() >= 4) {
-			// シーケンスストア
-			if (m_AccessUnit.AddData(&pData[dwPos], Remain) >= 0x1000000UL) {
-				// 例外(シーケンスが16MBを超える)
-				m_AccessUnit.ClearSize();
-			}
-		}
-	}
-
-	return bTrigger;
+	return ParseSequence(pData, Size, 0x00000146UL, 0xFFFFFFFE, &m_AccessUnit);
 }
 
 void CH265Parser::Reset()
 {
 	// 状態を初期化する
-	m_dwSyncState = 0xFFFFFFFFUL;
+	CVideoStreamParser::Reset();
 
 	m_AccessUnit.Reset();
 }
 
-void CH265Parser::OnPesPacket(const CPesParser *pPesParser, const CPesPacket *pPacket)
+void CH265Parser::OnSequence(CMediaData *pSequenceData)
 {
-	// CPesParser::IPacketHandlerインタフェースの実装
-	StorePacket(pPacket);
-}
+	CH265AccessUnit *pAccessUnit = static_cast<CH265AccessUnit *>(pSequenceData);
 
-void CH265Parser::OnAccessUnit(const CH265AccessUnit *pAccessUnit) const
-{
-	// ハンドラ呼び出し
-	if (m_pAccessUnitHandler)
-		m_pAccessUnitHandler->OnAccessUnit(this, pAccessUnit);
+	if (pAccessUnit->ParseHeader()) {
+		// ハンドラ呼び出し
+		if (m_pAccessUnitHandler)
+			m_pAccessUnitHandler->OnAccessUnit(this, pAccessUnit);
+	}
 }
