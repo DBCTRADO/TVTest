@@ -132,7 +132,8 @@ INT_PTR CAboutDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 						   SWP_NOZORDER | SWP_NOACTIVATE);
 
 			::SetRect(&rcLogo,rcLogo.right-rcLogo.left,0,0,0);
-			if (m_AeroGlass.ApplyAeroGlass(hDlg,&rcLogo)) {
+			if (!Util::OS::IsWindows8OrLater()
+					&& m_AeroGlass.ApplyAeroGlass(hDlg,&rcLogo)) {
 				m_fDrawLogo=true;
 				m_LogoImage.LoadFromResource(GetAppClass().GetResourceInstance(),
 					MAKEINTRESOURCE(IDB_LOGO32),TEXT("PNG"));
