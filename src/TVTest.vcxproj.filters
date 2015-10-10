@@ -593,6 +593,9 @@
     <ClCompile Include="ProgramGuideTool.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
+    <ClCompile Include="BonTsEngine\Simd.cpp">
+      <Filter>BonTsEngine\Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="BonTsEngine\Bitstream.h">
@@ -1158,6 +1161,9 @@
     </ClInclude>
     <ClInclude Include="ProgramGuideTool.h">
       <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="BonTsEngine\Simd.h">
+      <Filter>BonTsEngine\Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

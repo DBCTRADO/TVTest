@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../BonTsEngine/MediaData.h"
+#include "../BonTsEngine/Simd.h"
 #include "AudioDecoder.h"
 #include "TsUtilClass.h"
 
@@ -149,7 +150,7 @@ private:
 	CAudioDecoder *m_pDecoder;
 	mutable CCritSec m_cPropLock;
 	CMediaType m_MediaType;
-	CMediaData m_OutData;
+	CSimdMediaData m_OutData;
 	BYTE m_CurChannelNum;
 	bool m_bDualMono;
 

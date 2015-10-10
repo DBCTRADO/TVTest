@@ -935,6 +935,7 @@
     <ClCompile Include="BonTsEngine\MediaTee.cpp" />
     <ClCompile Include="BonTsEngine\MediaViewer.cpp" />
     <ClCompile Include="BonTsEngine\PATGenerator.cpp" />
+    <ClCompile Include="BonTsEngine\Simd.cpp" />
     <ClCompile Include="BonTsEngine\TsAnalyzer.cpp" />
     <ClCompile Include="BonTsEngine\TsDescriptor.cpp" />
     <ClCompile Include="BonTsEngine\TsDownload.cpp" />
@@ -1122,6 +1123,7 @@
     <ClInclude Include="BonTsEngine\MediaTee.h" />
     <ClInclude Include="BonTsEngine\MediaViewer.h" />
     <ClInclude Include="BonTsEngine\PATGenerator.h" />
+    <ClInclude Include="BonTsEngine\Simd.h" />
     <ClInclude Include="BonTsEngine\TsAnalyzer.h" />
     <ClInclude Include="BonTsEngine\TsDescriptor.h" />
     <ClInclude Include="BonTsEngine\TsDownload.h" />

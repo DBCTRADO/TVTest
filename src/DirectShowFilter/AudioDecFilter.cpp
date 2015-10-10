@@ -1053,6 +1053,27 @@ DWORD CAudioDecFilter::MonoToStereo(short *pDst, const short *pSrc, const DWORD 
 	const short *p = pSrc, *pEnd = pSrc + Samples;
 	short *q = pDst;
 
+#ifdef BONTSENGINE_SSE2
+	if (Samples >= 16 && TsEngine::IsSSE2Enabled()) {
+		const short *pSimdEnd = pSrc + (Samples & ~15UL);
+		do {
+			__m128i v1, v2, r1, r2, r3, r4;
+			v1 = _mm_loadu_si128(pointer_cast<const __m128i*>(p) + 0);
+			v2 = _mm_loadu_si128(pointer_cast<const __m128i*>(p) + 1);
+			r1 = _mm_unpacklo_epi16(v1, v1);
+			r2 = _mm_unpackhi_epi16(v1, v1);
+			r3 = _mm_unpacklo_epi16(v2, v2);
+			r4 = _mm_unpackhi_epi16(v2, v2);
+			_mm_store_si128(pointer_cast<__m128i*>(q) + 0, r1);
+			_mm_store_si128(pointer_cast<__m128i*>(q) + 1, r2);
+			_mm_store_si128(pointer_cast<__m128i*>(q) + 2, r3);
+			_mm_store_si128(pointer_cast<__m128i*>(q) + 3, r4);
+			q += 32;
+			p += 16;
+		} while (p < pSimdEnd);
+	}
+#endif
+
 	while (p < pEnd) {
 		short Value = *p++;
 		*q++ = Value;	// L
@@ -1070,11 +1091,40 @@ DWORD CAudioDecFilter::DownMixStereo(short *pDst, const short *pSrc, const DWORD
 		// 2ch ¨ 2ch ƒXƒ‹[
 		::CopyMemory(pDst, pSrc, Samples * (sizeof(short) * 2));
 	} else {
-		const short *p = pSrc, *pEnd = pSrc + Samples * 2;
+		const DWORD Length = Samples * 2;
+		const short *p = pSrc, *pEnd = pSrc + Length;
 		short *q = pDst;
 
 		if (m_StereoMode == STEREOMODE_LEFT) {
 			// ¶‚Ì‚Ý
+
+#ifdef BONTSENGINE_SSE2
+			if (Length >= 32 && TsEngine::IsSSE2Enabled()) {
+				const short *pSimdEnd = pSrc + (Length & ~31UL);
+				do {
+					__m128i v1, v2, v3, v4;
+					v1 = _mm_loadu_si128(pointer_cast<const __m128i*>(p) + 0);
+					v2 = _mm_loadu_si128(pointer_cast<const __m128i*>(p) + 1);
+					v3 = _mm_loadu_si128(pointer_cast<const __m128i*>(p) + 2);
+					v4 = _mm_loadu_si128(pointer_cast<const __m128i*>(p) + 3);
+					v1 = _mm_shufflelo_epi16(v1, _MM_SHUFFLE(2, 2, 0, 0));
+					v2 = _mm_shufflelo_epi16(v2, _MM_SHUFFLE(2, 2, 0, 0));
+					v3 = _mm_shufflelo_epi16(v3, _MM_SHUFFLE(2, 2, 0, 0));
+					v4 = _mm_shufflelo_epi16(v4, _MM_SHUFFLE(2, 2, 0, 0));
+					v1 = _mm_shufflehi_epi16(v1, _MM_SHUFFLE(2, 2, 0, 0));
+					v2 = _mm_shufflehi_epi16(v2, _MM_SHUFFLE(2, 2, 0, 0));
+					v3 = _mm_shufflehi_epi16(v3, _MM_SHUFFLE(2, 2, 0, 0));
+					v4 = _mm_shufflehi_epi16(v4, _MM_SHUFFLE(2, 2, 0, 0));
+					_mm_store_si128(pointer_cast<__m128i*>(q) + 0, v1);
+					_mm_store_si128(pointer_cast<__m128i*>(q) + 1, v2);
+					_mm_store_si128(pointer_cast<__m128i*>(q) + 2, v3);
+					_mm_store_si128(pointer_cast<__m128i*>(q) + 3, v4);
+					q += 32;
+					p += 32;
+				} while (p < pSimdEnd);
+			}
+#endif
+
 			while (p < pEnd) {
 				short Value = *p;
 				*q++ = Value;	// L
@@ -1083,6 +1133,34 @@ DWORD CAudioDecFilter::DownMixStereo(short *pDst, const short *pSrc, const DWORD
 			}
 		} else {
 			// ‰E‚Ì‚Ý
+
+#ifdef BONTSENGINE_SSE2
+			if (Length >= 32 && TsEngine::IsSSE2Enabled()) {
+				const short *pSimdEnd = pSrc + (Length & ~31UL);
+				do {
+					__m128i v1, v2, v3, v4;
+					v1 = _mm_loadu_si128(pointer_cast<const __m128i*>(p) + 0);
+					v2 = _mm_loadu_si128(pointer_cast<const __m128i*>(p) + 1);
+					v3 = _mm_loadu_si128(pointer_cast<const __m128i*>(p) + 2);
+					v4 = _mm_loadu_si128(pointer_cast<const __m128i*>(p) + 3);
+					v1 = _mm_shufflelo_epi16(v1, _MM_SHUFFLE(3, 3, 1, 1));
+					v2 = _mm_shufflelo_epi16(v2, _MM_SHUFFLE(3, 3, 1, 1));
+					v3 = _mm_shufflelo_epi16(v3, _MM_SHUFFLE(3, 3, 1, 1));
+					v4 = _mm_shufflelo_epi16(v4, _MM_SHUFFLE(3, 3, 1, 1));
+					v1 = _mm_shufflehi_epi16(v1, _MM_SHUFFLE(3, 3, 1, 1));
+					v2 = _mm_shufflehi_epi16(v2, _MM_SHUFFLE(3, 3, 1, 1));
+					v3 = _mm_shufflehi_epi16(v3, _MM_SHUFFLE(3, 3, 1, 1));
+					v4 = _mm_shufflehi_epi16(v4, _MM_SHUFFLE(3, 3, 1, 1));
+					_mm_store_si128(pointer_cast<__m128i*>(q) + 0, v1);
+					_mm_store_si128(pointer_cast<__m128i*>(q) + 1, v2);
+					_mm_store_si128(pointer_cast<__m128i*>(q) + 2, v3);
+					_mm_store_si128(pointer_cast<__m128i*>(q) + 3, v4);
+					q += 32;
+					p += 32;
+				} while (p < pSimdEnd);
+			}
+#endif
+
 			while (p < pEnd) {
 				short Value = p[1];
 				*q++ = Value;	// L
