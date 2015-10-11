@@ -2639,8 +2639,24 @@ void CMainWindow::OnCommand(HWND hwnd,int id,HWND hwndCtl,UINT codeNotify)
 			if (hwndOwner==nullptr || ::IsWindowEnabled(hwndOwner)) {
 				for (int i=0;i<lengthof(m_DirectShowFilterPropertyList);i++) {
 					if (m_DirectShowFilterPropertyList[i].Command==id) {
-						m_App.CoreEngine.m_DtvEngine.m_MediaViewer.DisplayFilterProperty(
-							m_DirectShowFilterPropertyList[i].Filter,hwndOwner);
+						CMediaViewer &MediaViewer=m_App.CoreEngine.m_DtvEngine.m_MediaViewer;
+						bool fOK=false;
+
+						if (m_DirectShowFilterPropertyList[i].Filter==CMediaViewer::PROPERTY_FILTER_VIDEODECODER) {
+							IBaseFilter *pDecoder = MediaViewer.GetVideoDecoderFilter();
+							if (pDecoder!=nullptr) {
+								HRESULT hr=ShowPropertyPageFrame(pDecoder,hwndOwner,m_App.GetResourceInstance());
+								if (SUCCEEDED(hr)) {
+									MediaViewer.SaveVideoDecoderSettings();
+									fOK=true;
+								}
+								pDecoder->Release();
+							}
+						}
+
+						if (!fOK) {
+							MediaViewer.DisplayFilterProperty(m_DirectShowFilterPropertyList[i].Filter,hwndOwner);
+						}
 						break;
 					}
 				}

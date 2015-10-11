@@ -13,6 +13,7 @@
 #include "../DirectShowFilter/VideoRenderer.h"
 #include "../DirectShowFilter/ImageMixer.h"
 #include "../DirectShowFilter/VideoParser.h"
+#include "../DirectShowFilter/InternalDecoder.h"
 
 
 /////////////////////////////////////////////////////////////////////////////
@@ -99,6 +100,10 @@ public:
 	bool GetSourceRect(RECT *pRect) const;
 	bool GetDestRect(RECT *pRect) const;
 	bool GetDestSize(WORD *pWidth, WORD *pHeight) const;
+	IBaseFilter *GetVideoDecoderFilter();
+	void SetVideoDecoderSettings(const CInternalDecoderManager::VideoDecoderSettings &Settings);
+	bool GetVideoDecoderSettings(CInternalDecoderManager::VideoDecoderSettings *pSettings) const;
+	void SaveVideoDecoderSettings();
 
 	bool SetVolume(const float fVolume);
 	enum {
@@ -232,6 +237,7 @@ protected:
 	void *m_pAudioStreamCallbackParam;
 	CImageMixer *m_pImageMixer;
 	CTracer *m_pTracer;
+	CInternalDecoderManager m_InternalDecoderManager;
 
 #ifdef _DEBUG
 private:

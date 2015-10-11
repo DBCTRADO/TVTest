@@ -1508,6 +1508,34 @@ bool CMediaViewer::GetDestSize(WORD *pWidth, WORD *pHeight) const
 }
 
 
+IBaseFilter *CMediaViewer::GetVideoDecoderFilter()
+{
+	if (!m_pVideoDecoderFilter)
+		return NULL;
+	m_pVideoDecoderFilter->AddRef();
+	return m_pVideoDecoderFilter;
+}
+
+
+void CMediaViewer::SetVideoDecoderSettings(const CInternalDecoderManager::VideoDecoderSettings &Settings)
+{
+	m_InternalDecoderManager.SetVideoDecoderSettings(Settings);
+}
+
+
+bool CMediaViewer::GetVideoDecoderSettings(CInternalDecoderManager::VideoDecoderSettings *pSettings) const
+{
+	return m_InternalDecoderManager.GetVideoDecoderSettings(pSettings);
+}
+
+
+void CMediaViewer::SaveVideoDecoderSettings()
+{
+	if (m_pVideoDecoderFilter)
+		m_InternalDecoderManager.SaveVideoDecoderSettings(m_pVideoDecoderFilter);
+}
+
+
 bool CMediaViewer::SetVolume(const float fVolume)
 {
 	// オーディオボリュームをdBで設定する( -100.0(無音) < fVolume < 0(最大) )
@@ -1982,35 +2010,57 @@ void CMediaViewer::ConnectVideoDecoder(
 {
 	Trace(CTracer::TYPE_INFORMATION, TEXT("%sデコーダの接続中..."), pszCodecName);
 
-	CDirectShowFilterFinder FilterFinder;
-	TCHAR szText1[128], szText2[128];
+	const bool bDefault = (pszDecoderName == NULL || pszDecoderName[0] == '\0');
+	bool bConnectSuccess = false;
+	HRESULT hr;
+	WCHAR szFilter[256];
 
-	// 検索
-	if(!FilterFinder.FindFilter(&MEDIATYPE_Video, &MediaSubType)) {
-		StdUtil::snprintf(szText1, _countof(szText1),
-						  TEXT("%sデコーダが見付かりません。"), pszCodecName);
-		StdUtil::snprintf(szText2, _countof(szText2),
-						  TEXT("%sデコーダがインストールされているか確認してください。"), pszCodecName);
-		throw CBonException(szText1, szText2);
+	if (m_InternalDecoderManager.IsMediaSupported(MediaSubType)
+			&& ((bDefault && m_InternalDecoderManager.IsDecoderAvailable(MediaSubType))
+			|| (!bDefault && ::lstrcmpi(m_InternalDecoderManager.GetDecoderName(MediaSubType), pszDecoderName) == 0))) {
+		IBaseFilter *pFilter;
+
+		hr = m_InternalDecoderManager.CreateInstance(MediaSubType, &pFilter);
+		if (SUCCEEDED(hr)) {
+			::lstrcpyn(szFilter, m_InternalDecoderManager.GetDecoderName(MediaSubType), _countof(szFilter));
+			hr = DirectShowUtil::AppendFilterAndConnect(
+				m_pFilterGraph, pFilter, szFilter, ppOutputPin, NULL, true);
+			if (SUCCEEDED(hr)) {
+				m_pVideoDecoderFilter = pFilter;
+				bConnectSuccess = true;
+			} else {
+				pFilter->Release();
+			}
+		}
 	}
 
-	bool bConnectSuccess = false;
-	WCHAR szFilter[256];
-	HRESULT hr;
+	TCHAR szText1[128], szText2[128];
 
-	for (int i = 0; i < FilterFinder.GetFilterCount(); i++) {
-		CLSID clsidFilter;
+	if (!bConnectSuccess) {
+		CDirectShowFilterFinder FilterFinder;
 
-		if (FilterFinder.GetFilterInfo(i, &clsidFilter, szFilter, _countof(szFilter))) {
-			if (pszDecoderName != NULL && pszDecoderName[0] != '\0'
-					&& ::lstrcmpi(szFilter, pszDecoderName) != 0)
-				continue;
-			hr = DirectShowUtil::AppendFilterAndConnect(m_pFilterGraph,
-				clsidFilter, szFilter, &m_pVideoDecoderFilter,
-				ppOutputPin, NULL, true);
-			if (SUCCEEDED(hr)) {
-				bConnectSuccess = true;
-				break;
+		// 検索
+		if (!FilterFinder.FindFilter(&MEDIATYPE_Video, &MediaSubType)) {
+			StdUtil::snprintf(szText1, _countof(szText1),
+							  TEXT("%sデコーダが見付かりません。"), pszCodecName);
+			StdUtil::snprintf(szText2, _countof(szText2),
+							  TEXT("%sデコーダがインストールされているか確認してください。"), pszCodecName);
+			throw CBonException(szText1, szText2);
+		}
+
+		for (int i = 0; i < FilterFinder.GetFilterCount(); i++) {
+			CLSID clsidFilter;
+
+			if (FilterFinder.GetFilterInfo(i, &clsidFilter, szFilter, _countof(szFilter))) {
+				if (!bDefault && ::lstrcmpi(szFilter, pszDecoderName) != 0)
+					continue;
+				hr = DirectShowUtil::AppendFilterAndConnect(m_pFilterGraph,
+					clsidFilter, szFilter, &m_pVideoDecoderFilter,
+					ppOutputPin, NULL, true);
+				if (SUCCEEDED(hr)) {
+					bConnectSuccess = true;
+					break;
+				}
 			}
 		}
 	}

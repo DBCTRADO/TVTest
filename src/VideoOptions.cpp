@@ -264,6 +264,10 @@ INT_PTR CVideoOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 void CVideoOptions::SetVideoDecoderList(
 	int ID,const GUID &SubType,BYTE StreamType,const TVTest::String &DecoderName)
 {
+	LPCWSTR pszDefaultDecoderName=
+		CInternalDecoderManager::IsDecoderAvailable(SubType)?
+			CInternalDecoderManager::GetDecoderName(SubType):NULL;
+
 	CDirectShowFilterFinder FilterFinder;
 	std::vector<TVTest::String> FilterList;
 	if (FilterFinder.FindFilter(&MEDIATYPE_Video,&SubType)) {
@@ -271,15 +275,22 @@ void CVideoOptions::SetVideoDecoderList(
 		for (int i=0;i<FilterFinder.GetFilterCount();i++) {
 			TVTest::String FilterName;
 
-			if (FilterFinder.GetFilterInfo(i,NULL,&FilterName)) {
+			if (FilterFinder.GetFilterInfo(i,NULL,&FilterName)
+					&& (pszDefaultDecoderName==NULL
+						|| ::lstrcmpi(FilterName.c_str(),pszDefaultDecoderName)!=0)) {
 				FilterList.push_back(FilterName);
 			}
 		}
 	}
 	int Sel=0;
 	if (FilterList.empty()) {
-		DlgComboBox_AddString(m_hDlg,ID,TEXT("<デコーダが見付かりません>"));
+		DlgComboBox_AddString(m_hDlg,ID,
+			pszDefaultDecoderName!=NULL?
+				pszDefaultDecoderName:
+				TEXT("<デコーダが見付かりません>"));
 	} else {
+		if (pszDefaultDecoderName!=NULL)
+			DlgComboBox_AddString(m_hDlg,ID,pszDefaultDecoderName);
 		if (FilterList.size()>1) {
 			std::sort(FilterList.begin(),FilterList.end(),
 				[](const TVTest::String Filter1,const TVTest::String &Filter2) {

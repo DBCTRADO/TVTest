@@ -596,6 +596,12 @@
     <ClCompile Include="BonTsEngine\Simd.cpp">
       <Filter>BonTsEngine\Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="DirectShowFilter\InternalDecoder.cpp">
+      <Filter>DirectShowFilter\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="VideoDecoderOptions.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="BonTsEngine\Bitstream.h">
@@ -1164,6 +1170,12 @@
     </ClInclude>
     <ClInclude Include="BonTsEngine\Simd.h">
       <Filter>BonTsEngine\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="DirectShowFilter\InternalDecoder.h">
+      <Filter>DirectShowFilter\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="VideoDecoderOptions.h">
+      <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

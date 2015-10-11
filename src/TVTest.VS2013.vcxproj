@@ -954,6 +954,7 @@
     <ClCompile Include="CaptureOptions.cpp" />
     <ClCompile Include="ChannelInput.cpp" />
     <ClCompile Include="ComUtility.cpp" />
+    <ClCompile Include="DirectShowFilter\InternalDecoder.cpp" />
     <ClCompile Include="DirectWrite.cpp" />
     <ClCompile Include="DirectWriteOptionsDialog.cpp" />
     <ClCompile Include="Epg.cpp" />
@@ -1090,6 +1091,7 @@
     <ClCompile Include="UISkin.cpp" />
     <ClCompile Include="Util.cpp" />
     <ClCompile Include="VariableString.cpp" />
+    <ClCompile Include="VideoDecoderOptions.cpp" />
     <ClCompile Include="VideoOptions.cpp" />
     <ClCompile Include="View.cpp" />
     <ClCompile Include="ViewOptions.cpp" />
@@ -1145,6 +1147,7 @@
     <ClInclude Include="Common\Common.h" />
     <ClInclude Include="Common\DebugDef.h" />
     <ClInclude Include="ComUtility.h" />
+    <ClInclude Include="DirectShowFilter\InternalDecoder.h" />
     <ClInclude Include="DirectWrite.h" />
     <ClInclude Include="DirectWriteOptionsDialog.h" />
     <ClInclude Include="Epg.h" />
@@ -1281,6 +1284,7 @@
     <ClInclude Include="UISkin.h" />
     <ClInclude Include="Util.h" />
     <ClInclude Include="VariableString.h" />
+    <ClInclude Include="VideoDecoderOptions.h" />
     <ClInclude Include="VideoOptions.h" />
     <ClInclude Include="View.h" />
     <ClInclude Include="ViewOptions.h" />

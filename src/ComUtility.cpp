@@ -3,6 +3,7 @@
 #include "ComUtility.h"
 #include "Dialog.h"
 #include "DialogUtil.h"
+#include "TVTestInterface.h"
 #include "resource.h"
 #include "Common/DebugDef.h"
 
@@ -515,6 +516,45 @@ HRESULT ShowPropertyPageFrame(IPropertyPage **ppPropPages, int NumPages,
 	Frame.Show(hwndOwner, hinst);
 
 	return S_OK;
+}
+
+
+HRESULT ShowPropertyPageFrame(IUnknown *pObject, HWND hwndOwner, HINSTANCE hinst)
+{
+	if (pObject == nullptr)
+		return E_POINTER;
+
+	HRESULT hr;
+	ISpecifyPropertyPages2 *pSpecifyPropPages2;
+
+	hr = pObject->QueryInterface(IID_PPV_ARGS(&pSpecifyPropPages2));
+
+	if (SUCCEEDED(hr)) {
+		CAUUID Pages = {0, nullptr};
+
+		hr = pSpecifyPropPages2->GetPages(&Pages);
+		if (SUCCEEDED(hr) && Pages.pElems != nullptr) {
+			if (Pages.cElems > 0) {
+				IPropertyPage **ppPropPages = new IPropertyPage*[Pages.cElems];
+				ULONG j;
+
+				for (j = 0; j < Pages.cElems; j++) {
+					hr = pSpecifyPropPages2->CreatePage(Pages.pElems[j], &ppPropPages[j]);
+					if (FAILED(hr))
+						break;
+				}
+				if (SUCCEEDED(hr))
+					hr = ShowPropertyPageFrame(ppPropPages, Pages.cElems, pObject, hwndOwner, hinst);
+				while (j > 0)
+					ppPropPages[--j]->Release();
+				delete [] ppPropPages;
+			}
+			::CoTaskMemFree(Pages.pElems);
+		}
+		pSpecifyPropPages2->Release();
+	}
+
+	return hr;
 }
 
 

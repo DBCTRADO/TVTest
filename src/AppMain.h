@@ -37,6 +37,7 @@
 #include "ProgramGuideOptions.h"
 #include "TSProcessorOptions.h"
 #include "TaskbarOptions.h"
+#include "VideoDecoderOptions.h"
 #include "Plugin.h"
 #include "Logger.h"
 #include "CommandLine.h"
@@ -187,6 +188,7 @@ public:
 	TVTest::CTSProcessorOptions TSProcessorOptions;
 	CPluginOptions PluginOptions;
 	CTaskbarOptions TaskbarOptions;
+	CVideoDecoderOptions VideoDecoderOptions;
 	CRecentChannelList RecentChannelList;
 	CChannelHistory ChannelHistory;
 	TVTest::CFavoritesManager FavoritesManager;

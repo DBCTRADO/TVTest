@@ -346,6 +346,9 @@ INT_PTR CInitialSettings::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPara
 
 void CInitialSettings::InitDecoderList(int ID,const GUID &SubType,LPCTSTR pszDecoderName)
 {
+	LPCWSTR pszDefaultDecoderName=
+		CInternalDecoderManager::IsDecoderAvailable(SubType)?
+			CInternalDecoderManager::GetDecoderName(SubType):NULL;
 	CDirectShowFilterFinder FilterFinder;
 	std::vector<TVTest::String> FilterList;
 	int Sel=0;
@@ -353,10 +356,12 @@ void CInitialSettings::InitDecoderList(int ID,const GUID &SubType,LPCTSTR pszDec
 	if (FilterFinder.FindFilter(&MEDIATYPE_Video,&SubType)) {
 		FilterList.reserve(FilterFinder.GetFilterCount());
 		for (int i=0;i<FilterFinder.GetFilterCount();i++) {
-			WCHAR szFilterName[MAX_DECODER_NAME];
+			TVTest::String FilterName;
 
-			if (FilterFinder.GetFilterInfo(i,NULL,szFilterName,lengthof(szFilterName))) {
-				FilterList.push_back(TVTest::String(szFilterName));
+			if (FilterFinder.GetFilterInfo(i,NULL,&FilterName)
+					&& (pszDefaultDecoderName==NULL
+						|| ::lstrcmpi(FilterName.c_str(),pszDefaultDecoderName)!=0)) {
+				FilterList.push_back(FilterName);
 			}
 		}
 		if (FilterList.size()>1) {
@@ -371,12 +376,16 @@ void CInitialSettings::InitDecoderList(int ID,const GUID &SubType,LPCTSTR pszDec
 		for (size_t i=0;i<FilterList.size();i++) {
 			DlgComboBox_AddString(m_hDlg,ID,FilterList[i].c_str());
 		}
-
-		Sel=(int)DlgComboBox_FindStringExact(m_hDlg,ID,-1,pszDecoderName)+1;
 	}
 
+	if (pszDefaultDecoderName!=NULL)
+		DlgComboBox_InsertString(m_hDlg,ID,0,pszDefaultDecoderName);
+
+	if (!IsStringEmpty(pszDecoderName))
+		Sel=(int)DlgComboBox_FindStringExact(m_hDlg,ID,-1,pszDecoderName)+1;
+
 	DlgComboBox_InsertString(m_hDlg,ID,
-		0,!FilterList.empty()?TEXT("自動"):TEXT("<デコーダが見付かりません>"));
+		0,!FilterList.empty() || pszDefaultDecoderName!=NULL?TEXT("自動"):TEXT("<デコーダが見付かりません>"));
 	DlgComboBox_SetCurSel(m_hDlg,ID,Sel);
 }
 

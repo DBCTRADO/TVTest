@@ -511,6 +511,7 @@ bool CAppMain::LoadSettings()
 	TSProcessorOptions.LoadSettings(Settings);
 	FeaturedEvents.LoadSettings(Settings);
 	TaskbarManager.LoadSettings(Settings);
+	VideoDecoderOptions.LoadSettings(Settings);
 
 	return true;
 }
@@ -626,6 +627,7 @@ bool CAppMain::SaveSettings(unsigned int Flags)
 		{&ProgramGuideOptions,				true},
 		{&TSProcessorOptions,				true},
 		{&TaskbarOptions,					false},
+		{&VideoDecoderOptions,				true},
 		{&Logger,							false},
 	//	{&ZoomOptions,						false},
 	//	{&PanAndScanOptions,				false},

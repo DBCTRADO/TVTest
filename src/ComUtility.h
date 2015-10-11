@@ -88,6 +88,7 @@ namespace TVTest
 
 	HRESULT ShowPropertyPageFrame(IPropertyPage **pPropPages, int NumPages,
 								  IUnknown *pObject, HWND hwndOwner, HINSTANCE hinst);
+	HRESULT ShowPropertyPageFrame(IUnknown *pObject, HWND hwndOwner, HINSTANCE hinst);
 
 }	// namespace TVTest
 
