@@ -22,9 +22,7 @@ bool CVideoDecoderOptions::ReadSettings(CSettings &Settings)
 	MediaViewer.GetVideoDecoderSettings(&DecoderSettings);
 
 	Settings.Read(TEXT("EnableDeinterlace"), &DecoderSettings.bEnableDeinterlace);
-	if (Settings.Read(TEXT("DeinterlaceMethod"), &Value)
-			&& Value >= TVTVIDEODEC_DEINTERLACE_FIRST
-			&& Value <= TVTVIDEODEC_DEINTERLACE_LAST)
+	if (Settings.Read(TEXT("DeinterlaceMethod"), &Value))
 		DecoderSettings.DeinterlaceMethod = static_cast<TVTVIDEODEC_DeinterlaceMethod>(Value);
 	Settings.Read(TEXT("AdaptProgressive"), &DecoderSettings.bAdaptProgressive);
 	Settings.Read(TEXT("AdaptTelecine"), &DecoderSettings.bAdaptTelecine);
