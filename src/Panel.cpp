@@ -143,9 +143,11 @@ bool CPanel::SetPanelTheme(const PanelTheme &Theme)
 		RECT rc;
 
 		CalcDimensions();
-		GetTitleRect(&rc);
-		if (m_TitleHeight!=OldTitleHeight)
+		if (m_TitleHeight!=OldTitleHeight) {
+			GetClientRect(&rc);
 			OnSize(rc.right,rc.bottom);
+		}
+		GetTitleRect(&rc);
 		Invalidate(&rc);
 	}
 	return true;
