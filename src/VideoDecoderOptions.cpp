@@ -32,6 +32,7 @@ bool CVideoDecoderOptions::ReadSettings(CSettings &Settings)
 	Settings.Read(TEXT("Hue"), &DecoderSettings.Hue);
 	Settings.Read(TEXT("Saturation"), &DecoderSettings.Saturation);
 	Settings.Read(TEXT("NumThreads"), &DecoderSettings.NumThreads);
+	Settings.Read(TEXT("EnableDXVA2"), &DecoderSettings.bEnableDXVA2);
 
 	MediaViewer.SetVideoDecoderSettings(DecoderSettings);
 
@@ -57,6 +58,7 @@ bool CVideoDecoderOptions::WriteSettings(CSettings &Settings)
 	Settings.Write(TEXT("Hue"), DecoderSettings.Hue);
 	Settings.Write(TEXT("Saturation"), DecoderSettings.Saturation);
 	Settings.Write(TEXT("NumThreads"), DecoderSettings.NumThreads);
+	Settings.Write(TEXT("EnableDXVA2"), DecoderSettings.bEnableDXVA2);
 
 	return true;
 }

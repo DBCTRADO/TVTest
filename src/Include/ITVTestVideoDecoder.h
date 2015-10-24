@@ -44,6 +44,19 @@ enum TVTVIDEODEC_DeinterlaceMethod : int
 
 #define TVTVIDEODEC_MAX_THREADS 32
 
+struct TVTVIDEODEC_DXVADeviceInfo
+{
+	WCHAR Description[512];
+	WORD Product;
+	WORD Version;
+	WORD SubVersion;
+	WORD Build;
+	DWORD VendorID;
+	DWORD DeviceID;
+	DWORD SubSystemID;
+	DWORD Revision;
+};
+
 struct TVTVIDEODEC_Statistics
 {
 	DWORD Mask;
@@ -57,13 +70,19 @@ struct TVTVIDEODEC_Statistics
 	DWORD SkippedFrameCount;
 	LONG PlaybackRate;
 	LONGLONG BaseTimePerFrame;
+	DWORD Mode;
+	TVTVIDEODEC_DXVADeviceInfo DXVADeviceInfo;
 };
 
 #define TVTVIDEODEC_STAT_OUT_SIZE            0x00000001
 #define TVTVIDEODEC_STAT_FRAME_COUNT         0x00000002
 #define TVTVIDEODEC_STAT_PLAYBACK_RATE       0x00000004
 #define TVTVIDEODEC_STAT_BASE_TIME_PER_FRAME 0x00000008
-#define TVTVIDEODEC_STAT_ALL                 0x0000000f
+#define TVTVIDEODEC_STAT_MODE                0x00000010
+#define TVTVIDEODEC_STAT_DXVA_DEVICE_INFO    0x00000020
+#define TVTVIDEODEC_STAT_ALL                 0x0000003f
+
+#define TVTVIDEODEC_MODE_DXVA2               0x00000001
 
 #define TVTVIDEODEC_FRAME_TOP_FIELD_FIRST    0x00000001
 #define TVTVIDEODEC_FRAME_REPEAT_FIRST_FIELD 0x00000002
@@ -106,6 +125,8 @@ ITVTestVideoDecoder : public IUnknown
 
 	STDMETHOD(SetNumThreads)(int NumThreads) PURE;
 	STDMETHOD_(int, GetNumThreads)() PURE;
+	STDMETHOD(SetEnableDXVA2)(BOOL fEnable) PURE;
+	STDMETHOD_(BOOL, GetEnableDXVA2)() PURE;
 
 	STDMETHOD(LoadOptions)() PURE;
 	STDMETHOD(SaveOptions)() PURE;
@@ -129,7 +150,7 @@ struct TVTestVideoDecoderInfo
 #define TVTVIDEODEC_VERSION_GET_REV(ver)   ((ver) & 0xfff)
 
 #define TVTVIDEODEC_HOST_VERSION      TVTVIDEODEC_VERSION_(0, 0, 0)
-#define TVTVIDEODEC_INTERFACE_VERSION TVTVIDEODEC_VERSION_(0, 0, 0)
+#define TVTVIDEODEC_INTERFACE_VERSION TVTVIDEODEC_VERSION_(0, 1, 0)
 
 #ifdef TVTVIDEODEC_IMPL
 #define TVTVIDEODEC_EXPORT extern "C" __declspec(dllexport)

@@ -20,6 +20,7 @@ public:
 		int Hue;
 		int Saturation;
 		int NumThreads;
+		bool bEnableDXVA2;
 
 		VideoDecoderSettings()
 			: bEnableDeinterlace(true)
@@ -32,6 +33,7 @@ public:
 			, Hue(0)
 			, Saturation(0)
 			, NumThreads(0)
+			, bEnableDXVA2(false)
 		{
 		}
 	};

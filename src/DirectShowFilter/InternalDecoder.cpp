@@ -62,6 +62,7 @@ HRESULT CInternalDecoderManager::CreateInstance(const GUID &MediaSubType, IBaseF
 	pDecoder->SetHue(m_VideoDecoderSettings.Hue);
 	pDecoder->SetSaturation(m_VideoDecoderSettings.Saturation);
 	pDecoder->SetNumThreads(m_VideoDecoderSettings.NumThreads);
+	pDecoder->SetEnableDXVA2(m_VideoDecoderSettings.bEnableDXVA2);
 
 	pDecoder->Release();
 
@@ -104,6 +105,7 @@ bool CInternalDecoderManager::SaveVideoDecoderSettings(IBaseFilter *pFilter)
 	m_VideoDecoderSettings.Hue = pDecoder->GetHue();
 	m_VideoDecoderSettings.Saturation = pDecoder->GetSaturation();
 	m_VideoDecoderSettings.NumThreads = pDecoder->GetNumThreads();
+	m_VideoDecoderSettings.bEnableDXVA2 = pDecoder->GetEnableDXVA2() != FALSE;
 
 	pDecoder->Release();
 
