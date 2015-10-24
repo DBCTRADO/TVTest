@@ -115,10 +115,27 @@ ITVTestVideoDecoder : public IUnknown
 	STDMETHOD(SetFrameCapture)(ITVTestVideoDecoderFrameCapture *pFrameCapture) PURE;
 };
 
+struct TVTestVideoDecoderInfo
+{
+	DWORD HostVersion;
+	DWORD ModuleVersion;
+	DWORD InterfaceVersion;
+};
+
+#define TVTVIDEODEC_VERSION_(major, minor, rev) \
+	(((major) << 24) | ((minor) << 12) | (rev))
+#define TVTVIDEODEC_VERSION_GET_MAJOR(ver) ((ver) >> 24)
+#define TVTVIDEODEC_VERSION_GET_MINOR(ver) (((ver) >> 12) & 0xfff)
+#define TVTVIDEODEC_VERSION_GET_REV(ver)   ((ver) & 0xfff)
+
+#define TVTVIDEODEC_HOST_VERSION      TVTVIDEODEC_VERSION_(0, 0, 0)
+#define TVTVIDEODEC_INTERFACE_VERSION TVTVIDEODEC_VERSION_(0, 0, 0)
+
 #ifdef TVTVIDEODEC_IMPL
 #define TVTVIDEODEC_EXPORT extern "C" __declspec(dllexport)
 #else
 #define TVTVIDEODEC_EXPORT extern "C" __declspec(dllimport)
 #endif
 
+TVTVIDEODEC_EXPORT BOOL WINAPI TVTestVideoDecoder_GetInfo(TVTestVideoDecoderInfo *pInfo);
 TVTVIDEODEC_EXPORT HRESULT WINAPI TVTestVideoDecoder_CreateInstance(ITVTestVideoDecoder **ppDecoder);

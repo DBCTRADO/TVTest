@@ -28,9 +28,17 @@ HRESULT CInternalDecoderManager::CreateInstance(const GUID &MediaSubType, IBaseF
 	if (FAILED(hr))
 		return hr;
 
+	auto pGetInfo = reinterpret_cast<decltype(TVTestVideoDecoder_GetInfo)*>(
+		::GetProcAddress(m_hLib, "TVTestVideoDecoder_GetInfo"));
 	auto pCreateInstance = reinterpret_cast<decltype(TVTestVideoDecoder_CreateInstance)*>(
 		::GetProcAddress(m_hLib, "TVTestVideoDecoder_CreateInstance"));
-	if (!pCreateInstance)
+	if (!pGetInfo || !pCreateInstance)
+		return E_FAIL;
+
+	TVTestVideoDecoderInfo DecoderInfo;
+	DecoderInfo.HostVersion = TVTVIDEODEC_HOST_VERSION;
+	if (!pGetInfo(&DecoderInfo)
+			|| DecoderInfo.InterfaceVersion != TVTVIDEODEC_INTERFACE_VERSION)
 		return E_FAIL;
 
 	ITVTestVideoDecoder *pDecoder;
