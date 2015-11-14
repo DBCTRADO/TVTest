@@ -653,25 +653,34 @@ LRESULT CEventInfoPopup::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lPar
 		return ::SendMessage(m_hwndEdit,uMsg,wParam,lParam);
 
 	case WM_NCMOUSEMOVE:
-		{
-			TRACKMOUSEEVENT tme;
+		m_fCursorInWindow=true;
+		return 0;
 
-			tme.cbSize=sizeof(TRACKMOUSEEVENT);
-			tme.dwFlags=TME_LEAVE | TME_NONCLIENT;
-			tme.hwndTrack=hwnd;
-			::TrackMouseEvent(&tme);
+	case WM_SHOWWINDOW:
+		if (wParam!=0) {
+			::SetTimer(hwnd,TIMER_ID_HIDE,200,NULL);
+			m_fCursorInWindow=false;
+		} else {
+			::KillTimer(hwnd,TIMER_ID_HIDE);
 		}
 		return 0;
 
-	case WM_NCMOUSELEAVE:
-		{
+	case WM_TIMER:
+		if (wParam==TIMER_ID_HIDE) {
 			POINT pt;
-			RECT rc;
 
 			::GetCursorPos(&pt);
-			::GetWindowRect(hwnd,&rc);
-			if (!::PtInRect(&rc,pt))
-				Hide();
+			if (!m_fCursorInWindow) {
+				if (IsOwnWindow(::WindowFromPoint(pt)))
+					m_fCursorInWindow=true;
+			} else {
+				RECT rc;
+
+				::GetWindowRect(hwnd,&rc);
+				::InflateRect(&rc,::GetSystemMetrics(SM_CXSIZEFRAME)*2,::GetSystemMetrics(SM_CYSIZEFRAME)*2);
+				if (!::PtInRect(&rc,pt))
+					Hide();
+			}
 		}
 		return 0;
 

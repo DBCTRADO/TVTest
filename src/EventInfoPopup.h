@@ -69,9 +69,11 @@ private:
 	TVTest::String m_TitleText;
 	TVTest::CIcon m_TitleIcon;
 	CEventHandler *m_pEventHandler;
+	bool m_fCursorInWindow;
 
 	static const LPCTSTR m_pszWindowClass;
 	static HINSTANCE m_hinst;
+	static const UINT TIMER_ID_HIDE=1;
 
 // CCustomWindow
 	LRESULT OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
