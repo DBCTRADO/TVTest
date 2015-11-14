@@ -328,6 +328,7 @@ private:
 		void ShowStatusView(bool fShow);
 		void ShowTitleBar(bool fShow);
 		void ShowSideBar(bool fShow);
+		void RestorePanel();
 	// CBasicWindow
 		bool Create(HWND hwndParent,DWORD Style,DWORD ExStyle=0,int ID=0) override;
 	// CCustomWindow

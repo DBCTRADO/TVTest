@@ -6052,6 +6052,7 @@ LRESULT CMainWindow::CFullscreen::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LP
 		ShowStatusView(false);
 		ShowSideBar(false);
 		ShowPanel(false);
+		RestorePanel();
 		return 0;
 	}
 
@@ -6240,18 +6241,27 @@ void CMainWindow::CFullscreen::ShowPanel(bool fShow)
 			else
 				m_PanelWidth=m_Panel.GetWidth();
 			m_LayoutBase.SetContainerVisible(CONTAINER_ID_PANEL,false);
-			m_Panel.SetWindow(nullptr,nullptr);
-			CPanel *pPanel=m_App.Panel.Frame.GetPanel();
-			pPanel->SetWindow(&m_App.Panel.Form,TEXT("パネル"));
-			pPanel->SendSizeMessage();
-			if (m_App.Panel.fShowPanelWindow) {
-				m_App.Panel.Frame.SetPanelVisible(true);
-			}
+			if (!m_App.Panel.IsFloating())
+				RestorePanel();
 		}
 
 		m_fShowPanel=fShow;
 
 		m_App.UICore.SetCommandCheckedState(CM_PANEL,fShow);
+	}
+}
+
+
+void CMainWindow::CFullscreen::RestorePanel()
+{
+	if (m_Panel.GetWindow()!=nullptr) {
+		m_Panel.SetWindow(nullptr,nullptr);
+		CPanel *pPanel=m_App.Panel.Frame.GetPanel();
+		pPanel->SetWindow(&m_App.Panel.Form,TEXT("パネル"));
+		pPanel->SendSizeMessage();
+		if (m_App.Panel.fShowPanelWindow) {
+			m_App.Panel.Frame.SetPanelVisible(true,true);
+		}
 	}
 }
 
