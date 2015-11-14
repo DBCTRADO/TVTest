@@ -830,14 +830,9 @@ CEventInfoPopup::CEventHandler::~CEventHandler()
 
 
 
-const LPCTSTR CEventInfoPopupManager::m_pszPropName=TEXT("EventInfoPopup");
-
-
 CEventInfoPopupManager::CEventInfoPopupManager(CEventInfoPopup *pPopup)
 	: m_pPopup(pPopup)
 	, m_fEnable(true)
-	, m_hwnd(NULL)
-	, m_pOldWndProc(NULL)
 	, m_pEventHandler(NULL)
 	, m_HitTestParam(-1)
 {
@@ -854,13 +849,12 @@ bool CEventInfoPopupManager::Initialize(HWND hwnd,CEventHandler *pEventHandler)
 {
 	if (hwnd==NULL)
 		return false;
-	m_hwnd=hwnd;
-	m_pOldWndProc=(WNDPROC)::SetWindowLongPtr(hwnd,GWLP_WNDPROC,(LONG_PTR)HookWndProc);
+	if (!SetSubclass(hwnd))
+		return false;
 	m_pEventHandler=pEventHandler;
 	if (m_pEventHandler!=NULL)
 		m_pEventHandler->m_pPopup=m_pPopup;
 	m_fTrackMouseEvent=false;
-	::SetProp(hwnd,m_pszPropName,this);
 	return true;
 }
 
@@ -869,12 +863,7 @@ void CEventInfoPopupManager::Finalize()
 {
 	if (m_hwnd!=NULL) {
 		m_pPopup->Hide();
-		if (m_pOldWndProc!=NULL) {
-			::SetWindowLongPtr(m_hwnd,GWLP_WNDPROC,(LONG_PTR)m_pOldWndProc);
-			m_pOldWndProc=NULL;
-		}
-		::RemoveProp(m_hwnd,m_pszPropName);
-		m_hwnd=NULL;
+		RemoveSubclass();
 	}
 }
 
@@ -902,15 +891,11 @@ bool CEventInfoPopupManager::Popup(int x,int y)
 }
 
 
-LRESULT CALLBACK CEventInfoPopupManager::HookWndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
+LRESULT CEventInfoPopupManager::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 {
-	CEventInfoPopupManager *pThis=static_cast<CEventInfoPopupManager*>(::GetProp(hwnd,m_pszPropName));
-
-	if (pThis==NULL)
-		return ::DefWindowProc(hwnd,uMsg,wParam,lParam);
 	switch (uMsg) {
 	case WM_MOUSEMOVE:
-		if (!pThis->m_fTrackMouseEvent) {
+		if (!m_fTrackMouseEvent) {
 			TRACKMOUSEEVENT tme;
 
 			tme.cbSize=sizeof(tme);
@@ -918,17 +903,17 @@ LRESULT CALLBACK CEventInfoPopupManager::HookWndProc(HWND hwnd,UINT uMsg,WPARAM 
 			tme.hwndTrack=hwnd;
 			tme.dwHoverTime=1000;
 			if (::TrackMouseEvent(&tme))
-				pThis->m_fTrackMouseEvent=true;
+				m_fTrackMouseEvent=true;
 		}
-		if (pThis->m_pPopup->IsVisible() && pThis->m_pEventHandler!=NULL) {
+		if (m_pPopup->IsVisible() && m_pEventHandler!=NULL) {
 			LPARAM Param;
-			if (pThis->m_pEventHandler->HitTest(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam),&Param)) {
-				if (Param!=pThis->m_HitTestParam) {
-					pThis->m_HitTestParam=Param;
-					pThis->m_pEventHandler->ShowPopup(pThis->m_HitTestParam,pThis->m_pPopup);
+			if (m_pEventHandler->HitTest(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam),&Param)) {
+				if (Param!=m_HitTestParam) {
+					m_HitTestParam=Param;
+					m_pEventHandler->ShowPopup(m_HitTestParam,m_pPopup);
 				}
 			} else {
-				pThis->m_pPopup->Hide();
+				m_pPopup->Hide();
 			}
 		}
 		break;
@@ -944,55 +929,55 @@ LRESULT CALLBACK CEventInfoPopupManager::HookWndProc(HWND hwnd,UINT uMsg,WPARAM 
 	case WM_MOUSEHWHEEL:
 	case WM_VSCROLL:
 	case WM_HSCROLL:
-		pThis->m_pPopup->Hide();
+		m_pPopup->Hide();
 		break;
 
 	case WM_MOUSELEAVE:
-		if (pThis->m_pPopup->IsVisible()) {
+		if (m_pPopup->IsVisible()) {
 			POINT pt;
 			::GetCursorPos(&pt);
 			HWND hwndCur=::WindowFromPoint(pt);
-			if (!pThis->m_pPopup->IsOwnWindow(hwndCur))
-				pThis->m_pPopup->Hide();
+			if (!m_pPopup->IsOwnWindow(hwndCur))
+				m_pPopup->Hide();
 		}
-		pThis->m_fTrackMouseEvent=false;
+		m_fTrackMouseEvent=false;
 		return 0;
 
 	case WM_ACTIVATE:
 		if (LOWORD(wParam)==WA_INACTIVE) {
 			HWND hwndActive=reinterpret_cast<HWND>(lParam);
-			if (!pThis->m_pPopup->IsOwnWindow(hwndActive))
-				pThis->m_pPopup->Hide();
+			if (!m_pPopup->IsOwnWindow(hwndActive))
+				m_pPopup->Hide();
 		}
 		break;
 
 	case WM_MOUSEHOVER:
-		if (pThis->m_pEventHandler!=NULL && pThis->m_fEnable
+		if (m_pEventHandler!=NULL && m_fEnable
 				&& ::GetActiveWindow()==::GetForegroundWindow()) {
 			bool fHit=false;
-			pThis->m_HitTestParam=-1;
-			if (pThis->m_pEventHandler->HitTest(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam),&pThis->m_HitTestParam)) {
-				if (pThis->m_pEventHandler->ShowPopup(pThis->m_HitTestParam,pThis->m_pPopup)) {
+			m_HitTestParam=-1;
+			if (m_pEventHandler->HitTest(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam),&m_HitTestParam)) {
+				if (m_pEventHandler->ShowPopup(m_HitTestParam,m_pPopup)) {
 					fHit=true;
 				}
 			}
 			if (!fHit)
-				pThis->m_pPopup->Hide();
+				m_pPopup->Hide();
 		}
-		pThis->m_fTrackMouseEvent=false;
+		m_fTrackMouseEvent=false;
 		return 0;
 
 	case WM_SHOWWINDOW:
 		if (!wParam)
-			pThis->m_pPopup->Hide();
-		return 0;
+			m_pPopup->Hide();
+		break;
 
 	case WM_DESTROY:
-		::CallWindowProc(pThis->m_pOldWndProc,hwnd,uMsg,wParam,lParam);
-		pThis->Finalize();
-		return 0;
+		m_pPopup->Hide();
+		break;
 	}
-	return ::CallWindowProc(pThis->m_pOldWndProc,hwnd,uMsg,wParam,lParam);
+
+	return CWindowSubclass::OnMessage(hwnd,uMsg,wParam,lParam);
 }
 
 
