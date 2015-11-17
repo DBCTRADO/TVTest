@@ -70,6 +70,7 @@ private:
 	TVTest::CIcon m_TitleIcon;
 	CEventHandler *m_pEventHandler;
 	bool m_fCursorInWindow;
+	bool m_fMenuShowing;
 
 	static const LPCTSTR m_pszWindowClass;
 	static HINSTANCE m_hinst;

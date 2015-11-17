@@ -55,6 +55,7 @@ CEventInfoPopup::CEventInfoPopup()
 		false
 #endif
 		)
+	, m_fMenuShowing(false)
 {
 	m_WindowPosition.Width=320;
 	m_WindowPosition.Height=320;
@@ -667,21 +668,32 @@ LRESULT CEventInfoPopup::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lPar
 
 	case WM_TIMER:
 		if (wParam==TIMER_ID_HIDE) {
-			POINT pt;
+			if (!m_fMenuShowing) {
+				POINT pt;
 
-			::GetCursorPos(&pt);
-			if (!m_fCursorInWindow) {
-				if (IsOwnWindow(::WindowFromPoint(pt)))
-					m_fCursorInWindow=true;
-			} else {
-				RECT rc;
+				::GetCursorPos(&pt);
+				if (!m_fCursorInWindow) {
+					if (IsOwnWindow(::WindowFromPoint(pt)))
+						m_fCursorInWindow=true;
+				} else {
+					RECT rc;
 
-				::GetWindowRect(hwnd,&rc);
-				::InflateRect(&rc,::GetSystemMetrics(SM_CXSIZEFRAME)*2,::GetSystemMetrics(SM_CYSIZEFRAME)*2);
-				if (!::PtInRect(&rc,pt))
-					Hide();
+					::GetWindowRect(hwnd,&rc);
+					::InflateRect(&rc,::GetSystemMetrics(SM_CXSIZEFRAME)*2,::GetSystemMetrics(SM_CYSIZEFRAME)*2);
+					if (!::PtInRect(&rc,pt))
+						Hide();
+				}
 			}
 		}
+		return 0;
+
+	case WM_ENTERMENULOOP:
+		m_fMenuShowing=true;
+		return 0;
+
+	case WM_EXITMENULOOP:
+		m_fMenuShowing=false;
+		m_fCursorInWindow=false;
 		return 0;
 
 	case WM_NCACTIVATE:
