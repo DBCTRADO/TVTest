@@ -188,6 +188,7 @@ CAppMain::CAppMain()
 	, FeaturedEvents(EventSearchOptions)
 
 	, m_fFirstExecute(false)
+	, m_fInitialSettings(false)
 
 	, m_DtvEngineHandler(*this)
 	, m_StreamInfoEventHandler(*this)
@@ -356,7 +357,7 @@ void CAppMain::Finalize()
 		FavoritesManager.Save(m_szFavoritesFileName);
 
 	AddLog(TEXT("設定を保存しています..."));
-	SaveSettings(SETTINGS_SAVE_STATUS);
+	SaveSettings(SETTINGS_SAVE_STATUS | (m_fInitialSettings ? SETTINGS_SAVE_OPTIONS : 0));
 }
 
 
@@ -754,7 +755,7 @@ int CAppMain::Main(HINSTANCE hInstance,LPCTSTR pszCmdLine,int nCmdShow)
 	DriverOptions.Initialize(&DriverManager);
 
 	// 初期設定ダイアログを表示するか
-	const bool fInitialSettings=
+	m_fInitialSettings=
 		CmdLineOptions.m_fInitialSettings
 			|| (m_fFirstExecute && CmdLineOptions.m_DriverName.empty());
 
@@ -763,18 +764,21 @@ int CAppMain::Main(HINSTANCE hInstance,LPCTSTR pszCmdLine,int nCmdShow)
 	TCHAR szDriverFileName[MAX_PATH];
 
 	// 初期設定ダイアログの表示
-	if (fInitialSettings) {
+	if (m_fInitialSettings) {
 		CInitialSettings InitialSettings(&DriverManager);
 
 		if (!InitialSettings.Show(nullptr))
 			return 0;
 		InitialSettings.GetDriverFileName(szDriverFileName,lengthof(szDriverFileName));
 		GeneralOptions.SetDefaultDriverName(szDriverFileName);
+		GeneralOptions.SetChanged();
 		VideoOptions.SetMpeg2DecoderName(InitialSettings.GetMpeg2DecoderName());
 		VideoOptions.SetH264DecoderName(InitialSettings.GetH264DecoderName());
 		VideoOptions.SetH265DecoderName(InitialSettings.GetH265DecoderName());
 		VideoOptions.SetVideoRendererType(InitialSettings.GetVideoRenderer());
+		VideoOptions.SetChanged();
 		RecordOptions.SetSaveFolder(InitialSettings.GetRecordFolder());
+		RecordOptions.SetChanged();
 	} else if (!CmdLineOptions.m_DriverName.empty()) {
 		::lstrcpy(szDriverFileName,CmdLineOptions.m_DriverName.c_str());
 	} else if (CmdLineOptions.m_fNoDriver) {

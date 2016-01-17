@@ -310,6 +310,7 @@ private:
 	TCHAR m_szFavoritesFileName[MAX_PATH];
 	CSettings m_Settings;
 	bool m_fFirstExecute;
+	bool m_fInitialSettings;
 	CDtvEngineEventHandler m_DtvEngineHandler;
 	CStreamInfoEventHandler m_StreamInfoEventHandler;
 	CCaptureWindowEventHandler m_CaptureWindowEventHandler;
