@@ -823,7 +823,7 @@ INT_PTR CALLBACK CRecordManager::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARA
 						Sel=(int)i;
 				}
 				DlgComboBox_SetCurSel(hDlg,IDC_RECORD_WRITEPLUGIN,Sel+1);
-				EnableDlgItem(hDlg,IDC_RECORD_WRITEPLUGINSETTING,Sel>0);
+				EnableDlgItem(hDlg,IDC_RECORD_WRITEPLUGINSETTING,Sel>=0);
 			} else {
 				int Sel=0;
 				if (!pThis->m_Settings.m_WritePlugin.empty()) {

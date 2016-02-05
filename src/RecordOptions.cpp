@@ -384,7 +384,7 @@ INT_PTR CRecordOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 					Sel=(int)i;
 			}
 			DlgComboBox_SetCurSel(hDlg,IDC_RECORDOPTIONS_WRITEPLUGIN,Sel+1);
-			EnableDlgItem(hDlg,IDC_RECORDOPTIONS_WRITEPLUGINSETTING,Sel>0);
+			EnableDlgItem(hDlg,IDC_RECORDOPTIONS_WRITEPLUGINSETTING,Sel>=0);
 
 			DlgCheckBox_Check(hDlg,IDC_RECORDOPTIONS_ALERTLOWFREESPACE,m_fAlertLowFreeSpace);
 			::SetDlgItemInt(hDlg,IDC_RECORDOPTIONS_LOWFREESPACETHRESHOLD,m_LowFreeSpaceThreshold,FALSE);
