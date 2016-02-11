@@ -1219,15 +1219,33 @@ CColorSchemeOptions::~CColorSchemeOptions()
 
 bool CColorSchemeOptions::LoadSettings(CSettings &Settings)
 {
-	return m_pColorScheme->Load(Settings);
+	if (!m_pColorScheme->Load(Settings))
+		return false;
+
+	// ver.0.9.0‚æ‚è‘O‚É‚ ‚Á‚½u‰f‘œ•\Ž¦•”‚Ì˜gv‚ÌÝ’è‚ð”½‰f‚³‚¹‚é
+	if (m_pColorScheme->GetBorderType(CColorScheme::BORDER_SCREEN)==Theme::BORDER_SUNKEN
+			&& Settings.SetSection(TEXT("Settings"))) {
+		bool fClientEdge;
+
+		if (Settings.Read(TEXT("ClientEdge"),&fClientEdge) && !fClientEdge)
+			m_pColorScheme->SetBorderType(CColorScheme::BORDER_SCREEN,Theme::BORDER_NONE);
+	}
+
+	return true;
 }
 
 
 bool CColorSchemeOptions::SaveSettings(CSettings &Settings)
 {
-	return m_pColorScheme->Save(Settings,
-								CColorScheme::SAVE_NODEFAULT |
-								CColorScheme::SAVE_NONAME);
+	if (!m_pColorScheme->Save(Settings,
+							  CColorScheme::SAVE_NODEFAULT |
+							  CColorScheme::SAVE_NONAME))
+		return false;
+
+	if (Settings.SetSection(TEXT("Settings")))
+		Settings.DeleteValue(TEXT("ClientEdge"));
+
+	return true;
 }
 
 
