@@ -212,6 +212,10 @@
 			<param name="Local" value="appendix/tips.html">
 			</OBJECT>
 		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="デコーダとレンダラ">
+			<param name="Local" value="appendix/decoder.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
 			<param name="Name" value="放送局ロゴの取得について">
 			<param name="Local" value="appendix/logo.html">
 			</OBJECT>
