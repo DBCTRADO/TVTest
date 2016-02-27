@@ -120,8 +120,8 @@ bool CLogger::ReadSettings(CSettings &Settings)
 	if (m_fOutputToFile && m_LogList.size()>0) {
 		TCHAR szFileName[MAX_PATH];
 
-		GetDefaultLogFileName(szFileName);
-		SaveToFile(szFileName,true);
+		if (GetDefaultLogFileName(szFileName,lengthof(szFileName)))
+			SaveToFile(szFileName,true);
 	}
 	return true;
 }
@@ -180,21 +180,33 @@ bool CLogger::AddLogRaw(CLogItem::LogType Type,LPCTSTR pszText)
 
 	if (m_fOutputToFile) {
 		TCHAR szFileName[MAX_PATH];
-		HANDLE hFile;
 
-		GetDefaultLogFileName(szFileName);
-		hFile=::CreateFile(szFileName,GENERIC_WRITE,FILE_SHARE_READ,NULL,
-						   OPEN_ALWAYS,FILE_ATTRIBUTE_NORMAL,NULL);
-		if (hFile!=INVALID_HANDLE_VALUE) {
-			char szText[MAX_LOG_TEXT_LENGTH];
-			DWORD Length,Write;
+		if (GetDefaultLogFileName(szFileName,lengthof(szFileName))) {
+			HANDLE hFile;
 
-			::SetFilePointer(hFile,0,NULL,FILE_END);
-			Length=pLogItem->Format(szText,lengthof(szText)-1);
-			szText[Length++]='\r';
-			szText[Length++]='\n';
-			::WriteFile(hFile,szText,Length,&Write,NULL);
-			::CloseHandle(hFile);
+			hFile=::CreateFile(szFileName,GENERIC_WRITE,FILE_SHARE_READ,NULL,
+							   OPEN_ALWAYS,FILE_ATTRIBUTE_NORMAL,NULL);
+			if (hFile!=INVALID_HANDLE_VALUE) {
+				static const LARGE_INTEGER Zero={};
+				LARGE_INTEGER Pos;
+				DWORD Size;
+
+				if (::SetFilePointerEx(hFile,Zero,&Pos,FILE_END) && Pos.QuadPart==0) {
+					static const WORD BOM=0xFEFF;
+
+					::WriteFile(hFile,&BOM,2,&Size,NULL);
+				}
+
+				WCHAR szText[MAX_LOG_TEXT_LENGTH];
+				DWORD Length;
+
+				Length=pLogItem->Format(szText,lengthof(szText)-1);
+				szText[Length++]=L'\r';
+				szText[Length++]=L'\n';
+				::WriteFile(hFile,szText,Length*sizeof(WCHAR),&Size,NULL);
+
+				::CloseHandle(hFile);
+			}
 		}
 	}
 
@@ -274,22 +286,28 @@ bool CLogger::SaveToFile(LPCTSTR pszFileName,bool fAppend)
 					   FILE_ATTRIBUTE_NORMAL,NULL);
 	if (hFile==INVALID_HANDLE_VALUE)
 		return false;
-	if (fAppend)
-		::SetFilePointer(hFile,0,NULL,FILE_END);
 
-	m_Lock.Lock();
+	bool fBOM=!fAppend;
+	DWORD Size;
 
-	for (auto itr=m_LogList.begin();itr!=m_LogList.end();++itr) {
-		char szText[MAX_LOG_TEXT_LENGTH];
-		DWORD Length,Write;
+	if (fAppend) {
+		static const LARGE_INTEGER Zero={};
+		LARGE_INTEGER Pos;
 
-		Length=(*itr)->Format(szText,lengthof(szText)-1);
-		szText[Length++]='\r';
-		szText[Length++]='\n';
-		::WriteFile(hFile,szText,Length,&Write,NULL);
+		if (::SetFilePointerEx(hFile,Zero,&Pos,FILE_END) && Pos.QuadPart==0)
+			fBOM=true;
 	}
 
-	m_Lock.Unlock();
+	if (fBOM) {
+		static const WORD BOM=0xFEFF;
+
+		::WriteFile(hFile,&BOM,2,&Size,NULL);
+	}
+
+	TVTest::String Text;
+
+	GetLogText(&Text);
+	::WriteFile(hFile,Text.data(),(DWORD)(Text.length()*sizeof(WCHAR)),&Size,NULL);
 
 	::CloseHandle(hFile);
 
@@ -297,10 +315,41 @@ bool CLogger::SaveToFile(LPCTSTR pszFileName,bool fAppend)
 }
 
 
-void CLogger::GetDefaultLogFileName(LPTSTR pszFileName) const
+bool CLogger::GetDefaultLogFileName(LPTSTR pszFileName,DWORD MaxLength) const
 {
-	::GetModuleFileName(NULL,pszFileName,MAX_PATH);
-	::PathRenameExtension(pszFileName,TEXT(".log"));
+	DWORD Result=::GetModuleFileName(NULL,pszFileName,MaxLength);
+	if (Result==0 || Result+4>=MaxLength)
+		return false;
+	::lstrcat(pszFileName,TEXT(".log"));
+	return true;
+}
+
+
+void CLogger::GetLogText(TVTest::String *pText) const
+{
+	CBlockLock Lock(&m_Lock);
+
+	for (auto itr=m_LogList.begin();itr!=m_LogList.end();++itr) {
+		WCHAR szText[MAX_LOG_TEXT_LENGTH];
+
+		(*itr)->Format(szText,lengthof(szText));
+		*pText+=szText;
+		*pText+=L"\r\n";
+	}
+}
+
+
+void CLogger::GetLogText(TVTest::AnsiString *pText) const
+{
+	CBlockLock Lock(&m_Lock);
+
+	for (auto itr=m_LogList.begin();itr!=m_LogList.end();++itr) {
+		char szText[MAX_LOG_TEXT_LENGTH];
+
+		(*itr)->Format(szText,lengthof(szText));
+		*pText+=szText;
+		*pText+="\r\n";
+	}
 }
 
 
@@ -308,17 +357,7 @@ bool CLogger::CopyToClipboard(HWND hwnd)
 {
 	TVTest::String LogText;
 
-	m_Lock.Lock();
-
-	for (auto itr=m_LogList.begin();itr!=m_LogList.end();++itr) {
-		TCHAR szText[MAX_LOG_TEXT_LENGTH];
-
-		(*itr)->Format(szText,lengthof(szText));
-		LogText+=szText;
-		LogText+=TEXT("\r\n");
-	}
-
-	m_Lock.Unlock();
+	GetLogText(&LogText);
 
 	return CopyTextToClipboard(hwnd,LogText.c_str());
 }
@@ -416,8 +455,8 @@ INT_PTR CLogger::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 			{
 				TCHAR szFileName[MAX_PATH];
 
-				GetDefaultLogFileName(szFileName);
-				if (!SaveToFile(szFileName,false)) {
+				if (!GetDefaultLogFileName(szFileName,lengthof(szFileName))
+						|| !SaveToFile(szFileName,false)) {
 					::MessageBox(hDlg,TEXT("•Û‘¶‚ª‚Å‚«‚Ü‚¹‚ñB"),NULL,MB_OK | MB_ICONEXCLAMATION);
 				} else {
 					TCHAR szMessage[MAX_PATH+64];
@@ -472,8 +511,8 @@ INT_PTR CLogger::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 					if (fOutput && m_LogList.size()>0) {
 						TCHAR szFileName[MAX_PATH];
 
-						GetDefaultLogFileName(szFileName);
-						SaveToFile(szFileName,true);
+						if (GetDefaultLogFileName(szFileName,lengthof(szFileName)))
+							SaveToFile(szFileName,true);
 					}
 					m_fOutputToFile=fOutput;
 

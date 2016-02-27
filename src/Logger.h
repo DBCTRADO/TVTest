@@ -59,7 +59,9 @@ public:
 	bool SetOutputToFile(bool fOutput);
 	bool GetOutputToFile() const { return m_fOutputToFile; }
 	bool SaveToFile(LPCTSTR pszFileName,bool fAppend);
-	void GetDefaultLogFileName(LPTSTR pszFileName) const;
+	bool GetDefaultLogFileName(LPTSTR pszFileName,DWORD MaxLength) const;
+	void GetLogText(TVTest::String *pText) const;
+	void GetLogText(TVTest::AnsiString *pText) const;
 	bool CopyToClipboard(HWND hwnd);
 
 private:

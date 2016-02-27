@@ -218,8 +218,8 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,HINSTANCE /*hPrevInstance*/,
 	if (g_App.CmdLineOptions.m_fSaveLog && !g_App.Logger.GetOutputToFile()) {
 		TCHAR szFileName[MAX_PATH];
 
-		g_App.Logger.GetDefaultLogFileName(szFileName);
-		g_App.Logger.SaveToFile(szFileName,true);
+		if (g_App.Logger.GetDefaultLogFileName(szFileName,lengthof(szFileName)))
+			g_App.Logger.SaveToFile(szFileName,true);
 	}
 
 	return Result;
