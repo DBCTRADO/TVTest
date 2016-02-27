@@ -48,7 +48,8 @@ public:
 	bool IsFocused() const override { return m_HotItem>=0; }
 	void OnCursorMove(int x,int y) override;
 	void OnCursorLeave() override;
-	bool OnClick(int x,int y) override;
+	void OnLButtonDown(int x,int y) override;
+	bool OnLButtonUp(int x,int y) override;
 	bool OnSetCursor() override;
 	bool OnCursorKey(WPARAM KeyCode) override;
 
@@ -80,6 +81,7 @@ protected:
 	int m_LogoWidth;
 	int m_LogoHeight;
 	int m_HotItem;
+	int m_ClickingItem;
 	ItemList m_ItemList;
 
 	void Clear();
@@ -95,6 +97,7 @@ CChannelListCategoryBase::CChannelListCategoryBase(CHomeDisplay *pHomeDisplay)
 	: CCategory(pHomeDisplay)
 	, m_Height(0)
 	, m_HotItem(-1)
+	, m_ClickingItem(-1)
 {
 }
 
@@ -225,9 +228,17 @@ void CChannelListCategoryBase::OnCursorLeave()
 }
 
 
-bool CChannelListCategoryBase::OnClick(int x,int y)
+void CChannelListCategoryBase::OnLButtonDown(int x,int y)
 {
 	SetHotItem(GetItemByPosition(x,y));
+	m_ClickingItem=m_HotItem;
+}
+
+
+bool CChannelListCategoryBase::OnLButtonUp(int x,int y)
+{
+	if (m_ClickingItem<0 || m_ClickingItem!=GetItemByPosition(x,y))
+		return false;
 	return OnDecide();
 }
 
@@ -278,6 +289,7 @@ void CChannelListCategoryBase::Clear()
 
 	m_Height=0;
 	m_HotItem=-1;
+	m_ClickingItem=-1;
 }
 
 
@@ -393,6 +405,7 @@ bool CChannelListCategoryBase::SetHotItem(int Item)
 		m_HotItem=HotItem;
 		if (HotItem>=0)
 			RedrawItem(HotItem);
+		m_ClickingItem=-1;
 	}
 
 	return true;
@@ -648,7 +661,8 @@ public:
 	void OnWindowDestroy() override;
 	void OnCursorMove(int x,int y) override;
 	void OnCursorLeave() override;
-	bool OnClick(int x,int y) override;
+	void OnLButtonDown(int x,int y) override;
+	bool OnLButtonUp(int x,int y) override;
 	bool OnRButtonUp(int x,int y) override;
 	bool OnSetCursor() override { return false; }
 	bool OnCursorKey(WPARAM KeyCode) override;
@@ -686,6 +700,7 @@ private:
 	int m_LogoWidth;
 	int m_LogoHeight;
 	int m_HotItem;
+	int m_ClickingItem;
 	std::vector<CEventItem*> m_ItemList;
 
 	void Clear();
@@ -705,6 +720,7 @@ CFeaturedEventsCategory::CFeaturedEventsCategory(CHomeDisplay *pHomeDisplay)
 	: CCategory(pHomeDisplay)
 	, m_Height(0)
 	, m_HotItem(-1)
+	, m_ClickingItem(-1)
 {
 }
 
@@ -956,9 +972,17 @@ void CFeaturedEventsCategory::OnCursorLeave()
 }
 
 
-bool CFeaturedEventsCategory::OnClick(int x,int y)
+void CFeaturedEventsCategory::OnLButtonDown(int x,int y)
 {
 	SetHotItem(GetItemByPosition(x,y));
+	m_ClickingItem=m_HotItem;
+}
+
+
+bool CFeaturedEventsCategory::OnLButtonUp(int x,int y)
+{
+	if (m_ClickingItem<0 || m_ClickingItem!=GetItemByPosition(x,y))
+		return false;
 	return OnDecide();
 }
 
@@ -1053,6 +1077,7 @@ void CFeaturedEventsCategory::Clear()
 
 	m_Height=0;
 	m_HotItem=-1;
+	m_ClickingItem=-1;
 }
 
 
@@ -1235,6 +1260,7 @@ bool CFeaturedEventsCategory::SetHotItem(int Item)
 		m_HotItem=HotItem;
 		if (HotItem>=0)
 			RedrawItem(HotItem);
+		m_ClickingItem=-1;
 	}
 
 	return true;
@@ -1695,8 +1721,6 @@ LRESULT CHomeDisplay::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 		m_hwndScroll=::CreateWindowEx(0,TEXT("SCROLLBAR"),TEXT(""),
 			WS_CHILD | SBS_VERT,0,0,0,0,hwnd,NULL,m_hinst,NULL);
 		m_ScrollPos=0;
-		m_LButtonDownPos.x=-1;
-		m_LButtonDownPos.y=-1;
 		m_fHitCloseButton=false;
 		m_CursorPart=PART_MARGIN;
 		m_himlIcons=::ImageList_LoadImage(m_hinst,MAKEINTRESOURCE(IDB_HOME),
@@ -1729,7 +1753,6 @@ LRESULT CHomeDisplay::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 			POINT pt={GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam)};
 
 			::SetFocus(hwnd);
-			m_LButtonDownPos=pt;
 			m_fHitCloseButton=CloseButtonHitTest(pt.x,pt.y);
 		}
 		// Fall through
@@ -1744,7 +1767,10 @@ LRESULT CHomeDisplay::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 				if (m_CurCategory>=0) {
 					CCategory *pCategory=m_CategoryList[m_CurCategory];
 					bool fFocused=pCategory->IsFocused();
-					pCategory->OnCursorMove(x,y);
+					if (uMsg==WM_LBUTTONDOWN)
+						pCategory->OnLButtonDown(x,y);
+					else
+						pCategory->OnCursorMove(x,y);
 					if (pCategory->IsFocused()!=fFocused)
 						RedrawCategoryItem(m_CurCategory);
 				}
@@ -1775,8 +1801,7 @@ LRESULT CHomeDisplay::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 				if (CloseButtonHitTest(x,y)) {
 					Close();
 				}
-			} else if (m_LButtonDownPos.x==x
-					&& m_LButtonDownPos.y==y) {
+			} else {
 				int Category;
 				PartType Part=HitTest(x,y,&Category);
 
@@ -1786,7 +1811,7 @@ LRESULT CHomeDisplay::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 					break;
 
 				case PART_CONTENT:
-					if (m_CategoryList[m_CurCategory]->OnClick(x,y)) {
+					if (m_CategoryList[m_CurCategory]->OnLButtonUp(x,y)) {
 						Close();
 					}
 					break;

@@ -66,7 +66,8 @@ public:
 		virtual void OnWindowDestroy() {}
 		virtual void OnCursorMove(int x,int y) {}
 		virtual void OnCursorLeave() {}
-		virtual bool OnClick(int x,int y) { return false; }
+		virtual void OnLButtonDown(int x,int y) {}
+		virtual bool OnLButtonUp(int x,int y) { return false; }
 		virtual bool OnRButtonUp(int x,int y) { return false; }
 		virtual bool OnSetCursor() { return false; }
 		virtual bool OnCursorKey(WPARAM KeyCode) { return false; }
@@ -125,7 +126,6 @@ private:
 	HWND m_hwndScroll;
 	int m_ScrollPos;
 	CMouseWheelHandler m_MouseWheel;
-	POINT m_LButtonDownPos;
 	bool m_fHitCloseButton;
 	PartType m_CursorPart;
 	bool m_fHoverOverButton;
