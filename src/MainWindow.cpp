@@ -3841,7 +3841,7 @@ bool CMainWindow::OnInitMenuPopup(HMENU hmenu)
 						for (int k=0;k<GroupInfo.CAUnit[j].ComponentNum;k++) {
 							const BYTE ComponentTag=GroupInfo.CAUnit[j].ComponentTag[k];
 
-							for (int AudioIndex=0;AudioIndex=static_cast<int>(AudioList.size());AudioIndex++) {
+							for (int AudioIndex=0;AudioIndex<static_cast<int>(AudioList.size());AudioIndex++) {
 								CAudioManager::AudioInfo &AudioInfo=AudioList[AudioIndex];
 
 								if (AudioInfo.ComponentTag==ComponentTag) {
@@ -4078,7 +4078,7 @@ bool CMainWindow::OnInitMenuPopup(HMENU hmenu)
 					for (int j=0;j<GroupInfo.CAUnitNum;j++) {
 						for (int k=0;k<GroupInfo.CAUnit[j].ComponentNum;k++) {
 							const BYTE ComponentTag=GroupInfo.CAUnit[j].ComponentTag[k];
-							for (int EsIndex=0;EsIndex=static_cast<int>(EsList.size());EsIndex++) {
+							for (int EsIndex=0;EsIndex<static_cast<int>(EsList.size());EsIndex++) {
 								if (EsList[EsIndex].ComponentTag==ComponentTag) {
 									TCHAR szText[80];
 									VideoCount++;
