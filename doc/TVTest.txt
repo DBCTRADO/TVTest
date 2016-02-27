@@ -21,12 +21,12 @@
 
 ◆ 試験環境
 
-  ・Windows XP SP2 以降 / Vista / 7 / 8
+  ・Windows XP SP2 以降 / Vista / 7 / 8 / 10
 
 
 ◆ ビルド
 
-  Visual Studio 2010/2013 のプロジェクトファイルが付属しています。
+  Visual Studio 2010/2013/2015 のプロジェクトファイルが付属しています。
   C++11 の機能を利用しているため、2010 より前の Visual Studio ではビルドできませ
   ん。Express Edition でもビルドできると思いますが、確認はしていません。
   TVTest のビルドには以下の SDK/ライブラリが必要になります。
@@ -50,13 +50,16 @@
   ・TVTest_Image.sln  TVTest_Image.dll のソリューション
   ・TVTest_All.sln    TVTest.exe と TVTest_Image.dll 両方のソリューション
 
-  ファイル名に VS2013 の付いたものは Visual Studio 2013 用、付いていないものは
-  Visual Studio 2010 用です。
+  ファイル名に VS2013 の付いたものは Visual Studio 2013/2015 用、付いていないも
+  のは Visual Studio 2010 用です。
 
   ソリューション構成の名称に _XP が付いたものは Windows XP 対応版、_MD が付いた
   ものはランタイムライブラリ動的リンク版です。
   _XP の付いていないソリューション構成では、Windows XP では動作しない実行ファイ
   ルが作成されます。
+
+  プラグインは sdk\Samples にある Samples.sln か Samples.VS2013.sln を使ってビル
+  ドできます。
 
   なお、デコーダによっては、(恐らくリバースエンジニアリング対策で)デバッグ実行時
   に接続できなかったり不正終了させられたりします。
@@ -75,15 +78,19 @@
   ・TVTest.chm          ヘルプファイル
   ・TVTest_Image.dll    画像保存用 DLL
   ・TVTest_Logo.bmp     ロゴ画像
-  ・Preset_BS.ch2       BS 用チャンネルプリセット
-  ・Preset_CS.ch2       CS 用チャンネルプリセット
   ・DRCSMap.ini         DRCS 設定ファイル
+                        (DRCSMap.sample.ini を参考に、必要であれば配置する)
   ・Plugins\*.tvtp      プラグインフォルダ
                         (プラグインファイル *.tvtp を配置する)
   ・Themes\*.httheme    テーマ設定フォルダ
                         (テーマファイル *.httheme を配置する)
 
   (最低限 TVTest.exe と TVTest_Image.dll があれば動作はします)
+
+  本体とプラグインをビルドした後、Git Bash で package.sh を実行すれば、必要なファ
+  イルを集めたアーカイブを作成することができます。
+  package.sh の実行には、7-Zip (http://www.7-zip.org/) がインストールされている
+  必要があります。
 
   TVTest.exe を実行すると、本体のあるフォルダに以下のファイルが作成されます。
 
@@ -107,11 +114,13 @@
    となっています)
   以下のデコーダで試験が行えることが確認されています。
 
+    ・TVTest DTV Video Decoder
     ・Microsoft MPEG-2 Video Decoder / Microsoft DTV-DVD Video Decoder
     ・MPV Decoder Filter / MPC - MPEG-2 Video Decoder / Mpeg2Dec Filter
-    ・ATI MPEG Video Decoder
+    ・ATI MPEG Video Decoder / AMD Video Decoder
     ・LAV Video Decoder
     ・ffdshow Video Decoder
+    ・DScaler Mpeg2 Video Decoder
 
   TVTest で実際に視聴試験を行うには、BonDriver が必要です。
   使用するチューナーに対応した BonDriver を TVTest.exe と同じフォルダに入れます。
@@ -213,12 +222,7 @@
   ・音声だけ出て映像が出ない
     映像の再生には MPEG-2 のデコーダ・フィルタが必要です。
     また、デコーダによっては動作しないものもありますので注意してください。
-    以下のデコーダで動作が確認されています。
-      ・MPV Decoder Filter / MPC - MPEG-2 Video Decoder / Mpeg2Dec Filter
-      ・ATI MPEG Video Decoder
-      ・Microsoft MPEG-2 Video Decoder / Microsoft DTV-DVD Video Decoder
-      ・LAV Video Decoder
-      ・ffdshow Video Decoder
+    動作確認されているデコーダは、「◆ 試験準備」の節を参照してください。
     デコーダが入っているのに映像が出ない場合は、レンダラを変えてみてください。
     デコーダとレンダラは環境依存性が強く、組み合わせの相性もあるので色々と試して
     みてください。
@@ -254,7 +258,7 @@
 
   ・音量を最大にしても音が小さい
     右クリックメニューから [音量] -> [音量増幅] を選択してください。
-    Viata/7 の場合は音量ミキサで TVTest の音量を上げてください。
+    Vista 以降の場合は音量ミキサで TVTest の音量を上げてください。
 
   ・かくつく・音ずれする
     映像がかくつく場合、以下を試してみてください。
@@ -388,7 +392,7 @@
     受けません。
     ネットワーク系の BonDriver や Spinel を使用している場合は誤差が大きくなる可
     能性があります。
-    Vista では時刻の変更に管理者権限が必要です。
+    Vista 以降では時刻の変更に管理者権限が必要です。
     (※この機能は微妙なので削除するかも知れません)
 
 
