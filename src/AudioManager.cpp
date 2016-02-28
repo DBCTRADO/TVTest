@@ -16,8 +16,6 @@ CAudioManager::CAudioManager()
 	, m_CurServiceID(0)
 	, m_CurEventID(CTsAnalyzer::EVENTID_INVALID)
 {
-	m_SelectedAudio.ComponentTag=COMPONENT_TAG_INVALID;
-	m_SelectedAudio.DualMono=DUALMONO_INVALID;
 }
 
 
@@ -55,29 +53,16 @@ bool CAudioManager::GetAudioList(AudioList *pList) const
 }
 
 
-int CAudioManager::FindAudioInfoByComponentTag(BYTE ComponentTag) const
+int CAudioManager::FindAudioInfoByID(IDType ID) const
 {
 	CBlockLock Lock(&m_Lock);
 
 	for (auto it=m_AudioList.begin();it!=m_AudioList.end();++it) {
-		if (it->ComponentTag==ComponentTag)
+		if (it->ID==ID)
 			return (int)std::distance(m_AudioList.begin(),it);
 	}
 
 	return -1;
-}
-
-
-bool CAudioManager::GetAudioComponentList(AudioComponentList *pList) const
-{
-	if (pList==nullptr)
-		return false;
-
-	CBlockLock Lock(&m_Lock);
-
-	*pList=m_AudioComponentList;
-
-	return true;
 }
 
 
@@ -103,7 +88,7 @@ int CAudioManager::GetDefaultAudio(AudioSelectInfo *pSelectInfo) const
 								|| itAudio!=m_AudioList.begin()
 								|| itAudio->DualMono==CAudioManager::DUALMONO_SUB) {
 							if (pSelectInfo!=nullptr) {
-								pSelectInfo->ComponentTag=itAudio->ComponentTag;
+								pSelectInfo->ID=itAudio->ID;
 								pSelectInfo->DualMono=itAudio->DualMono;
 							}
 							return (int)std::distance(m_AudioList.begin(),itAudio);
@@ -117,7 +102,7 @@ int CAudioManager::GetDefaultAudio(AudioSelectInfo *pSelectInfo) const
 	if (pSelectInfo!=nullptr) {
 		const AudioInfo &Info=m_AudioList.front();
 
-		pSelectInfo->ComponentTag=Info.ComponentTag;
+		pSelectInfo->ID=Info.ID;
 		if (Info.IsDualMono()) {
 			if (m_SelectedAudio.DualMono!=DUALMONO_INVALID)
 				pSelectInfo->DualMono=m_SelectedAudio.DualMono;
@@ -132,30 +117,31 @@ int CAudioManager::GetDefaultAudio(AudioSelectInfo *pSelectInfo) const
 }
 
 
-bool CAudioManager::GetAudioSelectInfoByComponentTag(
-	BYTE ComponentTag,AudioSelectInfo *pSelectInfo) const
+bool CAudioManager::GetAudioSelectInfoByID(
+	IDType ID,AudioSelectInfo *pSelectInfo) const
 {
 	if (pSelectInfo==nullptr)
 		return false;
 
 	CBlockLock Lock(&m_Lock);
 
-	for (auto it=m_AudioList.begin();it!=m_AudioList.end();++it) {
-		if (it->ComponentTag==ComponentTag) {
-			pSelectInfo->ComponentTag=ComponentTag;
-			if (it->IsDualMono()) {
-				if (m_SelectedAudio.DualMono!=DUALMONO_INVALID)
-					pSelectInfo->DualMono=m_SelectedAudio.DualMono;
-				else
-					pSelectInfo->DualMono=DUALMONO_MAIN;
-			} else {
-				pSelectInfo->DualMono=DUALMONO_INVALID;
-			}
-			return true;
-		}
+	const int Index=FindAudioInfoByID(ID);
+	if (Index<0)
+		return false;
+
+	const AudioInfo &Info=m_AudioList[Index];
+
+	pSelectInfo->ID=ID;
+	if (Info.IsDualMono()) {
+		if (m_SelectedAudio.DualMono!=DUALMONO_INVALID)
+			pSelectInfo->DualMono=m_SelectedAudio.DualMono;
+		else
+			pSelectInfo->DualMono=DUALMONO_MAIN;
+	} else {
+		pSelectInfo->DualMono=DUALMONO_INVALID;
 	}
 
-	return false;
+	return true;
 }
 
 
@@ -166,8 +152,7 @@ void CAudioManager::SetSelectedAudio(const AudioSelectInfo *pSelectInfo)
 	if (pSelectInfo!=nullptr) {
 		m_SelectedAudio=*pSelectInfo;
 	} else {
-		m_SelectedAudio.ComponentTag=COMPONENT_TAG_INVALID;
-		m_SelectedAudio.DualMono=DUALMONO_INVALID;
+		m_SelectedAudio.Reset();
 	}
 }
 
@@ -178,7 +163,7 @@ bool CAudioManager::GetSelectedAudio(AudioSelectInfo *pSelectInfo) const
 
 	if (pSelectInfo!=nullptr)
 		*pSelectInfo=m_SelectedAudio;
-	return m_SelectedAudio.ComponentTag!=COMPONENT_TAG_INVALID;
+	return m_SelectedAudio.ID!=ID_INVALID;
 }
 
 
@@ -186,11 +171,11 @@ int CAudioManager::FindSelectedAudio() const
 {
 	CBlockLock Lock(&m_Lock);
 
-	if (m_SelectedAudio.ComponentTag==COMPONENT_TAG_INVALID)
+	if (m_SelectedAudio.ID==ID_INVALID)
 		return -1;
 
 	for (auto it=m_AudioList.begin();it!=m_AudioList.end();++it) {
-		if (it->ComponentTag==m_SelectedAudio.ComponentTag
+		if (it->ID==m_SelectedAudio.ID
 				&& it->DualMono==m_SelectedAudio.DualMono)
 			return (int)std::distance(m_AudioList.begin(),it);
 	}
@@ -199,19 +184,19 @@ int CAudioManager::FindSelectedAudio() const
 }
 
 
-void CAudioManager::SetSelectedComponentTag(BYTE ComponentTag)
+void CAudioManager::SetSelectedID(IDType ID)
 {
 	CBlockLock Lock(&m_Lock);
 
-	m_SelectedAudio.ComponentTag=ComponentTag;
+	m_SelectedAudio.ID=ID;
 }
 
 
-BYTE CAudioManager::GetSelectedComponentTag() const
+CAudioManager::IDType CAudioManager::GetSelectedID() const
 {
 	CBlockLock Lock(&m_Lock);
 
-	return m_SelectedAudio.ComponentTag;
+	return m_SelectedAudio.ID;
 }
 
 
@@ -249,7 +234,7 @@ bool CAudioManager::OnServiceUpdated()
 
 	ComponentList.resize(StreamCount);
 	for (int i=0;i<StreamCount;i++)
-		ComponentList[i]=DtvEngine.m_TsAnalyzer.GetAudioComponentTag(ServiceIndex,i);
+		ComponentList[i]=MakeID(i,DtvEngine.m_TsAnalyzer.GetAudioComponentTag(ServiceIndex,i));
 
 	WORD TransportStreamID,ServiceID;
 	TransportStreamID=DtvEngine.m_TsAnalyzer.GetTransportStreamID();
@@ -268,7 +253,7 @@ bool CAudioManager::OnServiceUpdated()
 
 	if (fServiceChanged) {
 		if (m_CurTransportStreamID!=0 && m_CurServiceID!=0
-				&& m_SelectedAudio.ComponentTag!=COMPONENT_TAG_INVALID) {
+				&& m_SelectedAudio.ID!=ID_INVALID) {
 			ServiceAudioSelectInfo Info;
 			Info.SelectedAudio=m_SelectedAudio;
 			Info.EventID=m_CurEventID;
@@ -292,11 +277,11 @@ bool CAudioManager::OnServiceUpdated()
 			}
 		}
 	} else {
-		// 選択されていた component tag のストリームが無くなったらリセット
-		if (m_SelectedAudio.ComponentTag!=COMPONENT_TAG_INVALID) {
+		// 選択されていたIDのストリームが無くなったらリセット
+		if (m_SelectedAudio.ID!=ID_INVALID) {
 			if (std::find(m_AudioComponentList.begin(),
 						  m_AudioComponentList.end(),
-						  m_SelectedAudio.ComponentTag)==m_AudioComponentList.end())
+						  m_SelectedAudio.ID)==m_AudioComponentList.end())
 				SetSelectedAudio(nullptr);
 		}
 	}
@@ -402,26 +387,33 @@ void CAudioManager::MakeAudioList()
 	m_AudioList.clear();
 
 	for (size_t i=0;i<m_AudioComponentList.size();i++) {
-		const BYTE ComponentTag=m_AudioComponentList[i];
+		const IDType ID=m_AudioComponentList[i];
+		const BYTE ComponentTag=IDToComponentTag(ID);
 		bool fFound=false;
 
-		for (size_t j=0;j<m_EventAudioList.size();j++) {
-			const AudioInfo &Info=m_EventAudioList[j];
+		if (ComponentTag!=COMPONENT_TAG_INVALID) {
+			for (size_t j=0;j<m_EventAudioList.size();j++) {
+				const AudioInfo &Info=m_EventAudioList[j];
 
-			if (Info.ComponentTag==ComponentTag) {
-				m_AudioList.push_back(Info);
-				if (Info.IsDualMono()) {
-					m_AudioList.push_back(m_EventAudioList[j+1]);
-					m_AudioList.push_back(m_EventAudioList[j+2]);
+				if (Info.ComponentTag==ComponentTag) {
+					m_AudioList.push_back(Info);
+					m_AudioList.back().ID=ID;
+					if (Info.IsDualMono()) {
+						m_AudioList.push_back(m_EventAudioList[j+1]);
+						m_AudioList.back().ID=ID;
+						m_AudioList.push_back(m_EventAudioList[j+2]);
+						m_AudioList.back().ID=ID;
+					}
+					fFound=true;
+					break;
 				}
-				fFound=true;
-				break;
 			}
 		}
 
 		if (!fFound) {
 			AudioInfo Info;
 
+			Info.ID=ID;
 			Info.ComponentTag=ComponentTag;
 			Info.ComponentType=COMPONENT_TYPE_INVALID;
 			Info.DualMono=DUALMONO_INVALID;

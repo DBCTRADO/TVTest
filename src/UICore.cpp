@@ -283,12 +283,14 @@ int CUICore::GetAudioStream() const
 
 bool CUICore::SetAudioStream(int Stream)
 {
-	const BYTE ComponentTag=m_App.CoreEngine.m_DtvEngine.GetAudioComponentTag(Stream);
-	if (ComponentTag==CTsAnalyzer::COMPONENTTAG_INVALID)
+	if (Stream<0 || Stream>=GetNumAudioStreams())
 		return false;
 
 	TVTest::CAudioManager::AudioSelectInfo SelInfo;
-	if (!m_App.AudioManager.GetAudioSelectInfoByComponentTag(ComponentTag,&SelInfo))
+	if (!m_App.AudioManager.GetAudioSelectInfoByID(
+			TVTest::CAudioManager::MakeID(
+				Stream,m_App.CoreEngine.m_DtvEngine.GetAudioComponentTag(Stream)),
+			&SelInfo))
 		return false;
 
 	return SelectAudio(SelInfo);
@@ -304,7 +306,7 @@ bool CUICore::SelectAudio(int Index)
 
 	TVTest::CAudioManager::AudioSelectInfo SelInfo;
 
-	SelInfo.ComponentTag=Info.ComponentTag;
+	SelInfo.ID=Info.ID;
 	SelInfo.DualMono=Info.DualMono;
 
 	return SelectAudio(SelInfo);
@@ -327,9 +329,15 @@ bool CUICore::AutoSelectAudio()
 
 bool CUICore::SelectAudio(const TVTest::CAudioManager::AudioSelectInfo &Info,bool fUpdate)
 {
-	const int AudioIndex=
-		m_App.CoreEngine.m_DtvEngine.m_TsAnalyzer.GetAudioIndexByComponentTag(
-			m_App.CoreEngine.m_DtvEngine.GetServiceIndex(),Info.ComponentTag);
+	int AudioIndex;
+	const BYTE ComponentTag=TVTest::CAudioManager::IDToComponentTag(Info.ID);
+
+	if (ComponentTag!=TVTest::CAudioManager::COMPONENT_TAG_INVALID) {
+		AudioIndex=m_App.CoreEngine.m_DtvEngine.m_TsAnalyzer.GetAudioIndexByComponentTag(
+			m_App.CoreEngine.m_DtvEngine.GetServiceIndex(),ComponentTag);
+	} else {
+		AudioIndex=TVTest::CAudioManager::IDToStreamIndex(Info.ID);
+	}
 
 	if (AudioIndex>=0) {
 		CAudioDecFilter::DualMonoMode DualMonoMode=CAudioDecFilter::DUALMONO_INVALID;
@@ -353,7 +361,7 @@ bool CUICore::SelectAudio(const TVTest::CAudioManager::AudioSelectInfo &Info,boo
 	}
 
 	if (fUpdate)
-		m_App.AudioManager.SetSelectedComponentTag(Info.ComponentTag);
+		m_App.AudioManager.SetSelectedID(Info.ID);
 
 	return true;
 }

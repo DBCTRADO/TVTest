@@ -3822,7 +3822,6 @@ bool CMainWindow::OnInitMenuPopup(HMENU hmenu)
 			};
 
 			const WORD ServiceIndex=DtvEngine.GetServiceIndex();
-			const BYTE CurComponentTag=DtvEngine.GetAudioComponentTag();
 			CTsAnalyzer::EventComponentGroupList GroupList;
 			int Sel=-1;
 
@@ -3865,7 +3864,7 @@ bool CMainWindow::OnInitMenuPopup(HMENU hmenu)
 									StdUtil::snprintf(szText+Length,lengthof(szText)-Length,
 													  TEXT(": %s"),szAudio);
 									Menu.Append(CM_AUDIO_FIRST+AudioIndex,szText);
-									AudioInfo.ComponentTag=CAudioManager::COMPONENT_TAG_INVALID;
+									AudioInfo.ID=CAudioManager::ID_INVALID;
 
 									if (AudioInfo.IsDualMono()) {
 										if (CurDualMonoMode==CAudioDecFilter::DUALMONO_MAIN) {
@@ -3892,12 +3891,16 @@ bool CMainWindow::OnInitMenuPopup(HMENU hmenu)
 				}
 			}
 
+			const CAudioManager::IDType CurAudioID=
+				CAudioManager::MakeID(
+					DtvEngine.GetAudioStream(),
+					DtvEngine.GetAudioComponentTag());
 			int StreamNumber=-1;
 
 			for (int i=0;i<static_cast<int>(AudioList.size()) && i<=CM_AUDIO_LAST-CM_AUDIO_FIRST;i++) {
 				const CAudioManager::AudioInfo &AudioInfo=AudioList[i];
 
-				if (AudioInfo.ComponentTag==CAudioManager::COMPONENT_TAG_INVALID)
+				if (AudioInfo.ID==CAudioManager::ID_INVALID)
 					continue;
 
 				if (!AudioInfo.IsDualMono() || AudioInfo.DualMono==CAudioManager::DUALMONO_MAIN)
@@ -3911,7 +3914,7 @@ bool CMainWindow::OnInitMenuPopup(HMENU hmenu)
 				GetAudioInfoText(AudioInfo,StreamNumber,szText+Length,lengthof(szText)-Length);
 				Menu.Append(CM_AUDIO_FIRST+i,szText);
 
-				if (AudioInfo.ComponentTag==CurComponentTag) {
+				if (AudioInfo.ID==CurAudioID) {
 					if (AudioInfo.IsDualMono()) {
 						if (CurDualMonoMode==CAudioDecFilter::DUALMONO_MAIN) {
 							if (AudioInfo.DualMono==CAudioManager::DUALMONO_MAIN)

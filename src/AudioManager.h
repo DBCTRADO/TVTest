@@ -12,6 +12,9 @@ namespace TVTest
 	class CAudioManager
 	{
 	public:
+		typedef WORD IDType;
+
+		static const IDType ID_INVALID=0xFFFF;
 		static const BYTE COMPONENT_TAG_INVALID=0xFF;
 		static const BYTE COMPONENT_TYPE_INVALID=0xFF;
 
@@ -24,6 +27,7 @@ namespace TVTest
 
 		struct AudioInfo
 		{
+			IDType ID;
 			BYTE ComponentTag;
 			BYTE ComponentType;
 			DualMonoMode DualMono;
@@ -34,7 +38,8 @@ namespace TVTest
 
 			bool operator==(const AudioInfo &Op) const
 			{
-				return ComponentTag==Op.ComponentTag
+				return ID==Op.ID
+					&& ComponentTag==Op.ComponentTag
 					&& ComponentType==Op.ComponentType
 					&& DualMono==Op.DualMono
 					&& fMultiLingual==Op.fMultiLingual
@@ -50,25 +55,41 @@ namespace TVTest
 
 		struct AudioSelectInfo
 		{
-			BYTE ComponentTag;
+			IDType ID;
 			DualMonoMode DualMono;
+
+			AudioSelectInfo()
+				: ID(ID_INVALID)
+				, DualMono(DUALMONO_INVALID)
+			{
+			}
+
+			void Reset() { *this=AudioSelectInfo(); }
 		};
 
-		typedef std::vector<BYTE> AudioComponentList;
+		typedef std::vector<IDType> AudioComponentList;
+
+		static inline IDType MakeID(int Index,BYTE ComponentTag)
+		{
+			return ComponentTag!=COMPONENT_TAG_INVALID ?
+				ComponentTag :
+				(IDType)(((BYTE)(INT8)Index<<8) | COMPONENT_TAG_INVALID);
+		}
+		static inline BYTE IDToComponentTag(IDType ID) { return (BYTE)(ID&0xFF); }
+		static inline int IDToStreamIndex(IDType ID) { return (INT8)(BYTE)(ID>>8); }
 
 		CAudioManager();
 		int GetAudioCount() const;
 		bool GetAudioInfo(int Index,AudioInfo *pInfo) const;
 		bool GetAudioList(AudioList *pList) const;
-		int FindAudioInfoByComponentTag(BYTE ComponentTag) const;
-		bool GetAudioComponentList(AudioComponentList *pList) const;
+		int FindAudioInfoByID(IDType ID) const;
 		int GetDefaultAudio(AudioSelectInfo *pSelectInfo) const;
-		bool GetAudioSelectInfoByComponentTag(BYTE ComponentTag,AudioSelectInfo *pSelectInfo) const;
+		bool GetAudioSelectInfoByID(IDType ID,AudioSelectInfo *pSelectInfo) const;
 		void SetSelectedAudio(const AudioSelectInfo *pSelectInfo);
 		bool GetSelectedAudio(AudioSelectInfo *pSelectInfo) const;
 		int FindSelectedAudio() const;
-		void SetSelectedComponentTag(BYTE ComponentTag);
-		BYTE GetSelectedComponentTag() const;
+		void SetSelectedID(IDType ID);
+		IDType GetSelectedID() const;
 		bool SetSelectedDualMonoMode(DualMonoMode Mode);
 		DualMonoMode GetSelectedDualMonoMode() const;
 		bool OnServiceUpdated();
