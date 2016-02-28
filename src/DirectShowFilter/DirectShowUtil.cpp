@@ -1,4 +1,5 @@
 #include "stdafx.h"
+#include <utility>
 #include <initguid.h>
 #include "DirectShowUtil.h"
 #include "../HelperClass/StdUtil.h"
@@ -151,26 +152,29 @@ bool CDirectShowFilterFinder::FindFilter(const GUID *pidInType,const GUID *pidIn
 }
 
 // 優先するフィルタをリスト先端に持ってくる
-bool CDirectShowFilterFinder::PriorityFilterGoToHead(const CLSID idPriorityClass)
+bool CDirectShowFilterFinder::SetPreferredFilter(const CLSID &idFilter)
 {
 	std::vector<CFilterInfo> TmpList;
-	size_t i;
 
-	for (i=0;i<m_FilterList.size();i++) {
-		if (m_FilterList[i].m_clsid == idPriorityClass) {
-			// 優先するものを発見
-			TmpList.push_back(m_FilterList[i]);
+	TmpList.reserve(m_FilterList.size());
+
+	for (auto it = m_FilterList.begin(); it != m_FilterList.end(); ++it) {
+		if (it->m_clsid == idFilter) {
+			TmpList.push_back(*it);
 		}
 	}
-	if (!TmpList.empty()) {
-		for (i=0;i<m_FilterList.size();i++) {
-			if(m_FilterList[i].m_clsid != idPriorityClass) {
-				// 優先するもの以外
-				TmpList.push_back(m_FilterList[i]);
-			}
+
+	if (TmpList.empty())
+		return false;
+
+	for (auto it = m_FilterList.begin(); it != m_FilterList.end(); ++it) {
+		if (it->m_clsid != idFilter) {
+			TmpList.push_back(*it);
 		}
 	}
-	m_FilterList=TmpList;
+
+	m_FilterList = std::move(TmpList);
+
 	return true;
 }
 

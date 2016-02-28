@@ -141,6 +141,14 @@ LPCWSTR CInternalDecoderManager::GetDecoderName(const GUID &MediaSubType)
 }
 
 
+CLSID CInternalDecoderManager::GetDecoderCLSID(const GUID &MediaSubType)
+{
+	if (MediaSubType == MEDIASUBTYPE_MPEG2_VIDEO)
+		return __uuidof(ITVTestVideoDecoder);
+	return GUID_NULL;
+}
+
+
 HRESULT CInternalDecoderManager::LoadDecoderModule()
 {
 	if (!m_hLib) {

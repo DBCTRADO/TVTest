@@ -48,6 +48,7 @@ public:
 	static bool IsMediaSupported(const GUID &MediaSubType);
 	static bool IsDecoderAvailable(const GUID &MediaSubType);
 	static LPCWSTR GetDecoderName(const GUID &MediaSubType);
+	static CLSID GetDecoderCLSID(const GUID &MediaSubType);
 
 private:
 	VideoDecoderSettings m_VideoDecoderSettings;

@@ -2048,6 +2048,13 @@ void CMediaViewer::ConnectVideoDecoder(
 			throw CBonException(szText1, szText2);
 		}
 
+		if (bDefault) {
+			CLSID id = m_InternalDecoderManager.GetDecoderCLSID(MediaSubType);
+
+			if (id != GUID_NULL)
+				FilterFinder.SetPreferredFilter(id);
+		}
+
 		for (int i = 0; i < FilterFinder.GetFilterCount(); i++) {
 			CLSID clsidFilter;
 

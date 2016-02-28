@@ -80,7 +80,7 @@ public:
 	bool FindFilter(const GUID *pidInType,const GUID *pidInSubType,
 					const GUID *pidOutType=NULL,const GUID *pidOutubType=NULL,
 					DWORD Merit=MERIT_DO_NOT_USE+1);
-	bool PriorityFilterGoToHead(const CLSID idPriorityClass);
+	bool SetPreferredFilter(const CLSID &idFilter);
 	bool IgnoreFilterGoToTail(const CLSID idIgnoreClass,bool bRemoveIt=false);
 	int GetFilterCount() const;
 	bool GetFilterInfo(const int iIndex,CLSID *pidClass=NULL,LPWSTR pwszFriendlyName=NULL,int iBufLen=0) const;
