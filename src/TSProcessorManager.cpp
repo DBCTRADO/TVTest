@@ -51,13 +51,41 @@ bool CTSProcessorManager::ReadSettings(CSettings &Settings)
 				StdUtil::snprintf(szKey,lengthof(szKey),TEXT("Processor%d.DefaultFilter"),i);
 				Settings.Read(szKey,&pTSProcessorSettings->m_DefaultFilter.Filter);
 
+#if 1
+				// ‹ŒŽd—l‚ÌÝ’è‚ð“Ç‚Ýž‚Ý
 				for (int j=0;;j++) {
 					TunerFilterInfo TunerDecInfo;
+					int Value;
 
-					StdUtil::snprintf(szKey,lengthof(szKey),TEXT("Processor%d.TunerMap%d.Tuner"),i,j);
-					if (!Settings.Read(szKey,&TunerDecInfo.Tuner))
+					StdUtil::snprintf(szKey,lengthof(szKey),TEXT("Processor%d.NetworkMap%d.NetworkID"),i,j);
+					if (!Settings.Read(szKey,&Value))
 						break;
+					TunerDecInfo.NetworkID=(WORD)Value;
+					StdUtil::snprintf(szKey,lengthof(szKey),TEXT("Processor%d.NetworkMap%d.TSID"),i,j);
+					if (Settings.Read(szKey,&Value))
+						TunerDecInfo.TransportStreamID=(WORD)Value;
+					StdUtil::snprintf(szKey,lengthof(szKey),TEXT("Processor%d.NetworkMap%d.Enable"),i,j);
+					Settings.Read(szKey,&TunerDecInfo.fEnable);
+					StdUtil::snprintf(szKey,lengthof(szKey),TEXT("Processor%d.NetworkMap%d.EnableProcessing"),i,j);
+					Settings.Read(szKey,&TunerDecInfo.fEnableProcessing);
+					StdUtil::snprintf(szKey,lengthof(szKey),TEXT("Processor%d.NetworkMap%d.Module"),i,j);
+					Settings.Read(szKey,&TunerDecInfo.Module);
+					StdUtil::snprintf(szKey,lengthof(szKey),TEXT("Processor%d.NetworkMap%d.Device"),i,j);
+					Settings.Read(szKey,&TunerDecInfo.Device);
+					StdUtil::snprintf(szKey,lengthof(szKey),TEXT("Processor%d.NetworkMap%d.Filter"),i,j);
+					Settings.Read(szKey,&TunerDecInfo.Filter);
+
+					pTSProcessorSettings->m_TunerFilterMap.push_back(TunerDecInfo);
+				}
+#endif
+
+				for (int j=0;;j++) {
+					TunerFilterInfo TunerDecInfo;
+					unsigned int Value;
+
 					StdUtil::snprintf(szKey,lengthof(szKey),TEXT("Processor%d.TunerMap%d.Enable"),i,j);
+					if (!Settings.IsValueExists(szKey))
+						break;
 					Settings.Read(szKey,&TunerDecInfo.fEnable);
 					StdUtil::snprintf(szKey,lengthof(szKey),TEXT("Processor%d.TunerMap%d.EnableProcessing"),i,j);
 					Settings.Read(szKey,&TunerDecInfo.fEnableProcessing);
@@ -67,33 +95,19 @@ bool CTSProcessorManager::ReadSettings(CSettings &Settings)
 					Settings.Read(szKey,&TunerDecInfo.Device);
 					StdUtil::snprintf(szKey,lengthof(szKey),TEXT("Processor%d.TunerMap%d.Filter"),i,j);
 					Settings.Read(szKey,&TunerDecInfo.Filter);
+					StdUtil::snprintf(szKey,lengthof(szKey),TEXT("Processor%d.TunerMap%d.Tuner"),i,j);
+					Settings.Read(szKey,&TunerDecInfo.Tuner);
+					StdUtil::snprintf(szKey,lengthof(szKey),TEXT("Processor%d.TunerMap%d.NetworkID"),i,j);
+					if (Settings.Read(szKey,&Value))
+						TunerDecInfo.NetworkID=(WORD)Value;
+					StdUtil::snprintf(szKey,lengthof(szKey),TEXT("Processor%d.TunerMap%d.TSID"),i,j);
+					if (Settings.Read(szKey,&Value))
+						TunerDecInfo.TransportStreamID=(WORD)Value;
+					StdUtil::snprintf(szKey,lengthof(szKey),TEXT("Processor%d.TunerMap%d.ServiceID"),i,j);
+					if (Settings.Read(szKey,&Value))
+						TunerDecInfo.ServiceID=(WORD)Value;
 
 					pTSProcessorSettings->m_TunerFilterMap.push_back(TunerDecInfo);
-				}
-
-				for (int j=0;;j++) {
-					NetworkFilterInfo NetworkDecInfo;
-					int Value;
-
-					StdUtil::snprintf(szKey,lengthof(szKey),TEXT("Processor%d.NetworkMap%d.NetworkID"),i,j);
-					if (!Settings.Read(szKey,&Value))
-						break;
-					NetworkDecInfo.NetworkID=(WORD)Value;
-					StdUtil::snprintf(szKey,lengthof(szKey),TEXT("Processor%d.NetworkMap%d.TSID"),i,j);
-					if (Settings.Read(szKey,&Value))
-						NetworkDecInfo.TransportStreamID=(WORD)Value;
-					StdUtil::snprintf(szKey,lengthof(szKey),TEXT("Processor%d.NetworkMap%d.Enable"),i,j);
-					Settings.Read(szKey,&NetworkDecInfo.fEnable);
-					StdUtil::snprintf(szKey,lengthof(szKey),TEXT("Processor%d.NetworkMap%d.EnableProcessing"),i,j);
-					Settings.Read(szKey,&NetworkDecInfo.fEnableProcessing);
-					StdUtil::snprintf(szKey,lengthof(szKey),TEXT("Processor%d.NetworkMap%d.Module"),i,j);
-					Settings.Read(szKey,&NetworkDecInfo.Module);
-					StdUtil::snprintf(szKey,lengthof(szKey),TEXT("Processor%d.NetworkMap%d.Device"),i,j);
-					Settings.Read(szKey,&NetworkDecInfo.Device);
-					StdUtil::snprintf(szKey,lengthof(szKey),TEXT("Processor%d.NetworkMap%d.Filter"),i,j);
-					Settings.Read(szKey,&NetworkDecInfo.Filter);
-
-					pTSProcessorSettings->m_NetworkFilterMap.push_back(NetworkDecInfo);
 				}
 
 				for (int j=0;;j++) {
@@ -147,8 +161,6 @@ bool CTSProcessorManager::WriteSettings(CSettings &Settings) const
 
 			StdUtil::snprintf(szKey,lengthof(szKey),TEXT("Processor%d.TunerMap%d.Enable"),i,j);
 			Settings.Write(szKey,TunerDecInfo.fEnable);
-			StdUtil::snprintf(szKey,lengthof(szKey),TEXT("Processor%d.TunerMap%d.Tuner"),i,j);
-			Settings.Write(szKey,TunerDecInfo.Tuner);
 			StdUtil::snprintf(szKey,lengthof(szKey),TEXT("Processor%d.TunerMap%d.EnableProcessing"),i,j);
 			Settings.Write(szKey,TunerDecInfo.fEnableProcessing);
 			StdUtil::snprintf(szKey,lengthof(szKey),TEXT("Processor%d.TunerMap%d.Module"),i,j);
@@ -157,25 +169,20 @@ bool CTSProcessorManager::WriteSettings(CSettings &Settings) const
 			Settings.Write(szKey,TunerDecInfo.Device);
 			StdUtil::snprintf(szKey,lengthof(szKey),TEXT("Processor%d.TunerMap%d.Filter"),i,j);
 			Settings.Write(szKey,TunerDecInfo.Filter);
-		}
-
-		for (int j=0;j<(int)pTSProcessorSettings->m_NetworkFilterMap.size();j++) {
-			const NetworkFilterInfo NetworkDecInfo=pTSProcessorSettings->m_NetworkFilterMap[j];
-
-			StdUtil::snprintf(szKey,lengthof(szKey),TEXT("Processor%d.NetworkMap%d.Enable"),i,j);
-			Settings.Write(szKey,NetworkDecInfo.fEnable);
-			StdUtil::snprintf(szKey,lengthof(szKey),TEXT("Processor%d.NetworkMap%d.NetworkID"),i,j);
-			Settings.Write(szKey,(unsigned int)NetworkDecInfo.NetworkID);
-			StdUtil::snprintf(szKey,lengthof(szKey),TEXT("Processor%d.NetworkMap%d.TSID"),i,j);
-			Settings.Write(szKey,(unsigned int)NetworkDecInfo.TransportStreamID);
-			StdUtil::snprintf(szKey,lengthof(szKey),TEXT("Processor%d.NetworkMap%d.EnableProcessing"),i,j);
-			Settings.Write(szKey,NetworkDecInfo.fEnableProcessing);
-			StdUtil::snprintf(szKey,lengthof(szKey),TEXT("Processor%d.NetworkMap%d.Module"),i,j);
-			Settings.Write(szKey,NetworkDecInfo.Module);
-			StdUtil::snprintf(szKey,lengthof(szKey),TEXT("Processor%d.NetworkMap%d.Device"),i,j);
-			Settings.Write(szKey,NetworkDecInfo.Device);
-			StdUtil::snprintf(szKey,lengthof(szKey),TEXT("Processor%d.NetworkMap%d.Filter"),i,j);
-			Settings.Write(szKey,NetworkDecInfo.Filter);
+			StdUtil::snprintf(szKey,lengthof(szKey),TEXT("Processor%d.TunerMap%d.Tuner"),i,j);
+			Settings.Write(szKey,TunerDecInfo.Tuner);
+			if (TunerDecInfo.IsNetworkIDEnabled()) {
+				StdUtil::snprintf(szKey,lengthof(szKey),TEXT("Processor%d.TunerMap%d.NetworkID"),i,j);
+				Settings.Write(szKey,(unsigned int)TunerDecInfo.NetworkID);
+			}
+			if (TunerDecInfo.IsTransportStreamIDEnabled()) {
+				StdUtil::snprintf(szKey,lengthof(szKey),TEXT("Processor%d.TunerMap%d.TSID"),i,j);
+				Settings.Write(szKey,(unsigned int)TunerDecInfo.TransportStreamID);
+			}
+			if (TunerDecInfo.IsServiceIDEnabled()) {
+				StdUtil::snprintf(szKey,lengthof(szKey),TEXT("Processor%d.TunerMap%d.ServiceID"),i,j);
+				Settings.Write(szKey,(unsigned int)TunerDecInfo.ServiceID);
+			}
 		}
 
 		const CTSProcessorSettings::PropertyList &PropertyList=pTSProcessorSettings->m_PropertyList;
@@ -394,8 +401,7 @@ void CTSProcessorManager::OpenDefaultFilters(unsigned int FilterOpenFlags)
 
 		CTSProcessorSettings *pSettings=GetTSProcessorSettings(guid);
 		if (pSettings!=nullptr
-				&& !pSettings->IsTunerFilterMapEnabled()
-				&& !pSettings->IsNetworkFilterMapEnabled()) {
+				&& !pSettings->IsTunerFilterMapEnabled()) {
 			OpenFilter(pTSProcessor,pSettings,
 					   pSettings->m_DefaultFilter,
 					   FilterOpenFlags);
@@ -502,7 +508,7 @@ void CTSProcessorManager::OnTunerOpened(LPCTSTR pszTuner,unsigned int FilterOpen
 
 
 void CTSProcessorManager::OnNetworkChanged(
-	WORD NetworkID,WORD TransportStreamID,unsigned int FilterOpenFlags)
+	LPCTSTR pszTuner,WORD NetworkID,WORD TransportStreamID,WORD ServiceID,unsigned int FilterOpenFlags)
 {
 	CAppMain &App=GetAppClass();
 	CCoreEngine &CoreEngine=App.CoreEngine;
@@ -518,19 +524,19 @@ void CTSProcessorManager::OnNetworkChanged(
 			continue;
 
 		CTSProcessorSettings *pSettings=GetTSProcessorSettings(guid);
-		if (pSettings==nullptr || !pSettings->IsNetworkFilterMapEnabled())
+		if (pSettings==nullptr)
 			continue;
 
-		const NetworkFilterInfo *pNetworkDecInfo=
-			pSettings->GetNetworkFilterInfo(NetworkID,TransportStreamID);
+		const TunerFilterInfo *pTunerDecInfo=
+			pSettings->GetTunerFilterInfo(pszTuner,NetworkID,TransportStreamID,ServiceID);
 		const FilterInfo *pFilter;
 
-		if (pNetworkDecInfo!=nullptr && pNetworkDecInfo->fEnable) {
-			if (!pNetworkDecInfo->fEnableProcessing) {
+		if (pTunerDecInfo!=nullptr && pTunerDecInfo->fEnable) {
+			if (!pTunerDecInfo->fEnableProcessing) {
 				pTSProcessor->CloseFilter();
 				continue;
 			}
-			pFilter=pNetworkDecInfo;
+			pFilter=pTunerDecInfo;
 		} else {
 			pFilter=&pSettings->m_DefaultFilter;
 		}
@@ -665,44 +671,29 @@ CTSProcessorManager::CTSProcessorSettings::CTSProcessorSettings(const GUID &guid
 
 
 const CTSProcessorManager::TunerFilterInfo *
-	CTSProcessorManager::CTSProcessorSettings::GetTunerFilterInfo(LPCTSTR pszTuner) const
+	CTSProcessorManager::CTSProcessorSettings::GetTunerFilterInfo(
+		LPCTSTR pszTuner,WORD NetworkID,WORD TransportStreamID,WORD ServiceID) const
 {
 	if (IsStringEmpty(pszTuner))
 		return nullptr;
 
+	LPCTSTR pszName=::PathFindFileName(pszTuner);
+
 	for (auto it=m_TunerFilterMap.begin();it!=m_TunerFilterMap.end();++it) {
-		if (::PathMatchSpec(pszTuner,it->Tuner.c_str())) {
+		if ((it->Tuner.empty()
+				|| (::PathMatchSpec(pszName,it->Tuner.c_str())
+					|| (pszTuner!=pszName && ::PathMatchSpec(pszTuner,it->Tuner.c_str()))))
+				&& (!it->IsNetworkIDEnabled()
+					|| it->NetworkID==NetworkID)
+				&& (!it->IsTransportStreamIDEnabled()
+					|| it->TransportStreamID==TransportStreamID)
+				&& (!it->IsServiceIDEnabled()
+					|| it->ServiceID==ServiceID)) {
 			return &*it;
 		}
 	}
 
-	LPCTSTR pszName=::PathFindFileName(pszTuner);
-	if (pszName!=pszTuner) {
-		for (auto it=m_TunerFilterMap.begin();it!=m_TunerFilterMap.end();++it) {
-			if (::PathMatchSpec(pszName,it->Tuner.c_str())) {
-				return &*it;
-			}
-		}
-	}
-
 	return nullptr;
-}
-
-
-const CTSProcessorManager::NetworkFilterInfo *
-	CTSProcessorManager::CTSProcessorSettings::GetNetworkFilterInfo(WORD NetworkID,WORD TransportStreamID) const
-{
-	const NetworkFilterInfo *pInfo=nullptr;
-
-	for (auto it=m_NetworkFilterMap.begin();it!=m_NetworkFilterMap.end();++it) {
-		if ((it->NetworkID==NetworkID
-					|| (it->NetworkID==0xFFFF && (pInfo==nullptr || pInfo->NetworkID==0xFFFF)))
-				&& (it->TransportStreamID==TransportStreamID
-					|| (it->TransportStreamID==0xFFFF && (pInfo==nullptr || pInfo->TransportStreamID==0xFFFF))))
-			pInfo=&*it;
-	}
-
-	return pInfo;
 }
 
 
@@ -712,21 +703,11 @@ bool CTSProcessorManager::CTSProcessorSettings::IsTunerFilterMapEnabled() const
 		return false;
 
 	for (auto it=m_TunerFilterMap.begin();it!=m_TunerFilterMap.end();++it) {
-		if (it->fEnable)
-			return true;
-	}
-
-	return false;
-}
-
-
-bool CTSProcessorManager::CTSProcessorSettings::IsNetworkFilterMapEnabled() const
-{
-	if (m_NetworkFilterMap.empty())
-		return false;
-
-	for (auto it=m_NetworkFilterMap.begin();it!=m_NetworkFilterMap.end();++it) {
-		if (it->fEnable)
+		if (it->fEnable
+				&& (!it->Tuner.empty()
+					|| it->IsNetworkIDEnabled()
+					|| it->IsTransportStreamIDEnabled()
+					|| it->IsServiceIDEnabled()))
 			return true;
 	}
 

@@ -1291,18 +1291,25 @@ LRESULT CMainWindow::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 		m_App.Panel.InfoPanel.UpdateItem(CInformationPanel::ITEM_SERVICE);
 		if (m_App.Panel.Form.GetCurPageID()==PANEL_ID_INFORMATION)
 			m_App.Panel.InfoPanel.UpdateItem(CInformationPanel::ITEM_PROGRAMINFO);
+
+		if (!IsMessageInQueue(hwnd,WM_APP_SERVICECHANGED)) {
+			CAppCore::StreamIDInfo StreamID;
+
+			m_App.Core.GetCurrentStreamIDInfo(&StreamID);
+			m_App.TSProcessorManager.OnNetworkChanged(
+				m_App.CoreEngine.GetDriverFileName(),
+				StreamID.NetworkID,
+				StreamID.TransportStreamID,
+				StreamID.ServiceID,
+				CTSProcessorManager::FILTER_OPEN_NOTIFY_ERROR |
+				CTSProcessorManager::FILTER_OPEN_NO_UI);
+		}
 		return 0;
 
 	case WM_APP_SERVICEINFOUPDATED:
 		TRACE(TEXT("WM_APP_SERVICEINFOUPDATED\n"));
 		m_pCore->UpdateTitle();
 		m_App.StatusView.UpdateItem(STATUS_ITEM_CHANNEL);
-		if (!IsMessageInQueue(hwnd,WM_APP_SERVICEINFOUPDATED)) {
-			m_App.TSProcessorManager.OnNetworkChanged(
-				LOWORD(lParam),HIWORD(lParam),
-				CTSProcessorManager::FILTER_OPEN_NOTIFY_ERROR |
-				CTSProcessorManager::FILTER_OPEN_NO_UI);
-		}
 		return 0;
 
 	/*

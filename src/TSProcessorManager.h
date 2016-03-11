@@ -29,30 +29,28 @@ namespace TVTest
 		struct TunerFilterInfo : public FilterInfo
 		{
 			bool fEnable;
-			String Tuner;
 			bool fEnableProcessing;
+			String Tuner;
+			WORD NetworkID;
+			WORD TransportStreamID;
+			WORD ServiceID;
+
+			static const WORD NID_INVALID=0xFFFF;
+			static const WORD TSID_INVALID=0xFFFF;
+			static const WORD SID_INVALID=0xFFFF;
 
 			TunerFilterInfo()
 				: fEnable(true)
 				, fEnableProcessing(true)
+				, NetworkID(NID_INVALID)
+				, TransportStreamID(TSID_INVALID)
+				, ServiceID(SID_INVALID)
 			{
 			}
-		};
 
-		struct NetworkFilterInfo : public FilterInfo
-		{
-			bool fEnable;
-			WORD NetworkID;
-			WORD TransportStreamID;
-			bool fEnableProcessing;
-
-			NetworkFilterInfo()
-				: fEnable(true)
-				, NetworkID(0xFFFF)
-				, TransportStreamID(0xFFFF)
-				, fEnableProcessing(true)
-			{
-			}
+			bool IsNetworkIDEnabled() const { return NetworkID!=NID_INVALID; }
+			bool IsTransportStreamIDEnabled() const { return TransportStreamID!=TSID_INVALID; }
+			bool IsServiceIDEnabled() const { return ServiceID!=SID_INVALID; }
 		};
 
 		template<typename T> struct Optional
@@ -78,16 +76,17 @@ namespace TVTest
 			Optional<bool> m_EnableProcessing;
 			FilterInfo m_DefaultFilter;
 			std::vector<TunerFilterInfo> m_TunerFilterMap;
-			std::vector<NetworkFilterInfo> m_NetworkFilterMap;
 			PropertyList m_PropertyList;
 			FilterInfo m_LastOpenFilter;
 			bool m_fLastOpenFailed;
 
 			CTSProcessorSettings(const GUID &guid);
-			const TunerFilterInfo *GetTunerFilterInfo(LPCTSTR pszTuner) const;
-			const NetworkFilterInfo *GetNetworkFilterInfo(WORD NetworkID,WORD TransportStreamID) const;
+			const TunerFilterInfo *GetTunerFilterInfo(
+				LPCTSTR pszTuner,
+				WORD NetworkID=TunerFilterInfo::NID_INVALID,
+				WORD TransportStreamID=TunerFilterInfo::TSID_INVALID,
+				WORD ServiceID=TunerFilterInfo::SID_INVALID) const;
 			bool IsTunerFilterMapEnabled() const;
-			bool IsNetworkFilterMapEnabled() const;
 		};
 
 		enum {
@@ -114,7 +113,12 @@ namespace TVTest
 		void CloseAllFilters();
 		void OnTunerChange(LPCTSTR pszOldTuner,LPCTSTR pszNewTuner);
 		void OnTunerOpened(LPCTSTR pszTuner,unsigned int FilterOpenFlags=0);
-		void OnNetworkChanged(WORD NetworkID,WORD TransportStreamID,unsigned int FilterOpenFlags=0);
+		void OnNetworkChanged(
+			LPCTSTR pszTuner,
+			WORD NetworkID=TunerFilterInfo::NID_INVALID,
+			WORD TransportStreamID=TunerFilterInfo::TSID_INVALID,
+			WORD ServiceID=TunerFilterInfo::SID_INVALID,
+			unsigned int FilterOpenFlags=0);
 
 	private:
 		std::vector<CTSProcessorSettings*> m_SettingsList;

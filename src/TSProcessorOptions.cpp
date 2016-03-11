@@ -56,29 +56,21 @@ INT_PTR CTSProcessorOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lP
 			m_TunerMapListView.Attach(::GetDlgItem(hDlg,IDC_TSPROCESSOR_TUNERMAP));
 			m_TunerMapListView.SetExtendedStyle(
 				LVS_EX_CHECKBOXES | LVS_EX_FULLROWSELECT | LVS_EX_LABELTIP);
-			static const LPCTSTR TunerMapColumns[] = {
-				TEXT("チューナー"),
-				TEXT("有効/無効"),
-				TEXT("モジュール"),
-				TEXT("デバイス"),
-				TEXT("フィルター"),
+			static const struct {
+				LPCTSTR pszText;
+				int Format;
+			} TunerMapColumns[] = {
+				{TEXT("チューナー"),		LVCFMT_LEFT},
+				{TEXT("ネットワークID"),	LVCFMT_RIGHT},
+				{TEXT("TSID"),				LVCFMT_RIGHT},
+				{TEXT("サービスID"),		LVCFMT_RIGHT},
+				{TEXT("処理"),				LVCFMT_LEFT},
+				{TEXT("モジュール"),		LVCFMT_LEFT},
+				{TEXT("デバイス"),			LVCFMT_LEFT},
+				{TEXT("フィルター"),		LVCFMT_LEFT},
 			};
 			for (int i=0;i<lengthof(TunerMapColumns);i++)
-				m_TunerMapListView.InsertColumn(i,TunerMapColumns[i]);
-
-			m_NetworkMapListView.Attach(::GetDlgItem(hDlg,IDC_TSPROCESSOR_NETWORKMAP));
-			m_NetworkMapListView.SetExtendedStyle(
-				LVS_EX_CHECKBOXES | LVS_EX_FULLROWSELECT | LVS_EX_LABELTIP);
-			static const LPCTSTR NetworkMapColumns[] = {
-				TEXT("ネットワークID"),
-				TEXT("TSID"),
-				TEXT("有効/無効"),
-				TEXT("モジュール"),
-				TEXT("デバイス"),
-				TEXT("フィルター"),
-			};
-			for (int i=0;i<lengthof(NetworkMapColumns);i++)
-				m_NetworkMapListView.InsertColumn(i,NetworkMapColumns[i]);
+				m_TunerMapListView.InsertColumn(i,TunerMapColumns[i].pszText,TunerMapColumns[i].Format);
 
 			std::vector<CTSProcessor*> TSProcessorList;
 
@@ -119,7 +111,6 @@ INT_PTR CTSProcessorOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lP
 			UpdateCurSettings();
 
 			m_TunerMapListView.AdjustColumnWidth();
-			m_NetworkMapListView.AdjustColumnWidth();
 		}
 		return TRUE;
 
@@ -221,81 +212,6 @@ INT_PTR CTSProcessorOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lP
 					LVIS_FOCUSED | LVIS_SELECTED);
 			}
 			return TRUE;
-
-		case IDC_TSPROCESSOR_NETWORKMAP_ADD:
-			if (m_pCurSettings!=nullptr) {
-				CTSProcessorManager::NetworkFilterInfo Info;
-
-				if (NetworkMapDialog(&Info)) {
-					m_pCurSettings->m_NetworkFilterMap.push_back(Info);
-					int Index=m_NetworkMapListView.InsertItem(
-						-1,TEXT(""),m_pCurSettings->m_NetworkFilterMap.size()-1);
-					int ItemCount=m_NetworkMapListView.GetItemCount();
-					for (int i=Index;i<ItemCount;i++)
-						UpdateNetworkMapItem(i);
-					m_NetworkMapListView.SetItemState(Index,
-						LVIS_FOCUSED | LVIS_SELECTED,
-						LVIS_FOCUSED | LVIS_SELECTED);
-				}
-			}
-			return TRUE;
-
-		case IDC_TSPROCESSOR_NETWORKMAP_EDIT:
-			if (m_pCurSettings!=nullptr) {
-				int Sel=m_NetworkMapListView.GetSelectedItem();
-
-				if (Sel>=0 && (size_t)Sel<m_pCurSettings->m_NetworkFilterMap.size()) {
-					CTSProcessorManager::NetworkFilterInfo &Info=
-						m_pCurSettings->m_NetworkFilterMap[Sel];
-					if (NetworkMapDialog(&Info)) {
-						UpdateNetworkMapItem(Sel);
-					}
-				}
-			}
-			return TRUE;
-
-		case IDC_TSPROCESSOR_NETWORKMAP_REMOVE:
-			if (m_pCurSettings!=nullptr) {
-				int Sel=m_NetworkMapListView.GetSelectedItem();
-
-				if (Sel>=0) {
-					m_NetworkMapListView.DeleteItem(Sel);
-					auto it=m_pCurSettings->m_NetworkFilterMap.begin();
-					std::advance(it,Sel);
-					m_pCurSettings->m_NetworkFilterMap.erase(it);
-					int ItemCount=m_NetworkMapListView.GetItemCount();
-					for (int i=Sel;i<ItemCount;i++)
-						UpdateNetworkMapItem(i);
-				}
-			}
-			return TRUE;
-
-		case IDC_TSPROCESSOR_NETWORKMAP_UP:
-		case IDC_TSPROCESSOR_NETWORKMAP_DOWN:
-			if (m_pCurSettings!=nullptr) {
-				int Sel=m_NetworkMapListView.GetSelectedItem();
-				int ItemCount=m_NetworkMapListView.GetItemCount();
-				int To;
-
-				if (LOWORD(wParam)==IDC_TSPROCESSOR_NETWORKMAP_UP) {
-					if (Sel<1)
-						return TRUE;
-					To=Sel-1;
-				} else {
-					if (Sel<0 || Sel+1>=ItemCount)
-						return TRUE;
-					To=Sel+1;
-				}
-
-				std::swap(m_pCurSettings->m_NetworkFilterMap[Sel],
-						  m_pCurSettings->m_NetworkFilterMap[To]);
-				UpdateNetworkMapItem(Sel);
-				UpdateNetworkMapItem(To);
-				m_NetworkMapListView.SetItemState(To,
-					LVIS_FOCUSED | LVIS_SELECTED,
-					LVIS_FOCUSED | LVIS_SELECTED);
-			}
-			return TRUE;
 		}
 		return FALSE;
 
@@ -346,23 +262,6 @@ INT_PTR CTSProcessorOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lP
 						EnableDlgItem(hDlg,IDC_TSPROCESSOR_TUNERMAP_DOWN,
 									  Sel>=0 && Sel+1<m_TunerMapListView.GetItemCount());
 					}
-				} else if (pnmlv->hdr.hwndFrom==::GetDlgItem(hDlg,IDC_TSPROCESSOR_NETWORKMAP)) {
-					if (fCheckStateChanged) {
-						if (pnmlv->iItem>=0 && (size_t)pnmlv->iItem<m_pCurSettings->m_NetworkFilterMap.size()) {
-							m_pCurSettings->m_NetworkFilterMap[pnmlv->iItem].fEnable=
-								(pnmlv->uNewState & LVIS_STATEIMAGEMASK)==INDEXTOSTATEIMAGEMASK(2);
-						}
-					}
-					if (fSelectStateChanged) {
-						int Sel=m_NetworkMapListView.GetSelectedItem();
-						EnableDlgItems(hDlg,
-							IDC_TSPROCESSOR_NETWORKMAP_EDIT,
-							IDC_TSPROCESSOR_NETWORKMAP_REMOVE,
-							Sel>=0);
-						EnableDlgItem(hDlg,IDC_TSPROCESSOR_NETWORKMAP_UP,Sel>0);
-						EnableDlgItem(hDlg,IDC_TSPROCESSOR_NETWORKMAP_DOWN,
-									  Sel>=0 && Sel+1<m_NetworkMapListView.GetItemCount());
-					}
 				}
 			}
 			return TRUE;
@@ -373,8 +272,6 @@ INT_PTR CTSProcessorOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lP
 
 				if (pnmia->hdr.hwndFrom==::GetDlgItem(hDlg,IDC_TSPROCESSOR_TUNERMAP)) {
 					::SendMessage(hDlg,WM_COMMAND,IDC_TSPROCESSOR_TUNERMAP_EDIT,0);
-				} else if (pnmia->hdr.hwndFrom==::GetDlgItem(hDlg,IDC_TSPROCESSOR_NETWORKMAP)) {
-					::SendMessage(hDlg,WM_COMMAND,IDC_TSPROCESSOR_NETWORKMAP_EDIT,0);
 				}
 			}
 			return TRUE;
@@ -395,18 +292,6 @@ INT_PTR CTSProcessorOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lP
 						};
 						PopupMenuFromControls(hDlg,MenuIDs,lengthof(MenuIDs),TPM_RIGHTBUTTON);
 					}
-				} else if (pnmia->hdr.hwndFrom==::GetDlgItem(hDlg,IDC_TSPROCESSOR_NETWORKMAP)) {
-					if (m_NetworkMapListView.GetSelectedItem()>=0) {
-						static const int MenuIDs[] = {
-							IDC_TSPROCESSOR_NETWORKMAP_EDIT,
-							0,
-							IDC_TSPROCESSOR_NETWORKMAP_UP,
-							IDC_TSPROCESSOR_NETWORKMAP_DOWN,
-							0,
-							IDC_TSPROCESSOR_NETWORKMAP_REMOVE,
-						};
-						PopupMenuFromControls(hDlg,MenuIDs,lengthof(MenuIDs),TPM_RIGHTBUTTON);
-					}
 				}
 			}
 			return TRUE;
@@ -421,7 +306,6 @@ INT_PTR CTSProcessorOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lP
 		m_ModuleList.clear();
 		m_ModuleInfoMap.clear();
 		m_TunerMapListView.Detach();
-		m_NetworkMapListView.Detach();
 		return TRUE;
 
 	case WM_APP_UPDATEDEVICEFILTERLIST:
@@ -505,7 +389,6 @@ void CTSProcessorOptions::UpdateCurSettings()
 void CTSProcessorOptions::UpdateItemsState()
 {
 	m_TunerMapListView.DeleteAllItems();
-	m_NetworkMapListView.DeleteAllItems();
 	EnableDlgItems(m_hDlg,
 				   IDC_TSPROCESSOR_SETTINGSFIRST,
 				   IDC_TSPROCESSOR_SETTINGSLAST,
@@ -555,18 +438,9 @@ void CTSProcessorOptions::UpdateItemsState()
 			UpdateTunerMapItem(i);
 		}
 
-		for (int i=0;i<(int)m_pCurSettings->m_NetworkFilterMap.size();i++) {
-			m_NetworkMapListView.InsertItem(i,TEXT(""));
-			UpdateNetworkMapItem(i);
-		}
-
 		EnableDlgItems(m_hDlg,
 					   IDC_TSPROCESSOR_TUNERMAP_EDIT,
 					   IDC_TSPROCESSOR_TUNERMAP_DOWN,
-					   false);
-		EnableDlgItems(m_hDlg,
-					   IDC_TSPROCESSOR_NETWORKMAP_EDIT,
-					   IDC_TSPROCESSOR_NETWORKMAP_DOWN,
 					   false);
 	} else {
 		m_ModuleList.clear();
@@ -628,51 +502,36 @@ void CTSProcessorOptions::UpdateTunerMapItem(int Index)
 {
 	const CTSProcessorManager::TunerFilterInfo &Settings=
 		m_pCurSettings->m_TunerFilterMap[Index];
-
-	m_TunerMapListView.CheckItem(Index,Settings.fEnable);
-	m_TunerMapListView.SetItemText(Index,0,Settings.Tuner.c_str());
-	m_TunerMapListView.SetItemText(Index,1,Settings.fEnableProcessing?TEXT("有効"):TEXT("無効"));
-	m_TunerMapListView.SetItemText(Index,2,Settings.Module.c_str());
-	m_TunerMapListView.SetItemText(Index,3,Settings.Device.c_str());
-	m_TunerMapListView.SetItemText(Index,4,Settings.Filter.c_str());
-}
-
-
-void CTSProcessorOptions::UpdateNetworkMapItem(int Index)
-{
-	const CTSProcessorManager::NetworkFilterInfo &Settings=
-		m_pCurSettings->m_NetworkFilterMap[Index];
 	TCHAR szText[32];
 
-	m_NetworkMapListView.CheckItem(Index,Settings.fEnable);
-	if (Settings.NetworkID!=0xFFFF)
+	m_TunerMapListView.CheckItem(Index,Settings.fEnable);
+	m_TunerMapListView.SetItemText(Index,0,
+		!Settings.Tuner.empty() ? Settings.Tuner.c_str() : TEXT("(指定なし)"));
+	if (Settings.IsNetworkIDEnabled())
 		StdUtil::snprintf(szText,lengthof(szText),TEXT("%d"),Settings.NetworkID);
 	else
 		StdUtil::strncpy(szText,lengthof(szText),TEXT("(指定なし)"));
-	m_NetworkMapListView.SetItemText(Index,0,szText);
-	if (Settings.TransportStreamID!=0xFFFF)
+	m_TunerMapListView.SetItemText(Index,1,szText);
+	if (Settings.IsTransportStreamIDEnabled())
 		StdUtil::snprintf(szText,lengthof(szText),TEXT("%d"),Settings.TransportStreamID);
 	else
 		StdUtil::strncpy(szText,lengthof(szText),TEXT("(指定なし)"));
-	m_NetworkMapListView.SetItemText(Index,1,szText);
-	m_NetworkMapListView.SetItemText(Index,2,Settings.fEnableProcessing?TEXT("有効"):TEXT("無効"));
-	m_NetworkMapListView.SetItemText(Index,3,Settings.Module.c_str());
-	m_NetworkMapListView.SetItemText(Index,4,Settings.Device.c_str());
-	m_NetworkMapListView.SetItemText(Index,5,Settings.Filter.c_str());
+	m_TunerMapListView.SetItemText(Index,2,szText);
+	if (Settings.IsServiceIDEnabled())
+		StdUtil::snprintf(szText,lengthof(szText),TEXT("%d"),Settings.ServiceID);
+	else
+		StdUtil::strncpy(szText,lengthof(szText),TEXT("(指定なし)"));
+	m_TunerMapListView.SetItemText(Index,3,szText);
+	m_TunerMapListView.SetItemText(Index,4,Settings.fEnableProcessing?TEXT("有効"):TEXT("無効"));
+	m_TunerMapListView.SetItemText(Index,5,Settings.Module.c_str());
+	m_TunerMapListView.SetItemText(Index,6,Settings.Device.c_str());
+	m_TunerMapListView.SetItemText(Index,7,Settings.Filter.c_str());
 }
 
 
 bool CTSProcessorOptions::TunerMapDialog(CTSProcessorManager::TunerFilterInfo *pInfo)
 {
 	CTunerMapDialog Dialog(this,pInfo);
-
-	return Dialog.Show(m_hDlg);
-}
-
-
-bool CTSProcessorOptions::NetworkMapDialog(CTSProcessorManager::NetworkFilterInfo *pInfo)
-{
-	CNetworkMapDialog Dialog(this,pInfo);
 
 	return Dialog.Show(m_hDlg);
 }
@@ -710,6 +569,12 @@ INT_PTR CTSProcessorOptions::CTunerMapDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM
 									  DriverManager.GetDriverInfo(i)->GetFileName());
 			}
 			::SetDlgItemText(hDlg,IDC_TSPROCESSORTUNERMAP_TUNER,m_pInfo->Tuner.c_str());
+			if (m_pInfo->IsNetworkIDEnabled())
+				::SetDlgItemInt(hDlg,IDC_TSPROCESSORTUNERMAP_NETWORKID,m_pInfo->NetworkID,FALSE);
+			if (m_pInfo->IsTransportStreamIDEnabled())
+				::SetDlgItemInt(hDlg,IDC_TSPROCESSORTUNERMAP_TSID,m_pInfo->TransportStreamID,FALSE);
+			if (m_pInfo->IsServiceIDEnabled())
+				::SetDlgItemInt(hDlg,IDC_TSPROCESSORTUNERMAP_SERVICEID,m_pInfo->ServiceID,FALSE);
 			::CheckRadioButton(hDlg,
 				IDC_TSPROCESSORTUNERMAP_ENABLEPROCESSING,
 				IDC_TSPROCESSORTUNERMAP_DISABLEPROCESSING,
@@ -754,12 +619,37 @@ INT_PTR CTSProcessorOptions::CTunerMapDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM
 			return TRUE;
 
 		case IDOK:
-			GetDlgItemString(hDlg,IDC_TSPROCESSORTUNERMAP_TUNER,&m_pInfo->Tuner);
-			m_pInfo->fEnableProcessing=
-				DlgRadioButton_IsChecked(hDlg,IDC_TSPROCESSORTUNERMAP_ENABLEPROCESSING);
-			GetDlgItemString(hDlg,IDC_TSPROCESSORTUNERMAP_MODULE,&m_pInfo->Module);
-			GetDlgItemString(hDlg,IDC_TSPROCESSORTUNERMAP_DEVICE,&m_pInfo->Device);
-			GetDlgItemString(hDlg,IDC_TSPROCESSORTUNERMAP_FILTER,&m_pInfo->Filter);
+			{
+				String Buffer;
+
+				GetDlgItemString(hDlg,IDC_TSPROCESSORTUNERMAP_TUNER,&m_pInfo->Tuner);
+				if (GetDlgItemString(hDlg,IDC_TSPROCESSORTUNERMAP_NETWORKID,&Buffer)) {
+					try {
+						m_pInfo->NetworkID=static_cast<WORD>(std::stoi(Buffer,nullptr,0));
+					} catch (...) {
+						m_pInfo->NetworkID=CTSProcessorManager::TunerFilterInfo::NID_INVALID;
+					}
+				}
+				if (GetDlgItemString(hDlg,IDC_TSPROCESSORTUNERMAP_TSID,&Buffer)) {
+					try {
+						m_pInfo->TransportStreamID=static_cast<WORD>(std::stoi(Buffer,nullptr,0));
+					} catch (...) {
+						m_pInfo->TransportStreamID=CTSProcessorManager::TunerFilterInfo::TSID_INVALID;
+					}
+				}
+				if (GetDlgItemString(hDlg,IDC_TSPROCESSORTUNERMAP_SERVICEID,&Buffer)) {
+					try {
+						m_pInfo->ServiceID=static_cast<WORD>(std::stoi(Buffer,nullptr,0));
+					} catch (...) {
+						m_pInfo->ServiceID=CTSProcessorManager::TunerFilterInfo::SID_INVALID;
+					}
+				}
+				m_pInfo->fEnableProcessing=
+					DlgRadioButton_IsChecked(hDlg,IDC_TSPROCESSORTUNERMAP_ENABLEPROCESSING);
+				GetDlgItemString(hDlg,IDC_TSPROCESSORTUNERMAP_MODULE,&m_pInfo->Module);
+				GetDlgItemString(hDlg,IDC_TSPROCESSORTUNERMAP_DEVICE,&m_pInfo->Device);
+				GetDlgItemString(hDlg,IDC_TSPROCESSORTUNERMAP_FILTER,&m_pInfo->Filter);
+			}
 		case IDCANCEL:
 			::EndDialog(hDlg,LOWORD(wParam));
 			return TRUE;
@@ -771,119 +661,6 @@ INT_PTR CTSProcessorOptions::CTunerMapDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM
 			IDC_TSPROCESSORTUNERMAP_MODULE,
 			IDC_TSPROCESSORTUNERMAP_DEVICE,
 			IDC_TSPROCESSORTUNERMAP_FILTER);
-		return TRUE;
-	}
-
-	return FALSE;
-}
-
-
-
-
-CTSProcessorOptions::CNetworkMapDialog::CNetworkMapDialog(
-		CTSProcessorOptions *pOptions,
-		CTSProcessorManager::NetworkFilterInfo *pInfo)
-	: m_pOptions(pOptions)
-	, m_pInfo(pInfo)
-{
-}
-
-
-bool CTSProcessorOptions::CNetworkMapDialog::Show(HWND hwndOwner)
-{
-	return ShowDialog(hwndOwner,
-					  GetAppClass().GetResourceInstance(),
-					  MAKEINTRESOURCE(IDD_TSPROCESSOR_NETWORKMAP))==IDOK;
-}
-
-
-INT_PTR CTSProcessorOptions::CNetworkMapDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
-{
-	switch (uMsg) {
-	case WM_INITDIALOG:
-		{
-			if (m_pInfo->NetworkID!=0xFFFF)
-				::SetDlgItemInt(hDlg,IDC_TSPROCESSORNETWORKMAP_NETWORKID,m_pInfo->NetworkID,FALSE);
-			if (m_pInfo->TransportStreamID!=0xFFFF)
-				::SetDlgItemInt(hDlg,IDC_TSPROCESSORNETWORKMAP_TSID,m_pInfo->TransportStreamID,FALSE);
-			::CheckRadioButton(hDlg,
-				IDC_TSPROCESSORNETWORKMAP_ENABLEPROCESSING,
-				IDC_TSPROCESSORNETWORKMAP_DISABLEPROCESSING,
-				m_pInfo->fEnableProcessing?
-					IDC_TSPROCESSORNETWORKMAP_ENABLEPROCESSING:
-					IDC_TSPROCESSORNETWORKMAP_DISABLEPROCESSING);
-			for (auto it=m_pOptions->m_ModuleList.begin();it!=m_pOptions->m_ModuleList.end();++it)
-				DlgComboBox_AddString(hDlg,IDC_TSPROCESSORNETWORKMAP_MODULE,it->c_str());
-			::SetDlgItemText(hDlg,IDC_TSPROCESSORNETWORKMAP_MODULE,m_pInfo->Module.c_str());
-			::SetDlgItemText(hDlg,IDC_TSPROCESSORNETWORKMAP_DEVICE,m_pInfo->Device.c_str());
-			::SetDlgItemText(hDlg,IDC_TSPROCESSORNETWORKMAP_FILTER,m_pInfo->Filter.c_str());
-			EnableDlgItems(hDlg,
-						   IDC_TSPROCESSORNETWORKMAP_MODULE_LABEL,
-						   IDC_TSPROCESSORNETWORKMAP_FILTER,
-						   m_pInfo->fEnableProcessing);
-			m_pOptions->UpdateDeviceFilterList(hDlg,
-				IDC_TSPROCESSORNETWORKMAP_MODULE,
-				IDC_TSPROCESSORNETWORKMAP_DEVICE,
-				IDC_TSPROCESSORNETWORKMAP_FILTER);
-			AdjustDialogPos(::GetParent(hDlg),hDlg);
-		}
-		return TRUE;
-
-	case WM_COMMAND:
-		switch (LOWORD(wParam)) {
-		case IDC_TSPROCESSORNETWORKMAP_ENABLEPROCESSING:
-		case IDC_TSPROCESSORNETWORKMAP_DISABLEPROCESSING:
-			EnableDlgItemsSyncCheckBox(hDlg,
-									   IDC_TSPROCESSORNETWORKMAP_MODULE_LABEL,
-									   IDC_TSPROCESSORNETWORKMAP_FILTER,
-									   IDC_TSPROCESSORNETWORKMAP_ENABLEPROCESSING);
-			return TRUE;
-
-		case IDC_TSPROCESSORNETWORKMAP_MODULE:
-		case IDC_TSPROCESSORNETWORKMAP_DEVICE:
-			if (HIWORD(wParam)==CBN_SELCHANGE || HIWORD(wParam)==CBN_EDITCHANGE)
-				::PostMessage(hDlg,WM_APP_UPDATEDEVICEFILTERLIST,0,0);
-			return TRUE;
-
-		case IDC_TSPROCESSORNETWORKMAP_HELP:
-			GetAppClass().UICore.ShowHelpContent(HELP_ID_TSPROCESSOR_NETWORKMAP);
-			return TRUE;
-
-		case IDOK:
-			{
-				String Buffer;
-
-				if (GetDlgItemString(hDlg,IDC_TSPROCESSORNETWORKMAP_NETWORKID,&Buffer)) {
-					try {
-						m_pInfo->NetworkID=static_cast<WORD>(std::stoi(Buffer,nullptr,0));
-					} catch (...) {
-						m_pInfo->NetworkID=0xFFFF;
-					}
-				}
-				if (GetDlgItemString(hDlg,IDC_TSPROCESSORNETWORKMAP_TSID,&Buffer)) {
-					try {
-						m_pInfo->TransportStreamID=static_cast<WORD>(std::stoi(Buffer,nullptr,0));
-					} catch (...) {
-						m_pInfo->TransportStreamID=0xFFFF;
-					}
-				}
-				m_pInfo->fEnableProcessing=
-					DlgRadioButton_IsChecked(hDlg,IDC_TSPROCESSORNETWORKMAP_ENABLEPROCESSING);
-				GetDlgItemString(hDlg,IDC_TSPROCESSORNETWORKMAP_MODULE,&m_pInfo->Module);
-				GetDlgItemString(hDlg,IDC_TSPROCESSORNETWORKMAP_DEVICE,&m_pInfo->Device);
-				GetDlgItemString(hDlg,IDC_TSPROCESSORNETWORKMAP_FILTER,&m_pInfo->Filter);
-			}
-		case IDCANCEL:
-			::EndDialog(hDlg,LOWORD(wParam));
-			return TRUE;
-		}
-		return TRUE;
-
-	case WM_APP_UPDATEDEVICEFILTERLIST:
-		m_pOptions->UpdateDeviceFilterList(hDlg,
-			IDC_TSPROCESSORNETWORKMAP_MODULE,
-			IDC_TSPROCESSORNETWORKMAP_DEVICE,
-			IDC_TSPROCESSORNETWORKMAP_FILTER);
 		return TRUE;
 	}
 
