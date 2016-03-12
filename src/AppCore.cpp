@@ -1399,6 +1399,7 @@ bool CAppCore::GetVariableStringEventInfo(
 		if (pInfo->Channel.GetChannelNo()==0
 				&& pInfo->Channel.GetServiceID()>0)
 			pInfo->Channel.SetChannelNo(pInfo->Channel.GetServiceID());
+		pInfo->Channel.SetTunerName(m_App.CoreEngine.GetDriverFileName());
 	}
 
 	SYSTEMTIME stCur;

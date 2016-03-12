@@ -45,7 +45,7 @@ public:
 	bool GetMinimizeToTray() const { return m_fMinimizeToTray; }
 	bool GetDisablePreviewWhenMinimized() const { return m_fDisablePreviewWhenMinimized; }
 	bool GetUseLogoIcon() const { return m_fUseLogoIcon; }
-	bool GetShowTitleEventTime() const { return m_fShowTitleEventTime; }
+	LPCTSTR GetTitleTextFormat() const { return m_TitleTextFormat.c_str(); }
 	bool GetShowLogo() const { return m_fShowLogo; }
 	LPCTSTR GetLogoFileName() const { return m_szLogoFileName; }
 	bool GetNoScreenSaver() const { return m_fNoScreenSaver; }
@@ -66,7 +66,7 @@ private:
 	bool m_fMinimizeToTray;
 	bool m_fDisablePreviewWhenMinimized;
 	bool m_fUseLogoIcon;
-	bool m_fShowTitleEventTime;
+	TVTest::String m_TitleTextFormat;
 	bool m_fShowLogo;
 	TCHAR m_szLogoFileName[MAX_PATH];
 

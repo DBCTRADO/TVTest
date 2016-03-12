@@ -113,6 +113,15 @@ CTunerChannelInfo::CTunerChannelInfo(const CChannelInfo &ChannelInfo,LPCTSTR psz
 }
 
 
+CTunerChannelInfo &CTunerChannelInfo::operator=(const CChannelInfo &Src)
+{
+	CChannelInfo *p=this;
+	if (p!=&Src)
+		*p=Src;
+	return *this;
+}
+
+
 void CTunerChannelInfo::SetTunerName(LPCTSTR pszName)
 {
 	TVTest::StringUtility::Assign(m_TunerName,pszName);

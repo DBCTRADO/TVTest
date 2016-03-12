@@ -1244,43 +1244,38 @@ bool CUICore::UpdateTitle()
 	if (hwnd==nullptr)
 		return false;
 
-	TCHAR szText[256],szOld[256],szService[MAX_CHANNEL_NAME];
-	CStaticStringFormatter Formatter(szText,lengthof(szText));
 	LPCTSTR pszText;
+	CTitleStringMap::EventInfo EventInfo;
+	TVTest::String Title;
 
-	// TODO: ユーザーが "%service-name% / %event-time% %event-name%" のようにフォーマットを指定できるようにする
-	if (m_App.Core.GetCurrentServiceName(szService,lengthof(szService))) {
-		Formatter.AppendFormat(
-			MAIN_TITLE_TEXT TEXT(" %s %s"),
-			m_App.RecordManager.IsRecording()?TEXT("●"):TEXT("-"),
-			szService);
+	if (m_App.Core.GetVariableStringEventInfo(&EventInfo)
+			&& !EventInfo.ServiceName.empty()) {
+		CTitleStringMap Map(m_App,&EventInfo);
+		TVTest::String Buffer;
+		TVTest::FormatVariableString(&Map,m_App.ViewOptions.GetTitleTextFormat(),&Title);
 
-		if (m_App.CoreEngine.IsTunerOpen()) {
-			TCHAR szTime[EpgUtil::MAX_EVENT_TIME_LENGTH+1],szEvent[256];
-
-			szTime[0]=_T('\0');
-			if (m_App.ViewOptions.GetShowTitleEventTime()) {
-				SYSTEMTIME StartTime;
-				DWORD Duration;
-
-				if (m_App.CoreEngine.m_DtvEngine.GetEventTime(&StartTime,&Duration)) {
-					if (EpgUtil::FormatEventTime(StartTime,Duration,szTime,lengthof(szTime)-1)>0)
-						::lstrcat(szTime,TEXT(" "));
-				}
-			}
-			if (m_App.CoreEngine.m_DtvEngine.GetEventName(szEvent,lengthof(szEvent))<1)
-				szEvent[0]=_T('\0');
-			if (szTime[0]!=_T('\0') || szEvent[0]!=_T('\0'))
-				Formatter.AppendFormat(TEXT(" / %s%s"),szTime,szEvent);
+		// 連続する空白を除去する
+		TVTest::String::size_type i,j;
+		for (i=0;i<Title.length() && Title[i]==L' ';i++);
+		WCHAR LastChar=L'\0';
+		for (j=0;i<Title.length();i++) {
+			if (Title[i]==L' ' && LastChar==L' ')
+				continue;
+			LastChar=Title[i];
+			Title[j++]=LastChar;
 		}
+		if (LastChar==L' ')
+			j--;
+		Title.resize(j);
 
-		pszText=Formatter.GetString();
+		pszText=Title.c_str();
 	} else {
 		pszText=MAIN_TITLE_TEXT;
 	}
 
-	if (::GetWindowText(hwnd,szOld,lengthof(szOld))<1
-			|| ::lstrcmp(pszText,szOld)!=0) {
+	TCHAR szOld[256];
+	::GetWindowText(hwnd,szOld,lengthof(szOld));
+	if (::lstrcmp(pszText,szOld)!=0) {
 		::SetWindowText(hwnd,pszText);
 		m_App.TaskTrayManager.SetTipText(pszText);
 	}
@@ -1520,6 +1515,62 @@ void CUICore::OnTrace(CTracer::TraceType Type,LPCTSTR pszOutput)
 		m_App.StatusView.SetSingleText(pszOutput);
 	else
 		m_App.Logger.AddLogRaw(LogType,pszOutput);
+}
+
+
+
+
+CUICore::CTitleStringMap::CTitleStringMap(CAppMain &App,const EventInfo *pInfo)
+	: m_App(App)
+{
+	m_Flags=FLAG_NO_NORMALIZE | FLAG_NO_CURRENT_TIME | FLAG_NO_TOT_TIME;
+
+	if (pInfo)
+		m_EventInfo=*pInfo;
+}
+
+
+bool CUICore::CTitleStringMap::GetString(LPCWSTR pszKeyword,TVTest::String *pString)
+{
+	if (::lstrcmpi(pszKeyword,TEXT("event-sep"))==0) {
+		if (!m_EventInfo.Event.m_EventName.empty())
+			*pString=TEXT("/");
+	} else if (::lstrcmpi(pszKeyword,TEXT("event-time"))==0) {
+		TCHAR szTime[EpgUtil::MAX_EVENT_TIME_LENGTH+1];
+		if (m_EventInfo.Event.m_bValidStartTime
+				&& EpgUtil::FormatEventTime(
+					m_EventInfo.Event.m_StartTime,
+					m_EventInfo.Event.m_Duration,
+					szTime,lengthof(szTime))>0)
+			*pString=szTime;
+	} else if (::lstrcmpi(pszKeyword,TEXT("rec-circle"))==0) {
+		if (m_App.RecordManager.IsRecording())
+			*pString=TEXT("●");
+	} else {
+		return CEventVariableStringMap::GetString(pszKeyword,pString);
+	}
+	return true;
+}
+
+
+bool CUICore::CTitleStringMap::GetParameterList(ParameterGroupList *pList) const
+{
+	if (!CEventVariableStringMap::GetParameterList(pList))
+		return false;
+
+	static const ParameterInfo ParameterList[] = {
+		{TEXT("%event-time%"),	TEXT("番組開始～終了時間")},
+		{TEXT("%event-sep%"),	TEXT("番組情報区切り")},
+		{TEXT("%rec-circle%"),	TEXT("録画●")},
+	};
+
+	static const ParameterGroup Group = {
+		nullptr,ParameterList,lengthof(ParameterList)
+	};
+
+	pList->push_back(Group);
+
+	return true;
 }
 
 

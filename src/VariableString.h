@@ -4,6 +4,7 @@
 
 #include "ChannelList.h"
 #include "EpgProgramList.h"
+#include <vector>
 
 
 namespace TVTest
@@ -18,12 +19,20 @@ namespace TVTest
 			LPCWSTR pszText;
 		};
 
+		struct ParameterGroup
+		{
+			LPCWSTR pszText;
+			const ParameterInfo *pParameterList;
+			int ParameterCount;
+		};
+
+		typedef std::vector<ParameterGroup> ParameterGroupList;
+
 		virtual bool BeginFormat() { return true; }
 		virtual void EndFormat() {}
 		virtual bool GetString(LPCWSTR pszKeyword,String *pString) = 0;
 		virtual bool NormalizeString(String *pString) const { return false; }
-		virtual bool GetParameterInfo(int Index,ParameterInfo *pInfo) const = 0;
-		virtual int GetParameterCount() const = 0;
+		virtual bool GetParameterList(ParameterGroupList *pList) const = 0;
 		bool InputParameter(HWND hDlg,int EditID,const POINT &MenuPos);
 
 	protected:
@@ -36,9 +45,15 @@ namespace TVTest
 	class CEventVariableStringMap : public CVariableStringMap
 	{
 	public:
+		enum {
+			FLAG_NO_NORMALIZE    = 0x0001U,
+			FLAG_NO_CURRENT_TIME = 0x0002U,
+			FLAG_NO_TOT_TIME     = 0x0004U
+		};
+
 		struct EventInfo
 		{
-			CChannelInfo Channel;
+			CTunerChannelInfo Channel;
 			CEventInfo Event;
 			String ServiceName;
 			SYSTEMTIME TotTime;
@@ -49,8 +64,7 @@ namespace TVTest
 		bool BeginFormat() override;
 		bool GetString(LPCWSTR pszKeyword,String *pString) override;
 		bool NormalizeString(String *pString) const override;
-		bool GetParameterInfo(int Index,ParameterInfo *pInfo) const override;
-		int GetParameterCount() const override;
+		bool GetParameterList(ParameterGroupList *pList) const override;
 		void SetCurrentTime(const SYSTEMTIME *pTime);
 		void SetSampleEventInfo();
 
@@ -58,9 +72,9 @@ namespace TVTest
 
 	protected:
 		static void GetEventTitle(const String &EventName,String *pTitle);
+		static void GetEventMark(const String &EventName,String *pMarks);
 
-		static const ParameterInfo m_ParameterList[];
-
+		unsigned int m_Flags;
 		EventInfo m_EventInfo;
 		bool m_fCurrentTimeSet;
 		SYSTEMTIME m_CurrentTime;

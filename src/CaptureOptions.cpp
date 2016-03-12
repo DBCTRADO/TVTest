@@ -17,8 +17,7 @@ public:
 	CCaptureVariableStringMap();
 	CCaptureVariableStringMap(const EventInfo &Info,const CCaptureImage *pImage);
 	bool GetString(LPCWSTR pszKeyword,String *pString) override;
-	bool GetParameterInfo(int Index,ParameterInfo *pInfo) const override;
-	int GetParameterCount() const override;
+	bool GetParameterList(ParameterGroupList *pList) const override;
 
 private:
 	static const ParameterInfo m_CaptureParameterList[];
@@ -72,23 +71,18 @@ bool CCaptureVariableStringMap::GetString(LPCWSTR pszKeyword,String *pString)
 }
 
 
-bool CCaptureVariableStringMap::GetParameterInfo(int Index,ParameterInfo *pInfo) const
+bool CCaptureVariableStringMap::GetParameterList(ParameterGroupList *pList) const
 {
-	if (Index>=CEventVariableStringMap::GetParameterCount()) {
-		Index-=CEventVariableStringMap::GetParameterCount();
-		if (Index>=lengthof(m_CaptureParameterList))
-			return false;
-		*pInfo=m_CaptureParameterList[Index];
-		return true;
-	}
+	if (!CEventVariableStringMap::GetParameterList(pList))
+		return false;
 
-	return CEventVariableStringMap::GetParameterInfo(Index,pInfo);
-}
+	static const ParameterGroup Group = {
+		nullptr,m_CaptureParameterList,lengthof(m_CaptureParameterList)
+	};
 
+	pList->push_back(Group);
 
-int CCaptureVariableStringMap::GetParameterCount() const
-{
-	return CEventVariableStringMap::GetParameterCount()+lengthof(m_CaptureParameterList);
+	return true;
 }
 
 

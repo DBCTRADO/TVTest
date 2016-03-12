@@ -9,6 +9,7 @@
 #include "AudioManager.h"
 #include "Menu.h"
 #include "GUIUtil.h"
+#include "VariableString.h"
 #include "BonTsEngine/TsUtilClass.h"
 
 
@@ -32,6 +33,17 @@ public:
 		MENU_STREAMERROR,
 		MENU_CLOCK,
 		MENU_PROGRAMINFO
+	};
+
+	class CTitleStringMap : public TVTest::CEventVariableStringMap
+	{
+	public:
+		CTitleStringMap(CAppMain &App,const EventInfo *pInfo=nullptr);
+		bool GetString(LPCWSTR pszKeyword,TVTest::String *pString) override;
+		bool GetParameterList(ParameterGroupList *pList) const override;
+
+	private:
+		CAppMain &m_App;
 	};
 
 	CUICore(CAppMain &App);

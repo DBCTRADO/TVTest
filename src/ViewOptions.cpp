@@ -7,6 +7,20 @@
 #include "Common/DebugDef.h"
 
 
+static const struct {
+	LPCTSTR pszDescript;
+	LPCTSTR pszFormat;
+} TitleTextFormatPresets[] =
+{
+	{
+		TEXT("サービス名 / 番組時間 番組名 - TVTest"),
+		TEXT("%rec-circle% %service-name% %event-sep% %event-time% %event-name% - TVTest")
+	},
+	{
+		TEXT("サービス名 / 番組名 - TVTest"),
+		TEXT("%rec-circle% %service-name% %event-sep% %event-name% - TVTest")
+	},
+};
 
 
 CViewOptions::CViewOptions()
@@ -20,7 +34,7 @@ CViewOptions::CViewOptions()
 	, m_fMinimizeToTray(false)
 	, m_fDisablePreviewWhenMinimized(false)
 	, m_fUseLogoIcon(false)
-	, m_fShowTitleEventTime(false)
+	, m_TitleTextFormat(TitleTextFormatPresets[0].pszFormat)
 	, m_fShowLogo(true)
 
 	, m_fNoScreenSaver(false)
@@ -70,7 +84,7 @@ bool CViewOptions::ReadSettings(CSettings &Settings)
 	Settings.Read(TEXT("MinimizeToTray"),&m_fMinimizeToTray);
 	Settings.Read(TEXT("DisablePreviewWhenMinimized"),&m_fDisablePreviewWhenMinimized);
 	Settings.Read(TEXT("UseLogoIcon"),&m_fUseLogoIcon);
-	Settings.Read(TEXT("TitleEventTime"),&m_fShowTitleEventTime);
+	Settings.Read(TEXT("TitleTextFormat"),&m_TitleTextFormat);
 	Settings.Read(TEXT("ShowLogo"),&m_fShowLogo);
 	Settings.Read(TEXT("LogoFileName"),m_szLogoFileName,lengthof(m_szLogoFileName));
 	Settings.Read(TEXT("NoScreenSaver"),&m_fNoScreenSaver);
@@ -92,7 +106,8 @@ bool CViewOptions::WriteSettings(CSettings &Settings)
 	Settings.Write(TEXT("MinimizeToTray"),m_fMinimizeToTray);
 	Settings.Write(TEXT("DisablePreviewWhenMinimized"),m_fDisablePreviewWhenMinimized);
 	Settings.Write(TEXT("UseLogoIcon"),m_fUseLogoIcon);
-	Settings.Write(TEXT("TitleEventTime"),m_fShowTitleEventTime);
+	Settings.Write(TEXT("TitleTextFormat"),m_TitleTextFormat);
+	Settings.DeleteValue(TEXT("TitleEventTime"));
 	Settings.Write(TEXT("ShowLogo"),m_fShowLogo);
 	Settings.Write(TEXT("LogoFileName"),m_szLogoFileName);
 	Settings.Write(TEXT("NoScreenSaver"),m_fNoScreenSaver);
@@ -142,8 +157,9 @@ INT_PTR CViewOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 							  m_fDisablePreviewWhenMinimized);
 			DlgCheckBox_Check(hDlg,IDC_OPTIONS_USELOGOICON,
 							  m_fUseLogoIcon);
-			DlgCheckBox_Check(hDlg,IDC_OPTIONS_SHOWTITLEEVENTTIME,
-							  m_fShowTitleEventTime);
+			::SetDlgItemText(hDlg,IDC_OPTIONS_TITLETEXTFORMAT,m_TitleTextFormat.c_str());
+			InitDropDownButton(hDlg,IDC_OPTIONS_TITLETEXTFORMAT_PARAMETERS);
+			InitDropDownButtonWithText(hDlg,IDC_OPTIONS_TITLETEXTFORMAT_PRESETS);
 			DlgCheckBox_Check(hDlg,IDC_OPTIONS_SHOWLOGO,m_fShowLogo);
 			::SetDlgItemText(hDlg,IDC_OPTIONS_LOGOFILENAME,m_szLogoFileName);
 			::SendDlgItemMessage(hDlg,IDC_OPTIONS_LOGOFILENAME,EM_LIMITTEXT,MAX_PATH-1,0);
@@ -161,6 +177,36 @@ INT_PTR CViewOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 
 	case WM_COMMAND:
 		switch (LOWORD(wParam)) {
+		case IDC_OPTIONS_TITLETEXTFORMAT_PARAMETERS:
+			{
+				RECT rc;
+				POINT pt;
+
+				::GetWindowRect(::GetDlgItem(hDlg,IDC_OPTIONS_TITLETEXTFORMAT_PARAMETERS),&rc);
+				pt.x=rc.left;
+				pt.y=rc.bottom;
+				CUICore::CTitleStringMap StrMap(GetAppClass());
+				StrMap.InputParameter(hDlg,IDC_OPTIONS_TITLETEXTFORMAT,pt);
+			}
+			return TRUE;
+
+		case IDC_OPTIONS_TITLETEXTFORMAT_PRESETS:
+			{
+				RECT rc;
+				::GetWindowRect(::GetDlgItem(hDlg,IDC_OPTIONS_TITLETEXTFORMAT_PRESETS),&rc);
+				HMENU hmenu=::CreatePopupMenu();
+				for (int i=0;i<lengthof(TitleTextFormatPresets);i++) {
+					::AppendMenu(hmenu,MF_STRING | MF_ENABLED,i+1,
+								 TitleTextFormatPresets[i].pszDescript);
+				}
+				int Result=::TrackPopupMenu(hmenu,TPM_RETURNCMD,rc.left,rc.bottom,0,hDlg,NULL);
+				if (Result>0 && Result<=lengthof(TitleTextFormatPresets)) {
+					::SetDlgItemText(hDlg,IDC_OPTIONS_TITLETEXTFORMAT,
+									 TitleTextFormatPresets[Result-1].pszFormat);
+				}
+			}
+			return TRUE;
+
 		case IDC_OPTIONS_SHOWLOGO:
 			EnableDlgItemsSyncCheckBox(hDlg,IDC_OPTIONS_LOGOFILENAME,IDC_OPTIONS_LOGOFILENAME_BROWSE,
 									   IDC_OPTIONS_SHOWLOGO);
@@ -230,10 +276,13 @@ INT_PTR CViewOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 					m_fUseLogoIcon=f;
 					App.UICore.UpdateIcon();
 				}
-				f=DlgCheckBox_IsChecked(hDlg,IDC_OPTIONS_SHOWTITLEEVENTTIME);
-				if (m_fShowTitleEventTime!=f) {
-					m_fShowTitleEventTime=f;
-					App.UICore.UpdateTitle();
+				{
+					TVTest::String Text;
+					GetDlgItemString(hDlg,IDC_OPTIONS_TITLETEXTFORMAT,&Text);
+					if (m_TitleTextFormat!=Text) {
+						m_TitleTextFormat=std::move(Text);
+						App.UICore.UpdateTitle();
+					}
 				}
 				{
 					bool fLogo=DlgCheckBox_IsChecked(hDlg,IDC_OPTIONS_SHOWLOGO);

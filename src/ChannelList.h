@@ -53,6 +53,7 @@ class CTunerChannelInfo : public CChannelInfo
 public:
 	CTunerChannelInfo();
 	CTunerChannelInfo(const CChannelInfo &ChannelInfo,LPCTSTR pszTunerName=NULL);
+	CTunerChannelInfo &operator=(const CChannelInfo &Src);
 	void SetTunerName(LPCTSTR pszName);
 	LPCTSTR GetTunerName() const { return m_TunerName.c_str(); }
 

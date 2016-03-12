@@ -19,8 +19,7 @@ public:
 	CEpgVariableStringMap(const EventInfo &Info);
 	bool GetString(LPCWSTR pszKeyword,TVTest::String *pString) override;
 	bool NormalizeString(TVTest::String *pString) const override { return false; }
-	bool GetParameterInfo(int Index,ParameterInfo *pInfo) const override;
-	int GetParameterCount() const override;
+	bool GetParameterList(ParameterGroupList *pList) const override;
 	const TVTest::String &GetiEpgFileName() const { return m_iEpgFileName; }
 
 private:
@@ -83,27 +82,18 @@ bool CEpgVariableStringMap::GetString(LPCWSTR pszKeyword,TVTest::String *pString
 }
 
 
-bool CEpgVariableStringMap::GetParameterInfo(int Index,ParameterInfo *pInfo) const
+bool CEpgVariableStringMap::GetParameterList(ParameterGroupList *pList) const
 {
-	if (pInfo==nullptr)
+	if (!CEventVariableStringMap::GetParameterList(pList))
 		return false;
 
-	if (CEventVariableStringMap::GetParameterInfo(Index,pInfo))
-		return true;
+	static const ParameterGroup Group = {
+		nullptr,m_EpgParameterList,lengthof(m_EpgParameterList)
+	};
 
-	Index-=CEventVariableStringMap::GetParameterCount();
-	if (Index>=0 && Index<lengthof(m_EpgParameterList)) {
-		*pInfo=m_EpgParameterList[Index];
-		return true;
-	}
+	pList->push_back(Group);
 
-	return false;
-}
-
-
-int CEpgVariableStringMap::GetParameterCount() const
-{
-	return CEventVariableStringMap::GetParameterCount()+lengthof(m_EpgParameterList);
+	return true;
 }
 
 

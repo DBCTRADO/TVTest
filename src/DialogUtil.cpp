@@ -521,3 +521,24 @@ bool InitDropDownButton(HWND hDlg,int ID)
 
 	return true;
 }
+
+
+bool InitDropDownButtonWithText(HWND hDlg,int ID)
+{
+#ifdef WIN_XP_SUPPORT
+	if (!Util::OS::IsWindowsVistaOrLater())
+		return false;
+#endif
+
+	HWND hwnd=::GetDlgItem(hDlg,ID);
+	if (hwnd==NULL)
+		return false;
+
+	::SetWindowLong(hwnd,GWL_STYLE,::GetWindowLong(hwnd,GWL_STYLE) | BS_SPLITBUTTON);
+	BUTTON_SPLITINFO bsi;
+	bsi.mask=BCSIF_STYLE;
+	bsi.uSplitStyle=BCSS_NOSPLIT;
+	Button_SetSplitInfo(hwnd,&bsi);
+
+	return true;
+}
