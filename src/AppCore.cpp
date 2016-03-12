@@ -1385,6 +1385,20 @@ bool CAppCore::IsDriverNoSignalLevel(LPCTSTR pszFileName) const
 }
 
 
+void CAppCore::NotifyTSProcessorNetworkChanged(unsigned int FilterOpenFlags)
+{
+	StreamIDInfo StreamID;
+
+	GetCurrentStreamIDInfo(&StreamID);
+	m_App.TSProcessorManager.OnNetworkChanged(
+		m_App.CoreEngine.GetDriverFileName(),
+		StreamID.NetworkID,
+		StreamID.TransportStreamID,
+		StreamID.ServiceID,
+		FilterOpenFlags);
+}
+
+
 bool CAppCore::GetVariableStringEventInfo(
 	TVTest::CEventVariableStringMap::EventInfo *pInfo,DWORD NextEventMargin) const
 {

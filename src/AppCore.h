@@ -109,6 +109,8 @@ public:
 	bool IsChannelScanning() const;
 	bool IsDriverNoSignalLevel(LPCTSTR pszFileName) const;
 
+	void NotifyTSProcessorNetworkChanged(unsigned int FilterOpenFlags);
+
 	bool GetVariableStringEventInfo(TVTest::CEventVariableStringMap::EventInfo *pInfo,
 									DWORD NextEventMargin=0) const;
 
