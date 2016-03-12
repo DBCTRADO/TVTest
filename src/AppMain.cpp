@@ -1354,14 +1354,15 @@ void CAppMain::RegisterCommands()
 	// プラグイン
 	for (int i=0;i<PluginManager.NumPlugins();i++) {
 		const CPlugin *pPlugin=PluginManager.GetPlugin(i);
-		LPCTSTR pszFileName=::PathFindFileName(pPlugin->GetFileName());
 		TCHAR szName[CCommandList::MAX_COMMAND_NAME];
 		TCHAR szShortName[CCommandList::MAX_COMMAND_NAME];
 
-		StdUtil::snprintf(szName,lengthof(szName),TEXT("プラグイン有効/無効 : %s"),pszFileName);
+		StdUtil::snprintf(szName,lengthof(szName),
+						  TEXT("プラグイン有効/無効 : %s"),pPlugin->GetPluginName());
 		StdUtil::snprintf(szShortName,lengthof(szShortName),
 						  TEXT("%s 有効/無効"),pPlugin->GetPluginName());
-		CommandList.RegisterCommand(CM_PLUGIN_FIRST+i,pszFileName,szName,szShortName);
+		CommandList.RegisterCommand(CM_PLUGIN_FIRST+i,
+									::PathFindFileName(pPlugin->GetFileName()),szName,szShortName);
 	}
 
 	// プラグインの各コマンド
@@ -1385,7 +1386,8 @@ void CAppMain::RegisterCommands()
 			Text+=pInfo->GetText();
 
 			TCHAR szName[CCommandList::MAX_COMMAND_NAME];
-			StdUtil::snprintf(szName,lengthof(szName),TEXT("%s : %s"),pszFileName,pInfo->GetName());
+			StdUtil::snprintf(szName,lengthof(szName),TEXT("%s : %s"),
+							  pPlugin->GetPluginName(),pInfo->GetName());
 
 			unsigned int State=0;
 			if ((pInfo->GetState() & TVTest::PLUGIN_COMMAND_STATE_DISABLED)!=0)
