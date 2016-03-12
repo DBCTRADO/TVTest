@@ -16,16 +16,16 @@
 
 CInitialSettings::CInitialSettings(const CDriverManager *pDriverManager)
 	: m_pDriverManager(pDriverManager)
-	, m_VideoRenderer(CVideoRenderer::RENDERER_DEFAULT)
 	, m_fDrawLogo(false)
 {
 	m_szDriverFileName[0]='\0';
-#if 0
-	// VistaではビデオレンダラのデフォルトをEVRにする
-	// ...と問題が出る環境もあるみたい
-	if (Util::OS::IsWindowsVistaOrLater())
-		m_VideoRenderer=CVideoRenderer::RENDERER_EVR;
+
+	// Vista以降ではビデオレンダラのデフォルトをEVRにする
+	m_VideoRenderer=
+#ifdef WIN_XP_SUPPORT
+		!Util::OS::IsWindowsVistaOrLater() ? CVideoRenderer::RENDERER_DEFAULT :
 #endif
+		CVideoRenderer::RENDERER_EVR;
 
 #ifdef WIN_XP_SUPPORT
 	TCHAR szRecFolder[MAX_PATH];
