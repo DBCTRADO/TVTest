@@ -35,8 +35,22 @@
 <h2>ウィンドウのアイコンを局ロゴにする</h2>
 <p class="descript">TVTest のタイトルバーやタスクバーのアイコンを、現在のチャンネルの局ロゴにします。</p>
 
-<h2>タイトルバーに番組の時間を表示する</h2>
-<p class="descript">タイトルバーに、番組の放送時間を表示するようにします。</p>
+<h2>タイトルバー文字列の形式</h2>
+<p class="descript">タイトルバーに表示する文字列のフォーマットを指定します。<br>
+文字列の中の連続した空白文字は除去されます。<br>
+% で囲まれた識別子は、当該の項目に置換されます。<br>
+使用できる識別子は、主に以下のようなものがあります。</p>
+<div class="group">
+<table class="info">
+<tr><th>識別子</th><th>内容</th></tr>
+<tr><td>%event-name%</td><td>番組名</td></tr>
+<tr><td>%event-title%</td><td>番組名から [字] などを取り除いたもの</td></tr>
+<tr><td>%event-time%</td><td>番組開始～終了時間</td></tr>
+<tr><td>%event-mark%</td><td>番組名の [字] などのマーク</td></tr>
+<tr><td>%event-sep%</td><td>番組情報が取得されている場合は /、取得されていない場合は空</td></tr>
+<tr><td>%rec-circle%</td><td>録画中は●、録画中でない場合は空</td></tr>
+</table>
+</div>
 
 <h2>プログラムロゴを表示する</h2>
 <p class="descript">起動時や再生オフ時に、指定された画像をロゴとして表示します。<br>
