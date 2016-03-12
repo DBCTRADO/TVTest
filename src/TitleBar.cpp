@@ -7,8 +7,6 @@
 #include "Common/DebugDef.h"
 
 
-#define TITLE_BUTTON_ICON_WIDTH		12
-#define TITLE_BUTTON_ICON_HEIGHT	12
 #define NUM_BUTTONS 4
 
 enum {
@@ -273,10 +271,10 @@ LRESULT CTitleBar::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 			::AdjustWindowRectEx(&rc,pcs->style,FALSE,pcs->dwExStyle);
 			::MoveWindow(hwnd,0,0,0,rc.bottom-rc.top,FALSE);
 
-			if (!m_ButtonIcons.IsCreated()) {
-				m_ButtonIcons.Load(GetAppClass().GetResourceInstance(),IDB_TITLEBAR,
-								   TITLE_BUTTON_ICON_WIDTH,TITLE_BUTTON_ICON_HEIGHT);
-			}
+			if (m_Style.ButtonIconSize.Width<=12 && m_Style.ButtonIconSize.Height<=12)
+				m_ButtonIcons.Load(GetAppClass().GetResourceInstance(),IDB_TITLEBAR,12,12);
+			else
+				m_ButtonIcons.Load(GetAppClass().GetResourceInstance(),IDB_TITLEBAR24,24,24);
 
 			m_Tooltip.Create(hwnd);
 			for (int i=ITEM_BUTTON_FIRST;i<=ITEM_LAST;i++) {
