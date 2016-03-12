@@ -3,6 +3,9 @@
 #include "resource.h"
 #include "TVTest.h"
 
+LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
+#pragma code_page(932)
+
 
 IDI_ICON				ICON DISCARDABLE "TVTest.ico"
 IDI_TRAY				ICON DISCARDABLE "Tray.ico"
