@@ -12,7 +12,6 @@
 
 class CInformationPanel
 	: public CPanelForm::CPage
-	, public TVTest::CUIBase
 	, public CSettingsBase
 {
 public:
@@ -221,13 +220,15 @@ public:
 	void NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager) override;
 	void SetTheme(const TVTest::Theme::CThemeManager *pThemeManager) override;
 
+// CPage
+	bool SetFont(const TVTest::Style::Font &Font) override;
+
 // CSettingsBase
 	bool ReadSettings(CSettings &Settings) override;
 	bool WriteSettings(CSettings &Settings) override;
 
 // CInformationPanel
 	bool IsVisible() const;
-	bool SetFont(const LOGFONT *pFont);
 	CItem *GetItem(int Item);
 	const CItem *GetItem(int Item) const;
 	template<typename T> T *GetItem() { return static_cast<T*>(GetItem(T::ID)); }

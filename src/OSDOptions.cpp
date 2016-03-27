@@ -6,6 +6,7 @@
 #include "DrawUtil.h"
 #include "Util.h"
 #include "Aero.h"
+#include "StyleUtil.h"
 #include "resource.h"
 #include "Common/DebugDef.h"
 
@@ -43,12 +44,14 @@ COSDOptions::COSDOptions()
 	LOGFONT lf;
 	DrawUtil::GetSystemFont(DrawUtil::FONT_MESSAGE,&lf);
 
-	m_NotificationBarFont=lf;
+	m_NotificationBarFont.LogFont=lf;
 #ifndef TVTEST_FOR_1SEG
-	m_NotificationBarFont.lfHeight=lf.lfHeight*12/10;
+	m_NotificationBarFont.LogFont.lfHeight=lf.lfHeight*12/10;
 #endif
+	TVTest::Style::CStyleManager::AssignFontSizeFromLogFont(&m_NotificationBarFont);
 
-	m_DisplayFont=lf;
+	m_DisplayFont.LogFont=lf;
+	TVTest::Style::CStyleManager::AssignFontSizeFromLogFont(&m_DisplayFont);
 }
 
 
@@ -92,33 +95,18 @@ bool COSDOptions::ReadSettings(CSettings &Settings)
 	if (Settings.Read(TEXT("NotifyTSProcessorError"),&f))
 		EnableNotify(NOTIFY_TSPROCESSORERROR,f);
 
-	if (!Settings.Read(TEXT("NotificationBarFont"),&m_NotificationBarFont)) {
-		// 過去のバージョンとの互換用(そのうち消す)
-		TCHAR szFont[LF_FACESIZE];
-		if (Settings.Read(TEXT("NotificationBarFontName"),szFont,LF_FACESIZE)
-				&& szFont[0]!='\0') {
-			lstrcpy(m_NotificationBarFont.lfFaceName,szFont);
-			m_NotificationBarFont.lfEscapement=0;
-			m_NotificationBarFont.lfOrientation=0;
-			m_NotificationBarFont.lfUnderline=0;
-			m_NotificationBarFont.lfStrikeOut=0;
-			m_NotificationBarFont.lfCharSet=DEFAULT_CHARSET;
-			m_NotificationBarFont.lfOutPrecision=OUT_DEFAULT_PRECIS;
-			m_NotificationBarFont.lfClipPrecision=CLIP_DEFAULT_PRECIS;
-			m_NotificationBarFont.lfQuality=DRAFT_QUALITY;
-			m_NotificationBarFont.lfPitchAndFamily=DEFAULT_PITCH | FF_DONTCARE;
-		}
-		if (Settings.Read(TEXT("NotificationBarFontSize"),&Value)) {
-			m_NotificationBarFont.lfHeight=Value;
-			m_NotificationBarFont.lfWidth=0;
-		}
-		if (Settings.Read(TEXT("NotificationBarFontWeight"),&Value))
-			m_NotificationBarFont.lfWeight=Value;
-		if (Settings.Read(TEXT("NotificationBarFontItalic"),&Value))
-			m_NotificationBarFont.lfItalic=Value;
+	if (TVTest::StyleUtil::ReadFontSettings(Settings,TEXT("NotificationBarFont"),
+											&m_NotificationBarFont,true,&f)) {
+		if (!f)
+			m_fChanged=true;
 	}
 
-	Settings.Read(TEXT("DisplayMenuFont"),&m_DisplayFont);
+	if (TVTest::StyleUtil::ReadFontSettings(Settings,TEXT("DisplayMenuFont"),
+											&m_DisplayFont,false,&f)) {
+		if (!f)
+			m_fChanged=true;
+	}
+
 	Settings.Read(TEXT("DisplayMenuFontAutoSize"),&m_fDisplayFontAutoSize);
 
 	return true;
@@ -142,16 +130,8 @@ bool COSDOptions::WriteSettings(CSettings &Settings)
 	Settings.Write(TEXT("NotifyEventName"),(m_NotificationBarFlags&NOTIFY_EVENTNAME)!=0);
 	Settings.Write(TEXT("NotifyTSProcessorError"),(m_NotificationBarFlags&NOTIFY_TSPROCESSORERROR)!=0);
 
-#if 0
-	Settings.Write(TEXT("NotificationBarFontName"),m_NotificationBarFont.lfFaceName);
-	Settings.Write(TEXT("NotificationBarFontSize"),(int)m_NotificationBarFont.lfHeight);
-	Settings.Write(TEXT("NotificationBarFontWeight"),(int)m_NotificationBarFont.lfWeight);
-	Settings.Write(TEXT("NotificationBarFontItalic"),(int)m_NotificationBarFont.lfItalic);
-#else
-	Settings.Write(TEXT("NotificationBarFont"),&m_NotificationBarFont);
-#endif
-
-	Settings.Write(TEXT("DisplayMenuFont"),&m_DisplayFont);
+	TVTest::StyleUtil::WriteFontSettings(Settings,TEXT("NotificationBarFont"),m_NotificationBarFont);
+	TVTest::StyleUtil::WriteFontSettings(Settings,TEXT("DisplayMenuFont"),m_DisplayFont);
 	Settings.Write(TEXT("DisplayMenuFontAutoSize"),m_fDisplayFontAutoSize);
 
 	return true;
@@ -200,19 +180,6 @@ void COSDOptions::EnableNotify(unsigned int Type,bool fEnabled)
 }
 
 
-static void SetFontInfo(HWND hDlg,int ID,const LOGFONT *plf)
-{
-	HDC hdc;
-	TCHAR szText[LF_FACESIZE+16];
-
-	hdc=GetDC(hDlg);
-	if (hdc==NULL)
-		return;
-	wsprintf(szText,TEXT("%s, %d pt"),plf->lfFaceName,CalcFontPointHeight(hdc,plf));
-	SetDlgItemText(hDlg,ID,szText);
-	ReleaseDC(hDlg,hdc);
-}
-
 INT_PTR COSDOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 {
 	switch (uMsg) {
@@ -246,11 +213,11 @@ INT_PTR COSDOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 			::SetDlgItemInt(hDlg,IDC_NOTIFICATIONBAR_DURATION,m_NotificationBarDuration/1000,FALSE);
 			DlgUpDown_SetRange(hDlg,IDC_NOTIFICATIONBAR_DURATION_UPDOWN,1,60);
 			m_CurNotificationBarFont=m_NotificationBarFont;
-			SetFontInfo(hDlg,IDC_NOTIFICATIONBAR_FONT_INFO,&m_CurNotificationBarFont);
+			TVTest::StyleUtil::SetFontInfoItem(hDlg,IDC_NOTIFICATIONBAR_FONT_INFO,m_CurNotificationBarFont);
 			EnableDlgItems(hDlg,IDC_NOTIFICATIONBAR_FIRST,IDC_NOTIFICATIONBAR_LAST,m_fEnableNotificationBar);
 
 			m_DisplayFontCur=m_DisplayFont;
-			SetFontInfo(hDlg,IDC_DISPLAYMENU_FONT_INFO,&m_DisplayFont);
+			TVTest::StyleUtil::SetFontInfoItem(hDlg,IDC_DISPLAYMENU_FONT_INFO,m_DisplayFont);
 			DlgCheckBox_Check(hDlg,IDC_DISPLAYMENU_AUTOFONTSIZE,m_fDisplayFontAutoSize);
 		}
 		return TRUE;
@@ -307,13 +274,13 @@ INT_PTR COSDOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 			return TRUE;
 
 		case IDC_NOTIFICATIONBAR_FONT_CHOOSE:
-			if (ChooseFontDialog(hDlg,&m_CurNotificationBarFont))
-				SetFontInfo(hDlg,IDC_NOTIFICATIONBAR_FONT_INFO,&m_CurNotificationBarFont);
+			if (TVTest::StyleUtil::ChooseStyleFont(hDlg,&m_CurNotificationBarFont))
+				TVTest::StyleUtil::SetFontInfoItem(hDlg,IDC_NOTIFICATIONBAR_FONT_INFO,m_CurNotificationBarFont);
 			return TRUE;
 
 		case IDC_DISPLAYMENU_FONT_CHOOSE:
-			if (ChooseFontDialog(hDlg,&m_DisplayFontCur))
-				SetFontInfo(hDlg,IDC_DISPLAYMENU_FONT_INFO,&m_DisplayFontCur);
+			if (TVTest::StyleUtil::ChooseStyleFont(hDlg,&m_DisplayFontCur))
+				TVTest::StyleUtil::SetFontInfoItem(hDlg,IDC_DISPLAYMENU_FONT_INFO,m_DisplayFontCur);
 			return TRUE;
 		}
 		return TRUE;

@@ -250,9 +250,7 @@ CStatusView::CStatusView()
 	, m_fBufferedPaint(false)
 	, m_fAdjustSize(true)
 {
-	LOGFONT lf;
-	DrawUtil::GetDefaultUIFont(&lf);
-	m_Font.Create(&lf);
+	GetDefaultFont(&m_Font);
 }
 
 
@@ -382,6 +380,8 @@ LRESULT CStatusView::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 	case WM_CREATE:
 		{
 			InitializeUI();
+
+			CreateDrawFont(m_Font,&m_DrawFont);
 
 			m_TextHeight=CalcTextHeight(&m_FontHeight);
 			m_ItemHeight=CalcItemHeight();
@@ -873,23 +873,29 @@ void CStatusView::SetItemTheme(const TVTest::Theme::CThemeManager *pThemeManager
 }
 
 
-bool CStatusView::SetFont(const LOGFONT *pFont)
+bool CStatusView::SetFont(const TVTest::Style::Font &Font)
 {
-	if (!m_Font.Create(pFont))
-		return false;
+	m_Font=Font;
+	m_DrawFont.Destroy();
+
 	if (m_hwnd!=NULL) {
+		CreateDrawFont(m_Font,&m_DrawFont);
 		m_TextHeight=CalcTextHeight(&m_FontHeight);
 		m_ItemHeight=CalcItemHeight();
 		AdjustSize();
 		Invalidate();
 	}
+
 	return true;
 }
 
 
-bool CStatusView::GetFont(LOGFONT *pFont) const
+bool CStatusView::GetFont(TVTest::Style::Font *pFont) const
 {
-	return m_Font.GetLogFont(pFont);
+	if (pFont==nullptr)
+		return false;
+	*pFont=m_Font;
+	return true;
 }
 
 
@@ -995,7 +1001,7 @@ bool CStatusView::DrawItemPreview(CStatusItem *pItem,HDC hdc,const RECT &ItemRec
 	if (hfont!=NULL)
 		hfontOld=SelectFont(hdc,hfont);
 	else
-		hfontOld=DrawUtil::SelectObject(hdc,m_Font);
+		hfontOld=DrawUtil::SelectObject(hdc,m_DrawFont);
 	OldBkMode=::SetBkMode(hdc,TRANSPARENT);
 	crOldTextColor=::SetTextColor(hdc,Style.Fore.Fill.GetSolidColor());
 	crOldBkColor=::SetBkColor(hdc,Style.Back.Fill.GetSolidColor());
@@ -1091,7 +1097,7 @@ void CStatusView::Draw(HDC hdc,const RECT *pPaintRect)
 		hdcDst=hdc;
 	}
 
-	hfontOld=DrawUtil::SelectObject(hdcDst,m_Font);
+	hfontOld=DrawUtil::SelectObject(hdcDst,m_DrawFont);
 	OldBkMode=::SetBkMode(hdcDst,TRANSPARENT);
 	crOldTextColor=::GetTextColor(hdcDst);
 	crOldBkColor=::GetBkColor(hdcDst);
@@ -1306,7 +1312,7 @@ int CStatusView::CalcTextHeight(const DrawUtil::CFont &Font,int *pFontHeight) co
 
 int CStatusView::CalcTextHeight(int *pFontHeight) const
 {
-	return CalcTextHeight(m_Font,pFontHeight);
+	return CalcTextHeight(m_DrawFont,pFontHeight);
 }
 
 

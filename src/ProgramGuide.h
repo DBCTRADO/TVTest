@@ -365,9 +365,9 @@ public:
 	bool SetTextDrawEngine(TVTest::CTextDrawClient::TextDrawEngine Engine);
 	TVTest::CTextDrawClient::TextDrawEngine GetTextDrawEngine() const { return m_TextDrawEngine; }
 	bool SetDirectWriteRenderingParams(const TVTest::CDirectWriteRenderer::RenderingParams &Params);
-	bool SetFont(const LOGFONT *pFont);
-	bool GetFont(LOGFONT *pFont) const;
-	bool SetEventInfoFont(const LOGFONT *pFont);
+	bool SetFont(const TVTest::Style::Font &Font);
+	bool GetFont(TVTest::Style::Font *pFont) const;
+	bool SetEventInfoFont(const TVTest::Style::Font &Font);
 	bool SetShowToolTip(bool fShow);
 	bool GetShowToolTip() const { return m_fShowToolTip; }
 	void SetEventHandler(CEventHandler *pEventHandler);
@@ -451,7 +451,8 @@ private:
 	ListMode m_ListMode;
 	int m_WeekListService;
 	int m_LinesPerHour;
-	DrawUtil::CFont m_Font;
+	TVTest::Style::Font m_Font;
+	DrawUtil::CFont m_ContentFont;
 	DrawUtil::CFont m_TitleFont;
 	DrawUtil::CFont m_TimeFont;
 	TVTest::CTextDrawClient::TextDrawEngine m_TextDrawEngine;
@@ -603,6 +604,7 @@ private:
 	void DrawTimeBar(HDC hdc,const RECT &Rect,bool fRight);
 	void Draw(HDC hdc,const RECT &PaintRect);
 	void DrawMessage(HDC hdc,const RECT &ClientRect) const;
+	bool CreateFonts();
 	void CalcFontMetrics();
 	int GetLineHeight() const;
 	int CalcHeaderHeight() const;

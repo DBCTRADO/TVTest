@@ -37,7 +37,6 @@ public:
 
 class CProgramListPanel
 	: public CPanelForm::CPage
-	, public TVTest::CUIBase
 	, public CSettingsBase
 	, protected CFeaturedEvents::CEventHandler
 {
@@ -68,6 +67,9 @@ public:
 	void NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager) override;
 	void SetTheme(const TVTest::Theme::CThemeManager *pThemeManager) override;
 
+// CPage
+	bool SetFont(const TVTest::Style::Font &Font) override;
+
 // CSettingsBase
 	bool ReadSettings(CSettings &Settings) override;
 	bool WriteSettings(CSettings &Settings) override;
@@ -81,8 +83,7 @@ public:
 	void SetCurrentEventID(int EventID);
 	bool SetProgramListPanelTheme(const ProgramListPanelTheme &Theme);
 	bool GetProgramListPanelTheme(ProgramListPanelTheme *pTheme) const;
-	bool SetFont(const LOGFONT *pFont);
-	bool SetEventInfoFont(const LOGFONT *pFont);
+	bool SetEventInfoFont(const TVTest::Style::Font &Font);
 	void ShowRetrievingMessage(bool fShow);
 	void SetVisibleEventIcons(UINT VisibleIcons);
 	void SetMouseOverEventInfo(bool fMouseOverEventInfo);

@@ -4,6 +4,7 @@
 #include "StatusOptions.h"
 #include "Settings.h"
 #include "DialogUtil.h"
+#include "StyleUtil.h"
 #include "resource.h"
 #include "Common/DebugDef.h"
 
@@ -72,7 +73,7 @@ CStatusOptions::CStatusOptions(CStatusView *pStatusView)
 
 	m_ItemList=m_AvailItemList;
 
-	m_pStatusView->GetFont(&m_lfItemFont);
+	m_pStatusView->GetFont(&m_ItemFont);
 }
 
 
@@ -159,33 +160,16 @@ bool CStatusOptions::ReadSettings(CSettings &Settings)
 		m_ItemList=ItemList;
 	}
 
-	// Font
-	TCHAR szFont[LF_FACESIZE];
-	int Value;
-	if (Settings.Read(TEXT("FontName"),szFont,LF_FACESIZE) && szFont[0]!='\0') {
-		lstrcpy(m_lfItemFont.lfFaceName,szFont);
-		m_lfItemFont.lfEscapement=0;
-		m_lfItemFont.lfOrientation=0;
-		m_lfItemFont.lfUnderline=0;
-		m_lfItemFont.lfStrikeOut=0;
-		m_lfItemFont.lfCharSet=DEFAULT_CHARSET;
-		m_lfItemFont.lfOutPrecision=OUT_DEFAULT_PRECIS;
-		m_lfItemFont.lfClipPrecision=CLIP_DEFAULT_PRECIS;
-		m_lfItemFont.lfQuality=DRAFT_QUALITY;
-		m_lfItemFont.lfPitchAndFamily=DEFAULT_PITCH | FF_DONTCARE;
+	bool f;
+	if (TVTest::StyleUtil::ReadFontSettings(Settings,TEXT("Font"),&m_ItemFont,true,&f)) {
+		if (!f)
+			m_fChanged=true;
 	}
-	if (Settings.Read(TEXT("FontSize"),&Value)) {
-		m_lfItemFont.lfHeight=Value;
-		m_lfItemFont.lfWidth=0;
-	}
-	if (Settings.Read(TEXT("FontWeight"),&Value))
-		m_lfItemFont.lfWeight=Value;
-	if (Settings.Read(TEXT("FontItalic"),&Value))
-		m_lfItemFont.lfItalic=Value;
 
 	Settings.Read(TEXT("MultiRow"),&m_fMultiRow);
 	Settings.Read(TEXT("MaxRows"),&m_MaxRows);
 	Settings.Read(TEXT("ShowPopup"),&m_fShowPopup);
+	int Value;
 	if (Settings.Read(TEXT("PopupOpacity"),&Value))
 		m_PopupOpacity=CLAMP(Value,OPACITY_MIN,OPACITY_MAX);
 
@@ -216,11 +200,7 @@ bool CStatusOptions::WriteSettings(CSettings &Settings)
 		}
 	}
 
-	// Font
-	Settings.Write(TEXT("FontName"),m_lfItemFont.lfFaceName);
-	Settings.Write(TEXT("FontSize"),(int)m_lfItemFont.lfHeight);
-	Settings.Write(TEXT("FontWeight"),(int)m_lfItemFont.lfWeight);
-	Settings.Write(TEXT("FontItalic"),(int)m_lfItemFont.lfItalic);
+	TVTest::StyleUtil::WriteFontSettings(Settings,TEXT("Font"),m_ItemFont);
 
 	Settings.Write(TEXT("MultiRow"),m_fMultiRow);
 	Settings.Write(TEXT("MaxRows"),m_MaxRows);
@@ -247,7 +227,7 @@ bool CStatusOptions::ApplyOptions()
 	m_pStatusView->EnableSizeAdjustment(false);
 	m_pStatusView->SetMultiRow(m_fMultiRow);
 	m_pStatusView->SetMaxRows(m_MaxRows);
-	m_pStatusView->SetFont(&m_lfItemFont);
+	m_pStatusView->SetFont(m_ItemFont);
 	m_pStatusView->EnableSizeAdjustment(true);
 	return true;
 }
@@ -320,19 +300,6 @@ void CStatusOptions::InitListBox(HWND hDlg)
 }
 
 
-static void SetFontInfo(HWND hDlg,const LOGFONT *plf)
-{
-	HDC hdc;
-	TCHAR szText[LF_FACESIZE+16];
-
-	hdc=GetDC(hDlg);
-	wsprintf(szText,TEXT("%s, %d pt"),
-			 plf->lfFaceName,CalcFontPointHeight(hdc,plf));
-	ReleaseDC(hDlg,hdc);
-	SetDlgItemText(hDlg,IDC_STATUSOPTIONS_FONTINFO,szText);
-}
-
-
 INT_PTR CStatusOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 {
 	switch (uMsg) {
@@ -358,8 +325,8 @@ INT_PTR CStatusOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 
 			m_ItemListSubclass.SetSubclass(::GetDlgItem(hDlg,IDC_STATUSOPTIONS_ITEMLIST));
 
-			m_CurSettingFont=m_lfItemFont;
-			SetFontInfo(hDlg,&m_CurSettingFont);
+			m_CurSettingFont=m_ItemFont;
+			TVTest::StyleUtil::SetFontInfoItem(hDlg,IDC_STATUSOPTIONS_FONTINFO,m_CurSettingFont);
 			DlgCheckBox_Check(hDlg,IDC_STATUSOPTIONS_MULTIROW,m_fMultiRow);
 			::SetDlgItemInt(hDlg,IDC_STATUSOPTIONS_MAXROWS,m_MaxRows,TRUE);
 			DlgUpDown_SetRange(hDlg,IDC_STATUSOPTIONS_MAXROWS_UPDOWN,1,UD_MAXVAL);
@@ -441,9 +408,13 @@ INT_PTR CStatusOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 					SelectBrush(pdis->hDC,hbrOld);
 					SelectPen(pdis->hDC,hpenOld);
 					::DeleteObject(hpen);
-					HFONT hfont=::CreateFontIndirect(&m_CurSettingFont);
+
+					TVTest::Style::Font Font=m_CurSettingFont;
+					GetAppClass().StyleManager.RealizeFontSize(&Font);
+					HFONT hfont=::CreateFontIndirect(&Font.LogFont);
 					m_pStatusView->DrawItemPreview(pItem,pdis->hDC,rc,false,hfont);
 					::DeleteObject(hfont);
+
 					::SetBkMode(pdis->hDC,OldBkMode);
 					::SetTextColor(pdis->hDC,crOldTextColor);
 					if ((int)pdis->itemID==m_DropInsertPos
@@ -482,15 +453,14 @@ INT_PTR CStatusOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 
 		case IDC_STATUSOPTIONS_CHOOSEFONT:
 			{
-				LOGFONT lf=m_CurSettingFont;
+				TVTest::Style::Font Font=m_CurSettingFont;
 
-				if (ChooseFontDialog(hDlg,&lf)
-						&& !CompareLogFont(&m_CurSettingFont,&lf)) {
-					DrawUtil::CFont Font(lf);
-
-					m_CurSettingFont=lf;
-					SetFontInfo(hDlg,&lf);
-					m_ItemHeight=m_pStatusView->CalcItemHeight(Font)+m_ItemMargin.Vert();
+				if (TVTest::StyleUtil::ChooseStyleFont(hDlg,&Font) && Font!=m_CurSettingFont) {
+					m_CurSettingFont=Font;
+					TVTest::StyleUtil::SetFontInfoItem(hDlg,IDC_STATUSOPTIONS_FONTINFO,Font);
+					GetAppClass().StyleManager.RealizeFontSize(&Font);
+					DrawUtil::CFont DrawFont(Font.LogFont);
+					m_ItemHeight=m_pStatusView->CalcItemHeight(DrawFont)+m_ItemMargin.Vert();
 					DlgListBox_SetItemHeight(hDlg,IDC_STATUSOPTIONS_ITEMLIST,0,m_ItemHeight);
 					InvalidateDlgItem(hDlg,IDC_STATUSOPTIONS_ITEMLIST);
 				}
@@ -532,9 +502,9 @@ INT_PTR CStatusOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 				}
 				ApplyItemList();
 
-				if (!CompareLogFont(&m_lfItemFont,&m_CurSettingFont)) {
-					m_lfItemFont=m_CurSettingFont;
-					m_pStatusView->SetFont(&m_lfItemFont);
+				if (m_ItemFont!=m_CurSettingFont) {
+					m_ItemFont=m_CurSettingFont;
+					m_pStatusView->SetFont(m_ItemFont);
 					for (size_t i=0;i<m_ItemList.size();i++) {
 						StatusItemInfo &Item=m_ItemList[i];
 						if (Item.Width<0)

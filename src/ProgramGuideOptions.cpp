@@ -4,6 +4,7 @@
 #include "ProgramGuideOptions.h"
 #include "DirectWriteOptionsDialog.h"
 #include "DialogUtil.h"
+#include "StyleUtil.h"
 #include "resource.h"
 #include "Common/DebugDef.h"
 
@@ -92,29 +93,11 @@ bool CProgramGuideOptions::LoadSettings(CSettings &Settings)
 		if (Settings.Read(TEXT("ShowToolTip"),&f))
 			m_pProgramGuide->SetShowToolTip(f);
 
-		// Font
-		TCHAR szFont[LF_FACESIZE];
-		if (Settings.Read(TEXT("FontName"),szFont,LF_FACESIZE) && szFont[0]!=_T('\0')) {
-			lstrcpy(m_Font.lfFaceName,szFont);
-			m_Font.lfEscapement=0;
-			m_Font.lfOrientation=0;
-			m_Font.lfUnderline=0;
-			m_Font.lfStrikeOut=0;
-			m_Font.lfCharSet=DEFAULT_CHARSET;
-			m_Font.lfOutPrecision=OUT_DEFAULT_PRECIS;
-			m_Font.lfClipPrecision=CLIP_DEFAULT_PRECIS;
-			m_Font.lfQuality=DRAFT_QUALITY;
-			m_Font.lfPitchAndFamily=DEFAULT_PITCH | FF_DONTCARE;
+		if (TVTest::StyleUtil::ReadFontSettings(Settings,TEXT("Font"),&m_Font,true,&f)) {
+			if (!f)
+				m_fChanged=true;
 		}
-		if (Settings.Read(TEXT("FontSize"),&Value)) {
-			m_Font.lfHeight=Value;
-			m_Font.lfWidth=0;
-		}
-		if (Settings.Read(TEXT("FontWeight"),&Value))
-			m_Font.lfWeight=Value;
-		if (Settings.Read(TEXT("FontItalic"),&Value))
-			m_Font.lfItalic=Value;
-		m_pProgramGuide->SetFont(&m_Font);
+		m_pProgramGuide->SetFont(m_Font);
 
 		Settings.Read(TEXT("UseDirectWrite"),&m_fUseDirectWrite);
 		m_pProgramGuide->SetTextDrawEngine(
@@ -328,11 +311,7 @@ bool CProgramGuideOptions::SaveSettings(CSettings &Settings)
 		Settings.Write(TEXT("WheelScrollLines"),m_WheelScrollLines);
 		Settings.Write(TEXT("ProgramLDoubleClick"),m_ProgramLDoubleClickCommand);
 
-		// Font
-		Settings.Write(TEXT("FontName"),m_Font.lfFaceName);
-		Settings.Write(TEXT("FontSize"),(int)m_Font.lfHeight);
-		Settings.Write(TEXT("FontWeight"),(int)m_Font.lfWeight);
-		Settings.Write(TEXT("FontItalic"),(int)m_Font.lfItalic);
+		TVTest::StyleUtil::WriteFontSettings(Settings,TEXT("Font"),m_Font);
 
 		Settings.Write(TEXT("UseDirectWrite"),m_fUseDirectWrite);
 		Settings.Write(TEXT("DirectWriteRenderingParamsMask"),m_DirectWriteRenderingParams.Mask);
@@ -483,20 +462,6 @@ int CProgramGuideOptions::ParseCommand(LPCTSTR pszCommand) const
 }
 
 
-static void SetFontInfo(HWND hDlg,const LOGFONT *plf)
-{
-	HDC hdc;
-	TCHAR szText[LF_FACESIZE+16];
-
-	hdc=GetDC(hDlg);
-	if (hdc==NULL)
-		return;
-	wsprintf(szText,TEXT("%s, %d pt"),plf->lfFaceName,CalcFontPointHeight(hdc,plf));
-	SetDlgItemText(hDlg,IDC_PROGRAMGUIDEOPTIONS_FONTINFO,szText);
-	ReleaseDC(hDlg,hdc);
-}
-
-
 INT_PTR CProgramGuideOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 {
 	switch (uMsg) {
@@ -521,7 +486,7 @@ INT_PTR CProgramGuideOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM l
 				CProgramGuide::MIN_LINES_PER_HOUR,CProgramGuide::MAX_LINES_PER_HOUR);
 
 			m_CurSettingFont=m_Font;
-			SetFontInfo(hDlg,&m_CurSettingFont);
+			TVTest::StyleUtil::SetFontInfoItem(hDlg,IDC_PROGRAMGUIDEOPTIONS_FONTINFO,m_CurSettingFont);
 
 			if (Util::OS::IsWindowsVistaOrLater()) {
 				DlgCheckBox_Check(hDlg,IDC_PROGRAMGUIDEOPTIONS_USEDIRECTWRITE,m_fUseDirectWrite);
@@ -652,8 +617,8 @@ INT_PTR CProgramGuideOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM l
 	case WM_COMMAND:
 		switch (LOWORD(wParam)) {
 		case IDC_PROGRAMGUIDEOPTIONS_CHOOSEFONT:
-			if (ChooseFontDialog(hDlg,&m_CurSettingFont))
-				SetFontInfo(hDlg,&m_CurSettingFont);
+			if (TVTest::StyleUtil::ChooseStyleFont(hDlg,&m_CurSettingFont))
+				TVTest::StyleUtil::SetFontInfoItem(hDlg,IDC_PROGRAMGUIDEOPTIONS_FONTINFO,m_CurSettingFont);
 			return TRUE;
 
 		case IDC_PROGRAMGUIDEOPTIONS_USEDIRECTWRITE:
@@ -671,7 +636,7 @@ INT_PTR CProgramGuideOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM l
 					CRenderingTester(
 						CProgramGuide *pProgramGuide,
 						const TVTest::CDirectWriteRenderer::RenderingParams &Params,
-						const LOGFONT &Font)
+						const TVTest::Style::Font &Font)
 						: m_pProgramGuide(pProgramGuide)
 						, m_OldParams(Params)
 						, m_Font(Font)
@@ -683,15 +648,15 @@ INT_PTR CProgramGuideOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM l
 					void Apply(const TVTest::CDirectWriteRenderer::RenderingParams &Params) override
 					{
 						if (!m_fApplied) {
-							LOGFONT lf;
+							TVTest::Style::Font Font;
 
 							m_OldEngine=m_pProgramGuide->GetTextDrawEngine();
 							if (m_OldEngine!=TVTest::CTextDrawClient::ENGINE_DIRECTWRITE)
 								m_pProgramGuide->SetTextDrawEngine(TVTest::CTextDrawClient::ENGINE_DIRECTWRITE);
-							m_pProgramGuide->GetFont(&lf);
-							if (!CompareLogFont(&m_Font,&lf)) {
-								m_pProgramGuide->SetFont(&m_Font);
-								m_OldFont=lf;
+							m_pProgramGuide->GetFont(&Font);
+							if (m_Font!=Font) {
+								m_pProgramGuide->SetFont(m_Font);
+								m_OldFont=Font;
 								m_fFontChanged=true;
 							}
 							m_fApplied=true;
@@ -705,7 +670,7 @@ INT_PTR CProgramGuideOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM l
 							if (m_OldEngine!=TVTest::CTextDrawClient::ENGINE_DIRECTWRITE)
 								m_pProgramGuide->SetTextDrawEngine(m_OldEngine);
 							if (m_fFontChanged)
-								m_pProgramGuide->SetFont(&m_OldFont);
+								m_pProgramGuide->SetFont(m_OldFont);
 							m_pProgramGuide->SetDirectWriteRenderingParams(m_OldParams);
 							m_fApplied=false;
 						}
@@ -717,15 +682,15 @@ INT_PTR CProgramGuideOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM l
 				private:
 					CProgramGuide *m_pProgramGuide;
 					TVTest::CDirectWriteRenderer::RenderingParams m_OldParams;
-					LOGFONT m_Font;
-					LOGFONT m_OldFont;
+					TVTest::Style::Font m_Font;
+					TVTest::Style::Font m_OldFont;
 					bool m_fApplied;
 					bool m_fFontChanged;
 					TVTest::CTextDrawClient::TextDrawEngine m_OldEngine;
 				};
 
 				TVTest::CDirectWriteOptionsDialog Dialog(
-					&m_DirectWriteRenderingParams, m_CurSettingFont);
+					&m_DirectWriteRenderingParams, m_CurSettingFont.LogFont);
 				CRenderingTester RenderingTester(
 					m_pProgramGuide, m_DirectWriteRenderingParams, m_CurSettingFont);
 
@@ -737,7 +702,7 @@ INT_PTR CProgramGuideOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM l
 						if (!m_fUseDirectWrite)
 							m_pProgramGuide->SetTextDrawEngine(TVTest::CTextDrawClient::ENGINE_GDI);
 						if (RenderingTester.IsFontChanged())
-							m_pProgramGuide->SetFont(&m_Font);
+							m_pProgramGuide->SetFont(m_Font);
 #else
 						if (!m_fUseDirectWrite) {
 							m_fUseDirectWrite=true;
@@ -745,7 +710,7 @@ INT_PTR CProgramGuideOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM l
 						}
 						if (RenderingTester.IsFontChanged()) {
 							m_Font=m_CurSettingFont;
-							m_pProgramGuide->SetFont(&m_Font);
+							m_pProgramGuide->SetFont(m_Font);
 						}
 #endif
 					}
@@ -967,9 +932,9 @@ INT_PTR CProgramGuideOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM l
 					(int)CProgramGuide::MIN_LINES_PER_HOUR,(int)CProgramGuide::MAX_LINES_PER_HOUR);
 				m_pProgramGuide->SetUIOptions(m_LinesPerHour,m_ItemWidth);
 
-				if (!CompareLogFont(&m_Font,&m_CurSettingFont)) {
+				if (m_Font!=m_CurSettingFont) {
 					m_Font=m_CurSettingFont;
-					m_pProgramGuide->SetFont(&m_Font);
+					m_pProgramGuide->SetFont(m_Font);
 				}
 
 				if (Util::OS::IsWindowsVistaOrLater()) {

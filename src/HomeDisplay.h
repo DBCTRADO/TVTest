@@ -95,7 +95,7 @@ public:
 	void Clear();
 	bool UpdateContents();
 	void SetEventHandler(CHomeDisplayEventHandler *pEventHandler);
-	bool SetFont(const LOGFONT *pFont,bool fAutoSize);
+	bool SetFont(const TVTest::Style::Font &Font,bool fAutoSize);
 	int GetScrollPos() const { return m_ScrollPos; }
 	bool SetScrollPos(int Pos,bool fScroll=true);
 	bool SetCurCategory(int Category);

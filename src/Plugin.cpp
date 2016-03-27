@@ -3169,6 +3169,13 @@ static bool GetSettingFont(TVTest::SettingInfo *pSetting,const LOGFONT *pFont)
 	return true;
 }
 
+static bool GetSettingFont(TVTest::SettingInfo *pSetting,const TVTest::Style::Font &Font)
+{
+	TVTest::Style::Font f=Font;
+	GetAppClass().StyleManager.RealizeFontSize(&f);
+	return GetSettingFont(pSetting,&f.LogFont);
+}
+
 static bool GetSettingInt(TVTest::SettingInfo *pSetting,int Value)
 {
 	if (pSetting->Type!=TVTest::SETTING_TYPE_INT)
@@ -3199,9 +3206,9 @@ bool CPlugin::OnGetSetting(TVTest::SettingInfo *pSetting) const
 	} else if (::lstrcmpiW(pSetting->pszName,L"PanelFont")==0) {
 		return GetSettingFont(pSetting,App.PanelOptions.GetFont());
 	} else if (::lstrcmpiW(pSetting->pszName,L"ProgramGuideFont")==0) {
-		return GetSettingFont(pSetting,&App.ProgramGuideOptions.GetFont());
+		return GetSettingFont(pSetting,App.ProgramGuideOptions.GetFont());
 	} else if (::lstrcmpiW(pSetting->pszName,L"StatusBarFont")==0) {
-		return GetSettingFont(pSetting,&App.StatusOptions.GetFont());
+		return GetSettingFont(pSetting,App.StatusOptions.GetFont());
 	} else if (::lstrcmpiW(pSetting->pszName,L"DPI")==0) {
 		return GetSettingInt(pSetting,App.StyleManager.GetDPI());
 	}

@@ -15,15 +15,14 @@ class CPanelForm
 	, public TVTest::CUIBase
 {
 public:
-	class ABSTRACT_CLASS(CPage) : public CCustomWindow {
-	protected:
-		static bool GetDefaultFont(LOGFONT *pFont);
-		static HFONT CreateDefaultFont();
-		static bool CreateDefaultFont(DrawUtil::CFont *pFont);
+	class ABSTRACT_CLASS(CPage)
+		: public CCustomWindow
+		, public TVTest::CUIBase
+	{
 	public:
 		CPage();
 		virtual ~CPage()=0;
-		virtual bool SetFont(const LOGFONT *pFont) { return true; }
+		virtual bool SetFont(const TVTest::Style::Font &Font) { return true; }
 		virtual void OnActivate() {}
 		virtual void OnDeactivate() {}
 		virtual void OnVisibilityChanged(bool fVisible) {}
@@ -31,6 +30,9 @@ public:
 		virtual bool DrawIcon(HDC hdc,int x,int y,int Width,int Height,
 							  const TVTest::Theme::ThemeColor &Color) { return false; }
 		virtual bool NeedKeyboardFocus() const { return false; }
+
+	protected:
+		bool CreateDefaultFont(DrawUtil::CFont *pFont);
 	};
 
 	class ABSTRACT_CLASS(CEventHandler) {
@@ -102,8 +104,8 @@ public:
 	void SetEventHandler(CEventHandler *pHandler);
 	bool SetPanelFormTheme(const PanelFormTheme &Theme);
 	bool GetPanelFormTheme(PanelFormTheme *pTheme) const;
-	bool SetTabFont(const LOGFONT *pFont);
-	bool SetPageFont(const LOGFONT *pFont);
+	bool SetTabFont(const TVTest::Style::Font &Font);
+	bool SetPageFont(const TVTest::Style::Font &Font);
 	bool GetPageClientRect(RECT *pRect) const;
 	bool SetTabStyle(TabStyle Style);
 	bool SetIconImage(HBITMAP hbm,int Width,int Height);

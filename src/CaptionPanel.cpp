@@ -77,6 +77,17 @@ void CCaptionPanel::SetTheme(const TVTest::Theme::CThemeManager *pThemeManager)
 }
 
 
+bool CCaptionPanel::SetFont(const TVTest::Style::Font &Font)
+{
+	if (!CreateDrawFont(Font,&m_Font))
+		return false;
+	if (m_hwnd!=NULL) {
+		SetWindowFont(m_hwndEdit,m_Font.GetHandle(),TRUE);
+	}
+	return true;
+}
+
+
 bool CCaptionPanel::ReadSettings(CSettings &Settings)
 {
 	int Value;
@@ -108,17 +119,6 @@ void CCaptionPanel::SetColor(COLORREF BackColor,COLORREF TextColor)
 		m_BackBrush.Create(BackColor);
 		::InvalidateRect(m_hwndEdit,NULL,TRUE);
 	}
-}
-
-
-bool CCaptionPanel::SetFont(const LOGFONT *pFont)
-{
-	if (!m_Font.Create(pFont))
-		return false;
-	if (m_hwnd!=NULL) {
-		SetWindowFont(m_hwndEdit,m_Font.GetHandle(),TRUE);
-	}
-	return true;
 }
 
 

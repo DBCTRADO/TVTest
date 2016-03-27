@@ -92,6 +92,19 @@ void CControlPanel::SetTheme(const TVTest::Theme::CThemeManager *pThemeManager)
 }
 
 
+bool CControlPanel::SetFont(const TVTest::Style::Font &Font)
+{
+	if (!CreateDrawFont(Font,&m_Font))
+		return false;
+	if (m_hwnd!=NULL) {
+		m_FontHeight=CalcFontHeight();
+		UpdateLayout();
+		Invalidate();
+	}
+	return true;
+}
+
+
 bool CControlPanel::AddItem(CControlPanelItem *pItem)
 {
 	if (pItem==NULL)
@@ -182,19 +195,6 @@ bool CControlPanel::GetControlPanelTheme(ControlPanelTheme *pTheme) const
 	if (pTheme==NULL)
 		return false;
 	*pTheme=m_Theme;
-	return true;
-}
-
-
-bool CControlPanel::SetFont(const LOGFONT *pFont)
-{
-	if (!m_Font.Create(pFont))
-		return false;
-	if (m_hwnd!=NULL) {
-		m_FontHeight=CalcFontHeight();
-		UpdateLayout();
-		Invalidate();
-	}
 	return true;
 }
 
@@ -375,11 +375,8 @@ LRESULT CControlPanel::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam
 	case WM_CREATE:
 		InitializeUI();
 
-		if (!m_Font.IsCreated()) {
-			LOGFONT lf;
-			GetDefaultFont(&lf);
-			m_Font.Create(&lf);
-		}
+		if (!m_Font.IsCreated())
+			CreateDefaultFont(&m_Font);
 		m_FontHeight=CalcFontHeight();
 
 		m_HotItem=-1;

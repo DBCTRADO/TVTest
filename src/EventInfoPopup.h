@@ -3,6 +3,7 @@
 
 
 #include "BasicWindow.h"
+#include "UIBase.h"
 #include "EpgProgramList.h"
 #include "DrawUtil.h"
 #include "RichEditUtil.h"
@@ -10,7 +11,9 @@
 #include "WindowUtil.h"
 
 
-class CEventInfoPopup : protected CCustomWindow
+class CEventInfoPopup
+	: protected CCustomWindow
+	, public TVTest::CUIBase
 {
 public:
 	class ABSTRACT_CLASS(CEventHandler)
@@ -38,7 +41,7 @@ public:
 	bool SetSize(int Width,int Height);
 	void SetColor(COLORREF BackColor,COLORREF TextColor);
 	void SetTitleColor(COLORREF BackColor,COLORREF TextColor);
-	bool SetFont(const LOGFONT *pFont);
+	bool SetFont(const TVTest::Style::Font &Font);
 	void SetEventHandler(CEventHandler *pEventHandler);
 	bool IsSelected() const;
 	LPTSTR GetSelectedText() const;

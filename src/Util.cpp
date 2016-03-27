@@ -465,7 +465,7 @@ bool ChooseColorDialog(HWND hwndOwner,COLORREF *pcrResult)
 }
 
 
-bool ChooseFontDialog(HWND hwndOwner,LOGFONT *plf)
+bool ChooseFontDialog(HWND hwndOwner,LOGFONT *plf,int *pPointSize)
 {
 	CHOOSEFONT cf;
 
@@ -473,7 +473,13 @@ bool ChooseFontDialog(HWND hwndOwner,LOGFONT *plf)
 	cf.hwndOwner=hwndOwner;
 	cf.lpLogFont=plf;
 	cf.Flags=CF_FORCEFONTEXIST | CF_INITTOLOGFONTSTRUCT | CF_SCREENFONTS;
-	return ChooseFont(&cf)!=FALSE;
+	if (!ChooseFont(&cf))
+		return false;
+
+	if (pPointSize!=nullptr)
+		*pPointSize=cf.iPointSize;
+
+	return true;
 }
 
 

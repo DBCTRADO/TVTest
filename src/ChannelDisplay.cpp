@@ -254,9 +254,9 @@ bool CChannelDisplay::SetSelect(LPCTSTR pszDriverFileName,const CChannelInfo *pC
 }
 
 
-bool CChannelDisplay::SetFont(const LOGFONT *pFont,bool fAutoSize)
+bool CChannelDisplay::SetFont(const TVTest::Style::Font &Font,bool fAutoSize)
 {
-	if (!m_Font.Create(pFont))
+	if (!CreateDrawFont(Font,&m_Font))
 		return false;
 	m_fAutoFontSize=fAutoSize;
 	if (m_hwnd!=NULL) {
@@ -944,7 +944,7 @@ LRESULT CChannelDisplay::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lPar
 		{
 			InitializeUI();
 			if (!m_Font.IsCreated())
-				m_Font.Create(/*DrawUtil::FONT_DEFAULT*/DrawUtil::FONT_MESSAGE);
+				CreateDefaultFont(&m_Font);
 			m_hwndTunerScroll=::CreateWindowEx(0,TEXT("SCROLLBAR"),TEXT(""),
 				WS_CHILD | SBS_VERT,0,0,0,0,hwnd,NULL,m_hinst,NULL);
 			m_hwndChannelScroll=::CreateWindowEx(0,TEXT("SCROLLBAR"),TEXT(""),

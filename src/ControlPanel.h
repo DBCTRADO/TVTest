@@ -13,7 +13,6 @@ class CControlPanelItem;
 
 class CControlPanel
 	: public CPanelForm::CPage
-	, public TVTest::CUIBase
 {
 public:
 	struct ControlPanelTheme {
@@ -36,6 +35,9 @@ public:
 	void NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager) override;
 	void SetTheme(const TVTest::Theme::CThemeManager *pThemeManager) override;
 
+// CPage
+	bool SetFont(const TVTest::Style::Font &Font) override;
+
 // CControlPanel
 	bool AddItem(CControlPanelItem *pItem);
 	CControlPanelItem *GetItem(int Index) const;
@@ -44,7 +46,6 @@ public:
 	void UpdateLayout();
 	bool SetControlPanelTheme(const ControlPanelTheme &Theme);
 	bool GetControlPanelTheme(ControlPanelTheme *pTheme) const;
-	bool SetFont(const LOGFONT *pFont);
 	int GetFontHeight() const { return m_FontHeight; }
 	void SetSendMessageWindow(HWND hwnd);
 	bool CheckRadioItem(int FirstID,int LastID,int CheckID);

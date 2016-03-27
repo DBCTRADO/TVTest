@@ -1050,6 +1050,7 @@
     <ClCompile Include="StreamInfo.cpp" />
     <ClCompile Include="StringUtility.cpp" />
     <ClCompile Include="Style.cpp" />
+    <ClCompile Include="StyleUtil.cpp" />
     <ClCompile Include="Taskbar.cpp" />
     <ClCompile Include="TaskbarOptions.cpp" />
     <ClCompile Include="Theme.cpp" />
@@ -1241,6 +1242,7 @@
     <ClInclude Include="StreamInfo.h" />
     <ClInclude Include="StringUtility.h" />
     <ClInclude Include="Style.h" />
+    <ClInclude Include="StyleUtil.h" />
     <ClInclude Include="Taskbar.h" />
     <ClInclude Include="TaskbarOptions.h" />
     <ClInclude Include="Theme.h" />

@@ -26,7 +26,7 @@ public:
 	bool ApplyItemList();
 	int RegisterItem(LPCTSTR pszID);
 	bool SetItemVisibility(int ID,bool fVisible);
-	const LOGFONT &GetFont() const { return m_lfItemFont; }
+	const TVTest::Style::Font &GetFont() const { return m_ItemFont; }
 	bool GetShowPopup() const { return m_fShowPopup; }
 	int GetPopupOpacity() const { return m_PopupOpacity; }
 	bool GetShowTOTTime() const { return m_fShowTOTTime; }
@@ -63,13 +63,13 @@ private:
 	StatusItemInfoList m_ItemList;
 	StatusItemInfoList m_ItemListCur;
 	int m_ItemID;
-	LOGFONT m_lfItemFont;
+	TVTest::Style::Font m_ItemFont;
 	bool m_fMultiRow;
 	int m_MaxRows;
 	bool m_fShowPopup;
 	int m_PopupOpacity;
 
-	LOGFONT m_CurSettingFont;
+	TVTest::Style::Font m_CurSettingFont;
 	CItemListSubclass m_ItemListSubclass;
 	int m_ItemHeight;
 	int m_TextWidth;

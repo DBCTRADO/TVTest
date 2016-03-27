@@ -29,7 +29,7 @@ public:
 	bool GetTimeRange(SYSTEMTIME *pstFirst,SYSTEMTIME *pstLast);
 	bool GetOnScreen() const { return m_fOnScreen; }
 	bool ScrollToCurChannel() const { return m_fScrollToCurChannel; }
-	const LOGFONT &GetFont() const { return m_Font; }
+	const TVTest::Style::Font &GetFont() const { return m_Font; }
 	UINT GetVisibleEventIcons() const { return m_VisibleEventIcons; }
 	LPCTSTR GetProgramLDoubleClickCommand() const { return TVTest::StringUtility::GetCStrOrNull(m_ProgramLDoubleClickCommand); }
 	int ParseCommand(LPCTSTR pszCommand) const;
@@ -48,8 +48,8 @@ private:
 	int m_ViewHours;
 	int m_ItemWidth;
 	int m_LinesPerHour;
-	LOGFONT m_Font;
-	LOGFONT m_CurSettingFont;
+	TVTest::Style::Font m_Font;
+	TVTest::Style::Font m_CurSettingFont;
 	bool m_fUseDirectWrite;
 	TVTest::CDirectWriteRenderer::RenderingParams m_DirectWriteRenderingParams;
 	UINT m_VisibleEventIcons;

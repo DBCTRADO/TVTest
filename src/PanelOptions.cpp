@@ -3,6 +3,7 @@
 #include "AppMain.h"
 #include "PanelOptions.h"
 #include "DialogUtil.h"
+#include "StyleUtil.h"
 #include "resource.h"
 #include <algorithm>
 #include "Common/DebugDef.h"
@@ -20,8 +21,8 @@ CPanelOptions::CPanelOptions()
 	, m_fTabTooltip(true)
 	, m_fProgramInfoUseRichEdit(true)
 {
-	DrawUtil::GetDefaultUIFont(&m_Font);
-	DrawUtil::GetSystemFont(DrawUtil::FONT_MESSAGE,&m_CaptionFont);
+	TVTest::StyleUtil::GetDefaultUIFont(&m_Font);
+	TVTest::StyleUtil::GetSystemFont(DrawUtil::FONT_MESSAGE,&m_CaptionFont);
 
 	static const struct {
 		LPCTSTR pszID;
@@ -54,12 +55,12 @@ CPanelOptions::~CPanelOptions()
 
 bool CPanelOptions::InitializePanelForm(CPanelForm *pPanelForm)
 {
-	pPanelForm->SetTabFont(&m_Font);
-	pPanelForm->SetPageFont(&m_Font);
+	pPanelForm->SetTabFont(m_Font);
+	pPanelForm->SetPageFont(m_Font);
 	if (m_fSpecCaptionFont) {
 		CPanelForm::CPage *pCaptionPanel=pPanelForm->GetPageByID(PANEL_ID_CAPTION);
 		if (pCaptionPanel!=NULL)
-			pCaptionPanel->SetFont(&m_CaptionFont);
+			pCaptionPanel->SetFont(m_CaptionFont);
 	}
 	int InitialTab=GetInitialTab();
 	if (InitialTab<0)
@@ -82,31 +83,16 @@ bool CPanelOptions::ReadSettings(CSettings &Settings)
 	if (Settings.Read(TEXT("PanelOpacity"),&m_Opacity))
 		GetAppClass().Panel.Frame.SetPanelOpacity(m_Opacity*255/100);
 
-	// Font
-	TCHAR szFont[LF_FACESIZE];
-	if (Settings.Read(TEXT("PanelFontName"),szFont,LF_FACESIZE) && szFont[0]!='\0') {
-		::lstrcpy(m_Font.lfFaceName,szFont);
-		m_Font.lfEscapement=0;
-		m_Font.lfOrientation=0;
-		m_Font.lfUnderline=0;
-		m_Font.lfStrikeOut=0;
-		m_Font.lfCharSet=DEFAULT_CHARSET;
-		m_Font.lfOutPrecision=OUT_DEFAULT_PRECIS;
-		m_Font.lfClipPrecision=CLIP_DEFAULT_PRECIS;
-		m_Font.lfQuality=DRAFT_QUALITY;
-		m_Font.lfPitchAndFamily=DEFAULT_PITCH | FF_DONTCARE;
+	bool f;
+	if (TVTest::StyleUtil::ReadFontSettings(Settings,TEXT("PanelFont"),&m_Font,true,&f)) {
+		if (!f)
+			m_fChanged=true;
 	}
-	if (Settings.Read(TEXT("PanelFontSize"),&Value)) {
-		m_Font.lfHeight=Value;
-		m_Font.lfWidth=0;
+	if (TVTest::StyleUtil::ReadFontSettings(Settings,TEXT("CaptionPanelFont"),&m_CaptionFont,false,&f)) {
+		if (!f)
+			m_fChanged=true;
 	}
-	if (Settings.Read(TEXT("PanelFontWeight"),&Value))
-		m_Font.lfWeight=Value;
-	if (Settings.Read(TEXT("PanelFontItalic"),&Value))
-		m_Font.lfItalic=Value;
 	Settings.Read(TEXT("CaptionPanelFontSpec"),&m_fSpecCaptionFont);
-	if (!Settings.Read(TEXT("CaptionPanelFont"),&m_CaptionFont))
-		m_CaptionFont=m_Font;
 
 	if (Settings.Read(TEXT("PanelTabStyle"),&Value)
 			&& Value>=CPanelForm::TABSTYLE_FIRST && Value<=CPanelForm::TABSTYLE_LAST)
@@ -186,13 +172,9 @@ bool CPanelOptions::WriteSettings(CSettings &Settings)
 	Settings.Write(TEXT("PanelTabStyle"),(int)m_TabStyle);
 	Settings.Write(TEXT("PanelTabTooltip"),m_fTabTooltip);
 
-	// Font
-	Settings.Write(TEXT("PanelFontName"),m_Font.lfFaceName);
-	Settings.Write(TEXT("PanelFontSize"),(int)m_Font.lfHeight);
-	Settings.Write(TEXT("PanelFontWeight"),(int)m_Font.lfWeight);
-	Settings.Write(TEXT("PanelFontItalic"),(int)m_Font.lfItalic);
+	TVTest::StyleUtil::WriteFontSettings(Settings,TEXT("PanelFont"),m_Font);
+	TVTest::StyleUtil::WriteFontSettings(Settings,TEXT("CaptionPanelFont"),m_CaptionFont);
 	Settings.Write(TEXT("CaptionPanelFontSpec"),m_fSpecCaptionFont);
-	Settings.Write(TEXT("CaptionPanelFont"),&m_CaptionFont);
 
 	// アイテムリスト
 	Settings.Write(TEXT("PanelTabCount"),(int)m_ItemList.size());
@@ -343,21 +325,6 @@ bool CPanelOptions::ApplyItemList(CPanelForm *pPanelForm) const
 }
 
 
-static void SetFontInfo(HWND hDlg,int ID,const LOGFONT *plf)
-{
-	HDC hdc;
-	TCHAR szText[LF_FACESIZE+16];
-
-	hdc=GetDC(hDlg);
-	if (hdc==NULL)
-		return;
-	StdUtil::snprintf(szText,lengthof(szText),TEXT("%s, %d pt"),
-					  plf->lfFaceName,CalcFontPointHeight(hdc,plf));
-	SetDlgItemText(hDlg,ID,szText);
-	ReleaseDC(hDlg,hdc);
-}
-
-
 INT_PTR CPanelOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 {
 	switch (uMsg) {
@@ -382,13 +349,13 @@ INT_PTR CPanelOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 										UDM_SETRANGE,0,MAKELPARAM(100,20));
 
 			m_CurSettingFont=m_Font;
-			SetFontInfo(hDlg,IDC_PANELOPTIONS_FONTINFO,&m_Font);
+			TVTest::StyleUtil::SetFontInfoItem(hDlg,IDC_PANELOPTIONS_FONTINFO,m_Font);
 			DlgCheckBox_Check(hDlg,IDC_PANELOPTIONS_SPECCAPTIONFONT,m_fSpecCaptionFont);
 			EnableDlgItems(hDlg,IDC_PANELOPTIONS_CAPTIONFONT_INFO,
 						   IDC_PANELOPTIONS_CAPTIONFONT_CHOOSE,
 						   m_fSpecCaptionFont);
 			m_CurSettingCaptionFont=m_CaptionFont;
-			SetFontInfo(hDlg,IDC_PANELOPTIONS_CAPTIONFONT_INFO,&m_CaptionFont);
+			TVTest::StyleUtil::SetFontInfoItem(hDlg,IDC_PANELOPTIONS_CAPTIONFONT_INFO,m_CaptionFont);
 
 			m_ItemListView.Attach(::GetDlgItem(hDlg,IDC_PANELOPTIONS_ITEMLIST));
 			m_ItemListView.InitCheckList();
@@ -479,8 +446,8 @@ INT_PTR CPanelOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 			return TRUE;
 
 		case IDC_PANELOPTIONS_CHOOSEFONT:
-			if (ChooseFontDialog(hDlg,&m_CurSettingFont))
-				SetFontInfo(hDlg,IDC_PANELOPTIONS_FONTINFO,&m_CurSettingFont);
+			if (TVTest::StyleUtil::ChooseStyleFont(hDlg,&m_CurSettingFont))
+				TVTest::StyleUtil::SetFontInfoItem(hDlg,IDC_PANELOPTIONS_FONTINFO,m_CurSettingFont);
 			return TRUE;
 
 		case IDC_PANELOPTIONS_SPECCAPTIONFONT:
@@ -490,8 +457,8 @@ INT_PTR CPanelOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 			return TRUE;
 
 		case IDC_PANELOPTIONS_CAPTIONFONT_CHOOSE:
-			if (ChooseFontDialog(hDlg,&m_CurSettingCaptionFont))
-				SetFontInfo(hDlg,IDC_PANELOPTIONS_CAPTIONFONT_INFO,&m_CurSettingCaptionFont);
+			if (TVTest::StyleUtil::ChooseStyleFont(hDlg,&m_CurSettingCaptionFont))
+				TVTest::StyleUtil::SetFontInfoItem(hDlg,IDC_PANELOPTIONS_CAPTIONFONT_INFO,m_CurSettingCaptionFont);
 			return TRUE;
 		}
 		return TRUE;
@@ -509,11 +476,11 @@ INT_PTR CPanelOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 				m_Opacity=::GetDlgItemInt(hDlg,IDC_PANELOPTIONS_OPACITY_EDIT,NULL,TRUE);
 				Panel.Frame.SetPanelOpacity(m_Opacity*255/100);
 
-				bool fFontChanged=!CompareLogFont(&m_Font,&m_CurSettingFont);
+				bool fFontChanged=m_Font!=m_CurSettingFont;
 				if (fFontChanged) {
 					m_Font=m_CurSettingFont;
-					Panel.Form.SetTabFont(&m_Font);
-					Panel.Form.SetPageFont(&m_Font);
+					Panel.Form.SetTabFont(m_Font);
+					Panel.Form.SetPageFont(m_Font);
 				}
 
 				bool fChangeCaptionFont=false;
@@ -522,7 +489,7 @@ INT_PTR CPanelOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 					m_fSpecCaptionFont=fSpecCaptionFont;
 					fChangeCaptionFont=true;
 				}
-				if (!CompareLogFont(&m_CaptionFont,&m_CurSettingCaptionFont)) {
+				if (m_CaptionFont!=m_CurSettingCaptionFont) {
 					m_CaptionFont=m_CurSettingCaptionFont;
 					if (m_fSpecCaptionFont)
 						fChangeCaptionFont=true;
@@ -533,7 +500,7 @@ INT_PTR CPanelOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 					CPanelForm::CPage *pCaptionPanel=Panel.Form.GetPageByID(PANEL_ID_CAPTION);
 					if (pCaptionPanel!=NULL)
 						pCaptionPanel->SetFont(m_fSpecCaptionFont?
-											   &m_CaptionFont:&m_Font);
+											   m_CaptionFont:m_Font);
 				}
 
 				const int ItemCount=m_ItemListView.GetItemCount();

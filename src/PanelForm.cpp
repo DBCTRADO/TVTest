@@ -344,9 +344,9 @@ bool CPanelForm::GetPanelFormTheme(PanelFormTheme *pTheme) const
 }
 
 
-bool CPanelForm::SetTabFont(const LOGFONT *pFont)
+bool CPanelForm::SetTabFont(const TVTest::Style::Font &Font)
 {
-	if (!m_Font.Create(pFont))
+	if (!CreateDrawFont(Font,&m_Font))
 		return false;
 	if (m_hwnd!=NULL) {
 		CalcTabSize();
@@ -357,10 +357,10 @@ bool CPanelForm::SetTabFont(const LOGFONT *pFont)
 }
 
 
-bool CPanelForm::SetPageFont(const LOGFONT *pFont)
+bool CPanelForm::SetPageFont(const TVTest::Style::Font &Font)
 {
 	for (size_t i=0;i<m_WindowList.size();i++)
-		m_WindowList[i]->m_pWindow->SetFont(pFont);
+		m_WindowList[i]->m_pWindow->SetFont(Font);
 	return true;
 }
 
@@ -429,11 +429,8 @@ LRESULT CPanelForm::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 	case WM_CREATE:
 		{
 			InitializeUI();
-			if (!m_Font.IsCreated()) {
-				LOGFONT lf;
-				DrawUtil::GetDefaultUIFont(&lf);
-				m_Font.Create(&lf);
-			}
+			if (!m_Font.IsCreated())
+				CreateDefaultFont(&m_Font);
 			CalcTabSize();
 
 			m_Tooltip.Create(hwnd);
@@ -806,29 +803,13 @@ CPanelForm::CPage::~CPage()
 }
 
 
-bool CPanelForm::CPage::GetDefaultFont(LOGFONT *pFont)
-{
-	return DrawUtil::GetDefaultUIFont(pFont);
-}
-
-
-HFONT CPanelForm::CPage::CreateDefaultFont()
-{
-	LOGFONT lf;
-
-	if (!GetDefaultFont(&lf))
-		return NULL;
-	return ::CreateFontIndirect(&lf);
-}
-
-
 bool CPanelForm::CPage::CreateDefaultFont(DrawUtil::CFont *pFont)
 {
-	LOGFONT lf;
+	TVTest::Style::Font Font;
 
-	if (!GetDefaultFont(&lf))
+	if (!GetDefaultFont(&Font))
 		return false;
-	return pFont->Create(&lf);
+	return pFont->Create(&Font.LogFont);
 }
 
 

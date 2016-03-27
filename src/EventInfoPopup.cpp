@@ -390,13 +390,16 @@ void CEventInfoPopup::SetTitleColor(COLORREF BackColor,COLORREF TextColor)
 }
 
 
-bool CEventInfoPopup::SetFont(const LOGFONT *pFont)
+bool CEventInfoPopup::SetFont(const TVTest::Style::Font &Font)
 {
-	LOGFONT lf=*pFont;
+	if (!CreateDrawFont(Font,&m_Font))
+		return false;
 
-	m_Font.Create(&lf);
+	LOGFONT lf;
+	m_Font.GetLogFont(&lf);
 	lf.lfWeight=FW_BOLD;
 	m_TitleFont.Create(&lf);
+
 	if (m_hwnd!=NULL) {
 		CalcTitleHeight();
 		RECT rc;
@@ -406,6 +409,7 @@ bool CEventInfoPopup::SetFont(const LOGFONT *pFont)
 
 		SetWindowFont(m_hwndEdit,m_Font.GetHandle(),TRUE);
 	}
+
 	return true;
 }
 
@@ -527,13 +531,8 @@ LRESULT CEventInfoPopup::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lPar
 {
 	switch (uMsg) {
 	case WM_CREATE:
-		if (!m_Font.IsCreated()) {
-			LOGFONT lf;
-			DrawUtil::GetSystemFont(DrawUtil::FONT_MESSAGE,&lf);
-			m_Font.Create(&lf);
-			lf.lfWeight=FW_BOLD;
-			m_TitleFont.Create(&lf);
-		}
+		if (!m_Font.IsCreated())
+			CreateDefaultFontAndBoldFont(&m_Font,&m_TitleFont);
 
 		m_RichEditUtil.LoadRichEditLib();
 		m_hwndEdit=::CreateWindowEx(0,m_RichEditUtil.GetWindowClassName(),TEXT(""),

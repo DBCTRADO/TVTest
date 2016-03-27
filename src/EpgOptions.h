@@ -7,6 +7,7 @@
 #include "Options.h"
 #include "LogoManager.h"
 #include "EpgDataLoader.h"
+#include "Style.h"
 
 
 class CEpgOptions : public COptions
@@ -49,7 +50,7 @@ public:
 	bool GetUpdateBSExtended() const { return m_fUpdateBSExtended; }
 	bool GetUpdateCSExtended() const { return m_fUpdateCSExtended; }
 
-	const LOGFONT *GetEventInfoFont() const { return &m_EventInfoFont; }
+	const TVTest::Style::Font &GetEventInfoFont() const { return m_EventInfoFont; }
 
 	bool LoadEpgFile(CEpgProgramList *pEpgList);
 	bool AsyncLoadEpgFile(CEpgProgramList *pEpgList,CEpgFileLoadEventHandler *pEventHandler=NULL);
@@ -81,8 +82,8 @@ private:
 	HANDLE m_hLoadThread;
 	CEpgDataLoader *m_pEpgDataLoader;
 
-	LOGFONT m_EventInfoFont;
-	LOGFONT m_CurEventInfoFont;
+	TVTest::Style::Font m_EventInfoFont;
+	TVTest::Style::Font m_CurEventInfoFont;
 
 // CBasicDialog
 	INT_PTR DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam) override;

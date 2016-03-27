@@ -39,7 +39,7 @@ public:
 	bool GetSnapAtMainWindow() const { return m_fSnapAtMainWindow; }
 	int GetSnapMargin() const { return m_SnapMargin; }
 	bool GetAttachToMainWindow() const { return m_fAttachToMainWindow; }
-	const LOGFONT *GetFont() const { return &m_Font; }
+	const TVTest::Style::Font &GetFont() const { return m_Font; }
 	int GetInitialTab() const;
 	CPanelForm::TabStyle GetTabStyle() const { return m_TabStyle; }
 	bool GetProgramInfoUseRichEdit() const { return m_fProgramInfoUseRichEdit; }
@@ -65,11 +65,11 @@ private:
 	int m_SnapMargin;
 	bool m_fAttachToMainWindow;
 	int m_Opacity;
-	LOGFONT m_Font;
-	LOGFONT m_CurSettingFont;
+	TVTest::Style::Font m_Font;
+	TVTest::Style::Font m_CurSettingFont;
 	bool m_fSpecCaptionFont;
-	LOGFONT m_CaptionFont;
-	LOGFONT m_CurSettingCaptionFont;
+	TVTest::Style::Font m_CaptionFont;
+	TVTest::Style::Font m_CurSettingCaptionFont;
 	TVTest::String m_InitialTab;
 	TVTest::String m_LastTab;
 	PanelItemInfoList m_AvailItemList;

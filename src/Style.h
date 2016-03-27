@@ -90,6 +90,20 @@ namespace TVTest
 			int Vert() const { return Top+Bottom; }
 		};
 
+		struct Font
+		{
+		public:
+			LOGFONT LogFont;
+			IntValue Size;
+
+			Font() : LogFont() {}
+			Font(const LOGFONT &lf,int s,UnitType u=UNIT_POINT)
+				: LogFont(lf), Size(s,u) {}
+			bool operator==(const Font &o) const {
+				return CompareLogFont(&LogFont,&o.LogFont) && Size==o.Size; }
+			bool operator!=(const Font &o) const { return !(*this==o); }
+		};
+
 		class CStyleManager
 		{
 		public:
@@ -116,6 +130,11 @@ namespace TVTest
 			int DipToPixels(int Dip) const;
 			int ConvertUnit(int Value,UnitType SrcUnit,UnitType DstUnit) const;
 			int GetDPI() const;
+			int GetSystemDPI() const;
+			bool RealizeFontSize(Font *pFont) const;
+
+			static bool AssignFontSizeFromLogFont(Font *pFont);
+			static bool ParseValue(LPCTSTR pszText,IntValue *pValue);
 
 		private:
 			typedef std::unordered_map<String,StyleInfo> StyleMap;
@@ -123,6 +142,10 @@ namespace TVTest
 			StyleMap m_StyleMap;
 			int m_ResolutionX;
 			int m_ResolutionY;
+			bool m_fScaleFont;
+
+			static int m_SystemResolutionX;
+			static int m_SystemResolutionY;
 
 			static UnitType ParseUnit(LPCTSTR pszUnit);
 		};

@@ -4,6 +4,7 @@
 #include "EpgOptions.h"
 #include "DialogUtil.h"
 #include "DrawUtil.h"
+#include "StyleUtil.h"
 #include "resource.h"
 #include "Common/DebugDef.h"
 
@@ -47,7 +48,7 @@ CEpgOptions::CEpgOptions()
 
 	::lstrcpy(m_szLogoFileName,TEXT("LogoData"));
 
-	DrawUtil::GetSystemFont(DrawUtil::FONT_MESSAGE,&m_EventInfoFont);
+	TVTest::StyleUtil::GetSystemFont(DrawUtil::FONT_MESSAGE,&m_EventInfoFont);
 }
 
 
@@ -111,7 +112,11 @@ bool CEpgOptions::ReadSettings(CSettings &Settings)
 			LogoManager.SetLogoDirectory(TEXT(".\\Plugins\\Logo"));
 	}
 
-	Settings.Read(TEXT("EventInfoFont"),&m_EventInfoFont);
+	bool f;
+	if (TVTest::StyleUtil::ReadFontSettings(Settings,TEXT("EventInfoFont"),&m_EventInfoFont,false,&f)) {
+		if (!f)
+			m_fChanged=true;
+	}
 
 	return true;
 }
@@ -136,7 +141,8 @@ bool CEpgOptions::WriteSettings(CSettings &Settings)
 	Settings.Write(TEXT("SaveBmpLogo"),LogoManager.GetSaveLogoBmp());
 	Settings.Write(TEXT("LogoDirectory"),LogoManager.GetLogoDirectory());
 
-	Settings.Write(TEXT("EventInfoFont"),&m_EventInfoFont);
+	TVTest::StyleUtil::WriteFontSettings(Settings,TEXT("EventInfoFont"),m_EventInfoFont);
+
 	return true;
 }
 
@@ -373,19 +379,6 @@ bool CEpgOptions::SaveLogoFile()
 }
 
 
-static void SetFontInfo(HWND hDlg,const LOGFONT *plf)
-{
-	HDC hdc;
-	TCHAR szText[LF_FACESIZE+16];
-
-	hdc=::GetDC(hDlg);
-	if (hdc==NULL)
-		return;
-	::wsprintf(szText,TEXT("%s, %d pt"),plf->lfFaceName,CalcFontPointHeight(hdc,plf));
-	::SetDlgItemText(hDlg,IDC_EVENTINFOOPTIONS_FONT_INFO,szText);
-	::ReleaseDC(hDlg,hdc);
-}
-
 INT_PTR CEpgOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 {
 	switch (uMsg) {
@@ -421,7 +414,7 @@ INT_PTR CEpgOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 			::SetDlgItemText(hDlg,IDC_LOGOOPTIONS_LOGOFOLDER,LogoManager.GetLogoDirectory());
 
 			m_CurEventInfoFont=m_EventInfoFont;
-			SetFontInfo(hDlg,&m_CurEventInfoFont);
+			TVTest::StyleUtil::SetFontInfoItem(hDlg,IDC_EVENTINFOOPTIONS_FONT_INFO,m_CurEventInfoFont);
 		}
 		return TRUE;
 
@@ -536,8 +529,8 @@ INT_PTR CEpgOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 			return TRUE;
 
 		case IDC_EVENTINFOOPTIONS_FONT_CHOOSE:
-			if (ChooseFontDialog(hDlg,&m_CurEventInfoFont))
-				SetFontInfo(hDlg,&m_CurEventInfoFont);
+			if (TVTest::StyleUtil::ChooseStyleFont(hDlg,&m_CurEventInfoFont))
+				TVTest::StyleUtil::SetFontInfoItem(hDlg,IDC_EVENTINFOOPTIONS_FONT_INFO,m_CurEventInfoFont);
 			return TRUE;
 		}
 		return TRUE;
@@ -577,7 +570,7 @@ INT_PTR CEpgOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 				::GetDlgItemText(hDlg,IDC_LOGOOPTIONS_LOGOFOLDER,szPath,lengthof(szPath));
 				LogoManager.SetLogoDirectory(szPath);
 
-				if (!CompareLogFont(&m_EventInfoFont,&m_CurEventInfoFont)) {
+				if (m_EventInfoFont!=m_CurEventInfoFont) {
 					m_EventInfoFont=m_CurEventInfoFont;
 					SetGeneralUpdateFlag(UPDATE_GENERAL_EVENTINFOFONT);
 				}

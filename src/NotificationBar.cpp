@@ -162,9 +162,9 @@ bool CNotificationBar::Hide()
 }
 
 
-bool CNotificationBar::SetFont(const LOGFONT *pFont)
+bool CNotificationBar::SetFont(const TVTest::Style::Font &Font)
 {
-	if (!m_Font.Create(pFont))
+	if (!CreateDrawFont(Font,&m_Font))
 		return false;
 	if (m_hwnd!=NULL)
 		CalcBarHeight();
@@ -217,10 +217,11 @@ LRESULT CNotificationBar::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lPa
 			InitializeUI();
 
 			if (!m_Font.IsCreated()) {
-				LOGFONT lf;
-				DrawUtil::GetSystemFont(DrawUtil::FONT_MESSAGE,&lf);
-				lf.lfHeight=lf.lfHeight*12/10;
-				m_Font.Create(&lf);
+				TVTest::Style::Font Font;
+				GetSystemFont(DrawUtil::FONT_MESSAGE,&Font);
+				Font.LogFont.lfHeight=::MulDiv(Font.LogFont.lfHeight,12,10);
+				Font.Size.Value=::MulDiv(Font.Size.Value,12,10);
+				CreateDrawFont(Font,&m_Font);
 			}
 
 			/*

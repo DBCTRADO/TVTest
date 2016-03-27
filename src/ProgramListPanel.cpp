@@ -314,6 +314,29 @@ void CProgramListPanel::SetTheme(const TVTest::Theme::CThemeManager *pThemeManag
 }
 
 
+bool CProgramListPanel::SetFont(const TVTest::Style::Font &Font)
+{
+	if (!CreateDrawFont(Font,&m_Font))
+		return false;
+
+	LOGFONT lf;
+	m_Font.GetLogFont(&lf);
+	lf.lfWeight=FW_BOLD;
+	m_TitleFont.Create(&lf);
+	m_ScrollPos=0;
+
+	if (m_hwnd!=NULL) {
+		CalcFontHeight();
+		CalcDimensions();
+		SetScrollBar();
+		//SetToolTip();
+		Invalidate();
+	}
+
+	return true;
+}
+
+
 bool CProgramListPanel::ReadSettings(CSettings &Settings)
 {
 	Settings.Read(TEXT("ProgramListPanel.MouseOverEventInfo"),&m_fMouseOverEventInfo);
@@ -606,28 +629,9 @@ bool CProgramListPanel::GetProgramListPanelTheme(ProgramListPanelTheme *pTheme) 
 }
 
 
-bool CProgramListPanel::SetFont(const LOGFONT *pFont)
+bool CProgramListPanel::SetEventInfoFont(const TVTest::Style::Font &Font)
 {
-	if (!m_Font.Create(pFont))
-		return false;
-	LOGFONT lf=*pFont;
-	lf.lfWeight=FW_BOLD;
-	m_TitleFont.Create(&lf);
-	m_ScrollPos=0;
-	if (m_hwnd!=NULL) {
-		CalcFontHeight();
-		CalcDimensions();
-		SetScrollBar();
-		//SetToolTip();
-		Invalidate();
-	}
-	return true;
-}
-
-
-bool CProgramListPanel::SetEventInfoFont(const LOGFONT *pFont)
-{
-	return m_EventInfoPopup.SetFont(pFont);
+	return m_EventInfoPopup.SetFont(Font);
 }
 
 
@@ -892,13 +896,8 @@ LRESULT CProgramListPanel::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lP
 		{
 			InitializeUI();
 
-			if (!m_Font.IsCreated()) {
-				LOGFONT lf;
-				GetDefaultFont(&lf);
-				m_Font.Create(&lf);
-				lf.lfWeight=FW_BOLD;
-				m_TitleFont.Create(&lf);
-			}
+			if (!m_Font.IsCreated())
+				CreateDefaultFontAndBoldFont(&m_Font,&m_TitleFont);
 
 			LOGFONT lf;
 			::ZeroMemory(&lf,sizeof(lf));

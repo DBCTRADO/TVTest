@@ -188,8 +188,8 @@ public:
 	bool SetStatusViewTheme(const StatusViewTheme &Theme);
 	bool GetStatusViewTheme(StatusViewTheme *pTheme) const;
 	void SetItemTheme(const TVTest::Theme::CThemeManager *pThemeManager);
-	bool SetFont(const LOGFONT *pFont);
-	bool GetFont(LOGFONT *pFont) const;
+	bool SetFont(const TVTest::Style::Font &Font);
+	bool GetFont(TVTest::Style::Font *pFont) const;
 	bool SetMultiRow(bool fMultiRow);
 	bool SetMaxRows(int MaxRows);
 	int CalcHeight(int Width) const;
@@ -217,7 +217,8 @@ private:
 	static HINSTANCE m_hinst;
 
 	StatusViewStyle m_Style;
-	DrawUtil::CFont m_Font;
+	TVTest::Style::Font m_Font;
+	DrawUtil::CFont m_DrawFont;
 	int m_FontHeight;
 	int m_TextHeight;
 	int m_ItemHeight;

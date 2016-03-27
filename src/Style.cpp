@@ -14,18 +14,26 @@ namespace Style
 {
 
 
+int CStyleManager::m_SystemResolutionX=96;
+int CStyleManager::m_SystemResolutionY=96;
+
+
 CStyleManager::CStyleManager()
+	: m_fScaleFont(true)
 {
-	HDC hdc=::CreateIC(TEXT("DISPLAY"),NULL,NULL,NULL);
-	if (hdc!=NULL) {
-		m_ResolutionX=::GetDeviceCaps(hdc,LOGPIXELSX);
-		m_ResolutionY=::GetDeviceCaps(hdc,LOGPIXELSY);
-		TRACE(TEXT("System DPI : %d:%d\n"),m_ResolutionX,m_ResolutionY);
-		::DeleteDC(hdc);
+	HDC hdc=::GetDC(nullptr);
+	if (hdc!=nullptr) {
+		m_SystemResolutionX=::GetDeviceCaps(hdc,LOGPIXELSX);
+		m_SystemResolutionY=::GetDeviceCaps(hdc,LOGPIXELSY);
+		TRACE(TEXT("System DPI : %d:%d\n"),m_SystemResolutionX,m_SystemResolutionY);
+		::ReleaseDC(nullptr,hdc);
 	} else {
-		m_ResolutionX=96;
-		m_ResolutionY=96;
+		m_SystemResolutionX=96;
+		m_SystemResolutionY=96;
 	}
+
+	m_ResolutionX=m_SystemResolutionX;
+	m_ResolutionY=m_SystemResolutionY;
 }
 
 
@@ -48,6 +56,8 @@ bool CStyleManager::Load(LPCTSTR pszFileName)
 			m_ResolutionX=Value;
 			m_ResolutionY=Value;
 		}
+
+		Settings.Read(TEXT("ScaleFont"),&m_fScaleFont);
 	}
 
 	if (Settings.SetSection(TEXT("Styles"))) {
@@ -59,12 +69,11 @@ bool CStyleManager::Load(LPCTSTR pszFileName)
 			if (!itr->Name.empty() && !itr->Value.empty()) {
 				StringUtility::Trim(itr->Value);
 				if (!itr->Value.empty()) {
-					if (std::_istdigit(itr->Value[0])) {
-						LPTSTR pEnd;
-						int Value=static_cast<int>(std::_tcstol(itr->Value.c_str(),&pEnd,0));
-						UnitType Unit=ParseUnit(pEnd);
-						if (Unit!=UNIT_UNDEFINED)
-							Set(itr->Name.c_str(),IntValue(Value,Unit));
+					if (std::_istdigit(itr->Value[0])
+							|| itr->Value[0]==_T('-') || itr->Value[0]==_T('+')) {
+						IntValue Value;
+						if (ParseValue(itr->Value.c_str(),&Value))
+							Set(itr->Name.c_str(),Value);
 					} else if (StringUtility::CompareNoCase(itr->Value,TEXT("true"))==0
 							|| StringUtility::CompareNoCase(itr->Value,TEXT("false"))==0) {
 						Set(itr->Name.c_str(),itr->Value[0]==_T('t'));
@@ -448,6 +457,66 @@ int CStyleManager::ConvertUnit(int Value,UnitType SrcUnit,UnitType DstUnit) cons
 int CStyleManager::GetDPI() const
 {
 	return m_ResolutionY;
+}
+
+
+int CStyleManager::GetSystemDPI() const
+{
+	return m_SystemResolutionY;
+}
+
+
+bool CStyleManager::RealizeFontSize(Font *pFont) const
+{
+	if (pFont==nullptr)
+		return false;
+
+	if (!m_fScaleFont)
+		return false;
+
+	int Size=ToPixels(pFont->Size.Value,pFont->Size.Unit);
+	if (Size==0)
+		return false;
+
+	pFont->LogFont.lfHeight=
+		pFont->LogFont.lfHeight>=0 ? Size : -Size;
+
+	return true;
+}
+
+
+bool CStyleManager::AssignFontSizeFromLogFont(Font *pFont)
+{
+	if (pFont==nullptr)
+		return false;
+
+	pFont->Size.Value=::MulDiv(abs(pFont->LogFont.lfHeight),72,m_SystemResolutionY);
+	if (pFont->Size.Value!=0)
+		pFont->Size.Unit=TVTest::Style::UNIT_POINT;
+	else
+		pFont->Size.Unit=TVTest::Style::UNIT_UNDEFINED;
+
+	return true;
+}
+
+
+bool CStyleManager::ParseValue(LPCTSTR pszText,IntValue *pValue)
+{
+	if (IsStringEmpty(pszText) || pValue==nullptr)
+		return false;
+
+	if (!std::_istdigit(pszText[0]) && pszText[0]!=_T('-') && pszText[0]!=_T('+'))
+		return false;
+
+	LPTSTR pEnd;
+	int Value=static_cast<int>(std::_tcstol(pszText,&pEnd,10));
+	UnitType Unit=ParseUnit(pEnd);
+	if (Unit==UNIT_UNDEFINED)
+		return false;
+
+	*pValue=IntValue(Value,Unit);
+
+	return true;
 }
 
 

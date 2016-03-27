@@ -21,7 +21,6 @@
 
 class CChannelPanel
 	: public CPanelForm::CPage
-	, public TVTest::CUIBase
 	, public CSettingsBase
 	, protected CFeaturedEvents::CEventHandler
 {
@@ -64,6 +63,9 @@ public:
 	void NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager) override;
 	void SetTheme(const TVTest::Theme::CThemeManager *pThemeManager) override;
 
+// CPage
+	bool SetFont(const TVTest::Style::Font &Font) override;
+
 // CSettingsBase
 	bool ReadSettings(CSettings &Settings) override;
 	bool WriteSettings(CSettings &Settings) override;
@@ -82,8 +84,7 @@ public:
 	void SetEventHandler(CEventHandler *pEventHandler);
 	bool SetChannelPanelTheme(const ChannelPanelTheme &Theme);
 	bool GetChannelPanelTheme(ChannelPanelTheme *pTheme) const;
-	bool SetFont(const LOGFONT *pFont);
-	bool SetEventInfoFont(const LOGFONT *pFont);
+	bool SetEventInfoFont(const TVTest::Style::Font &Font);
 	void SetDetailToolTip(bool fDetail);
 	bool GetDetailToolTip() const { return m_fDetailToolTip; }
 	bool SetEventsPerChannel(int Events,int Expand=-1);

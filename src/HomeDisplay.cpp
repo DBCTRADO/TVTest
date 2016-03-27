@@ -1598,9 +1598,9 @@ void CHomeDisplay::SetEventHandler(CHomeDisplayEventHandler *pEventHandler)
 }
 
 
-bool CHomeDisplay::SetFont(const LOGFONT *pFont,bool fAutoSize)
+bool CHomeDisplay::SetFont(const TVTest::Style::Font &Font,bool fAutoSize)
 {
-	if (!m_Font.Create(pFont))
+	if (!CreateDrawFont(Font,&m_Font))
 		return false;
 	m_fAutoFontSize=fAutoSize;
 	if (m_hwnd!=NULL) {
@@ -1717,7 +1717,7 @@ LRESULT CHomeDisplay::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 	case WM_CREATE:
 		InitializeUI();
 		if (!m_Font.IsCreated())
-			m_Font.Create(DrawUtil::FONT_MESSAGE);
+			CreateDefaultFont(&m_Font);
 		m_hwndScroll=::CreateWindowEx(0,TEXT("SCROLLBAR"),TEXT(""),
 			WS_CHILD | SBS_VERT,0,0,0,0,hwnd,NULL,m_hinst,NULL);
 		m_ScrollPos=0;

@@ -963,6 +963,7 @@
     <ClCompile Include="MainPanel.cpp" />
     <ClCompile Include="ProgramGuideTool.cpp" />
     <ClCompile Include="SharedMemory.cpp" />
+    <ClCompile Include="StyleUtil.cpp" />
     <ClCompile Include="TaskbarOptions.cpp" />
     <ClCompile Include="TaskbarSharedProperties.cpp" />
     <ClCompile Include="TextDraw.cpp" />
@@ -1156,6 +1157,7 @@
     <ClInclude Include="MainPanel.h" />
     <ClInclude Include="ProgramGuideTool.h" />
     <ClInclude Include="SharedMemory.h" />
+    <ClInclude Include="StyleUtil.h" />
     <ClInclude Include="TaskbarOptions.h" />
     <ClInclude Include="TaskbarSharedProperties.h" />
     <ClInclude Include="TextDraw.h" />

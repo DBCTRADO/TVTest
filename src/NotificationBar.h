@@ -37,7 +37,7 @@ public:
 // CNotificationBar
 	bool Show(LPCTSTR pszText,MessageType Type,DWORD Timeout,bool fSkippable);
 	bool Hide();
-	bool SetFont(const LOGFONT *pFont);
+	bool SetFont(const TVTest::Style::Font &Font);
 	void SetAnimate(bool fAnimate) { m_fAnimate=fAnimate; }
 	int GetBarHeight() const { return m_BarHeight; }
 

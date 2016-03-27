@@ -53,7 +53,7 @@ public:
 	void SetLogoManager(CLogoManager *pLogoManager);
 	void SetEventHandler(CChannelDisplayEventHandler *pEventHandler);
 	bool SetSelect(LPCTSTR pszDriverFileName,const CChannelInfo *pChannelInfo);
-	bool SetFont(const LOGFONT *pFont,bool fAutoSize);
+	bool SetFont(const TVTest::Style::Font &Font,bool fAutoSize);
 
 	static bool Initialize(HINSTANCE hinst);
 

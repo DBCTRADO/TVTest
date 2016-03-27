@@ -47,7 +47,6 @@ public:
 
 class CCaptionPanel
 	: public CPanelForm::CPage
-	, public TVTest::CUIBase
 	, protected CCaptionDecoder::IHandler
 	, public CSettingsBase
 {
@@ -61,13 +60,15 @@ public:
 // CUIBase
 	void SetTheme(const TVTest::Theme::CThemeManager *pThemeManager) override;
 
+// CPage
+	bool SetFont(const TVTest::Style::Font &Font) override;
+
 // CSettingsBase
 	bool ReadSettings(CSettings &Settings) override;
 	bool WriteSettings(CSettings &Settings) override;
 
 // CCaptionPanel
 	void SetColor(COLORREF BackColor,COLORREF TextColor);
-	bool SetFont(const LOGFONT *pFont);
 	void Clear();
 	bool LoadDRCSMap(LPCTSTR pszFileName);
 

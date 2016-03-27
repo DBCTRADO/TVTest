@@ -231,8 +231,8 @@ public:
 	bool GetShowProgress() const { return m_fShowProgress; }
 	void EnablePopupInfo(bool fEnable);
 	bool UpdateProgress();
-	bool SetEventInfoFont(const LOGFONT *pFont) {
-		return m_EventInfoPopup.SetFont(pFont);
+	bool SetEventInfoFont(const TVTest::Style::Font &Font) {
+		return m_EventInfoPopup.SetFont(Font);
 	}
 };
 

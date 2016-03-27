@@ -1109,9 +1109,7 @@ CProgramGuide::CProgramGuide(CEventSearchOptions &EventSearchOptions)
 	m_WindowPosition.Width=640;
 	m_WindowPosition.Height=480;
 
-	LOGFONT lf;
-	DrawUtil::GetDefaultUIFont(&lf);
-	SetFont(&lf);
+	GetDefaultFont(&m_Font);
 
 	m_ScrollPos.x=0;
 	m_ScrollPos.y=0;
@@ -1672,7 +1670,7 @@ void CProgramGuide::DrawEventText(
 	if (rcText.bottom>rcTitle.bottom) {
 		RECT rc=rcText;
 		rc.top+=m_Style.EventLeading;
-		TextDraw.SetFont(m_Font.GetHandle());
+		TextDraw.SetFont(m_ContentFont.GetHandle());
 		TextDraw.SetTextColor(TextColor);
 		pItem->DrawText(TextDraw,rc,LineHeight,
 						m_Style.fEventJustify ? TVTest::CTextDraw::DRAW_FLAG_JUSTIFY_MULTI_LINE : 0);
@@ -1952,7 +1950,7 @@ void CProgramGuide::DrawMessage(HDC hdc,const RECT &ClientRect) const
 {
 	if (!m_Message.empty()) {
 		RECT rc;
-		HFONT hfontOld=DrawUtil::SelectObject(hdc,m_Font);
+		HFONT hfontOld=DrawUtil::SelectObject(hdc,m_ContentFont);
 		::SetRectEmpty(&rc);
 		::DrawText(hdc,m_Message.c_str(),-1,&rc,DT_NOPREFIX | DT_CALCRECT);
 		::OffsetRect(&rc,
@@ -2233,12 +2231,29 @@ void CProgramGuide::Draw(HDC hdc,const RECT &PaintRect)
 }
 
 
+bool CProgramGuide::CreateFonts()
+{
+	if (!CreateDrawFont(m_Font,&m_ContentFont))
+		return false;
+
+	LOGFONT lf;
+	m_ContentFont.GetLogFont(&lf);
+	lf.lfWeight=FW_BOLD;
+	m_TitleFont.Create(&lf);
+	lf.lfWeight=FW_NORMAL;
+	lf.lfEscapement=lf.lfOrientation=2700;
+	m_TimeFont.Create(&lf);
+
+	return true;
+}
+
+
 void CProgramGuide::CalcFontMetrics()
 {
 	if (m_hwnd!=NULL) {
 		HDC hdc=::GetDC(m_hwnd);
 
-		m_GDIFontHeight=m_Font.GetHeight(hdc);
+		m_GDIFontHeight=m_ContentFont.GetHeight(hdc);
 
 		{
 			TVTest::CTextDraw TextDraw;
@@ -2248,7 +2263,7 @@ void CProgramGuide::CalcFontMetrics()
 			m_TextDrawClient.InitializeTextDraw(&TextDraw);
 			GetClientRect(&rc);
 			TextDraw.BindDC(hdc,rc);
-			TextDraw.SetFont(m_Font.GetHandle());
+			TextDraw.SetFont(m_ContentFont.GetHandle());
 			if (TextDraw.GetFontMetrics(&FontMetrics))
 				m_FontHeight=FontMetrics.Height;
 			else
@@ -3358,34 +3373,31 @@ bool CProgramGuide::SetDirectWriteRenderingParams(
 }
 
 
-bool CProgramGuide::SetFont(const LOGFONT *pFont)
+bool CProgramGuide::SetFont(const TVTest::Style::Font &Font)
 {
-	LOGFONT lf;
+	m_Font=Font;
 
-	if (!m_Font.Create(pFont))
-		return false;
-	lf=*pFont;
-	lf.lfWeight=FW_BOLD;
-	m_TitleFont.Create(&lf);
-	lf.lfWeight=FW_NORMAL;
-	lf.lfEscapement=lf.lfOrientation=2700;
-	m_TimeFont.Create(&lf);
-	if (m_hwnd!=NULL)
+	if (m_hwnd!=NULL) {
+		CreateFonts();
 		OnFontChanged();
+	}
 
 	return true;
 }
 
 
-bool CProgramGuide::GetFont(LOGFONT *pFont) const
+bool CProgramGuide::GetFont(TVTest::Style::Font *pFont) const
 {
-	return m_Font.GetLogFont(pFont);
+	if (pFont==nullptr)
+		return false;
+	*pFont=m_Font;
+	return true;
 }
 
 
-bool CProgramGuide::SetEventInfoFont(const LOGFONT *pFont)
+bool CProgramGuide::SetEventInfoFont(const TVTest::Style::Font &Font)
 {
-	return m_EventInfoPopup.SetFont(pFont);
+	return m_EventInfoPopup.SetFont(Font);
 }
 
 
@@ -3827,6 +3839,8 @@ LRESULT CProgramGuide::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam
 	case WM_CREATE:
 		{
 			InitializeUI();
+
+			CreateFonts();
 
 			m_TextLeftMargin=
 				m_Style.EventIconSize.Width+
@@ -5668,9 +5682,9 @@ protected:
 CStatusBar::CStatusBar(CProgramGuide *pProgramGuide)
 	: CProgramGuideBar(pProgramGuide)
 {
-	LOGFONT lf;
-	if (DrawUtil::GetSystemFont(DrawUtil::FONT_MENU,&lf))
-		m_StatusView.SetFont(&lf);
+	TVTest::Style::Font Font;
+	if (DrawUtil::GetSystemFont(DrawUtil::FONT_MENU,&Font.LogFont))
+		m_StatusView.SetFont(Font);
 }
 
 

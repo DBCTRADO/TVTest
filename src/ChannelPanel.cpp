@@ -65,12 +65,6 @@ CChannelPanel::CChannelPanel()
 	, m_fDetailToolTip(false)
 	, m_pLogoManager(NULL)
 {
-	LOGFONT lf;
-	GetDefaultFont(&lf);
-	m_Font.Create(&lf);
-	lf.lfWeight=FW_BOLD;
-	m_ChannelFont.Create(&lf);
-
 	::ZeroMemory(&m_UpdatedTime,sizeof(SYSTEMTIME));
 	::ZeroMemory(&m_CurTime,sizeof(SYSTEMTIME));
 }
@@ -129,6 +123,27 @@ void CChannelPanel::SetTheme(const TVTest::Theme::CThemeManager *pThemeManager)
 	SetChannelPanelTheme(Theme);
 
 	m_EpgTheme.SetTheme(pThemeManager);
+}
+
+
+bool CChannelPanel::SetFont(const TVTest::Style::Font &Font)
+{
+	if (!CreateDrawFont(Font,&m_Font))
+		return false;
+
+	LOGFONT lf;
+	m_Font.GetLogFont(&lf);
+	lf.lfWeight=FW_BOLD;
+	m_ChannelFont.Create(&lf);
+
+	if (m_hwnd!=NULL) {
+		CalcItemHeight();
+		m_ScrollPos=0;
+		SetScrollBar();
+		Invalidate();
+	}
+
+	return true;
 }
 
 
@@ -433,26 +448,9 @@ bool CChannelPanel::GetChannelPanelTheme(ChannelPanelTheme *pTheme) const
 }
 
 
-bool CChannelPanel::SetFont(const LOGFONT *pFont)
+bool CChannelPanel::SetEventInfoFont(const TVTest::Style::Font &Font)
 {
-	if (!m_Font.Create(pFont))
-		return false;
-	LOGFONT lf=*pFont;
-	lf.lfWeight=FW_BOLD;
-	m_ChannelFont.Create(&lf);
-	if (m_hwnd!=NULL) {
-		CalcItemHeight();
-		m_ScrollPos=0;
-		SetScrollBar();
-		Invalidate();
-	}
-	return true;
-}
-
-
-bool CChannelPanel::SetEventInfoFont(const LOGFONT *pFont)
-{
-	return m_EventInfoPopup.SetFont(pFont);
+	return m_EventInfoPopup.SetFont(Font);
 }
 
 
@@ -653,6 +651,9 @@ LRESULT CChannelPanel::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam
 	case WM_CREATE:
 		{
 			InitializeUI();
+
+			if (!m_Font.IsCreated())
+				CreateDefaultFontAndBoldFont(&m_Font,&m_ChannelFont);
 
 			CalcItemHeight();
 			m_ScrollPos=0;

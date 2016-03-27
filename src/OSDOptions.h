@@ -3,6 +3,7 @@
 
 
 #include "Options.h"
+#include "Style.h"
 
 
 class COSDOptions : public COptions
@@ -50,9 +51,9 @@ public:
 	bool IsOSDEnabled(OSDType Type) const;
 	bool IsNotificationBarEnabled() const { return m_fEnableNotificationBar; }
 	int GetNotificationBarDuration() const { return m_NotificationBarDuration; }
-	const LOGFONT *GetNotificationBarFont() const { return &m_NotificationBarFont; }
+	const TVTest::Style::Font &GetNotificationBarFont() const { return m_NotificationBarFont; }
 	bool IsNotifyEnabled(unsigned int Type) const;
-	const LOGFONT *GetDisplayFont() const { return &m_DisplayFont; }
+	const TVTest::Style::Font &GetDisplayFont() const { return m_DisplayFont; }
 	bool IsDisplayFontAutoSize() const { return m_fDisplayFontAutoSize; }
 
 private:
@@ -80,11 +81,11 @@ private:
 	bool m_fEnableNotificationBar;
 	int m_NotificationBarDuration;
 	unsigned int m_NotificationBarFlags;
-	LOGFONT m_NotificationBarFont;
-	LOGFONT m_CurNotificationBarFont;
+	TVTest::Style::Font m_NotificationBarFont;
+	TVTest::Style::Font m_CurNotificationBarFont;
 
-	LOGFONT m_DisplayFont;
-	LOGFONT m_DisplayFontCur;
+	TVTest::Style::Font m_DisplayFont;
+	TVTest::Style::Font m_DisplayFontCur;
 	bool m_fDisplayFontAutoSize;
 };
 

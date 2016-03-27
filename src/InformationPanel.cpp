@@ -129,15 +129,9 @@ void CInformationPanel::SetTheme(const TVTest::Theme::CThemeManager *pThemeManag
 }
 
 
-bool CInformationPanel::IsVisible() const
+bool CInformationPanel::SetFont(const TVTest::Style::Font &Font)
 {
-	return m_hwnd!=NULL;
-}
-
-
-bool CInformationPanel::SetFont(const LOGFONT *pFont)
-{
-	if (!m_Font.Create(pFont))
+	if (!CreateDrawFont(Font,&m_Font))
 		return false;
 	if (m_hwnd!=NULL) {
 		CalcFontHeight();
@@ -153,6 +147,11 @@ bool CInformationPanel::SetFont(const LOGFONT *pFont)
 	return true;
 }
 
+
+bool CInformationPanel::IsVisible() const
+{
+	return m_hwnd!=NULL;
+}
 
 
 CInformationPanel::CItem *CInformationPanel::GetItem(int Item)

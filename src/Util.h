@@ -56,7 +56,7 @@ void InitOpenFileName(OPENFILENAME *pofn);
 void ForegroundWindow(HWND hwnd);
 
 bool ChooseColorDialog(HWND hwndOwner,COLORREF *pcrResult);
-bool ChooseFontDialog(HWND hwndOwner,LOGFONT *plf);
+bool ChooseFontDialog(HWND hwndOwner,LOGFONT *plf,int *pPointSize=nullptr);
 bool BrowseFolderDialog(HWND hwndOwner,LPTSTR pszDirectory,LPCTSTR pszTitle);
 
 bool CompareLogFont(const LOGFONT *pFont1,const LOGFONT *pFont2);
