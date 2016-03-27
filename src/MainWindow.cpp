@@ -6720,6 +6720,7 @@ void CMainWindow::CTitleBarManager::OnLabelLButtonDown(int x,int y)
 
 void CMainWindow::CTitleBarManager::OnLabelLButtonDoubleClick(int x,int y)
 {
+	m_fFixed=false;
 	if (m_fMainWindow)
 		OnMaximize();
 	else
