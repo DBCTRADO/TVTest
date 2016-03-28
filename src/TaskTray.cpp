@@ -203,9 +203,11 @@ bool CTaskTrayManager::SetStatus(UINT Status,UINT Mask)
 
 bool CTaskTrayManager::SetTipText(LPCTSTR pszText)
 {
-	StringUtility::Assign(m_TipText,pszText);
-	if (NeedTrayIcon())
-		UpdateTipText();
+	if (StringUtility::Compare(m_TipText,pszText)!=0) {
+		StringUtility::Assign(m_TipText,pszText);
+		if (NeedTrayIcon())
+			UpdateTipText();
+	}
 	return true;
 }
 

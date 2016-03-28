@@ -46,6 +46,9 @@ public:
 	bool GetDisablePreviewWhenMinimized() const { return m_fDisablePreviewWhenMinimized; }
 	bool GetUseLogoIcon() const { return m_fUseLogoIcon; }
 	LPCTSTR GetTitleTextFormat() const { return m_TitleTextFormat.c_str(); }
+	LPCTSTR GetMinimizedTitleTextFormat() const { return m_MinimizedTitleTextFormat.c_str(); }
+	LPCTSTR GetMaximizedTitleTextFormat() const { return m_MaximizedTitleTextFormat.c_str(); }
+	LPCTSTR GetTaskbarTitleTextFormat() const { return m_TaskbarTitleTextFormat.c_str(); }
 	bool GetShowLogo() const { return m_fShowLogo; }
 	LPCTSTR GetLogoFileName() const { return m_szLogoFileName; }
 	bool GetNoScreenSaver() const { return m_fNoScreenSaver; }
@@ -67,6 +70,9 @@ private:
 	bool m_fDisablePreviewWhenMinimized;
 	bool m_fUseLogoIcon;
 	TVTest::String m_TitleTextFormat;
+	TVTest::String m_MinimizedTitleTextFormat;
+	TVTest::String m_MaximizedTitleTextFormat;
+	TVTest::String m_TaskbarTitleTextFormat;
 	bool m_fShowLogo;
 	TCHAR m_szLogoFileName[MAX_PATH];
 

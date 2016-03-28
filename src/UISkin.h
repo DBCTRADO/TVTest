@@ -37,6 +37,7 @@ protected:
 	virtual HWND GetViewerWindow() const = 0;
 	virtual bool SetZoomRate(int Rate,int Factor) = 0;
 	virtual bool GetZoomRate(int *pRate,int *pFactor) = 0;
+	virtual void SetTitleText(LPCTSTR pszTitleText,LPCTSTR pszWindowText) = 0;
 	virtual bool SetLogo(HBITMAP hbm) = 0;
 	virtual bool SetAlwaysOnTop(bool fTop) = 0;
 	virtual bool SetFullscreen(bool fFullscreen) = 0;

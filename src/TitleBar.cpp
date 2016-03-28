@@ -140,9 +140,11 @@ int CTitleBar::GetButtonHeight() const
 
 bool CTitleBar::SetLabel(LPCTSTR pszLabel)
 {
-	TVTest::StringUtility::Assign(m_Label,pszLabel);
-	if (m_hwnd!=NULL)
-		UpdateItem(ITEM_LABEL);
+	if (TVTest::StringUtility::Compare(m_Label,pszLabel)!=0) {
+		TVTest::StringUtility::Assign(m_Label,pszLabel);
+		if (m_hwnd!=NULL)
+			UpdateItem(ITEM_LABEL);
+	}
 	return true;
 }
 

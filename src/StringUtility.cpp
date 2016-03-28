@@ -207,6 +207,17 @@ namespace TVTest
 			return (int)Str.length();
 		}
 
+		int Compare(const String &String1,LPCWSTR pszString2)
+		{
+			if (IsStringEmpty(pszString2)) {
+				if (String1.empty())
+					return 0;
+				return 1;
+			}
+
+			return String1.compare(pszString2);
+		}
+
 		int CompareNoCase(const String &String1,const String &String2)
 		{
 			return ::lstrcmpiW(String1.c_str(),String2.c_str());

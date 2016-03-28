@@ -94,6 +94,7 @@ CMainWindow::CMainWindow(CAppMain &App)
 	, m_fStandbyInit(false)
 	, m_fMinimizeInit(false)
 
+	, m_WindowState(WINDOW_STATE_NORMAL)
 	, m_WindowSizeMode(WINDOW_SIZE_HD)
 
 	, m_fLockLayout(false)
@@ -701,6 +702,7 @@ void CMainWindow::SetCustomTitleBar(bool fCustom)
 			if (m_fShowTitleBar) {
 				if (!fCustom)
 					m_LayoutBase.SetContainerVisible(CONTAINER_ID_TITLEBAR,false);
+				m_pCore->UpdateTitle();
 				SetWindowStyle(GetWindowStyle()^WS_CAPTION,true);
 				if (fCustom)
 					m_LayoutBase.SetContainerVisible(CONTAINER_ID_TITLEBAR,true);
@@ -1188,16 +1190,6 @@ LRESULT CMainWindow::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 		m_Display.GetDisplayBase().SetFocus();
 		return 0;
 
-	case WM_SETTEXT:
-		{
-			LPCTSTR pszText=reinterpret_cast<LPCTSTR>(lParam);
-
-			m_TitleBar.SetLabel(pszText);
-			if (m_pCore->GetFullscreen())
-				::SetWindowText(m_Fullscreen.GetHandle(),pszText);
-		}
-		break;
-
 	case WM_SETICON:
 		if (wParam==ICON_SMALL) {
 			m_TitleBar.SetIcon(reinterpret_cast<HICON>(lParam));
@@ -1502,6 +1494,13 @@ bool CMainWindow::OnCreate(const CREATESTRUCT *pcs)
 {
 	InitializeUI();
 
+	if ((pcs->style&WS_MINIMIZE)!=0)
+		m_WindowState=WINDOW_STATE_MINIMIZED;
+	else if ((pcs->style&WS_MAXIMIZE)!=0)
+		m_WindowState=WINDOW_STATE_MAXIMIZED;
+	else
+		m_WindowState=WINDOW_STATE_NORMAL;
+
 	RECT rc;
 	GetClientRect(&rc);
 	m_LayoutBase.SetPosition(&rc);
@@ -1763,6 +1762,13 @@ void CMainWindow::OnSizeChanged(UINT State,int Width,int Height)
 {
 	const bool fMinimized=State==SIZE_MINIMIZED;
 	const bool fMaximized=State==SIZE_MAXIMIZED;
+	WindowState NewState;
+	if (fMinimized)
+		NewState=WINDOW_STATE_MINIMIZED;
+	else if (fMaximized)
+		NewState=WINDOW_STATE_MAXIMIZED;
+	else
+		NewState=WINDOW_STATE_NORMAL;
 
 	if (fMinimized) {
 		m_App.OSDManager.ClearOSD();
@@ -1775,6 +1781,11 @@ void CMainWindow::OnSizeChanged(UINT State,int Width,int Height)
 	} else if ((m_App.TaskTrayManager.GetStatus() & CTaskTrayManager::STATUS_MINIMIZED)!=0) {
 		SetWindowVisible();
 	}
+
+	if (m_WindowState!=NewState)
+		m_pCore->UpdateTitle();
+
+	m_WindowState=NewState;
 
 	m_TitleBar.SetMaximizeMode(fMaximized);
 
@@ -5161,6 +5172,22 @@ bool CMainWindow::SetPanAndScan(int Command)
 		m_AspectRatioType<ASPECTRATIO_CUSTOM?CM_ASPECTRATIO_FIRST+m_AspectRatioType:0);
 
 	return true;
+}
+
+
+void CMainWindow::SetTitleText(LPCTSTR pszTitleText,LPCTSTR pszWindowText)
+{
+	LPCTSTR pszWindow=m_fCustomTitleBar?pszWindowText:pszTitleText;
+	int Length=::GetWindowTextLength(m_hwnd)+1;
+	Util::CTempBuffer<TCHAR,256> OldText(Length);
+	::GetWindowText(m_hwnd,OldText.GetBuffer(),Length);
+	if (::lstrcmp(pszWindow,OldText.GetBuffer())!=0)
+		::SetWindowText(m_hwnd,pszWindow);
+
+	m_TitleBar.SetLabel(pszTitleText);
+	if (m_pCore->GetFullscreen())
+		::SetWindowText(m_Fullscreen.GetHandle(),pszTitleText);
+	m_App.TaskTrayManager.SetTipText(pszTitleText);
 }
 
 

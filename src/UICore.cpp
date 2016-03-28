@@ -711,6 +711,7 @@ bool CUICore::SetFullscreen(bool fFullscreen)
 		if (!m_pSkin->SetFullscreen(fFullscreen))
 			return false;
 		m_fFullscreen=fFullscreen;
+		UpdateTitle();
 		m_App.AppEventManager.OnFullscreenChanged(fFullscreen);
 	}
 	return true;
@@ -1235,50 +1236,65 @@ bool CUICore::UpdateIcon()
 }
 
 
+static void RemoveMultipleSpaces(TVTest::String &Str)
+{
+	// ˜A‘±‚·‚é‹ó”’‚ğœ‹‚·‚é
+	TVTest::String::size_type i,j;
+	for (i=0;i<Str.length() && Str[i]==L' ';i++);
+	WCHAR LastChar=L'\0';
+	for (j=0;i<Str.length();i++) {
+		if (Str[i]==L' ' && LastChar==L' ')
+			continue;
+		LastChar=Str[i];
+		Str[j++]=LastChar;
+	}
+	if (LastChar==L' ')
+		j--;
+	Str.resize(j);
+}
+
 bool CUICore::UpdateTitle()
 {
-#define MAIN_TITLE_TEXT APP_NAME
-
 	HWND hwnd=GetMainWindow();
 
 	if (hwnd==nullptr)
 		return false;
 
-	LPCTSTR pszText;
+	LPCTSTR pszTitleTextFormat,pszWindowTextFormat=nullptr;
+
+	pszTitleTextFormat=m_App.ViewOptions.GetTitleTextFormat();
+	if (::IsIconic(hwnd)) {
+		if (!IsStringEmpty(m_App.ViewOptions.GetMinimizedTitleTextFormat()))
+			pszTitleTextFormat=m_App.ViewOptions.GetMinimizedTitleTextFormat();
+	} else {
+		if (::IsZoomed(hwnd) || m_fFullscreen) {
+			if (!IsStringEmpty(m_App.ViewOptions.GetMaximizedTitleTextFormat()))
+				pszTitleTextFormat=m_App.ViewOptions.GetMaximizedTitleTextFormat();
+		}
+		if (!IsStringEmpty(m_App.ViewOptions.GetTaskbarTitleTextFormat())) {
+			pszWindowTextFormat=m_App.ViewOptions.GetTaskbarTitleTextFormat();
+		}
+	}
+
 	CTitleStringMap::EventInfo EventInfo;
-	TVTest::String Title;
+	TVTest::String TitleText,WindowText;
 
 	if (m_App.Core.GetVariableStringEventInfo(&EventInfo)
 			&& !EventInfo.ServiceName.empty()) {
 		CTitleStringMap Map(m_App,&EventInfo);
-		TVTest::String Buffer;
-		TVTest::FormatVariableString(&Map,m_App.ViewOptions.GetTitleTextFormat(),&Title);
-
-		// ˜A‘±‚·‚é‹ó”’‚ğœ‹‚·‚é
-		TVTest::String::size_type i,j;
-		for (i=0;i<Title.length() && Title[i]==L' ';i++);
-		WCHAR LastChar=L'\0';
-		for (j=0;i<Title.length();i++) {
-			if (Title[i]==L' ' && LastChar==L' ')
-				continue;
-			LastChar=Title[i];
-			Title[j++]=LastChar;
+		TVTest::FormatVariableString(&Map,pszTitleTextFormat,&TitleText);
+		RemoveMultipleSpaces(TitleText);
+		if (pszWindowTextFormat!=nullptr) {
+			TVTest::FormatVariableString(&Map,pszWindowTextFormat,&WindowText);
+			RemoveMultipleSpaces(WindowText);
 		}
-		if (LastChar==L' ')
-			j--;
-		Title.resize(j);
-
-		pszText=Title.c_str();
 	} else {
-		pszText=MAIN_TITLE_TEXT;
+		TitleText=APP_NAME;
 	}
 
-	TCHAR szOld[256];
-	::GetWindowText(hwnd,szOld,lengthof(szOld));
-	if (::lstrcmp(pszText,szOld)!=0) {
-		::SetWindowText(hwnd,pszText);
-		m_App.TaskTrayManager.SetTipText(pszText);
-	}
+	m_pSkin->SetTitleText(
+		TitleText.c_str(),
+		!WindowText.empty()?WindowText.c_str():TitleText.c_str());
 
 	return true;
 }

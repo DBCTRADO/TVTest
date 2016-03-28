@@ -85,6 +85,9 @@ bool CViewOptions::ReadSettings(CSettings &Settings)
 	Settings.Read(TEXT("DisablePreviewWhenMinimized"),&m_fDisablePreviewWhenMinimized);
 	Settings.Read(TEXT("UseLogoIcon"),&m_fUseLogoIcon);
 	Settings.Read(TEXT("TitleTextFormat"),&m_TitleTextFormat);
+	Settings.Read(TEXT("MinimizedTitleTextFormat"),&m_MinimizedTitleTextFormat);
+	Settings.Read(TEXT("MaximizedTitleTextFormat"),&m_MaximizedTitleTextFormat);
+	Settings.Read(TEXT("TaskbarTitleTextFormat"),&m_TaskbarTitleTextFormat);
 	Settings.Read(TEXT("ShowLogo"),&m_fShowLogo);
 	Settings.Read(TEXT("LogoFileName"),m_szLogoFileName,lengthof(m_szLogoFileName));
 	Settings.Read(TEXT("NoScreenSaver"),&m_fNoScreenSaver);
@@ -107,6 +110,12 @@ bool CViewOptions::WriteSettings(CSettings &Settings)
 	Settings.Write(TEXT("DisablePreviewWhenMinimized"),m_fDisablePreviewWhenMinimized);
 	Settings.Write(TEXT("UseLogoIcon"),m_fUseLogoIcon);
 	Settings.Write(TEXT("TitleTextFormat"),m_TitleTextFormat);
+	// ê›íËUIñ¢é¿ëï
+	/*
+	Settings.Write(TEXT("MinimizedTitleTextFormat"),m_MinimizedTitleTextFormat);
+	Settings.Write(TEXT("MaximizedTitleTextFormat"),m_MaximizedTitleTextFormat);
+	Settings.Write(TEXT("TaskbarTitleTextFormat"),m_TaskbarTitleTextFormat);
+	*/
 	Settings.DeleteValue(TEXT("TitleEventTime"));
 	Settings.Write(TEXT("ShowLogo"),m_fShowLogo);
 	Settings.Write(TEXT("LogoFileName"),m_szLogoFileName);

@@ -435,6 +435,14 @@ private:
 	bool m_fMinimizeInit;
 	ResumeInfo m_Resume;
 
+	enum WindowState
+	{
+		WINDOW_STATE_NORMAL,
+		WINDOW_STATE_MINIMIZED,
+		WINDOW_STATE_MAXIMIZED
+	};
+	WindowState m_WindowState;
+
 	enum WindowSizeMode {
 		WINDOW_SIZE_HD,
 		WINDOW_SIZE_1SEG
@@ -551,6 +559,7 @@ private:
 	HWND GetViewerWindow() const override;
 	bool SetZoomRate(int Rate,int Factor) override;
 	bool GetZoomRate(int *pRate,int *pFactor) override;
+	void SetTitleText(LPCTSTR pszTitleText,LPCTSTR pszWindowText) override;
 	bool SetLogo(HBITMAP hbm) override;
 	bool SetAlwaysOnTop(bool fTop) override;
 	bool SetFullscreen(bool fFullscreen) override;
