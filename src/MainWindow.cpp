@@ -44,6 +44,7 @@ const CMainWindow::DirectShowFilterPropertyInfo CMainWindow::m_DirectShowFilterP
 };
 
 ATOM CMainWindow::m_atomChildOldWndProcProp=0;
+CMainWindow *CMainWindow::m_pThis=nullptr;
 
 
 bool CMainWindow::Initialize(HINSTANCE hinst)
@@ -155,6 +156,7 @@ bool CMainWindow::Create(HWND hwndParent,DWORD Style,DWORD ExStyle,int ID)
 {
 	if (m_pCore->GetAlwaysOnTop())
 		ExStyle|=WS_EX_TOPMOST;
+	m_pThis=this;
 	if (!CreateBasicWindow(nullptr,Style,ExStyle,ID,MAIN_WINDOW_CLASS,MAIN_TITLE_TEXT,m_App.GetInstance()))
 		return false;
 	return true;
@@ -1078,7 +1080,17 @@ LRESULT CMainWindow::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 			if (wParam!=0) {
 				NCCALCSIZE_PARAMS *pnccsp=reinterpret_cast<NCCALCSIZE_PARAMS*>(lParam);
 
-				::InflateRect(&pnccsp->rgrc[0],-m_CustomFrameWidth,-m_CustomFrameWidth);
+				// 最大化状態で起動された際、最初にここに来る時 NCCALCSIZE_PARAMS::rgrc[0] が
+				// デフォルトのウィンドウ枠の分大きくされたサイズになっている
+				if (::IsZoomed(hwnd)) {
+					HMONITOR hMonitor=::MonitorFromRect(&pnccsp->rgrc[0],MONITOR_DEFAULTTONEAREST);
+					MONITORINFO mi;
+					mi.cbSize=sizeof(MONITORINFO);
+					::GetMonitorInfo(hMonitor,&mi);
+					pnccsp->rgrc[0]=mi.rcWork;
+				} else {
+					::InflateRect(&pnccsp->rgrc[0],-m_CustomFrameWidth,-m_CustomFrameWidth);
+				}
 			}
 			return 0;
 		}
@@ -5303,7 +5315,13 @@ LRESULT CALLBACK CMainWindow::WndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM l
 	}
 
 	if (pThis==nullptr) {
-		return ::DefWindowProc(hwnd,uMsg,wParam,lParam);
+		if (uMsg==WM_GETMINMAXINFO || uMsg==WM_NCCALCSIZE) {
+			pThis=m_pThis;
+			pThis->m_hwnd=hwnd;
+			::SetWindowLongPtr(hwnd,GWLP_USERDATA,reinterpret_cast<LONG_PTR>(pThis));
+		} else {
+			return ::DefWindowProc(hwnd,uMsg,wParam,lParam);
+		}
 	}
 
 	if (uMsg==WM_CREATE) {

@@ -546,6 +546,7 @@ private:
 	static const BYTE m_AudioGainList[];
 	static const DirectShowFilterPropertyInfo m_DirectShowFilterPropertyList[];
 	static ATOM m_atomChildOldWndProcProp;
+	static CMainWindow *m_pThis;
 
 // CUISkin
 	HWND GetMainWindow() const override { return m_hwnd; }
