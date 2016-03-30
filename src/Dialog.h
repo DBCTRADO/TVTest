@@ -38,15 +38,18 @@ public:
 	bool SetVisible(bool fVisible);
 	bool GetPosition(Position *pPosition) const;
 	bool GetPosition(RECT *pPosition) const;
-	bool GetPosition(int *pLeft,int *pTop,int *pWidth,int *pHeight) const;
+	bool GetPosition(int *pLeft,int *pTop,int *pWidth=nullptr,int *pHeight=nullptr) const;
 	bool SetPosition(const Position &Pos);
 	bool SetPosition(const RECT *pPosition);
 	bool SetPosition(int Left,int Top,int Width,int Height);
+	bool SetPosition(int Left,int Top);
+	bool IsPositionSet() const { return m_fSetPosition; }
 	LRESULT SendMessage(UINT uMsg,WPARAM wParam,LPARAM lParam);
 
 protected:
 	HWND m_hDlg;
 	bool m_fModeless;
+	bool m_fSetPosition;
 	Position m_Position;
 
 	static CBasicDialog *GetThis(HWND hDlg);
@@ -55,6 +58,8 @@ protected:
 	bool CreateDialogWindow(HWND hwndOwner,HINSTANCE hinst,LPCTSTR pszTemplate);
 	virtual INT_PTR HandleMessage(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam);
 	virtual INT_PTR DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam);
+	virtual bool ApplyPosition();
+	void StorePosition();
 };
 
 class CResizableDialog : public CBasicDialog
@@ -91,12 +96,12 @@ protected:
 	std::vector<LayoutItem> m_ControlList;
 
 	INT_PTR HandleMessage(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
+	bool ApplyPosition() override;
 	void DoLayout();
 	bool AddControl(int ID,unsigned int Align);
 	bool AddControls(int FirstID,int LastID,unsigned int Align);
 	bool UpdateControlPosition(int ID);
 	void UpdateLayout();
-	void ApplyPosition();
 };
 
 

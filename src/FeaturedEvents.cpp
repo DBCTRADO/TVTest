@@ -1044,13 +1044,38 @@ CFeaturedEvents::CFeaturedEvents(CEventSearchOptions &EventSearchOptions)
 
 bool CFeaturedEvents::LoadSettings(CSettings &Settings)
 {
-	return m_Settings.LoadSettings(Settings);
+	m_Settings.LoadSettings(Settings);
+
+	if (Settings.SetSection(TEXT("FeaturedEvents"))) {
+		CBasicDialog::Position Pos;
+		if (Settings.Read(TEXT("DialogLeft"),&Pos.x)
+				&& Settings.Read(TEXT("DialogTop"),&Pos.y)) {
+			Settings.Read(TEXT("DialogWidth"),&Pos.Width);
+			Settings.Read(TEXT("DialogHeight"),&Pos.Height);
+			m_Dialog.SetPosition(Pos);
+		}
+	}
+
+	return true;
 }
 
 
 bool CFeaturedEvents::SaveSettings(CSettings &Settings)
 {
-	return m_Settings.SaveSettings(Settings);
+	m_Settings.SaveSettings(Settings);
+
+	if (Settings.SetSection(TEXT("FeaturedEvents"))) {
+		if (m_Dialog.IsPositionSet()) {
+			CBasicDialog::Position Pos;
+			m_Dialog.GetPosition(&Pos);
+			Settings.Write(TEXT("DialogLeft"),Pos.x);
+			Settings.Write(TEXT("DialogTop"),Pos.y);
+			Settings.Write(TEXT("DialogWidth"),Pos.Width);
+			Settings.Write(TEXT("DialogHeight"),Pos.Height);
+		}
+	}
+
+	return true;
 }
 
 

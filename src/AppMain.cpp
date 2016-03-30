@@ -457,20 +457,25 @@ bool CAppMain::LoadSettings()
 		if (Settings.Read(TEXT("CaptureStatusBar"),&f))
 			CaptureWindow.ShowStatusBar(f);
 
-		StreamInfo.GetPosition(&Left,&Top,&Width,&Height);
-		Settings.Read(TEXT("StreamInfoLeft"),&Left);
-		Settings.Read(TEXT("StreamInfoTop"),&Top);
-		Settings.Read(TEXT("StreamInfoWidth"),&Width);
-		Settings.Read(TEXT("StreamInfoHeight"),&Height);
-		StreamInfo.SetPosition(Left,Top,Width,Height);
-		//StreamInfo.MoveToMonitorInside();
+		if (Settings.Read(TEXT("StreamInfoLeft"),&Left)
+				&& Settings.Read(TEXT("StreamInfoTop"),&Top)) {
+			StreamInfo.GetPosition(NULL,NULL,&Width,&Height);
+			Settings.Read(TEXT("StreamInfoWidth"),&Width);
+			Settings.Read(TEXT("StreamInfoHeight"),&Height);
+			StreamInfo.SetPosition(Left,Top,Width,Height);
+		}
 
 		CBasicDialog::Position Pos;
-		Settings.Read(TEXT("OrganizeFavoritesLeft"),&Pos.x);
-		Settings.Read(TEXT("OrganizeFavoritesTop"),&Pos.y);
-		Settings.Read(TEXT("OrganizeFavoritesWidth"),&Pos.Width);
-		Settings.Read(TEXT("OrganizeFavoritesHeight"),&Pos.Height);
-		FavoritesManager.SetOrganizeDialogPos(Pos);
+		if (Settings.Read(TEXT("OrganizeFavoritesLeft"),&Pos.x)
+				&& Settings.Read(TEXT("OrganizeFavoritesTop"),&Pos.y)) {
+			Settings.Read(TEXT("OrganizeFavoritesWidth"),&Pos.Width);
+			Settings.Read(TEXT("OrganizeFavoritesHeight"),&Pos.Height);
+			FavoritesManager.SetOrganizeDialogPos(Pos);
+		}
+
+		if (Settings.Read(TEXT("OptionDialogLeft"),&Left)
+				&& Settings.Read(TEXT("OptionDialogTop"),&Top))
+			m_OptionDialog.SetPosition(Left,Top);
 
 		Settings.Read(TEXT("ExitTimeout"),&m_ExitTimeout);
 		Settings.Read(TEXT("IncrementUDPPort"),&m_fIncrementNetworkPort);
@@ -537,6 +542,7 @@ bool CAppMain::SaveSettings(unsigned int Flags)
 
 		if ((Flags&SETTINGS_SAVE_STATUS)!=0) {
 			int Left,Top,Width,Height;
+			CBasicDialog::Position Pos;
 
 			Settings.Write(TEXT("EnablePlay"),m_fEnablePlaybackOnStart);
 			Settings.Write(TEXT("Volume"),CoreEngine.GetVolume());
@@ -582,17 +588,27 @@ bool CAppMain::SaveSettings(unsigned int Flags)
 			Settings.Write(TEXT("CapturePreviewHeight"),Height);
 			Settings.Write(TEXT("CaptureStatusBar"),CaptureWindow.IsStatusBarVisible());
 
-			StreamInfo.GetPosition(&Left,&Top,&Width,&Height);
-			Settings.Write(TEXT("StreamInfoLeft"),Left);
-			Settings.Write(TEXT("StreamInfoTop"),Top);
-			Settings.Write(TEXT("StreamInfoWidth"),Width);
-			Settings.Write(TEXT("StreamInfoHeight"),Height);
+			if (StreamInfo.IsPositionSet()) {
+				StreamInfo.GetPosition(&Pos);
+				Settings.Write(TEXT("StreamInfoLeft"),Pos.x);
+				Settings.Write(TEXT("StreamInfoTop"),Pos.y);
+				Settings.Write(TEXT("StreamInfoWidth"),Pos.Width);
+				Settings.Write(TEXT("StreamInfoHeight"),Pos.Height);
+			}
 
-			const CBasicDialog::Position Pos=FavoritesManager.GetOrganizeDialogPos();
-			Settings.Write(TEXT("OrganizeFavoritesLeft"),Pos.x);
-			Settings.Write(TEXT("OrganizeFavoritesTop"),Pos.y);
-			Settings.Write(TEXT("OrganizeFavoritesWidth"),Pos.Width);
-			Settings.Write(TEXT("OrganizeFavoritesHeight"),Pos.Height);
+			if (FavoritesManager.IsOrganizeDialogPosSet()) {
+				FavoritesManager.GetOrganizeDialogPos(&Pos);
+				Settings.Write(TEXT("OrganizeFavoritesLeft"),Pos.x);
+				Settings.Write(TEXT("OrganizeFavoritesTop"),Pos.y);
+				Settings.Write(TEXT("OrganizeFavoritesWidth"),Pos.Width);
+				Settings.Write(TEXT("OrganizeFavoritesHeight"),Pos.Height);
+			}
+
+			if (m_OptionDialog.IsPositionSet()) {
+				m_OptionDialog.GetPosition(&Left,&Top);
+				Settings.Write(TEXT("OptionDialogLeft"),Left);
+				Settings.Write(TEXT("OptionDialogTop"),Top);
+			}
 
 			//Settings.Write(TEXT("ExitTimeout"),m_ExitTimeout);
 			//Settings.Write(TEXT("IncrementUDPPort"),m_fIncrementNetworkPort);

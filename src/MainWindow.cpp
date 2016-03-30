@@ -3085,12 +3085,8 @@ void CMainWindow::OnCommand(HWND hwnd,int id,HWND hwndCtl,UINT codeNotify)
 		return;
 
 	case CM_ORGANIZEFAVORITES:
-		{
-			COrganizeFavoritesDialog Dialog(&m_App.FavoritesManager);
-
-			if (Dialog.Show(GetVideoHostWindow()))
-				m_App.AppEventManager.OnFavoritesChanged();
-		}
+		if (m_App.FavoritesManager.ShowOrganizeDialog(GetVideoHostWindow()))
+			m_App.AppEventManager.OnFavoritesChanged();
 		return;
 
 	case CM_SWITCHVIDEO:

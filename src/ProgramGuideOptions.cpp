@@ -182,13 +182,14 @@ bool CProgramGuideOptions::LoadSettings(CSettings &Settings)
 		if (Settings.Read(TEXT("SearchTarget"),&Value))
 			pProgramSearch->SetSearchTarget(Value);
 
-		int Left,Top;
-		pProgramSearch->GetPosition(&Left,&Top,&Width,&Height);
-		Settings.Read(TEXT("SearchLeft"),&Left);
-		Settings.Read(TEXT("SearchTop"),&Top);
-		Settings.Read(TEXT("SearchWidth"),&Width);
-		Settings.Read(TEXT("SearchHeight"),&Height);
-		pProgramSearch->SetPosition(Left,Top,Width,Height);
+		CBasicDialog::Position Pos;
+		if (Settings.Read(TEXT("SearchLeft"),&Pos.x)
+				&& Settings.Read(TEXT("SearchTop"),&Pos.y)) {
+			pProgramSearch->GetPosition(NULL,NULL,&Pos.Width,&Pos.Height);
+			Settings.Read(TEXT("SearchWidth"),&Pos.Width);
+			Settings.Read(TEXT("SearchHeight"),&Pos.Height);
+			pProgramSearch->SetPosition(Pos);
+		}
 	}
 
 	if (Settings.SetSection(TEXT("ProgramGuideTools"))) {
@@ -356,12 +357,14 @@ bool CProgramGuideOptions::SaveSettings(CSettings &Settings)
 		Settings.Write(TEXT("SearchResultListHeight"),pProgramSearch->GetResultListHeight());
 		Settings.Write(TEXT("SearchTarget"),pProgramSearch->GetSearchTarget());
 
-		int Left,Top;
-		pProgramSearch->GetPosition(&Left,&Top,&Width,&Height);
-		Settings.Write(TEXT("SearchLeft"),Left);
-		Settings.Write(TEXT("SearchTop"),Top);
-		Settings.Write(TEXT("SearchWidth"),Width);
-		Settings.Write(TEXT("SearchHeight"),Height);
+		if (pProgramSearch->IsPositionSet()) {
+			int Left,Top;
+			pProgramSearch->GetPosition(&Left,&Top,&Width,&Height);
+			Settings.Write(TEXT("SearchLeft"),Left);
+			Settings.Write(TEXT("SearchTop"),Top);
+			Settings.Write(TEXT("SearchWidth"),Width);
+			Settings.Write(TEXT("SearchHeight"),Height);
+		}
 	}
 
 	if (Settings.SetSection(TEXT("ProgramGuideTools"))) {

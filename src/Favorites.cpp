@@ -272,6 +272,7 @@ namespace TVTest
 
 	CFavoritesManager::CFavoritesManager()
 		: m_fModified(false)
+		, m_OrganizeDialog(this)
 	{
 	}
 
@@ -599,6 +600,26 @@ namespace TVTest
 			}
 		}
 
+	}
+
+	bool CFavoritesManager::ShowOrganizeDialog(HWND hwndOwner)
+	{
+		return m_OrganizeDialog.Show(hwndOwner);
+	}
+
+	bool CFavoritesManager::GetOrganizeDialogPos(CBasicDialog::Position *pPos) const
+	{
+		return m_OrganizeDialog.GetPosition(pPos);
+	}
+
+	bool CFavoritesManager::SetOrganizeDialogPos(const CBasicDialog::Position &Pos)
+	{
+		return m_OrganizeDialog.SetPosition(Pos);
+	}
+
+	bool CFavoritesManager::IsOrganizeDialogPosSet() const
+	{
+		return m_OrganizeDialog.IsPositionSet();
 	}
 
 
@@ -1290,15 +1311,9 @@ namespace TVTest
 
 	bool COrganizeFavoritesDialog::Show(HWND hwndOwner)
 	{
-		m_Position=m_pManager->GetOrganizeDialogPos();
-
-		bool fResult=ShowDialog(hwndOwner,
-								GetAppClass().GetResourceInstance(),
-								MAKEINTRESOURCE(IDD_ORGANIZEFAVORITES))==IDOK;
-
-		m_pManager->SetOrganizeDialogPos(m_Position);
-
-		return fResult;
+		return ShowDialog(hwndOwner,
+						  GetAppClass().GetResourceInstance(),
+						  MAKEINTRESOURCE(IDD_ORGANIZEFAVORITES))==IDOK;
 	}
 
 	INT_PTR COrganizeFavoritesDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)

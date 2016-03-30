@@ -10,6 +10,8 @@
 namespace TVTest
 {
 
+	class CFavoritesManager;
+
 	class ABSTRACT_CLASS(CFavoriteItem)
 	{
 	public:
@@ -82,41 +84,6 @@ namespace TVTest
 	protected:
 		virtual bool ChannelItem(CFavoriteFolder &Folder,CFavoriteChannel &Channel) { return true; }
 		virtual bool FolderItem(CFavoriteFolder &Folder) { return true; }
-	};
-
-	class CFavoritesManager
-	{
-	public:
-		struct ChannelInfo
-		{
-			CChannelInfo Channel;
-			String BonDriverFileName;
-			bool fForceBonDriverChange;
-		};
-
-		CFavoritesManager();
-		~CFavoritesManager();
-		CFavoriteFolder &GetRootFolder() { return m_RootFolder; }
-		const CFavoriteFolder &GetRootFolder() const { return m_RootFolder; }
-		bool AddChannel(const CChannelInfo *pChannelInfo,LPCTSTR pszBonDriverFileName);
-		bool SetMenu(HMENU hmenu);
-		bool GetChannelByCommand(int Command,ChannelInfo *pInfo) const;
-		bool Load(LPCTSTR pszFileName);
-		bool Save(LPCTSTR pszFileName) const;
-		bool GetModified() const { return m_fModified; }
-		void SetModified(bool fModified) { m_fModified=fModified; }
-		const CBasicDialog::Position &GetOrganizeDialogPos() const { return m_OrganizeDialogPos; }
-		void SetOrganizeDialogPos(const CBasicDialog::Position &Pos) { m_OrganizeDialogPos=Pos; }
-
-	private:
-		void SetFolderMenu(HMENU hmenu,int MenuPos,int *pCommand,const CFavoriteFolder *pFolder) const;
-		bool GetChannelByCommandSub(const CFavoriteFolder *pFolder,
-									int Command,int *pBaseCommand,ChannelInfo *pInfo) const;
-		void SaveFolder(const CFavoriteFolder *pFolder,const String &Path,String *pBuffer) const;
-
-		CFavoriteFolder m_RootFolder;
-		bool m_fModified;
-		CBasicDialog::Position m_OrganizeDialogPos;
 	};
 
 	class CFavoritesMenu
@@ -200,6 +167,43 @@ namespace TVTest
 		bool m_fDropToFolder;
 		bool m_fDropInsertAfter;
 		WNDPROC m_pOldEditProc;
+	};
+
+	class CFavoritesManager
+	{
+	public:
+		struct ChannelInfo
+		{
+			CChannelInfo Channel;
+			String BonDriverFileName;
+			bool fForceBonDriverChange;
+		};
+
+		CFavoritesManager();
+		~CFavoritesManager();
+		CFavoriteFolder &GetRootFolder() { return m_RootFolder; }
+		const CFavoriteFolder &GetRootFolder() const { return m_RootFolder; }
+		bool AddChannel(const CChannelInfo *pChannelInfo,LPCTSTR pszBonDriverFileName);
+		bool SetMenu(HMENU hmenu);
+		bool GetChannelByCommand(int Command,ChannelInfo *pInfo) const;
+		bool Load(LPCTSTR pszFileName);
+		bool Save(LPCTSTR pszFileName) const;
+		bool GetModified() const { return m_fModified; }
+		void SetModified(bool fModified) { m_fModified=fModified; }
+		bool ShowOrganizeDialog(HWND hwndOwner);
+		bool GetOrganizeDialogPos(CBasicDialog::Position *pPos) const;
+		bool SetOrganizeDialogPos(const CBasicDialog::Position &Pos);
+		bool IsOrganizeDialogPosSet() const;
+
+	private:
+		void SetFolderMenu(HMENU hmenu,int MenuPos,int *pCommand,const CFavoriteFolder *pFolder) const;
+		bool GetChannelByCommandSub(const CFavoriteFolder *pFolder,
+									int Command,int *pBaseCommand,ChannelInfo *pInfo) const;
+		void SaveFolder(const CFavoriteFolder *pFolder,const String &Path,String *pBuffer) const;
+
+		CFavoriteFolder m_RootFolder;
+		bool m_fModified;
+		COrganizeFavoritesDialog m_OrganizeDialog;
 	};
 
 }

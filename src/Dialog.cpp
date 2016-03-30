@@ -10,6 +10,7 @@
 CBasicDialog::CBasicDialog()
 	: m_hDlg(NULL)
 	, m_fModeless(false)
+	, m_fSetPosition(false)
 {
 }
 
@@ -126,8 +127,22 @@ bool CBasicDialog::SetPosition(int Left,int Top,int Width,int Height)
 		m_Position.y=Top;
 		m_Position.Width=Width;
 		m_Position.Height=Height;
+		m_fSetPosition=true;
 	} else {
 		::MoveWindow(m_hDlg,Left,Top,Width,Height,TRUE);
+	}
+	return true;
+}
+
+
+bool CBasicDialog::SetPosition(int Left,int Top)
+{
+	if (m_hDlg==NULL) {
+		m_Position.x=Left;
+		m_Position.y=Top;
+		m_fSetPosition=true;
+	} else {
+		::SetWindowPos(m_hDlg,NULL,Left,Top,0,0,SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);
 	}
 	return true;
 }
@@ -195,6 +210,17 @@ INT_PTR CALLBACK CBasicDialog::DialogProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPAR
 
 INT_PTR CBasicDialog::HandleMessage(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 {
+	switch (uMsg) {
+	case WM_INITDIALOG:
+		if (m_fSetPosition)
+			ApplyPosition();
+		break;
+
+	case WM_DESTROY:
+		StorePosition();
+		break;
+	}
+
 	return DlgProc(hDlg,uMsg,wParam,lParam);
 }
 
@@ -207,6 +233,55 @@ INT_PTR CBasicDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 	}
 
 	return FALSE;
+}
+
+
+bool CBasicDialog::ApplyPosition()
+{
+	if (m_hDlg==NULL || !m_fSetPosition)
+		return false;
+
+	RECT rc;
+	m_Position.Get(&rc);
+	HMONITOR hMonitor=::MonitorFromRect(&rc,MONITOR_DEFAULTTONEAREST);
+	MONITORINFO mi;
+	mi.cbSize=sizeof(mi);
+	if (::GetMonitorInfo(hMonitor,&mi)) {
+		if (rc.left<mi.rcMonitor.left)
+			m_Position.x=mi.rcMonitor.left;
+		else if (rc.right>mi.rcMonitor.right)
+			m_Position.x=mi.rcMonitor.right-m_Position.Width;
+		if (rc.top<mi.rcMonitor.top)
+			m_Position.y=mi.rcMonitor.top;
+		else if (rc.bottom>mi.rcMonitor.bottom)
+			m_Position.y=mi.rcMonitor.bottom-m_Position.Height;
+	}
+
+	if (m_Position.Width<=0 || m_Position.Height<=0) {
+		::GetWindowRect(m_hDlg,&rc);
+		if (m_Position.Width<=0)
+			m_Position.Width=rc.right-rc.left;
+		if (m_Position.Height<=0)
+			m_Position.Height=rc.bottom-rc.top;
+	}
+
+	return ::SetWindowPos(m_hDlg,NULL,
+						  m_Position.x,m_Position.y,
+						  m_Position.Width,m_Position.Height,
+						  SWP_NOZORDER)!=FALSE;
+}
+
+
+void CBasicDialog::StorePosition()
+{
+	if (m_hDlg!=NULL) {
+		RECT rc;
+
+		if (::GetWindowRect(m_hDlg,&rc)) {
+			m_Position.Set(&rc);
+			m_fSetPosition=true;
+		}
+	}
 }
 
 
@@ -263,16 +338,22 @@ INT_PTR CResizableDialog::HandleMessage(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM
 		break;
 
 	case WM_DESTROY:
-		{
-			RECT rc;
-
-			::GetWindowRect(hDlg,&rc);
-			m_Position.Set(&rc);
-		}
+		StorePosition();
 		break;
 	}
 
 	return DlgProc(hDlg,uMsg,wParam,lParam);
+}
+
+
+bool CResizableDialog::ApplyPosition()
+{
+	if (m_Position.Width<m_MinSize.cx)
+		m_Position.Width=m_MinSize.cx;
+	if (m_Position.Height<m_MinSize.cy)
+		m_Position.Height=m_MinSize.cy;
+
+	return CBasicDialog::ApplyPosition();
 }
 
 
@@ -364,32 +445,4 @@ void CResizableDialog::UpdateLayout()
 
 	for (size_t i=0;i<m_ControlList.size();i++)
 		GetDlgItemRect(m_hDlg,m_ControlList[i].ID,&m_ControlList[i].rcOriginal);
-}
-
-
-void CResizableDialog::ApplyPosition()
-{
-	if (m_Position.Width<m_MinSize.cx)
-		m_Position.Width=m_MinSize.cx;
-	if (m_Position.Height<m_MinSize.cy)
-		m_Position.Height=m_MinSize.cy;
-
-	RECT rc;
-	m_Position.Get(&rc);
-	HMONITOR hMonitor=::MonitorFromRect(&rc,MONITOR_DEFAULTTOPRIMARY);
-	MONITORINFO mi;
-	mi.cbSize=sizeof(mi);
-	if (::GetMonitorInfo(hMonitor,&mi)) {
-		if (rc.left<mi.rcMonitor.left)
-			m_Position.x=mi.rcMonitor.left;
-		else if (rc.right>mi.rcMonitor.right)
-			m_Position.x=mi.rcMonitor.right-m_Position.Width;
-		if (rc.top<mi.rcMonitor.top)
-			m_Position.y=mi.rcMonitor.top;
-		else if (rc.bottom>mi.rcMonitor.bottom)
-			m_Position.y=mi.rcMonitor.bottom-m_Position.Height;
-	}
-
-	::MoveWindow(m_hDlg,m_Position.x,m_Position.y,
-				 m_Position.Width,m_Position.Height,FALSE);
 }
