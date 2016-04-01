@@ -103,7 +103,7 @@ bool CVariableStringMap::InputParameter(HWND hDlg,int EditID,const POINT &MenuPo
 
 	const int GroupIndex=Command>>10;
 	const int ParamIndex=(Command&0x3FF)-1;
-	if (GroupIndex>=GroupList.size()
+	if (GroupIndex>=(int)GroupList.size()
 			|| ParamIndex<0
 			|| ParamIndex>=GroupList[GroupIndex].ParameterCount)
 		return false;
