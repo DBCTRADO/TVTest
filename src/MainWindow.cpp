@@ -96,6 +96,8 @@ CMainWindow::CMainWindow(CAppMain &App)
 	, m_fMinimizeInit(false)
 
 	, m_WindowState(WINDOW_STATE_NORMAL)
+	, m_fWindowRegionSet(false)
+	, m_fWindowFrameChanged(false)
 	, m_WindowSizeMode(WINDOW_SIZE_HD)
 
 	, m_fLockLayout(false)
@@ -163,9 +165,17 @@ bool CMainWindow::Create(HWND hwndParent,DWORD Style,DWORD ExStyle,int ID)
 }
 
 
-bool CMainWindow::Show(int CmdShow)
+bool CMainWindow::Show(int CmdShow,bool fForce)
 {
-	return ::ShowWindow(m_hwnd,m_WindowPosition.fMaximized?SW_SHOWMAXIMIZED:CmdShow)!=FALSE;
+	if (!m_fShowTitleBar || m_fCustomTitleBar)
+		SetWindowStyle(GetWindowStyle()&~WS_CAPTION,true);
+
+	if (!::ShowWindow(m_hwnd,!fForce && m_WindowPosition.fMaximized?SW_SHOWMAXIMIZED:CmdShow))
+		return false;
+
+	Update();
+
+	return true;
 }
 
 
@@ -737,10 +747,11 @@ void CMainWindow::SetCustomFrame(bool fCustomFrame,int Width)
 		if (fCustomFrame)
 			m_CustomFrameWidth=Width;
 		if (m_hwnd!=nullptr) {
-			::SetWindowPos(m_hwnd,nullptr,0,0,0,0,
-						   SWP_FRAMECHANGED | SWP_DRAWFRAME | SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER);
-			CAeroGlass Aero;
-			Aero.EnableNcRendering(m_hwnd,!fCustomFrame);
+			// 最大化状態でウィンドウ枠を変えるとおかしくなるので、元に戻された時に変える
+			if (::IsZoomed(m_hwnd))
+				m_fWindowFrameChanged=true;
+			else
+				UpdateWindowFrame();
 			if (fCustomFrame) {
 				HookWindows(m_LayoutBase.GetHandle());
 				HookWindows(m_App.Panel.Form.GetHandle());
@@ -1794,6 +1805,11 @@ void CMainWindow::OnSizeChanged(UINT State,int Width,int Height)
 		SetWindowVisible();
 	}
 
+	if ((m_fCustomFrame && fMaximized) || m_fWindowRegionSet)
+		SetMaximizedRegion(fMaximized);
+	if (m_fWindowFrameChanged && !fMaximized && m_WindowState==WINDOW_STATE_MAXIMIZED)
+		UpdateWindowFrame();
+
 	if (m_WindowState!=NewState)
 		m_pCore->UpdateTitle();
 
@@ -1920,7 +1936,12 @@ void CMainWindow::OnGetMinMaxInfo(HWND hwnd,LPMINMAXINFO pmmi)
 	pmmi->ptMinTrackSize.y=rc.bottom-rc.top;
 
 	if (!m_fShowTitleBar || m_fCustomTitleBar) {
-		HMONITOR hMonitor=::MonitorFromWindow(hwnd,MONITOR_DEFAULTTOPRIMARY);
+		WINDOWPLACEMENT wp;
+
+		wp.length=sizeof(WINDOWPLACEMENT);
+		::GetWindowPlacement(m_hwnd,&wp);
+
+		HMONITOR hMonitor=::MonitorFromRect(&wp.rcNormalPosition,MONITOR_DEFAULTTONEAREST);
 		MONITORINFO mi;
 
 		mi.cbSize=sizeof(MONITORINFO);
@@ -5485,6 +5506,43 @@ LRESULT CALLBACK CMainWindow::ChildHookProc(HWND hwnd,UINT uMsg,WPARAM wParam,LP
 }
 
 
+void CMainWindow::SetMaximizedRegion(bool fSet)
+{
+	// ウィンドウ枠を独自にしている場合、最大化時にクリッピングしないと
+	// 枠が隣接するモニタの端に表示されてしまうことがある
+	if (fSet) {
+		RECT rcWindow,rcClient;
+
+		::GetWindowRect(m_hwnd,&rcWindow);
+		::GetClientRect(m_hwnd,&rcClient);
+		MapWindowRect(m_hwnd,nullptr,&rcClient);
+		if (!::EqualRect(&rcWindow,&rcClient)) {
+			::OffsetRect(&rcClient,-rcWindow.left,-rcWindow.top);
+			HRGN hrgn=::CreateRectRgnIndirect(&rcClient);
+			if (::SetWindowRgn(m_hwnd,hrgn,TRUE))
+				m_fWindowRegionSet=true;
+			else
+				::DeleteObject(hrgn);
+		}
+	} else if (m_fWindowRegionSet) {
+		::SetWindowRgn(m_hwnd,nullptr,TRUE);
+		m_fWindowRegionSet=false;
+	}
+}
+
+
+void CMainWindow::UpdateWindowFrame()
+{
+	m_fWindowFrameChanged=false;
+
+	CAeroGlass Aero;
+	Aero.EnableNcRendering(m_hwnd,!m_fCustomFrame);
+
+	::SetWindowPos(m_hwnd,nullptr,0,0,0,0,
+				   SWP_FRAMECHANGED | SWP_DRAWFRAME | SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER);
+}
+
+
 void CMainWindow::SetWindowVisible()
 {
 	bool fRestore=false,fShow=false;
@@ -5495,7 +5553,13 @@ void CMainWindow::SetWindowVisible()
 		fRestore=true;
 	}
 	if (!GetVisible()) {
-		SetVisible(true);
+		if (m_fMinimizeInit || m_fStandbyInit) {
+			Show(SW_SHOWNORMAL);
+			if (m_fMinimizeInit)
+				fRestore=true;
+		} else {
+			SetVisible(true);
+		}
 		ForegroundWindow(m_hwnd);
 		Update();
 		fShow=true;
@@ -5670,8 +5734,9 @@ bool CMainWindow::InitMinimize()
 
 	m_App.TaskTrayManager.SetStatus(CTaskTrayManager::STATUS_MINIMIZED,
 									CTaskTrayManager::STATUS_MINIMIZED);
+
 	if (!m_App.TaskTrayManager.GetMinimizeToTray())
-		::ShowWindow(m_hwnd,SW_SHOWMINNOACTIVE);
+		Show(SW_SHOWMINNOACTIVE,true);
 
 	m_fMinimizeInit=true;
 

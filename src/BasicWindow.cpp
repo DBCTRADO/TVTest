@@ -109,12 +109,7 @@ void CBasicWindow::GetPosition(int *pLeft,int *pTop,int *pWidth,int *pHeight) co
 					rcNormalPositionはワークスペース座標になる(仕様が意味不明...)
 				*/
 				if ((GetWindowExStyle() & WS_EX_TOOLWINDOW)==0) {
-					/*
-						ワークスペース座標をスクリーン座標に変換
-						しかし、マルチモニタの時はどのモニタのワークスペース座標が
-						基準になっているのか不明...
-					*/
-					HMONITOR hMonitor=::MonitorFromWindow(m_hwnd,MONITOR_DEFAULTTONEAREST);
+					HMONITOR hMonitor=::MonitorFromRect(&wp.rcNormalPosition,MONITOR_DEFAULTTONEAREST);
 					MONITORINFO mi;
 
 					mi.cbSize=sizeof(MONITORINFO);

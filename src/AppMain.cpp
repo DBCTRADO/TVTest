@@ -876,17 +876,8 @@ int CAppMain::Main(HINSTANCE hInstance,LPCTSTR pszCmdLine,int nCmdShow)
 		CmdLineOptions.m_fMinimize=true;
 	if (CmdLineOptions.m_fStandby && CmdLineOptions.m_fMinimize)
 		CmdLineOptions.m_fMinimize=false;
-	if (!CmdLineOptions.m_fStandby && !CmdLineOptions.m_fMinimize) {
+	if (!CmdLineOptions.m_fStandby && !CmdLineOptions.m_fMinimize)
 		MainWindow.Show(nCmdShow);
-		MainWindow.Update();
-	}
-	if (!MainWindow.GetTitleBarVisible() || MainWindow.GetCustomTitleBar()) {
-		// WS_CAPTION を外す場合、この段階でスタイルを変えないとおかしくなる
-		// (最初からこのスタイルにしてもキャプションが表示される
-		//  ShowWindow の前に入れると、キャプションを表示させた時にアイコンが出ない)
-		MainWindow.SetWindowStyle(MainWindow.GetWindowStyle()^WS_CAPTION,true);
-		MainWindow.Update();
-	}
 
 	GeneralOptions.Apply(COptions::UPDATE_ALL);
 

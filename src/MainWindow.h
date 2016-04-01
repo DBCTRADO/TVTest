@@ -93,7 +93,7 @@ public:
 	CMainWindow(CAppMain &App);
 	~CMainWindow();
 	bool Create(HWND hwndParent,DWORD Style,DWORD ExStyle=0,int ID=0);
-	bool Show(int CmdShow);
+	bool Show(int CmdShow,bool fForce=false);
 	void CreatePanel();
 	void AdjustWindowSize(int Width,int Height,bool fScreenSize=true);
 	bool ReadSettings(CSettings &Settings);
@@ -442,6 +442,8 @@ private:
 		WINDOW_STATE_MAXIMIZED
 	};
 	WindowState m_WindowState;
+	bool m_fWindowRegionSet;
+	bool m_fWindowFrameChanged;
 
 	enum WindowSizeMode {
 		WINDOW_SIZE_HD,
@@ -634,6 +636,8 @@ private:
 	bool SetEpgUpdateNextChannel();
 	void HookWindows(HWND hwnd);
 	void HookChildWindow(HWND hwnd);
+	void SetMaximizedRegion(bool fSet);
+	void UpdateWindowFrame();
 	void SendCommand(int Command) { SendMessage(WM_COMMAND,Command,0); }
 	void PostCommand(int Command) { PostMessage(WM_COMMAND,Command,0); }
 
