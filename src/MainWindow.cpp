@@ -170,7 +170,7 @@ bool CMainWindow::Show(int CmdShow,bool fForce)
 	if (!m_fShowTitleBar || m_fCustomTitleBar)
 		SetWindowStyle(GetWindowStyle()&~WS_CAPTION,true);
 
-	if (!::ShowWindow(m_hwnd,!fForce && m_WindowPosition.fMaximized?SW_SHOWMAXIMIZED:CmdShow))
+	if (::ShowWindow(m_hwnd,!fForce && m_WindowPosition.fMaximized?SW_SHOWMAXIMIZED:CmdShow))
 		return false;
 
 	Update();
