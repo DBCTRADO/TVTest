@@ -1369,11 +1369,14 @@ INT_PTR CColorSchemeOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lP
 			for (i=0;i<m_PresetList.NumColorSchemes();i++) {
 				DlgComboBox_AddItem(hDlg,IDC_COLORSCHEME_PRESET,i);
 			}
-			int Height=7*HIWORD(::GetDialogBaseUnits())/8+6;
-			DlgComboBox_SetItemHeight(hDlg,IDC_COLORSCHEME_PRESET,0,Height);
-			DlgComboBox_SetItemHeight(hDlg,IDC_COLORSCHEME_PRESET,-1,Height);
 			DlgComboBox_SetCurSel(hDlg,IDC_COLORSCHEME_PRESET,CurPreset<0?0:CurPreset);
 			EnableDlgItem(hDlg,IDC_COLORSCHEME_DELETE,CurPreset>0);
+			{
+				RECT rc={0,0,0,14};
+				::MapDialogRect(hDlg,&rc);
+				DlgComboBox_SetItemHeight(hDlg,IDC_COLORSCHEME_PRESET,0,rc.bottom);
+				DlgComboBox_SetItemHeight(hDlg,IDC_COLORSCHEME_PRESET,-1,rc.bottom);
+			}
 
 			for (i=0;i<CColorScheme::NUM_COLORS;i++) {
 				DlgListBox_AddItem(hDlg,IDC_COLORSCHEME_LIST,m_pColorScheme->GetColor(i));
@@ -1391,10 +1394,13 @@ INT_PTR CColorSchemeOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lP
 			}
 			SelectFont(hdc,hfontOld);
 			ReleaseDC(GetDlgItem(hDlg,IDC_COLORSCHEME_LIST),hdc);
-			DlgListBox_SetItemHeight(hDlg,IDC_COLORSCHEME_LIST,0,
-									 7*HIWORD(::GetDialogBaseUnits())/8);
-			DlgListBox_SetHorizontalExtent(hDlg,IDC_COLORSCHEME_LIST,
-										   DlgListBox_GetItemHeight(hDlg,IDC_COLORSCHEME_LIST,0)*2+MaxWidth+2);
+			{
+				RECT rc={0,0,0,10};
+				::MapDialogRect(hDlg,&rc);
+				DlgListBox_SetItemHeight(hDlg,IDC_COLORSCHEME_LIST,0,rc.bottom);
+				DlgListBox_SetHorizontalExtent(hDlg,IDC_COLORSCHEME_LIST,
+											   rc.bottom*2+MaxWidth+2);
+			}
 			ExtendListBox(GetDlgItem(hDlg,IDC_COLORSCHEME_LIST));
 
 			for (int i=0;i<CColorScheme::NUM_GRADIENTS;i++)
@@ -1471,18 +1477,6 @@ INT_PTR CColorSchemeOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lP
 			m_ColorPalette.SetPalette(Palette,lengthof(Palette));
 		}
 		return TRUE;
-
-	/*
-	case WM_MEASUREITEM:
-		{
-			LPMEASUREITEMSTRUCT pmis=reinterpret_cast<LPMEASUREITEMSTRUCT>(lParam);
-
-			pmis->itemHeight=7*HIWORD(GetDialogBaseUnits())/8;
-			if (pmis->CtlID==IDC_COLORSCHEME_PRESET)
-				pmis->itemHeight+=6;
-		}
-		return TRUE;
-	*/
 
 	case WM_DRAWITEM:
 		{
