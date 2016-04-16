@@ -368,6 +368,13 @@ LRESULT CInformationPanel::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lP
 
 			if (!m_Font.IsCreated())
 				CreateDefaultFont(&m_Font);
+
+			LOGFONT lf={};
+			lf.lfHeight=m_Style.ButtonSize.Height;
+			lf.lfCharSet=SYMBOL_CHARSET;
+			::lstrcpy(lf.lfFaceName,TEXT("Marlett"));
+			m_IconFont.Create(&lf);
+
 			m_BackBrush.Create(m_Theme.Style.Back.Fill.GetSolidColor());
 			m_ProgramInfoBackBrush.Create(m_Theme.ProgramInfoStyle.Back.Fill.GetSolidColor());
 			CalcFontHeight();
@@ -560,6 +567,7 @@ LRESULT CInformationPanel::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lP
 		m_BackBrush.Destroy();
 		m_ProgramInfoBackBrush.Destroy();
 		m_Offscreen.Destroy();
+		m_IconFont.Destroy();
 		m_hwndProgramInfo=NULL;
 		return 0;
 	}
@@ -724,37 +732,18 @@ void CInformationPanel::DrawProgramInfoPrevNextButton(
 
 	TVTest::Theme::Draw(hdc,Rect,Style.Back);
 
-	HBRUSH hbr;
-	POINT Points[3];
+	HFONT hfontOld=DrawUtil::SelectObject(hdc,m_IconFont);
+	TVTest::Theme::ForegroundStyle Fore;
 
-	if (!fNext) {
-		Points[0].x=Rect.right-5;
-		Points[0].y=Rect.top+3;
-		Points[1].x=Points[0].x;
-		Points[1].y=Rect.bottom-4;
-		Points[2].x=Rect.left+4;
-		Points[2].y=Rect.top+(Rect.bottom-Rect.top)/2;
-	} else {
-		Points[0].x=Rect.left+4;
-		Points[0].y=Rect.top+3;
-		Points[1].x=Points[0].x;
-		Points[1].y=Rect.bottom-4;
-		Points[2].x=Rect.right-5;
-		Points[2].y=Rect.top+(Rect.bottom-Rect.top)/2;
-	}
-	if (fEnabled) {
-		hbr=::CreateSolidBrush(Style.Fore.Fill.GetSolidColor());
-	} else {
-		hbr=::CreateSolidBrush(MixColor(
-			Style.Back.Fill.GetSolidColor(),
-			Style.Fore.Fill.GetSolidColor()));
-	}
-	HGDIOBJ hOldBrush=::SelectObject(hdc,hbr);
-	HGDIOBJ hOldPen=::SelectObject(hdc,::GetStockObject(NULL_PEN));
-	::Polygon(hdc,Points,3);
-	::SelectObject(hdc,hOldPen);
-	::SelectObject(hdc,hOldBrush);
-	::DeleteObject(hbr);
+	if (fEnabled)
+		Fore.Fill=Style.Fore.Fill;
+	else
+		Fore.Fill=TVTest::Theme::MixStyle(Style.Fore.Fill,Style.Back.Fill);
+	RECT rc=Rect;
+	TVTest::Theme::SubtractBorderRect(Style.Back.Border,&rc);
+	TVTest::Theme::Draw(hdc,rc,Fore,fNext?TEXT("4"):TEXT("3"),
+						DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+	::SelectObject(hdc,hfontOld);
 }
 
 

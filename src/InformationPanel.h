@@ -297,6 +297,7 @@ private:
 	DrawUtil::CBrush m_ProgramInfoBackBrush;
 	DrawUtil::CFont m_Font;
 	int m_FontHeight;
+	DrawUtil::CFont m_IconFont;
 	DrawUtil::COffscreen m_Offscreen;
 
 	HWND m_hwndProgramInfo;
