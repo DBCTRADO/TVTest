@@ -1059,6 +1059,27 @@ void CColorScheme::SetLoaded()
 }
 
 
+bool CColorScheme::CompareScheme(const CColorScheme &Scheme) const
+{
+	for (int i=0;i<NUM_COLORS;i++) {
+		if (Scheme.IsLoaded(i) && m_ColorList[i]!=Scheme.m_ColorList[i])
+			return false;
+	}
+
+	for (int i=0;i<NUM_GRADIENTS;i++) {
+		if (m_GradientList[i]!=Scheme.m_GradientList[i])
+			return false;
+	}
+
+	for (int i=0;i<NUM_BORDERS;i++) {
+		if (m_BorderList[i]!=Scheme.m_BorderList[i])
+			return false;
+	}
+
+	return true;
+}
+
+
 int CColorScheme::GetColorGradient(int Type)
 {
 	for (int i=0;i<NUM_GRADIENTS;i++) {
@@ -1328,22 +1349,31 @@ INT_PTR CColorSchemeOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lP
 			GetThemesDirectory(szDirectory,lengthof(szDirectory));
 			m_PresetList.Load(szDirectory);
 			//m_PresetList.SortByName();
-			CColorScheme *pColorScheme=new CColorScheme(*m_pColorScheme);
-			pColorScheme->SetName(TEXT("現在のテーマ"));
-			pColorScheme->SetLoaded();
-			m_PresetList.Insert(0,pColorScheme);
-			pColorScheme=new CColorScheme;
-			pColorScheme->SetName(TEXT("デフォルトのテーマ"));
-			pColorScheme->SetLoaded();
-			m_PresetList.Insert(1,pColorScheme);
+			CColorScheme *pDefaultColorScheme=new CColorScheme;
+			pDefaultColorScheme->SetName(TEXT("デフォルトのテーマ"));
+			pDefaultColorScheme->SetLoaded();
+			m_PresetList.Insert(0,pDefaultColorScheme);
+			int CurPreset=-1;
+			for (int i=0;i<m_PresetList.NumColorSchemes();i++) {
+				if (m_pColorScheme->CompareScheme(*m_PresetList.GetColorScheme(i))) {
+					CurPreset=i;
+					break;
+				}
+			}
+			if (CurPreset<0) {
+				CColorScheme *pColorScheme=new CColorScheme(*m_pColorScheme);
+				pColorScheme->SetName(TEXT("現在のテーマ"));
+				pColorScheme->SetLoaded();
+				m_PresetList.Insert(0,pColorScheme);
+			}
 			for (i=0;i<m_PresetList.NumColorSchemes();i++) {
 				DlgComboBox_AddItem(hDlg,IDC_COLORSCHEME_PRESET,i);
 			}
 			int Height=7*HIWORD(::GetDialogBaseUnits())/8+6;
 			DlgComboBox_SetItemHeight(hDlg,IDC_COLORSCHEME_PRESET,0,Height);
 			DlgComboBox_SetItemHeight(hDlg,IDC_COLORSCHEME_PRESET,-1,Height);
-			DlgComboBox_SetCurSel(hDlg,IDC_COLORSCHEME_PRESET,0);
-			EnableDlgItem(hDlg,IDC_COLORSCHEME_DELETE,false);
+			DlgComboBox_SetCurSel(hDlg,IDC_COLORSCHEME_PRESET,CurPreset<0?0:CurPreset);
+			EnableDlgItem(hDlg,IDC_COLORSCHEME_DELETE,CurPreset>0);
 
 			for (i=0;i<CColorScheme::NUM_COLORS;i++) {
 				DlgListBox_AddItem(hDlg,IDC_COLORSCHEME_LIST,m_pColorScheme->GetColor(i));
@@ -1578,13 +1608,12 @@ INT_PTR CColorSchemeOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lP
 			COMPAREITEMSTRUCT *pcis=reinterpret_cast<COMPAREITEMSTRUCT*>(lParam);
 
 			if (pcis->CtlID==IDC_COLORSCHEME_PRESET) {
-				if (pcis->itemData1<2 || pcis->itemData2<2)
-					return (int)pcis->itemData1-(int)pcis->itemData2;
-
 				const CColorScheme *pColorScheme1=m_PresetList.GetColorScheme((int)pcis->itemData1);
 				const CColorScheme *pColorScheme2=m_PresetList.GetColorScheme((int)pcis->itemData2);
 				if (pColorScheme1==NULL || pColorScheme2==NULL)
 					return 0;
+				if (!pColorScheme1->IsLoadedFromFile() || !pColorScheme2->IsLoadedFromFile())
+					return (int)pcis->itemData1-(int)pcis->itemData2;
 				int Cmp=::CompareString(pcis->dwLocaleId,NORM_IGNORECASE,
 										pColorScheme1->GetName(),-1,
 										pColorScheme2->GetName(),-1);
@@ -1600,11 +1629,12 @@ INT_PTR CColorSchemeOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lP
 		case IDC_COLORSCHEME_PRESET:
 			if (HIWORD(wParam)==CBN_SELCHANGE) {
 				int Sel=(int)DlgComboBox_GetCurSel(hDlg,IDC_COLORSCHEME_PRESET);
+				const CColorScheme *pColorScheme=NULL;
 
 				if (Sel>=0) {
 					int Index=(int)DlgComboBox_GetItemData(hDlg,IDC_COLORSCHEME_PRESET,Sel);
-					const CColorScheme *pColorScheme=m_PresetList.GetColorScheme(Index);
 
+					pColorScheme=m_PresetList.GetColorScheme(Index);
 					if (pColorScheme!=NULL) {
 						int i;
 
@@ -1626,7 +1656,8 @@ INT_PTR CColorSchemeOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lP
 					}
 				}
 
-				EnableDlgItem(hDlg,IDC_COLORSCHEME_DELETE,Sel>=2);
+				EnableDlgItem(hDlg,IDC_COLORSCHEME_DELETE,
+							  pColorScheme!=NULL && pColorScheme->IsLoadedFromFile());
 			}
 			return TRUE;
 
@@ -1636,25 +1667,23 @@ INT_PTR CColorSchemeOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lP
 				TCHAR szName[MAX_COLORSCHEME_NAME];
 				szName[0]=_T('\0');
 				LRESULT Sel=DlgComboBox_GetCurSel(hDlg,IDC_COLORSCHEME_PRESET);
-				if (Sel>=2) {
-					pColorScheme=m_PresetList.GetColorScheme(
-						(int)DlgComboBox_GetItemData(hDlg,IDC_COLORSCHEME_PRESET,Sel));
-					if (pColorScheme!=NULL && !IsStringEmpty(pColorScheme->GetName()))
-						::lstrcpyn(szName,pColorScheme->GetName(),lengthof(szName));
-				}
+				pColorScheme=m_PresetList.GetColorScheme(
+					(int)DlgComboBox_GetItemData(hDlg,IDC_COLORSCHEME_PRESET,Sel));
+				if (pColorScheme!=NULL && pColorScheme->IsLoadedFromFile())
+					::lstrcpyn(szName,pColorScheme->GetName(),lengthof(szName));
 				if (::DialogBoxParam(GetAppClass().GetResourceInstance(),
 									 MAKEINTRESOURCE(IDD_SAVECOLORSCHEME),
 									 hDlg,SaveDlgProc,reinterpret_cast<LPARAM>(szName))!=IDOK)
 					return TRUE;
 
 				pColorScheme=NULL;
-				int Index=m_PresetList.FindByName(szName,2);
-				if (Index>=2) {
+				int Index=m_PresetList.FindByName(szName);
+				if (Index>=0) {
 					pColorScheme=m_PresetList.GetColorScheme(Index);
 				}
 				bool fNewColorScheme;
 				TCHAR szFileName[MAX_PATH];
-				if (pColorScheme!=NULL && !IsStringEmpty(pColorScheme->GetFileName())) {
+				if (pColorScheme!=NULL && pColorScheme->IsLoadedFromFile()) {
 					::lstrcpy(szFileName,pColorScheme->GetFileName());
 					fNewColorScheme=false;
 				} else {
@@ -1686,7 +1715,7 @@ INT_PTR CColorSchemeOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lP
 				} else {
 					InvalidateDlgItem(hDlg,IDC_COLORSCHEME_PRESET);
 					int ItemCount=(int)DlgComboBox_GetCount(hDlg,IDC_COLORSCHEME_PRESET);
-					for (int i=2;i<ItemCount;i++) {
+					for (int i=0;i<ItemCount;i++) {
 						if (DlgComboBox_GetItemData(hDlg,IDC_COLORSCHEME_PRESET,i)==Index) {
 							Index=i;
 							break;
@@ -1702,11 +1731,9 @@ INT_PTR CColorSchemeOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lP
 		case IDC_COLORSCHEME_DELETE:
 			{
 				LRESULT Sel=DlgComboBox_GetCurSel(hDlg,IDC_COLORSCHEME_PRESET);
-				if (Sel<2)
-					break;
 				CColorScheme *pColorScheme=m_PresetList.GetColorScheme(
 					(int)DlgComboBox_GetItemData(hDlg,IDC_COLORSCHEME_PRESET,Sel));
-				if (pColorScheme==NULL || IsStringEmpty(pColorScheme->GetFileName()))
+				if (pColorScheme==NULL || !pColorScheme->IsLoadedFromFile())
 					break;
 				if (::MessageBox(hDlg,TEXT("選択されたテーマを削除しますか?"),TEXT("削除の確認"),
 								 MB_OKCANCEL | MB_ICONQUESTION)!=IDOK)

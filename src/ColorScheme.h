@@ -371,6 +371,7 @@ public:
 	LPCTSTR GetName() const { return m_Name.c_str(); }
 	void SetName(LPCTSTR pszName);
 	LPCTSTR GetFileName() const { return m_FileName.c_str(); }
+	bool IsLoadedFromFile() const { return !m_FileName.empty(); }
 	bool Load(CSettings &Settings);
 	bool Save(CSettings &Settings,unsigned int Flags=0) const;
 	bool Load(LPCTSTR pszFileName);
@@ -379,6 +380,7 @@ public:
 	void SetDefault();
 	bool IsLoaded(int Type) const;
 	void SetLoaded();
+	bool CompareScheme(const CColorScheme &Scheme) const;
 
 	static LPCTSTR GetColorName(int Type);
 	static COLORREF GetDefaultColor(int Type);
