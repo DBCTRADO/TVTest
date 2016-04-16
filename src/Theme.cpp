@@ -134,8 +134,10 @@ bool Draw(HDC hdc,const RECT &Rect,const ForegroundStyle &Style,LPCTSTR pszText,
 	}
 
 	COLORREF OldTextColor=::SetTextColor(hdc,c);
+	int OldBkMode=::SetBkMode(hdc,TRANSPARENT);
 	RECT rc=Rect;
 	::DrawText(hdc,pszText,-1,&rc,Flags);
+	::SetBkMode(hdc,OldBkMode);
 	::SetTextColor(hdc,OldTextColor);
 
 	return true;
