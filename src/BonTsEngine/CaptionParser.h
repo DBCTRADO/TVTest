@@ -43,7 +43,7 @@ public:
 	void SetCaptionHandler(ICaptionHandler *pHandler);
 	void SetDRCSMap(IDRCSMap *pDRCSMap);
 	int GetLanguageNum() const;
-	bool GetLanguageCode(int LanguageTag, char *pCode) const;
+	DWORD GetLanguageCode(int LanguageTag) const;
 	bool Is1Seg() const { return m_b1Seg; }
 
 private:
@@ -55,7 +55,7 @@ private:
 		BYTE LanguageTag;
 		BYTE DMF;
 		BYTE DC;
-		char LanguageCode[4];
+		DWORD LanguageCode;
 		BYTE Format;
 		BYTE TCS;
 		BYTE RollupMode;
@@ -63,7 +63,7 @@ private:
 			return LanguageTag == Info.LanguageTag
 				&& DMF == Info.DMF
 				&& DC == Info.DC
-				&& memcmp(LanguageCode, Info.LanguageCode, 4) == 0
+				&& LanguageCode == Info.LanguageCode
 				&& Format == Info.Format
 				&& TCS == Info.TCS
 				&& RollupMode == Info.RollupMode;

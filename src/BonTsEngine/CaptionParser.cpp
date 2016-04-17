@@ -56,17 +56,13 @@ int CCaptionParser::GetLanguageNum() const
 }
 
 
-bool CCaptionParser::GetLanguageCode(int LanguageTag, char *pCode) const
+DWORD CCaptionParser::GetLanguageCode(int LanguageTag) const
 {
-	if (pCode == NULL)
-		return false;
-
 	int Index = GetLanguageIndex(LanguageTag);
 	if (Index < 0)
-		return false;
+		return 0;
 
-	::CopyMemory(pCode, m_LanguageList[Index].LanguageCode, 4);
-	return true;
+	return m_LanguageList[Index].LanguageCode;
 }
 
 
@@ -141,10 +137,7 @@ bool CCaptionParser::ParseManagementData(const BYTE *pData, const DWORD DataSize
 			LangInfo.DC = pData[Pos + 1];
 			Pos++;
 		}
-		LangInfo.LanguageCode[0] = pData[Pos + 1];
-		LangInfo.LanguageCode[1] = pData[Pos + 2];
-		LangInfo.LanguageCode[2] = pData[Pos + 3];
-		LangInfo.LanguageCode[3] = '\0';
+		LangInfo.LanguageCode = ((DWORD)pData[Pos + 1] << 16) | ((DWORD)pData[Pos + 2] << 8) | (DWORD)pData[Pos + 3];
 		LangInfo.Format = pData[Pos + 4] >> 4;
 		LangInfo.TCS = (pData[Pos + 4] & 0x0C) >> 2;
 		LangInfo.RollupMode = pData[Pos + 4] & 0x03;

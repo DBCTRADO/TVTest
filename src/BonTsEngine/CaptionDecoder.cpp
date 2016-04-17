@@ -155,7 +155,7 @@ int CCaptionDecoder::GetLanguageNum()
 }
 
 
-bool CCaptionDecoder::GetLanguageCode(int LanguageTag, char *pCode)
+DWORD CCaptionDecoder::GetLanguageCode(int LanguageTag)
 {
 	CBlockLock Lock(&m_DecoderLock);
 
@@ -163,7 +163,7 @@ bool CCaptionDecoder::GetLanguageCode(int LanguageTag, char *pCode)
 	if (pParser == NULL)
 		return 0;
 
-	return pParser->GetLanguageCode(LanguageTag, pCode);
+	return pParser->GetLanguageCode(LanguageTag);
 }
 
 

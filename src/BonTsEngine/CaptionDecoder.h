@@ -32,7 +32,7 @@ public:
 	void SetCaptionHandler(IHandler *pHandler);
 	void SetDRCSMap(IDRCSMap *pDRCSMap);
 	int GetLanguageNum();
-	bool GetLanguageCode(int LanguageTag, char *pCode);
+	DWORD GetLanguageCode(int LanguageTag);
 
 protected:
 // CCaptionParser::IHandler
