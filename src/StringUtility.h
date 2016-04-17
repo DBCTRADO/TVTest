@@ -92,6 +92,7 @@ namespace TVTest
 		void ToLower(String &Str);
 		bool ToHalfWidthNoKatakana(LPCWSTR pSrc,String::size_type SrcLength,String *pDst);
 		bool ToHalfWidthNoKatakana(const String &Src,String *pDst);
+		bool ToHalfWidthNoKatakana(String &Str);
 		bool ToHalfWidthNoKatakana(LPCWSTR pszSrc,String *pDst);
 		bool ToHalfWidthNoKatakana(LPCWSTR pszSrc,LPWSTR pszDst,String::size_type DstLength);
 		bool ToAnsi(const String &Src,AnsiString *pDst);

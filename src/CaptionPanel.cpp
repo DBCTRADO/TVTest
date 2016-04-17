@@ -51,6 +51,8 @@ CCaptionPanel::CCaptionPanel()
 	, m_fEnable(true)
 	, m_fAutoScroll(true)
 	, m_fIgnoreSmall(true)
+	, m_fHalfWidthAlnum(true)
+	, m_fHalfWidthEuroLanguagesOnly(true)
 	, m_CurLanguage(0)
 	, m_SaveCharEncoding(CHARENCODING_UTF16)
 {
@@ -95,6 +97,8 @@ bool CCaptionPanel::ReadSettings(CSettings &Settings)
 
 	Settings.Read(TEXT("CaptionPanel.AutoScroll"),&m_fAutoScroll);
 	Settings.Read(TEXT("CaptionPanel.IgnoreSmall"),&m_fIgnoreSmall);
+	Settings.Read(TEXT("CaptionPanel.HalfWidthAlnum"),&m_fHalfWidthAlnum);
+	Settings.Read(TEXT("CaptionPanel.HalfWidthEuroLanguagesOnly"),&m_fHalfWidthEuroLanguagesOnly);
 	if (Settings.Read(TEXT("CaptionPanel.SaveCharEncoding"),&Value)
 			&& Value>=CHARENCODING_FIRST && Value<=CHARENCODING_LAST)
 		m_SaveCharEncoding=(CharEncoding)Value;
@@ -106,6 +110,8 @@ bool CCaptionPanel::WriteSettings(CSettings &Settings)
 {
 	Settings.Write(TEXT("CaptionPanel.AutoScroll"),m_fAutoScroll);
 	Settings.Write(TEXT("CaptionPanel.IgnoreSmall"),m_fIgnoreSmall);
+	Settings.Write(TEXT("CaptionPanel.HalfWidthAlnum"),m_fHalfWidthAlnum);
+	Settings.Write(TEXT("CaptionPanel.HalfWidthEuroLanguagesOnly"),m_fHalfWidthEuroLanguagesOnly);
 	Settings.Write(TEXT("CaptionPanel.SaveCharEncoding"),(int)m_SaveCharEncoding);
 	return true;
 }
@@ -197,11 +203,20 @@ void CCaptionPanel::AppendQueuedText(BYTE Language)
 
 void CCaptionPanel::AddNextCaption(BYTE Language)
 {
+	LanguageInfo &Lang=m_LanguageList[Language];
+
+	if (m_fHalfWidthAlnum) {
+		if (!m_fHalfWidthEuroLanguagesOnly
+				|| (Lang.LanguageCode!=LANGUAGE_CODE_JPN &&
+					Lang.LanguageCode!=LANGUAGE_CODE_ZHO &&
+					Lang.LanguageCode!=LANGUAGE_CODE_KOR)) {
+			TVTest::StringUtility::ToHalfWidthNoKatakana(Lang.NextCaption);
+		}
+	}
+
 	if (Language==m_CurLanguage) {
 		::PostMessage(m_hwnd,WM_APP_ADD_CAPTION,Language,0);
 	} else {
-		LanguageInfo &Lang=m_LanguageList[Language];
-
 		Lang.CaptionList.push_back(Lang.NextCaption);
 		Lang.NextCaption.clear();
 	}
@@ -374,6 +389,18 @@ void CCaptionPanel::OnCommand(int Command)
 	case CM_CAPTIONPANEL_IGNORESMALL:
 		m_Lock.Lock();
 		m_fIgnoreSmall=!m_fIgnoreSmall;
+		m_Lock.Unlock();
+		break;
+
+	case CM_CAPTIONPANEL_HALFWIDTHALNUM:
+		m_Lock.Lock();
+		m_fHalfWidthAlnum=!m_fHalfWidthAlnum;
+		m_Lock.Unlock();
+		break;
+
+	case CM_CAPTIONPANEL_HALFWIDTHEUROLANGS:
+		m_Lock.Lock();
+		m_fHalfWidthEuroLanguagesOnly=!m_fHalfWidthEuroLanguagesOnly;
 		m_Lock.Unlock();
 		break;
 
@@ -628,6 +655,9 @@ LRESULT CCaptionPanel::CEditSubclass::OnMessage(
 			Menu.CheckItem(CM_CAPTIONPANEL_ENABLE,m_pCaptionPanel->m_fEnable);
 			Menu.CheckItem(CM_CAPTIONPANEL_AUTOSCROLL,m_pCaptionPanel->m_fAutoScroll);
 			Menu.CheckItem(CM_CAPTIONPANEL_IGNORESMALL,m_pCaptionPanel->m_fIgnoreSmall);
+			Menu.CheckItem(CM_CAPTIONPANEL_HALFWIDTHALNUM,m_pCaptionPanel->m_fHalfWidthAlnum);
+			Menu.CheckItem(CM_CAPTIONPANEL_HALFWIDTHEUROLANGS,m_pCaptionPanel->m_fHalfWidthEuroLanguagesOnly);
+			Menu.EnableItem(CM_CAPTIONPANEL_HALFWIDTHEUROLANGS,m_pCaptionPanel->m_fHalfWidthAlnum);
 
 			// Œ¾Œê‘I‘ð
 			m_pCaptionPanel->m_Lock.Lock();

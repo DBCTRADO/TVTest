@@ -115,6 +115,8 @@ private:
 	bool m_fEnable;
 	bool m_fAutoScroll;
 	bool m_fIgnoreSmall;
+	bool m_fHalfWidthAlnum;
+	bool m_fHalfWidthEuroLanguagesOnly;
 	BYTE m_CurLanguage;
 	std::vector<LanguageInfo> m_LanguageList;
 	CCriticalLock m_Lock;

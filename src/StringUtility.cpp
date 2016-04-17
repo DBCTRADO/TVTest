@@ -338,6 +338,16 @@ namespace TVTest
 			return ToHalfWidthNoKatakana(Src.data(),Src.length(),pDst);
 		}
 
+		bool ToHalfWidthNoKatakana(String &Str)
+		{
+			String Temp;
+
+			if (!ToHalfWidthNoKatakana(Str.data(),Str.length(),&Temp))
+				return false;
+			Str=Temp;
+			return true;
+		}
+
 		bool ToHalfWidthNoKatakana(LPCWSTR pszSrc,String *pDst)
 		{
 			if (pszSrc==nullptr)
