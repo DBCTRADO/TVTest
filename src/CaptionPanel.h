@@ -69,7 +69,7 @@ public:
 
 // CCaptionPanel
 	void SetColor(COLORREF BackColor,COLORREF TextColor);
-	void Clear();
+	void Reset();
 	bool LoadDRCSMap(LPCTSTR pszFileName);
 
 	static bool Initialize(HINSTANCE hinst);
@@ -85,6 +85,16 @@ private:
 
 		CCaptionPanel *m_pCaptionPanel;
 	};
+
+	struct LanguageInfo
+	{
+		std::deque<TVTest::String> CaptionList;
+		TVTest::String NextCaption;
+		DWORD LanguageCode;
+		bool fClearLast;
+		bool fContinue;
+	};
+	enum { MAX_QUEUE_TEXT=10000 };
 
 	enum CharEncoding
 	{
@@ -105,12 +115,8 @@ private:
 	bool m_fEnable;
 	bool m_fAutoScroll;
 	bool m_fIgnoreSmall;
-	BYTE m_Language;
-	bool m_fClearLast;
-	bool m_fContinue;
-	std::deque<LPTSTR> m_CaptionList;
-	enum { MAX_QUEUE_TEXT=10000 };
-	TVTest::String m_NextCaption;
+	BYTE m_CurLanguage;
+	std::vector<LanguageInfo> m_LanguageList;
 	CCriticalLock m_Lock;
 	CCaptionDRCSMap m_DRCSMap;
 	CharEncoding m_SaveCharEncoding;
@@ -123,6 +129,10 @@ private:
 
 	void ClearCaptionList();
 	void AppendText(LPCTSTR pszText);
+	void AppendQueuedText(BYTE Language);
+	void AddNextCaption(BYTE Language);
+	bool SetLanguage(BYTE Language);
+	void OnCommand(int Command);
 
 	static const LPCTSTR m_pszClassName;
 	static HINSTANCE m_hinst;

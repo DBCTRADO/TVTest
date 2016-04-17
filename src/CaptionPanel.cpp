@@ -2,7 +2,9 @@
 #include "TVTest.h"
 #include "AppMain.h"
 #include "CaptionPanel.h"
+#include "EpgUtil.h"
 #include "resource.h"
+#include <utility>
 #include "Common/DebugDef.h"
 
 
@@ -49,7 +51,7 @@ CCaptionPanel::CCaptionPanel()
 	, m_fEnable(true)
 	, m_fAutoScroll(true)
 	, m_fIgnoreSmall(true)
-	, m_Language(0)
+	, m_CurLanguage(0)
 	, m_SaveCharEncoding(CHARENCODING_UTF16)
 {
 }
@@ -58,7 +60,6 @@ CCaptionPanel::CCaptionPanel()
 CCaptionPanel::~CCaptionPanel()
 {
 	Destroy();
-	Clear();
 }
 
 
@@ -122,16 +123,13 @@ void CCaptionPanel::SetColor(COLORREF BackColor,COLORREF TextColor)
 }
 
 
-void CCaptionPanel::Clear()
+void CCaptionPanel::Reset()
 {
 	CBlockLock Lock(&m_Lock);
 
 	ClearCaptionList();
-	if (m_hwndEdit!=NULL) {
+	if (m_hwndEdit!=NULL)
 		::SetWindowText(m_hwndEdit,TEXT(""));
-		m_fClearLast=true;
-		m_fContinue=false;
-	}
 	m_DRCSMap.Reset();
 }
 
@@ -144,13 +142,12 @@ bool CCaptionPanel::LoadDRCSMap(LPCTSTR pszFileName)
 
 void CCaptionPanel::ClearCaptionList()
 {
-	if (!m_CaptionList.empty()) {
-		for (std::deque<LPTSTR>::iterator itr=m_CaptionList.begin();itr!=m_CaptionList.end();++itr)
-			delete [] *itr;
-		m_CaptionList.clear();
+	for (auto it=m_LanguageList.begin();it!=m_LanguageList.end();++it) {
+		it->CaptionList.clear();
+		it->NextCaption.clear();
+		it->fClearLast=true;
+		it->fContinue=false;
 	}
-
-	m_NextCaption.clear();
 }
 
 
@@ -178,6 +175,217 @@ void CCaptionPanel::AppendText(LPCTSTR pszText)
 }
 
 
+void CCaptionPanel::AppendQueuedText(BYTE Language)
+{
+	if (Language>=m_LanguageList.size())
+		return;
+
+	LanguageInfo &Lang=m_LanguageList[Language];
+
+	if (!Lang.CaptionList.empty() || !Lang.NextCaption.empty()) {
+		TVTest::String Text;
+
+		for (auto it=Lang.CaptionList.begin();it!=Lang.CaptionList.end();++it)
+			Text+=*it;
+		Text+=Lang.NextCaption;
+		AppendText(Text.c_str());
+		Lang.CaptionList.clear();
+		Lang.NextCaption.clear();
+	}
+}
+
+
+void CCaptionPanel::AddNextCaption(BYTE Language)
+{
+	if (Language==m_CurLanguage) {
+		::PostMessage(m_hwnd,WM_APP_ADD_CAPTION,Language,0);
+	} else {
+		LanguageInfo &Lang=m_LanguageList[Language];
+
+		Lang.CaptionList.push_back(Lang.NextCaption);
+		Lang.NextCaption.clear();
+	}
+}
+
+
+bool CCaptionPanel::SetLanguage(BYTE Language)
+{
+	CBlockLock Lock(&m_Lock);
+
+	if (Language>=m_LanguageList.size())
+		return false;
+	if (Language==m_CurLanguage)
+		return true;
+
+	if (m_CurLanguage<m_LanguageList.size()) {
+		const int Length=::GetWindowTextLength(m_hwndEdit);
+
+		if (Length>0) {
+			LanguageInfo &Lang=m_LanguageList[m_CurLanguage];
+			LPTSTR pszBuffer=new TCHAR[Length+1];
+			int End;
+
+			::GetWindowText(m_hwndEdit,pszBuffer,Length+1);
+			End=Length-1;
+			for (int i=Length-2;Lang.CaptionList.size()<MAX_QUEUE_TEXT;i--) {
+				if (i<0 || pszBuffer[i]==_T('\n')) {
+					Lang.CaptionList.push_front(TVTest::String(pszBuffer+(i+1),End-i));
+					if (i<0)
+						break;
+					End=i;
+				}
+			}
+			delete [] pszBuffer;
+		}
+	}
+
+	m_CurLanguage=Language;
+
+	::SetWindowText(m_hwndEdit,TEXT(""));
+	AppendQueuedText(m_CurLanguage);
+
+	return true;
+}
+
+
+void CCaptionPanel::OnCommand(int Command)
+{
+	switch (Command) {
+	case CM_CAPTIONPANEL_COPY:
+		{
+			HWND hwndEdit=m_hwndEdit;
+			DWORD Start,End;
+
+			::SendMessage(hwndEdit,WM_SETREDRAW,FALSE,0);
+			::SendMessage(hwndEdit,EM_GETSEL,(WPARAM)&Start,(LPARAM)&End);
+			if (Start==End)
+				::SendMessage(hwndEdit,EM_SETSEL,0,-1);
+			::SendMessage(hwndEdit,WM_COPY,0,0);
+			if (Start==End)
+				::SendMessage(hwndEdit,EM_SETSEL,Start,End);
+			::SendMessage(hwndEdit,WM_SETREDRAW,TRUE,0);
+		}
+		break;
+
+	case CM_CAPTIONPANEL_SELECTALL:
+		::SendMessage(m_hwndEdit,EM_SETSEL,0,-1);
+		break;
+
+	case CM_CAPTIONPANEL_CLEAR:
+		{
+			CBlockLock Lock(&m_Lock);
+
+			ClearCaptionList();
+			::SetWindowText(m_hwndEdit,TEXT(""));
+		}
+		break;
+
+	case CM_CAPTIONPANEL_SAVE:
+		{
+			int Length=::GetWindowTextLengthW(m_hwndEdit);
+			if (Length>0) {
+				LPWSTR pszText=new WCHAR[Length+1];
+				DWORD Start,End;
+
+				::GetWindowTextW(m_hwndEdit,pszText,Length+1);
+				::SendMessageW(m_hwndEdit,EM_GETSEL,(WPARAM)&Start,(LPARAM)&End);
+
+				OPENFILENAME ofn;
+				TCHAR szFileName[MAX_PATH];
+
+				szFileName[0]=_T('\0');
+				InitOpenFileName(&ofn);
+				ofn.hwndOwner=m_hwnd;
+				ofn.lpstrFilter=
+					TEXT("テキストファイル(UTF-16 LE)(*.*)\0*.*\0")
+					TEXT("テキストファイル(UTF-8)(*.*)\0*.*\0")
+					TEXT("テキストファイル(Shift_JIS)(*.*)\0*.*\0");
+				ofn.nFilterIndex=(int)m_SaveCharEncoding+1;
+				ofn.lpstrFile=szFileName;
+				ofn.nMaxFile=lengthof(szFileName);
+				ofn.lpstrTitle=TEXT("字幕の保存");
+				ofn.Flags=OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT | OFN_EXPLORER;
+				if (::GetSaveFileName(&ofn)) {
+					m_SaveCharEncoding=(CharEncoding)(ofn.nFilterIndex-1);
+
+					bool fOK=false;
+					HANDLE hFile=::CreateFile(
+						szFileName,GENERIC_WRITE,0,NULL,CREATE_ALWAYS,FILE_ATTRIBUTE_NORMAL,NULL);
+
+					if (hFile!=INVALID_HANDLE_VALUE) {
+						LPCWSTR pSrcText;
+						DWORD SrcLength;
+						DWORD Write;
+
+						if (Start<End) {
+							pSrcText=pszText+Start;
+							SrcLength=End-Start;
+						} else {
+							pSrcText=pszText;
+							SrcLength=Length;
+						}
+						if (m_SaveCharEncoding==CHARENCODING_UTF16) {
+							const WCHAR BOM=0xFEFF;
+							fOK=::WriteFile(hFile,&BOM,sizeof(BOM),&Write,NULL)
+									&& Write==sizeof(BOM)
+								&& ::WriteFile(hFile,pSrcText,SrcLength*sizeof(WCHAR),&Write,NULL)
+									&& Write==SrcLength*sizeof(WCHAR);
+						} else {
+							const UINT CodePage=
+								m_SaveCharEncoding==CHARENCODING_UTF8?CP_UTF8:932;
+							int EncodedLen=::WideCharToMultiByte(CodePage,0,pSrcText,SrcLength,NULL,0,NULL,NULL);
+							if (EncodedLen>0) {
+								char *pEncodedText=new char[EncodedLen];
+								::WideCharToMultiByte(CodePage,0,pSrcText,SrcLength,pEncodedText,EncodedLen,NULL,NULL);
+								fOK=::WriteFile(hFile,pEncodedText,EncodedLen,&Write,NULL)
+									&& Write==(DWORD)EncodedLen;
+								delete [] pEncodedText;
+							}
+						}
+
+						::CloseHandle(hFile);
+					}
+
+					if (!fOK) {
+						::MessageBox(m_hwnd,TEXT("ファイルを保存できません。"),NULL,
+									 MB_OK | MB_ICONEXCLAMATION);
+					}
+				}
+
+				delete [] pszText;
+			}
+		}
+		break;
+
+	case CM_CAPTIONPANEL_ENABLE:
+		m_Lock.Lock();
+		m_fEnable=!m_fEnable;
+		for (auto it=m_LanguageList.begin();it!=m_LanguageList.end();++it) {
+			it->fClearLast=false;
+			it->fContinue=false;
+		}
+		m_Lock.Unlock();
+		break;
+
+	case CM_CAPTIONPANEL_AUTOSCROLL:
+		m_fAutoScroll=!m_fAutoScroll;
+		break;
+
+	case CM_CAPTIONPANEL_IGNORESMALL:
+		m_Lock.Lock();
+		m_fIgnoreSmall=!m_fIgnoreSmall;
+		m_Lock.Unlock();
+		break;
+
+	default:
+		if (Command>=CM_CAPTIONPANEL_LANGUAGE_FIRST && Command<=CM_CAPTIONPANEL_LANGUAGE_LAST) {
+			SetLanguage((BYTE)(Command-CM_CAPTIONPANEL_LANGUAGE_FIRST));
+		}
+		break;
+	}
+}
+
+
 LRESULT CCaptionPanel::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 {
 	switch (uMsg) {
@@ -198,8 +406,10 @@ LRESULT CCaptionPanel::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam
 			SetWindowFont(m_hwndEdit,m_Font.GetHandle(),FALSE);
 			m_EditSubclass.SetSubclass(m_hwndEdit);
 
-			m_fClearLast=true;
-			m_fContinue=false;
+			for (auto it=m_LanguageList.begin();it!=m_LanguageList.end();++it) {
+				it->fClearLast=true;
+				it->fContinue=false;
+			}
 
 			CCaptionDecoder *pCaptionDecoder=&GetAppClass().CoreEngine.m_DtvEngine.m_CaptionDecoder;
 			pCaptionDecoder->SetCaptionHandler(this);
@@ -223,150 +433,36 @@ LRESULT CCaptionPanel::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam
 	case WM_APP_ADD_CAPTION:
 		{
 			CBlockLock Lock(&m_Lock);
+			const int LangIndex=(int)wParam;
 
-			if (!m_NextCaption.empty()) {
-				if (m_fEnable) {
-					if (m_fActive) {
-						::SendMessage(m_hwndEdit,WM_SETREDRAW,FALSE,0);
-						AppendText(m_NextCaption.c_str());
-						::SendMessage(m_hwndEdit,WM_SETREDRAW,TRUE,0);
-						::InvalidateRect(m_hwndEdit,NULL,TRUE);
-					} else {
-						// 非アクティブの場合はキューに溜める
-						if (m_CaptionList.size()>=MAX_QUEUE_TEXT) {
-							delete [] m_CaptionList.front();
-							m_CaptionList.pop_front();
-							::SetWindowText(m_hwndEdit,TEXT(""));
+			if (LangIndex>=0 && (size_t)LangIndex<m_LanguageList.size()) {
+				LanguageInfo &Lang=m_LanguageList[LangIndex];
+
+				if (!Lang.NextCaption.empty()) {
+					if (m_fEnable) {
+						if (m_fActive && LangIndex==m_CurLanguage) {
+							::SendMessage(m_hwndEdit,WM_SETREDRAW,FALSE,0);
+							AppendText(Lang.NextCaption.c_str());
+							::SendMessage(m_hwndEdit,WM_SETREDRAW,TRUE,0);
+							::InvalidateRect(m_hwndEdit,NULL,TRUE);
+						} else {
+							// 非アクティブの場合はキューに溜める
+							if (Lang.CaptionList.size()>=MAX_QUEUE_TEXT) {
+								Lang.CaptionList.pop_front();
+								if (LangIndex==m_CurLanguage)
+									::SetWindowText(m_hwndEdit,TEXT(""));
+							}
+							Lang.CaptionList.push_back(Lang.NextCaption);
 						}
-						m_CaptionList.push_back(DuplicateString(m_NextCaption.c_str()));
 					}
+					Lang.NextCaption.clear();
 				}
-				m_NextCaption.clear();
 			}
 		}
 		return 0;
 
 	case WM_COMMAND:
-		switch (LOWORD(wParam)) {
-		case CM_CAPTIONPANEL_COPY:
-			{
-				HWND hwndEdit=m_hwndEdit;
-				DWORD Start,End;
-
-				::SendMessage(hwndEdit,WM_SETREDRAW,FALSE,0);
-				::SendMessage(hwndEdit,EM_GETSEL,(WPARAM)&Start,(LPARAM)&End);
-				if (Start==End)
-					::SendMessage(hwndEdit,EM_SETSEL,0,-1);
-				::SendMessage(hwndEdit,WM_COPY,0,0);
-				if (Start==End)
-					::SendMessage(hwndEdit,EM_SETSEL,Start,End);
-				::SendMessage(hwndEdit,WM_SETREDRAW,TRUE,0);
-			}
-			break;
-
-		case CM_CAPTIONPANEL_SELECTALL:
-			::SendMessage(m_hwndEdit,EM_SETSEL,0,-1);
-			break;
-
-		case CM_CAPTIONPANEL_CLEAR:
-			::SetWindowText(m_hwndEdit,TEXT(""));
-			break;
-
-		case CM_CAPTIONPANEL_SAVE:
-			{
-				int Length=::GetWindowTextLengthW(m_hwndEdit);
-				if (Length>0) {
-					LPWSTR pszText=new WCHAR[Length+1];
-					DWORD Start,End;
-
-					::GetWindowTextW(m_hwndEdit,pszText,Length+1);
-					::SendMessageW(m_hwndEdit,EM_GETSEL,(WPARAM)&Start,(LPARAM)&End);
-
-					OPENFILENAME ofn;
-					TCHAR szFileName[MAX_PATH];
-
-					szFileName[0]=_T('\0');
-					InitOpenFileName(&ofn);
-					ofn.hwndOwner=hwnd;
-					ofn.lpstrFilter=
-						TEXT("テキストファイル(UTF-16 LE)(*.*)\0*.*\0")
-						TEXT("テキストファイル(UTF-8)(*.*)\0*.*\0")
-						TEXT("テキストファイル(Shift_JIS)(*.*)\0*.*\0");
-					ofn.nFilterIndex=(int)m_SaveCharEncoding+1;
-					ofn.lpstrFile=szFileName;
-					ofn.nMaxFile=lengthof(szFileName);
-					ofn.lpstrTitle=TEXT("字幕の保存");
-					ofn.Flags=OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT | OFN_EXPLORER;
-					if (::GetSaveFileName(&ofn)) {
-						m_SaveCharEncoding=(CharEncoding)(ofn.nFilterIndex-1);
-
-						bool fOK=false;
-						HANDLE hFile=::CreateFile(
-							szFileName,GENERIC_WRITE,0,NULL,CREATE_ALWAYS,FILE_ATTRIBUTE_NORMAL,NULL);
-
-						if (hFile!=INVALID_HANDLE_VALUE) {
-							LPCWSTR pSrcText;
-							DWORD SrcLength;
-							DWORD Write;
-
-							if (Start<End) {
-								pSrcText=pszText+Start;
-								SrcLength=End-Start;
-							} else {
-								pSrcText=pszText;
-								SrcLength=Length;
-							}
-							if (m_SaveCharEncoding==CHARENCODING_UTF16) {
-								const WCHAR BOM=0xFEFF;
-								fOK=::WriteFile(hFile,&BOM,sizeof(BOM),&Write,NULL)
-										&& Write==sizeof(BOM)
-									&& ::WriteFile(hFile,pSrcText,SrcLength*sizeof(WCHAR),&Write,NULL)
-										&& Write==SrcLength*sizeof(WCHAR);
-							} else {
-								const UINT CodePage=
-									m_SaveCharEncoding==CHARENCODING_UTF8?CP_UTF8:932;
-								int EncodedLen=::WideCharToMultiByte(CodePage,0,pSrcText,SrcLength,NULL,0,NULL,NULL);
-								if (EncodedLen>0) {
-									char *pEncodedText=new char[EncodedLen];
-									::WideCharToMultiByte(CodePage,0,pSrcText,SrcLength,pEncodedText,EncodedLen,NULL,NULL);
-									fOK=::WriteFile(hFile,pEncodedText,EncodedLen,&Write,NULL)
-										&& Write==(DWORD)EncodedLen;
-									delete [] pEncodedText;
-								}
-							}
-
-							::CloseHandle(hFile);
-						}
-
-						if (!fOK) {
-							::MessageBox(hwnd,TEXT("ファイルを保存できません。"),NULL,
-										 MB_OK | MB_ICONEXCLAMATION);
-						}
-					}
-
-					delete [] pszText;
-				}
-			}
-			break;
-
-		case CM_CAPTIONPANEL_ENABLE:
-			m_Lock.Lock();
-			m_fEnable=!m_fEnable;
-			m_fClearLast=false;
-			m_fContinue=false;
-			m_Lock.Unlock();
-			break;
-
-		case CM_CAPTIONPANEL_AUTOSCROLL:
-			m_fAutoScroll=!m_fAutoScroll;
-			break;
-
-		case CM_CAPTIONPANEL_IGNORESMALL:
-			m_Lock.Lock();
-			m_fIgnoreSmall=!m_fIgnoreSmall;
-			m_Lock.Unlock();
-			break;
-		}
+		OnCommand(LOWORD(wParam));
 		return 0;
 
 	case WM_DESTROY:
@@ -389,15 +485,7 @@ void CCaptionPanel::OnActivate()
 {
 	CBlockLock Lock(&m_Lock);
 
-	if (!m_CaptionList.empty()) {
-		TVTest::String Text;
-
-		for (std::deque<LPTSTR>::iterator itr=m_CaptionList.begin();itr!=m_CaptionList.end();++itr)
-			Text+=*itr;
-		Text+=m_NextCaption;
-		AppendText(Text.c_str());
-		ClearCaptionList();
-	}
+	AppendQueuedText(m_CurLanguage);
 
 	m_fActive=true;
 }
@@ -411,6 +499,23 @@ void CCaptionPanel::OnDeactivate()
 
 void CCaptionPanel::OnLanguageUpdate(CCaptionDecoder *pDecoder,CCaptionParser *pParser)
 {
+	CBlockLock Lock(&m_Lock);
+
+	const int LanguageNum=pDecoder->GetLanguageNum();
+	const int OldLanguageNum=(int)m_LanguageList.size();
+
+	m_LanguageList.resize(LanguageNum);
+
+	for (int i=0;i<LanguageNum;i++) {
+		m_LanguageList[i].LanguageCode=pDecoder->GetLanguageCode(i);
+		if (i>=OldLanguageNum) {
+			m_LanguageList[i].fClearLast=true;
+			m_LanguageList[i].fContinue=false;
+		}
+	}
+
+	if (m_CurLanguage>=LanguageNum)
+		m_CurLanguage=0;
 }
 
 
@@ -420,82 +525,85 @@ void CCaptionPanel::OnCaption(CCaptionDecoder *pDecoder,CCaptionParser *pParser,
 {
 	CBlockLock Lock(&m_Lock);
 
-	if ((Language==m_Language || Language==0xFF) && m_hwnd!=NULL && m_fEnable) {
-		int Length=::lstrlen(pszText);
+	if (Language>=m_LanguageList.size() || m_hwnd==NULL || !m_fEnable)
+		return;
 
-		if (Length>0) {
-			int i;
-			for (i=0;i<Length;i++) {
-				if (pszText[i]!='\f')
-					break;
-			}
-			if (i==Length) {
-				if (m_fClearLast || m_fContinue)
-					return;
-				m_fClearLast=true;
-				m_NextCaption+=TEXT("\r\n");
-				::PostMessage(m_hwnd,WM_APP_ADD_CAPTION,0,0);
+	int Length=::lstrlen(pszText);
+
+	if (Length>0) {
+		LanguageInfo &Lang=m_LanguageList[Language];
+		int i;
+
+		for (i=0;i<Length;i++) {
+			if (pszText[i]!='\f')
+				break;
+		}
+		if (i==Length) {
+			if (Lang.fClearLast || Lang.fContinue)
 				return;
-			} else {
-				m_fClearLast=false;
-			}
+			Lang.fClearLast=true;
+			Lang.NextCaption+=TEXT("\r\n");
+			AddNextCaption(Language);
+			return;
+		} else {
+			Lang.fClearLast=false;
+		}
 
-			LPTSTR pszBuff=new TCHAR[Length+2];
-			::lstrcpy(pszBuff,pszText);
-			DWORD DstLength=Length;
+		LPTSTR pszBuff=new TCHAR[Length+2];
+		::lstrcpy(pszBuff,pszText);
+		DWORD DstLength=Length;
 
-			if (m_fIgnoreSmall && !pParser->Is1Seg()) {
-				for (int i=(int)pFormatList->size()-1;i>=0;i--) {
-					if ((*pFormatList)[i].Size==CAribString::SIZE_SMALL) {
-						DWORD Pos=(*pFormatList)[i].Pos;
-						if (Pos<DstLength) {
-							if (i+1<(int)pFormatList->size()) {
-								DWORD NextPos=min(DstLength,(*pFormatList)[i+1].Pos);
+		if (m_fIgnoreSmall && !pParser->Is1Seg()) {
+			for (int i=(int)pFormatList->size()-1;i>=0;i--) {
+				if ((*pFormatList)[i].Size==CAribString::SIZE_SMALL) {
+					DWORD Pos=(*pFormatList)[i].Pos;
+					if (Pos<DstLength) {
+						if (i+1<(int)pFormatList->size()) {
+							DWORD NextPos=min(DstLength,(*pFormatList)[i+1].Pos);
 #ifdef _DEBUG
-								TCHAR szTrace[1024];
-								::lstrcpyn(szTrace,&pszBuff[Pos],NextPos-Pos+1);
-								TRACE(TEXT("Caption exclude : %s\n"),szTrace);
+							TCHAR szTrace[1024];
+							::lstrcpyn(szTrace,&pszBuff[Pos],NextPos-Pos+1);
+							TRACE(TEXT("Caption exclude : %s\n"),szTrace);
 #endif
-								memmove(&pszBuff[Pos],&pszBuff[NextPos],
-										(DstLength-NextPos+1)*sizeof(TCHAR));
-								DstLength-=NextPos-Pos;
-							} else {
-								pszBuff[Pos]='\0';
-								DstLength=Pos;
-							}
+							memmove(&pszBuff[Pos],&pszBuff[NextPos],
+									(DstLength-NextPos+1)*sizeof(TCHAR));
+							DstLength-=NextPos-Pos;
+						} else {
+							pszBuff[Pos]='\0';
+							DstLength=Pos;
 						}
 					}
 				}
 			}
+		}
 
-			for (DWORD i=0;i<DstLength;i++) {
-				if (pszBuff[i]=='\f') {
-					if (i==0 && !m_fContinue) {
-						memmove(&pszBuff[2],&pszBuff[1],DstLength*sizeof(TCHAR));
-						pszBuff[0]='\r';
-						pszBuff[1]='\n';
-						i++;
-						DstLength++;
-					} else {
-						memmove(&pszBuff[i],&pszBuff[i+1],(DstLength-i)*sizeof(TCHAR));
-						DstLength--;
-					}
+		for (DWORD i=0;i<DstLength;i++) {
+			if (pszBuff[i]=='\f') {
+				if (i==0 && !Lang.fContinue) {
+					memmove(&pszBuff[2],&pszBuff[1],DstLength*sizeof(TCHAR));
+					pszBuff[0]='\r';
+					pszBuff[1]='\n';
+					i++;
+					DstLength++;
+				} else {
+					memmove(&pszBuff[i],&pszBuff[i+1],(DstLength-i)*sizeof(TCHAR));
+					DstLength--;
 				}
 			}
-			m_fContinue=
-#ifdef UNICODE
-				DstLength>1 && pszBuff[DstLength-1]==L'→';
-#else
-				DstLength>2 && pszBuff[DstLength-2]=="→"[0] && pszBuff[DstLength-1]=="→"[1];
-#endif
-			if (m_fContinue)
-				pszBuff[DstLength-(3-sizeof(TCHAR))]='\0';
-			if (DstLength>0) {
-				m_NextCaption+=pszBuff;
-				::PostMessage(m_hwnd,WM_APP_ADD_CAPTION,0,0);
-			}
-			delete [] pszBuff;
 		}
+		Lang.fContinue=
+#ifdef UNICODE
+			DstLength>1 && pszBuff[DstLength-1]==L'→';
+#else
+			DstLength>2 && pszBuff[DstLength-2]=="→"[0] && pszBuff[DstLength-1]=="→"[1];
+#endif
+		if (Lang.fContinue)
+			pszBuff[DstLength-(3-sizeof(TCHAR))]='\0';
+		if (DstLength>0) {
+			Lang.NextCaption+=pszBuff;
+			AddNextCaption(Language);
+		}
+		delete [] pszBuff;
 	}
 }
 
@@ -520,6 +628,29 @@ LRESULT CCaptionPanel::CEditSubclass::OnMessage(
 			Menu.CheckItem(CM_CAPTIONPANEL_ENABLE,m_pCaptionPanel->m_fEnable);
 			Menu.CheckItem(CM_CAPTIONPANEL_AUTOSCROLL,m_pCaptionPanel->m_fAutoScroll);
 			Menu.CheckItem(CM_CAPTIONPANEL_IGNORESMALL,m_pCaptionPanel->m_fIgnoreSmall);
+
+			// 言語選択
+			m_pCaptionPanel->m_Lock.Lock();
+			if (!m_pCaptionPanel->m_LanguageList.empty()) {
+				Menu.AppendSeparator();
+				int LanguageNum=(int)m_pCaptionPanel->m_LanguageList.size();
+				if (LanguageNum>CM_CAPTIONPANEL_LANGUAGE_LAST-CM_CAPTIONPANEL_LANGUAGE_FIRST+1)
+					LanguageNum=CM_CAPTIONPANEL_LANGUAGE_LAST-CM_CAPTIONPANEL_LANGUAGE_FIRST+1;
+				for (int i=0;i<LanguageNum;i++) {
+					TCHAR szText[EpgUtil::MAX_LANGUAGE_TEXT_LENGTH];
+					EpgUtil::GetLanguageText(
+						m_pCaptionPanel->m_LanguageList[i].LanguageCode,
+						szText,lengthof(szText));
+					if (szText[0]==_T('\0'))
+						StdUtil::snprintf(szText,lengthof(szText),TEXT("言語%d"),i+1);
+					Menu.Append(CM_CAPTIONPANEL_LANGUAGE_FIRST+i,szText);
+				}
+				Menu.CheckRadioItem(CM_CAPTIONPANEL_LANGUAGE_FIRST,
+									CM_CAPTIONPANEL_LANGUAGE_FIRST+LanguageNum-1,
+									CM_CAPTIONPANEL_LANGUAGE_FIRST+m_pCaptionPanel->m_CurLanguage);
+			}
+			m_pCaptionPanel->m_Lock.Unlock();
+
 			POINT pt={GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam)};
 			::ClientToScreen(hwnd,&pt);
 			Menu.Show(m_pCaptionPanel->m_hwnd,&pt,TPM_RIGHTBUTTON);

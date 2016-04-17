@@ -4264,7 +4264,7 @@ void CMainWindow::OnTunerChanged()
 		m_App.Panel.ChannelPanel.ClearChannelList();
 	}
 	*/
-	m_App.Panel.CaptionPanel.Clear();
+	m_App.Panel.CaptionPanel.Reset();
 	m_App.Epg.ProgramGuide.ClearCurrentService();
 	ClearMenu(m_App.MainMenu.GetSubMenu(CMainMenu::SUBMENU_SERVICE));
 	m_ResetErrorCountTimer.End();
@@ -4385,7 +4385,7 @@ void CMainWindow::OnChannelChanged(unsigned int Status)
 			CM_CHANNELNO_1+ChannelNo-1:0);
 	if (fSpaceChanged && m_App.SideBarOptions.GetShowChannelLogo())
 		m_App.SideBar.Invalidate();
-	m_App.Panel.CaptionPanel.Clear();
+	m_App.Panel.CaptionPanel.Reset();
 	m_App.Panel.UpdateControlPanel();
 
 	LPCTSTR pszDriverFileName=m_App.CoreEngine.GetDriverFileName();
