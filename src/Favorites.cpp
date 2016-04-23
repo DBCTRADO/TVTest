@@ -330,8 +330,7 @@ namespace TVTest
 
 						::InsertMenu(hmenu,MenuPos,MF_BYPOSITION | MF_POPUP | MF_ENABLED,
 									 reinterpret_cast<UINT_PTR>(hmenuSub),
-									 // TODO: & -> &&
-									 pSubFolder->GetName());
+									 FormatMenuString(pSubFolder->GetName()).c_str());
 						SetFolderMenu(hmenuSub,0,pCommand,pSubFolder);
 						MenuPos++;
 					}
@@ -345,8 +344,7 @@ namespace TVTest
 
 					if (pChannel!=nullptr) {
 						::InsertMenu(hmenu,MenuPos,MF_BYPOSITION | MF_STRING | MF_ENABLED,
-									 // TODO: & -> &&
-									 *pCommand,pChannel->GetName());
+									 *pCommand,FormatMenuString(pChannel->GetName()).c_str());
 						(*pCommand)++;
 						MenuPos++;
 					}

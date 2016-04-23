@@ -50,6 +50,8 @@ bool CopyTextToClipboard(HWND hwndOwner,LPCTSTR pszText);
 
 void ClearMenu(HMENU hmenu);
 int CopyToMenuText(LPCTSTR pszSrcText,LPTSTR pszDstText,int MaxLength);
+TVTest::String FormatMenuString(const TVTest::String &Str);
+TVTest::String FormatMenuString(LPCWSTR pszText);
 
 void InitOpenFileName(OPENFILENAME *pofn);
 

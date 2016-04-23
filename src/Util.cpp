@@ -397,6 +397,22 @@ int CopyToMenuText(LPCTSTR pszSrcText,LPTSTR pszDstText,int MaxLength)
 }
 
 
+TVTest::String FormatMenuString(const TVTest::String &Str)
+{
+	TVTest::String Temp(Str);
+	TVTest::StringUtility::Replace(Temp,L"&",L"&&");
+	return Temp;
+}
+
+
+TVTest::String FormatMenuString(LPCWSTR pszText)
+{
+	TVTest::String Temp(pszText);
+	TVTest::StringUtility::Replace(Temp,L"&",L"&&");
+	return Temp;
+}
+
+
 void InitOpenFileName(OPENFILENAME *pofn)
 {
 #if _WIN32_WINNT>=0x0500
