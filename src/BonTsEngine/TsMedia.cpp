@@ -396,8 +396,10 @@ const bool CAdtsFrame::ParseHeader(void)
 {
 	// adts_fixed_header()
 	if(m_dwDataSize < 7UL)return false;									// ADTSヘッダは7バイト
-	else if(m_pData[0] != 0xFFU || m_pData[1] != 0xF8U)return false;	// Syncword、ID、layer、protection_absent異常　※CRCなしは非対応
-	
+	else if(m_pData[0] != 0xFFU || (m_pData[1] & 0xF6) != 0xF0U)return false;	// Syncword、layer異常
+
+	m_Header.bMpegVersion			= (m_pData[1] & 0x08U)? true : false;							// +1 bit3
+	m_Header.bProtectionAbsent		= (m_pData[1] & 0x01U)? true : false;							// +1 bit0
 	m_Header.byProfile				= (m_pData[2] & 0xC0U) >> 6;									// +2 bit7-6
 	m_Header.bySamplingFreqIndex	= (m_pData[2] & 0x3CU) >> 2;									// +2 bit5-2
 	m_Header.bPrivateBit			= (m_pData[2] & 0x02U)? true : false;							// +2 bit1
@@ -419,8 +421,8 @@ const bool CAdtsFrame::ParseHeader(void)
 		return false;		// 未定義のサンプリング周波数
 	else if(m_Header.byChannelConfig >= 3 && m_Header.byChannelConfig != 6)
 		return false;		// チャンネル数異常
-	else if(m_Header.wFrameLength < 2U || m_Header.wFrameLength > 0x2000 - 7)
-		return false;		// データなしの場合も最低CRCのサイズが必要
+	else if(m_Header.wFrameLength < (m_Header.bProtectionAbsent ? 7 : 9))
+		return false;		// フレーム長異常
 	else if(m_Header.byRawDataBlockNum)
 		return false;		// 本クラスは単一のRaw Data Blockにしか対応しない
 
@@ -663,8 +665,8 @@ inline const bool CAdtsParser::SyncFrame(const BYTE byData)
 		break;
 
 	case 1UL :
-		// syncword(4bit), ID, layer, protection_absent	※CRC付きのフレームのみ対応
-		if (byData == 0xF8U)
+		// syncword(4bit), ID, layer, protection_absent
+		if ((byData & 0xF6) == 0xF0U)
 			m_AdtsFrame.AddByte(byData);
 		else
 			m_AdtsFrame.ClearSize();

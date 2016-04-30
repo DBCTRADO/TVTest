@@ -139,6 +139,8 @@ public:
 protected:
 	struct TAG_ADTSHEADER{
 		// adts_fixed_header()
+		bool bMpegVersion;				// MPEG Version
+		bool bProtectionAbsent;			// Protection Absent
 		BYTE byProfile;					// Profile
 		BYTE bySamplingFreqIndex;		// Sampling Frequency Index
 		bool bPrivateBit;				// Private Bit
