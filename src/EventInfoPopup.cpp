@@ -702,6 +702,7 @@ LRESULT CEventInfoPopup::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lPar
 		{
 			HDC hdc=::GetWindowDC(hwnd);
 			RECT rcWindow,rcClient;
+			int LineWidth=GetHairlineWidth();
 
 			::GetWindowRect(hwnd,&rcWindow);
 			::GetClientRect(hwnd,&rcClient);
@@ -709,11 +710,11 @@ LRESULT CEventInfoPopup::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lPar
 			::OffsetRect(&rcClient,-rcWindow.left,-rcWindow.top);
 			::OffsetRect(&rcWindow,-rcWindow.left,-rcWindow.top);
 			DrawUtil::FillBorder(hdc,&rcWindow,&rcClient,&rcWindow,m_TitleBackColor);
-			HPEN hpen=::CreatePen(PS_SOLID,1,MixColor(m_TitleBackColor,RGB(0,0,0),192));
+			HPEN hpen=::CreatePen(PS_INSIDEFRAME,LineWidth,MixColor(m_TitleBackColor,RGB(0,0,0),192));
 			HGDIOBJ hOldPen=::SelectObject(hdc,hpen);
 			HGDIOBJ hOldBrush=::SelectObject(hdc,::GetStockObject(NULL_BRUSH));
 			::Rectangle(hdc,rcWindow.left,rcWindow.top,rcWindow.right,rcWindow.bottom);
-			::Rectangle(hdc,rcClient.left-1,rcClient.top-1,rcClient.right+1,rcClient.bottom+1);
+			::Rectangle(hdc,rcClient.left-LineWidth,rcClient.top-LineWidth,rcClient.right+LineWidth,rcClient.bottom+LineWidth);
 			::SelectObject(hdc,hOldBrush);
 			::SelectObject(hdc,hOldPen);
 			::DeleteObject(hpen);

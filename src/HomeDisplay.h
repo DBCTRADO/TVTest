@@ -57,7 +57,8 @@ public:
 		virtual void ReadSettings(CSettings &Settings) {}
 		virtual void WriteSettings(CSettings &Settings) {}
 		virtual void LayOut(const StyleInfo &Style,HDC hdc,const RECT &ContentRect) = 0;
-		virtual void Draw(HDC hdc,const StyleInfo &Style,const RECT &ContentRect,const RECT &PaintRect) const = 0;
+		virtual void Draw(HDC hdc,const StyleInfo &Style,const RECT &ContentRect,const RECT &PaintRect,
+						  TVTest::Theme::CThemeDraw &ThemeDraw) const = 0;
 		virtual bool GetCurItemRect(RECT *pRect) const = 0;
 		virtual bool SetFocus(bool fFocus) {}
 		virtual bool IsFocused() const = 0;

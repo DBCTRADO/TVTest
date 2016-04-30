@@ -8,10 +8,6 @@
 #include "Common/DebugDef.h"
 
 
-#define CHEVRON_WIDTH	10
-#define CHEVRON_HEIGHT	10
-
-
 const LPCTSTR CChannelPanel::m_pszClassName=APP_NAME TEXT(" Channel Panel");
 HINSTANCE CChannelPanel::m_hinst=NULL;
 
@@ -661,7 +657,15 @@ LRESULT CChannelPanel::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam
 				m_EventInfoPopupManager.Initialize(hwnd,&m_EventInfoPopupHandler);
 			else
 				CreateTooltip();
-			m_Chevron.Load(m_hinst,IDB_CHEVRON,CHEVRON_WIDTH,CHEVRON_HEIGHT);
+
+			static const TVTest::Theme::IconList::ResourceInfo ResourceList[] = {
+				{MAKEINTRESOURCE(IDB_CHEVRON10),10,10},
+				{MAKEINTRESOURCE(IDB_CHEVRON20),20,20},
+			};
+			m_Chevron.Load(m_hinst,
+						   m_Style.ChannelChevronSize.Width,
+						   m_Style.ChannelChevronSize.Height,
+						   ResourceList,lengthof(ResourceList));
 
 			if (m_fShowProgressBar)
 				GetCurrentEpgTime(&m_CurTime);
@@ -867,6 +871,8 @@ void CChannelPanel::Draw(HDC hdc,const RECT *prcPaint)
 	COLORREF crOldTextColor=::GetTextColor(hdcDst);
 	int OldBkMode=::SetBkMode(hdcDst,TRANSPARENT);
 
+	TVTest::Theme::CThemeDraw ThemeDraw(BeginThemeDraw(hdcDst));
+
 	TVTest::CTextDraw TextDraw;
 	TextDraw.Begin(hdcDst,rcClient,
 				   TVTest::CTextDraw::FLAG_JAPANESE_HYPHNATION |
@@ -896,7 +902,7 @@ void CChannelPanel::Draw(HDC hdc,const RECT *prcPaint)
 				fCurrent?m_Theme.CurChannelNameStyle:m_Theme.ChannelNameStyle;
 			DrawUtil::SelectObject(hdcDst,m_ChannelFont);
 			::SetTextColor(hdcDst,Style.Fore.Fill.GetSolidColor());
-			TVTest::Theme::Draw(hdcDst,rc,Style.Back);
+			ThemeDraw.Draw(Style.Back,rc);
 			RECT rcName=rc;
 			TVTest::Style::Subtract(&rcName,m_Style.ChannelNameMargin);
 			rcName.right-=m_Style.ChannelChevronMargin+m_Style.ChannelChevronSize.Width;
@@ -916,21 +922,20 @@ void CChannelPanel::Draw(HDC hdc,const RECT *prcPaint)
 				RECT rcContent=rc;
 
 				if (m_fUseEpgColorScheme && pChannelInfo->IsEventEnabled(j)) {
-					m_EpgTheme.DrawContentBackground(hdcDst,rc,pChannelInfo->GetEventInfo(j),
+					m_EpgTheme.DrawContentBackground(hdcDst,ThemeDraw,rc,pChannelInfo->GetEventInfo(j),
 													 CEpgTheme::DRAW_CONTENT_BACKGROUND_SEPARATOR);
 					::SetTextColor(hdcDst,m_EpgTheme.GetColor(CEpgTheme::COLOR_EVENTNAME));
 				} else {
 					const TVTest::Theme::Style &Style=
 						(fCurrent?m_Theme.CurChannelEventStyle:m_Theme.EventStyle)[j%2];
-					TVTest::Theme::Draw(hdcDst,rc,Style.Back);
-					TVTest::Theme::SubtractBorderRect(Style.Back.Border,&rcContent);
+					ThemeDraw.Draw(Style.Back,&rcContent);
 					if (m_fShowGenreColor && pChannelInfo->IsEventEnabled(j)) {
 						RECT rcBar=rcContent;
 						rcBar.right=m_Style.EventNameMargin.Left;
 						unsigned int Flags=CEpgTheme::DRAW_CONTENT_BACKGROUND_NOBORDER;
 						if (rcBar.top==rc.top && rcBar.bottom==rc.bottom)
 							Flags|=CEpgTheme::DRAW_CONTENT_BACKGROUND_SEPARATOR;
-						m_EpgTheme.DrawContentBackground(hdcDst,rcBar,
+						m_EpgTheme.DrawContentBackground(hdcDst,ThemeDraw,rcBar,
 							pChannelInfo->GetEventInfo(j),Flags);
 					}
 					::SetTextColor(hdcDst,Style.Fore.Fill.GetSolidColor());
@@ -943,7 +948,7 @@ void CChannelPanel::Draw(HDC hdc,const RECT *prcPaint)
 					rcMark.right=m_Style.EventNameMargin.Left;
 					TVTest::Style::Subtract(&rcMark,m_Style.FeaturedMarkMargin);
 					rcMark.bottom=rcMark.top+(rcMark.right-rcMark.left);
-					TVTest::Theme::Draw(hdcDst,rcMark,m_Theme.FeaturedMarkStyle);
+					ThemeDraw.Draw(m_Theme.FeaturedMarkStyle,rcMark);
 				}
 
 				RECT rcText=rc;
@@ -970,8 +975,8 @@ void CChannelPanel::Draw(HDC hdc,const RECT *prcPaint)
 						}
 						if (rcProgress.left<rcProgress.right) {
 							rcProgress.top=rcProgress.bottom-m_FontHeight/3;
-							TVTest::Theme::Draw(hdcDst,rcProgress,
-								fCurrent?m_Theme.CurProgressStyle:m_Theme.ProgressStyle);
+							ThemeDraw.Draw(
+								fCurrent?m_Theme.CurProgressStyle:m_Theme.ProgressStyle,rcProgress);
 						}
 					}
 				}
@@ -1501,7 +1506,7 @@ CChannelPanel::ChannelPanelStyle::ChannelPanelStyle()
 	: ChannelNameMargin(2,2,2,2)
 	, ChannelLogoMargin(0,0,3,0)
 	, EventNameMargin(8,1,2,1)
-	, ChannelChevronSize(CHEVRON_WIDTH,CHEVRON_HEIGHT)
+	, ChannelChevronSize(10,10)
 	, ChannelChevronMargin(12)
 	, FeaturedMarkMargin(1)
 {

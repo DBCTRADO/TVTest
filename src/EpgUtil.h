@@ -5,6 +5,7 @@
 #include "EpgProgramList.h"
 #include "DrawUtil.h"
 #include "ThemeManager.h"
+#include "ThemeDraw.h"
 
 
 namespace EpgUtil
@@ -187,7 +188,7 @@ public:
 		int Genre,unsigned int Flags=0) const;
 	TVTest::Theme::BackgroundStyle GetContentBackgroundStyle(
 		const CEventInfoData &EventInfo,unsigned int Flags=0) const;
-	bool DrawContentBackground(HDC hdc,const RECT &Rect,
+	bool DrawContentBackground(HDC hdc,TVTest::Theme::CThemeDraw &ThemeDraw,const RECT &Rect,
 							   const CEventInfoData &EventInfo,unsigned int Flags=0) const;
 
 private:

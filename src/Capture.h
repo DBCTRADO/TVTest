@@ -121,9 +121,10 @@ private:
 	};
 
 	class CCaptureStatusItem : public CIconStatusItem {
-		DrawUtil::CMonoColorIconList &m_Icons;
+		CCaptureWindow *m_pCaptureWindow;
+		TVTest::Theme::IconList &m_Icons;
 	public:
-		CCaptureStatusItem(DrawUtil::CMonoColorIconList &Icons);
+		CCaptureStatusItem(CCaptureWindow *pCaptureWindow,TVTest::Theme::IconList &Icons);
 		LPCTSTR GetIDText() const override { return TEXT("Capture"); }
 		LPCTSTR GetName() const override { return TEXT("キャプチャ"); }
 		void Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect,unsigned int Flags) override;
@@ -133,9 +134,9 @@ private:
 
 	class CSaveStatusItem : public CIconStatusItem {
 		CCaptureWindow *m_pCaptureWindow;
-		DrawUtil::CMonoColorIconList &m_Icons;
+		TVTest::Theme::IconList &m_Icons;
 	public:
-		CSaveStatusItem(CCaptureWindow *pCaptureWindow,DrawUtil::CMonoColorIconList &Icons);
+		CSaveStatusItem(CCaptureWindow *pCaptureWindow,TVTest::Theme::IconList &Icons);
 		LPCTSTR GetIDText() const override { return TEXT("Save"); }
 		LPCTSTR GetName() const override { return TEXT("保存"); }
 		void Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect,unsigned int Flags) override;
@@ -144,9 +145,9 @@ private:
 
 	class CCopyStatusItem : public CIconStatusItem {
 		CCaptureWindow *m_pCaptureWindow;
-		DrawUtil::CMonoColorIconList &m_Icons;
+		TVTest::Theme::IconList &m_Icons;
 	public:
-		CCopyStatusItem(CCaptureWindow *pCaptureWindow,DrawUtil::CMonoColorIconList &Icons);
+		CCopyStatusItem(CCaptureWindow *pCaptureWindow,TVTest::Theme::IconList &Icons);
 		LPCTSTR GetIDText() const override { return TEXT("Copy"); }
 		LPCTSTR GetName() const override { return TEXT("コピー"); }
 		void Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect,unsigned int Flags) override;
@@ -159,7 +160,7 @@ private:
 	CPreviewEventHandler m_PreviewEventHandler;
 	CStatusView m_Status;
 	bool m_fShowStatusBar;
-	DrawUtil::CMonoColorIconList m_StatusIcons;
+	TVTest::Theme::IconList m_StatusIcons;
 	CCaptureImage *m_pImage;
 	CEventHandler *m_pEventHandler;
 	bool m_fCreateFirst;

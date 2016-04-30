@@ -37,6 +37,7 @@ CPanelForm::CPanelForm()
 	: m_TabStyle(TABSTYLE_TEXT_ONLY)
 	, m_TabHeight(0)
 	, m_TabWidth(0)
+	, m_TabLineWidth(1)
 	, m_fFitTabWidth(true)
 	, m_CurTab(-1)
 	, m_PrevActivePageID(-1)
@@ -535,6 +536,7 @@ void CPanelForm::CalcTabSize()
 	hdc=::GetDC(m_hwnd);
 	IconHeight=m_Style.TabIconSize.Height+m_Style.TabIconMargin.Vert();
 	LabelHeight=m_Font.GetHeight(hdc)+m_Style.TabLabelMargin.Vert();
+	m_TabLineWidth=GetHairlineWidth();
 	m_TabHeight=max(IconHeight,LabelHeight)+m_Style.TabPadding.Vert();
 	hfontOld=DrawUtil::SelectObject(hdc,m_Font);
 
@@ -617,6 +619,7 @@ int CPanelForm::HitTest(int x,int y) const
 void CPanelForm::Draw(HDC hdc,const RECT &PaintRect)
 {
 	if (PaintRect.top<m_TabHeight) {
+		TVTest::Theme::CThemeDraw ThemeDraw(BeginThemeDraw(hdc));
 		const int TabWidth=GetRealTabWidth();
 		COLORREF crOldTextColor;
 		int OldBkMode;
@@ -624,10 +627,7 @@ void CPanelForm::Draw(HDC hdc,const RECT &PaintRect)
 		int i;
 		RECT rc;
 		HBRUSH hbrOld;
-		HPEN hpen,hpenOld;
 
-		hpen=::CreatePen(PS_SOLID,1,m_Theme.BorderColor);
-		hpenOld=SelectPen(hdc,hpen);
 		crOldTextColor=::GetTextColor(hdc);
 		OldBkMode=::SetBkMode(hdc,TRANSPARENT);
 		hfontOld=DrawUtil::SelectObject(hdc,m_Font);
@@ -649,12 +649,16 @@ void CPanelForm::Draw(HDC hdc,const RECT &PaintRect)
 			RECT rcTab,rcContent,rcText;
 
 			rcTab=rc;
-			if (fCur)
-				rcTab.bottom++;
-			TVTest::Theme::Draw(hdc,rcTab,Style.Back);
+			if (fCur) {
+				RECT rcBorder;
+				GetBorderWidthsInPixels(Style.Back.Border,&rcBorder);
+				rcTab.bottom+=rcBorder.bottom;
+			}
+			ThemeDraw.Draw(Style.Back,rcTab);
 			if (!fCur) {
-				::MoveToEx(hdc,rc.left,rc.bottom-1,NULL);
-				::LineTo(hdc,rc.right,rc.bottom-1);
+				RECT rcLine=rc;
+				rcLine.top=rcLine.bottom-m_TabLineWidth;
+				DrawUtil::Fill(hdc,&rcLine,m_Theme.BorderColor);
 			}
 
 			rcContent=rc;
@@ -692,7 +696,7 @@ void CPanelForm::Draw(HDC hdc,const RECT &PaintRect)
 
 			if (m_TabStyle!=TABSTYLE_ICON_ONLY) {
 				TVTest::Style::Subtract(&rcText,m_Style.TabLabelMargin);
-				TVTest::Theme::Draw(hdc,rcText,Style.Fore,pWindow->m_Title.c_str(),
+				ThemeDraw.Draw(Style.Fore,rcText,pWindow->m_Title.c_str(),
 					(m_TabStyle!=TABSTYLE_TEXT_ONLY ? DT_LEFT : DT_CENTER)
 						| DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX | DT_END_ELLIPSIS);
 			}
@@ -710,13 +714,10 @@ void CPanelForm::Draw(HDC hdc,const RECT &PaintRect)
 			if (PaintRect.left>rc.left)
 				rc.left=PaintRect.left;
 			rc.right=PaintRect.right;
-			TVTest::Theme::Draw(hdc,rc,m_Theme.TabMarginStyle.Back);
-			::MoveToEx(hdc,rc.left,rc.bottom-1,NULL);
-			::LineTo(hdc,rc.right,rc.bottom-1);
+			ThemeDraw.Draw(m_Theme.TabMarginStyle.Back,rc);
+			rc.top=rc.bottom-m_TabLineWidth;
+			DrawUtil::Fill(hdc,&rc,m_Theme.BorderColor);
 		}
-
-		SelectPen(hdc,hpenOld);
-		::DeleteObject(hpen);
 	}
 
 	if (PaintRect.bottom>m_TabHeight) {

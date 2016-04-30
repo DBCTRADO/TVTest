@@ -5,6 +5,7 @@
 #include "DialogUtil.h"
 #include "LogoManager.h"
 #include "DriverManager.h"
+#include "GUIUtil.h"
 #include "resource.h"
 #include "Common/DebugDef.h"
 
@@ -19,6 +20,21 @@ namespace TVTest
 		FAVORITES_ICON_ADD,
 		FAVORITES_ICON_ORGANIZE
 	};
+
+
+	static HIMAGELIST CreateFavoritesIconImageList(HINSTANCE hinst)
+	{
+		static const LPCTSTR Icons[] = {
+			nullptr,
+			MAKEINTRESOURCE(IDI_FAVORITES_FOLDER),
+			MAKEINTRESOURCE(IDI_FAVORITES_ADD),
+			MAKEINTRESOURCE(IDI_FAVORITES),
+		};
+
+		return CreateImageListFromIcons(hinst,Icons,lengthof(Icons),ICON_SIZE_SMALL);
+	}
+
+
 
 
 	bool CFavoriteItem::SetName(LPCTSTR pszName)
@@ -723,8 +739,6 @@ namespace TVTest
 		, m_hmenu(NULL)
 		, m_TextHeight(0)
 		, m_TextWidth(0)
-		, m_LogoWidth(26)
-		, m_LogoHeight(16)
 		, m_IconWidth(16)
 		, m_IconHeight(16)
 		, m_MenuLogoMargin(3)
@@ -749,6 +763,9 @@ namespace TVTest
 		m_Flags=Flags;
 		m_hwnd=hwnd;
 
+		m_IconWidth=::GetSystemMetrics(SM_CXSMICON);
+		m_IconHeight=::GetSystemMetrics(SM_CYSMICON);
+
 		m_MenuPainter.Initialize(hwnd);
 		m_MenuPainter.GetItemMargins(&m_Margins);
 		if (m_Margins.cxLeftWidth<2)
@@ -763,7 +780,8 @@ namespace TVTest
 
 		m_ItemHeight=m_TextHeight;
 		if ((Flags&FLAG_SHOWLOGO)!=0) {
-			int Height=max(m_LogoHeight,m_IconHeight);
+			m_Logo.Initialize(m_IconHeight);
+			int Height=max(m_Logo.GetLogoHeight(),m_IconHeight);
 			if (Height>m_ItemHeight)
 				m_ItemHeight=Height;
 		}
@@ -820,8 +838,7 @@ namespace TVTest
 					m_TextWidth=rc.right;
 			}
 
-			m_himlIcons=::ImageList_LoadImage(hinstRes,MAKEINTRESOURCE(IDB_FAVORITES),
-											  16,1,0,IMAGE_BITMAP,LR_CREATEDIBSECTION);
+			m_himlIcons=CreateFavoritesIconImageList(hinstRes);
 		} else {
 			m_LastCommand=Command;
 
@@ -841,11 +858,6 @@ namespace TVTest
 			m_Tooltip.SetMaxWidth(480);
 			m_Tooltip.SetPopDelay(30*1000);
 			m_Tooltip.AddTrackingTip(1,TEXT(""));
-		}
-
-		if ((Flags&FLAG_SHOWLOGO)!=0) {
-			if (!m_LogoFrameImage.IsCreated())
-				m_LogoFrameImage.Load(hinstRes,MAKEINTRESOURCE(IDB_LOGOFRAME),LR_CREATEDIBSECTION);
 		}
 
 		return true;
@@ -988,7 +1000,7 @@ namespace TVTest
 				const CChannelItem *pItem=reinterpret_cast<const CChannelItem*>(pmis->itemData);
 				pmis->itemWidth=pItem->GetNameWidth()+m_Margins.cxLeftWidth+m_Margins.cxRightWidth;
 				if ((m_Flags&FLAG_SHOWLOGO)!=0)
-					pmis->itemWidth+=m_LogoWidth+m_MenuLogoMargin;
+					pmis->itemWidth+=m_Logo.GetLogoWidth()+m_MenuLogoMargin;
 				if ((m_Flags&FLAG_SHOWEVENTINFO)!=0)
 					pmis->itemWidth+=m_TextHeight+pItem->GetEventWidth();
 				pmis->itemHeight=m_ItemHeight;
@@ -999,14 +1011,14 @@ namespace TVTest
 					return false;
 				pmis->itemWidth=pItem->GetTextWidth()+m_Margins.cxLeftWidth+m_Margins.cxRightWidth;
 				if ((m_Flags&FLAG_SHOWLOGO)!=0)
-					pmis->itemWidth+=m_LogoWidth+m_MenuLogoMargin;
+					pmis->itemWidth+=m_Logo.GetLogoWidth()+m_MenuLogoMargin;
 				pmis->itemHeight=m_ItemHeight;
 				return true;
 			} else if (pmis->itemID==CM_ADDTOFAVORITES
 					|| pmis->itemID==CM_ORGANIZEFAVORITES) {
 				pmis->itemWidth=m_TextWidth+m_Margins.cxLeftWidth+m_Margins.cxRightWidth;
 				if ((m_Flags&FLAG_SHOWLOGO)!=0)
-					pmis->itemWidth+=m_LogoWidth+m_MenuLogoMargin;
+					pmis->itemWidth+=m_Logo.GetLogoWidth()+m_MenuLogoMargin;
 				pmis->itemHeight=m_ItemHeight;
 				return true;
 			}
@@ -1045,21 +1057,11 @@ namespace TVTest
 			const CChannelItem *pItem=reinterpret_cast<const CChannelItem*>(pdis->itemData);
 
 			if ((m_Flags&FLAG_SHOWLOGO)!=0) {
-				const CChannelInfo &ChInfo=pItem->GetChannelInfo();
-				HBITMAP hbmLogo=GetAppClass().LogoManager.GetAssociatedLogoBitmap(
-					ChInfo.GetNetworkID(),ChInfo.GetServiceID(),CLogoManager::LOGOTYPE_SMALL);
-				if (hbmLogo!=NULL) {
-					DrawUtil::CMemoryDC MemoryDC(pdis->hDC);
-					MemoryDC.SetBitmap(hbmLogo);
-					int y=rc.top+((rc.bottom-rc.top)-m_LogoHeight)/2;
-					BITMAP bm;
-					::GetObject(hbmLogo,sizeof(bm),&bm);
-					MemoryDC.DrawStretch(pdis->hDC,rc.left+1,y+1,m_LogoWidth-3,m_LogoHeight-3,
-										 0,0,bm.bmWidth,bm.bmHeight);
-					MemoryDC.SetBitmap(m_LogoFrameImage);
-					MemoryDC.DrawAlpha(pdis->hDC,rc.left,y,0,0,m_LogoWidth,m_LogoHeight);
-				}
-				rc.left+=m_LogoWidth+m_MenuLogoMargin;
+				m_Logo.DrawLogo(pdis->hDC,
+								rc.left,
+								rc.top+((rc.bottom-rc.top)-m_Logo.GetLogoHeight())/2,
+								pItem->GetChannelInfo());
+				rc.left+=m_Logo.GetLogoWidth()+m_MenuLogoMargin;
 			}
 
 			rc.right=rc.left+pItem->GetNameWidth();
@@ -1083,10 +1085,10 @@ namespace TVTest
 						m_himlIcons,
 						pdis->itemID==CM_ADDTOFAVORITES?FAVORITES_ICON_ADD:FAVORITES_ICON_ORGANIZE,
 						pdis->hDC,
-						rc.left+(m_LogoWidth-m_IconWidth)/2,
+						rc.left+(m_Logo.GetLogoWidth()-m_IconWidth)/2,
 						rc.top+(rc.bottom-rc.top-m_IconHeight)/2,
 						pdis->itemState);
-					rc.left+=m_LogoWidth+m_MenuLogoMargin;
+					rc.left+=m_Logo.GetLogoWidth()+m_MenuLogoMargin;
 				}
 				::LoadString(GetAppClass().GetResourceInstance(),
 							 pdis->itemID==CM_ADDTOFAVORITES?IDS_MENU_ADDTOFAVORITES:IDS_MENU_ORGANIZEFAVORITES,
@@ -1096,10 +1098,10 @@ namespace TVTest
 				const CFolderItem *pItem=reinterpret_cast<const CFolderItem*>(pdis->itemData);
 				if ((m_Flags&FLAG_SHOWLOGO)!=0) {
 					m_MenuPainter.DrawIcon(m_himlIcons,FAVORITES_ICON_FOLDER,pdis->hDC,
-										   rc.left+(m_LogoWidth-m_IconWidth)/2,
+										   rc.left+(m_Logo.GetLogoWidth()-m_IconWidth)/2,
 										   rc.top+(rc.bottom-rc.top-m_IconHeight)/2,
 										   pdis->itemState);
-					rc.left+=m_LogoWidth+m_MenuLogoMargin;
+					rc.left+=m_Logo.GetLogoWidth()+m_MenuLogoMargin;
 				}
 				m_MenuPainter.DrawItemText(pdis->hDC,pdis->itemState,pItem->GetName(),rc,
 										   DT_LEFT | DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX);
@@ -1155,7 +1157,7 @@ namespace TVTest
 					m_Tooltip.SetText(1,szText);
 					::GetCursorPos(&pt);
 					pt.x+=16;
-					pt.y+=max(m_TextHeight,m_LogoHeight)+
+					pt.y+=max(m_TextHeight,m_Logo.GetLogoHeight())+
 								m_Margins.cyTopHeight+m_Margins.cyBottomHeight;
 					m_Tooltip.TrackPosition(pt.x,pt.y);
 					m_Tooltip.TrackActivate(1,true);
@@ -1322,9 +1324,7 @@ namespace TVTest
 				HINSTANCE hinstRes=GetAppClass().GetResourceInstance();
 				HWND hwndTree=::GetDlgItem(hDlg,IDC_FAVORITES_FOLDERTREE);
 
-				HIMAGELIST himl=ImageList_LoadImage(hinstRes,
-													MAKEINTRESOURCE(IDB_FAVORITES),
-													16,1,0,IMAGE_BITMAP,LR_CREATEDIBSECTION);
+				HIMAGELIST himl=CreateFavoritesIconImageList(hinstRes);
 				ImageList_SetBkColor(himl,TreeView_GetBkColor(hwndTree));
 				TreeView_SetImageList(hwndTree,himl,TVSIL_NORMAL);
 
@@ -1341,12 +1341,7 @@ namespace TVTest
 				m_fItemDragging=false;
 				m_himlDrag=nullptr;
 
-				HICON hico=(HICON)::LoadImage(hinstRes,MAKEINTRESOURCE(IDI_FAVORITES),
-											  IMAGE_ICON,0,0,LR_DEFAULTSIZE | LR_SHARED);
-				::SendMessage(hDlg,WM_SETICON,ICON_BIG,reinterpret_cast<LPARAM>(hico));
-				hico=(HICON)::LoadImage(hinstRes,MAKEINTRESOURCE(IDI_FAVORITES),
-										IMAGE_ICON,16,16,LR_DEFAULTSIZE | LR_SHARED);
-				::SendMessage(hDlg,WM_SETICON,ICON_SMALL,reinterpret_cast<LPARAM>(hico));
+				SetWindowIcon(hDlg,hinstRes,MAKEINTRESOURCE(IDI_FAVORITES));
 
 				ApplyPosition();
 			}
@@ -1711,7 +1706,9 @@ namespace TVTest
 						const CChannelInfo &ChannelInfo=pChannel->GetChannelInfo();
 						if (ChannelInfo.GetNetworkID()!=0 && ChannelInfo.GetServiceID()!=0) {
 							HICON hico=GetAppClass().LogoManager.CreateLogoIcon(
-								ChannelInfo.GetNetworkID(),ChannelInfo.GetServiceID(),16,16);
+								ChannelInfo.GetNetworkID(),ChannelInfo.GetServiceID(),
+								::GetSystemMetrics(SM_CXSMICON),
+								::GetSystemMetrics(SM_CYSMICON));
 							if (hico!=nullptr) {
 								tvis.item.iImage=ImageList_AddIcon(
 									TreeView_GetImageList(hwndTree,TVSIL_NORMAL),hico);

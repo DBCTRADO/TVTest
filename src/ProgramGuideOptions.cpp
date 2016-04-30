@@ -507,28 +507,37 @@ INT_PTR CProgramGuideOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM l
 
 			m_Tooltip.Create(hDlg);
 
-			HDC hdc=::GetDC(hDlg);
-			HDC hdcMem=::CreateCompatibleDC(hdc);
-			CEpgIcons EpgIcons;
-			EpgIcons.Load();
-			EpgIcons.BeginDraw(hdc);
-			for (int i=0;i<=CEpgIcons::ICON_LAST;i++) {
-				DlgCheckBox_Check(hDlg,IDC_PROGRAMGUIDEOPTIONS_ICON_FIRST+i,
-								  (m_VisibleEventIcons&CEpgIcons::IconFlag(i))!=0);
-				HBITMAP hbm=::CreateCompatibleBitmap(hdc,CEpgIcons::DEFAULT_ICON_WIDTH,CEpgIcons::DEFAULT_ICON_HEIGHT);
-				HGDIOBJ hOldBmp=::SelectObject(hdcMem,hbm);
-				EpgIcons.DrawIcon(hdcMem,0,0,CEpgIcons::DEFAULT_ICON_WIDTH,CEpgIcons::DEFAULT_ICON_HEIGHT,i);
-				::SelectObject(hdcMem,hOldBmp);
-				::SendDlgItemMessage(hDlg,IDC_PROGRAMGUIDEOPTIONS_ICON_FIRST+i,
-									 BM_SETIMAGE,IMAGE_BITMAP,
-									 reinterpret_cast<LPARAM>(hbm));
-				TCHAR szText[64];
-				::GetDlgItemText(hDlg,IDC_PROGRAMGUIDEOPTIONS_ICON_FIRST+i,szText,lengthof(szText));
-				m_Tooltip.AddTool(::GetDlgItem(hDlg,IDC_PROGRAMGUIDEOPTIONS_ICON_FIRST+i),szText);
+			{
+				HDC hdc=::GetDC(hDlg);
+				HDC hdcMem=::CreateCompatibleDC(hdc);
+				RECT rc={0,0,0,8};
+				::MapDialogRect(hDlg,&rc);
+				int IconSize;
+				if (rc.bottom<=CEpgIcons::DEFAULT_ICON_HEIGHT+4)
+					IconSize=CEpgIcons::DEFAULT_ICON_HEIGHT;
+				else
+					IconSize=rc.bottom;
+				CEpgIcons EpgIcons;
+				EpgIcons.Load();
+				EpgIcons.BeginDraw(hdc);
+				for (int i=0;i<=CEpgIcons::ICON_LAST;i++) {
+					DlgCheckBox_Check(hDlg,IDC_PROGRAMGUIDEOPTIONS_ICON_FIRST+i,
+									  (m_VisibleEventIcons&CEpgIcons::IconFlag(i))!=0);
+					HBITMAP hbm=::CreateCompatibleBitmap(hdc,IconSize,IconSize);
+					HGDIOBJ hOldBmp=::SelectObject(hdcMem,hbm);
+					EpgIcons.DrawIcon(hdcMem,0,0,IconSize,IconSize,i);
+					::SelectObject(hdcMem,hOldBmp);
+					::SendDlgItemMessage(hDlg,IDC_PROGRAMGUIDEOPTIONS_ICON_FIRST+i,
+										 BM_SETIMAGE,IMAGE_BITMAP,
+										 reinterpret_cast<LPARAM>(hbm));
+					TCHAR szText[64];
+					::GetDlgItemText(hDlg,IDC_PROGRAMGUIDEOPTIONS_ICON_FIRST+i,szText,lengthof(szText));
+					m_Tooltip.AddTool(::GetDlgItem(hDlg,IDC_PROGRAMGUIDEOPTIONS_ICON_FIRST+i),szText);
+				}
+				EpgIcons.EndDraw();
+				::DeleteDC(hdcMem);
+				::ReleaseDC(hDlg,hdc);
 			}
-			EpgIcons.EndDraw();
-			::DeleteDC(hdcMem);
-			::ReleaseDC(hDlg,hdc);
 
 			DlgEdit_SetInt(hDlg,IDC_PROGRAMGUIDEOPTIONS_WHEELSCROLLLINES,m_WheelScrollLines);
 			DlgUpDown_SetRange(hDlg,IDC_PROGRAMGUIDEOPTIONS_WHEELSCROLLLINES_UD,0,100);

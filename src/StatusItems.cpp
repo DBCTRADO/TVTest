@@ -258,13 +258,20 @@ void CAudioChannelStatusItem::Draw(HDC hdc,const RECT &ItemRect,const RECT &Draw
 	RECT rc=DrawRect;
 
 	if (App.CoreEngine.m_DtvEngine.m_MediaViewer.IsSpdifPassthrough()) {
-		if (!m_Icons.IsCreated())
-			m_Icons.Load(App.GetResourceInstance(),IDB_PASSTHROUGH,16,16);
+		TVTest::Style::Size IconSize=m_pStatus->GetIconSize();
+		if (!m_Icons.IsCreated()) {
+			static const TVTest::Theme::IconList::ResourceInfo ResourceList[] = {
+				{MAKEINTRESOURCE(IDB_PASSTHROUGH16),16,16},
+				{MAKEINTRESOURCE(IDB_PASSTHROUGH32),32,32},
+			};
+			m_Icons.Load(App.GetResourceInstance(),
+						 IconSize.Width,IconSize.Height,
+						 ResourceList,lengthof(ResourceList));
+		}
 		RECT rcIcon=rc;
-		int IconWidth=m_pStatus->GetIconSize().Width;
-		rcIcon.right=rcIcon.left+IconWidth;
+		rcIcon.right=rcIcon.left+IconSize.Width;
 		DrawIcon(hdc,rcIcon,m_Icons);
-		rc.left+=IconWidth+4;
+		rc.left+=IconSize.Width+IconSize.Width/4;
 	}
 
 	TCHAR szText[64];
@@ -519,8 +526,16 @@ CCaptureStatusItem::CCaptureStatusItem()
 
 void CCaptureStatusItem::Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect,unsigned int Flags)
 {
-	if (!m_Icons.IsCreated())
-		m_Icons.Load(GetAppClass().GetResourceInstance(),IDB_CAPTURE,16,16);
+	if (!m_Icons.IsCreated()) {
+		static const TVTest::Theme::IconList::ResourceInfo ResourceList[] = {
+			{MAKEINTRESOURCE(IDB_CAPTURE16),16,16},
+			{MAKEINTRESOURCE(IDB_CAPTURE32),32,32},
+		};
+		TVTest::Style::Size IconSize=m_pStatus->GetIconSize();
+		m_Icons.Load(GetAppClass().GetResourceInstance(),
+					 IconSize.Width,IconSize.Height,
+					 ResourceList,lengthof(ResourceList));
+	}
 	DrawIcon(hdc,DrawRect,m_Icons);
 }
 
@@ -777,17 +792,17 @@ void CProgramInfoStatusItem::Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawR
 	}
 
 	if (m_fShowProgress && m_fValidProgress) {
+		TVTest::Theme::CThemeDraw ThemeDraw(BeginThemeDraw(hdc));
 		RECT rcProgress=DrawRect;
 		rcProgress.top=rcProgress.bottom-(DrawRect.bottom-DrawRect.top)/3;
-		TVTest::Theme::Draw(hdc,rcProgress,m_ProgressBackStyle);
+		ThemeDraw.Draw(m_ProgressBackStyle,&rcProgress);
 		LONGLONG Elapsed=DiffSystemTime(&m_EventStartTime,&m_CurTime)/TimeConsts::SYSTEMTIME_SECOND;
 		if (Elapsed>0) {
-			TVTest::Theme::SubtractBorderRect(m_ProgressBackStyle.Border,&rcProgress);
 			if (m_EventDuration>0 && Elapsed<static_cast<LONGLONG>(m_EventDuration)) {
 				rcProgress.right=rcProgress.left+
 					::MulDiv((rcProgress.right-rcProgress.left),static_cast<int>(Elapsed),m_EventDuration);
 			}
-			TVTest::Theme::Draw(hdc,rcProgress,m_ProgressElapsedStyle);
+			ThemeDraw.Draw(m_ProgressElapsedStyle,rcProgress);
 		}
 	}
 
@@ -1149,8 +1164,16 @@ CFavoritesStatusItem::CFavoritesStatusItem()
 
 void CFavoritesStatusItem::Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect,unsigned int Flags)
 {
-	if (!m_Icons.IsCreated())
-		m_Icons.Load(GetAppClass().GetResourceInstance(),IDB_STATUSBAR_FAVORITES,16,16);
+	if (!m_Icons.IsCreated()) {
+		static const TVTest::Theme::IconList::ResourceInfo ResourceList[] = {
+			{MAKEINTRESOURCE(IDB_STATUSBAR_FAVORITES16),16,16},
+			{MAKEINTRESOURCE(IDB_STATUSBAR_FAVORITES32),32,32},
+		};
+		TVTest::Style::Size IconSize=m_pStatus->GetIconSize();
+		m_Icons.Load(GetAppClass().GetResourceInstance(),
+					 IconSize.Width,IconSize.Height,
+					 ResourceList,lengthof(ResourceList));
+	}
 	DrawIcon(hdc,DrawRect,m_Icons);
 }
 

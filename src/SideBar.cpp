@@ -93,13 +93,15 @@ void CSideBar::SetTheme(const TVTest::Theme::CThemeManager *pThemeManager)
 
 int CSideBar::GetBarWidth() const
 {
-	RECT rc;
-	TVTest::Theme::GetBorderWidths(m_Theme.Border,&rc);
+	TVTest::Theme::BorderStyle Border=m_Theme.Border;
+	ConvertBorderWidthsInPixels(&Border);
+	RECT rcBorder;
+	TVTest::Theme::GetBorderWidths(Border,&rcBorder);
 	int Width;
 	if (m_fVertical) {
-		Width=m_Style.IconSize.Width+m_Style.ItemPadding.Horz()+rc.left+rc.right;
+		Width=m_Style.IconSize.Width+m_Style.ItemPadding.Horz()+rcBorder.left+rcBorder.right;
 	} else {
-		Width=m_Style.IconSize.Height+m_Style.ItemPadding.Vert()+rc.top+rc.bottom;
+		Width=m_Style.IconSize.Height+m_Style.ItemPadding.Vert()+rcBorder.top+rcBorder.bottom;
 	}
 	return Width;
 }
@@ -514,7 +516,9 @@ LRESULT CSideBar::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 				int x,y;
 
 				::GetWindowRect(hwnd,&rcBar);
-				TVTest::Theme::SubtractBorderRect(m_Theme.Border,&rcBar);
+				TVTest::Theme::BorderStyle Border=m_Theme.Border;
+				ConvertBorderWidthsInPixels(&Border);
+				TVTest::Theme::SubtractBorderRect(Border,&rcBar);
 				::GetWindowRect(pnmh->hwndFrom,&rcTip);
 				x=rcBar.right;
 				y=rcTip.top;
@@ -562,8 +566,10 @@ void CSideBar::GetItemRect(int Item,RECT *pRect) const
 				Offset+=ItemWidth;
 		}
 	}
+	TVTest::Theme::BorderStyle Border=m_Theme.Border;
+	ConvertBorderWidthsInPixels(&Border);
 	RECT rcBorder;
-	TVTest::Theme::GetBorderWidths(m_Theme.Border,&rcBorder);
+	TVTest::Theme::GetBorderWidths(Border,&rcBorder);
 	if (m_fVertical) {
 		pRect->left=rcBorder.left;
 		pRect->right=rcBorder.left+ItemWidth;
@@ -630,11 +636,13 @@ void CSideBar::Draw(HDC hdc,const RECT &PaintRect)
 		rc.right=PaintRect.right;
 	}
 
+	TVTest::Theme::CThemeDraw ThemeDraw(BeginThemeDraw(hdc));
+
 	TVTest::Theme::BackgroundStyle BackStyle;
 	BackStyle=m_Theme.ItemStyle.Back;
 	if (!m_fVertical && BackStyle.Fill.Type==TVTest::Theme::FILL_GRADIENT)
 		BackStyle.Fill.Gradient.Rotate(TVTest::Theme::GradientStyle::ROTATE_RIGHT);
-	TVTest::Theme::Draw(hdc,rc,BackStyle);
+	ThemeDraw.Draw(BackStyle,rc);
 
 	HDC hdcMemory=::CreateCompatibleDC(hdc);
 	HBITMAP hbmOld=static_cast<HBITMAP>(::GetCurrentObject(hdcMemory,OBJ_BITMAP));
@@ -655,14 +663,14 @@ void CSideBar::Draw(HDC hdc,const RECT &PaintRect)
 					Style.Back.Fill.Gradient.Rotate(TVTest::Theme::GradientStyle::ROTATE_RIGHT);
 				if (m_ItemList[i].IsChecked())
 					Style.Back.Border=m_Theme.CheckItemStyle.Back.Border;
-				TVTest::Theme::Draw(hdc,rc,Style.Back);
+				ThemeDraw.Draw(Style.Back,rc);
 				ForeColor=m_Theme.HighlightItemStyle.Fore.Fill.GetSolidColor();
 			} else {
 				if (m_ItemList[i].IsChecked()) {
 					TVTest::Theme::Style Style=m_Theme.CheckItemStyle;
 					if (!m_fVertical && Style.Back.Fill.Type==TVTest::Theme::FILL_GRADIENT)
 						Style.Back.Fill.Gradient.Rotate(TVTest::Theme::GradientStyle::ROTATE_RIGHT);
-					TVTest::Theme::Draw(hdc,rc,Style.Back);
+					ThemeDraw.Draw(Style.Back,rc);
 					ForeColor=m_Theme.CheckItemStyle.Fore.Fill.GetSolidColor();
 				} else {
 					ForeColor=m_Theme.ItemStyle.Fore.Fill.GetSolidColor();
@@ -708,7 +716,7 @@ void CSideBar::Draw(HDC hdc,const RECT &PaintRect)
 	::SelectObject(hdcMemory,hbmOld);
 	::DeleteDC(hdcMemory);
 
-	TVTest::Theme::Draw(hdc,rcClient,m_Theme.Border);
+	ThemeDraw.Draw(m_Theme.Border,rcClient);
 }
 
 

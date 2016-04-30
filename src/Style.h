@@ -53,6 +53,8 @@ namespace TVTest
 			ValueTemplate<T> &operator=(T v) { Value=v; return *this; }
 			bool operator==(const ValueTemplate<T> &o) const { return Value==o.Value && Unit==o.Unit; }
 			bool operator!=(const ValueTemplate<T> &o) const { return !(*this==o); }
+			bool operator==(T v) const { return Value==v; }
+			bool operator!=(T v) const { return Value!=v; }
 		};
 
 		typedef ValueTemplate<int> IntValue;

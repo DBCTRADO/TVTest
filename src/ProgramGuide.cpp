@@ -16,9 +16,6 @@
 // 現在時刻を更新するタイマのID
 #define TIMER_ID_UPDATECURTIME	1
 
-#define CHEVRON_WIDTH	10
-#define CHEVRON_HEIGHT	10
-
 // メニューの位置
 #define MENU_DATE			0
 #define MENU_CHANNELGROUP	1
@@ -1496,8 +1493,8 @@ unsigned int CProgramGuide::GetEventItemStatus(
 
 
 void CProgramGuide::DrawEventBackground(
-	ProgramGuide::CEventItem *pItem,
-	HDC hdc,const RECT &Rect,TVTest::CTextDraw &TextDraw,int LineHeight,int CurTimePos)
+	ProgramGuide::CEventItem *pItem,HDC hdc,const RECT &Rect,
+	TVTest::Theme::CThemeDraw &ThemeDraw,TVTest::CTextDraw &TextDraw,int LineHeight,int CurTimePos)
 {
 	const CEventInfoData *pEventInfo=pItem->GetEventInfo();
 	const CEventInfoData *pOrigEventInfo=pEventInfo;
@@ -1530,19 +1527,16 @@ void CProgramGuide::DrawEventBackground(
 			BackColor,
 			DrawUtil::DIRECTION_VERT);
 	} else if (fCurrent) {
-		m_EpgTheme.DrawContentBackground(hdc,Rect,*pEventInfo,
+		m_EpgTheme.DrawContentBackground(hdc,ThemeDraw,Rect,*pEventInfo,
 										 CEpgTheme::DRAW_CONTENT_BACKGROUND_CURRENT);
 	} else {
 		DrawUtil::Fill(hdc,&Rect,BackColor);
 	}
 
-	HPEN hpen=::CreatePen(PS_SOLID,1,
+	RECT rcLine=Rect;
+	rcLine.bottom=rcLine.top+GetHairlineWidth();
+	DrawUtil::Fill(hdc,&rcLine,
 		MixColor(BackColor,RGB(0,0,0),pItem->GetStartTime().wMinute==0?192:224));
-	HPEN hpenOld=static_cast<HPEN>(::SelectObject(hdc,hpen));
-	::MoveToEx(hdc,Rect.left,Rect.top,NULL);
-	::LineTo(hdc,Rect.right,Rect.top);
-	::SelectObject(hdc,hpenOld);
-	::DeleteObject(hpen);
 
 	// 現在時刻の線
 	if (((m_ListMode==LIST_SERVICES && m_Day==DAY_TODAY) || m_ListMode==LIST_WEEK)
@@ -1609,7 +1603,7 @@ void CProgramGuide::DrawEventBackground(
 		rcMark.right=rcMark.left+sz.cx;
 		rcMark.bottom=rcMark.top+sz.cy;
 		TVTest::Style::Subtract(&rcMark,m_Style.FeaturedMarkMargin);
-		TVTest::Theme::Draw(hdc,rcMark,m_Theme.FeaturedMarkStyle);
+		ThemeDraw.Draw(m_Theme.FeaturedMarkStyle,rcMark);
 	}
 
 	if (rcText.bottom>rcTitle.bottom) {
@@ -1631,8 +1625,8 @@ void CProgramGuide::DrawEventBackground(
 
 
 void CProgramGuide::DrawEventText(
-	ProgramGuide::CEventItem *pItem,
-	HDC hdc,const RECT &Rect,TVTest::CTextDraw &TextDraw,int LineHeight)
+	ProgramGuide::CEventItem *pItem,HDC hdc,const RECT &Rect,
+	TVTest::Theme::CThemeDraw &ThemeDraw,TVTest::CTextDraw &TextDraw,int LineHeight)
 {
 	const unsigned int ItemStatus=
 		GetEventItemStatus(pItem,
@@ -1681,7 +1675,7 @@ void CProgramGuide::DrawEventText(
 void CProgramGuide::DrawEventList(
 	ProgramGuide::CEventLayout *pLayout,
 	HDC hdc,const RECT &Rect,const RECT &PaintRect,
-	TVTest::CTextDraw &TextDraw,bool fBackground)
+	TVTest::Theme::CThemeDraw &ThemeDraw,TVTest::CTextDraw &TextDraw,bool fBackground)
 {
 	const int LineHeight=GetLineHeight();
 	const int CurTimePos=Rect.top+GetCurTimeLinePos();
@@ -1708,9 +1702,9 @@ void CProgramGuide::DrawEventList(
 				continue;
 
 			if (fBackground)
-				DrawEventBackground(pItem,hdc,rcItem,TextDraw,LineHeight,CurTimePos);
+				DrawEventBackground(pItem,hdc,rcItem,ThemeDraw,TextDraw,LineHeight,CurTimePos);
 			else
-				DrawEventText(pItem,hdc,rcItem,TextDraw,LineHeight);
+				DrawEventText(pItem,hdc,rcItem,ThemeDraw,TextDraw,LineHeight);
 		}
 	}
 
@@ -1722,16 +1716,17 @@ void CProgramGuide::DrawEventList(
 }
 
 
-void CProgramGuide::DrawHeaderBackground(HDC hdc,const RECT &Rect,bool fCur) const
+void CProgramGuide::DrawHeaderBackground(TVTest::Theme::CThemeDraw &ThemeDraw,const RECT &Rect,bool fCur) const
 {
 	const TVTest::Theme::FillStyle &Style=
 		fCur?m_Theme.CurChannelNameBackStyle:m_Theme.ChannelNameBackStyle;
+	const int LineWidth=GetHairlineWidth();
 	RECT rc;
 
 	rc=Rect;
-	rc.left++;
-	rc.right--;
-	TVTest::Theme::Draw(hdc,rc,Style);
+	rc.left+=LineWidth;
+	rc.right-=LineWidth;
+	ThemeDraw.Draw(Style,rc);
 
 	TVTest::Theme::FillStyle Border;
 	Border.Type=TVTest::Theme::FILL_GRADIENT;
@@ -1742,20 +1737,20 @@ void CProgramGuide::DrawHeaderBackground(HDC hdc,const RECT &Rect,bool fCur) con
 	Border.Gradient.Color1.Set(255,255,255);
 	Border.Gradient.Color2.Set(255,255,255);
 	rc=Rect;
-	rc.right=rc.left+1;
-	TVTest::Theme::Draw(hdc,rc,TVTest::Theme::MixStyle(Style,Border,192));
+	rc.right=rc.left+LineWidth;
+	ThemeDraw.Draw(TVTest::Theme::MixStyle(Style,Border,192),rc);
 
 	Border.Gradient.Color1.Set(0,0,0);
 	Border.Gradient.Color2.Set(0,0,0);
 	rc=Rect;
-	rc.left=rc.right-1;
-	TVTest::Theme::Draw(hdc,rc,TVTest::Theme::MixStyle(Style,Border,192));
+	rc.left=rc.right-LineWidth;
+	ThemeDraw.Draw(TVTest::Theme::MixStyle(Style,Border,192),rc);
 }
 
 
 void CProgramGuide::DrawServiceHeader(ProgramGuide::CServiceInfo *pServiceInfo,
-									  HDC hdc,const RECT &Rect,int Chevron,
-									  bool fLeftAlign)
+									  HDC hdc,const RECT &Rect,TVTest::Theme::CThemeDraw &ThemeDraw,
+									  int Chevron,bool fLeftAlign)
 {
 	bool fCur=
 		m_CurrentChannel.ServiceID>0
@@ -1763,7 +1758,7 @@ void CProgramGuide::DrawServiceHeader(ProgramGuide::CServiceInfo *pServiceInfo,
 		&& pServiceInfo->GetTSID()==m_CurrentChannel.TransportStreamID
 		&& pServiceInfo->GetServiceID()==m_CurrentChannel.ServiceID;
 
-	DrawHeaderBackground(hdc,Rect,fCur);
+	DrawHeaderBackground(ThemeDraw,Rect,fCur);
 
 	HFONT hfontOld=DrawUtil::SelectObject(hdc,m_TitleFont);
 	COLORREF TextColor=m_Theme.ColorList[fCur?COLOR_CURCHANNELNAMETEXT:COLOR_CHANNELNAMETEXT];
@@ -1808,14 +1803,14 @@ void CProgramGuide::DrawServiceHeader(ProgramGuide::CServiceInfo *pServiceInfo,
 }
 
 
-void CProgramGuide::DrawDayHeader(int Day,HDC hdc,const RECT &Rect) const
+void CProgramGuide::DrawDayHeader(int Day,HDC hdc,const RECT &Rect,TVTest::Theme::CThemeDraw &ThemeDraw) const
 {
 	SYSTEMTIME st;
 	GetCurrentTimeRange(&st,NULL);
 	if (Day>0)
 		OffsetSystemTime(&st,Day*TimeConsts::SYSTEMTIME_DAY);
 
-	DrawHeaderBackground(hdc,Rect,false);
+	DrawHeaderBackground(ThemeDraw,Rect,false);
 
 	HFONT hfontOld=DrawUtil::SelectObject(hdc,m_TitleFont);
 	COLORREF OldTextColor=::SetTextColor(hdc,m_Theme.ColorList[COLOR_CHANNELNAMETEXT]);
@@ -1832,19 +1827,17 @@ void CProgramGuide::DrawDayHeader(int Day,HDC hdc,const RECT &Rect) const
 }
 
 
-void CProgramGuide::DrawTimeBar(HDC hdc,const RECT &Rect,bool fRight)
+void CProgramGuide::DrawTimeBar(HDC hdc,const RECT &Rect,TVTest::Theme::CThemeDraw &ThemeDraw,bool fRight)
 {
 	const int PixelsPerHour=GetLineHeight()*m_LinesPerHour;
 	const int CurTimePos=Rect.top+GetCurTimeLinePos();
+	const int LineWidth=GetHairlineWidth();
 	HFONT hfontOld;
 	COLORREF crOldTextColor;
-	HPEN hpen,hpenOld;
 	RECT rc;
 
 	hfontOld=DrawUtil::SelectObject(hdc,m_TimeFont);
 	crOldTextColor=::SetTextColor(hdc,m_Theme.ColorList[COLOR_TIMETEXT]);
-	hpen=::CreatePen(PS_SOLID,0,m_Theme.ColorList[COLOR_TIMETEXT]);
-	hpenOld=SelectPen(hdc,hpen);
 	rc.left=Rect.left;
 	rc.top=Rect.top;
 	rc.right=Rect.right;
@@ -1860,9 +1853,11 @@ void CProgramGuide::DrawTimeBar(HDC hdc,const RECT &Rect,bool fRight)
 		EpgUtil::EpgTimeToDisplayTime(Time,&DispTime);
 
 		rc.bottom=rc.top+PixelsPerHour;
-		TVTest::Theme::Draw(hdc,rc,m_Theme.TimeBarBackStyle[DispTime.wHour/3]);
-		::MoveToEx(hdc,rc.left,rc.top,NULL);
-		::LineTo(hdc,rc.right,rc.top);
+		ThemeDraw.Draw(m_Theme.TimeBarBackStyle[DispTime.wHour/3],rc);
+
+		RECT rcLine=rc;
+		rcLine.bottom=rcLine.top+LineWidth;
+		DrawUtil::Fill(hdc,&rcLine,m_Theme.ColorList[COLOR_TIMETEXT]);
 
 		if (((m_ListMode==LIST_SERVICES && m_Day==DAY_TODAY) || m_ListMode==LIST_WEEK)
 				&& CurTimePos>=rc.top && CurTimePos<rc.bottom) {
@@ -1870,10 +1865,11 @@ void CProgramGuide::DrawTimeBar(HDC hdc,const RECT &Rect,bool fRight)
 			const int TriangleWidth=TriangleHeight*8/10;
 			POINT ptTriangle[3];
 			HBRUSH hbr,hbrOld;
+			HPEN hpenOld;
 
 			hbr=::CreateSolidBrush(m_Theme.ColorList[COLOR_CURTIMELINE]);
 			hbrOld=SelectBrush(hdc,hbr);
-			SelectObject(hdc,::CreatePen(PS_SOLID,1,m_Theme.ColorList[COLOR_CURTIMELINE]));
+			hpenOld=SelectPen(hdc,(HPEN)::GetStockObject(NULL_PEN));
 			if (fRight) {
 				ptTriangle[0].x=rc.left;
 				ptTriangle[0].y=CurTimePos;
@@ -1891,8 +1887,8 @@ void CProgramGuide::DrawTimeBar(HDC hdc,const RECT &Rect,bool fRight)
 			}
 			::Polygon(hdc,ptTriangle,3);
 			::SelectObject(hdc,hbrOld);
+			::SelectObject(hdc,hpenOld);
 			::DeleteObject(hbr);
-			::DeleteObject(::SelectObject(hdc,hpen));
 		}
 
 		TCHAR szText[64];
@@ -1921,9 +1917,11 @@ void CProgramGuide::DrawTimeBar(HDC hdc,const RECT &Rect,bool fRight)
 			const int TriangleHeight=TriangleWidth*8/10;
 			POINT ptTriangle[3];
 			HBRUSH hbr,hbrOld;
+			HPEN hpenOld;
 
 			hbr=::CreateSolidBrush(m_Theme.ColorList[COLOR_TIMETEXT]);
 			hbrOld=SelectBrush(hdc,hbr);
+			hpenOld=SelectPen(hdc,(HPEN)::GetStockObject(NULL_PEN));
 			ptTriangle[0].x=m_TimeBarWidth/2;
 			ptTriangle[0].y=rc.top-(m_TimeBarWidth-TriangleHeight)/2;
 			ptTriangle[1].x=ptTriangle[0].x-TriangleWidth/2;
@@ -1935,12 +1933,11 @@ void CProgramGuide::DrawTimeBar(HDC hdc,const RECT &Rect,bool fRight)
 				ptTriangle[i].x+=rcClient.right-m_TimeBarWidth;
 			::Polygon(hdc,ptTriangle,3);
 			::SelectObject(hdc,hbrOld);
+			::SelectObject(hdc,hpenOld);
 			::DeleteObject(hbr);
 		}
 	}
 
-	::SelectObject(hdc,hpenOld);
-	::DeleteObject(hpen);
 	::SetTextColor(hdc,crOldTextColor);
 	SelectFont(hdc,hfontOld);
 }
@@ -2007,6 +2004,8 @@ void CProgramGuide::Draw(HDC hdc,const RECT &PaintRect)
 	::GetClientRect(m_hwnd,&rcClient);
 	GetProgramGuideRect(&rcGuide);
 
+	TVTest::Theme::CThemeDraw ThemeDraw(BeginThemeDraw(hdc));
+
 	if (::IntersectRect(&rc,&rcGuide,&PaintRect))
 		DrawUtil::Fill(hdc,&rc,m_Theme.ColorList[COLOR_BACK]);
 
@@ -2029,25 +2028,25 @@ void CProgramGuide::Draw(HDC hdc,const RECT &PaintRect)
 				for (size_t i=0;i<m_ServiceList.NumServices();i++) {
 					rc.right=rc.left+(m_ItemWidth+m_Style.ColumnMargin*2);
 					if (rc.left<PaintRect.right && rc.right>PaintRect.left)
-						DrawServiceHeader(m_ServiceList.GetItem(i),hdc,rc,2);
+						DrawServiceHeader(m_ServiceList.GetItem(i),hdc,rc,ThemeDraw,2);
 					rc.left=rc.right;
 				}
 			} else if (m_ListMode==LIST_WEEK) {
 				rc.bottom=m_HeaderHeight;
-				DrawServiceHeader(m_ServiceList.GetItem(m_WeekListService),hdc,rc,3,true);
+				DrawServiceHeader(m_ServiceList.GetItem(m_WeekListService),hdc,rc,ThemeDraw,3,true);
 				rc.left=m_TimeBarWidth-m_ScrollPos.x;
 				rc.top=rc.bottom;
 				rc.bottom+=m_HeaderHeight;
 				for (int i=0;i<(int)m_EventLayoutList.Length();i++) {
 					rc.right=rc.left+(m_ItemWidth+m_Style.ColumnMargin*2);
 					if (rc.left<PaintRect.right && rc.right>PaintRect.left)
-						DrawDayHeader(i,hdc,rc);
+						DrawDayHeader(i,hdc,rc,ThemeDraw);
 					rc.left=rc.right;
 				}
 			}
 			if (rc.left<PaintRect.right) {
 				rc.right=PaintRect.right;
-				TVTest::Theme::Draw(hdc,rc,m_Theme.ChannelNameBackStyle);
+				ThemeDraw.Draw(m_Theme.ChannelNameBackStyle,rc);
 			}
 			::SelectClipRgn(hdc,NULL);
 			::DeleteObject(hrgn);
@@ -2062,13 +2061,10 @@ void CProgramGuide::Draw(HDC hdc,const RECT &PaintRect)
 			m_TextDrawClient.InitializeTextDraw(&TextDraw);
 			TextDraw.BindDC(hdc,rcClient);
 
-			HPEN hpen,hpenOld;
-			hpen=::CreatePen(PS_SOLID,0,m_Theme.ColorList[COLOR_TIMELINE]);
-			hpenOld=SelectPen(hdc,hpen);
-
 			const int PixelsPerHour=GetLineHeight()*m_LinesPerHour;
 			const int CurTimePos=rc.top+GetCurTimeLinePos();
 			const int XOrigin=m_TimeBarWidth+m_Style.ColumnMargin-m_ScrollPos.x;
+			const int TimeLineWidth=GetHairlineWidth();
 
 			// 番組背景の描画
 			rc.left=XOrigin;
@@ -2078,14 +2074,12 @@ void CProgramGuide::Draw(HDC hdc,const RECT &PaintRect)
 				for (int j=0;j<m_Hours;j++) {
 					int y=rc.top+j*PixelsPerHour;
 					if (y>=PaintRect.top && y<PaintRect.bottom) {
-						/*
-						::MoveToEx(hdc,rc.left-m_Style.ColumnMargin,y,NULL);
-						::LineTo(hdc,rc.left,y);
-						::MoveToEx(hdc,rc.right,y,NULL);
-						::LineTo(hdc,rc.right+m_Style.ColumnMargin,y);
-						*/
-						::MoveToEx(hdc,rc.left-m_Style.ColumnMargin,y,NULL);
-						::LineTo(hdc,rc.right+m_Style.ColumnMargin,y);
+						RECT rcLine;
+						rcLine.left=rc.left-m_Style.ColumnMargin;
+						rcLine.right=rc.right+m_Style.ColumnMargin;
+						rcLine.top=y;
+						rcLine.bottom=y+TimeLineWidth;
+						DrawUtil::Fill(hdc,&rcLine,m_Theme.ColorList[COLOR_TIMELINE]);
 					}
 					if (((m_ListMode==LIST_SERVICES && m_Day==DAY_TODAY) || m_ListMode==LIST_WEEK)
 							&& CurTimePos>=y && CurTimePos<y+PixelsPerHour) {
@@ -2099,11 +2093,9 @@ void CProgramGuide::Draw(HDC hdc,const RECT &PaintRect)
 					}
 				}
 				if (rc.left<PaintRect.right && rc.right>PaintRect.left)
-					DrawEventList(m_EventLayoutList[i],hdc,rc,PaintRect,TextDraw,true);
+					DrawEventList(m_EventLayoutList[i],hdc,rc,PaintRect,ThemeDraw,TextDraw,true);
 				rc.left=rc.right+m_Style.ColumnMargin*2;
 			}
-			::SelectObject(hdc,hpenOld);
-			::DeleteObject(hpen);
 
 			// 番組テキストの描画
 			TextDraw.Begin(hdc,rcClient,
@@ -2115,7 +2107,7 @@ void CProgramGuide::Draw(HDC hdc,const RECT &PaintRect)
 			for (size_t i=0;i<m_EventLayoutList.Length();i++) {
 				rc.right=rc.left+m_ItemWidth;
 				if (rc.left<PaintRect.right && rc.right>PaintRect.left)
-					DrawEventList(m_EventLayoutList[i],hdc,rc,PaintRect,TextDraw,false);
+					DrawEventList(m_EventLayoutList[i],hdc,rc,PaintRect,ThemeDraw,TextDraw,false);
 				rc.left=rc.right+m_Style.ColumnMargin*2;
 			}
 
@@ -2132,7 +2124,7 @@ void CProgramGuide::Draw(HDC hdc,const RECT &PaintRect)
 			if (rc.left<rc.right) {
 				rc.top=0;
 				rc.bottom=m_HeaderHeight;
-				TVTest::Theme::Draw(hdc,rc,m_Theme.ChannelNameBackStyle);
+				ThemeDraw.Draw(m_Theme.ChannelNameBackStyle,rc);
 			}
 		}
 	}
@@ -2148,27 +2140,27 @@ void CProgramGuide::Draw(HDC hdc,const RECT &PaintRect)
 	if (PaintRect.left<m_TimeBarWidth) {
 		rc.left=0;
 		rc.right=m_TimeBarWidth;
-		DrawTimeBar(hdc,rc,false);
+		DrawTimeBar(hdc,rc,ThemeDraw,false);
 	}
 	rc.left=rcClient.right-m_TimeBarWidth;
 	if (rc.left<PaintRect.right) {
 		rc.right=rcClient.right;
-		DrawTimeBar(hdc,rc,true);
+		DrawTimeBar(hdc,rc,ThemeDraw,true);
 	}
 	::SelectClipRgn(hdc,NULL);
 	::DeleteObject(hrgn);
 
 	if (rc.bottom<PaintRect.bottom) {
 		::SetRect(&rc,0,rc.bottom,m_TimeBarWidth,rcClient.bottom);
-		TVTest::Theme::Draw(hdc,rc,m_Theme.TimeBarMarginStyle);
+		ThemeDraw.Draw(m_Theme.TimeBarMarginStyle,rc);
 		::OffsetRect(&rc,rcGuide.right,0);
-		TVTest::Theme::Draw(hdc,rc,m_Theme.TimeBarMarginStyle);
+		ThemeDraw.Draw(m_Theme.TimeBarMarginStyle,rc);
 	}
 	if (PaintRect.top<HeaderHeight) {
 		::SetRect(&rc,0,0,m_TimeBarWidth,HeaderHeight);
-		TVTest::Theme::Draw(hdc,rc,m_Theme.TimeBarMarginStyle);
+		ThemeDraw.Draw(m_Theme.TimeBarMarginStyle,rc);
 		::OffsetRect(&rc,rcGuide.right,0);
-		TVTest::Theme::Draw(hdc,rc,m_Theme.TimeBarMarginStyle);
+		ThemeDraw.Draw(m_Theme.TimeBarMarginStyle,rc);
 	}
 
 	if (m_ListMode==LIST_SERVICES && m_Day!=DAY_TODAY
@@ -2177,13 +2169,12 @@ void CProgramGuide::Draw(HDC hdc,const RECT &PaintRect)
 		const int TriangleWidth=m_GDIFontHeight*2/3;
 		const int TriangleHeight=TriangleWidth*8/10;
 		POINT ptTriangle[3];
-		HPEN hpen,hpenOld;
+		HPEN hpenOld;
 		HBRUSH hbr,hbrOld;
 
 		hbr=::CreateSolidBrush(m_Theme.ColorList[COLOR_TIMETEXT]);
-		hpen=::CreatePen(PS_SOLID,0,m_Theme.ColorList[COLOR_TIMETEXT]);
 		hbrOld=SelectBrush(hdc,hbr);
-		hpenOld=SelectPen(hdc,hpen);
+		hpenOld=SelectPen(hdc,(HPEN)::GetStockObject(NULL_PEN));
 		ptTriangle[0].x=m_TimeBarWidth/2;
 		ptTriangle[0].y=(m_HeaderHeight-TriangleHeight)/2;
 		ptTriangle[1].x=ptTriangle[0].x-TriangleWidth/2;
@@ -2197,7 +2188,6 @@ void CProgramGuide::Draw(HDC hdc,const RECT &PaintRect)
 		::SelectObject(hdc,hbrOld);
 		::SelectObject(hdc,hpenOld);
 		::DeleteObject(hbr);
-		::DeleteObject(hpen);
 	}
 
 	if (m_fBarShadow) {
@@ -3850,7 +3840,16 @@ LRESULT CProgramGuide::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam
 				m_hDragCursor1=::LoadCursor(m_hinst,MAKEINTRESOURCE(IDC_GRAB1));
 			if (m_hDragCursor2==NULL)
 				m_hDragCursor2=::LoadCursor(m_hinst,MAKEINTRESOURCE(IDC_GRAB2));
-			m_Chevron.Load(m_hinst,IDB_CHEVRON,CHEVRON_WIDTH,CHEVRON_HEIGHT);
+
+			static const TVTest::Theme::IconList::ResourceInfo ResourceList[] = {
+				{MAKEINTRESOURCE(IDB_CHEVRON10),10,10},
+				{MAKEINTRESOURCE(IDB_CHEVRON20),20,20},
+			};
+			m_Chevron.Load(m_hinst,
+						   m_Style.HeaderChevronSize.Width,
+						   m_Style.HeaderChevronSize.Height,
+						   ResourceList,lengthof(ResourceList));
+
 			m_EpgIcons.Load();
 			m_EventInfoPopupManager.Initialize(hwnd,&m_EventInfoPopupHandler);
 			m_Tooltip.Create(hwnd);
@@ -5046,7 +5045,7 @@ CProgramGuide::ProgramGuideStyle::ProgramGuideStyle()
 	, HeaderPadding(4)
 	, HeaderChannelNameMargin(0)
 	, HeaderIconMargin(0,0,4,0)
-	, HeaderChevronSize(CHEVRON_WIDTH,CHEVRON_HEIGHT)
+	, HeaderChevronSize(10,10)
 	, HeaderChevronMargin(8,0,0,0)
 	, HeaderShadowHeight(8)
 	, EventLeading(1)
@@ -5423,6 +5422,7 @@ CProgramGuideBar::~CProgramGuideBar()
 class ABSTRACT_CLASS(CProgramGuideToolbar)
 	: public CProgramGuideBar
 	, public CBasicWindow
+	, public TVTest::CUIBase
 {
 public:
 	CProgramGuideToolbar(CProgramGuide *pProgramGuide);
@@ -5448,6 +5448,7 @@ public:
 protected:
 	CBufferedPaint m_BufferedPaint;
 	TVTest::Style::Margins m_Padding;
+	int m_FontHeight;
 
 	void AdjustSize();
 	void DeleteAllButtons();
@@ -5460,6 +5461,7 @@ protected:
 CProgramGuideToolbar::CProgramGuideToolbar(CProgramGuide *pProgramGuide)
 	: CProgramGuideBar(pProgramGuide)
 	, m_Padding(pProgramGuide->GetToolbarItemPadding())
+	, m_FontHeight(0)
 {
 }
 
@@ -5478,6 +5480,17 @@ bool CProgramGuideToolbar::Create(HWND hwndParent,DWORD Style,DWORD ExStyle,int 
 						   ExStyle,ID,
 						   TOOLBARCLASSNAME,NULL,GetAppClass().GetInstance()))
 		return false;
+
+	InitializeUI();
+
+	// フォントの高さを取得
+	HDC hdc=::GetDC(m_hwnd);
+	HFONT hfontOld=SelectFont(hdc,GetWindowFont(m_hwnd));
+	TEXTMETRIC tm;
+	::GetTextMetrics(hdc,&tm);
+	m_FontHeight=tm.tmHeight-tm.tmInternalLeading;
+	SelectFont(hdc,hfontOld);
+	::ReleaseDC(m_hwnd,hdc);
 
 	::SendMessage(m_hwnd,TB_BUTTONSTRUCTSIZE,sizeof(TBBUTTON),0);
 	//::SendMessage(m_hwnd,TB_SETEXTENDEDSTYLE,0,TBSTYLE_EX_MIXEDBUTTONS);
@@ -5528,20 +5541,8 @@ bool CProgramGuideToolbar::SetBarVisible(bool fVisible)
 
 void CProgramGuideToolbar::GetBarSize(SIZE *pSize)
 {
-	int ButtonCount;
-
-	if (m_hwnd!=NULL && (ButtonCount=(int)::SendMessage(m_hwnd,TB_BUTTONCOUNT,0,0))>0) {
-#if 0
-		TBBUTTON tbb;
-		RECT rc;
-
-		::SendMessage(m_hwnd,TB_GETBUTTON,ButtonCount-1,reinterpret_cast<LPARAM>(&tbb));
-		::SendMessage(m_hwnd,TB_GETRECT,tbb.idCommand,reinterpret_cast<LPARAM>(&rc));
-		pSize->cx=rc.right;
-		pSize->cy=rc.bottom;
-#else
+	if (m_hwnd!=NULL && (int)::SendMessage(m_hwnd,TB_BUTTONCOUNT,0,0)>0) {
 		::SendMessage(m_hwnd,TB_GETMAXSIZE,0,reinterpret_cast<LPARAM>(pSize));
-#endif
 	} else {
 		pSize->cx=0;
 		pSize->cy=0;
@@ -5902,6 +5903,22 @@ void CFavoritesToolbar::SetButtons()
 		tbb.idCommand++;
 	}
 
+	SIZE ButtonSize;
+	ButtonSize.cx=0;
+	ButtonSize.cy=m_FontHeight+m_Padding.Horz();
+
+	if (pFavorites->GetFixedWidth()) {
+		const int ButtonCount=(int)::SendMessage(m_hwnd,TB_BUTTONCOUNT,0,0);
+		for (int i=0;i<ButtonCount;i++) {
+			RECT rc;
+			::SendMessage(m_hwnd,TB_GETITEMRECT,i,(LPARAM)&rc);
+			if (ButtonSize.cx<rc.right-rc.left)
+				ButtonSize.cx=rc.right-rc.left;
+		}
+	}
+
+	::SendMessage(m_hwnd,TB_SETBUTTONSIZE,0,MAKELONG(ButtonSize.cx,ButtonSize.cy));
+
 	AdjustSize();
 }
 
@@ -5918,6 +5935,7 @@ void CFavoritesToolbar::OnCustomDraw(NMTBCUSTOMDRAW *pnmtb,HDC hdc)
 		m_pProgramGuide->GetFavorites()->Get(pnmtb->nmcd.lItemlParam);
 
 	if (pInfo!=NULL) {
+		TVTest::Theme::CThemeDraw ThemeDraw(BeginThemeDraw(hdc));
 		TVTest::Theme::BackgroundStyle Style;
 		COLORREF LightColor=pInfo->BackColor;
 		COLORREF DarkColor=MixColor(LightColor,RGB(0,0,0),220);
@@ -5939,7 +5957,7 @@ void CFavoritesToolbar::OnCustomDraw(NMTBCUSTOMDRAW *pnmtb,HDC hdc)
 			Style.Border.Type=TVTest::Theme::BORDER_RAISED;
 			Style.Border.Color=LightColor;
 		}
-		TVTest::Theme::Draw(hdc,pnmtb->nmcd.rc,Style);
+		ThemeDraw.Draw(Style,pnmtb->nmcd.rc);
 
 		HFONT hfont=reinterpret_cast<HFONT>(::SendMessage(m_hwnd,WM_GETFONT,0,0));
 		HGDIOBJ hOldFont=::SelectObject(hdc,hfont);
@@ -6047,7 +6065,7 @@ bool CDateToolbar::SetButtons(const SYSTEMTIME *pDateList,int Days,int FirstComm
 
 		tbb.idCommand=FirstCommand+i;
 		StdUtil::snprintf(szText,lengthof(szText),
-						  TEXT("%02d/%02d(%s)"),	// %02d にしているのは幅を揃えるため
+						  TEXT("%d/%d(%s)"),
 						  Date.wMonth,Date.wDay,GetDayOfWeekText(Date.wDayOfWeek));
 		tbb.iString=reinterpret_cast<INT_PTR>(szText);
 		tbb.dwData=((DWORD)Date.wMonth<<16) | ((DWORD)Date.wDay<<8) | Date.wDayOfWeek;
@@ -6055,6 +6073,29 @@ bool CDateToolbar::SetButtons(const SYSTEMTIME *pDateList,int Days,int FirstComm
 			tbb.dwData|=ITEM_FLAG_NOW;
 		::SendMessage(m_hwnd,TB_ADDBUTTONS,1,reinterpret_cast<LPARAM>(&tbb));
 	}
+
+	SIZE ButtonSize;
+	ButtonSize.cx=0;
+	ButtonSize.cy=m_FontHeight;
+	HDC hdc=::GetDC(m_hwnd);
+	HFONT hfontOld=SelectFont(hdc,GetWindowFont(m_hwnd));
+	for (int i=0;i<Days;i++) {
+		const SYSTEMTIME &Date=pDateList[i];
+		TCHAR szText[32];
+		StdUtil::snprintf(szText,lengthof(szText),
+						  TEXT("%02d/%02d(%s)"),	// %02d にしているのは幅を揃えるため
+						  Date.wMonth,Date.wDay,GetDayOfWeekText(Date.wDayOfWeek));
+		RECT rc={0,0,0,0};
+		::DrawText(hdc,szText,-1,&rc,DT_SINGLELINE | DT_NOPREFIX | DT_CALCRECT);
+		if (rc.right>ButtonSize.cx)
+			ButtonSize.cx=rc.right;
+	}
+	SelectFont(hdc,hfontOld);
+	::ReleaseDC(m_hwnd,hdc);
+
+	ButtonSize.cx+=m_Padding.Horz();
+	ButtonSize.cy+=m_Padding.Vert();
+	::SendMessage(m_hwnd,TB_SETBUTTONSIZE,0,MAKELONG(ButtonSize.cx,ButtonSize.cy));
 
 	AdjustSize();
 
@@ -6064,6 +6105,8 @@ bool CDateToolbar::SetButtons(const SYSTEMTIME *pDateList,int Days,int FirstComm
 
 void CDateToolbar::OnCustomDraw(NMTBCUSTOMDRAW *pnmtb,HDC hdc)
 {
+	TVTest::Theme::CThemeDraw ThemeDraw(BeginThemeDraw(hdc));
+
 	TVTest::Theme::BackgroundStyle Style;
 	Style.Fill.Type=TVTest::Theme::FILL_GRADIENT;
 	Style.Fill.Gradient.Type=TVTest::Theme::GRADIENT_NORMAL;
@@ -6082,7 +6125,7 @@ void CDateToolbar::OnCustomDraw(NMTBCUSTOMDRAW *pnmtb,HDC hdc)
 		Style.Border.Type=TVTest::Theme::BORDER_RAISED;
 		Style.Border.Color.Set(255,255,255);
 	}
-	TVTest::Theme::Draw(hdc,pnmtb->nmcd.rc,Style);
+	ThemeDraw.Draw(Style,pnmtb->nmcd.rc);
 
 	int DayOfWeek=(int)(pnmtb->nmcd.lItemlParam&0xFF);
 
@@ -6292,15 +6335,38 @@ bool CTimeToolbar::SetButtons(const TimeInfo *pTimeList,int TimeListLength)
 
 		tbb.idCommand=TimeInfo.Command;
 		if (TimeInfo.Command==CM_PROGRAMGUIDE_TIME_CURRENT) {
-			::lstrcpy(szText,TEXT(" 現在 "));
+			::lstrcpy(szText,TEXT("現在"));
 		} else {
 			StdUtil::snprintf(szText,lengthof(szText),
-							  TEXT("%02d時～"),TimeInfo.Hour);
+							  TEXT("%d時～"),TimeInfo.Hour);
 		}
 		tbb.iString=reinterpret_cast<INT_PTR>(szText);
 		tbb.dwData=MAKELONG(TimeInfo.Hour,TimeInfo.Offset);
 		::SendMessage(m_hwnd,TB_ADDBUTTONS,1,reinterpret_cast<LPARAM>(&tbb));
 	}
+
+	SIZE ButtonSize;
+	ButtonSize.cx=0;
+	ButtonSize.cy=m_FontHeight;
+	HDC hdc=::GetDC(m_hwnd);
+	HFONT hfontOld=SelectFont(hdc,GetWindowFont(m_hwnd));
+	for (int i=0;i<TimeListLength;i++) {
+		const TimeInfo &TimeInfo=pTimeList[i];
+		TCHAR szText[32];
+		StdUtil::snprintf(szText,lengthof(szText),
+						  TEXT("%02d時～"),	// %02d にしているのは幅を揃えるため
+						  TimeInfo.Hour);
+		RECT rc={0,0,0,0};
+		::DrawText(hdc,szText,-1,&rc,DT_SINGLELINE | DT_NOPREFIX | DT_CALCRECT);
+		if (rc.right>ButtonSize.cx)
+			ButtonSize.cx=rc.right;
+	}
+	SelectFont(hdc,hfontOld);
+	::ReleaseDC(m_hwnd,hdc);
+
+	ButtonSize.cx+=m_Padding.Horz();
+	ButtonSize.cy+=m_Padding.Vert();
+	::SendMessage(m_hwnd,TB_SETBUTTONSIZE,0,MAKELONG(ButtonSize.cx,ButtonSize.cy));
 
 	AdjustSize();
 
@@ -6311,6 +6377,7 @@ bool CTimeToolbar::SetButtons(const TimeInfo *pTimeList,int TimeListLength)
 void CTimeToolbar::OnCustomDraw(NMTBCUSTOMDRAW *pnmtb,HDC hdc)
 {
 	const bool fCurrent=pnmtb->nmcd.dwItemSpec==CM_PROGRAMGUIDE_TIME_CURRENT;
+	TVTest::Theme::CThemeDraw ThemeDraw(BeginThemeDraw(hdc));
 	TVTest::Theme::Style Style;
 	int Hour;
 
@@ -6339,7 +6406,7 @@ void CTimeToolbar::OnCustomDraw(NMTBCUSTOMDRAW *pnmtb,HDC hdc)
 		std::swap(Style.Back.Fill.Gradient.Color1,
 				  Style.Back.Fill.Gradient.Color2);
 	}
-	TVTest::Theme::Draw(hdc,pnmtb->nmcd.rc,Style.Back);
+	ThemeDraw.Draw(Style.Back,pnmtb->nmcd.rc);
 
 	HFONT hfont=reinterpret_cast<HFONT>(::SendMessage(m_hwnd,WM_GETFONT,0,0));
 	HGDIOBJ hOldFont=::SelectObject(hdc,hfont);
@@ -6353,8 +6420,8 @@ void CTimeToolbar::OnCustomDraw(NMTBCUSTOMDRAW *pnmtb,HDC hdc)
 	}
 	RECT rc=pnmtb->nmcd.rc;
 	TVTest::Style::Subtract(&rc,m_Padding);
-	TVTest::Theme::Draw(hdc,rc,Style.Fore,szText,
-						DT_CENTER | DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX);
+	ThemeDraw.Draw(Style.Fore,rc,szText,
+				   DT_CENTER | DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX);
 
 	::SetBkMode(hdc,OldBkMode);
 	::SelectObject(hdc,hOldFont);

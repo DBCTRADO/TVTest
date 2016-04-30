@@ -2,6 +2,9 @@
 #define TVTEST_GUI_UTIL_H
 
 
+#include <commctrl.h>
+
+
 namespace TVTest
 {
 
@@ -25,6 +28,11 @@ namespace TVTest
 	private:
 		HICON m_hico;
 	};
+
+
+	HIMAGELIST CreateImageListFromIcons(
+		HINSTANCE hinst,const LPCTSTR *ppszIcons,int IconCount,IconSizeType Size);
+	void SetWindowIcon(HWND hwnd,HINSTANCE hinst,LPCTSTR pszIcon);
 
 }	// namespace TVTest
 

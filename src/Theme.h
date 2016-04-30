@@ -3,6 +3,7 @@
 
 
 #include "DrawUtil.h"
+#include "Style.h"
 
 
 namespace TVTest
@@ -13,6 +14,7 @@ namespace TVTest
 
 		typedef DrawUtil::RGBA ThemeColor;
 		typedef DrawUtil::CMonoColorBitmap ThemeBitmap;
+		typedef DrawUtil::CMonoColorIconList IconList;
 
 		struct SolidStyle
 		{
@@ -102,17 +104,33 @@ namespace TVTest
 			BORDER_RAISED
 		};
 
+		struct BorderWidth
+		{
+			Style::IntValue Left;
+			Style::IntValue Top;
+			Style::IntValue Right;
+			Style::IntValue Bottom;
+
+			BorderWidth() : Left(1), Top(1), Right(1), Bottom(1) {}
+			BorderWidth(int Width) : Left(Width), Top(Width), Right(Width), Bottom(Width) {}
+			bool operator==(const BorderWidth &Op) const {
+				return Left==Op.Left && Top==Op.Top && Right==Op.Right && Bottom==Op.Bottom;
+			}
+			bool operator!=(const BorderWidth &Op) const { return !(*this==Op); }
+		};
+
 		struct BorderStyle
 		{
 			BorderType Type;
 			ThemeColor Color;
+			BorderWidth Width;
 
 			BorderStyle() : Type(BORDER_NONE) {}
 			BorderStyle(BorderType type,const ThemeColor &color) : Type(type), Color(color) {}
-			bool operator==(const BorderStyle &Info) const {
-				return Type==Info.Type && Color==Info.Color;
+			bool operator==(const BorderStyle &Op) const {
+				return Type==Op.Type && Color==Op.Color && Width==Op.Width;
 			}
-			bool operator!=(const BorderStyle &Info) const { return !(*this==Info); }
+			bool operator!=(const BorderStyle &Op) const { return !(*this==Op); }
 		};
 
 		struct BackgroundStyle
@@ -153,7 +171,6 @@ namespace TVTest
 		bool Draw(HDC hdc,const RECT &Rect,const FillStyle &Style);
 		bool Draw(HDC hdc,const RECT &Rect,const BackgroundStyle &Style);
 		bool Draw(HDC hdc,const RECT &Rect,const ForegroundStyle &Style,LPCTSTR pszText,UINT Flags);
-		bool Draw(HDC hdc,const RECT &Rect,BorderType Border);
 		bool Draw(HDC hdc,const RECT &Rect,const BorderStyle &Style);
 		bool Draw(HDC hdc,RECT *pRect,const BorderStyle &Style);
 		ThemeColor MixColor(const ThemeColor &Color1,const ThemeColor &Color2,BYTE Ratio=128);

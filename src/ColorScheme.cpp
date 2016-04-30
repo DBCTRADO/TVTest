@@ -1492,13 +1492,15 @@ INT_PTR CColorSchemeOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lP
 						bool fSelected=(pdis->itemState & ODS_SELECTED)!=0
 									&& (pdis->itemState & ODS_COMBOBOXEDIT)==0;
 						Theme::CThemeManager ThemeManager(pColorScheme);
+						Theme::CThemeDraw ThemeDraw(&GetAppClass().StyleManager);
 						Theme::Style Style;
 
 						ThemeManager.GetStyle(fSelected?
 											  Theme::CThemeManager::STYLE_STATUSBAR_ITEM_HOT:
 											  Theme::CThemeManager::STYLE_STATUSBAR_ITEM,
 											  &Style);
-						Theme::Draw(pdis->hDC,pdis->rcItem,Style.Back);
+						ThemeDraw.Begin(pdis->hDC);
+						ThemeDraw.Draw(Style.Back,pdis->rcItem);
 						if (!IsStringEmpty(pColorScheme->GetName())) {
 							int OldBkMode;
 							RECT rc;
@@ -1518,7 +1520,7 @@ INT_PTR CColorSchemeOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lP
 							OldBkMode=::SetBkMode(pdis->hDC,TRANSPARENT);
 							rc=pdis->rcItem;
 							rc.left+=4;
-							Theme::Draw(pdis->hDC,rc,Style.Fore,pColorScheme->GetName(),
+							ThemeDraw.Draw(Style.Fore,rc,pColorScheme->GetName(),
 								DT_LEFT | DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX | DT_END_ELLIPSIS);
 							::SetBkMode(pdis->hDC,OldBkMode);
 							if (hfont!=NULL) {

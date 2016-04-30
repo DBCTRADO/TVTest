@@ -373,7 +373,9 @@ INT_PTR CPanAndScanOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPa
 						   static_cast<HBRUSH>(::GetStockObject(BLACK_BRUSH)));
 				if (GetPanAndScanSettings(&PanScan)) {
 					HBRUSH hbr=::CreateSolidBrush(RGB(128,128,128));
-					HPEN hpen=::CreatePen(PS_SOLID,1,RGB(160,160,160));
+					HPEN hpen=::CreatePen(PS_INSIDEFRAME,
+						GetAppClass().StyleManager.ToPixels(1,TVTest::Style::UNIT_LOGICAL_PIXEL),
+						RGB(160,160,160));
 					HGDIOBJ hOldBrush=::SelectObject(pdis->hDC,hbr);
 					HGDIOBJ hOldPen=::SelectObject(pdis->hDC,hpen);
 

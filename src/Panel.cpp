@@ -198,21 +198,23 @@ void CPanel::CalcDimensions()
 	int ButtonHeight=
 		m_Style.TitleButtonIconSize.Height+
 		m_Style.TitleButtonPadding.Vert();
-	RECT Border;
-	TVTest::Theme::GetBorderWidths(m_Theme.TitleStyle.Back.Border,&Border);
+	TVTest::Theme::BorderStyle Border=m_Theme.TitleStyle.Back.Border;
+	ConvertBorderWidthsInPixels(&Border);
+	RECT rcBorder;
+	TVTest::Theme::GetBorderWidths(Border,&rcBorder);
 	m_TitleHeight=max(LabelHeight,ButtonHeight)+m_Style.TitlePadding.Vert()+
-		Border.top+Border.bottom;
+		rcBorder.top+rcBorder.bottom;
 }
 
 
 void CPanel::Draw(HDC hdc,const RECT &PaintRect) const
 {
 	if (m_fShowTitle && PaintRect.top<m_TitleHeight) {
+		TVTest::Theme::CThemeDraw ThemeDraw(BeginThemeDraw(hdc));
 		RECT rc;
 
 		GetTitleRect(&rc);
-		TVTest::Theme::Draw(hdc,rc,m_Theme.TitleStyle.Back);
-		TVTest::Theme::SubtractBorderRect(m_Theme.TitleStyle.Back.Border,&rc);
+		ThemeDraw.Draw(m_Theme.TitleStyle.Back,&rc);
 
 		if (!m_Title.empty()) {
 			TVTest::Style::Subtract(&rc,m_Style.TitlePadding);
@@ -228,7 +230,7 @@ void CPanel::Draw(HDC hdc,const RECT &PaintRect) const
 			m_HotItem==ITEM_CLOSE?m_Theme.TitleIconHighlightStyle:m_Theme.TitleIconStyle;
 		if (Style.Back.Border.Type!=TVTest::Theme::BORDER_NONE
 				|| Style.Back.Fill!=m_Theme.TitleStyle.Back.Fill)
-			TVTest::Theme::Draw(hdc,rc,Style.Back);
+			ThemeDraw.Draw(Style.Back,rc);
 		DrawUtil::DrawText(hdc,TEXT("r"),rc,DT_CENTER | DT_VCENTER | DT_SINGLELINE,
 						   &m_IconFont,Style.Fore.Fill.GetSolidColor());
 	}
@@ -258,7 +260,9 @@ void CPanel::GetCloseButtonRect(RECT *pRect) const
 	RECT rc;
 
 	GetClientRect(&rc);
-	TVTest::Theme::SubtractBorderRect(m_Theme.TitleStyle.Back.Border,&rc);
+	TVTest::Theme::BorderStyle Border=m_Theme.TitleStyle.Back.Border;
+	ConvertBorderWidthsInPixels(&Border);
+	TVTest::Theme::SubtractBorderRect(Border,&rc);
 	rc.right-=m_Style.TitlePadding.Right;
 	rc.left=rc.right-ButtonWidth;
 	rc.top=m_Style.TitlePadding.Top+

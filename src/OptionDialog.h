@@ -52,11 +52,14 @@ private:
 	static const PageInfo m_PageList[NUM_PAGES];
 	int m_CurrentPage;
 	int m_StartPage;
-	//DrawUtil::CBitmap m_Icons;
 	HIMAGELIST m_himlIcons;
 	DrawUtil::CFont m_TitleFont;
 	bool m_fSettingError;
 	bool m_fApplied;
+	int m_IconWidth;
+	int m_IconHeight;
+	int m_ListMargin;
+	int m_IconTextMargin;
 
 	void CreatePage(int Page);
 	void SetPage(int Page);

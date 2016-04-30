@@ -2071,12 +2071,18 @@ LRESULT CPlugin::OnCallback(TVTest::PluginParam *pParam,UINT Message,LPARAM lPar
 					|| pInfo->hdc==NULL)
 				return FALSE;
 
-			TVTest::Theme::CThemeManager ThemeManager(GetAppClass().UICore.GetCurrentColorScheme());
+			CAppMain &App=GetAppClass();
+			TVTest::Theme::CThemeManager ThemeManager(App.UICore.GetCurrentColorScheme());
 			int Type=ThemeManager.ParseStyleName(pInfo->pszStyle);
 			if (Type<0)
 				return FALSE;
 			TVTest::Theme::BackgroundStyle Style;
 			ThemeManager.GetBackgroundStyle(Type,&Style);
+			TVTest::Style::CStyleManager &StyleManager=App.StyleManager;
+			StyleManager.ToPixels(&Style.Border.Width.Left);
+			StyleManager.ToPixels(&Style.Border.Width.Top);
+			StyleManager.ToPixels(&Style.Border.Width.Right);
+			StyleManager.ToPixels(&Style.Border.Width.Bottom);
 			TVTest::Theme::Draw(pInfo->hdc,pInfo->DrawRect,Style);
 			if ((pInfo->Flags & TVTest::THEME_DRAW_BACKGROUND_FLAG_ADJUSTRECT)!=0)
 				TVTest::Theme::SubtractBorderRect(Style.Border,&pInfo->DrawRect);

@@ -981,8 +981,9 @@ TVTest::Theme::BackgroundStyle CEpgTheme::GetContentBackgroundStyle(
 }
 
 
-bool CEpgTheme::DrawContentBackground(HDC hdc,const RECT &Rect,
-									  const CEventInfoData &EventInfo,unsigned int Flags) const
+bool CEpgTheme::DrawContentBackground(
+	HDC hdc,TVTest::Theme::CThemeDraw &ThemeDraw,const RECT &Rect,
+	const CEventInfoData &EventInfo,unsigned int Flags) const
 {
 	if (hdc==nullptr)
 		return false;
@@ -992,15 +993,12 @@ bool CEpgTheme::DrawContentBackground(HDC hdc,const RECT &Rect,
 		StyleFlags|=CONTENT_STYLE_CURRENT;
 	if ((Flags & DRAW_CONTENT_BACKGROUND_NOBORDER)!=0)
 		StyleFlags|=CONTENT_STYLE_NOBORDER;
-	TVTest::Theme::Draw(hdc,Rect,GetContentBackgroundStyle(EventInfo,StyleFlags));
+	ThemeDraw.Draw(GetContentBackgroundStyle(EventInfo,StyleFlags),Rect);
 
 	if ((Flags & DRAW_CONTENT_BACKGROUND_SEPARATOR)!=0) {
-		HPEN hpen=::CreatePen(PS_SOLID,1,MixColor(GetGenreColor(EventInfo),RGB(0,0,0),224));
-		HPEN hpenOld=static_cast<HPEN>(::SelectObject(hdc,hpen));
-		::MoveToEx(hdc,Rect.left,Rect.top,NULL);
-		::LineTo(hdc,Rect.right,Rect.top);
-		::SelectObject(hdc,hpenOld);
-		::DeleteObject(hpen);
+		RECT rc=Rect;
+		rc.bottom=rc.top+ThemeDraw.GetStyleManager()->ToPixels(1,TVTest::Style::UNIT_LOGICAL_PIXEL);
+		DrawUtil::Fill(hdc,&rc,MixColor(GetGenreColor(EventInfo),RGB(0,0,0),224));
 	}
 
 	return true;

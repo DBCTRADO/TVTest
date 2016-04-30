@@ -222,8 +222,8 @@ HBITMAP CSideBarOptions::CreateImage(IconSizeType SizeType,SIZE *pIconSize)
 	int PercentWidth1,PercentWidth2;
 
 	if (SizeType==ICON_SIZE_SMALL) {
-		pszImageName=MAKEINTRESOURCE(IDB_SIDEBAR);
-		pszZoomImageName=MAKEINTRESOURCE(IDB_SIDEBARZOOM);
+		pszImageName=MAKEINTRESOURCE(IDB_SIDEBAR16);
+		pszZoomImageName=MAKEINTRESOURCE(IDB_SIDEBARZOOM16);
 		IconWidth=16;
 		IconHeight=16;
 		NumWidth1=4;
@@ -462,12 +462,14 @@ INT_PTR CSideBarOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam
 			DlgCheckBox_Check(hDlg,IDC_SIDEBAR_SHOWCHANNELLOGO,m_fShowChannelLogo);
 
 			const COLORREF IconColor=::GetSysColor(COLOR_WINDOWTEXT);
+			const int IconWidth=::GetSystemMetrics(SM_CXSMICON);
+			const int IconHeight=::GetSystemMetrics(SM_CYSMICON);
 			SIZE sz;
-			HBITMAP hbmIcons=CreateImage(ICON_SIZE_SMALL,&sz);
-			DrawUtil::CMonoColorBitmap Bitmap;
-			Bitmap.Create(hbmIcons);
+			HBITMAP hbmIcons=CreateImage(IconWidth<=16 && IconHeight<=16?ICON_SIZE_SMALL:ICON_SIZE_BIG,&sz);
+			TVTest::Theme::IconList Bitmap;
+			Bitmap.Create(hbmIcons,sz.cx,sz.cy,IconWidth,IconHeight);
 			::DeleteObject(hbmIcons);
-			m_himlIcons=Bitmap.CreateImageList(sz.cx,IconColor);
+			m_himlIcons=Bitmap.CreateImageList(IconColor);
 			Bitmap.Destroy();
 
 			m_IconIDMap.clear();

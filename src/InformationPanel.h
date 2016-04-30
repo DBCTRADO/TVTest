@@ -317,7 +317,8 @@ private:
 	void Draw(HDC hdc,const RECT &PaintRect);
 	bool GetDrawItemRect(int Item,RECT *pRect,const RECT &PaintRect) const;
 	void DrawItem(HDC hdc,LPCTSTR pszText,const RECT &Rect);
-	void DrawProgramInfoPrevNextButton(HDC hdc,const RECT &Rect,bool fNext,bool fEnabled,bool fHot) const;
+	void DrawProgramInfoPrevNextButton(HDC hdc,TVTest::Theme::CThemeDraw &ThemeDraw,
+									   const RECT &Rect,bool fNext,bool fEnabled,bool fHot) const;
 	bool GetButtonRect(int Button,RECT *pRect) const;
 	void RedrawButton(int Button);
 	int ButtonHitTest(int x,int y) const;

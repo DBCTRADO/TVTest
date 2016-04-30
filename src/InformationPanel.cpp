@@ -393,10 +393,11 @@ LRESULT CInformationPanel::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lP
 
 	case WM_SIZE:
 		if (IsItemVisible(ITEM_PROGRAMINFO)) {
+			TVTest::Theme::BorderStyle Style=m_Theme.ProgramInfoStyle.Back.Border;
+			ConvertBorderWidthsInPixels(&Style);
 			RECT rc;
-
 			GetItemRect(ITEM_PROGRAMINFO,&rc);
-			TVTest::Theme::SubtractBorderRect(m_Theme.ProgramInfoStyle.Back.Border,&rc);
+			TVTest::Theme::SubtractBorderRect(Style,&rc);
 			::MoveWindow(m_hwndProgramInfo,rc.left,rc.top,
 						 rc.right-rc.left,rc.bottom-rc.top,TRUE);
 		}
@@ -673,18 +674,20 @@ void CInformationPanel::Draw(HDC hdc,const RECT &PaintRect)
 	}
 
 	if (IsItemVisible(ITEM_PROGRAMINFO)) {
+		TVTest::Theme::CThemeDraw ThemeDraw(BeginThemeDraw(hdc));
+
 		if (m_Theme.ProgramInfoStyle.Back.Border.Type!=TVTest::Theme::BORDER_NONE) {
 			GetItemRect(ITEM_PROGRAMINFO,&rc);
-			TVTest::Theme::Draw(hdc,rc,m_Theme.ProgramInfoStyle.Back.Border);
+			ThemeDraw.Draw(m_Theme.ProgramInfoStyle.Back.Border,rc);
 		}
 
 		GetButtonRect(BUTTON_PROGRAMINFOPREV,&rc);
 		DrawProgramInfoPrevNextButton(
-			hdc,rc,false,IsButtonEnabled(BUTTON_PROGRAMINFOPREV),
+			hdc,ThemeDraw,rc,false,IsButtonEnabled(BUTTON_PROGRAMINFOPREV),
 			m_HotButton==BUTTON_PROGRAMINFOPREV);
 		GetButtonRect(BUTTON_PROGRAMINFONEXT,&rc);
 		DrawProgramInfoPrevNextButton(
-			hdc,rc,true,IsButtonEnabled(BUTTON_PROGRAMINFONEXT),
+			hdc,ThemeDraw,rc,true,IsButtonEnabled(BUTTON_PROGRAMINFONEXT),
 			m_HotButton==BUTTON_PROGRAMINFONEXT);
 	}
 
@@ -725,12 +728,13 @@ void CInformationPanel::DrawItem(HDC hdc,LPCTSTR pszText,const RECT &Rect)
 
 
 void CInformationPanel::DrawProgramInfoPrevNextButton(
-	HDC hdc,const RECT &Rect,bool fNext,bool fEnabled,bool fHot) const
+	HDC hdc,TVTest::Theme::CThemeDraw &ThemeDraw,const RECT &Rect,bool fNext,bool fEnabled,bool fHot) const
 {
 	const TVTest::Theme::Style &Style=
 		fEnabled && fHot?m_Theme.ButtonHotStyle:m_Theme.ButtonStyle;
+	RECT rc=Rect;
 
-	TVTest::Theme::Draw(hdc,Rect,Style.Back);
+	ThemeDraw.Draw(Style.Back,&rc);
 
 	HFONT hfontOld=DrawUtil::SelectObject(hdc,m_IconFont);
 	TVTest::Theme::ForegroundStyle Fore;
@@ -739,10 +743,8 @@ void CInformationPanel::DrawProgramInfoPrevNextButton(
 		Fore.Fill=Style.Fore.Fill;
 	else
 		Fore.Fill=TVTest::Theme::MixStyle(Style.Fore.Fill,Style.Back.Fill);
-	RECT rc=Rect;
-	TVTest::Theme::SubtractBorderRect(Style.Back.Border,&rc);
-	TVTest::Theme::Draw(hdc,rc,Fore,fNext?TEXT("4"):TEXT("3"),
-						DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+	ThemeDraw.Draw(Fore,rc,fNext?TEXT("4"):TEXT("3"),
+				   DT_CENTER | DT_VCENTER | DT_SINGLELINE);
 	::SelectObject(hdc,hfontOld);
 }
 

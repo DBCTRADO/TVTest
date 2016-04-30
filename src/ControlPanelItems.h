@@ -84,7 +84,7 @@ public:
 	void OnRButtonDown(int x,int y);
 
 private:
-	DrawUtil::CMonoColorIconList m_Icons;
+	TVTest::Theme::IconList m_Icons;
 };
 
 class CControlPanelButton : public CControlPanelItem

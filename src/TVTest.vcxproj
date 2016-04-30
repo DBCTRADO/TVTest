@@ -1054,6 +1054,7 @@
     <ClCompile Include="Taskbar.cpp" />
     <ClCompile Include="TaskbarOptions.cpp" />
     <ClCompile Include="Theme.cpp" />
+    <ClCompile Include="ThemeDraw.cpp" />
     <ClCompile Include="ThemeManager.cpp" />
     <ClCompile Include="TitleBar.cpp" />
     <ClCompile Include="Tooltip.cpp" />
@@ -1246,6 +1247,7 @@
     <ClInclude Include="Taskbar.h" />
     <ClInclude Include="TaskbarOptions.h" />
     <ClInclude Include="Theme.h" />
+    <ClInclude Include="ThemeDraw.h" />
     <ClInclude Include="ThemeManager.h" />
     <ClInclude Include="TitleBar.h" />
     <ClInclude Include="Tooltip.h" />

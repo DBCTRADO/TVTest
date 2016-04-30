@@ -3,6 +3,7 @@
 #include "AppMain.h"
 #include "OptionDialog.h"
 #include "DialogUtil.h"
+#include "Graphics.h"
 #include "resource.h"
 #include "Common/DebugDef.h"
 
@@ -97,15 +98,22 @@ COLORREF COptionDialog::GetTitleColor(int Page) const
 
 INT_PTR COptionDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 {
-	static const int ICON_WIDTH=16,ICON_HEIGHT=16,LIST_MARGIN=1,ICON_TEXT_MARGIN=4;
-
 	switch (uMsg) {
 	case WM_INITDIALOG:
 		{
-			int i;
+			const int DPI=GetAppClass().StyleManager.GetSystemDPI();
+			m_IconWidth=::GetSystemMetrics(SM_CXSMICON);
+			m_IconHeight=::GetSystemMetrics(SM_CYSMICON);
+			m_ListMargin=::MulDiv(1,DPI,96);
+			m_IconTextMargin=::MulDiv(4,DPI,96);
+
+			RECT rc={0,0,0,10};
+			::MapDialogRect(hDlg,&rc);
+			DlgListBox_SetItemHeight(hDlg,IDC_OPTIONS_LIST,0,
+									 max(rc.bottom,m_IconHeight+m_ListMargin*2));
 
 			COptions::ClearGeneralUpdateFlags();
-			for (i=0;i<NUM_PAGES;i++) {
+			for (int i=0;i<NUM_PAGES;i++) {
 				m_PageList[i].pOptions->ClearUpdateFlags();
 				DlgListBox_AddString(hDlg,IDC_OPTIONS_LIST,i);
 			}
@@ -115,10 +123,11 @@ INT_PTR COptionDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 			m_PageList[m_CurrentPage].pOptions->SetVisible(true);
 			DlgListBox_SetCurSel(hDlg,IDC_OPTIONS_LIST,m_CurrentPage);
 
-			//m_Icons.Load(GetAppClass().GetResourceInstance(),IDB_OPTIONS);
-			m_himlIcons=::ImageList_LoadImage(GetAppClass().GetResourceInstance(),
-											  MAKEINTRESOURCE(IDB_OPTIONS),
-											  16,1,0,IMAGE_BITMAP,LR_CREATEDIBSECTION);
+			m_himlIcons=::ImageList_LoadImage(
+				GetAppClass().GetResourceInstance(),
+				m_IconWidth<=16?MAKEINTRESOURCE(IDB_OPTIONS16):MAKEINTRESOURCE(IDB_OPTIONS32),
+				m_IconWidth<=16?16:32,
+				1,CLR_NONE,IMAGE_BITMAP,LR_CREATEDIBSECTION);
 
 			HFONT hfont=reinterpret_cast<HFONT>(::SendMessage(hDlg,WM_GETFONT,0,0));
 			LOGFONT lf;
@@ -129,17 +138,6 @@ INT_PTR COptionDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 			m_fApplied=false;
 		}
 		return TRUE;
-
-	/*
-	case WM_MEASUREITEM:
-		if (wParam==IDC_OPTIONS_LIST) {
-			MEASUREITEMSTRUCT *pmis=reinterpret_cast<MEASUREITEMSTRUCT*>(lParam);
-
-			//pmis->itemHeight=ICON_HEIGHT+LIST_MARGIN*2;
-			pmis->itemHeight=ICON_HEIGHT;
-			return TRUE;
-		}
-	*/
 
 	case WM_DRAWITEM:
 		{
@@ -153,7 +151,7 @@ INT_PTR COptionDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 
 				if (fSelected) {
 					rc=pdis->rcItem;
-					rc.right=rc.left+LIST_MARGIN+ICON_WIDTH+ICON_TEXT_MARGIN/2;
+					rc.right=rc.left+m_ListMargin+m_IconWidth+m_IconTextMargin/2;
 					::FillRect(pdis->hDC,&rc,reinterpret_cast<HBRUSH>(COLOR_WINDOW+1));
 					rc.left=rc.right;
 					rc.right=pdis->rcItem.right;
@@ -165,31 +163,52 @@ INT_PTR COptionDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 							   reinterpret_cast<HBRUSH>(COLOR_WINDOW+1));
 					crText=::GetSysColor(COLOR_WINDOWTEXT);
 				}
+
 				rc=pdis->rcItem;
-				rc.left+=LIST_MARGIN;
-				/*
-				HDC hdcMem=::CreateCompatibleDC(pdis->hDC);
-				if (hdcMem!=NULL) {
-					HBITMAP hbmOld=static_cast<HBITMAP>(::SelectObject(hdcMem,m_Icons.GetHandle()));
-					::GdiTransparentBlt(pdis->hDC,rc.left,rc.top,ICON_WIDTH,ICON_HEIGHT,
-										hdcMem,(int)pdis->itemData*ICON_WIDTH,0,ICON_WIDTH,ICON_HEIGHT,RGB(255,255,255));
-					::SelectObject(hdcMem,hbmOld);
-					::DeleteDC(hdcMem);
+				rc.left+=m_ListMargin;
+				int y=rc.top+((rc.bottom-rc.top)-m_IconHeight)/2;
+
+				int IconWidth,IconHeight;
+				::ImageList_GetIconSize(m_himlIcons,&IconWidth,&IconHeight);
+				if (IconWidth==m_IconWidth && IconHeight==m_IconHeight) {
+					::ImageList_Draw(m_himlIcons,(int)pdis->itemData,pdis->hDC,rc.left,y,ILD_TRANSPARENT);
+					if (fSelected)
+						::ImageList_Draw(m_himlIcons,(int)pdis->itemData,pdis->hDC,rc.left,y,ILD_TRANSPARENT);
+				} else {
+					HICON hicon=::ImageList_ExtractIcon(NULL,m_himlIcons,(int)pdis->itemData);
+#if 0				// DrawIconEx ‚Å•`‰æ‚·‚é‚Æ‰˜‚¢
+					::DrawIconEx(pdis->hDC,rc.left,y,hicon,m_IconWidth,m_IconHeight,0,NULL,DI_NORMAL);
+					if (fSelected)
+						::DrawIconEx(pdis->hDC,rc.left,y,hicon,m_IconWidth,m_IconHeight,0,NULL,DI_NORMAL);
+#else
+					ICONINFO ii;
+					if (::GetIconInfo(hicon,&ii)) {
+						HBITMAP hbm=(HBITMAP)::CopyImage(ii.hbmColor,IMAGE_BITMAP,0,0,LR_CREATEDIBSECTION);
+						::DeleteObject(ii.hbmColor);
+						::DeleteObject(ii.hbmMask);
+						TVTest::Graphics::CImage Image;
+						Image.CreateFromBitmap(hbm);
+						::DeleteObject(hbm);
+						TVTest::Graphics::CCanvas Canvas(pdis->hDC);
+						Canvas.SetComposition(true);
+						Canvas.DrawImage(rc.left,y,m_IconWidth,m_IconHeight,&Image,0,0,IconWidth,IconHeight);
+						if (fSelected)
+							Canvas.DrawImage(rc.left,y,m_IconWidth,m_IconHeight,&Image,0,0,IconWidth,IconHeight);
+					}
+#endif
+					::DestroyIcon(hicon);
 				}
-				*/
-				::ImageList_Draw(m_himlIcons,(int)pdis->itemData,pdis->hDC,rc.left,rc.top,ILD_TRANSPARENT);
-				if (fSelected)
-					::ImageList_Draw(m_himlIcons,(int)pdis->itemData,pdis->hDC,rc.left,rc.top,ILD_TRANSPARENT);
+
 				crOldText=::SetTextColor(pdis->hDC,crText);
 				OldBkMode=::SetBkMode(pdis->hDC,TRANSPARENT);
-				rc.left+=ICON_WIDTH+ICON_TEXT_MARGIN;
+				rc.left+=m_IconWidth+m_IconTextMargin;
 				::DrawText(pdis->hDC,m_PageList[pdis->itemData].pszTitle,-1,
 						   &rc,DT_LEFT | DT_SINGLELINE | DT_VCENTER | DT_NOPREFIX);
 				::SetTextColor(pdis->hDC,crOldText);
 				::SetBkMode(pdis->hDC,OldBkMode);
 				if ((pdis->itemState & (ODS_FOCUS | ODS_NOFOCUSRECT))==ODS_FOCUS) {
 					rc=pdis->rcItem;
-					rc.left+=LIST_MARGIN+ICON_WIDTH+ICON_TEXT_MARGIN/2;
+					rc.left+=m_ListMargin+m_IconWidth+m_IconTextMargin/2;
 					::DrawFocusRect(pdis->hDC,&rc);
 				}
 			} else if (wParam==IDC_OPTIONS_TITLE) {
@@ -260,7 +279,6 @@ INT_PTR COptionDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 		return TRUE;
 
 	case WM_DESTROY:
-		//m_Icons.Destroy();
 		if (m_himlIcons!=NULL) {
 			::ImageList_Destroy(m_himlIcons);
 			m_himlIcons=NULL;

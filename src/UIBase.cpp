@@ -134,6 +134,38 @@ namespace TVTest
 	}
 
 
+	bool CUIBase::ConvertBorderWidthsInPixels(Theme::BorderStyle *pStyle) const
+	{
+		if (pStyle==nullptr)
+			return false;
+
+		const Style::CStyleManager *pStyleManager=GetStyleManager();
+
+		pStyleManager->ToPixels(&pStyle->Width.Left);
+		pStyleManager->ToPixels(&pStyle->Width.Top);
+		pStyleManager->ToPixels(&pStyle->Width.Right);
+		pStyleManager->ToPixels(&pStyle->Width.Bottom);
+
+		return true;
+	}
+
+
+	bool CUIBase::GetBorderWidthsInPixels(const Theme::BorderStyle &Style,RECT *pWidths) const
+	{
+		Theme::BorderStyle Border=Style;
+
+		ConvertBorderWidthsInPixels(&Border);
+		return Theme::GetBorderWidths(Border,pWidths);
+	}
+
+
+	int CUIBase::GetHairlineWidth() const
+	{
+		int Width=GetStyleManager()->ToPixels(1,Style::UNIT_LOGICAL_PIXEL);
+		return max(Width,1);
+	}
+
+
 	void CUIBase::ResetDefaultFont()
 	{
 		m_fValidDefaultFont=false;

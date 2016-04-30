@@ -248,7 +248,11 @@ LRESULT CNotificationBar::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lPa
 			::BeginPaint(hwnd,&ps);
 
 			::GetClientRect(hwnd,&rc);
-			TVTest::Theme::Draw(ps.hdc,rc,m_BackStyle);
+
+			{
+				TVTest::Theme::CThemeDraw ThemeDraw(BeginThemeDraw(ps.hdc));
+				ThemeDraw.Draw(m_BackStyle,rc);
+			}
 
 			if (!m_MessageQueue.empty()) {
 				const MessageInfo &Info=m_MessageQueue.front();

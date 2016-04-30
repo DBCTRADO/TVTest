@@ -251,11 +251,19 @@ void CAudioControlItem::Draw(HDC hdc,const RECT &Rect)
 	TVTest::Style::Subtract(&rc,m_pControlPanel->GetItemPadding());
 
 	if (App.CoreEngine.m_DtvEngine.m_MediaViewer.IsSpdifPassthrough()) {
-		if (!m_Icons.IsCreated())
-			m_Icons.Load(App.GetResourceInstance(),IDB_PASSTHROUGH,16,16);
-		m_Icons.Draw(hdc,rc.left,rc.top+((rc.bottom-rc.top)-16)/2,
-					 16,16,0,::GetTextColor(hdc));
-		rc.left+=16+4;
+		TVTest::Style::Size IconSize=m_pControlPanel->GetIconSize();
+		if (!m_Icons.IsCreated()) {
+			static const TVTest::Theme::IconList::ResourceInfo ResourceList[] = {
+				{MAKEINTRESOURCE(IDB_PASSTHROUGH16),16,16},
+				{MAKEINTRESOURCE(IDB_PASSTHROUGH32),32,32},
+			};
+			m_Icons.Load(App.GetResourceInstance(),
+						 IconSize.Width,IconSize.Height,
+						 ResourceList,lengthof(ResourceList));
+		}
+		m_Icons.Draw(hdc,rc.left,rc.top+((rc.bottom-rc.top)-IconSize.Height)/2,
+					 IconSize.Width,IconSize.Height,0,::GetTextColor(hdc));
+		rc.left+=IconSize.Width+IconSize.Width/4;
 	}
 
 	TCHAR szText[64];

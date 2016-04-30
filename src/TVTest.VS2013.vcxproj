@@ -968,6 +968,7 @@
     <ClCompile Include="TaskbarSharedProperties.cpp" />
     <ClCompile Include="TextDraw.cpp" />
     <ClCompile Include="TextDrawClient.cpp" />
+    <ClCompile Include="ThemeDraw.cpp" />
     <ClCompile Include="TSProcessorErrorDialog.cpp" />
     <ClCompile Include="EpgCapture.cpp" />
     <ClCompile Include="ListView.cpp" />
@@ -1162,6 +1163,7 @@
     <ClInclude Include="TaskbarSharedProperties.h" />
     <ClInclude Include="TextDraw.h" />
     <ClInclude Include="TextDrawClient.h" />
+    <ClInclude Include="ThemeDraw.h" />
     <ClInclude Include="TSProcessorErrorDialog.h" />
     <ClInclude Include="DirectShowFilter\RingBuffer.h" />
     <ClInclude Include="EpgCapture.h" />

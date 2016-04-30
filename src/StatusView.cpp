@@ -398,7 +398,9 @@ LRESULT CStatusView::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 
 			::SetRectEmpty(&rc);
 			rc.bottom=m_ItemHeight;
-			TVTest::Theme::AddBorderRect(m_Theme.Border,&rc);
+			TVTest::Theme::BorderStyle Border=m_Theme.Border;
+			ConvertBorderWidthsInPixels(&Border);
+			TVTest::Theme::AddBorderRect(Border,&rc);
 			::AdjustWindowRectEx(&rc,pcs->style,FALSE,pcs->dwExStyle);
 			::SetWindowPos(hwnd,NULL,0,0,pcs->cx,rc.bottom-rc.top,
 						   SWP_NOZORDER | SWP_NOMOVE);
@@ -685,7 +687,9 @@ bool CStatusView::GetItemRectByIndex(int Index,RECT *pRect) const
 
 	RECT rc;
 	GetClientRect(&rc);
-	TVTest::Theme::SubtractBorderRect(m_Theme.Border,&rc);
+	TVTest::Theme::BorderStyle Border=m_Theme.Border;
+	ConvertBorderWidthsInPixels(&Border);
+	TVTest::Theme::SubtractBorderRect(Border,&rc);
 	if (m_Rows>1)
 		rc.bottom=rc.top+m_ItemHeight;
 	const int HorzMargin=m_Style.ItemPadding.Horz();
@@ -733,7 +737,9 @@ int CStatusView::GetItemHeight() const
 	if (m_Rows>1)
 		return m_ItemHeight;
 	GetClientRect(&rc);
-	TVTest::Theme::SubtractBorderRect(m_Theme.Border,&rc);
+	TVTest::Theme::BorderStyle Border=m_Theme.Border;
+	ConvertBorderWidthsInPixels(&Border);
+	TVTest::Theme::SubtractBorderRect(Border,&rc);
 	return rc.bottom-rc.top;
 }
 
@@ -766,7 +772,7 @@ int CStatusView::GetIntegralWidth() const
 			Width+=m_ItemList[i]->GetWidth()+m_Style.ItemPadding.Horz();
 	}
 	RECT rc;
-	TVTest::Theme::GetBorderWidths(m_Theme.Border,&rc);
+	GetBorderWidthsInPixels(m_Theme.Border,&rc);
 	return Width+rc.left+rc.right;
 }
 
@@ -793,7 +799,9 @@ bool CStatusView::AdjustSize()
 	GetPosition(&rcWindow);
 	::SetRectEmpty(&rc);
 	rc.bottom=m_ItemHeight*m_Rows;
-	TVTest::Theme::AddBorderRect(m_Theme.Border,&rc);
+	TVTest::Theme::BorderStyle Border=m_Theme.Border;
+	ConvertBorderWidthsInPixels(&Border);
+	TVTest::Theme::AddBorderRect(Border,&rc);
 	CalcPositionFromClientRect(&rc);
 	int Height=rc.bottom-rc.top;
 	if (Height!=rcWindow.bottom-rcWindow.top) {
@@ -943,7 +951,7 @@ int CStatusView::CalcHeight(int Width) const
 	}
 
 	RECT rcBorder;
-	TVTest::Theme::GetBorderWidths(m_Theme.Border,&rcBorder);
+	GetBorderWidthsInPixels(m_Theme.Border,&rcBorder);
 
 	int Rows=CalcRows(ItemList,Width-(rcBorder.left+rcBorder.right));
 
@@ -992,6 +1000,7 @@ bool CStatusView::DrawItemPreview(CStatusItem *pItem,HDC hdc,const RECT &ItemRec
 	if (pItem==NULL || hdc==NULL)
 		return false;
 
+	TVTest::Theme::CThemeDraw ThemeDraw(BeginThemeDraw(hdc));
 	HFONT hfontOld;
 	int OldBkMode;
 	COLORREF crOldTextColor,crOldBkColor;
@@ -1005,7 +1014,7 @@ bool CStatusView::DrawItemPreview(CStatusItem *pItem,HDC hdc,const RECT &ItemRec
 	OldBkMode=::SetBkMode(hdc,TRANSPARENT);
 	crOldTextColor=::SetTextColor(hdc,Style.Fore.Fill.GetSolidColor());
 	crOldBkColor=::SetBkColor(hdc,Style.Back.Fill.GetSolidColor());
-	TVTest::Theme::Draw(hdc,ItemRect,Style.Back);
+	ThemeDraw.Draw(Style.Back,ItemRect);
 	RECT rcDraw=ItemRect;
 	TVTest::Style::Subtract(&rcDraw,m_Style.ItemPadding);
 	unsigned int Flags=CStatusItem::DRAW_PREVIEW;
@@ -1077,7 +1086,9 @@ void CStatusView::Draw(HDC hdc,const RECT *pPaintRect)
 
 	GetClientRect(&rcClient);
 	rc=rcClient;
-	TVTest::Theme::SubtractBorderRect(m_Theme.Border,&rc);
+	TVTest::Theme::BorderStyle Border=m_Theme.Border;
+	ConvertBorderWidthsInPixels(&Border);
+	TVTest::Theme::SubtractBorderRect(Border,&rc);
 	const int ItemHeight=m_Rows>1?m_ItemHeight:rc.bottom-rc.top;
 
 	if (!m_fSingleMode) {
@@ -1105,21 +1116,24 @@ void CStatusView::Draw(HDC hdc,const RECT *pPaintRect)
 	if (m_Rows>1)
 		rc.bottom=rc.top+ItemHeight;
 
+	TVTest::Theme::CThemeDraw ThemeDraw(BeginThemeDraw(hdc));
+
 	if (m_fSingleMode) {
 		RECT rcRow=rc;
 
 		for (int i=0;i<m_Rows;i++) {
 			const TVTest::Theme::Style &Style=i==0?m_Theme.ItemStyle:m_Theme.BottomItemStyle;
 
-			TVTest::Theme::Draw(hdcDst,rcRow,Style.Back.Fill);
+			ThemeDraw.Draw(Style.Back.Fill,rcRow);
 			rcRow.top=rcRow.bottom;
 			rcRow.bottom+=ItemHeight;
 		}
 		rc.left+=m_Style.ItemPadding.Left;
 		rc.right-=m_Style.ItemPadding.Right;
-		TVTest::Theme::Draw(hdcDst,rc,m_Theme.ItemStyle.Fore,m_SingleText.c_str(),
-							DT_LEFT | DT_SINGLELINE | DT_VCENTER | DT_NOPREFIX | DT_END_ELLIPSIS);
+		ThemeDraw.Draw(m_Theme.ItemStyle.Fore,rc,m_SingleText.c_str(),
+					   DT_LEFT | DT_SINGLELINE | DT_VCENTER | DT_NOPREFIX | DT_END_ELLIPSIS);
 	} else {
+		TVTest::Theme::CThemeDraw ItemThemeDraw(BeginThemeDraw(hdcDst));
 		const int Left=rc.left;
 		int Row=0;
 
@@ -1138,7 +1152,7 @@ void CStatusView::Draw(HDC hdc,const RECT *pPaintRect)
 					RECT rcItem=rc;
 					if (hdcDst!=hdc)
 						::OffsetRect(&rcItem,-rcItem.left,-rcItem.top);
-					TVTest::Theme::Draw(hdcDst,rcItem,Style.Back);
+					ItemThemeDraw.Draw(Style.Back,rcItem);
 					::SetTextColor(hdcDst,Style.Fore.Fill.GetSolidColor());
 					::SetBkColor(hdcDst,Style.Back.Fill.GetSolidColor());
 					RECT rcDraw=rcItem;
@@ -1157,8 +1171,7 @@ void CStatusView::Draw(HDC hdc,const RECT *pPaintRect)
 				if (rc.right<pPaintRect->right) {
 					rc.left=max(rc.right,pPaintRect->left);
 					rc.right=pPaintRect->right;
-					TVTest::Theme::Draw(hdc,rc,
-										Row==0?m_Theme.ItemStyle.Back.Fill:m_Theme.BottomItemStyle.Back.Fill);
+					ThemeDraw.Draw(Row==0?m_Theme.ItemStyle.Back.Fill:m_Theme.BottomItemStyle.Back.Fill,rc);
 				}
 				rc.right=Left;
 				rc.top=rc.bottom;
@@ -1169,12 +1182,11 @@ void CStatusView::Draw(HDC hdc,const RECT *pPaintRect)
 		if (rc.right<pPaintRect->right) {
 			rc.left=max(rc.right,pPaintRect->left);
 			rc.right=pPaintRect->right;
-			TVTest::Theme::Draw(hdc,rc,
-								Row==0?m_Theme.ItemStyle.Back.Fill:m_Theme.BottomItemStyle.Back.Fill);
+			ThemeDraw.Draw(Row==0?m_Theme.ItemStyle.Back.Fill:m_Theme.BottomItemStyle.Back.Fill,rc);
 		}
 	}
 
-	TVTest::Theme::Draw(hdc,rcClient,m_Theme.Border);
+	ThemeDraw.Draw(m_Theme.Border,rcClient);
 
 	::SetBkColor(hdcDst,crOldBkColor);
 	::SetTextColor(hdcDst,crOldTextColor);
@@ -1199,6 +1211,8 @@ void CStatusView::CalcLayout()
 
 	RECT rc;
 	GetClientRect(&rc);
+	TVTest::Theme::BorderStyle Border=m_Theme.Border;
+	ConvertBorderWidthsInPixels(&Border);
 	TVTest::Theme::SubtractBorderRect(m_Theme.Border,&rc);
 	const int MaxRowWidth=rc.right-rc.left;
 

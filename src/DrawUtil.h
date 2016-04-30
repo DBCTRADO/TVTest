@@ -182,18 +182,31 @@ private:
 class CMonoColorIconList
 {
 public:
+	struct ResourceInfo
+	{
+		LPCTSTR pszName;
+		int Width;
+		int Height;
+	};
+
 	CMonoColorIconList();
 	bool Load(HINSTANCE hinst,LPCTSTR pszName,int Width,int Height);
 	bool Load(HINSTANCE hinst,int ID,int Width,int Height) {
 		return Load(hinst,MAKEINTRESOURCE(ID),Width,Height);
 	}
+	bool Load(HINSTANCE hinst,int Width,int Height,
+			  const ResourceInfo *pResourceList,int NumResources);
 	bool Create(HBITMAP hbm,int Width,int Height);
+	bool Create(HBITMAP hbm,int OrigWidth,int OrigHeight,int Width,int Height);
 	void Destroy();
 	bool IsCreated() const;
 	bool Draw(HDC hdc,int DstX,int DstY,int DstWidth,int DstHeight,
 			  int IconIndex,COLORREF Color,BYTE Opacity=255);
 	int GetIconWidth() const { return m_IconWidth; }
 	int GetIconHeight() const { return m_IconHeight; }
+	HIMAGELIST CreateImageList(COLORREF Color);
+	HBITMAP ExtractBitmap(int Index,COLORREF Color);
+	HICON ExtractIcon(int Index,COLORREF Color);
 
 private:
 	CMonoColorBitmap m_Bitmap;

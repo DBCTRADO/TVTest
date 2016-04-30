@@ -102,8 +102,7 @@ private:
 	DrawUtil::CFont m_Font;
 	int m_FontHeight;
 	TitleBarTheme m_Theme;
-	DrawUtil::CMonoColorIconList m_ButtonIcons;
-	HBITMAP m_hbmIcons;
+	TVTest::Theme::IconList m_ButtonIcons;
 	CTooltip m_Tooltip;
 	TVTest::String m_Label;
 	HICON m_hIcon;

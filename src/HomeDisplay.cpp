@@ -42,7 +42,8 @@ public:
 // CHomeDisplay::CCategory
 	int GetHeight() const override { return m_Height; }
 	void LayOut(const CHomeDisplay::StyleInfo &Style,HDC hdc,const RECT &ContentRect) override;
-	void Draw(HDC hdc,const CHomeDisplay::StyleInfo &Style,const RECT &ContentRect,const RECT &PaintRect) const override;
+	void Draw(HDC hdc,const CHomeDisplay::StyleInfo &Style,const RECT &ContentRect,const RECT &PaintRect,
+			  TVTest::Theme::CThemeDraw &ThemeDraw) const override;
 	bool GetCurItemRect(RECT *pRect) const override;
 	bool SetFocus(bool fFocus) override;
 	bool IsFocused() const override { return m_HotItem>=0; }
@@ -130,7 +131,9 @@ void CChannelListCategoryBase::LayOut(const CHomeDisplay::StyleInfo &Style,HDC h
 }
 
 
-void CChannelListCategoryBase::Draw(HDC hdc,const CHomeDisplay::StyleInfo &Style,const RECT &ContentRect,const RECT &PaintRect) const
+void CChannelListCategoryBase::Draw(
+	HDC hdc,const CHomeDisplay::StyleInfo &Style,const RECT &ContentRect,const RECT &PaintRect,
+	TVTest::Theme::CThemeDraw &ThemeDraw) const
 {
 	for (size_t i=0;i<m_ItemList.size();i++) {
 		RECT rcItem,rc;
@@ -145,7 +148,7 @@ void CChannelListCategoryBase::Draw(HDC hdc,const CHomeDisplay::StyleInfo &Style
 		} else {
 			pItemStyle=&Style.ItemStyle[i%2];
 		}
-		TVTest::Theme::Draw(hdc,rcItem,pItemStyle->Back);
+		ThemeDraw.Draw(pItemStyle->Back,rcItem);
 		rc=rcItem;
 		rc.left+=Style.ItemMargins.Left;
 		rc.top+=Style.ItemMargins.Top;
@@ -158,7 +161,7 @@ void CChannelListCategoryBase::Draw(HDC hdc,const CHomeDisplay::StyleInfo &Style
 								 i==m_HotItem?255:224);
 			rc.top+=Style.FontHeight;
 		}
-		TVTest::Theme::Draw(hdc,rc,pItemStyle->Fore,pItem->GetName(),
+		ThemeDraw.Draw(pItemStyle->Fore,rc,pItem->GetName(),
 			DT_LEFT | DT_SINGLELINE | DT_VCENTER | DT_NOPREFIX | DT_END_ELLIPSIS);
 
 		rc.left=rc.right+8;
@@ -183,7 +186,7 @@ void CChannelListCategoryBase::Draw(HDC hdc,const CHomeDisplay::StyleInfo &Style
 						pEventInfo->m_EventName.c_str());
 				}
 				if (Length>0) {
-					TVTest::Theme::Draw(hdc,rc,pItemStyle->Fore,szText,
+					ThemeDraw.Draw(pItemStyle->Fore,rc,szText,
 						DT_LEFT | DT_SINGLELINE | DT_VCENTER | DT_NOPREFIX | DT_END_ELLIPSIS);
 				}
 			}
@@ -652,7 +655,8 @@ public:
 	int GetHeight() const override { return m_Height; }
 	bool Create() override;
 	void LayOut(const CHomeDisplay::StyleInfo &Style,HDC hdc,const RECT &ContentRect) override;
-	void Draw(HDC hdc,const CHomeDisplay::StyleInfo &Style,const RECT &ContentRect,const RECT &PaintRect) const override;
+	void Draw(HDC hdc,const CHomeDisplay::StyleInfo &Style,const RECT &ContentRect,const RECT &PaintRect,
+			  TVTest::Theme::CThemeDraw &ThemeDraw) const override;
 	bool GetCurItemRect(RECT *pRect) const override;
 	bool SetFocus(bool fFocus) override;
 	bool IsFocused() const override { return m_HotItem>=0; }
@@ -817,7 +821,9 @@ void CFeaturedEventsCategory::LayOut(const CHomeDisplay::StyleInfo &Style,HDC hd
 }
 
 
-void CFeaturedEventsCategory::Draw(HDC hdc,const CHomeDisplay::StyleInfo &Style,const RECT &ContentRect,const RECT &PaintRect) const
+void CFeaturedEventsCategory::Draw(
+	HDC hdc,const CHomeDisplay::StyleInfo &Style,const RECT &ContentRect,const RECT &PaintRect,
+	TVTest::Theme::CThemeDraw &ThemeDraw) const
 {
 	const CFeaturedEventsSettings &Settings=GetAppClass().FeaturedEvents.GetSettings();
 
@@ -862,7 +868,7 @@ void CFeaturedEventsCategory::Draw(HDC hdc,const CHomeDisplay::StyleInfo &Style,
 		} else {
 			pItemStyle=&Style.ItemStyle[i%2];
 		}
-		TVTest::Theme::Draw(hdc,rcItem,pItemStyle->Back);
+		ThemeDraw.Draw(pItemStyle->Back,rcItem);
 		::SetTextColor(hdc,pItemStyle->Fore.Fill.GetSolidColor());
 		rc=rcItem;
 		rc.left+=Style.ItemMargins.Left;
@@ -1996,10 +2002,12 @@ void CHomeDisplay::Draw(HDC hdc,const RECT &PaintRect)
 	if (m_CurCategory>=0)
 		pCategory=m_CategoryList[m_CurCategory];
 
+	TVTest::Theme::CThemeDraw ThemeDraw(BeginThemeDraw(hdc));
+
 	if (PaintRect.left<m_CategoriesAreaWidth) {
 		RECT rcCategories=rcClient;
 		rcCategories.right=m_CategoriesAreaWidth;
-		TVTest::Theme::Draw(hdc,rcCategories,m_HomeDisplayStyle.CategoriesBackStyle);
+		ThemeDraw.Draw(m_HomeDisplayStyle.CategoriesBackStyle,rcCategories);
 
 		RECT rcItem;
 		rcItem.left=rcCategories.left+m_Style.CategoriesMargin.Left;
@@ -2014,14 +2022,14 @@ void CHomeDisplay::Draw(HDC hdc,const RECT &PaintRect)
 					(&m_HomeDisplayStyle.CategoryItemStyle);
 
 			rcItem.bottom=rcItem.top+m_CategoryItemHeight;
-			TVTest::Theme::Draw(hdc,rcItem,pStyle->Back);
+			ThemeDraw.Draw(pStyle->Back,rcItem);
 			RECT rc=rcItem;
 			TVTest::Style::Subtract(&rc,m_HomeDisplayStyle.CategoryItemMargins);
 			::ImageList_Draw(m_himlIcons,pCategory->GetIconIndex(),
 							 hdc,rc.left,rc.top+((rc.bottom-rc.top)-CATEGORY_ICON_HEIGHT)/2,ILD_TRANSPARENT);
 			rc.left+=CATEGORY_ICON_WIDTH+m_HomeDisplayStyle.CategoryIconMargin;
-			TVTest::Theme::Draw(hdc,rc,pStyle->Fore,pCategory->GetTitle(),
-								DT_NOPREFIX | DT_SINGLELINE | DT_VCENTER);
+			ThemeDraw.Draw(pStyle->Fore,rc,pCategory->GetTitle(),
+						   DT_NOPREFIX | DT_SINGLELINE | DT_VCENTER);
 			rcItem.top=rcItem.bottom;
 		}
 	}
@@ -2029,7 +2037,7 @@ void CHomeDisplay::Draw(HDC hdc,const RECT &PaintRect)
 	if (PaintRect.right>m_CategoriesAreaWidth) {
 		RECT rcContent=rcClient;
 		rcContent.left=m_CategoriesAreaWidth;
-		TVTest::Theme::Draw(hdc,rcContent,m_HomeDisplayStyle.ContentBackStyle);
+		ThemeDraw.Draw(m_HomeDisplayStyle.ContentBackStyle,rcContent);
 
 		if (pCategory!=NULL) {
 			TVTest::Style::Subtract(&rcContent,m_Style.ContentMargin);
@@ -2038,7 +2046,7 @@ void CHomeDisplay::Draw(HDC hdc,const RECT &PaintRect)
 				::SelectClipRgn(hdc,hrgn);
 
 				::OffsetRect(&rcContent,0,-m_ScrollPos);
-				pCategory->Draw(hdc,m_HomeDisplayStyle,rcContent,PaintRect);
+				pCategory->Draw(hdc,m_HomeDisplayStyle,rcContent,PaintRect,ThemeDraw);
 
 				::SelectClipRgn(hdc,NULL);
 				::DeleteObject(hrgn);

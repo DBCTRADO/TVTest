@@ -163,10 +163,11 @@ void CColorPalette::DrawSelRect(HDC hdc,int Sel,bool fSel)
 	HBRUSH hbrOld;
 	RECT rc;
 
-	hpen=CreatePen(PS_SOLID,1,GetSysColor(fSel?COLOR_HIGHLIGHT:COLOR_3DFACE));
+	hpen=CreatePen(PS_INSIDEFRAME,2,GetSysColor(fSel?COLOR_HIGHLIGHT:COLOR_3DFACE));
 	hpenOld=SelectPen(hdc,hpen);
 	hbrOld=SelectBrush(hdc,GetStockObject(NULL_BRUSH));
 	GetItemRect(Sel,&rc);
+	InflateRect(&rc,1,1);
 	Rectangle(hdc,rc.left,rc.top,rc.right,rc.bottom);
 	SelectPen(hdc,hpenOld);
 	SelectBrush(hdc,hbrOld);

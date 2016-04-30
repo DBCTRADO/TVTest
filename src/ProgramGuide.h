@@ -476,7 +476,7 @@ private:
 	} m_DragInfo;
 	CMouseWheelHandler m_VertWheel;
 	CMouseWheelHandler m_HorzWheel;
-	DrawUtil::CMonoColorIconList m_Chevron;
+	TVTest::Theme::IconList m_Chevron;
 	CEpgIcons m_EpgIcons;
 	UINT m_VisibleEventIcons;
 	bool m_fBarShadow;
@@ -587,21 +587,21 @@ private:
 	};
 	unsigned int GetEventItemStatus(const ProgramGuide::CEventItem *pItem,unsigned int Mask) const;
 	void DrawEventBackground(
-		ProgramGuide::CEventItem *pItem,
-		HDC hdc,const RECT &Rect,TVTest::CTextDraw &TextDraw,int LineHeight,int CurTimePos);
+		ProgramGuide::CEventItem *pItem,HDC hdc,const RECT &Rect,
+		TVTest::Theme::CThemeDraw &ThemeDraw,TVTest::CTextDraw &TextDraw,int LineHeight,int CurTimePos);
 	void DrawEventText(
-		ProgramGuide::CEventItem *pItem,
-		HDC hdc,const RECT &Rect,TVTest::CTextDraw &TextDraw,int LineHeight);
+		ProgramGuide::CEventItem *pItem,HDC hdc,const RECT &Rect,
+		TVTest::Theme::CThemeDraw &ThemeDraw,TVTest::CTextDraw &TextDraw,int LineHeight);
 	void DrawEventList(
 		ProgramGuide::CEventLayout *pLayout,
 		HDC hdc,const RECT &Rect,const RECT &PaintRect,
-		TVTest::CTextDraw &TextDraw,bool fBackground);
-	void DrawHeaderBackground(HDC hdc,const RECT &Rect,bool fCur) const;
+		TVTest::Theme::CThemeDraw &ThemeDraw,TVTest::CTextDraw &TextDraw,bool fBackground);
+	void DrawHeaderBackground(TVTest::Theme::CThemeDraw &ThemeDraw,const RECT &Rect,bool fCur) const;
 	void DrawServiceHeader(ProgramGuide::CServiceInfo *pServiceInfo,
-						   HDC hdc,const RECT &Rect,int Chevron,
-						   bool fLeftAlign=false);
-	void DrawDayHeader(int Day,HDC hdc,const RECT &Rect) const;
-	void DrawTimeBar(HDC hdc,const RECT &Rect,bool fRight);
+						   HDC hdc,const RECT &Rect,TVTest::Theme::CThemeDraw &ThemeDraw,
+						   int Chevron,bool fLeftAlign=false);
+	void DrawDayHeader(int Day,HDC hdc,const RECT &Rect,TVTest::Theme::CThemeDraw &ThemeDraw) const;
+	void DrawTimeBar(HDC hdc,const RECT &Rect,TVTest::Theme::CThemeDraw &ThemeDraw,bool fRight);
 	void Draw(HDC hdc,const RECT &PaintRect);
 	void DrawMessage(HDC hdc,const RECT &ClientRect) const;
 	bool CreateFonts();

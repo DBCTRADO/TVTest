@@ -1350,12 +1350,65 @@ bool CMonoColorIconList::Load(HINSTANCE hinst,LPCTSTR pszName,int Width,int Heig
 	return true;
 }
 
+bool CMonoColorIconList::Load(HINSTANCE hinst,int Width,int Height,
+							  const ResourceInfo *pResourceList,int NumResources)
+{
+	int i;
+	for (i=0;i<NumResources-1;i++) {
+		if (pResourceList[i].Width>=Width && pResourceList[i].Height>=Height)
+			break;
+	}
+	return Load(hinst,pResourceList[i].pszName,pResourceList[i].Width,pResourceList[i].Height);
+}
+
 bool CMonoColorIconList::Create(HBITMAP hbm,int Width,int Height)
 {
 	if (!m_Bitmap.Create(hbm))
 		return false;
 	m_IconWidth=Width;
 	m_IconHeight=Height;
+	return true;
+}
+
+bool CMonoColorIconList::Create(HBITMAP hbm,int OrigWidth,int OrigHeight,int Width,int Height)
+{
+	BITMAP bm;
+
+	if (::GetObject(hbm,sizeof(BITMAP),&bm)!=sizeof(BITMAP)
+			|| bm.bmWidth<OrigWidth || bm.bmHeight<OrigHeight)
+		return false;
+
+	if (Width==OrigWidth && Height==OrigHeight) {
+		if (!m_Bitmap.Create(hbm))
+			return false;
+	} else {
+		const int IconCount=bm.bmWidth/OrigWidth;
+		HBITMAP hbmStretched=DrawUtil::CreateDIB(Width*IconCount,Height,24);
+		if (hbmStretched==NULL)
+			return false;
+		HDC hdcSrc=::CreateCompatibleDC(NULL);
+		HDC hdcDst=::CreateCompatibleDC(NULL);
+		HBITMAP hbmSrcOld=SelectBitmap(hdcSrc,hbm);
+		HBITMAP hbmDstOld=SelectBitmap(hdcDst,hbmStretched);
+		int OldStretchMode=::SetStretchBltMode(hdcDst,STRETCH_HALFTONE);
+		for (int i=0;i<IconCount;i++) {
+			::StretchBlt(hdcDst,Width*i,0,Width,Height,
+						 hdcSrc,OrigWidth*i,0,OrigWidth,OrigHeight,SRCCOPY);
+		}
+		::SetStretchBltMode(hdcDst,OldStretchMode);
+		::SelectObject(hdcSrc,hbmSrcOld);
+		::SelectObject(hdcDst,hbmDstOld);
+		::DeleteDC(hdcSrc);
+		::DeleteDC(hdcDst);
+		bool fResult=m_Bitmap.Create(hbmStretched);
+		::DeleteObject(hbmStretched);
+		if (!fResult)
+			return false;
+	}
+
+	m_IconWidth=Width;
+	m_IconHeight=Height;
+
 	return true;
 }
 
@@ -1399,6 +1452,21 @@ bool CMonoColorIconList::Draw(
 	return m_Bitmap.Draw(hdc,DstX,DstY,DstWidth,DstHeight,
 						 IconIndex*m_IconWidth,0,m_IconWidth,m_IconHeight,
 						 Color,Opacity);
+}
+
+HIMAGELIST CMonoColorIconList::CreateImageList(COLORREF Color)
+{
+	return m_Bitmap.CreateImageList(m_IconWidth,Color);
+}
+
+HBITMAP CMonoColorIconList::ExtractBitmap(int Index,COLORREF Color)
+{
+	return m_Bitmap.ExtractBitmap(Index*m_IconWidth,0,m_IconWidth,m_IconHeight,Color);
+}
+
+HICON CMonoColorIconList::ExtractIcon(int Index,COLORREF Color)
+{
+	return m_Bitmap.ExtractIcon(Index*m_IconWidth,0,m_IconWidth,m_IconHeight,Color);
 }
 
 

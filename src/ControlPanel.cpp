@@ -232,6 +232,12 @@ const TVTest::Style::Margins &CControlPanel::GetItemPadding() const
 }
 
 
+const TVTest::Style::Size &CControlPanel::GetIconSize() const
+{
+	return m_Style.IconSize;
+}
+
+
 bool CControlPanel::CalcTextSize(LPCTSTR pszText,SIZE *pSize)
 {
 	pSize->cx=0;
@@ -312,6 +318,8 @@ void CControlPanel::Draw(HDC hdc,const RECT &PaintRect)
 	::SetRect(&rcOffscreen,0,0,Width,MaxHeight);
 	::SetRect(&rcDest,m_Style.Padding.Left,-1,m_Style.Padding.Left+Width,0);
 
+	TVTest::Theme::CThemeDraw ThemeDraw(BeginThemeDraw(hdcOffscreen));
+
 	for (int i=0;i<(int)m_ItemList.size();i++) {
 		CControlPanelItem *pItem=m_ItemList[i];
 
@@ -334,7 +342,7 @@ void CControlPanel::Draw(HDC hdc,const RECT &PaintRect)
 			if (i==m_HotItem) {
 				crText=m_Theme.OverItemStyle.Fore.Fill.GetSolidColor();
 				crBack=m_Theme.OverItemStyle.Back.Fill.GetSolidColor();
-				TVTest::Theme::Draw(hdcOffscreen,rc,m_Theme.OverItemStyle.Back);
+				ThemeDraw.Draw(m_Theme.OverItemStyle.Back,rc);
 			} else {
 				TVTest::Theme::Style Style=
 					pItem->GetCheck()?m_Theme.CheckedItemStyle:m_Theme.ItemStyle;
@@ -343,7 +351,7 @@ void CControlPanel::Draw(HDC hdc,const RECT &PaintRect)
 				crBack=Style.Back.Fill.GetSolidColor();
 				if (!pItem->GetEnable())
 					crText=MixColor(crText,crBack);
-				TVTest::Theme::Draw(hdcOffscreen,rc,Style.Back);
+				ThemeDraw.Draw(Style.Back,rc);
 			}
 			::SetTextColor(hdcOffscreen,crText);
 			::SetBkColor(hdcOffscreen,crBack);
@@ -544,6 +552,7 @@ CControlPanel::ControlPanelStyle::ControlPanelStyle()
 	: Padding(2)
 	, ItemPadding(4,2,4,2)
 	, TextExtraHeight(4)
+	, IconSize(16,16)
 {
 }
 
@@ -553,6 +562,7 @@ void CControlPanel::ControlPanelStyle::SetStyle(const TVTest::Style::CStyleManag
 	pStyleManager->Get(TEXT("control-panel.padding"),&Padding);
 	pStyleManager->Get(TEXT("control-panel.item.padding"),&ItemPadding);
 	pStyleManager->Get(TEXT("control-panel.item.text.extra-height"),&TextExtraHeight);
+	pStyleManager->Get(TEXT("control-panel.item.icon"),&IconSize);
 }
 
 
@@ -561,6 +571,7 @@ void CControlPanel::ControlPanelStyle::NormalizeStyle(const TVTest::Style::CStyl
 	pStyleManager->ToPixels(&Padding);
 	pStyleManager->ToPixels(&ItemPadding);
 	pStyleManager->ToPixels(&TextExtraHeight);
+	pStyleManager->ToPixels(&IconSize);
 }
 
 

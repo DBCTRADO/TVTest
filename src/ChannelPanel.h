@@ -175,7 +175,7 @@ private:
 	bool m_fShowProgressBar;
 	ProgressBarStyle m_ProgressBarStyle;
 	DrawUtil::COffscreen m_Offscreen;
-	DrawUtil::CMonoColorIconList m_Chevron;
+	TVTest::Theme::IconList m_Chevron;
 	int m_EventsPerChannel;
 	int m_ExpandAdditionalEvents;
 	int m_ExpandEvents;

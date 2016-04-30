@@ -330,7 +330,9 @@ void CViewWindow::ShowCursor(bool fShow)
 
 bool CViewWindow::CalcClientRect(RECT *pRect) const
 {
-	if (!TVTest::Theme::SubtractBorderRect(m_BorderStyle,pRect))
+	TVTest::Theme::BorderStyle Border=m_BorderStyle;
+	ConvertBorderWidthsInPixels(&Border);
+	if (!TVTest::Theme::SubtractBorderRect(Border,pRect))
 		return false;
 	TVTest::Style::Subtract(pRect,m_Margin);
 	return true;
@@ -339,6 +341,8 @@ bool CViewWindow::CalcClientRect(RECT *pRect) const
 
 bool CViewWindow::CalcWindowRect(RECT *pRect) const
 {
+	TVTest::Theme::BorderStyle Border=m_BorderStyle;
+	ConvertBorderWidthsInPixels(&Border);
 	if (!TVTest::Theme::AddBorderRect(m_BorderStyle,pRect))
 		return false;
 	TVTest::Style::Add(pRect,m_Margin);
@@ -349,6 +353,10 @@ bool CViewWindow::CalcWindowRect(RECT *pRect) const
 LRESULT CViewWindow::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 {
 	switch (uMsg) {
+	case WM_CREATE:
+		InitializeUI();
+		return 0;
+
 	case WM_SIZE:
 		{
 			const int Width=LOWORD(lParam),Height=HIWORD(lParam);
@@ -390,7 +398,10 @@ LRESULT CViewWindow::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 			} else {
 				::FillRect(ps.hdc,&ps.rcPaint,hbr);
 			}
-			TVTest::Theme::Draw(ps.hdc,rcClient,m_BorderStyle);
+			{
+				TVTest::Theme::CThemeDraw ThemeDraw(BeginThemeDraw(ps.hdc));
+				ThemeDraw.Draw(m_BorderStyle,rcClient);
+			}
 			::EndPaint(hwnd,&ps);
 		}
 		return 0;

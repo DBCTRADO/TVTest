@@ -490,6 +490,8 @@ LRESULT CCaptureWindow::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lPara
 {
 	switch (uMsg) {
 	case WM_CREATE:
+		InitializeUI();
+
 		m_Preview.Create(hwnd,WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS,WS_EX_CLIENTEDGE);
 		m_Preview.SetEventHandler(&m_PreviewEventHandler);
 		m_Status.Create(hwnd,
@@ -498,9 +500,16 @@ LRESULT CCaptureWindow::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lPara
 		//m_Status.SetEventHandler(pThis);
 		if (m_Status.NumItems()==0) {
 			if (!m_StatusIcons.IsCreated()) {
-				m_StatusIcons.Load(GetAppClass().GetResourceInstance(),IDB_CAPTURE,16,16);
+				static const TVTest::Theme::IconList::ResourceInfo ResourceList[] = {
+					{MAKEINTRESOURCE(IDB_CAPTURE16),16,16},
+					{MAKEINTRESOURCE(IDB_CAPTURE32),32,32},
+				};
+				TVTest::Style::Size IconSize=m_Status.GetIconSize();
+				m_StatusIcons.Load(GetAppClass().GetResourceInstance(),
+								   IconSize.Width,IconSize.Height,
+								   ResourceList,lengthof(ResourceList));
 			}
-			m_Status.AddItem(new CCaptureStatusItem(m_StatusIcons));
+			m_Status.AddItem(new CCaptureStatusItem(this,m_StatusIcons));
 			//m_Status.AddItem(new CContinuousStatusItem(m_StatusIcons));
 			m_Status.AddItem(new CSaveStatusItem(this,m_StatusIcons));
 			m_Status.AddItem(new CCopyStatusItem(this,m_StatusIcons));
@@ -601,8 +610,10 @@ bool CCaptureWindow::CPreviewEventHandler::OnKeyDown(UINT KeyCode,UINT Flags)
 
 
 
-CCaptureWindow::CCaptureStatusItem::CCaptureStatusItem(DrawUtil::CMonoColorIconList &Icons)
-	: CIconStatusItem(STATUS_ITEM_CAPTURE,16)
+CCaptureWindow::CCaptureStatusItem::CCaptureStatusItem(
+	CCaptureWindow *pCaptureWindow,TVTest::Theme::IconList &Icons)
+	: CIconStatusItem(STATUS_ITEM_CAPTURE,pCaptureWindow->m_Status.GetIconSize().Width)
+	, m_pCaptureWindow(pCaptureWindow)
 	, m_Icons(Icons)
 {
 }
@@ -630,9 +641,9 @@ void CCaptureWindow::CCaptureStatusItem::OnRButtonDown(int x,int y)
 }
 
 
-CCaptureWindow::CSaveStatusItem::CSaveStatusItem(CCaptureWindow *pCaptureWindow,
-												 DrawUtil::CMonoColorIconList &Icons)
-	: CIconStatusItem(STATUS_ITEM_SAVE,16)
+CCaptureWindow::CSaveStatusItem::CSaveStatusItem(
+	CCaptureWindow *pCaptureWindow,TVTest::Theme::IconList &Icons)
+	: CIconStatusItem(STATUS_ITEM_SAVE,pCaptureWindow->m_Status.GetIconSize().Width)
 	, m_pCaptureWindow(pCaptureWindow)
 	, m_Icons(Icons)
 {
@@ -649,9 +660,9 @@ void CCaptureWindow::CSaveStatusItem::OnLButtonDown(int x,int y)
 }
 
 
-CCaptureWindow::CCopyStatusItem::CCopyStatusItem(CCaptureWindow *pCaptureWindow,
-												 DrawUtil::CMonoColorIconList &Icons)
-	: CIconStatusItem(STATUS_ITEM_COPY,16)
+CCaptureWindow::CCopyStatusItem::CCopyStatusItem(
+	CCaptureWindow *pCaptureWindow,TVTest::Theme::IconList &Icons)
+	: CIconStatusItem(STATUS_ITEM_COPY,pCaptureWindow->m_Status.GetIconSize().Width)
 	, m_pCaptureWindow(pCaptureWindow)
 	, m_Icons(Icons)
 {

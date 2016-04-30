@@ -1710,21 +1710,20 @@ bool CMainWindow::OnCreate(const CREATESTRUCT *pcs)
 	::InsertMenu(hSysMenu,1,MF_BYPOSITION | MF_SEPARATOR,0,nullptr);
 
 	static const CIconMenu::ItemInfo AspectRatioMenuItems[] = {
-		{CM_ASPECTRATIO_DEFAULT,	0},
-		{CM_ASPECTRATIO_16x9,		1},
-		{CM_ASPECTRATIO_LETTERBOX,	2},
-		{CM_ASPECTRATIO_SUPERFRAME,	3},
-		{CM_ASPECTRATIO_SIDECUT,	4},
-		{CM_ASPECTRATIO_4x3,		5},
-		{CM_ASPECTRATIO_32x9,		6},
-		{CM_ASPECTRATIO_16x9_LEFT,	7},
-		{CM_ASPECTRATIO_16x9_RIGHT,	8},
-		{CM_FRAMECUT,				9},
-		{CM_PANANDSCANOPTIONS,		10},
+		{CM_ASPECTRATIO_DEFAULT,	MAKEINTRESOURCE(IDI_PANSCAN_AUTO)},
+		{CM_ASPECTRATIO_16x9,		MAKEINTRESOURCE(IDI_PANSCAN_16x9)},
+		{CM_ASPECTRATIO_LETTERBOX,	MAKEINTRESOURCE(IDI_PANSCAN_LETTERBOX)},
+		{CM_ASPECTRATIO_SUPERFRAME,	MAKEINTRESOURCE(IDI_PANSCAN_WINDOWBOX)},
+		{CM_ASPECTRATIO_SIDECUT,	MAKEINTRESOURCE(IDI_PANSCAN_4x3_SIDECUT)},
+		{CM_ASPECTRATIO_4x3,		MAKEINTRESOURCE(IDI_PANSCAN_4x3)},
+		{CM_ASPECTRATIO_32x9,		MAKEINTRESOURCE(IDI_PANSCAN_32x9)},
+		{CM_ASPECTRATIO_16x9_LEFT,	MAKEINTRESOURCE(IDI_PANSCAN_16x9_LEFT)},
+		{CM_ASPECTRATIO_16x9_RIGHT,	MAKEINTRESOURCE(IDI_PANSCAN_16x9_RIGHT)},
+		{CM_FRAMECUT,				MAKEINTRESOURCE(IDI_PANSCAN_TOUCHOUTSIDE)},
+		{CM_PANANDSCANOPTIONS,		MAKEINTRESOURCE(IDI_PANSCAN_OPTIONS)},
 	};
 	HMENU hmenuAspectRatio=m_App.MainMenu.GetSubMenu(CMainMenu::SUBMENU_ASPECTRATIO);
-	m_App.AspectRatioIconMenu.Initialize(hmenuAspectRatio,
-										 m_App.GetInstance(),MAKEINTRESOURCE(IDB_PANSCAN),16,
+	m_App.AspectRatioIconMenu.Initialize(hmenuAspectRatio,m_App.GetInstance(),
 										 AspectRatioMenuItems,lengthof(AspectRatioMenuItems));
 	if (m_AspectRatioType<ASPECTRATIO_CUSTOM) {
 		m_pCore->SetCommandRadioCheckedState(
@@ -5600,17 +5599,20 @@ void CMainWindow::ShowFloatingWindows(bool fShow,bool fNoProgramGuide)
 
 void CMainWindow::DrawCustomFrame(bool fActive)
 {
-	const TVTest::Theme::BackgroundStyle &Style=
-		fActive?m_Theme.ActiveFrameStyle:m_Theme.FrameStyle;
 	HDC hdc=::GetWindowDC(m_hwnd);
-	RECT rc,rcEmpty;
+	{
+		TVTest::Theme::CThemeDraw ThemeDraw(BeginThemeDraw(hdc));
+		const TVTest::Theme::BackgroundStyle &Style=
+			fActive?m_Theme.ActiveFrameStyle:m_Theme.FrameStyle;
+		RECT rc,rcEmpty;
 
-	::GetWindowRect(m_hwnd,&rc);
-	::OffsetRect(&rc,-rc.left,-rc.top);
-	rcEmpty=rc;
-	::InflateRect(&rcEmpty,-m_CustomFrameWidth,-m_CustomFrameWidth);
-	TVTest::Theme::Draw(hdc,&rc,Style.Border);
-	DrawUtil::FillBorder(hdc,&rc,&rcEmpty,&rc,Style.Fill.GetSolidColor());
+		::GetWindowRect(m_hwnd,&rc);
+		::OffsetRect(&rc,-rc.left,-rc.top);
+		rcEmpty=rc;
+		::InflateRect(&rcEmpty,-m_CustomFrameWidth,-m_CustomFrameWidth);
+		ThemeDraw.Draw(Style.Border,&rc);
+		DrawUtil::FillBorder(hdc,&rc,&rcEmpty,&rc,Style.Fill.GetSolidColor());
+	}
 	::ReleaseDC(m_hwnd,hdc);
 }
 

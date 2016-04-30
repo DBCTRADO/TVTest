@@ -159,7 +159,9 @@ private:
 	LRESULT OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
 };
 
-class CViewWindow : public CCustomWindow
+class CViewWindow
+	: public CCustomWindow
+	, public TVTest::CUIBase
 {
 public:
 	class ABSTRACT_CLASS(CEventHandler) {

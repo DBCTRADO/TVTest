@@ -5,6 +5,7 @@
 #include "DialogUtil.h"
 #include "EpgUtil.h"
 #include "EventInfoUtil.h"
+#include "GUIUtil.h"
 #include "resource.h"
 #include "Common/DebugDef.h"
 
@@ -1978,9 +1979,7 @@ INT_PTR CProgramSearchDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM l
 			::SendDlgItemMessage(hDlg,IDC_PROGRAMSEARCH_INFO,EM_SETEVENTMASK,0,ENM_MOUSEEVENTS | ENM_LINK);
 		}
 
-		::SendMessage(hDlg,WM_SETICON,ICON_SMALL,
-			reinterpret_cast<LPARAM>(::LoadImage(
-				GetAppClass().GetResourceInstance(),MAKEINTRESOURCE(IDI_SEARCH),IMAGE_ICON,0,0,LR_SHARED)));
+		TVTest::SetWindowIcon(hDlg,GetAppClass().GetResourceInstance(),MAKEINTRESOURCE(IDI_SEARCH));
 
 		ApplyPosition();
 

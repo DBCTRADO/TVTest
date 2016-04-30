@@ -132,7 +132,7 @@ namespace TVTest
 		SYSTEMTIME m_BaseTime;
 		std::vector<CMenuItem*> m_ItemList;
 		HIMAGELIST m_himlIcons;
-		DrawUtil::CBitmap m_LogoFrameImage;
+		CChannelMenuLogo m_Logo;
 
 		void SetFolderMenu(HMENU hmenu,int MenuPos,HDC hdc,UINT *pCommand,const CFavoriteFolder *pFolder);
 		int GetEventText(const CEventInfoData *pEventInfo,

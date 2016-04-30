@@ -50,6 +50,7 @@ public:
 	void SetSendMessageWindow(HWND hwnd);
 	bool CheckRadioItem(int FirstID,int LastID,int CheckID);
 	const TVTest::Style::Margins &GetItemPadding() const;
+	const TVTest::Style::Size &GetIconSize() const;
 
 	friend CControlPanelItem;
 
@@ -59,6 +60,7 @@ private:
 		TVTest::Style::Margins Padding;
 		TVTest::Style::Margins ItemPadding;
 		TVTest::Style::IntValue TextExtraHeight;
+		TVTest::Style::Size IconSize;
 
 		ControlPanelStyle();
 		void SetStyle(const TVTest::Style::CStyleManager *pStyleManager);

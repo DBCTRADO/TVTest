@@ -1174,8 +1174,11 @@ LRESULT CProgramListPanel::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lP
 void CProgramListPanel::Draw(HDC hdc,const RECT *prcPaint)
 {
 	RECT rc,rcMargin;
-	TVTest::CTextDraw DrawText;
 	GetClientRect(&rc);
+
+	TVTest::Theme::CThemeDraw ThemeDraw(BeginThemeDraw(hdc));
+
+	TVTest::CTextDraw DrawText;
 	DrawText.Begin(hdc,rc,TVTest::CTextDraw::FLAG_JAPANESE_HYPHNATION);
 
 	const int LineHeight=m_FontHeight+m_Style.LineSpacing;
@@ -1195,7 +1198,7 @@ void CProgramListPanel::Draw(HDC hdc,const RECT *prcPaint)
 		const TVTest::Theme::Style &ChannelStyle=
 			fCurChannel?m_Theme.CurChannelNameStyle:m_Theme.ChannelNameStyle;
 
-		TVTest::Theme::Draw(hdc,rc,ChannelStyle.Back);
+		ThemeDraw.Draw(ChannelStyle.Back,rc);
 
 		if (!IsStringEmpty(m_SelectedChannel.GetName())) {
 			TVTest::Style::Subtract(&rc,m_Style.ChannelPadding);
@@ -1219,8 +1222,8 @@ void CProgramListPanel::Draw(HDC hdc,const RECT *prcPaint)
 				m_Style.ChannelButtonPadding.Horz();
 			TVTest::Style::Subtract(&rc,m_Style.ChannelNameMargin);
 			DrawUtil::SelectObject(hdc,m_TitleFont);
-			TVTest::Theme::Draw(hdc,rc,ChannelStyle.Fore,m_SelectedChannel.GetName(),
-								DT_LEFT | DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX | DT_END_ELLIPSIS);
+			ThemeDraw.Draw(ChannelStyle.Fore,rc,m_SelectedChannel.GetName(),
+						   DT_LEFT | DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX | DT_END_ELLIPSIS);
 		}
 
 		GetChannelButtonRect(&rc);
@@ -1229,11 +1232,11 @@ void CProgramListPanel::Draw(HDC hdc,const RECT *prcPaint)
 				m_Theme.ChannelButtonHotStyle:m_Theme.ChannelButtonStyle;
 		if (ButtonStyle.Back.Border.Type!=TVTest::Theme::BORDER_NONE
 				|| ButtonStyle.Back.Fill!=ChannelStyle.Back.Fill)
-			TVTest::Theme::Draw(hdc,rc,ButtonStyle.Back);
+			ThemeDraw.Draw(ButtonStyle.Back,rc);
 		TVTest::Style::Subtract(&rc,m_Style.ChannelButtonPadding);
 		DrawUtil::SelectObject(hdc,m_IconFont);
-		TVTest::Theme::Draw(hdc,rc,ButtonStyle.Fore,TEXT("6"),
-							DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+		ThemeDraw.Draw(ButtonStyle.Fore,rc,TEXT("6"),
+					   DT_CENTER | DT_VCENTER | DT_SINGLELINE);
 	}
 
 	HBRUSH hbr=::CreateSolidBrush(m_Theme.MarginColor);
@@ -1270,7 +1273,7 @@ void CProgramListPanel::Draw(HDC hdc,const RECT *prcPaint)
 					unsigned int Flags=CEpgTheme::DRAW_CONTENT_BACKGROUND_SEPARATOR;
 					if (fCur)
 						Flags|=CEpgTheme::DRAW_CONTENT_BACKGROUND_CURRENT;
-					m_EpgTheme.DrawContentBackground(hdc,rcContent,pItem->GetEventInfo(),Flags);
+					m_EpgTheme.DrawContentBackground(hdc,ThemeDraw,rcContent,pItem->GetEventInfo(),Flags);
 				}
 			}
 			if (rc.bottom>prcPaint->top) {
@@ -1281,7 +1284,7 @@ void CProgramListPanel::Draw(HDC hdc,const RECT *prcPaint)
 					const TVTest::Theme::Style &Style=
 						fCur?m_Theme.CurEventNameStyle:m_Theme.EventNameStyle;
 					::SetTextColor(hdc,Style.Fore.Fill.GetSolidColor());
-					TVTest::Theme::Draw(hdc,rc,Style.Back);
+					ThemeDraw.Draw(Style.Back,rc);
 				}
 
 				RECT rcTitle=rc;
@@ -1304,7 +1307,7 @@ void CProgramListPanel::Draw(HDC hdc,const RECT *prcPaint)
 						rcMark.right=rcMark.left+m_Style.FeaturedMarkSize.Width;
 						rcMark.bottom=rcMark.top+m_Style.FeaturedMarkSize.Height;
 					}
-					TVTest::Theme::Draw(hdc,rcMark,m_Theme.FeaturedMarkStyle);
+					ThemeDraw.Draw(m_Theme.FeaturedMarkStyle,rcMark);
 				}
 
 				pItem->DrawTitle(DrawText,rcTitle,LineHeight);
@@ -1320,7 +1323,7 @@ void CProgramListPanel::Draw(HDC hdc,const RECT *prcPaint)
 					const TVTest::Theme::Style &Style=
 						fCur?m_Theme.CurEventTextStyle:m_Theme.EventTextStyle;
 					::SetTextColor(hdc,Style.Fore.Fill.GetSolidColor());
-					TVTest::Theme::Draw(hdc,rc,Style.Back);
+					ThemeDraw.Draw(Style.Back,rc);
 				}
 				DrawUtil::SelectObject(hdc,m_Font);
 				rc.left=GetTextLeftMargin();

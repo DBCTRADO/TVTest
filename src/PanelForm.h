@@ -150,6 +150,7 @@ private:
 	TabStyle m_TabStyle;
 	int m_TabHeight;
 	int m_TabWidth;
+	int m_TabLineWidth;
 	bool m_fFitTabWidth;
 	int m_CurTab;
 	int m_PrevActivePageID;

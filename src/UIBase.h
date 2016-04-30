@@ -4,6 +4,7 @@
 
 #include "Style.h"
 #include "ThemeManager.h"
+#include "ThemeDraw.h"
 
 
 namespace TVTest
@@ -30,6 +31,14 @@ namespace TVTest
 		bool CreateDefaultFontAndBoldFont(DrawUtil::CFont *pDefaultFont,DrawUtil::CFont *pBoldFont) const;
 		HCURSOR GetActionCursor() const;
 		HCURSOR GetLinkCursor() const;
+		Theme::CThemeDraw BeginThemeDraw(HDC hdc) const {
+			Theme::CThemeDraw ThemeDraw(GetStyleManager());
+			ThemeDraw.Begin(hdc);
+			return ThemeDraw;
+		}
+		bool ConvertBorderWidthsInPixels(Theme::BorderStyle *pStyle) const;
+		bool GetBorderWidthsInPixels(const Theme::BorderStyle &Style,RECT *pWidths) const;
+		int GetHairlineWidth() const;
 
 	private:
 		static Style::Font m_DefaultFont;

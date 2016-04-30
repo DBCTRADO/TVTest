@@ -1,4 +1,5 @@
 #include "stdafx.h"
+#include "TVTest.h"
 #include "Theme.h"
 #include "DrawUtil.h"
 #include "Util.h"
@@ -110,7 +111,7 @@ bool Draw(HDC hdc,const RECT &Rect,const BackgroundStyle &Style)
 		Draw(hdc,&rc,Style.Border);
 	Draw(hdc,rc,Style.Fill);
 
-	return false;
+	return true;
 }
 
 
@@ -144,45 +145,6 @@ bool Draw(HDC hdc,const RECT &Rect,const ForegroundStyle &Style,LPCTSTR pszText,
 }
 
 
-bool Draw(HDC hdc,const RECT &Rect,BorderType Border)
-{
-	if (hdc==NULL)
-		return false;
-
-	RECT rc=Rect;
-
-	switch (Border) {
-	case BORDER_SOLID:
-		{
-			HPEN hpen,hpenOld;
-			HBRUSH hbrOld;
-
-			hpen=::CreatePen(PS_SOLID,1,::GetSysColor(COLOR_3DFACE));
-			hpenOld=static_cast<HPEN>(::SelectObject(hdc,hpen));
-			hbrOld=static_cast<HBRUSH>(::SelectObject(hdc,::GetStockObject(NULL_BRUSH)));
-			::Rectangle(hdc,rc.left,rc.top,rc.right,rc.bottom);
-			::SelectObject(hdc,hbrOld);
-			::SelectObject(hdc,hpenOld);
-			::DeleteObject(hpen);
-		}
-		break;
-
-	case BORDER_SUNKEN:
-		::DrawEdge(hdc,&rc,BDR_SUNKENINNER,BF_RECT);
-		break;
-
-	case BORDER_RAISED:
-		::DrawEdge(hdc,&rc,BDR_RAISEDOUTER,BF_RECT);
-		break;
-
-	default:
-		return false;
-	}
-
-	return true;
-}
-
-
 bool Draw(HDC hdc,const RECT &Rect,const BorderStyle &Style)
 {
 	RECT rc=Rect;
@@ -205,6 +167,16 @@ inline ThemeColor GetShadowColor(const ThemeColor &Color)
 	return MixColor(Color,ThemeColor(0,0,0),96+RGBIntensity(Color)/2);
 }
 
+inline void FillBorder(HDC hdc,const RECT &Area,int Left,int Top,int Right,int Bottom,const ThemeColor &Color)
+{
+	if (Area.left<Area.right && Area.top<Area.bottom) {
+		RECT rcBorder={Left,Top,Right,Bottom};
+		RECT rcDraw;
+		if (::IntersectRect(&rcDraw,&Area,&rcBorder))
+			DrawUtil::Fill(hdc,&rcDraw,Color);
+	}
+}
+
 bool Draw(HDC hdc,RECT *pRect,const BorderStyle &Style)
 {
 	if (hdc==NULL || pRect==NULL)
@@ -214,45 +186,86 @@ bool Draw(HDC hdc,RECT *pRect,const BorderStyle &Style)
 		return true;
 
 	RECT rc=*pRect;
-	HPEN hpenOld=static_cast<HPEN>(::SelectObject(hdc,::GetStockObject(DC_PEN)));
-	COLORREF OldDCPenColor=::GetDCPenColor(hdc);
-	HBRUSH hbrOld=static_cast<HBRUSH>(::SelectObject(hdc,::GetStockObject(NULL_BRUSH)));
 
-	switch (Style.Type) {
-	case BORDER_SOLID:
-		::SetDCPenColor(hdc,Style.Color);
-		::Rectangle(hdc,rc.left,rc.top,rc.right,rc.bottom);
-		break;
+	if (Style.Width.Left==1 && Style.Width.Top==1 && Style.Width.Right==1 && Style.Width.Bottom==1) {
+		HPEN hpenOld=static_cast<HPEN>(::SelectObject(hdc,::GetStockObject(DC_PEN)));
+		COLORREF OldDCPenColor=::GetDCPenColor(hdc);
+		HBRUSH hbrOld=static_cast<HBRUSH>(::SelectObject(hdc,::GetStockObject(NULL_BRUSH)));
 
-	case BORDER_SUNKEN:
-		::SetDCPenColor(hdc,GetHighlightColor(Style.Color));
-		::MoveToEx(hdc,rc.left+1,rc.bottom-1,NULL);
-		::LineTo(hdc,rc.right-1,rc.bottom-1);
-		::LineTo(hdc,rc.right-1,rc.top);
-		::SetDCPenColor(hdc,GetShadowColor(Style.Color));
-		::LineTo(hdc,rc.left,rc.top);
-		::LineTo(hdc,rc.left,rc.bottom);
-		break;
+		switch (Style.Type) {
+		case BORDER_SOLID:
+			::SetDCPenColor(hdc,Style.Color);
+			::Rectangle(hdc,rc.left,rc.top,rc.right,rc.bottom);
+			break;
 
-	case BORDER_RAISED:
-		::SetDCPenColor(hdc,GetHighlightColor(Style.Color));
-		::MoveToEx(hdc,rc.right-2,rc.top,NULL);
-		::LineTo(hdc,rc.left,rc.top);
-		::LineTo(hdc,rc.left,rc.bottom-1);
-		::SetDCPenColor(hdc,GetShadowColor(Style.Color));
-		::LineTo(hdc,rc.right-1,rc.bottom-1);
-		::LineTo(hdc,rc.right-1,rc.top-1);
-		break;
+		case BORDER_SUNKEN:
+			::SetDCPenColor(hdc,GetHighlightColor(Style.Color));
+			::MoveToEx(hdc,rc.left+1,rc.bottom-1,NULL);
+			::LineTo(hdc,rc.right-1,rc.bottom-1);
+			::LineTo(hdc,rc.right-1,rc.top);
+			::SetDCPenColor(hdc,GetShadowColor(Style.Color));
+			::LineTo(hdc,rc.left,rc.top);
+			::LineTo(hdc,rc.left,rc.bottom);
+			break;
 
-	default:
+		case BORDER_RAISED:
+			::SetDCPenColor(hdc,GetHighlightColor(Style.Color));
+			::MoveToEx(hdc,rc.right-2,rc.top,NULL);
+			::LineTo(hdc,rc.left,rc.top);
+			::LineTo(hdc,rc.left,rc.bottom-1);
+			::SetDCPenColor(hdc,GetShadowColor(Style.Color));
+			::LineTo(hdc,rc.right-1,rc.bottom-1);
+			::LineTo(hdc,rc.right-1,rc.top-1);
+			break;
+
+		default:
+			::SelectObject(hdc,hbrOld);
+			::SelectObject(hdc,hpenOld);
+			return false;
+		}
+
 		::SelectObject(hdc,hbrOld);
+		::SetDCPenColor(hdc,OldDCPenColor);
 		::SelectObject(hdc,hpenOld);
-		return false;
-	}
+	} else {
+		ThemeColor Color1,Color2;
 
-	::SelectObject(hdc,hbrOld);
-	::SetDCPenColor(hdc,OldDCPenColor);
-	::SelectObject(hdc,hpenOld);
+		switch (Style.Type) {
+		case BORDER_SOLID:
+			Color1=Style.Color;
+			Color2=Style.Color;
+			break;
+
+		case BORDER_SUNKEN:
+			Color1=GetShadowColor(Style.Color);
+			Color2=GetHighlightColor(Style.Color);
+			break;
+
+		case BORDER_RAISED:
+			Color1=GetHighlightColor(Style.Color);
+			Color2=GetShadowColor(Style.Color);
+			break;
+
+		default:
+			return false;
+		}
+
+		if (Style.Width.Top>0) {
+			FillBorder(hdc,rc,rc.left,rc.top,rc.right,rc.top+Style.Width.Top,Color1);
+			rc.top+=Style.Width.Top;
+		}
+		if (Style.Width.Bottom>0) {
+			FillBorder(hdc,rc,rc.left,rc.bottom-Style.Width.Bottom,rc.right,rc.bottom,Color2);
+			rc.bottom-=Style.Width.Bottom;
+		}
+		if (Style.Width.Left>0) {
+			FillBorder(hdc,rc,rc.left,rc.top,rc.left+Style.Width.Left,rc.bottom,Color1);
+			rc.left+=Style.Width.Left;
+		}
+		if (Style.Width.Right>0) {
+			FillBorder(hdc,rc,rc.right-Style.Width.Right,rc.top,rc.right,rc.bottom,Color2);
+		}
+	}
 
 	SubtractBorderRect(Style,pRect);
 
@@ -316,8 +329,12 @@ bool AddBorderRect(const BorderStyle &Style,RECT *pRect)
 {
 	if (pRect==NULL)
 		return false;
-	if (Style.Type!=BORDER_NONE)
-		::InflateRect(pRect,1,1);
+	if (Style.Type!=BORDER_NONE) {
+		pRect->left-=Style.Width.Left;
+		pRect->top-=Style.Width.Top;
+		pRect->right+=Style.Width.Right;
+		pRect->bottom+=Style.Width.Bottom;
+	}
 	return true;
 }
 
@@ -326,8 +343,12 @@ bool SubtractBorderRect(const BorderStyle &Style,RECT *pRect)
 {
 	if (pRect==NULL)
 		return false;
-	if (Style.Type!=BORDER_NONE)
-		::InflateRect(pRect,-1,-1);
+	if (Style.Type!=BORDER_NONE) {
+		pRect->left+=Style.Width.Left;
+		pRect->top+=Style.Width.Top;
+		pRect->right-=Style.Width.Right;
+		pRect->bottom-=Style.Width.Bottom;
+	}
 	return true;
 }
 
@@ -337,10 +358,10 @@ bool GetBorderWidths(const BorderStyle &Style,RECT *pRect)
 	if (pRect==NULL)
 		return false;
 	if (Style.Type!=BORDER_NONE) {
-		pRect->left=1;
-		pRect->top=1;
-		pRect->right=1;
-		pRect->bottom=1;
+		pRect->left=Style.Width.Left;
+		pRect->top=Style.Width.Top;
+		pRect->right=Style.Width.Right;
+		pRect->bottom=Style.Width.Bottom;
 	} else {
 		::SetRectEmpty(pRect);
 	}

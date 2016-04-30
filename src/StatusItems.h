@@ -93,7 +93,7 @@ public:
 	bool OnMouseWheel(int x,int y,bool fHorz,int Delta,int *pCommand) override;
 
 private:
-	DrawUtil::CMonoColorIconList m_Icons;
+	TVTest::Theme::IconList m_Icons;
 };
 
 class CRecordStatusItem : public CStatusItem
@@ -134,7 +134,7 @@ public:
 	void OnRButtonDown(int x,int y) override;
 
 private:
-	DrawUtil::CMonoColorIconList m_Icons;
+	TVTest::Theme::IconList m_Icons;
 };
 
 class CErrorStatusItem : public CStatusItem
@@ -291,7 +291,7 @@ public:
 	void OnRButtonDown(int x,int y) override;
 
 private:
-	DrawUtil::CMonoColorIconList m_Icons;
+	TVTest::Theme::IconList m_Icons;
 };
 
 

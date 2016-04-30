@@ -1119,16 +1119,88 @@ bool SaveIconFromBitmap(LPCTSTR pszFileName,HBITMAP hbm,
 }
 
 
-HICON CreateEmptyIcon(int Width,int Height)
+HICON CreateEmptyIcon(int Width,int Height,int BitsPerPixel)
 {
-	size_t Size=(Width+7)/8*Height;
-	BYTE *pAndBits=new BYTE[Size*2];
-	BYTE *pXorBits=pAndBits+Size;
-	::FillMemory(pAndBits,Size,0xFF);
-	::FillMemory(pXorBits,Size,0x00);
-	HICON hico=::CreateIcon(::GetModuleHandle(NULL),Width,Height,1,1,pAndBits,pXorBits);
-	delete [] pAndBits;
-	return hico;
+	if (Width<=0 || Height<=0)
+		return NULL;
+
+	ICONINFO ii={TRUE,0,0,NULL,NULL};
+	HICON hicon=NULL;
+
+	const int Planes=BitsPerPixel==1?2:1;
+	const size_t Size=(Width+15)/16*2*Height;
+	BYTE *pMaskBits=new BYTE[Size*Planes];
+	::FillMemory(pMaskBits,Size,0xFF);
+	if (BitsPerPixel==1)
+		::FillMemory(pMaskBits+Size,Size,0x00);
+	ii.hbmMask=::CreateBitmap(Width,Height*Planes,1,1,pMaskBits);
+	delete [] pMaskBits;
+
+	if (BitsPerPixel!=1) {
+		const DWORD HeaderSize=BitsPerPixel==32?sizeof(BITMAPV5HEADER):sizeof(BITMAPINFOHEADER);
+		size_t PaletteSize=0;
+		if (BitsPerPixel<=8)
+			PaletteSize=(size_t)(1<<BitsPerPixel)*sizeof(RGBQUAD);
+		BITMAPINFO *pbmi=(BITMAPINFO*)std::malloc(HeaderSize+PaletteSize);
+		if (pbmi!=NULL) {
+			::ZeroMemory(pbmi,HeaderSize+PaletteSize);
+			pbmi->bmiHeader.biSize=HeaderSize;
+			pbmi->bmiHeader.biWidth=Width;
+			pbmi->bmiHeader.biHeight=Height;
+			pbmi->bmiHeader.biPlanes=1;
+			pbmi->bmiHeader.biBitCount=BitsPerPixel;
+			if (BitsPerPixel==32) {
+				BITMAPV5HEADER *pbV5=(BITMAPV5HEADER*)&pbmi->bmiHeader;
+				pbV5->bV5Compression=BI_BITFIELDS;
+				pbV5->bV5RedMask  =0x00FF0000;
+				pbV5->bV5GreenMask=0x0000FF00;
+				pbV5->bV5BlueMask =0x000000FF;
+				pbV5->bV5AlphaMask=0xFF000000;
+			}
+			void *pBits;
+			ii.hbmColor=::CreateDIBSection(NULL,pbmi,DIB_RGB_COLORS,&pBits,NULL,0);
+			std::free(pbmi);
+			if (ii.hbmColor!=NULL)
+				::ZeroMemory(pBits,(Width*BitsPerPixel+31)/32*4*Height);
+		}
+	}
+
+	hicon=::CreateIconIndirect(&ii);
+
+	if (ii.hbmMask!=NULL)
+		::DeleteObject(ii.hbmMask);
+	if (ii.hbmColor!=NULL)
+		::DeleteObject(ii.hbmColor);
+
+	return hicon;
+}
+
+
+bool GetStandardIconSize(IconSizeType Size,int *pWidth,int *pHeight)
+{
+	int Width,Height;
+
+	switch (Size) {
+	case ICON_SIZE_SMALL:
+		Width=::GetSystemMetrics(SM_CXSMICON);
+		Height=::GetSystemMetrics(SM_CYSMICON);
+		break;
+
+	case ICON_SIZE_NORMAL:
+		Width=::GetSystemMetrics(SM_CXICON);
+		Height=::GetSystemMetrics(SM_CYICON);
+		break;
+
+	default:
+		return false;
+	}
+
+	if (pWidth!=NULL)
+		*pWidth=Width;
+	if (pHeight!=NULL)
+		*pHeight=Height;
+
+	return true;
 }
 
 
@@ -1157,16 +1229,7 @@ HICON LoadIconStandardSize(HINSTANCE hinst,LPCTSTR pszName,IconSizeType Size)
 
 	int Width,Height;
 
-	switch (Size) {
-	case ICON_SIZE_SMALL:
-		Width=::GetSystemMetrics(SM_CXSMICON);
-		Height=::GetSystemMetrics(SM_CYSMICON);
-		break;
-	case ICON_SIZE_NORMAL:
-		Width=::GetSystemMetrics(SM_CXICON);
-		Height=::GetSystemMetrics(SM_CYICON);
-		break;
-	}
+	GetStandardIconSize(Size,&Width,&Height);
 
 	return (HICON)::LoadImage(hinst,pszName,IMAGE_ICON,Width,Height,LR_DEFAULTCOLOR);
 }
@@ -1197,16 +1260,7 @@ HICON LoadSystemIcon(LPCTSTR pszName,IconSizeType Size)
 
 	int Width,Height;
 
-	switch (Size) {
-	case ICON_SIZE_SMALL:
-		Width=::GetSystemMetrics(SM_CXSMICON);
-		Height=::GetSystemMetrics(SM_CYSMICON);
-		break;
-	case ICON_SIZE_NORMAL:
-		Width=::GetSystemMetrics(SM_CXICON);
-		Height=::GetSystemMetrics(SM_CYICON);
-		break;
-	}
+	GetStandardIconSize(Size,&Width,&Height);
 
 	hico=::LoadIcon(NULL,pszName);
 	if (hico!=NULL)

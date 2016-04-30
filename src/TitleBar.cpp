@@ -120,7 +120,7 @@ int CTitleBar::CalcHeight() const
 	if (Height<ButtonHeight)
 		Height=ButtonHeight;
 	RECT Border;
-	TVTest::Theme::GetBorderWidths(m_Theme.Border,&Border);
+	GetBorderWidthsInPixels(m_Theme.Border,&Border);
 
 	return Height+m_Style.Padding.Vert()+Border.top+Border.bottom;
 }
@@ -273,10 +273,13 @@ LRESULT CTitleBar::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 			::AdjustWindowRectEx(&rc,pcs->style,FALSE,pcs->dwExStyle);
 			::MoveWindow(hwnd,0,0,0,rc.bottom-rc.top,FALSE);
 
-			if (m_Style.ButtonIconSize.Width<=12 && m_Style.ButtonIconSize.Height<=12)
-				m_ButtonIcons.Load(GetAppClass().GetResourceInstance(),IDB_TITLEBAR,12,12);
-			else
-				m_ButtonIcons.Load(GetAppClass().GetResourceInstance(),IDB_TITLEBAR24,24,24);
+			static const TVTest::Theme::IconList::ResourceInfo ResourceList[] = {
+				{MAKEINTRESOURCE(IDB_TITLEBAR12),12,12},
+				{MAKEINTRESOURCE(IDB_TITLEBAR24),24,24},
+			};
+			m_ButtonIcons.Load(GetAppClass().GetResourceInstance(),
+							   m_Style.ButtonIconSize.Width,m_Style.ButtonIconSize.Height,
+							   ResourceList,lengthof(ResourceList));
 
 			m_Tooltip.Create(hwnd);
 			for (int i=ITEM_BUTTON_FIRST;i<=ITEM_LAST;i++) {
@@ -486,7 +489,9 @@ bool CTitleBar::GetItemRect(int Item,RECT *pRect) const
 	RECT rc;
 
 	GetClientRect(&rc);
-	TVTest::Theme::SubtractBorderRect(m_Theme.Border,&rc);
+	TVTest::Theme::BorderStyle Border=m_Theme.Border;
+	ConvertBorderWidthsInPixels(&Border);
+	TVTest::Theme::SubtractBorderRect(Border,&rc);
 	TVTest::Style::Subtract(&rc,m_Style.Padding);
 	const int ButtonWidth=GetButtonWidth();
 	int ButtonPos=rc.right-NUM_BUTTONS*ButtonWidth;
@@ -541,7 +546,7 @@ int CTitleBar::HitTest(int x,int y) const
 bool CTitleBar::PtInIcon(int x,int y) const
 {
 	RECT Border;
-	TVTest::Theme::GetBorderWidths(m_Theme.Border,&Border);
+	GetBorderWidthsInPixels(m_Theme.Border,&Border);
 	int IconLeft=Border.left+m_Style.Padding.Left+m_Style.IconMargin.Left;
 	if (x>=IconLeft && x<IconLeft+m_Style.IconSize.Width)
 		return true;
@@ -568,13 +573,17 @@ void CTitleBar::Draw(HDC hdc,const RECT &PaintRect)
 	COLORREF crOldTextColor=::GetTextColor(hdc);
 	COLORREF crOldBkColor=::GetBkColor(hdc);
 
+	TVTest::Theme::CThemeDraw ThemeDraw(BeginThemeDraw(hdc));
+
 	GetClientRect(&rc);
-	TVTest::Theme::SubtractBorderRect(m_Theme.Border,&rc);
+	TVTest::Theme::BorderStyle Border=m_Theme.Border;
+	ConvertBorderWidthsInPixels(&Border);
+	TVTest::Theme::SubtractBorderRect(Border,&rc);
 	if (rc.left<PaintRect.left)
 		rc.left=PaintRect.left;
 	if (rc.right>PaintRect.right)
 		rc.right=PaintRect.right;
-	TVTest::Theme::Draw(hdc,rc,m_Theme.CaptionStyle.Back);
+	ThemeDraw.Draw(m_Theme.CaptionStyle.Back,rc);
 
 	for (int i=0;i<=ITEM_LAST;i++) {
 		GetItemRect(i,&rc);
@@ -597,7 +606,7 @@ void CTitleBar::Draw(HDC hdc,const RECT &PaintRect)
 				}
 				if (!m_Label.empty()) {
 					TVTest::Style::Subtract(&rc,m_Style.LabelMargin);
-					TVTest::Theme::Draw(hdc,rc,m_Theme.CaptionStyle.Fore,m_Label.c_str(),
+					ThemeDraw.Draw(m_Theme.CaptionStyle.Fore,rc,m_Label.c_str(),
 						DT_LEFT | DT_SINGLELINE | DT_VCENTER | DT_NOPREFIX | DT_END_ELLIPSIS);
 				}
 			} else {
@@ -608,7 +617,7 @@ void CTitleBar::Draw(HDC hdc,const RECT &PaintRect)
 				// ”wŒi‚ð“§‰ßŽw’è‚Å‚«‚é‚æ‚¤‚É‚µ‚½•û‚ª—Ç‚¢B
 				if (Style.Back.Border.Type!=TVTest::Theme::BORDER_NONE
 						|| Style.Back.Fill!=m_Theme.CaptionStyle.Back.Fill)
-					TVTest::Theme::Draw(hdc,rc,Style.Back);
+					ThemeDraw.Draw(Style.Back,rc);
 				m_ButtonIcons.Draw(hdc,
 					rc.left+m_Style.ButtonPadding.Left,
 					rc.top+m_Style.ButtonPadding.Top,
@@ -623,7 +632,7 @@ void CTitleBar::Draw(HDC hdc,const RECT &PaintRect)
 	}
 
 	GetClientRect(&rc);
-	TVTest::Theme::Draw(hdc,rc,m_Theme.Border);
+	ThemeDraw.Draw(m_Theme.Border,rc);
 
 	::SetBkColor(hdc,crOldBkColor);
 	::SetTextColor(hdc,crOldTextColor);

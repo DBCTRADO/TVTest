@@ -9,6 +9,7 @@
 #include "Theme.h"
 #include "LogoManager.h"
 #include "DrawUtil.h"
+#include "Graphics.h"
 #include "Tooltip.h"
 
 
@@ -82,6 +83,26 @@ public:
 	void DrawSeparator(HDC hdc,const RECT &Rect);
 };
 
+class CChannelMenuLogo
+{
+public:
+	enum {
+		FLAG_NOFRAME = 0x0001
+	};
+
+	CChannelMenuLogo();
+	bool Initialize(int IconHeight,unsigned int Flags=0);
+	bool DrawLogo(HDC hdc,int x,int y,const CChannelInfo &Channel);
+	int GetLogoWidth() const { return m_LogoWidth; }
+	int GetLogoHeight() const { return m_LogoHeight; }
+
+private:
+	int m_LogoWidth;
+	int m_LogoHeight;
+	bool m_fNoFrame;
+	TVTest::Graphics::CImage m_FrameImage;
+};
+
 class CChannelMenu
 {
 	unsigned int m_Flags;
@@ -99,7 +120,7 @@ class CChannelMenu
 	int m_LogoWidth;
 	int m_LogoHeight;
 	CMenuPainter m_MenuPainter;
-	DrawUtil::CBitmap m_LogoFrameImage;
+	CChannelMenuLogo m_Logo;
 	MARGINS m_Margins;
 	int m_MenuLogoMargin;
 	CTooltip m_Tooltip;
@@ -184,13 +205,12 @@ public:
 	struct ItemInfo
 	{
 		UINT ID;
-		int Image;
+		LPCTSTR pszIcon;
 	};
 
 	CIconMenu();
 	~CIconMenu();
-	bool Initialize(HMENU hmenu,HINSTANCE hinst,LPCTSTR pszImageName,
-					int IconWidth,const ItemInfo *pItemList,int ItemCount);
+	bool Initialize(HMENU hmenu,HINSTANCE hinst,const ItemInfo *pItemList,int ItemCount);
 	void Finalize();
 	bool OnInitMenuPopup(HWND hwnd,HMENU hmenu);
 	bool OnMeasureItem(HWND hwnd,WPARAM wParam,LPARAM lParam);
@@ -208,9 +228,17 @@ private:
 		ITEM_DATA_CHECKED	=0x00010000UL
 	};
 
+	struct ItemIconInfo
+	{
+		UINT ID;
+		int Icon;
+	};
+
 	HMENU m_hmenu;
-	std::vector<ItemInfo> m_ItemList;
+	std::vector<ItemIconInfo> m_ItemList;
+#ifdef WIN_XP_SUPPORT
 	HIMAGELIST m_hImageList;
+#endif
 	std::vector<HBITMAP> m_BitmapList;
 	CMenuPainter m_MenuPainter;
 };

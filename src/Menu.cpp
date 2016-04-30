@@ -2,6 +2,7 @@
 #include "TVTest.h"
 #include "Menu.h"
 #include "AppMain.h"
+#include "GUIUtil.h"
 #include "resource.h"
 #include "Common/DebugDef.h"
 
@@ -399,7 +400,8 @@ void CMenuPainter::DrawBorder(HDC hdc,const RECT &Rect)
 		m_UxTheme.DrawBackground(hdc,MENU_POPUPBORDERS,0,
 								 MENU_POPUPBACKGROUND,0,&Rect);
 	} else {
-		TVTest::Theme::Draw(hdc,Rect,TVTest::Theme::BORDER_RAISED);
+		RECT rc=Rect;
+		::DrawEdge(hdc,&rc,BDR_RAISEDOUTER,BF_RECT);
 	}
 }
 
@@ -440,6 +442,94 @@ int CMenuPainter::ItemStateToID(UINT State) const
 		StateID=MPI_NORMAL;
 	}
 	return StateID;
+}
+
+
+
+
+CChannelMenuLogo::CChannelMenuLogo()
+	: m_LogoWidth(26)
+	, m_LogoHeight(16)
+	, m_fNoFrame(false)
+{
+}
+
+
+bool CChannelMenuLogo::Initialize(int IconHeight,unsigned int Flags)
+{
+	if (IconHeight<=16) {
+		m_LogoHeight=16;
+		m_LogoWidth=26;
+	} else {
+		m_LogoHeight=IconHeight;
+		m_LogoWidth=::MulDiv(52,m_LogoHeight,32);
+	}
+
+	m_fNoFrame=(Flags & FLAG_NOFRAME)!=0;
+
+	if (!m_fNoFrame) {
+		DrawUtil::CBitmap FrameImage;
+		FrameImage.Load(
+			GetAppClass().GetResourceInstance(),
+			m_LogoHeight<=16?MAKEINTRESOURCE(IDB_LOGOFRAME16):MAKEINTRESOURCE(IDB_LOGOFRAME32));
+		m_FrameImage.CreateFromBitmap(FrameImage.GetHandle());
+	}
+
+	return true;
+}
+
+
+bool CChannelMenuLogo::DrawLogo(HDC hdc,int x,int y,const CChannelInfo &Channel)
+{
+	HBITMAP hbmLogo=GetAppClass().LogoManager.GetAssociatedLogoBitmap(
+		Channel.GetNetworkID(),Channel.GetServiceID(),
+		m_LogoHeight<=24?CLogoManager::LOGOTYPE_SMALL:CLogoManager::LOGOTYPE_BIG);
+	if (hbmLogo==NULL)
+		return false;
+
+	if (m_fNoFrame) {
+		DrawUtil::DrawBitmap(hdc,x,y,m_LogoWidth,m_LogoHeight,hbmLogo);
+		return true;
+	}
+
+	TVTest::Graphics::CImage LogoImage;
+
+	LogoImage.CreateFromBitmap(hbmLogo);
+
+	TVTest::Graphics::CCanvas Canvas(hdc);
+	const int Margin=m_LogoHeight<=16?1:2;
+
+	Canvas.SetComposition(true);
+	if (m_FrameImage.GetHeight()==m_LogoHeight) {
+		Canvas.DrawImage(
+			x+Margin,y+Margin,m_LogoWidth-Margin*3,m_LogoHeight-Margin*3,
+			&LogoImage,0,0,LogoImage.GetWidth(),LogoImage.GetHeight());
+		Canvas.DrawImage(
+			x,y,m_LogoWidth,m_LogoHeight,
+			&m_FrameImage,0,0,m_LogoWidth,m_LogoHeight);
+	} else {
+		TVTest::Graphics::CImage TempImage;
+		const int DrawWidth=m_FrameImage.GetWidth(),DrawHeight=m_FrameImage.GetHeight();
+
+		TempImage.Create(DrawWidth,DrawHeight,32);
+		{
+			TVTest::Graphics::CCanvas TempCanvas(&TempImage);
+
+			TempCanvas.Clear(0,0,0,0);
+			TempCanvas.SetComposition(true);
+			TempCanvas.DrawImage(
+				Margin,Margin,DrawWidth-Margin*3,DrawHeight-Margin*3,
+				&LogoImage,0,0,LogoImage.GetWidth(),LogoImage.GetHeight());
+			TempCanvas.DrawImage(
+				0,0,DrawWidth,DrawHeight,
+				&m_FrameImage,0,0,DrawWidth,DrawHeight);
+		}
+		Canvas.DrawImage(
+			x,y,m_LogoWidth,m_LogoHeight,
+			&TempImage,0,0,DrawWidth,DrawHeight);
+	}
+
+	return true;
 }
 
 
@@ -528,8 +618,6 @@ CChannelMenu::CChannelMenu()
 	, m_TextHeight(0)
 	, m_ChannelNameWidth(0)
 	, m_EventNameWidth(0)
-	, m_LogoWidth(26)
-	, m_LogoHeight(16)
 	, m_MenuLogoMargin(3)
 {
 }
@@ -651,10 +739,7 @@ bool CChannelMenu::Create(const CChannelList *pChannelList,int CurChannel,UINT C
 	}
 
 	if ((Flags & FLAG_SHOWLOGO)!=0) {
-		if (!m_LogoFrameImage.IsCreated()) {
-			m_LogoFrameImage.Load(GetAppClass().GetResourceInstance(),
-								  MAKEINTRESOURCE(IDB_LOGOFRAME),LR_CREATEDIBSECTION);
-		}
+		m_Logo.Initialize(::GetSystemMetrics(SM_CYSMICON));
 	}
 
 	return true;
@@ -720,10 +805,10 @@ bool CChannelMenu::OnMeasureItem(HWND hwnd,WPARAM wParam,LPARAM lParam)
 		pmis->itemWidth=m_ChannelNameWidth+
 						m_Margins.cxLeftWidth+m_Margins.cxRightWidth;
 		if ((m_Flags&FLAG_SHOWLOGO)!=0)
-			pmis->itemWidth+=m_LogoWidth+m_MenuLogoMargin;
+			pmis->itemWidth+=m_Logo.GetLogoWidth()+m_MenuLogoMargin;
 		if (m_EventNameWidth>0)
 			pmis->itemWidth+=m_TextHeight+m_EventNameWidth;
-		pmis->itemHeight=max(m_TextHeight,m_LogoHeight)+
+		pmis->itemHeight=max(m_TextHeight,m_Logo.GetLogoHeight())+
 							m_Margins.cyTopHeight+m_Margins.cyBottomHeight;
 		return true;
 	}
@@ -757,20 +842,11 @@ bool CChannelMenu::OnDrawItem(HWND hwnd,WPARAM wParam,LPARAM lParam)
 	rc.bottom=pdis->rcItem.bottom-m_Margins.cyBottomHeight;
 
 	if ((m_Flags&FLAG_SHOWLOGO)!=0) {
-		HBITMAP hbmLogo=GetAppClass().LogoManager.GetAssociatedLogoBitmap(
-			pChInfo->GetNetworkID(),pChInfo->GetServiceID(),CLogoManager::LOGOTYPE_SMALL);
-		if (hbmLogo!=NULL) {
-			DrawUtil::CMemoryDC MemoryDC(pdis->hDC);
-			MemoryDC.SetBitmap(hbmLogo);
-			int y=rc.top+((rc.bottom-rc.top)-m_LogoHeight)/2;
-			BITMAP bm;
-			::GetObject(hbmLogo,sizeof(bm),&bm);
-			MemoryDC.DrawStretch(pdis->hDC,rc.left+1,y+1,m_LogoWidth-3,m_LogoHeight-3,
-								 0,0,bm.bmWidth,bm.bmHeight);
-			MemoryDC.SetBitmap(m_LogoFrameImage);
-			MemoryDC.DrawAlpha(pdis->hDC,rc.left,y,0,0,m_LogoWidth,m_LogoHeight);
-		}
-		rc.left+=m_LogoWidth+m_MenuLogoMargin;
+		m_Logo.DrawLogo(pdis->hDC,
+						rc.left,
+						rc.top+((rc.bottom-rc.top)-m_Logo.GetLogoHeight())/2,
+						*pChInfo);
+		rc.left+=m_Logo.GetLogoWidth()+m_MenuLogoMargin;
 	}
 
 	rc.right=rc.left+m_ChannelNameWidth;
@@ -840,7 +916,7 @@ bool CChannelMenu::OnMenuSelect(HWND hwnd,WPARAM wParam,LPARAM lParam)
 				m_Tooltip.SetText(1,szText);
 				::GetCursorPos(&pt);
 				pt.x+=16;
-				pt.y+=max(m_TextHeight,m_LogoHeight)+
+				pt.y+=max(m_TextHeight,m_Logo.GetLogoHeight())+
 							m_Margins.cyTopHeight+m_Margins.cyBottomHeight;
 				m_Tooltip.TrackPosition(pt.x,pt.y);
 				m_Tooltip.TrackActivate(1,true);
@@ -930,8 +1006,6 @@ void CChannelMenu::CreateFont(HDC hdc)
 		m_TextHeight=m_Font.GetHeight(hdc);
 	else
 		m_TextHeight=abs(lf.lfHeight);
-	//m_LogoHeight=min(m_TextHeight,14);
-	//m_LogoWidth=m_LogoHeight*16/9;
 }
 
 
@@ -1167,7 +1241,9 @@ int CPopupMenu::Show(HINSTANCE hinst,LPCTSTR pszName,HWND hwnd,const POINT *pPos
 
 CIconMenu::CIconMenu()
 	: m_hmenu(NULL)
+#ifdef WIN_XP_SUPPORT
 	, m_hImageList(NULL)
+#endif
 {
 }
 
@@ -1178,55 +1254,61 @@ CIconMenu::~CIconMenu()
 }
 
 
-bool CIconMenu::Initialize(HMENU hmenu,HINSTANCE hinst,LPCTSTR pszImageName,
-						   int IconWidth,const ItemInfo *pItemList,int ItemCount)
+bool CIconMenu::Initialize(HMENU hmenu,HINSTANCE hinst,const ItemInfo *pItemList,int ItemCount)
 {
 	Finalize();
 
-	if (hmenu==NULL || pszImageName==NULL || IconWidth<1 || pItemList==NULL || ItemCount<1)
+	if (hmenu==NULL || pItemList==NULL || ItemCount<1)
 		return false;
 
-	int IconCount;
-
+#ifdef WIN_XP_SUPPORT
 	if (!Util::OS::IsWindowsVistaOrLater()) {
-		m_hImageList=::ImageList_LoadImage(hinst,pszImageName,IconWidth,1,0,
-										   IMAGE_BITMAP,LR_CREATEDIBSECTION);
+		LPCTSTR *pIcons=new LPCTSTR[ItemCount];
+		for (int i=0;i<ItemCount;i++)
+			pIcons[i]=pItemList[i].pszIcon;
+		m_hImageList=TVTest::CreateImageListFromIcons(hinst,pIcons,ItemCount,ICON_SIZE_SMALL);
+		delete [] pIcons;
 		if (m_hImageList==NULL)
 			return false;
-		IconCount=::ImageList_GetImageCount(m_hImageList);
-	} else {
-		HBITMAP hbm=static_cast<HBITMAP>(::LoadImage(hinst,pszImageName,IMAGE_BITMAP,0,0,LR_CREATEDIBSECTION));
-		if (hbm==NULL)
-			return false;
-		BITMAP bm;
-		if (::GetObject(hbm,sizeof(bm),&bm)!=sizeof(bm) || bm.bmBits==NULL) {
-			::DeleteObject(hbm);
-			return false;
+
+		m_ItemList.reserve(ItemCount);
+		for (int i=0;i<ItemCount;i++) {
+			ItemIconInfo Item;
+			Item.ID=pItemList[i].ID;
+			Item.Icon=i;
+			m_ItemList.push_back(Item);
 		}
-		for (int x=0;x+IconWidth<=bm.bmWidth;x+=IconWidth) {
-			void *pBits;
-			HBITMAP hbmIcon=DrawUtil::CreateDIB(IconWidth,bm.bmHeight,32,&pBits);
-			BYTE *q=static_cast<BYTE*>(pBits);
-			BYTE *p=static_cast<BYTE*>(bm.bmBits)+x*4;
-			for (int y=0;y<bm.bmHeight;y++) {
-				::CopyMemory(q,p,bm.bmWidth*4);
-				q+=IconWidth*4;
-				p+=bm.bmWidth*4;
+	} else
+#endif
+	{
+		for (int i=0;i<ItemCount;i++) {
+			HICON hicon=LoadIconStandardSize(hinst,pItemList[i].pszIcon,ICON_SIZE_SMALL);
+
+			if (hicon!=NULL) {
+				ICONINFO ii;
+
+				if (::GetIconInfo(hicon,&ii)) {
+					/*
+						ii.hbmColor は DDB になっていて、そのままメニューの画像に指定すると
+						アルファチャンネルが無視されるため、DIB に変換する
+					*/
+					HBITMAP hbm=(HBITMAP)::CopyImage(ii.hbmColor,IMAGE_BITMAP,0,0,LR_CREATEDIBSECTION);
+					if (hbm!=NULL) {
+						m_BitmapList.push_back(hbm);
+						ItemIconInfo Item;
+						Item.ID=pItemList[i].ID;
+						Item.Icon=(int)m_BitmapList.size()-1;
+						m_ItemList.push_back(Item);
+					}
+					::DeleteObject(ii.hbmColor);
+					::DeleteObject(ii.hbmMask);
+				}
+				::DestroyIcon(hicon);
 			}
-			m_BitmapList.push_back(hbmIcon);
 		}
-		::DeleteObject(hbm);
-		IconCount=bm.bmWidth/IconWidth;
 	}
 
 	m_hmenu=hmenu;
-
-	m_ItemList.reserve(ItemCount);
-	for (int i=0;i<ItemCount;i++) {
-		ItemInfo Item=pItemList[i];
-		if (Item.Image<IconCount)
-			m_ItemList.push_back(Item);
-	}
 
 	return true;
 }
@@ -1236,10 +1318,12 @@ void CIconMenu::Finalize()
 {
 	m_hmenu=NULL;
 	m_ItemList.clear();
+#ifdef WIN_XP_SUPPORT
 	if (m_hImageList!=NULL) {
 		::ImageList_Destroy(m_hImageList);
 		m_hImageList=NULL;
 	}
+#endif
 	if (!m_BitmapList.empty()) {
 		for (auto i=m_BitmapList.begin();i!=m_BitmapList.end();i++)
 			::DeleteObject(*i);
@@ -1263,15 +1347,18 @@ bool CIconMenu::OnInitMenuPopup(HWND hwnd,HMENU hmenu)
 			for (auto itrItem=m_ItemList.begin();itrItem!=m_ItemList.end();++itrItem) {
 				if (itrItem->ID==mii.wID) {
 					mii.fMask=MIIM_STATE | MIIM_BITMAP | MIIM_DATA;
-					mii.dwItemData=(mii.dwItemData & ~ITEM_DATA_IMAGEMASK) | (itrItem->Image+1);
+					mii.dwItemData=(mii.dwItemData & ~ITEM_DATA_IMAGEMASK) | (itrItem->Icon+1);
+#ifdef WIN_XP_SUPPORT
 					if (m_hImageList!=NULL) {
 						mii.hbmpItem=HBMMENU_CALLBACK;
 						if ((mii.fState & MFS_CHECKED)!=0) {
 							mii.fState&=~MFS_CHECKED;
 							mii.dwItemData|=ITEM_DATA_CHECKED;
 						}
-					} else {
-						mii.hbmpItem=m_BitmapList[itrItem->Image];
+					} else
+#endif
+					{
+						mii.hbmpItem=m_BitmapList[itrItem->Icon];
 						if ((mii.dwItemData & ITEM_DATA_CHECKED)!=0) {
 							mii.fState|=MFS_CHECKED;
 						}
@@ -1282,6 +1369,7 @@ bool CIconMenu::OnInitMenuPopup(HWND hwnd,HMENU hmenu)
 		}
 	}
 
+#ifdef WIN_XP_SUPPORT
 	if (m_hImageList!=NULL) {
 		MENUINFO mi;
 		mi.cbSize=sizeof(mi);
@@ -1292,6 +1380,7 @@ bool CIconMenu::OnInitMenuPopup(HWND hwnd,HMENU hmenu)
 			::SetMenuInfo(hmenu,&mi);
 		}
 	}
+#endif
 
 	return true;
 }
@@ -1299,6 +1388,7 @@ bool CIconMenu::OnInitMenuPopup(HWND hwnd,HMENU hmenu)
 
 bool CIconMenu::OnMeasureItem(HWND hwnd,WPARAM wParam,LPARAM lParam)
 {
+#ifdef WIN_XP_SUPPORT
 	LPMEASUREITEMSTRUCT pmis=reinterpret_cast<LPMEASUREITEMSTRUCT>(lParam);
 
 	if (pmis->CtlType!=ODT_MENU)
@@ -1313,6 +1403,7 @@ bool CIconMenu::OnMeasureItem(HWND hwnd,WPARAM wParam,LPARAM lParam)
 			return true;
 		}
 	}
+#endif
 
 	return false;
 }
@@ -1320,6 +1411,7 @@ bool CIconMenu::OnMeasureItem(HWND hwnd,WPARAM wParam,LPARAM lParam)
 
 bool CIconMenu::OnDrawItem(HWND hwnd,WPARAM wParam,LPARAM lParam)
 {
+#ifdef WIN_XP_SUPPORT
 	LPDRAWITEMSTRUCT pdis=reinterpret_cast<LPDRAWITEMSTRUCT>(lParam);
 
 	if (pdis->CtlType!=ODT_MENU || (HMENU)pdis->hwndItem!=m_hmenu)
@@ -1363,6 +1455,9 @@ bool CIconMenu::OnDrawItem(HWND hwnd,WPARAM wParam,LPARAM lParam)
 	m_MenuPainter.DrawIcon(m_hImageList,Image,pdis->hDC,x,y,pdis->itemState);
 
 	return true;
+#else
+	return false;
+#endif
 }
 
 
