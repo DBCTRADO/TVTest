@@ -228,10 +228,12 @@ namespace Util
 		bool IsWindowsVista();
 		bool IsWindows7();
 		bool IsWindows8();
+		bool IsWindows10();
 		bool IsWindowsXPOrLater();
 		bool IsWindowsVistaOrLater();
 		bool IsWindows7OrLater();
 		bool IsWindows8OrLater();
+		bool IsWindows10OrLater();
 
 	}	// namespace OS
 

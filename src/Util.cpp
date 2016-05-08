@@ -1836,6 +1836,11 @@ namespace Util
 			return CheckOSVersion(6,2);
 		}
 
+		bool IsWindows10()
+		{
+			return CheckOSVersion(10,0);
+		}
+
 		bool IsWindowsXPOrLater()
 		{
 			return CheckOSVersionLater(5,1);
@@ -1854,6 +1859,11 @@ namespace Util
 		bool IsWindows8OrLater()
 		{
 			return CheckOSVersionLater(6,2);
+		}
+
+		bool IsWindows10OrLater()
+		{
+			return CheckOSVersionLater(10,0);
 		}
 
 	}	// namespace OS
