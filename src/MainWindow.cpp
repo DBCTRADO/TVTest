@@ -141,6 +141,11 @@ CMainWindow::CMainWindow(CAppMain &App)
 		(::GetSystemMetrics(SM_CXSCREEN)-m_WindowPosition.Width)/2;
 	m_WindowPosition.Top=
 		(::GetSystemMetrics(SM_CYSCREEN)-m_WindowPosition.Height)/2;
+
+	if (Util::OS::IsWindows10()) {
+		m_fCustomFrame=true;
+		m_CustomFrameWidth=m_ThinFrameWidth;
+	}
 }
 
 
