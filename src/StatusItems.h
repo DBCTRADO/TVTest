@@ -196,6 +196,7 @@ private:
 	bool m_fTOT;
 	bool m_fInterpolateTOT;
 	SYSTEMTIME m_Time;
+	CCriticalLock m_Lock;
 };
 
 class CProgramInfoStatusItem : public CStatusItem

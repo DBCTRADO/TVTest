@@ -323,6 +323,23 @@ namespace Util
 		HCURSOR m_hcurOld;
 	};
 
+	class CTimer
+	{
+	public:
+		CTimer();
+		virtual ~CTimer();
+		bool Begin(DWORD DueTime,DWORD Period);
+		void End();
+
+	protected:
+		virtual void OnTimer() = 0;
+
+	private:
+		static void CALLBACK TimerCallback(PVOID lpParameter,BOOLEAN TimerOrWaitFired);
+
+		HANDLE m_hTimer;
+	};
+
 	template<typename T,std::size_t N> class CTempBuffer
 	{
 	public:

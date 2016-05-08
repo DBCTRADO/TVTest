@@ -128,6 +128,9 @@ CMainWindow::CMainWindow(CAppMain &App)
 	, m_ChannelNoInputTimer(TIMER_ID_CHANNELNO)
 	, m_DisplayBaseEventHandler(this)
 	, m_EpgCaptureEventHandler(this)
+
+	, m_ClockUpdateTimer(this)
+	, m_fAccurateClock(true)
 {
 	// 適当にデフォルトサイズを設定
 #ifndef TVTEST_FOR_1SEG
@@ -480,6 +483,7 @@ bool CMainWindow::ReadSettings(CSettings &Settings)
 	if (Settings.Read(TEXT("ShowSideBar"),&f))
 		SetSideBarVisible(f);
 	Settings.Read(TEXT("FrameCut"),&m_fFrameCut);
+	Settings.Read(TEXT("AccurateClock"),&m_fAccurateClock);
 
 	return true;
 }
@@ -1471,6 +1475,10 @@ LRESULT CMainWindow::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 		}
 		return 0;
 
+	case WM_APP_UPDATECLOCK:
+		m_App.StatusView.RedrawItem(STATUS_ITEM_CLOCK);
+		return 0;
+
 	case WM_ACTIVATEAPP:
 		{
 			bool fActive=wParam!=FALSE;
@@ -1764,6 +1772,8 @@ bool CMainWindow::OnCreate(const CREATESTRUCT *pcs)
 
 void CMainWindow::OnDestroy()
 {
+	m_ClockUpdateTimer.End();
+
 	RECT rc;
 	GetPosition(&rc);
 	if (m_WindowSizeMode==WINDOW_SIZE_1SEG)
@@ -5048,6 +5058,14 @@ void CMainWindow::OnAudioStreamChanged(int Stream)
 }
 
 
+void CMainWindow::OnStartupDone()
+{
+	// TODO: ステータスバーに時計が表示されている場合のみタイマーを有効にする
+	if (m_fAccurateClock)
+		m_ClockUpdateTimer.Begin(1000,200);
+}
+
+
 void CMainWindow::ShowAudioOSD()
 {
 	if (m_App.OSDOptions.IsOSDEnabled(COSDOptions::OSD_AUDIO)) {
@@ -7346,4 +7364,18 @@ void CMainWindow::CCommandEventHandler::OnCommandRadioCheckedStateChanged(
 	else
 		m_pMainWindow->m_App.MainMenu.CheckRadioItem(FirstID,LastID,CheckedID);
 	m_pMainWindow->m_App.SideBar.CheckRadioItem(FirstID,LastID,CheckedID);
+}
+
+
+CMainWindow::CClockUpdateTimer::CClockUpdateTimer(CMainWindow *pMainWindow)
+	: m_pMainWindow(pMainWindow)
+{
+}
+
+void CMainWindow::CClockUpdateTimer::OnTimer()
+{
+	CClockStatusItem *pClockStatusItem=
+		dynamic_cast<CClockStatusItem*>(m_pMainWindow->m_App.StatusView.GetItemByID(STATUS_ITEM_CLOCK));
+	if (pClockStatusItem!=nullptr && pClockStatusItem->UpdateContent())
+		m_pMainWindow->PostMessage(WM_APP_UPDATECLOCK,0,0);
 }

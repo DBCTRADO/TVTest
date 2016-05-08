@@ -684,6 +684,8 @@ CClockStatusItem::CClockStatusItem()
 
 bool CClockStatusItem::UpdateContent()
 {
+	CBlockLock Lock(&m_Lock);
+
 	SYSTEMTIME st;
 
 	if (m_fTOT) {
@@ -700,6 +702,8 @@ bool CClockStatusItem::UpdateContent()
 		::GetLocalTime(&st);
 	}
 
+	st.wMilliseconds=0;
+
 	if (CompareSystemTime(&st,&m_Time)==0)
 		return false;
 
@@ -710,6 +714,8 @@ bool CClockStatusItem::UpdateContent()
 
 void CClockStatusItem::Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect,unsigned int Flags)
 {
+	CBlockLock Lock(&m_Lock);
+
 	TCHAR szText[64];
 
 	if ((Flags & DRAW_PREVIEW)==0) {
@@ -743,6 +749,8 @@ void CClockStatusItem::OnRButtonDown(int x,int y)
 
 void CClockStatusItem::SetTOT(bool fTOT)
 {
+	CBlockLock Lock(&m_Lock);
+
 	if (m_fTOT!=fTOT) {
 		m_fTOT=fTOT;
 		::ZeroMemory(&m_Time,sizeof(m_Time));
@@ -752,6 +760,8 @@ void CClockStatusItem::SetTOT(bool fTOT)
 
 void CClockStatusItem::SetInterpolateTOT(bool fInterpolate)
 {
+	CBlockLock Lock(&m_Lock);
+
 	m_fInterpolateTOT=fInterpolate;
 }
 

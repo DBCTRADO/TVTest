@@ -39,6 +39,7 @@
 #define WM_APP_SERVICEINFOUPDATED		(WM_APP+17)
 #define WM_APP_AUDIOLISTCHANGED			(WM_APP+18)
 #define WM_APP_SPDIFPASSTHROUGHERROR	(WM_APP+19)
+#define WM_APP_UPDATECLOCK				(WM_APP+20)
 
 enum {
 	CONTAINER_ID_VIEW=1,
@@ -540,6 +541,17 @@ private:
 
 	CEpgCaptureEventHandler m_EpgCaptureEventHandler;
 
+	class CClockUpdateTimer : public Util::CTimer
+	{
+	public:
+		CClockUpdateTimer(CMainWindow *pMainWindow);
+	private:
+		void OnTimer() override;
+		CMainWindow *m_pMainWindow;
+	};
+	CClockUpdateTimer m_ClockUpdateTimer;
+	bool m_fAccurateClock;
+
 	struct DirectShowFilterPropertyInfo {
 		CMediaViewer::PropertyFilter Filter;
 		int Command;
@@ -588,6 +600,7 @@ private:
 	void OnDualMonoModeChanged(CAudioDecFilter::DualMonoMode Mode) override;
 	void OnStereoModeChanged(CAudioDecFilter::StereoMode Mode) override;
 	void OnAudioStreamChanged(int Stream) override;
+	void OnStartupDone() override;
 
 // COSDManager::CEventHandler
 	bool GetOSDClientInfo(COSDManager::OSDClientInfo *pInfo) override;

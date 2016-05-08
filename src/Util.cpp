@@ -1868,4 +1868,41 @@ namespace Util
 
 	}	// namespace OS
 
+
+	CTimer::CTimer()
+		: m_hTimer(NULL)
+	{
+	}
+
+	CTimer::~CTimer()
+	{
+		End();
+	}
+
+	bool CTimer::Begin(DWORD DueTime,DWORD Period)
+	{
+		End();
+
+		HANDLE hTimer;
+		if (!::CreateTimerQueueTimer(&hTimer,NULL,TimerCallback,this,DueTime,Period,WT_EXECUTEDEFAULT))
+			return false;
+
+		m_hTimer=hTimer;
+
+		return true;
+	}
+
+	void CTimer::End()
+	{
+		if (m_hTimer!=NULL) {
+			::DeleteTimerQueueTimer(NULL,m_hTimer,INVALID_HANDLE_VALUE);
+			m_hTimer=NULL;
+		}
+	}
+
+	void CALLBACK CTimer::TimerCallback(PVOID lpParameter,BOOLEAN TimerOrWaitFired)
+	{
+		static_cast<CTimer*>(lpParameter)->OnTimer();
+	}
+
 }	// namespace Util
