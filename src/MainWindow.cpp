@@ -88,7 +88,7 @@ CMainWindow::CMainWindow(CAppMain &App)
 	, m_fPanelVerticalAlign(false)
 	, m_fCustomFrame(false)
 	, m_CustomFrameWidth(0)
-	, m_ThinFrameWidth(1)
+	, m_ThinFrameWidth(GetHairlineWidth())
 
 	, m_fEnablePlayback(true)
 
