@@ -127,6 +127,7 @@ namespace TVTest
 		void OpenFilter(
 			CTSProcessor *pTSProcessor,CTSProcessorSettings *pSettings,
 			const FilterInfo &Filter,unsigned int FilterOpenFlags);
+		void CloseFilter(CTSProcessor *pTSProcessor);
 
 	// CTSProcessor::CEventHandler
 		void OnFinalize(CTSProcessor *pTSProcessor) override;

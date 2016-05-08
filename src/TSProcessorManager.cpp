@@ -447,7 +447,7 @@ void CTSProcessorManager::OnTunerChange(LPCTSTR pszOldTuner,LPCTSTR pszNewTuner)
 
 		if (pNewTunerDecInfo!=nullptr && pNewTunerDecInfo->fEnable) {
 			if (!pNewTunerDecInfo->fEnableProcessing) {
-				pTSProcessor->CloseFilter();
+				CloseFilter(pTSProcessor);
 				continue;
 			}
 			pNewFilter=pNewTunerDecInfo;
@@ -494,7 +494,7 @@ void CTSProcessorManager::OnTunerOpened(LPCTSTR pszTuner,unsigned int FilterOpen
 
 		if (pTunerDecInfo!=nullptr && pTunerDecInfo->fEnable) {
 			if (!pTunerDecInfo->fEnableProcessing) {
-				pTSProcessor->CloseFilter();
+				CloseFilter(pTSProcessor);
 				continue;
 			}
 			pFilter=pTunerDecInfo;
@@ -533,7 +533,7 @@ void CTSProcessorManager::OnNetworkChanged(
 
 		if (pTunerDecInfo!=nullptr && pTunerDecInfo->fEnable) {
 			if (!pTunerDecInfo->fEnableProcessing) {
-				pTSProcessor->CloseFilter();
+				CloseFilter(pTSProcessor);
 				continue;
 			}
 			pFilter=pTunerDecInfo;
@@ -642,6 +642,20 @@ void CTSProcessorManager::OpenFilter(
 			}
 		}
 	}
+}
+
+
+void CTSProcessorManager::CloseFilter(CTSProcessor *pTSProcessor)
+{
+#if 0
+	pTSProcessor->CloseFilter();
+#else
+	if (pTSProcessor->IsModuleLoaded()) {
+		String ModuleName=pTSProcessor->GetModuleName();
+		pTSProcessor->UnloadModule();
+		GetAppClass().AddLog(TEXT("モジュール \"%s\" を開放しました。"),ModuleName.c_str());
+	}
+#endif
 }
 
 
