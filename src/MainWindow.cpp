@@ -2972,6 +2972,18 @@ void CMainWindow::OnCommand(HWND hwnd,int id,HWND hwndCtl,UINT codeNotify)
 		}
 		return;
 
+	case CM_INTERPOLATETOTTIME:
+		{
+			const bool fInterpolateTOT=!m_App.StatusOptions.GetInterpolateTOTTime();
+			m_App.StatusOptions.SetInterpolateTOTTime(fInterpolateTOT);
+
+			CClockStatusItem *pItem=
+				dynamic_cast<CClockStatusItem*>(m_App.StatusView.GetItemByID(STATUS_ITEM_CLOCK));
+			if (pItem!=nullptr)
+				pItem->SetInterpolateTOT(fInterpolateTOT);
+		}
+		return;
+
 	case CM_PROGRAMINFOSTATUS_POPUPINFO:
 		{
 			const bool fEnable=!m_App.StatusOptions.IsPopupProgramInfoEnabled();
@@ -3465,7 +3477,8 @@ void CMainWindow::OnTimer(HWND hwnd,UINT id)
 			CClockStatusItem *pClockStatusItem=
 				dynamic_cast<CClockStatusItem*>(m_App.StatusView.GetItemByID(STATUS_ITEM_CLOCK));
 			if (pClockStatusItem!=nullptr
-					&& (!pClockStatusItem->IsTOT() || (UpdateStatus & CCoreEngine::STATUS_TOT)!=0)) {
+					&& (!pClockStatusItem->IsTOT()
+						|| (pClockStatusItem->IsInterpolateTOT() || (UpdateStatus & CCoreEngine::STATUS_TOT)!=0))) {
 				pClockStatusItem->Update();
 			}
 

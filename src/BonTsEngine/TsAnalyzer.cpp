@@ -123,6 +123,8 @@ void CTsAnalyzer::Reset()
 	m_bSendEitUpdatedEvent = false;
 #endif
 
+	m_TotInterpolation.PcrPID = PID_INVALID;
+
 	// サービスリストクリア
 	m_ServiceList.clear();
 
@@ -1684,6 +1686,49 @@ bool CTsAnalyzer::GetTotTime(SYSTEMTIME *pTime) const
 }
 
 
+bool CTsAnalyzer::GetInterpolatedTotTime(SYSTEMTIME *pTime, bool *pbInterpolated) const
+{
+	// PCRで補間したTOT時刻を取得する
+	CBlockLock Lock(&m_DecoderLock);
+
+	if (!GetTotTime(pTime))
+		return false;
+
+	bool bInterpolated = false;
+
+	if (m_TotInterpolation.PcrPID != PID_INVALID) {
+		for (size_t i = 0; i < m_ServiceList.size(); i++) {
+			if (m_ServiceList[i].PcrPID == m_TotInterpolation.PcrPID) {
+				ULONGLONG PcrTime;
+
+				if (GetPcrTimeStamp((int)i, &PcrTime)) {
+					LONGLONG Diff;
+
+					if (PcrTime >= m_TotInterpolation.PcrTime)
+						Diff = PcrTime - m_TotInterpolation.PcrTime;
+					else
+						Diff = (0x200000000ULL - m_TotInterpolation.PcrTime) + PcrTime;
+					if (Diff <= 15 * 90000LL) {	// 最大15秒
+						CDateTime Time(*pTime);
+
+						Time.Offset(Diff / 90LL);
+						Time.Get(pTime);
+
+						bInterpolated = true;
+					}
+				}
+				break;
+			}
+		}
+	}
+
+	if (pbInterpolated)
+		*pbInterpolated = bInterpolated;
+
+	return true;
+}
+
+
 bool CTsAnalyzer::GetSatelliteDeliverySystemList(SatelliteDeliverySystemList *pList) const
 {
 	if (pList == NULL)
@@ -2208,6 +2253,40 @@ void CALLBACK CTsAnalyzer::OnTotUpdated(const WORD wPID, CTsPidMapTarget *pMapTa
 {
 	// TOTが更新された
 	CTsAnalyzer *pThis = static_cast<CTsAnalyzer *>(pParam);
+
+	// 現在のPCRを記憶
+	WORD PcrPID = PID_INVALID;
+
+	if (!pThis->m_ServiceList.empty()) {
+		int Index = -1;
+
+		if (pThis->m_TotInterpolation.PcrPID != PID_INVALID) {
+			for (size_t i = 0; i < pThis->m_ServiceList.size(); i++) {
+				if (pThis->m_ServiceList[i].PcrPID == pThis->m_TotInterpolation.PcrPID) {
+					Index = (int)i;
+					break;
+				}
+			}
+		}
+
+		if (Index < 0) {
+			for (size_t i = 0; i < pThis->m_ServiceList.size(); i++) {
+				if (pThis->m_ServiceList[i].PcrPID != PID_INVALID) {
+					Index = (int)i;
+					break;
+				}
+			}
+		}
+
+		ULONGLONG PcrTime;
+
+		if (Index >= 0 && pThis->GetPcrTimeStamp(Index, &PcrTime)) {
+			PcrPID = pThis->m_ServiceList[Index].PcrPID;
+			pThis->m_TotInterpolation.PcrTime = PcrTime;
+		}
+	}
+
+	pThis->m_TotInterpolation.PcrPID = PcrPID;
 
 	// 通知イベント設定
 	pThis->SetDecoderEvent(EVENT_TOT_UPDATED);

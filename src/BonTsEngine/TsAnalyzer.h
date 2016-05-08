@@ -222,6 +222,7 @@ public:
 #endif	// TS_ANALYZER_EIT_SUPPORT
 
 	bool GetTotTime(SYSTEMTIME *pTime) const;
+	bool GetInterpolatedTotTime(SYSTEMTIME *pTime, bool *pbInterpolated = NULL) const;
 
 	struct SatelliteDeliverySystemInfo {
 		WORD TransportStreamID;
@@ -302,6 +303,12 @@ protected:
 
 	unsigned int m_ViewableVideoStreamTypes;
 	bool m_bRadioSupport;
+
+	struct TotInterpolationInfo {
+		WORD PcrPID;
+		ULONGLONG PcrTime;
+	};
+	TotInterpolationInfo m_TotInterpolation;
 
 	struct StreamTypeMap {
 		unsigned int Flag;

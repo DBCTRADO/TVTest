@@ -28,6 +28,7 @@ CStatusOptions::CStatusOptions(CStatusView *pStatusView)
 	, m_pStatusView(pStatusView)
 	, m_ItemID(STATUS_ITEM_LAST+1)
 	, m_fShowTOTTime(false)
+	, m_fInterpolateTOTTime(true)
 	, m_fEnablePopupProgramInfo(true)
 	, m_fShowEventProgress(true)
 	, m_fMultiRow(!IS_HD)
@@ -174,6 +175,7 @@ bool CStatusOptions::ReadSettings(CSettings &Settings)
 		m_PopupOpacity=CLAMP(Value,OPACITY_MIN,OPACITY_MAX);
 
 	Settings.Read(TEXT("TOTTime"),&m_fShowTOTTime);
+	Settings.Read(TEXT("InterpolateTOTTime"),&m_fInterpolateTOTTime);
 	Settings.Read(TEXT("PopupProgramInfo"),&m_fEnablePopupProgramInfo);
 	Settings.Read(TEXT("ShowEventProgress"),&m_fShowEventProgress);
 
@@ -208,6 +210,7 @@ bool CStatusOptions::WriteSettings(CSettings &Settings)
 	Settings.Write(TEXT("PopupOpacity"),m_PopupOpacity);
 
 	Settings.Write(TEXT("TOTTime"),m_fShowTOTTime);
+	Settings.Write(TEXT("InterpolateTOTTime"),m_fInterpolateTOTTime);
 	Settings.Write(TEXT("PopupProgramInfo"),m_fEnablePopupProgramInfo);
 	Settings.Write(TEXT("ShowEventProgress"),m_fShowEventProgress);
 

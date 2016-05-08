@@ -31,6 +31,8 @@ public:
 	int GetPopupOpacity() const { return m_PopupOpacity; }
 	bool GetShowTOTTime() const { return m_fShowTOTTime; }
 	void SetShowTOTTime(bool fShow) { m_fShowTOTTime=fShow; }
+	bool GetInterpolateTOTTime() const { return m_fInterpolateTOTTime; }
+	void SetInterpolateTOTTime(bool fInterpolate) { m_fInterpolateTOTTime=fInterpolate; }
 	bool IsPopupProgramInfoEnabled() const { return m_fEnablePopupProgramInfo; }
 	void EnablePopupProgramInfo(bool fEnable) { m_fEnablePopupProgramInfo=fEnable; }
 	bool GetShowEventProgress() const { return m_fShowEventProgress; }
@@ -80,6 +82,7 @@ private:
 	bool m_fDragResize;
 
 	bool m_fShowTOTTime;
+	bool m_fInterpolateTOTTime;
 	bool m_fEnablePopupProgramInfo;
 	bool m_fShowEventProgress;
 

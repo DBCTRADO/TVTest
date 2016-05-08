@@ -919,6 +919,8 @@ bool CUICore::ShowSpecialMenu(MenuType Menu,const POINT *pPos,UINT Flags,const R
 			CPopupMenu Menu(m_App.GetResourceInstance(),IDM_TIME);
 
 			Menu.CheckItem(CM_SHOWTOTTIME,m_App.StatusOptions.GetShowTOTTime());
+			Menu.CheckItem(CM_INTERPOLATETOTTIME,m_App.StatusOptions.GetInterpolateTOTTime());
+			Menu.EnableItem(CM_INTERPOLATETOTTIME,m_App.StatusOptions.GetShowTOTTime());
 			Menu.Show(GetMainWindow(),&pt,Flags,pExcludeRect);
 		}
 		break;

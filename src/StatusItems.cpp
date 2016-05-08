@@ -677,6 +677,7 @@ void CSignalLevelStatusItem::ShowSignalLevel(bool fShow)
 CClockStatusItem::CClockStatusItem()
 	: CStatusItem(STATUS_ITEM_CLOCK,SizeValue(5*EM_FACTOR,SIZE_EM))
 	, m_fTOT(false)
+	, m_fInterpolateTOT(true)
 {
 	::ZeroMemory(&m_Time,sizeof(m_Time));
 }
@@ -686,7 +687,14 @@ bool CClockStatusItem::UpdateContent()
 	SYSTEMTIME st;
 
 	if (m_fTOT) {
-		if (!GetAppClass().CoreEngine.m_DtvEngine.m_TsAnalyzer.GetTotTime(&st))
+		CTsAnalyzer &TsAnalyzer=GetAppClass().CoreEngine.m_DtvEngine.m_TsAnalyzer;
+		bool fResult;
+
+		if (m_fInterpolateTOT)
+			fResult=TsAnalyzer.GetInterpolatedTotTime(&st);
+		else
+			fResult=TsAnalyzer.GetTotTime(&st);
+		if (!fResult)
 			::ZeroMemory(&st,sizeof(st));
 	} else {
 		::GetLocalTime(&st);
@@ -740,6 +748,11 @@ void CClockStatusItem::SetTOT(bool fTOT)
 		::ZeroMemory(&m_Time,sizeof(m_Time));
 		Update();
 	}
+}
+
+void CClockStatusItem::SetInterpolateTOT(bool fInterpolate)
+{
+	m_fInterpolateTOT=fInterpolate;
 }
 
 void CClockStatusItem::FormatTime(const SYSTEMTIME &Time,LPTSTR pszText,int MaxLength) const

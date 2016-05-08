@@ -187,11 +187,14 @@ public:
 // CClockStatusItem
 	void SetTOT(bool fTOT);
 	bool IsTOT() const { return m_fTOT; }
+	void SetInterpolateTOT(bool fInterpolate);
+	bool IsInterpolateTOT() const { return m_fInterpolateTOT; }
 
 private:
 	void FormatTime(const SYSTEMTIME &Time,LPTSTR pszText,int MaxLength) const;
 
 	bool m_fTOT;
+	bool m_fInterpolateTOT;
 	SYSTEMTIME m_Time;
 };
 
