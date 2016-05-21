@@ -67,7 +67,7 @@ public:
 	bool SetEventHandler(CEventHandler *pHandler);
 	bool SetTitleBarTheme(const TitleBarTheme &Theme);
 	bool GetTitleBarTheme(TitleBarTheme *pTheme) const;
-	bool SetFont(const LOGFONT *pFont);
+	bool SetFont(const TVTest::Style::Font &Font);
 	void SetIcon(HICON hIcon);
 	SIZE GetIconDrawSize() const;
 	bool IsIconDrawSmall() const;

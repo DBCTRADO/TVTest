@@ -123,6 +123,7 @@ public:
 
 	bool UpdateIcon();
 	bool UpdateTitle();
+	bool SetTitleFont(const TVTest::Style::Font &Font);
 	bool SetLogo(LPCTSTR pszFileName);
 
 	bool RegisterModelessDialog(CBasicDialog *pDialog);

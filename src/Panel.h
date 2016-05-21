@@ -58,6 +58,7 @@ public:
 	int GetTitleHeight() const { return m_TitleHeight; }
 	bool GetTitleRect(RECT *pRect) const;
 	bool GetContentRect(RECT *pRect) const;
+	bool SetTitleFont(const TVTest::Style::Font &Font);
 
 private:
 	struct PanelStyle

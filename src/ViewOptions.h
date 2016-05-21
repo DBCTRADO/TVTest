@@ -4,6 +4,7 @@
 
 #include "Options.h"
 #include "MediaViewer.h"
+#include "Style.h"
 
 
 class CViewOptions : public COptions
@@ -49,6 +50,8 @@ public:
 	LPCTSTR GetMinimizedTitleTextFormat() const { return m_MinimizedTitleTextFormat.c_str(); }
 	LPCTSTR GetMaximizedTitleTextFormat() const { return m_MaximizedTitleTextFormat.c_str(); }
 	LPCTSTR GetTaskbarTitleTextFormat() const { return m_TaskbarTitleTextFormat.c_str(); }
+	bool GetTitleBarFontEnabled() const { return m_fEnableTitleBarFont; }
+	const TVTest::Style::Font &GetTitleBarFont() const { return m_TitleBarFont; }
 	bool GetShowLogo() const { return m_fShowLogo; }
 	LPCTSTR GetLogoFileName() const { return m_szLogoFileName; }
 	bool GetNoScreenSaver() const { return m_fNoScreenSaver; }
@@ -73,12 +76,16 @@ private:
 	TVTest::String m_MinimizedTitleTextFormat;
 	TVTest::String m_MaximizedTitleTextFormat;
 	TVTest::String m_TaskbarTitleTextFormat;
+	bool m_fEnableTitleBarFont;
+	TVTest::Style::Font m_TitleBarFont;
 	bool m_fShowLogo;
 	TCHAR m_szLogoFileName[MAX_PATH];
 
 	bool m_fNoScreenSaver;
 	bool m_fNoMonitorLowPower;
 	bool m_fNoMonitorLowPowerActiveOnly;
+
+	TVTest::Style::Font m_CurTitleBarFont;
 };
 
 

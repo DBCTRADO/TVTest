@@ -1302,6 +1302,14 @@ bool CUICore::UpdateTitle()
 }
 
 
+bool CUICore::SetTitleFont(const TVTest::Style::Font &Font)
+{
+	if (m_pSkin==nullptr)
+		return false;
+	return m_pSkin->SetTitleFont(Font);
+}
+
+
 bool CUICore::SetLogo(LPCTSTR pszFileName)
 {
 	if (m_pSkin==nullptr)

@@ -283,6 +283,7 @@ private:
 		void OnMButtonUp();
 		void OnMouseMove();
 		CViewWindow &GetViewWindow() { return m_ViewWindow; }
+		void SetTitleFont(const TVTest::Style::Font &Font);
 
 	// CUIBase
 		void SetTheme(const TVTest::Theme::CThemeManager *pThemeManager) override;
@@ -575,6 +576,7 @@ private:
 	bool SetZoomRate(int Rate,int Factor) override;
 	bool GetZoomRate(int *pRate,int *pFactor) override;
 	void SetTitleText(LPCTSTR pszTitleText,LPCTSTR pszWindowText) override;
+	bool SetTitleFont(const TVTest::Style::Font &Font) override;
 	bool SetLogo(HBITMAP hbm) override;
 	bool SetAlwaysOnTop(bool fTop) override;
 	bool SetFullscreen(bool fFullscreen) override;

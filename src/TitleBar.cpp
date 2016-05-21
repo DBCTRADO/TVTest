@@ -210,13 +210,26 @@ bool CTitleBar::GetTitleBarTheme(TitleBarTheme *pTheme) const
 }
 
 
-bool CTitleBar::SetFont(const LOGFONT *pFont)
+bool CTitleBar::SetFont(const TVTest::Style::Font &Font)
 {
-	if (!m_Font.Create(pFont))
+	if (!CreateDrawFont(Font,&m_Font))
 		return false;
+
 	if (m_hwnd!=NULL) {
+		const int OldHeight=GetHeight();
 		m_FontHeight=CalcFontHeight();
+		const int Height=CalcHeight();
+		if (Height!=OldHeight) {
+			RECT rc;
+			GetPosition(&rc);
+			rc.bottom=rc.top+Height;
+			SetPosition(&rc);
+		} else {
+			SendSizeMessage();
+		}
+		Invalidate();
 	}
+
 	return true;
 }
 

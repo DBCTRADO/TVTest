@@ -3,6 +3,7 @@
 #include "ViewOptions.h"
 #include "AppMain.h"
 #include "DialogUtil.h"
+#include "StyleUtil.h"
 #include "resource.h"
 #include "Common/DebugDef.h"
 
@@ -35,12 +36,15 @@ CViewOptions::CViewOptions()
 	, m_fDisablePreviewWhenMinimized(false)
 	, m_fUseLogoIcon(false)
 	, m_TitleTextFormat(TitleTextFormatPresets[0].pszFormat)
+	, m_fEnableTitleBarFont(false)
 	, m_fShowLogo(true)
 
 	, m_fNoScreenSaver(false)
 	, m_fNoMonitorLowPower(false)
 	, m_fNoMonitorLowPowerActiveOnly(false)
 {
+	TVTest::StyleUtil::GetSystemFont(DrawUtil::FONT_CAPTION,&m_TitleBarFont);
+
 	::lstrcpy(m_szLogoFileName,APP_NAME TEXT("_Logo.bmp"));
 }
 
@@ -88,6 +92,8 @@ bool CViewOptions::ReadSettings(CSettings &Settings)
 	Settings.Read(TEXT("MinimizedTitleTextFormat"),&m_MinimizedTitleTextFormat);
 	Settings.Read(TEXT("MaximizedTitleTextFormat"),&m_MaximizedTitleTextFormat);
 	Settings.Read(TEXT("TaskbarTitleTextFormat"),&m_TaskbarTitleTextFormat);
+	Settings.Read(TEXT("EnableTitleBarFont"),&m_fEnableTitleBarFont);
+	TVTest::StyleUtil::ReadFontSettings(Settings,TEXT("TitleBarFont"),&m_TitleBarFont);
 	Settings.Read(TEXT("ShowLogo"),&m_fShowLogo);
 	Settings.Read(TEXT("LogoFileName"),m_szLogoFileName,lengthof(m_szLogoFileName));
 	Settings.Read(TEXT("NoScreenSaver"),&m_fNoScreenSaver);
@@ -117,6 +123,8 @@ bool CViewOptions::WriteSettings(CSettings &Settings)
 	Settings.Write(TEXT("TaskbarTitleTextFormat"),m_TaskbarTitleTextFormat);
 	*/
 	Settings.DeleteValue(TEXT("TitleEventTime"));
+	Settings.Write(TEXT("EnableTitleBarFont"),m_fEnableTitleBarFont);
+	TVTest::StyleUtil::WriteFontSettings(Settings,TEXT("TitleBarFont"),m_TitleBarFont);
 	Settings.Write(TEXT("ShowLogo"),m_fShowLogo);
 	Settings.Write(TEXT("LogoFileName"),m_szLogoFileName);
 	Settings.Write(TEXT("NoScreenSaver"),m_fNoScreenSaver);
@@ -169,6 +177,15 @@ INT_PTR CViewOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 			::SetDlgItemText(hDlg,IDC_OPTIONS_TITLETEXTFORMAT,m_TitleTextFormat.c_str());
 			InitDropDownButton(hDlg,IDC_OPTIONS_TITLETEXTFORMAT_PARAMETERS);
 			InitDropDownButtonWithText(hDlg,IDC_OPTIONS_TITLETEXTFORMAT_PRESETS);
+
+			m_CurTitleBarFont=m_TitleBarFont;
+			DlgCheckBox_Check(hDlg,IDC_OPTIONS_TITLEBARFONT_ENABLE,m_fEnableTitleBarFont);
+			TVTest::StyleUtil::SetFontInfoItem(hDlg,IDC_OPTIONS_TITLEBARFONT_INFO,m_CurTitleBarFont);
+			EnableDlgItems(hDlg,
+						   IDC_OPTIONS_TITLEBARFONT_INFO,
+						   IDC_OPTIONS_TITLEBARFONT_CHOOSE,
+						   m_fEnableTitleBarFont);
+
 			DlgCheckBox_Check(hDlg,IDC_OPTIONS_SHOWLOGO,m_fShowLogo);
 			::SetDlgItemText(hDlg,IDC_OPTIONS_LOGOFILENAME,m_szLogoFileName);
 			::SendDlgItemMessage(hDlg,IDC_OPTIONS_LOGOFILENAME,EM_LIMITTEXT,MAX_PATH-1,0);
@@ -214,6 +231,18 @@ INT_PTR CViewOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 									 TitleTextFormatPresets[Result-1].pszFormat);
 				}
 			}
+			return TRUE;
+
+		case IDC_OPTIONS_TITLEBARFONT_ENABLE:
+			EnableDlgItemsSyncCheckBox(hDlg,
+									   IDC_OPTIONS_TITLEBARFONT_INFO,
+									   IDC_OPTIONS_TITLEBARFONT_CHOOSE,
+									   IDC_OPTIONS_TITLEBARFONT_ENABLE);
+			return TRUE;
+
+		case IDC_OPTIONS_TITLEBARFONT_CHOOSE:
+			if (TVTest::StyleUtil::ChooseStyleFont(hDlg,&m_CurTitleBarFont))
+				TVTest::StyleUtil::SetFontInfoItem(hDlg,IDC_OPTIONS_TITLEBARFONT_INFO,m_CurTitleBarFont);
 			return TRUE;
 
 		case IDC_OPTIONS_SHOWLOGO:
@@ -304,6 +333,28 @@ INT_PTR CViewOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 						::lstrcpy(m_szLogoFileName,szFileName);
 						SetUpdateFlag(UPDATE_LOGO);
 					}
+				}
+
+				bool fTitleBarFontChanged=false;
+				bool fEnableTitleBarFont=
+					DlgCheckBox_IsChecked(hDlg,IDC_OPTIONS_TITLEBARFONT_ENABLE);
+				if (m_fEnableTitleBarFont!=fEnableTitleBarFont) {
+					m_fEnableTitleBarFont=fEnableTitleBarFont;
+					fTitleBarFontChanged=true;
+				}
+				if (m_TitleBarFont!=m_CurTitleBarFont) {
+					m_TitleBarFont=m_CurTitleBarFont;
+					if (m_fEnableTitleBarFont)
+						fTitleBarFontChanged=true;
+				}
+				if (fTitleBarFontChanged) {
+					TVTest::Style::Font Font;
+					if (m_fEnableTitleBarFont)
+						Font=m_TitleBarFont;
+					else
+						TVTest::StyleUtil::GetSystemFont(DrawUtil::FONT_CAPTION,&Font);
+					App.UICore.SetTitleFont(Font);
+					App.Panel.Frame.GetPanel()->SetTitleFont(Font);
 				}
 
 				m_fNoScreenSaver=

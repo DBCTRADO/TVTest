@@ -258,6 +258,8 @@ void CMainWindow::CreatePanel()
 	m_App.PluginManager.RegisterPanelItems();
 
 	m_App.PanelOptions.InitializePanelForm(&m_App.Panel.Form);
+	if (m_App.ViewOptions.GetTitleBarFontEnabled())
+		m_App.Panel.Frame.GetPanel()->SetTitleFont(m_App.ViewOptions.GetTitleBarFont());
 	m_App.Panel.Frame.Create(m_hwnd,
 		dynamic_cast<Layout::CSplitter*>(m_LayoutBase.GetContainerByID(CONTAINER_ID_PANELSPLITTER)),
 		CONTAINER_ID_PANEL,&m_App.Panel.Form,TEXT("ƒpƒlƒ‹"));
@@ -1549,6 +1551,8 @@ bool CMainWindow::OnCreate(const CREATESTRUCT *pcs)
 	m_Display.GetVideoContainer().SetEventHandler(&m_VideoContainerEventHandler);
 	m_Display.GetDisplayBase().SetEventHandler(&m_DisplayBaseEventHandler);
 
+	if (m_App.ViewOptions.GetTitleBarFontEnabled())
+		m_TitleBar.SetFont(m_App.ViewOptions.GetTitleBarFont());
 	m_TitleBar.Create(m_LayoutBase.GetHandle(),
 					  WS_CHILD | WS_CLIPSIBLINGS | (m_fShowTitleBar && m_fCustomTitleBar?WS_VISIBLE:0),
 					  0,IDC_TITLEBAR);
@@ -5255,6 +5259,23 @@ void CMainWindow::SetTitleText(LPCTSTR pszTitleText,LPCTSTR pszWindowText)
 }
 
 
+bool CMainWindow::SetTitleFont(const TVTest::Style::Font &Font)
+{
+	m_TitleBar.SetFont(Font);
+	const int Height=m_TitleBar.GetHeight();
+	Layout::CWindowContainer *pContainer=static_cast<Layout::CWindowContainer*>(
+		m_LayoutBase.GetContainerByID(CONTAINER_ID_TITLEBAR));
+	pContainer->SetMinSize(0,Height);
+	Layout::CSplitter *pSplitter=static_cast<Layout::CSplitter*>(
+		m_LayoutBase.GetContainerByID(CONTAINER_ID_TITLEBARSPLITTER));
+	pSplitter->SetPaneSize(CONTAINER_ID_TITLEBAR,Height);
+
+	m_Fullscreen.SetTitleFont(Font);
+
+	return true;
+}
+
+
 bool CMainWindow::SetLogo(HBITMAP hbm)
 {
 	return m_Display.GetViewWindow().SetLogo(hbm);
@@ -6326,6 +6347,8 @@ bool CMainWindow::CFullscreen::OnCreate()
 	m_pDisplay->GetDisplayBase().GetParent()->GetClientRect(&rc);
 	m_pDisplay->GetDisplayBase().SetPosition(&rc);
 
+	if (m_App.ViewOptions.GetTitleBarFontEnabled())
+		m_TitleBar.SetFont(m_App.ViewOptions.GetTitleBarFont());
 	m_TitleBar.Create(m_ViewWindow.GetHandle(),
 					  WS_CHILD | WS_CLIPSIBLINGS,0,IDC_TITLEBAR);
 	m_TitleBar.SetEventHandler(&m_TitleBarManager);
@@ -6590,6 +6613,12 @@ void CMainWindow::CFullscreen::OnMouseMove()
 	}
 
 	::SetTimer(m_hwnd,TIMER_ID_HIDECURSOR,HIDE_CURSOR_DELAY,nullptr);
+}
+
+
+void CMainWindow::CFullscreen::SetTitleFont(const TVTest::Style::Font &Font)
+{
+	m_TitleBar.SetFont(Font);
 }
 
 

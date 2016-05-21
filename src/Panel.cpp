@@ -189,6 +189,19 @@ bool CPanel::GetContentRect(RECT *pRect) const
 }
 
 
+bool CPanel::SetTitleFont(const TVTest::Style::Font &Font)
+{
+	if (!CreateDrawFont(Font,&m_Font))
+		return false;
+	if (m_hwnd!=NULL) {
+		CalcDimensions();
+		SendSizeMessage();
+		Invalidate();
+	}
+	return true;
+}
+
+
 void CPanel::CalcDimensions()
 {
 	m_FontHeight=TVTest::Style::GetFontHeight(
