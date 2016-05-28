@@ -5320,7 +5320,7 @@ class CListPrevStatusItem : public CStatusItem
 
 public:
 	CListPrevStatusItem::CListPrevStatusItem(CProgramGuide *pProgramGuide)
-		: CStatusItem(STATUS_ITEM_DATEPREV,SizeValue(16,SIZE_PIXEL))
+		: CStatusItem(STATUS_ITEM_DATEPREV,SizeValue(1*EM_FACTOR,SIZE_EM))
 		, m_pProgramGuide(pProgramGuide)
 	{
 	}
@@ -5340,7 +5340,7 @@ public:
 		COLORREF OldTextColor;
 		if (!fEnabled)
 			OldTextColor=::SetTextColor(hdc,MixColor(::GetTextColor(hdc),GetBkColor(hdc)));
-		DrawText(hdc,DrawRect,TEXT("Å£"),DRAWTEXT_HCENTER);
+		DrawText(hdc,DrawRect,TEXT("Å£"),DRAWTEXT_HCENTER | DRAWTEXT_NOENDELLIPSIS);
 		if (!fEnabled)
 			::SetTextColor(hdc,OldTextColor);
 	}
@@ -5363,7 +5363,7 @@ class CListNextStatusItem : public CStatusItem
 
 public:
 	CListNextStatusItem::CListNextStatusItem(CProgramGuide *pProgramGuide)
-		: CStatusItem(STATUS_ITEM_DATENEXT,SizeValue(16,SIZE_PIXEL))
+		: CStatusItem(STATUS_ITEM_DATENEXT,SizeValue(1*EM_FACTOR,SIZE_EM))
 		, m_pProgramGuide(pProgramGuide)
 	{
 	}
@@ -5384,7 +5384,7 @@ public:
 		COLORREF OldTextColor;
 		if (!fEnabled)
 			OldTextColor=::SetTextColor(hdc,MixColor(::GetTextColor(hdc),GetBkColor(hdc)));
-		DrawText(hdc,DrawRect,TEXT("Å•"),DRAWTEXT_HCENTER);
+		DrawText(hdc,DrawRect,TEXT("Å•"),DRAWTEXT_HCENTER | DRAWTEXT_NOENDELLIPSIS);
 		if (!fEnabled)
 			::SetTextColor(hdc,OldTextColor);
 	}

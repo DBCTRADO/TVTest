@@ -109,7 +109,8 @@ protected:
 
 	bool GetMenuPos(POINT *pPos,UINT *pFlags,RECT *pExcludeRect);
 	enum {
-		DRAWTEXT_HCENTER = 0x00000001UL
+		DRAWTEXT_HCENTER       = 0x00000001UL,
+		DRAWTEXT_NOENDELLIPSIS = 0x00000002UL
 	};
 	void DrawText(HDC hdc,const RECT &Rect,LPCTSTR pszText,DWORD Flags=0) const;
 	void DrawIcon(HDC hdc,const RECT &Rect,DrawUtil::CMonoColorIconList &IconList,

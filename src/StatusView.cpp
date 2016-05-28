@@ -150,10 +150,13 @@ bool CStatusItem::GetMenuPos(POINT *pPos,UINT *pFlags,RECT *pExcludeRect)
 
 void CStatusItem::DrawText(HDC hdc,const RECT &Rect,LPCTSTR pszText,DWORD Flags) const
 {
+	DWORD DTFlags=DT_SINGLELINE | DT_VCENTER | DT_NOPREFIX;
+	if ((Flags&DRAWTEXT_HCENTER)!=0)
+		DTFlags|=DT_CENTER;
+	if ((Flags&DRAWTEXT_NOENDELLIPSIS)==0)
+		DTFlags|=DT_END_ELLIPSIS;
 	RECT rc=Rect;
-	::DrawText(hdc,pszText,-1,&rc,
-			   ((Flags&DRAWTEXT_HCENTER)!=0?DT_CENTER:DT_LEFT) |
-			   DT_SINGLELINE | DT_VCENTER | DT_NOPREFIX | DT_END_ELLIPSIS);
+	::DrawText(hdc,pszText,-1,&rc,DTFlags);
 }
 
 
