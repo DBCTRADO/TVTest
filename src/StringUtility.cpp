@@ -4,6 +4,10 @@
 #include "Util.h"
 #include "Common/DebugDef.h"
 
+#if _MSC_VER<1800 && !defined(va_copy)
+#define va_copy(dst,src) ((void)((dst)=(src)))
+#endif
+
 
 LONGLONG StringToInt64(LPCTSTR pszString)
 {
@@ -187,22 +191,25 @@ namespace TVTest
 				return 0;
 			}
 
+			va_list CopyArgs;
+			va_copy(CopyArgs,Args);
 			int Length=::_vscwprintf(pszFormat,Args);
 			if (Length<=0) {
 				Str.clear();
-				return 0;
-			}
-			static const int BUFFER_LENGTH=256;
-			if (Length<BUFFER_LENGTH) {
-				WCHAR szBuffer[BUFFER_LENGTH];
-				::_vsnwprintf_s(szBuffer,BUFFER_LENGTH,_TRUNCATE,pszFormat,Args);
-				Str=szBuffer;
 			} else {
-				LPWSTR pszBuffer=new WCHAR[Length+1];
-				::_vsnwprintf_s(pszBuffer,Length+1,_TRUNCATE,pszFormat,Args);
-				Str=pszBuffer;
-				delete [] pszBuffer;
+				static const int BUFFER_LENGTH=256;
+				if (Length<BUFFER_LENGTH) {
+					WCHAR szBuffer[BUFFER_LENGTH];
+					::_vsnwprintf_s(szBuffer,BUFFER_LENGTH,_TRUNCATE,pszFormat,CopyArgs);
+					Str=szBuffer;
+				} else {
+					LPWSTR pszBuffer=new WCHAR[Length+1];
+					::_vsnwprintf_s(pszBuffer,Length+1,_TRUNCATE,pszFormat,CopyArgs);
+					Str=pszBuffer;
+					delete [] pszBuffer;
+				}
 			}
+			va_end(CopyArgs);
 
 			return (int)Str.length();
 		}
