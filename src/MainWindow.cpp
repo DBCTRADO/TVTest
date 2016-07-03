@@ -826,7 +826,7 @@ bool CMainWindow::OnBarMouseLeave(HWND hwnd)
 				if (::RealChildWindowFromPoint(m_App.SideBar.GetParent(),pt)==m_App.SideBar.GetHandle())
 					return false;
 			}
-			m_TitleBar.SetVisible(false);
+			ShowPopupTitleBar(false);
 			if (!m_fShowSideBar && m_App.SideBar.GetVisible())
 				ShowPopupSideBar(false);
 			return true;
@@ -848,7 +848,7 @@ bool CMainWindow::OnBarMouseLeave(HWND hwnd)
 			ShowPopupSideBar(false);
 			if (!m_fShowTitleBar && m_TitleBar.GetVisible()
 					&& ::RealChildWindowFromPoint(m_TitleBar.GetParent(),pt)!=m_TitleBar.GetHandle())
-				m_TitleBar.SetVisible(false);
+				ShowPopupTitleBar(false);
 			if (!m_fShowStatusBar && m_App.StatusView.GetVisible()
 					&& ::RealChildWindowFromPoint(m_App.StatusView.GetParent(),pt)!=m_App.StatusView.GetHandle())
 				ShowPopupStatusBar(false);
@@ -1190,6 +1190,7 @@ LRESULT CMainWindow::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 
 	case WM_EXITMENULOOP:
 		m_fNoHideCursor=false;
+		m_CursorTracker.Reset();
 		return 0;
 
 	case WM_SYSCOMMAND:
@@ -1665,14 +1666,8 @@ bool CMainWindow::OnCreate(const CREATESTRUCT *pcs)
 	UpdateLayoutStructure();
 
 	// 起動状況を表示するために、起動時は常にステータスバーを表示する
-	if (!m_fShowStatusBar) {
-		RECT rc;
-
-		GetClientRect(&rc);
-		rc.top=rc.bottom-m_App.StatusView.GetHeight();
-		m_App.StatusView.SetPosition(&rc);
+	if (!m_fShowStatusBar)
 		ShowPopupStatusBar(true);
-	}
 	m_App.StatusView.SetSingleText(TEXT("起動中..."));
 
 	m_App.OSDManager.Initialize();
@@ -1766,7 +1761,7 @@ bool CMainWindow::OnCreate(const CREATESTRUCT *pcs)
 	::SetTimer(m_hwnd,TIMER_ID_UPDATE,UPDATE_TIMER_INTERVAL,nullptr);
 
 	m_fShowCursor=true;
-	m_ShowCursorManager.Reset();
+	m_CursorTracker.Reset();
 	if (m_App.OperationOptions.GetHideCursor())
 		::SetTimer(m_hwnd,TIMER_ID_HIDECURSOR,HIDE_CURSOR_DELAY,nullptr);
 
@@ -2025,7 +2020,14 @@ void CMainWindow::OnMouseMove(int x,int y)
 		SetPosition(&rc);
 		m_App.Panel.OnOwnerMovingOrSizing(&rcOld,&rc);
 	} else if (!m_pCore->GetFullscreen()) {
-		POINT pt={x,y};
+		const POINT pt={x,y};
+
+		if (m_CursorTracker.GetLastCursorPos()==pt) {
+			if (m_App.OperationOptions.GetHideCursor())
+				::SetTimer(m_hwnd,TIMER_ID_HIDECURSOR,HIDE_CURSOR_DELAY,nullptr);
+			return;
+		}
+
 		RECT rcClient,rcTitle,rcStatus,rcSideBar,rc;
 		bool fShowTitleBar=false,fShowStatusBar=false,fShowSideBar=false;
 
@@ -2077,19 +2079,14 @@ void CMainWindow::OnMouseMove(int x,int y)
 		}
 
 		if (fShowTitleBar) {
-			if (!m_TitleBar.GetVisible()) {
-				m_TitleBar.SetPosition(&rcTitle);
-				m_TitleBar.SetVisible(true);
-				::BringWindowToTop(m_TitleBar.GetHandle());
-			}
+			if (!m_TitleBar.GetVisible())
+				ShowPopupTitleBar(true);
 		} else if (!m_fShowTitleBar && m_TitleBar.GetVisible()) {
-			m_TitleBar.SetVisible(false);
+			ShowPopupTitleBar(false);
 		}
 		if (fShowStatusBar) {
-			if (!m_App.StatusView.GetVisible()) {
-				m_App.StatusView.SetPosition(&rcStatus);
+			if (!m_App.StatusView.GetVisible())
 				ShowPopupStatusBar(true);
-			}
 		} else if (!m_fShowStatusBar && m_App.StatusView.GetVisible()) {
 			ShowPopupStatusBar(false);
 		}
@@ -2102,12 +2099,16 @@ void CMainWindow::OnMouseMove(int x,int y)
 			ShowPopupSideBar(false);
 		}
 
-		if (m_ShowCursorManager.OnCursorMove(x,y)) {
+		if (m_CursorTracker.OnCursorMove(x,y)) {
 			if (!m_fShowCursor)
 				ShowCursor(true);
 		}
-		if (m_App.OperationOptions.GetHideCursor())
-			::SetTimer(m_hwnd,TIMER_ID_HIDECURSOR,HIDE_CURSOR_DELAY,nullptr);
+		if (m_App.OperationOptions.GetHideCursor()) {
+			if (fShowTitleBar || fShowStatusBar || fShowSideBar)
+				::KillTimer(m_hwnd,TIMER_ID_HIDECURSOR);
+			else
+				::SetTimer(m_hwnd,TIMER_ID_HIDECURSOR,HIDE_CURSOR_DELAY,nullptr);
+		}
 	} else {
 		m_Fullscreen.OnMouseMove();
 	}
@@ -3025,6 +3026,24 @@ void CMainWindow::OnCommand(HWND hwnd,int id,HWND hwndCtl,UINT codeNotify)
 		m_App.TotTimeAdjuster.BeginAdjust();
 		return;
 
+	case CM_POPUPTITLEBAR:
+		if (!m_fShowTitleBar) {
+			if (m_pCore->GetFullscreen())
+				m_Fullscreen.ShowTitleBar(!m_Fullscreen.IsTitleBarVisible());
+			else
+				ShowPopupTitleBar(!m_TitleBar.GetVisible());
+		}
+		return;
+
+	case CM_POPUPSTATUSBAR:
+		if (!m_fShowStatusBar) {
+			if (m_pCore->GetFullscreen())
+				m_Fullscreen.ShowStatusBar(!m_Fullscreen.IsStatusBarVisible());
+			else
+				ShowPopupStatusBar(!m_App.StatusView.GetVisible());
+		}
+		return;
+
 	case CM_ZOOMMENU:
 	case CM_ASPECTRATIOMENU:
 	case CM_CHANNELMENU:
@@ -3731,10 +3750,8 @@ void CMainWindow::OnTimer(HWND hwnd,UINT id)
 				RECT rc;
 				::GetCursorPos(&pt);
 				m_Display.GetViewWindow().GetScreenPosition(&rc);
-				if (::PtInRect(&rc,pt)) {
+				if (::PtInRect(&rc,pt))
 					ShowCursor(false);
-					::SetCursor(nullptr);
-				}
 			}
 		}
 		::KillTimer(hwnd,TIMER_ID_HIDECURSOR);
@@ -4608,9 +4625,32 @@ void CMainWindow::SetFixedPaneSize(int SplitterID,int ContainerID,int Width,int 
 }
 
 
+void CMainWindow::ShowPopupTitleBar(bool fShow)
+{
+	if (fShow) {
+		RECT rcClient,rcTitle;
+
+		m_Display.GetViewWindow().GetClientRect(&rcClient);
+		m_TitleBarManager.Layout(&rcClient,&rcTitle);
+		m_TitleBar.SetPosition(&rcTitle);
+		m_TitleBar.SetVisible(true);
+		::BringWindowToTop(m_TitleBar.GetHandle());
+	} else {
+		m_TitleBar.SetVisible(false);
+	}
+}
+
+
 void CMainWindow::ShowPopupStatusBar(bool fShow)
 {
 	if (fShow) {
+		CViewWindow &ViewWindow=GetCurrentViewWindow();
+		RECT rc;
+
+		ViewWindow.GetClientRect(&rc);
+		MapWindowRect(ViewWindow.GetHandle(),m_App.StatusView.GetParent(),&rc);
+		rc.top=rc.bottom-m_App.StatusView.CalcHeight(rc.right-rc.left);
+		m_App.StatusView.SetPosition(&rc);
 		m_App.StatusView.SetOpacity(m_App.StatusOptions.GetPopupOpacity()*255/CStatusOptions::OPACITY_MAX);
 		m_App.StatusView.SetVisible(true);
 		::BringWindowToTop(m_App.StatusView.GetHandle());
@@ -4639,6 +4679,7 @@ void CMainWindow::ShowCursor(bool fShow)
 	m_App.CoreEngine.m_DtvEngine.m_MediaViewer.HideCursor(!fShow);
 	m_Display.GetViewWindow().ShowCursor(fShow);
 	m_fShowCursor=fShow;
+	::SetCursor(fShow ? ::LoadCursor(nullptr,IDC_ARROW) : nullptr);
 }
 
 
@@ -6120,10 +6161,8 @@ LRESULT CMainWindow::CFullscreen::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LP
 				RECT rc;
 				::GetCursorPos(&pt);
 				m_ViewWindow.GetScreenPosition(&rc);
-				if (::PtInRect(&rc,pt)) {
+				if (::PtInRect(&rc,pt))
 					ShowCursor(false);
-					::SetCursor(nullptr);
-				}
 			}
 			::KillTimer(hwnd,TIMER_ID_HIDECURSOR);
 		}
@@ -6223,7 +6262,7 @@ LRESULT CMainWindow::CFullscreen::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LP
 		m_pDisplay->GetDisplayBase().AdjustPosition();
 		m_TitleBar.Destroy();
 		m_App.OSDManager.Reset();
-		ShowStatusView(false);
+		ShowStatusBar(false);
 		ShowSideBar(false);
 		ShowPanel(false);
 		RestorePanel();
@@ -6370,7 +6409,8 @@ bool CMainWindow::CFullscreen::OnCreate()
 	m_fShowSideBar=false;
 	m_fShowPanel=false;
 
-	m_ShowCursorManager.Reset(4);
+	m_CursorTracker.SetMoveDelta(4);
+	m_CursorTracker.Reset();
 	::SetTimer(m_hwnd,TIMER_ID_HIDECURSOR,HIDE_CURSOR_DELAY,nullptr);
 
 	return true;
@@ -6382,6 +6422,7 @@ void CMainWindow::CFullscreen::ShowCursor(bool fShow)
 	m_App.CoreEngine.m_DtvEngine.m_MediaViewer.HideCursor(!fShow);
 	m_ViewWindow.ShowCursor(fShow);
 	m_fShowCursor=fShow;
+	::SetCursor(fShow ? ::LoadCursor(nullptr,IDC_ARROW) : nullptr);
 }
 
 
@@ -6500,7 +6541,7 @@ void CMainWindow::CFullscreen::HideAllBars()
 {
 	ShowTitleBar(false);
 	ShowSideBar(false);
-	ShowStatusView(false);
+	ShowStatusBar(false);
 }
 
 
@@ -6517,12 +6558,13 @@ void CMainWindow::CFullscreen::OnMouseCommand(int Command)
 	// メニュー表示中はカーソルを消さない
 	::KillTimer(m_hwnd,TIMER_ID_HIDECURSOR);
 	ShowCursor(true);
-	::SetCursor(LoadCursor(nullptr,IDC_ARROW));
 	m_fMenu=true;
 	m_MainWindow.SendMessage(WM_COMMAND,MAKEWPARAM(Command,CMainWindow::COMMAND_FROM_MOUSE),0);
 	m_fMenu=false;
-	if (m_hwnd!=nullptr)
+	if (m_hwnd!=nullptr) {
+		m_CursorTracker.Reset();
 		::SetTimer(m_hwnd,TIMER_ID_HIDECURSOR,HIDE_CURSOR_DELAY,nullptr);
+	}
 }
 
 
@@ -6550,11 +6592,18 @@ void CMainWindow::CFullscreen::OnMouseMove()
 		return;
 
 	POINT pt;
-	RECT rcClient,rcStatus,rcTitle,rc;
-	bool fShowStatusView=false,fShowTitleBar=false,fShowSideBar=false;
 
 	::GetCursorPos(&pt);
 	::ScreenToClient(m_hwnd,&pt);
+
+	if (m_CursorTracker.GetLastCursorPos()==pt) {
+		::SetTimer(m_hwnd,TIMER_ID_HIDECURSOR,HIDE_CURSOR_DELAY,nullptr);
+		return;
+	}
+
+	RECT rcClient,rcStatus,rcTitle,rc;
+	bool fShowStatusView=false,fShowTitleBar=false,fShowSideBar=false;
+
 	m_ViewWindow.GetClientRect(&rcClient);
 
 	rcStatus=rcClient;
@@ -6596,20 +6645,19 @@ void CMainWindow::CFullscreen::OnMouseMove()
 		}
 	}
 
-	ShowStatusView(fShowStatusView);
+	ShowStatusBar(fShowStatusView);
 	ShowTitleBar(fShowTitleBar);
 	ShowSideBar(fShowSideBar);
 
 	if (fShowStatusView || fShowTitleBar || fShowSideBar) {
+		m_CursorTracker.Reset();
 		::KillTimer(m_hwnd,TIMER_ID_HIDECURSOR);
 		return;
 	}
 
-	if (m_ShowCursorManager.OnCursorMove(pt.x,pt.y)) {
-		if (!m_fShowCursor) {
-			::SetCursor(::LoadCursor(nullptr,IDC_ARROW));
+	if (m_CursorTracker.OnCursorMove(pt.x,pt.y)) {
+		if (!m_fShowCursor)
 			ShowCursor(true);
-		}
 	}
 
 	::SetTimer(m_hwnd,TIMER_ID_HIDECURSOR,HIDE_CURSOR_DELAY,nullptr);
@@ -6622,7 +6670,7 @@ void CMainWindow::CFullscreen::SetTitleFont(const TVTest::Style::Font &Font)
 }
 
 
-void CMainWindow::CFullscreen::ShowStatusView(bool fShow)
+void CMainWindow::CFullscreen::ShowStatusBar(bool fShow)
 {
 	if (fShow==m_fShowStatusView)
 		return;
@@ -6630,17 +6678,13 @@ void CMainWindow::CFullscreen::ShowStatusView(bool fShow)
 	Layout::CLayoutBase &LayoutBase=m_MainWindow.GetLayoutBase();
 
 	if (fShow) {
-		RECT rc;
-
 		ShowSideBar(false);
-		m_ViewWindow.GetClientRect(&rc);
-		rc.top=rc.bottom-m_App.StatusView.CalcHeight(rc.right-rc.left);
 		m_App.StatusView.SetVisible(false);
 		LayoutBase.SetContainerVisible(CONTAINER_ID_STATUS,false);
 		m_App.StatusView.SetParent(&m_ViewWindow);
-		m_App.StatusView.SetPosition(&rc);
 		m_MainWindow.ShowPopupStatusBar(true);
 	} else {
+		OnBarHide(m_App.StatusView);
 		m_MainWindow.ShowPopupStatusBar(false);
 		m_App.StatusView.SetParent(&LayoutBase);
 		if (m_MainWindow.GetStatusBarVisible())
@@ -6671,6 +6715,7 @@ void CMainWindow::CFullscreen::ShowTitleBar(bool fShow)
 		m_TitleBar.SetVisible(true);
 		::BringWindowToTop(m_TitleBar.GetHandle());
 	} else {
+		OnBarHide(m_TitleBar);
 		m_TitleBar.SetVisible(false);
 	}
 
@@ -6700,6 +6745,7 @@ void CMainWindow::CFullscreen::ShowSideBar(bool fShow)
 		m_App.SideBar.SetPosition(&rcBar);
 		m_MainWindow.ShowPopupSideBar(true);
 	} else {
+		OnBarHide(m_App.SideBar);
 		m_MainWindow.ShowPopupSideBar(false);
 		m_App.SideBar.SetParent(&LayoutBase);
 		if (m_MainWindow.GetSideBarVisible())
@@ -6707,6 +6753,21 @@ void CMainWindow::CFullscreen::ShowSideBar(bool fShow)
 	}
 
 	m_fShowSideBar=fShow;
+}
+
+
+void CMainWindow::CFullscreen::OnBarHide(CBasicWindow &Window)
+{
+	POINT pt;
+	RECT rc;
+
+	::GetCursorPos(&pt);
+	Window.GetScreenPosition(&rc);
+	if (::PtInRect(&rc,pt)) {
+		::ScreenToClient(m_hwnd,&pt);
+		m_CursorTracker.OnCursorMove(pt.x,pt.y);
+		ShowCursor(false);
+	}
 }
 
 
@@ -7268,20 +7329,24 @@ bool CMainWindow::CDisplayBaseEventHandler::OnVisibleChange(bool fVisible)
 }
 
 
-CMainWindow::CShowCursorManager::CShowCursorManager()
+CMainWindow::CCursorTracker::CCursorTracker()
+	: m_MoveDelta(1)
 {
 	Reset();
 }
 
-void CMainWindow::CShowCursorManager::Reset(int Delta)
+void CMainWindow::CCursorTracker::Reset()
 {
-	m_MoveDelta=Delta;
 	m_LastMovePos.x=LONG_MAX/2;
 	m_LastMovePos.y=LONG_MAX/2;
+	m_LastCursorPos=m_LastMovePos;
 }
 
-bool CMainWindow::CShowCursorManager::OnCursorMove(int x,int y)
+bool CMainWindow::CCursorTracker::OnCursorMove(int x,int y)
 {
+	m_LastCursorPos.x=x;
+	m_LastCursorPos.y=y;
+
 	if (abs(m_LastMovePos.x-x)>=m_MoveDelta || abs(m_LastMovePos.y-y)>=m_MoveDelta) {
 		m_LastMovePos.x=x;
 		m_LastMovePos.y=y;

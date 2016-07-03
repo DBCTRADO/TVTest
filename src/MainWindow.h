@@ -248,16 +248,19 @@ private:
 		void OnBarWidthChanged(int BarWidth) override;
 	};
 
-	class CShowCursorManager
+	class CCursorTracker
 	{
 	public:
-		CShowCursorManager();
-		void Reset(int Delta=1);
+		CCursorTracker();
+		void Reset();
 		bool OnCursorMove(int x,int y);
+		POINT GetLastCursorPos() const { return m_LastCursorPos; }
+		void SetMoveDelta(int Delta) { m_MoveDelta=Delta; }
 
 	private:
 		int m_MoveDelta;
 		POINT m_LastMovePos;
+		POINT m_LastCursorPos;
 	};
 
 	class CFullscreen
@@ -268,7 +271,10 @@ private:
 		CFullscreen(CMainWindow &MainWindow);
 		~CFullscreen();
 		bool Create(HWND hwndOwner,TVTest::CMainDisplay *pDisplay);
+		void ShowStatusBar(bool fShow);
 		bool IsStatusBarVisible() const { return m_fShowStatusView; }
+		void ShowTitleBar(bool fShow);
+		bool IsTitleBarVisible() const { return m_fShowTitleBar; }
 		bool IsSideBarVisible() const { return m_fShowSideBar; }
 		void ShowPanel(bool fShow);
 		bool IsPanelVisible() const { return m_fShowPanel; }
@@ -321,15 +327,14 @@ private:
 		CPanelFrame::DockingPlace m_PanelPlace;
 		int m_PanelWidth;
 		int m_PanelHeight;
-		CShowCursorManager m_ShowCursorManager;
+		CCursorTracker m_CursorTracker;
 
 		bool OnCreate();
 		void OnMouseCommand(int Command);
 		void OnLButtonDoubleClick();
 		void ShowCursor(bool fShow);
-		void ShowStatusView(bool fShow);
-		void ShowTitleBar(bool fShow);
 		void ShowSideBar(bool fShow);
+		void OnBarHide(CBasicWindow &Window);
 		void RestorePanel();
 	// CBasicWindow
 		bool Create(HWND hwndParent,DWORD Style,DWORD ExStyle=0,int ID=0) override;
@@ -471,7 +476,7 @@ private:
 
 	bool m_fShowCursor;
 	bool m_fNoHideCursor;
-	CShowCursorManager m_ShowCursorManager;
+	CCursorTracker m_CursorTracker;
 
 	bool m_fDragging;
 	POINT m_ptDragStartPos;
@@ -633,6 +638,7 @@ private:
 	void AdjustWindowSizeOnDockPanel(bool fDock);
 	void GetPanelDockingAdjustedPos(bool fDock,RECT *pPos) const;
 	void SetFixedPaneSize(int SplitterID,int ContainerID,int Width,int Height);
+	void ShowPopupTitleBar(bool fShow);
 	void ShowPopupStatusBar(bool fShow);
 	void ShowPopupSideBar(bool fShow);
 	void ShowCursor(bool fShow);

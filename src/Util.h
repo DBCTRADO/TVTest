@@ -6,6 +6,9 @@
 #include "StringUtility.h"
 
 
+inline bool operator==(const POINT &pt1, const POINT &pt2) { return pt1.x == pt2.x && pt1.y == pt2.y; }
+inline bool operator!=(const POINT &pt1, const POINT &pt2) { return !(pt1 == pt2); }
+
 int HexCharToInt(TCHAR Code);
 unsigned int HexStringToUInt(LPCTSTR pszString,int Length,LPCTSTR *ppszEnd=NULL);
 

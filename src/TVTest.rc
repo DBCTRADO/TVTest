@@ -710,6 +710,8 @@ BEGIN
 	CM_RESETERRORCOUNT,			"エラーカウントリセット"
 	CM_SHOWTOTTIME,				"TOTの時刻を表示する"
 	CM_ADJUSTTOTTIME,			"TOTで時刻合わせ"
+	CM_POPUPTITLEBAR,			"タイトルバーをポップアップ表示"
+	CM_POPUPSTATUSBAR,			"ステータスバーをポップアップ表示"
 	CM_ZOOMMENU,				"倍率 メニュー"
 	CM_ASPECTRATIOMENU,			"比率 メニュー"
 	CM_CHANNELMENU,				"チャンネル メニュー"
