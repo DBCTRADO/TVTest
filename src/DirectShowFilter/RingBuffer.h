@@ -240,19 +240,22 @@ public:
 
 	T *Push()
 	{
-		size_t Pos = m_Pos + m_Used;
+		size_t Capacity = m_ChunkList.size() * ChunkSize;
 
-		if (Pos == m_ChunkList.size() * ChunkSize
+		if (m_Used == Capacity
 				&& m_ChunkList.size() < m_MaxChunks) {
 			T *pBuffer = new T[ChunkSize * Unit];
 			m_ChunkList.push_back(pBuffer);
 			if (m_Pos != 0)
 				::CopyMemory(pBuffer, m_ChunkList.front(), m_Pos * UnitBytes);
+			Capacity += ChunkSize;
 		}
 
-		if (Pos >= m_Capacity)
-			Pos -= m_Capacity;
-		if (m_Used < m_Capacity) {
+		size_t Pos = m_Pos + m_Used;
+
+		if (Pos >= Capacity)
+			Pos -= Capacity;
+		if (m_Used < Capacity) {
 			m_Used++;
 		} else {
 			m_Pos++;
