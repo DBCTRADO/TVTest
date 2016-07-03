@@ -9,8 +9,12 @@
 
 
 #define IDC_PROGRAMINFO		1000
-#define CM_PROGRAMINFOPREV	1001
-#define CM_PROGRAMINFONEXT	1002
+
+
+static inline UINT GetTooltipID(int Item,int Button)
+{
+	return ((Item+1)<<8)|Button;
+}
 
 
 
@@ -51,7 +55,6 @@ CInformationPanel::CInformationPanel()
 	, m_ProgramInfoSubclass(this)
 	, m_fUseRichEdit(true)
 	, m_fProgramInfoCursorOverLink(false)
-	, m_HotButton(-1)
 {
 	RegisterItem<CVideoInfoItem>();
 	RegisterItem<CVideoDecoderItem>();
@@ -221,6 +224,11 @@ void CInformationPanel::RedrawItem(int Item)
 		RECT rc;
 
 		GetItemRect(Item,&rc);
+		if (Item==ITEM_PROGRAMINFO) {
+			RECT rcClient;
+			GetClientRect(&rcClient);
+			rc.bottom=rcClient.bottom;
+		}
 		Invalidate(&rc);
 	}
 }
@@ -238,11 +246,8 @@ bool CInformationPanel::ResetItem(int Item)
 	if (Item==ITEM_PROGRAMINFO) {
 		m_ProgramInfoLinkList.clear();
 		m_fProgramInfoCursorOverLink=false;
-		if (m_hwnd!=NULL) {
+		if (m_hwnd!=NULL)
 			::SetWindowText(m_hwndProgramInfo,TEXT(""));
-			RedrawButton(BUTTON_PROGRAMINFOPREV);
-			RedrawButton(BUTTON_PROGRAMINFONEXT);
-		}
 	}
 
 	if (m_hwnd!=NULL && pItem->IsVisible())
@@ -379,7 +384,23 @@ LRESULT CInformationPanel::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lP
 			m_ProgramInfoBackBrush.Create(m_Theme.ProgramInfoStyle.Back.Fill.GetSolidColor());
 			CalcFontHeight();
 
-			m_HotButton=-1;
+			m_ItemButtonWidth=m_FontHeight*15/10+m_Style.ItemButtonPadding.Horz();
+
+			m_HotButton.Item=-1;
+			m_HotButton.Button=-1;
+
+			m_Tooltip.Create(hwnd);
+			for (int i=0;i<NUM_ITEMS;i++) {
+				const CItem *pItem=m_ItemList[i];
+				const int ButtonCount=pItem->GetButtonCount();
+				for (int j=0;j<ButtonCount;j++) {
+					RECT rc;
+					TCHAR szText[CCommandList::MAX_COMMAND_NAME];
+					pItem->GetButtonRect(j,&rc);
+					pItem->GetButtonTipText(j,szText,lengthof(szText));
+					m_Tooltip.AddTool(GetTooltipID(i,j),rc,szText);
+				}
+			}
 
 			CProgramInfoItem *pProgramInfoItem=
 				static_cast<CProgramInfoItem*>(GetItem(ITEM_PROGRAMINFO));
@@ -392,6 +413,18 @@ LRESULT CInformationPanel::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lP
 	HANDLE_MSG(hwnd,WM_COMMAND,OnCommand);
 
 	case WM_SIZE:
+		{
+			for (int i=0;i<NUM_ITEMS;i++) {
+				const CItem *pItem=m_ItemList[i];
+				const int ButtonCount=pItem->GetButtonCount();
+				for (int j=0;j<ButtonCount;j++) {
+					RECT rc;
+					pItem->GetButtonRect(j,&rc);
+					m_Tooltip.SetToolRect(GetTooltipID(i,j),rc);
+				}
+			}
+		}
+
 		if (IsItemVisible(ITEM_PROGRAMINFO)) {
 			TVTest::Theme::BorderStyle Style=m_Theme.ProgramInfoStyle.Back.Border;
 			ConvertBorderWidthsInPixels(&Style);
@@ -424,9 +457,9 @@ LRESULT CInformationPanel::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lP
 
 	case WM_LBUTTONDOWN:
 		{
-			int Button=ButtonHitTest(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam));
+			ItemButtonNumber Button=ButtonHitTest(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam));
 
-			if (Button>=0) {
+			if (Button.Item>=0) {
 				SetHotButton(Button);
 				::SetCapture(hwnd);
 			}
@@ -435,20 +468,15 @@ LRESULT CInformationPanel::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lP
 
 	case WM_LBUTTONUP:
 		if (::GetCapture()==hwnd) {
-			if (m_HotButton>=0) {
+			if (m_HotButton.IsValid()) {
 				SetHotButton(ButtonHitTest(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam)));
-
-				switch (m_HotButton) {
-				case BUTTON_PROGRAMINFOPREV:
-					::SendMessage(hwnd,WM_COMMAND,CM_PROGRAMINFOPREV,0);
-					break;
-				case BUTTON_PROGRAMINFONEXT:
-					::SendMessage(hwnd,WM_COMMAND,CM_PROGRAMINFONEXT,0);
-					break;
-				}
+				ItemButtonNumber Button=m_HotButton;
+				::ReleaseCapture();
+				if (Button.IsValid())
+					m_ItemList[Button.Item]->OnButtonPushed(Button.Button);
+			} else {
+				::ReleaseCapture();
 			}
-
-			::ReleaseCapture();
 		}
 		return 0;
 
@@ -485,13 +513,14 @@ LRESULT CInformationPanel::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lP
 
 	case WM_MOUSELEAVE:
 	case WM_CAPTURECHANGED:
-		if (m_HotButton>=0)
-			SetHotButton(-1);
+		if (m_HotButton.IsValid()) {
+			SetHotButton(ItemButtonNumber());
+		}
 		return 0;
 
 	case WM_SETCURSOR:
 		if ((HWND)wParam==hwnd) {
-			if (LOWORD(lParam)==HTCLIENT && m_HotButton>=0) {
+			if (LOWORD(lParam)==HTCLIENT && m_HotButton.IsValid()) {
 				::SetCursor(GetActionCursor());
 				return TRUE;
 			}
@@ -579,30 +608,12 @@ LRESULT CInformationPanel::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lP
 
 void CInformationPanel::OnCommand(HWND hwnd,int id,HWND hwndCtl,UINT codeNotify)
 {
-	switch (id) {
-	case CM_PROGRAMINFOPREV:
-	case CM_PROGRAMINFONEXT:
-		{
-			bool fNext=id==CM_PROGRAMINFONEXT;
-			CProgramInfoItem *pItem=
-				static_cast<CProgramInfoItem*>(GetItem(ITEM_PROGRAMINFO));
+	if (id>=CM_INFORMATIONPANEL_ITEM_FIRST
+			&& id<CM_INFORMATIONPANEL_ITEM_FIRST+NUM_ITEMS) {
+		int Item=id-CM_INFORMATIONPANEL_ITEM_FIRST;
 
-			if (fNext!=pItem->IsNext()) {
-				pItem->SetNext(fNext);
-				RedrawButton(BUTTON_PROGRAMINFOPREV);
-				RedrawButton(BUTTON_PROGRAMINFONEXT);
-			}
-		}
+		SetItemVisible(Item,!IsItemVisible(Item));
 		return;
-
-	default:
-		if (id>=CM_INFORMATIONPANEL_ITEM_FIRST
-				&& id<CM_INFORMATIONPANEL_ITEM_FIRST+NUM_ITEMS) {
-			int Item=id-CM_INFORMATIONPANEL_ITEM_FIRST;
-
-			SetItemVisible(Item,!IsItemVisible(Item));
-			return;
-		}
 	}
 }
 
@@ -645,7 +656,6 @@ void CInformationPanel::Draw(HDC hdc,const RECT &PaintRect)
 {
 	HDC hdcDst;
 	RECT rc;
-//	TCHAR szText[256];
 
 	GetClientRect(&rc);
 	if (rc.right>m_Offscreen.GetWidth()
@@ -655,16 +665,7 @@ void CInformationPanel::Draw(HDC hdc,const RECT &PaintRect)
 	if (hdcDst==NULL)
 		hdcDst=hdc;
 
-	HFONT hfontOld=DrawUtil::SelectObject(hdcDst,m_Font);
-	COLORREF crOldTextColor=::SetTextColor(hdcDst,m_Theme.Style.Fore.Fill.GetSolidColor());
-	int OldBkMode=::SetBkMode(hdcDst,TRANSPARENT);
-
-	for (int i=0;i<ITEM_PROGRAMINFO;i++) {
-		if (GetDrawItemRect(i,&rc,PaintRect))
-			m_ItemList[i]->Draw(hdc,rc);
-	}
-
-	GetItemRect(ITEM_PROGRAMINFO-1,&rc);
+	GetItemRect(ITEM_PROGRAMINFO,&rc);
 	if (PaintRect.bottom>rc.bottom) {
 		rc.left=PaintRect.left;
 		rc.top=max(PaintRect.top,rc.bottom);
@@ -673,26 +674,22 @@ void CInformationPanel::Draw(HDC hdc,const RECT &PaintRect)
 		::FillRect(hdc,&rc,m_BackBrush.GetHandle());
 	}
 
-	if (IsItemVisible(ITEM_PROGRAMINFO)) {
-		TVTest::Theme::CThemeDraw ThemeDraw(BeginThemeDraw(hdc));
+	HFONT hfontOld=DrawUtil::SelectObject(hdcDst,m_Font);
 
+	for (int i=0;i<NUM_ITEMS;i++) {
+		if (GetDrawItemRect(i,&rc,PaintRect))
+			m_ItemList[i]->Draw(hdc,rc);
+	}
+
+	if (IsItemVisible(ITEM_PROGRAMINFO)) {
 		if (m_Theme.ProgramInfoStyle.Back.Border.Type!=TVTest::Theme::BORDER_NONE) {
+			TVTest::Theme::CThemeDraw ThemeDraw(BeginThemeDraw(hdc));
+
 			GetItemRect(ITEM_PROGRAMINFO,&rc);
 			ThemeDraw.Draw(m_Theme.ProgramInfoStyle.Back.Border,rc);
 		}
-
-		GetButtonRect(BUTTON_PROGRAMINFOPREV,&rc);
-		DrawProgramInfoPrevNextButton(
-			hdc,ThemeDraw,rc,false,IsButtonEnabled(BUTTON_PROGRAMINFOPREV),
-			m_HotButton==BUTTON_PROGRAMINFOPREV);
-		GetButtonRect(BUTTON_PROGRAMINFONEXT,&rc);
-		DrawProgramInfoPrevNextButton(
-			hdc,ThemeDraw,rc,true,IsButtonEnabled(BUTTON_PROGRAMINFONEXT),
-			m_HotButton==BUTTON_PROGRAMINFONEXT);
 	}
 
-	::SetBkMode(hdcDst,OldBkMode);
-	::SetTextColor(hdcDst,crOldTextColor);
 	::SelectObject(hdcDst,hfontOld);
 }
 
@@ -707,118 +704,102 @@ bool CInformationPanel::GetDrawItemRect(int Item,RECT *pRect,const RECT &PaintRe
 }
 
 
-void CInformationPanel::DrawItem(HDC hdc,LPCTSTR pszText,const RECT &Rect)
+void CInformationPanel::DrawItem(
+	CItem *pItem,HDC hdc,LPCTSTR pszText,const RECT &Rect)
 {
-	HDC hdcDst;
+	HDC hdcDst=NULL;
 	RECT rcDraw;
 
-	hdcDst=m_Offscreen.GetDC();
+	if (pItem->IsSingleRow())
+		hdcDst=m_Offscreen.GetDC();
 	if (hdcDst!=NULL) {
 		::SetRect(&rcDraw,0,0,Rect.right-Rect.left,Rect.bottom-Rect.top);
 	} else {
 		hdcDst=hdc;
 		rcDraw=Rect;
 	}
+	TVTest::Theme::CThemeDraw ThemeDraw(GetStyleManager());
+	ThemeDraw.Begin(hdcDst);
+
 	::FillRect(hdcDst,&rcDraw,m_BackBrush.GetHandle());
-	if (pszText!=NULL && pszText[0]!='\0')
-		::DrawText(hdcDst,pszText,-1,&rcDraw,DT_LEFT | DT_SINGLELINE | DT_END_ELLIPSIS);
+
+	const int ButtonCount=pItem->GetButtonCount();
+
+	if (pszText!=NULL && pszText[0]!='\0') {
+		RECT rc=rcDraw;
+		if (ButtonCount>0)
+			rc.right-=ButtonCount*m_ItemButtonWidth+m_Style.ItemButtonMargin.Horz();
+		ThemeDraw.Draw(m_Theme.Style.Fore,rc,pszText,DT_LEFT | DT_SINGLELINE | DT_END_ELLIPSIS);
+	}
+
+	for (int i=0;i<ButtonCount;i++) {
+		RECT rc;
+		pItem->GetButtonRect(i,&rc);
+		if (hdcDst!=hdc)
+			::OffsetRect(&rc,-Rect.left,-Rect.top);
+
+		const bool fEnabled=pItem->IsButtonEnabled(i);
+		const bool fHot=m_HotButton.Item==pItem->GetID() && m_HotButton.Button==i;
+		const TVTest::Theme::Style &Style=
+			fEnabled && fHot ? m_Theme.ButtonHotStyle : m_Theme.ButtonStyle;
+
+		ThemeDraw.Draw(Style.Back,&rc);
+		RECT rcText=rc;
+		TVTest::Style::Subtract(&rcText,m_Style.ItemButtonPadding);
+		TVTest::Theme::ForegroundStyle Fore;
+		if (fEnabled)
+			Fore.Fill=Style.Fore.Fill;
+		else
+			Fore.Fill=TVTest::Theme::MixStyle(Style.Fore.Fill,Style.Back.Fill);
+		pItem->DrawButton(hdcDst,ThemeDraw,Fore,rc,rcText,i);
+	}
+
+	ThemeDraw.End();
+
 	if (hdcDst!=hdc)
 		m_Offscreen.CopyTo(hdc,&Rect);
 }
 
 
-void CInformationPanel::DrawProgramInfoPrevNextButton(
-	HDC hdc,TVTest::Theme::CThemeDraw &ThemeDraw,const RECT &Rect,bool fNext,bool fEnabled,bool fHot) const
+void CInformationPanel::RedrawButton(ItemButtonNumber Button)
 {
-	const TVTest::Theme::Style &Style=
-		fEnabled && fHot?m_Theme.ButtonHotStyle:m_Theme.ButtonStyle;
-	RECT rc=Rect;
-
-	ThemeDraw.Draw(Style.Back,&rc);
-
-	HFONT hfontOld=DrawUtil::SelectObject(hdc,m_IconFont);
-	TVTest::Theme::ForegroundStyle Fore;
-
-	if (fEnabled)
-		Fore.Fill=Style.Fore.Fill;
-	else
-		Fore.Fill=TVTest::Theme::MixStyle(Style.Fore.Fill,Style.Back.Fill);
-	ThemeDraw.Draw(Fore,rc,fNext?TEXT("4"):TEXT("3"),
-				   DT_CENTER | DT_VCENTER | DT_SINGLELINE);
-	::SelectObject(hdc,hfontOld);
-}
-
-
-bool CInformationPanel::GetButtonRect(int Button,RECT *pRect) const
-{
-	RECT rc;
-
-	GetItemRect(ITEM_PROGRAMINFO,&rc);
-	pRect->left=rc.right-m_Style.ButtonSize.Width*(2-Button);
-	pRect->right=pRect->left+m_Style.ButtonSize.Width;
-	pRect->top=rc.bottom;
-	if (!IsItemVisible(ITEM_PROGRAMINFO)) {
-		pRect->bottom=rc.bottom;
-		return false;
+	if (Button.IsValid() && IsItemVisible(Button.Item)) {
+		RECT rc;
+		if (m_ItemList[Button.Item]->GetButtonRect(Button.Button,&rc))
+			Invalidate(&rc);
 	}
-	pRect->bottom=rc.bottom+m_Style.ButtonSize.Height;
-
-	return true;
 }
 
 
-void CInformationPanel::RedrawButton(int Button)
+CInformationPanel::ItemButtonNumber CInformationPanel::ButtonHitTest(int x,int y) const
 {
-	RECT rc;
+	ItemButtonNumber ItemButton;
 
-	if (GetButtonRect(Button,&rc))
-		Invalidate(&rc);
-}
-
-
-int CInformationPanel::ButtonHitTest(int x,int y) const
-{
-	POINT pt={x,y};
-
-	for (int i=0;i<NUM_BUTTONS;i++) {
-		if (IsButtonEnabled(i)) {
-			RECT rc;
-
-			if (GetButtonRect(i,&rc) && ::PtInRect(&rc,pt))
-				return i;
+	for (int i=0;i<NUM_ITEMS;i++) {
+		if (IsItemVisible(i)) {
+			const CItem *pItem=m_ItemList[i];
+			int Button=pItem->ButtonHitTest(x,y);
+			if (Button>=0 && pItem->IsButtonEnabled(Button)) {
+				ItemButton.Item=i;
+				ItemButton.Button=Button;
+				break;
+			}
 		}
 	}
 
-	return -1;
+	return ItemButton;
 }
 
 
-void CInformationPanel::SetHotButton(int Button)
+void CInformationPanel::SetHotButton(ItemButtonNumber Button)
 {
 	if (Button!=m_HotButton) {
-		if (m_HotButton>=0)
+		if (m_HotButton.IsValid())
 			RedrawButton(m_HotButton);
 		m_HotButton=Button;
-		if (m_HotButton>=0)
+		if (m_HotButton.IsValid())
 			RedrawButton(m_HotButton);
 	}
-}
-
-
-bool CInformationPanel::IsButtonEnabled(int Button) const
-{
-	const CProgramInfoItem *pProgramInfoItem=
-		static_cast<const CProgramInfoItem*>(GetItem(ITEM_PROGRAMINFO));
-
-	switch (Button) {
-	case BUTTON_PROGRAMINFOPREV:
-		return pProgramInfoItem->IsNext();
-
-	case BUTTON_PROGRAMINFONEXT:
-		return !pProgramInfoItem->IsNext();
-	}
-
-	return false;
 }
 
 
@@ -901,6 +882,8 @@ LRESULT CInformationPanel::CProgramInfoSubclass::OnMessage(
 CInformationPanel::InformationPanelStyle::InformationPanelStyle()
 	: ButtonSize(16,16)
 	, LineSpacing(1)
+	, ItemButtonMargin(4,0,0,0)
+	, ItemButtonPadding(2)
 {
 }
 
@@ -909,6 +892,8 @@ void CInformationPanel::InformationPanelStyle::SetStyle(const TVTest::Style::CSt
 {
 	pStyleManager->Get(TEXT("info-panel.button"),&ButtonSize);
 	pStyleManager->Get(TEXT("info-panel.line-spacing"),&LineSpacing);
+	pStyleManager->Get(TEXT("info-panel.item.button.margin"),&ItemButtonMargin);
+	pStyleManager->Get(TEXT("info-panel.item.button.padding"),&ItemButtonPadding);
 }
 
 
@@ -916,21 +901,95 @@ void CInformationPanel::InformationPanelStyle::NormalizeStyle(const TVTest::Styl
 {
 	pStyleManager->ToPixels(&ButtonSize);
 	pStyleManager->ToPixels(&LineSpacing);
+	pStyleManager->ToPixels(&ItemButtonMargin);
+	pStyleManager->ToPixels(&ItemButtonPadding);
 }
 
 
 
 
-CInformationPanel::CItem::CItem(CInformationPanel *pPanel,bool fVisible)
+CInformationPanel::CItem::CItem(CInformationPanel *pPanel,bool fVisible,int PropertyID)
 	: m_pPanel(pPanel)
 	, m_fVisible(fVisible)
+	, m_PropertyID(PropertyID)
 {
 }
 
 
 void CInformationPanel::CItem::DrawItem(HDC hdc,const RECT &Rect,LPCTSTR pszText)
 {
-	m_pPanel->DrawItem(hdc,pszText,Rect);
+	m_pPanel->DrawItem(this,hdc,pszText,Rect);
+}
+
+
+void CInformationPanel::CItem::DrawButton(
+	HDC hdc,TVTest::Theme::CThemeDraw &ThemeDraw,
+	const TVTest::Theme::ForegroundStyle Style,
+	const RECT &ButtonRect,const RECT &TextRect,
+	int Button)
+{
+	if (Button==0)
+		ThemeDraw.Draw(Style,TextRect,TEXT("..."),DT_CENTER | DT_SINGLELINE | DT_BOTTOM);
+}
+
+
+int CInformationPanel::CItem::GetButtonCount() const
+{
+	return HasProperty() ? 1 : 0;
+}
+
+
+bool CInformationPanel::CItem::GetButtonRect(int Button,RECT *pRect) const
+{
+	if (HasProperty() && Button==0) {
+		m_pPanel->GetItemRect(GetID(),pRect);
+		pRect->right-=m_pPanel->m_Style.ItemButtonMargin.Right;
+		pRect->left=pRect->right-m_pPanel->m_ItemButtonWidth;
+		pRect->top-=m_pPanel->m_Style.ItemButtonMargin.Top;
+		pRect->bottom-=m_pPanel->m_Style.ItemButtonMargin.Bottom;
+		return true;
+	}
+	return false;
+}
+
+
+bool CInformationPanel::CItem::IsButtonEnabled(int Button) const
+{
+	return Button==0 && HasProperty()
+		&& GetAppClass().UICore.GetCommandEnabledState(m_PropertyID);
+}
+
+
+bool CInformationPanel::CItem::OnButtonPushed(int Button)
+{
+	if (Button==0 && HasProperty()) {
+		GetAppClass().UICore.DoCommand(m_PropertyID);
+		return true;
+	}
+	return false;
+}
+
+
+bool CInformationPanel::CItem::GetButtonTipText(int Button,LPTSTR pszText,int MaxText) const
+{
+	if (Button==0 && HasProperty()) {
+		return GetAppClass().CommandList.GetCommandNameByID(m_PropertyID,pszText,MaxText)>0;
+	}
+	return false;
+}
+
+
+int CInformationPanel::CItem::ButtonHitTest(int x,int y) const
+{
+	const int ButtonCount=GetButtonCount();
+	for (int i=0;i<ButtonCount;i++) {
+		RECT rc;
+		GetButtonRect(i,&rc);
+		POINT pt={x,y};
+		if (::PtInRect(&rc,pt))
+			return i;
+	}
+	return -1;
 }
 
 
@@ -1015,7 +1074,7 @@ void CInformationPanel::CVideoInfoItem::Draw(HDC hdc,const RECT &Rect)
 
 
 CInformationPanel::CVideoDecoderItem::CVideoDecoderItem(CInformationPanel *pPanel,bool fVisible)
-	: CItemTemplate(pPanel,fVisible)
+	: CItemTemplate(pPanel,fVisible,CM_VIDEODECODERPROPERTY)
 {
 }
 
@@ -1054,7 +1113,7 @@ void CInformationPanel::CVideoDecoderItem::Draw(HDC hdc,const RECT &Rect)
 
 
 CInformationPanel::CVideoRendererItem::CVideoRendererItem(CInformationPanel *pPanel,bool fVisible)
-	: CItemTemplate(pPanel,fVisible)
+	: CItemTemplate(pPanel,fVisible,CM_VIDEORENDERERPROPERTY)
 {
 }
 
@@ -1093,7 +1152,7 @@ void CInformationPanel::CVideoRendererItem::Draw(HDC hdc,const RECT &Rect)
 
 
 CInformationPanel::CAudioDeviceItem::CAudioDeviceItem(CInformationPanel *pPanel,bool fVisible)
-	: CItemTemplate(pPanel,fVisible)
+	: CItemTemplate(pPanel,fVisible,CM_AUDIORENDERERPROPERTY)
 {
 }
 
@@ -1495,6 +1554,89 @@ bool CInformationPanel::CProgramInfoItem::Update()
 	m_pPanel->UpdateProgramInfoText();
 
 	return true;
+}
+
+
+void CInformationPanel::CProgramInfoItem::Draw(HDC hdc,const RECT &Rect)
+{
+	DrawItem(hdc,Rect,NULL);
+}
+
+
+void CInformationPanel::CProgramInfoItem::DrawButton(
+	HDC hdc,TVTest::Theme::CThemeDraw &ThemeDraw,
+	const TVTest::Theme::ForegroundStyle Style,
+	const RECT &ButtonRect,const RECT &TextRect,
+	int Button)
+{
+	HFONT hfontOld=DrawUtil::SelectObject(hdc,m_pPanel->m_IconFont);
+	ThemeDraw.Draw(Style,ButtonRect,
+				   Button==BUTTON_NEXT?TEXT("4"):TEXT("3"),
+				   DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+	::SelectObject(hdc,hfontOld);
+}
+
+
+bool CInformationPanel::CProgramInfoItem::GetButtonRect(int Button,RECT *pRect) const
+{
+	if (Button==BUTTON_PREV || Button==BUTTON_NEXT) {
+		RECT rc;
+
+		m_pPanel->GetItemRect(GetID(),&rc);
+		pRect->left=rc.right-m_pPanel->m_Style.ButtonSize.Width*(2-Button);
+		pRect->right=pRect->left+m_pPanel->m_Style.ButtonSize.Width;
+		pRect->top=rc.bottom;
+		pRect->bottom=rc.bottom+m_pPanel->m_Style.ButtonSize.Height;
+
+		return true;
+	}
+
+	return false;
+}
+
+
+bool CInformationPanel::CProgramInfoItem::IsButtonEnabled(int Button) const
+{
+	switch (Button) {
+	case BUTTON_PREV:
+		return m_fNext;
+
+	case BUTTON_NEXT:
+		return !m_fNext;
+	}
+
+	return false;
+}
+
+
+bool CInformationPanel::CProgramInfoItem::OnButtonPushed(int Button)
+{
+	switch (Button) {
+	case BUTTON_PREV:
+	case BUTTON_NEXT:
+		SetNext(Button==BUTTON_NEXT);
+		m_pPanel->RedrawButton(GetID(),BUTTON_PREV);
+		m_pPanel->RedrawButton(GetID(),BUTTON_NEXT);
+		return true;
+	}
+
+	return false;
+}
+
+
+bool CInformationPanel::CProgramInfoItem::GetButtonTipText(int Button,LPTSTR pszText,int MaxText) const
+{
+	switch (Button) {
+	case BUTTON_PREV:
+		::lstrcpyn(pszText,TEXT("åªç›ÇÃî‘ëg"),MaxText);
+		return true;
+
+	case BUTTON_NEXT:
+		::lstrcpyn(pszText,TEXT("éüÇÃî‘ëg"),MaxText);
+		return true;
+	}
+
+	return false;
 }
 
 

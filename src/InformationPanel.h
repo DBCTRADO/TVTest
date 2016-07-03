@@ -8,6 +8,7 @@
 #include "DrawUtil.h"
 #include "RichEditUtil.h"
 #include "WindowUtil.h"
+#include "Tooltip.h"
 
 
 class CInformationPanel
@@ -32,15 +33,27 @@ public:
 	class CItem
 	{
 	public:
-		CItem(CInformationPanel *pPanel,bool fVisible);
+		CItem(CInformationPanel *pPanel,bool fVisible,int PropertyID=0);
 		virtual ~CItem() {}
 		virtual int GetID() const = 0;
 		virtual LPCTSTR GetName() const = 0;
+		virtual bool IsSingleRow() const { return true; }
 		virtual void Reset() {}
 		virtual bool Update() = 0;
 		virtual void Draw(HDC hdc,const RECT &Rect) {}
+		virtual void DrawButton(HDC hdc,TVTest::Theme::CThemeDraw &ThemeDraw,
+								const TVTest::Theme::ForegroundStyle Style,
+								const RECT &ButtonRect,const RECT &TextRect,
+								int Button);
+		virtual int GetButtonCount() const;
+		virtual bool GetButtonRect(int Button,RECT *pRect) const;
+		virtual bool IsButtonEnabled(int Button) const;
+		virtual bool OnButtonPushed(int Button);
+		virtual bool GetButtonTipText(int Button,LPTSTR pszText,int MaxText) const;
+		int ButtonHitTest(int x,int y) const;
 		bool IsVisible() const { return m_fVisible; }
 		void SetVisible(bool fVisible) { m_fVisible=fVisible; }
+		bool HasProperty() const { return m_PropertyID!=0; }
 
 	protected:
 		void DrawItem(HDC hdc,const RECT &Rect,LPCTSTR pszText);
@@ -49,13 +62,15 @@ public:
 
 		CInformationPanel *m_pPanel;
 		bool m_fVisible;
+		const int m_PropertyID;
 	};
 
 	template<int id> class CItemTemplate : public CItem
 	{
 	public:
 		static const int ID=id;
-		CItemTemplate(CInformationPanel *pPanel,bool fVisible) : CItem(pPanel,fVisible) {}
+		CItemTemplate(CInformationPanel *pPanel,bool fVisible,int PropertyID=0)
+			: CItem(pPanel,fVisible,PropertyID) {}
 		int GetID() const override { return id; }
 	};
 
@@ -196,13 +211,29 @@ public:
 	public:
 		CProgramInfoItem(CInformationPanel *pPanel,bool fVisible);
 		LPCTSTR GetName() const override { return TEXT("ProgramInfo"); }
+		bool IsSingleRow() const { return false; }
 		void Reset() override;
 		bool Update() override;
+		void Draw(HDC hdc,const RECT &Rect) override;
+		void DrawButton(HDC hdc,TVTest::Theme::CThemeDraw &ThemeDraw,
+						const TVTest::Theme::ForegroundStyle Style,
+						const RECT &ButtonRect,const RECT &TextRect,
+						int Button) override;
+		int GetButtonCount() const override { return 2; }
+		bool GetButtonRect(int Button,RECT *pRect) const override;
+		bool IsButtonEnabled(int Button) const override;
+		bool OnButtonPushed(int Button) override;
+		bool GetButtonTipText(int Button,LPTSTR pszText,int MaxText) const;
 		const TVTest::String &GetInfoText() const { return m_InfoText; }
 		void SetNext(bool fNext);
 		bool IsNext() const { return m_fNext; }
 
 	private:
+		enum {
+			BUTTON_PREV,
+			BUTTON_NEXT
+		};
+
 		TVTest::String m_InfoText;
 		bool m_fNext;
 	};
@@ -246,6 +277,8 @@ private:
 	{
 		TVTest::Style::Size ButtonSize;
 		TVTest::Style::IntValue LineSpacing;
+		TVTest::Style::Margins ItemButtonMargin;
+		TVTest::Style::Margins ItemButtonPadding;
 
 		InformationPanelStyle();
 		void SetStyle(const TVTest::Style::CStyleManager *pStyleManager);
@@ -266,12 +299,6 @@ private:
 		m_ItemList[pItem->GetID()]=pItem;
 	}
 
-	enum {
-		BUTTON_PROGRAMINFOPREV,
-		BUTTON_PROGRAMINFONEXT,
-		NUM_BUTTONS
-	};
-
 	class CProgramInfoSubclass : public CWindowSubclass
 	{
 	public:
@@ -281,6 +308,18 @@ private:
 		LRESULT OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
 
 		CInformationPanel *m_pInfoPanel;
+	};
+
+	struct ItemButtonNumber
+	{
+		int Item;
+		int Button;
+
+		ItemButtonNumber() : Item(-1), Button(-1) {}
+		ItemButtonNumber(int item,int button) : Item(item), Button(button) {}
+		bool operator==(const ItemButtonNumber &rhs) const { return Item==rhs.Item && Button==rhs.Button; }
+		bool operator!=(const ItemButtonNumber &rhs) const { return !(*this==rhs); }
+		bool IsValid() const { return Item>=0 && Button>=0; }
 	};
 
 	static const LPCTSTR m_pszClassName;
@@ -299,6 +338,8 @@ private:
 	int m_FontHeight;
 	DrawUtil::CFont m_IconFont;
 	DrawUtil::COffscreen m_Offscreen;
+	CTooltip m_Tooltip;
+	int m_ItemButtonWidth;
 
 	HWND m_hwndProgramInfo;
 	CProgramInfoSubclass m_ProgramInfoSubclass;
@@ -307,7 +348,7 @@ private:
 	CRichEditUtil::CharRangeList m_ProgramInfoLinkList;
 	POINT m_ProgramInfoClickPos;
 	bool m_fProgramInfoCursorOverLink;
-	int m_HotButton;
+	ItemButtonNumber m_HotButton;
 
 	void UpdateProgramInfoText();
 	bool CreateProgramInfoEdit();
@@ -316,14 +357,11 @@ private:
 	void CalcFontHeight();
 	void Draw(HDC hdc,const RECT &PaintRect);
 	bool GetDrawItemRect(int Item,RECT *pRect,const RECT &PaintRect) const;
-	void DrawItem(HDC hdc,LPCTSTR pszText,const RECT &Rect);
-	void DrawProgramInfoPrevNextButton(HDC hdc,TVTest::Theme::CThemeDraw &ThemeDraw,
-									   const RECT &Rect,bool fNext,bool fEnabled,bool fHot) const;
-	bool GetButtonRect(int Button,RECT *pRect) const;
-	void RedrawButton(int Button);
-	int ButtonHitTest(int x,int y) const;
-	void SetHotButton(int Button);
-	bool IsButtonEnabled(int Button) const;
+	void DrawItem(CItem *pItem,HDC hdc,LPCTSTR pszText,const RECT &Rect);
+	void RedrawButton(ItemButtonNumber Button);
+	void RedrawButton(int Item,int Button) { RedrawButton(ItemButtonNumber(Item,Button)); }
+	ItemButtonNumber ButtonHitTest(int x,int y) const;
+	void SetHotButton(ItemButtonNumber Button);
 
 // CCustomWindow
 	LRESULT OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam) override;

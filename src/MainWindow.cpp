@@ -279,6 +279,13 @@ bool CMainWindow::InitializeViewer(BYTE VideoStreamType)
 	if (m_Display.BuildViewer(VideoStreamType)) {
 		CMediaViewer &MediaViewer=m_App.CoreEngine.m_DtvEngine.m_MediaViewer;
 
+		for (int i=0;i<lengthof(m_DirectShowFilterPropertyList);i++) {
+			m_pCore->SetCommandEnabledState(
+				m_DirectShowFilterPropertyList[i].Command,
+				m_App.CoreEngine.m_DtvEngine.m_MediaViewer.FilterHasProperty(
+					m_DirectShowFilterPropertyList[i].Filter));
+		}
+
 		m_App.Panel.InfoPanel.UpdateItem(CInformationPanel::ITEM_VIDEODECODER);
 		m_App.Panel.InfoPanel.UpdateItem(CInformationPanel::ITEM_VIDEORENDERER);
 		m_App.Panel.InfoPanel.UpdateItem(CInformationPanel::ITEM_AUDIODEVICE);
@@ -1715,6 +1722,11 @@ bool CMainWindow::OnCreate(const CREATESTRUCT *pcs)
 	m_pCore->SetCommandCheckedState(CM_TITLEBAR,m_fShowTitleBar);
 	m_pCore->SetCommandCheckedState(CM_STATUSBAR,m_fShowStatusBar);
 	m_pCore->SetCommandCheckedState(CM_SIDEBAR,m_fShowSideBar);
+
+	for (int i=0;i<lengthof(m_DirectShowFilterPropertyList);i++) {
+		m_pCore->SetCommandEnabledState(
+			m_DirectShowFilterPropertyList[i].Command,false);
+	}
 
 	HMENU hSysMenu=::GetSystemMenu(m_hwnd,FALSE);
 	::InsertMenu(hSysMenu,0,MF_BYPOSITION | MF_STRING | MF_ENABLED,
