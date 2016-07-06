@@ -1362,14 +1362,15 @@ void CAppMain::RegisterCommands()
 	for (int i=0;i<PluginManager.NumPlugins();i++) {
 		const CPlugin *pPlugin=PluginManager.GetPlugin(i);
 		TCHAR szName[CCommandList::MAX_COMMAND_NAME];
-		TCHAR szShortName[CCommandList::MAX_COMMAND_NAME];
+		//TCHAR szShortName[CCommandList::MAX_COMMAND_NAME];
 
 		StdUtil::snprintf(szName,lengthof(szName),
 						  TEXT("プラグイン有効/無効 : %s"),pPlugin->GetPluginName());
-		StdUtil::snprintf(szShortName,lengthof(szShortName),
-						  TEXT("%s 有効/無効"),pPlugin->GetPluginName());
+		//StdUtil::snprintf(szShortName,lengthof(szShortName),
+		//				  TEXT("%s 有効/無効"),pPlugin->GetPluginName());
 		CommandList.RegisterCommand(CM_PLUGIN_FIRST+i,
-									::PathFindFileName(pPlugin->GetFileName()),szName,szShortName);
+									::PathFindFileName(pPlugin->GetFileName()),szName,
+									/*szShortName*/pPlugin->GetPluginName());
 	}
 
 	// プラグインの各コマンド

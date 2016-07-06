@@ -23,7 +23,7 @@ public:
 // CMenuOptions
 	int GetMaxChannelMenuRows() const { return m_MaxChannelMenuRows; }
 	int GetMaxChannelMenuEventInfo() const { return m_MaxChannelMenuEventInfo; }
-	bool GetMenuItemList(std::vector<int> *pItemList) const;
+	bool GetMenuItemList(std::vector<int> *pItemList);
 	int GetSubMenuPosByCommand(int Command) const;
 
 private:
@@ -32,6 +32,7 @@ private:
 
 	int IDToCommand(int ID) const;
 	int CommandToID(int Command) const;
+	int GetIDFromString(const TVTest::String &Str) const;
 	void SetDlgItemState(HWND hDlg);
 	void GetItemText(int ID,LPTSTR pszText,int MaxLength) const;
 
@@ -42,15 +43,23 @@ private:
 	};
 
 	struct MenuItemInfo {
+		TVTest::String Name;
 		int ID;
 		bool fVisible;
 	};
 
+	struct AdditionalItemInfo {
+		int First;
+		int Last;
+	};
+
 	enum {
-		MENU_ID_SEPARATOR = -1
+		MENU_ID_SEPARATOR = -1,
+		MENU_ID_INVALID   = -2
 	};
 
 	static const MenuInfo m_DefaultMenuItemList[];
+	static const AdditionalItemInfo m_AdditionalItemList[];
 
 	int m_MaxChannelMenuRows;
 	int m_MaxChannelMenuEventInfo;

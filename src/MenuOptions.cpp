@@ -1,4 +1,5 @@
 #include "stdafx.h"
+#include <algorithm>
 #include "TVTest.h"
 #include "AppMain.h"
 #include "MenuOptions.h"
@@ -51,17 +52,17 @@ const CMenuOptions::MenuInfo CMenuOptions::m_DefaultMenuItemList[] =
 	{CM_CLOSE,							CM_CLOSE,					CM_CLOSE},
 };
 
+const CMenuOptions::AdditionalItemInfo CMenuOptions::m_AdditionalItemList[] = {
+	{CM_PLUGIN_FIRST,			CM_PLUGIN_LAST},
+	{CM_PLUGINCOMMAND_FIRST,	CM_PLUGINCOMMAND_LAST},
+};
+
 
 CMenuOptions::CMenuOptions()
 	: COptions(TEXT("Menu"))
 	, m_MaxChannelMenuRows(24)
 	, m_MaxChannelMenuEventInfo(30)
 {
-	m_MenuItemList.resize(lengthof(m_DefaultMenuItemList));
-	for (int i=0;i<lengthof(m_DefaultMenuItemList);i++) {
-		m_MenuItemList[i].ID=m_DefaultMenuItemList[i].ID;
-		m_MenuItemList[i].fVisible=true;
-	}
 }
 
 
@@ -81,8 +82,8 @@ bool CMenuOptions::ReadSettings(CSettings &Settings)
 
 	int ItemCount;
 	if (Settings.Read(TEXT("ItemCount"),&ItemCount) && ItemCount>0) {
-		const CCommandList &CommandList=GetAppClass().CommandList;
-		std::vector<MenuItemInfo> ItemList;
+		m_MenuItemList.clear();
+		m_MenuItemList.reserve(ItemCount);
 
 		for (int i=0;i<ItemCount;i++) {
 			TCHAR szName[32],szText[CCommandList::MAX_COMMAND_TEXT];
@@ -91,49 +92,15 @@ bool CMenuOptions::ReadSettings(CSettings &Settings)
 			if (Settings.Read(szName,szText,lengthof(szText))) {
 				MenuItemInfo Item;
 
+				Item.Name=szText;
+				Item.ID=MENU_ID_INVALID;
 				Item.fVisible=true;
 				::wsprintf(szName,TEXT("Item%d_State"),i);
 				if (Settings.Read(szName,&Value))
 					Item.fVisible=(Value&ITEM_STATE_VISIBLE)!=0;
-
-				if (szText[0]==_T('\0')) {
-					Item.ID=MENU_ID_SEPARATOR;
-					ItemList.push_back(Item);
-				} else {
-					int Command=CommandList.ParseText(szText);
-					if (Command>0) {
-						int ID=CommandToID(Command);
-						if (ID>=0) {
-							Item.ID=ID;
-							ItemList.push_back(Item);
-						}
-					}
-#ifdef _DEBUG
-					else {
-						TRACE(TEXT("CMenuOptions::ReadSettings() : Unknown command \"%s\"\n"),szText);
-					}
-#endif
-				}
+				m_MenuItemList.push_back(Item);
 			}
 		}
-
-		for (int i=0;i<lengthof(m_DefaultMenuItemList);i++) {
-			bool fFound=false;
-			for (size_t j=0;j<ItemList.size();j++) {
-				if (ItemList[j].ID==m_DefaultMenuItemList[i].ID) {
-					fFound=true;
-					break;
-				}
-			}
-			if (!fFound) {
-				MenuItemInfo Item;
-				Item.ID=m_DefaultMenuItemList[i].ID;
-				Item.fVisible=false;
-				ItemList.push_back(Item);
-			}
-		}
-
-		m_MenuItemList=ItemList;
 	}
 
 	return true;
@@ -147,32 +114,47 @@ bool CMenuOptions::WriteSettings(CSettings &Settings)
 	Settings.Write(TEXT("MaxChannelMenuRows"),m_MaxChannelMenuRows);
 	Settings.Write(TEXT("MaxChannelMenuEventInfo"),m_MaxChannelMenuEventInfo);
 
-	bool fDefault=true;
-	if (m_MenuItemList.size()!=lengthof(m_DefaultMenuItemList)) {
-		fDefault=false;
-	} else {
-		for (int i=0;i<lengthof(m_DefaultMenuItemList);i++) {
-			if (m_MenuItemList[i].ID!=m_DefaultMenuItemList[i].ID
-					|| !m_MenuItemList[i].fVisible) {
-				fDefault=false;
-				break;
+	if (!m_MenuItemList.empty()) {
+		// デフォルトと同じである場合は保存しない
+		// (新しく項目が追加された時にデフォルトとして反映されるようにするため)
+		bool fDefault=true;
+		if (m_MenuItemList.size()<lengthof(m_DefaultMenuItemList)) {
+			fDefault=false;
+		} else {
+			for (size_t i=0;i<lengthof(m_DefaultMenuItemList);i++) {
+				if (m_MenuItemList[i].ID!=m_DefaultMenuItemList[i].ID
+						|| !m_MenuItemList[i].fVisible) {
+					fDefault=false;
+					break;
+				}
+			}
+			if (fDefault) {
+				for (size_t i=lengthof(m_DefaultMenuItemList);i<m_MenuItemList.size();i++) {
+					if (m_MenuItemList[i].fVisible) {
+						fDefault=false;
+						break;
+					}
+				}
 			}
 		}
-	}
-	if (!fDefault) {
-		Settings.Write(TEXT("ItemCount"),(int)m_MenuItemList.size());
-		const CCommandList &CommandList=GetAppClass().CommandList;
-		for (size_t i=0;i<m_MenuItemList.size();i++) {
-			TCHAR szName[32];
+		if (!fDefault) {
+			Settings.Write(TEXT("ItemCount"),(int)m_MenuItemList.size());
+			const CCommandList &CommandList=GetAppClass().CommandList;
+			for (size_t i=0;i<m_MenuItemList.size();i++) {
+				const MenuItemInfo &Item=m_MenuItemList[i];
+				TCHAR szName[32];
 
-			::wsprintf(szName,TEXT("Item%d_ID"),i);
-			if (m_MenuItemList[i].ID==MENU_ID_SEPARATOR) {
-				Settings.Write(szName,TEXT(""));
-			} else {
-				Settings.Write(szName,CommandList.GetCommandTextByID(IDToCommand(m_MenuItemList[i].ID)));
+				::wsprintf(szName,TEXT("Item%d_ID"),i);
+				if (Item.ID==MENU_ID_INVALID) {
+					Settings.Write(szName,Item.Name);
+				} else if (Item.ID==MENU_ID_SEPARATOR) {
+					Settings.Write(szName,TEXT(""));
+				} else {
+					Settings.Write(szName,CommandList.GetCommandTextByID(IDToCommand(Item.ID)));
+				}
+				::wsprintf(szName,TEXT("Item%d_State"),i);
+				Settings.Write(szName,Item.fVisible?ITEM_STATE_VISIBLE:0);
 			}
-			::wsprintf(szName,TEXT("Item%d_State"),i);
-			Settings.Write(szName,m_MenuItemList[i].fVisible?ITEM_STATE_VISIBLE:0);
 		}
 	}
 
@@ -180,16 +162,28 @@ bool CMenuOptions::WriteSettings(CSettings &Settings)
 }
 
 
-bool CMenuOptions::GetMenuItemList(std::vector<int> *pItemList) const
+bool CMenuOptions::GetMenuItemList(std::vector<int> *pItemList)
 {
 	if (pItemList==NULL)
 		return false;
 
-	pItemList->clear();
+	if (m_MenuItemList.empty()) {
+		pItemList->resize(lengthof(m_DefaultMenuItemList));
+		for (int i=0;i<lengthof(m_DefaultMenuItemList);i++)
+			(*pItemList)[i]=m_DefaultMenuItemList[i].ID;
+	} else {
+		pItemList->clear();
+		pItemList->reserve(m_MenuItemList.size());
 
-	for (auto itr=m_MenuItemList.begin();itr!=m_MenuItemList.end();++itr) {
-		if (itr->fVisible)
-			pItemList->push_back(itr->ID);
+		for (auto itr=m_MenuItemList.begin();itr!=m_MenuItemList.end();++itr) {
+			if (itr->fVisible) {
+				int &ID=itr->ID;
+				if (ID==MENU_ID_INVALID)
+					ID=GetIDFromString(itr->Name);
+				if (ID!=MENU_ID_INVALID)
+					pItemList->push_back(ID);
+			}
+		}
 	}
 
 	return true;
@@ -215,7 +209,7 @@ int CMenuOptions::IDToCommand(int ID) const
 		if (m_DefaultMenuItemList[i].ID==ID)
 			return m_DefaultMenuItemList[i].Command;
 	}
-	return 0;
+	return ID;
 }
 
 
@@ -225,7 +219,20 @@ int CMenuOptions::CommandToID(int Command) const
 		if (m_DefaultMenuItemList[i].Command==Command)
 			return m_DefaultMenuItemList[i].ID;
 	}
-	return -1;
+	return Command;
+}
+
+
+int CMenuOptions::GetIDFromString(const TVTest::String &Str) const
+{
+	if (Str.empty())
+		return MENU_ID_SEPARATOR;
+
+	int Command=GetAppClass().CommandList.ParseText(Str.c_str());
+	if (Command>0)
+		return CommandToID(Command);
+
+	return MENU_ID_INVALID;
 }
 
 
@@ -252,13 +259,61 @@ INT_PTR CMenuOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 
 			m_fChanging=true;
 
-			for (int i=0;i<(int)m_MenuItemList.size();i++) {
-				int ID=m_MenuItemList[i].ID;
+			if (m_MenuItemList.empty()) {
+				m_MenuItemList.resize(lengthof(m_DefaultMenuItemList));
+				for (int i=0;i<lengthof(m_DefaultMenuItemList);i++) {
+					m_MenuItemList[i].ID=m_DefaultMenuItemList[i].ID;
+					m_MenuItemList[i].fVisible=true;
+				}
+			} else {
+				for (auto itr=m_MenuItemList.begin();itr!=m_MenuItemList.end();++itr) {
+					if (itr->ID==MENU_ID_INVALID)
+						itr->ID=GetIDFromString(itr->Name);
+				}
+
+				for (int i=0;i<lengthof(m_DefaultMenuItemList);i++) {
+					const int ID=m_DefaultMenuItemList[i].ID;
+					auto it=std::find_if(
+						m_MenuItemList.begin(),m_MenuItemList.end(),
+						[=](const MenuItemInfo &Item) -> bool { return Item.ID==ID; });
+					if (it==m_MenuItemList.end()) {
+						MenuItemInfo Item;
+						Item.ID=ID;
+						Item.fVisible=false;
+						m_MenuItemList.push_back(Item);
+					}
+				}
+			}
+
+			const CCommandList &CommandList=GetAppClass().CommandList;
+			for (int i=0;i<lengthof(m_AdditionalItemList);i++) {
+				for (int ID=m_AdditionalItemList[i].First;ID<=m_AdditionalItemList[i].Last;ID++) {
+					if (CommandList.IDToIndex(ID)<=0)
+						break;
+					auto it=std::find_if(
+						m_MenuItemList.begin(),m_MenuItemList.end(),
+						[=](const MenuItemInfo &Item) -> bool { return Item.ID==ID; });
+					if (it==m_MenuItemList.end()) {
+						MenuItemInfo Item;
+						Item.ID=ID;
+						Item.fVisible=false;
+						m_MenuItemList.push_back(Item);
+					}
+				}
+			}
+
+			int i=0;
+			for (auto itr=m_MenuItemList.begin();itr!=m_MenuItemList.end();++itr) {
 				TCHAR szText[CCommandList::MAX_COMMAND_NAME];
 
-				GetItemText(ID,szText,lengthof(szText));
-				m_ItemListView.InsertItem(i,szText,ID);
-				m_ItemListView.CheckItem(i,m_MenuItemList[i].fVisible);
+				if (itr->ID==MENU_ID_INVALID)
+					itr->ID=GetIDFromString(itr->Name);
+				if (itr->ID!=MENU_ID_INVALID) {
+					GetItemText(itr->ID,szText,lengthof(szText));
+					m_ItemListView.InsertItem(i,szText,itr->ID);
+					m_ItemListView.CheckItem(i,itr->fVisible);
+					i++;
+				}
 			}
 
 			m_fChanging=false;
@@ -340,6 +395,20 @@ INT_PTR CMenuOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 					m_ItemListView.CheckItem(i,true);
 				}
 
+				const CCommandList &CommandList=GetAppClass().CommandList;
+				for (int i=0;i<lengthof(m_AdditionalItemList);i++) {
+					for (int ID=m_AdditionalItemList[i].First;ID<=m_AdditionalItemList[i].Last;ID++) {
+						if (CommandList.IDToIndex(ID)<=0)
+							break;
+
+						TCHAR szText[CCommandList::MAX_COMMAND_NAME];
+
+						GetItemText(ID,szText,lengthof(szText));
+						int Index=m_ItemListView.InsertItem(-1,szText,ID);
+						m_ItemListView.CheckItem(Index,false);
+					}
+				}
+
 				SetDlgItemState(hDlg);
 
 				m_fChanging=false;
@@ -370,6 +439,7 @@ INT_PTR CMenuOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 			{
 				const int ItemCount=m_ItemListView.GetItemCount();
 
+				m_MenuItemList.clear();
 				m_MenuItemList.resize(ItemCount);
 
 				for (int i=0;i<ItemCount;i++) {
@@ -414,8 +484,10 @@ void CMenuOptions::GetItemText(int ID,LPTSTR pszText,int MaxLength) const
 				::LoadString(GetAppClass().GetResourceInstance(),
 							 m_DefaultMenuItemList[i].TextID,
 							 pszText,MaxLength);
-				break;
+				return;
 			}
 		}
+
+		GetAppClass().CommandList.GetCommandNameByID(ID,pszText,MaxLength);
 	}
 }

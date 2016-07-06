@@ -82,6 +82,7 @@ bool CMainMenu::Show(UINT Flags,int x,int y,HWND hwnd,bool fToggle,const std::ve
 		if (pItemList!=NULL && !pItemList->empty()) {
 			hmenuCustom=::CreatePopupMenu();
 			int OrigItemCount=::GetMenuItemCount(m_hmenuPopup);
+			const CCommandList &CommandList=GetAppClass().CommandList;
 
 			MENUITEMINFO mii;
 			TCHAR szText[256];
@@ -90,33 +91,39 @@ bool CMainMenu::Show(UINT Flags,int x,int y,HWND hwnd,bool fToggle,const std::ve
 			mii.fMask=MIIM_FTYPE | MIIM_STATE | MIIM_ID | MIIM_SUBMENU | MIIM_STRING;
 			mii.dwTypeData=szText;
 
-			int ItemCount=0;
-
 			for (auto itr=pItemList->begin();itr!=pItemList->end();++itr) {
 				int ID=*itr;
 
 				if (ID<0) {
-					if (::AppendMenu(hmenuCustom,MF_SEPARATOR,0,NULL))
-						ItemCount++;
+					::AppendMenu(hmenuCustom,MF_SEPARATOR,0,NULL);
 				} else if (ID>=CM_COMMAND_FIRST) {
-					for (int j=0;j<OrigItemCount;j++) {
-						mii.cch=lengthof(szText);
-						if (::GetMenuItemInfo(m_hmenuPopup,j,TRUE,&mii)
-								&& mii.wID==ID) {
-							if (::InsertMenuItem(hmenuCustom,ItemCount,TRUE,&mii))
-								ItemCount++;
+					// トップレベルの項目にあればコピー
+					int i;
+					for (i=0;i<OrigItemCount;i++) {
+						if (::GetMenuItemID(m_hmenuPopup,i)==(UINT)ID)
 							break;
-						}
+					}
+					if (i<OrigItemCount) {
+						mii.cch=lengthof(szText);
+						if (::GetMenuItemInfo(m_hmenuPopup,i,TRUE,&mii))
+							::InsertMenuItem(hmenuCustom,::GetMenuItemCount(hmenuCustom),TRUE,&mii);
+					} else if (CommandList.GetCommandShortNameByID(ID,szText,lengthof(szText))>0) {
+						unsigned int State=CommandList.GetCommandStateByID(ID);
+						UINT Flags=MF_STRING;
+						if ((State & CCommandList::COMMAND_STATE_DISABLED)!=0)
+							Flags|=MF_GRAYED;
+						if ((State & CCommandList::COMMAND_STATE_CHECKED)!=0)
+							Flags|=MF_CHECKED;
+						::AppendMenu(hmenuCustom,Flags,ID,FormatMenuString(szText).c_str());
 					}
 				} else {
 					mii.cch=lengthof(szText);
-					if (::GetMenuItemInfo(m_hmenuPopup,ID,TRUE,&mii)
-							&& ::InsertMenuItem(hmenuCustom,ItemCount,TRUE,&mii))
-						ItemCount++;
+					if (::GetMenuItemInfo(m_hmenuPopup,ID,TRUE,&mii))
+						::InsertMenuItem(hmenuCustom,::GetMenuItemCount(hmenuCustom),TRUE,&mii);
 				}
 			}
 
-			if (ItemCount==0) {
+			if (::GetMenuItemCount(hmenuCustom)==0) {
 				::DestroyMenu(hmenuCustom);
 				hmenuCustom=m_hmenuPopup;
 			}
