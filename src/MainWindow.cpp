@@ -4640,10 +4640,12 @@ void CMainWindow::SetFixedPaneSize(int SplitterID,int ContainerID,int Width,int 
 void CMainWindow::ShowPopupTitleBar(bool fShow)
 {
 	if (fShow) {
+		CViewWindow &ViewWindow=GetCurrentViewWindow();
 		RECT rcClient,rcTitle;
 
-		m_Display.GetViewWindow().GetClientRect(&rcClient);
+		ViewWindow.GetClientRect(&rcClient);
 		m_TitleBarManager.Layout(&rcClient,&rcTitle);
+		MapWindowRect(ViewWindow.GetHandle(),m_TitleBar.GetParent(),&rcTitle);
 		m_TitleBar.SetPosition(&rcTitle);
 		m_TitleBar.SetVisible(true);
 		::BringWindowToTop(m_TitleBar.GetHandle());
