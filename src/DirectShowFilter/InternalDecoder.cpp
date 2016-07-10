@@ -43,7 +43,7 @@ HRESULT CInternalDecoderManager::CreateInstance(const GUID &MediaSubType, IBaseF
 
 	ITVTestVideoDecoder *pDecoder;
 
-	hr = pCreateInstance(&pDecoder);
+	hr = pCreateInstance(IID_PPV_ARGS(&pDecoder));
 	if (FAILED(hr))
 		return hr;
 	hr = pDecoder->QueryInterface(IID_PPV_ARGS(ppFilter));

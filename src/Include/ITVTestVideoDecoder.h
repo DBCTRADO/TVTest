@@ -1,6 +1,6 @@
 /*
  *  TVTest DTV Video Decoder
- *  Copyright (C) 2015 DBCTRADO
+ *  Copyright (C) 2015-2016 DBCTRADO
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -17,6 +17,13 @@
  */
 
 #pragma once
+
+
+#if defined(_WIN64)
+#include <pshpack8.h>
+#else
+#include <pshpack4.h>
+#endif
 
 
 #define TVTVIDEODEC_FILTER_NAME L"TVTest DTV Video Decoder"
@@ -70,6 +77,7 @@ struct TVTVIDEODEC_Statistics
 	DWORD SkippedFrameCount;
 	LONG PlaybackRate;
 	LONGLONG BaseTimePerFrame;
+	DWORD RepeatFieldCount;
 	DWORD Mode;
 	TVTVIDEODEC_DXVADeviceInfo DXVADeviceInfo;
 };
@@ -78,9 +86,10 @@ struct TVTVIDEODEC_Statistics
 #define TVTVIDEODEC_STAT_FRAME_COUNT         0x00000002
 #define TVTVIDEODEC_STAT_PLAYBACK_RATE       0x00000004
 #define TVTVIDEODEC_STAT_BASE_TIME_PER_FRAME 0x00000008
-#define TVTVIDEODEC_STAT_MODE                0x00000010
-#define TVTVIDEODEC_STAT_DXVA_DEVICE_INFO    0x00000020
-#define TVTVIDEODEC_STAT_ALL                 0x0000003f
+#define TVTVIDEODEC_STAT_FIELD_COUNT         0x00000010
+#define TVTVIDEODEC_STAT_MODE                0x00000020
+#define TVTVIDEODEC_STAT_DXVA_DEVICE_INFO    0x00000040
+#define TVTVIDEODEC_STAT_ALL                 0x0000007f
 
 #define TVTVIDEODEC_MODE_DXVA2               0x00000001
 
@@ -92,15 +101,38 @@ struct TVTVIDEODEC_Statistics
 #define TVTVIDEODEC_FRAME_TYPE_P             0x00000020
 #define TVTVIDEODEC_FRAME_TYPE_B             0x00000040
 
-MIDL_INTERFACE("803267E1-0A79-4F9D-E167-3280790A9D4F")
-ITVTestVideoDecoderFrameCapture : public IUnknown
+struct TVTVIDEODEC_ColorDescription
 {
-	STDMETHOD(OnFrame)(
-		int Width, int Height, int AspectX, int AspectY,
-		REFGUID subtype, const BYTE * const *Buffer, const int *Pitch, DWORD Flags) PURE;
+	BYTE Flags;
+	BYTE ColorPrimaries;
+	BYTE MatrixCoefficients;
+	BYTE TransferCharacteristics;
 };
 
-MIDL_INTERFACE("5BF96108-6F7E-4D89-0861-F95B7E6F894D")
+#define TVTVIDEODEC_COLOR_DESCRIPTION_PRESENT 0x01
+
+struct TVTVIDEODEC_FrameInfo
+{
+	int Width;
+	int Height;
+	int AspectX;
+	int AspectY;
+	GUID Subtype;
+	const BYTE * const *Buffer;
+	const int *Pitch;
+	DWORD Flags;
+	TVTVIDEODEC_ColorDescription ColorDescription;
+};
+
+/* Frame capture interface */
+MIDL_INTERFACE("37669070-5574-44DA-BF20-A84A959990B5")
+ITVTestVideoDecoderFrameCapture : public IUnknown
+{
+	STDMETHOD(OnFrame)(const TVTVIDEODEC_FrameInfo *pFrameInfo) PURE;
+};
+
+/* DirectShow decoder interface */
+MIDL_INTERFACE("AE0BF9FF-EBCE-4412-9EFC-C6EE86B20855")
 ITVTestVideoDecoder : public IUnknown
 {
 	STDMETHOD(SetEnableDeinterlace)(BOOL fEnable) PURE;
@@ -136,6 +168,27 @@ ITVTestVideoDecoder : public IUnknown
 	STDMETHOD(SetFrameCapture)(ITVTestVideoDecoderFrameCapture *pFrameCapture) PURE;
 };
 
+/* Stand-alone decoder interface */
+MIDL_INTERFACE("B08074A7-7033-4ABA-AC28-972F55543736")
+ITVTestVideoFrameDecoder : public IUnknown
+{
+	STDMETHOD(Open)(REFGUID VideoSubtype) PURE;
+	STDMETHOD(Close)() PURE;
+
+	STDMETHOD(InputStream)(const void *pData, SIZE_T Size) PURE;
+
+	STDMETHOD(SetFrameCapture)(ITVTestVideoDecoderFrameCapture *pFrameCapture, REFGUID Subtype) PURE;
+
+	STDMETHOD(SetDeinterlaceMethod)(TVTVIDEODEC_DeinterlaceMethod Method) PURE;
+	STDMETHOD_(TVTVIDEODEC_DeinterlaceMethod, GetDeinterlaceMethod)() PURE;
+	STDMETHOD(SetWaitForKeyFrame)(BOOL fWait) PURE;
+	STDMETHOD_(BOOL, GetWaitForKeyFrame)() PURE;
+	STDMETHOD(SetSkipBFrames)(BOOL fSkip) PURE;
+	STDMETHOD_(BOOL, GetSkipBFrames)() PURE;
+	STDMETHOD(SetNumThreads)(int NumThreads) PURE;
+	STDMETHOD_(int, GetNumThreads)() PURE;
+};
+
 struct TVTestVideoDecoderInfo
 {
 	DWORD HostVersion;
@@ -150,7 +203,7 @@ struct TVTestVideoDecoderInfo
 #define TVTVIDEODEC_VERSION_GET_REV(ver)   ((ver) & 0xfff)
 
 #define TVTVIDEODEC_HOST_VERSION      TVTVIDEODEC_VERSION_(0, 0, 0)
-#define TVTVIDEODEC_INTERFACE_VERSION TVTVIDEODEC_VERSION_(0, 1, 0)
+#define TVTVIDEODEC_INTERFACE_VERSION TVTVIDEODEC_VERSION_(0, 2, 0)
 
 #ifdef TVTVIDEODEC_IMPL
 #define TVTVIDEODEC_EXPORT extern "C" __declspec(dllexport)
@@ -159,4 +212,7 @@ struct TVTestVideoDecoderInfo
 #endif
 
 TVTVIDEODEC_EXPORT BOOL WINAPI TVTestVideoDecoder_GetInfo(TVTestVideoDecoderInfo *pInfo);
-TVTVIDEODEC_EXPORT HRESULT WINAPI TVTestVideoDecoder_CreateInstance(ITVTestVideoDecoder **ppDecoder);
+TVTVIDEODEC_EXPORT HRESULT WINAPI TVTestVideoDecoder_CreateInstance(REFIID riid, void **ppObject);
+
+
+#include <poppack.h>
