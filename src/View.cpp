@@ -499,9 +499,11 @@ void CDisplayView::SetStyle(const TVTest::Style::CStyleManager *pStyleManager)
 }
 
 
-void CDisplayView::NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager)
+void CDisplayView::NormalizeStyle(
+	const TVTest::Style::CStyleManager *pStyleManager,
+	const TVTest::Style::CStyleScaling *pStyleScaling)
 {
-	m_Style.NormalizeStyle(pStyleManager);
+	m_Style.NormalizeStyle(pStyleManager,pStyleScaling);
 }
 
 
@@ -703,6 +705,7 @@ void CDisplayView::DisplayViewStyle::SetStyle(const TVTest::Style::CStyleManager
 {
 	TVTest::Style::IntValue Value;
 
+	*this=DisplayViewStyle();
 	if (pStyleManager->Get(TEXT("display.text-size-ratio.horz"),&Value) && Value.Value>0)
 		TextSizeRatioHorz=Value;
 	if (pStyleManager->Get(TEXT("display.text-size-ratio.vert"),&Value) && Value.Value>0)
@@ -715,13 +718,15 @@ void CDisplayView::DisplayViewStyle::SetStyle(const TVTest::Style::CStyleManager
 }
 
 
-void CDisplayView::DisplayViewStyle::NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager)
+void CDisplayView::DisplayViewStyle::NormalizeStyle(
+	const TVTest::Style::CStyleManager *pStyleManager,
+	const TVTest::Style::CStyleScaling *pStyleScaling)
 {
-	pStyleManager->ToPixels(&TextSizeMin);
-	pStyleManager->ToPixels(&ContentMargin);
-	pStyleManager->ToPixels(&CategoriesMargin);
-	pStyleManager->ToPixels(&CloseButtonSize);
-	pStyleManager->ToPixels(&CloseButtonMargin);
+	pStyleScaling->ToPixels(&TextSizeMin);
+	pStyleScaling->ToPixels(&ContentMargin);
+	pStyleScaling->ToPixels(&CategoriesMargin);
+	pStyleScaling->ToPixels(&CloseButtonSize);
+	pStyleScaling->ToPixels(&CloseButtonMargin);
 }
 
 

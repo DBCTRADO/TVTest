@@ -45,6 +45,10 @@
 #include <shlwapi.h>
 #include <streams.h>	// DirectShow BaseClasses
 
+#ifndef WM_DPICHANGED
+#define WM_DPICHANGED 0x02E0
+#endif
+
 #ifdef _DEBUG
 #define _CRTDBG_MAP_ALLOC
 #endif

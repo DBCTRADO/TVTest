@@ -61,6 +61,8 @@ CChannelPanel::CChannelPanel()
 	, m_fDetailToolTip(false)
 	, m_pLogoManager(NULL)
 {
+	GetDefaultFont(&m_StyleFont);
+
 	::ZeroMemory(&m_UpdatedTime,sizeof(SYSTEMTIME));
 	::ZeroMemory(&m_CurTime,sizeof(SYSTEMTIME));
 }
@@ -86,9 +88,14 @@ void CChannelPanel::SetStyle(const TVTest::Style::CStyleManager *pStyleManager)
 }
 
 
-void CChannelPanel::NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager)
+void CChannelPanel::NormalizeStyle(
+	const TVTest::Style::CStyleManager *pStyleManager,
+	const TVTest::Style::CStyleScaling *pStyleScaling)
 {
-	m_Style.NormalizeStyle(pStyleManager);
+	m_Style.NormalizeStyle(pStyleManager,pStyleScaling);
+
+	if (m_OldDPI==0)
+		m_OldDPI=pStyleScaling->GetDPI();
 }
 
 
@@ -124,19 +131,11 @@ void CChannelPanel::SetTheme(const TVTest::Theme::CThemeManager *pThemeManager)
 
 bool CChannelPanel::SetFont(const TVTest::Style::Font &Font)
 {
-	if (!CreateDrawFont(Font,&m_Font))
-		return false;
-
-	LOGFONT lf;
-	m_Font.GetLogFont(&lf);
-	lf.lfWeight=FW_BOLD;
-	m_ChannelFont.Create(&lf);
+	m_StyleFont=Font;
 
 	if (m_hwnd!=NULL) {
-		CalcItemHeight();
-		m_ScrollPos=0;
-		SetScrollBar();
-		Invalidate();
+		ApplyStyle();
+		RealizeStyle();
 	}
 
 	return true;
@@ -164,6 +163,11 @@ bool CChannelPanel::ReadSettings(CSettings &Settings)
 	if (Settings.Read(TEXT("ChannelPanelProgressBarStyle"),&Style))
 		m_ProgressBarStyle=static_cast<ProgressBarStyle>(Style);
 
+	int PopupWidth,PopupHeight;
+	if (Settings.Read(TEXT("ChannelPanelPopupEventInfoWidth"),&PopupWidth)
+			&& Settings.Read(TEXT("ChannelPanelPopupEventInfoHeight"),&PopupHeight))
+		m_EventInfoPopup.SetSize(PopupWidth,PopupHeight);
+
 	return true;
 }
 
@@ -179,6 +183,11 @@ bool CChannelPanel::WriteSettings(CSettings &Settings)
 	Settings.Write(TEXT("ChannelPanelShowFeaturedMark"),m_fShowFeaturedMark);
 	Settings.Write(TEXT("ChannelPanelShowProgressBar"),m_fShowProgressBar);
 	Settings.Write(TEXT("ChannelPanelProgressBarStyle"),static_cast<int>(m_ProgressBarStyle));
+
+	int PopupWidth,PopupHeight;
+	m_EventInfoPopup.GetSize(&PopupWidth,&PopupHeight);
+	Settings.Write(TEXT("ChannelPanelPopupEventInfoWidth"),PopupWidth);
+	Settings.Write(TEXT("ChannelPanelPopupEventInfoHeight"),PopupHeight);
 
 	return true;
 }
@@ -646,26 +655,15 @@ LRESULT CChannelPanel::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam
 	switch (uMsg) {
 	case WM_CREATE:
 		{
+			m_ScrollPos=0;
+			m_OldDPI=0;
+
 			InitializeUI();
 
-			if (!m_Font.IsCreated())
-				CreateDefaultFontAndBoldFont(&m_Font,&m_ChannelFont);
-
-			CalcItemHeight();
-			m_ScrollPos=0;
 			if (m_fDetailToolTip)
 				m_EventInfoPopupManager.Initialize(hwnd,&m_EventInfoPopupHandler);
 			else
 				CreateTooltip();
-
-			static const TVTest::Theme::IconList::ResourceInfo ResourceList[] = {
-				{MAKEINTRESOURCE(IDB_CHEVRON10),10,10},
-				{MAKEINTRESOURCE(IDB_CHEVRON20),20,20},
-			};
-			m_Chevron.Load(m_hinst,
-						   m_Style.ChannelChevronSize.Width,
-						   m_Style.ChannelChevronSize.Height,
-						   ResourceList,lengthof(ResourceList));
 
 			if (m_fShowProgressBar)
 				GetCurrentEpgTime(&m_CurTime);
@@ -851,6 +849,41 @@ LRESULT CChannelPanel::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam
 	}
 
 	return ::DefWindowProc(hwnd,uMsg,wParam,lParam);
+}
+
+
+void CChannelPanel::ApplyStyle()
+{
+	if (m_hwnd!=NULL) {
+		CreateDrawFontAndBoldFont(m_StyleFont,&m_Font,&m_ChannelFont);
+
+		CalcItemHeight();
+
+		static const TVTest::Theme::IconList::ResourceInfo ResourceList[] = {
+			{MAKEINTRESOURCE(IDB_CHEVRON10),10,10},
+			{MAKEINTRESOURCE(IDB_CHEVRON20),20,20},
+		};
+		m_Chevron.Load(m_hinst,
+					   m_Style.ChannelChevronSize.Width,
+					   m_Style.ChannelChevronSize.Height,
+					   ResourceList,lengthof(ResourceList));
+	}
+}
+
+
+void CChannelPanel::RealizeStyle()
+{
+	if (m_hwnd!=NULL) {
+		if (m_pStyleScaling!=NULL) {
+			const int NewDPI=m_pStyleScaling->GetDPI();
+			if (m_OldDPI!=0)
+				m_ScrollPos=::MulDiv(m_ScrollPos,NewDPI,m_OldDPI);
+			m_OldDPI=NewDPI;
+		}
+
+		SetScrollBar();
+		Invalidate();
+	}
 }
 
 
@@ -1515,6 +1548,7 @@ CChannelPanel::ChannelPanelStyle::ChannelPanelStyle()
 
 void CChannelPanel::ChannelPanelStyle::SetStyle(const TVTest::Style::CStyleManager *pStyleManager)
 {
+	*this=ChannelPanelStyle();
 	pStyleManager->Get(TEXT("channel-list-panel.channel-name.margin"),&ChannelNameMargin);
 	pStyleManager->Get(TEXT("channel-list-panel.channel-name.logo.margin"),&ChannelLogoMargin);
 	pStyleManager->Get(TEXT("channel-list-panel.channel-name.chevron"),&ChannelChevronSize);
@@ -1524,12 +1558,14 @@ void CChannelPanel::ChannelPanelStyle::SetStyle(const TVTest::Style::CStyleManag
 }
 
 
-void CChannelPanel::ChannelPanelStyle::NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager)
+void CChannelPanel::ChannelPanelStyle::NormalizeStyle(
+	const TVTest::Style::CStyleManager *pStyleManager,
+	const TVTest::Style::CStyleScaling *pStyleScaling)
 {
-	pStyleManager->ToPixels(&ChannelNameMargin);
-	pStyleManager->ToPixels(&ChannelLogoMargin);
-	pStyleManager->ToPixels(&ChannelChevronSize);
-	pStyleManager->ToPixels(&ChannelChevronMargin);
-	pStyleManager->ToPixels(&EventNameMargin);
-	pStyleManager->ToPixels(&FeaturedMarkMargin);
+	pStyleScaling->ToPixels(&ChannelNameMargin);
+	pStyleScaling->ToPixels(&ChannelLogoMargin);
+	pStyleScaling->ToPixels(&ChannelChevronSize);
+	pStyleScaling->ToPixels(&ChannelChevronMargin);
+	pStyleScaling->ToPixels(&EventNameMargin);
+	pStyleScaling->ToPixels(&FeaturedMarkMargin);
 }

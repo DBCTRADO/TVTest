@@ -106,6 +106,34 @@ namespace TVTest
 			bool operator!=(const Font &o) const { return !(*this==o); }
 		};
 
+		class CStyleScaling
+		{
+		public:
+			CStyleScaling();
+			bool SetDPI(int ResolutionX,int ResolutionY);
+			int GetDPI() const;
+			bool SetSystemDPI(int ResolutionX,int ResolutionY);
+			int GetSystemDPI() const;
+			void SetScaleFont(bool fScale);
+			bool ToPixels(IntValue *pValue) const;
+			bool ToPixels(Size *pValue) const;
+			bool ToPixels(Margins *pValue) const;
+			int ToPixels(int Value,UnitType Unit) const;
+			int LogicalPixelsToPhysicalPixels(int Pixels) const;
+			int PointsToPixels(int Points) const;
+			int DipToPixels(int Dip) const;
+			int ConvertUnit(int Value,UnitType SrcUnit,UnitType DstUnit) const;
+			bool RealizeFontSize(Font *pFont) const;
+			int GetScaledSystemMetrics(int Index) const;
+
+		private:
+			int m_ResolutionX;
+			int m_ResolutionY;
+			int m_SystemResolutionX;
+			int m_SystemResolutionY;
+			bool m_fScaleFont;
+		};
+
 		class CStyleManager
 		{
 		public:
@@ -123,17 +151,13 @@ namespace TVTest
 			bool Get(LPCTSTR pszName,Size *pValue) const;
 			bool Set(LPCTSTR pszName,const Margins &Value);
 			bool Get(LPCTSTR pszName,Margins *pValue) const;
-			bool ToPixels(IntValue *pValue) const;
-			bool ToPixels(Size *pValue) const;
-			bool ToPixels(Margins *pValue) const;
-			int ToPixels(int Value,UnitType Unit) const;
-			int LogicalPixelsToPhysicalPixels(int Pixels) const;
-			int PointsToPixels(int Points) const;
-			int DipToPixels(int Dip) const;
-			int ConvertUnit(int Value,UnitType SrcUnit,UnitType DstUnit) const;
-			int GetDPI() const;
+			bool InitStyleScaling(CStyleScaling *pScaling,HMONITOR hMonitor) const;
+			bool InitStyleScaling(CStyleScaling *pScaling,HWND hwnd) const;
+			bool InitStyleScaling(CStyleScaling *pScaling,const RECT &Position) const;
+			bool InitStyleScaling(CStyleScaling *pScaling) const;
 			int GetSystemDPI() const;
-			bool RealizeFontSize(Font *pFont) const;
+			int GetForcedDPI() const;
+			bool IsHandleDPIChanged() const;
 
 			static bool AssignFontSizeFromLogFont(Font *pFont);
 			static bool ParseValue(LPCTSTR pszText,IntValue *pValue);
@@ -144,7 +168,10 @@ namespace TVTest
 			StyleMap m_StyleMap;
 			int m_ResolutionX;
 			int m_ResolutionY;
+			int m_ForcedResolutionX;
+			int m_ForcedResolutionY;
 			bool m_fScaleFont;
+			bool m_fHandleDPIChanged;
 
 			static int m_SystemResolutionX;
 			static int m_SystemResolutionY;

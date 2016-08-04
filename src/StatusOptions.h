@@ -24,6 +24,7 @@ public:
 // CStatusOptions
 	bool ApplyOptions();
 	bool ApplyItemList();
+	void ApplyItemWidth();
 	int RegisterItem(LPCTSTR pszID);
 	bool SetItemVisibility(int ID,bool fVisible);
 	const TVTest::Style::Font &GetFont() const { return m_ItemFont; }
@@ -37,6 +38,9 @@ public:
 	void EnablePopupProgramInfo(bool fEnable) { m_fEnablePopupProgramInfo=fEnable; }
 	bool GetShowEventProgress() const { return m_fShowEventProgress; }
 	void SetShowEventProgress(bool fShow) { m_fShowEventProgress=fShow; }
+	int GetPopupEventInfoWidth() const { return m_PopupEventInfoWidth; }
+	int GetPopupEventInfoHeight() const { return m_PopupEventInfoHeight; }
+	void SetPopupEventInfoSize(int Width,int Height) { m_PopupEventInfoWidth=Width; m_PopupEventInfoHeight=Height; }
 
 private:
 	struct StatusItemInfo
@@ -65,6 +69,8 @@ private:
 	StatusItemInfoList m_ItemList;
 	StatusItemInfoList m_ItemListCur;
 	int m_ItemID;
+	int m_DPI;
+	int m_StatusBarDPI;
 	TVTest::Style::Font m_ItemFont;
 	bool m_fMultiRow;
 	int m_MaxRows;
@@ -85,13 +91,19 @@ private:
 	bool m_fInterpolateTOTTime;
 	bool m_fEnablePopupProgramInfo;
 	bool m_fShowEventProgress;
+	int m_PopupEventInfoWidth;
+	int m_PopupEventInfoHeight;
 
 // CBasicDialog
 	INT_PTR DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
 
-	void InitListBox(HWND hDlg);
-	void CalcTextWidth(HWND hDlg);
-	void SetListHExtent(HWND hDlg);
+// CUIBase
+	void ApplyStyle() override;
+	void RealizeStyle() override;
+
+	void InitListBox();
+	void CalcTextWidth();
+	void SetListHExtent();
 	void DrawInsertMark(HWND hwndList,int Pos);
 	bool GetItemPreviewRect(HWND hwndList,int Index,RECT *pRect);
 	bool IsCursorResize(HWND hwndList,int x,int y);

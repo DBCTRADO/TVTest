@@ -156,6 +156,7 @@ private:
 
 	static HINSTANCE m_hinst;
 
+	TVTest::Style::CStyleScaling m_StyleScaling;
 	CCapturePreview m_Preview;
 	CPreviewEventHandler m_PreviewEventHandler;
 	CStatusView m_Status;
@@ -168,6 +169,8 @@ private:
 	void SetTitle();
 // CCustomWindow
 	LRESULT OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
+// CUIBase
+	void RealizeStyle() override;
 };
 
 /*

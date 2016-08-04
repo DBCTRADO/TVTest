@@ -62,6 +62,7 @@ CContainer *CContainer::GetChildContainer(int Index) const
 CWindowContainer::CWindowContainer(int ID)
 	: CContainer(ID)
 	, m_pWindow(NULL)
+	, m_pUIBase(NULL)
 	, m_MinWidth(0)
 	, m_MinHeight(0)
 {
@@ -102,9 +103,14 @@ void CWindowContainer::SetVisible(bool fVisible)
 }
 
 
-void CWindowContainer::SetWindow(CBasicWindow *pWindow)
+void CWindowContainer::SetWindow(CBasicWindow *pWindow,TVTest::CUIBase *pUIBase)
 {
+	if (m_pUIBase!=NULL)
+		RemoveUIChild(m_pUIBase);
 	m_pWindow=pWindow;
+	m_pUIBase=pUIBase;
+	if (pUIBase!=NULL)
+		RegisterUIChild(pUIBase);
 	if (pWindow!=NULL && m_pBase!=NULL
 			&& pWindow->GetParent()!=m_pBase->GetHandle())
 		pWindow->SetParent(m_pBase);
@@ -288,9 +294,9 @@ bool CSplitter::SetPane(int Index,CContainer *pContainer)
 {
 	if (Index<0 || Index>1)
 		return false;
-	if (m_PaneList[Index].pContainer!=NULL)
-		delete m_PaneList[Index].pContainer;
-	m_PaneList[Index].pContainer=pContainer;
+	CContainer *pOldContainer=m_PaneList[Index].pContainer;
+	ReplacePane(Index,pContainer);
+	delete pOldContainer;
 	return true;
 }
 
@@ -299,7 +305,11 @@ bool CSplitter::ReplacePane(int Index,CContainer *pContainer)
 {
 	if (Index<0 || Index>1)
 		return false;
+	if (m_PaneList[Index].pContainer!=NULL)
+		RemoveUIChild(m_PaneList[Index].pContainer);
 	m_PaneList[Index].pContainer=pContainer;
+	if (pContainer!=NULL)
+		RegisterUIChild(pContainer);
 	return true;
 }
 
@@ -538,6 +548,18 @@ bool CSplitter::GetBarRect(RECT *pRect) const
 }
 
 
+void CSplitter::ApplyStyle()
+{
+	m_BarWidth=m_pStyleScaling->LogicalPixelsToPhysicalPixels(4);
+}
+
+
+void CSplitter::RealizeStyle()
+{
+	Adjust();
+}
+
+
 
 
 // ‰ß‹Ž‚Ìƒo[ƒWƒ‡ƒ“‚Æ‚ÌŒÝŠ·‚Ì‚½‚ß‚É Splitter ‚É‚µ‚Ä‚¨‚­
@@ -675,10 +697,14 @@ LRESULT CLayoutBase::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 
 bool CLayoutBase::SetTopContainer(CContainer *pContainer)
 {
+	if (m_pContainer!=NULL)
+		RemoveUIChild(m_pContainer);
 	m_pContainer=pContainer;
 	m_pFocusContainer=NULL;
 	if (pContainer!=NULL) {
 		SetBasePointer(pContainer,this);
+		RegisterUIChild(pContainer);
+		pContainer->SetStyleScaling(m_pStyleScaling);
 		Adjust();
 	}
 	return true;

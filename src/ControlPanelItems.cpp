@@ -143,18 +143,11 @@ void CVideoControlItem::OnRButtonDown(int x,int y)
 }
 
 
-CVolumeControlItem::CVolumeControlItem()
-	: m_BarHeight(8)
-	, m_BarPadding(1)
-	, m_BarBorderWidth(1)
-{
-}
-
 void CVolumeControlItem::CalcSize(int Width,SIZE *pSize)
 {
 	const TVTest::Style::Margins &Padding=m_pControlPanel->GetItemPadding();
 	pSize->cx=Width;
-	pSize->cy=m_BarHeight+Padding.Vert();
+	pSize->cy=m_Style.BarHeight+Padding.Vert();
 }
 
 void CVolumeControlItem::Draw(HDC hdc,const RECT &Rect)
@@ -170,13 +163,13 @@ void CVolumeControlItem::Draw(HDC hdc,const RECT &Rect)
 	lb.lbColor=TextColor;
 	lb.lbHatch=0;
 	hpen=::ExtCreatePen(PS_GEOMETRIC | PS_SOLID | PS_INSIDEFRAME | PS_JOIN_MITER,
-						m_BarBorderWidth,&lb,0,NULL);
+						m_Style.BarBorderWidth,&lb,0,NULL);
 	hpenOld=SelectPen(hdc,hpen);
 	hbrOld=SelectBrush(hdc,::GetStockObject(NULL_BRUSH));
 	rc=Rect;
 	TVTest::Style::Subtract(&rc,m_pControlPanel->GetItemPadding());
-	rc.top+=((rc.bottom-rc.top)-m_BarHeight)/2;
-	rc.bottom=rc.top+m_BarHeight;
+	rc.top+=((rc.bottom-rc.top)-m_Style.BarHeight)/2;
+	rc.bottom=rc.top+m_Style.BarHeight;
 	::Rectangle(hdc,rc.left,rc.top,rc.right,rc.bottom);
 	SelectBrush(hdc,hbrOld);
 	SelectPen(hdc,hpenOld);
@@ -185,8 +178,8 @@ void CVolumeControlItem::Draw(HDC hdc,const RECT &Rect)
 		BarColor=TextColor;
 	else
 		BarColor=MixColor(TextColor,::GetBkColor(hdc));
-	::InflateRect(&rc,-m_BarBorderWidth,-m_BarBorderWidth);
-	TVTest::Style::Subtract(&rc,m_BarPadding);
+	::InflateRect(&rc,-m_Style.BarBorderWidth,-m_Style.BarBorderWidth);
+	TVTest::Style::Subtract(&rc,m_Style.BarPadding);
 	rc.right=rc.left+(rc.right-rc.left)*UICore.GetVolume()/CCoreEngine::MAX_VOLUME;
 	DrawUtil::Fill(hdc,&rc,BarColor);
 }
@@ -211,7 +204,7 @@ void CVolumeControlItem::OnMouseMove(int x,int y)
 
 	rc=m_Position;
 	TVTest::Style::Subtract(&rc,m_pControlPanel->GetItemPadding());
-	TVTest::Style::Subtract(&rc,m_BarPadding);
+	TVTest::Style::Subtract(&rc,m_Style.BarPadding);
 	Volume=(x-rc.left)*CCoreEngine::MAX_VOLUME/((rc.right-rc.left)-1);
 	if (Volume<0)
 		Volume=0;
@@ -223,16 +216,26 @@ void CVolumeControlItem::OnMouseMove(int x,int y)
 
 void CVolumeControlItem::SetStyle(const TVTest::Style::CStyleManager *pStyleManager)
 {
-	pStyleManager->Get(TEXT("control-panel.volume.bar.height"),&m_BarHeight);
-	pStyleManager->Get(TEXT("control-panel.volume.bar.padding"),&m_BarPadding);
-	pStyleManager->Get(TEXT("control-panel.volume.bar.border.width"),&m_BarBorderWidth);
+	m_Style=VolumeControlStyle();
+	pStyleManager->Get(TEXT("control-panel.volume.bar.height"),&m_Style.BarHeight);
+	pStyleManager->Get(TEXT("control-panel.volume.bar.padding"),&m_Style.BarPadding);
+	pStyleManager->Get(TEXT("control-panel.volume.bar.border.width"),&m_Style.BarBorderWidth);
 }
 
-void CVolumeControlItem::NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager)
+void CVolumeControlItem::NormalizeStyle(
+	const TVTest::Style::CStyleManager *pStyleManager,
+	const TVTest::Style::CStyleScaling *pStyleScaling)
 {
-	pStyleManager->ToPixels(&m_BarHeight);
-	pStyleManager->ToPixels(&m_BarPadding);
-	pStyleManager->ToPixels(&m_BarBorderWidth);
+	pStyleScaling->ToPixels(&m_Style.BarHeight);
+	pStyleScaling->ToPixels(&m_Style.BarPadding);
+	pStyleScaling->ToPixels(&m_Style.BarBorderWidth);
+}
+
+CVolumeControlItem::VolumeControlStyle::VolumeControlStyle()
+	: BarHeight(8)
+	, BarPadding(1)
+	, BarBorderWidth(1)
+{
 }
 
 

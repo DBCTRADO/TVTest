@@ -31,7 +31,9 @@ public:
 
 // CUIBase
 	void SetStyle(const TVTest::Style::CStyleManager *pStyleManager) override;
-	void NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager) override;
+	void NormalizeStyle(
+		const TVTest::Style::CStyleManager *pStyleManager,
+		const TVTest::Style::CStyleScaling *pStyleScaling) override;
 	void SetTheme(const TVTest::Theme::CThemeManager *pThemeManager) override;
 
 // CNotificationBar
@@ -60,7 +62,9 @@ private:
 
 		NotificationBarStyle();
 		void SetStyle(const TVTest::Style::CStyleManager *pStyleManager);
-		void NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager);
+		void NormalizeStyle(
+			const TVTest::Style::CStyleManager *pStyleManager,
+			const TVTest::Style::CStyleScaling *pStyleScaling);
 	};
 
 	enum {
@@ -77,6 +81,7 @@ private:
 	NotificationBarStyle m_Style;
 	TVTest::Theme::BackgroundStyle m_BackStyle;
 	COLORREF m_TextColor[3];
+	TVTest::Style::Font m_StyleFont;
 	DrawUtil::CFont m_Font;
 	int m_BarHeight;
 	bool m_fAnimate;
@@ -92,6 +97,8 @@ private:
 	void SetHideTimer();
 // CCustomWindow
 	LRESULT OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
+// CUIBase
+	void ApplyStyle() override;
 };
 
 

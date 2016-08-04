@@ -32,7 +32,9 @@ public:
 
 // CUIBase
 	void SetStyle(const TVTest::Style::CStyleManager *pStyleManager) override;
-	void NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager) override;
+	void NormalizeStyle(
+		const TVTest::Style::CStyleManager *pStyleManager,
+		const TVTest::Style::CStyleScaling *pStyleScaling) override;
 	void SetTheme(const TVTest::Theme::CThemeManager *pThemeManager) override;
 
 // CPage
@@ -64,10 +66,13 @@ private:
 
 		ControlPanelStyle();
 		void SetStyle(const TVTest::Style::CStyleManager *pStyleManager);
-		void NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager);
+		void NormalizeStyle(
+			const TVTest::Style::CStyleManager *pStyleManager,
+			const TVTest::Style::CStyleScaling *pStyleScaling);
 	};
 
 	std::vector<CControlPanelItem*> m_ItemList;
+	TVTest::Style::Font m_StyleFont;
 	DrawUtil::CFont m_Font;
 	int m_FontHeight;
 	ControlPanelStyle m_Style;
@@ -83,6 +88,11 @@ private:
 
 // CCustomWindow
 	LRESULT OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
+
+// CUIBase
+	void ApplyStyle() override;
+	void RealizeStyle() override;
+
 // CControlPanel
 	void Draw(HDC hdc,const RECT &PaintRect);
 	void SendCommand(int Command);
@@ -92,6 +102,7 @@ private:
 };
 
 class ABSTRACT_CLASS(CControlPanelItem)
+	: public TVTest::CUIBase
 {
 protected:
 	RECT m_Position;
@@ -127,8 +138,6 @@ public:
 	virtual void OnRButtonDown(int x,int y) {}
 	virtual void OnRButtonUp(int x,int y) {}
 	virtual void OnMouseMove(int x,int y) {}
-	virtual void SetStyle(const TVTest::Style::CStyleManager *pStyleManager) {}
-	virtual void NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager) {}
 
 	friend CControlPanel;
 };

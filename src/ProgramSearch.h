@@ -358,7 +358,12 @@ private:
 
 	static const int MIN_PANE_HEIGHT=16;
 
-	INT_PTR DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam);
+// CBasicDialog
+	INT_PTR DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
+
+// CUIBase
+	void ApplyStyle() override;
+
 	bool AddSearchResult(CSearchEventInfo *pEventInfo);
 	void ClearSearchResult();
 	void SortSearchResult();

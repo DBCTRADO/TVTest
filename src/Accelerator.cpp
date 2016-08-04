@@ -1107,6 +1107,16 @@ INT_PTR CAccelerator::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 }
 
 
+void CAccelerator::RealizeStyle()
+{
+	CBasicDialog::RealizeStyle();
+
+	if (m_hDlg!=NULL) {
+		m_ListView.AdjustColumnWidth(true);
+	}
+}
+
+
 // CRawInput::CEventHandler
 void CAccelerator::OnInput(int Type)
 {

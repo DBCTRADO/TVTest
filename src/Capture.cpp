@@ -368,6 +368,9 @@ CCaptureWindow::CCaptureWindow()
 {
 	m_WindowPosition.Width=320;
 	m_WindowPosition.Height=240;
+
+	RegisterUIChild(&m_Status);
+	SetStyleScaling(&m_StyleScaling);
 }
 
 
@@ -544,6 +547,10 @@ LRESULT CCaptureWindow::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lPara
 			return 0;
 		break;
 
+	case WM_DPICHANGED:
+		OnDPIChanged(hwnd,wParam,lParam);
+		break;
+
 	case WM_COMMAND:
 		switch (LOWORD(wParam)) {
 		case CM_SAVEIMAGE:
@@ -577,6 +584,13 @@ LRESULT CCaptureWindow::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lPara
 		break;
 	}
 	return ::DefWindowProc(hwnd,uMsg,wParam,lParam);
+}
+
+
+void CCaptureWindow::RealizeStyle()
+{
+	if (m_hwnd!=NULL)
+		SendSizeMessage();
 }
 
 

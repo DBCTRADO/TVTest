@@ -275,7 +275,7 @@ public:
 	bool DeleteItem(int Command);
 	bool SetItemText(int Command,LPCTSTR pszText);
 	int CommandToIndex(int Command) const;
-	bool Show(HWND hwndOwner,HWND hwndMessage,const POINT *pPos,int CurItem=-1,UINT Flags=0);
+	bool Show(HWND hwndOwner,HWND hwndMessage,const POINT *pPos,int CurItem=-1,UINT Flags=0,int DPI=0);
 	bool Hide();
 	bool GetPosition(RECT *pRect);
 
@@ -287,6 +287,7 @@ private:
 	MARGINS m_WindowMargin;
 	DrawUtil::CFont m_Font;
 	CMenuPainter m_MenuPainter;
+	int m_DPI;
 	int m_ItemWidth;
 	int m_ItemHeight;
 	int m_MaxRows;

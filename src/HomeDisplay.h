@@ -113,6 +113,7 @@ private:
 		PART_CONTENT
 	};
 
+	TVTest::Style::Font m_StyleFont;
 	DrawUtil::CFont m_Font;
 	bool m_fAutoFontSize;
 	StyleInfo m_HomeDisplayStyle;
@@ -137,6 +138,10 @@ private:
 
 // CCustomWindow
 	LRESULT OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
+
+// CUIBase
+	void ApplyStyle() override;
+	void RealizeStyle() override;
 
 // CDoubleBufferingDraw
 	void Draw(HDC hdc,const RECT &PaintRect) override;

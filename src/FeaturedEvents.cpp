@@ -455,6 +455,8 @@ CFeaturedEventsSearchDialog::CFeaturedEventsSearchDialog(
 	, m_SearchSettingsDialog(Options)
 	, m_ServiceList(ServiceList)
 {
+	RegisterUIChild(&m_SearchSettingsDialog);
+	SetStyleScaling(&m_StyleScaling);
 }
 
 

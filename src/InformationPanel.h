@@ -248,7 +248,9 @@ public:
 
 // CUIBase
 	void SetStyle(const TVTest::Style::CStyleManager *pStyleManager) override;
-	void NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager) override;
+	void NormalizeStyle(
+		const TVTest::Style::CStyleManager *pStyleManager,
+		const TVTest::Style::CStyleScaling *pStyleScaling) override;
 	void SetTheme(const TVTest::Theme::CThemeManager *pThemeManager) override;
 
 // CPage
@@ -282,7 +284,9 @@ private:
 
 		InformationPanelStyle();
 		void SetStyle(const TVTest::Style::CStyleManager *pStyleManager);
-		void NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager);
+		void NormalizeStyle(
+			const TVTest::Style::CStyleManager *pStyleManager,
+			const TVTest::Style::CStyleScaling *pStyleScaling);
 	};
 
 	struct InformationPanelTheme
@@ -334,6 +338,7 @@ private:
 	COLORREF m_crProgramInfoTextColor;
 	DrawUtil::CBrush m_BackBrush;
 	DrawUtil::CBrush m_ProgramInfoBackBrush;
+	TVTest::Style::Font m_StyleFont;
 	DrawUtil::CFont m_Font;
 	int m_FontHeight;
 	DrawUtil::CFont m_IconFont;
@@ -365,6 +370,10 @@ private:
 
 // CCustomWindow
 	LRESULT OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
+
+// CUIBase
+	void ApplyStyle() override;
+	void RealizeStyle() override;
 };
 
 

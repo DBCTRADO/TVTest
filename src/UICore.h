@@ -4,7 +4,7 @@
 
 #include <vector>
 #include "UISkin.h"
-#include "ColorScheme.h"
+#include "ColorSchemeOptions.h"
 #include "CoreEngine.h"
 #include "AudioManager.h"
 #include "Menu.h"

@@ -309,9 +309,9 @@
       <MinimumRequiredVersion>6</MinimumRequiredVersion>
     </Link>
     <Manifest>
-      <AdditionalManifestFiles>$(SolutionDir)Resource\compatibility.manifest;%(AdditionalManifestFiles)</AdditionalManifestFiles>
+      <AdditionalManifestFiles>$(SolutionDir)Resource\TVTest.exe.manifest;%(AdditionalManifestFiles)</AdditionalManifestFiles>
       <OutputManifestFile>$(IntDir)$(TargetName)$(TargetExt).embed.manifest</OutputManifestFile>
-      <EnableDPIAwareness>true</EnableDPIAwareness>
+      <EnableDPIAwareness>false</EnableDPIAwareness>
     </Manifest>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug_XP|Win32'">
@@ -359,9 +359,9 @@
       <MinimumRequiredVersion>5.01</MinimumRequiredVersion>
     </Link>
     <Manifest>
-      <AdditionalManifestFiles>$(SolutionDir)Resource\compatibility.manifest;%(AdditionalManifestFiles)</AdditionalManifestFiles>
+      <AdditionalManifestFiles>$(SolutionDir)Resource\TVTest.exe.manifest;%(AdditionalManifestFiles)</AdditionalManifestFiles>
       <OutputManifestFile>$(IntDir)$(TargetName)$(TargetExt).embed.manifest</OutputManifestFile>
-      <EnableDPIAwareness>true</EnableDPIAwareness>
+      <EnableDPIAwareness>false</EnableDPIAwareness>
     </Manifest>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -408,9 +408,9 @@
       <MinimumRequiredVersion>6</MinimumRequiredVersion>
     </Link>
     <Manifest>
-      <AdditionalManifestFiles>$(SolutionDir)Resource\compatibility.manifest;%(AdditionalManifestFiles)</AdditionalManifestFiles>
+      <AdditionalManifestFiles>$(SolutionDir)Resource\TVTest.exe.manifest;%(AdditionalManifestFiles)</AdditionalManifestFiles>
       <OutputManifestFile>$(IntDir)$(TargetName)$(TargetExt).embed.manifest</OutputManifestFile>
-      <EnableDPIAwareness>true</EnableDPIAwareness>
+      <EnableDPIAwareness>false</EnableDPIAwareness>
     </Manifest>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug_XP|x64'">
@@ -457,9 +457,9 @@
       <MinimumRequiredVersion>5.02</MinimumRequiredVersion>
     </Link>
     <Manifest>
-      <AdditionalManifestFiles>$(SolutionDir)Resource\compatibility.manifest;%(AdditionalManifestFiles)</AdditionalManifestFiles>
+      <AdditionalManifestFiles>$(SolutionDir)Resource\TVTest.exe.manifest;%(AdditionalManifestFiles)</AdditionalManifestFiles>
       <OutputManifestFile>$(IntDir)$(TargetName)$(TargetExt).embed.manifest</OutputManifestFile>
-      <EnableDPIAwareness>true</EnableDPIAwareness>
+      <EnableDPIAwareness>false</EnableDPIAwareness>
     </Manifest>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -513,9 +513,9 @@
       <MinimumRequiredVersion>6</MinimumRequiredVersion>
     </Link>
     <Manifest>
-      <AdditionalManifestFiles>$(SolutionDir)Resource\compatibility.manifest;%(AdditionalManifestFiles)</AdditionalManifestFiles>
+      <AdditionalManifestFiles>$(SolutionDir)Resource\TVTest.exe.manifest;%(AdditionalManifestFiles)</AdditionalManifestFiles>
       <OutputManifestFile>$(IntDir)$(TargetName)$(TargetExt).embed.manifest</OutputManifestFile>
-      <EnableDPIAwareness>true</EnableDPIAwareness>
+      <EnableDPIAwareness>false</EnableDPIAwareness>
     </Manifest>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_XP|Win32'">
@@ -569,9 +569,9 @@
       <MinimumRequiredVersion>5.01</MinimumRequiredVersion>
     </Link>
     <Manifest>
-      <AdditionalManifestFiles>$(SolutionDir)Resource\compatibility.manifest;%(AdditionalManifestFiles)</AdditionalManifestFiles>
+      <AdditionalManifestFiles>$(SolutionDir)Resource\TVTest.exe.manifest;%(AdditionalManifestFiles)</AdditionalManifestFiles>
       <OutputManifestFile>$(IntDir)$(TargetName)$(TargetExt).embed.manifest</OutputManifestFile>
-      <EnableDPIAwareness>true</EnableDPIAwareness>
+      <EnableDPIAwareness>false</EnableDPIAwareness>
     </Manifest>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_MD|Win32'">
@@ -625,9 +625,9 @@
       <MinimumRequiredVersion>6</MinimumRequiredVersion>
     </Link>
     <Manifest>
-      <AdditionalManifestFiles>$(SolutionDir)Resource\compatibility.manifest;%(AdditionalManifestFiles)</AdditionalManifestFiles>
+      <AdditionalManifestFiles>$(SolutionDir)Resource\TVTest.exe.manifest;%(AdditionalManifestFiles)</AdditionalManifestFiles>
       <OutputManifestFile>$(IntDir)$(TargetName)$(TargetExt).embed.manifest</OutputManifestFile>
-      <EnableDPIAwareness>true</EnableDPIAwareness>
+      <EnableDPIAwareness>false</EnableDPIAwareness>
     </Manifest>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_XP_MD|Win32'">
@@ -681,9 +681,9 @@
       <MinimumRequiredVersion>5.01</MinimumRequiredVersion>
     </Link>
     <Manifest>
-      <AdditionalManifestFiles>$(SolutionDir)Resource\compatibility.manifest;%(AdditionalManifestFiles)</AdditionalManifestFiles>
+      <AdditionalManifestFiles>$(SolutionDir)Resource\TVTest.exe.manifest;%(AdditionalManifestFiles)</AdditionalManifestFiles>
       <OutputManifestFile>$(IntDir)$(TargetName)$(TargetExt).embed.manifest</OutputManifestFile>
-      <EnableDPIAwareness>true</EnableDPIAwareness>
+      <EnableDPIAwareness>false</EnableDPIAwareness>
     </Manifest>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -737,9 +737,9 @@
       <MinimumRequiredVersion>6</MinimumRequiredVersion>
     </Link>
     <Manifest>
-      <AdditionalManifestFiles>$(SolutionDir)Resource\compatibility.manifest;%(AdditionalManifestFiles)</AdditionalManifestFiles>
+      <AdditionalManifestFiles>$(SolutionDir)Resource\TVTest.exe.manifest;%(AdditionalManifestFiles)</AdditionalManifestFiles>
       <OutputManifestFile>$(IntDir)$(TargetName)$(TargetExt).embed.manifest</OutputManifestFile>
-      <EnableDPIAwareness>true</EnableDPIAwareness>
+      <EnableDPIAwareness>false</EnableDPIAwareness>
     </Manifest>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_XP|x64'">
@@ -793,9 +793,9 @@
       <MinimumRequiredVersion>5.02</MinimumRequiredVersion>
     </Link>
     <Manifest>
-      <AdditionalManifestFiles>$(SolutionDir)Resource\compatibility.manifest;%(AdditionalManifestFiles)</AdditionalManifestFiles>
+      <AdditionalManifestFiles>$(SolutionDir)Resource\TVTest.exe.manifest;%(AdditionalManifestFiles)</AdditionalManifestFiles>
       <OutputManifestFile>$(IntDir)$(TargetName)$(TargetExt).embed.manifest</OutputManifestFile>
-      <EnableDPIAwareness>true</EnableDPIAwareness>
+      <EnableDPIAwareness>false</EnableDPIAwareness>
     </Manifest>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_MD|x64'">
@@ -849,9 +849,9 @@
       <MinimumRequiredVersion>6</MinimumRequiredVersion>
     </Link>
     <Manifest>
-      <AdditionalManifestFiles>$(SolutionDir)Resource\compatibility.manifest;%(AdditionalManifestFiles)</AdditionalManifestFiles>
+      <AdditionalManifestFiles>$(SolutionDir)Resource\TVTest.exe.manifest;%(AdditionalManifestFiles)</AdditionalManifestFiles>
       <OutputManifestFile>$(IntDir)$(TargetName)$(TargetExt).embed.manifest</OutputManifestFile>
-      <EnableDPIAwareness>true</EnableDPIAwareness>
+      <EnableDPIAwareness>false</EnableDPIAwareness>
     </Manifest>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_XP_MD|x64'">
@@ -905,9 +905,9 @@
       <MinimumRequiredVersion>5.02</MinimumRequiredVersion>
     </Link>
     <Manifest>
-      <AdditionalManifestFiles>$(SolutionDir)Resource\compatibility.manifest;%(AdditionalManifestFiles)</AdditionalManifestFiles>
+      <AdditionalManifestFiles>$(SolutionDir)Resource\TVTest.exe.manifest;%(AdditionalManifestFiles)</AdditionalManifestFiles>
       <OutputManifestFile>$(IntDir)$(TargetName)$(TargetExt).embed.manifest</OutputManifestFile>
-      <EnableDPIAwareness>true</EnableDPIAwareness>
+      <EnableDPIAwareness>false</EnableDPIAwareness>
     </Manifest>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -953,6 +953,7 @@
     <ClCompile Include="Capture.cpp" />
     <ClCompile Include="CaptureOptions.cpp" />
     <ClCompile Include="ChannelInput.cpp" />
+    <ClCompile Include="ColorSchemeOptions.cpp" />
     <ClCompile Include="ComUtility.cpp" />
     <ClCompile Include="DirectShowFilter\InternalDecoder.cpp" />
     <ClCompile Include="DirectWrite.cpp" />
@@ -1146,6 +1147,7 @@
     <ClInclude Include="Capture.h" />
     <ClInclude Include="CaptureOptions.h" />
     <ClInclude Include="ChannelInput.h" />
+    <ClInclude Include="ColorSchemeOptions.h" />
     <ClInclude Include="Common\Common.h" />
     <ClInclude Include="Common\DebugDef.h" />
     <ClInclude Include="ComUtility.h" />
@@ -1300,7 +1302,7 @@
     <ResourceCompile Include="TVTest.rc" />
   </ItemGroup>
   <ItemGroup>
-    <Manifest Include="Resource\compatibility.manifest" />
+    <Manifest Include="Resource\TVTest.exe.manifest" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

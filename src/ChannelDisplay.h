@@ -40,7 +40,9 @@ public:
 
 // CUIBase
 	void SetStyle(const TVTest::Style::CStyleManager *pStyleManager) override;
-	void NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager) override;
+	void NormalizeStyle(
+		const TVTest::Style::CStyleManager *pStyleManager,
+		const TVTest::Style::CStyleScaling *pStyleScaling) override;
 
 // CDisplayView
 	bool Close() override;
@@ -110,7 +112,9 @@ private:
 
 		ChannelDisplayStyle();
 		void SetStyle(const TVTest::Style::CStyleManager *pStyleManager);
-		void NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager);
+		void NormalizeStyle(
+			const TVTest::Style::CStyleManager *pStyleManager,
+			const TVTest::Style::CStyleScaling *pStyleScaling);
 	};
 
 	ChannelDisplayStyle m_ChannelDisplayStyle;
@@ -122,6 +126,7 @@ private:
 	TVTest::Theme::Style m_ChannelItemStyle[2];
 	TVTest::Theme::Style m_ChannelItemCurStyle;
 	TVTest::Theme::Style m_ClockStyle;
+	TVTest::Style::Font m_StyleFont;
 	DrawUtil::CFont m_Font;
 	bool m_fAutoFontSize;
 	int m_FontHeight;
@@ -190,6 +195,10 @@ private:
 
 // CCustomWindow
 	LRESULT OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
+
+// CUIBase
+	void ApplyStyle() override;
+	void RealizeStyle() override;
 };
 
 

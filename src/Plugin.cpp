@@ -2022,11 +2022,10 @@ LRESULT CPlugin::OnCallback(TVTest::PluginParam *pParam,UINT Message,LPARAM lPar
 					pInfo->Value=Style.Value.Int;
 					switch (Style.Unit) {
 					case TVTest::Style::UNIT_LOGICAL_PIXEL:
-						pInfo->Value=StyleManager.LogicalPixelsToPhysicalPixels(pInfo->Value);
-						pInfo->Unit=TVTest::STYLE_UNIT_PIXEL;
+						pInfo->Unit=TVTest::STYLE_UNIT_LOGICAL_PIXEL;
 						break;
 					case TVTest::Style::UNIT_PHYSICAL_PIXEL:
-						pInfo->Unit=TVTest::STYLE_UNIT_PIXEL;
+						pInfo->Unit=TVTest::STYLE_UNIT_PHYSICAL_PIXEL;
 						break;
 					case TVTest::Style::UNIT_POINT:
 						pInfo->Unit=TVTest::STYLE_UNIT_POINT;
@@ -2038,7 +2037,10 @@ LRESULT CPlugin::OnCallback(TVTest::PluginParam *pParam,UINT Message,LPARAM lPar
 				} else {
 					TVTest::Style::UnitType Unit;
 					switch (pInfo->Unit) {
-					case TVTest::STYLE_UNIT_PIXEL:
+					case TVTest::STYLE_UNIT_LOGICAL_PIXEL:
+						Unit=TVTest::Style::UNIT_LOGICAL_PIXEL;
+						break;
+					case TVTest::STYLE_UNIT_PHYSICAL_PIXEL:
 						Unit=TVTest::Style::UNIT_PHYSICAL_PIXEL;
 						break;
 					case TVTest::STYLE_UNIT_POINT:
@@ -2050,7 +2052,10 @@ LRESULT CPlugin::OnCallback(TVTest::PluginParam *pParam,UINT Message,LPARAM lPar
 					default:
 						return FALSE;
 					}
-					pInfo->Value=StyleManager.ConvertUnit(Style.Value.Int,Style.Unit,Unit);
+					TVTest::Style::CStyleScaling StyleScaling;
+					int DPI=pInfo->DPI!=0?pInfo->DPI:96;
+					StyleScaling.SetDPI(DPI,DPI);
+					pInfo->Value=StyleScaling.ConvertUnit(Style.Value.Int,Style.Unit,Unit);
 				}
 			} else if (Style.Type==TVTest::Style::TYPE_BOOL) {
 				pInfo->Value=Style.Value.Bool;
@@ -2078,11 +2083,19 @@ LRESULT CPlugin::OnCallback(TVTest::PluginParam *pParam,UINT Message,LPARAM lPar
 				return FALSE;
 			TVTest::Theme::BackgroundStyle Style;
 			ThemeManager.GetBackgroundStyle(Type,&Style);
-			TVTest::Style::CStyleManager &StyleManager=App.StyleManager;
-			StyleManager.ToPixels(&Style.Border.Width.Left);
-			StyleManager.ToPixels(&Style.Border.Width.Top);
-			StyleManager.ToPixels(&Style.Border.Width.Right);
-			StyleManager.ToPixels(&Style.Border.Width.Bottom);
+			const TVTest::Style::CStyleScaling *pStyleScaling;
+			TVTest::Style::CStyleScaling StyleScaling;
+			if (pInfo->DPI==0) {
+				pStyleScaling=App.MainWindow.GetStyleScaling();
+			} else {
+				App.StyleManager.InitStyleScaling(&StyleScaling);
+				StyleScaling.SetDPI(pInfo->DPI,pInfo->DPI);
+				pStyleScaling=&StyleScaling;
+			}
+			pStyleScaling->ToPixels(&Style.Border.Width.Left);
+			pStyleScaling->ToPixels(&Style.Border.Width.Top);
+			pStyleScaling->ToPixels(&Style.Border.Width.Right);
+			pStyleScaling->ToPixels(&Style.Border.Width.Bottom);
 			TVTest::Theme::Draw(pInfo->hdc,pInfo->DrawRect,Style);
 			if ((pInfo->Flags & TVTest::THEME_DRAW_BACKGROUND_FLAG_ADJUSTRECT)!=0)
 				TVTest::Theme::SubtractBorderRect(Style.Border,&pInfo->DrawRect);
@@ -2384,7 +2397,7 @@ LRESULT CPlugin::OnCallback(TVTest::PluginParam *pParam,UINT Message,LPARAM lPar
 						if (NewStyle!=OldStyle) {
 							pItem->Style=NewStyle;
 							if (pItem->pItem!=NULL) {
-								pItem->pItem->ApplyStyle();
+								pItem->pItem->ApplyItemStyle();
 								GetAppClass().StatusView.AdjustSize();
 							}
 						}
@@ -2610,6 +2623,11 @@ LRESULT CPlugin::OnCallback(TVTest::PluginParam *pParam,UINT Message,LPARAM lPar
 		return GetAppClass().Core.Is1SegMode();
 
 	case TVTest::MESSAGE_SET1SEGMODE:
+		return SendPluginMessage(pParam,Message,lParam1,lParam2);
+
+	case TVTest::MESSAGE_GETDPI:
+	case TVTest::MESSAGE_GETFONT:
+	case TVTest::MESSAGE_SHOWDIALOG:
 		return SendPluginMessage(pParam,Message,lParam1,lParam2);
 
 #ifdef _DEBUG
@@ -3124,6 +3142,183 @@ LRESULT CPlugin::OnPluginMessage(WPARAM wParam,LPARAM lParam)
 	case TVTest::MESSAGE_SET1SEGMODE:
 		return GetAppClass().Core.Set1SegMode(pParam->lParam1!=0,true);
 
+	case TVTest::MESSAGE_GETDPI:
+		{
+			TVTest::GetDPIInfo *pInfo=reinterpret_cast<TVTest::GetDPIInfo*>(pParam->lParam1);
+
+			if (pInfo==NULL)
+				return 0;
+
+			CAppMain &App=GetAppClass();
+
+			switch (pInfo->Type) {
+			case TVTest::DPI_TYPE_SYSTEM:
+				return App.StyleManager.GetSystemDPI();
+
+			case TVTest::DPI_TYPE_WINDOW:
+				{
+					HWND hwndRoot;
+
+					{
+						const TVTest::Style::CStyleScaling *pStyleScaling=NULL;
+
+						if (pInfo->hwnd==NULL || (hwndRoot=::GetAncestor(pInfo->hwnd,GA_ROOT))==App.MainWindow.GetHandle())
+							pStyleScaling=App.UICore.GetSkin()->GetUIBase()->GetStyleScaling();
+						else if (hwndRoot==App.UICore.GetSkin()->GetFullscreenWindow())
+							pStyleScaling=App.UICore.GetSkin()->GetUIBase()->GetStyleScaling();
+						else if (hwndRoot==App.Panel.Frame.GetHandle())
+							pStyleScaling=App.Panel.Frame.GetStyleScaling();
+						else if (hwndRoot==App.Epg.ProgramGuide.GetHandle())
+							pStyleScaling=App.Epg.ProgramGuide.GetStyleScaling();
+
+						if (pStyleScaling!=NULL)
+							return pStyleScaling->GetDPI();
+					}
+
+			case TVTest::DPI_TYPE_RECT:
+			case TVTest::DPI_TYPE_POINT:
+			case TVTest::DPI_TYPE_MONITOR:
+					if ((pInfo->Flags & TVTest::DPI_FLAG_FORCED)!=0
+							&& App.StyleManager.GetForcedDPI()>0)
+						return App.StyleManager.GetForcedDPI();
+
+					if (Util::OS::IsWindows8_1OrLater()) {
+						HMONITOR hMonitor;
+
+						switch (pInfo->Type) {
+						case TVTest::DPI_TYPE_WINDOW:
+							hMonitor=::MonitorFromWindow(hwndRoot,MONITOR_DEFAULTTONULL);
+							break;
+						case TVTest::DPI_TYPE_RECT:
+							hMonitor=::MonitorFromRect(&pInfo->Rect,MONITOR_DEFAULTTONULL);
+							break;
+						case TVTest::DPI_TYPE_POINT:
+							hMonitor=::MonitorFromPoint(pInfo->Point,MONITOR_DEFAULTTONULL);
+							break;
+						case TVTest::DPI_TYPE_MONITOR:
+							hMonitor=pInfo->hMonitor;
+							break;
+						}
+
+						if (hMonitor!=NULL) {
+							int DPI=Util::GetMonitorDPI(hMonitor);
+							if (DPI!=0)
+								return DPI;
+						}
+					}
+				}
+				return App.StyleManager.GetSystemDPI();
+			}
+
+			return 0;
+		}
+
+	case TVTest::MESSAGE_GETFONT:
+		{
+			TVTest::GetFontInfo *pInfo=reinterpret_cast<TVTest::GetFontInfo*>(pParam->lParam1);
+
+			if (pInfo==NULL || pInfo->Size!=sizeof(TVTest::GetFontInfo))
+				return FALSE;
+
+			CAppMain &App=GetAppClass();
+			TVTest::Style::Font Font;
+
+			if (::lstrcmpiW(pInfo->pszName,L"OSDFont")==0) {
+				Font.LogFont=*App.OSDOptions.GetOSDFont();
+			} else if (::lstrcmpiW(pInfo->pszName,L"PanelFont")==0) {
+				Font=App.PanelOptions.GetFont();
+			} else if (::lstrcmpiW(pInfo->pszName,L"ProgramGuideFont")==0) {
+				Font=App.ProgramGuideOptions.GetFont();
+			} else if (::lstrcmpiW(pInfo->pszName,L"StatusBarFont")==0) {
+				Font=App.StatusOptions.GetFont();
+			} else {
+				::ZeroMemory(&pInfo->LogFont,sizeof(LOGFONT));
+				return FALSE;
+			}
+
+			pInfo->LogFont=Font.LogFont;
+
+			if (pInfo->DPI!=0 && Font.Size.Unit==TVTest::Style::UNIT_POINT) {
+				LONG Height=::MulDiv(Font.Size.Value,pInfo->DPI,72);
+				pInfo->LogFont.lfHeight=
+					Font.LogFont.lfHeight>=0 ? Height : -Height;
+			}
+		}
+		return TRUE;
+
+	case TVTest::MESSAGE_SHOWDIALOG:
+		{
+			TVTest::ShowDialogInfo *pInfo=
+				reinterpret_cast<TVTest::ShowDialogInfo*>(pParam->lParam1);
+
+			if (pInfo==NULL || pInfo->Size!=sizeof(TVTest::ShowDialogInfo))
+				return 0;
+
+			class CPluginDialog : public CBasicDialog
+			{
+				TVTest::ShowDialogInfo m_Info;
+				INT_PTR m_Result;
+
+			public:
+				CPluginDialog(TVTest::ShowDialogInfo *pInfo) : m_Info(*pInfo) {}
+
+				bool Show(HWND hwndOwner) override
+				{
+					m_Result=ShowDialog(m_Info.hwndOwner,m_Info.hinst,m_Info.pszTemplate);
+					return m_Result==IDOK;
+				}
+
+				bool Create(HWND hwndOwner) override
+				{
+					return CreateDialogWindow(m_Info.hwndOwner,m_Info.hinst,m_Info.pszTemplate);
+				}
+
+				INT_PTR GetResult() const { return m_Result; }
+				HWND GetHandle() const { return m_hDlg; }
+
+			private:
+				INT_PTR DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam) override
+				{
+					if (m_Info.pMessageFunc!=NULL) {
+						return m_Info.pMessageFunc(
+							hDlg,uMsg,wParam,
+							uMsg==WM_INITDIALOG ? (LPARAM)m_Info.pClientData : lParam,
+							m_Info.pClientData);
+					}
+					if (uMsg==WM_INITDIALOG)
+						return TRUE;
+					return FALSE;
+				}
+
+				void OnDestroyed() override
+				{
+					if (m_fModeless)
+						delete this;
+				}
+			};
+
+			INT_PTR Result;
+
+			if ((pInfo->Flags & TVTest::SHOW_DIALOG_FLAG_MODELESS)!=0) {
+				CPluginDialog *pDialog=new CPluginDialog(pInfo);
+				if ((pInfo->Flags & TVTest::SHOW_DIALOG_FLAG_POSITION)!=0)
+					pDialog->SetPosition(pInfo->Position.x,pInfo->Position.y);
+				if (!pDialog->Create(pInfo->hwndOwner)) {
+					delete pDialog;
+					return 0;
+				}
+				Result=(INT_PTR)pDialog->GetHandle();
+			} else {
+				CPluginDialog Dialog(pInfo);
+				if ((pInfo->Flags & TVTest::SHOW_DIALOG_FLAG_POSITION)!=0)
+					Dialog.SetPosition(pInfo->Position.x,pInfo->Position.y);
+				Dialog.Show(pInfo->hwndOwner);
+				Result=Dialog.GetResult();
+			}
+
+			return Result;
+		}
+
 #ifdef _DEBUG
 	default:
 		TRACE(TEXT("CPlugin::OnPluginMessage() : Unknown message %u\n"),pParam->Message);
@@ -3178,7 +3373,7 @@ static bool GetSettingFont(TVTest::SettingInfo *pSetting,const LOGFONT *pFont)
 static bool GetSettingFont(TVTest::SettingInfo *pSetting,const TVTest::Style::Font &Font)
 {
 	TVTest::Style::Font f=Font;
-	GetAppClass().StyleManager.RealizeFontSize(&f);
+	GetAppClass().MainWindow.GetStyleScaling()->RealizeFontSize(&f);
 	return GetSettingFont(pSetting,&f.LogFont);
 }
 
@@ -3215,8 +3410,6 @@ bool CPlugin::OnGetSetting(TVTest::SettingInfo *pSetting) const
 		return GetSettingFont(pSetting,App.ProgramGuideOptions.GetFont());
 	} else if (::lstrcmpiW(pSetting->pszName,L"StatusBarFont")==0) {
 		return GetSettingFont(pSetting,App.StatusOptions.GetFont());
-	} else if (::lstrcmpiW(pSetting->pszName,L"DPI")==0) {
-		return GetSettingInt(pSetting,App.StyleManager.GetDPI());
 	}
 #ifdef _DEBUG
 	else {
@@ -3310,7 +3503,7 @@ CPlugin::CPluginStatusItem::CPluginStatusItem(CPlugin *pPlugin,StatusItem *pItem
 	m_MaxWidth=pItem->MaxWidth;
 	m_MinHeight=pItem->MinHeight;
 	m_fVisible=(pItem->State & TVTest::STATUS_ITEM_STATE_VISIBLE)!=0;
-	ApplyStyle();
+	ApplyItemStyle();
 
 	m_IDText=::PathFindFileName(m_pPlugin->GetFileName());
 	m_IDText+=_T(':');
@@ -3479,7 +3672,20 @@ HWND CPlugin::CPluginStatusItem::GetWindowHandle() const
 }
 
 
-void CPlugin::CPluginStatusItem::ApplyStyle()
+void CPlugin::CPluginStatusItem::RealizeStyle()
+{
+	if (m_pPlugin!=NULL && m_pItem!=NULL) {
+		TVTest::StatusItemEventInfo Info;
+		Info.ID=m_pItem->ID;
+		Info.Event=TVTest::STATUS_ITEM_EVENT_STYLECHANGED;
+		Info.Param=0;
+		m_pPlugin->SendEvent(TVTest::EVENT_STATUSITEM_NOTIFY,
+							 reinterpret_cast<LPARAM>(&Info),0);
+	}
+}
+
+
+void CPlugin::CPluginStatusItem::ApplyItemStyle()
 {
 	if (m_pItem!=NULL) {
 		m_Style=0;
@@ -3650,6 +3856,18 @@ LRESULT CPlugin::CPluginPanelItem::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,L
 	}
 
 	return ::DefWindowProc(hwnd,uMsg,wParam,lParam);
+}
+
+
+void CPlugin::CPluginPanelItem::RealizeStyle()
+{
+	if (m_pItem!=NULL && m_pPlugin!=NULL) {
+		TVTest::PanelItemEventInfo Info;
+		Info.ID=m_pItem->ID;
+		Info.Event=TVTest::PANEL_ITEM_EVENT_STYLECHANGED;
+		m_pPlugin->SendEvent(TVTest::EVENT_PANELITEM_NOTIFY,
+							 reinterpret_cast<LPARAM>(&Info),0);
+	}
 }
 
 
@@ -4649,13 +4867,13 @@ INT_PTR CPluginOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 			lvc.fmt=LVCFMT_LEFT;
 			lvc.cx=120;
 			lvc.pszText=TEXT("ファイル名");
-			ListView_InsertColumn(hwndList,0,&lvc);
+			ListView_InsertColumn(hwndList,COLUMN_FILENAME,&lvc);
 			lvc.pszText=TEXT("プラグイン名");
-			ListView_InsertColumn(hwndList,1,&lvc);
+			ListView_InsertColumn(hwndList,COLUMN_PLUGINNAME,&lvc);
 			lvc.pszText=TEXT("説明");
-			ListView_InsertColumn(hwndList,2,&lvc);
+			ListView_InsertColumn(hwndList,COLUMN_DESCRIPTION,&lvc);
 			lvc.pszText=TEXT("著作権");
-			ListView_InsertColumn(hwndList,3,&lvc);
+			ListView_InsertColumn(hwndList,COLUMN_COPYRIGHT,&lvc);
 			for (i=0;i<m_pPluginManager->NumPlugins();i++) {
 				const CPlugin *pPlugin=m_pPluginManager->GetPlugin(i);
 				LV_ITEM lvi;
@@ -4677,7 +4895,7 @@ INT_PTR CPluginOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 				lvi.pszText=const_cast<LPTSTR>(pPlugin->GetCopyright());
 				ListView_SetItem(hwndList,&lvi);
 			}
-			for (i=0;i<4;i++)
+			for (i=0;i<NUM_COLUMNS;i++)
 				ListView_SetColumnWidth(hwndList,i,LVSCW_AUTOSIZE_USEHEADER);
 		}
 		return TRUE;
@@ -4798,4 +5016,17 @@ INT_PTR CPluginOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 	}
 
 	return FALSE;
+}
+
+
+void CPluginOptions::RealizeStyle()
+{
+	CBasicDialog::RealizeStyle();
+
+	if (m_hDlg!=NULL) {
+		HWND hwndList=::GetDlgItem(m_hDlg,IDC_PLUGIN_LIST);
+
+		for (int i=0;i<NUM_COLUMNS;i++)
+			ListView_SetColumnWidth(hwndList,i,LVSCW_AUTOSIZE_USEHEADER);
+	}
 }

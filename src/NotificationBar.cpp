@@ -41,6 +41,9 @@ CNotificationBar::CNotificationBar()
 	, m_BarHeight(0)
 	, m_TimerCount(0)
 {
+	GetSystemFont(DrawUtil::FONT_MESSAGE,&m_StyleFont);
+	m_StyleFont.LogFont.lfHeight=::MulDiv(m_StyleFont.LogFont.lfHeight,12,10);
+	m_StyleFont.Size.Value=::MulDiv(m_StyleFont.Size.Value,12,10);
 }
 
 
@@ -62,9 +65,11 @@ void CNotificationBar::SetStyle(const TVTest::Style::CStyleManager *pStyleManage
 }
 
 
-void CNotificationBar::NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager)
+void CNotificationBar::NormalizeStyle(
+	const TVTest::Style::CStyleManager *pStyleManager,
+	const TVTest::Style::CStyleScaling *pStyleScaling)
 {
-	m_Style.NormalizeStyle(pStyleManager);
+	m_Style.NormalizeStyle(pStyleManager,pStyleScaling);
 }
 
 
@@ -164,10 +169,9 @@ bool CNotificationBar::Hide()
 
 bool CNotificationBar::SetFont(const TVTest::Style::Font &Font)
 {
-	if (!CreateDrawFont(Font,&m_Font))
-		return false;
+	m_StyleFont=Font;
 	if (m_hwnd!=NULL)
-		CalcBarHeight();
+		RealizeStyle();
 	return true;
 }
 
@@ -215,25 +219,6 @@ LRESULT CNotificationBar::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lPa
 	case WM_CREATE:
 		{
 			InitializeUI();
-
-			if (!m_Font.IsCreated()) {
-				TVTest::Style::Font Font;
-				GetSystemFont(DrawUtil::FONT_MESSAGE,&Font);
-				Font.LogFont.lfHeight=::MulDiv(Font.LogFont.lfHeight,12,10);
-				Font.Size.Value=::MulDiv(Font.Size.Value,12,10);
-				CreateDrawFont(Font,&m_Font);
-			}
-
-			/*
-			m_Icons[MESSAGE_INFO].Attach(
-				LoadSystemIcon(IDI_INFORMATION,m_Style.IconSize.Width,m_Style.IconSize.Height));
-			*/
-			m_Icons[MESSAGE_WARNING].Attach(
-				LoadSystemIcon(IDI_WARNING,m_Style.IconSize.Width,m_Style.IconSize.Height));
-			m_Icons[MESSAGE_ERROR].Attach(
-				LoadSystemIcon(IDI_ERROR,m_Style.IconSize.Width,m_Style.IconSize.Height));
-
-			CalcBarHeight();
 
 			InitializeTimer(hwnd);
 			m_TimerCount=0;
@@ -356,6 +341,26 @@ LRESULT CNotificationBar::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lPa
 }
 
 
+void CNotificationBar::ApplyStyle()
+{
+	if (m_hwnd==NULL)
+		return;
+
+	CreateDrawFont(m_StyleFont,&m_Font);
+
+	/*
+	m_Icons[MESSAGE_INFO].Attach(
+		LoadSystemIcon(IDI_INFORMATION,m_Style.IconSize.Width,m_Style.IconSize.Height));
+	*/
+	m_Icons[MESSAGE_WARNING].Attach(
+		LoadSystemIcon(IDI_WARNING,m_Style.IconSize.Width,m_Style.IconSize.Height));
+	m_Icons[MESSAGE_ERROR].Attach(
+		LoadSystemIcon(IDI_ERROR,m_Style.IconSize.Width,m_Style.IconSize.Height));
+
+	CalcBarHeight();
+}
+
+
 
 
 CNotificationBar::NotificationBarStyle::NotificationBarStyle()
@@ -370,6 +375,7 @@ CNotificationBar::NotificationBarStyle::NotificationBarStyle()
 
 void CNotificationBar::NotificationBarStyle::SetStyle(const TVTest::Style::CStyleManager *pStyleManager)
 {
+	*this=NotificationBarStyle();
 	pStyleManager->Get(TEXT("notification-bar.padding"),&Padding);
 	pStyleManager->Get(TEXT("notification-bar.icon"),&IconSize);
 	pStyleManager->Get(TEXT("notification-bar.icon.margin"),&IconMargin);
@@ -378,11 +384,13 @@ void CNotificationBar::NotificationBarStyle::SetStyle(const TVTest::Style::CStyl
 }
 
 
-void CNotificationBar::NotificationBarStyle::NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager)
+void CNotificationBar::NotificationBarStyle::NormalizeStyle(
+	const TVTest::Style::CStyleManager *pStyleManager,
+	const TVTest::Style::CStyleScaling *pStyleScaling)
 {
-	pStyleManager->ToPixels(&Padding);
-	pStyleManager->ToPixels(&IconSize);
-	pStyleManager->ToPixels(&IconMargin);
-	pStyleManager->ToPixels(&TextMargin);
-	pStyleManager->ToPixels(&TextExtraHeight);
+	pStyleScaling->ToPixels(&Padding);
+	pStyleScaling->ToPixels(&IconSize);
+	pStyleScaling->ToPixels(&IconMargin);
+	pStyleScaling->ToPixels(&TextMargin);
+	pStyleScaling->ToPixels(&TextExtraHeight);
 }

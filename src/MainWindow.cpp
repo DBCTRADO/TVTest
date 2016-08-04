@@ -132,14 +132,18 @@ CMainWindow::CMainWindow(CAppMain &App)
 	, m_ClockUpdateTimer(this)
 	, m_fAccurateClock(true)
 {
+	POINT pt={0,0};
+	UINT DpiX,DpiY;
+	if (Util::GetMonitorDPI(::MonitorFromPoint(pt,MONITOR_DEFAULTTOPRIMARY),&DpiX,&DpiY)==0)
+		DpiX=DpiY=m_App.StyleManager.GetSystemDPI();
 	// 適当にデフォルトサイズを設定
 #ifndef TVTEST_FOR_1SEG
-	m_WindowPosition.Width=960;
-	m_WindowPosition.Height=540;
+	static const int DefaultWidth=960,DefaultHeight=540;
 #else
-	m_WindowPosition.Width=400;
-	m_WindowPosition.Height=320;
+	static const int DefaultWidth=640,DefaultHeight=360;
 #endif
+	m_WindowPosition.Width=::MulDiv(DefaultWidth,DpiX,96);
+	m_WindowPosition.Height=::MulDiv(DefaultHeight,DpiY,96);
 	m_WindowPosition.Left=
 		(::GetSystemMetrics(SM_CXSCREEN)-m_WindowPosition.Width)/2;
 	m_WindowPosition.Top=
@@ -949,6 +953,11 @@ LRESULT CMainWindow::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 	HANDLE_MSG(hwnd,WM_TIMER,OnTimer);
 	HANDLE_MSG(hwnd,WM_GETMINMAXINFO,OnGetMinMaxInfo);
 
+	case WM_NCCREATE:
+		if (!OnNCCreate(reinterpret_cast<CREATESTRUCT*>(lParam)))
+			return FALSE;
+		break;
+
 	case WM_SIZE:
 		OnSizeChanged((UINT)wParam,LOWORD(lParam),HIWORD(lParam));
 		return 0;
@@ -1503,6 +1512,34 @@ LRESULT CMainWindow::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 		m_App.CoreEngine.m_DtvEngine.m_MediaViewer.DisplayModeChanged();
 		break;
 
+	case WM_DPICHANGED:
+		{
+			const int OldDPI=m_pStyleScaling->GetDPI();
+			RECT rcOld;
+
+			m_Display.GetViewWindow().GetPosition(&rcOld);
+			OnDPIChanged(hwnd,wParam,lParam);
+
+			const int NewDPI=m_pStyleScaling->GetDPI();
+			if (OldDPI!=NewDPI) {
+				Layout::CSplitter *pSplitter=static_cast<Layout::CSplitter*>(
+					m_LayoutBase.GetContainerByID(CONTAINER_ID_PANELSPLITTER));
+				RECT rcNew;
+				int Offset;
+
+				m_Display.GetViewWindow().GetPosition(&rcNew);
+				::OffsetRect(&rcNew,-rcNew.left,-rcNew.top);
+				::OffsetRect(&rcOld,-rcOld.left,-rcOld.top);
+				if (m_fPanelVerticalAlign)
+					Offset=::MulDiv(rcNew.right,rcOld.bottom,rcOld.right)-rcNew.bottom;
+				else
+					Offset=::MulDiv(rcNew.bottom,rcOld.right,rcOld.bottom)-rcNew.right;
+				const int ID=pSplitter->GetPane(1-GetPanelPaneIndex())->GetID();
+				pSplitter->SetPaneSize(ID,pSplitter->GetPaneSize(ID)+Offset);
+			}
+		}
+		break;
+
 	case WM_THEMECHANGED:
 		m_App.ChannelMenu.Destroy();
 		m_App.FavoritesMenu.Destroy();
@@ -1533,6 +1570,23 @@ LRESULT CMainWindow::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 	}
 
 	return ::DefWindowProc(hwnd,uMsg,wParam,lParam);
+}
+
+
+bool CMainWindow::OnNCCreate(const CREATESTRUCT *pcs)
+{
+	RegisterUIChild(&m_App.OSDManager);
+	RegisterUIChild(&m_App.StatusView);
+	RegisterUIChild(&m_App.SideBar);
+	RegisterUIChild(&m_LayoutBase);
+	RegisterUIChild(&m_TitleBar);
+	RegisterUIChild(&m_NotificationBar);
+	RegisterUIChild(&m_Display.GetViewWindow());
+
+	SetStyleScaling(&m_StyleScaling);
+	InitStyleScaling(m_hwnd);
+
+	return true;
 }
 
 
@@ -1585,6 +1639,9 @@ bool CMainWindow::OnCreate(const CREATESTRUCT *pcs)
 	CProgramInfoStatusItem *pProgramInfoStatusItem=new CProgramInfoStatusItem;
 	pProgramInfoStatusItem->EnablePopupInfo(m_App.StatusOptions.IsPopupProgramInfoEnabled());
 	pProgramInfoStatusItem->SetShowProgress(m_App.StatusOptions.GetShowEventProgress());
+	pProgramInfoStatusItem->SetPopupInfoSize(
+		m_App.StatusOptions.GetPopupEventInfoWidth(),
+		m_App.StatusOptions.GetPopupEventInfoHeight());
 	m_App.StatusView.AddItem(pProgramInfoStatusItem);
 	m_App.StatusView.AddItem(new CBufferingStatusItem);
 	m_App.StatusView.AddItem(new CTunerStatusItem);
@@ -1794,6 +1851,14 @@ void CMainWindow::OnDestroy()
 
 	m_App.SetEnablePlaybackOnStart(m_fEnablePlayback);
 	m_PanelPaneIndex=GetPanelPaneIndex();
+
+	CProgramInfoStatusItem *pProgramInfoStatusItem=
+		dynamic_cast<CProgramInfoStatusItem*>(m_App.StatusView.GetItemByID(STATUS_ITEM_PROGRAMINFO));
+	if (pProgramInfoStatusItem!=nullptr) {
+		int Width,Height;
+		pProgramInfoStatusItem->GetPopupInfoSize(&Width,&Height);
+		m_App.StatusOptions.SetPopupEventInfoSize(Width,Height);
+	}
 
 	m_App.HtmlHelpClass.Finalize();
 	m_pCore->PreventDisplaySave(false);
@@ -2913,10 +2978,12 @@ void CMainWindow::OnCommand(HWND hwnd,int id,HWND hwndCtl,UINT codeNotify)
 									  m_App.OSDOptions.IsDisplayFontAutoSize());
 			if (!m_App.HomeDisplay.IsCreated()) {
 				m_App.HomeDisplay.SetEventHandler(&m_Display.HomeDisplayEventHandler);
+				m_App.HomeDisplay.SetStyleScaling(&m_StyleScaling);
 				m_App.HomeDisplay.Create(m_Display.GetDisplayViewParent(),
 										 WS_CHILD | WS_CLIPCHILDREN);
 				if (m_fCustomFrame)
 					HookWindows(m_App.HomeDisplay.GetHandle());
+				RegisterUIChild(&m_App.HomeDisplay);
 			}
 			m_App.HomeDisplay.UpdateContents();
 			m_Display.GetDisplayBase().SetDisplayView(&m_App.HomeDisplay);
@@ -2935,6 +3002,7 @@ void CMainWindow::OnCommand(HWND hwnd,int id,HWND hwndCtl,UINT codeNotify)
 										 m_App.OSDOptions.IsDisplayFontAutoSize());
 			if (!m_App.ChannelDisplay.IsCreated()) {
 				m_App.ChannelDisplay.SetEventHandler(&m_Display.ChannelDisplayEventHandler);
+				m_App.ChannelDisplay.SetStyleScaling(&m_StyleScaling);
 				m_App.ChannelDisplay.Create(
 					m_Display.GetDisplayViewParent(),
 					WS_CHILD | WS_CLIPCHILDREN);
@@ -2942,6 +3010,7 @@ void CMainWindow::OnCommand(HWND hwnd,int id,HWND hwndCtl,UINT codeNotify)
 				m_App.ChannelDisplay.SetLogoManager(&m_App.LogoManager);
 				if (m_fCustomFrame)
 					HookWindows(m_App.ChannelDisplay.GetHandle());
+				RegisterUIChild(&m_App.ChannelDisplay);
 			}
 			m_Display.GetDisplayBase().SetDisplayView(&m_App.ChannelDisplay);
 			m_Display.GetDisplayBase().SetVisible(true);
@@ -5352,11 +5421,13 @@ bool CMainWindow::ShowProgramGuide(bool fShow,unsigned int Flags,const ProgramGu
 		Util::CWaitCursor WaitCursor;
 
 		if (fOnScreen) {
+			m_App.Epg.ProgramGuideDisplay.SetStyleScaling(&m_StyleScaling);
 			m_App.Epg.ProgramGuideDisplay.Create(m_Display.GetDisplayViewParent(),
 				WS_CHILD | WS_CLIPCHILDREN);
 			m_Display.GetDisplayBase().SetDisplayView(&m_App.Epg.ProgramGuideDisplay);
 			if (m_fCustomFrame)
 				HookWindows(m_App.Epg.ProgramGuideDisplay.GetHandle());
+			RegisterUIChild(&m_App.Epg.ProgramGuideDisplay);
 		} else {
 			m_App.Epg.ProgramGuideFrame.Create(nullptr,
 				WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_MAXIMIZEBOX |
@@ -6032,9 +6103,11 @@ void CMainWindow::SetStyle(const TVTest::Style::CStyleManager *pStyleManager)
 }
 
 
-void CMainWindow::NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager)
+void CMainWindow::NormalizeStyle(
+	const TVTest::Style::CStyleManager *pStyleManager,
+	const TVTest::Style::CStyleScaling *pStyleScaling)
 {
-	m_Style.NormalizeStyle(pStyleManager);
+	m_Style.NormalizeStyle(pStyleManager,pStyleScaling);
 }
 
 
@@ -6133,6 +6206,12 @@ CMainWindow::CFullscreen::CFullscreen(CMainWindow &MainWindow)
 	, m_PanelHeight(-1)
 	, m_PanelPlace(CPanelFrame::DOCKING_NONE)
 {
+	RegisterUIChild(&m_LayoutBase);
+	RegisterUIChild(&m_TitleBar);
+	RegisterUIChild(&m_ViewWindow);
+	RegisterUIChild(&m_Panel);
+
+	SetStyleScaling(&m_StyleScaling);
 }
 
 
@@ -6147,6 +6226,10 @@ LRESULT CMainWindow::CFullscreen::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LP
 	switch (uMsg) {
 	case WM_CREATE:
 		return OnCreate()?0:-1;
+
+	case WM_NCCREATE:
+		InitStyleScaling(hwnd);
+		break;
 
 	case WM_SIZE:
 		m_LayoutBase.SetPosition(0,0,LOWORD(lParam),HIWORD(lParam));
@@ -6323,7 +6406,7 @@ bool CMainWindow::CFullscreen::Create(HWND hwndOwner,CMainDisplay *pDisplay)
 					StdUtil::snprintf(szKey,lengthof(szKey),TEXT("fullscreen.monitor%d.margin"),MonitorNo);
 					TVTest::Style::Margins Margin;
 					if (pStyleManager->Get(szKey,&Margin)) {
-						pStyleManager->ToPixels(&Margin);
+						m_pStyleScaling->ToPixels(&Margin);
 						m_ScreenMargin=Margin;
 					}
 					break;
@@ -6695,12 +6778,12 @@ void CMainWindow::CFullscreen::ShowStatusBar(bool fShow)
 		ShowSideBar(false);
 		m_App.StatusView.SetVisible(false);
 		LayoutBase.SetContainerVisible(CONTAINER_ID_STATUS,false);
-		m_App.StatusView.SetParent(&m_ViewWindow);
+		OnSharedBarVisibilityChange(m_App.StatusView,m_App.StatusView,true);
 		m_MainWindow.ShowPopupStatusBar(true);
 	} else {
 		OnBarHide(m_App.StatusView);
 		m_MainWindow.ShowPopupStatusBar(false);
-		m_App.StatusView.SetParent(&LayoutBase);
+		OnSharedBarVisibilityChange(m_App.StatusView,m_App.StatusView,false);
 		if (m_MainWindow.GetStatusBarVisible())
 			LayoutBase.SetContainerVisible(CONTAINER_ID_STATUS,true);
 	}
@@ -6747,21 +6830,21 @@ void CMainWindow::CFullscreen::ShowSideBar(bool fShow)
 	if (fShow) {
 		RECT rcClient,rcBar;
 
+		m_App.SideBar.SetVisible(false);
+		LayoutBase.SetContainerVisible(CONTAINER_ID_SIDEBAR,false);
+		OnSharedBarVisibilityChange(m_App.SideBar,m_App.SideBar,true);
 		m_ViewWindow.GetClientRect(&rcClient);
 		if (m_fShowStatusView)
 			rcClient.bottom-=m_App.StatusView.GetHeight();
 		if (m_fShowTitleBar)
 			rcClient.top+=m_TitleBar.GetHeight();
 		m_MainWindow.m_SideBarManager.Layout(&rcClient,&rcBar);
-		m_App.SideBar.SetVisible(false);
-		LayoutBase.SetContainerVisible(CONTAINER_ID_SIDEBAR,false);
-		m_App.SideBar.SetParent(&m_ViewWindow);
 		m_App.SideBar.SetPosition(&rcBar);
 		m_MainWindow.ShowPopupSideBar(true);
 	} else {
 		OnBarHide(m_App.SideBar);
 		m_MainWindow.ShowPopupSideBar(false);
-		m_App.SideBar.SetParent(&LayoutBase);
+		OnSharedBarVisibilityChange(m_App.SideBar,m_App.SideBar,false);
 		if (m_MainWindow.GetSideBarVisible())
 			LayoutBase.SetContainerVisible(CONTAINER_ID_SIDEBAR,true);
 	}
@@ -6782,6 +6865,22 @@ void CMainWindow::CFullscreen::OnBarHide(CBasicWindow &Window)
 		m_CursorTracker.OnCursorMove(pt.x,pt.y);
 		ShowCursor(false);
 	}
+}
+
+
+void CMainWindow::CFullscreen::OnSharedBarVisibilityChange(
+	CBasicWindow &Window,TVTest::CUIBase &UIBase,bool fVisible)
+{
+	if (fVisible) {
+		Window.SetParent(&m_ViewWindow);
+		m_MainWindow.RemoveUIChild(&UIBase);
+		UIBase.SetStyleScaling(m_pStyleScaling);
+	} else {
+		Window.SetParent(&m_MainWindow.GetLayoutBase());
+		m_MainWindow.RegisterUIChild(&UIBase);
+		UIBase.SetStyleScaling(m_MainWindow.GetStyleScaling());
+	}
+	UIBase.UpdateStyle();
 }
 
 
@@ -6868,16 +6967,19 @@ CMainWindow::MainWindowStyle::MainWindowStyle()
 
 void CMainWindow::MainWindowStyle::SetStyle(const TVTest::Style::CStyleManager *pStyleManager)
 {
+	*this=MainWindowStyle();
 	pStyleManager->Get(TEXT("screen.margin"),&ScreenMargin);
 	pStyleManager->Get(TEXT("fullscreen.margin"),&FullscreenMargin);
 	pStyleManager->Get(TEXT("main-window.resizing-margin"),&ResizingMargin);
 }
 
-void CMainWindow::MainWindowStyle::NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager)
+void CMainWindow::MainWindowStyle::NormalizeStyle(
+	const TVTest::Style::CStyleManager *pStyleManager,
+	const TVTest::Style::CStyleScaling *pStyleScaling)
 {
-	pStyleManager->ToPixels(&ScreenMargin);
-	pStyleManager->ToPixels(&FullscreenMargin);
-	pStyleManager->ToPixels(&ResizingMargin);
+	pStyleScaling->ToPixels(&ScreenMargin);
+	pStyleScaling->ToPixels(&FullscreenMargin);
+	pStyleScaling->ToPixels(&ResizingMargin);
 }
 
 
@@ -7253,6 +7355,11 @@ void CMainWindow::CSideBarManager::OnBarWidthChanged(int BarWidth)
 	m_pMainWindow->SetFixedPaneSize(CONTAINER_ID_SIDEBARSPLITTER,CONTAINER_ID_SIDEBAR,Width,Height);
 }
 
+void CMainWindow::CSideBarManager::OnStyleChanged()
+{
+	m_pMainWindow->m_App.SideBarOptions.SetSideBarImage();
+}
+
 
 CMainWindow::CStatusViewEventHandler::CStatusViewEventHandler(CMainWindow *pMainWindow)
 	: m_pMainWindow(pMainWindow)
@@ -7267,6 +7374,11 @@ void CMainWindow::CStatusViewEventHandler::OnMouseLeave()
 void CMainWindow::CStatusViewEventHandler::OnHeightChanged(int Height)
 {
 	m_pMainWindow->SetFixedPaneSize(CONTAINER_ID_STATUSSPLITTER,CONTAINER_ID_STATUS,0,Height);
+}
+
+void CMainWindow::CStatusViewEventHandler::OnStyleChanged()
+{
+	m_pMainWindow->m_App.StatusOptions.ApplyItemWidth();
 }
 
 

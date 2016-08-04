@@ -56,6 +56,7 @@ CCaptionPanel::CCaptionPanel()
 	, m_CurLanguage(0)
 	, m_SaveCharEncoding(CHARENCODING_UTF16)
 {
+	GetDefaultFont(&m_CaptionFont);
 }
 
 
@@ -82,10 +83,10 @@ void CCaptionPanel::SetTheme(const TVTest::Theme::CThemeManager *pThemeManager)
 
 bool CCaptionPanel::SetFont(const TVTest::Style::Font &Font)
 {
-	if (!CreateDrawFont(Font,&m_Font))
-		return false;
+	m_CaptionFont=Font;
 	if (m_hwnd!=NULL) {
-		SetWindowFont(m_hwndEdit,m_Font.GetHandle(),TRUE);
+		ApplyStyle();
+		RealizeStyle();
 	}
 	return true;
 }
@@ -422,8 +423,6 @@ LRESULT CCaptionPanel::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam
 
 			if (!m_BackBrush.IsCreated())
 				m_BackBrush.Create(m_BackColor);
-			if (!m_Font.IsCreated())
-				CreateDefaultFont(&m_Font);
 
 			m_hwndEdit=CreateWindowEx(0,TEXT("EDIT"),TEXT(""),
 				WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_VSCROLL |
@@ -505,6 +504,20 @@ LRESULT CCaptionPanel::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam
 	}
 
 	return ::DefWindowProc(hwnd,uMsg,wParam,lParam);
+}
+
+
+void CCaptionPanel::ApplyStyle()
+{
+	if (m_hwnd!=NULL)
+		CreateDrawFont(m_CaptionFont,&m_Font);
+}
+
+
+void CCaptionPanel::RealizeStyle()
+{
+	if (m_hwndEdit!=NULL)
+		SetWindowFont(m_hwndEdit,m_Font.GetHandle(),TRUE);
 }
 
 

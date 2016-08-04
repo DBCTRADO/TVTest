@@ -23,6 +23,7 @@ private:
 	DrawUtil::CFont m_LinkFont;
 
 	INT_PTR DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
+	void ApplyStyle() override;
 };
 
 

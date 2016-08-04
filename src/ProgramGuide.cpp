@@ -1071,7 +1071,7 @@ CProgramGuide::CProgramGuide(CEventSearchOptions &EventSearchOptions)
 	, m_WeekListService(-1)
 	, m_LinesPerHour(12)
 	, m_TextDrawEngine(TVTest::CTextDrawClient::ENGINE_GDI)
-	, m_ItemWidth(140)
+	, m_ItemLogicalWidth(140)
 	, m_TextLeftMargin(m_Style.EventIconSize.Width+
 					   m_Style.EventIconMargin.Left+m_Style.EventIconMargin.Right)
 	, m_fDragScroll(false)
@@ -1143,9 +1143,11 @@ void CProgramGuide::SetStyle(const TVTest::Style::CStyleManager *pStyleManager)
 }
 
 
-void CProgramGuide::NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager)
+void CProgramGuide::NormalizeStyle(
+	const TVTest::Style::CStyleManager *pStyleManager,
+	const TVTest::Style::CStyleScaling *pStyleScaling)
 {
-	m_Style.NormalizeStyle(pStyleManager);
+	m_Style.NormalizeStyle(pStyleManager,pStyleScaling);
 }
 
 
@@ -2612,16 +2614,21 @@ void CProgramGuide::SetTooltip()
 }
 
 
-void CProgramGuide::OnFontChanged()
+void CProgramGuide::ResetEventFont()
 {
 	for (size_t i=0;i<m_EventLayoutList.Length();i++) {
 		ProgramGuide::CEventLayout *pLayout=m_EventLayoutList[i];
-		for (size_t i=0;i<pLayout->NumItems();i++) {
-			ProgramGuide::CEventItem *pItem=pLayout->GetItem(i);
+		for (size_t j=0;j<pLayout->NumItems();j++) {
+			ProgramGuide::CEventItem *pItem=pLayout->GetItem(j);
 			pItem->ResetTitleLines();
 		}
 	}
+}
 
+
+void CProgramGuide::OnFontChanged()
+{
+	ResetEventFont();
 	CalcFontMetrics();
 	SetScrollBar();
 	SetTooltip();
@@ -3321,8 +3328,9 @@ bool CProgramGuide::SetUIOptions(int LinesPerHour,int ItemWidth)
 	if (m_LinesPerHour!=LinesPerHour
 			|| m_ItemWidth!=ItemWidth) {
 		m_LinesPerHour=LinesPerHour;
-		m_ItemWidth=ItemWidth;
+		m_ItemLogicalWidth=ItemWidth;
 		if (m_hwnd!=NULL) {
+			m_ItemWidth=m_pStyleScaling->LogicalPixelsToPhysicalPixels(m_ItemLogicalWidth);
 			m_ScrollPos.x=0;
 			m_ScrollPos.y=0;
 			m_OldScrollPos=m_ScrollPos;
@@ -3828,27 +3836,20 @@ LRESULT CProgramGuide::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam
 	switch (uMsg) {
 	case WM_CREATE:
 		{
+			if (!m_TextDrawClient.Initialize(m_TextDrawEngine,hwnd)) {
+				if (m_TextDrawEngine!=TVTest::CTextDrawClient::ENGINE_GDI) {
+					m_TextDrawEngine=TVTest::CTextDrawClient::ENGINE_GDI;
+					m_TextDrawClient.Initialize(m_TextDrawEngine,hwnd);
+				}
+			}
+			m_TextDrawClient.SetMaxFontCache(2);
+
 			InitializeUI();
-
-			CreateFonts();
-
-			m_TextLeftMargin=
-				m_Style.EventIconSize.Width+
-				m_Style.EventIconMargin.Left+m_Style.EventIconMargin.Right;
 
 			if (m_hDragCursor1==NULL)
 				m_hDragCursor1=::LoadCursor(m_hinst,MAKEINTRESOURCE(IDC_GRAB1));
 			if (m_hDragCursor2==NULL)
 				m_hDragCursor2=::LoadCursor(m_hinst,MAKEINTRESOURCE(IDC_GRAB2));
-
-			static const TVTest::Theme::IconList::ResourceInfo ResourceList[] = {
-				{MAKEINTRESOURCE(IDB_CHEVRON10),10,10},
-				{MAKEINTRESOURCE(IDB_CHEVRON20),20,20},
-			};
-			m_Chevron.Load(m_hinst,
-						   m_Style.HeaderChevronSize.Width,
-						   m_Style.HeaderChevronSize.Height,
-						   ResourceList,lengthof(ResourceList));
 
 			m_EpgIcons.Load();
 			m_EventInfoPopupManager.Initialize(hwnd,&m_EventInfoPopupHandler);
@@ -3857,15 +3858,6 @@ LRESULT CProgramGuide::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam
 				m_pProgramCustomizer->Initialize();
 
 			m_fBarShadow=CBufferedPaint::IsSupported();
-
-			if (!m_TextDrawClient.Initialize(m_TextDrawEngine,hwnd)) {
-				if (m_TextDrawEngine!=TVTest::CTextDrawClient::ENGINE_GDI) {
-					m_TextDrawEngine=TVTest::CTextDrawClient::ENGINE_GDI;
-					m_TextDrawClient.Initialize(m_TextDrawEngine,hwnd);
-				}
-			}
-			m_TextDrawClient.SetMaxFontCache(2);
-			CalcFontMetrics();
 
 			CFeaturedEvents &FeaturedEvents=GetAppClass().FeaturedEvents;
 			FeaturedEvents.AddEventHandler(this);
@@ -4642,6 +4634,40 @@ bool CProgramGuide::ExecuteTool(int Tool,
 }
 
 
+void CProgramGuide::ApplyStyle()
+{
+	if (m_hwnd!=NULL) {
+		CreateFonts();
+		CalcFontMetrics();
+
+		m_ItemWidth=m_pStyleScaling->LogicalPixelsToPhysicalPixels(m_ItemLogicalWidth);
+		m_TextLeftMargin=
+			m_Style.EventIconSize.Width+
+			m_Style.EventIconMargin.Left+m_Style.EventIconMargin.Right;
+
+		static const TVTest::Theme::IconList::ResourceInfo ResourceList[] = {
+			{MAKEINTRESOURCE(IDB_CHEVRON10),10,10},
+			{MAKEINTRESOURCE(IDB_CHEVRON20),20,20},
+		};
+		m_Chevron.Load(m_hinst,
+					   m_Style.HeaderChevronSize.Width,
+					   m_Style.HeaderChevronSize.Height,
+					   ResourceList,lengthof(ResourceList));
+	}
+}
+
+
+void CProgramGuide::RealizeStyle()
+{
+	if (m_hwnd!=NULL) {
+		CalcLayout();
+		SetScrollBar();
+		SetTooltip();
+		Invalidate();
+	}
+}
+
+
 void CProgramGuide::OnFeaturedEventsSettingsChanged(CFeaturedEvents &FeaturedEvents)
 {
 	if (m_fShowFeaturedMark) {
@@ -5067,6 +5093,7 @@ CProgramGuide::ProgramGuideStyle::ProgramGuideStyle()
 
 void CProgramGuide::ProgramGuideStyle::SetStyle(const TVTest::Style::CStyleManager *pStyleManager)
 {
+	*this=ProgramGuideStyle();
 	pStyleManager->Get(TEXT("program-guide.column.margin"),&ColumnMargin);
 	pStyleManager->Get(TEXT("program-guide.header.padding"),&HeaderPadding);
 	pStyleManager->Get(TEXT("program-guide.header.channel-name.margin"),&HeaderChannelNameMargin);
@@ -5090,27 +5117,29 @@ void CProgramGuide::ProgramGuideStyle::SetStyle(const TVTest::Style::CStyleManag
 }
 
 
-void CProgramGuide::ProgramGuideStyle::NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager)
+void CProgramGuide::ProgramGuideStyle::NormalizeStyle(
+	const TVTest::Style::CStyleManager *pStyleManager,
+	const TVTest::Style::CStyleScaling *pStyleScaling)
 {
-	pStyleManager->ToPixels(&ColumnMargin);
-	pStyleManager->ToPixels(&HeaderPadding);
-	pStyleManager->ToPixels(&HeaderChannelNameMargin);
-	pStyleManager->ToPixels(&HeaderIconMargin);
-	pStyleManager->ToPixels(&HeaderChevronSize);
-	pStyleManager->ToPixels(&HeaderChevronMargin);
-	pStyleManager->ToPixels(&HeaderShadowHeight);
-	pStyleManager->ToPixels(&EventLeading);
-	pStyleManager->ToPixels(&EventLineSpacing);
-	pStyleManager->ToPixels(&EventPadding);
-	pStyleManager->ToPixels(&EventIconSize);
-	pStyleManager->ToPixels(&EventIconMargin);
-	pStyleManager->ToPixels(&FeaturedMarkMargin);
-	pStyleManager->ToPixels(&HighlightBorder);
-	pStyleManager->ToPixels(&SelectedBorder);
-	pStyleManager->ToPixels(&TimeBarPadding);
-	pStyleManager->ToPixels(&TimeBarShadowWidth);
-	pStyleManager->ToPixels(&CurTimeLineWidth);
-	pStyleManager->ToPixels(&ToolbarItemPadding);
+	pStyleScaling->ToPixels(&ColumnMargin);
+	pStyleScaling->ToPixels(&HeaderPadding);
+	pStyleScaling->ToPixels(&HeaderChannelNameMargin);
+	pStyleScaling->ToPixels(&HeaderIconMargin);
+	pStyleScaling->ToPixels(&HeaderChevronSize);
+	pStyleScaling->ToPixels(&HeaderChevronMargin);
+	pStyleScaling->ToPixels(&HeaderShadowHeight);
+	pStyleScaling->ToPixels(&EventLeading);
+	pStyleScaling->ToPixels(&EventLineSpacing);
+	pStyleScaling->ToPixels(&EventPadding);
+	pStyleScaling->ToPixels(&EventIconSize);
+	pStyleScaling->ToPixels(&EventIconMargin);
+	pStyleScaling->ToPixels(&FeaturedMarkMargin);
+	pStyleScaling->ToPixels(&HighlightBorder);
+	pStyleScaling->ToPixels(&SelectedBorder);
+	pStyleScaling->ToPixels(&TimeBarPadding);
+	pStyleScaling->ToPixels(&TimeBarShadowWidth);
+	pStyleScaling->ToPixels(&CurTimeLineWidth);
+	pStyleScaling->ToPixels(&ToolbarItemPadding);
 }
 
 
@@ -5129,14 +5158,29 @@ enum {
 };
 
 
-class CProgramGuideTunerStatusItem : public CStatusItem
+class CStatusItemBase : public CStatusItem
+{
+public:
+	CStatusItemBase(int ID,const SizeValue &DefaultWidth)
+		: CStatusItem(ID,DefaultWidth)
+	{
+	}
+
+	void ApplyStyle() override
+	{
+		m_Width=m_pStatus->CalcItemPixelSize(m_DefaultWidth);
+		m_ActualWidth=m_Width;
+	}
+};
+
+class CProgramGuideTunerStatusItem : public CStatusItemBase
 {
 	CProgramGuide *m_pProgramGuide;
 	CDropDownMenu m_Menu;
 
 public:
 	CProgramGuideTunerStatusItem::CProgramGuideTunerStatusItem(CProgramGuide *pProgramGuide)
-		: CStatusItem(STATUS_ITEM_TUNER,SizeValue(14*EM_FACTOR,SIZE_EM))
+		: CStatusItemBase(STATUS_ITEM_TUNER,SizeValue(14*EM_FACTOR,SIZE_EM))
 		, m_pProgramGuide(pProgramGuide)
 	{
 	}
@@ -5172,7 +5216,8 @@ public:
 			pt.y=rc.bottom;
 			::ClientToScreen(m_pStatus->GetHandle(),&pt);
 			m_Menu.Show(GetParent(m_pStatus->GetHandle()),m_pProgramGuide->GetHandle(),&pt,
-						CM_PROGRAMGUIDE_CHANNELGROUP_FIRST+m_pProgramGuide->GetCurrentChannelGroup());
+						CM_PROGRAMGUIDE_CHANNELGROUP_FIRST+m_pProgramGuide->GetCurrentChannelGroup(),
+						0,m_pStyleScaling->GetDPI());
 		} else {
 			POINT pt;
 			RECT rc;
@@ -5184,7 +5229,7 @@ public:
 	}
 };
 
-class CListSelectStatusItem : public CStatusItem
+class CListSelectStatusItem : public CStatusItemBase
 {
 	CProgramGuide *m_pProgramGuide;
 	CDropDownMenu m_Menu;
@@ -5228,7 +5273,7 @@ class CListSelectStatusItem : public CStatusItem
 
 public:
 	CListSelectStatusItem::CListSelectStatusItem(CProgramGuide *pProgramGuide)
-		: CStatusItem(STATUS_ITEM_DATE,SizeValue(14*EM_FACTOR,SIZE_EM))
+		: CStatusItemBase(STATUS_ITEM_DATE,SizeValue(14*EM_FACTOR,SIZE_EM))
 		, m_pProgramGuide(pProgramGuide)
 	{
 	}
@@ -5302,7 +5347,7 @@ public:
 			pt.y=rc.bottom;
 			::ClientToScreen(m_pStatus->GetHandle(),&pt);
 			m_Menu.Show(GetParent(m_pStatus->GetHandle()),m_pProgramGuide->GetHandle(),&pt,
-						CurItem);
+						CurItem,0,m_pStyleScaling->GetDPI());
 		} else {
 			POINT pt;
 			RECT rc;
@@ -5314,13 +5359,13 @@ public:
 	}
 };
 
-class CListPrevStatusItem : public CStatusItem
+class CListPrevStatusItem : public CStatusItemBase
 {
 	CProgramGuide *m_pProgramGuide;
 
 public:
 	CListPrevStatusItem::CListPrevStatusItem(CProgramGuide *pProgramGuide)
-		: CStatusItem(STATUS_ITEM_DATEPREV,SizeValue(1*EM_FACTOR,SIZE_EM))
+		: CStatusItemBase(STATUS_ITEM_DATEPREV,SizeValue(1*EM_FACTOR,SIZE_EM))
 		, m_pProgramGuide(pProgramGuide)
 	{
 	}
@@ -5357,13 +5402,13 @@ public:
 	}
 };
 
-class CListNextStatusItem : public CStatusItem
+class CListNextStatusItem : public CStatusItemBase
 {
 	CProgramGuide *m_pProgramGuide;
 
 public:
 	CListNextStatusItem::CListNextStatusItem(CProgramGuide *pProgramGuide)
-		: CStatusItem(STATUS_ITEM_DATENEXT,SizeValue(1*EM_FACTOR,SIZE_EM))
+		: CStatusItemBase(STATUS_ITEM_DATENEXT,SizeValue(1*EM_FACTOR,SIZE_EM))
 		, m_pProgramGuide(pProgramGuide)
 	{
 	}
@@ -5438,6 +5483,7 @@ public:
 	bool SetBarVisible(bool fVisible) override;
 	void GetBarSize(SIZE *pSize) override;
 	void SetBarPosition(int x,int y,int Width,int Height) override;
+	TVTest::CUIBase *GetUIBase() override;
 	bool OnSetCursor(HWND hwnd,int HitTestCode) override;
 	bool OnNotify(LPARAM lParam,LRESULT *pResult) override;
 
@@ -5448,10 +5494,15 @@ public:
 protected:
 	CBufferedPaint m_BufferedPaint;
 	TVTest::Style::Margins m_Padding;
+	DrawUtil::CFont m_Font;
 	int m_FontHeight;
 
 	void AdjustSize();
 	void DeleteAllButtons();
+
+// CUIBase
+	void ApplyStyle() override;
+	void RealizeStyle() override;
 
 	virtual void OnCreate() {}
 	virtual void OnCustomDraw(NMTBCUSTOMDRAW *pnmtb,HDC hdc) = 0;
@@ -5483,19 +5534,8 @@ bool CProgramGuideToolbar::Create(HWND hwndParent,DWORD Style,DWORD ExStyle,int 
 
 	InitializeUI();
 
-	// フォントの高さを取得
-	HDC hdc=::GetDC(m_hwnd);
-	HFONT hfontOld=SelectFont(hdc,GetWindowFont(m_hwnd));
-	TEXTMETRIC tm;
-	::GetTextMetrics(hdc,&tm);
-	m_FontHeight=tm.tmHeight-tm.tmInternalLeading;
-	SelectFont(hdc,hfontOld);
-	::ReleaseDC(m_hwnd,hdc);
-
 	::SendMessage(m_hwnd,TB_BUTTONSTRUCTSIZE,sizeof(TBBUTTON),0);
 	//::SendMessage(m_hwnd,TB_SETEXTENDEDSTYLE,0,TBSTYLE_EX_MIXEDBUTTONS);
-	::SendMessage(m_hwnd,TB_SETPADDING,0,
-				  MAKELONG((m_Padding.Horz()+1)/2,(m_Padding.Vert()+1)/2));
 	// ボタンをアイコン無しにしてもなぜかアイコン分の幅がとられる
 	::SendMessage(m_hwnd,TB_SETBITMAPSIZE,0,MAKELONG(1,15));
 
@@ -5553,6 +5593,12 @@ void CProgramGuideToolbar::GetBarSize(SIZE *pSize)
 void CProgramGuideToolbar::SetBarPosition(int x,int y,int Width,int Height)
 {
 	SetPosition(x,y,Width,Height);
+}
+
+
+TVTest::CUIBase *CProgramGuideToolbar::GetUIBase()
+{
+	return this;
 }
 
 
@@ -5658,9 +5704,31 @@ void CProgramGuideToolbar::DeleteAllButtons()
 }
 
 
+void CProgramGuideToolbar::ApplyStyle()
+{
+	TVTest::Style::Font Font;
+
+	GetSystemFont(DrawUtil::FONT_MENU,&Font);
+	CreateDrawFont(Font,&m_Font);
+	HDC hdc=::GetDC(m_hwnd);
+	m_FontHeight=m_Font.GetHeight(hdc,false);
+	::ReleaseDC(m_hwnd,hdc);
+}
 
 
-class ABSTRACT_CLASS(CStatusBar) : public CProgramGuideBar
+void CProgramGuideToolbar::RealizeStyle()
+{
+	SetWindowFont(m_hwnd,m_Font.GetHandle(),TRUE);
+	::SendMessage(m_hwnd,TB_SETPADDING,0,
+				  MAKELONG((m_Padding.Horz()+1)/2,(m_Padding.Vert()+1)/2));
+}
+
+
+
+
+class ABSTRACT_CLASS(CStatusBar)
+	: public CProgramGuideBar
+	, public TVTest::CUIBase
 {
 public:
 	CStatusBar(CProgramGuide *pProgramGuide);
@@ -5674,6 +5742,7 @@ public:
 	void GetBarSize(SIZE *pSize) override;
 	void SetBarPosition(int x,int y,int Width,int Height) override;
 	void SetTheme(const ThemeInfo &Theme) override;
+	TVTest::CUIBase *GetUIBase() override;
 
 protected:
 	CStatusView m_StatusView;
@@ -5684,8 +5753,10 @@ CStatusBar::CStatusBar(CProgramGuide *pProgramGuide)
 	: CProgramGuideBar(pProgramGuide)
 {
 	TVTest::Style::Font Font;
-	if (DrawUtil::GetSystemFont(DrawUtil::FONT_MENU,&Font.LogFont))
+	if (GetSystemFont(DrawUtil::FONT_MENU,&Font))
 		m_StatusView.SetFont(Font);
+
+	RegisterUIChild(&m_StatusView);
 }
 
 
@@ -5741,6 +5812,12 @@ void CStatusBar::SetBarPosition(int x,int y,int Width,int Height)
 void CStatusBar::SetTheme(const ThemeInfo &Theme)
 {
 	m_StatusView.SetStatusViewTheme(Theme.StatusTheme);
+}
+
+
+TVTest::CUIBase *CStatusBar::GetUIBase()
+{
+	return this;
 }
 
 
@@ -5820,6 +5897,7 @@ private:
 	void SetButtons();
 	void OnCreate() override;
 	void OnCustomDraw(NMTBCUSTOMDRAW *pnmtb,HDC hdc) override;
+	void RealizeStyle() override;
 };
 
 
@@ -5976,6 +6054,13 @@ void CFavoritesToolbar::OnCustomDraw(NMTBCUSTOMDRAW *pnmtb,HDC hdc)
 }
 
 
+void CFavoritesToolbar::RealizeStyle()
+{
+	CProgramGuideToolbar::RealizeStyle();
+	OnFavoritesChanged();
+}
+
+
 
 
 class CDateToolbar : public CProgramGuideToolbar
@@ -5999,6 +6084,7 @@ private:
 
 	bool SetButtons(const SYSTEMTIME *pDateList,int Days,int FirstCommand);
 	void OnCustomDraw(NMTBCUSTOMDRAW *pnmtb,HDC hdc) override;
+	void RealizeStyle() override;
 };
 
 
@@ -6155,6 +6241,13 @@ void CDateToolbar::OnCustomDraw(NMTBCUSTOMDRAW *pnmtb,HDC hdc)
 }
 
 
+void CDateToolbar::RealizeStyle()
+{
+	CProgramGuideToolbar::RealizeStyle();
+	OnTimeRangeChanged();
+}
+
+
 
 
 class CTimeToolbar : public CProgramGuideToolbar
@@ -6183,6 +6276,7 @@ private:
 	void ChangeTime();
 	bool SetButtons(const TimeInfo *pTimeList,int TimeListLength);
 	void OnCustomDraw(NMTBCUSTOMDRAW *pnmtb,HDC hdc) override;
+	void RealizeStyle() override;
 };
 
 
@@ -6428,6 +6522,13 @@ void CTimeToolbar::OnCustomDraw(NMTBCUSTOMDRAW *pnmtb,HDC hdc)
 }
 
 
+void CTimeToolbar::RealizeStyle()
+{
+	CProgramGuideToolbar::RealizeStyle();
+	ChangeTime();
+}
+
+
 }	// namespace ProgramGuideBar
 
 
@@ -6646,10 +6747,20 @@ void CProgramGuideFrameBase::OnMenuInitialize(HMENU hmenu)
 }
 
 
-void CProgramGuideFrameBase::OnWindowCreate(HWND hwnd,bool fBufferedPaint)
+void CProgramGuideFrameBase::OnWindowCreate(
+	HWND hwnd,TVTest::Style::CStyleScaling *pStyleScaling,bool fBufferedPaint)
 {
+	TVTest::CUIBase *pUIBase=GetUIBase();
+
+	for (int i=0;i<lengthof(m_ToolbarList);i++)
+		pUIBase->RegisterUIChild(m_ToolbarList[i]->GetUIBase());
+	pUIBase->SetStyleScaling(pStyleScaling);
+
 	m_pProgramGuide->SetFrame(this);
+	m_pProgramGuide->SetStyleScaling(pStyleScaling);
 	m_pProgramGuide->Create(hwnd,WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_HSCROLL);
+
+	pUIBase->RegisterUIChild(m_pProgramGuide);
 
 	for (int i=0;i<lengthof(m_ToolbarList);i++) {
 		ProgramGuideBar::CProgramGuideBar *pBar=m_ToolbarList[i];
@@ -6671,6 +6782,8 @@ void CProgramGuideFrameBase::OnWindowCreate(HWND hwnd,bool fBufferedPaint)
 
 void CProgramGuideFrameBase::OnWindowDestroy()
 {
+	GetUIBase()->ClearUIChildList();
+
 	m_pProgramGuide->SetFrame(NULL);
 
 	for (int i=0;i<lengthof(m_ToolbarList);i++)
@@ -7068,6 +7181,8 @@ CProgramGuideFrame::CProgramGuideFrame(CProgramGuide *pProgramGuide,CProgramGuid
 {
 	m_WindowPosition.Width=640;
 	m_WindowPosition.Height=480;
+
+	SetStyleScaling(&m_StyleScaling);
 }
 
 
@@ -7130,8 +7245,12 @@ LRESULT CProgramGuideFrame::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM l
 {
 	switch (uMsg) {
 	case WM_CREATE:
-		OnWindowCreate(hwnd,true);
+		OnWindowCreate(hwnd,m_pStyleScaling,true);
 		return 0;
+
+	case WM_NCCREATE:
+		InitStyleScaling(hwnd);
+		break;
 
 	case WM_SIZE:
 		{
@@ -7191,9 +7310,19 @@ LRESULT CProgramGuideFrame::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM l
 		if (!m_pProgramGuide->OnCloseFrame())
 			return 0;
 		break;
+
+	case WM_DPICHANGED:
+		OnDPIChanged(hwnd,wParam,lParam);
+		break;
 	}
 
 	return DefaultMessageHandler(hwnd,uMsg,wParam,lParam);
+}
+
+
+void CProgramGuideFrame::RealizeStyle()
+{
+	SendSizeMessage();
 }
 
 
@@ -7320,7 +7449,7 @@ LRESULT CProgramGuideDisplay::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM
 	switch (uMsg) {
 	case WM_CREATE:
 		InitializeUI();
-		OnWindowCreate(hwnd,false);
+		OnWindowCreate(hwnd,m_pStyleScaling,false);
 		return 0;
 
 	case WM_SIZE:

@@ -1829,9 +1829,11 @@ CProgramSearchDialog::CProgramSearchDialog(CEventSearchOptions &Options)
 	, m_fHighlightResult(true)
 	, m_ResultListHeight(-1)
 {
-	m_ColumnWidth[COLUMN_CHANNEL]=100;
-	m_ColumnWidth[COLUMN_TIME]=136;
-	m_ColumnWidth[COLUMN_EVENTNAME]=240;
+	for (int i=0;i<NUM_COLUMNS;i++)
+		m_ColumnWidth[i]=-1;
+
+	RegisterUIChild(&m_SearchSettingsDialog);
+	SetStyleScaling(&m_StyleScaling);
 }
 
 
@@ -1936,8 +1938,7 @@ INT_PTR CProgramSearchDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM l
 	case WM_INITDIALOG:
 		AddControl(IDC_PROGRAMSEARCH_SETTINGSPLACE,ALIGN_HORZ);
 		AddControl(IDC_PROGRAMSEARCH_STATUS,ALIGN_HORZ);
-		AddControl(IDC_PROGRAMSEARCH_RESULT,ALIGN_ALL);
-		AddControl(IDC_PROGRAMSEARCH_INFO,ALIGN_HORZ_BOTTOM);
+		AddControl(IDC_PROGRAMSEARCH_RESULTPANE,ALIGN_ALL);
 
 		m_SearchSettingsDialog.SetEventHandler(this);
 		m_SearchSettings.Keyword.clear();
@@ -1950,16 +1951,31 @@ INT_PTR CProgramSearchDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM l
 			HWND hwndList=::GetDlgItem(hDlg,IDC_PROGRAMSEARCH_RESULT);
 			ListView_SetExtendedListViewStyle(hwndList,LVS_EX_FULLROWSELECT | LVS_EX_LABELTIP);
 
+			int FontSize;
+			for (int i=0;i<NUM_COLUMNS;i++) {
+				if (m_ColumnWidth[i]<0) {
+					HDC hdc=::GetDC(hwndList);
+					HFONT hfont=GetWindowFont(hwndList);
+					HFONT hfontOld=SelectFont(hdc,hfont);
+					TEXTMETRIC tm;
+					::GetTextMetrics(hdc,&tm);
+					FontSize=tm.tmHeight-tm.tmInternalLeading;
+					SelectFont(hdc,hfontOld);
+					::ReleaseDC(hwndList,hdc);
+					break;
+				}
+			}
+
 			LVCOLUMN lvc;
 			lvc.mask=LVCF_FMT | LVCF_WIDTH | LVCF_TEXT;
 			lvc.fmt=LVCFMT_LEFT;
-			lvc.cx=m_ColumnWidth[COLUMN_CHANNEL];
+			lvc.cx=m_ColumnWidth[COLUMN_CHANNEL]>=0?m_ColumnWidth[COLUMN_CHANNEL]:8*FontSize;
 			lvc.pszText=TEXT("ƒ`ƒƒƒ“ƒlƒ‹");
 			ListView_InsertColumn(hwndList,COLUMN_CHANNEL,&lvc);
-			lvc.cx=m_ColumnWidth[COLUMN_TIME];
+			lvc.cx=m_ColumnWidth[COLUMN_TIME]>=0?m_ColumnWidth[COLUMN_TIME]:12*FontSize;
 			lvc.pszText=TEXT("“úŽž");
 			ListView_InsertColumn(hwndList,COLUMN_TIME,&lvc);
-			lvc.cx=m_ColumnWidth[COLUMN_EVENTNAME];
+			lvc.cx=m_ColumnWidth[COLUMN_EVENTNAME]>=0?m_ColumnWidth[COLUMN_EVENTNAME]:20*FontSize;
 			lvc.pszText=TEXT("”Ô‘g–¼");
 			ListView_InsertColumn(hwndList,COLUMN_EVENTNAME,&lvc);
 
@@ -2000,9 +2016,7 @@ INT_PTR CProgramSearchDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM l
 
 			InvalidateDlgItem(hDlg,IDC_PROGRAMSEARCH_STATUS);
 
-			GetDlgItemRect(hDlg,IDC_PROGRAMSEARCH_RESULT,&rc);
-			if (rc.bottom-rc.top<MIN_PANE_HEIGHT)
-				AdjustResultListHeight(MIN_PANE_HEIGHT);
+			AdjustResultListHeight(-1);
 		}
 		return TRUE;
 
@@ -2194,6 +2208,21 @@ INT_PTR CProgramSearchDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM l
 	}
 
 	return FALSE;
+}
+
+
+void CProgramSearchDialog::ApplyStyle()
+{
+	CResizableDialog::ApplyStyle();
+
+	if (m_hDlg!=NULL) {
+		HWND hwnd=::GetDlgItem(m_hDlg,IDC_PROGRAMSEARCH_INFO);
+		HDC hdc=::GetDC(hwnd);
+		LOGFONT lf;
+		m_Font.GetLogFont(&lf);
+		CRichEditUtil::LogFontToCharFormat(hdc,&lf,&m_InfoTextFormat);
+		::ReleaseDC(hwnd,hdc);
+	}
 }
 
 
@@ -2483,22 +2512,23 @@ bool CProgramSearchDialog::IsSplitterPos(int x,int y) const
 
 void CProgramSearchDialog::AdjustResultListHeight(int Height)
 {
-	RECT rcList,rcInfo;
+	RECT rcPane,rcList,rcInfo;
 
+	GetDlgItemRect(m_hDlg,IDC_PROGRAMSEARCH_RESULTPANE,&rcPane);
 	GetDlgItemRect(m_hDlg,IDC_PROGRAMSEARCH_RESULT,&rcList);
 	GetDlgItemRect(m_hDlg,IDC_PROGRAMSEARCH_INFO,&rcInfo);
 	const int SplitterHeight=rcInfo.top-rcList.bottom;
+	if (Height<0)
+		Height=(rcPane.bottom-rcPane.top)-(rcInfo.bottom-rcInfo.top)-SplitterHeight;
+	if (rcPane.top+Height>rcPane.bottom-MIN_PANE_HEIGHT-SplitterHeight)
+		Height=(rcPane.bottom-rcPane.top)-MIN_PANE_HEIGHT-SplitterHeight;
 	if (Height<MIN_PANE_HEIGHT)
 		Height=MIN_PANE_HEIGHT;
-	if (rcList.top+Height>rcInfo.bottom-MIN_PANE_HEIGHT)
-		Height=(rcInfo.bottom-rcList.top)-MIN_PANE_HEIGHT-SplitterHeight;
-	rcList.bottom=rcList.top+Height;
 	::MoveWindow(::GetDlgItem(m_hDlg,IDC_PROGRAMSEARCH_RESULT),
-				 rcList.left,rcList.top,rcList.right-rcList.left,rcList.bottom-rcList.top,TRUE);
-	rcInfo.top=rcList.bottom+SplitterHeight;
+				 rcPane.left,rcPane.top,rcPane.right-rcPane.left,Height,TRUE);
+	rcInfo.top=rcPane.top+Height+SplitterHeight;
 	::MoveWindow(::GetDlgItem(m_hDlg,IDC_PROGRAMSEARCH_INFO),
-				 rcInfo.left,rcInfo.top,rcInfo.right-rcInfo.left,rcInfo.bottom-rcInfo.top,TRUE);
-	UpdateLayout();
+				 rcPane.left,rcInfo.top,rcPane.right-rcPane.left,max(rcPane.bottom-rcInfo.top,0),TRUE);
 }
 
 

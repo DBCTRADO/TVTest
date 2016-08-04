@@ -108,6 +108,7 @@ private:
 	COLORREF m_BackColor;
 	COLORREF m_TextColor;
 	DrawUtil::CBrush m_BackBrush;
+	TVTest::Style::Font m_CaptionFont;
 	DrawUtil::CFont m_Font;
 	HWND m_hwndEdit;
 	CEditSubclass m_EditSubclass;
@@ -141,6 +142,10 @@ private:
 
 // CCustomWindow
 	LRESULT OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
+
+// CUIBase
+	void ApplyStyle() override;
+	void RealizeStyle() override;
 
 // CPanelForm::CPage
 	void OnActivate() override;

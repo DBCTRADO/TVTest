@@ -19,7 +19,10 @@ int CStyleManager::m_SystemResolutionY=96;
 
 
 CStyleManager::CStyleManager()
-	: m_fScaleFont(true)
+	: m_ForcedResolutionX(0)
+	, m_ForcedResolutionY(0)
+	, m_fScaleFont(true)
+	, m_fHandleDPIChanged(true)
 {
 	HDC hdc=::GetDC(nullptr);
 	if (hdc!=nullptr) {
@@ -53,10 +56,13 @@ bool CStyleManager::Load(LPCTSTR pszFileName)
 		int Value;
 
 		if (Settings.Read(TEXT("DPI"),&Value) && Value>0) {
-			m_ResolutionX=Value;
-			m_ResolutionY=Value;
+			m_ForcedResolutionX=Value;
+			m_ForcedResolutionY=Value;
+			m_ResolutionX=m_ForcedResolutionX;
+			m_ResolutionY=m_ForcedResolutionY;
 		}
 
+		Settings.Read(TEXT("HandleDPIChanged"),&m_fHandleDPIChanged);
 		Settings.Read(TEXT("ScaleFont"),&m_fScaleFont);
 	}
 
@@ -337,126 +343,52 @@ bool CStyleManager::Get(LPCTSTR pszName,Margins *pValue) const
 }
 
 
-bool CStyleManager::ToPixels(IntValue *pValue) const
+bool CStyleManager::InitStyleScaling(CStyleScaling *pScaling,HMONITOR hMonitor) const
 {
-	if (pValue==nullptr)
+	if (pScaling==nullptr)
 		return false;
 
-	switch (pValue->Unit) {
-	case UNIT_LOGICAL_PIXEL:
-		pValue->Value=LogicalPixelsToPhysicalPixels(pValue->Value);
-		break;
+	int ResolutionX,ResolutionY;
 
-	case UNIT_PHYSICAL_PIXEL:
-		return true;
+	if (m_ForcedResolutionX>0 && m_ForcedResolutionY>0) {
+		ResolutionX=m_ForcedResolutionX;
+		ResolutionY=m_ForcedResolutionY;
+	} else {
+		ResolutionX=m_SystemResolutionX;
+		ResolutionY=m_SystemResolutionY;
 
-	case UNIT_POINT:
-		pValue->Value=PointsToPixels(pValue->Value);
-		break;
-
-	case UNIT_DIP:
-		pValue->Value=DipToPixels(pValue->Value);
-		break;
-
-	default:
-		return false;
+		if (hMonitor!=nullptr) {
+			UINT DpiX,DpiY;
+			if (Util::GetMonitorDPI(hMonitor,&DpiX,&DpiY)!=0) {
+				ResolutionX=DpiX;
+				ResolutionY=DpiY;
+			}
+		}
 	}
 
-	pValue->Unit=UNIT_PHYSICAL_PIXEL;
+	pScaling->SetDPI(ResolutionX,ResolutionY);
+	pScaling->SetSystemDPI(m_SystemResolutionX,m_SystemResolutionY);
+	pScaling->SetScaleFont(m_fScaleFont);
 
 	return true;
 }
 
 
-bool CStyleManager::ToPixels(Size *pValue) const
+bool CStyleManager::InitStyleScaling(CStyleScaling *pScaling,HWND hwnd) const
 {
-	if (pValue==nullptr)
-		return false;
-
-	ToPixels(&pValue->Width);
-	ToPixels(&pValue->Height);
-
-	return true;
+	return InitStyleScaling(pScaling,::MonitorFromWindow(::GetAncestor(hwnd,GA_ROOT),MONITOR_DEFAULTTONULL));
 }
 
 
-bool CStyleManager::ToPixels(Margins *pValue) const
+bool CStyleManager::InitStyleScaling(CStyleScaling *pScaling,const RECT &Position) const
 {
-	if (pValue==nullptr)
-		return false;
-
-	ToPixels(&pValue->Left);
-	ToPixels(&pValue->Top);
-	ToPixels(&pValue->Right);
-	ToPixels(&pValue->Bottom);
-
-	return true;
+	return InitStyleScaling(pScaling,::MonitorFromRect(&Position,MONITOR_DEFAULTTONULL));
 }
 
 
-int CStyleManager::ToPixels(int Value,UnitType Unit) const
+bool CStyleManager::InitStyleScaling(CStyleScaling *pScaling) const
 {
-	switch (Unit) {
-	case UNIT_LOGICAL_PIXEL:
-		return LogicalPixelsToPhysicalPixels(Value);
-
-	case UNIT_PHYSICAL_PIXEL:
-		return Value;
-
-	case UNIT_POINT:
-		return PointsToPixels(Value);
-
-	case UNIT_DIP:
-		return DipToPixels(Value);
-	}
-
-	return 0;
-}
-
-
-int CStyleManager::LogicalPixelsToPhysicalPixels(int Pixels) const
-{
-	return ::MulDiv(Pixels,m_ResolutionY,96);
-}
-
-
-int CStyleManager::PointsToPixels(int Points) const
-{
-	// 1pt = 1/72in
-	return ::MulDiv(Points,m_ResolutionY,72);
-}
-
-
-int CStyleManager::DipToPixels(int Dip) const
-{
-	// 1dp = 1/160in
-	return ::MulDiv(Dip,m_ResolutionY,160);
-}
-
-
-int CStyleManager::ConvertUnit(int Value,UnitType SrcUnit,UnitType DstUnit) const
-{
-	switch (DstUnit) {
-	case UNIT_LOGICAL_PIXEL:
-		return ::MulDiv(ToPixels(Value,SrcUnit),96,m_ResolutionY);
-
-	case UNIT_PHYSICAL_PIXEL:
-		return ToPixels(Value,SrcUnit);
-
-	case UNIT_POINT:
-		return ::MulDiv(ToPixels(Value,SrcUnit),72,m_ResolutionY);
-
-	case UNIT_DIP:
-		return ::MulDiv(ToPixels(Value,SrcUnit),160,m_ResolutionY);
-	}
-
-	return Value;
-}
-
-
-int CStyleManager::GetDPI() const
-{
-	return m_ResolutionY;
+	return InitStyleScaling(pScaling,static_cast<HMONITOR>(nullptr));
 }
 
 
@@ -466,22 +398,15 @@ int CStyleManager::GetSystemDPI() const
 }
 
 
-bool CStyleManager::RealizeFontSize(Font *pFont) const
+int CStyleManager::GetForcedDPI() const
 {
-	if (pFont==nullptr)
-		return false;
+	return m_ForcedResolutionY;
+}
 
-	if (!m_fScaleFont)
-		return false;
 
-	int Size=ToPixels(pFont->Size.Value,pFont->Size.Unit);
-	if (Size==0)
-		return false;
-
-	pFont->LogFont.lfHeight=
-		pFont->LogFont.lfHeight>=0 ? Size : -Size;
-
-	return true;
+bool CStyleManager::IsHandleDPIChanged() const
+{
+	return m_fHandleDPIChanged;
 }
 
 
@@ -532,6 +457,202 @@ UnitType CStyleManager::ParseUnit(LPCTSTR pszUnit)
 		return UNIT_DIP;
 
 	return UNIT_UNDEFINED;
+}
+
+
+
+
+CStyleScaling::CStyleScaling()
+	: m_ResolutionX(96)
+	, m_ResolutionY(96)
+	, m_SystemResolutionX(96)
+	, m_SystemResolutionY(96)
+	, m_fScaleFont(true)
+{
+}
+
+
+bool CStyleScaling::SetDPI(int ResolutionX,int ResolutionY)
+{
+	if (ResolutionX<1 || ResolutionY<1)
+		return false;
+
+	m_ResolutionX=ResolutionX;
+	m_ResolutionY=ResolutionY;
+
+	return true;
+}
+
+
+int CStyleScaling::GetDPI() const
+{
+	return m_ResolutionY;
+}
+
+
+bool CStyleScaling::SetSystemDPI(int ResolutionX,int ResolutionY)
+{
+	if (ResolutionX<1 || ResolutionY<1)
+		return false;
+
+	m_SystemResolutionX=ResolutionX;
+	m_SystemResolutionY=ResolutionY;
+
+	return true;
+}
+
+
+int CStyleScaling::GetSystemDPI() const
+{
+	return m_SystemResolutionY;
+}
+
+
+void CStyleScaling::SetScaleFont(bool fScale)
+{
+	m_fScaleFont=fScale;
+}
+
+
+bool CStyleScaling::ToPixels(IntValue *pValue) const
+{
+	if (pValue==nullptr)
+		return false;
+
+	switch (pValue->Unit) {
+	case UNIT_LOGICAL_PIXEL:
+		pValue->Value=LogicalPixelsToPhysicalPixels(pValue->Value);
+		break;
+
+	case UNIT_PHYSICAL_PIXEL:
+		return true;
+
+	case UNIT_POINT:
+		pValue->Value=PointsToPixels(pValue->Value);
+		break;
+
+	case UNIT_DIP:
+		pValue->Value=DipToPixels(pValue->Value);
+		break;
+
+	default:
+		return false;
+	}
+
+	pValue->Unit=UNIT_PHYSICAL_PIXEL;
+
+	return true;
+}
+
+
+bool CStyleScaling::ToPixels(Size *pValue) const
+{
+	if (pValue==nullptr)
+		return false;
+
+	ToPixels(&pValue->Width);
+	ToPixels(&pValue->Height);
+
+	return true;
+}
+
+
+bool CStyleScaling::ToPixels(Margins *pValue) const
+{
+	if (pValue==nullptr)
+		return false;
+
+	ToPixels(&pValue->Left);
+	ToPixels(&pValue->Top);
+	ToPixels(&pValue->Right);
+	ToPixels(&pValue->Bottom);
+
+	return true;
+}
+
+
+int CStyleScaling::ToPixels(int Value,UnitType Unit) const
+{
+	switch (Unit) {
+	case UNIT_LOGICAL_PIXEL:
+		return LogicalPixelsToPhysicalPixels(Value);
+
+	case UNIT_PHYSICAL_PIXEL:
+		return Value;
+
+	case UNIT_POINT:
+		return PointsToPixels(Value);
+
+	case UNIT_DIP:
+		return DipToPixels(Value);
+	}
+
+	return 0;
+}
+
+
+int CStyleScaling::LogicalPixelsToPhysicalPixels(int Pixels) const
+{
+	return ::MulDiv(Pixels,m_ResolutionY,96);
+}
+
+
+int CStyleScaling::PointsToPixels(int Points) const
+{
+	// 1pt = 1/72in
+	return ::MulDiv(Points,m_ResolutionY,72);
+}
+
+
+int CStyleScaling::DipToPixels(int Dip) const
+{
+	// 1dp = 1/160in
+	return ::MulDiv(Dip,m_ResolutionY,160);
+}
+
+
+int CStyleScaling::ConvertUnit(int Value,UnitType SrcUnit,UnitType DstUnit) const
+{
+	switch (DstUnit) {
+	case UNIT_LOGICAL_PIXEL:
+		return ::MulDiv(ToPixels(Value,SrcUnit),96,m_ResolutionY);
+
+	case UNIT_PHYSICAL_PIXEL:
+		return ToPixels(Value,SrcUnit);
+
+	case UNIT_POINT:
+		return ::MulDiv(ToPixels(Value,SrcUnit),72,m_ResolutionY);
+
+	case UNIT_DIP:
+		return ::MulDiv(ToPixels(Value,SrcUnit),160,m_ResolutionY);
+	}
+
+	return Value;
+}
+
+
+bool CStyleScaling::RealizeFontSize(Font *pFont) const
+{
+	if (pFont==nullptr)
+		return false;
+
+	if (!m_fScaleFont)
+		return false;
+
+	int Size=ToPixels(pFont->Size.Value,pFont->Size.Unit);
+	if (Size==0)
+		return false;
+
+	pFont->LogFont.lfHeight=
+		pFont->LogFont.lfHeight>=0 ? Size : -Size;
+
+	return true;
+}
+
+
+int CStyleScaling::GetScaledSystemMetrics(int Index) const
+{
+	return ::MulDiv(::GetSystemMetrics(Index),m_ResolutionY,m_SystemResolutionY);
 }
 
 

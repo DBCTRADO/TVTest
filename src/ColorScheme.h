@@ -3,9 +3,11 @@
 
 
 #include <vector>
-#include "Options.h"
-#include "ColorPalette.h"
 #include "Theme.h"
+#include "Settings.h"
+
+
+#define MAX_COLORSCHEME_NAME 128
 
 
 class CColorScheme
@@ -440,50 +442,6 @@ public:
 
 private:
 	std::vector<CColorScheme*> m_List;
-};
-
-class CColorSchemeOptions : public COptions
-{
-public:
-	class ABSTRACT_CLASS(CEventHandler)
-	{
-	public:
-		virtual bool ApplyColorScheme(const CColorScheme *pColorScheme) = 0;
-	};
-
-	CColorSchemeOptions();
-	~CColorSchemeOptions();
-// COptions
-	bool LoadSettings(CSettings &Settings) override;
-	bool SaveSettings(CSettings &Settings) override;
-// CBasicDialog
-	bool Create(HWND hwndOwner) override;
-// CColorSchemeOptions
-	bool SetEventHandler(CEventHandler *pEventHandler);
-	bool ApplyColorScheme() const;
-	const CColorScheme *GetColorScheme() const { return m_pColorScheme; }
-	COLORREF GetColor(int Type) const;
-	COLORREF GetColor(LPCTSTR pszText) const;
-	static bool GetThemesDirectory(LPTSTR pszDirectory,int MaxLength,bool fCreate=false);
-
-private:
-	CColorScheme *m_pColorScheme;
-	CColorSchemeList m_PresetList;
-	CColorScheme::GradientStyle m_GradientList[CColorScheme::NUM_GRADIENTS];
-	TVTest::Theme::BorderType m_BorderList[CColorScheme::NUM_BORDERS];
-	CColorScheme *m_pPreviewColorScheme;
-	bool m_fPreview;
-	CEventHandler *m_pEventHandler;
-	CColorPalette m_ColorPalette;
-
-// CBasicDialog
-	INT_PTR DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
-
-	bool Apply(const CColorScheme *pColorScheme) const;
-	void GetCurrentSettings(CColorScheme *pColorScheme);
-	static const LPCTSTR m_pszExtension;
-
-	static INT_PTR CALLBACK SaveDlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam);
 };
 
 

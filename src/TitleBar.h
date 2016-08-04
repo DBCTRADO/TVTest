@@ -53,7 +53,9 @@ public:
 
 // CUIBase
 	void SetStyle(const TVTest::Style::CStyleManager *pStyleManager) override;
-	void NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager) override;
+	void NormalizeStyle(
+		const TVTest::Style::CStyleManager *pStyleManager,
+		const TVTest::Style::CStyleScaling *pStyleScaling) override;
 	void SetTheme(const TVTest::Theme::CThemeManager *pThemeManager) override;
 
 // CTitleBar
@@ -95,10 +97,13 @@ private:
 
 		TitleBarStyle();
 		void SetStyle(const TVTest::Style::CStyleManager *pStyleManager);
-		void NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager);
+		void NormalizeStyle(
+			const TVTest::Style::CStyleManager *pStyleManager,
+			const TVTest::Style::CStyleScaling *pStyleScaling);
 	};
 
 	TitleBarStyle m_Style;
+	TVTest::Style::Font m_StyleFont;
 	DrawUtil::CFont m_Font;
 	int m_FontHeight;
 	TitleBarTheme m_Theme;
@@ -116,6 +121,7 @@ private:
 	static const LPCTSTR CLASS_NAME;
 	static HINSTANCE m_hinst;
 
+	void AdjustSize();
 	int CalcFontHeight() const;
 	bool GetItemRect(int Item,RECT *pRect) const;
 	bool UpdateItem(int Item);
@@ -126,6 +132,10 @@ private:
 
 // CCustomWindow
 	LRESULT OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
+
+// CUIBase
+	void ApplyStyle() override;
+	void RealizeStyle() override;
 };
 
 

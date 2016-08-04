@@ -116,6 +116,8 @@ private:
 	bool OnButtonDown(CController *pController,int Index) override;
 // CBasicDialog
 	INT_PTR DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
+// CUIBase
+	void RealizeStyle() override;
 // CControllerManager
 	int FindController(LPCTSTR pszName) const;
 	void InitDlgItems();

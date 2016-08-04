@@ -4,6 +4,23 @@
 #include "Common/DebugDef.h"
 
 
+#ifndef DPI_ENUMS_DECLARED
+typedef enum MONITOR_DPI_TYPE { 
+	MDT_EFFECTIVE_DPI = 0,
+	MDT_ANGULAR_DPI = 1,
+	MDT_RAW_DPI = 2,
+	MDT_DEFAULT = MDT_EFFECTIVE_DPI
+} MONITOR_DPI_TYPE;
+#endif
+
+STDAPI GetDpiForMonitor(
+	HMONITOR hmonitor,
+	MONITOR_DPI_TYPE dpiType,
+	UINT *dpiX,
+	UINT *dpiY
+);
+
+
 
 
 int HexCharToInt(TCHAR Code)
@@ -1748,6 +1765,44 @@ bool CBasicSecurityAttributes::Initialize()
 namespace Util
 {
 
+	HMODULE LoadSystemLibrary(LPCTSTR pszName)
+	{
+		TCHAR szPath[MAX_PATH];
+		UINT Length=::GetSystemDirectory(szPath,_countof(szPath));
+		if (Length<1 || Length+1+::lstrlen(pszName)>=_countof(szPath))
+			return nullptr;
+		::PathAppend(szPath,pszName);
+		return ::LoadLibrary(szPath);
+	}
+
+	int GetMonitorDPI(HMONITOR hMonitor,UINT *pDpiX,UINT *pDpiY)
+	{
+		if (hMonitor!=nullptr && OS::IsWindows8_1OrLater()) {
+			HMODULE hLib=LoadSystemLibrary(TEXT("shcore.dll"));
+			if (hLib!=nullptr) {
+				bool fOK=false;
+				UINT DpiX,DpiY;
+				auto pGetDpiForMonitor=GET_LIBRARY_FUNCTION(hLib,GetDpiForMonitor);
+				if (pGetDpiForMonitor!=nullptr) {
+					if (pGetDpiForMonitor(hMonitor,MDT_EFFECTIVE_DPI,&DpiX,&DpiY)==S_OK) {
+						fOK=true;
+					}
+				}
+				::FreeLibrary(hLib);
+
+				if (pDpiX!=nullptr)
+					*pDpiX=DpiX;
+				if (pDpiY!=nullptr)
+					*pDpiY=DpiY;
+
+				return DpiY;
+			}
+		}
+
+		return 0;
+	}
+
+
 	namespace OS
 	{
 
@@ -1836,6 +1891,11 @@ namespace Util
 			return CheckOSVersion(6,2);
 		}
 
+		bool IsWindows8_1()
+		{
+			return CheckOSVersion(6,3);
+		}
+
 		bool IsWindows10()
 		{
 			return CheckOSVersion(10,0);
@@ -1859,6 +1919,11 @@ namespace Util
 		bool IsWindows8OrLater()
 		{
 			return CheckOSVersionLater(6,2);
+		}
+
+		bool IsWindows8_1OrLater()
+		{
+			return CheckOSVersionLater(6,3);
 		}
 
 		bool IsWindows10OrLater()

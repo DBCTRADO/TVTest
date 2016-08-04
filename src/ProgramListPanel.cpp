@@ -255,6 +255,7 @@ CProgramListPanel::CProgramListPanel()
 	//, m_hwndToolTip(NULL)
 	, m_fShowRetrievingMessage(false)
 {
+	GetDefaultFont(&m_StyleFont);
 }
 
 
@@ -277,9 +278,14 @@ void CProgramListPanel::SetStyle(const TVTest::Style::CStyleManager *pStyleManag
 }
 
 
-void CProgramListPanel::NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager)
+void CProgramListPanel::NormalizeStyle(
+	const TVTest::Style::CStyleManager *pStyleManager,
+	const TVTest::Style::CStyleScaling *pStyleScaling)
 {
-	m_Style.NormalizeStyle(pStyleManager);
+	m_Style.NormalizeStyle(pStyleManager,pStyleScaling);
+
+	if (m_OldDPI==0)
+		m_OldDPI=pStyleScaling->GetDPI();
 }
 
 
@@ -316,21 +322,11 @@ void CProgramListPanel::SetTheme(const TVTest::Theme::CThemeManager *pThemeManag
 
 bool CProgramListPanel::SetFont(const TVTest::Style::Font &Font)
 {
-	if (!CreateDrawFont(Font,&m_Font))
-		return false;
-
-	LOGFONT lf;
-	m_Font.GetLogFont(&lf);
-	lf.lfWeight=FW_BOLD;
-	m_TitleFont.Create(&lf);
-	m_ScrollPos=0;
+	m_StyleFont=Font;
 
 	if (m_hwnd!=NULL) {
-		CalcFontHeight();
-		CalcDimensions();
-		SetScrollBar();
-		//SetToolTip();
-		Invalidate();
+		ApplyStyle();
+		RealizeStyle();
 	}
 
 	return true;
@@ -343,6 +339,11 @@ bool CProgramListPanel::ReadSettings(CSettings &Settings)
 	Settings.Read(TEXT("ProgramListPanel.UseEpgColorScheme"),&m_fUseEpgColorScheme);
 	Settings.Read(TEXT("ProgramListPanel.ShowFeaturedMark"),&m_fShowFeaturedMark);
 
+	int PopupWidth,PopupHeight;
+	if (Settings.Read(TEXT("ProgramListPanel.PopupEventInfoWidth"),&PopupWidth)
+			&& Settings.Read(TEXT("ProgramListPanel.PopupEventInfoHeight"),&PopupHeight))
+		m_EventInfoPopup.SetSize(PopupWidth,PopupHeight);
+
 	return true;
 }
 
@@ -352,6 +353,11 @@ bool CProgramListPanel::WriteSettings(CSettings &Settings)
 	Settings.Write(TEXT("ProgramListPanel.MouseOverEventInfo"),m_fMouseOverEventInfo);
 	Settings.Write(TEXT("ProgramListPanel.UseEpgColorScheme"),m_fUseEpgColorScheme);
 	Settings.Write(TEXT("ProgramListPanel.ShowFeaturedMark"),m_fShowFeaturedMark);
+
+	int PopupWidth,PopupHeight;
+	m_EventInfoPopup.GetSize(&PopupWidth,&PopupHeight);
+	Settings.Write(TEXT("ProgramListPanel.PopupEventInfoWidth"),PopupWidth);
+	Settings.Write(TEXT("ProgramListPanel.PopupEventInfoHeight"),PopupHeight);
 
 	return true;
 }
@@ -894,20 +900,10 @@ LRESULT CProgramListPanel::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lP
 	switch (uMsg) {
 	case WM_CREATE:
 		{
+			m_ScrollPos=0;
+			m_OldDPI=0;
+
 			InitializeUI();
-
-			if (!m_Font.IsCreated())
-				CreateDefaultFontAndBoldFont(&m_Font,&m_TitleFont);
-
-			LOGFONT lf;
-			::ZeroMemory(&lf,sizeof(lf));
-			lf.lfHeight=-m_Style.ChannelButtonIconSize.Height;
-			lf.lfCharSet=SYMBOL_CHARSET;
-			::lstrcpy(lf.lfFaceName,TEXT("Marlett"));
-			m_IconFont.Create(&lf);
-
-			CalcFontHeight();
-			CalcChannelHeight();
 
 			m_EpgIcons.Load();
 			/*
@@ -1168,6 +1164,40 @@ LRESULT CProgramListPanel::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lP
 	}
 
 	return ::DefWindowProc(hwnd,uMsg,wParam,lParam);
+}
+
+
+void CProgramListPanel::ApplyStyle()
+{
+	if (m_hwnd!=NULL) {
+		CreateDrawFontAndBoldFont(m_StyleFont,&m_Font,&m_TitleFont);
+
+		LOGFONT lf;
+		::ZeroMemory(&lf,sizeof(lf));
+		lf.lfHeight=-m_Style.ChannelButtonIconSize.Height;
+		lf.lfCharSet=SYMBOL_CHARSET;
+		::lstrcpy(lf.lfFaceName,TEXT("Marlett"));
+		m_IconFont.Create(&lf);
+
+		CalcFontHeight();
+		CalcChannelHeight();
+	}
+}
+
+
+void CProgramListPanel::RealizeStyle()
+{
+	if (m_hwnd!=NULL) {
+		if (m_pStyleScaling!=NULL) {
+			const int NewDPI=m_pStyleScaling->GetDPI();
+			if (m_OldDPI!=0)
+				m_ScrollPos=::MulDiv(m_ScrollPos,NewDPI,m_OldDPI);
+			m_OldDPI=NewDPI;
+		}
+
+		SendSizeMessage();
+		Invalidate();
+	}
 }
 
 
@@ -1457,6 +1487,7 @@ CProgramListPanel::ProgramListPanelStyle::ProgramListPanelStyle()
 
 void CProgramListPanel::ProgramListPanelStyle::SetStyle(const TVTest::Style::CStyleManager *pStyleManager)
 {
+	*this=ProgramListPanelStyle();
 	pStyleManager->Get(TEXT("program-list-panel.channel.padding"),&ChannelPadding);
 	pStyleManager->Get(TEXT("program-list-panel.channel.logo.margin"),&ChannelLogoMargin);
 	pStyleManager->Get(TEXT("program-list-panel.channel.channel-name.margin"),&ChannelNameMargin);
@@ -1472,18 +1503,20 @@ void CProgramListPanel::ProgramListPanelStyle::SetStyle(const TVTest::Style::CSt
 }
 
 
-void CProgramListPanel::ProgramListPanelStyle::NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager)
+void CProgramListPanel::ProgramListPanelStyle::NormalizeStyle(
+	const TVTest::Style::CStyleManager *pStyleManager,
+	const TVTest::Style::CStyleScaling *pStyleScaling)
 {
-	pStyleManager->ToPixels(&ChannelPadding);
-	pStyleManager->ToPixels(&ChannelLogoMargin);
-	pStyleManager->ToPixels(&ChannelNameMargin);
-	pStyleManager->ToPixels(&ChannelButtonIconSize);
-	pStyleManager->ToPixels(&ChannelButtonPadding);
-	pStyleManager->ToPixels(&ChannelButtonMargin);
-	pStyleManager->ToPixels(&TitlePadding);
-	pStyleManager->ToPixels(&IconSize);
-	pStyleManager->ToPixels(&IconMargin);
-	pStyleManager->ToPixels(&LineSpacing);
-	pStyleManager->ToPixels(&FeaturedMarkSize);
-	pStyleManager->ToPixels(&FeaturedMarkMargin);
+	pStyleScaling->ToPixels(&ChannelPadding);
+	pStyleScaling->ToPixels(&ChannelLogoMargin);
+	pStyleScaling->ToPixels(&ChannelNameMargin);
+	pStyleScaling->ToPixels(&ChannelButtonIconSize);
+	pStyleScaling->ToPixels(&ChannelButtonPadding);
+	pStyleScaling->ToPixels(&ChannelButtonMargin);
+	pStyleScaling->ToPixels(&TitlePadding);
+	pStyleScaling->ToPixels(&IconSize);
+	pStyleScaling->ToPixels(&IconMargin);
+	pStyleScaling->ToPixels(&LineSpacing);
+	pStyleScaling->ToPixels(&FeaturedMarkSize);
+	pStyleScaling->ToPixels(&FeaturedMarkMargin);
 }

@@ -216,6 +216,8 @@ namespace Util
 #define GET_MODULE_FUNCTION(pszModule,Func) \
 	Util::GetModuleFunction<decltype(Func)>(pszModule,#Func)
 
+	HMODULE LoadSystemLibrary(LPCTSTR pszName);
+
 #ifdef WIN_XP_SUPPORT
 	typedef DWORD TickCountType;
 	inline TickCountType GetTickCount() { return ::GetTickCount(); }
@@ -224,6 +226,8 @@ namespace Util
 	inline TickCountType GetTickCount() { return ::GetTickCount64(); }
 #endif
 
+	int GetMonitorDPI(HMONITOR hMonitor,UINT *pDpiX=nullptr,UINT *pDpiY=nullptr);
+
 	namespace OS
 	{
 
@@ -231,11 +235,13 @@ namespace Util
 		bool IsWindowsVista();
 		bool IsWindows7();
 		bool IsWindows8();
+		bool IsWindows8_1();
 		bool IsWindows10();
 		bool IsWindowsXPOrLater();
 		bool IsWindowsVistaOrLater();
 		bool IsWindows7OrLater();
 		bool IsWindows8OrLater();
+		bool IsWindows8_1OrLater();
 		bool IsWindows10OrLater();
 
 	}	// namespace OS

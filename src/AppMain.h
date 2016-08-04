@@ -24,7 +24,7 @@
 #include "SideBarOptions.h"
 #include "MenuOptions.h"
 #include "PanelOptions.h"
-#include "ColorScheme.h"
+#include "ColorSchemeOptions.h"
 #include "OperationOptions.h"
 #include "DriverOptions.h"
 #include "VideoOptions.h"

@@ -1401,6 +1401,8 @@ CHomeDisplay::CHomeDisplay()
 	, m_ScrollPos(0)
 	, m_himlIcons(NULL)
 {
+	GetDefaultFont(&m_StyleFont);
+
 	GetBackgroundStyle(BACKGROUND_STYLE_CATEGORIES,&m_HomeDisplayStyle.CategoriesBackStyle);
 	GetBackgroundStyle(BACKGROUND_STYLE_CONTENT,&m_HomeDisplayStyle.ContentBackStyle);
 	GetItemStyle(ITEM_STYLE_NORMAL,&m_HomeDisplayStyle.CategoryItemStyle);
@@ -1606,13 +1608,10 @@ void CHomeDisplay::SetEventHandler(CHomeDisplayEventHandler *pEventHandler)
 
 bool CHomeDisplay::SetFont(const TVTest::Style::Font &Font,bool fAutoSize)
 {
-	if (!CreateDrawFont(Font,&m_Font))
-		return false;
+	m_StyleFont=Font;
 	m_fAutoFontSize=fAutoSize;
-	if (m_hwnd!=NULL) {
-		LayOut();
-		Invalidate();
-	}
+	if (m_hwnd!=NULL)
+		RealizeStyle();
 	return true;
 }
 
@@ -1722,8 +1721,7 @@ LRESULT CHomeDisplay::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 	switch (uMsg) {
 	case WM_CREATE:
 		InitializeUI();
-		if (!m_Font.IsCreated())
-			CreateDefaultFont(&m_Font);
+
 		m_hwndScroll=::CreateWindowEx(0,TEXT("SCROLLBAR"),TEXT(""),
 			WS_CHILD | SBS_VERT,0,0,0,0,hwnd,NULL,m_hinst,NULL);
 		m_ScrollPos=0;
@@ -1989,6 +1987,24 @@ LRESULT CHomeDisplay::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 }
 
 
+void CHomeDisplay::ApplyStyle()
+{
+	if (m_hwnd!=NULL) {
+		if (!m_fAutoFontSize)
+			CreateDrawFont(m_StyleFont,&m_Font);
+	}
+}
+
+
+void CHomeDisplay::RealizeStyle()
+{
+	if (m_hwnd!=NULL) {
+		LayOut();
+		Invalidate();
+	}
+}
+
+
 void CHomeDisplay::Draw(HDC hdc,const RECT &PaintRect)
 {
 	RECT rcClient;
@@ -2068,9 +2084,8 @@ void CHomeDisplay::LayOut()
 	GetClientRect(&rcClient);
 
 	if (m_fAutoFontSize) {
-		LOGFONT lf;
-		m_Font.GetLogFont(&lf);
-		lf.lfHeight=GetDefaultFontSize(rcClient.right,rcClient.bottom);
+		LOGFONT lf=m_StyleFont.LogFont;
+		lf.lfHeight=-GetDefaultFontSize(rcClient.right,rcClient.bottom);
 		lf.lfWidth=0;
 		m_Font.Create(&lf);
 	}

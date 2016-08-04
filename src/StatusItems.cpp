@@ -148,9 +148,6 @@ void CVideoSizeStatusItem::OnRButtonDown(int x,int y)
 
 CVolumeStatusItem::CVolumeStatusItem()
 	: CStatusItem(STATUS_ITEM_VOLUME,SizeValue(7*EM_FACTOR,SIZE_EM))
-	, m_BarHeight(8)
-	, m_BarPadding(1)
-	, m_BarBorderWidth(1)
 {
 }
 
@@ -167,13 +164,13 @@ void CVolumeStatusItem::Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect,u
 	lb.lbColor=crText;
 	lb.lbHatch=0;
 	hpen=::ExtCreatePen(PS_GEOMETRIC | PS_SOLID | PS_INSIDEFRAME | PS_JOIN_MITER,
-						m_BarBorderWidth,&lb,0,NULL);
+						m_Style.BarBorderWidth,&lb,0,NULL);
 	hpenOld=SelectPen(hdc,hpen);
 	hbrOld=SelectBrush(hdc,::GetStockObject(NULL_BRUSH));
 	rc.left=DrawRect.left;
-	rc.top=DrawRect.top+((DrawRect.bottom-DrawRect.top)-m_BarHeight)/2;
+	rc.top=DrawRect.top+((DrawRect.bottom-DrawRect.top)-m_Style.BarHeight)/2;
 	rc.right=DrawRect.right;
-	rc.bottom=rc.top+m_BarHeight;
+	rc.bottom=rc.top+m_Style.BarHeight;
 	::Rectangle(hdc,rc.left,rc.top,rc.right,rc.bottom);
 	::SelectObject(hdc,hbrOld);
 	::SelectObject(hdc,hpenOld);
@@ -182,8 +179,8 @@ void CVolumeStatusItem::Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect,u
 		crBar=crText;
 	else
 		crBar=MixColor(crText,::GetBkColor(hdc),128);
-	::InflateRect(&rc,-m_BarBorderWidth,-m_BarBorderWidth);
-	TVTest::Style::Subtract(&rc,m_BarPadding);
+	::InflateRect(&rc,-m_Style.BarBorderWidth,-m_Style.BarBorderWidth);
+	TVTest::Style::Subtract(&rc,m_Style.BarPadding);
 	rc.right=rc.left+(rc.right-rc.left)*pUICore->GetVolume()/CCoreEngine::MAX_VOLUME;
 	DrawUtil::Fill(hdc,&rc,crBar);
 }
@@ -211,7 +208,7 @@ void CVolumeStatusItem::OnMouseMove(int x,int y)
 
 	GetRect(&rcItem);
 	GetClientRect(&rcClient);
-	TVTest::Style::Subtract(&rcClient,m_BarPadding);
+	TVTest::Style::Subtract(&rcClient,m_Style.BarPadding);
 	Volume=(x-(rcClient.left-rcItem.left))*CCoreEngine::MAX_VOLUME/((rcClient.right-rcClient.left)-1);
 	if (Volume<0)
 		Volume=0;
@@ -229,16 +226,26 @@ bool CVolumeStatusItem::OnMouseWheel(int x,int y,bool fHorz,int Delta,int *pComm
 
 void CVolumeStatusItem::SetStyle(const TVTest::Style::CStyleManager *pStyleManager)
 {
-	pStyleManager->Get(TEXT("status-bar.volume.bar.height"),&m_BarHeight);
-	pStyleManager->Get(TEXT("status-bar.volume.bar.padding"),&m_BarPadding);
-	pStyleManager->Get(TEXT("status-bar.volume.bar.border.width"),&m_BarBorderWidth);
+	m_Style=VolumeStatusStyle();
+	pStyleManager->Get(TEXT("status-bar.volume.bar.height"),&m_Style.BarHeight);
+	pStyleManager->Get(TEXT("status-bar.volume.bar.padding"),&m_Style.BarPadding);
+	pStyleManager->Get(TEXT("status-bar.volume.bar.border.width"),&m_Style.BarBorderWidth);
 }
 
-void CVolumeStatusItem::NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager)
+void CVolumeStatusItem::NormalizeStyle(
+	const TVTest::Style::CStyleManager *pStyleManager,
+	const TVTest::Style::CStyleScaling *pStyleScaling)
 {
-	pStyleManager->ToPixels(&m_BarHeight);
-	pStyleManager->ToPixels(&m_BarPadding);
-	pStyleManager->ToPixels(&m_BarBorderWidth);
+	pStyleScaling->ToPixels(&m_Style.BarHeight);
+	pStyleScaling->ToPixels(&m_Style.BarPadding);
+	pStyleScaling->ToPixels(&m_Style.BarBorderWidth);
+}
+
+CVolumeStatusItem::VolumeStatusStyle::VolumeStatusStyle()
+	: BarHeight(8)
+	, BarPadding(1)
+	, BarBorderWidth(1)
+{
 }
 
 
@@ -1025,6 +1032,17 @@ void CProgramInfoStatusItem::ShowPopupInfo()
 			}
 		}
 	}
+}
+
+void CProgramInfoStatusItem::SetPopupInfoSize(int Width,int Height)
+{
+	if (Width>0 && Height>0)
+		m_EventInfoPopup.SetSize(Width,Height);
+}
+
+void CProgramInfoStatusItem::GetPopupInfoSize(int *pWidth,int *pHeight) const
+{
+	m_EventInfoPopup.GetSize(pWidth,pHeight);
 }
 
 

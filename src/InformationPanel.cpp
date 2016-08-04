@@ -56,6 +56,8 @@ CInformationPanel::CInformationPanel()
 	, m_fUseRichEdit(true)
 	, m_fProgramInfoCursorOverLink(false)
 {
+	GetDefaultFont(&m_StyleFont);
+
 	RegisterItem<CVideoInfoItem>();
 	RegisterItem<CVideoDecoderItem>();
 	RegisterItem<CVideoRendererItem>();
@@ -91,9 +93,11 @@ void CInformationPanel::SetStyle(const TVTest::Style::CStyleManager *pStyleManag
 }
 
 
-void CInformationPanel::NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager)
+void CInformationPanel::NormalizeStyle(
+	const TVTest::Style::CStyleManager *pStyleManager,
+	const TVTest::Style::CStyleScaling *pStyleScaling)
 {
-	m_Style.NormalizeStyle(pStyleManager);
+	m_Style.NormalizeStyle(pStyleManager,pStyleScaling);
 }
 
 
@@ -134,19 +138,13 @@ void CInformationPanel::SetTheme(const TVTest::Theme::CThemeManager *pThemeManag
 
 bool CInformationPanel::SetFont(const TVTest::Style::Font &Font)
 {
-	if (!CreateDrawFont(Font,&m_Font))
-		return false;
+	m_StyleFont=Font;
+
 	if (m_hwnd!=NULL) {
-		CalcFontHeight();
-		if (m_fUseRichEdit) {
-			SetWindowFont(m_hwndProgramInfo,m_Font.GetHandle(),FALSE);
-			UpdateProgramInfoText();
-		} else {
-			SetWindowFont(m_hwndProgramInfo,m_Font.GetHandle(),TRUE);
-		}
-		SendSizeMessage();
-		Invalidate();
+		ApplyStyle();
+		RealizeStyle();
 	}
+
 	return true;
 }
 
@@ -371,20 +369,8 @@ LRESULT CInformationPanel::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lP
 		{
 			InitializeUI();
 
-			if (!m_Font.IsCreated())
-				CreateDefaultFont(&m_Font);
-
-			LOGFONT lf={};
-			lf.lfHeight=m_Style.ButtonSize.Height;
-			lf.lfCharSet=SYMBOL_CHARSET;
-			::lstrcpy(lf.lfFaceName,TEXT("Marlett"));
-			m_IconFont.Create(&lf);
-
 			m_BackBrush.Create(m_Theme.Style.Back.Fill.GetSolidColor());
 			m_ProgramInfoBackBrush.Create(m_Theme.ProgramInfoStyle.Back.Fill.GetSolidColor());
-			CalcFontHeight();
-
-			m_ItemButtonWidth=m_FontHeight*15/10+m_Style.ItemButtonPadding.Horz();
 
 			m_HotButton.Item=-1;
 			m_HotButton.Button=-1;
@@ -606,6 +592,39 @@ LRESULT CInformationPanel::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lP
 }
 
 
+void CInformationPanel::ApplyStyle()
+{
+	if (m_hwnd!=NULL) {
+		CreateDrawFont(m_StyleFont,&m_Font);
+
+		LOGFONT lf={};
+		lf.lfHeight=m_Style.ButtonSize.Height;
+		lf.lfCharSet=SYMBOL_CHARSET;
+		::lstrcpy(lf.lfFaceName,TEXT("Marlett"));
+		m_IconFont.Create(&lf);
+
+		CalcFontHeight();
+
+		m_ItemButtonWidth=m_FontHeight*15/10+m_Style.ItemButtonPadding.Horz();
+	}
+}
+
+
+void CInformationPanel::RealizeStyle()
+{
+	if (m_hwnd!=NULL) {
+		if (m_fUseRichEdit) {
+			SetWindowFont(m_hwndProgramInfo,m_Font.GetHandle(),FALSE);
+			UpdateProgramInfoText();
+		} else {
+			SetWindowFont(m_hwndProgramInfo,m_Font.GetHandle(),TRUE);
+		}
+		SendSizeMessage();
+		Invalidate();
+	}
+}
+
+
 void CInformationPanel::OnCommand(HWND hwnd,int id,HWND hwndCtl,UINT codeNotify)
 {
 	if (id>=CM_INFORMATIONPANEL_ITEM_FIRST
@@ -718,8 +737,7 @@ void CInformationPanel::DrawItem(
 		hdcDst=hdc;
 		rcDraw=Rect;
 	}
-	TVTest::Theme::CThemeDraw ThemeDraw(GetStyleManager());
-	ThemeDraw.Begin(hdcDst);
+	TVTest::Theme::CThemeDraw ThemeDraw(BeginThemeDraw(hdcDst));
 
 	::FillRect(hdcDst,&rcDraw,m_BackBrush.GetHandle());
 
@@ -890,6 +908,7 @@ CInformationPanel::InformationPanelStyle::InformationPanelStyle()
 
 void CInformationPanel::InformationPanelStyle::SetStyle(const TVTest::Style::CStyleManager *pStyleManager)
 {
+	*this=InformationPanelStyle();
 	pStyleManager->Get(TEXT("info-panel.button"),&ButtonSize);
 	pStyleManager->Get(TEXT("info-panel.line-spacing"),&LineSpacing);
 	pStyleManager->Get(TEXT("info-panel.item.button.margin"),&ItemButtonMargin);
@@ -897,12 +916,14 @@ void CInformationPanel::InformationPanelStyle::SetStyle(const TVTest::Style::CSt
 }
 
 
-void CInformationPanel::InformationPanelStyle::NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager)
+void CInformationPanel::InformationPanelStyle::NormalizeStyle(
+	const TVTest::Style::CStyleManager *pStyleManager,
+	const TVTest::Style::CStyleScaling *pStyleScaling)
 {
-	pStyleManager->ToPixels(&ButtonSize);
-	pStyleManager->ToPixels(&LineSpacing);
-	pStyleManager->ToPixels(&ItemButtonMargin);
-	pStyleManager->ToPixels(&ItemButtonPadding);
+	pStyleScaling->ToPixels(&ButtonSize);
+	pStyleScaling->ToPixels(&LineSpacing);
+	pStyleScaling->ToPixels(&ItemButtonMargin);
+	pStyleScaling->ToPixels(&ItemButtonPadding);
 }
 
 

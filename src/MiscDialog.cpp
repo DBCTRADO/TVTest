@@ -59,12 +59,6 @@ INT_PTR CAboutDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 			HWND hwndLogo=::GetDlgItem(hDlg,IDC_ABOUT_LOGO);
 			HWND hwndLink=::GetDlgItem(hDlg,IDC_ABOUT_LINK);
 
-			LOGFONT lf;
-			DrawUtil::GetSystemFont(DrawUtil::FONT_MESSAGE,&lf);
-			m_Font.Create(&lf);
-			lf.lfUnderline=1;
-			m_LinkFont.Create(&lf);
-
 			::SetWindowText(hwndHeader,
 				ABOUT_VERSION_TEXT
 #ifdef VERSION_PLATFORM
@@ -283,4 +277,20 @@ INT_PTR CAboutDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 	}
 
 	return FALSE;
+}
+
+
+void CAboutDialog::ApplyStyle()
+{
+	CBasicDialog::ApplyStyle();
+
+	if (m_hDlg!=NULL) {
+		TVTest::Style::Font Font;
+		GetSystemFont(DrawUtil::FONT_MESSAGE,&Font);
+		CreateDrawFont(Font,&m_Font);
+		LOGFONT lf;
+		m_Font.GetLogFont(&lf);
+		lf.lfUnderline=1;
+		m_LinkFont.Create(&lf);
+	}
 }

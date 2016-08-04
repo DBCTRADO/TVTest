@@ -89,6 +89,9 @@ private:
 // CBasicDialog
 	INT_PTR DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
 
+// CUIBase
+	void RealizeStyle() override;
+
 // CAccelerator
 	static const KeyInfo m_DefaultAccelList[];
 	static const AppCommandInfo m_DefaultAppCommandList[];

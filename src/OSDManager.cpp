@@ -351,9 +351,11 @@ void COSDManager::SetStyle(const TVTest::Style::CStyleManager *pStyleManager)
 }
 
 
-void COSDManager::NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager)
+void COSDManager::NormalizeStyle(
+	const TVTest::Style::CStyleManager *pStyleManager,
+	const TVTest::Style::CStyleScaling *pStyleScaling)
 {
-	m_Style.NormalizeStyle(pStyleManager);
+	m_Style.NormalizeStyle(pStyleManager,pStyleScaling);
 }
 
 
@@ -376,6 +378,7 @@ void COSDManager::OSDStyle::SetStyle(const TVTest::Style::CStyleManager *pStyleM
 {
 	TVTest::Style::IntValue Value;
 
+	*this=OSDStyle();
 	pStyleManager->Get(TEXT("osd.margin"),&Margin);
 	if (pStyleManager->Get(TEXT("osd.text-size-ratio"),&Value) && Value.Value>0)
 		TextSizeRatio=Value;
@@ -389,10 +392,12 @@ void COSDManager::OSDStyle::SetStyle(const TVTest::Style::CStyleManager *pStyleM
 }
 
 
-void COSDManager::OSDStyle::NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager)
+void COSDManager::OSDStyle::NormalizeStyle(
+	const TVTest::Style::CStyleManager *pStyleManager,
+	const TVTest::Style::CStyleScaling *pStyleScaling)
 {
-	pStyleManager->ToPixels(&Margin);
-	pStyleManager->ToPixels(&LogoSize);
-	pStyleManager->ToPixels(&VolumeMargin);
-	pStyleManager->ToPixels(&VolumeTextSizeMin);
+	pStyleScaling->ToPixels(&Margin);
+	pStyleScaling->ToPixels(&LogoSize);
+	pStyleScaling->ToPixels(&VolumeMargin);
+	pStyleScaling->ToPixels(&VolumeTextSizeMin);
 }

@@ -286,6 +286,7 @@ public:
 	bool GetFont(int PartID,int StateID,int PropID,LOGFONT *pFont);
 	bool GetInt(int PartID,int StateID,int PropID,int *pValue);
 	bool GetPartSize(HDC hdc,int PartID,int StateID,SIZE *pSize);
+	static void ScaleMargins(MARGINS *pMargins,int Num,int Denom);
 };
 
 

@@ -608,6 +608,9 @@
     <ClCompile Include="ThemeDraw.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
+    <ClCompile Include="ColorSchemeOptions.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="BonTsEngine\Bitstream.h">
@@ -1189,6 +1192,9 @@
     <ClInclude Include="ThemeDraw.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
+    <ClInclude Include="ColorSchemeOptions.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="TVTest.rc">
@@ -1196,7 +1202,7 @@
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
-    <Manifest Include="Resource\compatibility.manifest">
+    <Manifest Include="Resource\TVTest.exe.manifest">
       <Filter>リソース ファイル</Filter>
     </Manifest>
   </ItemGroup>

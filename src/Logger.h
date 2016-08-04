@@ -65,8 +65,18 @@ public:
 	bool CopyToClipboard(HWND hwnd);
 
 private:
+	enum {
+		COLUMN_DUMMY,
+		COLUMN_TIME,
+		COLUMN_TEXT,
+		NUM_COLUMNS
+	};
+
 // CBasicDialog
 	INT_PTR DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
+
+// CUIBase
+	void RealizeStyle() override;
 
 	std::vector<CLogItem*> m_LogList;
 	DWORD m_SerialNumber;

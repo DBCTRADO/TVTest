@@ -5,6 +5,7 @@
 #include <vector>
 #include "DtvEngine.h"
 #include "VariableString.h"
+#include "Dialog.h"
 
 
 class CRecordingSettings
@@ -112,6 +113,18 @@ public:
 	typedef TVTest::CEventVariableStringMap::EventInfo FileNameFormatInfo;
 
 private:
+	class CRecordSettingsDialog : public CBasicDialog
+	{
+	public:
+		CRecordSettingsDialog(CRecordManager *pRecManager);
+		bool Show(HWND hwndOwner) override;
+
+	private:
+		CRecordManager *m_pRecManager;
+
+		INT_PTR DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
+	};
+
 	bool m_fRecording;
 	bool m_fReserved;
 	TVTest::String m_FileName;
@@ -126,9 +139,6 @@ private:
 	CRecordingSettings m_Settings;
 
 	std::vector<TVTest::String> m_WritePluginList;
-
-	static CRecordManager *GetThis(HWND hDlg);
-	static INT_PTR CALLBACK DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam);
 
 public:
 	CRecordManager();

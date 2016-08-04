@@ -41,12 +41,13 @@ bool CPanel::Initialize(HINSTANCE hinst)
 
 CPanel::CPanel()
 	: m_TitleHeight(0)
-	, m_pWindow(NULL)
+	, m_pContent(NULL)
 	, m_fShowTitle(false)
 	, m_fEnableFloating(true)
 	, m_pEventHandler(NULL)
 	, m_HotItem(ITEM_NONE)
 {
+	GetSystemFont(DrawUtil::FONT_CAPTION,&m_StyleFont);
 }
 
 
@@ -69,9 +70,11 @@ void CPanel::SetStyle(const TVTest::Style::CStyleManager *pStyleManager)
 }
 
 
-void CPanel::NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager)
+void CPanel::NormalizeStyle(
+	const TVTest::Style::CStyleManager *pStyleManager,
+	const TVTest::Style::CStyleScaling *pStyleScaling)
 {
-	m_Style.NormalizeStyle(pStyleManager);
+	m_Style.NormalizeStyle(pStyleManager,pStyleScaling);
 }
 
 
@@ -90,18 +93,23 @@ void CPanel::SetTheme(const TVTest::Theme::CThemeManager *pThemeManager)
 }
 
 
-bool CPanel::SetWindow(CBasicWindow *pWindow,LPCTSTR pszTitle)
+bool CPanel::SetWindow(CPanelContent *pContent,LPCTSTR pszTitle)
 {
 	RECT rc;
 
-	m_pWindow=pWindow;
-	if (m_pWindow!=NULL) {
-		if (pWindow->GetParent()!=m_hwnd)
-			pWindow->SetParent(m_hwnd);
-		pWindow->SetVisible(true);
+	if (m_pContent!=NULL)
+		RemoveUIChild(m_pContent);
+	m_pContent=pContent;
+	if (m_pContent!=NULL) {
+		if (pContent->GetParent()!=m_hwnd)
+			pContent->SetParent(m_hwnd);
+		RegisterUIChild(pContent);
+		pContent->SetStyleScaling(m_pStyleScaling);
+		pContent->UpdateStyle();
+		pContent->SetVisible(true);
 		TVTest::StringUtility::Assign(m_Title,pszTitle);
 		GetPosition(&rc);
-		rc.right=rc.left+pWindow->GetWidth();
+		rc.right=rc.left+pContent->GetWidth();
 		SetPosition(&rc);
 	} else {
 		m_Title.clear();
@@ -191,12 +199,10 @@ bool CPanel::GetContentRect(RECT *pRect) const
 
 bool CPanel::SetTitleFont(const TVTest::Style::Font &Font)
 {
-	if (!CreateDrawFont(Font,&m_Font))
-		return false;
+	m_StyleFont=Font;
 	if (m_hwnd!=NULL) {
-		CalcDimensions();
-		SendSizeMessage();
-		Invalidate();
+		ApplyStyle();
+		RealizeStyle();
 	}
 	return true;
 }
@@ -252,14 +258,14 @@ void CPanel::Draw(HDC hdc,const RECT &PaintRect) const
 
 void CPanel::OnSize(int Width,int Height)
 {
-	if (m_pWindow!=NULL) {
+	if (m_pContent!=NULL) {
 		int y;
 
 		if (m_fShowTitle)
 			y=m_TitleHeight;
 		else
 			y=0;
-		m_pWindow->SetPosition(0,y,Width,max(Height-y,0));
+		m_pContent->SetPosition(0,y,Width,max(Height-y,0));
 	}
 	if (m_pEventHandler!=NULL)
 		m_pEventHandler->OnSizeChanged(Width,Height);
@@ -303,20 +309,6 @@ LRESULT CPanel::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 	case WM_CREATE:
 		{
 			InitializeUI();
-
-			if (!m_Font.IsCreated())
-				m_Font.Create(DrawUtil::FONT_CAPTION);
-
-			if (!m_IconFont.IsCreated()) {
-				LOGFONT lf;
-				::ZeroMemory(&lf,sizeof(lf));
-				lf.lfHeight=-m_Style.TitleButtonIconSize.Height;
-				lf.lfCharSet=SYMBOL_CHARSET;
-				::lstrcpy(lf.lfFaceName,TEXT("Marlett"));
-				m_IconFont.Create(&lf);
-			}
-
-			CalcDimensions();
 
 			m_HotItem=ITEM_NONE;
 			m_fCloseButtonPushed=false;
@@ -485,6 +477,31 @@ LRESULT CPanel::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 }
 
 
+void CPanel::ApplyStyle()
+{
+	if (m_hwnd!=NULL) {
+		CreateDrawFont(m_StyleFont,&m_Font);
+
+		LOGFONT lf={};
+		lf.lfHeight=-m_Style.TitleButtonIconSize.Height;
+		lf.lfCharSet=SYMBOL_CHARSET;
+		::lstrcpy(lf.lfFaceName,TEXT("Marlett"));
+		m_IconFont.Create(&lf);
+
+		CalcDimensions();
+	}
+}
+
+
+void CPanel::RealizeStyle()
+{
+	if (m_hwnd!=NULL) {
+		SendSizeMessage();
+		Invalidate();
+	}
+}
+
+
 CPanel::PanelStyle::PanelStyle()
 	: TitlePadding(0,0,4,0)
 	, TitleLabelMargin(4,2,4,2)
@@ -497,6 +514,7 @@ CPanel::PanelStyle::PanelStyle()
 
 void CPanel::PanelStyle::SetStyle(const TVTest::Style::CStyleManager *pStyleManager)
 {
+	*this=PanelStyle();
 	pStyleManager->Get(TEXT("panel.title.padding"),&TitlePadding);
 	pStyleManager->Get(TEXT("panel.title.label.margin"),&TitleLabelMargin);
 	pStyleManager->Get(TEXT("panel.title.label.extra-height"),&TitleLabelExtraHeight);
@@ -505,13 +523,15 @@ void CPanel::PanelStyle::SetStyle(const TVTest::Style::CStyleManager *pStyleMana
 }
 
 
-void CPanel::PanelStyle::NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager)
+void CPanel::PanelStyle::NormalizeStyle(
+	const TVTest::Style::CStyleManager *pStyleManager,
+	const TVTest::Style::CStyleScaling *pStyleScaling)
 {
-	pStyleManager->ToPixels(&TitlePadding);
-	pStyleManager->ToPixels(&TitleLabelMargin);
-	pStyleManager->ToPixels(&TitleLabelExtraHeight);
-	pStyleManager->ToPixels(&TitleButtonIconSize);
-	pStyleManager->ToPixels(&TitleButtonPadding);
+	pStyleScaling->ToPixels(&TitlePadding);
+	pStyleScaling->ToPixels(&TitleLabelMargin);
+	pStyleScaling->ToPixels(&TitleLabelExtraHeight);
+	pStyleScaling->ToPixels(&TitleButtonIconSize);
+	pStyleScaling->ToPixels(&TitleButtonPadding);
 }
 
 
@@ -556,6 +576,8 @@ CPanelFrame::CPanelFrame()
 	m_WindowPosition.Top=120;
 	m_WindowPosition.Width=200;
 	m_WindowPosition.Height=240;
+
+	SetStyleScaling(&m_StyleScaling);
 }
 
 
@@ -577,7 +599,7 @@ bool CPanelFrame::Create(HWND hwndParent,DWORD Style,DWORD ExStyle,int ID)
 
 
 bool CPanelFrame::Create(HWND hwndOwner,Layout::CSplitter *pSplitter,int PanelID,
-						 CBasicWindow *pWindow,LPCTSTR pszTitle)
+						 CPanelContent *pContent,LPCTSTR pszTitle)
 {
 	RECT rc;
 
@@ -587,8 +609,11 @@ bool CPanelFrame::Create(HWND hwndOwner,Layout::CSplitter *pSplitter,int PanelID
 				WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME | WS_CLIPCHILDREN,
 				WS_EX_TOOLWINDOW))
 		return false;
+
+	m_Panel.SetStyleScaling(
+		m_fFloating ? m_pStyleScaling : m_pSplitter->GetStyleScaling());
 	m_Panel.Create(m_hwnd,WS_CHILD | WS_CLIPCHILDREN);
-	m_Panel.SetWindow(pWindow,pszTitle);
+	m_Panel.SetWindow(pContent,pszTitle);
 	m_Panel.SetEventHandler(this);
 	m_Panel.GetPosition(&rc);
 	if (IsDockingVertical()) {
@@ -604,6 +629,7 @@ bool CPanelFrame::Create(HWND hwndOwner,Layout::CSplitter *pSplitter,int PanelID
 	}
 
 	if (m_fFloating) {
+		RegisterUIChild(&m_Panel);
 		m_Panel.SetParent(this);
 		GetClientRect(&rc);
 		m_Panel.SetPosition(&rc);
@@ -613,7 +639,7 @@ bool CPanelFrame::Create(HWND hwndOwner,Layout::CSplitter *pSplitter,int PanelID
 		Layout::CWindowContainer *pContainer=
 			dynamic_cast<Layout::CWindowContainer*>(m_pSplitter->GetPaneByID(PanelID));
 
-		pContainer->SetWindow(&m_Panel);
+		pContainer->SetWindow(&m_Panel,&m_Panel);
 		if (IsDockingVertical()) {
 			m_pSplitter->SetPaneSize(PanelID,m_DockingHeight);
 			rc.bottom=rc.top+m_DockingHeight;
@@ -641,7 +667,10 @@ bool CPanelFrame::SetFloating(bool fFloating)
 			if (fFloating) {
 				pContainer->SetVisible(false);
 				pContainer->SetWindow(NULL);
+				RegisterUIChild(&m_Panel);
 				m_Panel.SetParent(this);
+				m_Panel.SetStyleScaling(m_pStyleScaling);
+				m_Panel.UpdateStyle();
 				m_Panel.SetVisible(true);
 				GetClientRect(&rc);
 				m_Panel.SetPosition(&rc);
@@ -655,10 +684,13 @@ bool CPanelFrame::SetFloating(bool fFloating)
 				else
 					m_DockingWidth=rc.right-rc.left;
 				*/
+				RemoveUIChild(&m_Panel);
 				SetVisible(false);
 				m_Panel.SetVisible(false);
 				m_Panel.ShowTitle(true);
-				pContainer->SetWindow(&m_Panel);
+				pContainer->SetWindow(&m_Panel,&m_Panel);
+				m_Panel.SetStyleScaling(m_pSplitter->GetStyleScaling());
+				m_Panel.UpdateStyle();
 				m_pSplitter->SetPaneSize(m_PanelID,
 					IsDockingVertical()?m_DockingHeight:m_DockingWidth);
 				pContainer->SetVisible(true);
@@ -779,6 +811,10 @@ LRESULT CPanelFrame::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 		}
 		return 0;
 
+	case WM_NCCREATE:
+		InitStyleScaling(hwnd);
+		break;
+
 	case WM_SIZE:
 		if (m_fFloating)
 			m_Panel.SetPosition(0,0,LOWORD(lParam),HIWORD(lParam));
@@ -898,6 +934,10 @@ LRESULT CPanelFrame::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 			SetFloating(false);
 			return 0;
 		}
+		break;
+
+	case WM_DPICHANGED:
+		OnDPIChanged(hwnd,wParam,lParam);
 		break;
 
 	case WM_CLOSE:

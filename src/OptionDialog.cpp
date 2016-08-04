@@ -14,6 +14,12 @@ COptionDialog::COptionDialog()
 	: m_CurrentPage(0)
 	, m_himlIcons(NULL)
 {
+	for (int i=0;i<NUM_PAGES;i++) {
+		COptions *pOptions=m_PageList[i].pOptions;
+
+		pOptions->SetStyleScaling(m_pStyleScaling);
+		RegisterUIChild(pOptions);
+	}
 }
 
 
@@ -28,6 +34,8 @@ bool COptionDialog::Show(HWND hwndOwner,int StartPage)
 	if (m_hDlg!=NULL)
 		return false;
 	COptions::SetFrame(this);
+	for (int i=0;i<NUM_PAGES;i++)
+		m_PageList[i].pOptions->SetStyleScaling(m_pStyleScaling);
 	m_StartPage=StartPage;
 	if (ShowDialog(hwndOwner,GetAppClass().GetResourceInstance(),MAKEINTRESOURCE(IDD_OPTIONS))!=IDOK) {
 		return false;
@@ -62,14 +70,8 @@ bool COptionDialog::SetCurrentPage(int Page)
 void COptionDialog::CreatePage(int Page)
 {
 	if (!m_PageList[Page].pOptions->IsCreated()) {
-		RECT rcPage,rcOptions;
-
 		m_PageList[Page].pOptions->Create(m_hDlg);
-		GetDlgItemRect(m_hDlg,IDC_OPTIONS_PAGEPLACE,&rcPage);
-		m_PageList[Page].pOptions->GetPosition(&rcOptions);
-		m_PageList[Page].pOptions->SetPosition(rcPage.left,rcPage.top,
-											   rcOptions.right-rcOptions.left,
-											   rcOptions.bottom-rcOptions.top);
+		SetPagePos(Page);
 	}
 }
 
@@ -90,6 +92,20 @@ void COptionDialog::SetPage(int Page)
 }
 
 
+void COptionDialog::SetPagePos(int Page)
+{
+	if (m_PageList[Page].pOptions->IsCreated()) {
+		RECT rcPage,rcOptions;
+
+		GetDlgItemRect(m_hDlg,IDC_OPTIONS_PAGEPLACE,&rcPage);
+		m_PageList[Page].pOptions->GetPosition(&rcOptions);
+		m_PageList[Page].pOptions->SetPosition(rcPage.left,rcPage.top,
+											   rcOptions.right-rcOptions.left,
+											   rcOptions.bottom-rcOptions.top);
+	}
+}
+
+
 COLORREF COptionDialog::GetTitleColor(int Page) const
 {
 	return HSVToRGB((double)Page/(double)NUM_PAGES,0.4,0.9);
@@ -101,17 +117,6 @@ INT_PTR COptionDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 	switch (uMsg) {
 	case WM_INITDIALOG:
 		{
-			const int DPI=GetAppClass().StyleManager.GetSystemDPI();
-			m_IconWidth=::GetSystemMetrics(SM_CXSMICON);
-			m_IconHeight=::GetSystemMetrics(SM_CYSMICON);
-			m_ListMargin=::MulDiv(1,DPI,96);
-			m_IconTextMargin=::MulDiv(4,DPI,96);
-
-			RECT rc={0,0,0,10};
-			::MapDialogRect(hDlg,&rc);
-			DlgListBox_SetItemHeight(hDlg,IDC_OPTIONS_LIST,0,
-									 max(rc.bottom,m_IconHeight+m_ListMargin*2));
-
 			COptions::ClearGeneralUpdateFlags();
 			for (int i=0;i<NUM_PAGES;i++) {
 				m_PageList[i].pOptions->ClearUpdateFlags();
@@ -122,18 +127,6 @@ INT_PTR COptionDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 			CreatePage(m_CurrentPage);
 			m_PageList[m_CurrentPage].pOptions->SetVisible(true);
 			DlgListBox_SetCurSel(hDlg,IDC_OPTIONS_LIST,m_CurrentPage);
-
-			m_himlIcons=::ImageList_LoadImage(
-				GetAppClass().GetResourceInstance(),
-				m_IconWidth<=16?MAKEINTRESOURCE(IDB_OPTIONS16):MAKEINTRESOURCE(IDB_OPTIONS32),
-				m_IconWidth<=16?16:32,
-				1,CLR_NONE,IMAGE_BITMAP,LR_CREATEDIBSECTION);
-
-			HFONT hfont=reinterpret_cast<HFONT>(::SendMessage(hDlg,WM_GETFONT,0,0));
-			LOGFONT lf;
-			::GetObject(hfont,sizeof(LOGFONT),&lf);
-			lf.lfWeight=FW_BOLD;
-			m_TitleFont.Create(&lf);
 
 			m_fApplied=false;
 		}
@@ -288,6 +281,49 @@ INT_PTR COptionDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 	}
 
 	return FALSE;
+}
+
+
+void COptionDialog::ApplyStyle()
+{
+	CBasicDialog::ApplyStyle();
+
+	if (m_hDlg!=NULL) {
+		m_IconWidth=m_pStyleScaling->GetScaledSystemMetrics(SM_CXSMICON);
+		m_IconHeight=m_pStyleScaling->GetScaledSystemMetrics(SM_CYSMICON);
+		m_ListMargin=m_pStyleScaling->LogicalPixelsToPhysicalPixels(1);
+		m_IconTextMargin=m_pStyleScaling->LogicalPixelsToPhysicalPixels(4);
+
+		LOGFONT lf;
+		m_Font.GetLogFont(&lf);
+		lf.lfWeight=FW_BOLD;
+		m_TitleFont.Create(&lf);
+
+		if (m_himlIcons!=NULL)
+			::ImageList_Destroy(m_himlIcons);
+		m_himlIcons=::ImageList_LoadImage(
+			GetAppClass().GetResourceInstance(),
+			m_IconWidth<=16?MAKEINTRESOURCE(IDB_OPTIONS16):MAKEINTRESOURCE(IDB_OPTIONS32),
+			m_IconWidth<=16?16:32,
+			1,CLR_NONE,IMAGE_BITMAP,LR_CREATEDIBSECTION);
+	}
+}
+
+
+void COptionDialog::RealizeStyle()
+{
+	CBasicDialog::RealizeStyle();
+
+	if (m_hDlg!=NULL) {
+		HDC hdc=::GetDC(m_hDlg);
+		int FontHeight=m_Font.GetHeight(hdc,false);
+		::ReleaseDC(m_hDlg,hdc);
+		DlgListBox_SetItemHeight(m_hDlg,IDC_OPTIONS_LIST,0,
+								 max(FontHeight,m_IconHeight)+m_ListMargin*2);
+
+		for (int i=0;i<NUM_PAGES;i++)
+			SetPagePos(i);
+	}
 }
 
 

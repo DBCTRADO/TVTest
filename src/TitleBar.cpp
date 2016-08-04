@@ -57,6 +57,7 @@ CTitleBar::CTitleBar()
 	, m_fFullscreen(false)
 	, m_pEventHandler(NULL)
 {
+	GetSystemFont(DrawUtil::FONT_CAPTION,&m_StyleFont);
 }
 
 
@@ -88,9 +89,11 @@ void CTitleBar::SetStyle(const TVTest::Style::CStyleManager *pStyleManager)
 }
 
 
-void CTitleBar::NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager)
+void CTitleBar::NormalizeStyle(
+	const TVTest::Style::CStyleManager *pStyleManager,
+	const TVTest::Style::CStyleScaling *pStyleScaling)
 {
-	m_Style.NormalizeStyle(pStyleManager);
+	m_Style.NormalizeStyle(pStyleManager,pStyleScaling);
 }
 
 
@@ -184,18 +187,8 @@ bool CTitleBar::SetTitleBarTheme(const TitleBarTheme &Theme)
 {
 	m_Theme=Theme;
 
-	if (m_hwnd!=NULL) {
-		RECT rc;
-		GetClientRect(&rc);
-		int Height=CalcHeight();
-		if (Height!=rc.bottom) {
-			rc.bottom=Height;
-			SetPosition(&rc);
-			if (m_pEventHandler!=NULL)
-				m_pEventHandler->OnHeightChanged(Height);
-		}
-		Invalidate();
-	}
+	if (m_hwnd!=NULL)
+		AdjustSize();
 
 	return true;
 }
@@ -212,23 +205,10 @@ bool CTitleBar::GetTitleBarTheme(TitleBarTheme *pTheme) const
 
 bool CTitleBar::SetFont(const TVTest::Style::Font &Font)
 {
-	if (!CreateDrawFont(Font,&m_Font))
-		return false;
+	m_StyleFont=Font;
 
-	if (m_hwnd!=NULL) {
-		const int OldHeight=GetHeight();
-		m_FontHeight=CalcFontHeight();
-		const int Height=CalcHeight();
-		if (Height!=OldHeight) {
-			RECT rc;
-			GetPosition(&rc);
-			rc.bottom=rc.top+Height;
-			SetPosition(&rc);
-		} else {
-			SendSizeMessage();
-		}
-		Invalidate();
-	}
+	if (m_hwnd!=NULL)
+		RealizeStyle();
 
 	return true;
 }
@@ -272,10 +252,6 @@ LRESULT CTitleBar::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 		{
 			InitializeUI();
 
-			if (!m_Font.IsCreated())
-				m_Font.Create(DrawUtil::FONT_CAPTION);
-			m_FontHeight=CalcFontHeight();
-
 			LPCREATESTRUCT pcs=reinterpret_cast<LPCREATESTRUCT>(lParam);
 			RECT rc;
 
@@ -285,14 +261,6 @@ LRESULT CTitleBar::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 			rc.bottom=CalcHeight();
 			::AdjustWindowRectEx(&rc,pcs->style,FALSE,pcs->dwExStyle);
 			::MoveWindow(hwnd,0,0,0,rc.bottom-rc.top,FALSE);
-
-			static const TVTest::Theme::IconList::ResourceInfo ResourceList[] = {
-				{MAKEINTRESOURCE(IDB_TITLEBAR12),12,12},
-				{MAKEINTRESOURCE(IDB_TITLEBAR24),24,24},
-			};
-			m_ButtonIcons.Load(GetAppClass().GetResourceInstance(),
-							   m_Style.ButtonIconSize.Width,m_Style.ButtonIconSize.Height,
-							   ResourceList,lengthof(ResourceList));
 
 			m_Tooltip.Create(hwnd);
 			for (int i=ITEM_BUTTON_FIRST;i<=ITEM_LAST;i++) {
@@ -488,6 +456,23 @@ LRESULT CTitleBar::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 }
 
 
+void CTitleBar::AdjustSize()
+{
+	RECT rc;
+	GetPosition(&rc);
+	const int NewHeight=CalcHeight();
+	if (NewHeight!=rc.bottom-rc.top) {
+		rc.bottom=rc.top+NewHeight;
+		SetPosition(&rc);
+		if (m_pEventHandler!=NULL)
+			m_pEventHandler->OnHeightChanged(NewHeight);
+	} else {
+		SendSizeMessage();
+	}
+	Invalidate();
+}
+
+
 int CTitleBar::CalcFontHeight() const
 {
 	return TVTest::Style::GetFontHeight(m_hwnd,m_Font.GetHandle(),m_Style.LabelExtraHeight);
@@ -654,6 +639,32 @@ void CTitleBar::Draw(HDC hdc,const RECT &PaintRect)
 }
 
 
+void CTitleBar::ApplyStyle()
+{
+	if (m_hwnd==NULL)
+		return;
+
+	CreateDrawFont(m_StyleFont,&m_Font);
+	m_FontHeight=CalcFontHeight();
+
+	static const TVTest::Theme::IconList::ResourceInfo ResourceList[] = {
+		{MAKEINTRESOURCE(IDB_TITLEBAR12),12,12},
+		{MAKEINTRESOURCE(IDB_TITLEBAR24),24,24},
+	};
+	m_ButtonIcons.Load(GetAppClass().GetResourceInstance(),
+					   m_Style.ButtonIconSize.Width,m_Style.ButtonIconSize.Height,
+					   ResourceList,lengthof(ResourceList));
+}
+
+
+void CTitleBar::RealizeStyle()
+{
+	if (m_hwnd!=NULL) {
+		AdjustSize();
+	}
+}
+
+
 
 
 CTitleBar::CEventHandler::CEventHandler()
@@ -685,6 +696,7 @@ CTitleBar::TitleBarStyle::TitleBarStyle()
 
 void CTitleBar::TitleBarStyle::SetStyle(const TVTest::Style::CStyleManager *pStyleManager)
 {
+	*this=TitleBarStyle();
 	pStyleManager->Get(TEXT("title-bar.padding"),&Padding);
 	pStyleManager->Get(TEXT("title-bar.label.margin"),&LabelMargin);
 	pStyleManager->Get(TEXT("title-bar.label.extra-height"),&LabelExtraHeight);
@@ -695,13 +707,15 @@ void CTitleBar::TitleBarStyle::SetStyle(const TVTest::Style::CStyleManager *pSty
 }
 
 
-void CTitleBar::TitleBarStyle::NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager)
+void CTitleBar::TitleBarStyle::NormalizeStyle(
+	const TVTest::Style::CStyleManager *pStyleManager,
+	const TVTest::Style::CStyleScaling *pStyleScaling)
 {
-	pStyleManager->ToPixels(&Padding);
-	pStyleManager->ToPixels(&LabelMargin);
-	pStyleManager->ToPixels(&LabelExtraHeight);
-	pStyleManager->ToPixels(&IconSize);
-	pStyleManager->ToPixels(&IconMargin);
-	pStyleManager->ToPixels(&ButtonIconSize);
-	pStyleManager->ToPixels(&ButtonPadding);
+	pStyleScaling->ToPixels(&Padding);
+	pStyleScaling->ToPixels(&LabelMargin);
+	pStyleScaling->ToPixels(&LabelExtraHeight);
+	pStyleScaling->ToPixels(&IconSize);
+	pStyleScaling->ToPixels(&IconMargin);
+	pStyleScaling->ToPixels(&ButtonIconSize);
+	pStyleScaling->ToPixels(&ButtonPadding);
 }

@@ -1657,10 +1657,17 @@ int CDropDownMenu::CommandToIndex(int Command) const
 }
 
 
-bool CDropDownMenu::Show(HWND hwndOwner,HWND hwndMessage,const POINT *pPos,int CurItem,UINT Flags)
+bool CDropDownMenu::Show(HWND hwndOwner,HWND hwndMessage,const POINT *pPos,int CurItem,UINT Flags,int DPI)
 {
 	if (m_ItemList.empty() || m_hwnd!=NULL)
 		return false;
+
+	HMONITOR hMonitor=::MonitorFromPoint(*pPos,MONITOR_DEFAULTTONEAREST);
+
+	if (DPI!=0)
+		m_DPI=DPI;
+	else
+		m_DPI=Util::GetMonitorDPI(hMonitor);
 
 	HWND hwnd=::CreateWindowEx(WS_EX_NOACTIVATE | WS_EX_TOPMOST,DROPDOWNMENU_WINDOW_CLASS,
 							   NULL,WS_POPUP,0,0,0,0,hwndOwner,NULL,m_hinst,this);
@@ -1678,12 +1685,10 @@ bool CDropDownMenu::Show(HWND hwndOwner,HWND hwndMessage,const POINT *pPos,int C
 		if (Width>MaxWidth)
 			MaxWidth=Width;
 	}
-	TEXTMETRIC tm;
-	::GetTextMetrics(hdc,&tm);
-	m_ItemWidth=MaxWidth+m_ItemMargin.cxLeftWidth+m_ItemMargin.cxRightWidth;
-	m_ItemHeight=tm.tmHeight/*-tm.tmInternalLeading*/+
-		m_ItemMargin.cyTopHeight+m_ItemMargin.cyBottomHeight;
 	::SelectObject(hdc,hfontOld);
+	m_ItemWidth=MaxWidth+m_ItemMargin.cxLeftWidth+m_ItemMargin.cxRightWidth;
+	m_ItemHeight=m_Font.GetHeight(hdc)+
+		m_ItemMargin.cyTopHeight+m_ItemMargin.cyBottomHeight;
 	::ReleaseDC(hwnd,hdc);
 
 	const int HorzMargin=m_WindowMargin.cxLeftWidth+m_WindowMargin.cxRightWidth;
@@ -1693,7 +1698,7 @@ bool CDropDownMenu::Show(HWND hwndOwner,HWND hwndMessage,const POINT *pPos,int C
 	int x=pPos->x,y=pPos->y;
 	MONITORINFO mi;
 	mi.cbSize=sizeof(mi);
-	if (::GetMonitorInfo(::MonitorFromPoint(*pPos,MONITOR_DEFAULTTONEAREST),&mi)) {
+	if (::GetMonitorInfo(hMonitor,&mi)) {
 		int Rows=((mi.rcMonitor.bottom-y)-VertMargin)/m_ItemHeight;
 
 		if ((int)m_ItemList.size()>Rows) {
@@ -1848,8 +1853,14 @@ LRESULT CALLBACK CDropDownMenu::WndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM
 			if (pThis->m_ItemMargin.cxRightWidth<4)
 				pThis->m_ItemMargin.cxRightWidth=4;
 			pThis->m_MenuPainter.GetMargins(&pThis->m_WindowMargin);
+
+			const int SystemDPI=GetAppClass().StyleManager.GetSystemDPI();
+			CUxTheme::ScaleMargins(&pThis->m_ItemMargin,pThis->m_DPI,SystemDPI);
+			CUxTheme::ScaleMargins(&pThis->m_WindowMargin,pThis->m_DPI,SystemDPI);
+
 			LOGFONT lf;
 			pThis->m_MenuPainter.GetFont(&lf);
+			lf.lfHeight=::MulDiv(lf.lfHeight,pThis->m_DPI,SystemDPI);
 			pThis->m_Font.Create(&lf);
 		}
 		return 0;

@@ -306,7 +306,9 @@ public:
 
 // CUIBase
 	void SetStyle(const TVTest::Style::CStyleManager *pStyleManager) override;
-	void NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager) override;
+	void NormalizeStyle(
+		const TVTest::Style::CStyleManager *pStyleManager,
+		const TVTest::Style::CStyleScaling *pStyleScaling) override;
 	void SetTheme(const TVTest::Theme::CThemeManager *pThemeManager) override;
 
 // CProgramGuide
@@ -360,7 +362,7 @@ public:
 	bool ScrollToCurrentService();
 
 	int GetLinesPerHour() const { return m_LinesPerHour; }
-	int GetItemWidth() const { return m_ItemWidth; }
+	int GetItemWidth() const { return m_ItemLogicalWidth; }
 	bool SetUIOptions(int LinesPerHour,int ItemWidth);
 	bool SetTextDrawEngine(TVTest::CTextDrawClient::TextDrawEngine Engine);
 	TVTest::CTextDrawClient::TextDrawEngine GetTextDrawEngine() const { return m_TextDrawEngine; }
@@ -431,7 +433,9 @@ private:
 
 		ProgramGuideStyle();
 		void SetStyle(const TVTest::Style::CStyleManager *pStyleManager);
-		void NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager);
+		void NormalizeStyle(
+			const TVTest::Style::CStyleManager *pStyleManager,
+			const TVTest::Style::CStyleScaling *pStyleScaling);
 	};
 
 	struct ProgramGuideTheme
@@ -460,6 +464,7 @@ private:
 	int m_FontHeight;
 	int m_GDIFontHeight;
 	int m_LineMargin;
+	int m_ItemLogicalWidth;
 	int m_ItemWidth;
 	int m_TextLeftMargin;
 	int m_HeaderHeight;
@@ -621,6 +626,7 @@ private:
 	void RestoreTimePos();
 	void SetCaption();
 	void SetTooltip();
+	void ResetEventFont();
 	void OnFontChanged();
 	ProgramGuide::CEventItem *GetEventItem(int ListIndex,int EventIndex);
 	const ProgramGuide::CEventItem *GetEventItem(int ListIndex,int EventIndex) const;
@@ -641,6 +647,10 @@ private:
 
 // CCustomWindow
 	LRESULT OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
+
+// CUIBase
+	void ApplyStyle() override;
+	void RealizeStyle() override;
 
 // CFeaturedEvents::CEventHandler
 	void OnFeaturedEventsSettingsChanged(CFeaturedEvents &FeaturedEvents) override;
@@ -668,6 +678,7 @@ namespace ProgramGuideBar
 		virtual void GetBarSize(SIZE *pSize) = 0;
 		virtual void SetBarPosition(int x,int y,int Width,int Height) = 0;
 		virtual void SetTheme(const ThemeInfo &Theme) {}
+		virtual TVTest::CUIBase *GetUIBase() = 0;
 
 		virtual void OnDateChanged() {}
 		virtual void OnSpaceChanged() {}
@@ -723,10 +734,12 @@ protected:
 	void OnMenuInitialize(HMENU hmenu) override;
 
 	LRESULT DefaultMessageHandler(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam);
-	void OnWindowCreate(HWND hwnd,bool fBufferedPaint);
+	void OnWindowCreate(
+		HWND hwnd,TVTest::Style::CStyleScaling *pStyleScaling,bool fBufferedPaint);
 	void OnWindowDestroy();
 	void OnSizeChanged(int Width,int Height);
 	virtual void OnLayoutChange() {}
+	virtual TVTest::CUIBase *GetUIBase() = 0;
 };
 
 class CProgramGuideFrameSettings : public CSettingsBase
@@ -827,15 +840,19 @@ public:
 	bool Show();
 
 private:
+	TVTest::Style::CStyleScaling m_StyleScaling;
 	CAeroGlass m_AeroGlass;
 	bool m_fAlwaysOnTop;
 
 // CProgramGuideFrameBase
 	void OnLayoutChange() override;
+	TVTest::CUIBase *GetUIBase() override { return this; }
 // CProgramGuide::CFrame
 	void SetCaption(LPCTSTR pszCaption) override;
 // CCustomWindow
 	LRESULT OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
+// CUIBase
+	void RealizeStyle() override;
 // CProgramGuideFrame
 	void SetAeroGlass();
 
@@ -885,6 +902,7 @@ private:
 	bool GetAlwaysOnTop() const override;
 // CProgramGuideFrameBase
 	void OnLayoutChange() override;
+	TVTest::CUIBase *GetUIBase() override { return this; }
 // CCustomWindow
 	LRESULT OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
 };

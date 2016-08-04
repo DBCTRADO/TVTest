@@ -1762,3 +1762,12 @@ bool CUxTheme::GetPartSize(HDC hdc,int PartID,int StateID,SIZE *pSize)
 		return false;
 	return ::GetThemePartSize(m_hTheme,hdc,PartID,StateID,NULL,TS_TRUE,pSize)==S_OK;
 }
+
+
+void CUxTheme::ScaleMargins(MARGINS *pMargins,int Num,int Denom)
+{
+	pMargins->cxLeftWidth=::MulDiv(pMargins->cxLeftWidth,Num,Denom);
+	pMargins->cxRightWidth=::MulDiv(pMargins->cxRightWidth,Num,Denom);
+	pMargins->cyTopHeight=::MulDiv(pMargins->cyTopHeight,Num,Denom);
+	pMargins->cyBottomHeight=::MulDiv(pMargins->cyBottomHeight,Num,Denom);
+}

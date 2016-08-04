@@ -2,7 +2,7 @@
 #define PANEL_FORM_H
 
 
-#include "BasicWindow.h"
+#include "Panel.h"
 #include "UIBase.h"
 #include "Theme.h"
 #include "DrawUtil.h"
@@ -11,8 +11,7 @@
 
 
 class CPanelForm
-	: public CCustomWindow
-	, public TVTest::CUIBase
+	: public CPanelContent
 {
 public:
 	class ABSTRACT_CLASS(CPage)
@@ -84,7 +83,9 @@ public:
 
 // CUIBase
 	void SetStyle(const TVTest::Style::CStyleManager *pStyleManager) override;
-	void NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager) override;
+	void NormalizeStyle(
+		const TVTest::Style::CStyleManager *pStyleManager,
+		const TVTest::Style::CStyleScaling *pStyleScaling) override;
 	void SetTheme(const TVTest::Theme::CThemeManager *pThemeManager) override;
 
 // CPanelForm
@@ -138,13 +139,16 @@ private:
 
 		PanelFormStyle();
 		void SetStyle(const TVTest::Style::CStyleManager *pStyleManager);
-		void NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager);
+		void NormalizeStyle(
+			const TVTest::Style::CStyleManager *pStyleManager,
+			const TVTest::Style::CStyleScaling *pStyleScaling);
 	};
 
 	std::vector<CWindowInfo*> m_WindowList;
 	std::vector<int> m_TabOrder;
 	PanelFormStyle m_Style;
 	PanelFormTheme m_Theme;
+	TVTest::Style::Font m_StyleFont;
 	DrawUtil::CFont m_Font;
 	DrawUtil::CMonoColorIconList m_Icons;
 	TabStyle m_TabStyle;
@@ -170,6 +174,10 @@ private:
 
 // CCustomWindow
 	LRESULT OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
+
+// CUIBase
+	void ApplyStyle() override;
+	void RealizeStyle() override;
 };
 
 

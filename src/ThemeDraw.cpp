@@ -11,10 +11,17 @@ namespace Theme
 {
 
 
-CThemeDraw::CThemeDraw(const TVTest::Style::CStyleManager *pStyleManager)
+CThemeDraw::CThemeDraw(
+	const TVTest::Style::CStyleManager *pStyleManager,
+	const TVTest::Style::CStyleScaling *pStyleScaling)
 	: m_pStyleManager(pStyleManager)
+	, m_pStyleScaling(pStyleScaling)
 	, m_hdc(nullptr)
 {
+	if (m_pStyleScaling==nullptr) {
+		m_pStyleManager->InitStyleScaling(&m_StyleScaling);
+		m_pStyleScaling=&m_StyleScaling;
+	}
 }
 
 
@@ -94,10 +101,10 @@ bool CThemeDraw::Draw(const BorderStyle &Style,RECT *pRect)
 
 	BorderStyle DrawStyle=Style;
 
-	m_pStyleManager->ToPixels(&DrawStyle.Width.Left);
-	m_pStyleManager->ToPixels(&DrawStyle.Width.Top);
-	m_pStyleManager->ToPixels(&DrawStyle.Width.Right);
-	m_pStyleManager->ToPixels(&DrawStyle.Width.Bottom);
+	m_pStyleScaling->ToPixels(&DrawStyle.Width.Left);
+	m_pStyleScaling->ToPixels(&DrawStyle.Width.Top);
+	m_pStyleScaling->ToPixels(&DrawStyle.Width.Right);
+	m_pStyleScaling->ToPixels(&DrawStyle.Width.Bottom);
 
 	return Theme::Draw(m_hdc,pRect,DrawStyle);
 }

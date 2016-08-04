@@ -66,12 +66,14 @@ void CControlPanel::SetStyle(const TVTest::Style::CStyleManager *pStyleManager)
 }
 
 
-void CControlPanel::NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager)
+void CControlPanel::NormalizeStyle(
+	const TVTest::Style::CStyleManager *pStyleManager,
+	const TVTest::Style::CStyleScaling *pStyleScaling)
 {
-	m_Style.NormalizeStyle(pStyleManager);
+	m_Style.NormalizeStyle(pStyleManager,pStyleScaling);
 
 	for (auto itr=m_ItemList.begin();itr!=m_ItemList.end();++itr)
-		(*itr)->NormalizeStyle(pStyleManager);
+		(*itr)->NormalizeStyle(pStyleManager,pStyleScaling);
 }
 
 
@@ -94,12 +96,10 @@ void CControlPanel::SetTheme(const TVTest::Theme::CThemeManager *pThemeManager)
 
 bool CControlPanel::SetFont(const TVTest::Style::Font &Font)
 {
-	if (!CreateDrawFont(Font,&m_Font))
-		return false;
+	m_StyleFont=Font;
 	if (m_hwnd!=NULL) {
-		m_FontHeight=CalcFontHeight();
-		UpdateLayout();
-		Invalidate();
+		ApplyStyle();
+		RealizeStyle();
 	}
 	return true;
 }
@@ -111,6 +111,7 @@ bool CControlPanel::AddItem(CControlPanelItem *pItem)
 		return false;
 	m_ItemList.push_back(pItem);
 	pItem->m_pControlPanel=this;
+	RegisterUIChild(pItem);
 	return true;
 }
 
@@ -383,10 +384,6 @@ LRESULT CControlPanel::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam
 	case WM_CREATE:
 		InitializeUI();
 
-		if (!m_Font.IsCreated())
-			CreateDefaultFont(&m_Font);
-		m_FontHeight=CalcFontHeight();
-
 		m_HotItem=-1;
 		m_fTrackMouseEvent=false;
 		m_fOnButtonDown=false;
@@ -546,6 +543,24 @@ LRESULT CControlPanel::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam
 }
 
 
+void CControlPanel::ApplyStyle()
+{
+	if (m_hwnd!=NULL) {
+		CreateDrawFont(m_StyleFont,&m_Font);
+		m_FontHeight=CalcFontHeight();
+	}
+}
+
+
+void CControlPanel::RealizeStyle()
+{
+	if (m_hwnd!=NULL) {
+		UpdateLayout();
+		Invalidate();
+	}
+}
+
+
 
 
 CControlPanel::ControlPanelStyle::ControlPanelStyle()
@@ -559,6 +574,7 @@ CControlPanel::ControlPanelStyle::ControlPanelStyle()
 
 void CControlPanel::ControlPanelStyle::SetStyle(const TVTest::Style::CStyleManager *pStyleManager)
 {
+	*this=ControlPanelStyle();
 	pStyleManager->Get(TEXT("control-panel.padding"),&Padding);
 	pStyleManager->Get(TEXT("control-panel.item.padding"),&ItemPadding);
 	pStyleManager->Get(TEXT("control-panel.item.text.extra-height"),&TextExtraHeight);
@@ -566,12 +582,14 @@ void CControlPanel::ControlPanelStyle::SetStyle(const TVTest::Style::CStyleManag
 }
 
 
-void CControlPanel::ControlPanelStyle::NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager)
+void CControlPanel::ControlPanelStyle::NormalizeStyle(
+	const TVTest::Style::CStyleManager *pStyleManager,
+	const TVTest::Style::CStyleScaling *pStyleScaling)
 {
-	pStyleManager->ToPixels(&Padding);
-	pStyleManager->ToPixels(&ItemPadding);
-	pStyleManager->ToPixels(&TextExtraHeight);
-	pStyleManager->ToPixels(&IconSize);
+	pStyleScaling->ToPixels(&Padding);
+	pStyleScaling->ToPixels(&ItemPadding);
+	pStyleScaling->ToPixels(&TextExtraHeight);
+	pStyleScaling->ToPixels(&IconSize);
 }
 
 

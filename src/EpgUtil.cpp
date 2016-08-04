@@ -997,7 +997,7 @@ bool CEpgTheme::DrawContentBackground(
 
 	if ((Flags & DRAW_CONTENT_BACKGROUND_SEPARATOR)!=0) {
 		RECT rc=Rect;
-		rc.bottom=rc.top+ThemeDraw.GetStyleManager()->ToPixels(1,TVTest::Style::UNIT_LOGICAL_PIXEL);
+		rc.bottom=rc.top+ThemeDraw.GetStyleScaling()->ToPixels(1,TVTest::Style::UNIT_LOGICAL_PIXEL);
 		DrawUtil::Fill(hdc,&rc,MixColor(GetGenreColor(EventInfo),RGB(0,0,0),224));
 	}
 

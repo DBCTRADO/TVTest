@@ -161,7 +161,9 @@ public:
 
 // CUIBase
 	void SetStyle(const TVTest::Style::CStyleManager *pStyleManager) override;
-	void NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager) override;
+	void NormalizeStyle(
+		const TVTest::Style::CStyleManager *pStyleManager,
+		const TVTest::Style::CStyleScaling *pStyleScaling) override;
 	void SetTheme(const TVTest::Theme::CThemeManager *pThemeManager) override;
 
 private:
@@ -173,7 +175,9 @@ private:
 
 		MainWindowStyle();
 		void SetStyle(const TVTest::Style::CStyleManager *pStyleManager);
-		void NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager);
+		void NormalizeStyle(
+			const TVTest::Style::CStyleManager *pStyleManager,
+			const TVTest::Style::CStyleScaling *pStyleScaling);
 	};
 
 	struct MainWindowTheme
@@ -246,6 +250,7 @@ private:
 		bool GetTooltipText(int Command,LPTSTR pszText,int MaxText) override;
 		bool DrawIcon(const CSideBar::DrawIconInfo *pInfo) override;
 		void OnBarWidthChanged(int BarWidth) override;
+		void OnStyleChanged() override;
 	};
 
 	class CCursorTracker
@@ -310,6 +315,7 @@ private:
 
 		CMainWindow &m_MainWindow;
 		CAppMain &m_App;
+		TVTest::Style::CStyleScaling m_StyleScaling;
 		Layout::CLayoutBase m_LayoutBase;
 		CViewWindow m_ViewWindow;
 		TVTest::CMainDisplay *m_pDisplay;
@@ -335,6 +341,7 @@ private:
 		void ShowCursor(bool fShow);
 		void ShowSideBar(bool fShow);
 		void OnBarHide(CBasicWindow &Window);
+		void OnSharedBarVisibilityChange(CBasicWindow &Window,TVTest::CUIBase &UIBase,bool fVisible);
 		void RestorePanel();
 	// CBasicWindow
 		bool Create(HWND hwndParent,DWORD Style,DWORD ExStyle=0,int ID=0) override;
@@ -352,6 +359,7 @@ private:
 
 		void OnMouseLeave() override;
 		void OnHeightChanged(int Height) override;
+		void OnStyleChanged() override;
 	};
 
 	class CVideoContainerEventHandler : public CVideoContainerWindow::CEventHandler
@@ -405,6 +413,7 @@ private:
 	enum { UPDATE_TIMER_INTERVAL=500 };
 
 	CAppMain &m_App;
+	TVTest::Style::CStyleScaling m_StyleScaling;
 	Layout::CLayoutBase m_LayoutBase;
 	TVTest::CMainDisplay m_Display;
 	CTitleBar m_TitleBar;
@@ -570,6 +579,9 @@ private:
 
 // CUISkin
 	HWND GetMainWindow() const override { return m_hwnd; }
+	HWND GetFullscreenWindow() const override { return m_Fullscreen.GetHandle(); }
+	const TVTest::CUIBase *GetUIBase() const override { return this; }
+	const TVTest::CUIBase *GetFullscreenUIBase() const override { return &m_Fullscreen; }
 	void ShowNotificationBar(LPCTSTR pszText,
 							 CNotificationBar::MessageType Type=CNotificationBar::MESSAGE_INFO,
 							 DWORD Duration=0,bool fSkippable=false) override;
@@ -615,6 +627,7 @@ private:
 
 // CMainWindow
 	LRESULT OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam);
+	bool OnNCCreate(const CREATESTRUCT *pcs);
 	bool OnCreate(const CREATESTRUCT *pcs);
 	void OnDestroy();
 	void OnSizeChanged(UINT State,int Width,int Height);

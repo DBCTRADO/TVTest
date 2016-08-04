@@ -60,7 +60,9 @@ public:
 
 // CUIBase
 	void SetStyle(const TVTest::Style::CStyleManager *pStyleManager) override;
-	void NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager) override;
+	void NormalizeStyle(
+		const TVTest::Style::CStyleManager *pStyleManager,
+		const TVTest::Style::CStyleScaling *pStyleScaling) override;
 	void SetTheme(const TVTest::Theme::CThemeManager *pThemeManager) override;
 
 // CPage
@@ -153,11 +155,14 @@ private:
 
 		ChannelPanelStyle();
 		void SetStyle(const TVTest::Style::CStyleManager *pStyleManager);
-		void NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager);
+		void NormalizeStyle(
+			const TVTest::Style::CStyleManager *pStyleManager,
+			const TVTest::Style::CStyleScaling *pStyleScaling);
 	};
 
 	CEpgProgramList *m_pProgramList;
 	ChannelPanelStyle m_Style;
+	TVTest::Style::Font m_StyleFont;
 	DrawUtil::CFont m_Font;
 	DrawUtil::CFont m_ChannelFont;
 	int m_FontHeight;
@@ -180,6 +185,7 @@ private:
 	int m_ExpandAdditionalEvents;
 	int m_ExpandEvents;
 	int m_ScrollPos;
+	int m_OldDPI;
 	CMouseWheelHandler m_MouseWheel;
 	bool m_fScrollToCurChannel;
 	std::vector<CChannelEventInfo*> m_ChannelList;
@@ -230,6 +236,10 @@ private:
 
 // CCustomWindow
 	LRESULT OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
+
+// CUIBase
+	void ApplyStyle() override;
+	void RealizeStyle() override;
 
 // CPanelForm::CPage
 	bool NeedKeyboardFocus() const override { return true; }

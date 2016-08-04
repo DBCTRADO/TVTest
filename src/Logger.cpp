@@ -396,12 +396,12 @@ INT_PTR CLogger::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 			lvc.fmt=LVCFMT_LEFT;
 			lvc.cx=0;
 			lvc.pszText=TEXT("");
-			ListView_InsertColumn(hwndList,0,&lvc);
+			ListView_InsertColumn(hwndList,COLUMN_DUMMY,&lvc);
 			lvc.cx=80;
 			lvc.pszText=TEXT("“úŽž");
-			ListView_InsertColumn(hwndList,1,&lvc);
+			ListView_InsertColumn(hwndList,COLUMN_TIME,&lvc);
 			lvc.pszText=TEXT("“à—e");
-			ListView_InsertColumn(hwndList,2,&lvc);
+			ListView_InsertColumn(hwndList,COLUMN_TEXT,&lvc);
 
 			LVITEM lvi;
 			lvi.iItem=0;
@@ -412,25 +412,25 @@ INT_PTR CLogger::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 				TCHAR szTime[64];
 
 				lvi.mask=LVIF_TEXT;
-				lvi.iSubItem=0;
+				lvi.iSubItem=COLUMN_DUMMY;
 				lvi.pszText=TEXT("");
 				ListView_InsertItem(hwndList,&lvi);
 
 				lvi.mask=LVIF_TEXT;
-				lvi.iSubItem=1;
+				lvi.iSubItem=COLUMN_TIME;
 				pLogItem->FormatTime(szTime,lengthof(szTime));
 				lvi.pszText=szTime;
 				ListView_SetItem(hwndList,&lvi);
 
 				lvi.mask=LVIF_TEXT | LVIF_IMAGE;
-				lvi.iSubItem=2;
+				lvi.iSubItem=COLUMN_TEXT;
 				lvi.iImage=(int)pLogItem->GetType();
 				lvi.pszText=const_cast<LPTSTR>(pLogItem->GetText());
 				ListView_SetItem(hwndList,&lvi);
 
 				lvi.iItem++;
 			}
-			for (int i=1;i<=2;i++)
+			for (int i=1;i<NUM_COLUMNS;i++)
 				ListView_SetColumnWidth(hwndList,i,LVSCW_AUTOSIZE_USEHEADER);
 			if (!m_LogList.empty())
 				ListView_EnsureVisible(hwndList,(int)m_LogList.size()-1,FALSE);
@@ -525,4 +525,17 @@ INT_PTR CLogger::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 	}
 
 	return FALSE;
+}
+
+
+void CLogger::RealizeStyle()
+{
+	CBasicDialog::RealizeStyle();
+
+	if (m_hDlg!=NULL) {
+		HWND hwndList=::GetDlgItem(m_hDlg,IDC_LOG_LIST);
+
+		for (int i=1;i<NUM_COLUMNS;i++)
+			ListView_SetColumnWidth(hwndList,i,LVSCW_AUTOSIZE_USEHEADER);
+	}
 }

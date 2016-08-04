@@ -510,8 +510,8 @@ INT_PTR CProgramGuideOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM l
 			{
 				HDC hdc=::GetDC(hDlg);
 				HDC hdcMem=::CreateCompatibleDC(hdc);
-				RECT rc={0,0,0,8};
-				::MapDialogRect(hDlg,&rc);
+				RECT rc;
+				::GetClientRect(::GetDlgItem(hDlg,IDC_PROGRAMGUIDEOPTIONS_ICON_FIRST),&rc);
 				int IconSize;
 				if (rc.bottom<=CEpgIcons::DEFAULT_ICON_HEIGHT+4)
 					IconSize=CEpgIcons::DEFAULT_ICON_HEIGHT;

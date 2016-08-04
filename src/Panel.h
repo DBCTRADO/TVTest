@@ -8,6 +8,12 @@
 #include "Theme.h"
 
 
+class CPanelContent
+	: public CCustomWindow
+	, public TVTest::CUIBase
+{
+};
+
 class CPanel
 	: public CCustomWindow
 	, public TVTest::CUIBase
@@ -44,15 +50,17 @@ public:
 
 // CUIBase
 	void SetStyle(const TVTest::Style::CStyleManager *pStyleManager) override;
-	void NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager) override;
+	void NormalizeStyle(
+		const TVTest::Style::CStyleManager *pStyleManager,
+		const TVTest::Style::CStyleScaling *pStyleScaling) override;
 	void SetTheme(const TVTest::Theme::CThemeManager *pThemeManager) override;
 
 // CPanel
-	bool SetWindow(CBasicWindow *pWindow,LPCTSTR pszTitle);
+	bool SetWindow(CPanelContent *pContent,LPCTSTR pszTitle);
 	void ShowTitle(bool fShow);
 	void EnableFloating(bool fEnable);
 	void SetEventHandler(CEventHandler *pHandler);
-	CBasicWindow *GetWindow() { return m_pWindow; }
+	CBasicWindow *GetWindow() { return m_pContent; }
 	bool SetPanelTheme(const PanelTheme &Theme);
 	bool GetPanelTheme(PanelTheme *pTheme) const;
 	int GetTitleHeight() const { return m_TitleHeight; }
@@ -71,7 +79,9 @@ private:
 
 		PanelStyle();
 		void SetStyle(const TVTest::Style::CStyleManager *pStyleManager);
-		void NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager);
+		void NormalizeStyle(
+			const TVTest::Style::CStyleManager *pStyleManager,
+			const TVTest::Style::CStyleScaling *pStyleScaling);
 	};
 
 	enum ItemType {
@@ -79,11 +89,12 @@ private:
 		ITEM_CLOSE
 	};
 
+	TVTest::Style::Font m_StyleFont;
 	DrawUtil::CFont m_Font;
 	DrawUtil::CFont m_IconFont;
 	int m_FontHeight;
 	int m_TitleHeight;
-	CBasicWindow *m_pWindow;
+	CPanelContent *m_pContent;
 	TVTest::String m_Title;
 	bool m_fShowTitle;
 	bool m_fEnableFloating;
@@ -104,6 +115,9 @@ private:
 	void SetHotItem(ItemType Item);
 // CCustomWindow
 	LRESULT OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
+// CUIBase
+	void ApplyStyle() override;
+	void RealizeStyle() override;
 };
 
 class CDropHelper : public CCustomWindow
@@ -158,7 +172,7 @@ public:
 	CPanelFrame();
 	~CPanelFrame();
 	bool Create(HWND hwndOwner,Layout::CSplitter *pSplitter,int PanelID,
-				CBasicWindow *pWindow,LPCTSTR pszTitle);
+				CPanelContent *pContent,LPCTSTR pszTitle);
 	CPanel *GetPanel() { return &m_Panel; }
 	CBasicWindow *GetWindow() { return m_Panel.GetWindow(); }
 	bool SetFloating(bool fFloating);
@@ -192,6 +206,7 @@ private:
 	DockingPlace m_DragDockingTarget;
 	bool m_fDragMoving;
 	CEventHandler *m_pEventHandler;
+	TVTest::Style::CStyleScaling m_StyleScaling;
 
 	static HINSTANCE m_hinst;
 

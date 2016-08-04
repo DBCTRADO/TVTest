@@ -72,12 +72,20 @@ public:
 	void OnMouseMove(int x,int y) override;
 	bool OnMouseWheel(int x,int y,bool fHorz,int Delta,int *pCommand) override;
 	void SetStyle(const TVTest::Style::CStyleManager *pStyleManager) override;
-	void NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager) override;
+	void NormalizeStyle(
+		const TVTest::Style::CStyleManager *pStyleManager,
+		const TVTest::Style::CStyleScaling *pStyleScaling) override;
 
 private:
-	TVTest::Style::IntValue m_BarHeight;
-	TVTest::Style::Margins m_BarPadding;
-	TVTest::Style::IntValue m_BarBorderWidth;
+	struct VolumeStatusStyle {
+		TVTest::Style::IntValue BarHeight;
+		TVTest::Style::Margins BarPadding;
+		TVTest::Style::IntValue BarBorderWidth;
+
+		VolumeStatusStyle();
+	};
+
+	VolumeStatusStyle m_Style;
 };
 
 class CAudioChannelStatusItem : public CStatusItem
@@ -238,6 +246,8 @@ public:
 	bool SetEventInfoFont(const TVTest::Style::Font &Font) {
 		return m_EventInfoPopup.SetFont(Font);
 	}
+	void SetPopupInfoSize(int Width,int Height);
+	void GetPopupInfoSize(int *pWidth,int *pHeight) const;
 };
 
 class CBufferingStatusItem : public CStatusItem

@@ -760,26 +760,35 @@ INT_PTR CChannelScan::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 			ListView_SetExtendedListViewStyle(hwndList,
 				LVS_EX_FULLROWSELECT | LVS_EX_CHECKBOXES | LVS_EX_LABELTIP);
 
+			HDC hdc=::GetDC(hwndList);
+			HFONT hfont=GetWindowFont(hwndList);
+			HFONT hfontOld=SelectFont(hdc,hfont);
+			TEXTMETRIC tm;
+			::GetTextMetrics(hdc,&tm);
+			SelectFont(hdc,hfontOld);
+			::ReleaseDC(hwndList,hdc);
+			const int FontSize=tm.tmHeight-tm.tmInternalLeading;
+
 			LV_COLUMN lvc;
 			lvc.mask=LVCF_FMT | LVCF_WIDTH | LVCF_TEXT;
 			lvc.fmt=LVCFMT_LEFT;
-			lvc.cx=128;
+			lvc.cx=10*FontSize;
 			lvc.pszText=TEXT("名前");
 			ListView_InsertColumn(hwndList,COLUMN_NAME,&lvc);
-			lvc.cx=72;
+			lvc.cx=6*FontSize;
 			lvc.pszText=TEXT("種別");
 			ListView_InsertColumn(hwndList,COLUMN_SERVICETYPE,&lvc);
 			lvc.fmt=LVCFMT_RIGHT;
-			lvc.cx=72;
+			lvc.cx=6*FontSize;
 			lvc.pszText=TEXT("チャンネル");
 			ListView_InsertColumn(hwndList,COLUMN_CHANNELNAME,&lvc);
-			lvc.cx=72;
+			lvc.cx=6*FontSize;
 			lvc.pszText=TEXT("サービスID");
 			ListView_InsertColumn(hwndList,COLUMN_SERVICEID,&lvc);
-			lvc.cx=80;
+			lvc.cx=7*FontSize;
 			lvc.pszText=TEXT("リモコンキー");
 			ListView_InsertColumn(hwndList,COLUMN_REMOTECONTROLKEYID,&lvc);
-			lvc.cx=40;
+			lvc.cx=4*FontSize;
 			lvc.pszText=TEXT("インデックス");
 			ListView_InsertColumn(hwndList,COLUMN_CHANNELINDEX,&lvc);
 			if (NumSpaces>0) {

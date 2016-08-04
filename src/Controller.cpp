@@ -785,6 +785,19 @@ INT_PTR CControllerManager::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPa
 }
 
 
+void CControllerManager::RealizeStyle()
+{
+	CBasicDialog::RealizeStyle();
+
+	if (m_hDlg!=NULL) {
+		HWND hwndList=::GetDlgItem(m_hDlg,IDC_CONTROLLER_ASSIGN);
+
+		for (int i=0;i<2;i++)
+			ListView_SetColumnWidth(hwndList,i,LVSCW_AUTOSIZE_USEHEADER);
+	}
+}
+
+
 
 
 bool CControllerManager::ControllerSettings::operator==(const ControllerSettings &Operand) const

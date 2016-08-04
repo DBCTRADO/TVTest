@@ -63,6 +63,7 @@ private:
 
 	void CreatePage(int Page);
 	void SetPage(int Page);
+	void SetPagePos(int Page);
 	COLORREF GetTitleColor(int Page) const;
 
 // COptionFrame
@@ -71,6 +72,10 @@ private:
 
 // CBasicDialog
 	INT_PTR DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
+
+// CUIBase
+	void ApplyStyle() override;
+	void RealizeStyle() override;
 };
 
 

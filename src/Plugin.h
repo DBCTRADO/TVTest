@@ -157,12 +157,15 @@ private:
 	// CPluginStatusItem
 		void DetachItem();
 		HWND GetWindowHandle() const;
-		void ApplyStyle();
+		void ApplyItemStyle();
 
 	private:
 		CPlugin *m_pPlugin;
 		StatusItem *m_pItem;
 		TVTest::String m_IDText;
+
+	// CUIBase
+		void RealizeStyle() override;
 
 		void NotifyDraw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect,unsigned int Flags);
 		LRESULT NotifyMouseEvent(UINT Action,int x,int y,int WheelDelta=0);
@@ -194,6 +197,7 @@ private:
 
 	private:
 		LRESULT OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
+		void RealizeStyle() override;
 		void OnActivate() override;
 		void OnDeactivate() override;
 		void OnVisibilityChanged(bool fVisible) override;
@@ -354,10 +358,22 @@ public:
 
 class CPluginOptions : public COptions
 {
+	enum {
+		COLUMN_FILENAME,
+		COLUMN_PLUGINNAME,
+		COLUMN_DESCRIPTION,
+		COLUMN_COPYRIGHT,
+		NUM_COLUMNS
+	};
+
 	CPluginManager *m_pPluginManager;
 	std::vector<LPTSTR> m_EnablePluginList;
 
-	INT_PTR DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam);
+// CBasicDialog
+	INT_PTR DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
+// CUIBase
+	void RealizeStyle() override;
+// CPluginOptions
 	void ClearList();
 
 public:

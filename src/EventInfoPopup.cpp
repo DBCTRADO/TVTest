@@ -59,6 +59,10 @@ CEventInfoPopup::CEventInfoPopup()
 {
 	m_WindowPosition.Width=320;
 	m_WindowPosition.Height=320;
+
+	GetDefaultFont(&m_StyleFont);
+
+	SetStyleScaling(&m_StyleScaling);
 }
 
 
@@ -271,11 +275,12 @@ void CEventInfoPopup::CalcTitleHeight()
 		::ReleaseDC(m_hwnd,hdc);
 	}
 
-	int IconHeight=::GetSystemMetrics(SM_CYSMICON)+2;
+	int IconHeight=m_pStyleScaling->GetScaledSystemMetrics(SM_CYSMICON);
 	int ButtonHeight=m_ButtonSize+m_ButtonMargin*2;
+	int Margin=m_pStyleScaling->LogicalPixelsToPhysicalPixels(2);
 
 	m_TitleHeight=max(IconHeight,ButtonHeight);
-	m_TitleHeight=max(m_TitleHeight,FontHeight+2);
+	m_TitleHeight=max(m_TitleHeight,FontHeight+Margin);
 }
 
 
@@ -340,7 +345,7 @@ bool CEventInfoPopup::IsOwnWindow(HWND hwnd) const
 }
 
 
-void CEventInfoPopup::GetSize(int *pWidth,int *pHeight)
+void CEventInfoPopup::GetSize(int *pWidth,int *pHeight) const
 {
 	RECT rc;
 
@@ -392,22 +397,11 @@ void CEventInfoPopup::SetTitleColor(COLORREF BackColor,COLORREF TextColor)
 
 bool CEventInfoPopup::SetFont(const TVTest::Style::Font &Font)
 {
-	if (!CreateDrawFont(Font,&m_Font))
-		return false;
-
-	LOGFONT lf;
-	m_Font.GetLogFont(&lf);
-	lf.lfWeight=FW_BOLD;
-	m_TitleFont.Create(&lf);
+	m_StyleFont=Font;
 
 	if (m_hwnd!=NULL) {
-		CalcTitleHeight();
-		RECT rc;
-		GetClientRect(&rc);
-		::MoveWindow(m_hwndEdit,0,m_TitleHeight,rc.right,max(rc.bottom-m_TitleHeight,0),TRUE);
-		Invalidate();
-
-		SetWindowFont(m_hwndEdit,m_Font.GetHandle(),TRUE);
+		ApplyStyle();
+		RealizeStyle();
 	}
 
 	return true;
@@ -439,9 +433,9 @@ LPTSTR CEventInfoPopup::GetSelectedText() const
 void CEventInfoPopup::GetPreferredIconSize(int *pWidth,int *pHeight) const
 {
 	if (pWidth!=NULL)
-		*pWidth=::GetSystemMetrics(SM_CXSMICON);
+		*pWidth=m_pStyleScaling->GetScaledSystemMetrics(SM_CXSMICON);
 	if (pHeight!=NULL)
-		*pHeight=::GetSystemMetrics(SM_CYSMICON);
+		*pHeight=m_pStyleScaling->GetScaledSystemMetrics(SM_CYSMICON);
 }
 
 
@@ -531,8 +525,7 @@ LRESULT CEventInfoPopup::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lPar
 {
 	switch (uMsg) {
 	case WM_CREATE:
-		if (!m_Font.IsCreated())
-			CreateDefaultFontAndBoldFont(&m_Font,&m_TitleFont);
+		InitializeUI();
 
 		m_RichEditUtil.LoadRichEditLib();
 		m_hwndEdit=::CreateWindowEx(0,m_RichEditUtil.GetWindowClassName(),TEXT(""),
@@ -544,6 +537,10 @@ LRESULT CEventInfoPopup::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lPar
 
 		SetNcRendering();
 		return 0;
+
+	case WM_NCCREATE:
+		InitStyleScaling(hwnd);
+		break;
 
 	case WM_SIZE:
 		CalcTitleHeight();
@@ -565,9 +562,9 @@ LRESULT CEventInfoPopup::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lPar
 			rc.left+=m_TitleLeftMargin;
 
 			if (m_TitleIcon) {
-				int IconWidth=::GetSystemMetrics(SM_CXSMICON);
-				int IconHeight=::GetSystemMetrics(SM_CYSMICON);
+				int IconWidth,IconHeight;
 
+				GetPreferredIconSize(&IconWidth,&IconHeight);
 				::DrawIconEx(ps.hdc,
 					rc.left,rc.top+(m_TitleHeight-IconHeight)/2,
 					m_TitleIcon,IconWidth,IconHeight,0,NULL,DI_NORMAL);
@@ -678,7 +675,10 @@ LRESULT CEventInfoPopup::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lPar
 					RECT rc;
 
 					::GetWindowRect(hwnd,&rc);
-					::InflateRect(&rc,::GetSystemMetrics(SM_CXSIZEFRAME)*2,::GetSystemMetrics(SM_CYSIZEFRAME)*2);
+					::InflateRect(
+						&rc,
+						m_pStyleScaling->GetScaledSystemMetrics(SM_CXSIZEFRAME)*2,
+						m_pStyleScaling->GetScaledSystemMetrics(SM_CYSIZEFRAME)*2);
 					if (!::PtInRect(&rc,pt))
 						Hide();
 				}
@@ -725,6 +725,10 @@ LRESULT CEventInfoPopup::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lPar
 	case WM_DWMCOMPOSITIONCHANGED:
 		SetNcRendering();
 		return 0;
+
+	case WM_DPICHANGED:
+		OnDPIChanged(hwnd,wParam,lParam);
+		break;
 
 	case WM_NOTIFY:
 		switch (((LPNMHDR)lParam)->code) {
@@ -809,6 +813,24 @@ LRESULT CEventInfoPopup::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lPar
 	}
 
 	return ::DefWindowProc(hwnd,uMsg,wParam,lParam);
+}
+
+
+void CEventInfoPopup::ApplyStyle()
+{
+	if (m_hwnd!=NULL) {
+		CreateDrawFontAndBoldFont(m_StyleFont,&m_Font,&m_TitleFont);
+	}
+}
+
+
+void CEventInfoPopup::RealizeStyle()
+{
+	if (m_hwnd!=NULL) {
+		SendSizeMessage();
+		Invalidate();
+		SetWindowFont(m_hwndEdit,m_Font.GetHandle(),TRUE);
+	}
 }
 
 

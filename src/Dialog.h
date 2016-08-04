@@ -2,10 +2,12 @@
 #define DIALOG_H
 
 
+#include "UIBase.h"
 #include <vector>
 
 
 class CBasicDialog
+	: public TVTest::CUIBase
 {
 public:
 	struct Position {
@@ -51,6 +53,18 @@ protected:
 	bool m_fModeless;
 	bool m_fSetPosition;
 	Position m_Position;
+	TVTest::Style::CStyleScaling m_StyleScaling;
+
+	struct ItemInfo {
+		HWND hwnd;
+		RECT rcOriginal;
+	};
+	std::vector<ItemInfo> m_ItemList;
+	int m_OriginalDPI;
+	int m_CurrentDPI;
+	HFONT m_hOriginalFont;
+	DrawUtil::CFont m_Font;
+	bool m_fInitializing;
 
 	static CBasicDialog *GetThis(HWND hDlg);
 	static INT_PTR CALLBACK DialogProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam);
@@ -60,6 +74,12 @@ protected:
 	virtual INT_PTR DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam);
 	virtual bool ApplyPosition();
 	void StorePosition();
+	void InitDialog();
+	virtual void OnDestroyed() {}
+
+// CUIBase
+	void ApplyStyle() override;
+	void RealizeStyle() override;
 };
 
 class CResizableDialog : public CBasicDialog
@@ -72,6 +92,7 @@ protected:
 	struct LayoutItem {
 		int ID;
 		RECT rcOriginal;
+		int DPI;
 		unsigned int Align;
 	};
 	enum {
@@ -92,6 +113,8 @@ protected:
 
 	SIZE m_MinSize;
 	SIZE m_OriginalClientSize;
+	SIZE m_ScaledClientSize;
+	int m_BaseDPI;
 	HWND m_hwndSizeGrip;
 	std::vector<LayoutItem> m_ControlList;
 
@@ -101,7 +124,10 @@ protected:
 	bool AddControl(int ID,unsigned int Align);
 	bool AddControls(int FirstID,int LastID,unsigned int Align);
 	bool UpdateControlPosition(int ID);
-	void UpdateLayout();
+
+// CUIBase
+	void ApplyStyle() override;
+	void RealizeStyle() override;
 };
 
 

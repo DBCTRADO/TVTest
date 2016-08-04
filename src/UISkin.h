@@ -51,7 +51,10 @@ public:
 	CUISkin();
 	virtual ~CUISkin();
 	virtual HWND GetMainWindow() const = 0;
+	virtual HWND GetFullscreenWindow() const = 0;
 	virtual HWND GetVideoHostWindow() const = 0;
+	virtual const TVTest::CUIBase *GetUIBase() const = 0;
+	virtual const TVTest::CUIBase *GetFullscreenUIBase() const = 0;
 	virtual int ShowMessage(LPCTSTR pszText,LPCTSTR pszCaption=NULL,
 							UINT Type=MB_OK | MB_ICONEXCLAMATION) const;
 	virtual void ShowErrorMessage(LPCTSTR pszText) const;

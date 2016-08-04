@@ -46,6 +46,8 @@ CPanelForm::CPanelForm()
 {
 	m_WindowPosition.Width=200;
 	m_WindowPosition.Height=240;
+
+	GetDefaultFont(&m_StyleFont);
 }
 
 
@@ -80,9 +82,11 @@ void CPanelForm::SetStyle(const TVTest::Style::CStyleManager *pStyleManager)
 }
 
 
-void CPanelForm::NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager)
+void CPanelForm::NormalizeStyle(
+	const TVTest::Style::CStyleManager *pStyleManager,
+	const TVTest::Style::CStyleScaling *pStyleScaling)
 {
-	m_Style.NormalizeStyle(pStyleManager);
+	m_Style.NormalizeStyle(pStyleManager,pStyleScaling);
 }
 
 
@@ -109,6 +113,7 @@ bool CPanelForm::AddPage(const PageInfo &Info)
 {
 	m_WindowList.push_back(new CWindowInfo(Info));
 	m_TabOrder.push_back((int)m_WindowList.size()-1);
+	RegisterUIChild(Info.pPage);
 	if (m_hwnd!=NULL) {
 		CalcTabSize();
 		Invalidate();
@@ -347,12 +352,10 @@ bool CPanelForm::GetPanelFormTheme(PanelFormTheme *pTheme) const
 
 bool CPanelForm::SetTabFont(const TVTest::Style::Font &Font)
 {
-	if (!CreateDrawFont(Font,&m_Font))
-		return false;
+	m_StyleFont=Font;
 	if (m_hwnd!=NULL) {
-		CalcTabSize();
-		SendSizeMessage();
-		Invalidate();
+		ApplyStyle();
+		RealizeStyle();
 	}
 	return true;
 }
@@ -430,9 +433,6 @@ LRESULT CPanelForm::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 	case WM_CREATE:
 		{
 			InitializeUI();
-			if (!m_Font.IsCreated())
-				CreateDefaultFont(&m_Font);
-			CalcTabSize();
 
 			m_Tooltip.Create(hwnd);
 			UpdateTooltip();
@@ -524,6 +524,25 @@ LRESULT CPanelForm::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 	}
 
 	return ::DefWindowProc(hwnd,uMsg,wParam,lParam);
+}
+
+
+void CPanelForm::ApplyStyle()
+{
+	if (m_hwnd!=NULL) {
+		CreateDrawFont(m_StyleFont,&m_Font);
+		CalcTabSize();
+	}
+}
+
+
+void CPanelForm::RealizeStyle()
+{
+	if (m_hwnd!=NULL) {
+		SendSizeMessage();
+		UpdateTooltip();
+		Invalidate();
+	}
 }
 
 
@@ -829,6 +848,7 @@ CPanelForm::PanelFormStyle::PanelFormStyle()
 
 void CPanelForm::PanelFormStyle::SetStyle(const TVTest::Style::CStyleManager *pStyleManager)
 {
+	*this=PanelFormStyle();
 	pStyleManager->Get(TEXT("panel.tab.padding"),&TabPadding);
 	pStyleManager->Get(TEXT("panel.tab.icon"),&TabIconSize);
 	pStyleManager->Get(TEXT("panel.tab.icon.margin"),&TabIconMargin);
@@ -838,12 +858,14 @@ void CPanelForm::PanelFormStyle::SetStyle(const TVTest::Style::CStyleManager *pS
 }
 
 
-void CPanelForm::PanelFormStyle::NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager)
+void CPanelForm::PanelFormStyle::NormalizeStyle(
+	const TVTest::Style::CStyleManager *pStyleManager,
+	const TVTest::Style::CStyleScaling *pStyleScaling)
 {
-	pStyleManager->ToPixels(&TabPadding);
-	pStyleManager->ToPixels(&TabIconSize);
-	pStyleManager->ToPixels(&TabIconMargin);
-	pStyleManager->ToPixels(&TabLabelMargin);
-	pStyleManager->ToPixels(&TabIconLabelMargin);
-	pStyleManager->ToPixels(&ClientMargin);
+	pStyleScaling->ToPixels(&TabPadding);
+	pStyleScaling->ToPixels(&TabIconSize);
+	pStyleScaling->ToPixels(&TabIconMargin);
+	pStyleScaling->ToPixels(&TabLabelMargin);
+	pStyleScaling->ToPixels(&TabIconLabelMargin);
+	pStyleScaling->ToPixels(&ClientMargin);
 }

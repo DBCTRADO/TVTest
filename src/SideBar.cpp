@@ -68,9 +68,11 @@ void CSideBar::SetStyle(const TVTest::Style::CStyleManager *pStyleManager)
 }
 
 
-void CSideBar::NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager)
+void CSideBar::NormalizeStyle(
+	const TVTest::Style::CStyleManager *pStyleManager,
+	const TVTest::Style::CStyleScaling *pStyleScaling)
 {
-	m_Style.NormalizeStyle(pStyleManager);
+	m_Style.NormalizeStyle(pStyleManager,pStyleScaling);
 }
 
 
@@ -550,6 +552,24 @@ LRESULT CSideBar::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 }
 
 
+void CSideBar::RealizeStyle()
+{
+	if (m_hwnd!=NULL) {
+		RECT rc;
+		GetPosition(&rc);
+		const int OldBarWidth=m_fVertical ? rc.right-rc.left : rc.bottom-rc.top;
+		SendSizeMessage();
+		Invalidate();
+		if (m_pEventHandler!=NULL) {
+			m_pEventHandler->OnStyleChanged();
+			const int NewBarWidth=GetBarWidth();
+			if (OldBarWidth!=NewBarWidth)
+				m_pEventHandler->OnBarWidthChanged(NewBarWidth);
+		}
+	}
+}
+
+
 void CSideBar::GetItemRect(int Item,RECT *pRect) const
 {
 	const int ItemWidth=m_Style.IconSize.Width+m_Style.ItemPadding.Horz();
@@ -747,15 +767,18 @@ CSideBar::SideBarStyle::SideBarStyle()
 
 void CSideBar::SideBarStyle::SetStyle(const TVTest::Style::CStyleManager *pStyleManager)
 {
+	*this=SideBarStyle();
 	pStyleManager->Get(TEXT("side-bar.item.icon"),&IconSize);
 	pStyleManager->Get(TEXT("side-bar.item.padding"),&ItemPadding);
 	pStyleManager->Get(TEXT("side-bar.separator.width"),&SeparatorWidth);
 }
 
 
-void CSideBar::SideBarStyle::NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager)
+void CSideBar::SideBarStyle::NormalizeStyle(
+	const TVTest::Style::CStyleManager *pStyleManager,
+	const TVTest::Style::CStyleScaling *pStyleScaling)
 {
-	pStyleManager->ToPixels(&IconSize);
-	pStyleManager->ToPixels(&ItemPadding);
-	pStyleManager->ToPixels(&SeparatorWidth);
+	pStyleScaling->ToPixels(&IconSize);
+	pStyleScaling->ToPixels(&ItemPadding);
+	pStyleScaling->ToPixels(&SeparatorWidth);
 }

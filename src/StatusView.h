@@ -121,7 +121,9 @@ class CIconStatusItem : public CStatusItem
 {
 public:
 	CIconStatusItem(int ID,int DefaultWidth);
-	void NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager) override;
+	void NormalizeStyle(
+		const TVTest::Style::CStyleManager *pStyleManager,
+		const TVTest::Style::CStyleScaling *pStyleScaling) override;
 };
 
 class CStatusView
@@ -139,6 +141,7 @@ public:
 		virtual ~CEventHandler();
 		virtual void OnMouseLeave() {}
 		virtual void OnHeightChanged(int Height) {}
+		virtual void OnStyleChanged() {}
 		friend CStatusView;
 	};
 
@@ -159,7 +162,9 @@ public:
 
 // CUIBase
 	void SetStyle(const TVTest::Style::CStyleManager *pStyleManager) override;
-	void NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager) override;
+	void NormalizeStyle(
+		const TVTest::Style::CStyleManager *pStyleManager,
+		const TVTest::Style::CStyleScaling *pStyleScaling) override;
 	void SetTheme(const TVTest::Theme::CThemeManager *pThemeManager) override;
 
 // CStatusView
@@ -197,10 +202,13 @@ public:
 	int GetCurItem() const;
 	bool SetEventHandler(CEventHandler *pEventHandler);
 	bool SetItemOrder(const int *pOrderList);
+	bool CreateItemPreviewFont(
+		const TVTest::Style::Font &Font,DrawUtil::CFont *pDrawFont) const;
 	bool DrawItemPreview(CStatusItem *pItem,HDC hdc,const RECT &ItemRect,
 						 bool fHighlight=false,HFONT hfont=NULL) const;
 	bool EnableBufferedPaint(bool fEnable);
 	void EnableSizeAdjustment(bool fEnable);
+	int CalcItemPixelSize(const CStatusItem::SizeValue &Size) const;
 
 private:
 	struct StatusViewStyle
@@ -211,7 +219,9 @@ private:
 
 		StatusViewStyle();
 		void SetStyle(const TVTest::Style::CStyleManager *pStyleManager);
-		void NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager);
+		void NormalizeStyle(
+			const TVTest::Style::CStyleManager *pStyleManager,
+			const TVTest::Style::CStyleScaling *pStyleScaling);
 	};
 
 	static const LPCTSTR CLASS_NAME;
@@ -249,10 +259,13 @@ private:
 	int CalcTextHeight(int *pFontHeight=nullptr) const;
 	int CalcItemHeight(int TextHeight) const;
 	int CalcItemHeight() const;
-	int CalcItemPixelSize(const CStatusItem::SizeValue &Size) const;
 
 // CCustomWindow
 	LRESULT OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
+
+// CUIBase
+	void ApplyStyle() override;
+	void RealizeStyle() override;
 };
 
 

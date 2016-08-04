@@ -58,7 +58,6 @@ public:
 class CVolumeControlItem : public CControlPanelItem
 {
 public:
-	CVolumeControlItem();
 // CControlPanelItem
 	void CalcSize(int Width,SIZE *pSize);
 	void Draw(HDC hdc,const RECT &Rect);
@@ -66,12 +65,20 @@ public:
 	void OnRButtonDown(int x,int y);
 	void OnMouseMove(int x,int y);
 	void SetStyle(const TVTest::Style::CStyleManager *pStyleManager);
-	void NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager);
+	void NormalizeStyle(
+		const TVTest::Style::CStyleManager *pStyleManager,
+		const TVTest::Style::CStyleScaling *pStyleScaling);
 
 private:
-	TVTest::Style::IntValue m_BarHeight;
-	TVTest::Style::Margins m_BarPadding;
-	TVTest::Style::IntValue m_BarBorderWidth;
+	struct VolumeControlStyle {
+		TVTest::Style::IntValue BarHeight;
+		TVTest::Style::Margins BarPadding;
+		TVTest::Style::IntValue BarBorderWidth;
+
+		VolumeControlStyle();
+	};
+
+	VolumeControlStyle m_Style;
 };
 
 class CAudioControlItem : public CControlPanelItem

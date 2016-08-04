@@ -187,7 +187,9 @@ CIconStatusItem::CIconStatusItem(int ID,int DefaultWidth)
 }
 
 
-void CIconStatusItem::NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager)
+void CIconStatusItem::NormalizeStyle(
+	const TVTest::Style::CStyleManager *pStyleManager,
+	const TVTest::Style::CStyleScaling *pStyleScaling)
 {
 	m_MinWidth=m_pStatus->GetIconSize().Width;
 	if (m_Width<m_MinWidth)
@@ -285,12 +287,14 @@ void CStatusView::SetStyle(const TVTest::Style::CStyleManager *pStyleManager)
 }
 
 
-void CStatusView::NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager)
+void CStatusView::NormalizeStyle(
+	const TVTest::Style::CStyleManager *pStyleManager,
+	const TVTest::Style::CStyleScaling *pStyleScaling)
 {
-	m_Style.NormalizeStyle(pStyleManager);
+	m_Style.NormalizeStyle(pStyleManager,pStyleScaling);
 
 	for (auto itr=m_ItemList.begin();itr!=m_ItemList.end();++itr)
-		(*itr)->NormalizeStyle(pStyleManager);
+		(*itr)->NormalizeStyle(pStyleManager,pStyleScaling);
 }
 
 
@@ -349,6 +353,8 @@ bool CStatusView::AddItem(CStatusItem *pItem)
 
 	pItem->m_pStatus=this;
 
+	RegisterUIChild(pItem);
+
 	if (m_hwnd!=NULL) {
 		if (pItem->GetWidth()<0)
 			pItem->SetWidth(CalcItemPixelSize(pItem->GetDefaultWidth()));
@@ -383,18 +389,6 @@ LRESULT CStatusView::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 	case WM_CREATE:
 		{
 			InitializeUI();
-
-			CreateDrawFont(m_Font,&m_DrawFont);
-
-			m_TextHeight=CalcTextHeight(&m_FontHeight);
-			m_ItemHeight=CalcItemHeight();
-
-			for (auto itr=m_ItemList.begin();itr!=m_ItemList.end();++itr) {
-				CStatusItem *pItem=*itr;
-				if (pItem->GetWidth()<0)
-					pItem->SetWidth(CalcItemPixelSize(pItem->GetDefaultWidth()));
-				pItem->SetActualWidth(pItem->GetWidth());
-			}
 
 			LPCREATESTRUCT pcs=reinterpret_cast<LPCREATESTRUCT>(lParam);
 			RECT rc;
@@ -997,6 +991,13 @@ bool CStatusView::SetItemOrder(const int *pOrderList)
 }
 
 
+bool CStatusView::CreateItemPreviewFont(
+	const TVTest::Style::Font &Font,DrawUtil::CFont *pDrawFont) const
+{
+	return CreateDrawFont(Font,pDrawFont);
+}
+
+
 bool CStatusView::DrawItemPreview(CStatusItem *pItem,HDC hdc,const RECT &ItemRect,
 								  bool fHighlight,HFONT hfont) const
 {
@@ -1349,13 +1350,42 @@ int CStatusView::CalcItemPixelSize(const CStatusItem::SizeValue &Size) const
 {
 	switch (Size.Unit) {
 	case CStatusItem::SIZE_PIXEL:
-		return Size.Value;
+		return ::MulDiv(Size.Value,m_pStyleScaling->GetDPI(),96);
 
 	case CStatusItem::SIZE_EM:
 		return ::MulDiv(Size.Value,m_FontHeight,CStatusItem::EM_FACTOR);
 	}
 
 	return 0;
+}
+
+
+void CStatusView::ApplyStyle()
+{
+	if (m_hwnd==NULL)
+		return;
+
+	CreateDrawFont(m_Font,&m_DrawFont);
+
+	m_TextHeight=CalcTextHeight(&m_FontHeight);
+	m_ItemHeight=CalcItemHeight();
+
+	for (auto itr=m_ItemList.begin();itr!=m_ItemList.end();++itr) {
+		CStatusItem *pItem=*itr;
+		if (pItem->GetWidth()<0)
+			pItem->SetWidth(CalcItemPixelSize(pItem->GetDefaultWidth()));
+		pItem->SetActualWidth(pItem->GetWidth());
+	}
+}
+
+
+void CStatusView::RealizeStyle()
+{
+	if (m_hwnd!=NULL) {
+		if (m_pEventHandler!=NULL)
+			m_pEventHandler->OnStyleChanged();
+		AdjustSize();
+	}
 }
 
 
@@ -1371,15 +1401,18 @@ CStatusView::StatusViewStyle::StatusViewStyle()
 
 void CStatusView::StatusViewStyle::SetStyle(const TVTest::Style::CStyleManager *pStyleManager)
 {
+	*this=StatusViewStyle();
 	pStyleManager->Get(TEXT("status-bar.item.padding"),&ItemPadding);
 	pStyleManager->Get(TEXT("status-bar.item.text.extra-height"),&TextExtraHeight);
 	pStyleManager->Get(TEXT("status-bar.item.icon"),&IconSize);
 }
 
 
-void CStatusView::StatusViewStyle::NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager)
+void CStatusView::StatusViewStyle::NormalizeStyle(
+	const TVTest::Style::CStyleManager *pStyleManager,
+	const TVTest::Style::CStyleScaling *pStyleScaling)
 {
-	pStyleManager->ToPixels(&ItemPadding);
-	pStyleManager->ToPixels(&TextExtraHeight);
-	pStyleManager->ToPixels(&IconSize);
+	pStyleScaling->ToPixels(&ItemPadding);
+	pStyleScaling->ToPixels(&TextExtraHeight);
+	pStyleScaling->ToPixels(&IconSize);
 }

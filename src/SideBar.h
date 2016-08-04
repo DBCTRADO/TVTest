@@ -66,6 +66,7 @@ public:
 		virtual bool GetTooltipText(int Command,LPTSTR pszText,int MaxText) { return false; }
 		virtual bool DrawIcon(const DrawIconInfo *pInfo) { return false; }
 		virtual void OnBarWidthChanged(int BarWidth) {}
+		virtual void OnStyleChanged() {}
 		friend class CSideBar;
 	};
 
@@ -79,7 +80,9 @@ public:
 
 // CUIBase
 	void SetStyle(const TVTest::Style::CStyleManager *pStyleManager) override;
-	void NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager) override;
+	void NormalizeStyle(
+		const TVTest::Style::CStyleManager *pStyleManager,
+		const TVTest::Style::CStyleScaling *pStyleScaling) override;
 	void SetTheme(const TVTest::Theme::CThemeManager *pThemeManager) override;
 
 // CSideBar
@@ -118,7 +121,9 @@ protected:
 
 		SideBarStyle();
 		void SetStyle(const TVTest::Style::CStyleManager *pStyleManager);
-		void NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager);
+		void NormalizeStyle(
+			const TVTest::Style::CStyleManager *pStyleManager,
+			const TVTest::Style::CStyleScaling *pStyleScaling);
 	};
 
 	SideBarStyle m_Style;
@@ -147,6 +152,9 @@ protected:
 
 // CCustomWindow
 	LRESULT OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
+
+// CUIBase
+	void RealizeStyle() override;
 };
 
 

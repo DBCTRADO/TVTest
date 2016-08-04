@@ -61,6 +61,8 @@ CChannelDisplay::CChannelDisplay(CEpgProgramList *pEpgProgramList)
 	m_ClockStyle.Back.Border.Type=TVTest::Theme::BORDER_NONE;
 	m_ClockStyle.Fore.Fill.Type=TVTest::Theme::FILL_SOLID;
 	m_ClockStyle.Fore.Fill.Solid.Color.Set(255,255,255);
+
+	GetDefaultFont(&m_StyleFont);
 }
 
 
@@ -84,10 +86,12 @@ void CChannelDisplay::SetStyle(const TVTest::Style::CStyleManager *pStyleManager
 }
 
 
-void CChannelDisplay::NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager)
+void CChannelDisplay::NormalizeStyle(
+	const TVTest::Style::CStyleManager *pStyleManager,
+	const TVTest::Style::CStyleScaling *pStyleScaling)
 {
-	CDisplayView::NormalizeStyle(pStyleManager);
-	m_ChannelDisplayStyle.NormalizeStyle(pStyleManager);
+	CDisplayView::NormalizeStyle(pStyleManager,pStyleScaling);
+	m_ChannelDisplayStyle.NormalizeStyle(pStyleManager,pStyleScaling);
 }
 
 
@@ -256,13 +260,10 @@ bool CChannelDisplay::SetSelect(LPCTSTR pszDriverFileName,const CChannelInfo *pC
 
 bool CChannelDisplay::SetFont(const TVTest::Style::Font &Font,bool fAutoSize)
 {
-	if (!CreateDrawFont(Font,&m_Font))
-		return false;
+	m_StyleFont=Font;
 	m_fAutoFontSize=fAutoSize;
-	if (m_hwnd!=NULL) {
-		Layout();
-		Invalidate();
-	}
+	if (m_hwnd!=NULL)
+		RealizeStyle();
 	return true;
 }
 
@@ -329,9 +330,8 @@ void CChannelDisplay::Layout()
 	GetClientRect(&rc);
 
 	if (m_fAutoFontSize) {
-		LOGFONT lf;
-		m_Font.GetLogFont(&lf);
-		lf.lfHeight=GetDefaultFontSize(rc.right,rc.bottom);
+		LOGFONT lf=m_StyleFont.LogFont;
+		lf.lfHeight=-GetDefaultFontSize(rc.right,rc.bottom);
 		lf.lfWidth=0;
 		m_Font.Create(&lf);
 	}
@@ -943,8 +943,7 @@ LRESULT CChannelDisplay::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lPar
 	case WM_CREATE:
 		{
 			InitializeUI();
-			if (!m_Font.IsCreated())
-				CreateDefaultFont(&m_Font);
+
 			m_hwndTunerScroll=::CreateWindowEx(0,TEXT("SCROLLBAR"),TEXT(""),
 				WS_CHILD | SBS_VERT,0,0,0,0,hwnd,NULL,m_hinst,NULL);
 			m_hwndChannelScroll=::CreateWindowEx(0,TEXT("SCROLLBAR"),TEXT(""),
@@ -1196,6 +1195,24 @@ LRESULT CChannelDisplay::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lPar
 }
 
 
+void CChannelDisplay::ApplyStyle()
+{
+	if (m_hwnd!=NULL) {
+		if (!m_fAutoFontSize)
+			CreateDrawFont(m_StyleFont,&m_Font);
+	}
+}
+
+
+void CChannelDisplay::RealizeStyle()
+{
+	if (m_hwnd!=NULL) {
+		Layout();
+		Invalidate();
+	}
+}
+
+
 
 
 CChannelDisplay::CTuner::CTuner(const CDriverInfo *pDriverInfo)
@@ -1338,6 +1355,7 @@ CChannelDisplay::ChannelDisplayStyle::ChannelDisplayStyle()
 
 void CChannelDisplay::ChannelDisplayStyle::SetStyle(const TVTest::Style::CStyleManager *pStyleManager)
 {
+	*this=ChannelDisplayStyle();
 	pStyleManager->Get(TEXT("channel-display.tuner.padding"),&TunerItemPadding);
 	pStyleManager->Get(TEXT("channel-display.tuner.icon"),&TunerIconSize);
 	pStyleManager->Get(TEXT("channel-display.channel.padding"),&ChannelItemPadding);
@@ -1347,12 +1365,14 @@ void CChannelDisplay::ChannelDisplayStyle::SetStyle(const TVTest::Style::CStyleM
 }
 
 
-void CChannelDisplay::ChannelDisplayStyle::NormalizeStyle(const TVTest::Style::CStyleManager *pStyleManager)
+void CChannelDisplay::ChannelDisplayStyle::NormalizeStyle(
+	const TVTest::Style::CStyleManager *pStyleManager,
+	const TVTest::Style::CStyleScaling *pStyleScaling)
 {
-	pStyleManager->ToPixels(&TunerItemPadding);
-	pStyleManager->ToPixels(&TunerIconSize);
-	pStyleManager->ToPixels(&ChannelItemPadding);
-	pStyleManager->ToPixels(&ChannelEventMargin);
-	pStyleManager->ToPixels(&ClockPadding);
-	pStyleManager->ToPixels(&ClockMargin);
+	pStyleScaling->ToPixels(&TunerItemPadding);
+	pStyleScaling->ToPixels(&TunerIconSize);
+	pStyleScaling->ToPixels(&ChannelItemPadding);
+	pStyleScaling->ToPixels(&ChannelEventMargin);
+	pStyleScaling->ToPixels(&ClockPadding);
+	pStyleScaling->ToPixels(&ClockMargin);
 }
