@@ -20,8 +20,6 @@
 #define IDC_CHANNELLIST	101
 #define IDC_EVENTLIST	102
 
-// 項目の余白
-#define ITEM_MARGIN 2
 // 番組あたりの行数
 #define LINES_PER_EVENT 3
 
@@ -31,7 +29,7 @@ class CMiniProgramGuide : public TVTest::CTVTestPlugin
 {
 	struct Position {
 		int Left,Top,Width,Height;
-		Position() : Left(0), Top(0), Width(200), Height(400) {}
+		Position() : Left(0), Top(0), Width(0), Height(0) {}
 	};
 
 	HWND m_hwnd;
@@ -42,6 +40,11 @@ class CMiniProgramGuide : public TVTest::CTVTestPlugin
 	COLORREF m_crBackColor;
 	COLORREF m_crTextColor;
 	HBRUSH m_hbrBackground;
+	HFONT m_hfont;
+	int m_DPI;
+	int m_FontHeight;
+	int m_ItemMargin;
+	int m_ItemHeight;
 	TVTest::EpgEventList m_EventList;
 
 	bool Enable(bool fEnable);
@@ -49,6 +52,8 @@ class CMiniProgramGuide : public TVTest::CTVTestPlugin
 	void SetChannelList();
 	void SetEventList();
 	void GetColors();
+	void CalcMetrics();
+	void SetControlsFont();
 
 	static LRESULT CALLBACK EventCallback(UINT Event,LPARAM lParam1,LPARAM lParam2,void *pClientData);
 	static CMiniProgramGuide *GetThis(HWND hwnd);
@@ -68,6 +73,7 @@ CMiniProgramGuide::CMiniProgramGuide()
 	, m_hwndChannelList(NULL)
 	, m_hwndEventList(NULL)
 	, m_hbrBackground(NULL)
+	, m_hfont(NULL)
 {
 	m_EventList.NumEvents = 0;
 	m_EventList.EventList = NULL;
@@ -175,14 +181,44 @@ bool CMiniProgramGuide::Enable(bool fEnable)
 
 		if (m_hwnd == NULL) {
 			// ウィンドウの作成
-			if (::CreateWindowEx(WS_EX_TOOLWINDOW,
+			const DWORD Style = WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME;
+			const DWORD ExStyle = WS_EX_TOOLWINDOW;
+			if (::CreateWindowEx(ExStyle,
 								 MINI_PROGRAM_GUIDE_WINDOW_CLASS,
 								 TEXT("ミニ番組表"),
-								 WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME,
-								 m_WindowPosition.Left, m_WindowPosition.Top,
-								 m_WindowPosition.Width, m_WindowPosition.Height,
+								 Style,
+								 0, 0, 320, 320,
 								 m_pApp->GetAppWindow(), NULL, g_hinstDLL, this) == NULL)
 				return false;
+
+			// デフォルトサイズの計算
+			if (m_WindowPosition.Width <= 0 || m_WindowPosition.Height <= 0) {
+				RECT rcList;
+				::GetWindowRect(m_hwndEventList, &rcList);
+				::MapWindowPoints(NULL, m_hwnd, reinterpret_cast<POINT*>(&rcList), 2);
+				RECT rc;
+				rc.left = 0;
+				rc.top = 0;
+				rc.right = (m_FontHeight * 15) + ::GetSystemMetrics(SM_CXVSCROLL);
+				rc.bottom = rcList.top + (m_ItemHeight * 5);
+				::AdjustWindowRectEx(&rc, Style, FALSE, ExStyle);
+				if (m_WindowPosition.Width <= 0)
+					m_WindowPosition.Width = rc.right - rc.left;
+				if (m_WindowPosition.Height <= 0)
+					m_WindowPosition.Height = rc.bottom - rc.top;
+			}
+
+			// ウィンドウ位置の復元
+			WINDOWPLACEMENT wp;
+			wp.length = sizeof(WINDOWPLACEMENT);
+			::GetWindowPlacement(m_hwnd, &wp);
+			wp.flags = 0;
+			wp.showCmd = SW_SHOWNOACTIVATE;
+			wp.rcNormalPosition.left = m_WindowPosition.Left;
+			wp.rcNormalPosition.top = m_WindowPosition.Top;
+			wp.rcNormalPosition.right = m_WindowPosition.Left + m_WindowPosition.Width;
+			wp.rcNormalPosition.bottom = m_WindowPosition.Top + m_WindowPosition.Height;
+			::SetWindowPlacement(m_hwnd, &wp);
 		}
 
 		::ShowWindow(m_hwnd, SW_SHOWNORMAL);
@@ -281,6 +317,37 @@ void CMiniProgramGuide::GetColors()
 }
 
 
+// 寸法を計算する
+void CMiniProgramGuide::CalcMetrics()
+{
+	LOGFONT lf;
+	m_pApp->GetFont(L"PanelFont", &lf, m_DPI);
+	if (m_hfont != NULL)
+		::DeleteObject(m_hfont);
+	m_hfont = ::CreateFontIndirect(&lf);
+
+	HDC hdc = ::GetDC(m_hwnd);
+	HGDIOBJ hOldFont = ::SelectObject(hdc, m_hfont);
+	TEXTMETRIC tm;
+	::GetTextMetrics(hdc, &tm);
+	::SelectObject(hdc, hOldFont);
+	::ReleaseDC(m_hwnd, hdc);
+
+	m_FontHeight = tm.tmHeight;
+	m_ItemMargin = ::MulDiv(2, m_DPI, 96);
+	m_ItemHeight = ((m_FontHeight + tm.tmExternalLeading) * LINES_PER_EVENT) + (m_ItemMargin * 2);
+}
+
+
+void CMiniProgramGuide::SetControlsFont()
+{
+	::SendMessage(m_hwndTunerList, WM_SETFONT, reinterpret_cast<WPARAM>(m_hfont), 0);
+	::SendMessage(m_hwndChannelList, WM_SETFONT, reinterpret_cast<WPARAM>(m_hfont), 0);
+	::SendMessage(m_hwndEventList, WM_SETFONT, reinterpret_cast<WPARAM>(m_hfont), 0);
+	::SendMessage(m_hwndEventList, LB_SETITEMHEIGHT, 0, m_ItemHeight);
+}
+
+
 // ウィンドウハンドルからthisを取得する
 CMiniProgramGuide *CMiniProgramGuide::GetThis(HWND hwnd)
 {
@@ -300,33 +367,28 @@ LRESULT CALLBACK CMiniProgramGuide::WndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LP
 			::SetWindowLongPtr(hwnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(pThis));
 			pThis->m_hwnd = hwnd;
 
-			HFONT hFont = static_cast<HFONT>(::GetStockObject(DEFAULT_GUI_FONT));
+			pThis->m_DPI = pThis->m_pApp->GetDPIFromWindow(hwnd);
+			if (pThis->m_DPI == 0)
+				pThis->m_DPI = 96;
+
+			pThis->CalcMetrics();
 
 			pThis->m_hwndTunerList = ::CreateWindowEx(0, TEXT("COMBOBOX"), NULL,
 				WS_CHILD | WS_VISIBLE | WS_VSCROLL | CBS_DROPDOWNLIST,
-				0, 0, 0, 200, hwnd, reinterpret_cast<HMENU>(IDC_TUNERLIST), g_hinstDLL, NULL);
-			::SendMessage(pThis->m_hwndTunerList, WM_SETFONT, reinterpret_cast<WPARAM>(hFont), 0);
+				0, 0, 0, pThis->m_FontHeight * 20,
+				hwnd, reinterpret_cast<HMENU>(IDC_TUNERLIST), g_hinstDLL, NULL);
 
 			pThis->m_hwndChannelList = ::CreateWindowEx(0, TEXT("COMBOBOX"), NULL,
 				WS_CHILD | WS_VISIBLE | WS_VSCROLL | CBS_DROPDOWNLIST,
-				0, 0, 0, 200, hwnd, reinterpret_cast<HMENU>(IDC_CHANNELLIST), g_hinstDLL, NULL);
-			::SendMessage(pThis->m_hwndChannelList, WM_SETFONT, reinterpret_cast<WPARAM>(hFont), 0);
+				0, 0, 0, pThis->m_FontHeight * 20,
+				hwnd, reinterpret_cast<HMENU>(IDC_CHANNELLIST), g_hinstDLL, NULL);
 
 			pThis->m_hwndEventList = ::CreateWindowEx(0, TEXT("LISTBOX"), NULL,
 				WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_HSCROLL | LBS_OWNERDRAWFIXED | LBS_NOINTEGRALHEIGHT,
-				0, 0, 0, 0, hwnd, reinterpret_cast<HMENU>(IDC_EVENTLIST), g_hinstDLL, NULL);
-			::SendMessage(pThis->m_hwndEventList, WM_SETFONT, reinterpret_cast<WPARAM>(hFont), 0);
+				0, 0, 0, 0,
+				hwnd, reinterpret_cast<HMENU>(IDC_EVENTLIST), g_hinstDLL, NULL);
 
-			// アイテムの大きさを設定する
-			HDC hdc = ::GetDC(pThis->m_hwndEventList);
-			HGDIOBJ hOldFont = ::SelectObject(hdc, hFont);
-			TEXTMETRIC tm;
-			::GetTextMetrics(hdc, &tm);
-			::SelectObject(hdc, hOldFont);
-			::ReleaseDC(pThis->m_hwndEventList, hdc);
-			::SendMessage(pThis->m_hwndEventList, LB_SETITEMHEIGHT, 0,
-						  ITEM_MARGIN * 2 + tm.tmHeight * LINES_PER_EVENT);
-
+			pThis->SetControlsFont();
 			pThis->GetColors();
 
 			pThis->SetTunerList();
@@ -394,7 +456,7 @@ LRESULT CALLBACK CMiniProgramGuide::WndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LP
 			::DeleteObject(hbr);
 
 			RECT rc = pdis->rcItem;
-			::InflateRect(&rc, -ITEM_MARGIN, -ITEM_MARGIN);
+			::InflateRect(&rc, -pThis->m_ItemMargin, -pThis->m_ItemMargin);
 
 			TCHAR szText[256];
 			::wsprintf(szText, TEXT("%d/%02d/%02d %02d:%02d %s"),
@@ -453,6 +515,29 @@ LRESULT CALLBACK CMiniProgramGuide::WndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LP
 		}
 		return 0;
 
+#ifndef WM_DPICHANGED
+#define WM_DPICHANGED 0x02E0
+#endif
+	case WM_DPICHANGED:
+		// DPI が変わった
+		{
+			CMiniProgramGuide *pThis = GetThis(hwnd);
+			const RECT *prc = reinterpret_cast<const RECT*>(lParam);
+
+			pThis->m_DPI = HIWORD(wParam);
+
+			pThis->CalcMetrics();
+			pThis->SetControlsFont();
+
+			::SetWindowPos(
+				hwnd, NULL,
+				prc->left, prc->top,
+				prc->right - prc->left, prc->bottom - prc->top,
+				SWP_NOZORDER | SWP_NOACTIVATE);
+			::InvalidateRect(pThis->m_hwndEventList, NULL, TRUE);
+		}
+		break;
+
 	case WM_NCDESTROY:
 		{
 			CMiniProgramGuide *pThis = GetThis(hwnd);
@@ -461,12 +546,14 @@ LRESULT CALLBACK CMiniProgramGuide::WndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LP
 				pThis->m_pApp->FreeEpgEventList(&pThis->m_EventList);
 
 			// ウィンドウ位置の記憶
-			RECT rc;
-			::GetWindowRect(hwnd, &rc);
-			pThis->m_WindowPosition.Left = rc.left;
-			pThis->m_WindowPosition.Top = rc.top;
-			pThis->m_WindowPosition.Width = rc.right - rc.left;
-			pThis->m_WindowPosition.Height = rc.bottom - rc.top;
+			WINDOWPLACEMENT wp;
+			wp.length = sizeof (WINDOWPLACEMENT);
+			if (::GetWindowPlacement(hwnd, &wp)) {
+				pThis->m_WindowPosition.Left = wp.rcNormalPosition.left;
+				pThis->m_WindowPosition.Top = wp.rcNormalPosition.top;
+				pThis->m_WindowPosition.Width = wp.rcNormalPosition.right - wp.rcNormalPosition.left;
+				pThis->m_WindowPosition.Height = wp.rcNormalPosition.bottom - wp.rcNormalPosition.top;
+			}
 
 			pThis->m_hwnd = NULL;
 			pThis->m_hwndTunerList = NULL;
@@ -476,6 +563,10 @@ LRESULT CALLBACK CMiniProgramGuide::WndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LP
 			if (pThis->m_hbrBackground != NULL) {
 				::DeleteObject(pThis->m_hbrBackground);
 				pThis->m_hbrBackground = NULL;
+			}
+			if (pThis->m_hfont != NULL) {
+				::DeleteObject(pThis->m_hfont);
+				pThis->m_hfont = NULL;
 			}
 		}
 		return 0;

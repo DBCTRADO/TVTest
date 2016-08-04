@@ -78,6 +78,8 @@ class CSleepTimer : public TVTest::CTVTestPlugin
 		TIMER_ID_QUERY
 	};
 
+	static const int DEFAULT_POS = INT_MIN;
+
 	bool m_fInitialized;				// 初期化済みか?
 	TCHAR m_szIniFileName[MAX_PATH];	// INIファイルのパス
 	SleepCondition m_Condition;			// スリープする条件
@@ -91,6 +93,7 @@ class CSleepTimer : public TVTest::CTVTestPlugin
 	bool m_fConfirm;					// 確認を取る
 	int m_ConfirmTimeout;				// 確認のタイムアウト時間(秒単位)
 	bool m_fShowSettings;				// プラグイン有効時に設定表示
+	POINT m_SettingsDialogPos;			// 設定ダイアログの位置
 	HWND m_hwnd;						// ウィンドウハンドル
 	bool m_fEnabled;					// プラグインが有効か?
 	int m_ConfirmTimerCount;			// 確認のタイマー
@@ -103,12 +106,13 @@ class CSleepTimer : public TVTest::CTVTestPlugin
 	bool DoSleep();
 	bool BeginTimer();
 	void EndTimer();
+	bool ShowSettingsDialog(HWND hwndOwner);
 
 	static LRESULT CALLBACK EventCallback(UINT Event, LPARAM lParam1, LPARAM lParam2, void *pClientData);
 	static CSleepTimer *GetThis(HWND hwnd);
 	static LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-	static INT_PTR CALLBACK SettingsDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
-	static INT_PTR CALLBACK ConfirmDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
+	static INT_PTR CALLBACK SettingsDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam, void *pClientData);
+	static INT_PTR CALLBACK ConfirmDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam, void *pClientData);
 
 public:
 	CSleepTimer();
@@ -142,6 +146,8 @@ CSleepTimer::CSleepTimer()
 	, m_hwnd(nullptr)
 	, m_fEnabled(false)
 {
+	m_SettingsDialogPos.x = DEFAULT_POS;
+	m_SettingsDialogPos.y = DEFAULT_POS;
 }
 
 
@@ -199,6 +205,10 @@ bool CSleepTimer::InitializePlugin()
 		::GetPrivateProfileInt(TEXT("Settings"), TEXT("ConfirmTimeout"), m_ConfirmTimeout, m_szIniFileName);
 	m_fShowSettings =
 		::GetPrivateProfileInt(TEXT("Settings"), TEXT("ShowSettings"), m_fShowSettings, m_szIniFileName) != 0;
+	m_SettingsDialogPos.x = (int)
+		::GetPrivateProfileInt(TEXT("Settings"), TEXT("SettingsDialogX"), m_SettingsDialogPos.x, m_szIniFileName);
+	m_SettingsDialogPos.y = (int)
+		::GetPrivateProfileInt(TEXT("Settings"), TEXT("SettingsDialogY"), m_SettingsDialogPos.y, m_szIniFileName);
 
 	// ウィンドウクラスの登録
 	WNDCLASS wc;
@@ -253,6 +263,10 @@ bool CSleepTimer::Finalize()
 		::WritePrivateProfileString(TEXT("Settings"), TEXT("Confirm"), IntString(m_fConfirm), m_szIniFileName);
 		::WritePrivateProfileString(TEXT("Settings"), TEXT("ConfirmTimeout"), IntString(m_ConfirmTimeout), m_szIniFileName);
 		::WritePrivateProfileString(TEXT("Settings"), TEXT("ShowSettings"), IntString(m_fShowSettings), m_szIniFileName);
+		if (m_SettingsDialogPos.x != DEFAULT_POS)
+			::WritePrivateProfileString(TEXT("Settings"), TEXT("SettingsDialogX"), IntString(m_SettingsDialogPos.x), m_szIniFileName);
+		if (m_SettingsDialogPos.y != DEFAULT_POS)
+			::WritePrivateProfileString(TEXT("Settings"), TEXT("SettingsDialogY"), IntString(m_SettingsDialogPos.y), m_szIniFileName);
 	}
 
 	return true;
@@ -265,9 +279,7 @@ bool CSleepTimer::OnEnablePlugin(bool fEnable)
 	InitializePlugin();
 
 	if (fEnable && (m_fShowSettings || m_Condition == CONDITION_DATETIME)) {
-		if (::DialogBoxParam(g_hinstDLL, MAKEINTRESOURCE(IDD_SETTINGS),
-							 m_pApp->GetAppWindow(), SettingsDlgProc,
-							 reinterpret_cast<LPARAM>(this)) != IDOK)
+		if (!ShowSettingsDialog(m_pApp->GetAppWindow()))
 			return false;
 	}
 
@@ -292,9 +304,16 @@ bool CSleepTimer::BeginSleep()
 
 	if (m_fConfirm) {
 		// 確認ダイアログを表示
-		if (::DialogBoxParam(g_hinstDLL, MAKEINTRESOURCE(IDD_CONFIRM),
-							 m_pApp->GetAppWindow(), ConfirmDlgProc,
-							 reinterpret_cast<LPARAM>(this)) != IDOK) {
+		TVTest::ShowDialogInfo Info;
+
+		Info.Flags = 0;
+		Info.hinst = g_hinstDLL;
+		Info.pszTemplate = MAKEINTRESOURCE(IDD_CONFIRM);
+		Info.pMessageFunc = ConfirmDlgProc;
+		Info.pClientData = this;
+		Info.hwndOwner = m_pApp->GetAppWindow();
+
+		if (m_pApp->ShowDialog(&Info) != IDOK) {
 			m_pApp->AddLog(L"ユーザーによってスリープがキャンセルされました。");
 			return false;
 		}
@@ -418,6 +437,26 @@ void CSleepTimer::EndTimer()
 }
 
 
+// 設定ダイアログを表示
+bool CSleepTimer::ShowSettingsDialog(HWND hwndOwner)
+{
+	TVTest::ShowDialogInfo Info;
+
+	Info.Flags = 0;
+	Info.hinst = g_hinstDLL;
+	Info.pszTemplate = MAKEINTRESOURCE(IDD_SETTINGS);
+	Info.pMessageFunc = SettingsDlgProc;
+	Info.pClientData = this;
+	Info.hwndOwner = hwndOwner;
+	if (m_SettingsDialogPos.x != DEFAULT_POS && m_SettingsDialogPos.y != DEFAULT_POS) {
+		Info.Flags |= TVTest::SHOW_DIALOG_FLAG_POSITION;
+		Info.Position = m_SettingsDialogPos;
+	}
+
+	return m_pApp->ShowDialog(&Info) == IDOK;
+}
+
+
 // イベントコールバック関数
 // 何かイベントが起きると呼ばれる
 LRESULT CALLBACK CSleepTimer::EventCallback(UINT Event, LPARAM lParam1, LPARAM lParam2, void *pClientData)
@@ -432,9 +471,7 @@ LRESULT CALLBACK CSleepTimer::EventCallback(UINT Event, LPARAM lParam1, LPARAM l
 	case TVTest::EVENT_PLUGINSETTINGS:
 		// プラグインの設定を行う
 		pThis->InitializePlugin();
-		return ::DialogBoxParam(g_hinstDLL, MAKEINTRESOURCE(IDD_SETTINGS),
-								reinterpret_cast<HWND>(lParam1), SettingsDlgProc,
-								reinterpret_cast<LPARAM>(pThis)) == IDOK;
+		return pThis->ShowSettingsDialog(reinterpret_cast<HWND>(lParam1));
 	}
 
 	return 0;
@@ -541,16 +578,12 @@ static void EnableDlgItems(HWND hDlg, int FirstID, int LastID, BOOL fEnable)
 }
 
 // 設定ダイアログプロシージャ
-INT_PTR CALLBACK CSleepTimer::SettingsDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+INT_PTR CALLBACK CSleepTimer::SettingsDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam, void *pClientData)
 {
-	static const LPCTSTR PROP_NAME = TEXT("926EDC25-D769-4166-9DC9-8BB93F958493");
-
 	switch (uMsg) {
 	case WM_INITDIALOG:
 		{
-			CSleepTimer *pThis = reinterpret_cast<CSleepTimer*>(lParam);
-
-			::SetProp(hDlg, PROP_NAME, pThis);
+			CSleepTimer *pThis = static_cast<CSleepTimer*>(pClientData);
 
 			::CheckRadioButton(
 				hDlg, IDC_SETTINGS_CONDITION_DURATION, IDC_SETTINGS_CONDITION_EVENTEND,
@@ -614,7 +647,7 @@ INT_PTR CALLBACK CSleepTimer::SettingsDlgProc(HWND hDlg, UINT uMsg, WPARAM wPara
 
 		case IDOK:
 			{
-				CSleepTimer *pThis = static_cast<CSleepTimer*>(::GetProp(hDlg, PROP_NAME));
+				CSleepTimer *pThis = static_cast<CSleepTimer*>(pClientData);
 				SleepCondition Condition;
 
 				if (::IsDlgButtonChecked(hDlg, IDC_SETTINGS_CONDITION_DURATION)) {
@@ -685,13 +718,18 @@ INT_PTR CALLBACK CSleepTimer::SettingsDlgProc(HWND hDlg, UINT uMsg, WPARAM wPara
 					pThis->BeginTimer();
 			}
 		case IDCANCEL:
-			::EndDialog(hDlg, LOWORD(wParam));
+			{
+				CSleepTimer *pThis = static_cast<CSleepTimer*>(pClientData);
+				RECT rc;
+
+				::GetWindowRect(hDlg, &rc);
+				pThis->m_SettingsDialogPos.x = rc.left;
+				pThis->m_SettingsDialogPos.y = rc.top;
+
+				::EndDialog(hDlg, LOWORD(wParam));
+			}
 			return TRUE;
 		}
-		return TRUE;
-
-	case WM_NCDESTROY:
-		::RemoveProp(hDlg, PROP_NAME);
 		return TRUE;
 	}
 
@@ -700,16 +738,12 @@ INT_PTR CALLBACK CSleepTimer::SettingsDlgProc(HWND hDlg, UINT uMsg, WPARAM wPara
 
 
 // 確認ダイアログプロシージャ
-INT_PTR CALLBACK CSleepTimer::ConfirmDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+INT_PTR CALLBACK CSleepTimer::ConfirmDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam, void *pClientData)
 {
-	static const LPCTSTR PROP_NAME = TEXT("E3A245D3-A7D9-499C-95D5-97DF7A666C77");
-
 	switch (uMsg) {
 	case WM_INITDIALOG:
 		{
-			CSleepTimer *pThis = reinterpret_cast<CSleepTimer*>(lParam);
-
-			::SetProp(hDlg, PROP_NAME, pThis);
+			CSleepTimer *pThis = static_cast<CSleepTimer*>(pClientData);
 
 			TCHAR szText[64];
 			::wsprintf(szText, TEXT("%sしますか？"), m_ModeTextList[pThis->m_Mode]);
@@ -727,7 +761,7 @@ INT_PTR CALLBACK CSleepTimer::ConfirmDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam
 
 	case WM_TIMER:
 		{
-			CSleepTimer *pThis = static_cast<CSleepTimer*>(::GetProp(hDlg, PROP_NAME));
+			CSleepTimer *pThis = static_cast<CSleepTimer*>(pClientData);
 
 			pThis->m_ConfirmTimerCount++;
 			if (pThis->m_ConfirmTimerCount < pThis->m_ConfirmTimeout) {
@@ -745,10 +779,6 @@ INT_PTR CALLBACK CSleepTimer::ConfirmDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam
 			::EndDialog(hDlg, LOWORD(wParam));
 			return TRUE;
 		}
-		return TRUE;
-
-	case WM_NCDESTROY:
-		::RemoveProp(hDlg, PROP_NAME);
 		return TRUE;
 	}
 

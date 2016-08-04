@@ -55,6 +55,7 @@ private:
 	std::deque<SignalInfo> m_List;
 	HWND m_hwnd;
 	Position m_WindowPosition;
+	int m_DPI;
 	Gdiplus::Color m_BackColor;
 	Gdiplus::Color m_SignalLevelColor;
 	Gdiplus::Color m_BitRateColor;
@@ -78,6 +79,7 @@ private:
 	void OnPaint(HWND hwnd);
 	void FreeResources();
 	void AdjustSignalLevelScale();
+	void CreateDPIDependingResources();
 
 	static LRESULT CALLBACK EventCallback(UINT Event, LPARAM lParam1, LPARAM lParam2, void *pClientData);
 	static CSignalGraph *GetThis(HWND hwnd);
@@ -217,14 +219,18 @@ bool CSignalGraph::EnablePlugin(bool fEnable)
 			static const DWORD Style = WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME;
 			static const DWORD ExStyle = WS_EX_TOOLWINDOW;
 
+			// プライマリモニタの DPI を取得
+			m_DPI = m_pApp->GetDPIFromPoint(0, 0);
+			if (m_DPI == 0)
+				m_DPI = 96;
+
 			// デフォルトのウィンドウサイズを取得
 			if (m_WindowPosition.Width <= 0 || m_WindowPosition.Height <= 0) {
 				int Width = GRAPH_WIDTH, Height = GRAPH_HEIGHT;
 				// DPI設定に合わせてスケーリング
-				int DPI;
-				if (m_pApp->GetSetting(L"DPI", &DPI) && DPI != 96) {
-					Width = ::MulDiv(Width, DPI, 96);
-					Height = ::MulDiv(Height, DPI, 96);
+				if (m_DPI != 96) {
+					Width = ::MulDiv(Width, m_DPI, 96);
+					Height = ::MulDiv(Height, m_DPI, 96);
 				}
 				RECT rc = {0, 0, Width, Height};
 				::AdjustWindowRectEx(&rc, Style, FALSE, ExStyle);
@@ -241,6 +247,7 @@ bool CSignalGraph::EnablePlugin(bool fEnable)
 					m_pApp->GetAppWindow(), nullptr, g_hinstDLL, this) == nullptr)
 				return false;
 
+			// ウィンドウ位置の復元
 			WINDOWPLACEMENT wp;
 			wp.length = sizeof(WINDOWPLACEMENT);
 			::GetWindowPlacement(m_hwnd, &wp);
@@ -460,6 +467,16 @@ void CSignalGraph::AdjustSignalLevelScale()
 }
 
 
+// DPI に依存したリソースを作成する
+void CSignalGraph::CreateDPIDependingResources()
+{
+	// フォントを取得
+	m_pApp->GetFont(L"StatusBarFont", &m_Font, m_DPI);
+
+	SafeDelete(m_pFont);
+}
+
+
 // イベントコールバック関数
 // 何かイベントが起きると呼ばれる
 LRESULT CALLBACK CSignalGraph::EventCallback(UINT Event, LPARAM lParam1, LPARAM lParam2, void *pClientData)
@@ -503,17 +520,7 @@ LRESULT CALLBACK CSignalGraph::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPAR
 			::SetWindowLongPtr(hwnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(pThis));
 			pThis->m_hwnd = hwnd;
 
-			// フォントを取得
-			if (!pThis->m_pApp->GetSetting(L"StatusBarFont", &pThis->m_Font)) {
-				NONCLIENTMETRICS ncm;
-#if WINVER >= 0x0600
-				ncm.cbSize = offsetof(NONCLIENTMETRICS, iPaddedBorderWidth);
-#else
-				ncm.cbSize = sizeof(NONCLIENTMETRICS);
-#endif
-				::SystemParametersInfo(SPI_GETNONCLIENTMETRICS, ncm.cbSize, &ncm, 0);
-				pThis->m_Font = ncm.lfStatusFont;
-			}
+			pThis->CreateDPIDependingResources();
 
 			pThis->m_ActualSignalLevelScale = pThis->m_SignalLevelScale;
 
@@ -560,6 +567,28 @@ LRESULT CALLBACK CSignalGraph::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPAR
 
 			pThis->m_pApp->EnablePlugin(false);
 			return TRUE;
+		}
+		break;
+
+#ifndef WM_DPICHANGED
+#define WM_DPICHANGED 0x02E0
+#endif
+	case WM_DPICHANGED:
+		// DPI が変わった
+		{
+			CSignalGraph *pThis = GetThis(hwnd);
+			const RECT *prc = reinterpret_cast<const RECT*>(lParam);
+
+			pThis->m_DPI = HIWORD(wParam);
+
+			pThis->CreateDPIDependingResources();
+
+			::SetWindowPos(
+				hwnd, nullptr,
+				prc->left, prc->top,
+				prc->right - prc->left, prc->bottom - prc->top,
+				SWP_NOZORDER | SWP_NOACTIVATE);
+			::InvalidateRect(hwnd, nullptr, FALSE);
 		}
 		break;
 

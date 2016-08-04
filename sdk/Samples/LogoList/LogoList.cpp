@@ -15,9 +15,6 @@
 // ウィンドウクラス名
 #define LOGO_LIST_WINDOW_CLASS TEXT("TV Logo List Window")
 
-#define ITEM_MARGIN	4	// アイテムの余白の大きさ
-#define LOGO_MARGIN	4	// ロゴの間の余白の大きさ
-
 // 更新用タイマーの識別子
 #define TIMER_UPDATELOGO	1
 
@@ -46,7 +43,14 @@ class CLogoList : public TVTest::CTVTestPlugin
 	Position m_WindowPosition;
 	COLORREF m_crBackColor;
 	COLORREF m_crTextColor;
+	int m_DPI;
+	int m_ItemMargin;
+	int m_LogoMargin;
 	int m_ServiceNameWidth;
+	int m_ItemWidth;
+	int m_ItemHeight;
+	HFONT m_hfont;
+	HBRUSH m_hbrBack;
 
 	class CServiceInfo {
 	public:
@@ -64,6 +68,7 @@ class CLogoList : public TVTest::CTVTestPlugin
 	bool UpdateLogo();
 	void ClearServiceList();
 	void GetColors();
+	void CalcMetrics();
 
 	static LRESULT CALLBACK EventCallback(UINT Event,LPARAM lParam1,LPARAM lParam2,void *pClientData);
 	static CLogoList *GetThis(HWND hwnd);
@@ -80,6 +85,8 @@ public:
 CLogoList::CLogoList()
 	: m_hwnd(NULL)
 	, m_hwndList(NULL)
+	, m_hfont(NULL)
+	, m_hbrBack(NULL)
 {
 }
 
@@ -180,22 +187,35 @@ bool CLogoList::Enable(bool fEnable)
 			const DWORD ExStyle = WS_EX_TOOLWINDOW;
 			if (::CreateWindowEx(ExStyle, LOGO_LIST_WINDOW_CLASS,
 								 TEXT("局ロゴの一覧"), Style,
-								 m_WindowPosition.Left, m_WindowPosition.Top,
-								 m_WindowPosition.Width, m_WindowPosition.Height,
+								 0, 0, 320, 320,
 								 m_pApp->GetAppWindow(), NULL, g_hinstDLL, this) == NULL)
 				return false;
 
-			// 初期サイズの設定
-			if (m_WindowPosition.Width == 0) {
+			// デフォルトサイズの計算
+			if (m_WindowPosition.Width <= 0 || m_WindowPosition.Height <= 0) {
 				RECT rc;
-				::SetRect(&rc, 0, 0,
-						  (LONG)::SendMessage(m_hwndList, LB_GETHORIZONTALEXTENT, 0, 0) + ::GetSystemMetrics(SM_CXVSCROLL),
-						  (LONG)::SendMessage(m_hwndList, LB_GETITEMHEIGHT, 0, 0) * 8);
+				rc.left = 0;
+				rc.top = 0;
+				rc.right = m_ItemWidth + ::GetSystemMetrics(SM_CXVSCROLL);
+				rc.bottom = m_ItemHeight * 8;
 				::AdjustWindowRectEx(&rc, Style, FALSE, ExStyle);
-				::SetWindowPos(m_hwnd, NULL, 0, 0,
-							   rc.right - rc.left, rc.bottom - rc.top,
-							   SWP_NOMOVE | SWP_NOZORDER);
+				if (m_WindowPosition.Width <= 0)
+					m_WindowPosition.Width = rc.right - rc.left;
+				if (m_WindowPosition.Height <= 0)
+					m_WindowPosition.Height = rc.bottom - rc.top;
 			}
+
+			// ウィンドウ位置の復元
+			WINDOWPLACEMENT wp;
+			wp.length = sizeof(WINDOWPLACEMENT);
+			::GetWindowPlacement(m_hwnd, &wp);
+			wp.flags = 0;
+			wp.showCmd = SW_SHOWNOACTIVATE;
+			wp.rcNormalPosition.left = m_WindowPosition.Left;
+			wp.rcNormalPosition.top = m_WindowPosition.Top;
+			wp.rcNormalPosition.right = m_WindowPosition.Left + m_WindowPosition.Width;
+			wp.rcNormalPosition.bottom = m_WindowPosition.Top + m_WindowPosition.Height;
+			::SetWindowPlacement(m_hwnd, &wp);
 		}
 
 		::ShowWindow(m_hwnd, SW_SHOWNORMAL);
@@ -291,6 +311,38 @@ void CLogoList::GetColors()
 {
 	m_crBackColor = m_pApp->GetColor(L"PanelBack");
 	m_crTextColor = m_pApp->GetColor(L"PanelText");
+
+	if (m_hbrBack != NULL)
+		::DeleteObject(m_hbrBack);
+	m_hbrBack = ::CreateSolidBrush(m_crBackColor);
+}
+
+
+// 寸法を計算する
+void CLogoList::CalcMetrics()
+{
+	LOGFONT lf;
+	m_pApp->GetFont(L"PanelFont", &lf, m_DPI);
+	if (m_hfont != NULL)
+		::DeleteObject(m_hfont);
+	m_hfont = ::CreateFontIndirect(&lf);
+
+	HDC hdc = ::GetDC(m_hwnd);
+	HGDIOBJ hOldFont = ::SelectObject(hdc, m_hfont);
+	TEXTMETRIC tm;
+	::GetTextMetrics(hdc, &tm);
+	::SelectObject(hdc, hOldFont);
+	::ReleaseDC(m_hwnd, hdc);
+
+	m_ItemMargin = ::MulDiv(2, m_DPI, 96);
+	m_LogoMargin = ::MulDiv(4, m_DPI, 96);
+	m_ServiceNameWidth = tm.tmAveCharWidth * 20;
+
+	int LogoWidth = 0;
+	for (int i = 0; i < 6; i++)
+		LogoWidth += LogoSizeList[i].Width;
+	m_ItemWidth = m_ServiceNameWidth + (m_ItemMargin * 2) + (m_LogoMargin * 6) + LogoWidth;
+	m_ItemHeight = max(36, tm.tmHeight) + (m_ItemMargin * 2);
 }
 
 
@@ -313,6 +365,12 @@ LRESULT CALLBACK CLogoList::WndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lPa
 			::SetWindowLongPtr(hwnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(pThis));
 			pThis->m_hwnd = hwnd;
 
+			pThis->m_DPI = pThis->m_pApp->GetDPIFromWindow(hwnd);
+			if (pThis->m_DPI == 0)
+				pThis->m_DPI = 96;
+
+			pThis->CalcMetrics();
+
 			pThis->m_hwndList = ::CreateWindowEx(0, TEXT("LISTBOX"), NULL,
 				WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_HSCROLL | LBS_OWNERDRAWFIXED | LBS_NOINTEGRALHEIGHT,
 				0, 0, 0, 0, hwnd, NULL, g_hinstDLL, NULL);
@@ -322,12 +380,8 @@ LRESULT CALLBACK CLogoList::WndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lPa
 			pThis->GetServiceList();
 
 			// アイテムの大きさを設定する
-			pThis->m_ServiceNameWidth = 120;
-			::SendMessage(pThis->m_hwndList, LB_SETITEMHEIGHT, 0, 36 + ITEM_MARGIN * 2);
-			int Width = pThis->m_ServiceNameWidth + ITEM_MARGIN * 2 + LOGO_MARGIN * 6;
-			for (int i = 0; i < 6; i++)
-				Width += LogoSizeList[i].Width;
-			::SendMessage(pThis->m_hwndList, LB_SETHORIZONTALEXTENT, Width, 0);
+			::SendMessage(pThis->m_hwndList, LB_SETITEMHEIGHT, 0, pThis->m_ItemHeight);
+			::SendMessage(pThis->m_hwndList, LB_SETHORIZONTALEXTENT, pThis->m_ItemWidth, 0);
 
 			for (size_t i = 0; i < pThis->m_ServiceList.size(); i++)
 				::SendMessage(pThis->m_hwndList, LB_ADDSTRING, 0, reinterpret_cast<LPARAM>(pThis->m_ServiceList[i]));
@@ -351,24 +405,22 @@ LRESULT CALLBACK CLogoList::WndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lPa
 			CLogoList *pThis = GetThis(hwnd);
 			LPDRAWITEMSTRUCT pdis = reinterpret_cast<LPDRAWITEMSTRUCT>(lParam);
 
-			HBRUSH hbr = ::CreateSolidBrush(pThis->m_crBackColor);
-			::FillRect(pdis->hDC, &pdis->rcItem, hbr);
-			::DeleteObject(hbr);
+			::FillRect(pdis->hDC, &pdis->rcItem, pThis->m_hbrBack);
 			if ((int)pdis->itemID < 0 || pdis->itemID >= pThis->m_ServiceList.size())
 				return TRUE;
 
 			const CServiceInfo *pService = pThis->m_ServiceList[pdis->itemID];
 
-			HFONT hfontOld = static_cast<HFONT>(::SelectObject(pdis->hDC, ::GetStockObject(DEFAULT_GUI_FONT)));
+			HFONT hfontOld = static_cast<HFONT>(::SelectObject(pdis->hDC, pThis->m_hfont));
 			int OldBkMode = ::SetBkMode(pdis->hDC, TRANSPARENT);
 			COLORREF OldTextColor = ::SetTextColor(pdis->hDC, pThis->m_crTextColor);
 
 			RECT rc;
 
-			rc.left = pdis->rcItem.left + ITEM_MARGIN;
-			rc.top = pdis->rcItem.top + ITEM_MARGIN;
+			rc.left = pdis->rcItem.left + pThis->m_ItemMargin;
+			rc.top = pdis->rcItem.top + pThis->m_ItemMargin;
 			rc.right = rc.left + pThis->m_ServiceNameWidth;
-			rc.bottom = pdis->rcItem.bottom - ITEM_MARGIN;
+			rc.bottom = pdis->rcItem.bottom - pThis->m_ItemMargin;
 			::DrawText(pdis->hDC, pService->m_szServiceName, -1, &rc,
 					   DT_LEFT | DT_SINGLELINE | DT_VCENTER | DT_NOPREFIX | DT_END_ELLIPSIS);
 
@@ -378,7 +430,7 @@ LRESULT CALLBACK CLogoList::WndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lPa
 
 			HDC hdcMemory = ::CreateCompatibleDC(pdis->hDC);
 			HGDIOBJ hOldBitmap = ::GetCurrentObject(hdcMemory, OBJ_BITMAP);
-			int x = rc.right + LOGO_MARGIN;
+			int x = rc.right + pThis->m_LogoMargin;
 			for (int i = 0; i < 6; i++) {
 				if (pService->m_hbmLogo[i] != NULL) {
 					::SelectObject(hdcMemory, pService->m_hbmLogo[i]);
@@ -387,13 +439,20 @@ LRESULT CALLBACK CLogoList::WndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lPa
 							 LogoSizeList[i].Width, LogoSizeList[i].Height,
 							 hdcMemory, 0, 0, SRCCOPY);
 				}
-				x += LogoSizeList[i].Width + LOGO_MARGIN;
+				x += LogoSizeList[i].Width + pThis->m_LogoMargin;
 			}
 			if (::GetCurrentObject(hdcMemory, OBJ_BITMAP) != hOldBitmap)
 				::SelectObject(hdcMemory, hOldBitmap);
 			::DeleteDC(hdcMemory);
 		}
 		return TRUE;
+
+	case WM_CTLCOLORLISTBOX:
+		{
+			CLogoList *pThis = GetThis(hwnd);
+
+			return reinterpret_cast<LRESULT>(pThis->m_hbrBack);
+		}
 
 	case WM_TIMER:
 		// ロゴの更新
@@ -415,17 +474,54 @@ LRESULT CALLBACK CLogoList::WndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lPa
 		}
 		break;
 
+#ifndef WM_DPICHANGED
+#define WM_DPICHANGED 0x02E0
+#endif
+	case WM_DPICHANGED:
+		// DPI が変わった
+		{
+			CLogoList *pThis = GetThis(hwnd);
+			const RECT *prc = reinterpret_cast<const RECT*>(lParam);
+
+			pThis->m_DPI = HIWORD(wParam);
+
+			pThis->CalcMetrics();
+
+			::SendMessage(pThis->m_hwndList, LB_SETITEMHEIGHT, 0, pThis->m_ItemHeight);
+			::SendMessage(pThis->m_hwndList, LB_SETHORIZONTALEXTENT, pThis->m_ItemWidth, 0);
+
+			::SetWindowPos(
+				hwnd, NULL,
+				prc->left, prc->top,
+				prc->right - prc->left, prc->bottom - prc->top,
+				SWP_NOZORDER | SWP_NOACTIVATE);
+			::InvalidateRect(pThis->m_hwndList, NULL, TRUE);
+		}
+		break;
+
 	case WM_NCDESTROY:
 		{
 			CLogoList *pThis = GetThis(hwnd);
 
 			// ウィンドウ位置の記憶
-			RECT rc;
-			::GetWindowRect(hwnd, &rc);
-			pThis->m_WindowPosition.Left = rc.left;
-			pThis->m_WindowPosition.Top = rc.top;
-			pThis->m_WindowPosition.Width = rc.right - rc.left;
-			pThis->m_WindowPosition.Height = rc.bottom - rc.top;
+			WINDOWPLACEMENT wp;
+			wp.length = sizeof (WINDOWPLACEMENT);
+			if (::GetWindowPlacement(hwnd, &wp)) {
+				pThis->m_WindowPosition.Left = wp.rcNormalPosition.left;
+				pThis->m_WindowPosition.Top = wp.rcNormalPosition.top;
+				pThis->m_WindowPosition.Width = wp.rcNormalPosition.right - wp.rcNormalPosition.left;
+				pThis->m_WindowPosition.Height = wp.rcNormalPosition.bottom - wp.rcNormalPosition.top;
+			}
+
+			// リソース解放
+			if (pThis->m_hfont != NULL) {
+				::DeleteObject(pThis->m_hfont);
+				pThis->m_hfont = NULL;
+			}
+			if (pThis->m_hbrBack != NULL) {
+				::DeleteObject(pThis->m_hbrBack);
+				pThis->m_hbrBack = NULL;
+			}
 
 			pThis->m_hwnd = NULL;
 			pThis->m_hwndList = NULL;

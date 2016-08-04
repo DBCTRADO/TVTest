@@ -148,6 +148,7 @@ private:
 	bool m_fEnableByPlugin;
 	HWND m_hwnd;
 	HWND m_hwndToolTips;
+	int m_DPI;
 	HFONT m_hFont;
 	int m_FontHeight;
 	int m_ScrollPos;
@@ -411,6 +412,21 @@ LRESULT CALLBACK CTunerPanel::EventCallback(
 				pThis->m_pApp->EnablePlugin(pInfo->Event == TVTest::PANEL_ITEM_EVENT_ENABLE);
 				pThis->m_fEnableByPlugin = false;
 				return TRUE;
+
+			case TVTest::PANEL_ITEM_EVENT_STYLECHANGED:
+				// スタイルが変わった(DPI の変更など)
+				{
+					const int OldDPI = pThis->m_DPI;
+					pThis->m_DPI = pThis->m_pApp->GetDPIFromWindow(pThis->m_hwnd);
+					pThis->InitializePanel();
+					pThis->m_ScrollPos = ::MulDiv(pThis->m_ScrollPos, pThis->m_DPI, OldDPI);
+					RECT rc;
+					::GetClientRect(pThis->m_hwnd, &rc);
+					::SendMessage(pThis->m_hwnd, WM_SIZE, 0, MAKELPARAM(rc.right, rc.bottom));
+					::InvalidateRect(pThis->m_hwnd, NULL, TRUE);
+					pThis->UpdateScroll();
+				}
+				return TRUE;
 			}
 		}
 		break;
@@ -561,6 +577,7 @@ LRESULT CTunerPanel::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 			if (Delay < 5000)
 				::SendMessage(m_hwndToolTips, TTM_SETDELAYTIME, TTDT_AUTOPOP, MAKELONG(5000, 0));
 
+			m_DPI = m_pApp->GetDPIFromWindow(hwnd);
 			m_ScrollPos = 0;
 			InitializePanel();
 		}
@@ -568,7 +585,6 @@ LRESULT CTunerPanel::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 
 	case WM_SIZE:
 		UpdateItemSize();
-		m_ColumnCount = GetColumnCount();
 		UpdateScroll();
 		return 0;
 
@@ -866,7 +882,9 @@ void CTunerPanel::OnCommand(int ID)
 void CTunerPanel::InitializePanel()
 {
 	LOGFONT lf;
-	m_pApp->GetSetting(L"PanelFont", &lf);
+	m_pApp->GetFont(L"PanelFont", &lf, m_DPI);
+	if (m_hFont != NULL)
+		::DeleteObject(m_hFont);
 	m_hFont = ::CreateFontIndirect(&lf);
 
 	HDC hdc = ::GetDC(m_hwnd);
@@ -882,13 +900,13 @@ void CTunerPanel::InitializePanel()
 	m_TunerItemMargin.Right  = 0;
 	m_TunerItemMargin.Bottom = m_FontHeight / 3;
 	m_pApp->GetStyleValuePixels(L"tuner-panel.tuner-name.margin.left",
-								&m_TunerItemMargin.Left);
+								m_DPI, &m_TunerItemMargin.Left);
 	m_pApp->GetStyleValuePixels(L"tuner-panel.tuner-name.margin.top",
-								&m_TunerItemMargin.Top);
+								m_DPI, &m_TunerItemMargin.Top);
 	m_pApp->GetStyleValuePixels(L"tuner-panel.tuner-name.margin.right",
-								&m_TunerItemMargin.Right);
+								m_DPI, &m_TunerItemMargin.Right);
 	m_pApp->GetStyleValuePixels(L"tuner-panel.tuner-name.margin.bottom",
-								&m_TunerItemMargin.Bottom);
+								m_DPI, &m_TunerItemMargin.Bottom);
 
 	m_TunerItemHeight = m_FontHeight + m_TunerItemMargin.Top + m_TunerItemMargin.Bottom;
 
@@ -897,13 +915,13 @@ void CTunerPanel::InitializePanel()
 	m_ChannelItemMargin.Right  = m_FontHeight / 4;
 	m_ChannelItemMargin.Bottom = m_FontHeight / 4;
 	m_pApp->GetStyleValuePixels(L"tuner-panel.channel-name.margin.left",
-								&m_ChannelItemMargin.Left);
+								m_DPI, &m_ChannelItemMargin.Left);
 	m_pApp->GetStyleValuePixels(L"tuner-panel.channel-name.margin.top",
-								&m_ChannelItemMargin.Top);
+								m_DPI, &m_ChannelItemMargin.Top);
 	m_pApp->GetStyleValuePixels(L"tuner-panel.channel-name.margin.right",
-								&m_ChannelItemMargin.Right);
+								m_DPI, &m_ChannelItemMargin.Right);
 	m_pApp->GetStyleValuePixels(L"tuner-panel.channel-name.margin.bottom",
-								&m_ChannelItemMargin.Bottom);
+								m_DPI, &m_ChannelItemMargin.Bottom);
 
 	m_ChannelItemHeight = m_FontHeight + m_ChannelItemMargin.Top + m_ChannelItemMargin.Bottom;
 
@@ -915,13 +933,13 @@ void CTunerPanel::InitializePanel()
 	m_LogoMargin.Right  = m_FontHeight / 4;
 	m_LogoMargin.Bottom = m_FontHeight / 4;
 	m_pApp->GetStyleValuePixels(L"tuner-panel.logo.margin.left",
-								&m_LogoMargin.Left);
+								m_DPI, &m_LogoMargin.Left);
 	m_pApp->GetStyleValuePixels(L"tuner-panel.logo.margin.top",
-								&m_LogoMargin.Top);
+								m_DPI, &m_LogoMargin.Top);
 	m_pApp->GetStyleValuePixels(L"tuner-panel.logo.margin.right",
-								&m_LogoMargin.Right);
+								m_DPI, &m_LogoMargin.Right);
 	m_pApp->GetStyleValuePixels(L"tuner-panel.logo.margin.bottom",
-								&m_LogoMargin.Bottom);
+								m_DPI, &m_LogoMargin.Bottom);
 
 	UpdateItemSize();
 
@@ -939,7 +957,7 @@ void CTunerPanel::Draw(HDC hdc, const RECT &PaintRect)
 	RECT rcClient;
 	::GetClientRect(m_hwnd, &rcClient);
 
-	m_pApp->ThemeDrawBackground(L"panel.content", hdc, PaintRect);
+	m_pApp->ThemeDrawBackground(L"panel.content", hdc, PaintRect, m_DPI);
 
 	int LogoHeight = m_FontHeight;
 	int LogoWidth = LogoHeight * 16 / 9;
@@ -996,7 +1014,7 @@ void CTunerPanel::Draw(HDC hdc, const RECT &PaintRect)
 			if (::StrCmpNI(pszTunerName, L"BonDriver_", 10) == 0)
 				pszTunerName += 10;
 
-			m_pApp->ThemeDrawBackground(pszStyle, hdc, rcItem);
+			m_pApp->ThemeDrawBackground(pszStyle, hdc, rcItem, m_DPI);
 			m_pApp->ThemeDrawText(
 				pszStyle, hdc, pszTunerName, rc,
 				DT_LEFT | DT_VCENTER | DT_SINGLELINE | DT_END_ELLIPSIS | DT_NOPREFIX);
@@ -1037,10 +1055,10 @@ void CTunerPanel::Draw(HDC hdc, const RECT &PaintRect)
 							&& m_HotItem.Space == (int)j
 							&& m_HotItem.Channel == k) {
 						pszStyle = L"control-panel.item.hot";
-						m_pApp->ThemeDrawBackground(pszStyle, hdc, rc);
+						m_pApp->ThemeDrawBackground(pszStyle, hdc, rc, m_DPI);
 					} else if (fCurrentChannel) {
 						pszStyle = L"control-panel.item.checked";
-						m_pApp->ThemeDrawBackground(pszStyle, hdc, rc);
+						m_pApp->ThemeDrawBackground(pszStyle, hdc, rc, m_DPI);
 					} else {
 						pszStyle = L"panel.content";
 					}

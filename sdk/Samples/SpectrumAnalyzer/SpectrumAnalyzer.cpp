@@ -74,6 +74,7 @@ private:
 	bool m_fInitialized;
 	HWND m_hwnd;
 	Position m_WindowPosition;
+	int m_DPI;
 	Gdiplus::Color m_BackColor;
 	Gdiplus::Color m_SpectrumColor1;
 	Gdiplus::Color m_SpectrumColor2;
@@ -250,14 +251,18 @@ bool CSpectrumAnalyzer::EnablePlugin(bool fEnable)
 			static const DWORD Style = WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME;
 			static const DWORD ExStyle = WS_EX_TOOLWINDOW;
 
+			// プライマリモニタの DPI を取得
+			m_DPI = m_pApp->GetDPIFromPoint(0, 0);
+			if (m_DPI == 0)
+				m_DPI = 96;
+
 			// デフォルトのウィンドウサイズを取得
 			if (m_WindowPosition.Width <= 0 || m_WindowPosition.Height <= 0) {
 				int Width = NUM_BANDS * 10, Height = NUM_LEVELS * 4;
 				// DPI設定に合わせてスケーリング
-				int DPI;
-				if (m_pApp->GetSetting(L"DPI", &DPI) && DPI != 96) {
-					Width = ::MulDiv(Width, DPI, 96);
-					Height = ::MulDiv(Height, DPI, 96);
+				if (m_DPI != 96) {
+					Width = ::MulDiv(Width, m_DPI, 96);
+					Height = ::MulDiv(Height, m_DPI, 96);
 				}
 				RECT rc = {0, 0, Width, Height};
 				::AdjustWindowRectEx(&rc, Style, FALSE, ExStyle);
@@ -275,6 +280,7 @@ bool CSpectrumAnalyzer::EnablePlugin(bool fEnable)
 				return false;
 		}
 
+		// ウィンドウ位置の復元
 		WINDOWPLACEMENT wp;
 		wp.length = sizeof(WINDOWPLACEMENT);
 		::GetWindowPlacement(m_hwnd, &wp);
@@ -563,6 +569,25 @@ LRESULT CALLBACK CSpectrumAnalyzer::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam,
 
 			pThis->m_pApp->EnablePlugin(false);
 			return TRUE;
+		}
+		break;
+
+#ifndef WM_DPICHANGED
+#define WM_DPICHANGED 0x02E0
+#endif
+	case WM_DPICHANGED:
+		// DPI が変わった
+		{
+			CSpectrumAnalyzer *pThis = GetThis(hwnd);
+			const RECT *prc = reinterpret_cast<const RECT*>(lParam);
+
+			pThis->m_DPI = HIWORD(wParam);
+
+			::SetWindowPos(
+				hwnd, nullptr,
+				prc->left, prc->top,
+				prc->right - prc->left, prc->bottom - prc->top,
+				SWP_NOZORDER | SWP_NOACTIVATE);
 		}
 		break;
 

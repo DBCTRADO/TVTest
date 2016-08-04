@@ -224,6 +224,7 @@ private:
 	HWND m_hwnd;
 	COLORREF m_crBackColor;
 	COLORREF m_crTextColor;
+	int m_DPI;
 	int m_SliderWidth;
 	int m_SliderHeight;
 	int m_SliderMargin;
@@ -236,6 +237,8 @@ private:
 	int m_ButtonHeight;
 	int m_ButtonMargin;
 	int m_LineWidth;
+	int m_ClientWidth;
+	int m_ClientHeight;
 	HFONT m_hfont;
 	POINT m_WindowPosition;
 	CBandPass m_BandPass;
@@ -257,6 +260,8 @@ private:
 	void EnableEqualizer(bool fEnable);
 	void ResetSettings();
 	void ApplySettings();
+	void CalcMetrics();
+	void CreateDPIDependingResources();
 	void GetSliderRect(int Index, RECT *pRect, bool fBar = false) const;
 	int MapSliderPos(int y) const;
 	int CalcSliderPos(int Pos) const;
@@ -264,17 +269,17 @@ private:
 	void GetColor();
 	void OnButtonPush(int Button);
 	void Draw(HDC hdc,const RECT &rcPaint);
+	void ScaleDPI(int *pValue) {
+		int Value = ::MulDiv(*pValue, m_DPI, 96);
+		if (Value < 1)
+			Value = 1;
+		*pValue = Value;
+	}
 
 	static LRESULT CALLBACK EventCallback(UINT Event, LPARAM lParam1, LPARAM lParam2, void *pClientData);
 	static LRESULT CALLBACK AudioCallback(short *pData, DWORD Samples, int Channels, void *pClientData);
 	static CEqualizer *GetThis(HWND hwnd);
 	static LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-	static void ScaleDPI(int *pValue,int DPI) {
-		int Value = ::MulDiv(*pValue, DPI, 96);
-		if (Value < 1)
-			Value = 1;
-		*pValue = Value;
-	}
 };
 
 
@@ -538,54 +543,40 @@ bool CEqualizer::EnablePlugin(bool fEnable)
 
 			LoadSettings();
 
-			m_SliderWidth = SLIDER_WIDTH;
-			m_SliderHeight = SLIDER_HEIGHT;
-			m_SliderMargin = SLIDER_MARGIN;
-			m_SliderPadding = SLIDER_PADDING;
-			m_WindowMargin = WINDOW_MARGIN;
-			m_TextHeight = TEXT_HEIGHT;
-			m_SliderTextMargin = SLIDER_TEXT_MARGIN;
-			m_SliderButtonMargin = SLIDER_BUTTON_MARGIN;
-			m_ButtonWidth = BUTTON_WIDTH;
-			m_ButtonHeight = BUTTON_HEIGHT;
-			m_ButtonMargin = BUTTON_MARGIN;
-			m_LineWidth = LINE_WIDTH;
+			// プライマリモニタの DPI を取得
+			m_DPI = m_pApp->GetDPIFromPoint(0, 0);
+			if (m_DPI == 0)
+				m_DPI = 96;
 
-			// DPIに応じてスケーリング
-			int DPI;
-			if (m_pApp->GetSetting(L"DPI", &DPI) && DPI != 96) {
-				ScaleDPI(&m_SliderWidth, DPI);
-				ScaleDPI(&m_SliderHeight, DPI);
-				ScaleDPI(&m_SliderMargin, DPI);
-				ScaleDPI(&m_SliderPadding, DPI);
-				ScaleDPI(&m_WindowMargin, DPI);
-				ScaleDPI(&m_TextHeight, DPI);
-				ScaleDPI(&m_SliderTextMargin, DPI);
-				ScaleDPI(&m_SliderButtonMargin, DPI);
-				ScaleDPI(&m_ButtonWidth, DPI);
-				ScaleDPI(&m_ButtonHeight, DPI);
-				ScaleDPI(&m_ButtonMargin, DPI);
-				ScaleDPI(&m_LineWidth, DPI);
-			}
+			CalcMetrics();
 
 			static const DWORD Style = WS_POPUP | WS_CAPTION | WS_SYSMENU;
 			static const DWORD ExStyle = WS_EX_TOOLWINDOW;
 			RECT rc;
-			::SetRect(&rc, 0, 0,
-				(NUM_FREQUENCY + 2) * (m_SliderWidth + m_SliderMargin) - m_SliderMargin + m_WindowMargin * 2,
-				m_SliderHeight + m_SliderTextMargin + m_TextHeight + m_SliderButtonMargin + m_ButtonHeight + m_WindowMargin * 2);
+			::SetRect(&rc, 0, 0, m_ClientWidth, m_ClientHeight);
 			::AdjustWindowRectEx(&rc, Style, FALSE, ExStyle);
 			if (::CreateWindowEx(
 					ExStyle, WINDOW_CLASS_NAME, TEXT("Equalizer"), Style,
-					m_WindowPosition.x, m_WindowPosition.y,
-					rc.right - rc.left, rc.bottom - rc.top,
+					0, 0, rc.right - rc.left, rc.bottom - rc.top,
 					m_pApp->GetAppWindow(), nullptr, g_hinstDLL, this) == nullptr)
 				return false;
 
 			m_fShowed = true;
-		}
 
-		::ShowWindow(m_hwnd, SW_SHOWNORMAL);
+			// ウィンドウ位置の復元
+			WINDOWPLACEMENT wp;
+			wp.length = sizeof(WINDOWPLACEMENT);
+			::GetWindowPlacement(m_hwnd, &wp);
+			wp.flags = 0;
+			wp.showCmd = SW_SHOWNOACTIVATE;
+			wp.rcNormalPosition.left = m_WindowPosition.x;
+			wp.rcNormalPosition.top = m_WindowPosition.y;
+			wp.rcNormalPosition.right = m_WindowPosition.x + (rc.right - rc.left);
+			wp.rcNormalPosition.bottom = m_WindowPosition.y + (rc.bottom - rc.top);
+			::SetWindowPlacement(m_hwnd, &wp);
+		} else {
+			::ShowWindow(m_hwnd, SW_SHOWNORMAL);
+		}
 		::UpdateWindow(m_hwnd);
 	} else {
 		// プラグインが無効にされたのでウィンドウを破棄する
@@ -640,6 +631,57 @@ void CEqualizer::ApplySettings()
 	m_BandPass.SetPreAmplifier((double)(m_CurSettings.PreAmplifier + 10) * 0.1);
 	for (int i = 0; i < NUM_FREQUENCY; i++)
 		m_BandPass.SetVolume(i, (double)(m_CurSettings.Frequency[i] + 10) * 0.1);
+}
+
+
+// 各部のサイズを計算する
+void CEqualizer::CalcMetrics()
+{
+	m_SliderWidth = SLIDER_WIDTH;
+	m_SliderHeight = SLIDER_HEIGHT;
+	m_SliderMargin = SLIDER_MARGIN;
+	m_SliderPadding = SLIDER_PADDING;
+	m_WindowMargin = WINDOW_MARGIN;
+	m_TextHeight = TEXT_HEIGHT;
+	m_SliderTextMargin = SLIDER_TEXT_MARGIN;
+	m_SliderButtonMargin = SLIDER_BUTTON_MARGIN;
+	m_ButtonWidth = BUTTON_WIDTH;
+	m_ButtonHeight = BUTTON_HEIGHT;
+	m_ButtonMargin = BUTTON_MARGIN;
+	m_LineWidth = LINE_WIDTH;
+
+	// DPIに応じてスケーリング
+	if (m_DPI != 96) {
+		ScaleDPI(&m_SliderWidth);
+		ScaleDPI(&m_SliderHeight);
+		ScaleDPI(&m_SliderMargin);
+		ScaleDPI(&m_SliderPadding);
+		ScaleDPI(&m_WindowMargin);
+		ScaleDPI(&m_TextHeight);
+		ScaleDPI(&m_SliderTextMargin);
+		ScaleDPI(&m_SliderButtonMargin);
+		ScaleDPI(&m_ButtonWidth);
+		ScaleDPI(&m_ButtonHeight);
+		ScaleDPI(&m_ButtonMargin);
+		ScaleDPI(&m_LineWidth);
+	}
+
+	m_ClientWidth = (NUM_FREQUENCY + 2) * (m_SliderWidth + m_SliderMargin) - m_SliderMargin + m_WindowMargin * 2;
+	m_ClientHeight = m_SliderHeight + m_SliderTextMargin + m_TextHeight + m_SliderButtonMargin + m_ButtonHeight + m_WindowMargin * 2;
+}
+
+
+// DPI 依存のリソースを作成する
+void CEqualizer::CreateDPIDependingResources()
+{
+	// フォントを取得
+	LOGFONT lf;
+	m_pApp->GetFont(L"StatusBarFont", &lf, m_DPI);
+	lf.lfHeight = -m_TextHeight;
+	lf.lfWidth = 0;
+	if (m_hfont != nullptr)
+		::DeleteObject(m_hfont);
+	m_hfont = ::CreateFontIndirect(&lf);
 }
 
 
@@ -957,21 +999,7 @@ LRESULT CALLBACK CEqualizer::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
 			pThis->m_hwnd = hwnd;
 			pThis->GetColor();
 
-			// フォントを取得
-			LOGFONT lf;
-			if (!pThis->m_pApp->GetSetting(L"StatusBarFont", &lf)) {
-				NONCLIENTMETRICS ncm;
-#if WINVER >= 0x0600
-				ncm.cbSize = offsetof(NONCLIENTMETRICS, iPaddedBorderWidth);
-#else
-				ncm.cbSize = sizeof(NONCLIENTMETRICS);
-#endif
-				::SystemParametersInfo(SPI_GETNONCLIENTMETRICS, ncm.cbSize, &ncm, 0);
-				lf = ncm.lfStatusFont;
-			}
-			lf.lfHeight = -pThis->m_TextHeight;
-			lf.lfWidth = 0;
-			pThis->m_hfont = ::CreateFontIndirect(&lf);
+			pThis->CreateDPIDependingResources();
 
 			// ウィンドウを最初に表示した時にイコライザーを有効化する
 			if (!pThis->m_fEnabled && pThis->m_fEnableDefault)
@@ -1102,6 +1130,29 @@ LRESULT CALLBACK CEqualizer::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
 		}
 		break;
 
+#ifndef WM_DPICHANGED
+#define WM_DPICHANGED 0x02E0
+#endif
+	case WM_DPICHANGED:
+		// DPI が変わった
+		{
+			CEqualizer *pThis = GetThis(hwnd);
+			const RECT *prc = reinterpret_cast<const RECT*>(lParam);
+
+			pThis->m_DPI = HIWORD(wParam);
+
+			pThis->CalcMetrics();
+			pThis->CreateDPIDependingResources();
+
+			::SetWindowPos(
+				hwnd, nullptr,
+				prc->left, prc->top,
+				prc->right - prc->left, prc->bottom - prc->top,
+				SWP_NOZORDER | SWP_NOACTIVATE);
+			::InvalidateRect(hwnd, nullptr, FALSE);
+		}
+		break;
+
 	case WM_DESTROY:
 		{
 			CEqualizer *pThis = GetThis(hwnd);
@@ -1110,10 +1161,12 @@ LRESULT CALLBACK CEqualizer::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
 			::DeleteObject(pThis->m_hfont);
 
 			// ウィンドウ位置保存
-			RECT rc;
-			::GetWindowRect(hwnd, &rc);
-			pThis->m_WindowPosition.x = rc.left;
-			pThis->m_WindowPosition.y = rc.top;
+			WINDOWPLACEMENT wp;
+			wp.length = sizeof (WINDOWPLACEMENT);
+			if (::GetWindowPlacement(hwnd, &wp)) {
+				pThis->m_WindowPosition.x = wp.rcNormalPosition.left;
+				pThis->m_WindowPosition.y = wp.rcNormalPosition.top;
+			}
 
 			pThis->m_hwnd = nullptr;
 		}
