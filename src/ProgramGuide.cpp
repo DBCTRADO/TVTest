@@ -5499,6 +5499,7 @@ protected:
 
 	void AdjustSize();
 	void DeleteAllButtons();
+	void SetToolbarFont();
 
 // CUIBase
 	void ApplyStyle() override;
@@ -5538,6 +5539,8 @@ bool CProgramGuideToolbar::Create(HWND hwndParent,DWORD Style,DWORD ExStyle,int 
 	//::SendMessage(m_hwnd,TB_SETEXTENDEDSTYLE,0,TBSTYLE_EX_MIXEDBUTTONS);
 	// ボタンをアイコン無しにしてもなぜかアイコン分の幅がとられる
 	::SendMessage(m_hwnd,TB_SETBITMAPSIZE,0,MAKELONG(1,15));
+
+	SetToolbarFont();
 
 	return true;
 }
@@ -5704,6 +5707,14 @@ void CProgramGuideToolbar::DeleteAllButtons()
 }
 
 
+void CProgramGuideToolbar::SetToolbarFont()
+{
+	SetWindowFont(m_hwnd,m_Font.GetHandle(),TRUE);
+	::SendMessage(m_hwnd,TB_SETPADDING,0,
+				  MAKELONG((m_Padding.Horz()+1)/2,(m_Padding.Vert()+1)/2));
+}
+
+
 void CProgramGuideToolbar::ApplyStyle()
 {
 	TVTest::Style::Font Font;
@@ -5718,9 +5729,7 @@ void CProgramGuideToolbar::ApplyStyle()
 
 void CProgramGuideToolbar::RealizeStyle()
 {
-	SetWindowFont(m_hwnd,m_Font.GetHandle(),TRUE);
-	::SendMessage(m_hwnd,TB_SETPADDING,0,
-				  MAKELONG((m_Padding.Horz()+1)/2,(m_Padding.Vert()+1)/2));
+	SetToolbarFont();
 }
 
 
