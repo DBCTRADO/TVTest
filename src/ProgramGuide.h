@@ -717,11 +717,24 @@ public:
 	void SetTheme(const TVTest::Theme::CThemeManager *pThemeManager);
 
 protected:
+	struct FrameStyle {
+		TVTest::Style::Margins ToolbarMargin;
+		TVTest::Style::IntValue ToolbarHorzGap;
+		TVTest::Style::IntValue ToolbarVertGap;
+		bool fExtendFrame;
+
+		FrameStyle();
+		void SetStyle(const TVTest::Style::CStyleManager *pStyleManager);
+		void NormalizeStyle(
+			const TVTest::Style::CStyleManager *pStyleManager,
+			const TVTest::Style::CStyleScaling *pStyleScaling);
+	};
+
 	CProgramGuide *m_pProgramGuide;
 	CProgramGuideFrameSettings *m_pSettings;
 	ProgramGuideBar::CProgramGuideBar *m_ToolbarList[TOOLBAR_NUM];
-	RECT m_ToolbarMargin;
-	POINT m_ToolbarGap;
+	FrameStyle m_FrameStyle;
+	int m_ToolbarRightMargin;
 	bool m_fNoUpdateLayout;
 
 // CProgramGuide::CFrame
@@ -836,12 +849,18 @@ public:
 	bool GetAlwaysOnTop() const override { return m_fAlwaysOnTop; }
 // CUIBase
 	void SetTheme(const TVTest::Theme::CThemeManager *pThemeManager) override;
+	void SetStyle(const TVTest::Style::CStyleManager *pStyleManager) override;
+	void NormalizeStyle(
+		const TVTest::Style::CStyleManager *pStyleManager,
+		const TVTest::Style::CStyleScaling *pStyleScaling) override;
 // CProgramGuideFrame
 	bool Show();
 
 private:
 	TVTest::Style::CStyleScaling m_StyleScaling;
 	CAeroGlass m_AeroGlass;
+	bool m_fAero;
+	CUxTheme m_UxTheme;
 	bool m_fAlwaysOnTop;
 
 // CProgramGuideFrameBase
@@ -855,6 +874,7 @@ private:
 	void RealizeStyle() override;
 // CProgramGuideFrame
 	void SetAeroGlass();
+	void DrawBackground(HDC hdc,bool fActive);
 
 	static const LPCTSTR m_pszWindowClass;
 	static HINSTANCE m_hinst;
@@ -885,6 +905,10 @@ public:
 	bool Create(HWND hwndParent,DWORD Style,DWORD ExStyle=0,int ID=0) override;
 // CUIBase
 	void SetTheme(const TVTest::Theme::CThemeManager *pThemeManager) override;
+	void SetStyle(const TVTest::Style::CStyleManager *pStyleManager) override;
+	void NormalizeStyle(
+		const TVTest::Style::CStyleManager *pStyleManager,
+		const TVTest::Style::CStyleScaling *pStyleScaling) override;
 // CProgramGuideDisplay
 	void SetEventHandler(CProgramGuideDisplayEventHandler *pHandler);
 

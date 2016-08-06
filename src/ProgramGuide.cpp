@@ -6546,15 +6546,9 @@ void CTimeToolbar::RealizeStyle()
 CProgramGuideFrameBase::CProgramGuideFrameBase(CProgramGuide *pProgramGuide,CProgramGuideFrameSettings *pSettings)
 	: m_pProgramGuide(pProgramGuide)
 	, m_pSettings(pSettings)
+	, m_ToolbarRightMargin(0)
 	, m_fNoUpdateLayout(false)
 {
-	m_ToolbarMargin.left=0;
-	m_ToolbarMargin.top=0;
-	m_ToolbarMargin.right=0;
-	m_ToolbarMargin.bottom=5;
-	m_ToolbarGap.x=6;
-	m_ToolbarGap.y=5;
-
 	m_ToolbarList[TOOLBAR_TUNER_MENU]=new ProgramGuideBar::CTunerMenuBar(pProgramGuide);
 	m_ToolbarList[TOOLBAR_DATE_MENU ]=new ProgramGuideBar::CDateMenuBar(pProgramGuide);
 	m_ToolbarList[TOOLBAR_FAVORITES ]=new ProgramGuideBar::CFavoritesToolbar(pProgramGuide);
@@ -6805,8 +6799,9 @@ void CProgramGuideFrameBase::OnSizeChanged(int Width,int Height)
 	int OrderList[TOOLBAR_NUM];
 	m_pSettings->GetToolbarOrderList(OrderList);
 
-	int x=m_ToolbarMargin.left;
-	int y=m_ToolbarMargin.top;
+	const int ToolbarAreaWidth=Width-m_FrameStyle.ToolbarMargin.Right-m_ToolbarRightMargin;
+	int x=m_FrameStyle.ToolbarMargin.Left;
+	int y=m_FrameStyle.ToolbarMargin.Top;
 	int BarHeight=0;
 
 	for (int i=0;i<lengthof(m_ToolbarList);i++) {
@@ -6816,25 +6811,25 @@ void CProgramGuideFrameBase::OnSizeChanged(int Width,int Height)
 			SIZE sz;
 
 			pBar->GetBarSize(&sz);
-			if (x+sz.cx>Width-m_ToolbarMargin.right) {
+			if (x+sz.cx>ToolbarAreaWidth) {
 				if (i>0) {
-					x=m_ToolbarMargin.left;
-					y+=BarHeight+m_ToolbarGap.y;
+					x=m_FrameStyle.ToolbarMargin.Left;
+					y+=BarHeight+m_FrameStyle.ToolbarVertGap;
 				}
-				if (x+sz.cx>Width-m_ToolbarMargin.right)
-					sz.cx=max(Width-m_ToolbarMargin.right-x,0);
+				if (x+sz.cx>ToolbarAreaWidth)
+					sz.cx=max(ToolbarAreaWidth-x,0);
 				BarHeight=sz.cy;
 			} else {
 				if (sz.cy>BarHeight)
 					BarHeight=sz.cy;
 			}
 			pBar->SetBarPosition(x,y,sz.cx,sz.cy);
-			x+=sz.cx+m_ToolbarGap.x;
+			x+=sz.cx+m_FrameStyle.ToolbarHorzGap;
 		}
 	}
 
 	if (BarHeight>0)
-		y+=BarHeight+m_ToolbarMargin.bottom;
+		y+=BarHeight+m_FrameStyle.ToolbarMargin.Bottom;
 	else
 		y=0;
 	m_pProgramGuide->SetPosition(0,y,Width,max(Height-y,0));
@@ -6909,6 +6904,37 @@ LRESULT CProgramGuideFrameBase::DefaultMessageHandler(HWND hwnd,UINT uMsg,WPARAM
 	}
 
 	return ::DefWindowProc(hwnd,uMsg,wParam,lParam);
+}
+
+
+
+
+CProgramGuideFrameBase::FrameStyle::FrameStyle()
+	: ToolbarMargin(2,2,2,4)
+	, ToolbarHorzGap(3)
+	, ToolbarVertGap(4)
+	, fExtendFrame(true)
+{
+}
+
+
+void CProgramGuideFrameBase::FrameStyle::SetStyle(const TVTest::Style::CStyleManager *pStyleManager)
+{
+	*this=FrameStyle();
+	pStyleManager->Get(TEXT("program-guide.tool-bar.margin"),&ToolbarMargin);
+	pStyleManager->Get(TEXT("program-guide.tool-bar.horz-gap"),&ToolbarHorzGap);
+	pStyleManager->Get(TEXT("program-guide.tool-bar.vert-gap"),&ToolbarVertGap);
+	pStyleManager->Get(TEXT("program-guide.extend-frame"),&fExtendFrame);
+}
+
+
+void CProgramGuideFrameBase::FrameStyle::NormalizeStyle(
+	const TVTest::Style::CStyleManager *pStyleManager,
+	const TVTest::Style::CStyleScaling *pStyleScaling)
+{
+	pStyleScaling->ToPixels(&ToolbarMargin);
+	pStyleScaling->ToPixels(&ToolbarHorzGap);
+	pStyleScaling->ToPixels(&ToolbarVertGap);
 }
 
 
@@ -7186,6 +7212,7 @@ bool CProgramGuideFrame::Initialize(HINSTANCE hinst)
 
 CProgramGuideFrame::CProgramGuideFrame(CProgramGuide *pProgramGuide,CProgramGuideFrameSettings *pSettings)
 	: CProgramGuideFrameBase(pProgramGuide,pSettings)
+	, m_fAero(false)
 	, m_fAlwaysOnTop(false)
 {
 	m_WindowPosition.Width=640;
@@ -7229,6 +7256,20 @@ void CProgramGuideFrame::SetTheme(const TVTest::Theme::CThemeManager *pThemeMana
 }
 
 
+void CProgramGuideFrame::SetStyle(const TVTest::Style::CStyleManager *pStyleManager)
+{
+	m_FrameStyle.SetStyle(pStyleManager);
+}
+
+
+void CProgramGuideFrame::NormalizeStyle(
+	const TVTest::Style::CStyleManager *pStyleManager,
+	const TVTest::Style::CStyleScaling *pStyleScaling)
+{
+	m_FrameStyle.NormalizeStyle(pStyleManager,pStyleScaling);
+}
+
+
 bool CProgramGuideFrame::Show()
 {
 	if (m_hwnd==NULL)
@@ -7254,6 +7295,7 @@ LRESULT CProgramGuideFrame::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM l
 {
 	switch (uMsg) {
 	case WM_CREATE:
+		InitializeUI();
 		OnWindowCreate(hwnd,m_pStyleScaling,true);
 		return 0;
 
@@ -7282,10 +7324,11 @@ LRESULT CProgramGuideFrame::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM l
 #endif
 	case WM_DWMCOMPOSITIONCHANGED:
 		SetAeroGlass();
+		m_UxTheme.Close();
 		break;
 
 	case WM_PAINT:
-		if (m_AeroGlass.IsEnabled()) {
+		if (m_fAero && !Util::OS::IsWindows8OrLater()) {
 			::PAINTSTRUCT ps;
 
 			::BeginPaint(hwnd,&ps);
@@ -7306,12 +7349,17 @@ LRESULT CProgramGuideFrame::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM l
 		break;
 
 	case WM_ERASEBKGND:
-		if (!m_AeroGlass.IsEnabled()) {
-			RECT rc;
-			::GetClientRect(hwnd,&rc);
-			::FillRect(reinterpret_cast<HDC>(wParam),&rc,
-					   reinterpret_cast<HBRUSH>(COLOR_3DFACE+1));
+		if (!m_fAero) {
+			DrawBackground(reinterpret_cast<HDC>(wParam),::GetForegroundWindow()==hwnd);
 			return 1;
+		}
+		break;
+
+	case WM_ACTIVATE:
+		if (!m_fAero) {
+			HDC hdc=::GetDC(hwnd);
+			DrawBackground(hdc,wParam!=WA_INACTIVE);
+			::ReleaseDC(hwnd,hdc);
 		}
 		break;
 
@@ -7322,6 +7370,14 @@ LRESULT CProgramGuideFrame::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM l
 
 	case WM_DPICHANGED:
 		OnDPIChanged(hwnd,wParam,lParam);
+		break;
+
+	case WM_THEMECHANGED:
+		m_UxTheme.Close();
+		break;
+
+	case WM_DESTROY:
+		m_UxTheme.Close();
 		break;
 	}
 
@@ -7337,12 +7393,37 @@ void CProgramGuideFrame::RealizeStyle()
 
 void CProgramGuideFrame::SetAeroGlass()
 {
-	if (m_hwnd!=NULL) {
+	m_fAero=false;
+	if (m_hwnd!=NULL && m_FrameStyle.fExtendFrame) {
 		RECT rc={0,0,0,0},rcPos;
 
 		m_pProgramGuide->GetPosition(&rcPos);
 		rc.top=rcPos.top;
-		m_AeroGlass.ApplyAeroGlass(m_hwnd,&rc);
+		if (m_AeroGlass.ApplyAeroGlass(m_hwnd,&rc))
+			m_fAero=true;
+	}
+}
+
+
+void CProgramGuideFrame::DrawBackground(HDC hdc,bool fActive)
+{
+	RECT rc,rcGuide;
+
+	GetClientRect(&rc);
+	m_pProgramGuide->GetPosition(&rcGuide);
+	rc.bottom=rcGuide.top;
+
+	if (m_UxTheme.IsActive()
+			&& (m_UxTheme.IsOpen() || m_UxTheme.Open(m_hwnd,L"Window"))) {
+		COLORREF Color;
+		m_UxTheme.GetColor(
+			WP_CAPTION,
+			fActive ? CS_ACTIVE : CS_INACTIVE,
+			fActive ? TMT_FILLCOLORHINT : TMT_BORDERCOLORHINT,
+			&Color);
+		DrawUtil::Fill(hdc,&rc,Color);
+	} else {
+		::FillRect(hdc,&rc,reinterpret_cast<HBRUSH>(COLOR_3DFACE+1));
 	}
 }
 
@@ -7380,8 +7461,6 @@ CProgramGuideDisplay::CProgramGuideDisplay(CProgramGuide *pProgramGuide,CProgram
 	: CProgramGuideFrameBase(pProgramGuide,pSettings)
 	, m_pProgramGuideDisplayEventHandler(NULL)
 {
-	m_ToolbarMargin.left=6;
-	m_ToolbarMargin.top=m_ToolbarMargin.bottom;
 }
 
 
@@ -7402,6 +7481,20 @@ void CProgramGuideDisplay::SetTheme(const TVTest::Theme::CThemeManager *pThemeMa
 {
 	CProgramGuideFrameBase::SetTheme(pThemeManager);
 	CDisplayView::SetTheme(pThemeManager);
+}
+
+
+void CProgramGuideDisplay::SetStyle(const TVTest::Style::CStyleManager *pStyleManager)
+{
+	m_FrameStyle.SetStyle(pStyleManager);
+}
+
+
+void CProgramGuideDisplay::NormalizeStyle(
+	const TVTest::Style::CStyleManager *pStyleManager,
+	const TVTest::Style::CStyleScaling *pStyleScaling)
+{
+	m_FrameStyle.NormalizeStyle(pStyleManager,pStyleScaling);
 }
 
 
@@ -7466,7 +7559,7 @@ LRESULT CProgramGuideDisplay::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM
 			RECT rc;
 
 			GetCloseButtonRect(&rc);
-			m_ToolbarMargin.right=(LOWORD(lParam)-rc.left)+m_ToolbarMargin.left;
+			m_ToolbarRightMargin=LOWORD(lParam)-rc.left;
 		}
 		break;
 
