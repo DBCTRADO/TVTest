@@ -44,8 +44,6 @@ bool CColorSchemeSaveDialog::Show(HWND hwndOwner)
 
 INT_PTR CColorSchemeSaveDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 {
-	static LPTSTR pszName;
-
 	switch (uMsg) {
 	case WM_INITDIALOG:
 		DlgEdit_SetText(hDlg,IDC_SAVECOLORSCHEME_NAME,m_pszName);
