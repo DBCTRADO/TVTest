@@ -42,7 +42,7 @@ bool CColorSchemeSaveDialog::Show(HWND hwndOwner)
 }
 
 
-INT_PTR CALLBACK CColorSchemeSaveDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
+INT_PTR CColorSchemeSaveDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 {
 	static LPTSTR pszName;
 
