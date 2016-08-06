@@ -196,10 +196,7 @@
 	・MESSAGE_RESET にパラメータを追加した
 
 	ver.0.0.8 (TVTest ver.0.6.0 or later)
-	・以下のメッセージを追加した
-	  ・MESSAGE_GETBCASINFO
-	  ・MESSAGE_SENDBCASCOMMAND
-	  ・MESSAGE_GETHOSTINFO
+	・MESSAGE_GETHOSTINFO を追加した
 	・MESSAGE_SETCHANNEL のパラメータにサービスIDを追加した
 
 	ver.0.0.7 (TVTest ver.0.5.45 or later)
@@ -229,7 +226,7 @@
 	ver.0.0.2
 	・MESSAGE_GETAUDIOSTREAM と MESSAGE_SETAUDIOSTREAM を追加した
 	・ServiceInfo 構造体に AudioComponentType と SubtitlePID メンバを追加した
-	・StatusInfo 構造体に DropPacketCount と BcasCardStatus メンバを追加した
+	・StatusInfo 構造体に DropPacketCount と Reserved メンバを追加した
 
 	ver.0.0.1
 	・以下のメッセージを追加した
@@ -389,8 +386,8 @@ enum {
 	MESSAGE_DOCOMMAND,					// コマンドの実行
 #endif
 #if TVTEST_PLUGIN_VERSION>=TVTEST_PLUGIN_VERSION_(0,0,8)
-	MESSAGE_GETBCASINFO,				// B-CAS カードの情報を取得
-	MESSAGE_SENDBCASCOMMAND,			// B-CAS カードにコマンドを送信
+	MESSAGE_REMOVED1,					// (機能削除)
+	MESSAGE_REMOVED2,					// (機能削除)
 	MESSAGE_GETHOSTINFO,				// ホストプログラムの情報を取得
 #endif
 #if TVTEST_PLUGIN_VERSION>=TVTEST_PLUGIN_VERSION_(0,0,9)
@@ -825,17 +822,6 @@ inline bool MsgSetPanScan(PluginParam *pParam,const PanScanInfo *pInfo) {
 	return (*pParam->Callback)(pParam,MESSAGE_SETPANSCAN,(LPARAM)pInfo,0)!=0;
 }
 
-// B-CAS カードの状態
-enum {
-	BCAS_STATUS_OK,				// エラーなし
-	BCAS_STATUS_NOTOPEN,		// 開かれていない(スクランブル解除なし)
-	BCAS_STATUS_NOCARDREADER,	// カードリーダが無い
-	BCAS_STATUS_NOCARD,			// カードがない
-	BCAS_STATUS_OPENERROR,		// オープンエラー
-	BCAS_STATUS_TRANSMITERROR,	// 通信エラー
-	BCAS_STATUS_ESTABLISHERROR	// コンテキスト確立失敗
-};
-
 // ステータス情報
 struct StatusInfo {
 	DWORD Size;							// 構造体のサイズ
@@ -846,8 +832,7 @@ struct StatusInfo {
 	DWORD ScramblePacketCount;			// 復号漏れパケット数
 #if TVTEST_PLUGIN_VERSION>=TVTEST_PLUGIN_VERSION_(0,0,2)
 	DWORD DropPacketCount;				// ドロップパケット数
-	DWORD BcasCardStatus;				// B-CAS カードの状態(BCAS_STATUS_???)
-										// ※ B-CAS 関連の機能は削除されました。現在は利用できません。
+	DWORD Reserved;						// 予約
 #endif
 };
 
@@ -1298,64 +1283,6 @@ inline bool MsgDoCommand(PluginParam *pParam,LPCWSTR pszCommand)
 #endif	// TVTEST_PLUGIN_VERSION>=TVTEST_PLUGIN_VERSION_(0,0,7)
 
 #if TVTEST_PLUGIN_VERSION>=TVTEST_PLUGIN_VERSION_(0,0,8)
-
-// B-CAS の情報
-struct BCasInfo {
-	DWORD Size;						// 構造体のサイズ
-	WORD CASystemID;				// CA_system_id
-	BYTE CardID[6];					// カードID
-	BYTE CardType;					// カード種別
-	BYTE MessagePartitionLength;	// メッセージ分割長
-	BYTE SystemKey[32];				// システム鍵
-	BYTE InitialCBC[8];				// CBC初期値
-	BYTE CardManufacturerID;		// メーカ識別
-	BYTE CardVersion;				// バージョン
-	WORD CheckCode;					// チェックコード
-	char szFormatCardID[25];		// 可読形式のカードID (4桁の数字x5)
-};
-
-// B-CAS カードの情報を取得する
-// ※ B-CAS 関連の機能は削除されました。現在は利用できません。
-// カードが開かれていない場合は false が返ります。
-inline bool MsgGetBCasInfo(PluginParam *pParam,BCasInfo *pInfo)
-{
-	return (*pParam->Callback)(pParam,MESSAGE_GETBCASINFO,(LPARAM)pInfo,0)!=0;
-}
-
-// B-CAS コマンドの情報
-struct BCasCommandInfo {
-	const BYTE *pSendData;	// 送信データ
-	DWORD SendSize;			// 送信サイズ (バイト単位)
-	BYTE *pReceiveData;		// 受信データ
-	DWORD ReceiveSize;		// 受信サイズ (バイト単位)
-};
-
-// B-CAS カードにコマンドを送信する
-// ※ B-CAS 関連の機能は削除されました。現在は利用できません。
-// BCasCommandInfo の pSendData に送信データへのポインタを指定して、
-// SendSize に送信データのバイト数を設定します。
-// また、pReceiveData に受信データを格納するバッファへのポインタを指定して、
-// ReceiveSize にバッファに格納できる最大サイズを設定します。
-// 送信が成功すると、ReceiveSize に受信したデータのサイズが返されます。
-inline bool MsgSendBCasCommand(PluginParam *pParam,BCasCommandInfo *pInfo)
-{
-	return (*pParam->Callback)(pParam,MESSAGE_SENDBCASCOMMAND,(LPARAM)pInfo,0)!=0;
-}
-
-// B-CAS カードにコマンドを送信する
-// ※ B-CAS 関連の機能は削除されました。現在は利用できません。
-inline bool MsgSendBCasCommand(PluginParam *pParam,const BYTE *pSendData,DWORD SendSize,BYTE *pReceiveData,DWORD *pReceiveSize)
-{
-	BCasCommandInfo Info;
-	Info.pSendData=pSendData;
-	Info.SendSize=SendSize;
-	Info.pReceiveData=pReceiveData;
-	Info.ReceiveSize=*pReceiveSize;
-	if (!MsgSendBCasCommand(pParam,&Info))
-		return false;
-	*pReceiveSize=Info.ReceiveSize;
-	return true;
-}
 
 // ホストプログラムの情報
 struct HostInfo {
@@ -3265,16 +3192,6 @@ public:
 	}
 #endif
 #if TVTEST_PLUGIN_VERSION>=TVTEST_PLUGIN_VERSION_(0,0,8)
-	bool GetBCasInfo(BCasInfo *pInfo) {
-		pInfo->Size=sizeof(BCasInfo);
-		return MsgGetBCasInfo(m_pParam,pInfo);
-	}
-	bool SendBCasCommand(BCasCommandInfo *pInfo) {
-		return MsgSendBCasCommand(m_pParam,pInfo);
-	}
-	bool SendBCasCommand(const BYTE *pSendData,DWORD SendSize,BYTE *pReceiveData,DWORD *pReceiveSize) {
-		return MsgSendBCasCommand(m_pParam,pSendData,SendSize,pReceiveData,pReceiveSize);
-	}
 	bool GetHostInfo(HostInfo *pInfo) {
 		pInfo->Size=sizeof(HostInfo);
 		return MsgGetHostInfo(m_pParam,pInfo);

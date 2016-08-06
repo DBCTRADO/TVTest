@@ -1163,8 +1163,8 @@ LRESULT CPlugin::OnCallback(TVTest::PluginParam *pParam,UINT Message,LPARAM lPar
 	case TVTest::MESSAGE_QUERYMESSAGE:
 		if (lParam1<0 || lParam1>=TVTest::MESSAGE_TRAILER)
 			return FALSE;
-		if (lParam1==TVTest::MESSAGE_GETBCASINFO
-				|| lParam1==TVTest::MESSAGE_SENDBCASCOMMAND)
+		if (lParam1==TVTest::MESSAGE_REMOVED1
+				|| lParam1==TVTest::MESSAGE_REMOVED2)
 			return FALSE;
 		return TRUE;
 
@@ -1340,7 +1340,7 @@ LRESULT CPlugin::OnCallback(TVTest::PluginParam *pParam,UINT Message,LPARAM lPar
 			pInfo->ScramblePacketCount=(DWORD)pCoreEngine->GetScramblePacketCount();
 			if (pInfo->Size==sizeof(TVTest::StatusInfo)) {
 				pInfo->DropPacketCount=(DWORD)DropCount;
-				pInfo->BcasCardStatus=TVTest::BCAS_STATUS_OK;	// 非対応
+				pInfo->Reserved=0;
 			}
 		}
 		return TRUE;
@@ -1679,22 +1679,6 @@ LRESULT CPlugin::OnCallback(TVTest::PluginParam *pParam,UINT Message,LPARAM lPar
 				return FALSE;
 			return GetAppClass().UICore.DoCommand(pszCommand);
 		}
-
-	case TVTest::MESSAGE_GETBCASINFO:
-		// このメッセージは現在サポートされない
-		{
-			TVTest::BCasInfo *pBCasInfo=reinterpret_cast<TVTest::BCasInfo*>(lParam1);
-
-			if (pBCasInfo==NULL || pBCasInfo->Size!=sizeof(TVTest::BCasInfo))
-				return FALSE;
-
-			::ZeroMemory(pBCasInfo,sizeof(TVTest::BCasInfo));
-		}
-		return FALSE;
-
-	case TVTest::MESSAGE_SENDBCASCOMMAND:
-		// このメッセージは現在サポートされない
-		return FALSE;
 
 	case TVTest::MESSAGE_GETHOSTINFO:
 		{
