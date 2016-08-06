@@ -707,9 +707,9 @@ void CMainWindow::SetTitleBarVisible(bool fVisible)
 				else
 					CaptionHeight=m_TitleBar.GetHeight();
 				if (fVisible)
-					rc.top-=CaptionHeight;
+					rc.bottom+=CaptionHeight;
 				else
-					rc.top+=CaptionHeight;
+					rc.bottom-=CaptionHeight;
 				::SetWindowPos(m_hwnd,nullptr,rc.left,rc.top,
 							   rc.right-rc.left,rc.bottom-rc.top,
 							   SWP_NOZORDER | SWP_FRAMECHANGED | SWP_DRAWFRAME);
