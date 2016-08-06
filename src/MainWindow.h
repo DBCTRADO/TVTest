@@ -342,7 +342,7 @@ private:
 		void ShowSideBar(bool fShow);
 		void OnBarHide(CBasicWindow &Window);
 		void OnSharedBarVisibilityChange(CBasicWindow &Window,TVTest::CUIBase &UIBase,bool fVisible);
-		void RestorePanel();
+		void RestorePanel(bool fPreventForeground);
 	// CBasicWindow
 		bool Create(HWND hwndParent,DWORD Style,DWORD ExStyle=0,int ID=0) override;
 	// CCustomWindow

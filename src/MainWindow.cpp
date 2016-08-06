@@ -6362,7 +6362,7 @@ LRESULT CMainWindow::CFullscreen::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LP
 		ShowStatusBar(false);
 		ShowSideBar(false);
 		ShowPanel(false);
-		RestorePanel();
+		RestorePanel(false);
 		return 0;
 	}
 
@@ -6555,8 +6555,7 @@ void CMainWindow::CFullscreen::ShowPanel(bool fShow)
 			else
 				m_PanelWidth=m_Panel.GetWidth();
 			m_LayoutBase.SetContainerVisible(CONTAINER_ID_PANEL,false);
-			if (!m_App.Panel.IsFloating())
-				RestorePanel();
+			RestorePanel(true);
 		}
 
 		m_fShowPanel=fShow;
@@ -6566,15 +6565,34 @@ void CMainWindow::CFullscreen::ShowPanel(bool fShow)
 }
 
 
-void CMainWindow::CFullscreen::RestorePanel()
+void CMainWindow::CFullscreen::RestorePanel(bool fPreventForeground)
 {
 	if (m_Panel.GetWindow()!=nullptr) {
 		m_Panel.SetWindow(nullptr,nullptr);
 		CPanel *pPanel=m_App.Panel.Frame.GetPanel();
 		pPanel->SetWindow(&m_App.Panel.Form,TEXT("パネル"));
 		pPanel->SendSizeMessage();
+
 		if (m_App.Panel.fShowPanelWindow) {
+			// フローティングのパネルを再表示した際に、なぜか全画面ウィンドウの前に出るため
+			// 見えない位置に移動した後でZオーダーを調整する
+			RECT rc;
+			if (fPreventForeground && m_App.Panel.IsFloating()) {
+				m_App.Panel.Frame.GetPosition(&rc);
+				int Width=rc.right-rc.left,Height=rc.bottom-rc.top;
+				m_App.Panel.Frame.SetPosition(
+					::GetSystemMetrics(SM_XVIRTUALSCREEN)-Width-64,0,Width,Height);
+			}
+
 			m_App.Panel.Frame.SetPanelVisible(true,true);
+
+			if (fPreventForeground && m_App.Panel.IsFloating()) {
+				::SetWindowPos(m_App.Panel.Frame.GetHandle(),m_hwnd,0,0,0,0,
+							   SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
+				::SetWindowPos(m_App.Panel.Frame.GetHandle(),HWND_NOTOPMOST,
+							   rc.left,rc.top,rc.right-rc.left,rc.bottom-rc.top,
+							   SWP_NOACTIVATE);
+			}
 		}
 	}
 }
