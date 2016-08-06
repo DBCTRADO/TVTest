@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "TVTest.h"
 #include "AppMain.h"
-#include "MiscDialog.h"
+#include "AboutDialog.h"
 #include "DialogUtil.h"
 #include "DrawUtil.h"
 #include "WindowUtil.h"

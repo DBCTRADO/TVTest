@@ -284,7 +284,7 @@
     <ClCompile Include="MessageDialog.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="MiscDialog.cpp">
+    <ClCompile Include="AboutDialog.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
     <ClCompile Include="NotificationBar.cpp">
@@ -847,7 +847,7 @@
     <ClInclude Include="MessageDialog.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="MiscDialog.h">
+    <ClInclude Include="AboutDialog.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="NotificationBar.h">

@@ -1,5 +1,5 @@
-#ifndef MISC_DIALOG_H
-#define MISC_DIALOG_H
+#ifndef ABOUT_DIALOG_H
+#define ABOUT_DIALOG_H
 
 
 #include "Dialog.h"

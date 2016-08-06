@@ -1038,7 +1038,7 @@
     <ClCompile Include="Menu.cpp" />
     <ClCompile Include="MenuOptions.cpp" />
     <ClCompile Include="MessageDialog.cpp" />
-    <ClCompile Include="MiscDialog.cpp" />
+    <ClCompile Include="AboutDialog.cpp" />
     <ClCompile Include="NotificationBar.cpp" />
     <ClCompile Include="OperationOptions.cpp" />
     <ClCompile Include="OptionDialog.cpp" />
@@ -1236,7 +1236,7 @@
     <ClInclude Include="Menu.h" />
     <ClInclude Include="MenuOptions.h" />
     <ClInclude Include="MessageDialog.h" />
-    <ClInclude Include="MiscDialog.h" />
+    <ClInclude Include="AboutDialog.h" />
     <ClInclude Include="NotificationBar.h" />
     <ClInclude Include="OperationOptions.h" />
     <ClInclude Include="OptionDialog.h" />
