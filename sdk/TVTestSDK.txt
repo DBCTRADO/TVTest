@@ -44,9 +44,6 @@
   ・SignalGraph
   　信号レベルとビットレートをグラフ表示する
 
-  ・SkinController
-  　スキン風コントローラを表示する
-
   ・SleepTimer
   　指定時間後にスリープする
 
