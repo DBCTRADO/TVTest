@@ -77,7 +77,8 @@ INT_PTR CInitialSettings::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPara
 
 				::GetWindowRect(hwndLogo,&rc);
 				::SetRect(&rc,rc.right-rc.left,0,0,0);
-				if (m_AeroGlass.ApplyAeroGlass(hDlg,&rc)) {
+				if (!Util::OS::IsWindows8OrLater()
+						&& m_AeroGlass.ApplyAeroGlass(hDlg,&rc)) {
 					m_fDrawLogo=true;
 					m_LogoImage.LoadFromResource(GetAppClass().GetResourceInstance(),
 						MAKEINTRESOURCE(IDB_LOGO32),TEXT("PNG"));
