@@ -2632,7 +2632,7 @@ enum {
 	PANEL_ITEM_SET_INFO_MASK_STYLE	=0x00000002U	// StyleMask / Style を設定
 };
 
-// ステータス項目を設定する
+// パネル項目を設定する
 // PanelItemSetInfo の Size に構造体のサイズを、Mask に設定したい情報を、
 // ID に設定したい項目の識別子を指定して呼び出します。
 /*
