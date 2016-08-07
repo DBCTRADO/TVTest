@@ -88,6 +88,7 @@ private:
 		LPCTSTR GetTunerName() const { return m_TunerName.c_str(); }
 		LPCTSTR GetDisplayName() const;
 		void SetDisplayName(LPCTSTR pszName);
+		void GetDisplayName(int Space,LPTSTR pszName,int MaxName) const;
 		int NumSpaces() const;
 		CTuningSpaceInfo *GetTuningSpaceInfo(int Index);
 		const CTuningSpaceInfo *GetTuningSpaceInfo(int Index) const;
@@ -105,6 +106,7 @@ private:
 	{
 		TVTest::Style::Margins TunerItemPadding;
 		TVTest::Style::Size TunerIconSize;
+		TVTest::Style::IntValue TunerIconTextMargin;
 		TVTest::Style::Margins ChannelItemPadding;
 		TVTest::Style::IntValue ChannelEventMargin;
 		TVTest::Style::Margins ClockPadding;

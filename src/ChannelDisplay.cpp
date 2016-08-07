@@ -340,7 +340,25 @@ void CChannelDisplay::Layout()
 	HFONT hfontOld=SelectFont(hdc,m_Font.GetHandle());
 	m_FontHeight=m_Font.GetHeight(hdc);
 
-	m_TunerItemWidth=m_FontHeight*10+m_ChannelDisplayStyle.TunerItemPadding.Horz();
+	int TunerNameWidth=0;
+	bool fTunerIcon=false;
+	for (auto it=m_TunerList.begin();it!=m_TunerList.end();++it) {
+		const CTuner *pTuner=*it;
+		for (int j=0;j<pTuner->NumSpaces();j++) {
+			TCHAR szText[256];
+			pTuner->GetDisplayName(j,szText,lengthof(szText));
+			RECT rc={};
+			::DrawText(hdc,szText,-1,&rc,DT_SINGLELINE | DT_NOPREFIX | DT_CALCRECT);
+			if (TunerNameWidth<rc.right)
+				TunerNameWidth=rc.right;
+			if (pTuner->GetIcon()!=NULL)
+				fTunerIcon=true;
+		}
+	}
+
+	m_TunerItemWidth=TunerNameWidth+m_ChannelDisplayStyle.TunerItemPadding.Horz();
+	if (fTunerIcon)
+		m_TunerItemWidth+=m_ChannelDisplayStyle.TunerIconSize.Width+m_ChannelDisplayStyle.TunerIconTextMargin;
 	m_TunerItemHeight=max(m_ChannelDisplayStyle.TunerIconSize.Height,m_FontHeight)+
 		m_ChannelDisplayStyle.TunerItemPadding.Vert();
 	int CategoriesHeight=rc.bottom-m_Style.CategoriesMargin.Vert();
@@ -366,11 +384,11 @@ void CChannelDisplay::Layout()
 		si.nPage=m_VisibleTunerItems;
 		si.nPos=m_TunerScrollPos;
 		::SetScrollInfo(m_hwndTunerScroll,SB_CTL,&si,TRUE);
-		m_TunerItemWidth-=ScrollWidth;
 		::MoveWindow(m_hwndTunerScroll,
 					 m_TunerItemLeft+m_TunerItemWidth,m_TunerItemTop,
 					 ScrollWidth,m_VisibleTunerItems*m_TunerItemHeight,TRUE);
 		::ShowWindow(m_hwndTunerScroll,SW_SHOW);
+		m_TunerAreaWidth+=ScrollWidth;
 	} else {
 		m_TunerScrollPos=0;
 		::ShowWindow(m_hwndTunerScroll,SW_HIDE);
@@ -742,6 +760,14 @@ void CChannelDisplay::Draw(HDC hdc,const RECT *pPaintRect)
 		rc.bottom=rcClient.bottom;
 		TVTest::Theme::Draw(hdc,rc,m_TunerAreaBackStyle);
 
+		bool fTunerIcon=false;
+		for (auto it=m_TunerList.begin();it!=m_TunerList.end();++it) {
+			if ((*it)->GetIcon()!=NULL) {
+				fTunerIcon=true;
+				break;
+			}
+		}
+
 		int TunerIndex=0;
 		for (size_t i=0;i<m_TunerList.size();i++) {
 			const CTuner *pTuner=m_TunerList[i];
@@ -749,7 +775,6 @@ void CChannelDisplay::Draw(HDC hdc,const RECT *pPaintRect)
 			for (int j=0;j<pTuner->NumSpaces();j++) {
 				if (TunerIndex>=m_TunerScrollPos
 						&& TunerIndex<m_TunerScrollPos+m_VisibleTunerItems) {
-					const CTuningSpaceInfo *pTuningSpace=pTuner->GetTuningSpaceInfo(j);
 					const TVTest::Theme::Style *pStyle;
 					if (TunerIndex==m_CurTuner) {
 						pStyle=m_CurChannel>=0?&m_TunerItemSelStyle:&m_TunerItemCurStyle;
@@ -768,24 +793,9 @@ void CChannelDisplay::Draw(HDC hdc,const RECT *pPaintRect)
 									 m_ChannelDisplayStyle.TunerIconSize.Height,
 									 0,NULL,DI_NORMAL);
 					}
-					if (!IsStringEmpty(pTuner->GetDisplayName())) {
-						::lstrcpyn(szText,pTuner->GetDisplayName(),lengthof(szText));
-					} else {
-						LPCTSTR pszDriver=pTuner->GetDriverFileName();
-						if (::StrCmpNI(pszDriver,TEXT("BonDriver_"),10)==0)
-							pszDriver+=10;
-						::lstrcpyn(szText,pszDriver,lengthof(szText));
-						::PathRemoveExtension(szText);
-					}
-					if (pTuner->NumSpaces()>1) {
-						int Length=::lstrlen(szText);
-						if (!IsStringEmpty(pTuningSpace->GetName()))
-							StdUtil::snprintf(szText+Length,lengthof(szText)-Length,
-											  TEXT(" [%s]"),pTuningSpace->GetName());
-						else
-							StdUtil::snprintf(szText+Length,lengthof(szText)-Length,
-											  TEXT(" [%d]"),j+1);
-					}
+					if (fTunerIcon)
+						rc.left+=m_ChannelDisplayStyle.TunerIconSize.Width+m_ChannelDisplayStyle.TunerIconTextMargin;
+					pTuner->GetDisplayName(j,szText,lengthof(szText));
 					TVTest::Theme::Draw(hdc,rc,pStyle->Fore,szText,
 						DT_CENTER | DT_SINGLELINE | DT_VCENTER | DT_NOPREFIX | DT_END_ELLIPSIS);
 				}
@@ -1282,6 +1292,33 @@ LPCTSTR CChannelDisplay::CTuner::GetDisplayName() const
 }
 
 
+void CChannelDisplay::CTuner::GetDisplayName(int Space,LPTSTR pszName,int MaxName) const
+{
+	if (!IsStringEmpty(GetDisplayName())) {
+		::lstrcpyn(pszName,GetDisplayName(),MaxName);
+	} else {
+		LPCTSTR pszDriver=GetDriverFileName();
+		if (::StrCmpNI(pszDriver,TEXT("BonDriver_"),10)==0)
+			pszDriver+=10;
+		::lstrcpyn(pszName,pszDriver,MaxName);
+		::PathRemoveExtension(pszName);
+	}
+
+	if (m_TuningSpaceList.size()>1) {
+		const CTuningSpaceInfo *pTuningSpace=GetTuningSpaceInfo(Space);
+		if (pTuningSpace!=NULL) {
+			int Length=::lstrlen(pszName);
+			if (!IsStringEmpty(pTuningSpace->GetName()))
+				StdUtil::snprintf(pszName+Length,MaxName-Length,
+								  TEXT(" [%s]"),pTuningSpace->GetName());
+			else
+				StdUtil::snprintf(pszName+Length,MaxName-Length,
+								  TEXT(" [%d]"),Space+1);
+		}
+	}
+}
+
+
 void CChannelDisplay::CTuner::SetDisplayName(LPCTSTR pszName)
 {
 	TVTest::StringUtility::Assign(m_DisplayName,pszName);
@@ -1343,8 +1380,9 @@ const CEventInfoData *CChannelDisplay::CTuner::CChannel::GetEvent(int Index) con
 
 
 CChannelDisplay::ChannelDisplayStyle::ChannelDisplayStyle()
-	: TunerItemPadding(4,4,4,4)
+	: TunerItemPadding(8,4,8,4)
 	, TunerIconSize(32,32)
+	, TunerIconTextMargin(4)
 	, ChannelItemPadding(8,2,4,2)
 	, ChannelEventMargin(8)
 	, ClockPadding(2)
@@ -1358,6 +1396,7 @@ void CChannelDisplay::ChannelDisplayStyle::SetStyle(const TVTest::Style::CStyleM
 	*this=ChannelDisplayStyle();
 	pStyleManager->Get(TEXT("channel-display.tuner.padding"),&TunerItemPadding);
 	pStyleManager->Get(TEXT("channel-display.tuner.icon"),&TunerIconSize);
+	pStyleManager->Get(TEXT("channel-display.tuner.icon-text-margin"),&TunerIconTextMargin);
 	pStyleManager->Get(TEXT("channel-display.channel.padding"),&ChannelItemPadding);
 	pStyleManager->Get(TEXT("channel-display.channel.event-margin"),&ChannelEventMargin);
 	pStyleManager->Get(TEXT("channel-display.clock.padding"),&ClockPadding);
@@ -1371,6 +1410,7 @@ void CChannelDisplay::ChannelDisplayStyle::NormalizeStyle(
 {
 	pStyleScaling->ToPixels(&TunerItemPadding);
 	pStyleScaling->ToPixels(&TunerIconSize);
+	pStyleScaling->ToPixels(&TunerIconTextMargin);
 	pStyleScaling->ToPixels(&ChannelItemPadding);
 	pStyleScaling->ToPixels(&ChannelEventMargin);
 	pStyleScaling->ToPixels(&ClockPadding);
