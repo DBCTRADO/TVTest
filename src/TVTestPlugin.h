@@ -547,20 +547,18 @@ inline bool MsgQueryMessage(PluginParam *pParam,UINT Message) {
 }
 
 // メモリ再確保
-// 仕様はreallocと同じ
+// pData が NULL で新しい領域を確保
+// Size が0で領域を解放
 inline void *MsgMemoryReAlloc(PluginParam *pParam,void *pData,DWORD Size) {
 	return (void*)(*pParam->Callback)(pParam,MESSAGE_MEMORYALLOC,(LPARAM)pData,Size);
 }
 
 // メモリ確保
-// 仕様はrealloc(NULL,Size)と同じ
 inline void *MsgMemoryAlloc(PluginParam *pParam,DWORD Size) {
 	return (void*)(*pParam->Callback)(pParam,MESSAGE_MEMORYALLOC,(LPARAM)(void*)NULL,Size);
 }
 
 // メモリ開放
-// 仕様はrealloc(pData,0)と同じ
-// (実際にreallocでメモリ開放しているコードは見たこと無いけど...)
 inline void MsgMemoryFree(PluginParam *pParam,void *pData) {
 	(*pParam->Callback)(pParam,MESSAGE_MEMORYALLOC,(LPARAM)pData,0);
 }
