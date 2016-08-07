@@ -1157,7 +1157,7 @@ HICON CreateEmptyIcon(int Width,int Height,int BitsPerPixel)
 		const DWORD HeaderSize=BitsPerPixel==32?sizeof(BITMAPV5HEADER):sizeof(BITMAPINFOHEADER);
 		size_t PaletteSize=0;
 		if (BitsPerPixel<=8)
-			PaletteSize=(size_t)(1<<BitsPerPixel)*sizeof(RGBQUAD);
+			PaletteSize=((size_t)1<<BitsPerPixel)*sizeof(RGBQUAD);
 		BITMAPINFO *pbmi=(BITMAPINFO*)std::malloc(HeaderSize+PaletteSize);
 		if (pbmi!=NULL) {
 			::ZeroMemory(pbmi,HeaderSize+PaletteSize);
