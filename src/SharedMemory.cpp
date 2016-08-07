@@ -3,6 +3,9 @@
 #include "SharedMemory.h"
 #include "Common/DebugDef.h"
 
+#ifndef _NTDEF_
+typedef LONG NTSTATUS;
+#endif
 
 #include <pshpack1.h>
 

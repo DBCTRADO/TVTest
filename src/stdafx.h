@@ -20,8 +20,7 @@
 #define _WIN32_IE 0x0600	// Internet Explorer 6.0
 #endif
 
-// Winsock2 Ç∆ÉwÉbÉ_Ç™ä±è¬ÇµÇ»Ç¢ÇÊÇ§Ç…Ç∑ÇÈ
-#define _WINSOCKAPI_
+#define WIN32_LEAN_AND_MEAN
 
 #define _WIN32_DCOM	// for CoInitializeEx()
 
@@ -41,6 +40,8 @@
 #include <windowsx.h>
 #include <tchar.h>
 #include <commctrl.h>
+#include <commdlg.h>
+#include <shellapi.h>
 #include <shlobj.h>
 #include <shlwapi.h>
 #include <streams.h>	// DirectShow BaseClasses
@@ -58,8 +59,6 @@
 #define strdup strdup
 #define DEBUG_NEW new(_NORMAL_BLOCK,__FILE__,__LINE__)
 #endif // _DEBUG
-
-#undef _WINSOCKAPI_
 
 #include "Common/Common.h"
 

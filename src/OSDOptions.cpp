@@ -8,6 +8,7 @@
 #include "Aero.h"
 #include "StyleUtil.h"
 #include "resource.h"
+#include <dlgs.h>
 #include "Common/DebugDef.h"
 
 
