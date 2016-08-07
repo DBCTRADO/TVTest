@@ -34,6 +34,10 @@
 #define PSAPI_VERSION 1
 #endif
 
+// Windows ‚Ìƒwƒbƒ_‚Åo‚éŒx‚ğ—}~
+#pragma warning(push)
+#pragma warning(disable: 4091)
+
 #include <stdio.h>
 #include <process.h>
 #include <windows.h>
@@ -45,6 +49,8 @@
 #include <shlobj.h>
 #include <shlwapi.h>
 #include <streams.h>	// DirectShow BaseClasses
+
+#pragma warning(pop)
 
 #ifndef WM_DPICHANGED
 #define WM_DPICHANGED 0x02E0
