@@ -690,8 +690,8 @@ CDisplayView::CEventHandler::~CEventHandler()
 
 
 CDisplayView::DisplayViewStyle::DisplayViewStyle()
-	: TextSizeRatioHorz(40)
-	, TextSizeRatioVert(24)
+	: TextSizeRatioHorz(50)
+	, TextSizeRatioVert(30)
 	, TextSizeMin(12)
 	, ContentMargin(8,16,18,16)
 	, CategoriesMargin(8,32,8,32)
