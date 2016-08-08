@@ -171,7 +171,7 @@ bool CNotificationBar::SetFont(const TVTest::Style::Font &Font)
 {
 	m_StyleFont=Font;
 	if (m_hwnd!=NULL)
-		RealizeStyle();
+		ApplyStyle();
 	return true;
 }
 

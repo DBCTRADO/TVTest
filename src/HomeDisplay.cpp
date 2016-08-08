@@ -1610,8 +1610,10 @@ bool CHomeDisplay::SetFont(const TVTest::Style::Font &Font,bool fAutoSize)
 {
 	m_StyleFont=Font;
 	m_fAutoFontSize=fAutoSize;
-	if (m_hwnd!=NULL)
+	if (m_hwnd!=NULL) {
+		ApplyStyle();
 		RealizeStyle();
+	}
 	return true;
 }
 
