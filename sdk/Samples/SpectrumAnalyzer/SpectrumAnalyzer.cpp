@@ -6,6 +6,11 @@
 	fft4g.c は http://www.kurims.kyoto-u.ac.jp/~ooura/fft-j.html で配布されて
 	いるもので、大浦拓哉氏に著作権があります。
 	Copyright Takuya OOURA, 1996-2001
+
+	このサンプルでは主に以下の機能を実装しています。
+
+	・音声サンプルを取得する
+	・ウィンドウを表示する
 */
 
 
