@@ -54,7 +54,9 @@ protected:
 	{
 		TVTest::Style::IntValue TextSizeRatioHorz;
 		TVTest::Style::IntValue TextSizeRatioVert;
+		TVTest::Style::IntValue TextSizeScaleBase;
 		TVTest::Style::IntValue TextSizeMin;
+		TVTest::Style::IntValue TextSizeMax;
 		TVTest::Style::Margins ContentMargin;
 		TVTest::Style::Margins CategoriesMargin;
 		TVTest::Style::Size CloseButtonSize;

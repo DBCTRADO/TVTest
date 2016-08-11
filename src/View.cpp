@@ -2,6 +2,7 @@
 #include "TVTest.h"
 #include "View.h"
 #include "DrawUtil.h"
+#include <cmath>
 #include "Common/DebugDef.h"
 
 
@@ -643,7 +644,20 @@ bool CDisplayView::GetBackgroundStyle(BackgroundType Type,TVTest::Theme::Backgro
 int CDisplayView::GetDefaultFontSize(int Width,int Height) const
 {
 	int Size=min(Width/m_Style.TextSizeRatioHorz,Height/m_Style.TextSizeRatioVert);
-	return max(Size,m_Style.TextSizeMin);
+	double DPI=(double)m_pStyleScaling->GetDPI();
+	double Points=(double)Size*72.0/DPI;
+	const double BasePoints=9.0;
+	if (Points>BasePoints && m_Style.TextSizeScaleBase>0) {
+		Points=(int)(std::log(Points-(BasePoints-1.0))/
+					 std::log((double)m_Style.TextSizeScaleBase*0.01)+
+					 ((BasePoints-1.0)+0.5));
+		Size=(int)(Points*DPI/72.0+0.5);
+	}
+	if (Size<m_Style.TextSizeMin)
+		Size=m_Style.TextSizeMin;
+	else if (m_Style.TextSizeMax>0 && Size>m_Style.TextSizeMax)
+		Size=m_Style.TextSizeMax;
+	return Size;
 }
 
 
@@ -692,7 +706,9 @@ CDisplayView::CEventHandler::~CEventHandler()
 CDisplayView::DisplayViewStyle::DisplayViewStyle()
 	: TextSizeRatioHorz(50)
 	, TextSizeRatioVert(30)
+	, TextSizeScaleBase(140)
 	, TextSizeMin(12)
+	, TextSizeMax(72)
 	, ContentMargin(8,16,18,16)
 	, CategoriesMargin(8,32,8,32)
 	, CloseButtonSize(14,14)
@@ -710,7 +726,9 @@ void CDisplayView::DisplayViewStyle::SetStyle(const TVTest::Style::CStyleManager
 		TextSizeRatioHorz=Value;
 	if (pStyleManager->Get(TEXT("display.text-size-ratio.vert"),&Value) && Value.Value>0)
 		TextSizeRatioVert=Value;
+	pStyleManager->Get(TEXT("display.text-size-scale-base"),&TextSizeScaleBase);
 	pStyleManager->Get(TEXT("display.text-size-min"),&TextSizeMin);
+	pStyleManager->Get(TEXT("display.text-size-max"),&TextSizeMax);
 	pStyleManager->Get(TEXT("display.content.margin"),&ContentMargin);
 	pStyleManager->Get(TEXT("display.categories.margin"),&CategoriesMargin);
 	pStyleManager->Get(TEXT("display.close-button"),&CloseButtonSize);
@@ -723,6 +741,7 @@ void CDisplayView::DisplayViewStyle::NormalizeStyle(
 	const TVTest::Style::CStyleScaling *pStyleScaling)
 {
 	pStyleScaling->ToPixels(&TextSizeMin);
+	pStyleScaling->ToPixels(&TextSizeMax);
 	pStyleScaling->ToPixels(&ContentMargin);
 	pStyleScaling->ToPixels(&CategoriesMargin);
 	pStyleScaling->ToPixels(&CloseButtonSize);
