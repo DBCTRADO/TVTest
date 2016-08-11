@@ -2614,6 +2614,130 @@ LRESULT CPlugin::OnCallback(TVTest::PluginParam *pParam,UINT Message,LPARAM lPar
 	case TVTest::MESSAGE_SHOWDIALOG:
 		return SendPluginMessage(pParam,Message,lParam1,lParam2);
 
+	case TVTest::MESSAGE_CONVERTTIME:
+		{
+			TVTest::ConvertTimeInfo *pInfo=reinterpret_cast<TVTest::ConvertTimeInfo*>(lParam1);
+
+			if (pInfo==NULL || pInfo->Size!=sizeof(TVTest::ConvertTimeInfo))
+				return FALSE;
+
+			const bool fFromFileTime=
+				(pInfo->Flags & TVTest::CONVERT_TIME_FLAG_FROM_FILETIME)!=0;
+			const bool fToFileTime=
+				(pInfo->Flags & TVTest::CONVERT_TIME_FLAG_TO_FILETIME)!=0;
+
+			if (pInfo->TypeFrom==pInfo->TypeTo) {
+				if (!fFromFileTime && fToFileTime) {
+					if (!::SystemTimeToFileTime(&pInfo->From.SystemTime,&pInfo->To.FileTime))
+						return FALSE;
+				} else if (fFromFileTime && !fToFileTime) {
+					if (!::FileTimeToSystemTime(&pInfo->From.FileTime,&pInfo->To.SystemTime))
+						return FALSE;
+				} else {
+					pInfo->To=pInfo->From;
+				}
+				return TRUE;
+			}
+
+			::ZeroMemory(&pInfo->To,sizeof(pInfo->To));
+
+			SYSTEMTIME stFrom,stTo;
+
+			if (fFromFileTime) {
+				if (!::FileTimeToSystemTime(&pInfo->From.FileTime,&stFrom))
+					return FALSE;
+			} else {
+				stFrom=pInfo->From.SystemTime;
+			}
+
+			switch (pInfo->TypeFrom) {
+			case TVTest::CONVERT_TIME_TYPE_UTC:
+				break;
+
+			case TVTest::CONVERT_TIME_TYPE_LOCAL:
+				if (!::TzSpecificLocalTimeToSystemTime(NULL,&stFrom,&stTo))
+					return FALSE;
+				stFrom=stTo;
+				break;
+
+			case TVTest::CONVERT_TIME_TYPE_EPG:
+				if (!EpgTimeToUtc(&stFrom,&stTo))
+					return FALSE;
+				stFrom=stTo;
+				break;
+
+			default:
+				return FALSE;
+			}
+
+			switch (pInfo->TypeTo) {
+			case TVTest::CONVERT_TIME_TYPE_UTC:
+				stTo=stFrom;
+				break;
+
+			case TVTest::CONVERT_TIME_TYPE_LOCAL:
+				if (!::SystemTimeToTzSpecificLocalTime(NULL,&stFrom,&stTo))
+					return FALSE;
+				break;
+
+			case TVTest::CONVERT_TIME_TYPE_EPG:
+				if (!UtcToEpgTime(&stFrom,&stTo))
+					return FALSE;
+				break;
+
+			case TVTest::CONVERT_TIME_TYPE_EPG_DISPLAY:
+				{
+					const CEpgOptions &EpgOptions=GetAppClass().EpgOptions;
+
+					switch (EpgOptions.GetEpgTimeMode()) {
+					case CEpgOptions::EPGTIME_RAW:
+						if (!UtcToEpgTime(&stFrom,&stTo))
+							return FALSE;
+						break;
+
+					case CEpgOptions::EPGTIME_JST:
+						{
+							TIME_ZONE_INFORMATION tzi;
+							if (!GetJSTTimeZoneInformation(&tzi)
+									|| !::SystemTimeToTzSpecificLocalTime(&tzi,&stFrom,&stTo))
+								return FALSE;
+						}
+						break;
+
+					case CEpgOptions::EPGTIME_LOCAL:
+						if (!EpgTimeToLocalTime(&stFrom,&stTo))
+							return FALSE;
+						break;
+
+					case CEpgOptions::EPGTIME_UTC:
+						stTo=stFrom;
+						break;
+
+					default:
+						return FALSE;
+					}
+				}
+				break;
+
+			default:
+				return FALSE;
+			}
+
+			if ((pInfo->Flags & TVTest::CONVERT_TIME_FLAG_OFFSET)!=0
+					&& pInfo->Offset!=0) {
+				if (!OffsetSystemTime(&stTo,pInfo->Offset))
+					return FALSE;
+			}
+
+			if (fToFileTime) {
+				if (!::SystemTimeToFileTime(&stTo,&pInfo->To.FileTime))
+					return FALSE;
+			} else {
+				pInfo->To.SystemTime=stTo;
+			}
+		}
+		return TRUE;
+
 #ifdef _DEBUG
 	default:
 		TRACE(TEXT("CPluign::OnCallback() : Unknown message %u\n"),Message);

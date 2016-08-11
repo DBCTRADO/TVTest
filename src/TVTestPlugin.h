@@ -125,6 +125,7 @@
 	  ・MESSAGE_GETDPI
 	  ・MESSAGE_GETFONT
 	  ・MESSAGE_SHOWDIALOG
+	  ・MESSAGE_CONVERTTIME
 	・以下のイベントを追加した
 	  ・EVENT_FILTERGRAPH_INITIALIZE
 	  ・EVENT_FILTERGRAPH_INITIALIZED
@@ -452,6 +453,7 @@ enum {
 	MESSAGE_GETDPI,						// DPIを取得
 	MESSAGE_GETFONT,					// フォントを取得
 	MESSAGE_SHOWDIALOG,					// ダイアログを表示
+	MESSAGE_CONVERTTIME,				// 日時を変換
 #endif
 	MESSAGE_TRAILER
 };
@@ -1095,7 +1097,7 @@ struct ProgramInfo {
 	int MaxEventText;		// イベントテキストの最大長
 	LPWSTR pszEventExtText;	// 追加イベントテキスト
 	int MaxEventExtText;	// 追加イベントテキストの最大長
-	SYSTEMTIME StartTime;	// 開始日時(JST)
+	SYSTEMTIME StartTime;	// 開始日時(EPG 日時 : UTC+9)
 	DWORD Duration;			// 長さ(秒単位)
 };
 
@@ -1711,7 +1713,7 @@ struct EpgEventInfo {
 	BYTE RunningStatus;					// running_status
 	BYTE FreeCaMode;					// free_CA_mode
 	DWORD Reserved;						// 予約
-	SYSTEMTIME StartTime;				// 開始日時(ローカル時刻)
+	SYSTEMTIME StartTime;				// 開始日時(EPG 日時 : UTC+9)
 	DWORD Duration;						// 長さ(秒単位)
 	BYTE VideoListLength;				// 映像の情報の数
 	BYTE AudioListLength;				// 音声の情報の数
@@ -1848,7 +1850,7 @@ struct ProgramGuideProgramInfo {
 	WORD TransportStreamID;	// ストリームID
 	WORD ServiceID;			// サービスID
 	WORD EventID;			// イベントID
-	SYSTEMTIME StartTime;	// 開始日時
+	SYSTEMTIME StartTime;	// 開始日時(EPG 日時 : UTC+9)
 	DWORD Duration;			// 長さ(秒単位)
 };
 
@@ -2928,6 +2930,60 @@ inline INT_PTR MsgShowDialog(PluginParam *pParam,ShowDialogInfo *pInfo) {
 	return (*pParam->Callback)(pParam,MESSAGE_SHOWDIALOG,(LPARAM)pInfo,0);
 }
 
+// 各種日時
+union TimeUnion {
+	SYSTEMTIME SystemTime;
+	FILETIME FileTime;
+};
+
+// 日時変換のフラグ
+enum {
+	CONVERT_TIME_FLAG_FROM_FILETIME = 0x00000001U,	// FILETIME から変換
+	CONVERT_TIME_FLAG_TO_FILETIME   = 0x00000002U,	// FILETIME へ変換
+	CONVERT_TIME_FLAG_FILETIME      = CONVERT_TIME_FLAG_FROM_FILETIME | CONVERT_TIME_FLAG_TO_FILETIME,
+	CONVERT_TIME_FLAG_OFFSET        = 0x00000004U	// オフセットの指定
+};
+
+// 日時変換の種類
+enum {
+	CONVERT_TIME_TYPE_UTC,			// UTC
+	CONVERT_TIME_TYPE_LOCAL,		// ローカル
+	CONVERT_TIME_TYPE_EPG,			// EPG 日時(UTC+9)
+	CONVERT_TIME_TYPE_EPG_DISPLAY	// EPG の表示用(変換先としてのみ指定可能)
+};
+
+// 日時変換の情報
+struct ConvertTimeInfo {
+	DWORD Size;					// 構造体のサイズ
+	DWORD Flags;				// 各種フラグ(CONVERT_TIME_FLAG_*)
+	DWORD TypeFrom;				// 変換元の種類(CONVERT_TIME_TYPE_*)
+	DWORD TypeTo;				// 変換先の種類(CONVERT_TIME_TYPE_*)
+	TimeUnion From;				// 変換元の日時
+	TimeUnion To;				// 変換先の日時
+	LONGLONG Offset;			// オフセットms(Flags に CONVERT_TIME_FLAG_OFFSET が指定されている場合のみ)
+};
+
+// 日時を変換する
+// Flags に CONVERT_TIME_FLAG_OFFSET を指定すると、Offset の時間が変換結果に加算されます。
+bool inline MsgConvertTime(PluginParam *pParam,ConvertTimeInfo *pInfo) {
+	return (*pParam->Callback)(pParam,MESSAGE_CONVERTTIME,(LPARAM)pInfo,0)!=FALSE;
+}
+// EPG 日時を変換する
+bool inline MsgConvertEpgTimeTo(
+	PluginParam *pParam,const SYSTEMTIME &EpgTime,DWORD Type,SYSTEMTIME *pDstTime)
+{
+	ConvertTimeInfo Info;
+	Info.Size = sizeof(ConvertTimeInfo);
+	Info.Flags = 0;
+	Info.TypeFrom = CONVERT_TIME_TYPE_EPG;
+	Info.TypeTo = Type;
+	Info.From.SystemTime = EpgTime;
+	if (!MsgConvertTime(pParam, &Info))
+		return false;
+	*pDstTime = Info.To.SystemTime;
+	return true;
+}
+
 #endif	// TVTEST_PLUGIN_VERSION>=TVTEST_PLUGIN_VERSION_(0,0,14)
 
 
@@ -3439,6 +3495,13 @@ public:
 	INT_PTR ShowDialog(ShowDialogInfo *pInfo) {
 		pInfo->Size=sizeof(ShowDialogInfo);
 		return MsgShowDialog(m_pParam,pInfo);
+	}
+	bool ConvertTime(ConvertTimeInfo *pInfo) {
+		pInfo->Size=sizeof(ConvertTimeInfo);
+		return MsgConvertTime(m_pParam,pInfo);
+	}
+	bool ConvertEpgTimeTo(const SYSTEMTIME &EpgTime,DWORD Type,SYSTEMTIME *pDstTime) {
+		return MsgConvertEpgTimeTo(m_pParam,EpgTime,Type,pDstTime);
 	}
 #endif
 };
