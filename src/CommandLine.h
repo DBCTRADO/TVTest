@@ -44,7 +44,7 @@ public:
 
 	bool m_fRecord;
 	bool m_fRecordStop;
-	FILETIME m_RecordStartTime;
+	SYSTEMTIME m_RecordStartTime;
 	int m_RecordDelay;
 	int m_RecordDuration;
 	TVTest::String m_RecordFileName;

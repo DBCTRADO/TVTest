@@ -70,13 +70,13 @@ CRecordTime::CRecordTime()
 
 bool CRecordTime::SetCurrentTime()
 {
-	GetLocalTimeAsFileTime(&m_Time);
+	::GetSystemTime(&m_Time);
 	m_TickTime=Util::GetTickCount();
 	return true;
 }
 
 
-bool CRecordTime::GetTime(FILETIME *pTime) const
+bool CRecordTime::GetTime(SYSTEMTIME *pTime) const
 {
 	if (!IsValid())
 		return false;
@@ -94,9 +94,7 @@ void CRecordTime::Clear()
 
 bool CRecordTime::IsValid() const
 {
-	if (m_Time.dwLowDateTime==0 && m_Time.dwHighDateTime==0)
-		return false;
-	return true;
+	return m_Time.wYear!=0;
 }
 
 
@@ -212,7 +210,7 @@ CRecordTask::DurationType CRecordTask::GetStartTime() const
 }
 
 
-bool CRecordTask::GetStartTime(FILETIME *pTime) const
+bool CRecordTask::GetStartTime(SYSTEMTIME *pTime) const
 {
 	if (m_State==STATE_STOP)
 		return false;
@@ -341,7 +339,7 @@ bool CRecordManager::SetFileExistsOperation(FileExistsOperation Operation)
 */
 
 
-bool CRecordManager::GetStartTime(FILETIME *pTime) const
+bool CRecordManager::GetStartTime(SYSTEMTIME *pTime) const
 {
 	if (!m_fRecording)
 		return false;
@@ -349,7 +347,7 @@ bool CRecordManager::GetStartTime(FILETIME *pTime) const
 }
 
 
-bool CRecordManager::GetReserveTime(FILETIME *pTime) const
+bool CRecordManager::GetReserveTime(SYSTEMTIME *pTime) const
 {
 	if (!m_fReserved)
 		return false;
@@ -357,7 +355,7 @@ bool CRecordManager::GetReserveTime(FILETIME *pTime) const
 }
 
 
-bool CRecordManager::GetReservedStartTime(FILETIME *pTime) const
+bool CRecordManager::GetReservedStartTime(SYSTEMTIME *pTime) const
 {
 	if (!m_fReserved)
 		return false;
@@ -366,7 +364,7 @@ bool CRecordManager::GetReservedStartTime(FILETIME *pTime) const
 	} else if (m_StartTimeSpec.Type==TIME_DURATION) {
 		if (!m_ReserveTime.GetTime(pTime))
 			return false;
-		*pTime+=m_StartTimeSpec.Time.Duration*FILETIME_MILLISECOND;
+		OffsetSystemTime(pTime,m_StartTimeSpec.Time.Duration);
 	} else
 		return false;
 	return true;
@@ -517,10 +515,10 @@ LONGLONG CRecordManager::GetRemainTime() const
 	switch (m_StopTimeSpec.Type) {
 	case TIME_DATETIME:
 		{
-			FILETIME ft;
+			SYSTEMTIME st;
 
-			GetLocalTimeAsFileTime(&ft);
-			Remain=(m_StopTimeSpec.Time.DateTime-ft)/FILETIME_MILLISECOND;
+			::GetSystemTime(&st);
+			Remain=DiffSystemTime(&st,&m_StopTimeSpec.Time.DateTime);
 		}
 		break;
 	case TIME_DURATION:
@@ -541,12 +539,12 @@ bool CRecordManager::QueryStart(int Offset) const
 	switch (m_StartTimeSpec.Type) {
 	case TIME_DATETIME:
 		{
-			FILETIME ft;
+			SYSTEMTIME st;
 
-			GetLocalTimeAsFileTime(&ft);
+			::GetSystemTime(&st);
 			if (Offset!=0)
-				ft+=(LONGLONG)Offset*(FILETIME_SECOND/1000);
-			if (::CompareFileTime(&ft,&m_StartTimeSpec.Time.DateTime)>=0)
+				OffsetSystemTime(&st,Offset);
+			if (CompareSystemTime(&st,&m_StartTimeSpec.Time.DateTime)>=0)
 				return true;
 		}
 		break;
@@ -575,12 +573,12 @@ bool CRecordManager::QueryStop(int Offset) const
 	switch (m_StopTimeSpec.Type) {
 	case TIME_DATETIME:
 		{
-			FILETIME ft;
+			SYSTEMTIME st;
 
-			GetLocalTimeAsFileTime(&ft);
+			::GetSystemTime(&st);
 			if (Offset!=0)
-				ft+=(LONGLONG)Offset*FILETIME_MILLISECOND;
-			if (::CompareFileTime(&ft,&m_StopTimeSpec.Time.DateTime)>=0)
+				OffsetSystemTime(&st,Offset);
+			if (CompareSystemTime(&st,&m_StopTimeSpec.Time.DateTime)>=0)
 				return true;
 		}
 		break;
@@ -723,7 +721,7 @@ bool CRecordManager::GenerateFilePath(
 
 	if (m_fReserved && m_StartTimeSpec.Type==TIME_DATETIME) {
 		SYSTEMTIME st;
-		::FileTimeToSystemTime(&m_StartTimeSpec.Time.DateTime,&st);
+		::SystemTimeToTzSpecificLocalTime(NULL,&m_StartTimeSpec.Time.DateTime,&st);
 		VarStrMap.SetCurrentTime(&st);
 	}
 
@@ -889,15 +887,6 @@ static void SetDateTimeFormat(HWND hDlg,UINT ID)
 }
 
 
-static BOOL DateTime_SetFiletime(HWND hwndDT,DWORD flag,FILETIME *pFileTime)
-{
-	SYSTEMTIME st;
-
-	FileTimeToSystemTime(pFileTime,&st);
-	return DateTime_SetSystemtime(hwndDT,flag,&st);
-}
-
-
 CRecordManager::CRecordSettingsDialog::CRecordSettingsDialog(CRecordManager *pRecManager)
 	: m_pRecManager(pRecManager)
 {
@@ -917,41 +906,37 @@ INT_PTR CRecordManager::CRecordSettingsDialog::DlgProc(HWND hDlg,UINT uMsg,WPARA
 	switch (uMsg) {
 	case WM_INITDIALOG:
 		{
-			SYSTEMTIME st;
-			FILETIME ftTime;
-
 			DlgEdit_LimitText(hDlg,IDC_RECORD_FILENAME,MAX_PATH-1);
 			if (!m_pRecManager->m_FileName.empty())
 				DlgEdit_SetText(hDlg,IDC_RECORD_FILENAME,m_pRecManager->m_FileName.c_str());
 			InitDropDownButton(hDlg,IDC_RECORD_FILENAMEFORMAT);
 			EnableDlgItems(hDlg,IDC_RECORD_FILENAME_LABEL,IDC_RECORD_FILENAMEPREVIEW,!m_pRecManager->m_fRecording);
 
+			SYSTEMTIME stLocal;
+			::GetLocalTime(&stLocal);
+
 			// 開始時間
+			SYSTEMTIME stStart;
 			DWORD Delay;
 			::CheckRadioButton(hDlg,IDC_RECORD_START_NOW,IDC_RECORD_START_DELAY,
 							   IDC_RECORD_START_NOW+m_pRecManager->m_StartTimeSpec.Type);
 			switch (m_pRecManager->m_StartTimeSpec.Type) {
 			case TIME_NOTSPECIFIED:
-				::GetLocalTime(&st);
-				st.wSecond=0;
-				st.wMilliseconds=0;
-				::SystemTimeToFileTime(&st,&ftTime);
+				stStart=stLocal;
+				stStart.wSecond=0;
+				stStart.wMilliseconds=0;
 				Delay=60*1000;
 				break;
 			case TIME_DATETIME:
 				{
-					FILETIME ft;
-					ULARGE_INTEGER Time1,Time2;
+					SYSTEMTIME st;
 
-					::GetLocalTime(&st);
-					::SystemTimeToFileTime(&st,&ft);
-					ftTime=m_pRecManager->m_StartTimeSpec.Time.DateTime;
-					Time1.LowPart=ft.dwLowDateTime;
-					Time1.HighPart=ft.dwHighDateTime;
-					Time2.LowPart=ftTime.dwLowDateTime;
-					Time2.HighPart=ftTime.dwHighDateTime;
-					if (Time1.QuadPart<Time2.QuadPart) {
-						Delay=(DWORD)((Time2.QuadPart-Time1.QuadPart)/FILETIME_MILLISECOND);
+					::SystemTimeToTzSpecificLocalTime(
+						NULL,&m_pRecManager->m_StartTimeSpec.Time.DateTime,&stStart);
+					::GetSystemTime(&st);
+					LONGLONG Diff=DiffSystemTime(&m_pRecManager->m_StartTimeSpec.Time.DateTime,&st);
+					if (Diff>0) {
+						Delay=(DWORD)Diff;
 					} else {
 						Delay=0;
 					}
@@ -959,15 +944,14 @@ INT_PTR CRecordManager::CRecordSettingsDialog::DlgProc(HWND hDlg,UINT uMsg,WPARA
 				break;
 			case TIME_DURATION:
 				Delay=(DWORD)m_pRecManager->m_StartTimeSpec.Time.Duration;
-				::GetLocalTime(&st);
-				st.wSecond=0;
-				st.wMilliseconds=0;
-				::SystemTimeToFileTime(&st,&ftTime);
-				ftTime+=(LONGLONG)Delay*FILETIME_MILLISECOND;
+				stStart=stLocal;
+				stStart.wSecond=0;
+				stStart.wMilliseconds=0;
+				OffsetSystemTime(&stStart,Delay);
 				break;
 			}
 			SetDateTimeFormat(hDlg,IDC_RECORD_STARTTIME_TIME);
-			DateTime_SetFiletime(::GetDlgItem(hDlg,IDC_RECORD_STARTTIME_TIME),GDT_VALID,&ftTime);
+			DateTime_SetSystemtime(::GetDlgItem(hDlg,IDC_RECORD_STARTTIME_TIME),GDT_VALID,&stStart);
 			Delay/=1000;
 			::SetDlgItemInt(hDlg,IDC_RECORD_STARTTIME_HOUR,Delay/(60*60),FALSE);
 			DlgUpDown_SetRange(hDlg,IDC_RECORD_STARTTIME_HOUR_UD,0,100);
@@ -987,6 +971,7 @@ INT_PTR CRecordManager::CRecordSettingsDialog::DlgProc(HWND hDlg,UINT uMsg,WPARA
 			}
 
 			// 終了時間
+			SYSTEMTIME stStop;
 			DWORD Duration;
 			::CheckDlgButton(hDlg,IDC_RECORD_STOPSPECTIME,
 				m_pRecManager->m_StopTimeSpec.Type!=TIME_NOTSPECIFIED?BST_CHECKED:BST_UNCHECKED);
@@ -995,36 +980,36 @@ INT_PTR CRecordManager::CRecordSettingsDialog::DlgProc(HWND hDlg,UINT uMsg,WPARA
 					IDC_RECORD_STOPDATETIME:IDC_RECORD_STOPREMAINTIME);
 			switch (m_pRecManager->m_StopTimeSpec.Type) {
 			case TIME_NOTSPECIFIED:
-				::GetLocalTime(&st);
-				st.wSecond=0;
-				st.wMilliseconds=0;
-				::SystemTimeToFileTime(&st,&ftTime);
-				ftTime+=60*60*FILETIME_SECOND;
+				stStop=stLocal;
+				stStop.wSecond=0;
+				stStop.wMilliseconds=0;
 				Duration=60*60*1000;
+				OffsetSystemTime(&stStop,Duration);
 				break;
 			case TIME_DATETIME:
 				{
-					FILETIME ft;
+					SYSTEMTIME st;
 
-					GetLocalTimeAsFileTime(&ft);
-					ftTime=m_pRecManager->m_StopTimeSpec.Time.DateTime;
-					if (::CompareFileTime(&ft,&ftTime)<0)
-						Duration=(DWORD)((ftTime-ft)/FILETIME_MILLISECOND);
+					::SystemTimeToTzSpecificLocalTime(
+						NULL,&m_pRecManager->m_StopTimeSpec.Time.DateTime,&stStop);
+					::GetSystemTime(&st);
+					LONGLONG Diff=DiffSystemTime(&st,&m_pRecManager->m_StopTimeSpec.Time.DateTime);
+					if (Diff>0)
+						Duration=(DWORD)Diff;
 					else
 						Duration=0;
 				}
 				break;
 			case TIME_DURATION:
 				Duration=(DWORD)m_pRecManager->m_StopTimeSpec.Time.Duration;
-				::GetLocalTime(&st);
-				st.wSecond=0;
-				st.wMilliseconds=0;
-				::SystemTimeToFileTime(&st,&ftTime);
-				ftTime+=(LONGLONG)Duration*FILETIME_MILLISECOND;
+				stStop=stLocal;
+				stStop.wSecond=0;
+				stStop.wMilliseconds=0;
+				OffsetSystemTime(&stStop,Duration);
 				break;
 			}
 			SetDateTimeFormat(hDlg,IDC_RECORD_STOPTIME_TIME);
-			DateTime_SetFiletime(::GetDlgItem(hDlg,IDC_RECORD_STOPTIME_TIME),GDT_VALID,&ftTime);
+			DateTime_SetSystemtime(::GetDlgItem(hDlg,IDC_RECORD_STOPTIME_TIME),GDT_VALID,&stStop);
 			::SetDlgItemInt(hDlg,IDC_RECORD_STOPTIME_HOUR,Duration/(60*60*1000),FALSE);
 			DlgUpDown_SetRange(hDlg,IDC_RECORD_STOPTIME_HOUR_UD,0,100);
 			::SetDlgItemInt(hDlg,IDC_RECORD_STOPTIME_MINUTE,Duration/(60*1000)%60,FALSE);
@@ -1228,18 +1213,18 @@ INT_PTR CRecordManager::CRecordSettingsDialog::DlgProc(HWND hDlg,UINT uMsg,WPARA
 		case IDOK:
 			{
 				int StartTimeChecked;
-				SYSTEMTIME st;
-				FILETIME ftCur,ftStart,ftStop;
+				SYSTEMTIME stCur,stStart,stStop;
 
-				::GetLocalTimeAsFileTime(&ftCur);
+				::GetSystemTime(&stCur);
 
 				if (!m_pRecManager->m_fRecording) {
 					StartTimeChecked=GetCheckedRadioButton(hDlg,IDC_RECORD_START_NOW,IDC_RECORD_START_DELAY);
 					if (StartTimeChecked==IDC_RECORD_START_DATETIME) {
+						SYSTEMTIME st;
 						DateTime_GetSystemtime(
 							::GetDlgItem(hDlg,IDC_RECORD_STARTTIME_TIME),&st);
-						::SystemTimeToFileTime(&st,&ftStart);
-						if (::CompareFileTime(&ftStart,&ftCur)<=0) {
+						::TzSpecificLocalTimeToSystemTime(NULL,&st,&stStart);
+						if (CompareSystemTime(&stStart,&stCur)<=0) {
 							::MessageBox(hDlg,
 								TEXT("指定された開始時刻を既に過ぎています。"),
 								NULL,MB_OK | MB_ICONEXCLAMATION);
@@ -1251,10 +1236,11 @@ INT_PTR CRecordManager::CRecordSettingsDialog::DlgProc(HWND hDlg,UINT uMsg,WPARA
 
 				if (DlgCheckBox_IsChecked(hDlg,IDC_RECORD_STOPSPECTIME)
 						&& DlgCheckBox_IsChecked(hDlg,IDC_RECORD_STOPDATETIME)) {
+					SYSTEMTIME st;
 					DateTime_GetSystemtime(
 						::GetDlgItem(hDlg,IDC_RECORD_STOPTIME_TIME),&st);
-					::SystemTimeToFileTime(&st,&ftStop);
-					if (::CompareFileTime(&ftStop,&ftCur)<=0) {
+					::TzSpecificLocalTimeToSystemTime(NULL,&st,&stStop);
+					if (CompareSystemTime(&stStop,&stCur)<=0) {
 						::MessageBox(hDlg,
 							TEXT("指定された停止時刻を既に過ぎています。"),
 							NULL,MB_OK | MB_ICONEXCLAMATION);
@@ -1322,7 +1308,7 @@ INT_PTR CRecordManager::CRecordSettingsDialog::DlgProc(HWND hDlg,UINT uMsg,WPARA
 							TimeSpecInfo TimeSpec;
 
 							TimeSpec.Type=TIME_DATETIME;
-							TimeSpec.Time.DateTime=ftStart;
+							TimeSpec.Time.DateTime=stStart;
 							m_pRecManager->SetStartTimeSpec(&TimeSpec);
 						}
 						break;
@@ -1360,7 +1346,7 @@ INT_PTR CRecordManager::CRecordSettingsDialog::DlgProc(HWND hDlg,UINT uMsg,WPARA
 
 					if (DlgCheckBox_IsChecked(hDlg,IDC_RECORD_STOPDATETIME)) {
 						TimeSpec.Type=TIME_DATETIME;
-						TimeSpec.Time.DateTime=ftStop;
+						TimeSpec.Time.DateTime=stStop;
 					} else {
 						unsigned int Hour,Minute,Second;
 

@@ -37,6 +37,24 @@ static void EventInfoToProgramGuideProgramInfo(const CEventInfoData &EventInfo,
 }
 
 
+static bool SystemTimeToLocalFileTime(const SYSTEMTIME *pSystemTime,FILETIME *pFileTime)
+{
+	SYSTEMTIME stLocal;
+
+	return ::SystemTimeToTzSpecificLocalTime(NULL,pSystemTime,&stLocal)
+		&& ::SystemTimeToFileTime(&stLocal,pFileTime);
+}
+
+
+static bool LocalFileTimeToSystemTime(const FILETIME *pFileTime,SYSTEMTIME *pSystemTime)
+{
+	SYSTEMTIME stLocal;
+
+	return ::FileTimeToSystemTime(pFileTime,&stLocal)
+		&& ::TzSpecificLocalTimeToSystemTime(NULL,&stLocal,pSystemTime);
+}
+
+
 
 
 class CControllerPlugin : public CController
@@ -2889,7 +2907,14 @@ LRESULT CPlugin::OnPluginMessage(WPARAM wParam,LPARAM lParam)
 					break;
 				case TVTest::RECORD_START_TIME:
 					StartTime.Type=CRecordManager::TIME_DATETIME;
-					StartTime.Time.DateTime=pRecInfo->StartTime.Time;
+					if ((pRecInfo->Mask&TVTest::RECORD_MASK_FLAGS)!=0
+							&& (pRecInfo->Flags&TVTest::RECORD_FLAG_UTC)!=0) {
+						if (!::FileTimeToSystemTime(&pRecInfo->StartTime.Time,&StartTime.Time.DateTime))
+							return FALSE;
+					} else {
+						if (!LocalFileTimeToSystemTime(&pRecInfo->StartTime.Time,&StartTime.Time.DateTime))
+							return FALSE;
+					}
 					break;
 				case TVTest::RECORD_START_DELAY:
 					StartTime.Type=CRecordManager::TIME_DURATION;
@@ -2906,7 +2931,14 @@ LRESULT CPlugin::OnPluginMessage(WPARAM wParam,LPARAM lParam)
 					break;
 				case TVTest::RECORD_STOP_TIME:
 					StopTime.Type=CRecordManager::TIME_DATETIME;
-					StopTime.Time.DateTime=pRecInfo->StopTime.Time;
+					if ((pRecInfo->Mask&TVTest::RECORD_MASK_FLAGS)!=0
+							&& (pRecInfo->Flags&TVTest::RECORD_FLAG_UTC)!=0) {
+						if (!::FileTimeToSystemTime(&pRecInfo->StopTime.Time,&StopTime.Time.DateTime))
+							return FALSE;
+					} else {
+						if (!LocalFileTimeToSystemTime(&pRecInfo->StopTime.Time,&StopTime.Time.DateTime))
+							return FALSE;
+					}
 					break;
 				case TVTest::RECORD_STOP_DURATION:
 					StopTime.Type=CRecordManager::TIME_DURATION;
@@ -2957,8 +2989,17 @@ LRESULT CPlugin::OnPluginMessage(WPARAM wParam,LPARAM lParam)
 					pRecInfo->pszFileName[0]='\0';
 			}
 
-			if (!pRecordManager->GetReserveTime(&pRecInfo->ReserveTime))
+			SYSTEMTIME st;
+			if (pRecordManager->GetReserveTime(&st)) {
+				if ((pRecInfo->Mask&TVTest::RECORD_MASK_FLAGS)!=0
+						&& (pRecInfo->Flags&TVTest::RECORD_FLAG_UTC)!=0) {
+					::SystemTimeToFileTime(&st,&pRecInfo->ReserveTime);
+				} else {
+					SystemTimeToLocalFileTime(&st,&pRecInfo->ReserveTime);
+				}
+			} else {
 				pRecInfo->ReserveTime=FILETIME_NULL;
+			}
 
 			if ((pRecInfo->Mask&TVTest::RECORD_MASK_STARTTIME)!=0) {
 				CRecordManager::TimeSpecInfo StartTime;
@@ -2971,7 +3012,12 @@ LRESULT CPlugin::OnPluginMessage(WPARAM wParam,LPARAM lParam)
 					break;
 				case CRecordManager::TIME_DATETIME:
 					pRecInfo->StartTimeSpec=TVTest::RECORD_START_TIME;
-					pRecInfo->StartTime.Time=StartTime.Time.DateTime;
+					if ((pRecInfo->Mask&TVTest::RECORD_MASK_FLAGS)!=0
+							&& (pRecInfo->Flags&TVTest::RECORD_FLAG_UTC)!=0) {
+						::SystemTimeToFileTime(&StartTime.Time.DateTime,&pRecInfo->StartTime.Time);
+					} else {
+						SystemTimeToLocalFileTime(&StartTime.Time.DateTime,&pRecInfo->StartTime.Time);
+					}
 					break;
 				case CRecordManager::TIME_DURATION:
 					pRecInfo->StartTimeSpec=TVTest::RECORD_START_DELAY;
@@ -2991,7 +3037,12 @@ LRESULT CPlugin::OnPluginMessage(WPARAM wParam,LPARAM lParam)
 					break;
 				case CRecordManager::TIME_DATETIME:
 					pRecInfo->StopTimeSpec=TVTest::RECORD_STOP_TIME;
-					pRecInfo->StopTime.Time=StopTime.Time.DateTime;
+					if ((pRecInfo->Mask&TVTest::RECORD_MASK_FLAGS)!=0
+							&& (pRecInfo->Flags&TVTest::RECORD_FLAG_UTC)!=0) {
+						::SystemTimeToFileTime(&StopTime.Time.DateTime,&pRecInfo->StopTime.Time);
+					} else {
+						SystemTimeToLocalFileTime(&StopTime.Time.DateTime,&pRecInfo->StopTime.Time);
+					}
 					break;
 				case CRecordManager::TIME_DURATION:
 					pRecInfo->StopTimeSpec=TVTest::RECORD_STOP_DURATION;
@@ -3021,7 +3072,14 @@ LRESULT CPlugin::OnPluginMessage(WPARAM wParam,LPARAM lParam)
 					break;
 				case TVTest::RECORD_START_TIME:
 					StartTime.Type=CRecordManager::TIME_DATETIME;
-					StartTime.Time.DateTime=pRecInfo->StartTime.Time;
+					if ((pRecInfo->Mask&TVTest::RECORD_MASK_FLAGS)!=0
+							&& (pRecInfo->Flags&TVTest::RECORD_FLAG_UTC)!=0) {
+						if (!::FileTimeToSystemTime(&pRecInfo->StartTime.Time,&StartTime.Time.DateTime))
+							return FALSE;
+					} else {
+						if (!LocalFileTimeToSystemTime(&pRecInfo->StartTime.Time,&StartTime.Time.DateTime))
+							return FALSE;
+					}
 					break;
 				case TVTest::RECORD_START_DELAY:
 					StartTime.Type=CRecordManager::TIME_DURATION;
@@ -3038,7 +3096,14 @@ LRESULT CPlugin::OnPluginMessage(WPARAM wParam,LPARAM lParam)
 					break;
 				case TVTest::RECORD_STOP_TIME:
 					StopTime.Type=CRecordManager::TIME_DATETIME;
-					StopTime.Time.DateTime=pRecInfo->StopTime.Time;
+					if ((pRecInfo->Mask&TVTest::RECORD_MASK_FLAGS)!=0
+							&& (pRecInfo->Flags&TVTest::RECORD_FLAG_UTC)!=0) {
+						if (!::FileTimeToSystemTime(&pRecInfo->StopTime.Time,&StopTime.Time.DateTime))
+							return FALSE;
+					} else {
+						if (!LocalFileTimeToSystemTime(&pRecInfo->StopTime.Time,&StopTime.Time.DateTime))
+							return FALSE;
+					}
 					break;
 				case TVTest::RECORD_STOP_DURATION:
 					StopTime.Type=CRecordManager::TIME_DURATION;
@@ -3070,19 +3135,33 @@ LRESULT CPlugin::OnPluginMessage(WPARAM wParam,LPARAM lParam)
 					|| (pInfo->Size!=sizeof(TVTest::RecordStatusInfo)
 						&& pInfo->Size!=TVTest::RECORDSTATUSINFO_SIZE_V1))
 				return FALSE;
+
+			const DWORD Flags=(DWORD)pParam->lParam2;
+
 			pInfo->Status=pRecordManager->IsRecording()?
 				(pRecordManager->IsPaused()?TVTest::RECORD_STATUS_PAUSED:
 											TVTest::RECORD_STATUS_RECORDING):
 											TVTest::RECORD_STATUS_NOTRECORDING;
 			if (pInfo->Status!=TVTest::RECORD_STATUS_NOTRECORDING) {
-				pRecordManager->GetStartTime(&pInfo->StartTime);
+				SYSTEMTIME st;
+				pRecordManager->GetStartTime(&st);
+				if ((Flags & TVTest::RECORD_STATUS_FLAG_UTC)!=0) {
+					::SystemTimeToFileTime(&st,&pInfo->StartTime);
+				} else {
+					SystemTimeToLocalFileTime(&st,&pInfo->StartTime);
+				}
 				CRecordManager::TimeSpecInfo StopTimeInfo;
 				pRecordManager->GetStopTimeSpec(&StopTimeInfo);
 				pInfo->StopTimeSpec=(DWORD)StopTimeInfo.Type;
-				if (StopTimeInfo.Type==CRecordManager::TIME_DATETIME)
-					pInfo->StopTime.Time=StopTimeInfo.Time.DateTime;
-				else
+				if (StopTimeInfo.Type==CRecordManager::TIME_DATETIME) {
+					if ((Flags & TVTest::RECORD_STATUS_FLAG_UTC)!=0) {
+						::SystemTimeToFileTime(&StopTimeInfo.Time.DateTime,&pInfo->StopTime.Time);
+					} else {
+						SystemTimeToLocalFileTime(&StopTimeInfo.Time.DateTime,&pInfo->StopTime.Time);
+					}
+				} else {
 					pInfo->StopTime.Duration=StopTimeInfo.Time.Duration;
+				}
 			} else {
 				pInfo->StopTimeSpec=TVTest::RECORD_STOP_NOTSPECIFIED;
 			}
@@ -4431,8 +4510,11 @@ void CPluginManager::OnRecordingStart(TVTest::AppEvent::RecordingStartInfo *pInf
 		Info.StartTimeSpec=TVTest::RECORD_START_DELAY;
 		break;
 	}
-	if (TimeSpec.Type!=CRecordManager::TIME_NOTSPECIFIED)
-		pRecordManager->GetReservedStartTime(&Info.StartTime);
+	if (TimeSpec.Type!=CRecordManager::TIME_NOTSPECIFIED) {
+		SYSTEMTIME st;
+		pRecordManager->GetReservedStartTime(&st);
+		SystemTimeToLocalFileTime(&st,&Info.StartTime);
+	}
 	pRecordManager->GetStopTimeSpec(&TimeSpec);
 	switch (TimeSpec.Type) {
 	case CRecordManager::TIME_NOTSPECIFIED:
@@ -4440,7 +4522,7 @@ void CPluginManager::OnRecordingStart(TVTest::AppEvent::RecordingStartInfo *pInf
 		break;
 	case CRecordManager::TIME_DATETIME:
 		Info.StopTimeSpec=TVTest::RECORD_STOP_TIME;
-		Info.StopTime.Time=TimeSpec.Time.DateTime;
+		SystemTimeToLocalFileTime(&TimeSpec.Time.DateTime,&Info.StopTime.Time);
 		break;
 	case CRecordManager::TIME_DURATION:
 		Info.StopTimeSpec=TVTest::RECORD_STOP_DURATION;

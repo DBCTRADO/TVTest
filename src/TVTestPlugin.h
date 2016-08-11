@@ -139,6 +139,8 @@
 	  ・EVENT_FAVORITESCHANGED
 	  ・EVENT_1SEGMODECHANGED
 	・プラグインのフラグに PLUGIN_FLAG_NOENABLEDDISABLED を追加した
+	・録画情報のフラグに RECORD_FLAG_UTC を追加した。
+	・MESSAGE_GETRECORDSTATUS にフラグの指定を追加した。
 
 	ver.0.0.13 (TVTest ver.0.7.16 or later)
 	・以下のメッセージを追加した
@@ -716,6 +718,9 @@ enum {
 // 録画フラグ
 enum {
 	RECORD_FLAG_CANCEL		=0x10000000UL	// キャンセル
+#if TVTEST_PLUGIN_VERSION>=TVTEST_PLUGIN_VERSION_(0,0,14)
+	, RECORD_FLAG_UTC		=0x00000001UL	// UTC 日時
+#endif
 };
 
 // 録画開始時間の指定方法
@@ -741,17 +746,18 @@ struct RecordInfo {
 							// %～% で囲まれた置換キーワードを使用できます
 	int MaxFileName;		// ファイル名の最大長(MESSAGE_GETRECORDのみで使用)
 	FILETIME ReserveTime;	// 録画予約された時刻(MESSAGE_GETRECORDのみで使用)
+							// ローカル時刻(Flags に RECORD_FLAG_UTC を指定した場合 UTC)
 	DWORD StartTimeSpec;	// 録画開始時間の指定方法(RECORD_START_???)
 	union {
 		FILETIME Time;		// 録画開始時刻(StartTimeSpec==RECORD_START_TIME)
-							// ローカル時刻
+							// ローカル時刻(Flags に RECORD_FLAG_UTC を指定した場合 UTC)
 		ULONGLONG Delay;	// 録画開始時間(StartTimeSpec==RECORD_START_DELAY)
 							// 録画を開始するまでの時間(ms)
 	} StartTime;
 	DWORD StopTimeSpec;		// 録画停止時間の指定方法(RECORD_STOP_???)
 	union {
 		FILETIME Time;		// 録画停止時刻(StopTimeSpec==RECORD_STOP_TIME)
-							// ローカル時刻
+							// ローカル時刻(Flags に RECORD_FLAG_UTC を指定した場合 UTC)
 		ULONGLONG Duration;	// 録画停止時間(StopTimeSpec==RECORD_STOP_DURATION)
 							// 開始時間からのミリ秒
 	} StopTime;
@@ -857,13 +863,14 @@ enum {
 struct RecordStatusInfo {
 	DWORD Size;				// 構造体のサイズ
 	DWORD Status;			// 状態(RECORD_STATUS_???)
-	FILETIME StartTime;		// 録画開始時刻(ローカル時刻)
+	FILETIME StartTime;		// 録画開始時刻
+							// ローカル時刻(RECORD_STATUS_FLAG_UTC が指定されていれば UTC)
 	DWORD RecordTime;		// 録画時間(ms) 一時停止中を含まない
 	DWORD PauseTime;		// 一時停止時間(ms)
 	DWORD StopTimeSpec;		// 録画停止時間の指定方法(RECORD_STOP_???)
 	union {
 		FILETIME Time;		// 録画停止予定時刻(StopTimeSpec==RECORD_STOP_TIME)
-							// (ローカル時刻)
+							// ローカル時刻(RECORD_STATUS_FLAG_UTC が指定されていれば UTC)
 		ULONGLONG Duration;	// 録画停止までの時間(StopTimeSpec==RECORD_STOP_DURATION)
 							// 開始時刻(StartTime)からミリ秒単位
 	} StopTime;
@@ -884,6 +891,15 @@ enum { RECORDSTATUSINFO_SIZE_V1=TVTEST_OFFSETOF(RecordStatusInfo,pszFileName) };
 inline bool MsgGetRecordStatus(PluginParam *pParam,RecordStatusInfo *pInfo) {
 	return (*pParam->Callback)(pParam,MESSAGE_GETRECORDSTATUS,(LPARAM)pInfo,0)!=0;
 }
+#if TVTEST_PLUGIN_VERSION>=TVTEST_PLUGIN_VERSION_(0,0,14)
+// 録画ステータス取得フラグ
+enum {
+	RECORD_STATUS_FLAG_UTC = 0x00000001U	// UTC の時刻を取得
+};
+inline bool MsgGetRecordStatus(PluginParam *pParam,RecordStatusInfo *pInfo,DWORD Flags) {
+	return (*pParam->Callback)(pParam,MESSAGE_GETRECORDSTATUS,(LPARAM)pInfo,Flags)!=0;
+}
+#endif
 
 // 映像の情報
 struct VideoInfo {
@@ -3107,6 +3123,12 @@ public:
 #endif
 		return MsgGetRecordStatus(m_pParam,pInfo);
 	}
+#if TVTEST_PLUGIN_VERSION>=TVTEST_PLUGIN_VERSION_(0,0,14)
+	bool GetRecordStatus(RecordStatusInfo *pInfo,DWORD Flags) {
+		pInfo->Size=sizeof(RecordStatusInfo);
+		return MsgGetRecordStatus(m_pParam,pInfo,Flags);
+	}
+#endif
 	bool GetVideoInfo(VideoInfo *pInfo) {
 		pInfo->Size=sizeof(VideoInfo);
 		return MsgGetVideoInfo(m_pParam,pInfo);

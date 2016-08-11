@@ -100,7 +100,7 @@ public:
 	bool PauseResumeRecording();
 	bool RelayRecord(LPCTSTR pszFileName);
 	bool CommandLineRecord(const CCommandLineOptions *pCmdLine);
-	bool CommandLineRecord(LPCTSTR pszFileName,const FILETIME *pStartTime,int Delay,int Duration);
+	bool CommandLineRecord(LPCTSTR pszFileName,const SYSTEMTIME *pStartTime,int Delay,int Duration);
 	LPCTSTR GetDefaultRecordFolder() const;
 	bool GetExitOnRecordingStop() const { return m_fExitOnRecordingStop; }
 	void SetExitOnRecordingStop(bool fExit) { m_fExitOnRecordingStop=fExit; }

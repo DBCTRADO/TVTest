@@ -32,13 +32,13 @@ private:
 };
 
 class CRecordTime {
-	FILETIME m_Time;
+	SYSTEMTIME m_Time;
 	Util::TickCountType m_TickTime;
 
 public:
 	CRecordTime();
 	bool SetCurrentTime();
-	bool GetTime(FILETIME *pTime) const;
+	bool GetTime(SYSTEMTIME *pTime) const;
 	Util::TickCountType GetTickTime() const { return m_TickTime; }
 	void Clear();
 	bool IsValid() const;
@@ -72,7 +72,7 @@ public:
 	bool IsRecording() const { return m_State==STATE_RECORDING; }
 	bool IsPaused() const { return m_State==STATE_PAUSE; }
 	DurationType GetStartTime() const;
-	bool GetStartTime(FILETIME *pTime) const;
+	bool GetStartTime(SYSTEMTIME *pTime) const;
 	bool GetStartTime(CRecordTime *pTime) const;
 	DurationType GetRecordTime() const;
 	DurationType GetPauseTime() const;
@@ -93,7 +93,7 @@ public:
 	struct TimeSpecInfo {
 		TimeSpecType Type;
 		union {
-			FILETIME DateTime;
+			SYSTEMTIME DateTime;
 			ULONGLONG Duration;
 		} Time;
 	};
@@ -149,9 +149,9 @@ public:
 	bool SetFileExistsOperation(FileExistsOperation Operation);
 	FileExistsOperation GetFileExistsOperation() const { return m_ExistsOperation; }
 	*/
-	bool GetStartTime(FILETIME *pTime) const;
-	bool GetReserveTime(FILETIME *pTime) const;
-	bool GetReservedStartTime(FILETIME *pTime) const;
+	bool GetStartTime(SYSTEMTIME *pTime) const;
+	bool GetReserveTime(SYSTEMTIME *pTime) const;
+	bool GetReservedStartTime(SYSTEMTIME *pTime) const;
 	bool SetStartTimeSpec(const TimeSpecInfo *pInfo);
 	bool GetStartTimeSpec(TimeSpecInfo *pInfo) const;
 	bool SetStopTimeSpec(const TimeSpecInfo *pInfo);

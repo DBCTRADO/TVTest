@@ -1325,17 +1325,17 @@ bool CAppCore::CommandLineRecord(const CCommandLineOptions *pCmdLine)
 }
 
 
-bool CAppCore::CommandLineRecord(LPCTSTR pszFileName,const FILETIME *pStartTime,int Delay,int Duration)
+bool CAppCore::CommandLineRecord(LPCTSTR pszFileName,const SYSTEMTIME *pStartTime,int Delay,int Duration)
 {
 	CRecordManager::TimeSpecInfo StartTime,StopTime;
 
-	if (pStartTime!=nullptr && (pStartTime->dwLowDateTime!=0 || pStartTime->dwHighDateTime!=0)) {
+	if (pStartTime!=nullptr && pStartTime->wYear!=0) {
 		StartTime.Type=CRecordManager::TIME_DATETIME;
-		StartTime.Time.DateTime=*pStartTime;
+		::TzSpecificLocalTimeToSystemTime(NULL,pStartTime,&StartTime.Time.DateTime);
 		if (Delay!=0)
-			StartTime.Time.DateTime+=(LONGLONG)Delay*FILETIME_SECOND;
+			OffsetSystemTime(&StartTime.Time.DateTime,Delay*TimeConsts::SYSTEMTIME_SECOND);
 		SYSTEMTIME st;
-		::FileTimeToSystemTime(pStartTime,&st);
+		::SystemTimeToTzSpecificLocalTime(NULL,&StartTime.Time.DateTime,&st);
 		m_App.AddLog(TEXT("コマンドラインから録画指定されました。(%d/%d/%d %d:%02d:%02d 開始)"),
 					 st.wYear,st.wMonth,st.wDay,st.wHour,st.wMinute,st.wSecond);
 	} else if (Delay>0) {

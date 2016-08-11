@@ -23,7 +23,7 @@ public:
 	bool GetOption(LPCWSTR pszOption,LPTSTR pszValue,int MaxLength);
 	bool GetOption(LPCWSTR pszOption,int *pValue);
 	bool GetOption(LPCWSTR pszOption,DWORD *pValue);
-	bool GetOption(LPCWSTR pszOption,FILETIME *pValue);
+	bool GetOption(LPCWSTR pszOption,SYSTEMTIME *pValue);
 	bool GetDurationOption(LPCWSTR pszOption,int *pValue);
 	bool IsEnd() const { return m_CurPos>=m_Args; }
 	bool Next();
@@ -31,7 +31,7 @@ public:
 	bool GetText(LPWSTR pszText,int MaxLength) const;
 	bool GetValue(int *pValue) const;
 	bool GetValue(DWORD *pValue) const;
-	bool GetValue(FILETIME *pValue) const;
+	bool GetValue(SYSTEMTIME *pValue) const;
 	bool GetDurationValue(int *pValue) const;
 };
 
@@ -121,7 +121,7 @@ bool CArgsParser::GetOption(LPCWSTR pszOption,DWORD *pValue)
 }
 
 
-bool CArgsParser::GetOption(LPCWSTR pszOption,FILETIME *pValue)
+bool CArgsParser::GetOption(LPCWSTR pszOption,SYSTEMTIME *pValue)
 {
 	if (IsOption(pszOption)) {
 		if (Next())
@@ -185,7 +185,7 @@ bool CArgsParser::GetValue(DWORD *pValue) const
 }
 
 
-bool CArgsParser::GetValue(FILETIME *pValue) const
+bool CArgsParser::GetValue(SYSTEMTIME *pValue) const
 {
 	if (IsEnd())
 		return false;
@@ -280,20 +280,18 @@ bool CArgsParser::GetValue(FILETIME *pValue) const
 			Time.wHour+=24;
 	}
 
-	SYSTEMTIME st;
-	FILETIME ft;
-	::ZeroMemory(&st,sizeof(st));
+	SYSTEMTIME st={};
+
 	st.wYear=Time.wYear;
 	st.wMonth=Time.wMonth;
 	st.wDay=Time.wDay;
-	if (!::SystemTimeToFileTime(&st,&ft))
-		return false;
 
-	ft+=(LONGLONG)Time.wHour*FILETIME_HOUR+
-		(LONGLONG)Time.wMinute*FILETIME_MINUTE+
-		(LONGLONG)Time.wSecond*FILETIME_SECOND;
+	OffsetSystemTime(&st,
+		(LONGLONG)Time.wHour*TimeConsts::SYSTEMTIME_HOUR+
+		(LONGLONG)Time.wMinute*TimeConsts::SYSTEMTIME_MINUTE+
+		(LONGLONG)Time.wSecond*TimeConsts::SYSTEMTIME_SECOND);
 
-	*pValue=ft;
+	*pValue=st;
 
 	return true;
 }
@@ -394,7 +392,7 @@ CCommandLineOptions::CCommandLineOptions()
 
 	, m_fRecord(false)
 	, m_fRecordStop(false)
-	, m_RecordStartTime(FILETIME_NULL)
+	, m_RecordStartTime()
 	, m_RecordDelay(0)
 	, m_RecordDuration(0)
 	, m_fRecordCurServiceOnly(false)
@@ -599,16 +597,14 @@ void CCommandLineOptions::Parse(LPCWSTR pszCmdLine)
 		do {
 			if (Args.IsSwitch()) {
 				int Duration;
-				FILETIME Time;
+				SYSTEMTIME Time;
 				if (Args.GetDurationOption(L"d",&Duration)) {
 					TRACE(L"Commandline parse test : \"%s\" %d\n",
 						  Args.GetText(),Duration);
 				} else if (Args.GetOption(L"t",&Time)) {
-					SYSTEMTIME st;
-					::FileTimeToSystemTime(&Time,&st);
 					TRACE(L"Commandline parse test : \"%s\" %d/%d/%d %d:%d:%d\n",
 						  Args.GetText(),
-						  st.wYear,st.wMonth,st.wDay,st.wHour,st.wMinute,st.wSecond);
+						  Time.wYear,Time.wMonth,Time.wDay,Time.wHour,Time.wMinute,Time.wSecond);
 				}
 			}
 		} while (Args.Next());
