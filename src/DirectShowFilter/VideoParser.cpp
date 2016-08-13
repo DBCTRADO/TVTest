@@ -69,21 +69,38 @@ void CVideoParser::NotifyVideoInfo() const
 }
 
 
+// GCD (Greatest Common Denominator)
+template<typename T> T GCD(T m, T n)
+{
+	if (m != 0 && n != 0) {
+		do {
+			T r;
+
+			r = m % n;
+			m = n;
+			n = r;
+		} while (n != 0);
+	} else {
+		m = 0;
+	}
+
+	return m;
+}
+
 bool CVideoParser::SARToDAR(WORD SarX, WORD SarY, WORD Width, WORD Height,
 							BYTE *pDarX, BYTE *pDarY)
 {
 	DWORD DispWidth = Width * SarX, DispHeight = Height * SarY;
+	DWORD Denom = GCD(DispWidth, DispHeight);
 
-	// ‚Æ‚è‚ ‚¦‚¸ 16:9 ‚Æ 4:3 ‚¾‚¯
-	if (DispWidth * 9 == DispHeight * 16) {
-		*pDarX = 16;
-		*pDarY = 9;
-	} else if (DispWidth * 3 == DispHeight * 4) {
-		*pDarX = 4;
-		*pDarY = 3;
-	} else {
-		return false;
+	if (Denom != 0) {
+		DWORD DarX = DispWidth / Denom, DarY = DispHeight / Denom;
+		if (DarX <= 255 && DarY <= 255) {
+			*pDarX = (BYTE)DarX;
+			*pDarY = (BYTE)DarY;
+			return true;
+		}
 	}
 
-	return true;
+	return false;
 }
