@@ -25,6 +25,8 @@ public:
 	bool GetRestoreMute() const { return m_fRestoreMute; }
 	bool IsMuteOnStartUp() const { return m_fRestoreMute && m_fMute; }
 	bool GetRestorePlayStatus() const { return m_fRestorePlayStatus; }
+	bool GetRestore1SegMode() const { return m_fRestore1SegMode; }
+	bool Is1SegModeOnStartup() const { return m_fRestore1SegMode && m_f1SegMode; }
 	bool GetUseAudioRendererClock() const { return m_fUseAudioRendererClock; }
 	bool GetAdjustAudioStreamTime() const { return m_fAdjustAudioStreamTime; }
 	bool GetMinTimerResolution() const { return m_fMinTimerResolution; }
@@ -49,6 +51,8 @@ private:
 	bool m_fRestoreMute;
 	bool m_fMute;
 	bool m_fRestorePlayStatus;
+	bool m_fRestore1SegMode;
+	bool m_f1SegMode;
 
 	bool m_fUseAudioRendererClock;
 	bool m_fEnablePTSSync;

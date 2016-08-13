@@ -13,6 +13,8 @@ CPlaybackOptions::CPlaybackOptions()
 	: m_fRestoreMute(false)
 	, m_fMute(false)
 	, m_fRestorePlayStatus(false)
+	, m_fRestore1SegMode(false)
+	, m_f1SegMode(false)
 	, m_fUseAudioRendererClock(true)
 	, m_fEnablePTSSync(true)
 	, m_fAdjustAudioStreamTime(true)
@@ -66,6 +68,8 @@ bool CPlaybackOptions::ReadSettings(CSettings &Settings)
 	Settings.Read(TEXT("RestoreMute"),&m_fRestoreMute);
 	Settings.Read(TEXT("Mute"),&m_fMute);
 	Settings.Read(TEXT("RestorePlayStatus"),&m_fRestorePlayStatus);
+	Settings.Read(TEXT("Restore1SegMode"),&m_fRestore1SegMode);
+	Settings.Read(TEXT("1SegMode"),&m_f1SegMode);
 	Settings.Read(TEXT("UseAudioRendererClock"),&m_fUseAudioRendererClock);
 	Settings.Read(TEXT("PTSSync"),&m_fEnablePTSSync);
 	Settings.Read(TEXT("AdjustAudioStreamTime"),&m_fAdjustAudioStreamTime);
@@ -89,6 +93,8 @@ bool CPlaybackOptions::WriteSettings(CSettings &Settings)
 	Settings.Write(TEXT("RestoreMute"),m_fRestoreMute);
 	Settings.Write(TEXT("Mute"),GetAppClass().CoreEngine.GetMute());
 	Settings.Write(TEXT("RestorePlayStatus"),m_fRestorePlayStatus);
+	Settings.Write(TEXT("Restore1SegMode"),m_fRestore1SegMode);
+	Settings.Write(TEXT("1SegMode"),GetAppClass().Core.Is1SegMode());
 	Settings.Write(TEXT("UseAudioRendererClock"),m_fUseAudioRendererClock);
 	Settings.Write(TEXT("PTSSync"),m_fEnablePTSSync);
 	Settings.Write(TEXT("AdjustAudioStreamTime"),m_fAdjustAudioStreamTime);
@@ -126,6 +132,8 @@ INT_PTR CPlaybackOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPara
 							  m_fRestoreMute);
 			DlgCheckBox_Check(hDlg,IDC_OPTIONS_RESTOREPLAYSTATUS,
 							  m_fRestorePlayStatus);
+			DlgCheckBox_Check(hDlg,IDC_OPTIONS_RESTORE1SEGMODE,
+							  m_fRestore1SegMode);
 
 			DlgCheckBox_Check(hDlg,IDC_OPTIONS_MINTIMERRESOLUTION,
 							  m_fMinTimerResolution);
@@ -180,6 +188,8 @@ INT_PTR CPlaybackOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPara
 					DlgCheckBox_IsChecked(hDlg,IDC_OPTIONS_RESTOREMUTE);
 				m_fRestorePlayStatus=
 					DlgCheckBox_IsChecked(hDlg,IDC_OPTIONS_RESTOREPLAYSTATUS);
+				m_fRestore1SegMode=
+					DlgCheckBox_IsChecked(hDlg,IDC_OPTIONS_RESTORE1SEGMODE);
 
 				bool f=DlgCheckBox_IsChecked(hDlg,IDC_OPTIONS_MINTIMERRESOLUTION);
 				if (f!=m_fMinTimerResolution) {

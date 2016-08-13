@@ -889,7 +889,7 @@ int CAppMain::Main(HINSTANCE hInstance,LPCTSTR pszCmdLine,int nCmdShow)
 	ViewOptions.Apply(COptions::UPDATE_ALL);
 	VideoOptions.Apply(COptions::UPDATE_ALL);
 
-	if (CmdLineOptions.m_f1Seg)
+	if (CmdLineOptions.m_f1Seg || PlaybackOptions.Is1SegModeOnStartup())
 		Core.Set1SegMode(true,false);
 	if (CmdLineOptions.m_fNoTSProcessor)
 		CoreEngine.EnableTSProcessor(false);
