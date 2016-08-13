@@ -465,13 +465,6 @@ bool CMediaViewer::OpenViewer(
 #endif	// BONTSENGINE_H265_SUPPORT
 		}
 
-		if (m_pVideoParser) {
-			m_pVideoParser->SetVideoInfoCallback(OnVideoInfo, this);
-			// madVR は映像サイズの変化時に MediaType を設定しないと新しいサイズが適用されない
-			m_pVideoParser->SetAttachMediaType(RendererType == CVideoRenderer::RENDERER_madVR);
-			ApplyAdjustVideoSampleOptions();
-		}
-
 		Trace(CTracer::TYPE_INFORMATION, TEXT("音声デコーダの接続中..."));
 
 #if 1
@@ -612,6 +605,13 @@ bool CMediaViewer::OpenViewer(
 		}
 
 		m_VideoStreamType = VideoStreamType;
+
+		if (m_pVideoParser) {
+			m_pVideoParser->SetVideoInfoCallback(OnVideoInfo, this);
+			// madVR は映像サイズの変化時に MediaType を設定しないと新しいサイズが適用されない
+			m_pVideoParser->SetAttachMediaType(RendererType == CVideoRenderer::RENDERER_madVR);
+			ApplyAdjustVideoSampleOptions();
+		}
 
 		if (!bNoVideo) {
 			Trace(CTracer::TYPE_INFORMATION, TEXT("映像レンダラの構築中..."));
@@ -2129,10 +2129,13 @@ void CMediaViewer::ApplyAdjustVideoSampleOptions()
 
 		if (m_b1SegMode) {
 			Flags = CVideoParser::ADJUST_SAMPLE_1SEG;
-			if (m_bAdjust1SegVideoSampleTime)
-				Flags |= CVideoParser::ADJUST_SAMPLE_TIME;
-			if (m_bAdjust1SegFrameRate)
-				Flags |= CVideoParser::ADJUST_SAMPLE_FRAME_RATE;
+			// Microsoft DTV-DVD Video Decoder では何故か映像が出なくなってしまうため無効とする
+			if (::lstrcmpi(m_pszVideoDecoderName, TEXT("Microsoft DTV-DVD Video Decoder")) != 0) {
+				if (m_bAdjust1SegVideoSampleTime)
+					Flags |= CVideoParser::ADJUST_SAMPLE_TIME;
+				if (m_bAdjust1SegFrameRate)
+					Flags |= CVideoParser::ADJUST_SAMPLE_FRAME_RATE;
+			}
 		}
 
 		m_pVideoParser->SetAdjustSampleOptions(Flags);
