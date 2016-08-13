@@ -141,6 +141,19 @@ bool CChannelDisplay::OnMouseWheel(UINT Msg,WPARAM wParam,LPARAM lParam)
 				SetTunerScrollPos(m_TunerScrollPos-Delta,true);
 			} else if (ChannelItemHitTest(pt.x,pt.y)>=0) {
 				SetChannelScrollPos(m_ChannelScrollPos-Delta,true);
+			} else {
+				RECT rc;
+
+				::ClientToScreen(m_hwnd,&pt);
+				::GetWindowRect(m_hwndTunerScroll,&rc);
+				if (::PtInRect(&rc,pt)) {
+					SetTunerScrollPos(m_TunerScrollPos-Delta,true);
+				} else {
+					::GetWindowRect(m_hwndChannelScroll,&rc);
+					if (::PtInRect(&rc,pt)) {
+						SetChannelScrollPos(m_ChannelScrollPos-Delta,true);
+					}
+				}
 			}
 		}
 		return true;
