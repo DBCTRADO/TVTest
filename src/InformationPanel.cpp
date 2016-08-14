@@ -1288,9 +1288,9 @@ void CInformationPanel::CMediaBitRateItem::Reset()
 
 bool CInformationPanel::CMediaBitRateItem::Update()
 {
-	const CMediaViewer &MediaViewer=GetAppClass().CoreEngine.m_DtvEngine.m_MediaViewer;
-	const DWORD VideoBitRate=MediaViewer.GetVideoBitRate();
-	const DWORD AudioBitRate=MediaViewer.GetAudioBitRate();
+	const CTsPacketCounter &PacketCounter=GetAppClass().CoreEngine.m_DtvEngine.m_TsPacketCounter;
+	const DWORD VideoBitRate=PacketCounter.GetVideoBitRate();
+	const DWORD AudioBitRate=PacketCounter.GetAudioBitRate();
 
 	if (VideoBitRate==m_VideoBitRate && AudioBitRate==m_AudioBitRate)
 		return false;

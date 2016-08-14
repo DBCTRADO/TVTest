@@ -46,14 +46,6 @@ void CVideoParser::SetVideoInfoCallback(VideoInfoCallback pCallback, const PVOID
 }
 
 
-DWORD CVideoParser::GetBitRate() const
-{
-	CAutoLock Lock(&m_ParserLock);
-
-	return m_BitRateCalculator.GetBitRate();
-}
-
-
 void CVideoParser::SetAttachMediaType(bool bAttach)
 {
 	CAutoLock Lock(&m_ParserLock);

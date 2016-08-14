@@ -157,8 +157,6 @@ public:
 	bool SetInitialPoolPercentage(int Percentage);
 	int GetBufferFillPercentage() const;
 	bool SetPacketInputWait(DWORD Wait);
-	DWORD GetAudioBitRate() const;
-	DWORD GetVideoBitRate() const;
 
 protected:
 	static void CALLBACK OnVideoInfo(const CVideoParser::VideoInfo *pVideoInfo, const LPVOID pParam);

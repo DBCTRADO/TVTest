@@ -173,18 +173,12 @@ HRESULT CH264ParserFilter::StartStreaming()
 	Reset();
 	m_VideoInfo.Reset();
 
-	m_BitRateCalculator.Initialize();
-
 	return S_OK;
 }
 
 
 HRESULT CH264ParserFilter::StopStreaming()
 {
-	CAutoLock Lock(&m_ParserLock);
-
-	m_BitRateCalculator.Reset();
-
 	return S_OK;
 }
 
@@ -280,8 +274,6 @@ HRESULT CH264ParserFilter::Transform(IMediaSample *pIn, IMediaSample *pOut)
 		}
 
 		m_H264Parser.StoreEs(pInData, InDataSize);
-
-		m_BitRateCalculator.Update(InDataSize);
 	}
 
 	if (!m_OutSampleQueue.empty()) {

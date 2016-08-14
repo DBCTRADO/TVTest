@@ -288,7 +288,6 @@ HRESULT CAudioDecFilter::StartStreaming()
 	ResetSync();
 
 	m_bPassthroughError = false;
-	m_BitRateCalculator.Initialize();
 
 	return S_OK;
 }
@@ -301,8 +300,6 @@ HRESULT CAudioDecFilter::StopStreaming()
 	if (m_pDecoder) {
 		m_pDecoder->Close();
 	}
-
-	m_BitRateCalculator.Reset();
 
 	return S_OK;
 }
@@ -378,8 +375,6 @@ HRESULT CAudioDecFilter::Transform(IMediaSample *pIn, IMediaSample *pOut)
 			TRACE(TEXT("Initialize audio stream time (%lld)\n"), rtStart);
 			m_StartTime = rtStart;
 		}
-
-		m_BitRateCalculator.Update(InSize);
 	}
 
 	DWORD InDataPos = 0;
@@ -709,14 +704,6 @@ bool CAudioDecFilter::SetStreamCallback(StreamCallback pCallback, void *pParam)
 void CAudioDecFilter::SetEventHandler(IEventHandler *pEventHandler)
 {
 	m_pEventHandler = pEventHandler;
-}
-
-
-DWORD CAudioDecFilter::GetBitRate() const
-{
-	CAutoLock AutoLock(&m_cPropLock);
-
-	return m_BitRateCalculator.GetBitRate();
 }
 
 

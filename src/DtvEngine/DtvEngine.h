@@ -214,6 +214,8 @@ protected:
 	const DecoderConnectionInfo *GetOutputConnectionInfo(int ID) const;
 	void ConnectDecoder(int ID);
 	void DisconnectDecoder(int ID);
+	void SetVideoPid(WORD Pid);
+	void SetAudioPid(WORD Pid, bool bUseMap = false);
 
 	mutable CCriticalLock m_EngineLock;
 	CEventHandler *m_pEventHandler;

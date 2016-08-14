@@ -112,8 +112,6 @@ public:
 	typedef void (CALLBACK *StreamCallback)(short *pData, DWORD Samples, int Channels, void *pParam);
 	bool SetStreamCallback(StreamCallback pCallback, void *pParam = NULL);
 
-	DWORD GetBitRate() const;
-
 private:
 	CAudioDecFilter(LPUNKNOWN pUnk, HRESULT *phr);
 	~CAudioDecFilter();
@@ -182,6 +180,4 @@ private:
 
 	StreamCallback m_pStreamCallback;
 	void *m_pStreamCallbackParam;
-
-	CBitRateCalculator m_BitRateCalculator;
 };

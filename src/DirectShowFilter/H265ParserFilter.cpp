@@ -68,8 +68,6 @@ HRESULT CH265ParserFilter::Transform(IMediaSample *pSample)
 	// シーケンスを取得
 	m_H265Parser.StoreEs(pData, DataSize);
 
-	m_BitRateCalculator.Update(DataSize);
-
 	return S_OK;
 }
 
@@ -108,18 +106,12 @@ HRESULT CH265ParserFilter::StartStreaming()
 	m_H265Parser.Reset();
 	m_VideoInfo.Reset();
 
-	m_BitRateCalculator.Initialize();
-
 	return S_OK;
 }
 
 
 HRESULT CH265ParserFilter::StopStreaming()
 {
-	CAutoLock Lock(&m_ParserLock);
-
-	m_BitRateCalculator.Reset();
-
 	return S_OK;
 }
 

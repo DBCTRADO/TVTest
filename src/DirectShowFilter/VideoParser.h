@@ -85,8 +85,6 @@ public:
 	typedef void (CALLBACK *VideoInfoCallback)(const VideoInfo *pVideoInfo, const PVOID pParam);
 	void SetVideoInfoCallback(VideoInfoCallback pCallback, const PVOID pParam = NULL);
 
-	DWORD GetBitRate() const;
-
 	void SetAttachMediaType(bool bAttach);
 	virtual bool SetAdjustSampleOptions(unsigned int Flags) { return false; }
 
@@ -99,6 +97,5 @@ protected:
 	VideoInfoCallback m_pVideoInfoCallback;
 	PVOID m_pCallbackParam;
 	mutable CCritSec m_ParserLock;
-	CBitRateCalculator m_BitRateCalculator;
 	bool m_bAttachMediaType;
 };

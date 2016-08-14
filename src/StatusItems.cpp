@@ -1158,9 +1158,9 @@ CMediaBitRateStatusItem::CMediaBitRateStatusItem()
 
 bool CMediaBitRateStatusItem::UpdateContent()
 {
-	const CCoreEngine &CoreEngine=GetAppClass().CoreEngine;
-	const DWORD VideoBitRate=CoreEngine.m_DtvEngine.m_MediaViewer.GetVideoBitRate();
-	const DWORD AudioBitRate=CoreEngine.m_DtvEngine.m_MediaViewer.GetAudioBitRate();
+	const CTsPacketCounter &PacketCounter=GetAppClass().CoreEngine.m_DtvEngine.m_TsPacketCounter;
+	const DWORD VideoBitRate=PacketCounter.GetVideoBitRate();
+	const DWORD AudioBitRate=PacketCounter.GetAudioBitRate();
 
 	if (VideoBitRate==m_VideoBitRate && AudioBitRate==m_AudioBitRate)
 		return false;

@@ -1989,22 +1989,6 @@ bool CMediaViewer::SetPacketInputWait(DWORD Wait)
 }
 
 
-DWORD CMediaViewer::GetAudioBitRate() const
-{
-	if (m_pAudioDecoder != NULL)
-		return m_pAudioDecoder->GetBitRate();
-	return 0;
-}
-
-
-DWORD CMediaViewer::GetVideoBitRate() const
-{
-	if (m_pVideoParser != NULL)
-		return m_pVideoParser->GetBitRate();
-	return 0;
-}
-
-
 void CMediaViewer::ConnectVideoDecoder(
 	LPCTSTR pszCodecName, const GUID &MediaSubType, LPCTSTR pszDecoderName, IPin **ppOutputPin)
 {

@@ -24,6 +24,10 @@ public:
 	void ResetInputPacketCount();
 	UINT64 GetScrambledPacketCount() const;
 	void ResetScrambledPacketCount();
+	void SetVideoPid(WORD Pid);
+	void SetAudioPid(WORD Pid);
+	DWORD GetVideoBitRate() const;
+	DWORD GetAudioBitRate() const;
 
 protected:
 	struct ServiceInfo
@@ -51,6 +55,11 @@ protected:
 
 	CUInt64Counter m_InputPacketCount;
 	CUInt64Counter m_ScrambledPacketCount;
+
+	WORD m_VideoPid;
+	WORD m_AudioPid;
+	CBitRateCalculator m_VideoBitRate;
+	CBitRateCalculator m_AudioBitRate;
 
 	int GetServiceIndexByID(WORD ServiceID) const;
 	void MapServiceESs(size_t Index);

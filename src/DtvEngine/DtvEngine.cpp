@@ -398,8 +398,8 @@ bool CDtvEngine::SelectService(WORD ServiceID, bool bNo1Seg)
 	}
 
 	m_MediaViewer.Set1SegMode(m_TsAnalyzer.Is1SegService(m_CurServiceIndex));
-	m_MediaViewer.SetVideoPID(VideoPID);
-	m_MediaViewer.SetAudioPID(AudioPID);
+	SetVideoPid(VideoPID);
+	SetAudioPid(AudioPID);
 
 	WalkDecoderGraph(&m_BonSrcDecoder,
 					 [=](CMediaDecoder *pDecoder) { pDecoder->SetActiveServiceID(ServiceID); });
@@ -584,8 +584,8 @@ const DWORD CDtvEngine::OnDecoderEvent(CMediaDecoder *pDecoder, const DWORD dwEv
 					}
 
 					if (!bSetService || !SelectService(ServiceID, m_ServiceSel.OneSegSelect == ONESEG_SELECT_REFUSE)) {
-						m_MediaViewer.SetVideoPID(CMediaViewer::PID_INVALID);
-						m_MediaViewer.SetAudioPID(CMediaViewer::PID_INVALID);
+						SetVideoPid(CMediaViewer::PID_INVALID);
+						SetAudioPid(CMediaViewer::PID_INVALID);
 					}
 				} else {
 					// ストリームIDは同じだが、構成ESのPIDが変わった可能性がある
@@ -882,7 +882,7 @@ bool CDtvEngine::SetVideoStream(const int StreamIndex)
 			m_pEventHandler->OnVideoStreamTypeChanged(VideoStreamType);
 	}
 
-	m_MediaViewer.SetVideoPID(VideoPID);
+	SetVideoPid(VideoPID);
 
 	return true;
 }
@@ -929,13 +929,12 @@ bool CDtvEngine::SetAudioStream(const int StreamIndex)
 	if (!m_TsAnalyzer.GetAudioEsPID(m_CurServiceIndex, StreamIndex, &AudioPID))
 		return false;
 
-	if (!m_MediaViewer.SetAudioPID(AudioPID, true))
-		return false;
-
 	m_CurAudioStream = StreamIndex;
 	m_CurAudioComponentTag = m_TsAnalyzer.GetAudioComponentTag(m_CurServiceIndex, StreamIndex);
 
 	TRACE(TEXT("Select audio : %d (component_tag %02X)\n"), m_CurAudioStream, m_CurAudioComponentTag);
+
+	SetAudioPid(AudioPID, true);
 
 	return true;
 }
@@ -1102,4 +1101,18 @@ void CDtvEngine::DisconnectDecoder(int ID)
 				pInputConnection->OutputIndex);
 		}
 	}
+}
+
+
+void CDtvEngine::SetVideoPid(WORD Pid)
+{
+	m_MediaViewer.SetVideoPID(Pid);
+	m_TsPacketCounter.SetVideoPid(Pid);
+}
+
+
+void CDtvEngine::SetAudioPid(WORD Pid, bool bUseMap)
+{
+	m_MediaViewer.SetAudioPID(Pid, bUseMap);
+	m_TsPacketCounter.SetAudioPid(Pid);
 }

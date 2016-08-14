@@ -140,8 +140,6 @@ HRESULT CMpeg2ParserFilter::Transform(IMediaSample *pIn, IMediaSample *pOut)
 	// シーケンスを取得
 	m_Mpeg2Parser.StoreEs(pInData, InDataSize);
 
-	m_BitRateCalculator.Update(InDataSize);
-
 	return pOut->GetActualDataLength() > 0 ? S_OK : S_FALSE;
 }
 
@@ -168,8 +166,6 @@ HRESULT CMpeg2ParserFilter::Transform(IMediaSample *pSample)
 
 	// シーケンスを取得
 	m_Mpeg2Parser.StoreEs(pData, DataSize);
-
-	m_BitRateCalculator.Update(DataSize);
 
 	return S_OK;
 }
@@ -212,18 +208,12 @@ HRESULT CMpeg2ParserFilter::StartStreaming()
 	m_Mpeg2Parser.Reset();
 	m_VideoInfo.Reset();
 
-	m_BitRateCalculator.Initialize();
-
 	return S_OK;
 }
 
 
 HRESULT CMpeg2ParserFilter::StopStreaming()
 {
-	CAutoLock Lock(&m_ParserLock);
-
-	m_BitRateCalculator.Reset();
-
 	return S_OK;
 }
 

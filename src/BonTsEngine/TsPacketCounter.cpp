@@ -35,6 +35,11 @@ void CTsPacketCounter::Reset()
 
 	m_InputPacketCount.Reset();
 	m_ScrambledPacketCount.Reset();
+
+	m_VideoPid = 0xFFFF;
+	m_AudioPid = 0xFFFF;
+	m_VideoBitRate.Initialize();
+	m_AudioBitRate.Initialize();
 }
 
 
@@ -115,6 +120,38 @@ UINT64 CTsPacketCounter::GetScrambledPacketCount() const
 void CTsPacketCounter::ResetScrambledPacketCount()
 {
 	m_ScrambledPacketCount.Reset();
+}
+
+
+void CTsPacketCounter::SetVideoPid(WORD Pid)
+{
+	CBlockLock Lock(&m_DecoderLock);
+
+	m_VideoPid = Pid;
+}
+
+
+void CTsPacketCounter::SetAudioPid(WORD Pid)
+{
+	CBlockLock Lock(&m_DecoderLock);
+
+	m_AudioPid = Pid;
+}
+
+
+DWORD CTsPacketCounter::GetVideoBitRate() const
+{
+	CBlockLock Lock(&m_DecoderLock);
+
+	return m_VideoBitRate.GetBitRate();
+}
+
+
+DWORD CTsPacketCounter::GetAudioBitRate() const
+{
+	CBlockLock Lock(&m_DecoderLock);
+
+	return m_AudioBitRate.GetBitRate();
 }
 
 
@@ -222,5 +259,12 @@ const bool CTsPacketCounter::CEsPidMapTarget::StorePacket(const CTsPacket *pPack
 {
 	if (pPacket->IsScrambled())
 		m_pTsPacketCounter->m_ScrambledPacketCount.Increment();
+
+	const WORD Pid = pPacket->GetPID();
+	if (Pid == m_pTsPacketCounter->m_VideoPid)
+		m_pTsPacketCounter->m_VideoBitRate.Update(pPacket->GetPayloadSize());
+	else if (Pid == m_pTsPacketCounter->m_AudioPid)
+		m_pTsPacketCounter->m_AudioBitRate.Update(pPacket->GetPayloadSize());
+
 	return true;
 }
