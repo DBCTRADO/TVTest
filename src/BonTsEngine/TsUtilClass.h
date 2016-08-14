@@ -193,7 +193,7 @@ public:
 	void Initialize();
 	void Reset();
 	bool Update(SIZE_T Size);
-	DWORD GetBitRate() const { return m_BitRate; }
+	DWORD GetBitRate() const;
 };
 
 

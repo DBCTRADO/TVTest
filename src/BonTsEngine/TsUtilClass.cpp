@@ -690,3 +690,10 @@ bool CBitRateCalculator::Update(SIZE_T Size)
 	}
 	return bUpdated;
 }
+
+DWORD CBitRateCalculator::GetBitRate() const
+{
+	if (::GetTickCount()-m_Time>=2000)
+		return 0;
+	return m_BitRate;
+}
