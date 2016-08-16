@@ -5,7 +5,7 @@
 #pragma once
 
 
-#include "neaacdec.h"
+#include "../Libs/faad2/include/neaacdec.h"
 #include "AudioDecoder.h"
 #include "TsMedia.h"
 

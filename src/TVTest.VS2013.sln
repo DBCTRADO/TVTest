@@ -13,7 +13,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TVTest", "TVTest.VS2013.vcx
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "BaseClasses", "BaseClasses\BaseClasses.VS2013.vcxproj", "{E8A3F6FA-AE1C-4C8E-A0B6-9C8480324EAA}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libfaad", "faad2\libfaad.VS2013.vcxproj", "{BC3EFE27-9015-4C9C-AD3C-72B3B7ED2114}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libfaad", "Libs\faad2\libfaad.VS2013.vcxproj", "{BC3EFE27-9015-4C9C-AD3C-72B3B7ED2114}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libmad", "Libs\libmad\libmad.VS2013.vcxproj", "{47C250DA-15E2-484A-AD6F-04EA8F56A705}"
 EndProject
