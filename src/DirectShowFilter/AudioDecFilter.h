@@ -31,6 +31,12 @@ public:
 	HRESULT Receive(IMediaSample *pSample) override;
 
 // CAudioDecFilter
+	enum DecoderType {
+		DECODER_UNDEFINED,
+		DECODER_AAC,
+		DECODER_MPEG_AUDIO
+	};
+
 	enum {
 		CHANNEL_DUALMONO	= 0x00,
 		CHANNEL_INVALID		= 0xFF
@@ -89,6 +95,7 @@ public:
 		virtual void OnSpdifPassthroughError(HRESULT hr) {}
 	};
 
+	bool SetDecoderType(DecoderType Type);
 	BYTE GetCurrentChannelNum() const;
 	bool SetDualMonoMode(DualMonoMode Mode);
 	DualMonoMode GetDualMonoMode() const { return m_DualMonoMode; }
@@ -135,7 +142,8 @@ private:
 	HRESULT ProcessPcm(const BYTE *pData, const DWORD Samples,
 					   const CAudioDecoder::AudioInfo &Info,
 					   FrameSampleInfo *pSampleInfo);
-	HRESULT ProcessSpdif(FrameSampleInfo *pSampleInfo);
+	HRESULT ProcessSpdif(const CAudioDecoder::AudioInfo &Info,
+						 FrameSampleInfo *pSampleInfo);
 	HRESULT ReconnectOutput(long BufferSize, const CMediaType &mt);
 	void ResetSync();
 	DWORD MonoToStereo(short *pDst, const short *pSrc, const DWORD Samples);
@@ -144,7 +152,9 @@ private:
 	DWORD MapSurroundChannels(short *pDst, const short *pSrc, const DWORD Samples);
 	void GainControl(short *pBuffer, const DWORD Samples, const float Gain);
 	void SelectDualMonoStereoMode();
+	CAudioDecoder *CreateDecoder(DecoderType Type);
 
+	DecoderType m_DecoderType;
 	CAudioDecoder *m_pDecoder;
 	mutable CCritSec m_cPropLock;
 	CMediaType m_MediaType;

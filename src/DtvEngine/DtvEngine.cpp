@@ -38,6 +38,7 @@ CDtvEngine::CDtvEngine(void)
 	, m_CurServiceIndex(SERVICE_INVALID)
 	, m_CurServiceID(SID_INVALID)
 	, m_VideoStreamType(STREAM_TYPE_UNINITIALIZED)
+	, m_AudioStreamType(STREAM_TYPE_UNINITIALIZED)
 	, m_CurVideoStream(0)
 	, m_CurVideoComponentTag(CTsAnalyzer::COMPONENTTAG_INVALID)
 	, m_CurAudioStream(0)
@@ -351,6 +352,7 @@ bool CDtvEngine::SelectService(WORD ServiceID, bool bNo1Seg)
 	WORD VideoPID = CMediaViewer::PID_INVALID;
 	WORD AudioPID = CMediaViewer::PID_INVALID;
 	BYTE VideoStreamType = STREAM_TYPE_INVALID;
+	BYTE AudioStreamType = STREAM_TYPE_INVALID;
 
 	int VideoIndex;
 	if (m_CurVideoComponentTag != CTsAnalyzer::COMPONENTTAG_INVALID
@@ -387,6 +389,7 @@ bool CDtvEngine::SelectService(WORD ServiceID, bool bNo1Seg)
 	}
 	m_CurAudioStream = AudioIndex;
 	m_CurAudioComponentTag = m_TsAnalyzer.GetAudioComponentTag(m_CurServiceIndex, AudioIndex);
+	m_TsAnalyzer.GetAudioStreamType(m_CurServiceIndex, AudioIndex, &AudioStreamType);
 	TRACE(TEXT("Select audio : %d (component_tag %02X)\n"), m_CurAudioStream, m_CurAudioComponentTag);
 
 	if (m_VideoStreamType != VideoStreamType) {
@@ -395,6 +398,13 @@ bool CDtvEngine::SelectService(WORD ServiceID, bool bNo1Seg)
 		m_VideoStreamType = VideoStreamType;
 		if (m_pEventHandler!=NULL)
 			m_pEventHandler->OnVideoStreamTypeChanged(VideoStreamType);
+	}
+
+	if (m_AudioStreamType != AudioStreamType) {
+		TRACE(TEXT("Audio stream_type changed (%02x -> %02x)\n"),
+			  m_AudioStreamType, AudioStreamType);
+		m_AudioStreamType = AudioStreamType;
+		m_MediaViewer.SetAudioStreamType(m_AudioStreamType);
 	}
 
 	m_MediaViewer.Set1SegMode(m_TsAnalyzer.Is1SegService(m_CurServiceIndex));
@@ -900,6 +910,12 @@ BYTE CDtvEngine::GetVideoComponentTag() const
 }
 
 
+BYTE CDtvEngine::GetAudioStreamType() const
+{
+	return m_AudioStreamType;
+}
+
+
 BYTE CDtvEngine::GetAudioChannelNum()
 {
 	return m_MediaViewer.GetAudioChannelNum();
@@ -935,6 +951,16 @@ bool CDtvEngine::SetAudioStream(const int StreamIndex)
 	TRACE(TEXT("Select audio : %d (component_tag %02X)\n"), m_CurAudioStream, m_CurAudioComponentTag);
 
 	SetAudioPid(AudioPID, true);
+
+	BYTE AudioStreamType = STREAM_TYPE_INVALID;
+	m_TsAnalyzer.GetAudioStreamType(m_CurServiceIndex, StreamIndex, &AudioStreamType);
+
+	if (m_AudioStreamType != AudioStreamType) {
+		TRACE(TEXT("Audio stream_type changed (%02x -> %02x)\n"),
+			  m_AudioStreamType, AudioStreamType);
+		m_AudioStreamType = AudioStreamType;
+		m_MediaViewer.SetAudioStreamType(m_AudioStreamType);
+	}
 
 	return true;
 }

@@ -124,6 +124,7 @@ public:
 	bool SetAudioDelay(LONGLONG Delay);
 	LONGLONG GetAudioDelay() const;
 	bool GetAudioDecFilter(CAudioDecFilter **ppFilter);
+	bool SetAudioStreamType(BYTE StreamType);
 
 	bool GetVideoDecoderName(LPWSTR pszName,int Length) const;
 	bool GetVideoRendererName(LPTSTR pszName, int Length) const;
@@ -217,6 +218,7 @@ protected:
 	CVideoRenderer::RendererType m_VideoRendererType;
 	LPWSTR m_pszAudioRendererName;
 	BYTE m_VideoStreamType;
+	BYTE m_AudioStreamType;
 	int m_ForceAspectX,m_ForceAspectY;
 	ClippingInfo m_Clipping;
 	ViewStretchMode m_ViewStretchMode;

@@ -956,6 +956,7 @@
     <ClCompile Include="ColorSchemeOptions.cpp" />
     <ClCompile Include="ComUtility.cpp" />
     <ClCompile Include="DirectShowFilter\InternalDecoder.cpp" />
+    <ClCompile Include="DirectShowFilter\MpegAudioDecoder.cpp" />
     <ClCompile Include="DirectWrite.cpp" />
     <ClCompile Include="DirectWriteOptionsDialog.cpp" />
     <ClCompile Include="Epg.cpp" />
@@ -1152,6 +1153,7 @@
     <ClInclude Include="Common\DebugDef.h" />
     <ClInclude Include="ComUtility.h" />
     <ClInclude Include="DirectShowFilter\InternalDecoder.h" />
+    <ClInclude Include="DirectShowFilter\MpegAudioDecoder.h" />
     <ClInclude Include="DirectWrite.h" />
     <ClInclude Include="DirectWriteOptionsDialog.h" />
     <ClInclude Include="Epg.h" />

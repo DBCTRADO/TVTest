@@ -167,6 +167,7 @@ public:
 	int GetVideoStream() const;
 	BYTE GetVideoComponentTag() const;
 
+	BYTE GetAudioStreamType() const;
 	BYTE GetAudioChannelNum();
 	int GetAudioStreamNum(const int Service = -1) const;
 	bool SetAudioStream(const int StreamIndex);
@@ -228,6 +229,7 @@ protected:
 	ServiceSelectInfo m_ServiceSel;
 	ServiceSelectInfo m_SetChannelServiceSel;
 	BYTE m_VideoStreamType;
+	BYTE m_AudioStreamType;
 	int m_CurVideoStream;
 	BYTE m_CurVideoComponentTag;
 	int m_CurAudioStream;

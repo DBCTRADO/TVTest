@@ -3,6 +3,9 @@
 #include <mmreg.h>
 #include "AudioDecFilter.h"
 #include "AacDecoder.h"
+#ifdef BONTSENGINE_MPEG_AUDIO_SUPPORT
+#include "MpegAudioDecoder.h"
+#endif
 #include "../Common/DebugDef.h"
 
 
@@ -10,7 +13,7 @@
 static const int FREQUENCY = 48000;
 
 // フレーム当たりのサンプル数(最大)
-static const int SAMPLES_PER_FRAME = 1024;
+static const int SAMPLES_PER_FRAME = 1152;
 
 // REFERENCE_TIMEの一秒
 static const REFERENCE_TIME REFERENCE_TIME_SECOND = 10000000LL;
@@ -88,6 +91,7 @@ static void OutputLog(LPCTSTR pszFormat, ...)
 
 CAudioDecFilter::CAudioDecFilter(LPUNKNOWN pUnk, HRESULT *phr)
 	: CTransformFilter(AUDIODECFILTER_NAME, pUnk, CLSID_AudioDecFilter)
+	, m_DecoderType(DECODER_UNDEFINED)
 	, m_pDecoder(NULL)
 	, m_CurChannelNum(0)
 	, m_bDualMono(false)
@@ -345,11 +349,10 @@ HRESULT CAudioDecFilter::Transform(IMediaSample *pIn, IMediaSample *pOut)
 	{
 		CAutoLock Lock(&m_cPropLock);
 
-		/*
-			複数の音声フォーマットに対応する場合、この辺りでフォーマットの判定をする
-		*/
 		if (!m_pDecoder) {
-			m_pDecoder = new CAacDecoder();
+			m_pDecoder = CreateDecoder(m_DecoderType);
+			if (!m_pDecoder)
+				return E_UNEXPECTED;
 			m_pDecoder->Open();
 		}
 
@@ -384,10 +387,11 @@ HRESULT CAudioDecFilter::Transform(IMediaSample *pIn, IMediaSample *pOut)
 	hr = S_OK;
 
 	while (InDataPos < InSize) {
+		CAudioDecoder::DecodeFrameInfo FrameInfo;
+
 		{
 			CAutoLock Lock(&m_cPropLock);
 
-			CAudioDecoder::DecodeFrameInfo FrameInfo;
 			const DWORD DataSize = InSize - InDataPos;
 			DWORD DecodeSize = DataSize;
 			if (!m_pDecoder->Decode(&pInData[InDataPos], &DecodeSize, &FrameInfo)) {
@@ -398,6 +402,9 @@ HRESULT CAudioDecFilter::Transform(IMediaSample *pIn, IMediaSample *pOut)
 				break;
 			}
 			InDataPos += DecodeSize;
+
+			if (FrameInfo.Samples == 0)
+				continue;
 
 			if (FrameInfo.bDiscontinuity)
 				m_bDiscontinuity = true;
@@ -448,7 +455,7 @@ HRESULT CAudioDecFilter::Transform(IMediaSample *pIn, IMediaSample *pOut)
 
 			if (m_StartTime >= 0) {
 				REFERENCE_TIME rtDuration, rtStart, rtEnd;
-				rtDuration = REFERENCE_TIME_SECOND * (LONGLONG)SampleInfo.Samples / FREQUENCY;
+				rtDuration = REFERENCE_TIME_SECOND * (LONGLONG)SampleInfo.Samples / FrameInfo.Info.Frequency;
 				rtStart = m_StartTime;
 				m_StartTime += rtDuration;
 				// 音ずれ補正用時間シフト
@@ -524,6 +531,25 @@ HRESULT CAudioDecFilter::Receive(IMediaSample *pSample)
 	}
 
 	return hr;
+}
+
+
+bool CAudioDecFilter::SetDecoderType(DecoderType Type)
+{
+	CAutoLock AutoLock(&m_cPropLock);
+
+	if (m_pDecoder) {
+		CAudioDecoder *pDecoder = CreateDecoder(Type);
+		if (!pDecoder)
+			return false;
+		delete m_pDecoder;
+		m_pDecoder = pDecoder;
+		m_pDecoder->Open();
+	}
+
+	m_DecoderType = Type;
+
+	return true;
 }
 
 
@@ -717,21 +743,23 @@ HRESULT CAudioDecFilter::OnFrame(const BYTE *pData, const DWORD Samples,
 	const bool bDualMono = (Info.Channels == 2 && Info.bDualMono);
 
 	bool bPassthrough = false;
-	if (m_SpdifOptions.Mode == SPDIF_MODE_PASSTHROUGH) {
-		bPassthrough = true;
-	} else if (m_SpdifOptions.Mode == SPDIF_MODE_AUTO) {
-		UINT ChannelFlag;
-		if (bDualMono) {
-			ChannelFlag = SPDIF_CHANNELS_DUALMONO;
-		} else {
-			switch (Info.Channels) {
-			case 1: ChannelFlag = SPDIF_CHANNELS_MONO;		break;
-			case 2: ChannelFlag = SPDIF_CHANNELS_STEREO;	break;
-			case 6: ChannelFlag = SPDIF_CHANNELS_SURROUND;	break;
-			}
-		}
-		if ((m_SpdifOptions.PassthroughChannels & ChannelFlag) != 0)
+	if (m_pDecoder->IsSpdifSupported()) {
+		if (m_SpdifOptions.Mode == SPDIF_MODE_PASSTHROUGH) {
 			bPassthrough = true;
+		} else if (m_SpdifOptions.Mode == SPDIF_MODE_AUTO) {
+			UINT ChannelFlag;
+			if (bDualMono) {
+				ChannelFlag = SPDIF_CHANNELS_DUALMONO;
+			} else {
+				switch (Info.Channels) {
+				case 1: ChannelFlag = SPDIF_CHANNELS_MONO;		break;
+				case 2: ChannelFlag = SPDIF_CHANNELS_STEREO;	break;
+				case 6: ChannelFlag = SPDIF_CHANNELS_SURROUND;	break;
+				}
+			}
+			if ((m_SpdifOptions.PassthroughChannels & ChannelFlag) != 0)
+				bPassthrough = true;
+		}
 	}
 
 	if (m_bPassthrough != bPassthrough)
@@ -752,7 +780,7 @@ HRESULT CAudioDecFilter::OnFrame(const BYTE *pData, const DWORD Samples,
 	HRESULT hr;
 
 	if (m_bPassthrough) {
-		hr = ProcessSpdif(pSampleInfo);
+		hr = ProcessSpdif(Info, pSampleInfo);
 	} else {
 		hr = ProcessPcm(pData, Samples, Info, pSampleInfo);
 	}
@@ -773,7 +801,8 @@ HRESULT CAudioDecFilter::ProcessPcm(const BYTE *pData, const DWORD Samples,
 	WAVEFORMATEX *pwfx = pointer_cast<WAVEFORMATEX*>(m_MediaType.Format());
 	if (*m_MediaType.FormatType() != FORMAT_WaveFormatEx
 			|| (!bSurround && pwfx->wFormatTag != WAVE_FORMAT_PCM)
-			|| (bSurround && pwfx->wFormatTag != WAVE_FORMAT_EXTENSIBLE)) {
+			|| (bSurround && pwfx->wFormatTag != WAVE_FORMAT_EXTENSIBLE)
+			|| pwfx->nSamplesPerSec != Info.Frequency) {
 		CMediaType &mt = pSampleInfo->MediaType;
 		mt.SetType(&MEDIATYPE_Audio);
 		mt.SetSubtype(&MEDIASUBTYPE_PCM);
@@ -798,7 +827,7 @@ HRESULT CAudioDecFilter::ProcessPcm(const BYTE *pData, const DWORD Samples,
 			pExtensible->Samples.wValidBitsPerSample = 16;
 			pExtensible->SubFormat = MEDIASUBTYPE_PCM;
 		}
-		pwfx->nSamplesPerSec = FREQUENCY;
+		pwfx->nSamplesPerSec = Info.Frequency;
 		pwfx->wBitsPerSample = 16;
 		pwfx->nBlockAlign = pwfx->nChannels * pwfx->wBitsPerSample / 8;
 		pwfx->nAvgBytesPerSec = pwfx->nSamplesPerSec * pwfx->nBlockAlign;
@@ -860,7 +889,8 @@ HRESULT CAudioDecFilter::ProcessPcm(const BYTE *pData, const DWORD Samples,
 }
 
 
-HRESULT CAudioDecFilter::ProcessSpdif(FrameSampleInfo *pSampleInfo)
+HRESULT CAudioDecFilter::ProcessSpdif(const CAudioDecoder::AudioInfo &Info,
+									  FrameSampleInfo *pSampleInfo)
 {
 	static const int PREAMBLE_SIZE = sizeof(WORD) * 4;
 
@@ -888,7 +918,8 @@ HRESULT CAudioDecFilter::ProcessSpdif(FrameSampleInfo *pSampleInfo)
 
 	WAVEFORMATEX *pwfx = pointer_cast<WAVEFORMATEX*>(m_MediaType.Format());
 	if (*m_MediaType.FormatType() != FORMAT_WaveFormatEx
-			|| pwfx->wFormatTag != WAVE_FORMAT_DOLBY_AC3_SPDIF) {
+			|| pwfx->wFormatTag != WAVE_FORMAT_DOLBY_AC3_SPDIF
+			|| pwfx->nSamplesPerSec != Info.Frequency) {
 		CMediaType &mt = pSampleInfo->MediaType;
 		mt.SetType(&MEDIATYPE_Audio);
 		mt.SetSubtype(&MEDIASUBTYPE_PCM);
@@ -899,7 +930,7 @@ HRESULT CAudioDecFilter::ProcessSpdif(FrameSampleInfo *pSampleInfo)
 			return E_OUTOFMEMORY;
 		pwfx->wFormatTag = WAVE_FORMAT_DOLBY_AC3_SPDIF;
 		pwfx->nChannels = 2;
-		pwfx->nSamplesPerSec = FREQUENCY;
+		pwfx->nSamplesPerSec = Info.Frequency;
 		pwfx->wBitsPerSample = 16;
 		pwfx->nBlockAlign = pwfx->nChannels * pwfx->wBitsPerSample / 8;
 		pwfx->nAvgBytesPerSec = pwfx->nSamplesPerSec * pwfx->nBlockAlign;
@@ -916,7 +947,7 @@ HRESULT CAudioDecFilter::ProcessSpdif(FrameSampleInfo *pSampleInfo)
 										SPEAKER_BACK_LEFT | SPEAKER_BACK_RIGHT;
 		pwfx->FormatExt.Samples.wValidBitsPerSample = 16;
 		pwfx->FormatExt.SubFormat = KSDATAFORMAT_SUBTYPE_IEC61937_AAC;
-		pwfx->dwEncodedSamplesPerSec = FREQUENCY;
+		pwfx->dwEncodedSamplesPerSec = Info.Frequency;
 		pwfx->dwEncodedChannelCount = 6;
 		pwfx->dwAverageBytesPerSec = 0;
 		*/
@@ -1300,4 +1331,20 @@ void CAudioDecFilter::SelectDualMonoStereoMode()
 	case DUALMONO_SUB:	m_StereoMode = STEREOMODE_RIGHT;	break;
 	case DUALMONO_BOTH:	m_StereoMode = STEREOMODE_STEREO;	break;
 	}
+}
+
+
+CAudioDecoder *CAudioDecFilter::CreateDecoder(DecoderType Type)
+{
+	switch (Type) {
+	case DECODER_AAC:
+		return new CAacDecoder;
+
+#ifdef BONTSENGINE_MPEG_AUDIO_SUPPORT
+	case DECODER_MPEG_AUDIO:
+		return new CMpegAudioDecoder;
+#endif
+	}
+
+	return NULL;
 }
