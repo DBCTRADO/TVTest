@@ -10,6 +10,8 @@ CAS 処理は実装されていないため、一般のテレビ放送を視聴�
 --------------
 * DirectShow BaseClasses
 * [FAAD2](http://www.audiocoding.com/faad2.html)
+* [libmad](http://www.underbit.com/products/mad/)
+* [liba52](http://liba52.sourceforge.net/)
 * [libjpeg](http://www.ijg.org/)
 * [libpng](http://libpng.org/)
 * [zlib](http://zlib.net/)

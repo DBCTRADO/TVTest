@@ -24,6 +24,25 @@
   ・Windows XP SP2 以降 / Vista / 7 / 8 / 10
 
 
+◆ 仕様
+
+  対応コンテナ
+
+  ・MPEG-2 TS (Transport Stream)
+
+  対応映像形式
+
+  ・MPEG-2 Video (ITU-T Rec. H.262 | ISO/IEC 13818-2)
+  ・H.264 / AVC (ITU-T Rec. H.264 | ISO/IEC 14496-10)
+  ・H.265 / HEVC (ITU-T Rec. H.265 | ISO/IEC 23008-2)
+
+  対応音声形式
+
+  ・AAC (ISO/IEC 13818-7 Audio with ADTS transport syntax)
+  ・MPEG-1/2 Audio Layer I/II/III (ISO/IEC 11172-3)
+  ・AC-3 (ATSC A/52)
+
+
 ◆ ビルド
 
   Visual Studio 2010/2013/2015 のプロジェクトファイルが付属しています。
@@ -33,6 +52,8 @@
 
   ・Microsoft Windows SDK v7.0 以上
   ・FAAD2        http://www.audiocoding.com/faad2.html
+  ・libmad       http://www.underbit.com/products/mad/
+  ・liba52       http://liba52.sourceforge.net/
   ・libjpeg (*)  http://www.ijg.org/
   ・libpng (*)   http://libpng.org/
   ・zlib (*)     http://zlib.net/
@@ -509,18 +530,29 @@
 
   ・このプログラムは GPL v2 です。
   ・このプログラムの使用及び使用不能によって生じたいかなる損害も補償しません。
-  ・このプログラムは FAAD2 を使用しています。
+  ・このプログラムは以下のライブラリを使用しています。
+
+    FAAD2
       Code from FAAD2 is copyright (c) Nero AG, www.nero.com
-  ・このプログラムは libjpeg を使用しています。
-      libjpeg 9a  Copyright (C) 1991-2014, Thomas G. Lane, Guido Vollbeding
-        This software is based in part on the work of the Independent JPEG Group.
-  ・このプログラムは libpng を使用しています。
-      libpng 1.6.10 - March 6, 2014
-        Copyright (c) 1998-2014 Glenn Randers-Pehrson
-        Copyright (c) 1996-1997 Andreas Dilger
-        Copyright (c) 1995-1996 Guy Eric Schalnat, Group 42, Inc.
-  ・このプログラムは zlib を使用しています。
-      zlib version 1.2.8 Copyright (C) 1995-2013 Jean-loup Gailly and Mark Adler
+
+    libmad
+      Copyright (C) 2000-2004 Underbit Technologies, Inc.
+
+    liba52
+      Copyright (C) 2000-2002 Michel Lespinasse
+      Copyright (C) 1999-2000 Aaron Holtzman
+
+    libjpeg
+      Copyright (C) 1991-2014, Thomas G. Lane, Guido Vollbeding
+      This software is based in part on the work of the Independent JPEG Group.
+
+    libpng
+      Copyright (c) 1998-2014 Glenn Randers-Pehrson
+      Copyright (c) 1996-1997 Andreas Dilger
+      Copyright (c) 1995-1996 Guy Eric Schalnat, Group 42, Inc.
+
+    zlib
+      Copyright (C) 1995-2013 Jean-loup Gailly and Mark Adler
 
 
 ◆ 謝辞
