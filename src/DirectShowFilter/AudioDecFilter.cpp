@@ -6,14 +6,20 @@
 #ifdef BONTSENGINE_MPEG_AUDIO_SUPPORT
 #include "MpegAudioDecoder.h"
 #endif
+#ifdef BONTSENGINE_AC3_SUPPORT
+#include "Ac3Decoder.h"
+#endif
 #include "../Common/DebugDef.h"
 
 
-// 周波数(48kHz)
+// デフォルト周波数(48kHz)
 static const int FREQUENCY = 48000;
 
 // フレーム当たりのサンプル数(最大)
-static const int SAMPLES_PER_FRAME = 1152;
+// AAC        : 1024
+// MPEG Audio : 1152
+// AC-3       : 1536 == 256 * 6
+static const int SAMPLES_PER_FRAME = 256 * 6;
 
 // REFERENCE_TIMEの一秒
 static const REFERENCE_TIME REFERENCE_TIME_SECOND = 10000000LL;
@@ -1343,6 +1349,11 @@ CAudioDecoder *CAudioDecFilter::CreateDecoder(DecoderType Type)
 #ifdef BONTSENGINE_MPEG_AUDIO_SUPPORT
 	case DECODER_MPEG_AUDIO:
 		return new CMpegAudioDecoder;
+#endif
+
+#ifdef BONTSENGINE_AC3_SUPPORT
+	case DECODER_AC3:
+		return new CAc3Decoder;
 #endif
 	}
 

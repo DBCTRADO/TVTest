@@ -1971,6 +1971,9 @@ void CALLBACK CTsAnalyzer::OnPmtUpdated(const WORD wPID, CTsPidMapTarget *pMapTa
 		case STREAM_TYPE_MPEG1_AUDIO:
 		case STREAM_TYPE_MPEG2_AUDIO:
 #endif
+#ifdef BONTSENGINE_AC3_SUPPORT
+		case STREAM_TYPE_AC3:
+#endif
 			Info.AudioEsList.push_back(Es);
 			break;
 

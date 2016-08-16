@@ -955,6 +955,7 @@
     <ClCompile Include="ChannelInput.cpp" />
     <ClCompile Include="ColorSchemeOptions.cpp" />
     <ClCompile Include="ComUtility.cpp" />
+    <ClCompile Include="DirectShowFilter\Ac3Decoder.cpp" />
     <ClCompile Include="DirectShowFilter\InternalDecoder.cpp" />
     <ClCompile Include="DirectShowFilter\MpegAudioDecoder.cpp" />
     <ClCompile Include="DirectWrite.cpp" />
@@ -1152,6 +1153,7 @@
     <ClInclude Include="Common\Common.h" />
     <ClInclude Include="Common\DebugDef.h" />
     <ClInclude Include="ComUtility.h" />
+    <ClInclude Include="DirectShowFilter\Ac3Decoder.h" />
     <ClInclude Include="DirectShowFilter\InternalDecoder.h" />
     <ClInclude Include="DirectShowFilter\MpegAudioDecoder.h" />
     <ClInclude Include="DirectWrite.h" />

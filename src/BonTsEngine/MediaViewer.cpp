@@ -481,13 +481,7 @@ bool CMediaViewer::OpenViewer(
 			if (FAILED(hr))
 				throw CBonException(hr,TEXT("音声デコーダフィルタをフィルタグラフに追加できません。"));
 
-			m_pAudioDecoder->SetDecoderType(
-#ifdef BONTSENGINE_MPEG_AUDIO_SUPPORT
-				m_AudioStreamType == STREAM_TYPE_MPEG1_AUDIO ||
-				m_AudioStreamType == STREAM_TYPE_MPEG2_AUDIO ?
-					CAudioDecFilter::DECODER_MPEG_AUDIO :
-#endif
-					CAudioDecFilter::DECODER_AAC);
+			SetAudioDecoderType(m_AudioStreamType);
 
 			m_pAudioDecoder->SetEventHandler(this);
 			m_pAudioDecoder->SetJitterCorrection(m_bAdjustAudioStreamTime);
@@ -1696,13 +1690,7 @@ bool CMediaViewer::SetAudioStreamType(BYTE StreamType)
 	m_AudioStreamType = StreamType;
 
 	if (m_pAudioDecoder) {
-		m_pAudioDecoder->SetDecoderType(
-#ifdef BONTSENGINE_MPEG_AUDIO_SUPPORT
-			m_AudioStreamType == STREAM_TYPE_MPEG1_AUDIO ||
-			m_AudioStreamType == STREAM_TYPE_MPEG2_AUDIO ?
-				CAudioDecFilter::DECODER_MPEG_AUDIO :
-#endif
-				CAudioDecFilter::DECODER_AAC);
+		SetAudioDecoderType(m_AudioStreamType);
 	}
 
 	return true;
@@ -2150,6 +2138,24 @@ void CMediaViewer::ApplyAdjustVideoSampleOptions()
 		}
 
 		m_pVideoParser->SetAdjustSampleOptions(Flags);
+	}
+}
+
+
+void CMediaViewer::SetAudioDecoderType(BYTE StreamType)
+{
+	if (m_pAudioDecoder) {
+		m_pAudioDecoder->SetDecoderType(
+#ifdef BONTSENGINE_MPEG_AUDIO_SUPPORT
+			StreamType == STREAM_TYPE_MPEG1_AUDIO ||
+			StreamType == STREAM_TYPE_MPEG2_AUDIO ?
+				CAudioDecFilter::DECODER_MPEG_AUDIO :
+#endif
+#ifdef BONTSENGINE_AC3_SUPPORT
+			StreamType == STREAM_TYPE_AC3 ?
+				CAudioDecFilter::DECODER_AC3 :
+#endif
+				CAudioDecFilter::DECODER_AAC);
 	}
 }
 

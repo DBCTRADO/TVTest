@@ -614,6 +614,9 @@
     <ClCompile Include="DirectShowFilter\MpegAudioDecoder.cpp">
       <Filter>DirectShowFilter\Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="DirectShowFilter\Ac3Decoder.cpp">
+      <Filter>DirectShowFilter\Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="BonTsEngine\Bitstream.h">
@@ -1199,6 +1202,9 @@
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="DirectShowFilter\MpegAudioDecoder.h">
+      <Filter>DirectShowFilter\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="DirectShowFilter\Ac3Decoder.h">
       <Filter>DirectShowFilter\Header Files</Filter>
     </ClInclude>
   </ItemGroup>

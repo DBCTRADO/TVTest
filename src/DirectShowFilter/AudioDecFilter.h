@@ -34,7 +34,8 @@ public:
 	enum DecoderType {
 		DECODER_UNDEFINED,
 		DECODER_AAC,
-		DECODER_MPEG_AUDIO
+		DECODER_MPEG_AUDIO,
+		DECODER_AC3
 	};
 
 	enum {

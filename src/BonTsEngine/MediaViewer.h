@@ -168,6 +168,7 @@ protected:
 	bool MapVideoPID(WORD PID);
 	bool MapAudioPID(WORD PID);
 	void ApplyAdjustVideoSampleOptions();
+	void SetAudioDecoderType(BYTE StreamType);
 
 // CAudioDecFilter::IEventHandler
 	void OnSpdifPassthroughError(HRESULT hr) override;
