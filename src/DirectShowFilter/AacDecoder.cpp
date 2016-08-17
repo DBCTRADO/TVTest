@@ -4,6 +4,13 @@
 
 #include "stdafx.h"
 #include "AacDecoder.h"
+
+// ダウンミックス係数のパラメータ取得にFAAD2の内部情報が必要
+#define HAVE_CONFIG_H
+#pragma include_alias("neaacdec.h", "../Libs/faad2/include/neaacdec.h")
+#include "../Libs/faad2/libfaad/common.h"
+#include "../Libs/faad2/libfaad/structs.h"
+
 #include "../Common/DebugDef.h"
 
 
@@ -166,26 +173,26 @@ bool CAacDecoder::GetDownmixInfo(DownmixInfo *pInfo) const
 
 	// 5.1chダウンミックス設定
 	/*
-	本来の計算式 (STD-B21 6.2)
-	┌─┬──┬─┬───┬────────────────┐
-	│*1│*2  │*3│kの値 │計算式(*4)                      │
-	├─┼──┼─┼───┼────────────────┤
-	│ 1│ 0/1│ 0│1/√2 │Set1                            │
-	│  │    │ 1│1/2   │Lt=a*(L+1/√2*C＋k*Sl)          │
-	│  │    │ 2│1/2√2│Rt=a*(R+1/√2*C＋k*Sr)          │
-	│  │    │ 3│0     │a=1/√2                         │
-	├─┼──┼─┼───┼────────────────┤
-	│ 0│    │  │      │Set3                            │
-	│  │    │  │      │Lt=(1/√2)*(L+1/√2*C＋1/√2*Sl)│
-	│  │    │  │      │Rt=(1/√2)*(R+1/√2*C＋1/√2*Sr)│
-	└─┴──┴─┴───┴────────────────┘
+	ダウンミックス計算式 (STD-B21 6.2.1)
+	┌─┬──┬─┬───┬───────────┐
+	│*1│*2  │*3│kの値 │計算式(*4)            │
+	├─┼──┼─┼───┼───────────┤
+	│ 1│ 0/1│ 0│1/√2 │Set1                  │
+	│  │    │ 1│1/2   │Lt=L+1/√2*C＋k*Ls    │
+	│  │    │ 2│1/2√2│Rt=R+1/√2*C＋k*Rs    │
+	│  │    │ 3│0     │                      │
+	├─┼──┼─┼───┼───────────┤
+	│ 0│    │  │      │Set3                  │
+	│  │    │  │      │Lt=L+1/√2*C＋1/√2*Ls│
+	│  │    │  │      │Rt=R+1/√2*C＋1/√2*Rs│
+	└─┴──┴─┴───┴───────────┘
 	*1 matrix_mixdown_idx_present
 	*2 pseudo_surround_enable
 	*3 matrix_mixdown_idx
-	*4 L=Left, R=Right, C=Center, Sl=Rear left, Sr=Rear right
+	*4 L=Left, R=Right, C=Center, Ls=Rear left, Rs=Rear right
 
-	必要な値は NeAACDecStruct.pce (NeAACDecStruct* = NeAACDecHandle) で参照できるが、
-	今のところそこまでしていない。
+	STD-B21 5.3版より前は、最終的に Lt/Rt に 1/√2 を乗じる規定(STD-B21 付属4参照)
+	ただしTVTestでは元々この規定は無視していた
 	*/
 
 	static const double PSQR = 1.0 / 1.4142135623730950488016887242097;
@@ -193,7 +200,16 @@ bool CAacDecoder::GetDownmixInfo(DownmixInfo *pInfo) const
 	pInfo->Center = PSQR;
 	pInfo->Front  = 1.0;
 	pInfo->Rear   = PSQR;
-	pInfo->LFE    = PSQR;
+	pInfo->LFE    = 0.0;
+
+	if (m_hDecoder) {
+		const NeAACDecStruct *pDec = static_cast<const NeAACDecStruct*>(m_hDecoder);
+
+		if (pDec->pce.matrix_mixdown_idx_present) {
+			static const double k[4] = {PSQR, 0.5, 0.5 * PSQR, 0.0};
+			pInfo->Rear = pDec->pce.matrix_mixdown_idx <= 3 ? k[pDec->pce.matrix_mixdown_idx] : PSQR;
+		}
+	}
 
 	return true;
 }
