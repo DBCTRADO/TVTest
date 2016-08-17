@@ -154,7 +154,7 @@ bool CAc3Decoder::GetDownmixInfo(DownmixInfo *pInfo) const
 		return false;
 
 	pInfo->Front  = 1.0;
-	pInfo->LFE    = 1.0;
+	pInfo->LFE    = 0.0;
 	if (m_pA52State) {
 		pInfo->Center = m_pA52State->clev;
 		pInfo->Rear   = m_pA52State->slev;
