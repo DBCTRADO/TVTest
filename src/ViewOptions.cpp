@@ -34,6 +34,7 @@ CViewOptions::CViewOptions()
 	, m_fRemember1SegWindowSize(true)
 	, m_fMinimizeToTray(false)
 	, m_fDisablePreviewWhenMinimized(false)
+	, m_fHideCursor(false)
 	, m_fUseLogoIcon(false)
 	, m_TitleTextFormat(TitleTextFormatPresets[0].pszFormat)
 	, m_fEnableTitleBarFont(false)
@@ -87,6 +88,7 @@ bool CViewOptions::ReadSettings(CSettings &Settings)
 	Settings.Read(TEXT("Remember1SegWindowSize"),&m_fRemember1SegWindowSize);
 	Settings.Read(TEXT("MinimizeToTray"),&m_fMinimizeToTray);
 	Settings.Read(TEXT("DisablePreviewWhenMinimized"),&m_fDisablePreviewWhenMinimized);
+	Settings.Read(TEXT("HideCursor"),&m_fHideCursor);
 	Settings.Read(TEXT("UseLogoIcon"),&m_fUseLogoIcon);
 	Settings.Read(TEXT("TitleTextFormat"),&m_TitleTextFormat);
 	Settings.Read(TEXT("MinimizedTitleTextFormat"),&m_MinimizedTitleTextFormat);
@@ -114,6 +116,7 @@ bool CViewOptions::WriteSettings(CSettings &Settings)
 	Settings.Write(TEXT("Remember1SegWindowSize"),m_fRemember1SegWindowSize);
 	Settings.Write(TEXT("MinimizeToTray"),m_fMinimizeToTray);
 	Settings.Write(TEXT("DisablePreviewWhenMinimized"),m_fDisablePreviewWhenMinimized);
+	Settings.Write(TEXT("HideCursor"),m_fHideCursor);
 	Settings.Write(TEXT("UseLogoIcon"),m_fUseLogoIcon);
 	Settings.Write(TEXT("TitleTextFormat"),m_TitleTextFormat);
 	// ê›íËUIñ¢é¿ëï
@@ -172,6 +175,7 @@ INT_PTR CViewOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 			DlgCheckBox_Check(hDlg,IDC_OPTIONS_MINIMIZETOTRAY,m_fMinimizeToTray);
 			DlgCheckBox_Check(hDlg,IDC_OPTIONS_MINIMIZEDISABLEPREVIEW,
 							  m_fDisablePreviewWhenMinimized);
+			DlgCheckBox_Check(hDlg,IDC_OPTIONS_HIDECURSOR,m_fHideCursor);
 			DlgCheckBox_Check(hDlg,IDC_OPTIONS_USELOGOICON,
 							  m_fUseLogoIcon);
 			::SetDlgItemText(hDlg,IDC_OPTIONS_TITLETEXTFORMAT,m_TitleTextFormat.c_str());
@@ -309,6 +313,8 @@ INT_PTR CViewOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 					DlgCheckBox_IsChecked(hDlg,IDC_OPTIONS_MINIMIZETOTRAY);
 				m_fDisablePreviewWhenMinimized=
 					DlgCheckBox_IsChecked(hDlg,IDC_OPTIONS_MINIMIZEDISABLEPREVIEW);
+				m_fHideCursor=
+					DlgCheckBox_IsChecked(hDlg,IDC_OPTIONS_HIDECURSOR);
 				f=DlgCheckBox_IsChecked(hDlg,IDC_OPTIONS_USELOGOICON);
 				if (m_fUseLogoIcon!=f) {
 					m_fUseLogoIcon=f;

@@ -45,6 +45,7 @@ public:
 	bool GetRemember1SegWindowSize() const { return m_fRemember1SegWindowSize; }
 	bool GetMinimizeToTray() const { return m_fMinimizeToTray; }
 	bool GetDisablePreviewWhenMinimized() const { return m_fDisablePreviewWhenMinimized; }
+	bool GetHideCursor() const { return m_fHideCursor; }
 	bool GetUseLogoIcon() const { return m_fUseLogoIcon; }
 	LPCTSTR GetTitleTextFormat() const { return m_TitleTextFormat.c_str(); }
 	LPCTSTR GetMinimizedTitleTextFormat() const { return m_MinimizedTitleTextFormat.c_str(); }
@@ -71,6 +72,7 @@ private:
 	bool m_fRemember1SegWindowSize;
 	bool m_fMinimizeToTray;
 	bool m_fDisablePreviewWhenMinimized;
+	bool m_fHideCursor;
 	bool m_fUseLogoIcon;
 	TVTest::String m_TitleTextFormat;
 	TVTest::String m_MinimizedTitleTextFormat;

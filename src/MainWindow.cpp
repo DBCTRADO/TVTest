@@ -1043,7 +1043,7 @@ LRESULT CMainWindow::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 		if (m_fDragging) {
 			m_fDragging=false;
 			m_TitleBarManager.EndDrag();
-			if (m_App.OperationOptions.GetHideCursor())
+			if (m_App.ViewOptions.GetHideCursor())
 				::SetTimer(m_hwnd,TIMER_ID_HIDECURSOR,HIDE_CURSOR_DELAY,nullptr);
 		}
 		return 0;
@@ -1831,7 +1831,7 @@ bool CMainWindow::OnCreate(const CREATESTRUCT *pcs)
 
 	m_fShowCursor=true;
 	m_CursorTracker.Reset();
-	if (m_App.OperationOptions.GetHideCursor())
+	if (m_App.ViewOptions.GetHideCursor())
 		::SetTimer(m_hwnd,TIMER_ID_HIDECURSOR,HIDE_CURSOR_DELAY,nullptr);
 
 	return true;
@@ -2100,7 +2100,7 @@ void CMainWindow::OnMouseMove(int x,int y)
 		const POINT pt={x,y};
 
 		if (m_CursorTracker.GetLastCursorPos()==pt) {
-			if (m_App.OperationOptions.GetHideCursor())
+			if (m_App.ViewOptions.GetHideCursor())
 				::SetTimer(m_hwnd,TIMER_ID_HIDECURSOR,HIDE_CURSOR_DELAY,nullptr);
 			return;
 		}
@@ -2180,7 +2180,7 @@ void CMainWindow::OnMouseMove(int x,int y)
 			if (!m_fShowCursor)
 				ShowCursor(true);
 		}
-		if (m_App.OperationOptions.GetHideCursor()) {
+		if (m_App.ViewOptions.GetHideCursor()) {
 			if (fShowTitleBar || fShowStatusBar || fShowSideBar)
 				::KillTimer(m_hwnd,TIMER_ID_HIDECURSOR);
 			else
@@ -3825,7 +3825,7 @@ void CMainWindow::OnTimer(HWND hwnd,UINT id)
 		return;
 
 	case TIMER_ID_HIDECURSOR:
-		if (m_App.OperationOptions.GetHideCursor()) {
+		if (m_App.ViewOptions.GetHideCursor()) {
 			if (!m_fNoHideCursor && !m_Display.GetDisplayBase().IsVisible()) {
 				POINT pt;
 				RECT rc;

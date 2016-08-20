@@ -25,7 +25,6 @@ public:
 // COperationOptions
 	bool Initialize(CSettings &Settings,const CCommandList *pCommandList);
 	bool GetDisplayDragMove() const { return m_fDisplayDragMove; }
-	bool GetHideCursor() const { return m_fHideCursor; }
 	int GetVolumeStep() const { return m_VolumeStep; }
 	int GetAudioDelayStep() const { return m_AudioDelayStep; }
 	CChannelManager::UpDownOrder GetChannelUpDownOrder() const { return m_ChannelUpDownOrder; }
@@ -47,7 +46,6 @@ private:
 	TVTest::CWheelCommandManager m_WheelCommandManager;
 
 	bool m_fDisplayDragMove;
-	bool m_fHideCursor;
 	int m_VolumeStep;
 	int m_AudioDelayStep;
 	CChannelManager::UpDownOrder m_ChannelUpDownOrder;
