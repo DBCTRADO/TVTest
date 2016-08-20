@@ -4011,6 +4011,7 @@ LRESULT CProgramGuide::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam
 				m_fScrolling=true;
 				m_DragInfo.StartCursorPos=pt;
 				m_DragInfo.StartScrollPos=m_ScrollPos;
+				m_DragInfo.fCursorMoved=false;
 				::SetCursor(m_hDragCursor2);
 				::SetCapture(hwnd);
 				m_EventInfoPopupManager.SetEnable(false);
@@ -4024,6 +4025,13 @@ LRESULT CProgramGuide::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam
 	case WM_LBUTTONUP:
 		if (m_fScrolling) {
 			::ReleaseCapture();
+
+			if (!m_DragInfo.fCursorMoved) {
+				int x=GET_X_LPARAM(lParam),y=GET_Y_LPARAM(lParam);
+
+				if (SelectEventByPosition(x,y))
+					m_EventInfoPopupManager.Popup(x,y);
+			}
 		}
 		return 0;
 
@@ -4069,6 +4077,10 @@ LRESULT CProgramGuide::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam
 		if (m_fScrolling) {
 			int x=GET_X_LPARAM(lParam),y=GET_Y_LPARAM(lParam);
 			int XScroll,YScroll;
+
+			if (!m_DragInfo.fCursorMoved
+					&& (m_DragInfo.StartCursorPos.x!=x || m_DragInfo.StartCursorPos.y!=y))
+				m_DragInfo.fCursorMoved=true;
 
 			XScroll=(m_DragInfo.StartScrollPos.x+(m_DragInfo.StartCursorPos.x-x))-m_ScrollPos.x;
 			YScroll=(m_DragInfo.StartScrollPos.y+(m_DragInfo.StartCursorPos.y-y)/GetLineHeight())-m_ScrollPos.y;

@@ -478,6 +478,7 @@ private:
 	struct {
 		POINT StartCursorPos;
 		POINT StartScrollPos;
+		bool fCursorMoved;
 	} m_DragInfo;
 	CMouseWheelHandler m_VertWheel;
 	CMouseWheelHandler m_HorzWheel;
