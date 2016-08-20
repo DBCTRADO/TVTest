@@ -668,7 +668,6 @@ private:
 	void ResumeViewer(unsigned int Flags);
 	void OnChannelNoInput();
 	int GetNextChannel(bool fUp);
-	bool SetEpgUpdateNextChannel();
 	void HookWindows(HWND hwnd);
 	void HookChildWindow(HWND hwnd);
 	void SetMaximizedRegion(bool fSet);
