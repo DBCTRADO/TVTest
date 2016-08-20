@@ -667,6 +667,7 @@ private:
 	void SuspendViewer(unsigned int Flags);
 	void ResumeViewer(unsigned int Flags);
 	void OnChannelNoInput();
+	int GetNextChannel(bool fUp);
 	bool SetEpgUpdateNextChannel();
 	void HookWindows(HWND hwnd);
 	void HookChildWindow(HWND hwnd);

@@ -387,6 +387,14 @@ int CChannelList::GetNextChannel(int Index,bool fWrap) const
 		return -1;
 
 	const int ChannelNo=GetChannelNo(Index);
+
+	for (int i=Index+1;i<(int)m_ChannelList.size();i++) {
+		const CChannelInfo *pChInfo=m_ChannelList[i];
+
+		if (pChInfo->IsEnabled() && pChInfo->GetChannelNo()==ChannelNo)
+			return i;
+	}
+
 	int Channel,Min,No;
 
 	Channel=INT_MAX;
@@ -407,7 +415,7 @@ int CChannelList::GetNextChannel(int Index,bool fWrap) const
 	if (Channel==INT_MAX) {
 		if (Min==INT_MAX || !fWrap)
 			return -1;
-		return FindChannelNo(Min);
+		Channel=Min;
 	}
 	return FindChannelNo(Channel);
 }
@@ -419,6 +427,14 @@ int CChannelList::GetPrevChannel(int Index,bool fWrap) const
 		return -1;
 
 	const int ChannelNo=GetChannelNo(Index);
+
+	for (int i=Index-1;i>=0;i--) {
+		const CChannelInfo *pChInfo=m_ChannelList[i];
+
+		if (pChInfo->IsEnabled() && pChInfo->GetChannelNo()==ChannelNo)
+			return i;
+	}
+
 	int Channel,Max,No;
 
 	Channel=0;
@@ -437,11 +453,19 @@ int CChannelList::GetPrevChannel(int Index,bool fWrap) const
 		}
 	}
 	if (Channel==0) {
-		if (fWrap)
-			return FindChannelNo(Max);
-		return -1;
+		if (!fWrap)
+			return -1;
+		Channel=Max;
 	}
-	return FindChannelNo(Channel);
+
+	for (int i=(int)m_ChannelList.size()-1;i>=0;i--) {
+		const CChannelInfo *pChInfo=m_ChannelList[i];
+
+		if (pChInfo->IsEnabled() && pChInfo->GetChannelNo()==Channel)
+			return i;
+	}
+
+	return -1;
 }
 
 

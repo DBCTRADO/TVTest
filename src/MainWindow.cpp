@@ -2862,7 +2862,7 @@ void CMainWindow::OnCommand(HWND hwnd,int id,HWND hwndCtl,UINT codeNotify)
 	case CM_CHANNEL_UP:
 	case CM_CHANNEL_DOWN:
 		{
-			int Channel=m_App.ChannelManager.GetNextChannel(id==CM_CHANNEL_UP);
+			int Channel=GetNextChannel(id==CM_CHANNEL_UP);
 
 			if (Channel>=0)
 				m_App.Core.SwitchChannel(Channel);
@@ -5025,7 +5025,7 @@ void CMainWindow::OnMouseWheel(WPARAM wParam,LPARAM lParam,bool fHorz)
 				fUp=Delta>0;
 			else
 				fUp=Delta<0;
-			int Channel=m_App.ChannelManager.GetNextChannel(fUp);
+			int Channel=GetNextChannel(fUp);
 			if (Channel>=0) {
 				if (m_fWheelChannelChanging
 						&& m_WheelCount<5
@@ -6094,6 +6094,101 @@ void CMainWindow::OnChannelNoInput()
 	const DWORD Timeout=m_App.Accelerator.GetChannelInputOptions().KeyTimeout;
 	if (Timeout>0)
 		m_ChannelNoInputTimer.Begin(m_hwnd,Timeout);
+}
+
+
+int CMainWindow::GetNextChannel(bool fUp)
+{
+	int Channel=m_App.ChannelManager.GetNextChannel(
+		m_App.OperationOptions.GetChannelUpDownOrder(),fUp);
+	if (Channel<0)
+		return -1;
+
+	if (m_App.OperationOptions.GetChannelUpDownSkipSubChannel()) {
+		// 異なる番組を放送している場合以外はサブチャンネルをスキップする
+		const CChannelList *pCurChannelList=m_App.ChannelManager.GetCurrentChannelList();
+		const int CurChannel=
+			m_App.ChannelManager.GetChangingChannel()>=0 ?
+				m_App.ChannelManager.GetChangingChannel() :
+				m_App.ChannelManager.GetCurrentChannel();
+		const CChannelInfo *pCurChannelInfo=pCurChannelList->GetChannelInfo(CurChannel);
+		SYSTEMTIME st;
+		CEventInfoData EventInfo;
+
+		GetCurrentEpgTime(&st);
+		if (m_App.EpgProgramList.GetEventInfo(
+				pCurChannelInfo->GetNetworkID(),
+				pCurChannelInfo->GetTransportStreamID(),
+				pCurChannelInfo->GetServiceID(),
+				&st,&EventInfo)) {
+			const WORD CurEventID=EventInfo.m_EventID;
+			bool fDiffEvent=false;
+			int i;
+
+			for (i=pCurChannelList->NumEnableChannels()-1;i>0;i--) {
+				const CChannelInfo *pNextChannelInfo=pCurChannelList->GetChannelInfo(Channel);
+
+				if (pCurChannelInfo->GetSpace()!=pNextChannelInfo->GetSpace()
+						|| pCurChannelInfo->GetChannelIndex()!=pNextChannelInfo->GetChannelIndex())
+					break;
+
+				if (m_App.EpgProgramList.GetEventInfo(
+						pNextChannelInfo->GetNetworkID(),
+						pNextChannelInfo->GetTransportStreamID(),
+						pNextChannelInfo->GetServiceID(),
+						&st,&EventInfo)) {
+					if (CurEventID!=EventInfo.m_EventID) {
+						fDiffEvent=true;
+						break;
+					}
+				}
+
+				Channel=m_App.ChannelManager.GetNextChannel(
+					Channel,m_App.OperationOptions.GetChannelUpDownOrder(),fUp);
+				if (Channel==CurChannel)
+					return -1;
+			}
+
+			if (i==0)
+				return -1;
+
+			if (!fUp && !fDiffEvent) {
+				const CChannelInfo *pNextChannelInfo=pCurChannelList->GetChannelInfo(Channel);
+				WORD NextEventID=0xFFFF;
+
+				if (m_App.EpgProgramList.GetEventInfo(
+						pNextChannelInfo->GetNetworkID(),
+						pNextChannelInfo->GetTransportStreamID(),
+						pNextChannelInfo->GetServiceID(),
+						&st,&EventInfo))
+					NextEventID=EventInfo.m_EventID;
+
+				for (int i=Channel-1;i>=0;i--) {
+					const CChannelInfo *pChannelInfo=pCurChannelList->GetChannelInfo(i);
+
+					if (!pChannelInfo->IsEnabled())
+						continue;
+
+					if (pNextChannelInfo->GetSpace()!=pChannelInfo->GetSpace()
+							|| pNextChannelInfo->GetChannelIndex()!=pChannelInfo->GetChannelIndex())
+						break;
+
+					if (NextEventID!=0xFFFF
+							&& m_App.EpgProgramList.GetEventInfo(
+								pChannelInfo->GetNetworkID(),
+								pChannelInfo->GetTransportStreamID(),
+								pChannelInfo->GetServiceID(),
+								&st,&EventInfo)
+							&& NextEventID!=EventInfo.m_EventID)
+						break;
+
+					Channel=i;
+				}
+			}
+		}
+	}
+
+	return Channel;
 }
 
 

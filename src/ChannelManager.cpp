@@ -209,24 +209,18 @@ const CChannelInfo *CChannelManager::GetChangingChannelInfo() const
 }
 
 
-int CChannelManager::GetNextChannel(bool fNext) const
+int CChannelManager::GetNextChannel(int CurChannel,UpDownOrder Order,bool fNext) const
 {
 	const CChannelList *pList=GetCurrentChannelList();
 	if (pList==NULL)
 		return -1;
 
-	int Channel=-1;
+	if (CurChannel<0 || CurChannel>=pList->NumChannels())
+		return -1;
 
-	if (m_ChangingChannel>=0)
-		Channel=m_ChangingChannel;
+	int Channel=CurChannel;
 
-	if (Channel<0) {
-		if (m_CurrentChannel<0)
-			return -1;
-		Channel=m_CurrentChannel;
-	}
-	//if (pList->HasRemoteControlKeyID()) {
-	if (pList->GetChannelNo(Channel)>0) {
+	if (Order==UP_DOWN_ORDER_ID && pList->GetChannelNo(Channel)>0) {
 		if (fNext)
 			Channel=pList->GetNextChannel(Channel,true);
 		else
@@ -255,12 +249,19 @@ int CChannelManager::GetNextChannel(bool fNext) const
 }
 
 
-const CChannelInfo *CChannelManager::GetNextChannelInfo(bool fNext) const
+int CChannelManager::GetNextChannel(UpDownOrder Order,bool fNext) const
 {
-	int Channel=GetNextChannel(fNext);
-	if (Channel<0)
-		return NULL;
-	return GetCurrentChannelList()->GetChannelInfo(Channel);
+	int Channel;
+
+	if (m_ChangingChannel>=0) {
+		Channel=m_ChangingChannel;
+	} else {
+		if (m_CurrentChannel<0)
+			return -1;
+		Channel=m_CurrentChannel;
+	}
+
+	return GetNextChannel(Channel,Order,fNext);
 }
 
 

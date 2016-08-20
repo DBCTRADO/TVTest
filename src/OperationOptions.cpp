@@ -27,6 +27,8 @@ COperationOptions::COperationOptions()
 	, m_LeftDoubleClickCommand(CM_FULLSCREEN)
 	, m_RightClickCommand(CM_MENU)
 	, m_MiddleClickCommand(0)
+	, m_ChannelUpDownOrder(CChannelManager::UP_DOWN_ORDER_INDEX)
+	, m_fChannelUpDownSkipSubChannel(true)
 {
 }
 
@@ -45,6 +47,9 @@ bool COperationOptions::ReadSettings(CSettings &Settings)
 	Settings.Read(TEXT("HideCursor"),&m_fHideCursor);
 	Settings.Read(TEXT("VolumeStep"),&m_VolumeStep);
 	Settings.Read(TEXT("AudioDelayStep"),&m_AudioDelayStep);
+	if (Settings.Read(TEXT("ChannelUpDownOrder"),&Value))
+		m_ChannelUpDownOrder=(CChannelManager::UpDownOrder)Value;
+	Settings.Read(TEXT("ChannelUpDownSkipSubChannel"),&m_fChannelUpDownSkipSubChannel);
 
 	// ver.0.9.0 より前との互換用
 	static const int WheelModeList[] = {
@@ -122,6 +127,8 @@ bool COperationOptions::WriteSettings(CSettings &Settings)
 	Settings.Write(TEXT("HideCursor"),m_fHideCursor);
 	Settings.Write(TEXT("VolumeStep"),m_VolumeStep);
 	Settings.Write(TEXT("AudioDelayStep"),m_AudioDelayStep);
+	Settings.Write(TEXT("ChannelUpDownOrder"),(int)m_ChannelUpDownOrder);
+	Settings.Write(TEXT("ChannelUpDownSkipSubChannel"),m_fChannelUpDownSkipSubChannel);
 
 	TCHAR szCommand[TVTest::CWheelCommandManager::MAX_COMMAND_PARSABLE_NAME];
 	m_WheelCommandManager.GetCommandParsableName(m_WheelCommand,szCommand,lengthof(szCommand));
@@ -226,6 +233,17 @@ INT_PTR COperationOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPar
 
 			DlgEdit_SetInt(hDlg,IDC_OPTIONS_AUDIODELAYSTEP,m_AudioDelayStep);
 			DlgUpDown_SetRange(hDlg,IDC_OPTIONS_AUDIODELAYSTEP_UD,1,1000);
+
+			static const LPCTSTR ChannelUpDownOrderList[] = {
+				TEXT("リストの並び順"),
+				TEXT("チャンネル番号順"),
+			};
+			for (int i=0;i<lengthof(ChannelUpDownOrderList);i++) {
+				DlgComboBox_AddString(hDlg,IDC_OPTIONS_CHANNELUPDOWNORDER,ChannelUpDownOrderList[i]);
+			}
+			DlgComboBox_SetCurSel(hDlg,IDC_OPTIONS_CHANNELUPDOWNORDER,(int)m_ChannelUpDownOrder);
+
+			DlgCheckBox_Check(hDlg,IDC_OPTIONS_SKIPSUBCHANNEL,m_fChannelUpDownSkipSubChannel);
 		}
 		return TRUE;
 
@@ -270,6 +288,11 @@ INT_PTR COperationOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPar
 
 				m_VolumeStep=DlgEdit_GetInt(hDlg,IDC_OPTIONS_VOLUMESTEP);
 				m_AudioDelayStep=DlgEdit_GetInt(hDlg,IDC_OPTIONS_AUDIODELAYSTEP);
+
+				m_ChannelUpDownOrder=(CChannelManager::UpDownOrder)
+					DlgComboBox_GetCurSel(hDlg,IDC_OPTIONS_CHANNELUPDOWNORDER);
+				m_fChannelUpDownSkipSubChannel=
+					DlgCheckBox_IsChecked(hDlg,IDC_OPTIONS_SKIPSUBCHANNEL);
 
 				m_fChanged=true;
 			}

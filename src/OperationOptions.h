@@ -5,6 +5,7 @@
 #include "Options.h"
 #include "Command.h"
 #include "WheelCommand.h"
+#include "ChannelManager.h"
 
 
 class COperationOptions : public COptions
@@ -27,6 +28,8 @@ public:
 	bool GetHideCursor() const { return m_fHideCursor; }
 	int GetVolumeStep() const { return m_VolumeStep; }
 	int GetAudioDelayStep() const { return m_AudioDelayStep; }
+	CChannelManager::UpDownOrder GetChannelUpDownOrder() const { return m_ChannelUpDownOrder; }
+	bool GetChannelUpDownSkipSubChannel() const { return m_fChannelUpDownSkipSubChannel; }
 	int GetWheelCommand() const { return m_WheelCommand; }
 	int GetWheelShiftCommand() const { return m_WheelShiftCommand; }
 	int GetWheelCtrlCommand() const { return m_WheelCtrlCommand; }
@@ -47,6 +50,8 @@ private:
 	bool m_fHideCursor;
 	int m_VolumeStep;
 	int m_AudioDelayStep;
+	CChannelManager::UpDownOrder m_ChannelUpDownOrder;
+	bool m_fChannelUpDownSkipSubChannel;
 	int m_WheelCommand;
 	int m_WheelShiftCommand;
 	int m_WheelCtrlCommand;

@@ -736,7 +736,7 @@ bool CAppCore::SetServiceByID(WORD ServiceID,unsigned int Flags)
 
 	bool fChannelChanged=false;
 
-	if (!m_f1SegMode && ServiceID!=0 && pCurChInfo!=nullptr) {
+	if (/*!m_f1SegMode && */ServiceID!=0 && pCurChInfo!=nullptr) {
 		const CChannelList *pChList=m_App.ChannelManager.GetCurrentChannelList();
 		int Index=pChList->FindByIndex(pCurChInfo->GetSpace(),
 									   pCurChInfo->GetChannelIndex(),
@@ -1052,7 +1052,9 @@ int CAppCore::GetCorresponding1SegService(
 		ServiceIndex=ServiceID-SID;
 	}
 
-	return ServiceIndex;
+	// フルセグのマルチ放送のサービスIDが101/103のように飛んでいる場合があるが、
+	// ワンセグのサービスは連続しているため、サブチャンネルは1に固定する
+	return min(ServiceIndex,1);
 }
 
 

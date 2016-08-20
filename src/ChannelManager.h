@@ -25,6 +25,11 @@ public:
 		SPACE_ALL=-1
 	};
 
+	enum UpDownOrder {
+		UP_DOWN_ORDER_INDEX,
+		UP_DOWN_ORDER_ID
+	};
+
 	CChannelManager();
 	~CChannelManager();
 	void Reset();
@@ -42,8 +47,8 @@ public:
 	int GetChangingChannel() const { return m_ChangingChannel; }
 	const CChannelInfo *GetCurrentChannelInfo() const;
 	const CChannelInfo *GetChangingChannelInfo() const;
-	int GetNextChannel(bool fNext) const;
-	const CChannelInfo *GetNextChannelInfo(bool fNext) const;
+	int GetNextChannel(int CurChannel,UpDownOrder Order,bool fNext) const;
+	int GetNextChannel(UpDownOrder Order,bool fNext) const;
 	const CChannelList *GetCurrentChannelList() const;
 	const CChannelList *GetChannelList(int Space) const;
 	const CChannelList *GetFileChannelList(int Space) const;
