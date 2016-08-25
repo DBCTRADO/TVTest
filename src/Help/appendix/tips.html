@@ -23,18 +23,30 @@
 
 <h2>ウィンドウの枠を細くする</h2>
 <p class="descript">メニューの [バー/枠] -&gt; [ウィンドウ枠 : 細くする] をチェックすると、幅1ドット(デフォルトの場合)の細い枠になります。<br>
-また、[映像表示部の枠] のチェックを外すと、映像の周囲の窪みも無くなってよりシンプルになります。<br>
-ウィンドウ枠を細くした場合の幅は、設定ファイル(TVTest.ini)の [Settings] に ThinFrameWidth=x の形で設定できます。</p>
+ウィンドウ枠を細くした場合の幅は、設定ファイル(TVTest.ini)の [Settings] に <code>ThinFrameWidth=x</code> の形で設定できます。</p>
 
 <h2>タイトルバーを非表示にした時、マウスオーバーで自動表示されないようにする</h2>
-<p class="descript">タイトルバーを非表示にした際は、ウィンドウの上にカーソルを持っていくと一時的に表示されますが、それを抑止したい場合は設定ファイル(TVTest.ini)の [Settings] に以下の設定を追加してください。<br>
-; タイトルバーの自動表示を抑止<br>
-PopupTitleBar=no<br>
-この設定は全画面表示時には適用されません。</p>
+<p class="descript">タイトルバーを非表示にした際は、ウィンドウの上部にカーソルを持っていくと一時的に表示されますが、それを抑止したい場合は設定ファイル(TVTest.ini)の [Settings] に以下の設定を追加してください。</p>
+<div class="group">
+<pre><code>; タイトルバーの自動表示を抑止
+PopupTitleBar=no</code></pre>
+</div>
+<p class="descript">この設定は全画面表示時には適用されません。</p>
+
+<h2>最小化/最大化時などにタイトルの文字列を変える</h2>
+<p class="descript">最小化時や最大化時にタイトルの文字列の形式を変えたい場合、設定ファイル(TVTest.ini)の [Settings] に以下の設定を追加してください。<br>
+<a href="../options/view.html">表示設定</a>の [タイトルバー文字列の形式] と同じものが指定できます。</p>
+<div class="group">
+<table class="info">
+<tr><th>MinimizedTitleTextFormat</th><td>最小化時の文字列です。</td></tr>
+<tr><th>MaximizedTitleTextFormat</th><td>最大化/全画面表示時の文字列です。</td></tr>
+<tr><th>TaskbarTitleTextFormat</th><td>タスクバーに表示する文字列です。<br><a href="../menu.html">メニュー</a>の [バー/枠] -&gt; [独自タイトルバーを使用] がチェックされている時のみ有効です。</td></tr>
+</table>
+</div>
 
 <h2>EPG の表示日時を Windows のタイムゾーンの設定に合わせる</h2>
 <p class="descript">デフォルトでは、EPG の番組情報の日時は日本時間(UTC+9)になっています。<br>
-設定ファイル(TVTest.ini)の [Settings] にある EpgTimeMode で以下のように設定を変更することができます。<br>
+設定ファイル(TVTest.ini)の [Settings] にある <code>EpgTimeMode</code> で以下のように設定を変更することができます。<br>
 </p>
 <div class="group">
 <table class="info">

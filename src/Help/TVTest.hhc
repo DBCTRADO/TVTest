@@ -219,6 +219,10 @@
 			<param name="Name" value="チャンネルファイル">
 			<param name="Local" value="appendix/channelfile.html">
 			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="スタイルファイル">
+			<param name="Local" value="appendix/stylefile.html">
+			</OBJECT>
 	</UL>
 </UL>
 </BODY></HTML>
