@@ -94,7 +94,6 @@
     <ClCompile Include="jidctint.c" />
     <ClCompile Include="jmemmgr.c" />
     <ClCompile Include="jmemnobs.c" />
-    <ClCompile Include="jpegtran.c" />
     <ClCompile Include="jquant1.c" />
     <ClCompile Include="jquant2.c" />
     <ClCompile Include="jutils.c" />

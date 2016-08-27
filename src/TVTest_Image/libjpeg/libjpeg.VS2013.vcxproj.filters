@@ -140,9 +140,6 @@
     <ClCompile Include="jmemnobs.c">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="jpegtran.c">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
     <ClCompile Include="jquant1.c">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
