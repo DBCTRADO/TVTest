@@ -7,11 +7,6 @@
 #include "ImageUtil.h"
 
 
-#ifndef PNG_ERROR_TEXT_SUPPORTED
-#define png_error(s1,s2) png_err(s1)
-#endif
-
-
 namespace TVTest
 {
 
