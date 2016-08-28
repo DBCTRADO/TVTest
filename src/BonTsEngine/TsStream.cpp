@@ -32,29 +32,9 @@ CTsPacket::CTsPacket()
 	::ZeroMemory(&m_AdaptationField, sizeof(m_AdaptationField));
 }
 
-CTsPacket::CTsPacket(const CTsPacket &Operand)
-{
-	*this = Operand;
-}
-
 CTsPacket::~CTsPacket()
 {
 	ClearBuffer();
-}
-
-CTsPacket & CTsPacket::operator = (const CTsPacket &Operand)
-{
-	if (&Operand != this) {
-		// インスタンスのコピー
-		CMediaData::operator = (Operand);
-
-		m_Header = Operand.m_Header;
-		m_AdaptationField = Operand.m_AdaptationField;
-		if (Operand.m_AdaptationField.pOptionData)
-			m_AdaptationField.pOptionData = &m_pData[6];
-	}
-
-	return *this;
 }
 
 DWORD CTsPacket::ParsePacket(BYTE *pContinuityCounter)
@@ -82,8 +62,7 @@ DWORD CTsPacket::ParsePacket(BYTE *pContinuityCounter)
 			m_AdaptationField.bDiscontinuityIndicator = (m_AdaptationField.Flags & ADAPTFIELD_DISCONTINUITY_INDICATOR) != 0;
 
 			if (m_AdaptationField.byAdaptationFieldLength > 1U) {
-				m_AdaptationField.byOptionSize			= m_AdaptationField.byAdaptationFieldLength - 1U;
-				m_AdaptationField.pOptionData			= &m_pData[6];
+				m_AdaptationField.byOptionSize = m_AdaptationField.byAdaptationFieldLength - 1U;
 			}
 		}
 	}
@@ -189,8 +168,6 @@ void CTsPacket::RestoreFromBuffer(const void *pBuffer)
 	::CopyMemory(&m_Header,p,sizeof(m_Header));
 	p+=sizeof(m_Header);
 	::CopyMemory(&m_AdaptationField,p,sizeof(m_AdaptationField));
-	if (m_AdaptationField.pOptionData)
-		m_AdaptationField.pOptionData=&m_pData[6];
 }
 
 #ifdef TSPACKET_NEED_ALIGNED_PAYLOAD

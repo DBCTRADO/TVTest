@@ -33,7 +33,6 @@ class CTsPacket : public CMediaData
 		BYTE Flags;							// フラグ
 		bool bDiscontinuityIndicator;		// Discontinuity Indicator
 		BYTE byOptionSize;					// オプションフィールド長
-		const BYTE *pOptionData;			// オプションフィールドデータ
 	};
 
 	enum {
@@ -49,8 +48,6 @@ class CTsPacket : public CMediaData
 
 public:
 	CTsPacket();
-	CTsPacket(const CTsPacket &Operand);
-	CTsPacket & operator = (const CTsPacket &Operand);
 	~CTsPacket();
 
 	enum	// ParsePacket() エラーコード
@@ -84,7 +81,7 @@ public:
 	bool GetSplicingPointFlag() const { return (m_AdaptationField.Flags & ADAPTFIELD_SPLICING_POINT_FLAG) != 0; }
 	bool GetTransportPrivateDataFlag() const { return (m_AdaptationField.Flags & ADAPTFIELD_TRANSPORT_PRIVATE_DATA_FLAG) != 0; }
 	bool GetAdaptationFieldExtFlag() const { return (m_AdaptationField.Flags & ADAPTFIELD_ADAPTATION_FIELD_EXT_FLAG) != 0; }
-	const BYTE *GetOptionData() const { return m_AdaptationField.pOptionData; }
+	const BYTE *GetOptionData() const { return m_AdaptationField.byOptionSize ? &m_pData[6] : NULL; }
 	const BYTE GetOptionSize() const { return m_AdaptationField.byOptionSize; }
 
 	enum { BUFFER_SIZE=TS_PACKETSIZE+sizeof(TAG_TSPACKETHEADER)+sizeof(TAG_ADAPTFIELDHEADER) };
