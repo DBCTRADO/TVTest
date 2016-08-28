@@ -140,6 +140,9 @@ HRESULT CMpeg2ParserFilter::Transform(IMediaSample *pIn, IMediaSample *pOut)
 	// シーケンスを取得
 	m_Mpeg2Parser.StoreEs(pInData, InDataSize);
 
+	if (m_pStreamCallback)
+		m_pStreamCallback->OnStream(MAKEFOURCC('m','p','2','v'), pInData, InDataSize);
+
 	return pOut->GetActualDataLength() > 0 ? S_OK : S_FALSE;
 }
 
@@ -166,6 +169,9 @@ HRESULT CMpeg2ParserFilter::Transform(IMediaSample *pSample)
 
 	// シーケンスを取得
 	m_Mpeg2Parser.StoreEs(pData, DataSize);
+
+	if (m_pStreamCallback)
+		m_pStreamCallback->OnStream(MAKEFOURCC('m','p','2','v'), pData, DataSize);
 
 	return S_OK;
 }

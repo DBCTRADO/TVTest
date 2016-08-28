@@ -6,6 +6,7 @@
 CVideoParser::CVideoParser()
 	: m_pVideoInfoCallback(NULL)
 	, m_pCallbackParam(NULL)
+	, m_pStreamCallback(NULL)
 	, m_bAttachMediaType(false)
 {
 }
@@ -43,6 +44,14 @@ void CVideoParser::SetVideoInfoCallback(VideoInfoCallback pCallback, const PVOID
 
 	m_pVideoInfoCallback = pCallback;
 	m_pCallbackParam = pParam;
+}
+
+
+void CVideoParser::SetStreamCallback(IStreamCallback *pCallback)
+{
+	CAutoLock Lock(&m_ParserLock);
+
+	m_pStreamCallback = pCallback;
 }
 
 

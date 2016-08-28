@@ -257,6 +257,28 @@ private:
 	static CCriticalLock m_AudioStreamLock;
 	static std::vector<CAudioStreamCallbackInfo> m_AudioStreamCallbackList;
 
+	class CVideoStreamCallbackInfo {
+	public:
+		CPlugin *m_pPlugin;
+		TVTest::VideoStreamCallbackFunc m_pCallback;
+		void *m_pClientData;
+		CVideoStreamCallbackInfo(CPlugin *pPlugin,TVTest::VideoStreamCallbackFunc pCallback,void *pClientData)
+			: m_pPlugin(pPlugin)
+			, m_pCallback(pCallback)
+			, m_pClientData(pClientData)
+		{
+		}
+	};
+
+	class CVideoStreamCallback : public CVideoParser::IStreamCallback
+	{
+		void OnStream(DWORD Format,const void *pData,SIZE_T Size) override;
+	};
+
+	static std::vector<CVideoStreamCallbackInfo> m_VideoStreamCallbackList;
+	static CVideoStreamCallback m_VideoStreamCallback;
+	static CCriticalLock m_VideoStreamLock;
+
 	static void CALLBACK AudioStreamCallback(short *pData,DWORD Samples,int Channels,void *pParam);
 	static LRESULT CALLBACK Callback(TVTest::PluginParam *pParam,UINT Message,LPARAM lParam1,LPARAM lParam2);
 

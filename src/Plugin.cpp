@@ -637,6 +637,9 @@ UINT CPlugin::m_MessageCode=0;
 
 std::vector<CPlugin::CAudioStreamCallbackInfo> CPlugin::m_AudioStreamCallbackList;
 CCriticalLock CPlugin::m_AudioStreamLock;
+std::vector<CPlugin::CVideoStreamCallbackInfo> CPlugin::m_VideoStreamCallbackList;
+CPlugin::CVideoStreamCallback CPlugin::m_VideoStreamCallback;
+CCriticalLock CPlugin::m_VideoStreamLock;
 
 
 CPlugin::CPlugin()
@@ -775,6 +778,15 @@ void CPlugin::Free()
 		}
 	}
 	m_AudioStreamLock.Unlock();
+
+	m_VideoStreamLock.Lock();
+	for (auto it=m_VideoStreamCallbackList.begin();it!=m_VideoStreamCallbackList.end();++it) {
+		if (it->m_pPlugin==this) {
+			m_VideoStreamCallbackList.erase(it);
+			break;
+		}
+	}
+	m_VideoStreamLock.Unlock();
 
 	m_CommandList.clear();
 	m_ProgramGuideCommandList.clear();
@@ -2756,6 +2768,42 @@ LRESULT CPlugin::OnCallback(TVTest::PluginParam *pParam,UINT Message,LPARAM lPar
 		}
 		return TRUE;
 
+	case TVTest::MESSAGE_SETVIDEOSTREAMCALLBACK:
+		{
+			TVTest::VideoStreamCallbackFunc pCallback=
+				reinterpret_cast<TVTest::VideoStreamCallbackFunc>(lParam1);
+			CBlockLock Lock(&m_VideoStreamLock);
+
+			if (pCallback!=NULL) {
+				if (m_VideoStreamCallbackList.empty()) {
+					GetAppClass().CoreEngine.m_DtvEngine.m_MediaViewer.SetVideoStreamCallback(&m_VideoStreamCallback);
+				} else {
+					for (auto it=m_VideoStreamCallbackList.begin();it!=m_VideoStreamCallbackList.end();++it) {
+						if (it->m_pPlugin==this) {
+							m_VideoStreamCallbackList.erase(it);
+							break;
+						}
+					}
+				}
+				m_VideoStreamCallbackList.push_back(
+					CVideoStreamCallbackInfo(this,pCallback,reinterpret_cast<void*>(lParam2)));
+			} else {
+				bool fFound=false;
+				for (auto it=m_VideoStreamCallbackList.begin();it!=m_VideoStreamCallbackList.end();++it) {
+					if (it->m_pPlugin==this) {
+						m_VideoStreamCallbackList.erase(it);
+						fFound=true;
+						break;
+					}
+				}
+				if (!fFound)
+					return FALSE;
+				if (m_VideoStreamCallbackList.empty())
+					GetAppClass().CoreEngine.m_DtvEngine.m_MediaViewer.SetVideoStreamCallback(NULL);
+			}
+		}
+		return TRUE;
+
 #ifdef _DEBUG
 	default:
 		TRACE(TEXT("CPluign::OnCallback() : Unknown message %u\n"),Message);
@@ -4130,6 +4178,18 @@ bool CPlugin::CPluginPanelItem::DrawIcon(
 bool CPlugin::CPluginPanelItem::NeedKeyboardFocus() const
 {
 	return m_pItem!=NULL && (m_pItem->Style & TVTest::PANEL_ITEM_STYLE_NEEDFOCUS)!=0;
+}
+
+
+
+
+void CPlugin::CVideoStreamCallback::OnStream(DWORD Format,const void *pData,SIZE_T Size)
+{
+	CBlockLock Lock(&CPlugin::m_VideoStreamLock);
+
+	for (auto it=CPlugin::m_VideoStreamCallbackList.begin();it!=CPlugin::m_VideoStreamCallbackList.end();++it) {
+		it->m_pCallback(Format,pData,Size,it->m_pClientData);
+	}
 }
 
 

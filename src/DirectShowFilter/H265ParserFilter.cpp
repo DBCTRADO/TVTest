@@ -68,6 +68,9 @@ HRESULT CH265ParserFilter::Transform(IMediaSample *pSample)
 	// シーケンスを取得
 	m_H265Parser.StoreEs(pData, DataSize);
 
+	if (m_pStreamCallback)
+		m_pStreamCallback->OnStream(MAKEFOURCC('H','2','6','5'), pData, DataSize);
+
 	return S_OK;
 }
 

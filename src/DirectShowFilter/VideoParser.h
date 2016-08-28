@@ -70,6 +70,13 @@ public:
 		}
 	};
 
+	class IStreamCallback
+	{
+	public:
+		virtual ~IStreamCallback() {}
+		virtual void OnStream(DWORD Format, const void *pData, SIZE_T Size) = 0;
+	};
+
 	enum {
 		ADJUST_SAMPLE_TIME       = 0x0001U,
 		ADJUST_SAMPLE_FRAME_RATE = 0x0002U,
@@ -85,6 +92,8 @@ public:
 	typedef void (CALLBACK *VideoInfoCallback)(const VideoInfo *pVideoInfo, const PVOID pParam);
 	void SetVideoInfoCallback(VideoInfoCallback pCallback, const PVOID pParam = NULL);
 
+	void SetStreamCallback(IStreamCallback *pCallback);
+
 	void SetAttachMediaType(bool bAttach);
 	virtual bool SetAdjustSampleOptions(unsigned int Flags) { return false; }
 
@@ -96,6 +105,7 @@ protected:
 	VideoInfo m_VideoInfo;
 	VideoInfoCallback m_pVideoInfoCallback;
 	PVOID m_pCallbackParam;
+	IStreamCallback *m_pStreamCallback;
 	mutable CCritSec m_ParserLock;
 	bool m_bAttachMediaType;
 };

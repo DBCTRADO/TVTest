@@ -274,6 +274,9 @@ HRESULT CH264ParserFilter::Transform(IMediaSample *pIn, IMediaSample *pOut)
 		}
 
 		m_H264Parser.StoreEs(pInData, InDataSize);
+
+		if (m_pStreamCallback)
+			m_pStreamCallback->OnStream(MAKEFOURCC('H','2','6','4'), pInData, InDataSize);
 	}
 
 	if (!m_OutSampleQueue.empty()) {

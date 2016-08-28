@@ -126,6 +126,7 @@
 	  ・MESSAGE_GETFONT
 	  ・MESSAGE_SHOWDIALOG
 	  ・MESSAGE_CONVERTTIME
+	  ・MESSAGE_SETVIDEOSTREAMCALLBACK
 	・以下のイベントを追加した
 	  ・EVENT_FILTERGRAPH_INITIALIZE
 	  ・EVENT_FILTERGRAPH_INITIALIZED
@@ -456,6 +457,7 @@ enum {
 	MESSAGE_GETFONT,					// フォントを取得
 	MESSAGE_SHOWDIALOG,					// ダイアログを表示
 	MESSAGE_CONVERTTIME,				// 日時を変換
+	MESSAGE_SETVIDEOSTREAMCALLBACK,		// 映像ストリームのコールバック関数を設定
 #endif
 	MESSAGE_TRAILER
 };
@@ -3000,6 +3002,25 @@ bool inline MsgConvertEpgTimeTo(
 	return true;
 }
 
+// 映像ストリームのコールバック関数
+// Format はストリームのコーデックの FourCC で、現在以下のいずれかです。
+//   FCC('mp2v')  MPEG-2 Video
+//   FCC('H264')  H.264
+//   FCC('H265')  H.265
+// 渡されたデータを加工することはできません。
+// 戻り値は今のところ常に0を返します。
+typedef LRESULT (CALLBACK *VideoStreamCallbackFunc)(
+	DWORD Format,const void *pData,SIZE_T Size,void *pClientData);
+
+// 映像ストリームを取得するコールバック関数を設定する
+// 一つのプラグインで設定できるコールバック関数は一つだけです。
+// pClinetData はコールバック関数に渡されます。
+// pCallback に NULL を指定すると、設定が解除されます。
+inline bool MsgSetVideoStreamCallback(PluginParam *pParam,VideoStreamCallbackFunc pCallback,void *pClientData=NULL)
+{
+	return (*pParam->Callback)(pParam,MESSAGE_SETVIDEOSTREAMCALLBACK,(LPARAM)pCallback,(LPARAM)pClientData)!=0;
+}
+
 #endif	// TVTEST_PLUGIN_VERSION>=TVTEST_PLUGIN_VERSION_(0,0,14)
 
 
@@ -3524,6 +3545,9 @@ public:
 	}
 	bool ConvertEpgTimeTo(const SYSTEMTIME &EpgTime,DWORD Type,SYSTEMTIME *pDstTime) {
 		return MsgConvertEpgTimeTo(m_pParam,EpgTime,Type,pDstTime);
+	}
+	bool SetVideoStreamCallback(VideoStreamCallbackFunc pCallback,void *pClientData=NULL) {
+		return MsgSetVideoStreamCallback(m_pParam,pCallback,pClientData);
 	}
 #endif
 };

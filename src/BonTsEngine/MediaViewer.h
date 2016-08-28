@@ -146,6 +146,7 @@ public:
 	bool SetAdjustAudioStreamTime(bool bAdjust);
 	bool SetAudioStreamCallback(CAudioDecFilter::StreamCallback pCallback, void *pParam = NULL);
 	bool SetAudioFilter(LPCWSTR pszFilterName);
+	void SetVideoStreamCallback(CVideoParser::IStreamCallback *pCallback);
 	bool GetCurrentImage(BYTE **ppDib);
 	bool DrawText(LPCTSTR pszText,int x,int y,HFONT hfont,COLORREF crColor,int Opacity);
 	bool IsDrawTextSupported() const;
@@ -234,6 +235,7 @@ protected:
 	size_t m_BufferSize;
 	int m_InitialPoolPercentage;
 	DWORD m_PacketInputWait;
+	CVideoParser::IStreamCallback *m_pVideoStreamCallback;
 	CAudioDecFilter::StreamCallback m_pAudioStreamCallback;
 	void *m_pAudioStreamCallbackParam;
 	CImageMixer *m_pImageMixer;

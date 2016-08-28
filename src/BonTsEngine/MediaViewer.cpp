@@ -184,6 +184,7 @@ CMediaViewer::CMediaViewer(CMediaDecoder::IEventHandler *pEventHandler)
 	, m_BufferSize(0)
 	, m_InitialPoolPercentage(0)
 	, m_PacketInputWait(0)
+	, m_pVideoStreamCallback(NULL)
 	, m_pAudioStreamCallback(NULL)
 	, m_pAudioStreamCallbackParam(NULL)
 	, m_pImageMixer(NULL)
@@ -613,6 +614,8 @@ bool CMediaViewer::OpenViewer(
 			m_pVideoParser->SetVideoInfoCallback(OnVideoInfo, this);
 			// madVR は映像サイズの変化時に MediaType を設定しないと新しいサイズが適用されない
 			m_pVideoParser->SetAttachMediaType(RendererType == CVideoRenderer::RENDERER_madVR);
+			if (m_pVideoStreamCallback)
+				m_pVideoParser->SetStreamCallback(m_pVideoStreamCallback);
 			ApplyAdjustVideoSampleOptions();
 		}
 
@@ -1846,6 +1849,14 @@ bool CMediaViewer::SetAudioFilter(LPCWSTR pszFilterName)
 	if (pszFilterName && pszFilterName[0] != '\0')
 		m_pszAudioFilterName = StdUtil::strdup(pszFilterName);
 	return true;
+}
+
+
+void CMediaViewer::SetVideoStreamCallback(CVideoParser::IStreamCallback *pCallback)
+{
+	m_pVideoStreamCallback = pCallback;
+	if (m_pVideoParser)
+		m_pVideoParser->SetStreamCallback(pCallback);
 }
 
 
