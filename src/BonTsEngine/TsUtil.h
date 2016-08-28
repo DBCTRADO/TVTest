@@ -8,6 +8,12 @@
 namespace TsEngine
 {
 
+	inline DWORD Load32(const void *p)
+	{
+		return _byteswap_ulong(*static_cast<const DWORD*>(p));
+	}
+
+
 	// ë}ì¸É\Å[Ég
 	template<typename TValue, typename TSize, typename TCmp>
 		void InsertionSort(TValue *array, TSize size, TCmp cmp = std::less<TValue>())

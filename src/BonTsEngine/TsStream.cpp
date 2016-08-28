@@ -5,6 +5,7 @@
 #include "stdafx.h"
 #include "TsStream.h"
 #include "TsUtilClass.h"
+#include "TsUtil.h"
 #include <mmsystem.h>
 #include "../Common/DebugDef.h"
 
@@ -59,14 +60,15 @@ CTsPacket & CTsPacket::operator = (const CTsPacket &Operand)
 DWORD CTsPacket::ParsePacket(BYTE *pContinuityCounter)
 {
 	// TSパケットヘッダ解析
-	m_Header.bySyncByte					= m_pData[0];							// +0
-	m_Header.bTransportErrorIndicator	= (m_pData[1] & 0x80U) != 0;	// +1 bit7
-	m_Header.bPayloadUnitStartIndicator	= (m_pData[1] & 0x40U) != 0;	// +1 bit6
-	m_Header.bTransportPriority			= (m_pData[1] & 0x20U) != 0;	// +1 bit5
-	m_Header.wPID = ((WORD)(m_pData[1] & 0x1F) << 8) | (WORD)m_pData[2];		// +1 bit4-0, +2
-	m_Header.byTransportScramblingCtrl	= (m_pData[3] & 0xC0U) >> 6;			// +3 bit7-6
-	m_Header.byAdaptationFieldCtrl		= (m_pData[3] & 0x30U) >> 4;			// +3 bit5-4
-	m_Header.byContinuityCounter		= m_pData[3] & 0x0FU;					// +3 bit3-0
+	const DWORD Header = TsEngine::Load32(m_pData);
+	m_Header.bySyncByte					= (BYTE)(Header >> 24);				// +0
+	m_Header.bTransportErrorIndicator	= (Header & 0x800000U) != 0;		// +1 bit7
+	m_Header.bPayloadUnitStartIndicator	= (Header & 0x400000U) != 0;		// +1 bit6
+	m_Header.bTransportPriority			= (Header & 0x200000U) != 0;		// +1 bit5
+	m_Header.wPID						= (WORD)((Header >> 8) & 0x1FFFU);	// +1 bit4-0, +2
+	m_Header.byTransportScramblingCtrl	= (BYTE)((Header >> 6) & 0x03U);	// +3 bit7-6
+	m_Header.byAdaptationFieldCtrl		= (BYTE)((Header >> 4) & 0x03U);	// +3 bit5-4
+	m_Header.byContinuityCounter		= (BYTE)(Header & 0x0FU);			// +3 bit3-0
 
 	// アダプテーションフィールド解析
 	::ZeroMemory(&m_AdaptationField, sizeof(m_AdaptationField));
