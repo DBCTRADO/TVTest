@@ -58,6 +58,7 @@ public:
 		EC_CONTINUITY	= 0x00000003UL		// 連続性カウンタエラー(ドロップ)
 	};
 	DWORD ParsePacket(BYTE *pContinuityCounter = NULL);
+	void ReparsePacket();
 
 	BYTE * GetPayloadData(void);
 	const BYTE * GetPayloadData(void) const;

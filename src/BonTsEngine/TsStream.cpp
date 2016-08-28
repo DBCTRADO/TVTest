@@ -94,6 +94,37 @@ DWORD CTsPacket::ParsePacket(BYTE *pContinuityCounter)
 	return EC_VALID;
 }
 
+void CTsPacket::ReparsePacket()
+{
+	// TSパケットヘッダ解析
+	const DWORD Header = TsEngine::Load32(m_pData);
+//	m_Header.bySyncByte					= (BYTE)(Header >> 24);				// +0
+//	m_Header.bTransportErrorIndicator	= (Header & 0x800000U) != 0;		// +1 bit7
+	m_Header.bPayloadUnitStartIndicator	= (Header & 0x400000U) != 0;		// +1 bit6
+	m_Header.bTransportPriority			= (Header & 0x200000U) != 0;		// +1 bit5
+	m_Header.wPID						= (WORD)((Header >> 8) & 0x1FFFU);	// +1 bit4-0, +2
+	m_Header.byTransportScramblingCtrl	= (BYTE)((Header >> 6) & 0x03U);	// +3 bit7-6
+	m_Header.byAdaptationFieldCtrl		= (BYTE)((Header >> 4) & 0x03U);	// +3 bit5-4
+	m_Header.byContinuityCounter		= (BYTE)(Header & 0x0FU);			// +3 bit3-0
+
+	// アダプテーションフィールド解析
+	::ZeroMemory(&m_AdaptationField, sizeof(m_AdaptationField));
+
+	if (m_Header.byAdaptationFieldCtrl & 0x02) {
+		// アダプテーションフィールドあり
+		m_AdaptationField.byAdaptationFieldLength = m_pData[4];				// +4
+		if (m_AdaptationField.byAdaptationFieldLength > 0) {
+			// フィールド長以降あり
+			m_AdaptationField.Flags = m_pData[5];
+			m_AdaptationField.bDiscontinuityIndicator = (m_AdaptationField.Flags & ADAPTFIELD_DISCONTINUITY_INDICATOR) != 0;
+
+			if (m_AdaptationField.byAdaptationFieldLength > 1U) {
+				m_AdaptationField.byOptionSize = m_AdaptationField.byAdaptationFieldLength - 1U;
+			}
+		}
+	}
+}
+
 BYTE * CTsPacket::GetPayloadData(void)
 {
 	// ペイロードポインタを返す

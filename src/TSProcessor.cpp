@@ -910,14 +910,15 @@ STDMETHODIMP CTSProcessor::OutputPacket(Interface::ITSPacket *pPacket)
 		if (!m_fSourceProcessor && pPacket->GetModified() == S_OK) {
 #ifndef _DEBUG
 			CTsPacket *pTsPacket = static_cast<CTsPacket*>(pMediaData);
+			pTsPacket->ReparsePacket();
 #else
 			CTsPacket *pTsPacket = dynamic_cast<CTsPacket*>(pMediaData);
 			_ASSERT(pTsPacket != nullptr);
-#endif
 			if (pTsPacket->ParsePacket() != CTsPacket::EC_VALID) {
 				pTsMediaData->Release();
 				return E_FAIL;
 			}
+#endif
 		}
 
 		OutputMedia(pMediaData);
