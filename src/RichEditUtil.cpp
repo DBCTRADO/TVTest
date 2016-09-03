@@ -327,6 +327,10 @@ bool CRichEditUtil::SearchNextURL(LPCTSTR *ppszText,int *pLength)
 					while (i+URLLength<TextLength && ::StrChr(m_pszURLFullWidthChars,p[i+URLLength])!=NULL)
 						URLLength++;
 				}
+#ifdef UNICODE
+				if (i>0 && p[i-1]==L'(' && p[i+URLLength-1]==L')')
+					URLLength--;
+#endif
 				*ppszText=p+i;
 				*pLength=URLLength;
 				return true;
