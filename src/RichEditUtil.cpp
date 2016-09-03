@@ -33,7 +33,7 @@ CRichEditUtil::~CRichEditUtil()
 bool CRichEditUtil::LoadRichEditLib()
 {
 	if (m_hLib==NULL) {
-		m_hLib=::LoadLibrary(TEXT("Riched20.dll"));
+		m_hLib=Util::LoadSystemLibrary(TEXT("Riched20.dll"));
 		if (m_hLib==NULL)
 			return false;
 	}

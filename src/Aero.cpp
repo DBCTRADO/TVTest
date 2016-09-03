@@ -35,7 +35,7 @@ bool CAeroGlass::LoadDwmLib()
 	if (m_hDwmLib==NULL) {
 		if (!Util::OS::IsWindowsVistaOrLater())
 			return false;
-		m_hDwmLib=::LoadLibrary(TEXT("dwmapi.dll"));
+		m_hDwmLib=Util::LoadSystemLibrary(TEXT("dwmapi.dll"));
 		if (m_hDwmLib==NULL)
 			return false;
 	}
@@ -139,7 +139,7 @@ public:
 		if (m_hThemeLib==NULL) {
 			if (!Util::OS::IsWindowsVistaOrLater())
 				return false;
-			m_hThemeLib=::LoadLibrary(TEXT("uxtheme.dll"));
+			m_hThemeLib=Util::LoadSystemLibrary(TEXT("uxtheme.dll"));
 			if (m_hThemeLib!=NULL) {
 				auto pBufferedPaintInit=GET_LIBRARY_FUNCTION(m_hThemeLib,BufferedPaintInit);
 				if (pBufferedPaintInit==NULL

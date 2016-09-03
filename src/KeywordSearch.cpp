@@ -183,7 +183,7 @@ bool CKeywordSearch::EncodeURL(UINT CodePage,LPCWSTR pszSrc,String *pDst) const
 							  Buffer.data(),DstLength,nullptr,nullptr);
 	} else {
 		bool fOK=false;
-		HMODULE hMLang=::LoadLibrary(TEXT("mlang.dll"));
+		HMODULE hMLang=Util::LoadSystemLibrary(TEXT("mlang.dll"));
 		if (hMLang!=nullptr) {
 			auto pConvertINetUnicodeToMultiByte=
 				GET_LIBRARY_FUNCTION(hMLang,ConvertINetUnicodeToMultiByte);

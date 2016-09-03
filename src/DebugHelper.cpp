@@ -43,7 +43,7 @@ bool CDebugHelper::Initialize()
 {
 #ifdef ENABLE_DEBUG_HELPER
 	if (m_hDbgHelp==NULL) {
-		m_hDbgHelp=::LoadLibrary(TEXT("dbghelp.dll"));
+		m_hDbgHelp=Util::LoadSystemLibrary(TEXT("dbghelp.dll"));
 		if (m_hDbgHelp==NULL)
 			return false;
 

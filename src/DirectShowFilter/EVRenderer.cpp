@@ -5,6 +5,7 @@
 #include <mfapi.h>
 #include <mferror.h>
 #include <mfidl.h>
+#include <shlwapi.h>
 #include "EVRenderer.h"
 #include "DirectShowUtil.h"
 #include "../Common/DebugDef.h"
@@ -103,7 +104,10 @@ bool CVideoRenderer_EVR::Initialize(IGraphBuilder *pFilterGraph,IPin *pInputPin,
 
 	// MFStartup‚ÍŒÄ‚Î‚È‚­‚Ä‚¢‚¢‚ç‚µ‚¢
 	/*
-	m_hMFPlatLib=::LoadLibrary(TEXT("mfplat.dll"));
+	TCHAR szPath[MAX_PATH];
+	::GetSystemDirectory(szPath,_countof(szPath));
+	::PathAppend(szPath,TEXT("mfplat.dll"));
+	m_hMFPlatLib=::LoadLibrary(szPath);
 	if (m_hMFPlatLib==NULL) {
 		SetError(TEXT("mfplat.dll‚ğƒ[ƒh‚Å‚«‚Ü‚¹‚ñB"));
 		return false;

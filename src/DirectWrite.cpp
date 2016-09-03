@@ -56,13 +56,13 @@ CDirectWriteSystem::~CDirectWriteSystem()
 bool CDirectWriteSystem::Initialize()
 {
 	if (m_hD2DLib == nullptr) {
-		m_hD2DLib = ::LoadLibrary(TEXT("d2d1.dll"));
+		m_hD2DLib = Util::LoadSystemLibrary(TEXT("d2d1.dll"));
 		if (m_hD2DLib == nullptr)
 			return false;
 	}
 
 	if (m_hDWriteLib == nullptr) {
-		m_hDWriteLib = ::LoadLibrary(TEXT("dwrite.dll"));
+		m_hDWriteLib = Util::LoadSystemLibrary(TEXT("dwrite.dll"));
 		if (m_hDWriteLib == nullptr)
 			return false;
 	}
