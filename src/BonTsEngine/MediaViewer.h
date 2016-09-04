@@ -95,6 +95,7 @@ public:
 	bool GetNoMaskSideCut() const { return m_bNoMaskSideCut; }
 	bool SetIgnoreDisplayExtension(bool bIgnore);
 	bool GetIgnoreDisplayExtension() const { return m_bIgnoreDisplayExtension; }
+	bool SetClipToDevice(bool bClip);
 	bool GetOriginalVideoSize(WORD *pWidth, WORD *pHeight) const;
 	bool GetCroppedVideoSize(WORD *pWidth, WORD *pHeight) const;
 	bool GetSourceRect(RECT *pRect) const;
@@ -226,6 +227,7 @@ protected:
 	ViewStretchMode m_ViewStretchMode;
 	bool m_bNoMaskSideCut;
 	bool m_bIgnoreDisplayExtension;
+	bool m_bClipToDevice;
 	bool m_bUseAudioRendererClock;
 	bool m_b1SegMode;
 	bool m_bAdjustAudioStreamTime;

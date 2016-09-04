@@ -19,6 +19,7 @@ CVideoRenderer::CVideoRenderer()
 	, m_pFilterGraph(NULL)
 	, m_hwndRender(NULL)
 	, m_bCrop1088To1080(true)
+	, m_bClipToDevice(true)
 {
 }
 

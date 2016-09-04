@@ -13,6 +13,7 @@ protected:
 	IGraphBuilder *m_pFilterGraph;
 	HWND m_hwndRender;
 	bool m_bCrop1088To1080;
+	bool m_bClipToDevice;
 
 public:
 	enum RendererType {
@@ -43,6 +44,7 @@ public:
 	virtual bool HasProperty();
 	IBaseFilter *GetRendererFilter() const { return m_pRenderer; }
 	virtual bool SetCrop1088To1080(bool bCrop) { return false; }
+	virtual bool SetClipToDevice(bool bClip) { return false; }
 
 	static bool CreateRenderer(RendererType Type,CVideoRenderer **ppRenderer);
 	static LPCTSTR EnumRendererName(int Index);

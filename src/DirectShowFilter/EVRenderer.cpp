@@ -188,6 +188,9 @@ bool CVideoRenderer_EVR::Initialize(IGraphBuilder *pFilterGraph,IPin *pInputPin,
 	pDisplayControl->SetVideoPosition(NULL,&rc);
 	*/
 	pDisplayControl->SetBorderColor(RGB(0,0,0));
+
+	UpdateRenderingPrefs(pDisplayControl);
+
 	pDisplayControl->Release();
 
 	IMFVideoProcessor *pVideoProcessor;
@@ -430,6 +433,41 @@ bool CVideoRenderer_EVR::SetVisible(bool fVisible)
 #else
 	return true;
 #endif
+}
+
+
+bool CVideoRenderer_EVR::SetClipToDevice(bool bClip)
+{
+	if (m_bClipToDevice!=bClip) {
+		m_bClipToDevice=bClip;
+
+		if (m_pRenderer) {
+			IMFVideoDisplayControl *pDisplayControl=GetVideoDisplayControl(m_pRenderer);
+
+			if (pDisplayControl) {
+				UpdateRenderingPrefs(pDisplayControl);
+				pDisplayControl->Release();
+			}
+		}
+	}
+
+	return true;
+}
+
+
+HRESULT CVideoRenderer_EVR::UpdateRenderingPrefs(IMFVideoDisplayControl *pDisplayControl)
+{
+	DWORD RenderingPrefs;
+	HRESULT hr=pDisplayControl->GetRenderingPrefs(&RenderingPrefs);
+	if (SUCCEEDED(hr)) {
+		TRACE(TEXT("ClipToDevice = %s\n"),m_bClipToDevice?TEXT("true"):TEXT("false"));
+		if (!m_bClipToDevice)
+			RenderingPrefs|=MFVideoRenderPrefs_DoNotClipToDevice;
+		else
+			RenderingPrefs&=~MFVideoRenderPrefs_DoNotClipToDevice;
+		hr=pDisplayControl->SetRenderingPrefs(RenderingPrefs);
+	}
+	return hr;
 }
 
 

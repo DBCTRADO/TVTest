@@ -18,6 +18,7 @@ CVideoOptions::CVideoOptions()
 	, m_FullscreenStretchMode(CMediaViewer::STRETCH_KEEPASPECTRATIO)
 	, m_MaximizeStretchMode(CMediaViewer::STRETCH_KEEPASPECTRATIO)
 	, m_fIgnoreDisplayExtension(false)
+	, m_fClipToDevice(true)
 {
 }
 
@@ -38,6 +39,10 @@ bool CVideoOptions::Apply(DWORD Flags)
 
 	if ((Flags & UPDATE_IGNOREDISPLAYEXTENSION)!=0) {
 		App.CoreEngine.m_DtvEngine.m_MediaViewer.SetIgnoreDisplayExtension(m_fIgnoreDisplayExtension);
+	}
+
+	if ((Flags & UPDATE_CLIPTODEVICE)!=0) {
+		App.CoreEngine.m_DtvEngine.m_MediaViewer.SetClipToDevice(m_fClipToDevice);
 	}
 
 	return true;
@@ -72,6 +77,7 @@ bool CVideoOptions::ReadSettings(CSettings &Settings)
 		m_MaximizeStretchMode=Value==1?CMediaViewer::STRETCH_CUTFRAME:
 									   CMediaViewer::STRETCH_KEEPASPECTRATIO;
 	Settings.Read(TEXT("IgnoreDisplayExtension"),&m_fIgnoreDisplayExtension);
+	Settings.Read(TEXT("ClipToDevice"),&m_fClipToDevice);
 
 	return true;
 }
@@ -89,6 +95,7 @@ bool CVideoOptions::WriteSettings(CSettings &Settings)
 	Settings.Write(TEXT("FullscreenStretchMode"),(int)m_FullscreenStretchMode);
 	Settings.Write(TEXT("MaximizeStretchMode"),(int)m_MaximizeStretchMode);
 	Settings.Write(TEXT("IgnoreDisplayExtension"),m_fIgnoreDisplayExtension);
+	Settings.Write(TEXT("ClipToDevice"),m_fClipToDevice);
 
 	return true;
 }
@@ -193,6 +200,8 @@ INT_PTR CVideoOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 				m_MaximizeStretchMode==CMediaViewer::STRETCH_CUTFRAME);
 			DlgCheckBox_Check(hDlg,IDC_OPTIONS_IGNOREDISPLAYSIZE,
 							  m_fIgnoreDisplayExtension);
+			DlgCheckBox_Check(hDlg,IDC_OPTIONS_CLIPTODEVICE,
+							  m_fClipToDevice);
 		}
 		return TRUE;
 
@@ -248,6 +257,11 @@ INT_PTR CVideoOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 				if (m_fIgnoreDisplayExtension!=f) {
 					m_fIgnoreDisplayExtension=f;
 					SetUpdateFlag(UPDATE_IGNOREDISPLAYEXTENSION);
+				}
+				f=DlgCheckBox_IsChecked(hDlg,IDC_OPTIONS_CLIPTODEVICE);
+				if (m_fClipToDevice!=f) {
+					m_fClipToDevice=f;
+					SetUpdateFlag(UPDATE_CLIPTODEVICE);
 				}
 
 				m_fChanged=true;

@@ -37,6 +37,7 @@ public:
 	CMediaViewer::ViewStretchMode GetFullscreenStretchMode() const { return m_FullscreenStretchMode; }
 	CMediaViewer::ViewStretchMode GetMaximizeStretchMode() const { return m_MaximizeStretchMode; }
 	bool GetIgnoreDisplayExtension() const { return m_fIgnoreDisplayExtension; }
+	bool GetClipToDevice() const { return m_fClipToDevice; }
 
 private:
 // CBasicDialog
@@ -50,7 +51,8 @@ private:
 		UPDATE_DECODER					= 0x00000001UL,
 		UPDATE_RENDERER					= 0x00000002UL,
 		UPDATE_MASKCUTAREA				= 0x00000004UL,
-		UPDATE_IGNOREDISPLAYEXTENSION	= 0x00000008UL
+		UPDATE_IGNOREDISPLAYEXTENSION	= 0x00000008UL,
+		UPDATE_CLIPTODEVICE				= 0x00000010UL
 	};
 	enum {
 		MAX_VIDEO_DECODER_NAME=128
@@ -65,6 +67,7 @@ private:
 	CMediaViewer::ViewStretchMode m_FullscreenStretchMode;
 	CMediaViewer::ViewStretchMode m_MaximizeStretchMode;
 	bool m_fIgnoreDisplayExtension;
+	bool m_fClipToDevice;
 };
 
 

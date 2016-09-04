@@ -175,6 +175,7 @@ CMediaViewer::CMediaViewer(CMediaDecoder::IEventHandler *pEventHandler)
 	, m_ViewStretchMode(STRETCH_KEEPASPECTRATIO)
 	, m_bNoMaskSideCut(false)
 	, m_bIgnoreDisplayExtension(false)
+	, m_bClipToDevice(true)
 	, m_bUseAudioRendererClock(true)
 	, m_b1SegMode(false)
 	, m_bAdjustAudioStreamTime(false)
@@ -626,6 +627,7 @@ bool CMediaViewer::OpenViewer(
 				throw CBonException(TEXT("映像レンダラを作成できません。"),
 									TEXT("設定で有効なレンダラが選択されているか確認してください。"));
 			}
+			m_pVideoRenderer->SetClipToDevice(m_bClipToDevice);
 			if (!m_pVideoRenderer->Initialize(m_pFilterGraph, pOutputVideo,
 											  hOwnerHwnd, hMessageDrainHwnd)) {
 				throw CBonException(m_pVideoRenderer->GetLastErrorException());
@@ -1403,6 +1405,17 @@ bool CMediaViewer::SetIgnoreDisplayExtension(bool bIgnore)
 		if (m_VideoInfo.m_DisplayWidth != m_VideoInfo.m_OrigWidth
 				|| m_VideoInfo.m_DisplayHeight != m_VideoInfo.m_OrigHeight)
 			AdjustVideoPosition();
+	}
+	return true;
+}
+
+
+bool CMediaViewer::SetClipToDevice(bool bClip)
+{
+	if (bClip != m_bClipToDevice) {
+		m_bClipToDevice = bClip;
+		if (m_pVideoRenderer)
+			m_pVideoRenderer->SetClipToDevice(m_bClipToDevice);
 	}
 	return true;
 }
