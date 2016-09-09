@@ -2148,7 +2148,7 @@ LRESULT CPlugin::OnCallback(TVTest::PluginParam *pParam,UINT Message,LPARAM lPar
 				reinterpret_cast<TVTest::ThemeDrawIconInfo*>(lParam1);
 
 			if (pInfo==NULL
-					|| pInfo->Size!=sizeof(TVTest::ThemeDrawTextInfo)
+					|| pInfo->Size!=sizeof(TVTest::ThemeDrawIconInfo)
 					|| IsStringEmpty(pInfo->pszStyle)
 					|| pInfo->hdc==NULL
 					|| pInfo->hbm==NULL)
