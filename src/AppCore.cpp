@@ -1419,7 +1419,7 @@ bool CAppCore::GetVariableStringEventInfo(
 	}
 
 	SYSTEMTIME stCur;
-	if (!m_App.CoreEngine.m_DtvEngine.m_TsAnalyzer.GetTotTime(&stCur))
+	if (!m_App.CoreEngine.m_DtvEngine.m_TsAnalyzer.GetInterpolatedTotTime(&stCur))
 		GetCurrentEpgTime(&stCur);
 	pInfo->TotTime=stCur;
 
