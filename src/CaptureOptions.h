@@ -53,6 +53,8 @@ public:
 // CBasicDialog
 	bool Create(HWND hwndOwner) override;
 // CCaptureOptions
+	LPCTSTR GetSaveFolder() const { return m_szSaveFolder; }
+	LPCTSTR GetFileName() const { return m_FileName.c_str(); }
 	int GetSaveFormat() const { return m_SaveFormat; }
 	bool GetWriteComment() const { return m_fSetComment; }
 	bool SetPresetCaptureSize(int Size);

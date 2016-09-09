@@ -142,6 +142,10 @@
 	・プラグインのフラグに PLUGIN_FLAG_NOENABLEDDISABLED を追加した
 	・録画情報のフラグに RECORD_FLAG_UTC を追加した。
 	・MESSAGE_GETRECORDSTATUS にフラグの指定を追加した。
+	・MESSAGE_GETSETTING で取得できる設定に以下を追加した。
+	  ・RecordFileName
+	  ・CaptureFolder
+	  ・CaptureFileName
 
 	ver.0.0.13 (TVTest ver.0.7.16 or later)
 	・以下のメッセージを追加した
@@ -1358,6 +1362,11 @@ enum SettingType {
 	DriverDirectory       BonDriver の検索ディレクトリ        文字列
 	IniFilePath           Ini ファイルのパス                  文字列
 	RecordFolder          録画時の保存先フォルダ              文字列
+
+	ver.0.0.14 以降
+	RecordFileName        録画のファイル名                    文字列
+	CaptureFolder         キャプチャの保存先フォルダ          文字列
+	CaptureFileName       キャプチャのファイル名              文字列
 
 	* フォント関係の設定の取得は ver.0.0.14 正式版までに削除されます。
 	* 代わりに MsgGetFont を利用します。

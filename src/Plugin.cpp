@@ -3636,7 +3636,13 @@ bool CPlugin::OnGetSetting(TVTest::SettingInfo *pSetting) const
 	} else if (::lstrcmpiW(pSetting->pszName,L"IniFilePath")==0) {
 		return GetSettingString(pSetting,App.GetIniFileName());
 	} else if (::lstrcmpiW(pSetting->pszName,L"RecordFolder")==0) {
-		return GetSettingString(pSetting,App.Core.GetDefaultRecordFolder());
+		return GetSettingString(pSetting,App.RecordOptions.GetSaveFolder());
+	} else if (::lstrcmpiW(pSetting->pszName,L"RecordFileName")==0) {
+		return GetSettingString(pSetting,App.RecordOptions.GetFileName());
+	} else if (::lstrcmpiW(pSetting->pszName,L"CaptureFolder")==0) {
+		return GetSettingString(pSetting,App.CaptureOptions.GetSaveFolder());
+	} else if (::lstrcmpiW(pSetting->pszName,L"CaptureFileName")==0) {
+		return GetSettingString(pSetting,App.CaptureOptions.GetFileName());
 	} else if (::lstrcmpiW(pSetting->pszName,L"OSDFont")==0) {
 		return GetSettingFont(pSetting,App.OSDOptions.GetOSDFont());
 	} else if (::lstrcmpiW(pSetting->pszName,L"PanelFont")==0) {

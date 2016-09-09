@@ -48,6 +48,7 @@ public:
 // CRecordOptions
 	bool SetSaveFolder(LPCTSTR pszFolder);
 	LPCTSTR GetSaveFolder() const { return m_szSaveFolder; }
+	LPCTSTR GetFileName() const { return m_szFileName; }
 	bool GetFilePath(LPTSTR pszFileName,int MaxLength) const;
 	bool GenerateFilePath(LPTSTR pszFileName,int MaxLength,LPCTSTR *ppszErrorMessage=NULL) const;
 	bool ConfirmChannelChange(HWND hwndOwner) const;
