@@ -1180,30 +1180,16 @@ bool CAppMain::IsNoAcceleratorMessage(const MSG *pmsg)
 		if (pDisplayView!=nullptr && hwnd==pDisplayView->GetHandle()) {
 			return pDisplayView->IsMessageNeed(pmsg);
 		} else if (pmsg->message==WM_KEYDOWN || pmsg->message==WM_KEYUP) {
-			TCHAR szClass[64];
-
-			if (::GetClassName(hwnd,szClass,lengthof(szClass))>0) {
-				bool fNeedCursor=false;
-
-				if (::lstrcmpi(szClass,TEXT("EDIT"))==0
-						|| ::StrCmpNI(szClass,TEXT("RICHEDIT"),8)==0) {
-					if ((GetWindowStyle(hwnd)&ES_READONLY)==0)
-						return true;
-					fNeedCursor=true;
-				} else if (::lstrcmpi(szClass,TEXT("COMBOBOX"))==0
-						|| ::lstrcmpi(szClass,TEXT("LISTBOX"))==0
-						|| ::StrCmpNI(szClass,TEXT("SysListView"),11)==0
-						|| ::StrCmpNI(szClass,TEXT("SysTreeView"),11)==0) {
-					fNeedCursor=true;
-				}
-				if (fNeedCursor) {
-					switch (pmsg->wParam) {
-					case VK_LEFT:
-					case VK_RIGHT:
-					case VK_UP:
-					case VK_DOWN:
-						return true;
-					}
+			LRESULT Result=::SendMessage(hwnd,WM_GETDLGCODE,pmsg->wParam,0);
+			if ((Result & DLGC_WANTALLKEYS)!=0)
+				return true;
+			if ((Result & DLGC_WANTARROWS)!=0) {
+				switch (pmsg->wParam) {
+				case VK_LEFT:
+				case VK_RIGHT:
+				case VK_UP:
+				case VK_DOWN:
+					return true;
 				}
 			}
 		}
