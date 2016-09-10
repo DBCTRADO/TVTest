@@ -632,6 +632,50 @@ static void FreeFavoriteList(TVTest::FavoriteList *pList)
 
 
 
+namespace TVTest
+{
+
+struct VarStringContext
+{
+	CEventVariableStringMap::EventInfo Event;
+};
+
+class CPluginVarStringMap : public CEventVariableStringMap
+{
+public:
+	CPluginVarStringMap(VarStringFormatInfo *pInfo,const VarStringContext *pContext)
+		: CEventVariableStringMap(pContext->Event)
+		, m_pInfo(pInfo)
+		, m_pContext(pContext)
+	{
+		m_Flags=(pInfo->Flags & VAR_STRING_FORMAT_FLAG_FILENAME)==0 ? FLAG_NO_NORMALIZE : 0;
+	}
+
+	bool GetString(LPCWSTR pszKeyword,String *pString) override
+	{
+		if (m_pInfo->pMapFunc!=nullptr) {
+			LPWSTR pszString=nullptr;
+			if (m_pInfo->pMapFunc(pszKeyword,&pszString,m_pInfo->pClientData)) {
+				if (pszString!=nullptr) {
+					*pString=pszString;
+					std::free(pszString);
+				}
+				return true;
+			}
+		}
+		return CEventVariableStringMap::GetString(pszKeyword,pString);
+	}
+
+private:
+	VarStringFormatInfo *m_pInfo;
+	const VarStringContext *m_pContext;
+};
+
+}
+
+
+
+
 HWND CPlugin::m_hwndMessage=NULL;
 UINT CPlugin::m_MessageCode=0;
 
@@ -2801,6 +2845,63 @@ LRESULT CPlugin::OnCallback(TVTest::PluginParam *pParam,UINT Message,LPARAM lPar
 				if (m_VideoStreamCallbackList.empty())
 					GetAppClass().CoreEngine.m_DtvEngine.m_MediaViewer.SetVideoStreamCallback(NULL);
 			}
+		}
+		return TRUE;
+
+	case TVTest::MESSAGE_GETVARSTRINGCONTEXT:
+		{
+			TVTest::VarStringContext *pContext=new TVTest::VarStringContext;
+
+			if (!GetAppClass().Core.GetVariableStringEventInfo(&pContext->Event)) {
+				delete pContext;
+				return (LRESULT)nullptr;
+			}
+
+			return (LRESULT)pContext;
+		}
+
+	case TVTest::MESSAGE_FREEVARSTRINGCONTEXT:
+		{
+			TVTest::VarStringContext *pContext=reinterpret_cast<TVTest::VarStringContext*>(lParam1);
+
+			if (pContext==nullptr)
+				return FALSE;
+
+			delete pContext;
+		}
+		return TRUE;
+
+	case TVTest::MESSAGE_FORMATVARSTRING:
+		{
+			TVTest::VarStringFormatInfo *pInfo=
+				reinterpret_cast<TVTest::VarStringFormatInfo*>(lParam1);
+
+			if (pInfo==nullptr
+					|| pInfo->Size!=sizeof(TVTest::VarStringFormatInfo))
+				return FALSE;
+
+			pInfo->pszResult=nullptr;
+
+			if (pInfo->pszFormat==nullptr)
+				return FALSE;
+
+			TVTest::VarStringContext Context;
+			if (pInfo->pContext==nullptr) {
+				if (!GetAppClass().Core.GetVariableStringEventInfo(&Context.Event))
+					return FALSE;
+			}
+			TVTest::CPluginVarStringMap VarStrMap(
+				pInfo,
+				pInfo->pContext!=nullptr?pInfo->pContext:&Context);
+			TVTest::String Result;
+
+			if (!TVTest::FormatVariableString(&VarStrMap,pInfo->pszFormat,&Result))
+				return FALSE;
+
+			pInfo->pszResult=static_cast<LPWSTR>(std::malloc((Result.length()+1)*sizeof(WCHAR)));
+			if (pInfo->pszResult==nullptr)
+				return FALSE;
+			::CopyMemory(pInfo->pszResult,Result.c_str(),(Result.length()+1)*sizeof(WCHAR));
 		}
 		return TRUE;
 

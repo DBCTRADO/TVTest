@@ -127,6 +127,9 @@
 	  ・MESSAGE_SHOWDIALOG
 	  ・MESSAGE_CONVERTTIME
 	  ・MESSAGE_SETVIDEOSTREAMCALLBACK
+	  ・MESSAGE_GETVARSTRINGCONTEXT
+	  ・MESSAGE_FREEVARSTRINGCONTEXT
+	  ・MESSAGE_FORMATVARSTRING
 	・以下のイベントを追加した
 	  ・EVENT_FILTERGRAPH_INITIALIZE
 	  ・EVENT_FILTERGRAPH_INITIALIZED
@@ -462,6 +465,9 @@ enum {
 	MESSAGE_SHOWDIALOG,					// ダイアログを表示
 	MESSAGE_CONVERTTIME,				// 日時を変換
 	MESSAGE_SETVIDEOSTREAMCALLBACK,		// 映像ストリームのコールバック関数を設定
+	MESSAGE_GETVARSTRINGCONTEXT,		// 変数文字列のコンテキストを取得
+	MESSAGE_FREEVARSTRINGCONTEXT,		// 変数文字列のコンテキストを解放
+	MESSAGE_FORMATVARSTRING,			// 変数文字列を使って文字列をフォーマット
 #endif
 	MESSAGE_TRAILER
 };
@@ -3030,6 +3036,90 @@ inline bool MsgSetVideoStreamCallback(PluginParam *pParam,VideoStreamCallbackFun
 	return (*pParam->Callback)(pParam,MESSAGE_SETVIDEOSTREAMCALLBACK,(LPARAM)pCallback,(LPARAM)pClientData)!=0;
 }
 
+// 変数文字列のコンテキスト
+// MsgFormatVarString の説明を参照してください。
+struct VarStringContext;
+
+// 変数文字列のコンテキストを取得
+inline VarStringContext *MsgGetVarStringContext(PluginParam *pParam) {
+	return (VarStringContext*)(*pParam->Callback)(pParam,MESSAGE_GETVARSTRINGCONTEXT,0,0);
+}
+// 変数文字列のコンテキストを解放
+inline void MsgFreeVarStringContext(PluginParam *pParam,VarStringContext *pContext) {
+	(*pParam->Callback)(pParam,MESSAGE_FREEVARSTRINGCONTEXT,(LPARAM)pContext,0);
+}
+
+// 変数文字列のマップ関数
+typedef BOOL (CALLBACK *VarStringMapFunc)(LPCWSTR pszVar, LPWSTR *ppszString, void *pClientData);
+
+// 変数文字列のフォーマットフラグ
+enum {
+	VAR_STRING_FORMAT_FLAG_FILENAME = 0x00000001	// ファイル名用(ファイル名に使えない文字が全角になる)
+};
+
+// 変数文字列のフォーマット情報
+struct VarStringFormatInfo {
+	DWORD Size;							// 構造体のサイズ
+	DWORD Flags;						// 各種フラグ(VAR_STRING_FORMAT_FLAG_*)
+	LPCWSTR pszFormat;					// フォーマット文字列
+	const VarStringContext *pContext;	// コンテキスト(NULL で現在のコンテキスト)
+	VarStringMapFunc pMapFunc;			// マップ関数(必要なければ NULL)
+	void *pClientData;					// ユーザー指定の任意データ
+	LPWSTR pszResult;					// 変換結果の文字列
+};
+
+// 変数文字列を使って文字列をフォーマット
+// 変数文字列は、%event-name% などの変数が含まれた文字列です。
+// このような文字列の変数を展開した文字列を取得できます。
+// 変数の展開に必要な、現在の番組や日時などの情報をコンテキストと呼びます。
+// MsgGetVarStringContext で、その時点のコンテキストを取得できます。
+/*
+	// 現在のコンテキストを取得
+	VarStringContext *pContext = MsgGetVarStringContext(pParam);
+
+	// 文字列をフォーマットする
+	VarStringFormatInfo Info;
+	Info.Size = sizeof(VarStringFormatInfo);
+	Info.Flags = 0;
+	Info.pszFormat = L"%event-name% %tot-date% %tot-time%";
+	Info.pContext = pContext;
+	Info.pMapFunc = NULL;
+	Info.pClientData = NULL;
+
+	if (MsgFormatVarString(pParam, &Info)) {
+		// Info.pszResult に結果の文字列が返される
+		...
+		// 不要になったらメモリを解放する
+		MsgMemoryFree(pParam, Info.pszResult);
+	}
+
+	// 不要になったらコンテキストを解放する
+	MsgFreeVarStringContext(pParam, pContext);
+*/
+// マップ関数を指定すると、任意の変数を文字列に変換できます。
+// 上記の例でマップ関数を使う場合は以下のようになります。
+/*
+	BOOL CALLBACK VarStringMap(LPCWSTR pszVar, LPWSTR *ppszString, void *pClientData)
+	{
+		PluginParam *pParam = static_cast<PluginParam*>(pClientData);
+		if (::lstrcmpiW(pszVar, L"my-var") == 0) {
+			LPCWSTR pszMapString = L"replaced string";
+			DWORD Size = (::lstrlenW(pszMapString) + 1) * sizeof(WCHAR);
+			*ppszString = (LPWSTR)MsgMemoryAlloc(pParam, Size);
+			if (*ppszString != NULL)
+				::CopyMemory(*ppszString, pszMapString, Size);
+			return TRUE;
+		}
+		return FALSE;
+	}
+
+	Info.pMapFunc = VarStringMap;
+	Info.pClientData = pParam;
+*/
+inline bool MsgFormatVarString(PluginParam *pParam,VarStringFormatInfo *pInfo) {
+	return (*pParam->Callback)(pParam,MESSAGE_FORMATVARSTRING,(LPARAM)pInfo,0)!=FALSE;
+}
+
 #endif	// TVTEST_PLUGIN_VERSION>=TVTEST_PLUGIN_VERSION_(0,0,14)
 
 
@@ -3557,6 +3647,16 @@ public:
 	}
 	bool SetVideoStreamCallback(VideoStreamCallbackFunc pCallback,void *pClientData=NULL) {
 		return MsgSetVideoStreamCallback(m_pParam,pCallback,pClientData);
+	}
+	VarStringContext *GetVarStringContext() {
+		return MsgGetVarStringContext(m_pParam);
+	}
+	void FreeVarStringContext(VarStringContext *pContext) {
+		MsgFreeVarStringContext(m_pParam,pContext);
+	}
+	bool FormatVarString(VarStringFormatInfo *pInfo) {
+		pInfo->Size=sizeof(VarStringFormatInfo);
+		return MsgFormatVarString(m_pParam,pInfo);
 	}
 #endif
 };
