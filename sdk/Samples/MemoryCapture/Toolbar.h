@@ -1,0 +1,62 @@
+#pragma once
+
+
+#include <vector>
+
+
+// ツールバークラス
+class CToolbar
+{
+public:
+	struct ItemInfo
+	{
+		int ID;
+		int Icon;
+	};
+
+	static bool Initialize(HINSTANCE hinst);
+
+	CToolbar();
+	~CToolbar();
+
+	bool Create(HWND hwndParent, int ID, TVTest::CTVTestApp *pApp);
+	void SetPosition(int Left, int Top, int Width, int Height);
+	void SetDPI(int DPI);
+	int GetHeight() const;
+	void AddItem(const ItemInfo &Item);
+	void SetIconImage(HBITMAP hbm, int Width, int Height);
+
+private:
+	static const LPCTSTR m_WindowClassName;
+	static HINSTANCE m_hinst;
+
+	TVTest::CTVTestApp *m_pApp;
+	HWND m_hwnd;
+	HWND m_hwndTooltips;
+	int m_DPI;
+	RECT m_Margin;
+	int m_ItemPadding;
+	int m_ItemWidth;
+	int m_ItemHeight;
+	int m_IconWidth;
+	int m_IconHeight;
+	HBITMAP m_hbmIcons;
+	std::vector<ItemInfo> m_ItemList;
+	int m_HotItem;
+	int m_ClickItem;
+
+	void CalcMetrics();
+	void Draw(HDC hdc, const RECT &rcPaint);
+	void OnLButtonDown(int x, int y);
+	void OnLButtonUp(int x, int y);
+	void OnMouseMove(int x, int y);
+	void GetItemRect(int Item, RECT *pRect) const;
+	void RedrawItem(int Item) const;
+	int GetItemFromPoint(int x, int y) const;
+	void SetHotItem(int Item);
+	void SetTooltips();
+	void UpdateTooltips();
+
+	static CToolbar *GetThis(HWND hwnd);
+	static LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+};

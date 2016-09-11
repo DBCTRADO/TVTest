@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2013
-VisualStudioVersion = 12.0.31101.0
+# Visual Studio 14
+VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AutoSnapShot", "AutoSnapShot\AutoSnapShot.VS2013.vcxproj", "{178CA9B3-D4E4-46AC-89F1-96E163B2E369}"
 EndProject
@@ -30,6 +30,8 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MiniProgramGuide", "MiniProgramGuide\MiniProgramGuide.VS2013.vcxproj", "{F78F780F-2042-44EA-9804-A1CB0C908611}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TunerPanel", "TunerPanel\TunerPanel.VS2013.vcxproj", "{50951ABA-25D2-4BAD-8E4C-15711A6FCA65}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MemoryCapture", "MemoryCapture\MemoryCapture.VS2013.vcxproj", "{ADBFD3CA-B844-4088-A326-4AD5B001C07F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -209,6 +211,18 @@ Global
 		{50951ABA-25D2-4BAD-8E4C-15711A6FCA65}.Release|Win32.Build.0 = Release|Win32
 		{50951ABA-25D2-4BAD-8E4C-15711A6FCA65}.Release|x64.ActiveCfg = Release|x64
 		{50951ABA-25D2-4BAD-8E4C-15711A6FCA65}.Release|x64.Build.0 = Release|x64
+		{ADBFD3CA-B844-4088-A326-4AD5B001C07F}.Debug|Win32.ActiveCfg = Debug|Win32
+		{ADBFD3CA-B844-4088-A326-4AD5B001C07F}.Debug|Win32.Build.0 = Debug|Win32
+		{ADBFD3CA-B844-4088-A326-4AD5B001C07F}.Debug|x64.ActiveCfg = Debug|x64
+		{ADBFD3CA-B844-4088-A326-4AD5B001C07F}.Debug|x64.Build.0 = Debug|x64
+		{ADBFD3CA-B844-4088-A326-4AD5B001C07F}.Release_static|Win32.ActiveCfg = Release_static|Win32
+		{ADBFD3CA-B844-4088-A326-4AD5B001C07F}.Release_static|Win32.Build.0 = Release_static|Win32
+		{ADBFD3CA-B844-4088-A326-4AD5B001C07F}.Release_static|x64.ActiveCfg = Release_static|x64
+		{ADBFD3CA-B844-4088-A326-4AD5B001C07F}.Release_static|x64.Build.0 = Release_static|x64
+		{ADBFD3CA-B844-4088-A326-4AD5B001C07F}.Release|Win32.ActiveCfg = Release|Win32
+		{ADBFD3CA-B844-4088-A326-4AD5B001C07F}.Release|Win32.Build.0 = Release|Win32
+		{ADBFD3CA-B844-4088-A326-4AD5B001C07F}.Release|x64.ActiveCfg = Release|x64
+		{ADBFD3CA-B844-4088-A326-4AD5B001C07F}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

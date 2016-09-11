@@ -35,6 +35,9 @@
   ・LogoList
   　局ロゴの一覧を表示する
 
+  ・MemoryCapture
+  　映像から画像を取り込む
+
   ・MiniProgramGuide
   　小さい番組表を表示する
 
