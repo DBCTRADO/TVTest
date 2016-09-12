@@ -1729,8 +1729,7 @@ LRESULT CALLBACK CMemoryCapture::EventCallback(
 
 	case TVTest::EVENT_SETTINGSCHANGE:
 		// Ý’è‚ª•ÏX‚³‚ê‚½
-		if (pThis->m_fInitialized)
-			pThis->LoadAppSettings();
+		pThis->LoadAppSettings();
 		return TRUE;
 	}
 
