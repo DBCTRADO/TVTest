@@ -130,7 +130,13 @@ private:
 	};
 
 	enum {
-		IDC_SEEK_BAR = 900
+		IDC_SEEK_BAR = 900,
+		IDC_TOOLBAR
+	};
+
+	enum {
+		TIMER_SEEK_START = 1,
+		TIMER_SEEK
 	};
 
 	enum {
@@ -149,6 +155,7 @@ private:
 	int m_DPI;
 	int m_SkipFrames;
 	int m_CurFrame;
+	int m_SeekCommand;
 	CImageCodec m_Codec;
 	CVideoDecoder m_Decoder;
 	CPreviewWindow m_Preview;
@@ -205,6 +212,8 @@ private:
 	void AdjustWindowSize();
 	void PostNotifyMessage(UINT Message, WPARAM wParam = 0, LPARAM lParam = 0);
 	void SetToolbarImage();
+	void StartSeeking(int Command);
+	void StopSeeking();
 	bool GetSaveFolder(LPWSTR pszFolder);
 	bool GetSaveFileName(LPWSTR pszFileName, LPCWSTR pszFolder,
 						 const CImage *pImage, const FrameGroupInfo *pGroup,
@@ -286,6 +295,7 @@ CMemoryCapture::CMemoryCapture()
 	, m_fAccumulateAlways(false)
 	, m_SkipFrames(10)
 	, m_CurFrame(-1)
+	, m_SeekCommand(0)
 	, m_Resample(CImage::Resample_Lanczos3)
 	, m_Deinterlace(CVideoDecoder::Deinterlace_Blend)
 
@@ -401,16 +411,16 @@ bool CMemoryCapture::EnablePlugin(bool fEnable)
 			// ツールバーのボタンを設定
 			static const CToolbar::ItemInfo ToolbarItemList[] =
 			{
-				{CM_CAPTURE,             0},
-				{CM_CAPTURE_ADD,         1},
-				{CM_PREV_FRAME,          2},
-				{CM_NEXT_FRAME,          3},
-				{CM_SKIP_BACKWARD_FRAME, 4},
-				{CM_SKIP_FORWARD_FRAME,  5},
-				{CM_FIRST_FRAME,         6},
-				{CM_LAST_FRAME,          7},
-				{CM_SAVE,                8},
-				{CM_COPY,                9},
+				{CM_CAPTURE,             0, 0},
+				{CM_CAPTURE_ADD,         1, 0},
+				{CM_PREV_FRAME,          2, CToolbar::ItemFlag_NotifyPress},
+				{CM_NEXT_FRAME,          3, CToolbar::ItemFlag_NotifyPress},
+				{CM_SKIP_BACKWARD_FRAME, 4, CToolbar::ItemFlag_NotifyPress},
+				{CM_SKIP_FORWARD_FRAME,  5, CToolbar::ItemFlag_NotifyPress},
+				{CM_FIRST_FRAME,         6, 0},
+				{CM_LAST_FRAME,          7, 0},
+				{CM_SAVE,                8, 0},
+				{CM_COPY,                9, 0},
 			};
 			for (int i = 0; i < _countof(ToolbarItemList); i++)
 				m_Toolbar.AddItem(ToolbarItemList[i]);
@@ -1095,6 +1105,30 @@ void CMemoryCapture::SetToolbarImage()
 }
 
 
+// フレーム送り開始
+void CMemoryCapture::StartSeeking(int Command)
+{
+	StopSeeking();
+
+	m_SeekCommand = Command;
+	::SendMessage(m_hwnd, WM_COMMAND, Command, 0);
+
+	int Delay;
+	::SystemParametersInfo(SPI_GETKEYBOARDDELAY, 0, &Delay, 0);
+
+	::SetTimer(m_hwnd, TIMER_SEEK_START, (Delay + 1) * 250, nullptr);
+}
+
+
+// フレーム送り終了
+void CMemoryCapture::StopSeeking()
+{
+	m_SeekCommand = 0;
+	::KillTimer(m_hwnd, TIMER_SEEK);
+	::KillTimer(m_hwnd, TIMER_SEEK_START);
+}
+
+
 // 保存先フォルダを取得する
 bool CMemoryCapture::GetSaveFolder(LPWSTR pszFolder)
 {
@@ -1383,7 +1417,7 @@ void CMemoryCapture::OnWindowCreate()
 
 	SetToolbarImage();
 	m_Toolbar.SetDPI(m_DPI);
-	m_Toolbar.Create(m_hwnd, 0, m_pApp);
+	m_Toolbar.Create(m_hwnd, IDC_TOOLBAR, m_pApp);
 
 	SetCaption();
 
@@ -1508,6 +1542,13 @@ void CMemoryCapture::OnCommand(int Command, int NotifyCode)
 	case IDC_SEEK_BAR:
 		if (NotifyCode == CSeekBar::Notify_PosChanged)
 			SetCurFrame(m_SeekBar.GetBarPos());
+		return;
+
+	case IDC_TOOLBAR:
+		if (NotifyCode == CToolbar::Notify_ItemPressed)
+			StartSeeking(m_Toolbar.GetPressingItem());
+		else if (NotifyCode == CToolbar::Notify_ItemReleased)
+			StopSeeking();
 		return;
 
 	default:
@@ -1844,27 +1885,54 @@ LRESULT CALLBACK CMemoryCapture::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LP
 
 	case WM_KEYDOWN:
 		// キー操作
-		switch (wParam) {
-		case VK_LEFT:
-		case VK_BACK:
-			::SendMessage(hwnd, WM_COMMAND, CM_PREV_FRAME, 0);
-			break;
-		case VK_RIGHT:
-		case VK_SPACE:
-			::SendMessage(hwnd, WM_COMMAND, CM_NEXT_FRAME, 0);
-			break;
-		case VK_HOME:
-			::SendMessage(hwnd, WM_COMMAND, CM_FIRST_FRAME, 0);
-			break;
-		case VK_END:
-			::SendMessage(hwnd, WM_COMMAND, CM_LAST_FRAME, 0);
-			break;
-		case VK_PRIOR:
-			::SendMessage(hwnd, WM_COMMAND, CM_SKIP_BACKWARD_FRAME, 0);
-			break;
-		case VK_NEXT:
-			::SendMessage(hwnd, WM_COMMAND, CM_SKIP_FORWARD_FRAME, 0);
-			break;
+		{
+			CMemoryCapture *pThis = GetThis(hwnd);
+
+			switch (wParam) {
+			case VK_LEFT:
+				if (pThis->m_SeekCommand != CM_PREV_FRAME)
+					pThis->StartSeeking(CM_PREV_FRAME);
+				break;
+			case VK_RIGHT:
+				if (pThis->m_SeekCommand != CM_NEXT_FRAME)
+					pThis->StartSeeking(CM_NEXT_FRAME);
+				break;
+			case VK_BACK:
+				::SendMessage(hwnd, WM_COMMAND, CM_PREV_FRAME, 0);
+				break;
+			case VK_SPACE:
+				::SendMessage(hwnd, WM_COMMAND, CM_NEXT_FRAME, 0);
+				break;
+			case VK_HOME:
+				::SendMessage(hwnd, WM_COMMAND, CM_FIRST_FRAME, 0);
+				break;
+			case VK_END:
+				::SendMessage(hwnd, WM_COMMAND, CM_LAST_FRAME, 0);
+				break;
+			case VK_PRIOR:
+				if (pThis->m_SeekCommand != CM_SKIP_BACKWARD_FRAME)
+					pThis->StartSeeking(CM_SKIP_BACKWARD_FRAME);
+				break;
+			case VK_NEXT:
+				if (pThis->m_SeekCommand != CM_SKIP_FORWARD_FRAME)
+					pThis->StartSeeking(CM_SKIP_FORWARD_FRAME);
+				break;
+			}
+		}
+		return 0;
+
+	case WM_KEYUP:
+		{
+			CMemoryCapture *pThis = GetThis(hwnd);
+
+			switch (wParam) {
+			case VK_LEFT:
+			case VK_RIGHT:
+			case VK_PRIOR:
+			case VK_NEXT:
+				pThis->StopSeeking();
+				break;
+			}
 		}
 		return 0;
 
@@ -1889,6 +1957,27 @@ LRESULT CALLBACK CMemoryCapture::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LP
 			}
 
 			pThis->ShowContextMenu(pt.x, pt.y);
+		}
+		return 0;
+
+	case WM_TIMER:
+		{
+			CMemoryCapture *pThis = GetThis(hwnd);
+
+			if (wParam == TIMER_SEEK_START) {
+				::KillTimer(hwnd, TIMER_SEEK_START);
+
+				UINT Interval;
+				if (pThis->m_SeekCommand == CM_PREV_FRAME || pThis->m_SeekCommand == CM_NEXT_FRAME) {
+					Interval = 1000 / 30;
+				} else {
+					::SystemParametersInfo(SPI_GETKEYBOARDSPEED, 0, &Interval, 0);
+					Interval = 400 - (Interval * (400 - 33) / 31);
+				}
+				::SetTimer(hwnd, TIMER_SEEK, Interval, nullptr);
+			} else if (wParam == TIMER_SEEK) {
+				::SendMessage(hwnd, WM_COMMAND, pThis->m_SeekCommand, 0);
+			}
 		}
 		return 0;
 

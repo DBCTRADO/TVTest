@@ -12,6 +12,16 @@ public:
 	{
 		int ID;
 		int Icon;
+		unsigned int Flags;
+	};
+
+	enum {
+		ItemFlag_NotifyPress = 0x00000001
+	};
+
+	enum {
+		Notify_ItemPressed = 1,
+		Notify_ItemReleased
 	};
 
 	static bool Initialize(HINSTANCE hinst);
@@ -25,6 +35,7 @@ public:
 	int GetHeight() const;
 	void AddItem(const ItemInfo &Item);
 	void SetIconImage(HBITMAP hbm, int Width, int Height);
+	int GetPressingItem() const;
 
 private:
 	static const LPCTSTR m_WindowClassName;

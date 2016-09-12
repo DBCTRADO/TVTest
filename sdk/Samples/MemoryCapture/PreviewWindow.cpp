@@ -57,7 +57,7 @@ void CPreviewWindow::SetImage(const CImage *pImage)
 	m_pImage = pImage;
 
 	if (m_hwnd != nullptr)
-		::InvalidateRect(m_hwnd, nullptr, TRUE);
+		::RedrawWindow(m_hwnd, nullptr, nullptr, RDW_INVALIDATE | RDW_UPDATENOW);
 }
 
 

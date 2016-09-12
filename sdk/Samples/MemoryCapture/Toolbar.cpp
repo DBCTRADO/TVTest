@@ -109,6 +109,14 @@ void CToolbar::SetIconImage(HBITMAP hbm, int Width, int Height)
 }
 
 
+int CToolbar::GetPressingItem() const
+{
+	if (m_ClickItem < 0 || m_ClickItem >= (int)m_ItemList.size())
+		return 0;
+	return m_ItemList[m_ClickItem].ID;
+}
+
+
 void CToolbar::CalcMetrics()
 {
 	m_Margin.left = m_Margin.top = m_Margin.right = m_Margin.bottom = ::MulDiv(1, m_DPI, 96);
@@ -156,6 +164,13 @@ void CToolbar::OnLButtonDown(int x, int y)
 
 	if (Item >= 0) {
 		m_ClickItem = Item;
+
+		if ((m_ItemList[Item].Flags & ItemFlag_NotifyPress) != 0) {
+			::SendMessage(::GetParent(m_hwnd), WM_COMMAND,
+						  MAKEWPARAM(GetWindowID(m_hwnd), Notify_ItemPressed),
+						  reinterpret_cast<LPARAM>(m_hwnd));
+		}
+
 		::SetCapture(m_hwnd);
 	}
 }
@@ -164,10 +179,11 @@ void CToolbar::OnLButtonDown(int x, int y)
 void CToolbar::OnLButtonUp(int x, int y)
 {
 	if (::GetCapture() == m_hwnd) {
-		::ReleaseCapture();
-
-		if (GetItemFromPoint(x, y) == m_ClickItem)
+		if (GetItemFromPoint(x, y) == m_ClickItem
+				&& (m_ItemList[m_ClickItem].Flags & ItemFlag_NotifyPress) == 0)
 			::SendMessage(::GetParent(m_hwnd), WM_COMMAND, m_ItemList[m_ClickItem].ID, 0);
+
+		::ReleaseCapture();
 	}
 }
 
@@ -323,6 +339,20 @@ LRESULT CALLBACK CToolbar::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 
 	case WM_MOUSELEAVE:
 		GetThis(hwnd)->SetHotItem(-1);
+		return 0;
+
+	case WM_CAPTURECHANGED:
+		{
+			CToolbar *pThis = GetThis(hwnd);
+
+			if (pThis->m_ClickItem >= 0 && pThis->m_ClickItem < (int)pThis->m_ItemList.size()
+					&& (pThis->m_ItemList[pThis->m_ClickItem].Flags & ItemFlag_NotifyPress) != 0) {
+				::SendMessage(::GetParent(hwnd), WM_COMMAND,
+							  MAKEWPARAM(GetWindowID(hwnd), Notify_ItemReleased),
+							  reinterpret_cast<LPARAM>(hwnd));
+			}
+			pThis->m_ClickItem = -1;
+		}
 		return 0;
 
 	case WM_SETCURSOR:
