@@ -108,7 +108,7 @@ fi
 cp -fp data/Themes/*.httheme ${dst_dir}/Themes
 
 ## Copy only "useful" plugins
-plugin_files=(DiskRelay.tvtp Equalizer.tvtp GamePad.tvtp HDUSRemocon.tvtp HDUSRemocon_KeyHook.dll LogoList.tvtp SignalGraph.tvtp SleepTimer.tvtp SpectrumAnalyzer.tvtp TunerPanel.tvtp)
+plugin_files=(DiskRelay.tvtp Equalizer.tvtp GamePad.tvtp HDUSRemocon.tvtp HDUSRemocon_KeyHook.dll LogoList.tvtp MemoryCapture.tvtp SignalGraph.tvtp SleepTimer.tvtp SpectrumAnalyzer.tvtp TunerPanel.tvtp)
 
 plugin_src_dir=sdk/Samples/${src_arch_dir}/${target}
 if [ "$crt_type" = static ]
