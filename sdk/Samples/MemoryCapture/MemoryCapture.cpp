@@ -156,6 +156,8 @@ private:
 	int m_SkipFrames;
 	int m_CurFrame;
 	int m_SeekCommand;
+	int m_WheelDelta;
+	DWORD m_WheelTime;
 	CImageCodec m_Codec;
 	CVideoDecoder m_Decoder;
 	CPreviewWindow m_Preview;
@@ -296,6 +298,8 @@ CMemoryCapture::CMemoryCapture()
 	, m_SkipFrames(10)
 	, m_CurFrame(-1)
 	, m_SeekCommand(0)
+	, m_WheelDelta(0)
+	, m_WheelTime(0)
 	, m_Resample(CImage::Resample_Lanczos3)
 	, m_Deinterlace(CVideoDecoder::Deinterlace_Blend)
 
@@ -1407,6 +1411,9 @@ void CMemoryCapture::OnWindowCreate()
 	}
 	m_ImageLock.Unlock();
 
+	m_WheelDelta = 0;
+	m_WheelTime = 0;
+
 	m_Preview.SetImage(GetCurImage());
 	m_Preview.Create(m_hwnd);
 
@@ -1933,6 +1940,34 @@ LRESULT CALLBACK CMemoryCapture::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LP
 				pThis->StopSeeking();
 				break;
 			}
+		}
+		return 0;
+
+	case WM_MOUSEWHEEL:
+		// マウスホイール
+		{
+			CMemoryCapture *pThis = GetThis(hwnd);
+			const int Delta = GET_WHEEL_DELTA_WPARAM(wParam);
+			const DWORD CurTime = ::GetTickCount();
+
+			if (CurTime - pThis->m_WheelTime >= 500)
+				pThis->m_WheelDelta = Delta;
+			else
+				pThis->m_WheelDelta += Delta;
+
+			if (abs(pThis->m_WheelDelta) >= WHEEL_DELTA) {
+				CBlockLock Lock(pThis->m_ImageLock);
+				int Delta = pThis->m_WheelDelta / WHEEL_DELTA;
+				int Frame = pThis->m_CurFrame - Delta;
+				if (Frame < 0)
+					Frame = 0;
+				else if (Frame > (int)pThis->m_ImageList.size() - 1)
+					Frame = (int)pThis->m_ImageList.size() - 1;
+				pThis->SetCurFrame(Frame);
+				pThis->m_WheelDelta -= Delta * WHEEL_DELTA;
+			}
+
+			pThis->m_WheelTime = CurTime;
 		}
 		return 0;
 
