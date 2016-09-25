@@ -3700,23 +3700,6 @@ void CMainWindow::OnTimer(HWND hwnd,UINT id)
 		break;
 
 	case TIMER_ID_PROGRAMLISTUPDATE:
-		if (m_ProgramListUpdateTimerCount==0) {
-			// サービスとロゴを関連付ける
-			CTsAnalyzer *pAnalyzer=&m_App.CoreEngine.m_DtvEngine.m_TsAnalyzer;
-			const WORD NetworkID=pAnalyzer->GetNetworkID();
-			if (NetworkID!=0) {
-				CTsAnalyzer::ServiceList ServiceList;
-				if (pAnalyzer->GetServiceList(&ServiceList)) {
-					for (size_t i=0;i<ServiceList.size();i++) {
-						const CTsAnalyzer::ServiceInfo *pServiceInfo=&ServiceList[i];
-						const WORD LogoID=pServiceInfo->LogoID;
-						if (LogoID!=0xFFFF)
-							m_App.LogoManager.AssociateLogoID(NetworkID,pServiceInfo->ServiceID,LogoID);
-					}
-				}
-			}
-		}
-
 		// EPG情報の同期
 		if (!m_App.EpgOptions.IsEpgFileLoading()
 				&& !m_App.EpgOptions.IsEDCBDataLoading()) {

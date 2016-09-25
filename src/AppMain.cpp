@@ -1581,10 +1581,22 @@ void CAppMain::CDtvEngineEventHandler::OnServiceListUpdated(
 
 void CAppMain::CDtvEngineEventHandler::OnServiceInfoUpdated(CTsAnalyzer *pTsAnalyzer)
 {
+	const WORD NetworkID=pTsAnalyzer->GetNetworkID();
+
+	// サービスとロゴを関連付ける
+	CTsAnalyzer::ServiceList ServiceList;
+	if (pTsAnalyzer->GetServiceList(&ServiceList)) {
+		for (size_t i=0;i<ServiceList.size();i++) {
+			const CTsAnalyzer::ServiceInfo &ServiceInfo=ServiceList[i];
+			const WORD LogoID=ServiceInfo.LogoID;
+			if (LogoID!=0xFFFF)
+				m_App.LogoManager.AssociateLogoID(NetworkID,ServiceInfo.ServiceID,LogoID);
+		}
+	}
+
 	OnServiceUpdated(pTsAnalyzer,false,false);
 	m_App.MainWindow.PostMessage(WM_APP_SERVICEINFOUPDATED,0,
-								 MAKELPARAM(pTsAnalyzer->GetNetworkID(),
-											pTsAnalyzer->GetTransportStreamID()));
+								 MAKELPARAM(NetworkID, pTsAnalyzer->GetTransportStreamID()));
 }
 
 void CAppMain::CDtvEngineEventHandler::OnServiceChanged(WORD ServiceID)
