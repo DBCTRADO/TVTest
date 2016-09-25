@@ -6114,6 +6114,7 @@ int CMainWindow::GetNextChannel(bool fUp)
 		const CChannelInfo *pCurChannelInfo=pCurChannelList->GetChannelInfo(CurChannel);
 		SYSTEMTIME st;
 		CEventInfoData EventInfo;
+		CEventInfo::CommonEventInfo CurEvent={0};
 
 		GetCurrentEpgTime(&st);
 		if (m_App.EpgProgramList.GetEventInfo(
@@ -6121,69 +6122,98 @@ int CMainWindow::GetNextChannel(bool fUp)
 				pCurChannelInfo->GetTransportStreamID(),
 				pCurChannelInfo->GetServiceID(),
 				&st,&EventInfo)) {
-			const WORD CurEventID=EventInfo.m_EventID;
-			bool fDiffEvent=false;
-			int i;
+			if (EventInfo.m_bCommonEvent) {
+				CurEvent=EventInfo.m_CommonEventInfo;
+			} else {
+				CurEvent.ServiceID=EventInfo.m_ServiceID;
+				CurEvent.EventID=EventInfo.m_EventID;
+			}
+		}
 
-			for (i=pCurChannelList->NumEnableChannels()-1;i>0;i--) {
-				const CChannelInfo *pNextChannelInfo=pCurChannelList->GetChannelInfo(Channel);
+		bool fDiffEvent=false;
+		int i;
 
-				if (pCurChannelInfo->GetSpace()!=pNextChannelInfo->GetSpace()
-						|| pCurChannelInfo->GetChannelIndex()!=pNextChannelInfo->GetChannelIndex())
-					break;
+		for (i=pCurChannelList->NumEnableChannels()-1;i>0;i--) {
+			const CChannelInfo *pNextChannelInfo=pCurChannelList->GetChannelInfo(Channel);
 
-				if (m_App.EpgProgramList.GetEventInfo(
+			if (pCurChannelInfo->GetNetworkID()!=pNextChannelInfo->GetNetworkID()
+					|| pCurChannelInfo->GetTransportStreamID()!=pNextChannelInfo->GetTransportStreamID())
+				break;
+
+			if (CurEvent.ServiceID!=0
+					&& m_App.EpgProgramList.GetEventInfo(
 						pNextChannelInfo->GetNetworkID(),
 						pNextChannelInfo->GetTransportStreamID(),
 						pNextChannelInfo->GetServiceID(),
 						&st,&EventInfo)) {
-					if (CurEventID!=EventInfo.m_EventID) {
-						fDiffEvent=true;
-						break;
-					}
+				CEventInfo::CommonEventInfo Event;
+				if (EventInfo.m_bCommonEvent) {
+					Event=EventInfo.m_CommonEventInfo;
+				} else {
+					Event.ServiceID=EventInfo.m_ServiceID;
+					Event.EventID=EventInfo.m_EventID;
 				}
-
-				Channel=m_App.ChannelManager.GetNextChannel(
-					Channel,m_App.OperationOptions.GetChannelUpDownOrder(),fUp);
-				if (Channel==CurChannel)
-					return -1;
+				if (CurEvent!=Event) {
+					fDiffEvent=true;
+					break;
+				}
 			}
 
-			if (i==0)
+			Channel=m_App.ChannelManager.GetNextChannel(
+				Channel,m_App.OperationOptions.GetChannelUpDownOrder(),fUp);
+			if (Channel==CurChannel)
 				return -1;
+		}
 
-			if (!fUp && !fDiffEvent) {
-				const CChannelInfo *pNextChannelInfo=pCurChannelList->GetChannelInfo(Channel);
-				WORD NextEventID=0xFFFF;
+		if (i==0)
+			return -1;
 
-				if (m_App.EpgProgramList.GetEventInfo(
-						pNextChannelInfo->GetNetworkID(),
-						pNextChannelInfo->GetTransportStreamID(),
-						pNextChannelInfo->GetServiceID(),
-						&st,&EventInfo))
-					NextEventID=EventInfo.m_EventID;
+		if (!fUp && !fDiffEvent) {
+			// 同じ番組の最初のサービスを探す
+			const CChannelInfo *pNextChannelInfo=pCurChannelList->GetChannelInfo(Channel);
+			CEventInfo::CommonEventInfo NextEvent={0};
 
-				for (int i=Channel-1;i>=0;i--) {
-					const CChannelInfo *pChannelInfo=pCurChannelList->GetChannelInfo(i);
-
-					if (!pChannelInfo->IsEnabled())
-						continue;
-
-					if (pNextChannelInfo->GetSpace()!=pChannelInfo->GetSpace()
-							|| pNextChannelInfo->GetChannelIndex()!=pChannelInfo->GetChannelIndex())
-						break;
-
-					if (NextEventID!=0xFFFF
-							&& m_App.EpgProgramList.GetEventInfo(
-								pChannelInfo->GetNetworkID(),
-								pChannelInfo->GetTransportStreamID(),
-								pChannelInfo->GetServiceID(),
-								&st,&EventInfo)
-							&& NextEventID!=EventInfo.m_EventID)
-						break;
-
-					Channel=i;
+			if (m_App.EpgProgramList.GetEventInfo(
+					pNextChannelInfo->GetNetworkID(),
+					pNextChannelInfo->GetTransportStreamID(),
+					pNextChannelInfo->GetServiceID(),
+					&st,&EventInfo)) {
+				if (EventInfo.m_bCommonEvent) {
+					NextEvent=EventInfo.m_CommonEventInfo;
+				} else {
+					NextEvent.ServiceID=EventInfo.m_ServiceID;
+					NextEvent.EventID=EventInfo.m_EventID;
 				}
+			}
+
+			for (int i=Channel-1;i>=0;i--) {
+				const CChannelInfo *pChannelInfo=pCurChannelList->GetChannelInfo(i);
+
+				if (!pChannelInfo->IsEnabled())
+					continue;
+
+				if (pNextChannelInfo->GetNetworkID()!=pChannelInfo->GetNetworkID()
+						|| pNextChannelInfo->GetTransportStreamID()!=pChannelInfo->GetTransportStreamID())
+					break;
+
+				if (NextEvent.ServiceID!=0
+						&& m_App.EpgProgramList.GetEventInfo(
+							pChannelInfo->GetNetworkID(),
+							pChannelInfo->GetTransportStreamID(),
+							pChannelInfo->GetServiceID(),
+							&st,&EventInfo)) {
+					CEventInfo::CommonEventInfo Event;
+					if (EventInfo.m_bCommonEvent) {
+						Event=EventInfo.m_CommonEventInfo;
+					} else {
+						Event.ServiceID=EventInfo.m_ServiceID;
+						Event.EventID=EventInfo.m_EventID;
+					}
+					if (Event!=NextEvent)
+						break;
+				}
+
+				Channel=i;
 			}
 		}
 	}
