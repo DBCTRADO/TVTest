@@ -6832,6 +6832,7 @@ void CMainWindow::CFullscreen::OnMouseMove()
 	bool fShowStatusView=false,fShowTitleBar=false,fShowSideBar=false;
 
 	m_ViewWindow.GetClientRect(&rcClient);
+	MapWindowRect(m_ViewWindow.GetHandle(),m_hwnd,&rcClient);
 
 	rcStatus=rcClient;
 	rcStatus.top=rcStatus.bottom-m_App.StatusView.CalcHeight(rcClient.right-rcClient.left);
