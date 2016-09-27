@@ -6700,6 +6700,10 @@ void CMainWindow::CFullscreen::RestorePanel(bool fPreventForeground)
 				::SetWindowPos(m_App.Panel.Frame.GetHandle(),HWND_NOTOPMOST,
 							   rc.left,rc.top,rc.right-rc.left,rc.bottom-rc.top,
 							   SWP_NOACTIVATE);
+				if (m_MainWindow.m_pCore->GetAlwaysOnTop()) {
+					::SetWindowPos(m_MainWindow.GetHandle(),HWND_TOPMOST,0,0,0,0,
+								   SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
+				}
 			}
 		}
 	}
