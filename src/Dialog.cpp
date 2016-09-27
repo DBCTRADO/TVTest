@@ -372,6 +372,8 @@ void CBasicDialog::RealizeStyle()
 				}
 			}
 
+			HDWP hdwp=::BeginDeferWindowPos(static_cast<int>(m_ItemList.size()));
+
 			for (auto it=m_ItemList.begin();it!=m_ItemList.end();++it) {
 				HWND hwnd=it->hwnd;
 				RECT rc=it->rcOriginal;
@@ -380,7 +382,17 @@ void CBasicDialog::RealizeStyle()
 				rc.top=::MulDiv(rc.top,DPI,m_OriginalDPI);
 				rc.right=::MulDiv(rc.right,DPI,m_OriginalDPI);
 				rc.bottom=::MulDiv(rc.bottom,DPI,m_OriginalDPI);
-				::MoveWindow(hwnd,rc.left,rc.top,rc.right-rc.left,rc.bottom-rc.top,FALSE);
+				if (hdwp!=NULL) {
+					::DeferWindowPos(
+						hdwp, hwnd, nullptr,
+						rc.left,rc.top,rc.right-rc.left,rc.bottom-rc.top,
+						SWP_NOZORDER | SWP_NOACTIVATE);
+				} else {
+					::SetWindowPos(
+						hwnd, nullptr,
+						rc.left,rc.top,rc.right-rc.left,rc.bottom-rc.top,
+						SWP_NOZORDER | SWP_NOACTIVATE);
+				}
 
 				TCHAR szClass[32];
 				::GetClassName(hwnd,szClass,lengthof(szClass));
@@ -392,6 +404,9 @@ void CBasicDialog::RealizeStyle()
 				SetWindowFont(hwnd,m_Font.GetHandle(),FALSE);
 				::InvalidateRect(hwnd,NULL,TRUE);
 			}
+
+			if (hdwp!=NULL)
+				::EndDeferWindowPos(hdwp);
 
 			SetWindowFont(m_hDlg,m_Font.GetHandle(),FALSE);
 			::InvalidateRect(m_hDlg,NULL,TRUE);
@@ -490,6 +505,8 @@ void CResizableDialog::DoLayout()
 	Width=rc.right;
 	Height=rc.bottom;
 
+	HDWP hdwp=::BeginDeferWindowPos(static_cast<int>(m_ControlList.size()));
+
 	for (size_t i=0;i<m_ControlList.size();i++) {
 		rc=m_ControlList[i].rcOriginal;
 
@@ -515,9 +532,22 @@ void CResizableDialog::DoLayout()
 			if (rc.bottom<rc.top)
 				rc.bottom=rc.top;
 		}
-		::MoveWindow(::GetDlgItem(m_hDlg,m_ControlList[i].ID),
-					 rc.left,rc.top,rc.right-rc.left,rc.bottom-rc.top,TRUE);
+
+		if (hdwp!=NULL) {
+			::DeferWindowPos(
+				hdwp,::GetDlgItem(m_hDlg,m_ControlList[i].ID),nullptr,
+				rc.left,rc.top,rc.right-rc.left,rc.bottom-rc.top,
+				SWP_NOZORDER | SWP_NOACTIVATE);
+		} else {
+			::SetWindowPos(
+				::GetDlgItem(m_hDlg,m_ControlList[i].ID),nullptr,
+				rc.left,rc.top,rc.right-rc.left,rc.bottom-rc.top,
+				SWP_NOZORDER | SWP_NOACTIVATE);
+		}
 	}
+
+	if (hdwp!=NULL)
+		::EndDeferWindowPos(hdwp);
 
 	if (m_hwndSizeGrip!=NULL) {
 		::GetWindowRect(m_hwndSizeGrip,&rc);
