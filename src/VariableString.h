@@ -21,9 +21,8 @@ namespace TVTest
 
 		struct ParameterGroup
 		{
-			LPCWSTR pszText;
-			const ParameterInfo *pParameterList;
-			int ParameterCount;
+			String Text;
+			std::vector<ParameterInfo> ParameterList;
 		};
 
 		typedef std::vector<ParameterGroup> ParameterGroupList;
@@ -42,13 +41,26 @@ namespace TVTest
 
 	bool FormatVariableString(CVariableStringMap *pVariableMap,LPCWSTR pszFormat,String *pString);
 
-	class CEventVariableStringMap : public CVariableStringMap
+	class CBasicVariableStringMap : public CVariableStringMap
+	{
+	public:
+		bool GetString(LPCWSTR pszKeyword,String *pString) override;
+		bool GetParameterList(ParameterGroupList *pList) const override;
+
+	protected:
+		virtual bool GetLocalString(LPCWSTR pszKeyword,String *pString) = 0;
+		bool GetPreferredGlobalString(LPCWSTR pszKeyword,String *pString);
+		bool GetGlobalString(LPCWSTR pszKeyword,String *pString);
+	};
+
+	class CEventVariableStringMap : public CBasicVariableStringMap
 	{
 	public:
 		enum {
 			FLAG_NO_NORMALIZE    = 0x0001U,
 			FLAG_NO_CURRENT_TIME = 0x0002U,
-			FLAG_NO_TOT_TIME     = 0x0004U
+			FLAG_NO_TOT_TIME     = 0x0004U,
+			FLAG_NO_SEPARATOR    = 0x0008U
 		};
 
 		struct EventInfo
@@ -62,7 +74,6 @@ namespace TVTest
 		CEventVariableStringMap();
 		CEventVariableStringMap(const EventInfo &Info);
 		bool BeginFormat() override;
-		bool GetString(LPCWSTR pszKeyword,String *pString) override;
 		bool NormalizeString(String *pString) const override;
 		bool GetParameterList(ParameterGroupList *pList) const override;
 		void SetCurrentTime(const SYSTEMTIME *pTime);
@@ -71,6 +82,8 @@ namespace TVTest
 		static bool GetSampleEventInfo(EventInfo *pInfo);
 
 	protected:
+		bool GetLocalString(LPCWSTR pszKeyword,String *pString) override;
+
 		static void GetEventTitle(const String &EventName,String *pTitle);
 		static void GetEventMark(const String &EventName,String *pMarks);
 

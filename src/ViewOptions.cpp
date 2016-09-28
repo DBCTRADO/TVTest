@@ -14,12 +14,12 @@ static const struct {
 } TitleTextFormatPresets[] =
 {
 	{
-		TEXT("サービス名 / 番組時間 番組名 - TVTest"),
-		TEXT("%rec-circle% %service-name% %event-sep% %event-time% %event-name% - TVTest")
+		TEXT("サービス名 / 番組時間 番組名 - ") APP_NAME,
+		TEXT("%rec-circle% %service-name% %sep-slash% %event-time% %event-name% %sep-hyphen% ") APP_NAME
 	},
 	{
-		TEXT("サービス名 / 番組名 - TVTest"),
-		TEXT("%rec-circle% %service-name% %event-sep% %event-name% - TVTest")
+		TEXT("サービス名 / 番組名 - ") APP_NAME,
+		TEXT("%rec-circle% %service-name% %sep-slash% %event-name% %sep-hyphen% ") APP_NAME
 	},
 };
 

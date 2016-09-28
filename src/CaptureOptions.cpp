@@ -16,10 +16,11 @@ class CCaptureVariableStringMap : public CEventVariableStringMap
 public:
 	CCaptureVariableStringMap();
 	CCaptureVariableStringMap(const EventInfo &Info,const CCaptureImage *pImage);
-	bool GetString(LPCWSTR pszKeyword,String *pString) override;
 	bool GetParameterList(ParameterGroupList *pList) const override;
 
 private:
+	bool GetLocalString(LPCWSTR pszKeyword,String *pString) override;
+
 	static const ParameterInfo m_CaptureParameterList[];
 
 	int m_ImageWidth;
@@ -29,8 +30,8 @@ private:
 
 const CVariableStringMap::ParameterInfo CCaptureVariableStringMap::m_CaptureParameterList[] =
 {
-	{TEXT("%width%"),	TEXT("‰æ‘œ‚Ì•")},
-	{TEXT("%height%"),	TEXT("‰æ‘œ‚Ì‚‚³")},
+	{TEXT("width"),		TEXT("‰æ‘œ‚Ì•")},
+	{TEXT("height"),	TEXT("‰æ‘œ‚Ì‚‚³")},
 };
 
 
@@ -57,14 +58,14 @@ CCaptureVariableStringMap::CCaptureVariableStringMap(
 }
 
 
-bool CCaptureVariableStringMap::GetString(LPCWSTR pszKeyword,String *pString)
+bool CCaptureVariableStringMap::GetLocalString(LPCWSTR pszKeyword,String *pString)
 {
 	if (::lstrcmpi(pszKeyword,TEXT("width"))==0) {
 		TVTest::StringUtility::Format(*pString,TEXT("%d"),m_ImageWidth);
 	} else if (::lstrcmpi(pszKeyword,TEXT("height"))==0) {
 		TVTest::StringUtility::Format(*pString,TEXT("%d"),m_ImageHeight);
 	} else {
-		return CEventVariableStringMap::GetString(pszKeyword,pString);
+		return CEventVariableStringMap::GetLocalString(pszKeyword,pString);
 	}
 
 	return true;
@@ -76,11 +77,11 @@ bool CCaptureVariableStringMap::GetParameterList(ParameterGroupList *pList) cons
 	if (!CEventVariableStringMap::GetParameterList(pList))
 		return false;
 
-	static const ParameterGroup Group = {
-		nullptr,m_CaptureParameterList,lengthof(m_CaptureParameterList)
-	};
-
-	pList->push_back(Group);
+	pList->push_back(ParameterGroup());
+	pList->back().ParameterList.insert(
+		pList->back().ParameterList.end(),
+		m_CaptureParameterList,
+		m_CaptureParameterList+lengthof(m_CaptureParameterList));
 
 	return true;
 }

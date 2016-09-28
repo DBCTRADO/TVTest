@@ -651,7 +651,7 @@ public:
 		m_Flags=(pInfo->Flags & VAR_STRING_FORMAT_FLAG_FILENAME)==0 ? FLAG_NO_NORMALIZE : 0;
 	}
 
-	bool GetString(LPCWSTR pszKeyword,String *pString) override
+	bool GetLocalString(LPCWSTR pszKeyword,String *pString) override
 	{
 		if (m_pInfo->pMapFunc!=nullptr) {
 			LPWSTR pszString=nullptr;
@@ -663,7 +663,7 @@ public:
 				return true;
 			}
 		}
-		return CEventVariableStringMap::GetString(pszKeyword,pString);
+		return CEventVariableStringMap::GetLocalString(pszKeyword,pString);
 	}
 
 private:
@@ -697,6 +697,7 @@ CPlugin::CPlugin()
 	, m_pEventCallback(NULL)
 	, m_ProgramGuideEventFlags(0)
 	, m_pMessageCallback(NULL)
+	, m_GetVariable(this)
 {
 }
 
@@ -2905,6 +2906,28 @@ LRESULT CPlugin::OnCallback(TVTest::PluginParam *pParam,UINT Message,LPARAM lPar
 		}
 		return TRUE;
 
+	case TVTest::MESSAGE_REGISTERVARIABLE:
+		{
+			const TVTest::RegisterVariableInfo *pInfo=
+				reinterpret_cast<const TVTest::RegisterVariableInfo*>(lParam1);
+
+			if (pInfo==nullptr
+					|| pInfo->Size!=sizeof(TVTest::RegisterVariableInfo)
+					|| IsStringEmpty(pInfo->pszKeyword))
+				return FALSE;
+
+			unsigned int Flags=0;
+			if ((pInfo->Flags & TVTest::REGISTER_VARIABLE_FLAG_OVERRIDE)!=0)
+				Flags|=TVTest::CVariableManager::FLAG_OVERRIDE;
+
+			return GetAppClass().VariableManager.RegisterVariable(
+				pInfo->pszKeyword,pInfo->pszValue,
+				pInfo->pszValue==nullptr ? &m_GetVariable : nullptr,
+				pInfo->pszDescription,
+				Flags);
+		}
+		return TRUE;
+
 #ifdef _DEBUG
 	default:
 		TRACE(TEXT("CPluign::OnCallback() : Unknown message %u\n"),Message);
@@ -4297,6 +4320,33 @@ void CPlugin::CVideoStreamCallback::OnStream(DWORD Format,const void *pData,SIZE
 	for (auto it=CPlugin::m_VideoStreamCallbackList.begin();it!=CPlugin::m_VideoStreamCallbackList.end();++it) {
 		it->m_pCallback(Format,pData,Size,it->m_pClientData);
 	}
+}
+
+
+
+
+CPlugin::CGetVariable::CGetVariable(CPlugin *pPlugin)
+	: m_pPlugin(pPlugin)
+{
+}
+
+
+bool CPlugin::CGetVariable::GetVariable(LPCWSTR pszKeyword,TVTest::String *pValue)
+{
+	TVTest::GetVariableInfo Info;
+
+	Info.pszKeyword=pszKeyword;
+	Info.pszValue=nullptr;
+
+	if (!m_pPlugin->SendEvent(TVTest::EVENT_GETVARIABLE,reinterpret_cast<LPARAM>(&Info)))
+		return false;
+
+	if (Info.pszValue!=nullptr) {
+		*pValue=Info.pszValue;
+		std::free(Info.pszValue);
+	}
+
+	return true;
 }
 
 

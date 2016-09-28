@@ -1,6 +1,8 @@
 #include "stdafx.h"
+#include <algorithm>
 #include "TVTest.h"
 #include "VariableString.h"
+#include "AppMain.h"
 #include "Common/DebugDef.h"
 
 
@@ -21,6 +23,13 @@ bool FormatVariableString(CVariableStringMap *pVariableMap,LPCWSTR pszFormat,Str
 	if (!pVariableMap->BeginFormat())
 		return false;
 
+	struct SeparatorInfo {
+		String::size_type Pos;
+		LPCWSTR pszSeparator;
+		SeparatorInfo(String::size_type p,LPCWSTR s) : Pos(p), pszSeparator(s) {}
+	};
+
+	std::vector<SeparatorInfo> SeparatorList;
 	LPCWSTR p=pszFormat;
 
 	while (*p!=L'\0') {
@@ -36,7 +45,13 @@ bool FormatVariableString(CVariableStringMap *pVariableMap,LPCWSTR pszFormat,Str
 					Keyword.push_back(*p++);
 				if (*p==L'%') {
 					p++;
-					if (pVariableMap->GetString(Keyword.c_str(),&Text)) {
+					if (::lstrcmpiW(Keyword.c_str(),L"sep-hyphen")==0) {
+						SeparatorList.push_back(SeparatorInfo(pString->size(),L"-"));
+					} else if (::lstrcmpiW(Keyword.c_str(),L"sep-slash")==0) {
+						SeparatorList.push_back(SeparatorInfo(pString->size(),L"/"));
+					} else if (::lstrcmpiW(Keyword.c_str(),L"sep-backslash")==0) {
+						SeparatorList.push_back(SeparatorInfo(pString->size(),L"\\"));
+					} else if (pVariableMap->GetString(Keyword.c_str(),&Text)) {
 						pVariableMap->NormalizeString(&Text);
 						pString->append(Text);
 					} else {
@@ -56,7 +71,95 @@ bool FormatVariableString(CVariableStringMap *pVariableMap,LPCWSTR pszFormat,Str
 		}
 	}
 
+	if (!SeparatorList.empty()) {
+		// 前後にトークンが存在する場合のみ区切りを挿入する
+		bool fLast=true;
+		for (int i=static_cast<int>(SeparatorList.size()-1);i>=0;i--) {
+			auto itBegin=pString->begin()+(i>0 ? SeparatorList[i-1].Pos : 0);
+			auto itEnd=pString->begin()+
+				(i+1<static_cast<int>(SeparatorList.size()) ? SeparatorList[i+1].Pos : pString->length());
+			auto itCur=pString->begin()+SeparatorList[i].Pos;
+			bool fPrev=
+				std::find_if(itBegin,itCur,[](WCHAR c) -> bool { return c!=L' '; })!=itCur;
+			bool fNext=
+				std::find_if(itCur,itEnd,[](WCHAR c) -> bool { return c!=L' '; })!=itEnd;
+			if ((fPrev && fNext) || (fPrev && !fLast))
+				pString->insert(SeparatorList[i].Pos,SeparatorList[i].pszSeparator);
+			if (fPrev || fNext)
+				fLast=false;
+		}
+	}
+
 	pVariableMap->EndFormat();
+
+	return true;
+}
+
+
+
+
+bool CBasicVariableStringMap::GetString(LPCWSTR pszKeyword,String *pString)
+{
+	if (GetPreferredGlobalString(pszKeyword,pString))
+		return true;
+	bool fResult=false;
+	if (GetLocalString(pszKeyword,pString)) {
+		fResult=true;
+		if (!pString->empty())
+			return true;
+	}
+	if (GetGlobalString(pszKeyword,pString))
+		fResult=true;
+	return fResult;
+}
+
+
+bool CBasicVariableStringMap::GetPreferredGlobalString(LPCWSTR pszKeyword,String *pString)
+{
+	return GetAppClass().VariableManager.GetPreferredVariable(pszKeyword,pString);
+}
+
+
+bool CBasicVariableStringMap::GetGlobalString(LPCWSTR pszKeyword,String *pString)
+{
+	return GetAppClass().VariableManager.GetVariable(pszKeyword,pString);
+}
+
+
+bool CBasicVariableStringMap::GetParameterList(ParameterGroupList *pList) const
+{
+	std::vector<CVariableManager::VariableInfo> VarList;
+
+	if (!GetAppClass().VariableManager.GetVariableList(&VarList))
+		return false;
+	if (VarList.empty())
+		return true;
+
+	pList->push_back(ParameterGroup());
+	ParameterGroup &Group=pList->back();
+
+	Group.ParameterList.reserve(VarList.size());
+
+	for (auto it=VarList.begin();it!=VarList.end();++it) {
+		bool fFound=false;
+
+		for (size_t i=0;i<pList->size()-1;i++) {
+			for (size_t j=0;j<(*pList)[i].ParameterList.size();j++) {
+				if (::lstrcmpiW((*pList)[i].ParameterList[j].pszParameter,it->pszKeyword)==0) {
+					fFound=true;
+					break;
+				}
+			}
+		}
+
+		if (!fFound) {
+			ParameterInfo Info;
+
+			Info.pszParameter=it->pszKeyword;
+			Info.pszText=it->pszDescription;
+			Group.ParameterList.push_back(Info);
+		}
+	}
 
 	return true;
 }
@@ -77,20 +180,20 @@ bool CVariableStringMap::InputParameter(HWND hDlg,int EditID,const POINT &MenuPo
 		const ParameterGroup &Group=GroupList[i];
 		HMENU hmenu;
 
-		if (Group.pszText!=nullptr) {
+		if (!Group.Text.empty()) {
 			hmenu=::CreatePopupMenu();
 			::AppendMenu(hmenuRoot,MF_POPUP | MF_STRING | MF_ENABLED,
 						 reinterpret_cast<UINT_PTR>(hmenu),
-						 Group.pszText);
+						 Group.Text.c_str());
 		} else {
 			hmenu=hmenuRoot;
 		}
 
-		for (int j=0;j<Group.ParameterCount;j++) {
-			const ParameterInfo &Param=Group.pParameterList[j];
+		for (int j=0;j<(int)Group.ParameterList.size();j++) {
+			const ParameterInfo &Param=Group.ParameterList[j];
 
 			TCHAR szText[128];
-			StdUtil::snprintf(szText,lengthof(szText),TEXT("%s\t%s"),
+			StdUtil::snprintf(szText,lengthof(szText),TEXT("%s\t%%%s%%"),
 							  Param.pszText,Param.pszParameter);
 			::AppendMenu(hmenu,MF_STRING | MF_ENABLED,(i<<10)|(j+1),szText);
 		}
@@ -105,19 +208,22 @@ bool CVariableStringMap::InputParameter(HWND hDlg,int EditID,const POINT &MenuPo
 	const int ParamIndex=(Command&0x3FF)-1;
 	if (GroupIndex>=(int)GroupList.size()
 			|| ParamIndex<0
-			|| ParamIndex>=GroupList[GroupIndex].ParameterCount)
+			|| ParamIndex>=(int)GroupList[GroupIndex].ParameterList.size())
 		return false;
-	const ParameterInfo &Param=GroupList[GroupIndex].pParameterList[ParamIndex];
+	String Param;
+	Param=L"%";
+	Param+=GroupList[GroupIndex].ParameterList[ParamIndex].pszParameter;
+	Param+=L"%";
 	DWORD Start,End;
 	::SendDlgItemMessage(hDlg,EditID,EM_GETSEL,
 		reinterpret_cast<WPARAM>(&Start),reinterpret_cast<LPARAM>(&End));
 	::SendDlgItemMessage(hDlg,EditID,EM_REPLACESEL,
-		TRUE,reinterpret_cast<LPARAM>(Param.pszParameter));
+		TRUE,reinterpret_cast<LPARAM>(Param.c_str()));
 	::SetFocus(::GetDlgItem(hDlg,EditID));
 	if (End<Start)
 		Start=End;
 	::SendDlgItemMessage(hDlg,EditID,EM_SETSEL,
-		Start,Start+::lstrlen(Param.pszParameter));
+		Start,Start+Param.length());
 
 	return true;
 }
@@ -220,7 +326,7 @@ bool CEventVariableStringMap::BeginFormat()
 }
 
 
-bool CEventVariableStringMap::GetString(LPCWSTR pszKeyword,String *pString)
+bool CEventVariableStringMap::GetLocalString(LPCWSTR pszKeyword,String *pString)
 {
 	if (::lstrcmpi(pszKeyword,TEXT("channel-name"))==0) {
 		*pString=m_EventInfo.Channel.GetName();
@@ -340,124 +446,143 @@ bool CEventVariableStringMap::GetParameterList(ParameterGroupList *pList) const
 
 	static const ParameterInfo DateTimeParams[] =
 	{
-		{TEXT("%date%"),					TEXT("年月日")},
-		{TEXT("%year%"),					TEXT("年")},
-		{TEXT("%year2%"),					TEXT("年(下2桁)")},
-		{TEXT("%month%"),					TEXT("月")},
-		{TEXT("%month2%"),					TEXT("月(2桁)")},
-		{TEXT("%day%"),						TEXT("日")},
-		{TEXT("%day2%"),					TEXT("日(2桁)")},
-		{TEXT("%time%"),					TEXT("時刻(時+分+秒)")},
-		{TEXT("%hour%"),					TEXT("時")},
-		{TEXT("%hour2%"),					TEXT("時(2桁)")},
-		{TEXT("%minute%"),					TEXT("分")},
-		{TEXT("%minute2%"),					TEXT("分(2桁)")},
-		{TEXT("%second%"),					TEXT("秒")},
-		{TEXT("%second2%"),					TEXT("秒(2桁)")},
-		{TEXT("%day-of-week%"),				TEXT("曜日(漢字)")},
+		{TEXT("date"),					TEXT("年月日")},
+		{TEXT("year"),					TEXT("年")},
+		{TEXT("year2"),					TEXT("年(下2桁)")},
+		{TEXT("month"),					TEXT("月")},
+		{TEXT("month2"),				TEXT("月(2桁)")},
+		{TEXT("day"),					TEXT("日")},
+		{TEXT("day2"),					TEXT("日(2桁)")},
+		{TEXT("time"),					TEXT("時刻(時+分+秒)")},
+		{TEXT("hour"),					TEXT("時")},
+		{TEXT("hour2"),					TEXT("時(2桁)")},
+		{TEXT("minute"),				TEXT("分")},
+		{TEXT("minute2"),				TEXT("分(2桁)")},
+		{TEXT("second"),				TEXT("秒")},
+		{TEXT("second2"),				TEXT("秒(2桁)")},
+		{TEXT("day-of-week"),			TEXT("曜日(漢字)")},
 	};
 
 	static const ParameterInfo StartTimeParams[] =
 	{
-		{TEXT("%start-date%"),				TEXT("年月日")},
-		{TEXT("%start-year%"),				TEXT("年")},
-		{TEXT("%start-year2%"),				TEXT("年(下2桁)")},
-		{TEXT("%start-month%"),				TEXT("月")},
-		{TEXT("%start-month2%"),			TEXT("月(2桁)")},
-		{TEXT("%start-day%"),				TEXT("日")},
-		{TEXT("%start-day2%"),				TEXT("日(2桁)")},
-		{TEXT("%start-time%"),				TEXT("時刻(時+分+秒)")},
-		{TEXT("%start-hour%"),				TEXT("時")},
-		{TEXT("%start-hour2%"),				TEXT("時(2桁)")},
-		{TEXT("%start-minute%"),			TEXT("分")},
-		{TEXT("%start-minute2%"),			TEXT("分(2桁)")},
-		{TEXT("%start-second%"),			TEXT("秒")},
-		{TEXT("%start-second2%"),			TEXT("秒(2桁)")},
-		{TEXT("%start-day-of-week%"),		TEXT("曜日(漢字)")},
+		{TEXT("start-date"),			TEXT("年月日")},
+		{TEXT("start-year"),			TEXT("年")},
+		{TEXT("start-year2"),			TEXT("年(下2桁)")},
+		{TEXT("start-month"),			TEXT("月")},
+		{TEXT("start-month2"),			TEXT("月(2桁)")},
+		{TEXT("start-day"),				TEXT("日")},
+		{TEXT("start-day2"),			TEXT("日(2桁)")},
+		{TEXT("start-time"),			TEXT("時刻(時+分+秒)")},
+		{TEXT("start-hour"),			TEXT("時")},
+		{TEXT("start-hour2"),			TEXT("時(2桁)")},
+		{TEXT("start-minute"),			TEXT("分")},
+		{TEXT("start-minute2"),			TEXT("分(2桁)")},
+		{TEXT("start-second"),			TEXT("秒")},
+		{TEXT("start-second2"),			TEXT("秒(2桁)")},
+		{TEXT("start-day-of-week"),		TEXT("曜日(漢字)")},
 	};
 
 	static const ParameterInfo EndTimeParams[] =
 	{
-		{TEXT("%end-date%"),				TEXT("年月日")},
-		{TEXT("%end-year%"),				TEXT("年")},
-		{TEXT("%end-year2%"),				TEXT("年(下2桁)")},
-		{TEXT("%end-month%"),				TEXT("月")},
-		{TEXT("%end-month2%"),				TEXT("月(2桁)")},
-		{TEXT("%end-day%"),					TEXT("日")},
-		{TEXT("%end-day2%"),				TEXT("日(2桁)")},
-		{TEXT("%end-time%"),				TEXT("時刻(時+分+秒)")},
-		{TEXT("%end-hour%"),				TEXT("時")},
-		{TEXT("%end-hour2%"),				TEXT("時(2桁)")},
-		{TEXT("%end-minute%"),				TEXT("分")},
-		{TEXT("%end-minute2%"),				TEXT("分(2桁)")},
-		{TEXT("%end-second%"),				TEXT("秒")},
-		{TEXT("%end-second2%"),				TEXT("秒(2桁)")},
-		{TEXT("%end-day-of-week%"),			TEXT("曜日(漢字)")},
+		{TEXT("end-date"),				TEXT("年月日")},
+		{TEXT("end-year"),				TEXT("年")},
+		{TEXT("end-year2"),				TEXT("年(下2桁)")},
+		{TEXT("end-month"),				TEXT("月")},
+		{TEXT("end-month2"),			TEXT("月(2桁)")},
+		{TEXT("end-day"),				TEXT("日")},
+		{TEXT("end-day2"),				TEXT("日(2桁)")},
+		{TEXT("end-time"),				TEXT("時刻(時+分+秒)")},
+		{TEXT("end-hour"),				TEXT("時")},
+		{TEXT("end-hour2"),				TEXT("時(2桁)")},
+		{TEXT("end-minute"),			TEXT("分")},
+		{TEXT("end-minute2"),			TEXT("分(2桁)")},
+		{TEXT("end-second"),			TEXT("秒")},
+		{TEXT("end-second2"),			TEXT("秒(2桁)")},
+		{TEXT("end-day-of-week"),		TEXT("曜日(漢字)")},
 	};
 
 	static const ParameterInfo TotTimeParams[] =
 	{
-		{TEXT("%tot-date%"),				TEXT("年月日")},
-		{TEXT("%tot-year%"),				TEXT("年")},
-		{TEXT("%tot-year2%"),				TEXT("年(下2桁)")},
-		{TEXT("%tot-month%"),				TEXT("月")},
-		{TEXT("%tot-month2%"),				TEXT("月(2桁)")},
-		{TEXT("%tot-day%"),					TEXT("日")},
-		{TEXT("%tot-day2%"),				TEXT("日(2桁)")},
-		{TEXT("%tot-time%"),				TEXT("時刻(時+分+秒)")},
-		{TEXT("%tot-hour%"),				TEXT("時")},
-		{TEXT("%tot-hour2%"),				TEXT("時(2桁)")},
-		{TEXT("%tot-minute%"),				TEXT("分")},
-		{TEXT("%tot-minute2%"),				TEXT("分(2桁)")},
-		{TEXT("%tot-second%"),				TEXT("秒")},
-		{TEXT("%tot-second2%"),				TEXT("秒(2桁)")},
-		{TEXT("%tot-day-of-week%"),			TEXT("曜日(漢字)")},
+		{TEXT("tot-date"),				TEXT("年月日")},
+		{TEXT("tot-year"),				TEXT("年")},
+		{TEXT("tot-year2"),				TEXT("年(下2桁)")},
+		{TEXT("tot-month"),				TEXT("月")},
+		{TEXT("tot-month2"),			TEXT("月(2桁)")},
+		{TEXT("tot-day"),				TEXT("日")},
+		{TEXT("tot-day2"),				TEXT("日(2桁)")},
+		{TEXT("tot-time"),				TEXT("時刻(時+分+秒)")},
+		{TEXT("tot-hour"),				TEXT("時")},
+		{TEXT("tot-hour2"),				TEXT("時(2桁)")},
+		{TEXT("tot-minute"),			TEXT("分")},
+		{TEXT("tot-minute2"),			TEXT("分(2桁)")},
+		{TEXT("tot-second"),			TEXT("秒")},
+		{TEXT("tot-second2"),			TEXT("秒(2桁)")},
+		{TEXT("tot-day-of-week"),		TEXT("曜日(漢字)")},
 	};
 
 	static const ParameterInfo EventDurationParams[] =
 	{
-		{TEXT("%event-duration-hour%"),		TEXT("時間")},
-		{TEXT("%event-duration-hour2%"),	TEXT("時間(2桁)")},
-		{TEXT("%event-duration-min%"),		TEXT("分")},
-		{TEXT("%event-duration-min2%"),		TEXT("分(2桁)")},
-		{TEXT("%event-duration-sec%"),		TEXT("秒")},
-		{TEXT("%event-duration-sec2%"),		TEXT("秒(2桁)")},
+		{TEXT("event-duration-hour"),	TEXT("時間")},
+		{TEXT("event-duration-hour2"),	TEXT("時間(2桁)")},
+		{TEXT("event-duration-min"),	TEXT("分")},
+		{TEXT("event-duration-min2"),	TEXT("分(2桁)")},
+		{TEXT("event-duration-sec"),	TEXT("秒")},
+		{TEXT("event-duration-sec2"),	TEXT("秒(2桁)")},
 	};
 
 	static const ParameterInfo EventParams[] =
 	{
-		{TEXT("%channel-name%"),			TEXT("チャンネル名")},
-		{TEXT("%channel-no%"),				TEXT("チャンネル番号")},
-		{TEXT("%channel-no2%"),				TEXT("チャンネル番号(2桁)")},
-		{TEXT("%channel-no3%"),				TEXT("チャンネル番号(3桁)")},
-		{TEXT("%event-name%"),				TEXT("番組名")},
-		{TEXT("%event-title%"),				TEXT("番組タイトル")},
-		{TEXT("%event-mark%"),				TEXT("番組情報マーク")},
-		{TEXT("%event-id%"),				TEXT("イベントID")},
-		{TEXT("%service-name%"),			TEXT("サービス名")},
-		{TEXT("%service-id%"),				TEXT("サービスID")},
-		{TEXT("%tuner-filename%"),			TEXT("チューナーファイル名")},
-		{TEXT("%tuner-name%"),				TEXT("チューナー名")},
+		{TEXT("channel-name"),			TEXT("チャンネル名")},
+		{TEXT("channel-no"),			TEXT("チャンネル番号")},
+		{TEXT("channel-no2"),			TEXT("チャンネル番号(2桁)")},
+		{TEXT("channel-no3"),			TEXT("チャンネル番号(3桁)")},
+		{TEXT("event-name"),			TEXT("番組名")},
+		{TEXT("event-title"),			TEXT("番組タイトル")},
+		{TEXT("event-mark"),			TEXT("番組情報マーク")},
+		{TEXT("event-id"),				TEXT("イベントID")},
+		{TEXT("service-name"),			TEXT("サービス名")},
+		{TEXT("service-id"),			TEXT("サービスID")},
+		{TEXT("tuner-filename"),		TEXT("チューナーファイル名")},
+		{TEXT("tuner-name"),			TEXT("チューナー名")},
+	};
+
+	static const ParameterInfo SeparatorParams[] =
+	{
+		{TEXT("sep-hyphen"),			TEXT("-(ハイフン)区切り")},
+		{TEXT("sep-slash"),				TEXT("/(スラッシュ)区切り")},
+		{TEXT("sep-backslash"),			TEXT("\\(バックスラッシュ)区切り")},
 	};
 
 	static const struct {
-		ParameterGroup Group;
+		LPCTSTR pszText;
+		const ParameterInfo *pList;
+		int ListLength;
 		unsigned int Flags;
 	} GroupList[] = {
-		{{TEXT("現在日時"),		DateTimeParams,			lengthof(DateTimeParams)},		FLAG_NO_CURRENT_TIME},
-		{{TEXT("番組開始日時"),	StartTimeParams,		lengthof(StartTimeParams)},		0},
-		{{TEXT("番組終了日時"),	EndTimeParams,			lengthof(EndTimeParams)},		0},
-		{{TEXT("TOT日時"),		TotTimeParams,			lengthof(TotTimeParams)},		FLAG_NO_TOT_TIME},
-		{{TEXT("番組の長さ"),	EventDurationParams,	lengthof(EventDurationParams)},	0},
-		{{nullptr,				EventParams,			lengthof(EventParams)},			0},
+		{TEXT("現在日時"),		DateTimeParams,			lengthof(DateTimeParams),		FLAG_NO_CURRENT_TIME},
+		{TEXT("番組開始日時"),	StartTimeParams,		lengthof(StartTimeParams),		0},
+		{TEXT("番組終了日時"),	EndTimeParams,			lengthof(EndTimeParams),		0},
+		{TEXT("TOT日時"),		TotTimeParams,			lengthof(TotTimeParams),		FLAG_NO_TOT_TIME},
+		{TEXT("番組の長さ"),	EventDurationParams,	lengthof(EventDurationParams),	0},
+		{TEXT("区切り"),		SeparatorParams,		lengthof(SeparatorParams),		FLAG_NO_SEPARATOR},
+		{nullptr,				EventParams,			lengthof(EventParams),			0},
 	};
 
-	pList->clear();
-
 	for (int i=0;i<lengthof(GroupList);i++) {
-		if ((GroupList[i].Flags & m_Flags)==0)
-			pList->push_back(GroupList[i].Group);
+		if ((GroupList[i].Flags & m_Flags)==0) {
+			pList->push_back(ParameterGroup());
+			ParameterGroup &Group=pList->back();
+
+			if (GroupList[i].pszText!=nullptr)
+				Group.Text=GroupList[i].pszText;
+			Group.ParameterList.insert(
+				Group.ParameterList.begin(),
+				GroupList[i].pList,
+				GroupList[i].pList+GroupList[i].ListLength);
+		}
 	}
+
+	CBasicVariableStringMap::GetParameterList(pList);
 
 	return true;
 }

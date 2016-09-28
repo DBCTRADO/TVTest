@@ -130,6 +130,7 @@
 	  ・MESSAGE_GETVARSTRINGCONTEXT
 	  ・MESSAGE_FREEVARSTRINGCONTEXT
 	  ・MESSAGE_FORMATVARSTRING
+	  ・MESSAGE_REGISTERVARIABLE
 	・以下のイベントを追加した
 	  ・EVENT_FILTERGRAPH_INITIALIZE
 	  ・EVENT_FILTERGRAPH_INITIALIZED
@@ -468,6 +469,7 @@ enum {
 	MESSAGE_GETVARSTRINGCONTEXT,		// 変数文字列のコンテキストを取得
 	MESSAGE_FREEVARSTRINGCONTEXT,		// 変数文字列のコンテキストを解放
 	MESSAGE_FORMATVARSTRING,			// 変数文字列を使って文字列をフォーマット
+	MESSAGE_REGISTERVARIABLE,			// 変数を登録
 #endif
 	MESSAGE_TRAILER
 };
@@ -537,6 +539,7 @@ enum {
 	EVENT_PANELITEM_NOTIFY,						// パネル項目の通知
 	EVENT_FAVORITESCHANGED,						// お気に入りチャンネルが変更された
 	EVENT_1SEGMODECHANGED,						// ワンセグモードが変わった
+	EVENT_GETVARIABLE,							// 変数の取得
 #endif
 	EVENT_TRAILER
 };
@@ -3120,6 +3123,73 @@ inline bool MsgFormatVarString(PluginParam *pParam,VarStringFormatInfo *pInfo) {
 	return (*pParam->Callback)(pParam,MESSAGE_FORMATVARSTRING,(LPARAM)pInfo,0)!=FALSE;
 }
 
+// 変数登録のフラグ
+enum {
+	REGISTER_VARIABLE_FLAG_OVERRIDE = 0x00000001	// デフォルトの変数を上書き
+};
+
+// 変数登録の情報
+struct RegisterVariableInfo {
+	DWORD Size;				// 構造体のサイズ
+	DWORD Flags;			// フラグ(REGISTER_VARIABLE_FLAG_*)
+	LPCWSTR pszKeyword;		// 識別子
+	LPCWSTR pszDescription;	// 説明文
+	LPCWSTR pszValue;		// 変数の値(NULL で動的に取得)
+};
+
+// 変数取得の情報
+struct GetVariableInfo {
+	LPCWSTR pszKeyword;		// 識別子
+	LPWSTR pszValue;		// 値
+};
+
+// 変数を登録
+// 変数を登録すると、TVTest の各所の変数文字列で利用できるようになります。
+// 変数の識別子は半角のアルファベットと数字、-記号のみ使用してください。
+// TVTest で既に定義されている識別子と同じものを指定した場合、
+// Flags に REGISTER_VARIABLE_FLAG_OVERRIDE が設定されている場合は
+// プラグインで登録されたものが優先され、そうでない場合は TVTest での定義が優先されます。
+/*
+	// 変数 lucky-number を登録します。
+	// 変数文字列の中で "%lucky-number%" を使うと、"777" に置き換えられます。
+	RegisterVariableInfo Info;
+	Info.Size           = sizeof(RegisterVariableInfo);
+	Info.Flags          = 0;
+	Info.pszKeyword     = L"lucky-number";
+	Info.pszDescription = L"幸運の番号";
+	Info.pszValue       = L"777";
+	MsgRegisterVariable(pParam, &Info);
+*/
+// 変数の値が頻繁に変わるような場合は、動的に取得されるようにします。
+// pszValue に NULL を指定すると、変数が必要になった段階で
+// EVENT_GETVARIABLE が呼ばれるので、そこで値を返します。
+/*
+	// 変数の値が動的に取得されるようにする例
+	RegisterVariableInfo Info;
+	Info.Size           = sizeof(RegisterVariableInfo);
+	Info.Flags          = 0;
+	Info.pszKeyword     = L"unlucky-number";
+	Info.pszDescription = L"不幸の番号";
+	Info.pszValue       = NULL;
+	MsgRegisterVariable(pParam, &Info);
+
+	// EVENT_GETVARIABLE で値を返します。
+	bool OnGetVariable(GetVariableInfo *pInfo)
+	{
+		if (lstrcmpiW(pInfo->pszKeyword, L"unlucky-number") == 0) {
+			LPCWSTR pszValue = L"4949";	// 返す値
+			DWORD Size = (lstrlenW(pszValue) + 1) * sizeof(WCHAR);
+			pInfo->pszValue = static_cast<LPWSTR>(MsgMemoryAlloc(pParam, Size));
+			memcpy(pInfo->pszValue, pszValue, Size);
+			return true;
+		}
+		return false;
+	}
+*/
+inline bool MsgRegisterVariable(PluginParam *pParam,const RegisterVariableInfo *pInfo) {
+	return (*pParam->Callback)(pParam,MESSAGE_REGISTERVARIABLE,(LPARAM)pInfo,0)!=FALSE;
+}
+
 #endif	// TVTEST_PLUGIN_VERSION>=TVTEST_PLUGIN_VERSION_(0,0,14)
 
 
@@ -3658,6 +3728,10 @@ public:
 		pInfo->Size=sizeof(VarStringFormatInfo);
 		return MsgFormatVarString(m_pParam,pInfo);
 	}
+	bool RegisterVariable(RegisterVariableInfo *pInfo) {
+		pInfo->Size=sizeof(RegisterVariableInfo);
+		return MsgRegisterVariable(m_pParam,pInfo);
+	}
 #endif
 };
 
@@ -3836,6 +3910,8 @@ protected:
 	virtual void OnFavoritesChanged() {}
 	// ワンセグモードが変わった
 	virtual void On1SegModeChanged(bool f1SegMode) {}
+	// 変数を取得
+	virtual bool OnGetVariable(GetVariableInfo *pInfo) { return false; }
 #endif
 
 public:
@@ -3933,6 +4009,8 @@ public:
 		case EVENT_1SEGMODECHANGED:
 			On1SegModeChanged(lParam1!=0);
 			return 0;
+		case EVENT_GETVARIABLE:
+			return OnGetVariable((GetVariableInfo*)lParam1);
 #endif
 		}
 		return 0;

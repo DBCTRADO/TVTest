@@ -1281,17 +1281,13 @@ bool CUICore::UpdateTitle()
 	CTitleStringMap::EventInfo EventInfo;
 	TVTest::String TitleText,WindowText;
 
-	if (m_App.Core.GetVariableStringEventInfo(&EventInfo)
-			&& !EventInfo.ServiceName.empty()) {
-		CTitleStringMap Map(m_App,&EventInfo);
-		TVTest::FormatVariableString(&Map,pszTitleTextFormat,&TitleText);
-		RemoveMultipleSpaces(TitleText);
-		if (pszWindowTextFormat!=nullptr) {
-			TVTest::FormatVariableString(&Map,pszWindowTextFormat,&WindowText);
-			RemoveMultipleSpaces(WindowText);
-		}
-	} else {
-		TitleText=APP_NAME;
+	m_App.Core.GetVariableStringEventInfo(&EventInfo);
+	CTitleStringMap Map(m_App,&EventInfo);
+	TVTest::FormatVariableString(&Map,pszTitleTextFormat,&TitleText);
+	RemoveMultipleSpaces(TitleText);
+	if (pszWindowTextFormat!=nullptr) {
+		TVTest::FormatVariableString(&Map,pszWindowTextFormat,&WindowText);
+		RemoveMultipleSpaces(WindowText);
 	}
 
 	m_pSkin->SetTitleText(
@@ -1556,12 +1552,9 @@ CUICore::CTitleStringMap::CTitleStringMap(CAppMain &App,const EventInfo *pInfo)
 }
 
 
-bool CUICore::CTitleStringMap::GetString(LPCWSTR pszKeyword,TVTest::String *pString)
+bool CUICore::CTitleStringMap::GetLocalString(LPCWSTR pszKeyword,TVTest::String *pString)
 {
-	if (::lstrcmpi(pszKeyword,TEXT("event-sep"))==0) {
-		if (!m_EventInfo.Event.m_EventName.empty())
-			*pString=TEXT("/");
-	} else if (::lstrcmpi(pszKeyword,TEXT("event-time"))==0) {
+	if (::lstrcmpi(pszKeyword,TEXT("event-time"))==0) {
 		TCHAR szTime[EpgUtil::MAX_EVENT_TIME_LENGTH+1];
 		if (m_EventInfo.Event.m_bValidStartTime
 				&& EpgUtil::FormatEventTime(
@@ -1573,7 +1566,7 @@ bool CUICore::CTitleStringMap::GetString(LPCWSTR pszKeyword,TVTest::String *pStr
 		if (m_App.RecordManager.IsRecording())
 			*pString=TEXT("●");
 	} else {
-		return CEventVariableStringMap::GetString(pszKeyword,pString);
+		return CEventVariableStringMap::GetLocalString(pszKeyword,pString);
 	}
 	return true;
 }
@@ -1585,16 +1578,15 @@ bool CUICore::CTitleStringMap::GetParameterList(ParameterGroupList *pList) const
 		return false;
 
 	static const ParameterInfo ParameterList[] = {
-		{TEXT("%event-time%"),	TEXT("番組開始～終了時間")},
-		{TEXT("%event-sep%"),	TEXT("番組情報区切り")},
-		{TEXT("%rec-circle%"),	TEXT("録画●")},
+		{TEXT("event-time"),	TEXT("番組開始～終了時間")},
+		{TEXT("rec-circle"),	TEXT("録画●")},
 	};
 
-	static const ParameterGroup Group = {
-		nullptr,ParameterList,lengthof(ParameterList)
-	};
-
-	pList->push_back(Group);
+	pList->push_back(ParameterGroup());
+	pList->back().ParameterList.insert(
+		pList->back().ParameterList.end(),
+		ParameterList,
+		ParameterList+lengthof(ParameterList));
 
 	return true;
 }

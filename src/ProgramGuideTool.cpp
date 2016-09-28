@@ -17,12 +17,13 @@ class CEpgVariableStringMap : public TVTest::CEventVariableStringMap
 public:
 	CEpgVariableStringMap();
 	CEpgVariableStringMap(const EventInfo &Info);
-	bool GetString(LPCWSTR pszKeyword,TVTest::String *pString) override;
 	bool NormalizeString(TVTest::String *pString) const override { return false; }
 	bool GetParameterList(ParameterGroupList *pList) const override;
 	const TVTest::String &GetiEpgFileName() const { return m_iEpgFileName; }
 
 private:
+	bool GetLocalString(LPCWSTR pszKeyword,TVTest::String *pString) override;
+
 	static const ParameterInfo m_EpgParameterList[];
 
 	TVTest::String m_iEpgFileName;
@@ -30,13 +31,13 @@ private:
 
 
 const CEpgVariableStringMap::ParameterInfo CEpgVariableStringMap::m_EpgParameterList[] = {
-//	{TEXT("%eid%"),				TEXT("イベントID")},
-	{TEXT("%nid%"),				TEXT("ネットワークID")},
-	{TEXT("%tsid%"),			TEXT("ストリームID")},
-//	{TEXT("%sid%"),				TEXT("サービスID")},
-	{TEXT("%tvpid%"),			TEXT("iEPGファイル")},
-	{TEXT("%duration-sec%"),	TEXT("番組の長さ(秒単位)")},
-	{TEXT("%duration-min%"),	TEXT("番組の長さ(分単位)")},
+//	{TEXT("eid"),			TEXT("イベントID")},
+	{TEXT("nid"),			TEXT("ネットワークID")},
+	{TEXT("tsid"),			TEXT("ストリームID")},
+//	{TEXT("sid"),			TEXT("サービスID")},
+	{TEXT("tvpid"),			TEXT("iEPGファイル")},
+	{TEXT("duration-sec"),	TEXT("番組の長さ(秒単位)")},
+	{TEXT("duration-min"),	TEXT("番組の長さ(分単位)")},
 };
 
 
@@ -51,7 +52,7 @@ CEpgVariableStringMap::CEpgVariableStringMap(const EventInfo &Info)
 }
 
 
-bool CEpgVariableStringMap::GetString(LPCWSTR pszKeyword,TVTest::String *pString)
+bool CEpgVariableStringMap::GetLocalString(LPCWSTR pszKeyword,TVTest::String *pString)
 {
 	if (::lstrcmpi(pszKeyword,TEXT("tvpid"))==0) {
 		if (m_iEpgFileName.empty()) {
@@ -75,7 +76,7 @@ bool CEpgVariableStringMap::GetString(LPCWSTR pszKeyword,TVTest::String *pString
 	} else if (::lstrcmpi(pszKeyword,TEXT("duration-min"))==0) {
 		TVTest::StringUtility::Format(*pString,TEXT("%d"),(m_EventInfo.Event.m_Duration+59)/60);
 	} else {
-		return CEventVariableStringMap::GetString(pszKeyword,pString);
+		return CEventVariableStringMap::GetLocalString(pszKeyword,pString);
 	}
 
 	return true;
@@ -87,11 +88,11 @@ bool CEpgVariableStringMap::GetParameterList(ParameterGroupList *pList) const
 	if (!CEventVariableStringMap::GetParameterList(pList))
 		return false;
 
-	static const ParameterGroup Group = {
-		nullptr,m_EpgParameterList,lengthof(m_EpgParameterList)
-	};
-
-	pList->push_back(Group);
+	pList->push_back(ParameterGroup());
+	pList->back().ParameterList.insert(
+		pList->back().ParameterList.end(),
+		m_EpgParameterList,
+		m_EpgParameterList+lengthof(m_EpgParameterList));
 
 	return true;
 }

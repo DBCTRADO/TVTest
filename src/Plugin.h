@@ -6,6 +6,7 @@
 #include "TVTestPlugin.h"
 #include "AppEvent.h"
 #include "Options.h"
+#include "VariableManager.h"
 #include "MediaData.h"
 #include "BonTsEngine/Exception.h"
 #include "BonTsEngine/TsUtilClass.h"
@@ -213,6 +214,16 @@ private:
 		static bool m_fInitialized;
 	};
 
+	class CGetVariable : public TVTest::CVariableManager::IGetVariable
+	{
+	public:
+		CGetVariable(CPlugin *pPlugin);
+		bool GetVariable(LPCWSTR pszKeyword,TVTest::String *pValue) override;
+
+	private:
+		CPlugin *m_pPlugin;
+	};
+
 	HMODULE m_hLib;
 	TVTest::String m_FileName;
 	TVTest::PluginParam m_PluginParam;
@@ -238,6 +249,7 @@ private:
 	std::vector<TVTest::String> m_ControllerList;
 	std::vector<StatusItem*> m_StatusItemList;
 	std::vector<PanelItem*> m_PanelItemList;
+	CGetVariable m_GetVariable;
 
 	static HWND m_hwndMessage;
 	static UINT m_MessageCode;

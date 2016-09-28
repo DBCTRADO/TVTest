@@ -1070,6 +1070,7 @@
     <ClCompile Include="UICore.cpp" />
     <ClCompile Include="UISkin.cpp" />
     <ClCompile Include="Util.cpp" />
+    <ClCompile Include="VariableManager.cpp" />
     <ClCompile Include="VariableString.cpp" />
     <ClCompile Include="VideoDecoderOptions.cpp" />
     <ClCompile Include="VideoOptions.cpp" />
@@ -1268,6 +1269,7 @@
     <ClInclude Include="UICore.h" />
     <ClInclude Include="UISkin.h" />
     <ClInclude Include="Util.h" />
+    <ClInclude Include="VariableManager.h" />
     <ClInclude Include="VariableString.h" />
     <ClInclude Include="VideoDecoderOptions.h" />
     <ClInclude Include="VideoOptions.h" />

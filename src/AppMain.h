@@ -55,6 +55,7 @@
 #include "LogoManager.h"
 #include "EpgCapture.h"
 #include "KeywordSearch.h"
+#include "VariableManager.h"
 #ifndef _DEBUG
 #include "DebugHelper.h"
 #endif
@@ -195,6 +196,7 @@ public:
 	TVTest::CFavoritesMenu FavoritesMenu;
 	TVTest::CKeywordSearch KeywordSearch;
 	CFeaturedEvents FeaturedEvents;
+	TVTest::CVariableManager VariableManager;
 
 	struct {
 		int Space;

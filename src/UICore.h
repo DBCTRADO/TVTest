@@ -39,10 +39,11 @@ public:
 	{
 	public:
 		CTitleStringMap(CAppMain &App,const EventInfo *pInfo=nullptr);
-		bool GetString(LPCWSTR pszKeyword,TVTest::String *pString) override;
 		bool GetParameterList(ParameterGroupList *pList) const override;
 
 	private:
+		bool GetLocalString(LPCWSTR pszKeyword,TVTest::String *pString) override;
+
 		CAppMain &m_App;
 	};
 
