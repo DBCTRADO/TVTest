@@ -582,6 +582,17 @@ inline void MsgMemoryFree(PluginParam *pParam,void *pData) {
 	(*pParam->Callback)(pParam,MESSAGE_MEMORYALLOC,(LPARAM)pData,0);
 }
 
+// 文字列複製
+inline LPWSTR MsgStringDuplicate(PluginParam *pParam,LPCWSTR pszString) {
+	if (pszString==NULL)
+		return NULL;
+	DWORD Size=(::lstrlenW(pszString)+1)*sizeof(WCHAR);
+	LPWSTR pszDup=(LPWSTR)MsgMemoryAlloc(pParam,Size);
+	if (pszDup!=NULL)
+		::CopyMemory(pszDup,pszString,Size);
+	return pszDup;
+}
+
 // イベントハンドル用コールバックの設定
 // pClientData はコールバックの呼び出し時に渡されます。
 // 一つのプラグインで設定できるコールバック関数は一つだけです。
@@ -3106,11 +3117,8 @@ struct VarStringFormatInfo {
 	{
 		PluginParam *pParam = static_cast<PluginParam*>(pClientData);
 		if (::lstrcmpiW(pszVar, L"my-var") == 0) {
-			LPCWSTR pszMapString = L"replaced string";
-			DWORD Size = (::lstrlenW(pszMapString) + 1) * sizeof(WCHAR);
-			*ppszString = (LPWSTR)MsgMemoryAlloc(pParam, Size);
-			if (*ppszString != NULL)
-				::CopyMemory(*ppszString, pszMapString, Size);
+			LPCWSTR pszMapString = L"replaced string";	// 置き換える文字列
+			*ppszString = MsgStringDuplicate(pParam, pszMapString);
 			return TRUE;
 		}
 		return FALSE;
@@ -3178,9 +3186,7 @@ struct GetVariableInfo {
 	{
 		if (lstrcmpiW(pInfo->pszKeyword, L"unlucky-number") == 0) {
 			LPCWSTR pszValue = L"4949";	// 返す値
-			DWORD Size = (lstrlenW(pszValue) + 1) * sizeof(WCHAR);
-			pInfo->pszValue = static_cast<LPWSTR>(MsgMemoryAlloc(pParam, Size));
-			memcpy(pInfo->pszValue, pszValue, Size);
+			pInfo->pszValue = MsgStringDuplicate(pParam, pszValue);
 			return true;
 		}
 		return false;
@@ -3225,6 +3231,9 @@ public:
 	}
 	void MemoryFree(void *pData) {
 		MsgMemoryFree(m_pParam,pData);
+	}
+	LPWSTR StringDuplicate(LPCWSTR pszString) {
+		return MsgStringDuplicate(m_pParam,pszString);
 	}
 	bool SetEventCallback(EventCallbackFunc Callback,void *pClientData=NULL) {
 		return MsgSetEventCallback(m_pParam,Callback,pClientData);
