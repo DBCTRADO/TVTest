@@ -4,6 +4,7 @@
 #include "AppMain.h"
 #include "DialogUtil.h"
 #include "StyleUtil.h"
+#include "StringUtility.h"
 #include "resource.h"
 #include "Common/DebugDef.h"
 
@@ -22,6 +23,17 @@ static const struct {
 		TEXT("%rec-circle% %service-name% %sep-slash% %event-name% %sep-hyphen% ") APP_NAME
 	},
 };
+
+
+// 旧仕様互換用
+// ver.0.9.0 開発途中の変更なので長く残さなくていい
+static void TitleFormatMakeCompatible(TVTest::String &Str)
+{
+	if (Str.find(L"%event-sep%")!=TVTest::String::npos) {
+		TVTest::StringUtility::Replace(Str,L"%event-sep%",L"%sep-slash%");
+		TVTest::StringUtility::Replace(Str,L"- TVTest",L"%sep-hyphen% " APP_NAME);
+	}
+}
 
 
 CViewOptions::CViewOptions()
@@ -91,9 +103,13 @@ bool CViewOptions::ReadSettings(CSettings &Settings)
 	Settings.Read(TEXT("HideCursor"),&m_fHideCursor);
 	Settings.Read(TEXT("UseLogoIcon"),&m_fUseLogoIcon);
 	Settings.Read(TEXT("TitleTextFormat"),&m_TitleTextFormat);
+	TitleFormatMakeCompatible(m_TitleTextFormat);
 	Settings.Read(TEXT("MinimizedTitleTextFormat"),&m_MinimizedTitleTextFormat);
+	TitleFormatMakeCompatible(m_MinimizedTitleTextFormat);
 	Settings.Read(TEXT("MaximizedTitleTextFormat"),&m_MaximizedTitleTextFormat);
+	TitleFormatMakeCompatible(m_MaximizedTitleTextFormat);
 	Settings.Read(TEXT("TaskbarTitleTextFormat"),&m_TaskbarTitleTextFormat);
+	TitleFormatMakeCompatible(m_TaskbarTitleTextFormat);
 	Settings.Read(TEXT("EnableTitleBarFont"),&m_fEnableTitleBarFont);
 	TVTest::StyleUtil::ReadFontSettings(Settings,TEXT("TitleBarFont"),&m_TitleBarFont);
 	Settings.Read(TEXT("ShowLogo"),&m_fShowLogo);
