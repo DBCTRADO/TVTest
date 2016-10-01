@@ -5177,6 +5177,12 @@ void CMainWindow::OnStartupDone()
 }
 
 
+void CMainWindow::OnVariableChanged()
+{
+	m_pCore->UpdateTitle();
+}
+
+
 void CMainWindow::ShowAudioOSD()
 {
 	if (m_App.OSDOptions.IsOSDEnabled(COSDOptions::OSD_AUDIO)) {

@@ -620,6 +620,7 @@ private:
 	void OnStereoModeChanged(CAudioDecFilter::StereoMode Mode) override;
 	void OnAudioStreamChanged(int Stream) override;
 	void OnStartupDone() override;
+	void OnVariableChanged() override;
 
 // COSDManager::CEventHandler
 	bool GetOSDClientInfo(COSDManager::OSDClientInfo *pInfo) override;
