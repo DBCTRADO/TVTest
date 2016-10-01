@@ -232,6 +232,12 @@ void CAppEventManager::OnFavoritesChanged()
 }
 
 
+void CAppEventManager::OnVariableChanged()
+{
+	CALL_HANDLERS(OnVariableChanged());
+}
+
+
 
 
 CAppEventHandler::~CAppEventHandler()

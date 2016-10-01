@@ -2916,15 +2916,18 @@ LRESULT CPlugin::OnCallback(TVTest::PluginParam *pParam,UINT Message,LPARAM lPar
 					|| IsStringEmpty(pInfo->pszKeyword))
 				return FALSE;
 
+			CAppMain &App=GetAppClass();
 			unsigned int Flags=0;
 			if ((pInfo->Flags & TVTest::REGISTER_VARIABLE_FLAG_OVERRIDE)!=0)
 				Flags|=TVTest::CVariableManager::FLAG_OVERRIDE;
 
-			return GetAppClass().VariableManager.RegisterVariable(
-				pInfo->pszKeyword,pInfo->pszValue,
-				pInfo->pszValue==nullptr ? &m_GetVariable : nullptr,
-				pInfo->pszDescription,
-				Flags);
+			if (!App.VariableManager.RegisterVariable(
+					pInfo->pszKeyword,pInfo->pszValue,
+					pInfo->pszValue==nullptr ? &m_GetVariable : nullptr,
+					pInfo->pszDescription,
+					Flags))
+				return FALSE;
+			App.AppEventManager.OnVariableChanged();
 		}
 		return TRUE;
 
