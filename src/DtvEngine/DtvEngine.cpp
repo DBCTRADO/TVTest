@@ -774,7 +774,7 @@ bool CDtvEngine::BuildMediaViewer(HWND hwndHost, HWND hwndMessage,
 		SetError(m_MediaViewer.GetLastErrorException());
 	ConnectDecoder(DECODER_ID_MediaViewer);
 
-	return true;
+	return bOK;
 }
 
 
