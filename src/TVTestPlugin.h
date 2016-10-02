@@ -1384,9 +1384,13 @@ enum SettingType {
 	RecordFolder          録画時の保存先フォルダ              文字列
 
 	ver.0.0.14 以降
-	RecordFileName        録画のファイル名                    文字列
-	CaptureFolder         キャプチャの保存先フォルダ          文字列
-	CaptureFileName       キャプチャのファイル名              文字列
+	RecordFileName        録画のファイル名(※1)               文字列
+	CaptureFolder         キャプチャの保存先フォルダ(※2)     文字列
+	CaptureFileName       キャプチャのファイル名(※1)         文字列
+
+	※1　%event-name% などの変数が含まれている可能性があります。
+	　 　MsgFormatVarString を使って変数を展開できます。
+	※2　相対パスの可能性があります。その場合実行ファイルの場所が基準です。
 
 	* フォント関係の設定の取得は ver.0.0.14 正式版までに削除されます。
 	* 代わりに MsgGetFont を利用します。
@@ -1455,6 +1459,7 @@ inline DWORD MsgGetSetting(PluginParam *pParam,LPCWSTR pszName,LPWSTR pszString,
 }
 
 // フォントの設定を取得する
+// 現在は使用しません。
 inline bool MsgGetSetting(PluginParam *pParam,LPCWSTR pszName,LOGFONTW *pFont)
 {
 	SettingInfo Info;
@@ -1546,6 +1551,7 @@ enum {
 };
 
 // 録画開始情報
+// EVENT_STARTRECORD で渡されます。
 struct StartRecordInfo {
 	DWORD Size;				// 構造体のサイズ
 	DWORD Flags;			// フラグ(現在未使用)
@@ -2336,6 +2342,7 @@ inline bool MsgRegisterPluginCommand(PluginParam *pParam,const PluginCommandInfo
 }
 
 // プラグインのコマンドの状態を設定する
+// State に PLUGIN_COMMAND_STATE_* の組み合わせを指定します。
 inline bool MsgSetPluginCommandState(PluginParam *pParam,int ID,DWORD State) {
 	return (*pParam->Callback)(pParam,MESSAGE_SETPLUGINCOMMANDSTATE,ID,State)!=FALSE;
 }
@@ -2526,6 +2533,7 @@ enum {
 };
 
 // ステータス項目の通知を行う
+// Type に STATUS_ITEM_NOTIFY_* のいずれかを指定します。
 inline bool MsgStatusItemNotify(PluginParam *pParam,int ID,UINT Type) {
 	return (*pParam->Callback)(pParam,MESSAGE_STATUSITEMNOTIFY,ID,Type)!=FALSE;
 }
@@ -2962,6 +2970,7 @@ struct ShowDialogInfo {
 	POINT Position;					// ダイアログの位置(Flags に SHOW_DIALOG_FLAG_POSITION が指定されている場合に有効)
 };
 
+// ダイアログ表示のフラグ
 enum {
 	SHOW_DIALOG_FLAG_MODELESS = 0x00000001U,	// モードレス
 	SHOW_DIALOG_FLAG_POSITION = 0x00000002U		// 位置指定が有効
@@ -3055,10 +3064,12 @@ inline bool MsgSetVideoStreamCallback(PluginParam *pParam,VideoStreamCallbackFun
 struct VarStringContext;
 
 // 変数文字列のコンテキストを取得
+// 取得したコンテキストは MsgFreeVarStringContext で解放します。
 inline VarStringContext *MsgGetVarStringContext(PluginParam *pParam) {
 	return (VarStringContext*)(*pParam->Callback)(pParam,MESSAGE_GETVARSTRINGCONTEXT,0,0);
 }
 // 変数文字列のコンテキストを解放
+// MsgGetVarStringContext で取得したコンテキストを解放します。
 inline void MsgFreeVarStringContext(PluginParam *pParam,VarStringContext *pContext) {
 	(*pParam->Callback)(pParam,MESSAGE_FREEVARSTRINGCONTEXT,(LPARAM)pContext,0);
 }
@@ -3078,7 +3089,7 @@ struct VarStringFormatInfo {
 	LPCWSTR pszFormat;					// フォーマット文字列
 	const VarStringContext *pContext;	// コンテキスト(NULL で現在のコンテキスト)
 	VarStringMapFunc pMapFunc;			// マップ関数(必要なければ NULL)
-	void *pClientData;					// ユーザー指定の任意データ
+	void *pClientData;					// マップ関数に渡す任意データ
 	LPWSTR pszResult;					// 変換結果の文字列
 };
 
@@ -3089,6 +3100,8 @@ struct VarStringFormatInfo {
 // MsgGetVarStringContext で、その時点のコンテキストを取得できます。
 /*
 	// 現在のコンテキストを取得
+	// (ここでは例のために取得していますが、現在の情報を使うのであれば
+	//  VarStringFormatInfo.pContext を NULL にすればよいです)
 	VarStringContext *pContext = MsgGetVarStringContext(pParam);
 
 	// 文字列をフォーマットする
@@ -3146,6 +3159,7 @@ struct RegisterVariableInfo {
 };
 
 // 変数取得の情報
+// EVENT_GETVARIABLE で渡されます。
 struct GetVariableInfo {
 	LPCWSTR pszKeyword;		// 識別子
 	LPWSTR pszValue;		// 値
@@ -3157,6 +3171,7 @@ struct GetVariableInfo {
 // TVTest で既に定義されている識別子と同じものを指定した場合、
 // Flags に REGISTER_VARIABLE_FLAG_OVERRIDE が設定されている場合は
 // プラグインで登録されたものが優先され、そうでない場合は TVTest での定義が優先されます。
+// 同じ識別子の変数を再登録すると、値が更新されます。
 /*
 	// 変数 lucky-number を登録します。
 	// 変数文字列の中で "%lucky-number%" を使うと、"777" に置き換えられます。
@@ -3176,17 +3191,19 @@ struct GetVariableInfo {
 	RegisterVariableInfo Info;
 	Info.Size           = sizeof(RegisterVariableInfo);
 	Info.Flags          = 0;
-	Info.pszKeyword     = L"unlucky-number";
-	Info.pszDescription = L"不幸の番号";
+	Info.pszKeyword     = L"tick-count";
+	Info.pszDescription = L"Tick count";
 	Info.pszValue       = NULL;
 	MsgRegisterVariable(pParam, &Info);
 
 	// EVENT_GETVARIABLE で値を返します。
 	bool OnGetVariable(GetVariableInfo *pInfo)
 	{
-		if (lstrcmpiW(pInfo->pszKeyword, L"unlucky-number") == 0) {
-			LPCWSTR pszValue = L"4949";	// 返す値
-			pInfo->pszValue = MsgStringDuplicate(pParam, pszValue);
+		if (lstrcmpiW(pInfo->pszKeyword, L"tick-count") == 0) {
+			// GetTickCount() の値を返す
+			WCHAR szValue[16];
+			wsprintf(szValue, L"%u", GetTickCount());
+			pInfo->pszValue = MsgStringDuplicate(pParam, szValue);
 			return true;
 		}
 		return false;
