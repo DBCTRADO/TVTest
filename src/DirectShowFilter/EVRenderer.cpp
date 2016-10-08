@@ -341,7 +341,6 @@ bool CVideoRenderer_EVR::GetDestPosition(RECT *pRect)
 
 			fOK=SUCCEEDED(pDisplayControl->GetVideoPosition(&rcSrc,pRect));
 			pDisplayControl->Release();
-			fOK=true;
 		}
 	}
 #endif
