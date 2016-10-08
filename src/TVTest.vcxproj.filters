@@ -647,6 +647,9 @@
     <ClCompile Include="DirectShowFilter\EVRCustomPresenter\EVRScheduler.cpp">
       <Filter>DirectShowFilter\EVRCustomPresenter\Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="DirectShowFilter\VMR7Renderless.cpp">
+      <Filter>DirectShowFilter\Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="BonTsEngine\Bitstream.h">
@@ -1260,6 +1263,9 @@
     </ClInclude>
     <ClInclude Include="DirectShowFilter\EVRCustomPresenter\EVRScheduler.h">
       <Filter>DirectShowFilter\EVRCustomPresenter\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="DirectShowFilter\VMR7Renderless.h">
+      <Filter>DirectShowFilter\Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
