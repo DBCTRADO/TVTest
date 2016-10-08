@@ -504,6 +504,7 @@ LRESULT CALLBACK CVideoRenderer_EVR::VideoWndProc(HWND hwnd,UINT uMsg,WPARAM wPa
 
 					::SetRect(&rc,0,0,LOWORD(lParam),HIWORD(lParam));
 					pDisplayControl->SetVideoPosition(NULL,&rc);
+					pDisplayControl->Release();
 				}
 			}
 		}
