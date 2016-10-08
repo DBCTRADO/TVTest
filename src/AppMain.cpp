@@ -1180,8 +1180,8 @@ bool CAppMain::IsNoAcceleratorMessage(const MSG *pmsg)
 		if (pDisplayView!=nullptr && hwnd==pDisplayView->GetHandle()) {
 			return pDisplayView->IsMessageNeed(pmsg);
 		} else if (pmsg->message==WM_KEYDOWN || pmsg->message==WM_KEYUP) {
-			LRESULT Result=::SendMessage(hwnd,WM_GETDLGCODE,pmsg->wParam,0);
-			if ((Result & DLGC_WANTALLKEYS)!=0)
+			LRESULT Result=::SendMessage(hwnd,WM_GETDLGCODE,pmsg->wParam,reinterpret_cast<LPARAM>(pmsg));
+			if ((Result & (DLGC_WANTALLKEYS | DLGC_WANTCHARS))!=0)
 				return true;
 			if ((Result & DLGC_WANTARROWS)!=0) {
 				switch (pmsg->wParam) {
