@@ -11,6 +11,28 @@
 
 
 
+const CVideoOptions::RendererInfo CVideoOptions::m_RendererList[] = {
+	{CVideoRenderer::RENDERER_DEFAULT,            TEXT("システムデフォルト")},
+	{CVideoRenderer::RENDERER_VMR7,               TEXT("VMR7")},
+	{CVideoRenderer::RENDERER_VMR9,               TEXT("VMR9")},
+	{CVideoRenderer::RENDERER_VMR7RENDERLESS,     TEXT("VMR7 Renderless")},
+	{CVideoRenderer::RENDERER_VMR9RENDERLESS,     TEXT("VMR9 Renderless")},
+	{CVideoRenderer::RENDERER_EVR,                TEXT("EVR")},
+	{CVideoRenderer::RENDERER_EVRCUSTOMPRESENTER, TEXT("EVR (Custom Presenter)")},
+	{CVideoRenderer::RENDERER_OVERLAYMIXER,       TEXT("Overlay Mixer")},
+	{CVideoRenderer::RENDERER_madVR,              TEXT("madVR")},
+};
+
+
+bool CVideoOptions::GetRendererInfo(int Index,RendererInfo *pInfo)
+{
+	if (Index<0 || Index>=lengthof(m_RendererList))
+		return false;
+	*pInfo=m_RendererList[Index];
+	return true;
+}
+
+
 CVideoOptions::CVideoOptions()
 	: m_VideoRendererType(CVideoRenderer::RENDERER_DEFAULT)
 	, m_fResetPanScanEventChange(true)
@@ -57,7 +79,7 @@ bool CVideoOptions::ReadSettings(CSettings &Settings)
 	Settings.Read(TEXT("H264Decoder"),&m_H264DecoderName);
 	Settings.Read(TEXT("H265Decoder"),&m_H265DecoderName);
 
-	TCHAR szRenderer[16];
+	TCHAR szRenderer[32];
 	if (Settings.Read(TEXT("Renderer"),szRenderer,lengthof(szRenderer))) {
 		if (szRenderer[0]=='\0') {
 			m_VideoRendererType=CVideoRenderer::RENDERER_DEFAULT;
@@ -184,11 +206,15 @@ INT_PTR CVideoOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 								m_H265DecoderName);
 
 			// 映像レンダラ
-			LPCTSTR pszRenderer;
-			DlgComboBox_AddString(hDlg,IDC_OPTIONS_RENDERER,TEXT("デフォルト"));
-			for (int i=1;(pszRenderer=CVideoRenderer::EnumRendererName(i))!=NULL;i++)
-				DlgComboBox_AddString(hDlg,IDC_OPTIONS_RENDERER,pszRenderer);
-			DlgComboBox_SetCurSel(hDlg,IDC_OPTIONS_RENDERER,m_VideoRendererType);
+			int Sel=-1;
+			RendererInfo Info;
+			for (int i=0;GetRendererInfo(i,&Info);i++) {
+				DlgComboBox_AddString(hDlg,IDC_OPTIONS_RENDERER,Info.pszName);
+				DlgComboBox_SetItemData(hDlg,IDC_OPTIONS_RENDERER,i,(LPARAM)Info.Renderer);
+				if (Info.Renderer==m_VideoRendererType)
+					Sel=i;
+			}
+			DlgComboBox_SetCurSel(hDlg,IDC_OPTIONS_RENDERER,Sel);
 
 			DlgCheckBox_Check(hDlg,IDC_OPTIONS_RESETPANSCANEVENTCHANGE,
 							  m_fResetPanScanEventChange);
@@ -213,7 +239,8 @@ INT_PTR CVideoOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 				bool f;
 
 				CVideoRenderer::RendererType Renderer=(CVideoRenderer::RendererType)
-					DlgComboBox_GetCurSel(hDlg,IDC_OPTIONS_RENDERER);
+					DlgComboBox_GetItemData(hDlg,IDC_OPTIONS_RENDERER,
+						DlgComboBox_GetCurSel(hDlg,IDC_OPTIONS_RENDERER));
 				if (Renderer!=m_VideoRendererType) {
 					if (!CVideoRenderer::IsAvailable(Renderer)) {
 						SettingError();

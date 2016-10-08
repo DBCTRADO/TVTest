@@ -132,6 +132,18 @@ bool CVideoRenderer_EVR::Initialize(IGraphBuilder *pFilterGraph,IPin *pInputPin,
 		goto OnError;
 	}
 
+	hr=pFilterGraph->AddFilter(m_pRenderer,L"EVR");
+	if (FAILED(hr)) {
+		SetError(hr,TEXT("EVRをフィルタグラフに追加できません。"));
+		goto OnError;
+	}
+
+	hr=InitializePresenter(m_pRenderer);
+	if (FAILED(hr)) {
+		SetError(hr,TEXT("カスタムプレゼンタを初期化できません。"));
+		goto OnError;
+	}
+
 	IEVRFilterConfig *pFilterConfig;
 	hr=m_pRenderer->QueryInterface(IID_IEVRFilterConfig,reinterpret_cast<LPVOID*>(&pFilterConfig));
 	if (FAILED(hr)) {
@@ -140,27 +152,6 @@ bool CVideoRenderer_EVR::Initialize(IGraphBuilder *pFilterGraph,IPin *pInputPin,
 	}
 	pFilterConfig->SetNumberOfStreams(1);
 	pFilterConfig->Release();
-
-	hr=pFilterGraph->AddFilter(m_pRenderer,L"EVR");
-	if (FAILED(hr)) {
-		SetError(hr,TEXT("EVRをフィルタグラフに追加できません。"));
-		goto OnError;
-	}
-
-	IFilterGraph2 *pFilterGraph2;
-	hr=pFilterGraph->QueryInterface(IID_IFilterGraph2,
-									reinterpret_cast<LPVOID*>(&pFilterGraph2));
-	if (FAILED(hr)) {
-		SetError(hr,TEXT("IFilterGraph2を取得できません。"));
-		goto OnError;
-	}
-	hr=pFilterGraph2->RenderEx(pInputPin,
-								AM_RENDEREX_RENDERTOEXISTINGRENDERERS,NULL);
-	pFilterGraph2->Release();
-	if (FAILED(hr)) {
-		SetError(hr,TEXT("映像レンダラを構築できません。"));
-		goto OnError;
-	}
 
 	IMFGetService *pGetService;
 	hr=m_pRenderer->QueryInterface(IID_IMFGetService,reinterpret_cast<LPVOID*>(&pGetService));
@@ -237,6 +228,21 @@ bool CVideoRenderer_EVR::Initialize(IGraphBuilder *pFilterGraph,IPin *pInputPin,
 	pVideoProcessor->Release();
 
 	pGetService->Release();
+
+	IFilterGraph2 *pFilterGraph2;
+	hr=pFilterGraph->QueryInterface(IID_IFilterGraph2,
+									reinterpret_cast<LPVOID*>(&pFilterGraph2));
+	if (FAILED(hr)) {
+		SetError(hr,TEXT("IFilterGraph2を取得できません。"));
+		goto OnError;
+	}
+	hr=pFilterGraph2->RenderEx(pInputPin,
+								AM_RENDEREX_RENDERTOEXISTINGRENDERERS,NULL);
+	pFilterGraph2->Release();
+	if (FAILED(hr)) {
+		SetError(hr,TEXT("映像レンダラを構築できません。"));
+		goto OnError;
+	}
 
 	m_pFilterGraph=pFilterGraph;
 	m_hwndRender=hwndRender;

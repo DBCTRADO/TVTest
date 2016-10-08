@@ -39,6 +39,9 @@ public:
 	bool DisplayModeChanged();
 	bool SetVisible(bool fVisible);
 	bool SetClipToDevice(bool bClip);
+
+protected:
+	virtual HRESULT InitializePresenter(IBaseFilter *pFilter) { return S_OK; }
 };
 
 

@@ -54,6 +54,15 @@
     <Filter Include="Common">
       <UniqueIdentifier>{1fa25962-066c-4495-84de-0f33b8089366}</UniqueIdentifier>
     </Filter>
+    <Filter Include="DirectShowFilter\EVRCustomPresenter">
+      <UniqueIdentifier>{8a272bff-48e3-4701-99e8-b7ccad90bbe6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="DirectShowFilter\EVRCustomPresenter\Header Files">
+      <UniqueIdentifier>{d5d7a659-d657-4d11-9664-26baf2ef131e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="DirectShowFilter\EVRCustomPresenter\Source Files">
+      <UniqueIdentifier>{b48c4688-32a1-4344-bec4-07b46b3459ec}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="BonTsEngine\Bitstream.cpp">
@@ -619,6 +628,24 @@
     </ClCompile>
     <ClCompile Include="VariableManager.cpp">
       <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="DirectShowFilter\EVRCustomPresenter\EVRCustomPresenter.cpp">
+      <Filter>DirectShowFilter\EVRCustomPresenter\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="DirectShowFilter\EVRCustomPresenter\EVRHelpers.cpp">
+      <Filter>DirectShowFilter\EVRCustomPresenter\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="DirectShowFilter\EVRCustomPresenter\EVRMediaType.cpp">
+      <Filter>DirectShowFilter\EVRCustomPresenter\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="DirectShowFilter\EVRCustomPresenter\EVRPresentEngine.cpp">
+      <Filter>DirectShowFilter\EVRCustomPresenter\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="DirectShowFilter\EVRCustomPresenter\EVRPresenter.cpp">
+      <Filter>DirectShowFilter\EVRCustomPresenter\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="DirectShowFilter\EVRCustomPresenter\EVRScheduler.cpp">
+      <Filter>DirectShowFilter\EVRCustomPresenter\Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -1212,6 +1239,27 @@
     </ClInclude>
     <ClInclude Include="VariableManager.h">
       <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="DirectShowFilter\EVRCustomPresenter\EVRCustomPresenter.h">
+      <Filter>DirectShowFilter\EVRCustomPresenter\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="DirectShowFilter\EVRCustomPresenter\EVRHelpers.h">
+      <Filter>DirectShowFilter\EVRCustomPresenter\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="DirectShowFilter\EVRCustomPresenter\EVRMediaType.h">
+      <Filter>DirectShowFilter\EVRCustomPresenter\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="DirectShowFilter\EVRCustomPresenter\EVRPresentEngine.h">
+      <Filter>DirectShowFilter\EVRCustomPresenter\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="DirectShowFilter\EVRCustomPresenter\EVRPresenter.h">
+      <Filter>DirectShowFilter\EVRCustomPresenter\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="DirectShowFilter\EVRCustomPresenter\EVRPresenterBase.h">
+      <Filter>DirectShowFilter\EVRCustomPresenter\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="DirectShowFilter\EVRCustomPresenter\EVRScheduler.h">
+      <Filter>DirectShowFilter\EVRCustomPresenter\Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -10,6 +10,12 @@
 class CVideoOptions : public COptions
 {
 public:
+	struct RendererInfo
+	{
+		CVideoRenderer::RendererType Renderer;
+		LPCTSTR pszName;
+	};
+
 	CVideoOptions();
 	~CVideoOptions();
 
@@ -39,6 +45,8 @@ public:
 	bool GetIgnoreDisplayExtension() const { return m_fIgnoreDisplayExtension; }
 	bool GetClipToDevice() const { return m_fClipToDevice; }
 
+	static bool GetRendererInfo(int Index,RendererInfo *pInfo);
+
 private:
 // CBasicDialog
 	INT_PTR DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
@@ -57,6 +65,8 @@ private:
 	enum {
 		MAX_VIDEO_DECODER_NAME=128
 	};
+
+	static const RendererInfo m_RendererList[];
 
 	TVTest::String m_Mpeg2DecoderName;
 	TVTest::String m_H264DecoderName;

@@ -4,6 +4,7 @@
 #include "VideoRenderer.h"
 #include "VMR9Renderless.h"
 #include "EVRenderer.h"
+#include "EVRCustomPresenter/EVRCustomPresenter.h"
 #include "DirectShowUtil.h"
 #include "../HelperClass/StdUtil.h"
 #include "../Common/DebugDef.h"
@@ -1486,6 +1487,9 @@ bool CVideoRenderer::CreateRenderer(RendererType Type,CVideoRenderer **ppRendere
 	case RENDERER_madVR:
 		*ppRenderer=new CVideoRenderer_Basic(CLSID_madVR,TEXT("madVR"),true);
 		break;
+	case RENDERER_EVRCUSTOMPRESENTER:
+		*ppRenderer=new CVideoRenderer_EVRCustomPresenter;
+		break;
 	default:
 		return false;
 	}
@@ -1505,6 +1509,7 @@ LPCTSTR CVideoRenderer::EnumRendererName(int Index)
 		TEXT("EVR"),
 		TEXT("Overlay Mixer"),
 		TEXT("madVR"),
+		TEXT("EVR Custom Presenter"),
 	};
 
 	if (Index<0 || Index>=sizeof(pszRendererName)/sizeof(LPCTSTR))
@@ -1561,6 +1566,7 @@ bool CVideoRenderer::IsAvailable(RendererType Type)
 			return false;
 		break;
 	case RENDERER_EVR:
+	case RENDERER_EVRCUSTOMPRESENTER:
 		if (!TestCreateInstance(CLSID_EnhancedVideoRenderer))
 			return false;
 		break;

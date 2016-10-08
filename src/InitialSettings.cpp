@@ -3,6 +3,7 @@
 #include "AppMain.h"
 #include "InitialSettings.h"
 #include "DirectShowFilter/DirectShowUtil.h"
+#include "VideoOptions.h"
 #include "DialogUtil.h"
 #include "DrawUtil.h"
 #include "Aero.h"
@@ -133,13 +134,16 @@ INT_PTR CInitialSettings::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPara
 
 			// Video renderer
 			{
-				LPCTSTR pszName;
+				int Sel=-1;
+				CVideoOptions::RendererInfo Info;
 
-				DlgComboBox_AddString(hDlg,IDC_INITIALSETTINGS_VIDEORENDERER,TEXT("デフォルト"));
-				for (int i=1;(pszName=CVideoRenderer::EnumRendererName(i))!=NULL;i++)
-					DlgComboBox_AddString(hDlg,IDC_INITIALSETTINGS_VIDEORENDERER,pszName);
-				DlgComboBox_SetCurSel(hDlg,IDC_INITIALSETTINGS_VIDEORENDERER,
-									  m_VideoRenderer);
+				for (int i=0;CVideoOptions::GetRendererInfo(i,&Info);i++) {
+					DlgComboBox_AddString(hDlg,IDC_INITIALSETTINGS_VIDEORENDERER,Info.pszName);
+					DlgComboBox_SetItemData(hDlg,IDC_INITIALSETTINGS_VIDEORENDERER,i,(LPARAM)Info.Renderer);
+					if (Info.Renderer==m_VideoRenderer)
+						Sel=i;
+				}
+				DlgComboBox_SetCurSel(hDlg,IDC_INITIALSETTINGS_VIDEORENDERER,Sel);
 			}
 
 			// 録画フォルダ
@@ -235,7 +239,8 @@ INT_PTR CInitialSettings::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPara
 					GetDecoderSetting(IDC_INITIALSETTINGS_H265DECODER,&H265DecoderName);
 
 				CVideoRenderer::RendererType VideoRenderer=(CVideoRenderer::RendererType)
-					DlgComboBox_GetCurSel(hDlg,IDC_INITIALSETTINGS_VIDEORENDERER);
+					DlgComboBox_GetItemData(hDlg,IDC_INITIALSETTINGS_VIDEORENDERER,
+						DlgComboBox_GetCurSel(hDlg,IDC_INITIALSETTINGS_VIDEORENDERER));
 
 				// 相性の悪い組み合わせに対して注意を表示する
 				static const struct {

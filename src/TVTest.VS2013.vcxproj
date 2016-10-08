@@ -297,7 +297,7 @@
       <EnableUAC>false</EnableUAC>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
       <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
-      <DelayLoadDLLs>%(DelayLoadDLLs)</DelayLoadDLLs>
+      <DelayLoadDLLs>evr.dll;mf.dll;mfplat.dll;d3d9.dll;dxva2.dll;%(DelayLoadDLLs)</DelayLoadDLLs>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
       <StackReserveSize>2097152</StackReserveSize>
@@ -347,7 +347,7 @@
       <EnableUAC>false</EnableUAC>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
       <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
-      <DelayLoadDLLs>%(DelayLoadDLLs)</DelayLoadDLLs>
+      <DelayLoadDLLs>evr.dll;mf.dll;mfplat.dll;d3d9.dll;dxva2.dll;%(DelayLoadDLLs)</DelayLoadDLLs>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
       <StackReserveSize>2097152</StackReserveSize>
@@ -396,7 +396,7 @@
       <EnableUAC>false</EnableUAC>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
       <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
-      <DelayLoadDLLs>%(DelayLoadDLLs)</DelayLoadDLLs>
+      <DelayLoadDLLs>evr.dll;mf.dll;mfplat.dll;d3d9.dll;dxva2.dll;%(DelayLoadDLLs)</DelayLoadDLLs>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
       <StackReserveSize>2097152</StackReserveSize>
@@ -445,7 +445,7 @@
       <EnableUAC>false</EnableUAC>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
       <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
-      <DelayLoadDLLs>%(DelayLoadDLLs)</DelayLoadDLLs>
+      <DelayLoadDLLs>evr.dll;mf.dll;mfplat.dll;d3d9.dll;dxva2.dll;%(DelayLoadDLLs)</DelayLoadDLLs>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
       <StackReserveSize>2097152</StackReserveSize>
@@ -496,7 +496,7 @@
       <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(IntDir);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <EnableUAC>false</EnableUAC>
-      <DelayLoadDLLs>%(DelayLoadDLLs)</DelayLoadDLLs>
+      <DelayLoadDLLs>evr.dll;mf.dll;mfplat.dll;d3d9.dll;dxva2.dll;%(DelayLoadDLLs)</DelayLoadDLLs>
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
       <StackReserveSize>2097152</StackReserveSize>
@@ -552,7 +552,7 @@
       <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(IntDir);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <EnableUAC>false</EnableUAC>
-      <DelayLoadDLLs>%(DelayLoadDLLs)</DelayLoadDLLs>
+      <DelayLoadDLLs>evr.dll;mf.dll;mfplat.dll;d3d9.dll;dxva2.dll;%(DelayLoadDLLs)</DelayLoadDLLs>
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
       <StackReserveSize>2097152</StackReserveSize>
@@ -608,7 +608,7 @@
       <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(IntDir);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <EnableUAC>false</EnableUAC>
-      <DelayLoadDLLs>%(DelayLoadDLLs)</DelayLoadDLLs>
+      <DelayLoadDLLs>evr.dll;mf.dll;mfplat.dll;d3d9.dll;dxva2.dll;%(DelayLoadDLLs)</DelayLoadDLLs>
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
       <StackReserveSize>2097152</StackReserveSize>
@@ -664,7 +664,7 @@
       <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(IntDir);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <EnableUAC>false</EnableUAC>
-      <DelayLoadDLLs>%(DelayLoadDLLs)</DelayLoadDLLs>
+      <DelayLoadDLLs>evr.dll;mf.dll;mfplat.dll;d3d9.dll;dxva2.dll;%(DelayLoadDLLs)</DelayLoadDLLs>
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
       <StackReserveSize>2097152</StackReserveSize>
@@ -720,7 +720,7 @@
       <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(IntDir);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <EnableUAC>false</EnableUAC>
-      <DelayLoadDLLs>%(DelayLoadDLLs)</DelayLoadDLLs>
+      <DelayLoadDLLs>evr.dll;mf.dll;mfplat.dll;d3d9.dll;dxva2.dll;%(DelayLoadDLLs)</DelayLoadDLLs>
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
       <StackReserveSize>2097152</StackReserveSize>
@@ -776,7 +776,7 @@
       <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(IntDir);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <EnableUAC>false</EnableUAC>
-      <DelayLoadDLLs>%(DelayLoadDLLs)</DelayLoadDLLs>
+      <DelayLoadDLLs>evr.dll;mf.dll;mfplat.dll;d3d9.dll;dxva2.dll;%(DelayLoadDLLs)</DelayLoadDLLs>
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
       <StackReserveSize>2097152</StackReserveSize>
@@ -832,7 +832,7 @@
       <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(IntDir);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <EnableUAC>false</EnableUAC>
-      <DelayLoadDLLs>%(DelayLoadDLLs)</DelayLoadDLLs>
+      <DelayLoadDLLs>evr.dll;mf.dll;mfplat.dll;d3d9.dll;dxva2.dll;%(DelayLoadDLLs)</DelayLoadDLLs>
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
       <StackReserveSize>2097152</StackReserveSize>
@@ -888,7 +888,7 @@
       <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(IntDir);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <EnableUAC>false</EnableUAC>
-      <DelayLoadDLLs>%(DelayLoadDLLs)</DelayLoadDLLs>
+      <DelayLoadDLLs>evr.dll;mf.dll;mfplat.dll;d3d9.dll;dxva2.dll;%(DelayLoadDLLs)</DelayLoadDLLs>
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
       <StackReserveSize>2097152</StackReserveSize>
@@ -956,6 +956,12 @@
     <ClCompile Include="ColorSchemeOptions.cpp" />
     <ClCompile Include="ComUtility.cpp" />
     <ClCompile Include="DirectShowFilter\Ac3Decoder.cpp" />
+    <ClCompile Include="DirectShowFilter\EVRCustomPresenter\EVRCustomPresenter.cpp" />
+    <ClCompile Include="DirectShowFilter\EVRCustomPresenter\EVRHelpers.cpp" />
+    <ClCompile Include="DirectShowFilter\EVRCustomPresenter\EVRMediaType.cpp" />
+    <ClCompile Include="DirectShowFilter\EVRCustomPresenter\EVRPresentEngine.cpp" />
+    <ClCompile Include="DirectShowFilter\EVRCustomPresenter\EVRPresenter.cpp" />
+    <ClCompile Include="DirectShowFilter\EVRCustomPresenter\EVRScheduler.cpp" />
     <ClCompile Include="DirectShowFilter\InternalDecoder.cpp" />
     <ClCompile Include="DirectShowFilter\MpegAudioDecoder.cpp" />
     <ClCompile Include="DirectWrite.cpp" />
@@ -1155,6 +1161,13 @@
     <ClInclude Include="Common\DebugDef.h" />
     <ClInclude Include="ComUtility.h" />
     <ClInclude Include="DirectShowFilter\Ac3Decoder.h" />
+    <ClInclude Include="DirectShowFilter\EVRCustomPresenter\EVRCustomPresenter.h" />
+    <ClInclude Include="DirectShowFilter\EVRCustomPresenter\EVRHelpers.h" />
+    <ClInclude Include="DirectShowFilter\EVRCustomPresenter\EVRMediaType.h" />
+    <ClInclude Include="DirectShowFilter\EVRCustomPresenter\EVRPresentEngine.h" />
+    <ClInclude Include="DirectShowFilter\EVRCustomPresenter\EVRPresenter.h" />
+    <ClInclude Include="DirectShowFilter\EVRCustomPresenter\EVRPresenterBase.h" />
+    <ClInclude Include="DirectShowFilter\EVRCustomPresenter\EVRScheduler.h" />
     <ClInclude Include="DirectShowFilter\InternalDecoder.h" />
     <ClInclude Include="DirectShowFilter\MpegAudioDecoder.h" />
     <ClInclude Include="DirectWrite.h" />
