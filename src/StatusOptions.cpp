@@ -276,8 +276,10 @@ void CStatusOptions::ApplyItemWidth()
 	for (size_t i=0;i<m_ItemList.size();i++) {
 		if (m_ItemList[i].Width>=0) {
 			CStatusItem *pItem=m_pStatusView->GetItemByID(m_ItemList[i].ID);
-			pItem->SetWidth(::MulDiv(m_ItemList[i].Width,StatusBarDPI,m_DPI));
-			pItem->SetActualWidth(pItem->GetWidth());
+			if (pItem!=nullptr) {
+				pItem->SetWidth(::MulDiv(m_ItemList[i].Width,StatusBarDPI,m_DPI));
+				pItem->SetActualWidth(pItem->GetWidth());
+			}
 		}
 	}
 }
