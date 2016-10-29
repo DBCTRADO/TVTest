@@ -562,51 +562,50 @@ bool CAppCore::SwitchChannelByNo(int ChannelNo,bool fSwitchService)
 
 bool CAppCore::SetCommandLineChannel(const CCommandLineOptions *pCmdLine)
 {
+	CChannelInfo FindChannel;
+
+	if (pCmdLine->m_Channel>0)
+		FindChannel.SetPhysicalChannel(pCmdLine->m_Channel);
+	if (pCmdLine->m_ControllerChannel>0)
+		FindChannel.SetChannelNo(pCmdLine->m_ControllerChannel);
+	if (pCmdLine->m_ChannelIndex>=0)
+		FindChannel.SetChannelIndex(pCmdLine->m_ChannelIndex);
+	if (pCmdLine->m_TuningSpace>=0)
+		FindChannel.SetSpace(pCmdLine->m_TuningSpace);
+	if (pCmdLine->m_ServiceID>0)
+		FindChannel.SetServiceID((WORD)pCmdLine->m_ServiceID);
+	if (pCmdLine->m_NetworkID>0)
+		FindChannel.SetNetworkID((WORD)pCmdLine->m_NetworkID);
+	if (pCmdLine->m_TransportStreamID>0)
+		FindChannel.SetTransportStreamID((WORD)pCmdLine->m_TransportStreamID);
+
 	const CChannelList *pChannelList;
 
-	for (int i=0;(pChannelList=m_App.ChannelManager.GetChannelList(i))!=nullptr;i++) {
-		if (pCmdLine->m_TuningSpace<0 || i==pCmdLine->m_TuningSpace) {
-			for (int j=0;j<pChannelList->NumChannels();j++) {
-				const CChannelInfo *pChannelInfo=pChannelList->GetChannelInfo(j);
-
-				if ((pCmdLine->m_Channel==0
-						|| pCmdLine->m_Channel==pChannelInfo->GetPhysicalChannel())
-					&& (pCmdLine->m_ChannelIndex<0
-						|| pCmdLine->m_ChannelIndex==pChannelInfo->GetChannelIndex())
-					&& (pCmdLine->m_ControllerChannel==0
-						|| pCmdLine->m_ControllerChannel==pChannelInfo->GetChannelNo())
-					&& (pCmdLine->m_ServiceID==0
-						|| pCmdLine->m_ServiceID==pChannelInfo->GetServiceID())
-					&& (pCmdLine->m_NetworkID==0
-						|| pCmdLine->m_NetworkID==pChannelInfo->GetNetworkID())
-					&& (pCmdLine->m_TransportStreamID==0
-						|| pCmdLine->m_TransportStreamID==pChannelInfo->GetTransportStreamID())) {
-					return SetChannel(i,j);
+	// まず有効なチャンネルから探し、無ければ全てのチャンネルから探す
+	for (int i=0;i<2;i++) {
+		for (int Space=0;(pChannelList=m_App.ChannelManager.GetChannelList(Space))!=nullptr;Space++) {
+			if (pCmdLine->m_TuningSpace<0 || Space==pCmdLine->m_TuningSpace) {
+				int Channel=pChannelList->Find(FindChannel,i==0);
+				if (Channel>=0) {
+					return SetChannel(Space,Channel);
 				}
 			}
 		}
 	}
 
+	// 指定と完全に一致するチャンネルが無い場合、サービスIDを無視して探し
+	// チャンネル設定時にサービスIDを指定する
 	if (pCmdLine->m_ServiceID>0
 			&& (pCmdLine->m_Channel>0 || pCmdLine->m_ChannelIndex>=0
 				|| pCmdLine->m_ControllerChannel>0
 				|| pCmdLine->m_NetworkID>0 || pCmdLine->m_TransportStreamID>0)) {
-		for (int i=0;(pChannelList=m_App.ChannelManager.GetChannelList(i))!=nullptr;i++) {
-			if (pCmdLine->m_TuningSpace<0 || i==pCmdLine->m_TuningSpace) {
-				for (int j=0;j<pChannelList->NumChannels();j++) {
-					const CChannelInfo *pChannelInfo=pChannelList->GetChannelInfo(j);
-
-					if ((pCmdLine->m_Channel==0
-							|| pCmdLine->m_Channel==pChannelInfo->GetPhysicalChannel())
-						&& (pCmdLine->m_ChannelIndex<0
-							|| pCmdLine->m_ChannelIndex==pChannelInfo->GetChannelIndex())
-						&& (pCmdLine->m_ControllerChannel==0
-							|| pCmdLine->m_ControllerChannel==pChannelInfo->GetChannelNo())
-						&& (pCmdLine->m_NetworkID==0
-							|| pCmdLine->m_NetworkID==pChannelInfo->GetNetworkID())
-						&& (pCmdLine->m_TransportStreamID==0
-							|| pCmdLine->m_TransportStreamID==pChannelInfo->GetTransportStreamID())) {
-						return SetChannel(i,j,pCmdLine->m_ServiceID);
+		FindChannel.SetServiceID(0);
+		for (int i=0;i<2;i++) {
+			for (int Space=0;(pChannelList=m_App.ChannelManager.GetChannelList(Space))!=nullptr;Space++) {
+				if (pCmdLine->m_TuningSpace<0 || Space==pCmdLine->m_TuningSpace) {
+					int Channel=pChannelList->Find(FindChannel,i==0);
+					if (Channel>=0) {
+						return SetChannel(Space,Channel,pCmdLine->m_ServiceID);
 					}
 				}
 			}
