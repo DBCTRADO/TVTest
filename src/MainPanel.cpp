@@ -26,7 +26,7 @@ bool CMainPanel::IsFloating() const
 }
 
 
-bool CMainPanel::OnOwnerMovingOrSizing(const RECT *pOldRect,const RECT *pNewRect)
+bool CMainPanel::OnOwnerWindowPosChanging(const RECT *pOldRect,const RECT *pNewRect)
 {
 	if (fShowPanelWindow && GetAppClass().PanelOptions.GetAttachToMainWindow()
 			&& IsFloating()) {

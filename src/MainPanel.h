@@ -26,7 +26,7 @@ public:
 
 	CMainPanel();
 	bool IsFloating() const;
-	bool OnOwnerMovingOrSizing(const RECT *pOldRect,const RECT *pNewRect);
+	bool OnOwnerWindowPosChanging(const RECT *pOldRect,const RECT *pNewRect);
 	bool IsAttached();
 	void SetTheme(const TVTest::Theme::CThemeManager *pThemeManager);
 	void UpdateContent();

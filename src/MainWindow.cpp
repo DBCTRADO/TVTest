@@ -437,7 +437,6 @@ void CMainWindow::AdjustWindowSize(int Width,int Height,bool fScreenSize)
 	}
 
 	SetPosition(&rc);
-	m_App.Panel.OnOwnerMovingOrSizing(&rcOld,&rc);
 }
 
 
@@ -983,6 +982,30 @@ LRESULT CMainWindow::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 			Layout::CSplitter *pSplitter=dynamic_cast<Layout::CSplitter*>(
 				m_LayoutBase.GetContainerByID(CONTAINER_ID_PANELSPLITTER));
 			pSplitter->SetAdjustPane(pSplitter->GetPane(!pSplitter->IDToIndex(CONTAINER_ID_PANEL))->GetID());
+		}
+		return 0;
+
+	case WM_WINDOWPOSCHANGING:
+		{
+			::DefWindowProc(hwnd,uMsg,wParam,lParam);
+
+			WINDOWPOS *pPos=reinterpret_cast<WINDOWPOS*>(lParam);
+			RECT rcOld,rcNew;
+
+			::GetWindowRect(hwnd,&rcOld);
+			rcNew=rcOld;
+			if (!(pPos->flags & SWP_NOMOVE)) {
+				rcNew.left=pPos->x;
+				rcNew.top=pPos->y;
+			}
+			if (!(pPos->flags & SWP_NOSIZE)) {
+				rcNew.right=rcNew.left+pPos->cx;
+				rcNew.bottom=rcNew.top+pPos->cy;
+			} else {
+				rcNew.right=rcNew.left+(rcOld.right-rcOld.left);
+				rcNew.bottom=rcNew.top+(rcOld.bottom-rcOld.top);
+			}
+			m_App.Panel.OnOwnerWindowPosChanging(&rcOld,&rcNew);
 		}
 		return 0;
 
@@ -1982,13 +2005,13 @@ bool CMainWindow::OnSizeChanging(UINT Edge,RECT *pRect)
 			}
 			::OffsetRect(&rcClient,-rcClient.left,-rcClient.top);
 			if (rcClient.right<=0 || rcClient.bottom<=0)
-				goto SizingEnd;
+				return false;
 			XMargin=(rcWindow.right-rcWindow.left)-rcClient.right;
 			YMargin=(rcWindow.bottom-rcWindow.top)-rcClient.bottom;
 			Width=(pRect->right-pRect->left)-XMargin;
 			Height=(pRect->bottom-pRect->top)-YMargin;
 			if (Width<=0 || Height<=0)
-				goto SizingEnd;
+				return false;
 			if (Edge==WMSZ_LEFT || Edge==WMSZ_RIGHT)
 				Height=Width*YAspect/XAspect;
 			else if (Edge==WMSZ_TOP || Edge==WMSZ_BOTTOM)
@@ -2008,8 +2031,7 @@ bool CMainWindow::OnSizeChanging(UINT Edge,RECT *pRect)
 			fChanged=true;
 		}
 	}
-SizingEnd:
-	m_App.Panel.OnOwnerMovingOrSizing(&rcOld,pRect);
+
 	return fChanged;
 }
 
@@ -2074,7 +2096,7 @@ void CMainWindow::OnMouseMove(int x,int y)
 	if (m_fDragging) {
 		// ウィンドウ移動中
 		POINT pt;
-		RECT rcOld,rc;
+		RECT rc;
 
 		/*
 		pt.x=x;
@@ -2082,7 +2104,6 @@ void CMainWindow::OnMouseMove(int x,int y)
 		::ClientToScreen(hwnd,&pt);
 		*/
 		::GetCursorPos(&pt);
-		::GetWindowRect(m_hwnd,&rcOld);
 		rc.left=m_rcDragStart.left+(pt.x-m_ptDragStartPos.x);
 		rc.top=m_rcDragStart.top+(pt.y-m_ptDragStartPos.y);
 		rc.right=rc.left+(m_rcDragStart.right-m_rcDragStart.left);
@@ -2095,7 +2116,6 @@ void CMainWindow::OnMouseMove(int x,int y)
 					   m_App.ViewOptions.GetSnapAtWindowEdgeMargin(),
 					   m_App.Panel.IsAttached()?nullptr:m_App.Panel.Frame.GetHandle());
 		SetPosition(&rc);
-		m_App.Panel.OnOwnerMovingOrSizing(&rcOld,&rc);
 	} else if (!m_pCore->GetFullscreen()) {
 		const POINT pt={x,y};
 
