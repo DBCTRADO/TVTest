@@ -84,6 +84,7 @@ public:
 	bool DeleteChannel(int Index);
 	void Clear();
 	int Find(const CChannelInfo *pInfo) const;
+	int Find(const CChannelInfo &Info,bool fEnabledOnly=true) const;
 	int FindByIndex(int Space,int ChannelIndex,int ServiceID=-1,bool fEnabledOnly=true) const;
 	int FindPhysicalChannel(int Channel) const;
 	int FindChannelNo(int No,bool fEnabledOnly=true) const;

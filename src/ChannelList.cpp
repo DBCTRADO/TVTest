@@ -308,6 +308,32 @@ int CChannelList::Find(const CChannelInfo *pInfo) const
 }
 
 
+int CChannelList::Find(const CChannelInfo &Info,bool fEnabledOnly) const
+{
+	for (size_t i=0;i<m_ChannelList.size();i++) {
+		const CChannelInfo *pChInfo=m_ChannelList[i];
+
+		if ((!fEnabledOnly || pChInfo->IsEnabled())
+				&& (Info.GetSpace()<0
+					|| pChInfo->GetSpace()==Info.GetSpace())
+				&& (Info.GetChannelIndex()<0
+					|| pChInfo->GetChannelIndex()==Info.GetChannelIndex())
+				&& (Info.GetChannelNo()<=0
+					|| pChInfo->GetChannelNo()==Info.GetChannelNo())
+				&& (Info.GetPhysicalChannel()<=0
+					|| pChInfo->GetPhysicalChannel()==Info.GetPhysicalChannel())
+				&& (Info.GetNetworkID()==0
+					|| pChInfo->GetNetworkID()==Info.GetNetworkID())
+				&& (Info.GetTransportStreamID()==0
+					|| pChInfo->GetTransportStreamID()==Info.GetTransportStreamID())
+				&& (Info.GetServiceID()==0
+					|| pChInfo->GetServiceID()==Info.GetServiceID()))
+			return (int)i;
+	}
+	return -1;
+}
+
+
 int CChannelList::FindByIndex(int Space,int ChannelIndex,int ServiceID,bool fEnabledOnly) const
 {
 	for (size_t i=0;i<m_ChannelList.size();i++) {
