@@ -731,6 +731,7 @@ bool CPlugin::Load(LPCTSTR pszFileName)
 #endif
 				TEXT("ビット用のプラグインではないか、ファイルが破損している可能性があります。"));
 			break;
+		case ERROR_MOD_NOT_FOUND:
 		case ERROR_SXS_CANT_GEN_ACTCTX:
 			SetErrorAdvise(TEXT("必要なランタイムがインストールされていない可能性があります。"));
 			break;
