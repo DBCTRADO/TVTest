@@ -43,6 +43,9 @@ protected:
 	HRESULT GetSwapChainPresentParameters(IMFMediaType *pType, D3DPRESENT_PARAMETERS *pPP);
 	HRESULT CreateD3DDevice();
 	HRESULT CreateD3DSample(IDirect3DSwapChain9 *pSwapChain, IMFSample **ppVideoSample);
+	void InitPresentParameters(
+		D3DPRESENT_PARAMETERS *pParameters,
+		HWND hwnd, UINT Width, UINT Height, D3DFORMAT Format);
 	HRESULT UpdateDestRect();
 	HRESULT GetDibFromSurface(
 		IDirect3DSurface9 *pSurface, const D3DSURFACE_DESC &Desc,

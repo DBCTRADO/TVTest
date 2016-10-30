@@ -1,4 +1,5 @@
 #include "stdafx.h"
+#include <dwmapi.h>
 #include "EVRPresenterBase.h"
 #include "EVRPresentEngine.h"
 #include "../../Common/DebugDef.h"
@@ -495,20 +496,9 @@ HRESULT CEVRPresentEngine::CreateD3DDevice()
 		Vertex = D3DCREATE_SOFTWARE_VERTEXPROCESSING;
 	}
 
-	D3DPRESENT_PARAMETERS pp = {};
+	D3DPRESENT_PARAMETERS pp;
 
-	pp.BackBufferWidth = 1;
-	pp.BackBufferHeight = 1;
-	pp.BackBufferFormat = D3DFMT_UNKNOWN;
-	pp.SwapEffect = D3DSWAPEFFECT_COPY;
-	pp.hDeviceWindow = ::GetDesktopWindow();
-	pp.Windowed = TRUE;
-	pp.Flags = D3DPRESENTFLAG_VIDEO
-#ifdef USE_LOCKABLE_BACKBUFFER
-		| D3DPRESENTFLAG_LOCKABLE_BACKBUFFER
-#endif
-		;
-	pp.PresentationInterval = D3DPRESENT_INTERVAL_DEFAULT;
+	InitPresentParameters(&pp, ::GetDesktopWindow(), 1, 1, D3DFMT_UNKNOWN);
 
 	IDirect3DDevice9Ex *pDevice = nullptr;
 
@@ -569,6 +559,41 @@ HRESULT CEVRPresentEngine::CreateD3DSample(IDirect3DSwapChain9 *pSwapChain, IMFS
 }
 
 
+void CEVRPresentEngine::InitPresentParameters(
+	D3DPRESENT_PARAMETERS *pParameters,
+	HWND hwnd, UINT Width, UINT Height, D3DFORMAT Format)
+{
+	BOOL bCompositionEnabled = FALSE;
+	HMODULE hDwmLib = ::GetModuleHandle(TEXT("dwmapi.dll"));
+	if (hDwmLib != nullptr) {
+		auto pDwmIsCompositionEnabled =
+			reinterpret_cast<decltype(DwmIsCompositionEnabled)*>(
+				::GetProcAddress(hDwmLib, "DwmIsCompositionEnabled"));
+		if (pDwmIsCompositionEnabled != nullptr) {
+			pDwmIsCompositionEnabled(&bCompositionEnabled);
+		}
+	}
+
+	::ZeroMemory(pParameters, sizeof(D3DPRESENT_PARAMETERS));
+
+	pParameters->BackBufferWidth = Width;
+	pParameters->BackBufferHeight = Height;
+	pParameters->BackBufferFormat = Format;
+	pParameters->SwapEffect = D3DSWAPEFFECT_COPY;
+	pParameters->hDeviceWindow = hwnd;
+	pParameters->Windowed = TRUE;
+	pParameters->Flags = D3DPRESENTFLAG_VIDEO
+#ifdef USE_LOCKABLE_BACKBUFFER
+		| D3DPRESENTFLAG_LOCKABLE_BACKBUFFER
+#endif
+		;
+	pParameters->PresentationInterval =
+		bCompositionEnabled ?
+			D3DPRESENT_INTERVAL_IMMEDIATE :
+			D3DPRESENT_INTERVAL_DEFAULT;
+}
+
+
 HRESULT CEVRPresentEngine::PresentSwapChain(IDirect3DSwapChain9 *pSwapChain, IDirect3DSurface9 *pSurface)
 {
 	if (m_hwnd == nullptr) {
@@ -615,18 +640,7 @@ HRESULT CEVRPresentEngine::GetSwapChainPresentParameters(IMFMediaType *pType, D3
 		return S_OK;
 	}
 
-	pPP->BackBufferWidth = Width;
-	pPP->BackBufferHeight = Height;
-	pPP->BackBufferFormat = (D3DFORMAT)Format;
-	pPP->SwapEffect = D3DSWAPEFFECT_COPY;
-	pPP->hDeviceWindow = m_hwnd;
-	pPP->Windowed = TRUE;
-	pPP->Flags = D3DPRESENTFLAG_VIDEO
-#ifdef USE_LOCKABLE_BACKBUFFER
-		| D3DPRESENTFLAG_LOCKABLE_BACKBUFFER
-#endif
-		;
-	pPP->PresentationInterval = D3DPRESENT_INTERVAL_DEFAULT;
+	InitPresentParameters(pPP, m_hwnd, Width, Height, static_cast<D3DFORMAT>(Format));
 
 #if 0
 	D3DDEVICE_CREATION_PARAMETERS params;
