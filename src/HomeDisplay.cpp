@@ -2141,7 +2141,7 @@ void CHomeDisplay::SetScrollBar()
 		si.nPage=ContentAreaHeight;
 		si.nPos=m_ScrollPos;
 		::SetScrollInfo(m_hwndScroll,SB_CTL,&si,TRUE);
-		int ScrollWidth=::GetSystemMetrics(SM_CXVSCROLL);
+		int ScrollWidth=m_pStyleScaling->GetScaledSystemMetrics(SM_CXVSCROLL);
 		::MoveWindow(m_hwndScroll,
 					 rcContent.right,rcContent.top,
 					 ScrollWidth,rcContent.bottom-rcContent.top,TRUE);
@@ -2158,7 +2158,7 @@ void CHomeDisplay::GetContentAreaRect(RECT *pRect) const
 	GetClientRect(pRect);
 	TVTest::Style::Subtract(pRect,m_Style.ContentMargin);
 	pRect->left+=m_CategoriesAreaWidth;
-	pRect->right-=::GetSystemMetrics(SM_CXVSCROLL);
+	pRect->right-=m_pStyleScaling->GetScaledSystemMetrics(SM_CXVSCROLL);
 	if (pRect->right<pRect->left)
 		pRect->right=pRect->left;
 	if (pRect->bottom<pRect->top)

@@ -6,6 +6,7 @@
 #include "LogoManager.h"
 #include "EpgChannelSettings.h"
 #include "ProgramGuideToolbarOptions.h"
+#include "DPIUtil.h"
 #include "BonTsEngine/TsUtil.h"
 #include "resource.h"
 #include "Common/DebugDef.h"
@@ -7226,6 +7227,7 @@ CProgramGuideFrame::CProgramGuideFrame(CProgramGuide *pProgramGuide,CProgramGuid
 	: CProgramGuideFrameBase(pProgramGuide,pSettings)
 	, m_fAero(false)
 	, m_fAlwaysOnTop(false)
+	, m_fCreated(false)
 {
 	m_WindowPosition.Width=640;
 	m_WindowPosition.Height=480;
@@ -7242,6 +7244,8 @@ CProgramGuideFrame::~CProgramGuideFrame()
 
 bool CProgramGuideFrame::Create(HWND hwndParent,DWORD Style,DWORD ExStyle,int ID)
 {
+	TVTest::PerMonitorDPIBlock DPIBlock;
+
 	if (m_WindowPosition.fMaximized)
 		Style|=WS_MAXIMIZE;
 	if (m_fAlwaysOnTop)
@@ -7309,14 +7313,16 @@ LRESULT CProgramGuideFrame::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM l
 	case WM_CREATE:
 		InitializeUI();
 		OnWindowCreate(hwnd,m_pStyleScaling,true);
+		m_fCreated=true;
 		return 0;
 
 	case WM_NCCREATE:
-		InitStyleScaling(hwnd);
+		// EnableNonClientDpiScaling “à‚©‚ç WM_SIZE ‚ª‘—‚ç‚ê‚é
+		InitStyleScaling(hwnd,true);
 		break;
 
 	case WM_SIZE:
-		{
+		if (m_fCreated) {
 			RECT rcOld,rcNew;
 
 			m_pProgramGuide->GetPosition(&rcOld);

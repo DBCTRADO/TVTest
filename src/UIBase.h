@@ -51,7 +51,7 @@ namespace TVTest
 		bool ConvertBorderWidthsInPixels(Theme::BorderStyle *pStyle) const;
 		bool GetBorderWidthsInPixels(const Theme::BorderStyle &Style,RECT *pWidths) const;
 		int GetHairlineWidth() const;
-		void InitStyleScaling(HWND hwnd);
+		void InitStyleScaling(HWND hwnd,bool fNonClientScaling);
 		void OnDPIChanged(HWND hwnd,WPARAM wParam,LPARAM lParam);
 
 		Style::CStyleScaling *m_pStyleScaling;

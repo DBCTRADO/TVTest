@@ -253,14 +253,6 @@ bool CBasicWindow::GetClientSize(SIZE *pSize) const
 }
 
 
-bool CBasicWindow::CalcPositionFromClientRect(RECT *pRect) const
-{
-	if (m_hwnd==NULL)
-		return false;
-	return ::AdjustWindowRectEx(pRect,GetWindowStyle(),FALSE,GetWindowExStyle())!=FALSE;
-}
-
-
 bool CBasicWindow::SetParent(HWND hwnd)
 {
 	return m_hwnd!=NULL && ::SetParent(m_hwnd,hwnd);

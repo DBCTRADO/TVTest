@@ -293,7 +293,7 @@ INT_PTR CViewOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 				ofn.lpstrInitialDir=szInitDir;
 				ofn.lpstrTitle=TEXT("ÉçÉSâÊëúÇÃëIë");
 				ofn.Flags=OFN_HIDEREADONLY | OFN_FILEMUSTEXIST | OFN_EXPLORER;
-				if (::GetOpenFileName(&ofn)) {
+				if (FileOpenDialog(&ofn)) {
 					::SetDlgItemText(hDlg,IDC_OPTIONS_LOGOFILENAME,szFileName);
 				}
 			}

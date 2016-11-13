@@ -53,7 +53,6 @@ public:
 	bool Redraw(const RECT *pRect=NULL,UINT Flags=RDW_ERASE | RDW_INVALIDATE | RDW_UPDATENOW);
 	bool GetClientRect(RECT *pRect) const;
 	bool GetClientSize(SIZE *pSize) const;
-	bool CalcPositionFromClientRect(RECT *pRect) const;
 	bool SetParent(HWND hwnd);
 	bool SetParent(CBasicWindow *pWindow);
 	HWND GetParent() const;

@@ -1116,7 +1116,7 @@ INT_PTR CRecordManager::CRecordSettingsDialog::DlgProc(HWND hDlg,UINT uMsg,WPARA
 				ofn.dwReserved=0;
 				ofn.FlagsEx=0;
 #endif
-				if (::GetSaveFileName(&ofn))
+				if (FileSaveDialog(&ofn))
 					DlgEdit_SetText(hDlg,IDC_RECORD_FILENAME,szFileName);
 			}
 			return TRUE;

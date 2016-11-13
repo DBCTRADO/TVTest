@@ -2,6 +2,7 @@
 #include "TVTest.h"
 #include "Panel.h"
 #include "DrawUtil.h"
+#include "DPIUtil.h"
 #include "resource.h"
 #include "Common/DebugDef.h"
 
@@ -589,6 +590,8 @@ CPanelFrame::~CPanelFrame()
 
 bool CPanelFrame::Create(HWND hwndParent,DWORD Style,DWORD ExStyle,int ID)
 {
+	TVTest::PerMonitorDPIBlock DPIBlock;
+
 	if (!CreateBasicWindow(hwndParent,Style,ExStyle,ID,
 						   PANEL_FRAME_WINDOW_CLASS,TEXT("ƒpƒlƒ‹"),m_hinst))
 		return false;
@@ -812,7 +815,7 @@ LRESULT CPanelFrame::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 		return 0;
 
 	case WM_NCCREATE:
-		InitStyleScaling(hwnd);
+		InitStyleScaling(hwnd,true);
 		break;
 
 	case WM_SIZE:
@@ -846,7 +849,7 @@ LRESULT CPanelFrame::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 
 	case WM_MOVE:
 		if (m_fDragMoving) {
-			const int Margin=::GetSystemMetrics(SM_CYCAPTION);
+			const int Margin=m_pStyleScaling->GetScaledSystemMetrics(SM_CYCAPTION);
 			POINT pt;
 			RECT rcTarget,rc;
 			DockingPlace Target;
@@ -961,7 +964,7 @@ bool CPanelFrame::OnFloating()
 	MapWindowRect(m_Panel.GetHandle(),NULL,&rc);
 	if (m_pEventHandler!=NULL && !m_pEventHandler->OnFloatingChange(true))
 		return false;
-	CalcPositionFromClientRect(&rc);
+	m_pStyleScaling->AdjustWindowRect(m_hwnd,&rc);
 	SetPosition(&rc);
 	SetFloating(true);
 	return true;

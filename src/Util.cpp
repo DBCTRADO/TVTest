@@ -1,24 +1,8 @@
 #include "stdafx.h"
 #include <math.h>
 #include "Util.h"
+#include "DPIUtil.h"
 #include "Common/DebugDef.h"
-
-
-#ifndef DPI_ENUMS_DECLARED
-typedef enum MONITOR_DPI_TYPE { 
-	MDT_EFFECTIVE_DPI = 0,
-	MDT_ANGULAR_DPI = 1,
-	MDT_RAW_DPI = 2,
-	MDT_DEFAULT = MDT_EFFECTIVE_DPI
-} MONITOR_DPI_TYPE;
-#endif
-
-STDAPI GetDpiForMonitor(
-	HMONITOR hmonitor,
-	MONITOR_DPI_TYPE dpiType,
-	UINT *dpiX,
-	UINT *dpiY
-);
 
 
 
@@ -461,6 +445,22 @@ void InitOpenFileName(OPENFILENAME *pofn)
 }
 
 
+bool FileOpenDialog(OPENFILENAME *pofn)
+{
+	TVTest::SystemDPIBlock SystemDPI;
+
+	return ::GetOpenFileName(pofn) != FALSE;
+}
+
+
+bool FileSaveDialog(OPENFILENAME *pofn)
+{
+	TVTest::SystemDPIBlock SystemDPI;
+
+	return ::GetSaveFileName(pofn) != FALSE;
+}
+
+
 void ForegroundWindow(HWND hwnd)
 {
 	int TargetID,ForegroundID;
@@ -491,8 +491,14 @@ bool ChooseColorDialog(HWND hwndOwner,COLORREF *pcrResult)
 	cc.rgbResult=*pcrResult;
 	cc.lpCustColors=crCustomColors;
 	cc.Flags=CC_RGBINIT | CC_FULLOPEN;
-	if (!ChooseColor(&cc))
-		return false;
+
+	{
+		TVTest::SystemDPIBlock SystemDPI;
+
+		if (!ChooseColor(&cc))
+			return false;
+	}
+
 	*pcrResult=cc.rgbResult;
 	return true;
 }
@@ -506,8 +512,13 @@ bool ChooseFontDialog(HWND hwndOwner,LOGFONT *plf,int *pPointSize)
 	cf.hwndOwner=hwndOwner;
 	cf.lpLogFont=plf;
 	cf.Flags=CF_FORCEFONTEXIST | CF_INITTOLOGFONTSTRUCT | CF_SCREENFONTS;
-	if (!ChooseFont(&cf))
-		return false;
+
+	{
+		TVTest::SystemDPIBlock SystemDPI;
+
+		if (!ChooseFont(&cf))
+			return false;
+	}
 
 	if (pPointSize!=nullptr)
 		*pPointSize=cf.iPointSize;
@@ -547,9 +558,15 @@ bool BrowseFolderDialog(HWND hwndOwner,LPTSTR pszDirectory,LPCTSTR pszTitle)
 	bi.ulFlags=BIF_RETURNONLYFSDIRS | BIF_NEWDIALOGSTYLE;
 	bi.lpfn=BrowseFolderCallback;
 	bi.lParam=(LPARAM)pszDirectory;
-	pidl=SHBrowseForFolder(&bi);
-	if (pidl==NULL)
-		return false;
+
+	{
+		TVTest::SystemDPIBlock SystemDPI;
+
+		pidl=SHBrowseForFolder(&bi);
+		if (pidl==NULL)
+			return false;
+	}
+
 	fRet=SHGetPathFromIDList(pidl,pszDirectory);
 	CoTaskMemFree(pidl);
 	return fRet==TRUE;
@@ -1775,70 +1792,10 @@ namespace Util
 		return ::LoadLibrary(szPath);
 	}
 
-	int GetMonitorDPI(HMONITOR hMonitor,UINT *pDpiX,UINT *pDpiY)
-	{
-		if (hMonitor!=nullptr && OS::IsWindows8_1OrLater()) {
-			HMODULE hLib=LoadSystemLibrary(TEXT("shcore.dll"));
-			if (hLib!=nullptr) {
-				bool fOK=false;
-				UINT DpiX,DpiY;
-				auto pGetDpiForMonitor=GET_LIBRARY_FUNCTION(hLib,GetDpiForMonitor);
-				if (pGetDpiForMonitor!=nullptr) {
-					if (pGetDpiForMonitor(hMonitor,MDT_EFFECTIVE_DPI,&DpiX,&DpiY)==S_OK) {
-						fOK=true;
-					}
-				}
-				::FreeLibrary(hLib);
-
-				if (pDpiX!=nullptr)
-					*pDpiX=DpiX;
-				if (pDpiY!=nullptr)
-					*pDpiY=DpiY;
-
-				return DpiY;
-			}
-		}
-
-		return 0;
-	}
-
 
 	namespace OS
 	{
 
-#if 0
-		static bool GetVersion(DWORD *pMajor,DWORD *pMinor)
-		{
-			OSVERSIONINFO osvi;
-
-			osvi.dwOSVersionInfoSize=sizeof(OSVERSIONINFO);
-			if (!::GetVersionEx(&osvi))
-				return false;
-			if (pMajor)
-				*pMajor=osvi.dwMajorVersion;
-			if (pMinor)
-				*pMinor=osvi.dwMinorVersion;
-			return true;
-		}
-
-		static bool CheckOSVersion(DWORD Major,DWORD Minor)
-		{
-			DWORD MajorVersion,MinorVersion;
-			if (!GetVersion(&MajorVersion,&MinorVersion))
-				return false;
-			return MajorVersion==Major
-				&& MinorVersion==Minor;
-		}
-
-		static bool CheckOSVersionLater(DWORD Major,DWORD Minor)
-		{
-			DWORD MajorVersion,MinorVersion;
-			if (!GetVersion(&MajorVersion,&MinorVersion))
-				return false;
-			return MajorVersion>Major
-				|| (MajorVersion==Major && MinorVersion>=Minor);
-		}
-#else
 		static bool VerifyOSVersion(DWORD Major,BYTE MajorOperator,
 									DWORD Minor,BYTE MinorOperator)
 		{
@@ -1853,27 +1810,50 @@ namespace Util
 					VER_MINORVERSION,MinorOperator))!=FALSE;
 		}
 
+		static bool VerifyOSVersion(DWORD Major,BYTE MajorOperator,
+									DWORD Minor,BYTE MinorOperator,
+									DWORD Build,BYTE BuildOperator)
+		{
+			OSVERSIONINFOEX osvi={sizeof(osvi)};
+
+			osvi.dwMajorVersion=Major;
+			osvi.dwMinorVersion=Minor;
+			osvi.dwBuildNumber=Build;
+
+			ULONGLONG ConditionMask=0;
+			VER_SET_CONDITION(ConditionMask,VER_MAJORVERSION,MajorOperator);
+			VER_SET_CONDITION(ConditionMask,VER_MINORVERSION,MinorOperator);
+			VER_SET_CONDITION(ConditionMask,VER_BUILDNUMBER,BuildOperator);
+
+			return ::VerifyVersionInfo(
+				&osvi,
+				VER_MAJORVERSION | VER_MINORVERSION | VER_BUILDNUMBER,
+				ConditionMask)!=FALSE;
+		}
+
 		static bool CheckOSVersion(DWORD Major,DWORD Minor)
 		{
 			return VerifyOSVersion(Major,VER_EQUAL,Minor,VER_EQUAL);
+		}
+
+		static bool CheckOSVersion(DWORD Major,DWORD Minor,DWORD Build)
+		{
+			return VerifyOSVersion(Major,VER_EQUAL,Minor,VER_EQUAL,Build,VER_EQUAL);
 		}
 
 		static bool CheckOSVersionLater(DWORD Major,DWORD Minor)
 		{
 			return VerifyOSVersion(Major,VER_GREATER_EQUAL,Minor,VER_GREATER_EQUAL);
 		}
-#endif
+
+		static bool CheckOSVersionLater(DWORD Major,DWORD Minor,DWORD Build)
+		{
+			return VerifyOSVersion(Major,VER_GREATER_EQUAL,Minor,VER_GREATER_EQUAL,Build,VER_GREATER_EQUAL);
+		}
 
 		bool IsWindowsXP()
 		{
-#if 0
-			DWORD MajorVersion,MinorVersion;
-			if (!GetVersion(&MajorVersion,&MinorVersion))
-				return false;
-			return MajorVersion==5 && MinorVersion>=1;
-#else
 			return VerifyOSVersion(5,VER_EQUAL,1,VER_GREATER_EQUAL);
-#endif
 		}
 
 		bool IsWindowsVista()
@@ -1899,6 +1879,11 @@ namespace Util
 		bool IsWindows10()
 		{
 			return CheckOSVersion(10,0);
+		}
+
+		bool IsWindows10AnniversaryUpdate()
+		{
+			return CheckOSVersion(10,0,14393);
 		}
 
 		bool IsWindowsXPOrLater()
@@ -1929,6 +1914,11 @@ namespace Util
 		bool IsWindows10OrLater()
 		{
 			return CheckOSVersionLater(10,0);
+		}
+
+		bool IsWindows10AnniversaryUpdateOrLater()
+		{
+			return CheckOSVersionLater(10,0,14393);
 		}
 
 	}	// namespace OS

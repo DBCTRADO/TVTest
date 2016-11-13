@@ -386,7 +386,7 @@ void CChannelDisplay::Layout()
 	m_TunerItemTop=m_Style.CategoriesMargin.Top+
 		max((CategoriesHeight-m_VisibleTunerItems*m_TunerItemHeight)/2,0);
 	m_TunerAreaWidth=m_TunerItemLeft+m_TunerItemWidth+m_Style.CategoriesMargin.Right;
-	int ScrollWidth=::GetSystemMetrics(SM_CXVSCROLL);
+	int ScrollWidth=m_pStyleScaling->GetScaledSystemMetrics(SM_CXVSCROLL);
 	if (m_TotalTuningSpaces>m_VisibleTunerItems) {
 		SCROLLINFO si;
 

@@ -3,6 +3,7 @@
 #include "UIBase.h"
 #include "AppMain.h"
 #include "StyleUtil.h"
+#include "DPIUtil.h"
 #include <algorithm>
 #include "Common/DebugDef.h"
 
@@ -282,16 +283,10 @@ namespace TVTest
 	}
 
 
-	void CUIBase::InitStyleScaling(HWND hwnd)
+	void CUIBase::InitStyleScaling(HWND hwnd,bool fNonClientScaling)
 	{
-		// 公式にAPIが公開されたら有効化する
-		// (ただし AdjustWindowRectEx や GetSystemMetrics などの修正が必要)
-#if 0
-		auto pEnableNonClientDpiScaling=
-			GET_MODULE_FUNCTION(TEXT("user32.dll"),EnableNonClientDpiScaling);
-		if (pEnableNonClientDpiScaling!=nullptr)
-			pEnableNonClientDpiScaling(hwnd);
-#endif
+		if (fNonClientScaling)
+			EnableNonClientDPIScaling(hwnd);
 
 		if (m_pStyleScaling!=nullptr)
 			GetStyleManager()->InitStyleScaling(m_pStyleScaling,hwnd);
@@ -303,7 +298,7 @@ namespace TVTest
 		TRACE(TEXT("DPI changed : %dx%d\n"),LOWORD(wParam),HIWORD(wParam));
 
 		if (GetStyleManager()->IsHandleDPIChanged() && m_pStyleScaling!=nullptr) {
-			m_pStyleScaling->SetDPI(LOWORD(wParam),HIWORD(wParam));
+			m_pStyleScaling->SetDPI(HIWORD(wParam));
 
 			UpdateStyle();
 

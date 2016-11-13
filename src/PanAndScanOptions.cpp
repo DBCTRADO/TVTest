@@ -467,7 +467,7 @@ INT_PTR CPanAndScanOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPa
 				ofn.nMaxFile=lengthof(szFileName);
 				ofn.lpstrTitle=TEXT("パン&スキャン設定の読み込み");
 				ofn.Flags=OFN_HIDEREADONLY | OFN_FILEMUSTEXIST | OFN_EXPLORER;
-				if (::GetOpenFileName(&ofn)) {
+				if (FileOpenDialog(&ofn)) {
 					Import(szFileName);
 				}
 			}
@@ -489,7 +489,7 @@ INT_PTR CPanAndScanOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPa
 				ofn.lpstrTitle=TEXT("パン&スキャン設定の保存");
 				ofn.Flags=OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT | OFN_EXPLORER;
 				ofn.lpstrDefExt=TEXT("ini");
-				if (::GetSaveFileName(&ofn)) {
+				if (FileSaveDialog(&ofn)) {
 					Export(szFileName);
 				}
 			}

@@ -5,6 +5,7 @@
 #include "DialogUtil.h"
 #include "DrawUtil.h"
 #include "WindowUtil.h"
+#include "DPIUtil.h"
 #include "PseudoOSD.h"
 #include "EventInfoPopup.h"
 #include "ToolTip.h"
@@ -110,6 +111,7 @@ CMainWindow::CMainWindow(CAppMain &App)
 	, m_fEnterSizeMove(false)
 	, m_fResizePanel(false)
 
+	, m_fCreated(false)
 	, m_fClosing(false)
 
 	, m_WheelCount(0)
@@ -133,17 +135,17 @@ CMainWindow::CMainWindow(CAppMain &App)
 	, m_fAccurateClock(true)
 {
 	POINT pt={0,0};
-	UINT DpiX,DpiY;
-	if (Util::GetMonitorDPI(::MonitorFromPoint(pt,MONITOR_DEFAULTTOPRIMARY),&DpiX,&DpiY)==0)
-		DpiX=DpiY=m_App.StyleManager.GetSystemDPI();
+	int DPI=GetMonitorDPI(::MonitorFromPoint(pt,MONITOR_DEFAULTTOPRIMARY));
+	if (DPI==0)
+		DPI=GetSystemDPI();
 	// 適当にデフォルトサイズを設定
 #ifndef TVTEST_FOR_1SEG
 	static const int DefaultWidth=960,DefaultHeight=540;
 #else
 	static const int DefaultWidth=640,DefaultHeight=360;
 #endif
-	m_WindowPosition.Width=::MulDiv(DefaultWidth,DpiX,96);
-	m_WindowPosition.Height=::MulDiv(DefaultHeight,DpiY,96);
+	m_WindowPosition.Width=::MulDiv(DefaultWidth,DPI,96);
+	m_WindowPosition.Height=::MulDiv(DefaultHeight,DPI,96);
 	m_WindowPosition.Left=
 		(::GetSystemMetrics(SM_CXSCREEN)-m_WindowPosition.Width)/2;
 	m_WindowPosition.Top=
@@ -400,7 +402,7 @@ void CMainWindow::AdjustWindowSize(int Width,int Height,bool fScreenSize)
 		if (m_fCustomFrame)
 			::InflateRect(&rc,m_CustomFrameWidth,m_CustomFrameWidth);
 		else
-			CalcPositionFromClientRect(&rc);
+			m_pStyleScaling->AdjustWindowRect(m_hwnd,&rc);
 	} else {
 		rc.left=rcOld.left;
 		rc.top=rcOld.top;
@@ -702,7 +704,7 @@ void CMainWindow::SetTitleBarVisible(bool fVisible)
 				int CaptionHeight;
 
 				if (!m_fCustomTitleBar)
-					CaptionHeight=::GetSystemMetrics(SM_CYCAPTION);
+					CaptionHeight=m_pStyleScaling->GetScaledSystemMetrics(SM_CYCAPTION,false);
 				else
 					CaptionHeight=m_TitleBar.GetHeight();
 				if (fVisible)
@@ -1607,7 +1609,7 @@ bool CMainWindow::OnNCCreate(const CREATESTRUCT *pcs)
 	RegisterUIChild(&m_Display.GetViewWindow());
 
 	SetStyleScaling(&m_StyleScaling);
-	InitStyleScaling(m_hwnd);
+	InitStyleScaling(m_hwnd,true);
 
 	return true;
 }
@@ -1857,6 +1859,8 @@ bool CMainWindow::OnCreate(const CREATESTRUCT *pcs)
 	if (m_App.ViewOptions.GetHideCursor())
 		::SetTimer(m_hwnd,TIMER_ID_HIDECURSOR,HIDE_CURSOR_DELAY,nullptr);
 
+	m_fCreated=true;
+
 	return true;
 }
 
@@ -1896,6 +1900,11 @@ void CMainWindow::OnDestroy()
 
 void CMainWindow::OnSizeChanged(UINT State,int Width,int Height)
 {
+	// WM_NCCREATE で EnableNonClientDpiScaling を呼んだ時に WM_SIZE が送られてくるため、
+	// まだ WM_CREATE を処理してない場合は何もしないようにする
+	if (!m_fCreated)
+		return;
+
 	const bool fMinimized=State==SIZE_MINIMIZED;
 	const bool fMaximized=State==SIZE_MAXIMIZED;
 	WindowState NewState;
@@ -2043,7 +2052,7 @@ void CMainWindow::OnGetMinMaxInfo(HWND hwnd,LPMINMAXINFO pmmi)
 
 	m_LayoutBase.GetMinSize(&sz);
 	::SetRect(&rc,0,0,sz.cx,sz.cy);
-	CalcPositionFromClientRect(&rc);
+	m_StyleScaling.AdjustWindowRect(m_hwnd,&rc);
 	pmmi->ptMinTrackSize.x=rc.right-rc.left;
 	pmmi->ptMinTrackSize.y=rc.bottom-rc.top;
 
@@ -3230,7 +3239,7 @@ void CMainWindow::OnCommand(HWND hwnd,int id,HWND hwndCtl,UINT codeNotify)
 			ofn.lpstrInitialDir=szInitDir;
 			ofn.lpstrTitle=TEXT("BonDriverの選択");
 			ofn.Flags=OFN_HIDEREADONLY | OFN_FILEMUSTEXIST | OFN_EXPLORER;
-			if (::GetOpenFileName(&ofn)) {
+			if (FileOpenDialog(&ofn)) {
 				m_App.Core.OpenTuner(szFileName);
 			}
 		}
@@ -6362,7 +6371,7 @@ LRESULT CMainWindow::CFullscreen::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LP
 		return OnCreate()?0:-1;
 
 	case WM_NCCREATE:
-		InitStyleScaling(hwnd);
+		InitStyleScaling(hwnd,true);
 		break;
 
 	case WM_SIZE:

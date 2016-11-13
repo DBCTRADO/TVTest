@@ -4,6 +4,7 @@
 #include "TVTest.h"
 #include "Style.h"
 #include "Settings.h"
+#include "DPIUtil.h"
 #include "Common/DebugDef.h"
 
 
@@ -14,29 +15,12 @@ namespace Style
 {
 
 
-int CStyleManager::m_SystemResolutionX=96;
-int CStyleManager::m_SystemResolutionY=96;
-
-
 CStyleManager::CStyleManager()
-	: m_ForcedResolutionX(0)
-	, m_ForcedResolutionY(0)
+	: m_DPI(TVTest::GetSystemDPI())
+	, m_ForcedDPI(0)
 	, m_fScaleFont(true)
 	, m_fHandleDPIChanged(true)
 {
-	HDC hdc=::GetDC(nullptr);
-	if (hdc!=nullptr) {
-		m_SystemResolutionX=::GetDeviceCaps(hdc,LOGPIXELSX);
-		m_SystemResolutionY=::GetDeviceCaps(hdc,LOGPIXELSY);
-		TRACE(TEXT("System DPI : %d:%d\n"),m_SystemResolutionX,m_SystemResolutionY);
-		::ReleaseDC(nullptr,hdc);
-	} else {
-		m_SystemResolutionX=96;
-		m_SystemResolutionY=96;
-	}
-
-	m_ResolutionX=m_SystemResolutionX;
-	m_ResolutionY=m_SystemResolutionY;
 }
 
 
@@ -56,10 +40,8 @@ bool CStyleManager::Load(LPCTSTR pszFileName)
 		int Value;
 
 		if (Settings.Read(TEXT("DPI"),&Value) && Value>0) {
-			m_ForcedResolutionX=Value;
-			m_ForcedResolutionY=Value;
-			m_ResolutionX=m_ForcedResolutionX;
-			m_ResolutionY=m_ForcedResolutionY;
+			m_ForcedDPI=Value;
+			m_DPI=m_ForcedDPI;
 		}
 
 		Settings.Read(TEXT("HandleDPIChanged"),&m_fHandleDPIChanged);
@@ -348,26 +330,24 @@ bool CStyleManager::InitStyleScaling(CStyleScaling *pScaling,HMONITOR hMonitor) 
 	if (pScaling==nullptr)
 		return false;
 
-	int ResolutionX,ResolutionY;
+	const int SystemDPI=GetSystemDPI();
+	int DPI;
 
-	if (m_ForcedResolutionX>0 && m_ForcedResolutionY>0) {
-		ResolutionX=m_ForcedResolutionX;
-		ResolutionY=m_ForcedResolutionY;
+	if (m_ForcedDPI>0) {
+		DPI=m_ForcedDPI;
 	} else {
-		ResolutionX=m_SystemResolutionX;
-		ResolutionY=m_SystemResolutionY;
+		DPI=SystemDPI;
 
 		if (hMonitor!=nullptr) {
-			UINT DpiX,DpiY;
-			if (Util::GetMonitorDPI(hMonitor,&DpiX,&DpiY)!=0) {
-				ResolutionX=DpiX;
-				ResolutionY=DpiY;
+			int MonitorDPI=GetMonitorDPI(hMonitor);
+			if (MonitorDPI!=0) {
+				DPI=MonitorDPI;
 			}
 		}
 	}
 
-	pScaling->SetDPI(ResolutionX,ResolutionY);
-	pScaling->SetSystemDPI(m_SystemResolutionX,m_SystemResolutionY);
+	pScaling->SetDPI(DPI);
+	pScaling->SetSystemDPI(SystemDPI);
 	pScaling->SetScaleFont(m_fScaleFont);
 
 	return true;
@@ -394,13 +374,13 @@ bool CStyleManager::InitStyleScaling(CStyleScaling *pScaling) const
 
 int CStyleManager::GetSystemDPI() const
 {
-	return m_SystemResolutionY;
+	return TVTest::GetSystemDPI();
 }
 
 
 int CStyleManager::GetForcedDPI() const
 {
-	return m_ForcedResolutionY;
+	return m_ForcedDPI;
 }
 
 
@@ -415,7 +395,7 @@ bool CStyleManager::AssignFontSizeFromLogFont(Font *pFont)
 	if (pFont==nullptr)
 		return false;
 
-	pFont->Size.Value=::MulDiv(abs(pFont->LogFont.lfHeight),72,m_SystemResolutionY);
+	pFont->Size.Value=::MulDiv(abs(pFont->LogFont.lfHeight),72,TVTest::GetSystemDPI());
 	if (pFont->Size.Value!=0)
 		pFont->Size.Unit=TVTest::Style::UNIT_POINT;
 	else
@@ -463,22 +443,19 @@ UnitType CStyleManager::ParseUnit(LPCTSTR pszUnit)
 
 
 CStyleScaling::CStyleScaling()
-	: m_ResolutionX(96)
-	, m_ResolutionY(96)
-	, m_SystemResolutionX(96)
-	, m_SystemResolutionY(96)
+	: m_DPI(96)
+	, m_SystemDPI(96)
 	, m_fScaleFont(true)
 {
 }
 
 
-bool CStyleScaling::SetDPI(int ResolutionX,int ResolutionY)
+bool CStyleScaling::SetDPI(int DPI)
 {
-	if (ResolutionX<1 || ResolutionY<1)
+	if (DPI<1)
 		return false;
 
-	m_ResolutionX=ResolutionX;
-	m_ResolutionY=ResolutionY;
+	m_DPI=DPI;
 
 	return true;
 }
@@ -486,17 +463,16 @@ bool CStyleScaling::SetDPI(int ResolutionX,int ResolutionY)
 
 int CStyleScaling::GetDPI() const
 {
-	return m_ResolutionY;
+	return m_DPI;
 }
 
 
-bool CStyleScaling::SetSystemDPI(int ResolutionX,int ResolutionY)
+bool CStyleScaling::SetSystemDPI(int DPI)
 {
-	if (ResolutionX<1 || ResolutionY<1)
+	if (DPI<1)
 		return false;
 
-	m_SystemResolutionX=ResolutionX;
-	m_SystemResolutionY=ResolutionY;
+	m_SystemDPI=DPI;
 
 	return true;
 }
@@ -504,7 +480,7 @@ bool CStyleScaling::SetSystemDPI(int ResolutionX,int ResolutionY)
 
 int CStyleScaling::GetSystemDPI() const
 {
-	return m_SystemResolutionY;
+	return m_SystemDPI;
 }
 
 
@@ -593,21 +569,21 @@ int CStyleScaling::ToPixels(int Value,UnitType Unit) const
 
 int CStyleScaling::LogicalPixelsToPhysicalPixels(int Pixels) const
 {
-	return ::MulDiv(Pixels,m_ResolutionY,96);
+	return ::MulDiv(Pixels,m_DPI,96);
 }
 
 
 int CStyleScaling::PointsToPixels(int Points) const
 {
 	// 1pt = 1/72in
-	return ::MulDiv(Points,m_ResolutionY,72);
+	return ::MulDiv(Points,m_DPI,72);
 }
 
 
 int CStyleScaling::DipToPixels(int Dip) const
 {
 	// 1dp = 1/160in
-	return ::MulDiv(Dip,m_ResolutionY,160);
+	return ::MulDiv(Dip,m_DPI,160);
 }
 
 
@@ -615,16 +591,16 @@ int CStyleScaling::ConvertUnit(int Value,UnitType SrcUnit,UnitType DstUnit) cons
 {
 	switch (DstUnit) {
 	case UNIT_LOGICAL_PIXEL:
-		return ::MulDiv(ToPixels(Value,SrcUnit),96,m_ResolutionY);
+		return ::MulDiv(ToPixels(Value,SrcUnit),96,m_DPI);
 
 	case UNIT_PHYSICAL_PIXEL:
 		return ToPixels(Value,SrcUnit);
 
 	case UNIT_POINT:
-		return ::MulDiv(ToPixels(Value,SrcUnit),72,m_ResolutionY);
+		return ::MulDiv(ToPixels(Value,SrcUnit),72,m_DPI);
 
 	case UNIT_DIP:
-		return ::MulDiv(ToPixels(Value,SrcUnit),160,m_ResolutionY);
+		return ::MulDiv(ToPixels(Value,SrcUnit),160,m_DPI);
 	}
 
 	return Value;
@@ -650,9 +626,20 @@ bool CStyleScaling::RealizeFontSize(Font *pFont) const
 }
 
 
-int CStyleScaling::GetScaledSystemMetrics(int Index) const
+int CStyleScaling::GetScaledSystemMetrics(int Index,bool fFallbackScaling) const
 {
-	return ::MulDiv(::GetSystemMetrics(Index),m_ResolutionY,m_SystemResolutionY);
+	return GetSystemMetricsWithDPI(Index,m_DPI,fFallbackScaling);
+}
+
+
+bool CStyleScaling::AdjustWindowRect(HWND hwnd,RECT *pRect) const
+{
+	return AdjustWindowRectWithDPI(
+		pRect,
+		::GetWindowLong(hwnd,GWL_STYLE),
+		::GetWindowLong(hwnd,GWL_EXSTYLE),
+		false,
+		m_DPI);
 }
 
 

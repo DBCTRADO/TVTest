@@ -110,9 +110,9 @@ namespace TVTest
 		{
 		public:
 			CStyleScaling();
-			bool SetDPI(int ResolutionX,int ResolutionY);
+			bool SetDPI(int DPI);
 			int GetDPI() const;
-			bool SetSystemDPI(int ResolutionX,int ResolutionY);
+			bool SetSystemDPI(int DPI);
 			int GetSystemDPI() const;
 			void SetScaleFont(bool fScale);
 			bool ToPixels(IntValue *pValue) const;
@@ -124,13 +124,12 @@ namespace TVTest
 			int DipToPixels(int Dip) const;
 			int ConvertUnit(int Value,UnitType SrcUnit,UnitType DstUnit) const;
 			bool RealizeFontSize(Font *pFont) const;
-			int GetScaledSystemMetrics(int Index) const;
+			int GetScaledSystemMetrics(int Index,bool fFallbackScaling=true) const;
+			bool AdjustWindowRect(HWND hwnd,RECT *pRect) const;
 
 		private:
-			int m_ResolutionX;
-			int m_ResolutionY;
-			int m_SystemResolutionX;
-			int m_SystemResolutionY;
+			int m_DPI;
+			int m_SystemDPI;
 			bool m_fScaleFont;
 		};
 
@@ -166,15 +165,14 @@ namespace TVTest
 			typedef std::unordered_map<String,StyleInfo> StyleMap;
 
 			StyleMap m_StyleMap;
+			int m_DPI;
+			int m_ForcedDPI;
 			int m_ResolutionX;
 			int m_ResolutionY;
 			int m_ForcedResolutionX;
 			int m_ForcedResolutionY;
 			bool m_fScaleFont;
 			bool m_fHandleDPIChanged;
-
-			static int m_SystemResolutionX;
-			static int m_SystemResolutionY;
 
 			static UnitType ParseUnit(LPCTSTR pszUnit);
 		};

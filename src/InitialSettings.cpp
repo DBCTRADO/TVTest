@@ -179,7 +179,7 @@ INT_PTR CInitialSettings::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPara
 				ofn.lpstrInitialDir=szInitDir;
 				ofn.lpstrTitle=TEXT("BonDriver‚Ì‘I‘ð");
 				ofn.Flags=OFN_HIDEREADONLY | OFN_FILEMUSTEXIST | OFN_EXPLORER;
-				if (::GetOpenFileName(&ofn)) {
+				if (FileOpenDialog(&ofn)) {
 					::SetDlgItemText(hDlg,IDC_INITIALSETTINGS_DRIVER,szFileName);
 				}
 			}

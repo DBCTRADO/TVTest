@@ -3,6 +3,7 @@
 #include "Menu.h"
 #include "AppMain.h"
 #include "GUIUtil.h"
+#include "DPIUtil.h"
 #include "resource.h"
 #include "Common/DebugDef.h"
 
@@ -1667,7 +1668,7 @@ bool CDropDownMenu::Show(HWND hwndOwner,HWND hwndMessage,const POINT *pPos,int C
 	if (DPI!=0)
 		m_DPI=DPI;
 	else
-		m_DPI=Util::GetMonitorDPI(hMonitor);
+		m_DPI=TVTest::GetMonitorDPI(hMonitor);
 
 	HWND hwnd=::CreateWindowEx(WS_EX_NOACTIVATE | WS_EX_TOPMOST,DROPDOWNMENU_WINDOW_CLASS,
 							   NULL,WS_POPUP,0,0,0,0,hwndOwner,NULL,m_hinst,this);

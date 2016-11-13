@@ -799,7 +799,7 @@ bool CStatusView::AdjustSize()
 	TVTest::Theme::BorderStyle Border=m_Theme.Border;
 	ConvertBorderWidthsInPixels(&Border);
 	TVTest::Theme::AddBorderRect(Border,&rc);
-	CalcPositionFromClientRect(&rc);
+	::AdjustWindowRectEx(&rc,GetWindowStyle(),FALSE,GetWindowExStyle());
 	int Height=rc.bottom-rc.top;
 	if (Height!=rcWindow.bottom-rcWindow.top) {
 		::SetWindowPos(m_hwnd,NULL,0,0,rcWindow.right-rcWindow.left,Height,

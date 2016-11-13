@@ -57,6 +57,8 @@ TVTest::String FormatMenuString(const TVTest::String &Str);
 TVTest::String FormatMenuString(LPCWSTR pszText);
 
 void InitOpenFileName(OPENFILENAME *pofn);
+bool FileOpenDialog(OPENFILENAME *pofn);
+bool FileSaveDialog(OPENFILENAME *pofn);
 
 void ForegroundWindow(HWND hwnd);
 
@@ -226,8 +228,6 @@ namespace Util
 	inline TickCountType GetTickCount() { return ::GetTickCount64(); }
 #endif
 
-	int GetMonitorDPI(HMONITOR hMonitor,UINT *pDpiX=nullptr,UINT *pDpiY=nullptr);
-
 	namespace OS
 	{
 
@@ -237,12 +237,14 @@ namespace Util
 		bool IsWindows8();
 		bool IsWindows8_1();
 		bool IsWindows10();
+		bool IsWindows10AnniversaryUpdate();
 		bool IsWindowsXPOrLater();
 		bool IsWindowsVistaOrLater();
 		bool IsWindows7OrLater();
 		bool IsWindows8OrLater();
 		bool IsWindows8_1OrLater();
 		bool IsWindows10OrLater();
+		bool IsWindows10AnniversaryUpdateOrLater();
 
 	}	// namespace OS
 

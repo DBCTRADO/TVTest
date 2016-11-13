@@ -296,7 +296,7 @@ INT_PTR CProgramGuideTool::CProgramGuideToolDialog::DlgProc(HWND hDlg,UINT uMsg,
 					::lstrcpy(szFileName,Path.GetFileName());
 				}
 				ofn.Flags=OFN_FILEMUSTEXIST | OFN_HIDEREADONLY | OFN_EXPLORER;
-				if (::GetOpenFileName(&ofn)) {
+				if (FileOpenDialog(&ofn)) {
 					::PathQuoteSpaces(szFileName);
 					//::lstrcat(szFileName,TEXT(" \"%tvpid%\""));
 					::SetDlgItemText(hDlg,IDC_PROGRAMGUIDETOOL_COMMAND,szFileName);

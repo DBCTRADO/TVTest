@@ -321,7 +321,7 @@ void CCaptionPanel::OnCommand(int Command)
 				ofn.nMaxFile=lengthof(szFileName);
 				ofn.lpstrTitle=TEXT("Žš–‹‚Ì•Û‘¶");
 				ofn.Flags=OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT | OFN_EXPLORER;
-				if (::GetSaveFileName(&ofn)) {
+				if (FileSaveDialog(&ofn)) {
 					m_SaveCharEncoding=(CharEncoding)(ofn.nFilterIndex-1);
 
 					bool fOK=false;

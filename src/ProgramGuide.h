@@ -863,6 +863,7 @@ private:
 	bool m_fAero;
 	CUxTheme m_UxTheme;
 	bool m_fAlwaysOnTop;
+	bool m_fCreated;
 
 // CProgramGuideFrameBase
 	void OnLayoutChange() override;

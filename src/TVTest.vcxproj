@@ -942,6 +942,7 @@
     <ClCompile Include="DirectShowFilter\VMR7Renderless.cpp" />
     <ClCompile Include="DirectWrite.cpp" />
     <ClCompile Include="DirectWriteOptionsDialog.cpp" />
+    <ClCompile Include="DPIUtil.cpp" />
     <ClCompile Include="Epg.cpp" />
     <ClCompile Include="GUIUtil.cpp" />
     <ClCompile Include="MainDisplay.cpp" />
@@ -1149,6 +1150,7 @@
     <ClInclude Include="DirectShowFilter\VMR7Renderless.h" />
     <ClInclude Include="DirectWrite.h" />
     <ClInclude Include="DirectWriteOptionsDialog.h" />
+    <ClInclude Include="DPIUtil.h" />
     <ClInclude Include="Epg.h" />
     <ClInclude Include="GUIUtil.h" />
     <ClInclude Include="MainDisplay.h" />

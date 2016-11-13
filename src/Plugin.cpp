@@ -4,6 +4,7 @@
 #include "Plugin.h"
 #include "Image.h"
 #include "DialogUtil.h"
+#include "DPIUtil.h"
 #include "Command.h"
 #include "EpgProgramList.h"
 #include "DriverManager.h"
@@ -2114,7 +2115,7 @@ LRESULT CPlugin::OnCallback(TVTest::PluginParam *pParam,UINT Message,LPARAM lPar
 					}
 					TVTest::Style::CStyleScaling StyleScaling;
 					int DPI=pInfo->DPI!=0?pInfo->DPI:96;
-					StyleScaling.SetDPI(DPI,DPI);
+					StyleScaling.SetDPI(DPI);
 					pInfo->Value=StyleScaling.ConvertUnit(Style.Value.Int,Style.Unit,Unit);
 				}
 			} else if (Style.Type==TVTest::Style::TYPE_BOOL) {
@@ -2149,7 +2150,7 @@ LRESULT CPlugin::OnCallback(TVTest::PluginParam *pParam,UINT Message,LPARAM lPar
 				pStyleScaling=App.MainWindow.GetStyleScaling();
 			} else {
 				App.StyleManager.InitStyleScaling(&StyleScaling);
-				StyleScaling.SetDPI(pInfo->DPI,pInfo->DPI);
+				StyleScaling.SetDPI(pInfo->DPI);
 				pStyleScaling=&StyleScaling;
 			}
 			pStyleScaling->ToPixels(&Style.Border.Width.Left);
@@ -3516,61 +3517,57 @@ LRESULT CPlugin::OnPluginMessage(WPARAM wParam,LPARAM lParam)
 
 			switch (pInfo->Type) {
 			case TVTest::DPI_TYPE_SYSTEM:
-				return App.StyleManager.GetSystemDPI();
+				return TVTest::GetSystemDPI();
 
 			case TVTest::DPI_TYPE_WINDOW:
 				{
 					HWND hwndRoot;
+					const TVTest::Style::CStyleScaling *pStyleScaling=NULL;
 
-					{
-						const TVTest::Style::CStyleScaling *pStyleScaling=NULL;
+					if (pInfo->hwnd==NULL || (hwndRoot=::GetAncestor(pInfo->hwnd,GA_ROOT))==App.MainWindow.GetHandle())
+						pStyleScaling=App.UICore.GetSkin()->GetUIBase()->GetStyleScaling();
+					else if (hwndRoot==App.UICore.GetSkin()->GetFullscreenWindow())
+						pStyleScaling=App.UICore.GetSkin()->GetUIBase()->GetStyleScaling();
+					else if (hwndRoot==App.Panel.Frame.GetHandle())
+						pStyleScaling=App.Panel.Frame.GetStyleScaling();
+					else if (hwndRoot==App.Epg.ProgramGuide.GetHandle())
+						pStyleScaling=App.Epg.ProgramGuide.GetStyleScaling();
 
-						if (pInfo->hwnd==NULL || (hwndRoot=::GetAncestor(pInfo->hwnd,GA_ROOT))==App.MainWindow.GetHandle())
-							pStyleScaling=App.UICore.GetSkin()->GetUIBase()->GetStyleScaling();
-						else if (hwndRoot==App.UICore.GetSkin()->GetFullscreenWindow())
-							pStyleScaling=App.UICore.GetSkin()->GetUIBase()->GetStyleScaling();
-						else if (hwndRoot==App.Panel.Frame.GetHandle())
-							pStyleScaling=App.Panel.Frame.GetStyleScaling();
-						else if (hwndRoot==App.Epg.ProgramGuide.GetHandle())
-							pStyleScaling=App.Epg.ProgramGuide.GetStyleScaling();
+					if (pStyleScaling!=NULL)
+						return pStyleScaling->GetDPI();
 
-						if (pStyleScaling!=NULL)
-							return pStyleScaling->GetDPI();
-					}
+					return TVTest::GetWindowDPI(hwndRoot);
+				}
 
 			case TVTest::DPI_TYPE_RECT:
 			case TVTest::DPI_TYPE_POINT:
 			case TVTest::DPI_TYPE_MONITOR:
-					if ((pInfo->Flags & TVTest::DPI_FLAG_FORCED)!=0
-							&& App.StyleManager.GetForcedDPI()>0)
-						return App.StyleManager.GetForcedDPI();
+				if ((pInfo->Flags & TVTest::DPI_FLAG_FORCED)!=0
+						&& App.StyleManager.GetForcedDPI()>0)
+					return App.StyleManager.GetForcedDPI();
 
-					if (Util::OS::IsWindows8_1OrLater()) {
-						HMONITOR hMonitor;
+				if (Util::OS::IsWindows8_1OrLater()) {
+					HMONITOR hMonitor;
 
-						switch (pInfo->Type) {
-						case TVTest::DPI_TYPE_WINDOW:
-							hMonitor=::MonitorFromWindow(hwndRoot,MONITOR_DEFAULTTONULL);
-							break;
-						case TVTest::DPI_TYPE_RECT:
-							hMonitor=::MonitorFromRect(&pInfo->Rect,MONITOR_DEFAULTTONULL);
-							break;
-						case TVTest::DPI_TYPE_POINT:
-							hMonitor=::MonitorFromPoint(pInfo->Point,MONITOR_DEFAULTTONULL);
-							break;
-						case TVTest::DPI_TYPE_MONITOR:
-							hMonitor=pInfo->hMonitor;
-							break;
-						}
+					switch (pInfo->Type) {
+					case TVTest::DPI_TYPE_RECT:
+						hMonitor=::MonitorFromRect(&pInfo->Rect,MONITOR_DEFAULTTONULL);
+						break;
+					case TVTest::DPI_TYPE_POINT:
+						hMonitor=::MonitorFromPoint(pInfo->Point,MONITOR_DEFAULTTONULL);
+						break;
+					case TVTest::DPI_TYPE_MONITOR:
+						hMonitor=pInfo->hMonitor;
+						break;
+					}
 
-						if (hMonitor!=NULL) {
-							int DPI=Util::GetMonitorDPI(hMonitor);
-							if (DPI!=0)
-								return DPI;
-						}
+					if (hMonitor!=NULL) {
+						int DPI=TVTest::GetMonitorDPI(hMonitor);
+						if (DPI!=0)
+							return DPI;
 					}
 				}
-				return App.StyleManager.GetSystemDPI();
+				return TVTest::GetSystemDPI();
 			}
 
 			return 0;

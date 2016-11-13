@@ -539,7 +539,7 @@ LRESULT CEventInfoPopup::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lPar
 		return 0;
 
 	case WM_NCCREATE:
-		InitStyleScaling(hwnd);
+		InitStyleScaling(hwnd,true);
 		break;
 
 	case WM_SIZE:

@@ -2,6 +2,7 @@
 #include "TVTest.h"
 #include "Dialog.h"
 #include "DialogUtil.h"
+#include "DPIUtil.h"
 #include "Common/DebugDef.h"
 
 
@@ -165,6 +166,10 @@ int CBasicDialog::ShowDialog(HWND hwndOwner,HINSTANCE hinst,LPCTSTR pszTemplate)
 {
 	if (m_hDlg!=NULL)
 		return -1;
+
+	// ダイアログは Per-Monitor DPI 対応
+	TVTest::PerMonitorDPIBlock DPIBlock;
+
 	return (int)::DialogBoxParam(hinst,pszTemplate,hwndOwner,DialogProc,
 								 reinterpret_cast<LPARAM>(this));
 }
@@ -174,6 +179,10 @@ bool CBasicDialog::CreateDialogWindow(HWND hwndOwner,HINSTANCE hinst,LPCTSTR psz
 {
 	if (m_hDlg!=NULL)
 		return false;
+
+	// ダイアログは Per-Monitor DPI 対応
+	TVTest::PerMonitorDPIBlock DPIBlock;
+
 	if (::CreateDialogParam(hinst,pszTemplate,hwndOwner,DialogProc,
 							reinterpret_cast<LPARAM>(this))==NULL)
 		return false;
@@ -311,7 +320,7 @@ void CBasicDialog::InitDialog()
 	m_fInitializing=true;
 
 	if (m_pStyleScaling==&m_StyleScaling) {
-		InitStyleScaling(m_hDlg);
+		InitStyleScaling(m_hDlg,false);
 	}
 
 	m_OriginalDPI=m_pStyleScaling->GetSystemDPI();

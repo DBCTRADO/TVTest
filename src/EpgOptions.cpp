@@ -456,7 +456,7 @@ INT_PTR CEpgOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 				ofn.dwReserved=0;
 				ofn.FlagsEx=0;
 #endif
-				if (::GetOpenFileName(&ofn))
+				if (FileOpenDialog(&ofn))
 					::SetDlgItemText(hDlg,IDC_EPGOPTIONS_EPGFILENAME,szFileName);
 			}
 			return TRUE;
@@ -513,7 +513,7 @@ INT_PTR CEpgOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 				ofn.dwReserved=0;
 				ofn.FlagsEx=0;
 #endif
-				if (::GetOpenFileName(&ofn))
+				if (FileOpenDialog(&ofn))
 					::SetDlgItemText(hDlg,IDC_LOGOOPTIONS_DATAFILENAME,szFileName);
 			}
 			return TRUE;
