@@ -1,7 +1,5 @@
 /*
-	TVTest プラグインヘッダ ver.0.0.14-pre
-
-	※ ver.0.0.14 はまだ開発途中です。今後変更される可能性があります。
+	TVTest プラグインヘッダ ver.0.0.14
 
 	このファイルは再配布・改変など自由に行って構いません。
 	ただし、改変した場合はオリジナルと違う旨を記載して頂けると、混乱がなくてい
@@ -1391,13 +1389,6 @@ enum SettingType {
 	※1　%event-name% などの変数が含まれている可能性があります。
 	　 　MsgFormatVarString を使って変数を展開できます。
 	※2　相対パスの可能性があります。その場合実行ファイルの場所が基準です。
-
-	* フォント関係の設定の取得は ver.0.0.14 正式版までに削除されます。
-	* 代わりに MsgGetFont を利用します。
-	OSDFont               OSD のフォント                      データ(LOGFONT)
-	PanelFont             パネルのフォント                    データ(LOGFONT)
-	ProgramGuideFont      番組表のフォント                    データ(LOGFONT)
-	StatusBarFont         ステータスバーのフォント            データ(LOGFONT)
 */
 
 // 設定を取得する
@@ -1456,18 +1447,6 @@ inline DWORD MsgGetSetting(PluginParam *pParam,LPCWSTR pszName,LPWSTR pszString,
 	if (!(*pParam->Callback)(pParam,MESSAGE_GETSETTING,(LPARAM)&Info,0))
 		return 0;
 	return Info.ValueSize/sizeof(WCHAR);
-}
-
-// フォントの設定を取得する
-// 現在は使用しません。
-inline bool MsgGetSetting(PluginParam *pParam,LPCWSTR pszName,LOGFONTW *pFont)
-{
-	SettingInfo Info;
-	Info.pszName=pszName;
-	Info.Type=SETTING_TYPE_DATA;
-	Info.ValueSize=sizeof(LOGFONTW);
-	Info.Value.pData=pFont;
-	return (*pParam->Callback)(pParam,MESSAGE_GETSETTING,(LPARAM)&Info,0)!=FALSE;
 }
 
 // BonDriverのフルパス名を取得する
@@ -3503,9 +3482,6 @@ public:
 	}
 	DWORD GetSetting(LPCWSTR pszName,LPWSTR pszString,DWORD MaxLength) {
 		return MsgGetSetting(m_pParam,pszName,pszString,MaxLength);
-	}
-	bool GetSetting(LPCWSTR pszName,LOGFONTW *pFont) {
-		return MsgGetSetting(m_pParam,pszName,pFont);
 	}
 	int GetDriverFullPathName(LPWSTR pszPath,int MaxLength) {
 		return MsgGetDriverFullPathName(m_pParam,pszPath,MaxLength);
