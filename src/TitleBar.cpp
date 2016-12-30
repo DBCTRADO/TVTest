@@ -263,6 +263,7 @@ LRESULT CTitleBar::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 			::MoveWindow(hwnd,0,0,0,rc.bottom-rc.top,FALSE);
 
 			m_Tooltip.Create(hwnd);
+			m_Tooltip.SetFont(m_Font.GetHandle());
 			for (int i=ITEM_BUTTON_FIRST;i<=ITEM_LAST;i++) {
 				RECT rc;
 				GetItemRect(i,&rc);
@@ -646,6 +647,9 @@ void CTitleBar::ApplyStyle()
 
 	CreateDrawFont(m_StyleFont,&m_Font);
 	m_FontHeight=CalcFontHeight();
+
+	if (m_Tooltip.IsCreated())
+		m_Tooltip.SetFont(m_Font.GetHandle());
 
 	static const TVTest::Theme::IconList::ResourceInfo ResourceList[] = {
 		{MAKEINTRESOURCE(IDB_TITLEBAR12),12,12},

@@ -263,6 +263,7 @@ INT_PTR CColorSchemeOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lP
 
 			CColorPalette::Initialize(GetWindowInstance(hDlg));
 			m_ColorPalette.Create(hDlg,WS_CHILD | WS_VISIBLE,0,IDC_COLORSCHEME_PALETTE);
+			m_ColorPalette.SetTooltipFont(GetWindowFont(hDlg));
 			GetWindowRect(GetDlgItem(hDlg,IDC_COLORSCHEME_PALETTEPLACE),&rc);
 			MapWindowPoints(NULL,hDlg,(LPPOINT)&rc,2);
 			m_ColorPalette.SetPosition(&rc);
@@ -872,6 +873,9 @@ void CColorSchemeOptions::RealizeStyle()
 
 	if (m_hDlg!=NULL) {
 		SetListItemSize();
+
+		if (m_ColorPalette.IsCreated())
+			m_ColorPalette.SetTooltipFont(m_Font.GetHandle());
 	}
 }
 

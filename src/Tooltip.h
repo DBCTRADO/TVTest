@@ -29,6 +29,7 @@ public:
 	bool AddTrackingTip(UINT ID,LPCTSTR pszText=LPSTR_TEXTCALLBACK,LPARAM lParam=0);
 	bool TrackActivate(UINT ID,bool fActivate);
 	bool TrackPosition(int x,int y);
+	bool SetFont(HFONT hfont);
 };
 
 class CBalloonTip

@@ -859,6 +859,9 @@ void CChannelPanel::ApplyStyle()
 
 		CalcItemHeight();
 
+		if (m_Tooltip.IsCreated())
+			SetTooltipFont();
+
 		static const TVTest::Theme::IconList::ResourceInfo ResourceList[] = {
 			{MAKEINTRESOURCE(IDB_CHEVRON10),10,10},
 			{MAKEINTRESOURCE(IDB_CHEVRON20),20,20},
@@ -1240,10 +1243,17 @@ bool CChannelPanel::CreateTooltip()
 {
 	if (!m_Tooltip.Create(m_hwnd))
 		return false;
-	m_Tooltip.SetMaxWidth(256);
+	SetTooltipFont();
 	m_Tooltip.SetPopDelay(30*1000);
 	SetTooltips();
 	return true;
+}
+
+
+void CChannelPanel::SetTooltipFont()
+{
+	m_Tooltip.SetFont(m_Font.GetHandle());
+	m_Tooltip.SetMaxWidth(m_FontHeight*20);
 }
 
 

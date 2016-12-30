@@ -855,7 +855,8 @@ namespace TVTest
 
 		if ((Flags&FLAG_SHOWTOOLTIP)!=0) {
 			m_Tooltip.Create(hwnd);
-			m_Tooltip.SetMaxWidth(480);
+			m_Tooltip.SetFont(m_Font.GetHandle());
+			m_Tooltip.SetMaxWidth(m_TextHeight*40);
 			m_Tooltip.SetPopDelay(30*1000);
 			m_Tooltip.AddTrackingTip(1,TEXT(""));
 		}

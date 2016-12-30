@@ -506,6 +506,7 @@ INT_PTR CProgramGuideOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM l
 			}
 
 			m_Tooltip.Create(hDlg);
+			m_Tooltip.SetFont(GetWindowFont(hDlg));
 
 			{
 				HDC hdc=::GetDC(hDlg);
@@ -1038,6 +1039,13 @@ INT_PTR CProgramGuideOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM l
 	}
 
 	return FALSE;
+}
+
+
+void CProgramGuideOptions::RealizeStyle()
+{
+	CBasicDialog::RealizeStyle();
+	m_Tooltip.SetFont(CBasicDialog::m_Font.GetHandle());
 }
 
 

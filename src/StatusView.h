@@ -91,6 +91,7 @@ public:
 	virtual void OnSizeChanged() {}
 	virtual void OnCaptureReleased() {}
 	virtual LRESULT OnNotifyMessage(LPNMHDR pnmh) { return 0; }
+	virtual void OnFontChanged() {}
 
 	friend CStatusView;
 
@@ -196,6 +197,7 @@ public:
 	void SetItemTheme(const TVTest::Theme::CThemeManager *pThemeManager);
 	bool SetFont(const TVTest::Style::Font &Font);
 	bool GetFont(TVTest::Style::Font *pFont) const;
+	HFONT GetFont() const;
 	bool SetMultiRow(bool fMultiRow);
 	bool SetMaxRows(int MaxRows);
 	int CalcHeight(int Width) const;

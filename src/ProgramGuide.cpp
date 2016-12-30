@@ -3379,6 +3379,7 @@ bool CProgramGuide::SetFont(const TVTest::Style::Font &Font)
 	if (m_hwnd!=NULL) {
 		CreateFonts();
 		OnFontChanged();
+		m_Tooltip.SetFont(m_ContentFont.GetHandle());
 	}
 
 	return true;
@@ -3855,6 +3856,7 @@ LRESULT CProgramGuide::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam
 			m_EpgIcons.Load();
 			m_EventInfoPopupManager.Initialize(hwnd,&m_EventInfoPopupHandler);
 			m_Tooltip.Create(hwnd);
+			m_Tooltip.SetFont(m_ContentFont.GetHandle());
 			if (m_pProgramCustomizer!=NULL)
 				m_pProgramCustomizer->Initialize();
 
@@ -4666,6 +4668,9 @@ void CProgramGuide::ApplyStyle()
 					   m_Style.HeaderChevronSize.Width,
 					   m_Style.HeaderChevronSize.Height,
 					   ResourceList,lengthof(ResourceList));
+
+		if (m_Tooltip.IsCreated())
+			m_Tooltip.SetFont(m_ContentFont.GetHandle());
 	}
 }
 

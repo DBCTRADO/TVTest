@@ -376,6 +376,7 @@ LRESULT CInformationPanel::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lP
 			m_HotButton.Button=-1;
 
 			m_Tooltip.Create(hwnd);
+			m_Tooltip.SetFont(m_Font.GetHandle());
 			for (int i=0;i<NUM_ITEMS;i++) {
 				const CItem *pItem=m_ItemList[i];
 				const int ButtonCount=pItem->GetButtonCount();
@@ -621,6 +622,7 @@ void CInformationPanel::RealizeStyle()
 		}
 		SendSizeMessage();
 		Invalidate();
+		m_Tooltip.SetFont(m_Font.GetHandle());
 	}
 }
 

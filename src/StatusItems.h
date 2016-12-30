@@ -111,6 +111,7 @@ class CRecordStatusItem : public CStatusItem
 	CTooltip m_Tooltip;
 
 	int GetTipText(LPTSTR pszText,int MaxLength);
+	void SetTipFont();
 
 public:
 	CRecordStatusItem();
@@ -123,6 +124,7 @@ public:
 	bool OnMouseHover(int x,int y) override;
 	void OnFocus(bool fFocus) override;
 	LRESULT OnNotifyMessage(LPNMHDR pnmh) override;
+	void OnFontChanged() override;
 // CUIBase
 	void SetTheme(const TVTest::Theme::CThemeManager *pThemeManager) override;
 // CRecordStatusItem

@@ -43,6 +43,7 @@ public:
 	bool SetSel(int Sel);
 	int GetHot() const;
 	int FindColor(COLORREF Color) const;
+	bool SetTooltipFont(HFONT hfont);
 	static bool Initialize(HINSTANCE hinst);
 	enum {
 		NOTIFY_SELCHANGE=1,

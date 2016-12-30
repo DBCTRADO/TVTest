@@ -229,6 +229,7 @@ private:
 	};
 	int HitTest(int x,int y,HitType *pType=NULL) const;
 	bool CreateTooltip();
+	void SetTooltipFont();
 	void SetTooltips(bool fRectOnly=false);
 	bool EventInfoPopupHitTest(int x,int y,LPARAM *pParam);
 	bool ShowEventInfoPopup(LPARAM Param,CEventInfoPopup *pPopup);

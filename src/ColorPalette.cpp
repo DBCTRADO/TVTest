@@ -144,6 +144,12 @@ int CColorPalette::FindColor(COLORREF Color) const
 }
 
 
+bool CColorPalette::SetTooltipFont(HFONT hfont)
+{
+	return m_Tooltip.SetFont(hfont);
+}
+
+
 void CColorPalette::GetItemRect(int Index,RECT *pRect) const
 {
 	int x,y;

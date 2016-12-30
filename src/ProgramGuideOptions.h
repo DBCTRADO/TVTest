@@ -61,6 +61,9 @@ private:
 // CBasicDialog
 	INT_PTR DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
 
+// CUIBase
+	void RealizeStyle() override;
+
 	void SetDlgItemState();
 	void DeleteAllTools();
 };

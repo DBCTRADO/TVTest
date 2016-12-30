@@ -537,6 +537,7 @@ INT_PTR CControllerManager::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPa
 			}
 
 			m_Tooltip.Create(hDlg);
+			m_Tooltip.SetFont(GetWindowFont(hDlg));
 
 			InitDlgItems();
 			SetDlgItemStatus();
@@ -794,6 +795,8 @@ void CControllerManager::RealizeStyle()
 
 		for (int i=0;i<2;i++)
 			ListView_SetColumnWidth(hwndList,i,LVSCW_AUTOSIZE_USEHEADER);
+
+		m_Tooltip.SetFont(m_Font.GetHandle());
 	}
 }
 

@@ -435,6 +435,7 @@ LRESULT CPanelForm::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 			InitializeUI();
 
 			m_Tooltip.Create(hwnd);
+			m_Tooltip.SetFont(m_Font.GetHandle());
 			UpdateTooltip();
 		}
 		return 0;
@@ -542,6 +543,7 @@ void CPanelForm::RealizeStyle()
 		SendSizeMessage();
 		UpdateTooltip();
 		Invalidate();
+		m_Tooltip.SetFont(m_Font.GetHandle());
 	}
 }
 

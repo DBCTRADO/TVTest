@@ -429,7 +429,7 @@ bool CRecordStatusItem::OnMouseHover(int x,int y)
 		if (!m_Tooltip.IsCreated()) {
 			m_Tooltip.Create(hwndStatus);
 			m_Tooltip.AddTrackingTip(1);
-			m_Tooltip.SetMaxWidth(256);
+			SetTipFont();
 		}
 
 		TCHAR szText[256];
@@ -477,6 +477,12 @@ int CRecordStatusItem::GetTipText(LPTSTR pszText,int MaxLength)
 	return 0;
 }
 
+void CRecordStatusItem::SetTipFont()
+{
+	m_Tooltip.SetFont(m_pStatus->GetFont());
+	m_Tooltip.SetMaxWidth(m_pStatus->GetFontHeight()*20);
+}
+
 void CRecordStatusItem::OnFocus(bool fFocus)
 {
 	if (!fFocus && m_Tooltip.IsCreated())
@@ -502,6 +508,12 @@ LRESULT CRecordStatusItem::OnNotifyMessage(LPNMHDR pnmh)
 		}
 	}
 	return 0;
+}
+
+void CRecordStatusItem::OnFontChanged()
+{
+	if (m_Tooltip.IsCreated())
+		SetTipFont();
 }
 
 void CRecordStatusItem::SetTheme(const TVTest::Theme::CThemeManager *pThemeManager)

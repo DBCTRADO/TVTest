@@ -242,6 +242,16 @@ bool CTooltip::TrackPosition(int x,int y)
 }
 
 
+bool CTooltip::SetFont(HFONT hfont)
+{
+	if (m_hwndTooltip==NULL || hfont==NULL)
+		return false;
+
+	SetWindowFont(m_hwndTooltip,hfont,FALSE);
+	return true;
+}
+
+
 
 
 CBalloonTip::CBalloonTip()

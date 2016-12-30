@@ -128,6 +128,7 @@ protected:
 
 	SideBarStyle m_Style;
 	CTooltip m_Tooltip;
+	DrawUtil::CFont m_TooltipFont;
 	bool m_fShowTooltips;
 	DrawUtil::CMonoColorIconList m_Icons;
 	bool m_fVertical;
@@ -148,6 +149,7 @@ protected:
 	void UpdateItem(int Item);
 	int HitTest(int x,int y) const;
 	void UpdateTooltipsRect();
+	void SetTooltipFont();
 	void Draw(HDC hdc,const RECT &PaintRect);
 
 // CCustomWindow

@@ -370,6 +370,8 @@ LRESULT CSideBar::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 
 			m_Tooltip.Create(hwnd);
 			m_Tooltip.Enable(m_fShowTooltips);
+			SetTooltipFont();
+
 			for (int i=0;i<(int)m_ItemList.size();i++) {
 				if (m_ItemList[i].Command!=ITEM_SEPARATOR) {
 					RECT rc;
@@ -545,6 +547,7 @@ LRESULT CSideBar::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 
 	case WM_DESTROY:
 		m_Tooltip.Destroy();
+		m_TooltipFont.Destroy();
 		return 0;
 	}
 
@@ -560,6 +563,10 @@ void CSideBar::RealizeStyle()
 		const int OldBarWidth=m_fVertical ? rc.right-rc.left : rc.bottom-rc.top;
 		SendSizeMessage();
 		Invalidate();
+
+		if (m_Tooltip.IsCreated())
+			SetTooltipFont();
+
 		if (m_pEventHandler!=NULL) {
 			m_pEventHandler->OnStyleChanged();
 			const int NewBarWidth=GetBarWidth();
@@ -639,6 +646,16 @@ void CSideBar::UpdateTooltipsRect()
 		GetItemRect(i,&rc);
 		m_Tooltip.SetToolRect(i,rc);
 	}
+}
+
+
+void CSideBar::SetTooltipFont()
+{
+	TVTest::Style::Font Font;
+
+	GetSystemFont(DrawUtil::FONT_STATUS,&Font);
+	CreateDrawFont(Font,&m_TooltipFont);
+	m_Tooltip.SetFont(m_TooltipFont.GetHandle());
 }
 
 

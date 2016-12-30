@@ -888,6 +888,8 @@ bool CStatusView::SetFont(const TVTest::Style::Font &Font)
 		m_TextHeight=CalcTextHeight(&m_FontHeight);
 		m_ItemHeight=CalcItemHeight();
 		AdjustSize();
+		for (auto itr=m_ItemList.begin();itr!=m_ItemList.end();++itr)
+			(*itr)->OnFontChanged();
 		Invalidate();
 	}
 
@@ -901,6 +903,12 @@ bool CStatusView::GetFont(TVTest::Style::Font *pFont) const
 		return false;
 	*pFont=m_Font;
 	return true;
+}
+
+
+HFONT CStatusView::GetFont() const
+{
+	return m_DrawFont.GetHandle();
 }
 
 
@@ -1372,9 +1380,12 @@ void CStatusView::ApplyStyle()
 
 	for (auto itr=m_ItemList.begin();itr!=m_ItemList.end();++itr) {
 		CStatusItem *pItem=*itr;
+
 		if (pItem->GetWidth()<0)
 			pItem->SetWidth(CalcItemPixelSize(pItem->GetDefaultWidth()));
 		pItem->SetActualWidth(pItem->GetWidth());
+
+		pItem->OnFontChanged();
 	}
 }
 
