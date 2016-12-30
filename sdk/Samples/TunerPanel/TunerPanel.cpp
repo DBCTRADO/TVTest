@@ -424,6 +424,8 @@ LRESULT CALLBACK CTunerPanel::EventCallback(
 
 			case TVTest::PANEL_ITEM_EVENT_STYLECHANGED:
 				// スタイルが変わった(DPI の変更など)
+			case TVTest::PANEL_ITEM_EVENT_FONTCHANGED:
+				// フォントが変わった
 				{
 					const int OldDPI = pThis->m_DPI;
 					pThis->m_DPI = pThis->m_pApp->GetDPIFromWindow(pThis->m_hwnd);
@@ -796,16 +798,22 @@ LRESULT CTunerPanel::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 					::GetClientRect(hwnd, &rc);
 					::SendMessage(m_hwndToolTips, TTM_SETMAXTIPWIDTH, 0, rc.right);
 
+					// EPG 日時から表示用日時に変換
+					SYSTEMTIME StartTime;
+					if (!m_pApp->ConvertEpgTimeTo(
+							pEventInfo->StartTime, TVTest::CONVERT_TIME_TYPE_EPG_DISPLAY, &StartTime))
+						StartTime = pEventInfo->StartTime;
+
 					// 開始時刻
 					Length += ::wnsprintfW(
 						m_szToolTipBuffer + Length, _countof(m_szToolTipBuffer) - Length,
-						L"\r\n%d:%02d～", pEventInfo->StartTime.wHour, pEventInfo->StartTime.wMinute);
+						L"\r\n%d:%02d～", StartTime.wHour, StartTime.wMinute);
 
 					//  終了時刻
 					if (pEventInfo->Duration != 0) {
 						FILETIME ft;
 						SYSTEMTIME st;
-						::SystemTimeToFileTime(&pEventInfo->StartTime, &ft);
+						::SystemTimeToFileTime(&StartTime, &ft);
 						OffsetFileTime(&ft, pEventInfo->Duration * (1000LL * 10000LL));
 						::FileTimeToSystemTime(&ft, &st);
 						Length += ::wnsprintfW(
