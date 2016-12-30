@@ -1,7 +1,5 @@
 /*
-	TVTest プラグインヘッダ ver.0.0.14-pre
-
-	※ ver.0.0.14 はまだ開発途中です。今後変更される可能性があります。
+	TVTest プラグインヘッダ ver.0.0.14
 
 	このファイルは再配布・改変など自由に行って構いません。
 	ただし、改変した場合はオリジナルと違う旨を記載して頂けると、混乱がなくてい
@@ -130,6 +128,7 @@
 	  ・MESSAGE_GETVARSTRINGCONTEXT
 	  ・MESSAGE_FREEVARSTRINGCONTEXT
 	  ・MESSAGE_FORMATVARSTRING
+	  ・MESSAGE_REGISTERVARIABLE
 	・以下のイベントを追加した
 	  ・EVENT_FILTERGRAPH_INITIALIZE
 	  ・EVENT_FILTERGRAPH_INITIALIZED
@@ -468,6 +467,7 @@ enum {
 	MESSAGE_GETVARSTRINGCONTEXT,		// 変数文字列のコンテキストを取得
 	MESSAGE_FREEVARSTRINGCONTEXT,		// 変数文字列のコンテキストを解放
 	MESSAGE_FORMATVARSTRING,			// 変数文字列を使って文字列をフォーマット
+	MESSAGE_REGISTERVARIABLE,			// 変数を登録
 #endif
 	MESSAGE_TRAILER
 };
@@ -537,6 +537,7 @@ enum {
 	EVENT_PANELITEM_NOTIFY,						// パネル項目の通知
 	EVENT_FAVORITESCHANGED,						// お気に入りチャンネルが変更された
 	EVENT_1SEGMODECHANGED,						// ワンセグモードが変わった
+	EVENT_GETVARIABLE,							// 変数の取得
 #endif
 	EVENT_TRAILER
 };
@@ -577,6 +578,17 @@ inline void *MsgMemoryAlloc(PluginParam *pParam,DWORD Size) {
 // メモリ開放
 inline void MsgMemoryFree(PluginParam *pParam,void *pData) {
 	(*pParam->Callback)(pParam,MESSAGE_MEMORYALLOC,(LPARAM)pData,0);
+}
+
+// 文字列複製
+inline LPWSTR MsgStringDuplicate(PluginParam *pParam,LPCWSTR pszString) {
+	if (pszString==NULL)
+		return NULL;
+	DWORD Size=(::lstrlenW(pszString)+1)*sizeof(WCHAR);
+	LPWSTR pszDup=(LPWSTR)MsgMemoryAlloc(pParam,Size);
+	if (pszDup!=NULL)
+		::CopyMemory(pszDup,pszString,Size);
+	return pszDup;
 }
 
 // イベントハンドル用コールバックの設定
@@ -1370,16 +1382,13 @@ enum SettingType {
 	RecordFolder          録画時の保存先フォルダ              文字列
 
 	ver.0.0.14 以降
-	RecordFileName        録画のファイル名                    文字列
-	CaptureFolder         キャプチャの保存先フォルダ          文字列
-	CaptureFileName       キャプチャのファイル名              文字列
+	RecordFileName        録画のファイル名(※1)               文字列
+	CaptureFolder         キャプチャの保存先フォルダ(※2)     文字列
+	CaptureFileName       キャプチャのファイル名(※1)         文字列
 
-	* フォント関係の設定の取得は ver.0.0.14 正式版までに削除されます。
-	* 代わりに MsgGetFont を利用します。
-	OSDFont               OSD のフォント                      データ(LOGFONT)
-	PanelFont             パネルのフォント                    データ(LOGFONT)
-	ProgramGuideFont      番組表のフォント                    データ(LOGFONT)
-	StatusBarFont         ステータスバーのフォント            データ(LOGFONT)
+	※1　%event-name% などの変数が含まれている可能性があります。
+	　 　MsgFormatVarString を使って変数を展開できます。
+	※2　相対パスの可能性があります。その場合実行ファイルの場所が基準です。
 */
 
 // 設定を取得する
@@ -1438,17 +1447,6 @@ inline DWORD MsgGetSetting(PluginParam *pParam,LPCWSTR pszName,LPWSTR pszString,
 	if (!(*pParam->Callback)(pParam,MESSAGE_GETSETTING,(LPARAM)&Info,0))
 		return 0;
 	return Info.ValueSize/sizeof(WCHAR);
-}
-
-// フォントの設定を取得する
-inline bool MsgGetSetting(PluginParam *pParam,LPCWSTR pszName,LOGFONTW *pFont)
-{
-	SettingInfo Info;
-	Info.pszName=pszName;
-	Info.Type=SETTING_TYPE_DATA;
-	Info.ValueSize=sizeof(LOGFONTW);
-	Info.Value.pData=pFont;
-	return (*pParam->Callback)(pParam,MESSAGE_GETSETTING,(LPARAM)&Info,0)!=FALSE;
 }
 
 // BonDriverのフルパス名を取得する
@@ -1532,6 +1530,7 @@ enum {
 };
 
 // 録画開始情報
+// EVENT_STARTRECORD で渡されます。
 struct StartRecordInfo {
 	DWORD Size;				// 構造体のサイズ
 	DWORD Flags;			// フラグ(現在未使用)
@@ -2322,6 +2321,7 @@ inline bool MsgRegisterPluginCommand(PluginParam *pParam,const PluginCommandInfo
 }
 
 // プラグインのコマンドの状態を設定する
+// State に PLUGIN_COMMAND_STATE_* の組み合わせを指定します。
 inline bool MsgSetPluginCommandState(PluginParam *pParam,int ID,DWORD State) {
 	return (*pParam->Callback)(pParam,MESSAGE_SETPLUGINCOMMANDSTATE,ID,State)!=FALSE;
 }
@@ -2512,6 +2512,7 @@ enum {
 };
 
 // ステータス項目の通知を行う
+// Type に STATUS_ITEM_NOTIFY_* のいずれかを指定します。
 inline bool MsgStatusItemNotify(PluginParam *pParam,int ID,UINT Type) {
 	return (*pParam->Callback)(pParam,MESSAGE_STATUSITEMNOTIFY,ID,Type)!=FALSE;
 }
@@ -2557,7 +2558,8 @@ enum {
 	STATUS_ITEM_EVENT_LEAVE,				// フォーカスが離れた
 	STATUS_ITEM_EVENT_SIZECHANGED,			// 項目の大きさが変わった
 	STATUS_ITEM_EVENT_UPDATETIMER,			// 更新タイマー
-	STATUS_ITEM_EVENT_STYLECHANGED			// スタイルが変わった(DPI の変更など)
+	STATUS_ITEM_EVENT_STYLECHANGED,			// スタイルが変わった(DPI の変更など)
+	STATUS_ITEM_EVENT_FONTCHANGED			// フォントが変わった
 };
 
 // ステータス項目のマウスイベント情報
@@ -2726,7 +2728,8 @@ enum {
 	PANEL_ITEM_EVENT_DEACTIVATE,	// 項目が非アクティブになる
 	PANEL_ITEM_EVENT_ENABLE,		// 項目が有効になる
 	PANEL_ITEM_EVENT_DISABLE,		// 項目が無効になる
-	PANEL_ITEM_EVENT_STYLECHANGED	// スタイルが変わった(DPI の変更など)
+	PANEL_ITEM_EVENT_STYLECHANGED,	// スタイルが変わった(DPI の変更など)
+	PANEL_ITEM_EVENT_FONTCHANGED	// フォントが変わった
 };
 
 // パネル項目作成イベントの情報
@@ -2948,6 +2951,7 @@ struct ShowDialogInfo {
 	POINT Position;					// ダイアログの位置(Flags に SHOW_DIALOG_FLAG_POSITION が指定されている場合に有効)
 };
 
+// ダイアログ表示のフラグ
 enum {
 	SHOW_DIALOG_FLAG_MODELESS = 0x00000001U,	// モードレス
 	SHOW_DIALOG_FLAG_POSITION = 0x00000002U		// 位置指定が有効
@@ -3041,10 +3045,12 @@ inline bool MsgSetVideoStreamCallback(PluginParam *pParam,VideoStreamCallbackFun
 struct VarStringContext;
 
 // 変数文字列のコンテキストを取得
+// 取得したコンテキストは MsgFreeVarStringContext で解放します。
 inline VarStringContext *MsgGetVarStringContext(PluginParam *pParam) {
 	return (VarStringContext*)(*pParam->Callback)(pParam,MESSAGE_GETVARSTRINGCONTEXT,0,0);
 }
 // 変数文字列のコンテキストを解放
+// MsgGetVarStringContext で取得したコンテキストを解放します。
 inline void MsgFreeVarStringContext(PluginParam *pParam,VarStringContext *pContext) {
 	(*pParam->Callback)(pParam,MESSAGE_FREEVARSTRINGCONTEXT,(LPARAM)pContext,0);
 }
@@ -3064,7 +3070,7 @@ struct VarStringFormatInfo {
 	LPCWSTR pszFormat;					// フォーマット文字列
 	const VarStringContext *pContext;	// コンテキスト(NULL で現在のコンテキスト)
 	VarStringMapFunc pMapFunc;			// マップ関数(必要なければ NULL)
-	void *pClientData;					// ユーザー指定の任意データ
+	void *pClientData;					// マップ関数に渡す任意データ
 	LPWSTR pszResult;					// 変換結果の文字列
 };
 
@@ -3075,6 +3081,8 @@ struct VarStringFormatInfo {
 // MsgGetVarStringContext で、その時点のコンテキストを取得できます。
 /*
 	// 現在のコンテキストを取得
+	// (ここでは例のために取得していますが、現在の情報を使うのであれば
+	//  VarStringFormatInfo.pContext を NULL にすればよいです)
 	VarStringContext *pContext = MsgGetVarStringContext(pParam);
 
 	// 文字列をフォーマットする
@@ -3103,11 +3111,8 @@ struct VarStringFormatInfo {
 	{
 		PluginParam *pParam = static_cast<PluginParam*>(pClientData);
 		if (::lstrcmpiW(pszVar, L"my-var") == 0) {
-			LPCWSTR pszMapString = L"replaced string";
-			DWORD Size = (::lstrlenW(pszMapString) + 1) * sizeof(WCHAR);
-			*ppszString = (LPWSTR)MsgMemoryAlloc(pParam, Size);
-			if (*ppszString != NULL)
-				::CopyMemory(*ppszString, pszMapString, Size);
+			LPCWSTR pszMapString = L"replaced string";	// 置き換える文字列
+			*ppszString = MsgStringDuplicate(pParam, pszMapString);
 			return TRUE;
 		}
 		return FALSE;
@@ -3118,6 +3123,75 @@ struct VarStringFormatInfo {
 */
 inline bool MsgFormatVarString(PluginParam *pParam,VarStringFormatInfo *pInfo) {
 	return (*pParam->Callback)(pParam,MESSAGE_FORMATVARSTRING,(LPARAM)pInfo,0)!=FALSE;
+}
+
+// 変数登録のフラグ
+enum {
+	REGISTER_VARIABLE_FLAG_OVERRIDE = 0x00000001	// デフォルトの変数を上書き
+};
+
+// 変数登録の情報
+struct RegisterVariableInfo {
+	DWORD Size;				// 構造体のサイズ
+	DWORD Flags;			// フラグ(REGISTER_VARIABLE_FLAG_*)
+	LPCWSTR pszKeyword;		// 識別子
+	LPCWSTR pszDescription;	// 説明文
+	LPCWSTR pszValue;		// 変数の値(NULL で動的に取得)
+};
+
+// 変数取得の情報
+// EVENT_GETVARIABLE で渡されます。
+struct GetVariableInfo {
+	LPCWSTR pszKeyword;		// 識別子
+	LPWSTR pszValue;		// 値
+};
+
+// 変数を登録
+// 変数を登録すると、TVTest の各所の変数文字列で利用できるようになります。
+// 変数の識別子は半角のアルファベットと数字、-記号のみ使用してください。
+// TVTest で既に定義されている識別子と同じものを指定した場合、
+// Flags に REGISTER_VARIABLE_FLAG_OVERRIDE が設定されている場合は
+// プラグインで登録されたものが優先され、そうでない場合は TVTest での定義が優先されます。
+// 同じ識別子の変数を再登録すると、値が更新されます。
+/*
+	// 変数 lucky-number を登録します。
+	// 変数文字列の中で "%lucky-number%" を使うと、"777" に置き換えられます。
+	RegisterVariableInfo Info;
+	Info.Size           = sizeof(RegisterVariableInfo);
+	Info.Flags          = 0;
+	Info.pszKeyword     = L"lucky-number";
+	Info.pszDescription = L"幸運の番号";
+	Info.pszValue       = L"777";
+	MsgRegisterVariable(pParam, &Info);
+*/
+// 変数の値が頻繁に変わるような場合は、動的に取得されるようにします。
+// pszValue に NULL を指定すると、変数が必要になった段階で
+// EVENT_GETVARIABLE が呼ばれるので、そこで値を返します。
+/*
+	// 変数の値が動的に取得されるようにする例
+	RegisterVariableInfo Info;
+	Info.Size           = sizeof(RegisterVariableInfo);
+	Info.Flags          = 0;
+	Info.pszKeyword     = L"tick-count";
+	Info.pszDescription = L"Tick count";
+	Info.pszValue       = NULL;
+	MsgRegisterVariable(pParam, &Info);
+
+	// EVENT_GETVARIABLE で値を返します。
+	bool OnGetVariable(GetVariableInfo *pInfo)
+	{
+		if (lstrcmpiW(pInfo->pszKeyword, L"tick-count") == 0) {
+			// GetTickCount() の値を返す
+			WCHAR szValue[16];
+			wsprintf(szValue, L"%u", GetTickCount());
+			pInfo->pszValue = MsgStringDuplicate(pParam, szValue);
+			return true;
+		}
+		return false;
+	}
+*/
+inline bool MsgRegisterVariable(PluginParam *pParam,const RegisterVariableInfo *pInfo) {
+	return (*pParam->Callback)(pParam,MESSAGE_REGISTERVARIABLE,(LPARAM)pInfo,0)!=FALSE;
 }
 
 #endif	// TVTEST_PLUGIN_VERSION>=TVTEST_PLUGIN_VERSION_(0,0,14)
@@ -3155,6 +3229,9 @@ public:
 	}
 	void MemoryFree(void *pData) {
 		MsgMemoryFree(m_pParam,pData);
+	}
+	LPWSTR StringDuplicate(LPCWSTR pszString) {
+		return MsgStringDuplicate(m_pParam,pszString);
 	}
 	bool SetEventCallback(EventCallbackFunc Callback,void *pClientData=NULL) {
 		return MsgSetEventCallback(m_pParam,Callback,pClientData);
@@ -3406,9 +3483,6 @@ public:
 	DWORD GetSetting(LPCWSTR pszName,LPWSTR pszString,DWORD MaxLength) {
 		return MsgGetSetting(m_pParam,pszName,pszString,MaxLength);
 	}
-	bool GetSetting(LPCWSTR pszName,LOGFONTW *pFont) {
-		return MsgGetSetting(m_pParam,pszName,pFont);
-	}
 	int GetDriverFullPathName(LPWSTR pszPath,int MaxLength) {
 		return MsgGetDriverFullPathName(m_pParam,pszPath,MaxLength);
 	}
@@ -3658,6 +3732,10 @@ public:
 		pInfo->Size=sizeof(VarStringFormatInfo);
 		return MsgFormatVarString(m_pParam,pInfo);
 	}
+	bool RegisterVariable(RegisterVariableInfo *pInfo) {
+		pInfo->Size=sizeof(RegisterVariableInfo);
+		return MsgRegisterVariable(m_pParam,pInfo);
+	}
 #endif
 };
 
@@ -3836,6 +3914,8 @@ protected:
 	virtual void OnFavoritesChanged() {}
 	// ワンセグモードが変わった
 	virtual void On1SegModeChanged(bool f1SegMode) {}
+	// 変数を取得
+	virtual bool OnGetVariable(GetVariableInfo *pInfo) { return false; }
 #endif
 
 public:
@@ -3933,6 +4013,8 @@ public:
 		case EVENT_1SEGMODECHANGED:
 			On1SegModeChanged(lParam1!=0);
 			return 0;
+		case EVENT_GETVARIABLE:
+			return OnGetVariable((GetVariableInfo*)lParam1);
 #endif
 		}
 		return 0;
