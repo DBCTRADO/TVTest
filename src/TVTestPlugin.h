@@ -2579,7 +2579,8 @@ enum {
 	STATUS_ITEM_EVENT_LEAVE,				// フォーカスが離れた
 	STATUS_ITEM_EVENT_SIZECHANGED,			// 項目の大きさが変わった
 	STATUS_ITEM_EVENT_UPDATETIMER,			// 更新タイマー
-	STATUS_ITEM_EVENT_STYLECHANGED			// スタイルが変わった(DPI の変更など)
+	STATUS_ITEM_EVENT_STYLECHANGED,			// スタイルが変わった(DPI の変更など)
+	STATUS_ITEM_EVENT_FONTCHANGED			// フォントが変わった
 };
 
 // ステータス項目のマウスイベント情報
@@ -2748,7 +2749,8 @@ enum {
 	PANEL_ITEM_EVENT_DEACTIVATE,	// 項目が非アクティブになる
 	PANEL_ITEM_EVENT_ENABLE,		// 項目が有効になる
 	PANEL_ITEM_EVENT_DISABLE,		// 項目が無効になる
-	PANEL_ITEM_EVENT_STYLECHANGED	// スタイルが変わった(DPI の変更など)
+	PANEL_ITEM_EVENT_STYLECHANGED,	// スタイルが変わった(DPI の変更など)
+	PANEL_ITEM_EVENT_FONTCHANGED	// フォントが変わった
 };
 
 // パネル項目作成イベントの情報

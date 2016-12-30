@@ -4023,6 +4023,19 @@ void CPlugin::CPluginStatusItem::OnCaptureReleased()
 }
 
 
+void CPlugin::CPluginStatusItem::OnFontChanged()
+{
+	if (m_pPlugin!=NULL && m_pItem!=NULL) {
+		TVTest::StatusItemEventInfo Info;
+		Info.ID=m_pItem->ID;
+		Info.Event=TVTest::STATUS_ITEM_EVENT_FONTCHANGED;
+		Info.Param=0;
+		m_pPlugin->SendEvent(TVTest::EVENT_STATUSITEM_NOTIFY,
+							 reinterpret_cast<LPARAM>(&Info),0);
+	}
+}
+
+
 void CPlugin::CPluginStatusItem::DetachItem()
 {
 	m_pPlugin=NULL;
@@ -4234,6 +4247,19 @@ void CPlugin::CPluginPanelItem::RealizeStyle()
 		m_pPlugin->SendEvent(TVTest::EVENT_PANELITEM_NOTIFY,
 							 reinterpret_cast<LPARAM>(&Info),0);
 	}
+}
+
+
+bool CPlugin::CPluginPanelItem::SetFont(const TVTest::Style::Font &Font)
+{
+	if (m_pItem!=NULL && m_pPlugin!=NULL) {
+		TVTest::PanelItemEventInfo Info;
+		Info.ID=m_pItem->ID;
+		Info.Event=TVTest::PANEL_ITEM_EVENT_FONTCHANGED;
+		m_pPlugin->SendEvent(TVTest::EVENT_PANELITEM_NOTIFY,
+							 reinterpret_cast<LPARAM>(&Info),0);
+	}
+	return true;
 }
 
 

@@ -154,6 +154,7 @@ private:
 		void OnFocus(bool fFocus) override;
 		void OnSizeChanged() override;
 		void OnCaptureReleased() override;
+		void OnFontChanged() override;
 
 	// CPluginStatusItem
 		void DetachItem();
@@ -199,6 +200,7 @@ private:
 	private:
 		LRESULT OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
 		void RealizeStyle() override;
+		bool SetFont(const TVTest::Style::Font &Font) override;
 		void OnActivate() override;
 		void OnDeactivate() override;
 		void OnVisibilityChanged(bool fVisible) override;
