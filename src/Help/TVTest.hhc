@@ -157,7 +157,14 @@
 		<LI> <OBJECT type="text/sitemap">
 			<param name="Name" value="チャンネルスキャン">
 			<param name="Local" value="options\channelscan.html">
+			<param name="ImageNumber" value="11">
 			</OBJECT>
+		<UL>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="チャンネルスキャンの詳細設定">
+				<param name="Local" value="options\channelscan_details.html">
+				</OBJECT>
+		</UL>
 		<LI> <OBJECT type="text/sitemap">
 			<param name="Name" value="EPG/番組情報">
 			<param name="Local" value="options\epg.html">

@@ -30,6 +30,7 @@ options\audio.html
 options\capture.html
 options\channelinput.html
 options\channelscan.html
+options\channelscan_details.html
 options\colorscheme.html
 options\controller.html
 options\driver.html
@@ -87,6 +88,7 @@ HELP_ID_OPTIONS_VIDEO=options\video.html
 HELP_ID_OPTIONS_VIEW=options\view.html
 HELP_ID_PROGRAMGUIDETOOL=options\programguidetool.html
 HELP_ID_CHANNELINPUTOPTIONS=options\channelinput.html
+HELP_ID_CHANNELSCANDETAILS=options\channelscan_details.html
 HELP_ID_TSPROCESSOR_TUNERMAP=options\tsprocessor_tunermap.html
 HELP_ID_INITIALSETTINGS=initialsettings.html
 
