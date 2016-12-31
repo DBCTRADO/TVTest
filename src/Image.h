@@ -1,6 +1,14 @@
 #pragma once
 
 
+#ifndef TVTEST_IMAGE_STATIC
+/*
+	TVTEST_IMAGE_STATIC を定義すると、TVTest_Image.dll の機能が静的リンクされ
+	TVTest_Image.dll を使用しなくなる。
+*/
+//#define TVTEST_IMAGE_STATIC
+#endif
+
 #include "TVTest_Image/TVTest_Image.h"
 
 
@@ -17,9 +25,8 @@ HGLOBAL ResizeImage(const BITMAPINFO *pbmiSrc,const void *pSrcData,
 									const RECT *pSrcRect,int Width,int Height);
 
 
-class CImageCodec {
-	HMODULE m_hLib;
-	SaveImageFunc m_pSaveImage;
+class CImageCodec
+{
 public:
 	CImageCodec();
 	~CImageCodec();
@@ -31,4 +38,10 @@ public:
 	int FormatNameToIndex(LPCTSTR pszName) const;
 	HGLOBAL LoadAribPngFromMemory(const void *pData,SIZE_T DataSize);
 	HGLOBAL LoadAribPngFromFile(LPCTSTR pszFileName);
+
+#ifndef TVTEST_IMAGE_STATIC
+private:
+	HMODULE m_hLib;
+	SaveImageFunc m_pSaveImage;
+#endif
 };

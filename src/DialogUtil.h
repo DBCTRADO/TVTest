@@ -70,6 +70,10 @@
 	(::SendDlgItemMessage(hwndDlg,ID,LB_SETITEMHEIGHT,Index,Height)!=LB_ERR)
 #define DlgListBox_SetHorizontalExtent(hwndDlg,ID,Extent) \
 	::SendDlgItemMessage(hwndDlg,ID,LB_SETHORIZONTALEXTENT,Extent,0)
+#define DlgListBox_FindString(hwndDlg,ID,First,pszString) \
+	::SendDlgItemMessage(hwndDlg,ID,LB_FINDSTRING,First,(LPARAM)(pszString))
+#define DlgListBox_FindStringExact(hwndDlg,ID,First,pszString) \
+	::SendDlgItemMessage(hwndDlg,ID,LB_FINDSTRINGEXACT,First,(LPARAM)(pszString))
 
 #define DlgComboBox_LimitText(hwndDlg,ID,Limit) \
 	::SendDlgItemMessage(hwndDlg,ID,CB_LIMITTEXT,Limit,0)
@@ -111,6 +115,8 @@
 	(::SendDlgItemMessage(hwndDlg,ID,CB_SETITEMHEIGHT,Index,Height)!=CB_ERR)
 #define DlgComboBox_SetCueBanner(hwndDlg,ID,pszString) \
 	::SendDlgItemMessage(hwndDlg,ID,CB_SETCUEBANNER,0,(LPARAM)(pszString))
+#define DlgComboBox_GetDroppedState(hwndDlg,ID) \
+	(::SendDlgItemMessage(hwndDlg,ID,CB_GETDROPPEDSTATE,0,0)!=FALSE)
 
 #define DlgUpDown_SetRange(hwndDlg,ID,Low,High) \
 	::SendDlgItemMessage(hwndDlg,ID,UDM_SETRANGE32,Low,High)
@@ -134,6 +140,9 @@ void SetComboBoxList(HWND hDlg,int ID,const LPCTSTR *ppszList,int Length);
 bool SetDlgButtonBitmap(HWND hDlg,int ID,HINSTANCE hinst,LPCTSTR pszName);
 bool SetListBoxHExtent(HWND hDlg,int ID);
 LPTSTR GetDlgItemString(HWND hDlg,int ID);
+bool GetDlgItemString(HWND hDlg,int ID,TVTest::String *pString);
+bool GetDlgListBoxItemString(HWND hDlg,int ID,int Index,TVTest::String *pString);
+bool GetDlgComboBoxItemString(HWND hDlg,int ID,int Index,TVTest::String *pString);
 bool EnableDlgItemSyncCheckBox(HWND hDlg,int ID,int CheckBoxID);
 bool EnableDlgItemsSyncCheckBox(HWND hDlg,int FirstID,int LastID,int CheckBoxID);
 BOOL SetDlgItemInt64(HWND hDlg,int ID,ULONGLONG Value,BOOL fSigned);
@@ -143,8 +152,12 @@ HMENU CreatePopupMenuFromControls(HWND hDlg,const int *pIDList,int IDListLength)
 bool PopupMenuFromControls(HWND hDlg,const int *pIDList,int IDListLength,
 						   unsigned int Flags=0,const POINT *ppt=NULL);
 #define LBN_EX_RBUTTONDOWN	0x0100
+#define LBN_EX_RBUTTONUP	0x0101
 bool ExtendListBox(HWND hwndList,unsigned int Flags=0);
 bool SetListViewSortMark(HWND hwndList,int Column,bool fAscending=true);
+bool AdjustListViewColumnWidth(HWND hwndList,bool fUseHeader=true);
+bool InitDropDownButton(HWND hDlg,int ID);
+bool InitDropDownButtonWithText(HWND hDlg,int ID);
 
 
 #endif

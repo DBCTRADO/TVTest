@@ -1,0 +1,143 @@
+#include <windows.h>
+#include <shlwapi.h>
+#include <new>
+#include "ImageCodec.h"
+
+
+struct ImageSaveInfo
+{
+	LPCWSTR pszFileName;
+	LPCWSTR pszFormat;
+	LPCWSTR pszOption;
+	const BITMAPINFO *pbmi;
+	const void *pBits;
+	LPCWSTR pszComment;
+};
+
+BOOL WINAPI SaveImage(const ImageSaveInfo *pInfo);
+
+
+
+
+const LPCTSTR CImageCodec::m_FormatStringList[] =
+{
+	TEXT("BMP"),
+	TEXT("JPEG"),
+	TEXT("PNG"),
+};
+
+
+CImageCodec::CImageCodec()
+	: m_hLib(nullptr)
+	, m_JpegQuality(90)
+	, m_PngCompressionLevel(6)
+{
+}
+
+
+CImageCodec::~CImageCodec()
+{
+	if (m_hLib != nullptr)
+		::FreeLibrary(m_hLib);
+}
+
+
+// ‰æ‘œ‚ðƒtƒ@ƒCƒ‹‚É•Û‘¶‚·‚é
+bool CImageCodec::SaveImageToFile(
+	const CImage *pImage, LPCWSTR pszFileName, FormatType Format)
+{
+	if (pImage == nullptr || pszFileName == nullptr)
+		return false;
+
+	if (m_hLib == nullptr) {
+		if (!LoadModule())
+			return false;
+	}
+
+	auto pSaveImage =
+		reinterpret_cast<decltype(SaveImage)*>(::GetProcAddress(m_hLib, "SaveImage"));
+	if (pSaveImage == nullptr)
+		return false;
+
+	const int Width = pImage->GetWidth(), Height = pImage->GetHeight();
+	const std::size_t RowBytes = (Width * 3 + 3) / 4 * 4;
+	BYTE *pBuffer = new(std::nothrow) BYTE[RowBytes * Height];
+	if (pBuffer == nullptr)
+		return false;
+
+	for (int y = 0; y < Height; y++)
+		pImage->ExtractRow24(Height - 1 - y, pBuffer + (y * RowBytes));
+
+	ImageSaveInfo SaveInfo = {};
+	BITMAPINFO bmi = {};
+	WCHAR szOption[16];
+
+	bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+	bmi.bmiHeader.biWidth = Width;
+	bmi.bmiHeader.biHeight = Height;
+	bmi.bmiHeader.biPlanes = 1;
+	bmi.bmiHeader.biBitCount = 24;
+
+	SaveInfo.pszFileName = pszFileName;
+	SaveInfo.pszFormat = m_FormatStringList[Format];
+	SaveInfo.pszOption = szOption;
+	SaveInfo.pbmi = &bmi;
+	SaveInfo.pBits = pBuffer;
+
+	switch (Format) {
+	case Format_JPEG:
+		::wsprintfW(szOption, L"%d", m_JpegQuality);
+		break;
+	case Format_PNG:
+		::wsprintfW(szOption, L"%d", m_PngCompressionLevel);
+		break;
+	default:
+		szOption[0] = L'\0';
+		break;
+	}
+
+	bool fResult = pSaveImage(&SaveInfo) != FALSE;
+
+	delete [] pBuffer;
+
+	return fResult;
+}
+
+
+CImageCodec::FormatType CImageCodec::ParseFormatName(LPCTSTR pszName) const
+{
+	for (int i = 0; i < _countof(m_FormatStringList); i++) {
+		if (::lstrcmpi(m_FormatStringList[i], pszName) == 0)
+			return (FormatType)i;
+	}
+
+	return Format_Invalid;
+}
+
+
+LPCWSTR CImageCodec::GetFormatExtensions(FormatType Format) const
+{
+	switch (Format) {
+	case Format_BMP:  return L".bmp";
+	case Format_JPEG: return L".jpg\0.jpeg\0.jpe";
+	case Format_PNG:  return L".png";
+	}
+	return nullptr;
+}
+
+
+// TVTest_Image.dll ‚ð“Ç‚Ýž‚Þ
+bool CImageCodec::LoadModule()
+{
+	if (m_hLib == nullptr) {
+		TCHAR szPath[MAX_PATH];
+		DWORD Length = ::GetModuleFileName(nullptr, szPath, _countof(szPath));
+		if (Length > 0 && Length < _countof(szPath)) {
+			::PathRemoveFileSpec(szPath);
+			if (::PathAppend(szPath, TEXT("TVTest_Image.dll")))
+				m_hLib = ::LoadLibrary(szPath);
+		}
+	}
+
+	return m_hLib != nullptr;
+}

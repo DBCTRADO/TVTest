@@ -6,7 +6,10 @@
 #include <map>
 #include "BonTsEngine/CaptionDecoder.h"
 #include "PanelForm.h"
+#include "UIBase.h"
+#include "Settings.h"
 #include "DrawUtil.h"
+#include "WindowUtil.h"
 
 
 class CCaptionDRCSMap : public CCaptionDecoder::IDRCSMap
@@ -42,58 +45,112 @@ public:
 	bool Load(LPCTSTR pszFileName);
 };
 
-class CCaptionPanel : public CPanelForm::CPage, protected CCaptionDecoder::IHandler
+class CCaptionPanel
+	: public CPanelForm::CPage
+	, protected CCaptionDecoder::IHandler
+	, public CSettingsBase
 {
+public:
+	CCaptionPanel();
+	~CCaptionPanel();
+
+// CBasicWindow
+	bool Create(HWND hwndParent,DWORD Style,DWORD ExStyle=0,int ID=0) override;
+
+// CUIBase
+	void SetTheme(const TVTest::Theme::CThemeManager *pThemeManager) override;
+
+// CPage
+	bool SetFont(const TVTest::Style::Font &Font) override;
+
+// CSettingsBase
+	bool ReadSettings(CSettings &Settings) override;
+	bool WriteSettings(CSettings &Settings) override;
+
+// CCaptionPanel
+	void SetColor(COLORREF BackColor,COLORREF TextColor);
+	void Reset();
+	bool LoadDRCSMap(LPCTSTR pszFileName);
+
+	static bool Initialize(HINSTANCE hinst);
+
+private:
+	class CEditSubclass : public CWindowSubclass
+	{
+	public:
+		CEditSubclass(CCaptionPanel *pCaptionPanel);
+
+	private:
+		LRESULT OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
+
+		CCaptionPanel *m_pCaptionPanel;
+	};
+
+	struct LanguageInfo
+	{
+		std::deque<TVTest::String> CaptionList;
+		TVTest::String NextCaption;
+		DWORD LanguageCode;
+		bool fClearLast;
+		bool fContinue;
+	};
+	enum { MAX_QUEUE_TEXT=10000 };
+
+	enum CharEncoding
+	{
+		CHARENCODING_UTF16,
+		CHARENCODING_UTF8,
+		CHARENCODING_SHIFTJIS
+	};
+	static const CharEncoding CHARENCODING_FIRST = CHARENCODING_UTF16;
+	static const CharEncoding CHARENCODING_LAST  = CHARENCODING_SHIFTJIS;
+
 	COLORREF m_BackColor;
 	COLORREF m_TextColor;
 	DrawUtil::CBrush m_BackBrush;
+	TVTest::Style::Font m_CaptionFont;
 	DrawUtil::CFont m_Font;
 	HWND m_hwndEdit;
-	WNDPROC m_pOldEditProc;
+	CEditSubclass m_EditSubclass;
+	bool m_fActive;
 	bool m_fEnable;
 	bool m_fAutoScroll;
-#ifndef TVH264_FOR_1SEG
 	bool m_fIgnoreSmall;
-#endif
-	BYTE m_Language;
-	bool m_fClearLast;
-	bool m_fContinue;
-	std::deque<LPTSTR> m_CaptionList;
-	enum { MAX_QUEUE_TEXT=10000 };
-	TVTest::String m_NextCaption;
+	bool m_fHalfWidthAlnum;
+	bool m_fHalfWidthEuroLanguagesOnly;
+	BYTE m_CurLanguage;
+	std::vector<LanguageInfo> m_LanguageList;
 	CCriticalLock m_Lock;
 	CCaptionDRCSMap m_DRCSMap;
+	CharEncoding m_SaveCharEncoding;
 
 // CCaptionDecoder::IHandler
-	virtual void OnLanguageUpdate(CCaptionDecoder *pDecoder) override;
-	virtual void OnCaption(CCaptionDecoder *pDecoder,BYTE Language,LPCTSTR pszText,
+	virtual void OnLanguageUpdate(CCaptionDecoder *pDecoder,CCaptionParser *pParser) override;
+	virtual void OnCaption(CCaptionDecoder *pDecoder,CCaptionParser *pParser,
+						   BYTE Language,LPCTSTR pszText,
 						   const CAribString::FormatList *pFormatList) override;
 
 	void ClearCaptionList();
 	void AppendText(LPCTSTR pszText);
+	void AppendQueuedText(BYTE Language);
+	void AddNextCaption(BYTE Language);
+	bool SetLanguage(BYTE Language);
+	void OnCommand(int Command);
 
 	static const LPCTSTR m_pszClassName;
-	static const LPCTSTR m_pszPropName;
 	static HINSTANCE m_hinst;
-
-	static LRESULT CALLBACK EditWndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam);
 
 // CCustomWindow
 	LRESULT OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
 
-public:
-	CCaptionPanel();
-	~CCaptionPanel();
-// CBasicWindow
-	bool Create(HWND hwndParent,DWORD Style,DWORD ExStyle=0,int ID=0) override;
-	void SetVisible(bool fVisible) override;
-// CCaptionPanel
-	void SetColor(COLORREF BackColor,COLORREF TextColor);
-	bool SetFont(const LOGFONT *pFont);
-	void Clear();
-	bool LoadDRCSMap(LPCTSTR pszFileName);
+// CUIBase
+	void ApplyStyle() override;
+	void RealizeStyle() override;
 
-	static bool Initialize(HINSTANCE hinst);
+// CPanelForm::CPage
+	void OnActivate() override;
+	void OnDeactivate() override;
+
 };
 
 

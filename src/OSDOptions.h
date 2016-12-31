@@ -3,6 +3,7 @@
 
 
 #include "Options.h"
+#include "Style.h"
 
 
 class COSDOptions : public COptions
@@ -26,8 +27,8 @@ public:
 	};
 
 	enum {
-		NOTIFY_EVENTNAME	=0x00000001,
-		NOTIFY_ECMERROR		=0x00000002
+		NOTIFY_EVENTNAME		=0x00000001,
+		NOTIFY_TSPROCESSORERROR	=0x00000002
 	};
 
 	COSDOptions();
@@ -45,14 +46,15 @@ public:
 	const LOGFONT *GetOSDFont() const { return &m_OSDFont; }
 	int GetFadeTime() const { return m_FadeTime; }
 	ChannelChangeType GetChannelChangeType() const { return m_ChannelChangeType; }
+	LPCTSTR GetChannelChangeText() const { return m_ChannelChangeText.c_str(); }
 	bool GetLayeredWindow() const;
 	void OnDwmCompositionChanged();
 	bool IsOSDEnabled(OSDType Type) const;
 	bool IsNotificationBarEnabled() const { return m_fEnableNotificationBar; }
 	int GetNotificationBarDuration() const { return m_NotificationBarDuration; }
-	const LOGFONT *GetNotificationBarFont() const { return &m_NotificationBarFont; }
+	const TVTest::Style::Font &GetNotificationBarFont() const { return m_NotificationBarFont; }
 	bool IsNotifyEnabled(unsigned int Type) const;
-	const LOGFONT *GetDisplayFont() const { return &m_DisplayFont; }
+	const TVTest::Style::Font &GetDisplayFont() const { return m_DisplayFont; }
 	bool IsDisplayFontAutoSize() const { return m_fDisplayFontAutoSize; }
 
 private:
@@ -72,6 +74,7 @@ private:
 	LOGFONT m_CurOSDFont;
 	int m_FadeTime;
 	ChannelChangeType m_ChannelChangeType;
+	TVTest::String m_ChannelChangeText;
 	unsigned int m_EnabledOSD;
 
 	bool m_fLayeredWindow;
@@ -80,11 +83,11 @@ private:
 	bool m_fEnableNotificationBar;
 	int m_NotificationBarDuration;
 	unsigned int m_NotificationBarFlags;
-	LOGFONT m_NotificationBarFont;
-	LOGFONT m_CurNotificationBarFont;
+	TVTest::Style::Font m_NotificationBarFont;
+	TVTest::Style::Font m_CurNotificationBarFont;
 
-	LOGFONT m_DisplayFont;
-	LOGFONT m_DisplayFontCur;
+	TVTest::Style::Font m_DisplayFont;
+	TVTest::Style::Font m_DisplayFontCur;
 	bool m_fDisplayFontAutoSize;
 };
 

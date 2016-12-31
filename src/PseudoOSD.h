@@ -3,11 +3,25 @@
 
 
 #include "DrawUtil.h"
+#include "WindowUtil.h"
 
 
 class CPseudoOSD
 {
 public:
+	enum {
+		TEXT_STYLE_LEFT				= 0x0000U,
+		TEXT_STYLE_RIGHT			= 0x0001U,
+		TEXT_STYLE_HORZ_CENTER		= 0x0002U,
+		TEXT_STYLE_HORZ_ALIGN_MASK	= 0x0003U,
+		TEXT_STYLE_TOP				= 0x0000U,
+		TEXT_STYLE_BOTTOM			= 0x0004U,
+		TEXT_STYLE_VERT_CENTER		= 0x0008U,
+		TEXT_STYLE_VERT_ALIGN_MASK	= 0x000CU,
+		TEXT_STYLE_OUTLINE			= 0x0010U,
+		TEXT_STYLE_FILL_BACKGROUND	= 0x0020U
+	};
+
 	enum {
 		IMAGEEFFECT_GLOSS	= 0x01,
 		IMAGEEFFECT_DARK	= 0x02
@@ -28,10 +42,10 @@ public:
 	void GetPosition(int *pLeft,int *pTop,int *pWidth,int *pHeight) const;
 	void SetTextColor(COLORREF crText);
 	bool SetTextHeight(int Height);
+	bool SetTextStyle(unsigned int Style);
 	bool SetFont(const LOGFONT &Font);
 	bool CalcTextSize(SIZE *pSize);
 	bool SetImage(HBITMAP hbm,unsigned int ImageEffect=0);
-	bool SetOpacity(int Opacity);
 	void OnParentMove();
 
 private:
@@ -39,7 +53,8 @@ private:
 	COLORREF m_crBackColor;
 	COLORREF m_crTextColor;
 	DrawUtil::CFont m_Font;
-	CDynamicString m_Text;
+	unsigned int m_TextStyle;
+	TVTest::String m_Text;
 	HBITMAP m_hbmIcon;
 	int m_IconWidth;
 	int m_IconHeight;
@@ -48,10 +63,10 @@ private:
 	struct {
 		int Left,Top,Width,Height;
 	} m_Position;
-	UINT_PTR m_TimerID;
+	CWindowTimerManager m_Timer;
 	int m_AnimationCount;
-	int m_Opacity;
 	bool m_fLayeredWindow;
+	bool m_fPopupLayeredWindow;
 	HWND m_hwndParent;
 	POINT m_ParentPosition;
 

@@ -5,12 +5,7 @@
 #include "stdafx.h"
 #include "TsUtilClass.h"
 #include "StdUtil.h"
-
-#ifdef _DEBUG
-#undef THIS_FILE
-static char THIS_FILE[]=__FILE__;
-#define new DEBUG_NEW
-#endif
+#include "../Common/DebugDef.h"
 
 
 //////////////////////////////////////////////////////////////////////
@@ -323,19 +318,21 @@ void CDateTime::Get(SYSTEMTIME *pTime) const
 // トレースクラス
 /////////////////////////////////////////////////////////////////////////////
 
-void CTracer::Trace(LPCTSTR pszOutput, ...)
+void CTracer::Trace(TraceType Type, LPCTSTR pszOutput, ...)
 {
 	va_list Args;
 
 	va_start(Args,pszOutput);
-	TraceV(pszOutput,Args);
+	TraceV(Type,pszOutput,Args);
 	va_end(Args);
 }
 
-void CTracer::TraceV(LPCTSTR pszOutput,va_list Args)
+void CTracer::TraceV(TraceType Type, LPCTSTR pszOutput, va_list Args)
 {
-	StdUtil::vsnprintf(m_szBuffer,sizeof(m_szBuffer)/sizeof(TCHAR),pszOutput,Args);
-	OnTrace(m_szBuffer);
+	TCHAR szBuffer[512];
+
+	StdUtil::vsnprintf(szBuffer,sizeof(szBuffer)/sizeof(TCHAR),pszOutput,Args);
+	OnTrace(Type,szBuffer);
 }
 
 
@@ -692,4 +689,11 @@ bool CBitRateCalculator::Update(SIZE_T Size)
 		m_Size=0;
 	}
 	return bUpdated;
+}
+
+DWORD CBitRateCalculator::GetBitRate() const
+{
+	if (::GetTickCount()-m_Time>=2000)
+		return 0;
+	return m_BitRate;
 }

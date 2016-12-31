@@ -3,52 +3,63 @@
 #include <uxtheme.h>
 #include "TVTest.h"
 #include "Aero.h"
+#include "Common/DebugDef.h"
 
-#ifdef _DEBUG
-#undef THIS_FILE
-static char THIS_FILE[]=__FILE__;
-#define new DEBUG_NEW
+#ifndef WIN_XP_SUPPORT
+#pragma comment(lib,"dwmapi.lib")
 #endif
 
 
 
 
 CAeroGlass::CAeroGlass()
+#ifdef WIN_XP_SUPPORT
 	: m_hDwmLib(NULL)
+#endif
 {
 }
 
 
 CAeroGlass::~CAeroGlass()
 {
+#ifdef WIN_XP_SUPPORT
 	if (m_hDwmLib)
 		::FreeLibrary(m_hDwmLib);
+#endif
 }
 
 
+#ifdef WIN_XP_SUPPORT
 bool CAeroGlass::LoadDwmLib()
 {
 	if (m_hDwmLib==NULL) {
 		if (!Util::OS::IsWindowsVistaOrLater())
 			return false;
-		m_hDwmLib=::LoadLibrary(TEXT("dwmapi.dll"));
+		m_hDwmLib=Util::LoadSystemLibrary(TEXT("dwmapi.dll"));
 		if (m_hDwmLib==NULL)
 			return false;
 	}
 	return true;
 }
+#endif
 
 
 // コンポジションが有効か取得する
 bool CAeroGlass::IsEnabled()
 {
+	BOOL fEnabled;
+
+#ifdef WIN_XP_SUPPORT
 	if (!LoadDwmLib())
 		return false;
 
 	auto pIsCompositionEnabled=GET_LIBRARY_FUNCTION(m_hDwmLib,DwmIsCompositionEnabled);
-	BOOL fEnabled;
+
 	return pIsCompositionEnabled!=NULL
 		&& pIsCompositionEnabled(&fEnabled)==S_OK && fEnabled;
+#else
+	return ::DwmIsCompositionEnabled(&fEnabled)==S_OK && fEnabled;
+#endif
 }
 
 
@@ -58,9 +69,11 @@ bool CAeroGlass::ApplyAeroGlass(HWND hwnd,const RECT *pRect)
 	if (!IsEnabled())
 		return false;
 
+#ifdef WIN_XP_SUPPORT
 	auto pExtendFrame=GET_LIBRARY_FUNCTION(m_hDwmLib,DwmExtendFrameIntoClientArea);
 	if (pExtendFrame==NULL)
 		return false;
+#endif
 
 	MARGINS Margins;
 
@@ -69,13 +82,20 @@ bool CAeroGlass::ApplyAeroGlass(HWND hwnd,const RECT *pRect)
 	Margins.cyTopHeight=pRect->top;
 	Margins.cyBottomHeight=pRect->bottom;
 
+#ifdef WIN_XP_SUPPORT
 	return pExtendFrame(hwnd,&Margins)==S_OK;
+#else
+	return ::DwmExtendFrameIntoClientArea(hwnd,&Margins)==S_OK;
+#endif
 }
 
 
 // フレームの描画を無効にする
 bool CAeroGlass::EnableNcRendering(HWND hwnd,bool fEnable)
 {
+	DWMNCRENDERINGPOLICY ncrp=fEnable?DWMNCRP_USEWINDOWSTYLE:DWMNCRP_DISABLED;
+
+#ifdef WIN_XP_SUPPORT
 	if (!LoadDwmLib())
 		return false;
 
@@ -83,8 +103,10 @@ bool CAeroGlass::EnableNcRendering(HWND hwnd,bool fEnable)
 	if (pSetWindowAttribute==NULL)
 		return false;
 
-	DWMNCRENDERINGPOLICY ncrp=fEnable?DWMNCRP_USEWINDOWSTYLE:DWMNCRP_DISABLED;
 	return pSetWindowAttribute(hwnd,DWMWA_NCRENDERING_POLICY,&ncrp,sizeof(ncrp))==S_OK;
+#else
+	return ::DwmSetWindowAttribute(hwnd,DWMWA_NCRENDERING_POLICY,&ncrp,sizeof(ncrp))==S_OK;
+#endif
 }
 
 
@@ -93,6 +115,8 @@ bool CAeroGlass::EnableNcRendering(HWND hwnd,bool fEnable)
 class CBufferedPaintInitializer
 {
 public:
+#ifdef WIN_XP_SUPPORT
+
 	HMODULE m_hThemeLib;
 
 	CBufferedPaintInitializer()
@@ -115,7 +139,7 @@ public:
 		if (m_hThemeLib==NULL) {
 			if (!Util::OS::IsWindowsVistaOrLater())
 				return false;
-			m_hThemeLib=::LoadLibrary(TEXT("uxtheme.dll"));
+			m_hThemeLib=Util::LoadSystemLibrary(TEXT("uxtheme.dll"));
 			if (m_hThemeLib!=NULL) {
 				auto pBufferedPaintInit=GET_LIBRARY_FUNCTION(m_hThemeLib,BufferedPaintInit);
 				if (pBufferedPaintInit==NULL
@@ -129,6 +153,38 @@ public:
 		}
 		return true;
 	}
+
+	bool IsInitialized() const { return m_hThemeLib!=NULL; }
+
+#else	// WIN_XP_SUPPORT
+
+	CBufferedPaintInitializer()
+		: m_fInitialized(false)
+	{
+	}
+
+	~CBufferedPaintInitializer()
+	{
+		if (m_fInitialized)
+			::BufferedPaintUnInit();
+	}
+
+	bool Initialize()
+	{
+		if (!m_fInitialized) {
+			if (::BufferedPaintInit()!=S_OK)
+				return false;
+			m_fInitialized=true;
+		}
+		return true;
+	}
+
+	bool IsInitialized() const { return m_fInitialized; }
+
+private:
+	bool m_fInitialized;
+
+#endif
 };
 
 static CBufferedPaintInitializer BufferedPaintInitializer;
@@ -148,7 +204,7 @@ CBufferedPaint::~CBufferedPaint()
 
 HDC CBufferedPaint::Begin(HDC hdc,const RECT *pRect,bool fErase)
 {
-	if (BufferedPaintInitializer.m_hThemeLib==NULL)
+	if (!BufferedPaintInitializer.IsInitialized())
 		return NULL;
 
 	if (m_hPaintBuffer!=NULL) {
@@ -156,16 +212,24 @@ HDC CBufferedPaint::Begin(HDC hdc,const RECT *pRect,bool fErase)
 			return NULL;
 	}
 
+#ifdef WIN_XP_SUPPORT
 	auto pBeginBufferedPaint=
 		GET_LIBRARY_FUNCTION(BufferedPaintInitializer.m_hThemeLib,BeginBufferedPaint);
 	if (pBeginBufferedPaint==NULL)
 		return NULL;
+#endif
 
 	BP_PAINTPARAMS Params={sizeof(BP_PAINTPARAMS),0,NULL,NULL};
 	if (fErase)
 		Params.dwFlags|=BPPF_ERASE;
 	HDC hdcBuffer;
-	m_hPaintBuffer=pBeginBufferedPaint(hdc,pRect,BPBF_TOPDOWNDIB,&Params,&hdcBuffer);
+	m_hPaintBuffer=
+#ifdef WIN_XP_SUPPORT
+		pBeginBufferedPaint
+#else
+		::BeginBufferedPaint
+#endif
+			(hdc,pRect,BPBF_TOPDOWNDIB,&Params,&hdcBuffer);
 	if (m_hPaintBuffer==NULL)
 		return NULL;
 	return hdcBuffer;
@@ -175,11 +239,15 @@ HDC CBufferedPaint::Begin(HDC hdc,const RECT *pRect,bool fErase)
 bool CBufferedPaint::End(bool fUpdate)
 {
 	if (m_hPaintBuffer!=NULL) {
+#ifdef WIN_XP_SUPPORT
 		auto pEndBufferedPaint=
 			GET_LIBRARY_FUNCTION(BufferedPaintInitializer.m_hThemeLib,EndBufferedPaint);
 		if (pEndBufferedPaint==NULL)
 			return false;
 		pEndBufferedPaint(m_hPaintBuffer,fUpdate);
+#else
+		::EndBufferedPaint(m_hPaintBuffer,fUpdate);
+#endif
 		m_hPaintBuffer=NULL;
 	}
 	return true;
@@ -190,11 +258,15 @@ bool CBufferedPaint::Clear(const RECT *pRect)
 {
 	if (m_hPaintBuffer==NULL)
 		return false;
+#ifdef WIN_XP_SUPPORT
 	auto pBufferedPaintClear=
 		GET_LIBRARY_FUNCTION(BufferedPaintInitializer.m_hThemeLib,BufferedPaintClear);
 	if (pBufferedPaintClear==NULL)
 		return false;
 	return pBufferedPaintClear(m_hPaintBuffer,pRect)==S_OK;
+#else
+	return ::BufferedPaintClear(m_hPaintBuffer,pRect)==S_OK;
+#endif
 }
 
 
@@ -202,11 +274,15 @@ bool CBufferedPaint::SetAlpha(BYTE Alpha)
 {
 	if (m_hPaintBuffer==NULL)
 		return false;
+#ifdef WIN_XP_SUPPORT
 	auto pBufferedPaintSetAlpha=
 		GET_LIBRARY_FUNCTION(BufferedPaintInitializer.m_hThemeLib,BufferedPaintSetAlpha);
 	if (pBufferedPaintSetAlpha==NULL)
 		return false;
 	return pBufferedPaintSetAlpha(m_hPaintBuffer,NULL,Alpha)==S_OK;
+#else
+	return ::BufferedPaintSetAlpha(m_hPaintBuffer,NULL,Alpha)==S_OK;
+#endif
 }
 
 
@@ -218,7 +294,7 @@ bool CBufferedPaint::Initialize()
 
 bool CBufferedPaint::IsSupported()
 {
-	return BufferedPaintInitializer.m_hThemeLib!=NULL;
+	return BufferedPaintInitializer.IsInitialized();
 }
 
 

@@ -3,12 +3,17 @@
 
 
 #include "BasicWindow.h"
+#include "UIBase.h"
 #include "EpgProgramList.h"
 #include "DrawUtil.h"
 #include "RichEditUtil.h"
+#include "GUIUtil.h"
+#include "WindowUtil.h"
 
 
-class CEventInfoPopup : protected CCustomWindow
+class CEventInfoPopup
+	: protected CCustomWindow
+	, public TVTest::CUIBase
 {
 public:
 	class ABSTRACT_CLASS(CEventHandler)
@@ -32,15 +37,19 @@ public:
 	bool Hide();
 	bool IsVisible();
 	bool IsOwnWindow(HWND hwnd) const;
-	void GetSize(int *pWidth,int *pHeight);
+	void GetSize(int *pWidth,int *pHeight) const;
 	bool SetSize(int Width,int Height);
 	void SetColor(COLORREF BackColor,COLORREF TextColor);
 	void SetTitleColor(COLORREF BackColor,COLORREF TextColor);
-	bool SetFont(const LOGFONT *pFont);
+	bool SetFont(const TVTest::Style::Font &Font);
 	void SetEventHandler(CEventHandler *pEventHandler);
 	bool IsSelected() const;
 	LPTSTR GetSelectedText() const;
 	void GetPreferredIconSize(int *pWidth,int *pHeight) const;
+	bool GetPopupPosition(int x,int y,RECT *pPos) const;
+	bool AdjustPopupPosition(POINT *pPos) const;
+	bool GetDefaultPopupPosition(RECT *pPos) const;
+	bool GetDefaultPopupPosition(POINT *pPos) const;
 
 	static bool Initialize(HINSTANCE hinst);
 
@@ -48,10 +57,12 @@ private:
 	CEventInfoData m_EventInfo;
 	HWND m_hwndEdit;
 	CRichEditUtil m_RichEditUtil;
+	TVTest::Style::CStyleScaling m_StyleScaling;
 	COLORREF m_BackColor;
 	COLORREF m_TextColor;
 	COLORREF m_TitleBackColor;
 	COLORREF m_TitleTextColor;
+	TVTest::Style::Font m_StyleFont;
 	DrawUtil::CFont m_Font;
 	DrawUtil::CFont m_TitleFont;
 	int m_TitleHeight;
@@ -61,14 +72,21 @@ private:
 	int m_ButtonMargin;
 	bool m_fDetailInfo;
 	TVTest::String m_TitleText;
-	HICON m_hTitleIcon;
+	TVTest::CIcon m_TitleIcon;
 	CEventHandler *m_pEventHandler;
+	bool m_fCursorInWindow;
+	bool m_fMenuShowing;
 
 	static const LPCTSTR m_pszWindowClass;
 	static HINSTANCE m_hinst;
+	static const UINT TIMER_ID_HIDE=1;
 
 // CCustomWindow
 	LRESULT OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
+
+// CUIBase
+	void ApplyStyle() override;
+	void RealizeStyle() override;
 
 	bool Create(HWND hwndParent,DWORD Style,DWORD ExStyle,int ID) override;
 	void SetEventInfo(const CEventInfoData *pEventInfo);
@@ -79,7 +97,7 @@ private:
 	void SetNcRendering();
 };
 
-class CEventInfoPopupManager
+class CEventInfoPopupManager : protected CWindowSubclass
 {
 public:
 	class ABSTRACT_CLASS(CEventHandler)
@@ -103,16 +121,13 @@ public:
 	bool Popup(int x,int y);
 
 private:
-	static const LPCTSTR m_pszPropName;
 	CEventInfoPopup *m_pPopup;
 	bool m_fEnable;
-	HWND m_hwnd;
-	WNDPROC m_pOldWndProc;
 	CEventHandler *m_pEventHandler;
 	bool m_fTrackMouseEvent;
 	LPARAM m_HitTestParam;
 
-	static LRESULT CALLBACK HookWndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam);
+	LRESULT OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
 };
 
 

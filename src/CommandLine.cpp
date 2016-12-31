@@ -2,12 +2,7 @@
 #include "TVTest.h"
 #include "CommandLine.h"
 //#include "AppMain.h"
-
-#ifdef _DEBUG
-#undef THIS_FILE
-static char THIS_FILE[]=__FILE__;
-#define new DEBUG_NEW
-#endif
+#include "Common/DebugDef.h"
 
 
 
@@ -24,11 +19,11 @@ public:
 	bool IsSwitch() const;
 	bool IsOption(LPCWSTR pszOption) const;
 	bool GetOption(LPCWSTR pszOption,bool *pValue);
-	bool GetOption(LPCWSTR pszOption,CDynamicString *pValue);
+	bool GetOption(LPCWSTR pszOption,TVTest::String *pValue);
 	bool GetOption(LPCWSTR pszOption,LPTSTR pszValue,int MaxLength);
 	bool GetOption(LPCWSTR pszOption,int *pValue);
 	bool GetOption(LPCWSTR pszOption,DWORD *pValue);
-	bool GetOption(LPCWSTR pszOption,FILETIME *pValue);
+	bool GetOption(LPCWSTR pszOption,SYSTEMTIME *pValue);
 	bool GetDurationOption(LPCWSTR pszOption,int *pValue);
 	bool IsEnd() const { return m_CurPos>=m_Args; }
 	bool Next();
@@ -36,7 +31,7 @@ public:
 	bool GetText(LPWSTR pszText,int MaxLength) const;
 	bool GetValue(int *pValue) const;
 	bool GetValue(DWORD *pValue) const;
-	bool GetValue(FILETIME *pValue) const;
+	bool GetValue(SYSTEMTIME *pValue) const;
 	bool GetDurationValue(int *pValue) const;
 };
 
@@ -84,11 +79,13 @@ bool CArgsParser::GetOption(LPCWSTR pszOption,bool *pValue)
 }
 
 
-bool CArgsParser::GetOption(LPCWSTR pszOption,CDynamicString *pValue)
+bool CArgsParser::GetOption(LPCWSTR pszOption,TVTest::String *pValue)
 {
 	if (IsOption(pszOption)) {
-		if (Next())
-			return pValue->Set(GetText());
+		if (Next()) {
+			TVTest::StringUtility::Assign(*pValue,GetText());
+			return true;
+		}
 	}
 	return false;
 }
@@ -124,7 +121,7 @@ bool CArgsParser::GetOption(LPCWSTR pszOption,DWORD *pValue)
 }
 
 
-bool CArgsParser::GetOption(LPCWSTR pszOption,FILETIME *pValue)
+bool CArgsParser::GetOption(LPCWSTR pszOption,SYSTEMTIME *pValue)
 {
 	if (IsOption(pszOption)) {
 		if (Next())
@@ -188,7 +185,7 @@ bool CArgsParser::GetValue(DWORD *pValue) const
 }
 
 
-bool CArgsParser::GetValue(FILETIME *pValue) const
+bool CArgsParser::GetValue(SYSTEMTIME *pValue) const
 {
 	if (IsEnd())
 		return false;
@@ -283,20 +280,18 @@ bool CArgsParser::GetValue(FILETIME *pValue) const
 			Time.wHour+=24;
 	}
 
-	SYSTEMTIME st;
-	FILETIME ft;
-	::ZeroMemory(&st,sizeof(st));
+	SYSTEMTIME st={};
+
 	st.wYear=Time.wYear;
 	st.wMonth=Time.wMonth;
 	st.wDay=Time.wDay;
-	if (!::SystemTimeToFileTime(&st,&ft))
-		return false;
 
-	ft+=(LONGLONG)Time.wHour*FILETIME_HOUR+
-		(LONGLONG)Time.wMinute*FILETIME_MINUTE+
-		(LONGLONG)Time.wSecond*FILETIME_SECOND;
+	OffsetSystemTime(&st,
+		(LONGLONG)Time.wHour*TimeConsts::SYSTEMTIME_HOUR+
+		(LONGLONG)Time.wMinute*TimeConsts::SYSTEMTIME_MINUTE+
+		(LONGLONG)Time.wSecond*TimeConsts::SYSTEMTIME_SECOND);
 
-	*pValue=ft;
+	*pValue=st;
 
 	return true;
 }
@@ -349,16 +344,16 @@ static bool GetIniEntry(LPCWSTR pszText,CCommandLineOptions::IniEntry *pEntry)
 		LPCWSTR pEnd=::StrChrW(p,L']');
 		if (pEnd==NULL)
 			return false;
-		pEntry->Section.Set(p,pEnd-p);
+		pEntry->Section.assign(p,pEnd-p);
 		p=pEnd+1;
 	}
 
 	LPCWSTR pEnd=::StrChrW(p,L'=');
 	if (pEnd==NULL || pEnd-p<1)
 		return false;
-	pEntry->Name.Set(p,pEnd-p);
+	pEntry->Name.assign(p,pEnd-p);
 	p=pEnd+1;
-	pEntry->Value.Set(p);
+	pEntry->Value.assign(p);
 
 	return true;
 }
@@ -368,19 +363,25 @@ static bool GetIniEntry(LPCWSTR pszText,CCommandLineOptions::IniEntry *pEntry)
 
 CCommandLineOptions::CCommandLineOptions()
 	: m_fNoDriver(false)
-	, m_fNoDescramble(false)
+	, m_fNoTSProcessor(false)
 	, m_fSingleTask(false)
 	, m_fStandby(false)
 	, m_fNoView(false)
 	, m_fNoDirectShow(false)
+	, m_fMpeg2(false)
+	, m_fH264(false)
+	, m_fH265(false)
 	, m_fSilent(false)
 	, m_fInitialSettings(false)
 	, m_fSaveLog(false)
 	, m_fNoEpg(false)
+	, m_f1Seg(false)
+	, m_fJumpList(false)
 	, m_TvRockDID(-1)
 
 	, m_Channel(0)
 	, m_ControllerChannel(0)
+	, m_ChannelIndex(-1)
 	, m_TuningSpace(-1)
 	, m_ServiceID(0)
 	, m_NetworkID(0)
@@ -391,7 +392,7 @@ CCommandLineOptions::CCommandLineOptions()
 
 	, m_fRecord(false)
 	, m_fRecordStop(false)
-	, m_RecordStartTime(FILETIME_NULL)
+	, m_RecordStartTime()
 	, m_RecordDelay(0)
 	, m_RecordDuration(0)
 	, m_fRecordCurServiceOnly(false)
@@ -424,7 +425,8 @@ CCommandLineOptions::CCommandLineOptions()
 /*
 	利用可能なコマンドラインオプション
 
-	/ch				チャンネル (e.g. /ch 13)
+	/ch				物理チャンネル (e.g. /ch 13)
+	/chi			チャンネルインデックス
 	/chspace		チューニング空間 (e.g. /chspace 1)
 	/d				ドライバの指定 (e.g. /d BonDriver.dll)
 	/f /fullscreen	フルスクリーン
@@ -440,12 +442,16 @@ CCommandLineOptions::CCommandLineOptions()
 	/width			ウィンドウの幅の指定
 	/height			ウィンドウの高さの指定
 	/mute			消音
-	/nd				スクランブル解除しない
+	/nd				TSプロセッサーを無効にする
 	/nid			ネットワークID
 	/nodriver		BonDriverを読み込まない
 	/nodshow		DirectShowの初期化をしない
 	/noplugin		プラグインを読み込まない
 	/noview			プレビュー無効
+	/mpeg2			MPEG-2を有効
+	/h264			H.264を有効
+	/h265			H.265を有効
+	/1seg			ワンセグモード
 	/nr				ネットワークリモコンを使用する
 	/p /port		UDP のポート番号 (e.g. /p 1234)
 	/plugin-		指定されたプラグインを読み込まない
@@ -473,6 +479,9 @@ CCommandLineOptions::CCommandLineOptions()
 	/epgspace		EPG番組表のデフォルトチューニング空間
 	/home			ホーム画面表示
 	/chdisplay		チャンネル選択画面表示
+	/style			スタイルファイル名
+	/command		コマンド実行
+	/jumplist		ジャンプリストからの起動
 */
 void CCommandLineOptions::Parse(LPCWSTR pszCmdLine)
 {
@@ -482,9 +491,12 @@ void CCommandLineOptions::Parse(LPCWSTR pszCmdLine)
 		return;
 	do {
 		if (Args.IsSwitch()) {
-			if (!Args.GetOption(TEXT("ch"),&m_Channel)
+			if (!Args.GetOption(TEXT("1seg"),&m_f1Seg)
+					&& !Args.GetOption(TEXT("ch"),&m_Channel)
 					&& !Args.GetOption(TEXT("chdisplay"),&m_fChannelDisplay)
+					&& !Args.GetOption(TEXT("chi"),&m_ChannelIndex)
 					&& !Args.GetOption(TEXT("chspace"),&m_TuningSpace)
+					&& !Args.GetOption(TEXT("command"),&m_Command)
 					&& !Args.GetOption(TEXT("d"),&m_DriverName)
 					&& !Args.GetOption(TEXT("epg"),&m_fShowProgramGuide)
 					&& !Args.GetOption(TEXT("epgonly"),&m_fProgramGuideOnly)
@@ -492,15 +504,19 @@ void CCommandLineOptions::Parse(LPCWSTR pszCmdLine)
 					&& !Args.GetOption(TEXT("epgtuner"),&m_ProgramGuideTuner)
 					&& !Args.GetOption(TEXT("f"),&m_fFullscreen)
 					&& !Args.GetOption(TEXT("fullscreen"),&m_fFullscreen)
+					&& !Args.GetOption(TEXT("h264"),&m_fH264)
+					&& !Args.GetOption(TEXT("h265"),&m_fH265)
 					&& !Args.GetOption(TEXT("height"),&m_WindowHeight)
 					&& !Args.GetOption(TEXT("home"),&m_fHomeDisplay)
 					&& !Args.GetOption(TEXT("ini"),&m_IniFileName)
 					&& !Args.GetOption(TEXT("init"),&m_fInitialSettings)
+					&& !Args.GetOption(TEXT("jumplist"),&m_fJumpList)
 					&& !Args.GetOption(TEXT("log"),&m_fSaveLog)
 					&& !Args.GetOption(TEXT("max"),&m_fMaximize)
 					&& !Args.GetOption(TEXT("min"),&m_fMinimize)
+					&& !Args.GetOption(TEXT("mpeg2"),&m_fMpeg2)
 					&& !Args.GetOption(TEXT("mute"),&m_fMute)
-					&& !Args.GetOption(TEXT("nd"),&m_fNoDescramble)
+					&& !Args.GetOption(TEXT("nd"),&m_fNoTSProcessor)
 					&& !Args.GetOption(TEXT("nodriver"),&m_fNoDriver)
 					&& !Args.GetOption(TEXT("nodshow"),&m_fNoDirectShow)
 					&& !Args.GetOption(TEXT("noepg"),&m_fNoEpg)
@@ -528,9 +544,9 @@ void CCommandLineOptions::Parse(LPCWSTR pszCmdLine)
 					&& !Args.GetOption(TEXT("sid"),&m_ServiceID)
 					&& !Args.GetOption(TEXT("silent"),&m_fSilent)
 					&& !Args.GetOption(TEXT("standby"),&m_fStandby)
+					&& !Args.GetOption(TEXT("style"),&m_StyleFileName)
 					&& !Args.GetOption(TEXT("tray"),&m_fTray)
 					&& !Args.GetOption(TEXT("tsid"),&m_TransportStreamID)
-					&& !Args.GetOption(TEXT("tvcas"),&m_CasLibraryName)
 					&& !Args.GetOption(TEXT("volume"),&m_Volume)
 					&& !Args.GetOption(TEXT("width"),&m_WindowWidth)) {
 				if (Args.IsOption(TEXT("inikey"))) {
@@ -543,7 +559,7 @@ void CCommandLineOptions::Parse(LPCWSTR pszCmdLine)
 					if (Args.Next()) {
 						TCHAR szPlugin[MAX_PATH];
 						if (Args.GetText(szPlugin,MAX_PATH))
-							m_NoLoadPlugins.push_back(CDynamicString(szPlugin));
+							m_NoLoadPlugins.push_back(TVTest::String(szPlugin));
 					}
 				} else if (Args.IsOption(TEXT("did"))) {
 					if (Args.Next()) {
@@ -581,16 +597,14 @@ void CCommandLineOptions::Parse(LPCWSTR pszCmdLine)
 		do {
 			if (Args.IsSwitch()) {
 				int Duration;
-				FILETIME Time;
+				SYSTEMTIME Time;
 				if (Args.GetDurationOption(L"d",&Duration)) {
 					TRACE(L"Commandline parse test : \"%s\" %d\n",
 						  Args.GetText(),Duration);
 				} else if (Args.GetOption(L"t",&Time)) {
-					SYSTEMTIME st;
-					::FileTimeToSystemTime(&Time,&st);
 					TRACE(L"Commandline parse test : \"%s\" %d/%d/%d %d:%d:%d\n",
 						  Args.GetText(),
-						  st.wYear,st.wMonth,st.wDay,st.wHour,st.wMinute,st.wSecond);
+						  Time.wYear,Time.wMonth,Time.wDay,Time.wHour,Time.wMinute,Time.wSecond);
 				}
 			}
 		} while (Args.Next());
@@ -602,6 +616,7 @@ void CCommandLineOptions::Parse(LPCWSTR pszCmdLine)
 
 bool CCommandLineOptions::IsChannelSpecified() const
 {
-	return m_Channel>0 || m_ControllerChannel>0 || m_ServiceID>0
-		|| m_NetworkID>0 || m_TransportStreamID>0;
+	return m_Channel>0 || m_ControllerChannel>0
+		|| (m_ChannelIndex>=0 && m_TuningSpace>=0)
+		|| m_ServiceID>0 || m_NetworkID>0 || m_TransportStreamID>0;
 }

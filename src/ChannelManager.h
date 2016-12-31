@@ -19,16 +19,15 @@ class CChannelManager
 	bool m_fChannelFileHasStreamIDs;
 	TVTest::String m_ChannelFileName;
 
-#ifdef NETWORK_REMOCON_SUPPORT
-	bool m_fNetworkRemocon;
-	CChannelList *m_pNetworkRemoconChannelList;
-	int m_NetworkRemoconCurrentChannel;
-#endif
-
 public:
 	enum {
 		SPACE_INVALID=-2,
 		SPACE_ALL=-1
+	};
+
+	enum UpDownOrder {
+		UP_DOWN_ORDER_INDEX,
+		UP_DOWN_ORDER_ID
 	};
 
 	CChannelManager();
@@ -47,12 +46,10 @@ public:
 	bool SetChangingChannel(int Channel);
 	int GetChangingChannel() const { return m_ChangingChannel; }
 	const CChannelInfo *GetCurrentChannelInfo() const;
-	const CChannelInfo *GetCurrentRealChannelInfo() const;
 	const CChannelInfo *GetChangingChannelInfo() const;
-	int GetNextChannel(bool fNext) const;
-	const CChannelInfo *GetNextChannelInfo(bool fNext) const;
+	int GetNextChannel(int CurChannel,UpDownOrder Order,bool fNext) const;
+	int GetNextChannel(UpDownOrder Order,bool fNext) const;
 	const CChannelList *GetCurrentChannelList() const;
-	const CChannelList *GetCurrentRealChannelList() const;
 	const CChannelList *GetChannelList(int Space) const;
 	const CChannelList *GetFileChannelList(int Space) const;
 	const CChannelList *GetDriverChannelList(int Space) const;
@@ -63,22 +60,12 @@ public:
 	const CTuningSpaceList *GetDriverTuningSpaceList() const { return &m_DriverTuningSpaceList; }
 	LPCTSTR GetTuningSpaceName(int Space) const;
 	int FindChannelInfo(const CChannelInfo *pInfo) const;
-	int FindChannelByIDs(int Space,WORD NetworkID,WORD TransportStreamID,WORD ServiceID) const;
+	int FindChannelByIDs(int Space,WORD NetworkID,WORD TransportStreamID,WORD ServiceID,
+						 bool fEnabledOnly=true) const;
 	int NumSpaces() const;
 	bool GetChannelFileName(LPTSTR pszFileName,int MaxLength) const;
 
-#ifdef NETWORK_REMOCON_SUPPORT
-	bool SetNetworkRemoconMode(bool fNetworkRemocon,CChannelList *pList=NULL);
-	bool IsNetworkRemoconMode() const { return m_fNetworkRemocon; }
-	int GetNetworkRemoconCurrentChannel() const { return m_NetworkRemoconCurrentChannel; }
-	bool SetNetworkRemoconCurrentChannel(int Channel);
-#endif
-
 	bool ChannelFileHasStreamIDs() const { return m_fChannelFileHasStreamIDs; }
-	bool UpdateStreamInfo(int Space,int ChannelIndex,
-						  WORD NetworkID,WORD TransportStreamID,WORD ServiceID);
-	bool LoadChannelSettings(LPCTSTR pszFileName,LPCTSTR pszDriverName);
-	bool SaveChannelSettings(LPCTSTR pszFileName,LPCTSTR pszDriverName);
 };
 
 class CChannelSpec

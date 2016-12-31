@@ -2,12 +2,8 @@
 #include "TVTest.h"
 #include "View.h"
 #include "DrawUtil.h"
-
-#ifdef _DEBUG
-#undef THIS_FILE
-static char THIS_FILE[]=__FILE__;
-#define new DEBUG_NEW
-#endif
+#include <cmath>
+#include "Common/DebugDef.h"
 
 
 #define VIEW_WINDOW_CLASS				APP_NAME TEXT(" View")
@@ -97,7 +93,7 @@ LRESULT CVideoContainerWindow::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARA
 		{
 			int Width=LOWORD(lParam),Height=HIWORD(lParam);
 
-			m_pDtvEngine->SetViewSize(Width,Height);
+			m_pDtvEngine->m_MediaViewer.SetViewSize(Width,Height);
 			if (m_pDisplayBase!=NULL)
 				m_pDisplayBase->AdjustPosition();
 			if (uMsg==WM_SIZE
@@ -223,7 +219,7 @@ CViewWindow::CViewWindow()
 	, m_hwndMessage(NULL)
 	, m_pEventHandler(NULL)
 	, m_hbmLogo(NULL)
-	, m_BorderInfo(Theme::BORDER_NONE,RGB(128,128,128))
+	, m_BorderStyle(TVTest::Theme::BORDER_NONE,RGB(128,128,128))
 	, m_fShowCursor(true)
 {
 }
@@ -254,6 +250,7 @@ void CViewWindow::SetVideoContainer(CVideoContainerWindow *pVideoContainer)
 		RECT rc;
 
 		GetClientRect(&rc);
+		CalcClientRect(&rc);
 		pVideoContainer->SetPosition(&rc);
 	}
 }
@@ -288,17 +285,26 @@ bool CViewWindow::SetLogo(HBITMAP hbm)
 }
 
 
-void CViewWindow::SetBorder(const Theme::BorderInfo *pInfo)
+void CViewWindow::SetBorder(const TVTest::Theme::BorderStyle &Style)
 {
-	if (m_BorderInfo!=*pInfo) {
-		const bool fResize=m_BorderInfo.Type!=pInfo->Type
-			&& (m_BorderInfo.Type==Theme::BORDER_NONE || pInfo->Type==Theme::BORDER_NONE);
-		m_BorderInfo=*pInfo;
+	if (m_BorderStyle!=Style) {
+		const bool fResize=m_BorderStyle.Type!=Style.Type
+			&& (m_BorderStyle.Type==TVTest::Theme::BORDER_NONE || Style.Type==TVTest::Theme::BORDER_NONE);
+		m_BorderStyle=Style;
 		if (m_hwnd) {
 			if (fResize)
 				SendSizeMessage();
 			Invalidate();
 		}
+	}
+}
+
+
+void CViewWindow::SetMargin(const TVTest::Style::Margins &Margin)
+{
+	if (m_Margin!=Margin) {
+		m_Margin=Margin;
+		SendSizeMessage();
 	}
 }
 
@@ -325,19 +331,33 @@ void CViewWindow::ShowCursor(bool fShow)
 
 bool CViewWindow::CalcClientRect(RECT *pRect) const
 {
-	return Theme::SubtractBorderRect(&m_BorderInfo,pRect);
+	TVTest::Theme::BorderStyle Border=m_BorderStyle;
+	ConvertBorderWidthsInPixels(&Border);
+	if (!TVTest::Theme::SubtractBorderRect(Border,pRect))
+		return false;
+	TVTest::Style::Subtract(pRect,m_Margin);
+	return true;
 }
 
 
 bool CViewWindow::CalcWindowRect(RECT *pRect) const
 {
-	return Theme::AddBorderRect(&m_BorderInfo,pRect);
+	TVTest::Theme::BorderStyle Border=m_BorderStyle;
+	ConvertBorderWidthsInPixels(&Border);
+	if (!TVTest::Theme::AddBorderRect(m_BorderStyle,pRect))
+		return false;
+	TVTest::Style::Add(pRect,m_Margin);
+	return true;
 }
 
 
 LRESULT CViewWindow::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 {
 	switch (uMsg) {
+	case WM_CREATE:
+		InitializeUI();
+		return 0;
+
 	case WM_SIZE:
 		{
 			const int Width=LOWORD(lParam),Height=HIWORD(lParam);
@@ -348,9 +368,7 @@ LRESULT CViewWindow::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 
 				::SetRect(&rc,0,0,Width,Height);
 				CalcClientRect(&rc);
-				m_pVideoContainer->SetPosition(rc.left,rc.top,
-											   max(rc.right-rc.left,0),
-											   max(rc.bottom-rc.top,0));
+				m_pVideoContainer->SetPosition(&rc);
 			}
 			if (m_pEventHandler!=NULL)
 				m_pEventHandler->OnSizeChanged(Width,Height);
@@ -381,7 +399,10 @@ LRESULT CViewWindow::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 			} else {
 				::FillRect(ps.hdc,&ps.rcPaint,hbr);
 			}
-			Theme::DrawBorder(ps.hdc,rcClient,&m_BorderInfo);
+			{
+				TVTest::Theme::CThemeDraw ThemeDraw(BeginThemeDraw(ps.hdc));
+				ThemeDraw.Draw(m_BorderStyle,rcClient);
+			}
 			::EndPaint(hwnd,&ps);
 		}
 		return 0;
@@ -450,6 +471,7 @@ CViewWindow::CEventHandler::~CEventHandler()
 
 CDisplayView::CDisplayView()
 	: m_pDisplayBase(NULL)
+	, m_pEventHandler(NULL)
 {
 }
 
@@ -469,6 +491,20 @@ void CDisplayView::SetVisible(bool fVisible)
 {
 	if (m_pDisplayBase!=NULL)
 		m_pDisplayBase->SetVisible(fVisible);
+}
+
+
+void CDisplayView::SetStyle(const TVTest::Style::CStyleManager *pStyleManager)
+{
+	m_Style.SetStyle(pStyleManager);
+}
+
+
+void CDisplayView::NormalizeStyle(
+	const TVTest::Style::CStyleManager *pStyleManager,
+	const TVTest::Style::CStyleScaling *pStyleScaling)
+{
+	m_Style.NormalizeStyle(pStyleManager,pStyleScaling);
 }
 
 
@@ -494,10 +530,10 @@ bool CDisplayView::GetCloseButtonRect(RECT *pRect) const
 
 	if (!GetClientRect(&rc))
 		return false;
-	pRect->right=rc.right-1;
-	pRect->left=pRect->right-14;
-	pRect->top=1;
-	pRect->bottom=pRect->top+14;
+	pRect->right=rc.right-m_Style.CloseButtonMargin.Right;
+	pRect->left=pRect->right-m_Style.CloseButtonSize.Width;
+	pRect->top=m_Style.CloseButtonMargin.Top;
+	pRect->bottom=pRect->top+m_Style.CloseButtonSize.Height;
 	return true;
 }
 
@@ -524,48 +560,50 @@ void CDisplayView::DrawCloseButton(HDC hdc) const
 }
 
 
-bool CDisplayView::GetItemStyle(ItemType Type,Theme::Style *pStyle) const
+bool CDisplayView::GetItemStyle(ItemType Type,TVTest::Theme::Style *pStyle) const
 {
 	switch (Type) {
 	case ITEM_STYLE_NORMAL:
 	case ITEM_STYLE_NORMAL_1:
 	case ITEM_STYLE_NORMAL_2:
-		pStyle->Gradient.Type=Theme::GRADIENT_NORMAL;
-		pStyle->Gradient.Direction=Theme::DIRECTION_VERT;
+		pStyle->Back.Fill.Type=TVTest::Theme::FILL_SOLID;
 		if (Type!=ITEM_STYLE_NORMAL_2) {
-			pStyle->Gradient.Color1=RGB(48,48,48);
-			pStyle->Gradient.Color2=RGB(48,48,48);
+			pStyle->Back.Fill.Solid.Color.Set(48,48,48);
 		} else {
-			pStyle->Gradient.Color1=RGB(24,24,24);
-			pStyle->Gradient.Color2=RGB(24,24,24);
+			pStyle->Back.Fill.Solid.Color.Set(24,24,24);
 		}
-		pStyle->Border.Type=Theme::BORDER_NONE;
-		pStyle->TextColor=RGB(255,255,255);
+		pStyle->Back.Border.Type=TVTest::Theme::BORDER_NONE;
+		pStyle->Fore.Fill.Type=TVTest::Theme::FILL_SOLID;
+		pStyle->Fore.Fill.Solid.Color.Set(255,255,255);
 		break;
 
 	case ITEM_STYLE_HOT:
-		pStyle->Gradient.Type=Theme::GRADIENT_NORMAL;
-		pStyle->Gradient.Direction=Theme::DIRECTION_VERT;
-		pStyle->Gradient.Color1=RGB(128,128,128);
-		pStyle->Gradient.Color2=RGB(96,96,96);
-		pStyle->Border.Type=Theme::BORDER_SOLID;
-		pStyle->Border.Color=RGB(144,144,144);
-		pStyle->TextColor=RGB(255,255,255);
+		pStyle->Back.Fill.Type=TVTest::Theme::FILL_GRADIENT;
+		pStyle->Back.Fill.Gradient.Type=TVTest::Theme::GRADIENT_NORMAL;
+		pStyle->Back.Fill.Gradient.Direction=TVTest::Theme::DIRECTION_VERT;
+		pStyle->Back.Fill.Gradient.Color1.Set(128,128,128);
+		pStyle->Back.Fill.Gradient.Color2.Set(96,96,96);
+		pStyle->Back.Border.Type=TVTest::Theme::BORDER_SOLID;
+		pStyle->Back.Border.Color.Set(144,144,144);
+		pStyle->Fore.Fill.Type=TVTest::Theme::FILL_SOLID;
+		pStyle->Fore.Fill.Solid.Color.Set(255,255,255);
 		break;
 
 	case ITEM_STYLE_SELECTED:
 	case ITEM_STYLE_CURRENT:
-		pStyle->Gradient.Type=Theme::GRADIENT_NORMAL;
-		pStyle->Gradient.Direction=Theme::DIRECTION_HORZ;
-		pStyle->Gradient.Color1=RGB(96,96,96);
-		pStyle->Gradient.Color2=RGB(128,128,128);
+		pStyle->Back.Fill.Type=TVTest::Theme::FILL_GRADIENT;
+		pStyle->Back.Fill.Gradient.Type=TVTest::Theme::GRADIENT_NORMAL;
+		pStyle->Back.Fill.Gradient.Direction=TVTest::Theme::DIRECTION_VERT;
+		pStyle->Back.Fill.Gradient.Color1.Set(96,96,96);
+		pStyle->Back.Fill.Gradient.Color2.Set(128,128,128);
 		if (Type==ITEM_STYLE_CURRENT) {
-			pStyle->Border.Type=Theme::BORDER_SOLID;
-			pStyle->Border.Color=RGB(144,144,144);
+			pStyle->Back.Border.Type=TVTest::Theme::BORDER_SOLID;
+			pStyle->Back.Border.Color.Set(144,144,144);
 		} else {
-			pStyle->Border.Type=Theme::BORDER_NONE;
+			pStyle->Back.Border.Type=TVTest::Theme::BORDER_NONE;
 		}
-		pStyle->TextColor=RGB(255,255,255);
+		pStyle->Fore.Fill.Type=TVTest::Theme::FILL_SOLID;
+		pStyle->Fore.Fill.Solid.Color.Set(255,255,255);
 		break;
 
 	default:
@@ -576,21 +614,23 @@ bool CDisplayView::GetItemStyle(ItemType Type,Theme::Style *pStyle) const
 }
 
 
-bool CDisplayView::GetBackgroundStyle(BackgroundType Type,Theme::GradientInfo *pGradient) const
+bool CDisplayView::GetBackgroundStyle(BackgroundType Type,TVTest::Theme::BackgroundStyle *pStyle) const
 {
 	switch (Type) {
 	case BACKGROUND_STYLE_CONTENT:
-		pGradient->Type=Theme::GRADIENT_NORMAL;
-		pGradient->Direction=Theme::DIRECTION_HORZ;
-		pGradient->Color1=RGB(36,36,36);
-		pGradient->Color2=RGB(16,16,16);
+		pStyle->Fill.Type=TVTest::Theme::FILL_GRADIENT;
+		pStyle->Fill.Gradient.Direction=TVTest::Theme::DIRECTION_HORZ;
+		pStyle->Fill.Gradient.Color1.Set(36,36,36);
+		pStyle->Fill.Gradient.Color2.Set(16,16,16);
+		pStyle->Border.Type=TVTest::Theme::BORDER_NONE;
 		break;
 
 	case BACKGROUND_STYLE_CATEGORIES:
-		pGradient->Type=Theme::GRADIENT_NORMAL;
-		pGradient->Direction=Theme::DIRECTION_HORZ;
-		pGradient->Color1=RGB(24,24,80);
-		pGradient->Color2=RGB(24,24,32);
+		pStyle->Fill.Type=TVTest::Theme::FILL_GRADIENT;
+		pStyle->Fill.Gradient.Direction=TVTest::Theme::DIRECTION_HORZ;
+		pStyle->Fill.Gradient.Color1.Set(24,24,80);
+		pStyle->Fill.Gradient.Color2.Set(24,24,32);
+		pStyle->Border.Type=TVTest::Theme::BORDER_NONE;
 		break;
 
 	default:
@@ -603,8 +643,109 @@ bool CDisplayView::GetBackgroundStyle(BackgroundType Type,Theme::GradientInfo *p
 
 int CDisplayView::GetDefaultFontSize(int Width,int Height) const
 {
-	int Size=min(Width/40,Height/24);
-	return max(Size,12);
+	int Size=min(Width/m_Style.TextSizeRatioHorz,Height/m_Style.TextSizeRatioVert);
+	double DPI=(double)m_pStyleScaling->GetDPI();
+	double Points=(double)Size*72.0/DPI;
+	const double BasePoints=9.0;
+	if (Points>BasePoints && m_Style.TextSizeScaleBase>0) {
+		Points=(int)(std::log(Points-(BasePoints-1.0))/
+					 std::log((double)m_Style.TextSizeScaleBase*0.01)+
+					 ((BasePoints-1.0)+0.5));
+		Size=(int)(Points*DPI/72.0+0.5);
+	}
+	if (Size<m_Style.TextSizeMin)
+		Size=m_Style.TextSizeMin;
+	else if (m_Style.TextSizeMax>0 && Size>m_Style.TextSizeMax)
+		Size=m_Style.TextSizeMax;
+	return Size;
+}
+
+
+void CDisplayView::SetEventHandler(CEventHandler *pEventHandler)
+{
+	m_pEventHandler=pEventHandler;
+}
+
+
+bool CDisplayView::HandleMessage(HWND hwnd,UINT Msg,WPARAM wParam,LPARAM lParam,LRESULT *pResult)
+{
+	*pResult=0;
+
+	if (m_pEventHandler==NULL)
+		return false;
+
+	switch (Msg) {
+	case WM_RBUTTONDOWN:
+	case WM_RBUTTONUP:
+	case WM_MBUTTONDOWN:
+	case WM_MBUTTONUP:
+	case WM_LBUTTONDBLCLK:
+		m_pEventHandler->OnMouseMessage(Msg,GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam));
+		return true;
+	}
+
+	return false;
+}
+
+
+LRESULT CDisplayView::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
+{
+	LRESULT Result;
+	if (HandleMessage(hwnd,uMsg,wParam,lParam,&Result))
+		return Result;
+
+	return CCustomWindow::OnMessage(hwnd,uMsg,wParam,lParam);
+}
+
+
+CDisplayView::CEventHandler::~CEventHandler()
+{
+}
+
+
+CDisplayView::DisplayViewStyle::DisplayViewStyle()
+	: TextSizeRatioHorz(50)
+	, TextSizeRatioVert(30)
+	, TextSizeScaleBase(140)
+	, TextSizeMin(12)
+	, TextSizeMax(72)
+	, ContentMargin(8,16,18,16)
+	, CategoriesMargin(8,32,8,32)
+	, CloseButtonSize(14,14)
+	, CloseButtonMargin(2)
+{
+}
+
+
+void CDisplayView::DisplayViewStyle::SetStyle(const TVTest::Style::CStyleManager *pStyleManager)
+{
+	TVTest::Style::IntValue Value;
+
+	*this=DisplayViewStyle();
+	if (pStyleManager->Get(TEXT("display.text-size-ratio.horz"),&Value) && Value.Value>0)
+		TextSizeRatioHorz=Value;
+	if (pStyleManager->Get(TEXT("display.text-size-ratio.vert"),&Value) && Value.Value>0)
+		TextSizeRatioVert=Value;
+	pStyleManager->Get(TEXT("display.text-size-scale-base"),&TextSizeScaleBase);
+	pStyleManager->Get(TEXT("display.text-size-min"),&TextSizeMin);
+	pStyleManager->Get(TEXT("display.text-size-max"),&TextSizeMax);
+	pStyleManager->Get(TEXT("display.content.margin"),&ContentMargin);
+	pStyleManager->Get(TEXT("display.categories.margin"),&CategoriesMargin);
+	pStyleManager->Get(TEXT("display.close-button"),&CloseButtonSize);
+	pStyleManager->Get(TEXT("display.close-button.margin"),&CloseButtonMargin);
+}
+
+
+void CDisplayView::DisplayViewStyle::NormalizeStyle(
+	const TVTest::Style::CStyleManager *pStyleManager,
+	const TVTest::Style::CStyleScaling *pStyleScaling)
+{
+	pStyleScaling->ToPixels(&TextSizeMin);
+	pStyleScaling->ToPixels(&TextSizeMax);
+	pStyleScaling->ToPixels(&ContentMargin);
+	pStyleScaling->ToPixels(&CategoriesMargin);
+	pStyleScaling->ToPixels(&CloseButtonSize);
+	pStyleScaling->ToPixels(&CloseButtonMargin);
 }
 
 
@@ -731,4 +872,17 @@ void CDisplayBase::SetFocus()
 
 CDisplayBase::CEventHandler::~CEventHandler()
 {
+}
+
+
+
+
+void CDisplayEventHandlerBase::RelayMouseMessage(CDisplayView *pView,UINT Message,int x,int y)
+{
+	if (pView==nullptr)
+		return;
+	HWND hwndParent=pView->GetParent();
+	POINT pt={x,y};
+	::MapWindowPoints(pView->GetHandle(),hwndParent,&pt,1);
+	::SendMessage(hwndParent,Message,0,MAKELPARAM(pt.x,pt.y));
 }

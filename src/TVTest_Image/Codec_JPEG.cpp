@@ -4,9 +4,16 @@
 #include <tchar.h>
 #include "libjpeg/jpeglib.h"
 #include "libjpeg/jerror.h"
-#include "TVTest_Image.h"
+#include "ImageLib.h"
 #include "Codec_JPEG.h"
 #include "ImageUtil.h"
+
+
+namespace TVTest
+{
+
+namespace ImageLib
+{
 
 
 struct JPEGErrorInfo {
@@ -165,3 +172,8 @@ bool SaveJPEGFile(const ImageSaveInfo *pInfo)
 	CloseHandle(hFile);
 	return true;
 }
+
+
+}	// namespace ImageLib
+
+}	// namespace TVTest

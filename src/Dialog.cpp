@@ -1,11 +1,9 @@
 #include "stdafx.h"
+#include "TVTest.h"
 #include "Dialog.h"
-
-#ifdef _DEBUG
-#undef THIS_FILE
-static char THIS_FILE[]=__FILE__;
-#define new DEBUG_NEW
-#endif
+#include "DialogUtil.h"
+#include "DPIUtil.h"
+#include "Common/DebugDef.h"
 
 
 
@@ -13,7 +11,13 @@ static char THIS_FILE[]=__FILE__;
 CBasicDialog::CBasicDialog()
 	: m_hDlg(NULL)
 	, m_fModeless(false)
+	, m_fSetPosition(false)
+	, m_OriginalDPI(0)
+	, m_CurrentDPI(0)
+	, m_hOriginalFont(NULL)
+	, m_fInitializing(false)
 {
+	SetStyleScaling(&m_StyleScaling);
 }
 
 
@@ -60,6 +64,21 @@ bool CBasicDialog::SetVisible(bool fVisible)
 }
 
 
+bool CBasicDialog::GetPosition(Position *pPosition) const
+{
+	if (pPosition==NULL)
+		return false;
+	if (m_hDlg==NULL) {
+		*pPosition=m_Position;
+	} else {
+		RECT rc;
+		::GetWindowRect(m_hDlg,&rc);
+		pPosition->Set(&rc);
+	}
+	return true;
+}
+
+
 bool CBasicDialog::GetPosition(RECT *pPosition) const
 {
 	if (pPosition==NULL)
@@ -89,6 +108,12 @@ bool CBasicDialog::GetPosition(int *pLeft,int *pTop,int *pWidth,int *pHeight) co
 }
 
 
+bool CBasicDialog::SetPosition(const Position &Pos)
+{
+	return SetPosition(Pos.x,Pos.y,Pos.Width,Pos.Height);
+}
+
+
 bool CBasicDialog::SetPosition(const RECT *pPosition)
 {
 	if (pPosition==NULL)
@@ -108,8 +133,22 @@ bool CBasicDialog::SetPosition(int Left,int Top,int Width,int Height)
 		m_Position.y=Top;
 		m_Position.Width=Width;
 		m_Position.Height=Height;
+		m_fSetPosition=true;
 	} else {
 		::MoveWindow(m_hDlg,Left,Top,Width,Height,TRUE);
+	}
+	return true;
+}
+
+
+bool CBasicDialog::SetPosition(int Left,int Top)
+{
+	if (m_hDlg==NULL) {
+		m_Position.x=Left;
+		m_Position.y=Top;
+		m_fSetPosition=true;
+	} else {
+		::SetWindowPos(m_hDlg,NULL,Left,Top,0,0,SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);
 	}
 	return true;
 }
@@ -127,6 +166,10 @@ int CBasicDialog::ShowDialog(HWND hwndOwner,HINSTANCE hinst,LPCTSTR pszTemplate)
 {
 	if (m_hDlg!=NULL)
 		return -1;
+
+	// ダイアログは Per-Monitor DPI 対応
+	TVTest::PerMonitorDPIBlock DPIBlock;
+
 	return (int)::DialogBoxParam(hinst,pszTemplate,hwndOwner,DialogProc,
 								 reinterpret_cast<LPARAM>(this));
 }
@@ -136,6 +179,10 @@ bool CBasicDialog::CreateDialogWindow(HWND hwndOwner,HINSTANCE hinst,LPCTSTR psz
 {
 	if (m_hDlg!=NULL)
 		return false;
+
+	// ダイアログは Per-Monitor DPI 対応
+	TVTest::PerMonitorDPIBlock DPIBlock;
+
 	if (::CreateDialogParam(hinst,pszTemplate,hwndOwner,DialogProc,
 							reinterpret_cast<LPARAM>(this))==NULL)
 		return false;
@@ -162,16 +209,53 @@ INT_PTR CALLBACK CBasicDialog::DialogProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPAR
 		pThis=GetThis(hDlg);
 		if (uMsg==WM_NCDESTROY) {
 			if (pThis!=NULL) {
-				pThis->DlgProc(hDlg,uMsg,wParam,lParam);
+				pThis->HandleMessage(hDlg,uMsg,wParam,lParam);
 				pThis->m_hDlg=NULL;
 			}
 			::RemoveProp(hDlg,TEXT("This"));
+			pThis->OnDestroyed();
+			// ここで既に pThis が delete されている可能性がある
 			return TRUE;
 		}
 	}
 	if (pThis!=NULL)
-		return pThis->DlgProc(hDlg,uMsg,wParam,lParam);
+		return pThis->HandleMessage(hDlg,uMsg,wParam,lParam);
 	return FALSE;
+}
+
+
+INT_PTR CBasicDialog::HandleMessage(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
+{
+	switch (uMsg) {
+	case WM_INITDIALOG:
+		m_fInitializing=true;
+		if (m_fSetPosition) {
+			m_Position.Width=0;
+			m_Position.Height=0;
+			ApplyPosition();
+		}
+		InitDialog();
+		break;
+
+	case WM_DPICHANGED:
+		if (!m_fInitializing)
+			OnDPIChanged(hDlg,wParam,lParam);
+		break;
+
+	case WM_DESTROY:
+		StorePosition();
+
+		if (!m_ItemList.empty()) {
+			for (auto it=m_ItemList.begin();it!=m_ItemList.end();++it)
+				SetWindowFont(it->hwnd,m_hOriginalFont,FALSE);
+			m_ItemList.clear();
+		}
+		if (m_hOriginalFont!=NULL)
+			SetWindowFont(hDlg,m_hOriginalFont,FALSE);
+		break;
+	}
+
+	return DlgProc(hDlg,uMsg,wParam,lParam);
 }
 
 
@@ -186,11 +270,167 @@ INT_PTR CBasicDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 }
 
 
+bool CBasicDialog::ApplyPosition()
+{
+	if (m_hDlg==NULL || !m_fSetPosition)
+		return false;
+
+	RECT rc;
+	m_Position.Get(&rc);
+	HMONITOR hMonitor=::MonitorFromRect(&rc,MONITOR_DEFAULTTONEAREST);
+	MONITORINFO mi;
+	mi.cbSize=sizeof(mi);
+	if (::GetMonitorInfo(hMonitor,&mi)) {
+		if (rc.left<mi.rcMonitor.left)
+			m_Position.x=mi.rcMonitor.left;
+		else if (rc.right>mi.rcMonitor.right)
+			m_Position.x=mi.rcMonitor.right-m_Position.Width;
+		if (rc.top<mi.rcMonitor.top)
+			m_Position.y=mi.rcMonitor.top;
+		else if (rc.bottom>mi.rcMonitor.bottom)
+			m_Position.y=mi.rcMonitor.bottom-m_Position.Height;
+	}
+
+	UINT Flags=SWP_NOZORDER | SWP_NOACTIVATE;
+	if (m_Position.Width<=0 || m_Position.Height<=0)
+		Flags|=SWP_NOSIZE;
+
+	return ::SetWindowPos(m_hDlg,NULL,
+						  m_Position.x,m_Position.y,
+						  m_Position.Width,m_Position.Height,
+						  Flags)!=FALSE;
+}
+
+
+void CBasicDialog::StorePosition()
+{
+	if (m_hDlg!=NULL) {
+		RECT rc;
+
+		if (::GetWindowRect(m_hDlg,&rc)) {
+			m_Position.Set(&rc);
+			m_fSetPosition=true;
+		}
+	}
+}
+
+
+void CBasicDialog::InitDialog()
+{
+	m_fInitializing=true;
+
+	if (m_pStyleScaling==&m_StyleScaling) {
+		InitStyleScaling(m_hDlg,false);
+	}
+
+	m_OriginalDPI=m_pStyleScaling->GetSystemDPI();
+	m_CurrentDPI=m_OriginalDPI;
+	m_hOriginalFont=GetWindowFont(m_hDlg);
+
+	InitializeUI();
+
+	if (m_pStyleScaling->GetDPI()!=m_OriginalDPI) {
+		RealizeStyle();
+
+		RECT rc;
+		::GetClientRect(m_hDlg,&rc);
+		rc.right=::MulDiv(rc.right,m_CurrentDPI,m_OriginalDPI),
+		rc.bottom=::MulDiv(rc.bottom,m_CurrentDPI,m_OriginalDPI),
+		::AdjustWindowRectEx(&rc,GetWindowStyle(m_hDlg),FALSE,GetWindowExStyle(m_hDlg));
+		::SetWindowPos(m_hDlg,NULL,0,0,rc.right-rc.left,rc.bottom-rc.top,
+					   SWP_NOZORDER | SWP_NOMOVE | SWP_NOACTIVATE);
+	}
+
+	m_fInitializing=false;
+}
+
+
+void CBasicDialog::ApplyStyle()
+{
+	if (m_hDlg!=NULL) {
+		const int DPI=m_pStyleScaling->GetDPI();
+
+		LOGFONT lf;
+		::GetObject(m_hOriginalFont,sizeof(LOGFONT),&lf);
+		LONG Height=::MulDiv(abs(lf.lfHeight),DPI,m_OriginalDPI);
+		lf.lfHeight=lf.lfHeight<0?-Height:Height;
+		lf.lfWidth=0;
+		m_Font.Create(&lf);
+	}
+}
+
+
+void CBasicDialog::RealizeStyle()
+{
+	if (m_hDlg!=NULL) {
+		const int DPI=m_pStyleScaling->GetDPI();
+
+		if (m_CurrentDPI!=DPI) {
+			m_CurrentDPI=DPI;
+
+			if (m_ItemList.empty()) {
+				HWND hwnd=NULL;
+
+				while ((hwnd=::FindWindowEx(m_hDlg,hwnd,NULL,NULL))!=NULL) {
+					ItemInfo Item;
+
+					Item.hwnd=hwnd;
+					::GetWindowRect(hwnd,&Item.rcOriginal);
+					MapWindowRect(NULL,m_hDlg,&Item.rcOriginal);
+					m_ItemList.push_back(Item);
+				}
+			}
+
+			HDWP hdwp=::BeginDeferWindowPos(static_cast<int>(m_ItemList.size()));
+
+			for (auto it=m_ItemList.begin();it!=m_ItemList.end();++it) {
+				HWND hwnd=it->hwnd;
+				RECT rc=it->rcOriginal;
+
+				rc.left=::MulDiv(rc.left,DPI,m_OriginalDPI);
+				rc.top=::MulDiv(rc.top,DPI,m_OriginalDPI);
+				rc.right=::MulDiv(rc.right,DPI,m_OriginalDPI);
+				rc.bottom=::MulDiv(rc.bottom,DPI,m_OriginalDPI);
+				if (hdwp!=NULL) {
+					::DeferWindowPos(
+						hdwp, hwnd, nullptr,
+						rc.left,rc.top,rc.right-rc.left,rc.bottom-rc.top,
+						SWP_NOZORDER | SWP_NOACTIVATE);
+				} else {
+					::SetWindowPos(
+						hwnd, nullptr,
+						rc.left,rc.top,rc.right-rc.left,rc.bottom-rc.top,
+						SWP_NOZORDER | SWP_NOACTIVATE);
+				}
+
+				TCHAR szClass[32];
+				::GetClassName(hwnd,szClass,lengthof(szClass));
+				if (::lstrcmpi(szClass,TEXT("BUTTON"))==0
+						|| ::lstrcmpi(szClass,WC_LISTVIEW)==0
+						|| ::lstrcmpi(szClass,WC_TREEVIEW)==0)
+					::SendMessage(hwnd,CCM_DPISCALE,TRUE,0);
+
+				SetWindowFont(hwnd,m_Font.GetHandle(),FALSE);
+				::InvalidateRect(hwnd,NULL,TRUE);
+			}
+
+			if (hdwp!=NULL)
+				::EndDeferWindowPos(hdwp);
+
+			SetWindowFont(m_hDlg,m_Font.GetHandle(),FALSE);
+			::InvalidateRect(m_hDlg,NULL,TRUE);
+		}
+	}
+}
+
+
 
 
 CResizableDialog::CResizableDialog()
 	: m_hwndSizeGrip(NULL)
 {
+	m_MinSize.cx=0;
+	m_MinSize.cy=0;
 }
 
 
@@ -199,20 +439,23 @@ CResizableDialog::~CResizableDialog()
 }
 
 
-INT_PTR CResizableDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
+INT_PTR CResizableDialog::HandleMessage(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 {
 	switch (uMsg) {
 	case WM_INITDIALOG:
 		{
 			RECT rc;
 
-			::GetWindowRect(hDlg,&rc);
-			m_MinSize.cx=rc.right-rc.left;
-			m_MinSize.cy=rc.bottom-rc.top;
+			m_BaseDPI=m_pStyleScaling->GetSystemDPI();
+
 			::GetClientRect(hDlg,&rc);
-			m_OriginalClientSize.cx=rc.right-rc.left;
-			m_OriginalClientSize.cy=rc.bottom-rc.top;
+			m_OriginalClientSize.cx=rc.right;
+			m_OriginalClientSize.cy=rc.bottom;
+
+			InitDialog();
+
 			if ((::GetWindowLong(hDlg,GWL_STYLE)&WS_CHILD)==0) {
+				::GetClientRect(hDlg,&rc);
 				m_hwndSizeGrip=::CreateWindowEx(0,TEXT("SCROLLBAR"),NULL,
 					WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | SBS_SIZEGRIP |
 													SBS_SIZEBOXBOTTOMRIGHTALIGN,
@@ -223,7 +466,7 @@ INT_PTR CResizableDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPara
 				m_hwndSizeGrip=NULL;
 			}
 		}
-		return TRUE;
+		break;
 
 	case WM_GETMINMAXINFO:
 		{
@@ -236,18 +479,29 @@ INT_PTR CResizableDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPara
 
 	case WM_SIZE:
 		DoLayout();
-		return TRUE;
+		break;
+
+	case WM_DPICHANGED:
+		if (!m_fInitializing)
+			OnDPIChanged(hDlg,wParam,lParam);
+		break;
 
 	case WM_DESTROY:
-		{
-			RECT rc;
-
-			::GetWindowRect(hDlg,&rc);
-			m_Position.Set(&rc);
-		}
-		return TRUE;
+		return CBasicDialog::HandleMessage(hDlg,uMsg,wParam,lParam);
 	}
-	return FALSE;
+
+	return DlgProc(hDlg,uMsg,wParam,lParam);
+}
+
+
+bool CResizableDialog::ApplyPosition()
+{
+	if (m_Position.Width<m_MinSize.cx)
+		m_Position.Width=m_MinSize.cx;
+	if (m_Position.Height<m_MinSize.cy)
+		m_Position.Height=m_MinSize.cy;
+
+	return CBasicDialog::ApplyPosition();
 }
 
 
@@ -257,23 +511,53 @@ void CResizableDialog::DoLayout()
 	int Width,Height;
 
 	::GetClientRect(m_hDlg,&rc);
-	Width=rc.right-rc.left;
-	Height=rc.bottom-rc.top;
+	Width=rc.right;
+	Height=rc.bottom;
+
+	HDWP hdwp=::BeginDeferWindowPos(static_cast<int>(m_ControlList.size()));
+
 	for (size_t i=0;i<m_ControlList.size();i++) {
 		rc=m_ControlList[i].rcOriginal;
+
+		const int DPI=m_ControlList[i].DPI;
+		if (DPI!=m_CurrentDPI) {
+			rc.left=::MulDiv(rc.left,m_CurrentDPI,DPI);
+			rc.top=::MulDiv(rc.top,m_CurrentDPI,DPI);
+			rc.right=::MulDiv(rc.right,m_CurrentDPI,DPI);
+			rc.bottom=::MulDiv(rc.bottom,m_CurrentDPI,DPI);
+		}
+
 		if ((m_ControlList[i].Align&ALIGN_RIGHT)!=0) {
-			rc.right+=Width-m_OriginalClientSize.cx;
+			rc.right+=Width-m_ScaledClientSize.cx;
 			if ((m_ControlList[i].Align&ALIGN_LEFT)==0)
-				rc.left+=Width-m_OriginalClientSize.cx;
+				rc.left+=Width-m_ScaledClientSize.cx;
+			if (rc.right<rc.left)
+				rc.right=rc.left;
 		}
 		if ((m_ControlList[i].Align&ALIGN_BOTTOM)!=0) {
-			rc.bottom+=Height-m_OriginalClientSize.cy;
+			rc.bottom+=Height-m_ScaledClientSize.cy;
 			if ((m_ControlList[i].Align&ALIGN_TOP)==0)
-				rc.top+=Height-m_OriginalClientSize.cy;
+				rc.top+=Height-m_ScaledClientSize.cy;
+			if (rc.bottom<rc.top)
+				rc.bottom=rc.top;
 		}
-		::MoveWindow(::GetDlgItem(m_hDlg,m_ControlList[i].ID),
-					 rc.left,rc.top,rc.right-rc.left,rc.bottom-rc.top,TRUE);
+
+		if (hdwp!=NULL) {
+			::DeferWindowPos(
+				hdwp,::GetDlgItem(m_hDlg,m_ControlList[i].ID),nullptr,
+				rc.left,rc.top,rc.right-rc.left,rc.bottom-rc.top,
+				SWP_NOZORDER | SWP_NOACTIVATE);
+		} else {
+			::SetWindowPos(
+				::GetDlgItem(m_hDlg,m_ControlList[i].ID),nullptr,
+				rc.left,rc.top,rc.right-rc.left,rc.bottom-rc.top,
+				SWP_NOZORDER | SWP_NOACTIVATE);
+		}
 	}
+
+	if (hdwp!=NULL)
+		::EndDeferWindowPos(hdwp);
+
 	if (m_hwndSizeGrip!=NULL) {
 		::GetWindowRect(m_hwndSizeGrip,&rc);
 		::OffsetRect(&rc,-rc.left,-rc.top);
@@ -294,6 +578,7 @@ bool CResizableDialog::AddControl(int ID,unsigned int Align)
 	Item.ID=ID;
 	::GetWindowRect(hwnd,&Item.rcOriginal);
 	::MapWindowPoints(NULL,m_hDlg,reinterpret_cast<LPPOINT>(&Item.rcOriginal),2);
+	Item.DPI=m_CurrentDPI;
 	Item.Align=Align;
 	m_ControlList.push_back(Item);
 	return true;
@@ -312,29 +597,43 @@ bool CResizableDialog::AddControls(int FirstID,int LastID,unsigned int Align)
 }
 
 
-void CResizableDialog::ApplyPosition()
+bool CResizableDialog::UpdateControlPosition(int ID)
 {
-	if (m_Position.Width<m_MinSize.cx)
-		m_Position.Width=m_MinSize.cx;
-	if (m_Position.Height<m_MinSize.cy)
-		m_Position.Height=m_MinSize.cy;
-
-	RECT rc;
-	m_Position.Get(&rc);
-	HMONITOR hMonitor=::MonitorFromRect(&rc,MONITOR_DEFAULTTOPRIMARY);
-	MONITORINFO mi;
-	mi.cbSize=sizeof(mi);
-	if (::GetMonitorInfo(hMonitor,&mi)) {
-		if (rc.left<mi.rcMonitor.left)
-			m_Position.x=mi.rcMonitor.left;
-		else if (rc.right>mi.rcMonitor.right)
-			m_Position.x=mi.rcMonitor.right-m_Position.Width;
-		if (rc.top<mi.rcMonitor.top)
-			m_Position.y=mi.rcMonitor.top;
-		else if (rc.bottom>mi.rcMonitor.bottom)
-			m_Position.y=mi.rcMonitor.bottom-m_Position.Height;
+	for (size_t i=0;i<m_ControlList.size();i++) {
+		if (m_ControlList[i].ID==ID) {
+			GetDlgItemRect(m_hDlg,ID,&m_ControlList[i].rcOriginal);
+			m_ControlList[i].DPI=m_CurrentDPI;
+			return true;
+		}
 	}
 
-	::MoveWindow(m_hDlg,m_Position.x,m_Position.y,
-				 m_Position.Width,m_Position.Height,FALSE);
+	return false;
+}
+
+
+void CResizableDialog::ApplyStyle()
+{
+	CBasicDialog::ApplyStyle();
+
+	if (m_hDlg!=NULL) {
+		const int DPI=m_pStyleScaling->GetDPI();
+		RECT rc;
+
+		m_ScaledClientSize.cx=::MulDiv(m_OriginalClientSize.cx,DPI,m_BaseDPI);
+		m_ScaledClientSize.cy=::MulDiv(m_OriginalClientSize.cy,DPI,m_BaseDPI);
+
+		rc.left=0;
+		rc.top=0;
+		rc.right=m_ScaledClientSize.cx;
+		rc.bottom=m_ScaledClientSize.cy;
+		::AdjustWindowRectEx(&rc,GetWindowStyle(m_hDlg),FALSE,GetWindowExStyle(m_hDlg));
+		m_MinSize.cx=rc.right-rc.left;
+		m_MinSize.cy=rc.bottom-rc.top;
+	}
+}
+
+
+void CResizableDialog::RealizeStyle()
+{
+	CBasicDialog::RealizeStyle();
 }

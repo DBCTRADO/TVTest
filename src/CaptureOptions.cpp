@@ -4,12 +4,90 @@
 #include "CaptureOptions.h"
 #include "DialogUtil.h"
 #include "resource.h"
+#include "Common/DebugDef.h"
 
-#ifdef _DEBUG
-#undef THIS_FILE
-static char THIS_FILE[]=__FILE__;
-#define new DEBUG_NEW
-#endif
+
+namespace TVTest
+{
+
+
+class CCaptureVariableStringMap : public CEventVariableStringMap
+{
+public:
+	CCaptureVariableStringMap();
+	CCaptureVariableStringMap(const EventInfo &Info,const CCaptureImage *pImage);
+	bool GetParameterList(ParameterGroupList *pList) const override;
+
+private:
+	bool GetLocalString(LPCWSTR pszKeyword,String *pString) override;
+
+	static const ParameterInfo m_CaptureParameterList[];
+
+	int m_ImageWidth;
+	int m_ImageHeight;
+};
+
+
+const CVariableStringMap::ParameterInfo CCaptureVariableStringMap::m_CaptureParameterList[] =
+{
+	{TEXT("width"),		TEXT("画像の幅")},
+	{TEXT("height"),	TEXT("画像の高さ")},
+};
+
+
+CCaptureVariableStringMap::CCaptureVariableStringMap()
+	: m_ImageWidth(1920)
+	, m_ImageHeight(1080)
+{
+}
+
+
+CCaptureVariableStringMap::CCaptureVariableStringMap(
+		const EventInfo &Info,const CCaptureImage *pImage)
+	: CEventVariableStringMap(Info)
+{
+	BITMAPINFOHEADER bmih;
+
+	if (pImage->GetBitmapInfoHeader(&bmih)) {
+		m_ImageWidth=bmih.biWidth;
+		m_ImageHeight=bmih.biHeight;
+	} else {
+		m_ImageWidth=0;
+		m_ImageHeight=0;
+	}
+}
+
+
+bool CCaptureVariableStringMap::GetLocalString(LPCWSTR pszKeyword,String *pString)
+{
+	if (::lstrcmpi(pszKeyword,TEXT("width"))==0) {
+		TVTest::StringUtility::Format(*pString,TEXT("%d"),m_ImageWidth);
+	} else if (::lstrcmpi(pszKeyword,TEXT("height"))==0) {
+		TVTest::StringUtility::Format(*pString,TEXT("%d"),m_ImageHeight);
+	} else {
+		return CEventVariableStringMap::GetLocalString(pszKeyword,pString);
+	}
+
+	return true;
+}
+
+
+bool CCaptureVariableStringMap::GetParameterList(ParameterGroupList *pList) const
+{
+	if (!CEventVariableStringMap::GetParameterList(pList))
+		return false;
+
+	pList->push_back(ParameterGroup());
+	pList->back().ParameterList.insert(
+		pList->back().ParameterList.end(),
+		m_CaptureParameterList,
+		m_CaptureParameterList+lengthof(m_CaptureParameterList));
+
+	return true;
+}
+
+
+}	// namespace TVTest
 
 
 
@@ -45,14 +123,16 @@ const CCaptureOptions::PercentageType CCaptureOptions::m_PercentageList[PERCENTA
 
 
 CCaptureOptions::CCaptureOptions()
-	: m_SaveFormat(0)
+	: m_FileName(TEXT("Capture_%date%-%time%"))
+	, m_SaveFormat(0)
 	, m_JPEGQuality(90)
 	, m_PNGCompressionLevel(6)
 	, m_fCaptureSaveToFile(true)
 	, m_fSetComment(false)
+	, m_CommentFormat(TEXT("%year%/%month%/%day% %hour%:%minute%:%second% %channel-name%\r\n%event-title%"))
 	, m_CaptureSizeType(SIZE_TYPE_ORIGINAL)
 	, m_CaptureSize(
-#ifndef TVH264_FOR_1SEG
+#ifndef TVTEST_FOR_1SEG
 		SIZE_1920x1080
 #else
 		SIZE_320x180
@@ -61,7 +141,6 @@ CCaptureOptions::CCaptureOptions()
 	, m_CapturePercentage(PERCENTAGE_50)
 {
 	GetAppClass().GetAppDirectory(m_szSaveFolder);
-	::lstrcpy(m_szFileName,TEXT("Capture"));
 }
 
 
@@ -74,7 +153,11 @@ CCaptureOptions::~CCaptureOptions()
 bool CCaptureOptions::ReadSettings(CSettings &Settings)
 {
 	Settings.Read(TEXT("CaptureFolder"),m_szSaveFolder,lengthof(m_szSaveFolder));
-	Settings.Read(TEXT("CaptureFileName"),m_szFileName,lengthof(m_szFileName));
+	if (!Settings.Read(TEXT("CaptureFileNameFormat"),&m_FileName)) {
+		// ver.0.9.0 より前との互換用
+		if (Settings.Read(TEXT("CaptureFileName"),&m_FileName))
+			m_FileName+=TEXT("%date%-%time%");
+	}
 	TCHAR szFormat[32];
 	if (Settings.Read(TEXT("CaptureSaveFormat"),szFormat,lengthof(szFormat))) {
 		int Format=m_ImageCodec.FormatNameToIndex(szFormat);
@@ -83,6 +166,9 @@ bool CCaptureOptions::ReadSettings(CSettings &Settings)
 	}
 	Settings.Read(TEXT("CaptureIconSaveFile"),&m_fCaptureSaveToFile);
 	Settings.Read(TEXT("CaptureSetComment"),&m_fSetComment);
+	TVTest::String CommentFormat;
+	if (Settings.Read(TEXT("CaptureCommentFormat"),&CommentFormat))
+		m_CommentFormat=TVTest::StringUtility::Decode(CommentFormat);
 	Settings.Read(TEXT("JpegQuality"),&m_JPEGQuality);
 	Settings.Read(TEXT("PngCompressionLevel"),&m_PNGCompressionLevel);
 	int Size;
@@ -121,10 +207,11 @@ bool CCaptureOptions::ReadSettings(CSettings &Settings)
 bool CCaptureOptions::WriteSettings(CSettings &Settings)
 {
 	Settings.Write(TEXT("CaptureFolder"),m_szSaveFolder);
-	Settings.Write(TEXT("CaptureFileName"),m_szFileName);
+	Settings.Write(TEXT("CaptureFileNameFormat"),m_FileName);
 	Settings.Write(TEXT("CaptureSaveFormat"),m_ImageCodec.EnumSaveFormat(m_SaveFormat));
 	Settings.Write(TEXT("CaptureIconSaveFile"),m_fCaptureSaveToFile);
 	Settings.Write(TEXT("CaptureSetComment"),m_fSetComment);
+	Settings.Write(TEXT("CaptureCommentFormat"),TVTest::StringUtility::Encode(m_CommentFormat));
 	Settings.Write(TEXT("JpegQuality"),m_JPEGQuality);
 	Settings.Write(TEXT("PngCompressionLevel"),m_PNGCompressionLevel);
 	Settings.Write(TEXT("CaptureSizeType"),m_CaptureSizeType);
@@ -202,39 +289,56 @@ bool CCaptureOptions::GetCustomSize(int *pWidth,int *pHeight) const
 }
 
 
-bool CCaptureOptions::GenerateFileName(LPTSTR pszFileName,int MaxLength,const SYSTEMTIME *pst) const
+bool CCaptureOptions::GenerateFileName(
+	TVTest::String *pFileName,const CCaptureImage *pImage) const
 {
+	if (pFileName==NULL)
+		return false;
+
 	TCHAR szSaveFolder[MAX_PATH];
-	SYSTEMTIME st;
 
 	if (m_szSaveFolder[0]!='\0') {
-		::lstrcpy(szSaveFolder,m_szSaveFolder);
+		if (!GetAbsolutePath(m_szSaveFolder,szSaveFolder,lengthof(szSaveFolder)))
+			return false;
 	} else {
 		if (!GetAppClass().GetAppDirectory(szSaveFolder))
 			return false;
 	}
-	if (::lstrlen(szSaveFolder)+1+::lstrlen(m_szFileName)>=MaxLength)
+
+	TVTest::CEventVariableStringMap::EventInfo EventInfo;
+	GetAppClass().Core.GetVariableStringEventInfo(&EventInfo);
+	TVTest::CCaptureVariableStringMap VarStrMap(EventInfo,pImage);
+	TVTest::String FileName;
+	TCHAR szPath[MAX_PATH];
+
+	VarStrMap.SetCurrentTime(&pImage->GetCaptureTime());
+
+	if (!TVTest::FormatVariableString(&VarStrMap,m_FileName.c_str(),&FileName)
+			|| FileName.empty())
 		return false;
-	::PathCombine(pszFileName,szSaveFolder,m_szFileName);
-	if (pst==NULL) {
-		::GetLocalTime(&st);
-	} else {
-		st=*pst;
-	}
-	int Length=::lstrlen(pszFileName);
-	Length+=StdUtil::snprintf(pszFileName+Length,MaxLength-Length,
-							  TEXT("%04d%02d%02d-%02d%02d%02d"),
-							  st.wYear,st.wMonth,st.wDay,st.wHour,st.wMinute,st.wSecond);
-	LPCTSTR pszExtension=m_ImageCodec.GetExtension(m_SaveFormat);
-	StdUtil::snprintf(pszFileName+Length,MaxLength-Length,TEXT(".%s"),pszExtension);
-	if (::PathFileExists(pszFileName)) {
-		for (int i=0;;i++) {
-			StdUtil::snprintf(pszFileName+Length,MaxLength-Length,
-							  TEXT("-%d.%s"),i+1,pszExtension);
-			if (!::PathFileExists(pszFileName))
-				break;
+	if (::lstrlen(szSaveFolder)+1+(int)FileName.length()>=MAX_PATH)
+		return false;
+	::PathCombine(szPath,szSaveFolder,FileName.c_str());
+	::lstrcpy(szSaveFolder,szPath);
+	::PathRemoveFileSpec(szSaveFolder);
+	if (!::PathIsDirectory(szSaveFolder)) {
+		int Result=::SHCreateDirectoryEx(NULL,szSaveFolder,NULL);
+		if (Result!=ERROR_SUCCESS && Result!=ERROR_ALREADY_EXISTS) {
+			GetAppClass().AddLog(
+				CLogItem::TYPE_ERROR,
+				TEXT("キャプチャの保存先フォルダ \"%s\" を作成できません。"),
+				szSaveFolder);
+			return false;
 		}
 	}
+
+	FileName=szPath;
+	FileName+=_T('.');
+	FileName+=m_ImageCodec.GetExtension(m_SaveFormat);
+	if (!MakeUniqueFileName(&FileName))
+		return false;
+	*pFileName=FileName;
+
 	return true;
 }
 
@@ -260,36 +364,36 @@ bool CCaptureOptions::GetOptionText(LPTSTR pszOption,int MaxLength) const
 }
 
 
-bool CCaptureOptions::GetCommentText(LPTSTR pszComment,int MaxComment,
-									LPCTSTR pszChannelName,LPCTSTR pszEventName)
+bool CCaptureOptions::GetCommentText(
+	TVTest::String *pComment,const CCaptureImage *pImage) const
 {
-	SYSTEMTIME st;
-	TCHAR szDate[64],szTime[64];
+	if (pComment==NULL || pImage==NULL)
+		return false;
 
-	::GetLocalTime(&st);
-	::GetDateFormat(LOCALE_USER_DEFAULT,DATE_SHORTDATE,&st,NULL,szDate,lengthof(szDate));
-	::GetTimeFormat(LOCALE_USER_DEFAULT,TIME_FORCE24HOURFORMAT,&st,NULL,szTime,lengthof(szTime));
-	int Length=StdUtil::snprintf(pszComment,MaxComment,TEXT("%s %s"),szDate,szTime);
-	if (!IsStringEmpty(pszChannelName))
-		Length+=StdUtil::snprintf(pszComment+Length,MaxComment-Length,TEXT(" %s"),pszChannelName);
-	if (!IsStringEmpty(pszEventName))
-		Length+=StdUtil::snprintf(pszComment+Length,MaxComment-Length,TEXT("\r\n%s"),pszEventName);
-	return true;
+	TVTest::CEventVariableStringMap::EventInfo EventInfo;
+	GetAppClass().Core.GetVariableStringEventInfo(&EventInfo);
+	TVTest::CCaptureVariableStringMap VarStrMap(EventInfo,pImage);
+
+	VarStrMap.SetCurrentTime(&pImage->GetCaptureTime());
+
+	return TVTest::FormatVariableString(&VarStrMap,m_CommentFormat.c_str(),pComment);
 }
 
 
 bool CCaptureOptions::SaveImage(CCaptureImage *pImage)
 {
-	TCHAR szFileName[MAX_PATH],szOption[16];
+	TVTest::String FileName;
+	TCHAR szOption[16];
 	BITMAPINFO *pbmi;
 	BYTE *pBits;
 	bool fOK;
 
-	GenerateFileName(szFileName,lengthof(szFileName),&pImage->GetCaptureTime());
+	if (!GenerateFileName(&FileName,pImage))
+		return false;
 	GetOptionText(szOption,lengthof(szOption));
 	if (!pImage->LockData(&pbmi,&pBits))
 		return false;
-	fOK=m_ImageCodec.SaveImage(szFileName,m_SaveFormat,szOption,
+	fOK=m_ImageCodec.SaveImage(FileName.c_str(),m_SaveFormat,szOption,
 						pbmi,pBits,m_fSetComment?pImage->GetComment():NULL);
 	pImage->UnlockData();
 	return fOK;
@@ -309,10 +413,11 @@ bool CCaptureOptions::OpenSaveFolder() const
 	TCHAR szFolder[MAX_PATH];
 
 	if (m_szSaveFolder[0]!='\0') {
-		::lstrcpy(szFolder,m_szSaveFolder);
+		if (!GetAbsolutePath(m_szSaveFolder,szFolder,lengthof(szFolder)))
+			return false;
 	} else {
-		::GetModuleFileName(NULL,szFolder,lengthof(szFolder));
-		*(::PathFindFileName(szFolder)-1)='\0';
+		if (!GetAppClass().GetAppDirectory(szFolder))
+			return false;
 	}
 	return (ULONG_PTR)::ShellExecute(NULL,TEXT("open"),szFolder,NULL,NULL,SW_SHOWNORMAL)>32;
 }
@@ -327,8 +432,8 @@ INT_PTR CCaptureOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam
 
 			SendDlgItemMessage(hDlg,IDC_CAPTUREOPTIONS_SAVEFOLDER,EM_LIMITTEXT,MAX_PATH-1,0);
 			SetDlgItemText(hDlg,IDC_CAPTUREOPTIONS_SAVEFOLDER,m_szSaveFolder);
-			SendDlgItemMessage(hDlg,IDC_CAPTUREOPTIONS_FILENAME,EM_LIMITTEXT,MAX_PATH-1,0);
-			SetDlgItemText(hDlg,IDC_CAPTUREOPTIONS_FILENAME,m_szFileName);
+			SetDlgItemText(hDlg,IDC_CAPTUREOPTIONS_FILENAME,m_FileName.c_str());
+			InitDropDownButton(hDlg,IDC_CAPTUREOPTIONS_FILENAME_PARAMETERS);
 
 			static const LPCTSTR SizeTypeText[] = {
 				TEXT("元の大きさ"),
@@ -338,8 +443,15 @@ INT_PTR CCaptureOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam
 			for (i=0;i<lengthof(SizeTypeText);i++)
 				DlgComboBox_AddString(hDlg,IDC_CAPTUREOPTIONS_SIZE,SizeTypeText[i]);
 			for (i=0;i<=PERCENTAGE_LAST;i++) {
-				StdUtil::snprintf(szText,lengthof(szText),TEXT("%d %%"),
-								  m_PercentageList[i].Num*100/m_PercentageList[i].Denom);
+				const PercentageType &Ratio=m_PercentageList[i];
+				int Length=StdUtil::snprintf(
+					szText,lengthof(szText),TEXT("%d %%"),
+					::MulDiv(Ratio.Num,100,Ratio.Denom));
+				if (Ratio.Num*100%Ratio.Denom!=0) {
+					StdUtil::snprintf(
+						szText+Length,lengthof(szText)-Length,TEXT(" (%d/%d)"),
+						Ratio.Num,Ratio.Denom);
+				}
 				DlgComboBox_AddString(hDlg,IDC_CAPTUREOPTIONS_SIZE,szText);
 			}
 			for (i=0;i<=SIZE_LAST;i++) {
@@ -397,6 +509,12 @@ INT_PTR CCaptureOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam
 
 			DlgCheckBox_Check(hDlg,IDC_CAPTUREOPTIONS_ICONSAVEFILE,m_fCaptureSaveToFile);
 			DlgCheckBox_Check(hDlg,IDC_CAPTUREOPTIONS_SETCOMMENT,m_fSetComment);
+			::SetDlgItemText(hDlg,IDC_CAPTUREOPTIONS_COMMENT,m_CommentFormat.c_str());
+			InitDropDownButton(hDlg,IDC_CAPTUREOPTIONS_COMMENT_PARAMETERS);
+			EnableDlgItems(hDlg,
+						   IDC_CAPTUREOPTIONS_COMMENT,
+						   IDC_CAPTUREOPTIONS_COMMENT_PARAMETERS,
+						   m_fSetComment);
 		}
 		return TRUE;
 
@@ -424,6 +542,29 @@ INT_PTR CCaptureOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam
 			}
 			return TRUE;
 
+		case IDC_CAPTUREOPTIONS_FILENAME:
+			if (HIWORD(wParam)==EN_CHANGE)
+				UpdateFileNamePreview();
+			return TRUE;
+
+		case IDC_CAPTUREOPTIONS_FILENAME_PARAMETERS:
+			{
+				RECT rc;
+				POINT pt;
+
+				::GetWindowRect(::GetDlgItem(hDlg,IDC_CAPTUREOPTIONS_FILENAME_PARAMETERS),&rc);
+				pt.x=rc.left;
+				pt.y=rc.bottom;
+				TVTest::CCaptureVariableStringMap VarStrMap;
+				VarStrMap.InputParameter(hDlg,IDC_CAPTUREOPTIONS_FILENAME,pt);
+			}
+			return TRUE;
+
+		case IDC_CAPTUREOPTIONS_FORMAT:
+			if (HIWORD(wParam)==CBN_SELCHANGE)
+				UpdateFileNamePreview();
+			return TRUE;
+
 		case IDC_CAPTUREOPTIONS_JPEGQUALITY_EDIT:
 			if (HIWORD(wParam)==EN_CHANGE)
 				SyncTrackBarWithEdit(hDlg,IDC_CAPTUREOPTIONS_JPEGQUALITY_EDIT,
@@ -435,6 +576,26 @@ INT_PTR CCaptureOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam
 				SyncTrackBarWithEdit(hDlg,IDC_CAPTUREOPTIONS_PNGLEVEL_EDIT,
 										  IDC_CAPTUREOPTIONS_PNGLEVEL_TB);
 			return TRUE;
+
+		case IDC_CAPTUREOPTIONS_SETCOMMENT:
+			EnableDlgItemsSyncCheckBox(hDlg,
+				IDC_CAPTUREOPTIONS_COMMENT,
+				IDC_CAPTUREOPTIONS_COMMENT_PARAMETERS,
+				IDC_CAPTUREOPTIONS_SETCOMMENT);
+			return TRUE;
+
+		case IDC_CAPTUREOPTIONS_COMMENT_PARAMETERS:
+			{
+				RECT rc;
+				POINT pt;
+
+				::GetWindowRect(::GetDlgItem(hDlg,IDC_CAPTUREOPTIONS_COMMENT_PARAMETERS),&rc);
+				pt.x=rc.left;
+				pt.y=rc.bottom;
+				TVTest::CCaptureVariableStringMap VarStrMap;
+				VarStrMap.InputParameter(hDlg,IDC_CAPTUREOPTIONS_COMMENT,pt);
+			}
+			return TRUE;
 		}
 		return TRUE;
 
@@ -442,42 +603,33 @@ INT_PTR CCaptureOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam
 		switch (((LPNMHDR)lParam)->code) {
 		case PSN_APPLY:
 			{
-				TCHAR szSaveFolder[MAX_PATH],szFileName[MAX_PATH],szMessage[256];
+				TCHAR szSaveFolder[MAX_PATH];
 
 				GetDlgItemText(hDlg,IDC_CAPTUREOPTIONS_SAVEFOLDER,szSaveFolder,lengthof(szSaveFolder));
-				if (szSaveFolder[0]!='\0' && !::PathIsDirectory(szSaveFolder)) {
-					TCHAR szMessage[MAX_PATH+80];
-
-					StdUtil::snprintf(szMessage,lengthof(szMessage),
+				CAppMain::CreateDirectoryResult CreateDirResult=
+					GetAppClass().CreateDirectory(
+						hDlg,szSaveFolder,
 						TEXT("キャプチャ画像の保存先フォルダ \"%s\" がありません。\n")
-						TEXT("作成しますか?"),szSaveFolder);
-					if (::MessageBox(hDlg,szMessage,TEXT("フォルダ作成の確認"),
-									 MB_YESNO | MB_ICONQUESTION)==IDYES) {
-						int Result;
-
-						Result=::SHCreateDirectoryEx(hDlg,szSaveFolder,NULL);
-						if (Result!=ERROR_SUCCESS
-								&& Result!=ERROR_ALREADY_EXISTS) {
-							SettingError();
-							StdUtil::snprintf(szMessage,lengthof(szMessage),
-								TEXT("フォルダ \"%s\" を作成できません。"),szSaveFolder);
-							::MessageBox(hDlg,szMessage,
-										 NULL,MB_OK | MB_ICONEXCLAMATION);
-							SetDlgItemFocus(hDlg,IDC_CAPTUREOPTIONS_SAVEFOLDER);
-							return TRUE;
-						}
-					}
-				}
-				GetDlgItemText(hDlg,IDC_CAPTUREOPTIONS_FILENAME,szFileName,lengthof(szFileName));
-				if (!IsValidFileName(szFileName,false,szMessage,lengthof(szMessage))) {
+						TEXT("作成しますか?"));
+				if (CreateDirResult==CAppMain::CREATEDIRECTORY_RESULT_ERROR) {
 					SettingError();
-					SetDlgItemFocus(hDlg,IDC_CAPTUREOPTIONS_FILENAME);
-					SendDlgItemMessage(hDlg,IDC_CAPTUREOPTIONS_FILENAME,EM_SETSEL,0,-1);
-					MessageBox(hDlg,szMessage,NULL,MB_OK | MB_ICONEXCLAMATION);
+					SetDlgItemFocus(hDlg,IDC_CAPTUREOPTIONS_SAVEFOLDER);
 					return TRUE;
 				}
+
+				TVTest::String FileName,Message;
+				GetDlgItemString(hDlg,IDC_CAPTUREOPTIONS_FILENAME,&FileName);
+				if (!IsValidFileName(FileName.c_str(),FILENAME_VALIDATE_ALLOWDELIMITER,&Message)) {
+					SettingError();
+					::SendDlgItemMessage(hDlg,IDC_CAPTUREOPTIONS_FILENAME,EM_SETSEL,0,-1);
+					::MessageBox(hDlg,Message.c_str(),NULL,MB_OK | MB_ICONEXCLAMATION);
+					SetDlgItemFocus(hDlg,IDC_CAPTUREOPTIONS_FILENAME);
+					return TRUE;
+				}
+
 				lstrcpy(m_szSaveFolder,szSaveFolder);
-				lstrcpy(m_szFileName,szFileName);
+				m_FileName=FileName;
+
 				SetPresetCaptureSize(
 					(int)DlgComboBox_GetCurSel(hDlg,IDC_CAPTUREOPTIONS_SIZE));
 				m_SaveFormat=
@@ -490,6 +642,7 @@ INT_PTR CCaptureOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam
 					DlgCheckBox_IsChecked(hDlg,IDC_CAPTUREOPTIONS_ICONSAVEFILE);
 				m_fSetComment=
 					DlgCheckBox_IsChecked(hDlg,IDC_CAPTUREOPTIONS_SETCOMMENT);
+				GetDlgItemString(hDlg,IDC_CAPTUREOPTIONS_COMMENT,&m_CommentFormat);
 
 				m_fChanged=true;
 			}
@@ -499,4 +652,27 @@ INT_PTR CCaptureOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam
 	}
 
 	return FALSE;
+}
+
+
+void CCaptureOptions::UpdateFileNamePreview()
+{
+	TVTest::String Format;
+	TVTest::String FileName;
+
+	GetDlgItemString(m_hDlg,IDC_CAPTUREOPTIONS_FILENAME,&Format);
+	if (!Format.empty()) {
+		TVTest::CCaptureVariableStringMap VarStrMap;
+		VarStrMap.SetSampleEventInfo();
+		TVTest::FormatVariableString(&VarStrMap,Format.c_str(),&FileName);
+		if (!FileName.empty()) {
+			LPCTSTR pszExtension=m_ImageCodec.GetExtension(
+				(int)DlgComboBox_GetCurSel(m_hDlg,IDC_CAPTUREOPTIONS_FORMAT));
+			if (pszExtension!=nullptr) {
+				FileName+=_T('.');
+				FileName+=pszExtension;
+			}
+		}
+	}
+	::SetDlgItemText(m_hDlg,IDC_CAPTUREOPTIONS_FILENAME_PREVIEW,FileName.c_str());
 }

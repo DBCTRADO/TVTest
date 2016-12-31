@@ -2,7 +2,6 @@
 #include <htmlhelp.h>
 #include <shlwapi.h>
 #include "TVTest.h"
-#include "AppMain.h"
 #include "Help.h"
 
 
@@ -25,7 +24,7 @@ bool CHtmlHelp::Initialize()
 {
 	if (m_hLib!=NULL)
 		return true;
-	m_hLib=::LoadLibrary(TEXT("hhctrl.ocx"));
+	m_hLib=Util::LoadSystemLibrary(TEXT("hhctrl.ocx"));
 	if (m_hLib==NULL)
 		return false;
 	m_pHtmlHelp=(HtmlHelpFunc)::GetProcAddress(m_hLib,

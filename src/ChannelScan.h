@@ -36,6 +36,43 @@ private:
 		UPDATE_PREVIEW		= 0x0000002UL
 	};
 
+	enum {
+		COLUMN_NAME,
+		COLUMN_SERVICETYPE,
+		COLUMN_CHANNELNAME,
+		COLUMN_SERVICEID,
+		COLUMN_REMOTECONTROLKEYID,
+		COLUMN_CHANNELINDEX,
+		NUM_COLUMNS
+	};
+
+	// チャンネルリストのソートクラス
+	class CChannelListSort
+	{
+		static int CALLBACK CompareFunc(LPARAM lParam1,LPARAM lParam2,LPARAM lParamSort);
+
+	public:
+		CChannelListSort();
+		CChannelListSort(int Column,bool fDescending=false);
+		void Sort(HWND hwndList);
+		bool UpdateChannelList(HWND hwndList,CChannelList *pList);
+
+		int m_Column;
+		bool m_fDescending;
+	};
+
+	class CScanSettingsDialog : public CBasicDialog
+	{
+	public:
+		CScanSettingsDialog(CChannelScan *pChannelScan);
+		bool Show(HWND hwndOwner) override;
+
+	private:
+		INT_PTR DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
+
+		CChannelScan *m_pChannelScan;
+	};
+
 	int m_ScanSpace;
 	int m_ScanChannel;
 	const CTuningSpaceList *m_pOriginalTuningSpaceList;
@@ -44,9 +81,13 @@ private:
 	std::vector<TVTest::String> m_BonDriverChannelList;
 	bool m_fScanService;
 	bool m_fIgnoreSignalLevel;
+	float m_SignalLevelThreshold;
 	unsigned int m_ScanWait;
 	int m_RetryCount;
 	unsigned int m_RetryInterval;
+	bool m_fDetectDataService;
+	bool m_fDetect1SegService;
+	bool m_fDetectAudioService;
 	bool m_fUpdated;
 	bool m_fScaned;
 	bool m_fRestorePreview;
@@ -65,7 +106,7 @@ private:
 // CBasicDialog
 	INT_PTR DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
 
-	void InsertChannelInfo(int Index,const CChannelInfo *pChInfo);
+	void InsertChannelInfo(int Index,const CChannelInfo *pChInfo,bool fServiceType);
 	void SetChannelList(int Space);
 	CChannelInfo *GetSelectedChannelInfo() const;
 	bool LoadPreset(LPCTSTR pszFileName,CChannelList *pChannelList,int Space,bool *pfCorrupted);
@@ -73,9 +114,8 @@ private:
 	void Scan();
 	float GetSignalLevel();
 	INT_PTR ScanDlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam);
-
-	static bool IsScanService(const CTsAnalyzer::SdtServiceInfo &ServiceInfo,bool fData=true);
-	static bool IsScanServiceType(BYTE ServiceType,bool fData=true);
+	bool IsScanService(const CTsAnalyzer::SdtServiceInfo &ServiceInfo,bool fData=true) const;
+	bool IsScanServiceType(BYTE ServiceType,bool fData=true) const;
 
 	static unsigned int __stdcall ScanProc(LPVOID lpParameter);
 	static INT_PTR CALLBACK ScanDialogProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam);

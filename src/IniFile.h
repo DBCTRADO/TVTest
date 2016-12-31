@@ -3,6 +3,7 @@
 
 
 #include <list>
+#include <vector>
 
 
 namespace TVTest
@@ -28,6 +29,8 @@ namespace TVTest
 			CEntry(LPCWSTR pszName,LPCWSTR pszValue);
 		};
 
+		typedef std::vector<CEntry> EntryArray;
+
 		CIniFile();
 		~CIniFile();
 		bool Open(LPCWSTR pszFileName,UINT Flags);
@@ -41,8 +44,8 @@ namespace TVTest
 		bool SetValue(LPCWSTR pszName,LPCWSTR pszValue);
 		bool IsValueExists(LPCWSTR pszName);
 		bool DeleteValue(LPCWSTR pszName);
-		bool GetSectionEntries(LPCWSTR pszSection,std::vector<CEntry> *pEntries);
-		bool GetEntries(std::vector<CEntry> *pEntries);
+		bool GetSectionEntries(LPCWSTR pszSection,EntryArray *pEntries);
+		bool GetEntries(EntryArray *pEntries);
 
 	private:
 		typedef std::list<CEntry> EntryList;

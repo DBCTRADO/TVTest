@@ -10,12 +10,13 @@
 #include "DrawUtil.h"
 #include "Theme.h"
 #include "WindowUtil.h"
+#include "GUIUtil.h"
 
 
 class CChannelDisplay : public CDisplayView
 {
 public:
-	class ABSTRACT_CLASS(CEventHandler)
+	class ABSTRACT_CLASS(CChannelDisplayEventHandler) : public CDisplayView::CEventHandler
 	{
 	protected:
 		class CChannelDisplay *m_pChannelDisplay;
@@ -24,13 +25,10 @@ public:
 			SPACE_NOTSPECIFIED	=-2,
 			SPACE_ALL			=-1
 		};
-		CEventHandler() : m_pChannelDisplay(NULL) {}
-		virtual ~CEventHandler() {}
+		CChannelDisplayEventHandler() : m_pChannelDisplay(NULL) {}
 		virtual void OnTunerSelect(LPCTSTR pszDriverFileName,int TuningSpace)=0;
 		virtual void OnChannelSelect(LPCTSTR pszDriverFileName,const CChannelInfo *pChannelInfo)=0;
 		virtual void OnClose()=0;
-		virtual void OnRButtonDown(int x,int y) {}
-		virtual void OnLButtonDoubleClick(int x,int y) {}
 		friend class CChannelDisplay;
 	};
 
@@ -39,6 +37,12 @@ public:
 
 // CBasicWindow
 	bool Create(HWND hwndParent,DWORD Style,DWORD ExStyle=0,int ID=0) override;
+
+// CUIBase
+	void SetStyle(const TVTest::Style::CStyleManager *pStyleManager) override;
+	void NormalizeStyle(
+		const TVTest::Style::CStyleManager *pStyleManager,
+		const TVTest::Style::CStyleScaling *pStyleScaling) override;
 
 // CDisplayView
 	bool Close() override;
@@ -49,9 +53,9 @@ public:
 	void Clear();
 	bool SetDriverManager(CDriverManager *pDriverManager);
 	void SetLogoManager(CLogoManager *pLogoManager);
-	void SetEventHandler(CEventHandler *pEventHandler);
+	void SetEventHandler(CChannelDisplayEventHandler *pEventHandler);
 	bool SetSelect(LPCTSTR pszDriverFileName,const CChannelInfo *pChannelInfo);
-	bool SetFont(const LOGFONT *pFont,bool fAutoSize);
+	bool SetFont(const TVTest::Style::Font &Font,bool fAutoSize);
 
 	static bool Initialize(HINSTANCE hinst);
 
@@ -80,31 +84,51 @@ private:
 		CTuner(const CDriverInfo *pDriverInfo);
 		~CTuner();
 		void Clear();
-		LPCTSTR GetDriverFileName() const { return m_DriverFileName.Get(); }
-		LPCTSTR GetTunerName() const { return m_TunerName.Get(); }
+		LPCTSTR GetDriverFileName() const { return m_DriverFileName.c_str(); }
+		LPCTSTR GetTunerName() const { return m_TunerName.c_str(); }
 		LPCTSTR GetDisplayName() const;
 		void SetDisplayName(LPCTSTR pszName);
+		void GetDisplayName(int Space,LPTSTR pszName,int MaxName) const;
 		int NumSpaces() const;
 		CTuningSpaceInfo *GetTuningSpaceInfo(int Index);
 		const CTuningSpaceInfo *GetTuningSpaceInfo(int Index) const;
 		void SetIcon(HICON hico);
-		HICON GetIcon() const { return m_hIcon; }
+		HICON GetIcon() const { return m_Icon; }
 	private:
 		std::vector<CTuningSpaceInfo*> m_TuningSpaceList;
-		CDynamicString m_DriverFileName;
-		CDynamicString m_TunerName;
-		CDynamicString m_DisplayName;
-		HICON m_hIcon;
+		TVTest::String m_DriverFileName;
+		TVTest::String m_TunerName;
+		TVTest::String m_DisplayName;
+		TVTest::CIcon m_Icon;
 	};
 
-	Theme::GradientInfo m_TunerAreaBackGradient;
-	Theme::GradientInfo m_ChannelAreaBackGradient;
-	Theme::Style m_TunerItemStyle;
-	Theme::Style m_TunerItemSelStyle;
-	Theme::Style m_TunerItemCurStyle;
-	Theme::Style m_ChannelItemStyle[2];
-	Theme::Style m_ChannelItemCurStyle;
-	Theme::Style m_ClockStyle;
+	struct ChannelDisplayStyle
+	{
+		TVTest::Style::Margins TunerItemPadding;
+		TVTest::Style::Size TunerIconSize;
+		TVTest::Style::IntValue TunerIconTextMargin;
+		TVTest::Style::Margins ChannelItemPadding;
+		TVTest::Style::IntValue ChannelEventMargin;
+		TVTest::Style::Margins ClockPadding;
+		TVTest::Style::Margins ClockMargin;
+
+		ChannelDisplayStyle();
+		void SetStyle(const TVTest::Style::CStyleManager *pStyleManager);
+		void NormalizeStyle(
+			const TVTest::Style::CStyleManager *pStyleManager,
+			const TVTest::Style::CStyleScaling *pStyleScaling);
+	};
+
+	ChannelDisplayStyle m_ChannelDisplayStyle;
+	TVTest::Theme::BackgroundStyle m_TunerAreaBackStyle;
+	TVTest::Theme::BackgroundStyle m_ChannelAreaBackStyle;
+	TVTest::Theme::Style m_TunerItemStyle;
+	TVTest::Theme::Style m_TunerItemSelStyle;
+	TVTest::Theme::Style m_TunerItemCurStyle;
+	TVTest::Theme::Style m_ChannelItemStyle[2];
+	TVTest::Theme::Style m_ChannelItemCurStyle;
+	TVTest::Theme::Style m_ClockStyle;
+	TVTest::Style::Font m_StyleFont;
 	DrawUtil::CFont m_Font;
 	bool m_fAutoFontSize;
 	int m_FontHeight;
@@ -135,7 +159,7 @@ private:
 	int m_CurChannel;
 	CEpgProgramList *m_pEpgProgramList;
 	CLogoManager *m_pLogoManager;
-	CEventHandler *m_pEventHandler;
+	CChannelDisplayEventHandler *m_pChannelDisplayEventHandler;
 	POINT m_LastCursorPos;
 
 	struct TunerInfo {
@@ -170,8 +194,13 @@ private:
 	void DrawClock(HDC hdc) const;
 	void NotifyTunerSelect() const;
 	void NotifyChannelSelect() const;
+
 // CCustomWindow
 	LRESULT OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
+
+// CUIBase
+	void ApplyStyle() override;
+	void RealizeStyle() override;
 };
 
 

@@ -1,12 +1,8 @@
 #include "stdafx.h"
 #include "TVTest.h"
 #include "Settings.h"
-
-#ifdef _DEBUG
-#undef THIS_FILE
-static char THIS_FILE[]=__FILE__;
-#define new DEBUG_NEW
-#endif
+#include <utility>
+#include "Common/DebugDef.h"
 
 using namespace TVTest;
 
@@ -84,6 +80,33 @@ bool CSettings::SetSection(LPCTSTR pszSection)
 		return false;
 
 	return m_IniFile.SelectSection(pszSection);
+}
+
+
+bool CSettings::IsSectionExists(LPCTSTR pszSection)
+{
+	return m_IniFile.IsSectionExists(pszSection);
+}
+
+
+bool CSettings::GetEntries(EntryList *pEntries)
+{
+	return m_IniFile.GetEntries(pEntries);
+}
+
+
+bool CSettings::IsValueExists(LPCTSTR pszValueName)
+{
+	return m_IniFile.IsValueExists(pszValueName);
+}
+
+
+bool CSettings::DeleteValue(LPCTSTR pszValueName)
+{
+	if ((m_OpenFlags&OPEN_WRITE)==0)
+		return false;
+
+	return m_IniFile.DeleteValue(pszValueName);
 }
 
 
@@ -175,7 +198,13 @@ bool CSettings::Read(LPCTSTR pszValueName,TVTest::String *pValue)
 	if (pValue==NULL)
 		return false;
 
-	return m_IniFile.GetValue(pszValueName,pValue);
+	TVTest::String Value;
+	if (!m_IniFile.GetValue(pszValueName,&Value))
+		return false;
+
+	*pValue=std::move(Value);
+
+	return true;
 }
 
 
@@ -206,6 +235,47 @@ bool CSettings::Write(LPCTSTR pszValueName,bool fData)
 	// よく考えたら否定文もあるので yes/no は変だが…
 	// (その昔、iniファイルを直接編集して設定するようにしていた頃の名残)
 	return Write(pszValueName,fData?TEXT("yes"):TEXT("no"));
+}
+
+
+bool CSettings::Read(LPCTSTR pszValueName,double *pData)
+{
+	if (pData==NULL)
+		return false;
+
+	TVTest::String Value;
+
+	if (!Read(pszValueName,&Value))
+		return false;
+
+	*pData=std::_tcstod(Value.c_str(),NULL);
+
+	return true;
+}
+
+
+bool CSettings::Write(LPCTSTR pszValueName,double Data,int Digits)
+{
+	TCHAR szText[64];
+
+	StdUtil::snprintf(szText,lengthof(szText),TEXT("%.*f"),Digits,Data);
+	return Write(pszValueName,szText);
+}
+
+
+bool CSettings::Read(LPCTSTR pszValueName,float *pData)
+{
+	if (pData==NULL)
+		return false;
+
+	double Value;
+
+	if (!Read(pszValueName,&Value))
+		return false;
+
+	*pData=static_cast<float>(Value);
+
+	return true;
 }
 
 

@@ -8,42 +8,14 @@
 <body>
 <h1>導入</h1>
 
-<h2>必要なもの</h2>
-<p>
-TVTest で視聴試験を行うには別途 MPEG-2 のデコーダが必要です。<br>
-もしお使いの環境に入っていない場合は、インストールしておく必要があります。<br>
-(Vista/7 では Microsoft のデコーダがデフォルトで入っています。
-Windows 8 では Microsoft のデコーダでの MPEG-2 のデコード機能が有料オプションとなっています)<br>
-以下のデコーダで試験が行えることが確認されています。
-</p>
-<ul>
-	<li>Microsoft MPEG-2 Video Decoder / Microsoft DTV-DVD Video Decoder</li>
-	<li>MPV Decoder Filter / MPC - MPEG-2 Video Decoder / Mpeg2Dec Filter</li>
-	<li>ATI MPEG Video Decoder</li>
-	<li>CyberLink Video/SP Decoder</li>
-	<li>ffdshow Video Decoder</li>
-</ul>
-
 <h2>試験準備</h2>
 <p>
-TVTest の試験準備は、適当なフォルダに書庫内のファイルを展開するだけです。<br>
-フォルダ内に設定などを保存しますので、読み書きのアクセス権限のある場所にしてください(Program Files 内は避けた方が無難です)。
-</p>
-
-<h2>単体で視聴試験を行う</h2>
-<p>
-TVTest で実際に視聴試験を行うには、BonDriver が必要です。<br>
-使用するチューナーに対応した BonDriver を TVTest.exe と同じフォルダに入れます。
-</p>
-
-<h2>EpgDataCap_Bon や cap_hdus GUI+ などから呼び出して視聴試験を行う</h2>
-<p>
-呼び出し側のプログラムで、視聴プログラムを<br>
-<span class="nowrap">"TVTestのあるフォルダ\TVTest.exe" /nd /d BonDriver_UDP.dll"</span><br>
-のように設定します。</br>
-BonDriver_UDP.dll は、TVTest に同梱されています。</br>
-コマンドラインオプションに関しては「<a href="commandline.html">コマンドライン</a>」の項を参照してください。
-</p>
+TVTest で視聴試験を行うには別途映像デコーダ (MPEG-2 / H.264 / H.265) が必要です。<br>
+もしお使いの環境に入っていない場合は、インストールしておく必要があります。<br>
+(Vista/7 では Microsoft のデコーダがデフォルトで入っています。
+Windows 8/10 では Microsoft のデコーダでの MPEG-2 のデコード機能が有料オプションとなっています)<br>
+動作が確認されているデコーダについては、「<a href="appendix/decoder.html">デコーダとレンダラ</a>」のページを参照してください。<br>
+</ul>
 
 <h2>起動</h2>
 <p>

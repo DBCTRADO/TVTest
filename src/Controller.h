@@ -106,7 +106,7 @@ private:
 	std::vector<ControllerSettings> m_CurSettingsList;
 	bool m_fFocus;
 	bool m_fActive;
-	CDynamicString m_CurController;
+	TVTest::String m_CurController;
 	HBITMAP m_hbmController;
 	HBITMAP m_hbmSelButtons;
 	RECT m_ImageRect;
@@ -116,6 +116,8 @@ private:
 	bool OnButtonDown(CController *pController,int Index) override;
 // CBasicDialog
 	INT_PTR DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
+// CUIBase
+	void RealizeStyle() override;
 // CControllerManager
 	int FindController(LPCTSTR pszName) const;
 	void InitDlgItems();

@@ -2,6 +2,7 @@
 #define TVTEST_SETTINGS_H
 
 
+#include <vector>
 #include "IniFile.h"
 
 
@@ -17,6 +18,9 @@ public:
 		OPEN_WRITE_VOLATILE = 0x00000004U
 	};
 
+	typedef TVTest::CIniFile::CEntry CEntry;
+	typedef TVTest::CIniFile::EntryArray EntryList;
+
 	CSettings();
 	~CSettings();
 	bool Open(LPCTSTR pszFileName,unsigned int Flags);
@@ -24,6 +28,10 @@ public:
 	bool IsOpened() const;
 	bool Clear();
 	bool SetSection(LPCTSTR pszSection);
+	bool IsSectionExists(LPCTSTR pszSection);
+	bool GetEntries(EntryList *pEntries);
+	bool IsValueExists(LPCTSTR pszValueName);
+	bool DeleteValue(LPCTSTR pszValueName);
 	bool Read(LPCTSTR pszValueName,int *pData);
 	bool Write(LPCTSTR pszValueName,int Data);
 	bool Read(LPCTSTR pszValueName,unsigned int *pData);
@@ -34,6 +42,9 @@ public:
 	bool Write(LPCTSTR pszValueName,const TVTest::String &Value);
 	bool Read(LPCTSTR pszValueName,bool *pfData);
 	bool Write(LPCTSTR pszValueName,bool fData);
+	bool Read(LPCTSTR pszValueName,double *pData);
+	bool Write(LPCTSTR pszValueName,double Data,int Digits);
+	bool Read(LPCTSTR pszValueName,float *pData);
 	bool ReadColor(LPCTSTR pszValueName,COLORREF *pcrData);
 	bool WriteColor(LPCTSTR pszValueName,COLORREF crData);
 	bool Read(LPCTSTR pszValueName,LOGFONT *pFont);
@@ -53,6 +64,7 @@ public:
 	bool LoadSettings(LPCTSTR pszFileName);
 	bool SaveSettings(LPCTSTR pszFileName);
 	bool IsChanged() const { return m_fChanged; }
+	void SetChanged() { m_fChanged=true; }
 	void ClearChanged() { m_fChanged=false; }
 
 protected:

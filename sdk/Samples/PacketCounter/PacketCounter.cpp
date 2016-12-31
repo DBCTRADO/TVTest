@@ -1,7 +1,16 @@
 /*
 	TVTest プラグインサンプル
 
-	パケットを数えるだけ
+	パケットカウンター
+
+	ステータスバーにパケットを数える項目を追加します。
+	このサンプルでは、プラグインの有効/無効の状態と
+	ステータスバーの項目の表示/非表示の状態の同期をとっています。
+
+	このサンプルでは主に以下の機能を実装しています。
+
+	・TS のパケットを取得する
+	・ステータスバー項目を追加する
 */
 
 
@@ -11,36 +20,28 @@
 #include "TVTestPlugin.h"
 
 
-#define PACKET_COUNTER_WINDOW_CLASS TEXT("Packet Counter Window")
-
-
+// ステータス項目の識別子
+#define STATUS_ITEM_ID 1
 
 
 // プラグインクラス
 class CPacketCounter : public TVTest::CTVTestPlugin
 {
-	HWND m_hwnd;
-	HFONT m_hfont;
-	ULONGLONG m_PacketCount;
-	static LRESULT CALLBACK EventCallback(UINT Event,LPARAM lParam1,LPARAM lParam2,void *pClientData);
-	static BOOL CALLBACK StreamCallback(BYTE *pData,void *pClientData);
-	static CPacketCounter *GetThis(HWND hwnd);
-	static LRESULT CALLBACK WndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam);
+	LONG m_PacketCount;
+
+	static LRESULT CALLBACK EventCallback(UINT Event, LPARAM lParam1, LPARAM lParam2, void *pClientData);
+	static BOOL CALLBACK StreamCallback(BYTE *pData, void *pClientData);
+	void ShowItem(bool fShow);
+
 public:
 	CPacketCounter()
+		: m_PacketCount(0)
 	{
-		m_hwnd=NULL;
-		m_hfont=NULL;
-		m_PacketCount=0;
 	}
-	~CPacketCounter()
-	{
-		if (m_hfont)
-			::DeleteObject(m_hfont);
-	}
-	virtual bool GetPluginInfo(TVTest::PluginInfo *pInfo);
-	virtual bool Initialize();
-	virtual bool Finalize();
+
+	bool GetPluginInfo(TVTest::PluginInfo *pInfo) override;
+	bool Initialize() override;
+	bool Finalize() override;
 };
 
 
@@ -49,9 +50,9 @@ bool CPacketCounter::GetPluginInfo(TVTest::PluginInfo *pInfo)
 	// プラグインの情報を返す
 	pInfo->Type           = TVTest::PLUGIN_TYPE_NORMAL;
 	pInfo->Flags          = 0;
-	pInfo->pszPluginName  = L"Packet Counter";
+	pInfo->pszPluginName  = L"パケットカウンター";
 	pInfo->pszCopyright   = L"Public Domain";
-	pInfo->pszDescription = L"パケットを数える";
+	pInfo->pszDescription = L"ステータスバーにパケットを数える項目を追加します。";
 	return true;
 }
 
@@ -60,41 +61,28 @@ bool CPacketCounter::Initialize()
 {
 	// 初期化処理
 
-	WNDCLASS wc;
-	wc.style=0;
-	wc.lpfnWndProc=WndProc;
-	wc.cbClsExtra=0;
-	wc.cbWndExtra=0;
-	wc.hInstance=g_hinstDLL;
-	wc.hIcon=NULL;
-	wc.hCursor=LoadCursor(NULL,IDC_ARROW);
-	wc.hbrBackground=(HBRUSH)(COLOR_3DFACE+1);
-	wc.lpszMenuName=NULL;
-	wc.lpszClassName=PACKET_COUNTER_WINDOW_CLASS;
-	if (::RegisterClass(&wc)==0)
+	// ステータス項目を登録
+	TVTest::StatusItemInfo Item;
+	Item.Size         = sizeof(Item);
+	Item.Flags        = TVTest::STATUS_ITEM_FLAG_TIMERUPDATE;
+	Item.Style        = 0;
+	Item.ID           = STATUS_ITEM_ID;
+	Item.pszIDText    = L"PacketCounter";
+	Item.pszName      = L"パケットカウンター";
+	Item.MinWidth     = 0;
+	Item.MaxWidth     = -1;
+	Item.DefaultWidth = TVTest::StatusItemWidthByFontSize(6);
+	Item.MinHeight    = 0;
+	if (!m_pApp->RegisterStatusItem(&Item)) {
+		m_pApp->AddLog(L"ステータス項目を登録できません。", TVTest::LOG_TYPE_ERROR);
 		return false;
-
-	LOGFONT lf;
-	::GetObject(::GetStockObject(DEFAULT_GUI_FONT),sizeof(LOGFONT),&lf);
-	m_hfont=::CreateFontIndirect(&lf);
-
-	RECT rc;
-	::SetRect(&rc,0,0,160,abs(lf.lfHeight)+4);
-	::AdjustWindowRectEx(&rc,WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME,
-						 FALSE,WS_EX_TOOLWINDOW);
-
-	if (::CreateWindowEx(WS_EX_TOOLWINDOW,PACKET_COUNTER_WINDOW_CLASS,
-							TEXT("Packet Counter"),
-							WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME,
-							0,0,rc.right-rc.left,rc.bottom-rc.top,
-							m_pApp->GetAppWindow(),NULL,g_hinstDLL,this)==NULL)
-		return false;
+	}
 
 	// イベントコールバック関数を登録
-	m_pApp->SetEventCallback(EventCallback,this);
+	m_pApp->SetEventCallback(EventCallback, this);
 
 	// ストリームコールバック関数を登録
-	m_pApp->SetStreamCallback(0,StreamCallback,this);
+	m_pApp->SetStreamCallback(0, StreamCallback, this);
 
 	return true;
 }
@@ -104,23 +92,86 @@ bool CPacketCounter::Finalize()
 {
 	// 終了処理
 
-	::DestroyWindow(m_hwnd);
-
 	return true;
 }
 
 
 // イベントコールバック関数
 // 何かイベントが起きると呼ばれる
-LRESULT CALLBACK CPacketCounter::EventCallback(UINT Event,LPARAM lParam1,LPARAM lParam2,void *pClientData)
+LRESULT CALLBACK CPacketCounter::EventCallback(
+	UINT Event, LPARAM lParam1, LPARAM lParam2, void *pClientData)
 {
-	CPacketCounter *pThis=static_cast<CPacketCounter*>(pClientData);
+	CPacketCounter *pThis = static_cast<CPacketCounter*>(pClientData);
 
 	switch (Event) {
 	case TVTest::EVENT_PLUGINENABLE:
 		// プラグインの有効状態が変化した
-		::ShowWindow(pThis->m_hwnd,lParam1!=0?SW_SHOW:SW_HIDE);
+		// プラグインの有効状態と項目の表示状態を同期する
+		pThis->ShowItem(lParam1 != 0);
 		return TRUE;
+
+	case TVTest::EVENT_STATUSITEM_DRAW:
+		// ステータス項目の描画
+		{
+			const TVTest::StatusItemDrawInfo *pInfo =
+				reinterpret_cast<const TVTest::StatusItemDrawInfo *>(lParam1);
+			WCHAR szText[32];
+
+			if ((pInfo->Flags & TVTest::STATUS_ITEM_DRAW_FLAG_PREVIEW) == 0) {
+				// 通常の項目の描画
+				::_itow_s(pThis->m_PacketCount, szText, 10);
+			} else {
+				// プレビュー(設定ダイアログ)の項目の描画
+				::lstrcpyW(szText, L"123456");
+			}
+			pThis->m_pApp->ThemeDrawText(pInfo->pszStyle, pInfo->hdc, szText,
+										 pInfo->DrawRect,
+										 DT_LEFT | DT_VCENTER | DT_SINGLELINE | DT_END_ELLIPSIS,
+										 pInfo->Color);
+		}
+		return TRUE;
+
+	case TVTest::EVENT_STATUSITEM_NOTIFY:
+		// ステータス項目の通知
+		{
+			const TVTest::StatusItemEventInfo *pInfo =
+				reinterpret_cast<const TVTest::StatusItemEventInfo *>(lParam1);
+
+			switch (pInfo->Event) {
+			case TVTest::STATUS_ITEM_EVENT_CREATED:
+				// 項目が作成された
+				// プラグインが有効であれば項目を表示状態にする
+				pThis->ShowItem(pThis->m_pApp->IsPluginEnabled());
+				return TRUE;
+
+			case TVTest::STATUS_ITEM_EVENT_VISIBILITYCHANGED:
+				// 項目の表示状態が変わった
+				// 項目の表示状態とプラグインの有効状態を同期する
+				pThis->m_pApp->EnablePlugin(pInfo->Param != 0);
+				return TRUE;
+
+			case TVTest::STATUS_ITEM_EVENT_UPDATETIMER:
+				// 更新タイマー
+				return TRUE;	// TRUE を返すと再描画される
+			}
+		}
+		return FALSE;
+
+	case TVTest::EVENT_STATUSITEM_MOUSE:
+		// ステータス項目のマウス操作
+		{
+			const TVTest::StatusItemMouseEventInfo *pInfo =
+				reinterpret_cast<const TVTest::StatusItemMouseEventInfo *>(lParam1);
+
+			// 左ボタンが押されたらリセットする
+			if (pInfo->Action == TVTest::STATUS_ITEM_MOUSE_ACTION_LDOWN) {
+				::InterlockedExchange(&pThis->m_PacketCount, 0);
+				// 項目を再描画
+				pThis->m_pApp->StatusItemNotify(STATUS_ITEM_ID, TVTest::STATUS_ITEM_NOTIFY_REDRAW);
+				return TRUE;
+			}
+		}
+		return FALSE;
 	}
 
 	return 0;
@@ -129,89 +180,28 @@ LRESULT CALLBACK CPacketCounter::EventCallback(UINT Event,LPARAM lParam1,LPARAM 
 
 // ストリームコールバック関数
 // 188バイトのパケットデータが渡される
-BOOL CALLBACK CPacketCounter::StreamCallback(BYTE *pData,void *pClientData)
+BOOL CALLBACK CPacketCounter::StreamCallback(BYTE *pData, void *pClientData)
 {
-	CPacketCounter *pThis=static_cast<CPacketCounter*>(pClientData);
+	CPacketCounter *pThis = static_cast<CPacketCounter*>(pClientData);
 
-	pThis->m_PacketCount++;
+	::InterlockedIncrement(&pThis->m_PacketCount);
 
 	return TRUE;	// FALSEを返すとパケットが破棄される
 }
 
 
-CPacketCounter *CPacketCounter::GetThis(HWND hwnd)
+// ステータス項目の表示/非表示を切り替える
+void CPacketCounter::ShowItem(bool fShow)
 {
-	return reinterpret_cast<CPacketCounter*>(::GetWindowLongPtr(hwnd,GWLP_USERDATA));
-}
+	TVTest::StatusItemSetInfo Info;
 
+	Info.Size      = sizeof(Info);
+	Info.Mask      = TVTest::STATUS_ITEM_SET_INFO_MASK_STATE;
+	Info.ID        = STATUS_ITEM_ID;
+	Info.StateMask = TVTest::STATUS_ITEM_STATE_VISIBLE;
+	Info.State     = fShow ? TVTest::STATUS_ITEM_STATE_VISIBLE : 0;
 
-LRESULT CALLBACK CPacketCounter::WndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
-{
-	switch (uMsg) {
-	case WM_CREATE:
-		{
-			LPCREATESTRUCT pcs=reinterpret_cast<LPCREATESTRUCT>(lParam);
-			CPacketCounter *pThis=static_cast<CPacketCounter*>(pcs->lpCreateParams);
-
-			::SetWindowLongPtr(hwnd,GWLP_USERDATA,reinterpret_cast<LONG_PTR>(pThis));
-			pThis->m_hwnd=hwnd;
-
-			// 表示更新用タイマの設定
-			::SetTimer(hwnd,1,500,NULL);
-		}
-		return TRUE;
-
-	case WM_PAINT:
-		{
-			CPacketCounter *pThis=GetThis(hwnd);
-			PAINTSTRUCT ps;
-			HFONT hfontOld;
-			int OldBkMode;
-			COLORREF crOldTextColor;
-			TCHAR szText[32];
-			RECT rc;
-
-			::BeginPaint(hwnd,&ps);
-			hfontOld=static_cast<HFONT>(::SelectObject(ps.hdc,pThis->m_hfont));
-			OldBkMode=::SetBkMode(ps.hdc,TRANSPARENT);
-			crOldTextColor=::SetTextColor(ps.hdc,::GetSysColor(COLOR_WINDOWTEXT));
-			_ui64tot_s(pThis->m_PacketCount,szText,32,10);
-			::GetClientRect(hwnd,&rc);
-			rc.right-=2;
-			::DrawText(ps.hdc,szText,-1,&rc,DT_RIGHT | DT_SINGLELINE | DT_VCENTER);
-			::SelectObject(ps.hdc,hfontOld);
-			::SetBkMode(ps.hdc,OldBkMode);
-			::SetTextColor(ps.hdc,crOldTextColor);
-			::EndPaint(hwnd,&ps);
-		}
-		return 0;
-
-	case WM_TIMER:
-		// 表示更新
-		::InvalidateRect(hwnd,NULL,TRUE);
-		return 0;
-
-	case WM_SYSCOMMAND:
-		if ((wParam&0xFFF0)==SC_CLOSE) {
-			// 閉じる時はプラグインを無効にする
-			CPacketCounter *pThis=GetThis(hwnd);
-
-			pThis->m_pApp->EnablePlugin(false);
-			return 0;
-		}
-		break;
-
-	case WM_DESTROY:
-		{
-			CPacketCounter *pThis=GetThis(hwnd);
-
-			::KillTimer(hwnd,1);	// 別にしなくてもいいけど...
-			pThis->m_hwnd=NULL;
-		}
-		return 0;
-	}
-
-	return ::DefWindowProc(hwnd,uMsg,wParam,lParam);
+	m_pApp->SetStatusItem(&Info);
 }
 
 

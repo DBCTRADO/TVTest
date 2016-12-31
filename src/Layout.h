@@ -4,6 +4,7 @@
 
 #include <vector>
 #include "BasicWindow.h"
+#include "UIBase.h"
 #include "DrawUtil.h"
 
 
@@ -13,6 +14,7 @@ namespace Layout
 class CLayoutBase;
 
 class ABSTRACT_CLASS(CContainer)
+	: public TVTest::CUIBase
 {
 public:
 	CContainer(int ID);
@@ -43,6 +45,7 @@ protected:
 class CWindowContainer : public CContainer
 {
 	CBasicWindow *m_pWindow;
+	TVTest::CUIBase *m_pUIBase;
 	int m_MinWidth;
 	int m_MinHeight;
 
@@ -54,7 +57,7 @@ public:
 	void GetMinSize(SIZE *pSize) const override;
 	void SetVisible(bool fVisible) override;
 // CWindowContainer
-	void SetWindow(CBasicWindow *pWindow);
+	void SetWindow(CBasicWindow *pWindow,TVTest::CUIBase *pUIBase=NULL);
 	CBasicWindow *GetWindow() const { return m_pWindow; }
 	bool SetMinSize(int Width,int Height);
 };
@@ -71,6 +74,10 @@ class CSplitter : public CContainer
 	int m_AdjustPane;
 	int m_BarPos;
 	int m_BarWidth;
+
+// CUIBase
+	void ApplyStyle() override;
+	void RealizeStyle() override;
 
 	void Adjust();
 	bool GetBarRect(RECT *pRect) const;
@@ -110,7 +117,9 @@ public:
 };
 
 
-class CLayoutBase : public CCustomWindow
+class CLayoutBase
+	: public CCustomWindow
+	, public TVTest::CUIBase
 {
 public:
 	class ABSTRACT_CLASS(CEventHandler) {
@@ -133,6 +142,9 @@ public:
 	bool GetContainerVisible(int ID) const;
 	void GetMinSize(SIZE *pSize) const;
 	void Adjust();
+	void LockLayout();
+	void UnlockLayout(bool fAdjust=true);
+	bool IsLayoutLocked() const { return m_fLockLayout; }
 	void SetEventHandler(CEventHandler *pHandler);
 	bool SetBackColor(COLORREF Color);
 	COLORREF GetBackColor() const { return m_BackColor; }
@@ -146,6 +158,7 @@ protected:
 	CContainer *m_pFocusContainer;
 	COLORREF m_BackColor;
 	DrawUtil::CBrush m_BackBrush;
+	bool m_fLockLayout;
 
 	LRESULT OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
 

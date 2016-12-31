@@ -3,13 +3,9 @@
 #include "AppMain.h"
 #include "OptionDialog.h"
 #include "DialogUtil.h"
+#include "Graphics.h"
 #include "resource.h"
-
-#ifdef _DEBUG
-#undef THIS_FILE
-static char THIS_FILE[]=__FILE__;
-#define new DEBUG_NEW
-#endif
+#include "Common/DebugDef.h"
 
 
 
@@ -18,6 +14,12 @@ COptionDialog::COptionDialog()
 	: m_CurrentPage(0)
 	, m_himlIcons(NULL)
 {
+	for (int i=0;i<NUM_PAGES;i++) {
+		COptions *pOptions=m_PageList[i].pOptions;
+
+		pOptions->SetStyleScaling(m_pStyleScaling);
+		RegisterUIChild(pOptions);
+	}
 }
 
 
@@ -32,6 +34,8 @@ bool COptionDialog::Show(HWND hwndOwner,int StartPage)
 	if (m_hDlg!=NULL)
 		return false;
 	COptions::SetFrame(this);
+	for (int i=0;i<NUM_PAGES;i++)
+		m_PageList[i].pOptions->SetStyleScaling(m_pStyleScaling);
 	m_StartPage=StartPage;
 	if (ShowDialog(hwndOwner,GetAppClass().GetResourceInstance(),MAKEINTRESOURCE(IDD_OPTIONS))!=IDOK) {
 		return false;
@@ -66,14 +70,8 @@ bool COptionDialog::SetCurrentPage(int Page)
 void COptionDialog::CreatePage(int Page)
 {
 	if (!m_PageList[Page].pOptions->IsCreated()) {
-		RECT rcPage,rcOptions;
-
 		m_PageList[Page].pOptions->Create(m_hDlg);
-		GetDlgItemRect(m_hDlg,IDC_OPTIONS_PAGEPLACE,&rcPage);
-		m_PageList[Page].pOptions->GetPosition(&rcOptions);
-		m_PageList[Page].pOptions->SetPosition(rcPage.left,rcPage.top,
-											   rcOptions.right-rcOptions.left,
-											   rcOptions.bottom-rcOptions.top);
+		SetPagePos(Page);
 	}
 }
 
@@ -94,6 +92,20 @@ void COptionDialog::SetPage(int Page)
 }
 
 
+void COptionDialog::SetPagePos(int Page)
+{
+	if (m_PageList[Page].pOptions->IsCreated()) {
+		RECT rcPage,rcOptions;
+
+		GetDlgItemRect(m_hDlg,IDC_OPTIONS_PAGEPLACE,&rcPage);
+		m_PageList[Page].pOptions->GetPosition(&rcOptions);
+		m_PageList[Page].pOptions->SetPosition(rcPage.left,rcPage.top,
+											   rcOptions.right-rcOptions.left,
+											   rcOptions.bottom-rcOptions.top);
+	}
+}
+
+
 COLORREF COptionDialog::GetTitleColor(int Page) const
 {
 	return HSVToRGB((double)Page/(double)NUM_PAGES,0.4,0.9);
@@ -102,15 +114,11 @@ COLORREF COptionDialog::GetTitleColor(int Page) const
 
 INT_PTR COptionDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 {
-	static const int ICON_WIDTH=16,ICON_HEIGHT=16,LIST_MARGIN=1,ICON_TEXT_MARGIN=4;
-
 	switch (uMsg) {
 	case WM_INITDIALOG:
 		{
-			int i;
-
 			COptions::ClearGeneralUpdateFlags();
-			for (i=0;i<NUM_PAGES;i++) {
+			for (int i=0;i<NUM_PAGES;i++) {
 				m_PageList[i].pOptions->ClearUpdateFlags();
 				DlgListBox_AddString(hDlg,IDC_OPTIONS_LIST,i);
 			}
@@ -120,31 +128,9 @@ INT_PTR COptionDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 			m_PageList[m_CurrentPage].pOptions->SetVisible(true);
 			DlgListBox_SetCurSel(hDlg,IDC_OPTIONS_LIST,m_CurrentPage);
 
-			//m_Icons.Load(GetAppClass().GetResourceInstance(),IDB_OPTIONS);
-			m_himlIcons=::ImageList_LoadImage(GetAppClass().GetResourceInstance(),
-											  MAKEINTRESOURCE(IDB_OPTIONS),
-											  16,1,0,IMAGE_BITMAP,LR_CREATEDIBSECTION);
-
-			HFONT hfont=reinterpret_cast<HFONT>(::SendMessage(hDlg,WM_GETFONT,0,0));
-			LOGFONT lf;
-			::GetObject(hfont,sizeof(LOGFONT),&lf);
-			lf.lfWeight=FW_BOLD;
-			m_TitleFont.Create(&lf);
-
 			m_fApplied=false;
 		}
 		return TRUE;
-
-	/*
-	case WM_MEASUREITEM:
-		if (wParam==IDC_OPTIONS_LIST) {
-			MEASUREITEMSTRUCT *pmis=reinterpret_cast<MEASUREITEMSTRUCT*>(lParam);
-
-			//pmis->itemHeight=ICON_HEIGHT+LIST_MARGIN*2;
-			pmis->itemHeight=ICON_HEIGHT;
-			return TRUE;
-		}
-	*/
 
 	case WM_DRAWITEM:
 		{
@@ -158,7 +144,7 @@ INT_PTR COptionDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 
 				if (fSelected) {
 					rc=pdis->rcItem;
-					rc.right=rc.left+LIST_MARGIN+ICON_WIDTH+ICON_TEXT_MARGIN/2;
+					rc.right=rc.left+m_ListMargin+m_IconWidth+m_IconTextMargin/2;
 					::FillRect(pdis->hDC,&rc,reinterpret_cast<HBRUSH>(COLOR_WINDOW+1));
 					rc.left=rc.right;
 					rc.right=pdis->rcItem.right;
@@ -170,31 +156,52 @@ INT_PTR COptionDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 							   reinterpret_cast<HBRUSH>(COLOR_WINDOW+1));
 					crText=::GetSysColor(COLOR_WINDOWTEXT);
 				}
+
 				rc=pdis->rcItem;
-				rc.left+=LIST_MARGIN;
-				/*
-				HDC hdcMem=::CreateCompatibleDC(pdis->hDC);
-				if (hdcMem!=NULL) {
-					HBITMAP hbmOld=static_cast<HBITMAP>(::SelectObject(hdcMem,m_Icons.GetHandle()));
-					::GdiTransparentBlt(pdis->hDC,rc.left,rc.top,ICON_WIDTH,ICON_HEIGHT,
-										hdcMem,(int)pdis->itemData*ICON_WIDTH,0,ICON_WIDTH,ICON_HEIGHT,RGB(255,255,255));
-					::SelectObject(hdcMem,hbmOld);
-					::DeleteDC(hdcMem);
+				rc.left+=m_ListMargin;
+				int y=rc.top+((rc.bottom-rc.top)-m_IconHeight)/2;
+
+				int IconWidth,IconHeight;
+				::ImageList_GetIconSize(m_himlIcons,&IconWidth,&IconHeight);
+				if (IconWidth==m_IconWidth && IconHeight==m_IconHeight) {
+					::ImageList_Draw(m_himlIcons,(int)pdis->itemData,pdis->hDC,rc.left,y,ILD_TRANSPARENT);
+					if (fSelected)
+						::ImageList_Draw(m_himlIcons,(int)pdis->itemData,pdis->hDC,rc.left,y,ILD_TRANSPARENT);
+				} else {
+					HICON hicon=::ImageList_ExtractIcon(NULL,m_himlIcons,(int)pdis->itemData);
+#if 0				// DrawIconEx ‚Å•`‰æ‚·‚é‚Æ‰˜‚¢
+					::DrawIconEx(pdis->hDC,rc.left,y,hicon,m_IconWidth,m_IconHeight,0,NULL,DI_NORMAL);
+					if (fSelected)
+						::DrawIconEx(pdis->hDC,rc.left,y,hicon,m_IconWidth,m_IconHeight,0,NULL,DI_NORMAL);
+#else
+					ICONINFO ii;
+					if (::GetIconInfo(hicon,&ii)) {
+						HBITMAP hbm=(HBITMAP)::CopyImage(ii.hbmColor,IMAGE_BITMAP,0,0,LR_CREATEDIBSECTION);
+						::DeleteObject(ii.hbmColor);
+						::DeleteObject(ii.hbmMask);
+						TVTest::Graphics::CImage Image;
+						Image.CreateFromBitmap(hbm);
+						::DeleteObject(hbm);
+						TVTest::Graphics::CCanvas Canvas(pdis->hDC);
+						Canvas.SetComposition(true);
+						Canvas.DrawImage(rc.left,y,m_IconWidth,m_IconHeight,&Image,0,0,IconWidth,IconHeight);
+						if (fSelected)
+							Canvas.DrawImage(rc.left,y,m_IconWidth,m_IconHeight,&Image,0,0,IconWidth,IconHeight);
+					}
+#endif
+					::DestroyIcon(hicon);
 				}
-				*/
-				::ImageList_Draw(m_himlIcons,(int)pdis->itemData,pdis->hDC,rc.left,rc.top,ILD_TRANSPARENT);
-				if (fSelected)
-					::ImageList_Draw(m_himlIcons,(int)pdis->itemData,pdis->hDC,rc.left,rc.top,ILD_TRANSPARENT);
+
 				crOldText=::SetTextColor(pdis->hDC,crText);
 				OldBkMode=::SetBkMode(pdis->hDC,TRANSPARENT);
-				rc.left+=ICON_WIDTH+ICON_TEXT_MARGIN;
+				rc.left+=m_IconWidth+m_IconTextMargin;
 				::DrawText(pdis->hDC,m_PageList[pdis->itemData].pszTitle,-1,
 						   &rc,DT_LEFT | DT_SINGLELINE | DT_VCENTER | DT_NOPREFIX);
 				::SetTextColor(pdis->hDC,crOldText);
 				::SetBkMode(pdis->hDC,OldBkMode);
 				if ((pdis->itemState & (ODS_FOCUS | ODS_NOFOCUSRECT))==ODS_FOCUS) {
 					rc=pdis->rcItem;
-					rc.left+=LIST_MARGIN+ICON_WIDTH+ICON_TEXT_MARGIN/2;
+					rc.left+=m_ListMargin+m_IconWidth+m_IconTextMargin/2;
 					::DrawFocusRect(pdis->hDC,&rc);
 				}
 			} else if (wParam==IDC_OPTIONS_TITLE) {
@@ -233,7 +240,7 @@ INT_PTR COptionDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 			return TRUE;
 
 		case IDC_OPTIONS_HELP:
-			GetAppClass().ShowHelpContent(m_PageList[m_CurrentPage].HelpID);
+			GetAppClass().UICore.ShowHelpContent(m_PageList[m_CurrentPage].HelpID);
 			return TRUE;
 
 		case IDOK:
@@ -265,7 +272,6 @@ INT_PTR COptionDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 		return TRUE;
 
 	case WM_DESTROY:
-		//m_Icons.Destroy();
 		if (m_himlIcons!=NULL) {
 			::ImageList_Destroy(m_himlIcons);
 			m_himlIcons=NULL;
@@ -275,6 +281,60 @@ INT_PTR COptionDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 	}
 
 	return FALSE;
+}
+
+
+void COptionDialog::ApplyStyle()
+{
+	CBasicDialog::ApplyStyle();
+
+	if (m_hDlg!=NULL) {
+		m_IconWidth=m_pStyleScaling->GetScaledSystemMetrics(SM_CXSMICON);
+		m_IconHeight=m_pStyleScaling->GetScaledSystemMetrics(SM_CYSMICON);
+		m_ListMargin=m_pStyleScaling->LogicalPixelsToPhysicalPixels(1);
+		m_IconTextMargin=m_pStyleScaling->LogicalPixelsToPhysicalPixels(4);
+
+		LOGFONT lf;
+		m_Font.GetLogFont(&lf);
+		lf.lfWeight=FW_BOLD;
+		m_TitleFont.Create(&lf);
+
+		if (m_himlIcons!=NULL)
+			::ImageList_Destroy(m_himlIcons);
+		m_himlIcons=::ImageList_LoadImage(
+			GetAppClass().GetResourceInstance(),
+			m_IconWidth<=16?MAKEINTRESOURCE(IDB_OPTIONS16):MAKEINTRESOURCE(IDB_OPTIONS32),
+			m_IconWidth<=16?16:32,
+			1,CLR_NONE,IMAGE_BITMAP,LR_CREATEDIBSECTION);
+	}
+}
+
+
+void COptionDialog::RealizeStyle()
+{
+	CBasicDialog::RealizeStyle();
+
+	if (m_hDlg!=NULL) {
+		HDC hdc=::GetDC(m_hDlg);
+		int FontHeight=m_Font.GetHeight(hdc,false);
+		::ReleaseDC(m_hDlg,hdc);
+		DlgListBox_SetItemHeight(m_hDlg,IDC_OPTIONS_LIST,0,
+								 max(FontHeight,m_IconHeight)+m_ListMargin*2);
+
+		for (int i=0;i<NUM_PAGES;i++)
+			SetPagePos(i);
+	}
+}
+
+
+void COptionDialog::ActivatePage(COptions *pOptions)
+{
+	for (int i=0;i<NUM_PAGES;i++) {
+		if (m_PageList[i].pOptions==pOptions) {
+			SetPage(i);
+			break;
+		}
+	}
 }
 
 

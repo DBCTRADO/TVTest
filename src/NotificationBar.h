@@ -4,13 +4,16 @@
 
 #include <deque>
 #include "BasicWindow.h"
+#include "UIBase.h"
 #include "Theme.h"
 #include "DrawUtil.h"
 #include "WindowUtil.h"
+#include "GUIUtil.h"
 
 
 class CNotificationBar
 	: public CCustomWindow
+	, public TVTest::CUIBase
 	, protected CWindowTimerManager
 {
 public:
@@ -26,12 +29,17 @@ public:
 // CBasicWindow
 	bool Create(HWND hwndParent,DWORD Style,DWORD ExStyle=0,int ID=0) override;
 
+// CUIBase
+	void SetStyle(const TVTest::Style::CStyleManager *pStyleManager) override;
+	void NormalizeStyle(
+		const TVTest::Style::CStyleManager *pStyleManager,
+		const TVTest::Style::CStyleScaling *pStyleScaling) override;
+	void SetTheme(const TVTest::Theme::CThemeManager *pThemeManager) override;
+
 // CNotificationBar
 	bool Show(LPCTSTR pszText,MessageType Type,DWORD Timeout,bool fSkippable);
 	bool Hide();
-	bool SetColors(const Theme::GradientInfo *pBackGradient,
-				   COLORREF crTextColor,COLORREF crWarningTextColor,COLORREF crErrorTextColor);
-	bool SetFont(const LOGFONT *pFont);
+	bool SetFont(const TVTest::Style::Font &Font);
 	void SetAnimate(bool fAnimate) { m_fAnimate=fAnimate; }
 	int GetBarHeight() const { return m_BarHeight; }
 
@@ -39,11 +47,24 @@ public:
 
 private:
 	struct MessageInfo {
-		CDynamicString Text;
+		TVTest::String Text;
 		MessageType Type;
-		HICON hIcon;
 		DWORD Timeout;
 		bool fSkippable;
+	};
+
+	struct NotificationBarStyle {
+		TVTest::Style::Margins Padding;
+		TVTest::Style::Size IconSize;
+		TVTest::Style::Margins IconMargin;
+		TVTest::Style::Margins TextMargin;
+		TVTest::Style::IntValue TextExtraHeight;
+
+		NotificationBarStyle();
+		void SetStyle(const TVTest::Style::CStyleManager *pStyleManager);
+		void NormalizeStyle(
+			const TVTest::Style::CStyleManager *pStyleManager,
+			const TVTest::Style::CStyleScaling *pStyleScaling);
 	};
 
 	enum {
@@ -57,13 +78,16 @@ private:
 	static const int FADE_ANIMATION_COUNT=4;
 	static const DWORD FADE_ANIMATION_INTERVAL=50;
 
-	Theme::GradientInfo m_BackGradient;
+	NotificationBarStyle m_Style;
+	TVTest::Theme::BackgroundStyle m_BackStyle;
 	COLORREF m_TextColor[3];
+	TVTest::Style::Font m_StyleFont;
 	DrawUtil::CFont m_Font;
 	int m_BarHeight;
 	bool m_fAnimate;
 	std::deque<MessageInfo> m_MessageQueue;
 	int m_TimerCount;
+	TVTest::CIcon m_Icons[3];
 
 	static HINSTANCE m_hinst;
 
@@ -73,6 +97,8 @@ private:
 	void SetHideTimer();
 // CCustomWindow
 	LRESULT OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
+// CUIBase
+	void ApplyStyle() override;
 };
 
 

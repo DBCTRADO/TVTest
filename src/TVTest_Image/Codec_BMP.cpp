@@ -1,10 +1,15 @@
 #include <windows.h>
 #include <tchar.h>
-#include "TVTest_Image.h"
+#include "ImageLib.h"
 #include "Codec_BMP.h"
 #include "ImageUtil.h"
 
 
+namespace TVTest
+{
+
+namespace ImageLib
+{
 
 
 bool SaveBMPFile(const ImageSaveInfo *pInfo)
@@ -94,3 +99,8 @@ bool SaveBMPFile(const ImageSaveInfo *pInfo)
 	CloseHandle(hFile);
 	return true;
 }
+
+
+}	// namespace ImageLib
+
+}	// namespace TVTest

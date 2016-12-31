@@ -2,14 +2,11 @@
 #include "TVTest.h"
 #include "AppMain.h"
 #include "ProgramGuideOptions.h"
+#include "DirectWriteOptionsDialog.h"
 #include "DialogUtil.h"
+#include "StyleUtil.h"
 #include "resource.h"
-
-#ifdef _DEBUG
-#undef THIS_FILE
-static char THIS_FILE[]=__FILE__;
-#define new DEBUG_NEW
-#endif
+#include "Common/DebugDef.h"
 
 
 #define IEPG_ASSOCIATE_COMMAND TEXT("iEpgAssociate")
@@ -26,12 +23,17 @@ CProgramGuideOptions::CProgramGuideOptions(CProgramGuide *pProgramGuide,CPluginM
 	, m_ViewHours(26)
 	, m_ItemWidth(pProgramGuide->GetItemWidth())
 	, m_LinesPerHour(pProgramGuide->GetLinesPerHour())
-	, m_LineMargin(1)
+	, m_fUseDirectWrite(false)
 	, m_VisibleEventIcons(m_pProgramGuide->GetVisibleEventIcons())
-	, m_himlEventIcons(NULL)
 	, m_WheelScrollLines(pProgramGuide->GetWheelScrollLines())
 {
 	m_pProgramGuide->GetFont(&m_Font);
+
+	m_DirectWriteRenderingParams.Gamma = 2.2f;
+	m_DirectWriteRenderingParams.EnhancedContrast = 0.5f;
+	m_DirectWriteRenderingParams.ClearTypeLevel = 0.5f;
+	m_DirectWriteRenderingParams.PixelGeometry = DWRITE_PIXEL_GEOMETRY_RGB;
+	m_DirectWriteRenderingParams.RenderingMode = DWRITE_RENDERING_MODE_DEFAULT;
 }
 
 
@@ -77,9 +79,7 @@ bool CProgramGuideOptions::LoadSettings(CSettings &Settings)
 				&& Value>=CProgramGuide::MIN_LINES_PER_HOUR
 				&& Value<=CProgramGuide::MAX_LINES_PER_HOUR)
 			m_LinesPerHour=Value;
-		if (Settings.Read(TEXT("LineMargin"),&Value))
-			m_LineMargin=max(Value,0);
-		m_pProgramGuide->SetUIOptions(m_LinesPerHour,m_ItemWidth,m_LineMargin);
+		m_pProgramGuide->SetUIOptions(m_LinesPerHour,m_ItemWidth);
 
 		Settings.Read(TEXT("EventIcons"),&m_VisibleEventIcons);
 		m_pProgramGuide->SetVisibleEventIcons(m_VisibleEventIcons);
@@ -88,40 +88,32 @@ bool CProgramGuideOptions::LoadSettings(CSettings &Settings)
 			m_WheelScrollLines=Value;
 		m_pProgramGuide->SetWheelScrollLines(m_WheelScrollLines);
 
-		TCHAR szText[512];
-		if (Settings.Read(TEXT("ProgramLDoubleClick"),szText,lengthof(szText))) {
-			if (szText[0]!=_T('\0'))
-				m_ProgramLDoubleClickCommand.Set(szText);
-			else
-				m_ProgramLDoubleClickCommand.Clear();
-		}
+		Settings.Read(TEXT("ProgramLDoubleClick"),&m_ProgramLDoubleClickCommand);
 
 		if (Settings.Read(TEXT("ShowToolTip"),&f))
 			m_pProgramGuide->SetShowToolTip(f);
 
-		// Font
-		TCHAR szFont[LF_FACESIZE];
-		if (Settings.Read(TEXT("FontName"),szFont,LF_FACESIZE) && szFont[0]!=_T('\0')) {
-			lstrcpy(m_Font.lfFaceName,szFont);
-			m_Font.lfEscapement=0;
-			m_Font.lfOrientation=0;
-			m_Font.lfUnderline=0;
-			m_Font.lfStrikeOut=0;
-			m_Font.lfCharSet=DEFAULT_CHARSET;
-			m_Font.lfOutPrecision=OUT_DEFAULT_PRECIS;
-			m_Font.lfClipPrecision=CLIP_DEFAULT_PRECIS;
-			m_Font.lfQuality=DRAFT_QUALITY;
-			m_Font.lfPitchAndFamily=DEFAULT_PITCH | FF_DONTCARE;
+		if (TVTest::StyleUtil::ReadFontSettings(Settings,TEXT("Font"),&m_Font,true,&f)) {
+			if (!f)
+				m_fChanged=true;
 		}
-		if (Settings.Read(TEXT("FontSize"),&Value)) {
-			m_Font.lfHeight=Value;
-			m_Font.lfWidth=0;
-		}
-		if (Settings.Read(TEXT("FontWeight"),&Value))
-			m_Font.lfWeight=Value;
-		if (Settings.Read(TEXT("FontItalic"),&Value))
-			m_Font.lfItalic=Value;
-		m_pProgramGuide->SetFont(&m_Font);
+		m_pProgramGuide->SetFont(m_Font);
+
+		Settings.Read(TEXT("UseDirectWrite"),&m_fUseDirectWrite);
+		m_pProgramGuide->SetTextDrawEngine(
+			m_fUseDirectWrite?
+				TVTest::CTextDrawClient::ENGINE_DIRECTWRITE:
+				TVTest::CTextDrawClient::ENGINE_GDI);
+
+		Settings.Read(TEXT("DirectWriteRenderingParamsMask"),&m_DirectWriteRenderingParams.Mask);
+		Settings.Read(TEXT("DirectWriteGamma"),&m_DirectWriteRenderingParams.Gamma);
+		Settings.Read(TEXT("DirectWriteEnhancedContrast"),&m_DirectWriteRenderingParams.EnhancedContrast);
+		Settings.Read(TEXT("DirectWriteClearTypeLevel"),&m_DirectWriteRenderingParams.ClearTypeLevel);
+		if (Settings.Read(TEXT("DirectWritePixelGeometry"),&Value))
+			m_DirectWriteRenderingParams.PixelGeometry=static_cast<DWRITE_PIXEL_GEOMETRY>(Value);
+		if (Settings.Read(TEXT("DirectWriteRenderingMode"),&Value))
+			m_DirectWriteRenderingParams.RenderingMode=static_cast<DWRITE_RENDERING_MODE>(Value);
+		m_pProgramGuide->SetDirectWriteRenderingParams(m_DirectWriteRenderingParams);
 
 		bool fDragScroll;
 		if (Settings.Read(TEXT("DragScroll"),&fDragScroll))
@@ -134,6 +126,10 @@ bool CProgramGuideOptions::LoadSettings(CSettings &Settings)
 		bool fKeepTimePos;
 		if (Settings.Read(TEXT("KeepTimePos"),&fKeepTimePos))
 			m_pProgramGuide->SetKeepTimePos(fKeepTimePos);
+
+		bool fShowFeaturedMark;
+		if (Settings.Read(TEXT("ShowFeaturedMark"),&fShowFeaturedMark))
+			m_pProgramGuide->SetShowFeaturedMark(fShowFeaturedMark);
 
 		bool fExcludeNoEvent;
 		if (Settings.Read(TEXT("ExcludeNoEventServices"),&fExcludeNoEvent))
@@ -180,13 +176,20 @@ bool CProgramGuideOptions::LoadSettings(CSettings &Settings)
 				pProgramSearch->SetColumnWidth(i,Value);
 		}
 
-		int Left,Top;
-		pProgramSearch->GetPosition(&Left,&Top,&Width,&Height);
-		Settings.Read(TEXT("SearchLeft"),&Left);
-		Settings.Read(TEXT("SearchTop"),&Top);
-		Settings.Read(TEXT("SearchWidth"),&Width);
-		Settings.Read(TEXT("SearchHeight"),&Height);
-		pProgramSearch->SetPosition(Left,Top,Width,Height);
+		if (Settings.Read(TEXT("SearchResultListHeight"),&Value))
+			pProgramSearch->SetResultListHeight(Value);
+
+		if (Settings.Read(TEXT("SearchTarget"),&Value))
+			pProgramSearch->SetSearchTarget(Value);
+
+		CBasicDialog::Position Pos;
+		if (Settings.Read(TEXT("SearchLeft"),&Pos.x)
+				&& Settings.Read(TEXT("SearchTop"),&Pos.y)) {
+			pProgramSearch->GetPosition(NULL,NULL,&Pos.Width,&Pos.Height);
+			Settings.Read(TEXT("SearchWidth"),&Pos.Width);
+			Settings.Read(TEXT("SearchHeight"),&Pos.Height);
+			pProgramSearch->SetPosition(Pos);
+		}
 	}
 
 	if (Settings.SetSection(TEXT("ProgramGuideTools"))) {
@@ -194,21 +197,18 @@ bool CProgramGuideOptions::LoadSettings(CSettings &Settings)
 
 		if (Settings.Read(TEXT("ToolCount"),&NumTools) && NumTools>0) {
 			CProgramGuideToolList *pToolList=m_pProgramGuide->GetToolList();
+			TVTest::String ToolName,Command;
 
 			for (unsigned int i=0;i<NumTools;i++) {
 				TCHAR szName[32];
-				TCHAR szToolName[CProgramGuideTool::MAX_NAME];
-				TCHAR szCommand[CProgramGuideTool::MAX_COMMAND];
 
 				wsprintf(szName,TEXT("Tool%u_Name"),i);
-				if (!Settings.Read(szName,szToolName,lengthof(szToolName))
-						|| szToolName[0]=='\0')
+				if (!Settings.Read(szName,&ToolName) || ToolName.empty())
 					break;
 				wsprintf(szName,TEXT("Tool%u_Command"),i);
-				if (!Settings.Read(szName,szCommand,lengthof(szCommand))
-						|| szCommand[0]=='\0')
+				if (!Settings.Read(szName,&Command) || Command.empty())
 					break;
-				pToolList->Add(new CProgramGuideTool(szToolName,szCommand));
+				pToolList->Add(new CProgramGuideTool(ToolName,Command));
 			}
 		}
 	}
@@ -308,21 +308,27 @@ bool CProgramGuideOptions::SaveSettings(CSettings &Settings)
 		Settings.Write(TEXT("ViewHours"),m_ViewHours);
 		Settings.Write(TEXT("ItemWidth"),m_ItemWidth);
 		Settings.Write(TEXT("LinesPerHour"),m_LinesPerHour);
-		Settings.Write(TEXT("LineMargin"),m_LineMargin);
 		Settings.Write(TEXT("EventIcons"),m_VisibleEventIcons);
 		Settings.Write(TEXT("WheelScrollLines"),m_WheelScrollLines);
-		Settings.Write(TEXT("ProgramLDoubleClick"),m_ProgramLDoubleClickCommand.GetSafe());
+		Settings.Write(TEXT("ProgramLDoubleClick"),m_ProgramLDoubleClickCommand);
 
-		// Font
-		Settings.Write(TEXT("FontName"),m_Font.lfFaceName);
-		Settings.Write(TEXT("FontSize"),(int)m_Font.lfHeight);
-		Settings.Write(TEXT("FontWeight"),(int)m_Font.lfWeight);
-		Settings.Write(TEXT("FontItalic"),(int)m_Font.lfItalic);
+		TVTest::StyleUtil::WriteFontSettings(Settings,TEXT("Font"),m_Font);
+
+		Settings.Write(TEXT("UseDirectWrite"),m_fUseDirectWrite);
+		Settings.Write(TEXT("DirectWriteRenderingParamsMask"),m_DirectWriteRenderingParams.Mask);
+		Settings.Write(TEXT("DirectWriteGamma"),m_DirectWriteRenderingParams.Gamma,2);
+		Settings.Write(TEXT("DirectWriteEnhancedContrast"),m_DirectWriteRenderingParams.EnhancedContrast,2);
+		Settings.Write(TEXT("DirectWriteClearTypeLevel"),m_DirectWriteRenderingParams.ClearTypeLevel,2);
+		Settings.Write(TEXT("DirectWritePixelGeometry"),
+			static_cast<int>(m_DirectWriteRenderingParams.PixelGeometry));
+		Settings.Write(TEXT("DirectWriteRenderingMode"),
+			static_cast<int>(m_DirectWriteRenderingParams.RenderingMode));
 
 		Settings.Write(TEXT("DragScroll"),m_pProgramGuide->GetDragScroll());
 		Settings.Write(TEXT("ShowToolTip"),m_pProgramGuide->GetShowToolTip());
 		Settings.Write(TEXT("Filter"),m_pProgramGuide->GetFilter());
 		Settings.Write(TEXT("KeepTimePos"),m_pProgramGuide->GetKeepTimePos());
+		Settings.Write(TEXT("ShowFeaturedMark"),m_pProgramGuide->GetShowFeaturedMark());
 		Settings.Write(TEXT("ExcludeNoEventServices"),m_pProgramGuide->GetExcludeNoEventServices());
 
 		int Width,Height;
@@ -348,12 +354,17 @@ bool CProgramGuideOptions::SaveSettings(CSettings &Settings)
 			Settings.Write(szName,pProgramSearch->GetColumnWidth(i));
 		}
 
-		int Left,Top;
-		pProgramSearch->GetPosition(&Left,&Top,&Width,&Height);
-		Settings.Write(TEXT("SearchLeft"),Left);
-		Settings.Write(TEXT("SearchTop"),Top);
-		Settings.Write(TEXT("SearchWidth"),Width);
-		Settings.Write(TEXT("SearchHeight"),Height);
+		Settings.Write(TEXT("SearchResultListHeight"),pProgramSearch->GetResultListHeight());
+		Settings.Write(TEXT("SearchTarget"),pProgramSearch->GetSearchTarget());
+
+		if (pProgramSearch->IsPositionSet()) {
+			int Left,Top;
+			pProgramSearch->GetPosition(&Left,&Top,&Width,&Height);
+			Settings.Write(TEXT("SearchLeft"),Left);
+			Settings.Write(TEXT("SearchTop"),Top);
+			Settings.Write(TEXT("SearchWidth"),Width);
+			Settings.Write(TEXT("SearchHeight"),Height);
+		}
 	}
 
 	if (Settings.SetSection(TEXT("ProgramGuideTools"))) {
@@ -435,12 +446,10 @@ bool CProgramGuideOptions::GetTimeRange(SYSTEMTIME *pstFirst,SYSTEMTIME *pstLast
 {
 	SYSTEMTIME st;
 
-	::GetLocalTime(&st);
-	st.wMinute=0;
-	st.wSecond=0;
-	st.wMilliseconds=0;
+	GetCurrentEpgTime(&st);
+	SystemTimeTruncateHour(&st);
 	*pstFirst=st;
-	OffsetSystemTime(&st,(LONGLONG)m_ViewHours*(60*60*1000));
+	OffsetSystemTime(&st,(LONGLONG)m_ViewHours*TimeConsts::SYSTEMTIME_HOUR);
 	*pstLast=st;
 	return true;
 }
@@ -453,20 +462,6 @@ int CProgramGuideOptions::ParseCommand(LPCTSTR pszCommand) const
 	if (::lstrcmpi(pszCommand,IEPG_ASSOCIATE_COMMAND)==0)
 		return CM_PROGRAMGUIDE_IEPGASSOCIATE;
 	return 0;
-}
-
-
-static void SetFontInfo(HWND hDlg,const LOGFONT *plf)
-{
-	HDC hdc;
-	TCHAR szText[LF_FACESIZE+16];
-
-	hdc=GetDC(hDlg);
-	if (hdc==NULL)
-		return;
-	wsprintf(szText,TEXT("%s, %d pt"),plf->lfFaceName,CalcFontPointHeight(hdc,plf));
-	SetDlgItemText(hDlg,IDC_PROGRAMGUIDEOPTIONS_FONTINFO,szText);
-	ReleaseDC(hDlg,hdc);
 }
 
 
@@ -492,49 +487,66 @@ INT_PTR CProgramGuideOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM l
 			DlgEdit_SetInt(hDlg,IDC_PROGRAMGUIDEOPTIONS_LINESPERHOUR,m_LinesPerHour);
 			DlgUpDown_SetRange(hDlg,IDC_PROGRAMGUIDEOPTIONS_LINESPERHOUR_UD,
 				CProgramGuide::MIN_LINES_PER_HOUR,CProgramGuide::MAX_LINES_PER_HOUR);
-			DlgEdit_SetInt(hDlg,IDC_PROGRAMGUIDEOPTIONS_LINEMARGIN,m_LineMargin);
-			DlgUpDown_SetRange(hDlg,IDC_PROGRAMGUIDEOPTIONS_LINEMARGIN_UD,0,100);
 
 			m_CurSettingFont=m_Font;
-			SetFontInfo(hDlg,&m_CurSettingFont);
+			TVTest::StyleUtil::SetFontInfoItem(hDlg,IDC_PROGRAMGUIDEOPTIONS_FONTINFO,m_CurSettingFont);
+
+			if (Util::OS::IsWindowsVistaOrLater()) {
+				DlgCheckBox_Check(hDlg,IDC_PROGRAMGUIDEOPTIONS_USEDIRECTWRITE,m_fUseDirectWrite);
+				EnableDlgItem(
+					hDlg,
+					IDC_PROGRAMGUIDEOPTIONS_DIRECTWRITEOPTIONS,
+					m_fUseDirectWrite);
+			} else {
+				EnableDlgItems(
+					hDlg,
+					IDC_PROGRAMGUIDEOPTIONS_USEDIRECTWRITE,
+					IDC_PROGRAMGUIDEOPTIONS_DIRECTWRITEOPTIONS,
+					false);
+			}
 
 			m_Tooltip.Create(hDlg);
-			m_himlEventIcons=::ImageList_LoadImage(
-				GetAppClass().GetResourceInstance(),MAKEINTRESOURCE(IDB_PROGRAMGUIDEICONS),
-				CEpgIcons::ICON_WIDTH,1,CLR_NONE,IMAGE_BITMAP,LR_CREATEDIBSECTION);
-			HDC hdc=::GetDC(hDlg);
-			HDC hdcMem=::CreateCompatibleDC(hdc);
-			for (int i=0;i<=CEpgIcons::ICON_LAST;i++) {
-				DlgCheckBox_Check(hDlg,IDC_PROGRAMGUIDEOPTIONS_ICON_FIRST+i,
-								  (m_VisibleEventIcons&CEpgIcons::IconFlag(i))!=0);
-				// ImageList_ExtractIcon()だとなぜか色が化ける
-				// (4ビットのアイコンはシステムパレットが前提なのかも)
-				/*
-				::SendDlgItemMessage(hDlg,IDC_PROGRAMGUIDEOPTIONS_ICON_FIRST+i,
-									 BM_SETIMAGE,IMAGE_ICON,
-									 reinterpret_cast<LPARAM>(::ImageList_ExtractIcon(NULL,m_himlEventIcons,i)));
-				*/
-				HBITMAP hbm=::CreateCompatibleBitmap(hdc,CEpgIcons::ICON_WIDTH,CEpgIcons::ICON_HEIGHT);
-				HGDIOBJ hOldBmp=::SelectObject(hdcMem,hbm);
-				::ImageList_Draw(m_himlEventIcons,i,hdcMem,0,0,ILD_NORMAL);
-				::SelectObject(hdcMem,hOldBmp);
-				::SendDlgItemMessage(hDlg,IDC_PROGRAMGUIDEOPTIONS_ICON_FIRST+i,
-									 BM_SETIMAGE,IMAGE_BITMAP,
-									 reinterpret_cast<LPARAM>(hbm));
-				TCHAR szText[64];
-				::GetDlgItemText(hDlg,IDC_PROGRAMGUIDEOPTIONS_ICON_FIRST+i,szText,lengthof(szText));
-				m_Tooltip.AddTool(::GetDlgItem(hDlg,IDC_PROGRAMGUIDEOPTIONS_ICON_FIRST+i),szText);
+			m_Tooltip.SetFont(GetWindowFont(hDlg));
+
+			{
+				HDC hdc=::GetDC(hDlg);
+				HDC hdcMem=::CreateCompatibleDC(hdc);
+				RECT rc;
+				::GetClientRect(::GetDlgItem(hDlg,IDC_PROGRAMGUIDEOPTIONS_ICON_FIRST),&rc);
+				int IconSize;
+				if (rc.bottom<=CEpgIcons::DEFAULT_ICON_HEIGHT+4)
+					IconSize=CEpgIcons::DEFAULT_ICON_HEIGHT;
+				else
+					IconSize=rc.bottom;
+				CEpgIcons EpgIcons;
+				EpgIcons.Load();
+				EpgIcons.BeginDraw(hdc);
+				for (int i=0;i<=CEpgIcons::ICON_LAST;i++) {
+					DlgCheckBox_Check(hDlg,IDC_PROGRAMGUIDEOPTIONS_ICON_FIRST+i,
+									  (m_VisibleEventIcons&CEpgIcons::IconFlag(i))!=0);
+					HBITMAP hbm=::CreateCompatibleBitmap(hdc,IconSize,IconSize);
+					HGDIOBJ hOldBmp=::SelectObject(hdcMem,hbm);
+					EpgIcons.DrawIcon(hdcMem,0,0,IconSize,IconSize,i);
+					::SelectObject(hdcMem,hOldBmp);
+					::SendDlgItemMessage(hDlg,IDC_PROGRAMGUIDEOPTIONS_ICON_FIRST+i,
+										 BM_SETIMAGE,IMAGE_BITMAP,
+										 reinterpret_cast<LPARAM>(hbm));
+					TCHAR szText[64];
+					::GetDlgItemText(hDlg,IDC_PROGRAMGUIDEOPTIONS_ICON_FIRST+i,szText,lengthof(szText));
+					m_Tooltip.AddTool(::GetDlgItem(hDlg,IDC_PROGRAMGUIDEOPTIONS_ICON_FIRST+i),szText);
+				}
+				EpgIcons.EndDraw();
+				::DeleteDC(hdcMem);
+				::ReleaseDC(hDlg,hdc);
 			}
-			::DeleteDC(hdcMem);
-			::ReleaseDC(hDlg,hdc);
 
 			DlgEdit_SetInt(hDlg,IDC_PROGRAMGUIDEOPTIONS_WHEELSCROLLLINES,m_WheelScrollLines);
 			DlgUpDown_SetRange(hDlg,IDC_PROGRAMGUIDEOPTIONS_WHEELSCROLLLINES_UD,0,100);
 
-			int Sel=m_ProgramLDoubleClickCommand.IsEmpty()?0:-1;
+			int Sel=m_ProgramLDoubleClickCommand.empty()?0:-1;
 			DlgComboBox_AddString(hDlg,IDC_PROGRAMGUIDEOPTIONS_PROGRAMLDOUBLECLICK,TEXT("何もしない"));
 			DlgComboBox_AddString(hDlg,IDC_PROGRAMGUIDEOPTIONS_PROGRAMLDOUBLECLICK,TEXT("iEPG関連付け実行"));
-			if (Sel<0 && m_ProgramLDoubleClickCommand.Compare(IEPG_ASSOCIATE_COMMAND)==0)
+			if (Sel<0 && m_ProgramLDoubleClickCommand.compare(IEPG_ASSOCIATE_COMMAND)==0)
 				Sel=1;
 			for (int i=0;i<m_pPluginManager->NumPlugins();i++) {
 				const CPlugin *pPlugin=m_pPluginManager->GetPlugin(i);
@@ -553,8 +565,8 @@ INT_PTR CProgramGuideOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM l
 															CommandInfo.pszName);
 						DlgComboBox_SetItemData(hDlg,IDC_PROGRAMGUIDEOPTIONS_PROGRAMLDOUBLECLICK,
 												Index,reinterpret_cast<LPARAM>(DuplicateString(szCommand)));
-						if (Sel<0 && !m_ProgramLDoubleClickCommand.IsEmpty()
-								&& ::lstrcmpi(szCommand,m_ProgramLDoubleClickCommand.Get())==0)
+						if (Sel<0 && !m_ProgramLDoubleClickCommand.empty()
+								&& TVTest::StringUtility::CompareNoCase(m_ProgramLDoubleClickCommand,szCommand)==0)
 							Sel=(int)Index;
 					}
 				}
@@ -618,8 +630,107 @@ INT_PTR CProgramGuideOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM l
 	case WM_COMMAND:
 		switch (LOWORD(wParam)) {
 		case IDC_PROGRAMGUIDEOPTIONS_CHOOSEFONT:
-			if (ChooseFontDialog(hDlg,&m_CurSettingFont))
-				SetFontInfo(hDlg,&m_CurSettingFont);
+			if (TVTest::StyleUtil::ChooseStyleFont(hDlg,&m_CurSettingFont))
+				TVTest::StyleUtil::SetFontInfoItem(hDlg,IDC_PROGRAMGUIDEOPTIONS_FONTINFO,m_CurSettingFont);
+			return TRUE;
+
+		case IDC_PROGRAMGUIDEOPTIONS_USEDIRECTWRITE:
+			EnableDlgItemSyncCheckBox(
+				hDlg,
+				IDC_PROGRAMGUIDEOPTIONS_DIRECTWRITEOPTIONS,
+				IDC_PROGRAMGUIDEOPTIONS_USEDIRECTWRITE);
+			return TRUE;
+
+		case IDC_PROGRAMGUIDEOPTIONS_DIRECTWRITEOPTIONS:
+			{
+				class CRenderingTester : public TVTest::CDirectWriteOptionsDialog::CRenderingTester
+				{
+				public:
+					CRenderingTester(
+						CProgramGuide *pProgramGuide,
+						const TVTest::CDirectWriteRenderer::RenderingParams &Params,
+						const TVTest::Style::Font &Font)
+						: m_pProgramGuide(pProgramGuide)
+						, m_OldParams(Params)
+						, m_Font(Font)
+						, m_fApplied(false)
+						, m_fFontChanged(false)
+					{
+					}
+
+					void Apply(const TVTest::CDirectWriteRenderer::RenderingParams &Params) override
+					{
+						if (!m_fApplied) {
+							TVTest::Style::Font Font;
+
+							m_OldEngine=m_pProgramGuide->GetTextDrawEngine();
+							if (m_OldEngine!=TVTest::CTextDrawClient::ENGINE_DIRECTWRITE)
+								m_pProgramGuide->SetTextDrawEngine(TVTest::CTextDrawClient::ENGINE_DIRECTWRITE);
+							m_pProgramGuide->GetFont(&Font);
+							if (m_Font!=Font) {
+								m_pProgramGuide->SetFont(m_Font);
+								m_OldFont=Font;
+								m_fFontChanged=true;
+							}
+							m_fApplied=true;
+						}
+						m_pProgramGuide->SetDirectWriteRenderingParams(Params);
+					}
+
+					void Reset() override
+					{
+						if (m_fApplied) {
+							if (m_OldEngine!=TVTest::CTextDrawClient::ENGINE_DIRECTWRITE)
+								m_pProgramGuide->SetTextDrawEngine(m_OldEngine);
+							if (m_fFontChanged)
+								m_pProgramGuide->SetFont(m_OldFont);
+							m_pProgramGuide->SetDirectWriteRenderingParams(m_OldParams);
+							m_fApplied=false;
+						}
+					}
+
+					bool IsApplied() const { return m_fApplied; }
+					bool IsFontChanged() const { return m_fFontChanged; }
+
+				private:
+					CProgramGuide *m_pProgramGuide;
+					TVTest::CDirectWriteRenderer::RenderingParams m_OldParams;
+					TVTest::Style::Font m_Font;
+					TVTest::Style::Font m_OldFont;
+					bool m_fApplied;
+					bool m_fFontChanged;
+					TVTest::CTextDrawClient::TextDrawEngine m_OldEngine;
+				};
+
+				TVTest::CDirectWriteOptionsDialog Dialog(
+					&m_DirectWriteRenderingParams, m_CurSettingFont.LogFont);
+				CRenderingTester RenderingTester(
+					m_pProgramGuide, m_DirectWriteRenderingParams, m_CurSettingFont);
+
+				if (m_pProgramGuide->GetVisible())
+					Dialog.SetRenderingTester(&RenderingTester);
+				if (Dialog.Show(hDlg)) {
+					if (RenderingTester.IsApplied()) {
+#if 0
+						if (!m_fUseDirectWrite)
+							m_pProgramGuide->SetTextDrawEngine(TVTest::CTextDrawClient::ENGINE_GDI);
+						if (RenderingTester.IsFontChanged())
+							m_pProgramGuide->SetFont(m_Font);
+#else
+						if (!m_fUseDirectWrite) {
+							m_fUseDirectWrite=true;
+							m_pProgramGuide->SetTextDrawEngine(TVTest::CTextDrawClient::ENGINE_DIRECTWRITE);
+						}
+						if (RenderingTester.IsFontChanged()) {
+							m_Font=m_CurSettingFont;
+							m_pProgramGuide->SetFont(m_Font);
+						}
+#endif
+					}
+					m_pProgramGuide->SetDirectWriteRenderingParams(m_DirectWriteRenderingParams);
+					m_fChanged=true;
+				}
+			}
 			return TRUE;
 
 		case IDC_PROGRAMGUIDETOOL_ADD:
@@ -820,7 +931,7 @@ INT_PTR CProgramGuideOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM l
 					m_ViewHours=Value;
 					m_pProgramGuide->GetTimeRange(&stFirst,NULL);
 					stLast=stFirst;
-					OffsetSystemTime(&stLast,(LONGLONG)m_ViewHours*(60*60*1000));
+					OffsetSystemTime(&stLast,(LONGLONG)m_ViewHours*TimeConsts::SYSTEMTIME_HOUR);
 					m_pProgramGuide->SetTimeRange(&stFirst,&stLast);
 					fUpdate=true;
 				}
@@ -832,12 +943,23 @@ INT_PTR CProgramGuideOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM l
 				Value=::GetDlgItemInt(hDlg,IDC_PROGRAMGUIDEOPTIONS_LINESPERHOUR,NULL,TRUE);
 				m_LinesPerHour=CLAMP(Value,
 					(int)CProgramGuide::MIN_LINES_PER_HOUR,(int)CProgramGuide::MAX_LINES_PER_HOUR);
-				m_LineMargin=::GetDlgItemInt(hDlg,IDC_PROGRAMGUIDEOPTIONS_LINEMARGIN,NULL,TRUE);
-				m_pProgramGuide->SetUIOptions(m_LinesPerHour,m_ItemWidth,m_LineMargin);
+				m_pProgramGuide->SetUIOptions(m_LinesPerHour,m_ItemWidth);
 
-				if (!CompareLogFont(&m_Font,&m_CurSettingFont)) {
+				if (m_Font!=m_CurSettingFont) {
 					m_Font=m_CurSettingFont;
-					m_pProgramGuide->SetFont(&m_Font);
+					m_pProgramGuide->SetFont(m_Font);
+				}
+
+				if (Util::OS::IsWindowsVistaOrLater()) {
+					bool fUseDirectWrite=
+						DlgCheckBox_IsChecked(hDlg,IDC_PROGRAMGUIDEOPTIONS_USEDIRECTWRITE);
+					if (m_fUseDirectWrite!=fUseDirectWrite) {
+						m_fUseDirectWrite=fUseDirectWrite;
+						m_pProgramGuide->SetTextDrawEngine(
+							m_fUseDirectWrite?
+								TVTest::CTextDrawClient::ENGINE_DIRECTWRITE:
+								TVTest::CTextDrawClient::ENGINE_GDI);
+					}
 				}
 
 				UINT VisibleEventIcons=0;
@@ -857,13 +979,13 @@ INT_PTR CProgramGuideOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM l
 				LRESULT Sel=DlgComboBox_GetCurSel(hDlg,IDC_PROGRAMGUIDEOPTIONS_PROGRAMLDOUBLECLICK);
 				if (Sel>=0) {
 					if (Sel==0) {
-						m_ProgramLDoubleClickCommand.Clear();
+						m_ProgramLDoubleClickCommand.clear();
 					} else if (Sel==1) {
-						m_ProgramLDoubleClickCommand.Set(IEPG_ASSOCIATE_COMMAND);
+						m_ProgramLDoubleClickCommand=IEPG_ASSOCIATE_COMMAND;
 					} else {
-						m_ProgramLDoubleClickCommand.Set(
+						m_ProgramLDoubleClickCommand=
 							reinterpret_cast<LPCTSTR>(
-								DlgComboBox_GetItemData(hDlg,IDC_PROGRAMGUIDEOPTIONS_PROGRAMLDOUBLECLICK,Sel)));
+								DlgComboBox_GetItemData(hDlg,IDC_PROGRAMGUIDEOPTIONS_PROGRAMLDOUBLECLICK,Sel));
 					}
 				}
 
@@ -903,14 +1025,6 @@ INT_PTR CProgramGuideOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM l
 			}
 
 			for (int i=0;i<=CEpgIcons::ICON_LAST;i++) {
-				/*
-				HICON hico=reinterpret_cast<HICON>(
-					::SendDlgItemMessage(hDlg,IDC_PROGRAMGUIDEOPTIONS_ICON_FIRST+i,
-										 BM_SETIMAGE,IMAGE_ICON,
-										 reinterpret_cast<LPARAM>((HICON)NULL)));
-				if (hico!=NULL)
-					::DestroyIcon(hico);
-				*/
 				HBITMAP hbm=reinterpret_cast<HBITMAP>(
 					::SendDlgItemMessage(hDlg,IDC_PROGRAMGUIDEOPTIONS_ICON_FIRST+i,
 										 BM_SETIMAGE,IMAGE_BITMAP,
@@ -919,17 +1033,19 @@ INT_PTR CProgramGuideOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM l
 					::DeleteObject(hbm);
 			}
 
-			if (m_himlEventIcons!=NULL) {
-				::ImageList_Destroy(m_himlEventIcons);
-				m_himlEventIcons=NULL;
-			}
-
 			m_Tooltip.Destroy();
 		}
 		return TRUE;
 	}
 
 	return FALSE;
+}
+
+
+void CProgramGuideOptions::RealizeStyle()
+{
+	CBasicDialog::RealizeStyle();
+	m_Tooltip.SetFont(CBasicDialog::m_Font.GetHandle());
 }
 
 

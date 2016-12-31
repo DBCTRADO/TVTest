@@ -1,0 +1,46 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="ja">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=Shift_JIS">
+	<link rel="stylesheet" href="../default.css" type="text/css">
+	<title>チューナーマップ</title>
+</head>
+<body>
+<h1>チューナーマップ</h1>
+<p>チューナーマップの指定により、チューナーやネットワークID・TSID・サービスIDに応じて使用するフィルターを自動的に切り換えることができます。</p>
+<p>情報の送信頻度の関係で、ネットワークIDよりTSIDで指定した方が切り替えが早くなります。</p>
+
+<h2>チューナー</h2>
+<p class="descript">設定の対象となるチューナーを指定します。ワイルドカードとして * と ? が利用可能です。<br>
+空欄にすると全てのチューナーが対象になります。</p>
+
+<h2>ネットワークID</h2>
+<p class="descript">設定の対象となるネットワークIDを指定します。<br>
+空欄にすると全てのネットワークIDが対象になります。</p>
+
+<h2>TSID</h2>
+<p class="descript">設定の対象となるTSID(Transport Stream ID)を指定します。<br>
+空欄にすると全てのTSIDが対象になります。</p>
+
+<h2>サービスID</h2>
+<p class="descript">設定の対象となるサービスIDを指定します。<br>
+空欄にすると全てのサービスIDが対象になります。</p>
+
+<h2>処理を有効にする</h2>
+<p class="descript">指定されたチューナーの使用時にTSプロセッサーの処理を有効にします。</p>
+<div class="group">
+	<h2>モジュール</h2>
+	<p class="descript">使用するモジュールを指定します。空欄にするとデフォルトのモジュールになります。</p>
+
+	<h2>デバイス</h2>
+	<p class="descript">使用するデバイスを指定します。空欄にするとデフォルトのデバイスになります。</p>
+
+	<h2>フィルター</h2>
+	<p class="descript">使用するフィルターを指定します。空欄にするとデフォルトのフィルターになります。</p>
+</div>
+
+<h2>処理を無効にする</h2>
+<p class="descript">指定されたチューナーの使用時にTSプロセッサーの処理を無効にします。</p>
+
+</body>
+</html>

@@ -2,12 +2,7 @@
 #include "TVTest.h"
 #include "AppMain.h"
 #include "Tooltip.h"
-
-#ifdef _DEBUG
-#undef THIS_FILE
-static char THIS_FILE[]=__FILE__;
-#define new DEBUG_NEW
-#endif
+#include "Common/DebugDef.h"
 
 #ifndef TTTOOLINFO_V2_SIZE
 #ifdef UNICODE
@@ -243,6 +238,16 @@ bool CTooltip::TrackPosition(int x,int y)
 		return false;
 
 	::SendMessage(m_hwndTooltip,TTM_TRACKPOSITION,0,MAKELONG(x,y));
+	return true;
+}
+
+
+bool CTooltip::SetFont(HFONT hfont)
+{
+	if (m_hwndTooltip==NULL || hfont==NULL)
+		return false;
+
+	SetWindowFont(m_hwndTooltip,hfont,FALSE);
 	return true;
 }
 

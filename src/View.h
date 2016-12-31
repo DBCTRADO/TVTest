@@ -3,13 +3,23 @@
 
 
 #include "BasicWindow.h"
+#include "UIBase.h"
 #include "DtvEngine.h"
 #include "Theme.h"
 
 
-class ABSTRACT_CLASS(CDisplayView) : public CCustomWindow
+class ABSTRACT_CLASS(CDisplayView)
+	: public CCustomWindow
+	, public TVTest::CUIBase
 {
 public:
+	class ABSTRACT_CLASS(CEventHandler)
+	{
+	public:
+		virtual ~CEventHandler() = 0;
+		virtual void OnMouseMessage(UINT Msg,int x,int y) {}
+	};
+
 	CDisplayView();
 	virtual ~CDisplayView() = 0;
 	virtual bool Close() = 0;
@@ -18,6 +28,12 @@ public:
 
 // CBasicWindow
 	void SetVisible(bool fVisible) override;
+
+// CUIBase
+	void SetStyle(const TVTest::Style::CStyleManager *pStyleManager) override;
+	void NormalizeStyle(
+		const TVTest::Style::CStyleManager *pStyleManager,
+		const TVTest::Style::CStyleScaling *pStyleScaling) override;
 
 protected:
 	enum ItemType {
@@ -34,15 +50,41 @@ protected:
 		BACKGROUND_STYLE_CATEGORIES
 	};
 
+	struct DisplayViewStyle
+	{
+		TVTest::Style::IntValue TextSizeRatioHorz;
+		TVTest::Style::IntValue TextSizeRatioVert;
+		TVTest::Style::IntValue TextSizeScaleBase;
+		TVTest::Style::IntValue TextSizeMin;
+		TVTest::Style::IntValue TextSizeMax;
+		TVTest::Style::Margins ContentMargin;
+		TVTest::Style::Margins CategoriesMargin;
+		TVTest::Style::Size CloseButtonSize;
+		TVTest::Style::Margins CloseButtonMargin;
+
+		DisplayViewStyle();
+		void SetStyle(const TVTest::Style::CStyleManager *pStyleManager);
+		void NormalizeStyle(
+			const TVTest::Style::CStyleManager *pStyleManager,
+			const TVTest::Style::CStyleScaling *pStyleScaling);
+	};
+
 	class CDisplayBase *m_pDisplayBase;
+	DisplayViewStyle m_Style;
+	CEventHandler *m_pEventHandler;
 
 	virtual bool OnVisibleChange(bool fVisible);
 	virtual bool GetCloseButtonRect(RECT *pRect) const;
 	bool CloseButtonHitTest(int x,int y) const;
 	void DrawCloseButton(HDC hdc) const;
-	bool GetItemStyle(ItemType Type,Theme::Style *pStyle) const;
-	bool GetBackgroundStyle(BackgroundType Type,Theme::GradientInfo *pGradient) const;
+	bool GetItemStyle(ItemType Type,TVTest::Theme::Style *pStyle) const;
+	bool GetBackgroundStyle(BackgroundType Type,TVTest::Theme::BackgroundStyle *pStyle) const;
 	int GetDefaultFontSize(int Width,int Height) const;
+	void SetEventHandler(CEventHandler *pEventHandler);
+	bool HandleMessage(HWND hwnd,UINT Msg,WPARAM wParam,LPARAM lParam,LRESULT *pResult);
+
+// CCustomWindow
+	LRESULT OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
 
 private:
 	void SetDisplayVisible(bool fVisible);
@@ -78,6 +120,12 @@ private:
 	CDisplayView *m_pDisplayView;
 	CEventHandler *m_pEventHandler;
 	bool m_fVisible;
+};
+
+class CDisplayEventHandlerBase
+{
+protected:
+	void RelayMouseMessage(CDisplayView *pView,UINT Message,int x,int y);
 };
 
 class CVideoContainerWindow : public CCustomWindow
@@ -117,7 +165,9 @@ private:
 	LRESULT OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
 };
 
-class CViewWindow : public CCustomWindow
+class CViewWindow
+	: public CCustomWindow
+	, public TVTest::CUIBase
 {
 public:
 	class ABSTRACT_CLASS(CEventHandler) {
@@ -139,7 +189,8 @@ public:
 	void SetMessageWindow(HWND hwnd);
 	void SetEventHandler(CEventHandler *pEventHandler);
 	bool SetLogo(HBITMAP hbm);
-	void SetBorder(const Theme::BorderInfo *pInfo);
+	void SetBorder(const TVTest::Theme::BorderStyle &Style);
+	void SetMargin(const TVTest::Style::Margins &Margin);
 	void ShowCursor(bool fShow);
 	bool CalcClientRect(RECT *pRect) const;
 	bool CalcWindowRect(RECT *pRect) const;
@@ -153,7 +204,8 @@ private:
 	HWND m_hwndMessage;
 	CEventHandler *m_pEventHandler;
 	HBITMAP m_hbmLogo;
-	Theme::BorderInfo m_BorderInfo;
+	TVTest::Theme::BorderStyle m_BorderStyle;
+	TVTest::Style::Margins m_Margin;
 	bool m_fShowCursor;
 
 // CCustomWindow

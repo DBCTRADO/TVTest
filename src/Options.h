@@ -10,7 +10,8 @@ class ABSTRACT_CLASS(COptionFrame)
 {
 public:
 	virtual ~COptionFrame() {}
-	virtual void OnSettingError(class COptions *pOptions) {}
+	virtual void ActivatePage(class COptions *pOptions) = 0;
+	virtual void OnSettingError(class COptions *pOptions) = 0;
 };
 
 class COptions : public CBasicDialog, public CSettingsBase
@@ -36,6 +37,7 @@ public:
 	static DWORD SetGeneralUpdateFlag(DWORD Flag);
 
 protected:
+	void ActivatePage();
 	void SettingError();
 
 	DWORD m_UpdateFlags;

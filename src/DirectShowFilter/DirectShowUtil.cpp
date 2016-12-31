@@ -1,4 +1,5 @@
 #include "stdafx.h"
+#include <utility>
 #include <initguid.h>
 #include "DirectShowUtil.h"
 #include "../HelperClass/StdUtil.h"
@@ -8,12 +9,7 @@
 #pragma comment(lib,"mfplat.lib")
 #pragma comment(lib,"mfuuid.lib")
 #endif
-
-#ifdef _DEBUG
-#undef THIS_FILE
-static char THIS_FILE[]=__FILE__;
-#define new DEBUG_NEW
-#endif
+#include "../Common/DebugDef.h"
 
 
 
@@ -33,16 +29,17 @@ void CDirectShowFilterFinder::Clear()
 	m_FilterList.clear();
 }
 
-int CDirectShowFilterFinder::GetFilterCount()
+int CDirectShowFilterFinder::GetFilterCount() const
 {
 	return (int)m_FilterList.size();
 }
 
-bool CDirectShowFilterFinder::GetFilterInfo(const int iIndex,CLSID *pidClass,LPWSTR pwszFriendlyName,int iBufLen)
+bool CDirectShowFilterFinder::GetFilterInfo(
+	const int iIndex,CLSID *pidClass,LPWSTR pwszFriendlyName,int iBufLen) const
 {
 	if (iIndex<0 || iIndex>=GetFilterCount())
 		return false;
-	CFilterInfo &Info = m_FilterList[iIndex];
+	const CFilterInfo &Info = m_FilterList[iIndex];
 	if (pidClass)
 		*pidClass = Info.m_clsid;
 	if (pwszFriendlyName) {
@@ -51,6 +48,23 @@ bool CDirectShowFilterFinder::GetFilterInfo(const int iIndex,CLSID *pidClass,LPW
 		} else if (iBufLen>0) {
 			pwszFriendlyName[0]='\0';
 		}
+	}
+	return true;
+}
+
+bool CDirectShowFilterFinder::GetFilterInfo(
+	const int iIndex,CLSID *pidClass,std::wstring *pFriendlyName) const
+{
+	if (iIndex<0 || iIndex>=GetFilterCount())
+		return false;
+	const CFilterInfo &Info = m_FilterList[iIndex];
+	if (pidClass)
+		*pidClass = Info.m_clsid;
+	if (pFriendlyName) {
+		if (Info.m_pwszFriendlyName)
+			*pFriendlyName = Info.m_pwszFriendlyName;
+		else
+			pFriendlyName->clear();
 	}
 	return true;
 }
@@ -138,26 +152,29 @@ bool CDirectShowFilterFinder::FindFilter(const GUID *pidInType,const GUID *pidIn
 }
 
 // 優先するフィルタをリスト先端に持ってくる
-bool CDirectShowFilterFinder::PriorityFilterGoToHead(const CLSID idPriorityClass)
+bool CDirectShowFilterFinder::SetPreferredFilter(const CLSID &idFilter)
 {
 	std::vector<CFilterInfo> TmpList;
-	size_t i;
 
-	for (i=0;i<m_FilterList.size();i++) {
-		if (m_FilterList[i].m_clsid == idPriorityClass) {
-			// 優先するものを発見
-			TmpList.push_back(m_FilterList[i]);
+	TmpList.reserve(m_FilterList.size());
+
+	for (auto it = m_FilterList.begin(); it != m_FilterList.end(); ++it) {
+		if (it->m_clsid == idFilter) {
+			TmpList.push_back(*it);
 		}
 	}
-	if (!TmpList.empty()) {
-		for (i=0;i<m_FilterList.size();i++) {
-			if(m_FilterList[i].m_clsid != idPriorityClass) {
-				// 優先するもの以外
-				TmpList.push_back(m_FilterList[i]);
-			}
+
+	if (TmpList.empty())
+		return false;
+
+	for (auto it = m_FilterList.begin(); it != m_FilterList.end(); ++it) {
+		if (it->m_clsid != idFilter) {
+			TmpList.push_back(*it);
 		}
 	}
-	m_FilterList=TmpList;
+
+	m_FilterList = std::move(TmpList);
+
 	return true;
 }
 
@@ -378,7 +395,7 @@ HRESULT DirectShowUtil::AddToRot(IUnknown *pUnkGraph, DWORD *pdwRegister)
 		return E_FAIL;
 
 	wchar_t wsz[256];
-	swprintf_s(wsz,256, L"FilterGraph %08p pid %08x", (DWORD_PTR)pUnkGraph, ::GetCurrentProcessId());
+	swprintf_s(wsz,256, L"FilterGraph %08p pid %08x", pUnkGraph, ::GetCurrentProcessId());
 
 	HRESULT hr = ::CreateItemMoniker(L"!", wsz, &pMoniker);
 

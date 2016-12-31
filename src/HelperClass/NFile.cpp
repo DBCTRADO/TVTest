@@ -5,12 +5,7 @@
 #include "stdafx.h"
 #include "NFile.h"
 #include "StdUtil.h"
-
-#ifdef _DEBUG
-#undef THIS_FILE
-static char THIS_FILE[]=__FILE__;
-#define new DEBUG_NEW
-#endif
+#include "../Common/DebugDef.h"
 
 //////////////////////////////////////////////////////////////////////
 // ç\íz/è¡ñ≈
@@ -114,7 +109,7 @@ const bool CNFile::Open(LPCTSTR lpszName, const UINT Flags)
 		SetFileInformationByHandleFunc pSetFileInformationByHandle =
 			(SetFileInformationByHandleFunc)::GetProcAddress(hKernel, "SetFileInformationByHandle");
 		if (pSetFileInformationByHandle) {
-			FILE_IO_PRIORITY_HINT_INFO PriorityHint;
+			alignas(8) FILE_IO_PRIORITY_HINT_INFO PriorityHint;
 			PriorityHint.PriorityHint = (Flags & CNF_PRIORITY_IDLE) ? IoPriorityHintVeryLow : IoPriorityHintLow;
 			TRACE(TEXT("Set file I/O priority hint %d\n"), (int)PriorityHint.PriorityHint);
 			if (!pSetFileInformationByHandle(m_hFile, FileIoPriorityHintInfo, &PriorityHint, sizeof(PriorityHint))) {

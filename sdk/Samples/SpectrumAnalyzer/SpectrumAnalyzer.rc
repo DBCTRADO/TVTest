@@ -1,0 +1,4 @@
+#include "resource.h"
+
+
+IDB_ICON BITMAP "SpectrumAnalyzer.bmp"

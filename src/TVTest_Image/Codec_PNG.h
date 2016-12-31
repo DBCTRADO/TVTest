@@ -2,8 +2,16 @@
 #define TVTEST_PNG_H
 
 
-bool SavePNGFile(const ImageSaveInfo *pInfo);
-HGLOBAL LoadAribPng(const void *pData,SIZE_T DataSize);
+namespace TVTest
+{
+	namespace ImageLib
+	{
+
+		bool SavePNGFile(const ImageSaveInfo *pInfo);
+		HGLOBAL LoadAribPng(const void *pData,SIZE_T DataSize);
+
+	}
+}
 
 
 #endif

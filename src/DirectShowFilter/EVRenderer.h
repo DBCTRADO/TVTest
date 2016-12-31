@@ -14,6 +14,8 @@
 
 class CVideoRenderer_EVR : public CVideoRenderer
 {
+	HRESULT UpdateRenderingPrefs(interface IMFVideoDisplayControl *pDisplayControl);
+
 	//HMODULE m_hMFPlatLib;
 #ifdef EVR_USE_VIDEO_WINDOW
 	HWND m_hwndVideo;
@@ -22,6 +24,7 @@ class CVideoRenderer_EVR : public CVideoRenderer
 	static CVideoRenderer_EVR *GetThis(HWND hwnd);
 	static LRESULT CALLBACK VideoWndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam);
 #endif
+
 public:
 	CVideoRenderer_EVR();
 	~CVideoRenderer_EVR();
@@ -35,6 +38,10 @@ public:
 	bool RepaintVideo(HWND hwnd,HDC hdc);
 	bool DisplayModeChanged();
 	bool SetVisible(bool fVisible);
+	bool SetClipToDevice(bool bClip);
+
+protected:
+	virtual HRESULT InitializePresenter(IBaseFilter *pFilter) { return S_OK; }
 };
 
 

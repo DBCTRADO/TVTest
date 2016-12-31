@@ -70,6 +70,19 @@ public:
 		}
 	};
 
+	class IStreamCallback
+	{
+	public:
+		virtual ~IStreamCallback() {}
+		virtual void OnStream(DWORD Format, const void *pData, SIZE_T Size) = 0;
+	};
+
+	enum {
+		ADJUST_SAMPLE_TIME       = 0x0001U,
+		ADJUST_SAMPLE_FRAME_RATE = 0x0002U,
+		ADJUST_SAMPLE_1SEG       = 0x0004U
+	};
+
 	CVideoParser();
 	virtual ~CVideoParser();
 
@@ -79,14 +92,20 @@ public:
 	typedef void (CALLBACK *VideoInfoCallback)(const VideoInfo *pVideoInfo, const PVOID pParam);
 	void SetVideoInfoCallback(VideoInfoCallback pCallback, const PVOID pParam = NULL);
 
-	DWORD GetBitRate() const;
+	void SetStreamCallback(IStreamCallback *pCallback);
+
+	void SetAttachMediaType(bool bAttach);
+	virtual bool SetAdjustSampleOptions(unsigned int Flags) { return false; }
 
 protected:
 	void NotifyVideoInfo() const;
+	static bool SARToDAR(WORD SarX, WORD SarY, WORD Width, WORD Height,
+						 BYTE *pDarX, BYTE *pDarY);
 
 	VideoInfo m_VideoInfo;
 	VideoInfoCallback m_pVideoInfoCallback;
 	PVOID m_pCallbackParam;
+	IStreamCallback *m_pStreamCallback;
 	mutable CCritSec m_ParserLock;
-	CBitRateCalculator m_BitRateCalculator;
+	bool m_bAttachMediaType;
 };

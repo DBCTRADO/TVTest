@@ -1,11 +1,6 @@
 #include "stdafx.h"
 #include "WindowUtil.h"
-
-#ifdef _DEBUG
-#undef THIS_FILE
-static char THIS_FILE[]=__FILE__;
-#define new DEBUG_NEW
-#endif
+#include "Common/DebugDef.h"
 
 
 
@@ -181,6 +176,22 @@ void SnapWindow(HWND hwnd,RECT *prc,int Margin,HWND hwndExclude)
 		prc->top+=YOffset;
 	prc->right=prc->left+(Info.rcOriginal.right-Info.rcOriginal.left);
 	prc->bottom=prc->top+(Info.rcOriginal.bottom-Info.rcOriginal.top);
+}
+
+
+bool IsMessageInQueue(HWND hwnd,UINT Message)
+{
+	MSG msg;
+
+	if (::PeekMessage(&msg,hwnd,Message,Message,PM_NOREMOVE)) {
+		if (msg.message==WM_QUIT) {
+			::PostQuitMessage(static_cast<int>(msg.wParam));
+		} else {
+			return true;
+		}
+	}
+
+	return false;
 }
 
 
@@ -407,4 +418,68 @@ void CWindowTimerManager::EndAllTimers()
 bool CWindowTimerManager::IsTimerEnabled(unsigned int ID) const
 {
 	return (m_TimerIDs & ID)==ID;
+}
+
+
+
+
+CWindowSubclass::CWindowSubclass()
+	: m_hwnd(nullptr)
+{
+}
+
+
+CWindowSubclass::~CWindowSubclass()
+{
+	RemoveSubclass();
+}
+
+
+bool CWindowSubclass::SetSubclass(HWND hwnd)
+{
+	RemoveSubclass();
+
+	if (hwnd==nullptr)
+		return false;
+
+	if (!::SetWindowSubclass(hwnd,SubclassProc,
+							 reinterpret_cast<UINT_PTR>(this),
+							 reinterpret_cast<DWORD_PTR>(this)))
+		return false;
+
+	m_hwnd=hwnd;
+
+	return true;
+}
+
+
+void CWindowSubclass::RemoveSubclass()
+{
+	if (m_hwnd!=nullptr) {
+		::RemoveWindowSubclass(m_hwnd,SubclassProc,reinterpret_cast<UINT_PTR>(this));
+		m_hwnd=nullptr;
+	}
+}
+
+
+LRESULT CALLBACK CWindowSubclass::SubclassProc(
+	HWND hWnd,UINT uMsg,WPARAM wParam,LPARAM lParam,
+	UINT_PTR uIdSubclass,DWORD_PTR dwRefData)
+{
+	CWindowSubclass *pThis=reinterpret_cast<CWindowSubclass*>(dwRefData);
+
+	if (uMsg==WM_NCDESTROY) {
+		pThis->RemoveSubclass();
+		LRESULT Result=pThis->OnMessage(hWnd,uMsg,wParam,lParam);
+		pThis->OnSubclassRemoved();
+		return Result;
+	}
+
+	return pThis->OnMessage(hWnd,uMsg,wParam,lParam);
+}
+
+
+LRESULT CWindowSubclass::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
+{
+	return ::DefSubclassProc(hwnd,uMsg,wParam,lParam);
 }

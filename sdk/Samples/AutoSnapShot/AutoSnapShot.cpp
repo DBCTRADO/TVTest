@@ -2,6 +2,11 @@
 	TVTest プラグインサンプル
 
 	一定時間ごとにキャプチャを行う
+
+	このサンプルでは主に以下の機能を実装しています。
+
+	・キャプチャ画像を保存する
+	・設定ダイアログを表示する
 */
 
 
@@ -24,7 +29,7 @@ class CAutoSnapShot : public TVTest::CTVTestPlugin
 	static LRESULT CALLBACK EventCallback(UINT Event,LPARAM lParam1,LPARAM lParam2,void *pClientData);
 	static CAutoSnapShot *GetThis(HWND hwnd);
 	static LRESULT CALLBACK WndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam);
-	static INT_PTR CALLBACK DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam);
+	static INT_PTR CALLBACK DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam,void *pClientData);
 public:
 	CAutoSnapShot();
 	virtual bool GetPluginInfo(TVTest::PluginInfo *pInfo);
@@ -113,9 +118,18 @@ LRESULT CALLBACK CAutoSnapShot::EventCallback(UINT Event,LPARAM lParam1,LPARAM l
 
 	case TVTest::EVENT_PLUGINSETTINGS:
 		// プラグインの設定を行う
-		return ::DialogBoxParam(g_hinstDLL,MAKEINTRESOURCE(IDD_SETTINGS),
-								reinterpret_cast<HWND>(lParam1),DlgProc,
-								reinterpret_cast<LPARAM>(pThis))==IDOK;
+		{
+			TVTest::ShowDialogInfo Info;
+
+			Info.Flags = 0;
+			Info.hinst = g_hinstDLL;
+			Info.pszTemplate = MAKEINTRESOURCE(IDD_SETTINGS);
+			Info.pMessageFunc = DlgProc;
+			Info.pClientData = pThis;
+			Info.hwndOwner = reinterpret_cast<HWND>(lParam1);
+
+			return pThis->m_pApp->ShowDialog(&Info) == IDOK;
+		}
 	}
 
 	return 0;
@@ -164,16 +178,13 @@ LRESULT CALLBACK CAutoSnapShot::WndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM
 
 
 // 設定ダイアログプロシージャ
-INT_PTR CALLBACK CAutoSnapShot::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
+INT_PTR CALLBACK CAutoSnapShot::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam,void *pClientData)
 {
-	static const LPCTSTR PROP_NAME=TEXT("A083EB29-A656-4B85-BA13-FD6501AE9343");
-
 	switch (uMsg) {
 	case WM_INITDIALOG:
 		{
-			CAutoSnapShot *pThis=reinterpret_cast<CAutoSnapShot*>(lParam);
+			CAutoSnapShot *pThis=static_cast<CAutoSnapShot*>(pClientData);
 
-			::SetProp(hDlg,PROP_NAME,pThis);
 			::SetDlgItemInt(hDlg,IDC_SETTINGS_INTERVAL,pThis->m_Interval,FALSE);
 		}
 		return TRUE;
@@ -182,7 +193,7 @@ INT_PTR CALLBACK CAutoSnapShot::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM
 		switch (LOWORD(wParam)) {
 		case IDOK:
 			{
-				CAutoSnapShot *pThis=static_cast<CAutoSnapShot*>(::GetProp(hDlg,PROP_NAME));
+				CAutoSnapShot *pThis=static_cast<CAutoSnapShot*>(pClientData);
 
 				pThis->m_Interval=::GetDlgItemInt(hDlg,IDC_SETTINGS_INTERVAL,NULL,FALSE);
 				if (pThis->m_fEnabled)
@@ -192,10 +203,6 @@ INT_PTR CALLBACK CAutoSnapShot::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM
 			::EndDialog(hDlg,LOWORD(wParam));
 			return TRUE;
 		}
-		return TRUE;
-
-	case WM_NCDESTROY:
-		::RemoveProp(hDlg,PROP_NAME);
 		return TRUE;
 	}
 

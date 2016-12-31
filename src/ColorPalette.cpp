@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "TVTest.h"
 #include "ColorPalette.h"
+#include "DrawUtil.h"
 
 
 #define PALETTE_WINDOW_CLASS APP_NAME TEXT(" Color Palette")
@@ -143,6 +144,12 @@ int CColorPalette::FindColor(COLORREF Color) const
 }
 
 
+bool CColorPalette::SetTooltipFont(HFONT hfont)
+{
+	return m_Tooltip.SetFont(hfont);
+}
+
+
 void CColorPalette::GetItemRect(int Index,RECT *pRect) const
 {
 	int x,y;
@@ -162,10 +169,11 @@ void CColorPalette::DrawSelRect(HDC hdc,int Sel,bool fSel)
 	HBRUSH hbrOld;
 	RECT rc;
 
-	hpen=CreatePen(PS_SOLID,1,GetSysColor(fSel?COLOR_HIGHLIGHT:COLOR_3DFACE));
+	hpen=CreatePen(PS_INSIDEFRAME,2,GetSysColor(fSel?COLOR_HIGHLIGHT:COLOR_3DFACE));
 	hpenOld=SelectPen(hdc,hpen);
 	hbrOld=SelectBrush(hdc,GetStockObject(NULL_BRUSH));
 	GetItemRect(Sel,&rc);
+	InflateRect(&rc,1,1);
 	Rectangle(hdc,rc.left,rc.top,rc.right,rc.bottom);
 	SelectPen(hdc,hpenOld);
 	SelectBrush(hdc,hbrOld);
@@ -241,7 +249,6 @@ LRESULT CColorPalette::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam
 			PAINTSTRUCT ps;
 			int x,y;
 			int i;
-			HBRUSH hbr;
 			RECT rc;
 
 			::BeginPaint(hwnd,&ps);
@@ -254,11 +261,10 @@ LRESULT CColorPalette::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam
 				rc.bottom=rc.top+m_ItemHeight-4;
 				if (rc.left<ps.rcPaint.right && rc.top<ps.rcPaint.bottom
 						&& rc.right>ps.rcPaint.left && rc.bottom>ps.rcPaint.top) {
-					hbr=::CreateSolidBrush(RGB(m_pPalette[i].rgbRed,
-											   m_pPalette[i].rgbGreen,
-											   m_pPalette[i].rgbBlue));
-					::FillRect(ps.hdc,&rc,hbr);
-					::DeleteObject(hbr);
+					DrawUtil::Fill(ps.hdc,&rc,
+								   RGB(m_pPalette[i].rgbRed,
+								       m_pPalette[i].rgbGreen,
+								       m_pPalette[i].rgbBlue));
 				}
 			}
 			if (m_SelColor>=0)

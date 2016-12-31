@@ -3,46 +3,19 @@
 #include "TVTest.h"
 #include "AppMain.h"
 #include "ProgramGuide.h"
-#include "DialogUtil.h"
 #include "LogoManager.h"
 #include "EpgChannelSettings.h"
-#include "Help/HelpID.h"
+#include "ProgramGuideToolbarOptions.h"
+#include "DPIUtil.h"
+#include "BonTsEngine/TsUtil.h"
 #include "resource.h"
-
-#ifdef _DEBUG
-#undef THIS_FILE
-static char THIS_FILE[]=__FILE__;
-#define new DEBUG_NEW
-#endif
+#include "Common/DebugDef.h"
 
 
 #define TITLE_TEXT TEXT("EPG番組表")
 
-// 現在時刻を表す線の幅
-#define CUR_TIME_LINE_WIDTH 2
-
-#define HIGHLIGHT_BORDER_WIDTH	3
-#define SELECTED_BORDER_WIDTH	2
-
 // 現在時刻を更新するタイマのID
 #define TIMER_ID_UPDATECURTIME	1
-
-#define HEADER_MARGIN_LEFT		4
-#define HEADER_MARGIN_RIGHT		4
-#define HEADER_MARGIN_TOP		4
-#define HEADER_MARGIN_BOTTOM	4
-#define HEADER_CHEVRON_MARGIN	8
-
-#define CHEVRON_WIDTH	10
-#define CHEVRON_HEIGHT	10
-
-#define PROGRAM_GUIDE_ICON_MARGIN_LEFT		1
-#define PROGRAM_GUIDE_ICON_MARGIN_RIGHT		0
-#define PROGRAM_GUIDE_ICON_MARGIN_TOP		1
-#define PROGRAM_GUIDE_ICON_MARGIN			1
-
-#define HEADER_SHADOW_HEIGHT	8
-#define TIMEBAR_SHADOW_WIDTH	6
 
 // メニューの位置
 #define MENU_DATE			0
@@ -53,11 +26,6 @@ static char THIS_FILE[]=__FILE__;
 #define MAX_CHANNEL_PROVIDER_MENU_ITEMS \
 	(CM_PROGRAMGUIDE_CHANNELPROVIDER_LAST-CM_PROGRAMGUIDE_CHANNELPROVIDER_FIRST+1)
 
-static const LPCTSTR DayText[] = {
-	TEXT("今日"), TEXT("明日"), TEXT("2日後"), TEXT("3日後"),
-	TEXT("4日後"), TEXT("5日後"), TEXT("6日後"), TEXT("7日後"),
-};
-
 
 
 
@@ -67,18 +35,20 @@ namespace ProgramGuide
 
 class CEventItem
 {
+	static const int MAX_TITLE_LENGTH=256;
+
 	const CEventInfoData *m_pEventInfo;
 	const CEventInfoData *m_pCommonEventInfo;
 	SYSTEMTIME m_StartTime;
 	SYSTEMTIME m_EndTime;
 	DWORD m_Duration;
 	int m_TitleLines;
-	//int m_TextLines;
 	int m_ItemPos;
 	int m_ItemLines;
 	bool m_fSelected;
 
 	int GetTitleText(LPTSTR pszText,int MaxLength) const;
+	int GetTimeText(LPTSTR pszText,int MaxLength) const;
 	LPCTSTR GetEventText() const;
 
 public:
@@ -94,12 +64,11 @@ public:
 	int GetGenre(int Level=0) const;
 	bool SetCommonEvent(const CEventInfoData *pEvent);
 	int GetTitleLines() const { return m_TitleLines; }
-	//int GetTextLines() const { return m_TextLines; }
-	//int GetLines() const { return m_TitleLines+m_TextLines; }
-	//int CalcLines(HDC hdc,HFONT hfontTitle,int TitleWidth,HFONT hfontText,int TextWidth);
-	void CalcLines(HDC hdc,HFONT hfontTitle,int TitleWidth,HFONT hfontText,int TextWidth);
-	void DrawTitle(HDC hdc,const RECT *pRect,int LineHeight) const;
-	void DrawText(HDC hdc,const RECT *pRect,int LineHeight) const;
+	void CalcTitleLines(TVTest::CTextDraw &TextDraw,int Width);
+	void ResetTitleLines() { m_TitleLines=0; }
+	void DrawTitle(TVTest::CTextDraw &TextDraw,const RECT &Rect,int LineHeight) const;
+	void DrawText(TVTest::CTextDraw &TextDraw,const RECT &Rect,int LineHeight,unsigned int TextDrawFlags) const;
+	void GetTimeSize(TVTest::CTextDraw &TextDraw,SIZE *pSize) const;
 	int GetItemPos() const { return m_ItemPos; }
 	void SetItemPos(int Pos) { m_ItemPos=Pos; }
 	int GetItemLines() const { return m_ItemLines; }
@@ -114,7 +83,6 @@ CEventItem::CEventItem(const CEventInfoData *pInfo)
 	: m_pEventInfo(pInfo)
 	, m_pCommonEventInfo(NULL)
 	, m_TitleLines(0)
-	//, m_TextLines(0)
 	, m_ItemPos(-1)
 	, m_ItemLines(0)
 	, m_fSelected(false)
@@ -132,13 +100,12 @@ CEventItem::CEventItem(const SYSTEMTIME &StartTime,DWORD Duration)
 	, m_StartTime(StartTime)
 	, m_Duration(Duration)
 	, m_TitleLines(0)
-	//, m_TextLines(0)
 	, m_ItemPos(-1)
 	, m_ItemLines(0)
 	, m_fSelected(false)
 {
 	m_EndTime=StartTime;
-	OffsetSystemTime(&m_EndTime,Duration*1000);
+	OffsetSystemTime(&m_EndTime,Duration*TimeConsts::SYSTEMTIME_SECOND);
 }
 
 
@@ -194,11 +161,11 @@ int CEventItem::GetGenre(int Level) const
 
 bool CEventItem::SetCommonEvent(const CEventInfoData *pEvent)
 {
-	if (m_pEventInfo==NULL || !m_pEventInfo->m_fCommonEvent || pEvent==NULL)
+	if (m_pEventInfo==NULL || !m_pEventInfo->m_bCommonEvent || pEvent==NULL)
 		return false;
 	m_pCommonEventInfo=pEvent;
 	/*
-	if (m_pEventInfo->GetEventName()==NULL)
+	if (m_pEventInfo->m_EventName.empty())
 		m_TitleLines=pItem->m_TitleLines;	// とりあえず
 	*/
 	return true;
@@ -209,22 +176,23 @@ int CEventItem::GetTitleText(LPTSTR pszText,int MaxLength) const
 {
 	int Length;
 
-#ifndef _DEBUG
-	Length=StdUtil::snprintf(pszText,MaxLength,TEXT("%d:%02d"),
-							 m_StartTime.wHour,m_StartTime.wMinute);
-#else
-	Length=StdUtil::snprintf(pszText,MaxLength,TEXT("%d:%02d.%02d-%d:%02d.%02d"),
-							 m_StartTime.wHour,m_StartTime.wMinute,m_StartTime.wSecond,
-							 m_EndTime.wHour,m_EndTime.wMinute,m_EndTime.wSecond);
-#endif
+	Length=GetTimeText(pszText,MaxLength);
 	if (m_pEventInfo!=NULL) {
-		LPCTSTR pszEventName=m_pEventInfo->GetEventName();
-		if (pszEventName==NULL && m_pCommonEventInfo!=NULL)
-			pszEventName=m_pCommonEventInfo->GetEventName();
-		if (pszEventName!=NULL)
-			Length+=StdUtil::snprintf(pszText+Length,MaxLength-Length,TEXT(" %s"),pszEventName);
+		const CEventInfoData::String *pEventName;
+		if (m_pEventInfo->m_EventName.empty() && m_pCommonEventInfo!=NULL)
+			pEventName=&m_pCommonEventInfo->m_EventName;
+		else
+			pEventName=&m_pEventInfo->m_EventName;
+		if (!pEventName->empty())
+			Length+=StdUtil::snprintf(pszText+Length,MaxLength-Length,TEXT(" %s"),pEventName->c_str());
 	}
 	return Length;
+}
+
+
+int CEventItem::GetTimeText(LPTSTR pszText,int MaxLength) const
+{
+	return EpgUtil::FormatEventTime(m_StartTime,0,pszText,MaxLength,EpgUtil::EVENT_TIME_START_ONLY);
 }
 
 
@@ -233,83 +201,60 @@ LPCTSTR CEventItem::GetEventText() const
 	if (m_pEventInfo==NULL)
 		return NULL;
 
-	LPCTSTR pszEventText,p;
+#if 0
+	if (m_pCommonEventInfo!=NULL
+			&& ((m_pEventInfo->m_EventText.empty()
+					&& !m_pCommonEventInfo->m_EventText.empty())
+				|| (m_pEventInfo->m_EventExtendedText.empty()
+					&& !m_pCommonEventInfo->m_EventExtendedText.empty())))
+		return EpgUtil::GetEventDisplayText(*m_pCommonEventInfo);
+#endif
 
-	pszEventText=m_pEventInfo->GetEventText();
-	//if (pszEventText==NULL && m_pCommonEventInfo!=NULL)
-	//	pszEventText=m_pCommonEventInfo->GetEventText();
-	if (pszEventText!=NULL) {
-		p=pszEventText;
-		while (*p!='\0') {
-			if (*p<=0x20) {
-				p++;
-				continue;
-			}
-			return p;
-		}
-	}
-	pszEventText=m_pEventInfo->GetEventExtText();
-	//if (pszEventText==NULL && m_pCommonEventInfo!=NULL)
-	//	pszEventText=m_pCommonEventInfo->GetEventExtText();
-	if (pszEventText!=NULL) {
-		p=pszEventText;
-		if (memcmp(p,TEXT("番組内容"),8)==0)
-			p+=4*(3-sizeof(TCHAR));
-		while (*p!='\0') {
-			if (*p<=0x20) {
-				p++;
-				continue;
-			}
-			return p;
-		}
-	}
-	return NULL;
+	return EpgUtil::GetEventDisplayText(*m_pEventInfo);
 }
 
 
-/*
-int CEventItem::CalcLines(HDC hdc,HFONT hfontTitle,int TitleWidth,HFONT hfontText,int TextWidth)
+void CEventItem::CalcTitleLines(TVTest::CTextDraw &TextDraw,int Width)
 {
-	TCHAR szText[256];
-	GetTitleText(szText,lengthof(szText));
-	SelectFont(hdc,hfontTitle);
-	m_TitleLines=DrawUtil::CalcWrapTextLines(hdc,szText,TitleWidth);
-
-	LPCTSTR pszEventText=GetEventText();
-	if (!IsStringEmpty(pszEventText)) {
-		SelectFont(hdc,hfontText);
-		m_TextLines=DrawUtil::CalcWrapTextLines(hdc,pszEventText,TextWidth);
-	} else {
-		m_TextLines=0;
+	if (m_TitleLines==0) {
+		TCHAR szText[MAX_TITLE_LENGTH];
+		GetTitleText(szText,lengthof(szText));
+		m_TitleLines=TextDraw.CalcLineCount(szText,Width);
 	}
-
-	return m_TitleLines+m_TextLines;
-}
-*/
-
-void CEventItem::CalcLines(HDC hdc,HFONT hfontTitle,int TitleWidth,HFONT hfontText,int TextWidth)
-{
-	TCHAR szText[256];
-	GetTitleText(szText,lengthof(szText));
-	SelectFont(hdc,hfontTitle);
-	m_TitleLines=DrawUtil::CalcWrapTextLines(hdc,szText,TitleWidth);
 }
 
 
-void CEventItem::DrawTitle(HDC hdc,const RECT *pRect,int LineHeight) const
+void CEventItem::DrawTitle(TVTest::CTextDraw &TextDraw,const RECT &Rect,int LineHeight) const
 {
-	TCHAR szText[1024];
+	TCHAR szText[MAX_TITLE_LENGTH];
 
 	GetTitleText(szText,lengthof(szText));
-	DrawUtil::DrawWrapText(hdc,szText,pRect,LineHeight);
+	TextDraw.Draw(szText,Rect,LineHeight/*,TVTest::CTextDraw::DRAW_FLAG_JUSTIFY_MULTI_LINE*/);
 }
 
 
-void CEventItem::DrawText(HDC hdc,const RECT *pRect,int LineHeight) const
+void CEventItem::DrawText(TVTest::CTextDraw &TextDraw,const RECT &Rect,int LineHeight,unsigned int TextDrawFlags) const
 {
 	LPCTSTR pszEventText=GetEventText();
 	if (!IsStringEmpty(pszEventText))
-		DrawUtil::DrawWrapText(hdc,pszEventText,pRect,LineHeight);
+		TextDraw.Draw(pszEventText,Rect,LineHeight,TextDrawFlags);
+}
+
+
+void CEventItem::GetTimeSize(TVTest::CTextDraw &TextDraw,SIZE *pSize) const
+{
+	TCHAR szText[32];
+	int Length;
+	TVTest::CTextDraw::TextMetrics Metrics;
+
+	Length=GetTimeText(szText,lengthof(szText));
+	if (TextDraw.GetTextMetrics(szText,Length,&Metrics)) {
+		pSize->cx=Metrics.Width;
+		pSize->cy=Metrics.Height;
+	} else {
+		pSize->cx=0;
+		pSize->cy=0;
+	}
 }
 
 
@@ -423,7 +368,7 @@ void CEventLayout::InsertNullItems(const SYSTEMTIME &FirstTime,const SYSTEMTIME 
 			} else if (Cmp<0) {
 				LONGLONG Diff=DiffSystemTime(&stPrev,&stStart);
 
-				if (Diff<60*1000) {
+				if (Diff<TimeConsts::SYSTEMTIME_MINUTE) {
 					if (pPrevItem)
 						pPrevItem->SetEndTime(stStart);
 				} else {
@@ -477,50 +422,6 @@ const CEventLayout *CEventLayoutList::operator[](size_t Index) const
 }
 
 
-
-
-class CServiceInfo
-{
-	CChannelInfo m_ChannelInfo;
-	CServiceInfoData m_ServiceData;
-	LPTSTR m_pszBonDriverFileName;
-	HBITMAP m_hbmLogo;
-	DrawUtil::CBitmap m_StretchedLogo;
-	std::vector<CEventInfoData*> m_EventList;
-	typedef std::map<WORD,CEventInfoData*> EventIDMap;
-	EventIDMap m_EventIDMap;
-
-#ifdef EVENT_LIST_CUSTOM_SORT
-	void SortSub(CEventInfoData **ppFirst,CEventInfoData **ppLast);
-#endif
-
-public:
-	CServiceInfo(const CChannelInfo &ChannelInfo,LPCTSTR pszBonDriver);
-	CServiceInfo(const CChannelInfo &ChannelInfo,const CEpgServiceInfo &Info,LPCTSTR pszBonDriver);
-	~CServiceInfo();
-	const CChannelInfo &GetChannelInfo() const { return m_ChannelInfo; }
-	const CServiceInfoData &GetServiceInfoData() const { return m_ServiceData; }
-	WORD GetNetworkID() const { return m_ServiceData.m_NetworkID; }
-	WORD GetTSID() const { return m_ServiceData.m_TSID; }
-	WORD GetServiceID() const { return m_ServiceData.m_ServiceID; }
-	LPCTSTR GetServiceName() const { return m_ChannelInfo.GetName(); }
-	LPCTSTR GetBonDriverFileName() const { return m_pszBonDriverFileName; }
-	void SetLogo(HBITMAP hbm) { m_hbmLogo=hbm; }
-	HBITMAP GetLogo() const { return m_hbmLogo; }
-	HBITMAP GetStretchedLogo(int Width,int Height);
-	int NumEvents() const { return (int)m_EventList.size(); }
-	CEventInfoData *GetEvent(int Index);
-	const CEventInfoData *GetEvent(int Index) const;
-	CEventInfoData *GetEventByEventID(WORD EventID);
-	const CEventInfoData *GetEventByEventID(WORD EventID) const;
-	bool AddEvent(CEventInfoData *pEvent);
-	void ClearEvents();
-	void SortEvents();
-	void CalcLayout(CEventLayout *pEventList,const CServiceList *pServiceList,
-		HDC hdc,const SYSTEMTIME &FirstTime,const SYSTEMTIME &LastTime,int LinesPerHour,
-		HFONT hfontTitle,int TitleWidth,HFONT hfontText,int TextWidth);
-	bool SaveiEpgFile(const CEventInfoData *pEventInfo,LPCTSTR pszFileName,bool fVersion2) const;
-};
 
 
 CServiceInfo::CServiceInfo(const CChannelInfo &ChannelInfo,LPCTSTR pszBonDriver)
@@ -623,61 +524,8 @@ void CServiceInfo::ClearEvents()
 }
 
 
-#ifdef EVENT_LIST_CUSTOM_SORT
-void CServiceInfo::SortSub(CEventInfoData **ppFirst,CEventInfoData **ppLast)
-{
-	SYSTEMTIME stKey=ppFirst[(ppLast-ppFirst)/2]->m_stStartTime;
-	CEventInfoData **p,**q;
-
-	p=ppFirst;
-	q=ppLast;
-	while (p<=q) {
-		while (CompareSystemTime(&(*p)->m_stStartTime,&stKey)<0)
-			p++;
-		while (CompareSystemTime(&(*q)->m_stStartTime,&stKey)>0)
-			q--;
-		if (p<=q) {
-			CEventInfoData *pTemp;
-
-			pTemp=*p;
-			*p=*q;
-			*q=pTemp;
-			p++;
-			q--;
-		}
-	}
-	if (q>ppFirst)
-		SortSub(ppFirst,q);
-	if (p<ppLast)
-		SortSub(p,ppLast);
-}
-#endif
-
-
-void CServiceInfo::SortEvents()
-{
-	if (m_EventList.size()>1) {
-#ifdef EVENT_LIST_CUSTOM_SORT
-		SortSub(&m_EventList[0],&m_EventList[m_EventList.size()-1]);
-#else
-		class Compare
-		{
-		public:
-			bool operator()(const CEventInfoData *pEvent1,const CEventInfoData *pEvent2)
-			{
-				return CompareSystemTime(&pEvent1->m_stStartTime,&pEvent2->m_stStartTime)<0;
-			}
-		};
-
-		std::sort(m_EventList.begin(),m_EventList.end(),Compare());
-#endif
-	}
-}
-
-
 void CServiceInfo::CalcLayout(CEventLayout *pEventList,const CServiceList *pServiceList,
-	HDC hdc,const SYSTEMTIME &FirstTime,const SYSTEMTIME &LastTime,
-	int LinesPerHour,HFONT hfontTitle,int TitleWidth,HFONT hfontText,int TextWidth)
+	const SYSTEMTIME &FirstTime,const SYSTEMTIME &LastTime,int LinesPerHour)
 {
 	pEventList->Clear();
 
@@ -698,7 +546,7 @@ void CServiceInfo::CalcLayout(CEventLayout *pEventList,const CServiceList *pServ
 			}
 
 			CEventItem *pItem=new CEventItem(pEvent);
-			if (pEvent->m_fCommonEvent) {
+			if (pEvent->m_bCommonEvent) {
 				const CEventInfoData *pCommonEvent=
 					pServiceList->GetEventByIDs(m_ServiceData.m_TSID,
 												pEvent->m_CommonEventInfo.ServiceID,
@@ -706,9 +554,6 @@ void CServiceInfo::CalcLayout(CEventLayout *pEventList,const CServiceList *pServ
 				if (pCommonEvent!=NULL)
 					pItem->SetCommonEvent(pCommonEvent);
 			}
-			pItem->CalcLines(hdc,hfontTitle,TitleWidth,hfontText,TextWidth);
-			pItem->SetItemPos(-1);
-			pItem->SetItemLines(0);
 			pEventList->AddItem(pItem);
 		}
 		if (CompareSystemTime(&EndTime,&LastTime)>=0)
@@ -729,7 +574,7 @@ void CServiceInfo::CalcLayout(CEventLayout *pEventList,const CServiceList *pServ
 		if (CompareSystemTime(&stFirst,&LastTime)>=0)
 			break;
 		stLast=stFirst;
-		OffsetSystemTime(&stLast,60*60*1000);
+		OffsetSystemTime(&stLast,TimeConsts::SYSTEMTIME_HOUR);
 		do {
 			if (CompareSystemTime(&pEventList->GetItem(i)->GetEndTime(),&stFirst)>0)
 				break;
@@ -748,13 +593,13 @@ void CServiceInfo::CalcLayout(CEventLayout *pEventList,const CServiceList *pServ
 
 			const SYSTEMTIME &stStart=pEventList->GetItem(i)->GetStartTime();
 			if (CompareSystemTime(&stStart,&stFirst)>0) {
-				Offset=(int)(DiffSystemTime(&stFirst,&stStart)*LinesPerHour/(60*60*1000));
+				Offset=(int)(DiffSystemTime(&stFirst,&stStart)*LinesPerHour/TimeConsts::SYSTEMTIME_HOUR);
 				Lines-=Offset;
 			}
 			if (Lines>ProgramsPerHour) {
 				const SYSTEMTIME &stEnd=pEventList->GetItem(i+ProgramsPerHour-1)->GetEndTime();
 				if (CompareSystemTime(&stEnd,&stLast)<0) {
-					Lines-=(int)(DiffSystemTime(&stEnd,&stLast)*LinesPerHour/(60*60*1000));
+					Lines-=(int)(DiffSystemTime(&stEnd,&stLast)*LinesPerHour/TimeConsts::SYSTEMTIME_HOUR);
 					if (Lines<ProgramsPerHour)
 						Lines=ProgramsPerHour;
 				}
@@ -830,24 +675,35 @@ bool CServiceInfo::SaveiEpgFile(const CEventInfoData *pEventInfo,LPCTSTR pszFile
 	if (hFile==INVALID_HANDLE_VALUE)
 		return false;
 	if (!IsStringEmpty(GetServiceName()))
-		::WideCharToMultiByte(CP_ACP,0,GetServiceName(),-1,
+		::WideCharToMultiByte(932,0,GetServiceName(),-1,
 							  szServiceName,sizeof(szServiceName),NULL,NULL);
 	else
 		szServiceName[0]='\0';
 	pEventInfo->GetStartTime(&stStart);
 	pEventInfo->GetEndTime(&stEnd);
-	if (!IsStringEmpty(pEventInfo->GetEventName()))
-		::WideCharToMultiByte(CP_ACP,0,pEventInfo->GetEventName(),-1,
+	if (!pEventInfo->m_EventName.empty())
+		::WideCharToMultiByte(932,0,pEventInfo->m_EventName.c_str(),-1,
 							  szEventName,sizeof(szEventName),NULL,NULL);
 	else
 		szEventName[0]='\0';
 	if (fVersion2) {
+		const char *pszStationFormat;
+		switch (GetAppClass().NetworkDefinition.GetNetworkType(m_ServiceData.m_NetworkID)) {
+		default:
+		case TVTest::CNetworkDefinition::NETWORK_TERRESTRIAL:
+			pszStationFormat="DFS%05x";
+			break;
+		case TVTest::CNetworkDefinition::NETWORK_BS:
+			pszStationFormat="BSDT%03d";
+			break;
+		case TVTest::CNetworkDefinition::NETWORK_CS:
+			pszStationFormat="CSDT%03d";
+			break;
+		}
 		char szStation[16];
 		StdUtil::snprintf(szStation,lengthof(szStation),
-						  m_ServiceData.IsBS()?"BSDT%03d":
-						  m_ServiceData.IsCS()?"CSDT%03d":"DFS%05x",
-						  m_ServiceData.m_ServiceID);
-		Length=::wnsprintfA(szText,lengthof(szText),
+						  pszStationFormat,m_ServiceData.m_ServiceID);
+		Length=StdUtil::snprintf(szText,lengthof(szText),
 			"Content-type: application/x-tv-program-digital-info; charset=shift_jis\r\n"
 			"version: 2\r\n"
 			"station: %s\r\n"
@@ -865,7 +721,7 @@ bool CServiceInfo::SaveiEpgFile(const CEventInfoData *pEventInfo,LPCTSTR pszFile
 			stEnd.wHour,stEnd.wMinute,
 			szEventName,pEventInfo->m_EventID);
 	} else {
-		Length=::wnsprintfA(szText,lengthof(szText),
+		Length=StdUtil::snprintf(szText,lengthof(szText),
 			"Content-type: application/x-tv-program-info; charset=shift_jis\r\n"
 			"version: 1\r\n"
 			"station: %s\r\n"
@@ -1215,11 +1071,10 @@ CProgramGuide::CProgramGuide(CEventSearchOptions &EventSearchOptions)
 	, m_ListMode(LIST_SERVICES)
 	, m_WeekListService(-1)
 	, m_LinesPerHour(12)
-	, m_LineMargin(1)
-	, m_ItemWidth(140)
-	, m_ItemMargin(4)
-	, m_TextLeftMargin(CEpgIcons::ICON_WIDTH+
-					   PROGRAM_GUIDE_ICON_MARGIN_LEFT+PROGRAM_GUIDE_ICON_MARGIN_RIGHT)
+	, m_TextDrawEngine(TVTest::CTextDrawClient::ENGINE_GDI)
+	, m_ItemLogicalWidth(140)
+	, m_TextLeftMargin(m_Style.EventIconSize.Width+
+					   m_Style.EventIconMargin.Left+m_Style.EventIconMargin.Right)
 	, m_fDragScroll(false)
 	, m_fScrolling(false)
 	, m_hDragCursor1(NULL)
@@ -1235,6 +1090,7 @@ CProgramGuide::CProgramGuide(CEventSearchOptions &EventSearchOptions)
 	, m_CurrentChannelProvider(-1)
 	, m_CurrentChannelGroup(-1)
 	, m_fExcludeNoEventServices(true)
+	, m_CurrentEventID(0)
 	, m_BeginHour(-1)
 	, m_pEventHandler(NULL)
 	, m_pFrame(NULL)
@@ -1244,15 +1100,14 @@ CProgramGuide::CProgramGuide(CEventSearchOptions &EventSearchOptions)
 	, m_Filter(0)
 	, m_fEpgUpdating(false)
 	, m_ProgramSearch(EventSearchOptions)
+	, m_fShowFeaturedMark(true)
 {
 	m_WindowPosition.Left=0;
 	m_WindowPosition.Top=0;
 	m_WindowPosition.Width=640;
 	m_WindowPosition.Height=480;
 
-	LOGFONT lf;
-	DrawUtil::GetDefaultUIFont(&lf);
-	SetFont(&lf);
+	GetDefaultFont(&m_Font);
 
 	m_ScrollPos.x=0;
 	m_ScrollPos.y=0;
@@ -1260,47 +1115,13 @@ CProgramGuide::CProgramGuide(CEventSearchOptions &EventSearchOptions)
 
 	m_CurEventItem.fSelected=false;
 
-	const COLORREF WindowTextColor=::GetSysColor(COLOR_WINDOWTEXT);
-	m_ColorList[COLOR_BACK]=::GetSysColor(COLOR_WINDOW);
-	m_ColorList[COLOR_EVENTTITLE]=WindowTextColor;
-	m_ColorList[COLOR_EVENTTEXT]=WindowTextColor;
-	m_ColorList[COLOR_CHANNELNAMETEXT]=WindowTextColor;
-	m_ColorList[COLOR_TIMETEXT]=WindowTextColor;
-	m_ColorList[COLOR_TIMELINE]=m_ColorList[COLOR_TIMETEXT];
-	m_ColorList[COLOR_CURTIMELINE]=RGB(255,64,0);
-	m_ColorList[COLOR_HIGHLIGHT_TITLE]=RGB(0,0,224);
-	m_ColorList[COLOR_HIGHLIGHT_TEXT]=RGB(0,0,128);
-	m_ColorList[COLOR_HIGHLIGHT_BACK]=RGB(255,255,255);
-	m_ColorList[COLOR_HIGHLIGHT_BORDER]=RGB(128,128,255);
-	for (int i=COLOR_CONTENT_FIRST;i<=COLOR_CONTENT_LAST;i++)
-		m_ColorList[i]=RGB(240,240,240);
-	m_ColorList[COLOR_CONTENT_NEWS]=RGB(255,255,224);
-	m_ColorList[COLOR_CONTENT_SPORTS]=RGB(255,255,224);
-	//m_ColorList[COLOR_CONTENT_INFORMATION]=RGB(255,255,224);
-	m_ColorList[COLOR_CONTENT_DRAMA]=RGB(255,224,224);
-	m_ColorList[COLOR_CONTENT_MUSIC]=RGB(224,255,224);
-	m_ColorList[COLOR_CONTENT_VARIETY]=RGB(224,224,255);
-	m_ColorList[COLOR_CONTENT_MOVIE]=RGB(224,255,255);
-	m_ColorList[COLOR_CONTENT_ANIME]=RGB(255,224,255);
-	m_ColorList[COLOR_CONTENT_DOCUMENTARY]=RGB(255,255,224);
-	m_ColorList[COLOR_CONTENT_THEATER]=RGB(224,255,255);
-	m_ChannelNameBackGradient.Type=Theme::GRADIENT_NORMAL;
-	m_ChannelNameBackGradient.Direction=Theme::DIRECTION_VERT;
-	m_ChannelNameBackGradient.Color1=::GetSysColor(COLOR_3DFACE);
-	m_ChannelNameBackGradient.Color2=m_ChannelNameBackGradient.Color1;
-	m_CurChannelNameBackGradient=m_ChannelNameBackGradient;
-	m_TimeBarMarginGradient.Type=Theme::GRADIENT_NORMAL;
-	m_TimeBarMarginGradient.Direction=Theme::DIRECTION_HORZ;
-	m_TimeBarMarginGradient.Color1=::GetSysColor(COLOR_3DFACE);
-	m_TimeBarMarginGradient.Color2=m_TimeBarMarginGradient.Color1;
-	for (int i=0;i<TIME_BAR_BACK_COLORS;i++) {
-		m_TimeBarBackGradient[i].Type=Theme::GRADIENT_NORMAL;
-		m_TimeBarBackGradient[i].Direction=Theme::DIRECTION_HORZ;
-		m_TimeBarBackGradient[i].Color1=m_TimeBarMarginGradient.Color1;
-		m_TimeBarBackGradient[i].Color2=m_TimeBarMarginGradient.Color2;
-	}
-
 	m_EventInfoPopup.SetEventHandler(&m_EventInfoPopupHandler);
+
+	static const LPCTSTR SearchTargetList[] = {
+		TEXT("この番組表から"),
+		TEXT("全ての番組から"),
+	};
+	m_ProgramSearch.SetSearchTargetList(SearchTargetList,lengthof(SearchTargetList));
 }
 
 
@@ -1314,6 +1135,63 @@ CProgramGuide::~CProgramGuide()
 		m_pFrame->m_pProgramGuide=NULL;
 	if (m_pProgramCustomizer!=NULL)
 		m_pProgramCustomizer->m_pProgramGuide=NULL;
+}
+
+
+void CProgramGuide::SetStyle(const TVTest::Style::CStyleManager *pStyleManager)
+{
+	m_Style.SetStyle(pStyleManager);
+}
+
+
+void CProgramGuide::NormalizeStyle(
+	const TVTest::Style::CStyleManager *pStyleManager,
+	const TVTest::Style::CStyleScaling *pStyleScaling)
+{
+	m_Style.NormalizeStyle(pStyleManager,pStyleScaling);
+}
+
+
+void CProgramGuide::SetTheme(const TVTest::Theme::CThemeManager *pThemeManager)
+{
+	static const struct {
+		int From,To;
+	} ProgramGuideColorMap[] = {
+		{CColorScheme::COLOR_PROGRAMGUIDE_BACK,				COLOR_BACK},
+		{CColorScheme::COLOR_PROGRAMGUIDE_HIGHLIGHTTEXT,	COLOR_HIGHLIGHT_TEXT},
+		{CColorScheme::COLOR_PROGRAMGUIDE_HIGHLIGHTTITLE,	COLOR_HIGHLIGHT_TITLE},
+		{CColorScheme::COLOR_PROGRAMGUIDE_HIGHLIGHTBACK,	COLOR_HIGHLIGHT_BACK},
+		{CColorScheme::COLOR_PROGRAMGUIDE_HIGHLIGHTBORDER,	COLOR_HIGHLIGHT_BORDER},
+		{CColorScheme::COLOR_PROGRAMGUIDE_CHANNELTEXT,		COLOR_CHANNELNAMETEXT},
+		{CColorScheme::COLOR_PROGRAMGUIDE_CURCHANNELTEXT,	COLOR_CURCHANNELNAMETEXT},
+		{CColorScheme::COLOR_PROGRAMGUIDE_TIMETEXT,			COLOR_TIMETEXT},
+		{CColorScheme::COLOR_PROGRAMGUIDE_TIMELINE,			COLOR_TIMELINE},
+		{CColorScheme::COLOR_PROGRAMGUIDE_CURTIMELINE,		COLOR_CURTIMELINE},
+	};
+	for (int i=0;i<lengthof(ProgramGuideColorMap);i++) {
+		m_Theme.ColorList[ProgramGuideColorMap[i].To]=
+			pThemeManager->GetColor(ProgramGuideColorMap[i].From);
+	}
+
+	pThemeManager->GetFillStyle(TVTest::Theme::CThemeManager::STYLE_PROGRAMGUIDE_CHANNEL,
+								&m_Theme.ChannelNameBackStyle);
+	pThemeManager->GetFillStyle(TVTest::Theme::CThemeManager::STYLE_PROGRAMGUIDE_CURCHANNEL,
+								&m_Theme.CurChannelNameBackStyle);
+	pThemeManager->GetFillStyle(TVTest::Theme::CThemeManager::STYLE_PROGRAMGUIDE_TIMEBAR,
+								&m_Theme.TimeBarMarginStyle);
+	pThemeManager->GetBackgroundStyle(TVTest::Theme::CThemeManager::STYLE_PROGRAMGUIDE_FEATUREDMARK,
+									  &m_Theme.FeaturedMarkStyle);
+
+	for (int i=0;i<CProgramGuide::TIME_BAR_BACK_COLORS;i++) {
+		pThemeManager->GetFillStyle(
+			TVTest::Theme::CThemeManager::STYLE_PROGRAMGUIDE_TIMEBAR_0_2+i,
+			&m_Theme.TimeBarBackStyle[i]);
+	}
+
+	m_EpgTheme.SetTheme(pThemeManager);
+
+	if (m_hwnd!=NULL)
+		Invalidate();
 }
 
 
@@ -1343,6 +1221,19 @@ void CProgramGuide::Clear()
 }
 
 
+bool CProgramGuide::Refresh()
+{
+	if (m_hwnd==NULL)
+		return false;
+
+	if (m_pEventHandler!=NULL
+			&& !m_pEventHandler->OnRefresh())
+		return false;
+
+	return UpdateProgramGuide(true);
+}
+
+
 bool CProgramGuide::UpdateProgramGuide(bool fUpdateList)
 {
 	if (m_hwnd!=NULL && m_pChannelProvider!=NULL) {
@@ -1356,7 +1247,7 @@ bool CProgramGuide::UpdateProgramGuide(bool fUpdateList)
 		if (UpdateList(fUpdateList)) {
 			CalcLayout();
 			SetScrollBar();
-			GetCurrentJST(&m_stCurTime);
+			GetCurrentEpgTime(&m_stCurTime);
 		}
 
 		SetMessage(NULL,false);
@@ -1418,20 +1309,21 @@ bool CProgramGuide::UpdateList(bool fUpdateList)
 
 		if (pServiceInfo!=NULL) {
 			pService=new ProgramGuide::CServiceInfo(*pChannelInfo,*pServiceInfo,szBonDriver);
-			CEventInfoList::EventIterator itrEvent;
-			for (itrEvent=pServiceInfo->m_EventList.EventDataMap.begin();
-					itrEvent!=pServiceInfo->m_EventList.EventDataMap.end();
-					++itrEvent) {
-				pService->AddEvent(new CEventInfoData(itrEvent->second));
+			const CEventInfoList &EventList=pServiceInfo->m_EventList;
+			for (auto itrTime=EventList.EventTimeMap.begin();
+					itrTime!=EventList.EventTimeMap.end();
+					++itrTime) {
+				auto itrEvent=EventList.EventDataMap.find(itrTime->EventID);
+				if (itrEvent!=EventList.EventDataMap.end())
+					pService->AddEvent(new CEventInfoData(itrEvent->second));
 			}
-			pService->SortEvents();
 		} else {
 			if (m_fExcludeNoEventServices)
 				continue;
 			pService=new ProgramGuide::CServiceInfo(*pChannelInfo,szBonDriver);
 		}
 
-		HBITMAP hbmLogo=GetAppClass().GetLogoManager()->GetAssociatedLogoBitmap(
+		HBITMAP hbmLogo=GetAppClass().LogoManager.GetAssociatedLogoBitmap(
 			pService->GetNetworkID(),pService->GetServiceID(),CLogoManager::LOGOTYPE_SMALL);
 		if (hbmLogo!=NULL)
 			pService->SetLogo(hbmLogo);
@@ -1463,13 +1355,17 @@ bool CProgramGuide::UpdateService(ProgramGuide::CServiceInfo *pService,bool fUpd
 		return false;
 
 	pService->ClearEvents();
-	CEventInfoList::EventIterator itrEvent;
-	for (itrEvent=pServiceInfo->m_EventList.EventDataMap.begin();
-			itrEvent!=pServiceInfo->m_EventList.EventDataMap.end();
-			++itrEvent) {
-		pService->AddEvent(new CEventInfoData(itrEvent->second));
+
+	const CEventInfoList &EventList=pServiceInfo->m_EventList;
+
+	for (auto itrTime=EventList.EventTimeMap.begin();
+			itrTime!=EventList.EventTimeMap.end();
+			++itrTime) {
+		auto itrEvent=EventList.EventDataMap.find(itrTime->EventID);
+		if (itrEvent!=EventList.EventDataMap.end())
+			pService->AddEvent(new CEventInfoData(itrEvent->second));
 	}
-	pService->SortEvents();
+
 	return true;
 }
 
@@ -1491,9 +1387,6 @@ void CProgramGuide::UpdateServiceList()
 
 void CProgramGuide::CalcLayout()
 {
-	HDC hdc=::GetDC(m_hwnd);
-	HFONT hfontOld=static_cast<HFONT>(GetCurrentObject(hdc,OBJ_FONT));
-
 	SYSTEMTIME stFirst,stLast;
 	GetCurrentTimeRange(&stFirst,&stLast);
 
@@ -1507,9 +1400,7 @@ void CProgramGuide::CalcLayout()
 
 			pService->CalcLayout(
 				pLayout,&m_ServiceList,
-				hdc,stFirst,stLast,m_LinesPerHour,
-				m_TitleFont.GetHandle(),m_ItemWidth,
-				m_Font.GetHandle(),m_ItemWidth-m_TextLeftMargin);
+				stFirst,stLast,m_LinesPerHour);
 			m_EventLayoutList.Add(pLayout);
 		}
 	} else if (m_ListMode==LIST_WEEK) {
@@ -1521,39 +1412,289 @@ void CProgramGuide::CalcLayout()
 
 				pCurService->CalcLayout(
 					pLayout,&m_ServiceList,
-					hdc,stFirst,stLast,m_LinesPerHour,
-					m_TitleFont.GetHandle(),m_ItemWidth,
-					m_Font.GetHandle(),m_ItemWidth-m_TextLeftMargin);
+					stFirst,stLast,m_LinesPerHour);
 				m_EventLayoutList.Add(pLayout);
-				OffsetSystemTime(&stFirst,24*60*60*1000);
-				OffsetSystemTime(&stLast,24*60*60*1000);
+				OffsetSystemTime(&stFirst,TimeConsts::SYSTEMTIME_DAY);
+				OffsetSystemTime(&stLast,TimeConsts::SYSTEMTIME_DAY);
 			}
 		}
 	}
-	SelectFont(hdc,hfontOld);
-	::ReleaseDC(m_hwnd,hdc);
 
 	SetTooltip();
 }
 
 
-void CProgramGuide::DrawEventList(const ProgramGuide::CEventLayout *pLayout,
-								  HDC hdc,const RECT &Rect,const RECT &PaintRect) const
+unsigned int CProgramGuide::GetEventItemStatus(
+	const ProgramGuide::CEventItem *pItem,unsigned int Mask) const
 {
-	const int LineHeight=m_FontHeight+m_LineMargin;
+	const CEventInfoData *pEventInfo=pItem->GetEventInfo();
+	const CEventInfoData *pOrigEventInfo=pEventInfo;
+	const bool fCommonEvent=pEventInfo->m_bCommonEvent;
+	if (fCommonEvent && pItem->GetCommonEventInfo()!=NULL)
+		pEventInfo=pItem->GetCommonEventInfo();
+	unsigned int Status=0;
+
+	if ((Mask & EVENT_ITEM_STATUS_HIGHLIGHTED)!=0) {
+		if (m_ProgramSearch.GetHighlightResult()
+				&& m_ProgramSearch.IsHitEvent(pEventInfo))
+			Status|=EVENT_ITEM_STATUS_HIGHLIGHTED;
+	}
+
+	if ((Mask & EVENT_ITEM_STATUS_CURRENT)!=0) {
+		if (m_CurrentEventID!=0
+				&& m_CurrentChannel.ServiceID!=0
+				&& pOrigEventInfo->m_NetworkID==m_CurrentChannel.NetworkID
+				&& pOrigEventInfo->m_TransportStreamID==m_CurrentChannel.TransportStreamID
+				&& pOrigEventInfo->m_ServiceID==m_CurrentChannel.ServiceID
+				&& pOrigEventInfo->m_EventID==m_CurrentEventID)
+			Status|=EVENT_ITEM_STATUS_CURRENT;
+	}
+
+	if ((Mask & EVENT_ITEM_STATUS_FILTERED)!=0) {
+		const int Genre1=pItem->GetGenre(0);
+		const int Genre2=pItem->GetGenre(1);
+		bool fFilter=false;
+
+		if ((m_Filter&FILTER_FREE)!=0
+				&& pEventInfo->m_bFreeCaMode
+				&& GetAppClass().NetworkDefinition.IsSatelliteNetworkID(pEventInfo->m_NetworkID)) {
+			fFilter=true;
+		} else if ((m_Filter&FILTER_NEWPROGRAM)!=0
+				&& (pEventInfo->m_EventName.empty()
+					|| pEventInfo->m_EventName.find(TEXT("[新]"))==CEventInfo::String::npos)) {
+			fFilter=true;
+		} else if ((m_Filter&FILTER_ORIGINAL)!=0
+				&& !pEventInfo->m_EventName.empty()
+				&& pEventInfo->m_EventName.find(TEXT("[再]"))!=CEventInfo::String::npos) {
+			fFilter=true;
+		} else if ((m_Filter&FILTER_RERUN)!=0
+				&& (pEventInfo->m_EventName.empty()
+					|| pEventInfo->m_EventName.find(TEXT("[再]"))==CEventInfo::String::npos)) {
+			fFilter=true;
+		} else if ((m_Filter&FILTER_NOT_SHOPPING)!=0
+				&& Genre1==2 && Genre2==4) {
+			fFilter=true;
+		} else if ((m_Filter&FILTER_GENRE_MASK)!=0) {
+			if (Genre1<0 || (m_Filter&(FILTER_GENRE_FIRST<<Genre1))==0)
+				fFilter=true;
+			// 映画ジャンルのアニメ
+			if ((m_Filter&FILTER_ANIME)!=0 && Genre1==6 && Genre2==2)
+				fFilter=false;
+		}
+
+		if (fFilter)
+			Status|=EVENT_ITEM_STATUS_FILTERED;
+	}
+
+	if ((Mask & EVENT_ITEM_STATUS_COMMON)!=0) {
+		if (fCommonEvent)
+			Status|=EVENT_ITEM_STATUS_COMMON;
+	}
+
+	return Status;
+}
+
+
+void CProgramGuide::DrawEventBackground(
+	ProgramGuide::CEventItem *pItem,HDC hdc,const RECT &Rect,
+	TVTest::Theme::CThemeDraw &ThemeDraw,TVTest::CTextDraw &TextDraw,int LineHeight,int CurTimePos)
+{
+	const CEventInfoData *pEventInfo=pItem->GetEventInfo();
+	const CEventInfoData *pOrigEventInfo=pEventInfo;
+	const bool fCommonEvent=pEventInfo->m_bCommonEvent;
+	if (fCommonEvent && pItem->GetCommonEventInfo()!=NULL)
+		pEventInfo=pItem->GetCommonEventInfo();
+	const unsigned int ItemStatus=
+		GetEventItemStatus(pItem,
+						   EVENT_ITEM_STATUS_CURRENT |
+						   EVENT_ITEM_STATUS_HIGHLIGHTED |
+						   EVENT_ITEM_STATUS_FILTERED);
+	const bool fCurrent=(ItemStatus & EVENT_ITEM_STATUS_CURRENT)!=0;
+	const bool fHighlighted=(ItemStatus & EVENT_ITEM_STATUS_HIGHLIGHTED)!=0;
+	const bool fFiltered=(ItemStatus & EVENT_ITEM_STATUS_FILTERED)!=0;
+	const int Genre1=pItem->GetGenre(0);
+	const int Genre2=pItem->GetGenre(1);
+	COLORREF BackColor=m_EpgTheme.GetGenreColor(Genre1);
+
+	if (!fCurrent) {
+		if (fFiltered) {
+			BackColor=MixColor(BackColor,m_Theme.ColorList[COLOR_BACK],96);
+		} else if (fCommonEvent) {
+			BackColor=MixColor(BackColor,m_Theme.ColorList[COLOR_BACK],192);
+		}
+	}
+
+	if (fHighlighted) {
+		DrawUtil::FillGradient(hdc,&Rect,
+			MixColor(m_Theme.ColorList[COLOR_HIGHLIGHT_BACK],BackColor,128),
+			BackColor,
+			DrawUtil::DIRECTION_VERT);
+	} else if (fCurrent) {
+		m_EpgTheme.DrawContentBackground(hdc,ThemeDraw,Rect,*pEventInfo,
+										 CEpgTheme::DRAW_CONTENT_BACKGROUND_CURRENT);
+	} else {
+		DrawUtil::Fill(hdc,&Rect,BackColor);
+	}
+
+	RECT rcLine=Rect;
+	rcLine.bottom=rcLine.top+GetHairlineWidth();
+	DrawUtil::Fill(hdc,&rcLine,
+		MixColor(BackColor,RGB(0,0,0),pItem->GetStartTime().wMinute==0?192:224));
+
+	// 現在時刻の線
+	if (((m_ListMode==LIST_SERVICES && m_Day==DAY_TODAY) || m_ListMode==LIST_WEEK)
+			&& CurTimePos>=Rect.top && CurTimePos<Rect.bottom) {
+		RECT rcCurTime;
+
+		rcCurTime.left=Rect.left;
+		rcCurTime.right=Rect.right;
+		rcCurTime.top=CurTimePos-m_Style.CurTimeLineWidth/2;
+		rcCurTime.bottom=rcCurTime.top+m_Style.CurTimeLineWidth;
+		DrawUtil::Fill(hdc,&rcCurTime,
+					   MixColor(m_Theme.ColorList[COLOR_CURTIMELINE],BackColor,64));
+	}
+
+	RECT rcTitle,rcText;
+	TextDraw.SetFont(m_TitleFont.GetHandle());
+	pItem->CalcTitleLines(TextDraw,Rect.right-Rect.left);
+	rcTitle=Rect;
+	rcTitle.bottom=min(Rect.bottom,Rect.top+pItem->GetTitleLines()*LineHeight);
+	rcText.left=Rect.left+m_TextLeftMargin;
+	rcText.top=rcTitle.bottom;
+	rcText.right=Rect.right-m_Style.EventPadding.Right;
+	rcText.bottom=Rect.bottom;
+
+	if (m_pProgramCustomizer!=NULL) {
+		if (!fCommonEvent) {
+			m_pProgramCustomizer->DrawBackground(*pEventInfo,hdc,Rect,rcTitle,rcText,BackColor);
+		} else {
+			CEventInfoData Info(*pEventInfo);
+			Info.m_ServiceID=pOrigEventInfo->m_ServiceID;
+			m_pProgramCustomizer->DrawBackground(Info,hdc,Rect,rcTitle,rcText,BackColor);
+		}
+	}
+
+	if (fHighlighted) {
+		RECT rc=Rect;
+		TVTest::Style::Subtract(&rc,m_Style.HighlightBorder);
+		DrawUtil::FillBorder(hdc,&Rect,&rc,&Rect,
+							 MixColor(m_Theme.ColorList[COLOR_HIGHLIGHT_BORDER],BackColor,80));
+	}
+	if (pItem->IsSelected()) {
+		RECT rcOuter=Rect;
+		rcOuter.left-=m_Style.SelectedBorder.Left;
+		rcOuter.right+=m_Style.SelectedBorder.Right;
+		RECT rcInner=Rect;
+		rcInner.top+=m_Style.SelectedBorder.Top;
+		rcInner.bottom-=m_Style.SelectedBorder.Bottom;
+		DrawUtil::FillBorder(hdc,&rcOuter,&rcInner,&rcOuter,
+							 MixColor(m_Theme.ColorList[COLOR_HIGHLIGHT_BORDER],BackColor,128));
+	} else if (fCurrent) {
+		RECT rcOuter=Rect;
+		rcOuter.left-=m_Style.SelectedBorder.Left;
+		rcOuter.right+=m_Style.SelectedBorder.Right;
+		DrawUtil::FillBorder(hdc,&rcOuter,&Rect,&rcOuter,m_Theme.ColorList[COLOR_CURTIMELINE]);
+	}
+
+	if (m_fShowFeaturedMark
+			&& m_FeaturedEventsMatcher.IsMatch(*pEventInfo)) {
+		SIZE sz;
+		RECT rcMark;
+		pItem->GetTimeSize(TextDraw,&sz);
+		rcMark.left=rcTitle.left;
+		rcMark.top=rcTitle.top+m_Style.EventLeading;
+		rcMark.right=rcMark.left+sz.cx;
+		rcMark.bottom=rcMark.top+sz.cy;
+		TVTest::Style::Subtract(&rcMark,m_Style.FeaturedMarkMargin);
+		ThemeDraw.Draw(m_Theme.FeaturedMarkStyle,rcMark);
+	}
+
+	if (rcText.bottom>rcTitle.bottom) {
+		const unsigned int ShowIcons=
+			CEpgIcons::GetEventIcons(pEventInfo) & m_VisibleEventIcons;
+		if (ShowIcons!=0) {
+			m_EpgIcons.DrawIcons(
+				ShowIcons,hdc,
+				Rect.left+m_Style.EventIconMargin.Left,
+				rcText.top+m_Style.EventIconMargin.Top,
+				m_Style.EventIconSize.Width,
+				m_Style.EventIconSize.Height,
+				0,m_Style.EventIconSize.Height+m_Style.EventIconMargin.Bottom,
+				(!fCurrent && (fCommonEvent || fFiltered))?128:255,
+				&Rect);
+		}
+	}
+}
+
+
+void CProgramGuide::DrawEventText(
+	ProgramGuide::CEventItem *pItem,HDC hdc,const RECT &Rect,
+	TVTest::Theme::CThemeDraw &ThemeDraw,TVTest::CTextDraw &TextDraw,int LineHeight)
+{
+	const unsigned int ItemStatus=
+		GetEventItemStatus(pItem,
+						   EVENT_ITEM_STATUS_CURRENT |
+						   EVENT_ITEM_STATUS_HIGHLIGHTED |
+						   EVENT_ITEM_STATUS_FILTERED);
+	COLORREF TitleColor=m_EpgTheme.GetColor(CEpgTheme::COLOR_EVENTNAME);
+	COLORREF TextColor=m_EpgTheme.GetColor(CEpgTheme::COLOR_EVENTTEXT);
+
+	if ((ItemStatus & EVENT_ITEM_STATUS_HIGHLIGHTED)!=0) {
+		TitleColor=m_Theme.ColorList[COLOR_HIGHLIGHT_TITLE];
+		TextColor=m_Theme.ColorList[COLOR_HIGHLIGHT_TEXT];
+	}
+
+	if ((ItemStatus & EVENT_ITEM_STATUS_CURRENT)==0) {
+		if ((ItemStatus & EVENT_ITEM_STATUS_FILTERED)!=0) {
+			TitleColor=MixColor(TitleColor,m_Theme.ColorList[COLOR_BACK],96);
+			TextColor=MixColor(TextColor,m_Theme.ColorList[COLOR_BACK],96);
+		}
+	}
+
+	RECT rcTitle,rcText;
+	rcTitle=Rect;
+	rcTitle.bottom=min(Rect.bottom,Rect.top+pItem->GetTitleLines()*LineHeight);
+	rcText.left=Rect.left+m_TextLeftMargin;
+	rcText.top=rcTitle.bottom;
+	rcText.right=Rect.right-m_Style.EventPadding.Right;
+	rcText.bottom=Rect.bottom;
+
+	rcTitle.top+=m_Style.EventLeading;
+	TextDraw.SetFont(m_TitleFont.GetHandle());
+	TextDraw.SetTextColor(TitleColor);
+	pItem->DrawTitle(TextDraw,rcTitle,LineHeight);
+
+	if (rcText.bottom>rcTitle.bottom) {
+		RECT rc=rcText;
+		rc.top+=m_Style.EventLeading;
+		TextDraw.SetFont(m_ContentFont.GetHandle());
+		TextDraw.SetTextColor(TextColor);
+		pItem->DrawText(TextDraw,rc,LineHeight,
+						m_Style.fEventJustify ? TVTest::CTextDraw::DRAW_FLAG_JUSTIFY_MULTI_LINE : 0);
+	}
+}
+
+
+void CProgramGuide::DrawEventList(
+	ProgramGuide::CEventLayout *pLayout,
+	HDC hdc,const RECT &Rect,const RECT &PaintRect,
+	TVTest::Theme::CThemeDraw &ThemeDraw,TVTest::CTextDraw &TextDraw,bool fBackground)
+{
+	const int LineHeight=GetLineHeight();
 	const int CurTimePos=Rect.top+GetCurTimeLinePos();
 
 	HFONT hfontOld=static_cast<HFONT>(::GetCurrentObject(hdc,OBJ_FONT));
 	COLORREF OldTextColor=::GetTextColor(hdc);
 
-	HDC hdcIcons=::CreateCompatibleDC(hdc);
-	HBITMAP hbmOld=DrawUtil::SelectObject(hdcIcons,m_EpgIcons);
+	if (fBackground)
+		m_EpgIcons.BeginDraw(hdc,m_Style.EventIconSize.Width,m_Style.EventIconSize.Height);
 
 	RECT rcItem;
 	rcItem.left=Rect.left;
 	rcItem.right=Rect.right;
+
 	for (size_t i=0;i<pLayout->NumItems();i++) {
-		const ProgramGuide::CEventItem *pItem=pLayout->GetItem(i);
+		ProgramGuide::CEventItem *pItem=pLayout->GetItem(i);
 
 		if (!pItem->IsNullItem() && pItem->GetItemLines()>0) {
 			rcItem.top=Rect.top+pItem->GetItemPos()*LineHeight;
@@ -1563,230 +1704,100 @@ void CProgramGuide::DrawEventList(const ProgramGuide::CEventLayout *pLayout,
 			if (rcItem.bottom<=PaintRect.top)
 				continue;
 
-			const CEventInfoData *pEventInfo=pItem->GetEventInfo();
-			const bool fCommonEvent=pEventInfo->m_fCommonEvent;
-			if (fCommonEvent && pItem->GetCommonEventInfo()!=NULL)
-				pEventInfo=pItem->GetCommonEventInfo();
-			const int Genre1=pItem->GetGenre(0);
-			const int Genre2=pItem->GetGenre(1);
-			int ColorType=Genre1>=0?COLOR_CONTENT_FIRST+Genre1:COLOR_CONTENT_OTHER;
-			COLORREF BackColor=m_ColorList[ColorType];
-			COLORREF TitleColor=m_ColorList[COLOR_EVENTTITLE];
-			COLORREF TextColor=m_ColorList[COLOR_EVENTTEXT];
-
-			const bool fHighlight=
-				m_ProgramSearch.GetHighlightResult()
-					&& m_ProgramSearch.IsHitEvent(pEventInfo);
-			if (fHighlight) {
-				TitleColor=m_ColorList[COLOR_HIGHLIGHT_TITLE];
-				TextColor=m_ColorList[COLOR_HIGHLIGHT_TEXT];
-			}
-
-			bool fFilter=false;
-			if ((m_Filter&FILTER_FREE)!=0
-					&& pEventInfo->m_CaType!=CEventInfoData::CA_TYPE_FREE
-					&& pEventInfo->m_NetworkID>=4 && pEventInfo->m_NetworkID<=10) {
-				fFilter=true;
-			} else if ((m_Filter&FILTER_NEWPROGRAM)!=0
-					&& (pEventInfo->GetEventName()==NULL
-						|| ::StrStr(pEventInfo->GetEventName(),TEXT("[新]"))==NULL)) {
-				fFilter=true;
-			} else if ((m_Filter&FILTER_ORIGINAL)!=0
-					&& pEventInfo->GetEventName()!=NULL
-					&& ::StrStr(pEventInfo->GetEventName(),TEXT("[再]"))!=NULL) {
-				fFilter=true;
-			} else if ((m_Filter&FILTER_RERUN)!=0
-					&& (pEventInfo->GetEventName()==NULL
-						|| ::StrStr(pEventInfo->GetEventName(),TEXT("[再]"))==NULL)) {
-				fFilter=true;
-			} else if ((m_Filter&FILTER_NOT_SHOPPING)!=0
-					&& Genre1==2 && Genre2==4) {
-				fFilter=true;
-			} else if ((m_Filter&FILTER_GENRE_MASK)!=0) {
-				if (Genre1<0 || (m_Filter&(FILTER_GENRE_FIRST<<Genre1))==0)
-					fFilter=true;
-				// 映画ジャンルのアニメ
-				if ((m_Filter&FILTER_ANIME)!=0 && Genre1==6 && Genre2==2)
-					fFilter=false;
-			}
-
-			if (fFilter) {
-				BackColor=MixColor(BackColor,m_ColorList[COLOR_BACK],96);
-				TitleColor=MixColor(TitleColor,m_ColorList[COLOR_BACK],96);
-				TextColor=MixColor(TextColor,m_ColorList[COLOR_BACK],96);
-			} else {
-				if (fCommonEvent)
-					BackColor=MixColor(BackColor,m_ColorList[COLOR_BACK],192);
-			}
-
-			if (fHighlight) {
-				DrawUtil::FillGradient(hdc,&rcItem,
-					MixColor(m_ColorList[COLOR_HIGHLIGHT_BACK],BackColor,128),
-					BackColor,
-					DrawUtil::DIRECTION_VERT);
-			} else {
-				DrawUtil::Fill(hdc,&rcItem,BackColor);
-			}
-
-			HPEN hpen=::CreatePen(PS_SOLID,1,
-				MixColor(BackColor,RGB(0,0,0),pItem->GetStartTime().wMinute==0?192:224));
-			HPEN hpenOld=static_cast<HPEN>(::SelectObject(hdc,hpen));
-			::MoveToEx(hdc,rcItem.left,rcItem.top,NULL);
-			::LineTo(hdc,rcItem.right,rcItem.top);
-			::SelectObject(hdc,hpenOld);
-			::DeleteObject(hpen);
-
-			// 現在時刻の線
-			if (((m_ListMode==LIST_SERVICES && m_Day==DAY_TODAY) || m_ListMode==LIST_WEEK)
-					&& CurTimePos>=rcItem.top && CurTimePos<rcItem.bottom) {
-				LOGBRUSH lb;
-
-				lb.lbStyle=BS_SOLID;
-				lb.lbColor=MixColor(m_ColorList[COLOR_CURTIMELINE],BackColor,64);
-				hpen=::ExtCreatePen(PS_GEOMETRIC | PS_SOLID | PS_ENDCAP_FLAT,
-									CUR_TIME_LINE_WIDTH,&lb,0,NULL);
-				::SelectObject(hdc,hpen);
-				::MoveToEx(hdc,rcItem.left,CurTimePos,NULL);
-				::LineTo(hdc,rcItem.right,CurTimePos);
-				::SelectObject(hdc,hpenOld);
-				::DeleteObject(hpen);
-			}
-
-			RECT rcTitle,rcText;
-			rcTitle=rcItem;
-			rcTitle.bottom=min(rcItem.bottom,rcItem.top+pItem->GetTitleLines()*LineHeight);
-			rcText.left=rcItem.left+m_TextLeftMargin;
-			rcText.top=rcTitle.bottom;
-			rcText.right=rcItem.right;
-			rcText.bottom=rcItem.bottom;
-
-			if (m_pProgramCustomizer!=NULL)
-				m_pProgramCustomizer->DrawBackground(*pEventInfo,hdc,rcItem,rcTitle,rcText,BackColor);
-
-			if (fHighlight) {
-				HBRUSH hbr=::CreateSolidBrush(MixColor(m_ColorList[COLOR_HIGHLIGHT_BORDER],BackColor,80));
-				RECT rc=rcItem;
-				::InflateRect(&rc,-HIGHLIGHT_BORDER_WIDTH,-HIGHLIGHT_BORDER_WIDTH);
-				DrawUtil::FillBorder(hdc,&rcItem,&rc,&rcItem,hbr);
-				::DeleteObject(hbr);
-			}
-			if (pItem->IsSelected()) {
-				HBRUSH hbr=::CreateSolidBrush(MixColor(m_ColorList[COLOR_HIGHLIGHT_BORDER],BackColor,128));
-				RECT rcOuter=rcItem;
-				rcOuter.left-=SELECTED_BORDER_WIDTH;
-				rcOuter.right+=SELECTED_BORDER_WIDTH;
-				RECT rcInner=rcItem;
-				rcInner.top+=SELECTED_BORDER_WIDTH;
-				rcInner.bottom-=SELECTED_BORDER_WIDTH;
-				DrawUtil::FillBorder(hdc,&rcOuter,&rcInner,&rcOuter,hbr);
-				::DeleteObject(hbr);
-			}
-
-			::SetTextColor(hdc,TitleColor);
-			DrawUtil::SelectObject(hdc,m_TitleFont);
-			pItem->DrawTitle(hdc,&rcTitle,LineHeight);
-
-			if (rcText.bottom>rcTitle.bottom) {
-				::SetTextColor(hdc,TextColor);
-				DrawUtil::SelectObject(hdc,m_Font);
-				pItem->DrawText(hdc,&rcText,LineHeight);
-
-				const unsigned int ShowIcons=
-					CEpgIcons::GetEventIcons(pEventInfo) & m_VisibleEventIcons;
-				if (ShowIcons!=0) {
-					int y=rcText.top+PROGRAM_GUIDE_ICON_MARGIN_TOP;
-					int Icon=0;
-					for (unsigned int Flag=ShowIcons;Flag!=0;Flag>>=1) {
-						if (y>=rcText.bottom)
-							break;
-						if ((Flag&1)!=0) {
-							CEpgIcons::Draw(hdc,rcItem.left+PROGRAM_GUIDE_ICON_MARGIN_LEFT,y,
-											hdcIcons,Icon,
-											CEpgIcons::ICON_WIDTH,
-											min(CEpgIcons::ICON_HEIGHT,rcText.bottom-y),
-											(fCommonEvent || fFilter)?128:255);
-							y+=CEpgIcons::ICON_HEIGHT+PROGRAM_GUIDE_ICON_MARGIN;
-						}
-						Icon++;
-					}
-				}
-			}
+			if (fBackground)
+				DrawEventBackground(pItem,hdc,rcItem,ThemeDraw,TextDraw,LineHeight,CurTimePos);
+			else
+				DrawEventText(pItem,hdc,rcItem,ThemeDraw,TextDraw,LineHeight);
 		}
 	}
 
-	::SelectObject(hdcIcons,hbmOld);
-	::DeleteDC(hdcIcons);
+	if (fBackground)
+		m_EpgIcons.EndDraw();
 
 	::SetTextColor(hdc,OldTextColor);
 	::SelectObject(hdc,hfontOld);
 }
 
 
-void CProgramGuide::DrawHeaderBackground(HDC hdc,const RECT &Rect,bool fCur) const
+void CProgramGuide::DrawHeaderBackground(TVTest::Theme::CThemeDraw &ThemeDraw,const RECT &Rect,bool fCur) const
 {
-	const Theme::GradientInfo &Gradient=
-		fCur?m_CurChannelNameBackGradient:m_ChannelNameBackGradient;
+	const TVTest::Theme::FillStyle &Style=
+		fCur?m_Theme.CurChannelNameBackStyle:m_Theme.ChannelNameBackStyle;
+	const int LineWidth=GetHairlineWidth();
 	RECT rc;
 
 	rc=Rect;
-	rc.left++;
-	rc.right--;
-	Theme::FillGradient(hdc,&rc,&Gradient);
+	rc.left+=LineWidth;
+	rc.right-=LineWidth;
+	ThemeDraw.Draw(Style,rc);
 
-	Theme::GradientInfo Border;
-	Border.Type=Gradient.Type;
-	Border.Direction=Theme::DIRECTION_VERT;
-	Border.Color1=MixColor(Gradient.Color1,RGB(255,255,255),192);
-	Border.Color2=MixColor(Gradient.Color2,RGB(255,255,255),192);
+	TVTest::Theme::FillStyle Border;
+	Border.Type=TVTest::Theme::FILL_GRADIENT;
+	Border.Gradient.Type=
+		Style.Type==TVTest::Theme::FILL_GRADIENT?
+			Style.Gradient.Type : TVTest::Theme::GRADIENT_NORMAL;
+	Border.Gradient.Direction=TVTest::Theme::DIRECTION_VERT;
+	Border.Gradient.Color1.Set(255,255,255);
+	Border.Gradient.Color2.Set(255,255,255);
 	rc=Rect;
-	rc.right=rc.left+1;
-	Theme::FillGradient(hdc,&rc,&Border);
+	rc.right=rc.left+LineWidth;
+	ThemeDraw.Draw(TVTest::Theme::MixStyle(Style,Border,192),rc);
 
-	Border.Color1=MixColor(Gradient.Color1,RGB(0,0,0),192);
-	Border.Color2=MixColor(Gradient.Color2,RGB(0,0,0),192);
+	Border.Gradient.Color1.Set(0,0,0);
+	Border.Gradient.Color2.Set(0,0,0);
 	rc=Rect;
-	rc.left=rc.right-1;
-	Theme::FillGradient(hdc,&rc,&Border);
+	rc.left=rc.right-LineWidth;
+	ThemeDraw.Draw(TVTest::Theme::MixStyle(Style,Border,192),rc);
 }
 
 
 void CProgramGuide::DrawServiceHeader(ProgramGuide::CServiceInfo *pServiceInfo,
-									  HDC hdc,const RECT &Rect,int Chevron,
-									  bool fLeftAlign)
+									  HDC hdc,const RECT &Rect,TVTest::Theme::CThemeDraw &ThemeDraw,
+									  int Chevron,bool fLeftAlign)
 {
 	bool fCur=
 		m_CurrentChannel.ServiceID>0
 		&& pServiceInfo->GetNetworkID()==m_CurrentChannel.NetworkID
 		&& pServiceInfo->GetTSID()==m_CurrentChannel.TransportStreamID
 		&& pServiceInfo->GetServiceID()==m_CurrentChannel.ServiceID;
-	RECT rc;
 
-	DrawHeaderBackground(hdc,Rect,fCur);
+	DrawHeaderBackground(ThemeDraw,Rect,fCur);
 
 	HFONT hfontOld=DrawUtil::SelectObject(hdc,m_TitleFont);
-	COLORREF TextColor=m_ColorList[fCur?COLOR_CURCHANNELNAMETEXT:COLOR_CHANNELNAMETEXT];
+	COLORREF TextColor=m_Theme.ColorList[fCur?COLOR_CURCHANNELNAMETEXT:COLOR_CHANNELNAMETEXT];
 	COLORREF OldTextColor=::SetTextColor(hdc,TextColor);
-	rc=Rect;
-	rc.left+=HEADER_MARGIN_LEFT;
-	rc.right-=HEADER_MARGIN_RIGHT;
+
+	RECT rc=Rect;
+	TVTest::Style::Subtract(&rc,m_Style.HeaderPadding);
 
 	HBITMAP hbmLogo=pServiceInfo->GetLogo();
 	if (hbmLogo!=NULL) {
-		int LogoWidth,LogoHeight;
-		LogoHeight=min(rc.bottom-rc.top-4,14);
+		int Height,LogoWidth,LogoHeight;
+		Height=(rc.bottom-rc.top)-m_Style.HeaderIconMargin.Vert();
+		LogoHeight=min(Height,24);
 		LogoWidth=LogoHeight*16/9;
 		HBITMAP hbmStretched=pServiceInfo->GetStretchedLogo(LogoWidth,LogoHeight);
-		DrawUtil::DrawBitmap(hdc,rc.left,rc.top+(rc.bottom-rc.top-LogoHeight)/2,
-							 LogoWidth,LogoHeight,
-							 hbmStretched!=NULL?hbmStretched:hbmLogo,NULL,192);
-		rc.left+=LogoWidth+HEADER_MARGIN_LEFT;
+		rc.left+=m_Style.HeaderIconMargin.Left;
+		DrawUtil::DrawBitmap(
+			hdc,
+			rc.left,
+			rc.top+m_Style.HeaderIconMargin.Top+((rc.bottom-rc.top)-Height)/2,
+			LogoWidth,LogoHeight,
+			hbmStretched!=NULL?hbmStretched:hbmLogo,NULL,192);
+		rc.left+=LogoWidth+m_Style.HeaderIconMargin.Right;
 	}
 
-	rc.right-=CHEVRON_WIDTH;
-	m_Chevron.Draw(hdc,rc.right,rc.top+((rc.bottom-rc.top)-CHEVRON_HEIGHT)/2,
-				   TextColor,Chevron*CHEVRON_WIDTH,0,CHEVRON_WIDTH,CHEVRON_HEIGHT);
-	rc.right-=HEADER_CHEVRON_MARGIN;
+	rc.right-=m_Style.HeaderChevronSize.Width+m_Style.HeaderChevronMargin.Right;
+	m_Chevron.Draw(
+		hdc,
+		rc.right,
+		rc.top+m_Style.HeaderChevronMargin.Top+
+			(((rc.bottom-rc.top)-m_Style.HeaderChevronMargin.Vert())-m_Style.HeaderChevronSize.Height)/2,
+		m_Style.HeaderChevronSize.Width,m_Style.HeaderChevronSize.Height,
+		Chevron,TextColor);
+	rc.right-=m_Style.HeaderChevronMargin.Left;
 
+	TVTest::Style::Subtract(&rc,m_Style.HeaderChannelNameMargin);
 	::DrawText(hdc,pServiceInfo->GetServiceName(),-1,&rc,
 			   (fLeftAlign || hbmLogo!=NULL?DT_LEFT:DT_CENTER) |
 			   DT_SINGLELINE | DT_VCENTER | DT_NOPREFIX | DT_END_ELLIPSIS);
@@ -1795,23 +1806,23 @@ void CProgramGuide::DrawServiceHeader(ProgramGuide::CServiceInfo *pServiceInfo,
 }
 
 
-void CProgramGuide::DrawDayHeader(int Day,HDC hdc,const RECT &Rect) const
+void CProgramGuide::DrawDayHeader(int Day,HDC hdc,const RECT &Rect,TVTest::Theme::CThemeDraw &ThemeDraw) const
 {
 	SYSTEMTIME st;
 	GetCurrentTimeRange(&st,NULL);
 	if (Day>0)
-		OffsetSystemTime(&st,Day*(24*60*60*1000));
+		OffsetSystemTime(&st,Day*TimeConsts::SYSTEMTIME_DAY);
 
-	DrawHeaderBackground(hdc,Rect,false);
+	DrawHeaderBackground(ThemeDraw,Rect,false);
 
 	HFONT hfontOld=DrawUtil::SelectObject(hdc,m_TitleFont);
-	COLORREF OldTextColor=::SetTextColor(hdc,m_ColorList[COLOR_CHANNELNAMETEXT]);
+	COLORREF OldTextColor=::SetTextColor(hdc,m_Theme.ColorList[COLOR_CHANNELNAMETEXT]);
 	TCHAR szText[64];
 	StdUtil::snprintf(szText,lengthof(szText),TEXT("%d/%d(%s)"),
 					  st.wMonth,st.wDay,GetDayOfWeekText(st.wDayOfWeek));
 	RECT rc=Rect;
-	rc.left+=HEADER_MARGIN_LEFT;
-	rc.right-=HEADER_MARGIN_RIGHT;
+	rc.left+=m_Style.HeaderPadding.Left;
+	rc.right-=m_Style.HeaderPadding.Right;
 	::DrawText(hdc,szText,-1,&rc,
 			   DT_CENTER | DT_SINGLELINE | DT_VCENTER | DT_NOPREFIX | DT_END_ELLIPSIS);
 	::SetTextColor(hdc,OldTextColor);
@@ -1819,43 +1830,49 @@ void CProgramGuide::DrawDayHeader(int Day,HDC hdc,const RECT &Rect) const
 }
 
 
-void CProgramGuide::DrawTimeBar(HDC hdc,const RECT &Rect,bool fRight)
+void CProgramGuide::DrawTimeBar(HDC hdc,const RECT &Rect,TVTest::Theme::CThemeDraw &ThemeDraw,bool fRight)
 {
-	const int PixelsPerHour=(m_FontHeight+m_LineMargin)*m_LinesPerHour;
+	const int PixelsPerHour=GetLineHeight()*m_LinesPerHour;
 	const int CurTimePos=Rect.top+GetCurTimeLinePos();
+	const int LineWidth=GetHairlineWidth();
 	HFONT hfontOld;
 	COLORREF crOldTextColor;
-	HPEN hpen,hpenOld;
 	RECT rc;
 
 	hfontOld=DrawUtil::SelectObject(hdc,m_TimeFont);
-	crOldTextColor=::SetTextColor(hdc,m_ColorList[COLOR_TIMETEXT]);
-	hpen=::CreatePen(PS_SOLID,0,m_ColorList[COLOR_TIMETEXT]);
-	hpenOld=SelectPen(hdc,hpen);
+	crOldTextColor=::SetTextColor(hdc,m_Theme.ColorList[COLOR_TIMETEXT]);
 	rc.left=Rect.left;
 	rc.top=Rect.top;
 	rc.right=Rect.right;
-	for (int i=0;i<m_Hours;i++) {
-		int Hour;
 
-		if ((m_ListMode==LIST_SERVICES && m_Day==DAY_TODAY) || m_BeginHour<0)
-			Hour=(m_stFirstTime.wHour+i)%24;
-		else
-			Hour=(m_BeginHour+i)%24;
+	SYSTEMTIME Time;
+	GetCurrentTimeRange(&Time,NULL);
+
+	for (int i=0;i<m_Hours;i++) {
+		SYSTEMTIME DispTime;
+
+		if (i>0)
+			OffsetSystemTime(&Time,TimeConsts::SYSTEMTIME_HOUR);
+		EpgUtil::EpgTimeToDisplayTime(Time,&DispTime);
+
 		rc.bottom=rc.top+PixelsPerHour;
-		Theme::FillGradient(hdc,&rc,&m_TimeBarBackGradient[Hour/3]);
-		::MoveToEx(hdc,rc.left,rc.top,NULL);
-		::LineTo(hdc,rc.right,rc.top);
+		ThemeDraw.Draw(m_Theme.TimeBarBackStyle[DispTime.wHour/3],rc);
+
+		RECT rcLine=rc;
+		rcLine.bottom=rcLine.top+LineWidth;
+		DrawUtil::Fill(hdc,&rcLine,m_Theme.ColorList[COLOR_TIMETEXT]);
+
 		if (((m_ListMode==LIST_SERVICES && m_Day==DAY_TODAY) || m_ListMode==LIST_WEEK)
 				&& CurTimePos>=rc.top && CurTimePos<rc.bottom) {
-			const int TriangleHeight=m_FontHeight*2/3;
+			const int TriangleHeight=m_GDIFontHeight*2/3;
 			const int TriangleWidth=TriangleHeight*8/10;
 			POINT ptTriangle[3];
 			HBRUSH hbr,hbrOld;
+			HPEN hpenOld;
 
-			hbr=::CreateSolidBrush(m_ColorList[COLOR_CURTIMELINE]);
+			hbr=::CreateSolidBrush(m_Theme.ColorList[COLOR_CURTIMELINE]);
 			hbrOld=SelectBrush(hdc,hbr);
-			SelectObject(hdc,::CreatePen(PS_SOLID,1,m_ColorList[COLOR_CURTIMELINE]));
+			hpenOld=SelectPen(hdc,(HPEN)::GetStockObject(NULL_PEN));
 			if (fRight) {
 				ptTriangle[0].x=rc.left;
 				ptTriangle[0].y=CurTimePos;
@@ -1873,21 +1890,23 @@ void CProgramGuide::DrawTimeBar(HDC hdc,const RECT &Rect,bool fRight)
 			}
 			::Polygon(hdc,ptTriangle,3);
 			::SelectObject(hdc,hbrOld);
+			::SelectObject(hdc,hpenOld);
 			::DeleteObject(hbr);
-			::DeleteObject(::SelectObject(hdc,hpen));
 		}
+
 		TCHAR szText[64];
-		if (m_ListMode==LIST_SERVICES && (i==0 || Hour==0)) {
-			SYSTEMTIME st;
-			GetCurrentTimeRange(&st,NULL);
-			if (i>0)
-				OffsetSystemTime(&st,(LONGLONG)i*(1000*60*60));
+		if (m_ListMode==LIST_SERVICES && (i==0 || DispTime.wHour%3==0)) {
 			StdUtil::snprintf(szText,lengthof(szText),TEXT("%d/%d(%s) %d時"),
-							  st.wMonth,st.wDay,GetDayOfWeekText(st.wDayOfWeek),Hour);
+							  DispTime.wMonth,DispTime.wDay,
+							  GetDayOfWeekText(DispTime.wDayOfWeek),
+							  DispTime.wHour);
 		} else {
-			StdUtil::snprintf(szText,lengthof(szText),TEXT("%d"),Hour);
+			StdUtil::snprintf(szText,lengthof(szText),TEXT("%d"),DispTime.wHour);
 		}
-		::TextOut(hdc,rc.right-4,rc.top+4,szText,lstrlen(szText));
+		::TextOut(hdc,
+				  rc.right-m_Style.TimeBarPadding.Right,
+				  rc.top+m_Style.TimeBarPadding.Top,
+				  szText,lstrlen(szText));
 		rc.top=rc.bottom;
 	}
 
@@ -1897,13 +1916,15 @@ void CProgramGuide::DrawTimeBar(HDC hdc,const RECT &Rect,bool fRight)
 
 		GetClientRect(&rcClient);
 		if (rc.top-m_TimeBarWidth<rcClient.bottom) {
-			const int TriangleWidth=m_FontHeight*2/3;
+			const int TriangleWidth=m_GDIFontHeight*2/3;
 			const int TriangleHeight=TriangleWidth*8/10;
 			POINT ptTriangle[3];
 			HBRUSH hbr,hbrOld;
+			HPEN hpenOld;
 
-			hbr=::CreateSolidBrush(m_ColorList[COLOR_TIMETEXT]);
+			hbr=::CreateSolidBrush(m_Theme.ColorList[COLOR_TIMETEXT]);
 			hbrOld=SelectBrush(hdc,hbr);
+			hpenOld=SelectPen(hdc,(HPEN)::GetStockObject(NULL_PEN));
 			ptTriangle[0].x=m_TimeBarWidth/2;
 			ptTriangle[0].y=rc.top-(m_TimeBarWidth-TriangleHeight)/2;
 			ptTriangle[1].x=ptTriangle[0].x-TriangleWidth/2;
@@ -1915,12 +1936,11 @@ void CProgramGuide::DrawTimeBar(HDC hdc,const RECT &Rect,bool fRight)
 				ptTriangle[i].x+=rcClient.right-m_TimeBarWidth;
 			::Polygon(hdc,ptTriangle,3);
 			::SelectObject(hdc,hbrOld);
+			::SelectObject(hdc,hpenOld);
 			::DeleteObject(hbr);
 		}
 	}
 
-	::SelectObject(hdc,hpenOld);
-	::DeleteObject(hpen);
 	::SetTextColor(hdc,crOldTextColor);
 	SelectFont(hdc,hfontOld);
 }
@@ -1930,7 +1950,7 @@ void CProgramGuide::DrawMessage(HDC hdc,const RECT &ClientRect) const
 {
 	if (!m_Message.empty()) {
 		RECT rc;
-		HFONT hfontOld=DrawUtil::SelectObject(hdc,m_Font);
+		HFONT hfontOld=DrawUtil::SelectObject(hdc,m_ContentFont);
 		::SetRectEmpty(&rc);
 		::DrawText(hdc,m_Message.c_str(),-1,&rc,DT_NOPREFIX | DT_CALCRECT);
 		::OffsetRect(&rc,
@@ -1987,11 +2007,10 @@ void CProgramGuide::Draw(HDC hdc,const RECT &PaintRect)
 	::GetClientRect(m_hwnd,&rcClient);
 	GetProgramGuideRect(&rcGuide);
 
-	if (::IntersectRect(&rc,&rcGuide,&PaintRect)) {
-		HBRUSH hbr=::CreateSolidBrush(m_ColorList[COLOR_BACK]);
-		::FillRect(hdc,&rc,hbr);
-		::DeleteObject(hbr);
-	}
+	TVTest::Theme::CThemeDraw ThemeDraw(BeginThemeDraw(hdc));
+
+	if (::IntersectRect(&rc,&rcGuide,&PaintRect))
+		DrawUtil::Fill(hdc,&rc,m_Theme.ColorList[COLOR_BACK]);
 
 	int OldBkMode=::SetBkMode(hdc,TRANSPARENT);
 
@@ -2010,82 +2029,97 @@ void CProgramGuide::Draw(HDC hdc,const RECT &PaintRect)
 			if (m_ListMode==LIST_SERVICES) {
 				rc.left=m_TimeBarWidth-m_ScrollPos.x;
 				for (size_t i=0;i<m_ServiceList.NumServices();i++) {
-					rc.right=rc.left+(m_ItemWidth+m_ItemMargin*2);
+					rc.right=rc.left+(m_ItemWidth+m_Style.ColumnMargin*2);
 					if (rc.left<PaintRect.right && rc.right>PaintRect.left)
-						DrawServiceHeader(m_ServiceList.GetItem(i),hdc,rc,2);
+						DrawServiceHeader(m_ServiceList.GetItem(i),hdc,rc,ThemeDraw,2);
 					rc.left=rc.right;
 				}
 			} else if (m_ListMode==LIST_WEEK) {
 				rc.bottom=m_HeaderHeight;
-				DrawServiceHeader(m_ServiceList.GetItem(m_WeekListService),hdc,rc,3,true);
+				DrawServiceHeader(m_ServiceList.GetItem(m_WeekListService),hdc,rc,ThemeDraw,3,true);
 				rc.left=m_TimeBarWidth-m_ScrollPos.x;
 				rc.top=rc.bottom;
 				rc.bottom+=m_HeaderHeight;
 				for (int i=0;i<(int)m_EventLayoutList.Length();i++) {
-					rc.right=rc.left+(m_ItemWidth+m_ItemMargin*2);
+					rc.right=rc.left+(m_ItemWidth+m_Style.ColumnMargin*2);
 					if (rc.left<PaintRect.right && rc.right>PaintRect.left)
-						DrawDayHeader(i,hdc,rc);
+						DrawDayHeader(i,hdc,rc,ThemeDraw);
 					rc.left=rc.right;
 				}
 			}
 			if (rc.left<PaintRect.right) {
 				rc.right=PaintRect.right;
-				Theme::FillGradient(hdc,&rc,&m_ChannelNameBackGradient);
+				ThemeDraw.Draw(m_Theme.ChannelNameBackStyle,rc);
 			}
 			::SelectClipRgn(hdc,NULL);
 			::DeleteObject(hrgn);
 		}
 
-		hrgn=::CreateRectRgnIndirect(&rcGuide);
-		::SelectClipRgn(hdc,hrgn);
-		rc.top=HeaderHeight-m_ScrollPos.y*(m_FontHeight+m_LineMargin);
-		rc.left=m_TimeBarWidth+m_ItemMargin-m_ScrollPos.x;
-		HPEN hpen,hpenOld;
-		hpen=::CreatePen(PS_SOLID,0,m_ColorList[COLOR_TIMELINE]);
-		hpenOld=SelectPen(hdc,hpen);
-		int PixelsPerHour=(m_FontHeight+m_LineMargin)*m_LinesPerHour;
-		int CurTimePos=rc.top+GetCurTimeLinePos();
-		for (size_t i=0;i<m_EventLayoutList.Length();i++) {
-			rc.right=rc.left+m_ItemWidth;
-			if (rc.top<PaintRect.bottom) {
+		rc.top=HeaderHeight-m_ScrollPos.y*GetLineHeight();
+		if (rc.top<PaintRect.bottom) {
+			hrgn=::CreateRectRgnIndirect(&rcGuide);
+			::SelectClipRgn(hdc,hrgn);
+
+			TVTest::CTextDraw TextDraw;
+			m_TextDrawClient.InitializeTextDraw(&TextDraw);
+			TextDraw.BindDC(hdc,rcClient);
+
+			const int PixelsPerHour=GetLineHeight()*m_LinesPerHour;
+			const int CurTimePos=rc.top+GetCurTimeLinePos();
+			const int XOrigin=m_TimeBarWidth+m_Style.ColumnMargin-m_ScrollPos.x;
+			const int TimeLineWidth=GetHairlineWidth();
+
+			// 番組背景の描画
+			rc.left=XOrigin;
+
+			for (size_t i=0;i<m_EventLayoutList.Length();i++) {
+				rc.right=rc.left+m_ItemWidth;
 				for (int j=0;j<m_Hours;j++) {
 					int y=rc.top+j*PixelsPerHour;
 					if (y>=PaintRect.top && y<PaintRect.bottom) {
-						/*
-						::MoveToEx(hdc,rc.left-m_ItemMargin,y,NULL);
-						::LineTo(hdc,rc.left,y);
-						::MoveToEx(hdc,rc.right,y,NULL);
-						::LineTo(hdc,rc.right+m_ItemMargin,y);
-						*/
-						::MoveToEx(hdc,rc.left-m_ItemMargin,y,NULL);
-						::LineTo(hdc,rc.right+m_ItemMargin,y);
+						RECT rcLine;
+						rcLine.left=rc.left-m_Style.ColumnMargin;
+						rcLine.right=rc.right+m_Style.ColumnMargin;
+						rcLine.top=y;
+						rcLine.bottom=y+TimeLineWidth;
+						DrawUtil::Fill(hdc,&rcLine,m_Theme.ColorList[COLOR_TIMELINE]);
 					}
 					if (((m_ListMode==LIST_SERVICES && m_Day==DAY_TODAY) || m_ListMode==LIST_WEEK)
 							&& CurTimePos>=y && CurTimePos<y+PixelsPerHour) {
-						HPEN hpenCurTime;
-						LOGBRUSH lb;
+						RECT rcCurTime;
 
-						lb.lbStyle=BS_SOLID;
-						lb.lbColor=m_ColorList[COLOR_CURTIMELINE];
-						hpenCurTime=::ExtCreatePen(
-							PS_GEOMETRIC | PS_SOLID | PS_ENDCAP_FLAT,
-							CUR_TIME_LINE_WIDTH,&lb,0,NULL);
-						::SelectObject(hdc,hpenCurTime);
-						::MoveToEx(hdc,rc.left-m_ItemMargin,CurTimePos,NULL);
-						::LineTo(hdc,rc.right+m_ItemMargin,CurTimePos);
-						::SelectObject(hdc,hpen);
-						::DeleteObject(hpenCurTime);
+						rcCurTime.left=rc.left-m_Style.ColumnMargin;
+						rcCurTime.right=rc.right+m_Style.ColumnMargin;
+						rcCurTime.top=CurTimePos-m_Style.CurTimeLineWidth/2;
+						rcCurTime.bottom=rcCurTime.top+m_Style.CurTimeLineWidth;
+						DrawUtil::Fill(hdc,&rcCurTime,m_Theme.ColorList[COLOR_CURTIMELINE]);
 					}
 				}
 				if (rc.left<PaintRect.right && rc.right>PaintRect.left)
-					DrawEventList(m_EventLayoutList[i],hdc,rc,PaintRect);
+					DrawEventList(m_EventLayoutList[i],hdc,rc,PaintRect,ThemeDraw,TextDraw,true);
+				rc.left=rc.right+m_Style.ColumnMargin*2;
 			}
-			rc.left=rc.right+m_ItemMargin*2;
+
+			// 番組テキストの描画
+			TextDraw.Begin(hdc,rcClient,
+						   TVTest::CTextDraw::FLAG_END_ELLIPSIS |
+						   TVTest::CTextDraw::FLAG_JAPANESE_HYPHNATION);
+			TextDraw.SetClippingRect(rcGuide);
+
+			rc.left=XOrigin;
+			for (size_t i=0;i<m_EventLayoutList.Length();i++) {
+				rc.right=rc.left+m_ItemWidth;
+				if (rc.left<PaintRect.right && rc.right>PaintRect.left)
+					DrawEventList(m_EventLayoutList[i],hdc,rc,PaintRect,ThemeDraw,TextDraw,false);
+				rc.left=rc.right+m_Style.ColumnMargin*2;
+			}
+
+			TextDraw.ResetClipping();
+			TextDraw.End();
+
+			::SelectClipRgn(hdc,NULL);
+			::DeleteObject(hrgn);
 		}
-		::SelectObject(hdc,hpenOld);
-		::DeleteObject(hpen);
-		::SelectClipRgn(hdc,NULL);
-		::DeleteObject(hrgn);
 	} else {
 		if (PaintRect.top<m_HeaderHeight) {
 			rc.left=max(PaintRect.left,m_TimeBarWidth);
@@ -2093,7 +2127,7 @@ void CProgramGuide::Draw(HDC hdc,const RECT &PaintRect)
 			if (rc.left<rc.right) {
 				rc.top=0;
 				rc.bottom=m_HeaderHeight;
-				Theme::FillGradient(hdc,&rc,&m_ChannelNameBackGradient);
+				ThemeDraw.Draw(m_Theme.ChannelNameBackStyle,rc);
 			}
 		}
 	}
@@ -2104,47 +2138,46 @@ void CProgramGuide::Draw(HDC hdc,const RECT &PaintRect)
 	rc.bottom=rcClient.bottom;
 	hrgn=::CreateRectRgnIndirect(&rc);
 	::SelectClipRgn(hdc,hrgn);
-	rc.top=HeaderHeight-m_ScrollPos.y*(m_FontHeight+m_LineMargin);
-		rc.bottom=rc.top+(m_FontHeight+m_LineMargin)*m_LinesPerHour*m_Hours;
+	rc.top=HeaderHeight-m_ScrollPos.y*GetLineHeight();
+		rc.bottom=rc.top+GetLineHeight()*m_LinesPerHour*m_Hours;
 	if (PaintRect.left<m_TimeBarWidth) {
 		rc.left=0;
 		rc.right=m_TimeBarWidth;
-		DrawTimeBar(hdc,rc,false);
+		DrawTimeBar(hdc,rc,ThemeDraw,false);
 	}
 	rc.left=rcClient.right-m_TimeBarWidth;
 	if (rc.left<PaintRect.right) {
 		rc.right=rcClient.right;
-		DrawTimeBar(hdc,rc,true);
+		DrawTimeBar(hdc,rc,ThemeDraw,true);
 	}
 	::SelectClipRgn(hdc,NULL);
 	::DeleteObject(hrgn);
 
 	if (rc.bottom<PaintRect.bottom) {
 		::SetRect(&rc,0,rc.bottom,m_TimeBarWidth,rcClient.bottom);
-		Theme::FillGradient(hdc,&rc,&m_TimeBarMarginGradient);
+		ThemeDraw.Draw(m_Theme.TimeBarMarginStyle,rc);
 		::OffsetRect(&rc,rcGuide.right,0);
-		Theme::FillGradient(hdc,&rc,&m_TimeBarMarginGradient);
+		ThemeDraw.Draw(m_Theme.TimeBarMarginStyle,rc);
 	}
 	if (PaintRect.top<HeaderHeight) {
 		::SetRect(&rc,0,0,m_TimeBarWidth,HeaderHeight);
-		Theme::FillGradient(hdc,&rc,&m_TimeBarMarginGradient);
+		ThemeDraw.Draw(m_Theme.TimeBarMarginStyle,rc);
 		::OffsetRect(&rc,rcGuide.right,0);
-		Theme::FillGradient(hdc,&rc,&m_TimeBarMarginGradient);
+		ThemeDraw.Draw(m_Theme.TimeBarMarginStyle,rc);
 	}
 
 	if (m_ListMode==LIST_SERVICES && m_Day!=DAY_TODAY
 			&& PaintRect.top<m_HeaderHeight) {
 		// ▲
-		const int TriangleWidth=m_FontHeight*2/3;
+		const int TriangleWidth=m_GDIFontHeight*2/3;
 		const int TriangleHeight=TriangleWidth*8/10;
 		POINT ptTriangle[3];
-		HPEN hpen,hpenOld;
+		HPEN hpenOld;
 		HBRUSH hbr,hbrOld;
 
-		hbr=::CreateSolidBrush(m_ColorList[COLOR_TIMETEXT]);
-		hpen=::CreatePen(PS_SOLID,0,m_ColorList[COLOR_TIMETEXT]);
+		hbr=::CreateSolidBrush(m_Theme.ColorList[COLOR_TIMETEXT]);
 		hbrOld=SelectBrush(hdc,hbr);
-		hpenOld=SelectPen(hdc,hpen);
+		hpenOld=SelectPen(hdc,(HPEN)::GetStockObject(NULL_PEN));
 		ptTriangle[0].x=m_TimeBarWidth/2;
 		ptTriangle[0].y=(m_HeaderHeight-TriangleHeight)/2;
 		ptTriangle[1].x=ptTriangle[0].x-TriangleWidth/2;
@@ -2158,32 +2191,98 @@ void CProgramGuide::Draw(HDC hdc,const RECT &PaintRect)
 		::SelectObject(hdc,hbrOld);
 		::SelectObject(hdc,hpenOld);
 		::DeleteObject(hbr);
-		::DeleteObject(hpen);
 	}
 
 	if (m_fBarShadow) {
-		rc.left=rcGuide.left;
-		rc.top=rcGuide.top;
-		rc.right=rcGuide.right;
-		//rc.bottom=min(rc.top+HEADER_SHADOW_HEIGHT,rcGuide.bottom);
-		rc.bottom=rc.top+HEADER_SHADOW_HEIGHT;
-		DrawUtil::FillGradient(hdc,&rc,DrawUtil::RGBA(0,0,0,80),DrawUtil::RGBA(0,0,0,0),
-							   DrawUtil::DIRECTION_VERT);
-		rc.top=rcGuide.top;
-		rc.bottom=rcGuide.bottom;
-		rc.left=rcGuide.left;
-		rc.right=min(rc.left+TIMEBAR_SHADOW_WIDTH,rcGuide.right);
-		DrawUtil::FillGradient(hdc,&rc,DrawUtil::RGBA(0,0,0,64),DrawUtil::RGBA(0,0,0,0),
-							   DrawUtil::DIRECTION_HORZ);
-		rc.right=rcGuide.right;
-		rc.left=max(rc.right-TIMEBAR_SHADOW_WIDTH,rcGuide.left);
-		DrawUtil::FillGradient(hdc,&rc,DrawUtil::RGBA(0,0,0,0),DrawUtil::RGBA(0,0,0,48),
-							   DrawUtil::DIRECTION_HORZ);
+		if (m_Style.HeaderShadowHeight>0) {
+			rc.left=rcGuide.left;
+			rc.top=rcGuide.top;
+			rc.right=rcGuide.right;
+			//rc.bottom=min(rc.top+m_Style.HeaderShadowHeight,rcGuide.bottom);
+			rc.bottom=rc.top+m_Style.HeaderShadowHeight;
+			DrawUtil::FillGradient(hdc,&rc,DrawUtil::RGBA(0,0,0,80),DrawUtil::RGBA(0,0,0,0),
+								   DrawUtil::DIRECTION_VERT);
+		}
+
+		if (m_Style.TimeBarShadowWidth>0) {
+			rc.top=rcGuide.top;
+			rc.bottom=rcGuide.bottom;
+			rc.left=rcGuide.left;
+			rc.right=min(rc.left+m_Style.TimeBarShadowWidth,rcGuide.right);
+			DrawUtil::FillGradient(hdc,&rc,DrawUtil::RGBA(0,0,0,64),DrawUtil::RGBA(0,0,0,0),
+								   DrawUtil::DIRECTION_HORZ);
+			rc.right=rcGuide.right;
+			rc.left=max(rc.right-m_Style.TimeBarShadowWidth,rcGuide.left);
+			DrawUtil::FillGradient(hdc,&rc,DrawUtil::RGBA(0,0,0,0),DrawUtil::RGBA(0,0,0,48),
+								   DrawUtil::DIRECTION_HORZ);
+		}
 	}
 
 	DrawMessage(hdc,rcClient);
 
 	::SetBkMode(hdc,OldBkMode);
+}
+
+
+bool CProgramGuide::CreateFonts()
+{
+	if (!CreateDrawFont(m_Font,&m_ContentFont))
+		return false;
+
+	LOGFONT lf;
+	m_ContentFont.GetLogFont(&lf);
+	lf.lfWeight=FW_BOLD;
+	m_TitleFont.Create(&lf);
+	lf.lfWeight=FW_NORMAL;
+	lf.lfEscapement=lf.lfOrientation=2700;
+	m_TimeFont.Create(&lf);
+
+	return true;
+}
+
+
+void CProgramGuide::CalcFontMetrics()
+{
+	if (m_hwnd!=NULL) {
+		HDC hdc=::GetDC(m_hwnd);
+
+		m_GDIFontHeight=m_ContentFont.GetHeight(hdc);
+
+		{
+			TVTest::CTextDraw TextDraw;
+			TVTest::CTextDraw::FontMetrics FontMetrics;
+			RECT rc;
+
+			m_TextDrawClient.InitializeTextDraw(&TextDraw);
+			GetClientRect(&rc);
+			TextDraw.BindDC(hdc,rc);
+			TextDraw.SetFont(m_ContentFont.GetHandle());
+			if (TextDraw.GetFontMetrics(&FontMetrics))
+				m_FontHeight=FontMetrics.Height;
+			else
+				m_FontHeight=m_GDIFontHeight;
+		}
+
+		::ReleaseDC(m_hwnd,hdc);
+
+		m_HeaderHeight=CalcHeaderHeight();
+		m_TimeBarWidth=m_GDIFontHeight+m_Style.TimeBarPadding.Horz();
+	}
+}
+
+
+int CProgramGuide::GetLineHeight() const
+{
+	return m_FontHeight+m_Style.EventLeading+m_Style.EventLineSpacing;
+}
+
+
+int CProgramGuide::CalcHeaderHeight() const
+{
+	int NameHeight=m_GDIFontHeight+m_Style.HeaderChannelNameMargin.Vert();
+	int ChevronHeight=m_Style.HeaderChevronSize.Height+m_Style.HeaderChevronMargin.Vert();
+
+	return max(NameHeight,ChevronHeight)+m_Style.HeaderPadding.Vert();
 }
 
 
@@ -2193,10 +2292,10 @@ int CProgramGuide::GetCurTimeLinePos() const
 	LONGLONG Span;
 
 	GetCurrentTimeRange(&stFirst,NULL);
-	Span=DiffSystemTime(&stFirst,&m_stCurTime)%(24LL*60*60*1000);
+	Span=DiffSystemTime(&stFirst,&m_stCurTime)%(24LL*TimeConsts::SYSTEMTIME_HOUR);
 	if (Span<0)
-		Span+=24*60*60*1000;
-	return (int)(Span*(LONGLONG)((m_FontHeight+m_LineMargin)*m_LinesPerHour)/(60*60*1000));
+		Span+=24*TimeConsts::SYSTEMTIME_HOUR;
+	return (int)(Span*(LONGLONG)(GetLineHeight()*m_LinesPerHour)/TimeConsts::SYSTEMTIME_HOUR);
 }
 
 
@@ -2213,7 +2312,7 @@ void CProgramGuide::GetProgramGuideRect(RECT *pRect) const
 
 void CProgramGuide::GetProgramGuideSize(SIZE *pSize) const
 {
-	pSize->cx=(m_ItemWidth+m_ItemMargin*2)*(int)m_EventLayoutList.Length();
+	pSize->cx=(m_ItemWidth+m_Style.ColumnMargin*2)*(int)m_EventLayoutList.Length();
 	pSize->cy=m_LinesPerHour*m_Hours;
 }
 
@@ -2224,7 +2323,7 @@ void CProgramGuide::GetPageSize(SIZE *pSize) const
 
 	GetProgramGuideRect(&rc);
 	pSize->cx=max(rc.right-rc.left,0);
-	pSize->cy=max(rc.bottom-rc.top,0)/(m_FontHeight+m_LineMargin);
+	pSize->cy=max(rc.bottom-rc.top,0)/GetLineHeight();
 }
 
 
@@ -2259,7 +2358,7 @@ void CProgramGuide::Scroll(int XScroll,int YScroll)
 			Pos.y=max(GuideSize.cy-PageSize.cy,0);
 		si.nPos=Pos.y;
 		::SetScrollInfo(m_hwnd,SB_VERT,&si,TRUE);
-		YScrollSize=(m_ScrollPos.y-Pos.y)*(m_FontHeight+m_LineMargin);
+		YScrollSize=(m_ScrollPos.y-Pos.y)*GetLineHeight();
 	}
 
 	m_ScrollPos=Pos;
@@ -2267,9 +2366,9 @@ void CProgramGuide::Scroll(int XScroll,int YScroll)
 	if (!CBufferedPaint::IsSupported() && m_Message.empty()) {
 		RECT rcClip=rcGuide;
 		if (m_fBarShadow) {
-			rcClip.top+=HEADER_SHADOW_HEIGHT;
-			rcClip.left+=TIMEBAR_SHADOW_WIDTH;
-			rcClip.right-=TIMEBAR_SHADOW_WIDTH;
+			rcClip.top+=m_Style.HeaderShadowHeight;
+			rcClip.left+=m_Style.TimeBarShadowWidth;
+			rcClip.right-=m_Style.TimeBarShadowWidth;
 		}
 		if (rcClip.right>rcClip.left && rcClip.bottom>rcClip.top
 				&& abs(YScrollSize)<rcClip.bottom-rcClip.top
@@ -2340,10 +2439,10 @@ void CProgramGuide::SetScrollBar()
 	si.fMask=SIF_PAGE | SIF_RANGE | SIF_POS | SIF_DISABLENOSCROLL;
 	si.nMin=0;
 	si.nMax=m_Hours*m_LinesPerHour-1;
-	si.nPage=(rc.bottom-rc.top)/(m_FontHeight+m_LineMargin);
+	si.nPage=(rc.bottom-rc.top)/GetLineHeight();
 	si.nPos=m_ScrollPos.y;
 	::SetScrollInfo(m_hwnd,SB_VERT,&si,TRUE);
-	si.nMax=(int)m_EventLayoutList.Length()*(m_ItemWidth+m_ItemMargin*2)-1;
+	si.nMax=(int)m_EventLayoutList.Length()*(m_ItemWidth+m_Style.ColumnMargin*2)-1;
 	si.nPage=rc.right-rc.left;
 	si.nPos=m_ScrollPos.x;
 	::SetScrollInfo(m_hwnd,SB_HORZ,&si,TRUE);
@@ -2365,11 +2464,11 @@ bool CProgramGuide::SetTimePos(int Pos)
 
 	GetCurrentTimeRange(&stBegin,&stEnd);
 	st=stBegin;
-	OffsetSystemTime(&st,(LONGLONG)(Pos*60/m_LinesPerHour-stBegin.wHour*60)*60*1000);
+	OffsetSystemTime(&st,(LONGLONG)(Pos*60/m_LinesPerHour-stBegin.wHour*60)*TimeConsts::SYSTEMTIME_MINUTE);
 	if (CompareSystemTime(&st,&stBegin)<0)
-		OffsetSystemTime(&st,24*60*60*1000);
+		OffsetSystemTime(&st,TimeConsts::SYSTEMTIME_DAY);
 	else if (CompareSystemTime(&st,&stEnd)>=0)
-		OffsetSystemTime(&st,-24*60*60*1000);
+		OffsetSystemTime(&st,-TimeConsts::SYSTEMTIME_DAY);
 	return ScrollToTime(st);
 }
 
@@ -2400,27 +2499,35 @@ void CProgramGuide::SetCaption()
 					(m_EpgUpdateProgress.RemainingTime+59999)/60000);
 				m_pFrame->SetCaption(szText);
 			} else {
+				DateInfo Info;
 				TCHAR szText[256];
-				SYSTEMTIME stFirst,stLast;
 
-				GetCurrentTimeRange(&stFirst,&stLast);
+				GetCurrentDateInfo(&Info);
 				if (m_ListMode==LIST_SERVICES) {
-					OffsetSystemTime(&stLast,-60*60*1000);
+					OffsetSystemTime(&Info.EndTime,-TimeConsts::SYSTEMTIME_HOUR);
 					StdUtil::snprintf(szText,lengthof(szText),
-						TITLE_TEXT TEXT(" - %s %d/%d(%s) %d時 ～ %d/%d(%s) %d時"),
-						DayText[m_Day],stFirst.wMonth,stFirst.wDay,
-						GetDayOfWeekText(stFirst.wDayOfWeek),stFirst.wHour,
-						stLast.wMonth,stLast.wDay,
-						GetDayOfWeekText(stLast.wDayOfWeek),stLast.wHour);
+						TITLE_TEXT TEXT(" - %s%s%d/%d(%s) %d時 ～ %d/%d(%s) %d時"),
+						Info.pszRelativeDayText!=NULL?Info.pszRelativeDayText:TEXT(""),
+						Info.pszRelativeDayText!=NULL?TEXT(" "):TEXT(""),
+						Info.BeginningTime.wMonth,
+						Info.BeginningTime.wDay,
+						GetDayOfWeekText(Info.BeginningTime.wDayOfWeek),
+						Info.BeginningTime.wHour,
+						Info.EndTime.wMonth,
+						Info.EndTime.wDay,
+						GetDayOfWeekText(Info.EndTime.wDayOfWeek),
+						Info.EndTime.wHour);
 				} else {
-					stLast=stFirst;
-					OffsetSystemTime(&stLast,6LL*24*60*60*1000);
+					SYSTEMTIME stLast=Info.BeginningTime;
+					OffsetSystemTime(&stLast,6LL*TimeConsts::SYSTEMTIME_DAY);
 					StdUtil::snprintf(szText,lengthof(szText),
 						TITLE_TEXT TEXT(" - %s %d/%d(%s) ～ %d/%d(%s)"),
 						m_ServiceList.GetItem(m_WeekListService)->GetServiceName(),
-						stFirst.wMonth,stFirst.wDay,
-						GetDayOfWeekText(stFirst.wDayOfWeek),
-						stLast.wMonth,stLast.wDay,
+						Info.BeginningTime.wMonth,
+						Info.BeginningTime.wDay,
+						GetDayOfWeekText(Info.BeginningTime.wDayOfWeek),
+						stLast.wMonth,
+						stLast.wDay,
 						GetDayOfWeekText(stLast.wDayOfWeek));
 				}
 				m_pFrame->SetCaption(szText);
@@ -2452,8 +2559,8 @@ void CProgramGuide::SetTooltip()
 		rc.bottom=m_HeaderHeight;
 		int ToolCount=0;
 		for (int i=0;i<NumServices;i++) {
-			rc.right=rc.left+(m_ItemWidth+m_ItemMargin*2);
-			rc.left=rc.right-(HEADER_MARGIN_RIGHT+CHEVRON_WIDTH);
+			rc.right=rc.left+(m_ItemWidth+m_Style.ColumnMargin*2);
+			rc.left=rc.right-(m_Style.HeaderPadding.Right+m_Style.HeaderChevronMargin.Right+m_Style.HeaderChevronSize.Width);
 			if (rc.left>=rcHeader.right)
 				break;
 			if (rc.right>rcHeader.left) {
@@ -2487,7 +2594,7 @@ void CProgramGuide::SetTooltip()
 		}
 		if (m_Day<DAY_LAST) {
 			int y=m_HeaderHeight+
-				(m_Hours*m_LinesPerHour-m_ScrollPos.y)*(m_FontHeight+m_LineMargin);
+				(m_Hours*m_LinesPerHour-m_ScrollPos.y)*GetLineHeight();
 			rc.top=y-m_TimeBarWidth;
 			rc.bottom=y;
 			rc.left=0;
@@ -2505,6 +2612,28 @@ void CProgramGuide::SetTooltip()
 		rc.bottom=m_HeaderHeight;
 		m_Tooltip.AddTool(0,rc,TEXT("チャンネル一覧表示へ"));
 	}
+}
+
+
+void CProgramGuide::ResetEventFont()
+{
+	for (size_t i=0;i<m_EventLayoutList.Length();i++) {
+		ProgramGuide::CEventLayout *pLayout=m_EventLayoutList[i];
+		for (size_t j=0;j<pLayout->NumItems();j++) {
+			ProgramGuide::CEventItem *pItem=pLayout->GetItem(j);
+			pItem->ResetTitleLines();
+		}
+	}
+}
+
+
+void CProgramGuide::OnFontChanged()
+{
+	ResetEventFont();
+	CalcFontMetrics();
+	SetScrollBar();
+	SetTooltip();
+	Invalidate();
 }
 
 
@@ -2536,6 +2665,26 @@ bool CProgramGuide::EnumChannelProvider(int Index,LPTSTR pszName,int MaxName) co
 
 	pChannelProvider->GetName(pszName,MaxName);
 
+	return true;
+}
+
+
+bool CProgramGuide::SetChannelProvider(int Provider,int Group)
+{
+	StoreTimePos();
+	if (!SetCurrentChannelProvider(Provider,Group))
+		return false;
+	UpdateServiceList();
+	return true;
+}
+
+
+bool CProgramGuide::SetChannelProvider(int Provider,LPCTSTR pszGroupID)
+{
+	StoreTimePos();
+	if (!SetCurrentChannelProvider(Provider,pszGroupID))
+		return false;
+	UpdateServiceList();
 	return true;
 }
 
@@ -2653,15 +2802,56 @@ bool CProgramGuide::GetChannelList(CChannelList *pList,bool fVisibleOnly) const
 
 void CProgramGuide::SetCurrentService(WORD NetworkID,WORD TSID,WORD ServiceID)
 {
+	bool fRedrawEvent=false;
+	int ListIndex,EventIndex;
+	if (m_CurrentEventID!=0 && m_hwnd!=NULL) {
+		fRedrawEvent=GetEventIndexByIDs(
+			m_CurrentChannel.NetworkID,
+			m_CurrentChannel.TransportStreamID,
+			m_CurrentChannel.ServiceID,
+			m_CurrentEventID,
+			&ListIndex,&EventIndex);
+	}
+
 	m_CurrentChannel.NetworkID=NetworkID;
 	m_CurrentChannel.TransportStreamID=TSID;
 	m_CurrentChannel.ServiceID=ServiceID;
+	m_CurrentEventID=0;
+
 	if (m_hwnd!=NULL) {
 		RECT rc;
 
 		GetClientRect(&rc);
 		rc.bottom=m_HeaderHeight;
 		::InvalidateRect(m_hwnd,&rc,TRUE);
+
+		if (fRedrawEvent)
+			RedrawEvent(ListIndex,EventIndex);
+	}
+}
+
+
+void CProgramGuide::SetCurrentEvent(WORD EventID)
+{
+	if (m_CurrentEventID!=EventID) {
+		const WORD OldEventID=m_CurrentEventID;
+
+		m_CurrentEventID=EventID;
+
+		if (m_hwnd!=NULL) {
+			if (OldEventID!=0) {
+				RedrawEventByIDs(m_CurrentChannel.NetworkID,
+								 m_CurrentChannel.TransportStreamID,
+								 m_CurrentChannel.ServiceID,
+								 OldEventID);
+			}
+			if (m_CurrentEventID!=0) {
+				RedrawEventByIDs(m_CurrentChannel.NetworkID,
+								 m_CurrentChannel.TransportStreamID,
+								 m_CurrentChannel.ServiceID,
+								 m_CurrentEventID);
+			}
+		}
 	}
 }
 
@@ -2793,22 +2983,20 @@ bool CProgramGuide::SetBeginHour(int Hour)
 
 bool CProgramGuide::SetTimeRange(const SYSTEMTIME *pFirstTime,const SYSTEMTIME *pLastTime)
 {
-	FILETIME ftFirst,ftLast;
+	SYSTEMTIME stFirst,stLast;
 
-	if (CompareSystemTime(pFirstTime,pLastTime)>=0)
+	stFirst=*pFirstTime;
+	SystemTimeTruncateHour(&stFirst);
+	stLast=*pLastTime;
+	SystemTimeTruncateHour(&stLast);
+
+	int Hours=(int)(DiffSystemTime(&stFirst,&stLast)/TimeConsts::SYSTEMTIME_HOUR);
+	if (Hours<=0)
 		return false;
 
-	m_stFirstTime=*pFirstTime;
-	m_stFirstTime.wMinute=0;
-	m_stFirstTime.wSecond=0;
-	m_stFirstTime.wMilliseconds=0;
-	m_stLastTime=*pLastTime;
-	m_stLastTime.wMinute=0;
-	m_stLastTime.wSecond=0;
-	m_stLastTime.wMilliseconds=0;
-	::SystemTimeToFileTime(&m_stFirstTime,&ftFirst);
-	::SystemTimeToFileTime(&m_stLastTime,&ftLast);
-	m_Hours=(int)((ftLast-ftFirst)/(FILETIME_SECOND*60*60));
+	m_stFirstTime=stFirst;
+	m_stLastTime=stLast;
+	m_Hours=Hours;
 
 	if (m_pFrame!=NULL)
 		m_pFrame->OnTimeRangeChanged();
@@ -2832,9 +3020,9 @@ bool CProgramGuide::GetCurrentTimeRange(SYSTEMTIME *pFirstTime,SYSTEMTIME *pLast
 	if (m_ListMode==LIST_WEEK) {
 		GetDayTimeRange(DAY_TOMORROW,pFirstTime,pLastTime);
 		if (pFirstTime!=NULL)
-			OffsetSystemTime(pFirstTime,-24*60*60*1000);
+			OffsetSystemTime(pFirstTime,-TimeConsts::SYSTEMTIME_DAY);
 		if (pLastTime!=NULL)
-			OffsetSystemTime(pLastTime,-24*60*60*1000);
+			OffsetSystemTime(pLastTime,-TimeConsts::SYSTEMTIME_DAY);
 		return true;
 	}
 
@@ -2852,13 +3040,64 @@ bool CProgramGuide::GetDayTimeRange(int Day,SYSTEMTIME *pFirstTime,SYSTEMTIME *p
 		if (m_BeginHour<0) {
 			Offset=Day*24;
 		} else {
+			int Begin=m_BeginHour*60;
+			CEpgOptions::EpgTimeMode TimeMode=GetAppClass().EpgOptions.GetEpgTimeMode();
+			bool fUTC=false;
+
+			switch (TimeMode) {
+			case CEpgOptions::EPGTIME_LOCAL:
+				{
+					TIME_ZONE_INFORMATION tzi;
+					DWORD Result=::GetTimeZoneInformation(&tzi);
+					switch (Result) {
+					case TIME_ZONE_ID_UNKNOWN:
+						Begin+=tzi.Bias;
+						break;
+					case TIME_ZONE_ID_STANDARD:
+						Begin+=tzi.Bias+tzi.StandardBias;
+						break;
+					case TIME_ZONE_ID_DAYLIGHT:
+						Begin+=tzi.Bias+tzi.DaylightBias;
+						break;
+					}
+					if (Begin<0)
+						Begin+=24*60;
+					fUTC=true;
+				}
+				break;
+
+			case CEpgOptions::EPGTIME_JST:
+				{
+					TIME_ZONE_INFORMATION tzi;
+
+					if (GetJSTTimeZoneInformation(&tzi)) {
+						SYSTEMTIME stUTC,stJST;
+
+						::GetSystemTime(&stUTC);
+						if (::SystemTimeToTzSpecificLocalTime(&tzi,&stUTC,&stJST)) {
+							Begin+=(int)(DiffSystemTime(&stJST,&stUTC)/TimeConsts::SYSTEMTIME_MINUTE);
+							fUTC=true;
+						}
+					}
+				}
+				break;
+
+			case CEpgOptions::EPGTIME_UTC:
+				fUTC=true;
+				break;
+			}
+
+			if (fUTC)
+				Begin+=9*60;
+			Begin=Begin/60%24;
+
 			Offset=Day*24-stFirst.wHour;
-			if (stFirst.wHour>=m_BeginHour)
-				Offset+=m_BeginHour;
+			if (stFirst.wHour>=Begin)
+				Offset+=Begin;
 			else
-				Offset-=24-m_BeginHour;
+				Offset-=24-Begin;
 		}
-		Offset*=60*60*1000;
+		Offset*=TimeConsts::SYSTEMTIME_HOUR;
 		OffsetSystemTime(&stFirst,Offset);
 		OffsetSystemTime(&stLast,Offset);
 	}
@@ -2866,6 +3105,43 @@ bool CProgramGuide::GetDayTimeRange(int Day,SYSTEMTIME *pFirstTime,SYSTEMTIME *p
 		*pFirstTime=stFirst;
 	if (pLastTime!=NULL)
 		*pLastTime=stLast;
+	return true;
+}
+
+
+bool CProgramGuide::GetCurrentDateInfo(DateInfo *pInfo) const
+{
+	if (m_ListMode==LIST_WEEK) {
+		if (!GetCurrentTimeRange(&pInfo->BeginningTime,&pInfo->EndTime))
+			return false;
+		pInfo->pszRelativeDayText=NULL;
+	} else {
+		if (!GetDateInfo(m_Day,pInfo))
+			return false;
+	}
+	return true;
+}
+
+
+bool CProgramGuide::GetDateInfo(int Day,DateInfo *pInfo) const
+{
+	if (!GetDayTimeRange(Day,&pInfo->BeginningTime,&pInfo->EndTime))
+		return false;
+	if (m_ListMode==LIST_SERVICES) {
+		if (Day==DAY_TODAY) {
+			pInfo->pszRelativeDayText=GetRelativeDayText(0);
+		} else {
+			SYSTEMTIME st1,st2;
+			GetDayTimeRange(DAY_TODAY,&st1,NULL);
+			SystemTimeTruncateDay(&st1);
+			st2=pInfo->BeginningTime;
+			SystemTimeTruncateDay(&st2);
+			pInfo->pszRelativeDayText=
+				GetRelativeDayText((int)(DiffSystemTime(&st1,&st2)/TimeConsts::SYSTEMTIME_DAY));
+		}
+	} else {
+		pInfo->pszRelativeDayText=NULL;
+	}
 	return true;
 }
 
@@ -2886,16 +3162,16 @@ bool CProgramGuide::ScrollToTime(const SYSTEMTIME &Time,bool fHour)
 		st.wMonth=stFirst.wMonth;
 		st.wDay=stFirst.wDay;
 		if (CompareSystemTime(&st,&stFirst)<0)
-			OffsetSystemTime(&st,24LL*60*60*1000);
+			OffsetSystemTime(&st,TimeConsts::SYSTEMTIME_DAY);
 	}
 
 	LONGLONG Diff=DiffSystemTime(&stFirst,&st);
 	POINT Pos;
 	Pos.x=m_ScrollPos.x;
 	if (fHour)
-		Pos.y=(int)(Diff/(60*60*1000))*m_LinesPerHour;
+		Pos.y=(int)(Diff/TimeConsts::SYSTEMTIME_HOUR)*m_LinesPerHour;
 	else
-		Pos.y=(int)(Diff/(60*1000)*m_LinesPerHour/60);
+		Pos.y=(int)(Diff/TimeConsts::SYSTEMTIME_MINUTE*m_LinesPerHour/60);
 	SetScrollPos(Pos);
 
 	return true;
@@ -2932,7 +3208,7 @@ bool CProgramGuide::SetViewDay(int Day)
 			CalcLayout();
 			SetScrollBar();
 			SetCaption();
-			GetCurrentJST(&m_stCurTime);
+			GetCurrentEpgTime(&m_stCurTime);
 			Invalidate();
 
 			RestoreTimePos();
@@ -2987,15 +3263,15 @@ bool CProgramGuide::JumpEvent(WORD NetworkID,WORD TSID,WORD ServiceID,WORD Event
 	SIZE Size,Page;
 	GetProgramGuideSize(&Size);
 	GetPageSize(&Page);
-	const int ItemWidth=m_ItemWidth+m_ItemMargin*2;
+	const int ItemWidth=m_ItemWidth+m_Style.ColumnMargin*2;
 	POINT Pos;
 	Pos.x=ItemWidth*ServiceIndex-(Page.cx-ItemWidth)/2;
 	if (Pos.x<0)
 		Pos.x=0;
 	else if (Pos.x>max(Size.cx-Page.cx,0))
 		Pos.x=max(Size.cx-Page.cx,0);
-	Pos.y=(int)(DiffSystemTime(&stFirst,&pEventInfo->m_stStartTime)/(1000*60))*m_LinesPerHour/60;
-	const int YOffset=(Page.cy-(int)(pEventInfo->m_DurationSec*m_LinesPerHour/(60*60)))/2;
+	Pos.y=(int)(DiffSystemTime(&stFirst,&pEventInfo->m_StartTime)/TimeConsts::SYSTEMTIME_MINUTE)*m_LinesPerHour/60;
+	const int YOffset=(Page.cy-(int)(pEventInfo->m_Duration*m_LinesPerHour/(60*60)))/2;
 	if (YOffset>0)
 		Pos.y-=YOffset;
 	if (Pos.y<0)
@@ -3012,7 +3288,7 @@ bool CProgramGuide::JumpEvent(WORD NetworkID,WORD TSID,WORD ServiceID,WORD Event
 
 bool CProgramGuide::JumpEvent(const CEventInfoData &EventInfo)
 {
-	return JumpEvent(EventInfo.m_NetworkID,EventInfo.m_TSID,EventInfo.m_ServiceID,EventInfo.m_EventID);
+	return JumpEvent(EventInfo.m_NetworkID,EventInfo.m_TransportStreamID,EventInfo.m_ServiceID,EventInfo.m_EventID);
 }
 
 
@@ -3031,7 +3307,7 @@ bool CProgramGuide::ScrollToCurrentService()
 	SIZE Size,Page;
 	GetProgramGuideSize(&Size);
 	GetPageSize(&Page);
-	const int ItemWidth=m_ItemWidth+m_ItemMargin*2;
+	const int ItemWidth=m_ItemWidth+m_Style.ColumnMargin*2;
 	POINT Pos;
 	Pos.x=ItemWidth*ServiceIndex-(Page.cx-ItemWidth)/2;
 	if (Pos.x<0)
@@ -3045,18 +3321,17 @@ bool CProgramGuide::ScrollToCurrentService()
 }
 
 
-bool CProgramGuide::SetUIOptions(int LinesPerHour,int ItemWidth,int LineMargin)
+bool CProgramGuide::SetUIOptions(int LinesPerHour,int ItemWidth)
 {
 	if (LinesPerHour<MIN_LINES_PER_HOUR || LinesPerHour>MAX_LINES_PER_HOUR
 			|| ItemWidth<MIN_ITEM_WIDTH || ItemWidth>MAX_ITEM_WIDTH)
 		return false;
 	if (m_LinesPerHour!=LinesPerHour
-			|| m_ItemWidth!=ItemWidth
-			|| m_LineMargin!=LineMargin) {
+			|| m_ItemWidth!=ItemWidth) {
 		m_LinesPerHour=LinesPerHour;
-		m_ItemWidth=ItemWidth;
-		m_LineMargin=LineMargin;
+		m_ItemLogicalWidth=ItemWidth;
 		if (m_hwnd!=NULL) {
+			m_ItemWidth=m_pStyleScaling->LogicalPixelsToPhysicalPixels(m_ItemLogicalWidth);
 			m_ScrollPos.x=0;
 			m_ScrollPos.y=0;
 			m_OldScrollPos=m_ScrollPos;
@@ -3069,72 +3344,60 @@ bool CProgramGuide::SetUIOptions(int LinesPerHour,int ItemWidth,int LineMargin)
 }
 
 
-bool CProgramGuide::SetColor(int Type,COLORREF Color)
+bool CProgramGuide::SetTextDrawEngine(TVTest::CTextDrawClient::TextDrawEngine Engine)
 {
-	if (Type<0 || Type>COLOR_LAST)
-		return false;
-	m_ColorList[Type]=Color;
+	if (m_hwnd!=NULL) {
+		if (!m_TextDrawClient.Initialize(Engine,m_hwnd))
+			return false;
+
+		OnFontChanged();
+	}
+
+	m_TextDrawEngine=Engine;
+
 	return true;
 }
 
 
-void CProgramGuide::SetBackColors(const Theme::GradientInfo *pChannelBackGradient,
-								  const Theme::GradientInfo *pCurChannelBackGradient,
-								  const Theme::GradientInfo *pTimeBarMarginGradient,
-								  const Theme::GradientInfo *pTimeBarBackGradient)
+bool CProgramGuide::SetDirectWriteRenderingParams(
+	const TVTest::CDirectWriteRenderer::RenderingParams &Params)
 {
-	m_ChannelNameBackGradient=*pChannelBackGradient;
-	m_CurChannelNameBackGradient=*pCurChannelBackGradient;
-	m_TimeBarMarginGradient=*pTimeBarMarginGradient;
-	for (int i=0;i<TIME_BAR_BACK_COLORS;i++)
-		m_TimeBarBackGradient[i]=pTimeBarBackGradient[i];
-	if (m_hwnd!=NULL)
-		Invalidate();
-}
-
-
-bool CProgramGuide::SetFont(const LOGFONT *pFont)
-{
-	LOGFONT lf;
-
-	if (!m_Font.Create(pFont))
+	if (!m_TextDrawClient.SetDirectWriteRenderingParams(Params))
 		return false;
-	lf=*pFont;
-	lf.lfWeight=FW_BOLD;
-	m_TitleFont.Create(&lf);
-	lf.lfWeight=FW_NORMAL;
-	lf.lfEscapement=lf.lfOrientation=2700;
-	m_TimeFont.Create(&lf);
-	if (m_hwnd!=NULL) {
-		HDC hdc=::GetDC(m_hwnd);
-		m_FontHeight=m_Font.GetHeight(hdc);
-		::ReleaseDC(m_hwnd,hdc);
-	} else {
-		m_FontHeight=m_Font.GetHeight();
-	}
-	m_HeaderHeight=m_FontHeight+(HEADER_MARGIN_TOP+HEADER_MARGIN_BOTTOM);
-	m_TimeBarWidth=m_FontHeight+8;
-	if (m_hwnd!=NULL) {
-		m_ScrollPos.x=0;
-		m_ScrollPos.y=0;
-		m_OldScrollPos=m_ScrollPos;
-		CalcLayout();
-		SetScrollBar();
+
+	if (m_hwnd!=NULL && m_TextDrawEngine==TVTest::CTextDrawClient::ENGINE_DIRECTWRITE)
 		Invalidate();
-	}
+
 	return true;
 }
 
 
-bool CProgramGuide::GetFont(LOGFONT *pFont) const
+bool CProgramGuide::SetFont(const TVTest::Style::Font &Font)
 {
-	return m_Font.GetLogFont(pFont);
+	m_Font=Font;
+
+	if (m_hwnd!=NULL) {
+		CreateFonts();
+		OnFontChanged();
+		m_Tooltip.SetFont(m_ContentFont.GetHandle());
+	}
+
+	return true;
 }
 
 
-bool CProgramGuide::SetEventInfoFont(const LOGFONT *pFont)
+bool CProgramGuide::GetFont(TVTest::Style::Font *pFont) const
 {
-	return m_EventInfoPopup.SetFont(pFont);
+	if (pFont==nullptr)
+		return false;
+	*pFont=m_Font;
+	return true;
+}
+
+
+bool CProgramGuide::SetEventInfoFont(const TVTest::Style::Font &Font)
+{
+	return m_EventInfoPopup.SetFont(Font);
 }
 
 
@@ -3227,6 +3490,25 @@ void CProgramGuide::SetKeepTimePos(bool fKeep)
 }
 
 
+void CProgramGuide::SetShowFeaturedMark(bool fShow)
+{
+	if (m_fShowFeaturedMark!=fShow) {
+		m_fShowFeaturedMark=fShow;
+		if (m_hwnd!=NULL) {
+			if (m_fShowFeaturedMark)
+				m_FeaturedEventsMatcher.BeginMatching(GetAppClass().FeaturedEvents.GetSettings());
+			Invalidate();
+		}
+	}
+}
+
+
+const TVTest::Style::Margins &CProgramGuide::GetToolbarItemPadding() const
+{
+	return m_Style.ToolbarItemPadding;
+}
+
+
 bool CProgramGuide::ShowProgramSearch(bool fShow)
 {
 	if (fShow) {
@@ -3241,13 +3523,13 @@ bool CProgramGuide::ShowProgramSearch(bool fShow)
 				m_ProgramSearch.SetPosition(pt.x,pt.y,0,0);
 			}
 			m_ProgramSearch.Create(m_hwnd);
-			GetAppClass().GetUICore()->RegisterModelessDialog(&m_ProgramSearch);
+			GetAppClass().UICore.RegisterModelessDialog(&m_ProgramSearch);
 		}
 		if (!m_ProgramSearch.IsVisible())
 			m_ProgramSearch.SetVisible(true);
 	} else {
 		if (m_ProgramSearch.IsCreated()) {
-			GetAppClass().GetUICore()->UnregisterModelessDialog(&m_ProgramSearch);
+			GetAppClass().UICore.UnregisterModelessDialog(&m_ProgramSearch);
 			m_ProgramSearch.Destroy();
 		}
 	}
@@ -3286,7 +3568,21 @@ void CProgramGuide::SetMessage(LPCTSTR pszMessage,bool fUpdate)
 }
 
 
-void CProgramGuide::SetEpgUpdateProgress(int Pos,int End,DWORD RemainingTime)
+void CProgramGuide::OnEpgCaptureBegin()
+{
+}
+
+
+void CProgramGuide::OnEpgCaptureEnd()
+{
+	if (m_fEpgUpdating) {
+		m_fEpgUpdating=false;
+		SetCaption();
+	}
+}
+
+
+void CProgramGuide::SetEpgCaptureProgress(int Pos,int End,DWORD RemainingTime)
 {
 	m_EpgUpdateProgress.Pos=Pos;
 	m_EpgUpdateProgress.End=End;
@@ -3301,11 +3597,8 @@ bool CProgramGuide::OnCloseFrame()
 	if (m_pEventHandler!=NULL && !m_pEventHandler->OnClose())
 		return false;
 
-	if (m_fEpgUpdating) {
-		if (m_pEventHandler)
-			m_pEventHandler->OnEndUpdate();
-		m_fEpgUpdating=false;
-	}
+	if (m_fEpgUpdating)
+		GetAppClass().EpgCaptureManager.EndCapture();
 
 	ShowProgramSearch(false);
 
@@ -3317,6 +3610,25 @@ void CProgramGuide::OnShowFrame(bool fShow)
 {
 	if (m_ProgramSearch.IsCreated())
 		m_ProgramSearch.SetVisible(fShow);
+}
+
+
+LPCTSTR CProgramGuide::GetRelativeDayText(int Day)
+{
+	static const LPCTSTR DayText[] = {
+		TEXT("今日"),
+		TEXT("明日"),
+		TEXT("2日後"),
+		TEXT("3日後"),
+		TEXT("4日後"),
+		TEXT("5日後"),
+		TEXT("6日後"),
+		TEXT("7日後"),
+	};
+
+	if (Day<0 || Day>=lengthof(DayText))
+		return NULL;
+	return DayText[Day];
 }
 
 
@@ -3342,13 +3654,13 @@ bool CProgramGuide::GetEventRect(int ListIndex,int EventIndex,RECT *pRect) const
 	if (pItem==NULL)
 		return false;
 
-	int LineHeight=m_FontHeight+m_LineMargin;
+	int LineHeight=GetLineHeight();
 	RECT rc;
 	GetProgramGuideRect(&rc);
 
 	pRect->top=pItem->GetItemPos()*LineHeight+(rc.top-m_ScrollPos.y*LineHeight);
 	pRect->bottom=pRect->top+pItem->GetItemLines()*LineHeight;
-	pRect->left=ListIndex*(m_ItemWidth+m_ItemMargin*2)+m_ItemMargin+(rc.left-m_ScrollPos.x);
+	pRect->left=ListIndex*(m_ItemWidth+m_Style.ColumnMargin*2)+m_Style.ColumnMargin+(rc.left-m_ScrollPos.x);
 	pRect->right=pRect->left+m_ItemWidth;
 
 	return true;
@@ -3361,10 +3673,21 @@ bool CProgramGuide::RedrawEvent(int ListIndex,int EventIndex)
 
 	if (!GetEventRect(ListIndex,EventIndex,&rc))
 		return false;
-	rc.left-=SELECTED_BORDER_WIDTH;
-	rc.right+=SELECTED_BORDER_WIDTH;
+	rc.left-=m_Style.SelectedBorder.Left;
+	rc.right+=m_Style.SelectedBorder.Right;
 	Invalidate(&rc);
 	return true;
+}
+
+
+bool CProgramGuide::RedrawEventByIDs(WORD NetworkID,WORD TSID,WORD ServiceID,WORD EventID)
+{
+	int ListIndex,EventIndex;
+
+	if (!GetEventIndexByIDs(NetworkID,TSID,ServiceID,EventID,&ListIndex,&EventIndex))
+		return false;
+
+	return RedrawEvent(ListIndex,EventIndex);
 }
 
 
@@ -3378,15 +3701,15 @@ bool CProgramGuide::EventHitTest(int x,int y,int *pListIndex,int *pEventIndex,RE
 	GetProgramGuideRect(&rc);
 	if (::PtInRect(&rc,pt)) {
 		const int XPos=x-rc.left+m_ScrollPos.x;
-		const int ServiceWidth=m_ItemWidth+m_ItemMargin*2;
+		const int ServiceWidth=m_ItemWidth+m_Style.ColumnMargin*2;
 
-		if (XPos%ServiceWidth<m_ItemMargin
-				|| XPos%ServiceWidth>=m_ItemMargin+m_ItemWidth)
+		if (XPos%ServiceWidth<m_Style.ColumnMargin
+				|| XPos%ServiceWidth>=m_Style.ColumnMargin+m_ItemWidth)
 			return false;
 		int List=XPos/ServiceWidth;
 		if (List<(int)m_EventLayoutList.Length()) {
 			const ProgramGuide::CEventLayout *pLayout=m_EventLayoutList[List];
-			int LineHeight=m_FontHeight+m_LineMargin;
+			int LineHeight=GetLineHeight();
 			int YOrigin=rc.top-m_ScrollPos.y*LineHeight;
 
 			y-=YOrigin;
@@ -3404,7 +3727,7 @@ bool CProgramGuide::EventHitTest(int x,int y,int *pListIndex,int *pEventIndex,RE
 						if (pItemRect!=NULL) {
 							pItemRect->top=rc.top+YOrigin;
 							pItemRect->bottom=pItemRect->top+(rc.bottom-rc.top);
-							pItemRect->left=List*ServiceWidth-m_ScrollPos.x+m_ItemMargin;
+							pItemRect->left=List*ServiceWidth-m_ScrollPos.x+m_Style.ColumnMargin;
 							pItemRect->right=pItemRect->left+m_ItemWidth;
 						}
 						return true;
@@ -3413,6 +3736,40 @@ bool CProgramGuide::EventHitTest(int x,int y,int *pListIndex,int *pEventIndex,RE
 			}
 		}
 	}
+	return false;
+}
+
+
+bool CProgramGuide::GetEventIndexByIDs(
+	WORD NetworkID,WORD TSID,WORD ServiceID,WORD EventID,
+	int *pListIndex,int *pEventIndex) const
+{
+	int ListIndex;
+
+	if (m_ListMode==LIST_SERVICES) {
+		ListIndex=m_ServiceList.FindItemByIDs(TSID,ServiceID);
+		if (ListIndex<0)
+			return false;
+	} else {
+		return false;
+	}
+
+	const ProgramGuide::CEventLayout *pEventLayout=m_EventLayoutList[ListIndex];
+	if (pEventLayout==NULL)
+		return false;
+	const size_t NumItems=pEventLayout->NumItems();
+	for (size_t i=0;i<NumItems;i++) {
+		const ProgramGuide::CEventItem *pItem=pEventLayout->GetItem(i);
+		if (pItem->GetEventInfo()!=NULL
+				&& pItem->GetEventInfo()->m_EventID==EventID) {
+			if (pListIndex!=NULL)
+				*pListIndex=ListIndex;
+			if (pEventIndex!=NULL)
+				*pEventIndex=static_cast<int>(i);
+			return true;
+		}
+	}
+
 	return false;
 }
 
@@ -3467,29 +3824,12 @@ bool CProgramGuide::SelectEventByPosition(int x,int y)
 
 bool CProgramGuide::SelectEventByIDs(WORD NetworkID,WORD TSID,WORD ServiceID,WORD EventID)
 {
-	int ListIndex;
+	int ListIndex,EventIndex;
 
-	if (m_ListMode==LIST_SERVICES) {
-		ListIndex=m_ServiceList.FindItemByIDs(TSID,ServiceID);
-		if (ListIndex<0)
-			return false;
-	} else {
+	if (!GetEventIndexByIDs(NetworkID,TSID,ServiceID,EventID,&ListIndex,&EventIndex))
 		return false;
-	}
 
-	const ProgramGuide::CEventLayout *pEventLayout=m_EventLayoutList[ListIndex];
-	if (pEventLayout==NULL)
-		return false;
-	const size_t NumItems=pEventLayout->NumItems();
-	for (size_t i=0;i<NumItems;i++) {
-		const ProgramGuide::CEventItem *pItem=pEventLayout->GetItem(i);
-		if (pItem->GetEventInfo()!=NULL
-				&& pItem->GetEventInfo()->m_EventID==EventID) {
-			return SelectEvent(ListIndex,(int)i);
-		}
-	}
-
-	return false;
+	return SelectEvent(ListIndex,EventIndex);
 }
 
 
@@ -3498,20 +3838,36 @@ LRESULT CProgramGuide::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam
 	switch (uMsg) {
 	case WM_CREATE:
 		{
+			if (!m_TextDrawClient.Initialize(m_TextDrawEngine,hwnd)) {
+				if (m_TextDrawEngine!=TVTest::CTextDrawClient::ENGINE_GDI) {
+					m_TextDrawEngine=TVTest::CTextDrawClient::ENGINE_GDI;
+					m_TextDrawClient.Initialize(m_TextDrawEngine,hwnd);
+				}
+			}
+			m_TextDrawClient.SetMaxFontCache(2);
+
+			InitializeUI();
+
 			if (m_hDragCursor1==NULL)
 				m_hDragCursor1=::LoadCursor(m_hinst,MAKEINTRESOURCE(IDC_GRAB1));
 			if (m_hDragCursor2==NULL)
 				m_hDragCursor2=::LoadCursor(m_hinst,MAKEINTRESOURCE(IDC_GRAB2));
-			m_Chevron.Load(m_hinst,IDB_CHEVRON);
+
 			m_EpgIcons.Load();
 			m_EventInfoPopupManager.Initialize(hwnd,&m_EventInfoPopupHandler);
 			m_Tooltip.Create(hwnd);
+			m_Tooltip.SetFont(m_ContentFont.GetHandle());
 			if (m_pProgramCustomizer!=NULL)
 				m_pProgramCustomizer->Initialize();
 
 			m_fBarShadow=CBufferedPaint::IsSupported();
 
-			GetCurrentJST(&m_stCurTime);
+			CFeaturedEvents &FeaturedEvents=GetAppClass().FeaturedEvents;
+			FeaturedEvents.AddEventHandler(this);
+			if (m_fShowFeaturedMark)
+				m_FeaturedEventsMatcher.BeginMatching(FeaturedEvents.GetSettings());
+
+			GetCurrentEpgTime(&m_stCurTime);
 			::SetTimer(hwnd,TIMER_ID_UPDATECURTIME,1000,NULL);
 		}
 		return 0;
@@ -3615,23 +3971,27 @@ LRESULT CProgramGuide::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam
 			if (pt.y<m_HeaderHeight
 					&& pt.x>=m_TimeBarWidth && pt.x<rc.right-m_TimeBarWidth) {
 				if (m_ListMode==LIST_SERVICES) {
-					const int HeaderWidth=m_ItemWidth+m_ItemMargin*2;
+					const int HeaderWidth=m_ItemWidth+m_Style.ColumnMargin*2;
 					int x=pt.x+m_ScrollPos.x-m_TimeBarWidth;
 
 					if (x<(int)m_EventLayoutList.Length()*HeaderWidth) {
 						int Service=x/HeaderWidth;
+						int ChevronArea=m_Style.HeaderChevronSize.Width+
+							m_Style.HeaderChevronMargin.Right+m_Style.HeaderPadding.Right;
 
-						if (x%HeaderWidth<HeaderWidth-(HEADER_CHEVRON_MARGIN+CHEVRON_WIDTH+HEADER_MARGIN_RIGHT)) {
+						if (x%HeaderWidth<HeaderWidth-(m_Style.HeaderChevronMargin.Left+ChevronArea)) {
 							if (m_pEventHandler) {
 								ProgramGuide::CServiceInfo *pServiceInfo=m_ServiceList.GetItem(Service);
 
 								if (pServiceInfo!=NULL) {
+									TVTest::String BonDriver(pServiceInfo->GetBonDriverFileName());
+									CServiceInfoData ServiceInfo(pServiceInfo->GetServiceInfoData());
+
 									m_pEventHandler->OnServiceTitleLButtonDown(
-										pServiceInfo->GetBonDriverFileName(),
-										&pServiceInfo->GetServiceInfoData());
+										BonDriver.c_str(),&ServiceInfo);
 								}
 							}
-						} else if (x%HeaderWidth>=HeaderWidth-(CHEVRON_WIDTH+HEADER_MARGIN_RIGHT)) {
+						} else if (x%HeaderWidth>=HeaderWidth-ChevronArea) {
 							SetWeekListMode(Service);
 						}
 					}
@@ -3643,7 +4003,7 @@ LRESULT CProgramGuide::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam
 					if (m_Day>DAY_FIRST && pt.y<m_HeaderHeight) {
 						::SendMessage(hwnd,WM_COMMAND,CM_PROGRAMGUIDE_DAY_FIRST+(m_Day-1),0);
 					} else if (m_Day<DAY_LAST) {
-						int y=(m_Hours*m_LinesPerHour-m_ScrollPos.y)*(m_FontHeight+m_LineMargin);
+						int y=(m_Hours*m_LinesPerHour-m_ScrollPos.y)*GetLineHeight();
 						if (pt.y-m_HeaderHeight>=y-m_TimeBarWidth
 								&& pt.y-m_HeaderHeight<y) {
 							::SendMessage(hwnd,WM_COMMAND,CM_PROGRAMGUIDE_DAY_FIRST+(m_Day+1),0);
@@ -3654,6 +4014,7 @@ LRESULT CProgramGuide::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam
 				m_fScrolling=true;
 				m_DragInfo.StartCursorPos=pt;
 				m_DragInfo.StartScrollPos=m_ScrollPos;
+				m_DragInfo.fCursorMoved=false;
 				::SetCursor(m_hDragCursor2);
 				::SetCapture(hwnd);
 				m_EventInfoPopupManager.SetEnable(false);
@@ -3667,6 +4028,13 @@ LRESULT CProgramGuide::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam
 	case WM_LBUTTONUP:
 		if (m_fScrolling) {
 			::ReleaseCapture();
+
+			if (!m_DragInfo.fCursorMoved) {
+				int x=GET_X_LPARAM(lParam),y=GET_Y_LPARAM(lParam);
+
+				if (SelectEventByPosition(x,y))
+					m_EventInfoPopupManager.Popup(x,y);
+			}
 		}
 		return 0;
 
@@ -3697,6 +4065,13 @@ LRESULT CProgramGuide::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam
 
 			::SetFocus(hwnd);
 			SelectEventByPosition(x,y);
+		}
+		return 0;
+
+	case WM_RBUTTONUP:
+		{
+			int x=GET_X_LPARAM(lParam),y=GET_Y_LPARAM(lParam);
+
 			ShowPopupMenu(x,y);
 		}
 		return 0;
@@ -3706,8 +4081,12 @@ LRESULT CProgramGuide::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam
 			int x=GET_X_LPARAM(lParam),y=GET_Y_LPARAM(lParam);
 			int XScroll,YScroll;
 
+			if (!m_DragInfo.fCursorMoved
+					&& (m_DragInfo.StartCursorPos.x!=x || m_DragInfo.StartCursorPos.y!=y))
+				m_DragInfo.fCursorMoved=true;
+
 			XScroll=(m_DragInfo.StartScrollPos.x+(m_DragInfo.StartCursorPos.x-x))-m_ScrollPos.x;
-			YScroll=(m_DragInfo.StartScrollPos.y+(m_DragInfo.StartCursorPos.y-y)/(m_FontHeight+m_LineMargin))-m_ScrollPos.y;
+			YScroll=(m_DragInfo.StartScrollPos.y+(m_DragInfo.StartCursorPos.y-y)/GetLineHeight())-m_ScrollPos.y;
 			if (XScroll!=0 || YScroll!=0)
 				Scroll(XScroll,YScroll);
 		}
@@ -3725,16 +4104,18 @@ LRESULT CProgramGuide::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam
 					&& pt.x>=m_TimeBarWidth
 					&& pt.x<rc.right-m_TimeBarWidth) {
 				if (m_ListMode==LIST_SERVICES) {
-					const int HeaderWidth=m_ItemWidth+m_ItemMargin*2;
+					const int HeaderWidth=m_ItemWidth+m_Style.ColumnMargin*2;
+					const int ChevronArea=m_Style.HeaderChevronSize.Width+
+						m_Style.HeaderChevronMargin.Right+m_Style.HeaderPadding.Right;
 					int x=pt.x+m_ScrollPos.x-m_TimeBarWidth;
 					if (x<(int)m_EventLayoutList.Length()*HeaderWidth
-							&& (x%HeaderWidth<HeaderWidth-(HEADER_CHEVRON_MARGIN+CHEVRON_WIDTH+HEADER_MARGIN_RIGHT)
-								|| x%HeaderWidth>=HeaderWidth-(CHEVRON_WIDTH+HEADER_MARGIN_RIGHT))) {
-						::SetCursor(::LoadCursor(NULL,IDC_HAND));
+							&& (x%HeaderWidth<HeaderWidth-(m_Style.HeaderChevronMargin.Left+ChevronArea)
+								|| x%HeaderWidth>=HeaderWidth-ChevronArea)) {
+						::SetCursor(GetActionCursor());
 						return TRUE;
 					}
 				} else if (m_ListMode==LIST_WEEK) {
-					::SetCursor(::LoadCursor(NULL,IDC_HAND));
+					::SetCursor(GetActionCursor());
 					return TRUE;
 				}
 			} else if (pt.x<m_TimeBarWidth
@@ -3742,15 +4123,14 @@ LRESULT CProgramGuide::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam
 				if (m_ListMode==LIST_SERVICES) {
 					if (m_Day>DAY_FIRST
 							&& pt.y<m_HeaderHeight) {
-						::SetCursor(::LoadCursor(NULL,IDC_HAND));
+						::SetCursor(GetActionCursor());
 						return TRUE;
 					}
-					int y=(m_Hours*m_LinesPerHour-m_ScrollPos.y)*
-						(m_FontHeight+m_LineMargin);
+					int y=(m_Hours*m_LinesPerHour-m_ScrollPos.y)*GetLineHeight();
 					if (m_Day<DAY_LAST
 							&& pt.y-m_HeaderHeight>=y-m_TimeBarWidth
 							&& pt.y-m_HeaderHeight<y) {
-						::SetCursor(::LoadCursor(NULL,IDC_HAND));
+						::SetCursor(GetActionCursor());
 						return TRUE;
 					}
 				}
@@ -3804,7 +4184,7 @@ LRESULT CProgramGuide::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam
 			if (m_Day==DAY_TODAY) {
 				SYSTEMTIME st;
 
-				GetCurrentJST(&st);
+				GetCurrentEpgTime(&st);
 				if (m_stCurTime.wMinute!=st.wMinute
 						|| m_stCurTime.wHour!=st.wHour
 						|| m_stCurTime.wDay!=st.wDay
@@ -3820,7 +4200,7 @@ LRESULT CProgramGuide::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam
 
 						::GetClientRect(hwnd,&rc);
 						GetProgramGuideRect(&rcGuide);
-						Offset=rcGuide.top-m_ScrollPos.y*(m_FontHeight+m_LineMargin);
+						Offset=rcGuide.top-m_ScrollPos.y*GetLineHeight();
 						rc.top=Offset+OldTimeLinePos-m_FontHeight/2;
 						rc.bottom=Offset+NewTimeLinePos+m_FontHeight/2;
 						::InvalidateRect(hwnd,&rc,FALSE);
@@ -3843,6 +4223,8 @@ LRESULT CProgramGuide::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam
 			m_pEventHandler->OnDestroy();
 		m_Chevron.Destroy();
 		m_EpgIcons.Destroy();
+		m_TextDrawClient.Finalize();
+		GetAppClass().FeaturedEvents.RemoveEventHandler(this);
 		return 0;
 	}
 
@@ -3855,19 +4237,24 @@ void CProgramGuide::OnCommand(int id)
 	switch (id) {
 	case CM_PROGRAMGUIDE_UPDATE:
 		if (!m_fEpgUpdating) {
-			TCHAR szBonDriver[MAX_PATH];
+			CAppMain &App=GetAppClass();
 
-			if (m_pEventHandler!=NULL
-					&& m_pChannelProvider!=NULL
-					&& m_pChannelProvider->GetBonDriver(szBonDriver,lengthof(szBonDriver))) {
-				CChannelList ChannelList;
+			if (!App.EpgCaptureManager.IsCapturing()) {
+				TCHAR szBonDriver[MAX_PATH];
 
-				GetChannelList(&ChannelList,false);
-				m_EpgUpdateProgress.Clear();
-				if (ChannelList.NumChannels()>0
-						&& m_pEventHandler->OnBeginUpdate(szBonDriver,&ChannelList)) {
-					m_fEpgUpdating=true;
-					SetCaption();
+				if (m_pEventHandler!=NULL
+						&& m_pChannelProvider!=NULL
+						&& m_pChannelProvider->GetBonDriver(szBonDriver,lengthof(szBonDriver))) {
+					CChannelList ChannelList;
+
+					GetChannelList(&ChannelList,false);
+					if (ChannelList.NumChannels()>0) {
+						m_EpgUpdateProgress.Clear();
+						if (App.EpgCaptureManager.BeginCapture(szBonDriver,&ChannelList)) {
+							m_fEpgUpdating=true;
+							SetCaption();
+						}
+					}
 				}
 			}
 		}
@@ -3875,18 +4262,12 @@ void CProgramGuide::OnCommand(int id)
 
 	case CM_PROGRAMGUIDE_ENDUPDATE:
 		if (m_fEpgUpdating) {
-			if (m_pEventHandler!=NULL)
-				m_pEventHandler->OnEndUpdate();
-			m_fEpgUpdating=false;
-			SetCaption();
+			GetAppClass().EpgCaptureManager.EndCapture();
 		}
 		return;
 
 	case CM_PROGRAMGUIDE_REFRESH:
-		if (m_pEventHandler==NULL
-				|| m_pEventHandler->OnRefresh()) {
-			UpdateProgramGuide(true);
-		}
+		Refresh();
 		return;
 
 	case CM_PROGRAMGUIDE_IEPGASSOCIATE:
@@ -3972,6 +4353,10 @@ void CProgramGuide::OnCommand(int id)
 		}
 		return;
 
+	case CM_PROGRAMGUIDE_SHOWFEATUREDMARK:
+		SetShowFeaturedMark(!m_fShowFeaturedMark);
+		return;
+
 	default:
 		if (id>=CM_PROGRAMGUIDE_DAY_FIRST
 				&& id<=CM_PROGRAMGUIDE_DAY_LAST) {
@@ -4008,13 +4393,7 @@ void CProgramGuide::OnCommand(int id)
 				&& id<=CM_PROGRAMGUIDE_CHANNELPROVIDER_LAST) {
 			if (m_fEpgUpdating)
 				OnCommand(CM_PROGRAMGUIDE_ENDUPDATE);
-			if (m_pChannelProviderManager!=NULL) {
-				const int Provider=id-CM_PROGRAMGUIDE_CHANNELPROVIDER_FIRST;
-
-				StoreTimePos();
-				if (SetCurrentChannelProvider(Provider,0))
-					UpdateServiceList();
-			}
+			SetChannelProvider(id-CM_PROGRAMGUIDE_CHANNELPROVIDER_FIRST,0);
 			return;
 		}
 
@@ -4062,9 +4441,7 @@ void CProgramGuide::OnCommand(int id)
 
 				for (int i=0;EnumChannelProvider(i,szName,lengthof(szName));i++) {
 					if (::lstrcmpi(szName,pInfo->Name.c_str())==0) {
-						StoreTimePos();
-						if (SetCurrentChannelProvider(i,pInfo->GroupID.c_str()))
-							UpdateServiceList();
+						SetChannelProvider(i,pInfo->GroupID.c_str());
 						return;
 					}
 				}
@@ -4182,6 +4559,8 @@ void CProgramGuide::ShowPopupMenu(int x,int y)
 		MF_BYCOMMAND | (m_fDragScroll?MF_CHECKED:MF_UNCHECKED));
 	::CheckMenuItem(hmenu,CM_PROGRAMGUIDE_POPUPEVENTINFO,
 		MF_BYCOMMAND | (m_fShowToolTip?MF_CHECKED:MF_UNCHECKED));
+	::CheckMenuItem(hmenu,CM_PROGRAMGUIDE_SHOWFEATUREDMARK,
+		MF_BYCOMMAND | (m_fShowFeaturedMark?MF_CHECKED:MF_UNCHECKED));
 	::CheckMenuItem(hmenu,CM_PROGRAMGUIDE_KEEPTIMEPOS,
 		MF_BYCOMMAND | (m_fKeepTimePos?MF_CHECKED:MF_UNCHECKED));
 	::EnableMenuItem(hmenu,CM_PROGRAMGUIDE_IEPGASSOCIATE,
@@ -4250,7 +4629,7 @@ bool CProgramGuide::ExecuteiEpgAssociate(const ProgramGuide::CServiceInfo *pServ
 	if (!pServiceInfo->SaveiEpgFile(pEventInfo,szFileName,true))
 		return false;
 
-	return (int)::ShellExecute(NULL,NULL,szFileName,NULL,NULL,SW_SHOWNORMAL)>32;
+	return (INT_PTR)::ShellExecute(NULL,NULL,szFileName,NULL,NULL,SW_SHOWNORMAL)>32;
 }
 
 
@@ -4267,6 +4646,52 @@ bool CProgramGuide::ExecuteTool(int Tool,
 
 	return pTool->Execute(pServiceInfo,pEventInfo,
 						  ::GetAncestor(m_hwnd,GA_ROOT));
+}
+
+
+void CProgramGuide::ApplyStyle()
+{
+	if (m_hwnd!=NULL) {
+		CreateFonts();
+		CalcFontMetrics();
+
+		m_ItemWidth=m_pStyleScaling->LogicalPixelsToPhysicalPixels(m_ItemLogicalWidth);
+		m_TextLeftMargin=
+			m_Style.EventIconSize.Width+
+			m_Style.EventIconMargin.Left+m_Style.EventIconMargin.Right;
+
+		static const TVTest::Theme::IconList::ResourceInfo ResourceList[] = {
+			{MAKEINTRESOURCE(IDB_CHEVRON10),10,10},
+			{MAKEINTRESOURCE(IDB_CHEVRON20),20,20},
+		};
+		m_Chevron.Load(m_hinst,
+					   m_Style.HeaderChevronSize.Width,
+					   m_Style.HeaderChevronSize.Height,
+					   ResourceList,lengthof(ResourceList));
+
+		if (m_Tooltip.IsCreated())
+			m_Tooltip.SetFont(m_ContentFont.GetHandle());
+	}
+}
+
+
+void CProgramGuide::RealizeStyle()
+{
+	if (m_hwnd!=NULL) {
+		CalcLayout();
+		SetScrollBar();
+		SetTooltip();
+		Invalidate();
+	}
+}
+
+
+void CProgramGuide::OnFeaturedEventsSettingsChanged(CFeaturedEvents &FeaturedEvents)
+{
+	if (m_fShowFeaturedMark) {
+		m_FeaturedEventsMatcher.BeginMatching(FeaturedEvents.GetSettings());
+		Invalidate();
+	}
 }
 
 
@@ -4344,7 +4769,7 @@ bool CProgramGuide::CEventInfoPopupHandler::ShowPopup(LPARAM Param,CEventInfoPop
 			else
 				pEventInfo=pItem->GetEventInfo();
 			/*
-			if (pEventInfo->GetEventName()==NULL && pEventInfo->m_fCommonEvent) {
+			if (pEventInfo->m_EventName.empty() && pEventInfo->m_bCommonEvent) {
 				const CProgramGuideItem *pCommonItem=m_pProgramGuide->m_ServiceList.GetEventByIDs(
 					pServiceInfo->GetTSID(),
 					pEventInfo->m_CommonEventInfo.ServiceID,
@@ -4354,28 +4779,29 @@ bool CProgramGuide::CEventInfoPopupHandler::ShowPopup(LPARAM Param,CEventInfoPop
 			}
 			*/
 
-			int Genre=-1;
-			for (int i=0;i<pEventInfo->m_ContentNibble.NibbleCount;i++) {
-				if (pEventInfo->m_ContentNibble.NibbleList[i].ContentNibbleLevel1!=0xE) {
-					Genre=pEventInfo->m_ContentNibble.NibbleList[i].ContentNibbleLevel1;
-					break;
-				}
-			}
-			COLORREF Color;
-			if (Genre>=0 && Genre<=CEventInfoData::CONTENT_LAST)
-				Color=m_pProgramGuide->m_ColorList[COLOR_CONTENT_FIRST+Genre];
-			else
-				Color=m_pProgramGuide->m_ColorList[COLOR_CONTENT_OTHER];
-			pPopup->SetTitleColor(Color,m_pProgramGuide->m_ColorList[COLOR_EVENTTITLE]);
+			pPopup->SetTitleColor(m_pProgramGuide->m_EpgTheme.GetGenreColor(*pEventInfo),
+								  m_pProgramGuide->m_EpgTheme.GetColor(CEpgTheme::COLOR_EVENTNAME));
 
 			const ProgramGuide::CServiceInfo *pServiceInfo=pLayout->GetServiceInfo();
 			int IconWidth,IconHeight;
 			pPopup->GetPreferredIconSize(&IconWidth,&IconHeight);
-			HICON hIcon=GetAppClass().GetLogoManager()->CreateLogoIcon(
+			HICON hIcon=GetAppClass().LogoManager.CreateLogoIcon(
 				pServiceInfo->GetNetworkID(),pServiceInfo->GetServiceID(),
 				IconWidth,IconHeight);
 
-			if (!pPopup->Show(pEventInfo,NULL,hIcon,pServiceInfo->GetServiceName())) {
+			RECT rc;
+			POINT pt;
+			m_pProgramGuide->GetEventRect(List,Event,&rc);
+			pt.x=rc.left;
+			pt.y=rc.bottom;
+			::ClientToScreen(m_pProgramGuide->m_hwnd,&pt);
+			pPopup->GetDefaultPopupPosition(&rc);
+			if (rc.top>pt.y) {
+				rc.bottom=pt.y+(rc.bottom-rc.top);
+				rc.top=pt.y;
+			}
+
+			if (!pPopup->Show(pEventInfo,&rc,hIcon,pServiceInfo->GetServiceName())) {
 				if (hIcon!=NULL)
 					::DestroyIcon(hIcon);
 				return false;
@@ -4440,9 +4866,58 @@ bool CProgramGuide::CProgramSearchEventHandler::OnSearch()
 
 		for (;j<pServiceInfo->NumEvents();j++) {
 			pEventInfo=pServiceInfo->GetEvent(j);
-			if (!pEventInfo->m_fCommonEvent
-					&& Match(pEventInfo))
-				AddSearchResult(pEventInfo,pServiceInfo->GetServiceName());
+			if (!pEventInfo->m_bCommonEvent && Match(pEventInfo)) {
+				AddSearchResult(
+					new CSearchEventInfo(
+						*pEventInfo,
+						CTunerChannelInfo(pServiceInfo->GetChannelInfo(),
+										  pServiceInfo->GetBonDriverFileName())));
+			}
+		}
+	}
+
+	if (m_pSearchDialog->GetSearchTarget()==SEARCH_TARGET_ALL) {
+		// 全ての番組から検索
+		CAppMain &App=GetAppClass();
+		CChannelList ServiceList;
+
+		App.DriverManager.GetAllServiceList(&ServiceList);
+
+		for (int i=0;i<ServiceList.NumChannels();i++) {
+			const CTunerChannelInfo *pChInfo=
+				static_cast<const CTunerChannelInfo*>(ServiceList.GetChannelInfo(i));
+
+			if (m_pProgramGuide->m_ServiceList.GetItemByIDs(
+					pChInfo->GetTransportStreamID(),pChInfo->GetServiceID())==NULL) {
+				m_pProgramGuide->m_pProgramList->UpdateService(
+					pChInfo->GetNetworkID(),pChInfo->GetTransportStreamID(),pChInfo->GetServiceID());
+
+				const CEpgServiceInfo *pServiceInfo=
+					m_pProgramGuide->m_pProgramList->GetServiceInfo(
+						pChInfo->GetNetworkID(),pChInfo->GetTransportStreamID(),pChInfo->GetServiceID());
+				if (pServiceInfo!=NULL && !pServiceInfo->m_EventList.EventTimeMap.empty()) {
+					const CEventInfoList &EventList=pServiceInfo->m_EventList;
+					CEventManager::TimeEventInfo Key(stFirst);
+					auto itrTime=EventList.EventTimeMap.upper_bound(Key);
+
+					if (itrTime!=EventList.EventTimeMap.begin()) {
+						auto itrPrev=itrTime;
+						--itrPrev;
+						if (itrPrev->StartTime+itrPrev->Duration>Key.StartTime)
+							itrTime=itrPrev;
+					}
+
+					for (;itrTime!=EventList.EventTimeMap.end();++itrTime) {
+						auto itrEvent=EventList.EventDataMap.find(itrTime->EventID);
+						if (itrEvent!=EventList.EventDataMap.end()) {
+							const CEventInfoData &EventInfo=itrEvent->second;
+							if (!EventInfo.m_bCommonEvent && Match(&EventInfo)) {
+								AddSearchResult(new CSearchEventInfo(EventInfo,*pChInfo));
+							}
+						}
+					}
+				}
+			}
 		}
 	}
 
@@ -4466,21 +4941,31 @@ bool CProgramGuide::CProgramSearchEventHandler::OnClose()
 
 
 bool CProgramGuide::CProgramSearchEventHandler::OnLDoubleClick(
-	const CEventInfoData *pEventInfo,LPARAM Param)
+	const CSearchEventInfo *pEventInfo)
 {
 	// 検索結果の一覧のダブルクリック
 	// TODO: 動作をカスタマイズできるようにする
-	DoCommand(CM_PROGRAMGUIDE_JUMPEVENT,pEventInfo);
+	if (!m_pProgramGuide->IsExcludeService(
+			pEventInfo->m_NetworkID,
+			pEventInfo->m_TransportStreamID,
+			pEventInfo->m_ServiceID))
+		DoCommand(CM_PROGRAMGUIDE_JUMPEVENT,pEventInfo);
 	return true;
 }
 
 
 bool CProgramGuide::CProgramSearchEventHandler::OnRButtonClick(
-	const CEventInfoData *pEventInfo,LPARAM Param)
+	const CSearchEventInfo *pEventInfo)
 {
 	// 検索結果の一覧の右クリックメニューを表示
 	HMENU hmenu=::LoadMenu(GetAppClass().GetResourceInstance(),MAKEINTRESOURCE(IDM_PROGRAMSEARCH));
 	HMENU hmenuPopup=::GetSubMenu(hmenu,0);
+
+	if (m_pProgramGuide->IsExcludeService(
+			pEventInfo->m_NetworkID,
+			pEventInfo->m_TransportStreamID,
+			pEventInfo->m_ServiceID))
+		::EnableMenuItem(hmenu,CM_PROGRAMGUIDE_JUMPEVENT,MF_BYCOMMAND | MF_GRAYED);
 
 	if (m_pProgramGuide->m_pProgramCustomizer!=NULL) {
 		POINT pt={50,50};
@@ -4511,33 +4996,177 @@ void CProgramGuide::CProgramSearchEventHandler::OnHighlightChange(bool fHighligh
 }
 
 
+static int FindChannelFromChannelProvider(
+	const CProgramGuideChannelProvider *pChannelProvider,
+	const CChannelInfo &ChannelInfo)
+{
+	const size_t GroupCount=pChannelProvider->GetGroupCount();
+
+	for (size_t i=0;i<GroupCount;i++) {
+		const size_t ChannelCount=pChannelProvider->GetChannelCount(i);
+
+		for (size_t j=0;j<ChannelCount;j++) {
+			const CChannelInfo *pChInfo=pChannelProvider->GetChannelInfo(i,j);
+
+			if (pChInfo->GetNetworkID()==ChannelInfo.GetNetworkID()
+					&& pChInfo->GetTransportStreamID()==ChannelInfo.GetTransportStreamID()
+					&& pChInfo->GetServiceID()==ChannelInfo.GetServiceID()) {
+				return (int)i;
+			}
+		}
+	}
+
+	return -1;
+}
+
 void CProgramGuide::CProgramSearchEventHandler::DoCommand(
-	int Command,const CEventInfoData *pEventInfo)
+	int Command,const CSearchEventInfo *pEventInfo)
 {
 	ProgramGuide::CServiceInfo *pServiceInfo=
-		m_pProgramGuide->m_ServiceList.GetItemByIDs(pEventInfo->m_TSID,pEventInfo->m_ServiceID);
+		m_pProgramGuide->m_ServiceList.GetItemByIDs(pEventInfo->m_TransportStreamID,pEventInfo->m_ServiceID);
 
 	if (Command==CM_PROGRAMGUIDE_JUMPEVENT) {
-		m_pProgramGuide->JumpEvent(*pEventInfo);
+		if (pServiceInfo!=NULL) {
+			m_pProgramGuide->JumpEvent(*pEventInfo);
+		} else if (m_pProgramGuide->m_pChannelProviderManager!=NULL) {
+			if (m_pProgramGuide->m_pChannelProvider!=NULL) {
+				const int Group=FindChannelFromChannelProvider(
+					m_pProgramGuide->m_pChannelProvider,pEventInfo->GetChannelInfo());
+				if (Group>=0) {
+					m_pProgramGuide->SetChannelProvider(
+						m_pProgramGuide->GetCurrentChannelProvider(),Group);
+					m_pProgramGuide->JumpEvent(*pEventInfo);
+					return;
+				}
+			}
+
+			const size_t ProviderCount=m_pProgramGuide->m_pChannelProviderManager->GetChannelProviderCount();
+			for (size_t i=0;i<ProviderCount;i++) {
+				if ((int)i!=m_pProgramGuide->GetCurrentChannelProvider()) {
+					CProgramGuideChannelProvider *pChannelProvider=
+						m_pProgramGuide->m_pChannelProviderManager->GetChannelProvider(i);
+					pChannelProvider->Update();
+					const int Group=FindChannelFromChannelProvider(
+						pChannelProvider,pEventInfo->GetChannelInfo());
+					if (Group>=0) {
+						m_pProgramGuide->SetChannelProvider((int)i,Group);
+						m_pProgramGuide->JumpEvent(*pEventInfo);
+						return;
+					}
+				}
+			}
+		}
 	} else if (Command==CM_PROGRAMGUIDE_IEPGASSOCIATE) {
-		if (pServiceInfo!=NULL)
+		if (pServiceInfo!=NULL) {
 			m_pProgramGuide->ExecuteiEpgAssociate(pServiceInfo,pEventInfo);
+		} else {
+			ProgramGuide::CServiceInfo ServiceInfo(pEventInfo->GetChannelInfo(),
+												   pEventInfo->GetChannelInfo().GetTunerName());
+			m_pProgramGuide->ExecuteiEpgAssociate(&ServiceInfo,pEventInfo);
+		}
 	} else if (Command>=CM_PROGRAMGUIDE_CUSTOM_FIRST
 			&& Command<=CM_PROGRAMGUIDE_CUSTOM_LAST) {
 		if (m_pProgramGuide->m_pProgramCustomizer!=NULL)
 			m_pProgramGuide->m_pProgramCustomizer->ProcessMenu(*pEventInfo,Command);
 	} else if (Command>=CM_PROGRAMGUIDETOOL_FIRST
 			&& Command<=CM_PROGRAMGUIDETOOL_LAST) {
-		if (pServiceInfo!=NULL)
-			m_pProgramGuide->ExecuteTool(Command-CM_PROGRAMGUIDETOOL_FIRST,
-										 pServiceInfo,pEventInfo);
+		const int Tool=Command-CM_PROGRAMGUIDETOOL_FIRST;
+		if (pServiceInfo!=NULL) {
+			m_pProgramGuide->ExecuteTool(Tool,pServiceInfo,pEventInfo);
+		} else {
+			ProgramGuide::CServiceInfo ServiceInfo(pEventInfo->GetChannelInfo(),
+												   pEventInfo->GetChannelInfo().GetTunerName());
+			m_pProgramGuide->ExecuteTool(Tool,&ServiceInfo,pEventInfo);
+		}
 	}
 }
 
 
 
 
+CProgramGuide::ProgramGuideStyle::ProgramGuideStyle()
+	: ColumnMargin(4)
+	, HeaderPadding(4)
+	, HeaderChannelNameMargin(0)
+	, HeaderIconMargin(0,0,4,0)
+	, HeaderChevronSize(10,10)
+	, HeaderChevronMargin(8,0,0,0)
+	, HeaderShadowHeight(8)
+	, EventLeading(1)
+	, EventLineSpacing(0)
+	, fEventJustify(true)
+	, EventPadding(0,0,2,0)
+	, EventIconSize(CEpgIcons::DEFAULT_ICON_WIDTH,CEpgIcons::DEFAULT_ICON_HEIGHT)
+	, EventIconMargin(1)
+	, FeaturedMarkMargin(0)
+	, HighlightBorder(3)
+	, SelectedBorder(2)
+	, TimeBarPadding(4)
+	, TimeBarShadowWidth(6)
+	, CurTimeLineWidth(2)
+	, ToolbarItemPadding(4)
+{
+}
+
+
+void CProgramGuide::ProgramGuideStyle::SetStyle(const TVTest::Style::CStyleManager *pStyleManager)
+{
+	*this=ProgramGuideStyle();
+	pStyleManager->Get(TEXT("program-guide.column.margin"),&ColumnMargin);
+	pStyleManager->Get(TEXT("program-guide.header.padding"),&HeaderPadding);
+	pStyleManager->Get(TEXT("program-guide.header.channel-name.margin"),&HeaderChannelNameMargin);
+	pStyleManager->Get(TEXT("program-guide.header.icon.margin"),&HeaderIconMargin);
+	pStyleManager->Get(TEXT("program-guide.header.chevron"),&HeaderChevronSize);
+	pStyleManager->Get(TEXT("program-guide.header.chevron.margin"),&HeaderChevronMargin);
+	pStyleManager->Get(TEXT("program-guide.header.shadow.height"),&HeaderShadowHeight);
+	pStyleManager->Get(TEXT("program-guide.event.leading"),&EventLeading);
+	pStyleManager->Get(TEXT("program-guide.event.line-spacing"),&EventLineSpacing);
+	pStyleManager->Get(TEXT("program-guide.event.justify"),&fEventJustify);
+	pStyleManager->Get(TEXT("program-guide.event.padding"),&EventPadding);
+	pStyleManager->Get(TEXT("program-guide.event.icon"),&EventIconSize);
+	pStyleManager->Get(TEXT("program-guide.event.icon.margin"),&EventIconMargin);
+	pStyleManager->Get(TEXT("program-guide.event.featured-mark.margin"),&FeaturedMarkMargin);
+	pStyleManager->Get(TEXT("program-guide.event.highlight-border"),&HighlightBorder);
+	pStyleManager->Get(TEXT("program-guide.event.selected-border"),&SelectedBorder);
+	pStyleManager->Get(TEXT("program-guide.time-bar.padding"),&TimeBarPadding);
+	pStyleManager->Get(TEXT("program-guide.time-bar.shadow.width"),&TimeBarShadowWidth);
+	pStyleManager->Get(TEXT("program-guide.cur-time-line.width"),&CurTimeLineWidth);
+	pStyleManager->Get(TEXT("program-guide.tool-bar.item.padding"),&ToolbarItemPadding);
+}
+
+
+void CProgramGuide::ProgramGuideStyle::NormalizeStyle(
+	const TVTest::Style::CStyleManager *pStyleManager,
+	const TVTest::Style::CStyleScaling *pStyleScaling)
+{
+	pStyleScaling->ToPixels(&ColumnMargin);
+	pStyleScaling->ToPixels(&HeaderPadding);
+	pStyleScaling->ToPixels(&HeaderChannelNameMargin);
+	pStyleScaling->ToPixels(&HeaderIconMargin);
+	pStyleScaling->ToPixels(&HeaderChevronSize);
+	pStyleScaling->ToPixels(&HeaderChevronMargin);
+	pStyleScaling->ToPixels(&HeaderShadowHeight);
+	pStyleScaling->ToPixels(&EventLeading);
+	pStyleScaling->ToPixels(&EventLineSpacing);
+	pStyleScaling->ToPixels(&EventPadding);
+	pStyleScaling->ToPixels(&EventIconSize);
+	pStyleScaling->ToPixels(&EventIconMargin);
+	pStyleScaling->ToPixels(&FeaturedMarkMargin);
+	pStyleScaling->ToPixels(&HighlightBorder);
+	pStyleScaling->ToPixels(&SelectedBorder);
+	pStyleScaling->ToPixels(&TimeBarPadding);
+	pStyleScaling->ToPixels(&TimeBarShadowWidth);
+	pStyleScaling->ToPixels(&CurTimeLineWidth);
+	pStyleScaling->ToPixels(&ToolbarItemPadding);
+}
+
+
+
+
 #include "Menu.h"
+
+namespace ProgramGuideBar
+{
 
 enum {
 	STATUS_ITEM_TUNER,
@@ -4547,29 +5176,45 @@ enum {
 };
 
 
-class CProgramGuideTunerStatusItem : public CStatusItem
+class CStatusItemBase : public CStatusItem
+{
+public:
+	CStatusItemBase(int ID,const SizeValue &DefaultWidth)
+		: CStatusItem(ID,DefaultWidth)
+	{
+	}
+
+	void ApplyStyle() override
+	{
+		m_Width=m_pStatus->CalcItemPixelSize(m_DefaultWidth);
+		m_ActualWidth=m_Width;
+	}
+};
+
+class CProgramGuideTunerStatusItem : public CStatusItemBase
 {
 	CProgramGuide *m_pProgramGuide;
 	CDropDownMenu m_Menu;
 
 public:
 	CProgramGuideTunerStatusItem::CProgramGuideTunerStatusItem(CProgramGuide *pProgramGuide)
-		: CStatusItem(STATUS_ITEM_TUNER,160)
+		: CStatusItemBase(STATUS_ITEM_TUNER,SizeValue(14*EM_FACTOR,SIZE_EM))
 		, m_pProgramGuide(pProgramGuide)
 	{
 	}
 
-	LPCTSTR GetName() const { return TEXT("チューナー"); }
+	LPCTSTR GetIDText() const override { return TEXT("Tuner"); }
+	LPCTSTR GetName() const override { return TEXT("チューナー"); }
 
-	void Draw(HDC hdc,const RECT *pRect)
+	void Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect,unsigned int Flags) override
 	{
 		TCHAR szText[256];
 
 		if (m_pProgramGuide->GetChannelGroupName(m_pProgramGuide->GetCurrentChannelGroup(),szText,lengthof(szText)))
-			DrawText(hdc,pRect,szText);
+			DrawText(hdc,DrawRect,szText);
 	}
 
-	void OnFocus(bool fFocus)
+	void OnFocus(bool fFocus) override
 	{
 		if (fFocus) {
 			TCHAR szText[256];
@@ -4589,7 +5234,8 @@ public:
 			pt.y=rc.bottom;
 			::ClientToScreen(m_pStatus->GetHandle(),&pt);
 			m_Menu.Show(GetParent(m_pStatus->GetHandle()),m_pProgramGuide->GetHandle(),&pt,
-						CM_PROGRAMGUIDE_CHANNELGROUP_FIRST+m_pProgramGuide->GetCurrentChannelGroup());
+						CM_PROGRAMGUIDE_CHANNELGROUP_FIRST+m_pProgramGuide->GetCurrentChannelGroup(),
+						0,m_pStyleScaling->GetDPI());
 		} else {
 			POINT pt;
 			RECT rc;
@@ -4601,7 +5247,7 @@ public:
 	}
 };
 
-class CListSelectStatusItem : public CStatusItem
+class CListSelectStatusItem : public CStatusItemBase
 {
 	CProgramGuide *m_pProgramGuide;
 	CDropDownMenu m_Menu;
@@ -4645,34 +5291,38 @@ class CListSelectStatusItem : public CStatusItem
 
 public:
 	CListSelectStatusItem::CListSelectStatusItem(CProgramGuide *pProgramGuide)
-		: CStatusItem(STATUS_ITEM_DATE,160)
+		: CStatusItemBase(STATUS_ITEM_DATE,SizeValue(14*EM_FACTOR,SIZE_EM))
 		, m_pProgramGuide(pProgramGuide)
 	{
 	}
 
-	LPCTSTR GetName() const { return TEXT("日時"); }
+	LPCTSTR GetIDText() const override { return TEXT("Date"); }
+	LPCTSTR GetName() const override { return TEXT("日時"); }
 
-	void Draw(HDC hdc,const RECT *pRect)
+	void Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect,unsigned int Flags) override
 	{
 		if (m_pProgramGuide->GetListMode()==CProgramGuide::LIST_SERVICES) {
-			SYSTEMTIME stFirst;
+			CProgramGuide::DateInfo Info;
 			TCHAR szText[256];
 
-			m_pProgramGuide->GetCurrentTimeRange(&stFirst,NULL);
-			StdUtil::snprintf(szText,lengthof(szText),TEXT("%s %d/%d(%s) %d時～"),
-							  DayText[m_pProgramGuide->GetViewDay()],
-							  stFirst.wMonth,stFirst.wDay,
-							  GetDayOfWeekText(stFirst.wDayOfWeek),stFirst.wHour);
-			DrawText(hdc,pRect,szText);
+			m_pProgramGuide->GetCurrentDateInfo(&Info);
+			EpgUtil::EpgTimeToDisplayTime(&Info.BeginningTime);
+			StdUtil::snprintf(szText,lengthof(szText),TEXT("%s%s%d/%d(%s) %d時～"),
+							  Info.pszRelativeDayText!=NULL?Info.pszRelativeDayText:TEXT(""),
+							  Info.pszRelativeDayText!=NULL?TEXT(" "):TEXT(""),
+							  Info.BeginningTime.wMonth,Info.BeginningTime.wDay,
+							  GetDayOfWeekText(Info.BeginningTime.wDayOfWeek),
+							  Info.BeginningTime.wHour);
+			DrawText(hdc,DrawRect,szText);
 		} else {
 			const ProgramGuide::CServiceInfo *pService=
 				m_pProgramGuide->GetServiceList().GetItem(m_pProgramGuide->GetWeekListService());
 			if (pService!=NULL)
-				DrawText(hdc,pRect,pService->GetServiceName());
+				DrawText(hdc,DrawRect,pService->GetServiceName());
 		}
 	}
 
-	void OnFocus(bool fFocus)
+	void OnFocus(bool fFocus) override
 	{
 		if (fFocus) {
 			int CurItem;
@@ -4680,13 +5330,18 @@ public:
 			m_Menu.Clear();
 			if (m_pProgramGuide->GetListMode()==CProgramGuide::LIST_SERVICES) {
 				for (int i=CProgramGuide::DAY_FIRST;i<=CProgramGuide::DAY_LAST;i++) {
-					SYSTEMTIME st;
+					CProgramGuide::DateInfo Info;
 					TCHAR szText[256];
 
-					m_pProgramGuide->GetDayTimeRange(i,&st,NULL);
-					StdUtil::snprintf(szText,lengthof(szText),TEXT("%s %d/%d(%s) %d時～"),
-									  DayText[i],
-									  st.wMonth,st.wDay,GetDayOfWeekText(st.wDayOfWeek),st.wHour);
+					m_pProgramGuide->GetDateInfo(i,&Info);
+					EpgUtil::EpgTimeToDisplayTime(&Info.BeginningTime);
+					StdUtil::snprintf(szText,lengthof(szText),TEXT("%s%s%d/%d(%s) %d時～"),
+									  Info.pszRelativeDayText!=NULL?Info.pszRelativeDayText:TEXT(""),
+									  Info.pszRelativeDayText!=NULL?TEXT(" "):TEXT(""),
+									  Info.BeginningTime.wMonth,
+									  Info.BeginningTime.wDay,
+									  GetDayOfWeekText(Info.BeginningTime.wDayOfWeek),
+									  Info.BeginningTime.wHour);
 					m_Menu.AppendItem(new CDropDownMenu::CItem(CM_PROGRAMGUIDE_DAY_FIRST+i,szText));
 				}
 				CurItem=CM_PROGRAMGUIDE_DAY_FIRST+m_pProgramGuide->GetViewDay();
@@ -4710,7 +5365,7 @@ public:
 			pt.y=rc.bottom;
 			::ClientToScreen(m_pStatus->GetHandle(),&pt);
 			m_Menu.Show(GetParent(m_pStatus->GetHandle()),m_pProgramGuide->GetHandle(),&pt,
-						CurItem);
+						CurItem,0,m_pStyleScaling->GetDPI());
 		} else {
 			POINT pt;
 			RECT rc;
@@ -4722,20 +5377,21 @@ public:
 	}
 };
 
-class CListPrevStatusItem : public CStatusItem
+class CListPrevStatusItem : public CStatusItemBase
 {
 	CProgramGuide *m_pProgramGuide;
 
 public:
 	CListPrevStatusItem::CListPrevStatusItem(CProgramGuide *pProgramGuide)
-		: CStatusItem(STATUS_ITEM_DATEPREV,16)
+		: CStatusItemBase(STATUS_ITEM_DATEPREV,SizeValue(1*EM_FACTOR,SIZE_EM))
 		, m_pProgramGuide(pProgramGuide)
 	{
 	}
 
-	LPCTSTR GetName() const { return TEXT("前へ"); }
+	LPCTSTR GetIDText() const override { return TEXT("Prev"); }
+	LPCTSTR GetName() const override { return TEXT("前へ"); }
 
-	void Draw(HDC hdc,const RECT *pRect)
+	void Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect,unsigned int Flags) override
 	{
 		bool fEnabled;
 
@@ -4747,12 +5403,12 @@ public:
 		COLORREF OldTextColor;
 		if (!fEnabled)
 			OldTextColor=::SetTextColor(hdc,MixColor(::GetTextColor(hdc),GetBkColor(hdc)));
-		DrawText(hdc,pRect,TEXT("▲"),DRAWTEXT_HCENTER);
+		DrawText(hdc,DrawRect,TEXT("▲"),DRAWTEXT_HCENTER | DRAWTEXT_NOENDELLIPSIS);
 		if (!fEnabled)
 			::SetTextColor(hdc,OldTextColor);
 	}
 
-	void OnLButtonDown(int x,int y)
+	void OnLButtonDown(int x,int y) override
 	{
 		if (m_pProgramGuide->GetListMode()==CProgramGuide::LIST_SERVICES) {
 			int Day=m_pProgramGuide->GetViewDay();
@@ -4764,20 +5420,21 @@ public:
 	}
 };
 
-class CListNextStatusItem : public CStatusItem
+class CListNextStatusItem : public CStatusItemBase
 {
 	CProgramGuide *m_pProgramGuide;
 
 public:
 	CListNextStatusItem::CListNextStatusItem(CProgramGuide *pProgramGuide)
-		: CStatusItem(STATUS_ITEM_DATENEXT,16)
+		: CStatusItemBase(STATUS_ITEM_DATENEXT,SizeValue(1*EM_FACTOR,SIZE_EM))
 		, m_pProgramGuide(pProgramGuide)
 	{
 	}
 
-	LPCTSTR GetName() const { return TEXT("次へ"); }
+	LPCTSTR GetIDText() const override { return TEXT("Next"); }
+	LPCTSTR GetName() const override { return TEXT("次へ"); }
 
-	void Draw(HDC hdc,const RECT *pRect)
+	void Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect,unsigned int Flags) override
 	{
 		bool fEnabled;
 
@@ -4790,12 +5447,12 @@ public:
 		COLORREF OldTextColor;
 		if (!fEnabled)
 			OldTextColor=::SetTextColor(hdc,MixColor(::GetTextColor(hdc),GetBkColor(hdc)));
-		DrawText(hdc,pRect,TEXT("▼"),DRAWTEXT_HCENTER);
+		DrawText(hdc,DrawRect,TEXT("▼"),DRAWTEXT_HCENTER | DRAWTEXT_NOENDELLIPSIS);
 		if (!fEnabled)
 			::SetTextColor(hdc,OldTextColor);
 	}
 
-	void OnLButtonDown(int x,int y)
+	void OnLButtonDown(int x,int y) override
 	{
 		if (m_pProgramGuide->GetListMode()==CProgramGuide::LIST_SERVICES) {
 			int Day=m_pProgramGuide->GetViewDay();
@@ -4808,10 +5465,6 @@ public:
 };
 
 
-
-
-namespace ProgramGuideBar
-{
 
 
 CProgramGuideBar::CProgramGuideBar(CProgramGuide *pProgramGuide)
@@ -4832,6 +5485,7 @@ CProgramGuideBar::~CProgramGuideBar()
 class ABSTRACT_CLASS(CProgramGuideToolbar)
 	: public CProgramGuideBar
 	, public CBasicWindow
+	, public TVTest::CUIBase
 {
 public:
 	CProgramGuideToolbar(CProgramGuide *pProgramGuide);
@@ -4847,6 +5501,7 @@ public:
 	bool SetBarVisible(bool fVisible) override;
 	void GetBarSize(SIZE *pSize) override;
 	void SetBarPosition(int x,int y,int Width,int Height) override;
+	TVTest::CUIBase *GetUIBase() override;
 	bool OnSetCursor(HWND hwnd,int HitTestCode) override;
 	bool OnNotify(LPARAM lParam,LRESULT *pResult) override;
 
@@ -4856,9 +5511,17 @@ public:
 
 protected:
 	CBufferedPaint m_BufferedPaint;
+	TVTest::Style::Margins m_Padding;
+	DrawUtil::CFont m_Font;
+	int m_FontHeight;
 
 	void AdjustSize();
 	void DeleteAllButtons();
+	void SetToolbarFont();
+
+// CUIBase
+	void ApplyStyle() override;
+	void RealizeStyle() override;
 
 	virtual void OnCreate() {}
 	virtual void OnCustomDraw(NMTBCUSTOMDRAW *pnmtb,HDC hdc) = 0;
@@ -4867,6 +5530,8 @@ protected:
 
 CProgramGuideToolbar::CProgramGuideToolbar(CProgramGuide *pProgramGuide)
 	: CProgramGuideBar(pProgramGuide)
+	, m_Padding(pProgramGuide->GetToolbarItemPadding())
+	, m_FontHeight(0)
 {
 }
 
@@ -4886,11 +5551,14 @@ bool CProgramGuideToolbar::Create(HWND hwndParent,DWORD Style,DWORD ExStyle,int 
 						   TOOLBARCLASSNAME,NULL,GetAppClass().GetInstance()))
 		return false;
 
+	InitializeUI();
+
 	::SendMessage(m_hwnd,TB_BUTTONSTRUCTSIZE,sizeof(TBBUTTON),0);
 	//::SendMessage(m_hwnd,TB_SETEXTENDEDSTYLE,0,TBSTYLE_EX_MIXEDBUTTONS);
-	::SendMessage(m_hwnd,TB_SETPADDING,0,MAKELONG(4,4));
 	// ボタンをアイコン無しにしてもなぜかアイコン分の幅がとられる
 	::SendMessage(m_hwnd,TB_SETBITMAPSIZE,0,MAKELONG(1,15));
+
+	SetToolbarFont();
 
 	return true;
 }
@@ -4934,20 +5602,8 @@ bool CProgramGuideToolbar::SetBarVisible(bool fVisible)
 
 void CProgramGuideToolbar::GetBarSize(SIZE *pSize)
 {
-	int ButtonCount;
-
-	if (m_hwnd!=NULL && (ButtonCount=(int)::SendMessage(m_hwnd,TB_BUTTONCOUNT,0,0))>0) {
-#if 0
-		TBBUTTON tbb;
-		RECT rc;
-
-		::SendMessage(m_hwnd,TB_GETBUTTON,ButtonCount-1,reinterpret_cast<LPARAM>(&tbb));
-		::SendMessage(m_hwnd,TB_GETRECT,tbb.idCommand,reinterpret_cast<LPARAM>(&rc));
-		pSize->cx=rc.right;
-		pSize->cy=rc.bottom;
-#else
+	if (m_hwnd!=NULL && (int)::SendMessage(m_hwnd,TB_BUTTONCOUNT,0,0)>0) {
 		::SendMessage(m_hwnd,TB_GETMAXSIZE,0,reinterpret_cast<LPARAM>(pSize));
-#endif
 	} else {
 		pSize->cx=0;
 		pSize->cy=0;
@@ -4961,10 +5617,16 @@ void CProgramGuideToolbar::SetBarPosition(int x,int y,int Width,int Height)
 }
 
 
+TVTest::CUIBase *CProgramGuideToolbar::GetUIBase()
+{
+	return this;
+}
+
+
 bool CProgramGuideToolbar::OnSetCursor(HWND hwnd,int HitTestCode)
 {
 	if (hwnd==m_hwnd && HitTestCode==HTCLIENT) {
-		::SetCursor(::LoadCursor(NULL,IDC_HAND));
+		::SetCursor(GetAppClass().UICore.GetActionCursor());
 		return true;
 	}
 
@@ -5063,9 +5725,37 @@ void CProgramGuideToolbar::DeleteAllButtons()
 }
 
 
+void CProgramGuideToolbar::SetToolbarFont()
+{
+	SetWindowFont(m_hwnd,m_Font.GetHandle(),TRUE);
+	::SendMessage(m_hwnd,TB_SETPADDING,0,
+				  MAKELONG((m_Padding.Horz()+1)/2,(m_Padding.Vert()+1)/2));
+}
 
 
-class ABSTRACT_CLASS(CStatusBar) : public CProgramGuideBar
+void CProgramGuideToolbar::ApplyStyle()
+{
+	TVTest::Style::Font Font;
+
+	GetSystemFont(DrawUtil::FONT_MENU,&Font);
+	CreateDrawFont(Font,&m_Font);
+	HDC hdc=::GetDC(m_hwnd);
+	m_FontHeight=m_Font.GetHeight(hdc,false);
+	::ReleaseDC(m_hwnd,hdc);
+}
+
+
+void CProgramGuideToolbar::RealizeStyle()
+{
+	SetToolbarFont();
+}
+
+
+
+
+class ABSTRACT_CLASS(CStatusBar)
+	: public CProgramGuideBar
+	, public TVTest::CUIBase
 {
 public:
 	CStatusBar(CProgramGuide *pProgramGuide);
@@ -5079,6 +5769,7 @@ public:
 	void GetBarSize(SIZE *pSize) override;
 	void SetBarPosition(int x,int y,int Width,int Height) override;
 	void SetTheme(const ThemeInfo &Theme) override;
+	TVTest::CUIBase *GetUIBase() override;
 
 protected:
 	CStatusView m_StatusView;
@@ -5088,9 +5779,11 @@ protected:
 CStatusBar::CStatusBar(CProgramGuide *pProgramGuide)
 	: CProgramGuideBar(pProgramGuide)
 {
-	LOGFONT lf;
-	if (DrawUtil::GetSystemFont(DrawUtil::FONT_MENU,&lf))
-		m_StatusView.SetFont(&lf);
+	TVTest::Style::Font Font;
+	if (GetSystemFont(DrawUtil::FONT_MENU,&Font))
+		m_StatusView.SetFont(Font);
+
+	RegisterUIChild(&m_StatusView);
 }
 
 
@@ -5145,7 +5838,13 @@ void CStatusBar::SetBarPosition(int x,int y,int Width,int Height)
 
 void CStatusBar::SetTheme(const ThemeInfo &Theme)
 {
-	m_StatusView.SetTheme(Theme.pStatusTheme);
+	m_StatusView.SetStatusViewTheme(Theme.StatusTheme);
+}
+
+
+TVTest::CUIBase *CStatusBar::GetUIBase()
+{
+	return this;
 }
 
 
@@ -5225,6 +5924,7 @@ private:
 	void SetButtons();
 	void OnCreate() override;
 	void OnCustomDraw(NMTBCUSTOMDRAW *pnmtb,HDC hdc) override;
+	void RealizeStyle() override;
 };
 
 
@@ -5308,6 +6008,22 @@ void CFavoritesToolbar::SetButtons()
 		tbb.idCommand++;
 	}
 
+	SIZE ButtonSize;
+	ButtonSize.cx=0;
+	ButtonSize.cy=m_FontHeight+m_Padding.Horz();
+
+	if (pFavorites->GetFixedWidth()) {
+		const int ButtonCount=(int)::SendMessage(m_hwnd,TB_BUTTONCOUNT,0,0);
+		for (int i=0;i<ButtonCount;i++) {
+			RECT rc;
+			::SendMessage(m_hwnd,TB_GETITEMRECT,i,(LPARAM)&rc);
+			if (ButtonSize.cx<rc.right-rc.left)
+				ButtonSize.cx=rc.right-rc.left;
+		}
+	}
+
+	::SendMessage(m_hwnd,TB_SETBUTTONSIZE,0,MAKELONG(ButtonSize.cx,ButtonSize.cy));
+
 	AdjustSize();
 }
 
@@ -5324,34 +6040,38 @@ void CFavoritesToolbar::OnCustomDraw(NMTBCUSTOMDRAW *pnmtb,HDC hdc)
 		m_pProgramGuide->GetFavorites()->Get(pnmtb->nmcd.lItemlParam);
 
 	if (pInfo!=NULL) {
-		Theme::Style Style;
+		TVTest::Theme::CThemeDraw ThemeDraw(BeginThemeDraw(hdc));
+		TVTest::Theme::BackgroundStyle Style;
 		COLORREF LightColor=pInfo->BackColor;
 		COLORREF DarkColor=MixColor(LightColor,RGB(0,0,0),220);
 
-		Style.Gradient.Type=Theme::GRADIENT_NORMAL;
-		Style.Gradient.Direction=Theme::DIRECTION_VERT;
+		Style.Fill.Type=TVTest::Theme::FILL_GRADIENT;
+		Style.Fill.Gradient.Type=TVTest::Theme::GRADIENT_NORMAL;
+		Style.Fill.Gradient.Direction=TVTest::Theme::DIRECTION_VERT;
 		if ((pnmtb->nmcd.uItemState&(CDIS_CHECKED | CDIS_HOT))!=0) {
-			Style.Gradient.Color1=DarkColor;
-			Style.Gradient.Color2=LightColor;
+			Style.Fill.Gradient.Color1=DarkColor;
+			Style.Fill.Gradient.Color2=LightColor;
 		} else {
-			Style.Gradient.Color1=LightColor;
-			Style.Gradient.Color2=DarkColor;
+			Style.Fill.Gradient.Color1=LightColor;
+			Style.Fill.Gradient.Color2=DarkColor;
 		}
 		if ((pnmtb->nmcd.uItemState&(CDIS_CHECKED | CDIS_SELECTED))!=0) {
-			Style.Border.Type=Theme::BORDER_SUNKEN;
+			Style.Border.Type=TVTest::Theme::BORDER_SUNKEN;
 			Style.Border.Color=DarkColor;
 		} else {
-			Style.Border.Type=Theme::BORDER_RAISED;
+			Style.Border.Type=TVTest::Theme::BORDER_RAISED;
 			Style.Border.Color=LightColor;
 		}
-		Theme::DrawStyleBackground(hdc,&pnmtb->nmcd.rc,&Style);
+		ThemeDraw.Draw(Style,pnmtb->nmcd.rc);
 
 		HFONT hfont=reinterpret_cast<HFONT>(::SendMessage(m_hwnd,WM_GETFONT,0,0));
 		HGDIOBJ hOldFont=::SelectObject(hdc,hfont);
 		int OldBkMode=::SetBkMode(hdc,TRANSPARENT);
 		COLORREF OldTextColor=::SetTextColor(hdc,pInfo->TextColor);
 
-		::DrawText(hdc,pInfo->Label.c_str(),-1,&pnmtb->nmcd.rc,
+		RECT rc=pnmtb->nmcd.rc;
+		TVTest::Style::Subtract(&rc,m_Padding);
+		::DrawText(hdc,pInfo->Label.c_str(),-1,&rc,
 				   DT_CENTER | DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX);
 
 		::SetTextColor(hdc,OldTextColor);
@@ -5361,26 +6081,43 @@ void CFavoritesToolbar::OnCustomDraw(NMTBCUSTOMDRAW *pnmtb,HDC hdc)
 }
 
 
+void CFavoritesToolbar::RealizeStyle()
+{
+	CProgramGuideToolbar::RealizeStyle();
+	OnFavoritesChanged();
+}
+
+
 
 
 class CDateToolbar : public CProgramGuideToolbar
 {
 public:
+	enum {
+		MAX_BUTTON_COUNT=CProgramGuideFrameSettings::DATEBAR_MAXBUTTONCOUNT
+	};
+
 	CDateToolbar(CProgramGuide *pProgramGuide);
 	~CDateToolbar();
 	void OnDateChanged() override;
 	void OnTimeRangeChanged() override;
+	bool SetButtonCount(int Count);
+	int GetButtonCount() const { return m_ButtonCount; }
 
 private:
 	static const DWORD ITEM_FLAG_NOW=0x80000000;
 
+	int m_ButtonCount;
+
 	bool SetButtons(const SYSTEMTIME *pDateList,int Days,int FirstCommand);
 	void OnCustomDraw(NMTBCUSTOMDRAW *pnmtb,HDC hdc) override;
+	void RealizeStyle() override;
 };
 
 
 CDateToolbar::CDateToolbar(CProgramGuide *pProgramGuide)
 	: CProgramGuideToolbar(pProgramGuide)
+	, m_ButtonCount(CProgramGuideFrameSettings::DATEBAR_DEFAULTBUTTONCOUNT)
 {
 }
 
@@ -5393,21 +6130,34 @@ CDateToolbar::~CDateToolbar()
 
 void CDateToolbar::OnDateChanged()
 {
+	UnselectButton();
 	if (m_pProgramGuide->GetListMode()==CProgramGuide::LIST_SERVICES)
 		SelectButton(CM_PROGRAMGUIDE_DAY_FIRST+m_pProgramGuide->GetViewDay());
-	else
-		UnselectButton();
 }
 
 
 void CDateToolbar::OnTimeRangeChanged()
 {
-	SYSTEMTIME DateList[8];
+	SYSTEMTIME DateList[MAX_BUTTON_COUNT];
 
-	for (int i=0;i<8;i++)
-		m_pProgramGuide->GetDayTimeRange(i,&DateList[i],NULL);
-	SetButtons(DateList,8,CM_PROGRAMGUIDE_DAY_FIRST);
+	for (int i=0;i<m_ButtonCount;i++) {
+		SYSTEMTIME st;
+		m_pProgramGuide->GetDayTimeRange(i,&st,NULL);
+		EpgUtil::EpgTimeToDisplayTime(st,&DateList[i]);
+	}
+	SetButtons(DateList,m_ButtonCount,CM_PROGRAMGUIDE_DAY_FIRST);
 	SelectButton(CM_PROGRAMGUIDE_DAY_FIRST+m_pProgramGuide->GetViewDay());
+}
+
+
+bool CDateToolbar::SetButtonCount(int Count)
+{
+	if (Count<1 || Count>MAX_BUTTON_COUNT)
+		return false;
+
+	m_ButtonCount=Count;
+
+	return true;
 }
 
 
@@ -5428,7 +6178,7 @@ bool CDateToolbar::SetButtons(const SYSTEMTIME *pDateList,int Days,int FirstComm
 
 		tbb.idCommand=FirstCommand+i;
 		StdUtil::snprintf(szText,lengthof(szText),
-						  TEXT("%02d/%02d(%s)"),	// %02d にしているのは幅を揃えるため
+						  TEXT("%d/%d(%s)"),
 						  Date.wMonth,Date.wDay,GetDayOfWeekText(Date.wDayOfWeek));
 		tbb.iString=reinterpret_cast<INT_PTR>(szText);
 		tbb.dwData=((DWORD)Date.wMonth<<16) | ((DWORD)Date.wDay<<8) | Date.wDayOfWeek;
@@ -5436,6 +6186,29 @@ bool CDateToolbar::SetButtons(const SYSTEMTIME *pDateList,int Days,int FirstComm
 			tbb.dwData|=ITEM_FLAG_NOW;
 		::SendMessage(m_hwnd,TB_ADDBUTTONS,1,reinterpret_cast<LPARAM>(&tbb));
 	}
+
+	SIZE ButtonSize;
+	ButtonSize.cx=0;
+	ButtonSize.cy=m_FontHeight;
+	HDC hdc=::GetDC(m_hwnd);
+	HFONT hfontOld=SelectFont(hdc,GetWindowFont(m_hwnd));
+	for (int i=0;i<Days;i++) {
+		const SYSTEMTIME &Date=pDateList[i];
+		TCHAR szText[32];
+		StdUtil::snprintf(szText,lengthof(szText),
+						  TEXT("%02d/%02d(%s)"),	// %02d にしているのは幅を揃えるため
+						  Date.wMonth,Date.wDay,GetDayOfWeekText(Date.wDayOfWeek));
+		RECT rc={0,0,0,0};
+		::DrawText(hdc,szText,-1,&rc,DT_SINGLELINE | DT_NOPREFIX | DT_CALCRECT);
+		if (rc.right>ButtonSize.cx)
+			ButtonSize.cx=rc.right;
+	}
+	SelectFont(hdc,hfontOld);
+	::ReleaseDC(m_hwnd,hdc);
+
+	ButtonSize.cx+=m_Padding.Horz();
+	ButtonSize.cy+=m_Padding.Vert();
+	::SendMessage(m_hwnd,TB_SETBUTTONSIZE,0,MAKELONG(ButtonSize.cx,ButtonSize.cy));
 
 	AdjustSize();
 
@@ -5445,24 +6218,27 @@ bool CDateToolbar::SetButtons(const SYSTEMTIME *pDateList,int Days,int FirstComm
 
 void CDateToolbar::OnCustomDraw(NMTBCUSTOMDRAW *pnmtb,HDC hdc)
 {
-	Theme::Style Style;
-	Style.Gradient.Type=Theme::GRADIENT_NORMAL;
-	Style.Gradient.Direction=Theme::DIRECTION_VERT;
+	TVTest::Theme::CThemeDraw ThemeDraw(BeginThemeDraw(hdc));
+
+	TVTest::Theme::BackgroundStyle Style;
+	Style.Fill.Type=TVTest::Theme::FILL_GRADIENT;
+	Style.Fill.Gradient.Type=TVTest::Theme::GRADIENT_NORMAL;
+	Style.Fill.Gradient.Direction=TVTest::Theme::DIRECTION_VERT;
 	if ((pnmtb->nmcd.uItemState&(CDIS_CHECKED | CDIS_HOT))!=0) {
-		Style.Gradient.Color1=RGB(220,220,220);
-		Style.Gradient.Color2=RGB(255,255,255);
+		Style.Fill.Gradient.Color1.Set(220,220,220);
+		Style.Fill.Gradient.Color2.Set(255,255,255);
 	} else {
-		Style.Gradient.Color1=RGB(255,255,255);
-		Style.Gradient.Color2=RGB(220,220,220);
+		Style.Fill.Gradient.Color1.Set(255,255,255);
+		Style.Fill.Gradient.Color2.Set(220,220,220);
 	}
 	if ((pnmtb->nmcd.uItemState&CDIS_CHECKED)!=0) {
-		Style.Border.Type=Theme::BORDER_SUNKEN;
-		Style.Border.Color=RGB(220,220,220);
+		Style.Border.Type=TVTest::Theme::BORDER_SUNKEN;
+		Style.Border.Color.Set(220,220,220);
 	} else {
-		Style.Border.Type=Theme::BORDER_RAISED;
-		Style.Border.Color=RGB(255,255,255);
+		Style.Border.Type=TVTest::Theme::BORDER_RAISED;
+		Style.Border.Color.Set(255,255,255);
 	}
-	Theme::DrawStyleBackground(hdc,&pnmtb->nmcd.rc,&Style);
+	ThemeDraw.Draw(Style,pnmtb->nmcd.rc);
 
 	int DayOfWeek=(int)(pnmtb->nmcd.lItemlParam&0xFF);
 
@@ -5474,14 +6250,16 @@ void CDateToolbar::OnCustomDraw(NMTBCUSTOMDRAW *pnmtb,HDC hdc)
 
 	TCHAR szText[32];
 	if ((pnmtb->nmcd.lItemlParam&ITEM_FLAG_NOW)!=0) {
-		::lstrcpy(szText,TEXT("現在"));
+		::lstrcpy(szText,TEXT("今日"));
 	} else {
 		StdUtil::snprintf(szText,lengthof(szText),TEXT("%d/%d(%s)"),
 						  (int)(pnmtb->nmcd.lItemlParam>>16),
 						  (int)((pnmtb->nmcd.lItemlParam>>8)&0xFF),
 						  GetDayOfWeekText(DayOfWeek));
 	}
-	::DrawText(hdc,szText,-1,&pnmtb->nmcd.rc,
+	RECT rc=pnmtb->nmcd.rc;
+	TVTest::Style::Subtract(&rc,m_Padding);
+	::DrawText(hdc,szText,-1,&rc,
 			   DT_CENTER | DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX);
 
 	::SetTextColor(hdc,OldTextColor);
@@ -5490,25 +6268,42 @@ void CDateToolbar::OnCustomDraw(NMTBCUSTOMDRAW *pnmtb,HDC hdc)
 }
 
 
+void CDateToolbar::RealizeStyle()
+{
+	CProgramGuideToolbar::RealizeStyle();
+	OnTimeRangeChanged();
+}
+
+
 
 
 class CTimeToolbar : public CProgramGuideToolbar
 {
 public:
-	struct TimeInfo {
-		int Hour;
-		int Command;
-	};
+	typedef CProgramGuideFrameSettings::TimeBarSettings TimeBarSettings;
 
 	CTimeToolbar(CProgramGuide *pProgramGuide);
 	~CTimeToolbar();
+	void SetTheme(const ThemeInfo &Theme) override;
 	void OnDateChanged() override { ChangeTime(); }
 	void OnTimeRangeChanged() override { ChangeTime(); }
+	void SetSettings(const TimeBarSettings &Settings);
+	bool GetTimeByCommand(int Command,SYSTEMTIME *pTime) const;
 
 private:
+	struct TimeInfo {
+		WORD Hour;
+		WORD Offset;
+		int Command;
+	};
+
+	CProgramGuideFrameSettings::TimeBarSettings m_Settings;
+	TVTest::Theme::Style m_ButtonStyle[CProgramGuide::TIME_BAR_BACK_COLORS];
+
 	void ChangeTime();
 	bool SetButtons(const TimeInfo *pTimeList,int TimeListLength);
 	void OnCustomDraw(NMTBCUSTOMDRAW *pnmtb,HDC hdc) override;
+	void RealizeStyle() override;
 };
 
 
@@ -5524,21 +6319,119 @@ CTimeToolbar::~CTimeToolbar()
 }
 
 
+void CTimeToolbar::SetTheme(const ThemeInfo &Theme)
+{
+	for (int i=0;i<CProgramGuide::TIME_BAR_BACK_COLORS;i++)
+		m_ButtonStyle[i]=Theme.TimeStyle[i];
+
+	if (m_hwnd!=NULL)
+		::InvalidateRect(m_hwnd,NULL,TRUE);
+}
+
+
+void CTimeToolbar::SetSettings(const TimeBarSettings &Settings)
+{
+	m_Settings=Settings;
+}
+
+
+bool CTimeToolbar::GetTimeByCommand(int Command,SYSTEMTIME *pTime) const
+{
+	TBBUTTONINFO tbbi;
+
+	tbbi.cbSize=sizeof(tbbi);
+	tbbi.dwMask=TBIF_LPARAM;
+	if (::SendMessage(m_hwnd,TB_GETBUTTONINFO,
+					  Command,reinterpret_cast<LPARAM>(&tbbi))<0)
+		return false;
+
+	if (!m_pProgramGuide->GetCurrentTimeRange(pTime,NULL))
+		return false;
+
+	OffsetSystemTime(pTime,HIWORD(tbbi.lParam)*TimeConsts::SYSTEMTIME_HOUR);
+
+	return true;
+}
+
+
 void CTimeToolbar::ChangeTime()
 {
 	SYSTEMTIME stFirst,stLast;
 
 	if (m_pProgramGuide->GetCurrentTimeRange(&stFirst,&stLast)) {
 		TimeInfo TimeList[(CM_PROGRAMGUIDE_TIME_LAST-CM_PROGRAMGUIDE_TIME_FIRST)+2];
-		SYSTEMTIME st=stFirst;
-		int i;
-
-		TimeList[0].Hour=-1;
+		TimeList[0].Hour=0;
+		TimeList[0].Offset=0;
 		TimeList[0].Command=CM_PROGRAMGUIDE_TIME_CURRENT;
-		for (i=1;i<lengthof(TimeList) && CompareSystemTime(&st,&stLast)<0;i++) {
-			TimeList[i].Hour=st.wHour;
-			TimeList[i].Command=CM_PROGRAMGUIDE_TIME_FIRST+(i-1);
-			OffsetSystemTime(&st,4*60*60*1000);
+
+		int i=1;
+
+		if (m_Settings.Time==TimeBarSettings::TIME_INTERVAL) {
+			SYSTEMTIME st=stFirst;
+
+			for (;i<lengthof(TimeList) && i-1<m_Settings.MaxButtonCount
+					&& CompareSystemTime(&st,&stLast)<0;i++) {
+				SYSTEMTIME stDisp;
+
+				EpgUtil::EpgTimeToDisplayTime(st,&stDisp);
+				TimeList[i].Hour=stDisp.wHour;
+				TimeList[i].Offset=(i-1)*m_Settings.Interval;
+				TimeList[i].Command=CM_PROGRAMGUIDE_TIME_FIRST+(i-1);
+				OffsetSystemTime(&st,m_Settings.Interval*TimeConsts::SYSTEMTIME_HOUR);
+			}
+		} else if (m_Settings.Time==TimeBarSettings::TIME_CUSTOM) {
+			std::vector<TVTest::String> Times;
+			TVTest::StringUtility::Split(m_Settings.CustomTime,_T(","),&Times);
+			if (!Times.empty()) {
+				std::vector<int> Hours;
+				Hours.reserve(Times.size());
+				for (auto itr=Times.begin();itr!=Times.end();++itr) {
+					try {
+						int Hour=std::stoi(*itr,nullptr,10);
+						if (Hour>=0)
+							Hours.push_back(Hour);
+					} catch (...) {
+					}
+				}
+				if (!Hours.empty()) {
+					TsEngine::InsertionSort(Hours);
+					SYSTEMTIME stDispFirst;
+					EpgUtil::EpgTimeToDisplayTime(stFirst,&stDispFirst);
+					const int FirstHour=stDispFirst.wHour;
+					const int LastHour=FirstHour+(int)(DiffSystemTime(&stFirst,&stLast)/TimeConsts::SYSTEMTIME_HOUR);
+					size_t j=0;
+					for (;j<Hours.size();j++) {
+						if (Hours[j]>=FirstHour)
+							break;
+					}
+					for (size_t k=0;i<lengthof(TimeList) && i-1<m_Settings.MaxButtonCount && k<Hours.size();k++) {
+						if (j==Hours.size())
+							j=0;
+						int Hour=Hours[j];
+						j++;
+						if (Hour>=LastHour)
+							break;
+						int HourOffset=Hour;
+						if (HourOffset<FirstHour) {
+							HourOffset+=24;
+							if (HourOffset<FirstHour || HourOffset>=LastHour)
+								break;
+						}
+						HourOffset-=FirstHour;
+						SYSTEMTIME st=stDispFirst;
+						OffsetSystemTime(&st,HourOffset*TimeConsts::SYSTEMTIME_HOUR);
+						if (EpgUtil::DisplayTimeToEpgTime(&st)) {
+							int Diff=(int)(DiffSystemTime(&stFirst,&st)/TimeConsts::SYSTEMTIME_HOUR);
+							if (Diff>=0) {
+								TimeList[i].Hour=(WORD)Hour;
+								TimeList[i].Offset=(WORD)Diff;
+								TimeList[i].Command=CM_PROGRAMGUIDE_TIME_FIRST+(i-1);
+								i++;
+							}
+						}
+					}
+				}
+			}
 		}
 
 		SetButtons(TimeList,i);
@@ -5562,16 +6455,39 @@ bool CTimeToolbar::SetButtons(const TimeInfo *pTimeList,int TimeListLength)
 		TCHAR szText[32];
 
 		tbb.idCommand=TimeInfo.Command;
-		if (TimeInfo.Hour<0) {
-			::lstrcpy(szText,TEXT(" 現在 "));
+		if (TimeInfo.Command==CM_PROGRAMGUIDE_TIME_CURRENT) {
+			::lstrcpy(szText,TEXT("現在"));
 		} else {
 			StdUtil::snprintf(szText,lengthof(szText),
-							  TEXT("%02d時～"),TimeInfo.Hour);
+							  TEXT("%d時～"),TimeInfo.Hour);
 		}
 		tbb.iString=reinterpret_cast<INT_PTR>(szText);
-		tbb.dwData=TimeInfo.Hour;
+		tbb.dwData=MAKELONG(TimeInfo.Hour,TimeInfo.Offset);
 		::SendMessage(m_hwnd,TB_ADDBUTTONS,1,reinterpret_cast<LPARAM>(&tbb));
 	}
+
+	SIZE ButtonSize;
+	ButtonSize.cx=0;
+	ButtonSize.cy=m_FontHeight;
+	HDC hdc=::GetDC(m_hwnd);
+	HFONT hfontOld=SelectFont(hdc,GetWindowFont(m_hwnd));
+	for (int i=0;i<TimeListLength;i++) {
+		const TimeInfo &TimeInfo=pTimeList[i];
+		TCHAR szText[32];
+		StdUtil::snprintf(szText,lengthof(szText),
+						  TEXT("%02d時～"),	// %02d にしているのは幅を揃えるため
+						  TimeInfo.Hour);
+		RECT rc={0,0,0,0};
+		::DrawText(hdc,szText,-1,&rc,DT_SINGLELINE | DT_NOPREFIX | DT_CALCRECT);
+		if (rc.right>ButtonSize.cx)
+			ButtonSize.cx=rc.right;
+	}
+	SelectFont(hdc,hfontOld);
+	::ReleaseDC(m_hwnd,hdc);
+
+	ButtonSize.cx+=m_Padding.Horz();
+	ButtonSize.cy+=m_Padding.Vert();
+	::SendMessage(m_hwnd,TB_SETBUTTONSIZE,0,MAKELONG(ButtonSize.cx,ButtonSize.cy));
 
 	AdjustSize();
 
@@ -5581,50 +6497,62 @@ bool CTimeToolbar::SetButtons(const TimeInfo *pTimeList,int TimeListLength)
 
 void CTimeToolbar::OnCustomDraw(NMTBCUSTOMDRAW *pnmtb,HDC hdc)
 {
-	const int Hour=(int)pnmtb->nmcd.lItemlParam;
+	const bool fCurrent=pnmtb->nmcd.dwItemSpec==CM_PROGRAMGUIDE_TIME_CURRENT;
+	TVTest::Theme::CThemeDraw ThemeDraw(BeginThemeDraw(hdc));
+	TVTest::Theme::Style Style;
+	int Hour;
 
-	COLORREF LightColor=RGB(255,255,255),DarkColor=RGB(220,220,220);
-	if (Hour>=0) {
-		LightColor=MixColor(RGB(192,216,255),LightColor,(Hour+1)*4);
-		DarkColor=MixColor(RGB(192,216,255),DarkColor,(Hour+1)*4);
-	}
-
-	Theme::Style Style;
-	Style.Gradient.Type=Theme::GRADIENT_NORMAL;
-	Style.Gradient.Direction=Theme::DIRECTION_VERT;
-	if ((pnmtb->nmcd.uItemState&(CDIS_CHECKED | CDIS_HOT))!=0) {
-		Style.Gradient.Color1=DarkColor;
-		Style.Gradient.Color2=LightColor;
+	if (fCurrent) {
+		Style.Back.Fill.Type=TVTest::Theme::FILL_GRADIENT;
+		Style.Back.Fill.Gradient=TVTest::Theme::GradientStyle(
+			TVTest::Theme::GRADIENT_NORMAL,
+			TVTest::Theme::DIRECTION_VERT,
+			TVTest::Theme::ThemeColor(255,255,255),
+			TVTest::Theme::ThemeColor(220,220,220));
+		Style.Fore.Fill.Type=TVTest::Theme::FILL_SOLID;
+		Style.Fore.Fill.Solid.Color.Set(0,0,0);
 	} else {
-		Style.Gradient.Color1=LightColor;
-		Style.Gradient.Color2=DarkColor;
+		Hour=LOWORD(pnmtb->nmcd.lItemlParam);
+		Style=m_ButtonStyle[Hour/3];
+		if (Style.Back.Fill.Type==TVTest::Theme::FILL_GRADIENT)
+			Style.Back.Fill.Gradient.Rotate(TVTest::Theme::GradientStyle::ROTATE_RIGHT);
 	}
-	if ((pnmtb->nmcd.uItemState&(CDIS_CHECKED | CDIS_SELECTED))!=0) {
-		Style.Border.Type=Theme::BORDER_SUNKEN;
-		Style.Border.Color=DarkColor;
-	} else {
-		Style.Border.Type=Theme::BORDER_RAISED;
-		Style.Border.Color=LightColor;
+	Style.Back.Border.Type=
+		(pnmtb->nmcd.uItemState & (CDIS_CHECKED | CDIS_SELECTED))!=0?
+			TVTest::Theme::BORDER_SUNKEN:
+			TVTest::Theme::BORDER_RAISED;
+	Style.Back.Border.Color=Style.Back.Fill.GetSolidColor();
+	if ((pnmtb->nmcd.uItemState & (CDIS_CHECKED | CDIS_HOT))!=0
+			&& Style.Back.Fill.Type==TVTest::Theme::FILL_GRADIENT) {
+		std::swap(Style.Back.Fill.Gradient.Color1,
+				  Style.Back.Fill.Gradient.Color2);
 	}
-	Theme::DrawStyleBackground(hdc,&pnmtb->nmcd.rc,&Style);
+	ThemeDraw.Draw(Style.Back,pnmtb->nmcd.rc);
 
 	HFONT hfont=reinterpret_cast<HFONT>(::SendMessage(m_hwnd,WM_GETFONT,0,0));
 	HGDIOBJ hOldFont=::SelectObject(hdc,hfont);
 	int OldBkMode=::SetBkMode(hdc,TRANSPARENT);
-	COLORREF OldTextColor=::SetTextColor(hdc,RGB(0,0,0));
 
 	TCHAR szText[32];
-	if (Hour<0) {
+	if (fCurrent) {
 		::lstrcpy(szText,TEXT("現在"));
 	} else {
 		StdUtil::snprintf(szText,lengthof(szText),TEXT("%d時～"),Hour);
 	}
-	::DrawText(hdc,szText,-1,&pnmtb->nmcd.rc,
-			   DT_CENTER | DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX);
+	RECT rc=pnmtb->nmcd.rc;
+	TVTest::Style::Subtract(&rc,m_Padding);
+	ThemeDraw.Draw(Style.Fore,rc,szText,
+				   DT_CENTER | DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX);
 
-	::SetTextColor(hdc,OldTextColor);
 	::SetBkMode(hdc,OldBkMode);
 	::SelectObject(hdc,hOldFont);
+}
+
+
+void CTimeToolbar::RealizeStyle()
+{
+	CProgramGuideToolbar::RealizeStyle();
+	ChangeTime();
 }
 
 
@@ -5636,14 +6564,9 @@ void CTimeToolbar::OnCustomDraw(NMTBCUSTOMDRAW *pnmtb,HDC hdc)
 CProgramGuideFrameBase::CProgramGuideFrameBase(CProgramGuide *pProgramGuide,CProgramGuideFrameSettings *pSettings)
 	: m_pProgramGuide(pProgramGuide)
 	, m_pSettings(pSettings)
+	, m_ToolbarRightMargin(0)
+	, m_fNoUpdateLayout(false)
 {
-	m_ToolbarMargin.left=0;
-	m_ToolbarMargin.top=0;
-	m_ToolbarMargin.right=0;
-	m_ToolbarMargin.bottom=5;
-	m_ToolbarGap.x=6;
-	m_ToolbarGap.y=5;
-
 	m_ToolbarList[TOOLBAR_TUNER_MENU]=new ProgramGuideBar::CTunerMenuBar(pProgramGuide);
 	m_ToolbarList[TOOLBAR_DATE_MENU ]=new ProgramGuideBar::CDateMenuBar(pProgramGuide);
 	m_ToolbarList[TOOLBAR_FAVORITES ]=new ProgramGuideBar::CFavoritesToolbar(pProgramGuide);
@@ -5659,11 +6582,22 @@ CProgramGuideFrameBase::~CProgramGuideFrameBase()
 }
 
 
-void CProgramGuideFrameBase::SetStatusTheme(const CStatusView::ThemeInfo *pTheme)
+void CProgramGuideFrameBase::SetTheme(const TVTest::Theme::CThemeManager *pThemeManager)
 {
 	ProgramGuideBar::CProgramGuideBar::ThemeInfo Theme;
 
-	Theme.pStatusTheme=pTheme;
+	CStatusView::GetStatusViewThemeFromThemeManager(pThemeManager,&Theme.StatusTheme);
+	pThemeManager->GetBorderStyle(TVTest::Theme::CThemeManager::STYLE_PROGRAMGUIDE_STATUS,
+								  &Theme.StatusTheme.Border);
+
+	TVTest::Theme::ThemeColor TimeTextColor(pThemeManager->GetColor(CColorScheme::COLOR_PROGRAMGUIDE_TIMETEXT));
+	for (int i=0;i<CProgramGuide::TIME_BAR_BACK_COLORS;i++) {
+		pThemeManager->GetFillStyle(
+			TVTest::Theme::CThemeManager::STYLE_PROGRAMGUIDE_TIMEBAR_0_2+i,
+			&Theme.TimeStyle[i].Back.Fill);
+		Theme.TimeStyle[i].Fore.Fill.Type=TVTest::Theme::FILL_SOLID;
+		Theme.TimeStyle[i].Fore.Fill.Solid.Color=TimeTextColor;
+	}
 
 	for (int i=0;i<lengthof(m_ToolbarList);i++)
 		m_ToolbarList[i]->SetTheme(Theme);
@@ -5686,7 +6620,8 @@ bool CProgramGuideFrameBase::SetToolbarVisible(int Toolbar,bool fVisible)
 				pBar->SetBarPosition(-sz.cx,-sz.cy,sz.cx,sz.cy);
 			}
 			pBar->SetBarVisible(fVisible);
-			OnLayoutChange();
+			if (!m_fNoUpdateLayout)
+				OnLayoutChange();
 		} else {
 			pBar->SetBarVisible(fVisible);
 		}
@@ -5773,16 +6708,44 @@ bool CProgramGuideFrameBase::OnCommand(int Command)
 			m_pProgramGuide->SetViewDay(CProgramGuide::DAY_TODAY);
 		m_pProgramGuide->ScrollToCurrentTime();
 		return true;
+
+	case CM_PROGRAMGUIDE_TOOLBAROPTIONS:
+		{
+			CProgramGuideToolbarOptions Options(*m_pSettings);
+
+			if (Options.Show(m_pProgramGuide->GetHandle())) {
+				m_fNoUpdateLayout=true;
+
+				for (int i=0;i<TOOLBAR_NUM;i++)
+					SetToolbarVisible(i,m_pSettings->GetToolbarVisible(i));
+
+				ProgramGuideBar::CDateToolbar *pDateToolbar=
+					static_cast<ProgramGuideBar::CDateToolbar*>(m_ToolbarList[TOOLBAR_DATE]);
+				if (pDateToolbar->GetButtonCount()!=m_pSettings->GetDateBarButtonCount()) {
+					pDateToolbar->SetButtonCount(m_pSettings->GetDateBarButtonCount());
+					pDateToolbar->OnTimeRangeChanged();
+				}
+
+				ProgramGuideBar::CTimeToolbar *pTimeToolbar=
+					static_cast<ProgramGuideBar::CTimeToolbar*>(m_ToolbarList[TOOLBAR_TIME]);
+				pTimeToolbar->SetSettings(m_pSettings->GetTimeBarSettings());
+				pTimeToolbar->OnTimeRangeChanged();
+
+				m_fNoUpdateLayout=false;
+				OnLayoutChange();
+			}
+		}
+		return true;
 	}
 
 	if (Command>=CM_PROGRAMGUIDE_TIME_FIRST
 			&& Command<=CM_PROGRAMGUIDE_TIME_LAST) {
+		const ProgramGuideBar::CTimeToolbar *pTimeToolbar=
+			static_cast<const ProgramGuideBar::CTimeToolbar*>(m_ToolbarList[TOOLBAR_TIME]);
 		SYSTEMTIME st;
 
-		if (m_pProgramGuide->GetCurrentTimeRange(&st,NULL)) {
-			OffsetSystemTime(&st,(Command-CM_PROGRAMGUIDE_TIME_FIRST)*(4LL*60*60*1000));
+		if (pTimeToolbar->GetTimeByCommand(Command,&st))
 			m_pProgramGuide->ScrollToTime(st);
-		}
 		return true;
 	}
 
@@ -5805,10 +6768,20 @@ void CProgramGuideFrameBase::OnMenuInitialize(HMENU hmenu)
 }
 
 
-void CProgramGuideFrameBase::OnWindowCreate(HWND hwnd,bool fBufferedPaint)
+void CProgramGuideFrameBase::OnWindowCreate(
+	HWND hwnd,TVTest::Style::CStyleScaling *pStyleScaling,bool fBufferedPaint)
 {
+	TVTest::CUIBase *pUIBase=GetUIBase();
+
+	for (int i=0;i<lengthof(m_ToolbarList);i++)
+		pUIBase->RegisterUIChild(m_ToolbarList[i]->GetUIBase());
+	pUIBase->SetStyleScaling(pStyleScaling);
+
 	m_pProgramGuide->SetFrame(this);
+	m_pProgramGuide->SetStyleScaling(pStyleScaling);
 	m_pProgramGuide->Create(hwnd,WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_HSCROLL);
+
+	pUIBase->RegisterUIChild(m_pProgramGuide);
 
 	for (int i=0;i<lengthof(m_ToolbarList);i++) {
 		ProgramGuideBar::CProgramGuideBar *pBar=m_ToolbarList[i];
@@ -5817,11 +6790,21 @@ void CProgramGuideFrameBase::OnWindowCreate(HWND hwnd,bool fBufferedPaint)
 		pBar->EnableBufferedPaint(fBufferedPaint);
 		pBar->CreateBar(hwnd,WS_CHILD | (pBar->IsBarVisible()?WS_VISIBLE:0));
 	}
+
+	ProgramGuideBar::CDateToolbar *pDateToolbar=
+		static_cast<ProgramGuideBar::CDateToolbar*>(m_ToolbarList[TOOLBAR_DATE]);
+	pDateToolbar->SetButtonCount(m_pSettings->GetDateBarButtonCount());
+
+	ProgramGuideBar::CTimeToolbar *pTimeToolbar=
+		static_cast<ProgramGuideBar::CTimeToolbar*>(m_ToolbarList[TOOLBAR_TIME]);
+	pTimeToolbar->SetSettings(m_pSettings->GetTimeBarSettings());
 }
 
 
 void CProgramGuideFrameBase::OnWindowDestroy()
 {
+	GetUIBase()->ClearUIChildList();
+
 	m_pProgramGuide->SetFrame(NULL);
 
 	for (int i=0;i<lengthof(m_ToolbarList);i++)
@@ -5831,36 +6814,40 @@ void CProgramGuideFrameBase::OnWindowDestroy()
 
 void CProgramGuideFrameBase::OnSizeChanged(int Width,int Height)
 {
-	int x=m_ToolbarMargin.left;
-	int y=m_ToolbarMargin.top;
+	int OrderList[TOOLBAR_NUM];
+	m_pSettings->GetToolbarOrderList(OrderList);
+
+	const int ToolbarAreaWidth=Width-m_FrameStyle.ToolbarMargin.Right-m_ToolbarRightMargin;
+	int x=m_FrameStyle.ToolbarMargin.Left;
+	int y=m_FrameStyle.ToolbarMargin.Top;
 	int BarHeight=0;
 
 	for (int i=0;i<lengthof(m_ToolbarList);i++) {
-		ProgramGuideBar::CProgramGuideBar *pBar=m_ToolbarList[i];
+		ProgramGuideBar::CProgramGuideBar *pBar=m_ToolbarList[OrderList[i]];
 
 		if (pBar->IsBarVisible()) {
 			SIZE sz;
 
 			pBar->GetBarSize(&sz);
-			if (x+sz.cx>Width-m_ToolbarMargin.right) {
+			if (x+sz.cx>ToolbarAreaWidth) {
 				if (i>0) {
-					x=m_ToolbarMargin.left;
-					y+=BarHeight+m_ToolbarGap.y;
+					x=m_FrameStyle.ToolbarMargin.Left;
+					y+=BarHeight+m_FrameStyle.ToolbarVertGap;
 				}
-				if (x+sz.cx>Width-m_ToolbarMargin.right)
-					sz.cx=max(Width-m_ToolbarMargin.right-x,0);
+				if (x+sz.cx>ToolbarAreaWidth)
+					sz.cx=max(ToolbarAreaWidth-x,0);
 				BarHeight=sz.cy;
 			} else {
 				if (sz.cy>BarHeight)
 					BarHeight=sz.cy;
 			}
 			pBar->SetBarPosition(x,y,sz.cx,sz.cy);
-			x+=sz.cx+m_ToolbarGap.x;
+			x+=sz.cx+m_FrameStyle.ToolbarHorzGap;
 		}
 	}
 
 	if (BarHeight>0)
-		y+=BarHeight+m_ToolbarMargin.bottom;
+		y+=BarHeight+m_FrameStyle.ToolbarMargin.Bottom;
 	else
 		y=0;
 	m_pProgramGuide->SetPosition(0,y,Width,max(Height-y,0));
@@ -5883,7 +6870,7 @@ LRESULT CProgramGuideFrameBase::DefaultMessageHandler(HWND hwnd,UINT uMsg,WPARAM
 	case WM_MOUSEHWHEEL:
 		return m_pProgramGuide->SendMessage(uMsg,wParam,lParam);
 
-	case WM_RBUTTONDOWN:
+	case WM_RBUTTONUP:
 		{
 			POINT pt={GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam)};
 			::ClientToScreen(hwnd,&pt);
@@ -5940,26 +6927,130 @@ LRESULT CProgramGuideFrameBase::DefaultMessageHandler(HWND hwnd,UINT uMsg,WPARAM
 
 
 
+CProgramGuideFrameBase::FrameStyle::FrameStyle()
+	: ToolbarMargin(2,2,2,4)
+	, ToolbarHorzGap(3)
+	, ToolbarVertGap(4)
+	, fExtendFrame(true)
+{
+}
+
+
+void CProgramGuideFrameBase::FrameStyle::SetStyle(const TVTest::Style::CStyleManager *pStyleManager)
+{
+	*this=FrameStyle();
+	pStyleManager->Get(TEXT("program-guide.tool-bar.margin"),&ToolbarMargin);
+	pStyleManager->Get(TEXT("program-guide.tool-bar.horz-gap"),&ToolbarHorzGap);
+	pStyleManager->Get(TEXT("program-guide.tool-bar.vert-gap"),&ToolbarVertGap);
+	pStyleManager->Get(TEXT("program-guide.extend-frame"),&fExtendFrame);
+}
+
+
+void CProgramGuideFrameBase::FrameStyle::NormalizeStyle(
+	const TVTest::Style::CStyleManager *pStyleManager,
+	const TVTest::Style::CStyleScaling *pStyleScaling)
+{
+	pStyleScaling->ToPixels(&ToolbarMargin);
+	pStyleScaling->ToPixels(&ToolbarHorzGap);
+	pStyleScaling->ToPixels(&ToolbarVertGap);
+}
+
+
+
+
+const CProgramGuideFrameSettings::ToolbarInfo
+	CProgramGuideFrameSettings::m_ToolbarInfoList[TOOLBAR_NUM] =
+{
+	{TEXT("TunerMenu"),	TEXT("チューナーメニュー")},
+	{TEXT("DateMenu"),	TEXT("日付メニュー")},
+	{TEXT("Favorites"),	TEXT("番組表選択ボタン")},
+	{TEXT("DateBar"),	TEXT("日付バー")},
+	{TEXT("TimeBar"),	TEXT("時刻バー")},
+};
+
+
 CProgramGuideFrameSettings::CProgramGuideFrameSettings()
 	: CSettingsBase(TEXT("ProgramGuide"))
+	, m_DateBarButtonCount(DATEBAR_DEFAULTBUTTONCOUNT)
 {
-	for (int i=0;i<lengthof(m_ToolbarList);i++) {
-		m_ToolbarList[i].fVisible=true;
+	for (int i=0;i<lengthof(m_ToolbarSettingsList);i++) {
+		m_ToolbarSettingsList[i].fVisible=true;
+		m_ToolbarSettingsList[i].Order=i;
 	}
 }
 
 
 bool CProgramGuideFrameSettings::ReadSettings(CSettings &Settings)
 {
-	for (int i=0;i<lengthof(m_ToolbarList);i++) {
-		TCHAR szText[32];
+	int OrderList[TOOLBAR_NUM];
+	int Count=0;
 
-		::wsprintf(szText,TEXT("Toolbar%d_Status"),i);
+	for (int i=0;i<TOOLBAR_NUM;i++) {
+		TCHAR szText[32],szName[32];
+		int ID;
+
+		StdUtil::snprintf(szText,lengthof(szText),TEXT("Toolbar%d_Name"),i);
+		if (Settings.Read(szText,szName,lengthof(szName))) {
+			ID=ParseIDText(szName);
+			if (ID<0)
+				continue;
+		} else {
+			// ver.0.9.0 より前との互換用
+			ID=i;
+		}
+
+		int j;
+		for (j=0;j<Count;j++) {
+			if (OrderList[j]==ID)
+				break;
+		}
+		if (j<Count)
+			continue;
+
+		StdUtil::snprintf(szText,lengthof(szText),TEXT("Toolbar%d_Status"),i);
 		unsigned int Status;
 		if (Settings.Read(szText,&Status)) {
-			m_ToolbarList[i].fVisible=(Status & TOOLBAR_STATUS_VISIBLE)!=0;
+			m_ToolbarSettingsList[ID].fVisible=(Status & TOOLBAR_STATUS_VISIBLE)!=0;
+		}
+
+		OrderList[Count]=ID;
+		Count++;
+	}
+
+	if (Count<TOOLBAR_NUM) {
+		for (int i=0;i<TOOLBAR_NUM;i++) {
+			int j;
+			for (j=0;j<Count;j++) {
+				if (OrderList[j]==i)
+					break;
+			}
+			if (j==Count) {
+				OrderList[Count]=i;
+				Count++;
+			}
 		}
 	}
+
+	SetToolbarOrderList(OrderList);
+
+	int Value;
+
+	if (Settings.Read(TEXT("DateBar.ButtonCount"),&Value))
+		m_DateBarButtonCount=CLAMP(Value,1,DATEBAR_MAXBUTTONCOUNT);
+
+	if (Settings.Read(TEXT("TimeBar.TimeType"),&Value)
+			&& (Value==TimeBarSettings::TIME_INTERVAL
+				|| Value==TimeBarSettings::TIME_CUSTOM))
+		m_TimeBarSettings.Time=static_cast<TimeBarSettings::TimeType>(Value);
+	if (Settings.Read(TEXT("TimeBar.Interval"),&Value)
+			&& Value>=TimeBarSettings::INTERVAL_MIN
+			&& Value<=TimeBarSettings::INTERVAL_MAX)
+		m_TimeBarSettings.Interval=Value;
+	Settings.Read(TEXT("TimeBar.Custom"),&m_TimeBarSettings.CustomTime);
+	if (Settings.Read(TEXT("TimeBar.MaxButtonCount"),&Value)
+			&& Value>=TimeBarSettings::BUTTONCOUNT_MIN
+			&& Value<=TimeBarSettings::BUTTONCOUNT_MAX)
+		m_TimeBarSettings.MaxButtonCount=Value;
 
 	return true;
 }
@@ -5967,34 +7058,144 @@ bool CProgramGuideFrameSettings::ReadSettings(CSettings &Settings)
 
 bool CProgramGuideFrameSettings::WriteSettings(CSettings &Settings)
 {
-	for (int i=0;i<lengthof(m_ToolbarList);i++) {
+	int OrderList[TOOLBAR_NUM];
+
+	GetToolbarOrderList(OrderList);
+
+	for (int i=0;i<TOOLBAR_NUM;i++) {
+		const int ID=OrderList[i];
 		TCHAR szText[32];
 
-		::wsprintf(szText,TEXT("Toolbar%d_Status"),i);
+		StdUtil::snprintf(szText,lengthof(szText),TEXT("Toolbar%d_Name"),i);
+		Settings.Write(szText,m_ToolbarInfoList[ID].pszIDText);
+
+		StdUtil::snprintf(szText,lengthof(szText),TEXT("Toolbar%d_Status"),i);
 		unsigned int Status=0;
-		if (m_ToolbarList[i].fVisible)
+		if (m_ToolbarSettingsList[ID].fVisible)
 			Status|=TOOLBAR_STATUS_VISIBLE;
 		Settings.Write(szText,Status);
 	}
+
+	Settings.Write(TEXT("DateBar.ButtonCount"),m_DateBarButtonCount);
+
+	Settings.Write(TEXT("TimeBar.TimeType"),static_cast<int>(m_TimeBarSettings.Time));
+	Settings.Write(TEXT("TimeBar.Interval"),m_TimeBarSettings.Interval);
+	Settings.Write(TEXT("TimeBar.Custom"),m_TimeBarSettings.CustomTime);
+	Settings.Write(TEXT("TimeBar.MaxButtonCount"),m_TimeBarSettings.MaxButtonCount);
 
 	return true;
 }
 
 
+LPCTSTR CProgramGuideFrameSettings::GetToolbarIDText(int Toolbar) const
+{
+	if (Toolbar<0 || Toolbar>=lengthof(m_ToolbarInfoList))
+		return NULL;
+	return m_ToolbarInfoList[Toolbar].pszIDText;
+}
+
+
+LPCTSTR CProgramGuideFrameSettings::GetToolbarName(int Toolbar) const
+{
+	if (Toolbar<0 || Toolbar>=lengthof(m_ToolbarInfoList))
+		return NULL;
+	return m_ToolbarInfoList[Toolbar].pszName;
+}
+
+
 bool CProgramGuideFrameSettings::SetToolbarVisible(int Toolbar,bool fVisible)
 {
-	if (Toolbar<0 || Toolbar>=lengthof(m_ToolbarList))
+	if (Toolbar<0 || Toolbar>=lengthof(m_ToolbarSettingsList))
 		return false;
-	m_ToolbarList[Toolbar].fVisible=fVisible;
+	m_ToolbarSettingsList[Toolbar].fVisible=fVisible;
 	return true;
 }
 
 
 bool CProgramGuideFrameSettings::GetToolbarVisible(int Toolbar) const
 {
-	if (Toolbar<0 || Toolbar>=lengthof(m_ToolbarList))
+	if (Toolbar<0 || Toolbar>=lengthof(m_ToolbarSettingsList))
 		return false;
-	return m_ToolbarList[Toolbar].fVisible;
+	return m_ToolbarSettingsList[Toolbar].fVisible;
+}
+
+
+bool CProgramGuideFrameSettings::SetToolbarOrderList(const int *pOrder)
+{
+	if (pOrder==NULL)
+		return false;
+
+	for (int i=0;i<lengthof(m_ToolbarSettingsList);i++) {
+		const int ID=pOrder[i];
+
+		if (ID<0 || ID>=lengthof(m_ToolbarSettingsList))
+			return false;
+
+		for (int j=i+1;j<lengthof(m_ToolbarSettingsList);j++) {
+			if (pOrder[j]==ID)
+				return false;
+		}
+	}
+
+	for (int i=0;i<lengthof(m_ToolbarSettingsList);i++)
+		m_ToolbarSettingsList[pOrder[i]].Order=i;
+
+	return true;
+}
+
+
+bool CProgramGuideFrameSettings::GetToolbarOrderList(int *pOrder) const
+{
+	if (pOrder==NULL)
+		return false;
+
+	for (int i=0;i<lengthof(m_ToolbarSettingsList);i++)
+		pOrder[m_ToolbarSettingsList[i].Order]=i;
+
+	return true;
+}
+
+
+bool CProgramGuideFrameSettings::SetDateBarButtonCount(int ButtonCount)
+{
+	if (ButtonCount<1 || ButtonCount>DATEBAR_MAXBUTTONCOUNT)
+		return false;
+
+	m_DateBarButtonCount=ButtonCount;
+
+	return true;
+}
+
+
+bool CProgramGuideFrameSettings::SetTimeBarSettings(const TimeBarSettings &Settings)
+{
+	m_TimeBarSettings=Settings;
+	return true;
+}
+
+
+int CProgramGuideFrameSettings::ParseIDText(LPCTSTR pszID) const
+{
+	if (IsStringEmpty(pszID))
+		return -1;
+
+	for (int i=0;i<lengthof(m_ToolbarInfoList);i++) {
+		if (::lstrcmpi(m_ToolbarInfoList[i].pszIDText,pszID)==0)
+			return i;
+	}
+
+	return -1;
+}
+
+
+
+
+CProgramGuideFrameSettings::TimeBarSettings::TimeBarSettings()
+	: Time(TIME_INTERVAL)
+	, Interval(4)
+	, CustomTime(TEXT("0,3,6,9,12,15,18,21"))
+	, MaxButtonCount(10)
+{
 }
 
 
@@ -6029,10 +7230,14 @@ bool CProgramGuideFrame::Initialize(HINSTANCE hinst)
 
 CProgramGuideFrame::CProgramGuideFrame(CProgramGuide *pProgramGuide,CProgramGuideFrameSettings *pSettings)
 	: CProgramGuideFrameBase(pProgramGuide,pSettings)
+	, m_fAero(false)
 	, m_fAlwaysOnTop(false)
+	, m_fCreated(false)
 {
 	m_WindowPosition.Width=640;
 	m_WindowPosition.Height=480;
+
+	SetStyleScaling(&m_StyleScaling);
 }
 
 
@@ -6044,6 +7249,8 @@ CProgramGuideFrame::~CProgramGuideFrame()
 
 bool CProgramGuideFrame::Create(HWND hwndParent,DWORD Style,DWORD ExStyle,int ID)
 {
+	TVTest::PerMonitorDPIBlock DPIBlock;
+
 	if (m_WindowPosition.fMaximized)
 		Style|=WS_MAXIMIZE;
 	if (m_fAlwaysOnTop)
@@ -6061,6 +7268,26 @@ bool CProgramGuideFrame::SetAlwaysOnTop(bool fTop)
 			::SetWindowPos(m_hwnd,fTop?HWND_TOPMOST:HWND_NOTOPMOST,0,0,0,0,SWP_NOMOVE | SWP_NOSIZE);
 	}
 	return true;
+}
+
+
+void CProgramGuideFrame::SetTheme(const TVTest::Theme::CThemeManager *pThemeManager)
+{
+	CProgramGuideFrameBase::SetTheme(pThemeManager);
+}
+
+
+void CProgramGuideFrame::SetStyle(const TVTest::Style::CStyleManager *pStyleManager)
+{
+	m_FrameStyle.SetStyle(pStyleManager);
+}
+
+
+void CProgramGuideFrame::NormalizeStyle(
+	const TVTest::Style::CStyleManager *pStyleManager,
+	const TVTest::Style::CStyleScaling *pStyleScaling)
+{
+	m_FrameStyle.NormalizeStyle(pStyleManager,pStyleScaling);
 }
 
 
@@ -6089,11 +7316,18 @@ LRESULT CProgramGuideFrame::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM l
 {
 	switch (uMsg) {
 	case WM_CREATE:
-		OnWindowCreate(hwnd,true);
+		InitializeUI();
+		OnWindowCreate(hwnd,m_pStyleScaling,true);
+		m_fCreated=true;
 		return 0;
 
+	case WM_NCCREATE:
+		// EnableNonClientDpiScaling 内から WM_SIZE が送られる
+		InitStyleScaling(hwnd,true);
+		break;
+
 	case WM_SIZE:
-		{
+		if (m_fCreated) {
 			RECT rcOld,rcNew;
 
 			m_pProgramGuide->GetPosition(&rcOld);
@@ -6113,10 +7347,11 @@ LRESULT CProgramGuideFrame::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM l
 #endif
 	case WM_DWMCOMPOSITIONCHANGED:
 		SetAeroGlass();
+		m_UxTheme.Close();
 		break;
 
 	case WM_PAINT:
-		if (m_AeroGlass.IsEnabled()) {
+		if (m_fAero && !Util::OS::IsWindows8OrLater()) {
 			::PAINTSTRUCT ps;
 
 			::BeginPaint(hwnd,&ps);
@@ -6137,12 +7372,17 @@ LRESULT CProgramGuideFrame::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM l
 		break;
 
 	case WM_ERASEBKGND:
-		if (!m_AeroGlass.IsEnabled()) {
-			RECT rc;
-			::GetClientRect(hwnd,&rc);
-			::FillRect(reinterpret_cast<HDC>(wParam),&rc,
-					   reinterpret_cast<HBRUSH>(COLOR_3DFACE+1));
+		if (!m_fAero) {
+			DrawBackground(reinterpret_cast<HDC>(wParam),::GetForegroundWindow()==hwnd);
 			return 1;
+		}
+		break;
+
+	case WM_ACTIVATE:
+		if (!m_fAero) {
+			HDC hdc=::GetDC(hwnd);
+			DrawBackground(hdc,wParam!=WA_INACTIVE);
+			::ReleaseDC(hwnd,hdc);
 		}
 		break;
 
@@ -6150,20 +7390,63 @@ LRESULT CProgramGuideFrame::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM l
 		if (!m_pProgramGuide->OnCloseFrame())
 			return 0;
 		break;
+
+	case WM_DPICHANGED:
+		OnDPIChanged(hwnd,wParam,lParam);
+		break;
+
+	case WM_THEMECHANGED:
+		m_UxTheme.Close();
+		break;
+
+	case WM_DESTROY:
+		m_UxTheme.Close();
+		break;
 	}
 
 	return DefaultMessageHandler(hwnd,uMsg,wParam,lParam);
 }
 
 
+void CProgramGuideFrame::RealizeStyle()
+{
+	SendSizeMessage();
+}
+
+
 void CProgramGuideFrame::SetAeroGlass()
 {
-	if (m_hwnd!=NULL) {
+	m_fAero=false;
+	if (m_hwnd!=NULL && m_FrameStyle.fExtendFrame) {
 		RECT rc={0,0,0,0},rcPos;
 
 		m_pProgramGuide->GetPosition(&rcPos);
 		rc.top=rcPos.top;
-		m_AeroGlass.ApplyAeroGlass(m_hwnd,&rc);
+		if (m_AeroGlass.ApplyAeroGlass(m_hwnd,&rc))
+			m_fAero=true;
+	}
+}
+
+
+void CProgramGuideFrame::DrawBackground(HDC hdc,bool fActive)
+{
+	RECT rc,rcGuide;
+
+	GetClientRect(&rc);
+	m_pProgramGuide->GetPosition(&rcGuide);
+	rc.bottom=rcGuide.top;
+
+	if (m_UxTheme.IsActive()
+			&& (m_UxTheme.IsOpen() || m_UxTheme.Open(m_hwnd,L"Window"))) {
+		COLORREF Color;
+		m_UxTheme.GetColor(
+			WP_CAPTION,
+			fActive ? CS_ACTIVE : CS_INACTIVE,
+			fActive ? TMT_FILLCOLORHINT : TMT_BORDERCOLORHINT,
+			&Color);
+		DrawUtil::Fill(hdc,&rc,Color);
+	} else {
+		::FillRect(hdc,&rc,reinterpret_cast<HBRUSH>(COLOR_3DFACE+1));
 	}
 }
 
@@ -6199,10 +7482,8 @@ bool CProgramGuideDisplay::Initialize(HINSTANCE hinst)
 
 CProgramGuideDisplay::CProgramGuideDisplay(CProgramGuide *pProgramGuide,CProgramGuideFrameSettings *pSettings)
 	: CProgramGuideFrameBase(pProgramGuide,pSettings)
-	, m_pEventHandler(NULL)
+	, m_pProgramGuideDisplayEventHandler(NULL)
 {
-	m_ToolbarMargin.left=6;
-	m_ToolbarMargin.top=m_ToolbarMargin.bottom;
 }
 
 
@@ -6219,13 +7500,35 @@ bool CProgramGuideDisplay::Create(HWND hwndParent,DWORD Style,DWORD ExStyle,int 
 }
 
 
-void CProgramGuideDisplay::SetEventHandler(CEventHandler *pHandler)
+void CProgramGuideDisplay::SetTheme(const TVTest::Theme::CThemeManager *pThemeManager)
 {
-	if (m_pEventHandler!=NULL)
-		m_pEventHandler->m_pProgramGuideDisplay=NULL;
+	CProgramGuideFrameBase::SetTheme(pThemeManager);
+	CDisplayView::SetTheme(pThemeManager);
+}
+
+
+void CProgramGuideDisplay::SetStyle(const TVTest::Style::CStyleManager *pStyleManager)
+{
+	m_FrameStyle.SetStyle(pStyleManager);
+}
+
+
+void CProgramGuideDisplay::NormalizeStyle(
+	const TVTest::Style::CStyleManager *pStyleManager,
+	const TVTest::Style::CStyleScaling *pStyleScaling)
+{
+	m_FrameStyle.NormalizeStyle(pStyleManager,pStyleScaling);
+}
+
+
+void CProgramGuideDisplay::SetEventHandler(CProgramGuideDisplayEventHandler *pHandler)
+{
+	if (m_pProgramGuideDisplayEventHandler!=NULL)
+		m_pProgramGuideDisplayEventHandler->m_pProgramGuideDisplay=NULL;
 	if (pHandler!=NULL)
 		pHandler->m_pProgramGuideDisplay=this;
-	m_pEventHandler=pHandler;
+	m_pProgramGuideDisplayEventHandler=pHandler;
+	CDisplayView::SetEventHandler(pHandler);
 }
 
 
@@ -6238,25 +7541,25 @@ bool CProgramGuideDisplay::Close()
 
 bool CProgramGuideDisplay::OnVisibleChange(bool fVisible)
 {
-	if (!fVisible && m_pEventHandler!=NULL)
-		return m_pEventHandler->OnHide();
+	if (!fVisible && m_pProgramGuideDisplayEventHandler!=NULL)
+		return m_pProgramGuideDisplayEventHandler->OnHide();
 	return true;
 }
 
 
 bool CProgramGuideDisplay::SetAlwaysOnTop(bool fTop)
 {
-	if (m_pEventHandler==NULL)
+	if (m_pProgramGuideDisplayEventHandler==NULL)
 		return false;
-	return m_pEventHandler->SetAlwaysOnTop(fTop);
+	return m_pProgramGuideDisplayEventHandler->SetAlwaysOnTop(fTop);
 }
 
 
 bool CProgramGuideDisplay::GetAlwaysOnTop() const
 {
-	if (m_pEventHandler==NULL)
+	if (m_pProgramGuideDisplayEventHandler==NULL)
 		return false;
-	return m_pEventHandler->GetAlwaysOnTop();
+	return m_pProgramGuideDisplayEventHandler->GetAlwaysOnTop();
 }
 
 
@@ -6270,7 +7573,8 @@ LRESULT CProgramGuideDisplay::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM
 {
 	switch (uMsg) {
 	case WM_CREATE:
-		OnWindowCreate(hwnd,false);
+		InitializeUI();
+		OnWindowCreate(hwnd,m_pStyleScaling,false);
 		return 0;
 
 	case WM_SIZE:
@@ -6278,7 +7582,7 @@ LRESULT CProgramGuideDisplay::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM
 			RECT rc;
 
 			GetCloseButtonRect(&rc);
-			m_ToolbarMargin.right=(LOWORD(lParam)-rc.left)+m_ToolbarMargin.left;
+			m_ToolbarRightMargin=LOWORD(lParam)-rc.left;
 		}
 		break;
 
@@ -6303,22 +7607,18 @@ LRESULT CProgramGuideDisplay::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM
 		}
 		return 0;
 
-	case WM_LBUTTONDBLCLK:
-		if (m_pEventHandler!=NULL)
-			m_pEventHandler->OnLButtonDoubleClick(
-				GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam));
-		return 0;
-
-	case WM_RBUTTONDOWN:
-		if (m_pEventHandler!=NULL)
-			m_pEventHandler->OnRButtonDown(
-				GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam));
-		return 0;
-
 	case WM_KEYDOWN:
 		if (wParam==VK_ESCAPE) {
 			Close();
 			return 0;
+		}
+		break;
+
+	default:
+		{
+			LRESULT Result;
+			if (HandleMessage(hwnd,uMsg,wParam,lParam,&Result))
+				return Result;
 		}
 		break;
 	}
@@ -6327,474 +7627,7 @@ LRESULT CProgramGuideDisplay::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM
 }
 
 
-CProgramGuideDisplay::CEventHandler::CEventHandler()
+CProgramGuideDisplay::CProgramGuideDisplayEventHandler::CProgramGuideDisplayEventHandler()
 	: m_pProgramGuideDisplay(NULL)
 {
-}
-
-
-CProgramGuideDisplay::CEventHandler::~CEventHandler()
-{
-}
-
-
-
-
-CProgramGuideTool::CProgramGuideTool()
-	: m_hIcon(NULL)
-{
-	m_szName[0]='\0';
-	m_szCommand[0]='\0';
-}
-
-
-CProgramGuideTool::CProgramGuideTool(const CProgramGuideTool &Tool)
-	: m_hIcon(NULL)
-{
-	*this=Tool;
-}
-
-
-CProgramGuideTool::CProgramGuideTool(LPCTSTR pszName,LPCTSTR pszCommand)
-	: m_hIcon(NULL)
-{
-	::lstrcpy(m_szName,pszName);
-	::lstrcpy(m_szCommand,pszCommand);
-}
-
-
-CProgramGuideTool::~CProgramGuideTool()
-{
-	if (m_hIcon!=NULL)
-		::DestroyIcon(m_hIcon);
-}
-
-
-CProgramGuideTool &CProgramGuideTool::operator=(const CProgramGuideTool &Tool)
-{
-	if (&Tool!=this) {
-		::lstrcpy(m_szName,Tool.m_szName);
-		::lstrcpy(m_szCommand,Tool.m_szCommand);
-		if (m_hIcon!=NULL)
-			::DestroyIcon(m_hIcon);
-		if (Tool.m_hIcon!=NULL)
-			m_hIcon=::CopyIcon(Tool.m_hIcon);
-		else
-			m_hIcon=NULL;
-	}
-	return *this;
-}
-
-
-bool CProgramGuideTool::GetPath(LPTSTR pszPath,int MaxLength) const
-{
-	LPCTSTR p=m_szCommand;
-
-	return GetCommandFileName(&p,pszPath,MaxLength);
-}
-
-
-HICON CProgramGuideTool::GetIcon()
-{
-	if (m_hIcon==NULL && m_szCommand[0]!='\0') {
-		TCHAR szFileName[MAX_PATH];
-		LPCTSTR p=m_szCommand;
-
-		if (GetCommandFileName(&p,szFileName,lengthof(szFileName))) {
-			SHFILEINFO shfi;
-			if (::SHGetFileInfo(szFileName,0,&shfi,sizeof(shfi),
-								SHGFI_ICON | SHGFI_SMALLICON))
-				m_hIcon=shfi.hIcon;
-		}
-	}
-	return m_hIcon;
-}
-
-
-bool CProgramGuideTool::Execute(const ProgramGuide::CServiceInfo *pServiceInfo,
-								const CEventInfoData *pEventInfo,HWND hwnd)
-{
-	if (pServiceInfo==NULL || pEventInfo==NULL)
-		return false;
-
-	SYSTEMTIME stStart,stEnd;
-	TCHAR szFileName[MAX_PATH],szCommand[2048];
-	LPCTSTR p;
-	LPTSTR q,pEnd;
-
-	pEventInfo->GetStartTime(&stStart);
-	pEventInfo->GetEndTime(&stEnd);
-	p=m_szCommand;
-	if (!GetCommandFileName(&p,szFileName,lengthof(szFileName))) {
-		::MessageBox(hwnd,TEXT("パスが長すぎます。"),NULL,MB_OK | MB_ICONEXCLAMATION);
-		return false;
-	}
-
-	while (*p==_T(' '))
-		p++;
-	q=szCommand;
-	pEnd=q+lengthof(szCommand);
-	while (*p!=_T('\0')) {
-		if (q>=pEnd) {
-			::MessageBox(hwnd,TEXT("コマンドが長すぎます。"),NULL,MB_OK | MB_ICONEXCLAMATION);
-			return false;
-		}
-
-		if (*p==_T('%')) {
-			p++;
-			if (*p==_T('%')) {
-				*q++=_T('%');
-				p++;
-			} else {
-				TCHAR szKeyword[32];
-				int i;
-
-				for (i=0;*p!=_T('%') && *p!=_T('\0');i++) {
-					if (i<lengthof(szKeyword)-1)
-						szKeyword[i]=*p;
-					p++;
-				}
-				if (*p==_T('%'))
-					p++;
-				szKeyword[i]=_T('\0');
-				if (::lstrcmpi(szKeyword,TEXT("tvpid"))==0) {
-					TCHAR sziEpgFileName[MAX_PATH+11];
-
-					GetAppClass().GetAppDirectory(sziEpgFileName);
-					::PathAppend(sziEpgFileName,TEXT("iepg.tvpid"));
-					if (!pServiceInfo->SaveiEpgFile(pEventInfo,sziEpgFileName,true)) {
-						::MessageBox(hwnd,TEXT("iEPGファイルの書き出しができません。"),NULL,
-									 MB_OK | MB_ICONEXCLAMATION);
-						return false;
-					}
-					size_t Length=::lstrlen(sziEpgFileName);
-					if (Length>=(size_t)(pEnd-q)) {
-						::MessageBox(hwnd,TEXT("コマンドが長すぎます。"),NULL,
-									 MB_OK | MB_ICONEXCLAMATION);
-						return false;
-					}
-					::lstrcpy(q,sziEpgFileName);
-					q+=Length;
-				} else if (::lstrcmpi(szKeyword,TEXT("eid"))==0) {
-					q+=StdUtil::snprintf(q,pEnd-q,TEXT("%d"),pEventInfo->m_EventID);
-				} else if (::lstrcmpi(szKeyword,TEXT("nid"))==0) {
-					q+=StdUtil::snprintf(q,pEnd-q,TEXT("%d"),pServiceInfo->GetNetworkID());
-				} else if (::lstrcmpi(szKeyword,TEXT("tsid"))==0) {
-					q+=StdUtil::snprintf(q,pEnd-q,TEXT("%d"),pServiceInfo->GetTSID());
-				} else if (::lstrcmpi(szKeyword,TEXT("sid"))==0) {
-					q+=StdUtil::snprintf(q,pEnd-q,TEXT("%d"),pServiceInfo->GetServiceID());
-				} else if (::lstrcmpi(szKeyword,TEXT("start-year"))==0) {
-					q+=StdUtil::snprintf(q,pEnd-q,TEXT("%d"),stStart.wYear);
-				} else if (::lstrcmpi(szKeyword,TEXT("start-month"))==0) {
-					q+=StdUtil::snprintf(q,pEnd-q,TEXT("%d"),stStart.wMonth);
-				} else if (::lstrcmpi(szKeyword,TEXT("start-day"))==0) {
-					q+=StdUtil::snprintf(q,pEnd-q,TEXT("%d"),stStart.wDay);
-				} else if (::lstrcmpi(szKeyword,TEXT("start-hour"))==0) {
-					q+=StdUtil::snprintf(q,pEnd-q,TEXT("%d"),stStart.wHour);
-				} else if (::lstrcmpi(szKeyword,TEXT("start-minute"))==0) {
-					q+=StdUtil::snprintf(q,pEnd-q,TEXT("%02d"),stStart.wMinute);
-				} else if (::lstrcmpi(szKeyword,TEXT("end-year"))==0) {
-					q+=StdUtil::snprintf(q,pEnd-q,TEXT("%d"),stEnd.wYear);
-				} else if (::lstrcmpi(szKeyword,TEXT("end-month"))==0) {
-					q+=StdUtil::snprintf(q,pEnd-q,TEXT("%d"),stEnd.wMonth);
-				} else if (::lstrcmpi(szKeyword,TEXT("end-day"))==0) {
-					q+=StdUtil::snprintf(q,pEnd-q,TEXT("%d"),stEnd.wDay);
-				} else if (::lstrcmpi(szKeyword,TEXT("end-hour"))==0) {
-					q+=StdUtil::snprintf(q,pEnd-q,TEXT("%d"),stEnd.wHour);
-				} else if (::lstrcmpi(szKeyword,TEXT("end-minute"))==0) {
-					q+=StdUtil::snprintf(q,pEnd-q,TEXT("%02d"),stEnd.wMinute);
-				} else if (::lstrcmpi(szKeyword,TEXT("duration-sec"))==0) {
-					q+=StdUtil::snprintf(q,pEnd-q,TEXT("%d"),pEventInfo->m_DurationSec);
-				} else if (::lstrcmpi(szKeyword,TEXT("duration-min"))==0) {
-					q+=StdUtil::snprintf(q,pEnd-q,TEXT("%d"),(pEventInfo->m_DurationSec+59)/60);
-				} else if (::lstrcmpi(szKeyword,TEXT("event-name"))==0) {
-					if (pEventInfo->GetEventName()!=NULL)
-						q+=StdUtil::snprintf(q,pEnd-q,TEXT("%s"),pEventInfo->GetEventName());
-				} else if (::lstrcmpi(szKeyword,TEXT("service-name"))==0) {
-					q+=StdUtil::snprintf(q,pEnd-q,TEXT("%s"),pServiceInfo->GetServiceName());
-				}
-			}
-		} else {
-#ifndef UNICODE
-			if (::IsDBCSLeadByteEx(CP_ACP,*p) && *(p+1)!='\0')
-				*q++=*p++;
-#endif
-			*q++=*p++;
-		}
-	}
-	*q=_T('\0');
-	TRACE(TEXT("外部ツール実行 : %s, %s\n"),szFileName,szCommand);
-	return ::ShellExecute(NULL,NULL,szFileName,szCommand,NULL,SW_SHOWNORMAL)>=(HINSTANCE)32;
-}
-
-
-bool CProgramGuideTool::ShowDialog(HWND hwndOwner)
-{
-	return ::DialogBoxParam(GetAppClass().GetResourceInstance(),MAKEINTRESOURCE(IDD_PROGRAMGUIDETOOL),
-							hwndOwner,DlgProc,reinterpret_cast<LPARAM>(this))==IDOK;
-}
-
-
-CProgramGuideTool *CProgramGuideTool::GetThis(HWND hDlg)
-{
-	return static_cast<CProgramGuideTool*>(::GetProp(hDlg,TEXT("This")));
-}
-
-
-INT_PTR CALLBACK CProgramGuideTool::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
-{
-	switch (uMsg) {
-	case WM_INITDIALOG:
-		{
-			CProgramGuideTool *pThis=reinterpret_cast<CProgramGuideTool*>(lParam);
-
-			::SetProp(hDlg,TEXT("This"),pThis);
-			::SendDlgItemMessage(hDlg,IDC_PROGRAMGUIDETOOL_NAME,
-								 EM_LIMITTEXT,MAX_NAME-1,0);
-			::SetDlgItemText(hDlg,IDC_PROGRAMGUIDETOOL_NAME,pThis->m_szName);
-			::SendDlgItemMessage(hDlg,IDC_PROGRAMGUIDETOOL_COMMAND,
-								 EM_LIMITTEXT,MAX_COMMAND-1,0);
-			::SetDlgItemText(hDlg,IDC_PROGRAMGUIDETOOL_COMMAND,pThis->m_szCommand);
-			if (pThis->m_szName[0]!='\0' && pThis->m_szCommand[0]!='\0')
-				EnableDlgItem(hDlg,IDOK,true);
-			AdjustDialogPos(::GetParent(hDlg),hDlg);
-		}
-		return TRUE;
-
-	case WM_COMMAND:
-		switch (LOWORD(wParam)) {
-		case IDC_PROGRAMGUIDETOOL_NAME:
-		case IDC_PROGRAMGUIDETOOL_COMMAND:
-			if (HIWORD(wParam)==EN_CHANGE)
-				EnableDlgItem(hDlg,IDOK,
-					GetDlgItemTextLength(hDlg,IDC_PROGRAMGUIDETOOL_NAME)>0
-					&& GetDlgItemTextLength(hDlg,IDC_PROGRAMGUIDETOOL_COMMAND)>0);
-			return TRUE;
-
-		case IDC_PROGRAMGUIDETOOL_BROWSE:
-			{
-				OPENFILENAME ofn;
-				TCHAR szCommand[MAX_COMMAND];
-				TCHAR szFileName[MAX_PATH],szDirectory[MAX_PATH];
-
-				GetDlgItemText(hDlg,IDC_PROGRAMGUIDETOOL_COMMAND,szCommand,MAX_COMMAND);
-				if (szCommand[0]!='\0') {
-					LPCTSTR p;
-
-					p=szCommand;
-					GetCommandFileName(&p,szFileName,lengthof(szFileName));
-				} else
-					szFileName[0]='\0';
-				InitOpenFileName(&ofn);
-				ofn.hwndOwner=hDlg;
-				ofn.lpstrFilter=TEXT("実行ファイル(*.exe;*.bat)\0*.exe;*.bat\0")
-								TEXT("すべてのファイル\0*.*\0");
-				ofn.nFilterIndex=1;
-				ofn.lpstrFile=szFileName;
-				ofn.nMaxFile=MAX_PATH;
-				if (szFileName[0]!='\0') {
-					CFilePath Path(szFileName);
-					Path.GetDirectory(szDirectory);
-					ofn.lpstrInitialDir=szDirectory;
-					::lstrcpy(szFileName,Path.GetFileName());
-				}
-				ofn.Flags=OFN_FILEMUSTEXIST | OFN_HIDEREADONLY | OFN_EXPLORER;
-				if (::GetOpenFileName(&ofn)) {
-					::PathQuoteSpaces(szFileName);
-					//::lstrcat(szFileName,TEXT(" \"%tvpid%\""));
-					::SetDlgItemText(hDlg,IDC_PROGRAMGUIDETOOL_COMMAND,szFileName);
-					if (GetDlgItemTextLength(hDlg,IDC_PROGRAMGUIDETOOL_NAME)==0) {
-						*::PathFindExtension(szFileName)='\0';
-						::SetDlgItemText(hDlg,IDC_PROGRAMGUIDETOOL_NAME,
-										 ::PathFindFileName(szFileName));
-					}
-				}
-				return TRUE;
-
-			case IDC_PROGRAMGUIDETOOL_PARAMETER:
-				{
-					static const struct {
-						LPCTSTR pszParameter;
-						LPCTSTR pszText;
-					} ParameterList[] = {
-						{TEXT("%tvpid%"),			TEXT("iEPGファイル")},
-						{TEXT("%eid%"),				TEXT("イベントID")},
-						{TEXT("%nid%"),				TEXT("ネットワークID")},
-						{TEXT("%tsid%"),			TEXT("ストリームID")},
-						{TEXT("%sid%"),				TEXT("サービスID")},
-						{TEXT("%start-year%"),		TEXT("開始年")},
-						{TEXT("%start-month%"),		TEXT("開始月")},
-						{TEXT("%start-day%"),		TEXT("開始日")},
-						{TEXT("%start-hour%"),		TEXT("開始時間")},
-						{TEXT("%start-minute%"),	TEXT("開始分")},
-						{TEXT("%end-year%"),		TEXT("終了年")},
-						{TEXT("%end-month%"),		TEXT("終了月")},
-						{TEXT("%end-day%"),			TEXT("終了日")},
-						{TEXT("%end-hour%"),		TEXT("終了時間")},
-						{TEXT("%end-minute%"),		TEXT("終了分")},
-						{TEXT("%duration-sec%"),	TEXT("秒単位の長さ")},
-						{TEXT("%duration-min%"),	TEXT("分単位の長さ")},
-						{TEXT("%event-name%"),		TEXT("イベント名")},
-						{TEXT("%service-name%"),	TEXT("サービス名")},
-					};
-					HMENU hmenu=::CreatePopupMenu();
-					RECT rc;
-					int Command;
-
-					for (int i=0;i<lengthof(ParameterList);i++) {
-						TCHAR szText[128];
-
-						StdUtil::snprintf(szText,lengthof(szText),TEXT("%s (%s)"),
-										  ParameterList[i].pszParameter,
-										  ParameterList[i].pszText);
-						::AppendMenu(hmenu,MF_STRING | MF_ENABLED,i+1,szText);
-					}
-					::GetWindowRect(::GetDlgItem(hDlg,IDC_PROGRAMGUIDETOOL_PARAMETER),&rc);
-					Command=::TrackPopupMenu(hmenu,TPM_RETURNCMD,
-											 rc.left,rc.bottom,0,hDlg,NULL);
-					::DestroyMenu(hmenu);
-					if (Command>0) {
-						DWORD Start,End;
-
-						::SendDlgItemMessage(hDlg,IDC_PROGRAMGUIDETOOL_COMMAND,EM_GETSEL,
-							reinterpret_cast<LPARAM>(&Start),
-							reinterpret_cast<LPARAM>(&End));
-						::SendDlgItemMessage(hDlg,IDC_PROGRAMGUIDETOOL_COMMAND,EM_REPLACESEL,
-							TRUE,reinterpret_cast<LPARAM>(ParameterList[Command-1].pszParameter));
-						if (End<Start)
-							Start=End;
-						::SendDlgItemMessage(hDlg,IDC_PROGRAMGUIDETOOL_COMMAND,EM_SETSEL,
-							Start,Start+::lstrlen(ParameterList[Command-1].pszParameter));
-					}
-				}
-				return TRUE;
-			}
-			return TRUE;
-
-		case IDC_PROGRAMGUIDETOOL_HELP:
-			GetAppClass().ShowHelpContent(HELP_ID_PROGRAMGUIDETOOL);
-			return TRUE;
-
-		case IDOK:
-			{
-				CProgramGuideTool *pThis=GetThis(hDlg);
-
-				::GetDlgItemText(hDlg,IDC_PROGRAMGUIDETOOL_NAME,
-								 pThis->m_szName,MAX_NAME);
-				::GetDlgItemText(hDlg,IDC_PROGRAMGUIDETOOL_COMMAND,
-								 pThis->m_szCommand,MAX_COMMAND);
-				if (pThis->m_hIcon!=NULL) {
-					::DestroyIcon(pThis->m_hIcon);
-					pThis->m_hIcon=NULL;
-				}
-			}
-		case IDCANCEL:
-			EndDialog(hDlg,LOWORD(wParam));
-		}
-		return TRUE;
-
-	case WM_NCDESTROY:
-		::RemoveProp(hDlg,TEXT("This"));
-		return TRUE;
-	}
-	return FALSE;
-}
-
-
-bool CProgramGuideTool::GetCommandFileName(LPCTSTR *ppszCommand,LPTSTR pszFileName,int MaxFileName)
-{
-	LPCTSTR p;
-	LPTSTR q;
-	TCHAR cDelimiter;
-
-	p=*ppszCommand;
-	q=pszFileName;
-	if (*p==_T('"')) {
-		cDelimiter=_T('"');
-		p++;
-	} else {
-		cDelimiter=_T(' ');
-	}
-	int Length=0;
-	while (*p!=_T('\0') && *p!=cDelimiter) {
-		int CharLength=StringCharLength(p);
-		if (CharLength==0 || Length+CharLength>=MaxFileName) {
-			pszFileName[0]=_T('\0');
-			return false;
-		}
-		for (int i=0;i<CharLength;i++)
-			*q++=*p++;
-		Length+=CharLength;
-	}
-	*q=_T('\0');
-	if (*p==cDelimiter)
-		p++;
-	*ppszCommand=p;
-	return true;
-}
-
-
-
-
-CProgramGuideToolList::CProgramGuideToolList()
-{
-}
-
-
-CProgramGuideToolList::CProgramGuideToolList(const CProgramGuideToolList &Src)
-{
-	*this=Src;
-}
-
-
-CProgramGuideToolList::~CProgramGuideToolList()
-{
-	Clear();
-}
-
-
-CProgramGuideToolList &CProgramGuideToolList::operator=(const CProgramGuideToolList &Src)
-{
-	if (&Src!=this) {
-		Clear();
-		if (Src.m_ToolList.size()>0) {
-			m_ToolList.resize(Src.m_ToolList.size());
-			for (size_t i=0;i<Src.m_ToolList.size();i++)
-				m_ToolList[i]=new CProgramGuideTool(*Src.m_ToolList[i]);
-		}
-	}
-	return *this;
-}
-
-
-void CProgramGuideToolList::Clear()
-{
-	for (size_t i=0;i<m_ToolList.size();i++)
-		delete m_ToolList[i];
-	m_ToolList.clear();
-}
-
-
-bool CProgramGuideToolList::Add(CProgramGuideTool *pTool)
-{
-	if (pTool==NULL)
-		return false;
-	m_ToolList.push_back(pTool);
-	return true;
-}
-
-
-CProgramGuideTool *CProgramGuideToolList::GetTool(size_t Index)
-{
-	if (Index>=m_ToolList.size())
-		return NULL;
-	return m_ToolList[Index];
-}
-
-
-const CProgramGuideTool *CProgramGuideToolList::GetTool(size_t Index) const
-{
-	if (Index>=m_ToolList.size())
-		return NULL;
-	return m_ToolList[Index];
 }

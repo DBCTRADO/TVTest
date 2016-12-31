@@ -4,37 +4,42 @@
 
 #include "UISkin.h"
 #include "View.h"
+#include "MainDisplay.h"
 #include "ChannelManager.h"
+#include "Command.h"
 #include "Layout.h"
 #include "TitleBar.h"
 #include "StatusView.h"
+#include "SideBar.h"
 #include "Settings.h"
-#include "NotificationBar.h"
 #include "Panel.h"
 #include "OSDManager.h"
 #include "WindowUtil.h"
+#include "EpgCapture.h"
+#include "AudioManager.h"
+#include "ChannelInput.h"
 
 
 #define MAIN_WINDOW_CLASS		APP_NAME TEXT(" Window")
 #define FULLSCREEN_WINDOW_CLASS	APP_NAME TEXT(" Fullscreen")
 
 // (*) が付いたものは、変えると異なるバージョン間での互換性が無くなるので注意
-#define WM_APP_SERVICEUPDATE	(WM_APP+0)
-#define WM_APP_CHANNELCHANGE	(WM_APP+1)
-#define WM_APP_IMAGESAVE		(WM_APP+2)
-#define WM_APP_TRAYICON			(WM_APP+3)
-#define WM_APP_EXECUTE			(WM_APP+4)
-#define WM_APP_QUERYPORT		(WM_APP+5)	// (*)
-#define WM_APP_FILEWRITEERROR	(WM_APP+6)
-#define WM_APP_VIDEOSIZECHANGED	(WM_APP+7)
-#define WM_APP_EMMPROCESSED		(WM_APP+8)
-#define WM_APP_ECMERROR			(WM_APP+9)
-#define WM_APP_ECMREFUSED		(WM_APP+10)
-#define WM_APP_CONTROLLERFOCUS	(WM_APP+11)	// (*)
-#define WM_APP_EPGLOADED		(WM_APP+12)
-#define WM_APP_PLUGINMESSAGE	(WM_APP+13)
-#define WM_APP_CARDREADERHUNG	(WM_APP+14)
-#define WM_APP_SERVICECHANGED	(WM_APP+15)
+#define WM_APP_SERVICEUPDATE			(WM_APP+0)
+#define WM_APP_IMAGESAVE				(WM_APP+2)
+#define WM_APP_TRAYICON					(WM_APP+3)
+#define WM_APP_QUERYPORT				(WM_APP+5)	// (*)
+#define WM_APP_FILEWRITEERROR			(WM_APP+6)
+#define WM_APP_VIDEOSIZECHANGED			(WM_APP+7)
+#define WM_APP_CONTROLLERFOCUS			(WM_APP+11)	// (*)
+#define WM_APP_EPGLOADED				(WM_APP+12)
+#define WM_APP_PLUGINMESSAGE			(WM_APP+13)
+#define WM_APP_SHOWNOTIFICATIONBAR		(WM_APP+14)
+#define WM_APP_SERVICECHANGED			(WM_APP+15)
+#define WM_APP_VIDEOSTREAMTYPECHANGED	(WM_APP+16)
+#define WM_APP_SERVICEINFOUPDATED		(WM_APP+17)
+#define WM_APP_AUDIOLISTCHANGED			(WM_APP+18)
+#define WM_APP_SPDIFPASSTHROUGHERROR	(WM_APP+19)
+#define WM_APP_UPDATECLOCK				(WM_APP+20)
 
 enum {
 	CONTAINER_ID_VIEW=1,
@@ -49,91 +54,17 @@ enum {
 };
 
 
-class CBasicViewer
-{
-protected:
-	CDtvEngine *m_pDtvEngine;
-	bool m_fEnabled;
-	CViewWindow m_ViewWindow;
-	CVideoContainerWindow m_VideoContainer;
-	CDisplayBase m_DisplayBase;
-
-public:
-	CBasicViewer(CDtvEngine *pDtvEngine);
-	bool Create(HWND hwndParent,int ViewID,int ContainerID,HWND hwndMessage);
-	bool EnableViewer(bool fEnable);
-	bool IsViewerEnabled() const { return m_fEnabled; }
-	bool BuildViewer();
-	bool CloseViewer();
-	CViewWindow &GetViewWindow() { return m_ViewWindow; }
-	const CViewWindow &GetViewWindow() const { return m_ViewWindow; }
-	CVideoContainerWindow &GetVideoContainer() { return m_VideoContainer; }
-	const CVideoContainerWindow &GetVideoContainer() const { return m_VideoContainer; }
-	CDisplayBase &GetDisplayBase() { return m_DisplayBase; }
-	const CDisplayBase &GetDisplayBase() const { return m_DisplayBase; }
-};
-
-class CFullscreen : public CCustomWindow
-{
-	Layout::CLayoutBase m_LayoutBase;
-	CViewWindow m_ViewWindow;
-	CBasicViewer *m_pViewer;
-	CTitleBar m_TitleBar;
-	CPanel m_Panel;
-	class CPanelEventHandler : public CPanel::CEventHandler {
-		bool OnClose();
-	};
-	CPanelEventHandler m_PanelEventHandler;
-	bool m_fShowCursor;
-	bool m_fMenu;
-	bool m_fShowStatusView;
-	bool m_fShowTitleBar;
-	bool m_fShowSideBar;
-	bool m_fShowPanel;
-	int m_PanelWidth;
-	POINT m_LastCursorMovePos;
-	enum {
-		TIMER_ID_HIDECURSOR=1
-	};
-	enum {
-		HIDE_CURSOR_DELAY=1000UL
-	};
-
-	bool OnCreate();
-	void OnMouseCommand(int Command);
-	void OnLButtonDoubleClick();
-	void ShowCursor(bool fShow);
-	void ShowStatusView(bool fShow);
-	void ShowTitleBar(bool fShow);
-	void ShowSideBar(bool fShow);
-// CBasicWindow
-	bool Create(HWND hwndParent,DWORD Style,DWORD ExStyle=0,int ID=0) override;
-// CCustomWindow
-	LRESULT OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
-
-public:
-	CFullscreen();
-	~CFullscreen();
-	bool Create(HWND hwndOwner,CBasicViewer *pViewer);
-	void ShowPanel(bool fShow);
-	bool IsPanelVisible() const { return m_fShowPanel; }
-	bool SetPanelWidth(int Width);
-	int GetPanelWidth() const { return m_PanelWidth; }
-	void HideAllBars();
-	void OnRButtonDown();
-	void OnMButtonDown();
-	void OnMouseMove();
-
-	static bool Initialize();
-};
+class CAppMain;
 
 class CMainWindow
 	: public CBasicWindow
 	, public CUISkin
+	, public TVTest::CUIBase
 	, public COSDManager::CEventHandler
 {
 public:
 	enum { COMMAND_FROM_MOUSE=8 };
+	static const DWORD HIDE_CURSOR_DELAY=1000UL;
 
 	struct ResumeInfo {
 		enum {
@@ -160,19 +91,20 @@ public:
 		}
 	};
 
-	CMainWindow();
+	CMainWindow(CAppMain &App);
 	~CMainWindow();
 	bool Create(HWND hwndParent,DWORD Style,DWORD ExStyle=0,int ID=0);
-	bool Show(int CmdShow);
+	bool Show(int CmdShow,bool fForce=false);
 	void CreatePanel();
-	void ShowNotificationBar(LPCTSTR pszText,
-							 CNotificationBar::MessageType Type=CNotificationBar::MESSAGE_INFO,
-							 DWORD Duration=0,bool fSkippable=false);
-	void AdjustWindowSize(int Width,int Height);
+	void AdjustWindowSize(int Width,int Height,bool fScreenSize=true);
 	bool ReadSettings(CSettings &Settings);
 	bool WriteSettings(CSettings &Settings);
+	void ShowPanel(bool fShow);
 	void SetStatusBarVisible(bool fVisible);
 	bool GetStatusBarVisible() const { return m_fShowStatusBar; }
+	bool ShowStatusBarItem(int ID,bool fShow);
+	void OnStatusBarInitialized();
+	void OnStatusBarTraceEnd();
 	void SetTitleBarVisible(bool fVisible);
 	bool GetTitleBarVisible() const { return m_fShowTitleBar; }
 	void SetCustomTitleBar(bool fCustom);
@@ -185,45 +117,32 @@ public:
 	bool GetSideBarVisible() const { return m_fShowSideBar; }
 	bool OnBarMouseLeave(HWND hwnd);
 	int GetPanelPaneIndex() const;
+	bool IsPanelVisible() const;
+	bool IsPanelPresent() const;
 	bool IsFullscreenPanelVisible() const { return m_Fullscreen.IsPanelVisible(); }
+	void OnPanelFloating(bool fFloating);
+	void OnPanelDocking(CPanelFrame::DockingPlace Place);
 	int GetAspectRatioType() const { return m_AspectRatioType; }
+
+	bool EnablePlayback(bool fEnable);
+	bool IsPlaybackEnabled() const { return m_fEnablePlayback; }
+
 	bool InitStandby();
 	bool InitMinimize();
 	ResumeInfo &GetResumeInfo() { return m_Resume; }
 	bool IsMinimizeToTray() const;
 	bool ConfirmExit();
 	void OnMouseWheel(WPARAM wParam,LPARAM lParam,bool fHorz);
-	void SendCommand(int Command) { SendMessage(WM_COMMAND,Command,0); }
-	void PostCommand(int Command) { PostMessage(WM_COMMAND,Command,0); }
-	bool CommandLineRecord(LPCTSTR pszFileName,const FILETIME *pStartTime,int Delay,int Duration);
 
+	bool IsNoAcceleratorMessage(const MSG *pMsg);
 	bool BeginChannelNoInput(int Digits);
-	void EndChannelNoInput();
-	bool OnChannelNoInput(int Number);
+	void EndChannelNoInput(bool fDetermine=false);
 
-	bool BeginProgramGuideUpdate(LPCTSTR pszBonDriver=NULL,const CChannelList *pChannelList=NULL,bool fStandby=false);
-	enum {
-		EPG_UPDATE_END_CLOSE_TUNER = 0x0001U,
-		EPG_UPDATE_END_RESUME      = 0x0002U,
-		EPG_UPDATE_END_DEFAULT     = EPG_UPDATE_END_CLOSE_TUNER | EPG_UPDATE_END_RESUME
-	};
-	void OnProgramGuideUpdateEnd(unsigned int Flags=EPG_UPDATE_END_DEFAULT);
-	void EndProgramGuideUpdate(unsigned int Flags=EPG_UPDATE_END_DEFAULT);
-
-	void UpdatePanel();
-	void ApplyColorScheme(const class CColorScheme *pColorScheme);
-	bool SetLogo(LPCTSTR pszFileName);
-	bool SetViewWindowEdge(bool fEdge);
-	bool GetViewWindowEdge() const { return m_fViewWindowEdge; }
-	bool GetExitOnRecordingStop() const { return m_fExitOnRecordingStop; }
-	void SetExitOnRecordingStop(bool fExit) { m_fExitOnRecordingStop=fExit; }
-
-	CStatusView *GetStatusView() const;
 	Layout::CLayoutBase &GetLayoutBase() { return m_LayoutBase; }
-	CDisplayBase &GetDisplayBase() { return m_Viewer.GetDisplayBase(); }
+	CDisplayBase &GetDisplayBase() { return m_Display.GetDisplayBase(); }
 	CTitleBar &GetTitleBar() { return m_TitleBar; }
-
-	bool UpdateProgramInfo();
+	CStatusView &GetStatusView();
+	CSideBar &GetSideBar();
 
 	enum {
 		PROGRAMGUIDE_SHOW_ONSCREEN = 0x0001U,
@@ -235,27 +154,288 @@ public:
 	};
 	bool ShowProgramGuide(bool fShow,unsigned int Flags=0,const ProgramGuideSpaceInfo *pSpaceInfo=NULL);
 
-	static bool Initialize();
+	static bool Initialize(HINSTANCE hinst);
 
 // CUISkin
 	HWND GetVideoHostWindow() const override;
 
+// CUIBase
+	void SetStyle(const TVTest::Style::CStyleManager *pStyleManager) override;
+	void NormalizeStyle(
+		const TVTest::Style::CStyleManager *pStyleManager,
+		const TVTest::Style::CStyleScaling *pStyleScaling) override;
+	void SetTheme(const TVTest::Theme::CThemeManager *pThemeManager) override;
+
 private:
+	struct MainWindowStyle
+	{
+		TVTest::Style::Margins ScreenMargin;
+		TVTest::Style::Margins FullscreenMargin;
+		TVTest::Style::Margins ResizingMargin;
+
+		MainWindowStyle();
+		void SetStyle(const TVTest::Style::CStyleManager *pStyleManager);
+		void NormalizeStyle(
+			const TVTest::Style::CStyleManager *pStyleManager,
+			const TVTest::Style::CStyleScaling *pStyleScaling);
+	};
+
+	struct MainWindowTheme
+	{
+		TVTest::Theme::BackgroundStyle FrameStyle;
+		TVTest::Theme::BackgroundStyle ActiveFrameStyle;
+	};
+
+	class CBarLayout
+	{
+	public:
+		CBarLayout() {}
+		virtual ~CBarLayout() {}
+		virtual void Layout(RECT *pArea,RECT *pBarRect) = 0;
+
+		bool IsSpot(const RECT *pArea,const POINT *pPos);
+		void AdjustArea(RECT *pArea);
+		void ReserveArea(RECT *pArea,bool fNoMove);
+	};
+
+	class CTitleBarManager
+		: public CTitleBar::CEventHandler
+		, public CBarLayout
+	{
+	public:
+		CTitleBarManager(CMainWindow *pMainWindow,bool fMainWindow);
+	// CBarLayout
+		void Layout(RECT *pArea,RECT *pBarRect) override;
+	// CTitleBarManager
+		void EndDrag();
+
+	private:
+	// CTitleBar::CEventHandler
+		bool OnClose() override;
+		bool OnMinimize() override;
+		bool OnMaximize() override;
+		bool OnFullscreen() override;
+		void OnMouseLeave() override;
+		void OnLabelLButtonDown(int x,int y) override;
+		void OnLabelLButtonDoubleClick(int x,int y) override;
+		void OnLabelRButtonUp(int x,int y) override;
+		void OnIconLButtonDown(int x,int y) override;
+		void OnIconLButtonDoubleClick(int x,int y) override;
+		void OnHeightChanged(int Height) override;
+	// CTitleBarManager
+		void ShowSystemMenu(int x,int y);
+
+		CMainWindow *m_pMainWindow;
+		bool m_fMainWindow;
+		bool m_fFixed;
+	};
+
+	class CSideBarManager : public CSideBar::CEventHandler, public CBarLayout
+	{
+	public:
+		CSideBarManager(CMainWindow *pMainWindow);
+	// CBarLayout
+		void Layout(RECT *pArea,RECT *pBarRect) override;
+
+	private:
+		CMainWindow *m_pMainWindow;
+		bool m_fFixed;
+
+		const CChannelInfo *GetChannelInfoByCommand(int Command);
+
+	// CSideBar::CEventHandler
+		void OnCommand(int Command) override;
+		void OnRButtonUp(int x,int y) override;
+		void OnMouseLeave() override;
+		bool GetTooltipText(int Command,LPTSTR pszText,int MaxText) override;
+		bool DrawIcon(const CSideBar::DrawIconInfo *pInfo) override;
+		void OnBarWidthChanged(int BarWidth) override;
+		void OnStyleChanged() override;
+	};
+
+	class CCursorTracker
+	{
+	public:
+		CCursorTracker();
+		void Reset();
+		bool OnCursorMove(int x,int y);
+		POINT GetLastCursorPos() const { return m_LastCursorPos; }
+		void SetMoveDelta(int Delta) { m_MoveDelta=Delta; }
+
+	private:
+		int m_MoveDelta;
+		POINT m_LastMovePos;
+		POINT m_LastCursorPos;
+	};
+
+	class CFullscreen
+		: public CCustomWindow
+		, public TVTest::CUIBase
+	{
+	public:
+		CFullscreen(CMainWindow &MainWindow);
+		~CFullscreen();
+		bool Create(HWND hwndOwner,TVTest::CMainDisplay *pDisplay);
+		void ShowStatusBar(bool fShow);
+		bool IsStatusBarVisible() const { return m_fShowStatusView; }
+		void ShowTitleBar(bool fShow);
+		bool IsTitleBarVisible() const { return m_fShowTitleBar; }
+		bool IsSideBarVisible() const { return m_fShowSideBar; }
+		void ShowPanel(bool fShow);
+		bool IsPanelVisible() const { return m_fShowPanel; }
+		bool SetPanelWidth(int Width);
+		int GetPanelWidth() const { return m_PanelWidth; }
+		bool SetPanelHeight(int Height);
+		int GetPanelHeight() const { return m_PanelHeight; }
+		bool SetPanelPlace(CPanelFrame::DockingPlace Place);
+		CPanelFrame::DockingPlace GetPanelPlace() const { return m_PanelPlace; }
+		void HideAllBars();
+		void OnRButtonUp();
+		void OnMButtonUp();
+		void OnMouseMove();
+		CViewWindow &GetViewWindow() { return m_ViewWindow; }
+		void SetTitleFont(const TVTest::Style::Font &Font);
+
+	// CUIBase
+		void SetTheme(const TVTest::Theme::CThemeManager *pThemeManager) override;
+
+		static bool Initialize(HINSTANCE hinst);
+
+	private:
+		class CPanelEventHandler : public CPanel::CEventHandler {
+		public:
+			CPanelEventHandler(CFullscreen &Fullscreen);
+			bool OnClose() override;
+			bool OnMenuPopup(HMENU hmenu) override;
+			bool OnMenuSelected(int Command) override;
+
+		private:
+			CFullscreen &m_Fullscreen;
+		};
+
+		CMainWindow &m_MainWindow;
+		CAppMain &m_App;
+		TVTest::Style::CStyleScaling m_StyleScaling;
+		Layout::CLayoutBase m_LayoutBase;
+		CViewWindow m_ViewWindow;
+		TVTest::CMainDisplay *m_pDisplay;
+		CTitleBar m_TitleBar;
+		CTitleBarManager m_TitleBarManager;
+		CPanel m_Panel;
+		CPanelEventHandler m_PanelEventHandler;
+		TVTest::Style::Margins m_ScreenMargin;
+		bool m_fShowCursor;
+		bool m_fMenu;
+		bool m_fShowStatusView;
+		bool m_fShowTitleBar;
+		bool m_fShowSideBar;
+		bool m_fShowPanel;
+		CPanelFrame::DockingPlace m_PanelPlace;
+		int m_PanelWidth;
+		int m_PanelHeight;
+		CCursorTracker m_CursorTracker;
+
+		bool OnCreate();
+		void OnMouseCommand(int Command);
+		void OnLButtonDoubleClick();
+		void ShowCursor(bool fShow);
+		void ShowSideBar(bool fShow);
+		void OnBarHide(CBasicWindow &Window);
+		void OnSharedBarVisibilityChange(CBasicWindow &Window,TVTest::CUIBase &UIBase,bool fVisible);
+		void RestorePanel(bool fPreventForeground);
+	// CBasicWindow
+		bool Create(HWND hwndParent,DWORD Style,DWORD ExStyle=0,int ID=0) override;
+	// CCustomWindow
+		LRESULT OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
+	};
+
+	class CStatusViewEventHandler : public CStatusView::CEventHandler
+	{
+	public:
+		CStatusViewEventHandler(CMainWindow *pMainWindow);
+
+	private:
+		CMainWindow *m_pMainWindow;
+
+		void OnMouseLeave() override;
+		void OnHeightChanged(int Height) override;
+		void OnStyleChanged() override;
+	};
+
+	class CVideoContainerEventHandler : public CVideoContainerWindow::CEventHandler
+	{
+	public:
+		CVideoContainerEventHandler(CMainWindow *pMainWindow);
+
+	private:
+		CMainWindow *m_pMainWindow;
+
+		void OnSizeChanged(int Width,int Height) override;
+	};
+
+	class CViewWindowEventHandler : public CViewWindow::CEventHandler
+	{
+	public:
+		CViewWindowEventHandler(CMainWindow *pMainWindow);
+
+	private:
+		CMainWindow *m_pMainWindow;
+
+		void OnSizeChanged(int Width,int Height) override;
+	};
+
+	class CEpgCaptureEventHandler : public TVTest::CEpgCaptureManager::CEventHandler
+	{
+	public:
+		CEpgCaptureEventHandler(CMainWindow *pMainWindow);
+
+	private:
+		CMainWindow *m_pMainWindow;
+
+		void OnBeginCapture(unsigned int Flags,unsigned int Status) override;
+		void OnEndCapture(unsigned int Flags) override;
+		void OnChannelChanged() override;
+		void OnChannelEnd(bool fComplete) override;
+	};
+
+	class CCommandEventHandler : public CCommandList::CEventHandler
+	{
+	public:
+		CCommandEventHandler(CMainWindow *pMainWindow);
+
+	private:
+		CMainWindow *m_pMainWindow;
+
+		void OnCommandStateChanged(int ID,unsigned int OldState,unsigned int NewState) override;
+		void OnCommandRadioCheckedStateChanged(int FirstID,int LastID,int CheckedID) override;
+	};
+
 	enum { UPDATE_TIMER_INTERVAL=500 };
 
+	CAppMain &m_App;
+	TVTest::Style::CStyleScaling m_StyleScaling;
 	Layout::CLayoutBase m_LayoutBase;
-	CBasicViewer m_Viewer;
+	TVTest::CMainDisplay m_Display;
 	CTitleBar m_TitleBar;
+	CTitleBarManager m_TitleBarManager;
+	CSideBarManager m_SideBarManager;
+	CStatusViewEventHandler m_StatusViewEventHandler;
+	CVideoContainerEventHandler m_VideoContainerEventHandler;
+	CViewWindowEventHandler m_ViewWindowEventHandler;
 	CFullscreen m_Fullscreen;
+	CNotificationBar m_NotificationBar;
+	CCommandEventHandler m_CommandEventHandler;
 
+	MainWindowStyle m_Style;
+	MainWindowTheme m_Theme;
 	bool m_fShowStatusBar;
-	bool m_fPopupStatusBar;
 	bool m_fShowTitleBar;
 	bool m_fCustomTitleBar;
 	bool m_fPopupTitleBar;
 	bool m_fSplitTitleBar;
 	bool m_fShowSideBar;
 	int m_PanelPaneIndex;
+	bool m_fPanelVerticalAlign;
 	bool m_fCustomFrame;
 	int m_CustomFrameWidth;
 	int m_ThinFrameWidth;
@@ -264,32 +444,61 @@ private:
 		FRAME_CUSTOM,
 		FRAME_NONE
 	};
-	bool m_fViewWindowEdge;
+
+	bool m_fEnablePlayback;
 
 	bool m_fStandbyInit;
 	bool m_fMinimizeInit;
 	ResumeInfo m_Resume;
 
-	struct EpgChannelGroup {
-		int Space;
-		int Channel;
-		DWORD Time;
-		CChannelList ChannelList;
+	enum WindowState
+	{
+		WINDOW_STATE_NORMAL,
+		WINDOW_STATE_MINIMIZED,
+		WINDOW_STATE_MAXIMIZED
 	};
-	bool m_fProgramGuideUpdating;
-	int m_EpgUpdateCurChannel;
-	std::vector<EpgChannelGroup> m_EpgUpdateChannelList;
-	Util::CClock m_EpgAccumulateClock;
-	bool m_fEpgUpdateChannelChange;
+	WindowState m_WindowState;
+	bool m_fWindowRegionSet;
+	bool m_fWindowFrameChanged;
 
-	bool m_fExitOnRecordingStop;
+	enum WindowSizeMode {
+		WINDOW_SIZE_HD,
+		WINDOW_SIZE_1SEG
+	};
+	struct WindowSize {
+		int Width;
+		int Height;
+		WindowSize() : Width(0), Height(0) {}
+		WindowSize &operator=(const RECT &rc) {
+			Width=rc.right-rc.left;
+			Height=rc.bottom-rc.top;
+			return *this;
+		}
+		bool IsValid() const { return Width>0 && Height>0; }
+	};
+	WindowSizeMode m_WindowSizeMode;
+	WindowSize m_HDWindowSize;
+	WindowSize m_1SegWindowSize;
+
+	bool m_fLockLayout;
+	bool m_fStatusBarInitialized;
+
+	bool m_fShowCursor;
+	bool m_fNoHideCursor;
+	CCursorTracker m_CursorTracker;
+
+	bool m_fDragging;
 	POINT m_ptDragStartPos;
 	RECT m_rcDragStart;
+	bool m_fEnterSizeMove;
+	bool m_fResizePanel;
+
+	bool m_fCreated;
 	bool m_fClosing;
 
 	CMouseWheelHandler m_WheelHandler;
 	int m_WheelCount;
-	int m_PrevWheelMode;
+	int m_PrevWheelCommand;
 	DWORD m_PrevWheelTime;
 
 	enum {
@@ -311,7 +520,6 @@ private:
 	bool m_fFrameCut;
 	int m_VideoSizeChangedTimerCount;
 	unsigned int m_ProgramListUpdateTimerCount;
-	int m_CurEventStereoMode;
 	bool m_fAlertedLowFreeSpace;
 
 	class CTimer {
@@ -345,79 +553,132 @@ private:
 	};
 	CDisplayBaseEventHandler m_DisplayBaseEventHandler;
 
-	struct ChannelNoInputInfo {
-		bool fInputting;
-		int Digits;
-		int CurDigit;
-		int Number;
-		ChannelNoInputInfo() : fInputting(false) {}
-	};
-	ChannelNoInputInfo m_ChannelNoInput;
-	DWORD m_ChannelNoInputTimeout;
+	TVTest::CChannelInput m_ChannelInput;
 	CTimer m_ChannelNoInputTimer;
 
+	CEpgCaptureEventHandler m_EpgCaptureEventHandler;
+
+	class CClockUpdateTimer : public Util::CTimer
+	{
+	public:
+		CClockUpdateTimer(CMainWindow *pMainWindow);
+	private:
+		void OnTimer() override;
+		CMainWindow *m_pMainWindow;
+	};
+	CClockUpdateTimer m_ClockUpdateTimer;
+	bool m_fAccurateClock;
+
+	struct DirectShowFilterPropertyInfo {
+		CMediaViewer::PropertyFilter Filter;
+		int Command;
+	};
+
+	static const BYTE m_AudioGainList[];
+	static const DirectShowFilterPropertyInfo m_DirectShowFilterPropertyList[];
 	static ATOM m_atomChildOldWndProcProp;
+	static CMainWindow *m_pThis;
 
 // CUISkin
 	HWND GetMainWindow() const override { return m_hwnd; }
-	bool InitializeViewer() override;
+	HWND GetFullscreenWindow() const override { return m_Fullscreen.GetHandle(); }
+	const TVTest::CUIBase *GetUIBase() const override { return this; }
+	const TVTest::CUIBase *GetFullscreenUIBase() const override { return &m_Fullscreen; }
+	void ShowNotificationBar(LPCTSTR pszText,
+							 CNotificationBar::MessageType Type=CNotificationBar::MESSAGE_INFO,
+							 DWORD Duration=0,bool fSkippable=false) override;
+	bool InitializeViewer(BYTE VideoStreamType=0) override;
 	bool FinalizeViewer() override;
 	bool EnableViewer(bool fEnable) override;
 	bool IsViewerEnabled() const override;
 	HWND GetViewerWindow() const override;
 	bool SetZoomRate(int Rate,int Factor) override;
 	bool GetZoomRate(int *pRate,int *pFactor) override;
-	bool SetPanAndScan(const PanAndScanInfo &Info) override;
-	bool GetPanAndScan(PanAndScanInfo *pInfo) const override;
-	void OnVolumeChanged(bool fOSD) override;
-	void OnMuteChanged() override;
-	void OnStereoModeChanged() override;
-	void OnAudioStreamChanged() override;
-	bool OnStandbyChange(bool fStandby) override;
-	bool OnFullscreenChange(bool fFullscreen) override;
+	void SetTitleText(LPCTSTR pszTitleText,LPCTSTR pszWindowText) override;
+	bool SetTitleFont(const TVTest::Style::Font &Font) override;
+	bool SetLogo(HBITMAP hbm) override;
 	bool SetAlwaysOnTop(bool fTop) override;
+	bool SetFullscreen(bool fFullscreen) override;
+	bool SetStandby(bool fStandby) override;
+	bool ShowVolumeOSD() override;
+
+// CAppEventHandler
 	void OnTunerChanged() override;
 	void OnTunerOpened() override;
 	void OnTunerClosed() override;
-	void OnChannelListChanged() override;
+	void OnTunerShutDown() override;
 	void OnChannelChanged(unsigned int Status) override;
 	void OnServiceChanged() override;
+	void OnChannelListChanged() override;
 	void OnRecordingStarted() override;
 	void OnRecordingStopped() override;
+	void OnRecordingPaused() override;
+	void OnRecordingResumed() override;
+	void On1SegModeChanged(bool f1SegMode) override;
+	void OnPanAndScanChanged() override;
+	void OnVolumeChanged(int Volume) override;
+	void OnMuteChanged(bool fMute) override;
+	void OnDualMonoModeChanged(CAudioDecFilter::DualMonoMode Mode) override;
+	void OnStereoModeChanged(CAudioDecFilter::StereoMode Mode) override;
+	void OnAudioStreamChanged(int Stream) override;
+	void OnStartupDone() override;
+	void OnVariableChanged() override;
 
 // COSDManager::CEventHandler
-	bool GetOSDWindow(HWND *phwndParent,RECT *pRect,bool *pfForcePseudoOSD) override;
+	bool GetOSDClientInfo(COSDManager::OSDClientInfo *pInfo) override;
 	bool SetOSDHideTimer(DWORD Delay) override;
 
 // CMainWindow
 	LRESULT OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam);
+	bool OnNCCreate(const CREATESTRUCT *pcs);
 	bool OnCreate(const CREATESTRUCT *pcs);
+	void OnDestroy();
 	void OnSizeChanged(UINT State,int Width,int Height);
 	bool OnSizeChanging(UINT Edge,RECT *pRect);
+	void OnGetMinMaxInfo(HWND hwnd,LPMINMAXINFO pmmi);
 	void OnMouseMove(int x,int y);
+	bool OnSetCursor(HWND hwndCursor,int HitTestCode,int MouseMessage);
+	bool OnKeyDown(WPARAM KeyCode);
 	void OnCommand(HWND hwnd,int id,HWND hwndCtl,UINT codeNotify);
+	bool OnSysCommand(UINT Command);
 	void OnTimer(HWND hwnd,UINT id);
 	bool OnInitMenuPopup(HMENU hmenu);
-	void AutoSelectStereoMode();
-	bool OnExecute(LPCTSTR pszCmdLine);
-	int GetZoomPercentage();
+	bool OnClose(HWND hwnd);
+	void OnRecordingStateChanged();
+	void OnEventChanged();
+	bool AutoFitWindowToVideo();
 	bool SetPanAndScan(int Command);
+	void LockLayout();
+	void UpdateLayout();
+	void UpdateLayoutStructure();
+	void AdjustWindowSizeOnDockPanel(bool fDock);
+	void GetPanelDockingAdjustedPos(bool fDock,RECT *pPos) const;
+	void SetFixedPaneSize(int SplitterID,int ContainerID,int Width,int Height);
+	void ShowPopupTitleBar(bool fShow);
+	void ShowPopupStatusBar(bool fShow);
+	void ShowPopupSideBar(bool fShow);
+	void ShowCursor(bool fShow);
 	void ShowChannelOSD();
 	void ShowAudioOSD();
 	void SetWindowVisible();
-	void ShowFloatingWindows(bool fShow);
+	void ShowFloatingWindows(bool fShow,bool fNoProgramGuide=false);
+	void DrawCustomFrame(bool fActive);
+	CViewWindow &GetCurrentViewWindow();
 	void StoreTunerResumeInfo();
 	bool ResumeTuner();
 	void ResumeChannel();
 	void SuspendViewer(unsigned int Flags);
 	void ResumeViewer(unsigned int Flags);
-	bool SetEpgUpdateNextChannel();
-	void RefreshChannelPanel();
+	void OnChannelNoInput();
+	int GetNextChannel(bool fUp);
 	void HookWindows(HWND hwnd);
 	void HookChildWindow(HWND hwnd);
+	void SetMaximizedRegion(bool fSet);
+	void UpdateWindowFrame();
+	void SendCommand(int Command) { SendMessage(WM_COMMAND,Command,0); }
+	void PostCommand(int Command) { PostMessage(WM_COMMAND,Command,0); }
 
 	static LRESULT CALLBACK WndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam);
-	static DWORD WINAPI ExitWatchThread(LPVOID lpParameter);
 	static LRESULT CALLBACK ChildHookProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam);
 };
 

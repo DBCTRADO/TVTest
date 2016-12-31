@@ -3,20 +3,23 @@
 
 
 #include "BasicWindow.h"
+#include "UIBase.h"
 #include "Theme.h"
 #include "DrawUtil.h"
 #include "Tooltip.h"
 #include "WindowUtil.h"
 
 
-class CTitleBar : public CCustomWindow
+class CTitleBar
+	: public CCustomWindow
+	, public TVTest::CUIBase
 {
 public:
-	struct ThemeInfo {
-		Theme::Style CaptionStyle;
-		Theme::Style IconStyle;
-		Theme::Style HighlightIconStyle;
-		Theme::BorderInfo Border;
+	struct TitleBarTheme {
+		TVTest::Theme::Style CaptionStyle;
+		TVTest::Theme::Style IconStyle;
+		TVTest::Theme::Style HighlightIconStyle;
+		TVTest::Theme::BorderStyle Border;
 	};
 
 	class ABSTRACT_CLASS(CEventHandler) {
@@ -32,9 +35,10 @@ public:
 		virtual void OnMouseLeave() {}
 		virtual void OnLabelLButtonDown(int x,int y) {}
 		virtual void OnLabelLButtonDoubleClick(int x,int y) {}
-		virtual void OnLabelRButtonDown(int x,int y) {}
+		virtual void OnLabelRButtonUp(int x,int y) {}
 		virtual void OnIconLButtonDown(int x,int y) {}
 		virtual void OnIconLButtonDoubleClick(int x,int y) {}
+		virtual void OnHeightChanged(int Height) {}
 		friend class CTitleBar;
 	};
 
@@ -42,19 +46,33 @@ public:
 
 	CTitleBar();
 	~CTitleBar();
+
 // CBasicWindow
 	bool Create(HWND hwndParent,DWORD Style,DWORD ExStyle=0,int ID=0) override;
 	void SetVisible(bool fVisible) override;
+
+// CUIBase
+	void SetStyle(const TVTest::Style::CStyleManager *pStyleManager) override;
+	void NormalizeStyle(
+		const TVTest::Style::CStyleManager *pStyleManager,
+		const TVTest::Style::CStyleScaling *pStyleScaling) override;
+	void SetTheme(const TVTest::Theme::CThemeManager *pThemeManager) override;
+
 // CTitleBar
+	int CalcHeight() const;
+	int GetButtonWidth() const;
+	int GetButtonHeight() const;
 	bool SetLabel(LPCTSTR pszLabel);
-	LPCTSTR GetLabel() const { return m_Label.Get(); }
+	LPCTSTR GetLabel() const { return m_Label.c_str(); }
 	void SetMaximizeMode(bool fMaximize);
 	void SetFullscreenMode(bool fFullscreen);
 	bool SetEventHandler(CEventHandler *pHandler);
-	bool SetTheme(const ThemeInfo *pTheme);
-	bool GetTheme(ThemeInfo *pTheme) const;
-	bool SetFont(const LOGFONT *pFont);
+	bool SetTitleBarTheme(const TitleBarTheme &Theme);
+	bool GetTitleBarTheme(TitleBarTheme *pTheme) const;
+	bool SetFont(const TVTest::Style::Font &Font);
 	void SetIcon(HICON hIcon);
+	SIZE GetIconDrawSize() const;
+	bool IsIconDrawSmall() const;
 
 private:
 	enum {
@@ -66,12 +84,32 @@ private:
 		ITEM_BUTTON_FIRST=ITEM_MINIMIZE,
 		ITEM_LAST=ITEM_CLOSE
 	};
+
+	struct TitleBarStyle
+	{
+		TVTest::Style::Margins Padding;
+		TVTest::Style::Margins LabelMargin;
+		TVTest::Style::IntValue LabelExtraHeight;
+		TVTest::Style::Size IconSize;
+		TVTest::Style::Margins IconMargin;
+		TVTest::Style::Size ButtonIconSize;
+		TVTest::Style::Margins ButtonPadding;
+
+		TitleBarStyle();
+		void SetStyle(const TVTest::Style::CStyleManager *pStyleManager);
+		void NormalizeStyle(
+			const TVTest::Style::CStyleManager *pStyleManager,
+			const TVTest::Style::CStyleScaling *pStyleScaling);
+	};
+
+	TitleBarStyle m_Style;
+	TVTest::Style::Font m_StyleFont;
 	DrawUtil::CFont m_Font;
 	int m_FontHeight;
-	ThemeInfo m_Theme;
-	HBITMAP m_hbmIcons;
+	TitleBarTheme m_Theme;
+	TVTest::Theme::IconList m_ButtonIcons;
 	CTooltip m_Tooltip;
-	CDynamicString m_Label;
+	TVTest::String m_Label;
 	HICON m_hIcon;
 	int m_HotItem;
 	int m_ClickItem;
@@ -80,16 +118,24 @@ private:
 	bool m_fFullscreen;
 	CEventHandler *m_pEventHandler;
 
+	static const LPCTSTR CLASS_NAME;
 	static HINSTANCE m_hinst;
 
+	void AdjustSize();
+	int CalcFontHeight() const;
 	bool GetItemRect(int Item,RECT *pRect) const;
 	bool UpdateItem(int Item);
 	int HitTest(int x,int y) const;
+	bool PtInIcon(int x,int y) const;
 	void UpdateTooltipsRect();
 	void Draw(HDC hdc,const RECT &PaintRect);
 
 // CCustomWindow
 	LRESULT OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
+
+// CUIBase
+	void ApplyStyle() override;
+	void RealizeStyle() override;
 };
 
 

@@ -22,16 +22,16 @@ public:
 		PAGE_ACCELERATOR,
 		PAGE_CONTROLLER,
 		PAGE_DRIVER,
+		PAGE_VIDEO,
 		PAGE_AUDIO,
+		PAGE_PLAYBACK,
 		PAGE_RECORD,
 		PAGE_CAPTURE,
 		PAGE_CHANNELSCAN,
 		PAGE_EPG,
 		PAGE_PROGRAMGUIDE,
 		PAGE_PLUGIN,
-#ifdef NETWORK_REMOCON_SUPPORT
-		PAGE_NETWORKREMOCON,
-#endif
+		PAGE_TSPROCESSOR,
 		PAGE_LOG,
 		PAGE_LAST=PAGE_LOG
 	};
@@ -52,21 +52,30 @@ private:
 	static const PageInfo m_PageList[NUM_PAGES];
 	int m_CurrentPage;
 	int m_StartPage;
-	//DrawUtil::CBitmap m_Icons;
 	HIMAGELIST m_himlIcons;
 	DrawUtil::CFont m_TitleFont;
 	bool m_fSettingError;
 	bool m_fApplied;
+	int m_IconWidth;
+	int m_IconHeight;
+	int m_ListMargin;
+	int m_IconTextMargin;
 
 	void CreatePage(int Page);
 	void SetPage(int Page);
+	void SetPagePos(int Page);
 	COLORREF GetTitleColor(int Page) const;
 
 // COptionFrame
+	void ActivatePage(COptions *pOptions) override;
 	void OnSettingError(COptions *pOptions) override;
 
 // CBasicDialog
 	INT_PTR DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
+
+// CUIBase
+	void ApplyStyle() override;
+	void RealizeStyle() override;
 };
 
 

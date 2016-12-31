@@ -2,12 +2,7 @@
 #include <dvdmedia.h>
 #include <initguid.h>
 #include "Mpeg2ParserFilter.h"
-
-#ifdef _DEBUG
-#undef THIS_FILE
-static char THIS_FILE[]=__FILE__;
-#define new DEBUG_NEW
-#endif
+#include "../Common/DebugDef.h"
 
 
 static const long SAMPLE_BUFFER_SIZE = 0x800000L;	// 8MiB
@@ -20,7 +15,6 @@ CMpeg2ParserFilter::CMpeg2ParserFilter(LPUNKNOWN pUnk, HRESULT *phr)
 	: CTransInPlaceFilter(MPEG2PARSERFILTER_NAME, pUnk, CLSID_Mpeg2ParserFilter, phr, FALSE)
 #endif
 	, m_Mpeg2Parser(this)
-	, m_bAttachMediaType(false)
 	, m_pOutSample(NULL)
 {
 	TRACE(TEXT("CMpeg2ParserFilter::CMpeg2ParserFilter() %p\n"), this);
@@ -146,7 +140,8 @@ HRESULT CMpeg2ParserFilter::Transform(IMediaSample *pIn, IMediaSample *pOut)
 	// シーケンスを取得
 	m_Mpeg2Parser.StoreEs(pInData, InDataSize);
 
-	m_BitRateCalculator.Update(InDataSize);
+	if (m_pStreamCallback)
+		m_pStreamCallback->OnStream(MAKEFOURCC('m','p','2','v'), pInData, InDataSize);
 
 	return pOut->GetActualDataLength() > 0 ? S_OK : S_FALSE;
 }
@@ -175,7 +170,8 @@ HRESULT CMpeg2ParserFilter::Transform(IMediaSample *pSample)
 	// シーケンスを取得
 	m_Mpeg2Parser.StoreEs(pData, DataSize);
 
-	m_BitRateCalculator.Update(DataSize);
+	if (m_pStreamCallback)
+		m_pStreamCallback->OnStream(MAKEFOURCC('m','p','2','v'), pData, DataSize);
 
 	return S_OK;
 }
@@ -218,18 +214,12 @@ HRESULT CMpeg2ParserFilter::StartStreaming()
 	m_Mpeg2Parser.Reset();
 	m_VideoInfo.Reset();
 
-	m_BitRateCalculator.Initialize();
-
 	return S_OK;
 }
 
 
 HRESULT CMpeg2ParserFilter::StopStreaming()
 {
-	CAutoLock Lock(&m_ParserLock);
-
-	m_BitRateCalculator.Reset();
-
 	return S_OK;
 }
 
@@ -244,14 +234,6 @@ HRESULT CMpeg2ParserFilter::BeginFlush()
 	m_VideoInfo.Reset();
 
 	return hr;
-}
-
-
-void CMpeg2ParserFilter::SetAttachMediaType(bool bAttach)
-{
-	CAutoLock Lock(&m_ParserLock);
-
-	m_bAttachMediaType = bAttach;
 }
 
 

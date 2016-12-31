@@ -4,20 +4,17 @@
 #include "Plugin.h"
 #include "Image.h"
 #include "DialogUtil.h"
+#include "DPIUtil.h"
 #include "Command.h"
 #include "EpgProgramList.h"
 #include "DriverManager.h"
 #include "LogoManager.h"
 #include "Controller.h"
+#include "TSProcessor.h"
 #include "BonTsEngine/TsEncode.h"
 #include "resource.h"
 #include <algorithm>
-
-#ifdef _DEBUG
-#undef THIS_FILE
-static char THIS_FILE[]=__FILE__;
-#define new DEBUG_NEW
-#endif
+#include "Common/DebugDef.h"
 
 
 struct PluginMessageParam
@@ -33,11 +30,29 @@ static void EventInfoToProgramGuideProgramInfo(const CEventInfoData &EventInfo,
 											   TVTest::ProgramGuideProgramInfo *pProgramInfo)
 {
 	pProgramInfo->NetworkID=EventInfo.m_NetworkID;
-	pProgramInfo->TransportStreamID=EventInfo.m_TSID;
+	pProgramInfo->TransportStreamID=EventInfo.m_TransportStreamID;
 	pProgramInfo->ServiceID=EventInfo.m_ServiceID;
 	pProgramInfo->EventID=EventInfo.m_EventID;
-	pProgramInfo->StartTime=EventInfo.m_stStartTime;
-	pProgramInfo->Duration=EventInfo.m_DurationSec;
+	pProgramInfo->StartTime=EventInfo.m_StartTime;
+	pProgramInfo->Duration=EventInfo.m_Duration;
+}
+
+
+static bool SystemTimeToLocalFileTime(const SYSTEMTIME *pSystemTime,FILETIME *pFileTime)
+{
+	SYSTEMTIME stLocal;
+
+	return ::SystemTimeToTzSpecificLocalTime(NULL,pSystemTime,&stLocal)
+		&& ::SystemTimeToFileTime(&stLocal,pFileTime);
+}
+
+
+static bool LocalFileTimeToSystemTime(const FILETIME *pFileTime,SYSTEMTIME *pSystemTime)
+{
+	SYSTEMTIME stLocal;
+
+	return ::FileTimeToSystemTime(pFileTime,&stLocal)
+		&& ::TzSpecificLocalTimeToSystemTime(NULL,&stLocal,pSystemTime);
 }
 
 
@@ -47,13 +62,13 @@ class CControllerPlugin : public CController
 {
 	CPlugin *m_pPlugin;
 	DWORD m_Flags;
-	CDynamicString m_Name;
-	CDynamicString m_Text;
+	TVTest::String m_Name;
+	TVTest::String m_Text;
 	int m_NumButtons;
 	CController::ButtonInfo *m_pButtonList;
 	LPTSTR m_pButtonNameList;
-	CDynamicString m_IniFileName;
-	CDynamicString m_SectionName;
+	TVTest::String m_IniFileName;
+	TVTest::String m_SectionName;
 	UINT m_ControllerImageID;
 	UINT m_SelButtonsImageID;
 	TVTest::ControllerInfo::TranslateMessageCallback m_pTranslateMessage;
@@ -62,8 +77,8 @@ class CControllerPlugin : public CController
 public:
 	CControllerPlugin(CPlugin *pPlugin,const TVTest::ControllerInfo *pInfo);
 	~CControllerPlugin();
-	LPCTSTR GetName() const { return m_Name.Get(); }
-	LPCTSTR GetText() const { return m_Text.Get(); }
+	LPCTSTR GetName() const { return m_Name.c_str(); }
+	LPCTSTR GetText() const { return m_Text.c_str(); }
 	int NumButtons() const { return m_NumButtons; }
 	bool GetButtonInfo(int Index,ButtonInfo *pInfo) const;
 	bool Enable(bool fEnable) { return m_pPlugin->Enable(fEnable); }
@@ -85,14 +100,14 @@ CControllerPlugin::CControllerPlugin(CPlugin *pPlugin,const TVTest::ControllerIn
 	, m_Name(pInfo->pszName)
 	, m_Text(pInfo->pszText)
 	, m_NumButtons(pInfo->NumButtons)
-	, m_IniFileName(pInfo->pszIniFileName)
-	, m_SectionName(pInfo->pszSectionName)
+	, m_IniFileName(TVTest::StringFromCStr(pInfo->pszIniFileName))
+	, m_SectionName(TVTest::StringFromCStr(pInfo->pszSectionName))
 	, m_ControllerImageID(pInfo->ControllerImageID)
 	, m_SelButtonsImageID(pInfo->SelButtonsImageID)
 	, m_pTranslateMessage(pInfo->pTranslateMessage)
 	, m_pClientData(pInfo->pClientData)
 {
-	const CCommandList *pCommandList=GetAppClass().GetCommandList();
+	const CCommandList &CommandList=GetAppClass().CommandList;
 
 	int Length=m_NumButtons+1;
 	for (int i=0;i<m_NumButtons;i++)
@@ -107,7 +122,7 @@ CControllerPlugin::CControllerPlugin(CPlugin *pPlugin,const TVTest::ControllerIn
 		::lstrcpy(pszName,ButtonInfo.pszName);
 		m_pButtonList[i].pszName=pszName;
 		m_pButtonList[i].DefaultCommand=ButtonInfo.pszDefaultCommand!=NULL?
-					pCommandList->ParseText(ButtonInfo.pszDefaultCommand):0;
+					CommandList.ParseText(ButtonInfo.pszDefaultCommand):0;
 		m_pButtonList[i].ImageButtonRect.Left=ButtonInfo.ButtonRect.Left;
 		m_pButtonList[i].ImageButtonRect.Top=ButtonInfo.ButtonRect.Top;
 		m_pButtonList[i].ImageButtonRect.Width=ButtonInfo.ButtonRect.Width;
@@ -145,20 +160,20 @@ bool CControllerPlugin::TranslateMessage(HWND hwnd,MSG *pMessage)
 
 bool CControllerPlugin::GetIniFileName(LPTSTR pszFileName,int MaxLength) const
 {
-	if (m_IniFileName.IsEmpty())
+	if (m_IniFileName.empty())
 		return CController::GetIniFileName(pszFileName,MaxLength);
-	if (m_IniFileName.Length()>=MaxLength)
+	if (m_IniFileName.length()>=(TVTest::String::size_type)MaxLength)
 		return false;
-	::lstrcpy(pszFileName,m_IniFileName.Get());
+	::lstrcpy(pszFileName,m_IniFileName.c_str());
 	return true;
 }
 
 
 LPCTSTR CControllerPlugin::GetIniFileSection() const
 {
-	if (m_SectionName.IsEmpty())
-		return m_Name.Get();
-	return m_SectionName.Get();
+	if (m_SectionName.empty())
+		return m_Name.c_str();
+	return m_SectionName.c_str();
 }
 
 
@@ -238,15 +253,17 @@ void CEpgDataConverter::GetEventInfoSize(const CEventInfoData &EventInfo,
 	SIZE_T InfoSize=sizeof(TVTest::EpgEventInfo);
 	SIZE_T StringSize=0;
 
-	if (!IsStringEmpty(EventInfo.GetEventName()))
-		StringSize+=::lstrlenW(EventInfo.GetEventName())+1;
-	if (!IsStringEmpty(EventInfo.GetEventText()))
-		StringSize+=::lstrlenW(EventInfo.GetEventText())+1;
-	if (!IsStringEmpty(EventInfo.GetEventExtText()))
-		StringSize+=::lstrlenW(EventInfo.GetEventExtText())+1;
-	InfoSize+=sizeof(TVTest::EpgEventVideoInfo*)+sizeof(TVTest::EpgEventVideoInfo);
-	if (EventInfo.m_VideoInfo.szText[0]!='\0')
-		StringSize+=::lstrlenW(EventInfo.m_VideoInfo.szText)+1;
+	if (!EventInfo.m_EventName.empty())
+		StringSize+=EventInfo.m_EventName.length()+1;
+	if (!EventInfo.m_EventText.empty())
+		StringSize+=EventInfo.m_EventText.length()+1;
+	if (!EventInfo.m_EventExtendedText.empty())
+		StringSize+=EventInfo.m_EventExtendedText.length()+1;
+	InfoSize+=(sizeof(TVTest::EpgEventVideoInfo)+sizeof(TVTest::EpgEventVideoInfo*))*EventInfo.m_VideoList.size();
+	for (size_t i=0;i<EventInfo.m_VideoList.size();i++) {
+		if (EventInfo.m_VideoList[i].szText[0]!='\0')
+			StringSize+=::lstrlenW(EventInfo.m_VideoList[i].szText)+1;
+	}
 	InfoSize+=(sizeof(TVTest::EpgEventAudioInfo)+sizeof(TVTest::EpgEventAudioInfo*))*EventInfo.m_AudioList.size();
 	for (size_t i=0;i<EventInfo.m_AudioList.size();i++) {
 		if (EventInfo.m_AudioList[i].szText[0]!='\0')
@@ -270,48 +287,56 @@ void CEpgDataConverter::ConvertEventInfo(const CEventInfoData &EventData,
 	TVTest::EpgEventInfo *pEventInfo=*ppEventInfo;
 	pEventInfo->EventID=EventData.m_EventID;
 	pEventInfo->RunningStatus=EventData.m_RunningStatus;
-	pEventInfo->FreeCaMode=EventData.m_CaType==CEventInfoData::CA_TYPE_CHARGEABLE;
+	pEventInfo->FreeCaMode=EventData.m_bFreeCaMode;
 	pEventInfo->Reserved=0;
-	pEventInfo->StartTime=EventData.m_stStartTime;
-	pEventInfo->Duration=EventData.m_DurationSec;
-	pEventInfo->VideoListLength=1;
+	pEventInfo->StartTime=EventData.m_StartTime;
+	pEventInfo->Duration=EventData.m_Duration;
+	pEventInfo->VideoListLength=(BYTE)EventData.m_VideoList.size();
 	pEventInfo->AudioListLength=(BYTE)EventData.m_AudioList.size();
 	pEventInfo->ContentListLength=(BYTE)EventData.m_ContentNibble.NibbleCount;
 	pEventInfo->EventGroupListLength=(BYTE)EventData.m_EventGroupList.size();
-	if (!IsStringEmpty(EventData.GetEventName())) {
+	if (!EventData.m_EventName.empty()) {
 		pEventInfo->pszEventName=pString;
-		pString=CopyString(pString,EventData.GetEventName());
+		pString=CopyString(pString,EventData.m_EventName.c_str());
 	} else {
 		pEventInfo->pszEventName=NULL;
 	}
-	if (!IsStringEmpty(EventData.GetEventText())) {
+	if (!EventData.m_EventText.empty()) {
 		pEventInfo->pszEventText=pString;
-		pString=CopyString(pString,EventData.GetEventText());
+		pString=CopyString(pString,EventData.m_EventText.c_str());
 	} else {
 		pEventInfo->pszEventText=NULL;
 	}
-	if (!IsStringEmpty(EventData.GetEventExtText())) {
+	if (!EventData.m_EventExtendedText.empty()) {
 		pEventInfo->pszEventExtendedText=pString;
-		pString=CopyString(pString,EventData.GetEventExtText());
+		pString=CopyString(pString,EventData.m_EventExtendedText.c_str());
 	} else {
 		pEventInfo->pszEventExtendedText=NULL;
 	}
 
 	BYTE *p=(BYTE*)(pEventInfo+1);
-	pEventInfo->VideoList=(TVTest::EpgEventVideoInfo**)p;
-	p+=sizeof(TVTest::EpgEventVideoInfo*);
-	pEventInfo->VideoList[0]=(TVTest::EpgEventVideoInfo*)p;
-	pEventInfo->VideoList[0]->StreamContent=EventData.m_VideoInfo.StreamContent;
-	pEventInfo->VideoList[0]->ComponentType=EventData.m_VideoInfo.ComponentType;
-	pEventInfo->VideoList[0]->ComponentTag=EventData.m_VideoInfo.ComponentTag;
-	pEventInfo->VideoList[0]->Reserved=0;
-	pEventInfo->VideoList[0]->LanguageCode=EventData.m_VideoInfo.LanguageCode;
-	p+=sizeof(TVTest::EpgEventVideoInfo);
-	if (EventData.m_VideoInfo.szText[0]!='\0') {
-		pEventInfo->VideoList[0]->pszText=pString;
-		pString=CopyString(pString,EventData.m_VideoInfo.szText);
+
+	if (!EventData.m_VideoList.empty()) {
+		pEventInfo->VideoList=(TVTest::EpgEventVideoInfo**)p;
+		p+=sizeof(TVTest::EpgEventVideoInfo*)*EventData.m_VideoList.size();
+		for (size_t i=0;i<EventData.m_VideoList.size();i++) {
+			const CEventInfoData::VideoInfo &Video=EventData.m_VideoList[i];
+			pEventInfo->VideoList[i]=(TVTest::EpgEventVideoInfo*)p;
+			pEventInfo->VideoList[i]->StreamContent=Video.StreamContent;
+			pEventInfo->VideoList[i]->ComponentType=Video.ComponentType;
+			pEventInfo->VideoList[i]->ComponentTag=Video.ComponentTag;
+			pEventInfo->VideoList[i]->Reserved=0;
+			pEventInfo->VideoList[i]->LanguageCode=Video.LanguageCode;
+			p+=sizeof(TVTest::EpgEventVideoInfo);
+			if (Video.szText[i]!='\0') {
+				pEventInfo->VideoList[i]->pszText=pString;
+				pString=CopyString(pString,Video.szText);
+			} else {
+				pEventInfo->VideoList[i]->pszText=NULL;
+			}
+		}
 	} else {
-		pEventInfo->VideoList[0]->pszText=NULL;
+		pEventInfo->VideoList=NULL;
 	}
 
 	if (EventData.m_AudioList.size()>0) {
@@ -491,15 +516,175 @@ void CEpgDataConverter::FreeEventList(TVTest::EpgEventInfo **ppEventList)
 
 
 
+static void GetFavoriteItemSize(const TVTest::CFavoriteItem *pItem,
+								size_t *pStructSize,size_t *pStringSize)
+{
+	*pStructSize+=sizeof(TVTest::FavoriteItemInfo);
+	*pStringSize+=::lstrlen(pItem->GetName())+1;
+
+	if (pItem->GetType()==TVTest::CFavoriteItem::ITEM_FOLDER) {
+		const TVTest::CFavoriteFolder *pFolder=
+			static_cast<const TVTest::CFavoriteFolder*>(pItem);
+
+		for (size_t i=0;i<pFolder->GetItemCount();i++)
+			GetFavoriteItemSize(pFolder->GetItem(i),pStructSize,pStringSize);
+	} else if (pItem->GetType()==TVTest::CFavoriteItem::ITEM_CHANNEL) {
+		const TVTest::CFavoriteChannel *pChannel=
+			static_cast<const TVTest::CFavoriteChannel*>(pItem);
+
+		*pStringSize+=::lstrlen(pChannel->GetBonDriverFileName())+1;
+	}
+}
+
+
+static void GetFavoriteItemInfo(const TVTest::CFavoriteItem *pItem,
+								TVTest::FavoriteItemInfo **ppItemInfo,
+								LPWSTR *ppStringBuffer)
+{
+	TVTest::FavoriteItemInfo *pItemInfo=*ppItemInfo;
+	LPWSTR pStringBuffer=*ppStringBuffer;
+	size_t Length;
+
+	::ZeroMemory(pItemInfo,sizeof(TVTest::FavoriteItemInfo));
+	pItemInfo->pszName=pStringBuffer;
+	Length=::lstrlen(pItem->GetName())+1;
+	::CopyMemory(pStringBuffer,pItem->GetName(),Length*sizeof(WCHAR));
+	pStringBuffer+=Length;
+
+	++*ppItemInfo;
+
+	if (pItem->GetType()==TVTest::CFavoriteItem::ITEM_FOLDER) {
+		const TVTest::CFavoriteFolder *pFolder=
+			static_cast<const TVTest::CFavoriteFolder*>(pItem);
+
+		pItemInfo->Type=TVTest::FAVORITE_ITEM_TYPE_FOLDER;
+		pItemInfo->Folder.ItemCount=static_cast<DWORD>(pFolder->GetItemCount());
+		if (pFolder->GetItemCount()>0) {
+			pItemInfo->Folder.ItemList=*ppItemInfo;
+			for (size_t i=0;i<pFolder->GetItemCount();i++)
+				GetFavoriteItemInfo(pFolder->GetItem(i),ppItemInfo,&pStringBuffer);
+		}
+	} else if (pItem->GetType()==TVTest::CFavoriteItem::ITEM_CHANNEL) {
+		const TVTest::CFavoriteChannel *pChannel=
+			static_cast<const TVTest::CFavoriteChannel*>(pItem);
+		const CChannelInfo &ChannelInfo=pChannel->GetChannelInfo();
+
+		pItemInfo->Type=TVTest::FAVORITE_ITEM_TYPE_CHANNEL;
+		if (pChannel->GetForceBonDriverChange())
+			pItemInfo->Channel.Flags|=TVTest::FAVORITE_CHANNEL_FLAG_FORCETUNERCHANGE;
+		pItemInfo->Channel.Space=ChannelInfo.GetSpace();
+		pItemInfo->Channel.Channel=ChannelInfo.GetChannelIndex();
+		pItemInfo->Channel.ChannelNo=ChannelInfo.GetChannelNo();
+		pItemInfo->Channel.NetworkID=ChannelInfo.GetNetworkID();
+		pItemInfo->Channel.TransportStreamID=ChannelInfo.GetTransportStreamID();
+		pItemInfo->Channel.ServiceID=ChannelInfo.GetServiceID();
+		pItemInfo->Channel.pszTuner=pStringBuffer;
+		Length=::lstrlen(pChannel->GetBonDriverFileName())+1;
+		::CopyMemory(pStringBuffer,pChannel->GetBonDriverFileName(),Length*sizeof(WCHAR));
+		pStringBuffer+=Length;
+	}
+
+	*ppStringBuffer=pStringBuffer;
+}
+
+
+static bool GetFavoriteList(const TVTest::CFavoriteFolder &Folder,TVTest::FavoriteList *pList)
+{
+	pList->ItemCount=0;
+	pList->ItemList=NULL;
+
+	if (Folder.GetItemCount()==0)
+		return true;
+
+	size_t StructSize=0,StringSize=0;
+
+	for (size_t i=0;i<Folder.GetItemCount();i++)
+		GetFavoriteItemSize(Folder.GetItem(i),&StructSize,&StringSize);
+
+	StringSize*=sizeof(WCHAR);
+	BYTE *pBuffer=static_cast<BYTE*>(std::malloc(StructSize+StringSize));
+	if (pBuffer==NULL)
+		return false;
+	pList->ItemList=pointer_cast<TVTest::FavoriteItemInfo*>(pBuffer);
+	pList->ItemCount=static_cast<DWORD>(Folder.GetItemCount());
+
+	TVTest::FavoriteItemInfo *pItemInfo=pList->ItemList;
+	LPWSTR pStringBuffer=pointer_cast<LPWSTR>(pBuffer+StructSize);
+
+	for (size_t i=0;i<Folder.GetItemCount();i++)
+		GetFavoriteItemInfo(Folder.GetItem(i),&pItemInfo,&pStringBuffer);
+
+	_ASSERT(((BYTE*)pItemInfo-(BYTE*)pList->ItemList)==StructSize &&
+			((BYTE*)pStringBuffer-(BYTE*)pItemInfo)==StringSize);
+
+	return true;
+}
+
+
+static void FreeFavoriteList(TVTest::FavoriteList *pList)
+{
+	pList->ItemCount=0;
+	if (pList->ItemList!=NULL) {
+		std::free(pList->ItemList);
+		pList->ItemList=NULL;
+	}
+}
+
+
+
+
+namespace TVTest
+{
+
+struct VarStringContext
+{
+	CEventVariableStringMap::EventInfo Event;
+};
+
+class CPluginVarStringMap : public CEventVariableStringMap
+{
+public:
+	CPluginVarStringMap(VarStringFormatInfo *pInfo,const VarStringContext *pContext)
+		: CEventVariableStringMap(pContext->Event)
+		, m_pInfo(pInfo)
+		, m_pContext(pContext)
+	{
+		m_Flags=(pInfo->Flags & VAR_STRING_FORMAT_FLAG_FILENAME)==0 ? FLAG_NO_NORMALIZE : 0;
+	}
+
+	bool GetLocalString(LPCWSTR pszKeyword,String *pString) override
+	{
+		if (m_pInfo->pMapFunc!=nullptr) {
+			LPWSTR pszString=nullptr;
+			if (m_pInfo->pMapFunc(pszKeyword,&pszString,m_pInfo->pClientData)) {
+				if (pszString!=nullptr) {
+					*pString=pszString;
+					std::free(pszString);
+				}
+				return true;
+			}
+		}
+		return CEventVariableStringMap::GetLocalString(pszKeyword,pString);
+	}
+
+private:
+	VarStringFormatInfo *m_pInfo;
+	const VarStringContext *m_pContext;
+};
+
+}
+
+
+
+
 HWND CPlugin::m_hwndMessage=NULL;
 UINT CPlugin::m_MessageCode=0;
 
-bool CPlugin::m_fSetGrabber=false;
-std::vector<CPlugin::CMediaGrabberInfo> CPlugin::m_GrabberList;
-CCriticalLock CPlugin::m_GrabberLock;
-
 std::vector<CPlugin::CAudioStreamCallbackInfo> CPlugin::m_AudioStreamCallbackList;
 CCriticalLock CPlugin::m_AudioStreamLock;
+std::vector<CPlugin::CVideoStreamCallbackInfo> CPlugin::m_VideoStreamCallbackList;
+CPlugin::CVideoStreamCallback CPlugin::m_VideoStreamCallback;
+CCriticalLock CPlugin::m_VideoStreamLock;
 
 
 CPlugin::CPlugin()
@@ -513,6 +698,7 @@ CPlugin::CPlugin()
 	, m_pEventCallback(NULL)
 	, m_ProgramGuideEventFlags(0)
 	, m_pMessageCallback(NULL)
+	, m_GetVariable(this)
 {
 }
 
@@ -546,6 +732,7 @@ bool CPlugin::Load(LPCTSTR pszFileName)
 #endif
 				TEXT("ビット用のプラグインではないか、ファイルが破損している可能性があります。"));
 			break;
+		case ERROR_MOD_NOT_FOUND:
 		case ERROR_SXS_CANT_GEN_ACTCTX:
 			SetErrorAdvise(TEXT("必要なランタイムがインストールされていない可能性があります。"));
 			break;
@@ -575,7 +762,8 @@ bool CPlugin::Load(LPCTSTR pszFileName)
 	}
 	TVTest::PluginInfo PluginInfo;
 	::ZeroMemory(&PluginInfo,sizeof(PluginInfo));
-	if (!pGetPluginInfo(&PluginInfo)) {
+	if (!pGetPluginInfo(&PluginInfo)
+			|| IsStringEmpty(PluginInfo.pszPluginName)) {
 		::FreeLibrary(hLib);
 		SetError(TEXT("プラグインの情報を取得できません。"));
 		return false;
@@ -587,15 +775,15 @@ bool CPlugin::Load(LPCTSTR pszFileName)
 		SetError(TEXT("TVTInitialize()関数のアドレスを取得できません。"));
 		return false;
 	}
-	m_FileName.Set(pszFileName);
-	m_PluginName.Set(PluginInfo.pszPluginName);
-	m_Copyright.Set(PluginInfo.pszCopyright);
-	m_Description.Set(PluginInfo.pszDescription);
+	m_FileName=pszFileName;
+	m_PluginName=PluginInfo.pszPluginName;
+	TVTest::StringUtility::Assign(m_Copyright,PluginInfo.pszCopyright);
+	TVTest::StringUtility::Assign(m_Description,PluginInfo.pszDescription);
 	m_Type=PluginInfo.Type;
 	m_Flags=PluginInfo.Flags;
 	m_fEnabled=(m_Flags&TVTest::PLUGIN_FLAG_ENABLEDEFAULT)!=0;
 	m_PluginParam.Callback=Callback;
-	m_PluginParam.hwndApp=GetAppClass().GetUICore()->GetMainWindow();
+	m_PluginParam.hwndApp=GetAppClass().UICore.GetMainWindow();
 	m_PluginParam.pClientData=NULL;
 	m_PluginParam.pInternalData=this;
 	if (!pInitialize(&m_PluginParam)) {
@@ -619,17 +807,12 @@ void CPlugin::Free()
 	m_pMessageCallback=NULL;
 
 	m_GrabberLock.Lock();
-	if (m_fSetGrabber) {
-		for (std::vector<CMediaGrabberInfo>::iterator i=m_GrabberList.begin();i!=m_GrabberList.end();) {
-			if (i->m_pPlugin==this)
-				i=m_GrabberList.erase(i);
-			else
-				i++;
+	if (!m_StreamGrabberList.empty()) {
+		for (auto it=m_StreamGrabberList.begin();it!=m_StreamGrabberList.end();++it) {
+			App.CoreEngine.m_DtvEngine.m_MediaGrabber.RemoveGrabber(*it);
+			delete *it;
 		}
-		if (m_GrabberList.empty()) {
-			App.GetCoreEngine()->m_DtvEngine.m_MediaGrabber.SetMediaGrabCallback(NULL);
-			m_fSetGrabber=false;
-		}
+		m_StreamGrabberList.clear();
 	}
 	m_GrabberLock.Unlock();
 
@@ -643,22 +826,32 @@ void CPlugin::Free()
 	}
 	m_AudioStreamLock.Unlock();
 
+	m_VideoStreamLock.Lock();
+	for (auto it=m_VideoStreamCallbackList.begin();it!=m_VideoStreamCallbackList.end();++it) {
+		if (it->m_pPlugin==this) {
+			m_VideoStreamCallbackList.erase(it);
+			break;
+		}
+	}
+	m_VideoStreamLock.Unlock();
+
 	m_CommandList.clear();
 	m_ProgramGuideCommandList.clear();
 
 	for (size_t i=0;i<m_ControllerList.size();i++)
-		App.GetControllerManager()->DeleteController(m_ControllerList[i].Get());
+		App.ControllerManager.DeleteController(m_ControllerList[i].c_str());
 	m_ControllerList.clear();
 
 	if (m_hLib!=NULL) {
-		LPCTSTR pszFileName=::PathFindFileName(m_FileName.Get());
+		LPCTSTR pszFileName=::PathFindFileName(m_FileName.c_str());
 
 		App.AddLog(TEXT("%s の終了処理を行っています..."),pszFileName);
 
 		TVTest::FinalizeFunc pFinalize=
 			reinterpret_cast<TVTest::FinalizeFunc>(::GetProcAddress(m_hLib,"TVTFinalize"));
 		if (pFinalize==NULL) {
-			App.AddLog(TEXT("%s のTVTFinalize()関数のアドレスを取得できません。"),
+			App.AddLog(CLogItem::TYPE_ERROR,
+					   TEXT("%s のTVTFinalize()関数のアドレスを取得できません。"),
 					   pszFileName);
 		} else {
 			pFinalize();
@@ -668,10 +861,26 @@ void CPlugin::Free()
 		App.AddLog(TEXT("%s を解放しました。"),pszFileName);
 	}
 
-	m_FileName.Clear();
-	m_PluginName.Clear();
-	m_Copyright.Clear();
-	m_Description.Clear();
+	for (auto itr=m_StatusItemList.begin();itr!=m_StatusItemList.end();++itr) {
+		StatusItem *pItem=*itr;
+		if (pItem->pItem!=NULL)
+			pItem->pItem->DetachItem();
+		delete pItem;
+	}
+	m_StatusItemList.clear();
+
+	for (auto itr=m_PanelItemList.begin();itr!=m_PanelItemList.end();++itr) {
+		PanelItem *pItem=*itr;
+		if (pItem->pItem!=NULL)
+			pItem->pItem->DetachItem();
+		delete pItem;
+	}
+	m_PanelItemList.clear();
+
+	m_FileName.clear();
+	m_PluginName.clear();
+	m_Copyright.clear();
+	m_Description.clear();
 	m_fEnabled=false;
 	m_fSetting=false;
 	m_PluginParam.pInternalData=NULL;
@@ -680,6 +889,9 @@ void CPlugin::Free()
 
 bool CPlugin::Enable(bool fEnable)
 {
+	if ((m_Flags & TVTest::PLUGIN_FLAG_NOENABLEDDISABLED)!=0)
+		return false;
+
 	if (m_fEnabled!=fEnable) {
 		if (m_fSetting)
 			return false;
@@ -689,9 +901,17 @@ bool CPlugin::Enable(bool fEnable)
 		if (!fResult)
 			return false;
 		m_fEnabled=fEnable;
+
+		if (m_Command>0) {
+			GetAppClass().CommandList.SetCommandStateByID(
+				m_Command,
+				CCommandList::COMMAND_STATE_CHECKED,
+				fEnable?CCommandList::COMMAND_STATE_CHECKED:0);
+		}
+
 		if (fEnable) {
 			for (size_t i=0;i<m_ControllerList.size();i++)
-				GetAppClass().GetControllerManager()->LoadControllerSettings(m_ControllerList[i].Get());
+				GetAppClass().ControllerManager.LoadControllerSettings(m_ControllerList[i].c_str());
 		}
 	}
 	return true;
@@ -713,6 +933,54 @@ int CPlugin::NumPluginCommands() const
 }
 
 
+int CPlugin::ParsePluginCommand(LPCWSTR pszCommand) const
+{
+	if (IsStringEmpty(pszCommand))
+		return -1;
+
+	for (size_t i=0;i<m_CommandList.size();i++) {
+		if (::lstrcmpi(m_CommandList[i].GetText(),pszCommand)==0)
+			return (int)i;
+	}
+
+	return -1;
+}
+
+
+CPlugin::CPluginCommandInfo *CPlugin::GetPluginCommandInfo(int Index)
+{
+	if (Index<0 || (size_t)Index>=m_CommandList.size())
+		return NULL;
+	return &m_CommandList[Index];
+}
+
+
+const CPlugin::CPluginCommandInfo *CPlugin::GetPluginCommandInfo(int Index) const
+{
+	if (Index<0 || (size_t)Index>=m_CommandList.size())
+		return NULL;
+	return &m_CommandList[Index];
+}
+
+
+CPlugin::CPluginCommandInfo *CPlugin::GetPluginCommandInfo(LPCWSTR pszCommand)
+{
+	int Index=ParsePluginCommand(pszCommand);
+	if (Index<0)
+		return NULL;
+	return &m_CommandList[Index];
+}
+
+
+const CPlugin::CPluginCommandInfo *CPlugin::GetPluginCommandInfo(LPCWSTR pszCommand) const
+{
+	int Index=ParsePluginCommand(pszCommand);
+	if (Index<0)
+		return NULL;
+	return &m_CommandList[Index];
+}
+
+
 bool CPlugin::GetPluginCommandInfo(int Index,TVTest::CommandInfo *pInfo) const
 {
 	if (Index<0 || (size_t)Index>=m_CommandList.size() || pInfo==NULL)
@@ -727,13 +995,18 @@ bool CPlugin::GetPluginCommandInfo(int Index,TVTest::CommandInfo *pInfo) const
 
 bool CPlugin::NotifyCommand(LPCWSTR pszCommand)
 {
-	for (size_t i=0;i<m_CommandList.size();i++) {
-		if (::lstrcmpi(m_CommandList[i].GetText(),pszCommand)==0) {
-			SendEvent(TVTest::EVENT_COMMAND,m_CommandList[i].GetID(),0);
-			return true;
-		}
-	}
-	return false;
+	int i=ParsePluginCommand(pszCommand);
+	if (i<0)
+		return false;
+	return SendEvent(TVTest::EVENT_COMMAND,m_CommandList[i].GetID(),0)!=FALSE;
+}
+
+
+bool CPlugin::DrawPluginCommandIcon(const TVTest::DrawCommandIconInfo *pInfo)
+{
+	if (pInfo==NULL)
+		return false;
+	return SendEvent(TVTest::EVENT_DRAWCOMMANDICON,reinterpret_cast<LPARAM>(pInfo),0)!=FALSE;
 }
 
 
@@ -792,6 +1065,106 @@ bool CPlugin::IsDisableOnStart() const
 }
 
 
+void CPlugin::RegisterStatusItems()
+{
+	CAppMain &App=GetAppClass();
+
+	for (auto itr=m_StatusItemList.begin();itr!=m_StatusItemList.end();++itr) {
+		StatusItem *pItem=*itr;
+		TVTest::String IDText;
+
+		IDText=::PathFindFileName(GetFileName());
+		IDText+=_T(':');
+		IDText+=pItem->IDText;
+
+		int ItemID=App.StatusOptions.RegisterItem(IDText.c_str());
+		if (ItemID>=0) {
+			pItem->ItemID=ItemID;
+			App.StatusView.AddItem(new CPluginStatusItem(this,pItem));
+		}
+	}
+}
+
+
+void CPlugin::SendStatusItemCreatedEvent()
+{
+	for (auto itr=m_StatusItemList.begin();itr!=m_StatusItemList.end();++itr) {
+		const StatusItem *pItem=*itr;
+
+		if (pItem->pItem!=NULL) {
+			TVTest::StatusItemEventInfo Info;
+
+			Info.ID=pItem->ID;
+			Info.Event=TVTest::STATUS_ITEM_EVENT_CREATED;
+			Info.Param=0;
+
+			SendEvent(TVTest::EVENT_STATUSITEM_NOTIFY,
+					  reinterpret_cast<LPARAM>(&Info),0);
+		}
+	}
+}
+
+
+void CPlugin::SendStatusItemUpdateTimerEvent()
+{
+	for (auto itr=m_StatusItemList.begin();itr!=m_StatusItemList.end();++itr) {
+		const StatusItem *pItem=*itr;
+
+		if ((pItem->Flags & TVTest::STATUS_ITEM_FLAG_TIMERUPDATE)!=0
+				&& pItem->pItem!=NULL) {
+			TVTest::StatusItemEventInfo Info;
+
+			Info.ID=pItem->ID;
+			Info.Event=TVTest::STATUS_ITEM_EVENT_UPDATETIMER;
+			Info.Param=0;
+
+			if (SendEvent(TVTest::EVENT_STATUSITEM_NOTIFY,
+						  reinterpret_cast<LPARAM>(&Info),0)!=FALSE) {
+				pItem->pItem->Redraw();
+			}
+		}
+	}
+}
+
+
+void CPlugin::RegisterPanelItems()
+{
+	CAppMain &App=GetAppClass();
+
+	for (auto itr=m_PanelItemList.begin();itr!=m_PanelItemList.end();++itr) {
+		PanelItem *pItem=*itr;
+		TVTest::String IDText;
+
+		IDText=::PathFindFileName(GetFileName());
+		IDText+=_T(':');
+		IDText+=pItem->IDText;
+
+		int ItemID=App.PanelOptions.RegisterPanelItem(IDText.c_str(),pItem->Title.c_str());
+		if (ItemID>=0) {
+			pItem->ItemID=ItemID;
+			if ((pItem->StateMask & TVTest::PANEL_ITEM_STATE_ENABLED)!=0) {
+				App.PanelOptions.SetPanelItemVisibility(
+					ItemID,(pItem->State & TVTest::PANEL_ITEM_STATE_ENABLED)!=0);
+			} else {
+				if (App.PanelOptions.GetPanelItemVisibility(ItemID))
+					pItem->State|=TVTest::PANEL_ITEM_STATE_ENABLED;
+				else
+					pItem->State&=~TVTest::PANEL_ITEM_STATE_ENABLED;
+			}
+			CPluginPanelItem *pPanelItem=new CPluginPanelItem(this,pItem);
+			pPanelItem->Create(App.Panel.Form.GetHandle(),WS_CHILD | WS_CLIPCHILDREN);
+			CPanelForm::PageInfo PageInfo;
+			PageInfo.pPage=pPanelItem;
+			PageInfo.pszTitle=pItem->Title.c_str();
+			PageInfo.ID=ItemID;
+			PageInfo.Icon=-1;
+			PageInfo.fVisible=(pItem->State & TVTest::PANEL_ITEM_STATE_ENABLED)!=0;
+			App.Panel.Form.AddPage(PageInfo);
+		}
+	}
+}
+
+
 LRESULT CPlugin::SendEvent(UINT Event,LPARAM lParam1,LPARAM lParam2)
 {
 	if (m_pEventCallback!=NULL)
@@ -821,10 +1194,18 @@ bool CPlugin::Settings(HWND hwndOwner)
 }
 
 
-inline CPlugin *ThisFromParam(TVTest::PluginParam *pParam)
+LRESULT CALLBACK CPlugin::Callback(TVTest::PluginParam *pParam,UINT Message,LPARAM lParam1,LPARAM lParam2)
 {
-	return static_cast<CPlugin*>(pParam->pInternalData);
+	if (pParam==NULL)
+		return 0;
+
+	CPlugin *pPlugin=static_cast<CPlugin*>(pParam->pInternalData);
+	if (pPlugin==NULL)
+		return 0;
+
+	return pPlugin->OnCallback(pParam,Message,lParam1,lParam2);
 }
+
 
 LRESULT CPlugin::SendPluginMessage(TVTest::PluginParam *pParam,UINT Message,LPARAM lParam1,LPARAM lParam2,
 								   LRESULT FailedResult)
@@ -832,7 +1213,7 @@ LRESULT CPlugin::SendPluginMessage(TVTest::PluginParam *pParam,UINT Message,LPAR
 	PluginMessageParam MessageParam;
 	DWORD_PTR Result;
 
-	MessageParam.pPlugin=ThisFromParam(pParam);
+	MessageParam.pPlugin=this;
 	if (MessageParam.pPlugin==NULL)
 		return FailedResult;
 	MessageParam.Message=Message;
@@ -842,22 +1223,27 @@ LRESULT CPlugin::SendPluginMessage(TVTest::PluginParam *pParam,UINT Message,LPAR
 							 Message,reinterpret_cast<LPARAM>(&MessageParam),
 							 SMTO_NORMAL,10000,&Result))
 		return Result;
-	GetAppClass().AddLog(TEXT("応答が無いためプラグインからのメッセージを処理できません。(%s : %u)"),
-						 ::PathFindFileName(MessageParam.pPlugin->m_FileName.Get()),Message);
+	GetAppClass().AddLog(
+		CLogItem::TYPE_ERROR,
+		TEXT("応答が無いためプラグインからのメッセージを処理できません。(%s : %u)"),
+		::PathFindFileName(MessageParam.pPlugin->m_FileName.c_str()),Message);
 	return FailedResult;
 }
 
 
-LRESULT CALLBACK CPlugin::Callback(TVTest::PluginParam *pParam,UINT Message,LPARAM lParam1,LPARAM lParam2)
+LRESULT CPlugin::OnCallback(TVTest::PluginParam *pParam,UINT Message,LPARAM lParam1,LPARAM lParam2)
 {
 	switch (Message) {
 	case TVTest::MESSAGE_GETVERSION:
 		return TVTest::MakeVersion(VERSION_MAJOR,VERSION_MINOR,VERSION_BUILD);
 
 	case TVTest::MESSAGE_QUERYMESSAGE:
-		if (lParam1>=0 && lParam1<TVTest::MESSAGE_TRAILER)
-			return TRUE;
-		return FALSE;
+		if (lParam1<0 || lParam1>=TVTest::MESSAGE_TRAILER)
+			return FALSE;
+		if (lParam1==TVTest::MESSAGE_REMOVED1
+				|| lParam1==TVTest::MESSAGE_REMOVED2)
+			return FALSE;
+		return TRUE;
 
 	case TVTest::MESSAGE_MEMORYALLOC:
 		{
@@ -873,14 +1259,8 @@ LRESULT CALLBACK CPlugin::Callback(TVTest::PluginParam *pParam,UINT Message,LPAR
 		return (LRESULT)(void*)0;
 
 	case TVTest::MESSAGE_SETEVENTCALLBACK:
-		{
-			CPlugin *pThis=ThisFromParam(pParam);
-			if (pThis==NULL)
-				return FALSE;
-
-			pThis->m_pEventCallback=reinterpret_cast<TVTest::EventCallbackFunc>(lParam1);
-			pThis->m_pEventCallbackClientData=reinterpret_cast<void*>(lParam2);
-		}
+		m_pEventCallback=reinterpret_cast<TVTest::EventCallbackFunc>(lParam1);
+		m_pEventCallbackClientData=reinterpret_cast<void*>(lParam2);
 		return TRUE;
 
 	case TVTest::MESSAGE_GETCURRENTCHANNELINFO:
@@ -889,15 +1269,15 @@ LRESULT CALLBACK CPlugin::Callback(TVTest::PluginParam *pParam,UINT Message,LPAR
 
 	case TVTest::MESSAGE_GETSERVICE:
 		{
-			CDtvEngine *pDtvEngine=&GetAppClass().GetCoreEngine()->m_DtvEngine;
+			CDtvEngine &DtvEngine=GetAppClass().CoreEngine.m_DtvEngine;
 			int *pNumServices=reinterpret_cast<int*>(lParam1);
 			WORD ServiceID;
 
 			if (pNumServices)
-				*pNumServices=pDtvEngine->m_TsAnalyzer.GetViewableServiceNum();
-			if (!pDtvEngine->GetServiceID(&ServiceID))
+				*pNumServices=DtvEngine.m_TsAnalyzer.GetViewableServiceNum();
+			if (!DtvEngine.GetServiceID(&ServiceID))
 				return -1;
-			return pDtvEngine->m_TsAnalyzer.GetViewableServiceIndexByID(ServiceID);;
+			return DtvEngine.m_TsAnalyzer.GetViewableServiceIndexByID(ServiceID);;
 		}
 
 	case TVTest::MESSAGE_SETSERVICE:
@@ -914,14 +1294,15 @@ LRESULT CALLBACK CPlugin::Callback(TVTest::PluginParam *pParam,UINT Message,LPAR
 					|| (pServiceInfo->Size!=sizeof(TVTest::ServiceInfo)
 						&& pServiceInfo->Size!=TVTest::SERVICEINFO_SIZE_V1))
 				return FALSE;
-			CTsAnalyzer *pTsAnalyzer=&GetAppClass().GetCoreEngine()->m_DtvEngine.m_TsAnalyzer;
+			CTsAnalyzer *pTsAnalyzer=&GetAppClass().CoreEngine.m_DtvEngine.m_TsAnalyzer;
 			WORD ServiceID;
 			CTsAnalyzer::ServiceInfo Info;
 			if (!pTsAnalyzer->GetViewableServiceID(Index,&ServiceID)
 					|| !pTsAnalyzer->GetServiceInfo(pTsAnalyzer->GetServiceIndexByID(ServiceID),&Info))
 				return FALSE;
 			pServiceInfo->ServiceID=ServiceID;
-			pServiceInfo->VideoPID=Info.VideoEs.PID;
+			pServiceInfo->VideoPID=
+				Info.VideoEsList.empty()?CTsAnalyzer::PID_INVALID:Info.VideoEsList[0].PID;
 			pServiceInfo->NumAudioPIDs=(int)Info.AudioEsList.size();
 			for (size_t i=0;i<Info.AudioEsList.size();i++)
 				pServiceInfo->AudioPID[i]=Info.AudioEsList[i].PID;
@@ -961,8 +1342,8 @@ LRESULT CALLBACK CPlugin::Callback(TVTest::PluginParam *pParam,UINT Message,LPAR
 			if (pInfo==NULL || pInfo->Size!=sizeof(TVTest::PanScanInfo))
 				return FALSE;
 
-			CUICore::PanAndScanInfo PanScan;
-			if (!GetAppClass().GetUICore()->GetPanAndScan(&PanScan))
+			CCoreEngine::PanAndScanInfo PanScan;
+			if (!GetAppClass().UICore.GetPanAndScan(&PanScan))
 				return FALSE;
 
 			pInfo->Type=TVTest::PANSCAN_NONE;
@@ -983,7 +1364,7 @@ LRESULT CALLBACK CPlugin::Callback(TVTest::PluginParam *pParam,UINT Message,LPAR
 
 			if (pInfo==NULL || pInfo->Size!=sizeof(TVTest::PanScanInfo))
 				return FALSE;
-			const CMediaViewer *pMediaViewer=&GetAppClass().GetCoreEngine()->m_DtvEngine.m_MediaViewer;
+			const CMediaViewer *pMediaViewer=&GetAppClass().CoreEngine.m_DtvEngine.m_MediaViewer;
 			int Command;
 			switch (pInfo->Type) {
 			case TVTest::PANSCAN_NONE:
@@ -1017,7 +1398,7 @@ LRESULT CALLBACK CPlugin::Callback(TVTest::PluginParam *pParam,UINT Message,LPAR
 			default:
 				return FALSE;
 			}
-			GetAppClass().GetUICore()->DoCommand(Command);
+			GetAppClass().UICore.DoCommand(Command);
 		}
 		return TRUE;
 
@@ -1028,25 +1409,15 @@ LRESULT CALLBACK CPlugin::Callback(TVTest::PluginParam *pParam,UINT Message,LPAR
 			if (pInfo==NULL || (pInfo->Size!=sizeof(TVTest::StatusInfo)
 								&& pInfo->Size!=TVTest::STATUSINFO_SIZE_V1))
 				return FALSE;
-			const CCoreEngine *pCoreEngine=GetAppClass().GetCoreEngine();
-			DWORD DropCount=pCoreEngine->GetContinuityErrorPacketCount();
+			const CCoreEngine *pCoreEngine=&GetAppClass().CoreEngine;
+			ULONGLONG DropCount=pCoreEngine->GetContinuityErrorPacketCount();
 			pInfo->SignalLevel=pCoreEngine->GetSignalLevel();
 			pInfo->BitRate=pCoreEngine->GetBitRate();
-			pInfo->ErrorPacketCount=pCoreEngine->GetErrorPacketCount()+DropCount;
-			pInfo->ScramblePacketCount=pCoreEngine->GetScramblePacketCount();
+			pInfo->ErrorPacketCount=(DWORD)(pCoreEngine->GetErrorPacketCount()+DropCount);
+			pInfo->ScramblePacketCount=(DWORD)pCoreEngine->GetScramblePacketCount();
 			if (pInfo->Size==sizeof(TVTest::StatusInfo)) {
-				pInfo->DropPacketCount=DropCount;
-				if (pCoreEngine->GetDescramble()
-						&& pCoreEngine->GetCasDevice()>=0) {
-					if (pCoreEngine->m_DtvEngine.m_CasProcessor.IsCasCardOpen()) {
-						pInfo->BcasCardStatus=TVTest::BCAS_STATUS_OK;
-					} else {
-						// 取りあえず...
-						pInfo->BcasCardStatus=TVTest::BCAS_STATUS_OPENERROR;
-					}
-				} else {
-					pInfo->BcasCardStatus=TVTest::BCAS_STATUS_NOTOPEN;
-				}
+				pInfo->DropPacketCount=(DWORD)DropCount;
+				pInfo->Reserved=0;
 			}
 		}
 		return TRUE;
@@ -1063,7 +1434,7 @@ LRESULT CALLBACK CPlugin::Callback(TVTest::PluginParam *pParam,UINT Message,LPAR
 
 			if (pVideoInfo==NULL || pVideoInfo->Size!=sizeof(TVTest::VideoInfo))
 				return FALSE;
-			pMediaViewer=&GetAppClass().GetCoreEngine()->m_DtvEngine.m_MediaViewer;
+			pMediaViewer=&GetAppClass().CoreEngine.m_DtvEngine.m_MediaViewer;
 			if (pMediaViewer->GetOriginalVideoSize(&VideoWidth,&VideoHeight)
 					&& pMediaViewer->GetVideoAspectRatio(&XAspect,&YAspect)
 					&& pMediaViewer->GetSourceRect(&pVideoInfo->SourceRect)) {
@@ -1078,9 +1449,9 @@ LRESULT CALLBACK CPlugin::Callback(TVTest::PluginParam *pParam,UINT Message,LPAR
 
 	case TVTest::MESSAGE_GETVOLUME:
 		{
-			const CUICore *pUICore=GetAppClass().GetUICore();
-			int Volume=pUICore->GetVolume();
-			bool fMute=pUICore->GetMute();
+			const CUICore &UICore=GetAppClass().UICore;
+			int Volume=UICore.GetVolume();
+			bool fMute=UICore.GetMute();
 
 			return MAKELONG(Volume,fMute);
 		}
@@ -1089,38 +1460,59 @@ LRESULT CALLBACK CPlugin::Callback(TVTest::PluginParam *pParam,UINT Message,LPAR
 		return SendPluginMessage(pParam,Message,lParam1,lParam2);
 
 	case TVTest::MESSAGE_GETSTEREOMODE:
-		return GetAppClass().GetUICore()->GetStereoMode();
+#if 0	// ver.0.9.0 より前
+		return GetAppClass().UICore.GetStereoMode();
+#else
+		{
+			int StereoMode;
+
+			switch (GetAppClass().UICore.GetActualDualMonoMode()) {
+			case CAudioDecFilter::DUALMONO_MAIN:
+				StereoMode=TVTest::STEREOMODE_LEFT;
+				break;
+			case CAudioDecFilter::DUALMONO_SUB:
+				StereoMode=TVTest::STEREOMODE_RIGHT;
+				break;
+			case CAudioDecFilter::DUALMONO_BOTH:
+			default:
+				StereoMode=TVTest::STEREOMODE_STEREO;
+				break;
+			}
+
+			return StereoMode;
+		}
+#endif
 
 	case TVTest::MESSAGE_SETSTEREOMODE:
 		return SendPluginMessage(pParam,Message,lParam1,lParam2);
 
 	case TVTest::MESSAGE_GETFULLSCREEN:
-		return GetAppClass().GetUICore()->GetFullscreen();
+		return GetAppClass().UICore.GetFullscreen();
 
 	case TVTest::MESSAGE_SETFULLSCREEN:
 		return SendPluginMessage(pParam,Message,lParam1,lParam2);
 
 	case TVTest::MESSAGE_GETPREVIEW:
-		return GetAppClass().GetUICore()->IsViewerEnabled();
+		return GetAppClass().UICore.IsViewerEnabled();
 
 	case TVTest::MESSAGE_SETPREVIEW:
 		return SendPluginMessage(pParam,Message,lParam1,lParam2);
 
 	case TVTest::MESSAGE_GETSTANDBY:
-		return GetAppClass().GetUICore()->GetStandby();
+		return GetAppClass().UICore.GetStandby();
 
 	case TVTest::MESSAGE_SETSTANDBY:
 		return SendPluginMessage(pParam,Message,lParam1,lParam2);
 
 	case TVTest::MESSAGE_GETALWAYSONTOP:
-		return GetAppClass().GetUICore()->GetAlwaysOnTop();
+		return GetAppClass().UICore.GetAlwaysOnTop();
 
 	case TVTest::MESSAGE_SETALWAYSONTOP:
 		return SendPluginMessage(pParam,Message,lParam1,lParam2);
 
 	case TVTest::MESSAGE_CAPTUREIMAGE:
 		{
-			void *pBuffer=GetAppClass().GetCoreEngine()->GetCurrentImage();
+			void *pBuffer=GetAppClass().CoreEngine.GetCurrentImage();
 
 			if (pBuffer!=NULL) {
 				SIZE_T Size=CalcDIBSize(static_cast<BITMAPINFOHEADER*>(pBuffer));
@@ -1136,7 +1528,7 @@ LRESULT CALLBACK CPlugin::Callback(TVTest::PluginParam *pParam,UINT Message,LPAR
 		return (LRESULT)(LPVOID)NULL;
 
 	case TVTest::MESSAGE_SAVEIMAGE:
-		GetAppClass().GetUICore()->DoCommand(CM_SAVEIMAGE);
+		GetAppClass().UICore.DoCommand(CM_SAVEIMAGE);
 		return TRUE;
 
 	case TVTest::MESSAGE_RESET:
@@ -1144,47 +1536,53 @@ LRESULT CALLBACK CPlugin::Callback(TVTest::PluginParam *pParam,UINT Message,LPAR
 			DWORD Flags=(DWORD)lParam1;
 
 			if (Flags==TVTest::RESET_ALL)
-				GetAppClass().GetUICore()->DoCommand(CM_RESET);
+				GetAppClass().UICore.DoCommand(CM_RESET);
 			else if (Flags==TVTest::RESET_VIEWER)
-				GetAppClass().GetUICore()->DoCommand(CM_RESETVIEWER);
+				GetAppClass().UICore.DoCommand(CM_RESETVIEWER);
 			else
 				return FALSE;
 		}
 		return TRUE;
 
 	case TVTest::MESSAGE_CLOSE:
-		::PostMessage(GetAppClass().GetUICore()->GetMainWindow(),
+		::PostMessage(GetAppClass().UICore.GetMainWindow(),
 					  WM_COMMAND,
 					  (lParam1&TVTest::CLOSE_EXIT)!=0?CM_EXIT:CM_CLOSE,0);
 		return TRUE;
 
 	case TVTest::MESSAGE_SETSTREAMCALLBACK:
 		{
-			CPlugin *pThis=ThisFromParam(pParam);
-			if (pThis==NULL)
-				return FALSE;
-
 			TVTest::StreamCallbackInfo *pInfo=reinterpret_cast<TVTest::StreamCallbackInfo*>(lParam1);
 
-			if (pInfo==NULL || pInfo->Size!=sizeof(TVTest::StreamCallbackInfo))
+			if (pInfo==NULL
+					|| pInfo->Size!=sizeof(TVTest::StreamCallbackInfo)
+					|| pInfo->Callback==NULL)
 				return FALSE;
 
 			CBlockLock Lock(&m_GrabberLock);
 
-			if ((pInfo->Flags&TVTest::STREAM_CALLBACK_REMOVE)==0) {
-				if (!m_fSetGrabber) {
-					CMediaGrabber &MediaGrabber=GetAppClass().GetCoreEngine()->m_DtvEngine.m_MediaGrabber;
-
-					MediaGrabber.SetMediaGrabCallback(GrabMediaCallback,&m_GrabberList);
-					m_fSetGrabber=true;
+			if ((pInfo->Flags & TVTest::STREAM_CALLBACK_REMOVE)==0) {
+				// コールバック登録
+				if (!m_StreamGrabberList.empty()) {
+					for (auto it=m_StreamGrabberList.begin();it!=m_StreamGrabberList.end();++it) {
+						CStreamGrabber *pGrabber=*it;
+						if (pGrabber->GetCallbackFunc()==pInfo->Callback) {
+							pGrabber->SetClientData(pInfo->pClientData);
+							return TRUE;
+						}
+					}
 				}
-				m_GrabberList.push_back(CMediaGrabberInfo(pThis,pInfo));
+				CStreamGrabber *pGrabber=new CStreamGrabber(pInfo->Callback,pInfo->pClientData);
+				m_StreamGrabberList.push_back(pGrabber);
+				GetAppClass().CoreEngine.m_DtvEngine.m_MediaGrabber.AddGrabber(pGrabber);
 			} else {
-				for (std::vector<CMediaGrabberInfo>::iterator i=m_GrabberList.begin();
-						i!=m_GrabberList.end();i++) {
-					if (i->m_pPlugin==pThis
-							&& i->m_CallbackInfo.Callback==pInfo->Callback) {
-						m_GrabberList.erase(i);
+				// コールバック削除
+				for (auto it=m_StreamGrabberList.begin();it!=m_StreamGrabberList.end();++it) {
+					CStreamGrabber *pGrabber=*it;
+					if (pGrabber->GetCallbackFunc()==pInfo->Callback) {
+						GetAppClass().CoreEngine.m_DtvEngine.m_MediaGrabber.RemoveGrabber(pGrabber);
+						m_StreamGrabberList.erase(it);
+						delete pGrabber;
 						return TRUE;
 					}
 				}
@@ -1194,13 +1592,7 @@ LRESULT CALLBACK CPlugin::Callback(TVTest::PluginParam *pParam,UINT Message,LPAR
 		return TRUE;
 
 	case TVTest::MESSAGE_ENABLEPLUGIN:
-		{
-			CPlugin *pThis=ThisFromParam(pParam);
-			if (pThis==NULL)
-				return FALSE;
-
-			return pThis->Enable(lParam1!=0);
-		}
+		return Enable(lParam1!=0);
 
 	case TVTest::MESSAGE_GETCOLOR:
 		{
@@ -1208,7 +1600,7 @@ LRESULT CALLBACK CPlugin::Callback(TVTest::PluginParam *pParam,UINT Message,LPAR
 
 			if (pszName==NULL)
 				return CLR_INVALID;
-			return GetAppClass().GetColor(pszName);
+			return GetAppClass().UICore.GetColor(pszName);
 		}
 
 	case TVTest::MESSAGE_DECODEARIBSTRING:
@@ -1235,7 +1627,7 @@ LRESULT CALLBACK CPlugin::Callback(TVTest::PluginParam *pParam,UINT Message,LPAR
 				return FALSE;
 
 			const bool fNext=lParam2!=0;
-			CDtvEngine *pDtvEngine=&GetAppClass().GetCoreEngine()->m_DtvEngine;
+			CDtvEngine *pDtvEngine=&GetAppClass().CoreEngine.m_DtvEngine;
 
 			pProgramInfo->ServiceID=0;
 			pDtvEngine->GetServiceID(&pProgramInfo->ServiceID);
@@ -1278,37 +1670,27 @@ LRESULT CALLBACK CPlugin::Callback(TVTest::PluginParam *pParam,UINT Message,LPAR
 		return SendPluginMessage(pParam,Message,lParam1,lParam2,-1);
 
 	case TVTest::MESSAGE_SETNEXTCHANNEL:
-		GetAppClass().GetUICore()->DoCommand((lParam1&1)!=0?CM_CHANNEL_UP:CM_CHANNEL_DOWN);
+		GetAppClass().UICore.DoCommand((lParam1&1)!=0?CM_CHANNEL_UP:CM_CHANNEL_DOWN);
 		return TRUE;
 
 	case TVTest::MESSAGE_GETAUDIOSTREAM:
-		return GetAppClass().GetUICore()->GetAudioStream();
+		return GetAppClass().UICore.GetAudioStream();
 
 	case TVTest::MESSAGE_SETAUDIOSTREAM:
 		return SendPluginMessage(pParam,Message,lParam1,lParam2);
 
 	case TVTest::MESSAGE_ISPLUGINENABLED:
-		{
-			CPlugin *pThis=ThisFromParam(pParam);
-			if (pThis==NULL)
-				return FALSE;
-
-			return pThis->IsEnabled();
-		}
+		return IsEnabled();
 
 	case TVTest::MESSAGE_REGISTERCOMMAND:
 		{
-			CPlugin *pThis=ThisFromParam(pParam);
-			if (pThis==NULL)
-				return FALSE;
-
 			const TVTest::CommandInfo *pCommandList=reinterpret_cast<TVTest::CommandInfo*>(lParam1);
 			int NumCommands=(int)lParam2;
 
 			if (pCommandList==NULL || NumCommands<=0)
 				return FALSE;
 			for (int i=0;i<NumCommands;i++) {
-				pThis->m_CommandList.push_back(CPluginCommandInfo(pCommandList[i]));
+				m_CommandList.push_back(CPluginCommandInfo(pCommandList[i]));
 			}
 		}
 		return TRUE;
@@ -1319,47 +1701,39 @@ LRESULT CALLBACK CPlugin::Callback(TVTest::PluginParam *pParam,UINT Message,LPAR
 			if (pszText==NULL)
 				return FALSE;
 
-			CPlugin *pThis=ThisFromParam(pParam);
-			if (pThis==NULL)
-				return FALSE;
-
-			LPCTSTR pszFileName=::PathFindFileName(pThis->m_FileName.Get());
-			GetAppClass().AddLog(TEXT("%s : %s"),pszFileName,pszText);
+			LPCTSTR pszFileName=::PathFindFileName(m_FileName.c_str());
+			GetAppClass().AddLog((CLogItem::LogType)lParam2,TEXT("%s : %s"),pszFileName,pszText);
 		}
 		return TRUE;
 
 	case TVTest::MESSAGE_RESETSTATUS:
-		GetAppClass().GetUICore()->DoCommand(CM_RESETERRORCOUNT);
+		GetAppClass().UICore.DoCommand(CM_RESETERRORCOUNT);
 		return TRUE;
 
 	case TVTest::MESSAGE_SETAUDIOCALLBACK:
 		{
-			CPlugin *pThis=ThisFromParam(pParam);
-			if (pThis==NULL)
-				return FALSE;
-
 			TVTest::AudioCallbackFunc pCallback=reinterpret_cast<TVTest::AudioCallbackFunc>(lParam1);
 
 			m_AudioStreamLock.Lock();
 			if (pCallback!=NULL) {
 				if (m_AudioStreamCallbackList.empty()) {
-					GetAppClass().GetCoreEngine()->m_DtvEngine.m_MediaViewer.SetAudioStreamCallback(AudioStreamCallback);
+					GetAppClass().CoreEngine.m_DtvEngine.m_MediaViewer.SetAudioStreamCallback(AudioStreamCallback);
 				} else {
 					for (std::vector<CAudioStreamCallbackInfo>::iterator i=m_AudioStreamCallbackList.begin();
 							i!=m_AudioStreamCallbackList.end();i++) {
-						if (i->m_pPlugin==pThis) {
+						if (i->m_pPlugin==this) {
 							m_AudioStreamCallbackList.erase(i);
 							break;
 						}
 					}
 				}
-				m_AudioStreamCallbackList.push_back(CAudioStreamCallbackInfo(pThis,pCallback,reinterpret_cast<void*>(lParam2)));
+				m_AudioStreamCallbackList.push_back(CAudioStreamCallbackInfo(this,pCallback,reinterpret_cast<void*>(lParam2)));
 				m_AudioStreamLock.Unlock();
 			} else {
 				bool fFound=false;
 				for (std::vector<CAudioStreamCallbackInfo>::iterator i=m_AudioStreamCallbackList.begin();
 						i!=m_AudioStreamCallbackList.end();i++) {
-					if (i->m_pPlugin==pThis) {
+					if (i->m_pPlugin==this) {
 						m_AudioStreamCallbackList.erase(i);
 						fFound=true;
 						break;
@@ -1369,7 +1743,7 @@ LRESULT CALLBACK CPlugin::Callback(TVTest::PluginParam *pParam,UINT Message,LPAR
 				if (!fFound)
 					return FALSE;
 				if (m_AudioStreamCallbackList.empty())
-					GetAppClass().GetCoreEngine()->m_DtvEngine.m_MediaViewer.SetAudioStreamCallback(NULL);
+					GetAppClass().CoreEngine.m_DtvEngine.m_MediaViewer.SetAudioStreamCallback(NULL);
 			}
 		}
 		return TRUE;
@@ -1380,49 +1754,7 @@ LRESULT CALLBACK CPlugin::Callback(TVTest::PluginParam *pParam,UINT Message,LPAR
 
 			if (pszCommand==NULL || pszCommand[0]==L'\0')
 				return FALSE;
-			return GetAppClass().GetUICore()->DoCommand(pszCommand);
-		}
-
-	case TVTest::MESSAGE_GETBCASINFO:
-		{
-			TVTest::BCasInfo *pBCasInfo=reinterpret_cast<TVTest::BCasInfo*>(lParam1);
-
-			if (pBCasInfo==NULL || pBCasInfo->Size!=sizeof(TVTest::BCasInfo))
-				return FALSE;
-
-			CCasProcessor::CasCardInfo CardInfo;
-			if (!GetAppClass().GetCoreEngine()->m_DtvEngine.m_CasProcessor.GetCasCardInfo(&CardInfo))
-				return FALSE;
-			pBCasInfo->CASystemID=CardInfo.CASystemID;
-			::CopyMemory(pBCasInfo->CardID,CardInfo.CardID,6);
-			pBCasInfo->CardType=CardInfo.CardType;
-			pBCasInfo->MessagePartitionLength=CardInfo.MessagePartitionLength;
-			::CopyMemory(pBCasInfo->SystemKey,CardInfo.SystemKey,32);
-			::CopyMemory(pBCasInfo->InitialCBC,CardInfo.InitialCBC,8);
-			pBCasInfo->CardManufacturerID=CardInfo.CardManufacturerID;
-			pBCasInfo->CardVersion=CardInfo.CardVersion;
-			pBCasInfo->CheckCode=CardInfo.CheckCode;
-#ifdef UNICODE
-			::WideCharToMultiByte(CP_ACP,0,CardInfo.CardIDText,-1,
-								  pBCasInfo->szFormatCardID,lengthof(pBCasInfo->szFormatCardID),NULL,NULL);
-#else
-			::lstrcpyn(pBCasInfo->szFormatCardID,CardInfo.CardIDText,lengthof(pBCasInfo->szFormatCardID));
-#endif
-		}
-		return TRUE;
-
-	case TVTest::MESSAGE_SENDBCASCOMMAND:
-		{
-			TVTest::BCasCommandInfo *pBCasCommand=reinterpret_cast<TVTest::BCasCommandInfo*>(lParam1);
-
-			if (pBCasCommand==NULL
-					|| pBCasCommand->pSendData==NULL || pBCasCommand->SendSize==0
-					|| pBCasCommand->pReceiveData==NULL)
-				return FALSE;
-
-			return GetAppClass().GetCoreEngine()->m_DtvEngine.m_CasProcessor.SendCasCommand(
-				pBCasCommand->pSendData, pBCasCommand->SendSize,
-				pBCasCommand->pReceiveData, &pBCasCommand->ReceiveSize);
+			return GetAppClass().UICore.DoCommand(pszCommand);
 		}
 
 	case TVTest::MESSAGE_GETHOSTINFO:
@@ -1441,44 +1773,7 @@ LRESULT CALLBACK CPlugin::Callback(TVTest::PluginParam *pParam,UINT Message,LPAR
 		return TRUE;
 
 	case TVTest::MESSAGE_GETSETTING:
-		{
-			TVTest::SettingInfo *pSetting=reinterpret_cast<TVTest::SettingInfo*>(lParam1);
-
-			if (pSetting==NULL || pSetting->pszName==NULL)
-				return FALSE;
-			if (::lstrcmpi(pSetting->pszName,TEXT("DriverDirectory"))==0) {
-				if (pSetting->Type!=TVTest::SETTING_TYPE_STRING)
-					return FALSE;
-				TCHAR szDirectory[MAX_PATH];
-				GetAppClass().GetDriverDirectory(szDirectory,lengthof(szDirectory));
-				if (pSetting->Value.pszString!=NULL)
-					::lstrcpyn(pSetting->Value.pszString,szDirectory,pSetting->ValueSize);
-				else
-					pSetting->ValueSize=(::lstrlen(szDirectory)+1)*sizeof(WCHAR);
-			} else if (::lstrcmpi(pSetting->pszName,TEXT("IniFilePath"))==0) {
-				if (pSetting->Type!=TVTest::SETTING_TYPE_STRING)
-					return FALSE;
-				LPCTSTR pszPath=GetAppClass().GetIniFileName();
-				if (pSetting->Value.pszString!=NULL)
-					::lstrcpyn(pSetting->Value.pszString,pszPath,pSetting->ValueSize);
-				else
-					pSetting->ValueSize=(::lstrlen(pszPath)+1)*sizeof(WCHAR);
-			} else if (::lstrcmpi(pSetting->pszName,TEXT("RecordFolder"))==0) {
-				if (pSetting->Type!=TVTest::SETTING_TYPE_STRING)
-					return FALSE;
-				LPCTSTR pszFolder=GetAppClass().GetDefaultRecordFolder();
-				if (pSetting->Value.pszString!=NULL)
-					::lstrcpyn(pSetting->Value.pszString,pszFolder,pSetting->ValueSize);
-				else
-					pSetting->ValueSize=(::lstrlen(pszFolder)+1)*sizeof(WCHAR);
-			} else {
-				return FALSE;
-			}
-			if (pSetting->Type==TVTest::SETTING_TYPE_STRING
-					&& pSetting->Value.pszString!=NULL)
-				pSetting->ValueSize=(::lstrlen(pSetting->Value.pszString)+1)*sizeof(WCHAR);
-		}
-		return TRUE;
+		return OnGetSetting(reinterpret_cast<TVTest::SettingInfo*>(lParam1));
 
 	case TVTest::MESSAGE_GETDRIVERFULLPATHNAME:
 		return SendPluginMessage(pParam,Message,lParam1,lParam2);
@@ -1487,8 +1782,7 @@ LRESULT CALLBACK CPlugin::Callback(TVTest::PluginParam *pParam,UINT Message,LPAR
 		{
 			const WORD NetworkID=LOWORD(lParam1),ServiceID=HIWORD(lParam1);
 			const BYTE LogoType=(BYTE)(lParam2&0xFF);
-			CLogoManager *pLogoManager=GetAppClass().GetLogoManager();
-			HBITMAP hbm=pLogoManager->GetAssociatedLogoBitmap(NetworkID,ServiceID,LogoType);
+			HBITMAP hbm=GetAppClass().LogoManager.GetAssociatedLogoBitmap(NetworkID,ServiceID,LogoType);
 			if (hbm!=NULL) {
 				return reinterpret_cast<LRESULT>(::CopyImage(hbm,IMAGE_BITMAP,0,0,LR_CREATEDIBSECTION));
 			}
@@ -1498,22 +1792,19 @@ LRESULT CALLBACK CPlugin::Callback(TVTest::PluginParam *pParam,UINT Message,LPAR
 	case TVTest::MESSAGE_GETAVAILABLELOGOTYPE:
 		{
 			const WORD NetworkID=LOWORD(lParam1),ServiceID=HIWORD(lParam1);
-			CLogoManager *pLogoManager=GetAppClass().GetLogoManager();
 
-			return pLogoManager->GetAvailableLogoType(NetworkID,ServiceID);
+			return GetAppClass().LogoManager.GetAvailableLogoType(NetworkID,ServiceID);
 		}
 
 	case TVTest::MESSAGE_RELAYRECORD:
 		return SendPluginMessage(pParam,Message,lParam1,lParam2);
 
 	case TVTest::MESSAGE_SILENTMODE:
-		{
-			if (lParam1==TVTest::SILENTMODE_GET) {
-				return GetAppClass().IsSilent();
-			} else if (lParam1==TVTest::SILENTMODE_SET) {
-				GetAppClass().SetSilent(lParam2!=0);
-				return TRUE;
-			}
+		if (lParam1==TVTest::SILENTMODE_GET) {
+			return GetAppClass().Core.IsSilent();
+		} else if (lParam1==TVTest::SILENTMODE_SET) {
+			GetAppClass().Core.SetSilent(lParam2!=0);
+			return TRUE;
 		}
 		return FALSE;
 
@@ -1522,10 +1813,6 @@ LRESULT CALLBACK CPlugin::Callback(TVTest::PluginParam *pParam,UINT Message,LPAR
 
 	case TVTest::MESSAGE_REGISTERCONTROLLER:
 		{
-			CPlugin *pThis=ThisFromParam(pParam);
-			if (pThis==NULL)
-				return FALSE;
-
 			const TVTest::ControllerInfo *pInfo=reinterpret_cast<const TVTest::ControllerInfo*>(lParam1);
 
 			if (pInfo==NULL
@@ -1535,20 +1822,20 @@ LRESULT CALLBACK CPlugin::Callback(TVTest::PluginParam *pParam,UINT Message,LPAR
 					|| pInfo->NumButtons<1
 					|| pInfo->pButtonList==NULL)
 				return FALSE;
-			CControllerPlugin *pController=new CControllerPlugin(pThis,pInfo);
-			CControllerManager *pControllerManager=GetAppClass().GetControllerManager();
+			CControllerPlugin *pController=new CControllerPlugin(this,pInfo);
+			CControllerManager *pControllerManager=&GetAppClass().ControllerManager;
 			if (!pControllerManager->AddController(pController)) {
 				delete pController;
 				return FALSE;
 			}
-			pThis->m_ControllerList.push_back(CDynamicString(pInfo->pszName));
-			if (pThis->m_fEnabled)
+			m_ControllerList.push_back(TVTest::String(pInfo->pszName));
+			if (m_fEnabled)
 				pControllerManager->LoadControllerSettings(pInfo->pszName);
 		}
 		return TRUE;
 
 	case TVTest::MESSAGE_ONCONTROLLERBUTTONDOWN:
-		return GetAppClass().GetControllerManager()->OnButtonDown(
+		return GetAppClass().ControllerManager.OnButtonDown(
 			reinterpret_cast<LPCWSTR>(lParam1),(int)lParam2);
 
 	case TVTest::MESSAGE_GETCONTROLLERSETTINGS:
@@ -1561,7 +1848,7 @@ LRESULT CALLBACK CPlugin::Callback(TVTest::PluginParam *pParam,UINT Message,LPAR
 					|| (pSettings->Mask|ValidMask)!=ValidMask)
 				return FALSE;
 			const CControllerManager::ControllerSettings *pControllerSettings=
-				GetAppClass().GetControllerManager()->GetControllerSettings(pszName);
+				GetAppClass().ControllerManager.GetControllerSettings(pszName);
 			if (pControllerSettings==NULL)
 				return FALSE;
 			if ((pSettings->Mask&TVTest::CONTROLLER_SETTINGS_MASK_FLAGS)!=0) {
@@ -1579,7 +1866,7 @@ LRESULT CALLBACK CPlugin::Callback(TVTest::PluginParam *pParam,UINT Message,LPAR
 			if (pQueryInfo==NULL)
 				return reinterpret_cast<LRESULT>((TVTest::EpgEventInfo*)NULL);
 
-			CEpgProgramList *pEpgProgramList=GetAppClass().GetEpgProgramList();
+			CEpgProgramList *pEpgProgramList=&GetAppClass().EpgProgramList;
 			CEventInfoData EventData;
 			if (pQueryInfo->Type==TVTest::EPG_EVENT_QUERY_EVENTID) {
 				if (!pEpgProgramList->GetEventInfo(pQueryInfo->NetworkID,
@@ -1589,15 +1876,15 @@ LRESULT CALLBACK CPlugin::Callback(TVTest::PluginParam *pParam,UINT Message,LPAR
 												   &EventData))
 					return reinterpret_cast<LRESULT>((TVTest::EpgEventInfo*)NULL);
 			} else if (pQueryInfo->Type==TVTest::EPG_EVENT_QUERY_TIME) {
-				SYSTEMTIME stUTC,stLocal;
+				SYSTEMTIME stUTC,stEpg;
 
 				if (!::FileTimeToSystemTime(&pQueryInfo->Time,&stUTC)
-						|| !UTCToJST(&stUTC,&stLocal))
+						|| !UtcToEpgTime(&stUTC,&stEpg))
 					return reinterpret_cast<LRESULT>((TVTest::EpgEventInfo*)NULL);
 				if (!pEpgProgramList->GetEventInfo(pQueryInfo->NetworkID,
 												   pQueryInfo->TransportStreamID,
 												   pQueryInfo->ServiceID,
-												   &stLocal,
+												   &stEpg,
 												   &EventData))
 					return reinterpret_cast<LRESULT>((TVTest::EpgEventInfo*)NULL);
 			} else {
@@ -1626,7 +1913,7 @@ LRESULT CALLBACK CPlugin::Callback(TVTest::PluginParam *pParam,UINT Message,LPAR
 			pEventList->NumEvents=0;
 			pEventList->EventList=NULL;
 
-			CEpgProgramList *pEpgProgramList=GetAppClass().GetEpgProgramList();
+			CEpgProgramList *pEpgProgramList=&GetAppClass().EpgProgramList;
 			pEpgProgramList->UpdateService(pEventList->NetworkID,
 										   pEventList->TransportStreamID,
 										   pEventList->ServiceID);
@@ -1663,7 +1950,7 @@ LRESULT CALLBACK CPlugin::Callback(TVTest::PluginParam *pParam,UINT Message,LPAR
 			const int Index=LOWORD(lParam2);
 			const int MaxLength=HIWORD(lParam2);
 
-			const CDriverManager *pDriverManager=GetAppClass().GetDriverManager();
+			const CDriverManager *pDriverManager=&GetAppClass().DriverManager;
 			const CDriverInfo *pDriverInfo=pDriverManager->GetDriverInfo(Index);
 			if (pDriverInfo!=NULL) {
 				if (pszFileName!=NULL)
@@ -1733,7 +2020,7 @@ LRESULT CALLBACK CPlugin::Callback(TVTest::PluginParam *pParam,UINT Message,LPAR
 				for (int j=0;j<NumChannels;j++) {
 					TVTest::ChannelInfo *pChannelInfo=(TVTest::ChannelInfo*)p;
 					p+=sizeof(TVTest::ChannelInfo);
-					pDriverSpaceInfo->ChannelList[i]=pChannelInfo;
+					pDriverSpaceInfo->ChannelList[j]=pChannelInfo;
 					pChannelInfo->Size=sizeof(TVTest::ChannelInfo);
 					ConvertChannelInfo(pChannelList->GetChannelInfo(j),pChannelInfo);
 				}
@@ -1759,20 +2046,11 @@ LRESULT CALLBACK CPlugin::Callback(TVTest::PluginParam *pParam,UINT Message,LPAR
 		return TRUE;
 
 	case TVTest::MESSAGE_ENABLEPROGRAMGUIDEEVENT:
-		{
-			CPlugin *pThis=ThisFromParam(pParam);
-			if (pThis==NULL)
-				return FALSE;
-
-			pThis->m_ProgramGuideEventFlags=(UINT)lParam1;
-		}
+		m_ProgramGuideEventFlags=(UINT)lParam1;
 		return TRUE;
 
 	case TVTest::MESSAGE_REGISTERPROGRAMGUIDECOMMAND:
 		{
-			CPlugin *pThis=ThisFromParam(pParam);
-			if (pThis==NULL)
-				return FALSE;
 			const TVTest::ProgramGuideCommandInfo *pCommandList=
 				reinterpret_cast<TVTest::ProgramGuideCommandInfo*>(lParam1);
 			const int NumCommands=(int)lParam2;
@@ -1780,17 +2058,888 @@ LRESULT CALLBACK CPlugin::Callback(TVTest::PluginParam *pParam,UINT Message,LPAR
 			if (pCommandList==NULL || NumCommands<1)
 				return FALSE;
 			for (int i=0;i<NumCommands;i++) {
-				pThis->m_ProgramGuideCommandList.push_back(CProgramGuideCommand(pCommandList[i]));
+				m_ProgramGuideCommandList.push_back(CProgramGuideCommand(pCommandList[i]));
 			}
+		}
+		return TRUE;
+
+	case TVTest::MESSAGE_GETSTYLEVALUE:
+		{
+			TVTest::StyleValueInfo *pInfo=reinterpret_cast<TVTest::StyleValueInfo*>(lParam1);
+
+			if (pInfo==NULL
+					|| pInfo->Size!=sizeof(TVTest::StyleValueInfo)
+					|| pInfo->Flags!=0
+					|| IsStringEmpty(pInfo->pszName))
+				return FALSE;
+
+			const TVTest::Style::CStyleManager &StyleManager=GetAppClass().StyleManager;
+			TVTest::Style::StyleInfo Style;
+
+			if (!StyleManager.Get(pInfo->pszName,&Style))
+				return FALSE;
+			if (Style.Type==TVTest::Style::TYPE_INT) {
+				if (pInfo->Unit==TVTest::STYLE_UNIT_UNDEFINED) {
+					pInfo->Value=Style.Value.Int;
+					switch (Style.Unit) {
+					case TVTest::Style::UNIT_LOGICAL_PIXEL:
+						pInfo->Unit=TVTest::STYLE_UNIT_LOGICAL_PIXEL;
+						break;
+					case TVTest::Style::UNIT_PHYSICAL_PIXEL:
+						pInfo->Unit=TVTest::STYLE_UNIT_PHYSICAL_PIXEL;
+						break;
+					case TVTest::Style::UNIT_POINT:
+						pInfo->Unit=TVTest::STYLE_UNIT_POINT;
+						break;
+					case TVTest::Style::UNIT_DIP:
+						pInfo->Unit=TVTest::STYLE_UNIT_DIP;
+						break;
+					}
+				} else {
+					TVTest::Style::UnitType Unit;
+					switch (pInfo->Unit) {
+					case TVTest::STYLE_UNIT_LOGICAL_PIXEL:
+						Unit=TVTest::Style::UNIT_LOGICAL_PIXEL;
+						break;
+					case TVTest::STYLE_UNIT_PHYSICAL_PIXEL:
+						Unit=TVTest::Style::UNIT_PHYSICAL_PIXEL;
+						break;
+					case TVTest::STYLE_UNIT_POINT:
+						Unit=TVTest::Style::UNIT_POINT;
+						break;
+					case TVTest::STYLE_UNIT_DIP:
+						Unit=TVTest::Style::UNIT_DIP;
+						break;
+					default:
+						return FALSE;
+					}
+					TVTest::Style::CStyleScaling StyleScaling;
+					int DPI=pInfo->DPI!=0?pInfo->DPI:96;
+					StyleScaling.SetDPI(DPI);
+					pInfo->Value=StyleScaling.ConvertUnit(Style.Value.Int,Style.Unit,Unit);
+				}
+			} else if (Style.Type==TVTest::Style::TYPE_BOOL) {
+				pInfo->Value=Style.Value.Bool;
+			} else {
+				return FALSE;
+			}
+		}
+		return TRUE;
+
+	case TVTest::MESSAGE_THEMEDRAWBACKGROUND:
+		{
+			TVTest::ThemeDrawBackgroundInfo *pInfo=
+				reinterpret_cast<TVTest::ThemeDrawBackgroundInfo*>(lParam1);
+
+			if (pInfo==NULL
+					|| pInfo->Size!=sizeof(TVTest::ThemeDrawBackgroundInfo)
+					|| IsStringEmpty(pInfo->pszStyle)
+					|| pInfo->hdc==NULL)
+				return FALSE;
+
+			CAppMain &App=GetAppClass();
+			TVTest::Theme::CThemeManager ThemeManager(App.UICore.GetCurrentColorScheme());
+			int Type=ThemeManager.ParseStyleName(pInfo->pszStyle);
+			if (Type<0)
+				return FALSE;
+			TVTest::Theme::BackgroundStyle Style;
+			ThemeManager.GetBackgroundStyle(Type,&Style);
+			const TVTest::Style::CStyleScaling *pStyleScaling;
+			TVTest::Style::CStyleScaling StyleScaling;
+			if (pInfo->DPI==0) {
+				pStyleScaling=App.MainWindow.GetStyleScaling();
+			} else {
+				App.StyleManager.InitStyleScaling(&StyleScaling);
+				StyleScaling.SetDPI(pInfo->DPI);
+				pStyleScaling=&StyleScaling;
+			}
+			pStyleScaling->ToPixels(&Style.Border.Width.Left);
+			pStyleScaling->ToPixels(&Style.Border.Width.Top);
+			pStyleScaling->ToPixels(&Style.Border.Width.Right);
+			pStyleScaling->ToPixels(&Style.Border.Width.Bottom);
+			TVTest::Theme::Draw(pInfo->hdc,pInfo->DrawRect,Style);
+			if ((pInfo->Flags & TVTest::THEME_DRAW_BACKGROUND_FLAG_ADJUSTRECT)!=0)
+				TVTest::Theme::SubtractBorderRect(Style.Border,&pInfo->DrawRect);
+		}
+		return TRUE;
+
+	case TVTest::MESSAGE_THEMEDRAWTEXT:
+		{
+			TVTest::ThemeDrawTextInfo *pInfo=
+				reinterpret_cast<TVTest::ThemeDrawTextInfo*>(lParam1);
+
+			if (pInfo==NULL
+					|| pInfo->Size!=sizeof(TVTest::ThemeDrawTextInfo)
+					|| IsStringEmpty(pInfo->pszStyle)
+					|| pInfo->hdc==NULL
+					|| pInfo->pszText==NULL)
+				return FALSE;
+
+			TVTest::Theme::CThemeManager ThemeManager(GetAppClass().UICore.GetCurrentColorScheme());
+			int Type=ThemeManager.ParseStyleName(pInfo->pszStyle);
+			if (Type<0)
+				return FALSE;
+			TVTest::Theme::ForegroundStyle Style;
+			ThemeManager.GetForegroundStyle(Type,&Style);
+			if (pInfo->Color!=CLR_INVALID) {
+				Style.Fill.Type=TVTest::Theme::FILL_SOLID;
+				Style.Fill.Solid.Color=TVTest::Theme::ThemeColor(pInfo->Color);
+			}
+			TVTest::Theme::Draw(pInfo->hdc,pInfo->DrawRect,Style,pInfo->pszText,pInfo->DrawFlags);
+		}
+		return TRUE;
+
+	case TVTest::MESSAGE_THEMEDRAWICON:
+		{
+			TVTest::ThemeDrawIconInfo *pInfo=
+				reinterpret_cast<TVTest::ThemeDrawIconInfo*>(lParam1);
+
+			if (pInfo==NULL
+					|| pInfo->Size!=sizeof(TVTest::ThemeDrawIconInfo)
+					|| IsStringEmpty(pInfo->pszStyle)
+					|| pInfo->hdc==NULL
+					|| pInfo->hbm==NULL)
+				return FALSE;
+
+			TVTest::Theme::CThemeManager ThemeManager(GetAppClass().UICore.GetCurrentColorScheme());
+			int Type=ThemeManager.ParseStyleName(pInfo->pszStyle);
+			if (Type<0)
+				return FALSE;
+			TVTest::Theme::ForegroundStyle Style;
+			ThemeManager.GetForegroundStyle(Type,&Style);
+			DrawUtil::CMonoColorBitmap Bitmap;
+			if (!Bitmap.Create(pInfo->hbm))
+				return FALSE;
+			Bitmap.Draw(pInfo->hdc,
+						pInfo->DstRect.left,pInfo->DstRect.top,
+						pInfo->DstRect.right-pInfo->DstRect.left,
+						pInfo->DstRect.bottom-pInfo->DstRect.top,
+						pInfo->SrcRect.left,pInfo->SrcRect.top,
+						pInfo->SrcRect.right-pInfo->SrcRect.left,
+						pInfo->SrcRect.bottom-pInfo->SrcRect.top,
+						pInfo->Color!=CLR_INVALID?pInfo->Color:Style.Fill.GetSolidColor(),
+						pInfo->Opacity);
+		}
+		return TRUE;
+
+	case TVTest::MESSAGE_GETEPGCAPTURESTATUS:
+		{
+			TVTest::EpgCaptureStatusInfo *pInfo=
+				reinterpret_cast<TVTest::EpgCaptureStatusInfo*>(lParam1);
+
+			if (pInfo==NULL
+					|| pInfo->Size!=sizeof(TVTest::EpgCaptureStatusInfo)
+					|| pInfo->Flags!=0)
+				return FALSE;
+
+			CEventManager &EventManager=GetAppClass().CoreEngine.m_DtvEngine.m_EventManager;
+			DWORD Status=0;
+
+			if ((pInfo->Status & TVTest::EPG_CAPTURE_STATUS_SCHEDULEBASICCOMPLETED)!=0) {
+				if (EventManager.IsScheduleComplete(pInfo->NetworkID,pInfo->TransportStreamID,pInfo->ServiceID,false))
+					Status|=TVTest::EPG_CAPTURE_STATUS_SCHEDULEBASICCOMPLETED;
+			}
+			if ((pInfo->Status & TVTest::EPG_CAPTURE_STATUS_SCHEDULEEXTENDEDCOMPLETED)!=0) {
+				if (EventManager.IsScheduleComplete(pInfo->NetworkID,pInfo->TransportStreamID,pInfo->ServiceID,true))
+					Status|=TVTest::EPG_CAPTURE_STATUS_SCHEDULEEXTENDEDCOMPLETED;
+			}
+			if ((pInfo->Status & TVTest::EPG_CAPTURE_STATUS_HASSCHEDULEBASIC)!=0) {
+				if (EventManager.HasSchedule(pInfo->NetworkID,pInfo->TransportStreamID,pInfo->ServiceID,false))
+					Status|=TVTest::EPG_CAPTURE_STATUS_HASSCHEDULEBASIC;
+			}
+			if ((pInfo->Status & TVTest::EPG_CAPTURE_STATUS_HASSCHEDULEEXTENDED)!=0) {
+				if (EventManager.HasSchedule(pInfo->NetworkID,pInfo->TransportStreamID,pInfo->ServiceID,true))
+					Status|=TVTest::EPG_CAPTURE_STATUS_HASSCHEDULEEXTENDED;
+			}
+
+			pInfo->Status=Status;
+		}
+		return TRUE;
+
+	case TVTest::MESSAGE_GETAPPCOMMANDINFO:
+		{
+			TVTest::AppCommandInfo *pInfo=reinterpret_cast<TVTest::AppCommandInfo*>(lParam1);
+
+			if (pInfo==NULL || pInfo->Size!=sizeof(TVTest::AppCommandInfo))
+				return FALSE;
+
+			const CCommandList &CommandList=GetAppClass().CommandList;
+
+			LPCTSTR pszText=CommandList.GetCommandText(pInfo->Index);
+			if (pszText==NULL)
+				return FALSE;
+			if (pInfo->pszText!=NULL) {
+				::lstrcpynW(pInfo->pszText,pszText,pInfo->MaxText);
+			} else {
+				pInfo->MaxText=::lstrlenW(pszText)+1;
+			}
+			TCHAR szName[CCommandList::MAX_COMMAND_NAME];
+			CommandList.GetCommandName(pInfo->Index,szName,lengthof(szName));
+			if (pInfo->pszName!=NULL) {
+				::lstrcpynW(pInfo->pszName,szName,pInfo->MaxName);
+			} else {
+				pInfo->MaxName=::lstrlenW(szName)+1;
+			}
+		}
+		return TRUE;
+
+	case TVTest::MESSAGE_GETAPPCOMMANDCOUNT:
+		return GetAppClass().CommandList.NumCommands();
+
+	case TVTest::MESSAGE_GETVIDEOSTREAMCOUNT:
+		return GetAppClass().CoreEngine.m_DtvEngine.GetVideoStreamNum();
+
+	case TVTest::MESSAGE_GETVIDEOSTREAM:
+		return GetAppClass().CoreEngine.m_DtvEngine.GetVideoStream();
+
+	case TVTest::MESSAGE_SETVIDEOSTREAM:
+		return SendPluginMessage(pParam,Message,lParam1,lParam2);
+
+	case TVTest::MESSAGE_GETLOG:
+		{
+			TVTest::GetLogInfo *pInfo=reinterpret_cast<TVTest::GetLogInfo*>(lParam1);
+
+			if (pInfo==NULL || pInfo->Size!=sizeof(TVTest::GetLogInfo))
+				return FALSE;
+
+			const CLogger &Logger=GetAppClass().Logger;
+			CLogItem Log;
+
+			if ((pInfo->Flags & TVTest::GET_LOG_FLAG_BYSERIAL)==0) {
+				if (!Logger.GetLog(pInfo->Index,&Log))
+					return FALSE;
+				pInfo->Serial=Log.GetSerialNumber();
+			} else {
+				if (!Logger.GetLogBySerialNumber(pInfo->Serial,&Log))
+					return FALSE;
+			}
+			LPCTSTR pszText=Log.GetText();
+			if (pInfo->pszText!=NULL) {
+				::lstrcpyn(pInfo->pszText,pszText,pInfo->MaxText);
+			} else {
+				pInfo->MaxText=::lstrlen(pszText)+1;
+			}
+			pInfo->Type=(int)Log.GetType();
+		}
+		return TRUE;
+
+	case TVTest::MESSAGE_GETLOGCOUNT:
+		return GetAppClass().Logger.GetLogCount();
+
+	case TVTest::MESSAGE_REGISTERPLUGINCOMMAND:
+		{
+			const TVTest::PluginCommandInfo *pInfo=
+				reinterpret_cast<const TVTest::PluginCommandInfo*>(lParam1);
+
+			if (pInfo==NULL || pInfo->Size!=sizeof(TVTest::PluginCommandInfo))
+				return FALSE;
+
+			m_CommandList.push_back(CPluginCommandInfo(*pInfo));
+		}
+		return TRUE;
+
+	case TVTest::MESSAGE_SETPLUGINCOMMANDSTATE:
+		{
+			const int ID=(int)lParam1;
+
+			for (auto itr=m_CommandList.begin();itr!=m_CommandList.end();++itr) {
+				if (itr->GetID()==ID) {
+					const DWORD State=(DWORD)lParam2;
+
+					itr->SetState(State);
+
+					unsigned int CommandState=0;
+					if ((State & TVTest::PLUGIN_COMMAND_STATE_DISABLED)!=0)
+						CommandState|=CCommandList::COMMAND_STATE_DISABLED;
+					if ((State & TVTest::PLUGIN_COMMAND_STATE_CHECKED)!=0)
+						CommandState|=CCommandList::COMMAND_STATE_CHECKED;
+					GetAppClass().CommandList.SetCommandStateByID(
+						itr->GetCommand(),
+						CCommandList::COMMAND_STATE_DISABLED |
+						CCommandList::COMMAND_STATE_CHECKED,
+						CommandState);
+
+					return TRUE;
+				}
+			}
+		}
+		return FALSE;
+
+	case TVTest::MESSAGE_PLUGINCOMMANDNOTIFY:
+		{
+			const int ID=(int)lParam1;
+
+			for (auto itr=m_CommandList.begin();itr!=m_CommandList.end();++itr) {
+				if (itr->GetID()==ID) {
+					const unsigned int Type=(unsigned int)lParam2;
+
+					if ((Type & TVTest::PLUGIN_COMMAND_NOTIFY_CHANGEICON))
+						GetAppClass().SideBar.RedrawItem(itr->GetCommand());
+
+					return TRUE;
+				}
+			}
+		}
+		return FALSE;
+
+	case TVTest::MESSAGE_REGISTERPLUGINICON:
+		{
+			const TVTest::PluginIconInfo *pInfo=
+				reinterpret_cast<const TVTest::PluginIconInfo*>(lParam1);
+
+			if (pInfo==NULL
+					|| pInfo->Size!=sizeof(TVTest::PluginIconInfo)
+					|| pInfo->Flags!=0
+					|| pInfo->hbmIcon==NULL)
+				return FALSE;
+
+			if (!m_PluginIcon.Create(pInfo->hbmIcon))
+				return FALSE;
+		}
+		return TRUE;
+
+	case TVTest::MESSAGE_REGISTERSTATUSITEM:
+		{
+			const TVTest::StatusItemInfo *pInfo=
+				reinterpret_cast<const TVTest::StatusItemInfo*>(lParam1);
+
+			if (pInfo==NULL
+					|| pInfo->Size!=sizeof(TVTest::StatusItemInfo)
+					|| IsStringEmpty(pInfo->pszIDText)
+					|| IsStringEmpty(pInfo->pszName))
+				return FALSE;
+
+			StatusItem *pItem=new StatusItem;
+
+			pItem->Flags=pInfo->Flags;
+			pItem->ID=pInfo->ID;
+			pItem->IDText=pInfo->pszIDText;
+			pItem->Name=pInfo->pszName;
+			pItem->MinWidth=pInfo->MinWidth;
+			pItem->MaxWidth=pInfo->MaxWidth;
+			pItem->DefaultWidth=pInfo->DefaultWidth;
+			pItem->MinHeight=pInfo->MinHeight;
+			pItem->ItemID=-1;
+			pItem->Style=pInfo->Style;
+			pItem->State=0;
+			pItem->pItem=NULL;
+
+			m_StatusItemList.push_back(pItem);
+		}
+		return TRUE;
+
+	case TVTest::MESSAGE_SETSTATUSITEM:
+		{
+			TVTest::StatusItemSetInfo *pInfo=
+				reinterpret_cast<TVTest::StatusItemSetInfo*>(lParam1);
+
+			if (pInfo==NULL || pInfo->Size!=sizeof(TVTest::StatusItemSetInfo))
+				return FALSE;
+
+			for (auto itr=m_StatusItemList.begin();itr!=m_StatusItemList.end();++itr) {
+				StatusItem *pItem=*itr;
+				if (pItem->ID==pInfo->ID) {
+					if ((pInfo->Mask & TVTest::STATUS_ITEM_SET_INFO_MASK_STATE)!=0) {
+						DWORD OldState=pItem->State;
+						DWORD NewState=(pItem->State & ~pInfo->StateMask) | (pInfo->State & pInfo->StateMask);
+						pItem->State=NewState;
+						if (((NewState ^ OldState) & TVTest::STATUS_ITEM_STATE_VISIBLE)!=0) {
+							const bool fVisible=(NewState & TVTest::STATUS_ITEM_STATE_VISIBLE)!=0;
+							GetAppClass().StatusOptions.SetItemVisibility(pItem->ItemID,fVisible);
+							if (pItem->pItem!=NULL) {
+								GetAppClass().MainWindow.ShowStatusBarItem(pItem->ItemID,fVisible);
+							}
+						}
+					}
+
+					if ((pInfo->Mask & TVTest::STATUS_ITEM_SET_INFO_MASK_STYLE)!=0) {
+						DWORD OldStyle=pItem->Style;
+						DWORD NewStyle=(OldStyle & ~pInfo->StyleMask) | (pInfo->Style & pInfo->StyleMask);
+						if (NewStyle!=OldStyle) {
+							pItem->Style=NewStyle;
+							if (pItem->pItem!=NULL) {
+								pItem->pItem->ApplyItemStyle();
+								GetAppClass().StatusView.AdjustSize();
+							}
+						}
+					}
+
+					return TRUE;
+				}
+			}
+		}
+		return FALSE;
+
+	case TVTest::MESSAGE_GETSTATUSITEMINFO:
+		{
+			TVTest::StatusItemGetInfo *pInfo=
+				reinterpret_cast<TVTest::StatusItemGetInfo*>(lParam1);
+
+			if (pInfo==NULL || pInfo->Size!=sizeof(TVTest::StatusItemGetInfo))
+				return FALSE;
+
+			for (auto itr=m_StatusItemList.begin();itr!=m_StatusItemList.end();++itr) {
+				StatusItem *pItem=*itr;
+
+				if (pItem->ID==pInfo->ID) {
+					if ((pInfo->Mask & TVTest::STATUS_ITEM_GET_INFO_MASK_STATE)!=0)
+						pInfo->State=pItem->State;
+
+					if ((pInfo->Mask & TVTest::STATUS_ITEM_GET_INFO_MASK_HWND)!=0) {
+						if (pItem->pItem!=NULL)
+							pInfo->hwnd=pItem->pItem->GetWindowHandle();
+						else
+							pInfo->hwnd=NULL;
+					}
+
+					if ((pInfo->Mask & TVTest::STATUS_ITEM_GET_INFO_MASK_ITEMRECT)!=0) {
+						if (pItem->pItem==NULL || !pItem->pItem->GetRect(&pInfo->ItemRect))
+							::SetRectEmpty(&pInfo->ItemRect);
+					}
+
+					if ((pInfo->Mask & TVTest::STATUS_ITEM_GET_INFO_MASK_CONTENTRECT)!=0) {
+						if (pItem->pItem==NULL || !pItem->pItem->GetClientRect(&pInfo->ContentRect))
+							::SetRectEmpty(&pInfo->ContentRect);
+					}
+
+					if ((pInfo->Mask & TVTest::STATUS_ITEM_GET_INFO_MASK_STYLE)!=0)
+						pInfo->Style=pItem->Style;
+
+					return TRUE;
+				}
+			}
+		}
+		return FALSE;
+
+	case TVTest::MESSAGE_STATUSITEMNOTIFY:
+		for (auto itr=m_StatusItemList.begin();itr!=m_StatusItemList.end();++itr) {
+			StatusItem *pItem=*itr;
+
+			if (pItem->ID==lParam1) {
+				switch (lParam2) {
+				case TVTest::STATUS_ITEM_NOTIFY_REDRAW:
+					if (pItem->pItem!=NULL)
+						pItem->pItem->Redraw();
+					return TRUE;
+				}
+			}
+		}
+		return FALSE;
+
+	case TVTest::MESSAGE_REGISTERTSPROCESSOR:
+		{
+			const TVTest::TSProcessorInfo *pInfo=
+				reinterpret_cast<const TVTest::TSProcessorInfo*>(lParam1);
+
+			if (pInfo==NULL
+					|| pInfo->Size!=sizeof(TVTest::TSProcessorInfo)
+					|| pInfo->Flags!=0
+					|| pInfo->pTSProcessor==NULL)
+				return FALSE;
+
+			TVTest::CTSProcessor *pTSProcessor=
+				new TVTest::CTSProcessor(pInfo->pTSProcessor);
+			if (!GetAppClass().TSProcessorManager.RegisterTSProcessor(
+					pTSProcessor,
+					(CCoreEngine::TSProcessorConnectPosition)pInfo->ConnectPosition)) {
+				pTSProcessor->Release();
+				return FALSE;
+			}
+
+			m_Flags|=TVTest::PLUGIN_FLAG_NOUNLOAD;
+		}
+		return TRUE;
+
+	case TVTest::MESSAGE_REGISTERPANELITEM:
+		{
+			const TVTest::PanelItemInfo *pInfo=
+				reinterpret_cast<const TVTest::PanelItemInfo*>(lParam1);
+
+			if (pInfo==NULL
+					|| pInfo->Size!=sizeof(TVTest::PanelItemInfo)
+					|| pInfo->Flags!=0
+					|| IsStringEmpty(pInfo->pszIDText)
+					|| IsStringEmpty(pInfo->pszTitle))
+				return FALSE;
+
+			PanelItem *pItem=new PanelItem;
+
+			pItem->ID=pInfo->ID;
+			pItem->IDText=pInfo->pszIDText;
+			pItem->Title=pInfo->pszTitle;
+			pItem->StateMask=0;
+			pItem->State=0;
+			pItem->Style=pInfo->Style;
+			pItem->ItemID=-1;
+			pItem->pItem=NULL;
+			if (pInfo->hbmIcon!=NULL)
+				pItem->Icon.Create(pInfo->hbmIcon);
+
+			m_PanelItemList.push_back(pItem);
+		}
+		return TRUE;
+
+	case TVTest::MESSAGE_SETPANELITEM:
+		{
+			TVTest::PanelItemSetInfo *pInfo=
+				reinterpret_cast<TVTest::PanelItemSetInfo*>(lParam1);
+
+			if (pInfo==NULL || pInfo->Size!=sizeof(TVTest::PanelItemSetInfo))
+				return FALSE;
+
+			for (auto itr=m_PanelItemList.begin();itr!=m_PanelItemList.end();++itr) {
+				PanelItem *pItem=*itr;
+				if (pItem->ID==pInfo->ID) {
+					if ((pInfo->Mask & TVTest::PANEL_ITEM_SET_INFO_MASK_STATE)!=0) {
+						if (pItem->pItem==NULL || pItem->pItem->GetItemHandle()==NULL) {
+							pItem->StateMask|=pInfo->StateMask;
+							pItem->State=(pItem->State & ~pInfo->StateMask) | (pInfo->State & pInfo->StateMask);
+						} else {
+							if ((pInfo->StateMask & TVTest::PANEL_ITEM_STATE_ENABLED)!=0) {
+								GetAppClass().PanelOptions.SetPanelItemVisibility(
+									pItem->ItemID,
+									(pInfo->State & TVTest::PANEL_ITEM_STATE_ENABLED)!=0);
+							}
+
+							if ((pInfo->StateMask & TVTest::PANEL_ITEM_STATE_ACTIVE)!=0) {
+								if ((pInfo->State & TVTest::PANEL_ITEM_STATE_ACTIVE)!=0) {
+									GetAppClass().Panel.Form.SetCurPageByID(pItem->ItemID);
+								}
+							}
+						}
+					}
+
+					if ((pInfo->Mask & TVTest::PANEL_ITEM_SET_INFO_MASK_STYLE)!=0) {
+						pItem->Style=(pItem->Style & ~pInfo->StyleMask) | (pInfo->Style & pInfo->StyleMask);
+					}
+
+					return TRUE;
+				}
+			}
+		}
+		return FALSE;
+
+	case TVTest::MESSAGE_GETPANELITEMINFO:
+		{
+			TVTest::PanelItemGetInfo *pInfo=
+				reinterpret_cast<TVTest::PanelItemGetInfo*>(lParam1);
+
+			if (pInfo==NULL || pInfo->Size!=sizeof(TVTest::PanelItemGetInfo))
+				return FALSE;
+
+			auto it=std::find_if(m_PanelItemList.begin(),m_PanelItemList.end(),
+								 [&](const PanelItem *pItem) -> bool { return pItem->ID==pInfo->ID; });
+			if (it==m_PanelItemList.end())
+				return FALSE;
+
+			const PanelItem *pItem=*it;
+
+			if ((pInfo->Mask & TVTest::PANEL_ITEM_GET_INFO_MASK_STATE)!=0) {
+				pInfo->State=pItem->State;
+			}
+
+			if ((pInfo->Mask & TVTest::PANEL_ITEM_GET_INFO_MASK_HWNDPARENT)!=0) {
+				if (pItem->pItem!=NULL)
+					pInfo->hwndParent=pItem->pItem->GetHandle();
+				else
+					pInfo->hwndParent=NULL;
+			}
+
+			if ((pInfo->Mask & TVTest::PANEL_ITEM_GET_INFO_MASK_HWNDITEM)!=0) {
+				if (pItem->pItem!=NULL)
+					pInfo->hwndItem=pItem->pItem->GetItemHandle();
+				else
+					pInfo->hwndItem=NULL;
+			}
+
+			if ((pInfo->Mask & TVTest::PANEL_ITEM_GET_INFO_MASK_STYLE)!=0) {
+				pInfo->Style=pItem->Style;
+			}
+		}
+		return TRUE;
+
+	case TVTest::MESSAGE_SELECTCHANNEL:
+		return SendPluginMessage(pParam,Message,lParam1,lParam2);
+
+	case TVTest::MESSAGE_GETFAVORITELIST:
+		{
+			TVTest::FavoriteList *pList=reinterpret_cast<TVTest::FavoriteList*>(lParam1);
+
+			if (pList==NULL || pList->Size!=sizeof(TVTest::FavoriteList))
+				return FALSE;
+
+			return GetFavoriteList(GetAppClass().FavoritesManager.GetRootFolder(),pList);
+		}
+
+	case TVTest::MESSAGE_FREEFAVORITELIST:
+		{
+			TVTest::FavoriteList *pList=reinterpret_cast<TVTest::FavoriteList*>(lParam1);
+
+			if (pList!=NULL && pList->Size==sizeof(TVTest::FavoriteList))
+				FreeFavoriteList(pList);
+		}
+		return 0;
+
+	case TVTest::MESSAGE_GET1SEGMODE:
+		return GetAppClass().Core.Is1SegMode();
+
+	case TVTest::MESSAGE_SET1SEGMODE:
+		return SendPluginMessage(pParam,Message,lParam1,lParam2);
+
+	case TVTest::MESSAGE_GETDPI:
+	case TVTest::MESSAGE_GETFONT:
+	case TVTest::MESSAGE_SHOWDIALOG:
+		return SendPluginMessage(pParam,Message,lParam1,lParam2);
+
+	case TVTest::MESSAGE_CONVERTTIME:
+		{
+			TVTest::ConvertTimeInfo *pInfo=reinterpret_cast<TVTest::ConvertTimeInfo*>(lParam1);
+
+			if (pInfo==NULL || pInfo->Size!=sizeof(TVTest::ConvertTimeInfo))
+				return FALSE;
+
+			const bool fFromFileTime=
+				(pInfo->Flags & TVTest::CONVERT_TIME_FLAG_FROM_FILETIME)!=0;
+			const bool fToFileTime=
+				(pInfo->Flags & TVTest::CONVERT_TIME_FLAG_TO_FILETIME)!=0;
+
+			if (pInfo->TypeFrom==pInfo->TypeTo) {
+				if (!fFromFileTime && fToFileTime) {
+					if (!::SystemTimeToFileTime(&pInfo->From.SystemTime,&pInfo->To.FileTime))
+						return FALSE;
+				} else if (fFromFileTime && !fToFileTime) {
+					if (!::FileTimeToSystemTime(&pInfo->From.FileTime,&pInfo->To.SystemTime))
+						return FALSE;
+				} else {
+					pInfo->To=pInfo->From;
+				}
+				return TRUE;
+			}
+
+			::ZeroMemory(&pInfo->To,sizeof(pInfo->To));
+
+			SYSTEMTIME stFrom,stTo;
+
+			if (fFromFileTime) {
+				if (!::FileTimeToSystemTime(&pInfo->From.FileTime,&stFrom))
+					return FALSE;
+			} else {
+				stFrom=pInfo->From.SystemTime;
+			}
+
+			switch (pInfo->TypeFrom) {
+			case TVTest::CONVERT_TIME_TYPE_UTC:
+				break;
+
+			case TVTest::CONVERT_TIME_TYPE_LOCAL:
+				if (!::TzSpecificLocalTimeToSystemTime(NULL,&stFrom,&stTo))
+					return FALSE;
+				stFrom=stTo;
+				break;
+
+			case TVTest::CONVERT_TIME_TYPE_EPG:
+				if (!EpgTimeToUtc(&stFrom,&stTo))
+					return FALSE;
+				stFrom=stTo;
+				break;
+
+			default:
+				return FALSE;
+			}
+
+			switch (pInfo->TypeTo) {
+			case TVTest::CONVERT_TIME_TYPE_UTC:
+				stTo=stFrom;
+				break;
+
+			case TVTest::CONVERT_TIME_TYPE_LOCAL:
+				if (!::SystemTimeToTzSpecificLocalTime(NULL,&stFrom,&stTo))
+					return FALSE;
+				break;
+
+			case TVTest::CONVERT_TIME_TYPE_EPG:
+				if (!UtcToEpgTime(&stFrom,&stTo))
+					return FALSE;
+				break;
+
+			case TVTest::CONVERT_TIME_TYPE_EPG_DISPLAY:
+				{
+					const CEpgOptions &EpgOptions=GetAppClass().EpgOptions;
+
+					switch (EpgOptions.GetEpgTimeMode()) {
+					case CEpgOptions::EPGTIME_RAW:
+						if (!UtcToEpgTime(&stFrom,&stTo))
+							return FALSE;
+						break;
+
+					case CEpgOptions::EPGTIME_JST:
+						{
+							TIME_ZONE_INFORMATION tzi;
+							if (!GetJSTTimeZoneInformation(&tzi)
+									|| !::SystemTimeToTzSpecificLocalTime(&tzi,&stFrom,&stTo))
+								return FALSE;
+						}
+						break;
+
+					case CEpgOptions::EPGTIME_LOCAL:
+						if (!EpgTimeToLocalTime(&stFrom,&stTo))
+							return FALSE;
+						break;
+
+					case CEpgOptions::EPGTIME_UTC:
+						stTo=stFrom;
+						break;
+
+					default:
+						return FALSE;
+					}
+				}
+				break;
+
+			default:
+				return FALSE;
+			}
+
+			if ((pInfo->Flags & TVTest::CONVERT_TIME_FLAG_OFFSET)!=0
+					&& pInfo->Offset!=0) {
+				if (!OffsetSystemTime(&stTo,pInfo->Offset))
+					return FALSE;
+			}
+
+			if (fToFileTime) {
+				if (!::SystemTimeToFileTime(&stTo,&pInfo->To.FileTime))
+					return FALSE;
+			} else {
+				pInfo->To.SystemTime=stTo;
+			}
+		}
+		return TRUE;
+
+	case TVTest::MESSAGE_SETVIDEOSTREAMCALLBACK:
+		{
+			TVTest::VideoStreamCallbackFunc pCallback=
+				reinterpret_cast<TVTest::VideoStreamCallbackFunc>(lParam1);
+			CBlockLock Lock(&m_VideoStreamLock);
+
+			if (pCallback!=NULL) {
+				if (m_VideoStreamCallbackList.empty()) {
+					GetAppClass().CoreEngine.m_DtvEngine.m_MediaViewer.SetVideoStreamCallback(&m_VideoStreamCallback);
+				} else {
+					for (auto it=m_VideoStreamCallbackList.begin();it!=m_VideoStreamCallbackList.end();++it) {
+						if (it->m_pPlugin==this) {
+							m_VideoStreamCallbackList.erase(it);
+							break;
+						}
+					}
+				}
+				m_VideoStreamCallbackList.push_back(
+					CVideoStreamCallbackInfo(this,pCallback,reinterpret_cast<void*>(lParam2)));
+			} else {
+				bool fFound=false;
+				for (auto it=m_VideoStreamCallbackList.begin();it!=m_VideoStreamCallbackList.end();++it) {
+					if (it->m_pPlugin==this) {
+						m_VideoStreamCallbackList.erase(it);
+						fFound=true;
+						break;
+					}
+				}
+				if (!fFound)
+					return FALSE;
+				if (m_VideoStreamCallbackList.empty())
+					GetAppClass().CoreEngine.m_DtvEngine.m_MediaViewer.SetVideoStreamCallback(NULL);
+			}
+		}
+		return TRUE;
+
+	case TVTest::MESSAGE_GETVARSTRINGCONTEXT:
+		{
+			TVTest::VarStringContext *pContext=new TVTest::VarStringContext;
+
+			if (!GetAppClass().Core.GetVariableStringEventInfo(&pContext->Event)) {
+				delete pContext;
+				return (LRESULT)nullptr;
+			}
+
+			return (LRESULT)pContext;
+		}
+
+	case TVTest::MESSAGE_FREEVARSTRINGCONTEXT:
+		{
+			TVTest::VarStringContext *pContext=reinterpret_cast<TVTest::VarStringContext*>(lParam1);
+
+			if (pContext==nullptr)
+				return FALSE;
+
+			delete pContext;
+		}
+		return TRUE;
+
+	case TVTest::MESSAGE_FORMATVARSTRING:
+		{
+			TVTest::VarStringFormatInfo *pInfo=
+				reinterpret_cast<TVTest::VarStringFormatInfo*>(lParam1);
+
+			if (pInfo==nullptr
+					|| pInfo->Size!=sizeof(TVTest::VarStringFormatInfo))
+				return FALSE;
+
+			pInfo->pszResult=nullptr;
+
+			if (pInfo->pszFormat==nullptr)
+				return FALSE;
+
+			TVTest::VarStringContext Context;
+			if (pInfo->pContext==nullptr) {
+				if (!GetAppClass().Core.GetVariableStringEventInfo(&Context.Event))
+					return FALSE;
+			}
+			TVTest::CPluginVarStringMap VarStrMap(
+				pInfo,
+				pInfo->pContext!=nullptr?pInfo->pContext:&Context);
+			TVTest::String Result;
+
+			if (!TVTest::FormatVariableString(&VarStrMap,pInfo->pszFormat,&Result))
+				return FALSE;
+
+			pInfo->pszResult=static_cast<LPWSTR>(std::malloc((Result.length()+1)*sizeof(WCHAR)));
+			if (pInfo->pszResult==nullptr)
+				return FALSE;
+			::CopyMemory(pInfo->pszResult,Result.c_str(),(Result.length()+1)*sizeof(WCHAR));
+		}
+		return TRUE;
+
+	case TVTest::MESSAGE_REGISTERVARIABLE:
+		{
+			const TVTest::RegisterVariableInfo *pInfo=
+				reinterpret_cast<const TVTest::RegisterVariableInfo*>(lParam1);
+
+			if (pInfo==nullptr
+					|| pInfo->Size!=sizeof(TVTest::RegisterVariableInfo)
+					|| IsStringEmpty(pInfo->pszKeyword))
+				return FALSE;
+
+			CAppMain &App=GetAppClass();
+			unsigned int Flags=0;
+			if ((pInfo->Flags & TVTest::REGISTER_VARIABLE_FLAG_OVERRIDE)!=0)
+				Flags|=TVTest::CVariableManager::FLAG_OVERRIDE;
+
+			if (!App.VariableManager.RegisterVariable(
+					pInfo->pszKeyword,pInfo->pszValue,
+					pInfo->pszValue==nullptr ? &m_GetVariable : nullptr,
+					pInfo->pszDescription,
+					Flags))
+				return FALSE;
+			App.AppEventManager.OnVariableChanged();
 		}
 		return TRUE;
 
 #ifdef _DEBUG
 	default:
-		TRACE(TEXT("CPluign::Callback() : Unknown message %u\n"),Message);
+		TRACE(TEXT("CPluign::OnCallback() : Unknown message %u\n"),Message);
 		break;
 #endif
 	}
+
 	return 0;
 }
 
@@ -1819,11 +2968,11 @@ LRESULT CPlugin::OnPluginMessage(WPARAM wParam,LPARAM lParam)
 						&& pChannelInfo->Size!=TVTest::CHANNELINFO_SIZE_V1
 						&& pChannelInfo->Size!=TVTest::CHANNELINFO_SIZE_V2))
 				return FALSE;
-			const CChannelInfo *pChInfo=GetAppClass().GetCurrentChannelInfo();
+			const CChannelInfo *pChInfo=GetAppClass().Core.GetCurrentChannelInfo();
 			if (pChInfo==NULL)
 				return FALSE;
 			ConvertChannelInfo(pChInfo,pChannelInfo);
-			CTsAnalyzer *pTsAnalyzer=&GetAppClass().GetCoreEngine()->m_DtvEngine.m_TsAnalyzer;
+			CTsAnalyzer *pTsAnalyzer=&GetAppClass().CoreEngine.m_DtvEngine.m_TsAnalyzer;
 			if (!pTsAnalyzer->GetNetworkName(pChannelInfo->szNetworkName,
 											 lengthof(pChannelInfo->szNetworkName)))
 				pChannelInfo->szNetworkName[0]='\0';
@@ -1835,25 +2984,25 @@ LRESULT CPlugin::OnPluginMessage(WPARAM wParam,LPARAM lParam)
 
 	case TVTest::MESSAGE_SETCHANNEL:
 		{
-			CAppMain &AppMain=GetAppClass();
+			CAppMain &App=GetAppClass();
 
-			AppMain.OpenTuner();
+			App.Core.OpenTuner();
 
 			int Space=(int)pParam->lParam1;
 
 			if (pParam->pPlugin->m_Version<TVTEST_PLUGIN_VERSION_(0,0,8))
-				return AppMain.SetChannel(Space,(int)pParam->lParam2);
+				return App.Core.SetChannel(Space,(int)pParam->lParam2,-1);
 
 			WORD ServiceID=HIWORD(pParam->lParam2);
-			return AppMain.SetChannel(Space,(SHORT)LOWORD(pParam->lParam2),
-									  ServiceID!=0?(int)ServiceID:-1);
+			return App.Core.SetChannel(Space,(SHORT)LOWORD(pParam->lParam2),
+									   ServiceID!=0?(int)ServiceID:-1);
 		}
 
 	case TVTest::MESSAGE_SETSERVICE:
 		{
 			if (pParam->lParam2==0)
-				return GetAppClass().SetServiceByIndex((int)pParam->lParam1);
-			return GetAppClass().SetServiceByID((WORD)pParam->lParam1);
+				return GetAppClass().Core.SetServiceByIndex((int)pParam->lParam1,CAppCore::SET_SERVICE_STRICT_ID);
+			return GetAppClass().Core.SetServiceByID((WORD)pParam->lParam1,CAppCore::SET_SERVICE_STRICT_ID);
 		}
 
 	case TVTest::MESSAGE_GETTUNINGSPACENAME:
@@ -1861,7 +3010,7 @@ LRESULT CPlugin::OnPluginMessage(WPARAM wParam,LPARAM lParam)
 			LPWSTR pszName=reinterpret_cast<LPWSTR>(pParam->lParam1);
 			int Index=LOWORD(pParam->lParam2);
 			int MaxLength=HIWORD(pParam->lParam2);
-			const CTuningSpaceList *pTuningSpaceList=GetAppClass().GetChannelManager()->GetDriverTuningSpaceList();
+			const CTuningSpaceList *pTuningSpaceList=GetAppClass().ChannelManager.GetDriverTuningSpaceList();
 			LPCTSTR pszTuningSpaceName=pTuningSpaceList->GetTuningSpaceName(Index);
 
 			if (pszTuningSpaceName==NULL)
@@ -1884,7 +3033,7 @@ LRESULT CPlugin::OnPluginMessage(WPARAM wParam,LPARAM lParam)
 					|| Space<0 || Channel<0)
 				return FALSE;
 
-			const CChannelManager *pChannelManager=GetAppClass().GetChannelManager();
+			const CChannelManager *pChannelManager=&GetAppClass().ChannelManager;
 			const CChannelList *pChannelList=pChannelManager->GetChannelList(Space);
 			if (pChannelList==NULL)
 				return FALSE;
@@ -1899,7 +3048,7 @@ LRESULT CPlugin::OnPluginMessage(WPARAM wParam,LPARAM lParam)
 		{
 			LPWSTR pszName=reinterpret_cast<LPWSTR>(pParam->lParam1);
 			int MaxLength=(int)pParam->lParam2;
-			LPCTSTR pszDriverName=GetAppClass().GetCoreEngine()->GetDriverFileName();
+			LPCTSTR pszDriverName=GetAppClass().CoreEngine.GetDriverFileName();
 
 			if (pszName!=NULL && MaxLength>0)
 				::lstrcpyn(pszName,pszDriverName,MaxLength);
@@ -1910,9 +3059,12 @@ LRESULT CPlugin::OnPluginMessage(WPARAM wParam,LPARAM lParam)
 		{
 			LPCWSTR pszDriverName=reinterpret_cast<LPCWSTR>(pParam->lParam1);
 
-			if (pszDriverName==NULL)
-				return FALSE;
-			return GetAppClass().OpenTuner(pszDriverName);
+			if (pszDriverName==NULL) {
+				GetAppClass().Core.ShutDownTuner();
+				return TRUE;
+			}
+
+			return GetAppClass().Core.OpenTuner(pszDriverName);
 		}
 
 	case TVTest::MESSAGE_STARTRECORD:
@@ -1922,7 +3074,7 @@ LRESULT CPlugin::OnPluginMessage(WPARAM wParam,LPARAM lParam)
 			CRecordManager::TimeSpecInfo StartTime,StopTime;
 
 			if (pRecInfo==NULL)
-				return App.StartRecord(NULL,NULL,NULL,CRecordManager::CLIENT_PLUGIN);
+				return App.Core.StartRecord(NULL,NULL,NULL,CRecordManager::CLIENT_PLUGIN);
 			if (pRecInfo->Size!=sizeof(TVTest::RecordInfo))
 				return FALSE;
 			StartTime.Type=CRecordManager::TIME_NOTSPECIFIED;
@@ -1932,7 +3084,14 @@ LRESULT CPlugin::OnPluginMessage(WPARAM wParam,LPARAM lParam)
 					break;
 				case TVTest::RECORD_START_TIME:
 					StartTime.Type=CRecordManager::TIME_DATETIME;
-					StartTime.Time.DateTime=pRecInfo->StartTime.Time;
+					if ((pRecInfo->Mask&TVTest::RECORD_MASK_FLAGS)!=0
+							&& (pRecInfo->Flags&TVTest::RECORD_FLAG_UTC)!=0) {
+						if (!::FileTimeToSystemTime(&pRecInfo->StartTime.Time,&StartTime.Time.DateTime))
+							return FALSE;
+					} else {
+						if (!LocalFileTimeToSystemTime(&pRecInfo->StartTime.Time,&StartTime.Time.DateTime))
+							return FALSE;
+					}
 					break;
 				case TVTest::RECORD_START_DELAY:
 					StartTime.Type=CRecordManager::TIME_DURATION;
@@ -1949,7 +3108,14 @@ LRESULT CPlugin::OnPluginMessage(WPARAM wParam,LPARAM lParam)
 					break;
 				case TVTest::RECORD_STOP_TIME:
 					StopTime.Type=CRecordManager::TIME_DATETIME;
-					StopTime.Time.DateTime=pRecInfo->StopTime.Time;
+					if ((pRecInfo->Mask&TVTest::RECORD_MASK_FLAGS)!=0
+							&& (pRecInfo->Flags&TVTest::RECORD_FLAG_UTC)!=0) {
+						if (!::FileTimeToSystemTime(&pRecInfo->StopTime.Time,&StopTime.Time.DateTime))
+							return FALSE;
+					} else {
+						if (!LocalFileTimeToSystemTime(&pRecInfo->StopTime.Time,&StopTime.Time.DateTime))
+							return FALSE;
+					}
 					break;
 				case TVTest::RECORD_STOP_DURATION:
 					StopTime.Type=CRecordManager::TIME_DURATION;
@@ -1959,26 +3125,26 @@ LRESULT CPlugin::OnPluginMessage(WPARAM wParam,LPARAM lParam)
 					return FALSE;
 				}
 			}
-			return App.StartRecord(
+			return App.Core.StartRecord(
 				(pRecInfo->Mask&TVTest::RECORD_MASK_FILENAME)!=0?pRecInfo->pszFileName:NULL,
 				&StartTime,&StopTime,
 				CRecordManager::CLIENT_PLUGIN);
 		}
 
 	case TVTest::MESSAGE_STOPRECORD:
-		return GetAppClass().StopRecord();
+		return GetAppClass().Core.StopRecord();
 
 	case TVTest::MESSAGE_PAUSERECORD:
 		{
 			CAppMain &App=GetAppClass();
-			const CRecordManager *pRecordManager=App.GetRecordManager();
+			const CRecordManager *pRecordManager=&App.RecordManager;
 			bool fPause=pParam->lParam1!=0;
 
 			if (!pRecordManager->IsRecording())
 				return FALSE;
 			if (fPause==pRecordManager->IsPaused())
 				return FALSE;
-			App.GetUICore()->DoCommand(CM_RECORD_PAUSE);
+			App.UICore.DoCommand(CM_RECORD_PAUSE);
 		}
 		return TRUE;
 
@@ -1988,7 +3154,9 @@ LRESULT CPlugin::OnPluginMessage(WPARAM wParam,LPARAM lParam)
 
 			if (pRecInfo==NULL || pRecInfo->Size!=sizeof(TVTest::RecordInfo))
 				return FALSE;
-			const CRecordManager *pRecordManager=GetAppClass().GetRecordManager();
+
+			const CRecordManager *pRecordManager=&GetAppClass().RecordManager;
+
 			if ((pRecInfo->Mask&TVTest::RECORD_MASK_FILENAME)!=0
 					&& pRecInfo->pszFileName!=NULL && pRecInfo->MaxFileName>0) {
 				if (pRecordManager->GetFileName()!=NULL)
@@ -1997,7 +3165,19 @@ LRESULT CPlugin::OnPluginMessage(WPARAM wParam,LPARAM lParam)
 				else
 					pRecInfo->pszFileName[0]='\0';
 			}
-			pRecordManager->GetReserveTime(&pRecInfo->ReserveTime);
+
+			SYSTEMTIME st;
+			if (pRecordManager->GetReserveTime(&st)) {
+				if ((pRecInfo->Mask&TVTest::RECORD_MASK_FLAGS)!=0
+						&& (pRecInfo->Flags&TVTest::RECORD_FLAG_UTC)!=0) {
+					::SystemTimeToFileTime(&st,&pRecInfo->ReserveTime);
+				} else {
+					SystemTimeToLocalFileTime(&st,&pRecInfo->ReserveTime);
+				}
+			} else {
+				pRecInfo->ReserveTime=FILETIME_NULL;
+			}
+
 			if ((pRecInfo->Mask&TVTest::RECORD_MASK_STARTTIME)!=0) {
 				CRecordManager::TimeSpecInfo StartTime;
 
@@ -2009,7 +3189,12 @@ LRESULT CPlugin::OnPluginMessage(WPARAM wParam,LPARAM lParam)
 					break;
 				case CRecordManager::TIME_DATETIME:
 					pRecInfo->StartTimeSpec=TVTest::RECORD_START_TIME;
-					pRecInfo->StartTime.Time=StartTime.Time.DateTime;
+					if ((pRecInfo->Mask&TVTest::RECORD_MASK_FLAGS)!=0
+							&& (pRecInfo->Flags&TVTest::RECORD_FLAG_UTC)!=0) {
+						::SystemTimeToFileTime(&StartTime.Time.DateTime,&pRecInfo->StartTime.Time);
+					} else {
+						SystemTimeToLocalFileTime(&StartTime.Time.DateTime,&pRecInfo->StartTime.Time);
+					}
 					break;
 				case CRecordManager::TIME_DURATION:
 					pRecInfo->StartTimeSpec=TVTest::RECORD_START_DELAY;
@@ -2017,6 +3202,7 @@ LRESULT CPlugin::OnPluginMessage(WPARAM wParam,LPARAM lParam)
 					break;
 				}
 			}
+
 			if ((pRecInfo->Mask&TVTest::RECORD_MASK_STOPTIME)!=0) {
 				CRecordManager::TimeSpecInfo StopTime;
 
@@ -2028,7 +3214,12 @@ LRESULT CPlugin::OnPluginMessage(WPARAM wParam,LPARAM lParam)
 					break;
 				case CRecordManager::TIME_DATETIME:
 					pRecInfo->StopTimeSpec=TVTest::RECORD_STOP_TIME;
-					pRecInfo->StopTime.Time=StopTime.Time.DateTime;
+					if ((pRecInfo->Mask&TVTest::RECORD_MASK_FLAGS)!=0
+							&& (pRecInfo->Flags&TVTest::RECORD_FLAG_UTC)!=0) {
+						::SystemTimeToFileTime(&StopTime.Time.DateTime,&pRecInfo->StopTime.Time);
+					} else {
+						SystemTimeToLocalFileTime(&StopTime.Time.DateTime,&pRecInfo->StopTime.Time);
+					}
 					break;
 				case CRecordManager::TIME_DURATION:
 					pRecInfo->StopTimeSpec=TVTest::RECORD_STOP_DURATION;
@@ -2049,7 +3240,7 @@ LRESULT CPlugin::OnPluginMessage(WPARAM wParam,LPARAM lParam)
 				return false;
 			if ((pRecInfo->Mask&TVTest::RECORD_MASK_FLAGS)!=0) {
 				if ((pRecInfo->Flags&TVTest::RECORD_FLAG_CANCEL)!=0)
-					return App.CancelReservedRecord();
+					return App.Core.CancelReservedRecord();
 			}
 			if ((pRecInfo->Mask&TVTest::RECORD_MASK_STARTTIME)!=0) {
 				switch (pRecInfo->StartTimeSpec) {
@@ -2058,7 +3249,14 @@ LRESULT CPlugin::OnPluginMessage(WPARAM wParam,LPARAM lParam)
 					break;
 				case TVTest::RECORD_START_TIME:
 					StartTime.Type=CRecordManager::TIME_DATETIME;
-					StartTime.Time.DateTime=pRecInfo->StartTime.Time;
+					if ((pRecInfo->Mask&TVTest::RECORD_MASK_FLAGS)!=0
+							&& (pRecInfo->Flags&TVTest::RECORD_FLAG_UTC)!=0) {
+						if (!::FileTimeToSystemTime(&pRecInfo->StartTime.Time,&StartTime.Time.DateTime))
+							return FALSE;
+					} else {
+						if (!LocalFileTimeToSystemTime(&pRecInfo->StartTime.Time,&StartTime.Time.DateTime))
+							return FALSE;
+					}
 					break;
 				case TVTest::RECORD_START_DELAY:
 					StartTime.Type=CRecordManager::TIME_DURATION;
@@ -2075,7 +3273,14 @@ LRESULT CPlugin::OnPluginMessage(WPARAM wParam,LPARAM lParam)
 					break;
 				case TVTest::RECORD_STOP_TIME:
 					StopTime.Type=CRecordManager::TIME_DATETIME;
-					StopTime.Time.DateTime=pRecInfo->StopTime.Time;
+					if ((pRecInfo->Mask&TVTest::RECORD_MASK_FLAGS)!=0
+							&& (pRecInfo->Flags&TVTest::RECORD_FLAG_UTC)!=0) {
+						if (!::FileTimeToSystemTime(&pRecInfo->StopTime.Time,&StopTime.Time.DateTime))
+							return FALSE;
+					} else {
+						if (!LocalFileTimeToSystemTime(&pRecInfo->StopTime.Time,&StopTime.Time.DateTime))
+							return FALSE;
+					}
 					break;
 				case TVTest::RECORD_STOP_DURATION:
 					StopTime.Type=CRecordManager::TIME_DURATION;
@@ -2085,7 +3290,7 @@ LRESULT CPlugin::OnPluginMessage(WPARAM wParam,LPARAM lParam)
 					return FALSE;
 				}
 			}
-			return App.ModifyRecord(
+			return App.Core.ModifyRecord(
 				(pRecInfo->Mask&TVTest::RECORD_MASK_FILENAME)!=0?pRecInfo->pszFileName:NULL,
 				(pRecInfo->Mask&TVTest::RECORD_MASK_STARTTIME)!=0?&StartTime:NULL,
 				(pRecInfo->Mask&TVTest::RECORD_MASK_STOPTIME)!=0?&StopTime:NULL,
@@ -2093,44 +3298,57 @@ LRESULT CPlugin::OnPluginMessage(WPARAM wParam,LPARAM lParam)
 		}
 
 	case TVTest::MESSAGE_GETZOOM:
-		return GetAppClass().GetUICore()->GetZoomPercentage();
+		return GetAppClass().UICore.GetZoomPercentage();
 
 	case TVTest::MESSAGE_SETZOOM:
-		return GetAppClass().GetUICore()->SetZoomRate((int)pParam->lParam1,(int)pParam->lParam2);
+		return GetAppClass().UICore.SetZoomRate((int)pParam->lParam1,(int)pParam->lParam2);
 
 	case TVTest::MESSAGE_GETRECORDSTATUS:
 		{
 			TVTest::RecordStatusInfo *pInfo=reinterpret_cast<TVTest::RecordStatusInfo*>(pParam->lParam1);
-			const CRecordManager *pRecordManager=GetAppClass().GetRecordManager();
+			const CRecordManager *pRecordManager=&GetAppClass().RecordManager;
 
 			if (pInfo==NULL
 					|| (pInfo->Size!=sizeof(TVTest::RecordStatusInfo)
 						&& pInfo->Size!=TVTest::RECORDSTATUSINFO_SIZE_V1))
 				return FALSE;
+
+			const DWORD Flags=(DWORD)pParam->lParam2;
+
 			pInfo->Status=pRecordManager->IsRecording()?
 				(pRecordManager->IsPaused()?TVTest::RECORD_STATUS_PAUSED:
 											TVTest::RECORD_STATUS_RECORDING):
 											TVTest::RECORD_STATUS_NOTRECORDING;
 			if (pInfo->Status!=TVTest::RECORD_STATUS_NOTRECORDING) {
-				pRecordManager->GetStartTime(&pInfo->StartTime);
+				SYSTEMTIME st;
+				pRecordManager->GetStartTime(&st);
+				if ((Flags & TVTest::RECORD_STATUS_FLAG_UTC)!=0) {
+					::SystemTimeToFileTime(&st,&pInfo->StartTime);
+				} else {
+					SystemTimeToLocalFileTime(&st,&pInfo->StartTime);
+				}
 				CRecordManager::TimeSpecInfo StopTimeInfo;
 				pRecordManager->GetStopTimeSpec(&StopTimeInfo);
 				pInfo->StopTimeSpec=(DWORD)StopTimeInfo.Type;
-				if (StopTimeInfo.Type==CRecordManager::TIME_DATETIME)
-					pInfo->StopTime.Time=StopTimeInfo.Time.DateTime;
-				else
+				if (StopTimeInfo.Type==CRecordManager::TIME_DATETIME) {
+					if ((Flags & TVTest::RECORD_STATUS_FLAG_UTC)!=0) {
+						::SystemTimeToFileTime(&StopTimeInfo.Time.DateTime,&pInfo->StopTime.Time);
+					} else {
+						SystemTimeToLocalFileTime(&StopTimeInfo.Time.DateTime,&pInfo->StopTime.Time);
+					}
+				} else {
 					pInfo->StopTime.Duration=StopTimeInfo.Time.Duration;
+				}
 			} else {
 				pInfo->StopTimeSpec=TVTest::RECORD_STOP_NOTSPECIFIED;
 			}
-			pInfo->RecordTime=pRecordManager->GetRecordTime();
-			pInfo->PauseTime=pRecordManager->GetPauseTime();
+			pInfo->RecordTime=(DWORD)pRecordManager->GetRecordTime();
+			pInfo->PauseTime=(DWORD)pRecordManager->GetPauseTime();
 			if (pInfo->Size>TVTest::RECORDSTATUSINFO_SIZE_V1) {
 				if (pInfo->pszFileName!=NULL && pInfo->MaxFileName>0) {
 					if (pRecordManager->IsRecording()) {
-						::lstrcpyn(pInfo->pszFileName,
-								   pRecordManager->GetRecordTask()->GetFileName(),
-								   pInfo->MaxFileName);
+						pRecordManager->GetRecordTask()->GetFileName(
+							pInfo->pszFileName,pInfo->MaxFileName);
 					} else {
 						pInfo->pszFileName[0]='\0';
 					}
@@ -2141,7 +3359,7 @@ LRESULT CPlugin::OnPluginMessage(WPARAM wParam,LPARAM lParam)
 
 	case TVTest::MESSAGE_SETVOLUME:
 		{
-			CUICore *pUICore=GetAppClass().GetUICore();
+			CUICore *pUICore=&GetAppClass().UICore;
 			int Volume=(int)pParam->lParam1;
 
 			if (Volume<0)
@@ -2150,24 +3368,40 @@ LRESULT CPlugin::OnPluginMessage(WPARAM wParam,LPARAM lParam)
 		}
 
 	case TVTest::MESSAGE_SETSTEREOMODE:
-		return GetAppClass().GetUICore()->SetStereoMode((int)pParam->lParam1);
+#if 0	// ver.0.9.0 より前
+		return GetAppClass().UICore.SetStereoMode(static_cast<CAudioDecFilter::StereoMode>(pParam->lParam1));
+#else
+		{
+			CAudioDecFilter::DualMonoMode Mode;
+
+			switch ((int)pParam->lParam1) {
+			case TVTest::STEREOMODE_STEREO:	Mode=CAudioDecFilter::DUALMONO_BOTH;	break;
+			case TVTest::STEREOMODE_LEFT:	Mode=CAudioDecFilter::DUALMONO_MAIN;	break;
+			case TVTest::STEREOMODE_RIGHT:	Mode=CAudioDecFilter::DUALMONO_SUB;		break;
+			default:
+				return FALSE;
+			}
+
+			return GetAppClass().UICore.SetDualMonoMode(Mode);
+		}
+#endif
 
 	case TVTest::MESSAGE_SETFULLSCREEN:
-		return GetAppClass().GetUICore()->SetFullscreen(pParam->lParam1!=0);
+		return GetAppClass().UICore.SetFullscreen(pParam->lParam1!=0);
 
 	case TVTest::MESSAGE_SETPREVIEW:
-		return GetAppClass().GetUICore()->EnableViewer(pParam->lParam1!=0);
+		return GetAppClass().UICore.EnableViewer(pParam->lParam1!=0);
 
 	case TVTest::MESSAGE_SETSTANDBY:
-		return GetAppClass().GetUICore()->SetStandby(pParam->lParam1!=0);
+		return GetAppClass().UICore.SetStandby(pParam->lParam1!=0);
 
 	case TVTest::MESSAGE_SETALWAYSONTOP:
-		GetAppClass().GetUICore()->SetAlwaysOnTop(pParam->lParam1!=0);
+		GetAppClass().UICore.SetAlwaysOnTop(pParam->lParam1!=0);
 		return TRUE;
 
 	case TVTest::MESSAGE_GETTUNINGSPACE:
 		{
-			const CChannelManager *pChannelManager=GetAppClass().GetChannelManager();
+			const CChannelManager *pChannelManager=&GetAppClass().ChannelManager;
 			int *pNumSpaces=reinterpret_cast<int*>(pParam->lParam1);
 			int CurSpace;
 
@@ -2195,7 +3429,7 @@ LRESULT CPlugin::OnPluginMessage(WPARAM wParam,LPARAM lParam)
 			if (pInfo==NULL || pInfo->Size!=sizeof(TVTest::TuningSpaceInfo))
 				return FALSE;
 
-			const CTuningSpaceList *pTuningSpaceList=GetAppClass().GetChannelManager()->GetDriverTuningSpaceList();
+			const CTuningSpaceList *pTuningSpaceList=GetAppClass().ChannelManager.GetDriverTuningSpaceList();
 			LPCTSTR pszTuningSpaceName=pTuningSpaceList->GetTuningSpaceName(Index);
 
 			if (pszTuningSpaceName==NULL)
@@ -2207,7 +3441,7 @@ LRESULT CPlugin::OnPluginMessage(WPARAM wParam,LPARAM lParam)
 
 	case TVTest::MESSAGE_SETAUDIOSTREAM:
 		{
-			CUICore *pUICore=GetAppClass().GetUICore();
+			CUICore *pUICore=&GetAppClass().UICore;
 			int Index=(int)pParam->lParam1;
 
 			if (Index<0 || Index>=pUICore->GetNumAudioStreams()
@@ -2222,7 +3456,7 @@ LRESULT CPlugin::OnPluginMessage(WPARAM wParam,LPARAM lParam)
 			int MaxLength=(int)pParam->lParam2;
 			TCHAR szFileName[MAX_PATH];
 
-			if (!GetAppClass().GetCoreEngine()->GetDriverPath(szFileName,lengthof(szFileName)))
+			if (!GetAppClass().CoreEngine.GetDriverPath(szFileName,lengthof(szFileName)))
 				return 0;
 			if (pszPath!=NULL && MaxLength>0)
 				::lstrcpyn(pszPath,szFileName,MaxLength);
@@ -2233,13 +3467,217 @@ LRESULT CPlugin::OnPluginMessage(WPARAM wParam,LPARAM lParam)
 		{
 			LPCWSTR pszFileName=reinterpret_cast<LPCWSTR>(pParam->lParam1);
 
-			return GetAppClass().RelayRecord(pszFileName);
+			return GetAppClass().Core.RelayRecord(pszFileName);
 		}
 
 	case TVTest::MESSAGE_SETWINDOWMESSAGECALLBACK:
 		pParam->pPlugin->m_pMessageCallback=reinterpret_cast<TVTest::WindowMessageCallbackFunc>(pParam->lParam1);
 		pParam->pPlugin->m_pMessageCallbackClientData=reinterpret_cast<void*>(pParam->lParam2);
 		return TRUE;
+
+	case TVTest::MESSAGE_SETVIDEOSTREAM:
+		return GetAppClass().CoreEngine.m_DtvEngine.SetVideoStream((int)pParam->lParam1);
+
+	case TVTest::MESSAGE_SELECTCHANNEL:
+		{
+			const TVTest::ChannelSelectInfo *pInfo=
+				reinterpret_cast<const TVTest::ChannelSelectInfo*>(pParam->lParam1);
+
+			if (pInfo==NULL || pInfo->Size!=sizeof(TVTest::ChannelSelectInfo))
+				return FALSE;
+
+			CChannelInfo Channel;
+			unsigned int Flags;
+
+			Channel.SetSpace(pInfo->Space);
+			Channel.SetChannelIndex(pInfo->Channel);
+			Channel.SetNetworkID(pInfo->NetworkID);
+			Channel.SetTransportStreamID(pInfo->TransportStreamID);
+			Channel.SetServiceID(pInfo->ServiceID);
+			Flags=0;
+			if (pInfo->pszTuner==NULL)
+				Flags|=CAppCore::SELECT_CHANNEL_USE_CUR_TUNER;
+			if ((pInfo->Flags & TVTest::CHANNEL_SELECT_FLAG_STRICTSERVICE)!=0)
+				Flags|=CAppCore::SELECT_CHANNEL_STRICT_SERVICE;
+
+			return GetAppClass().Core.SelectChannel(pInfo->pszTuner,Channel,Flags);
+		}
+
+	case TVTest::MESSAGE_SET1SEGMODE:
+		return GetAppClass().Core.Set1SegMode(pParam->lParam1!=0,true);
+
+	case TVTest::MESSAGE_GETDPI:
+		{
+			TVTest::GetDPIInfo *pInfo=reinterpret_cast<TVTest::GetDPIInfo*>(pParam->lParam1);
+
+			if (pInfo==NULL)
+				return 0;
+
+			CAppMain &App=GetAppClass();
+
+			switch (pInfo->Type) {
+			case TVTest::DPI_TYPE_SYSTEM:
+				return TVTest::GetSystemDPI();
+
+			case TVTest::DPI_TYPE_WINDOW:
+				{
+					HWND hwndRoot;
+					const TVTest::Style::CStyleScaling *pStyleScaling=NULL;
+
+					if (pInfo->hwnd==NULL || (hwndRoot=::GetAncestor(pInfo->hwnd,GA_ROOT))==App.MainWindow.GetHandle())
+						pStyleScaling=App.UICore.GetSkin()->GetUIBase()->GetStyleScaling();
+					else if (hwndRoot==App.UICore.GetSkin()->GetFullscreenWindow())
+						pStyleScaling=App.UICore.GetSkin()->GetUIBase()->GetStyleScaling();
+					else if (hwndRoot==App.Panel.Frame.GetHandle())
+						pStyleScaling=App.Panel.Frame.GetStyleScaling();
+					else if (hwndRoot==App.Epg.ProgramGuide.GetHandle())
+						pStyleScaling=App.Epg.ProgramGuide.GetStyleScaling();
+
+					if (pStyleScaling!=NULL)
+						return pStyleScaling->GetDPI();
+
+					return TVTest::GetWindowDPI(hwndRoot);
+				}
+
+			case TVTest::DPI_TYPE_RECT:
+			case TVTest::DPI_TYPE_POINT:
+			case TVTest::DPI_TYPE_MONITOR:
+				if ((pInfo->Flags & TVTest::DPI_FLAG_FORCED)!=0
+						&& App.StyleManager.GetForcedDPI()>0)
+					return App.StyleManager.GetForcedDPI();
+
+				if (Util::OS::IsWindows8_1OrLater()) {
+					HMONITOR hMonitor;
+
+					switch (pInfo->Type) {
+					case TVTest::DPI_TYPE_RECT:
+						hMonitor=::MonitorFromRect(&pInfo->Rect,MONITOR_DEFAULTTONULL);
+						break;
+					case TVTest::DPI_TYPE_POINT:
+						hMonitor=::MonitorFromPoint(pInfo->Point,MONITOR_DEFAULTTONULL);
+						break;
+					case TVTest::DPI_TYPE_MONITOR:
+						hMonitor=pInfo->hMonitor;
+						break;
+					}
+
+					if (hMonitor!=NULL) {
+						int DPI=TVTest::GetMonitorDPI(hMonitor);
+						if (DPI!=0)
+							return DPI;
+					}
+				}
+				return TVTest::GetSystemDPI();
+			}
+
+			return 0;
+		}
+
+	case TVTest::MESSAGE_GETFONT:
+		{
+			TVTest::GetFontInfo *pInfo=reinterpret_cast<TVTest::GetFontInfo*>(pParam->lParam1);
+
+			if (pInfo==NULL || pInfo->Size!=sizeof(TVTest::GetFontInfo))
+				return FALSE;
+
+			CAppMain &App=GetAppClass();
+			TVTest::Style::Font Font;
+
+			if (::lstrcmpiW(pInfo->pszName,L"OSDFont")==0) {
+				Font.LogFont=*App.OSDOptions.GetOSDFont();
+			} else if (::lstrcmpiW(pInfo->pszName,L"PanelFont")==0) {
+				Font=App.PanelOptions.GetFont();
+			} else if (::lstrcmpiW(pInfo->pszName,L"ProgramGuideFont")==0) {
+				Font=App.ProgramGuideOptions.GetFont();
+			} else if (::lstrcmpiW(pInfo->pszName,L"StatusBarFont")==0) {
+				Font=App.StatusOptions.GetFont();
+			} else {
+				::ZeroMemory(&pInfo->LogFont,sizeof(LOGFONT));
+				return FALSE;
+			}
+
+			pInfo->LogFont=Font.LogFont;
+
+			if (pInfo->DPI!=0 && Font.Size.Unit==TVTest::Style::UNIT_POINT) {
+				LONG Height=::MulDiv(Font.Size.Value,pInfo->DPI,72);
+				pInfo->LogFont.lfHeight=
+					Font.LogFont.lfHeight>=0 ? Height : -Height;
+			}
+		}
+		return TRUE;
+
+	case TVTest::MESSAGE_SHOWDIALOG:
+		{
+			TVTest::ShowDialogInfo *pInfo=
+				reinterpret_cast<TVTest::ShowDialogInfo*>(pParam->lParam1);
+
+			if (pInfo==NULL || pInfo->Size!=sizeof(TVTest::ShowDialogInfo))
+				return 0;
+
+			class CPluginDialog : public CBasicDialog
+			{
+				TVTest::ShowDialogInfo m_Info;
+				INT_PTR m_Result;
+
+			public:
+				CPluginDialog(TVTest::ShowDialogInfo *pInfo) : m_Info(*pInfo) {}
+
+				bool Show(HWND hwndOwner) override
+				{
+					m_Result=ShowDialog(m_Info.hwndOwner,m_Info.hinst,m_Info.pszTemplate);
+					return m_Result==IDOK;
+				}
+
+				bool Create(HWND hwndOwner) override
+				{
+					return CreateDialogWindow(m_Info.hwndOwner,m_Info.hinst,m_Info.pszTemplate);
+				}
+
+				INT_PTR GetResult() const { return m_Result; }
+				HWND GetHandle() const { return m_hDlg; }
+
+			private:
+				INT_PTR DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam) override
+				{
+					if (m_Info.pMessageFunc!=NULL) {
+						return m_Info.pMessageFunc(
+							hDlg,uMsg,wParam,
+							uMsg==WM_INITDIALOG ? (LPARAM)m_Info.pClientData : lParam,
+							m_Info.pClientData);
+					}
+					if (uMsg==WM_INITDIALOG)
+						return TRUE;
+					return FALSE;
+				}
+
+				void OnDestroyed() override
+				{
+					if (m_fModeless)
+						delete this;
+				}
+			};
+
+			INT_PTR Result;
+
+			if ((pInfo->Flags & TVTest::SHOW_DIALOG_FLAG_MODELESS)!=0) {
+				CPluginDialog *pDialog=new CPluginDialog(pInfo);
+				if ((pInfo->Flags & TVTest::SHOW_DIALOG_FLAG_POSITION)!=0)
+					pDialog->SetPosition(pInfo->Position.x,pInfo->Position.y);
+				if (!pDialog->Create(pInfo->hwndOwner)) {
+					delete pDialog;
+					return 0;
+				}
+				Result=(INT_PTR)pDialog->GetHandle();
+			} else {
+				CPluginDialog Dialog(pInfo);
+				if ((pInfo->Flags & TVTest::SHOW_DIALOG_FLAG_POSITION)!=0)
+					Dialog.SetPosition(pInfo->Position.x,pInfo->Position.y);
+				Dialog.Show(pInfo->hwndOwner);
+				Result=Dialog.GetResult();
+			}
+
+			return Result;
+		}
 
 #ifdef _DEBUG
 	default:
@@ -2248,21 +3686,6 @@ LRESULT CPlugin::OnPluginMessage(WPARAM wParam,LPARAM lParam)
 #endif
 	}
 	return 0;
-}
-
-
-bool CALLBACK CPlugin::GrabMediaCallback(const CMediaData *pMediaData, const PVOID pParam)
-{
-	CBlockLock Lock(&m_GrabberLock);
-	BYTE *pData=const_cast<BYTE*>(pMediaData->GetData());
-
-	for (size_t i=0;i<m_GrabberList.size();i++) {
-		CMediaGrabberInfo &Info=m_GrabberList[i];
-
-		if (!Info.m_CallbackInfo.Callback(pData,Info.m_CallbackInfo.pClientData))
-			return false;
-	}
-	return true;
 }
 
 
@@ -2278,10 +3701,99 @@ void CALLBACK CPlugin::AudioStreamCallback(short *pData,DWORD Samples,int Channe
 }
 
 
+static bool GetSettingString(TVTest::SettingInfo *pSetting,LPCWSTR pszString)
+{
+	if (pSetting->Type!=TVTest::SETTING_TYPE_STRING)
+		return false;
+	if (pSetting->Value.pszString!=NULL) {
+		if (pSetting->ValueSize==0)
+			return false;
+		::lstrcpynW(pSetting->Value.pszString,pszString,pSetting->ValueSize);
+		pSetting->ValueSize=(::lstrlenW(pSetting->Value.pszString)+1)*sizeof(WCHAR);
+	} else {
+		pSetting->ValueSize=(::lstrlenW(pszString)+1)*sizeof(WCHAR);
+	}
+	return true;
+}
+
+static bool GetSettingFont(TVTest::SettingInfo *pSetting,const LOGFONT *pFont)
+{
+	if (pSetting->Type!=TVTest::SETTING_TYPE_DATA)
+		return false;
+	if (pSetting->Value.pData!=NULL) {
+		if (pSetting->ValueSize!=sizeof(LOGFONT))
+			return false;
+		::CopyMemory(pSetting->Value.pData,pFont,sizeof(LOGFONT));
+	} else {
+		pSetting->ValueSize=sizeof(LOGFONT);
+	}
+	return true;
+}
+
+static bool GetSettingFont(TVTest::SettingInfo *pSetting,const TVTest::Style::Font &Font)
+{
+	TVTest::Style::Font f=Font;
+	GetAppClass().MainWindow.GetStyleScaling()->RealizeFontSize(&f);
+	return GetSettingFont(pSetting,&f.LogFont);
+}
+
+static bool GetSettingInt(TVTest::SettingInfo *pSetting,int Value)
+{
+	if (pSetting->Type!=TVTest::SETTING_TYPE_INT)
+		return false;
+	if (pSetting->ValueSize!=sizeof(int))
+		return false;
+	pSetting->Value.Int=Value;
+	return true;
+}
+
+bool CPlugin::OnGetSetting(TVTest::SettingInfo *pSetting) const
+{
+	if (pSetting==NULL || pSetting->pszName==NULL)
+		return false;
+
+	CAppMain &App=GetAppClass();
+
+	if (::lstrcmpiW(pSetting->pszName,L"DriverDirectory")==0) {
+		TCHAR szDirectory[MAX_PATH];
+		App.Core.GetDriverDirectory(szDirectory,lengthof(szDirectory));
+		return GetSettingString(pSetting,szDirectory);
+	} else if (::lstrcmpiW(pSetting->pszName,L"IniFilePath")==0) {
+		return GetSettingString(pSetting,App.GetIniFileName());
+	} else if (::lstrcmpiW(pSetting->pszName,L"RecordFolder")==0) {
+		return GetSettingString(pSetting,App.RecordOptions.GetSaveFolder());
+	} else if (::lstrcmpiW(pSetting->pszName,L"RecordFileName")==0) {
+		return GetSettingString(pSetting,App.RecordOptions.GetFileName());
+	} else if (::lstrcmpiW(pSetting->pszName,L"CaptureFolder")==0) {
+		return GetSettingString(pSetting,App.CaptureOptions.GetSaveFolder());
+	} else if (::lstrcmpiW(pSetting->pszName,L"CaptureFileName")==0) {
+		return GetSettingString(pSetting,App.CaptureOptions.GetFileName());
+	} else if (::lstrcmpiW(pSetting->pszName,L"OSDFont")==0) {
+		return GetSettingFont(pSetting,App.OSDOptions.GetOSDFont());
+	} else if (::lstrcmpiW(pSetting->pszName,L"PanelFont")==0) {
+		return GetSettingFont(pSetting,App.PanelOptions.GetFont());
+	} else if (::lstrcmpiW(pSetting->pszName,L"ProgramGuideFont")==0) {
+		return GetSettingFont(pSetting,App.ProgramGuideOptions.GetFont());
+	} else if (::lstrcmpiW(pSetting->pszName,L"StatusBarFont")==0) {
+		return GetSettingFont(pSetting,App.StatusOptions.GetFont());
+	}
+#ifdef _DEBUG
+	else {
+		TRACE(TEXT("CPlugin::OnGetSettings() : Unknown setting \"%s\"\n"),pSetting->pszName);
+	}
+#endif
+
+	return false;
+}
+
+
 
 
 CPlugin::CPluginCommandInfo::CPluginCommandInfo(int ID,LPCWSTR pszText,LPCWSTR pszName)
 	: m_ID(ID)
+	, m_Command(0)
+	, m_Flags(0)
+	, m_State(0)
 	, m_Text(pszText)
 	, m_Name(pszName)
 {
@@ -2290,9 +3802,24 @@ CPlugin::CPluginCommandInfo::CPluginCommandInfo(int ID,LPCWSTR pszText,LPCWSTR p
 
 CPlugin::CPluginCommandInfo::CPluginCommandInfo(const TVTest::CommandInfo &Info)
 	: m_ID(Info.ID)
+	, m_Command(0)
+	, m_Flags(0)
+	, m_State(0)
 	, m_Text(Info.pszText)
 	, m_Name(Info.pszName)
 {
+}
+
+
+CPlugin::CPluginCommandInfo::CPluginCommandInfo(const TVTest::PluginCommandInfo &Info)
+	: m_ID(Info.ID)
+	, m_Command(0)
+	, m_Flags(Info.Flags)
+	, m_State(Info.State)
+	, m_Text(Info.pszText)
+	, m_Name(Info.pszName)
+{
+	m_Icon.Create(Info.hbmIcon);
 }
 
 
@@ -2305,6 +3832,548 @@ CPlugin::CProgramGuideCommand::CProgramGuideCommand(const TVTest::ProgramGuideCo
 	: CPluginCommandInfo(Info.ID,Info.pszText,Info.pszName)
 	, m_Type(Info.Type)
 {
+}
+
+
+
+
+CPlugin::CStreamGrabber::CStreamGrabber(TVTest::StreamCallbackFunc Callback,void *pClientData)
+	: m_Callback(Callback)
+	, m_pClientData(pClientData)
+{
+}
+
+
+void CPlugin::CStreamGrabber::SetClientData(void *pClientData)
+{
+	m_pClientData=pClientData;
+}
+
+
+bool CPlugin::CStreamGrabber::OnInputMedia(CMediaData *pMediaData)
+{
+	return m_Callback(pMediaData->GetData(),m_pClientData)!=FALSE;
+}
+
+
+
+
+CPlugin::CPluginStatusItem::CPluginStatusItem(CPlugin *pPlugin,StatusItem *pItem)
+	: CStatusItem(pItem->ItemID,
+				  SizeValue(std::abs(pItem->DefaultWidth),
+							pItem->DefaultWidth>=0?SIZE_PIXEL:SIZE_EM))
+	, m_pPlugin(pPlugin)
+	, m_pItem(pItem)
+{
+	m_MinWidth=pItem->MinWidth;
+	m_MaxWidth=pItem->MaxWidth;
+	m_MinHeight=pItem->MinHeight;
+	m_fVisible=(pItem->State & TVTest::STATUS_ITEM_STATE_VISIBLE)!=0;
+	ApplyItemStyle();
+
+	m_IDText=::PathFindFileName(m_pPlugin->GetFileName());
+	m_IDText+=_T(':');
+	m_IDText+=pItem->IDText;
+
+	pItem->pItem=this;
+}
+
+
+CPlugin::CPluginStatusItem::~CPluginStatusItem()
+{
+	if (m_pItem!=NULL)
+		m_pItem->pItem=NULL;
+}
+
+
+void CPlugin::CPluginStatusItem::Draw(
+	HDC hdc,const RECT &ItemRect,const RECT &DrawRect,unsigned int Flags)
+{
+	NotifyDraw(hdc,ItemRect,DrawRect,Flags);
+}
+
+
+void CPlugin::CPluginStatusItem::OnLButtonDown(int x,int y)
+{
+	NotifyMouseEvent(TVTest::STATUS_ITEM_MOUSE_ACTION_LDOWN,x,y);
+}
+
+
+void CPlugin::CPluginStatusItem::OnLButtonUp(int x,int y)
+{
+	NotifyMouseEvent(TVTest::STATUS_ITEM_MOUSE_ACTION_LUP,x,y);
+}
+
+
+void CPlugin::CPluginStatusItem::OnLButtonDoubleClick(int x,int y)
+{
+	NotifyMouseEvent(TVTest::STATUS_ITEM_MOUSE_ACTION_LDOUBLECLICK,x,y);
+}
+
+
+void CPlugin::CPluginStatusItem::OnRButtonDown(int x,int y)
+{
+	NotifyMouseEvent(TVTest::STATUS_ITEM_MOUSE_ACTION_RDOWN,x,y);
+}
+
+
+void CPlugin::CPluginStatusItem::OnRButtonUp(int x,int y)
+{
+	NotifyMouseEvent(TVTest::STATUS_ITEM_MOUSE_ACTION_RUP,x,y);
+}
+
+
+void CPlugin::CPluginStatusItem::OnRButtonDoubleClick(int x,int y)
+{
+	NotifyMouseEvent(TVTest::STATUS_ITEM_MOUSE_ACTION_RDOUBLECLICK,x,y);
+}
+
+
+void CPlugin::CPluginStatusItem::OnMButtonDown(int x,int y)
+{
+	NotifyMouseEvent(TVTest::STATUS_ITEM_MOUSE_ACTION_MDOWN,x,y);
+}
+
+
+void CPlugin::CPluginStatusItem::OnMButtonUp(int x,int y)
+{
+	NotifyMouseEvent(TVTest::STATUS_ITEM_MOUSE_ACTION_MUP,x,y);
+}
+
+
+void CPlugin::CPluginStatusItem::OnMButtonDoubleClick(int x,int y)
+{
+	NotifyMouseEvent(TVTest::STATUS_ITEM_MOUSE_ACTION_MDOUBLECLICK,x,y);
+}
+
+
+void CPlugin::CPluginStatusItem::OnMouseMove(int x,int y)
+{
+	NotifyMouseEvent(TVTest::STATUS_ITEM_MOUSE_ACTION_MOVE,x,y);
+}
+
+
+bool CPlugin::CPluginStatusItem::OnMouseWheel(int x,int y,bool fHorz,int Delta,int *pCommand)
+{
+	return NotifyMouseEvent(fHorz?
+								TVTest::STATUS_ITEM_MOUSE_ACTION_HORZWHEEL:
+								TVTest::STATUS_ITEM_MOUSE_ACTION_WHEEL,
+							x,y,Delta)!=0;
+}
+
+
+void CPlugin::CPluginStatusItem::OnVisibilityChanged()
+{
+	if (m_pItem!=NULL) {
+		if (m_fVisible)
+			m_pItem->State|=TVTest::STATUS_ITEM_STATE_VISIBLE;
+		else
+			m_pItem->State&=~TVTest::STATUS_ITEM_STATE_VISIBLE;
+
+		if (m_pPlugin!=NULL) {
+			TVTest::StatusItemEventInfo Info;
+			Info.ID=m_pItem->ID;
+			Info.Event=TVTest::STATUS_ITEM_EVENT_VISIBILITYCHANGED;
+			Info.Param=m_fVisible;
+			m_pPlugin->SendEvent(TVTest::EVENT_STATUSITEM_NOTIFY,
+								 reinterpret_cast<LPARAM>(&Info),0);
+		}
+	}
+}
+
+
+void CPlugin::CPluginStatusItem::OnFocus(bool fFocus)
+{
+	if (m_pItem!=NULL) {
+		if (fFocus)
+			m_pItem->State|=TVTest::STATUS_ITEM_STATE_HOT;
+		else
+			m_pItem->State&=~TVTest::STATUS_ITEM_STATE_HOT;
+
+		if (m_pPlugin!=NULL) {
+			TVTest::StatusItemEventInfo Info;
+			Info.ID=m_pItem->ID;
+			Info.Event=fFocus?
+				TVTest::STATUS_ITEM_EVENT_ENTER:
+				TVTest::STATUS_ITEM_EVENT_LEAVE;
+			Info.Param=0;
+			m_pPlugin->SendEvent(TVTest::EVENT_STATUSITEM_NOTIFY,
+								 reinterpret_cast<LPARAM>(&Info),0);
+		}
+	}
+}
+
+
+void CPlugin::CPluginStatusItem::OnSizeChanged()
+{
+	if (m_pPlugin!=NULL && m_pItem!=NULL) {
+		TVTest::StatusItemEventInfo Info;
+		Info.ID=m_pItem->ID;
+		Info.Event=TVTest::STATUS_ITEM_EVENT_SIZECHANGED;
+		Info.Param=0;
+		m_pPlugin->SendEvent(TVTest::EVENT_STATUSITEM_NOTIFY,
+							 reinterpret_cast<LPARAM>(&Info),0);
+	}
+}
+
+
+void CPlugin::CPluginStatusItem::OnCaptureReleased()
+{
+	NotifyMouseEvent(TVTest::STATUS_ITEM_MOUSE_ACTION_CAPTURERELEASE,0,0);
+}
+
+
+void CPlugin::CPluginStatusItem::OnFontChanged()
+{
+	if (m_pPlugin!=NULL && m_pItem!=NULL) {
+		TVTest::StatusItemEventInfo Info;
+		Info.ID=m_pItem->ID;
+		Info.Event=TVTest::STATUS_ITEM_EVENT_FONTCHANGED;
+		Info.Param=0;
+		m_pPlugin->SendEvent(TVTest::EVENT_STATUSITEM_NOTIFY,
+							 reinterpret_cast<LPARAM>(&Info),0);
+	}
+}
+
+
+void CPlugin::CPluginStatusItem::DetachItem()
+{
+	m_pPlugin=NULL;
+	m_pItem=NULL;
+}
+
+
+HWND CPlugin::CPluginStatusItem::GetWindowHandle() const
+{
+	if (m_pStatus==NULL)
+		return NULL;
+	return m_pStatus->GetHandle();
+}
+
+
+void CPlugin::CPluginStatusItem::RealizeStyle()
+{
+	if (m_pPlugin!=NULL && m_pItem!=NULL) {
+		TVTest::StatusItemEventInfo Info;
+		Info.ID=m_pItem->ID;
+		Info.Event=TVTest::STATUS_ITEM_EVENT_STYLECHANGED;
+		Info.Param=0;
+		m_pPlugin->SendEvent(TVTest::EVENT_STATUSITEM_NOTIFY,
+							 reinterpret_cast<LPARAM>(&Info),0);
+	}
+}
+
+
+void CPlugin::CPluginStatusItem::ApplyItemStyle()
+{
+	if (m_pItem!=NULL) {
+		m_Style=0;
+		if ((m_pItem->Style & TVTest::STATUS_ITEM_STYLE_VARIABLEWIDTH)!=0)
+			m_Style|=STYLE_VARIABLEWIDTH;
+		if ((m_pItem->Style & TVTest::STATUS_ITEM_STYLE_FULLROW)!=0)
+			m_Style|=STYLE_FULLROW;
+		if ((m_pItem->Style & TVTest::STATUS_ITEM_STYLE_FORCEFULLROW)!=0)
+			m_Style|=STYLE_FULLROW | STYLE_FORCEFULLROW;
+	}
+}
+
+
+void CPlugin::CPluginStatusItem::NotifyDraw(
+	HDC hdc,const RECT &ItemRect,const RECT &DrawRect,unsigned int Flags)
+{
+	if (m_pPlugin!=NULL && m_pItem!=NULL) {
+		TVTest::StatusItemDrawInfo Info;
+
+		Info.ID=m_pItem->ID;
+		Info.Flags=0;
+		if ((Flags & DRAW_PREVIEW)!=0)
+			Info.Flags|=TVTest::STATUS_ITEM_DRAW_FLAG_PREVIEW;
+		Info.State=0;
+		if ((Flags & DRAW_HIGHLIGHT)!=0) {
+			Info.State|=TVTest::STATUS_ITEM_DRAW_STATE_HOT;
+			Info.pszStyle=L"status-bar.item.hot";
+		} else if ((Flags & DRAW_BOTTOM)!=0) {
+			Info.pszStyle=L"status-bar.item.bottom";
+		} else {
+			Info.pszStyle=L"status-bar.item";
+		}
+		Info.hdc=hdc;
+		Info.ItemRect=ItemRect;
+		Info.DrawRect=DrawRect;
+		Info.Color=::GetTextColor(hdc);
+
+		m_pPlugin->SendEvent(TVTest::EVENT_STATUSITEM_DRAW,
+							 reinterpret_cast<LPARAM>(&Info),0);
+	}
+}
+
+
+LRESULT CPlugin::CPluginStatusItem::NotifyMouseEvent(UINT Action,int x,int y,int WheelDelta)
+{
+	if (m_pPlugin!=NULL && m_pItem!=NULL) {
+		TVTest::StatusItemMouseEventInfo Info;
+
+		Info.ID=m_pItem->ID;
+		Info.Action=Action;
+		Info.hwnd=m_pStatus->GetHandle();
+		Info.CursorPos.x=x;
+		Info.CursorPos.y=y;
+		GetRect(&Info.ItemRect);
+		Info.CursorPos.x+=Info.ItemRect.left;
+		Info.CursorPos.y+=Info.ItemRect.top;
+		GetClientRect(&Info.ContentRect);
+		Info.WheelDelta=WheelDelta;
+
+		return m_pPlugin->SendEvent(TVTest::EVENT_STATUSITEM_MOUSE,
+									reinterpret_cast<LPARAM>(&Info),0);
+	}
+
+	return 0;
+}
+
+
+
+
+bool CPlugin::CPluginPanelItem::m_fInitialized=false;
+
+
+CPlugin::CPluginPanelItem::CPluginPanelItem(CPlugin *pPlugin,PanelItem *pItem)
+	: m_pPlugin(pPlugin)
+	, m_pItem(pItem)
+	, m_hwndItem(NULL)
+{
+	pItem->pItem=this;
+}
+
+
+CPlugin::CPluginPanelItem::~CPluginPanelItem()
+{
+	if (m_pItem!=NULL)
+		m_pItem->pItem=NULL;
+}
+
+
+bool CPlugin::CPluginPanelItem::Create(HWND hwndParent,DWORD Style,DWORD ExStyle,int ID)
+{
+	static const LPCTSTR CLASS_NAME=TEXT("TVTest Plugin Panel");
+
+	if (m_pPlugin==NULL || m_pItem==NULL)
+		return false;
+
+	HINSTANCE hinst=GetAppClass().GetInstance();
+
+	if (!m_fInitialized) {
+		WNDCLASS wc;
+
+		wc.style=0;
+		wc.lpfnWndProc=WndProc;
+		wc.cbClsExtra=0;
+		wc.cbWndExtra=0;
+		wc.hInstance=hinst;
+		wc.hIcon=NULL;
+		wc.hCursor=::LoadCursor(NULL,IDC_ARROW);
+		wc.hbrBackground=NULL;
+		wc.lpszMenuName=NULL;
+		wc.lpszClassName=CLASS_NAME;
+		if (::RegisterClass(&wc)==0)
+			return false;
+		m_fInitialized=true;
+	}
+
+	return CreateBasicWindow(hwndParent,Style,ExStyle,ID,
+							 CLASS_NAME,m_pItem->Title.c_str(),hinst);
+}
+
+
+void CPlugin::CPluginPanelItem::DetachItem()
+{
+	m_pPlugin=NULL;
+	m_pItem=NULL;
+	m_hwndItem=NULL;
+}
+
+
+LRESULT CPlugin::CPluginPanelItem::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
+{
+	switch (uMsg) {
+	case WM_CREATE:
+		{
+			TVTest::PanelItemCreateEventInfo CreateEvent;
+
+			CreateEvent.EventInfo.ID=m_pItem->ID;
+			CreateEvent.EventInfo.Event=TVTest::PANEL_ITEM_EVENT_CREATE;
+			GetAppClass().Panel.Form.GetPageClientRect(&CreateEvent.ItemRect);
+			CreateEvent.hwndParent=hwnd;
+			CreateEvent.hwndItem=NULL;
+
+			if (m_pPlugin->SendEvent(TVTest::EVENT_PANELITEM_NOTIFY,
+									 reinterpret_cast<LPARAM>(&CreateEvent),0)!=0)
+				m_hwndItem=CreateEvent.hwndItem;
+		}
+		return 0;
+
+	case WM_SIZE:
+		if (m_hwndItem!=NULL)
+			::MoveWindow(m_hwndItem,0,0,LOWORD(lParam),HIWORD(lParam),TRUE);
+		return 0;
+
+	case WM_PAINT:
+		{
+			PAINTSTRUCT ps;
+
+			::BeginPaint(hwnd,&ps);
+			DrawUtil::Fill(ps.hdc,&ps.rcPaint,
+				GetAppClass().ColorSchemeOptions.GetColor(CColorScheme::COLOR_PANELBACK));
+			::EndPaint(hwnd,&ps);
+		}
+		return 0;
+
+	case WM_SETFOCUS:
+		if (m_hwndItem!=NULL)
+			::SetFocus(m_hwndItem);
+		return 0;
+	}
+
+	return ::DefWindowProc(hwnd,uMsg,wParam,lParam);
+}
+
+
+void CPlugin::CPluginPanelItem::RealizeStyle()
+{
+	if (m_pItem!=NULL && m_pPlugin!=NULL) {
+		TVTest::PanelItemEventInfo Info;
+		Info.ID=m_pItem->ID;
+		Info.Event=TVTest::PANEL_ITEM_EVENT_STYLECHANGED;
+		m_pPlugin->SendEvent(TVTest::EVENT_PANELITEM_NOTIFY,
+							 reinterpret_cast<LPARAM>(&Info),0);
+	}
+}
+
+
+bool CPlugin::CPluginPanelItem::SetFont(const TVTest::Style::Font &Font)
+{
+	if (m_pItem!=NULL && m_pPlugin!=NULL) {
+		TVTest::PanelItemEventInfo Info;
+		Info.ID=m_pItem->ID;
+		Info.Event=TVTest::PANEL_ITEM_EVENT_FONTCHANGED;
+		m_pPlugin->SendEvent(TVTest::EVENT_PANELITEM_NOTIFY,
+							 reinterpret_cast<LPARAM>(&Info),0);
+	}
+	return true;
+}
+
+
+void CPlugin::CPluginPanelItem::OnActivate()
+{
+	if (m_pItem!=NULL) {
+		m_pItem->State|=TVTest::PANEL_ITEM_STATE_ACTIVE;
+
+		if (m_pPlugin!=NULL) {
+			TVTest::PanelItemEventInfo Info;
+			Info.ID=m_pItem->ID;
+			Info.Event=TVTest::PANEL_ITEM_EVENT_ACTIVATE;
+			m_pPlugin->SendEvent(TVTest::EVENT_PANELITEM_NOTIFY,
+								 reinterpret_cast<LPARAM>(&Info),0);
+		}
+	}
+}
+
+
+void CPlugin::CPluginPanelItem::OnDeactivate()
+{
+	if (m_pItem!=NULL) {
+		m_pItem->State&=~TVTest::PANEL_ITEM_STATE_ACTIVE;
+
+		if (m_pPlugin!=NULL) {
+			TVTest::PanelItemEventInfo Info;
+			Info.ID=m_pItem->ID;
+			Info.Event=TVTest::PANEL_ITEM_EVENT_DEACTIVATE;
+			m_pPlugin->SendEvent(TVTest::EVENT_PANELITEM_NOTIFY,
+								 reinterpret_cast<LPARAM>(&Info),0);
+		}
+	}
+}
+
+
+void CPlugin::CPluginPanelItem::OnVisibilityChanged(bool fVisible)
+{
+	if (m_pItem!=NULL) {
+		if (fVisible)
+			m_pItem->State|=TVTest::PANEL_ITEM_STATE_ENABLED;
+		else
+			m_pItem->State&=~TVTest::PANEL_ITEM_STATE_ENABLED;
+
+		if (m_pPlugin!=NULL) {
+			TVTest::PanelItemEventInfo Info;
+			Info.ID=m_pItem->ID;
+			Info.Event=fVisible?
+				TVTest::PANEL_ITEM_EVENT_ENABLE:
+				TVTest::PANEL_ITEM_EVENT_DISABLE;
+			m_pPlugin->SendEvent(TVTest::EVENT_PANELITEM_NOTIFY,
+								 reinterpret_cast<LPARAM>(&Info),0);
+		}
+	}
+}
+
+
+void CPlugin::CPluginPanelItem::OnFormDelete()
+{
+	delete this;
+}
+
+
+bool CPlugin::CPluginPanelItem::DrawIcon(
+	HDC hdc,int x,int y,int Width,int Height,const TVTest::Theme::ThemeColor &Color)
+{
+	if (m_pItem==NULL || !m_pItem->Icon.IsCreated())
+		return false;
+
+	return m_pItem->Icon.Draw(hdc,x,y,Width,Height,0,0,0,0,Color);
+}
+
+
+bool CPlugin::CPluginPanelItem::NeedKeyboardFocus() const
+{
+	return m_pItem!=NULL && (m_pItem->Style & TVTest::PANEL_ITEM_STYLE_NEEDFOCUS)!=0;
+}
+
+
+
+
+void CPlugin::CVideoStreamCallback::OnStream(DWORD Format,const void *pData,SIZE_T Size)
+{
+	CBlockLock Lock(&CPlugin::m_VideoStreamLock);
+
+	for (auto it=CPlugin::m_VideoStreamCallbackList.begin();it!=CPlugin::m_VideoStreamCallbackList.end();++it) {
+		it->m_pCallback(Format,pData,Size,it->m_pClientData);
+	}
+}
+
+
+
+
+CPlugin::CGetVariable::CGetVariable(CPlugin *pPlugin)
+	: m_pPlugin(pPlugin)
+{
+}
+
+
+bool CPlugin::CGetVariable::GetVariable(LPCWSTR pszKeyword,TVTest::String *pValue)
+{
+	TVTest::GetVariableInfo Info;
+
+	Info.pszKeyword=pszKeyword;
+	Info.pszValue=nullptr;
+
+	if (!m_pPlugin->SendEvent(TVTest::EVENT_GETVARIABLE,reinterpret_cast<LPARAM>(&Info)))
+		return false;
+
+	if (Info.pszValue!=nullptr) {
+		*pValue=Info.pszValue;
+		std::free(Info.pszValue);
+	}
+
+	return true;
 }
 
 
@@ -2383,13 +4452,15 @@ bool CPluginManager::LoadPlugins(LPCTSTR pszDirectory,const std::vector<LPCTSTR>
 				App.AddLog(TEXT("%s を読み込みました。"),wfd.cFileName);
 				m_PluginList.push_back(pPlugin);
 			} else {
-				App.AddLog(TEXT("%s : %s"),
-						   wfd.cFileName,
-						   !IsStringEmpty(pPlugin->GetLastErrorText())?
-						   pPlugin->GetLastErrorText():
-						   TEXT("プラグインを読み込めません。"));
+				App.AddLog(
+					CLogItem::TYPE_ERROR,
+					TEXT("%s : %s"),
+					wfd.cFileName,
+					!IsStringEmpty(pPlugin->GetLastErrorText())?
+						pPlugin->GetLastErrorText():
+						TEXT("プラグインを読み込めません。"));
 				if (!IsStringEmpty(pPlugin->GetLastErrorAdvise()))
-					App.AddLog(TEXT("(%s)"),pPlugin->GetLastErrorAdvise());
+					App.AddLog(CLogItem::TYPE_ERROR,TEXT("(%s)"),pPlugin->GetLastErrorAdvise());
 				delete pPlugin;
 			}
 		} while (::FindNextFile(hFind,&wfd));
@@ -2468,6 +4539,38 @@ int CPluginManager::FindPluginByCommand(int Command) const
 }
 
 
+CPlugin *CPluginManager::GetPluginByCommand(int Command)
+{
+	int Index=FindPluginByCommand(Command);
+	if (Index<0)
+		return NULL;
+	return GetPlugin(Index);
+}
+
+
+CPlugin *CPluginManager::GetPluginByPluginCommand(LPCTSTR pszCommand,LPCTSTR *ppszCommandText)
+{
+	if (IsStringEmpty(pszCommand))
+		return NULL;
+
+	LPCTSTR pDelimiter=::StrChr(pszCommand,_T(':'));
+	if (pDelimiter==NULL || (pDelimiter-pszCommand)>=MAX_PATH)
+		return NULL;
+
+	TCHAR szFileName[MAX_PATH];
+	::lstrcpyn(szFileName,pszCommand,(int)((pDelimiter-pszCommand)+1));
+
+	int PluginIndex=FindPluginByFileName(szFileName);
+	if (PluginIndex<0)
+		return NULL;
+
+	if (ppszCommandText!=NULL)
+		*ppszCommandText=pDelimiter+1;
+
+	return m_PluginList[PluginIndex];
+}
+
+
 bool CPluginManager::DeletePlugin(int Index)
 {
 	if (Index<0 || (size_t)Index>=m_PluginList.size())
@@ -2487,9 +4590,11 @@ bool CPluginManager::SetMenu(HMENU hmenu) const
 		for (size_t i=0;i<m_PluginList.size();i++) {
 			const CPlugin *pPlugin=m_PluginList[i];
 
-			::AppendMenu(hmenu,MFT_STRING | MFS_ENABLED |
-						 (pPlugin->IsEnabled()?MFS_CHECKED:MFS_UNCHECKED),
-						 pPlugin->GetCommand(),pPlugin->GetPluginName());
+			if (!pPlugin->IsNoEnabledDisabled()) {
+				::AppendMenu(hmenu,MFT_STRING | MFS_ENABLED |
+							 (pPlugin->IsEnabled()?MFS_CHECKED:MFS_UNCHECKED),
+							 pPlugin->GetCommand(),pPlugin->GetPluginName());
+			}
 		}
 	} else {
 		::AppendMenu(hmenu,MFT_STRING | MFS_GRAYED,0,TEXT("なし"));
@@ -2500,20 +4605,13 @@ bool CPluginManager::SetMenu(HMENU hmenu) const
 
 bool CPluginManager::OnPluginCommand(LPCTSTR pszCommand)
 {
-	if (pszCommand==NULL)
+	LPCTSTR pszCommandText;
+	CPlugin *pPlugin=GetPluginByPluginCommand(pszCommand,&pszCommandText);
+
+	if (pPlugin==NULL)
 		return false;
 
-	LPCTSTR pDelimiter=::StrChr(pszCommand,_T(':'));
-	if (pDelimiter==NULL || (pDelimiter-pszCommand)>=MAX_PATH)
-		return false;
-
-	TCHAR szFileName[MAX_PATH];
-	::lstrcpyn(szFileName,pszCommand,(int)((pDelimiter-pszCommand)+1));
-
-	int PluginIndex=FindPluginByFileName(szFileName);
-	if (PluginIndex<0)
-		return false;
-	return m_PluginList[PluginIndex]->NotifyCommand(pDelimiter+1);
+	return pPlugin->NotifyCommand(pszCommandText);
 }
 
 
@@ -2583,129 +4681,66 @@ bool CPluginManager::SendProgramGuideProgramEvent(UINT Event,const CEventInfoDat
 }
 
 
-bool CPluginManager::SendChannelChangeEvent()
+bool CPluginManager::SendFilterGraphEvent(
+	UINT Event,CMediaViewer *pMediaViewer,IGraphBuilder *pGraphBuilder)
 {
-	return SendEvent(TVTest::EVENT_CHANNELCHANGE);
+	TVTest::FilterGraphInfo Info;
+
+	Info.Flags=0;
+	Info.VideoStreamType=pMediaViewer->GetVideoStreamType();
+	::ZeroMemory(Info.Reserved,sizeof(Info.Reserved));
+	Info.pGraphBuilder=pGraphBuilder;
+	return SendEvent(Event,reinterpret_cast<LPARAM>(&Info));
 }
 
 
-bool CPluginManager::SendServiceChangeEvent()
+void CPluginManager::OnTunerChanged()
 {
-	return SendEvent(TVTest::EVENT_SERVICECHANGE);
+	SendEvent(TVTest::EVENT_DRIVERCHANGE);
 }
 
 
-bool CPluginManager::SendDriverChangeEvent()
+void CPluginManager::OnTunerShutDown()
 {
-	return SendEvent(TVTest::EVENT_DRIVERCHANGE);
+	SendEvent(TVTest::EVENT_DRIVERCHANGE);
 }
 
 
-bool CPluginManager::SendServiceUpdateEvent()
+void CPluginManager::OnChannelChanged(unsigned int Status)
 {
-	return SendEvent(TVTest::EVENT_SERVICEUPDATE);
+	SendEvent(TVTest::EVENT_CHANNELCHANGE);
 }
 
 
-bool CPluginManager::SendRecordStatusChangeEvent()
+void CPluginManager::OnServiceChanged()
 {
-	const CRecordManager *pRecordManager=GetAppClass().GetRecordManager();
-	int Status;
-
-	if (pRecordManager->IsRecording()) {
-		if (pRecordManager->IsPaused())
-			Status=TVTest::RECORD_STATUS_PAUSED;
-		else
-			Status=TVTest::RECORD_STATUS_RECORDING;
-	} else {
-		Status=TVTest::RECORD_STATUS_NOTRECORDING;
-	}
-	return SendEvent(TVTest::EVENT_RECORDSTATUSCHANGE,Status);
+	SendEvent(TVTest::EVENT_SERVICECHANGE);
 }
 
 
-bool CPluginManager::SendFullscreenChangeEvent(bool fFullscreen)
+void CPluginManager::OnServiceInfoUpdated()
 {
-	return SendEvent(TVTest::EVENT_FULLSCREENCHANGE,fFullscreen);
+	SendEvent(TVTest::EVENT_SERVICEUPDATE);
 }
 
 
-bool CPluginManager::SendPreviewChangeEvent(bool fPreview)
+void CPluginManager::OnServiceListUpdated()
 {
-	return SendEvent(TVTest::EVENT_PREVIEWCHANGE,fPreview);
+	SendEvent(TVTest::EVENT_SERVICEUPDATE);
 }
 
 
-bool CPluginManager::SendVolumeChangeEvent(int Volume,bool fMute)
+void CPluginManager::OnRecordingStart(TVTest::AppEvent::RecordingStartInfo *pInfo)
 {
-	return SendEvent(TVTest::EVENT_VOLUMECHANGE,Volume,fMute);
-}
-
-
-bool CPluginManager::SendStereoModeChangeEvent(int StereoMode)
-{
-	return SendEvent(TVTest::EVENT_STEREOMODECHANGE,StereoMode);
-}
-
-
-bool CPluginManager::SendColorChangeEvent()
-{
-	return SendEvent(TVTest::EVENT_COLORCHANGE);
-}
-
-
-bool CPluginManager::SendStandbyEvent(bool fStandby)
-{
-	return SendEvent(TVTest::EVENT_STANDBY,fStandby);
-}
-
-
-bool CPluginManager::SendExecuteEvent(LPCTSTR pszCommandLine)
-{
-	return SendEvent(TVTest::EVENT_EXECUTE,reinterpret_cast<LPARAM>(pszCommandLine));
-}
-
-
-bool CPluginManager::SendResetEvent()
-{
-	return SendEvent(TVTest::EVENT_RESET);
-}
-
-
-bool CPluginManager::SendStatusResetEvent()
-{
-	return SendEvent(TVTest::EVENT_STATUSRESET);
-}
-
-
-bool CPluginManager::SendAudioStreamChangeEvent(int Stream)
-{
-	return SendEvent(TVTest::EVENT_AUDIOSTREAMCHANGE,Stream);
-}
-
-
-bool CPluginManager::SendSettingsChangeEvent()
-{
-	return SendEvent(TVTest::EVENT_SETTINGSCHANGE);
-}
-
-
-bool CPluginManager::SendCloseEvent()
-{
-	return SendEvent(TVTest::EVENT_CLOSE);
-}
-
-
-bool CPluginManager::SendStartRecordEvent(const CRecordManager *pRecordManager,LPTSTR pszFileName,int MaxFileName)
-{
+	const CRecordManager *pRecordManager=pInfo->pRecordManager;
 	TVTest::StartRecordInfo Info;
 
 	Info.Size=sizeof(TVTest::StartRecordInfo);
 	Info.Flags=0;
 	Info.Modified=0;
 	Info.Client=(DWORD)pRecordManager->GetClient();
-	Info.pszFileName=pszFileName;
-	Info.MaxFileName=MaxFileName;
+	Info.pszFileName=pInfo->pszFileName;
+	Info.MaxFileName=pInfo->MaxFileName;
 	CRecordManager::TimeSpecInfo TimeSpec;
 	pRecordManager->GetStartTimeSpec(&TimeSpec);
 	switch (TimeSpec.Type) {
@@ -2719,8 +4754,11 @@ bool CPluginManager::SendStartRecordEvent(const CRecordManager *pRecordManager,L
 		Info.StartTimeSpec=TVTest::RECORD_START_DELAY;
 		break;
 	}
-	if (TimeSpec.Type!=CRecordManager::TIME_NOTSPECIFIED)
-		pRecordManager->GetReservedStartTime(&Info.StartTime);
+	if (TimeSpec.Type!=CRecordManager::TIME_NOTSPECIFIED) {
+		SYSTEMTIME st;
+		pRecordManager->GetReservedStartTime(&st);
+		SystemTimeToLocalFileTime(&st,&Info.StartTime);
+	}
 	pRecordManager->GetStopTimeSpec(&TimeSpec);
 	switch (TimeSpec.Type) {
 	case CRecordManager::TIME_NOTSPECIFIED:
@@ -2728,26 +4766,196 @@ bool CPluginManager::SendStartRecordEvent(const CRecordManager *pRecordManager,L
 		break;
 	case CRecordManager::TIME_DATETIME:
 		Info.StopTimeSpec=TVTest::RECORD_STOP_TIME;
-		Info.StopTime.Time=TimeSpec.Time.DateTime;
+		SystemTimeToLocalFileTime(&TimeSpec.Time.DateTime,&Info.StopTime.Time);
 		break;
 	case CRecordManager::TIME_DURATION:
 		Info.StopTimeSpec=TVTest::RECORD_STOP_DURATION;
 		Info.StopTime.Duration=TimeSpec.Time.Duration;
 		break;
 	}
-	return SendEvent(TVTest::EVENT_STARTRECORD,reinterpret_cast<LPARAM>(&Info));
+
+	SendEvent(TVTest::EVENT_STARTRECORD,reinterpret_cast<LPARAM>(&Info));
 }
 
 
-bool CPluginManager::SendRelayRecordEvent(LPCTSTR pszFileName)
+void CPluginManager::OnRecordingStarted()
 {
-	return SendEvent(TVTest::EVENT_RELAYRECORD,reinterpret_cast<LPARAM>(pszFileName));
+	OnRecordingStateChanged();
 }
 
 
-bool CPluginManager::SendStartupDoneEvent()
+void CPluginManager::OnRecordingStopped()
 {
-	return SendEvent(TVTest::EVENT_STARTUPDONE);
+	OnRecordingStateChanged();
+}
+
+
+void CPluginManager::OnRecordingPaused()
+{
+	OnRecordingStateChanged();
+}
+
+
+void CPluginManager::OnRecordingResumed()
+{
+	OnRecordingStateChanged();
+}
+
+
+void CPluginManager::OnRecordingStateChanged()
+{
+	const CRecordManager *pRecordManager=&GetAppClass().RecordManager;
+	int Status;
+
+	if (pRecordManager->IsRecording()) {
+		if (pRecordManager->IsPaused())
+			Status=TVTest::RECORD_STATUS_PAUSED;
+		else
+			Status=TVTest::RECORD_STATUS_RECORDING;
+	} else {
+		Status=TVTest::RECORD_STATUS_NOTRECORDING;
+	}
+	SendEvent(TVTest::EVENT_RECORDSTATUSCHANGE,Status);
+}
+
+
+void CPluginManager::OnRecordingFileChanged(LPCTSTR pszFileName)
+{
+	SendEvent(TVTest::EVENT_RELAYRECORD,reinterpret_cast<LPARAM>(pszFileName));
+}
+
+
+void CPluginManager::On1SegModeChanged(bool f1SegMode)
+{
+	SendEvent(TVTest::EVENT_1SEGMODECHANGED,f1SegMode);
+}
+
+
+void CPluginManager::OnFullscreenChanged(bool fFullscreen)
+{
+	SendEvent(TVTest::EVENT_FULLSCREENCHANGE,fFullscreen);
+}
+
+
+void CPluginManager::OnPlaybackStateChanged(bool fPlayback)
+{
+	SendEvent(TVTest::EVENT_PREVIEWCHANGE,fPlayback);
+}
+
+
+void CPluginManager::OnVolumeChanged(int Volume)
+{
+	SendEvent(TVTest::EVENT_VOLUMECHANGE,Volume,false);
+}
+
+
+void CPluginManager::OnMuteChanged(bool fMute)
+{
+	SendEvent(TVTest::EVENT_VOLUMECHANGE,GetAppClass().UICore.GetVolume(),fMute);
+}
+
+
+void CPluginManager::OnDualMonoModeChanged(CAudioDecFilter::DualMonoMode Mode)
+{
+	int StereoMode;
+
+	switch (Mode) {
+	case CAudioDecFilter::DUALMONO_MAIN:
+		StereoMode=TVTest::STEREOMODE_LEFT;
+		break;
+	case CAudioDecFilter::DUALMONO_SUB:
+		StereoMode=TVTest::STEREOMODE_RIGHT;
+		break;
+	case CAudioDecFilter::DUALMONO_BOTH:
+		StereoMode=TVTest::STEREOMODE_STEREO;
+		break;
+	default:
+		return;
+	}
+
+	SendEvent(TVTest::EVENT_STEREOMODECHANGE,StereoMode);
+}
+
+
+void CPluginManager::OnStereoModeChanged(CAudioDecFilter::StereoMode Mode)
+{
+	int StereoMode;
+
+	switch (Mode) {
+	case CAudioDecFilter::STEREOMODE_STEREO:
+		StereoMode=TVTest::STEREOMODE_STEREO;
+		break;
+	case CAudioDecFilter::STEREOMODE_LEFT:
+		StereoMode=TVTest::STEREOMODE_LEFT;
+		break;
+	case CAudioDecFilter::STEREOMODE_RIGHT:
+		StereoMode=TVTest::STEREOMODE_RIGHT;
+		break;
+	default:
+		return;
+	}
+
+	SendEvent(TVTest::EVENT_STEREOMODECHANGE,StereoMode);
+}
+
+
+void CPluginManager::OnAudioStreamChanged(int Stream)
+{
+	SendEvent(TVTest::EVENT_AUDIOSTREAMCHANGE,Stream);
+}
+
+
+void CPluginManager::OnColorSchemeChanged()
+{
+	SendEvent(TVTest::EVENT_COLORCHANGE);
+}
+
+
+void CPluginManager::OnStandbyChanged(bool fStandby)
+{
+	SendEvent(TVTest::EVENT_STANDBY,fStandby);
+}
+
+
+void CPluginManager::OnExecute(LPCTSTR pszCommandLine)
+{
+	SendEvent(TVTest::EVENT_EXECUTE,reinterpret_cast<LPARAM>(pszCommandLine));
+}
+
+
+void CPluginManager::OnEngineReset()
+{
+	SendEvent(TVTest::EVENT_RESET);
+}
+
+
+void CPluginManager::OnStatisticsReset()
+{
+	SendEvent(TVTest::EVENT_STATUSRESET);
+}
+
+
+void CPluginManager::OnSettingsChanged()
+{
+	SendEvent(TVTest::EVENT_SETTINGSCHANGE);
+}
+
+
+void CPluginManager::OnClose()
+{
+	SendEvent(TVTest::EVENT_CLOSE);
+}
+
+
+void CPluginManager::OnStartupDone()
+{
+	SendEvent(TVTest::EVENT_STARTUPDONE);
+}
+
+
+void CPluginManager::OnFavoritesChanged()
+{
+	SendEvent(TVTest::EVENT_FAVORITESCHANGED);
 }
 
 
@@ -2915,6 +5123,62 @@ bool CPluginManager::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam,L
 }
 
 
+void CPluginManager::SendFilterGraphInitializeEvent(
+	CMediaViewer *pMediaViewer,IGraphBuilder *pGraphBuilder)
+{
+	SendFilterGraphEvent(TVTest::EVENT_FILTERGRAPH_INITIALIZE,pMediaViewer,pGraphBuilder);
+}
+
+
+void CPluginManager::SendFilterGraphInitializedEvent(
+	CMediaViewer *pMediaViewer,IGraphBuilder *pGraphBuilder)
+{
+	SendFilterGraphEvent(TVTest::EVENT_FILTERGRAPH_INITIALIZED,pMediaViewer,pGraphBuilder);
+}
+
+
+void CPluginManager::SendFilterGraphFinalizeEvent(
+	CMediaViewer *pMediaViewer,IGraphBuilder *pGraphBuilder)
+{
+	SendFilterGraphEvent(TVTest::EVENT_FILTERGRAPH_FINALIZE,pMediaViewer,pGraphBuilder);
+}
+
+
+void CPluginManager::SendFilterGraphFinalizedEvent(
+	CMediaViewer *pMediaViewer,IGraphBuilder *pGraphBuilder)
+{
+	SendFilterGraphEvent(TVTest::EVENT_FILTERGRAPH_FINALIZED,pMediaViewer,pGraphBuilder);
+}
+
+
+void CPluginManager::RegisterStatusItems()
+{
+	for (auto itr=m_PluginList.begin();itr!=m_PluginList.end();++itr)
+		(*itr)->RegisterStatusItems();
+}
+
+
+void CPluginManager::SendStatusItemCreatedEvent()
+{
+	for (auto itr=m_PluginList.begin();itr!=m_PluginList.end();++itr) 
+		(*itr)->SendStatusItemCreatedEvent();
+}
+
+
+void CPluginManager::SendStatusItemUpdateTimerEvent()
+{
+	for (auto itr=m_PluginList.begin();itr!=m_PluginList.end();++itr) 
+		(*itr)->SendStatusItemUpdateTimerEvent();
+}
+
+
+void CPluginManager::RegisterPanelItems()
+{
+	for (auto itr=m_PluginList.begin();itr!=m_PluginList.end();++itr)
+		(*itr)->RegisterPanelItems();
+}
+
+
 
 
 CPluginOptions::CPluginOptions(CPluginManager *pPluginManager)
@@ -3037,13 +5301,13 @@ INT_PTR CPluginOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 			lvc.fmt=LVCFMT_LEFT;
 			lvc.cx=120;
 			lvc.pszText=TEXT("ファイル名");
-			ListView_InsertColumn(hwndList,0,&lvc);
+			ListView_InsertColumn(hwndList,COLUMN_FILENAME,&lvc);
 			lvc.pszText=TEXT("プラグイン名");
-			ListView_InsertColumn(hwndList,1,&lvc);
+			ListView_InsertColumn(hwndList,COLUMN_PLUGINNAME,&lvc);
 			lvc.pszText=TEXT("説明");
-			ListView_InsertColumn(hwndList,2,&lvc);
+			ListView_InsertColumn(hwndList,COLUMN_DESCRIPTION,&lvc);
 			lvc.pszText=TEXT("著作権");
-			ListView_InsertColumn(hwndList,3,&lvc);
+			ListView_InsertColumn(hwndList,COLUMN_COPYRIGHT,&lvc);
 			for (i=0;i<m_pPluginManager->NumPlugins();i++) {
 				const CPlugin *pPlugin=m_pPluginManager->GetPlugin(i);
 				LV_ITEM lvi;
@@ -3065,7 +5329,7 @@ INT_PTR CPluginOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 				lvi.pszText=const_cast<LPTSTR>(pPlugin->GetCopyright());
 				ListView_SetItem(hwndList,&lvi);
 			}
-			for (i=0;i<4;i++)
+			for (i=0;i<NUM_COLUMNS;i++)
 				ListView_SetColumnWidth(hwndList,i,LVSCW_AUTOSIZE_USEHEADER);
 		}
 		return TRUE;
@@ -3186,4 +5450,17 @@ INT_PTR CPluginOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 	}
 
 	return FALSE;
+}
+
+
+void CPluginOptions::RealizeStyle()
+{
+	CBasicDialog::RealizeStyle();
+
+	if (m_hDlg!=NULL) {
+		HWND hwndList=::GetDlgItem(m_hDlg,IDC_PLUGIN_LIST);
+
+		for (int i=0;i<NUM_COLUMNS;i++)
+			ListView_SetColumnWidth(hwndList,i,LVSCW_AUTOSIZE_USEHEADER);
+	}
 }

@@ -1,12 +1,7 @@
 #include "stdafx.h"
 #include "TVTest.h"
 #include "BasicWindow.h"
-
-#ifdef _DEBUG
-#undef THIS_FILE
-static char THIS_FILE[]=__FILE__;
-#define new DEBUG_NEW
-#endif
+#include "Common/DebugDef.h"
 
 
 
@@ -42,7 +37,30 @@ bool CBasicWindow::SetPosition(int Left,int Top,int Width,int Height)
 	if (Width<0 || Height<0)
 		return false;
 	if (m_hwnd!=NULL) {
-		::MoveWindow(m_hwnd,Left,Top,Width,Height,TRUE);
+		if ((GetWindowStyle() & WS_CHILD)!=0
+				|| (!::IsZoomed(m_hwnd) && !::IsIconic(m_hwnd))) {
+			::MoveWindow(m_hwnd,Left,Top,Width,Height,TRUE);
+		} else {
+			WINDOWPLACEMENT wp;
+
+			wp.length=sizeof(WINDOWPLACEMENT);
+			::GetWindowPlacement(m_hwnd,&wp);
+			wp.rcNormalPosition.left=Left;
+			wp.rcNormalPosition.top=Top;
+			wp.rcNormalPosition.right=Left+Width;
+			wp.rcNormalPosition.bottom=Top+Height;
+			if ((GetWindowExStyle() & WS_EX_TOOLWINDOW)==0) {
+				HMONITOR hMonitor=::MonitorFromRect(&wp.rcNormalPosition,MONITOR_DEFAULTTONEAREST);
+				MONITORINFO mi;
+
+				mi.cbSize=sizeof(MONITORINFO);
+				::GetMonitorInfo(hMonitor,&mi);
+				::OffsetRect(&wp.rcNormalPosition,
+							 mi.rcMonitor.left-mi.rcWork.left,
+							 mi.rcMonitor.top-mi.rcWork.top);
+			}
+			::SetWindowPlacement(m_hwnd,&wp);
+		}
 	} else {
 		m_WindowPosition.Left=Left;
 		m_WindowPosition.Top=Top;
@@ -66,7 +84,7 @@ void CBasicWindow::GetPosition(int *pLeft,int *pTop,int *pWidth,int *pHeight) co
 	if (m_hwnd!=NULL) {
 		RECT rc;
 
-		if ((GetWindowStyle(m_hwnd)&WS_CHILD)!=0) {
+		if ((GetWindowStyle() & WS_CHILD)!=0) {
 			::GetWindowRect(m_hwnd,&rc);
 			::MapWindowPoints(NULL,::GetParent(m_hwnd),reinterpret_cast<POINT*>(&rc),2);
 			if (pLeft)
@@ -78,11 +96,11 @@ void CBasicWindow::GetPosition(int *pLeft,int *pTop,int *pWidth,int *pHeight) co
 			if (pHeight)
 				*pHeight=rc.bottom-rc.top;
 		} else {
-			WINDOWPLACEMENT wc;
+			WINDOWPLACEMENT wp;
 
-			wc.length=sizeof(WINDOWPLACEMENT);
-			::GetWindowPlacement(m_hwnd,&wc);
-			if (wc.showCmd==SW_SHOWNORMAL) {
+			wp.length=sizeof(WINDOWPLACEMENT);
+			::GetWindowPlacement(m_hwnd,&wp);
+			if (wp.showCmd==SW_SHOWNORMAL) {
 				// 通常表示時はGetWindowRectの方が座標変換の問題がないので確実
 				::GetWindowRect(m_hwnd,&rc);
 			} else {
@@ -90,22 +108,17 @@ void CBasicWindow::GetPosition(int *pLeft,int *pTop,int *pWidth,int *pHeight) co
 					WS_EX_TOOLWINDOWスタイルが付いていない場合は、
 					rcNormalPositionはワークスペース座標になる(仕様が意味不明...)
 				*/
-				if ((GetWindowExStyle(m_hwnd)&WS_EX_TOOLWINDOW)==0) {
-					/*
-						ワークスペース座標をスクリーン座標に変換
-						しかし、マルチモニタの時はどのモニタのワークスペース座標が
-						基準になっているのか不明...
-					*/
-					HMONITOR hMonitor=::MonitorFromWindow(m_hwnd,MONITOR_DEFAULTTONEAREST);
+				if ((GetWindowExStyle() & WS_EX_TOOLWINDOW)==0) {
+					HMONITOR hMonitor=::MonitorFromRect(&wp.rcNormalPosition,MONITOR_DEFAULTTONEAREST);
 					MONITORINFO mi;
 
 					mi.cbSize=sizeof(MONITORINFO);
 					::GetMonitorInfo(hMonitor,&mi);
-					::OffsetRect(&wc.rcNormalPosition,
+					::OffsetRect(&wp.rcNormalPosition,
 								 mi.rcWork.left-mi.rcMonitor.left,
 								 mi.rcWork.top-mi.rcMonitor.top);
 				}
-				rc=wc.rcNormalPosition;
+				rc=wp.rcNormalPosition;
 			}
 			if (pLeft)
 				*pLeft=rc.left;
@@ -240,14 +253,6 @@ bool CBasicWindow::GetClientSize(SIZE *pSize) const
 }
 
 
-bool CBasicWindow::CalcPositionFromClientRect(RECT *pRect) const
-{
-	if (m_hwnd==NULL)
-		return false;
-	return ::AdjustWindowRectEx(pRect,GetStyle(),FALSE,GetExStyle())!=FALSE;
-}
-
-
 bool CBasicWindow::SetParent(HWND hwnd)
 {
 	return m_hwnd!=NULL && ::SetParent(m_hwnd,hwnd);
@@ -298,7 +303,7 @@ bool CBasicWindow::MoveToMonitorInside()
 }
 
 
-DWORD CBasicWindow::GetStyle() const
+DWORD CBasicWindow::GetWindowStyle() const
 {
 	if (m_hwnd==NULL)
 		return 0;
@@ -306,7 +311,7 @@ DWORD CBasicWindow::GetStyle() const
 }
 
 
-bool CBasicWindow::SetStyle(DWORD Style,bool fFrameChange)
+bool CBasicWindow::SetWindowStyle(DWORD Style,bool fFrameChange)
 {
 	if (m_hwnd==NULL)
 		return false;
@@ -318,7 +323,7 @@ bool CBasicWindow::SetStyle(DWORD Style,bool fFrameChange)
 }
 
 
-DWORD CBasicWindow::GetExStyle() const
+DWORD CBasicWindow::GetWindowExStyle() const
 {
 	if (m_hwnd==NULL)
 		return 0;
@@ -326,7 +331,7 @@ DWORD CBasicWindow::GetExStyle() const
 }
 
 
-bool CBasicWindow::SetExStyle(DWORD ExStyle,bool fFrameChange)
+bool CBasicWindow::SetWindowExStyle(DWORD ExStyle,bool fFrameChange)
 {
 	if (m_hwnd==NULL)
 		return false;
@@ -346,7 +351,7 @@ bool CBasicWindow::CreateBasicWindow(HWND hwndParent,DWORD Style,DWORD ExStyle,
 	m_hwnd=::CreateWindowEx(ExStyle,pszClassName,pszText,Style,
 		m_WindowPosition.Left,m_WindowPosition.Top,
 		m_WindowPosition.Width,m_WindowPosition.Height,
-		hwndParent,reinterpret_cast<HMENU>(ID),hinst,this);
+		hwndParent,reinterpret_cast<HMENU>(static_cast<INT_PTR>(ID)),hinst,this);
 	return m_hwnd!=NULL;
 }
 
@@ -403,6 +408,37 @@ bool CBasicWindow::SendSizeMessage()
 	if (!::GetClientRect(m_hwnd,&rc))
 		return false;
 	::SendMessage(m_hwnd,WM_SIZE,0,MAKELONG(rc.right,rc.bottom));
+	return true;
+}
+
+
+bool CBasicWindow::SetOpacity(int Opacity,bool fClearLayered)
+{
+	if (Opacity<0 || Opacity>255 || m_hwnd==NULL)
+		return false;
+
+	// 子ウィンドウをレイヤードウィンドウにできるのは Windows 8 以降
+	if ((GetWindowStyle() & WS_CHILD)!=0 && !Util::OS::IsWindows8OrLater())
+		return false;
+
+	DWORD ExStyle=GetWindowExStyle();
+
+	if (Opacity<255) {
+		if ((ExStyle & WS_EX_LAYERED)==0)
+			SetWindowExStyle(ExStyle | WS_EX_LAYERED);
+		if (!::SetLayeredWindowAttributes(m_hwnd,0,(BYTE)Opacity,LWA_ALPHA))
+			return false;
+	} else {
+		if ((ExStyle & WS_EX_LAYERED)!=0) {
+			if (fClearLayered) {
+				SetWindowExStyle(ExStyle ^ WS_EX_LAYERED);
+				Redraw(NULL,RDW_ERASE | RDW_INVALIDATE | RDW_FRAME | RDW_ALLCHILDREN);
+			} else {
+				::SetLayeredWindowAttributes(m_hwnd,0,255,LWA_ALPHA);
+			}
+		}
+	}
+
 	return true;
 }
 

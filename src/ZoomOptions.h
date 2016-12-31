@@ -5,6 +5,7 @@
 #include "Command.h"
 #include "Settings.h"
 #include "Dialog.h"
+#include "ListView.h"
 
 
 class CZoomOptions
@@ -22,7 +23,7 @@ public:
 		int Rate;
 		int Factor;
 
-		int GetPercentage() const { return Factor!=0?Rate*100/Factor:0; }
+		int GetPercentage() const { return Factor!=0?::MulDiv(Rate,100,Factor):0; }
 	};
 
 	struct ZoomSize {
@@ -66,13 +67,14 @@ private:
 	int m_Order[NUM_ZOOM_COMMANDS];
 	bool m_fChanging;
 	ZoomInfo m_ZoomSettingList[NUM_ZOOM_COMMANDS];
+	TVTest::CListView m_ItemListView;
 
 	int GetIndexByCommand(int Command) const;
 	void FormatCommandText(int Command,const ZoomInfo &Info,LPTSTR pszText,int MaxLength) const;
 
 	void SetItemState(HWND hDlg);
-	int GetItemIndex(HWND hwndList,int Item);
-	void UpdateItemText(HWND hDlg,int Item);
+	int GetItemIndex(int Item);
+	void UpdateItemText(int Item);
 
 // CBasicDialog
 	INT_PTR DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam) override;

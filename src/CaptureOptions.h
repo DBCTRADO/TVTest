@@ -53,6 +53,8 @@ public:
 // CBasicDialog
 	bool Create(HWND hwndOwner) override;
 // CCaptureOptions
+	LPCTSTR GetSaveFolder() const { return m_szSaveFolder; }
+	LPCTSTR GetFileName() const { return m_FileName.c_str(); }
 	int GetSaveFormat() const { return m_SaveFormat; }
 	bool GetWriteComment() const { return m_fSetComment; }
 	bool SetPresetCaptureSize(int Size);
@@ -60,22 +62,22 @@ public:
 	int GetCaptureSizeType() const { return m_CaptureSizeType; }
 	bool GetSizePercentage(int *pNum,int *pDenom) const;
 	bool GetCustomSize(int *pWidth,int *pHeight) const;
-	bool GenerateFileName(LPTSTR pszFileName,int MaxLength,const SYSTEMTIME *pst=NULL) const;
+	bool GenerateFileName(TVTest::String *pFileName,const CCaptureImage *pImage) const;
 	bool GetOptionText(LPTSTR pszOption,int MaxLength) const;
-	bool GetCommentText(LPTSTR pszComment,int MaxComment,
-						LPCTSTR pszChannelName,LPCTSTR pszEventName);
+	bool GetCommentText(TVTest::String *pComment,const CCaptureImage *pImage) const;
 	bool SaveImage(CCaptureImage *pImage);
 	int TranslateCommand(int Command);
 	bool OpenSaveFolder() const;
 
 private:
 	TCHAR m_szSaveFolder[MAX_PATH];
-	TCHAR m_szFileName[MAX_PATH];
+	TVTest::String m_FileName;
 	int m_SaveFormat;
 	int m_JPEGQuality;
 	int m_PNGCompressionLevel;
 	bool m_fCaptureSaveToFile;
 	bool m_fSetComment;
+	TVTest::String m_CommentFormat;
 	int m_CaptureSizeType;
 	int m_CaptureSize;
 	int m_CapturePercentage;
@@ -83,6 +85,8 @@ private:
 
 // CBasicDialog
 	INT_PTR DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
+
+	void UpdateFileNamePreview();
 
 	static const SIZE m_SizeList[SIZE_LAST+1];
 	struct PercentageType {

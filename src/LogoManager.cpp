@@ -3,12 +3,7 @@
 #include "AppMain.h"
 #include "LogoManager.h"
 #include "HelperClass/NFile.h"
-
-#ifdef _DEBUG
-#undef THIS_FILE
-static char THIS_FILE[]=__FILE__;
-#define new DEBUG_NEW
-#endif
+#include "Common/DebugDef.h"
 
 
 #define MAX_LOGO_BYTES 1296
@@ -426,7 +421,7 @@ HBITMAP CLogoManager::GetAssociatedLogoBitmap(WORD NetworkID,WORD ServiceID,BYTE
 }
 
 
-const CGdiPlus::CImage *CLogoManager::GetLogoImage(WORD NetworkID,WORD LogoID,BYTE LogoType)
+const TVTest::Graphics::CImage *CLogoManager::GetLogoImage(WORD NetworkID,WORD LogoID,BYTE LogoType)
 {
 	CBlockLock Lock(&m_Lock);
 	ULONGLONG Key=GetMapKey(NetworkID,LogoID,LogoType);
@@ -437,7 +432,7 @@ const CGdiPlus::CImage *CLogoManager::GetLogoImage(WORD NetworkID,WORD LogoID,BY
 }
 
 
-const CGdiPlus::CImage *CLogoManager::GetAssociatedLogoImage(WORD NetworkID,WORD ServiceID,BYTE LogoType)
+const TVTest::Graphics::CImage *CLogoManager::GetAssociatedLogoImage(WORD NetworkID,WORD ServiceID,BYTE LogoType)
 {
 	CBlockLock Lock(&m_Lock);
 	LogoIDMap::iterator itr=m_LogoIDMap.find(GetIDMapKey(NetworkID,ServiceID));
@@ -466,15 +461,34 @@ HICON CLogoManager::CreateLogoIcon(WORD NetworkID,WORD ServiceID,int Width,int H
 }
 
 
-bool CLogoManager::IsLogoAvailable(WORD NetworkID,WORD ServiceID,BYTE LogoType)
+bool CLogoManager::SaveLogoIcon(
+	WORD NetworkID,WORD ServiceID,BYTE LogoType,
+	int Width,int Height,LPCTSTR pszFileName)
+{
+	if (Width<1 || Height<1 || IsStringEmpty(pszFileName))
+		return false;
+
+	HBITMAP hbm=GetAssociatedLogoBitmap(NetworkID,ServiceID,LogoType);
+	if (hbm==NULL)
+		return false;
+
+	int ImageWidth=Height*16/10;
+	int ImageHeight=Width*10/16;
+	return SaveIconFromBitmap(pszFileName,hbm,Width,Height,
+							  min(Width,ImageWidth),
+							  min(Height,ImageHeight));
+}
+
+
+bool CLogoManager::IsLogoAvailable(WORD NetworkID,WORD ServiceID,BYTE LogoType) const
 {
 	CBlockLock Lock(&m_Lock);
-	LogoMap::iterator itr=m_LogoMap.find(GetMapKey(NetworkID,ServiceID,LogoType));
+	LogoMap::const_iterator itr=m_LogoMap.find(GetMapKey(NetworkID,ServiceID,LogoType));
 	return itr!=m_LogoMap.end();
 }
 
 
-DWORD CLogoManager::GetAvailableLogoType(WORD NetworkID,WORD ServiceID)
+DWORD CLogoManager::GetAvailableLogoType(WORD NetworkID,WORD ServiceID) const
 {
 	CBlockLock Lock(&m_Lock);
 
@@ -489,6 +503,34 @@ DWORD CLogoManager::GetAvailableLogoType(WORD NetworkID,WORD ServiceID)
 			Flags|=1<<i;
 	}
 	return Flags;
+}
+
+
+bool CLogoManager::GetLogoInfo(WORD NetworkID,WORD ServiceID,BYTE LogoType,LogoInfo *pInfo) const
+{
+	if (pInfo==NULL)
+		return false;
+
+	CBlockLock Lock(&m_Lock);
+
+	auto itrID=m_LogoIDMap.find(GetIDMapKey(NetworkID,ServiceID));
+	if (itrID==m_LogoIDMap.end())
+		return false;
+	auto itrLogo=m_LogoMap.find(GetMapKey(NetworkID,itrID->second,LogoType));
+	if (itrLogo==m_LogoMap.end())
+		return false;
+
+	const CLogoData *pLogoData=itrLogo->second;
+
+	pInfo->NetworkID=NetworkID;
+	pInfo->LogoID=pLogoData->GetLogoID();
+	pInfo->LogoVersion=pLogoData->GetLogoVersion();
+	pInfo->LogoType=pLogoData->GetLogoType();
+	SYSTEMTIME st;
+	EpgTimeToUtc(&pLogoData->GetTime(),&st);
+	::SystemTimeToFileTime(&st,&pInfo->UpdatedTime);
+
+	return true;
 }
 
 
@@ -730,7 +772,7 @@ HBITMAP CLogoManager::CLogoData::GetBitmap(CImageCodec *pCodec)
 }
 
 
-const CGdiPlus::CImage *CLogoManager::CLogoData::GetImage(CImageCodec *pCodec)
+const TVTest::Graphics::CImage *CLogoManager::CLogoData::GetImage(CImageCodec *pCodec)
 {
 	if (!m_Image.IsCreated()) {
 		HGLOBAL hDIB=pCodec->LoadAribPngFromMemory(m_pData,m_DataSize);

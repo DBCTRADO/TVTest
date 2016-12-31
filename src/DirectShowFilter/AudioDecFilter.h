@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../BonTsEngine/MediaData.h"
+#include "../BonTsEngine/Simd.h"
 #include "AudioDecoder.h"
 #include "TsUtilClass.h"
 
@@ -30,12 +31,26 @@ public:
 	HRESULT Receive(IMediaSample *pSample) override;
 
 // CAudioDecFilter
+	enum DecoderType {
+		DECODER_UNDEFINED,
+		DECODER_AAC,
+		DECODER_MPEG_AUDIO,
+		DECODER_AC3
+	};
+
 	enum {
 		CHANNEL_DUALMONO	= 0x00,
 		CHANNEL_INVALID		= 0xFF
 	};
 
-	enum {
+	enum DualMonoMode {
+		DUALMONO_INVALID,
+		DUALMONO_MAIN,
+		DUALMONO_SUB,
+		DUALMONO_BOTH
+	};
+
+	enum StereoMode {
 		STEREOMODE_STEREO,
 		STEREOMODE_LEFT,
 		STEREOMODE_RIGHT
@@ -66,25 +81,44 @@ public:
 		bool operator!=(const SpdifOptions &Op) const { return !(*this==Op); }
 	};
 
+	struct SurroundMixingMatrix {
+		double Matrix[6][6];
+	};
+
+	struct DownMixMatrix {
+		double Matrix[2][6];
+	};
+
+	class IEventHandler
+	{
+	public:
+		virtual ~IEventHandler() {}
+		virtual void OnSpdifPassthroughError(HRESULT hr) {}
+	};
+
+	bool SetDecoderType(DecoderType Type);
 	BYTE GetCurrentChannelNum() const;
-	bool SetStereoMode(int StereoMode);
-	int GetStereoMode() const { return m_StereoMode; }
-	bool SetAutoStereoMode(int StereoMode);
-	int GetAutoStereoMode() const { return m_AutoStereoMode; }
+	bool SetDualMonoMode(DualMonoMode Mode);
+	DualMonoMode GetDualMonoMode() const { return m_DualMonoMode; }
+	bool SetStereoMode(StereoMode Mode);
+	StereoMode GetStereoMode() const { return m_StereoMode; }
 	bool SetDownMixSurround(bool bDownMix);
 	bool GetDownMixSurround() const { return m_bDownMixSurround; }
+	bool SetSurroundMixingMatrix(const SurroundMixingMatrix *pMatrix);
+	bool SetDownMixMatrix(const DownMixMatrix *pMatrix);
 	bool SetGainControl(bool bGainControl, float Gain = 1.0f, float SurroundGain = 1.0f);
 	bool GetGainControl(float *pGain = NULL, float *pSurroundGain = NULL) const;
 	bool SetJitterCorrection(bool bEnable);
 	bool GetJitterCorrection() const { return m_bJitterCorrection; }
+	bool SetDelay(LONGLONG Delay);
+	LONGLONG GetDelay() const { return m_Delay; }
 	bool SetSpdifOptions(const SpdifOptions *pOptions);
 	bool GetSpdifOptions(SpdifOptions *pOptions) const;
 	bool IsSpdifPassthrough() const { return m_bPassthrough; }
+	void SetEventHandler(IEventHandler *pEventHandler);
 
 	typedef void (CALLBACK *StreamCallback)(short *pData, DWORD Samples, int Channels, void *pParam);
 	bool SetStreamCallback(StreamCallback pCallback, void *pParam = NULL);
-
-	DWORD GetBitRate() const;
 
 private:
 	CAudioDecFilter(LPUNKNOWN pUnk, HRESULT *phr);
@@ -109,7 +143,8 @@ private:
 	HRESULT ProcessPcm(const BYTE *pData, const DWORD Samples,
 					   const CAudioDecoder::AudioInfo &Info,
 					   FrameSampleInfo *pSampleInfo);
-	HRESULT ProcessSpdif(FrameSampleInfo *pSampleInfo);
+	HRESULT ProcessSpdif(const CAudioDecoder::AudioInfo &Info,
+						 FrameSampleInfo *pSampleInfo);
 	HRESULT ReconnectOutput(long BufferSize, const CMediaType &mt);
 	void ResetSync();
 	DWORD MonoToStereo(short *pDst, const short *pSrc, const DWORD Samples);
@@ -117,32 +152,43 @@ private:
 	DWORD DownMixSurround(short *pDst, const short *pSrc, const DWORD Samples);
 	DWORD MapSurroundChannels(short *pDst, const short *pSrc, const DWORD Samples);
 	void GainControl(short *pBuffer, const DWORD Samples, const float Gain);
+	void SelectDualMonoStereoMode();
+	CAudioDecoder *CreateDecoder(DecoderType Type);
 
+	DecoderType m_DecoderType;
 	CAudioDecoder *m_pDecoder;
 	mutable CCritSec m_cPropLock;
 	CMediaType m_MediaType;
-	CMediaData m_OutData;
+	CSimdMediaData m_OutData;
 	BYTE m_CurChannelNum;
 	bool m_bDualMono;
 
-	int m_StereoMode;
-	int m_AutoStereoMode;
+	DualMonoMode m_DualMonoMode;
+	StereoMode m_StereoMode;
 	bool m_bDownMixSurround;
+	bool m_bEnableCustomMixingMatrix;
+	SurroundMixingMatrix m_MixingMatrix;
+	bool m_bEnableCustomDownMixMatrix;
+	DownMixMatrix m_DownMixMatrix;
 
 	bool m_bGainControl;
 	float m_Gain;
 	float m_SurroundGain;
 
 	bool m_bJitterCorrection;
+	LONGLONG m_Delay;
+	LONGLONG m_DelayAdjustment;
 	REFERENCE_TIME m_StartTime;
 	LONGLONG m_SampleCount;
 	bool m_bDiscontinuity;
+	bool m_bInputDiscontinuity;
 
 	SpdifOptions m_SpdifOptions;
 	bool m_bPassthrough;
+	bool m_bPassthroughError;
+
+	IEventHandler *m_pEventHandler;
 
 	StreamCallback m_pStreamCallback;
 	void *m_pStreamCallbackParam;
-
-	CBitRateCalculator m_BitRateCalculator;
 };

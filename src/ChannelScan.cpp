@@ -5,16 +5,9 @@
 #include "DialogUtil.h"
 #include "MessageDialog.h"
 #include "resource.h"
+#include "Help/HelpID.h"
+#include "Common/DebugDef.h"
 
-#ifdef _DEBUG
-#undef THIS_FILE
-static char THIS_FILE[]=__FILE__;
-#define new DEBUG_NEW
-#endif
-
-
-// 信号レベルを考慮する場合の閾値
-#define SIGNAL_LEVEL_THRESHOLD	7.0f
 
 // スキャンスレッドから送られるメッセージ
 #define WM_APP_BEGINSCAN	(WM_APP+0)
@@ -137,80 +130,55 @@ INT_PTR CChannelPropDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPa
 
 
 
-// チャンネルリストのソートクラス
-class CChannelListSort
-{
-	static int CALLBACK CompareFunc(LPARAM lParam1,LPARAM lParam2,LPARAM lParamSort);
-
-public:
-	enum SortType {
-		SORT_NAME,
-		SORT_CHANNEL,
-		SORT_CHANNELNAME,
-		SORT_SERVICEID,
-		SORT_REMOTECONTROLKEYID
-	};
-
-	CChannelListSort();
-	CChannelListSort(SortType Type,bool fDescending=false);
-	void Sort(HWND hwndList);
-	bool UpdateChannelList(HWND hwndList,CChannelList *pList);
-
-	SortType m_Type;
-	bool m_fDescending;
-};
-
-
-CChannelListSort::CChannelListSort()
-	: m_Type(SORT_CHANNEL)
+CChannelScan::CChannelListSort::CChannelListSort()
+	: m_Column(COLUMN_CHANNELINDEX)
 	, m_fDescending(false)
 {
 }
 
 
-CChannelListSort::CChannelListSort(SortType Type,bool fDescending)
-	: m_Type(Type)
+CChannelScan::CChannelListSort::CChannelListSort(int Column,bool fDescending)
+	: m_Column(Column)
 	, m_fDescending(fDescending)
 {
 }
 
 
-int CALLBACK CChannelListSort::CompareFunc(LPARAM lParam1,LPARAM lParam2,LPARAM lParamSort)
+int CALLBACK CChannelScan::CChannelListSort::CompareFunc(LPARAM lParam1,LPARAM lParam2,LPARAM lParamSort)
 {
 	CChannelListSort *pThis=reinterpret_cast<CChannelListSort*>(lParamSort);
 	CChannelInfo *pChInfo1=reinterpret_cast<CChannelInfo*>(lParam1);
 	CChannelInfo *pChInfo2=reinterpret_cast<CChannelInfo*>(lParam2);
 	int Cmp;
 
-	switch (pThis->m_Type) {
-	case SORT_NAME:
+	switch (pThis->m_Column) {
+	case COLUMN_NAME:
 		Cmp=::lstrcmpi(pChInfo1->GetName(),pChInfo2->GetName());
 		if (Cmp==0)
 			Cmp=::lstrcmp(pChInfo1->GetName(),pChInfo2->GetName());
 		break;
 
-	case SORT_CHANNEL:
+	case COLUMN_SERVICETYPE:
+		Cmp=pChInfo1->GetServiceType()-pChInfo2->GetServiceType();
+		break;
+
+	case COLUMN_CHANNELNAME:
 		Cmp=pChInfo1->GetChannelIndex()-pChInfo2->GetChannelIndex();
 		break;
 
-	case SORT_CHANNELNAME:
-		Cmp=pChInfo1->GetChannelIndex()-pChInfo2->GetChannelIndex();
+	case COLUMN_SERVICEID:
+		Cmp=GetAppClass().NetworkDefinition.GetNetworkTypeOrder(
+			pChInfo1->GetNetworkID(),pChInfo2->GetNetworkID());
+		if (Cmp==0)
+			Cmp=pChInfo1->GetServiceID()-pChInfo2->GetServiceID();
 		break;
 
-	case SORT_SERVICEID:
-		{
-			NetworkType Ch1Network=GetNetworkType(pChInfo1->GetNetworkID());
-			NetworkType Ch2Network=GetNetworkType(pChInfo2->GetNetworkID());
-			if (Ch1Network!=Ch2Network) {
-				Cmp=Ch1Network-Ch2Network;
-			} else {
-				Cmp=pChInfo1->GetServiceID()-pChInfo2->GetServiceID();
-			}
-		}
-		break;
-
-	case SORT_REMOTECONTROLKEYID:
+	case COLUMN_REMOTECONTROLKEYID:
 		Cmp=pChInfo1->GetChannelNo()-pChInfo2->GetChannelNo();
+		break;
+
+	case COLUMN_CHANNELINDEX:
+		Cmp=pChInfo1->GetChannelIndex()-pChInfo2->GetChannelIndex();
 		break;
 
 	default:
@@ -221,13 +189,13 @@ int CALLBACK CChannelListSort::CompareFunc(LPARAM lParam1,LPARAM lParam2,LPARAM 
 }
 
 
-void CChannelListSort::Sort(HWND hwndList)
+void CChannelScan::CChannelListSort::Sort(HWND hwndList)
 {
 	ListView_SortItems(hwndList,CompareFunc,reinterpret_cast<LPARAM>(this));
 }
 
 
-bool CChannelListSort::UpdateChannelList(HWND hwndList,CChannelList *pList)
+bool CChannelScan::CChannelListSort::UpdateChannelList(HWND hwndList,CChannelList *pList)
 {
 	if (pList==NULL)
 		return false;
@@ -263,9 +231,13 @@ CChannelScan::CChannelScan()
 	: m_pOriginalTuningSpaceList(NULL)
 	, m_fScanService(true)
 	, m_fIgnoreSignalLevel(false)	// 信号レベルを無視
+	, m_SignalLevelThreshold(7.0f)	// 信号レベルの閾値
 	, m_ScanWait(5000)				// チャンネル切り替え後の待ち時間(ms)
 	, m_RetryCount(4)				// 情報取得の再試行回数
 	, m_RetryInterval(1000)			// 再試行の間隔(ms)
+	, m_fDetectDataService(true)
+	, m_fDetect1SegService(true)
+	, m_fDetectAudioService(true)
 	, m_hScanDlg(NULL)
 	, m_hScanThread(NULL)
 	, m_hCancelEvent(NULL)
@@ -282,15 +254,15 @@ CChannelScan::~CChannelScan()
 
 bool CChannelScan::Apply(DWORD Flags)
 {
-	CAppMain &AppMain=GetAppClass();
+	CAppMain &App=GetAppClass();
 
 	if ((Flags&UPDATE_CHANNELLIST)!=0) {
-		AppMain.UpdateCurrentChannelList(&m_TuningSpaceList);
+		App.Core.UpdateCurrentChannelList(&m_TuningSpaceList);
 	}
 
 	if ((Flags&UPDATE_PREVIEW)!=0) {
 		if (m_fRestorePreview)
-			AppMain.GetUICore()->EnableViewer(true);
+			App.UICore.EnableViewer(true);
 	}
 
 	return true;
@@ -302,6 +274,12 @@ bool CChannelScan::ReadSettings(CSettings &Settings)
 	Settings.Read(TEXT("ChannelScanIgnoreSignalLevel"),&m_fIgnoreSignalLevel);
 	Settings.Read(TEXT("ChannelScanWait"),&m_ScanWait);
 	Settings.Read(TEXT("ChannelScanRetry"),&m_RetryCount);
+	int Value;
+	if (Settings.Read(TEXT("ChannelScanSignalLevelThreshold"),&Value))
+		m_SignalLevelThreshold=static_cast<float>(Value)/100.0f;
+	Settings.Read(TEXT("ChannelScanDetectDataService"),&m_fDetectDataService);
+	Settings.Read(TEXT("ChannelScanDetect1SegService"),&m_fDetect1SegService);
+	Settings.Read(TEXT("ChannelScanDetectAudioService"),&m_fDetectAudioService);
 	return true;
 }
 
@@ -311,6 +289,11 @@ bool CChannelScan::WriteSettings(CSettings &Settings)
 	Settings.Write(TEXT("ChannelScanIgnoreSignalLevel"),m_fIgnoreSignalLevel);
 	Settings.Write(TEXT("ChannelScanWait"),m_ScanWait);
 	Settings.Write(TEXT("ChannelScanRetry"),m_RetryCount);
+	Settings.Write(TEXT("ChannelScanSignalLevelThreshold"),
+				   static_cast<int>(m_SignalLevelThreshold*100.0f+0.5f));
+	Settings.Write(TEXT("ChannelScanDetectDataService"),m_fDetectDataService);
+	Settings.Write(TEXT("ChannelScanDetect1SegService"),m_fDetect1SegService);
+	Settings.Write(TEXT("ChannelScanDetectAudioService"),m_fDetectAudioService);
 	return true;
 }
 
@@ -337,7 +320,7 @@ bool CChannelScan::AutoUpdateChannelList(CTuningSpaceList *pTuningSpaceList,std:
 	if (pTuningSpaceList==NULL)
 		return false;
 
-	CTsAnalyzer *pTsAnalyzer=&GetAppClass().GetCoreEngine()->m_DtvEngine.m_TsAnalyzer;
+	CTsAnalyzer *pTsAnalyzer=&GetAppClass().CoreEngine.m_DtvEngine.m_TsAnalyzer;
 	CTsAnalyzer::SdtTsList TsList;
 
 	if (!pTsAnalyzer->IsSdtComplete()
@@ -364,7 +347,7 @@ bool CChannelScan::AutoUpdateChannelList(CTuningSpaceList *pTuningSpaceList,std:
 				CChannelList *pChannelList=pTuningSpaceList->GetChannelList(i);
 
 				if (pChannelList!=NULL) {
-					if (pChannelList->FindByIDs(TsInfo.OriginalNetworkID,0,ServiceInfo.ServiceID)>=0) {
+					if (pChannelList->FindByIDs(TsInfo.OriginalNetworkID,0,ServiceInfo.ServiceID,false)>=0) {
 						fFound=true;
 						break;
 					}
@@ -379,7 +362,7 @@ bool CChannelScan::AutoUpdateChannelList(CTuningSpaceList *pTuningSpaceList,std:
 					CChannelList *pChannelList=pTuningSpaceList->GetChannelList(Space);
 
 					if (pChannelList!=NULL) {
-						int Index=pChannelList->FindByIDs(TsInfo.OriginalNetworkID,TsInfo.TransportStreamID,0);
+						int Index=pChannelList->FindByIDs(TsInfo.OriginalNetworkID,TsInfo.TransportStreamID,0,false);
 						if (Index>=0) {
 							CChannelInfo ChannelInfo(*pChannelList->GetChannelInfo(Index));
 
@@ -454,7 +437,7 @@ bool CChannelScan::AutoUpdateChannelList(CTuningSpaceList *pTuningSpaceList,std:
 
 								if (TsInfo.TransportStreamID!=pChannelInfo->GetTransportStreamID()) {
 									// TS移動
-									int Index=pChannelList->FindByIDs(TsInfo.OriginalNetworkID,TsInfo.TransportStreamID,0);
+									int Index=pChannelList->FindByIDs(TsInfo.OriginalNetworkID,TsInfo.TransportStreamID,0,false);
 									if (Index>=0) {
 										const CChannelInfo *pMoveChInfo=pChannelList->GetChannelInfo(Index);
 										CChannelInfo ChannelInfo(*pChannelInfo);
@@ -532,7 +515,7 @@ bool CChannelScan::AutoUpdateChannelList(CTuningSpaceList *pTuningSpaceList,std:
 }
 
 
-void CChannelScan::InsertChannelInfo(int Index,const CChannelInfo *pChInfo)
+void CChannelScan::InsertChannelInfo(int Index,const CChannelInfo *pChInfo,bool fServiceType)
 {
 	HWND hwndList=::GetDlgItem(m_hDlg,IDC_CHANNELSCAN_CHANNELLIST);
 	LV_ITEM lvi;
@@ -540,28 +523,50 @@ void CChannelScan::InsertChannelInfo(int Index,const CChannelInfo *pChInfo)
 
 	lvi.mask=LVIF_TEXT | LVIF_PARAM;
 	lvi.iItem=Index;
-	lvi.iSubItem=0;
+	lvi.iSubItem=COLUMN_NAME;
 	lvi.pszText=const_cast<LPTSTR>(pChInfo->GetName());
 	lvi.lParam=reinterpret_cast<LPARAM>(pChInfo);
 	lvi.iItem=ListView_InsertItem(hwndList,&lvi);
+
 	lvi.mask=LVIF_TEXT;
-	lvi.iSubItem=1;
-	::wsprintf(szText,TEXT("%d"),pChInfo->GetChannelIndex());
+	lvi.iSubItem=COLUMN_SERVICETYPE;
 	lvi.pszText=szText;
+	if (fServiceType) {
+		switch (pChInfo->GetServiceType()) {
+		case SERVICE_TYPE_DIGITALTV:		::lstrcpy(szText,TEXT("TV"));					break;
+		case SERVICE_TYPE_DIGITALAUDIO:		::lstrcpy(szText,TEXT("音声"));					break;
+		case SERVICE_TYPE_PROMOTIONVIDEO:	::lstrcpy(szText,TEXT("プロモーション映像"));	break;
+		case SERVICE_TYPE_DATA:				::lstrcpy(szText,TEXT("データ/ワンセグ"));		break;
+		case SERVICE_TYPE_4KTV:				::lstrcpy(szText,TEXT("4K TV"));				break;
+		default:
+			StdUtil::snprintf(szText,lengthof(szText),TEXT("他(%02x)"),pChInfo->GetServiceType());
+			break;
+		}
+	} else {
+		szText[0]=_T('\0');
+	}
 	ListView_SetItem(hwndList,&lvi);
-	lvi.iSubItem=2;
-	LPCTSTR pszChannelName=GetAppClass().GetCoreEngine()->m_DtvEngine.m_BonSrcDecoder.GetChannelName(pChInfo->GetSpace(),pChInfo->GetChannelIndex());
+
+	lvi.iSubItem=COLUMN_CHANNELNAME;
+	LPCTSTR pszChannelName=GetAppClass().CoreEngine.m_DtvEngine.m_BonSrcDecoder.GetChannelName(pChInfo->GetSpace(),pChInfo->GetChannelIndex());
 	::lstrcpyn(szText,!IsStringEmpty(pszChannelName)?pszChannelName:TEXT("\?\?\?"),lengthof(szText));
 	ListView_SetItem(hwndList,&lvi);
-	lvi.iSubItem=3;
+
+	lvi.iSubItem=COLUMN_SERVICEID;
 	::wsprintf(szText,TEXT("%d"),pChInfo->GetServiceID());
 	ListView_SetItem(hwndList,&lvi);
+
 	if (pChInfo->GetChannelNo()>0) {
-		lvi.iSubItem=4;
+		lvi.iSubItem=COLUMN_REMOTECONTROLKEYID;
 		::wsprintf(szText,TEXT("%d"),pChInfo->GetChannelNo());
 		lvi.pszText=szText;
 		ListView_SetItem(hwndList,&lvi);
 	}
+
+	lvi.iSubItem=COLUMN_CHANNELINDEX;
+	::wsprintf(szText,TEXT("%d"),pChInfo->GetChannelIndex());
+	ListView_SetItem(hwndList,&lvi);
+
 	ListView_SetCheckState(hwndList,lvi.iItem,pChInfo->IsEnabled());
 }
 
@@ -573,9 +578,18 @@ void CChannelScan::SetChannelList(int Space)
 	ListView_DeleteAllItems(::GetDlgItem(m_hDlg,IDC_CHANNELSCAN_CHANNELLIST));
 	if (pChannelList==NULL)
 		return;
+
+	bool fServiceType=true;
+	for (int i=0;i<pChannelList->NumChannels();i++) {
+		if (pChannelList->GetChannelInfo(i)->GetServiceType()==0) {
+			fServiceType=false;
+			break;
+		}
+	}
+
 	m_fChanging=true;
 	for (int i=0;i<pChannelList->NumChannels();i++)
-		InsertChannelInfo(i,pChannelList->GetChannelInfo(i));
+		InsertChannelInfo(i,pChannelList->GetChannelInfo(i),fServiceType);
 	m_fChanging=false;
 }
 
@@ -606,11 +620,11 @@ bool CChannelScan::LoadPreset(LPCTSTR pszFileName,CChannelList *pChannelList,int
 	if (!PresetList.LoadFromFile(szPresetFileName))
 		return false;
 
-	CBonSrcDecoder &BonSrcDecoder=GetAppClass().GetCoreEngine()->m_DtvEngine.m_BonSrcDecoder;
-	std::vector<CDynamicString> BonDriverChannelList;
+	CBonSrcDecoder &BonSrcDecoder=GetAppClass().CoreEngine.m_DtvEngine.m_BonSrcDecoder;
+	std::vector<TVTest::String> BonDriverChannelList;
 	LPCTSTR pszName;
 	for (int i=0;(pszName=BonSrcDecoder.GetChannelName(Space,i))!=NULL;i++) {
-		BonDriverChannelList.push_back(CDynamicString(pszName));
+		BonDriverChannelList.push_back(TVTest::String(pszName));
 	}
 	if (BonDriverChannelList.empty())
 		return false;
@@ -628,7 +642,7 @@ bool CChannelScan::LoadPreset(LPCTSTR pszFileName,CChannelList *pChannelList,int
 			::lstrcpyn(szName,pszChannelName+1,TSNameLength+1);
 			bool fFound=false;
 			for (size_t j=0;j<BonDriverChannelList.size();j++) {
-				pszName=BonDriverChannelList[j].Get();
+				pszName=BonDriverChannelList[j].c_str();
 				LPCTSTR p=::StrStrI(pszName,szName);
 				if (p!=NULL && !::IsCharAlphaNumeric(p[TSNameLength])) {
 					ChannelInfo.SetChannelIndex((int)j);
@@ -662,7 +676,7 @@ bool CChannelScan::LoadPreset(LPCTSTR pszFileName,CChannelList *pChannelList,int
 
 bool CChannelScan::SetPreset(bool fAuto)
 {
-	LPCTSTR pszName=GetAppClass().GetCoreEngine()->m_DtvEngine.m_BonSrcDecoder.GetSpaceName(m_ScanSpace);
+	LPCTSTR pszName=GetAppClass().CoreEngine.m_DtvEngine.m_BonSrcDecoder.GetSpaceName(m_ScanSpace);
 	if (pszName==NULL)
 		return false;
 
@@ -716,8 +730,8 @@ INT_PTR CChannelScan::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 	switch (uMsg) {
 	case WM_INITDIALOG:
 		{
-			CAppMain &AppMain=GetAppClass();
-			CCoreEngine *pCoreEngine=AppMain.GetCoreEngine();
+			CAppMain &App=GetAppClass();
+			CCoreEngine *pCoreEngine=&App.CoreEngine;
 			int NumSpaces;
 			LPCTSTR pszName;
 
@@ -726,7 +740,7 @@ INT_PTR CChannelScan::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 				DlgComboBox_AddString(hDlg,IDC_CHANNELSCAN_SPACE,pszName);
 			}
 			if (NumSpaces>0) {
-				const CChannelInfo *pCurChannel=AppMain.GetChannelManager()->GetCurrentRealChannelInfo();
+				const CChannelInfo *pCurChannel=App.ChannelManager.GetCurrentChannelInfo();
 				if (pCurChannel!=NULL && pCurChannel->GetSpace()<NumSpaces)
 					m_ScanSpace=pCurChannel->GetSpace();
 				else
@@ -747,47 +761,48 @@ INT_PTR CChannelScan::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 			ListView_SetExtendedListViewStyle(hwndList,
 				LVS_EX_FULLROWSELECT | LVS_EX_CHECKBOXES | LVS_EX_LABELTIP);
 
+			HDC hdc=::GetDC(hwndList);
+			HFONT hfont=GetWindowFont(hwndList);
+			HFONT hfontOld=SelectFont(hdc,hfont);
+			TEXTMETRIC tm;
+			::GetTextMetrics(hdc,&tm);
+			SelectFont(hdc,hfontOld);
+			::ReleaseDC(hwndList,hdc);
+			const int FontSize=tm.tmHeight-tm.tmInternalLeading;
+
 			LV_COLUMN lvc;
 			lvc.mask=LVCF_FMT | LVCF_WIDTH | LVCF_TEXT;
 			lvc.fmt=LVCFMT_LEFT;
-			lvc.cx=128;
+			lvc.cx=10*FontSize;
 			lvc.pszText=TEXT("名前");
-			ListView_InsertColumn(hwndList,0,&lvc);
+			ListView_InsertColumn(hwndList,COLUMN_NAME,&lvc);
+			lvc.cx=6*FontSize;
+			lvc.pszText=TEXT("種別");
+			ListView_InsertColumn(hwndList,COLUMN_SERVICETYPE,&lvc);
 			lvc.fmt=LVCFMT_RIGHT;
-			lvc.cx=40;
-			lvc.pszText=TEXT("番号");
-			ListView_InsertColumn(hwndList,1,&lvc);
-			lvc.cx=72;
+			lvc.cx=6*FontSize;
 			lvc.pszText=TEXT("チャンネル");
-			ListView_InsertColumn(hwndList,2,&lvc);
-			lvc.cx=72;
+			ListView_InsertColumn(hwndList,COLUMN_CHANNELNAME,&lvc);
+			lvc.cx=6*FontSize;
 			lvc.pszText=TEXT("サービスID");
-			ListView_InsertColumn(hwndList,3,&lvc);
-			lvc.cx=80;
+			ListView_InsertColumn(hwndList,COLUMN_SERVICEID,&lvc);
+			lvc.cx=7*FontSize;
 			lvc.pszText=TEXT("リモコンキー");
-			ListView_InsertColumn(hwndList,4,&lvc);
+			ListView_InsertColumn(hwndList,COLUMN_REMOTECONTROLKEYID,&lvc);
+			lvc.cx=4*FontSize;
+			lvc.pszText=TEXT("インデックス");
+			ListView_InsertColumn(hwndList,COLUMN_CHANNELINDEX,&lvc);
 			if (NumSpaces>0) {
 				//SetChannelList(hDlg,m_ScanSpace);
 				::SendMessage(hDlg,WM_COMMAND,MAKEWPARAM(IDC_CHANNELSCAN_SPACE,CBN_SELCHANGE),0);
 				/*
-				for (i=0;i<5;i++)
+				for (i=0;i<NUM_COLUMNS;i++)
 					ListView_SetColumnWidth(hwndList,i,LVSCW_AUTOSIZE_USEHEADER);
 				*/
 			}
 
+			DlgCheckBox_Check(hDlg,IDC_CHANNELSCAN_SCANSERVICE,true);
 			DlgCheckBox_Check(hDlg,IDC_CHANNELSCAN_IGNORESIGNALLEVEL,m_fIgnoreSignalLevel);
-
-			TCHAR szText[8];
-			for (int i=1;i<=10;i++) {
-				wsprintf(szText,TEXT("%d 秒"),i);
-				DlgComboBox_AddString(hDlg,IDC_CHANNELSCAN_SCANWAIT,szText);
-			}
-			DlgComboBox_SetCurSel(hDlg,IDC_CHANNELSCAN_SCANWAIT,m_ScanWait/1000-1);
-			for (int i=0;i<=10;i++) {
-				wsprintf(szText,TEXT("%d 秒"),i);
-				DlgComboBox_AddString(hDlg,IDC_CHANNELSCAN_RETRYCOUNT,szText);
-			}
-			DlgComboBox_SetCurSel(hDlg,IDC_CHANNELSCAN_RETRYCOUNT,m_RetryCount);
 
 			if (pCoreEngine->IsNetworkDriver())
 				EnableDlgItems(hDlg,IDC_CHANNELSCAN_FIRST,IDC_CHANNELSCAN_LAST,false);
@@ -803,7 +818,7 @@ INT_PTR CChannelScan::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 					return TRUE;
 
 				m_ScanSpace=Space;
-				LPCTSTR pszName=GetAppClass().GetCoreEngine()->m_DtvEngine.m_BonSrcDecoder.GetSpaceName(Space);
+				LPCTSTR pszName=GetAppClass().CoreEngine.m_DtvEngine.m_BonSrcDecoder.GetSpaceName(Space);
 				bool fBS=false,fCS=false;
 				if (pszName!=NULL) {
 					fBS=::StrStrI(pszName,TEXT("BS"))!=NULL;
@@ -818,11 +833,19 @@ INT_PTR CChannelScan::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 				} else {
 					SetChannelList(Space);
 				}
-				DlgCheckBox_Check(hDlg,IDC_CHANNELSCAN_SCANSERVICE,
-								  fBS || fCS || (pChannelList!=NULL && pChannelList->HasMultiService()));
+				if (fBS || fCS || (pChannelList!=NULL && pChannelList->HasMultiService()))
+					DlgCheckBox_Check(hDlg,IDC_CHANNELSCAN_SCANSERVICE,true);
 				EnableDlgItem(hDlg,IDC_CHANNELSCAN_LOADPRESET,fBS || fCS);
 				m_SortColumn=-1;
 				SetListViewSortMark(::GetDlgItem(hDlg,IDC_CHANNELSCAN_CHANNELLIST),-1);
+			}
+			return TRUE;
+
+		case IDC_CHANNELSCAN_SETTINGS:
+			{
+				CScanSettingsDialog SettingsDlg(this);
+
+				SettingsDlg.Show(::GetParent(hDlg));
 			}
 			return TRUE;
 
@@ -837,8 +860,8 @@ INT_PTR CChannelScan::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 				if (Space>=0) {
 					HWND hwndList=::GetDlgItem(hDlg,IDC_CHANNELSCAN_CHANNELLIST);
 
-					if (GetAppClass().GetUICore()->IsViewerEnabled()) {
-						GetAppClass().GetUICore()->EnableViewer(false);
+					if (GetAppClass().UICore.IsViewerEnabled()) {
+						GetAppClass().UICore.EnableViewer(false);
 						m_fRestorePreview=true;
 					}
 					m_ScanSpace=Space;
@@ -847,8 +870,6 @@ INT_PTR CChannelScan::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 						DlgCheckBox_IsChecked(hDlg,IDC_CHANNELSCAN_SCANSERVICE);
 					m_fIgnoreSignalLevel=
 						DlgCheckBox_IsChecked(hDlg,IDC_CHANNELSCAN_IGNORESIGNALLEVEL);
-					m_ScanWait=((unsigned int)DlgComboBox_GetCurSel(hDlg,IDC_CHANNELSCAN_SCANWAIT)+1)*1000;
-					m_RetryCount=(int)DlgComboBox_GetCurSel(hDlg,IDC_CHANNELSCAN_RETRYCOUNT);
 
 					ListView_DeleteAllItems(hwndList);
 
@@ -861,7 +882,7 @@ INT_PTR CChannelScan::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 							std::vector<const CChannelInfo*> MissingChannels;
 							for (int i=0;i<pChannelList->NumChannels();i++) {
 								const CChannelInfo *pOldChannel=pChannelList->GetChannelInfo(i);
-								if (m_ScanningChannelList.FindByIDs(pOldChannel->GetNetworkID(),0,pOldChannel->GetServiceID())<0
+								if (m_ScanningChannelList.FindByIDs(pOldChannel->GetNetworkID(),0,pOldChannel->GetServiceID(),false)<0
 										&& m_ScanningChannelList.FindByName(pOldChannel->GetName())<0)
 									MissingChannels.push_back(pOldChannel);
 							}
@@ -883,28 +904,37 @@ INT_PTR CChannelScan::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 								Formatter.Append(TEXT("\n検出されなかったチャンネルを残しますか？"));
 								if (::MessageBox(hDlg,Formatter.GetString(),TEXT("問い合わせ"),
 												 MB_YESNO | MB_ICONQUESTION)==IDYES) {
+									bool fServiceType=true;
+									for (int i=0;i<pChannelList->NumChannels();i++) {
+										if (pChannelList->GetChannelInfo(i)->GetServiceType()==0) {
+											fServiceType=false;
+											break;
+										}
+									}
+
 									for (size_t i=0;i<MissingChannels.size();i++) {
 										CChannelInfo *pInfo=new CChannelInfo(*MissingChannels[i]);
 										m_ScanningChannelList.AddChannel(pInfo);
-										InsertChannelInfo(ListView_GetItemCount(hwndList),pInfo);
+										InsertChannelInfo(ListView_GetItemCount(hwndList),pInfo,fServiceType);
 									}
 								}
 							}
 
-							CChannelListSort::SortType SortType;
+							int SortColumn;
 							if (m_ScanningChannelList.HasRemoteControlKeyID()
-									&& GetNetworkType(m_ScanningChannelList.GetChannelInfo(0)->GetNetworkID())==NETWORK_TERRESTRIAL)
-								SortType=CChannelListSort::SORT_REMOTECONTROLKEYID;
+									&& GetAppClass().NetworkDefinition.IsTerrestrialNetworkID(
+										m_ScanningChannelList.GetChannelInfo(0)->GetNetworkID()))
+								SortColumn=COLUMN_REMOTECONTROLKEYID;
 							else
-								SortType=CChannelListSort::SORT_SERVICEID;
-							CChannelListSort ListSort(SortType);
+								SortColumn=COLUMN_SERVICEID;
+							CChannelListSort ListSort(SortColumn);
 							ListSort.Sort(hwndList);
 							ListSort.UpdateChannelList(hwndList,m_TuningSpaceList.GetChannelList(Space));
 							if (IsStringEmpty(m_TuningSpaceList.GetTuningSpaceName(Space))) {
 								m_TuningSpaceList.GetTuningSpaceInfo(Space)->SetName(
-									GetAppClass().GetCoreEngine()->m_DtvEngine.m_BonSrcDecoder.GetSpaceName(Space));
+									GetAppClass().CoreEngine.m_DtvEngine.m_BonSrcDecoder.GetSpaceName(Space));
 							}
-							m_SortColumn=(int)SortType;
+							m_SortColumn=SortColumn;
 							m_fSortDescending=false;
 							SetListViewSortMark(hwndList,m_SortColumn,!m_fSortDescending);
 							ListView_EnsureVisible(hwndList,0,FALSE);
@@ -916,7 +946,7 @@ INT_PTR CChannelScan::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 							if ((m_fIgnoreSignalLevel
 										&& m_MaxSignalLevel<1.0f)
 									|| (!m_fIgnoreSignalLevel
-										&& m_MaxSignalLevel<SIGNAL_LEVEL_THRESHOLD)) {
+										&& m_MaxSignalLevel<m_SignalLevelThreshold)) {
 								::lstrcat(szText,TEXT("\n信号レベルが低すぎるか、取得できません。"));
 								if (!m_fIgnoreSignalLevel
 										&& m_MaxBitRate>8000000)
@@ -1002,9 +1032,7 @@ INT_PTR CChannelScan::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 					m_SortColumn=pnmlv->iSubItem;
 					m_fSortDescending=false;
 				}
-				CChannelListSort ListSort(
-					(CChannelListSort::SortType)pnmlv->iSubItem,
-					m_fSortDescending);
+				CChannelListSort ListSort(pnmlv->iSubItem,m_fSortDescending);
 				ListSort.Sort(pnmlv->hdr.hwndFrom);
 				ListSort.UpdateChannelList(pnmlv->hdr.hwndFrom,
 					m_TuningSpaceList.GetChannelList(m_ScanSpace));
@@ -1083,25 +1111,25 @@ INT_PTR CChannelScan::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 
 		case PSN_APPLY:
 			{
-				CAppMain &AppMain=GetAppClass();
+				CAppMain &App=GetAppClass();
 
 				if (m_fUpdated) {
 					m_TuningSpaceList.MakeAllChannelList();
 					TCHAR szFileName[MAX_PATH];
-					if (!GetAppClass().GetChannelManager()->GetChannelFileName(szFileName,lengthof(szFileName))
+					if (!App.ChannelManager.GetChannelFileName(szFileName,lengthof(szFileName))
 							|| ::lstrcmpi(::PathFindExtension(szFileName),CHANNEL_FILE_EXTENSION)!=0
 							|| !::PathFileExists(szFileName)) {
-						GetAppClass().GetCoreEngine()->GetDriverPath(szFileName,lengthof(szFileName));
+						App.CoreEngine.GetDriverPath(szFileName,lengthof(szFileName));
 						::PathRenameExtension(szFileName,CHANNEL_FILE_EXTENSION);
 					}
 					bool fOK=m_TuningSpaceList.SaveToFile(szFileName);
 					if (fOK) {
-						AppMain.AddLog(TEXT("チャンネルファイルを \"%s\" に保存しました。"),szFileName);
+						App.AddLog(TEXT("チャンネルファイルを \"%s\" に保存しました。"),szFileName);
 					} else {
 						TCHAR szText[32+MAX_PATH];
 						StdUtil::snprintf(szText,lengthof(szText),
 										  TEXT("チャンネルファイル \"%s\" を保存できません。"),szFileName);
-						AppMain.AddLog(TEXT("%s"),szText);
+						App.AddLog(CLogItem::TYPE_ERROR,TEXT("%s"),szText);
 						::MessageBox(hDlg,szText,NULL,MB_OK | MB_ICONEXCLAMATION);
 					}
 					SetUpdateFlag(UPDATE_CHANNELLIST);
@@ -1135,13 +1163,13 @@ INT_PTR CChannelScan::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 											::PathRenameExtension(szFileName,CHANNEL_FILE_EXTENSION);
 											*pSequence=_T('0')+i;
 											if (m_TuningSpaceList.SaveToFile(szFileName)) {
-												AppMain.AddLog(TEXT("チャンネルファイルを \"%s\" に保存しました。"),szFileName);
+												App.AddLog(TEXT("チャンネルファイルを \"%s\" に保存しました。"),szFileName);
 												::PathRenameExtension(szFileName,TEXT(".dll"));
-												AppMain.UpdateChannelList(szFileName,&m_TuningSpaceList);
+												App.Core.UpdateChannelList(szFileName,&m_TuningSpaceList);
 											} else {
 												StdUtil::snprintf(szText,lengthof(szText),
 																  TEXT("チャンネルファイル \"%s\" を保存できません。"),szFileName);
-												AppMain.AddLog(TEXT("%s"),szText);
+												App.AddLog(CLogItem::TYPE_ERROR,TEXT("%s"),szText);
 												if (::MessageBox(hDlg,szText,NULL,MB_OKCANCEL | MB_ICONEXCLAMATION)!=IDOK)
 													break;
 											}
@@ -1158,8 +1186,6 @@ INT_PTR CChannelScan::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 
 				m_fIgnoreSignalLevel=
 					DlgCheckBox_IsChecked(hDlg,IDC_CHANNELSCAN_IGNORESIGNALLEVEL);
-				m_ScanWait=((unsigned int)DlgComboBox_GetCurSel(hDlg,IDC_CHANNELSCAN_SCANWAIT)+1)*1000;
-				m_RetryCount=(int)DlgComboBox_GetCurSel(hDlg,IDC_CHANNELSCAN_RETRYCOUNT);
 
 				m_fChanged=true;
 			}
@@ -1168,7 +1194,7 @@ INT_PTR CChannelScan::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 		case PSN_RESET:
 			if (m_fRestorePreview)
 				//SetUpdateFlag(UPDATE_PREVIEW);
-				GetAppClass().GetUICore()->EnableViewer(true);
+				GetAppClass().UICore.EnableViewer(true);
 			return TRUE;
 		}
 		break;
@@ -1179,7 +1205,7 @@ INT_PTR CChannelScan::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 
 			// 元の有効/無効状態を反映
 			const CChannelList *pOldChList=m_TuningSpaceList.GetChannelList(m_ScanSpace);
-			int OldChIndex=pOldChList->FindByIDs(pChInfo->GetNetworkID(),0,pChInfo->GetServiceID());
+			int OldChIndex=pOldChList->FindByIDs(pChInfo->GetNetworkID(),0,pChInfo->GetServiceID(),false);
 			if (OldChIndex>=0)
 				pChInfo->Enable(pOldChList->IsEnabled(OldChIndex));
 
@@ -1187,7 +1213,7 @@ INT_PTR CChannelScan::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 			int Index=ListView_GetItemCount(hwndList);
 
 			m_fChanging=true;
-			InsertChannelInfo(Index,pChInfo);
+			InsertChannelInfo(Index,pChInfo,true);
 			ListView_EnsureVisible(hwndList,Index,FALSE);
 			m_fChanging=false;
 			::UpdateWindow(hwndList);
@@ -1229,7 +1255,7 @@ INT_PTR CChannelScan::ScanDlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPara
 	switch (uMsg) {
 	case WM_INITDIALOG:
 		{
-			CBonSrcDecoder &BonSrcDecoder=GetAppClass().GetCoreEngine()->m_DtvEngine.m_BonSrcDecoder;
+			CBonSrcDecoder &BonSrcDecoder=GetAppClass().CoreEngine.m_DtvEngine.m_BonSrcDecoder;
 			m_BonDriverChannelList.clear();
 			if (m_ScanChannel>0)
 				m_BonDriverChannelList.resize(m_ScanChannel);
@@ -1246,7 +1272,7 @@ INT_PTR CChannelScan::ScanDlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPara
 			::SendDlgItemMessage(hDlg,IDC_CHANNELSCAN_PROGRESS,PBM_SETPOS,
 								 m_ScanChannel,0);
 
-			GetAppClass().BeginChannelScan(m_ScanSpace);
+			GetAppClass().Core.BeginChannelScan(m_ScanSpace);
 
 			m_fCancelled=false;
 			m_hCancelEvent=::CreateEvent(NULL,FALSE,FALSE,NULL);
@@ -1273,11 +1299,11 @@ INT_PTR CChannelScan::ScanDlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPara
 
 	case WM_TIMER:
 		if (wParam==TIMER_ID_STATISTICS) {
-			const CCoreEngine *pCoreEngine=GetAppClass().GetCoreEngine();
+			const CCoreEngine &CoreEngine=GetAppClass().CoreEngine;
 			TCHAR szText[64],szSignalLevel[32],szBitRate[32];
 
-			pCoreEngine->GetSignalLevelText(szSignalLevel,lengthof(szSignalLevel));
-			pCoreEngine->GetBitRateText(szBitRate,lengthof(szBitRate));
+			CoreEngine.GetSignalLevelText(szSignalLevel,lengthof(szSignalLevel));
+			CoreEngine.GetBitRateText(szBitRate,lengthof(szBitRate));
 			StdUtil::snprintf(szText,lengthof(szText),
 							  TEXT("%s / %s"),szSignalLevel,szBitRate);
 			::SetDlgItemText(hDlg,IDC_CHANNELSCAN_LEVEL,szText);
@@ -1316,9 +1342,7 @@ INT_PTR CChannelScan::ScanDlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPara
 							rcFill.right=x+CellWidth;
 							rcFill.top=rcGraph.bottom-3-(int)(SignalLevel*(float)(rcGraph.bottom-rcGraph.top-4)/SignalScale);
 							rcFill.bottom=rcGraph.bottom-1;
-							HBRUSH hbr=::CreateSolidBrush(HSVToRGB(0.6-SignalLevel/SignalScale*0.6,0.8,1.0));
-							::FillRect(pdis->hDC,&rcFill,hbr);
-							::DeleteObject(hbr);
+							DrawUtil::Fill(pdis->hDC,&rcFill,HSVToRGB(0.6-SignalLevel/SignalScale*0.6,0.8,1.0));
 						}
 					}
 				}
@@ -1349,7 +1373,7 @@ INT_PTR CChannelScan::ScanDlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPara
 			::SetDlgItemText(hDlg,IDC_CHANNELSCAN_INFO,szText);
 			::SetDlgItemText(hDlg,IDC_CHANNELSCAN_CHANNEL,m_BonDriverChannelList[CurChannel].c_str());
 			::SendDlgItemMessage(hDlg,IDC_CHANNELSCAN_PROGRESS,PBM_SETPOS,wParam,0);
-			GetAppClass().SetProgress(CurChannel,NumChannels);
+			GetAppClass().UICore.SetProgress(CurChannel,NumChannels);
 		}
 		return TRUE;
 
@@ -1377,8 +1401,8 @@ INT_PTR CChannelScan::ScanDlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPara
 
 			::WaitForSingleObject(m_hScanThread,INFINITE);
 
-			//GetAppClass().EndChannelScan();
-			GetAppClass().EndProgress();
+			//GetAppClass().Core.EndChannelScan();
+			GetAppClass().UICore.EndProgress();
 
 			if (m_fCancelled) {
 				::EndDialog(hDlg,IDCANCEL);
@@ -1414,7 +1438,7 @@ INT_PTR CChannelScan::ScanDlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPara
 			if (m_hScanThread!=NULL) {
 				::SetEvent(m_hCancelEvent);
 				if (::WaitForSingleObject(m_hScanThread,30000)==WAIT_TIMEOUT) {
-					GetAppClass().AddLog(TEXT("チャンネルスキャンスレッドを強制終了します。"));
+					GetAppClass().AddLog(CLogItem::TYPE_WARNING,TEXT("チャンネルスキャンスレッドを強制終了します。"));
 					::TerminateThread(m_hScanThread,-1);
 				}
 				::CloseHandle(m_hScanThread);
@@ -1444,7 +1468,8 @@ unsigned int __stdcall CChannelScan::ScanProc(LPVOID lpParameter)
 
 void CChannelScan::Scan()
 {
-	CDtvEngine *pDtvEngine=&GetAppClass().GetCoreEngine()->m_DtvEngine;
+	CAppMain &App=GetAppClass();
+	CDtvEngine *pDtvEngine=&App.CoreEngine.m_DtvEngine;
 	CTsAnalyzer *pTsAnalyzer=&pDtvEngine->m_TsAnalyzer;
 
 	ScanResult Result=SCAN_RESULT_CANCELLED;
@@ -1509,7 +1534,7 @@ void CChannelScan::Scan()
 
 		if (pTsAnalyzer->IsSdtUpdated()
 				|| m_fIgnoreSignalLevel
-				|| SignalLevel>=SIGNAL_LEVEL_THRESHOLD) {
+				|| SignalLevel>=m_SignalLevelThreshold) {
 			for (int i=0;i<=m_RetryCount;i++) {
 				if (i>0) {
 					if (::WaitForSingleObject(m_hCancelEvent,
@@ -1550,7 +1575,7 @@ void CChannelScan::Scan()
 							} else {
 								// BS/CS の場合はサービスの検索を有効にする
 								WORD NetworkID=pTsAnalyzer->GetNetworkID();
-								if (IsBSNetworkID(NetworkID) || IsCSNetworkID(NetworkID))
+								if (App.NetworkDefinition.IsSatelliteNetworkID(NetworkID))
 									fScanService=true;
 							}
 						}
@@ -1582,23 +1607,21 @@ void CChannelScan::Scan()
 					} else {
 						if (ServiceInfo.ServiceType==SERVICE_TYPE_PROMOTIONVIDEO)
 							continue;
-#ifndef TVH246_FOR_1SEG
-						if (ServiceInfo.ServiceType==SERVICE_TYPE_DATA)
-							continue;
-#endif
+					}
+					if (ServiceInfo.ServiceType==SERVICE_TYPE_DATA) {
+						if (pTsAnalyzer->Is1SegService(ServiceIndex)) {
+							if (!m_fDetect1SegService)
+								continue;
+						} else {
+							if (!m_fDetectDataService)
+								continue;
+						}
 					}
 
 					int RemoteControlKeyID=pTsAnalyzer->GetRemoteControlKeyID();
 					if (RemoteControlKeyID==0) {
-						// BSのリモコン番号を割り当てる
-						if (IsBSNetworkID(NetworkID) && ServiceID<230) {
-							if (ServiceID<=109)
-								RemoteControlKeyID=ServiceID%10;
-							else
-								RemoteControlKeyID=ServiceID/10-10;
-						} else if (ServiceID<1000) {
-							RemoteControlKeyID=ServiceID;
-						}
+						RemoteControlKeyID=
+							App.NetworkDefinition.GetRemoteControlKeyID(NetworkID,ServiceID);
 					}
 
 					CChannelInfo *pChInfo=
@@ -1613,19 +1636,16 @@ void CChannelScan::Scan()
 					// 一部サービスはデフォルトで無効にする
 					if ((ServiceInfo.ServiceType!=SERVICE_TYPE_DIGITALTV
 							&& ServiceInfo.ServiceType!=SERVICE_TYPE_PROMOTIONVIDEO
-#ifdef TVH264_FOR_1SEG
+							&& ServiceInfo.ServiceType!=SERVICE_TYPE_4KTV
+#ifdef TVTEST_FOR_1SEG
 							&& ServiceInfo.ServiceType!=SERVICE_TYPE_DATA
 #endif
-#ifdef TVTEST_RADIO_SUPPORT
 							&& ServiceInfo.ServiceType!=SERVICE_TYPE_DIGITALAUDIO
-#endif
 							)
 							// BSのサブチャンネル
-							|| (IsBSNetworkID(NetworkID) && ServiceID<190 && ServiceCount>0)
-#ifndef TVH264
+							|| (App.NetworkDefinition.IsBSNetworkID(NetworkID) && ServiceID<190 && ServiceCount>0)
 							// 地デジのサブチャンネル
 							|| (NetworkID==TransportStreamID && ServiceCount>0)
-#endif
 						)
 						pChInfo->Enable(false);
 
@@ -1649,15 +1669,13 @@ void CChannelScan::Scan()
 				for (auto it=ServiceList.begin();it!=ServiceList.end();++it) {
 					if (IsScanService(*it)
 							&& (
-#ifdef TVH264_FOR_1SEG
+#ifdef TVTEST_FOR_1SEG
 							it->ServiceType==SERVICE_TYPE_DATA
 #else
 							it->ServiceType==SERVICE_TYPE_DIGITALTV
+							|| it->ServiceType==SERVICE_TYPE_4KTV
 #endif
-#ifdef TVTEST_RADIO_SUPPORT
-							|| it->ServiceType==SERVICE_TYPE_DIGITALAUDIO
-#endif
-							)) {
+							|| it->ServiceType==SERVICE_TYPE_DIGITALAUDIO)) {
 						pChInfo->SetServiceID(it->ServiceID);
 						pChInfo->SetServiceType(it->ServiceType);
 						break;
@@ -1694,7 +1712,7 @@ End:
 
 float CChannelScan::GetSignalLevel()
 {
-	CBonSrcDecoder *pBonSrcDecoder=&GetAppClass().GetCoreEngine()->m_DtvEngine.m_BonSrcDecoder;
+	CBonSrcDecoder *pBonSrcDecoder=&GetAppClass().CoreEngine.m_DtvEngine.m_BonSrcDecoder;
 
 	float SignalLevel=pBonSrcDecoder->GetSignalLevel();
 	if (SignalLevel>m_MaxSignalLevel)
@@ -1710,19 +1728,113 @@ float CChannelScan::GetSignalLevel()
 }
 
 
-bool CChannelScan::IsScanService(const CTsAnalyzer::SdtServiceInfo &ServiceInfo,bool fData)
+bool CChannelScan::IsScanService(const CTsAnalyzer::SdtServiceInfo &ServiceInfo,bool fData) const
 {
 	return ServiceInfo.szServiceName[0]!='\0'
+		&& ::lstrcmp(ServiceInfo.szServiceName,TEXT(" "))!=0
+		&& ::lstrcmp(ServiceInfo.szServiceName,TEXT("　"))!=0
 		&& IsScanServiceType(ServiceInfo.ServiceType,fData);
 }
 
 
-bool CChannelScan::IsScanServiceType(BYTE ServiceType,bool fData)
+bool CChannelScan::IsScanServiceType(BYTE ServiceType,bool fData) const
 {
 	return ServiceType==SERVICE_TYPE_DIGITALTV
-#ifdef TVTEST_RADIO_SUPPORT
-		|| ServiceType==SERVICE_TYPE_DIGITALAUDIO
-#endif
 		|| ServiceType==SERVICE_TYPE_PROMOTIONVIDEO
+		|| ServiceType==SERVICE_TYPE_4KTV
+		|| (m_fDetectAudioService && ServiceType==SERVICE_TYPE_DIGITALAUDIO)
 		|| (fData && ServiceType==SERVICE_TYPE_DATA);
+}
+
+
+
+
+CChannelScan::CScanSettingsDialog::CScanSettingsDialog(CChannelScan *pChannelScan)
+	: m_pChannelScan(pChannelScan)
+{
+}
+
+
+bool CChannelScan::CScanSettingsDialog::Show(HWND hwndOwner)
+{
+	return ShowDialog(hwndOwner,
+					  GetAppClass().GetResourceInstance(),
+					  MAKEINTRESOURCE(IDD_CHANNELSCANSETTINGS))==IDOK;
+}
+
+
+INT_PTR CChannelScan::CScanSettingsDialog::DlgProc(
+	HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
+{
+	switch (uMsg) {
+	case WM_INITDIALOG:
+		{
+			TCHAR szText[16];
+
+			StdUtil::snprintf(szText,lengthof(szText),TEXT("%.2f"),
+							  m_pChannelScan->m_SignalLevelThreshold);
+			::SetDlgItemText(hDlg,IDC_CHANNELSCANSETTINGS_SIGNALLEVELTHRESHOLD,szText);
+
+			for (int i=1;i<=10;i++) {
+				StdUtil::snprintf(szText,lengthof(szText),TEXT("%d 秒"),i);
+				DlgComboBox_AddString(hDlg,IDC_CHANNELSCANSETTINGS_SCANWAIT,szText);
+			}
+			DlgComboBox_SetCurSel(hDlg,IDC_CHANNELSCANSETTINGS_SCANWAIT,
+								  m_pChannelScan->m_ScanWait/1000-1);
+			for (int i=0;i<=10;i++) {
+				StdUtil::snprintf(szText,lengthof(szText),TEXT("%d 秒"),i);
+				DlgComboBox_AddString(hDlg,IDC_CHANNELSCANSETTINGS_RETRYCOUNT,szText);
+			}
+			DlgComboBox_SetCurSel(hDlg,IDC_CHANNELSCANSETTINGS_RETRYCOUNT,
+								  m_pChannelScan->m_RetryCount);
+
+			DlgCheckBox_Check(hDlg,IDC_CHANNELSCANSETTINGS_DETECTDATASERVICE,
+							  m_pChannelScan->m_fDetectDataService);
+			DlgCheckBox_Check(hDlg,IDC_CHANNELSCANSETTINGS_DETECT1SEGSERVICE,
+							  m_pChannelScan->m_fDetect1SegService);
+			DlgCheckBox_Check(hDlg,IDC_CHANNELSCANSETTINGS_DETECTAUDIOSERVICE,
+							  m_pChannelScan->m_fDetectAudioService);
+		}
+		return TRUE;
+
+	case WM_COMMAND:
+		switch (LOWORD(wParam)) {
+		case IDC_CHANNELSCANSETTINGS_HELP:
+			GetAppClass().UICore.ShowHelpContent(HELP_ID_CHANNELSCANDETAILS);
+			return TRUE;
+
+		case IDOK:
+			{
+				TCHAR szText[16];
+				if (::GetDlgItemText(hDlg,IDC_CHANNELSCANSETTINGS_SIGNALLEVELTHRESHOLD,
+									 szText,lengthof(szText))>0) {
+					m_pChannelScan->m_SignalLevelThreshold=
+#ifdef _tcstof
+						_tcstof(szText,NULL)
+#else
+						static_cast<float>(_tcstod(szText,NULL))
+#endif
+						;
+				}
+
+				m_pChannelScan->m_ScanWait=
+					((unsigned int)DlgComboBox_GetCurSel(hDlg,IDC_CHANNELSCANSETTINGS_SCANWAIT)+1)*1000;
+				m_pChannelScan->m_RetryCount=
+					(int)DlgComboBox_GetCurSel(hDlg,IDC_CHANNELSCANSETTINGS_RETRYCOUNT);
+
+				m_pChannelScan->m_fDetectDataService=
+					DlgCheckBox_IsChecked(hDlg,IDC_CHANNELSCANSETTINGS_DETECTDATASERVICE);
+				m_pChannelScan->m_fDetect1SegService=
+					DlgCheckBox_IsChecked(hDlg,IDC_CHANNELSCANSETTINGS_DETECT1SEGSERVICE);
+				m_pChannelScan->m_fDetectAudioService=
+					DlgCheckBox_IsChecked(hDlg,IDC_CHANNELSCANSETTINGS_DETECTAUDIOSERVICE);
+			}
+		case IDCANCEL:
+			::EndDialog(hDlg,LOWORD(wParam));
+			return TRUE;
+		}
+		return TRUE;
+	}
+
+	return FALSE;
 }

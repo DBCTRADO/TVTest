@@ -6,6 +6,7 @@
 
 
 #include "MediaDecoder.h"
+#include <vector>
 
 
 /////////////////////////////////////////////////////////////////////////////
@@ -15,27 +16,28 @@
 // Output	#0	: CMediaData		出力データ
 /////////////////////////////////////////////////////////////////////////////
 
-class CMediaGrabber : public CMediaDecoder  
+class CMediaGrabber : public CMediaDecoder
 {
 public:
-	typedef bool (CALLBACK * MEDIAGRABFUNC)(const CMediaData *pMediaData, const PVOID pParam);	// メディア受け取りコールバック型
-	typedef void (CALLBACK * RESETGRABFUNC)(const PVOID pParam);								// リセット受け取りコールバック型
+	class ABSTRACT_CLASS_DECL IGrabber
+	{
+	public:
+		virtual ~IGrabber() {}
+		virtual bool OnInputMedia(CMediaData *pMediaData) { return true; }
+		virtual void OnReset() {}
+	};
 
 	CMediaGrabber(IEventHandler *pEventHandler = NULL);
 	virtual ~CMediaGrabber();
 
 // IMediaDecoder
-	virtual void Reset(void);
-	virtual const bool InputMedia(CMediaData *pMediaData, const DWORD dwInputIndex = 0UL);
+	virtual void Reset(void) override;
+	virtual const bool InputMedia(CMediaData *pMediaData, const DWORD dwInputIndex = 0UL) override;
 
 // CMediaGrabber
-	void SetMediaGrabCallback(const MEDIAGRABFUNC pCallback, const PVOID pParam = NULL);
-	void SetResetGrabCallback(const RESETGRABFUNC pCallback, const PVOID pParam = NULL);
+	bool AddGrabber(IGrabber *pGrabber);
+	bool RemoveGrabber(IGrabber *pGrabber);
 
 protected:
-	MEDIAGRABFUNC m_pfnMediaGrabFunc;
-	RESETGRABFUNC m_pfnResetGrabFunc;
-
-	PVOID m_pMediaGrabParam;
-	PVOID m_pResetGrabParam;
+	std::vector<IGrabber*> m_GrabberList;
 };

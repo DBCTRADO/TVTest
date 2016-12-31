@@ -1,12 +1,7 @@
 #include "stdafx.h"
 #include "TVTest.h"
 #include "IniFile.h"
-
-#ifdef _DEBUG
-#undef THIS_FILE
-static char THIS_FILE[]=__FILE__;
-#define new DEBUG_NEW
-#endif
+#include "Common/DebugDef.h"
 
 
 namespace TVTest
@@ -238,7 +233,7 @@ namespace TVTest
 		if (i==m_SectionList.end())
 			return false;
 
-		i->Entries.clear();
+		i->Entries.remove_if([](const CEntry &Entry) -> bool { return !Entry.Name.empty(); });
 
 		return true;
 	}
@@ -352,7 +347,7 @@ namespace TVTest
 		return true;
 	}
 
-	bool CIniFile::GetSectionEntries(LPCWSTR pszSection,std::vector<CEntry> *pEntries)
+	bool CIniFile::GetSectionEntries(LPCWSTR pszSection,EntryArray *pEntries)
 	{
 		if (pEntries==nullptr)
 			return false;
@@ -376,7 +371,7 @@ namespace TVTest
 		return true;
 	}
 
-	bool CIniFile::GetEntries(std::vector<CEntry> *pEntries)
+	bool CIniFile::GetEntries(EntryArray *pEntries)
 	{
 		if (m_Section.empty())
 			return false;

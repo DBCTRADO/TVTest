@@ -30,10 +30,8 @@ public:
 	HRESULT StopStreaming() override;
 	HRESULT BeginFlush() override;
 
-// CH264ParserFilter
-	bool SetAdjustTime(bool bAdjust);
-	bool SetAdjustFrameRate(bool bAdjust);
-	void SetAttachMediaType(bool bAttach);
+// CVideoParser
+	bool SetAdjustSampleOptions(unsigned int Flags) override;
 
 protected:
 	CH264ParserFilter(LPUNKNOWN pUnk, HRESULT *phr);
@@ -91,9 +89,9 @@ protected:
 	CSampleDataQueue m_OutSampleQueue;
 	bool m_bAdjustTime;
 	bool m_bAdjustFrameRate;
+	bool m_bAdjust1Seg;
 	REFERENCE_TIME m_PrevTime;
 	DWORD m_SampleCount;
 	CSampleDataQueue m_SampleQueue;
-	bool m_bAttachMediaType;
 	bool m_bChangeSize;
 };

@@ -1,5 +1,5 @@
 /*
-	TVTest プラグインヘッダ ver.0.0.13
+	TVTest プラグインヘッダ ver.0.0.14
 
 	このファイルは再配布・改変など自由に行って構いません。
 	ただし、改変した場合はオリジナルと違う旨を記載して頂けると、混乱がなくてい
@@ -52,7 +52,8 @@
 	class CMyPlugin : public TVTest::CTVTestPlugin
 	{
 	public:
-		bool GetPluginInfo(TVTest::PluginInfo *pInfo) {
+		bool GetPluginInfo(TVTest::PluginInfo *pInfo) override
+		{
 			// プラグインの情報を返す
 			pInfo->Type           = TVTest::PLUGIN_TYPE_NORMAL;
 			pInfo->Flags          = 0;
@@ -61,12 +62,16 @@
 			pInfo->pszDescription = L"何もしないプラグイン";
 			return true;	// false を返すとプラグインのロードが失敗になる
 		}
-		bool Initialize() {
+
+		bool Initialize() override
+		{
 			// ここで初期化を行う
 			// 何もしないのであればオーバーライドしなくても良い
 			return true;	// false を返すとプラグインのロードが失敗になる
 		}
-		bool Finalize() {
+
+		bool Finalize() override
+		{
 			// ここでクリーンアップを行う
 			// 何もしないのであればオーバーライドしなくても良い
 			return true;
@@ -83,6 +88,66 @@
 
 /*
 	更新履歴
+
+	ver.0.0.14 (TVTest ver.0.9.0 or later)
+	・以下のメッセージを追加した
+	  ・MESSAGE_GETSTYLEVALUE
+	  ・MESSAGE_THEMEDRAWBACKGROUND
+	  ・MESSAGE_THEMEDRAWTEXT
+	  ・MESSAGE_THEMEDRAWICON
+	  ・MESSAGE_GETEPGCAPTURESTATUS
+	  ・MESSAGE_GETAPPCOMMANDINFO
+	  ・MESSAGE_GETAPPCOMMANDCOUNT
+	  ・MESSAGE_GETVIDEOSTREAMCOUNT
+	  ・MESSAGE_GETVIDEOSTREAM
+	  ・MESSAGE_SETVIDEOSTREAM
+	  ・MESSAGE_GETLOG
+	  ・MESSAGE_GETLOGCOUNT
+	  ・MESSAGE_REGISTERPLUGINCOMMAND
+	  ・MESSAGE_SETPLUGINCOMMANDSTATE
+	  ・MESSAGE_PLUGINCOMMANDNOTIFY
+	  ・MESSAGE_REGISTERPLUGINICON
+	  ・MESSAGE_REGISTERSTATUSITEM
+	  ・MESSAGE_SETSTATUSITEM
+	  ・MESSAGE_GETSTATUSITEMINFO
+	  ・MESSAGE_STATUSITEMNOTIFY
+	  ・MESSAGE_REGISTERTSPROCESSOR
+	  ・MESSAGE_REGISTERPANELITEM
+	  ・MESSAGE_SETPANELITEM
+	  ・MESSAGE_GETPANELITEMINFO
+	  ・MESSAGE_SELECTCHANNEL
+	  ・MESSAGE_GETFAVORITELIST
+	  ・MESSAGE_FREEFAVORITELIST
+	  ・MESSAGE_GET1SEGMODE
+	  ・MESSAGE_SET1SEGMODE
+	  ・MESSAGE_GETDPI
+	  ・MESSAGE_GETFONT
+	  ・MESSAGE_SHOWDIALOG
+	  ・MESSAGE_CONVERTTIME
+	  ・MESSAGE_SETVIDEOSTREAMCALLBACK
+	  ・MESSAGE_GETVARSTRINGCONTEXT
+	  ・MESSAGE_FREEVARSTRINGCONTEXT
+	  ・MESSAGE_FORMATVARSTRING
+	  ・MESSAGE_REGISTERVARIABLE
+	・以下のイベントを追加した
+	  ・EVENT_FILTERGRAPH_INITIALIZE
+	  ・EVENT_FILTERGRAPH_INITIALIZED
+	  ・EVENT_FILTERGRAPH_FINALIZE
+	  ・EVENT_FILTERGRAPH_FINALIZED
+	  ・EVENT_DRAWCOMMANDICON
+	  ・EVENT_STATUSITEM_DRAW
+	  ・EVENT_STATUSITEM_NOTIFY
+	  ・EVENT_STATUSITEM_MOUSE
+	  ・EVENT_PANELITEM_NOTIFY
+	  ・EVENT_FAVORITESCHANGED
+	  ・EVENT_1SEGMODECHANGED
+	・プラグインのフラグに PLUGIN_FLAG_NOENABLEDDISABLED を追加した
+	・録画情報のフラグに RECORD_FLAG_UTC を追加した。
+	・MESSAGE_GETRECORDSTATUS にフラグの指定を追加した。
+	・MESSAGE_GETSETTING で取得できる設定に以下を追加した。
+	  ・RecordFileName
+	  ・CaptureFolder
+	  ・CaptureFileName
 
 	ver.0.0.13 (TVTest ver.0.7.16 or later)
 	・以下のメッセージを追加した
@@ -141,10 +206,7 @@
 	・MESSAGE_RESET にパラメータを追加した
 
 	ver.0.0.8 (TVTest ver.0.6.0 or later)
-	・以下のメッセージを追加した
-	  ・MESSAGE_GETBCASINFO
-	  ・MESSAGE_SENDBCASCOMMAND
-	  ・MESSAGE_GETHOSTINFO
+	・MESSAGE_GETHOSTINFO を追加した
 	・MESSAGE_SETCHANNEL のパラメータにサービスIDを追加した
 
 	ver.0.0.7 (TVTest ver.0.5.45 or later)
@@ -174,7 +236,7 @@
 	ver.0.0.2
 	・MESSAGE_GETAUDIOSTREAM と MESSAGE_SETAUDIOSTREAM を追加した
 	・ServiceInfo 構造体に AudioComponentType と SubtitlePID メンバを追加した
-	・StatusInfo 構造体に DropPacketCount と BcasCardStatus メンバを追加した
+	・StatusInfo 構造体に DropPacketCount と Reserved メンバを追加した
 
 	ver.0.0.1
 	・以下のメッセージを追加した
@@ -203,7 +265,7 @@ namespace TVTest {
 #define TVTEST_PLUGIN_VERSION_(major,minor,rev) \
 	(((major)<<24) | ((minor)<<12) | (rev))
 #ifndef TVTEST_PLUGIN_VERSION
-#define TVTEST_PLUGIN_VERSION TVTEST_PLUGIN_VERSION_(0,0,13)
+#define TVTEST_PLUGIN_VERSION TVTEST_PLUGIN_VERSION_(0,0,14)
 #endif
 
 // エクスポート関数定義用
@@ -220,14 +282,18 @@ enum {
 
 // プラグインのフラグ
 enum {
-	PLUGIN_FLAG_HASSETTINGS		=0x00000001UL,	// 設定ダイアログがある
-	PLUGIN_FLAG_ENABLEDEFAULT	=0x00000002UL	// デフォルトで有効
-												// 特別な理由が無い限り使わない
+	PLUGIN_FLAG_HASSETTINGS			=0x00000001UL,	// 設定ダイアログがある
+	PLUGIN_FLAG_ENABLEDEFAULT		=0x00000002UL	// デフォルトで有効
+													// 特別な理由が無い限り使わない
 #if TVTEST_PLUGIN_VERSION>=TVTEST_PLUGIN_VERSION_(0,0,10)
-	,PLUGIN_FLAG_DISABLEONSTART	=0x00000004UL	// 起動時は必ず無効
+	,PLUGIN_FLAG_DISABLEONSTART		=0x00000004UL	// 起動時は必ず無効
 #endif
 #if TVTEST_PLUGIN_VERSION>=TVTEST_PLUGIN_VERSION_(0,0,11)
-	,PLUGIN_FLAG_NOUNLOAD		=0x00000008UL	// 終了時以外アンロード不可
+	,PLUGIN_FLAG_NOUNLOAD			=0x00000008UL	// 終了時以外アンロード不可
+#endif
+#if TVTEST_PLUGIN_VERSION>=TVTEST_PLUGIN_VERSION_(0,0,14)
+	,PLUGIN_FLAG_NOENABLEDDISABLED	=0x00000010UL	// 有効/無効の区別がない
+													// メニューに表示されず、EVENT_PLUGINENABLE が送られません
 #endif
 };
 
@@ -330,8 +396,8 @@ enum {
 	MESSAGE_DOCOMMAND,					// コマンドの実行
 #endif
 #if TVTEST_PLUGIN_VERSION>=TVTEST_PLUGIN_VERSION_(0,0,8)
-	MESSAGE_GETBCASINFO,				// B-CAS カードの情報を取得
-	MESSAGE_SENDBCASCOMMAND,			// B-CAS カードにコマンドを送信
+	MESSAGE_REMOVED1,					// (機能削除)
+	MESSAGE_REMOVED2,					// (機能削除)
 	MESSAGE_GETHOSTINFO,				// ホストプログラムの情報を取得
 #endif
 #if TVTEST_PLUGIN_VERSION>=TVTEST_PLUGIN_VERSION_(0,0,9)
@@ -362,6 +428,46 @@ enum {
 #if TVTEST_PLUGIN_VERSION>=TVTEST_PLUGIN_VERSION_(0,0,13)
 	MESSAGE_ENABLEPROGRAMGUIDEEVENT,	// 番組表のイベントの有効/無効を設定する
 	MESSAGE_REGISTERPROGRAMGUIDECOMMAND,	// 番組表のコマンドを登録
+#endif
+#if TVTEST_PLUGIN_VERSION>=TVTEST_PLUGIN_VERSION_(0,0,14)
+	MESSAGE_GETSTYLEVALUE,				// スタイル値を取得
+	MESSAGE_THEMEDRAWBACKGROUND,		// テーマの背景を描画
+	MESSAGE_THEMEDRAWTEXT,				// テーマの文字列を描画
+	MESSAGE_THEMEDRAWICON,				// テーマのアイコンを描画
+	MESSAGE_GETEPGCAPTURESTATUS,		// EPG取得状況を取得
+	MESSAGE_GETAPPCOMMANDINFO,			// コマンドの情報を取得
+	MESSAGE_GETAPPCOMMANDCOUNT,			// コマンドの数を取得
+	MESSAGE_GETVIDEOSTREAMCOUNT,		// 映像ストリームの数を取得
+	MESSAGE_GETVIDEOSTREAM,				// 映像ストリームを取得
+	MESSAGE_SETVIDEOSTREAM,				// 映像ストリームを設定
+	MESSAGE_GETLOG,						// ログを取得
+	MESSAGE_GETLOGCOUNT,				// ログの数を取得
+	MESSAGE_REGISTERPLUGINCOMMAND,		// プラグインのコマンドを登録
+	MESSAGE_SETPLUGINCOMMANDSTATE,		// プラグインのコマンドの状態を設定
+	MESSAGE_PLUGINCOMMANDNOTIFY,		// プラグインのコマンドの通知
+	MESSAGE_REGISTERPLUGINICON,			// プラグインのアイコンを登録
+	MESSAGE_REGISTERSTATUSITEM,			// ステータス項目を登録
+	MESSAGE_SETSTATUSITEM,				// ステータス項目の設定
+	MESSAGE_GETSTATUSITEMINFO,			// ステータス項目の情報を取得
+	MESSAGE_STATUSITEMNOTIFY,			// ステータス項目の通知
+	MESSAGE_REGISTERTSPROCESSOR,		// TSプロセッサの登録
+	MESSAGE_REGISTERPANELITEM,			// パネル項目を登録
+	MESSAGE_SETPANELITEM,				// パネル項目の設定
+	MESSAGE_GETPANELITEMINFO,			// パネル項目の情報を取得
+	MESSAGE_SELECTCHANNEL,				// チャンネルを選択する
+	MESSAGE_GETFAVORITELIST,			// お気に入りチャンネルを取得
+	MESSAGE_FREEFAVORITELIST,			// お気に入りチャンネルを解放
+	MESSAGE_GET1SEGMODE,				// ワンセグモードを取得
+	MESSAGE_SET1SEGMODE,				// ワンセグモードを設定
+	MESSAGE_GETDPI,						// DPIを取得
+	MESSAGE_GETFONT,					// フォントを取得
+	MESSAGE_SHOWDIALOG,					// ダイアログを表示
+	MESSAGE_CONVERTTIME,				// 日時を変換
+	MESSAGE_SETVIDEOSTREAMCALLBACK,		// 映像ストリームのコールバック関数を設定
+	MESSAGE_GETVARSTRINGCONTEXT,		// 変数文字列のコンテキストを取得
+	MESSAGE_FREEVARSTRINGCONTEXT,		// 変数文字列のコンテキストを解放
+	MESSAGE_FORMATVARSTRING,			// 変数文字列を使って文字列をフォーマット
+	MESSAGE_REGISTERVARIABLE,			// 変数を登録
 #endif
 	MESSAGE_TRAILER
 };
@@ -419,9 +525,24 @@ enum {
 	EVENT_PROGRAMGUIDE_PROGRAM_INITIALIZEMENU,	// 番組表の番組のメニューの設定
 	EVENT_PROGRAMGUIDE_PROGRAM_MENUSELECTED,	// 番組表の番組のメニューが選択された
 #endif
+#if TVTEST_PLUGIN_VERSION>=TVTEST_PLUGIN_VERSION_(0,0,14)
+	EVENT_FILTERGRAPH_INITIALIZE,				// フィルタグラフの初期化開始
+	EVENT_FILTERGRAPH_INITIALIZED,				// フィルタグラフの初期化終了
+	EVENT_FILTERGRAPH_FINALIZE,					// フィルタグラフの終了処理開始
+	EVENT_FILTERGRAPH_FINALIZED,				// フィルタグラフの終了処理終了
+	EVENT_DRAWCOMMANDICON,						// コマンドアイコンの描画
+	EVENT_STATUSITEM_DRAW,						// ステータス項目を描画
+	EVENT_STATUSITEM_NOTIFY,					// ステータス項目の通知
+	EVENT_STATUSITEM_MOUSE,						// ステータス項目のマウス操作
+	EVENT_PANELITEM_NOTIFY,						// パネル項目の通知
+	EVENT_FAVORITESCHANGED,						// お気に入りチャンネルが変更された
+	EVENT_1SEGMODECHANGED,						// ワンセグモードが変わった
+	EVENT_GETVARIABLE,							// 変数の取得
+#endif
 	EVENT_TRAILER
 };
 
+// バージョン番号を DWORD にまとめる
 inline DWORD MakeVersion(BYTE Major,WORD Minor,WORD Build) {
 	return ((DWORD)Major<<24) | ((DWORD)Minor<<12) | Build;
 }
@@ -443,22 +564,31 @@ inline bool MsgQueryMessage(PluginParam *pParam,UINT Message) {
 }
 
 // メモリ再確保
-// 仕様はreallocと同じ
+// pData が NULL で新しい領域を確保
+// Size が0で領域を解放
 inline void *MsgMemoryReAlloc(PluginParam *pParam,void *pData,DWORD Size) {
 	return (void*)(*pParam->Callback)(pParam,MESSAGE_MEMORYALLOC,(LPARAM)pData,Size);
 }
 
 // メモリ確保
-// 仕様はrealloc(NULL,Size)と同じ
 inline void *MsgMemoryAlloc(PluginParam *pParam,DWORD Size) {
 	return (void*)(*pParam->Callback)(pParam,MESSAGE_MEMORYALLOC,(LPARAM)(void*)NULL,Size);
 }
 
 // メモリ開放
-// 仕様はrealloc(pData,0)と同じ
-// (実際にreallocでメモリ開放しているコードは見たこと無いけど...)
 inline void MsgMemoryFree(PluginParam *pParam,void *pData) {
 	(*pParam->Callback)(pParam,MESSAGE_MEMORYALLOC,(LPARAM)pData,0);
+}
+
+// 文字列複製
+inline LPWSTR MsgStringDuplicate(PluginParam *pParam,LPCWSTR pszString) {
+	if (pszString==NULL)
+		return NULL;
+	DWORD Size=(::lstrlenW(pszString)+1)*sizeof(WCHAR);
+	LPWSTR pszDup=(LPWSTR)MsgMemoryAlloc(pParam,Size);
+	if (pszDup!=NULL)
+		::CopyMemory(pszDup,pszString,Size);
+	return pszDup;
 }
 
 // イベントハンドル用コールバックの設定
@@ -518,6 +648,7 @@ inline bool MsgGetCurrentChannelInfo(PluginParam *pParam,ChannelInfo *pInfo) {
 }
 
 // チャンネルを設定する
+// 機能が追加された MESSAGE_SELECTCHANNEL もあります。
 #if TVTEST_PLUGIN_VERSION<TVTEST_PLUGIN_VERSION_(0,0,8)
 inline bool MsgSetChannel(PluginParam *pParam,int Space,int Channel) {
 	return (*pParam->Callback)(pParam,MESSAGE_SETCHANNEL,Space,Channel)!=0;
@@ -595,6 +726,7 @@ inline int MsgGetDriverName(PluginParam *pParam,LPWSTR pszName,int MaxLength) {
 
 // BonDriverを設定する
 // ファイル名のみか相対パスを指定すると、BonDriver 検索フォルダの設定が使用されます。
+// NULL を指定すると現在の BonDriver が解放されます(ver.0.0.14 以降)。
 inline bool MsgSetDriverName(PluginParam *pParam,LPCWSTR pszName) {
 	return (*pParam->Callback)(pParam,MESSAGE_SETDRIVERNAME,(LPARAM)pszName,0)!=0;
 }
@@ -610,6 +742,9 @@ enum {
 // 録画フラグ
 enum {
 	RECORD_FLAG_CANCEL		=0x10000000UL	// キャンセル
+#if TVTEST_PLUGIN_VERSION>=TVTEST_PLUGIN_VERSION_(0,0,14)
+	, RECORD_FLAG_UTC		=0x00000001UL	// UTC 日時
+#endif
 };
 
 // 録画開始時間の指定方法
@@ -635,17 +770,18 @@ struct RecordInfo {
 							// %～% で囲まれた置換キーワードを使用できます
 	int MaxFileName;		// ファイル名の最大長(MESSAGE_GETRECORDのみで使用)
 	FILETIME ReserveTime;	// 録画予約された時刻(MESSAGE_GETRECORDのみで使用)
+							// ローカル時刻(Flags に RECORD_FLAG_UTC を指定した場合 UTC)
 	DWORD StartTimeSpec;	// 録画開始時間の指定方法(RECORD_START_???)
 	union {
 		FILETIME Time;		// 録画開始時刻(StartTimeSpec==RECORD_START_TIME)
-							// ローカル時刻
+							// ローカル時刻(Flags に RECORD_FLAG_UTC を指定した場合 UTC)
 		ULONGLONG Delay;	// 録画開始時間(StartTimeSpec==RECORD_START_DELAY)
 							// 録画を開始するまでの時間(ms)
 	} StartTime;
 	DWORD StopTimeSpec;		// 録画停止時間の指定方法(RECORD_STOP_???)
 	union {
 		FILETIME Time;		// 録画停止時刻(StopTimeSpec==RECORD_STOP_TIME)
-							// ローカル時刻
+							// ローカル時刻(Flags に RECORD_FLAG_UTC を指定した場合 UTC)
 		ULONGLONG Duration;	// 録画停止時間(StopTimeSpec==RECORD_STOP_DURATION)
 							// 開始時間からのミリ秒
 	} StopTime;
@@ -716,17 +852,6 @@ inline bool MsgSetPanScan(PluginParam *pParam,const PanScanInfo *pInfo) {
 	return (*pParam->Callback)(pParam,MESSAGE_SETPANSCAN,(LPARAM)pInfo,0)!=0;
 }
 
-// B-CAS カードの状態
-enum {
-	BCAS_STATUS_OK,				// エラーなし
-	BCAS_STATUS_NOTOPEN,		// 開かれていない(スクランブル解除なし)
-	BCAS_STATUS_NOCARDREADER,	// カードリーダが無い
-	BCAS_STATUS_NOCARD,			// カードがない
-	BCAS_STATUS_OPENERROR,		// オープンエラー
-	BCAS_STATUS_TRANSMITERROR,	// 通信エラー
-	BCAS_STATUS_ESTABLISHERROR	// コンテキスト確立失敗
-};
-
 // ステータス情報
 struct StatusInfo {
 	DWORD Size;							// 構造体のサイズ
@@ -737,7 +862,7 @@ struct StatusInfo {
 	DWORD ScramblePacketCount;			// 復号漏れパケット数
 #if TVTEST_PLUGIN_VERSION>=TVTEST_PLUGIN_VERSION_(0,0,2)
 	DWORD DropPacketCount;				// ドロップパケット数
-	DWORD BcasCardStatus;				// B-CAS カードの状態(BCAS_STATUS_???)
+	DWORD Reserved;						// 予約
 #endif
 };
 
@@ -762,13 +887,14 @@ enum {
 struct RecordStatusInfo {
 	DWORD Size;				// 構造体のサイズ
 	DWORD Status;			// 状態(RECORD_STATUS_???)
-	FILETIME StartTime;		// 録画開始時刻(ローカル時刻)
+	FILETIME StartTime;		// 録画開始時刻
+							// ローカル時刻(RECORD_STATUS_FLAG_UTC が指定されていれば UTC)
 	DWORD RecordTime;		// 録画時間(ms) 一時停止中を含まない
 	DWORD PauseTime;		// 一時停止時間(ms)
 	DWORD StopTimeSpec;		// 録画停止時間の指定方法(RECORD_STOP_???)
 	union {
 		FILETIME Time;		// 録画停止予定時刻(StopTimeSpec==RECORD_STOP_TIME)
-							// (ローカル時刻)
+							// ローカル時刻(RECORD_STATUS_FLAG_UTC が指定されていれば UTC)
 		ULONGLONG Duration;	// 録画停止までの時間(StopTimeSpec==RECORD_STOP_DURATION)
 							// 開始時刻(StartTime)からミリ秒単位
 	} StopTime;
@@ -789,6 +915,15 @@ enum { RECORDSTATUSINFO_SIZE_V1=TVTEST_OFFSETOF(RecordStatusInfo,pszFileName) };
 inline bool MsgGetRecordStatus(PluginParam *pParam,RecordStatusInfo *pInfo) {
 	return (*pParam->Callback)(pParam,MESSAGE_GETRECORDSTATUS,(LPARAM)pInfo,0)!=0;
 }
+#if TVTEST_PLUGIN_VERSION>=TVTEST_PLUGIN_VERSION_(0,0,14)
+// 録画ステータス取得フラグ
+enum {
+	RECORD_STATUS_FLAG_UTC = 0x00000001U	// UTC の時刻を取得
+};
+inline bool MsgGetRecordStatus(PluginParam *pParam,RecordStatusInfo *pInfo,DWORD Flags) {
+	return (*pParam->Callback)(pParam,MESSAGE_GETRECORDSTATUS,(LPARAM)pInfo,Flags)!=0;
+}
+#endif
 
 // 映像の情報
 struct VideoInfo {
@@ -1002,7 +1137,7 @@ struct ProgramInfo {
 	int MaxEventText;		// イベントテキストの最大長
 	LPWSTR pszEventExtText;	// 追加イベントテキスト
 	int MaxEventExtText;	// 追加イベントテキストの最大長
-	SYSTEMTIME StartTime;	// 開始日時(JST)
+	SYSTEMTIME StartTime;	// 開始日時(EPG 日時 : UTC+9)
 	DWORD Duration;			// 長さ(秒単位)
 };
 
@@ -1097,6 +1232,7 @@ struct CommandInfo {
 // MsgRegisterCommand(pParam, ID_MYCOMMAND, L"MyCommand", L"私のコマンド");
 // コマンドが実行されると EVENT_COMMAND イベントが送られます。
 // その際、パラメータとして識別子が渡されます。
+// MsgRegisterCommand から機能が追加されたバージョンの MsgRegisterPluginCommand もあります。
 inline bool MsgRegisterCommand(PluginParam *pParam,int ID,LPCWSTR pszText,LPCWSTR pszName)
 {
 	CommandInfo Info;
@@ -1119,6 +1255,21 @@ inline bool MsgAddLog(PluginParam *pParam,LPCWSTR pszText)
 {
 	return (*pParam->Callback)(pParam,MESSAGE_ADDLOG,(LPARAM)pszText,0)!=0;
 }
+
+#if TVTEST_PLUGIN_VERSION>=TVTEST_PLUGIN_VERSION_(0,0,14)
+// ログの種類
+enum {
+	LOG_TYPE_INFORMATION,	// 情報
+	LOG_TYPE_WARNING,		// 警告
+	LOG_TYPE_ERROR			// エラー
+};
+
+// ログを記録する
+inline bool MsgAddLog(PluginParam *pParam,LPCWSTR pszText,int Type)
+{
+	return (*pParam->Callback)(pParam,MESSAGE_ADDLOG,(LPARAM)pszText,Type)!=0;
+}
+#endif
 
 #endif	// TVTEST_PLUGIN_VERSION>=TVTEST_PLUGIN_VERSION_(0,0,3)
 
@@ -1158,8 +1309,12 @@ inline bool MsgSetAudioCallback(PluginParam *pParam,AudioCallbackFunc pCallback,
 
 // コマンドを実行する
 // 文字列を指定してコマンドを実行します。
-// コマンドは TVTest.ini の [Accelerator] セクションの Accel*_Command の文字列と同じです。
-// 一覧は TVTest のソースの Command.cpp にあります。
+// コマンドとは TVTest の各機能を実行するためのものです。
+// コマンドの情報は MsgGetAppCommandInfo で取得できます。
+/*
+	// 例
+	MsgDoCommand(pParam, L"Options");	// 設定ダイアログを表示
+*/
 inline bool MsgDoCommand(PluginParam *pParam,LPCWSTR pszCommand)
 {
 	return (*pParam->Callback)(pParam,MESSAGE_DOCOMMAND,(LPARAM)pszCommand,0)!=0;
@@ -1168,61 +1323,6 @@ inline bool MsgDoCommand(PluginParam *pParam,LPCWSTR pszCommand)
 #endif	// TVTEST_PLUGIN_VERSION>=TVTEST_PLUGIN_VERSION_(0,0,7)
 
 #if TVTEST_PLUGIN_VERSION>=TVTEST_PLUGIN_VERSION_(0,0,8)
-
-// B-CAS の情報
-struct BCasInfo {
-	DWORD Size;						// 構造体のサイズ
-	WORD CASystemID;				// CA_system_id
-	BYTE CardID[6];					// カードID
-	BYTE CardType;					// カード種別
-	BYTE MessagePartitionLength;	// メッセージ分割長
-	BYTE SystemKey[32];				// システム鍵
-	BYTE InitialCBC[8];				// CBC初期値
-	BYTE CardManufacturerID;		// メーカ識別
-	BYTE CardVersion;				// バージョン
-	WORD CheckCode;					// チェックコード
-	char szFormatCardID[25];		// 可読形式のカードID (4桁の数字x5)
-};
-
-// B-CAS カードの情報を取得する
-// カードが開かれていない場合は false が返ります。
-inline bool MsgGetBCasInfo(PluginParam *pParam,BCasInfo *pInfo)
-{
-	return (*pParam->Callback)(pParam,MESSAGE_GETBCASINFO,(LPARAM)pInfo,0)!=0;
-}
-
-// B-CAS コマンドの情報
-struct BCasCommandInfo {
-	const BYTE *pSendData;	// 送信データ
-	DWORD SendSize;			// 送信サイズ (バイト単位)
-	BYTE *pReceiveData;		// 受信データ
-	DWORD ReceiveSize;		// 受信サイズ (バイト単位)
-};
-
-// B-CAS カードにコマンドを送信する
-// BCasCommandInfo の pSendData に送信データへのポインタを指定して、
-// SendSize に送信データのバイト数を設定します。
-// また、pReceiveData に受信データを格納するバッファへのポインタを指定して、
-// ReceiveSize にバッファに格納できる最大サイズを設定します。
-// 送信が成功すると、ReceiveSize に受信したデータのサイズが返されます。
-inline bool MsgSendBCasCommand(PluginParam *pParam,BCasCommandInfo *pInfo)
-{
-	return (*pParam->Callback)(pParam,MESSAGE_SENDBCASCOMMAND,(LPARAM)pInfo,0)!=0;
-}
-
-// B-CAS カードにコマンドを送信する
-inline bool MsgSendBCasCommand(PluginParam *pParam,const BYTE *pSendData,DWORD SendSize,BYTE *pReceiveData,DWORD *pReceiveSize)
-{
-	BCasCommandInfo Info;
-	Info.pSendData=pSendData;
-	Info.SendSize=SendSize;
-	Info.pReceiveData=pReceiveData;
-	Info.ReceiveSize=*pReceiveSize;
-	if (!MsgSendBCasCommand(pParam,&Info))
-		return false;
-	*pReceiveSize=Info.ReceiveSize;
-	return true;
-}
 
 // ホストプログラムの情報
 struct HostInfo {
@@ -1276,9 +1376,19 @@ enum SettingType {
 	設定名の大文字と小文字は区別されません。
 
 	設定名                内容                                型
+
 	DriverDirectory       BonDriver の検索ディレクトリ        文字列
 	IniFilePath           Ini ファイルのパス                  文字列
 	RecordFolder          録画時の保存先フォルダ              文字列
+
+	ver.0.0.14 以降
+	RecordFileName        録画のファイル名(※1)               文字列
+	CaptureFolder         キャプチャの保存先フォルダ(※2)     文字列
+	CaptureFileName       キャプチャのファイル名(※1)         文字列
+
+	※1　%event-name% などの変数が含まれている可能性があります。
+	　 　MsgFormatVarString を使って変数を展開できます。
+	※2　相対パスの可能性があります。その場合実行ファイルの場所が基準です。
 */
 
 // 設定を取得する
@@ -1341,7 +1451,7 @@ inline DWORD MsgGetSetting(PluginParam *pParam,LPCWSTR pszName,LPWSTR pszString,
 
 // BonDriverのフルパス名を取得する
 // 戻り値はパスの長さ(終端のNullを除く)が返ります。
-// pszPahtをNULLで呼べば長さだけを取得できます。
+// pszPathをNULLで呼べば長さだけを取得できます。
 inline int MsgGetDriverFullPathName(PluginParam *pParam,LPWSTR pszPath,int MaxLength)
 {
 	return (int)(*pParam->Callback)(pParam,MESSAGE_GETDRIVERFULLPATHNAME,(LPARAM)pszPath,MaxLength);
@@ -1420,6 +1530,7 @@ enum {
 };
 
 // 録画開始情報
+// EVENT_STARTRECORD で渡されます。
 struct StartRecordInfo {
 	DWORD Size;				// 構造体のサイズ
 	DWORD Flags;			// フラグ(現在未使用)
@@ -1634,7 +1745,7 @@ struct EpgEventInfo {
 	BYTE RunningStatus;					// running_status
 	BYTE FreeCaMode;					// free_CA_mode
 	DWORD Reserved;						// 予約
-	SYSTEMTIME StartTime;				// 開始日時(ローカル時刻)
+	SYSTEMTIME StartTime;				// 開始日時(EPG 日時 : UTC+9)
 	DWORD Duration;						// 長さ(秒単位)
 	BYTE VideoListLength;				// 映像の情報の数
 	BYTE AudioListLength;				// 音声の情報の数
@@ -1771,7 +1882,7 @@ struct ProgramGuideProgramInfo {
 	WORD TransportStreamID;	// ストリームID
 	WORD ServiceID;			// サービスID
 	WORD EventID;			// イベントID
-	SYSTEMTIME StartTime;	// 開始日時
+	SYSTEMTIME StartTime;	// 開始日時(EPG 日時 : UTC+9)
 	DWORD Duration;			// 長さ(秒単位)
 };
 
@@ -1854,6 +1965,1237 @@ inline bool MsgRegisterProgramGuideCommand(PluginParam *pParam,
 
 #endif	// TVTEST_PLUGIN_VERSION>=TVTEST_PLUGIN_VERSION_(0,0,13)
 
+#if TVTEST_PLUGIN_VERSION>=TVTEST_PLUGIN_VERSION_(0,0,14)
+
+// フィルタグラフの情報
+// フィルタグラフ関係のイベント(EVENT_FILTERGRAPH_*)で渡されます。
+struct FilterGraphInfo {
+	DWORD Flags;							// 各種フラグ(現在は常に0)
+	BYTE VideoStreamType;					// 映像stream_type
+	BYTE Reserved[3];						// 予約
+	interface IGraphBuilder *pGraphBuilder;	// IGraphBuilder
+};
+
+// スタイル値の単位
+enum {
+	STYLE_UNIT_UNDEFINED,		// 未定義
+	STYLE_UNIT_LOGICAL_PIXEL,	// 論理ピクセル(96 DPI におけるピクセル単位)
+	STYLE_UNIT_PHYSICAL_PIXEL,	// 物理ピクセル
+	STYLE_UNIT_POINT,			// ポイント(1/72インチ)
+	STYLE_UNIT_DIP				// dip(1/160インチ)
+};
+
+// スタイル値の情報
+struct StyleValueInfo {
+	DWORD Size;			// 構造体のサイズ
+	DWORD Flags;		// 各種フラグ(現在は常に0)
+	LPCWSTR pszName;	// スタイル名
+	int Unit;			// 取得する値の単位(STYLE_UNIT_*)
+	int DPI;			// DPI の指定
+	int Value;			// 取得された値
+};
+
+// スタイル値を取得する
+// TVTest.style.ini で設定されたスタイル値を取得します。
+// 通常は下のオーバーロードされた関数を利用する方が簡単です。
+inline bool MsgGetStyleValue(PluginParam *pParam,StyleValueInfo *pInfo) {
+	return (*pParam->Callback)(pParam,MESSAGE_GETSTYLEVALUE,(LPARAM)pInfo,0)!=FALSE;
+}
+
+// 指定された単位のスタイル値を取得する
+inline bool MsgGetStyleValue(PluginParam *pParam,LPCWSTR pszName,int Unit,int DPI,int *pValue) {
+	StyleValueInfo Info;
+	Info.Size=sizeof(Info);
+	Info.Flags=0;
+	Info.pszName=pszName;
+	Info.Unit=Unit;
+	Info.DPI=DPI;
+	if (!MsgGetStyleValue(pParam,&Info))
+		return false;
+	*pValue=Info.Value;
+	return true;
+}
+
+// オリジナルの単位のスタイル値を取得する
+inline bool MsgGetStyleValue(PluginParam *pParam,LPCWSTR pszName,int *pValue) {
+	return MsgGetStyleValue(pParam,pszName,STYLE_UNIT_UNDEFINED,0,pValue);
+}
+
+// 物理ピクセル単位のスタイル値を取得する
+inline bool MsgGetStyleValuePixels(PluginParam *pParam,LPCWSTR pszName,int DPI,int *pValue) {
+	return MsgGetStyleValue(pParam,pszName,STYLE_UNIT_PHYSICAL_PIXEL,DPI,pValue);
+}
+
+// テーマの背景描画情報
+struct ThemeDrawBackgroundInfo {
+	DWORD Size;			// 構造体のサイズ
+	DWORD Flags;		// 各種フラグ(THEME_DRAW_BACKGROUND_FLAG_*)
+	LPCWSTR pszStyle;	// スタイル名
+	HDC hdc;			// 描画先DC
+	RECT DrawRect;		// 描画領域
+	int DPI;			// DPI の指定(0でメインウィンドウと同じ)
+};
+
+// テーマ描画フラグ
+enum {
+	THEME_DRAW_BACKGROUND_FLAG_ADJUSTRECT	=0x00000001U	// クライアント領域を取得
+};
+
+// テーマの背景を描画する
+// 通常は下のオーバーロードされた関数を利用する方が簡単です。
+inline bool MsgThemeDrawBackground(PluginParam *pParam,ThemeDrawBackgroundInfo *pInfo) {
+	return (*pParam->Callback)(pParam,MESSAGE_THEMEDRAWBACKGROUND,(LPARAM)pInfo,0)!=FALSE;
+}
+
+// テーマの背景を描画する
+inline bool MsgThemeDrawBackground(PluginParam *pParam,LPCWSTR pszStyle,HDC hdc,const RECT &DrawRect,int DPI=0) {
+	ThemeDrawBackgroundInfo Info;
+	Info.Size=sizeof(Info);
+	Info.Flags=0;
+	Info.pszStyle=pszStyle;
+	Info.hdc=hdc;
+	Info.DrawRect=DrawRect;
+	Info.DPI=DPI;
+	return MsgThemeDrawBackground(pParam,&Info);
+}
+
+// テーマの文字列描画情報
+struct ThemeDrawTextInfo {
+	DWORD Size;			// 構造体のサイズ
+	DWORD Flags;		// 各種フラグ(現在は常に0)
+	LPCWSTR pszStyle;	// スタイル名
+	HDC hdc;			// 描画先DC
+	LPCWSTR pszText;	// 描画する文字列
+	RECT DrawRect;		// 描画先の領域
+	UINT DrawFlags;		// 描画フラグ(DrawText API の DT_*)
+	COLORREF Color;		// 描画する色(CLR_INVALID でデフォルトの色)
+};
+
+// テーマの文字列を描画する
+// 通常は下のオーバーロードされた関数を利用する方が簡単です。
+inline bool MsgThemeDrawText(PluginParam *pParam,ThemeDrawTextInfo *pInfo) {
+	return (*pParam->Callback)(pParam,MESSAGE_THEMEDRAWTEXT,(LPARAM)pInfo,0)!=FALSE;
+}
+
+// テーマの文字列を描画する
+inline bool MsgThemeDrawText(PluginParam *pParam,
+		LPCWSTR pszStyle,HDC hdc,LPCWSTR pszText,const RECT &DrawRect,
+		UINT DrawFlags,COLORREF Color=CLR_INVALID) {
+	ThemeDrawTextInfo Info;
+	Info.Size=sizeof(Info);
+	Info.Flags=0;
+	Info.pszStyle=pszStyle;
+	Info.hdc=hdc;
+	Info.pszText=pszText;
+	Info.DrawRect=DrawRect;
+	Info.DrawFlags=DrawFlags;
+	Info.Color=Color;
+	return MsgThemeDrawText(pParam,&Info);
+}
+
+// テーマのアイコン描画情報
+struct ThemeDrawIconInfo {
+	DWORD Size;			// 構造体のサイズ
+	DWORD Flags;		// 各種フラグ(現在は常に0)
+	LPCWSTR pszStyle;	// スタイル名
+	HDC hdc;			// 描画先DC
+	HBITMAP hbm;		// 描画するビットマップ
+	RECT DstRect;		// 描画先の領域
+	RECT SrcRect;		// 描画元の領域
+	COLORREF Color;		// 描画する色(CLR_INVALID でデフォルトの色)
+	BYTE Opacity;		// 不透明度(1-255)
+	BYTE Reserved[3];	// 予約領域
+};
+
+// テーマのアイコンを描画する
+// 通常は下のオーバーロードされた関数を利用する方が簡単です。
+inline bool MsgThemeDrawIcon(PluginParam *pParam,ThemeDrawIconInfo *pInfo) {
+	return (*pParam->Callback)(pParam,MESSAGE_THEMEDRAWICON,(LPARAM)pInfo,0)!=FALSE;
+}
+
+// テーマのアイコンを描画する
+inline bool MsgThemeDrawIcon(PluginParam *pParam,LPCWSTR pszStyle,
+		HDC hdc,int DstX,int DstY,int DstWidth,int DstHeight,
+		HBITMAP hbm,int SrcX,int SrcY,int SrcWidth,int SrcHeight,
+		COLORREF Color=CLR_INVALID,BYTE Opacity=255) {
+	ThemeDrawIconInfo Info;
+	Info.Size=sizeof(Info);
+	Info.Flags=0;
+	Info.pszStyle=pszStyle;
+	Info.hdc=hdc;
+	Info.hbm=hbm;
+	Info.DstRect.left=DstX;
+	Info.DstRect.top=DstY;
+	Info.DstRect.right=DstX+DstWidth;
+	Info.DstRect.bottom=DstY+DstHeight;
+	Info.SrcRect.left=SrcX;
+	Info.SrcRect.top=SrcY;
+	Info.SrcRect.right=SrcX+SrcWidth;
+	Info.SrcRect.bottom=SrcY+SrcHeight;
+	Info.Color=Color;
+	Info.Opacity=Opacity;
+	return MsgThemeDrawIcon(pParam,&Info);
+}
+
+// EPG 取得状況の情報
+struct EpgCaptureStatusInfo {
+	DWORD Size;				// 構造体のサイズ
+	WORD Flags;				// 各種フラグ(現在は常に0)
+	WORD NetworkID;			// ネットワークID
+	WORD TransportStreamID;	// ストリームID
+	WORD ServiceID;			// サービスID
+	DWORD Status;			// ステータス(EPG_CAPTURE_STATUS_*)
+};
+
+// EPG 取得状況のステータス
+enum {
+	EPG_CAPTURE_STATUS_SCHEDULEBASICCOMPLETED		=0x00000001U,	// schedule basic が揃っている
+	EPG_CAPTURE_STATUS_SCHEDULEEXTENDEDCOMPLETED	=0x00000002U,	// schedule extended が揃っている
+	EPG_CAPTURE_STATUS_HASSCHEDULEBASIC				=0x00000004U,	// schedule basic が存在する
+	EPG_CAPTURE_STATUS_HASSCHEDULEEXTENDED			=0x00000008U	// schedule extended が存在する
+};
+
+// EPG 取得状況を取得する
+/*
+	// 例
+	EpgCaptureStatusInfo Info;
+	Info.Size = sizeof(Info);
+	Info.Flags = 0;
+	// 取得したいサービスを指定する
+	Info.NetworkID = NetworkID;
+	Info.TransportStreamID = TransportStreamID;
+	Info.ServiceID = ServiceID;
+	// Info.Status に取得したいステータスを指定する
+	Info.Status = EPG_CAPTURE_STATUS_SCHEDULEBASICCOMPLETED |
+	              EPG_CAPTURE_STATUS_SCHEDULEEXTENDEDCOMPLETED;
+	if (MsgGetEpgCaptureStatus(pParam, &Info)) {
+		if (Info.Status & EPG_CAPTURE_STATUS_SCHEDULEBASICCOMPLETED)
+			std::printf("schedule basic 揃った\n");
+		if (Info.Status & EPG_CAPTURE_STATUS_SCHEDULEEXTENDEDCOMPLETED)
+			std::printf("schedule extended 揃った\n");
+	}
+*/
+inline bool MsgGetEpgCaptureStatus(PluginParam *pParam,EpgCaptureStatusInfo *pInfo) {
+	return (*pParam->Callback)(pParam,MESSAGE_GETEPGCAPTURESTATUS,(LPARAM)pInfo,0)!=FALSE;
+}
+
+// コマンドの情報
+struct AppCommandInfo {
+	DWORD Size;			// 構造体のサイズ
+	DWORD Index;		// 取得するコマンドのインデックス
+	LPWSTR pszText;		// コマンドの文字列
+	int MaxText;		// コマンドの文字列のバッファ長
+	LPWSTR pszName;		// コマンドの名前
+	int MaxName;		// コマンドの名前のバッファ長
+};
+
+// コマンドの情報を取得する
+// TVTInitialize 内で呼ぶと、プラグインのコマンドなどが取得できませんので注意してください。
+// pszText に NULL を指定すると、必要なバッファ長(終端のNull文字を含む)が MaxText に返ります。
+// pszName に NULL を指定すると、必要なバッファ長(終端のNull文字を含む)が MaxName に返ります。
+// pszText に取得されたコマンド文字列を MsgDoCommand に指定して実行できます。
+/*
+	// 例
+	DWORD Count = MsgGetAppCommandCount(pParam);
+	for (DWORD i = 0; i < Count; i++) {
+		AppCommandInfo Info;
+		WCHAR szText[256],szName[256];
+		Info.Size = sizeof(Info);
+		Info.Index = i;
+		Info.pszText = szText;
+		Info.MaxText = _countof(szText);
+		Info.pszName = szName;
+		Info.MaxName = _countof(szName);
+		if (MsgGetAppCommandInfo(pParam,&Info)) {
+			std::wprintf(L"Command %u %s %s\n", i, szText, szName);
+		}
+	}
+*/
+inline bool MsgGetAppCommandInfo(PluginParam *pParam,AppCommandInfo *pInfo) {
+	return (*pParam->Callback)(pParam,MESSAGE_GETAPPCOMMANDINFO,(LPARAM)pInfo,0)!=FALSE;
+}
+
+// コマンドの数を取得する
+inline DWORD MsgGetAppCommandCount(PluginParam *pParam) {
+	return (DWORD)(*pParam->Callback)(pParam,MESSAGE_GETAPPCOMMANDCOUNT,0,0);
+}
+
+// 映像ストリームの数を取得する
+inline int MsgGetVideoStreamCount(PluginParam *pParam) {
+	return (int)(*pParam->Callback)(pParam,MESSAGE_GETVIDEOSTREAMCOUNT,0,0);
+}
+
+// 現在の映像ストリームを取得する
+inline int MsgGetVideoStream(PluginParam *pParam) {
+	return (int)(*pParam->Callback)(pParam,MESSAGE_GETVIDEOSTREAM,0,0);
+}
+
+// 映像ストリームを設定する
+inline bool MsgSetVideoStream(PluginParam *pParam,int Stream) {
+	return (*pParam->Callback)(pParam,MESSAGE_SETVIDEOSTREAM,Stream,0)!=FALSE;
+}
+
+// ログ取得の情報
+// Index は現在保持されているログの中でのインデックスを、
+// Serial は起動時からの連番を表します。
+struct GetLogInfo {
+	DWORD Size;		// 構造体のサイズ
+	DWORD Flags;	// 各種フラグ(GET_LOG_FLAG_*)
+	DWORD Index;	// ログのインデックス
+	DWORD Serial;	// ログのシリアルナンバー
+	LPWSTR pszText;	// 取得する文字列
+	DWORD MaxText;	// 文字列の最大長
+	int Type;		// ログの種類(LOG_TYPE_*)
+};
+
+// ログ取得のフラグ
+enum {
+	GET_LOG_FLAG_BYSERIAL	=0x00000001U	// シリアルナンバーから取得
+};
+
+// ログを取得する
+// GetLogInfo の pszText に NULL を指定すると、
+// 必要なバッファ長(終端のNull文字を含む)が MaxText に返ります。
+/*
+	// 例
+	// 全てのログを列挙する
+	GetLogInfo Info;
+	// まず最初のログのシリアルを取得
+	Info.Size = sizeof(Info);
+	Info.Flags = 0;
+	Info.Index = 0;
+	Info.pszText = NULL;
+	if (MsgGetLog(pParam, &Info)) {
+		// シリアルから順番にログを取得
+		WCHAR szText[256];
+		Info.Flags = GET_LOG_FLAG_BYSERIAL;
+		Info.pszText = szText;
+		for (;;) {
+			Info.MaxText = _countof(szText);
+			if (!MsgGetLog(pParam, &Info))
+				break;
+			std::wprintf(L"Log %u : %s\n", Info.Serial, Info.pszText);
+			Info.Serial++;
+		}
+	}
+*/
+inline bool MsgGetLog(PluginParam *pParam,GetLogInfo *pInfo) {
+	return (*pParam->Callback)(pParam,MESSAGE_GETLOG,(LPARAM)pInfo,0)!=FALSE;
+}
+
+// ログの数を取得する
+// ユーザーがログをクリアするなどして、数が減ることもあり得ます。
+inline DWORD MsgGetLogCount(PluginParam *pParam) {
+	return (DWORD)(*pParam->Callback)(pParam,MESSAGE_GETLOGCOUNT,0,0);
+}
+
+// プラグインのコマンドの情報
+// CommandInfo が拡張されたものです。
+struct PluginCommandInfo {
+	DWORD Size;				// 構造体のサイズ
+	DWORD Flags;			// 各種フラグ(PLUGIN_COMMAND_FLAG_*)
+	DWORD State;			// 状態フラグ(PLUGIN_COMMAND_STATE_*)
+	int ID;					// 識別子
+	LPCWSTR pszText;		// コマンドの文字列
+	LPCWSTR pszName;		// コマンドの名前
+	LPCWSTR pszDescription;	// コマンドの説明
+	HBITMAP hbmIcon;		// アイコン
+};
+
+// プラグインのコマンドのフラグ
+enum {
+	PLUGIN_COMMAND_FLAG_ICONIZE			=0x00000001U,	// アイコン表示(サイドバーなどに表示される)
+	PLUGIN_COMMAND_FLAG_NOTIFYDRAWICON	=0x00000002U	// アイコン描画の通知(EVENT_DRAWCOMMANDICON で描画を行う)
+};
+
+// プラグインコマンドの状態フラグ
+enum {
+	PLUGIN_COMMAND_STATE_DISABLED		=0x00000001U,	// 無効
+	PLUGIN_COMMAND_STATE_CHECKED		=0x00000002U	// チェック
+};
+
+// プラグインのコマンドを登録する
+// 基本的に MsgRegisterCommand と同じですが、メンバが追加されています。
+inline bool MsgRegisterPluginCommand(PluginParam *pParam,const PluginCommandInfo *pInfo) {
+	return (*pParam->Callback)(pParam,MESSAGE_REGISTERPLUGINCOMMAND,(LPARAM)pInfo,0)!=FALSE;
+}
+
+// プラグインのコマンドの状態を設定する
+// State に PLUGIN_COMMAND_STATE_* の組み合わせを指定します。
+inline bool MsgSetPluginCommandState(PluginParam *pParam,int ID,DWORD State) {
+	return (*pParam->Callback)(pParam,MESSAGE_SETPLUGINCOMMANDSTATE,ID,State)!=FALSE;
+}
+
+// プラグインコマンドの通知の種類
+enum {
+	PLUGIN_COMMAND_NOTIFY_CHANGEICON	=0x00000001U	// アイコンを再描画する
+};
+
+// プラグインコマンドの通知を行う
+inline bool MsgPluginCommandNotify(PluginParam *pParam,int ID,unsigned int Type) {
+	return (*pParam->Callback)(pParam,MESSAGE_PLUGINCOMMANDNOTIFY,ID,Type)!=FALSE;
+}
+
+// プラグインのアイコンの情報
+struct PluginIconInfo {
+	DWORD Size;			// 構造体のサイズ
+	DWORD Flags;		// 各種フラグ(現在は常に0)
+	HBITMAP hbmIcon;	// アイコン
+};
+
+// プラグインのアイコンを登録する
+// アイコンを登録すると、プラグインの有効/無効をサイドバーで切り替えられるようになります。
+inline bool MsgRegisterPluginIcon(PluginParam *pParam,const PluginIconInfo *pInfo) {
+	return (*pParam->Callback)(pParam,MESSAGE_REGISTERPLUGINICON,(LPARAM)pInfo,0)!=FALSE;
+}
+
+// プラグインのアイコンを登録する
+inline bool MsgRegisterPluginIcon(PluginParam *pParam,HBITMAP hbmIcon) {
+	PluginIconInfo Info;
+	Info.Size=sizeof(Info);
+	Info.Flags=0;
+	Info.hbmIcon=hbmIcon;
+	return MsgRegisterPluginIcon(pParam,&Info);
+}
+
+// プラグインのアイコンを登録する
+inline bool MsgRegisterPluginIconFromResource(PluginParam *pParam,HINSTANCE hinst,LPCTSTR pszName) {
+	HBITMAP hbmIcon=(HBITMAP)::LoadImage(hinst,pszName,IMAGE_BITMAP,0,0,LR_CREATEDIBSECTION);
+	bool fResult=MsgRegisterPluginIcon(pParam,hbmIcon);
+	::DeleteObject(hbmIcon);
+	return fResult;
+}
+
+// コマンドアイコンの描画情報
+// EVENT_DRAWCOMMANDICON で渡されます。
+struct DrawCommandIconInfo {
+	int ID;				// コマンドの識別子
+	WORD Flags;			// 各種フラグ(現在は常に0)
+	WORD State;			// 状態フラグ(COMMAND_ICON_STATE_*)
+	LPCWSTR pszStyle;	// スタイル名
+	HDC hdc;			// 描画先DC
+	RECT DrawRect;		// 描画先領域
+	COLORREF Color;		// 色
+	BYTE Opacity;		// 不透明度
+	BYTE Reserved[3];	// 予約領域
+};
+
+// コマンドアイコンの状態フラグ
+enum {
+	COMMAND_ICON_STATE_DISABLED	=0x0001U,	// 無効状態
+	COMMAND_ICON_STATE_CHECKED	=0x0002U,	// チェック状態
+	COMMAND_ICON_STATE_HOT		=0x0004U	// フォーカスが当たっている
+};
+
+// ステータス項目の情報
+struct StatusItemInfo {
+	DWORD Size;			// 構造体のサイズ
+	DWORD Flags;		// 各種フラグ(STATUS_ITEM_FLAG_*)
+	DWORD Style;		// スタイルフラグ(STATUS_ITEM_STYLE_*)
+	int ID;				// 識別子
+	LPCWSTR pszIDText;	// 識別子文字列
+	LPCWSTR pszName;	// 名前
+	int MinWidth;		// 最小の幅
+	int MaxWidth;		// 最大の幅(-1で制限なし)
+	int DefaultWidth;	// デフォルト幅(正数ではピクセル単位、負数ではフォントの高さの-1/1000単位)
+	int MinHeight;		// 最小の高さ
+};
+
+// ステータス項目のフラグ
+enum {
+	STATUS_ITEM_FLAG_TIMERUPDATE	=0x00000001U	// 定期的に更新する(STATUS_ITEM_EVENT_UPDATETIMER が呼ばれる)
+};
+
+// ステータス項目のスタイルフラグ
+enum {
+	STATUS_ITEM_STYLE_VARIABLEWIDTH	=0x00000001U,	// 可変幅
+	STATUS_ITEM_STYLE_FULLROW		=0x00000002U,	// 一行表示(表示領域が足りなければ一行表示にならないこともある)
+	STATUS_ITEM_STYLE_FORCEFULLROW	=0x00000004U	// 強制一行表示(常に一行表示になり、常に表示される)
+};
+
+// ステータス項目の幅をフォントサイズから求める
+inline int StatusItemWidthByFontSize(int Size) { return Size*-1000; }
+
+// ステータス項目を登録する
+inline bool MsgRegisterStatusItem(PluginParam *pParam,const StatusItemInfo *pInfo) {
+	return (*pParam->Callback)(pParam,MESSAGE_REGISTERSTATUSITEM,(LPARAM)pInfo,0)!=FALSE;
+}
+
+// ステータス項目の状態フラグ
+enum {
+	STATUS_ITEM_STATE_VISIBLE		=0x00000001U,	// 可視
+	STATUS_ITEM_STATE_HOT			=0x00000002U	// フォーカスが当たっている
+};
+
+// ステータス項目の設定の情報
+struct StatusItemSetInfo {
+	DWORD Size;			// 構造体のサイズ
+	DWORD Mask;			// 設定する情報のマスク(STATUS_ITEM_SET_INFO_MASK_*)
+	int ID;				// 項目の識別子
+	DWORD StateMask;	// 状態フラグのマスク(STATUS_ITEM_STATE_*)
+	DWORD State;		// 状態フラグ(STATUS_ITEM_STATE_*)
+	DWORD StyleMask;	// スタイルフラグのマスク(STATUS_ITEM_STYLE_*)
+	DWORD Style;		// スタイルフラグ(STATUS_ITEM_STYLE_*)
+};
+
+// ステータス項目の設定
+enum {
+	STATUS_ITEM_SET_INFO_MASK_STATE	=0x00000001U,	// StateMask / State を設定
+	STATUS_ITEM_SET_INFO_MASK_STYLE	=0x00000002U	// StyleMask / Style を設定
+};
+
+// ステータス項目を設定する
+// StatusItemSetInfo の Size に構造体のサイズを、Mask に設定したい情報を、
+// ID に設定したい項目の識別子を指定して呼び出します。
+/*
+	// 例
+	// 項目の表示状態を設定する
+	void ShowStatusItem(PluginParam *pParam, int ID, bool fVisible)
+	{
+		StatusItemSetInfo Info;
+		Info.Size = sizeof(Info);
+		Info.Mask = STATUS_ITEM_SET_INFO_MASK_STATE;
+		Info.ID = ID;
+		Info.StateMask = STATUS_ITEM_STATE_VISIBLE;
+		Info.State = fVisible ? STATUS_ITEM_STATE_VISIBLE : 0;
+		MsgSetStatusItem(pParam, &Info);
+	}
+*/
+inline bool MsgSetStatusItem(PluginParam *pParam,const StatusItemSetInfo *pInfo) {
+	return (*pParam->Callback)(pParam,MESSAGE_SETSTATUSITEM,(LPARAM)pInfo,0)!=FALSE;
+}
+
+// ステータス項目の情報取得
+struct StatusItemGetInfo {
+	DWORD Size;			// 構造体のサイズ
+	DWORD Mask;			// 取得する情報のマスク(STATUS_ITEM_GET_INFO_MASK_*)
+	int ID;				// 項目の識別子
+	DWORD State;		// 状態フラグ(STATUS_ITEM_STATE_*)
+	HWND hwnd;			// ウィンドウハンドル
+	RECT ItemRect;		// 項目の領域
+	RECT ContentRect;	// 項目の余白を除いた領域
+	DWORD Style;		// スタイルフラグ(STATUS_ITEM_STYLE_*)
+};
+
+// ステータス項目の情報取得
+enum {
+	STATUS_ITEM_GET_INFO_MASK_STATE			=0x00000001U,	// State を取得
+	STATUS_ITEM_GET_INFO_MASK_HWND			=0x00000002U,	// hwnd を取得
+	STATUS_ITEM_GET_INFO_MASK_ITEMRECT		=0x00000004U,	// ItemRect を取得
+	STATUS_ITEM_GET_INFO_MASK_CONTENTRECT	=0x00000008U,	// ContentRect を取得
+	STATUS_ITEM_GET_INFO_MASK_STYLE			=0x00000010U	// Style を取得
+};
+
+// ステータス項目の情報を取得する
+// StatusItemGetInfo の Size に構造体のサイズを、Mask に取得したい情報を、
+// ID に取得したい項目の識別子を指定して呼び出します。
+/*
+	// 例
+	// 項目の表示状態を取得する
+	bool IsStatusItemVisible(PluginParam *pParam, int ID)
+	{
+		StatusItemGetInfo Info;
+		Info.Size = sizeof(Info);
+		Info.Mask = STATUS_ITEM_GET_INFO_MASK_STATE;
+		Info.ID = ID;
+		return MsgGetStatusItem(pParam, &Info)
+			&& (Info.State & STATUS_ITEM_STATE_VISIBLE) != 0;
+	}
+*/
+inline bool MsgGetStatusItemInfo(PluginParam *pParam,StatusItemGetInfo *pInfo) {
+	return (*pParam->Callback)(pParam,MESSAGE_GETSTATUSITEMINFO,(LPARAM)pInfo,0)!=FALSE;
+}
+
+// ステータス項目の通知
+enum {
+	STATUS_ITEM_NOTIFY_REDRAW	// 再描画する
+};
+
+// ステータス項目の通知を行う
+// Type に STATUS_ITEM_NOTIFY_* のいずれかを指定します。
+inline bool MsgStatusItemNotify(PluginParam *pParam,int ID,UINT Type) {
+	return (*pParam->Callback)(pParam,MESSAGE_STATUSITEMNOTIFY,ID,Type)!=FALSE;
+}
+
+// ステータス項目の描画情報
+// EVENT_STATUSITEM_DRAW で渡されます。
+// 描画はダブルバッファリングによって行われるため、
+// ItemRect / DrawRect で渡される位置は表示上の位置とは異なっています。
+struct StatusItemDrawInfo {
+	int ID;				// 項目の識別子
+	WORD Flags;			// 各種フラグ(STATUS_ITEM_DRAW_FLAG_*)
+	WORD State;			// 状態フラグ(STATUS_ITEM_DRAW_STATE_*)
+	LPCWSTR pszStyle;	// スタイル
+	HDC hdc;			// 描画先DC
+	RECT ItemRect;		// 項目の領域
+	RECT DrawRect;		// 描画する領域
+	COLORREF Color;		// 色
+};
+
+// ステータス項目描画フラグ
+enum {
+	STATUS_ITEM_DRAW_FLAG_PREVIEW	=0x0001U	// プレビュー(設定ダイアログでの表示)
+};
+
+// ステータス項目描画状態フラグ
+enum {
+	STATUS_ITEM_DRAW_STATE_HOT		=0x0001U	// フォーカスが当たっている
+};
+
+// ステータス項目の通知情報
+// EVENT_STATUSITEM_NOTIFY で渡されます。
+struct StatusItemEventInfo {
+	int ID;				// 項目の識別子
+	UINT Event;			// イベントの種類(STATUS_ITEM_EVENT_*)
+	LPARAM Param;		// パラメータ
+};
+
+// ステータス項目のイベント
+enum {
+	STATUS_ITEM_EVENT_CREATED=1,			// 項目が作成された
+	STATUS_ITEM_EVENT_VISIBILITYCHANGED,	// 項目の表示状態が変わった
+	STATUS_ITEM_EVENT_ENTER,				// フォーカスが当たった
+	STATUS_ITEM_EVENT_LEAVE,				// フォーカスが離れた
+	STATUS_ITEM_EVENT_SIZECHANGED,			// 項目の大きさが変わった
+	STATUS_ITEM_EVENT_UPDATETIMER,			// 更新タイマー
+	STATUS_ITEM_EVENT_STYLECHANGED,			// スタイルが変わった(DPI の変更など)
+	STATUS_ITEM_EVENT_FONTCHANGED			// フォントが変わった
+};
+
+// ステータス項目のマウスイベント情報
+// EVENT_STATUSITEM_MOUSE で渡されます。
+struct StatusItemMouseEventInfo {
+	int ID;				// 項目の識別子
+	UINT Action;		// マウス操作の種類(STATUS_ITEM_MOUSE_ACTION_*)
+	HWND hwnd;			// ウィンドウハンドル
+	POINT CursorPos;	// カーソル位置(クライアント座標)
+	RECT ItemRect;		// 項目の領域
+	RECT ContentRect;	// 項目の余白を除いた領域
+	int WheelDelta;		// ホイール移動量
+};
+
+// ステータス項目のマウス操作の種類
+// DOWN か DOUBLECLICK が送られた際に SetCapture() でマウスキャプチャが行われると、
+// キャプチャが解除された時に CAPTURERELEASE が送られます。
+enum {
+	STATUS_ITEM_MOUSE_ACTION_LDOWN=1,		// 左ボタンが押された
+	STATUS_ITEM_MOUSE_ACTION_LUP,			// 左ボタンが離された
+	STATUS_ITEM_MOUSE_ACTION_LDOUBLECLICK,	// 左ダブルクリック
+	STATUS_ITEM_MOUSE_ACTION_RDOWN,			// 右ボタンが押された
+	STATUS_ITEM_MOUSE_ACTION_RUP,			// 右ボタンが離された
+	STATUS_ITEM_MOUSE_ACTION_RDOUBLECLICK,	// 右ダブルクリック
+	STATUS_ITEM_MOUSE_ACTION_MDOWN,			// 中央ボタンが押された
+	STATUS_ITEM_MOUSE_ACTION_MUP,			// 中央ボタンが離された
+	STATUS_ITEM_MOUSE_ACTION_MDOUBLECLICK,	// 中央ダブルクリック
+	STATUS_ITEM_MOUSE_ACTION_MOVE,			// カーソル移動
+	STATUS_ITEM_MOUSE_ACTION_WHEEL,			// ホイール
+	STATUS_ITEM_MOUSE_ACTION_HORZWHEEL,		// 横ホイール
+	STATUS_ITEM_MOUSE_ACTION_CAPTURERELEASE	// キャプチャが解除された
+};
+
+// TSプロセッサのインターフェースは TVTestInterface.h で宣言されています。
+#ifndef TVTEST_INTERFACE_H
+namespace Interface {
+	struct ITSProcessor;
+}
+#endif
+
+// TSプロセッサの接続位置
+// 詳細は TVTestInterface.h を参照してください。
+enum {
+	TS_PROCESSOR_CONNECT_POSITION_SOURCE,			// ソース(チューナー等からストリームが入力された後)
+	TS_PROCESSOR_CONNECT_POSITION_PREPROCESSING,	// 前処理(TSを解析する前)
+	TS_PROCESSOR_CONNECT_POSITION_POSTPROCESSING,	// 後処理(TSを解析した後)
+	TS_PROCESSOR_CONNECT_POSITION_VIEWER,			// ビューア(再生の前)
+	TS_PROCESSOR_CONNECT_POSITION_RECORDER			// レコーダ(ストリーム書き出しの前)
+};
+
+// TSプロセッサの情報
+struct TSProcessorInfo {
+	DWORD Size;								// 構造体のサイズ
+	DWORD Flags;							// 各種フラグ(現在は常に0)
+	Interface::ITSProcessor *pTSProcessor;	// 接続する ITSProcessor
+	DWORD ConnectPosition;					// 接続位置(TS_PROCESSOR_CONNECT_POSITION_*)
+};
+
+// TSプロセッサを登録する
+inline bool MsgRegisterTSProcessor(PluginParam *pParam,const TSProcessorInfo *pInfo) {
+	return (*pParam->Callback)(pParam,MESSAGE_REGISTERTSPROCESSOR,(LPARAM)pInfo,0)!=FALSE;
+}
+
+// パネル項目のスタイル
+enum {
+	PANEL_ITEM_STYLE_NEEDFOCUS	=0x0001U	// キーボードフォーカスを受け取る
+};
+
+// パネル項目の状態
+enum {
+	PANEL_ITEM_STATE_ENABLED	=0x0001U,	// 有効(タブに表示されている)
+	PANEL_ITEM_STATE_ACTIVE		=0x0002U	// アクティブ
+};
+
+// パネル項目の情報
+struct PanelItemInfo {
+	DWORD Size;			// 構造体のサイズ
+	DWORD Flags;		// 各種フラグ(現在は常に0)
+	DWORD Style;		// スタイルフラグ(PANEL_ITEM_STYLE_* の組み合わせ)
+	int ID;				// 識別子
+	LPCWSTR pszIDText;	// 識別子文字列
+	LPCWSTR pszTitle;	// タイトル
+	HBITMAP hbmIcon;	// アイコンのビットマップ
+};
+
+// パネル項目を登録する
+inline bool MsgRegisterPanelItem(PluginParam *pParam,const PanelItemInfo *pInfo) {
+	return (*pParam->Callback)(pParam,MESSAGE_REGISTERPANELITEM,(LPARAM)pInfo,0)!=FALSE;
+}
+
+// パネル項目の設定の情報
+struct PanelItemSetInfo {
+	DWORD Size;			// 構造体のサイズ
+	DWORD Mask;			// 設定する情報のマスク(PANEL_ITEM_SET_INFO_MASK_* の組み合わせ)
+	int ID;				// 項目の識別子
+	DWORD StateMask;	// 状態フラグのマスク(PANEL_ITEM_STATE_* の組み合わせ)
+	DWORD State;		// 状態フラグ(PANEL_ITEM_STATE_* の組み合わせ)
+	DWORD StyleMask;	// スタイルフラグのマスク(PANEL_ITEM_STYLE_* の組み合わせ)
+	DWORD Style;		// スタイルフラグ(PANEL_ITEM_STYLE_* の組み合わせ)
+};
+
+// パネル項目の設定
+enum {
+	PANEL_ITEM_SET_INFO_MASK_STATE	=0x00000001U,	// StateMask / State を設定
+	PANEL_ITEM_SET_INFO_MASK_STYLE	=0x00000002U	// StyleMask / Style を設定
+};
+
+// パネル項目を設定する
+// PanelItemSetInfo の Size に構造体のサイズを、Mask に設定したい情報を、
+// ID に設定したい項目の識別子を指定して呼び出します。
+/*
+	// 例
+	// 項目の有効状態を設定する
+	void EnablePanelItem(PluginParam *pParam, int ID, bool fEnable)
+	{
+		PanelItemSetInfo Info;
+		Info.Size = sizeof(PanelItemSetInfo);
+		Info.Mask = PANEL_ITEM_SET_INFO_MASK_STATE;
+		Info.ID = ID;
+		Info.StateMask = PANEL_ITEM_STATE_ENABLED;
+		Info.State = fEnable ? PANEL_ITEM_STATE_ENABLED : 0;
+		MsgSetPanelItem(pParam, &Info);
+	}
+*/
+inline bool MsgSetPanelItem(PluginParam *pParam,const PanelItemSetInfo *pInfo) {
+	return (*pParam->Callback)(pParam,MESSAGE_SETPANELITEM,(LPARAM)pInfo,0)!=FALSE;
+}
+
+// パネル項目の情報取得
+struct PanelItemGetInfo {
+	DWORD Size;			// 構造体のサイズ
+	DWORD Mask;			// 取得する情報のマスク(PANEL_ITEM_GET_INFO_MASK_* の組み合わせ)
+	int ID;				// 項目の識別子
+	DWORD State;		// 項目の状態フラグ(PANEL_ITEM_STATE_* の組み合わせ)
+	HWND hwndParent;	// 親ウィンドウのハンドル
+	HWND hwndItem;		// 項目のウィンドウハンドル
+	DWORD Style;		// スタイルフラグ(PANEL_ITEM_STYLE_* の組み合わせ)
+};
+
+// パネル項目の情報取得マスク
+enum {
+	PANEL_ITEM_GET_INFO_MASK_STATE		=0x0001U,	// State を取得
+	PANEL_ITEM_GET_INFO_MASK_HWNDPARENT	=0x0002U,	// hwndParent を取得
+	PANEL_ITEM_GET_INFO_MASK_HWNDITEM	=0x0004U,	// hwndItem を取得
+	PANEL_ITEM_GET_INFO_MASK_STYLE		=0x0008U	// Style を取得
+};
+
+// パネル項目の情報を取得する
+// PanelItemGetInfo の Size に構造体のサイズを、Mask に取得したい情報を、
+// ID に取得したい項目の識別子を指定して呼び出します。
+inline bool MsgGetPanelItemInfo(PluginParam *pParam,PanelItemGetInfo *pInfo) {
+	return (*pParam->Callback)(pParam,MESSAGE_GETPANELITEMINFO,(LPARAM)pInfo,0)!=FALSE;
+}
+
+// パネル項目の通知情報
+// EVENT_PANELITEM_NOTIFY で渡されます
+struct PanelItemEventInfo {
+	int ID;				// 項目の識別子
+	UINT Event;			// イベントの種類(PANEL_ITEM_EVENT_* のいずれか)
+};
+
+// パネル項目のイベント
+enum {
+	PANEL_ITEM_EVENT_CREATE=1,		// 項目を作成する
+	PANEL_ITEM_EVENT_ACTIVATE,		// 項目がアクティブになる
+	PANEL_ITEM_EVENT_DEACTIVATE,	// 項目が非アクティブになる
+	PANEL_ITEM_EVENT_ENABLE,		// 項目が有効になる
+	PANEL_ITEM_EVENT_DISABLE,		// 項目が無効になる
+	PANEL_ITEM_EVENT_STYLECHANGED,	// スタイルが変わった(DPI の変更など)
+	PANEL_ITEM_EVENT_FONTCHANGED	// フォントが変わった
+};
+
+// パネル項目作成イベントの情報
+// PANEL_ITEM_EVENT_CREATE で渡されます。
+// hwndItem に作成したウィンドウのハンドルを返します。
+struct PanelItemCreateEventInfo {
+	PanelItemEventInfo EventInfo;
+	RECT ItemRect;
+	HWND hwndParent;
+	HWND hwndItem;
+};
+
+// チャンネル選択の情報
+struct ChannelSelectInfo {
+	DWORD Size;				// 構造体のサイズ
+	DWORD Flags;			// 各種フラグ(CHANNEL_SELECT_FLAG_* の組み合わせ)
+	LPCWSTR pszTuner;		// チューナー名(NULL で指定なし)
+	int Space;				// チューニング空間(-1 で指定なし)
+	int Channel;			// チャンネル(-1 で指定なし)
+	WORD NetworkID;			// ネットワークID(0 で指定なし)
+	WORD TransportStreamID;	// トランスポートストリームID(0 で指定なし)
+	WORD ServiceID;			// サービスID(0 で指定なし)
+};
+
+// チャンネル選択のフラグ
+enum {
+	CHANNEL_SELECT_FLAG_STRICTSERVICE	=0x0001U	// ServiceID の指定を厳密に扱う
+};
+
+// チャンネルを選択する
+inline bool MsgSelectChannel(PluginParam *pParam,const ChannelSelectInfo *pInfo) {
+	return (*pParam->Callback)(pParam,MESSAGE_SELECTCHANNEL,(LPARAM)pInfo,0)!=FALSE;
+}
+
+// お気に入り項目の種類
+enum {
+	FAVORITE_ITEM_TYPE_FOLDER,	// フォルダ
+	FAVORITE_ITEM_TYPE_CHANNEL	// チャンネル
+};
+
+// お気に入り項目の情報
+struct FavoriteItemInfo {
+	DWORD Type;						// 種類(FAVORITE_ITEM_TYPE_* のいずれか)
+	DWORD Flags;					// 各種フラグ(現在は常に0)
+	LPCWSTR pszName;				// 名前
+	union {
+		// Type == FAVORITE_ITEM_TYPE_FOLDER の場合
+		struct {
+			DWORD Flags;								// 各種フラグ(現在は常に0)
+			DWORD ItemCount;							// 子項目数
+			const struct FavoriteItemInfo *ItemList;	// 子項目のリスト
+		} Folder;
+		// Type == FAVORITE_ITEM_TYPE_CHANNEL の場合
+		struct {
+			DWORD Flags;			// 各種フラグ(FAVORITE_CHANNEL_FLAG_*)
+			int Space;				// チューニング空間
+			int Channel;			// チャンネルインデックス
+			int ChannelNo;			// リモコン番号
+			WORD NetworkID;			// ネットワークID
+			WORD TransportStreamID;	// トランスポートストリームID
+			WORD ServiceID;			// サービスID
+			WORD Reserved;			// 予約(現在は常に0)
+			LPCWSTR pszTuner;		// チューナー名
+		} Channel;
+	};
+};
+
+// お気に入りチャンネルのフラグ
+enum {
+	FAVORITE_CHANNEL_FLAG_FORCETUNERCHANGE	=0x0001U	// チューナー指定を強制
+};
+
+// お気に入りリスト
+struct FavoriteList {
+	DWORD Size;					// 構造体のサイズ
+	DWORD ItemCount;			// お気に入り項目数
+	FavoriteItemInfo *ItemList;	// お気に入り項目のリスト
+};
+
+// お気に入りリストを取得する
+// FavoriteList の Size メンバに構造体のサイズを設定して呼び出します。
+// 取得したリストは MsgFreeFavoriteList で解放します。
+inline bool MsgGetFavoriteList(PluginParam *pParam,FavoriteList *pList) {
+	return (*pParam->Callback)(pParam,MESSAGE_GETFAVORITELIST,(LPARAM)pList,0)!=FALSE;
+}
+
+// お気に入りリストを解放する
+// MsgGetFavoriteList で取得したリストを解放します。
+inline void MsgFreeFavoriteList(PluginParam *pParam,FavoriteList *pList) {
+	(*pParam->Callback)(pParam,MESSAGE_FREEFAVORITELIST,(LPARAM)pList,0);
+}
+
+// ワンセグモードを取得する
+inline bool MsgGet1SegMode(PluginParam *pParam) {
+	return (*pParam->Callback)(pParam,MESSAGE_GET1SEGMODE,0,0)!=FALSE;
+}
+
+// ワンセグモードを設定する
+inline bool MsgSet1SegMode(PluginParam *pParam,bool f1SegMode) {
+	return (*pParam->Callback)(pParam,MESSAGE_SET1SEGMODE,f1SegMode,0)!=FALSE;
+}
+
+// 取得する DPI の種類
+enum DPIType {
+	DPI_TYPE_SYSTEM,	// システム
+	DPI_TYPE_WINDOW,	// ウィンドウ
+	DPI_TYPE_RECT,		// 矩形
+	DPI_TYPE_POINT,		// 位置
+	DPI_TYPE_MONITOR	// モニタ
+};
+
+// DPI 取得のフラグ
+enum {
+	DPI_FLAG_FORCED = 0x00000001U	// 強制指定された DPI を取得
+};
+
+// DPI 取得の情報
+struct GetDPIInfo {
+	DPIType Type;			// 取得する DPI の種類(DPI_TYPE_*)
+	DWORD Flags;			// フラグ(DPI_FLAG_*)
+	union {
+		HWND hwnd;			// ウィンドウハンドル(Type == DPI_TYPE_WINDOW)
+		RECT Rect;			// 矩形(Type == DPI_TYPE_RECT)
+		POINT Point;		// 位置(Type == DPI_TYPE_POINT)
+		HMONITOR hMonitor;	// モニタ(Type == DPI_TYPE_MONITOR)
+	};
+};
+
+// DPI を取得する
+// エラー時は0が返ります。
+inline int MsgGetDPI(PluginParam *pParam,GetDPIInfo *pInfo) {
+	return (int)(*pParam->Callback)(pParam,MESSAGE_GETDPI,(LPARAM)pInfo,0);
+}
+inline int MsgGetSystemDPI(PluginParam *pParam) {
+	GetDPIInfo Info;
+	Info.Type=DPI_TYPE_SYSTEM;
+	Info.Flags=0;
+	return (int)(*pParam->Callback)(pParam,MESSAGE_GETDPI,(LPARAM)&Info,0);
+}
+inline int MsgGetDPIFromWindow(PluginParam *pParam,HWND hwnd,DWORD Flags=0) {
+	GetDPIInfo Info;
+	Info.Type=DPI_TYPE_WINDOW;
+	Info.Flags=Flags;
+	Info.hwnd=hwnd;
+	return (int)(*pParam->Callback)(pParam,MESSAGE_GETDPI,(LPARAM)&Info,0);
+}
+inline int MsgGetDPIFromRect(PluginParam *pParam,const RECT &Rect,DWORD Flags=0) {
+	GetDPIInfo Info;
+	Info.Type=DPI_TYPE_RECT;
+	Info.Flags=Flags;
+	Info.Rect=Rect;
+	return (int)(*pParam->Callback)(pParam,MESSAGE_GETDPI,(LPARAM)&Info,0);
+}
+inline int MsgGetDPIFromPoint(PluginParam *pParam,const POINT &Point,DWORD Flags=0) {
+	GetDPIInfo Info;
+	Info.Type=DPI_TYPE_POINT;
+	Info.Flags=Flags;
+	Info.Point=Point;
+	return (int)(*pParam->Callback)(pParam,MESSAGE_GETDPI,(LPARAM)&Info,0);
+}
+inline int MsgGetDPIFromPoint(PluginParam *pParam,LONG x,LONG y,DWORD Flags=0) {
+	POINT pt;
+	pt.x=x;
+	pt.y=y;
+	return MsgGetDPIFromPoint(pParam,pt,Flags);
+}
+inline int MsgGetDPIFromMonitor(PluginParam *pParam,HMONITOR hMonitor,DWORD Flags=0) {
+	GetDPIInfo Info;
+	Info.Type=DPI_TYPE_MONITOR;
+	Info.Flags=Flags;
+	Info.hMonitor=hMonitor;
+	return (int)(*pParam->Callback)(pParam,MESSAGE_GETDPI,(LPARAM)&Info,0);
+}
+
+// フォント取得の情報
+struct GetFontInfo {
+	DWORD Size;			// 構造体のサイズ
+	DWORD Flags;		// フラグ(現在は常に0)
+	LPCWSTR pszName;	// 取得するフォントの指定
+	LOGFONTW LogFont;	// 取得したフォント
+	int DPI;			// DPI の指定(0で指定なし)
+};
+
+// フォントを取得する
+// 以下のフォントが取得できます。
+/*
+	OSDFont           OSD のフォント
+	PanelFont         パネルのフォント
+	ProgramGuideFont  番組表のフォント
+	StatusBarFont     ステータスバーのフォント
+*/
+inline bool MsgGetFont(PluginParam *pParam,GetFontInfo *pInfo) {
+	return (int)(*pParam->Callback)(pParam,MESSAGE_GETFONT,(LPARAM)pInfo,0)!=FALSE;
+}
+inline bool MsgGetFont(PluginParam *pParam,LPCWSTR pszName,LOGFONTW *pLogFont,int DPI=0) {
+	GetFontInfo Info;
+	Info.Size=sizeof(GetFontInfo);
+	Info.Flags=0;
+	Info.pszName=pszName;
+	Info.DPI=DPI;
+	if (!MsgGetFont(pParam,&Info))
+		return false;
+	*pLogFont=Info.LogFont;
+	return true;
+}
+
+// ダイアログのメッセージ処理関数
+typedef INT_PTR (CALLBACK *DialogMessageFunc)(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam,void *pClientData);
+
+// ダイアログ表示の情報
+struct ShowDialogInfo {
+	DWORD Size;						// 構造体のサイズ
+	DWORD Flags;					// フラグ(SHOW_DIALOG_FLAG_*)
+	HINSTANCE hinst;				// ダイアログテンプレートのインスタンス
+	LPCWSTR pszTemplate;			// ダイアログテンプレート
+	DialogMessageFunc pMessageFunc;	// メッセージ処理関数
+	void *pClientData;				// メッセージ処理関数に渡すパラメータ
+	HWND hwndOwner;					// オーナーウィンドウのハンドル
+	POINT Position;					// ダイアログの位置(Flags に SHOW_DIALOG_FLAG_POSITION が指定されている場合に有効)
+};
+
+// ダイアログ表示のフラグ
+enum {
+	SHOW_DIALOG_FLAG_MODELESS = 0x00000001U,	// モードレス
+	SHOW_DIALOG_FLAG_POSITION = 0x00000002U		// 位置指定が有効
+};
+
+// ダイアログを表示する
+// DialogBox / CreateDialog などの代わりに MsgShowDialog を利用すると、
+// DPI に応じたスケーリングなどが自動的に行われます。
+// Flags に SHOW_DIALOG_FLAG_MODELESS を指定するとモードレスダイアログが作成され、
+// ダイアログのウィンドウハンドルが返ります。
+// 指定しない場合はモーダルダイアログが作成され、EndDialog で指定された値が返ります。
+inline INT_PTR MsgShowDialog(PluginParam *pParam,ShowDialogInfo *pInfo) {
+	return (*pParam->Callback)(pParam,MESSAGE_SHOWDIALOG,(LPARAM)pInfo,0);
+}
+
+// 各種日時
+union TimeUnion {
+	SYSTEMTIME SystemTime;
+	FILETIME FileTime;
+};
+
+// 日時変換のフラグ
+enum {
+	CONVERT_TIME_FLAG_FROM_FILETIME = 0x00000001U,	// FILETIME から変換
+	CONVERT_TIME_FLAG_TO_FILETIME   = 0x00000002U,	// FILETIME へ変換
+	CONVERT_TIME_FLAG_FILETIME      = CONVERT_TIME_FLAG_FROM_FILETIME | CONVERT_TIME_FLAG_TO_FILETIME,
+	CONVERT_TIME_FLAG_OFFSET        = 0x00000004U	// オフセットの指定
+};
+
+// 日時変換の種類
+enum {
+	CONVERT_TIME_TYPE_UTC,			// UTC
+	CONVERT_TIME_TYPE_LOCAL,		// ローカル
+	CONVERT_TIME_TYPE_EPG,			// EPG 日時(UTC+9)
+	CONVERT_TIME_TYPE_EPG_DISPLAY	// EPG の表示用(変換先としてのみ指定可能)
+};
+
+// 日時変換の情報
+struct ConvertTimeInfo {
+	DWORD Size;					// 構造体のサイズ
+	DWORD Flags;				// 各種フラグ(CONVERT_TIME_FLAG_*)
+	DWORD TypeFrom;				// 変換元の種類(CONVERT_TIME_TYPE_*)
+	DWORD TypeTo;				// 変換先の種類(CONVERT_TIME_TYPE_*)
+	TimeUnion From;				// 変換元の日時
+	TimeUnion To;				// 変換先の日時
+	LONGLONG Offset;			// オフセットms(Flags に CONVERT_TIME_FLAG_OFFSET が指定されている場合のみ)
+};
+
+// 日時を変換する
+// Flags に CONVERT_TIME_FLAG_OFFSET を指定すると、Offset の時間が変換結果に加算されます。
+bool inline MsgConvertTime(PluginParam *pParam,ConvertTimeInfo *pInfo) {
+	return (*pParam->Callback)(pParam,MESSAGE_CONVERTTIME,(LPARAM)pInfo,0)!=FALSE;
+}
+// EPG 日時を変換する
+bool inline MsgConvertEpgTimeTo(
+	PluginParam *pParam,const SYSTEMTIME &EpgTime,DWORD Type,SYSTEMTIME *pDstTime)
+{
+	ConvertTimeInfo Info;
+	Info.Size = sizeof(ConvertTimeInfo);
+	Info.Flags = 0;
+	Info.TypeFrom = CONVERT_TIME_TYPE_EPG;
+	Info.TypeTo = Type;
+	Info.From.SystemTime = EpgTime;
+	if (!MsgConvertTime(pParam, &Info))
+		return false;
+	*pDstTime = Info.To.SystemTime;
+	return true;
+}
+
+// 映像ストリームのコールバック関数
+// Format はストリームのコーデックの FourCC で、現在以下のいずれかです。
+//   FCC('mp2v')  MPEG-2 Video
+//   FCC('H264')  H.264
+//   FCC('H265')  H.265
+// 渡されたデータを加工することはできません。
+// 戻り値は今のところ常に0を返します。
+typedef LRESULT (CALLBACK *VideoStreamCallbackFunc)(
+	DWORD Format,const void *pData,SIZE_T Size,void *pClientData);
+
+// 映像ストリームを取得するコールバック関数を設定する
+// 一つのプラグインで設定できるコールバック関数は一つだけです。
+// pClinetData はコールバック関数に渡されます。
+// pCallback に NULL を指定すると、設定が解除されます。
+inline bool MsgSetVideoStreamCallback(PluginParam *pParam,VideoStreamCallbackFunc pCallback,void *pClientData=NULL)
+{
+	return (*pParam->Callback)(pParam,MESSAGE_SETVIDEOSTREAMCALLBACK,(LPARAM)pCallback,(LPARAM)pClientData)!=0;
+}
+
+// 変数文字列のコンテキスト
+// MsgFormatVarString の説明を参照してください。
+struct VarStringContext;
+
+// 変数文字列のコンテキストを取得
+// 取得したコンテキストは MsgFreeVarStringContext で解放します。
+inline VarStringContext *MsgGetVarStringContext(PluginParam *pParam) {
+	return (VarStringContext*)(*pParam->Callback)(pParam,MESSAGE_GETVARSTRINGCONTEXT,0,0);
+}
+// 変数文字列のコンテキストを解放
+// MsgGetVarStringContext で取得したコンテキストを解放します。
+inline void MsgFreeVarStringContext(PluginParam *pParam,VarStringContext *pContext) {
+	(*pParam->Callback)(pParam,MESSAGE_FREEVARSTRINGCONTEXT,(LPARAM)pContext,0);
+}
+
+// 変数文字列のマップ関数
+typedef BOOL (CALLBACK *VarStringMapFunc)(LPCWSTR pszVar, LPWSTR *ppszString, void *pClientData);
+
+// 変数文字列のフォーマットフラグ
+enum {
+	VAR_STRING_FORMAT_FLAG_FILENAME = 0x00000001	// ファイル名用(ファイル名に使えない文字が全角になる)
+};
+
+// 変数文字列のフォーマット情報
+struct VarStringFormatInfo {
+	DWORD Size;							// 構造体のサイズ
+	DWORD Flags;						// 各種フラグ(VAR_STRING_FORMAT_FLAG_*)
+	LPCWSTR pszFormat;					// フォーマット文字列
+	const VarStringContext *pContext;	// コンテキスト(NULL で現在のコンテキスト)
+	VarStringMapFunc pMapFunc;			// マップ関数(必要なければ NULL)
+	void *pClientData;					// マップ関数に渡す任意データ
+	LPWSTR pszResult;					// 変換結果の文字列
+};
+
+// 変数文字列を使って文字列をフォーマット
+// 変数文字列は、%event-name% などの変数が含まれた文字列です。
+// このような文字列の変数を展開した文字列を取得できます。
+// 変数の展開に必要な、現在の番組や日時などの情報をコンテキストと呼びます。
+// MsgGetVarStringContext で、その時点のコンテキストを取得できます。
+/*
+	// 現在のコンテキストを取得
+	// (ここでは例のために取得していますが、現在の情報を使うのであれば
+	//  VarStringFormatInfo.pContext を NULL にすればよいです)
+	VarStringContext *pContext = MsgGetVarStringContext(pParam);
+
+	// 文字列をフォーマットする
+	VarStringFormatInfo Info;
+	Info.Size = sizeof(VarStringFormatInfo);
+	Info.Flags = 0;
+	Info.pszFormat = L"%event-name% %tot-date% %tot-time%";
+	Info.pContext = pContext;
+	Info.pMapFunc = NULL;
+	Info.pClientData = NULL;
+
+	if (MsgFormatVarString(pParam, &Info)) {
+		// Info.pszResult に結果の文字列が返される
+		...
+		// 不要になったらメモリを解放する
+		MsgMemoryFree(pParam, Info.pszResult);
+	}
+
+	// 不要になったらコンテキストを解放する
+	MsgFreeVarStringContext(pParam, pContext);
+*/
+// マップ関数を指定すると、任意の変数を文字列に変換できます。
+// 上記の例でマップ関数を使う場合は以下のようになります。
+/*
+	BOOL CALLBACK VarStringMap(LPCWSTR pszVar, LPWSTR *ppszString, void *pClientData)
+	{
+		PluginParam *pParam = static_cast<PluginParam*>(pClientData);
+		if (::lstrcmpiW(pszVar, L"my-var") == 0) {
+			LPCWSTR pszMapString = L"replaced string";	// 置き換える文字列
+			*ppszString = MsgStringDuplicate(pParam, pszMapString);
+			return TRUE;
+		}
+		return FALSE;
+	}
+
+	Info.pMapFunc = VarStringMap;
+	Info.pClientData = pParam;
+*/
+inline bool MsgFormatVarString(PluginParam *pParam,VarStringFormatInfo *pInfo) {
+	return (*pParam->Callback)(pParam,MESSAGE_FORMATVARSTRING,(LPARAM)pInfo,0)!=FALSE;
+}
+
+// 変数登録のフラグ
+enum {
+	REGISTER_VARIABLE_FLAG_OVERRIDE = 0x00000001	// デフォルトの変数を上書き
+};
+
+// 変数登録の情報
+struct RegisterVariableInfo {
+	DWORD Size;				// 構造体のサイズ
+	DWORD Flags;			// フラグ(REGISTER_VARIABLE_FLAG_*)
+	LPCWSTR pszKeyword;		// 識別子
+	LPCWSTR pszDescription;	// 説明文
+	LPCWSTR pszValue;		// 変数の値(NULL で動的に取得)
+};
+
+// 変数取得の情報
+// EVENT_GETVARIABLE で渡されます。
+struct GetVariableInfo {
+	LPCWSTR pszKeyword;		// 識別子
+	LPWSTR pszValue;		// 値
+};
+
+// 変数を登録
+// 変数を登録すると、TVTest の各所の変数文字列で利用できるようになります。
+// 変数の識別子は半角のアルファベットと数字、-記号のみ使用してください。
+// TVTest で既に定義されている識別子と同じものを指定した場合、
+// Flags に REGISTER_VARIABLE_FLAG_OVERRIDE が設定されている場合は
+// プラグインで登録されたものが優先され、そうでない場合は TVTest での定義が優先されます。
+// 同じ識別子の変数を再登録すると、値が更新されます。
+/*
+	// 変数 lucky-number を登録します。
+	// 変数文字列の中で "%lucky-number%" を使うと、"777" に置き換えられます。
+	RegisterVariableInfo Info;
+	Info.Size           = sizeof(RegisterVariableInfo);
+	Info.Flags          = 0;
+	Info.pszKeyword     = L"lucky-number";
+	Info.pszDescription = L"幸運の番号";
+	Info.pszValue       = L"777";
+	MsgRegisterVariable(pParam, &Info);
+*/
+// 変数の値が頻繁に変わるような場合は、動的に取得されるようにします。
+// pszValue に NULL を指定すると、変数が必要になった段階で
+// EVENT_GETVARIABLE が呼ばれるので、そこで値を返します。
+/*
+	// 変数の値が動的に取得されるようにする例
+	RegisterVariableInfo Info;
+	Info.Size           = sizeof(RegisterVariableInfo);
+	Info.Flags          = 0;
+	Info.pszKeyword     = L"tick-count";
+	Info.pszDescription = L"Tick count";
+	Info.pszValue       = NULL;
+	MsgRegisterVariable(pParam, &Info);
+
+	// EVENT_GETVARIABLE で値を返します。
+	bool OnGetVariable(GetVariableInfo *pInfo)
+	{
+		if (lstrcmpiW(pInfo->pszKeyword, L"tick-count") == 0) {
+			// GetTickCount() の値を返す
+			WCHAR szValue[16];
+			wsprintf(szValue, L"%u", GetTickCount());
+			pInfo->pszValue = MsgStringDuplicate(pParam, szValue);
+			return true;
+		}
+		return false;
+	}
+*/
+inline bool MsgRegisterVariable(PluginParam *pParam,const RegisterVariableInfo *pInfo) {
+	return (*pParam->Callback)(pParam,MESSAGE_REGISTERVARIABLE,(LPARAM)pInfo,0)!=FALSE;
+}
+
+#endif	// TVTEST_PLUGIN_VERSION>=TVTEST_PLUGIN_VERSION_(0,0,14)
+
 
 /*
 	TVTest アプリケーションクラス
@@ -1887,6 +3229,9 @@ public:
 	}
 	void MemoryFree(void *pData) {
 		MsgMemoryFree(m_pParam,pData);
+	}
+	LPWSTR StringDuplicate(LPCWSTR pszString) {
+		return MsgStringDuplicate(m_pParam,pszString);
 	}
 	bool SetEventCallback(EventCallbackFunc Callback,void *pClientData=NULL) {
 		return MsgSetEventCallback(m_pParam,Callback,pClientData);
@@ -1975,6 +3320,12 @@ public:
 #endif
 		return MsgGetRecordStatus(m_pParam,pInfo);
 	}
+#if TVTEST_PLUGIN_VERSION>=TVTEST_PLUGIN_VERSION_(0,0,14)
+	bool GetRecordStatus(RecordStatusInfo *pInfo,DWORD Flags) {
+		pInfo->Size=sizeof(RecordStatusInfo);
+		return MsgGetRecordStatus(m_pParam,pInfo,Flags);
+	}
+#endif
 	bool GetVideoInfo(VideoInfo *pInfo) {
 		pInfo->Size=sizeof(VideoInfo);
 		return MsgGetVideoInfo(m_pParam,pInfo);
@@ -2092,6 +3443,11 @@ public:
 	bool AddLog(LPCWSTR pszText) {
 		return MsgAddLog(m_pParam,pszText);
 	}
+#if TVTEST_PLUGIN_VERSION>=TVTEST_PLUGIN_VERSION_(0,0,14)
+	bool AddLog(LPCWSTR pszText,int Type) {
+		return MsgAddLog(m_pParam,pszText,Type);
+	}
+#endif
 #endif
 #if TVTEST_PLUGIN_VERSION>=TVTEST_PLUGIN_VERSION_(0,0,5)
 	bool ResetStatus() {
@@ -2109,16 +3465,6 @@ public:
 	}
 #endif
 #if TVTEST_PLUGIN_VERSION>=TVTEST_PLUGIN_VERSION_(0,0,8)
-	bool GetBCasInfo(BCasInfo *pInfo) {
-		pInfo->Size=sizeof(BCasInfo);
-		return MsgGetBCasInfo(m_pParam,pInfo);
-	}
-	bool SendBCasCommand(BCasCommandInfo *pInfo) {
-		return MsgSendBCasCommand(m_pParam,pInfo);
-	}
-	bool SendBCasCommand(const BYTE *pSendData,DWORD SendSize,BYTE *pReceiveData,DWORD *pReceiveSize) {
-		return MsgSendBCasCommand(m_pParam,pSendData,SendSize,pReceiveData,pReceiveSize);
-	}
 	bool GetHostInfo(HostInfo *pInfo) {
 		pInfo->Size=sizeof(HostInfo);
 		return MsgGetHostInfo(m_pParam,pInfo);
@@ -2205,6 +3551,190 @@ public:
 	}
 	bool RegisterProgramGuideCommand(const ProgramGuideCommandInfo *pCommandList,int NumCommands=1) {
 		return MsgRegisterProgramGuideCommand(m_pParam,pCommandList,NumCommands);
+	}
+#endif
+#if TVTEST_PLUGIN_VERSION>=TVTEST_PLUGIN_VERSION_(0,0,14)
+	bool GetStyleValue(StyleValueInfo *pInfo) {
+		pInfo->Size=sizeof(StyleValueInfo);
+		return MsgGetStyleValue(m_pParam,pInfo);
+	}
+	bool GetStyleValue(LPCWSTR pszName,int Unit,int DPI,int *pValue) {
+		return MsgGetStyleValue(m_pParam,pszName,Unit,DPI,pValue);
+	}
+	bool GetStyleValue(LPCWSTR pszName,int *pValue) {
+		return MsgGetStyleValue(m_pParam,pszName,pValue);
+	}
+	bool GetStyleValuePixels(LPCWSTR pszName,int DPI,int *pValue) {
+		return MsgGetStyleValuePixels(m_pParam,pszName,DPI,pValue);
+	}
+	bool ThemeDrawBackground(ThemeDrawBackgroundInfo *pInfo) {
+		pInfo->Size=sizeof(ThemeDrawBackgroundInfo);
+		return MsgThemeDrawBackground(m_pParam,pInfo);
+	}
+	bool ThemeDrawBackground(LPCWSTR pszStyle,HDC hdc,const RECT &DrawRect,int DPI=0) {
+		return MsgThemeDrawBackground(m_pParam,pszStyle,hdc,DrawRect,DPI);
+	}
+	bool ThemeDrawText(ThemeDrawTextInfo *pInfo) {
+		pInfo->Size=sizeof(ThemeDrawTextInfo);
+		return MsgThemeDrawText(m_pParam,pInfo);
+	}
+	bool ThemeDrawText(LPCWSTR pszStyle,HDC hdc,LPCWSTR pszText,const RECT &DrawRect,
+					   UINT DrawFlags,COLORREF Color=CLR_INVALID) {
+		return MsgThemeDrawText(m_pParam,pszStyle,hdc,pszText,DrawRect,DrawFlags,Color);
+	}
+	bool ThemeDrawIcon(ThemeDrawIconInfo *pInfo) {
+		pInfo->Size=sizeof(ThemeDrawIconInfo);
+		return MsgThemeDrawIcon(m_pParam,pInfo);
+	}
+	bool ThemeDrawIcon(LPCWSTR pszStyle,
+			HDC hdc,int DstX,int DstY,int DstWidth,int DstHeight,
+			HBITMAP hbm,int SrcX,int SrcY,int SrcWidth,int SrcHeight,
+			COLORREF Color=CLR_INVALID,BYTE Opacity=255) {
+		return MsgThemeDrawIcon(m_pParam,pszStyle,hdc,DstX,DstY,DstWidth,DstHeight,
+								hbm,SrcX,SrcY,SrcWidth,SrcHeight,Color,Opacity);
+	}
+	bool GetEpgCaptureStatus(EpgCaptureStatusInfo *pInfo) {
+		pInfo->Size=sizeof(EpgCaptureStatusInfo);
+		return MsgGetEpgCaptureStatus(m_pParam,pInfo);
+	}
+	bool GetAppCommandInfo(AppCommandInfo *pInfo) {
+		pInfo->Size=sizeof(AppCommandInfo);
+		return MsgGetAppCommandInfo(m_pParam,pInfo);
+	}
+	DWORD GetAppCommandCount() {
+		return MsgGetAppCommandCount(m_pParam);
+	}
+	int GetVideoStreamCount() {
+		return MsgGetVideoStreamCount(m_pParam);
+	}
+	int GetVideoStream() {
+		return MsgGetVideoStream(m_pParam);
+	}
+	bool SetVideoStream(int Stream) {
+		return MsgSetVideoStream(m_pParam,Stream);
+	}
+	bool GetLog(GetLogInfo *pInfo) {
+		pInfo->Size=sizeof(GetLogInfo);
+		return MsgGetLog(m_pParam,pInfo);
+	}
+	DWORD GetLogCount() {
+		return MsgGetLogCount(m_pParam);
+	}
+	bool RegisterPluginCommand(const PluginCommandInfo *pInfo) {
+		return MsgRegisterPluginCommand(m_pParam,pInfo);
+	}
+	bool SetPluginCommandState(int ID,DWORD State) {
+		return MsgSetPluginCommandState(m_pParam,ID,State);
+	}
+	bool PluginCommandNotify(int ID,unsigned int Type) {
+		return MsgPluginCommandNotify(m_pParam,ID,Type);
+	}
+	bool RegisterPluginIcon(const PluginIconInfo *pInfo) {
+		return MsgRegisterPluginIcon(m_pParam,pInfo);
+	}
+	bool RegisterPluginIcon(HBITMAP hbmIcon) {
+		return MsgRegisterPluginIcon(m_pParam,hbmIcon);
+	}
+	bool RegisterPluginIconFromResource(HINSTANCE hinst,LPCTSTR pszName) {
+		return MsgRegisterPluginIconFromResource(m_pParam,hinst,pszName);
+	}
+	bool RegisterStatusItem(const StatusItemInfo *pInfo) {
+		return MsgRegisterStatusItem(m_pParam,pInfo);
+	}
+	bool SetStatusItem(const StatusItemSetInfo *pInfo) {
+		return MsgSetStatusItem(m_pParam,pInfo);
+	}
+	bool GetStatusItemInfo(StatusItemGetInfo *pInfo) {
+		pInfo->Size=sizeof(StatusItemGetInfo);
+		return MsgGetStatusItemInfo(m_pParam,pInfo);
+	}
+	bool StatusItemNotify(int ID,UINT Type) {
+		return MsgStatusItemNotify(m_pParam,ID,Type);
+	}
+	bool RegisterTSProcessor(const TSProcessorInfo *pInfo) {
+		return MsgRegisterTSProcessor(m_pParam,pInfo);
+	}
+	bool RegisterPanelItem(const PanelItemInfo *pInfo) {
+		return MsgRegisterPanelItem(m_pParam,pInfo);
+	}
+	bool SetPanelItem(const PanelItemSetInfo *pInfo) {
+		return MsgSetPanelItem(m_pParam,pInfo);
+	}
+	bool GetPanelItemInfo(PanelItemGetInfo *pInfo) {
+		pInfo->Size=sizeof(PanelItemGetInfo);
+		return MsgGetPanelItemInfo(m_pParam,pInfo);
+	}
+	bool SelectChannel(const ChannelSelectInfo *pInfo) {
+		return MsgSelectChannel(m_pParam,pInfo);
+	}
+	bool GetFavoriteList(FavoriteList *pList) {
+		pList->Size=sizeof(FavoriteList);
+		return MsgGetFavoriteList(m_pParam,pList);
+	}
+	void FreeFavoriteList(FavoriteList *pList) {
+		MsgFreeFavoriteList(m_pParam,pList);
+	}
+	bool Get1SegMode() {
+		return MsgGet1SegMode(m_pParam);
+	}
+	bool Set1SegMode(bool f1SegMode) {
+		return MsgSet1SegMode(m_pParam,f1SegMode);
+	}
+	int GetDPI(GetDPIInfo *pInfo) {
+		return MsgGetDPI(m_pParam,pInfo);
+	}
+	int GetSystemDPI() {
+		return MsgGetSystemDPI(m_pParam);
+	}
+	int GetDPIFromWindow(HWND hwnd,DWORD Flags=0) {
+		return MsgGetDPIFromWindow(m_pParam,hwnd,Flags);
+	}
+	int GetDPIFromRect(const RECT &Rect,DWORD Flags=0) {
+		return MsgGetDPIFromRect(m_pParam,Rect,Flags);
+	}
+	int GetDPIFromPoint(const POINT &Point,DWORD Flags=0) {
+		return MsgGetDPIFromPoint(m_pParam,Point,Flags);
+	}
+	int GetDPIFromPoint(LONG x,LONG y,DWORD Flags=0) {
+		return MsgGetDPIFromPoint(m_pParam,x,y,Flags);
+	}
+	int GetDPIFromMonitor(HMONITOR hMonitor,DWORD Flags=0) {
+		return MsgGetDPIFromMonitor(m_pParam,hMonitor,Flags);
+	}
+	bool GetFont(GetFontInfo *pInfo) {
+		pInfo->Size=sizeof(GetFontInfo);
+		return MsgGetFont(m_pParam,pInfo);
+	}
+	bool GetFont(LPCWSTR pszName,LOGFONTW *pLogFont,int DPI=0) {
+		return MsgGetFont(m_pParam,pszName,pLogFont,DPI);
+	}
+	INT_PTR ShowDialog(ShowDialogInfo *pInfo) {
+		pInfo->Size=sizeof(ShowDialogInfo);
+		return MsgShowDialog(m_pParam,pInfo);
+	}
+	bool ConvertTime(ConvertTimeInfo *pInfo) {
+		pInfo->Size=sizeof(ConvertTimeInfo);
+		return MsgConvertTime(m_pParam,pInfo);
+	}
+	bool ConvertEpgTimeTo(const SYSTEMTIME &EpgTime,DWORD Type,SYSTEMTIME *pDstTime) {
+		return MsgConvertEpgTimeTo(m_pParam,EpgTime,Type,pDstTime);
+	}
+	bool SetVideoStreamCallback(VideoStreamCallbackFunc pCallback,void *pClientData=NULL) {
+		return MsgSetVideoStreamCallback(m_pParam,pCallback,pClientData);
+	}
+	VarStringContext *GetVarStringContext() {
+		return MsgGetVarStringContext(m_pParam);
+	}
+	void FreeVarStringContext(VarStringContext *pContext) {
+		MsgFreeVarStringContext(m_pParam,pContext);
+	}
+	bool FormatVarString(VarStringFormatInfo *pInfo) {
+		pInfo->Size=sizeof(VarStringFormatInfo);
+		return MsgFormatVarString(m_pParam,pInfo);
+	}
+	bool RegisterVariable(RegisterVariableInfo *pInfo) {
+		pInfo->Size=sizeof(RegisterVariableInfo);
+		return MsgRegisterVariable(m_pParam,pInfo);
 	}
 #endif
 };
@@ -2361,6 +3891,32 @@ protected:
 	virtual bool OnProgramGuideProgramMenuSelected(
 		const ProgramGuideProgramInfo *pProgramInfo,UINT Command) { return false; }
 #endif
+#if TVTEST_PLUGIN_VERSION>=TVTEST_PLUGIN_VERSION_(0,0,14)
+	// フィルタグラフの初期化
+	virtual void OnFilterGraphInitialize(FilterGraphInfo *pInfo) {}
+	// フィルタグラフが初期化された
+	virtual void OnFilterGraphInitialized(FilterGraphInfo *pInfo) {}
+	// フィルタグラフの終了処理
+	virtual void OnFilterGraphFinalize(FilterGraphInfo *pInfo) {}
+	// フィルタグラフが終了処理された
+	virtual void OnFilterGraphFinalized(FilterGraphInfo *pInfo) {}
+	// コマンドアイコンの描画
+	virtual bool OnDrawCommandIcon(DrawCommandIconInfo *pInfo) { return false; }
+	// ステータス項目の描画
+	virtual bool OnStatusItemDraw(StatusItemDrawInfo *pInfo) { return false; }
+	// ステータス項目の通知
+	virtual bool OnStatusItemNotify(StatusItemEventInfo *pInfo) { return false; }
+	// ステータス項目のマウスイベント
+	virtual bool OnStatusItemMouseEvent(StatusItemMouseEventInfo *pInfo) { return false; }
+	// パネル項目の通知
+	virtual bool OnPanelItemNotify(PanelItemEventInfo *pInfo) { return false; }
+	// お気に入りチャンネルが変更された
+	virtual void OnFavoritesChanged() {}
+	// ワンセグモードが変わった
+	virtual void On1SegModeChanged(bool f1SegMode) {}
+	// 変数を取得
+	virtual bool OnGetVariable(GetVariableInfo *pInfo) { return false; }
+#endif
 
 public:
 	virtual ~CTVTestEventHandler() {}
@@ -2427,6 +3983,38 @@ public:
 		case EVENT_PROGRAMGUIDE_PROGRAM_MENUSELECTED:
 			return OnProgramGuideProgramMenuSelected(
 				(const ProgramGuideProgramInfo*)lParam1,(UINT)lParam2);
+#endif
+#if TVTEST_PLUGIN_VERSION>=TVTEST_PLUGIN_VERSION_(0,0,14)
+		case EVENT_FILTERGRAPH_INITIALIZE:
+			OnFilterGraphInitialize((FilterGraphInfo*)lParam1);
+			return 0;
+		case EVENT_FILTERGRAPH_INITIALIZED:
+			OnFilterGraphInitialized((FilterGraphInfo*)lParam1);
+			return 0;
+		case EVENT_FILTERGRAPH_FINALIZE:
+			OnFilterGraphFinalize((FilterGraphInfo*)lParam1);
+			return 0;
+		case EVENT_FILTERGRAPH_FINALIZED:
+			OnFilterGraphFinalized((FilterGraphInfo*)lParam1);
+			return 0;
+		case EVENT_DRAWCOMMANDICON:
+			return OnDrawCommandIcon((DrawCommandIconInfo*)lParam1);
+		case EVENT_STATUSITEM_DRAW:
+			return OnStatusItemDraw((StatusItemDrawInfo*)lParam1);
+		case EVENT_STATUSITEM_NOTIFY:
+			return OnStatusItemNotify((StatusItemEventInfo*)lParam1);
+		case EVENT_STATUSITEM_MOUSE:
+			return OnStatusItemMouseEvent((StatusItemMouseEventInfo*)lParam1);
+		case EVENT_PANELITEM_NOTIFY:
+			return OnPanelItemNotify((PanelItemEventInfo*)lParam1);
+		case EVENT_FAVORITESCHANGED:
+			OnFavoritesChanged();
+			return 0;
+		case EVENT_1SEGMODECHANGED:
+			On1SegModeChanged(lParam1!=0);
+			return 0;
+		case EVENT_GETVARIABLE:
+			return OnGetVariable((GetVariableInfo*)lParam1);
 #endif
 		}
 		return 0;

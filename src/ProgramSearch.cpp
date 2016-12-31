@@ -4,13 +4,10 @@
 #include "ProgramSearch.h"
 #include "DialogUtil.h"
 #include "EpgUtil.h"
+#include "EventInfoUtil.h"
+#include "GUIUtil.h"
 #include "resource.h"
-
-#ifdef _DEBUG
-#undef THIS_FILE
-static char THIS_FILE[]=__FILE__;
-#define new DEBUG_NEW
-#endif
+#include "Common/DebugDef.h"
 
 
 
@@ -413,9 +410,33 @@ CEventSearchSettingsList::CEventSearchSettingsList()
 }
 
 
+CEventSearchSettingsList::CEventSearchSettingsList(const CEventSearchSettingsList &Src)
+{
+	*this=Src;
+}
+
+
 CEventSearchSettingsList::~CEventSearchSettingsList()
 {
 	Clear();
+}
+
+
+CEventSearchSettingsList &CEventSearchSettingsList::operator=(const CEventSearchSettingsList &Src)
+{
+	if (&Src!=this) {
+		Clear();
+
+		if (!Src.m_List.empty()) {
+			m_List.reserve(Src.m_List.size());
+
+			for (auto it=Src.m_List.begin();it!=Src.m_List.end();++it) {
+				m_List.push_back(new CEventSearchSettings(**it));
+			}
+		}
+	}
+
+	return *this;
 }
 
 
@@ -552,7 +573,9 @@ bool CEventSearchSettingsList::Save(CSettings &Settings,LPCTSTR pszPrefix) const
 
 
 CEventSearcher::CEventSearcher()
+#ifdef WIN_XP_SUPPORT
 	: m_pFindNLSString(GET_MODULE_FUNCTION(TEXT("kernel32.dll"),FindNLSString))
+#endif
 {
 }
 
@@ -594,7 +617,7 @@ bool CEventSearcher::Match(const CEventInfoData *pEventInfo)
 	if (m_Settings.fServiceList) {
 		if (!m_Settings.ServiceList.IsExists(
 				pEventInfo->m_NetworkID,
-				pEventInfo->m_TSID,
+				pEventInfo->m_TransportStreamID,
 				pEventInfo->m_ServiceID))
 			return false;
 	}
@@ -622,15 +645,15 @@ bool CEventSearcher::Match(const CEventInfoData *pEventInfo)
 	}
 
 	if (m_Settings.fDayOfWeek) {
-		if ((m_Settings.DayOfWeekFlags&(1<<pEventInfo->m_stStartTime.wDayOfWeek))==0)
+		if ((m_Settings.DayOfWeekFlags&(1<<pEventInfo->m_StartTime.wDayOfWeek))==0)
 			return false;
 	}
 
 	if (m_Settings.fTime) {
 		int RangeStart=(m_Settings.StartTime.Hour*60+m_Settings.StartTime.Minute)%(24*60);
 		int RangeEnd=(m_Settings.EndTime.Hour*60+m_Settings.EndTime.Minute)%(24*60);
-		int EventStart=pEventInfo->m_stStartTime.wHour*60+pEventInfo->m_stStartTime.wMinute;
-		int EventEnd=EventStart+pEventInfo->m_DurationSec/60;
+		int EventStart=pEventInfo->m_StartTime.wHour*60+pEventInfo->m_StartTime.wMinute;
+		int EventEnd=EventStart+pEventInfo->m_Duration/60;
 
 		if (RangeStart<=RangeEnd) {
 			if (EventEnd<=RangeStart || EventStart>RangeEnd)
@@ -642,34 +665,35 @@ bool CEventSearcher::Match(const CEventInfoData *pEventInfo)
 	}
 
 	if (m_Settings.fDuration) {
-		if (pEventInfo->m_DurationSec<m_Settings.DurationShortest)
+		if (pEventInfo->m_Duration<m_Settings.DurationShortest)
 			return false;
 		if (m_Settings.DurationLongest>0
-				&& pEventInfo->m_DurationSec>m_Settings.DurationLongest)
+				&& pEventInfo->m_Duration>m_Settings.DurationLongest)
 			return false;
 	}
 
 	if (m_Settings.fCA) {
 		switch (m_Settings.CA) {
 		case CEventSearchSettings::CA_FREE:
-			if (pEventInfo->m_CaType!=CEventInfoData::CA_TYPE_FREE)
+			if (pEventInfo->m_bFreeCaMode)
 				return false;
 			break;
 		case CEventSearchSettings::CA_CHARGEABLE:
-			if (pEventInfo->m_CaType!=CEventInfoData::CA_TYPE_CHARGEABLE)
+			if (!pEventInfo->m_bFreeCaMode)
 				return false;
 			break;
 		}
 	}
 
-	if (m_Settings.fVideo) {
+	if (m_Settings.fVideo
+			&& !pEventInfo->m_VideoList.empty()) {
 		switch (m_Settings.Video) {
 		case CEventSearchSettings::VIDEO_HD:
-			if (EpgUtil::GetVideoType(pEventInfo->m_VideoInfo.ComponentType)!=EpgUtil::VIDEO_TYPE_HD)
+			if (EpgUtil::GetVideoType(pEventInfo->m_VideoList[0].ComponentType)!=EpgUtil::VIDEO_TYPE_HD)
 				return false;
 			break;
 		case CEventSearchSettings::VIDEO_SD:
-			if (EpgUtil::GetVideoType(pEventInfo->m_VideoInfo.ComponentType)!=EpgUtil::VIDEO_TYPE_SD)
+			if (EpgUtil::GetVideoType(pEventInfo->m_VideoList[0].ComponentType)!=EpgUtil::VIDEO_TYPE_SD)
 				return false;
 			break;
 		}
@@ -696,6 +720,7 @@ int CEventSearcher::FindKeyword(LPCTSTR pszText,LPCTSTR pKeyword,int KeywordLeng
 	if (m_Settings.fIgnoreWidth)
 		Flags|=NORM_IGNOREWIDTH;
 
+#ifdef WIN_XP_SUPPORT
 	int Pos;
 
 	if (m_pFindNLSString!=NULL) {
@@ -721,6 +746,10 @@ int CEventSearcher::FindKeyword(LPCTSTR pszText,LPCTSTR pKeyword,int KeywordLeng
 	}
 
 	return Pos;
+#else	// WIN_XP_SUPPORT
+	return ::FindNLSString(LOCALE_USER_DEFAULT,FIND_FROMSTART | Flags,
+						   pszText,-1,pKeyword,KeywordLength,pFoundLength);
+#endif
 }
 
 
@@ -766,11 +795,11 @@ bool CEventSearcher::MatchKeyword(const CEventInfoData *pEventInfo,LPCTSTR pszKe
 		}
 		if (i>0) {
 			if ((m_Settings.fEventName
-						&& FindKeyword(pEventInfo->GetEventName(),szWord,i)>=0)
+						&& FindKeyword(pEventInfo->m_EventName.c_str(),szWord,i)>=0)
 					|| (m_Settings.fEventText
-						&& FindKeyword(pEventInfo->GetEventText(),szWord,i)>=0)
+						&& FindKeyword(pEventInfo->m_EventText.c_str(),szWord,i)>=0)
 					|| (m_Settings.fEventText
-						&& FindKeyword(pEventInfo->GetEventExtText(),szWord,i)>=0)) {
+						&& FindKeyword(pEventInfo->m_EventExtendedText.c_str(),szWord,i)>=0)) {
 				if (fMinus)
 					return false;
 				fMatch=true;
@@ -795,37 +824,15 @@ bool CEventSearcher::MatchKeyword(const CEventInfoData *pEventInfo,LPCTSTR pszKe
 bool CEventSearcher::MatchRegExp(const CEventInfoData *pEventInfo)
 {
 	return (m_Settings.fEventName
-			&& !IsStringEmpty(pEventInfo->GetEventName())
-			&& m_RegExp.Match(pEventInfo->GetEventName()))
+			&& !pEventInfo->m_EventName.empty()
+			&& m_RegExp.Match(pEventInfo->m_EventName.c_str()))
 		|| (m_Settings.fEventText
-			&& !IsStringEmpty(pEventInfo->GetEventText())
-			&& m_RegExp.Match(pEventInfo->GetEventText()))
+			&& !pEventInfo->m_EventText.empty()
+			&& m_RegExp.Match(pEventInfo->m_EventText.c_str()))
 		|| (m_Settings.fEventText
-			&& !IsStringEmpty(pEventInfo->GetEventExtText())
-			&& m_RegExp.Match(pEventInfo->GetEventExtText()));
+			&& !pEventInfo->m_EventExtendedText.empty()
+			&& m_RegExp.Match(pEventInfo->m_EventExtendedText.c_str()));
 }
-
-
-
-
-class CSearchEventInfo : public CEventInfoData
-{
-public:
-	LPTSTR m_pszChannelName;
-	LPARAM m_Param;
-
-	CSearchEventInfo(const CEventInfoData &EventInfo,LPCTSTR pszChannelName,LPARAM Param)
-		: CEventInfoData(EventInfo)
-		, m_pszChannelName(DuplicateString(pszChannelName))
-		, m_Param(Param)
-	{
-	}
-
-	~CSearchEventInfo()
-	{
-		delete [] m_pszChannelName;
-	}
-};
 
 
 
@@ -867,8 +874,9 @@ bool CEventSearchOptions::AddKeywordHistory(LPCTSTR pszKeyword)
 		return false;
 
 	for (auto it=m_KeywordHistory.begin();it!=m_KeywordHistory.end();++it) {
-		if (it->compare(pszKeyword)==0) {
-			if (it==m_KeywordHistory.begin())
+		if (TVTest::StringUtility::CompareNoCase(*it,pszKeyword)==0) {
+			if (it==m_KeywordHistory.begin()
+					&& it->compare(pszKeyword)==0)
 				return true;
 			m_KeywordHistory.erase(it);
 			break;
@@ -880,6 +888,17 @@ bool CEventSearchOptions::AddKeywordHistory(LPCTSTR pszKeyword)
 	if (m_KeywordHistory.size()>(size_t)m_MaxKeywordHistory) {
 		m_KeywordHistory.erase(m_KeywordHistory.begin()+m_MaxKeywordHistory,m_KeywordHistory.end());
 	}
+
+	return true;
+}
+
+
+bool CEventSearchOptions::DeleteKeywordHistory(int Index)
+{
+	if (Index<0 || (size_t)Index>=m_KeywordHistory.size())
+		return false;
+
+	m_KeywordHistory.erase(m_KeywordHistory.begin()+Index);
 
 	return true;
 }
@@ -997,20 +1016,18 @@ typedef struct tagNMLVEMPTYMARKUP {
 static ULONGLONG GetResultMapKey(const CEventInfoData *pEventInfo)
 {
 	return ((ULONGLONG)pEventInfo->m_NetworkID<<48)
-		| ((ULONGLONG)pEventInfo->m_TSID<<32)
+		| ((ULONGLONG)pEventInfo->m_TransportStreamID<<32)
 		| ((DWORD)pEventInfo->m_ServiceID<<16)
 		| pEventInfo->m_EventID;
 }
 
 
 
-const LPCTSTR CEventSearchSettingsDialog::m_pszPropName=TEXT("ProgramSearch");
-
 
 CEventSearchSettingsDialog::CEventSearchSettingsDialog(CEventSearchOptions &Options)
 	: m_pEventHandler(NULL)
 	, m_Options(Options)
-	, m_pOldEditProc(NULL)
+	, m_SearchTarget(0)
 {
 	for (int i=0;i<lengthof(m_fGenreExpanded);i++)
 		m_fGenreExpanded[i]=false;
@@ -1258,16 +1275,37 @@ void CEventSearchSettingsDialog::SetFocus(int ID)
 }
 
 
+void CEventSearchSettingsDialog::SetSearchTargetList(const LPCTSTR *ppszList,int Count)
+{
+	if (ppszList!=NULL && Count>0) {
+		m_SearchTargetList.resize(Count);
+		for (int i=0;i<Count;i++)
+			m_SearchTargetList[i]=ppszList[i];
+	} else {
+		m_SearchTargetList.clear();
+	}
+}
+
+
+bool CEventSearchSettingsDialog::SetSearchTarget(int Target)
+{
+	if (Target<0 || (size_t)Target>=m_SearchTargetList.size())
+		return false;
+	m_SearchTarget=Target;
+	return true;
+}
+
+
 INT_PTR CEventSearchSettingsDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 {
-	INT_PTR Result=CResizableDialog::DlgProc(hDlg,uMsg,wParam,lParam);
-
 	switch (uMsg) {
 	case WM_INITDIALOG:
 		AddControl(IDC_EVENTSEARCH_KEYWORD,ALIGN_HORZ);
+		AddControl(IDC_EVENTSEARCH_KEYWORDMENU,ALIGN_RIGHT);
 		AddControl(IDC_EVENTSEARCH_SETTINGSLIST,ALIGN_HORZ);
 		AddControl(IDC_EVENTSEARCH_SETTINGSLIST_SAVE,ALIGN_RIGHT);
 		AddControl(IDC_EVENTSEARCH_SETTINGSLIST_DELETE,ALIGN_RIGHT);
+		AddControl(IDC_EVENTSEARCH_SEARCHTARGET,ALIGN_RIGHT);
 		AddControl(IDC_EVENTSEARCH_SEARCH,ALIGN_RIGHT);
 
 		// キーワード
@@ -1281,8 +1319,9 @@ INT_PTR CEventSearchSettingsDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LP
 			COMBOBOXINFO cbi;
 			cbi.cbSize=sizeof(cbi);
 			::GetComboBoxInfo(::GetDlgItem(hDlg,IDC_EVENTSEARCH_KEYWORD),&cbi);
-			m_pOldEditProc=SubclassWindow(cbi.hwndItem,EditProc);
-			::SetProp(cbi.hwndItem,m_pszPropName,m_pOldEditProc);
+			m_KeywordEditSubclass.SetSubclass(cbi.hwndItem);
+
+			InitDropDownButton(hDlg,IDC_EVENTSEARCH_KEYWORDMENU);
 		}
 
 		// キーワード検索対象
@@ -1373,6 +1412,15 @@ INT_PTR CEventSearchSettingsDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LP
 			}
 
 			DlgComboBox_SetCueBanner(hDlg,IDC_EVENTSEARCH_SETTINGSLIST,TEXT("設定名"));
+		}
+
+		// 検索対象
+		if (!m_SearchTargetList.empty()) {
+			for (auto it=m_SearchTargetList.begin();it!=m_SearchTargetList.end();++it)
+				DlgComboBox_AddString(hDlg,IDC_EVENTSEARCH_SEARCHTARGET,it->c_str());
+			DlgComboBox_SetCurSel(hDlg,IDC_EVENTSEARCH_SEARCHTARGET,m_SearchTarget);
+		} else {
+			ShowDlgItem(hDlg,IDC_EVENTSEARCH_SEARCHTARGET,false);
 		}
 
 		SetSettings(m_SearchSettings);
@@ -1517,6 +1565,57 @@ INT_PTR CEventSearchSettingsDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LP
 				}
 			}
 			return TRUE;
+
+		case IDC_EVENTSEARCH_SEARCHTARGET:
+			if (HIWORD(wParam)==CBN_SELCHANGE)
+				m_SearchTarget=(int)DlgComboBox_GetCurSel(hDlg,IDC_EVENTSEARCH_SEARCHTARGET);
+			return TRUE;
+
+		case IDC_EVENTSEARCH_KEYWORDMENU:
+			{
+				CPopupMenu Menu(GetAppClass().GetResourceInstance(),
+								MAKEINTRESOURCE(IDM_EVENTSEARCHKEYWORD));
+				TCHAR szKeyword[CEventSearchSettings::MAX_KEYWORD_LENGTH];
+				RECT rc;
+				POINT pt;
+
+				::GetDlgItemText(hDlg,IDC_EVENTSEARCH_KEYWORD,szKeyword,lengthof(szKeyword));
+				Menu.EnableItem(IDC_EVENTSEARCH_DELETEKEYWORD,
+					szKeyword[0]!=_T('\0') &&
+						DlgComboBox_FindStringExact(hDlg,IDC_EVENTSEARCH_KEYWORD,-1,szKeyword)>=0);
+				::GetWindowRect(::GetDlgItem(hDlg,IDC_EVENTSEARCH_KEYWORDMENU),&rc);
+				pt.x=rc.right;
+				pt.y=rc.bottom;
+				Menu.Show(hDlg,&pt,TPM_RIGHTALIGN);
+			}
+			return TRUE;
+
+		case IDC_EVENTSEARCH_DELETEKEYWORD:
+			{
+				int Index=-1;
+
+				if (DlgComboBox_GetDroppedState(hDlg,IDC_EVENTSEARCH_KEYWORD)) {
+					Index=(int)DlgComboBox_GetCurSel(hDlg,IDC_EVENTSEARCH_KEYWORD);
+				} else {
+					TCHAR szKeyword[CEventSearchSettings::MAX_KEYWORD_LENGTH];
+
+					if (::GetDlgItemText(hDlg,IDC_EVENTSEARCH_KEYWORD,szKeyword,lengthof(szKeyword))>0) {
+						Index=(int)DlgComboBox_FindStringExact(hDlg,IDC_EVENTSEARCH_KEYWORD,-1,szKeyword);
+						if (Index>=0)
+							::SetDlgItemText(hDlg,IDC_EVENTSEARCH_KEYWORD,TEXT(""));
+					}
+				}
+				if (Index>=0) {
+					DlgComboBox_DeleteItem(hDlg,IDC_EVENTSEARCH_KEYWORD,Index);
+					m_Options.DeleteKeywordHistory(Index);
+				}
+			}
+			return TRUE;
+
+		case IDC_EVENTSEARCH_CLEARKEYWORDHISTORY:
+			DlgComboBox_Clear(hDlg,IDC_EVENTSEARCH_KEYWORD);
+			m_Options.ClearKeywordHistory();
+			return TRUE;
 		}
 		return TRUE;
 
@@ -1587,7 +1686,7 @@ INT_PTR CEventSearchSettingsDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LP
 		return TRUE;
 	}
 
-	return Result;
+	return FALSE;
 }
 
 
@@ -1655,13 +1754,9 @@ void CEventSearchSettingsDialog::SetGenreStatus()
 }
 
 
-LRESULT CALLBACK CEventSearchSettingsDialog::EditProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
+LRESULT CEventSearchSettingsDialog::CKeywordEditSubclass::OnMessage(
+	HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 {
-	WNDPROC pOldWndProc=static_cast<WNDPROC>(::GetProp(hwnd,m_pszPropName));
-
-	if (pOldWndProc==NULL)
-		return ::DefWindowProc(hwnd,uMsg,wParam,lParam);
-
 	switch (uMsg) {
 	case WM_GETDLGCODE:
 		if (wParam==VK_RETURN)
@@ -1673,19 +1768,55 @@ LRESULT CALLBACK CEventSearchSettingsDialog::EditProc(HWND hwnd,UINT uMsg,WPARAM
 			::SendMessage(::GetParent(::GetParent(hwnd)),WM_COMMAND,IDC_EVENTSEARCH_SEARCH,0);
 			return 0;
 		}
+		if (wParam==VK_DELETE) {
+			int Length=::GetWindowTextLength(hwnd);
+
+			if (Length>0) {
+				HWND hwndComboBox=::GetParent(hwnd);
+
+				if (ComboBox_GetDroppedState(hwndComboBox)) {
+					int Sel=ComboBox_GetCurSel(hwndComboBox);
+
+					if (Sel>=0) {
+						DWORD Start,End;
+
+						::SendMessage(hwnd,EM_GETSEL,
+									  reinterpret_cast<WPARAM>(&Start),
+									  reinterpret_cast<LPARAM>(&End));
+						if (Start==0 && End==(DWORD)Length) {
+							TCHAR szKeyword[CEventSearchSettings::MAX_KEYWORD_LENGTH];
+
+							if (::GetWindowText(hwnd,szKeyword,lengthof(szKeyword))==Length
+									&& ComboBox_FindStringExact(hwndComboBox,Sel-1,szKeyword)==Sel) {
+								::SendMessage(::GetParent(hwndComboBox),WM_COMMAND,
+											  IDC_EVENTSEARCH_DELETEKEYWORD,0);
+								return 0;
+							}
+						}
+					}
+				}
+			}
+			break;
+		}
 		break;
 
 	case WM_CHAR:
 		if (wParam=='\r' || wParam=='\n')
 			return 0;
 		break;
-
-	case WM_NCDESTROY:
-		::RemoveProp(hwnd,m_pszPropName);
-		break;
 	}
 
-	return ::CallWindowProc(pOldWndProc,hwnd,uMsg,wParam,lParam);
+	return CWindowSubclass::OnMessage(hwnd,uMsg,wParam,lParam);
+}
+
+
+
+
+CSearchEventInfo::CSearchEventInfo(
+	const CEventInfoData &EventInfo,const CTunerChannelInfo &ChannelInfo)
+	: CEventInfoData(EventInfo)
+	, m_ChannelInfo(ChannelInfo)
+{
 }
 
 
@@ -1696,10 +1827,13 @@ CProgramSearchDialog::CProgramSearchDialog(CEventSearchOptions &Options)
 	, m_Options(Options)
 	, m_SearchSettingsDialog(Options)
 	, m_fHighlightResult(true)
+	, m_ResultListHeight(-1)
 {
-	m_ColumnWidth[0]=100;
-	m_ColumnWidth[1]=136;
-	m_ColumnWidth[2]=240;
+	for (int i=0;i<NUM_COLUMNS;i++)
+		m_ColumnWidth[i]=-1;
+
+	RegisterUIChild(&m_SearchSettingsDialog);
+	SetStyleScaling(&m_StyleScaling);
 }
 
 
@@ -1774,16 +1908,37 @@ bool CProgramSearchDialog::IsHitEvent(const CEventInfoData *pEventInfo) const
 }
 
 
+void CProgramSearchDialog::SetResultListHeight(int Height)
+{
+	m_ResultListHeight=Height;
+}
+
+
+void CProgramSearchDialog::SetSearchTargetList(const LPCTSTR *ppszList,int Count)
+{
+	m_SearchSettingsDialog.SetSearchTargetList(ppszList,Count);
+}
+
+
+bool CProgramSearchDialog::SetSearchTarget(int Target)
+{
+	return m_SearchSettingsDialog.SetSearchTarget(Target);
+}
+
+
+int CProgramSearchDialog::GetSearchTarget() const
+{
+	return m_SearchSettingsDialog.GetSearchTarget();
+}
+
+
 INT_PTR CProgramSearchDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 {
-	INT_PTR Result=CResizableDialog::DlgProc(hDlg,uMsg,wParam,lParam);
-
 	switch (uMsg) {
 	case WM_INITDIALOG:
 		AddControl(IDC_PROGRAMSEARCH_SETTINGSPLACE,ALIGN_HORZ);
 		AddControl(IDC_PROGRAMSEARCH_STATUS,ALIGN_HORZ);
-		AddControl(IDC_PROGRAMSEARCH_RESULT,ALIGN_ALL);
-		AddControl(IDC_PROGRAMSEARCH_INFO,ALIGN_HORZ_BOTTOM);
+		AddControl(IDC_PROGRAMSEARCH_RESULTPANE,ALIGN_ALL);
 
 		m_SearchSettingsDialog.SetEventHandler(this);
 		m_SearchSettings.Keyword.clear();
@@ -1796,18 +1951,33 @@ INT_PTR CProgramSearchDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM l
 			HWND hwndList=::GetDlgItem(hDlg,IDC_PROGRAMSEARCH_RESULT);
 			ListView_SetExtendedListViewStyle(hwndList,LVS_EX_FULLROWSELECT | LVS_EX_LABELTIP);
 
+			int FontSize;
+			for (int i=0;i<NUM_COLUMNS;i++) {
+				if (m_ColumnWidth[i]<0) {
+					HDC hdc=::GetDC(hwndList);
+					HFONT hfont=GetWindowFont(hwndList);
+					HFONT hfontOld=SelectFont(hdc,hfont);
+					TEXTMETRIC tm;
+					::GetTextMetrics(hdc,&tm);
+					FontSize=tm.tmHeight-tm.tmInternalLeading;
+					SelectFont(hdc,hfontOld);
+					::ReleaseDC(hwndList,hdc);
+					break;
+				}
+			}
+
 			LVCOLUMN lvc;
 			lvc.mask=LVCF_FMT | LVCF_WIDTH | LVCF_TEXT;
 			lvc.fmt=LVCFMT_LEFT;
-			lvc.cx=m_ColumnWidth[0];
+			lvc.cx=m_ColumnWidth[COLUMN_CHANNEL]>=0?m_ColumnWidth[COLUMN_CHANNEL]:8*FontSize;
 			lvc.pszText=TEXT("チャンネル");
-			ListView_InsertColumn(hwndList,0,&lvc);
-			lvc.cx=m_ColumnWidth[1];
+			ListView_InsertColumn(hwndList,COLUMN_CHANNEL,&lvc);
+			lvc.cx=m_ColumnWidth[COLUMN_TIME]>=0?m_ColumnWidth[COLUMN_TIME]:12*FontSize;
 			lvc.pszText=TEXT("日時");
-			ListView_InsertColumn(hwndList,1,&lvc);
-			lvc.cx=m_ColumnWidth[2];
+			ListView_InsertColumn(hwndList,COLUMN_TIME,&lvc);
+			lvc.cx=m_ColumnWidth[COLUMN_EVENTNAME]>=0?m_ColumnWidth[COLUMN_EVENTNAME]:20*FontSize;
 			lvc.pszText=TEXT("番組名");
-			ListView_InsertColumn(hwndList,2,&lvc);
+			ListView_InsertColumn(hwndList,COLUMN_EVENTNAME,&lvc);
 
 			m_SortColumn=-1;
 			m_fSortDescending=false;
@@ -1825,11 +1995,14 @@ INT_PTR CProgramSearchDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM l
 			::SendDlgItemMessage(hDlg,IDC_PROGRAMSEARCH_INFO,EM_SETEVENTMASK,0,ENM_MOUSEEVENTS | ENM_LINK);
 		}
 
-		::SendMessage(hDlg,WM_SETICON,ICON_SMALL,
-			reinterpret_cast<LPARAM>(::LoadImage(
-				GetAppClass().GetResourceInstance(),MAKEINTRESOURCE(IDI_SEARCH),IMAGE_ICON,0,0,LR_SHARED)));
+		TVTest::SetWindowIcon(hDlg,GetAppClass().GetResourceInstance(),MAKEINTRESOURCE(IDI_SEARCH));
 
 		ApplyPosition();
+
+		if (m_ResultListHeight>=0)
+			AdjustResultListHeight(m_ResultListHeight);
+
+		m_fSplitterCursor=false;
 
 		m_SearchSettingsDialog.SetFocus(IDC_EVENTSEARCH_KEYWORD);
 
@@ -1842,6 +2015,8 @@ INT_PTR CProgramSearchDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM l
 			m_SearchSettingsDialog.SetPosition(&rc);
 
 			InvalidateDlgItem(hDlg,IDC_PROGRAMSEARCH_STATUS);
+
+			AdjustResultListHeight(-1);
 		}
 		return TRUE;
 
@@ -1868,6 +2043,47 @@ INT_PTR CProgramSearchDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM l
 		}
 		break;
 
+	case WM_SETCURSOR:
+		if ((HWND)wParam==hDlg && LOWORD(lParam)==HTCLIENT && m_fSplitterCursor) {
+			::SetCursor(::LoadCursor(NULL,IDC_SIZENS));
+			::SetWindowLongPtr(hDlg,DWLP_MSGRESULT,TRUE);
+			return TRUE;
+		}
+		break;
+
+	case WM_LBUTTONDOWN:
+		{
+			int x=GET_X_LPARAM(lParam),y=GET_Y_LPARAM(lParam);
+
+			if (IsSplitterPos(x,y)) {
+				RECT rc;
+
+				::GetWindowRect(::GetDlgItem(hDlg,IDC_PROGRAMSEARCH_RESULT),&rc);
+				m_ResultListHeight=rc.bottom-rc.top;
+				m_fSplitterCursor=true;
+				m_SplitterDragPos=y;
+				::SetCursor(::LoadCursor(NULL,IDC_SIZENS));
+				::SetCapture(hDlg);
+			}
+		}
+		return TRUE;
+
+	case WM_LBUTTONUP:
+		if (::GetCapture()==hDlg)
+			::ReleaseCapture();
+		return TRUE;
+
+	case WM_MOUSEMOVE:
+		{
+			int x=GET_X_LPARAM(lParam),y=GET_Y_LPARAM(lParam);
+
+			if (::GetCapture()==hDlg)
+				AdjustResultListHeight(m_ResultListHeight+(y-m_SplitterDragPos));
+			else
+				m_fSplitterCursor=IsSplitterPos(x,y);
+		}
+		return TRUE;
+
 	case WM_NOTIFY:
 		switch (((LPNMHDR)lParam)->code) {
 		case NM_RCLICK:
@@ -1887,9 +2103,9 @@ INT_PTR CProgramSearchDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM l
 						const CSearchEventInfo *pEventInfo=
 							reinterpret_cast<const CSearchEventInfo*>(lvi.lParam);
 						if (pnmia->hdr.code==NM_DBLCLK)
-							m_pEventHandler->OnLDoubleClick(pEventInfo,pEventInfo->m_Param);
+							m_pEventHandler->OnLDoubleClick(pEventInfo);
 						else
-							m_pEventHandler->OnRButtonClick(pEventInfo,pEventInfo->m_Param);
+							m_pEventHandler->OnRButtonClick(pEventInfo);
 						return TRUE;
 					}
 				}
@@ -1919,7 +2135,8 @@ INT_PTR CProgramSearchDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM l
 				::SetWindowText(hwndInfo,TEXT(""));
 				if (Sel>=0) {
 					LVITEM lvi;
-					TCHAR szText[2048];
+					TCHAR szText[256];
+					TVTest::String Text;
 
 					lvi.mask=LVIF_PARAM;
 					lvi.iItem=Sel;
@@ -1929,8 +2146,8 @@ INT_PTR CProgramSearchDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM l
 					const CSearchEventInfo *pEventInfo=reinterpret_cast<const CSearchEventInfo*>(lvi.lParam);
 					FormatEventTimeText(pEventInfo,szText,lengthof(szText));
 					CRichEditUtil::AppendText(hwndInfo,szText,&m_InfoTextFormat);
-					FormatEventInfoText(pEventInfo,szText,lengthof(szText));
-					CRichEditUtil::AppendText(hwndInfo,szText,&m_InfoTextFormat);
+					FormatEventInfoText(pEventInfo,&Text);
+					CRichEditUtil::AppendText(hwndInfo,Text.c_str(),&m_InfoTextFormat);
 					HighlightKeyword();
 					CRichEditUtil::DetectURL(hwndInfo,&m_InfoTextFormat,1);
 					POINT pt={0,0};
@@ -1952,27 +2169,8 @@ INT_PTR CProgramSearchDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM l
 			return TRUE;
 
 		case EN_MSGFILTER:
-			if (reinterpret_cast<MSGFILTER*>(lParam)->msg==WM_RBUTTONDOWN) {
-				HWND hwndInfo=::GetDlgItem(hDlg,IDC_PROGRAMSEARCH_INFO);
-				HMENU hmenu=::CreatePopupMenu();
-				POINT pt;
-
-				::AppendMenu(hmenu,MFT_STRING | MFS_ENABLED,1,TEXT("コピー(&C)"));
-				::AppendMenu(hmenu,MFT_STRING | MFS_ENABLED,2,TEXT("すべて選択(&A)"));
-				::GetCursorPos(&pt);
-				switch (::TrackPopupMenu(hmenu,TPM_RIGHTBUTTON | TPM_RETURNCMD,pt.x,pt.y,0,hDlg,NULL)) {
-				case 1:
-					if (::SendMessage(hwndInfo,EM_SELECTIONTYPE,0,0)==SEL_EMPTY) {
-						CRichEditUtil::CopyAllText(hwndInfo);
-					} else {
-						::SendMessage(hwndInfo,WM_COPY,0,0);
-					}
-					break;
-				case 2:
-					CRichEditUtil::SelectAll(hwndInfo);
-					break;
-				}
-				::DestroyMenu(hmenu);
+			if (reinterpret_cast<MSGFILTER*>(lParam)->msg==WM_RBUTTONUP) {
+				TVTest::EventInfoUtil::EventInfoContextMenu(hDlg,::GetDlgItem(hDlg,IDC_PROGRAMSEARCH_INFO));
 			}
 			return TRUE;
 
@@ -1996,6 +2194,12 @@ INT_PTR CProgramSearchDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM l
 				m_ColumnWidth[i]=ListView_GetColumnWidth(hwndList,i);
 		}
 
+		{
+			RECT rc;
+			::GetWindowRect(::GetDlgItem(hDlg,IDC_PROGRAMSEARCH_RESULT),&rc);
+			m_ResultListHeight=rc.bottom-rc.top;
+		}
+
 		ClearSearchResult();
 
 		m_Searcher.Finalize();
@@ -2003,7 +2207,22 @@ INT_PTR CProgramSearchDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM l
 		return TRUE;
 	}
 
-	return Result;
+	return FALSE;
+}
+
+
+void CProgramSearchDialog::ApplyStyle()
+{
+	CResizableDialog::ApplyStyle();
+
+	if (m_hDlg!=NULL) {
+		HWND hwnd=::GetDlgItem(m_hDlg,IDC_PROGRAMSEARCH_INFO);
+		HDC hdc=::GetDC(hwnd);
+		LOGFONT lf;
+		m_Font.GetLogFont(&lf);
+		CRichEditUtil::LogFontToCharFormat(hdc,&lf,&m_InfoTextFormat);
+		::ReleaseDC(hwnd,hdc);
+	}
 }
 
 
@@ -2014,23 +2233,23 @@ int CALLBACK CProgramSearchDialog::ResultCompareFunc(LPARAM lParam1,LPARAM lPara
 	int Cmp;
 
 	switch (LOWORD(lParamSort)) {
-	case 0:	// チャンネル
-		Cmp=::lstrcmpi(pInfo1->m_pszChannelName,pInfo2->m_pszChannelName);
+	case COLUMN_CHANNEL:	// チャンネル
+		Cmp=::lstrcmpi(pInfo1->GetChannelInfo().GetName(),pInfo2->GetChannelInfo().GetName());
 		break;
-	case 1:	// 日時
-		Cmp=CompareSystemTime(&pInfo1->m_stStartTime,&pInfo2->m_stStartTime);
+	case COLUMN_TIME:		// 日時
+		Cmp=CompareSystemTime(&pInfo1->m_StartTime,&pInfo2->m_StartTime);
 		break;
-	case 2:	// 番組名
-		if (pInfo1->GetEventName()==NULL) {
-			if (pInfo2->GetEventName()==NULL)
+	case COLUMN_EVENTNAME:	// 番組名
+		if (pInfo1->m_EventName.empty()) {
+			if (pInfo2->m_EventName.empty())
 				Cmp=0;
 			else
 				Cmp=-1;
 		} else {
-			if (pInfo2->GetEventName()==NULL)
+			if (pInfo2->m_EventName.empty())
 				Cmp=1;
 			else
-				Cmp=::lstrcmpi(pInfo1->GetEventName(),pInfo2->GetEventName());
+				Cmp=::lstrcmpi(pInfo1->m_EventName.c_str(),pInfo2->m_EventName.c_str());
 		}
 		break;
 	}
@@ -2038,12 +2257,10 @@ int CALLBACK CProgramSearchDialog::ResultCompareFunc(LPARAM lParam1,LPARAM lPara
 }
 
 
-bool CProgramSearchDialog::AddSearchResult(const CEventInfoData *pEventInfo,LPCTSTR pszChannelName,LPARAM Param)
+bool CProgramSearchDialog::AddSearchResult(CSearchEventInfo *pEventInfo)
 {
 	if (m_hDlg==NULL || pEventInfo==NULL)
 		return false;
-
-	CSearchEventInfo *pSearchEventInfo=new CSearchEventInfo(*pEventInfo,pszChannelName,Param);
 
 	HWND hwndList=::GetDlgItem(m_hDlg,IDC_PROGRAMSEARCH_RESULT);
 	LV_ITEM lvi;
@@ -2051,29 +2268,32 @@ bool CProgramSearchDialog::AddSearchResult(const CEventInfoData *pEventInfo,LPCT
 
 	lvi.mask=LVIF_TEXT | LVIF_PARAM;
 	lvi.iItem=ListView_GetItemCount(hwndList);
-	lvi.iSubItem=0;
-	::lstrcpyn(szText,NullToEmptyString(pszChannelName),lengthof(szText));
+	lvi.iSubItem=COLUMN_CHANNEL;
+	::lstrcpyn(szText,pEventInfo->GetChannelInfo().GetName(),lengthof(szText));
 	lvi.pszText=szText;
-	lvi.lParam=reinterpret_cast<LPARAM>(pSearchEventInfo);
+	lvi.lParam=reinterpret_cast<LPARAM>(pEventInfo);
 	ListView_InsertItem(hwndList,&lvi);
-	SYSTEMTIME stEnd;
+	SYSTEMTIME stStart,stEnd;
+	EpgUtil::EpgTimeToDisplayTime(pEventInfo->m_StartTime,&stStart);
 	pEventInfo->GetEndTime(&stEnd);
-	StdUtil::snprintf(szText,lengthof(szText),TEXT("%02d/%02d(%s) %02d:%02d～%02d:%02d"),
-					  pEventInfo->m_stStartTime.wMonth,pEventInfo->m_stStartTime.wDay,
-					  GetDayOfWeekText(pEventInfo->m_stStartTime.wDayOfWeek),
-					  pEventInfo->m_stStartTime.wHour,pEventInfo->m_stStartTime.wMinute,
+	EpgUtil::EpgTimeToDisplayTime(&stEnd);
+	StdUtil::snprintf(szText,lengthof(szText),
+					  TEXT("%02d/%02d(%s) %02d:%02d～%02d:%02d"),
+					  stStart.wMonth,stStart.wDay,
+					  GetDayOfWeekText(stStart.wDayOfWeek),
+					  stStart.wHour,stStart.wMinute,
 					  stEnd.wHour,stEnd.wMinute);
 	lvi.mask=LVIF_TEXT;
-	lvi.iSubItem=1;
+	lvi.iSubItem=COLUMN_TIME;
 	//lvi.pszText=szText;
 	ListView_SetItem(hwndList,&lvi);
 	//lvi.mask=LVIF_TEXT;
-	lvi.iSubItem=2;
-	::lstrcpyn(szText,NullToEmptyString(pEventInfo->GetEventName()),lengthof(szText));
+	lvi.iSubItem=COLUMN_EVENTNAME;
+	::lstrcpyn(szText,pEventInfo->m_EventName.c_str(),lengthof(szText));
 	//lvi.pszText=szText;
 	ListView_SetItem(hwndList,&lvi);
 
-	m_ResultMap.insert(std::pair<ULONGLONG,CSearchEventInfo*>(GetResultMapKey(pSearchEventInfo),pSearchEventInfo));
+	m_ResultMap.insert(std::pair<ULONGLONG,CSearchEventInfo*>(GetResultMapKey(pEventInfo),pEventInfo));
 
 	return true;
 }
@@ -2120,37 +2340,44 @@ int CProgramSearchDialog::FormatEventTimeText(const CEventInfoData *pEventInfo,L
 
 	TCHAR szEndTime[16];
 	SYSTEMTIME stEnd;
-	if (pEventInfo->m_DurationSec>0 && pEventInfo->GetEndTime(&stEnd))
+	if (pEventInfo->m_Duration>0 && pEventInfo->GetEndTime(&stEnd))
 		StdUtil::snprintf(szEndTime,lengthof(szEndTime),
 						  TEXT("～%d:%02d"),stEnd.wHour,stEnd.wMinute);
 	else
 		szEndTime[0]='\0';
 	return StdUtil::snprintf(pszText,MaxLength,TEXT("%d/%d/%d(%s) %d:%02d%s\r\n"),
-							 pEventInfo->m_stStartTime.wYear,
-							 pEventInfo->m_stStartTime.wMonth,
-							 pEventInfo->m_stStartTime.wDay,
-							 GetDayOfWeekText(pEventInfo->m_stStartTime.wDayOfWeek),
-							 pEventInfo->m_stStartTime.wHour,
-							 pEventInfo->m_stStartTime.wMinute,
+							 pEventInfo->m_StartTime.wYear,
+							 pEventInfo->m_StartTime.wMonth,
+							 pEventInfo->m_StartTime.wDay,
+							 GetDayOfWeekText(pEventInfo->m_StartTime.wDayOfWeek),
+							 pEventInfo->m_StartTime.wHour,
+							 pEventInfo->m_StartTime.wMinute,
 							 szEndTime);
 }
 
 
-int CProgramSearchDialog::FormatEventInfoText(const CEventInfoData *pEventInfo,LPTSTR pszText,int MaxLength) const
+void CProgramSearchDialog::FormatEventInfoText(const CEventInfoData *pEventInfo,TVTest::String *pText) const
 {
-	if (pEventInfo==NULL) {
-		pszText[0]='\0';
-		return 0;
+	pText->clear();
+
+	if (pEventInfo==NULL)
+		return;
+
+	*pText=pEventInfo->m_EventName;
+	*pText+=TEXT("\r\n\r\n");
+	if (!pEventInfo->m_EventText.empty()) {
+		*pText+=pEventInfo->m_EventText;
+		*pText+=TEXT("\r\n");
+	}
+	if (!pEventInfo->m_EventExtendedText.empty()) {
+		if (!pEventInfo->m_EventText.empty())
+			*pText+=TEXT("\r\n");
+		*pText+=pEventInfo->m_EventExtendedText;
 	}
 
-	return StdUtil::snprintf(
-		pszText,MaxLength,
-		TEXT("%s\r\n\r\n%s%s%s%s"),
-		NullToEmptyString(pEventInfo->GetEventName()),
-		NullToEmptyString(pEventInfo->GetEventText()),
-		pEventInfo->GetEventText()!=NULL?TEXT("\r\n\r\n"):TEXT(""),
-		NullToEmptyString(pEventInfo->GetEventExtText()),
-		pEventInfo->GetEventExtText()!=NULL?TEXT("\r\n\r\n"):TEXT(""));
+	TVTest::String::size_type Pos=pText->find_last_not_of(TEXT("\r\n"));
+	if (Pos!=TVTest::String::npos && pText->length()>Pos+2)
+		pText->resize(Pos+2);
 }
 
 
@@ -2273,6 +2500,38 @@ bool CProgramSearchDialog::SearchNextKeyword(LPCTSTR *ppszText,LPCTSTR pKeyword,
 }
 
 
+bool CProgramSearchDialog::IsSplitterPos(int x,int y) const
+{
+	RECT rcList,rcInfo;
+
+	GetDlgItemRect(m_hDlg,IDC_PROGRAMSEARCH_RESULT,&rcList);
+	GetDlgItemRect(m_hDlg,IDC_PROGRAMSEARCH_INFO,&rcInfo);
+	return x>=rcInfo.left && x<rcInfo.right && y>=rcList.bottom && y<rcInfo.top;
+}
+
+
+void CProgramSearchDialog::AdjustResultListHeight(int Height)
+{
+	RECT rcPane,rcList,rcInfo;
+
+	GetDlgItemRect(m_hDlg,IDC_PROGRAMSEARCH_RESULTPANE,&rcPane);
+	GetDlgItemRect(m_hDlg,IDC_PROGRAMSEARCH_RESULT,&rcList);
+	GetDlgItemRect(m_hDlg,IDC_PROGRAMSEARCH_INFO,&rcInfo);
+	const int SplitterHeight=rcInfo.top-rcList.bottom;
+	if (Height<0)
+		Height=(rcPane.bottom-rcPane.top)-(rcInfo.bottom-rcInfo.top)-SplitterHeight;
+	if (rcPane.top+Height>rcPane.bottom-MIN_PANE_HEIGHT-SplitterHeight)
+		Height=(rcPane.bottom-rcPane.top)-MIN_PANE_HEIGHT-SplitterHeight;
+	if (Height<MIN_PANE_HEIGHT)
+		Height=MIN_PANE_HEIGHT;
+	::MoveWindow(::GetDlgItem(m_hDlg,IDC_PROGRAMSEARCH_RESULT),
+				 rcPane.left,rcPane.top,rcPane.right-rcPane.left,Height,TRUE);
+	rcInfo.top=rcPane.top+Height+SplitterHeight;
+	::MoveWindow(::GetDlgItem(m_hDlg,IDC_PROGRAMSEARCH_INFO),
+				 rcPane.left,rcInfo.top,rcPane.right-rcPane.left,max(rcPane.bottom-rcInfo.top,0),TRUE);
+}
+
+
 void CProgramSearchDialog::OnSearch()
 {
 	CEventSearchSettings Settings;
@@ -2357,12 +2616,11 @@ bool CProgramSearchDialog::CEventHandler::Search(CEventSearcher *pSearcher)
 }
 
 
-bool CProgramSearchDialog::CEventHandler::AddSearchResult(
-	const CEventInfoData *pEventInfo,LPCTSTR pszChannelName,LPARAM Param)
+bool CProgramSearchDialog::CEventHandler::AddSearchResult(CSearchEventInfo *pEventInfo)
 {
 	if (pEventInfo==NULL || m_pSearchDialog==NULL)
 		return false;
-	return m_pSearchDialog->AddSearchResult(pEventInfo,pszChannelName,Param);
+	return m_pSearchDialog->AddSearchResult(pEventInfo);
 }
 
 

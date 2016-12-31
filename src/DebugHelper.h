@@ -7,8 +7,11 @@
 #endif
 
 #ifdef ENABLE_DEBUG_HELPER
+#pragma warning(push)
+#pragma warning(disable:4091)
 #include <dbghelp.h>
 #include <tlhelp32.h>
+#pragma warning(pop)
 #ifdef UNICODE
 #undef Module32First
 #undef Module32Next

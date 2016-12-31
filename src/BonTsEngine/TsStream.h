@@ -17,11 +17,37 @@
 
 class CTsPacket : public CMediaData
 {
+	struct TAG_TSPACKETHEADER {
+		BYTE bySyncByte;					// Sync Byte
+		bool bTransportErrorIndicator;		// Transport Error Indicator
+		bool bPayloadUnitStartIndicator;	// Payload Unit Start Indicator
+		bool bTransportPriority;			// Transport Priority
+		WORD wPID;							// PID
+		BYTE byTransportScramblingCtrl;		// Transport Scrambling Control
+		BYTE byAdaptationFieldCtrl;			// Adaptation Field Control
+		BYTE byContinuityCounter;			// Continuity Counter
+	};
+
+	struct TAG_ADAPTFIELDHEADER {
+		BYTE byAdaptationFieldLength;		// Adaptation Field Length
+		BYTE Flags;							// フラグ
+		bool bDiscontinuityIndicator;		// Discontinuity Indicator
+		BYTE byOptionSize;					// オプションフィールド長
+	};
+
+	enum {
+		ADAPTFIELD_DISCONTINUITY_INDICATOR		= 0x80U,	// Discontinuity Indicator
+		ADAPTFIELD_RANDOM_ACCESS_INDICATOR		= 0x40U,	// Random Access Indicator
+		ADAPTFIELD_ES_PRIORITY_INDICATOR		= 0x20U,	// Elementary Stream Priority Indicator
+		ADAPTFIELD_PCR_FLAG						= 0x10U,	// PCR Flag
+		ADAPTFIELD_OPCR_FLAG					= 0x08U,	// OPCR Flag
+		ADAPTFIELD_SPLICING_POINT_FLAG			= 0x04U,	// Splicing Point Flag
+		ADAPTFIELD_TRANSPORT_PRIVATE_DATA_FLAG	= 0x02U,	// Transport Private Data Flag
+		ADAPTFIELD_ADAPTATION_FIELD_EXT_FLAG	= 0x01U		// Adaptation Field Extension Flag
+	};
+
 public:
 	CTsPacket();
-	CTsPacket(const BYTE *pHexData);
-	CTsPacket(const CTsPacket &Operand);
-	CTsPacket & operator = (const CTsPacket &Operand);
 	~CTsPacket();
 
 	enum	// ParsePacket() エラーコード
@@ -32,50 +58,47 @@ public:
 		EC_CONTINUITY	= 0x00000003UL		// 連続性カウンタエラー(ドロップ)
 	};
 	DWORD ParsePacket(BYTE *pContinuityCounter = NULL);
+	void ReparsePacket();
 
 	BYTE * GetPayloadData(void);
 	const BYTE * GetPayloadData(void) const;
 	const BYTE GetPayloadSize(void) const;
 
 	const WORD GetPID(void) const { return m_Header.wPID; }
+	void SetPID(WORD PID);
 	const bool HaveAdaptationField(void) const { return (m_Header.byAdaptationFieldCtrl & 0x02U) != 0; }
 	const bool HavePayload(void) const { return (m_Header.byAdaptationFieldCtrl & 0x01U) != 0; }
 	const bool IsScrambled(void) const { return (m_Header.byTransportScramblingCtrl & 0x02U) != 0; }
 
-	struct TAG_TSPACKETHEADER {
-		BYTE bySyncByte;					// Sync Byte
-		bool bTransportErrorIndicator;		// Transport Error Indicator
-		bool bPayloadUnitStartIndicator;	// Payload Unit Start Indicator
-		bool TransportPriority;				// Transport Priority
-		WORD wPID;							// PID
-		BYTE byTransportScramblingCtrl;		// Transport Scrambling Control
-		BYTE byAdaptationFieldCtrl;			// Adaptation Field Control
-		BYTE byContinuityCounter;			// Continuity Counter
-	} m_Header;
-
-	struct TAG_ADAPTFIELDHEADER {
-		BYTE byAdaptationFieldLength;		// Adaptation Field Length
-		bool bDiscontinuityIndicator;		// Discontinuity Indicator
-		bool bRamdomAccessIndicator;		// Random Access Indicator
-		bool bEsPriorityIndicator;			// Elementary Stream Priority Indicator
-		bool bPcrFlag;						// PCR Flag
-		bool bOpcrFlag;						// OPCR Flag
-		bool bSplicingPointFlag;			// Splicing Point Flag
-		bool bTransportPrivateDataFlag;		// Transport Private Data Flag
-		bool bAdaptationFieldExtFlag;		// Adaptation Field Extension Flag
-		const BYTE *pOptionData;			// オプションフィールドデータ
-		BYTE byOptionSize;					// オプションフィールド長
-	} m_AdaptationField;
+	bool GetTransportErrorIndicator() const { return m_Header.bTransportErrorIndicator; }
+	bool GetPayloadUnitStartIndicator() const { return m_Header.bPayloadUnitStartIndicator; }
+	bool GetTransportPriority() const { return m_Header.bTransportPriority; }
+	BYTE GetTransportScramblingCtrl() const { return m_Header.byTransportScramblingCtrl; }
+	bool GetDiscontinuityIndicator() const { return m_AdaptationField.bDiscontinuityIndicator; }
+	bool GetRandomAccessIndicator() const { return (m_AdaptationField.Flags & ADAPTFIELD_RANDOM_ACCESS_INDICATOR) != 0; }
+	bool GetEsPriorityIndicator() const { return (m_AdaptationField.Flags & ADAPTFIELD_ES_PRIORITY_INDICATOR) != 0; }
+	bool GetPcrFlag() const { return (m_AdaptationField.Flags & ADAPTFIELD_PCR_FLAG) != 0; }
+	bool GetOpcrFlag() const { return (m_AdaptationField.Flags & ADAPTFIELD_OPCR_FLAG) != 0; }
+	bool GetSplicingPointFlag() const { return (m_AdaptationField.Flags & ADAPTFIELD_SPLICING_POINT_FLAG) != 0; }
+	bool GetTransportPrivateDataFlag() const { return (m_AdaptationField.Flags & ADAPTFIELD_TRANSPORT_PRIVATE_DATA_FLAG) != 0; }
+	bool GetAdaptationFieldExtFlag() const { return (m_AdaptationField.Flags & ADAPTFIELD_ADAPTATION_FIELD_EXT_FLAG) != 0; }
+	const BYTE *GetOptionData() const { return m_AdaptationField.byOptionSize ? &m_pData[6] : NULL; }
+	const BYTE GetOptionSize() const { return m_AdaptationField.byOptionSize; }
 
 	enum { BUFFER_SIZE=TS_PACKETSIZE+sizeof(TAG_TSPACKETHEADER)+sizeof(TAG_ADAPTFIELDHEADER) };
 	void StoreToBuffer(void *pBuffer);
 	void RestoreFromBuffer(const void *pBuffer);
 
 private:
+#ifdef TSPACKET_NEED_ALIGNED_PAYLOAD
 // CMediaData
 	void *Allocate(size_t Size) override;
 	void Free(void *pBuffer) override;
 	void *ReAllocate(void *pBuffer, size_t Size) override;
+#endif
+
+	TAG_TSPACKETHEADER m_Header;
+	TAG_ADAPTFIELDHEADER m_AdaptationField;
 };
 
 
@@ -168,8 +191,9 @@ protected:
 		CTsPidMapTarget *pMapTarget;
 		PIDMAPHANDLERFUNC pMapCallback;
 		PVOID pMapParam;
-	} m_PidMap[0x2000];
-	
+	};
+
+	TAG_MAPTARGETITEM *m_PidMap[0x2000];
 	WORD m_wMapCount;
 };
 

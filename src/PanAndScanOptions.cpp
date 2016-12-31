@@ -5,12 +5,7 @@
 #include "DialogUtil.h"
 #include "HelperClass/StdUtil.h"
 #include "resource.h"
-
-#ifdef _DEBUG
-#undef THIS_FILE
-static char THIS_FILE[]=__FILE__;
-#define new DEBUG_NEW
-#endif
+#include "Common/DebugDef.h"
 
 
 static const int FACTOR_PERCENTAGE=100;
@@ -58,7 +53,7 @@ static int GetValue(LPCTSTR pszValue,int Factor)
 }
 
 
-static int FormatPanAndScanInfo(const CUICore::PanAndScanInfo &Info,LPTSTR pszText,int MaxLength)
+static int FormatPanAndScanInfo(const CCoreEngine::PanAndScanInfo &Info,LPTSTR pszText,int MaxLength)
 {
 	TCHAR szXPos[32],szYPos[32],szWidth[32],szHeight[32];
 
@@ -71,7 +66,7 @@ static int FormatPanAndScanInfo(const CUICore::PanAndScanInfo &Info,LPTSTR pszTe
 }
 
 
-static bool ParsePanAndScanInfo(CUICore::PanAndScanInfo *pInfo,LPTSTR pszText)
+static bool ParsePanAndScanInfo(CCoreEngine::PanAndScanInfo *pInfo,LPTSTR pszText)
 {
 	LPTSTR p=pszText;
 	int j;
@@ -112,29 +107,23 @@ static bool ParsePanAndScanInfo(CUICore::PanAndScanInfo *pInfo,LPTSTR pszText)
 }
 
 
-#ifndef TVH264
 // 設定サンプル
 static const CPanAndScanOptions::PanAndScanInfo DefaultPresetList[] = {
-	{1350, 0, 8650, 8650, HORZ_FACTOR, VERT_FACTOR, 16, 9, TEXT("L字 MX"), 1},
-	{1500, 0, 8500, 8500, HORZ_FACTOR, VERT_FACTOR, 16, 9, TEXT("L字 TX"), 1},
+	{   0, 1281, 10000,  7438, HORZ_FACTOR, VERT_FACTOR, 239, 100, TEXT("2.39:1 シネスコ"),   1},
+	{   0, 1218, 10000,  7565, HORZ_FACTOR, VERT_FACTOR, 235, 100, TEXT("2.35:1 シネスコ"),   2},
+	{   0,  195, 10000,  9610, HORZ_FACTOR, VERT_FACTOR, 185, 100, TEXT("1.85:1 ビスタ(米)"), 3},
+	{ 331,    0,  9338, 10000, HORZ_FACTOR, VERT_FACTOR, 166, 100, TEXT("1.66:1 ビスタ(欧)"), 4},
 };
-#endif
 
 
 CPanAndScanOptions::CPanAndScanOptions()
 	: CSettingsBase(TEXT("PanAndScan"))
 	, CCommandCustomizer(CM_PANANDSCAN_PRESET_FIRST,CM_PANANDSCAN_PRESET_LAST)
 	, m_fStateChanging(false)
-#ifndef TVH264
 	, m_PresetID(lengthof(DefaultPresetList)+1)
-#else
-	, m_PresetID(1)
-#endif
 {
-#ifndef TVH264
 	for (size_t i=0;i<lengthof(DefaultPresetList);i++)
 		m_PresetList.push_back(DefaultPresetList[i]);
-#endif
 }
 
 
@@ -370,7 +359,7 @@ INT_PTR CPanAndScanOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPa
 			if (pdis->CtlID==IDC_PANANDSCAN_PREVIEW) {
 				int ItemWidth,ItemHeight,ScreenWidth,ScreenHeight;
 				RECT rcScreen;
-				CUICore::PanAndScanInfo PanScan;
+				CCoreEngine::PanAndScanInfo PanScan;
 
 				ItemWidth=pdis->rcItem.right-pdis->rcItem.left;
 				ItemHeight=pdis->rcItem.bottom-pdis->rcItem.top;
@@ -384,15 +373,17 @@ INT_PTR CPanAndScanOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPa
 						   static_cast<HBRUSH>(::GetStockObject(BLACK_BRUSH)));
 				if (GetPanAndScanSettings(&PanScan)) {
 					HBRUSH hbr=::CreateSolidBrush(RGB(128,128,128));
-					HPEN hpen=::CreatePen(PS_SOLID,1,RGB(160,160,160));
+					HPEN hpen=::CreatePen(PS_INSIDEFRAME,
+						m_pStyleScaling->ToPixels(1,TVTest::Style::UNIT_LOGICAL_PIXEL),
+						RGB(160,160,160));
 					HGDIOBJ hOldBrush=::SelectObject(pdis->hDC,hbr);
 					HGDIOBJ hOldPen=::SelectObject(pdis->hDC,hpen);
 
 					::Rectangle(pdis->hDC,
-								rcScreen.left+(PanScan.XPos*ScreenWidth/PanScan.XFactor),
-								rcScreen.top+(PanScan.YPos*ScreenHeight/PanScan.YFactor),
-								rcScreen.left+((PanScan.XPos+PanScan.Width)*ScreenWidth/PanScan.XFactor),
-								rcScreen.top+((PanScan.YPos+PanScan.Height)*ScreenHeight/PanScan.YFactor));
+								rcScreen.left+::MulDiv(PanScan.XPos,ScreenWidth,PanScan.XFactor),
+								rcScreen.top+::MulDiv(PanScan.YPos,ScreenHeight,PanScan.YFactor),
+								rcScreen.left+::MulDiv(PanScan.XPos+PanScan.Width,ScreenWidth,PanScan.XFactor),
+								rcScreen.top+::MulDiv(PanScan.YPos+PanScan.Height,ScreenHeight,PanScan.YFactor));
 					::SelectObject(pdis->hDC,hOldBrush);
 					::SelectObject(pdis->hDC,hOldPen);
 					::DeleteObject(hbr);
@@ -476,7 +467,7 @@ INT_PTR CPanAndScanOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPa
 				ofn.nMaxFile=lengthof(szFileName);
 				ofn.lpstrTitle=TEXT("パン&スキャン設定の読み込み");
 				ofn.Flags=OFN_HIDEREADONLY | OFN_FILEMUSTEXIST | OFN_EXPLORER;
-				if (::GetOpenFileName(&ofn)) {
+				if (FileOpenDialog(&ofn)) {
 					Import(szFileName);
 				}
 			}
@@ -498,7 +489,7 @@ INT_PTR CPanAndScanOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPa
 				ofn.lpstrTitle=TEXT("パン&スキャン設定の保存");
 				ofn.Flags=OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT | OFN_EXPLORER;
 				ofn.lpstrDefExt=TEXT("ini");
-				if (::GetSaveFileName(&ofn)) {
+				if (FileSaveDialog(&ofn)) {
 					Export(szFileName);
 				}
 			}
@@ -563,13 +554,16 @@ INT_PTR CPanAndScanOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPa
 				PanAndScanInfo Info;
 
 				if (GetSettings(&Info)) {
-					CUICore *pUICore=GetAppClass().GetUICore();
-					CUICore::PanAndScanInfo OldInfo;
+					CUICore &UICore=GetAppClass().UICore;
+					CCoreEngine::PanAndScanInfo OldInfo;
 
-					pUICore->GetPanAndScan(&OldInfo);
-					pUICore->SetPanAndScan(Info.Info);
-					m_fTested=true;
-					m_OldPanAndScanInfo=OldInfo;
+					if (!m_fTested)
+						UICore.GetPanAndScan(&OldInfo);
+					UICore.SetPanAndScan(Info.Info);
+					if (!m_fTested) {
+						m_fTested=true;
+						m_OldPanAndScanInfo=OldInfo;
+					}
 				}
 			}
 			return TRUE;
@@ -590,7 +584,7 @@ INT_PTR CPanAndScanOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPa
 			}
 		case IDCANCEL:
 			if (m_fTested)
-				GetAppClass().GetUICore()->SetPanAndScan(m_OldPanAndScanInfo);
+				GetAppClass().UICore.SetPanAndScan(m_OldPanAndScanInfo);
 
 			::EndDialog(hDlg,LOWORD(wParam));
 			return TRUE;
@@ -690,7 +684,7 @@ bool CPanAndScanOptions::GetSettings(CPanAndScanOptions::PanAndScanInfo *pInfo) 
 }
 
 
-bool CPanAndScanOptions::GetPanAndScanSettings(CUICore::PanAndScanInfo *pInfo) const
+bool CPanAndScanOptions::GetPanAndScanSettings(CCoreEngine::PanAndScanInfo *pInfo) const
 {
 	pInfo->XFactor=HORZ_FACTOR;
 	pInfo->YFactor=VERT_FACTOR;

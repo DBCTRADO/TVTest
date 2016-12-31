@@ -76,8 +76,11 @@ namespace TVTest
 	{
 
 		void Reserve(String &Str,size_t Size);
+		void Assign(String &Str,const String::value_type *pszSrc);
+		const String::value_type *GetCStrOrNull(const String &Str);
 		int Format(String &Str,LPCWSTR pszFormat, ...);
 		int FormatV(String &Str,LPCWSTR pszFormat,va_list Args);
+		int Compare(const String &String1,LPCWSTR pszString2);
 		int CompareNoCase(const String &String1,const String &String2);
 		int CompareNoCase(const String &String1,LPCWSTR pszString2);
 		int CompareNoCase(const String &String1,const String &String2,String::size_type Length);
@@ -87,12 +90,79 @@ namespace TVTest
 		bool Replace(String &Str,String::value_type From,String::value_type To);
 		void ToUpper(String &Str);
 		void ToLower(String &Str);
+		bool ToHalfWidthNoKatakana(LPCWSTR pSrc,String::size_type SrcLength,String *pDst);
+		bool ToHalfWidthNoKatakana(const String &Src,String *pDst);
+		bool ToHalfWidthNoKatakana(String &Str);
+		bool ToHalfWidthNoKatakana(LPCWSTR pszSrc,String *pDst);
+		bool ToHalfWidthNoKatakana(LPCWSTR pszSrc,LPWSTR pszDst,String::size_type DstLength);
 		bool ToAnsi(const String &Src,AnsiString *pDst);
 		bool Split(const String &Src,LPCWSTR pszDelimiter,std::vector<String> *pList);
 		bool Combine(const std::vector<String> &List,LPCWSTR pszDelimiter,String *pDst);
 		bool Encode(LPCWSTR pszSrc,String *pDst,LPCWSTR pszEncodeChars=L"\\\"\',/");
+		String Encode(const String &Src,LPCWSTR pszEncodeChars=L"\\\"\',/");
 		bool Decode(LPCWSTR pszSrc,String *pDst);
+		String Decode(const String &Src);
 
+		UINT32 Hash32(const String &Str);
+		UINT64 Hash64(const String &Str);
+		UINT32 HashNoCase32(const String &Str);
+		UINT64 HashNoCase64(const String &Str);
+		inline std::size_t Hash(const String &Str) {
+#ifndef _WIN64
+			return Hash32(Str);
+#else
+			return Hash64(Str);
+#endif
+		}
+		inline std::size_t HashNoCase(const String &Str) {
+#ifndef _WIN64
+			return HashNoCase32(Str);
+#else
+			return HashNoCase64(Str);
+#endif
+		}
+
+	}
+
+	namespace StringFunctional
+	{
+
+		struct Equal {
+			bool operator()(const String &Str1,const String &Str2) const {
+				return Str1==Str2;
+			}
+		};
+
+		struct EqualNoCase {
+			bool operator()(const String &Str1,const String &Str2) const {
+				return StringUtility::CompareNoCase(Str1,Str2)==0;
+			}
+		};
+
+		struct LessNoCase {
+			bool operator()(const String &Str1,const String &Str2) const {
+				return StringUtility::CompareNoCase(Str1,Str2)<0;
+			}
+		};
+
+		struct Hash {
+			std::size_t operator()(const String &Str) const {
+				return StringUtility::Hash(Str);
+			}
+		};
+
+		struct HashNoCase {
+			std::size_t operator()(const String &Str) const {
+				return StringUtility::HashNoCase(Str);
+			}
+		};
+
+	}
+
+	inline String StringFromCStr(const String::value_type *pszSrc) {
+		String Str;
+		StringUtility::Assign(Str,pszSrc);
+		return Str;
 	}
 
 }

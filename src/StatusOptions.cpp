@@ -4,25 +4,18 @@
 #include "StatusOptions.h"
 #include "Settings.h"
 #include "DialogUtil.h"
+#include "StyleUtil.h"
 #include "resource.h"
-
-#ifdef _DEBUG
-#undef THIS_FILE
-static char THIS_FILE[]=__FILE__;
-#define new DEBUG_NEW
-#endif
+#include "Common/DebugDef.h"
 
 
 static const bool IS_HD=
-#ifndef TVH264_FOR_1SEG
+#ifndef TVTEST_FOR_1SEG
 	true
 #else
 	false
 #endif
 	;
-
-#define ITEM_MARGIN	2
-#define CHECK_WIDTH	14
 
 #define TIMER_ID_UP		1
 #define TIMER_ID_DOWN	2
@@ -33,144 +26,25 @@ static const bool IS_HD=
 CStatusOptions::CStatusOptions(CStatusView *pStatusView)
 	: COptions(TEXT("Status"))
 	, m_pStatusView(pStatusView)
+	, m_ItemID(STATUS_ITEM_LAST+1)
+	, m_DPI(GetStyleManager()->GetSystemDPI())
 	, m_fShowTOTTime(false)
+	, m_fInterpolateTOTTime(true)
 	, m_fEnablePopupProgramInfo(true)
+	, m_fShowEventProgress(true)
+	, m_PopupEventInfoWidth(0)
+	, m_PopupEventInfoHeight(0)
 	, m_fMultiRow(!IS_HD)
 	, m_MaxRows(2)
-{
-	SetDefaultItemList();
-	m_pStatusView->GetFont(&m_lfItemFont);
-}
+	, m_fShowPopup(true)
+	, m_PopupOpacity(OPACITY_MAX)
 
-
-CStatusOptions::~CStatusOptions()
-{
-	Destroy();
-}
-
-
-bool CStatusOptions::ReadSettings(CSettings &Settings)
-{
-	int NumItems;
-	if (Settings.Read(TEXT("NumItems"),&NumItems)
-			&& NumItems>0 && NumItems<=NUM_STATUS_ITEMS) {
-		StatusItemInfo ItemList[NUM_STATUS_ITEMS];
-		int i,j,k;
-
-		for (i=j=0;i<NumItems;i++) {
-			TCHAR szKey[32];
-
-			::wsprintf(szKey,TEXT("Item%d_ID"),i);
-			if (Settings.Read(szKey,&ItemList[j].ID)
-					&& ItemList[j].ID>=STATUS_ITEM_FIRST
-					&& ItemList[j].ID<=STATUS_ITEM_LAST) {
-				for (k=0;k<j;k++) {
-					if (ItemList[k].ID==ItemList[j].ID)
-						break;
-				}
-				if (k==j) {
-					::wsprintf(szKey,TEXT("Item%d_Visible"),i);
-					Settings.Read(szKey,&ItemList[j].fVisible);
-					::wsprintf(szKey,TEXT("Item%d_Width"),i);
-					if (!Settings.Read(szKey,&ItemList[j].Width) || ItemList[j].Width<1)
-						ItemList[j].Width=-1;
-					j++;
-				}
-			}
-		}
-		NumItems=j;
-		if (NumItems<NUM_STATUS_ITEMS) {
-			for (i=0;i<NUM_STATUS_ITEMS;i++) {
-				for (k=0;k<NumItems;k++) {
-					if (ItemList[k].ID==m_ItemList[i].ID)
-						break;
-				}
-				if (k==NumItems)
-					m_ItemList[j++]=m_ItemList[i];
-			}
-		}
-		for (i=0;i<NumItems;i++)
-			m_ItemList[i]=ItemList[i];
-	}
-
-	// Font
-	TCHAR szFont[LF_FACESIZE];
-	int Value;
-	if (Settings.Read(TEXT("FontName"),szFont,LF_FACESIZE) && szFont[0]!='\0') {
-		lstrcpy(m_lfItemFont.lfFaceName,szFont);
-		m_lfItemFont.lfEscapement=0;
-		m_lfItemFont.lfOrientation=0;
-		m_lfItemFont.lfUnderline=0;
-		m_lfItemFont.lfStrikeOut=0;
-		m_lfItemFont.lfCharSet=DEFAULT_CHARSET;
-		m_lfItemFont.lfOutPrecision=OUT_DEFAULT_PRECIS;
-		m_lfItemFont.lfClipPrecision=CLIP_DEFAULT_PRECIS;
-		m_lfItemFont.lfQuality=DRAFT_QUALITY;
-		m_lfItemFont.lfPitchAndFamily=DEFAULT_PITCH | FF_DONTCARE;
-	}
-	if (Settings.Read(TEXT("FontSize"),&Value)) {
-		m_lfItemFont.lfHeight=Value;
-		m_lfItemFont.lfWidth=0;
-	}
-	if (Settings.Read(TEXT("FontWeight"),&Value))
-		m_lfItemFont.lfWeight=Value;
-	if (Settings.Read(TEXT("FontItalic"),&Value))
-		m_lfItemFont.lfItalic=Value;
-
-	Settings.Read(TEXT("MultiRow"),&m_fMultiRow);
-	Settings.Read(TEXT("MaxRows"),&m_MaxRows);
-
-	Settings.Read(TEXT("TOTTime"),&m_fShowTOTTime);
-	Settings.Read(TEXT("PopupProgramInfo"),&m_fEnablePopupProgramInfo);
-
-	return true;
-}
-
-
-bool CStatusOptions::WriteSettings(CSettings &Settings)
-{
-	if (Settings.Write(TEXT("NumItems"),NUM_STATUS_ITEMS)) {
-		for (int i=0;i<NUM_STATUS_ITEMS;i++) {
-			TCHAR szKey[32];
-
-			::wsprintf(szKey,TEXT("Item%d_ID"),i);
-			Settings.Write(szKey,m_ItemList[i].ID);
-			::wsprintf(szKey,TEXT("Item%d_Visible"),i);
-			Settings.Write(szKey,m_ItemList[i].fVisible);
-			::wsprintf(szKey,TEXT("Item%d_Width"),i);
-			Settings.Write(szKey,m_ItemList[i].Width);
-		}
-	}
-
-	// Font
-	Settings.Write(TEXT("FontName"),m_lfItemFont.lfFaceName);
-	Settings.Write(TEXT("FontSize"),(int)m_lfItemFont.lfHeight);
-	Settings.Write(TEXT("FontWeight"),(int)m_lfItemFont.lfWeight);
-	Settings.Write(TEXT("FontItalic"),(int)m_lfItemFont.lfItalic);
-
-	Settings.Write(TEXT("MultiRow"),m_fMultiRow);
-	Settings.Write(TEXT("MaxRows"),m_MaxRows);
-
-	Settings.Write(TEXT("TOTTime"),m_fShowTOTTime);
-	Settings.Write(TEXT("PopupProgramInfo"),m_fEnablePopupProgramInfo);
-
-	return true;
-}
-
-
-bool CStatusOptions::Create(HWND hwndOwner)
-{
-	return CreateDialogWindow(hwndOwner,
-							  GetAppClass().GetResourceInstance(),MAKEINTRESOURCE(IDD_OPTIONS_STATUS));
-}
-
-
-void CStatusOptions::SetDefaultItemList()
+	, m_ItemListSubclass(this)
 {
 	static const struct {
 		BYTE ID;
 		bool fVisible;
-	} DefaultItemList[NUM_STATUS_ITEMS] = {
+	} DefaultItemList[] = {
 		{STATUS_ITEM_TUNER,			IS_HD},
 		{STATUS_ITEM_CHANNEL,		true},
 		{STATUS_ITEM_FAVORITES,		false},
@@ -187,35 +61,273 @@ void CStatusOptions::SetDefaultItemList()
 		{STATUS_ITEM_MEDIABITRATE,	false},
 	};
 
-	for (int i=0;i<NUM_STATUS_ITEMS;i++) {
-		m_ItemList[i].ID=DefaultItemList[i].ID;
-		m_ItemList[i].fVisible=DefaultItemList[i].fVisible;
-		m_ItemList[i].Width=-1;
+	m_AvailItemList.reserve(lengthof(DefaultItemList));
+
+	for (int i=0;i<lengthof(DefaultItemList);i++) {
+		StatusItemInfo Info;
+
+		Info.ID=DefaultItemList[i].ID;
+		Info.fVisible=DefaultItemList[i].fVisible;
+		Info.Width=-1;
+
+		m_AvailItemList.push_back(Info);
+	}
+
+	m_ItemList=m_AvailItemList;
+
+	m_pStatusView->GetFont(&m_ItemFont);
+}
+
+
+CStatusOptions::~CStatusOptions()
+{
+	Destroy();
+}
+
+
+bool CStatusOptions::ReadSettings(CSettings &Settings)
+{
+	int NumItems;
+	if (Settings.Read(TEXT("NumItems"),&NumItems) && NumItems>0) {
+		StatusItemInfoList ItemList;
+		TVTest::String ID;
+
+		for (int i=0;i<NumItems;i++) {
+			TCHAR szKey[32];
+
+			StdUtil::snprintf(szKey,lengthof(szKey),TEXT("Item%d_ID"),i);
+			if (Settings.Read(szKey,&ID) && !ID.empty()) {
+				StatusItemInfo Item;
+
+				LPTSTR p;
+				long IDNum=std::_tcstol(ID.c_str(),&p,10);
+				if (*p==_T('\0')) {
+					if (IDNum>=STATUS_ITEM_FIRST && IDNum<=STATUS_ITEM_LAST) {
+						Item.ID=(int)IDNum;
+					} else {
+						continue;
+					}
+					size_t j;
+					for (j=0;j<ItemList.size();j++) {
+						if (ItemList[j].ID==Item.ID)
+							break;
+					}
+					if (j<ItemList.size())
+						continue;
+					for (size_t j=0;j<m_AvailItemList.size();j++) {
+						if (m_AvailItemList[j].ID==Item.ID) {
+							Item.fVisible=m_AvailItemList[j].fVisible;
+							break;
+						}
+					}
+				} else {
+					Item.ID=-1;
+					Item.IDText=ID;
+					size_t j=0;
+					for (j=0;j<ItemList.size();j++) {
+						if (TVTest::StringUtility::CompareNoCase(ItemList[j].IDText,Item.IDText)==0)
+							break;
+					}
+					if (j<ItemList.size())
+						continue;
+					Item.fVisible=false;
+				}
+
+				StdUtil::snprintf(szKey,lengthof(szKey),TEXT("Item%d_Visible"),i);
+				Settings.Read(szKey,&Item.fVisible);
+				StdUtil::snprintf(szKey,lengthof(szKey),TEXT("Item%d_Width"),i);
+				if (!Settings.Read(szKey,&Item.Width) || Item.Width<1)
+					Item.Width=-1;
+
+				ItemList.push_back(Item);
+			}
+		}
+
+		for (size_t i=0;i<m_AvailItemList.size();i++) {
+			const int ID=m_AvailItemList[i].ID;
+			bool fFound=false;
+			for (size_t j=0;j<ItemList.size();j++) {
+				if (ItemList[j].ID==ID) {
+					fFound=true;
+					break;
+				}
+			}
+			if (!fFound) {
+				StatusItemInfo Item(m_AvailItemList[i]);
+				Item.fVisible=false;
+				ItemList.push_back(Item);
+			}
+		}
+
+		m_ItemList=ItemList;
+	}
+
+	if (!Settings.Read(TEXT("DPI"),&m_DPI))
+		m_fChanged=true;
+
+	bool f;
+	if (TVTest::StyleUtil::ReadFontSettings(Settings,TEXT("Font"),&m_ItemFont,true,&f)) {
+		if (!f)
+			m_fChanged=true;
+	}
+
+	Settings.Read(TEXT("MultiRow"),&m_fMultiRow);
+	Settings.Read(TEXT("MaxRows"),&m_MaxRows);
+	Settings.Read(TEXT("ShowPopup"),&m_fShowPopup);
+	int Value;
+	if (Settings.Read(TEXT("PopupOpacity"),&Value))
+		m_PopupOpacity=CLAMP(Value,OPACITY_MIN,OPACITY_MAX);
+
+	Settings.Read(TEXT("TOTTime"),&m_fShowTOTTime);
+	Settings.Read(TEXT("InterpolateTOTTime"),&m_fInterpolateTOTTime);
+	Settings.Read(TEXT("PopupProgramInfo"),&m_fEnablePopupProgramInfo);
+	Settings.Read(TEXT("ShowEventProgress"),&m_fShowEventProgress);
+	Settings.Read(TEXT("PopupEventInfoWidth"),&m_PopupEventInfoWidth);
+	Settings.Read(TEXT("PopupEventInfoHeight"),&m_PopupEventInfoHeight);
+
+	return true;
+}
+
+
+bool CStatusOptions::WriteSettings(CSettings &Settings)
+{
+	if (Settings.Write(TEXT("NumItems"),(int)m_ItemList.size())) {
+		for (int i=0;i<(int)m_ItemList.size();i++) {
+			const StatusItemInfo &Info=m_ItemList[i];
+			TCHAR szKey[32];
+
+			StdUtil::snprintf(szKey,lengthof(szKey),TEXT("Item%d_ID"),i);
+			if (!Info.IDText.empty())
+				Settings.Write(szKey,Info.IDText);
+			else
+				Settings.Write(szKey,Info.ID);
+			StdUtil::snprintf(szKey,lengthof(szKey),TEXT("Item%d_Visible"),i);
+			Settings.Write(szKey,Info.fVisible);
+			StdUtil::snprintf(szKey,lengthof(szKey),TEXT("Item%d_Width"),i);
+			Settings.Write(szKey,Info.Width);
+		}
+	}
+
+	Settings.Write(TEXT("DPI"),m_DPI);
+
+	TVTest::StyleUtil::WriteFontSettings(Settings,TEXT("Font"),m_ItemFont);
+
+	Settings.Write(TEXT("MultiRow"),m_fMultiRow);
+	Settings.Write(TEXT("MaxRows"),m_MaxRows);
+	Settings.Write(TEXT("ShowPopup"),m_fShowPopup);
+	Settings.Write(TEXT("PopupOpacity"),m_PopupOpacity);
+
+	Settings.Write(TEXT("TOTTime"),m_fShowTOTTime);
+	Settings.Write(TEXT("InterpolateTOTTime"),m_fInterpolateTOTTime);
+	Settings.Write(TEXT("PopupProgramInfo"),m_fEnablePopupProgramInfo);
+	Settings.Write(TEXT("ShowEventProgress"),m_fShowEventProgress);
+	Settings.Write(TEXT("PopupEventInfoWidth"),m_PopupEventInfoWidth);
+	Settings.Write(TEXT("PopupEventInfoHeight"),m_PopupEventInfoHeight);
+
+	return true;
+}
+
+
+bool CStatusOptions::Create(HWND hwndOwner)
+{
+	return CreateDialogWindow(hwndOwner,
+							  GetAppClass().GetResourceInstance(),MAKEINTRESOURCE(IDD_OPTIONS_STATUS));
+}
+
+
+bool CStatusOptions::ApplyOptions()
+{
+	m_pStatusView->EnableSizeAdjustment(false);
+	m_pStatusView->SetMultiRow(m_fMultiRow);
+	m_pStatusView->SetMaxRows(m_MaxRows);
+	m_pStatusView->SetFont(m_ItemFont);
+	m_pStatusView->EnableSizeAdjustment(true);
+	return true;
+}
+
+
+bool CStatusOptions::ApplyItemList()
+{
+	StatusItemInfoList ItemList;
+
+	MakeItemList(&ItemList);
+
+	std::vector<int> ItemOrder;
+	ItemOrder.resize(ItemList.size());
+
+	const int StatusBarDPI=m_pStatusView->GetStyleScaling()->GetDPI();
+
+	for (size_t i=0;i<ItemList.size();i++) {
+		ItemOrder[i]=ItemList[i].ID;
+		CStatusItem *pItem=m_pStatusView->GetItemByID(ItemOrder[i]);
+		pItem->SetVisible(ItemList[i].fVisible);
+		if (ItemList[i].Width>=0)
+			pItem->SetWidth(::MulDiv(ItemList[i].Width,StatusBarDPI,m_DPI));
+	}
+
+	return m_pStatusView->SetItemOrder(ItemOrder.data());
+}
+
+
+void CStatusOptions::ApplyItemWidth()
+{
+	const int StatusBarDPI=m_pStatusView->GetStyleScaling()->GetDPI();
+
+	for (size_t i=0;i<m_ItemList.size();i++) {
+		if (m_ItemList[i].Width>=0) {
+			CStatusItem *pItem=m_pStatusView->GetItemByID(m_ItemList[i].ID);
+			if (pItem!=nullptr) {
+				pItem->SetWidth(::MulDiv(m_ItemList[i].Width,StatusBarDPI,m_DPI));
+				pItem->SetActualWidth(pItem->GetWidth());
+			}
+		}
 	}
 }
 
 
-void CStatusOptions::InitListBox(HWND hDlg)
+int CStatusOptions::RegisterItem(LPCTSTR pszID)
 {
-	int i;
+	if (IsStringEmpty(pszID))
+		return -1;
 
-	for (i=0;i<NUM_STATUS_ITEMS;i++) {
-		m_ItemListCur[i]=m_ItemList[i];
-		DlgListBox_AddString(hDlg,IDC_STATUSOPTIONS_ITEMLIST,&m_ItemListCur[i]);
+	StatusItemInfo Item;
+
+	Item.ID=m_ItemID++;
+	Item.IDText=pszID;
+	Item.fVisible=false;
+	Item.Width=-1;
+
+	m_AvailItemList.push_back(Item);
+
+	for (size_t i=0;i<m_ItemList.size();i++) {
+		if (m_ItemList[i].ID<0
+				&& TVTest::StringUtility::CompareNoCase(m_ItemList[i].IDText,Item.IDText)==0) {
+			m_ItemList[i].ID=Item.ID;
+			break;
+		}
 	}
+
+	return Item.ID;
 }
 
 
-static void SetFontInfo(HWND hDlg,const LOGFONT *plf)
+bool CStatusOptions::SetItemVisibility(int ID,bool fVisible)
 {
-	HDC hdc;
-	TCHAR szText[LF_FACESIZE+16];
+	for (auto itr=m_ItemList.begin();itr!=m_ItemList.end();++itr) {
+		if (itr->ID==ID) {
+			itr->fVisible=fVisible;
+			return true;
+		}
+	}
 
-	hdc=GetDC(hDlg);
-	wsprintf(szText,TEXT("%s, %d pt"),
-			 plf->lfFaceName,CalcFontPointHeight(hdc,plf));
-	ReleaseDC(hDlg,hdc);
-	SetDlgItemText(hDlg,IDC_STATUSOPTIONS_FONTINFO,szText);
+	return false;
+}
+
+
+void CStatusOptions::InitListBox()
+{
+	for (size_t i=0;i<m_ItemListCur.size();i++)
+		DlgListBox_AddString(m_hDlg,IDC_STATUSOPTIONS_ITEMLIST,&m_ItemListCur[i]);
 }
 
 
@@ -226,14 +338,25 @@ INT_PTR CStatusOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 		{
 			m_DropInsertPos=-1;
 			m_DragTimerID=0;
-			InitListBox(hDlg);
-			m_pOldListProc=SubclassWindow(GetDlgItem(hDlg,IDC_STATUSOPTIONS_ITEMLIST),ItemListProc);
-			m_ItemHeight=m_pStatusView->GetItemHeight()+(1+ITEM_MARGIN)*2;
+
+			MakeItemList(&m_ItemListCur);
+			m_StatusBarDPI=m_pStatusView->GetStyleScaling()->GetDPI();
+			for (auto itr=m_ItemListCur.begin();itr!=m_ItemListCur.end();++itr) {
+				const CStatusItem *pItem=m_pStatusView->GetItemByID(itr->ID);
+				itr->fVisible=pItem->GetVisible();
+				if (itr->Width>0)
+					itr->Width=::MulDiv(itr->Width,m_StatusBarDPI,m_DPI);
+			}
+
 			DlgListBox_SetItemHeight(hDlg,IDC_STATUSOPTIONS_ITEMLIST,0,m_ItemHeight);
-			CalcTextWidth(hDlg);
-			SetListHExtent(hDlg);
-			m_CurSettingFont=m_lfItemFont;
-			SetFontInfo(hDlg,&m_CurSettingFont);
+			InitListBox();
+			CalcTextWidth();
+			SetListHExtent();
+
+			m_ItemListSubclass.SetSubclass(::GetDlgItem(hDlg,IDC_STATUSOPTIONS_ITEMLIST));
+
+			m_CurSettingFont=m_ItemFont;
+			TVTest::StyleUtil::SetFontInfoItem(hDlg,IDC_STATUSOPTIONS_FONTINFO,m_CurSettingFont);
 			DlgCheckBox_Check(hDlg,IDC_STATUSOPTIONS_MULTIROW,m_fMultiRow);
 			::SetDlgItemInt(hDlg,IDC_STATUSOPTIONS_MAXROWS,m_MaxRows,TRUE);
 			DlgUpDown_SetRange(hDlg,IDC_STATUSOPTIONS_MAXROWS_UPDOWN,1,UD_MAXVAL);
@@ -241,6 +364,21 @@ INT_PTR CStatusOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 						   IDC_STATUSOPTIONS_MAXROWS_LABEL,
 						   IDC_STATUSOPTIONS_MAXROWS_UPDOWN,
 						   m_fMultiRow);
+
+			DlgCheckBox_Check(hDlg,IDC_STATUSOPTIONS_SHOWPOPUP,m_fShowPopup);
+
+			::SendDlgItemMessage(hDlg,IDC_STATUSOPTIONS_OPACITY_SLIDER,
+								 TBM_SETRANGE,TRUE,MAKELPARAM(OPACITY_MIN,OPACITY_MAX));
+			::SendDlgItemMessage(hDlg,IDC_STATUSOPTIONS_OPACITY_SLIDER,
+								 TBM_SETPOS,TRUE,m_PopupOpacity);
+			::SendDlgItemMessage(hDlg,IDC_STATUSOPTIONS_OPACITY_SLIDER,
+								 TBM_SETPAGESIZE,0,10);
+			::SendDlgItemMessage(hDlg,IDC_STATUSOPTIONS_OPACITY_SLIDER,
+								 TBM_SETTICFREQ,10,0);
+			DlgEdit_SetInt(hDlg,IDC_STATUSOPTIONS_OPACITY_INPUT,m_PopupOpacity);
+			DlgUpDown_SetRange(hDlg,IDC_STATUSOPTIONS_OPACITY_SPIN,OPACITY_MIN,OPACITY_MAX);
+			EnableDlgItems(hDlg,IDC_STATUSOPTIONS_OPACITY_LABEL,IDC_STATUSOPTIONS_OPACITY_UNIT,
+						   m_fShowPopup && Util::OS::IsWindows8OrLater());
 		}
 		return TRUE;
 
@@ -259,7 +397,7 @@ INT_PTR CStatusOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 					COLORREF crTextColor,crOldTextColor;
 					RECT rc;
 
-					if ((pdis->itemState&ODS_SELECTED)==0) {
+					if ((pdis->itemState & ODS_SELECTED)==0) {
 						TextColor=COLOR_WINDOWTEXT;
 						BackColor=COLOR_WINDOW;
 					} else {
@@ -267,29 +405,30 @@ INT_PTR CStatusOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 						BackColor=COLOR_HIGHLIGHT;
 					}
 					::FillRect(pdis->hDC,&pdis->rcItem,
-							   reinterpret_cast<HBRUSH>(BackColor+1));
+							   reinterpret_cast<HBRUSH>(static_cast<INT_PTR>(BackColor+1)));
 					OldBkMode=::SetBkMode(pdis->hDC,TRANSPARENT);
 					crTextColor=::GetSysColor(TextColor);
 					if (!pItemInfo->fVisible)
 						crTextColor=MixColor(crTextColor,::GetSysColor(BackColor));
 					crOldTextColor=::SetTextColor(pdis->hDC,crTextColor);
-					rc.left=pdis->rcItem.left+ITEM_MARGIN;
-					rc.top=pdis->rcItem.top+ITEM_MARGIN;
-					rc.right=rc.left+CHECK_WIDTH;
-					rc.bottom=pdis->rcItem.bottom-ITEM_MARGIN;
+					rc.left=pdis->rcItem.left+m_ItemMargin.Left;
+					rc.top=pdis->rcItem.top+m_ItemMargin.Top;
+					rc.right=rc.left+m_CheckSize.Width;
+					rc.bottom=pdis->rcItem.bottom-m_ItemMargin.Bottom;
 					::DrawFrameControl(pdis->hDC,&rc,DFC_BUTTON,
 						DFCS_BUTTONCHECK | (pItemInfo->fVisible?DFCS_CHECKED:0));
-					rc.left=pdis->rcItem.left+ITEM_MARGIN+CHECK_WIDTH+ITEM_MARGIN;
-					rc.top=pdis->rcItem.top+ITEM_MARGIN;
+					rc.left=pdis->rcItem.left+m_ItemMargin.Horz()+m_CheckSize.Width;
+					rc.top=pdis->rcItem.top+m_ItemMargin.Top;
 					rc.right=rc.left+m_TextWidth;
-					rc.bottom=pdis->rcItem.bottom-ITEM_MARGIN;
+					rc.bottom=pdis->rcItem.bottom-m_ItemMargin.Bottom;
 					::DrawText(pdis->hDC,pItem->GetName(),-1,&rc,
 						DT_LEFT | DT_SINGLELINE | DT_VCENTER | DT_NOPREFIX);
-					rc.left=rc.right+ITEM_MARGIN+1;
-					rc.right=rc.left+(pItemInfo->Width>=0?
-									pItemInfo->Width:pItem->GetDefaultWidth());
-					rc.top=pdis->rcItem.top+((pdis->rcItem.bottom-pdis->rcItem.top)-m_pStatusView->GetItemHeight())/2;
-					rc.bottom=rc.top+m_pStatusView->GetItemHeight();
+					rc.left=rc.right+m_ItemMargin.Left;
+					rc.right=rc.left+(pItemInfo->Width>=0?pItemInfo->Width:pItem->GetWidth())+
+						m_pStatusView->GetItemPadding().Horz();
+					const int ItemHeight=m_ItemHeight-m_ItemMargin.Vert();
+					rc.top+=((rc.bottom-rc.top)-ItemHeight)/2;
+					rc.bottom=rc.top+ItemHeight;
 					HPEN hpen,hpenOld;
 					HBRUSH hbrOld;
 					hpen=::CreatePen(PS_SOLID,1,crTextColor);
@@ -299,9 +438,13 @@ INT_PTR CStatusOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 					SelectBrush(pdis->hDC,hbrOld);
 					SelectPen(pdis->hDC,hpenOld);
 					::DeleteObject(hpen);
-					HFONT hfont=::CreateFontIndirect(&m_CurSettingFont);
-					m_pStatusView->DrawItemPreview(pItem,pdis->hDC,&rc,false,hfont);
-					::DeleteObject(hfont);
+
+					{
+						DrawUtil::CFont Font;
+						m_pStatusView->CreateItemPreviewFont(m_CurSettingFont,&Font);
+						m_pStatusView->DrawItemPreview(pItem,pdis->hDC,rc,false,Font.GetHandle());
+					}
+
 					::SetBkMode(pdis->hDC,OldBkMode);
 					::SetTextColor(pdis->hDC,crOldTextColor);
 					if ((int)pdis->itemID==m_DropInsertPos
@@ -310,7 +453,7 @@ INT_PTR CStatusOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 							(int)pdis->itemID==m_DropInsertPos?
 										pdis->rcItem.top:pdis->rcItem.bottom-1,
 							pdis->rcItem.right-pdis->rcItem.left,1,DSTINVERT);
-					if ((pdis->itemState&ODS_FOCUS)==0)
+					if ((pdis->itemState & ODS_FOCUS)==0)
 						break;
 				}
 			case ODA_FOCUS:
@@ -321,33 +464,35 @@ INT_PTR CStatusOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 		}
 		return TRUE;
 
+	case WM_HSCROLL:
+		if (reinterpret_cast<HWND>(lParam)==::GetDlgItem(hDlg,IDC_STATUSOPTIONS_OPACITY_SLIDER)) {
+			SyncEditWithTrackBar(hDlg,
+								 IDC_STATUSOPTIONS_OPACITY_SLIDER,
+								 IDC_STATUSOPTIONS_OPACITY_INPUT);
+		}
+		return TRUE;
+
 	case WM_COMMAND:
 		switch (LOWORD(wParam)) {
 		case IDC_STATUSOPTIONS_DEFAULT:
-			SetDefaultItemList();
 			DlgListBox_Clear(hDlg,IDC_STATUSOPTIONS_ITEMLIST);
-			InitListBox(hDlg);
-			SetListHExtent(hDlg);
+			m_ItemListCur=m_AvailItemList;
+			InitListBox();
+			SetListHExtent();
 			return TRUE;
 
 		case IDC_STATUSOPTIONS_CHOOSEFONT:
 			{
-				LOGFONT lf=m_CurSettingFont;
+				TVTest::Style::Font Font=m_CurSettingFont;
 
-				if (ChooseFontDialog(hDlg,&lf)
-						&& !CompareLogFont(&m_CurSettingFont,&lf)) {
-					DrawUtil::CFont Font(lf);
-					RECT rc;
-
-					m_CurSettingFont=lf;
-					SetFontInfo(hDlg,&lf);
-					m_pStatusView->GetItemMargin(&rc);
-					HWND hwndList=::GetDlgItem(hDlg,IDC_STATUSOPTIONS_ITEMLIST);
-					HDC hdc=::GetDC(hwndList);
-					m_ItemHeight=(Font.GetHeight(hdc,false)+rc.top+rc.bottom)+(1+ITEM_MARGIN)*2;
-					::ReleaseDC(hwndList,hdc);
+				if (TVTest::StyleUtil::ChooseStyleFont(hDlg,&Font) && Font!=m_CurSettingFont) {
+					m_CurSettingFont=Font;
+					TVTest::StyleUtil::SetFontInfoItem(hDlg,IDC_STATUSOPTIONS_FONTINFO,Font);
+					m_pStyleScaling->RealizeFontSize(&Font);
+					DrawUtil::CFont DrawFont(Font.LogFont);
+					m_ItemHeight=m_pStatusView->CalcItemHeight(DrawFont)+m_ItemMargin.Vert();
 					DlgListBox_SetItemHeight(hDlg,IDC_STATUSOPTIONS_ITEMLIST,0,m_ItemHeight);
-					::InvalidateRect(hwndList,NULL,TRUE);
+					InvalidateDlgItem(hDlg,IDC_STATUSOPTIONS_ITEMLIST);
 				}
 			}
 			return TRUE;
@@ -358,6 +503,19 @@ INT_PTR CStatusOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 									   IDC_STATUSOPTIONS_MAXROWS_UPDOWN,
 									   IDC_STATUSOPTIONS_MULTIROW);
 			return TRUE;
+
+		case IDC_STATUSOPTIONS_SHOWPOPUP:
+			EnableDlgItems(hDlg,IDC_STATUSOPTIONS_OPACITY_LABEL,IDC_STATUSOPTIONS_OPACITY_UNIT,
+				DlgCheckBox_IsChecked(hDlg,IDC_STATUSOPTIONS_SHOWPOPUP) && Util::OS::IsWindows8OrLater());
+			return TRUE;
+
+		case IDC_STATUSOPTIONS_OPACITY_INPUT:
+			if (HIWORD(wParam)==EN_CHANGE) {
+				SyncTrackBarWithEdit(hDlg,
+									 IDC_STATUSOPTIONS_OPACITY_INPUT,
+									 IDC_STATUSOPTIONS_OPACITY_SLIDER);
+			}
+			return TRUE;
 		}
 		return TRUE;
 
@@ -367,14 +525,22 @@ INT_PTR CStatusOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 			{
 				m_pStatusView->EnableSizeAdjustment(false);
 
-				for (int i=0;i<NUM_STATUS_ITEMS;i++)
+				m_ItemList.resize(m_ItemListCur.size());
+				for (size_t i=0;i<m_ItemListCur.size();i++) {
 					m_ItemList[i]=*reinterpret_cast<StatusItemInfo*>(
 						DlgListBox_GetItemData(hDlg,IDC_STATUSOPTIONS_ITEMLIST,i));
+				}
+				m_DPI=m_StatusBarDPI;
 				ApplyItemList();
 
-				if (!CompareLogFont(&m_lfItemFont,&m_CurSettingFont)) {
-					m_lfItemFont=m_CurSettingFont;
-					m_pStatusView->SetFont(&m_lfItemFont);
+				if (m_ItemFont!=m_CurSettingFont) {
+					m_ItemFont=m_CurSettingFont;
+					m_pStatusView->SetFont(m_ItemFont);
+					for (size_t i=0;i<m_ItemList.size();i++) {
+						StatusItemInfo &Item=m_ItemList[i];
+						if (Item.Width<0)
+							Item.Width=m_pStatusView->GetItemByID(Item.ID)->GetWidth();
+					}
 				}
 
 				bool fMultiRow=DlgCheckBox_IsChecked(hDlg,IDC_STATUSOPTIONS_MULTIROW);
@@ -390,6 +556,12 @@ INT_PTR CStatusOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 					m_pStatusView->SetMaxRows(MaxRows);
 				}
 
+				m_fShowPopup=DlgCheckBox_IsChecked(hDlg,IDC_STATUSOPTIONS_SHOWPOPUP);
+				if (Util::OS::IsWindows8OrLater()) {
+					int Opacity=DlgEdit_GetInt(hDlg,IDC_STATUSOPTIONS_OPACITY_INPUT);
+					m_PopupOpacity=CLAMP(Opacity,OPACITY_MIN,OPACITY_MAX);
+				}
+
 				m_pStatusView->EnableSizeAdjustment(true);
 
 				m_fChanged=true;
@@ -397,17 +569,41 @@ INT_PTR CStatusOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 			break;
 		}
 		break;
-
-	case WM_DESTROY:
-		SubclassWindow(GetDlgItem(hDlg,IDC_STATUSOPTIONS_ITEMLIST),m_pOldListProc);
-		return TRUE;
 	}
 
 	return FALSE;
 }
 
 
-void CStatusOptions::CalcTextWidth(HWND hDlg)
+void CStatusOptions::ApplyStyle()
+{
+	CBasicDialog::ApplyStyle();
+
+	if (m_hDlg!=NULL) {
+		m_ItemMargin=TVTest::Style::Margins(3);
+		m_pStyleScaling->ToPixels(&m_ItemMargin);
+		m_CheckSize=TVTest::Style::Size(14,14);
+		m_pStyleScaling->ToPixels(&m_CheckSize);
+		m_ItemHeight=m_pStatusView->GetItemHeight()+m_ItemMargin.Vert();
+	}
+}
+
+
+void CStatusOptions::RealizeStyle()
+{
+	CBasicDialog::RealizeStyle();
+
+	if (m_hDlg!=NULL) {
+		if (DlgListBox_GetCount(m_hDlg,IDC_STATUSOPTIONS_ITEMLIST)>0) {
+			DlgListBox_SetItemHeight(m_hDlg,IDC_STATUSOPTIONS_ITEMLIST,0,m_ItemHeight);
+			CalcTextWidth();
+			SetListHExtent();
+		}
+	}
+}
+
+
+void CStatusOptions::CalcTextWidth()
 {
 	HWND hwndList;
 	HDC hdc;
@@ -417,7 +613,7 @@ void CStatusOptions::CalcTextWidth(HWND hDlg)
 	CStatusItem *pItem;
 	SIZE sz;
 
-	hwndList=GetDlgItem(hDlg,IDC_STATUSOPTIONS_ITEMLIST);
+	hwndList=GetDlgItem(m_hDlg,IDC_STATUSOPTIONS_ITEMLIST);
 	hdc=GetDC(hwndList);
 	if (hdc==NULL)
 		return;
@@ -425,7 +621,7 @@ void CStatusOptions::CalcTextWidth(HWND hDlg)
 	Count=ListBox_GetCount(hwndList);
 	MaxWidth=0;
 	for (i=0;i<Count;i++) {
-		pItem=m_pStatusView->GetItemByID(m_ItemList[i].ID);
+		pItem=m_pStatusView->GetItemByID(m_ItemListCur[i].ID);
 		GetTextExtentPoint32(hdc,pItem->GetName(),lstrlen(pItem->GetName()),&sz);
 		if (sz.cx>MaxWidth)
 			MaxWidth=sz.cx;
@@ -436,22 +632,21 @@ void CStatusOptions::CalcTextWidth(HWND hDlg)
 }
 
 
-void CStatusOptions::SetListHExtent(HWND hDlg)
+void CStatusOptions::SetListHExtent()
 {
-	HWND hwndList;
-	int MaxWidth,Width;
-	int i;
+	HWND hwndList=::GetDlgItem(m_hDlg,IDC_STATUSOPTIONS_ITEMLIST);
+	int MaxWidth=0;
 
-	hwndList=GetDlgItem(hDlg,IDC_STATUSOPTIONS_ITEMLIST);
-	MaxWidth=0;
-	for (i=0;i<NUM_STATUS_ITEMS;i++) {
-		Width=m_ItemListCur[i].Width>=0?m_ItemListCur[i].Width:
-			m_pStatusView->GetItem(m_pStatusView->IDToIndex(m_ItemList[i].ID))->GetWidth();
+	for (size_t i=0;i<m_ItemListCur.size();i++) {
+		const StatusItemInfo &Item=m_ItemListCur[i];
+		int Width=Item.Width>=0?Item.Width:m_pStatusView->GetItemByID(Item.ID)->GetWidth();
 		if (Width>MaxWidth)
 			MaxWidth=Width;
 	}
+
 	ListBox_SetHorizontalExtent(hwndList,
-		ITEM_MARGIN+CHECK_WIDTH+ITEM_MARGIN+m_TextWidth+ITEM_MARGIN+MaxWidth+2+ITEM_MARGIN);
+		m_ItemMargin.Horz()+m_CheckSize.Width+m_TextWidth+
+		m_ItemMargin.Horz()+MaxWidth+m_pStatusView->GetItemPadding().Horz());
 }
 
 
@@ -523,11 +718,13 @@ bool CStatusOptions::GetItemPreviewRect(HWND hwndList,int Index,RECT *pRect)
 	pItemInfo=reinterpret_cast<StatusItemInfo*>(ListBox_GetItemData(hwndList,Index));
 	ListBox_GetItemRect(hwndList,Index,&rc);
 	OffsetRect(&rc,-GetScrollPos(hwndList,SB_HORZ),0);
-	rc.left+=ITEM_MARGIN+CHECK_WIDTH+ITEM_MARGIN+m_TextWidth+ITEM_MARGIN+1;
-	rc.right=rc.left+(pItemInfo->Width>=0?pItemInfo->Width:
-				m_pStatusView->GetItemByID(pItemInfo->ID)->GetDefaultWidth());
-	rc.top+=ITEM_MARGIN+1;
-	rc.bottom-=ITEM_MARGIN+1;
+	rc.left+=m_ItemMargin.Horz()+m_CheckSize.Width+m_TextWidth+m_ItemMargin.Left;
+	rc.right=rc.left+
+		(pItemInfo->Width>=0?pItemInfo->Width:
+			m_pStatusView->GetItemByID(pItemInfo->ID)->GetWidth())+
+		m_pStatusView->GetItemPadding().Horz();
+	rc.top+=m_ItemMargin.Top;
+	rc.bottom-=m_ItemMargin.Bottom;
 	*pRect=rc;
 	return true;
 }
@@ -539,14 +736,51 @@ bool CStatusOptions::IsCursorResize(HWND hwndList,int x,int y)
 
 	if (!GetItemPreviewRect(hwndList,ListBox_GetHitItem(hwndList,x,y),&rc))
 		return false;
-	return x>=rc.right-2 && x<=rc.right+2;
+	int Margin=(::GetSystemMetrics(SM_CXSIZEFRAME)+1)/2;
+	return x>=rc.right-Margin && x<=rc.right+Margin;
 }
 
 
-LRESULT CALLBACK CStatusOptions::ItemListProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
+void CStatusOptions::MakeItemList(StatusItemInfoList *pList) const
 {
-	CStatusOptions *pThis=static_cast<CStatusOptions*>(GetThis(GetParent(hwnd)));
+	pList->clear();
+	pList->reserve(m_AvailItemList.size());
 
+	for (auto itr=m_ItemList.begin();itr!=m_ItemList.end();++itr) {
+		if (itr->ID>=0)
+			pList->push_back(*itr);
+	}
+
+	if (pList->size()<m_AvailItemList.size()) {
+		for (size_t i=0;i<m_AvailItemList.size();i++) {
+			const int ID=m_AvailItemList[i].ID;
+			bool fFound=false;
+			for (size_t j=0;j<pList->size();j++) {
+				if ((*pList)[j].ID==ID) {
+					fFound=true;
+					break;
+				}
+			}
+			if (!fFound) {
+				pList->push_back(m_AvailItemList[i]);
+				const CStatusItem *pItem=m_pStatusView->GetItemByID(ID);
+				if (pItem!=NULL)
+					pList->back().fVisible=pItem->GetVisible();
+			}
+		}
+	}
+}
+
+
+CStatusOptions::CItemListSubclass::CItemListSubclass(CStatusOptions *pStatusOptions)
+	: m_pStatusOptions(pStatusOptions)
+{
+}
+
+
+LRESULT CStatusOptions::CItemListSubclass::OnMessage(
+	HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
+{
 	switch (uMsg) {
 	case WM_LBUTTONDOWN:
 		{
@@ -560,7 +794,8 @@ LRESULT CALLBACK CStatusOptions::ItemListProc(HWND hwnd,UINT uMsg,WPARAM wParam,
 
 				ListBox_GetItemRect(hwnd,Sel,&rc);
 				OffsetRect(&rc,-GetScrollPos(hwnd,SB_HORZ),0);
-				if (x>=rc.left+ITEM_MARGIN && x<rc.left+ITEM_MARGIN+CHECK_WIDTH) {
+				if (x>=rc.left+m_pStatusOptions->m_ItemMargin.Left
+						&& x<rc.left+m_pStatusOptions->m_ItemMargin.Left+m_pStatusOptions->m_CheckSize.Width) {
 					StatusItemInfo *pItemInfo=reinterpret_cast<StatusItemInfo*>(ListBox_GetItemData(hwnd,Sel));
 					RECT rc;
 
@@ -571,7 +806,7 @@ LRESULT CALLBACK CStatusOptions::ItemListProc(HWND hwnd,UINT uMsg,WPARAM wParam,
 					if (ListBox_GetCurSel(hwnd)!=Sel)
 						ListBox_SetCurSel(hwnd,Sel);
 					SetCapture(hwnd);
-					pThis->m_fDragResize=pThis->IsCursorResize(hwnd,x,y);
+					m_pStatusOptions->m_fDragResize=m_pStatusOptions->IsCursorResize(hwnd,x,y);
 				}
 			}
 		}
@@ -583,21 +818,21 @@ LRESULT CALLBACK CStatusOptions::ItemListProc(HWND hwnd,UINT uMsg,WPARAM wParam,
 		return 0;
 
 	case WM_CAPTURECHANGED:
-		if (pThis->m_DragTimerID!=0) {
-			KillTimer(hwnd,pThis->m_DragTimerID);
-			pThis->m_DragTimerID=0;
+		if (m_pStatusOptions->m_DragTimerID!=0) {
+			KillTimer(hwnd,m_pStatusOptions->m_DragTimerID);
+			m_pStatusOptions->m_DragTimerID=0;
 		}
-		if (pThis->m_DropInsertPos>=0) {
+		if (m_pStatusOptions->m_DropInsertPos>=0) {
 			int From=ListBox_GetCurSel(hwnd),To;
 
-			pThis->DrawInsertMark(hwnd,pThis->m_DropInsertPos);
-			To=pThis->m_DropInsertPos;
+			m_pStatusOptions->DrawInsertMark(hwnd,m_pStatusOptions->m_DropInsertPos);
+			To=m_pStatusOptions->m_DropInsertPos;
 			if (To>From)
 				To--;
 			SetWindowRedraw(hwnd,FALSE);
 			ListBox_MoveItem(hwnd,From,To);
 			SetWindowRedraw(hwnd,TRUE);
-			pThis->m_DropInsertPos=-1;
+			m_pStatusOptions->m_DropInsertPos=-1;
 		}
 		return 0;
 
@@ -607,29 +842,36 @@ LRESULT CALLBACK CStatusOptions::ItemListProc(HWND hwnd,UINT uMsg,WPARAM wParam,
 			RECT rc;
 
 			GetClientRect(hwnd,&rc);
-			if (pThis->m_fDragResize) {
+			if (m_pStatusOptions->m_fDragResize) {
 				int x=GET_X_LPARAM(lParam);
 				int Sel=ListBox_GetCurSel(hwnd);
 				RECT rc;
 
-				if (pThis->GetItemPreviewRect(hwnd,Sel,&rc)) {
+				if (m_pStatusOptions->GetItemPreviewRect(hwnd,Sel,&rc)) {
 					StatusItemInfo *pItemInfo=reinterpret_cast<StatusItemInfo*>(ListBox_GetItemData(hwnd,Sel));
+					int Width=(x-rc.left)-m_pStatusOptions->m_pStatusView->GetItemPadding().Horz();
+					const CStatusItem *pItem=m_pStatusOptions->m_pStatusView->GetItemByID(pItemInfo->ID);
+					int MinWidth=pItem->GetMinWidth();
+					int MaxWidth=pItem->GetMaxWidth();
 
-					pItemInfo->Width=max(x-(int)rc.left,
-						pThis->m_pStatusView->GetItemByID(pItemInfo->ID)->GetMinWidth());
+					if (Width<MinWidth)
+						Width=MinWidth;
+					else if (MaxWidth>0 && Width>MaxWidth)
+						Width=MaxWidth;
+					pItemInfo->Width=Width;
 					ListBox_GetItemRect(hwnd,Sel,&rc);
 					InvalidateRect(hwnd,&rc,TRUE);
-					pThis->SetListHExtent(GetParent(hwnd));
+					m_pStatusOptions->SetListHExtent();
 				}
 			} else if (y>=0 && y<rc.bottom) {
 				int Insert,Count,Sel;
 
-				if (pThis->m_DragTimerID!=0) {
-					KillTimer(hwnd,pThis->m_DragTimerID);
-					pThis->m_DragTimerID=0;
+				if (m_pStatusOptions->m_DragTimerID!=0) {
+					KillTimer(hwnd,m_pStatusOptions->m_DragTimerID);
+					m_pStatusOptions->m_DragTimerID=0;
 				}
 				Insert=ListBox_GetTopIndex(hwnd)+
-								(y+pThis->m_ItemHeight/2)/pThis->m_ItemHeight;
+								(y+m_pStatusOptions->m_ItemHeight/2)/m_pStatusOptions->m_ItemHeight;
 				Count=ListBox_GetCount(hwnd);
 				if (Insert>Count) {
 					Insert=Count;
@@ -638,47 +880,47 @@ LRESULT CALLBACK CStatusOptions::ItemListProc(HWND hwnd,UINT uMsg,WPARAM wParam,
 					if (Insert==Sel || Insert==Sel+1)
 						Insert=-1;
 				}
-				if (pThis->m_DropInsertPos>=0)
-					pThis->DrawInsertMark(hwnd,pThis->m_DropInsertPos);
-				pThis->m_DropInsertPos=Insert;
-				if (pThis->m_DropInsertPos>=0)
-					pThis->DrawInsertMark(hwnd,pThis->m_DropInsertPos);
+				if (m_pStatusOptions->m_DropInsertPos>=0)
+					m_pStatusOptions->DrawInsertMark(hwnd,m_pStatusOptions->m_DropInsertPos);
+				m_pStatusOptions->m_DropInsertPos=Insert;
+				if (m_pStatusOptions->m_DropInsertPos>=0)
+					m_pStatusOptions->DrawInsertMark(hwnd,m_pStatusOptions->m_DropInsertPos);
 				SetCursor(LoadCursor(NULL,IDC_ARROW));
 			} else {
 				UINT TimerID;
 
-				if (pThis->m_DropInsertPos>=0) {
-					pThis->DrawInsertMark(hwnd,pThis->m_DropInsertPos);
-					pThis->m_DropInsertPos=-1;
+				if (m_pStatusOptions->m_DropInsertPos>=0) {
+					m_pStatusOptions->DrawInsertMark(hwnd,m_pStatusOptions->m_DropInsertPos);
+					m_pStatusOptions->m_DropInsertPos=-1;
 				}
 				if (y<0)
 					TimerID=TIMER_ID_UP;
 				else
 					TimerID=TIMER_ID_DOWN;
-				if (TimerID!=pThis->m_DragTimerID) {
-					if (pThis->m_DragTimerID!=0)
-						KillTimer(hwnd,pThis->m_DragTimerID);
-					pThis->m_DragTimerID=(UINT)SetTimer(hwnd,TimerID,100,NULL);
+				if (TimerID!=m_pStatusOptions->m_DragTimerID) {
+					if (m_pStatusOptions->m_DragTimerID!=0)
+						KillTimer(hwnd,m_pStatusOptions->m_DragTimerID);
+					m_pStatusOptions->m_DragTimerID=(UINT)SetTimer(hwnd,TimerID,100,NULL);
 				}
 				SetCursor(LoadCursor(NULL,IDC_NO));
 			}
 		} else {
 			int x=GET_X_LPARAM(lParam),y=GET_Y_LPARAM(lParam);
 
-			SetCursor(LoadCursor(NULL,pThis->IsCursorResize(hwnd,x,y)?IDC_SIZEWE:IDC_ARROW));
+			SetCursor(LoadCursor(NULL,m_pStatusOptions->IsCursorResize(hwnd,x,y)?IDC_SIZEWE:IDC_ARROW));
 		}
 		return 0;
 
 	case WM_RBUTTONDOWN:
 		if (GetCapture()==hwnd) {
 			ReleaseCapture();
-			if (pThis->m_DragTimerID!=0) {
-				KillTimer(hwnd,pThis->m_DragTimerID);
-				pThis->m_DragTimerID=0;
+			if (m_pStatusOptions->m_DragTimerID!=0) {
+				KillTimer(hwnd,m_pStatusOptions->m_DragTimerID);
+				m_pStatusOptions->m_DragTimerID=0;
 			}
-			if (pThis->m_DropInsertPos>=0) {
-				pThis->DrawInsertMark(hwnd,pThis->m_DropInsertPos);
-				pThis->m_DropInsertPos=-1;
+			if (m_pStatusOptions->m_DropInsertPos>=0) {
+				m_pStatusOptions->DrawInsertMark(hwnd,m_pStatusOptions->m_DropInsertPos);
+				m_pStatusOptions->m_DropInsertPos=-1;
 			}
 		}
 		return 0;
@@ -702,36 +944,6 @@ LRESULT CALLBACK CStatusOptions::ItemListProc(HWND hwnd,UINT uMsg,WPARAM wParam,
 			return TRUE;
 		break;
 	}
-	return CallWindowProc(pThis->m_pOldListProc,hwnd,uMsg,wParam,lParam);
-}
 
-
-bool CStatusOptions::ApplyItemList()
-{
-	int i;
-	int ItemOrder[NUM_STATUS_ITEMS];
-	CStatusItem *pItem;
-
-	for (i=0;i<NUM_STATUS_ITEMS;i++) {
-		ItemOrder[i]=m_ItemList[i].ID;
-		pItem=m_pStatusView->GetItemByID(ItemOrder[i]);
-		pItem->SetVisible(m_ItemList[i].fVisible);
-		if (m_ItemList[i].Width>=0)
-			pItem->SetWidth(m_ItemList[i].Width);
-		else
-			pItem->SetWidth(pItem->GetDefaultWidth());
-	}
-	return m_pStatusView->SetItemOrder(ItemOrder);
-}
-
-
-bool CStatusOptions::ApplyOptions()
-{
-	m_pStatusView->EnableSizeAdjustment(false);
-	m_pStatusView->SetMultiRow(m_fMultiRow);
-	m_pStatusView->SetMaxRows(m_MaxRows);
-	m_pStatusView->SetFont(&m_lfItemFont);
-	ApplyItemList();
-	m_pStatusView->EnableSizeAdjustment(true);
-	return true;
+	return CWindowSubclass::OnMessage(hwnd,uMsg,wParam,lParam);
 }

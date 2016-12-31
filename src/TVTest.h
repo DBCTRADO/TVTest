@@ -2,36 +2,36 @@
 #define TVTEST_H
 
 
-#ifndef TVH264
 #define APP_NAME_A	"TVTest"
-#else
-#define APP_NAME_A	"TVH264"
-#endif
 
 #define VERSION_MAJOR		0
-#define VERSION_MINOR		8
-#define VERSION_BUILD		2
+#define VERSION_MINOR		9
+#define VERSION_BUILD		0
 #define VERSION_REVISION	0
 
-#define VERSION_TEXT_A	"0.8.2"
+#define VERSION_TEXT_A	"0.9.0"
 
-#ifdef TVH264
-// ÉèÉìÉZÉOå¸ÇØ
-#if !defined(TVH264_FOR_1SEG) && defined(BONTSENGINE_1SEG_SUPPORT)
-#define TVH264_FOR_1SEG
-#endif
-#endif
+//#define VERSION_STATUS_A	"dev"
 
 #define LTEXT_(text)	L##text
 #define LTEXT(text)		LTEXT_(text)
-#define APP_NAME_W		LTEXT(APP_NAME_A)
-#define VERSION_TEXT_W	LTEXT(VERSION_TEXT_A)
+#define APP_NAME_W			LTEXT(APP_NAME_A)
+#define VERSION_TEXT_W		LTEXT(VERSION_TEXT_A)
+#ifdef VERSION_STATUS_A
+#define VERSION_STATUS_W	LTEXT(VERSION_STATUS_A)
+#endif
 #ifndef UNICODE
 #define APP_NAME		APP_NAME_A
 #define VERSION_TEXT	VERSION_TEXT_A
+#ifdef VERSION_STATUS_A
+#define VERSION_STATUS	VERSION_STATUS_A
+#endif
 #else
 #define APP_NAME		APP_NAME_W
 #define VERSION_TEXT	VERSION_TEXT_W
+#ifdef VERSION_STATUS_W
+#define VERSION_STATUS	VERSION_STATUS_W
+#endif
 #endif
 
 #if defined(_M_IX86)
@@ -40,14 +40,10 @@
 #define VERSION_PLATFORM	TEXT("x64")
 #endif
 
+#ifdef VERSION_STATUS
+#define ABOUT_VERSION_TEXT	APP_NAME TEXT(" ver.") VERSION_TEXT TEXT("-") VERSION_STATUS
+#else
 #define ABOUT_VERSION_TEXT	APP_NAME TEXT(" ver.") VERSION_TEXT
-
-#ifndef NO_NETWORK_REMOCON
-#define NETWORK_REMOCON_SUPPORT
-#endif
-
-#ifdef BONTSENGINE_RADIO_SUPPORT
-#define TVTEST_RADIO_SUPPORT
 #endif
 
 
@@ -74,12 +70,8 @@
 #define ABSTRACT_DECL			__declspec(novtable)
 #define ABSTRACT_CLASS(name)	ABSTRACT_DECL name abstract
 
-#ifndef TVH264
 #define CHANNEL_FILE_EXTENSION			TEXT(".ch2")
-#else
-#define CHANNEL_FILE_EXTENSION			TEXT(".ch1")
-#define DEFERRED_CHANNEL_FILE_EXTENSION	TEXT(".ch2")
-#endif
+#define DEFERRED_CHANNEL_FILE_EXTENSION	TEXT(".ch1")
 
 
 #endif	// ndef RC_INVOKED

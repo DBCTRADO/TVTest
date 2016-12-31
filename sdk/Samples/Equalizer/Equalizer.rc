@@ -1,0 +1,5 @@
+#include "resource.h"
+
+
+IDB_SHOW	BITMAP "Show.bmp"
+IDB_ONOFF	BITMAP "OnOff.bmp"

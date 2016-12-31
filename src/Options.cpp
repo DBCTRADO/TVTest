@@ -1,12 +1,7 @@
 #include "stdafx.h"
 #include "TVTest.h"
 #include "Options.h"
-
-#ifdef _DEBUG
-#undef THIS_FILE
-static char THIS_FILE[]=__FILE__;
-#define new DEBUG_NEW
-#endif
+#include "Common/DebugDef.h"
 
 
 
@@ -44,6 +39,13 @@ DWORD COptions::SetGeneralUpdateFlag(DWORD Flag)
 {
 	m_GeneralUpdateFlags|=Flag;
 	return m_GeneralUpdateFlags;
+}
+
+
+void COptions::ActivatePage()
+{
+	if (m_pFrame!=NULL)
+		m_pFrame->ActivatePage(this);
 }
 
 

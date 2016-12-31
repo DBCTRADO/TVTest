@@ -4,15 +4,10 @@
 #include "AppMain.h"
 #include "DialogUtil.h"
 #include "resource.h"
-
-#ifdef _DEBUG
-#undef THIS_FILE
-static char THIS_FILE[]=__FILE__;
-#define new DEBUG_NEW
-#endif
+#include "Common/DebugDef.h"
 
 
-#define ZOOM_ICON_FIRST		36
+#define ZOOM_ICON_FIRST		37
 
 static const CSideBar::SideBarItem ItemList[] = {
 	{CM_ZOOM_20,				ZOOM_ICON_FIRST+0},
@@ -60,28 +55,29 @@ static const CSideBar::SideBarItem ItemList[] = {
 	{CM_SPDIF_TOGGLE,			21},
 	{CM_HOMEDISPLAY,			22},
 	{CM_CHANNELDISPLAY,			23},
-	{CM_CHANNELNO_1,			24},
-	{CM_CHANNELNO_2,			25},
-	{CM_CHANNELNO_3,			26},
-	{CM_CHANNELNO_4,			27},
-	{CM_CHANNELNO_5,			28},
-	{CM_CHANNELNO_6,			29},
-	{CM_CHANNELNO_7,			30},
-	{CM_CHANNELNO_8,			31},
-	{CM_CHANNELNO_9,			32},
-	{CM_CHANNELNO_10,			33},
-	{CM_CHANNELNO_11,			34},
-	{CM_CHANNELNO_12,			35},
+	{CM_1SEGMODE,				24},
+	{CM_CHANNELNO_1,			25},
+	{CM_CHANNELNO_2,			26},
+	{CM_CHANNELNO_3,			27},
+	{CM_CHANNELNO_4,			28},
+	{CM_CHANNELNO_5,			29},
+	{CM_CHANNELNO_6,			30},
+	{CM_CHANNELNO_7,			31},
+	{CM_CHANNELNO_8,			32},
+	{CM_CHANNELNO_9,			33},
+	{CM_CHANNELNO_10,			34},
+	{CM_CHANNELNO_11,			35},
+	{CM_CHANNELNO_12,			36},
 };
 
 static const int DefaultItemList[] = {
-#ifndef TVH264_FOR_1SEG
+#ifndef TVTEST_FOR_1SEG
 	CM_ZOOM_25,
 	CM_ZOOM_33,
 #endif
 	CM_ZOOM_50,
 	CM_ZOOM_100,
-#ifdef TVH264_FOR_1SEG
+#ifdef TVTEST_FOR_1SEG
 	CM_ZOOM_150,
 	CM_ZOOM_200,
 #endif
@@ -104,10 +100,14 @@ CSideBarOptions::CSideBarOptions(CSideBar *pSideBar,const CZoomOptions *pZoomOpt
 	, m_fShowPopup(true)
 	, m_fShowToolTips(true)
 	, m_fShowChannelLogo(true)
+	, m_PopupOpacity(OPACITY_MAX)
 	, m_Place(PLACE_LEFT)
 	, m_himlIcons(NULL)
-	, m_pEventHandler(NULL)
 {
+	m_AvailItemList.resize(lengthof(ItemList));
+	for (int i=0;i<lengthof(ItemList);i++)
+		m_AvailItemList[i]=ItemList[i];
+
 	m_ItemList.resize(lengthof(DefaultItemList));
 	for (int i=0;i<lengthof(DefaultItemList);i++)
 		m_ItemList[i]=DefaultItemList[i];
@@ -127,23 +127,32 @@ bool CSideBarOptions::ReadSettings(CSettings &Settings)
 	Settings.Read(TEXT("ShowPopup"),&m_fShowPopup);
 	Settings.Read(TEXT("ShowToolTips"),&m_fShowToolTips);
 	Settings.Read(TEXT("ShowChannelLogo"),&m_fShowChannelLogo);
+	if (Settings.Read(TEXT("PopupOpacity"),&Value))
+		m_PopupOpacity=CLAMP(Value,OPACITY_MIN,OPACITY_MAX);
 	if (Settings.Read(TEXT("Place"),&Value)
 			&& Value>=PLACE_FIRST && Value<=PLACE_LAST)
 		m_Place=(PlaceType)Value;
 
 	if (Settings.Read(TEXT("ItemCount"),&NumItems) && NumItems>0) {
-		// はまるのを防ぐために、アイテムの種類*2 を上限にしておく
-		if (NumItems>=lengthof(ItemList)*2)
-			NumItems=lengthof(ItemList)*2;
-		m_ItemList.clear();
-		for (int i=0;i<NumItems;i++) {
-			TCHAR szName[32],szCommand[CCommandList::MAX_COMMAND_TEXT];
+		// はまるのを防ぐために、200を上限にしておく
+		if (NumItems>=200)
+			NumItems=200;
 
-			::wsprintf(szName,TEXT("Item%d"),i);
-			if (Settings.Read(szName,szCommand,lengthof(szCommand))) {
+		m_ItemNameList.clear();
+
+		TVTest::String Command;
+
+		for (int i=0;i<NumItems;i++) {
+			TCHAR szName[32];
+
+			StdUtil::snprintf(szName,lengthof(szName),TEXT("Item%d"),i);
+			if (Settings.Read(szName,&Command)) {
+				m_ItemNameList.push_back(Command);
+				/*
 				if (szCommand[0]=='\0') {
-					m_ItemList.push_back(ITEM_SEPARATOR);
+					m_ItemNameList.push_back(TVTest::String());
 				} else {
+					m_ItemNameList.push_back(TVTest::String(szCommand));
 					int Command=m_pSideBar->GetCommandList()->ParseText(szCommand);
 
 					if (Command!=0) {
@@ -155,6 +164,7 @@ bool CSideBarOptions::ReadSettings(CSettings &Settings)
 						}
 					}
 				}
+				*/
 			}
 		}
 	}
@@ -170,19 +180,27 @@ bool CSideBarOptions::WriteSettings(CSettings &Settings)
 	Settings.Write(TEXT("ShowPopup"),m_fShowPopup);
 	Settings.Write(TEXT("ShowToolTips"),m_fShowToolTips);
 	Settings.Write(TEXT("ShowChannelLogo"),m_fShowChannelLogo);
+	Settings.Write(TEXT("PopupOpacity"),m_PopupOpacity);
 	Settings.Write(TEXT("Place"),(int)m_Place);
 
-	Settings.Write(TEXT("ItemCount"),(int)m_ItemList.size());
+	Settings.Write(TEXT("ItemCount"),(int)m_ItemNameList.size());
+	for (size_t i=0;i<m_ItemNameList.size();i++) {
+		TCHAR szName[32];
+		StdUtil::snprintf(szName,lengthof(szName),TEXT("Item%d"),(int)i);
+		Settings.Write(szName,m_ItemNameList[i]);
+	}
+	/*
 	const CCommandList *pCommandList=m_pSideBar->GetCommandList();
 	for (size_t i=0;i<m_ItemList.size();i++) {
 		TCHAR szName[32];
 
-		::wsprintf(szName,TEXT("Item%d"),i);
+		StdUtil::snprintf(szName,lengthof(szName),TEXT("Item%d"),i);
 		if (m_ItemList[i]==ITEM_SEPARATOR)
 			Settings.Write(szName,TEXT(""));
 		else
 			Settings.Write(szName,pCommandList->GetCommandTextByID(m_ItemList[i]));
 	}
+	*/
 
 	return true;
 }
@@ -195,15 +213,56 @@ bool CSideBarOptions::Create(HWND hwndOwner)
 }
 
 
-HBITMAP CSideBarOptions::CreateImage()
+HBITMAP CSideBarOptions::CreateImage(IconSizeType SizeType,SIZE *pIconSize)
 {
+	LPCTSTR pszImageName,pszZoomImageName;
+	int IconWidth,IconHeight;
+	int NumWidth1,NumWidth2,NumWidth3,NumHeight3;
+	int NumMargin1,NumMargin2,NumMargin3;
+	int PercentWidth1,PercentWidth2;
+
+	if (SizeType==ICON_SIZE_SMALL) {
+		pszImageName=MAKEINTRESOURCE(IDB_SIDEBAR16);
+		pszZoomImageName=MAKEINTRESOURCE(IDB_SIDEBARZOOM16);
+		IconWidth=16;
+		IconHeight=16;
+		NumWidth1=4;
+		NumWidth2=3;
+		NumWidth3=3;
+		NumHeight3=8;
+		NumMargin1=1;
+		NumMargin2=1;
+		NumMargin3=1;
+		PercentWidth1=6;
+		PercentWidth2=4;
+	} else {
+		pszImageName=MAKEINTRESOURCE(IDB_SIDEBAR32);
+		pszZoomImageName=MAKEINTRESOURCE(IDB_SIDEBARZOOM32);
+		IconWidth=32;
+		IconHeight=32;
+		NumWidth1=8;
+		NumWidth2=6;
+		NumWidth3=6;
+		NumHeight3=16;
+		NumMargin1=2;
+		NumMargin2=2;
+		NumMargin3=2;
+		PercentWidth1=12;
+		PercentWidth2=8;
+	}
+
+	if (pIconSize!=NULL) {
+		pIconSize->cx=IconWidth;
+		pIconSize->cy=IconHeight;
+	}
+
 	HINSTANCE hinst=GetAppClass().GetResourceInstance();
-	HBITMAP hbm=(HBITMAP)::LoadImage(hinst,MAKEINTRESOURCE(IDB_SIDEBAR),
+	HBITMAP hbm=(HBITMAP)::LoadImage(hinst,pszImageName,
 									 IMAGE_BITMAP,0,0,LR_CREATEDIBSECTION);
 
 	if (hbm!=NULL) {
 		// 表示倍率のアイコンを描画する
-		HBITMAP hbmZoom=(HBITMAP)::LoadImage(hinst,MAKEINTRESOURCE(IDB_SIDEBARZOOM),
+		HBITMAP hbmZoom=(HBITMAP)::LoadImage(hinst,pszZoomImageName,
 											 IMAGE_BITMAP,0,0,LR_CREATEDIBSECTION);
 
 		if (hbmZoom!=NULL) {
@@ -211,36 +270,43 @@ HBITMAP CSideBarOptions::CreateImage()
 			HBITMAP hbmDstOld=static_cast<HBITMAP>(::SelectObject(hdcDst,hbm));
 			HDC hdcSrc=::CreateCompatibleDC(NULL);
 			HBITMAP hbmSrcOld=static_cast<HBITMAP>(::SelectObject(hdcSrc,hbmZoom));
+
 			for (int i=0;i<CZoomOptions::NUM_ZOOM_COMMANDS;i++) {
 				CZoomOptions::ZoomInfo Zoom;
 				if (m_pZoomOptions->GetZoomInfoByCommand(ItemList[i].Command,&Zoom)) {
 					RECT rc;
-					rc.left=(ZOOM_ICON_FIRST+i)*16;
+					rc.left=(ZOOM_ICON_FIRST+i)*IconWidth;
 					rc.top=0;
-					rc.right=rc.left+16;
-					rc.bottom=16;
+					rc.right=rc.left+IconWidth;
+					rc.bottom=IconHeight;
 					if (Zoom.Type==CZoomOptions::ZOOM_RATE) {
 						int Percentage=Zoom.Rate.GetPercentage();
 						if (Percentage<1000) {
 							::FillRect(hdcDst,&rc,static_cast<HBRUSH>(::GetStockObject(BLACK_BRUSH)));
 							if (Percentage<100) {
 								if (Percentage>=10)
-									::BitBlt(hdcDst,rc.left,0,4,16,
-											 hdcSrc,(Percentage/10)*4,0,SRCCOPY);
-								::BitBlt(hdcDst,rc.left+5,0,4,16,
-										 hdcSrc,(Percentage%10)*4,0,SRCCOPY);
+									::BitBlt(hdcDst,rc.left,0,NumWidth1,IconHeight,
+											 hdcSrc,(Percentage/10)*NumWidth1,0,SRCCOPY);
+								::BitBlt(hdcDst,rc.left+NumWidth1+NumMargin1,0,NumWidth1,IconHeight,
+										 hdcSrc,(Percentage%10)*NumWidth1,0,SRCCOPY);
 								// %
-								::BitBlt(hdcDst,(ZOOM_ICON_FIRST+i)*16+10,0,6,16,
-										 hdcSrc,40,0,SRCCOPY);
+								::BitBlt(hdcDst,
+										 (ZOOM_ICON_FIRST+i)*IconWidth+(NumWidth1+NumMargin1)*2,0,
+										 PercentWidth1,IconHeight,
+										 hdcSrc,NumWidth1*10,0,SRCCOPY);
 							} else {
 								for (int j=0;j<3;j++) {
-									::BitBlt(hdcDst,rc.left+(2-j)*4,0,3,16,
-											 hdcSrc,(Percentage%10)*3,16,SRCCOPY);
+									::BitBlt(hdcDst,
+											 rc.left+(2-j)*(NumWidth2+NumMargin2),0,
+											 NumWidth2,IconHeight,
+											 hdcSrc,(Percentage%10)*NumWidth2,IconHeight,SRCCOPY);
 									Percentage/=10;
 								}
 								// %
-								::BitBlt(hdcDst,rc.left+12,0,4,16,
-										 hdcSrc,30,16,SRCCOPY);
+								::BitBlt(hdcDst,
+										 rc.left+(NumWidth2+NumMargin2)*3,0,
+										 PercentWidth2,IconHeight,
+										 hdcSrc,NumWidth2*10,IconHeight,SRCCOPY);
 							}
 						}
 					} else if (Zoom.Type==CZoomOptions::ZOOM_SIZE) {
@@ -249,8 +315,10 @@ HBITMAP CSideBarOptions::CreateImage()
 							for (int j=0;j<2;j++) {
 								int Size=j==0?Zoom.Size.Width:Zoom.Size.Height;
 								for (int k=0;k<4 && Size!=0;k++) {
-									::BitBlt(hdcDst,rc.left+(3-k)*4,j*8,3,8,
-											 hdcSrc,(Size%10)*3,32,SRCCOPY);
+									::BitBlt(hdcDst,
+											 rc.left+(3-k)*(NumWidth3+NumMargin3),j*IconHeight/2,
+											 NumWidth3,NumHeight3,
+											 hdcSrc,(Size%10)*NumWidth3,IconHeight*2,SRCCOPY);
 									Size/=10;
 								}
 							}
@@ -258,6 +326,7 @@ HBITMAP CSideBarOptions::CreateImage()
 					}
 				}
 			}
+
 			::SelectObject(hdcSrc,hbmSrcOld);
 			::DeleteDC(hdcSrc);
 			::SelectObject(hdcDst,hbmDstOld);
@@ -272,50 +341,91 @@ HBITMAP CSideBarOptions::CreateImage()
 
 bool CSideBarOptions::ApplySideBarOptions()
 {
-	SetSideBarImage();
-	ApplyItemList();
 	m_pSideBar->ShowToolTips(m_fShowToolTips);
 	m_pSideBar->SetVertical(m_Place==PLACE_LEFT || m_Place==PLACE_RIGHT);
 	return true;
 }
 
 
-bool CSideBarOptions::SetSideBarImage()
+void CSideBarOptions::ApplyItemList()
 {
-	HBITMAP hbm=CreateImage();
-	if (hbm==NULL)
-		return false;
-	bool fResult=m_pSideBar->SetIconImage(hbm);
-	::DeleteObject(hbm);
-	return fResult;
-}
+	const CCommandList *pCommandList=m_pSideBar->GetCommandList();
 
+	if (!m_ItemNameList.empty()) {
+		m_ItemList.clear();
 
-void CSideBarOptions::ApplyItemList() const
-{
+		for (size_t i=0;i<m_ItemNameList.size();i++) {
+			if (m_ItemNameList[i].empty()) {
+				m_ItemList.push_back(ITEM_SEPARATOR);
+			} else {
+				int ID=pCommandList->ParseText(m_ItemNameList[i].c_str());
+				if (ID!=0)
+					m_ItemList.push_back(ID);
+			}
+		}
+	}
+
 	m_pSideBar->DeleteAllItems();
+
 	for (size_t i=0;i<m_ItemList.size();i++) {
-		if (m_ItemList[i]==ITEM_SEPARATOR) {
-			CSideBar::SideBarItem Item;
+		const int Command=m_ItemList[i];
 
-			Item.Command=CSideBar::ITEM_SEPARATOR;
-			Item.Icon=-1;
-			Item.Flags=0;
-			m_pSideBar->AddItem(&Item);
+		if (Command==ITEM_SEPARATOR) {
+			m_pSideBar->AddSeparator();
 		} else {
-			int j;
+			for (size_t j=0;j<m_AvailItemList.size();j++) {
+				if (m_AvailItemList[j].Command==Command) {
+					CSideBar::SideBarItem Item;
 
-			for (j=0;j<lengthof(ItemList);j++) {
-				if (ItemList[j].Command==m_ItemList[i]) {
-					m_pSideBar->AddItem(&ItemList[j]);
+					Item.Command=Command;
+					Item.Icon=m_AvailItemList[j].Icon;
+					Item.State=0;
+					unsigned int State=pCommandList->GetCommandStateByID(Command);
+					if ((State & CCommandList::COMMAND_STATE_DISABLED)!=0)
+						Item.State|=CSideBar::ITEM_STATE_DISABLED;
+					if ((State & CCommandList::COMMAND_STATE_CHECKED)!=0)
+						Item.State|=CSideBar::ITEM_STATE_CHECKED;
+
+					m_pSideBar->AddItem(&Item);
 					break;
 				}
 			}
 		}
 	}
+
 	m_pSideBar->Invalidate();
-	if (m_pEventHandler!=NULL)
-		m_pEventHandler->OnItemChanged();
+}
+
+
+bool CSideBarOptions::SetSideBarImage()
+{
+	TVTest::Style::Size IconSize=m_pSideBar->GetIconDrawSize();
+	SIZE sz;
+	HBITMAP hbm=CreateImage(
+		IconSize.Width<=16 && IconSize.Height<=16?ICON_SIZE_SMALL:ICON_SIZE_BIG,
+		&sz);
+	if (hbm==NULL)
+		return false;
+	bool fResult=m_pSideBar->SetIconImage(hbm,sz.cx,sz.cy);
+	::DeleteObject(hbm);
+	return fResult;
+}
+
+
+bool CSideBarOptions::RegisterCommand(int ID)
+{
+	if (ID<=0 || IsAvailableItem(ID))
+		return false;
+
+	CSideBar::SideBarItem Item;
+
+	Item.Command=ID;
+	Item.Icon=-1;
+	Item.State=0;
+
+	m_AvailItemList.push_back(Item);
+
+	return true;
 }
 
 
@@ -333,16 +443,69 @@ INT_PTR CSideBarOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam
 	switch (uMsg) {
 	case WM_INITDIALOG:
 		{
-			DlgCheckBox_Check(hDlg,IDC_SIDEBAR_SHOW,m_fShowPopup);
+			DlgCheckBox_Check(hDlg,IDC_SIDEBAR_SHOWPOPUP,m_fShowPopup);
+
+			::SendDlgItemMessage(hDlg,IDC_SIDEBAR_OPACITY_SLIDER,
+								 TBM_SETRANGE,TRUE,MAKELPARAM(OPACITY_MIN,OPACITY_MAX));
+			::SendDlgItemMessage(hDlg,IDC_SIDEBAR_OPACITY_SLIDER,
+								 TBM_SETPOS,TRUE,m_PopupOpacity);
+			::SendDlgItemMessage(hDlg,IDC_SIDEBAR_OPACITY_SLIDER,
+								 TBM_SETPAGESIZE,0,10);
+			::SendDlgItemMessage(hDlg,IDC_SIDEBAR_OPACITY_SLIDER,
+								 TBM_SETTICFREQ,10,0);
+			DlgEdit_SetInt(hDlg,IDC_SIDEBAR_OPACITY_INPUT,m_PopupOpacity);
+			DlgUpDown_SetRange(hDlg,IDC_SIDEBAR_OPACITY_SPIN,OPACITY_MIN,OPACITY_MAX);
+			EnableDlgItems(hDlg,IDC_SIDEBAR_OPACITY_LABEL,IDC_SIDEBAR_OPACITY_UNIT,
+						   m_fShowPopup && Util::OS::IsWindows8OrLater());
+
 			DlgCheckBox_Check(hDlg,IDC_SIDEBAR_SHOWTOOLTIPS,m_fShowToolTips);
 			DlgCheckBox_Check(hDlg,IDC_SIDEBAR_SHOWCHANNELLOGO,m_fShowChannelLogo);
 
-			HBITMAP hbmIcons=CreateImage();
-			DrawUtil::CMonoColorBitmap Bitmap;
-			Bitmap.Create(hbmIcons);
+			const COLORREF IconColor=::GetSysColor(COLOR_WINDOWTEXT);
+			const int IconWidth=::GetSystemMetrics(SM_CXSMICON);
+			const int IconHeight=::GetSystemMetrics(SM_CYSMICON);
+			SIZE sz;
+			HBITMAP hbmIcons=CreateImage(IconWidth<=16 && IconHeight<=16?ICON_SIZE_SMALL:ICON_SIZE_BIG,&sz);
+			TVTest::Theme::IconList Bitmap;
+			Bitmap.Create(hbmIcons,sz.cx,sz.cy,IconWidth,IconHeight);
 			::DeleteObject(hbmIcons);
-			m_himlIcons=Bitmap.CreateImageList(16,::GetSysColor(COLOR_WINDOWTEXT));
+			m_himlIcons=Bitmap.CreateImageList(IconColor);
 			Bitmap.Destroy();
+
+			m_IconIDMap.clear();
+			for (int i=0;i<lengthof(ItemList);i++)
+				m_IconIDMap.insert(std::pair<int,int>(ItemList[i].Command,ItemList[i].Icon));
+			const CCommandList *pCommandList=m_pSideBar->GetCommandList();
+			for (size_t i=lengthof(ItemList);i<m_AvailItemList.size();i++) {
+				const int ID=m_AvailItemList[i].Command;
+				if (ID>=CM_PLUGIN_FIRST && ID<=CM_PLUGIN_LAST) {
+					CPlugin *pPlugin=GetAppClass().PluginManager.GetPluginByCommand(ID);
+					if (pPlugin!=NULL && pPlugin->GetIcon().IsCreated()) {
+						HICON hIcon=pPlugin->GetIcon().ExtractIcon(IconColor);
+						if (hIcon!=NULL) {
+							int Icon=ImageList_AddIcon(m_himlIcons,hIcon);
+							::DestroyIcon(hIcon);
+							m_IconIDMap.insert(std::pair<int,int>(ID,Icon));
+						}
+					}
+				} else if (ID>=CM_PLUGINCOMMAND_FIRST && ID<=CM_PLUGINCOMMAND_LAST) {
+					LPCTSTR pszCommand;
+					CPlugin *pPlugin=GetAppClass().PluginManager.GetPluginByPluginCommand(
+						pCommandList->GetCommandTextByID(ID),&pszCommand);
+					if (pPlugin!=NULL) {
+						CPlugin::CPluginCommandInfo *pCommandInfo=
+							pPlugin->GetPluginCommandInfo(pszCommand);
+						if (pCommandInfo!=NULL && pCommandInfo->GetIcon().IsCreated()) {
+							HICON hIcon=pCommandInfo->GetIcon().ExtractIcon(IconColor);
+							if (hIcon!=NULL) {
+								int Icon=ImageList_AddIcon(m_himlIcons,hIcon);
+								::DestroyIcon(hIcon);
+								m_IconIDMap.insert(std::pair<int,int>(ID,Icon));
+							}
+						}
+					}
+				}
+			}
 
 			HWND hwndList=::GetDlgItem(hDlg,IDC_SIDEBAR_ITEMLIST);
 			ListView_SetExtendedListViewStyle(hwndList,LVS_EX_FULLROWSELECT | LVS_EX_LABELTIP);
@@ -364,15 +527,37 @@ INT_PTR CSideBarOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam
 			rc.right-=::GetSystemMetrics(SM_CXVSCROLL);
 			lvc.cx=rc.right;
 			ListView_InsertColumn(hwndList,0,&lvc);
-			int List[lengthof(ItemList)];
-			for (int i=0;i<lengthof(ItemList);i++)
-				List[i]=ItemList[i].Command;
-			SetItemList(hwndList,List,lengthof(List));
+			std::vector<int> List;
+			List.resize(m_AvailItemList.size());
+			for (size_t i=0;i<m_AvailItemList.size();i++)
+				List[i]=m_AvailItemList[i].Command;
+			SetItemList(hwndList,List.data(),(int)List.size());
+		}
+		return TRUE;
+
+	case WM_HSCROLL:
+		if (reinterpret_cast<HWND>(lParam)==::GetDlgItem(hDlg,IDC_SIDEBAR_OPACITY_SLIDER)) {
+			SyncEditWithTrackBar(hDlg,
+								 IDC_SIDEBAR_OPACITY_SLIDER,
+								 IDC_SIDEBAR_OPACITY_INPUT);
 		}
 		return TRUE;
 
 	case WM_COMMAND:
 		switch (LOWORD(wParam)) {
+		case IDC_SIDEBAR_SHOWPOPUP:
+			EnableDlgItems(hDlg,IDC_SIDEBAR_OPACITY_LABEL,IDC_SIDEBAR_OPACITY_UNIT,
+				DlgCheckBox_IsChecked(hDlg,IDC_SIDEBAR_SHOWPOPUP) && Util::OS::IsWindows8OrLater());
+			return TRUE;
+
+		case IDC_SIDEBAR_OPACITY_INPUT:
+			if (HIWORD(wParam)==EN_CHANGE) {
+				SyncTrackBarWithEdit(hDlg,
+									 IDC_SIDEBAR_OPACITY_INPUT,
+									 IDC_SIDEBAR_OPACITY_SLIDER);
+			}
+			return TRUE;
+
 		case IDC_SIDEBAR_UP:
 		case IDC_SIDEBAR_DOWN:
 			{
@@ -413,7 +598,7 @@ INT_PTR CSideBarOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam
 
 		case IDC_SIDEBAR_DEFAULT:
 			SetItemList(::GetDlgItem(hDlg,IDC_SIDEBAR_ITEMLIST),
-							   DefaultItemList,lengthof(DefaultItemList));
+						DefaultItemList,lengthof(DefaultItemList));
 			return TRUE;
 
 		case IDC_SIDEBAR_ADD:
@@ -503,7 +688,11 @@ INT_PTR CSideBarOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam
 
 		case PSN_APPLY:
 			{
-				m_fShowPopup=DlgCheckBox_IsChecked(hDlg,IDC_SIDEBAR_SHOW);
+				m_fShowPopup=DlgCheckBox_IsChecked(hDlg,IDC_SIDEBAR_SHOWPOPUP);
+				if (Util::OS::IsWindows8OrLater()) {
+					int Opacity=DlgEdit_GetInt(hDlg,IDC_SIDEBAR_OPACITY_INPUT);
+					m_PopupOpacity=CLAMP(Opacity,OPACITY_MIN,OPACITY_MAX);
+				}
 				m_fShowToolTips=DlgCheckBox_IsChecked(hDlg,IDC_SIDEBAR_SHOWTOOLTIPS);
 				m_pSideBar->ShowToolTips(m_fShowToolTips);
 				bool fShowChannelLogo=DlgCheckBox_IsChecked(hDlg,IDC_SIDEBAR_SHOWCHANNELLOGO);
@@ -527,6 +716,18 @@ INT_PTR CSideBarOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam
 				}
 				if (ItemList!=m_ItemList) {
 					m_ItemList=ItemList;
+
+					const CCommandList *pCommandList=m_pSideBar->GetCommandList();
+					m_ItemNameList.clear();
+					for (int i=0;i<Count;i++) {
+						const int ID=m_ItemList[i];
+						if (ID==ITEM_SEPARATOR) {
+							m_ItemNameList.push_back(TVTest::String());
+						} else {
+							m_ItemNameList.push_back(TVTest::String(pCommandList->GetCommandTextByID(ID)));
+						}
+					}
+
 					ApplyItemList();
 				}
 
@@ -541,6 +742,7 @@ INT_PTR CSideBarOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam
 			::ImageList_Destroy(m_himlIcons);
 			m_himlIcons=NULL;
 		}
+		m_IconIDMap.clear();
 		return TRUE;
 	}
 
@@ -558,21 +760,32 @@ void CSideBarOptions::SetItemList(HWND hwndList,const int *pList,int NumItems)
 	lvi.mask=LVIF_TEXT | LVIF_IMAGE | LVIF_PARAM;
 	lvi.iSubItem=0;
 	lvi.pszText=szText;
+
 	for (int i=0;i<NumItems;i++) {
-		if (pList[i]==ITEM_SEPARATOR) {
+		const int ID=pList[i];
+
+		lvi.iImage=-1;
+		if (ID==ITEM_SEPARATOR) {
 			::lstrcpy(szText,TEXT("(区切り)"));
-			lvi.iImage=-1;
 		} else {
-			pCommandList->GetCommandName(pCommandList->IDToIndex(pList[i]),szText,lengthof(szText));
-			for (int j=0;j<lengthof(ItemList);j++) {
-				if (ItemList[j].Command==pList[i]) {
-					lvi.iImage=ItemList[j].Icon;
-					break;
-				}
-			}
+			pCommandList->GetCommandName(pCommandList->IDToIndex(ID),szText,lengthof(szText));
+			auto itr=m_IconIDMap.find(ID);
+			if (itr!=m_IconIDMap.end())
+				lvi.iImage=itr->second;
 		}
 		lvi.iItem=i;
 		lvi.lParam=pList[i];
 		ListView_InsertItem(hwndList,&lvi);
 	}
+}
+
+
+bool CSideBarOptions::IsAvailableItem(int ID) const
+{
+	for (size_t i=0;i<m_AvailItemList.size();i++) {
+		if (m_AvailItemList[i].Command==ID)
+			return true;
+	}
+
+	return false;
 }

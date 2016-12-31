@@ -12,9 +12,6 @@
 #include "TsDescriptor.h"
 
 
-using std::vector;
-
-
 /////////////////////////////////////////////////////////////////////////////
 // PSIテーブル基底クラス
 /////////////////////////////////////////////////////////////////////////////
@@ -52,10 +49,11 @@ public:
 	CPsiTable();
 	virtual ~CPsiTable() = 0;
 
-	WORD GetExtensionNum(void) const;
+	WORD GetExtensionNum() const;
 	bool GetExtension(const WORD Index, WORD *pExtension) const;
+	int GetExtensionIndexByTableID(const WORD TableID) const;
 	WORD GetSectionNum(const WORD Index) const;
-	const CPsiTableBase * GetSection(const WORD Index = 0, const BYTE SectionNo = 0) const;
+	const CPsiTableBase * GetSection(const WORD Index = 0, const WORD SectionNo = 0) const;
 	bool IsExtensionComplete(const WORD Index) const;
 
 // CPsiTableBase
@@ -98,10 +96,7 @@ class ABSTRACT_CLASS_DECL CPsiSingleTable : public CPsiTableBase
 {
 public:
 	CPsiSingleTable(const bool bTargetSectionExt = true);
-	CPsiSingleTable(const CPsiSingleTable &Operand);
 	virtual ~CPsiSingleTable() = 0;
-
-	CPsiSingleTable & operator = (const CPsiSingleTable &Operand);
 
 // CPsiTableBase
 	virtual void Reset() override;
@@ -131,10 +126,7 @@ public:
 	};
 
 	CPsiStreamTable(ISectionHandler *pHandler = NULL, const bool bTargetSectionExt = true, const bool bIgnoreSectionNumber = false);
-	CPsiStreamTable(const CPsiStreamTable &Operand);
 	virtual ~CPsiStreamTable() = 0;
-
-	CPsiStreamTable & operator = (const CPsiStreamTable &Operand);
 
 // CPsiTableBase
 	virtual void Reset() override;
@@ -156,10 +148,7 @@ class CPsiNullTable :	public CTsPidMapTarget
 {
 public:
 	CPsiNullTable();
-	CPsiNullTable(const CPsiNullTable &Operand);
 	virtual ~CPsiNullTable();
-
-	CPsiNullTable & operator = (const CPsiNullTable &Operand);
 
 // CTsPidMapTarget
 	virtual const bool StorePacket(const CTsPacket *pPacket) = 0;
@@ -172,45 +161,6 @@ public:
 /////////////////////////////////////////////////////////////////////////////
 // PSIテーブルセット抽象化クラス
 /////////////////////////////////////////////////////////////////////////////
-/*
-class CPsiTableSuite	// 保留： 実際のユースケースを判断した上で仕様を決める必要あり
-{
-public:
-	CPsiTableSuite();
-	CPsiTableSuite(const CPsiTableSuite &Operand);
-
-	CPsiTableSuite & operator = (const CPsiTableSuite &Operand);
-
-	const bool StorePacket(const CTsPacket *pPacket);
-
-	void SetTargetSectionExt(const bool bTargetExt);
-	const bool AddTable(const BYTE byTableID);
-
-	const WORD GetIndexByID(const BYTE byTableID);
-	const CPsiTable * GetTable(const WORD wIndex = 0U) const;
-	const CMediaData * GetSectionData(const WORD wIndex = 0U, const WORD wSubIndex = 0U, const BYTE bySectionNo = 0U) const;
-
-	const DWORD GetCrcErrorCount(void) const;
-	void Reset(void);
-
-protected:
-	static void CALLBACK StoreSection(const CPsiSection *pSection, const PVOID pParam);
-
-	struct TAG_TABLESET
-	{
-		BYTE byTableID;						// テーブルID
-		CPsiTable PsiTable;					// テーブル
-	};
-
-	vector<TAG_TABLESET> m_TableSet;		// テーブルセット
-
-	bool m_bTargetSectionExt;
-	bool m_bTableUpdated;
-
-private:
-	CPsiSectionParser m_PsiSectionParser;
-};
-*/
 
 class CPsiTableSet : public CPsiTableBase
 {
@@ -226,6 +176,7 @@ public:
 	bool UnmapTable(const BYTE TableID);
 	void UnmapAllTables();
 	CPsiTableBase * GetTableByID(const BYTE TableID);
+	const CPsiTableBase * GetTableByID(const BYTE TableID) const;
 	BYTE GetLastUpdatedTableID() const;
 
 protected:
@@ -251,22 +202,19 @@ public:
 		bool bTrace = false
 #endif
 	);
-	CPatTable(const CPatTable &Operand);
-
-	CPatTable & operator = (const CPatTable &Operand);
 
 // CPsiSingleTable
-	virtual void Reset(void);
+	virtual void Reset() override;
 
 // CPatTable
-	const WORD GetTransportStreamID(void) const;
+	const WORD GetTransportStreamID() const;
 
 	const WORD GetNitPID(const WORD wIndex = 0U) const;
-	const WORD GetNitNum(void) const;
+	const WORD GetNitNum() const;
 
 	const WORD GetPmtPID(const WORD wIndex = 0U) const;
 	const WORD GetProgramID(const WORD wIndex = 0U) const;
-	const WORD GetProgramNum(void) const;
+	const WORD GetProgramNum() const;
 
 	const bool IsPmtTablePID(const WORD wPID) const;
 
@@ -279,8 +227,8 @@ protected:
 		WORD wPID;			// PMTのPID
 	};
 
-	vector<WORD> m_NitPIDArray;
-	vector<TAG_PATITEM> m_PmtPIDArray;
+	std::vector<WORD> m_NitPIDArray;
+	std::vector<TAG_PATITEM> m_PmtPIDArray;
 
 #ifdef _DEBUG
 	bool m_bDebugTrace;
@@ -296,13 +244,10 @@ class CCatTable : public CPsiSingleTable
 {
 public:
 	CCatTable();
-	virtual ~CCatTable(void);
-	CCatTable(const CCatTable &Operand);
-
-	CCatTable  & operator = (const CCatTable &Operand);
+	virtual ~CCatTable();
 
 // CPsiSingleTable
-	virtual void Reset(void);
+	virtual void Reset() override;
 
 // CCatTable
 	const CCaMethodDesc * GetCaDescBySystemID(const WORD SystemID) const;
@@ -311,7 +256,7 @@ public:
 	const CDescBlock * GetCatDesc() const;
 
 protected:
-	virtual const bool OnTableUpdate(const CPsiSection *pCurSection, const CPsiSection *pOldSection);
+	virtual const bool OnTableUpdate(const CPsiSection *pCurSection, const CPsiSection *pOldSection) override;
 
 	CDescBlock m_DescBlock;
 };
@@ -329,28 +274,25 @@ public:
 		bool bTrace = false
 #endif
 	);
-	CPmtTable(const CPmtTable &Operand);
-
-	CPmtTable & operator = (const CPmtTable &Operand);
 
 // CPsiSingleTable
-	virtual void Reset(void);
+	virtual void Reset() override;
 
 // CPmtTable
-	const WORD GetProgramNumberID(void) const;
+	const WORD GetProgramNumberID() const;
 
-	const WORD GetPcrPID(void) const;
-	const CDescBlock * GetTableDesc(void) const;
-	const WORD GetEcmPID(void) const;
+	const WORD GetPcrPID() const;
+	const CDescBlock * GetTableDesc() const;
+	const WORD GetEcmPID() const;
 	const WORD GetEcmPID(const WORD CASystemID) const;
 
-	const WORD GetEsInfoNum(void) const;
+	const WORD GetEsInfoNum() const;
 	const BYTE GetStreamTypeID(const WORD wIndex) const;
 	const WORD GetEsPID(const WORD wIndex) const;
 	const CDescBlock * GetItemDesc(const WORD wIndex) const;
 
 protected:
-	virtual const bool OnTableUpdate(const CPsiSection *pCurSection, const CPsiSection *pOldSection);
+	virtual const bool OnTableUpdate(const CPsiSection *pCurSection, const CPsiSection *pOldSection) override;
 
 	struct TAG_PMTITEM
 	{
@@ -359,7 +301,7 @@ protected:
 		CDescBlock DescBlock;			// Stream ID Descriptor 他
 	};
 
-	vector<TAG_PMTITEM> m_EsInfoArray;
+	std::vector<TAG_PMTITEM> m_EsInfoArray;
 
 	WORD m_wPcrPID;						// PCR_PID
 	CDescBlock m_TableDescBlock;		// Conditional Access Method Descriptor 他
@@ -383,18 +325,15 @@ public:
 	};
 
 	CSdtTable(const BYTE TableID = TABLE_ID_ACTUAL);
-	CSdtTable(const CSdtTable &Operand);
-
-	CSdtTable & operator = (const CSdtTable &Operand);
 
 // CPsiSingleTable
-	virtual void Reset(void);
+	virtual void Reset() override;
 
 // CSdtTable
-	const BYTE GetTableID(void) const;
-	const WORD GetTransportStreamID(void) const;
-	const WORD GetNetworkID(void) const;
-	const WORD GetServiceNum(void) const;
+	const BYTE GetTableID() const;
+	const WORD GetTransportStreamID() const;
+	const WORD GetNetworkID() const;
+	const WORD GetServiceNum() const;
 	const WORD GetServiceIndexByID(const WORD wServiceID);
 	const WORD GetServiceID(const WORD wIndex) const;
 	const bool GetHEITFlag(const WORD wIndex) const;
@@ -407,8 +346,8 @@ public:
 	const CDescBlock * GetItemDesc(const WORD wIndex) const;
 
 protected:
-	virtual void OnPsiSection(const CPsiSectionParser *pPsiSectionParser, const CPsiSection *pSection);
-	virtual const bool OnTableUpdate(const CPsiSection *pCurSection, const CPsiSection *pOldSection);
+	virtual void OnPsiSection(const CPsiSectionParser *pPsiSectionParser, const CPsiSection *pSection) override;
+	virtual const bool OnTableUpdate(const CPsiSection *pCurSection, const CPsiSection *pOldSection) override;
 
 	struct TAG_SDTITEM
 	{
@@ -425,7 +364,7 @@ protected:
 
 	BYTE m_TableID;
 	WORD m_wNetworkID;
-	vector<TAG_SDTITEM> m_ServiceInfoArray;
+	std::vector<TAG_SDTITEM> m_ServiceInfoArray;
 };
 
 class CSdtOtherTable : public CPsiTable
@@ -439,6 +378,14 @@ protected:
 	virtual CPsiTableBase * CreateSectionTable(const CPsiSection *pSection) override;
 };
 
+class CSdtTableSet : public CPsiTableSet
+{
+public:
+	CSdtTableSet();
+	CSdtTable *GetActualSdtTable();
+	CSdtOtherTable *GetOtherSdtTable();
+};
+
 
 /////////////////////////////////////////////////////////////////////////////
 // NITテーブル抽象化クラス
@@ -448,23 +395,20 @@ class CNitTable : public CPsiSingleTable
 {
 public:
 	CNitTable();
-	CNitTable(const CNitTable &Operand);
-
-	CNitTable & operator = (const CNitTable &Operand);
 
 // CPsiSingleTable
-	virtual void Reset(void);
+	virtual void Reset() override;
 
 // CNitTable
-	const WORD GetNetworkID(void) const;
-	const CDescBlock * GetNetworkDesc(void) const;
-	const WORD GetTransportStreamNum(void) const;
+	const WORD GetNetworkID() const;
+	const CDescBlock * GetNetworkDesc() const;
+	const WORD GetTransportStreamNum() const;
 	const WORD GetTransportStreamID(const WORD wIndex) const;
 	const WORD GetOriginalNetworkID(const WORD wIndex) const;
 	const CDescBlock * GetItemDesc(const WORD wIndex) const;
 
 protected:
-	virtual const bool OnTableUpdate(const CPsiSection *pCurSection, const CPsiSection *pOldSection);
+	virtual const bool OnTableUpdate(const CPsiSection *pCurSection, const CPsiSection *pOldSection) override;
 
 	struct TAG_NITITEM {
 		WORD wTransportStreamID;
@@ -474,61 +418,102 @@ protected:
 
 	WORD m_wNetworkID;				// Network ID
 	CDescBlock m_NetworkDescBlock;	// Network descriptor
-	vector<TAG_NITITEM> m_TransportStreamArray;
+	std::vector<TAG_NITITEM> m_TransportStreamArray;
+};
+
+class CNitMultiTable : public CPsiTable
+{
+public:
+	WORD GetNitSectionNum() const;
+	const CNitTable * GetNitTable(const WORD SectionNo) const;
+	bool IsNitComplete() const;
+
+protected:
+// CPsiTable
+	virtual CPsiTableBase * CreateSectionTable(const CPsiSection *pSection) override;
 };
 
 
 /////////////////////////////////////////////////////////////////////////////
-// EIT[p/f]テーブル抽象化クラス
+// EITテーブル抽象化クラス
 /////////////////////////////////////////////////////////////////////////////
 
-class CEitPfTable : public CPsiStreamTable
+class CEitTable : public CPsiSingleTable
 {
 public:
-	CEitPfTable();
-	CEitPfTable(const CEitPfTable &Operand);
+	enum {
+		TABLE_ID_PF_ACTUAL = 0x4E,	// p/f actual
+		TABLE_ID_PF_OTHER  = 0x4F	// p/f other
+	};
 
-	CEitPfTable & operator = (const CEitPfTable &Operand);
+	CEitTable();
 
 // CPsiSingleTable
-	virtual void Reset(void);
+	void Reset() override;
 
-// CEitPfTable
-	const DWORD GetServiceNum(void) const;
-	const int GetServiceIndexByID(WORD ServiceID) const;
-	const WORD GetServiceID(DWORD Index) const;
-	const WORD GetTransportStreamID(DWORD Index) const;
-	const WORD GetOriginalNetworkID(DWORD Index) const;
-	const WORD GetEventID(DWORD Index, DWORD EventIndex) const;
-	const SYSTEMTIME *GetStartTime(DWORD Index, DWORD EventIndex) const;
-	const DWORD GetDuration(DWORD Index, DWORD EventIndex) const;
-	const BYTE GetRunningStatus(DWORD Index, DWORD EventIndex) const;
-	const bool GetFreeCaMode(DWORD Index, DWORD EventIndex) const;
-	const CDescBlock * GetItemDesc(DWORD Index, DWORD EventIndex) const;
-
-protected:
-	virtual const bool OnTableUpdate(const CPsiSection *pCurSection);
-
+// CEitTable
 	struct EventInfo {
-		bool bEnable;
 		WORD EventID;
 		bool bValidStartTime;
 		SYSTEMTIME StartTime;
 		DWORD Duration;
 		BYTE RunningStatus;
-		bool FreeCaMode;
+		bool bFreeCaMode;
 		CDescBlock DescBlock;
-		EventInfo() : bEnable(false) {}
 	};
 
-	struct ServiceInfo {
-		WORD ServiceID;
-		WORD TransportStreamID;
-		WORD OriginalNetworkID;
-		EventInfo EventList[2];
-	};
+	WORD GetServiceID() const;
+	WORD GetTransportStreamID() const;
+	WORD GetOriginalNetworkID() const;
+	BYTE GetSegmentLastSectionNumber() const;
+	BYTE GetLastTableID() const;
+	int GetEventNum() const;
+	const EventInfo * GetEventInfo(const int Index = 0) const;
+	WORD GetEventID(const int Index = 0) const;
+	const SYSTEMTIME * GetStartTime(const int Index = 0) const;
+	DWORD GetDuration(const int Index = 0) const;
+	BYTE GetRunningStatus(const int Index = 0) const;
+	bool GetFreeCaMode(const int Index = 0) const;
+	const CDescBlock * GetItemDesc(const int Index = 0) const;
 
-	vector<ServiceInfo> m_ServiceList;
+protected:
+	const bool OnTableUpdate(const CPsiSection *pCurSection, const CPsiSection *pOldSection) override;
+
+	WORD m_ServiceID;
+	WORD m_TransportStreamID;
+	WORD m_OriginalNetworkID;
+	BYTE m_SegmentLastSectionNumber;
+	BYTE m_LastTableID;
+
+	std::vector<EventInfo> m_EventList;
+};
+
+class CEitMultiTable : public CPsiTable
+{
+public:
+	const CEitTable * GetEitTable(const WORD ServiceID, const WORD SectionNo) const;
+
+protected:
+// CPsiTable
+	CPsiTableBase * CreateSectionTable(const CPsiSection *pSection) override;
+};
+
+class CEitPfTable : public CPsiTableSet
+{
+public:
+	CEitPfTable();
+	const CEitMultiTable * GetPfActualTable() const;
+	const CEitTable * GetPfActualTable(const WORD ServiceID, const bool bFollowing = false) const;
+	const CEitMultiTable * GetPfOtherTable() const;
+	const CEitTable * GetPfOtherTable(const WORD ServiceID, const bool bFollowing = false) const;
+};
+
+class CEitPfActualTable : public CPsiTableSet
+{
+public:
+	CEitPfActualTable();
+	const CEitMultiTable * GetPfActualTable() const;
+	const CEitTable * GetPfActualTable(const WORD ServiceID, const bool bFollowing = false) const;
 };
 
 
@@ -545,15 +530,15 @@ public:
 	virtual ~CTotTable();
 
 // CPsiSingleTable
-	virtual void Reset(void);
+	virtual void Reset() override;
 
 // CTotTable
 	const bool GetDateTime(SYSTEMTIME *pTime) const;
 	const int GetLocalTimeOffset() const;
-	const CDescBlock * GetTotDesc(void) const;
+	const CDescBlock * GetTotDesc() const;
 
 protected:
-	virtual const bool OnTableUpdate(const CPsiSection *pCurSection, const CPsiSection *pOldSection);
+	virtual const bool OnTableUpdate(const CPsiSection *pCurSection, const CPsiSection *pOldSection) override;
 
 	bool m_bValidDateTime;
 	SYSTEMTIME m_DateTime;	// 現在日付/時刻
@@ -574,7 +559,7 @@ public:
 	virtual ~CCdtTable();
 
 // CPsiStreamTable
-	virtual void Reset(void);
+	virtual void Reset() override;
 
 // CCdtTable
 	// データの種類
@@ -590,7 +575,7 @@ public:
 	const BYTE * GetDataModuleByte() const;
 
 protected:
-	virtual const bool OnTableUpdate(const CPsiSection *pCurSection);
+	virtual const bool OnTableUpdate(const CPsiSection *pCurSection) override;
 
 	WORD m_OriginalNetworkId;	// original_network_id
 	BYTE m_DataType;			// data_type
@@ -630,7 +615,7 @@ public:
 	virtual ~CSdttTable();
 
 // CPsiStreamTable
-	virtual void Reset(void);
+	virtual void Reset() override;
 
 // CSdttTable
 	const BYTE GetMakerID() const;
@@ -645,7 +630,7 @@ public:
 	const CDescBlock * GetContentDesc(DWORD Index) const;
 
 protected:
-	virtual const bool OnTableUpdate(const CPsiSection *pCurSection);
+	virtual const bool OnTableUpdate(const CPsiSection *pCurSection) override;
 
 	BYTE m_MakerID;				// maker_id
 	BYTE m_ModelID;				// model_id
@@ -665,20 +650,16 @@ protected:
 class CPcrTable : public CPsiNullTable
 {
 public:
-	CPcrTable(WORD wServiceIndex);
-	CPcrTable(const CPcrTable &Operand);
+	typedef ULONGLONG PcrType;
 
-	CPcrTable & operator = (const CPcrTable &Operand);
+	CPcrTable();
 
 // CPsiNullTable
-	virtual const bool StorePacket(const CTsPacket *pPacket);
+	const bool StorePacket(const CTsPacket *pPacket) override;
 
 // CPcrTable
-	void AddServiceIndex(WORD wServiceIndex);
-	const WORD GetServiceIndex(WORD *pwServiceIndex, WORD wIndex=0);
-	const unsigned __int64 GetPcrTimeStamp();
+	PcrType GetPcrTimeStamp() const;
 
 protected:
-	vector<WORD> m_ServiceIndex;
-	unsigned __int64 m_ui64_Pcr;
+	PcrType m_Pcr;
 };

@@ -2,19 +2,14 @@
 #include "TVTest.h"
 #include "SideBar.h"
 #include "resource.h"
-
-#ifdef _DEBUG
-#undef THIS_FILE
-static char THIS_FILE[]=__FILE__;
-#define new DEBUG_NEW
-#endif
-
-
-#define SIDE_BAR_CLASS APP_NAME TEXT(" Side Bar")
+#include "Common/DebugDef.h"
 
 
 
 
+const int CSideBar::ICON_WIDTH=16;
+const int CSideBar::ICON_HEIGHT=16;
+const LPCTSTR CSideBar::CLASS_NAME=APP_NAME TEXT(" Side Bar");
 HINSTANCE CSideBar::m_hinst=NULL;
 
 
@@ -29,11 +24,11 @@ bool CSideBar::Initialize(HINSTANCE hinst)
 		wc.cbWndExtra=0;
 		wc.hInstance=hinst;
 		wc.hIcon=NULL;
-		wc.hCursor=LoadCursor(NULL,IDC_ARROW);
+		wc.hCursor=::LoadCursor(NULL,IDC_ARROW);
 		wc.hbrBackground=NULL;
 		wc.lpszMenuName=NULL;
-		wc.lpszClassName=SIDE_BAR_CLASS;
-		if (RegisterClass(&wc)==0)
+		wc.lpszClassName=CLASS_NAME;
+		if (::RegisterClass(&wc)==0)
 			return false;
 		m_hinst=hinst;
 	}
@@ -44,36 +39,11 @@ bool CSideBar::Initialize(HINSTANCE hinst)
 CSideBar::CSideBar(const CCommandList *pCommandList)
 	: m_fShowTooltips(true)
 	, m_fVertical(true)
-	, m_IconWidth(16)
-	, m_IconHeight(16)
-	, m_SeparatorWidth(8)
 	, m_HotItem(-1)
 	, m_ClickItem(-1)
 	, m_pEventHandler(NULL)
 	, m_pCommandList(pCommandList)
 {
-	m_Theme.ItemStyle.Gradient.Type=Theme::GRADIENT_NORMAL;
-	m_Theme.ItemStyle.Gradient.Direction=Theme::DIRECTION_HORZ;
-	m_Theme.ItemStyle.Gradient.Color1=RGB(192,192,192);
-	m_Theme.ItemStyle.Gradient.Color2=RGB(192,192,192);
-	m_Theme.ItemStyle.Border.Type=Theme::BORDER_NONE;
-	m_Theme.ItemStyle.TextColor=RGB(0,0,0);
-	m_Theme.HighlightItemStyle.Gradient.Type=Theme::GRADIENT_NORMAL;
-	m_Theme.HighlightItemStyle.Gradient.Direction=Theme::DIRECTION_HORZ;
-	m_Theme.HighlightItemStyle.Gradient.Color1=RGB(128,128,128);
-	m_Theme.HighlightItemStyle.Gradient.Color2=RGB(128,128,128);
-	m_Theme.HighlightItemStyle.Border.Type=Theme::BORDER_NONE;
-	m_Theme.HighlightItemStyle.TextColor=RGB(255,255,255);
-	m_Theme.CheckItemStyle=m_Theme.ItemStyle;
-	m_Theme.CheckItemStyle.Border.Type=Theme::BORDER_SUNKEN;
-	m_Theme.CheckItemStyle.Border.Color=RGB(192,192,192);
-	m_Theme.Border.Type=Theme::BORDER_RAISED;
-	m_Theme.Border.Color=RGB(192,192,192);
-
-	m_ItemMargin.left=3;
-	m_ItemMargin.top=3;
-	m_ItemMargin.right=3;
-	m_ItemMargin.bottom=3;
 }
 
 
@@ -88,29 +58,62 @@ CSideBar::~CSideBar()
 bool CSideBar::Create(HWND hwndParent,DWORD Style,DWORD ExStyle,int ID)
 {
 	return CreateBasicWindow(hwndParent,Style,ExStyle,ID,
-							 SIDE_BAR_CLASS,NULL,m_hinst);
+							 CLASS_NAME,NULL,m_hinst);
+}
+
+
+void CSideBar::SetStyle(const TVTest::Style::CStyleManager *pStyleManager)
+{
+	m_Style.SetStyle(pStyleManager);
+}
+
+
+void CSideBar::NormalizeStyle(
+	const TVTest::Style::CStyleManager *pStyleManager,
+	const TVTest::Style::CStyleScaling *pStyleScaling)
+{
+	m_Style.NormalizeStyle(pStyleManager,pStyleScaling);
+}
+
+
+void CSideBar::SetTheme(const TVTest::Theme::CThemeManager *pThemeManager)
+{
+	SideBarTheme Theme;
+
+	pThemeManager->GetStyle(TVTest::Theme::CThemeManager::STYLE_SIDEBAR_ITEM,
+							&Theme.ItemStyle);
+	pThemeManager->GetStyle(TVTest::Theme::CThemeManager::STYLE_SIDEBAR_ITEM_HOT,
+							&Theme.HighlightItemStyle);
+	pThemeManager->GetStyle(TVTest::Theme::CThemeManager::STYLE_SIDEBAR_ITEM_CHECKED,
+							&Theme.CheckItemStyle);
+	pThemeManager->GetBorderStyle(TVTest::Theme::CThemeManager::STYLE_SIDEBAR,
+								  &Theme.Border);
+
+	SetSideBarTheme(Theme);
 }
 
 
 int CSideBar::GetBarWidth() const
 {
-	RECT rc;
-	Theme::GetBorderWidths(&m_Theme.Border,&rc);
+	TVTest::Theme::BorderStyle Border=m_Theme.Border;
+	ConvertBorderWidthsInPixels(&Border);
+	RECT rcBorder;
+	TVTest::Theme::GetBorderWidths(Border,&rcBorder);
 	int Width;
 	if (m_fVertical) {
-		Width=m_IconWidth+m_ItemMargin.left+m_ItemMargin.right+rc.left+rc.right;
+		Width=m_Style.IconSize.Width+m_Style.ItemPadding.Horz()+rcBorder.left+rcBorder.right;
 	} else {
-		Width=m_IconHeight+m_ItemMargin.top+m_ItemMargin.bottom+rc.top+rc.bottom;
+		Width=m_Style.IconSize.Height+m_Style.ItemPadding.Vert()+rcBorder.top+rcBorder.bottom;
 	}
 	return Width;
 }
 
 
-bool CSideBar::SetIconImage(HBITMAP hbm)
+bool CSideBar::SetIconImage(HBITMAP hbm,int Width,int Height)
 {
 	if (hbm==NULL)
 		return false;
-	if (!m_IconBitmap.Create(hbm))
+	if (!m_Icons.Create(hbm,Width,Height))
 		return false;
 	if (m_hwnd!=NULL)
 		Invalidate();
@@ -154,6 +157,32 @@ bool CSideBar::AddItems(const SideBarItem *pItemList,int NumItems)
 }
 
 
+bool CSideBar::AddSeparator()
+{
+	SideBarItem Item;
+
+	Item.Command=ITEM_SEPARATOR;
+	Item.Icon=-1;
+	Item.State=0;
+
+	return AddItem(&Item);
+}
+
+
+int CSideBar::GetItemCount() const
+{
+	return (int)m_ItemList.size();
+}
+
+
+int CSideBar::GetItemCommand(int Index) const
+{
+	if (Index<0 || (size_t)Index>=m_ItemList.size())
+		return -1;
+	return m_ItemList[Index].Command;
+}
+
+
 int CSideBar::CommandToIndex(int Command) const
 {
 	for (size_t i=0;i<m_ItemList.size();i++) {
@@ -170,8 +199,22 @@ bool CSideBar::EnableItem(int Command,bool fEnable)
 
 	if (Index<0)
 		return false;
-	if (((m_ItemList[Index].Flags&ITEM_FLAG_DISABLED)==0)!=fEnable) {
-		m_ItemList[Index].Flags^=ITEM_FLAG_DISABLED;
+	if (m_ItemList[Index].IsEnabled()!=fEnable) {
+		m_ItemList[Index].State^=ITEM_STATE_DISABLED;
+		if (!fEnable && m_HotItem==Index)
+			m_HotItem=-1;
+		UpdateItem(Index);
+	}
+	return true;
+}
+
+
+bool CSideBar::EnableItemByIndex(int Index,bool fEnable)
+{
+	if (Index<0 || (size_t)Index>=m_ItemList.size())
+		return false;
+	if (m_ItemList[Index].IsEnabled()!=fEnable) {
+		m_ItemList[Index].State^=ITEM_STATE_DISABLED;
 		if (!fEnable && m_HotItem==Index)
 			m_HotItem=-1;
 		UpdateItem(Index);
@@ -186,7 +229,7 @@ bool CSideBar::IsItemEnabled(int Command) const
 
 	if (Index<0)
 		return false;
-	return (m_ItemList[Index].Flags&ITEM_FLAG_DISABLED)==0;
+	return m_ItemList[Index].IsEnabled();
 }
 
 
@@ -196,8 +239,20 @@ bool CSideBar::CheckItem(int Command,bool fCheck)
 
 	if (Index<0)
 		return false;
-	if (((m_ItemList[Index].Flags&ITEM_FLAG_CHECKED)!=0)!=fCheck) {
-		m_ItemList[Index].Flags^=ITEM_FLAG_CHECKED;
+	if (m_ItemList[Index].IsChecked()!=fCheck) {
+		m_ItemList[Index].State^=ITEM_STATE_CHECKED;
+		UpdateItem(Index);
+	}
+	return true;
+}
+
+
+bool CSideBar::CheckItemByIndex(int Index,bool fCheck)
+{
+	if (Index<0 || (size_t)Index>=m_ItemList.size())
+		return false;
+	if (m_ItemList[Index].IsChecked()!=fCheck) {
+		m_ItemList[Index].State^=ITEM_STATE_CHECKED;
 		UpdateItem(Index);
 	}
 	return true;
@@ -220,22 +275,45 @@ bool CSideBar::IsItemChecked(int Command) const
 
 	if (Index<0)
 		return false;
-	return (m_ItemList[Index].Flags&ITEM_FLAG_CHECKED)!=0;
+	return m_ItemList[Index].IsChecked();
 }
 
 
-bool CSideBar::SetTheme(const ThemeInfo *pTheme)
+bool CSideBar::RedrawItem(int Command)
 {
-	if (pTheme==NULL)
+	int Index=CommandToIndex(Command);
+
+	if (Index<0)
 		return false;
-	m_Theme=*pTheme;
-	if (m_hwnd!=NULL)
-		Invalidate();
+
+	UpdateItem(Index);
+
 	return true;
 }
 
 
-bool CSideBar::GetTheme(ThemeInfo *pTheme) const
+bool CSideBar::SetSideBarTheme(const SideBarTheme &Theme)
+{
+	int OldBarWidth;
+	if (m_hwnd!=NULL && m_pEventHandler!=NULL)
+		OldBarWidth=GetBarWidth();
+
+	m_Theme=Theme;
+
+	if (m_hwnd!=NULL) {
+		if (m_pEventHandler!=NULL) {
+			int NewBarWidth=GetBarWidth();
+			if (NewBarWidth!=OldBarWidth)
+				m_pEventHandler->OnBarWidthChanged(NewBarWidth);
+		}
+		Invalidate();
+	}
+
+	return true;
+}
+
+
+bool CSideBar::GetSideBarTheme(SideBarTheme *pTheme) const
 {
 	if (pTheme==NULL)
 		return false;
@@ -275,15 +353,25 @@ void CSideBar::SetEventHandler(CEventHandler *pHandler)
 }
 
 
+TVTest::Style::Size CSideBar::GetIconDrawSize() const
+{
+	return m_Style.IconSize;
+}
+
+
 LRESULT CSideBar::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 {
 	switch (uMsg) {
 	case WM_CREATE:
 		{
+			InitializeUI();
+
 			LPCREATESTRUCT pcs=reinterpret_cast<LPCREATESTRUCT>(lParam);
 
 			m_Tooltip.Create(hwnd);
 			m_Tooltip.Enable(m_fShowTooltips);
+			SetTooltipFont();
+
 			for (int i=0;i<(int)m_ItemList.size();i++) {
 				if (m_ItemList[i].Command!=ITEM_SEPARATOR) {
 					RECT rc;
@@ -322,7 +410,7 @@ LRESULT CSideBar::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 
 			if (HotItem>=0
 					&& (m_ItemList[HotItem].Command==ITEM_SEPARATOR
-						|| (m_ItemList[HotItem].Flags&ITEM_FLAG_DISABLED)!=0))
+						|| m_ItemList[HotItem].IsDisabled()))
 				HotItem=-1;
 			if (GetCapture()==hwnd) {
 				if (HotItem!=m_ClickItem)
@@ -392,15 +480,15 @@ LRESULT CSideBar::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 		}
 		return 0;
 
-	case WM_RBUTTONDOWN:
+	case WM_RBUTTONUP:
 		if (m_pEventHandler!=NULL)
-			m_pEventHandler->OnRButtonDown(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam));
+			m_pEventHandler->OnRButtonUp(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam));
 		return 0;
 
 	case WM_SETCURSOR:
 		if (LOWORD(lParam)==HTCLIENT) {
 			if (m_HotItem>=0) {
-				::SetCursor(::LoadCursor(NULL,IDC_HAND));
+				::SetCursor(GetActionCursor());
 				return TRUE;
 			}
 		}
@@ -416,7 +504,7 @@ LRESULT CSideBar::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 						|| !m_pEventHandler->GetTooltipText(
 								m_ItemList[pnmttdi->hdr.idFrom].Command,
 								pnmttdi->szText,lengthof(pnmttdi->szText))) {
-					m_pCommandList->GetCommandNameByID(
+					m_pCommandList->GetCommandShortNameByID(
 						m_ItemList[pnmttdi->hdr.idFrom].Command,
 						pnmttdi->szText,lengthof(pnmttdi->szText));
 				}
@@ -432,7 +520,9 @@ LRESULT CSideBar::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 				int x,y;
 
 				::GetWindowRect(hwnd,&rcBar);
-				Theme::SubtractBorderRect(&m_Theme.Border,&rcBar);
+				TVTest::Theme::BorderStyle Border=m_Theme.Border;
+				ConvertBorderWidthsInPixels(&Border);
+				TVTest::Theme::SubtractBorderRect(Border,&rcBar);
 				::GetWindowRect(pnmh->hwndFrom,&rcTip);
 				x=rcBar.right;
 				y=rcTip.top;
@@ -457,21 +547,45 @@ LRESULT CSideBar::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 
 	case WM_DESTROY:
 		m_Tooltip.Destroy();
+		m_TooltipFont.Destroy();
 		return 0;
 	}
-	return ::DefWindowProc(hwnd,uMsg,wParam,lParam);
+
+	return CCustomWindow::OnMessage(hwnd,uMsg,wParam,lParam);
+}
+
+
+void CSideBar::RealizeStyle()
+{
+	if (m_hwnd!=NULL) {
+		RECT rc;
+		GetPosition(&rc);
+		const int OldBarWidth=m_fVertical ? rc.right-rc.left : rc.bottom-rc.top;
+		SendSizeMessage();
+		Invalidate();
+
+		if (m_Tooltip.IsCreated())
+			SetTooltipFont();
+
+		if (m_pEventHandler!=NULL) {
+			m_pEventHandler->OnStyleChanged();
+			const int NewBarWidth=GetBarWidth();
+			if (OldBarWidth!=NewBarWidth)
+				m_pEventHandler->OnBarWidthChanged(NewBarWidth);
+		}
+	}
 }
 
 
 void CSideBar::GetItemRect(int Item,RECT *pRect) const
 {
-	const int ItemWidth=m_IconWidth+m_ItemMargin.left+m_ItemMargin.right;
-	const int ItemHeight=m_IconHeight+m_ItemMargin.top+m_ItemMargin.bottom;
+	const int ItemWidth=m_Style.IconSize.Width+m_Style.ItemPadding.Horz();
+	const int ItemHeight=m_Style.IconSize.Height+m_Style.ItemPadding.Vert();
 	int Offset=0;
 
 	for (int i=0;i<Item;i++) {
 		if (m_ItemList[i].Command==ITEM_SEPARATOR) {
-			Offset+=m_SeparatorWidth;
+			Offset+=m_Style.SeparatorWidth;
 		} else {
 			if (m_fVertical)
 				Offset+=ItemHeight;
@@ -479,18 +593,20 @@ void CSideBar::GetItemRect(int Item,RECT *pRect) const
 				Offset+=ItemWidth;
 		}
 	}
+	TVTest::Theme::BorderStyle Border=m_Theme.Border;
+	ConvertBorderWidthsInPixels(&Border);
 	RECT rcBorder;
-	Theme::GetBorderWidths(&m_Theme.Border,&rcBorder);
+	TVTest::Theme::GetBorderWidths(Border,&rcBorder);
 	if (m_fVertical) {
 		pRect->left=rcBorder.left;
 		pRect->right=rcBorder.left+ItemWidth;
 		pRect->top=rcBorder.top+Offset;
-		pRect->bottom=pRect->top+(m_ItemList[Item].Command==ITEM_SEPARATOR?m_SeparatorWidth:ItemHeight);
+		pRect->bottom=pRect->top+(m_ItemList[Item].Command==ITEM_SEPARATOR?m_Style.SeparatorWidth:ItemHeight);
 	} else {
 		pRect->top=rcBorder.top;
 		pRect->bottom=rcBorder.top+ItemHeight;
 		pRect->left=rcBorder.left+Offset;
-		pRect->right=pRect->left+(m_ItemList[Item].Command==ITEM_SEPARATOR?m_SeparatorWidth:ItemWidth);
+		pRect->right=pRect->left+(m_ItemList[Item].Command==ITEM_SEPARATOR?m_Style.SeparatorWidth:ItemWidth);
 	}
 }
 
@@ -533,18 +649,15 @@ void CSideBar::UpdateTooltipsRect()
 }
 
 
-static Theme::GradientDirection GetGradientDirection(bool fVertical,Theme::GradientDirection Direction)
+void CSideBar::SetTooltipFont()
 {
-	if (fVertical)
-		return Direction;
-	switch (Direction) {
-	case Theme::DIRECTION_HORZ:			Direction=Theme::DIRECTION_VERT;		break;
-	case Theme::DIRECTION_VERT:			Direction=Theme::DIRECTION_HORZ;		break;
-	case Theme::DIRECTION_HORZMIRROR:	Direction=Theme::DIRECTION_VERTMIRROR;	break;
-	case Theme::DIRECTION_VERTMIRROR:	Direction=Theme::DIRECTION_HORZMIRROR;	break;
-	}
-	return Direction;
+	TVTest::Style::Font Font;
+
+	GetSystemFont(DrawUtil::FONT_STATUS,&Font);
+	CreateDrawFont(Font,&m_TooltipFont);
+	m_Tooltip.SetFont(m_TooltipFont.GetHandle());
 }
+
 
 void CSideBar::Draw(HDC hdc,const RECT &PaintRect)
 {
@@ -559,76 +672,88 @@ void CSideBar::Draw(HDC hdc,const RECT &PaintRect)
 		rc.left=PaintRect.left;
 		rc.right=PaintRect.right;
 	}
-	Theme::GradientInfo Gradient;
-	Gradient=m_Theme.ItemStyle.Gradient;
-	Gradient.Direction=GetGradientDirection(m_fVertical,Gradient.Direction);
-	Theme::FillGradient(hdc,&rc,&Gradient);
+
+	TVTest::Theme::CThemeDraw ThemeDraw(BeginThemeDraw(hdc));
+
+	TVTest::Theme::BackgroundStyle BackStyle;
+	BackStyle=m_Theme.ItemStyle.Back;
+	if (!m_fVertical && BackStyle.Fill.Type==TVTest::Theme::FILL_GRADIENT)
+		BackStyle.Fill.Gradient.Rotate(TVTest::Theme::GradientStyle::ROTATE_RIGHT);
+	ThemeDraw.Draw(BackStyle,rc);
+
 	HDC hdcMemory=::CreateCompatibleDC(hdc);
 	HBITMAP hbmOld=static_cast<HBITMAP>(::GetCurrentObject(hdcMemory,OBJ_BITMAP));
+
 	for (int i=0;i<(int)m_ItemList.size();i++) {
 		GetItemRect(i,&rc);
 		if (m_ItemList[i].Command!=ITEM_SEPARATOR
 				&& rc.left<PaintRect.right && rc.right>PaintRect.left
 				&& rc.top<PaintRect.bottom && rc.bottom>PaintRect.top) {
+			const bool fHot=m_HotItem==i;
 			COLORREF ForeColor;
+			BYTE Opacity=255;
 			RECT rcItem;
 
-			if (m_HotItem==i) {
-				Theme::Style Style=m_Theme.HighlightItemStyle;
-				Style.Gradient.Direction=
-					GetGradientDirection(m_fVertical,Style.Gradient.Direction);
-				if ((m_ItemList[i].Flags&ITEM_FLAG_CHECKED)!=0)
-					Style.Border=m_Theme.CheckItemStyle.Border;
-				Theme::DrawStyleBackground(hdc,&rc,&Style);
-				ForeColor=m_Theme.HighlightItemStyle.TextColor;
+			if (fHot) {
+				TVTest::Theme::Style Style=m_Theme.HighlightItemStyle;
+				if (!m_fVertical && Style.Back.Fill.Type==TVTest::Theme::FILL_GRADIENT)
+					Style.Back.Fill.Gradient.Rotate(TVTest::Theme::GradientStyle::ROTATE_RIGHT);
+				if (m_ItemList[i].IsChecked())
+					Style.Back.Border=m_Theme.CheckItemStyle.Back.Border;
+				ThemeDraw.Draw(Style.Back,rc);
+				ForeColor=m_Theme.HighlightItemStyle.Fore.Fill.GetSolidColor();
 			} else {
-				if ((m_ItemList[i].Flags&ITEM_FLAG_CHECKED)!=0) {
-					Theme::Style Style=m_Theme.CheckItemStyle;
-					Style.Gradient.Direction=
-						GetGradientDirection(m_fVertical,Style.Gradient.Direction);
-					Theme::DrawStyleBackground(hdc,&rc,&Style);
-					ForeColor=m_Theme.CheckItemStyle.TextColor;
+				if (m_ItemList[i].IsChecked()) {
+					TVTest::Theme::Style Style=m_Theme.CheckItemStyle;
+					if (!m_fVertical && Style.Back.Fill.Type==TVTest::Theme::FILL_GRADIENT)
+						Style.Back.Fill.Gradient.Rotate(TVTest::Theme::GradientStyle::ROTATE_RIGHT);
+					ThemeDraw.Draw(Style.Back,rc);
+					ForeColor=m_Theme.CheckItemStyle.Fore.Fill.GetSolidColor();
 				} else {
-					ForeColor=m_Theme.ItemStyle.TextColor;
+					ForeColor=m_Theme.ItemStyle.Fore.Fill.GetSolidColor();
 				}
-				if ((m_ItemList[i].Flags&ITEM_FLAG_DISABLED)!=0)
+				if (m_ItemList[i].IsDisabled()) {
+#if 0
 					ForeColor=MixColor(ForeColor,
-									   MixColor(m_Theme.ItemStyle.Gradient.Color1,
-												m_Theme.ItemStyle.Gradient.Color2));
+									   m_Theme.ItemStyle.Fore.Fill.GetSolidColor());
+#else
+					Opacity=128;
+#endif
+				}
 			}
-			rcItem.left=rc.left+m_ItemMargin.left;
-			rcItem.top=rc.top+m_ItemMargin.top;
-			rcItem.right=rcItem.left+m_IconWidth;
-			rcItem.bottom=rcItem.top+m_IconHeight;
-			if (m_pEventHandler==NULL
-					|| !m_pEventHandler->DrawIcon(m_ItemList[i].Command,hdc,rcItem,ForeColor,hdcMemory)) {
-				m_IconBitmap.Draw(hdc,rcItem.left,rcItem.top,
-								  ForeColor,
-								  m_ItemList[i].Icon*m_IconWidth,0,
-								  m_IconWidth,m_IconHeight);
-			}
-		}
-	}
-	/*
-	if ((m_fVertical && PaintRect.bottom>rc.bottom)
-			|| (!m_fVertical && PaintRect.right>rc.right)) {
-		Theme::GradientInfo Gradient;
 
-		if (m_fVertical) {
-			rc.top=rc.bottom;
-			rc.bottom=PaintRect.bottom;
-		} else {
-			rc.left=rc.right;
-			rc.right=PaintRect.right;
+			rcItem.left=rc.left+m_Style.ItemPadding.Left;
+			rcItem.top=rc.top+m_Style.ItemPadding.Top;
+			rcItem.right=rcItem.left+m_Style.IconSize.Width;
+			rcItem.bottom=rcItem.top+m_Style.IconSize.Height;
+
+			bool fIconDrew=false;
+			if (m_pEventHandler!=NULL) {
+				DrawIconInfo Info;
+				Info.Command=m_ItemList[i].Command;
+				Info.State=m_ItemList[i].State;
+				if (fHot)
+					Info.State|=ITEM_STATE_HOT;
+				Info.hdc=hdc;
+				Info.IconRect=rcItem;
+				Info.Color=ForeColor;
+				Info.Opacity=Opacity;
+				Info.hdcBuffer=hdcMemory;
+				if (m_pEventHandler->DrawIcon(&Info))
+					fIconDrew=true;
+			}
+			if (!fIconDrew && m_ItemList[i].Icon>=0) {
+				m_Icons.Draw(hdc,rcItem.left,rcItem.top,
+							 m_Style.IconSize.Width,m_Style.IconSize.Height,
+							 m_ItemList[i].Icon,ForeColor,Opacity);
+			}
 		}
-		Gradient=m_Theme.ItemStyle.Gradient;
-		Gradient.Direction=FillDir;
-		Theme::FillGradient(hdc,&rc,&Gradient);
 	}
-	*/
+
 	::SelectObject(hdcMemory,hbmOld);
 	::DeleteDC(hdcMemory);
-	Theme::DrawBorder(hdc,rcClient,&m_Theme.Border);
+
+	ThemeDraw.Draw(m_Theme.Border,rcClient);
 }
 
 
@@ -644,4 +769,33 @@ CSideBar::CEventHandler::~CEventHandler()
 {
 	if (m_pSideBar!=NULL)
 		m_pSideBar->SetEventHandler(NULL);
+}
+
+
+
+
+CSideBar::SideBarStyle::SideBarStyle()
+	: IconSize(ICON_WIDTH,ICON_HEIGHT)
+	, ItemPadding(3)
+	, SeparatorWidth(8)
+{
+}
+
+
+void CSideBar::SideBarStyle::SetStyle(const TVTest::Style::CStyleManager *pStyleManager)
+{
+	*this=SideBarStyle();
+	pStyleManager->Get(TEXT("side-bar.item.icon"),&IconSize);
+	pStyleManager->Get(TEXT("side-bar.item.padding"),&ItemPadding);
+	pStyleManager->Get(TEXT("side-bar.separator.width"),&SeparatorWidth);
+}
+
+
+void CSideBar::SideBarStyle::NormalizeStyle(
+	const TVTest::Style::CStyleManager *pStyleManager,
+	const TVTest::Style::CStyleScaling *pStyleScaling)
+{
+	pStyleScaling->ToPixels(&IconSize);
+	pStyleScaling->ToPixels(&ItemPadding);
+	pStyleScaling->ToPixels(&SeparatorWidth);
 }

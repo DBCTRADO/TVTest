@@ -2,6 +2,12 @@
 	TVTest プラグインサンプル
 
 	ストリームの各種情報を表示する
+
+	このサンプルでは主に以下の機能を実装しています。
+
+	・ダイアログテンプレートを元にウィンドウを表示する
+	・チャンネルやサービスの情報を取得する
+	・配色を取得し、配色の変更に追従する
 */
 
 
@@ -25,8 +31,7 @@ class CTSInfo : public TVTest::CTVTestPlugin
 	void UpdateItems();
 
 	static LRESULT CALLBACK EventCallback(UINT Event,LPARAM lParam1,LPARAM lParam2,void *pClientData);
-	static CTSInfo *GetThis(HWND hDlg);
-	static INT_PTR CALLBACK DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam);
+	static INT_PTR CALLBACK DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam,void *pClientData);
 
 public:
 	CTSInfo()
@@ -90,9 +95,16 @@ LRESULT CALLBACK CTSInfo::EventCallback(UINT Event,LPARAM lParam1,LPARAM lParam2
 
 			if (fEnable) {
 				if (pThis->m_hwnd==NULL) {
-					if (::CreateDialogParam(g_hinstDLL,MAKEINTRESOURCE(IDD_MAIN),
-											pThis->m_pApp->GetAppWindow(),DlgProc,
-											reinterpret_cast<LPARAM>(pThis))==NULL)
+					TVTest::ShowDialogInfo Info;
+
+					Info.Flags = TVTest::SHOW_DIALOG_FLAG_MODELESS;
+					Info.hinst = g_hinstDLL;
+					Info.pszTemplate = MAKEINTRESOURCE(IDD_MAIN);
+					Info.pMessageFunc = DlgProc;
+					Info.pClientData = pThis;
+					Info.hwndOwner = pThis->m_pApp->GetAppWindow();
+
+					if ((HWND)pThis->m_pApp->ShowDialog(&Info) == NULL)
 						return FALSE;
 				}
 				pThis->UpdateItems();
@@ -191,22 +203,13 @@ void CTSInfo::UpdateItems()
 }
 
 
-// ダイアログのハンドルからthisを取得する
-CTSInfo *CTSInfo::GetThis(HWND hDlg)
-{
-	return static_cast<CTSInfo*>(::GetProp(hDlg,PROP_NAME));
-}
-
-
 // ダイアログプロシージャ
-INT_PTR CALLBACK CTSInfo::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
+INT_PTR CALLBACK CTSInfo::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam,void *pClientData)
 {
 	switch (uMsg) {
 	case WM_INITDIALOG:
 		{
-			CTSInfo *pThis=reinterpret_cast<CTSInfo*>(lParam);
-
-			::SetProp(hDlg,PROP_NAME,pThis);
+			CTSInfo *pThis=static_cast<CTSInfo*>(pClientData);
 
 			pThis->m_hwnd=hDlg;
 			pThis->m_hbrBack=::CreateSolidBrush(pThis->m_pApp->GetColor(L"PanelBack"));
@@ -217,7 +220,7 @@ INT_PTR CALLBACK CTSInfo::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPara
 	case WM_TIMER:
 		{
 			// 情報更新
-			CTSInfo *pThis=GetThis(hDlg);
+			CTSInfo *pThis=static_cast<CTSInfo*>(pClientData);
 
 			pThis->UpdateItems();
 		}
@@ -226,7 +229,7 @@ INT_PTR CALLBACK CTSInfo::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPara
 	case WM_CTLCOLORSTATIC:
 		// 項目の背景色を設定
 		{
-			CTSInfo *pThis=GetThis(hDlg);
+			CTSInfo *pThis=static_cast<CTSInfo*>(pClientData);
 			HDC hdc=reinterpret_cast<HDC>(wParam);
 
 			::SetBkMode(hdc,TRANSPARENT);
@@ -237,7 +240,7 @@ INT_PTR CALLBACK CTSInfo::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPara
 	case WM_CTLCOLORDLG:
 		// ダイアログの背景色を設定
 		{
-			CTSInfo *pThis=GetThis(hDlg);
+			CTSInfo *pThis=static_cast<CTSInfo*>(pClientData);
 
 			return reinterpret_cast<INT_PTR>(pThis->m_hbrBack);
 		}
@@ -245,7 +248,7 @@ INT_PTR CALLBACK CTSInfo::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPara
 	case WM_COMMAND:
 		if (LOWORD(wParam)==IDCANCEL) {
 			// 閉じる時はプラグインを無効にする
-			CTSInfo *pThis=GetThis(hDlg);
+			CTSInfo *pThis=static_cast<CTSInfo*>(pClientData);
 
 			pThis->m_pApp->EnablePlugin(false);
 			return TRUE;
@@ -254,7 +257,7 @@ INT_PTR CALLBACK CTSInfo::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPara
 
 	case WM_DESTROY:
 		{
-			CTSInfo *pThis=GetThis(hDlg);
+			CTSInfo *pThis=static_cast<CTSInfo*>(pClientData);
 
 			::KillTimer(hDlg,1);
 			if (pThis->m_hbrBack!=NULL) {

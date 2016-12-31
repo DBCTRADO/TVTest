@@ -1,12 +1,9 @@
 #include "stdafx.h"
 #include "TVTest.h"
 #include "CoreEngine.h"
-
-#ifdef _DEBUG
-#undef THIS_FILE
-static char THIS_FILE[]=__FILE__;
-#define new DEBUG_NEW
-#endif
+#include <intrin.h>
+#pragma intrinsic(_InterlockedOr)
+#include "Common/DebugDef.h"
 
 
 
@@ -14,12 +11,9 @@ static char THIS_FILE[]=__FILE__;
 CCoreEngine::CCoreEngine()
 	: m_DriverType(DRIVER_UNKNOWN)
 
-	, m_fDescramble(true)
-	, m_CasDevice(-1)
+	, m_fEnableTSProcessor(true)
 
 	, m_fPacketBuffering(false)
-	, m_PacketBufferLength(m_DtvEngine.m_MediaBuffer.GetBufferLength())
-	, m_PacketBufferPoolPercentage(m_DtvEngine.m_MediaBuffer.GetPoolPercentage())
 
 	, m_OriginalVideoWidth(0)
 	, m_OriginalVideoHeight(0)
@@ -32,20 +26,20 @@ CCoreEngine::CCoreEngine()
 	, m_Volume(50)
 	, m_AudioGain(100)
 	, m_SurroundAudioGain(100)
-	, m_StereoMode(STEREOMODE_STEREO)
-	, m_AutoStereoMode(STEREOMODE_LEFT)
-	, m_fDownMixSurround(true)
+	, m_DualMonoMode(CAudioDecFilter::DUALMONO_MAIN)
+	, m_StereoMode(CAudioDecFilter::STEREOMODE_STEREO)
 	, m_fSpdifPassthrough(false)
-	, m_EventID(0)
 	, m_ErrorPacketCount(0)
 	, m_ContinuityErrorPacketCount(0)
 	, m_ScramblePacketCount(0)
 	, m_SignalLevel(0.0)
 	, m_BitRate(0)
-	, m_PacketBufferUsedCount(0)
+	, m_PacketBufferFillPercentage(0)
 	, m_StreamRemain(0)
 	, m_TimerResolution(0)
 	, m_fNoEpg(false)
+
+	, m_AsyncStatusUpdatedFlags(0)
 {
 	m_szDriverDirectory[0]='\0';
 	m_szDriverFileName[0]='\0';
@@ -64,49 +58,154 @@ CCoreEngine::~CCoreEngine()
 void CCoreEngine::Close()
 {
 	m_DtvEngine.CloseEngine();
+
+	if (!m_TSProcessorList.empty()) {
+		for (auto it=m_TSProcessorList.begin();it!=m_TSProcessorList.end();++it)
+			it->pTSProcessor->Release();
+		m_TSProcessorList.clear();
+	}
 }
 
 
 bool CCoreEngine::BuildDtvEngine(CDtvEngine::CEventHandler *pEventHandler)
 {
-	if (!m_DtvEngine.BuildEngine(pEventHandler,
-			m_fDescramble?m_CasDevice>=0:false,
-			true/*m_fPacketBuffering*/,!m_fNoEpg)) {
+	TSProcessorConnectionList ConnectionList;
+	int DecoderID,OutputIndex;
+
+	DecoderID=CDtvEngine::DECODER_ID_BonSrcDecoder;
+	ConnectTSProcessor(&ConnectionList,TSPROCESSOR_CONNECTPOSITION_SOURCE,&DecoderID);
+	ConnectionList.Add(DecoderID,
+					   CDtvEngine::DECODER_ID_TsPacketParser);
+	DecoderID=CDtvEngine::DECODER_ID_TsPacketParser;
+	ConnectTSProcessor(&ConnectionList,TSPROCESSOR_CONNECTPOSITION_PREPROCESSING,&DecoderID);
+	ConnectionList.Add(DecoderID,
+					   CDtvEngine::DECODER_ID_TsAnalyzer);
+	DecoderID=CDtvEngine::DECODER_ID_TsAnalyzer;
+	ConnectTSProcessor(&ConnectionList,TSPROCESSOR_CONNECTPOSITION_POSTPROCESSING,&DecoderID);
+	ConnectionList.Add(DecoderID,
+					   CDtvEngine::DECODER_ID_MediaTee);
+	if (!m_fNoEpg) {
+		ConnectionList.Add(CDtvEngine::DECODER_ID_MediaTee,
+						   CDtvEngine::DECODER_ID_EventManager,0);
+		ConnectionList.Add(CDtvEngine::DECODER_ID_EventManager,
+						   CDtvEngine::DECODER_ID_LogoDownloader);
+	} else {
+		ConnectionList.Add(CDtvEngine::DECODER_ID_MediaTee,
+						   CDtvEngine::DECODER_ID_LogoDownloader,0);
+	}
+	DecoderID=CDtvEngine::DECODER_ID_LogoDownloader;
+	ConnectTSProcessor(&ConnectionList,TSPROCESSOR_CONNECTPOSITION_RECORDER,&DecoderID);
+	ConnectionList.Add(DecoderID,
+					   CDtvEngine::DECODER_ID_MediaGrabber);
+	ConnectionList.Add(CDtvEngine::DECODER_ID_MediaGrabber,
+					   CDtvEngine::DECODER_ID_TsSelector);
+	ConnectionList.Add(CDtvEngine::DECODER_ID_TsSelector,
+					   CDtvEngine::DECODER_ID_TsRecorder);
+	DecoderID=CDtvEngine::DECODER_ID_MediaTee;
+	OutputIndex=1;
+	ConnectTSProcessor(&ConnectionList,TSPROCESSOR_CONNECTPOSITION_VIEWER,&DecoderID,&OutputIndex);
+	ConnectionList.Add(DecoderID,
+					   CDtvEngine::DECODER_ID_TsPacketCounter,OutputIndex);
+	ConnectionList.Add(CDtvEngine::DECODER_ID_TsPacketCounter,
+					   CDtvEngine::DECODER_ID_CaptionDecoder);
+	ConnectionList.Add(CDtvEngine::DECODER_ID_CaptionDecoder,
+					   CDtvEngine::DECODER_ID_MediaViewer);
+
+	if (!m_DtvEngine.BuildEngine(
+			ConnectionList.List.data(),static_cast<int>(ConnectionList.List.size()),
+			pEventHandler)) {
 		return false;
 	}
+
 	return true;
 }
 
 
-bool CCoreEngine::IsBuildComplete() const
+void CCoreEngine::ConnectTSProcessor(TSProcessorConnectionList *pList,
+									 TSProcessorConnectPosition ConnectPosition,
+									 int *pDecoderID,int *pOutputIndex)
 {
-	return m_DtvEngine.IsBuildComplete();
+	if (!m_fEnableTSProcessor)
+		return;
+
+	int DecoderID=*pDecoderID;
+	int OutputIndex=pOutputIndex!=NULL?*pOutputIndex:0;
+
+	for (auto it=m_TSProcessorList.begin();it!=m_TSProcessorList.end();++it) {
+		if (it->ConnectPosition==ConnectPosition) {
+			pList->Add(DecoderID,it->DecoderID,OutputIndex);
+			DecoderID=it->DecoderID;
+			OutputIndex=0;
+		}
+	}
+
+	*pDecoderID=DecoderID;
+	if (pOutputIndex!=NULL)
+		*pOutputIndex=OutputIndex;
+}
+
+
+TVTest::CTSProcessor *CCoreEngine::GetTSProcessorByIndex(size_t Index)
+{
+	if (Index>=m_TSProcessorList.size())
+		return NULL;
+	return m_TSProcessorList[Index].pTSProcessor;
+}
+
+
+bool CCoreEngine::RegisterTSProcessor(TVTest::CTSProcessor *pTSProcessor,
+									  TSProcessorConnectPosition ConnectPosition)
+{
+	if (pTSProcessor==NULL)
+		return false;
+
+	TSProcessorInfo Info;
+
+	Info.pTSProcessor=pTSProcessor;
+	Info.ConnectPosition=ConnectPosition;
+	Info.DecoderID=m_DtvEngine.RegisterDecoder(pTSProcessor);
+
+	if (ConnectPosition==TSPROCESSOR_CONNECTPOSITION_SOURCE)
+		pTSProcessor->SetSourceProcessor(true);
+
+	m_TSProcessorList.push_back(Info);
+
+	return true;
+}
+
+
+void CCoreEngine::EnableTSProcessor(bool fEnable)
+{
+	m_fEnableTSProcessor=fEnable;
 }
 
 
 bool CCoreEngine::BuildMediaViewer(HWND hwndHost,HWND hwndMessage,
-		CVideoRenderer::RendererType VideoRenderer,LPCWSTR pszMpeg2Decoder,LPCWSTR pszAudioDevice)
+	CVideoRenderer::RendererType VideoRenderer,
+	BYTE VideoStreamType,LPCWSTR pszVideoDecoder,
+	LPCWSTR pszAudioDevice)
 {
 	if (!m_DtvEngine.m_MediaViewer.IsOpen()) {
 		if (!m_DtvEngine.BuildMediaViewer(hwndHost,hwndMessage,VideoRenderer,
-										  pszMpeg2Decoder,pszAudioDevice)) {
+										  VideoStreamType,pszVideoDecoder,
+										  pszAudioDevice)) {
 			SetError(m_DtvEngine.GetLastErrorException());
 			return false;
 		}
 	} else {
 		if (!m_DtvEngine.RebuildMediaViewer(hwndHost,hwndMessage,VideoRenderer,
-											pszMpeg2Decoder,pszAudioDevice)) {
+											VideoStreamType,pszVideoDecoder,
+											pszAudioDevice)) {
 			SetError(m_DtvEngine.GetLastErrorException());
 			return false;
 		}
 	}
-	m_DtvEngine.SetVolume(m_fMute?-100.0f:LevelToDeciBel(m_Volume));
+	m_DtvEngine.m_MediaViewer.SetVolume(m_fMute?-100.0f:LevelToDeciBel(m_Volume));
 	m_DtvEngine.m_MediaViewer.SetAudioGainControl(
 		m_AudioGain!=100 || m_SurroundAudioGain!=100,
 		(float)m_AudioGain/100.0f,(float)m_SurroundAudioGain/100.0f);
-	m_DtvEngine.SetStereoMode(m_StereoMode);
-	m_DtvEngine.m_MediaViewer.SetAutoStereoMode(m_AutoStereoMode);
-	m_DtvEngine.m_MediaViewer.SetDownMixSurround(m_fDownMixSurround);
+	m_DtvEngine.m_MediaViewer.SetStereoMode(m_StereoMode);
+	m_DtvEngine.m_MediaViewer.SetDualMonoMode(m_DualMonoMode);
 	m_DtvEngine.m_MediaViewer.SetSpdifOptions(&m_SpdifOptions);
 	return true;
 }
@@ -118,12 +217,12 @@ bool CCoreEngine::CloseMediaViewer()
 }
 
 
-bool CCoreEngine::EnablePreview(bool fPreview)
+bool CCoreEngine::EnableMediaViewer(bool fEnable)
 {
-	if (!m_DtvEngine.EnablePreview(fPreview))
+	if (!m_DtvEngine.EnableMediaViewer(fEnable))
 		return false;
-	if (fPreview)
-		m_DtvEngine.SetVolume(m_fMute?-100.0f:LevelToDeciBel(m_Volume));
+	if (fEnable)
+		m_DtvEngine.m_MediaViewer.SetVolume(m_fMute?-100.0f:LevelToDeciBel(m_Volume));
 	return true;
 }
 
@@ -176,9 +275,13 @@ bool CCoreEngine::SetDriverDirectory(LPCTSTR pszDirectory)
 
 bool CCoreEngine::SetDriverFileName(LPCTSTR pszFileName)
 {
-	if (pszFileName==NULL || ::lstrlen(pszFileName)>=MAX_PATH)
-		return false;
-	::lstrcpy(m_szDriverFileName,pszFileName);
+	if (IsStringEmpty(pszFileName)) {
+		m_szDriverFileName[0]='\0';
+	} else {
+		if (::lstrlen(pszFileName)>=MAX_PATH)
+			return false;
+		::lstrcpy(m_szDriverFileName,pszFileName);
+	}
 	return true;
 }
 
@@ -258,178 +361,24 @@ bool CCoreEngine::IsTunerOpen() const
 }
 
 
-bool CCoreEngine::IsNetworkDriverFileName(LPCTSTR pszFileName)
+bool CCoreEngine::SetPacketBufferLength(DWORD BufferLength)
 {
-	if (pszFileName==NULL)
-		return false;
-
-	LPCTSTR pszName=::PathFindFileName(pszFileName);
-
-	if (IsEqualFileName(pszName,TEXT("BonDriver_UDP.dll"))
-			|| IsEqualFileName(pszName,TEXT("BonDriver_TCP.dll")))
-		return true;
-	return false;
+	return m_DtvEngine.m_MediaViewer.SetBufferSize(BufferLength);
 }
 
 
-bool CCoreEngine::LoadCasLibrary()
+bool CCoreEngine::SetPacketBufferPool(bool fBuffering,int Percentage)
 {
-	if (!m_DtvEngine.m_CasProcessor.LoadCasLibrary(m_CasLibraryName.c_str())) {
-		SetError(m_DtvEngine.m_CasProcessor.GetLastErrorException());
-		return false;
-	}
-	return true;
-}
-
-
-bool CCoreEngine::SetCasLibraryName(LPCTSTR pszName)
-{
-	if (!IsStringEmpty(pszName))
-		m_CasLibraryName=pszName;
-	else
-		m_CasLibraryName.clear();
-	return true;
-}
-
-
-bool CCoreEngine::FindCasLibraries(LPCTSTR pszDirectory,std::vector<TVTest::String> *pList) const
-{
-	if (IsStringEmpty(pszDirectory) || pList==NULL)
-		return false;
-
-	pList->clear();
-
-	TCHAR szMask[MAX_PATH];
-	WIN32_FIND_DATA fd;
-
-	if (::PathCombine(szMask,pszDirectory,TEXT("*.tvcas"))==NULL)
-		return false;
-	HANDLE hFind=::FindFirstFile(szMask,&fd);
-	if (hFind==INVALID_HANDLE_VALUE)
-		return false;
-	do {
-		if ((fd.dwFileAttributes&FILE_ATTRIBUTE_DIRECTORY)==0)
-			pList->push_back(TVTest::String(fd.cFileName));
-	} while (::FindNextFile(hFind,&fd));
-	::FindClose(hFind);
-
-	return true;
-}
-
-
-bool CCoreEngine::OpenCasCard(int Device,LPCTSTR pszName)
-{
-	if (!m_DtvEngine.OpenCasCard(Device,pszName)) {
-		SetError(m_DtvEngine.GetLastErrorException());
-		return false;
-	}
-
-	return true;
-}
-
-
-bool CCoreEngine::OpenCasCard()
-{
-	if (m_fDescramble) {
-		if (!OpenCasCard(m_CasDevice))
-			return false;
-	}
-	return true;
-}
-
-
-bool CCoreEngine::CloseCasCard()
-{
-	return m_DtvEngine.CloseCasCard();
-}
-
-
-bool CCoreEngine::IsCasCardOpen() const
-{
-	return m_DtvEngine.m_CasProcessor.IsCasCardOpen();
-}
-
-
-bool CCoreEngine::SetDescramble(bool fDescramble)
-{
-	if (m_DtvEngine.IsEngineBuild()) {
-		if (!m_DtvEngine.SetDescramble(fDescramble)) {
-			SetError(m_DtvEngine.GetLastErrorException());
-			return false;
-		}
-	}
-	m_fDescramble=fDescramble;
-	return true;
-}
-
-
-bool CCoreEngine::SetCasDevice(int Device,LPCTSTR pszName)
-{
-	if (Device<-1)
-		return false;
-	if (m_DtvEngine.IsEngineBuild()) {
-		if (!SetDescramble(Device>=0))
-			return false;
-		if (!OpenCasCard(Device,pszName)) {
-			m_CasDevice=-1;
-			return false;
-		}
-	}
-	m_CasDevice=Device;
-	return true;
-}
-
-
-bool CCoreEngine::GetCasDeviceList(CasDeviceList *pList)
-{
-	if (pList==NULL)
-		return false;
-
-	CasDeviceInfo Info;
-
-	Info.Device=-1;
-	Info.DeviceID=0;
-//	Info.Name=TEXT("");
-	Info.Text=TEXT("‚È‚µ (ƒXƒNƒ‰ƒ“ƒuƒ‹‰ðœ‚µ‚È‚¢)");
-	pList->push_back(Info);
-
-	CCasProcessor::CasDeviceInfo DeviceInfo;
-	for (int i=0;m_DtvEngine.m_CasProcessor.GetCasDeviceInfo(i,&DeviceInfo);i++) {
-		Info.Device=i;
-		Info.DeviceID=DeviceInfo.DeviceID;
-		Info.Name=DeviceInfo.Name;
-		Info.Text=DeviceInfo.Text;
-		pList->push_back(Info);
-	}
-
-	return true;
-}
-
-
-bool CCoreEngine::SetPacketBuffering(bool fBuffering)
-{
-	if (!m_DtvEngine.m_MediaBuffer.EnableBuffering(fBuffering))
+	if (!m_DtvEngine.m_MediaViewer.SetInitialPoolPercentage(fBuffering?Percentage:0))
 		return false;
 	m_fPacketBuffering=fBuffering;
 	return true;
 }
 
 
-bool CCoreEngine::SetPacketBufferLength(DWORD BufferLength)
+void CCoreEngine::ResetPacketBuffer()
 {
-	if (!m_DtvEngine.m_MediaBuffer.SetBufferLength(BufferLength))
-		return false;
-	m_PacketBufferLength=BufferLength;
-	return true;
-}
-
-
-bool CCoreEngine::SetPacketBufferPoolPercentage(int Percentage)
-{
-	if (!m_DtvEngine.m_MediaBuffer.SetPoolPercentage(Percentage))
-		return false;
-	m_PacketBufferPoolPercentage=Percentage;
-	return true;
+	m_DtvEngine.m_MediaViewer.ResetBuffer();
 }
 
 
@@ -454,11 +403,48 @@ bool CCoreEngine::GetVideoViewSize(int *pWidth,int *pHeight)
 }
 
 
+bool CCoreEngine::SetPanAndScan(const PanAndScanInfo &Info)
+{
+	CMediaViewer::ClippingInfo Clipping;
+
+	Clipping.Left=Info.XPos;
+	Clipping.Right=Info.XFactor-(Info.XPos+Info.Width);
+	Clipping.HorzFactor=Info.XFactor;
+	Clipping.Top=Info.YPos;
+	Clipping.Bottom=Info.YFactor-(Info.YPos+Info.Height);
+	Clipping.VertFactor=Info.YFactor;
+
+	return m_DtvEngine.m_MediaViewer.SetPanAndScan(Info.XAspect,Info.YAspect,&Clipping);
+}
+
+
+bool CCoreEngine::GetPanAndScan(PanAndScanInfo *pInfo) const
+{
+	if (pInfo==nullptr)
+		return false;
+
+	const CMediaViewer &MediaViewer=m_DtvEngine.m_MediaViewer;
+	CMediaViewer::ClippingInfo Clipping;
+
+	MediaViewer.GetForceAspectRatio(&pInfo->XAspect,&pInfo->YAspect);
+	MediaViewer.GetClippingInfo(&Clipping);
+
+	pInfo->XPos=Clipping.Left;
+	pInfo->YPos=Clipping.Top;
+	pInfo->Width=Clipping.HorzFactor-(Clipping.Left+Clipping.Right);
+	pInfo->Height=Clipping.VertFactor-(Clipping.Top+Clipping.Bottom);
+	pInfo->XFactor=Clipping.HorzFactor;
+	pInfo->YFactor=Clipping.VertFactor;
+
+	return true;
+}
+
+
 bool CCoreEngine::SetVolume(int Volume)
 {
 	if (Volume<0 || Volume>MAX_VOLUME)
 		return false;
-	m_DtvEngine.SetVolume(LevelToDeciBel(Volume));
+	m_DtvEngine.m_MediaViewer.SetVolume(LevelToDeciBel(Volume));
 	m_Volume=Volume;
 	m_fMute=false;
 	return true;
@@ -468,7 +454,7 @@ bool CCoreEngine::SetVolume(int Volume)
 bool CCoreEngine::SetMute(bool fMute)
 {
 	if (fMute!=m_fMute) {
-		m_DtvEngine.SetVolume(fMute?-100.0f:LevelToDeciBel(m_Volume));
+		m_DtvEngine.m_MediaViewer.SetVolume(fMute?-100.0f:LevelToDeciBel(m_Volume));
 		m_fMute=fMute;
 	}
 	return true;
@@ -500,36 +486,18 @@ bool CCoreEngine::GetAudioGainControl(int *pGain,int *pSurroundGain) const
 }
 
 
-bool CCoreEngine::SetStereoMode(int Mode)
+bool CCoreEngine::SetDualMonoMode(CAudioDecFilter::DualMonoMode Mode)
 {
-	if (Mode<0 || Mode>2)
-		return false;
-	/*if (Mode!=m_StereoMode)*/ {
-		m_DtvEngine.SetStereoMode(Mode);
-		m_StereoMode=Mode;
-	}
+	m_DualMonoMode=Mode;
+	m_DtvEngine.m_MediaViewer.SetDualMonoMode(Mode);
 	return true;
 }
 
 
-bool CCoreEngine::SetAutoStereoMode(int Mode)
+bool CCoreEngine::SetStereoMode(CAudioDecFilter::StereoMode Mode)
 {
-	if (Mode<0 || Mode>2)
-		return false;
-	if (Mode!=m_AutoStereoMode) {
-		m_DtvEngine.m_MediaViewer.SetAutoStereoMode(Mode);
-		m_AutoStereoMode=Mode;
-	}
-	return true;
-}
-
-
-bool CCoreEngine::SetDownMixSurround(bool fDownMix)
-{
-	if (fDownMix!=m_fDownMixSurround) {
-		m_DtvEngine.m_MediaViewer.SetDownMixSurround(fDownMix);
-		m_fDownMixSurround=fDownMix;
-	}
+	m_StereoMode=Mode;
+	m_DtvEngine.m_MediaViewer.SetStereoMode(Mode);
 	return true;
 }
 
@@ -548,6 +516,14 @@ bool CCoreEngine::GetSpdifOptions(CAudioDecFilter::SpdifOptions *pOptions) const
 		return false;
 	*pOptions=m_SpdifOptions;
 	return true;
+}
+
+
+bool CCoreEngine::IsSpdifPassthroughEnabled() const
+{
+	if (m_DtvEngine.m_MediaViewer.IsOpen())
+		return m_DtvEngine.m_MediaViewer.IsSpdifPassthrough();
+	return m_SpdifOptions.Mode==CAudioDecFilter::SPDIF_MODE_PASSTHROUGH;
 }
 
 
@@ -601,14 +577,17 @@ DWORD CCoreEngine::UpdateAsyncStatus()
 		TRACE(TEXT("S/PDIF passthrough %s\n"),fSpdifPassthrough?TEXT("ON"):TEXT("OFF"));
 	}
 
-	WORD EventID=m_DtvEngine.GetEventID();
-	if (EventID!=m_EventID) {
-		m_EventID=EventID;
-		Updated|=STATUS_EVENTID;
-		TRACE(TEXT("EventID = %d\n"),EventID);
+	if (m_AsyncStatusUpdatedFlags!=0) {
+		Updated|=::InterlockedExchange(pointer_cast<LONG*>(&m_AsyncStatusUpdatedFlags),0);
 	}
 
 	return Updated;
+}
+
+
+void CCoreEngine::SetAsyncStatusUpdatedFlag(DWORD Status)
+{
+	_InterlockedOr(pointer_cast<long*>(&m_AsyncStatusUpdatedFlags),Status);
 }
 
 
@@ -616,17 +595,17 @@ DWORD CCoreEngine::UpdateStatistics()
 {
 	DWORD Updated=0;
 
-	DWORD ErrorCount=m_DtvEngine.m_TsPacketParser.GetErrorPacketCount();
+	ULONGLONG ErrorCount=m_DtvEngine.m_TsPacketParser.GetErrorPacketCount();
 	if (ErrorCount!=m_ErrorPacketCount) {
 		m_ErrorPacketCount=ErrorCount;
 		Updated|=STATISTIC_ERRORPACKETCOUNT;
 	}
-	DWORD ContinuityErrorCount=m_DtvEngine.m_TsPacketParser.GetContinuityErrorPacketCount();
+	ULONGLONG ContinuityErrorCount=m_DtvEngine.m_TsPacketParser.GetContinuityErrorPacketCount();
 	if (ContinuityErrorCount!=m_ContinuityErrorPacketCount) {
 		m_ContinuityErrorPacketCount=ContinuityErrorCount;
 		Updated|=STATISTIC_CONTINUITYERRORPACKETCOUNT;
 	}
-	DWORD ScrambleCount=(DWORD)m_DtvEngine.m_CasProcessor.GetScramblePacketCount();
+	ULONGLONG ScrambleCount=m_DtvEngine.m_TsPacketCounter.GetScrambledPacketCount();
 	if (ScrambleCount!=m_ScramblePacketCount) {
 		m_ScramblePacketCount=ScrambleCount;
 		Updated|=STATISTIC_SCRAMBLEPACKETCOUNT;
@@ -646,9 +625,9 @@ DWORD CCoreEngine::UpdateStatistics()
 		m_StreamRemain=StreamRemain;
 		Updated|=STATISTIC_STREAMREMAIN;
 	}
-	DWORD BufferUsedCount=m_DtvEngine.m_MediaBuffer.GetUsedBufferCount();
-	if (BufferUsedCount!=m_PacketBufferUsedCount) {
-		m_PacketBufferUsedCount=BufferUsedCount;
+	int BufferFillPercentage=m_DtvEngine.m_MediaViewer.GetBufferFillPercentage();
+	if (BufferFillPercentage!=m_PacketBufferFillPercentage) {
+		m_PacketBufferFillPercentage=BufferFillPercentage;
 		Updated|=STATISTIC_PACKETBUFFERRATE;
 	}
 	return Updated;
@@ -660,7 +639,7 @@ void CCoreEngine::ResetErrorCount()
 	m_DtvEngine.m_TsPacketParser.ResetErrorPacketCount();
 	m_ErrorPacketCount=0;
 	m_ContinuityErrorPacketCount=0;
-	m_DtvEngine.m_CasProcessor.ResetScramblePacketCount();
+	m_DtvEngine.m_TsPacketCounter.ResetScrambledPacketCount();
 	m_ScramblePacketCount=0;
 }
 
@@ -683,16 +662,21 @@ int CCoreEngine::GetBitRateText(LPTSTR pszText,int MaxLength) const
 }
 
 
-int CCoreEngine::GetBitRateText(float BitRate,LPTSTR pszText,int MaxLength) const
+int CCoreEngine::GetBitRateText(DWORD BitRate,LPTSTR pszText,int MaxLength) const
 {
-	return StdUtil::snprintf(pszText,MaxLength,TEXT("%.2f Mbps"),BitRate);
+	return GetBitRateText(BitRateToFloat(BitRate),pszText,MaxLength);
 }
 
 
-int CCoreEngine::GetPacketBufferUsedPercentage()
+int CCoreEngine::GetBitRateText(float BitRate,LPTSTR pszText,int MaxLength,int Precision) const
 {
-	return m_DtvEngine.m_MediaBuffer.GetUsedBufferCount()*100/
-								m_DtvEngine.m_MediaBuffer.GetBufferLength();
+	return StdUtil::snprintf(pszText,MaxLength,TEXT("%.*f Mbps"),Precision,BitRate);
+}
+
+
+int CCoreEngine::GetPacketBufferUsedPercentage() const
+{
+	return m_PacketBufferFillPercentage;
 }
 
 
@@ -701,60 +685,18 @@ bool CCoreEngine::GetCurrentEventInfo(CEventInfoData *pInfo,WORD ServiceID,bool 
 	if (pInfo==NULL)
 		return false;
 
-	CTsAnalyzer::EventInfo EventInfo;
-	TCHAR szEventName[256],szEventText[256],szEventExtText[2048];
-
-	EventInfo.pszEventName=szEventName;
-	EventInfo.MaxEventName=lengthof(szEventName);
-	EventInfo.pszEventText=szEventText;
-	EventInfo.MaxEventText=lengthof(szEventText);
-	EventInfo.pszEventExtendedText=szEventExtText;
-	EventInfo.MaxEventExtendedText=lengthof(szEventExtText);
 	if (ServiceID==0xFFFF) {
 		if (!m_DtvEngine.GetServiceID(&ServiceID))
 			return false;
 	}
 	int ServiceIndex=m_DtvEngine.m_TsAnalyzer.GetServiceIndexByID(ServiceID);
-	if (ServiceIndex<0
-			|| !m_DtvEngine.m_TsAnalyzer.GetEventInfo(ServiceIndex ,&EventInfo, true, fNext))
+	if (ServiceIndex<0)
 		return false;
 
-	pInfo->m_NetworkID=m_DtvEngine.m_TsAnalyzer.GetNetworkID();
-	pInfo->m_TSID=m_DtvEngine.m_TsAnalyzer.GetTransportStreamID();
-	m_DtvEngine.GetServiceID(&pInfo->m_ServiceID);
-	pInfo->m_EventID=EventInfo.EventID;
-	pInfo->m_fValidStartTime=EventInfo.bValidStartTime;
-	if (EventInfo.bValidStartTime)
-		pInfo->m_stStartTime=EventInfo.StartTime;
-	pInfo->m_DurationSec=EventInfo.Duration;
-	pInfo->m_RunningStatus=EventInfo.RunningStatus;
-	pInfo->m_CaType=EventInfo.bFreeCaMode?
-		CEventInfoData::CA_TYPE_CHARGEABLE:CEventInfoData::CA_TYPE_FREE;
-	pInfo->m_VideoInfo.StreamContent=EventInfo.Video.StreamContent;
-	pInfo->m_VideoInfo.ComponentType=EventInfo.Video.ComponentType;
-	pInfo->m_VideoInfo.ComponentTag=EventInfo.Video.ComponentTag;
-	pInfo->m_VideoInfo.LanguageCode=EventInfo.Video.LanguageCode;
-	::lstrcpyn(pInfo->m_VideoInfo.szText,EventInfo.Video.szText,CEventInfoData::VideoInfo::MAX_TEXT);
-	pInfo->m_AudioList.resize(EventInfo.Audio.size());
-	for (size_t i=0;i<EventInfo.Audio.size();i++) {
-		pInfo->m_AudioList[i].StreamContent=EventInfo.Audio[i].StreamContent;
-		pInfo->m_AudioList[i].ComponentType=EventInfo.Audio[i].ComponentType;
-		pInfo->m_AudioList[i].ComponentTag=EventInfo.Audio[i].ComponentTag;
-		pInfo->m_AudioList[i].SimulcastGroupTag=EventInfo.Audio[i].SimulcastGroupTag;
-		pInfo->m_AudioList[i].bESMultiLingualFlag=EventInfo.Audio[i].bESMultiLingualFlag;
-		pInfo->m_AudioList[i].bMainComponentFlag=EventInfo.Audio[i].bMainComponentFlag;
-		pInfo->m_AudioList[i].QualityIndicator=EventInfo.Audio[i].QualityIndicator;
-		pInfo->m_AudioList[i].SamplingRate=EventInfo.Audio[i].SamplingRate;
-		pInfo->m_AudioList[i].LanguageCode=EventInfo.Audio[i].LanguageCode;
-		pInfo->m_AudioList[i].LanguageCode2=EventInfo.Audio[i].LanguageCode2;
-		::lstrcpyn(pInfo->m_AudioList[i].szText,EventInfo.Audio[i].szText,CEventInfoData::AudioInfo::MAX_TEXT);
-	}
-	pInfo->SetEventName(szEventName[0]!='\0'?szEventName:NULL);
-	pInfo->SetEventText(szEventText[0]!='\0'?szEventText:NULL);
-	pInfo->SetEventExtText(szEventExtText[0]!='\0'?szEventExtText:NULL);
-	pInfo->m_ContentNibble.NibbleCount=EventInfo.ContentNibble.NibbleCount;
-	for (int i=0;i<EventInfo.ContentNibble.NibbleCount;i++)
-		pInfo->m_ContentNibble.NibbleList[i]=EventInfo.ContentNibble.NibbleList[i];
+	CEventInfo EventInfo;
+	if (!m_DtvEngine.m_TsAnalyzer.GetEventInfo(ServiceIndex,&EventInfo,true,fNext))
+		return false;
+	*pInfo=EventInfo;
 
 	return true;
 }

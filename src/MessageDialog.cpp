@@ -4,12 +4,7 @@
 #include "MessageDialog.h"
 #include "DialogUtil.h"
 #include "resource.h"
-
-#ifdef _DEBUG
-#undef THIS_FILE
-static char THIS_FILE[]=__FILE__;
-#define new DEBUG_NEW
-#endif
+#include "Common/DebugDef.h"
 
 
 
@@ -48,8 +43,8 @@ INT_PTR CALLBACK CMessageDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARA
 			::SetProp(hDlg,TEXT("This"),pThis);
 			pThis->m_hDlg=hDlg;
 
-			if (!pThis->m_Caption.IsEmpty())
-				::SetWindowText(hDlg,pThis->m_Caption.Get());
+			if (!pThis->m_Caption.empty())
+				::SetWindowText(hDlg,pThis->m_Caption.c_str());
 
 			::SendDlgItemMessage(hDlg,IDC_ERROR_ICON,STM_SETICON,
 				reinterpret_cast<WPARAM>(::LoadIcon(NULL,
@@ -72,16 +67,16 @@ INT_PTR CALLBACK CMessageDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARA
 			cfBold=cf;
 			cfBold.dwMask|=CFM_BOLD;
 			cfBold.dwEffects|=CFE_BOLD;
-			if (!pThis->m_Title.IsEmpty()) {
-				CRichEditUtil::AppendText(hwndEdit,pThis->m_Title.Get(),&cfBold);
+			if (!pThis->m_Title.empty()) {
+				CRichEditUtil::AppendText(hwndEdit,pThis->m_Title.c_str(),&cfBold);
 				CRichEditUtil::AppendText(hwndEdit,TEXT("\n"),&cf);
 			}
-			if (!pThis->m_Text.IsEmpty()) {
-				CRichEditUtil::AppendText(hwndEdit,pThis->m_Text.Get(),&cf);
+			if (!pThis->m_Text.empty()) {
+				CRichEditUtil::AppendText(hwndEdit,pThis->m_Text.c_str(),&cf);
 			}
-			if (!pThis->m_SystemMessage.IsEmpty()) {
+			if (!pThis->m_SystemMessage.empty()) {
 				CRichEditUtil::AppendText(hwndEdit,TEXT("\n\nWindowsのエラーメッセージ :\n"),&cfBold);
-				CRichEditUtil::AppendText(hwndEdit,pThis->m_SystemMessage.Get(),&cf);
+				CRichEditUtil::AppendText(hwndEdit,pThis->m_SystemMessage.c_str(),&cf);
 			}
 			const int MaxWidth=CRichEditUtil::GetMaxLineWidth(hwndEdit)+8;
 			RECT rcEdit,rcIcon,rcDlg,rcClient,rcOK;
@@ -178,7 +173,7 @@ INT_PTR CALLBACK CMessageDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARA
 			return TRUE;
 
 		case EN_MSGFILTER:
-			if (reinterpret_cast<MSGFILTER*>(lParam)->msg==WM_RBUTTONDOWN) {
+			if (reinterpret_cast<MSGFILTER*>(lParam)->msg==WM_RBUTTONUP) {
 				HMENU hmenu;
 				POINT pt;
 
@@ -217,10 +212,10 @@ INT_PTR CALLBACK CMessageDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARA
 		{
 			CMessageDialog *pThis=GetThis(hDlg);
 
-			pThis->m_Text.Clear();
-			pThis->m_Title.Clear();
-			pThis->m_SystemMessage.Clear();
-			pThis->m_Caption.Clear();
+			pThis->m_Text.clear();
+			pThis->m_Title.clear();
+			pThis->m_SystemMessage.clear();
+			pThis->m_Caption.clear();
 			pThis->m_hDlg=NULL;
 			::RemoveProp(hDlg,TEXT("This"));
 		}
@@ -259,10 +254,10 @@ bool CMessageDialog::Show(HWND hwndOwner,MessageType Type,LPCTSTR pszText,LPCTST
 							 Type==TYPE_ERROR?MB_ICONSTOP:0))==IDOK;
 	}
 
-	m_Text.Set(pszText);
-	m_Title.Set(pszTitle);
-	m_SystemMessage.Set(pszSystemMessage);
-	m_Caption.Set(pszCaption);
+	TVTest::StringUtility::Assign(m_Text,pszText);
+	TVTest::StringUtility::Assign(m_Title,pszTitle);
+	TVTest::StringUtility::Assign(m_SystemMessage,pszSystemMessage);
+	TVTest::StringUtility::Assign(m_Caption,pszCaption);
 	m_MessageType=Type;
 	return ::DialogBoxParam(GetAppClass().GetResourceInstance(),
 							MAKEINTRESOURCE(IDD_ERROR),hwndOwner,DlgProc,

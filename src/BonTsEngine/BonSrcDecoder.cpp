@@ -5,12 +5,7 @@
 #include "stdafx.h"
 #include "BonSrcDecoder.h"
 #include "StdUtil.h"
-
-#ifdef _DEBUG
-#undef THIS_FILE
-static char THIS_FILE[]=__FILE__;
-#define new DEBUG_NEW
-#endif
+#include "../Common/DebugDef.h"
 
 
 typedef IBonDriver* (PFCREATEBONDRIVER)(void);
@@ -49,7 +44,7 @@ void CBonSrcDecoder::Reset(void)
 		return;
 
 	if (HasPendingRequest()) {
-		Trace(TEXT("前回の要求が完了しないため新しい要求を行えません。"));
+		Trace(CTracer::TYPE_ERROR, TEXT("前回の要求が完了しないため新しい要求を行えません。"));
 		return;
 	}
 
@@ -59,7 +54,7 @@ void CBonSrcDecoder::Reset(void)
 	AddRequest(Request);
 
 	if (!WaitAllRequests(m_RequestTimeout)) {
-		Trace(TEXT("ストリーム受信スレッドが応答しません。"));
+		Trace(CTracer::TYPE_ERROR, TEXT("ストリーム受信スレッドが応答しません。"));
 	}
 }
 
@@ -69,9 +64,10 @@ void CBonSrcDecoder::ResetGraph(void)
 
 	if (m_pBonDriver == NULL) {
 		ResetDownstreamDecoder();
+		SendDecoderEvent(EVENT_GRAPH_RESET);
 	} else {
 		if (HasPendingRequest()) {
-			Trace(TEXT("前回の要求が完了しないため新しい要求を行えません。"));
+			Trace(CTracer::TYPE_ERROR, TEXT("前回の要求が完了しないため新しい要求を行えません。"));
 			return;
 		}
 
@@ -82,7 +78,7 @@ void CBonSrcDecoder::ResetGraph(void)
 		AddRequests(Request, 2);
 
 		if (!WaitAllRequests(m_RequestTimeout)) {
-			Trace(TEXT("ストリーム受信スレッドが応答しません。"));
+			Trace(CTracer::TYPE_ERROR, TEXT("ストリーム受信スレッドが応答しません。"));
 		}
 	}
 }
@@ -105,7 +101,7 @@ bool CBonSrcDecoder::LoadBonDriver(LPCTSTR pszFileName)
 		return false;
 	}
 
-	Trace(TEXT("BonDriver \"%s\" を読み込みます..."), pszFileName);
+	Trace(CTracer::TYPE_INFORMATION, TEXT("BonDriver \"%s\" を読み込みます..."), pszFileName);
 
 	m_hBonDriverLib = ::LoadLibrary(pszFileName);
 
@@ -146,7 +142,7 @@ bool CBonSrcDecoder::LoadBonDriver(LPCTSTR pszFileName)
 		return false;
 	}
 
-	Trace(TEXT("BonDriver を読み込みました。"));
+	Trace(CTracer::TYPE_INFORMATION, TEXT("BonDriver を読み込みました。"));
 
 	return true;
 }
@@ -156,10 +152,10 @@ bool CBonSrcDecoder::UnloadBonDriver()
 	if (m_hBonDriverLib != NULL) {
 		CloseTuner();
 
-		Trace(TEXT("BonDriver を解放します..."));
+		Trace(CTracer::TYPE_INFORMATION, TEXT("BonDriver を解放します..."));
 		::FreeLibrary(m_hBonDriverLib);
 		m_hBonDriverLib = NULL;
-		Trace(TEXT("BonDriver を解放しました。"));
+		Trace(CTracer::TYPE_INFORMATION, TEXT("BonDriver を解放しました。"));
 	}
 
 	return true;
@@ -183,7 +179,7 @@ bool CBonSrcDecoder::OpenTuner()
 		return false;
 	}
 
-	Trace(TEXT("チューナを開いています..."));
+	Trace(CTracer::TYPE_INFORMATION, TEXT("チューナを開いています..."));
 
 	// ドライバポインタの取得
 	PFCREATEBONDRIVER *pfCreateBonDriver =
@@ -246,7 +242,7 @@ bool CBonSrcDecoder::OpenTuner()
 
 	ClearError();
 
-	Trace(TEXT("チューナを開きました。"));
+	Trace(CTracer::TYPE_INFORMATION, TEXT("チューナを開きました。"));
 
 	return true;
 }
@@ -258,11 +254,11 @@ bool CBonSrcDecoder::CloseTuner(void)
 
 	if (m_hStreamRecvThread) {
 		// ストリーム受信スレッド停止
-		Trace(TEXT("ストリーム受信スレッドを停止しています..."));
+		Trace(CTracer::TYPE_INFORMATION, TEXT("ストリーム受信スレッドを停止しています..."));
 		m_EndEvent.Set();
 		if (::WaitForSingleObject(m_hStreamRecvThread, 5000UL) != WAIT_OBJECT_0) {
 			// スレッド強制終了
-			Trace(TEXT("ストリーム受信スレッドが応答しないため強制終了します。"));
+			Trace(CTracer::TYPE_WARNING, TEXT("ストリーム受信スレッドが応答しないため強制終了します。"));
 			::TerminateThread(m_hStreamRecvThread, -1);
 		}
 		::CloseHandle(m_hStreamRecvThread);
@@ -275,15 +271,15 @@ bool CBonSrcDecoder::CloseTuner(void)
 
 	if (m_pBonDriver) {
 		// チューナを閉じる
-		Trace(TEXT("チューナを閉じています..."));
+		Trace(CTracer::TYPE_INFORMATION, TEXT("チューナを閉じています..."));
 		m_pBonDriver->CloseTuner();
 
 		// ドライバインスタンス開放
-		Trace(TEXT("BonDriver インターフェースを解放しています..."));
+		Trace(CTracer::TYPE_INFORMATION, TEXT("BonDriver インターフェースを解放しています..."));
 		m_pBonDriver->Release();
 		m_pBonDriver = NULL;
 		m_pBonDriver2 = NULL;
-		Trace(TEXT("BonDriver インターフェースを解放しました。"));
+		Trace(CTracer::TYPE_INFORMATION, TEXT("BonDriver インターフェースを解放しました。"));
 	}
 
 	ResetStatus();
@@ -555,20 +551,20 @@ LPCTSTR CBonSrcDecoder::GetTunerName() const
 	return m_pBonDriver2->GetTunerName();
 }
 
-int CBonSrcDecoder::GetCurSpace() const
+DWORD CBonSrcDecoder::GetCurSpace() const
 {
 	if (m_pBonDriver2 == NULL) {
 		//SetError(ERR_NOTOPEN, NULL);
-		return -1;
+		return SPACE_INVALID;
 	}
 	return m_pBonDriver2->GetCurSpace();
 }
 
-int CBonSrcDecoder::GetCurChannel() const
+DWORD CBonSrcDecoder::GetCurChannel() const
 {
 	if (m_pBonDriver2 == NULL) {
 		//SetError(ERR_NOTOPEN, NULL);
-		return -1;
+		return CHANNEL_INVALID;
 	}
 	return m_pBonDriver2->GetCurChannel();
 }
@@ -657,7 +653,7 @@ unsigned int __stdcall CBonSrcDecoder::StreamingThread(LPVOID pParam)
 	try {
 		pThis->StreamingMain();
 	} catch (...) {
-		pThis->Trace(TEXT("ストリーム処理で例外が発生しました。"));
+		pThis->Trace(CTracer::TYPE_ERROR, TEXT("ストリーム処理で例外が発生しました。"));
 	}
 
 	::CoUninitialize();
@@ -688,6 +684,8 @@ void CBonSrcDecoder::StreamingMain()
 				TRACE(TEXT("IBonDriver::SetChannel(%d)\n"), Request.SetChannel.Channel);
 				m_bRequestResult = m_pBonDriver->SetChannel(Request.SetChannel.Channel);
 				m_SetChannelTime = ::GetTickCount();
+				if (m_bRequestResult)
+					SendDecoderEvent(EVENT_CHANNEL_CHANGED);
 				break;
 
 			case StreamingRequest::TYPE_SETCHANNEL2:
@@ -697,6 +695,8 @@ void CBonSrcDecoder::StreamingMain()
 				m_bRequestResult = m_pBonDriver2->SetChannel(Request.SetChannel2.Space,
 															 Request.SetChannel2.Channel);
 				m_SetChannelTime = ::GetTickCount();
+				if (m_bRequestResult)
+					SendDecoderEvent(EVENT_CHANNEL_CHANGED);
 				break;
 
 			case StreamingRequest::TYPE_PURGESTREAM:
@@ -708,6 +708,7 @@ void CBonSrcDecoder::StreamingMain()
 				TRACE(TEXT("ResetDownstreamDecoder()\n"));
 				ResetStatus();
 				ResetDownstreamDecoder();
+				SendDecoderEvent(EVENT_GRAPH_RESET);
 				break;
 			}
 

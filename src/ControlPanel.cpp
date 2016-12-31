@@ -2,12 +2,7 @@
 #include "TVTest.h"
 #include "ControlPanel.h"
 #include "resource.h"
-
-#ifdef _DEBUG
-#undef THIS_FILE
-static char THIS_FILE[]=__FILE__;
-#define new DEBUG_NEW
-#endif
+#include "Common/DebugDef.h"
 
 
 
@@ -40,28 +35,10 @@ bool CControlPanel::Initialize(HINSTANCE hinst)
 
 
 CControlPanel::CControlPanel()
-	: m_MarginSize(2)
+	: m_FontHeight(0)
 	, m_hwndMessage(NULL)
 	, m_HotItem(-1)
 {
-	LOGFONT lf;
-	GetDefaultFont(&lf);
-	m_Font.Create(&lf);
-	m_FontHeight=abs(lf.lfHeight);
-
-	m_Theme.ItemStyle.Gradient.Type=Theme::GRADIENT_NORMAL;
-	m_Theme.ItemStyle.Gradient.Direction=Theme::DIRECTION_VERT;
-	m_Theme.ItemStyle.Gradient.Color1=RGB(0,0,0);
-	m_Theme.ItemStyle.Gradient.Color2=RGB(0,0,0);
-	m_Theme.ItemStyle.Border.Type=Theme::BORDER_NONE;
-	m_Theme.ItemStyle.TextColor=RGB(255,255,255);
-	m_Theme.OverItemStyle.Gradient.Type=Theme::GRADIENT_NORMAL;
-	m_Theme.OverItemStyle.Gradient.Direction=Theme::DIRECTION_VERT;
-	m_Theme.OverItemStyle.Gradient.Color1=RGB(255,255,255);
-	m_Theme.OverItemStyle.Gradient.Color2=RGB(255,255,255);
-	m_Theme.OverItemStyle.Border.Type=Theme::BORDER_NONE;
-	m_Theme.OverItemStyle.TextColor=RGB(0,0,0);
-	m_Theme.MarginColor=RGB(0,0,0);
 }
 
 
@@ -80,12 +57,61 @@ bool CControlPanel::Create(HWND hwndParent,DWORD Style,DWORD ExStyle,int ID)
 }
 
 
+void CControlPanel::SetStyle(const TVTest::Style::CStyleManager *pStyleManager)
+{
+	m_Style.SetStyle(pStyleManager);
+
+	for (auto itr=m_ItemList.begin();itr!=m_ItemList.end();++itr)
+		(*itr)->SetStyle(pStyleManager);
+}
+
+
+void CControlPanel::NormalizeStyle(
+	const TVTest::Style::CStyleManager *pStyleManager,
+	const TVTest::Style::CStyleScaling *pStyleScaling)
+{
+	m_Style.NormalizeStyle(pStyleManager,pStyleScaling);
+
+	for (auto itr=m_ItemList.begin();itr!=m_ItemList.end();++itr)
+		(*itr)->NormalizeStyle(pStyleManager,pStyleScaling);
+}
+
+
+void CControlPanel::SetTheme(const TVTest::Theme::CThemeManager *pThemeManager)
+{
+	ControlPanelTheme Theme;
+
+	pThemeManager->GetStyle(TVTest::Theme::CThemeManager::STYLE_CONTROLPANEL_ITEM,
+							&Theme.ItemStyle);
+	pThemeManager->GetStyle(TVTest::Theme::CThemeManager::STYLE_CONTROLPANEL_ITEM_HOT,
+							&Theme.OverItemStyle);
+	pThemeManager->GetStyle(TVTest::Theme::CThemeManager::STYLE_CONTROLPANEL_ITEM_CHECKED,
+							&Theme.CheckedItemStyle);
+	Theme.MarginColor=
+		pThemeManager->GetColor(CColorScheme::COLOR_CONTROLPANELMARGIN);
+
+	SetControlPanelTheme(Theme);
+}
+
+
+bool CControlPanel::SetFont(const TVTest::Style::Font &Font)
+{
+	m_StyleFont=Font;
+	if (m_hwnd!=NULL) {
+		ApplyStyle();
+		RealizeStyle();
+	}
+	return true;
+}
+
+
 bool CControlPanel::AddItem(CControlPanelItem *pItem)
 {
 	if (pItem==NULL)
 		return false;
 	m_ItemList.push_back(pItem);
 	pItem->m_pControlPanel=this;
+	RegisterUIChild(pItem);
 	return true;
 }
 
@@ -127,16 +153,17 @@ void CControlPanel::UpdateLayout()
 	int MaxHeight;
 
 	GetClientRect(&rc);
-	Width=(rc.right-rc.left)-m_MarginSize*2;
-	x=m_MarginSize;
-	y=m_MarginSize;
+	Width=(rc.right-rc.left)-(m_Style.Padding.Left+m_Style.Padding.Right);
+	x=m_Style.Padding.Left;
+	y=m_Style.Padding.Top;
+
 	for (size_t i=0;i<m_ItemList.size();i++) {
 		CControlPanelItem *pItem=m_ItemList[i];
 
 		if (!pItem->GetVisible())
 			continue;
 		if (pItem->GetBreak()) {
-			x=m_MarginSize;
+			x=m_Style.Padding.Left;
 			if (i>0)
 				y+=MaxHeight;
 			MaxHeight=0;
@@ -155,34 +182,20 @@ void CControlPanel::UpdateLayout()
 }
 
 
-bool CControlPanel::SetTheme(const ThemeInfo *pTheme)
+bool CControlPanel::SetControlPanelTheme(const ControlPanelTheme &Theme)
 {
-	if (pTheme==NULL)
-		return false;
-	m_Theme=*pTheme;
+	m_Theme=Theme;
 	if (m_hwnd!=NULL)
 		Invalidate();
 	return true;
 }
 
 
-bool CControlPanel::GetTheme(ThemeInfo *pTheme) const
+bool CControlPanel::GetControlPanelTheme(ControlPanelTheme *pTheme) const
 {
 	if (pTheme==NULL)
 		return false;
 	*pTheme=m_Theme;
-	return true;
-}
-
-
-bool CControlPanel::SetFont(const LOGFONT *pFont)
-{
-	if (!m_Font.Create(pFont))
-		return false;
-	if (m_hwnd!=NULL) {
-		UpdateLayout();
-		Invalidate();
-	}
 	return true;
 }
 
@@ -214,6 +227,18 @@ bool CControlPanel::CheckRadioItem(int FirstID,int LastID,int CheckID)
 }
 
 
+const TVTest::Style::Margins &CControlPanel::GetItemPadding() const
+{
+	return m_Style.ItemPadding;
+}
+
+
+const TVTest::Style::Size &CControlPanel::GetIconSize() const
+{
+	return m_Style.IconSize;
+}
+
+
 bool CControlPanel::CalcTextSize(LPCTSTR pszText,SIZE *pSize)
 {
 	pSize->cx=0;
@@ -226,10 +251,26 @@ bool CControlPanel::CalcTextSize(LPCTSTR pszText,SIZE *pSize)
 	if (hdc==NULL)
 		return false;
 	HFONT hfontOld=DrawUtil::SelectObject(hdc,m_Font);
-	::GetTextExtentPoint32(hdc,pszText,::lstrlen(pszText),pSize);
+	RECT rc={0,0,0,0};
+	::DrawText(hdc,pszText,-1,&rc,DT_NOPREFIX | DT_CALCRECT);
+	pSize->cx=rc.right-rc.left;
+	pSize->cy=rc.bottom-rc.top;
 	SelectFont(hdc,hfontOld);
 	::ReleaseDC(m_hwnd,hdc);
 	return true;
+}
+
+
+int CControlPanel::CalcFontHeight() const
+{
+	return TVTest::Style::GetFontHeight(
+		m_hwnd,m_Font.GetHandle(),m_Style.TextExtraHeight);
+}
+
+
+int CControlPanel::GetTextItemHeight() const
+{
+	return m_FontHeight+m_Style.ItemPadding.Vert();
 }
 
 
@@ -237,7 +278,7 @@ void CControlPanel::Draw(HDC hdc,const RECT &PaintRect)
 {
 	RECT rcClient;
 	GetClientRect(&rcClient);
-	int Width=(rcClient.right-rcClient.left)-m_MarginSize*2;
+	int Width=(rcClient.right-rcClient.left)-(m_Style.Padding.Left+m_Style.Padding.Right);
 
 	int MaxHeight;
 	MaxHeight=0;
@@ -267,13 +308,19 @@ void CControlPanel::Draw(HDC hdc,const RECT &PaintRect)
 	RECT rc,rcOffscreen,rcDest;
 
 	rc=rcClient;
-	::InflateRect(&rc,-m_MarginSize,-m_MarginSize);
+	rc.left+=m_Style.Padding.Left;
+	rc.top+=m_Style.Padding.Top;
+	rc.right-=m_Style.Padding.Right;
+	rc.bottom-=m_Style.Padding.Bottom;
 	DrawUtil::FillBorder(hdc,&rcClient,&rc,&PaintRect,hbrMargin);
 	hfontOld=DrawUtil::SelectObject(hdcOffscreen,m_Font);
 	crOldTextColor=::GetTextColor(hdcOffscreen);
 	OldBkMode=::SetBkMode(hdcOffscreen,TRANSPARENT);
 	::SetRect(&rcOffscreen,0,0,Width,MaxHeight);
-	::SetRect(&rcDest,m_MarginSize,-1,m_MarginSize+Width,0);
+	::SetRect(&rcDest,m_Style.Padding.Left,-1,m_Style.Padding.Left+Width,0);
+
+	TVTest::Theme::CThemeDraw ThemeDraw(BeginThemeDraw(hdcOffscreen));
+
 	for (int i=0;i<(int)m_ItemList.size();i++) {
 		CControlPanelItem *pItem=m_ItemList[i];
 
@@ -292,27 +339,20 @@ void CControlPanel::Draw(HDC hdc,const RECT &PaintRect)
 			}
 			if (rcDest.bottom<rc.bottom)
 				rcDest.bottom=rc.bottom;
-			::OffsetRect(&rc,-m_MarginSize,-rc.top);
+			::OffsetRect(&rc,-m_Style.Padding.Left,-rc.top);
 			if (i==m_HotItem) {
-				crText=m_Theme.OverItemStyle.TextColor;
-				crBack=MixColor(m_Theme.OverItemStyle.Gradient.Color1,
-								m_Theme.OverItemStyle.Gradient.Color2);
-				Theme::DrawStyleBackground(hdcOffscreen,&rc,&m_Theme.OverItemStyle);
+				crText=m_Theme.OverItemStyle.Fore.Fill.GetSolidColor();
+				crBack=m_Theme.OverItemStyle.Back.Fill.GetSolidColor();
+				ThemeDraw.Draw(m_Theme.OverItemStyle.Back,rc);
 			} else {
-				Theme::Style Style=m_Theme.ItemStyle;
+				TVTest::Theme::Style Style=
+					pItem->GetCheck()?m_Theme.CheckedItemStyle:m_Theme.ItemStyle;
 
-				crText=Style.TextColor;
-				crBack=MixColor(Style.Gradient.Color1,Style.Gradient.Color2);
-				if (!pItem->GetEnable()) {
+				crText=Style.Fore.Fill.GetSolidColor();
+				crBack=Style.Back.Fill.GetSolidColor();
+				if (!pItem->GetEnable())
 					crText=MixColor(crText,crBack);
-				} else if (pItem->GetCheck()) {
-					Style.Gradient.Color1=MixColor(Style.Gradient.Color1,
-												   m_Theme.OverItemStyle.Gradient.Color1);
-					Style.Gradient.Color2=MixColor(Style.Gradient.Color2,
-												  m_Theme.OverItemStyle.Gradient.Color2);
-					crBack=MixColor(Style.Gradient.Color1,Style.Gradient.Color2);
-				}
-				Theme::DrawStyleBackground(hdcOffscreen,&rc,&Style);
+				ThemeDraw.Draw(Style.Back,rc);
 			}
 			::SetTextColor(hdcOffscreen,crText);
 			::SetBkColor(hdcOffscreen,crBack);
@@ -323,7 +363,7 @@ void CControlPanel::Draw(HDC hdc,const RECT &PaintRect)
 		m_Offscreen.CopyTo(hdc,&rcDest);
 		rc.top=rcDest.bottom;
 	} else {
-		rc.top=m_MarginSize;
+		rc.top=m_Style.Padding.Top;
 	}
 	if (rc.top<PaintRect.bottom) {
 		rc.left=PaintRect.left;
@@ -342,6 +382,8 @@ LRESULT CControlPanel::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam
 {
 	switch (uMsg) {
 	case WM_CREATE:
+		InitializeUI();
+
 		m_HotItem=-1;
 		m_fTrackMouseEvent=false;
 		m_fOnButtonDown=false;
@@ -450,7 +492,26 @@ LRESULT CControlPanel::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam
 						::SendMessage(hwnd,WM_MOUSELEAVE,0,0);
 					}
 				}
-			} else if (uMsg==WM_RBUTTONDOWN) {
+			}
+		}
+		return 0;
+
+	case WM_LBUTTONUP:
+	case WM_RBUTTONUP:
+		{
+			int x=GET_X_LPARAM(lParam),y=GET_Y_LPARAM(lParam);
+
+			if (m_HotItem>=0) {
+				RECT rc;
+
+				m_ItemList[m_HotItem]->GetPosition(&rc);
+				x-=rc.left;
+				y-=rc.top;
+				if (uMsg==WM_LBUTTONUP)
+					m_ItemList[m_HotItem]->OnLButtonUp(x,y);
+				else
+					m_ItemList[m_HotItem]->OnRButtonUp(x,y);
+			} else if (uMsg==WM_RBUTTONUP) {
 				POINT pt;
 
 				pt.x=x;
@@ -458,19 +519,16 @@ LRESULT CControlPanel::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam
 				::MapWindowPoints(hwnd,GetParent(),&pt,1);
 				::SendMessage(GetParent(),uMsg,wParam,MAKELPARAM(pt.x,pt.y));
 			}
-		}
-		return 0;
 
-	case WM_LBUTTONUP:
-		if (GetCapture()==hwnd) {
-			::ReleaseCapture();
+			if (GetCapture()==hwnd)
+				::ReleaseCapture();
 		}
 		return 0;
 
 	case WM_SETCURSOR:
 		if (LOWORD(lParam)==HTCLIENT) {
 			if (m_HotItem>=0) {
-				::SetCursor(LoadCursor(NULL,IDC_HAND));
+				::SetCursor(GetActionCursor());
 				return TRUE;
 			}
 		}
@@ -480,7 +538,58 @@ LRESULT CControlPanel::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam
 		m_Offscreen.Destroy();
 		return 0;
 	}
-	return ::DefWindowProc(hwnd,uMsg,wParam,lParam);
+
+	return CCustomWindow::OnMessage(hwnd,uMsg,wParam,lParam);
+}
+
+
+void CControlPanel::ApplyStyle()
+{
+	if (m_hwnd!=NULL) {
+		CreateDrawFont(m_StyleFont,&m_Font);
+		m_FontHeight=CalcFontHeight();
+	}
+}
+
+
+void CControlPanel::RealizeStyle()
+{
+	if (m_hwnd!=NULL) {
+		UpdateLayout();
+		Invalidate();
+	}
+}
+
+
+
+
+CControlPanel::ControlPanelStyle::ControlPanelStyle()
+	: Padding(2)
+	, ItemPadding(4,2,4,2)
+	, TextExtraHeight(4)
+	, IconSize(16,16)
+{
+}
+
+
+void CControlPanel::ControlPanelStyle::SetStyle(const TVTest::Style::CStyleManager *pStyleManager)
+{
+	*this=ControlPanelStyle();
+	pStyleManager->Get(TEXT("control-panel.padding"),&Padding);
+	pStyleManager->Get(TEXT("control-panel.item.padding"),&ItemPadding);
+	pStyleManager->Get(TEXT("control-panel.item.text.extra-height"),&TextExtraHeight);
+	pStyleManager->Get(TEXT("control-panel.item.icon"),&IconSize);
+}
+
+
+void CControlPanel::ControlPanelStyle::NormalizeStyle(
+	const TVTest::Style::CStyleManager *pStyleManager,
+	const TVTest::Style::CStyleScaling *pStyleScaling)
+{
+	pStyleScaling->ToPixels(&Padding);
+	pStyleScaling->ToPixels(&ItemPadding);
+	pStyleScaling->ToPixels(&TextExtraHeight);
+	pStyleScaling->ToPixels(&IconSize);
 }
 
 
@@ -579,6 +688,14 @@ bool CControlPanelItem::CalcTextSize(LPCTSTR pszText,SIZE *pSize) const
 		return false;
 	}
 	return m_pControlPanel->CalcTextSize(pszText,pSize);
+}
+
+
+int CControlPanelItem::GetTextItemHeight() const
+{
+	if (m_pControlPanel==NULL)
+		return 0;
+	return m_pControlPanel->GetTextItemHeight();
 }
 
 

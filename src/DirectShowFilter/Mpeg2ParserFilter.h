@@ -45,7 +45,6 @@ public:
 #ifndef MPEG2PARSERFILTER_INPLACE
 	void SetFixSquareDisplay(bool bFix);
 #endif
-	void SetAttachMediaType(bool bAttach);
 
 protected:
 	CMpeg2ParserFilter(LPUNKNOWN pUnk, HRESULT *phr);
@@ -64,6 +63,5 @@ protected:
 	virtual void OnMpeg2Sequence(const CMpeg2Parser *pMpeg2Parser, const CMpeg2Sequence *pSequence) override;
 
 	CMpeg2Parser m_Mpeg2Parser;
-	bool m_bAttachMediaType;
 	IMediaSample *m_pOutSample;
 };

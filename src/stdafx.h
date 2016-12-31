@@ -5,21 +5,38 @@
 #pragma once
 
 #ifndef WINVER
-#define WINVER 0x0600		// Windows Vista
+#define WINVER 0x0601		// Windows 7
 #endif
 
 #ifndef _WIN32_WINNT
-#define _WIN32_WINNT 0x0600	// Windows Vista
+#define _WIN32_WINNT 0x0601	// Windows 7
+#endif
+
+#ifndef NTDDI_VERSION
+#define NTDDI_VERSION NTDDI_WIN7
 #endif
 
 #ifndef _WIN32_IE
 #define _WIN32_IE 0x0600	// Internet Explorer 6.0
 #endif
 
-// Winsock2 とヘッダが干渉しないようにする
-#define _WINSOCKAPI_
+#define WIN32_LEAN_AND_MEAN
 
 #define _WIN32_DCOM	// for CoInitializeEx()
+
+#if defined(_MSC_VER) && (_MSC_VER <= 1800)
+#ifndef _ALLOW_KEYWORD_MACROS
+#define _ALLOW_KEYWORD_MACROS
+#endif
+#endif
+
+#ifdef WIN_XP_SUPPORT
+#define PSAPI_VERSION 1
+#endif
+
+// Windows のヘッダで出る警告を抑止
+#pragma warning(push)
+#pragma warning(disable: 4091)
 
 #include <stdio.h>
 #include <process.h>
@@ -27,9 +44,17 @@
 #include <windowsx.h>
 #include <tchar.h>
 #include <commctrl.h>
+#include <commdlg.h>
+#include <shellapi.h>
 #include <shlobj.h>
 #include <shlwapi.h>
 #include <streams.h>	// DirectShow BaseClasses
+
+#pragma warning(pop)
+
+#ifndef WM_DPICHANGED
+#define WM_DPICHANGED 0x02E0
+#endif
 
 #ifdef _DEBUG
 #define _CRTDBG_MAP_ALLOC
@@ -41,21 +66,7 @@
 #define DEBUG_NEW new(_NORMAL_BLOCK,__FILE__,__LINE__)
 #endif // _DEBUG
 
-#undef _WINSOCKAPI_
-
-#include "Common.h"
-
-#ifdef _UNICODE
-#if defined _M_IX86
-#pragma comment(linker,"/manifestdependency:\"type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='x86' publicKeyToken='6595b64144ccf1df' language='*'\"")
-#elif defined _M_IA64
-#pragma comment(linker,"/manifestdependency:\"type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='ia64' publicKeyToken='6595b64144ccf1df' language='*'\"")
-#elif defined _M_X64
-#pragma comment(linker,"/manifestdependency:\"type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='amd64' publicKeyToken='6595b64144ccf1df' language='*'\"")
-#else
-#pragma comment(linker,"/manifestdependency:\"type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
-#endif
-#endif
+#include "Common/Common.h"
 
 
 // 警告の無効設定
@@ -101,15 +112,17 @@
 #define NULL nullptr
 #endif
 
+// アラインメント指定
+#if defined(_MSC_VER) && (_MSC_VER <= 1800)
+#define alignas(n) __declspec(align(n))
+#define alignof(t) __alignof(t)
+#endif
+
 
 // BonTsEngine の設定
-#ifdef TVH264
-	#ifndef TVH264_FOR_HD
-	#define BONTSENGINE_1SEG_SUPPORT	// ワンセグ対応
-	#define BONTSENGINE_RADIO_SUPPORT	// 音声放送対応
-	#endif
-	#define BONTSENGINE_H264_SUPPORT	// H.264 対応
-#else	// TVH264
-	#define BONTSENGINE_MPEG2_SUPPORT	// MPEG-2 対応
-	#define BONTSENGINE_RADIO_SUPPORT	// 音声放送対応
-#endif
+#define BONTSENGINE_SSE2				// SSE2 を利用
+#define BONTSENGINE_MPEG2_SUPPORT		// MPEG-2 対応
+#define BONTSENGINE_H264_SUPPORT		// H.264 対応
+#define BONTSENGINE_H265_SUPPORT		// H.265 対応
+#define BONTSENGINE_MPEG_AUDIO_SUPPORT	// MPEG-1/2 Audio 対応
+#define BONTSENGINE_AC3_SUPPORT			// AC-3 対応

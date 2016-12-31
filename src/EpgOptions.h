@@ -7,6 +7,7 @@
 #include "Options.h"
 #include "LogoManager.h"
 #include "EpgDataLoader.h"
+#include "Style.h"
 
 
 class CEpgOptions : public COptions
@@ -21,6 +22,15 @@ public:
 	};
 
 	typedef CEpgDataLoader::CEventHandler CEDCBDataLoadEventHandler;
+
+	enum EpgTimeMode {
+		EPGTIME_RAW,
+		EPGTIME_JST,
+		EPGTIME_LOCAL,
+		EPGTIME_UTC
+	};
+	static const EpgTimeMode EPGTIME_FIRST = EPGTIME_RAW;
+	static const EpgTimeMode EPGTIME_LAST  = EPGTIME_UTC;
 
 	CEpgOptions();
 	~CEpgOptions();
@@ -40,7 +50,7 @@ public:
 	bool GetUpdateBSExtended() const { return m_fUpdateBSExtended; }
 	bool GetUpdateCSExtended() const { return m_fUpdateCSExtended; }
 
-	const LOGFONT *GetEventInfoFont() const { return &m_EventInfoFont; }
+	const TVTest::Style::Font &GetEventInfoFont() const { return m_EventInfoFont; }
 
 	bool LoadEpgFile(CEpgProgramList *pEpgList);
 	bool AsyncLoadEpgFile(CEpgProgramList *pEpgList,CEpgFileLoadEventHandler *pEventHandler=NULL);
@@ -53,6 +63,8 @@ public:
 	bool IsEDCBDataLoading() const;
 	bool WaitEDCBDataLoad(DWORD Timeout=INFINITE);
 
+	EpgTimeMode GetEpgTimeMode() const { return m_EpgTimeMode; }
+
 	bool LoadLogoFile();
 	bool SaveLogoFile();
 
@@ -64,13 +76,14 @@ private:
 	bool m_fUpdateCSExtended;
 	bool m_fUseEDCBData;
 	TCHAR m_szEDCBDataFolder[MAX_PATH];
+	EpgTimeMode m_EpgTimeMode;
 	bool m_fSaveLogoFile;
 	TCHAR m_szLogoFileName[MAX_PATH];
 	HANDLE m_hLoadThread;
 	CEpgDataLoader *m_pEpgDataLoader;
 
-	LOGFONT m_EventInfoFont;
-	LOGFONT m_CurEventInfoFont;
+	TVTest::Style::Font m_EventInfoFont;
+	TVTest::Style::Font m_CurEventInfoFont;
 
 // CBasicDialog
 	INT_PTR DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam) override;

@@ -1,11 +1,6 @@
 #include "stdafx.h"
 #include "CaptionParser.h"
-
-#ifdef _DEBUG
-#undef THIS_FILE
-static char THIS_FILE[]=__FILE__;
-#define new DEBUG_NEW
-#endif
+#include "../Common/DebugDef.h"
 
 
 #ifdef _DEBUG
@@ -14,10 +9,11 @@ static char THIS_FILE[]=__FILE__;
 #endif
 
 
-CCaptionParser::CCaptionParser()
+CCaptionParser::CCaptionParser(bool b1Seg)
 	: m_PesParser(this)
 	, m_pHandler(NULL)
 	, m_pDRCSMap(NULL)
+	, m_b1Seg(b1Seg)
 	, m_DataGroupVersion(0xFF)
 {
 }
@@ -60,17 +56,13 @@ int CCaptionParser::GetLanguageNum() const
 }
 
 
-bool CCaptionParser::GetLanguageCode(int LanguageTag, char *pCode) const
+DWORD CCaptionParser::GetLanguageCode(int LanguageTag) const
 {
-	if (pCode == NULL)
-		return false;
-
 	int Index = GetLanguageIndex(LanguageTag);
 	if (Index < 0)
-		return false;
+		return 0;
 
-	::CopyMemory(pCode, m_LanguageList[Index].LanguageCode, 4);
-	return true;
+	return m_LanguageList[Index].LanguageCode;
 }
 
 
@@ -145,10 +137,7 @@ bool CCaptionParser::ParseManagementData(const BYTE *pData, const DWORD DataSize
 			LangInfo.DC = pData[Pos + 1];
 			Pos++;
 		}
-		LangInfo.LanguageCode[0] = pData[Pos + 1];
-		LangInfo.LanguageCode[1] = pData[Pos + 2];
-		LangInfo.LanguageCode[2] = pData[Pos + 3];
-		LangInfo.LanguageCode[3] = '\0';
+		LangInfo.LanguageCode = ((DWORD)pData[Pos + 1] << 16) | ((DWORD)pData[Pos + 2] << 8) | (DWORD)pData[Pos + 3];
 		LangInfo.Format = pData[Pos + 4] >> 4;
 		LangInfo.TCS = (pData[Pos + 4] & 0x0C) >> 2;
 		LangInfo.RollupMode = pData[Pos + 4] & 0x03;
@@ -237,7 +226,7 @@ bool CCaptionParser::ParseUnitData(const BYTE *pData, DWORD *pDataSize)
 		CAribString::FormatList FormatList;
 
 		if (CAribString::CaptionToString(szText, sizeof(szText) / sizeof(TCHAR), &pData[5], UnitSize,
-										 &FormatList, m_pDRCSMap) > 0) {
+										 m_b1Seg, &FormatList, m_pDRCSMap) > 0) {
 #ifdef TRACE_CAPTION_DATA
 			TCHAR szTrace[4096];
 			int Len = ::wsprintf(szTrace, TEXT("Caption %d : "), m_DataGroupID & 0x0F);

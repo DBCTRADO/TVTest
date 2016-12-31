@@ -4,6 +4,7 @@
 
 #include <vector>
 #include "PanelForm.h"
+#include "UIBase.h"
 #include "EpgProgramList.h"
 #include "ChannelList.h"
 #include "Theme.h"
@@ -13,26 +14,32 @@
 #include "Tooltip.h"
 #include "Settings.h"
 #include "WindowUtil.h"
+#include "EpgUtil.h"
+#include "FeaturedEvents.h"
+#include "TextDraw.h"
 
 
 class CChannelPanel
 	: public CPanelForm::CPage
 	, public CSettingsBase
+	, protected CFeaturedEvents::CEventHandler
 {
 public:
-	struct ThemeInfo {
-		Theme::Style ChannelNameStyle;
-		Theme::Style CurChannelNameStyle;
-		Theme::Style EventStyle[2];
-		Theme::Style CurChannelEventStyle[2];
-		COLORREF MarginColor;
+	struct ChannelPanelTheme {
+		TVTest::Theme::Style ChannelNameStyle;
+		TVTest::Theme::Style CurChannelNameStyle;
+		TVTest::Theme::Style EventStyle[2];
+		TVTest::Theme::Style CurChannelEventStyle[2];
+		TVTest::Theme::ThemeColor MarginColor;
+		TVTest::Theme::BackgroundStyle FeaturedMarkStyle;
+		TVTest::Theme::BackgroundStyle ProgressStyle;
+		TVTest::Theme::BackgroundStyle CurProgressStyle;
 	};
 
 	class CEventHandler {
 	public:
 		virtual ~CEventHandler() {}
 		virtual void OnChannelClick(const CChannelInfo *pChannelInfo) {}
-		virtual void OnRButtonDown() {}
 	};
 
 	enum {
@@ -40,11 +47,26 @@ public:
 		MAX_EXPAND_EVENTS      = 10
 	};
 
+	enum ProgressBarStyle {
+		PROGRESSBAR_STYLE_ELAPSED,
+		PROGRESSBAR_STYLE_REMAINING
+	};
+
 	CChannelPanel();
 	~CChannelPanel();
 
 // CBasicWindow
 	bool Create(HWND hwndParent,DWORD Style,DWORD ExStyle=0,int ID=0) override;
+
+// CUIBase
+	void SetStyle(const TVTest::Style::CStyleManager *pStyleManager) override;
+	void NormalizeStyle(
+		const TVTest::Style::CStyleManager *pStyleManager,
+		const TVTest::Style::CStyleScaling *pStyleScaling) override;
+	void SetTheme(const TVTest::Theme::CThemeManager *pThemeManager) override;
+
+// CPage
+	bool SetFont(const TVTest::Style::Font &Font) override;
 
 // CSettingsBase
 	bool ReadSettings(CSettings &Settings) override;
@@ -62,10 +84,9 @@ public:
 	bool ScrollToChannel(int Channel);
 	bool ScrollToCurrentChannel();
 	void SetEventHandler(CEventHandler *pEventHandler);
-	bool SetTheme(const ThemeInfo *pTheme);
-	bool GetTheme(ThemeInfo *pTheme) const;
-	bool SetFont(const LOGFONT *pFont);
-	bool SetEventInfoFont(const LOGFONT *pFont);
+	bool SetChannelPanelTheme(const ChannelPanelTheme &Theme);
+	bool GetChannelPanelTheme(ChannelPanelTheme *pTheme) const;
+	bool SetEventInfoFont(const TVTest::Style::Font &Font);
 	void SetDetailToolTip(bool fDetail);
 	bool GetDetailToolTip() const { return m_fDetailToolTip; }
 	bool SetEventsPerChannel(int Events,int Expand=-1);
@@ -74,6 +95,18 @@ public:
 	bool ExpandChannel(int Channel,bool fExpand);
 	void SetScrollToCurChannel(bool fScroll);
 	bool GetScrollToCurChannel() const { return m_fScrollToCurChannel; }
+	void SetUseEpgColorScheme(bool fUseEpgColorScheme);
+	bool GetUseEpgColorScheme() const { return m_fUseEpgColorScheme; }
+	void SetShowGenreColor(bool fShowGenreColor);
+	bool GetShowGenreColor() const { return m_fShowGenreColor; }
+	void SetShowFeaturedMark(bool fShowFeaturedMark);
+	bool GetShowFeaturedMark() const { return m_fShowFeaturedMark; }
+	void SetShowProgressBar(bool fShowProgressBar);
+	bool GetShowProgressBar() const { return m_fShowProgressBar; }
+	void SetProgressBarStyle(ProgressBarStyle Style);
+	ProgressBarStyle GetProgressBarStyle() const { return m_ProgressBarStyle; }
+	bool QueryUpdateProgress();
+	void UpdateProgress();
 	void SetLogoManager(CLogoManager *pLogoManager);
 	bool QueryUpdate() const;
 
@@ -102,8 +135,8 @@ private:
 		WORD GetTransportStreamID() const { return m_ChannelInfo.GetTransportStreamID(); }
 		WORD GetServiceID() const { return m_ChannelInfo.GetServiceID(); }
 		int FormatEventText(LPTSTR pszText,int MaxLength,int Index) const;
-		void DrawChannelName(HDC hdc,const RECT *pRect);
-		void DrawEventName(HDC hdc,const RECT *pRect,int Index);
+		void DrawChannelName(HDC hdc,const RECT *pRect,const TVTest::Style::Margins &LogoMargins);
+		void DrawEventName(int Index,TVTest::CTextDraw &TextDraw,const RECT &Rect,int LineHeight);
 		int GetOriginalChannelIndex() const { return m_OriginalChannelIndex; }
 		HBITMAP GetLogo() const { return m_hbmLogo; }
 		void SetLogo(HBITMAP hbm) { m_hbmLogo=hbm; }
@@ -111,24 +144,48 @@ private:
 		void Expand(bool fExpand) { m_fExpanded=fExpand; }
 	};
 
+	struct ChannelPanelStyle
+	{
+		TVTest::Style::Margins ChannelNameMargin;
+		TVTest::Style::Margins ChannelLogoMargin;
+		TVTest::Style::Margins EventNameMargin;
+		TVTest::Style::Size ChannelChevronSize;
+		TVTest::Style::IntValue ChannelChevronMargin;
+		TVTest::Style::Margins FeaturedMarkMargin;
+
+		ChannelPanelStyle();
+		void SetStyle(const TVTest::Style::CStyleManager *pStyleManager);
+		void NormalizeStyle(
+			const TVTest::Style::CStyleManager *pStyleManager,
+			const TVTest::Style::CStyleScaling *pStyleScaling);
+	};
+
 	CEpgProgramList *m_pProgramList;
+	ChannelPanelStyle m_Style;
+	TVTest::Style::Font m_StyleFont;
 	DrawUtil::CFont m_Font;
 	DrawUtil::CFont m_ChannelFont;
 	int m_FontHeight;
-	Util::CRect m_ChannelNameMargins;
-	Util::CRect m_EventNameMargins;
 	int m_ChannelChevronMargin;
 	int m_EventNameLines;
 	int m_ChannelNameHeight;
 	int m_EventNameHeight;
 	int m_ItemHeight;
 	int m_ExpandedItemHeight;
-	ThemeInfo m_Theme;
-	DrawUtil::CMonoColorBitmap m_Chevron;
+	ChannelPanelTheme m_Theme;
+	CEpgTheme m_EpgTheme;
+	bool m_fUseEpgColorScheme;
+	bool m_fShowGenreColor;
+	bool m_fShowFeaturedMark;
+	bool m_fShowProgressBar;
+	ProgressBarStyle m_ProgressBarStyle;
+	DrawUtil::COffscreen m_Offscreen;
+	TVTest::Theme::IconList m_Chevron;
 	int m_EventsPerChannel;
 	int m_ExpandAdditionalEvents;
 	int m_ExpandEvents;
 	int m_ScrollPos;
+	int m_OldDPI;
 	CMouseWheelHandler m_MouseWheel;
 	bool m_fScrollToCurChannel;
 	std::vector<CChannelEventInfo*> m_ChannelList;
@@ -149,6 +206,8 @@ private:
 	CEventInfoPopupHandler m_EventInfoPopupHandler;
 	CLogoManager *m_pLogoManager;
 	SYSTEMTIME m_UpdatedTime;
+	SYSTEMTIME m_CurTime;
+	CFeaturedEventsMatcher m_FeaturedEventsMatcher;
 
 	static const LPCTSTR m_pszClassName;
 	static HINSTANCE m_hinst;
@@ -156,6 +215,7 @@ private:
 	void ClearChannels();
 	bool UpdateEvents(CChannelEventInfo *pInfo,const SYSTEMTIME *pTime=NULL);
 	void Draw(HDC hdc,const RECT *prcPaint);
+	void OnCommand(int ID);
 	void SetScrollPos(int Pos);
 	void SetScrollBar();
 	void CalcItemHeight();
@@ -169,12 +229,24 @@ private:
 	};
 	int HitTest(int x,int y,HitType *pType=NULL) const;
 	bool CreateTooltip();
+	void SetTooltipFont();
 	void SetTooltips(bool fRectOnly=false);
 	bool EventInfoPopupHitTest(int x,int y,LPARAM *pParam);
 	bool ShowEventInfoPopup(LPARAM Param,CEventInfoPopup *pPopup);
+	void ShowMenu(int x,int y);
 
 // CCustomWindow
 	LRESULT OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
+
+// CUIBase
+	void ApplyStyle() override;
+	void RealizeStyle() override;
+
+// CPanelForm::CPage
+	bool NeedKeyboardFocus() const override { return true; }
+
+// CFeaturedEvents::CEventHandler
+	void OnFeaturedEventsSettingsChanged(CFeaturedEvents &FeaturedEvents) override;
 };
 
 

@@ -5,14 +5,10 @@
 #include <mfapi.h>
 #include <mferror.h>
 #include <mfidl.h>
+#include <shlwapi.h>
 #include "EVRenderer.h"
 #include "DirectShowUtil.h"
-
-#ifdef _DEBUG
-#undef THIS_FILE
-static char THIS_FILE[]=__FILE__;
-#define new DEBUG_NEW
-#endif
+#include "../Common/DebugDef.h"
 
 
 #pragma comment(lib,"mfuuid.lib")
@@ -108,7 +104,10 @@ bool CVideoRenderer_EVR::Initialize(IGraphBuilder *pFilterGraph,IPin *pInputPin,
 
 	// MFStartupは呼ばなくていいらしい
 	/*
-	m_hMFPlatLib=::LoadLibrary(TEXT("mfplat.dll"));
+	TCHAR szPath[MAX_PATH];
+	::GetSystemDirectory(szPath,_countof(szPath));
+	::PathAppend(szPath,TEXT("mfplat.dll"));
+	m_hMFPlatLib=::LoadLibrary(szPath);
 	if (m_hMFPlatLib==NULL) {
 		SetError(TEXT("mfplat.dllをロードできません。"));
 		return false;
@@ -133,6 +132,18 @@ bool CVideoRenderer_EVR::Initialize(IGraphBuilder *pFilterGraph,IPin *pInputPin,
 		goto OnError;
 	}
 
+	hr=pFilterGraph->AddFilter(m_pRenderer,L"EVR");
+	if (FAILED(hr)) {
+		SetError(hr,TEXT("EVRをフィルタグラフに追加できません。"));
+		goto OnError;
+	}
+
+	hr=InitializePresenter(m_pRenderer);
+	if (FAILED(hr)) {
+		SetError(hr,TEXT("カスタムプレゼンタを初期化できません。"));
+		goto OnError;
+	}
+
 	IEVRFilterConfig *pFilterConfig;
 	hr=m_pRenderer->QueryInterface(IID_IEVRFilterConfig,reinterpret_cast<LPVOID*>(&pFilterConfig));
 	if (FAILED(hr)) {
@@ -141,27 +152,6 @@ bool CVideoRenderer_EVR::Initialize(IGraphBuilder *pFilterGraph,IPin *pInputPin,
 	}
 	pFilterConfig->SetNumberOfStreams(1);
 	pFilterConfig->Release();
-
-	hr=pFilterGraph->AddFilter(m_pRenderer,L"EVR");
-	if (FAILED(hr)) {
-		SetError(hr,TEXT("EVRをフィルタグラフに追加できません。"));
-		goto OnError;
-	}
-
-	IFilterGraph2 *pFilterGraph2;
-	hr=pFilterGraph->QueryInterface(IID_IFilterGraph2,
-									reinterpret_cast<LPVOID*>(&pFilterGraph2));
-	if (FAILED(hr)) {
-		SetError(hr,TEXT("IFilterGraph2を取得できません。"));
-		goto OnError;
-	}
-	hr=pFilterGraph2->RenderEx(pInputPin,
-								AM_RENDEREX_RENDERTOEXISTINGRENDERERS,NULL);
-	pFilterGraph2->Release();
-	if (FAILED(hr)) {
-		SetError(hr,TEXT("映像レンダラを構築できません。"));
-		goto OnError;
-	}
 
 	IMFGetService *pGetService;
 	hr=m_pRenderer->QueryInterface(IID_IMFGetService,reinterpret_cast<LPVOID*>(&pGetService));
@@ -189,6 +179,9 @@ bool CVideoRenderer_EVR::Initialize(IGraphBuilder *pFilterGraph,IPin *pInputPin,
 	pDisplayControl->SetVideoPosition(NULL,&rc);
 	*/
 	pDisplayControl->SetBorderColor(RGB(0,0,0));
+
+	UpdateRenderingPrefs(pDisplayControl);
+
 	pDisplayControl->Release();
 
 	IMFVideoProcessor *pVideoProcessor;
@@ -235,6 +228,21 @@ bool CVideoRenderer_EVR::Initialize(IGraphBuilder *pFilterGraph,IPin *pInputPin,
 	pVideoProcessor->Release();
 
 	pGetService->Release();
+
+	IFilterGraph2 *pFilterGraph2;
+	hr=pFilterGraph->QueryInterface(IID_IFilterGraph2,
+									reinterpret_cast<LPVOID*>(&pFilterGraph2));
+	if (FAILED(hr)) {
+		SetError(hr,TEXT("IFilterGraph2を取得できません。"));
+		goto OnError;
+	}
+	hr=pFilterGraph2->RenderEx(pInputPin,
+								AM_RENDEREX_RENDERTOEXISTINGRENDERERS,NULL);
+	pFilterGraph2->Release();
+	if (FAILED(hr)) {
+		SetError(hr,TEXT("映像レンダラを構築できません。"));
+		goto OnError;
+	}
 
 	m_pFilterGraph=pFilterGraph;
 	m_hwndRender=hwndRender;
@@ -339,7 +347,6 @@ bool CVideoRenderer_EVR::GetDestPosition(RECT *pRect)
 
 			fOK=SUCCEEDED(pDisplayControl->GetVideoPosition(&rcSrc,pRect));
 			pDisplayControl->Release();
-			fOK=true;
 		}
 	}
 #endif
@@ -434,6 +441,41 @@ bool CVideoRenderer_EVR::SetVisible(bool fVisible)
 }
 
 
+bool CVideoRenderer_EVR::SetClipToDevice(bool bClip)
+{
+	if (m_bClipToDevice!=bClip) {
+		m_bClipToDevice=bClip;
+
+		if (m_pRenderer) {
+			IMFVideoDisplayControl *pDisplayControl=GetVideoDisplayControl(m_pRenderer);
+
+			if (pDisplayControl) {
+				UpdateRenderingPrefs(pDisplayControl);
+				pDisplayControl->Release();
+			}
+		}
+	}
+
+	return true;
+}
+
+
+HRESULT CVideoRenderer_EVR::UpdateRenderingPrefs(IMFVideoDisplayControl *pDisplayControl)
+{
+	DWORD RenderingPrefs;
+	HRESULT hr=pDisplayControl->GetRenderingPrefs(&RenderingPrefs);
+	if (SUCCEEDED(hr)) {
+		TRACE(TEXT("ClipToDevice = %s\n"),m_bClipToDevice?TEXT("true"):TEXT("false"));
+		if (!m_bClipToDevice)
+			RenderingPrefs|=MFVideoRenderPrefs_DoNotClipToDevice;
+		else
+			RenderingPrefs&=~MFVideoRenderPrefs_DoNotClipToDevice;
+		hr=pDisplayControl->SetRenderingPrefs(RenderingPrefs);
+	}
+	return hr;
+}
+
+
 #ifdef EVR_USE_VIDEO_WINDOW
 
 
@@ -467,6 +509,7 @@ LRESULT CALLBACK CVideoRenderer_EVR::VideoWndProc(HWND hwnd,UINT uMsg,WPARAM wPa
 
 					::SetRect(&rc,0,0,LOWORD(lParam),HIWORD(lParam));
 					pDisplayControl->SetVideoPosition(NULL,&rc);
+					pDisplayControl->Release();
 				}
 			}
 		}

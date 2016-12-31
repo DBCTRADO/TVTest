@@ -1,12 +1,7 @@
 #include "stdafx.h"
 #include "TVTest.h"
 #include "Layout.h"
-
-#ifdef _DEBUG
-#undef THIS_FILE
-static char THIS_FILE[]=__FILE__;
-#define new DEBUG_NEW
-#endif
+#include "Common/DebugDef.h"
 
 
 namespace Layout
@@ -67,6 +62,7 @@ CContainer *CContainer::GetChildContainer(int Index) const
 CWindowContainer::CWindowContainer(int ID)
 	: CContainer(ID)
 	, m_pWindow(NULL)
+	, m_pUIBase(NULL)
 	, m_MinWidth(0)
 	, m_MinHeight(0)
 {
@@ -107,9 +103,14 @@ void CWindowContainer::SetVisible(bool fVisible)
 }
 
 
-void CWindowContainer::SetWindow(CBasicWindow *pWindow)
+void CWindowContainer::SetWindow(CBasicWindow *pWindow,TVTest::CUIBase *pUIBase)
 {
+	if (m_pUIBase!=NULL)
+		RemoveUIChild(m_pUIBase);
 	m_pWindow=pWindow;
+	m_pUIBase=pUIBase;
+	if (pUIBase!=NULL)
+		RegisterUIChild(pUIBase);
 	if (pWindow!=NULL && m_pBase!=NULL
 			&& pWindow->GetParent()!=m_pBase->GetHandle())
 		pWindow->SetParent(m_pBase);
@@ -293,9 +294,9 @@ bool CSplitter::SetPane(int Index,CContainer *pContainer)
 {
 	if (Index<0 || Index>1)
 		return false;
-	if (m_PaneList[Index].pContainer!=NULL)
-		delete m_PaneList[Index].pContainer;
-	m_PaneList[Index].pContainer=pContainer;
+	CContainer *pOldContainer=m_PaneList[Index].pContainer;
+	ReplacePane(Index,pContainer);
+	delete pOldContainer;
 	return true;
 }
 
@@ -304,7 +305,11 @@ bool CSplitter::ReplacePane(int Index,CContainer *pContainer)
 {
 	if (Index<0 || Index>1)
 		return false;
+	if (m_PaneList[Index].pContainer!=NULL)
+		RemoveUIChild(m_PaneList[Index].pContainer);
 	m_PaneList[Index].pContainer=pContainer;
+	if (pContainer!=NULL)
+		RegisterUIChild(pContainer);
 	return true;
 }
 
@@ -340,8 +345,7 @@ void CSplitter::SwapPane()
 		m_BarPos=(m_Position.bottom-m_Position.top)-(m_BarPos+m_BarWidth);
 	if (m_BarPos<0)
 		m_BarPos=0;
-	if (m_pBase!=NULL)
-		Adjust();
+	Adjust();
 }
 
 
@@ -373,8 +377,7 @@ bool CSplitter::SetPaneSize(int ID,int Size)
 		}
 	}
 	m_PaneList[Index].FixedSize=Size;
-	if (m_pBase!=NULL)
-		Adjust();
+	Adjust();
 	return true;
 }
 
@@ -422,7 +425,7 @@ bool CSplitter::SetStyle(unsigned int Style,bool fAdjust)
 			}
 		}
 		m_Style=Style;
-		if (fAdjust && m_pBase!=NULL)
+		if (fAdjust)
 			Adjust();
 	}
 	return true;
@@ -445,6 +448,9 @@ bool CSplitter::SetBarPos(int Pos)
 
 void CSplitter::Adjust()
 {
+	if (m_pBase==NULL || m_pBase->IsLayoutLocked())
+		return;
+
 	if (m_PaneList[0].pContainer==NULL || !m_PaneList[0].pContainer->GetVisible()
 			|| m_PaneList[1].pContainer==NULL || !m_PaneList[1].pContainer->GetVisible()) {
 		if (m_PaneList[0].pContainer!=NULL && m_PaneList[0].pContainer->GetVisible())
@@ -542,6 +548,18 @@ bool CSplitter::GetBarRect(RECT *pRect) const
 }
 
 
+void CSplitter::ApplyStyle()
+{
+	m_BarWidth=m_pStyleScaling->LogicalPixelsToPhysicalPixels(4);
+}
+
+
+void CSplitter::RealizeStyle()
+{
+	Adjust();
+}
+
+
 
 
 // ‰ß‹Ž‚Ìƒo[ƒWƒ‡ƒ“‚Æ‚ÌŒÝŠ·‚Ì‚½‚ß‚É Splitter ‚É‚µ‚Ä‚¨‚­
@@ -578,6 +596,7 @@ CLayoutBase::CLayoutBase()
 	, m_pContainer(NULL)
 	, m_pFocusContainer(NULL)
 	, m_BackColor(::GetSysColor(COLOR_3DFACE))
+	, m_fLockLayout(false)
 {
 }
 
@@ -679,11 +698,13 @@ LRESULT CLayoutBase::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 bool CLayoutBase::SetTopContainer(CContainer *pContainer)
 {
 	if (m_pContainer!=NULL)
-		delete m_pContainer;
+		RemoveUIChild(m_pContainer);
 	m_pContainer=pContainer;
 	m_pFocusContainer=NULL;
 	if (pContainer!=NULL) {
 		SetBasePointer(pContainer,this);
+		RegisterUIChild(pContainer);
+		pContainer->SetStyleScaling(m_pStyleScaling);
 		Adjust();
 	}
 	return true;
@@ -808,11 +829,28 @@ void CLayoutBase::GetMinSize(SIZE *pSize) const
 
 void CLayoutBase::Adjust()
 {
-	if (m_pContainer!=NULL && m_hwnd!=NULL) {
+	if (m_pContainer!=NULL && m_hwnd!=NULL && !m_fLockLayout) {
 		RECT rc;
 
 		GetClientRect(&rc);
 		m_pContainer->SetPosition(rc);
+	}
+}
+
+
+void CLayoutBase::LockLayout()
+{
+	m_fLockLayout=true;
+}
+
+
+void CLayoutBase::UnlockLayout(bool fAdjust)
+{
+	if (m_fLockLayout) {
+		m_fLockLayout=false;
+
+		if (fAdjust)
+			Adjust();
 	}
 }
 

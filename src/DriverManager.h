@@ -11,8 +11,8 @@ class CDriverInfo
 public:
 	CDriverInfo(LPCTSTR pszFileName);
 	~CDriverInfo();
-	LPCTSTR GetFileName() const { return m_FileName.Get(); }
-	LPCTSTR GetTunerName() const { return m_TunerName.Get(); }
+	LPCTSTR GetFileName() const { return m_FileName.c_str(); }
+	LPCTSTR GetTunerName() const { return m_TunerName.c_str(); }
 	enum LoadTuningSpaceListMode {
 		LOADTUNINGSPACE_DEFAULT,
 		LOADTUNINGSPACE_NOLOADDRIVER,
@@ -33,8 +33,8 @@ public:
 	int NumDriverSpaces() const { return m_DriverSpaceList.NumSpaces(); }
 
 private:
-	CDynamicString m_FileName;
-	CDynamicString m_TunerName;
+	TVTest::String m_FileName;
+	TVTest::String m_TunerName;
 	bool m_fChannelFileLoaded;
 	CTuningSpaceList m_TuningSpaceList;
 	bool m_fDriverSpaceLoaded;
@@ -44,20 +44,43 @@ private:
 class CDriverManager
 {
 public:
+	struct TunerSpec
+	{
+		enum {
+			FLAG_NETWORK       = 0x00000001U,
+			FLAG_FILE          = 0x00000002U,
+			FLAG_VIRTUAL       = 0x00000004U,
+			FLAG_VOLATILE      = 0x00000008U,
+			FLAG_NOENUMCHANNEL = 0x00000010U
+		};
+
+		unsigned int Flags;
+	};
+
 	CDriverManager();
 	~CDriverManager();
 	void Clear();
 	bool Find(LPCTSTR pszDirectory);
-	LPCTSTR GetBaseDirectory() const { return m_BaseDirectory.Get(); }
+	LPCTSTR GetBaseDirectory() const { return m_BaseDirectory.c_str(); }
 	int NumDrivers() const { return (int)m_DriverList.size(); }
 	CDriverInfo *GetDriverInfo(int Index);
 	const CDriverInfo *GetDriverInfo(int Index) const;
 	int FindByFileName(LPCTSTR pszFileName) const;
 	bool GetAllServiceList(CChannelList *pList) const;
 
+	bool LoadTunerSpec(LPCTSTR pszFileName);
+	bool GetTunerSpec(LPCTSTR pszTunerName,TunerSpec *pSpec) const;
+
 private:
+	struct TunerSpecInfo
+	{
+		TVTest::String TunerMask;
+		TunerSpec Spec;
+	};
+
 	std::vector<CDriverInfo*> m_DriverList;
-	CDynamicString m_BaseDirectory;
+	TVTest::String m_BaseDirectory;
+	std::vector<TunerSpecInfo> m_TunerSpecList;
 };
 
 

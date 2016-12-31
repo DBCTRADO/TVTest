@@ -2,6 +2,11 @@
 	TVTest プラグインサンプル
 
 	ゲームパッドで操作できるようにする
+
+	このサンプルでは主に以下の機能を実装しています。
+
+	・コントローラを登録する
+	・ウィンドウメッセージを処理する
 */
 
 
@@ -181,13 +186,13 @@ bool CGamePad::Initialize()
 	Info.pTranslateMessage = NULL;
 	Info.pClientData       = NULL;
 	if (!m_pApp->RegisterController(&Info)) {
-		m_pApp->AddLog(L"コントローラを登録できません。");
+		m_pApp->AddLog(L"コントローラを登録できません。",TVTest::LOG_TYPE_ERROR);
 		return false;
 	}
 
 	// 共有メモリにウィンドウハンドルを設定
 	if (!m_TargetWindow.SetWindow(m_pApp->GetAppWindow())) {
-		m_pApp->AddLog(L"共有メモリを作成できません。");
+		m_pApp->AddLog(L"共有メモリを作成できません。",TVTest::LOG_TYPE_ERROR);
 		return false;
 	}
 
@@ -262,7 +267,7 @@ LRESULT CALLBACK CGamePad::EventCallback(UINT Event,LPARAM lParam1,LPARAM lParam
 		// プラグインの有効状態が変化した
 		if (lParam1!=0) {
 			if (!pThis->Start()) {
-				pThis->m_pApp->AddLog(L"初期化でエラーが発生しました。");
+				pThis->m_pApp->AddLog(L"初期化でエラーが発生しました。",TVTest::LOG_TYPE_ERROR);
 				if (!pThis->m_pApp->GetSilentMode()) {
 					::MessageBoxW(pThis->m_pApp->GetAppWindow(),
 								  L"初期化でエラーが発生しました。",

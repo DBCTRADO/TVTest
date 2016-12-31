@@ -4,6 +4,7 @@
 
 #include "Options.h"
 #include "MediaViewer.h"
+#include "Style.h"
 
 
 class CViewOptions : public COptions
@@ -41,17 +42,19 @@ public:
 	bool GetNearCornerResizeOrigin() const { return m_fNearCornerResizeOrigin; }
 	bool GetZoomKeepAspectRatio() const { return m_fZoomKeepAspectRatio; }
 	AdjustWindowMode GetPanScanAdjustWindowMode() const { return m_PanScanAdjustWindowMode; }
+	bool GetRemember1SegWindowSize() const { return m_fRemember1SegWindowSize; }
 	bool GetMinimizeToTray() const { return m_fMinimizeToTray; }
 	bool GetDisablePreviewWhenMinimized() const { return m_fDisablePreviewWhenMinimized; }
+	bool GetHideCursor() const { return m_fHideCursor; }
 	bool GetUseLogoIcon() const { return m_fUseLogoIcon; }
-	bool GetShowTitleEventTime() const { return m_fShowTitleEventTime; }
+	LPCTSTR GetTitleTextFormat() const { return m_TitleTextFormat.c_str(); }
+	LPCTSTR GetMinimizedTitleTextFormat() const { return m_MinimizedTitleTextFormat.c_str(); }
+	LPCTSTR GetMaximizedTitleTextFormat() const { return m_MaximizedTitleTextFormat.c_str(); }
+	LPCTSTR GetTaskbarTitleTextFormat() const { return m_TaskbarTitleTextFormat.c_str(); }
+	bool GetTitleBarFontEnabled() const { return m_fEnableTitleBarFont; }
+	const TVTest::Style::Font &GetTitleBarFont() const { return m_TitleBarFont; }
 	bool GetShowLogo() const { return m_fShowLogo; }
 	LPCTSTR GetLogoFileName() const { return m_szLogoFileName; }
-	bool GetResetPanScanEventChange() const { return m_fResetPanScanEventChange; }
-	bool GetNoMaskSideCut() const { return m_fNoMaskSideCut; }
-	CMediaViewer::ViewStretchMode GetFullscreenStretchMode() const { return m_FullscreenStretchMode; }
-	CMediaViewer::ViewStretchMode GetMaximizeStretchMode() const { return m_MaximizeStretchMode; }
-	bool GetIgnoreDisplayExtension() const { return m_fIgnoreDisplayExtension; }
 	bool GetNoScreenSaver() const { return m_fNoScreenSaver; }
 	bool GetNoMonitorLowPower() const { return m_fNoMonitorLowPower; }
 	bool GetNoMonitorLowPowerActiveOnly() const { return m_fNoMonitorLowPowerActiveOnly; }
@@ -66,22 +69,25 @@ private:
 	bool m_fNearCornerResizeOrigin;
 	bool m_fZoomKeepAspectRatio;
 	AdjustWindowMode m_PanScanAdjustWindowMode;
+	bool m_fRemember1SegWindowSize;
 	bool m_fMinimizeToTray;
 	bool m_fDisablePreviewWhenMinimized;
+	bool m_fHideCursor;
 	bool m_fUseLogoIcon;
-	bool m_fShowTitleEventTime;
+	TVTest::String m_TitleTextFormat;
+	TVTest::String m_MinimizedTitleTextFormat;
+	TVTest::String m_MaximizedTitleTextFormat;
+	TVTest::String m_TaskbarTitleTextFormat;
+	bool m_fEnableTitleBarFont;
+	TVTest::Style::Font m_TitleBarFont;
 	bool m_fShowLogo;
 	TCHAR m_szLogoFileName[MAX_PATH];
-
-	bool m_fResetPanScanEventChange;
-	bool m_fNoMaskSideCut;
-	CMediaViewer::ViewStretchMode m_FullscreenStretchMode;
-	CMediaViewer::ViewStretchMode m_MaximizeStretchMode;
-	bool m_fIgnoreDisplayExtension;
 
 	bool m_fNoScreenSaver;
 	bool m_fNoMonitorLowPower;
 	bool m_fNoMonitorLowPowerActiveOnly;
+
+	TVTest::Style::Font m_CurTitleBarFont;
 };
 
 

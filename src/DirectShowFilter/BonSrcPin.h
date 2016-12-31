@@ -29,11 +29,16 @@ public:
 
 	void Reset();
 	void Flush();
-	bool EnableSync(bool bEnable);
+	bool EnableSync(bool bEnable, bool b1Seg = false);
 	bool IsSyncEnabled() const;
 	void SetVideoPID(WORD PID);
 	void SetAudioPID(WORD PID);
 	void SetOutputWhenPaused(bool bOutput) { m_bOutputWhenPaused = bOutput; }
+	bool SetBufferSize(size_t Size);
+	bool SetInitialPoolPercentage(int Percentage);
+	int GetBufferFillPercentage();
+	bool SetInputWait(DWORD Wait);
+	bool MapAudioPID(WORD AudioPID, WORD MapPID);
 
 protected:
 	void EndStreamThread();
@@ -45,5 +50,10 @@ protected:
 	HANDLE m_hEndEvent;
 	CTsSrcStream m_SrcStream;
 
+	int m_InitialPoolPercentage;
+	bool m_bBuffering;
 	bool m_bOutputWhenPaused;
+	DWORD m_InputWait;
+	bool m_bInputTimeout;
+	volatile bool m_bNewSegment;
 };

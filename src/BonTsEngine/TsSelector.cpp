@@ -1,12 +1,7 @@
 #include "stdafx.h"
 #include "Common.h"
 #include "TsSelector.h"
-
-#ifdef _DEBUG
-#undef THIS_FILE
-static char THIS_FILE[]=__FILE__;
-#define new DEBUG_NEW
-#endif
+#include "../Common/DebugDef.h"
 
 
 
@@ -270,12 +265,21 @@ void CALLBACK CTsSelector::OnPmtUpdated(const WORD wPID, CTsPidMapTarget *pMapTa
 	// ES‚ÌPID’Ç‰Á
 	PIDInfo.EsPIDs.clear();
 	static const BYTE StreamTypeList [] = {
-		STREAM_TYPE_MPEG1,
-		STREAM_TYPE_MPEG2,
+		STREAM_TYPE_MPEG1_VIDEO,
+		STREAM_TYPE_MPEG2_VIDEO,
+		STREAM_TYPE_MPEG1_AUDIO,
+		STREAM_TYPE_MPEG2_AUDIO,
+		STREAM_TYPE_AAC,
+		STREAM_TYPE_MPEG4_VISUAL,
+		STREAM_TYPE_MPEG4_AUDIO,
+		STREAM_TYPE_H264,
+		STREAM_TYPE_H265,
+		STREAM_TYPE_AC3,
+		STREAM_TYPE_DTS,
+		STREAM_TYPE_TRUEHD,
+		STREAM_TYPE_DOLBY_DIGITAL_PLUS,
 		STREAM_TYPE_CAPTION,
 		STREAM_TYPE_DATACARROUSEL,
-		STREAM_TYPE_AAC,
-		STREAM_TYPE_H264,
 	};
 	for (WORD i = 0 ; i < pPmtTable->GetEsInfoNum() ; i++) {
 		bool bTarget;
@@ -329,7 +333,7 @@ bool CTsSelector::MakePat(const CTsPacket *pSrcPacket, CTsPacket *pDstPacket)
 	BYTE *pDstData = pDstPacket->GetData();
 	SIZE_T HeaderSize = pPayloadData-pSrcData;
 
-	if (!pSrcPacket->m_Header.bPayloadUnitStartIndicator)
+	if (!pSrcPacket->GetPayloadUnitStartIndicator())
 		return false;
 	SIZE_T UnitStartPos = pPayloadData[0] + 1;
 	pPayloadData += UnitStartPos;

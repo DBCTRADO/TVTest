@@ -1,15 +1,10 @@
 #include "stdafx.h"
 #include "TVTest.h"
-#include "AppMain.h"
 #include "Panel.h"
 #include "DrawUtil.h"
+#include "DPIUtil.h"
 #include "resource.h"
-
-#ifdef _DEBUG
-#undef THIS_FILE
-static char THIS_FILE[]=__FILE__;
-#define new DEBUG_NEW
-#endif
+#include "Common/DebugDef.h"
 
 
 #define PANEL_WINDOW_CLASS			APP_NAME TEXT(" Panel")
@@ -27,17 +22,17 @@ bool CPanel::Initialize(HINSTANCE hinst)
 	if (m_hinst==NULL) {
 		WNDCLASS wc;
 
-		wc.style=CS_HREDRAW;
+		wc.style=CS_HREDRAW | CS_VREDRAW;
 		wc.lpfnWndProc=WndProc;
 		wc.cbClsExtra=0;
 		wc.cbWndExtra=0;
 		wc.hInstance=hinst;
 		wc.hIcon=NULL;
-		wc.hCursor=LoadCursor(NULL,IDC_ARROW);
+		wc.hCursor=::LoadCursor(NULL,IDC_ARROW);
 		wc.hbrBackground=NULL;
 		wc.lpszMenuName=NULL;
 		wc.lpszClassName=PANEL_WINDOW_CLASS;
-		if (RegisterClass(&wc)==0)
+		if (::RegisterClass(&wc)==0)
 			return false;
 		m_hinst=hinst;
 	}
@@ -46,23 +41,14 @@ bool CPanel::Initialize(HINSTANCE hinst)
 
 
 CPanel::CPanel()
-	: m_TitleMargin(4)
-	, m_ButtonSize(14)
-	, m_Font(DrawUtil::FONT_CAPTION)
-	, m_TitleHeight(0)
-	, m_pWindow(NULL)
+	: m_TitleHeight(0)
+	, m_pContent(NULL)
 	, m_fShowTitle(false)
 	, m_fEnableFloating(true)
 	, m_pEventHandler(NULL)
+	, m_HotItem(ITEM_NONE)
 {
-	COLORREF CaptionColor=::GetSysColor(COLOR_INACTIVECAPTION);
-
-	m_Theme.TitleStyle.Gradient.Type=Theme::GRADIENT_NORMAL;
-	m_Theme.TitleStyle.Gradient.Direction=Theme::DIRECTION_VERT;
-	m_Theme.TitleStyle.Gradient.Color1=CaptionColor;
-	m_Theme.TitleStyle.Gradient.Color2=CaptionColor;
-	m_Theme.TitleStyle.Border.Type=Theme::BORDER_NONE;
-	m_Theme.TitleStyle.TextColor=::GetSysColor(COLOR_INACTIVECAPTIONTEXT);
+	GetSystemFont(DrawUtil::FONT_CAPTION,&m_StyleFont);
 }
 
 
@@ -79,21 +65,55 @@ bool CPanel::Create(HWND hwndParent,DWORD Style,DWORD ExStyle,int ID)
 }
 
 
-bool CPanel::SetWindow(CBasicWindow *pWindow,LPCTSTR pszTitle)
+void CPanel::SetStyle(const TVTest::Style::CStyleManager *pStyleManager)
+{
+	m_Style.SetStyle(pStyleManager);
+}
+
+
+void CPanel::NormalizeStyle(
+	const TVTest::Style::CStyleManager *pStyleManager,
+	const TVTest::Style::CStyleScaling *pStyleScaling)
+{
+	m_Style.NormalizeStyle(pStyleManager,pStyleScaling);
+}
+
+
+void CPanel::SetTheme(const TVTest::Theme::CThemeManager *pThemeManager)
+{
+	PanelTheme Theme;
+
+	pThemeManager->GetStyle(TVTest::Theme::CThemeManager::STYLE_PANEL_TITLE,
+							&Theme.TitleStyle);
+	pThemeManager->GetStyle(TVTest::Theme::CThemeManager::STYLE_TITLEBAR_BUTTON,
+							&Theme.TitleIconStyle);
+	pThemeManager->GetStyle(TVTest::Theme::CThemeManager::STYLE_TITLEBAR_BUTTON_HOT,
+							&Theme.TitleIconHighlightStyle);
+
+	SetPanelTheme(Theme);
+}
+
+
+bool CPanel::SetWindow(CPanelContent *pContent,LPCTSTR pszTitle)
 {
 	RECT rc;
 
-	m_pWindow=pWindow;
-	if (m_pWindow!=NULL) {
-		if (pWindow->GetParent()!=m_hwnd)
-			pWindow->SetParent(m_hwnd);
-		pWindow->SetVisible(true);
-		m_Title.Set(pszTitle);
+	if (m_pContent!=NULL)
+		RemoveUIChild(m_pContent);
+	m_pContent=pContent;
+	if (m_pContent!=NULL) {
+		if (pContent->GetParent()!=m_hwnd)
+			pContent->SetParent(m_hwnd);
+		RegisterUIChild(pContent);
+		pContent->SetStyleScaling(m_pStyleScaling);
+		pContent->UpdateStyle();
+		pContent->SetVisible(true);
+		TVTest::StringUtility::Assign(m_Title,pszTitle);
 		GetPosition(&rc);
-		rc.right=rc.left+pWindow->GetWidth();
+		rc.right=rc.left+pContent->GetWidth();
 		SetPosition(&rc);
 	} else {
-		m_Title.Clear();
+		m_Title.clear();
 	}
 	return true;
 }
@@ -123,14 +143,19 @@ void CPanel::SetEventHandler(CEventHandler *pHandler)
 }
 
 
-bool CPanel::SetTheme(const ThemeInfo *pTheme)
+bool CPanel::SetPanelTheme(const PanelTheme &Theme)
 {
-	if (pTheme==NULL)
-		return false;
-	m_Theme=*pTheme;
+	m_Theme=Theme;
+
 	if (m_hwnd!=NULL && m_fShowTitle) {
+		const int OldTitleHeight=m_TitleHeight;
 		RECT rc;
 
+		CalcDimensions();
+		if (m_TitleHeight!=OldTitleHeight) {
+			GetClientRect(&rc);
+			OnSize(rc.right,rc.bottom);
+		}
 		GetTitleRect(&rc);
 		Invalidate(&rc);
 	}
@@ -138,7 +163,7 @@ bool CPanel::SetTheme(const ThemeInfo *pTheme)
 }
 
 
-bool CPanel::GetTheme(ThemeInfo *pTheme) const
+bool CPanel::GetPanelTheme(PanelTheme *pTheme) const
 {
 	if (pTheme==NULL)
 		return false;
@@ -173,38 +198,75 @@ bool CPanel::GetContentRect(RECT *pRect) const
 }
 
 
+bool CPanel::SetTitleFont(const TVTest::Style::Font &Font)
+{
+	m_StyleFont=Font;
+	if (m_hwnd!=NULL) {
+		ApplyStyle();
+		RealizeStyle();
+	}
+	return true;
+}
+
+
+void CPanel::CalcDimensions()
+{
+	m_FontHeight=TVTest::Style::GetFontHeight(
+		m_hwnd,m_Font.GetHandle(),m_Style.TitleLabelExtraHeight);
+	int LabelHeight=m_FontHeight+
+		m_Style.TitleLabelMargin.Vert();
+	int ButtonHeight=
+		m_Style.TitleButtonIconSize.Height+
+		m_Style.TitleButtonPadding.Vert();
+	TVTest::Theme::BorderStyle Border=m_Theme.TitleStyle.Back.Border;
+	ConvertBorderWidthsInPixels(&Border);
+	RECT rcBorder;
+	TVTest::Theme::GetBorderWidths(Border,&rcBorder);
+	m_TitleHeight=max(LabelHeight,ButtonHeight)+m_Style.TitlePadding.Vert()+
+		rcBorder.top+rcBorder.bottom;
+}
+
+
 void CPanel::Draw(HDC hdc,const RECT &PaintRect) const
 {
 	if (m_fShowTitle && PaintRect.top<m_TitleHeight) {
+		TVTest::Theme::CThemeDraw ThemeDraw(BeginThemeDraw(hdc));
 		RECT rc;
 
 		GetTitleRect(&rc);
-		Theme::DrawStyleBackground(hdc,&rc,&m_Theme.TitleStyle);
-		if (!m_Title.IsEmpty()) {
-			rc.left+=m_TitleMargin;
-			rc.right-=m_TitleMargin+m_ButtonSize;
-			DrawUtil::DrawText(hdc,m_Title.Get(),rc,
+		ThemeDraw.Draw(m_Theme.TitleStyle.Back,&rc);
+
+		if (!m_Title.empty()) {
+			TVTest::Style::Subtract(&rc,m_Style.TitlePadding);
+			rc.right-=m_Style.TitleButtonIconSize.Width+m_Style.TitleButtonPadding.Horz();
+			TVTest::Style::Subtract(&rc,m_Style.TitleLabelMargin);
+			DrawUtil::DrawText(hdc,m_Title.c_str(),rc,
 				DT_LEFT | DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX,
-				&m_Font,m_Theme.TitleStyle.TextColor);
+				&m_Font,m_Theme.TitleStyle.Fore.Fill.GetSolidColor());
 		}
+
 		GetCloseButtonRect(&rc);
-		::DrawFrameControl(hdc,&rc,DFC_CAPTION,
-						   DFCS_CAPTIONCLOSE | DFCS_MONO |
-						   (m_fCloseButtonPushed?DFCS_PUSHED:0));
+		const TVTest::Theme::Style &Style=
+			m_HotItem==ITEM_CLOSE?m_Theme.TitleIconHighlightStyle:m_Theme.TitleIconStyle;
+		if (Style.Back.Border.Type!=TVTest::Theme::BORDER_NONE
+				|| Style.Back.Fill!=m_Theme.TitleStyle.Back.Fill)
+			ThemeDraw.Draw(Style.Back,rc);
+		DrawUtil::DrawText(hdc,TEXT("r"),rc,DT_CENTER | DT_VCENTER | DT_SINGLELINE,
+						   &m_IconFont,Style.Fore.Fill.GetSolidColor());
 	}
 }
 
 
 void CPanel::OnSize(int Width,int Height)
 {
-	if (m_pWindow!=NULL) {
+	if (m_pContent!=NULL) {
 		int y;
 
 		if (m_fShowTitle)
 			y=m_TitleHeight;
 		else
 			y=0;
-		m_pWindow->SetPosition(0,y,Width,max(Height-y,0));
+		m_pContent->SetPosition(0,y,Width,max(Height-y,0));
 	}
 	if (m_pEventHandler!=NULL)
 		m_pEventHandler->OnSizeChanged(Width,Height);
@@ -213,14 +275,32 @@ void CPanel::OnSize(int Width,int Height)
 
 void CPanel::GetCloseButtonRect(RECT *pRect) const
 {
+	const int ButtonWidth=m_Style.TitleButtonIconSize.Width+m_Style.TitleButtonPadding.Horz();
+	const int ButtonHeight=m_Style.TitleButtonIconSize.Height+m_Style.TitleButtonPadding.Vert();
 	RECT rc;
 
 	GetClientRect(&rc);
-	rc.right-=m_TitleMargin;
-	rc.left=rc.right-m_ButtonSize;
-	rc.top=(m_TitleHeight-m_ButtonSize)/2;
-	rc.bottom=rc.top+m_ButtonSize;
+	TVTest::Theme::BorderStyle Border=m_Theme.TitleStyle.Back.Border;
+	ConvertBorderWidthsInPixels(&Border);
+	TVTest::Theme::SubtractBorderRect(Border,&rc);
+	rc.right-=m_Style.TitlePadding.Right;
+	rc.left=rc.right-ButtonWidth;
+	rc.top=m_Style.TitlePadding.Top+
+		(m_TitleHeight-m_Style.TitlePadding.Vert()-ButtonHeight)/2;
+	rc.bottom=rc.top+ButtonHeight;
 	*pRect=rc;
+}
+
+
+void CPanel::SetHotItem(ItemType Item)
+{
+	if (m_HotItem!=Item) {
+		m_HotItem=Item;
+
+		RECT rc;
+		GetCloseButtonRect(&rc);
+		Invalidate(&rc);
+	}
 }
 
 
@@ -229,10 +309,9 @@ LRESULT CPanel::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 	switch (uMsg) {
 	case WM_CREATE:
 		{
-			HDC hdc=::GetDC(hwnd);
-			int FontHeight=m_Font.GetHeight(hdc,false);
-			m_TitleHeight=max(FontHeight,m_ButtonSize)+m_TitleMargin*2;
-			::ReleaseDC(hwnd,hdc);
+			InitializeUI();
+
+			m_HotItem=ITEM_NONE;
 			m_fCloseButtonPushed=false;
 		}
 		return 0;
@@ -262,14 +341,17 @@ LRESULT CPanel::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 
 				GetCloseButtonRect(&rc);
 				if (::PtInRect(&rc,pt)) {
+					SetHotItem(ITEM_CLOSE);
 					m_fCloseButtonPushed=true;
 					::SetCapture(hwnd);
-					::InvalidateRect(hwnd,&rc,FALSE);
-				} else if (m_fEnableFloating) {
-					::ClientToScreen(hwnd,&pt);
-					m_fCloseButtonPushed=false;
-					m_ptDragStartPos=pt;
-					::SetCapture(hwnd);
+				} else {
+					SetHotItem(ITEM_NONE);
+					if (m_fEnableFloating) {
+						::ClientToScreen(hwnd,&pt);
+						m_fCloseButtonPushed=false;
+						m_ptDragStartPos=pt;
+						::SetCapture(hwnd);
+					}
 				}
 			}
 		}
@@ -296,37 +378,61 @@ LRESULT CPanel::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 		return 0;
 
 	case WM_MOUSEMOVE:
-		if (::GetCapture()==hwnd) {
-			if (!m_fCloseButtonPushed) {
-				POINT pt;
+		{
+			POINT pt;
 
-				pt.x=GET_X_LPARAM(lParam);
-				pt.y=GET_Y_LPARAM(lParam);
-				::ClientToScreen(hwnd,&pt);
-				if (abs(pt.x-m_ptDragStartPos.x)>=4
-						|| abs(pt.y-m_ptDragStartPos.y)>=4) {
-					::ReleaseCapture();
-					if (m_pEventHandler!=NULL
-							&& m_pEventHandler->OnFloating()) {
-						::SendMessage(GetParent(),WM_NCLBUTTONDOWN,
-									  HTCAPTION,MAKELONG(pt.x,pt.y));
+			pt.x=GET_X_LPARAM(lParam);
+			pt.y=GET_Y_LPARAM(lParam);
+
+			RECT rc;
+			GetCloseButtonRect(&rc);
+			if (::PtInRect(&rc,pt))
+				SetHotItem(ITEM_CLOSE);
+			else
+				SetHotItem(ITEM_NONE);
+
+			if (::GetCapture()==hwnd) {
+				if (!m_fCloseButtonPushed) {
+					::ClientToScreen(hwnd,&pt);
+					if (abs(pt.x-m_ptDragStartPos.x)>=4
+							|| abs(pt.y-m_ptDragStartPos.y)>=4) {
+						::ReleaseCapture();
+						if (m_pEventHandler!=NULL
+								&& m_pEventHandler->OnFloating()) {
+							::SendMessage(GetParent(),WM_NCLBUTTONDOWN,
+										  HTCAPTION,MAKELONG(pt.x,pt.y));
+						}
 					}
 				}
+			} else {
+				TRACKMOUSEEVENT tme;
+				tme.cbSize=sizeof(TRACKMOUSEEVENT);
+				tme.dwFlags=TME_LEAVE;
+				tme.hwndTrack=hwnd;
+				::TrackMouseEvent(&tme);
 			}
 		}
 		return 0;
 
+	case WM_MOUSELEAVE:
+		SetHotItem(ITEM_NONE);
+		return 0;
+
+	case WM_SETCURSOR:
+		if ((HWND)wParam==hwnd && LOWORD(lParam)==HTCLIENT && m_HotItem!=ITEM_NONE) {
+			::SetCursor(GetActionCursor());
+			return TRUE;
+		}
+		break;
+
 	case WM_CAPTURECHANGED:
 		if (m_fCloseButtonPushed) {
-			RECT rc;
-
+			SetHotItem(ITEM_NONE);
 			m_fCloseButtonPushed=false;
-			GetCloseButtonRect(&rc);
-			::InvalidateRect(hwnd,&rc,FALSE);
 		}
 		return 0;
 
-	case WM_RBUTTONDOWN:
+	case WM_RBUTTONUP:
 		{
 			POINT pt;
 
@@ -367,7 +473,66 @@ LRESULT CPanel::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 			return 0;
 		break;
 	}
-	return ::DefWindowProc(hwnd,uMsg,wParam,lParam);
+
+	return CCustomWindow::OnMessage(hwnd,uMsg,wParam,lParam);
+}
+
+
+void CPanel::ApplyStyle()
+{
+	if (m_hwnd!=NULL) {
+		CreateDrawFont(m_StyleFont,&m_Font);
+
+		LOGFONT lf={};
+		lf.lfHeight=-m_Style.TitleButtonIconSize.Height;
+		lf.lfCharSet=SYMBOL_CHARSET;
+		::lstrcpy(lf.lfFaceName,TEXT("Marlett"));
+		m_IconFont.Create(&lf);
+
+		CalcDimensions();
+	}
+}
+
+
+void CPanel::RealizeStyle()
+{
+	if (m_hwnd!=NULL) {
+		SendSizeMessage();
+		Invalidate();
+	}
+}
+
+
+CPanel::PanelStyle::PanelStyle()
+	: TitlePadding(0,0,4,0)
+	, TitleLabelMargin(4,2,4,2)
+	, TitleLabelExtraHeight(4)
+	, TitleButtonIconSize(12,12)
+	, TitleButtonPadding(2)
+{
+}
+
+
+void CPanel::PanelStyle::SetStyle(const TVTest::Style::CStyleManager *pStyleManager)
+{
+	*this=PanelStyle();
+	pStyleManager->Get(TEXT("panel.title.padding"),&TitlePadding);
+	pStyleManager->Get(TEXT("panel.title.label.margin"),&TitleLabelMargin);
+	pStyleManager->Get(TEXT("panel.title.label.extra-height"),&TitleLabelExtraHeight);
+	pStyleManager->Get(TEXT("panel.title.button.icon"),&TitleButtonIconSize);
+	pStyleManager->Get(TEXT("panel.title.button.padding"),&TitleButtonPadding);
+}
+
+
+void CPanel::PanelStyle::NormalizeStyle(
+	const TVTest::Style::CStyleManager *pStyleManager,
+	const TVTest::Style::CStyleScaling *pStyleScaling)
+{
+	pStyleScaling->ToPixels(&TitlePadding);
+	pStyleScaling->ToPixels(&TitleLabelMargin);
+	pStyleScaling->ToPixels(&TitleLabelExtraHeight);
+	pStyleScaling->ToPixels(&TitleButtonIconSize);
+	pStyleScaling->ToPixels(&TitleButtonPadding);
 }
 
 
@@ -401,8 +566,9 @@ bool CPanelFrame::Initialize(HINSTANCE hinst)
 
 CPanelFrame::CPanelFrame()
 	: m_fFloating(true)
+	, m_fFloatingTransition(false)
 	, m_DockingWidth(-1)
-	, m_fKeepWidth(true)
+	, m_DockingHeight(-1)
 	, m_Opacity(255)
 	, m_DragDockingTarget(DOCKING_NONE)
 	, m_pEventHandler(NULL)
@@ -411,6 +577,8 @@ CPanelFrame::CPanelFrame()
 	m_WindowPosition.Top=120;
 	m_WindowPosition.Width=200;
 	m_WindowPosition.Height=240;
+
+	SetStyleScaling(&m_StyleScaling);
 }
 
 
@@ -422,19 +590,19 @@ CPanelFrame::~CPanelFrame()
 
 bool CPanelFrame::Create(HWND hwndParent,DWORD Style,DWORD ExStyle,int ID)
 {
+	TVTest::PerMonitorDPIBlock DPIBlock;
+
 	if (!CreateBasicWindow(hwndParent,Style,ExStyle,ID,
 						   PANEL_FRAME_WINDOW_CLASS,TEXT("パネル"),m_hinst))
 		return false;
-	if (m_Opacity<255) {
-		SetExStyle(ExStyle | WS_EX_LAYERED);
-		::SetLayeredWindowAttributes(m_hwnd,0,m_Opacity,LWA_ALPHA);
-	}
+	if (m_Opacity<255)
+		SetOpacity(m_Opacity);
 	return true;
 }
 
 
 bool CPanelFrame::Create(HWND hwndOwner,Layout::CSplitter *pSplitter,int PanelID,
-						 CBasicWindow *pWindow,LPCTSTR pszTitle)
+						 CPanelContent *pContent,LPCTSTR pszTitle)
 {
 	RECT rc;
 
@@ -444,15 +612,27 @@ bool CPanelFrame::Create(HWND hwndOwner,Layout::CSplitter *pSplitter,int PanelID
 				WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME | WS_CLIPCHILDREN,
 				WS_EX_TOOLWINDOW))
 		return false;
-	m_Panel.Create(m_hwnd,WS_CHILD | WS_VISIBLE | WS_CLIPCHILDREN);
-	m_Panel.SetWindow(pWindow,pszTitle);
+
+	m_Panel.SetStyleScaling(
+		m_fFloating ? m_pStyleScaling : m_pSplitter->GetStyleScaling());
+	m_Panel.Create(m_hwnd,WS_CHILD | WS_CLIPCHILDREN);
+	m_Panel.SetWindow(pContent,pszTitle);
 	m_Panel.SetEventHandler(this);
-	if (m_DockingWidth<0) {
-		m_Panel.GetClientRect(&rc);
-		m_DockingWidth=rc.right;
+	m_Panel.GetPosition(&rc);
+	if (IsDockingVertical()) {
+		if (m_DockingHeight<0)
+			m_DockingHeight=rc.bottom;
+		if (m_DockingWidth<0)
+			m_DockingWidth=m_DockingHeight;
+	} else {
+		if (m_DockingWidth<0)
+			m_DockingWidth=rc.right;
+		if (m_DockingHeight<0)
+			m_DockingHeight=m_DockingWidth;
 	}
+
 	if (m_fFloating) {
-		m_Panel.SetVisible(false);
+		RegisterUIChild(&m_Panel);
 		m_Panel.SetParent(this);
 		GetClientRect(&rc);
 		m_Panel.SetPosition(&rc);
@@ -462,10 +642,18 @@ bool CPanelFrame::Create(HWND hwndOwner,Layout::CSplitter *pSplitter,int PanelID
 		Layout::CWindowContainer *pContainer=
 			dynamic_cast<Layout::CWindowContainer*>(m_pSplitter->GetPaneByID(PanelID));
 
-		pContainer->SetWindow(&m_Panel);
-		m_pSplitter->SetPaneSize(PanelID,m_DockingWidth);
+		pContainer->SetWindow(&m_Panel,&m_Panel);
+		if (IsDockingVertical()) {
+			m_pSplitter->SetPaneSize(PanelID,m_DockingHeight);
+			rc.bottom=rc.top+m_DockingHeight;
+		} else {
+			m_pSplitter->SetPaneSize(PanelID,m_DockingWidth);
+			rc.right=rc.left+m_DockingWidth;
+		}
+		m_Panel.SetPosition(&rc);
 		m_Panel.ShowTitle(true);
 	}
+
 	return true;
 }
 
@@ -478,30 +666,44 @@ bool CPanelFrame::SetFloating(bool fFloating)
 				dynamic_cast<Layout::CWindowContainer*>(m_pSplitter->GetPaneByID(m_PanelID));
 			RECT rc;
 
+			m_fFloatingTransition=true;
 			if (fFloating) {
 				pContainer->SetVisible(false);
 				pContainer->SetWindow(NULL);
+				RegisterUIChild(&m_Panel);
 				m_Panel.SetParent(this);
+				m_Panel.SetStyleScaling(m_pStyleScaling);
+				m_Panel.UpdateStyle();
 				m_Panel.SetVisible(true);
 				GetClientRect(&rc);
 				m_Panel.SetPosition(&rc);
 				m_Panel.ShowTitle(false);
 				SetVisible(true);
 			} else {
-				if (m_fKeepWidth) {
-					m_Panel.GetClientRect(&rc);
-					m_DockingWidth=rc.right;
-				}
+				/*
+				m_Panel.GetContentRect(&rc);
+				if (IsDockingVertical())
+					m_DockingHeight=(rc.bottom-rc.top)+m_Panel.GetTitleHeight();
+				else
+					m_DockingWidth=rc.right-rc.left;
+				*/
+				RemoveUIChild(&m_Panel);
 				SetVisible(false);
 				m_Panel.SetVisible(false);
 				m_Panel.ShowTitle(true);
-				pContainer->SetWindow(&m_Panel);
-				m_pSplitter->SetPaneSize(m_PanelID,m_DockingWidth);
+				pContainer->SetWindow(&m_Panel,&m_Panel);
+				m_Panel.SetStyleScaling(m_pSplitter->GetStyleScaling());
+				m_Panel.UpdateStyle();
+				m_pSplitter->SetPaneSize(m_PanelID,
+					IsDockingVertical()?m_DockingHeight:m_DockingWidth);
 				pContainer->SetVisible(true);
 			}
+			m_fFloatingTransition=false;
 		}
+
 		m_fFloating=fFloating;
 	}
+
 	return true;
 }
 
@@ -509,6 +711,22 @@ bool CPanelFrame::SetFloating(bool fFloating)
 bool CPanelFrame::SetDockingWidth(int Width)
 {
 	m_DockingWidth=Width;
+	return true;
+}
+
+
+bool CPanelFrame::SetDockingHeight(int Height)
+{
+	m_DockingHeight=Height;
+	return true;
+}
+
+
+bool CPanelFrame::SetDockingPlace(DockingPlace Place)
+{
+	if (m_pEventHandler!=NULL)
+		m_pEventHandler->OnDocking(Place);
+
 	return true;
 }
 
@@ -545,38 +763,42 @@ bool CPanelFrame::SetPanelVisible(bool fVisible,bool fNoActivate)
 }
 
 
-bool CPanelFrame::SetTheme(const CPanel::ThemeInfo *pTheme)
+bool CPanelFrame::IsDockingVertical() const
 {
-	return m_Panel.SetTheme(pTheme);
+	return (m_pSplitter->GetStyle() & Layout::CSplitter::STYLE_VERT)!=0;
 }
 
 
-bool CPanelFrame::GetTheme(CPanel::ThemeInfo *pTheme) const
+bool CPanelFrame::SetPanelTheme(const CPanel::PanelTheme &Theme)
 {
-	return m_Panel.GetTheme(pTheme);
+	return m_Panel.SetPanelTheme(Theme);
 }
 
 
-bool CPanelFrame::SetOpacity(int Opacity)
+bool CPanelFrame::GetPanelTheme(CPanel::PanelTheme *pTheme) const
+{
+	return m_Panel.GetPanelTheme(pTheme);
+}
+
+
+bool CPanelFrame::SetPanelOpacity(int Opacity)
 {
 	if (Opacity<0 || Opacity>255)
 		return false;
 	if (Opacity!=m_Opacity) {
 		if (m_hwnd!=NULL) {
-			DWORD ExStyle=GetExStyle();
-
-			if (Opacity<255) {
-				if ((ExStyle&WS_EX_LAYERED)==0)
-					SetExStyle(ExStyle|WS_EX_LAYERED);
-				::SetLayeredWindowAttributes(m_hwnd,0,Opacity,LWA_ALPHA);
-			} else {
-				if ((ExStyle&WS_EX_LAYERED)!=0)
-					SetExStyle(ExStyle^WS_EX_LAYERED);
-			}
+			if (!SetOpacity(Opacity))
+				return false;
 		}
 		m_Opacity=Opacity;
 	}
 	return true;
+}
+
+
+void CPanelFrame::SetTheme(const TVTest::Theme::CThemeManager *pThemeManager)
+{
+	m_Panel.SetTheme(pThemeManager);
 }
 
 
@@ -591,6 +813,10 @@ LRESULT CPanelFrame::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 			InsertMenu(hmenu,1,MF_BYPOSITION | MFT_SEPARATOR,0,NULL);
 		}
 		return 0;
+
+	case WM_NCCREATE:
+		InitStyleScaling(hwnd,true);
+		break;
 
 	case WM_SIZE:
 		if (m_fFloating)
@@ -622,45 +848,60 @@ LRESULT CPanelFrame::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 		break;
 
 	case WM_MOVE:
-		{
+		if (m_fDragMoving) {
+			const int Margin=m_pStyleScaling->GetScaledSystemMetrics(SM_CYCAPTION);
 			POINT pt;
 			RECT rcTarget,rc;
 			DockingPlace Target;
 
-			if (!m_fDragMoving)
-				break;
 			::GetCursorPos(&pt);
 			m_pSplitter->GetLayoutBase()->GetScreenPosition(&rcTarget);
 			Target=DOCKING_NONE;
 			rc=rcTarget;
-			rc.right=rc.left+16;
+			rc.right=rc.left+Margin;
 			if (::PtInRect(&rc,pt)) {
 				Target=DOCKING_LEFT;
 			} else {
 				rc.right=rcTarget.right;
-				rc.left=rc.right-16;
-				if (PtInRect(&rc,pt))
+				rc.left=rc.right-Margin;
+				if (::PtInRect(&rc,pt)) {
 					Target=DOCKING_RIGHT;
+				} else {
+					rc.left=rcTarget.left;
+					rc.right=rcTarget.right;
+					rc.top=rcTarget.top;
+					rc.bottom=rc.top+Margin;
+					if (::PtInRect(&rc,pt)) {
+						Target=DOCKING_TOP;
+					} else {
+						rc.bottom=rcTarget.bottom;
+						rc.top=rc.bottom-Margin;
+						if (::PtInRect(&rc,pt))
+							Target=DOCKING_BOTTOM;
+					}
+				}
 			}
 			if (Target!=m_DragDockingTarget) {
 				if (Target==DOCKING_NONE) {
 					m_DropHelper.Hide();
 				} else {
-					int DockingWidth;
-
-					if (m_fKeepWidth) {
-						SIZE sz;
-						m_Panel.GetClientSize(&sz);
-						DockingWidth=sz.cx;
-					} else {
-						DockingWidth=m_DockingWidth;
-					}
-					if (Target==DOCKING_LEFT) {
+					switch (Target) {
+					case DOCKING_LEFT:
 						rc.right=rcTarget.left;
-						rc.left=rc.right-DockingWidth;
-					} else if (Target==DOCKING_RIGHT) {
+						rc.left=rc.right-m_DockingWidth;
+						break;
+					case DOCKING_RIGHT:
 						rc.left=rcTarget.right;
-						rc.right=rc.left+DockingWidth;
+						rc.right=rc.left+m_DockingWidth;
+						break;
+					case DOCKING_TOP:
+						rc.bottom=rcTarget.top;
+						rc.top=rc.bottom-m_DockingHeight;
+						break;
+					case DOCKING_BOTTOM:
+						rc.top=rcTarget.bottom;
+						rc.bottom=rc.top+m_DockingHeight;
+						break;
 					}
 					m_DropHelper.Show(&rc);
 				}
@@ -671,16 +912,9 @@ LRESULT CPanelFrame::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 
 	case WM_EXITSIZEMOVE:
 		if (m_DragDockingTarget!=DOCKING_NONE) {
-			int Index;
-
 			m_DropHelper.Hide();
-			if (m_DragDockingTarget==DOCKING_LEFT)
-				Index=0;
-			else
-				Index=1;
-			//if (m_pSplitter->IDToIndex(m_PanelID)!=Index)
-			if (m_pSplitter->GetPane(Index)->GetID()!=m_PanelID)
-				m_pSplitter->SwapPane();
+			if (m_pEventHandler!=NULL)
+				m_pEventHandler->OnDocking(m_DragDockingTarget);
 			::SendMessage(hwnd,WM_SYSCOMMAND,SC_DOCKING,0);
 		}
 		m_fDragMoving=false;
@@ -705,13 +939,18 @@ LRESULT CPanelFrame::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 		}
 		break;
 
+	case WM_DPICHANGED:
+		OnDPIChanged(hwnd,wParam,lParam);
+		break;
+
 	case WM_CLOSE:
 		if (m_pEventHandler!=NULL
 				&& !m_pEventHandler->OnClose())
 			return 0;
 		break;
 	}
-	return ::DefWindowProc(hwnd,uMsg,wParam,lParam);
+
+	return CCustomWindow::OnMessage(hwnd,uMsg,wParam,lParam);
 }
 
 
@@ -725,7 +964,7 @@ bool CPanelFrame::OnFloating()
 	MapWindowRect(m_Panel.GetHandle(),NULL,&rc);
 	if (m_pEventHandler!=NULL && !m_pEventHandler->OnFloatingChange(true))
 		return false;
-	CalcPositionFromClientRect(&rc);
+	m_pStyleScaling->AdjustWindowRect(m_hwnd,&rc);
 	SetPosition(&rc);
 	SetFloating(true);
 	return true;
@@ -758,17 +997,35 @@ bool CPanelFrame::OnKeyDown(UINT KeyCode,UINT Flags)
 
 void CPanelFrame::OnSizeChanged(int Width,int Height)
 {
-	if (!m_fFloating)
-		m_DockingWidth=Width;
+	if (!m_fFloating && !m_fFloatingTransition) {
+		if (IsDockingVertical())
+			m_DockingHeight=Height;
+		else
+			m_DockingWidth=Width;
+	}
 }
 
 
-#define PANEL_MENU_PLACEMENT	CPanel::MENU_USER
+enum {
+	PANEL_MENU_LEFT=CPanel::MENU_USER,
+	PANEL_MENU_RIGHT,
+	PANEL_MENU_TOP,
+	PANEL_MENU_BOTTOM
+};
 
 bool CPanelFrame::OnMenuPopup(HMENU hmenu)
 {
-	::AppendMenu(hmenu,MF_STRING | MF_ENABLED,PANEL_MENU_PLACEMENT,
-				 m_pSplitter->IDToIndex(m_PanelID)==0?TEXT("右へ(&R)"):TEXT("左へ(&L)"));
+	::AppendMenu(hmenu,MF_SEPARATOR,0,NULL);
+	::AppendMenu(hmenu,MF_STRING | MF_ENABLED,PANEL_MENU_LEFT,TEXT("左へ(&L)"));
+	::AppendMenu(hmenu,MF_STRING | MF_ENABLED,PANEL_MENU_RIGHT,TEXT("右へ(&R)"));
+	::AppendMenu(hmenu,MF_STRING | MF_ENABLED,PANEL_MENU_TOP,TEXT("上へ(&T)"));
+	::AppendMenu(hmenu,MF_STRING | MF_ENABLED,PANEL_MENU_BOTTOM,TEXT("下へ(&B)"));
+	int Index=m_pSplitter->IDToIndex(m_PanelID);
+	::EnableMenuItem(hmenu,
+		IsDockingVertical()?
+			(Index==0?PANEL_MENU_TOP:PANEL_MENU_BOTTOM):
+			(Index==0?PANEL_MENU_LEFT:PANEL_MENU_RIGHT),
+		MF_BYCOMMAND | MF_GRAYED);
 	return true;
 }
 
@@ -776,13 +1033,21 @@ bool CPanelFrame::OnMenuPopup(HMENU hmenu)
 bool CPanelFrame::OnMenuSelected(int Command)
 {
 	switch (Command) {
-	case PANEL_MENU_PLACEMENT:
-		m_pSplitter->SwapPane();
-		break;
-	default:
-		return false;
+	case PANEL_MENU_LEFT:
+		SetDockingPlace(DOCKING_LEFT);
+		return true;
+	case PANEL_MENU_RIGHT:
+		SetDockingPlace(DOCKING_RIGHT);
+		return true;
+	case PANEL_MENU_TOP:
+		SetDockingPlace(DOCKING_TOP);
+		return true;
+	case PANEL_MENU_BOTTOM:
+		SetDockingPlace(DOCKING_BOTTOM);
+		return true;
 	}
-	return true;
+
+	return false;
 }
 
 
@@ -868,5 +1133,6 @@ LRESULT CDropHelper::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 		}
 		return 0;
 	}
-	return ::DefWindowProc(hwnd,uMsg,wParam,lParam);
+
+	return CCustomWindow::OnMessage(hwnd,uMsg,wParam,lParam);
 }

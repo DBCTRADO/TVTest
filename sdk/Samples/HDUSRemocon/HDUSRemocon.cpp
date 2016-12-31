@@ -2,6 +2,11 @@
 	TVTest プラグインサンプル
 
 	HDUSのリモコンを使う
+
+	このサンプルでは主に以下の機能を実装しています。
+
+	・コントローラを登録する
+	・メッセージフックを利用する
 */
 
 
@@ -145,7 +150,7 @@ bool CHDUSRemocon::Initialize()
 	Info.pTranslateMessage = TranslateMessageCallback;
 	Info.pClientData       = this;
 	if (!m_pApp->RegisterController(&Info)) {
-		m_pApp->AddLog(L"コントローラを登録できません。");
+		m_pApp->AddLog(L"コントローラを登録できません。",TVTest::LOG_TYPE_ERROR);
 		return false;
 	}
 
@@ -264,7 +269,7 @@ bool CHDUSRemocon::SetWindow(HWND hwnd)
 void CHDUSRemocon::OnError(LPCWSTR pszMessage)
 {
 	// エラー発生時のメッセージ表示
-	m_pApp->AddLog(pszMessage);
+	m_pApp->AddLog(pszMessage,TVTest::LOG_TYPE_ERROR);
 	if (!m_pApp->GetSilentMode()) {
 		::MessageBoxW(m_pApp->GetAppWindow(),pszMessage,L"HDUSリモコン",
 					  MB_OK | MB_ICONEXCLAMATION);

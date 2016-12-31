@@ -2,13 +2,32 @@
 #include "TVTest.h"
 #include "Menu.h"
 #include "AppMain.h"
+#include "GUIUtil.h"
+#include "DPIUtil.h"
 #include "resource.h"
+#include "Common/DebugDef.h"
 
-#ifdef _DEBUG
-#undef THIS_FILE
-static char THIS_FILE[]=__FILE__;
-#define new DEBUG_NEW
-#endif
+
+
+
+static int MyTrackPopupMenu(
+	HMENU hmenu,UINT Flags,HWND hwnd,const POINT *pPos=NULL,const RECT *pExcludeRect=NULL)
+{
+	POINT pt;
+	TPMPARAMS tpm;
+
+	if (pPos!=NULL)
+		pt=*pPos;
+	else
+		::GetCursorPos(&pt);
+
+	if (pExcludeRect!=NULL) {
+		tpm.cbSize=sizeof(TPMPARAMS);
+		tpm.rcExclude=*pExcludeRect;
+	}
+
+	return ::TrackPopupMenuEx(hmenu,Flags,pt.x,pt.y,hwnd,pExcludeRect!=NULL?&tpm:NULL);
+}
 
 
 
@@ -64,6 +83,7 @@ bool CMainMenu::Show(UINT Flags,int x,int y,HWND hwnd,bool fToggle,const std::ve
 		if (pItemList!=NULL && !pItemList->empty()) {
 			hmenuCustom=::CreatePopupMenu();
 			int OrigItemCount=::GetMenuItemCount(m_hmenuPopup);
+			const CCommandList &CommandList=GetAppClass().CommandList;
 
 			MENUITEMINFO mii;
 			TCHAR szText[256];
@@ -72,33 +92,39 @@ bool CMainMenu::Show(UINT Flags,int x,int y,HWND hwnd,bool fToggle,const std::ve
 			mii.fMask=MIIM_FTYPE | MIIM_STATE | MIIM_ID | MIIM_SUBMENU | MIIM_STRING;
 			mii.dwTypeData=szText;
 
-			int ItemCount=0;
-
 			for (auto itr=pItemList->begin();itr!=pItemList->end();++itr) {
 				int ID=*itr;
 
 				if (ID<0) {
-					if (::AppendMenu(hmenuCustom,MF_SEPARATOR,0,NULL))
-						ItemCount++;
+					::AppendMenu(hmenuCustom,MF_SEPARATOR,0,NULL);
 				} else if (ID>=CM_COMMAND_FIRST) {
-					for (int j=0;j<OrigItemCount;j++) {
-						mii.cch=lengthof(szText);
-						if (::GetMenuItemInfo(m_hmenuPopup,j,TRUE,&mii)
-								&& mii.wID==ID) {
-							if (::InsertMenuItem(hmenuCustom,ItemCount,TRUE,&mii))
-								ItemCount++;
+					// トップレベルの項目にあればコピー
+					int i;
+					for (i=0;i<OrigItemCount;i++) {
+						if (::GetMenuItemID(m_hmenuPopup,i)==(UINT)ID)
 							break;
-						}
+					}
+					if (i<OrigItemCount) {
+						mii.cch=lengthof(szText);
+						if (::GetMenuItemInfo(m_hmenuPopup,i,TRUE,&mii))
+							::InsertMenuItem(hmenuCustom,::GetMenuItemCount(hmenuCustom),TRUE,&mii);
+					} else if (CommandList.GetCommandShortNameByID(ID,szText,lengthof(szText))>0) {
+						unsigned int State=CommandList.GetCommandStateByID(ID);
+						UINT Flags=MF_STRING;
+						if ((State & CCommandList::COMMAND_STATE_DISABLED)!=0)
+							Flags|=MF_GRAYED;
+						if ((State & CCommandList::COMMAND_STATE_CHECKED)!=0)
+							Flags|=MF_CHECKED;
+						::AppendMenu(hmenuCustom,Flags,ID,FormatMenuString(szText).c_str());
 					}
 				} else {
 					mii.cch=lengthof(szText);
-					if (::GetMenuItemInfo(m_hmenuPopup,ID,TRUE,&mii)
-							&& ::InsertMenuItem(hmenuCustom,ItemCount,TRUE,&mii))
-						ItemCount++;
+					if (::GetMenuItemInfo(m_hmenuPopup,ID,TRUE,&mii))
+						::InsertMenuItem(hmenuCustom,::GetMenuItemCount(hmenuCustom),TRUE,&mii);
 				}
 			}
 
-			if (ItemCount==0) {
+			if (::GetMenuItemCount(hmenuCustom)==0) {
 				::DestroyMenu(hmenuCustom);
 				hmenuCustom=m_hmenuPopup;
 			}
@@ -126,7 +152,8 @@ bool CMainMenu::Show(UINT Flags,int x,int y,HWND hwnd,bool fToggle,const std::ve
 }
 
 
-bool CMainMenu::PopupSubMenu(int SubMenu,UINT Flags,int x,int y,HWND hwnd,bool fToggle)
+bool CMainMenu::PopupSubMenu(
+	int SubMenu,UINT Flags,HWND hwnd,const POINT *pPos,bool fToggle,const RECT *pExcludeRect)
 {
 	HMENU hmenu=GetSubMenu(SubMenu);
 
@@ -137,7 +164,7 @@ bool CMainMenu::PopupSubMenu(int SubMenu,UINT Flags,int x,int y,HWND hwnd,bool f
 			::EndMenu();
 		m_fPopup=true;
 		m_PopupMenu=SubMenu;
-		::TrackPopupMenu(hmenu,Flags,x,y,0,hwnd,NULL);
+		MyTrackPopupMenu(hmenu,Flags,hwnd,pPos,pExcludeRect);
 		m_fPopup=false;
 	} else {
 		::EndMenu();
@@ -265,12 +292,12 @@ void CMenuPainter::DrawItemBackground(HDC hdc,const RECT &Rect,UINT State)
 		bool fSelected=(State & ODS_SELECTED)!=0;
 		if (m_fFlatMenu) {
 			::FillRect(hdc,&Rect,
-				reinterpret_cast<HBRUSH>(fSelected?COLOR_MENUHILIGHT+1:COLOR_MENU+1));
+				reinterpret_cast<HBRUSH>(static_cast<INT_PTR>(fSelected?COLOR_MENUHILIGHT+1:COLOR_MENU+1)));
 			if (fSelected)
 				::FrameRect(hdc,&Rect,::GetSysColorBrush(COLOR_HIGHLIGHT));
 		} else {
 			::FillRect(hdc,&Rect,
-				reinterpret_cast<HBRUSH>(fSelected?COLOR_HIGHLIGHT+1:COLOR_MENU+1));
+				reinterpret_cast<HBRUSH>(static_cast<INT_PTR>(fSelected?COLOR_HIGHLIGHT+1:COLOR_MENU+1)));
 		}
 	}
 }
@@ -381,7 +408,8 @@ void CMenuPainter::DrawBorder(HDC hdc,const RECT &Rect)
 		m_UxTheme.DrawBackground(hdc,MENU_POPUPBORDERS,0,
 								 MENU_POPUPBACKGROUND,0,&Rect);
 	} else {
-		Theme::DrawBorder(hdc,Rect,Theme::BORDER_RAISED);
+		RECT rc=Rect;
+		::DrawEdge(hdc,&rc,BDR_RAISEDOUTER,BF_RECT);
 	}
 }
 
@@ -427,6 +455,94 @@ int CMenuPainter::ItemStateToID(UINT State) const
 
 
 
+CChannelMenuLogo::CChannelMenuLogo()
+	: m_LogoWidth(26)
+	, m_LogoHeight(16)
+	, m_fNoFrame(false)
+{
+}
+
+
+bool CChannelMenuLogo::Initialize(int IconHeight,unsigned int Flags)
+{
+	if (IconHeight<=16) {
+		m_LogoHeight=16;
+		m_LogoWidth=26;
+	} else {
+		m_LogoHeight=IconHeight;
+		m_LogoWidth=::MulDiv(52,m_LogoHeight,32);
+	}
+
+	m_fNoFrame=(Flags & FLAG_NOFRAME)!=0;
+
+	if (!m_fNoFrame) {
+		DrawUtil::CBitmap FrameImage;
+		FrameImage.Load(
+			GetAppClass().GetResourceInstance(),
+			m_LogoHeight<=16?MAKEINTRESOURCE(IDB_LOGOFRAME16):MAKEINTRESOURCE(IDB_LOGOFRAME32));
+		m_FrameImage.CreateFromBitmap(FrameImage.GetHandle());
+	}
+
+	return true;
+}
+
+
+bool CChannelMenuLogo::DrawLogo(HDC hdc,int x,int y,const CChannelInfo &Channel)
+{
+	HBITMAP hbmLogo=GetAppClass().LogoManager.GetAssociatedLogoBitmap(
+		Channel.GetNetworkID(),Channel.GetServiceID(),
+		m_LogoHeight<=24?CLogoManager::LOGOTYPE_SMALL:CLogoManager::LOGOTYPE_BIG);
+	if (hbmLogo==NULL)
+		return false;
+
+	if (m_fNoFrame) {
+		DrawUtil::DrawBitmap(hdc,x,y,m_LogoWidth,m_LogoHeight,hbmLogo);
+		return true;
+	}
+
+	TVTest::Graphics::CImage LogoImage;
+
+	LogoImage.CreateFromBitmap(hbmLogo);
+
+	TVTest::Graphics::CCanvas Canvas(hdc);
+	const int Margin=m_LogoHeight<=16?1:2;
+
+	Canvas.SetComposition(true);
+	if (m_FrameImage.GetHeight()==m_LogoHeight) {
+		Canvas.DrawImage(
+			x+Margin,y+Margin,m_LogoWidth-Margin*3,m_LogoHeight-Margin*3,
+			&LogoImage,0,0,LogoImage.GetWidth(),LogoImage.GetHeight());
+		Canvas.DrawImage(
+			x,y,m_LogoWidth,m_LogoHeight,
+			&m_FrameImage,0,0,m_LogoWidth,m_LogoHeight);
+	} else {
+		TVTest::Graphics::CImage TempImage;
+		const int DrawWidth=m_FrameImage.GetWidth(),DrawHeight=m_FrameImage.GetHeight();
+
+		TempImage.Create(DrawWidth,DrawHeight,32);
+		{
+			TVTest::Graphics::CCanvas TempCanvas(&TempImage);
+
+			TempCanvas.Clear(0,0,0,0);
+			TempCanvas.SetComposition(true);
+			TempCanvas.DrawImage(
+				Margin,Margin,DrawWidth-Margin*3,DrawHeight-Margin*3,
+				&LogoImage,0,0,LogoImage.GetWidth(),LogoImage.GetHeight());
+			TempCanvas.DrawImage(
+				0,0,DrawWidth,DrawHeight,
+				&m_FrameImage,0,0,DrawWidth,DrawHeight);
+		}
+		Canvas.DrawImage(
+			x,y,m_LogoWidth,m_LogoHeight,
+			&TempImage,0,0,DrawWidth,DrawHeight);
+	}
+
+	return true;
+}
+
+
+
+
 class CChannelMenuItem
 {
 	const CChannelInfo *m_pChannelInfo;
@@ -459,18 +575,39 @@ const CEventInfoData *CChannelMenuItem::GetEventInfo(CEpgProgramList *pProgramLi
 			if (pCurTime!=NULL)
 				st=*pCurTime;
 			else
-				GetCurrentJST(&st);
+				GetCurrentEpgTime(&st);
 		} else {
 			if (!m_EventList[Index-1].EventInfo.GetEndTime(&st))
 				return NULL;
 		}
-		if (!pProgramList->GetEventInfo(m_pChannelInfo->GetNetworkID(),
-										m_pChannelInfo->GetTransportStreamID(),
-										m_pChannelInfo->GetServiceID(),
-										&st,&m_EventList[Index].EventInfo))
-			return NULL;
+
+		bool fCurrent=false;
+		if (pCurTime==NULL && Index<=1) {
+			CAppMain &App=GetAppClass();
+			CAppCore::StreamIDInfo StreamID;
+
+			if (App.Core.GetCurrentStreamIDInfo(&StreamID)
+					&& m_pChannelInfo->GetNetworkID()==StreamID.NetworkID
+					&& m_pChannelInfo->GetTransportStreamID()==StreamID.TransportStreamID) {
+				if (!App.CoreEngine.GetCurrentEventInfo(&m_EventList[Index].EventInfo,
+														m_pChannelInfo->GetServiceID(),
+														Index>0))
+					return NULL;
+				fCurrent=true;
+			}
+		}
+
+		if (!fCurrent) {
+			if (!pProgramList->GetEventInfo(m_pChannelInfo->GetNetworkID(),
+											m_pChannelInfo->GetTransportStreamID(),
+											m_pChannelInfo->GetServiceID(),
+											&st,&m_EventList[Index].EventInfo))
+				return NULL;
+		}
+
 		m_EventList[Index].fValid=true;
 	}
+
 	return &m_EventList[Index].EventInfo;
 }
 
@@ -482,18 +619,13 @@ const CEventInfoData *CChannelMenuItem::GetEventInfo(int Index) const
 }
 
 
-CChannelMenu::CChannelMenu(CEpgProgramList *pProgramList,CLogoManager *pLogoManager)
+CChannelMenu::CChannelMenu()
 	: m_Flags(0)
 	, m_hwnd(NULL)
 	, m_hmenu(NULL)
-	, m_pProgramList(pProgramList)
-	, m_pLogoManager(pLogoManager)
-	, m_pChannelList(NULL)
 	, m_TextHeight(0)
 	, m_ChannelNameWidth(0)
 	, m_EventNameWidth(0)
-	, m_LogoWidth(26)
-	, m_LogoHeight(16)
 	, m_MenuLogoMargin(3)
 {
 }
@@ -510,10 +642,13 @@ bool CChannelMenu::Create(const CChannelList *pChannelList,int CurChannel,UINT C
 {
 	Destroy();
 
-	m_pChannelList=pChannelList;
+	if (pChannelList==NULL)
+		return false;
+
+	m_ChannelList=*pChannelList;
 	m_CurChannel=CurChannel;
 	m_FirstCommand=Command;
-	m_LastCommand=Command+pChannelList->NumChannels()-1;
+	m_LastCommand=Command+m_ChannelList.NumChannels()-1;
 	m_Flags=Flags;
 	m_hwnd=hwnd;
 
@@ -529,8 +664,11 @@ bool CChannelMenu::Create(const CChannelList *pChannelList,int CurChannel,UINT C
 	CreateFont(hdc);
 	HFONT hfontOld=DrawUtil::SelectObject(hdc,m_Font);
 
+	CEpgProgramList &EpgProgramList=GetAppClass().EpgProgramList;
+	const bool fCurServices=(Flags & FLAG_CURSERVICES)!=0;
 	SYSTEMTIME st;
-	GetBaseTime(&st);
+	if (!fCurServices)
+		GetBaseTime(&st);
 	m_ChannelNameWidth=0;
 	m_EventNameWidth=0;
 	if (hmenu==NULL) {
@@ -544,8 +682,8 @@ bool CChannelMenu::Create(const CChannelList *pChannelList,int CurChannel,UINT C
 	mii.cbSize=sizeof(MENUITEMINFO);
 	mii.fMask=MIIM_FTYPE | MIIM_STATE | MIIM_ID | MIIM_DATA;
 	int PrevSpace=-1;
-	for (int i=0,j=0;i<pChannelList->NumChannels();i++) {
-		const CChannelInfo *pChInfo=pChannelList->GetChannelInfo(i);
+	for (int i=0,j=0;i<m_ChannelList.NumChannels();i++) {
+		const CChannelInfo *pChInfo=m_ChannelList.GetChannelInfo(i);
 		if (!pChInfo->IsEnabled())
 			continue;
 
@@ -577,7 +715,8 @@ bool CChannelMenu::Create(const CChannelList *pChannelList,int CurChannel,UINT C
 		CChannelMenuItem *pItem=new CChannelMenuItem(pChInfo);
 		mii.dwItemData=reinterpret_cast<ULONG_PTR>(pItem);
 		if ((Flags&FLAG_SHOWEVENTINFO)!=0) {
-			const CEventInfoData *pEventInfo=pItem->GetEventInfo(m_pProgramList,0,&st);
+			const CEventInfoData *pEventInfo=
+				pItem->GetEventInfo(&EpgProgramList,0,fCurServices?NULL:&st);
 
 			if (pEventInfo!=NULL) {
 				GetEventText(pEventInfo,szText,lengthof(szText));
@@ -602,16 +741,14 @@ bool CChannelMenu::Create(const CChannelList *pChannelList,int CurChannel,UINT C
 
 	if ((Flags&FLAG_SHOWTOOLTIP)!=0) {
 		m_Tooltip.Create(hwnd);
-		m_Tooltip.SetMaxWidth(480);
+		m_Tooltip.SetFont(m_Font.GetHandle());
+		m_Tooltip.SetMaxWidth(m_TextHeight*40);
 		m_Tooltip.SetPopDelay(30*1000);
 		m_Tooltip.AddTrackingTip(1,TEXT(""));
 	}
 
 	if ((Flags & FLAG_SHOWLOGO)!=0) {
-		if (!m_LogoFrameImage.IsCreated()) {
-			m_LogoFrameImage.Load(GetAppClass().GetResourceInstance(),
-								  MAKEINTRESOURCE(IDB_LOGOFRAME),LR_CREATEDIBSECTION);
-		}
+		m_Logo.Initialize(::GetSystemMetrics(SM_CYSMICON));
 	}
 
 	return true;
@@ -636,18 +773,35 @@ void CChannelMenu::Destroy()
 			ClearMenu(m_hmenu);
 		m_hmenu=NULL;
 	}
+	m_ChannelList.Clear();
 	m_MenuPainter.Finalize();
 	m_Tooltip.Destroy();
 	m_hwnd=NULL;
 }
 
 
-bool CChannelMenu::Show(UINT Flags,int x,int y)
+int CChannelMenu::Show(UINT Flags,int x,int y,const RECT *pExcludeRect)
 {
 	if (m_hmenu==NULL)
 		return false;
-	::TrackPopupMenu(m_hmenu,Flags,x,y,0,m_hwnd,NULL);
-	return true;
+	POINT pt={x,y};
+	return MyTrackPopupMenu(m_hmenu,Flags,m_hwnd,&pt,pExcludeRect);
+}
+
+
+bool CChannelMenu::SetHighlightedItem(int Index)
+{
+	if (m_hmenu==NULL)
+		return false;
+
+	MENUITEMINFO mii;
+
+	mii.cbSize=sizeof(mii);
+	mii.fMask=MIIM_STATE;
+	if (!::GetMenuItemInfo(m_hmenu,Index,TRUE,&mii))
+		return false;
+	mii.fState|=MFS_HILITE;
+	return ::SetMenuItemInfo(m_hmenu,Index,TRUE,&mii)!=FALSE;
 }
 
 
@@ -660,10 +814,10 @@ bool CChannelMenu::OnMeasureItem(HWND hwnd,WPARAM wParam,LPARAM lParam)
 		pmis->itemWidth=m_ChannelNameWidth+
 						m_Margins.cxLeftWidth+m_Margins.cxRightWidth;
 		if ((m_Flags&FLAG_SHOWLOGO)!=0)
-			pmis->itemWidth+=m_LogoWidth+m_MenuLogoMargin;
+			pmis->itemWidth+=m_Logo.GetLogoWidth()+m_MenuLogoMargin;
 		if (m_EventNameWidth>0)
 			pmis->itemWidth+=m_TextHeight+m_EventNameWidth;
-		pmis->itemHeight=max(m_TextHeight,m_LogoHeight)+
+		pmis->itemHeight=max(m_TextHeight,m_Logo.GetLogoHeight())+
 							m_Margins.cyTopHeight+m_Margins.cyBottomHeight;
 		return true;
 	}
@@ -697,20 +851,11 @@ bool CChannelMenu::OnDrawItem(HWND hwnd,WPARAM wParam,LPARAM lParam)
 	rc.bottom=pdis->rcItem.bottom-m_Margins.cyBottomHeight;
 
 	if ((m_Flags&FLAG_SHOWLOGO)!=0) {
-		HBITMAP hbmLogo=m_pLogoManager->GetAssociatedLogoBitmap(
-			pChInfo->GetNetworkID(),pChInfo->GetServiceID(),CLogoManager::LOGOTYPE_SMALL);
-		if (hbmLogo!=NULL) {
-			DrawUtil::CMemoryDC MemoryDC(pdis->hDC);
-			MemoryDC.SetBitmap(hbmLogo);
-			int y=rc.top+((rc.bottom-rc.top)-m_LogoHeight)/2;
-			BITMAP bm;
-			::GetObject(hbmLogo,sizeof(bm),&bm);
-			MemoryDC.DrawStretch(pdis->hDC,rc.left+1,y+1,m_LogoWidth-3,m_LogoHeight-3,
-								 0,0,bm.bmWidth,bm.bmHeight);
-			MemoryDC.SetBitmap(m_LogoFrameImage);
-			MemoryDC.DrawAlpha(pdis->hDC,rc.left,y,0,0,m_LogoWidth,m_LogoHeight);
-		}
-		rc.left+=m_LogoWidth+m_MenuLogoMargin;
+		m_Logo.DrawLogo(pdis->hDC,
+						rc.left,
+						rc.top+((rc.bottom-rc.top)-m_Logo.GetLogoHeight())/2,
+						*pChInfo);
+		rc.left+=m_Logo.GetLogoWidth()+m_MenuLogoMargin;
 	}
 
 	rc.right=rc.left+m_ChannelNameWidth;
@@ -763,7 +908,7 @@ bool CChannelMenu::OnMenuSelect(HWND hwnd,WPARAM wParam,LPARAM lParam)
 			const CEventInfoData *pEventInfo1,*pEventInfo2;
 			pEventInfo1=pItem->GetEventInfo(0);
 			if (pEventInfo1==NULL) {
-				pEventInfo1=pItem->GetEventInfo(m_pProgramList,0);
+				pEventInfo1=pItem->GetEventInfo(&GetAppClass().EpgProgramList,0);
 			}
 			if (pEventInfo1!=NULL) {
 				TCHAR szText[256*2+1];
@@ -771,7 +916,7 @@ bool CChannelMenu::OnMenuSelect(HWND hwnd,WPARAM wParam,LPARAM lParam)
 				POINT pt;
 
 				Length=GetEventText(pEventInfo1,szText,lengthof(szText)/2);
-				pEventInfo2=pItem->GetEventInfo(m_pProgramList,1);
+				pEventInfo2=pItem->GetEventInfo(&GetAppClass().EpgProgramList,1);
 				if (pEventInfo2!=NULL) {
 					szText[Length++]=_T('\r');
 					szText[Length++]=_T('\n');
@@ -780,7 +925,7 @@ bool CChannelMenu::OnMenuSelect(HWND hwnd,WPARAM wParam,LPARAM lParam)
 				m_Tooltip.SetText(1,szText);
 				::GetCursorPos(&pt);
 				pt.x+=16;
-				pt.y+=max(m_TextHeight,m_LogoHeight)+
+				pt.y+=max(m_TextHeight,m_Logo.GetLogoHeight())+
 							m_Margins.cyTopHeight+m_Margins.cyBottomHeight;
 				m_Tooltip.TrackPosition(pt.x,pt.y);
 				m_Tooltip.TrackActivate(1,true);
@@ -803,21 +948,55 @@ bool CChannelMenu::OnUninitMenuPopup(HWND hwnd,WPARAM wParam,LPARAM lParam)
 }
 
 
+bool CChannelMenu::HandleMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam,LRESULT *pResult)
+{
+	if (m_hwnd==NULL || hwnd!=m_hwnd)
+		return false;
+
+	switch (uMsg) {
+	case WM_MEASUREITEM:
+		if (OnMeasureItem(hwnd,wParam,lParam)) {
+			*pResult=TRUE;
+			return true;
+		}
+		break;
+
+	case WM_DRAWITEM:
+		if (OnDrawItem(hwnd,wParam,lParam)) {
+			*pResult=TRUE;
+			return true;
+		}
+		break;
+
+	case WM_UNINITMENUPOPUP:
+		if (OnUninitMenuPopup(hwnd,wParam,lParam)) {
+			*pResult=0;
+			return true;
+		}
+		break;
+
+	case WM_MENUSELECT:
+		if (OnMenuSelect(hwnd,wParam,lParam)) {
+			*pResult=0;
+			return true;
+		}
+		break;
+	}
+
+	return false;
+}
+
+
 int CChannelMenu::GetEventText(const CEventInfoData *pEventInfo,
 							   LPTSTR pszText,int MaxLength) const
 {
-	SYSTEMTIME stStart,stEnd;
-	TCHAR szEnd[16];
+	TCHAR szTime[EpgUtil::MAX_EVENT_TIME_LENGTH];
 
-	pEventInfo->GetStartTime(&stStart);
-	if (pEventInfo->GetEndTime(&stEnd))
-		StdUtil::snprintf(szEnd,lengthof(szEnd),
-						  TEXT("%02d:%02d"),stEnd.wHour,stEnd.wMinute);
-	else
-		szEnd[0]='\0';
-	return StdUtil::snprintf(pszText,MaxLength,TEXT("%02d:%02d～%s %ls"),
-							 stStart.wHour,stStart.wMinute,szEnd,
-							 NullToEmptyString(pEventInfo->GetEventName()));
+	EpgUtil::FormatEventTime(
+		pEventInfo,szTime,lengthof(szTime),EpgUtil::EVENT_TIME_HOUR_2DIGITS);
+
+	return StdUtil::snprintf(pszText,MaxLength,TEXT("%s %s"),
+							 szTime,pEventInfo->m_EventName.c_str());
 }
 
 
@@ -836,15 +1015,13 @@ void CChannelMenu::CreateFont(HDC hdc)
 		m_TextHeight=m_Font.GetHeight(hdc);
 	else
 		m_TextHeight=abs(lf.lfHeight);
-	//m_LogoHeight=min(m_TextHeight,14);
-	//m_LogoWidth=m_LogoHeight*16/9;
 }
 
 
 void CChannelMenu::GetBaseTime(SYSTEMTIME *pTime)
 {
-	GetCurrentJST(pTime);
-	OffsetSystemTime(pTime,120*1000);
+	GetCurrentEpgTime(pTime);
+	OffsetSystemTime(pTime,2*TimeConsts::SYSTEMTIME_MINUTE);
 }
 
 
@@ -1020,57 +1197,52 @@ HMENU CPopupMenu::GetSubMenu(int Pos) const
 }
 
 
-bool CPopupMenu::Show(HWND hwnd,const POINT *pPos,UINT Flags)
+int CPopupMenu::Show(HWND hwnd,const POINT *pPos,UINT Flags,const RECT *pExcludeRect)
 {
 	if (m_hmenu==NULL)
-		return false;
-	POINT pt;
-	if (pPos!=NULL)
-		pt=*pPos;
-	else
-		::GetCursorPos(&pt);
-	::TrackPopupMenu(GetPopupHandle(),Flags,pt.x,pt.y,0,hwnd,NULL);
-	return true;
+		return 0;
+
+	return MyTrackPopupMenu(GetPopupHandle(),Flags,hwnd,pPos,pExcludeRect);
 }
 
 
-bool CPopupMenu::Show(HMENU hmenu,HWND hwnd,const POINT *pPos,UINT Flags,bool fToggle)
+int CPopupMenu::Show(HMENU hmenu,HWND hwnd,const POINT *pPos,
+					 UINT Flags,bool fToggle,const RECT *pExcludeRect)
 {
+	int Result;
+
 	if (m_hmenu==NULL) {
 		m_hmenu=hmenu;
 		m_Type=TYPE_ATTACHED;
-		POINT pt;
-		if (pPos!=NULL)
-			pt=*pPos;
-		else
-			::GetCursorPos(&pt);
-		::TrackPopupMenu(m_hmenu,Flags,pt.x,pt.y,0,hwnd,NULL);
+		Result=MyTrackPopupMenu(m_hmenu,Flags,hwnd,pPos,pExcludeRect);
 		m_hmenu=NULL;
 	} else {
 		if (fToggle)
 			::EndMenu();
+		Result=0;
 	}
-	return true;
+
+	return Result;
 }
 
 
-bool CPopupMenu::Show(HINSTANCE hinst,LPCTSTR pszName,HWND hwnd,const POINT *pPos,UINT Flags,bool fToggle)
+int CPopupMenu::Show(HINSTANCE hinst,LPCTSTR pszName,HWND hwnd,const POINT *pPos,
+					 UINT Flags,bool fToggle,const RECT *pExcludeRect)
 {
+	int Result;
+
 	if (m_hmenu==NULL) {
 		if (!Load(hinst,pszName))
-			return false;
-		POINT pt;
-		if (pPos!=NULL)
-			pt=*pPos;
-		else
-			::GetCursorPos(&pt);
-		::TrackPopupMenu(GetPopupHandle(),Flags,pt.x,pt.y,0,hwnd,NULL);
+			return 0;
+		Result=MyTrackPopupMenu(GetPopupHandle(),Flags,hwnd,pPos,pExcludeRect);
 		Destroy();
 	} else {
 		if (fToggle)
 			::EndMenu();
+		Result=0;
 	}
-	return true;
+
+	return Result;
 }
 
 
@@ -1078,7 +1250,9 @@ bool CPopupMenu::Show(HINSTANCE hinst,LPCTSTR pszName,HWND hwnd,const POINT *pPo
 
 CIconMenu::CIconMenu()
 	: m_hmenu(NULL)
+#ifdef WIN_XP_SUPPORT
 	, m_hImageList(NULL)
+#endif
 {
 }
 
@@ -1089,55 +1263,61 @@ CIconMenu::~CIconMenu()
 }
 
 
-bool CIconMenu::Initialize(HMENU hmenu,HINSTANCE hinst,LPCTSTR pszImageName,
-						   int IconWidth,const ItemInfo *pItemList,int ItemCount)
+bool CIconMenu::Initialize(HMENU hmenu,HINSTANCE hinst,const ItemInfo *pItemList,int ItemCount)
 {
 	Finalize();
 
-	if (hmenu==NULL || pszImageName==NULL || IconWidth<1 || pItemList==NULL || ItemCount<1)
+	if (hmenu==NULL || pItemList==NULL || ItemCount<1)
 		return false;
 
-	int IconCount;
-
+#ifdef WIN_XP_SUPPORT
 	if (!Util::OS::IsWindowsVistaOrLater()) {
-		m_hImageList=::ImageList_LoadImage(hinst,pszImageName,IconWidth,1,0,
-										   IMAGE_BITMAP,LR_CREATEDIBSECTION);
+		LPCTSTR *pIcons=new LPCTSTR[ItemCount];
+		for (int i=0;i<ItemCount;i++)
+			pIcons[i]=pItemList[i].pszIcon;
+		m_hImageList=TVTest::CreateImageListFromIcons(hinst,pIcons,ItemCount,ICON_SIZE_SMALL);
+		delete [] pIcons;
 		if (m_hImageList==NULL)
 			return false;
-		IconCount=::ImageList_GetImageCount(m_hImageList);
-	} else {
-		HBITMAP hbm=static_cast<HBITMAP>(::LoadImage(hinst,pszImageName,IMAGE_BITMAP,0,0,LR_CREATEDIBSECTION));
-		if (hbm==NULL)
-			return false;
-		BITMAP bm;
-		if (::GetObject(hbm,sizeof(bm),&bm)!=sizeof(bm) || bm.bmBits==NULL) {
-			::DeleteObject(hbm);
-			return false;
+
+		m_ItemList.reserve(ItemCount);
+		for (int i=0;i<ItemCount;i++) {
+			ItemIconInfo Item;
+			Item.ID=pItemList[i].ID;
+			Item.Icon=i;
+			m_ItemList.push_back(Item);
 		}
-		for (int x=0;x+IconWidth<=bm.bmWidth;x+=IconWidth) {
-			void *pBits;
-			HBITMAP hbmIcon=DrawUtil::CreateDIB(IconWidth,bm.bmHeight,32,&pBits);
-			BYTE *q=static_cast<BYTE*>(pBits);
-			BYTE *p=static_cast<BYTE*>(bm.bmBits)+x*4;
-			for (int y=0;y<bm.bmHeight;y++) {
-				::CopyMemory(q,p,bm.bmWidth*4);
-				q+=IconWidth*4;
-				p+=bm.bmWidth*4;
+	} else
+#endif
+	{
+		for (int i=0;i<ItemCount;i++) {
+			HICON hicon=LoadIconStandardSize(hinst,pItemList[i].pszIcon,ICON_SIZE_SMALL);
+
+			if (hicon!=NULL) {
+				ICONINFO ii;
+
+				if (::GetIconInfo(hicon,&ii)) {
+					/*
+						ii.hbmColor は DDB になっていて、そのままメニューの画像に指定すると
+						アルファチャンネルが無視されるため、DIB に変換する
+					*/
+					HBITMAP hbm=(HBITMAP)::CopyImage(ii.hbmColor,IMAGE_BITMAP,0,0,LR_CREATEDIBSECTION);
+					if (hbm!=NULL) {
+						m_BitmapList.push_back(hbm);
+						ItemIconInfo Item;
+						Item.ID=pItemList[i].ID;
+						Item.Icon=(int)m_BitmapList.size()-1;
+						m_ItemList.push_back(Item);
+					}
+					::DeleteObject(ii.hbmColor);
+					::DeleteObject(ii.hbmMask);
+				}
+				::DestroyIcon(hicon);
 			}
-			m_BitmapList.push_back(hbmIcon);
 		}
-		::DeleteObject(hbm);
-		IconCount=bm.bmWidth/IconWidth;
 	}
 
 	m_hmenu=hmenu;
-
-	m_ItemList.reserve(ItemCount);
-	for (int i=0;i<ItemCount;i++) {
-		ItemInfo Item=pItemList[i];
-		if (Item.Image<IconCount)
-			m_ItemList.push_back(Item);
-	}
 
 	return true;
 }
@@ -1147,10 +1327,12 @@ void CIconMenu::Finalize()
 {
 	m_hmenu=NULL;
 	m_ItemList.clear();
+#ifdef WIN_XP_SUPPORT
 	if (m_hImageList!=NULL) {
 		::ImageList_Destroy(m_hImageList);
 		m_hImageList=NULL;
 	}
+#endif
 	if (!m_BitmapList.empty()) {
 		for (auto i=m_BitmapList.begin();i!=m_BitmapList.end();i++)
 			::DeleteObject(*i);
@@ -1174,15 +1356,18 @@ bool CIconMenu::OnInitMenuPopup(HWND hwnd,HMENU hmenu)
 			for (auto itrItem=m_ItemList.begin();itrItem!=m_ItemList.end();++itrItem) {
 				if (itrItem->ID==mii.wID) {
 					mii.fMask=MIIM_STATE | MIIM_BITMAP | MIIM_DATA;
-					mii.dwItemData=(mii.dwItemData & ~ITEM_DATA_IMAGEMASK) | (itrItem->Image+1);
+					mii.dwItemData=(mii.dwItemData & ~ITEM_DATA_IMAGEMASK) | (itrItem->Icon+1);
+#ifdef WIN_XP_SUPPORT
 					if (m_hImageList!=NULL) {
 						mii.hbmpItem=HBMMENU_CALLBACK;
 						if ((mii.fState & MFS_CHECKED)!=0) {
 							mii.fState&=~MFS_CHECKED;
 							mii.dwItemData|=ITEM_DATA_CHECKED;
 						}
-					} else {
-						mii.hbmpItem=m_BitmapList[itrItem->Image];
+					} else
+#endif
+					{
+						mii.hbmpItem=m_BitmapList[itrItem->Icon];
 						if ((mii.dwItemData & ITEM_DATA_CHECKED)!=0) {
 							mii.fState|=MFS_CHECKED;
 						}
@@ -1193,6 +1378,7 @@ bool CIconMenu::OnInitMenuPopup(HWND hwnd,HMENU hmenu)
 		}
 	}
 
+#ifdef WIN_XP_SUPPORT
 	if (m_hImageList!=NULL) {
 		MENUINFO mi;
 		mi.cbSize=sizeof(mi);
@@ -1203,6 +1389,7 @@ bool CIconMenu::OnInitMenuPopup(HWND hwnd,HMENU hmenu)
 			::SetMenuInfo(hmenu,&mi);
 		}
 	}
+#endif
 
 	return true;
 }
@@ -1210,6 +1397,7 @@ bool CIconMenu::OnInitMenuPopup(HWND hwnd,HMENU hmenu)
 
 bool CIconMenu::OnMeasureItem(HWND hwnd,WPARAM wParam,LPARAM lParam)
 {
+#ifdef WIN_XP_SUPPORT
 	LPMEASUREITEMSTRUCT pmis=reinterpret_cast<LPMEASUREITEMSTRUCT>(lParam);
 
 	if (pmis->CtlType!=ODT_MENU)
@@ -1224,6 +1412,7 @@ bool CIconMenu::OnMeasureItem(HWND hwnd,WPARAM wParam,LPARAM lParam)
 			return true;
 		}
 	}
+#endif
 
 	return false;
 }
@@ -1231,6 +1420,7 @@ bool CIconMenu::OnMeasureItem(HWND hwnd,WPARAM wParam,LPARAM lParam)
 
 bool CIconMenu::OnDrawItem(HWND hwnd,WPARAM wParam,LPARAM lParam)
 {
+#ifdef WIN_XP_SUPPORT
 	LPDRAWITEMSTRUCT pdis=reinterpret_cast<LPDRAWITEMSTRUCT>(lParam);
 
 	if (pdis->CtlType!=ODT_MENU || (HMENU)pdis->hwndItem!=m_hmenu)
@@ -1274,6 +1464,9 @@ bool CIconMenu::OnDrawItem(HWND hwnd,WPARAM wParam,LPARAM lParam)
 	m_MenuPainter.DrawIcon(m_hImageList,Image,pdis->hDC,x,y,pdis->itemState);
 
 	return true;
+#else
+	return false;
+#endif
 }
 
 
@@ -1449,7 +1642,8 @@ bool CDropDownMenu::SetItemText(int Command,LPCTSTR pszText)
 
 	if (Index<0)
 		return false;
-	return m_ItemList[Index]->SetText(pszText);
+	m_ItemList[Index]->SetText(pszText);
+	return true;
 }
 
 
@@ -1465,10 +1659,17 @@ int CDropDownMenu::CommandToIndex(int Command) const
 }
 
 
-bool CDropDownMenu::Show(HWND hwndOwner,HWND hwndMessage,const POINT *pPos,int CurItem,UINT Flags)
+bool CDropDownMenu::Show(HWND hwndOwner,HWND hwndMessage,const POINT *pPos,int CurItem,UINT Flags,int DPI)
 {
 	if (m_ItemList.empty() || m_hwnd!=NULL)
 		return false;
+
+	HMONITOR hMonitor=::MonitorFromPoint(*pPos,MONITOR_DEFAULTTONEAREST);
+
+	if (DPI!=0)
+		m_DPI=DPI;
+	else
+		m_DPI=TVTest::GetMonitorDPI(hMonitor);
 
 	HWND hwnd=::CreateWindowEx(WS_EX_NOACTIVATE | WS_EX_TOPMOST,DROPDOWNMENU_WINDOW_CLASS,
 							   NULL,WS_POPUP,0,0,0,0,hwndOwner,NULL,m_hinst,this);
@@ -1486,12 +1687,10 @@ bool CDropDownMenu::Show(HWND hwndOwner,HWND hwndMessage,const POINT *pPos,int C
 		if (Width>MaxWidth)
 			MaxWidth=Width;
 	}
-	TEXTMETRIC tm;
-	::GetTextMetrics(hdc,&tm);
-	m_ItemWidth=MaxWidth+m_ItemMargin.cxLeftWidth+m_ItemMargin.cxRightWidth;
-	m_ItemHeight=tm.tmHeight/*-tm.tmInternalLeading*/+
-		m_ItemMargin.cyTopHeight+m_ItemMargin.cyBottomHeight;
 	::SelectObject(hdc,hfontOld);
+	m_ItemWidth=MaxWidth+m_ItemMargin.cxLeftWidth+m_ItemMargin.cxRightWidth;
+	m_ItemHeight=m_Font.GetHeight(hdc)+
+		m_ItemMargin.cyTopHeight+m_ItemMargin.cyBottomHeight;
 	::ReleaseDC(hwnd,hdc);
 
 	const int HorzMargin=m_WindowMargin.cxLeftWidth+m_WindowMargin.cxRightWidth;
@@ -1501,7 +1700,7 @@ bool CDropDownMenu::Show(HWND hwndOwner,HWND hwndMessage,const POINT *pPos,int C
 	int x=pPos->x,y=pPos->y;
 	MONITORINFO mi;
 	mi.cbSize=sizeof(mi);
-	if (::GetMonitorInfo(::MonitorFromPoint(*pPos,MONITOR_DEFAULTTONEAREST),&mi)) {
+	if (::GetMonitorInfo(hMonitor,&mi)) {
 		int Rows=((mi.rcMonitor.bottom-y)-VertMargin)/m_ItemHeight;
 
 		if ((int)m_ItemList.size()>Rows) {
@@ -1656,8 +1855,14 @@ LRESULT CALLBACK CDropDownMenu::WndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM
 			if (pThis->m_ItemMargin.cxRightWidth<4)
 				pThis->m_ItemMargin.cxRightWidth=4;
 			pThis->m_MenuPainter.GetMargins(&pThis->m_WindowMargin);
+
+			const int SystemDPI=GetAppClass().StyleManager.GetSystemDPI();
+			CUxTheme::ScaleMargins(&pThis->m_ItemMargin,pThis->m_DPI,SystemDPI);
+			CUxTheme::ScaleMargins(&pThis->m_WindowMargin,pThis->m_DPI,SystemDPI);
+
 			LOGFONT lf;
 			pThis->m_MenuPainter.GetFont(&lf);
+			lf.lfHeight=::MulDiv(lf.lfHeight,pThis->m_DPI,SystemDPI);
 			pThis->m_Font.Create(&lf);
 		}
 		return 0;
@@ -1736,7 +1941,7 @@ LRESULT CALLBACK CDropDownMenu::WndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM
 
 CDropDownMenu::CItem::CItem(int Command,LPCTSTR pszText)
 	: m_Command(Command)
-	, m_Text(pszText)
+	, m_Text(TVTest::StringFromCStr(pszText))
 	, m_Width(0)
 {
 }
@@ -1747,18 +1952,18 @@ CDropDownMenu::CItem::~CItem()
 }
 
 
-bool CDropDownMenu::CItem::SetText(LPCTSTR pszText)
+void CDropDownMenu::CItem::SetText(LPCTSTR pszText)
 {
-	return m_Text.Set(pszText);
+	TVTest::StringUtility::Assign(m_Text,pszText);
 }
 
 
 int CDropDownMenu::CItem::GetWidth(HDC hdc)
 {
-	if (!m_Text.IsEmpty() && m_Width==0) {
+	if (!m_Text.empty() && m_Width==0) {
 		SIZE sz;
 
-		::GetTextExtentPoint32(hdc,m_Text.Get(),m_Text.Length(),&sz);
+		::GetTextExtentPoint32(hdc,m_Text.data(),(int)m_Text.length(),&sz);
 		m_Width=sz.cx;
 	}
 	return m_Width;
@@ -1767,9 +1972,10 @@ int CDropDownMenu::CItem::GetWidth(HDC hdc)
 
 void CDropDownMenu::CItem::Draw(HDC hdc,const RECT *pRect)
 {
-	if (!m_Text.IsEmpty()) {
+	if (!m_Text.empty()) {
 		RECT rc=*pRect;
 
-		::DrawText(hdc,m_Text.Get(),-1,&rc,DT_LEFT | DT_SINGLELINE | DT_VCENTER | DT_NOPREFIX);
+		::DrawText(hdc,m_Text.data(),(int)m_Text.length(),&rc,
+				   DT_LEFT | DT_SINGLELINE | DT_VCENTER | DT_NOPREFIX);
 	}
 }

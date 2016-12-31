@@ -2,6 +2,12 @@
 	TVTest プラグインサンプル
 
 	空きディスク容量が少なくなったら別のフォルダに録画する
+
+	このサンプルでは主に以下の機能を実装しています。
+
+	・録画の状況を取得する
+	・録画ファイルを変更する
+	・設定ダイアログを表示する
 */
 
 
@@ -47,7 +53,7 @@ class CDiskRelay : public TVTest::CTVTestPlugin
 	static LRESULT CALLBACK EventCallback(UINT Event,LPARAM lParam1,LPARAM lParam2,void *pClientData);
 	static CDiskRelay *GetThis(HWND hwnd);
 	static LRESULT CALLBACK WndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam);
-	static INT_PTR CALLBACK SettingsDlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam);
+	static INT_PTR CALLBACK SettingsDlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam,void *pClientData);
 
 public:
 	CDiskRelay();
@@ -88,7 +94,7 @@ bool CDiskRelay::Initialize()
 	if (!m_pApp->GetHostInfo(&HostInfo)
 			|| HostInfo.SupportedPluginVersion<TVTEST_PLUGIN_VERSION_(0,0,10)
 			|| !m_pApp->QueryMessage(TVTest::MESSAGE_RELAYRECORD)) {
-		m_pApp->AddLog(L"このバージョンでは利用できません。");
+		m_pApp->AddLog(L"このバージョンでは利用できません。",TVTest::LOG_TYPE_ERROR);
 		return false;
 	}
 
@@ -173,7 +179,8 @@ bool CDiskRelay::CheckFreeSpace()
 		ULARGE_INTEGER FreeSpace;
 		if (::GetDiskFreeSpaceEx(szPath,&FreeSpace,NULL,NULL)
 				&& FreeSpace.QuadPart<=(ULONGLONG)m_LowFreeSpace*0x100000) {
-			m_pApp->AddLog(TEXT("空き容量が少ないため続きを予備のフォルダに録画します。"));
+			m_pApp->AddLog(TEXT("空き容量が少ないため続きを予備のフォルダに録画します。"),
+						   TVTest::LOG_TYPE_WARNING);
 			for (;m_NextFolder<NUM_SPARE_FOLDERS;m_NextFolder++) {
 				if (m_szSpareFolder[m_NextFolder][0]!='\0'
 						&& ::PathIsDirectory(m_szSpareFolder[m_NextFolder])) {
@@ -190,7 +197,8 @@ bool CDiskRelay::CheckFreeSpace()
 					}
 				}
 			}
-			m_pApp->AddLog(TEXT("空き容量のあるフォルダがありません。"));
+			m_pApp->AddLog(TEXT("空き容量のあるフォルダがありません。"),
+						   TVTest::LOG_TYPE_ERROR);
 		}
 	}
 	return false;
@@ -262,9 +270,16 @@ LRESULT CALLBACK CDiskRelay::EventCallback(UINT Event,LPARAM lParam1,LPARAM lPar
 // 設定ダイアログの表示
 bool CDiskRelay::SettingsDialog(HWND hwndOwner)
 {
-	return ::DialogBoxParam(g_hinstDLL,MAKEINTRESOURCE(IDD_SETTINGS),
-							hwndOwner,SettingsDlgProc,
-							reinterpret_cast<LPARAM>(this))==IDOK;
+	TVTest::ShowDialogInfo Info;
+
+	Info.Flags = 0;
+	Info.hinst = g_hinstDLL;
+	Info.pszTemplate = MAKEINTRESOURCE(IDD_SETTINGS);
+	Info.pMessageFunc = SettingsDlgProc;
+	Info.pClientData = this;
+	Info.hwndOwner = hwndOwner;
+
+	return m_pApp->ShowDialog(&Info) == IDOK;
 }
 
 
@@ -364,16 +379,12 @@ bool BrowseFolderDialog(HWND hwndOwner,LPTSTR pszDirectory,LPCTSTR pszTitle)
 
 
 // 設定ダイアログプロシージャ
-INT_PTR CALLBACK CDiskRelay::SettingsDlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
+INT_PTR CALLBACK CDiskRelay::SettingsDlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam,void *pClientData)
 {
-	static const LPCTSTR PROP_NAME=TEXT("ABDBEFF3-CB03-459F-9D44-CE65377C7792");
-
 	switch (uMsg) {
 	case WM_INITDIALOG:
 		{
-			CDiskRelay *pThis=reinterpret_cast<CDiskRelay*>(lParam);
-
-			::SetProp(hDlg,PROP_NAME,pThis);
+			CDiskRelay *pThis=static_cast<CDiskRelay*>(pClientData);
 
 			// デフォルトの録画フォルダを取得する
 			TCHAR szDefaultFolder[MAX_PATH];
@@ -407,7 +418,7 @@ INT_PTR CALLBACK CDiskRelay::SettingsDlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,L
 
 		case IDOK:
 			{
-				CDiskRelay *pThis=static_cast<CDiskRelay*>(::GetProp(hDlg,PROP_NAME));
+				CDiskRelay *pThis=static_cast<CDiskRelay*>(pClientData);
 
 				// フォルダがあるかチェックする
 				for (int i=0;i<NUM_SPARE_FOLDERS;i++) {
@@ -457,10 +468,6 @@ INT_PTR CALLBACK CDiskRelay::SettingsDlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,L
 			::EndDialog(hDlg,LOWORD(wParam));
 			return TRUE;
 		}
-		return TRUE;
-
-	case WM_NCDESTROY:
-		::RemoveProp(hDlg,PROP_NAME);
 		return TRUE;
 	}
 

@@ -2,15 +2,11 @@
 #include <d3d9.h>
 #include <vmr9.h>
 //#include <streams.h>
+#include <shlwapi.h>
 #include <vector>
 #include "VMR9Renderless.h"
 #include "DirectShowUtil.h"
-
-#ifdef _DEBUG
-#undef THIS_FILE
-static char THIS_FILE[]=__FILE__;
-#define new DEBUG_NEW
-#endif
+#include "../Common/DebugDef.h"
 
 
 
@@ -113,7 +109,10 @@ CVMR9Allocator::CVMR9Allocator(HRESULT *phr,HWND wnd,IDirect3D9 *d3d,IDirect3DDe
 
 	*phr=S_OK;
 
-	m_hD3D9Lib=::LoadLibrary(TEXT("d3d9.dll"));
+	TCHAR szPath[MAX_PATH];
+	::GetSystemDirectory(szPath,_countof(szPath));
+	::PathAppend(szPath,TEXT("d3d9.dll"));
+	m_hD3D9Lib=::LoadLibrary(szPath);
 	if (m_hD3D9Lib==NULL) {
 		*phr=E_FAIL;
 		return;

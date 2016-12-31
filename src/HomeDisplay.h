@@ -3,7 +3,6 @@
 
 
 #include <vector>
-#include "AppMain.h"
 #include "View.h"
 #include "DrawUtil.h"
 #include "Theme.h"
@@ -19,30 +18,25 @@ class CHomeDisplay
 {
 public:
 	struct StyleInfo {
-		Theme::GradientInfo CategoriesBackGradient;
-		Theme::GradientInfo ContentBackGradient;
-		Theme::Style CategoryItemStyle;
-		Theme::Style CategoryItemSelStyle;
-		Theme::Style CategoryItemCurStyle;
-		Theme::Style ItemStyle[2];
-		Theme::Style ItemHotStyle;
+		TVTest::Theme::BackgroundStyle CategoriesBackStyle;
+		TVTest::Theme::BackgroundStyle ContentBackStyle;
+		TVTest::Theme::Style CategoryItemStyle;
+		TVTest::Theme::Style CategoryItemSelStyle;
+		TVTest::Theme::Style CategoryItemCurStyle;
+		TVTest::Theme::Style ItemStyle[2];
+		TVTest::Theme::Style ItemHotStyle;
 		COLORREF BannerTextColor;
-		RECT ContentMargins;
 		int FontHeight;
-		RECT ItemMargins;
-		RECT CategoryItemMargins;
-		int CategoryIconMargin;
-		RECT CategoriesMargins;
+		TVTest::Style::Margins ItemMargins;
+		TVTest::Style::Margins CategoryItemMargins;
+		TVTest::Style::IntValue CategoryIconMargin;
 	};
 
-	class ABSTRACT_CLASS(CEventHandler)
+	class ABSTRACT_CLASS(CHomeDisplayEventHandler) : public CDisplayView::CEventHandler
 	{
 	public:
-		CEventHandler();
-		virtual ~CEventHandler();
+		CHomeDisplayEventHandler();
 		virtual void OnClose() = 0;
-		virtual void OnRButtonDown(int x,int y) {}
-		virtual void OnLButtonDoubleClick(int x,int y) {}
 
 		friend class CHomeDisplay;
 
@@ -63,15 +57,19 @@ public:
 		virtual void ReadSettings(CSettings &Settings) {}
 		virtual void WriteSettings(CSettings &Settings) {}
 		virtual void LayOut(const StyleInfo &Style,HDC hdc,const RECT &ContentRect) = 0;
-		virtual void Draw(HDC hdc,const StyleInfo &Style,const RECT &ContentRect,const RECT &PaintRect) const = 0;
+		virtual void Draw(HDC hdc,const StyleInfo &Style,const RECT &ContentRect,const RECT &PaintRect,
+						  TVTest::Theme::CThemeDraw &ThemeDraw) const = 0;
 		virtual bool GetCurItemRect(RECT *pRect) const = 0;
 		virtual bool SetFocus(bool fFocus) {}
 		virtual bool IsFocused() const = 0;
 		virtual bool OnDecide() { return false; }
+		virtual void OnWindowCreate() {}
+		virtual void OnWindowDestroy() {}
 		virtual void OnCursorMove(int x,int y) {}
 		virtual void OnCursorLeave() {}
-		virtual bool OnClick(int x,int y) { return false; }
-		virtual bool OnRButtonDown(int x,int y) { return false; }
+		virtual void OnLButtonDown(int x,int y) {}
+		virtual bool OnLButtonUp(int x,int y) { return false; }
+		virtual bool OnRButtonUp(int x,int y) { return false; }
 		virtual bool OnSetCursor() { return false; }
 		virtual bool OnCursorKey(WPARAM KeyCode) { return false; }
 
@@ -79,7 +77,7 @@ public:
 		class CHomeDisplay *m_pHomeDisplay;
 	};
 
-	CHomeDisplay(CEventSearchOptions &EventSearchOptions);
+	CHomeDisplay();
 	~CHomeDisplay();
 
 // CBasicWindow
@@ -97,11 +95,12 @@ public:
 // CHomeDisplay
 	void Clear();
 	bool UpdateContents();
-	void SetEventHandler(CEventHandler *pEventHandler);
-	bool SetFont(const LOGFONT *pFont,bool fAutoSize);
+	void SetEventHandler(CHomeDisplayEventHandler *pEventHandler);
+	bool SetFont(const TVTest::Style::Font &Font,bool fAutoSize);
 	int GetScrollPos() const { return m_ScrollPos; }
 	bool SetScrollPos(int Pos,bool fScroll=true);
 	bool SetCurCategory(int Category);
+	int GetCurCategoryID() const;
 	bool UpdateCurContent();
 	bool OnContentChanged();
 
@@ -114,21 +113,21 @@ private:
 		PART_CONTENT
 	};
 
+	TVTest::Style::Font m_StyleFont;
 	DrawUtil::CFont m_Font;
 	bool m_fAutoFontSize;
-	StyleInfo m_Style;
+	StyleInfo m_HomeDisplayStyle;
 	int m_CategoriesAreaWidth;
 	int m_CategoryItemWidth;
 	int m_CategoryItemHeight;
 	int m_ContentHeight;
 
 	std::vector<CCategory*> m_CategoryList;
-	CEventHandler *m_pEventHandler;
+	CHomeDisplayEventHandler *m_pHomeDisplayEventHandler;
 	int m_CurCategory;
 	HWND m_hwndScroll;
 	int m_ScrollPos;
 	CMouseWheelHandler m_MouseWheel;
-	POINT m_LButtonDownPos;
 	bool m_fHitCloseButton;
 	PartType m_CursorPart;
 	bool m_fHoverOverButton;
@@ -139,6 +138,10 @@ private:
 
 // CCustomWindow
 	LRESULT OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
+
+// CUIBase
+	void ApplyStyle() override;
+	void RealizeStyle() override;
 
 // CDoubleBufferingDraw
 	void Draw(HDC hdc,const RECT &PaintRect) override;

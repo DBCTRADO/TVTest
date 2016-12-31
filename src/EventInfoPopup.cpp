@@ -1,14 +1,10 @@
 #include "stdafx.h"
 #include "TVTest.h"
+#include "AppMain.h"
 #include "EventInfoPopup.h"
 #include "EpgUtil.h"
 #include "Aero.h"
-
-#ifdef _DEBUG
-#undef THIS_FILE
-static char THIS_FILE[]=__FILE__;
-#define new DEBUG_NEW
-#endif
+#include "Common/DebugDef.h"
 
 
 
@@ -51,7 +47,6 @@ CEventInfoPopup::CEventInfoPopup()
 	, m_TitleIconTextMargin(4)
 	, m_ButtonSize(14)
 	, m_ButtonMargin(3)
-	, m_hTitleIcon(NULL)
 	, m_pEventHandler(NULL)
 	, m_fDetailInfo(
 #ifdef _DEBUG
@@ -60,9 +55,14 @@ CEventInfoPopup::CEventInfoPopup()
 		false
 #endif
 		)
+	, m_fMenuShowing(false)
 {
 	m_WindowPosition.Width=320;
 	m_WindowPosition.Height=320;
+
+	GetDefaultFont(&m_StyleFont);
+
+	SetStyleScaling(&m_StyleScaling);
 }
 
 
@@ -82,7 +82,7 @@ bool CEventInfoPopup::Create(HWND hwndParent,DWORD Style,DWORD ExStyle,int ID)
 
 void CEventInfoPopup::SetEventInfo(const CEventInfoData *pEventInfo)
 {
-	if (m_EventInfo==*pEventInfo)
+	if (m_EventInfo.IsEqual(*pEventInfo))
 		return;
 
 	m_EventInfo=*pEventInfo;
@@ -110,8 +110,8 @@ void CEventInfoPopup::SetEventInfo(const CEventInfoData *pEventInfo)
 		}
 	}
 
-	if (!IsStringEmpty(m_EventInfo.GetEventName())) {
-		Formatter.Append(m_EventInfo.GetEventName());
+	if (!m_EventInfo.m_EventName.empty()) {
+		Formatter.Append(m_EventInfo.m_EventName.c_str());
 		Formatter.Append(TEXT("\r\n"));
 	}
 
@@ -124,22 +124,27 @@ void CEventInfoPopup::SetEventInfo(const CEventInfoData *pEventInfo)
 		Formatter.Clear();
 	}
 
-	if (!IsStringEmpty(m_EventInfo.GetEventText())) {
-		Formatter.Append(m_EventInfo.GetEventText());
+	if (!m_EventInfo.m_EventText.empty()) {
+		Formatter.Append(m_EventInfo.m_EventText.c_str());
 		Formatter.RemoveTrailingWhitespace();
 	}
-	if (!IsStringEmpty(m_EventInfo.GetEventExtText())) {
-		if (!IsStringEmpty(m_EventInfo.GetEventText()))
+	if (!m_EventInfo.m_EventExtendedText.empty()) {
+		if (!m_EventInfo.m_EventText.empty())
 			Formatter.Append(TEXT("\r\n\r\n"));
-		Formatter.Append(m_EventInfo.GetEventExtText());
+		Formatter.Append(m_EventInfo.m_EventExtendedText.c_str());
 		Formatter.RemoveTrailingWhitespace();
 	}
 
 	Formatter.Append(TEXT("\r\n"));
 
-	LPCTSTR pszVideo=EpgUtil::GetVideoComponentTypeText(m_EventInfo.m_VideoInfo.ComponentType);
-	if (pszVideo!=NULL) {
-		Formatter.AppendFormat(TEXT("\r\n■ 映像： %s"),pszVideo);
+	if (!m_EventInfo.m_VideoList.empty()) {
+		// TODO: 複数映像対応
+		LPCTSTR pszVideo=EpgUtil::GetComponentTypeText(
+			m_EventInfo.m_VideoList[0].StreamContent,
+			m_EventInfo.m_VideoList[0].ComponentType);
+		if (pszVideo!=NULL) {
+			Formatter.AppendFormat(TEXT("\r\n■ 映像： %s"),pszVideo);
+		}
 	}
 
 	if (!m_EventInfo.m_AudioList.empty()) {
@@ -165,25 +170,21 @@ void CEventInfoPopup::SetEventInfo(const CEventInfoData *pEventInfo)
 		}
 	}
 
-	for (int i=0;i<m_EventInfo.m_ContentNibble.NibbleCount;i++) {
-		if (m_EventInfo.m_ContentNibble.NibbleList[i].ContentNibbleLevel1!=0xE) {
-			CEpgGenre EpgGenre;
-			LPCTSTR pszGenre=EpgGenre.GetText(m_EventInfo.m_ContentNibble.NibbleList[i].ContentNibbleLevel1,-1);
-			if (pszGenre!=NULL) {
-				Formatter.AppendFormat(TEXT("\r\n■ ジャンル： %s"),pszGenre);
-				pszGenre=EpgGenre.GetText(
-					m_EventInfo.m_ContentNibble.NibbleList[i].ContentNibbleLevel1,
-					m_EventInfo.m_ContentNibble.NibbleList[i].ContentNibbleLevel2);
-				if (pszGenre!=NULL)
-					Formatter.AppendFormat(TEXT(" - %s"),pszGenre);
-			}
-			break;
+	int Genre1,Genre2;
+	if (EpgUtil::GetEventGenre(m_EventInfo,&Genre1,&Genre2)) {
+		CEpgGenre EpgGenre;
+		LPCTSTR pszGenre=EpgGenre.GetText(Genre1,-1);
+		if (pszGenre!=NULL) {
+			Formatter.AppendFormat(TEXT("\r\n■ ジャンル： %s"),pszGenre);
+			pszGenre=EpgGenre.GetText(Genre1,Genre2);
+			if (pszGenre!=NULL)
+				Formatter.AppendFormat(TEXT(" - %s"),pszGenre);
 		}
 	}
 
 	if (m_fDetailInfo) {
 		Formatter.AppendFormat(TEXT("\r\n■ イベントID： 0x%04X"),m_EventInfo.m_EventID);
-		if (m_EventInfo.m_fCommonEvent)
+		if (m_EventInfo.m_bCommonEvent)
 			Formatter.AppendFormat(TEXT(" (イベント共有 サービスID 0x%04X / イベントID 0x%04X)"),
 								   m_EventInfo.m_CommonEventInfo.ServiceID,
 								   m_EventInfo.m_CommonEventInfo.EventID);
@@ -218,7 +219,8 @@ void CEventInfoPopup::FormatAudioInfo(
 		pszAudio=TEXT("Mono 二カ国語");
 		fBilingual=true;
 	} else {
-		pszAudio=EpgUtil::GetAudioComponentTypeText(pAudioInfo->ComponentType);
+		pszAudio=EpgUtil::GetComponentTypeText(
+			pAudioInfo->StreamContent,pAudioInfo->ComponentType);
 	}
 
 	LPCTSTR p=pAudioInfo->szText;
@@ -241,10 +243,17 @@ void CEventInfoPopup::FormatAudioInfo(
 		szAudioComponent[i+0]=_T(']');
 		szAudioComponent[i+1]=_T('\0');
 	} else if (fBilingual) {
+		TCHAR szLang1[EpgUtil::MAX_LANGUAGE_TEXT_LENGTH];
+		TCHAR szLang2[EpgUtil::MAX_LANGUAGE_TEXT_LENGTH];
+		EpgUtil::GetLanguageText(pAudioInfo->LanguageCode,szLang1,lengthof(szLang1));
+		EpgUtil::GetLanguageText(pAudioInfo->LanguageCode2,szLang2,lengthof(szLang2));
 		StdUtil::snprintf(szAudioComponent,lengthof(szAudioComponent),
-						  TEXT(" [%s/%s]"),
-						  EpgUtil::GetLanguageText(pAudioInfo->LanguageCode),
-						  EpgUtil::GetLanguageText(pAudioInfo->LanguageCode2));
+						  TEXT(" [%s/%s]"),szLang1,szLang2);
+	} else {
+		TCHAR szLang[EpgUtil::MAX_LANGUAGE_TEXT_LENGTH];
+		EpgUtil::GetLanguageText(pAudioInfo->LanguageCode,szLang,lengthof(szLang));
+		StdUtil::snprintf(szAudioComponent,lengthof(szAudioComponent),
+						  TEXT(" [%s]"),szLang);
 	}
 
 	StdUtil::snprintf(pszText,MaxLength,TEXT("%s%s"),
@@ -266,11 +275,12 @@ void CEventInfoPopup::CalcTitleHeight()
 		::ReleaseDC(m_hwnd,hdc);
 	}
 
-	int IconHeight=::GetSystemMetrics(SM_CYSMICON)+2;
+	int IconHeight=m_pStyleScaling->GetScaledSystemMetrics(SM_CYSMICON);
 	int ButtonHeight=m_ButtonSize+m_ButtonMargin*2;
+	int Margin=m_pStyleScaling->LogicalPixelsToPhysicalPixels(2);
 
 	m_TitleHeight=max(IconHeight,ButtonHeight);
-	m_TitleHeight=max(m_TitleHeight,FontHeight+2);
+	m_TitleHeight=max(m_TitleHeight,FontHeight+Margin);
 }
 
 
@@ -279,41 +289,23 @@ bool CEventInfoPopup::Show(const CEventInfoData *pEventInfo,const RECT *pPos,
 {
 	if (pEventInfo==NULL)
 		return false;
-	bool fExists=m_hwnd!=NULL;
-	if (!fExists) {
+
+	if (m_hwnd==NULL) {
 		if (!Create(NULL,WS_POPUP | WS_CLIPCHILDREN | WS_THICKFRAME,WS_EX_TOPMOST | WS_EX_NOACTIVATE,0))
 			return false;
 	}
-	if (pPos!=NULL) {
-		if (!GetVisible())
+
+	if (!GetVisible() || m_EventInfo!=*pEventInfo) {
+		if (pPos!=NULL) {
 			SetPosition(pPos);
-	} else if (!IsVisible() || m_EventInfo!=*pEventInfo) {
-		RECT rc;
-		POINT pt;
-		int Width,Height;
+		} else {
+			RECT rc;
 
-		GetPosition(&rc);
-		Width=rc.right-rc.left;
-		Height=rc.bottom-rc.top;
-		::GetCursorPos(&pt);
-		pt.y+=16;
-		HMONITOR hMonitor=::MonitorFromPoint(pt,MONITOR_DEFAULTTONEAREST);
-		if (hMonitor!=NULL) {
-			MONITORINFO mi;
-
-			mi.cbSize=sizeof(mi);
-			if (::GetMonitorInfo(hMonitor,&mi)) {
-				if (pt.x+Width>mi.rcMonitor.right)
-					pt.x=mi.rcMonitor.right-Width;
-				if (pt.y+Height>mi.rcMonitor.bottom) {
-					pt.y=mi.rcMonitor.bottom-Height;
-					if (pt.x+Width<mi.rcMonitor.right)
-						pt.x+=min(16,mi.rcMonitor.right-(pt.x+Width));
-				}
-			}
+			GetDefaultPopupPosition(&rc);
+			::SetWindowPos(m_hwnd,HWND_TOPMOST,
+						   rc.left,rc.top,rc.right-rc.left,rc.bottom-rc.top,
+						   SWP_NOACTIVATE);
 		}
-		::SetWindowPos(m_hwnd,HWND_TOPMOST,pt.x,pt.y,Width,Height,
-					   SWP_NOACTIVATE);
 	}
 
 	SetEventInfo(pEventInfo);
@@ -323,9 +315,7 @@ bool CEventInfoPopup::Show(const CEventInfoData *pEventInfo,const RECT *pPos,
 	else
 		m_TitleText.clear();
 
-	if (m_hTitleIcon!=NULL)
-		::DestroyIcon(m_hTitleIcon);
-	m_hTitleIcon=hIcon;
+	m_TitleIcon.Attach(hIcon);
 
 	::ShowWindow(m_hwnd,SW_SHOWNA);
 
@@ -355,7 +345,7 @@ bool CEventInfoPopup::IsOwnWindow(HWND hwnd) const
 }
 
 
-void CEventInfoPopup::GetSize(int *pWidth,int *pHeight)
+void CEventInfoPopup::GetSize(int *pWidth,int *pHeight) const
 {
 	RECT rc;
 
@@ -400,26 +390,20 @@ void CEventInfoPopup::SetTitleColor(COLORREF BackColor,COLORREF TextColor)
 		GetClientRect(&rc);
 		rc.bottom=m_TitleHeight;
 		::InvalidateRect(m_hwnd,&rc,TRUE);
+		::RedrawWindow(m_hwnd,NULL,NULL,RDW_FRAME | RDW_INVALIDATE);
 	}
 }
 
 
-bool CEventInfoPopup::SetFont(const LOGFONT *pFont)
+bool CEventInfoPopup::SetFont(const TVTest::Style::Font &Font)
 {
-	LOGFONT lf=*pFont;
+	m_StyleFont=Font;
 
-	m_Font.Create(&lf);
-	lf.lfWeight=FW_BOLD;
-	m_TitleFont.Create(&lf);
 	if (m_hwnd!=NULL) {
-		CalcTitleHeight();
-		RECT rc;
-		GetClientRect(&rc);
-		::MoveWindow(m_hwndEdit,0,m_TitleHeight,rc.right,max(rc.bottom-m_TitleHeight,0),TRUE);
-		Invalidate();
-
-		SetWindowFont(m_hwndEdit,m_Font.GetHandle(),TRUE);
+		ApplyStyle();
+		RealizeStyle();
 	}
+
 	return true;
 }
 
@@ -449,9 +433,91 @@ LPTSTR CEventInfoPopup::GetSelectedText() const
 void CEventInfoPopup::GetPreferredIconSize(int *pWidth,int *pHeight) const
 {
 	if (pWidth!=NULL)
-		*pWidth=::GetSystemMetrics(SM_CXSMICON);
+		*pWidth=m_pStyleScaling->GetScaledSystemMetrics(SM_CXSMICON);
 	if (pHeight!=NULL)
-		*pHeight=::GetSystemMetrics(SM_CYSMICON);
+		*pHeight=m_pStyleScaling->GetScaledSystemMetrics(SM_CYSMICON);
+}
+
+
+bool CEventInfoPopup::GetPopupPosition(int x,int y,RECT *pPos) const
+{
+	if (pPos==NULL)
+		return false;
+
+	RECT rc;
+	int Width,Height;
+
+	GetPosition(&rc);
+	Width=rc.right-rc.left;
+	Height=rc.bottom-rc.top;
+
+	POINT pt={x,y};
+	HMONITOR hMonitor=::MonitorFromPoint(pt,MONITOR_DEFAULTTONEAREST);
+	if (hMonitor!=NULL) {
+		MONITORINFO mi;
+
+		mi.cbSize=sizeof(mi);
+		if (::GetMonitorInfo(hMonitor,&mi)) {
+			if (x+Width>mi.rcMonitor.right)
+				x=mi.rcMonitor.right-Width;
+			if (y+Height>mi.rcMonitor.bottom) {
+				y=mi.rcMonitor.bottom-Height;
+				if (x+Width<mi.rcMonitor.right)
+					x+=min(16,mi.rcMonitor.right-(x+Width));
+			}
+		}
+	}
+
+	pPos->left=x;
+	pPos->right=x+Width;
+	pPos->top=y;
+	pPos->bottom=y+Height;
+
+	return true;
+}
+
+
+bool CEventInfoPopup::AdjustPopupPosition(POINT *pPos) const
+{
+	if (pPos==NULL)
+		return false;
+
+	RECT rc;
+	if (!GetPopupPosition(pPos->x,pPos->y,&rc))
+		return false;
+
+	pPos->x=rc.left;
+	pPos->y=rc.top;
+
+	return true;
+}
+
+
+bool CEventInfoPopup::GetDefaultPopupPosition(RECT *pPos) const
+{
+	if (pPos==NULL)
+		return false;
+
+	POINT pt;
+	::GetCursorPos(&pt);
+
+	return GetPopupPosition(pt.x,pt.y+16,pPos);
+}
+
+
+bool CEventInfoPopup::GetDefaultPopupPosition(POINT *pPos) const
+{
+	if (pPos==NULL)
+		return false;
+
+	RECT rc;
+	if (!GetDefaultPopupPosition(&rc))
+		return false;
+
+	pPos->x=rc.left;
+	pPos->y=rc.top;
+
+	return true;
 }
 
 
@@ -459,13 +525,7 @@ LRESULT CEventInfoPopup::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lPar
 {
 	switch (uMsg) {
 	case WM_CREATE:
-		if (!m_Font.IsCreated()) {
-			LOGFONT lf;
-			DrawUtil::GetSystemFont(DrawUtil::FONT_MESSAGE,&lf);
-			m_Font.Create(&lf);
-			lf.lfWeight=FW_BOLD;
-			m_TitleFont.Create(&lf);
-		}
+		InitializeUI();
 
 		m_RichEditUtil.LoadRichEditLib();
 		m_hwndEdit=::CreateWindowEx(0,m_RichEditUtil.GetWindowClassName(),TEXT(""),
@@ -477,6 +537,10 @@ LRESULT CEventInfoPopup::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lPar
 
 		SetNcRendering();
 		return 0;
+
+	case WM_NCCREATE:
+		InitStyleScaling(hwnd,true);
+		break;
 
 	case WM_SIZE:
 		CalcTitleHeight();
@@ -497,13 +561,13 @@ LRESULT CEventInfoPopup::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lPar
 
 			rc.left+=m_TitleLeftMargin;
 
-			if (m_hTitleIcon!=NULL) {
-				int IconWidth=::GetSystemMetrics(SM_CXSMICON);
-				int IconHeight=::GetSystemMetrics(SM_CYSMICON);
+			if (m_TitleIcon) {
+				int IconWidth,IconHeight;
 
+				GetPreferredIconSize(&IconWidth,&IconHeight);
 				::DrawIconEx(ps.hdc,
 					rc.left,rc.top+(m_TitleHeight-IconHeight)/2,
-					m_hTitleIcon,IconWidth,IconHeight,0,NULL,DI_NORMAL);
+					m_TitleIcon,IconWidth,IconHeight,0,NULL,DI_NORMAL);
 				rc.left+=IconWidth+m_TitleIconTextMargin;
 			}
 
@@ -575,7 +639,7 @@ LRESULT CEventInfoPopup::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lPar
 			::DestroyMenu(hmenu);
 			switch (Command) {
 			case 1:
-				CopyTextToClipboard(hwnd,m_EventInfo.GetEventName());
+				CopyTextToClipboard(hwnd,m_EventInfo.m_EventName.c_str());
 				break;
 			}
 			return 0;
@@ -586,26 +650,49 @@ LRESULT CEventInfoPopup::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lPar
 		return ::SendMessage(m_hwndEdit,uMsg,wParam,lParam);
 
 	case WM_NCMOUSEMOVE:
-		{
-			TRACKMOUSEEVENT tme;
+		m_fCursorInWindow=true;
+		return 0;
 
-			tme.cbSize=sizeof(TRACKMOUSEEVENT);
-			tme.dwFlags=TME_LEAVE | TME_NONCLIENT;
-			tme.hwndTrack=hwnd;
-			::TrackMouseEvent(&tme);
+	case WM_SHOWWINDOW:
+		if (wParam!=0) {
+			::SetTimer(hwnd,TIMER_ID_HIDE,200,NULL);
+			m_fCursorInWindow=false;
+		} else {
+			::KillTimer(hwnd,TIMER_ID_HIDE);
 		}
 		return 0;
 
-	case WM_NCMOUSELEAVE:
-		{
-			POINT pt;
-			RECT rc;
+	case WM_TIMER:
+		if (wParam==TIMER_ID_HIDE) {
+			if (!m_fMenuShowing) {
+				POINT pt;
 
-			::GetCursorPos(&pt);
-			::GetWindowRect(hwnd,&rc);
-			if (!::PtInRect(&rc,pt))
-				Hide();
+				::GetCursorPos(&pt);
+				if (!m_fCursorInWindow) {
+					if (IsOwnWindow(::WindowFromPoint(pt)))
+						m_fCursorInWindow=true;
+				} else {
+					RECT rc;
+
+					::GetWindowRect(hwnd,&rc);
+					::InflateRect(
+						&rc,
+						m_pStyleScaling->GetScaledSystemMetrics(SM_CXSIZEFRAME)*2,
+						m_pStyleScaling->GetScaledSystemMetrics(SM_CYSIZEFRAME)*2);
+					if (!::PtInRect(&rc,pt))
+						Hide();
+				}
+			}
 		}
+		return 0;
+
+	case WM_ENTERMENULOOP:
+		m_fMenuShowing=true;
+		return 0;
+
+	case WM_EXITMENULOOP:
+		m_fMenuShowing=false;
+		m_fCursorInWindow=false;
 		return 0;
 
 	case WM_NCACTIVATE:
@@ -615,20 +702,19 @@ LRESULT CEventInfoPopup::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lPar
 		{
 			HDC hdc=::GetWindowDC(hwnd);
 			RECT rcWindow,rcClient;
+			int LineWidth=GetHairlineWidth();
 
 			::GetWindowRect(hwnd,&rcWindow);
 			::GetClientRect(hwnd,&rcClient);
 			MapWindowRect(hwnd,NULL,&rcClient);
 			::OffsetRect(&rcClient,-rcWindow.left,-rcWindow.top);
 			::OffsetRect(&rcWindow,-rcWindow.left,-rcWindow.top);
-			HBRUSH hbr=::CreateSolidBrush(m_TitleBackColor);
-			DrawUtil::FillBorder(hdc,&rcWindow,&rcClient,&rcWindow,hbr);
-			::DeleteObject(hbr);
-			HPEN hpen=::CreatePen(PS_SOLID,1,MixColor(m_TitleBackColor,RGB(0,0,0),192));
+			DrawUtil::FillBorder(hdc,&rcWindow,&rcClient,&rcWindow,m_TitleBackColor);
+			HPEN hpen=::CreatePen(PS_INSIDEFRAME,LineWidth,MixColor(m_TitleBackColor,RGB(0,0,0),192));
 			HGDIOBJ hOldPen=::SelectObject(hdc,hpen);
 			HGDIOBJ hOldBrush=::SelectObject(hdc,::GetStockObject(NULL_BRUSH));
 			::Rectangle(hdc,rcWindow.left,rcWindow.top,rcWindow.right,rcWindow.bottom);
-			::Rectangle(hdc,rcClient.left-1,rcClient.top-1,rcClient.right+1,rcClient.bottom+1);
+			::Rectangle(hdc,rcClient.left-LineWidth,rcClient.top-LineWidth,rcClient.right+LineWidth,rcClient.bottom+LineWidth);
 			::SelectObject(hdc,hOldBrush);
 			::SelectObject(hdc,hOldPen);
 			::DeleteObject(hpen);
@@ -640,38 +726,67 @@ LRESULT CEventInfoPopup::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lPar
 		SetNcRendering();
 		return 0;
 
+	case WM_DPICHANGED:
+		OnDPIChanged(hwnd,wParam,lParam);
+		break;
+
 	case WM_NOTIFY:
 		switch (((LPNMHDR)lParam)->code) {
 		case EN_MSGFILTER:
-			if (reinterpret_cast<MSGFILTER*>(lParam)->msg==WM_RBUTTONDOWN) {
+			if (reinterpret_cast<MSGFILTER*>(lParam)->msg==WM_RBUTTONUP) {
+				enum {
+					COMMAND_COPY=1,
+					COMMAND_SELECTALL,
+					COMMAND_COPYEVENTNAME,
+					COMMAND_SEARCH
+				};
 				HMENU hmenu=::CreatePopupMenu();
 
-				::AppendMenu(hmenu,MF_STRING | MF_ENABLED,1,TEXT("コピー(&C)"));
-				::AppendMenu(hmenu,MF_STRING | MF_ENABLED,2,TEXT("すべて選択(&A)"));
-				::AppendMenu(hmenu,MF_STRING | MF_ENABLED,3,TEXT("番組名をコピー(&E)"));
+				::AppendMenu(hmenu,MF_STRING | MF_ENABLED,COMMAND_COPY,TEXT("コピー(&C)"));
+				::AppendMenu(hmenu,MF_STRING | MF_ENABLED,COMMAND_SELECTALL,TEXT("すべて選択(&A)"));
+				::AppendMenu(hmenu,MF_STRING | MF_ENABLED,COMMAND_COPYEVENTNAME,TEXT("番組名をコピー(&E)"));
 				if (m_pEventHandler!=NULL)
 					m_pEventHandler->OnMenuPopup(hmenu);
+				if (CRichEditUtil::IsSelected(m_hwndEdit)) {
+					const TVTest::CKeywordSearch &KeywordSearch=GetAppClass().KeywordSearch;
+					if (KeywordSearch.GetSearchEngineCount()>0) {
+						::AppendMenu(hmenu,MF_SEPARATOR,0,NULL);
+						KeywordSearch.InitializeMenu(hmenu,COMMAND_SEARCH,CEventHandler::COMMAND_FIRST-COMMAND_SEARCH);
+					}
+				}
+
 				POINT pt;
 				::GetCursorPos(&pt);
 				int Command=::TrackPopupMenu(hmenu,TPM_RIGHTBUTTON | TPM_RETURNCMD,pt.x,pt.y,0,hwnd,NULL);
 				::DestroyMenu(hmenu);
+
 				switch (Command) {
-				case 1:
+				case COMMAND_COPY:
 					if (::SendMessage(m_hwndEdit,EM_SELECTIONTYPE,0,0)==SEL_EMPTY) {
 						CRichEditUtil::CopyAllText(m_hwndEdit);
 					} else {
 						::SendMessage(m_hwndEdit,WM_COPY,0,0);
 					}
 					break;
-				case 2:
+
+				case COMMAND_SELECTALL:
 					CRichEditUtil::SelectAll(m_hwndEdit);
 					break;
-				case 3:
-					CopyTextToClipboard(hwnd,m_EventInfo.GetEventName());
+
+				case COMMAND_COPYEVENTNAME:
+					CopyTextToClipboard(hwnd,m_EventInfo.m_EventName.c_str());
 					break;
+
 				default:
-					if (Command>=CEventHandler::COMMAND_FIRST)
+					if (Command>=CEventHandler::COMMAND_FIRST) {
 						m_pEventHandler->OnMenuSelected(Command);
+					} else if (Command>=COMMAND_SEARCH) {
+						LPTSTR pszKeyword=CRichEditUtil::GetSelectedText(m_hwndEdit);
+						if (pszKeyword!=NULL) {
+							GetAppClass().KeywordSearch.Search(Command-COMMAND_SEARCH,pszKeyword);
+							delete [] pszKeyword;
+						}
+					}
 					break;
 				}
 			}
@@ -693,14 +808,29 @@ LRESULT CEventInfoPopup::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lPar
 		return 0;
 
 	case WM_DESTROY:
-		if (m_hTitleIcon!=NULL) {
-			::DestroyIcon(m_hTitleIcon);
-			m_hTitleIcon=NULL;
-		}
+		m_TitleIcon.Destroy();
 		return 0;
 	}
 
 	return ::DefWindowProc(hwnd,uMsg,wParam,lParam);
+}
+
+
+void CEventInfoPopup::ApplyStyle()
+{
+	if (m_hwnd!=NULL) {
+		CreateDrawFontAndBoldFont(m_StyleFont,&m_Font,&m_TitleFont);
+	}
+}
+
+
+void CEventInfoPopup::RealizeStyle()
+{
+	if (m_hwnd!=NULL) {
+		SendSizeMessage();
+		Invalidate();
+		SetWindowFont(m_hwndEdit,m_Font.GetHandle(),TRUE);
+	}
 }
 
 
@@ -743,14 +873,9 @@ CEventInfoPopup::CEventHandler::~CEventHandler()
 
 
 
-const LPCTSTR CEventInfoPopupManager::m_pszPropName=TEXT("EventInfoPopup");
-
-
 CEventInfoPopupManager::CEventInfoPopupManager(CEventInfoPopup *pPopup)
 	: m_pPopup(pPopup)
 	, m_fEnable(true)
-	, m_hwnd(NULL)
-	, m_pOldWndProc(NULL)
 	, m_pEventHandler(NULL)
 	, m_HitTestParam(-1)
 {
@@ -767,13 +892,12 @@ bool CEventInfoPopupManager::Initialize(HWND hwnd,CEventHandler *pEventHandler)
 {
 	if (hwnd==NULL)
 		return false;
-	m_hwnd=hwnd;
-	m_pOldWndProc=(WNDPROC)::SetWindowLongPtr(hwnd,GWLP_WNDPROC,(LONG_PTR)HookWndProc);
+	if (!SetSubclass(hwnd))
+		return false;
 	m_pEventHandler=pEventHandler;
 	if (m_pEventHandler!=NULL)
 		m_pEventHandler->m_pPopup=m_pPopup;
 	m_fTrackMouseEvent=false;
-	::SetProp(hwnd,m_pszPropName,this);
 	return true;
 }
 
@@ -782,12 +906,7 @@ void CEventInfoPopupManager::Finalize()
 {
 	if (m_hwnd!=NULL) {
 		m_pPopup->Hide();
-		if (m_pOldWndProc!=NULL) {
-			::SetWindowLongPtr(m_hwnd,GWLP_WNDPROC,(LONG_PTR)m_pOldWndProc);
-			m_pOldWndProc=NULL;
-		}
-		::RemoveProp(m_hwnd,m_pszPropName);
-		m_hwnd=NULL;
+		RemoveSubclass();
 	}
 }
 
@@ -815,15 +934,11 @@ bool CEventInfoPopupManager::Popup(int x,int y)
 }
 
 
-LRESULT CALLBACK CEventInfoPopupManager::HookWndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
+LRESULT CEventInfoPopupManager::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 {
-	CEventInfoPopupManager *pThis=static_cast<CEventInfoPopupManager*>(::GetProp(hwnd,m_pszPropName));
-
-	if (pThis==NULL)
-		return ::DefWindowProc(hwnd,uMsg,wParam,lParam);
 	switch (uMsg) {
 	case WM_MOUSEMOVE:
-		if (!pThis->m_fTrackMouseEvent) {
+		if (!m_fTrackMouseEvent) {
 			TRACKMOUSEEVENT tme;
 
 			tme.cbSize=sizeof(tme);
@@ -831,17 +946,17 @@ LRESULT CALLBACK CEventInfoPopupManager::HookWndProc(HWND hwnd,UINT uMsg,WPARAM 
 			tme.hwndTrack=hwnd;
 			tme.dwHoverTime=1000;
 			if (::TrackMouseEvent(&tme))
-				pThis->m_fTrackMouseEvent=true;
+				m_fTrackMouseEvent=true;
 		}
-		if (pThis->m_pPopup->IsVisible() && pThis->m_pEventHandler!=NULL) {
+		if (m_pPopup->IsVisible() && m_pEventHandler!=NULL) {
 			LPARAM Param;
-			if (pThis->m_pEventHandler->HitTest(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam),&Param)) {
-				if (Param!=pThis->m_HitTestParam) {
-					pThis->m_HitTestParam=Param;
-					pThis->m_pEventHandler->ShowPopup(pThis->m_HitTestParam,pThis->m_pPopup);
+			if (m_pEventHandler->HitTest(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam),&Param)) {
+				if (Param!=m_HitTestParam) {
+					m_HitTestParam=Param;
+					m_pEventHandler->ShowPopup(m_HitTestParam,m_pPopup);
 				}
 			} else {
-				pThis->m_pPopup->Hide();
+				m_pPopup->Hide();
 			}
 		}
 		break;
@@ -857,55 +972,55 @@ LRESULT CALLBACK CEventInfoPopupManager::HookWndProc(HWND hwnd,UINT uMsg,WPARAM 
 	case WM_MOUSEHWHEEL:
 	case WM_VSCROLL:
 	case WM_HSCROLL:
-		pThis->m_pPopup->Hide();
+		m_pPopup->Hide();
 		break;
 
 	case WM_MOUSELEAVE:
-		if (pThis->m_pPopup->IsVisible()) {
+		if (m_pPopup->IsVisible()) {
 			POINT pt;
 			::GetCursorPos(&pt);
 			HWND hwndCur=::WindowFromPoint(pt);
-			if (!pThis->m_pPopup->IsOwnWindow(hwndCur))
-				pThis->m_pPopup->Hide();
+			if (!m_pPopup->IsOwnWindow(hwndCur))
+				m_pPopup->Hide();
 		}
-		pThis->m_fTrackMouseEvent=false;
+		m_fTrackMouseEvent=false;
 		return 0;
 
 	case WM_ACTIVATE:
 		if (LOWORD(wParam)==WA_INACTIVE) {
 			HWND hwndActive=reinterpret_cast<HWND>(lParam);
-			if (!pThis->m_pPopup->IsOwnWindow(hwndActive))
-				pThis->m_pPopup->Hide();
+			if (!m_pPopup->IsOwnWindow(hwndActive))
+				m_pPopup->Hide();
 		}
 		break;
 
 	case WM_MOUSEHOVER:
-		if (pThis->m_pEventHandler!=NULL && pThis->m_fEnable
+		if (m_pEventHandler!=NULL && m_fEnable
 				&& ::GetActiveWindow()==::GetForegroundWindow()) {
 			bool fHit=false;
-			pThis->m_HitTestParam=-1;
-			if (pThis->m_pEventHandler->HitTest(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam),&pThis->m_HitTestParam)) {
-				if (pThis->m_pEventHandler->ShowPopup(pThis->m_HitTestParam,pThis->m_pPopup)) {
+			m_HitTestParam=-1;
+			if (m_pEventHandler->HitTest(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam),&m_HitTestParam)) {
+				if (m_pEventHandler->ShowPopup(m_HitTestParam,m_pPopup)) {
 					fHit=true;
 				}
 			}
 			if (!fHit)
-				pThis->m_pPopup->Hide();
+				m_pPopup->Hide();
 		}
-		pThis->m_fTrackMouseEvent=false;
+		m_fTrackMouseEvent=false;
 		return 0;
 
 	case WM_SHOWWINDOW:
 		if (!wParam)
-			pThis->m_pPopup->Hide();
-		return 0;
+			m_pPopup->Hide();
+		break;
 
 	case WM_DESTROY:
-		::CallWindowProc(pThis->m_pOldWndProc,hwnd,uMsg,wParam,lParam);
-		pThis->Finalize();
-		return 0;
+		m_pPopup->Hide();
+		break;
 	}
-	return ::CallWindowProc(pThis->m_pOldWndProc,hwnd,uMsg,wParam,lParam);
+
+	return CWindowSubclass::OnMessage(hwnd,uMsg,wParam,lParam);
 }
 
 

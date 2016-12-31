@@ -1,12 +1,8 @@
 #include "stdafx.h"
 #include "TVTest.h"
 #include "DialogUtil.h"
-
-#ifdef _DEBUG
-#undef THIS_FILE
-static char THIS_FILE[]=__FILE__;
-#define new DEBUG_NEW
-#endif
+#include "WindowUtil.h"
+#include "Common/DebugDef.h"
 
 
 
@@ -96,13 +92,22 @@ bool AdjustDialogPos(HWND hwndOwner,HWND hDlg)
 	RECT rcWork,rcWnd,rcDlg;
 	int x,y;
 
-	if (!SystemParametersInfo(SPI_GETWORKAREA,0,&rcWork,0))
-		return false;
-	if (hwndOwner)
-		GetWindowRect(hwndOwner,&rcWnd);
-	else
+	if (hwndOwner) {
+		HMONITOR hMonitor=::MonitorFromWindow(hwndOwner,MONITOR_DEFAULTTONEAREST);
+		MONITORINFO mi;
+
+		mi.cbSize=sizeof(mi);
+		if (!::GetMonitorInfo(hMonitor,&mi))
+			return false;
+		rcWork=mi.rcWork;
+		::GetWindowRect(hwndOwner,&rcWnd);
+	} else {
+		if (!::SystemParametersInfo(SPI_GETWORKAREA,0,&rcWork,0))
+			return false;
 		rcWnd=rcWork;
-	GetWindowRect(hDlg,&rcDlg);
+	}
+
+	::GetWindowRect(hDlg,&rcDlg);
 	x=((rcWnd.right-rcWnd.left)-(rcDlg.right-rcDlg.left))/2+rcWnd.left;
 	if (x<rcWork.left)
 		x=rcWork.left;
@@ -113,7 +118,8 @@ bool AdjustDialogPos(HWND hwndOwner,HWND hDlg)
 		y=rcWork.top;
 	else if (y+(rcDlg.bottom-rcDlg.top)>rcWork.bottom)
 		y=rcWork.bottom-(rcDlg.bottom-rcDlg.top);
-	return SetWindowPos(hDlg,NULL,x,y,0,0,SWP_NOSIZE | SWP_NOZORDER)!=FALSE;
+
+	return ::SetWindowPos(hDlg,NULL,x,y,0,0,SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE)!=FALSE;
 }
 
 
@@ -210,6 +216,60 @@ LPTSTR GetDlgItemString(HWND hDlg,int ID)
 	if (pszString!=NULL)
 		GetDlgItemText(hDlg,ID,pszString,Length+1);
 	return pszString;
+}
+
+
+bool GetDlgItemString(HWND hDlg,int ID,TVTest::String *pString)
+{
+	if (pString==NULL)
+		return false;
+	pString->clear();
+	if (GetDlgItemTextLength(hDlg,ID)==0)
+		return true;
+	LPTSTR pszBuffer=GetDlgItemString(hDlg,ID);
+	if (pszBuffer==NULL)
+		return false;
+	pString->assign(pszBuffer);
+	delete [] pszBuffer;
+	return true;
+}
+
+
+bool GetDlgListBoxItemString(HWND hDlg,int ID,int Index,TVTest::String *pString)
+{
+	if (hDlg==NULL || pString==NULL)
+		return false;
+
+	pString->clear();
+
+	int Length=(int)DlgListBox_GetStringLength(hDlg,ID,Index);
+	if (Length>0) {
+		LPTSTR pszBuffer=new TCHAR[Length+1];
+		if (DlgListBox_GetString(hDlg,ID,Index,pszBuffer)>0)
+			pString->assign(pszBuffer);
+		delete [] pszBuffer;
+	}
+
+	return true;
+}
+
+
+bool GetDlgComboBoxItemString(HWND hDlg,int ID,int Index,TVTest::String *pString)
+{
+	if (hDlg==NULL || pString==NULL)
+		return false;
+
+	pString->clear();
+
+	int Length=(int)DlgComboBox_GetLBStringLength(hDlg,ID,Index);
+	if (Length>0) {
+		LPTSTR pszBuffer=new TCHAR[Length+1];
+		if (DlgComboBox_GetLBString(hDlg,ID,Index,pszBuffer)>0)
+			pString->assign(pszBuffer);
+		delete [] pszBuffer;
+	}
+
+	return true;
 }
 
 
@@ -318,12 +378,14 @@ bool PopupMenuFromControls(HWND hDlg,const int *pIDList,int IDListLength,
 }
 
 
-static LRESULT CALLBACK ListBoxHookProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
+class CListBoxSubclass : public CWindowSubclass
 {
-	WNDPROC pOldWndProc=static_cast<WNDPROC>(GetProp(hwnd,TEXT("ExListBox")));
+	LRESULT OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
+	void OnSubclassRemoved() override { delete this; }
+};
 
-	if (pOldWndProc==NULL)
-		return DefWindowProc(hwnd,uMsg,wParam,lParam);
+LRESULT CListBoxSubclass::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
+{
 	switch (uMsg) {
 	case WM_RBUTTONDOWN:
 		{
@@ -356,22 +418,26 @@ static LRESULT CALLBACK ListBoxHookProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM
 		return 0;
 
 	case WM_RBUTTONUP:
-		return 0;
-
-	case WM_NCDESTROY:
-		CallWindowProc(pOldWndProc,hwnd,uMsg,wParam,lParam);
-		RemoveProp(hwnd,TEXT("ExListBox"));
+		SendMessage(GetParent(hwnd),WM_COMMAND,
+					MAKEWPARAM(GetWindowID(hwnd),LBN_EX_RBUTTONUP),
+					reinterpret_cast<LPARAM>(hwnd));
 		return 0;
 	}
-	return CallWindowProc(pOldWndProc,hwnd,uMsg,wParam,lParam);
+
+	return CWindowSubclass::OnMessage(hwnd,uMsg,wParam,lParam);
 }
 
 bool ExtendListBox(HWND hwndList,unsigned int Flags)
 {
-	WNDPROC pOldProc;
+	if (hwndList==NULL)
+		return false;
 
-	pOldProc=SubclassWindow(hwndList,ListBoxHookProc);
-	SetProp(hwndList,TEXT("ExListBox"),pOldProc);
+	CListBoxSubclass *pSubclass=new CListBoxSubclass;
+	if (!pSubclass->SetSubclass(hwndList)) {
+		delete pSubclass;
+		return false;
+	}
+
 	return true;
 }
 
@@ -412,6 +478,67 @@ bool SetListViewSortMark(HWND hwndList,int Column,bool fAscending)
 			Header_SetItem(hwndHeader,i,&hdi);
 		}
 	}
+
+	return true;
+}
+
+
+bool AdjustListViewColumnWidth(HWND hwndList,bool fUseHeader)
+{
+	if (hwndList==NULL)
+		return false;
+
+	int Count=Header_GetItemCount(ListView_GetHeader(hwndList));
+	for (int i=0;i<Count;i++)
+		ListView_SetColumnWidth(hwndList,i,fUseHeader?LVSCW_AUTOSIZE_USEHEADER:LVSCW_AUTOSIZE);
+
+	return true;
+}
+
+
+// ボタンをドロップダウンメニュー表示用に初期化する
+bool InitDropDownButton(HWND hDlg,int ID)
+{
+#ifdef WIN_XP_SUPPORT
+	if (!Util::OS::IsWindowsVistaOrLater())
+		return false;
+#endif
+
+	HWND hwnd=::GetDlgItem(hDlg,ID);
+	if (hwnd==NULL)
+		return false;
+
+	::SetWindowLong(hwnd,GWL_STYLE,::GetWindowLong(hwnd,GWL_STYLE) | BS_SPLITBUTTON);
+	::SetWindowText(hwnd,TEXT(""));
+	RECT rc;
+	::GetClientRect(hwnd,&rc);
+	BUTTON_SPLITINFO bsi;
+	bsi.mask=BCSIF_STYLE | BCSIF_SIZE;
+	bsi.uSplitStyle=BCSS_NOSPLIT | BCSS_STRETCH | BCSS_ALIGNLEFT;
+	bsi.size.cx=rc.right;
+	bsi.size.cy=rc.bottom;
+	::SendMessage(hwnd,BCM_SETSPLITINFO,0,reinterpret_cast<LPARAM>(&bsi));
+
+	return true;
+}
+
+
+bool InitDropDownButtonWithText(HWND hDlg,int ID)
+{
+#ifdef WIN_XP_SUPPORT
+	if (!Util::OS::IsWindowsVistaOrLater())
+		return false;
+#endif
+
+	HWND hwnd=::GetDlgItem(hDlg,ID);
+	if (hwnd==NULL)
+		return false;
+
+	::SetWindowLong(hwnd,GWL_STYLE,::GetWindowLong(hwnd,GWL_STYLE) | BS_SPLITBUTTON);
+	BUTTON_SPLITINFO bsi;
+	bsi.mask=BCSIF_STYLE;
+	bsi.uSplitStyle=BCSS_NOSPLIT;
+	Button_SetSplitInfo(hwnd,&bsi);
 
 	return true;
 }

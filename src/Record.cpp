@@ -5,12 +5,59 @@
 #include "DialogUtil.h"
 #include "StdUtil.h"
 #include "resource.h"
+#include <algorithm>
+#include "Common/DebugDef.h"
 
-#ifdef _DEBUG
-#undef THIS_FILE
-static char THIS_FILE[]=__FILE__;
-#define new DEBUG_NEW
-#endif
+
+
+
+CRecordingSettings::CRecordingSettings()
+	: m_fCurServiceOnly(false)
+	, m_SaveStream(CTsSelector::STREAM_ALL)
+	, m_BufferSize(DEFAULT_BUFFER_SIZE)
+	, m_PreAllocationUnit(0)
+	, m_fTimeShift(false)
+{
+}
+
+
+bool CRecordingSettings::IsSaveCaption() const
+{
+	return TestSaveStreamFlag(CTsSelector::STREAM_CAPTION);
+}
+
+
+void CRecordingSettings::SetSaveCaption(bool fSave)
+{
+	SetSaveStreamFlag(CTsSelector::STREAM_CAPTION,fSave);
+}
+
+
+bool CRecordingSettings::IsSaveDataCarrousel() const
+{
+	return TestSaveStreamFlag(CTsSelector::STREAM_DATACARROUSEL);
+}
+
+
+void CRecordingSettings::SetSaveDataCarrousel(bool fSave)
+{
+	SetSaveStreamFlag(CTsSelector::STREAM_DATACARROUSEL,fSave);
+}
+
+
+bool CRecordingSettings::TestSaveStreamFlag(DWORD Flag) const
+{
+	return (m_SaveStream & Flag)==Flag;
+}
+
+
+void CRecordingSettings::SetSaveStreamFlag(DWORD Flag,bool fSet)
+{
+	if (fSet)
+		m_SaveStream|=Flag;
+	else
+		m_SaveStream^=Flag;
+}
 
 
 
@@ -23,16 +70,13 @@ CRecordTime::CRecordTime()
 
 bool CRecordTime::SetCurrentTime()
 {
-	SYSTEMTIME st;
-
-	::GetLocalTime(&st);
-	m_TickTime=::GetTickCount();
-	::SystemTimeToFileTime(&st,&m_Time);
+	::GetSystemTime(&m_Time);
+	m_TickTime=Util::GetTickCount();
 	return true;
 }
 
 
-bool CRecordTime::GetTime(FILETIME *pTime) const
+bool CRecordTime::GetTime(SYSTEMTIME *pTime) const
 {
 	if (!IsValid())
 		return false;
@@ -50,9 +94,7 @@ void CRecordTime::Clear()
 
 bool CRecordTime::IsValid() const
 {
-	if (m_Time.dwLowDateTime==0 && m_Time.dwHighDateTime==0)
-		return false;
-	return true;
+	return m_Time.wYear!=0;
 }
 
 
@@ -71,17 +113,57 @@ CRecordTask::~CRecordTask()
 }
 
 
-bool CRecordTask::Start(CDtvEngine *pDtvEngine,LPCTSTR pszFileName)
+bool CRecordTask::Start(CDtvEngine *pDtvEngine,LPCTSTR pszFileName,const CRecordingSettings &Settings)
 {
 	if (m_State!=STATE_STOP)
 		return false;
-	if (!pDtvEngine->m_FileWriter.OpenFile(pszFileName,
-										   CNCachedFile::CNF_SHAREREAD))
+
+	bool fOldWriteCurOnly=pDtvEngine->GetWriteCurServiceOnly();
+	DWORD OldWriteStream;
+	pDtvEngine->GetWriteStream(NULL,&OldWriteStream);
+	pDtvEngine->SetWriteCurServiceOnly(Settings.m_fCurServiceOnly,Settings.m_SaveStream);
+	pDtvEngine->m_TsRecorder.SetBufferSize(Settings.m_BufferSize);
+	pDtvEngine->m_TsRecorder.SetPreAllocationUnit(Settings.m_PreAllocationUnit);
+	if (!Settings.m_fTimeShift)
+		pDtvEngine->m_TsRecorder.ClearQueue();
+
+	TVTest::String WritePlugin;
+	HMODULE hWriteLib=NULL;
+	if (!Settings.m_WritePlugin.empty()) {
+		if (::PathIsFileSpec(Settings.m_WritePlugin.c_str())) {
+			TCHAR szPath[MAX_PATH];
+			GetAppClass().GetAppDirectory(szPath);
+			if (::PathAppend(szPath,Settings.m_WritePlugin.c_str()))
+				WritePlugin=szPath;
+		} else {
+			WritePlugin=Settings.m_WritePlugin;
+		}
+		if (!WritePlugin.empty()) {
+			// 出力プラグインがロードできなければプラグインを使わないようにする
+			hWriteLib=::LoadLibrary(WritePlugin.c_str());
+			if (hWriteLib==NULL) {
+				GetAppClass().AddLog(
+					CLogItem::TYPE_WARNING,
+					TEXT("出力プラグイン \"%s\" がロードできないため、TS出力を行います。"),
+					WritePlugin.c_str());
+				WritePlugin.clear();
+			}
+		}
+	}
+
+	bool fResult=pDtvEngine->m_TsRecorder.OpenFile(WritePlugin.c_str(),pszFileName);
+	if (hWriteLib!=NULL)
+		::FreeLibrary(hWriteLib);
+	if (!fResult) {
+		pDtvEngine->SetWriteCurServiceOnly(fOldWriteCurOnly,OldWriteStream);
 		return false;
+	}
+
 	m_State=STATE_RECORDING;
 	m_pDtvEngine=pDtvEngine;
 	m_StartTime.SetCurrentTime();
 	m_TotalPauseTime=0;
+
 	return true;
 }
 
@@ -89,7 +171,7 @@ bool CRecordTask::Start(CDtvEngine *pDtvEngine,LPCTSTR pszFileName)
 bool CRecordTask::Stop()
 {
 	if (m_State==STATE_RECORDING || m_State==STATE_PAUSE) {
-		m_pDtvEngine->m_FileWriter.CloseFile();
+		m_pDtvEngine->m_TsRecorder.CloseFile();
 		m_State=STATE_STOP;
 		m_pDtvEngine=NULL;
 	}
@@ -100,14 +182,14 @@ bool CRecordTask::Stop()
 bool CRecordTask::Pause()
 {
 	if (m_State==STATE_RECORDING) {
-		m_pDtvEngine->m_FileWriter.Pause();
+		m_pDtvEngine->m_TsRecorder.Pause();
 		m_State=STATE_PAUSE;
-		m_PauseStartTime=::GetTickCount();
+		m_PauseStartTime=Util::GetTickCount();
 	} else if (m_State==STATE_PAUSE) {
-		m_pDtvEngine->m_FileWriter.ClearQueue();
-		m_pDtvEngine->m_FileWriter.Resume();
+		m_pDtvEngine->m_TsRecorder.ClearQueue();
+		m_pDtvEngine->m_TsRecorder.Resume();
 		m_State=STATE_RECORDING;
-		m_TotalPauseTime+=TickTimeSpan(m_PauseStartTime,::GetTickCount());
+		m_TotalPauseTime+=TickTimeSpan(m_PauseStartTime,Util::GetTickCount());
 	} else
 		return false;
 	return true;
@@ -120,7 +202,7 @@ CRecordTask::State CRecordTask::GetState() const
 }
 
 
-DWORD CRecordTask::GetStartTime() const
+CRecordTask::DurationType CRecordTask::GetStartTime() const
 {
 	if (m_State==STATE_STOP)
 		return 0;
@@ -128,7 +210,7 @@ DWORD CRecordTask::GetStartTime() const
 }
 
 
-bool CRecordTask::GetStartTime(FILETIME *pTime) const
+bool CRecordTask::GetStartTime(SYSTEMTIME *pTime) const
 {
 	if (m_State==STATE_STOP)
 		return false;
@@ -145,12 +227,12 @@ bool CRecordTask::GetStartTime(CRecordTime *pTime) const
 }
 
 
-DWORD CRecordTask::GetRecordTime() const
+CRecordTask::DurationType CRecordTask::GetRecordTime() const
 {
-	DWORD Time;
+	DurationType Time;
 
 	if (m_State==STATE_RECORDING) {
-		Time=TickTimeSpan(m_StartTime.GetTickTime(),::GetTickCount());
+		Time=TickTimeSpan(m_StartTime.GetTickTime(),Util::GetTickCount());
 	} else if (m_State==STATE_PAUSE) {
 		Time=TickTimeSpan(m_StartTime.GetTickTime(),m_PauseStartTime);
 	} else
@@ -159,29 +241,33 @@ DWORD CRecordTask::GetRecordTime() const
 }
 
 
-DWORD CRecordTask::GetPauseTime() const
+CRecordTask::DurationType CRecordTask::GetPauseTime() const
 {
 	if (m_State==STATE_RECORDING)
 		return m_TotalPauseTime;
 	if (m_State==STATE_PAUSE)
-		return TickTimeSpan(m_PauseStartTime,::GetTickCount())+m_TotalPauseTime;
+		return TickTimeSpan(m_PauseStartTime,Util::GetTickCount())+m_TotalPauseTime;
 	return 0;
 }
 
 
 LONGLONG CRecordTask::GetWroteSize() const
 {
-	if (m_State==STATE_STOP)
-		return 0;
-	return m_pDtvEngine->m_FileWriter.GetWriteSize();
+	if (m_State==STATE_STOP
+			|| !m_pDtvEngine->m_TsRecorder.IsWriteSizeAvailable())
+		return -1;
+	return m_pDtvEngine->m_TsRecorder.GetWriteSize();
 }
 
 
-LPCTSTR CRecordTask::GetFileName() const
+int CRecordTask::GetFileName(LPTSTR pszFileName,int MaxFileName) const
 {
-	if (m_State==STATE_STOP)
-		return NULL;
-	return m_pDtvEngine->m_FileWriter.GetFileName();
+	if (m_State==STATE_STOP) {
+		if (pszFileName!=NULL && MaxFileName>0)
+			pszFileName[0]=_T('\0');
+		return 0;
+	}
+	return m_pDtvEngine->m_TsRecorder.GetFileName(pszFileName,MaxFileName);
 }
 
 
@@ -189,7 +275,7 @@ bool CRecordTask::RelayFile(LPCTSTR pszFileName)
 {
 	if (m_State==STATE_STOP)
 		return false;
-	return m_pDtvEngine->m_FileWriter.RelayFile(pszFileName,CNCachedFile::CNF_SHAREREAD);
+	return m_pDtvEngine->m_TsRecorder.RelayFile(pszFileName);
 }
 
 
@@ -198,11 +284,12 @@ LONGLONG CRecordTask::GetFreeSpace() const
 	if (m_State==STATE_STOP)
 		return -1;
 
-	LPCTSTR pszFileName=m_pDtvEngine->m_FileWriter.GetFileName();
-	if (pszFileName==NULL)
+	TCHAR szFileName[MAX_PATH];
+	int Length=GetFileName(szFileName,lengthof(szFileName));
+	if (Length<1 || Length>=lengthof(szFileName))
 		return -1;
 	TCHAR szPath[MAX_PATH];
-	::lstrcpy(szPath,pszFileName);
+	::lstrcpy(szPath,szFileName);
 	*::PathFindFileName(szPath)='\0';
 	ULARGE_INTEGER FreeSpace;
 	if (!::GetDiskFreeSpaceEx(szPath,&FreeSpace,NULL,NULL))
@@ -220,9 +307,6 @@ CRecordManager::CRecordManager()
 	, m_Client(CLIENT_USER)
 	, m_pDtvEngine(NULL)
 	//, m_ExistsOperation(EXISTS_CONFIRM)
-	, m_fCurServiceOnly(false)
-	, m_SaveStream(CTsSelector::STREAM_ALL)
-	, m_BufferSize(0x100000)
 {
 	m_StartTimeSpec.Type=TIME_NOTSPECIFIED;
 	m_StopTimeSpec.Type=TIME_NOTSPECIFIED;
@@ -239,7 +323,8 @@ bool CRecordManager::SetFileName(LPCTSTR pszFileName)
 {
 	if (m_fRecording)
 		return false;
-	return m_FileName.Set(pszFileName);
+	TVTest::StringUtility::Assign(m_FileName,pszFileName);
+	return true;
 }
 
 
@@ -254,7 +339,7 @@ bool CRecordManager::SetFileExistsOperation(FileExistsOperation Operation)
 */
 
 
-bool CRecordManager::GetStartTime(FILETIME *pTime) const
+bool CRecordManager::GetStartTime(SYSTEMTIME *pTime) const
 {
 	if (!m_fRecording)
 		return false;
@@ -262,7 +347,7 @@ bool CRecordManager::GetStartTime(FILETIME *pTime) const
 }
 
 
-bool CRecordManager::GetReserveTime(FILETIME *pTime) const
+bool CRecordManager::GetReserveTime(SYSTEMTIME *pTime) const
 {
 	if (!m_fReserved)
 		return false;
@@ -270,7 +355,7 @@ bool CRecordManager::GetReserveTime(FILETIME *pTime) const
 }
 
 
-bool CRecordManager::GetReservedStartTime(FILETIME *pTime) const
+bool CRecordManager::GetReservedStartTime(SYSTEMTIME *pTime) const
 {
 	if (!m_fReserved)
 		return false;
@@ -279,7 +364,7 @@ bool CRecordManager::GetReservedStartTime(FILETIME *pTime) const
 	} else if (m_StartTimeSpec.Type==TIME_DURATION) {
 		if (!m_ReserveTime.GetTime(pTime))
 			return false;
-		*pTime+=m_StartTimeSpec.Time.Duration*FILETIME_MILLISECOND;
+		OffsetSystemTime(pTime,m_StartTimeSpec.Time.Duration);
 	} else
 		return false;
 	return true;
@@ -334,25 +419,24 @@ bool CRecordManager::IsStopTimeSpecified() const
 
 bool CRecordManager::StartRecord(CDtvEngine *pDtvEngine,LPCTSTR pszFileName,bool fTimeShift)
 {
-	if (m_fRecording)
-		return false;
-	bool fOldWriteCurOnly=pDtvEngine->GetWriteCurServiceOnly();
-	DWORD OldWriteStream;
-	pDtvEngine->GetWriteStream(NULL,&OldWriteStream);
-	pDtvEngine->SetWriteCurServiceOnly(m_fCurServiceOnly,m_SaveStream);
-	pDtvEngine->m_FileWriter.SetBufferSize((DWORD)m_BufferSize);
-	if (!fTimeShift)
-		pDtvEngine->m_FileWriter.ClearQueue();
-	if (!m_RecordTask.Start(pDtvEngine,pszFileName)) {
-		pDtvEngine->SetWriteCurServiceOnly(fOldWriteCurOnly,OldWriteStream);
-		SetError(pDtvEngine->m_FileWriter.GetLastErrorException());
+	if (m_fRecording) {
+		SetError(TEXT("既に録画中です。"));
 		return false;
 	}
+
+	m_Settings.m_fTimeShift=fTimeShift;
+
+	if (!m_RecordTask.Start(pDtvEngine,pszFileName,m_Settings)) {
+		SetError(pDtvEngine->m_TsRecorder.GetLastErrorException());
+		return false;
+	}
+
 	m_pDtvEngine=pDtvEngine;
 	m_fRecording=true;
 	m_fReserved=false;
 	m_StartTimeSpec.Type=TIME_NOTSPECIFIED;
 	ClearError();
+
 	return true;
 }
 
@@ -362,9 +446,9 @@ void CRecordManager::StopRecord()
 	if (m_fRecording) {
 		m_RecordTask.Stop();
 		m_fRecording=false;
-		if (m_fCurServiceOnly)
+		if (m_Settings.m_fCurServiceOnly)
 			m_pDtvEngine->SetWriteCurServiceOnly(false);
-		//m_FileName.Clear();
+		//m_FileName.clear();
 		m_pDtvEngine=NULL;
 	}
 }
@@ -383,7 +467,7 @@ bool CRecordManager::RelayFile(LPCTSTR pszFileName)
 	if (!m_fRecording)
 		return false;
 	if (!m_RecordTask.RelayFile(pszFileName)) {
-		SetError(m_pDtvEngine->m_FileWriter.GetLastErrorException());
+		SetError(m_pDtvEngine->m_TsRecorder.GetLastErrorException());
 		return false;
 	}
 	ClearError();
@@ -406,7 +490,7 @@ bool CRecordManager::CancelReserve()
 }
 
 
-DWORD CRecordManager::GetRecordTime() const
+CRecordTask::DurationType CRecordManager::GetRecordTime() const
 {
 	if (!m_fRecording)
 		return 0;
@@ -414,7 +498,7 @@ DWORD CRecordManager::GetRecordTime() const
 }
 
 
-DWORD CRecordManager::GetPauseTime() const
+CRecordTask::DurationType CRecordManager::GetPauseTime() const
 {
 	if (!m_fRecording)
 		return 0;
@@ -431,15 +515,15 @@ LONGLONG CRecordManager::GetRemainTime() const
 	switch (m_StopTimeSpec.Type) {
 	case TIME_DATETIME:
 		{
-			FILETIME ft;
+			SYSTEMTIME st;
 
-			GetLocalTimeAsFileTime(&ft);
-			Remain=(m_StopTimeSpec.Time.DateTime-ft)/FILETIME_MILLISECOND;
+			::GetSystemTime(&st);
+			Remain=DiffSystemTime(&st,&m_StopTimeSpec.Time.DateTime);
 		}
 		break;
 	case TIME_DURATION:
 		Remain=m_StopTimeSpec.Time.Duration-
-			(LONGLONG)TickTimeSpan(m_RecordTask.GetStartTime(),::GetTickCount());
+			(LONGLONG)TickTimeSpan(m_RecordTask.GetStartTime(),Util::GetTickCount());
 		break;
 	default:
 		Remain=-1;
@@ -455,25 +539,25 @@ bool CRecordManager::QueryStart(int Offset) const
 	switch (m_StartTimeSpec.Type) {
 	case TIME_DATETIME:
 		{
-			FILETIME ft;
+			SYSTEMTIME st;
 
-			GetLocalTimeAsFileTime(&ft);
+			::GetSystemTime(&st);
 			if (Offset!=0)
-				ft+=(LONGLONG)Offset*(FILETIME_SECOND/1000);
-			if (::CompareFileTime(&ft,&m_StartTimeSpec.Time.DateTime)>=0)
+				OffsetSystemTime(&st,Offset);
+			if (CompareSystemTime(&st,&m_StartTimeSpec.Time.DateTime)>=0)
 				return true;
 		}
 		break;
 	case TIME_DURATION:
 		{
-			DWORD Span=TickTimeSpan(m_ReserveTime.GetTickTime(),::GetTickCount());
+			ULONGLONG Span=TickTimeSpan(m_ReserveTime.GetTickTime(),Util::GetTickCount());
 
 			if (Offset!=0) {
 				if ((LONGLONG)Offset<=-(LONGLONG)Span)
 					return true;
 				Span+=Offset;
 			}
-			if ((ULONGLONG)Span>=m_StartTimeSpec.Time.Duration)
+			if (Span>=m_StartTimeSpec.Time.Duration)
 				return true;
 		}
 		break;
@@ -489,26 +573,26 @@ bool CRecordManager::QueryStop(int Offset) const
 	switch (m_StopTimeSpec.Type) {
 	case TIME_DATETIME:
 		{
-			FILETIME ft;
+			SYSTEMTIME st;
 
-			GetLocalTimeAsFileTime(&ft);
+			::GetSystemTime(&st);
 			if (Offset!=0)
-				ft+=(LONGLONG)Offset*FILETIME_MILLISECOND;
-			if (::CompareFileTime(&ft,&m_StopTimeSpec.Time.DateTime)>=0)
+				OffsetSystemTime(&st,Offset);
+			if (CompareSystemTime(&st,&m_StopTimeSpec.Time.DateTime)>=0)
 				return true;
 		}
 		break;
 	case TIME_DURATION:
 		{
-			DWORD Span;
+			ULONGLONG Span;
 
-			Span=TickTimeSpan(m_RecordTask.GetStartTime(),::GetTickCount());
+			Span=TickTimeSpan(m_RecordTask.GetStartTime(),Util::GetTickCount());
 			if (Offset!=0) {
 				if ((LONGLONG)Offset<=-(LONGLONG)Span)
 					return true;
 				Span+=Offset;
 			}
-			if ((ULONGLONG)Span>=m_StopTimeSpec.Time.Duration)
+			if (Span>=m_StopTimeSpec.Time.Duration)
 				return true;
 		}
 		break;
@@ -517,519 +601,10 @@ bool CRecordManager::QueryStop(int Offset) const
 }
 
 
-CRecordManager *CRecordManager::GetThis(HWND hDlg)
-{
-	return static_cast<CRecordManager*>(::GetProp(hDlg,TEXT("This")));
-}
-
-
-static void SetDateTimeFormat(HWND hDlg,UINT ID)
-{
-	int Length;
-	TCHAR szText[256];
-
-	GetLocaleInfo(LOCALE_USER_DEFAULT,LOCALE_SSHORTDATE,szText,
-														lengthof(szText)-1);
-	Length=lstrlen(szText);
-	szText[Length++]=' ';
-	GetLocaleInfo(LOCALE_USER_DEFAULT,LOCALE_STIMEFORMAT,
-										szText+Length,lengthof(szText)-Length);
-	DateTime_SetFormat(GetDlgItem(hDlg,ID),szText);
-}
-
-
-static BOOL DateTime_SetFiletime(HWND hwndDT,DWORD flag,FILETIME *pFileTime)
-{
-	SYSTEMTIME st;
-
-	FileTimeToSystemTime(pFileTime,&st);
-	return DateTime_SetSystemtime(hwndDT,flag,&st);
-}
-
-
-#pragma warning(disable: 4700)	// 初期化されていないローカル変数 'ftStop' が使用されます
-
-INT_PTR CALLBACK CRecordManager::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
-{
-	switch (uMsg) {
-	case WM_INITDIALOG:
-		{
-			CRecordManager *pThis=reinterpret_cast<CRecordManager*>(lParam);
-			SYSTEMTIME st;
-			FILETIME ftTime;
-
-			::SetProp(hDlg,TEXT("This"),pThis);
-			::SendDlgItemMessage(hDlg,IDC_RECORD_FILENAME,EM_LIMITTEXT,MAX_PATH-1,0);
-			if (!pThis->m_FileName.IsEmpty())
-				::SetDlgItemText(hDlg,IDC_RECORD_FILENAME,pThis->m_FileName.Get());
-			/*
-			static const LPCTSTR pszExistsOperation[] = {
-				TEXT("上書きする"),TEXT("確認を取る"),TEXT("連番を付加する")
-			};
-			for (i=0;i<3;i++)
-				::SendDlgItemMessage(hDlg,IDC_RECORD_FILEEXISTS,CB_ADDSTRING,0,
-							reinterpret_cast<LPARAM>(pszExistsOperation[i]));
-			::SendDlgItemMessage(hDlg,IDC_RECORD_FILEEXISTS,CB_SETCURSEL,
-										(WPARAM)pThis->m_ExistsOperation,0);
-			::EnableDlgItems(hDlg,IDC_RECORD_FILENAME_LABEL,IDC_RECORD_FILEEXISTS,!pThis->m_fRecording);
-			*/
-			::EnableDlgItems(hDlg,IDC_RECORD_FILENAME_LABEL,IDC_RECORD_FILENAMEPREVIEW,!pThis->m_fRecording);
-
-			// 開始時間
-			DWORD Delay;
-			::CheckRadioButton(hDlg,IDC_RECORD_START_NOW,IDC_RECORD_START_DELAY,
-							   IDC_RECORD_START_NOW+pThis->m_StartTimeSpec.Type);
-			switch (pThis->m_StartTimeSpec.Type) {
-			case TIME_NOTSPECIFIED:
-				::GetLocalTime(&st);
-				st.wSecond=0;
-				st.wMilliseconds=0;
-				::SystemTimeToFileTime(&st,&ftTime);
-				Delay=60*1000;
-				break;
-			case TIME_DATETIME:
-				{
-					FILETIME ft;
-					ULARGE_INTEGER Time1,Time2;
-
-					::GetLocalTime(&st);
-					::SystemTimeToFileTime(&st,&ft);
-					ftTime=pThis->m_StartTimeSpec.Time.DateTime;
-					Time1.LowPart=ft.dwLowDateTime;
-					Time1.HighPart=ft.dwHighDateTime;
-					Time2.LowPart=ftTime.dwLowDateTime;
-					Time2.HighPart=ftTime.dwHighDateTime;
-					if (Time1.QuadPart<Time2.QuadPart) {
-						Delay=
-							(DWORD)((Time2.QuadPart-Time1.QuadPart)/FILETIME_MILLISECOND);
-					} else {
-						Delay=0;
-					}
-				}
-				break;
-			case TIME_DURATION:
-				Delay=(DWORD)pThis->m_StartTimeSpec.Time.Duration;
-				::GetLocalTime(&st);
-				st.wSecond=0;
-				st.wMilliseconds=0;
-				::SystemTimeToFileTime(&st,&ftTime);
-				ftTime+=(LONGLONG)Delay*FILETIME_MILLISECOND;
-				break;
-			}
-			SetDateTimeFormat(hDlg,IDC_RECORD_STARTTIME_TIME);
-			DateTime_SetFiletime(GetDlgItem(hDlg,IDC_RECORD_STARTTIME_TIME),
-															GDT_VALID,&ftTime);
-			Delay/=1000;
-			::SetDlgItemInt(hDlg,IDC_RECORD_STARTTIME_HOUR,Delay/(60*60),FALSE);
-			::SendDlgItemMessage(hDlg,IDC_RECORD_STARTTIME_HOUR_UD,UDM_SETRANGE,
-														0,MAKELPARAM(100,0));
-			::SetDlgItemInt(hDlg,IDC_RECORD_STARTTIME_MINUTE,Delay/60%60,FALSE);
-			::SendDlgItemMessage(hDlg,IDC_RECORD_STARTTIME_MINUTE_UD,UDM_SETRANGE,
-														0,MAKELPARAM(60,0));
-			::SetDlgItemInt(hDlg,IDC_RECORD_STARTTIME_SECOND,Delay%60,FALSE);
-			::SendDlgItemMessage(hDlg,IDC_RECORD_STARTTIME_SECOND_UD,UDM_SETRANGE,
-														0,MAKELPARAM(60,0));
-			if (pThis->m_fRecording) {
-				::EnableDlgItems(hDlg,IDC_RECORD_STARTTIME,IDC_RECORD_STARTTIME_SECOND_LABEL,false);
-			} else {
-				EnableDlgItem(hDlg,IDC_RECORD_STARTTIME_TIME,
-									pThis->m_StartTimeSpec.Type==TIME_DATETIME);
-				EnableDlgItems(hDlg,IDC_RECORD_STARTTIME_HOUR,
-									IDC_RECORD_STARTTIME_SECOND_LABEL,
-									pThis->m_StartTimeSpec.Type==TIME_DURATION);
-			}
-
-			// 終了時間
-			DWORD Duration;
-			::CheckDlgButton(hDlg,IDC_RECORD_STOPSPECTIME,
-				pThis->m_StopTimeSpec.Type!=TIME_NOTSPECIFIED?BST_CHECKED:BST_UNCHECKED);
-			::CheckRadioButton(hDlg,IDC_RECORD_STOPDATETIME,
-													IDC_RECORD_STOPREMAINTIME,
-				pThis->m_StopTimeSpec.Type==TIME_DATETIME?
-							IDC_RECORD_STOPDATETIME:IDC_RECORD_STOPREMAINTIME);
-			switch (pThis->m_StopTimeSpec.Type) {
-			case TIME_NOTSPECIFIED:
-				::GetLocalTime(&st);
-				st.wSecond=0;
-				st.wMilliseconds=0;
-				::SystemTimeToFileTime(&st,&ftTime);
-				ftTime+=60*60*FILETIME_SECOND;
-				Duration=60*60*1000;
-				break;
-			case TIME_DATETIME:
-				{
-					FILETIME ft;
-
-					GetLocalTimeAsFileTime(&ft);
-					ftTime=pThis->m_StopTimeSpec.Time.DateTime;
-					if (::CompareFileTime(&ft,&ftTime)<0)
-						Duration=(DWORD)((ftTime-ft)/FILETIME_MILLISECOND);
-					else
-						Duration=0;
-				}
-				break;
-			case TIME_DURATION:
-				Duration=(DWORD)pThis->m_StopTimeSpec.Time.Duration;
-				::GetLocalTime(&st);
-				st.wSecond=0;
-				st.wMilliseconds=0;
-				::SystemTimeToFileTime(&st,&ftTime);
-				ftTime+=(LONGLONG)Duration*FILETIME_MILLISECOND;
-				break;
-			}
-			SetDateTimeFormat(hDlg,IDC_RECORD_STOPTIME_TIME);
-			DateTime_SetFiletime(GetDlgItem(hDlg,IDC_RECORD_STOPTIME_TIME),
-															GDT_VALID,&ftTime);
-			::SetDlgItemInt(hDlg,IDC_RECORD_STOPTIME_HOUR,
-												Duration/(60*60*1000),FALSE);
-			::SendDlgItemMessage(hDlg,IDC_RECORD_STOPTIME_HOUR_UD,UDM_SETRANGE,
-														0,MAKELPARAM(100,0));
-			::SetDlgItemInt(hDlg,IDC_RECORD_STOPTIME_MINUTE,
-												Duration/(60*1000)%60,FALSE);
-			::SendDlgItemMessage(hDlg,IDC_RECORD_STOPTIME_MINUTE_UD,UDM_SETRANGE,
-														0,MAKELPARAM(60,0));
-			::SetDlgItemInt(hDlg,IDC_RECORD_STOPTIME_SECOND,
-												Duration/1000%60,FALSE);
-			::SendDlgItemMessage(hDlg,IDC_RECORD_STOPTIME_SECOND_UD,UDM_SETRANGE,
-														0,MAKELPARAM(60,0));
-			if (pThis->m_StopTimeSpec.Type==TIME_NOTSPECIFIED) {
-				EnableDlgItems(hDlg,IDC_RECORD_STOPDATETIME,
-									IDC_RECORD_STOPTIME_SECOND_LABEL,false);
-			} else {
-				EnableDlgItem(hDlg,IDC_RECORD_STOPTIME_TIME,
-									pThis->m_StopTimeSpec.Type==TIME_DATETIME);
-				EnableDlgItems(hDlg,IDC_RECORD_STOPTIME_HOUR,
-									IDC_RECORD_STOPTIME_SECOND_LABEL,
-									pThis->m_StopTimeSpec.Type==TIME_DURATION);
-#if 0
-				if (pThis->m_fRecording
-						&& pThis->m_StopTimeSpec.Type==TIME_DURATION)
-					::SetTimer(hDlg,1,500,NULL);
-#endif
-			}
-
-			DlgCheckBox_Check(hDlg,IDC_RECORD_CURSERVICEONLY,pThis->m_fCurServiceOnly);
-			DlgCheckBox_Check(hDlg,IDC_RECORD_SAVESUBTITLE,
-				(pThis->m_SaveStream&CTsSelector::STREAM_CAPTION)!=0);
-			DlgCheckBox_Check(hDlg,IDC_RECORD_SAVEDATACARROUSEL,
-				(pThis->m_SaveStream&CTsSelector::STREAM_DATACARROUSEL)!=0);
-			if (pThis->m_fRecording) {
-				EnableDlgItems(hDlg,IDC_RECORD_CURSERVICEONLY,IDC_RECORD_SAVEDATACARROUSEL,false);
-			} else {
-				/*
-				EnableDlgItems(hDlg,IDC_RECORD_SAVESUBTITLE,IDC_RECORD_SAVEDATACARROUSEL,
-							   pThis->m_fCurServiceOnly);
-				*/
-			}
-			EnableDlgItem(hDlg,IDC_RECORD_CANCEL,pThis->m_fReserved);
-		}
-		return TRUE;
-
-#if 0
-	case WM_TIMER:
-		{
-			CRecordManager *pThis=GetThis(hDlg);
-			const LONGLONG Remain=pThis->GetRemainTime();
-
-			UpdateDlgItemInt(hDlg,IDC_RECORD_STOPTIME_HOUR,(int)(Remain/(60*60*1000)));
-			UpdateDlgItemInt(hDlg,IDC_RECORD_STOPTIME_MINUTE,(int)(Remain/(60*1000))%60);
-			UpdateDlgItemInt(hDlg,IDC_RECORD_STOPTIME_SECOND,(int)(Remain/1000)%60);
-		}
-		return TRUE;
-#endif
-
-	case WM_COMMAND:
-		switch (LOWORD(wParam)) {
-		case IDC_RECORD_FILENAME_BROWSE:
-			{
-				OPENFILENAME ofn;
-				TCHAR szFileName[MAX_PATH];
-
-				GetDlgItemText(hDlg,IDC_RECORD_FILENAME,szFileName,MAX_PATH);
-				ofn.lStructSize=sizeof(OPENFILENAME);
-				ofn.hwndOwner=hDlg;
-				ofn.lpstrFilter=
-					TEXT("TSファイル(*.ts)\0*.ts\0すべてのファイル\0*.*\0");
-				ofn.lpstrCustomFilter=NULL;
-				ofn.nFilterIndex=1;
-				ofn.lpstrFile=szFileName;
-				ofn.nMaxFile=MAX_PATH;
-				ofn.lpstrFileTitle=NULL;
-				ofn.lpstrInitialDir=NULL;
-				ofn.lpstrTitle=TEXT("保存ファイル名");
-				ofn.Flags=OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT;
-				ofn.lpstrDefExt=TEXT("ts");
-#if _WIN32_WINNT>=0x500
-				ofn.pvReserved=NULL;
-				ofn.dwReserved=0;
-				ofn.FlagsEx=0;
-#endif
-				if (GetSaveFileName(&ofn))
-					SetDlgItemText(hDlg,IDC_RECORD_FILENAME,szFileName);
-			}
-			return TRUE;
-
-		case IDC_RECORD_FILENAME:
-			if (HIWORD(wParam)==EN_CHANGE) {
-				CRecordManager *pThis=GetThis(hDlg);
-				if (pThis==NULL)
-					break;
-				TCHAR szFormat[MAX_PATH],szFileName[MAX_PATH];
-
-				::GetDlgItemText(hDlg,IDC_RECORD_FILENAME,szFormat,lengthof(szFormat));
-				szFileName[0]='\0';
-				if (szFormat[0]!='\0') {
-					EventInfo Info;
-
-					GetEventInfoSample(&Info);
-					if (!pThis->GenerateFileName(szFileName,lengthof(szFileName),
-												 &Info,szFormat))
-						szFileName[0]='\0';
-				}
-				::SetDlgItemText(hDlg,IDC_RECORD_FILENAMEPREVIEW,szFileName);
-			}
-			return TRUE;
-
-		case IDC_RECORD_FILENAMEFORMAT:
-			{
-				RECT rc;
-				POINT pt;
-
-				::GetWindowRect(::GetDlgItem(hDlg,IDC_RECORD_FILENAMEFORMAT),&rc);
-				pt.x=rc.left;
-				pt.y=rc.bottom;
-				InsertFileNameParameter(hDlg,IDC_RECORD_FILENAME,&pt);
-			}
-			return TRUE;
-
-		case IDC_RECORD_START_NOW:
-		case IDC_RECORD_START_DATETIME:
-		case IDC_RECORD_START_DELAY:
-			EnableDlgItem(hDlg,IDC_RECORD_STARTTIME_TIME,
-				DlgCheckBox_IsChecked(hDlg,IDC_RECORD_START_DATETIME));
-			EnableDlgItems(hDlg,IDC_RECORD_STARTTIME_HOUR,
-								IDC_RECORD_STARTTIME_SECOND_LABEL,
-				DlgCheckBox_IsChecked(hDlg,IDC_RECORD_START_DELAY));
-			return TRUE;
-
-		case IDC_RECORD_STOPSPECTIME:
-		case IDC_RECORD_STOPDATETIME:
-		case IDC_RECORD_STOPREMAINTIME:
-			if (DlgCheckBox_IsChecked(hDlg,IDC_RECORD_STOPSPECTIME)) {
-				bool fDateTime=IsDlgButtonChecked(hDlg,
-										IDC_RECORD_STOPDATETIME)==BST_CHECKED;
-
-				EnableDlgItems(hDlg,IDC_RECORD_STOPDATETIME,
-									IDC_RECORD_STOPREMAINTIME,TRUE);
-				EnableDlgItem(hDlg,IDC_RECORD_STOPTIME_TIME,fDateTime);
-				EnableDlgItems(hDlg,IDC_RECORD_STOPTIME_HOUR,
-									IDC_RECORD_STOPTIME_SECOND_LABEL,!fDateTime);
-			} else {
-				EnableDlgItems(hDlg,IDC_RECORD_STOPDATETIME,
-									IDC_RECORD_STOPTIME_SECOND_LABEL,false);
-			}
-			return TRUE;
-
-#if 0
-		case IDC_RECORD_STOPTIME_HOUR:
-		case IDC_RECORD_STOPTIME_MINUTE:
-		case IDC_RECORD_STOPTIME_SECOND:
-			if (HIWORD(wParam)==EN_CHANGE) {
-				::KillTimer(hDlg,1);
-			}
-			return TRUE;
-#endif
-
-		/*
-		case IDC_RECORD_CURSERVICEONLY:
-			EnableDlgItems(hDlg,IDC_RECORD_SAVESUBTITLE,IDC_RECORD_SAVEDATACARROUSEL,
-				DlgCheckBox_IsChecked(hDlg,IDC_RECORD_CURSERVICEONLY));
-			return TRUE;
-		*/
-
-		case IDOK:
-			{
-				CRecordManager *pThis=GetThis(hDlg);
-				int StartTimeChecked;
-				SYSTEMTIME st;
-				FILETIME ftCur,ftStart,ftStop;
-
-				GetLocalTimeAsFileTime(&ftCur);
-				if (!pThis->m_fRecording) {
-					StartTimeChecked=GetCheckedRadioButton(hDlg,IDC_RECORD_START_NOW,IDC_RECORD_START_DELAY);
-					if (StartTimeChecked==IDC_RECORD_START_DATETIME) {
-						DateTime_GetSystemtime(
-							GetDlgItem(hDlg,IDC_RECORD_STARTTIME_TIME),&st);
-						::SystemTimeToFileTime(&st,&ftStart);
-						if (::CompareFileTime(&ftStart,&ftCur)<=0) {
-							::MessageBox(hDlg,
-								TEXT("指定された開始時刻を既に過ぎています。"),
-								NULL,MB_OK | MB_ICONEXCLAMATION);
-							SetDlgItemFocus(hDlg,IDC_RECORD_STARTTIME_TIME);
-							return TRUE;
-						}
-					}
-				}
-				if (DlgCheckBox_IsChecked(hDlg,IDC_RECORD_STOPSPECTIME)
-						&& DlgCheckBox_IsChecked(hDlg,IDC_RECORD_STOPDATETIME)) {
-					DateTime_GetSystemtime(
-						::GetDlgItem(hDlg,IDC_RECORD_STOPTIME_TIME),&st);
-					::SystemTimeToFileTime(&st,&ftStop);
-					if (::CompareFileTime(&ftStop,&ftCur)<=0) {
-						::MessageBox(hDlg,
-							TEXT("指定された停止時刻を既に過ぎています。"),
-							NULL,MB_OK | MB_ICONEXCLAMATION);
-						SetDlgItemFocus(hDlg,IDC_RECORD_STOPTIME_TIME);
-						return TRUE;
-					}
-				}
-				if (!pThis->m_fRecording) {
-					TCHAR szFileName[MAX_PATH];
-
-					GetDlgItemText(hDlg,IDC_RECORD_FILENAME,szFileName,MAX_PATH);
-					CFilePath FilePath(szFileName);
-					if (szFileName[0]=='\0' || *FilePath.GetFileName()=='\0') {
-						MessageBox(hDlg,TEXT("ファイル名を入力してください。"),
-											NULL,MB_OK | MB_ICONEXCLAMATION);
-						SetDlgItemFocus(hDlg,IDC_RECORD_FILENAME);
-						return TRUE;
-					}
-#if 0
-					if (!FilePath.IsValid()) {
-						MessageBox(hDlg,
-							TEXT("ファイル名に使用できない文字が含まれています。"),
-							NULL,MB_OK | MB_ICONEXCLAMATION);
-						SetDlgItemFocus(hDlg,IDC_RECORD_FILENAME);
-						return TRUE;
-					}
-#else
-					TCHAR szMessage[256];
-					if (!IsValidFileName(FilePath.GetFileName(),false,
-										 szMessage,lengthof(szMessage))) {
-						MessageBox(hDlg,szMessage,NULL,MB_OK | MB_ICONEXCLAMATION);
-						SetDlgItemFocus(hDlg,IDC_RECORD_FILENAME);
-						return TRUE;
-					}
-#endif
-					if (!FilePath.HasDirectory()) {
-						MessageBox(hDlg,TEXT("保存先フォルダを入力してください。"),
-											NULL,MB_OK | MB_ICONEXCLAMATION);
-						SetDlgItemFocus(hDlg,IDC_RECORD_FILENAME);
-						return TRUE;
-					}
-					FilePath.GetDirectory(szFileName);
-					if (!::PathIsDirectory(szFileName)) {
-						TCHAR szMessage[MAX_PATH+64];
-
-						StdUtil::snprintf(szMessage,lengthof(szMessage),
-							TEXT("録画ファイルの保存先フォルダ \"%s\" がありません。\n")
-							TEXT("作成しますか?"),szFileName);
-						if (::MessageBox(hDlg,szMessage,TEXT("フォルダ作成の確認"),
-										 MB_YESNO | MB_ICONQUESTION)==IDYES) {
-							int Result;
-
-							Result=::SHCreateDirectoryEx(hDlg,szFileName,NULL);
-							if (Result!=ERROR_SUCCESS
-									&& Result!=ERROR_ALREADY_EXISTS) {
-								::MessageBox(hDlg,TEXT("フォルダが作成できません。"),
-											 NULL,MB_OK | MB_ICONEXCLAMATION);
-								SetDlgItemFocus(hDlg,IDC_RECORD_FILENAME);
-								return TRUE;
-							}
-						}
-					}
-					pThis->SetFileName(FilePath.GetPath());
-					/*
-					pThis->m_ExistsOperation=(FileExistsOperation)
-						SendDlgItemMessage(hDlg,IDC_RECORD_FILEEXISTS,CB_GETCURSEL,0,0);
-					*/
-					switch (StartTimeChecked) {
-					case IDC_RECORD_START_NOW:
-					default:
-						pThis->SetStartTimeSpec(NULL);
-						break;
-					case IDC_RECORD_START_DATETIME:
-						{
-							TimeSpecInfo TimeSpec;
-
-							TimeSpec.Type=TIME_DATETIME;
-							TimeSpec.Time.DateTime=ftStart;
-							pThis->SetStartTimeSpec(&TimeSpec);
-						}
-						break;
-					case IDC_RECORD_START_DELAY:
-						{
-							TimeSpecInfo TimeSpec;
-							unsigned int Hour,Minute,Second;
-
-							TimeSpec.Type=TIME_DURATION;
-							Hour=GetDlgItemInt(hDlg,IDC_RECORD_STARTTIME_HOUR,NULL,FALSE);
-							Minute=GetDlgItemInt(hDlg,IDC_RECORD_STARTTIME_MINUTE,NULL,FALSE);
-						Second=GetDlgItemInt(hDlg,IDC_RECORD_STARTTIME_SECOND,NULL,FALSE);
-							TimeSpec.Time.Duration=(Hour*(60*60)+Minute*60+Second)*1000;
-							pThis->SetStartTimeSpec(&TimeSpec);
-						}
-						break;
-					}
-
-					pThis->m_fCurServiceOnly=DlgCheckBox_IsChecked(hDlg,IDC_RECORD_CURSERVICEONLY);
-					pThis->m_SaveStream=CTsSelector::STREAM_ALL;
-					if (!DlgCheckBox_IsChecked(hDlg,IDC_RECORD_SAVESUBTITLE))
-						pThis->m_SaveStream^=CTsSelector::STREAM_CAPTION;
-					if (!DlgCheckBox_IsChecked(hDlg,IDC_RECORD_SAVEDATACARROUSEL))
-						pThis->m_SaveStream^=CTsSelector::STREAM_DATACARROUSEL;
-				}
-
-				if (DlgCheckBox_IsChecked(hDlg,IDC_RECORD_STOPSPECTIME)) {
-					TimeSpecInfo TimeSpec;
-
-					if (DlgCheckBox_IsChecked(hDlg,IDC_RECORD_STOPDATETIME)) {
-						TimeSpec.Type=TIME_DATETIME;
-						TimeSpec.Time.DateTime=ftStop;
-					} else {
-						unsigned int Hour,Minute,Second;
-
-						TimeSpec.Type=TIME_DURATION;
-						Hour=GetDlgItemInt(hDlg,IDC_RECORD_STOPTIME_HOUR,NULL,FALSE);
-						Minute=GetDlgItemInt(hDlg,IDC_RECORD_STOPTIME_MINUTE,NULL,FALSE);
-						Second=GetDlgItemInt(hDlg,IDC_RECORD_STOPTIME_SECOND,NULL,FALSE);
-						TimeSpec.Time.Duration=(Hour*(60*60)+Minute*60+Second)*1000;
-					}
-					pThis->SetStopTimeSpec(&TimeSpec);
-				} else {
-					pThis->SetStopTimeSpec(NULL);
-				}
-			}
-		case IDCANCEL:
-			EndDialog(hDlg,LOWORD(wParam));
-			return TRUE;
-
-		case IDC_RECORD_CANCEL:
-			{
-				CRecordManager *pThis=GetThis(hDlg);
-
-				pThis->CancelReserve();
-				EndDialog(hDlg,IDCANCEL);
-			}
-			return TRUE;
-		}
-		return TRUE;
-
-	case WM_DESTROY:
-		::RemoveProp(hDlg,TEXT("This"));
-		return TRUE;
-	}
-	return FALSE;
-}
-
-#pragma warning(default: 4700)
-
-
 bool CRecordManager::RecordDialog(HWND hwndOwner)
 {
-	return DialogBoxParam(GetAppClass().GetResourceInstance(),
-						  MAKEINTRESOURCE(IDD_RECORDOPTION),hwndOwner,
-						  DlgProc,reinterpret_cast<LPARAM>(this))==IDOK;
+	CRecordSettingsDialog Dialog(this);
+	return Dialog.Show(hwndOwner);
 }
 
 
@@ -1127,180 +702,42 @@ bool CRecordManager::ChangeStopTimeDialog(HWND hwndOwner)
 #endif
 
 
-int CRecordManager::FormatFileName(LPTSTR pszFileName,int MaxFileName,const EventInfo *pEventInfo,LPCTSTR pszFormat) const
+bool CRecordManager::GenerateFilePath(
+	const FileNameFormatInfo &FormatInfo,LPCWSTR pszFormat,
+	TVTest::String *pFilePath) const
 {
-	SYSTEMTIME stStart;
-	LPCTSTR p;
-	int i;
+	if (pFilePath==NULL)
+		return false;
 
-	if (m_fReserved && m_StartTimeSpec.Type==TIME_DATETIME) {
-		::FileTimeToSystemTime(&m_StartTimeSpec.Time.DateTime,&stStart);
-	} else {
-		::GetLocalTime(&stStart);
-	}
-	p=pszFormat;
-	for (i=0;i<MaxFileName-1 && *p!=_T('\0');) {
-		if (*p==_T('%')) {
-			p++;
-			if (*p==_T('%')) {
-				pszFileName[i++]=_T('%');
-				p++;
-			} else {
-				TCHAR szKeyword[32];
-				size_t j;
+	pFilePath->clear();
 
-				for (j=0;p[j]!=_T('%') && p[j]!=_T('\0');j++) {
-					if (j<lengthof(szKeyword)-1)
-						szKeyword[j]=p[j];
-				}
-				if (j<=lengthof(szKeyword)-1 && p[j]==_T('%')) {
-					const int Remain=MaxFileName-i;
-
-					p+=j+1;
-					szKeyword[j]=_T('\0');
-					if (::lstrcmpi(szKeyword,TEXT("date"))==0) {
-						i+=StdUtil::snprintf(&pszFileName[i],Remain,TEXT("%d%02d%02d"),
-											 stStart.wYear,stStart.wMonth,stStart.wDay);
-					} else if (::lstrcmpi(szKeyword,TEXT("year"))==0) {
-						i+=StdUtil::snprintf(&pszFileName[i],Remain,TEXT("%d"),stStart.wYear);
-					} else if (::lstrcmpi(szKeyword,TEXT("year2"))==0) {
-						i+=StdUtil::snprintf(&pszFileName[i],Remain,TEXT("%02d"),stStart.wYear%100);
-					} else if (::lstrcmpi(szKeyword,TEXT("month"))==0) {
-						i+=StdUtil::snprintf(&pszFileName[i],Remain,TEXT("%d"),stStart.wMonth);
-					} else if (::lstrcmpi(szKeyword,TEXT("month2"))==0) {
-						i+=StdUtil::snprintf(&pszFileName[i],Remain,TEXT("%02d"),stStart.wMonth);
-					} else if (::lstrcmpi(szKeyword,TEXT("day"))==0) {
-						i+=StdUtil::snprintf(&pszFileName[i],Remain,TEXT("%d"),stStart.wDay);
-					} else if (::lstrcmpi(szKeyword,TEXT("day2"))==0) {
-						i+=StdUtil::snprintf(&pszFileName[i],Remain,TEXT("%02d"),stStart.wDay);
-					} else if (::lstrcmpi(szKeyword,TEXT("time"))==0) {
-						i+=StdUtil::snprintf(&pszFileName[i],Remain,TEXT("%02d%02d%02d"),
-											 stStart.wHour,stStart.wMinute,stStart.wSecond);
-					} else if (::lstrcmpi(szKeyword,TEXT("hour"))==0) {
-						i+=StdUtil::snprintf(&pszFileName[i],Remain,TEXT("%d"),stStart.wHour);
-					} else if (::lstrcmpi(szKeyword,TEXT("hour2"))==0) {
-						i+=StdUtil::snprintf(&pszFileName[i],Remain,TEXT("%02d"),stStart.wHour);
-					} else if (::lstrcmpi(szKeyword,TEXT("minute"))==0) {
-						i+=StdUtil::snprintf(&pszFileName[i],Remain,TEXT("%d"),stStart.wMinute);
-					} else if (::lstrcmpi(szKeyword,TEXT("minute2"))==0) {
-						i+=StdUtil::snprintf(&pszFileName[i],Remain,TEXT("%02d"),stStart.wMinute);
-					} else if (::lstrcmpi(szKeyword,TEXT("second"))==0) {
-						i+=StdUtil::snprintf(&pszFileName[i],Remain,TEXT("%d"),stStart.wSecond);
-					} else if (::lstrcmpi(szKeyword,TEXT("second2"))==0) {
-						i+=StdUtil::snprintf(&pszFileName[i],Remain,TEXT("%02d"),stStart.wSecond);
-					} else if (::lstrcmpi(szKeyword,TEXT("day-of-week"))==0) {
-						i+=StdUtil::snprintf(&pszFileName[i],Remain,TEXT("%s"),
-											 GetDayOfWeekText(stStart.wDayOfWeek));
-					} else if (::lstrcmpi(szKeyword,TEXT("channel-name"))==0) {
-						if (pEventInfo->pszChannelName!=NULL)
-							i+=MapFileNameCopy(&pszFileName[i],Remain,pEventInfo->pszChannelName);
-					} else if (::lstrcmpi(szKeyword,TEXT("channel-no"))==0) {
-						if (pEventInfo->ChannelNo!=0)
-							i+=StdUtil::snprintf(&pszFileName[i],Remain,TEXT("%d"),pEventInfo->ChannelNo);
-					} else if (::lstrcmpi(szKeyword,TEXT("channel-no2"))==0) {
-						if (pEventInfo->ChannelNo!=0)
-							i+=StdUtil::snprintf(&pszFileName[i],Remain,TEXT("%02d"),pEventInfo->ChannelNo);
-					} else if (::lstrcmpi(szKeyword,TEXT("channel-no3"))==0) {
-						if (pEventInfo->ChannelNo!=0)
-							i+=StdUtil::snprintf(&pszFileName[i],Remain,TEXT("%03d"),pEventInfo->ChannelNo);
-					} else if (::lstrcmpi(szKeyword,TEXT("event-name"))==0) {
-						if (pEventInfo->pszEventName!=NULL)
-							i+=MapFileNameCopy(&pszFileName[i],Remain,pEventInfo->pszEventName);
-					} else if (::lstrcmpi(szKeyword,TEXT("event-id"))==0) {
-						i+=StdUtil::snprintf(&pszFileName[i],Remain,TEXT("%04X"),pEventInfo->EventID);
-					} else if (::lstrcmpi(szKeyword,TEXT("service-name"))==0) {
-						if (pEventInfo->pszServiceName!=NULL)
-							i+=MapFileNameCopy(&pszFileName[i],Remain,pEventInfo->pszServiceName);
-					} else if (::lstrcmpi(szKeyword,TEXT("service-id"))==0) {
-						if (pEventInfo->ServiceID!=0)
-							i+=StdUtil::snprintf(&pszFileName[i],Remain,TEXT("%04X"),pEventInfo->ServiceID);
-					} else if (::lstrcmpi(szKeyword,TEXT("tot-date"))==0) {
-						i+=StdUtil::snprintf(&pszFileName[i],Remain,TEXT("%d%02d%02d"),
-							pEventInfo->stTotTime.wYear,pEventInfo->stTotTime.wMonth,pEventInfo->stTotTime.wDay);
-					} else if (::lstrcmpi(szKeyword,TEXT("tot-time"))==0) {
-						i+=StdUtil::snprintf(&pszFileName[i],Remain,TEXT("%02d%02d%02d"),
-							pEventInfo->stTotTime.wHour,pEventInfo->stTotTime.wMinute,pEventInfo->stTotTime.wSecond);
-					} else {
-						TRACE(TEXT("Unknown keyword %%%s%%\n"),szKeyword);
-						i+=StdUtil::snprintf(&pszFileName[i],Remain,TEXT("%%%s%%"),szKeyword);
-					}
-				} else {
-					pszFileName[i++]=_T('%');
-				}
-			}
-		} else {
-#ifndef UNICODE
-			if (::IsDBCSLeadByteEx(CP_ACP,*p)) {
-				if (i+1==MaxFileName || *(p+1)==_T('\0'))
-					break;
-				pszFileName[i++]=*p++;
-			}
-#endif
-			pszFileName[i++]=*p++;
-		}
-	}
-	pszFileName[i]=_T('\0');
-	return i;
-}
-
-
-int CRecordManager::MapFileNameCopy(LPWSTR pszFileName,int MaxFileName,LPCWSTR pszText)
-{
-	int i;
-	LPCWSTR p=pszText;
-
-	for (i=0;i<MaxFileName-1 && *p!='\0';i++) {
-		static const struct {
-			WCHAR From;
-			WCHAR To;
-		} CharMap[] = {
-			{L'\\',	L'￥'},
-			{L'/',	L'／'},
-			{L':',	L'：'},
-			{L'*',	L'＊'},
-			{L'?',	L'？'},
-			{L'"',	L'”'},
-			{L'<',	L'＜'},
-			{L'>',	L'＞'},
-			{L'|',	L'｜'},
-		};
-
-		for (int j=0;j<lengthof(CharMap);j++) {
-			if (CharMap[j].From==*p) {
-				pszFileName[i]=CharMap[j].To;
-				goto Next;
-			}
-		}
-		pszFileName[i]=*p;
-	Next:
-		p++;
-	}
-	pszFileName[i]='\0';
-	return i;
-}
-
-
-bool CRecordManager::GenerateFileName(LPTSTR pszFileName,int MaxLength,const EventInfo *pEventInfo,LPCTSTR pszFormat) const
-{
 	if (pszFormat==NULL) {
-		if (m_FileName.IsEmpty())
+		if (m_FileName.empty())
 			return false;
 	}
-	if (FormatFileName(pszFileName,MaxLength-5,pEventInfo,
-					   pszFormat!=NULL?pszFormat:m_FileName.Get())==0)
-		return false;
-	if (pszFormat==NULL && ::PathFileExists(pszFileName)) {
-		LPTSTR pszSeqNumber=::PathFindExtension(pszFileName);
-		LPCTSTR pszExtension=::PathFindExtension(m_FileName.Get());
 
-		for (int i=2;i<1000;i++) {
-			::wsprintf(pszSeqNumber,TEXT("-%d%s"),i,pszExtension);
-			if (!::PathFileExists(pszFileName))
-				break;
-			if (i==999)
-				return false;
-		}
+	TVTest::CEventVariableStringMap VarStrMap(FormatInfo);
+	TVTest::String FileName;
+
+	if (m_fReserved && m_StartTimeSpec.Type==TIME_DATETIME) {
+		SYSTEMTIME st;
+		::SystemTimeToTzSpecificLocalTime(NULL,&m_StartTimeSpec.Time.DateTime,&st);
+		VarStrMap.SetCurrentTime(&st);
 	}
+
+	if (!TVTest::FormatVariableString(
+				&VarStrMap,pszFormat!=NULL?pszFormat:m_FileName.c_str(),
+				&FileName)
+			|| FileName.empty())
+		return false;
+
+	if (!::PathIsRelativeW(FileName.c_str())) {
+		if (!MakeUniqueFileName(&FileName))
+			return false;
+	}
+
+	*pFilePath=FileName;
+
 	return true;
 }
 
@@ -1308,23 +745,23 @@ bool CRecordManager::GenerateFileName(LPTSTR pszFileName,int MaxLength,const Eve
 /*
 bool CRecordManager::DoFileExistsOperation(HWND hwndOwner,LPTSTR pszFileName)
 {
-	lstrcpy(pszFileName,m_FileName.Get());
+	lstrcpy(pszFileName,m_FileName.c_str());
 	switch (m_ExistsOperation) {
 	case EXISTS_CONFIRM:
-		if (PathFileExists(m_FileName.Get())
+		if (PathFileExists(m_FileName.c_str())
 				&& MessageBox(hwndOwner,
 					TEXT("ファイルが既に存在します。\n上書きしますか?"),
 					TEXT("上書きの確認"),MB_OKCANCEL | MB_ICONQUESTION)!=IDOK)
 			return false;
 		break;
 	case EXISTS_SEQUENCIALNUMBER:
-		if (PathFileExists(m_FileName.Get())) {
+		if (PathFileExists(m_FileName.c_str())) {
 			int i;
 			TCHAR szFileName[MAX_PATH];
 			LPTSTR pszExtension,p;
 
-			pszExtension=PathFindExtension(m_FileName.Get());
-			lstrcpy(szFileName,m_FileName.Get());
+			pszExtension=PathFindExtension(m_FileName.c_str());
+			lstrcpy(szFileName,m_FileName.c_str());
 			p=PathFindExtension(szFileName);
 			for (i=0;;i++) {
 				wsprintf(p,TEXT("%d%s"),i+1,pszExtension);
@@ -1342,94 +779,603 @@ bool CRecordManager::DoFileExistsOperation(HWND hwndOwner,LPTSTR pszFileName)
 
 bool CRecordManager::SetCurServiceOnly(bool fOnly)
 {
-	m_fCurServiceOnly=fOnly;
+	m_Settings.m_fCurServiceOnly=fOnly;
 	return true;
 }
 
 
 bool CRecordManager::SetSaveStream(DWORD Stream)
 {
-	m_SaveStream=Stream;
+	m_Settings.m_SaveStream=Stream;
 	return true;
 }
 
 
-bool CRecordManager::SetBufferSize(SIZE_T BufferSize)
+bool CRecordManager::SetWritePlugin(LPCTSTR pszPlugin)
 {
-	m_BufferSize=BufferSize;
+	if (IsStringEmpty(pszPlugin))
+		m_Settings.m_WritePlugin.clear();
+	else
+		m_Settings.m_WritePlugin=pszPlugin;
 	return true;
 }
 
 
-bool CRecordManager::InsertFileNameParameter(HWND hDlg,int ID,const POINT *pMenuPos)
+LPCTSTR CRecordManager::GetWritePlugin() const
 {
-	static const struct {
-		LPCTSTR pszParameter;
-		LPCTSTR pszText;
-	} ParameterList[] = {
-		{TEXT("%date%"),			TEXT("開始年月日")},
-		{TEXT("%year%"),			TEXT("開始年")},
-		{TEXT("%year2%"),			TEXT("開始年(下2桁)")},
-		{TEXT("%month%"),			TEXT("開始月")},
-		{TEXT("%month2%"),			TEXT("開始月(2桁)")},
-		{TEXT("%day%"),				TEXT("開始日")},
-		{TEXT("%day2%"),			TEXT("開始日(2桁)")},
-		{TEXT("%time%"),			TEXT("開始時刻(時+分+秒)")},
-		{TEXT("%hour%"),			TEXT("開始時")},
-		{TEXT("%hour2%"),			TEXT("開始時(2桁)")},
-		{TEXT("%minute%"),			TEXT("開始分")},
-		{TEXT("%minute2%"),			TEXT("開始分(2桁)")},
-		{TEXT("%second%"),			TEXT("開始秒")},
-		{TEXT("%second2%"),			TEXT("開始秒(2桁)")},
-		{TEXT("%day-of-week%"),		TEXT("開始曜日(漢字)")},
-		{TEXT("%channel-name%"),	TEXT("チャンネル名")},
-		{TEXT("%channel-no%"),		TEXT("チャンネル番号")},
-		{TEXT("%channel-no2%"),		TEXT("チャンネル番号(2桁)")},
-		{TEXT("%channel-no3%"),		TEXT("チャンネル番号(3桁)")},
-		{TEXT("%event-name%"),		TEXT("イベント名")},
-		{TEXT("%event-id%"),		TEXT("イベントID")},
-		{TEXT("%service-name%"),	TEXT("サービス名")},
-		{TEXT("%service-id%"),		TEXT("サービスID")},
-		{TEXT("%tot-date%"),		TEXT("TOT年月日")},
-		{TEXT("%tot-time%"),		TEXT("TOT時刻(時+分+秒)")},
-	};
-	HMENU hmenu=::CreatePopupMenu();
-	int Command;
+	if (m_Settings.m_WritePlugin.empty())
+		return NULL;
+	return m_Settings.m_WritePlugin.c_str();
+}
 
-	for (int i=0;i<lengthof(ParameterList);i++) {
-		TCHAR szText[128];
 
-		StdUtil::snprintf(szText,lengthof(szText),TEXT("%s (%s)"),
-						  ParameterList[i].pszParameter,ParameterList[i].pszText);
-		::AppendMenu(hmenu,MFT_STRING | MFS_ENABLED,i+1,szText);
-	}
-	Command=::TrackPopupMenu(hmenu,TPM_RETURNCMD,pMenuPos->x,pMenuPos->y,0,hDlg,NULL);
-	::DestroyMenu(hmenu);
-	if (Command<=0)
+bool CRecordManager::SetBufferSize(DWORD BufferSize)
+{
+	m_Settings.m_BufferSize=BufferSize;
+	return true;
+}
+
+
+bool CRecordManager::GetWritePluginList(std::vector<TVTest::String> *pList)
+{
+	if (pList==nullptr)
 		return false;
 
-	DWORD Start,End;
-	::SendDlgItemMessage(hDlg,ID,EM_GETSEL,
-		reinterpret_cast<WPARAM>(&Start),reinterpret_cast<LPARAM>(&End));
-	::SendDlgItemMessage(hDlg,ID,EM_REPLACESEL,
-		TRUE,reinterpret_cast<LPARAM>(ParameterList[Command-1].pszParameter));
-	if (End<Start)
-		Start=End;
-	::SendDlgItemMessage(hDlg,ID,EM_SETSEL,
-		Start,Start+::lstrlen(ParameterList[Command-1].pszParameter));
+	pList->clear();
+
+	TCHAR szDir[MAX_PATH];
+	HANDLE hFind;
+	WIN32_FIND_DATA fd;
+
+	GetAppClass().GetAppDirectory(szDir);
+	::PathAppend(szDir,TEXT("Write_*.dll"));
+	hFind=::FindFirstFile(szDir,&fd);
+	if (hFind==INVALID_HANDLE_VALUE)
+		return false;
+	do {
+		if ((fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)==0)
+			pList->push_back(TVTest::String(fd.cFileName));
+	} while (::FindNextFile(hFind,&fd));
+	::FindClose(hFind);
+
+	if (pList->size()>1) {
+		std::sort(pList->begin(),pList->end(),
+				  [](const TVTest::String &Lib1,const TVTest::String &Lib2) {
+				      return TVTest::StringUtility::CompareNoCase(Lib1,Lib2)<0;
+				  });
+	}
+
 	return true;
 }
 
 
-void CRecordManager::GetEventInfoSample(EventInfo *pEventInfo)
+bool CRecordManager::ShowWritePluginSetting(HWND hwndOwner,LPCTSTR pszPlugin)
 {
-	pEventInfo->pszChannelName=TEXT("アフリカ中央テレビ");
-	pEventInfo->ChannelNo=13;
-	pEventInfo->pszServiceName=TEXT("アフテレ1");
-	pEventInfo->ServiceID=0x1234;
-	pEventInfo->pszEventName=TEXT("今日のニュース");
-	pEventInfo->EventID=0xABCD;
-	::GetLocalTime(&pEventInfo->stTotTime);
-	pEventInfo->stTotTime.wSecond=pEventInfo->stTotTime.wSecond/5*5;
-	pEventInfo->stTotTime.wMilliseconds=0;
+	if (IsStringEmpty(pszPlugin))
+		return false;
+
+	bool fOK=false;
+	HMODULE hLib=::LoadLibrary(pszPlugin);
+	if (hLib!=NULL) {
+		typedef void (WINAPI *Setting)(HWND parentWnd);
+		Setting pSetting=(Setting)::GetProcAddress(hLib,"Setting");
+		if (pSetting!=NULL) {
+			pSetting(hwndOwner);
+			fOK=true;
+		}
+		::FreeLibrary(hLib);
+	}
+
+	return fOK;
+}
+
+
+
+
+static void SetDateTimeFormat(HWND hDlg,UINT ID)
+{
+	int Length;
+	TCHAR szText[256];
+
+	GetLocaleInfo(LOCALE_USER_DEFAULT,LOCALE_SSHORTDATE,szText,
+														lengthof(szText)-1);
+	Length=lstrlen(szText);
+	szText[Length++]=' ';
+	GetLocaleInfo(LOCALE_USER_DEFAULT,LOCALE_STIMEFORMAT,
+										szText+Length,lengthof(szText)-Length);
+	DateTime_SetFormat(GetDlgItem(hDlg,ID),szText);
+}
+
+
+CRecordManager::CRecordSettingsDialog::CRecordSettingsDialog(CRecordManager *pRecManager)
+	: m_pRecManager(pRecManager)
+{
+}
+
+
+bool CRecordManager::CRecordSettingsDialog::Show(HWND hwndOwner)
+{
+	return ShowDialog(hwndOwner,
+					  GetAppClass().GetResourceInstance(),
+					  MAKEINTRESOURCE(IDD_RECORDOPTION))==IDOK;
+}
+
+
+INT_PTR CRecordManager::CRecordSettingsDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
+{
+	switch (uMsg) {
+	case WM_INITDIALOG:
+		{
+			DlgEdit_LimitText(hDlg,IDC_RECORD_FILENAME,MAX_PATH-1);
+			if (!m_pRecManager->m_FileName.empty())
+				DlgEdit_SetText(hDlg,IDC_RECORD_FILENAME,m_pRecManager->m_FileName.c_str());
+			InitDropDownButton(hDlg,IDC_RECORD_FILENAMEFORMAT);
+			EnableDlgItems(hDlg,IDC_RECORD_FILENAME_LABEL,IDC_RECORD_FILENAMEPREVIEW,!m_pRecManager->m_fRecording);
+
+			SYSTEMTIME stLocal;
+			::GetLocalTime(&stLocal);
+
+			// 開始時間
+			SYSTEMTIME stStart;
+			DWORD Delay;
+			::CheckRadioButton(hDlg,IDC_RECORD_START_NOW,IDC_RECORD_START_DELAY,
+							   IDC_RECORD_START_NOW+m_pRecManager->m_StartTimeSpec.Type);
+			switch (m_pRecManager->m_StartTimeSpec.Type) {
+			case TIME_NOTSPECIFIED:
+				stStart=stLocal;
+				stStart.wSecond=0;
+				stStart.wMilliseconds=0;
+				Delay=60*1000;
+				break;
+			case TIME_DATETIME:
+				{
+					SYSTEMTIME st;
+
+					::SystemTimeToTzSpecificLocalTime(
+						NULL,&m_pRecManager->m_StartTimeSpec.Time.DateTime,&stStart);
+					::GetSystemTime(&st);
+					LONGLONG Diff=DiffSystemTime(&m_pRecManager->m_StartTimeSpec.Time.DateTime,&st);
+					if (Diff>0) {
+						Delay=(DWORD)Diff;
+					} else {
+						Delay=0;
+					}
+				}
+				break;
+			case TIME_DURATION:
+				Delay=(DWORD)m_pRecManager->m_StartTimeSpec.Time.Duration;
+				stStart=stLocal;
+				stStart.wSecond=0;
+				stStart.wMilliseconds=0;
+				OffsetSystemTime(&stStart,Delay);
+				break;
+			}
+			SetDateTimeFormat(hDlg,IDC_RECORD_STARTTIME_TIME);
+			DateTime_SetSystemtime(::GetDlgItem(hDlg,IDC_RECORD_STARTTIME_TIME),GDT_VALID,&stStart);
+			Delay/=1000;
+			::SetDlgItemInt(hDlg,IDC_RECORD_STARTTIME_HOUR,Delay/(60*60),FALSE);
+			DlgUpDown_SetRange(hDlg,IDC_RECORD_STARTTIME_HOUR_UD,0,100);
+			::SetDlgItemInt(hDlg,IDC_RECORD_STARTTIME_MINUTE,Delay/60%60,FALSE);
+			DlgUpDown_SetRange(hDlg,IDC_RECORD_STARTTIME_MINUTE_UD,0,59);
+			::SetDlgItemInt(hDlg,IDC_RECORD_STARTTIME_SECOND,Delay%60,FALSE);
+			DlgUpDown_SetRange(hDlg,IDC_RECORD_STARTTIME_SECOND_UD,0,59);
+			if (m_pRecManager->m_fRecording) {
+				EnableDlgItems(hDlg,IDC_RECORD_STARTTIME,IDC_RECORD_STARTTIME_SECOND_LABEL,false);
+			} else {
+				EnableDlgItem(hDlg,IDC_RECORD_STARTTIME_TIME,
+							  m_pRecManager->m_StartTimeSpec.Type==TIME_DATETIME);
+				EnableDlgItems(hDlg,
+							   IDC_RECORD_STARTTIME_HOUR,
+							   IDC_RECORD_STARTTIME_SECOND_LABEL,
+							   m_pRecManager->m_StartTimeSpec.Type==TIME_DURATION);
+			}
+
+			// 終了時間
+			SYSTEMTIME stStop;
+			DWORD Duration;
+			::CheckDlgButton(hDlg,IDC_RECORD_STOPSPECTIME,
+				m_pRecManager->m_StopTimeSpec.Type!=TIME_NOTSPECIFIED?BST_CHECKED:BST_UNCHECKED);
+			::CheckRadioButton(hDlg,IDC_RECORD_STOPDATETIME,IDC_RECORD_STOPREMAINTIME,
+				m_pRecManager->m_StopTimeSpec.Type==TIME_DATETIME?
+					IDC_RECORD_STOPDATETIME:IDC_RECORD_STOPREMAINTIME);
+			switch (m_pRecManager->m_StopTimeSpec.Type) {
+			case TIME_NOTSPECIFIED:
+				stStop=stLocal;
+				stStop.wSecond=0;
+				stStop.wMilliseconds=0;
+				Duration=60*60*1000;
+				OffsetSystemTime(&stStop,Duration);
+				break;
+			case TIME_DATETIME:
+				{
+					SYSTEMTIME st;
+
+					::SystemTimeToTzSpecificLocalTime(
+						NULL,&m_pRecManager->m_StopTimeSpec.Time.DateTime,&stStop);
+					::GetSystemTime(&st);
+					LONGLONG Diff=DiffSystemTime(&st,&m_pRecManager->m_StopTimeSpec.Time.DateTime);
+					if (Diff>0)
+						Duration=(DWORD)Diff;
+					else
+						Duration=0;
+				}
+				break;
+			case TIME_DURATION:
+				Duration=(DWORD)m_pRecManager->m_StopTimeSpec.Time.Duration;
+				stStop=stLocal;
+				stStop.wSecond=0;
+				stStop.wMilliseconds=0;
+				OffsetSystemTime(&stStop,Duration);
+				break;
+			}
+			SetDateTimeFormat(hDlg,IDC_RECORD_STOPTIME_TIME);
+			DateTime_SetSystemtime(::GetDlgItem(hDlg,IDC_RECORD_STOPTIME_TIME),GDT_VALID,&stStop);
+			::SetDlgItemInt(hDlg,IDC_RECORD_STOPTIME_HOUR,Duration/(60*60*1000),FALSE);
+			DlgUpDown_SetRange(hDlg,IDC_RECORD_STOPTIME_HOUR_UD,0,100);
+			::SetDlgItemInt(hDlg,IDC_RECORD_STOPTIME_MINUTE,Duration/(60*1000)%60,FALSE);
+			DlgUpDown_SetRange(hDlg,IDC_RECORD_STOPTIME_MINUTE_UD,0,59);
+			::SetDlgItemInt(hDlg,IDC_RECORD_STOPTIME_SECOND,Duration/1000%60,FALSE);
+			DlgUpDown_SetRange(hDlg,IDC_RECORD_STOPTIME_SECOND_UD,0,59);
+			if (m_pRecManager->m_StopTimeSpec.Type==TIME_NOTSPECIFIED) {
+				EnableDlgItems(hDlg,
+							   IDC_RECORD_STOPDATETIME,
+							   IDC_RECORD_STOPTIME_SECOND_LABEL,false);
+			} else {
+				EnableDlgItem(hDlg,IDC_RECORD_STOPTIME_TIME,
+							  m_pRecManager->m_StopTimeSpec.Type==TIME_DATETIME);
+				EnableDlgItems(hDlg,
+							   IDC_RECORD_STOPTIME_HOUR,
+							   IDC_RECORD_STOPTIME_SECOND_LABEL,
+							   m_pRecManager->m_StopTimeSpec.Type==TIME_DURATION);
+#if 0
+				if (m_pRecManager->m_fRecording
+						&& m_pRecManager->m_StopTimeSpec.Type==TIME_DURATION)
+					::SetTimer(hDlg,1,500,NULL);
+#endif
+			}
+
+			DlgCheckBox_Check(hDlg,IDC_RECORD_CURSERVICEONLY,
+							  m_pRecManager->m_Settings.m_fCurServiceOnly);
+			DlgCheckBox_Check(hDlg,IDC_RECORD_SAVESUBTITLE,
+							  m_pRecManager->m_Settings.IsSaveCaption());
+			DlgCheckBox_Check(hDlg,IDC_RECORD_SAVEDATACARROUSEL,
+							  m_pRecManager->m_Settings.IsSaveDataCarrousel());
+			if (m_pRecManager->m_fRecording) {
+				EnableDlgItems(hDlg,IDC_RECORD_CURSERVICEONLY,IDC_RECORD_SAVEDATACARROUSEL,false);
+			} else {
+				/*
+				EnableDlgItems(hDlg,IDC_RECORD_SAVESUBTITLE,IDC_RECORD_SAVEDATACARROUSEL,
+							   m_pRecManager->m_Settings.m_fCurServiceOnly);
+				*/
+			}
+
+			// 保存プラグイン
+			DlgComboBox_AddString(hDlg,IDC_RECORD_WRITEPLUGIN,TEXT("使用しない (TS出力)"));
+			if (!m_pRecManager->m_fRecording) {
+				GetWritePluginList(&m_pRecManager->m_WritePluginList);
+				int Sel=-1;
+				for (size_t i=0;i<m_pRecManager->m_WritePluginList.size();i++) {
+					LPCTSTR pszFileName=m_pRecManager->m_WritePluginList[i].c_str();
+					DlgComboBox_AddString(hDlg,IDC_RECORD_WRITEPLUGIN,pszFileName);
+					if (!m_pRecManager->m_Settings.m_WritePlugin.empty()
+							&& IsEqualFileName(pszFileName,m_pRecManager->m_Settings.m_WritePlugin.c_str()))
+						Sel=(int)i;
+				}
+				DlgComboBox_SetCurSel(hDlg,IDC_RECORD_WRITEPLUGIN,Sel+1);
+				EnableDlgItem(hDlg,IDC_RECORD_WRITEPLUGINSETTING,Sel>=0);
+			} else {
+				int Sel=0;
+				if (!m_pRecManager->m_Settings.m_WritePlugin.empty()) {
+					DlgComboBox_AddString(hDlg,IDC_RECORD_WRITEPLUGIN,
+										  ::PathFindFileName(m_pRecManager->m_Settings.m_WritePlugin.c_str()));
+					Sel=1;
+				}
+				DlgComboBox_SetCurSel(hDlg,IDC_RECORD_WRITEPLUGIN,Sel);
+				EnableDlgItems(hDlg,IDC_RECORD_WRITEPLUGIN_LABEL,IDC_RECORD_WRITEPLUGINSETTING,false);
+			}
+
+			EnableDlgItem(hDlg,IDC_RECORD_CANCEL,m_pRecManager->m_fReserved);
+		}
+		return TRUE;
+
+#if 0
+	case WM_TIMER:
+		{
+			const LONGLONG Remain=m_pRecManager->GetRemainTime();
+
+			UpdateDlgItemInt(hDlg,IDC_RECORD_STOPTIME_HOUR,(int)(Remain/(60*60*1000)));
+			UpdateDlgItemInt(hDlg,IDC_RECORD_STOPTIME_MINUTE,(int)(Remain/(60*1000))%60);
+			UpdateDlgItemInt(hDlg,IDC_RECORD_STOPTIME_SECOND,(int)(Remain/1000)%60);
+		}
+		return TRUE;
+#endif
+
+	case WM_COMMAND:
+		switch (LOWORD(wParam)) {
+		case IDC_RECORD_FILENAME_BROWSE:
+			{
+				OPENFILENAME ofn;
+				TCHAR szFileName[MAX_PATH];
+
+				DlgEdit_GetText(hDlg,IDC_RECORD_FILENAME,szFileName,MAX_PATH);
+				ofn.lStructSize=sizeof(OPENFILENAME);
+				ofn.hwndOwner=hDlg;
+				ofn.lpstrFilter=
+					TEXT("TSファイル(*.ts)\0*.ts\0すべてのファイル\0*.*\0");
+				ofn.lpstrCustomFilter=NULL;
+				ofn.nFilterIndex=1;
+				ofn.lpstrFile=szFileName;
+				ofn.nMaxFile=MAX_PATH;
+				ofn.lpstrFileTitle=NULL;
+				ofn.lpstrInitialDir=NULL;
+				ofn.lpstrTitle=TEXT("保存ファイル名");
+				ofn.Flags=OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT;
+				ofn.lpstrDefExt=TEXT("ts");
+#if _WIN32_WINNT>=0x500
+				ofn.pvReserved=NULL;
+				ofn.dwReserved=0;
+				ofn.FlagsEx=0;
+#endif
+				if (FileSaveDialog(&ofn))
+					DlgEdit_SetText(hDlg,IDC_RECORD_FILENAME,szFileName);
+			}
+			return TRUE;
+
+		case IDC_RECORD_FILENAME:
+			if (HIWORD(wParam)==EN_CHANGE) {
+				TCHAR szFormat[MAX_PATH];
+				TVTest::String FileName;
+
+				DlgEdit_GetText(hDlg,IDC_RECORD_FILENAME,szFormat,lengthof(szFormat));
+				if (szFormat[0]!='\0') {
+					TVTest::CEventVariableStringMap EventVarStrMap;
+					EventVarStrMap.SetSampleEventInfo();
+					TVTest::FormatVariableString(&EventVarStrMap,szFormat,&FileName);
+				}
+				DlgEdit_SetText(hDlg,IDC_RECORD_FILENAMEPREVIEW,FileName.c_str());
+			}
+			return TRUE;
+
+		case IDC_RECORD_FILENAMEFORMAT:
+			{
+				RECT rc;
+				POINT pt;
+
+				::GetWindowRect(::GetDlgItem(hDlg,IDC_RECORD_FILENAMEFORMAT),&rc);
+				pt.x=rc.left;
+				pt.y=rc.bottom;
+				TVTest::CEventVariableStringMap EventVarStrMap;
+				EventVarStrMap.InputParameter(hDlg,IDC_RECORD_FILENAME,pt);
+			}
+			return TRUE;
+
+		case IDC_RECORD_START_NOW:
+		case IDC_RECORD_START_DATETIME:
+		case IDC_RECORD_START_DELAY:
+			EnableDlgItem(hDlg,IDC_RECORD_STARTTIME_TIME,
+				DlgCheckBox_IsChecked(hDlg,IDC_RECORD_START_DATETIME));
+			EnableDlgItems(hDlg,
+				IDC_RECORD_STARTTIME_HOUR,
+				IDC_RECORD_STARTTIME_SECOND_LABEL,
+				DlgCheckBox_IsChecked(hDlg,IDC_RECORD_START_DELAY));
+			return TRUE;
+
+		case IDC_RECORD_STOPSPECTIME:
+		case IDC_RECORD_STOPDATETIME:
+		case IDC_RECORD_STOPREMAINTIME:
+			if (DlgCheckBox_IsChecked(hDlg,IDC_RECORD_STOPSPECTIME)) {
+				bool fDateTime=DlgRadioButton_IsChecked(hDlg,IDC_RECORD_STOPDATETIME);
+
+				EnableDlgItems(hDlg,
+					IDC_RECORD_STOPDATETIME,
+					IDC_RECORD_STOPREMAINTIME,
+					true);
+				EnableDlgItem(hDlg,IDC_RECORD_STOPTIME_TIME,fDateTime);
+				EnableDlgItems(hDlg,
+					IDC_RECORD_STOPTIME_HOUR,
+					IDC_RECORD_STOPTIME_SECOND_LABEL,
+					!fDateTime);
+			} else {
+				EnableDlgItems(hDlg,
+					IDC_RECORD_STOPDATETIME,
+					IDC_RECORD_STOPTIME_SECOND_LABEL,
+					false);
+			}
+			return TRUE;
+
+#if 0
+		case IDC_RECORD_STOPTIME_HOUR:
+		case IDC_RECORD_STOPTIME_MINUTE:
+		case IDC_RECORD_STOPTIME_SECOND:
+			if (HIWORD(wParam)==EN_CHANGE) {
+				::KillTimer(hDlg,1);
+			}
+			return TRUE;
+#endif
+
+		case IDC_RECORD_WRITEPLUGIN:
+			if (HIWORD(wParam)==CBN_SELCHANGE) {
+				EnableDlgItem(hDlg,IDC_RECORD_WRITEPLUGINSETTING,
+							  DlgComboBox_GetCurSel(hDlg,IDC_RECORD_WRITEPLUGIN)>0);
+			}
+			return TRUE;
+
+		case IDC_RECORD_WRITEPLUGINSETTING:
+			{
+				LRESULT Sel=DlgComboBox_GetCurSel(hDlg,IDC_RECORD_WRITEPLUGIN)-1;
+
+				if (Sel>=0 && (size_t)Sel<m_pRecManager->m_WritePluginList.size()) {
+					ShowWritePluginSetting(hDlg,m_pRecManager->m_WritePluginList[Sel].c_str());
+				}
+			}
+			return TRUE;
+
+		case IDOK:
+			{
+				int StartTimeChecked;
+				SYSTEMTIME stCur,stStart,stStop;
+
+				::GetSystemTime(&stCur);
+
+				if (!m_pRecManager->m_fRecording) {
+					StartTimeChecked=GetCheckedRadioButton(hDlg,IDC_RECORD_START_NOW,IDC_RECORD_START_DELAY);
+					if (StartTimeChecked==IDC_RECORD_START_DATETIME) {
+						SYSTEMTIME st;
+						DateTime_GetSystemtime(
+							::GetDlgItem(hDlg,IDC_RECORD_STARTTIME_TIME),&st);
+						::TzSpecificLocalTimeToSystemTime(NULL,&st,&stStart);
+						if (CompareSystemTime(&stStart,&stCur)<=0) {
+							::MessageBox(hDlg,
+								TEXT("指定された開始時刻を既に過ぎています。"),
+								NULL,MB_OK | MB_ICONEXCLAMATION);
+							SetDlgItemFocus(hDlg,IDC_RECORD_STARTTIME_TIME);
+							return TRUE;
+						}
+					}
+				}
+
+				if (DlgCheckBox_IsChecked(hDlg,IDC_RECORD_STOPSPECTIME)
+						&& DlgCheckBox_IsChecked(hDlg,IDC_RECORD_STOPDATETIME)) {
+					SYSTEMTIME st;
+					DateTime_GetSystemtime(
+						::GetDlgItem(hDlg,IDC_RECORD_STOPTIME_TIME),&st);
+					::TzSpecificLocalTimeToSystemTime(NULL,&st,&stStop);
+					if (CompareSystemTime(&stStop,&stCur)<=0) {
+						::MessageBox(hDlg,
+							TEXT("指定された停止時刻を既に過ぎています。"),
+							NULL,MB_OK | MB_ICONEXCLAMATION);
+						SetDlgItemFocus(hDlg,IDC_RECORD_STOPTIME_TIME);
+						return TRUE;
+					}
+				}
+
+				if (!m_pRecManager->m_fRecording) {
+					TCHAR szFileName[MAX_PATH];
+
+					GetDlgItemText(hDlg,IDC_RECORD_FILENAME,szFileName,MAX_PATH);
+					CFilePath FilePath(szFileName);
+					if (szFileName[0]=='\0' || *FilePath.GetFileName()=='\0') {
+						::MessageBox(hDlg,
+							TEXT("ファイル名を入力してください。"),
+							NULL,MB_OK | MB_ICONEXCLAMATION);
+						SetDlgItemFocus(hDlg,IDC_RECORD_FILENAME);
+						return TRUE;
+					}
+#if 0
+					if (!FilePath.IsValid()) {
+						::MessageBox(hDlg,
+							TEXT("ファイル名に使用できない文字が含まれています。"),
+							NULL,MB_OK | MB_ICONEXCLAMATION);
+						SetDlgItemFocus(hDlg,IDC_RECORD_FILENAME);
+						return TRUE;
+					}
+#else
+					TVTest::String Message;
+					if (!IsValidFileName(FilePath.GetFileName(),0,&Message)) {
+						::MessageBox(hDlg,Message.c_str(),NULL,MB_OK | MB_ICONEXCLAMATION);
+						SetDlgItemFocus(hDlg,IDC_RECORD_FILENAME);
+						return TRUE;
+					}
+#endif
+					if (!FilePath.HasDirectory()) {
+						::MessageBox(hDlg,
+							TEXT("保存先フォルダを入力してください。"),
+							NULL,MB_OK | MB_ICONEXCLAMATION);
+						SetDlgItemFocus(hDlg,IDC_RECORD_FILENAME);
+						return TRUE;
+					}
+					if (StartTimeChecked!=IDC_RECORD_START_NOW) {
+						FilePath.GetDirectory(szFileName);
+						CAppMain::CreateDirectoryResult CreateDirResult=
+							GetAppClass().CreateDirectory(
+								hDlg,szFileName,
+								TEXT("録画ファイルの保存先フォルダ \"%s\" がありません。\n")
+								TEXT("作成しますか?"));
+						if (CreateDirResult==CAppMain::CREATEDIRECTORY_RESULT_ERROR) {
+							SetDlgItemFocus(hDlg,IDC_RECORD_FILENAME);
+							return TRUE;
+						}
+					}
+					m_pRecManager->SetFileName(FilePath.GetPath());
+
+					switch (StartTimeChecked) {
+					case IDC_RECORD_START_NOW:
+					default:
+						m_pRecManager->SetStartTimeSpec(NULL);
+						break;
+					case IDC_RECORD_START_DATETIME:
+						{
+							TimeSpecInfo TimeSpec;
+
+							TimeSpec.Type=TIME_DATETIME;
+							TimeSpec.Time.DateTime=stStart;
+							m_pRecManager->SetStartTimeSpec(&TimeSpec);
+						}
+						break;
+					case IDC_RECORD_START_DELAY:
+						{
+							TimeSpecInfo TimeSpec;
+							unsigned int Hour,Minute,Second;
+
+							TimeSpec.Type=TIME_DURATION;
+							Hour=::GetDlgItemInt(hDlg,IDC_RECORD_STARTTIME_HOUR,NULL,FALSE);
+							Minute=::GetDlgItemInt(hDlg,IDC_RECORD_STARTTIME_MINUTE,NULL,FALSE);
+							Second=::GetDlgItemInt(hDlg,IDC_RECORD_STARTTIME_SECOND,NULL,FALSE);
+							TimeSpec.Time.Duration=(Hour*(60*60)+Minute*60+Second)*1000;
+							m_pRecManager->SetStartTimeSpec(&TimeSpec);
+						}
+						break;
+					}
+
+					m_pRecManager->m_Settings.m_fCurServiceOnly=
+						DlgCheckBox_IsChecked(hDlg,IDC_RECORD_CURSERVICEONLY);
+					m_pRecManager->m_Settings.SetSaveCaption(
+						DlgCheckBox_IsChecked(hDlg,IDC_RECORD_SAVESUBTITLE));
+					m_pRecManager->m_Settings.SetSaveDataCarrousel(
+						DlgCheckBox_IsChecked(hDlg,IDC_RECORD_SAVEDATACARROUSEL));
+
+					int Sel=(int)DlgComboBox_GetCurSel(hDlg,IDC_RECORDOPTIONS_WRITEPLUGIN)-1;
+					if (Sel>=0 && (size_t)Sel<m_pRecManager->m_WritePluginList.size())
+						m_pRecManager->m_Settings.m_WritePlugin=m_pRecManager->m_WritePluginList[Sel];
+					else
+						m_pRecManager->m_Settings.m_WritePlugin.clear();
+				}
+
+				if (DlgCheckBox_IsChecked(hDlg,IDC_RECORD_STOPSPECTIME)) {
+					TimeSpecInfo TimeSpec;
+
+					if (DlgCheckBox_IsChecked(hDlg,IDC_RECORD_STOPDATETIME)) {
+						TimeSpec.Type=TIME_DATETIME;
+						TimeSpec.Time.DateTime=stStop;
+					} else {
+						unsigned int Hour,Minute,Second;
+
+						TimeSpec.Type=TIME_DURATION;
+						Hour=::GetDlgItemInt(hDlg,IDC_RECORD_STOPTIME_HOUR,NULL,FALSE);
+						Minute=::GetDlgItemInt(hDlg,IDC_RECORD_STOPTIME_MINUTE,NULL,FALSE);
+						Second=::GetDlgItemInt(hDlg,IDC_RECORD_STOPTIME_SECOND,NULL,FALSE);
+						TimeSpec.Time.Duration=(Hour*(60*60)+Minute*60+Second)*1000;
+					}
+					m_pRecManager->SetStopTimeSpec(&TimeSpec);
+				} else {
+					m_pRecManager->SetStopTimeSpec(NULL);
+				}
+			}
+		case IDCANCEL:
+			::EndDialog(hDlg,LOWORD(wParam));
+			return TRUE;
+
+		case IDC_RECORD_CANCEL:
+			m_pRecManager->CancelReserve();
+			::EndDialog(hDlg,IDCANCEL);
+			return TRUE;
+		}
+		return TRUE;
+
+	case WM_DESTROY:
+		m_pRecManager->m_WritePluginList.clear();
+		return TRUE;
+	}
+
+	return FALSE;
 }
