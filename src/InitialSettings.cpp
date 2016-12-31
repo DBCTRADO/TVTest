@@ -85,8 +85,10 @@ INT_PTR CInitialSettings::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPara
 						MAKEINTRESOURCE(IDB_LOGO32),TEXT("PNG"));
 					::ShowWindow(hwndLogo,SW_HIDE);
 				} else {
-					HBITMAP hbm=::LoadBitmap(GetAppClass().GetResourceInstance(),
-											 MAKEINTRESOURCE(IDB_LOGO));
+					HBITMAP hbm=static_cast<HBITMAP>(
+						::LoadImage(GetAppClass().GetResourceInstance(),
+									MAKEINTRESOURCE(IDB_LOGO),
+									IMAGE_BITMAP,0,0,LR_DEFAULTCOLOR));
 					::SendMessage(hwndLogo,STM_SETIMAGE,
 								  IMAGE_BITMAP,reinterpret_cast<LPARAM>(hbm));
 				}
