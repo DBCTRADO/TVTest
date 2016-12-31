@@ -97,24 +97,26 @@ bool SavePNGFile(const ImageSaveInfo *pInfo)
 		png_text PNGText;
 
 #ifndef UNICODE
-		PNGText.text=pInfo->pszComment;
-#else
-		int Length=WideCharToMultiByte(CP_ACP,0,pInfo->pszComment,-1,NULL,0,NULL,NULL);
+		int Length=MultiByteToWideChar(CP_ACP,0,pInfo->pszComment,-1,NULL,0);
+		LPWSTR pszComment=new WCHAR[Length];
+		MultiByteToWideChar(CP_ACP,0,pInfo->pszComment,-1,pszComment,Length);
+		Length=WideCharToMultiByte(CP_UTF8,0,pszComment,-1,NULL,0,NULL,NULL);
 		PNGText.text=new char[Length];
-		WideCharToMultiByte(CP_ACP,0,pInfo->pszComment,-1,PNGText.text,Length,NULL,NULL);
+		WideCharToMultiByte(CP_UTF8,0,pszComment,-1,PNGText.text,Length,NULL,NULL);
+		delete [] pszComment;
+#else
+		int Length=WideCharToMultiByte(CP_UTF8,0,pInfo->pszComment,-1,NULL,0,NULL,NULL);
+		PNGText.text=new char[Length];
+		WideCharToMultiByte(CP_UTF8,0,pInfo->pszComment,-1,PNGText.text,Length,NULL,NULL);
 #endif
+		PNGText.compression=PNG_ITXT_COMPRESSION_NONE;
 		PNGText.key="Comment";
-		PNGText.compression=PNG_TEXT_COMPRESSION_NONE;
-		PNGText.text_length=::lstrlenA(PNGText.text);
-#ifdef PNG_iTXt_SUPPORTED
-		PNGText.itxt_length=0;
+		PNGText.text_length=0;
+		PNGText.itxt_length=::lstrlenA(PNGText.text);
 		PNGText.lang=NULL;
 		PNGText.lang_key=NULL;
-#endif
 		png_set_text(pPNG,pPNGInfo,&PNGText,1);
-#ifdef UNICODE
 		delete [] PNGText.text;
-#endif
 	}
 	png_write_info(pPNG,pPNGInfo);
 	if (BitsPerPixel>8)
