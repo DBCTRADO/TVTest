@@ -5,6 +5,7 @@
 #include "DialogUtil.h"
 #include "MessageDialog.h"
 #include "resource.h"
+#include "Help/HelpID.h"
 #include "Common/DebugDef.h"
 
 
@@ -1798,6 +1799,10 @@ INT_PTR CChannelScan::CScanSettingsDialog::DlgProc(
 
 	case WM_COMMAND:
 		switch (LOWORD(wParam)) {
+		case IDC_CHANNELSCANSETTINGS_HELP:
+			GetAppClass().UICore.ShowHelpContent(HELP_ID_CHANNELSCANDETAILS);
+			return TRUE;
+
 		case IDOK:
 			{
 				TCHAR szText[16];
