@@ -331,10 +331,16 @@ bool CEventVariableStringMap::GetLocalString(LPCWSTR pszKeyword,String *pString)
 	if (::lstrcmpi(pszKeyword,TEXT("channel-name"))==0) {
 		*pString=m_EventInfo.Channel.GetName();
 	} else if (::lstrcmpi(pszKeyword,TEXT("channel-no"))==0) {
+		if (m_EventInfo.Channel.GetChannelNo()==0)
+			return false;
 		StringUtility::Format(*pString,TEXT("%d"),m_EventInfo.Channel.GetChannelNo());
 	} else if (::lstrcmpi(pszKeyword,TEXT("channel-no2"))==0) {
+		if (m_EventInfo.Channel.GetChannelNo()==0)
+			return false;
 		StringUtility::Format(*pString,TEXT("%02d"),m_EventInfo.Channel.GetChannelNo());
 	} else if (::lstrcmpi(pszKeyword,TEXT("channel-no3"))==0) {
+		if (m_EventInfo.Channel.GetChannelNo()==0)
+			return false;
 		StringUtility::Format(*pString,TEXT("%03d"),m_EventInfo.Channel.GetChannelNo());
 	} else if (::lstrcmpi(pszKeyword,TEXT("event-name"))==0) {
 		*pString=m_EventInfo.Event.m_EventName;

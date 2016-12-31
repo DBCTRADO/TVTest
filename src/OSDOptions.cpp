@@ -24,6 +24,7 @@ COSDOptions::COSDOptions()
 	, m_Opacity(80)
 	, m_FadeTime(3000)
 	, m_ChannelChangeType(CHANNELCHANGE_LOGOANDTEXT)
+	, m_ChannelChangeText(TEXT("%channel-no% %channel-name%"))
 	, m_EnabledOSD(OSD_FLAG(OSD_CHANNEL) | OSD_FLAG(OSD_VOLUME) | OSD_FLAG(OSD_CHANNELNOINPUT))
 
 	, m_fLayeredWindow(true)
@@ -87,6 +88,7 @@ bool COSDOptions::ReadSettings(CSettings &Settings)
 	if (Settings.Read(TEXT("ChannelOSDType"),&Value)
 			&& Value>=CHANNELCHANGE_FIRST && Value<=CHANNELCHANGE_LAST)
 		m_ChannelChangeType=(ChannelChangeType)Value;
+	Settings.Read(TEXT("ChannelOSDText"),&m_ChannelChangeText);
 
 	Settings.Read(TEXT("EnableNotificationBar"),&m_fEnableNotificationBar);
 	Settings.Read(TEXT("NotificationBarDuration"),&m_NotificationBarDuration);
@@ -125,6 +127,7 @@ bool COSDOptions::WriteSettings(CSettings &Settings)
 	Settings.Write(TEXT("EnabledOSD"),m_EnabledOSD);
 	Settings.Write(TEXT("EnabledOSDMask"),OSD_FLAG(OSD_TRAILER_)-1);
 	Settings.Write(TEXT("ChannelOSDType"),(int)m_ChannelChangeType);
+	Settings.Write(TEXT("ChannelOSDText"),m_ChannelChangeText);
 
 	Settings.Write(TEXT("EnableNotificationBar"),m_fEnableNotificationBar);
 	Settings.Write(TEXT("NotificationBarDuration"),m_NotificationBarDuration);
@@ -199,13 +202,15 @@ INT_PTR COSDOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 			DlgCheckBox_Check(hDlg,IDC_OSDOPTIONS_SHOW_RECORDING,(m_EnabledOSD&OSD_FLAG(OSD_RECORDING))!=0);
 			DlgCheckBox_Check(hDlg,IDC_OSDOPTIONS_SHOW_CHANNELNOINPUT,(m_EnabledOSD&OSD_FLAG(OSD_CHANNELNOINPUT))!=0);
 			static const LPCTSTR ChannelChangeModeText[] = {
-				TEXT("ロゴとチャンネル名"),
-				TEXT("チャンネル名のみ"),
+				TEXT("ロゴとテキスト"),
+				TEXT("テキストのみ"),
 				TEXT("ロゴのみ"),
 			};
-			SetComboBoxList(hDlg,IDC_OSDOPTIONS_CHANNELCHANGE,
+			SetComboBoxList(hDlg,IDC_OSDOPTIONS_CHANNELCHANGE_TYPE,
 							ChannelChangeModeText,lengthof(ChannelChangeModeText));
-			DlgComboBox_SetCurSel(hDlg,IDC_OSDOPTIONS_CHANNELCHANGE,(int)m_ChannelChangeType);
+			DlgComboBox_SetCurSel(hDlg,IDC_OSDOPTIONS_CHANNELCHANGE_TYPE,(int)m_ChannelChangeType);
+			DlgEdit_SetText(hDlg,IDC_OSDOPTIONS_CHANNELCHANGE_TEXT,m_ChannelChangeText.c_str());
+			InitDropDownButton(hDlg,IDC_OSDOPTIONS_CHANNELCHANGE_TEXT_PARAMS);
 			EnableDlgItems(hDlg,IDC_OSDOPTIONS_FIRST,IDC_OSDOPTIONS_LAST,m_fShowOSD);
 
 			DlgCheckBox_Check(hDlg,IDC_NOTIFICATIONBAR_ENABLE,m_fEnableNotificationBar);
@@ -269,6 +274,19 @@ INT_PTR COSDOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 			}
 			return TRUE;
 
+		case IDC_OSDOPTIONS_CHANNELCHANGE_TEXT_PARAMS:
+			{
+				RECT rc;
+				POINT pt;
+
+				::GetWindowRect(::GetDlgItem(hDlg,IDC_OSDOPTIONS_CHANNELCHANGE_TEXT_PARAMS),&rc);
+				pt.x=rc.left;
+				pt.y=rc.bottom;
+				CUICore::CTitleStringMap StrMap(GetAppClass());
+				StrMap.InputParameter(hDlg,IDC_OSDOPTIONS_CHANNELCHANGE_TEXT,pt);
+			}
+			return TRUE;
+
 		case IDC_NOTIFICATIONBAR_ENABLE:
 			EnableDlgItemsSyncCheckBox(hDlg,IDC_NOTIFICATIONBAR_FIRST,IDC_NOTIFICATIONBAR_LAST,
 									   IDC_NOTIFICATIONBAR_ENABLE);
@@ -307,7 +325,8 @@ INT_PTR COSDOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 				if (DlgCheckBox_IsChecked(hDlg,IDC_OSDOPTIONS_SHOW_CHANNELNOINPUT))
 					EnabledOSD|=OSD_FLAG(OSD_CHANNELNOINPUT);
 				m_EnabledOSD=EnabledOSD;
-				m_ChannelChangeType=(ChannelChangeType)DlgComboBox_GetCurSel(hDlg,IDC_OSDOPTIONS_CHANNELCHANGE);
+				m_ChannelChangeType=(ChannelChangeType)DlgComboBox_GetCurSel(hDlg,IDC_OSDOPTIONS_CHANNELCHANGE_TYPE);
+				GetDlgItemString(hDlg,IDC_OSDOPTIONS_CHANNELCHANGE_TEXT,&m_ChannelChangeText);
 
 				m_fEnableNotificationBar=
 					DlgCheckBox_IsChecked(hDlg,IDC_NOTIFICATIONBAR_ENABLE);

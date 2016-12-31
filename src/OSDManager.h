@@ -42,7 +42,7 @@ public:
 	void OnParentMove();
 	bool ShowOSD(LPCTSTR pszText,unsigned int Flags=0);
 	void HideOSD();
-	bool ShowChannelOSD(const CChannelInfo *pInfo,bool fChanging=false);
+	bool ShowChannelOSD(const CChannelInfo *pInfo,LPCTSTR pszText,bool fChanging=false);
 	void HideChannelOSD();
 	bool ShowVolumeOSD(int Volume);
 	void HideVolumeOSD();

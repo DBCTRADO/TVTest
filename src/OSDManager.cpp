@@ -112,7 +112,7 @@ void COSDManager::HideOSD()
 }
 
 
-bool COSDManager::ShowChannelOSD(const CChannelInfo *pInfo,bool fChanging)
+bool COSDManager::ShowChannelOSD(const CChannelInfo *pInfo,LPCTSTR pszText,bool fChanging)
 {
 	if (m_pEventHandler==NULL || pInfo==NULL)
 		return false;
@@ -153,12 +153,6 @@ bool COSDManager::ShowChannelOSD(const CChannelInfo *pInfo,bool fChanging)
 		}
 	}
 
-	TCHAR szText[4+MAX_CHANNEL_NAME];
-	int Length=0;
-	if (pInfo->GetChannelNo()!=0)
-		Length=StdUtil::snprintf(szText,lengthof(szText),TEXT("%d "),pInfo->GetChannelNo());
-	StdUtil::snprintf(szText+Length,lengthof(szText)-Length,TEXT("%s"),pInfo->GetName());
-
 	if (!m_pOptions->GetPseudoOSD() && !ClientInfo.fForcePseudoOSD
 			&& CoreEngine.m_DtvEngine.m_MediaViewer.IsDrawTextSupported()) {
 		if (hbmLogo!=NULL) {
@@ -170,8 +164,8 @@ bool COSDManager::ShowChannelOSD(const CChannelInfo *pInfo,bool fChanging)
 			m_OSD.Show(m_pOptions->GetFadeTime(),ClientInfo.fAnimation);
 		}
 
-		if (ChangeType!=COSDOptions::CHANNELCHANGE_LOGOONLY) {
-			CompositeText(szText,ClientInfo.ClientRect,hbmLogo!=NULL?m_Style.LogoSize.Width:0,m_pOptions->GetFadeTime());
+		if (ChangeType!=COSDOptions::CHANNELCHANGE_LOGOONLY && !IsStringEmpty(pszText)) {
+			CompositeText(pszText,ClientInfo.ClientRect,hbmLogo!=NULL?m_Style.LogoSize.Width:0,m_pOptions->GetFadeTime());
 		}
 	} else {
 		int FontSize=max((ClientInfo.ClientRect.right-ClientInfo.ClientRect.left)/m_Style.TextSizeRatio,12);
@@ -184,7 +178,7 @@ bool COSDManager::ShowChannelOSD(const CChannelInfo *pInfo,bool fChanging)
 		m_OSD.Create(ClientInfo.hwndParent,m_pOptions->GetLayeredWindow());
 		//m_OSD.SetTextHeight(FontSize);
 		m_OSD.SetFont(lf);
-		m_OSD.SetText(szText,hbmLogo,m_Style.LogoSize.Width,m_Style.LogoSize.Height,ImageEffect);
+		m_OSD.SetText(pszText,hbmLogo,m_Style.LogoSize.Width,m_Style.LogoSize.Height,ImageEffect);
 		m_OSD.CalcTextSize(&sz);
 		m_OSD.SetPosition(ClientInfo.ClientRect.left+m_Style.Margin.Left,
 						  ClientInfo.ClientRect.top+m_Style.Margin.Top,
@@ -363,8 +357,8 @@ void COSDManager::NormalizeStyle(
 
 COSDManager::OSDStyle::OSDStyle()
 	: Margin(8)
-	, TextSizeRatio(24)
-	, CompositeTextSizeRatio(20)
+	, TextSizeRatio(28)
+	, CompositeTextSizeRatio(24)
 	, LogoSize(64,36)
 	, LogoEffect(TEXT("gloss"))
 	, fChannelAnimation(true)

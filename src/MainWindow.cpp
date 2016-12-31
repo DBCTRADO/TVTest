@@ -4787,8 +4787,30 @@ void CMainWindow::ShowChannelOSD()
 			pInfo=m_App.ChannelManager.GetChangingChannelInfo();
 		else
 			pInfo=m_App.ChannelManager.GetCurrentChannelInfo();
-		if (pInfo!=nullptr)
-			m_App.OSDManager.ShowChannelOSD(pInfo,m_fWheelChannelChanging);
+		if (pInfo!=nullptr) {
+			TVTest::String Text;
+
+			if (m_App.OSDOptions.GetChannelChangeType()!=COSDOptions::CHANNELCHANGE_LOGOONLY) {
+				TVTest::CEventVariableStringMap::EventInfo Event;
+
+				m_App.Core.GetVariableStringEventInfo(&Event);
+				if (Event.Event.m_EventName.empty()) {
+					SYSTEMTIME st;
+					CEventInfoData EventData;
+
+					GetCurrentEpgTime(&st);
+					if (m_App.EpgProgramList.GetEventInfo(
+							pInfo->GetNetworkID(),
+							pInfo->GetTransportStreamID(),
+							pInfo->GetServiceID(),
+							&st,&EventData))
+						Event.Event=EventData;
+				}
+				CUICore::CTitleStringMap Map(m_App,&Event);
+				TVTest::FormatVariableString(&Map,m_App.OSDOptions.GetChannelChangeText(),&Text);
+			}
+			m_App.OSDManager.ShowChannelOSD(pInfo,Text.c_str(),m_fWheelChannelChanging);
+		}
 	}
 }
 

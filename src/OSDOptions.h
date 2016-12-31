@@ -46,6 +46,7 @@ public:
 	const LOGFONT *GetOSDFont() const { return &m_OSDFont; }
 	int GetFadeTime() const { return m_FadeTime; }
 	ChannelChangeType GetChannelChangeType() const { return m_ChannelChangeType; }
+	LPCTSTR GetChannelChangeText() const { return m_ChannelChangeText.c_str(); }
 	bool GetLayeredWindow() const;
 	void OnDwmCompositionChanged();
 	bool IsOSDEnabled(OSDType Type) const;
@@ -73,6 +74,7 @@ private:
 	LOGFONT m_CurOSDFont;
 	int m_FadeTime;
 	ChannelChangeType m_ChannelChangeType;
+	TVTest::String m_ChannelChangeText;
 	unsigned int m_EnabledOSD;
 
 	bool m_fLayeredWindow;
