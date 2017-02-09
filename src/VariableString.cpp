@@ -72,7 +72,7 @@ bool FormatVariableString(CVariableStringMap *pVariableMap,LPCWSTR pszFormat,Str
 	}
 
 	if (!SeparatorList.empty()) {
-		// ‘OŒã‚Éƒg[ƒNƒ“‚ª‘¶İ‚·‚éê‡‚Ì‚İ‹æØ‚è‚ğ‘}“ü‚·‚é
+		// å‰å¾Œã«ãƒˆãƒ¼ã‚¯ãƒ³ãŒå­˜åœ¨ã™ã‚‹å ´åˆã®ã¿åŒºåˆ‡ã‚Šã‚’æŒ¿å…¥ã™ã‚‹
 		bool fLast=true;
 		for (int i=static_cast<int>(SeparatorList.size()-1);i>=0;i--) {
 			auto itBegin=pString->begin()+(i>0 ? SeparatorList[i-1].Pos : 0);
@@ -416,21 +416,21 @@ bool CEventVariableStringMap::NormalizeString(String *pString) const
 	if ((m_Flags & FLAG_NO_NORMALIZE)!=0)
 		return false;
 
-	// ƒtƒ@ƒCƒ‹–¼‚Ég—p‚Å‚«‚È‚¢•¶š‚ğ’u‚«Š·‚¦‚é
+	// ãƒ•ã‚¡ã‚¤ãƒ«åã«ä½¿ç”¨ã§ããªã„æ–‡å­—ã‚’ç½®ãæ›ãˆã‚‹
 	for (auto i=pString->begin();i!=pString->end();++i) {
 		static const struct {
 			WCHAR From;
 			WCHAR To;
 		} CharMap[] = {
-			{L'\\',	L''},
-			{L'/',	L'^'},
-			{L':',	L'F'},
-			{L'*',	L'–'},
-			{L'?',	L'H'},
-			{L'"',	L'h'},
-			{L'<',	L'ƒ'},
-			{L'>',	L'„'},
-			{L'|',	L'b'},
+			{L'\\',	L'ï¿¥'},
+			{L'/',	L'ï¼'},
+			{L':',	L'ï¼š'},
+			{L'*',	L'ï¼Š'},
+			{L'?',	L'ï¼Ÿ'},
+			{L'"',	L'â€'},
+			{L'<',	L'ï¼œ'},
+			{L'>',	L'ï¼'},
+			{L'|',	L'ï½œ'},
 		};
 
 		for (int j=0;j<lengthof(CharMap);j++) {
@@ -452,111 +452,111 @@ bool CEventVariableStringMap::GetParameterList(ParameterGroupList *pList) const
 
 	static const ParameterInfo DateTimeParams[] =
 	{
-		{TEXT("date"),					TEXT("”NŒ“ú")},
-		{TEXT("year"),					TEXT("”N")},
-		{TEXT("year2"),					TEXT("”N(‰º2Œ…)")},
-		{TEXT("month"),					TEXT("Œ")},
-		{TEXT("month2"),				TEXT("Œ(2Œ…)")},
-		{TEXT("day"),					TEXT("“ú")},
-		{TEXT("day2"),					TEXT("“ú(2Œ…)")},
-		{TEXT("time"),					TEXT("(+•ª+•b)")},
-		{TEXT("hour"),					TEXT("")},
-		{TEXT("hour2"),					TEXT("(2Œ…)")},
-		{TEXT("minute"),				TEXT("•ª")},
-		{TEXT("minute2"),				TEXT("•ª(2Œ…)")},
-		{TEXT("second"),				TEXT("•b")},
-		{TEXT("second2"),				TEXT("•b(2Œ…)")},
-		{TEXT("day-of-week"),			TEXT("—j“ú(Š¿š)")},
+		{TEXT("date"),					TEXT("å¹´æœˆæ—¥")},
+		{TEXT("year"),					TEXT("å¹´")},
+		{TEXT("year2"),					TEXT("å¹´(ä¸‹2æ¡)")},
+		{TEXT("month"),					TEXT("æœˆ")},
+		{TEXT("month2"),				TEXT("æœˆ(2æ¡)")},
+		{TEXT("day"),					TEXT("æ—¥")},
+		{TEXT("day2"),					TEXT("æ—¥(2æ¡)")},
+		{TEXT("time"),					TEXT("æ™‚åˆ»(æ™‚+åˆ†+ç§’)")},
+		{TEXT("hour"),					TEXT("æ™‚")},
+		{TEXT("hour2"),					TEXT("æ™‚(2æ¡)")},
+		{TEXT("minute"),				TEXT("åˆ†")},
+		{TEXT("minute2"),				TEXT("åˆ†(2æ¡)")},
+		{TEXT("second"),				TEXT("ç§’")},
+		{TEXT("second2"),				TEXT("ç§’(2æ¡)")},
+		{TEXT("day-of-week"),			TEXT("æ›œæ—¥(æ¼¢å­—)")},
 	};
 
 	static const ParameterInfo StartTimeParams[] =
 	{
-		{TEXT("start-date"),			TEXT("”NŒ“ú")},
-		{TEXT("start-year"),			TEXT("”N")},
-		{TEXT("start-year2"),			TEXT("”N(‰º2Œ…)")},
-		{TEXT("start-month"),			TEXT("Œ")},
-		{TEXT("start-month2"),			TEXT("Œ(2Œ…)")},
-		{TEXT("start-day"),				TEXT("“ú")},
-		{TEXT("start-day2"),			TEXT("“ú(2Œ…)")},
-		{TEXT("start-time"),			TEXT("(+•ª+•b)")},
-		{TEXT("start-hour"),			TEXT("")},
-		{TEXT("start-hour2"),			TEXT("(2Œ…)")},
-		{TEXT("start-minute"),			TEXT("•ª")},
-		{TEXT("start-minute2"),			TEXT("•ª(2Œ…)")},
-		{TEXT("start-second"),			TEXT("•b")},
-		{TEXT("start-second2"),			TEXT("•b(2Œ…)")},
-		{TEXT("start-day-of-week"),		TEXT("—j“ú(Š¿š)")},
+		{TEXT("start-date"),			TEXT("å¹´æœˆæ—¥")},
+		{TEXT("start-year"),			TEXT("å¹´")},
+		{TEXT("start-year2"),			TEXT("å¹´(ä¸‹2æ¡)")},
+		{TEXT("start-month"),			TEXT("æœˆ")},
+		{TEXT("start-month2"),			TEXT("æœˆ(2æ¡)")},
+		{TEXT("start-day"),				TEXT("æ—¥")},
+		{TEXT("start-day2"),			TEXT("æ—¥(2æ¡)")},
+		{TEXT("start-time"),			TEXT("æ™‚åˆ»(æ™‚+åˆ†+ç§’)")},
+		{TEXT("start-hour"),			TEXT("æ™‚")},
+		{TEXT("start-hour2"),			TEXT("æ™‚(2æ¡)")},
+		{TEXT("start-minute"),			TEXT("åˆ†")},
+		{TEXT("start-minute2"),			TEXT("åˆ†(2æ¡)")},
+		{TEXT("start-second"),			TEXT("ç§’")},
+		{TEXT("start-second2"),			TEXT("ç§’(2æ¡)")},
+		{TEXT("start-day-of-week"),		TEXT("æ›œæ—¥(æ¼¢å­—)")},
 	};
 
 	static const ParameterInfo EndTimeParams[] =
 	{
-		{TEXT("end-date"),				TEXT("”NŒ“ú")},
-		{TEXT("end-year"),				TEXT("”N")},
-		{TEXT("end-year2"),				TEXT("”N(‰º2Œ…)")},
-		{TEXT("end-month"),				TEXT("Œ")},
-		{TEXT("end-month2"),			TEXT("Œ(2Œ…)")},
-		{TEXT("end-day"),				TEXT("“ú")},
-		{TEXT("end-day2"),				TEXT("“ú(2Œ…)")},
-		{TEXT("end-time"),				TEXT("(+•ª+•b)")},
-		{TEXT("end-hour"),				TEXT("")},
-		{TEXT("end-hour2"),				TEXT("(2Œ…)")},
-		{TEXT("end-minute"),			TEXT("•ª")},
-		{TEXT("end-minute2"),			TEXT("•ª(2Œ…)")},
-		{TEXT("end-second"),			TEXT("•b")},
-		{TEXT("end-second2"),			TEXT("•b(2Œ…)")},
-		{TEXT("end-day-of-week"),		TEXT("—j“ú(Š¿š)")},
+		{TEXT("end-date"),				TEXT("å¹´æœˆæ—¥")},
+		{TEXT("end-year"),				TEXT("å¹´")},
+		{TEXT("end-year2"),				TEXT("å¹´(ä¸‹2æ¡)")},
+		{TEXT("end-month"),				TEXT("æœˆ")},
+		{TEXT("end-month2"),			TEXT("æœˆ(2æ¡)")},
+		{TEXT("end-day"),				TEXT("æ—¥")},
+		{TEXT("end-day2"),				TEXT("æ—¥(2æ¡)")},
+		{TEXT("end-time"),				TEXT("æ™‚åˆ»(æ™‚+åˆ†+ç§’)")},
+		{TEXT("end-hour"),				TEXT("æ™‚")},
+		{TEXT("end-hour2"),				TEXT("æ™‚(2æ¡)")},
+		{TEXT("end-minute"),			TEXT("åˆ†")},
+		{TEXT("end-minute2"),			TEXT("åˆ†(2æ¡)")},
+		{TEXT("end-second"),			TEXT("ç§’")},
+		{TEXT("end-second2"),			TEXT("ç§’(2æ¡)")},
+		{TEXT("end-day-of-week"),		TEXT("æ›œæ—¥(æ¼¢å­—)")},
 	};
 
 	static const ParameterInfo TotTimeParams[] =
 	{
-		{TEXT("tot-date"),				TEXT("”NŒ“ú")},
-		{TEXT("tot-year"),				TEXT("”N")},
-		{TEXT("tot-year2"),				TEXT("”N(‰º2Œ…)")},
-		{TEXT("tot-month"),				TEXT("Œ")},
-		{TEXT("tot-month2"),			TEXT("Œ(2Œ…)")},
-		{TEXT("tot-day"),				TEXT("“ú")},
-		{TEXT("tot-day2"),				TEXT("“ú(2Œ…)")},
-		{TEXT("tot-time"),				TEXT("(+•ª+•b)")},
-		{TEXT("tot-hour"),				TEXT("")},
-		{TEXT("tot-hour2"),				TEXT("(2Œ…)")},
-		{TEXT("tot-minute"),			TEXT("•ª")},
-		{TEXT("tot-minute2"),			TEXT("•ª(2Œ…)")},
-		{TEXT("tot-second"),			TEXT("•b")},
-		{TEXT("tot-second2"),			TEXT("•b(2Œ…)")},
-		{TEXT("tot-day-of-week"),		TEXT("—j“ú(Š¿š)")},
+		{TEXT("tot-date"),				TEXT("å¹´æœˆæ—¥")},
+		{TEXT("tot-year"),				TEXT("å¹´")},
+		{TEXT("tot-year2"),				TEXT("å¹´(ä¸‹2æ¡)")},
+		{TEXT("tot-month"),				TEXT("æœˆ")},
+		{TEXT("tot-month2"),			TEXT("æœˆ(2æ¡)")},
+		{TEXT("tot-day"),				TEXT("æ—¥")},
+		{TEXT("tot-day2"),				TEXT("æ—¥(2æ¡)")},
+		{TEXT("tot-time"),				TEXT("æ™‚åˆ»(æ™‚+åˆ†+ç§’)")},
+		{TEXT("tot-hour"),				TEXT("æ™‚")},
+		{TEXT("tot-hour2"),				TEXT("æ™‚(2æ¡)")},
+		{TEXT("tot-minute"),			TEXT("åˆ†")},
+		{TEXT("tot-minute2"),			TEXT("åˆ†(2æ¡)")},
+		{TEXT("tot-second"),			TEXT("ç§’")},
+		{TEXT("tot-second2"),			TEXT("ç§’(2æ¡)")},
+		{TEXT("tot-day-of-week"),		TEXT("æ›œæ—¥(æ¼¢å­—)")},
 	};
 
 	static const ParameterInfo EventDurationParams[] =
 	{
-		{TEXT("event-duration-hour"),	TEXT("ŠÔ")},
-		{TEXT("event-duration-hour2"),	TEXT("ŠÔ(2Œ…)")},
-		{TEXT("event-duration-min"),	TEXT("•ª")},
-		{TEXT("event-duration-min2"),	TEXT("•ª(2Œ…)")},
-		{TEXT("event-duration-sec"),	TEXT("•b")},
-		{TEXT("event-duration-sec2"),	TEXT("•b(2Œ…)")},
+		{TEXT("event-duration-hour"),	TEXT("æ™‚é–“")},
+		{TEXT("event-duration-hour2"),	TEXT("æ™‚é–“(2æ¡)")},
+		{TEXT("event-duration-min"),	TEXT("åˆ†")},
+		{TEXT("event-duration-min2"),	TEXT("åˆ†(2æ¡)")},
+		{TEXT("event-duration-sec"),	TEXT("ç§’")},
+		{TEXT("event-duration-sec2"),	TEXT("ç§’(2æ¡)")},
 	};
 
 	static const ParameterInfo EventParams[] =
 	{
-		{TEXT("channel-name"),			TEXT("ƒ`ƒƒƒ“ƒlƒ‹–¼")},
-		{TEXT("channel-no"),			TEXT("ƒ`ƒƒƒ“ƒlƒ‹”Ô†")},
-		{TEXT("channel-no2"),			TEXT("ƒ`ƒƒƒ“ƒlƒ‹”Ô†(2Œ…)")},
-		{TEXT("channel-no3"),			TEXT("ƒ`ƒƒƒ“ƒlƒ‹”Ô†(3Œ…)")},
-		{TEXT("event-name"),			TEXT("”Ô‘g–¼")},
-		{TEXT("event-title"),			TEXT("”Ô‘gƒ^ƒCƒgƒ‹")},
-		{TEXT("event-mark"),			TEXT("”Ô‘gî•ñƒ}[ƒN")},
-		{TEXT("event-id"),				TEXT("ƒCƒxƒ“ƒgID")},
-		{TEXT("service-name"),			TEXT("ƒT[ƒrƒX–¼")},
-		{TEXT("service-id"),			TEXT("ƒT[ƒrƒXID")},
-		{TEXT("tuner-filename"),		TEXT("ƒ`ƒ…[ƒi[ƒtƒ@ƒCƒ‹–¼")},
-		{TEXT("tuner-name"),			TEXT("ƒ`ƒ…[ƒi[–¼")},
+		{TEXT("channel-name"),			TEXT("ãƒãƒ£ãƒ³ãƒãƒ«å")},
+		{TEXT("channel-no"),			TEXT("ãƒãƒ£ãƒ³ãƒãƒ«ç•ªå·")},
+		{TEXT("channel-no2"),			TEXT("ãƒãƒ£ãƒ³ãƒãƒ«ç•ªå·(2æ¡)")},
+		{TEXT("channel-no3"),			TEXT("ãƒãƒ£ãƒ³ãƒãƒ«ç•ªå·(3æ¡)")},
+		{TEXT("event-name"),			TEXT("ç•ªçµ„å")},
+		{TEXT("event-title"),			TEXT("ç•ªçµ„ã‚¿ã‚¤ãƒˆãƒ«")},
+		{TEXT("event-mark"),			TEXT("ç•ªçµ„æƒ…å ±ãƒãƒ¼ã‚¯")},
+		{TEXT("event-id"),				TEXT("ã‚¤ãƒ™ãƒ³ãƒˆID")},
+		{TEXT("service-name"),			TEXT("ã‚µãƒ¼ãƒ“ã‚¹å")},
+		{TEXT("service-id"),			TEXT("ã‚µãƒ¼ãƒ“ã‚¹ID")},
+		{TEXT("tuner-filename"),		TEXT("ãƒãƒ¥ãƒ¼ãƒŠãƒ¼ãƒ•ã‚¡ã‚¤ãƒ«å")},
+		{TEXT("tuner-name"),			TEXT("ãƒãƒ¥ãƒ¼ãƒŠãƒ¼å")},
 	};
 
 	static const ParameterInfo SeparatorParams[] =
 	{
-		{TEXT("sep-hyphen"),			TEXT("-(ƒnƒCƒtƒ“)‹æØ‚è")},
-		{TEXT("sep-slash"),				TEXT("/(ƒXƒ‰ƒbƒVƒ…)‹æØ‚è")},
-		{TEXT("sep-backslash"),			TEXT("\\(ƒoƒbƒNƒXƒ‰ƒbƒVƒ…)‹æØ‚è")},
+		{TEXT("sep-hyphen"),			TEXT("-(ãƒã‚¤ãƒ•ãƒ³)åŒºåˆ‡ã‚Š")},
+		{TEXT("sep-slash"),				TEXT("/(ã‚¹ãƒ©ãƒƒã‚·ãƒ¥)åŒºåˆ‡ã‚Š")},
+		{TEXT("sep-backslash"),			TEXT("\\(ãƒãƒƒã‚¯ã‚¹ãƒ©ãƒƒã‚·ãƒ¥)åŒºåˆ‡ã‚Š")},
 	};
 
 	static const struct {
@@ -565,12 +565,12 @@ bool CEventVariableStringMap::GetParameterList(ParameterGroupList *pList) const
 		int ListLength;
 		unsigned int Flags;
 	} GroupList[] = {
-		{TEXT("Œ»İ“ú"),		DateTimeParams,			lengthof(DateTimeParams),		FLAG_NO_CURRENT_TIME},
-		{TEXT("”Ô‘gŠJn“ú"),	StartTimeParams,		lengthof(StartTimeParams),		0},
-		{TEXT("”Ô‘gI—¹“ú"),	EndTimeParams,			lengthof(EndTimeParams),		0},
-		{TEXT("TOT“ú"),		TotTimeParams,			lengthof(TotTimeParams),		FLAG_NO_TOT_TIME},
-		{TEXT("”Ô‘g‚Ì’·‚³"),	EventDurationParams,	lengthof(EventDurationParams),	0},
-		{TEXT("‹æØ‚è"),		SeparatorParams,		lengthof(SeparatorParams),		FLAG_NO_SEPARATOR},
+		{TEXT("ç¾åœ¨æ—¥æ™‚"),		DateTimeParams,			lengthof(DateTimeParams),		FLAG_NO_CURRENT_TIME},
+		{TEXT("ç•ªçµ„é–‹å§‹æ—¥æ™‚"),	StartTimeParams,		lengthof(StartTimeParams),		0},
+		{TEXT("ç•ªçµ„çµ‚äº†æ—¥æ™‚"),	EndTimeParams,			lengthof(EndTimeParams),		0},
+		{TEXT("TOTæ—¥æ™‚"),		TotTimeParams,			lengthof(TotTimeParams),		FLAG_NO_TOT_TIME},
+		{TEXT("ç•ªçµ„ã®é•·ã•"),	EventDurationParams,	lengthof(EventDurationParams),	0},
+		{TEXT("åŒºåˆ‡ã‚Š"),		SeparatorParams,		lengthof(SeparatorParams),		FLAG_NO_SEPARATOR},
 		{nullptr,				EventParams,			lengthof(EventParams),			0},
 	};
 
@@ -624,19 +624,19 @@ bool CEventVariableStringMap::GetSampleEventInfo(EventInfo *pInfo)
 	pInfo->Channel.SetSpace(0);
 	pInfo->Channel.SetChannelIndex(8);
 	pInfo->Channel.SetChannelNo(13);
-	pInfo->Channel.SetName(TEXT("ƒAƒtƒŠƒJ’†‰›ƒeƒŒƒr"));
+	pInfo->Channel.SetName(TEXT("ã‚¢ãƒ•ãƒªã‚«ä¸­å¤®ãƒ†ãƒ¬ãƒ“"));
 	pInfo->Channel.SetNetworkID(0x1234);
 	pInfo->Channel.SetTransportStreamID(0x1234);
 	pInfo->Channel.SetServiceID(123);
 	pInfo->Channel.SetTunerName(TEXT("BonDriver_TV.dll"));
-	pInfo->ServiceName=TEXT("ƒAƒtƒeƒŒ1");
+	pInfo->ServiceName=TEXT("ã‚¢ãƒ•ãƒ†ãƒ¬1");
 	pInfo->TotTime=st;
 	pInfo->Event.m_NetworkID=0x1234;
 	pInfo->Event.m_TransportStreamID=0x1234;
 	pInfo->Event.m_ServiceID=123;
 	pInfo->Event.m_EventID=0xABCD;
-	pInfo->Event.m_EventName=TEXT("[“ñ][š]¡“ú‚Ìƒjƒ…[ƒX");
-	pInfo->Event.m_EventText=TEXT("–{“ú‚Ìƒjƒ…[ƒX‚ğ‚¨“`‚¦‚µ‚Ü‚·B");
+	pInfo->Event.m_EventName=TEXT("[äºŒ][å­—]ä»Šæ—¥ã®ãƒ‹ãƒ¥ãƒ¼ã‚¹");
+	pInfo->Event.m_EventText=TEXT("æœ¬æ—¥ã®ãƒ‹ãƒ¥ãƒ¼ã‚¹ã‚’ãŠä¼ãˆã—ã¾ã™ã€‚");
 	pInfo->Event.m_bValidStartTime=true;
 	OffsetSystemTime(&st,5*TimeConsts::SYSTEMTIME_MINUTE);
 	st.wMinute=st.wMinute/5*5;
@@ -652,7 +652,7 @@ bool CEventVariableStringMap::GetSampleEventInfo(EventInfo *pInfo)
 
 void CEventVariableStringMap::GetEventTitle(const String &EventName,String *pTitle)
 {
-	// ”Ô‘g–¼‚©‚ç [š] ‚Ì‚æ‚¤‚È‚à‚Ì‚ğœ‹‚·‚é
+	// ç•ªçµ„åã‹ã‚‰ [å­—] ã®ã‚ˆã†ãªã‚‚ã®ã‚’é™¤å»ã™ã‚‹
 
 	pTitle->clear();
 
@@ -686,7 +686,7 @@ void CEventVariableStringMap::GetEventTitle(const String &EventName,String *pTit
 
 void CEventVariableStringMap::GetEventMark(const String &EventName,String *pMarks)
 {
-	// ”Ô‘g–¼‚©‚ç [š] ‚Ì‚æ‚¤‚È‚à‚Ì‚ğ’Šo‚·‚é
+	// ç•ªçµ„åã‹ã‚‰ [å­—] ã®ã‚ˆã†ãªã‚‚ã®ã‚’æŠ½å‡ºã™ã‚‹
 
 	pMarks->clear();
 

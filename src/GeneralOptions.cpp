@@ -214,7 +214,7 @@ INT_PTR CGeneralOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam
 				} else {
 					GetAppClass().GetAppDirectory(szDirectory);
 				}
-				if (BrowseFolderDialog(hDlg,szDirectory,TEXT("BonDriver ‚ÌŒŸõƒtƒHƒ‹ƒ_‚ğ‘I‘ğ‚µ‚Ä‚­‚¾‚³‚¢B")))
+				if (BrowseFolderDialog(hDlg,szDirectory,TEXT("BonDriver ã®æ¤œç´¢ãƒ•ã‚©ãƒ«ãƒ€ã‚’é¸æŠã—ã¦ãã ã•ã„ã€‚")))
 					::SetDlgItemText(hDlg,IDC_OPTIONS_DRIVERDIRECTORY,szDirectory);
 			}
 			return TRUE;
@@ -244,11 +244,11 @@ INT_PTR CGeneralOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam
 				ofn.hwndOwner=hDlg;
 				ofn.lpstrFilter=
 					TEXT("BonDriver(BonDriver*.dll)\0BonDriver*.dll\0")
-					TEXT("‚·‚×‚Ä‚Ìƒtƒ@ƒCƒ‹\0*.*\0");
+					TEXT("ã™ã¹ã¦ã®ãƒ•ã‚¡ã‚¤ãƒ«\0*.*\0");
 				ofn.lpstrFile=szFileName;
 				ofn.nMaxFile=lengthof(szFileName);
 				ofn.lpstrInitialDir=szInitDir;
-				ofn.lpstrTitle=TEXT("BonDriver‚Ì‘I‘ğ");
+				ofn.lpstrTitle=TEXT("BonDriverã®é¸æŠ");
 				ofn.Flags=OFN_HIDEREADONLY | OFN_FILEMUSTEXIST | OFN_EXPLORER;
 				if (FileOpenDialog(&ofn))
 					::SetDlgItemText(hDlg,IDC_OPTIONS_DEFAULTDRIVER,szFileName);

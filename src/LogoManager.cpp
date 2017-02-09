@@ -15,19 +15,19 @@
 #include <pshpack1.h>
 
 /*
-	ƒƒSƒtƒ@ƒCƒ‹‚ÌƒtƒH[ƒ}ƒbƒg
-	„¡„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„¢
-	„ LogoFileHeader      „ 
-	„¥„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„§
-	„ „¡„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„¢„ 
-	„ „ LogoImageHeader „ „ 
-	„ „¥„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„§„ 
-	„ „ PNGƒf[ƒ^       „ „ 
-	„ „¥„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„§„ 
-	„ „ CRC32           „ „ 
-	„ „¤„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„£„ 
-	„ ...                 „ 
-	„¤„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„£
+	ãƒ­ã‚´ãƒ•ã‚¡ã‚¤ãƒ«ã®ãƒ•ã‚©ãƒ¼ãƒžãƒƒãƒˆ
+	â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+	â”‚LogoFileHeader      â”‚
+	â”œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¤
+	â”‚â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”â”‚
+	â”‚â”‚LogoImageHeader â”‚â”‚
+	â”‚â”œâ”€â”€â”€â”€â”€â”€â”€â”€â”¤â”‚
+	â”‚â”‚PNGãƒ‡ãƒ¼ã‚¿       â”‚â”‚
+	â”‚â”œâ”€â”€â”€â”€â”€â”€â”€â”€â”¤â”‚
+	â”‚â”‚CRC32           â”‚â”‚
+	â”‚â””â”€â”€â”€â”€â”€â”€â”€â”€â”˜â”‚
+	â”‚...                 â”‚
+	â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
 */
 
 struct LogoFileHeader {
@@ -171,8 +171,8 @@ bool CLogoManager::SaveLogoFile(LPCTSTR pszFileName)
 	if (m_LogoMap.empty())
 		return true;
 
-	// ƒtƒ@ƒCƒ‹‚ª“Ç‚Ýž‚ñ‚¾Žž‚©‚çXV‚³‚ê‚Ä‚¢‚éê‡“Ç‚Ýž‚Ý’¼‚·
-	// (•¡”‹N“®‚µ‚Ä‘¼‚ÌƒvƒƒZƒX‚ªXV‚µ‚½‰Â”\«‚ª‚ ‚é‚½‚ß)
+	// ãƒ•ã‚¡ã‚¤ãƒ«ãŒèª­ã¿è¾¼ã‚“ã æ™‚ã‹ã‚‰æ›´æ–°ã•ã‚Œã¦ã„ã‚‹å ´åˆèª­ã¿è¾¼ã¿ç›´ã™
+	// (è¤‡æ•°èµ·å‹•ã—ã¦ä»–ã®ãƒ—ãƒ­ã‚»ã‚¹ãŒæ›´æ–°ã—ãŸå¯èƒ½æ€§ãŒã‚ã‚‹ãŸã‚)
 	if (m_LogoFileLastWriteTime.dwLowDateTime!=0
 			|| m_LogoFileLastWriteTime.dwHighDateTime!=0) {
 		WIN32_FIND_DATA fd;
@@ -310,8 +310,8 @@ bool CLogoManager::SaveLogoIDMap(LPCTSTR pszFileName)
 	if (m_LogoIDMap.empty())
 		return true;
 
-	// ƒtƒ@ƒCƒ‹‚ª“Ç‚Ýž‚ñ‚¾Žž‚©‚çXV‚³‚ê‚Ä‚¢‚éê‡“Ç‚Ýž‚Ý’¼‚·
-	// (•¡”‹N“®‚µ‚Ä‘¼‚ÌƒvƒƒZƒX‚ªXV‚µ‚½‰Â”\«‚ª‚ ‚é‚½‚ß)
+	// ãƒ•ã‚¡ã‚¤ãƒ«ãŒèª­ã¿è¾¼ã‚“ã æ™‚ã‹ã‚‰æ›´æ–°ã•ã‚Œã¦ã„ã‚‹å ´åˆèª­ã¿è¾¼ã¿ç›´ã™
+	// (è¤‡æ•°èµ·å‹•ã—ã¦ä»–ã®ãƒ—ãƒ­ã‚»ã‚¹ãŒæ›´æ–°ã—ãŸå¯èƒ½æ€§ãŒã‚ã‚‹ãŸã‚)
 	if (m_LogoIDMapFileLastWriteTime.dwLowDateTime!=0
 			|| m_LogoIDMapFileLastWriteTime.dwHighDateTime!=0) {
 		WIN32_FIND_DATA fd;
@@ -452,7 +452,7 @@ HICON CLogoManager::CreateLogoIcon(WORD NetworkID,WORD ServiceID,int Width,int H
 	if (hbm==NULL)
 		return NULL;
 
-	// –{—ˆ‚Ì”ä—¦‚æ‚èc’·‚É‚µ‚Ä‚¢‚é(Œ©‰h‚¦‚Ì‚½‚ß)
+	// æœ¬æ¥ã®æ¯”çŽ‡ã‚ˆã‚Šç¸¦é•·ã«ã—ã¦ã„ã‚‹(è¦‹æ „ãˆã®ãŸã‚)
 	int ImageWidth=Height*16/10;
 	int ImageHeight=Width*10/16;
 	return CreateIconFromBitmap(hbm,Width,Height,
@@ -536,7 +536,7 @@ bool CLogoManager::GetLogoInfo(WORD NetworkID,WORD ServiceID,BYTE LogoType,LogoI
 
 void CLogoManager::OnLogoDownloaded(const CLogoDownloader::LogoData *pData)
 {
-	// “§–¾‚ÈƒƒS‚ÍœŠO
+	// é€æ˜Žãªãƒ­ã‚´ã¯é™¤å¤–
 	if (pData->DataSize<=93)
 		return;
 
@@ -547,11 +547,11 @@ void CLogoManager::OnLogoDownloaded(const CLogoDownloader::LogoData *pData)
 	bool fUpdated=false,fDataUpdated=false;
 	CLogoData *pLogoData;
 	if (itr!=m_LogoMap.end()) {
-		// ƒo[ƒWƒ‡ƒ“‚ªV‚µ‚¢ê‡‚Ì‚ÝXV
+		// ãƒãƒ¼ã‚¸ãƒ§ãƒ³ãŒæ–°ã—ã„å ´åˆã®ã¿æ›´æ–°
 		int VerCmp=CompareLogoVersion(itr->second->GetLogoVersion(),pData->LogoVersion);
 		if (VerCmp<0
 				|| (VerCmp==0 && CompareSystemTime(&itr->second->GetTime(),&pData->Time)<0)) {
-			// BS/CS‚Íƒo[ƒWƒ‡ƒ“‚ª‹¤’Ê‚Ì‚½‚ßAƒf[ƒ^‚ð”äŠr‚µ‚ÄXV‚ðŠm”F‚·‚é
+			// BS/CSã¯ãƒãƒ¼ã‚¸ãƒ§ãƒ³ãŒå…±é€šã®ãŸã‚ã€ãƒ‡ãƒ¼ã‚¿ã‚’æ¯”è¼ƒã—ã¦æ›´æ–°ã‚’ç¢ºèªã™ã‚‹
 			if (pData->DataSize!=itr->second->GetDataSize()
 					|| std::memcmp(pData->pData,itr->second->GetData(),pData->DataSize)!=0) {
 				pLogoData=new CLogoData(pData);
@@ -587,7 +587,7 @@ void CLogoManager::OnLogoDownloaded(const CLogoDownloader::LogoData *pData)
 		if (!GetAbsolutePath(m_szLogoDirectory,szDirectory,lengthof(szDirectory)))
 			return;
 		if (!::PathIsDirectory(szDirectory)) {
-			// ˆêŠK‘w‚Ì‚ÝŽ©“®“I‚Éì¬
+			// ä¸€éšŽå±¤ã®ã¿è‡ªå‹•çš„ã«ä½œæˆ
 			if (!::CreateDirectory(szDirectory,NULL)
 					&& ::GetLastError()!=ERROR_ALREADY_EXISTS)
 				return;
@@ -638,7 +638,7 @@ CLogoManager::CLogoData *CLogoManager::LoadLogoData(WORD NetworkID,WORD LogoID,B
 
 	if (!GetAbsolutePath(m_szLogoDirectory,szDirectory,lengthof(szDirectory)))
 		return false;
-	// Å‚àƒo[ƒWƒ‡ƒ“‚ªV‚µ‚¢ƒƒS‚ð’T‚·
+	// æœ€ã‚‚ãƒãƒ¼ã‚¸ãƒ§ãƒ³ãŒæ–°ã—ã„ãƒ­ã‚´ã‚’æŽ¢ã™
 	::wsprintf(szMask,TEXT("%04X_%03X_\?\?\?_%02X"),NetworkID,LogoID,LogoType);
 	if (::lstrlen(szDirectory)+1+::lstrlen(szMask)>=lengthof(szFileName))
 		return false;
@@ -663,7 +663,7 @@ CLogoManager::CLogoData *CLogoManager::LoadLogoData(WORD NetworkID,WORD LogoID,B
 	if (NewerVersion<0)
 		return NULL;
 
-	// ƒƒS‚ðƒtƒ@ƒCƒ‹‚©‚ç“Ç‚Ýž‚Þ
+	// ãƒ­ã‚´ã‚’ãƒ•ã‚¡ã‚¤ãƒ«ã‹ã‚‰èª­ã¿è¾¼ã‚€
 	::PathAppend(szDirectory,szFileName);
 	HANDLE hFile=::CreateFile(szDirectory,GENERIC_READ,FILE_SHARE_READ,NULL,
 							  OPEN_EXISTING,0,NULL);

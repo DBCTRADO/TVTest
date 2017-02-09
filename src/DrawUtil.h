@@ -22,12 +22,12 @@ struct RGBA {
 	COLORREF GetCOLORREF() const { return RGB(Red,Green,Blue); }
 };
 
-// “h‚è‚Â‚Ô‚µ‚Ì•ûŒü
+// å¡—ã‚Šã¤ã¶ã—ã®æ–¹å‘
 enum FillDirection {
-	DIRECTION_HORZ,			// …•½•ûŒü
-	DIRECTION_VERT,			// ‚’¼•ûŒü
-	DIRECTION_HORZMIRROR,	// ¶‰E‘ÎÌ
-	DIRECTION_VERTMIRROR	// ã‰º‘ÎÌ
+	DIRECTION_HORZ,			// æ°´å¹³æ–¹å‘
+	DIRECTION_VERT,			// åž‚ç›´æ–¹å‘
+	DIRECTION_HORZMIRROR,	// å·¦å³å¯¾ç§°
+	DIRECTION_VERTMIRROR	// ä¸Šä¸‹å¯¾ç§°
 };
 
 bool Fill(HDC hdc,const RECT *pRect,COLORREF Color);

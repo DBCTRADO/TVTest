@@ -1,11 +1,11 @@
-// AacDecoder.cpp: CAacDecoder ƒNƒ‰ƒX‚ÌƒCƒ“ƒvƒŠƒƒ“ƒe[ƒVƒ‡ƒ“
+// AacDecoder.cpp: CAacDecoder ã‚¯ãƒ©ã‚¹ã®ã‚¤ãƒ³ãƒ—ãƒªãƒ¡ãƒ³ãƒ†ãƒ¼ã‚·ãƒ§ãƒ³
 //
 //////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
 #include "AacDecoder.h"
 
-// ƒ_ƒEƒ“ƒ~ƒbƒNƒXŒW”‚Ìƒpƒ‰ƒ[ƒ^æ“¾‚ÉFAAD2‚Ì“à•”î•ñ‚ª•K—v
+// ãƒ€ã‚¦ãƒ³ãƒŸãƒƒã‚¯ã‚¹ä¿‚æ•°ã®ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿å–å¾—ã«FAAD2ã®å†…éƒ¨æƒ…å ±ãŒå¿…è¦
 #define HAVE_CONFIG_H
 #pragma include_alias("neaacdec.h", "../Libs/faad2/include/neaacdec.h")
 #include "../Libs/faad2/libfaad/common.h"
@@ -19,7 +19,7 @@
 
 
 //////////////////////////////////////////////////////////////////////
-// \’z/Á–Å
+// æ§‹ç¯‰/æ¶ˆæ»…
 //////////////////////////////////////////////////////////////////////
 
 CAacDecoder::CAacDecoder()
@@ -171,28 +171,28 @@ bool CAacDecoder::GetDownmixInfo(DownmixInfo *pInfo) const
 	if (pInfo == NULL)
 		return false;
 
-	// 5.1chƒ_ƒEƒ“ƒ~ƒbƒNƒXİ’è
+	// 5.1chãƒ€ã‚¦ãƒ³ãƒŸãƒƒã‚¯ã‚¹è¨­å®š
 	/*
-	ƒ_ƒEƒ“ƒ~ƒbƒNƒXŒvZ® (STD-B21 6.2.1)
-	„¡„Ÿ„¦„Ÿ„Ÿ„¦„Ÿ„¦„Ÿ„Ÿ„Ÿ„¦„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„¢
-	„ *1„ *2  „ *3„ k‚Ì’l „ ŒvZ®(*4)            „ 
-	„¥„Ÿ„©„Ÿ„Ÿ„©„Ÿ„©„Ÿ„Ÿ„Ÿ„©„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„§
-	„  1„  0/1„  0„ 1/ã2 „ Set1                  „ 
-	„   „     „  1„ 1/2   „ Lt=L+1/ã2*C{k*Ls    „ 
-	„   „     „  2„ 1/2ã2„ Rt=R+1/ã2*C{k*Rs    „ 
-	„   „     „  3„ 0     „                       „ 
-	„¥„Ÿ„©„Ÿ„Ÿ„©„Ÿ„©„Ÿ„Ÿ„Ÿ„©„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„§
-	„  0„     „   „       „ Set3                  „ 
-	„   „     „   „       „ Lt=L+1/ã2*C{1/ã2*Ls„ 
-	„   „     „   „       „ Rt=R+1/ã2*C{1/ã2*Rs„ 
-	„¤„Ÿ„¨„Ÿ„Ÿ„¨„Ÿ„¨„Ÿ„Ÿ„Ÿ„¨„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„£
+	ãƒ€ã‚¦ãƒ³ãƒŸãƒƒã‚¯ã‚¹è¨ˆç®—å¼ (STD-B21 6.2.1)
+	â”Œâ”€â”¬â”€â”€â”¬â”€â”¬â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+	â”‚*1â”‚*2  â”‚*3â”‚kã®å€¤ â”‚è¨ˆç®—å¼(*4)            â”‚
+	â”œâ”€â”¼â”€â”€â”¼â”€â”¼â”€â”€â”€â”¼â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¤
+	â”‚ 1â”‚ 0/1â”‚ 0â”‚1/âˆš2 â”‚Set1                  â”‚
+	â”‚  â”‚    â”‚ 1â”‚1/2   â”‚Lt=L+1/âˆš2*Cï¼‹k*Ls    â”‚
+	â”‚  â”‚    â”‚ 2â”‚1/2âˆš2â”‚Rt=R+1/âˆš2*Cï¼‹k*Rs    â”‚
+	â”‚  â”‚    â”‚ 3â”‚0     â”‚                      â”‚
+	â”œâ”€â”¼â”€â”€â”¼â”€â”¼â”€â”€â”€â”¼â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¤
+	â”‚ 0â”‚    â”‚  â”‚      â”‚Set3                  â”‚
+	â”‚  â”‚    â”‚  â”‚      â”‚Lt=L+1/âˆš2*Cï¼‹1/âˆš2*Lsâ”‚
+	â”‚  â”‚    â”‚  â”‚      â”‚Rt=R+1/âˆš2*Cï¼‹1/âˆš2*Rsâ”‚
+	â””â”€â”´â”€â”€â”´â”€â”´â”€â”€â”€â”´â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
 	*1 matrix_mixdown_idx_present
 	*2 pseudo_surround_enable
 	*3 matrix_mixdown_idx
 	*4 L=Left, R=Right, C=Center, Ls=Rear left, Rs=Rear right
 
-	STD-B21 5.3”Å‚æ‚è‘O‚ÍAÅI“I‚É Lt/Rt ‚É 1/ã2 ‚ğæ‚¶‚é‹K’è(STD-B21 •t‘®4QÆ)
-	‚½‚¾‚µTVTest‚Å‚ÍŒ³X‚±‚Ì‹K’è‚Í–³‹‚µ‚Ä‚¢‚½
+	STD-B21 5.3ç‰ˆã‚ˆã‚Šå‰ã¯ã€æœ€çµ‚çš„ã« Lt/Rt ã« 1/âˆš2 ã‚’ä¹—ã˜ã‚‹è¦å®š(STD-B21 ä»˜å±4å‚ç…§)
+	ãŸã ã—TVTestã§ã¯å…ƒã€…ã“ã®è¦å®šã¯ç„¡è¦–ã—ã¦ã„ãŸ
 	*/
 
 	static const double PSQR = 1.0 / 1.4142135623730950488016887242097;
@@ -219,15 +219,15 @@ bool CAacDecoder::OpenDecoder()
 {
 	CloseDecoder();
 
-	// FAAD2ƒI[ƒvƒ“
+	// FAAD2ã‚ªãƒ¼ãƒ—ãƒ³
 	m_hDecoder = ::NeAACDecOpen();
 	if (m_hDecoder == NULL)
 		return false;
 
-	// ƒfƒtƒHƒ‹ƒgİ’èæ“¾
+	// ãƒ‡ãƒ•ã‚©ãƒ«ãƒˆè¨­å®šå–å¾—
 	NeAACDecConfigurationPtr pDecodeConfig = ::NeAACDecGetCurrentConfiguration(m_hDecoder);
 
-	// ƒfƒR[ƒ_İ’è
+	// ãƒ‡ã‚³ãƒ¼ãƒ€è¨­å®š
 	pDecodeConfig->defObjectType = LC;
 	pDecodeConfig->defSampleRate = 48000UL;
 	pDecodeConfig->outputFormat = FAAD_FMT_16BIT;
@@ -249,7 +249,7 @@ bool CAacDecoder::OpenDecoder()
 
 void CAacDecoder::CloseDecoder()
 {
-	// FAAD2ƒNƒ[ƒY
+	// FAAD2ã‚¯ãƒ­ãƒ¼ã‚º
 	if (m_hDecoder) {
 		::NeAACDecClose(m_hDecoder);
 		m_hDecoder = NULL;
@@ -272,10 +272,10 @@ bool CAacDecoder::DecodeFrame(const CAdtsFrame *pFrame, DecodeFrameInfo *pInfo)
 		return false;
 	}
 
-	// ‰‰ñƒtƒŒ[ƒ€‰ğÍ
+	// åˆå›ãƒ•ãƒ¬ãƒ¼ãƒ è§£æ
 	if (m_bInitRequest || pFrame->GetChannelConfig() != m_LastChannelConfig) {
 		if (!m_bInitRequest) {
-			// ƒ`ƒƒƒ“ƒlƒ‹İ’è‚ª•Ï‰»‚µ‚½AƒfƒR[ƒ_ƒŠƒZƒbƒg
+			// ãƒãƒ£ãƒ³ãƒãƒ«è¨­å®šãŒå¤‰åŒ–ã—ãŸã€ãƒ‡ã‚³ãƒ¼ãƒ€ãƒªã‚»ãƒƒãƒˆ
 			if (!ResetDecoder())
 				return false;
 		}
@@ -292,7 +292,7 @@ bool CAacDecoder::DecodeFrame(const CAdtsFrame *pFrame, DecodeFrameInfo *pInfo)
 		m_LastChannelConfig = pFrame->GetChannelConfig();
 	}
 
-	// ƒfƒR[ƒh
+	// ãƒ‡ã‚³ãƒ¼ãƒ‰
 	NeAACDecFrameInfo FrameInfo;
 	//::ZeroMemory(&FrameInfo, sizeof(FrameInfo));
 
@@ -305,7 +305,7 @@ bool CAacDecoder::DecodeFrame(const CAdtsFrame *pFrame, DecodeFrameInfo *pInfo)
 	if (FrameInfo.error == 0) {
 		m_AudioInfo.Frequency = FrameInfo.samplerate;
 		m_AudioInfo.Channels = FrameInfo.channels;
-		// FAAD‚Å‚Íƒ‚ƒmƒ‰ƒ‹‚ª2ch‚ÉƒfƒR[ƒh‚³‚ê‚é
+		// FAADã§ã¯ãƒ¢ãƒãƒ©ãƒ«ãŒ2chã«ãƒ‡ã‚³ãƒ¼ãƒ‰ã•ã‚Œã‚‹
 		if (FrameInfo.channels == 2 && m_LastChannelConfig == 1)
 			m_AudioInfo.OrigChannels = 1;
 		else
@@ -319,13 +319,13 @@ bool CAacDecoder::DecodeFrame(const CAdtsFrame *pFrame, DecodeFrameInfo *pInfo)
 			bOK = true;
 		}
 	} else {
-		// ƒGƒ‰[”­¶
+		// ã‚¨ãƒ©ãƒ¼ç™ºç”Ÿ
 #ifdef _DEBUG
 		::OutputDebugString(TEXT("CAacDecoder::Decode error - "));
 		::OutputDebugStringA(NeAACDecGetErrorMessage(FrameInfo.error));
 		::OutputDebugString(TEXT("\n"));
 #endif
-		// ƒŠƒZƒbƒg‚·‚é
+		// ãƒªã‚»ãƒƒãƒˆã™ã‚‹
 		ResetDecoder();
 	}
 

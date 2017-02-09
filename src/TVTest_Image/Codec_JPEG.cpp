@@ -1,4 +1,4 @@
-#include <stdio.h>		// "jpeglib.h"‚ÅŽg—p‚³‚ê‚Ä‚¢‚é
+#include <stdio.h>		// "jpeglib.h"ã§ä½¿ç”¨ã•ã‚Œã¦ã„ã‚‹
 #include <setjmp.h>
 #include <windows.h>
 #include <tchar.h>
@@ -141,7 +141,7 @@ bool SaveJPEGFile(const ImageSaveInfo *pInfo)
 	//jpeg_simple_progression(&jcomp);
 	jpeg_start_compress(&jcomp,TRUE);
 	if (pInfo->pszComment!=NULL) {
-		/* ƒRƒƒ“ƒg‚Ì‘‚«ž‚Ý */
+		/* ã‚³ãƒ¡ãƒ³ãƒˆã®æ›¸ãè¾¼ã¿ */
 #ifndef UNICODE
 		jpeg_write_marker(&jcomp,JPEG_COM,(JOCTET*)pInfo->pszComment,
 												lstrlen(pInfo->pszComment));

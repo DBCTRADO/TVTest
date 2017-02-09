@@ -208,7 +208,7 @@ static void ConvertChannelInfo(const CChannelInfo *pChInfo,TVTest::ChannelInfo *
 	::lstrcpyn(pChannelInfo->szChannelName,pChInfo->GetName(),lengthof(pChannelInfo->szChannelName));
 	if (pChannelInfo->Size>=TVTest::CHANNELINFO_SIZE_V2) {
 		pChannelInfo->PhysicalChannel=pChInfo->GetPhysicalChannel();
-		pChannelInfo->ServiceIndex=0;	// g—p•s‰Â
+		pChannelInfo->ServiceIndex=0;	// ä½¿ç”¨ä¸å¯
 		pChannelInfo->ServiceID=pChInfo->GetServiceID();
 		if (pChannelInfo->Size==sizeof(TVTest::ChannelInfo)) {
 			pChannelInfo->Flags=0;
@@ -720,7 +720,7 @@ bool CPlugin::Load(LPCTSTR pszFileName)
 		TCHAR szText[256];
 
 		StdUtil::snprintf(szText,lengthof(szText),
-						  TEXT("DLL‚ªƒ[ƒh‚Å‚«‚Ü‚¹‚ñB(ƒGƒ‰[ƒR[ƒh 0x%lx)"),ErrorCode);
+						  TEXT("DLLãŒãƒ­ãƒ¼ãƒ‰ã§ãã¾ã›ã‚“ã€‚(ã‚¨ãƒ©ãƒ¼ã‚³ãƒ¼ãƒ‰ 0x%lx)"),ErrorCode);
 		SetError(szText);
 		switch (ErrorCode) {
 		case ERROR_BAD_EXE_FORMAT:
@@ -730,11 +730,11 @@ bool CPlugin::Load(LPCTSTR pszFileName)
 #else
 				TEXT("64")
 #endif
-				TEXT("ƒrƒbƒg—p‚Ìƒvƒ‰ƒOƒCƒ“‚Å‚Í‚È‚¢‚©Aƒtƒ@ƒCƒ‹‚ª”j‘¹‚µ‚Ä‚¢‚é‰Â”\«‚ª‚ ‚è‚Ü‚·B"));
+				TEXT("ãƒ“ãƒƒãƒˆç”¨ã®ãƒ—ãƒ©ã‚°ã‚¤ãƒ³ã§ã¯ãªã„ã‹ã€ãƒ•ã‚¡ã‚¤ãƒ«ãŒç ´æã—ã¦ã„ã‚‹å¯èƒ½æ€§ãŒã‚ã‚Šã¾ã™ã€‚"));
 			break;
 		case ERROR_MOD_NOT_FOUND:
 		case ERROR_SXS_CANT_GEN_ACTCTX:
-			SetErrorAdvise(TEXT("•K—v‚Èƒ‰ƒ“ƒ^ƒCƒ€‚ªƒCƒ“ƒXƒg[ƒ‹‚³‚ê‚Ä‚¢‚È‚¢‰Â”\«‚ª‚ ‚è‚Ü‚·B"));
+			SetErrorAdvise(TEXT("å¿…è¦ãªãƒ©ãƒ³ã‚¿ã‚¤ãƒ ãŒã‚¤ãƒ³ã‚¹ãƒˆãƒ¼ãƒ«ã•ã‚Œã¦ã„ãªã„å¯èƒ½æ€§ãŒã‚ã‚Šã¾ã™ã€‚"));
 			break;
 		}
 		return false;
@@ -743,21 +743,21 @@ bool CPlugin::Load(LPCTSTR pszFileName)
 		reinterpret_cast<TVTest::GetVersionFunc>(::GetProcAddress(hLib,"TVTGetVersion"));
 	if (pGetVersion==NULL) {
 		::FreeLibrary(hLib);
-		SetError(TEXT("TVTGetVersion()ŠÖ”‚ÌƒAƒhƒŒƒX‚ğæ“¾‚Å‚«‚Ü‚¹‚ñB"));
+		SetError(TEXT("TVTGetVersion()é–¢æ•°ã®ã‚¢ãƒ‰ãƒ¬ã‚¹ã‚’å–å¾—ã§ãã¾ã›ã‚“ã€‚"));
 		return false;
 	}
 	m_Version=pGetVersion();
 	if (TVTest::GetMajorVersion(m_Version)!=TVTest::GetMajorVersion(TVTEST_PLUGIN_VERSION)
 		|| TVTest::GetMinorVersion(m_Version)!=TVTest::GetMinorVersion(TVTEST_PLUGIN_VERSION)) {
 		::FreeLibrary(hLib);
-		SetError(TEXT("‘Î‰‚µ‚Ä‚¢‚È‚¢ƒo[ƒWƒ‡ƒ“‚Å‚·B"));
+		SetError(TEXT("å¯¾å¿œã—ã¦ã„ãªã„ãƒãƒ¼ã‚¸ãƒ§ãƒ³ã§ã™ã€‚"));
 		return false;
 	}
 	TVTest::GetPluginInfoFunc pGetPluginInfo=
 		reinterpret_cast<TVTest::GetPluginInfoFunc>(::GetProcAddress(hLib,"TVTGetPluginInfo"));
 	if (pGetPluginInfo==NULL) {
 		::FreeLibrary(hLib);
-		SetError(TEXT("TVTGetPluginInfo()ŠÖ”‚ÌƒAƒhƒŒƒX‚ğæ“¾‚Å‚«‚Ü‚¹‚ñB"));
+		SetError(TEXT("TVTGetPluginInfo()é–¢æ•°ã®ã‚¢ãƒ‰ãƒ¬ã‚¹ã‚’å–å¾—ã§ãã¾ã›ã‚“ã€‚"));
 		return false;
 	}
 	TVTest::PluginInfo PluginInfo;
@@ -765,14 +765,14 @@ bool CPlugin::Load(LPCTSTR pszFileName)
 	if (!pGetPluginInfo(&PluginInfo)
 			|| IsStringEmpty(PluginInfo.pszPluginName)) {
 		::FreeLibrary(hLib);
-		SetError(TEXT("ƒvƒ‰ƒOƒCƒ“‚Ìî•ñ‚ğæ“¾‚Å‚«‚Ü‚¹‚ñB"));
+		SetError(TEXT("ãƒ—ãƒ©ã‚°ã‚¤ãƒ³ã®æƒ…å ±ã‚’å–å¾—ã§ãã¾ã›ã‚“ã€‚"));
 		return false;
 	}
 	TVTest::InitializeFunc pInitialize=
 		reinterpret_cast<TVTest::InitializeFunc>(::GetProcAddress(hLib,"TVTInitialize"));
 	if (pInitialize==NULL) {
 		::FreeLibrary(hLib);
-		SetError(TEXT("TVTInitialize()ŠÖ”‚ÌƒAƒhƒŒƒX‚ğæ“¾‚Å‚«‚Ü‚¹‚ñB"));
+		SetError(TEXT("TVTInitialize()é–¢æ•°ã®ã‚¢ãƒ‰ãƒ¬ã‚¹ã‚’å–å¾—ã§ãã¾ã›ã‚“ã€‚"));
 		return false;
 	}
 	m_FileName=pszFileName;
@@ -789,7 +789,7 @@ bool CPlugin::Load(LPCTSTR pszFileName)
 	if (!pInitialize(&m_PluginParam)) {
 		Free();
 		::FreeLibrary(hLib);
-		SetError(TEXT("ƒvƒ‰ƒOƒCƒ“‚Ì‰Šú‰»‚ÅƒGƒ‰[”­¶‚µ‚Ü‚µ‚½B"));
+		SetError(TEXT("ãƒ—ãƒ©ã‚°ã‚¤ãƒ³ã®åˆæœŸåŒ–ã§ã‚¨ãƒ©ãƒ¼ç™ºç”Ÿã—ã¾ã—ãŸã€‚"));
 		return false;
 	}
 	m_hLib=hLib;
@@ -845,20 +845,20 @@ void CPlugin::Free()
 	if (m_hLib!=NULL) {
 		LPCTSTR pszFileName=::PathFindFileName(m_FileName.c_str());
 
-		App.AddLog(TEXT("%s ‚ÌI—¹ˆ—‚ğs‚Á‚Ä‚¢‚Ü‚·..."),pszFileName);
+		App.AddLog(TEXT("%s ã®çµ‚äº†å‡¦ç†ã‚’è¡Œã£ã¦ã„ã¾ã™..."),pszFileName);
 
 		TVTest::FinalizeFunc pFinalize=
 			reinterpret_cast<TVTest::FinalizeFunc>(::GetProcAddress(m_hLib,"TVTFinalize"));
 		if (pFinalize==NULL) {
 			App.AddLog(CLogItem::TYPE_ERROR,
-					   TEXT("%s ‚ÌTVTFinalize()ŠÖ”‚ÌƒAƒhƒŒƒX‚ğæ“¾‚Å‚«‚Ü‚¹‚ñB"),
+					   TEXT("%s ã®TVTFinalize()é–¢æ•°ã®ã‚¢ãƒ‰ãƒ¬ã‚¹ã‚’å–å¾—ã§ãã¾ã›ã‚“ã€‚"),
 					   pszFileName);
 		} else {
 			pFinalize();
 		}
 		::FreeLibrary(m_hLib);
 		m_hLib=NULL;
-		App.AddLog(TEXT("%s ‚ğ‰ğ•ú‚µ‚Ü‚µ‚½B"),pszFileName);
+		App.AddLog(TEXT("%s ã‚’è§£æ”¾ã—ã¾ã—ãŸã€‚"),pszFileName);
 	}
 
 	for (auto itr=m_StatusItemList.begin();itr!=m_StatusItemList.end();++itr) {
@@ -1225,7 +1225,7 @@ LRESULT CPlugin::SendPluginMessage(TVTest::PluginParam *pParam,UINT Message,LPAR
 		return Result;
 	GetAppClass().AddLog(
 		CLogItem::TYPE_ERROR,
-		TEXT("‰“š‚ª–³‚¢‚½‚ßƒvƒ‰ƒOƒCƒ“‚©‚ç‚ÌƒƒbƒZ[ƒW‚ğˆ—‚Å‚«‚Ü‚¹‚ñB(%s : %u)"),
+		TEXT("å¿œç­”ãŒç„¡ã„ãŸã‚ãƒ—ãƒ©ã‚°ã‚¤ãƒ³ã‹ã‚‰ã®ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸ã‚’å‡¦ç†ã§ãã¾ã›ã‚“ã€‚(%s : %u)"),
 		::PathFindFileName(MessageParam.pPlugin->m_FileName.c_str()),Message);
 	return FailedResult;
 }
@@ -1460,7 +1460,7 @@ LRESULT CPlugin::OnCallback(TVTest::PluginParam *pParam,UINT Message,LPARAM lPar
 		return SendPluginMessage(pParam,Message,lParam1,lParam2);
 
 	case TVTest::MESSAGE_GETSTEREOMODE:
-#if 0	// ver.0.9.0 ‚æ‚è‘O
+#if 0	// ver.0.9.0 ã‚ˆã‚Šå‰
 		return GetAppClass().UICore.GetStereoMode();
 #else
 		{
@@ -1562,7 +1562,7 @@ LRESULT CPlugin::OnCallback(TVTest::PluginParam *pParam,UINT Message,LPARAM lPar
 			CBlockLock Lock(&m_GrabberLock);
 
 			if ((pInfo->Flags & TVTest::STREAM_CALLBACK_REMOVE)==0) {
-				// ƒR[ƒ‹ƒoƒbƒN“o˜^
+				// ã‚³ãƒ¼ãƒ«ãƒãƒƒã‚¯ç™»éŒ²
 				if (!m_StreamGrabberList.empty()) {
 					for (auto it=m_StreamGrabberList.begin();it!=m_StreamGrabberList.end();++it) {
 						CStreamGrabber *pGrabber=*it;
@@ -1576,7 +1576,7 @@ LRESULT CPlugin::OnCallback(TVTest::PluginParam *pParam,UINT Message,LPARAM lPar
 				m_StreamGrabberList.push_back(pGrabber);
 				GetAppClass().CoreEngine.m_DtvEngine.m_MediaGrabber.AddGrabber(pGrabber);
 			} else {
-				// ƒR[ƒ‹ƒoƒbƒNíœ
+				// ã‚³ãƒ¼ãƒ«ãƒãƒƒã‚¯å‰Šé™¤
 				for (auto it=m_StreamGrabberList.begin();it!=m_StreamGrabberList.end();++it) {
 					CStreamGrabber *pGrabber=*it;
 					if (pGrabber->GetCallbackFunc()==pInfo->Callback) {
@@ -3368,7 +3368,7 @@ LRESULT CPlugin::OnPluginMessage(WPARAM wParam,LPARAM lParam)
 		}
 
 	case TVTest::MESSAGE_SETSTEREOMODE:
-#if 0	// ver.0.9.0 ‚æ‚è‘O
+#if 0	// ver.0.9.0 ã‚ˆã‚Šå‰
 		return GetAppClass().UICore.SetStereoMode(static_cast<CAudioDecFilter::StereoMode>(pParam->lParam1));
 #else
 		{
@@ -4436,7 +4436,7 @@ bool CPluginManager::LoadPlugins(LPCTSTR pszDirectory,const std::vector<LPCTSTR>
 					}
 				}
 				if (fExclude) {
-					App.AddLog(TEXT("%s ‚ÍœŠOw’è‚³‚ê‚Ä‚¢‚é‚½‚ß“Ç‚İ‚Ü‚ê‚Ü‚¹‚ñB"),
+					App.AddLog(TEXT("%s ã¯é™¤å¤–æŒ‡å®šã•ã‚Œã¦ã„ã‚‹ãŸã‚èª­ã¿è¾¼ã¾ã‚Œã¾ã›ã‚“ã€‚"),
 							   wfd.cFileName);
 					continue;
 				}
@@ -4449,7 +4449,7 @@ bool CPluginManager::LoadPlugins(LPCTSTR pszDirectory,const std::vector<LPCTSTR>
 
 			::PathCombine(szFileName,pszDirectory,wfd.cFileName);
 			if (pPlugin->Load(szFileName)) {
-				App.AddLog(TEXT("%s ‚ğ“Ç‚İ‚İ‚Ü‚µ‚½B"),wfd.cFileName);
+				App.AddLog(TEXT("%s ã‚’èª­ã¿è¾¼ã¿ã¾ã—ãŸã€‚"),wfd.cFileName);
 				m_PluginList.push_back(pPlugin);
 			} else {
 				App.AddLog(
@@ -4458,7 +4458,7 @@ bool CPluginManager::LoadPlugins(LPCTSTR pszDirectory,const std::vector<LPCTSTR>
 					wfd.cFileName,
 					!IsStringEmpty(pPlugin->GetLastErrorText())?
 						pPlugin->GetLastErrorText():
-						TEXT("ƒvƒ‰ƒOƒCƒ“‚ğ“Ç‚İ‚ß‚Ü‚¹‚ñB"));
+						TEXT("ãƒ—ãƒ©ã‚°ã‚¤ãƒ³ã‚’èª­ã¿è¾¼ã‚ã¾ã›ã‚“ã€‚"));
 				if (!IsStringEmpty(pPlugin->GetLastErrorAdvise()))
 					App.AddLog(CLogItem::TYPE_ERROR,TEXT("(%s)"),pPlugin->GetLastErrorAdvise());
 				delete pPlugin;
@@ -4597,7 +4597,7 @@ bool CPluginManager::SetMenu(HMENU hmenu) const
 			}
 		}
 	} else {
-		::AppendMenu(hmenu,MFT_STRING | MFS_GRAYED,0,TEXT("‚È‚µ"));
+		::AppendMenu(hmenu,MFT_STRING | MFS_GRAYED,0,TEXT("ãªã—"));
 	}
 	return true;
 }
@@ -5300,13 +5300,13 @@ INT_PTR CPluginOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 			lvc.mask=LVCF_FMT | LVCF_WIDTH | LVCF_TEXT;
 			lvc.fmt=LVCFMT_LEFT;
 			lvc.cx=120;
-			lvc.pszText=TEXT("ƒtƒ@ƒCƒ‹–¼");
+			lvc.pszText=TEXT("ãƒ•ã‚¡ã‚¤ãƒ«å");
 			ListView_InsertColumn(hwndList,COLUMN_FILENAME,&lvc);
-			lvc.pszText=TEXT("ƒvƒ‰ƒOƒCƒ“–¼");
+			lvc.pszText=TEXT("ãƒ—ãƒ©ã‚°ã‚¤ãƒ³å");
 			ListView_InsertColumn(hwndList,COLUMN_PLUGINNAME,&lvc);
-			lvc.pszText=TEXT("à–¾");
+			lvc.pszText=TEXT("èª¬æ˜");
 			ListView_InsertColumn(hwndList,COLUMN_DESCRIPTION,&lvc);
-			lvc.pszText=TEXT("’˜ìŒ ");
+			lvc.pszText=TEXT("è‘—ä½œæ¨©");
 			ListView_InsertColumn(hwndList,COLUMN_COPYRIGHT,&lvc);
 			for (i=0;i<m_pPluginManager->NumPlugins();i++) {
 				const CPlugin *pPlugin=m_pPluginManager->GetPlugin(i);

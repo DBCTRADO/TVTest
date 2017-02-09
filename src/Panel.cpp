@@ -442,9 +442,9 @@ LRESULT CPanel::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 					&& m_pEventHandler!=NULL) {
 				HMENU hmenu=::CreatePopupMenu();
 
-				::AppendMenu(hmenu,MFT_STRING | MFS_ENABLED,1,TEXT("ï¬Ç∂ÇÈ(&C)"));
+				::AppendMenu(hmenu,MFT_STRING | MFS_ENABLED,1,TEXT("Èñâ„Åò„Çã(&C)"));
 				if (m_fEnableFloating)
-					::AppendMenu(hmenu,MFT_STRING | MFS_ENABLED,2,TEXT("êÿÇËó£Ç∑(&F)"));
+					::AppendMenu(hmenu,MFT_STRING | MFS_ENABLED,2,TEXT("Âàá„ÇäÈõ¢„Åô(&F)"));
 				m_pEventHandler->OnMenuPopup(hmenu);
 				::ClientToScreen(hwnd,&pt);
 				int Command=::TrackPopupMenu(hmenu,
@@ -593,7 +593,7 @@ bool CPanelFrame::Create(HWND hwndParent,DWORD Style,DWORD ExStyle,int ID)
 	TVTest::PerMonitorDPIBlock DPIBlock;
 
 	if (!CreateBasicWindow(hwndParent,Style,ExStyle,ID,
-						   PANEL_FRAME_WINDOW_CLASS,TEXT("ÉpÉlÉã"),m_hinst))
+						   PANEL_FRAME_WINDOW_CLASS,TEXT("„Éë„Éç„É´"),m_hinst))
 		return false;
 	if (m_Opacity<255)
 		SetOpacity(m_Opacity);
@@ -809,7 +809,7 @@ LRESULT CPanelFrame::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 		{
 			m_fDragMoving=false;
 			HMENU hmenu=GetSystemMenu(hwnd,FALSE);
-			InsertMenu(hmenu,0,MF_BYPOSITION | MFT_STRING | MFS_ENABLED,SC_DOCKING,TEXT("ÉhÉbÉLÉìÉO(&D)"));
+			InsertMenu(hmenu,0,MF_BYPOSITION | MFT_STRING | MFS_ENABLED,SC_DOCKING,TEXT("„Éâ„ÉÉ„Ç≠„É≥„Ç∞(&D)"));
 			InsertMenu(hmenu,1,MF_BYPOSITION | MFT_SEPARATOR,0,NULL);
 		}
 		return 0;
@@ -1016,10 +1016,10 @@ enum {
 bool CPanelFrame::OnMenuPopup(HMENU hmenu)
 {
 	::AppendMenu(hmenu,MF_SEPARATOR,0,NULL);
-	::AppendMenu(hmenu,MF_STRING | MF_ENABLED,PANEL_MENU_LEFT,TEXT("ç∂Ç÷(&L)"));
-	::AppendMenu(hmenu,MF_STRING | MF_ENABLED,PANEL_MENU_RIGHT,TEXT("âEÇ÷(&R)"));
-	::AppendMenu(hmenu,MF_STRING | MF_ENABLED,PANEL_MENU_TOP,TEXT("è„Ç÷(&T)"));
-	::AppendMenu(hmenu,MF_STRING | MF_ENABLED,PANEL_MENU_BOTTOM,TEXT("â∫Ç÷(&B)"));
+	::AppendMenu(hmenu,MF_STRING | MF_ENABLED,PANEL_MENU_LEFT,TEXT("Â∑¶„Å∏(&L)"));
+	::AppendMenu(hmenu,MF_STRING | MF_ENABLED,PANEL_MENU_RIGHT,TEXT("Âè≥„Å∏(&R)"));
+	::AppendMenu(hmenu,MF_STRING | MF_ENABLED,PANEL_MENU_TOP,TEXT("‰∏ä„Å∏(&T)"));
+	::AppendMenu(hmenu,MF_STRING | MF_ENABLED,PANEL_MENU_BOTTOM,TEXT("‰∏ã„Å∏(&B)"));
 	int Index=m_pSplitter->IDToIndex(m_PanelID);
 	::EnableMenuItem(hmenu,
 		IsDockingVertical()?

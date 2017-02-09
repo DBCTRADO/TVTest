@@ -17,7 +17,7 @@ CChannelStatusItem::CChannelStatusItem()
 void CChannelStatusItem::Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect,unsigned int Flags)
 {
 	if ((Flags & DRAW_PREVIEW)!=0) {
-		DrawText(hdc,DrawRect,TEXT("ÉAÉtÉäÉJíÜâõÉeÉåÉr"));
+		DrawText(hdc,DrawRect,TEXT("„Ç¢„Éï„É™„Ç´‰∏≠Â§Æ„ÉÜ„É¨„Éì"));
 		return;
 	}
 
@@ -41,7 +41,7 @@ void CChannelStatusItem::Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect,
 			pInfo->GetChannelNo(),
 			App.Core.GetCurrentServiceName(szService,lengthof(szService))?szService:pInfo->GetName());
 	} else {
-		::lstrcpy(szText,TEXT("<É`ÉÉÉìÉlÉã>"));
+		::lstrcpy(szText,TEXT("<„ÉÅ„É£„É≥„Éç„É´>"));
 	}
 	DrawText(hdc,DrawRect,szText);
 }
@@ -283,7 +283,7 @@ void CAudioChannelStatusItem::Draw(HDC hdc,const RECT &ItemRect,const RECT &Draw
 
 	TCHAR szText[64];
 	if (App.UICore.FormatCurrentAudioText(szText,lengthof(szText))<=0)
-		::lstrcpy(szText,TEXT("<âπê∫>"));
+		::lstrcpy(szText,TEXT("<Èü≥Â£∞>"));
 	DrawText(hdc,rc,szText);
 }
 
@@ -323,7 +323,7 @@ void CRecordStatusItem::Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect,u
 	if ((Flags & DRAW_PREVIEW)!=0) {
 		RECT rc=DrawRect;
 		COLORREF OldTextColor=::SetTextColor(hdc,m_CircleColor);
-		::DrawText(hdc,TEXT("Åú"),-1,&rc,DT_LEFT | DT_SINGLELINE | DT_VCENTER);
+		::DrawText(hdc,TEXT("‚óè"),-1,&rc,DT_LEFT | DT_SINGLELINE | DT_VCENTER);
 		::SetTextColor(hdc,OldTextColor);
 		rc.left+=m_pStatus->GetFontHeight()+4;
 		DrawText(hdc,rc,TEXT("0:24:15"));
@@ -352,7 +352,7 @@ void CRecordStatusItem::Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect,u
 			::DeleteObject(hbr);
 		} else {
 #if 0
-			// EllipseÇ≈è¨Ç≥Ç¢ä€Çï`Ç≠Ç∆âòÇ¢
+			// Ellipse„ÅßÂ∞è„Åï„ÅÑ‰∏∏„ÇíÊèè„Åè„Å®Ê±ö„ÅÑ
 			HBRUSH hbr=::CreateSolidBrush(m_CircleColor);
 			HBRUSH hbrOld;
 			HPEN hpenOld;
@@ -366,7 +366,7 @@ void CRecordStatusItem::Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect,u
 			::DeleteObject(hbr);
 #else
 			COLORREF OldTextColor=::SetTextColor(hdc,m_CircleColor);
-			::DrawText(hdc,TEXT("Åú"),-1,&rc,
+			::DrawText(hdc,TEXT("‚óè"),-1,&rc,
 					   DT_LEFT | DT_SINGLELINE | DT_VCENTER);
 			::SetTextColor(hdc,OldTextColor);
 #endif
@@ -386,9 +386,9 @@ void CRecordStatusItem::Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect,u
 						  RecordSec/(60*60),(RecordSec/60)%60,RecordSec%60);
 		pszText=szText;
 	} else if (RecordManager.IsReserved()) {
-		pszText=TEXT("Å° ò^âÊë“ã@");
+		pszText=TEXT("‚ñ† Èå≤ÁîªÂæÖÊ©ü");
 	} else {
-		pszText=TEXT("Å° <ò^âÊ>");
+		pszText=TEXT("‚ñ† <Èå≤Áîª>");
 	}
 	DrawText(hdc,rc,pszText);
 }
@@ -451,14 +451,14 @@ int CRecordStatusItem::GetTipText(LPTSTR pszText,int MaxLength)
 
 		unsigned int RecordSec=(unsigned int)(pRecordTask->GetRecordTime()/1000);
 		Length=StdUtil::snprintf(pszText,MaxLength,
-								 TEXT("Åú %d:%02d:%02d"),
+								 TEXT("‚óè %d:%02d:%02d"),
 								 RecordSec/(60*60),(RecordSec/60)%60,RecordSec%60);
 
 		LONGLONG WroteSize=pRecordTask->GetWroteSize();
 		if (WroteSize>=0) {
 			unsigned int Size=(unsigned int)(WroteSize/(1024*1024/100));
 			Length+=StdUtil::snprintf(pszText+Length,MaxLength-Length,
-									  TEXT("\r\nÉTÉCÉY: %d.%02d MB"),
+									  TEXT("\r\n„Çµ„Ç§„Ç∫: %d.%02d MB"),
 									  Size/100,Size%100);
 		}
 
@@ -466,7 +466,7 @@ int CRecordStatusItem::GetTipText(LPTSTR pszText,int MaxLength)
 		if (DiskFreeSpace>0) {
 			unsigned int FreeSpace=(unsigned int)(DiskFreeSpace/(ULONGLONG)(1024*1024*1024/100));
 			Length+=StdUtil::snprintf(pszText+Length,MaxLength-Length,
-									  TEXT("\r\nãÛÇ´óeó : %d.%02d GB"),
+									  TEXT("\r\nÁ©∫„ÅçÂÆπÈáè: %d.%02d GB"),
 									  FreeSpace/100,FreeSpace%100);
 		}
 
@@ -829,7 +829,7 @@ CProgramInfoStatusItem::CProgramInfoStatusItem()
 void CProgramInfoStatusItem::Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect,unsigned int Flags)
 {
 	if ((Flags & DRAW_PREVIEW)!=0) {
-		DrawText(hdc,DrawRect,TEXT("1:00Å`1:30 ç°ì˙ÇÃÉjÉÖÅ[ÉX"));
+		DrawText(hdc,DrawRect,TEXT("1:00„Äú1:30 ‰ªäÊó•„ÅÆ„Éã„É•„Éº„Çπ"));
 		return;
 	}
 
@@ -861,7 +861,7 @@ bool CProgramInfoStatusItem::UpdateContent()
 	DWORD Duration;
 
 	if (m_fNext)
-		Formatter.Append(TEXT("éü: "));
+		Formatter.Append(TEXT("Ê¨°: "));
 	if (CoreEngine.m_DtvEngine.GetEventTime(&StartTime,&Duration,m_fNext)) {
 		TCHAR szTime[EpgUtil::MAX_EVENT_TIME_LENGTH];
 		if (EpgUtil::FormatEventTime(StartTime,Duration,szTime,lengthof(szTime))>0) {
@@ -1116,7 +1116,7 @@ CTunerStatusItem::CTunerStatusItem()
 void CTunerStatusItem::Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect,unsigned int Flags)
 {
 	if ((Flags & DRAW_PREVIEW)!=0) {
-		DrawText(hdc,DrawRect,TEXT("ínÉfÉW"));
+		DrawText(hdc,DrawRect,TEXT("Âú∞„Éá„Ç∏"));
 		return;
 	}
 
@@ -1129,11 +1129,11 @@ void CTunerStatusItem::Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect,un
 			ChannelManager.GetTuningSpaceName(
 				pChInfo!=NULL?pChInfo->GetSpace():ChannelManager.GetCurrentSpace());
 		if (pszText==NULL)
-			pszText=TEXT("<É`ÉÖÅ[ÉiÅ[>");
+			pszText=TEXT("<„ÉÅ„É•„Éº„Éä„Éº>");
 	} else if (ChannelManager.GetCurrentSpace()==CChannelManager::SPACE_ALL) {
-		pszText=TEXT("Ç∑Ç◊Çƒ");
+		pszText=TEXT("„Åô„Åπ„Å¶");
 	} else {
-		pszText=TEXT("<É`ÉÖÅ[ÉiÅ[>");
+		pszText=TEXT("<„ÉÅ„É•„Éº„Éä„Éº>");
 	}
 	DrawText(hdc,DrawRect,pszText);
 }

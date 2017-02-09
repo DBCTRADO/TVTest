@@ -188,7 +188,7 @@ bool CEventInfo::GetEndTimeLocal(SYSTEMTIME *pTime) const
 
 
 
-// EPG‚Ì“úŽž(UTC+9)‚©‚çUTC‚É•ÏŠ·‚·‚é
+// EPGã®æ—¥æ™‚(UTC+9)ã‹ã‚‰UTCã«å¤‰æ›ã™ã‚‹
 bool EpgTimeToUtc(const SYSTEMTIME *pEpgTime, SYSTEMTIME *pUtc)
 {
 	if (pEpgTime == nullptr || pUtc == nullptr)
@@ -207,7 +207,7 @@ bool EpgTimeToUtc(const SYSTEMTIME *pEpgTime, SYSTEMTIME *pUtc)
 }
 
 
-// UTC‚©‚çEPG‚Ì“úŽž(UTC+9)‚É•ÏŠ·‚·‚é
+// UTCã‹ã‚‰EPGã®æ—¥æ™‚(UTC+9)ã«å¤‰æ›ã™ã‚‹
 bool UtcToEpgTime(const SYSTEMTIME *pUtc, SYSTEMTIME *pEpgTime)
 {
 	if (pUtc == nullptr || pEpgTime == nullptr)
@@ -226,7 +226,7 @@ bool UtcToEpgTime(const SYSTEMTIME *pUtc, SYSTEMTIME *pEpgTime)
 }
 
 
-// EPG‚Ì“úŽž(UTC+9)‚©‚çƒ[ƒJƒ‹“úŽž‚É•ÏŠ·‚·‚é
+// EPGã®æ—¥æ™‚(UTC+9)ã‹ã‚‰ãƒ­ãƒ¼ã‚«ãƒ«æ—¥æ™‚ã«å¤‰æ›ã™ã‚‹
 bool EpgTimeToLocalTime(const SYSTEMTIME *pEpgTime, SYSTEMTIME *pLocalTime)
 {
 	if (pEpgTime == nullptr || pLocalTime == nullptr)
@@ -244,7 +244,7 @@ bool EpgTimeToLocalTime(const SYSTEMTIME *pEpgTime, SYSTEMTIME *pLocalTime)
 }
 
 
-// Œ»Ý‚Ì“úŽž‚ðEPG‚Ì“úŽž(UTC+9)‚ÅŽæ“¾‚·‚é
+// ç¾åœ¨ã®æ—¥æ™‚ã‚’EPGã®æ—¥æ™‚(UTC+9)ã§å–å¾—ã™ã‚‹
 bool GetCurrentEpgTime(SYSTEMTIME *pTime)
 {
 	if (pTime == nullptr)
@@ -257,7 +257,7 @@ bool GetCurrentEpgTime(SYSTEMTIME *pTime)
 }
 
 
-// Šg’£ƒeƒLƒXƒg‚ðŽæ“¾‚·‚é
+// æ‹¡å¼µãƒ†ã‚­ã‚¹ãƒˆã‚’å–å¾—ã™ã‚‹
 int GetEventExtendedText(const CDescBlock *pDescBlock, LPTSTR pszText, int MaxLength)
 {
 	pszText[0] = '\0';
@@ -275,7 +275,7 @@ int GetEventExtendedText(const CDescBlock *pDescBlock, LPTSTR pszText, int MaxLe
 	if (DescList.empty())
 		return 0;
 
-	// descriptor_number ‡‚Éƒ\[ƒg‚·‚é
+	// descriptor_number é †ã«ã‚½ãƒ¼ãƒˆã™ã‚‹
 	TsEngine::InsertionSort(DescList,
 		[](const CExtendedEventDesc *pDesc1, const CExtendedEventDesc *pDesc2) {
 			return pDesc1->GetDescriptorNumber() < pDesc2->GetDescriptorNumber();
@@ -297,7 +297,7 @@ int GetEventExtendedText(const CDescBlock *pDescBlock, LPTSTR pszText, int MaxLe
 			if (pItem == NULL)
 				continue;
 			if (pItem->szDescription[0] != '\0') {
-				// V‹K€–Ú
+				// æ–°è¦é …ç›®
 				ItemInfo Item;
 				Item.DescriptorNumber = pExtendedEvent->GetDescriptorNumber();
 				Item.pszDescription = pItem->szDescription;
@@ -307,7 +307,7 @@ int GetEventExtendedText(const CDescBlock *pDescBlock, LPTSTR pszText, int MaxLe
 				Item.pData2 = NULL;
 				ItemList.push_back(Item);
 			} else if (!ItemList.empty()) {
-				// ‘O‚Ì€–Ú‚Ì‘±‚«
+				// å‰ã®é …ç›®ã®ç¶šã
 				ItemInfo &Item = ItemList[ItemList.size() - 1];
 				if (Item.DescriptorNumber == pExtendedEvent->GetDescriptorNumber() - 1
 						&& Item.pData2 == NULL) {

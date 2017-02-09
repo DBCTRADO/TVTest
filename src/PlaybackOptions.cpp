@@ -156,9 +156,9 @@ INT_PTR CPlaybackOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPara
 			DlgUpDown_SetRange(hDlg,IDC_OPTIONS_BUFFERPOOLPERCENTAGE_UD,0,100);
 
 			static const LPCTSTR ThreadPriorityList[] = {
-				TEXT("’Êí (Ä¶—Dæ)"),
-				TEXT("‚‚ß"),
-				TEXT("Å‚ (˜^‰æ—Dæ)"),
+				TEXT("é€šå¸¸ (å†ç”Ÿå„ªå…ˆ)"),
+				TEXT("é«˜ã‚"),
+				TEXT("æœ€é«˜ (éŒ²ç”»å„ªå…ˆ)"),
 			};
 			for (int i=0;i<lengthof(ThreadPriorityList);i++)
 				DlgComboBox_AddString(hDlg,IDC_OPTIONS_STREAMTHREADPRIORITY,ThreadPriorityList[i]);

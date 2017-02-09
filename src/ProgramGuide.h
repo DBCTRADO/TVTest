@@ -99,7 +99,7 @@ namespace ProgramGuide
 
 }
 
-// �ԑg�\�̃`�����l���ꗗ�擾�N���X
+// 番組表のチャンネル一覧取得クラス
 class ABSTRACT_CLASS(CProgramGuideChannelProvider)
 {
 public:
@@ -142,7 +142,7 @@ protected:
 	TVTest::String m_BonDriverFileName;
 };
 
-// �ԑg�\�̃`�����l���ꗗ�擾�Ǘ��N���X
+// 番組表のチャンネル一覧取得管理クラス
 class ABSTRACT_CLASS(CProgramGuideChannelProviderManager)
 {
 public:

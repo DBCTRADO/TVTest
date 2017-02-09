@@ -8,7 +8,7 @@
 
 #define H264PARSERFILTER_NAME L"H264 Parser Filter"
 
-// Ç±ÇÃÉtÉBÉãÉ^ÇÃGUID {46941C5F-AD0A-47fc-A35A-155ECFCEB4BA}
+// „Åì„ÅÆ„Éï„Ç£„É´„Çø„ÅÆGUID {46941C5F-AD0A-47fc-A35A-155ECFCEB4BA}
 DEFINE_GUID(CLSID_H264ParserFilter, 0x46941c5f, 0xad0a, 0x47fc, 0xa3, 0x5a, 0x15, 0x5e, 0xcf, 0xce, 0xb4, 0xba);
 
 class __declspec(uuid("46941C5F-AD0A-47fc-A35A-155ECFCEB4BA")) CH264ParserFilter

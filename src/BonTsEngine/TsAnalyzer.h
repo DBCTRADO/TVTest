@@ -7,13 +7,13 @@
 #include "TsDescriptor.h"
 #include "EventInfo.h"
 
-// EIT の解析を行う
+// EIT 縺ｮ隗｣譫舌ｒ陦後≧
 #define TS_ANALYZER_EIT_SUPPORT
-// L-EIT[p/f] の解析を行う
+// L-EIT[p/f] 縺ｮ隗｣譫舌ｒ陦後≧
 #define TS_ANALYZER_L_EIT_SUPPORT
 
 
-// TS 解析クラス
+// TS 隗｣譫舌け繝ｩ繧ｹ
 class CTsAnalyzer : public CMediaDecoder
 {
 public:

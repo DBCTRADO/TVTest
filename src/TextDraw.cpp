@@ -10,12 +10,12 @@ namespace TVTest
 {
 
 
-// s“ª‹Ö‘¥•¶Žš
+// è¡Œé ­ç¦å‰‡æ–‡å­—
 const LPCWSTR CTextDraw::m_pszStartProhibitChars=
-	L")j]n£vxzrthAB,C.D!I?H[`cEƒ@ƒBƒDƒFƒHƒbƒƒƒ…ƒ‡ƒŽƒ•ƒ–‚Ÿ‚¡‚£‚¥‚§‚Á‚á‚ã‚å‚ìTUX";
-// s––‹Ö‘¥•¶Žš
+	L")ï¼‰]ï¼½ã€ã€ã€ã€‘ã€‰ã€‹â€ã€ã€‚,ï¼Œ.ï¼Ž!ï¼?ï¼Ÿãƒ¼ã€œâ€¦ãƒ»ã‚¡ã‚£ã‚¥ã‚§ã‚©ãƒƒãƒ£ãƒ¥ãƒ§ãƒ®ãƒµãƒ¶ããƒã…ã‡ã‰ã£ã‚ƒã‚…ã‚‡ã‚Žã‚ã‚žã€…";
+// è¡Œæœ«ç¦å‰‡æ–‡å­—
 const LPCWSTR CTextDraw::m_pszEndProhibitChars=
-	L"(i[m¢uwyqsg#”¤¥";
+	L"(ï¼ˆ[ï¼»ã€Œã€Œã€Žã€ã€ˆã€Šâ€œ#ï¼ƒâ–½â–¼";
 
 
 CTextDraw::CTextDraw()

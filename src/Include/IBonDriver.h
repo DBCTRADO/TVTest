@@ -1,4 +1,4 @@
-// IBonDriver.h: IBonDriver ƒNƒ‰ƒX‚ÌƒCƒ“ƒ^[ƒtƒFƒCƒX
+// IBonDriver.h: IBonDriver ã‚¯ãƒ©ã‚¹ã®ã‚¤ãƒ³ã‚¿ãƒ¼ãƒ•ã‚§ã‚¤ã‚¹
 //
 //////////////////////////////////////////////////////////////////////
 
@@ -10,7 +10,7 @@
 #endif // _MSC_VER > 1000
 
 
-// –}ƒhƒ‰ƒCƒoƒCƒ“ƒ^ƒtƒF[ƒX
+// å‡¡ãƒ‰ãƒ©ã‚¤ãƒã‚¤ãƒ³ã‚¿ãƒ•ã‚§ãƒ¼ã‚¹
 class IBonDriver
 {
 public:
@@ -32,7 +32,7 @@ public:
 };
 
 
-// ƒCƒ“ƒXƒ^ƒ“ƒX¶¬ƒƒ\ƒbƒh
+// ã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚¹ç”Ÿæˆãƒ¡ã‚½ãƒƒãƒ‰
 extern "C" __declspec(dllimport) IBonDriver * CreateBonDriver();
 
 

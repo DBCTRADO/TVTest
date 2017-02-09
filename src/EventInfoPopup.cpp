@@ -138,12 +138,12 @@ void CEventInfoPopup::SetEventInfo(const CEventInfoData *pEventInfo)
 	Formatter.Append(TEXT("\r\n"));
 
 	if (!m_EventInfo.m_VideoList.empty()) {
-		// TODO: •¡”‰f‘œ‘Î‰
+		// TODO: è¤‡æ•°æ˜ åƒå¯¾å¿œ
 		LPCTSTR pszVideo=EpgUtil::GetComponentTypeText(
 			m_EventInfo.m_VideoList[0].StreamContent,
 			m_EventInfo.m_VideoList[0].ComponentType);
 		if (pszVideo!=NULL) {
-			Formatter.AppendFormat(TEXT("\r\n¡ ‰f‘œF %s"),pszVideo);
+			Formatter.AppendFormat(TEXT("\r\nâ–  æ˜ åƒï¼š %s"),pszVideo);
 		}
 	}
 
@@ -151,18 +151,18 @@ void CEventInfoPopup::SetEventInfo(const CEventInfoData *pEventInfo)
 		const CEventInfoData::AudioInfo *pMainAudioInfo=m_EventInfo.GetMainAudioInfo();
 		TCHAR szBuff[64];
 
-		Formatter.Append(TEXT("\r\n¡ ‰¹ºF "));
+		Formatter.Append(TEXT("\r\nâ–  éŸ³å£°ï¼š "));
 		if (m_EventInfo.m_AudioList.size()==1) {
 			FormatAudioInfo(pMainAudioInfo,szBuff,lengthof(szBuff));
 			Formatter.Append(szBuff);
 		} else {
-			Formatter.Append(TEXT("å: "));
+			Formatter.Append(TEXT("ä¸»: "));
 			FormatAudioInfo(pMainAudioInfo,szBuff,lengthof(szBuff));
 			Formatter.Append(szBuff);
 			for (size_t i=0;i<m_EventInfo.m_AudioList.size();i++) {
 				const CEventInfoData::AudioInfo *pAudioInfo=&m_EventInfo.m_AudioList[i];
 				if (pAudioInfo!=pMainAudioInfo) {
-					Formatter.Append(TEXT(" / •›: "));
+					Formatter.Append(TEXT(" / å‰¯: "));
 					FormatAudioInfo(pAudioInfo,szBuff,lengthof(szBuff));
 					Formatter.Append(szBuff);
 				}
@@ -175,7 +175,7 @@ void CEventInfoPopup::SetEventInfo(const CEventInfoData *pEventInfo)
 		CEpgGenre EpgGenre;
 		LPCTSTR pszGenre=EpgGenre.GetText(Genre1,-1);
 		if (pszGenre!=NULL) {
-			Formatter.AppendFormat(TEXT("\r\n¡ ƒWƒƒƒ“ƒ‹F %s"),pszGenre);
+			Formatter.AppendFormat(TEXT("\r\nâ–  ã‚¸ãƒ£ãƒ³ãƒ«ï¼š %s"),pszGenre);
 			pszGenre=EpgGenre.GetText(Genre1,Genre2);
 			if (pszGenre!=NULL)
 				Formatter.AppendFormat(TEXT(" - %s"),pszGenre);
@@ -183,9 +183,9 @@ void CEventInfoPopup::SetEventInfo(const CEventInfoData *pEventInfo)
 	}
 
 	if (m_fDetailInfo) {
-		Formatter.AppendFormat(TEXT("\r\n¡ ƒCƒxƒ“ƒgIDF 0x%04X"),m_EventInfo.m_EventID);
+		Formatter.AppendFormat(TEXT("\r\nâ–  ã‚¤ãƒ™ãƒ³ãƒˆIDï¼š 0x%04X"),m_EventInfo.m_EventID);
 		if (m_EventInfo.m_bCommonEvent)
-			Formatter.AppendFormat(TEXT(" (ƒCƒxƒ“ƒg‹¤—L ƒT[ƒrƒXID 0x%04X / ƒCƒxƒ“ƒgID 0x%04X)"),
+			Formatter.AppendFormat(TEXT(" (ã‚¤ãƒ™ãƒ³ãƒˆå…±æœ‰ ã‚µãƒ¼ãƒ“ã‚¹ID 0x%04X / ã‚¤ãƒ™ãƒ³ãƒˆID 0x%04X)"),
 								   m_EventInfo.m_CommonEventInfo.ServiceID,
 								   m_EventInfo.m_CommonEventInfo.EventID);
 	}
@@ -216,7 +216,7 @@ void CEventInfoPopup::FormatAudioInfo(
 	if (pAudioInfo->ComponentType==0x02
 			&& pAudioInfo->bESMultiLingualFlag
 			&& pAudioInfo->LanguageCode!=pAudioInfo->LanguageCode2) {
-		pszAudio=TEXT("Mono “ñƒJ‘Œê");
+		pszAudio=TEXT("Mono äºŒã‚«å›½èª");
 		fBilingual=true;
 	} else {
 		pszAudio=EpgUtil::GetComponentTypeText(
@@ -634,7 +634,7 @@ LRESULT CEventInfoPopup::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lPar
 			POINT pt={GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam)};
 			HMENU hmenu=::CreatePopupMenu();
 
-			::AppendMenu(hmenu,MF_STRING | MF_ENABLED,1,TEXT("”Ô‘g–¼‚ğƒRƒs[(&C)"));
+			::AppendMenu(hmenu,MF_STRING | MF_ENABLED,1,TEXT("ç•ªçµ„åã‚’ã‚³ãƒ”ãƒ¼(&C)"));
 			int Command=::TrackPopupMenu(hmenu,TPM_RIGHTBUTTON | TPM_RETURNCMD,pt.x,pt.y,0,hwnd,NULL);
 			::DestroyMenu(hmenu);
 			switch (Command) {
@@ -742,9 +742,9 @@ LRESULT CEventInfoPopup::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lPar
 				};
 				HMENU hmenu=::CreatePopupMenu();
 
-				::AppendMenu(hmenu,MF_STRING | MF_ENABLED,COMMAND_COPY,TEXT("ƒRƒs[(&C)"));
-				::AppendMenu(hmenu,MF_STRING | MF_ENABLED,COMMAND_SELECTALL,TEXT("‚·‚×‚Ä‘I‘ğ(&A)"));
-				::AppendMenu(hmenu,MF_STRING | MF_ENABLED,COMMAND_COPYEVENTNAME,TEXT("”Ô‘g–¼‚ğƒRƒs[(&E)"));
+				::AppendMenu(hmenu,MF_STRING | MF_ENABLED,COMMAND_COPY,TEXT("ã‚³ãƒ”ãƒ¼(&C)"));
+				::AppendMenu(hmenu,MF_STRING | MF_ENABLED,COMMAND_SELECTALL,TEXT("ã™ã¹ã¦é¸æŠ(&A)"));
+				::AppendMenu(hmenu,MF_STRING | MF_ENABLED,COMMAND_COPYEVENTNAME,TEXT("ç•ªçµ„åã‚’ã‚³ãƒ”ãƒ¼(&E)"));
 				if (m_pEventHandler!=NULL)
 					m_pEventHandler->OnMenuPopup(hmenu);
 				if (CRichEditUtil::IsSelected(m_hwndEdit)) {

@@ -53,36 +53,36 @@ namespace EpgUtil
 			LPCTSTR pszText;
 		} VideoComponentTypeList[] = {
 			{0x01,TEXT("480i[4:3]")},
-			{0x02,TEXT("480i[16:9]")},	// ƒpƒ“ƒxƒNƒgƒ‹‚ ‚è
-			{0x03,TEXT("480i[16:9]")},	// ƒpƒ“ƒxƒNƒgƒ‹‚È‚µ
+			{0x02,TEXT("480i[16:9]")},	// ãƒ‘ãƒ³ãƒ™ã‚¯ãƒˆãƒ«ã‚ã‚Š
+			{0x03,TEXT("480i[16:9]")},	// ãƒ‘ãƒ³ãƒ™ã‚¯ãƒˆãƒ«ãªã—
 			{0x04,TEXT("480i[>16:9]")},
 			{0x91,TEXT("2160p[4:3]")},
-			{0x92,TEXT("2160p[16:9]")},	// ƒpƒ“ƒxƒNƒgƒ‹‚ ‚è
-			{0x93,TEXT("2160p[16:9]")},	// ƒpƒ“ƒxƒNƒgƒ‹‚È‚µ
+			{0x92,TEXT("2160p[16:9]")},	// ãƒ‘ãƒ³ãƒ™ã‚¯ãƒˆãƒ«ã‚ã‚Š
+			{0x93,TEXT("2160p[16:9]")},	// ãƒ‘ãƒ³ãƒ™ã‚¯ãƒˆãƒ«ãªã—
 			{0x94,TEXT("2160p[>16:9]")},
 			{0xA1,TEXT("480p[4:3]")},
-			{0xA2,TEXT("480p[16:9]")},	// ƒpƒ“ƒxƒNƒgƒ‹‚ ‚è
-			{0xA3,TEXT("480p[16:9]")},	// ƒpƒ“ƒxƒNƒgƒ‹‚È‚µ
+			{0xA2,TEXT("480p[16:9]")},	// ãƒ‘ãƒ³ãƒ™ã‚¯ãƒˆãƒ«ã‚ã‚Š
+			{0xA3,TEXT("480p[16:9]")},	// ãƒ‘ãƒ³ãƒ™ã‚¯ãƒˆãƒ«ãªã—
 			{0xA4,TEXT("480p[>16:9]")},
 			{0xB1,TEXT("1080i[4:3]")},
-			{0xB2,TEXT("1080i[16:9]")},	// ƒpƒ“ƒxƒNƒgƒ‹‚ ‚è
-			{0xB3,TEXT("1080i[16:9]")},	// ƒpƒ“ƒxƒNƒgƒ‹‚È‚µ
+			{0xB2,TEXT("1080i[16:9]")},	// ãƒ‘ãƒ³ãƒ™ã‚¯ãƒˆãƒ«ã‚ã‚Š
+			{0xB3,TEXT("1080i[16:9]")},	// ãƒ‘ãƒ³ãƒ™ã‚¯ãƒˆãƒ«ãªã—
 			{0xB4,TEXT("1080i[>16:9]")},
 			{0xC1,TEXT("720p[4:3]")},
-			{0xC2,TEXT("720p[16:9]")},	// ƒpƒ“ƒxƒNƒgƒ‹‚ ‚è
-			{0xC3,TEXT("720p[16:9]")},	// ƒpƒ“ƒxƒNƒgƒ‹‚È‚µ
+			{0xC2,TEXT("720p[16:9]")},	// ãƒ‘ãƒ³ãƒ™ã‚¯ãƒˆãƒ«ã‚ã‚Š
+			{0xC3,TEXT("720p[16:9]")},	// ãƒ‘ãƒ³ãƒ™ã‚¯ãƒˆãƒ«ãªã—
 			{0xC4,TEXT("720p[>16:9]")},
 			{0xD1,TEXT("240p[4:3]")},
-			{0xD2,TEXT("240p[16:9]")},	// ƒpƒ“ƒxƒNƒgƒ‹‚ ‚è
-			{0xD3,TEXT("240p[16:9]")},	// ƒpƒ“ƒxƒNƒgƒ‹‚È‚µ
+			{0xD2,TEXT("240p[16:9]")},	// ãƒ‘ãƒ³ãƒ™ã‚¯ãƒˆãƒ«ã‚ã‚Š
+			{0xD3,TEXT("240p[16:9]")},	// ãƒ‘ãƒ³ãƒ™ã‚¯ãƒˆãƒ«ãªã—
 			{0xD4,TEXT("240p[>16:9]")},
 			{0xE1,TEXT("1080p[4:3]")},
-			{0xE2,TEXT("1080p[16:9]")},	// ƒpƒ“ƒxƒNƒgƒ‹‚ ‚è
-			{0xE3,TEXT("1080p[16:9]")},	// ƒpƒ“ƒxƒNƒgƒ‹‚È‚µ
+			{0xE2,TEXT("1080p[16:9]")},	// ãƒ‘ãƒ³ãƒ™ã‚¯ãƒˆãƒ«ã‚ã‚Š
+			{0xE3,TEXT("1080p[16:9]")},	// ãƒ‘ãƒ³ãƒ™ã‚¯ãƒˆãƒ«ãªã—
 			{0xE4,TEXT("1080p[>16:9]")},
 			{0xF1,TEXT("180p[4:3]")},
-			{0xF2,TEXT("180p[16:9]")},	// ƒpƒ“ƒxƒNƒgƒ‹‚ ‚è
-			{0xF3,TEXT("180p[16:9]")},	// ƒpƒ“ƒxƒNƒgƒ‹‚È‚µ
+			{0xF2,TEXT("180p[16:9]")},	// ãƒ‘ãƒ³ãƒ™ã‚¯ãƒˆãƒ«ã‚ã‚Š
+			{0xF3,TEXT("180p[16:9]")},	// ãƒ‘ãƒ³ãƒ™ã‚¯ãƒˆãƒ«ãªã—
 			{0xF4,TEXT("180p[>16:9]")},
 		};
 
@@ -118,8 +118,8 @@ namespace EpgUtil
 			{0x0F,TEXT("7.1ch[0/2/0-3/0/2-0.1]")},
 			{0x10,TEXT("10.2ch")},					// 2/0/0-3/2/3-0.2
 			{0x11,TEXT("22.2ch")},					// 3/3/3-5/2/3-3/0/0.2
-			{0x40,TEXT("Ž‹ŠoáŠQŽÒ—p‰¹º‰ðà")},
-			{0x41,TEXT("’®ŠoáŠQŽÒ—p‰¹º")},
+			{0x40,TEXT("è¦–è¦šéšœå®³è€…ç”¨éŸ³å£°è§£èª¬")},
+			{0x41,TEXT("è´è¦šéšœå®³è€…ç”¨éŸ³å£°")},
 		};
 
 		for (int i=0;i<lengthof(AudioComponentTypeList);i++) {
@@ -196,14 +196,14 @@ namespace EpgUtil
 				}
 			} else {
 				if ((Flags & EVENT_TIME_UNDECIDED_TEXT)!=0)
-					::lstrcpy(szEndTime,TEXT("(I—¹–¢’è)"));
+					::lstrcpy(szEndTime,TEXT("(çµ‚äº†æœªå®š)"));
 			}
 		}
 
 		return StdUtil::snprintf(pszTime,MaxLength,TEXT("%s%s%s%s"),
 								 szDate,
 								 szStartTime,
-								 (Flags & EVENT_TIME_START_ONLY)==0?TEXT("`"):TEXT(""),
+								 (Flags & EVENT_TIME_START_ONLY)==0?TEXT("ï½ž"):TEXT(""),
 								 szEndTime);
 	}
 
@@ -315,16 +315,16 @@ namespace EpgUtil
 			LPCTSTR pszSimpleText;
 			LPCTSTR pszShortText;
 		} LanguageList[] = {
-			{LANGUAGE_CODE_JPN,	TEXT("“ú–{Œê"),		TEXT("“ú–{Œê"),	TEXT("“ú")},
-			{LANGUAGE_CODE_ENG,	TEXT("‰pŒê"),		TEXT("‰pŒê"),	TEXT("‰p")},
-			{LANGUAGE_CODE_DEU,	TEXT("ƒhƒCƒcŒê"),	TEXT("“ÆŒê"),	TEXT("“Æ")},
-			{LANGUAGE_CODE_FRA,	TEXT("ƒtƒ‰ƒ“ƒXŒê"),	TEXT("•§Œê"),	TEXT("•§")},
-			{LANGUAGE_CODE_ITA,	TEXT("ƒCƒ^ƒŠƒAŒê"),	TEXT("ˆÉŒê"),	TEXT("ˆÉ")},
-			{LANGUAGE_CODE_RUS,	TEXT("ƒƒVƒAŒê"),	TEXT("˜IŒê"),	TEXT("˜I")},
-			{LANGUAGE_CODE_ZHO,	TEXT("’†‘Œê"),		TEXT("’†‘Œê"),	TEXT("’†")},
-			{LANGUAGE_CODE_KOR,	TEXT("ŠØ‘Œê"),		TEXT("ŠØ‘Œê"),	TEXT("ŠØ")},
-			{LANGUAGE_CODE_SPA,	TEXT("ƒXƒyƒCƒ“Œê"),	TEXT("¼Œê"),	TEXT("¼")},
-			{LANGUAGE_CODE_ETC,	TEXT("ŠO‘Œê"),		TEXT("ŠO‘Œê"),	TEXT("ŠO")},
+			{LANGUAGE_CODE_JPN,	TEXT("æ—¥æœ¬èªž"),		TEXT("æ—¥æœ¬èªž"),	TEXT("æ—¥")},
+			{LANGUAGE_CODE_ENG,	TEXT("è‹±èªž"),		TEXT("è‹±èªž"),	TEXT("è‹±")},
+			{LANGUAGE_CODE_DEU,	TEXT("ãƒ‰ã‚¤ãƒ„èªž"),	TEXT("ç‹¬èªž"),	TEXT("ç‹¬")},
+			{LANGUAGE_CODE_FRA,	TEXT("ãƒ•ãƒ©ãƒ³ã‚¹èªž"),	TEXT("ä»èªž"),	TEXT("ä»")},
+			{LANGUAGE_CODE_ITA,	TEXT("ã‚¤ã‚¿ãƒªã‚¢èªž"),	TEXT("ä¼Šèªž"),	TEXT("ä¼Š")},
+			{LANGUAGE_CODE_RUS,	TEXT("ãƒ­ã‚·ã‚¢èªž"),	TEXT("éœ²èªž"),	TEXT("éœ²")},
+			{LANGUAGE_CODE_ZHO,	TEXT("ä¸­å›½èªž"),		TEXT("ä¸­å›½èªž"),	TEXT("ä¸­")},
+			{LANGUAGE_CODE_KOR,	TEXT("éŸ“å›½èªž"),		TEXT("éŸ“å›½èªž"),	TEXT("éŸ“")},
+			{LANGUAGE_CODE_SPA,	TEXT("ã‚¹ãƒšã‚¤ãƒ³èªž"),	TEXT("è¥¿èªž"),	TEXT("è¥¿")},
+			{LANGUAGE_CODE_ETC,	TEXT("å¤–å›½èªž"),		TEXT("å¤–å›½èªž"),	TEXT("å¤–")},
 		};
 
 		if (pszText==NULL || MaxText<1)
@@ -405,7 +405,7 @@ namespace EpgUtil
 
 		if (!EventInfo.m_EventExtendedText.empty()) {
 			p=EventInfo.m_EventExtendedText.c_str();
-			TCHAR szContent[]=TEXT("”Ô‘g“à—e");
+			TCHAR szContent[]=TEXT("ç•ªçµ„å†…å®¹");
 			if (::StrCmpN(p,szContent,lengthof(szContent)-1)==0)
 				p+=lengthof(szContent)-1;
 			while (*p!='\0') {
@@ -431,56 +431,56 @@ LPCTSTR CEpgGenre::GetText(int Level1,int Level2) const
 		LPCTSTR pszText;
 		LPCTSTR pszSubText[16];
 	} GenreList[] = {
-		{TEXT("ƒjƒ…[ƒX^•ñ“¹"),
+		{TEXT("ãƒ‹ãƒ¥ãƒ¼ã‚¹ï¼å ±é“"),
 			{
-				TEXT("’èŽžE‘‡"),
-				TEXT("“V‹C"),
-				TEXT("“ÁWEƒhƒLƒ…ƒƒ“ƒg"),
-				TEXT("­Ž¡E‘‰ï"),
-				TEXT("ŒoÏEŽs‹µ"),
-				TEXT("ŠCŠOE‘Û"),
-				TEXT("‰ðà"),
-				TEXT("“¢˜_E‰ï’k"),
-				TEXT("•ñ“¹“Á”Ô"),
-				TEXT("ƒ[ƒJƒ‹E’nˆæ"),
-				TEXT("Œð’Ê"),
+				TEXT("å®šæ™‚ãƒ»ç·åˆ"),
+				TEXT("å¤©æ°—"),
+				TEXT("ç‰¹é›†ãƒ»ãƒ‰ã‚­ãƒ¥ãƒ¡ãƒ³ãƒˆ"),
+				TEXT("æ”¿æ²»ãƒ»å›½ä¼š"),
+				TEXT("çµŒæ¸ˆãƒ»å¸‚æ³"),
+				TEXT("æµ·å¤–ãƒ»å›½éš›"),
+				TEXT("è§£èª¬"),
+				TEXT("è¨Žè«–ãƒ»ä¼šè«‡"),
+				TEXT("å ±é“ç‰¹ç•ª"),
+				TEXT("ãƒ­ãƒ¼ã‚«ãƒ«ãƒ»åœ°åŸŸ"),
+				TEXT("äº¤é€š"),
 				NULL,
 				NULL,
 				NULL,
 				NULL,
-				TEXT("‚»‚Ì‘¼")
+				TEXT("ãã®ä»–")
 			}
 		},
-		{TEXT("ƒXƒ|[ƒc"),
+		{TEXT("ã‚¹ãƒãƒ¼ãƒ„"),
 			{
-				TEXT("ƒXƒ|[ƒcƒjƒ…[ƒX"),
-				TEXT("–ì‹…"),
-				TEXT("ƒTƒbƒJ["),
-				TEXT("ƒSƒ‹ƒt"),
-				TEXT("‚»‚Ì‘¼‚Ì‹…‹Z"),
-				TEXT("‘Š–oEŠi“¬‹Z"),
-				TEXT("ƒIƒŠƒ“ƒsƒbƒNE‘Û‘å‰ï"),
-				TEXT("ƒ}ƒ‰ƒ\ƒ“E—¤ãE…‰j"),
-				TEXT("ƒ‚[ƒ^[ƒXƒ|[ƒc"),
-				TEXT("ƒ}ƒŠƒ“EƒEƒBƒ“ƒ^[ƒXƒ|[ƒc"),
-				TEXT("‹£”nEŒö‰c‹£‹Z"),
+				TEXT("ã‚¹ãƒãƒ¼ãƒ„ãƒ‹ãƒ¥ãƒ¼ã‚¹"),
+				TEXT("é‡Žçƒ"),
+				TEXT("ã‚µãƒƒã‚«ãƒ¼"),
+				TEXT("ã‚´ãƒ«ãƒ•"),
+				TEXT("ãã®ä»–ã®çƒæŠ€"),
+				TEXT("ç›¸æ’²ãƒ»æ ¼é—˜æŠ€"),
+				TEXT("ã‚ªãƒªãƒ³ãƒ”ãƒƒã‚¯ãƒ»å›½éš›å¤§ä¼š"),
+				TEXT("ãƒžãƒ©ã‚½ãƒ³ãƒ»é™¸ä¸Šãƒ»æ°´æ³³"),
+				TEXT("ãƒ¢ãƒ¼ã‚¿ãƒ¼ã‚¹ãƒãƒ¼ãƒ„"),
+				TEXT("ãƒžãƒªãƒ³ãƒ»ã‚¦ã‚£ãƒ³ã‚¿ãƒ¼ã‚¹ãƒãƒ¼ãƒ„"),
+				TEXT("ç«¶é¦¬ãƒ»å…¬å–¶ç«¶æŠ€"),
 				NULL,
 				NULL,
 				NULL,
 				NULL,
-				TEXT("‚»‚Ì‘¼")
+				TEXT("ãã®ä»–")
 			}
 		},
-		{TEXT("î•ñ^ƒƒCƒhƒVƒ‡["),
+		{TEXT("æƒ…å ±ï¼ãƒ¯ã‚¤ãƒ‰ã‚·ãƒ§ãƒ¼"),
 			{
-				TEXT("Œ|”\EƒƒCƒhƒVƒ‡["),
-				TEXT("ƒtƒ@ƒbƒVƒ‡ƒ“"),
-				TEXT("•é‚ç‚µEZ‚Ü‚¢"),
-				TEXT("Œ’NEˆã—Ã"),
-				TEXT("ƒVƒ‡ƒbƒsƒ“ƒOE’Ê”Ì"),
-				TEXT("ƒOƒ‹ƒE—¿—"),
-				TEXT("ƒCƒxƒ“ƒg"),
-				TEXT("”Ô‘gÐ‰îE‚¨’m‚ç‚¹"),
+				TEXT("èŠ¸èƒ½ãƒ»ãƒ¯ã‚¤ãƒ‰ã‚·ãƒ§ãƒ¼"),
+				TEXT("ãƒ•ã‚¡ãƒƒã‚·ãƒ§ãƒ³"),
+				TEXT("æš®ã‚‰ã—ãƒ»ä½ã¾ã„"),
+				TEXT("å¥åº·ãƒ»åŒ»ç™‚"),
+				TEXT("ã‚·ãƒ§ãƒƒãƒ”ãƒ³ã‚°ãƒ»é€šè²©"),
+				TEXT("ã‚°ãƒ«ãƒ¡ãƒ»æ–™ç†"),
+				TEXT("ã‚¤ãƒ™ãƒ³ãƒˆ"),
+				TEXT("ç•ªçµ„ç´¹ä»‹ãƒ»ãŠçŸ¥ã‚‰ã›"),
 				NULL,
 				NULL,
 				NULL,
@@ -488,14 +488,14 @@ LPCTSTR CEpgGenre::GetText(int Level1,int Level2) const
 				NULL,
 				NULL,
 				NULL,
-				TEXT("‚»‚Ì‘¼")
+				TEXT("ãã®ä»–")
 			}
 		},
-		{TEXT("ƒhƒ‰ƒ}"),
+		{TEXT("ãƒ‰ãƒ©ãƒž"),
 			{
-				TEXT("‘“àƒhƒ‰ƒ}"),
-				TEXT("ŠCŠOƒhƒ‰ƒ}"),
-				TEXT("Žž‘ãŒ€"),
+				TEXT("å›½å†…ãƒ‰ãƒ©ãƒž"),
+				TEXT("æµ·å¤–ãƒ‰ãƒ©ãƒž"),
+				TEXT("æ™‚ä»£åŠ‡"),
 				NULL,
 				NULL,
 				NULL,
@@ -508,38 +508,38 @@ LPCTSTR CEpgGenre::GetText(int Level1,int Level2) const
 				NULL,
 				NULL,
 				NULL,
-				TEXT("‚»‚Ì‘¼")
+				TEXT("ãã®ä»–")
 			}
 		},
-		{TEXT("‰¹Šy"),
+		{TEXT("éŸ³æ¥½"),
 			{
-				TEXT("‘“àƒƒbƒNEƒ|ƒbƒvƒX"),
-				TEXT("ŠCŠOƒƒbƒNEƒ|ƒbƒvƒX"),
-				TEXT("ƒNƒ‰ƒVƒbƒNEƒIƒyƒ‰"),
-				TEXT("ƒWƒƒƒYEƒtƒ…[ƒWƒ‡ƒ“"),
-				TEXT("‰Ì—w‹ÈE‰‰‰Ì"),
-				TEXT("ƒ‰ƒCƒuEƒRƒ“ƒT[ƒg"),
-				TEXT("ƒ‰ƒ“ƒLƒ“ƒOEƒŠƒNƒGƒXƒg"),
-				TEXT("ƒJƒ‰ƒIƒPE‚Ì‚ÇŽ©–"),
-				TEXT("–¯—wE–MŠy"),
-				TEXT("“¶—wEƒLƒbƒY"),
-				TEXT("–¯‘°‰¹ŠyEƒ[ƒ‹ƒhƒ~ƒ…[ƒWƒbƒN"),
+				TEXT("å›½å†…ãƒ­ãƒƒã‚¯ãƒ»ãƒãƒƒãƒ—ã‚¹"),
+				TEXT("æµ·å¤–ãƒ­ãƒƒã‚¯ãƒ»ãƒãƒƒãƒ—ã‚¹"),
+				TEXT("ã‚¯ãƒ©ã‚·ãƒƒã‚¯ãƒ»ã‚ªãƒšãƒ©"),
+				TEXT("ã‚¸ãƒ£ã‚ºãƒ»ãƒ•ãƒ¥ãƒ¼ã‚¸ãƒ§ãƒ³"),
+				TEXT("æ­Œè¬¡æ›²ãƒ»æ¼”æ­Œ"),
+				TEXT("ãƒ©ã‚¤ãƒ–ãƒ»ã‚³ãƒ³ã‚µãƒ¼ãƒˆ"),
+				TEXT("ãƒ©ãƒ³ã‚­ãƒ³ã‚°ãƒ»ãƒªã‚¯ã‚¨ã‚¹ãƒˆ"),
+				TEXT("ã‚«ãƒ©ã‚ªã‚±ãƒ»ã®ã©è‡ªæ…¢"),
+				TEXT("æ°‘è¬¡ãƒ»é‚¦æ¥½"),
+				TEXT("ç«¥è¬¡ãƒ»ã‚­ãƒƒã‚º"),
+				TEXT("æ°‘æ—éŸ³æ¥½ãƒ»ãƒ¯ãƒ¼ãƒ«ãƒ‰ãƒŸãƒ¥ãƒ¼ã‚¸ãƒƒã‚¯"),
 				NULL,
 				NULL,
 				NULL,
 				NULL,
-				TEXT("‚»‚Ì‘¼")
+				TEXT("ãã®ä»–")
 			}
 		},
-		{TEXT("ƒoƒ‰ƒGƒeƒB"),
+		{TEXT("ãƒãƒ©ã‚¨ãƒ†ã‚£"),
 			{
-				TEXT("ƒNƒCƒY"),
-				TEXT("ƒQ[ƒ€"),
-				TEXT("ƒg[ƒNƒoƒ‰ƒGƒeƒB"),
-				TEXT("‚¨Î‚¢EƒRƒƒfƒB"),
-				TEXT("‰¹Šyƒoƒ‰ƒGƒeƒB"),
-				TEXT("—·ƒoƒ‰ƒGƒeƒB"),
-				TEXT("—¿—ƒoƒ‰ƒGƒeƒB"),
+				TEXT("ã‚¯ã‚¤ã‚º"),
+				TEXT("ã‚²ãƒ¼ãƒ "),
+				TEXT("ãƒˆãƒ¼ã‚¯ãƒãƒ©ã‚¨ãƒ†ã‚£"),
+				TEXT("ãŠç¬‘ã„ãƒ»ã‚³ãƒ¡ãƒ‡ã‚£"),
+				TEXT("éŸ³æ¥½ãƒãƒ©ã‚¨ãƒ†ã‚£"),
+				TEXT("æ—…ãƒãƒ©ã‚¨ãƒ†ã‚£"),
+				TEXT("æ–™ç†ãƒãƒ©ã‚¨ãƒ†ã‚£"),
 				NULL,
 				NULL,
 				NULL,
@@ -548,14 +548,14 @@ LPCTSTR CEpgGenre::GetText(int Level1,int Level2) const
 				NULL,
 				NULL,
 				NULL,
-				TEXT("‚»‚Ì‘¼")
+				TEXT("ãã®ä»–")
 			}
 		},
-		{TEXT("‰f‰æ"),
+		{TEXT("æ˜ ç”»"),
 			{
-				TEXT("—m‰æ"),
-				TEXT("–M‰æ"),
-				TEXT("ƒAƒjƒ"),
+				TEXT("æ´‹ç”»"),
+				TEXT("é‚¦ç”»"),
+				TEXT("ã‚¢ãƒ‹ãƒ¡"),
 				NULL,
 				NULL,
 				NULL,
@@ -568,14 +568,14 @@ LPCTSTR CEpgGenre::GetText(int Level1,int Level2) const
 				NULL,
 				NULL,
 				NULL,
-				TEXT("‚»‚Ì‘¼")
+				TEXT("ãã®ä»–")
 			}
 		},
-		{TEXT("ƒAƒjƒ^“ÁŽB"),
+		{TEXT("ã‚¢ãƒ‹ãƒ¡ï¼ç‰¹æ’®"),
 			{
-				TEXT("‘“àƒAƒjƒ"),
-				TEXT("ŠCŠOƒAƒjƒ"),
-				TEXT("“ÁŽB"),
+				TEXT("å›½å†…ã‚¢ãƒ‹ãƒ¡"),
+				TEXT("æµ·å¤–ã‚¢ãƒ‹ãƒ¡"),
+				TEXT("ç‰¹æ’®"),
 				NULL,
 				NULL,
 				NULL,
@@ -588,36 +588,36 @@ LPCTSTR CEpgGenre::GetText(int Level1,int Level2) const
 				NULL,
 				NULL,
 				NULL,
-				TEXT("‚»‚Ì‘¼")
+				TEXT("ãã®ä»–")
 			}
 		},
-		{TEXT("ƒhƒLƒ…ƒƒ“ƒ^ƒŠ[^‹³—{"),
+		{TEXT("ãƒ‰ã‚­ãƒ¥ãƒ¡ãƒ³ã‚¿ãƒªãƒ¼ï¼æ•™é¤Š"),
 			{
-				TEXT("ŽÐ‰ïEŽžŽ–"),
-				TEXT("—ðŽjE‹Is"),
-				TEXT("Ž©‘RE“®•¨EŠÂ‹«"),
-				TEXT("‰F’ˆE‰ÈŠwEˆãŠw"),
-				TEXT("ƒJƒ‹ƒ`ƒƒ[E“`“•¶‰»"),
-				TEXT("•¶ŠwE•¶Œ|"),
-				TEXT("ƒXƒ|[ƒc"),
-				TEXT("ƒhƒLƒ…ƒƒ“ƒ^ƒŠ[‘S”Ê"),
-				TEXT("ƒCƒ“ƒ^ƒrƒ…[E“¢˜_"),
+				TEXT("ç¤¾ä¼šãƒ»æ™‚äº‹"),
+				TEXT("æ­´å²ãƒ»ç´€è¡Œ"),
+				TEXT("è‡ªç„¶ãƒ»å‹•ç‰©ãƒ»ç’°å¢ƒ"),
+				TEXT("å®‡å®™ãƒ»ç§‘å­¦ãƒ»åŒ»å­¦"),
+				TEXT("ã‚«ãƒ«ãƒãƒ£ãƒ¼ãƒ»ä¼çµ±æ–‡åŒ–"),
+				TEXT("æ–‡å­¦ãƒ»æ–‡èŠ¸"),
+				TEXT("ã‚¹ãƒãƒ¼ãƒ„"),
+				TEXT("ãƒ‰ã‚­ãƒ¥ãƒ¡ãƒ³ã‚¿ãƒªãƒ¼å…¨èˆ¬"),
+				TEXT("ã‚¤ãƒ³ã‚¿ãƒ“ãƒ¥ãƒ¼ãƒ»è¨Žè«–"),
 				NULL,
 				NULL,
 				NULL,
 				NULL,
 				NULL,
 				NULL,
-				TEXT("‚»‚Ì‘¼")
+				TEXT("ãã®ä»–")
 			}
 		},
-		{TEXT("Œ€ê^Œö‰‰"),
+		{TEXT("åŠ‡å ´ï¼å…¬æ¼”"),
 			{
-				TEXT("Œ»‘ãŒ€EVŒ€"),
-				TEXT("ƒ~ƒ…[ƒWƒJƒ‹"),
-				TEXT("ƒ_ƒ“ƒXEƒoƒŒƒG"),
-				TEXT("—ŽŒêE‰‰Œ|"),
-				TEXT("‰Ì•‘ŠêEŒÃ“T"),
+				TEXT("ç¾ä»£åŠ‡ãƒ»æ–°åŠ‡"),
+				TEXT("ãƒŸãƒ¥ãƒ¼ã‚¸ã‚«ãƒ«"),
+				TEXT("ãƒ€ãƒ³ã‚¹ãƒ»ãƒãƒ¬ã‚¨"),
+				TEXT("è½èªžãƒ»æ¼”èŠ¸"),
+				TEXT("æ­Œèˆžä¼Žãƒ»å¤å…¸"),
 				NULL,
 				NULL,
 				NULL,
@@ -628,38 +628,38 @@ LPCTSTR CEpgGenre::GetText(int Level1,int Level2) const
 				NULL,
 				NULL,
 				NULL,
-				TEXT("‚»‚Ì‘¼")
+				TEXT("ãã®ä»–")
 			}
 		},
-		{TEXT("Žï–¡^‹³ˆç"),
+		{TEXT("è¶£å‘³ï¼æ•™è‚²"),
 			{
-				TEXT("—·E’Þ‚èEƒAƒEƒgƒhƒA"),
-				TEXT("‰€Œ|EƒyƒbƒgEŽèŒ|"),
-				TEXT("‰¹ŠyE”üpEHŒ|"),
-				TEXT("ˆÍŒéE«Šû"),
-				TEXT("–ƒEƒpƒ`ƒ“ƒR"),
-				TEXT("ŽÔEƒI[ƒgƒoƒC"),
-				TEXT("ƒRƒ“ƒsƒ…[ƒ^ETVƒQ[ƒ€"),
-				TEXT("‰ï˜bEŒêŠw"),
-				TEXT("—cŽ™E¬Šw¶"),
-				TEXT("’†Šw¶E‚Z¶"),
-				TEXT("‘åŠw¶EŽóŒ±"),
-				TEXT("¶ŠUŠwKEŽ‘Ši"),
-				TEXT("‹³ˆç–â‘è"),
+				TEXT("æ—…ãƒ»é‡£ã‚Šãƒ»ã‚¢ã‚¦ãƒˆãƒ‰ã‚¢"),
+				TEXT("åœ’èŠ¸ãƒ»ãƒšãƒƒãƒˆãƒ»æ‰‹èŠ¸"),
+				TEXT("éŸ³æ¥½ãƒ»ç¾Žè¡“ãƒ»å·¥èŠ¸"),
+				TEXT("å›²ç¢ãƒ»å°†æ£‹"),
+				TEXT("éº»é›€ãƒ»ãƒ‘ãƒãƒ³ã‚³"),
+				TEXT("è»Šãƒ»ã‚ªãƒ¼ãƒˆãƒã‚¤"),
+				TEXT("ã‚³ãƒ³ãƒ”ãƒ¥ãƒ¼ã‚¿ãƒ»TVã‚²ãƒ¼ãƒ "),
+				TEXT("ä¼šè©±ãƒ»èªžå­¦"),
+				TEXT("å¹¼å…ãƒ»å°å­¦ç”Ÿ"),
+				TEXT("ä¸­å­¦ç”Ÿãƒ»é«˜æ ¡ç”Ÿ"),
+				TEXT("å¤§å­¦ç”Ÿãƒ»å—é¨“"),
+				TEXT("ç”Ÿæ¶¯å­¦ç¿’ãƒ»è³‡æ ¼"),
+				TEXT("æ•™è‚²å•é¡Œ"),
 				NULL,
 				NULL,
-				TEXT("‚»‚Ì‘¼")
+				TEXT("ãã®ä»–")
 			}
 		},
-		{TEXT("•ŸŽƒ"),
+		{TEXT("ç¦ç¥‰"),
 			{
-				TEXT("‚—îŽÒ"),
-				TEXT("áŠQŽÒ"),
-				TEXT("ŽÐ‰ï•ŸŽƒ"),
-				TEXT("ƒ{ƒ‰ƒ“ƒeƒBƒA"),
-				TEXT("Žè˜b"),
-				TEXT("•¶Žš(Žš–‹)"),
-				TEXT("‰¹º‰ðà"),
+				TEXT("é«˜é½¢è€…"),
+				TEXT("éšœå®³è€…"),
+				TEXT("ç¤¾ä¼šç¦ç¥‰"),
+				TEXT("ãƒœãƒ©ãƒ³ãƒ†ã‚£ã‚¢"),
+				TEXT("æ‰‹è©±"),
+				TEXT("æ–‡å­—(å­—å¹•)"),
+				TEXT("éŸ³å£°è§£èª¬"),
 				NULL,
 				NULL,
 				NULL,
@@ -668,7 +668,7 @@ LPCTSTR CEpgGenre::GetText(int Level1,int Level2) const
 				NULL,
 				NULL,
 				NULL,
-				TEXT("‚»‚Ì‘¼")
+				TEXT("ãã®ä»–")
 			}
 		},
 	};
@@ -677,7 +677,7 @@ LPCTSTR CEpgGenre::GetText(int Level1,int Level2) const
 		if (Level1>=0 && Level1<lengthof(GenreList))
 			return GenreList[Level1].pszText;
 		if (Level1==GENRE_OTHER)
-			return TEXT("‚»‚Ì‘¼");
+			return TEXT("ãã®ä»–");
 		return NULL;
 	}
 	if (Level1>=0 && Level1<lengthof(GenreList)

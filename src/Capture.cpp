@@ -11,7 +11,7 @@
 
 #define CAPTURE_WINDOW_CLASS			APP_NAME TEXT(" Capture Window")
 #define CAPTURE_PREVIEW_WINDOW_CLASS	APP_NAME TEXT(" Capture Preview")
-#define CAPTURE_TITLE_TEXT TEXT("�L���v�`��")
+#define CAPTURE_TITLE_TEXT TEXT("キャプチャ")
 
 enum {
 	CAPTURE_ICON_CAPTURE,
@@ -556,7 +556,7 @@ LRESULT CCaptureWindow::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lPara
 		case CM_SAVEIMAGE:
 			if (m_pImage!=NULL && m_pEventHandler!=NULL) {
 				if (!m_pEventHandler->OnSave(m_pImage)) {
-					::MessageBox(hwnd,TEXT("�摜�̕ۑ����ł��܂���B"),NULL,
+					::MessageBox(hwnd,TEXT("画像の保存ができません。"),NULL,
 								 MB_OK | MB_ICONEXCLAMATION);
 				}
 			}
@@ -565,7 +565,7 @@ LRESULT CCaptureWindow::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lPara
 		case CM_COPY:
 			if (m_pImage!=NULL) {
 				if (!m_pImage->SetClipboard(hwnd)) {
-					::MessageBox(hwnd,TEXT("�N���b�v�{�[�h�Ƀf�[�^��ݒ�ł��܂���B"),NULL,
+					::MessageBox(hwnd,TEXT("クリップボードにデータを設定できません。"),NULL,
 								 MB_OK | MB_ICONEXCLAMATION);
 				}
 			}

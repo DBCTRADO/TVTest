@@ -562,7 +562,7 @@ void CSplitter::RealizeStyle()
 
 
 
-// ‰ß‹‚Ìƒo[ƒWƒ‡ƒ“‚Æ‚ÌŒİŠ·‚Ì‚½‚ß‚É Splitter ‚É‚µ‚Ä‚¨‚­
+// éå»ã®ãƒãƒ¼ã‚¸ãƒ§ãƒ³ã¨ã®äº’æ›ã®ãŸã‚ã« Splitter ã«ã—ã¦ãŠã
 //const LPCTSTR CLayoutBase::m_pszWindowClass=APP_NAME TEXT(" Layout Base");
 const LPCTSTR CLayoutBase::m_pszWindowClass=APP_NAME TEXT(" Splitter");
 HINSTANCE CLayoutBase::m_hinst=NULL;

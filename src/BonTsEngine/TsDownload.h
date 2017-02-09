@@ -55,7 +55,7 @@ public:
 		WORD ModuleID;
 		DWORD ModuleSize;
 		BYTE ModuleVersion;
-		// ‚±‚Ì•Ó‚è‚Íb’è
+		// ã“ã®è¾ºã‚Šã¯æš«å®š
 		struct {
 			struct {
 				BYTE Length;

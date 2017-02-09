@@ -11,16 +11,16 @@
 
 class CChannelInfo
 {
-	int m_Space;				// ƒ`ƒ…[ƒjƒ“ƒO‹óŠÔ
-	int m_ChannelIndex;			// ƒ`ƒƒƒ“ƒlƒ‹ƒCƒ“ƒfƒbƒNƒX(BonDriver‚Å‚Ì”Ô†)
-	int m_ChannelNo;			// ƒŠƒ‚ƒRƒ“ƒ`ƒƒƒ“ƒlƒ‹”Ô†
-	int m_PhysicalChannel;		// •¨—ƒ`ƒƒƒ“ƒlƒ‹”Ô†
-	TVTest::String m_Name;		// ƒ`ƒƒƒ“ƒlƒ‹–¼
-	WORD m_NetworkID;			// ƒlƒbƒgƒ[ƒNID
-	WORD m_TransportStreamID;	// ƒgƒ‰ƒ“ƒXƒ|[ƒgƒXƒgƒŠ[ƒ€ID
-	WORD m_ServiceID;			// ƒT[ƒrƒXID
-	BYTE m_ServiceType;			// ƒT[ƒrƒX‚Ìí—Ş
-	bool m_fEnabled;			// —LŒø
+	int m_Space;				// ãƒãƒ¥ãƒ¼ãƒ‹ãƒ³ã‚°ç©ºé–“
+	int m_ChannelIndex;			// ãƒãƒ£ãƒ³ãƒãƒ«ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹(BonDriverã§ã®ç•ªå·)
+	int m_ChannelNo;			// ãƒªãƒ¢ã‚³ãƒ³ãƒãƒ£ãƒ³ãƒãƒ«ç•ªå·
+	int m_PhysicalChannel;		// ç‰©ç†ãƒãƒ£ãƒ³ãƒãƒ«ç•ªå·
+	TVTest::String m_Name;		// ãƒãƒ£ãƒ³ãƒãƒ«å
+	WORD m_NetworkID;			// ãƒãƒƒãƒˆãƒ¯ãƒ¼ã‚¯ID
+	WORD m_TransportStreamID;	// ãƒˆãƒ©ãƒ³ã‚¹ãƒãƒ¼ãƒˆã‚¹ãƒˆãƒªãƒ¼ãƒ ID
+	WORD m_ServiceID;			// ã‚µãƒ¼ãƒ“ã‚¹ID
+	BYTE m_ServiceType;			// ã‚µãƒ¼ãƒ“ã‚¹ã®ç¨®é¡
+	bool m_fEnabled;			// æœ‰åŠ¹
 
 public:
 	CChannelInfo();

@@ -63,9 +63,9 @@ void CEpgOptions::Finalize()
 {
 	if (m_hLoadThread!=NULL) {
 		if (::WaitForSingleObject(m_hLoadThread,0)==WAIT_TIMEOUT) {
-			GetAppClass().AddLog(TEXT("EPGƒf[ƒ^“Ç‚İ‚İƒXƒŒƒbƒh‚ÌI—¹‚ğ‘Ò‚Á‚Ä‚¢‚Ü‚·..."));
+			GetAppClass().AddLog(TEXT("EPGãƒ‡ãƒ¼ã‚¿èª­ã¿è¾¼ã¿ã‚¹ãƒ¬ãƒƒãƒ‰ã®çµ‚äº†ã‚’å¾…ã£ã¦ã„ã¾ã™..."));
 			if (::WaitForSingleObject(m_hLoadThread,30000)==WAIT_TIMEOUT) {
-				GetAppClass().AddLog(CLogItem::TYPE_WARNING,TEXT("EPGƒf[ƒ^“Ç‚İ‚İƒXƒŒƒbƒh‚ğ‹­§I—¹‚µ‚Ü‚·B"));
+				GetAppClass().AddLog(CLogItem::TYPE_WARNING,TEXT("EPGãƒ‡ãƒ¼ã‚¿èª­ã¿è¾¼ã¿ã‚¹ãƒ¬ãƒƒãƒ‰ã‚’å¼·åˆ¶çµ‚äº†ã—ã¾ã™ã€‚"));
 				::TerminateThread(m_hLoadThread,-1);
 			}
 		}
@@ -105,7 +105,7 @@ bool CEpgOptions::ReadSettings(CSettings &Settings)
 	if (Settings.Read(TEXT("LogoDirectory"),szLogoDir,MAX_PATH)) {
 		LogoManager.SetLogoDirectory(szLogoDir);
 	} else {
-		// TVLogoMark ‚ÌƒƒS‚ª‚ ‚ê‚Î—˜—p‚·‚é
+		// TVLogoMark ã®ãƒ­ã‚´ãŒã‚ã‚Œã°åˆ©ç”¨ã™ã‚‹
 		GetAppClass().GetAppDirectory(szLogoDir);
 		::PathAppend(szLogoDir,TEXT("Plugins\\Logo"));
 		if (::PathIsDirectory(szLogoDir))
@@ -164,7 +164,7 @@ bool CEpgOptions::LoadEpgFile(CEpgProgramList *pEpgList)
 		if (!GetAbsolutePath(m_szEpgFileName,szFileName,lengthof(szFileName)))
 			return false;
 		if (::PathFileExists(szFileName)) {
-			GetAppClass().AddLog(TEXT("EPG ƒf[ƒ^‚ğ \"%s\" ‚©‚ç“Ç‚İ‚İ‚Ü‚·..."),szFileName);
+			GetAppClass().AddLog(TEXT("EPG ãƒ‡ãƒ¼ã‚¿ã‚’ \"%s\" ã‹ã‚‰èª­ã¿è¾¼ã¿ã¾ã™..."),szFileName);
 			fOK=pEpgList->LoadFromFile(szFileName);
 		}
 	}
@@ -186,7 +186,7 @@ bool CEpgOptions::AsyncLoadEpgFile(CEpgProgramList *pEpgList,CEpgFileLoadEventHa
 		if (!GetAbsolutePath(m_szEpgFileName,szFileName,lengthof(szFileName)))
 			return false;
 		if (::PathFileExists(szFileName)) {
-			GetAppClass().AddLog(TEXT("EPG ƒf[ƒ^‚ğ \"%s\" ‚©‚ç“Ç‚İ‚İ‚Ü‚·..."),szFileName);
+			GetAppClass().AddLog(TEXT("EPG ãƒ‡ãƒ¼ã‚¿ã‚’ \"%s\" ã‹ã‚‰èª­ã¿è¾¼ã¿ã¾ã™..."),szFileName);
 
 			EpgLoadInfo *pInfo=new EpgLoadInfo;
 
@@ -251,7 +251,7 @@ bool CEpgOptions::SaveEpgFile(CEpgProgramList *pEpgList)
 		if (!GetAbsolutePath(m_szEpgFileName,szFileName,lengthof(szFileName)))
 			return false;
 		if (pEpgList->NumServices()>0) {
-			GetAppClass().AddLog(TEXT("EPG ƒf[ƒ^‚ğ \"%s\" ‚É•Û‘¶‚µ‚Ü‚·..."),szFileName);
+			GetAppClass().AddLog(TEXT("EPG ãƒ‡ãƒ¼ã‚¿ã‚’ \"%s\" ã«ä¿å­˜ã—ã¾ã™..."),szFileName);
 			fOK=pEpgList->SaveToFile(szFileName);
 			if (!fOK)
 				::DeleteFile(szFileName);
@@ -328,22 +328,22 @@ bool CEpgOptions::LoadLogoFile()
 		if (!GetAbsolutePath(m_szLogoFileName,szFileName,lengthof(szFileName)))
 			return false;
 		if (::PathFileExists(szFileName)) {
-			App.AddLog(TEXT("ƒƒSƒf[ƒ^‚ğ \"%s\" ‚©‚ç“Ç‚İ‚İ‚Ü‚·..."),szFileName);
+			App.AddLog(TEXT("ãƒ­ã‚´ãƒ‡ãƒ¼ã‚¿ã‚’ \"%s\" ã‹ã‚‰èª­ã¿è¾¼ã¿ã¾ã™..."),szFileName);
 			if (!LogoManager.LoadLogoFile(szFileName)) {
-				App.AddLog(CLogItem::TYPE_ERROR,TEXT("ƒƒSƒtƒ@ƒCƒ‹‚Ì“Ç‚İ‚İ‚ÅƒGƒ‰[‚ª”­¶‚µ‚Ü‚µ‚½B"));
+				App.AddLog(CLogItem::TYPE_ERROR,TEXT("ãƒ­ã‚´ãƒ•ã‚¡ã‚¤ãƒ«ã®èª­ã¿è¾¼ã¿ã§ã‚¨ãƒ©ãƒ¼ãŒç™ºç”Ÿã—ã¾ã—ãŸã€‚"));
 				return false;
 			}
 		}
 		if (::lstrlen(szFileName)+4<MAX_PATH) {
 			::lstrcat(szFileName,TEXT(".ini"));
 			if (!::PathFileExists(szFileName)) {
-				// ˆÈ‘O‚Ìƒo[ƒWƒ‡ƒ“‚Æ‚ÌŒİŠ·—p
+				// ä»¥å‰ã®ãƒãƒ¼ã‚¸ãƒ§ãƒ³ã¨ã®äº’æ›ç”¨
 				::GetModuleFileName(NULL,szFileName,lengthof(szFileName));
 				::PathRenameExtension(szFileName,TEXT(".logo.ini"));
 				if (!::PathFileExists(szFileName))
 					return false;
 			}
-			App.AddLog(TEXT("ƒƒSİ’è‚ğ \"%s\" ‚©‚ç“Ç‚İ‚İ‚Ü‚·..."),szFileName);
+			App.AddLog(TEXT("ãƒ­ã‚´è¨­å®šã‚’ \"%s\" ã‹ã‚‰èª­ã¿è¾¼ã¿ã¾ã™..."),szFileName);
 			LogoManager.LoadLogoIDMap(szFileName);
 		}
 	}
@@ -361,16 +361,16 @@ bool CEpgOptions::SaveLogoFile()
 		if (!GetAbsolutePath(m_szLogoFileName,szFileName,lengthof(szFileName)))
 			return false;
 		if (!::PathFileExists(szFileName) || LogoManager.IsLogoDataUpdated()) {
-			App.AddLog(TEXT("ƒƒSƒf[ƒ^‚ğ \"%s\" ‚É•Û‘¶‚µ‚Ü‚·..."),szFileName);
+			App.AddLog(TEXT("ãƒ­ã‚´ãƒ‡ãƒ¼ã‚¿ã‚’ \"%s\" ã«ä¿å­˜ã—ã¾ã™..."),szFileName);
 			if (!LogoManager.SaveLogoFile(szFileName)) {
-				App.AddLog(CLogItem::TYPE_ERROR,TEXT("ƒƒSƒtƒ@ƒCƒ‹‚Ì•Û‘¶‚ÅƒGƒ‰[‚ª”­¶‚µ‚Ü‚µ‚½B"));
+				App.AddLog(CLogItem::TYPE_ERROR,TEXT("ãƒ­ã‚´ãƒ•ã‚¡ã‚¤ãƒ«ã®ä¿å­˜ã§ã‚¨ãƒ©ãƒ¼ãŒç™ºç”Ÿã—ã¾ã—ãŸã€‚"));
 				return false;
 			}
 		}
 		if (::lstrlen(szFileName)+4<MAX_PATH) {
 			::lstrcat(szFileName,TEXT(".ini"));
 			if (!::PathFileExists(szFileName) || LogoManager.IsLogoIDMapUpdated()) {
-				App.AddLog(TEXT("ƒƒSİ’è‚ğ \"%s\" ‚É•Û‘¶‚µ‚Ü‚·..."),szFileName);
+				App.AddLog(TEXT("ãƒ­ã‚´è¨­å®šã‚’ \"%s\" ã«ä¿å­˜ã—ã¾ã™..."),szFileName);
 				LogoManager.SaveLogoIDMap(szFileName);
 			}
 		}
@@ -436,7 +436,7 @@ INT_PTR CEpgOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 								 szFileName,lengthof(szFileName));
 				ofn.lStructSize=sizeof(OPENFILENAME);
 				ofn.hwndOwner=hDlg;
-				ofn.lpstrFilter=TEXT("‚·‚×‚Ä‚Ìƒtƒ@ƒCƒ‹\0*.*\0");
+				ofn.lpstrFilter=TEXT("ã™ã¹ã¦ã®ãƒ•ã‚¡ã‚¤ãƒ«\0*.*\0");
 				ofn.lpstrCustomFilter=NULL;
 				ofn.nFilterIndex=1;
 				ofn.lpstrFile=szFileName;
@@ -448,7 +448,7 @@ INT_PTR CEpgOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 					ofn.lpstrInitialDir=szInitialDir;
 				} else
 					ofn.lpstrInitialDir=NULL;
-				ofn.lpstrTitle=TEXT("EPGƒtƒ@ƒCƒ‹–¼");
+				ofn.lpstrTitle=TEXT("EPGãƒ•ã‚¡ã‚¤ãƒ«å");
 				ofn.Flags=OFN_EXPLORER | OFN_HIDEREADONLY;
 				ofn.lpstrDefExt=NULL;
 #if _WIN32_WINNT>=0x500
@@ -473,7 +473,7 @@ INT_PTR CEpgOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 				TCHAR szFolder[MAX_PATH];
 
 				::GetDlgItemText(hDlg,IDC_EPGOPTIONS_EPGDATAFOLDER,szFolder,lengthof(szFolder));
-				if (BrowseFolderDialog(hDlg,szFolder,TEXT("EPGƒf[ƒ^‚ÌƒtƒHƒ‹ƒ_")))
+				if (BrowseFolderDialog(hDlg,szFolder,TEXT("EPGãƒ‡ãƒ¼ã‚¿ã®ãƒ•ã‚©ãƒ«ãƒ€")))
 					::SetDlgItemText(hDlg,IDC_EPGOPTIONS_EPGDATAFOLDER,szFolder);
 			}
 			return TRUE;
@@ -493,7 +493,7 @@ INT_PTR CEpgOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 				::GetDlgItemText(hDlg,IDC_LOGOOPTIONS_DATAFILENAME,szFileName,lengthof(szFileName));
 				ofn.lStructSize=sizeof(OPENFILENAME);
 				ofn.hwndOwner=hDlg;
-				ofn.lpstrFilter=TEXT("‚·‚×‚Ä‚Ìƒtƒ@ƒCƒ‹\0*.*\0");
+				ofn.lpstrFilter=TEXT("ã™ã¹ã¦ã®ãƒ•ã‚¡ã‚¤ãƒ«\0*.*\0");
 				ofn.lpstrCustomFilter=NULL;
 				ofn.nFilterIndex=1;
 				ofn.lpstrFile=szFileName;
@@ -505,7 +505,7 @@ INT_PTR CEpgOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 					ofn.lpstrInitialDir=szInitialDir;
 				} else
 					ofn.lpstrInitialDir=NULL;
-				ofn.lpstrTitle=TEXT("ƒƒSƒtƒ@ƒCƒ‹–¼");
+				ofn.lpstrTitle=TEXT("ãƒ­ã‚´ãƒ•ã‚¡ã‚¤ãƒ«å");
 				ofn.Flags=OFN_EXPLORER | OFN_HIDEREADONLY;
 				ofn.lpstrDefExt=NULL;
 #if _WIN32_WINNT>=0x500
@@ -523,7 +523,7 @@ INT_PTR CEpgOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 				TCHAR szFolder[MAX_PATH];
 
 				::GetDlgItemText(hDlg,IDC_LOGOOPTIONS_LOGOFOLDER,szFolder,lengthof(szFolder));
-				if (BrowseFolderDialog(hDlg,szFolder,TEXT("ƒƒS‚ÌƒtƒHƒ‹ƒ_")))
+				if (BrowseFolderDialog(hDlg,szFolder,TEXT("ãƒ­ã‚´ã®ãƒ•ã‚©ãƒ«ãƒ€")))
 					::SetDlgItemText(hDlg,IDC_LOGOOPTIONS_LOGOFOLDER,szFolder);
 			}
 			return TRUE;

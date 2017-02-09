@@ -78,7 +78,7 @@ CChannelPanel::~CChannelPanel()
 bool CChannelPanel::Create(HWND hwndParent,DWORD Style,DWORD ExStyle,int ID)
 {
 	return CreateBasicWindow(hwndParent,Style,ExStyle,ID,
-							 m_pszClassName,TEXT("ƒ`ƒƒƒ“ƒlƒ‹"),m_hinst);
+							 m_pszClassName,TEXT("ãƒãƒ£ãƒ³ãƒãƒ«"),m_hinst);
 }
 
 
@@ -802,8 +802,8 @@ LRESULT CChannelPanel::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam
 
 		case TTN_SHOW:
 			{
-				// ƒc[ƒ‹ƒ`ƒbƒv‚ÌˆÊ’u‚ªƒJ[ƒ\ƒ‹‚Æd‚È‚Á‚Ä‚¢‚é‚Æ
-				// o‚½‚èÁ‚¦‚½‚è‚ğŒJ‚è•Ô‚µ‚Ä‚¨‚©‚µ‚­‚È‚é‚Ì‚Å‚¸‚ç‚·
+				// ãƒ„ãƒ¼ãƒ«ãƒãƒƒãƒ—ã®ä½ç½®ãŒã‚«ãƒ¼ã‚½ãƒ«ã¨é‡ãªã£ã¦ã„ã‚‹ã¨
+				// å‡ºãŸã‚Šæ¶ˆãˆãŸã‚Šã‚’ç¹°ã‚Šè¿”ã—ã¦ãŠã‹ã—ããªã‚‹ã®ã§ãšã‚‰ã™
 				LPNMHDR pnmh=reinterpret_cast<LPNMHDR>(lParam);
 				RECT rcTip;
 				POINT pt;
@@ -1498,7 +1498,7 @@ void CChannelPanel::CChannelEventInfo::DrawChannelName(
 		LogoHeight=(rc.bottom-rc.top)-(LogoMargins.Top+LogoMargins.Bottom);
 		if (LogoHeight>0) {
 			LogoWidth=LogoHeight*16/9;
-			// AlphaBlend‚ÅƒŠƒTƒCƒY‚·‚é‚Æ‰˜‚¢‚Ì‚ÅA—\‚ßƒŠƒTƒCƒY‚µ‚½‰æ‘œ‚ğì¬‚µ‚Ä‚¨‚­
+			// AlphaBlendã§ãƒªã‚µã‚¤ã‚ºã™ã‚‹ã¨æ±šã„ã®ã§ã€äºˆã‚ãƒªã‚µã‚¤ã‚ºã—ãŸç”»åƒã‚’ä½œæˆã—ã¦ãŠã
 			if (m_StretchedLogo.IsCreated()) {
 				if (m_StretchedLogo.GetWidth()!=LogoWidth || m_StretchedLogo.GetHeight()!=LogoHeight)
 					m_StretchedLogo.Destroy();

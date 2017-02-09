@@ -351,8 +351,8 @@ public:
 	};
 
 	enum {
-		SAVE_NODEFAULT	= 0x0001U,	// �f�t�H���g�Ɠ����ݒ��ۑ����Ȃ�
-		SAVE_NONAME		= 0x0002U	// ���O��ۑ����Ȃ�
+		SAVE_NODEFAULT	= 0x0001U,	// デフォルトと同じ設定を保存しない
+		SAVE_NONAME		= 0x0002U	// 名前を保存しない
 	};
 
 	CColorScheme();

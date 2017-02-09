@@ -224,9 +224,9 @@ bool COSDManager::ShowVolumeOSD(int Volume)
 
 	szText[0]='\0';
 	for (i=0;i<Volume/(100/VolumeSteps);i++)
-		::lstrcat(szText,TEXT("¡"));
+		::lstrcat(szText,TEXT("â– "));
 	for (;i<VolumeSteps;i++)
-		::lstrcat(szText,TEXT(" "));
+		::lstrcat(szText,TEXT("â–¡"));
 	::wsprintf(szText+::lstrlen(szText),TEXT(" %d"),Volume);
 
 	if (!m_pOptions->GetPseudoOSD() && !ClientInfo.fForcePseudoOSD

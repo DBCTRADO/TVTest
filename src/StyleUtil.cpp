@@ -87,7 +87,7 @@ bool ReadFontSettings(CSettings &Settings, LPCTSTR pszValueName, Style::Font *pF
 	String Key;
 
 	if (!Settings.Read(pszValueName, &pFont->LogFont) && fCompatible) {
-		// 旧バージョンとの互換用
+		// 譌ｧ繝舌�ｼ繧ｸ繝ｧ繝ｳ縺ｨ縺ｮ莠呈鋤逕ｨ
 		TCHAR szFont[LF_FACESIZE];
 		int Value;
 

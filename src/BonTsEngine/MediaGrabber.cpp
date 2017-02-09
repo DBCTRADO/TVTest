@@ -1,4 +1,4 @@
-// MediaGrabber.cpp: CMediaGrabber ƒNƒ‰ƒX‚ÌƒCƒ“ƒvƒŠƒƒ“ƒe[ƒVƒ‡ƒ“
+// MediaGrabber.cpp: CMediaGrabber ã‚¯ãƒ©ã‚¹ã®ã‚¤ãƒ³ãƒ—ãƒªãƒ¡ãƒ³ãƒ†ãƒ¼ã‚·ãƒ§ãƒ³
 //
 //////////////////////////////////////////////////////////////////////
 
@@ -7,7 +7,7 @@
 #include "../Common/DebugDef.h"
 
 //////////////////////////////////////////////////////////////////////
-// \’z/Á–Å
+// æ§‹ç¯‰/æ¶ˆæ»…
 //////////////////////////////////////////////////////////////////////
 
 CMediaGrabber::CMediaGrabber(IEventHandler *pEventHandler)
@@ -23,7 +23,7 @@ void CMediaGrabber::Reset(void)
 {
 	CBlockLock Lock(&m_DecoderLock);
 
-	// ƒR[ƒ‹ƒoƒbƒN‚É’Ê’m‚·‚é
+	// ã‚³ãƒ¼ãƒ«ãƒãƒƒã‚¯ã«é€šçŸ¥ã™ã‚‹
 	for (auto itr = m_GrabberList.begin(); itr != m_GrabberList.end(); ++itr)
 		(*itr)->OnReset();
 }
@@ -39,7 +39,7 @@ const bool CMediaGrabber::InputMedia(CMediaData *pMediaData, const DWORD dwInput
 
 	bool bFail = false;
 
-	// ƒR[ƒ‹ƒoƒbƒN‚É’Ê’m‚·‚é
+	// ã‚³ãƒ¼ãƒ«ãƒãƒƒã‚¯ã«é€šçŸ¥ã™ã‚‹
 	for (auto itr = m_GrabberList.begin(); itr != m_GrabberList.end(); ++itr) {
 		if (!(*itr)->OnInputMedia(pMediaData))
 			bFail = true;
@@ -48,7 +48,7 @@ const bool CMediaGrabber::InputMedia(CMediaData *pMediaData, const DWORD dwInput
 	if (bFail)
 		return false;
 
-	// ‰ºˆÊƒfƒR[ƒ_‚Éƒf[ƒ^‚ğ“n‚·
+	// ä¸‹ä½ãƒ‡ã‚³ãƒ¼ãƒ€ã«ãƒ‡ãƒ¼ã‚¿ã‚’æ¸¡ã™
 	OutputMedia(pMediaData);
 
 	return true;

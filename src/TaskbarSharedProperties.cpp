@@ -30,7 +30,7 @@ bool CTaskbarSharedProperties::Open(LPCTSTR pszName,const CRecentChannelList *pR
 			sizeof(SharedInfoHeader)+sizeof(RecentChannelInfo)*MAX_RECENT_CHANNELS,
 			&fExists)) {
 		GetAppClass().AddLog(CLogItem::TYPE_ERROR,
-							 TEXT("‹¤—Lƒƒ‚ƒŠ(%s)‚ğì¬‚Å‚«‚Ü‚¹‚ñB"),
+							 TEXT("å…±æœ‰ãƒ¡ãƒ¢ãƒª(%s)ã‚’ä½œæˆã§ãã¾ã›ã‚“ã€‚"),
 							 pszName);
 		return false;
 	}

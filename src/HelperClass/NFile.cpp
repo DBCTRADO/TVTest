@@ -1,4 +1,4 @@
-// NFile.cpp: CNFile ƒNƒ‰ƒX‚ÌƒCƒ“ƒvƒŠƒƒ“ƒe[ƒVƒ‡ƒ“
+// NFile.cpp: CNFile ã‚¯ãƒ©ã‚¹ã®ã‚¤ãƒ³ãƒ—ãƒªãƒ¡ãƒ³ãƒ†ãƒ¼ã‚·ãƒ§ãƒ³
 //
 //////////////////////////////////////////////////////////////////////
 
@@ -8,7 +8,7 @@
 #include "../Common/DebugDef.h"
 
 //////////////////////////////////////////////////////////////////////
-// \’z/Á–Å
+// æ§‹ç¯‰/æ¶ˆæ»…
 //////////////////////////////////////////////////////////////////////
 
 CNFile::CNFile()
@@ -28,16 +28,16 @@ CNFile::~CNFile()
 const bool CNFile::Open(LPCTSTR lpszName, const UINT Flags)
 {
 	if (m_hFile != INVALID_HANDLE_VALUE) {
-		m_LastError = ERROR_BUSY;	// u—v‹‚µ‚½ƒŠƒ\[ƒX‚Íg—p’†‚Å‚·Bv
+		m_LastError = ERROR_BUSY;	// ã€Œè¦æ±‚ã—ãŸãƒªã‚½ãƒ¼ã‚¹ã¯ä½¿ç”¨ä¸­ã§ã™ã€‚ã€
 		return false;
 	}
 
 	if (lpszName == NULL) {
-		m_LastError = ERROR_INVALID_PARAMETER;	// uƒpƒ‰ƒ[ƒ^‚ª³‚µ‚­‚ ‚è‚Ü‚¹‚ñBv
+		m_LastError = ERROR_INVALID_PARAMETER;	// ã€Œãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿ãŒæ­£ã—ãã‚ã‚Šã¾ã›ã‚“ã€‚ã€
 		return false;
 	}
 
-	// ƒtƒ@ƒCƒ‹ƒAƒNƒZƒX‘®«\’z
+	// ãƒ•ã‚¡ã‚¤ãƒ«ã‚¢ã‚¯ã‚»ã‚¹å±æ€§æ§‹ç¯‰
 	DWORD dwAccess = 0x00000000UL;
 
 	if (Flags & CNF_READ)
@@ -50,7 +50,7 @@ const bool CNFile::Open(LPCTSTR lpszName, const UINT Flags)
 		return false;
 	}
 
-	// ƒtƒ@ƒCƒ‹‹¤—L‘®«\’z
+	// ãƒ•ã‚¡ã‚¤ãƒ«å…±æœ‰å±æ€§æ§‹ç¯‰
 	DWORD dwShare = 0x00000000UL;
 
 	if (Flags & CNF_SHAREREAD)
@@ -58,7 +58,7 @@ const bool CNFile::Open(LPCTSTR lpszName, const UINT Flags)
 	if (Flags & CNF_SHAREWRITE)
 		dwShare |= FILE_SHARE_WRITE;
 
-	// ƒtƒ@ƒCƒ‹ì¬‘®«\’z
+	// ãƒ•ã‚¡ã‚¤ãƒ«ä½œæˆå±æ€§æ§‹ç¯‰
 	DWORD dwCreate;
 
 	if (Flags & CNF_NEW)
@@ -66,7 +66,7 @@ const bool CNFile::Open(LPCTSTR lpszName, const UINT Flags)
 	else
 		dwCreate = OPEN_EXISTING;
 
-	// ƒtƒ@ƒCƒ‹‘®«/ƒtƒ‰ƒO\’z
+	// ãƒ•ã‚¡ã‚¤ãƒ«å±æ€§/ãƒ•ãƒ©ã‚°æ§‹ç¯‰
 	DWORD dwAttributes = FILE_ATTRIBUTE_NORMAL;
 
 	if (Flags & CNF_SEQUENTIALREAD)
@@ -74,7 +74,7 @@ const bool CNFile::Open(LPCTSTR lpszName, const UINT Flags)
 	if (Flags & CNF_RANDOMACCESS)
 		dwAttributes |= FILE_FLAG_RANDOM_ACCESS;
 
-	// ’·‚¢ƒpƒX‘Î‰
+	// é•·ã„ãƒ‘ã‚¹å¯¾å¿œ
 	LPTSTR pszPath = NULL;
 	const int PathLength = ::lstrlen(lpszName);
 	if (PathLength >= MAX_PATH && ::StrCmpN(lpszName, TEXT("\\\\?"), 3) != 0) {
@@ -89,7 +89,7 @@ const bool CNFile::Open(LPCTSTR lpszName, const UINT Flags)
 		}
 	}
 
-	// ƒtƒ@ƒCƒ‹ƒI[ƒvƒ“
+	// ãƒ•ã‚¡ã‚¤ãƒ«ã‚ªãƒ¼ãƒ—ãƒ³
 	TRACE(TEXT("CNFile::Open() : Open file \"%s\"\n"), pszPath ? pszPath : lpszName);
 	m_hFile = ::CreateFile(pszPath ? pszPath : lpszName,
 						   dwAccess, dwShare, NULL, dwCreate,
@@ -101,7 +101,7 @@ const bool CNFile::Open(LPCTSTR lpszName, const UINT Flags)
 	}
 
 #if _WIN32_WINNT >= 0x0600
-	// I/O—Dæ“x‚Ìİ’è
+	// I/Oå„ªå…ˆåº¦ã®è¨­å®š
 	if (Flags & (CNF_PRIORITY_LOW | CNF_PRIORITY_IDLE)) {
 		typedef BOOL (WINAPI *SetFileInformationByHandleFunc)(HANDLE hFile,
 			FILE_INFO_BY_HANDLE_CLASS FileInformationClass, LPVOID lpFileInformation, DWORD dwBufferSize);
@@ -113,7 +113,7 @@ const bool CNFile::Open(LPCTSTR lpszName, const UINT Flags)
 			PriorityHint.PriorityHint = (Flags & CNF_PRIORITY_IDLE) ? IoPriorityHintVeryLow : IoPriorityHintLow;
 			TRACE(TEXT("Set file I/O priority hint %d\n"), (int)PriorityHint.PriorityHint);
 			if (!pSetFileInformationByHandle(m_hFile, FileIoPriorityHintInfo, &PriorityHint, sizeof(PriorityHint))) {
-				TRACE(TEXT("ƒtƒ@ƒCƒ‹I/O—Dæ“x‚Ìİ’è¸”s (Error 0x%x)\n"), ::GetLastError());
+				TRACE(TEXT("ãƒ•ã‚¡ã‚¤ãƒ«I/Oå„ªå…ˆåº¦ã®è¨­å®šå¤±æ•— (Error 0x%x)\n"), ::GetLastError());
 			}
 		}
 	}
@@ -129,7 +129,7 @@ const bool CNFile::Open(LPCTSTR lpszName, const UINT Flags)
 
 const bool CNFile::Close(void)
 {
-	// ƒtƒ@ƒCƒ‹ƒNƒ[ƒY
+	// ãƒ•ã‚¡ã‚¤ãƒ«ã‚¯ãƒ­ãƒ¼ã‚º
 
 	m_LastError = ERROR_SUCCESS;
 
@@ -163,7 +163,7 @@ const DWORD CNFile::Read(void *pBuff, const DWORD dwLen)
 		return 0;
 	}
 
-	// ƒtƒ@ƒCƒ‹ƒŠ[ƒh
+	// ãƒ•ã‚¡ã‚¤ãƒ«ãƒªãƒ¼ãƒ‰
 	DWORD dwRead = 0;
 
 	if (!::ReadFile(m_hFile, pBuff, dwLen, &dwRead, NULL)) {
@@ -179,7 +179,7 @@ const DWORD CNFile::Read(void *pBuff, const DWORD dwLen)
 
 const DWORD CNFile::Read(void *pBuff, const DWORD dwLen, const ULONGLONG llPos)
 {
-	// ƒtƒ@ƒCƒ‹ƒŠ[ƒh
+	// ãƒ•ã‚¡ã‚¤ãƒ«ãƒªãƒ¼ãƒ‰
 	if (!SetPos(llPos))
 		return 0;
 
@@ -199,7 +199,7 @@ const bool CNFile::Write(const void *pBuff, const DWORD dwLen)
 		return false;
 	}
 
-	// ƒtƒ@ƒCƒ‹ƒ‰ƒCƒg
+	// ãƒ•ã‚¡ã‚¤ãƒ«ãƒ©ã‚¤ãƒˆ
 	DWORD dwWritten = 0UL;
 
 	if (!::WriteFile(m_hFile, pBuff, dwLen, &dwWritten, NULL)) {
@@ -219,7 +219,7 @@ const bool CNFile::Write(const void *pBuff, const DWORD dwLen)
 
 const bool CNFile::Write(const void *pBuff, const DWORD dwLen, const ULONGLONG llPos)
 {
-	// ƒtƒ@ƒCƒ‹ƒV[ƒN
+	// ãƒ•ã‚¡ã‚¤ãƒ«ã‚·ãƒ¼ã‚¯
 	if (!SetPos(llPos))
 		return false;
 	return Write(pBuff, dwLen);
@@ -251,7 +251,7 @@ const ULONGLONG CNFile::GetSize(void)
 		return 0;
 	}
 
-	// ƒtƒ@ƒCƒ‹ƒTƒCƒYæ“¾
+	// ãƒ•ã‚¡ã‚¤ãƒ«ã‚µã‚¤ã‚ºå–å¾—
 	LARGE_INTEGER FileSize;
 
 	if (!::GetFileSizeEx(m_hFile, &FileSize)) {
@@ -272,7 +272,7 @@ const ULONGLONG CNFile::GetPos(void)
 		return 0;
 	}
 
-	// ƒ|ƒWƒVƒ‡ƒ“æ“¾
+	// ãƒã‚¸ã‚·ãƒ§ãƒ³å–å¾—
 	static const LARGE_INTEGER DistanceToMove = {0, 0};
 	LARGE_INTEGER NewPos;
 
@@ -294,7 +294,7 @@ const bool CNFile::SetPos(const ULONGLONG llPos)
 		return false;
 	}
 
-	// ƒtƒ@ƒCƒ‹ƒV[ƒN
+	// ãƒ•ã‚¡ã‚¤ãƒ«ã‚·ãƒ¼ã‚¯
 	LARGE_INTEGER DistanceToMove;
 	DistanceToMove.QuadPart = llPos;
 	if (!::SetFilePointerEx(m_hFile, DistanceToMove, NULL, FILE_BEGIN)) {

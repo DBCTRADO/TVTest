@@ -12,7 +12,7 @@
 
 
 const CVideoOptions::RendererInfo CVideoOptions::m_RendererList[] = {
-	{CVideoRenderer::RENDERER_DEFAULT,            TEXT("ƒVƒXƒeƒ€ƒfƒtƒHƒ‹ƒg")},
+	{CVideoRenderer::RENDERER_DEFAULT,            TEXT("ã‚·ã‚¹ãƒ†ãƒ ãƒ‡ãƒ•ã‚©ãƒ«ãƒˆ")},
 	{CVideoRenderer::RENDERER_VMR7,               TEXT("VMR7")},
 	{CVideoRenderer::RENDERER_VMR9,               TEXT("VMR9")},
 	{CVideoRenderer::RENDERER_VMR7RENDERLESS,     TEXT("VMR7 Renderless")},
@@ -189,23 +189,23 @@ INT_PTR CVideoOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 		{
 			CAppMain &App=GetAppClass();
 
-			// MPEG-2 ƒfƒR[ƒ_
+			// MPEG-2 ãƒ‡ã‚³ãƒ¼ãƒ€
 			SetVideoDecoderList(IDC_OPTIONS_MPEG2DECODER,
 								MEDIASUBTYPE_MPEG2_VIDEO,
 								STREAM_TYPE_MPEG2_VIDEO,
 								m_Mpeg2DecoderName);
-			// H.264 ƒfƒR[ƒ_
+			// H.264 ãƒ‡ã‚³ãƒ¼ãƒ€
 			SetVideoDecoderList(IDC_OPTIONS_H264DECODER,
 								MEDIASUBTYPE_H264,
 								STREAM_TYPE_H264,
 								m_H264DecoderName);
-			// H.265 ƒfƒR[ƒ_
+			// H.265 ãƒ‡ã‚³ãƒ¼ãƒ€
 			SetVideoDecoderList(IDC_OPTIONS_H265DECODER,
 								MEDIASUBTYPE_HEVC,
 								STREAM_TYPE_H265,
 								m_H265DecoderName);
 
-			// ‰f‘œƒŒƒ“ƒ_ƒ‰
+			// æ˜ åƒãƒ¬ãƒ³ãƒ€ãƒ©
 			int Sel=-1;
 			RendererInfo Info;
 			for (int i=0;GetRendererInfo(i,&Info);i++) {
@@ -244,7 +244,7 @@ INT_PTR CVideoOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 				if (Renderer!=m_VideoRendererType) {
 					if (!CVideoRenderer::IsAvailable(Renderer)) {
 						SettingError();
-						::MessageBox(hDlg,TEXT("‘I‘ğ‚³‚ê‚½ƒŒƒ“ƒ_ƒ‰‚Í‚±‚ÌŠÂ‹«‚Å—˜—p‰Â”\‚É‚È‚Á‚Ä‚¢‚Ü‚¹‚ñB"),
+						::MessageBox(hDlg,TEXT("é¸æŠã•ã‚ŒãŸãƒ¬ãƒ³ãƒ€ãƒ©ã¯ã“ã®ç’°å¢ƒã§åˆ©ç”¨å¯èƒ½ã«ãªã£ã¦ã„ã¾ã›ã‚“ã€‚"),
 									 NULL,MB_OK | MB_ICONEXCLAMATION);
 						return TRUE;
 					}
@@ -328,7 +328,7 @@ void CVideoOptions::SetVideoDecoderList(
 		DlgComboBox_AddString(m_hDlg,ID,
 			pszDefaultDecoderName!=NULL?
 				pszDefaultDecoderName:
-				TEXT("<ƒfƒR[ƒ_‚ªŒ©•t‚©‚è‚Ü‚¹‚ñ>"));
+				TEXT("<ãƒ‡ã‚³ãƒ¼ãƒ€ãŒè¦‹ä»˜ã‹ã‚Šã¾ã›ã‚“>"));
 	} else {
 		if (pszDefaultDecoderName!=NULL)
 			DlgComboBox_AddString(m_hDlg,ID,pszDefaultDecoderName);
@@ -348,7 +348,7 @@ void CVideoOptions::SetVideoDecoderList(
 		CMediaViewer &MediaViewer=GetAppClass().CoreEngine.m_DtvEngine.m_MediaViewer;
 		TCHAR szText[32+MAX_VIDEO_DECODER_NAME];
 
-		::lstrcpy(szText,TEXT("©“®"));
+		::lstrcpy(szText,TEXT("è‡ªå‹•"));
 		if (!DecoderName.empty()) {
 			Sel=(int)DlgComboBox_FindStringExact(m_hDlg,ID,-1,DecoderName.c_str())+1;
 		} else if (MediaViewer.IsOpen()

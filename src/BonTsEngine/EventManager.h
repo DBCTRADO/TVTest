@@ -16,7 +16,7 @@
 
 
 /*
-	”Ô‘gî•ñŠÇ—ƒNƒ‰ƒX
+	ç•ªçµ„æƒ…å ±ç®¡ç†ã‚¯ãƒ©ã‚¹
 */
 class CEventManager
 	: public CMediaDecoder

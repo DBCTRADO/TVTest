@@ -12,29 +12,29 @@ static CAppMain g_App;
 
 
 const COptionDialog::PageInfo COptionDialog::m_PageList[] = {
-	{TEXT("àÍî "),					&g_App.GeneralOptions,			HELP_ID_OPTIONS_GENERAL},
-	{TEXT("ï\é¶"),					&g_App.ViewOptions,				HELP_ID_OPTIONS_VIEW},
+	{TEXT("‰∏ÄËà¨"),					&g_App.GeneralOptions,			HELP_ID_OPTIONS_GENERAL},
+	{TEXT("Ë°®Á§∫"),					&g_App.ViewOptions,				HELP_ID_OPTIONS_VIEW},
 	{TEXT("OSD"),					&g_App.OSDOptions,				HELP_ID_OPTIONS_OSD},
-	{TEXT("ÉXÉeÅ[É^ÉXÉoÅ["),		&g_App.StatusOptions,			HELP_ID_OPTIONS_STATUSBAR},
-	{TEXT("ÉTÉCÉhÉoÅ["),			&g_App.SideBarOptions,			HELP_ID_OPTIONS_SIDEBAR},
-	{TEXT("ÉÅÉjÉÖÅ["),				&g_App.MenuOptions,				HELP_ID_OPTIONS_MENU},
-	{TEXT("ÉpÉlÉã"),				&g_App.PanelOptions,			HELP_ID_OPTIONS_PANEL},
-	{TEXT("ÉeÅ[É}/îzêF"),			&g_App.ColorSchemeOptions,		HELP_ID_OPTIONS_COLORSCHEME},
-	{TEXT("ëÄçÏ"),					&g_App.OperationOptions,		HELP_ID_OPTIONS_OPERATION},
-	{TEXT("ÉLÅ[äÑÇËìñÇƒ"),			&g_App.Accelerator,				HELP_ID_OPTIONS_ACCELERATOR},
-	{TEXT("ÉäÉÇÉRÉì"),				&g_App.ControllerManager,		HELP_ID_OPTIONS_CONTROLLER},
-	{TEXT("BonDriverê›íË"),			&g_App.DriverOptions,			HELP_ID_OPTIONS_DRIVER},
-	{TEXT("âfëú"),					&g_App.VideoOptions,			HELP_ID_OPTIONS_VIDEO},
-	{TEXT("âπê∫"),					&g_App.AudioOptions,			HELP_ID_OPTIONS_AUDIO},
-	{TEXT("çƒê∂"),					&g_App.PlaybackOptions,			HELP_ID_OPTIONS_PLAYBACK},
-	{TEXT("ò^âÊ"),					&g_App.RecordOptions,			HELP_ID_OPTIONS_RECORD},
-	{TEXT("ÉLÉÉÉvÉ`ÉÉ"),			&g_App.CaptureOptions,			HELP_ID_OPTIONS_CAPTURE},
-	{TEXT("É`ÉÉÉìÉlÉãÉXÉLÉÉÉì"),	&g_App.ChannelScan,				HELP_ID_OPTIONS_CHANNELSCAN},
-	{TEXT("EPG/î‘ëgèÓïÒ"),			&g_App.EpgOptions,				HELP_ID_OPTIONS_EPG},
-	{TEXT("EPGî‘ëgï\"),				&g_App.ProgramGuideOptions,		HELP_ID_OPTIONS_PROGRAMGUIDE},
-	{TEXT("ÉvÉâÉOÉCÉì"),			&g_App.PluginOptions,			HELP_ID_OPTIONS_PLUGIN},
-	{TEXT("TSÉvÉçÉZÉbÉTÅ["),		&g_App.TSProcessorOptions,		HELP_ID_OPTIONS_TSPROCESSOR},
-	{TEXT("ÉçÉO"),					&g_App.Logger,					HELP_ID_OPTIONS_LOG},
+	{TEXT("„Çπ„ÉÜ„Éº„Çø„Çπ„Éê„Éº"),		&g_App.StatusOptions,			HELP_ID_OPTIONS_STATUSBAR},
+	{TEXT("„Çµ„Ç§„Éâ„Éê„Éº"),			&g_App.SideBarOptions,			HELP_ID_OPTIONS_SIDEBAR},
+	{TEXT("„É°„Éã„É•„Éº"),				&g_App.MenuOptions,				HELP_ID_OPTIONS_MENU},
+	{TEXT("„Éë„Éç„É´"),				&g_App.PanelOptions,			HELP_ID_OPTIONS_PANEL},
+	{TEXT("„ÉÜ„Éº„Éû/ÈÖçËâ≤"),			&g_App.ColorSchemeOptions,		HELP_ID_OPTIONS_COLORSCHEME},
+	{TEXT("Êìç‰Ωú"),					&g_App.OperationOptions,		HELP_ID_OPTIONS_OPERATION},
+	{TEXT("„Ç≠„ÉºÂâ≤„ÇäÂΩì„Å¶"),			&g_App.Accelerator,				HELP_ID_OPTIONS_ACCELERATOR},
+	{TEXT("„É™„É¢„Ç≥„É≥"),				&g_App.ControllerManager,		HELP_ID_OPTIONS_CONTROLLER},
+	{TEXT("BonDriverË®≠ÂÆö"),			&g_App.DriverOptions,			HELP_ID_OPTIONS_DRIVER},
+	{TEXT("Êò†ÂÉè"),					&g_App.VideoOptions,			HELP_ID_OPTIONS_VIDEO},
+	{TEXT("Èü≥Â£∞"),					&g_App.AudioOptions,			HELP_ID_OPTIONS_AUDIO},
+	{TEXT("ÂÜçÁîü"),					&g_App.PlaybackOptions,			HELP_ID_OPTIONS_PLAYBACK},
+	{TEXT("Èå≤Áîª"),					&g_App.RecordOptions,			HELP_ID_OPTIONS_RECORD},
+	{TEXT("„Ç≠„É£„Éó„ÉÅ„É£"),			&g_App.CaptureOptions,			HELP_ID_OPTIONS_CAPTURE},
+	{TEXT("„ÉÅ„É£„É≥„Éç„É´„Çπ„Ç≠„É£„É≥"),	&g_App.ChannelScan,				HELP_ID_OPTIONS_CHANNELSCAN},
+	{TEXT("EPG/Áï™ÁµÑÊÉÖÂ†±"),			&g_App.EpgOptions,				HELP_ID_OPTIONS_EPG},
+	{TEXT("EPGÁï™ÁµÑË°®"),				&g_App.ProgramGuideOptions,		HELP_ID_OPTIONS_PROGRAMGUIDE},
+	{TEXT("„Éó„É©„Ç∞„Ç§„É≥"),			&g_App.PluginOptions,			HELP_ID_OPTIONS_PLUGIN},
+	{TEXT("TS„Éó„É≠„Çª„ÉÉ„Çµ„Éº"),		&g_App.TSProcessorOptions,		HELP_ID_OPTIONS_TSPROCESSOR},
+	{TEXT("„É≠„Ç∞"),					&g_App.Logger,					HELP_ID_OPTIONS_LOG},
 };
 
 
@@ -88,10 +88,10 @@ bool CTotTimeAdjuster::AdjustTime()
 			tkp.Privileges[0].Attributes=SE_PRIVILEGE_ENABLED;
 			if (::AdjustTokenPrivileges(hToken,FALSE, &tkp,sizeof(TOKEN_PRIVILEGES),NULL,0)
 					&& ::GetLastError()==ERROR_SUCCESS) {
-				// ÉoÉbÉtÉ@Ç™Ç†ÇÈÇÃÇ≈è≠ÇµéûçèÇñﬂÇ∑
+				// „Éê„ÉÉ„Éï„Ç°„Åå„ÅÇ„Çã„ÅÆ„ÅßÂ∞ë„ÅóÊôÇÂàª„ÇíÊàª„Åô
 				OffsetSystemTime(&st,-2*TimeConsts::SYSTEMTIME_SECOND);
 				if (::SetLocalTime(&st)) {
-					g_App.AddLog(TEXT("TOTÇ≈éûçèçáÇÌÇπÇçsÇ¢Ç‹ÇµÇΩÅB(%d/%d/%d %d:%02d:%02d)"),
+					g_App.AddLog(TEXT("TOT„ÅßÊôÇÂàªÂêà„Çè„Åõ„ÇíË°å„ÅÑ„Åæ„Åó„Åü„ÄÇ(%d/%d/%d %d:%02d:%02d)"),
 								 st.wYear,st.wMonth,st.wDay,st.wHour,st.wMinute,st.wSecond);
 					fOK=true;
 				}
@@ -186,11 +186,11 @@ CServiceUpdateInfo::~CServiceUpdateInfo()
 
 
 
-// ÉGÉìÉgÉäÉ|ÉCÉìÉg
+// „Ç®„É≥„Éà„É™„Éù„Ç§„É≥„Éà
 int APIENTRY _tWinMain(HINSTANCE hInstance,HINSTANCE /*hPrevInstance*/,
 					   LPTSTR pszCmdLine,int nCmdShow)
 {
-	// DLLÉnÉCÉWÉÉÉbÉNëŒçÙ
+	// DLL„Éè„Ç§„Ç∏„É£„ÉÉ„ÇØÂØæÁ≠ñ
 	SetDllDirectory(TEXT(""));
 
 #ifdef _DEBUG
@@ -206,7 +206,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,HINSTANCE /*hPrevInstance*/,
 #ifdef VERSION_PLATFORM
 				 TEXT(" (") VERSION_PLATFORM TEXT(")")
 #endif
-				 TEXT(" ãNìÆ ********"));
+				 TEXT(" Ëµ∑Âãï ********"));
 
 	CoInitializeEx(NULL,COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE | COINIT_SPEED_OVER_MEMORY);
 
@@ -214,7 +214,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,HINSTANCE /*hPrevInstance*/,
 
 	CoUninitialize();
 
-	g_App.AddLog(TEXT("******** èIóπ ********"));
+	g_App.AddLog(TEXT("******** ÁµÇ‰∫Ü ********"));
 	if (g_App.CmdLineOptions.m_fSaveLog && !g_App.Logger.GetOutputToFile()) {
 		TCHAR szFileName[MAX_PATH];
 

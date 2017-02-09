@@ -15,18 +15,18 @@ static const struct {
 } TitleTextFormatPresets[] =
 {
 	{
-		TEXT("ƒT[ƒrƒX–¼ / ”Ô‘gŽžŠÔ ”Ô‘g–¼ - ") APP_NAME,
+		TEXT("ã‚µãƒ¼ãƒ“ã‚¹å / ç•ªçµ„æ™‚é–“ ç•ªçµ„å - ") APP_NAME,
 		TEXT("%rec-circle% %service-name% %sep-slash% %event-time% %event-name% %sep-hyphen% ") APP_NAME
 	},
 	{
-		TEXT("ƒT[ƒrƒX–¼ / ”Ô‘g–¼ - ") APP_NAME,
+		TEXT("ã‚µãƒ¼ãƒ“ã‚¹å / ç•ªçµ„å - ") APP_NAME,
 		TEXT("%rec-circle% %service-name% %sep-slash% %event-name% %sep-hyphen% ") APP_NAME
 	},
 };
 
 
-// ‹ŒŽd—lŒÝŠ·—p
-// ver.0.9.0 ŠJ”­“r’†‚Ì•ÏX‚È‚Ì‚Å’·‚­Žc‚³‚È‚­‚Ä‚¢‚¢
+// æ—§ä»•æ§˜äº’æ›ç”¨
+// ver.0.9.0 é–‹ç™ºé€”ä¸­ã®å¤‰æ›´ãªã®ã§é•·ãæ®‹ã•ãªãã¦ã„ã„
 static void TitleFormatMakeCompatible(TVTest::String &Str)
 {
 	if (Str.find(L"%event-sep%")!=TVTest::String::npos) {
@@ -92,7 +92,7 @@ bool CViewOptions::ReadSettings(CSettings &Settings)
 			&& Value>=ADJUSTWINDOW_FIRST && Value<=ADJUSTWINDOW_LAST) {
 		m_PanScanAdjustWindowMode=(AdjustWindowMode)Value;
 	} else {
-		// ˆÈ‘O‚Ìƒo[ƒWƒ‡ƒ“‚Æ‚ÌŒÝŠ·—p
+		// ä»¥å‰ã®ãƒãƒ¼ã‚¸ãƒ§ãƒ³ã¨ã®äº’æ›ç”¨
 		bool f;
 		if (Settings.Read(TEXT("PanScanNoResizeWindow"),&f))
 			m_PanScanAdjustWindowMode=f?ADJUSTWINDOW_WIDTH:ADJUSTWINDOW_FIT;
@@ -135,7 +135,7 @@ bool CViewOptions::WriteSettings(CSettings &Settings)
 	Settings.Write(TEXT("HideCursor"),m_fHideCursor);
 	Settings.Write(TEXT("UseLogoIcon"),m_fUseLogoIcon);
 	Settings.Write(TEXT("TitleTextFormat"),m_TitleTextFormat);
-	// Ý’èUI–¢ŽÀ‘•
+	// è¨­å®šUIæœªå®Ÿè£…
 	/*
 	Settings.Write(TEXT("MinimizedTitleTextFormat"),m_MinimizedTitleTextFormat);
 	Settings.Write(TEXT("MaximizedTitleTextFormat"),m_MaximizedTitleTextFormat);
@@ -166,7 +166,7 @@ INT_PTR CViewOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 	switch (uMsg) {
 	case WM_INITDIALOG:
 		{
-			// ƒEƒBƒ“ƒhƒEÝ’è
+			// ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦è¨­å®š
 			DlgCheckBox_Check(hDlg,IDC_OPTIONS_SNAPATWINDOWEDGE,
 							  m_fSnapAtWindowEdge);
 			DlgCheckBox_Check(hDlg,IDC_OPTIONS_ADJUSTASPECTRESIZING,
@@ -176,9 +176,9 @@ INT_PTR CViewOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 			DlgCheckBox_Check(hDlg,IDC_OPTIONS_ZOOMKEEPASPECTRATIO,m_fZoomKeepAspectRatio);
 			{
 				static const LPCTSTR AdjustWindowModeList[] = {
-					TEXT("ƒTƒCƒY‚ð•Ï‚¦‚È‚¢"),
-					TEXT("•‚Ì‚Ý•Ï‚¦‚é"),
-					TEXT("•‚Æ‚‚³‚ð•Ï‚¦‚é"),
+					TEXT("ã‚µã‚¤ã‚ºã‚’å¤‰ãˆãªã„"),
+					TEXT("å¹…ã®ã¿å¤‰ãˆã‚‹"),
+					TEXT("å¹…ã¨é«˜ã•ã‚’å¤‰ãˆã‚‹"),
 				};
 				for (int i=0;i<lengthof(AdjustWindowModeList);i++) {
 					DlgComboBox_AddString(hDlg,IDC_OPTIONS_PANSCANADJUSTWINDOW,
@@ -212,7 +212,7 @@ INT_PTR CViewOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 			::EnableDlgItems(hDlg,IDC_OPTIONS_LOGOFILENAME,IDC_OPTIONS_LOGOFILENAME_BROWSE,
 							 m_fShowLogo);
 
-			// —}Ž~Ý’è
+			// æŠ‘æ­¢è¨­å®š
 			DlgCheckBox_Check(hDlg,IDC_OPTIONS_NOSCREENSAVER,m_fNoScreenSaver);
 			DlgCheckBox_Check(hDlg,IDC_OPTIONS_NOMONITORLOWPOWER,m_fNoMonitorLowPower);
 			DlgCheckBox_Check(hDlg,IDC_OPTIONS_NOMONITORLOWPOWERACTIVEONLY,
@@ -286,12 +286,12 @@ INT_PTR CViewOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 				InitOpenFileName(&ofn);
 				ofn.hwndOwner=hDlg;
 				ofn.lpstrFilter=
-					TEXT("BMPƒtƒ@ƒCƒ‹(*.bmp)\0*.bmp\0")
-					TEXT("‚·‚×‚Ä‚Ìƒtƒ@ƒCƒ‹\0*.*\0");
+					TEXT("BMPãƒ•ã‚¡ã‚¤ãƒ«(*.bmp)\0*.bmp\0")
+					TEXT("ã™ã¹ã¦ã®ãƒ•ã‚¡ã‚¤ãƒ«\0*.*\0");
 				ofn.lpstrFile=szFileName;
 				ofn.nMaxFile=lengthof(szFileName);
 				ofn.lpstrInitialDir=szInitDir;
-				ofn.lpstrTitle=TEXT("ƒƒS‰æ‘œ‚Ì‘I‘ð");
+				ofn.lpstrTitle=TEXT("ãƒ­ã‚´ç”»åƒã®é¸æŠž");
 				ofn.Flags=OFN_HIDEREADONLY | OFN_FILEMUSTEXIST | OFN_EXPLORER;
 				if (FileOpenDialog(&ofn)) {
 					::SetDlgItemText(hDlg,IDC_OPTIONS_LOGOFILENAME,szFileName);

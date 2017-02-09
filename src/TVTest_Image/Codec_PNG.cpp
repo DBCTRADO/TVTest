@@ -34,7 +34,7 @@ static void FlushData(png_structp pPNG)
 }
 
 
-// PNG ‚ğƒtƒ@ƒCƒ‹‚É•Û‘¶‚·‚é
+// PNG ã‚’ãƒ•ã‚¡ã‚¤ãƒ«ã«ä¿å­˜ã™ã‚‹
 bool SavePNGFile(const ImageSaveInfo *pInfo)
 {
 	HANDLE hFile;
@@ -318,7 +318,7 @@ static const RGBA DefaultPalette[128] = {
 	{255, 255,  85, 128},
 };
 
-// ARIB Œ`®‚Ì PNG ‚ğ“Ç‚İ‚Ş
+// ARIB å½¢å¼ã® PNG ã‚’èª­ã¿è¾¼ã‚€
 HGLOBAL LoadAribPng(const void *pData,SIZE_T DataSize)
 {
 	static const BYTE Adam7[8][2][2] = {
@@ -431,7 +431,7 @@ Decode:
 		return NULL;
 	}
 
-	// í‚É32ƒrƒbƒgDIB‚É•ÏŠ·‚·‚é
+	// å¸¸ã«32ãƒ“ãƒƒãƒˆDIBã«å¤‰æ›ã™ã‚‹
 	HGLOBAL hDIB=::GlobalAlloc(GMEM_MOVEABLE,sizeof(BITMAPINFOHEADER)+ImageHeader.Width*4*ImageHeader.Height);
 	if (hDIB==NULL) {
 		delete [] pImageData;

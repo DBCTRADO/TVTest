@@ -12,12 +12,12 @@
 #include "Common/DebugDef.h"
 
 
-#define TITLE_TEXT TEXT("EPG”Ô‘g•\")
+#define TITLE_TEXT TEXT("EPGç•ªçµ„è¡¨")
 
-// Œ»İ‚ğXV‚·‚éƒ^ƒCƒ}‚ÌID
+// ç¾åœ¨æ™‚åˆ»ã‚’æ›´æ–°ã™ã‚‹ã‚¿ã‚¤ãƒã®ID
 #define TIMER_ID_UPDATECURTIME	1
 
-// ƒƒjƒ…[‚ÌˆÊ’u
+// ãƒ¡ãƒ‹ãƒ¥ãƒ¼ã®ä½ç½®
 #define MENU_DATE			0
 #define MENU_CHANNELGROUP	1
 
@@ -166,7 +166,7 @@ bool CEventItem::SetCommonEvent(const CEventInfoData *pEvent)
 	m_pCommonEventInfo=pEvent;
 	/*
 	if (m_pEventInfo->m_EventName.empty())
-		m_TitleLines=pItem->m_TitleLines;	// ‚Æ‚è‚ ‚¦‚¸
+		m_TitleLines=pItem->m_TitleLines;	// ã¨ã‚Šã‚ãˆãš
 	*/
 	return true;
 }
@@ -455,7 +455,7 @@ HBITMAP CServiceInfo::GetStretchedLogo(int Width,int Height)
 {
 	if (m_hbmLogo==NULL)
 		return NULL;
-	// AlphaBlend‚ÅƒŠƒTƒCƒY‚·‚é‚Æ‰˜‚¢‚Ì‚ÅA—\‚ßƒŠƒTƒCƒY‚µ‚½‰æ‘œ‚ğì¬‚µ‚Ä‚¨‚­
+	// AlphaBlendã§ãƒªã‚µã‚¤ã‚ºã™ã‚‹ã¨æ±šã„ã®ã§ã€äºˆã‚ãƒªã‚µã‚¤ã‚ºã—ãŸç”»åƒã‚’ä½œæˆã—ã¦ãŠã
 	if (m_StretchedLogo.IsCreated()) {
 		if (m_StretchedLogo.GetWidth()!=Width || m_StretchedLogo.GetHeight()!=Height)
 			m_StretchedLogo.Destroy();
@@ -903,7 +903,7 @@ bool CProgramGuideBaseChannelProvider::GetGroupName(size_t Group,LPTSTR pszName,
 
 	if (HasAllChannelGroup()) {
 		if (Group==0) {
-			::lstrcpyn(pszName,TEXT("‚·‚×‚Ä‚Ìƒ`ƒƒƒ“ƒlƒ‹"),MaxName);
+			::lstrcpyn(pszName,TEXT("ã™ã¹ã¦ã®ãƒãƒ£ãƒ³ãƒãƒ«"),MaxName);
 			return true;
 		}
 		Group--;
@@ -913,7 +913,7 @@ bool CProgramGuideBaseChannelProvider::GetGroupName(size_t Group,LPTSTR pszName,
 	if (!IsStringEmpty(pszTuningSpaceName))
 		::lstrcpyn(pszName,pszTuningSpaceName,MaxName);
 	else
-		StdUtil::snprintf(pszName,MaxName,TEXT("ƒ`ƒ…[ƒjƒ“ƒO‹óŠÔ %d"),(int)Group+1);
+		StdUtil::snprintf(pszName,MaxName,TEXT("ãƒãƒ¥ãƒ¼ãƒ‹ãƒ³ã‚°ç©ºé–“ %d"),(int)Group+1);
 
 	return true;
 }
@@ -1118,8 +1118,8 @@ CProgramGuide::CProgramGuide(CEventSearchOptions &EventSearchOptions)
 	m_EventInfoPopup.SetEventHandler(&m_EventInfoPopupHandler);
 
 	static const LPCTSTR SearchTargetList[] = {
-		TEXT("‚±‚Ì”Ô‘g•\‚©‚ç"),
-		TEXT("‘S‚Ä‚Ì”Ô‘g‚©‚ç"),
+		TEXT("ã“ã®ç•ªçµ„è¡¨ã‹ã‚‰"),
+		TEXT("å…¨ã¦ã®ç•ªçµ„ã‹ã‚‰"),
 	};
 	m_ProgramSearch.SetSearchTargetList(SearchTargetList,lengthof(SearchTargetList));
 }
@@ -1240,9 +1240,9 @@ bool CProgramGuide::UpdateProgramGuide(bool fUpdateList)
 		HCURSOR hcurOld=::SetCursor(::LoadCursor(NULL,IDC_WAIT));
 
 		if (m_pFrame!=NULL)
-			m_pFrame->SetCaption(TITLE_TEXT TEXT(" - ”Ô‘g•\‚ğì¬‚µ‚Ä‚¢‚Ü‚·..."));
+			m_pFrame->SetCaption(TITLE_TEXT TEXT(" - ç•ªçµ„è¡¨ã‚’ä½œæˆã—ã¦ã„ã¾ã™..."));
 
-		SetMessage(TEXT("”Ô‘g•\‚ğì¬‚µ‚Ä‚¢‚Ü‚·..."));
+		SetMessage(TEXT("ç•ªçµ„è¡¨ã‚’ä½œæˆã—ã¦ã„ã¾ã™..."));
 
 		if (UpdateList(fUpdateList)) {
 			CalcLayout();
@@ -1461,15 +1461,15 @@ unsigned int CProgramGuide::GetEventItemStatus(
 			fFilter=true;
 		} else if ((m_Filter&FILTER_NEWPROGRAM)!=0
 				&& (pEventInfo->m_EventName.empty()
-					|| pEventInfo->m_EventName.find(TEXT("[V]"))==CEventInfo::String::npos)) {
+					|| pEventInfo->m_EventName.find(TEXT("[æ–°]"))==CEventInfo::String::npos)) {
 			fFilter=true;
 		} else if ((m_Filter&FILTER_ORIGINAL)!=0
 				&& !pEventInfo->m_EventName.empty()
-				&& pEventInfo->m_EventName.find(TEXT("[Ä]"))!=CEventInfo::String::npos) {
+				&& pEventInfo->m_EventName.find(TEXT("[å†]"))!=CEventInfo::String::npos) {
 			fFilter=true;
 		} else if ((m_Filter&FILTER_RERUN)!=0
 				&& (pEventInfo->m_EventName.empty()
-					|| pEventInfo->m_EventName.find(TEXT("[Ä]"))==CEventInfo::String::npos)) {
+					|| pEventInfo->m_EventName.find(TEXT("[å†]"))==CEventInfo::String::npos)) {
 			fFilter=true;
 		} else if ((m_Filter&FILTER_NOT_SHOPPING)!=0
 				&& Genre1==2 && Genre2==4) {
@@ -1477,7 +1477,7 @@ unsigned int CProgramGuide::GetEventItemStatus(
 		} else if ((m_Filter&FILTER_GENRE_MASK)!=0) {
 			if (Genre1<0 || (m_Filter&(FILTER_GENRE_FIRST<<Genre1))==0)
 				fFilter=true;
-			// ‰f‰æƒWƒƒƒ“ƒ‹‚ÌƒAƒjƒ
+			// æ˜ ç”»ã‚¸ãƒ£ãƒ³ãƒ«ã®ã‚¢ãƒ‹ãƒ¡
 			if ((m_Filter&FILTER_ANIME)!=0 && Genre1==6 && Genre2==2)
 				fFilter=false;
 		}
@@ -1541,7 +1541,7 @@ void CProgramGuide::DrawEventBackground(
 	DrawUtil::Fill(hdc,&rcLine,
 		MixColor(BackColor,RGB(0,0,0),pItem->GetStartTime().wMinute==0?192:224));
 
-	// Œ»İ‚Ìü
+	// ç¾åœ¨æ™‚åˆ»ã®ç·š
 	if (((m_ListMode==LIST_SERVICES && m_Day==DAY_TODAY) || m_ListMode==LIST_WEEK)
 			&& CurTimePos>=Rect.top && CurTimePos<Rect.bottom) {
 		RECT rcCurTime;
@@ -1896,7 +1896,7 @@ void CProgramGuide::DrawTimeBar(HDC hdc,const RECT &Rect,TVTest::Theme::CThemeDr
 
 		TCHAR szText[64];
 		if (m_ListMode==LIST_SERVICES && (i==0 || DispTime.wHour%3==0)) {
-			StdUtil::snprintf(szText,lengthof(szText),TEXT("%d/%d(%s) %d"),
+			StdUtil::snprintf(szText,lengthof(szText),TEXT("%d/%d(%s) %dæ™‚"),
 							  DispTime.wMonth,DispTime.wDay,
 							  GetDayOfWeekText(DispTime.wDayOfWeek),
 							  DispTime.wHour);
@@ -1911,7 +1911,7 @@ void CProgramGuide::DrawTimeBar(HDC hdc,const RECT &Rect,TVTest::Theme::CThemeDr
 	}
 
 	if (m_ListMode==LIST_SERVICES && m_Day<DAY_LAST) {
-		// ¥
+		// â–¼
 		RECT rcClient;
 
 		GetClientRect(&rcClient);
@@ -2069,7 +2069,7 @@ void CProgramGuide::Draw(HDC hdc,const RECT &PaintRect)
 			const int XOrigin=m_TimeBarWidth+m_Style.ColumnMargin-m_ScrollPos.x;
 			const int TimeLineWidth=GetHairlineWidth();
 
-			// ”Ô‘g”wŒi‚Ì•`‰æ
+			// ç•ªçµ„èƒŒæ™¯ã®æç”»
 			rc.left=XOrigin;
 
 			for (size_t i=0;i<m_EventLayoutList.Length();i++) {
@@ -2100,7 +2100,7 @@ void CProgramGuide::Draw(HDC hdc,const RECT &PaintRect)
 				rc.left=rc.right+m_Style.ColumnMargin*2;
 			}
 
-			// ”Ô‘gƒeƒLƒXƒg‚Ì•`‰æ
+			// ç•ªçµ„ãƒ†ã‚­ã‚¹ãƒˆã®æç”»
 			TextDraw.Begin(hdc,rcClient,
 						   TVTest::CTextDraw::FLAG_END_ELLIPSIS |
 						   TVTest::CTextDraw::FLAG_JAPANESE_HYPHNATION);
@@ -2168,7 +2168,7 @@ void CProgramGuide::Draw(HDC hdc,const RECT &PaintRect)
 
 	if (m_ListMode==LIST_SERVICES && m_Day!=DAY_TODAY
 			&& PaintRect.top<m_HeaderHeight) {
-		// £
+		// â–²
 		const int TriangleWidth=m_GDIFontHeight*2/3;
 		const int TriangleHeight=TriangleWidth*8/10;
 		POINT ptTriangle[3];
@@ -2494,7 +2494,7 @@ void CProgramGuide::SetCaption()
 				TCHAR szText[256];
 
 				StdUtil::snprintf(szText,lengthof(szText),
-					TITLE_TEXT TEXT(" - ”Ô‘g•\‚Ìæ“¾’†... [%d/%d] c‚è–ñ%d•ª"),
+					TITLE_TEXT TEXT(" - ç•ªçµ„è¡¨ã®å–å¾—ä¸­... [%d/%d] æ®‹ã‚Šç´„%dåˆ†"),
 					m_EpgUpdateProgress.Pos+1,m_EpgUpdateProgress.End,
 					(m_EpgUpdateProgress.RemainingTime+59999)/60000);
 				m_pFrame->SetCaption(szText);
@@ -2506,7 +2506,7 @@ void CProgramGuide::SetCaption()
 				if (m_ListMode==LIST_SERVICES) {
 					OffsetSystemTime(&Info.EndTime,-TimeConsts::SYSTEMTIME_HOUR);
 					StdUtil::snprintf(szText,lengthof(szText),
-						TITLE_TEXT TEXT(" - %s%s%d/%d(%s) %d ` %d/%d(%s) %d"),
+						TITLE_TEXT TEXT(" - %s%s%d/%d(%s) %dæ™‚ ã€œ %d/%d(%s) %dæ™‚"),
 						Info.pszRelativeDayText!=NULL?Info.pszRelativeDayText:TEXT(""),
 						Info.pszRelativeDayText!=NULL?TEXT(" "):TEXT(""),
 						Info.BeginningTime.wMonth,
@@ -2521,7 +2521,7 @@ void CProgramGuide::SetCaption()
 					SYSTEMTIME stLast=Info.BeginningTime;
 					OffsetSystemTime(&stLast,6LL*TimeConsts::SYSTEMTIME_DAY);
 					StdUtil::snprintf(szText,lengthof(szText),
-						TITLE_TEXT TEXT(" - %s %d/%d(%s) ` %d/%d(%s)"),
+						TITLE_TEXT TEXT(" - %s %d/%d(%s) ã€œ %d/%d(%s)"),
 						m_ServiceList.GetItem(m_WeekListService)->GetServiceName(),
 						Info.BeginningTime.wMonth,
 						Info.BeginningTime.wDay,
@@ -2568,10 +2568,10 @@ void CProgramGuide::SetTooltip()
 
 				::IntersectRect(&rcTool,&rc,&rcHeader);
 				if (ToolCount<NumTools) {
-					m_Tooltip.SetText(ToolCount,TEXT("1TŠÔ•\¦"));
+					m_Tooltip.SetText(ToolCount,TEXT("1é€±é–“è¡¨ç¤º"));
 					m_Tooltip.SetToolRect(ToolCount,rcTool);
 				} else {
-					m_Tooltip.AddTool(ToolCount,rcTool,TEXT("1TŠÔ•\¦"));
+					m_Tooltip.AddTool(ToolCount,rcTool,TEXT("1é€±é–“è¡¨ç¤º"));
 				}
 				ToolCount++;
 			}
@@ -2587,10 +2587,10 @@ void CProgramGuide::SetTooltip()
 			rc.bottom=m_HeaderHeight;
 			rc.left=0;
 			rc.right=m_TimeBarWidth;
-			m_Tooltip.AddTool(ToolCount++,rc,TEXT("ˆê“ú‘O‚Ö"));
+			m_Tooltip.AddTool(ToolCount++,rc,TEXT("ä¸€æ—¥å‰ã¸"));
 			rc.left=rcClient.right-m_TimeBarWidth;
 			rc.right=rcClient.right;
-			m_Tooltip.AddTool(ToolCount++,rc,TEXT("ˆê“ú‘O‚Ö"));
+			m_Tooltip.AddTool(ToolCount++,rc,TEXT("ä¸€æ—¥å‰ã¸"));
 		}
 		if (m_Day<DAY_LAST) {
 			int y=m_HeaderHeight+
@@ -2599,10 +2599,10 @@ void CProgramGuide::SetTooltip()
 			rc.bottom=y;
 			rc.left=0;
 			rc.right=m_TimeBarWidth;
-			m_Tooltip.AddTool(ToolCount++,rc,TEXT("ˆê“úŒã‚Ö"));
+			m_Tooltip.AddTool(ToolCount++,rc,TEXT("ä¸€æ—¥å¾Œã¸"));
 			rc.left=rcClient.right-m_TimeBarWidth;
 			rc.right=rcClient.right;
-			m_Tooltip.AddTool(ToolCount,rc,TEXT("ˆê“úŒã‚Ö"));
+			m_Tooltip.AddTool(ToolCount,rc,TEXT("ä¸€æ—¥å¾Œã¸"));
 		}
 	} else if (m_ListMode==LIST_WEEK) {
 		m_Tooltip.DeleteAllTools();
@@ -2610,7 +2610,7 @@ void CProgramGuide::SetTooltip()
 		rc.left+=m_TimeBarWidth;
 		rc.right-=m_TimeBarWidth;
 		rc.bottom=m_HeaderHeight;
-		m_Tooltip.AddTool(0,rc,TEXT("ƒ`ƒƒƒ“ƒlƒ‹ˆê——•\¦‚Ö"));
+		m_Tooltip.AddTool(0,rc,TEXT("ãƒãƒ£ãƒ³ãƒãƒ«ä¸€è¦§è¡¨ç¤ºã¸"));
 	}
 }
 
@@ -3224,7 +3224,7 @@ bool CProgramGuide::SetViewDay(int Day)
 }
 
 
-// w’è‚³‚ê‚½”Ô‘g‚Ü‚ÅˆÚ“®‚·‚é
+// æŒ‡å®šã•ã‚ŒãŸç•ªçµ„ã¾ã§ç§»å‹•ã™ã‚‹
 bool CProgramGuide::JumpEvent(WORD NetworkID,WORD TSID,WORD ServiceID,WORD EventID)
 {
 	const int ServiceIndex=m_ServiceList.FindItemByIDs(TSID,ServiceID);
@@ -3616,14 +3616,14 @@ void CProgramGuide::OnShowFrame(bool fShow)
 LPCTSTR CProgramGuide::GetRelativeDayText(int Day)
 {
 	static const LPCTSTR DayText[] = {
-		TEXT("¡“ú"),
-		TEXT("–¾“ú"),
-		TEXT("2“úŒã"),
-		TEXT("3“úŒã"),
-		TEXT("4“úŒã"),
-		TEXT("5“úŒã"),
-		TEXT("6“úŒã"),
-		TEXT("7“úŒã"),
+		TEXT("ä»Šæ—¥"),
+		TEXT("æ˜æ—¥"),
+		TEXT("2æ—¥å¾Œ"),
+		TEXT("3æ—¥å¾Œ"),
+		TEXT("4æ—¥å¾Œ"),
+		TEXT("5æ—¥å¾Œ"),
+		TEXT("6æ—¥å¾Œ"),
+		TEXT("7æ—¥å¾Œ"),
 	};
 
 	if (Day<0 || Day>=lengthof(DayText))
@@ -4483,7 +4483,7 @@ void CProgramGuide::ShowPopupMenu(int x,int y)
 		mii.cch=lengthof(szText);
 		::GetMenuItemInfo(hmenu,i,FALSE,&mii);
 		int Length=::lstrlen(szText);
-		StdUtil::snprintf(szText+Length,lengthof(szText)-Length,TEXT(" %d/%d(%s) %d`"),
+		StdUtil::snprintf(szText+Length,lengthof(szText)-Length,TEXT(" %d/%d(%s) %dæ™‚ã€œ"),
 						  st.wMonth,st.wDay,GetDayOfWeekText(st.wDayOfWeek),st.wHour);
 		::SetMenuItemInfo(hmenu,i,FALSE,&mii);
 	}
@@ -4819,7 +4819,7 @@ bool CProgramGuide::CEventInfoPopupHandler::OnMenuPopup(HMENU hmenu)
 {
 	::AppendMenu(hmenu,MFT_SEPARATOR,0,NULL);
 	::AppendMenu(hmenu,MFT_STRING | (CEventInfoPopup::CEventHandler::m_pPopup->IsSelected()?MFS_ENABLED:MFS_GRAYED),
-				 COMMAND_FIRST,TEXT("‘I‘ğ•¶š—ñ‚ğŒŸõ(&S)"));
+				 COMMAND_FIRST,TEXT("é¸æŠæ–‡å­—åˆ—ã‚’æ¤œç´¢(&S)"));
 	return true;
 }
 
@@ -4846,7 +4846,7 @@ CProgramGuide::CProgramSearchEventHandler::CProgramSearchEventHandler(CProgramGu
 
 bool CProgramGuide::CProgramSearchEventHandler::OnSearch()
 {
-	// ”Ô‘g‚ÌŒŸõ
+	// ç•ªçµ„ã®æ¤œç´¢
 
 	SYSTEMTIME stFirst;
 	m_pProgramGuide->GetDayTimeRange(DAY_TODAY,&stFirst,NULL);
@@ -4877,7 +4877,7 @@ bool CProgramGuide::CProgramSearchEventHandler::OnSearch()
 	}
 
 	if (m_pSearchDialog->GetSearchTarget()==SEARCH_TARGET_ALL) {
-		// ‘S‚Ä‚Ì”Ô‘g‚©‚çŒŸõ
+		// å…¨ã¦ã®ç•ªçµ„ã‹ã‚‰æ¤œç´¢
 		CAppMain &App=GetAppClass();
 		CChannelList ServiceList;
 
@@ -4943,8 +4943,8 @@ bool CProgramGuide::CProgramSearchEventHandler::OnClose()
 bool CProgramGuide::CProgramSearchEventHandler::OnLDoubleClick(
 	const CSearchEventInfo *pEventInfo)
 {
-	// ŒŸõŒ‹‰Ê‚Ìˆê——‚Ìƒ_ƒuƒ‹ƒNƒŠƒbƒN
-	// TODO: “®ì‚ğƒJƒXƒ^ƒ}ƒCƒY‚Å‚«‚é‚æ‚¤‚É‚·‚é
+	// æ¤œç´¢çµæœã®ä¸€è¦§ã®ãƒ€ãƒ–ãƒ«ã‚¯ãƒªãƒƒã‚¯
+	// TODO: å‹•ä½œã‚’ã‚«ã‚¹ã‚¿ãƒã‚¤ã‚ºã§ãã‚‹ã‚ˆã†ã«ã™ã‚‹
 	if (!m_pProgramGuide->IsExcludeService(
 			pEventInfo->m_NetworkID,
 			pEventInfo->m_TransportStreamID,
@@ -4957,7 +4957,7 @@ bool CProgramGuide::CProgramSearchEventHandler::OnLDoubleClick(
 bool CProgramGuide::CProgramSearchEventHandler::OnRButtonClick(
 	const CSearchEventInfo *pEventInfo)
 {
-	// ŒŸõŒ‹‰Ê‚Ìˆê——‚Ì‰EƒNƒŠƒbƒNƒƒjƒ…[‚ğ•\¦
+	// æ¤œç´¢çµæœã®ä¸€è¦§ã®å³ã‚¯ãƒªãƒƒã‚¯ãƒ¡ãƒ‹ãƒ¥ãƒ¼ã‚’è¡¨ç¤º
 	HMENU hmenu=::LoadMenu(GetAppClass().GetResourceInstance(),MAKEINTRESOURCE(IDM_PROGRAMSEARCH));
 	HMENU hmenuPopup=::GetSubMenu(hmenu,0);
 
@@ -5204,7 +5204,7 @@ public:
 	}
 
 	LPCTSTR GetIDText() const override { return TEXT("Tuner"); }
-	LPCTSTR GetName() const override { return TEXT("ƒ`ƒ…[ƒi["); }
+	LPCTSTR GetName() const override { return TEXT("ãƒãƒ¥ãƒ¼ãƒŠãƒ¼"); }
 
 	void Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect,unsigned int Flags) override
 	{
@@ -5297,7 +5297,7 @@ public:
 	}
 
 	LPCTSTR GetIDText() const override { return TEXT("Date"); }
-	LPCTSTR GetName() const override { return TEXT("“ú"); }
+	LPCTSTR GetName() const override { return TEXT("æ—¥æ™‚"); }
 
 	void Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect,unsigned int Flags) override
 	{
@@ -5307,7 +5307,7 @@ public:
 
 			m_pProgramGuide->GetCurrentDateInfo(&Info);
 			EpgUtil::EpgTimeToDisplayTime(&Info.BeginningTime);
-			StdUtil::snprintf(szText,lengthof(szText),TEXT("%s%s%d/%d(%s) %d`"),
+			StdUtil::snprintf(szText,lengthof(szText),TEXT("%s%s%d/%d(%s) %dæ™‚ã€œ"),
 							  Info.pszRelativeDayText!=NULL?Info.pszRelativeDayText:TEXT(""),
 							  Info.pszRelativeDayText!=NULL?TEXT(" "):TEXT(""),
 							  Info.BeginningTime.wMonth,Info.BeginningTime.wDay,
@@ -5335,7 +5335,7 @@ public:
 
 					m_pProgramGuide->GetDateInfo(i,&Info);
 					EpgUtil::EpgTimeToDisplayTime(&Info.BeginningTime);
-					StdUtil::snprintf(szText,lengthof(szText),TEXT("%s%s%d/%d(%s) %d`"),
+					StdUtil::snprintf(szText,lengthof(szText),TEXT("%s%s%d/%d(%s) %dæ™‚ã€œ"),
 									  Info.pszRelativeDayText!=NULL?Info.pszRelativeDayText:TEXT(""),
 									  Info.pszRelativeDayText!=NULL?TEXT(" "):TEXT(""),
 									  Info.BeginningTime.wMonth,
@@ -5389,7 +5389,7 @@ public:
 	}
 
 	LPCTSTR GetIDText() const override { return TEXT("Prev"); }
-	LPCTSTR GetName() const override { return TEXT("‘O‚Ö"); }
+	LPCTSTR GetName() const override { return TEXT("å‰ã¸"); }
 
 	void Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect,unsigned int Flags) override
 	{
@@ -5403,7 +5403,7 @@ public:
 		COLORREF OldTextColor;
 		if (!fEnabled)
 			OldTextColor=::SetTextColor(hdc,MixColor(::GetTextColor(hdc),GetBkColor(hdc)));
-		DrawText(hdc,DrawRect,TEXT("£"),DRAWTEXT_HCENTER | DRAWTEXT_NOENDELLIPSIS);
+		DrawText(hdc,DrawRect,TEXT("â–²"),DRAWTEXT_HCENTER | DRAWTEXT_NOENDELLIPSIS);
 		if (!fEnabled)
 			::SetTextColor(hdc,OldTextColor);
 	}
@@ -5432,7 +5432,7 @@ public:
 	}
 
 	LPCTSTR GetIDText() const override { return TEXT("Next"); }
-	LPCTSTR GetName() const override { return TEXT("Ÿ‚Ö"); }
+	LPCTSTR GetName() const override { return TEXT("æ¬¡ã¸"); }
 
 	void Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect,unsigned int Flags) override
 	{
@@ -5447,7 +5447,7 @@ public:
 		COLORREF OldTextColor;
 		if (!fEnabled)
 			OldTextColor=::SetTextColor(hdc,MixColor(::GetTextColor(hdc),GetBkColor(hdc)));
-		DrawText(hdc,DrawRect,TEXT("¥"),DRAWTEXT_HCENTER | DRAWTEXT_NOENDELLIPSIS);
+		DrawText(hdc,DrawRect,TEXT("â–¼"),DRAWTEXT_HCENTER | DRAWTEXT_NOENDELLIPSIS);
 		if (!fEnabled)
 			::SetTextColor(hdc,OldTextColor);
 	}
@@ -5555,7 +5555,7 @@ bool CProgramGuideToolbar::Create(HWND hwndParent,DWORD Style,DWORD ExStyle,int 
 
 	::SendMessage(m_hwnd,TB_BUTTONSTRUCTSIZE,sizeof(TBBUTTON),0);
 	//::SendMessage(m_hwnd,TB_SETEXTENDEDSTYLE,0,TBSTYLE_EX_MIXEDBUTTONS);
-	// ƒ{ƒ^ƒ“‚ğƒAƒCƒRƒ“–³‚µ‚É‚µ‚Ä‚à‚È‚º‚©ƒAƒCƒRƒ“•ª‚Ì•‚ª‚Æ‚ç‚ê‚é
+	// ãƒœã‚¿ãƒ³ã‚’ã‚¢ã‚¤ã‚³ãƒ³ç„¡ã—ã«ã—ã¦ã‚‚ãªãœã‹ã‚¢ã‚¤ã‚³ãƒ³åˆ†ã®å¹…ãŒã¨ã‚‰ã‚Œã‚‹
 	::SendMessage(m_hwnd,TB_SETBITMAPSIZE,0,MAKELONG(1,15));
 
 	SetToolbarFont();
@@ -6196,7 +6196,7 @@ bool CDateToolbar::SetButtons(const SYSTEMTIME *pDateList,int Days,int FirstComm
 		const SYSTEMTIME &Date=pDateList[i];
 		TCHAR szText[32];
 		StdUtil::snprintf(szText,lengthof(szText),
-						  TEXT("%02d/%02d(%s)"),	// %02d ‚É‚µ‚Ä‚¢‚é‚Ì‚Í•‚ğ‘µ‚¦‚é‚½‚ß
+						  TEXT("%02d/%02d(%s)"),	// %02d ã«ã—ã¦ã„ã‚‹ã®ã¯å¹…ã‚’æƒãˆã‚‹ãŸã‚
 						  Date.wMonth,Date.wDay,GetDayOfWeekText(Date.wDayOfWeek));
 		RECT rc={0,0,0,0};
 		::DrawText(hdc,szText,-1,&rc,DT_SINGLELINE | DT_NOPREFIX | DT_CALCRECT);
@@ -6250,7 +6250,7 @@ void CDateToolbar::OnCustomDraw(NMTBCUSTOMDRAW *pnmtb,HDC hdc)
 
 	TCHAR szText[32];
 	if ((pnmtb->nmcd.lItemlParam&ITEM_FLAG_NOW)!=0) {
-		::lstrcpy(szText,TEXT("¡“ú"));
+		::lstrcpy(szText,TEXT("ä»Šæ—¥"));
 	} else {
 		StdUtil::snprintf(szText,lengthof(szText),TEXT("%d/%d(%s)"),
 						  (int)(pnmtb->nmcd.lItemlParam>>16),
@@ -6456,10 +6456,10 @@ bool CTimeToolbar::SetButtons(const TimeInfo *pTimeList,int TimeListLength)
 
 		tbb.idCommand=TimeInfo.Command;
 		if (TimeInfo.Command==CM_PROGRAMGUIDE_TIME_CURRENT) {
-			::lstrcpy(szText,TEXT("Œ»İ"));
+			::lstrcpy(szText,TEXT("ç¾åœ¨"));
 		} else {
 			StdUtil::snprintf(szText,lengthof(szText),
-							  TEXT("%d`"),TimeInfo.Hour);
+							  TEXT("%dæ™‚ã€œ"),TimeInfo.Hour);
 		}
 		tbb.iString=reinterpret_cast<INT_PTR>(szText);
 		tbb.dwData=MAKELONG(TimeInfo.Hour,TimeInfo.Offset);
@@ -6475,7 +6475,7 @@ bool CTimeToolbar::SetButtons(const TimeInfo *pTimeList,int TimeListLength)
 		const TimeInfo &TimeInfo=pTimeList[i];
 		TCHAR szText[32];
 		StdUtil::snprintf(szText,lengthof(szText),
-						  TEXT("%02d`"),	// %02d ‚É‚µ‚Ä‚¢‚é‚Ì‚Í•‚ğ‘µ‚¦‚é‚½‚ß
+						  TEXT("%02dæ™‚ã€œ"),	// %02d ã«ã—ã¦ã„ã‚‹ã®ã¯å¹…ã‚’æƒãˆã‚‹ãŸã‚
 						  TimeInfo.Hour);
 		RECT rc={0,0,0,0};
 		::DrawText(hdc,szText,-1,&rc,DT_SINGLELINE | DT_NOPREFIX | DT_CALCRECT);
@@ -6535,9 +6535,9 @@ void CTimeToolbar::OnCustomDraw(NMTBCUSTOMDRAW *pnmtb,HDC hdc)
 
 	TCHAR szText[32];
 	if (fCurrent) {
-		::lstrcpy(szText,TEXT("Œ»İ"));
+		::lstrcpy(szText,TEXT("ç¾åœ¨"));
 	} else {
-		StdUtil::snprintf(szText,lengthof(szText),TEXT("%d`"),Hour);
+		StdUtil::snprintf(szText,lengthof(szText),TEXT("%dæ™‚ã€œ"),Hour);
 	}
 	RECT rc=pnmtb->nmcd.rc;
 	TVTest::Style::Subtract(&rc,m_Padding);
@@ -6614,7 +6614,7 @@ bool CProgramGuideFrameBase::SetToolbarVisible(int Toolbar,bool fVisible)
 	if (pBar->IsBarVisible()!=fVisible) {
 		if (pBar->IsBarCreated()) {
 			if (fVisible) {
-				// ˆêu•Ï‚ÈˆÊ’u‚É•\¦‚³‚ê‚é‚Ì‚ğ–h‚®‚½‚ß‚ÉŒ©‚¦‚È‚¢ˆÊ’u‚ÉˆÚ“®
+				// ä¸€ç¬å¤‰ãªä½ç½®ã«è¡¨ç¤ºã•ã‚Œã‚‹ã®ã‚’é˜²ããŸã‚ã«è¦‹ãˆãªã„ä½ç½®ã«ç§»å‹•
 				SIZE sz;
 				pBar->GetBarSize(&sz);
 				pBar->SetBarPosition(-sz.cx,-sz.cy,sz.cx,sz.cy);
@@ -6961,11 +6961,11 @@ void CProgramGuideFrameBase::FrameStyle::NormalizeStyle(
 const CProgramGuideFrameSettings::ToolbarInfo
 	CProgramGuideFrameSettings::m_ToolbarInfoList[TOOLBAR_NUM] =
 {
-	{TEXT("TunerMenu"),	TEXT("ƒ`ƒ…[ƒi[ƒƒjƒ…[")},
-	{TEXT("DateMenu"),	TEXT("“ú•tƒƒjƒ…[")},
-	{TEXT("Favorites"),	TEXT("”Ô‘g•\‘I‘ğƒ{ƒ^ƒ“")},
-	{TEXT("DateBar"),	TEXT("“ú•tƒo[")},
-	{TEXT("TimeBar"),	TEXT("ƒo[")},
+	{TEXT("TunerMenu"),	TEXT("ãƒãƒ¥ãƒ¼ãƒŠãƒ¼ãƒ¡ãƒ‹ãƒ¥ãƒ¼")},
+	{TEXT("DateMenu"),	TEXT("æ—¥ä»˜ãƒ¡ãƒ‹ãƒ¥ãƒ¼")},
+	{TEXT("Favorites"),	TEXT("ç•ªçµ„è¡¨é¸æŠãƒœã‚¿ãƒ³")},
+	{TEXT("DateBar"),	TEXT("æ—¥ä»˜ãƒãƒ¼")},
+	{TEXT("TimeBar"),	TEXT("æ™‚åˆ»ãƒãƒ¼")},
 };
 
 
@@ -6995,7 +6995,7 @@ bool CProgramGuideFrameSettings::ReadSettings(CSettings &Settings)
 			if (ID<0)
 				continue;
 		} else {
-			// ver.0.9.0 ‚æ‚è‘O‚Æ‚ÌŒİŠ·—p
+			// ver.0.9.0 ã‚ˆã‚Šå‰ã¨ã®äº’æ›ç”¨
 			ID=i;
 		}
 
@@ -7322,7 +7322,7 @@ LRESULT CProgramGuideFrame::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM l
 		return 0;
 
 	case WM_NCCREATE:
-		// EnableNonClientDpiScaling “à‚©‚ç WM_SIZE ‚ª‘—‚ç‚ê‚é
+		// EnableNonClientDpiScaling å†…ã‹ã‚‰ WM_SIZE ãŒé€ã‚‰ã‚Œã‚‹
 		InitStyleScaling(hwnd,true);
 		break;
 

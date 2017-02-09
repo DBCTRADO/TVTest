@@ -430,7 +430,7 @@ HBITMAP CChannelListCategoryBase::CChannelItemBase::GetStretchedLogo(int Width,i
 	if (hbmLogo==NULL)
 		return NULL;
 
-	// AlphaBlend‚ÅƒŠƒTƒCƒY‚·‚é‚Æ‰˜‚¢‚Ì‚ÅA—\‚ßƒŠƒTƒCƒY‚µ‚½‰æ‘œ‚ðì¬‚µ‚Ä‚¨‚­
+	// AlphaBlendã§ãƒªã‚µã‚¤ã‚ºã™ã‚‹ã¨æ±šã„ã®ã§ã€äºˆã‚ãƒªã‚µã‚¤ã‚ºã—ãŸç”»åƒã‚’ä½œæˆã—ã¦ãŠã
 	if (m_StretchedLogo.IsCreated()) {
 		if (m_StretchedLogo.GetWidth()!=Width || m_StretchedLogo.GetHeight()!=Height)
 			m_StretchedLogo.Destroy();
@@ -475,7 +475,7 @@ public:
 
 // CHomeDisplay::CCategory
 	int GetID() const override { return CATEGORY_ID_FAVORITES; }
-	LPCTSTR GetTitle() const override { return TEXT("‚¨‹C‚É“ü‚è"); }
+	LPCTSTR GetTitle() const override { return TEXT("ãŠæ°—ã«å…¥ã‚Š"); }
 	int GetIconIndex() const override { return CATEGORY_ICON_FAVORITES; }
 	bool Create() override;
 	bool OnDecide() override;
@@ -563,7 +563,7 @@ public:
 
 // CHomeDisplay::CCategory
 	int GetID() const override { return CATEGORY_ID_RECENT_CHANNELS; }
-	LPCTSTR GetTitle() const override { return TEXT("Å‹ßŒ©‚½ƒ`ƒƒƒ“ƒlƒ‹"); }
+	LPCTSTR GetTitle() const override { return TEXT("æœ€è¿‘è¦‹ãŸãƒãƒ£ãƒ³ãƒãƒ«"); }
 	int GetIconIndex() const override { return CATEGORY_ICON_RECENT_CHANNELS; }
 	bool Create() override;
 	void ReadSettings(CSettings &Settings) override;
@@ -650,7 +650,7 @@ public:
 
 // CHomeDisplay::CCategory
 	int GetID() const override { return CATEGORY_ID_FEATURED_EVENTS; }
-	LPCTSTR GetTitle() const override { return TEXT("’–Ú‚Ì”Ô‘g"); }
+	LPCTSTR GetTitle() const override { return TEXT("æ³¨ç›®ã®ç•ªçµ„"); }
 	int GetIconIndex() const override { return CATEGORY_ICON_FEATURED_EVENTS; }
 	int GetHeight() const override { return m_Height; }
 	bool Create() override;
@@ -830,9 +830,9 @@ void CFeaturedEventsCategory::Draw(
 	if (m_ItemList.empty()) {
 		LPCTSTR pszText;
 		if (Settings.GetSearchSettingsList().GetCount()==0) {
-			pszText=TEXT("’–Ú‚Ì”Ô‘g‚ð•\Ž¦‚·‚é‚É‚ÍA‰EƒNƒŠƒbƒNƒƒjƒ…[‚Ì [’–Ú‚Ì”Ô‘g‚ÌÝ’è] ‚©‚çŒŸõðŒ‚ð“o˜^‚µ‚Ü‚·B");
+			pszText=TEXT("æ³¨ç›®ã®ç•ªçµ„ã‚’è¡¨ç¤ºã™ã‚‹ã«ã¯ã€å³ã‚¯ãƒªãƒƒã‚¯ãƒ¡ãƒ‹ãƒ¥ãƒ¼ã® [æ³¨ç›®ã®ç•ªçµ„ã®è¨­å®š] ã‹ã‚‰æ¤œç´¢æ¡ä»¶ã‚’ç™»éŒ²ã—ã¾ã™ã€‚");
 		} else {
-			pszText=TEXT("ŒŸõ‚³‚ê‚½”Ô‘g‚Í‚ ‚è‚Ü‚¹‚ñB");
+			pszText=TEXT("æ¤œç´¢ã•ã‚ŒãŸç•ªçµ„ã¯ã‚ã‚Šã¾ã›ã‚“ã€‚");
 		}
 		RECT rc=ContentRect;
 		TVTest::Style::Subtract(&rc,Style.ItemMargins);
@@ -1303,7 +1303,7 @@ HBITMAP CFeaturedEventsCategory::CEventItem::GetStretchedLogo(int Width,int Heig
 {
 	if (m_hbmLogo==NULL)
 		return NULL;
-	// AlphaBlend‚ÅƒŠƒTƒCƒY‚·‚é‚Æ‰˜‚¢‚Ì‚ÅA—\‚ßƒŠƒTƒCƒY‚µ‚½‰æ‘œ‚ðì¬‚µ‚Ä‚¨‚­
+	// AlphaBlendã§ãƒªã‚µã‚¤ã‚ºã™ã‚‹ã¨æ±šã„ã®ã§ã€äºˆã‚ãƒªã‚µã‚¤ã‚ºã—ãŸç”»åƒã‚’ä½œæˆã—ã¦ãŠã
 	if (m_StretchedLogo.IsCreated()) {
 		if (m_StretchedLogo.GetWidth()!=Width || m_StretchedLogo.GetHeight()!=Height)
 			m_StretchedLogo.Destroy();
@@ -1348,7 +1348,7 @@ void CFeaturedEventsCategory::CEventItem::AppendEventText(TVTest::String *pStrin
 				if (i>0)
 					pString->append(L"\r\n");
 				else
-					pString->push_back(L'@');
+					pString->push_back(L'ã€€');
 			}
 		} else {
 			if (fFirst) {

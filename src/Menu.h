@@ -22,7 +22,7 @@ class CMainMenu
 	int m_PopupMenu;
 
 public:
-	// サブメニュー項目の位置
+	// 繧ｵ繝悶Γ繝九Η繝ｼ鬆�逶ｮ縺ｮ菴咲ｽｮ
 	enum {
 		SUBMENU_ZOOM			= 0,
 		SUBMENU_ASPECTRATIO		= 1,

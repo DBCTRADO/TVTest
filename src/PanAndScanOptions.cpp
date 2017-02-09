@@ -107,12 +107,12 @@ static bool ParsePanAndScanInfo(CCoreEngine::PanAndScanInfo *pInfo,LPTSTR pszTex
 }
 
 
-// İ’èƒTƒ“ƒvƒ‹
+// è¨­å®šã‚µãƒ³ãƒ—ãƒ«
 static const CPanAndScanOptions::PanAndScanInfo DefaultPresetList[] = {
-	{   0, 1281, 10000,  7438, HORZ_FACTOR, VERT_FACTOR, 239, 100, TEXT("2.39:1 ƒVƒlƒXƒR"),   1},
-	{   0, 1218, 10000,  7565, HORZ_FACTOR, VERT_FACTOR, 235, 100, TEXT("2.35:1 ƒVƒlƒXƒR"),   2},
-	{   0,  195, 10000,  9610, HORZ_FACTOR, VERT_FACTOR, 185, 100, TEXT("1.85:1 ƒrƒXƒ^(•Ä)"), 3},
-	{ 331,    0,  9338, 10000, HORZ_FACTOR, VERT_FACTOR, 166, 100, TEXT("1.66:1 ƒrƒXƒ^(‰¢)"), 4},
+	{   0, 1281, 10000,  7438, HORZ_FACTOR, VERT_FACTOR, 239, 100, TEXT("2.39:1 ã‚·ãƒã‚¹ã‚³"),   1},
+	{   0, 1218, 10000,  7565, HORZ_FACTOR, VERT_FACTOR, 235, 100, TEXT("2.35:1 ã‚·ãƒã‚¹ã‚³"),   2},
+	{   0,  195, 10000,  9610, HORZ_FACTOR, VERT_FACTOR, 185, 100, TEXT("1.85:1 ãƒ“ã‚¹ã‚¿(ç±³)"), 3},
+	{ 331,    0,  9338, 10000, HORZ_FACTOR, VERT_FACTOR, 166, 100, TEXT("1.66:1 ãƒ“ã‚¹ã‚¿(æ¬§)"), 4},
 };
 
 
@@ -328,10 +328,10 @@ INT_PTR CPanAndScanOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPa
 			lvc.mask=LVCF_FMT | LVCF_WIDTH | LVCF_TEXT | LVCF_SUBITEM;
 			lvc.fmt=LVCFMT_LEFT;
 			lvc.cx=80;
-			lvc.pszText=TEXT("–¼‘O");
+			lvc.pszText=TEXT("åå‰");
 			lvc.iSubItem=0;
 			ListView_InsertColumn(hwndList,0,&lvc);
-			lvc.pszText=TEXT("İ’è");
+			lvc.pszText=TEXT("è¨­å®š");
 			lvc.iSubItem=1;
 			ListView_InsertColumn(hwndList,1,&lvc);
 
@@ -461,11 +461,11 @@ INT_PTR CPanAndScanOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPa
 				InitOpenFileName(&ofn);
 				ofn.hwndOwner=hDlg;
 				ofn.lpstrFilter=
-					TEXT("İ’èƒtƒ@ƒCƒ‹(*.ini)\0*.ini\0")
-					TEXT("‚·‚×‚Ä‚Ìƒtƒ@ƒCƒ‹\0*.*\0");
+					TEXT("è¨­å®šãƒ•ã‚¡ã‚¤ãƒ«(*.ini)\0*.ini\0")
+					TEXT("ã™ã¹ã¦ã®ãƒ•ã‚¡ã‚¤ãƒ«\0*.*\0");
 				ofn.lpstrFile=szFileName;
 				ofn.nMaxFile=lengthof(szFileName);
-				ofn.lpstrTitle=TEXT("ƒpƒ“&ƒXƒLƒƒƒ“İ’è‚Ì“Ç‚İ‚İ");
+				ofn.lpstrTitle=TEXT("ãƒ‘ãƒ³&ã‚¹ã‚­ãƒ£ãƒ³è¨­å®šã®èª­ã¿è¾¼ã¿");
 				ofn.Flags=OFN_HIDEREADONLY | OFN_FILEMUSTEXIST | OFN_EXPLORER;
 				if (FileOpenDialog(&ofn)) {
 					Import(szFileName);
@@ -482,11 +482,11 @@ INT_PTR CPanAndScanOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPa
 				InitOpenFileName(&ofn);
 				ofn.hwndOwner=hDlg;
 				ofn.lpstrFilter=
-					TEXT("İ’èƒtƒ@ƒCƒ‹(*.ini)\0*.ini\0")
-					TEXT("‚·‚×‚Ä‚Ìƒtƒ@ƒCƒ‹\0*.*\0");
+					TEXT("è¨­å®šãƒ•ã‚¡ã‚¤ãƒ«(*.ini)\0*.ini\0")
+					TEXT("ã™ã¹ã¦ã®ãƒ•ã‚¡ã‚¤ãƒ«\0*.*\0");
 				ofn.lpstrFile=szFileName;
 				ofn.nMaxFile=lengthof(szFileName);
-				ofn.lpstrTitle=TEXT("ƒpƒ“&ƒXƒLƒƒƒ“İ’è‚Ì•Û‘¶");
+				ofn.lpstrTitle=TEXT("ãƒ‘ãƒ³&ã‚¹ã‚­ãƒ£ãƒ³è¨­å®šã®ä¿å­˜");
 				ofn.Flags=OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT | OFN_EXPLORER;
 				ofn.lpstrDefExt=TEXT("ini");
 				if (FileSaveDialog(&ofn)) {
@@ -676,7 +676,7 @@ bool CPanAndScanOptions::GetSettings(CPanAndScanOptions::PanAndScanInfo *pInfo) 
 	::GetDlgItemText(m_hDlg,IDC_PANANDSCAN_NAME,pInfo->szName,MAX_NAME);
 
 	if (!GetPanAndScanSettings(&pInfo->Info)) {
-		::MessageBox(m_hDlg,TEXT("“ü—Í‚³‚ê‚½’l‚ª³‚µ‚­‚ ‚è‚Ü‚¹‚ñB"),NULL,MB_OK | MB_ICONINFORMATION);
+		::MessageBox(m_hDlg,TEXT("å…¥åŠ›ã•ã‚ŒãŸå€¤ãŒæ­£ã—ãã‚ã‚Šã¾ã›ã‚“ã€‚"),NULL,MB_OK | MB_ICONINFORMATION);
 		return false;
 	}
 
@@ -750,7 +750,7 @@ bool CPanAndScanOptions::Export(LPCTSTR pszFileName) const
 	HANDLE hFile=::CreateFile(pszFileName,GENERIC_WRITE,0,NULL,
 							  CREATE_ALWAYS,FILE_ATTRIBUTE_NORMAL,NULL);
 	if (hFile==INVALID_HANDLE_VALUE) {
-		::MessageBox(m_hDlg,TEXT("ƒtƒ@ƒCƒ‹‚ğì¬‚Å‚«‚Ü‚¹‚ñB"),NULL,MB_OK | MB_ICONEXCLAMATION);
+		::MessageBox(m_hDlg,TEXT("ãƒ•ã‚¡ã‚¤ãƒ«ã‚’ä½œæˆã§ãã¾ã›ã‚“ã€‚"),NULL,MB_OK | MB_ICONEXCLAMATION);
 		return false;
 	}
 
@@ -791,7 +791,7 @@ bool CPanAndScanOptions::GetCommandName(int Command,LPTSTR pszName,int MaxLength
 	if (Command<m_FirstID || Command>m_LastID)
 		return false;
 	const int Index=Command-m_FirstID;
-	int Length=StdUtil::snprintf(pszName,MaxLength,TEXT("ƒpƒ“&ƒXƒLƒƒƒ“%d"),Index+1);
+	int Length=StdUtil::snprintf(pszName,MaxLength,TEXT("ãƒ‘ãƒ³&ã‚¹ã‚­ãƒ£ãƒ³%d"),Index+1);
 	if ((size_t)Index<m_PresetList.size()) {
 		StdUtil::snprintf(pszName+Length,MaxLength-Length,
 						  TEXT(" : %s"),m_PresetList[Index].szName);

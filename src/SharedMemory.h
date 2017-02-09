@@ -8,7 +8,7 @@
 namespace TVTest
 {
 
-	// ‹¤—Lƒƒ‚ƒŠƒNƒ‰ƒX
+	// å…±æœ‰ãƒ¡ãƒ¢ãƒªã‚¯ãƒ©ã‚¹
 	class CSharedMemory
 	{
 	public:

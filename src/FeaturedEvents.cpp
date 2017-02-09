@@ -249,7 +249,7 @@ static void InitServiceListView(
 		GROUP_ID_CS
 	};
 	LVGROUP lvg;
-	// LVGROUP_V5_SIZE ÇÕ x64 Ç≈ä‘à·Ç¡ÇΩílÇ…Ç»Ç¡ÇƒÇ¢ÇÈ
+	// LVGROUP_V5_SIZE „ÅØ x64 „ÅßÈñìÈÅï„Å£„ÅüÂÄ§„Å´„Å™„Å£„Å¶„ÅÑ„Çã
 	//lvg.cbSize=LVGROUP_V5_SIZE;
 #if _WIN32_WINNT>=0x0600
 	if (fVista)
@@ -266,10 +266,10 @@ static void InitServiceListView(
 		lvg.state=LVGS_COLLAPSIBLE;
 #if _WIN32_WINNT>=0x0600
 		lvg.mask|=LVGF_TASK;
-		lvg.pszTask=TEXT("ëIë");
+		lvg.pszTask=TEXT("ÈÅ∏Êäû");
 #endif
 	}
-	lvg.pszHeader=TEXT("ínè„");
+	lvg.pszHeader=TEXT("Âú∞‰∏ä");
 	lvg.iGroupId=GROUP_ID_TERRESTRIAL;
 	ListView_InsertGroup(hwndList,-1,&lvg);
 	lvg.pszHeader=TEXT("BS");
@@ -351,7 +351,7 @@ static BOOL ServiceListViewGetInfoTip(
 		return FALSE;
 
 	StdUtil::snprintf(pGetInfoTip->pszText,pGetInfoTip->cchTextMax,
-		TEXT("%s\r\nÉTÅ[ÉrÉX: %d (0x%04x)\r\nÉlÉbÉgÉèÅ[ÉNID: %d (0x%04x)\r\nTSID: %d (0x%04x)"),
+		TEXT("%s\r\n„Çµ„Éº„Éì„Çπ: %d (0x%04x)\r\n„Éç„ÉÉ„Éà„ÉØ„Éº„ÇØID: %d (0x%04x)\r\nTSID: %d (0x%04x)"),
 		pChannelInfo->GetName(),
 		pChannelInfo->GetServiceID(),pChannelInfo->GetServiceID(),
 		pChannelInfo->GetNetworkID(),pChannelInfo->GetNetworkID(),
@@ -379,9 +379,9 @@ static BOOL ServiceListViewOnLinkClick(HWND hDlg,NMLVLINK *pLink)
 		int ID;
 		LPCTSTR pszText;
 	} CommandList[] = {
-		{COMMAND_CHECKALL,		TEXT("Ç∑Ç◊ÇƒëIë")},
-		{COMMAND_UNCHECKALL,	TEXT("Ç∑Ç◊Çƒâèú")},
-		{COMMAND_INVERTCHECK,	TEXT("ëIëÇÃîΩì]")},
+		{COMMAND_CHECKALL,		TEXT("„Åô„Åπ„Å¶ÈÅ∏Êäû")},
+		{COMMAND_UNCHECKALL,	TEXT("„Åô„Åπ„Å¶Ëß£Èô§")},
+		{COMMAND_INVERTCHECK,	TEXT("ÈÅ∏Êäû„ÅÆÂèçËª¢")},
 	};
 
 	HMENU hmenu=::CreatePopupMenu();
@@ -660,15 +660,15 @@ INT_PTR CFeaturedEventsDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM 
 			lvc.mask=LVCF_FMT | LVCF_WIDTH | LVCF_TEXT | LVCF_SUBITEM;
 			lvc.fmt=LVCFMT_LEFT;
 			lvc.cx=m_SettingsColumnWidth[SETTINGS_COLUMN_NAME];
-			lvc.pszText=TEXT("ñºëO");
+			lvc.pszText=TEXT("ÂêçÂâç");
 			lvc.iSubItem=0;
 			ListView_InsertColumn(hwndList,0,&lvc);
 			lvc.cx=m_SettingsColumnWidth[SETTINGS_COLUMN_KEYWORD];
-			lvc.pszText=TEXT("ÉLÅ[ÉèÅ[Éh");
+			lvc.pszText=TEXT("„Ç≠„Éº„ÉØ„Éº„Éâ");
 			lvc.iSubItem=1;
 			ListView_InsertColumn(hwndList,1,&lvc);
 			lvc.cx=m_SettingsColumnWidth[SETTINGS_COLUMN_GENRE];
-			lvc.pszText=TEXT("ÉWÉÉÉìÉã");
+			lvc.pszText=TEXT("„Ç∏„É£„É≥„É´");
 			lvc.iSubItem=2;
 			ListView_InsertColumn(hwndList,2,&lvc);
 
@@ -1017,17 +1017,17 @@ void CFeaturedEventsDialog::UpdateSearchSettingsItem(HWND hDlg,int Item)
 						pszText=EpgGenre.GetText(i,j);
 						if (pszText!=NULL) {
 							if (fFirst) {
-								Genre+=TEXT("Åi");
+								Genre+=TEXT("Ôºà");
 								fFirst=false;
 							} else {
-								Genre+=TEXT("ÅA");
+								Genre+=TEXT("„ÄÅ");
 							}
 							Genre+=pszText;
 						}
 					}
 				}
 				if (!fFirst)
-					Genre+=TEXT("Åj");
+					Genre+=TEXT("Ôºâ");
 			}
 		}
 	}

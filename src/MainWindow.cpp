@@ -138,7 +138,7 @@ CMainWindow::CMainWindow(CAppMain &App)
 	int DPI=GetMonitorDPI(::MonitorFromPoint(pt,MONITOR_DEFAULTTOPRIMARY));
 	if (DPI==0)
 		DPI=GetSystemDPI();
-	// “K“–‚ÉƒfƒtƒHƒ‹ƒgƒTƒCƒY‚ğİ’è
+	// é©å½“ã«ãƒ‡ãƒ•ã‚©ãƒ«ãƒˆã‚µã‚¤ã‚ºã‚’è¨­å®š
 #ifndef TVTEST_FOR_1SEG
 	static const int DefaultWidth=960,DefaultHeight=540;
 #else
@@ -221,7 +221,7 @@ void CMainWindow::CreatePanel()
 	m_App.Panel.InfoPanel.GetItem<CInformationPanel::CSignalLevelItem>()->ShowSignalLevel(
 		!m_App.DriverOptions.IsNoSignalLevel(m_App.CoreEngine.GetDriverFileName()));
 	PageInfo.pPage=&m_App.Panel.InfoPanel;
-	PageInfo.pszTitle=TEXT("î•ñ");
+	PageInfo.pszTitle=TEXT("æƒ…å ±");
 	PageInfo.ID=PANEL_ID_INFORMATION;
 	PageInfo.Icon=0;
 	PageInfo.fVisible=true;
@@ -231,7 +231,7 @@ void CMainWindow::CreatePanel()
 	m_App.Panel.ProgramListPanel.SetVisibleEventIcons(m_App.ProgramGuideOptions.GetVisibleEventIcons());
 	m_App.Panel.ProgramListPanel.Create(m_App.Panel.Form.GetHandle(),WS_CHILD | WS_VSCROLL);
 	PageInfo.pPage=&m_App.Panel.ProgramListPanel;
-	PageInfo.pszTitle=TEXT("”Ô‘g•\");
+	PageInfo.pszTitle=TEXT("ç•ªçµ„è¡¨");
 	PageInfo.ID=PANEL_ID_PROGRAMLIST;
 	PageInfo.Icon=1;
 	m_App.Panel.Form.AddPage(PageInfo);
@@ -240,7 +240,7 @@ void CMainWindow::CreatePanel()
 	m_App.Panel.ChannelPanel.SetLogoManager(&m_App.LogoManager);
 	m_App.Panel.ChannelPanel.Create(m_App.Panel.Form.GetHandle(),WS_CHILD | WS_VSCROLL);
 	PageInfo.pPage=&m_App.Panel.ChannelPanel;
-	PageInfo.pszTitle=TEXT("ƒ`ƒƒƒ“ƒlƒ‹");
+	PageInfo.pszTitle=TEXT("ãƒãƒ£ãƒ³ãƒãƒ«");
 	PageInfo.ID=PANEL_ID_CHANNEL;
 	PageInfo.Icon=2;
 	m_App.Panel.Form.AddPage(PageInfo);
@@ -249,14 +249,14 @@ void CMainWindow::CreatePanel()
 	m_App.Panel.InitControlPanel();
 	m_App.Panel.ControlPanel.Create(m_App.Panel.Form.GetHandle(),WS_CHILD);
 	PageInfo.pPage=&m_App.Panel.ControlPanel;
-	PageInfo.pszTitle=TEXT("‘€ì");
+	PageInfo.pszTitle=TEXT("æ“ä½œ");
 	PageInfo.ID=PANEL_ID_CONTROL;
 	PageInfo.Icon=3;
 	m_App.Panel.Form.AddPage(PageInfo);
 
 	m_App.Panel.CaptionPanel.Create(m_App.Panel.Form.GetHandle(),WS_CHILD | WS_CLIPCHILDREN);
 	PageInfo.pPage=&m_App.Panel.CaptionPanel;
-	PageInfo.pszTitle=TEXT("š–‹");
+	PageInfo.pszTitle=TEXT("å­—å¹•");
 	PageInfo.ID=PANEL_ID_CAPTION;
 	PageInfo.Icon=4;
 	m_App.Panel.Form.AddPage(PageInfo);
@@ -268,7 +268,7 @@ void CMainWindow::CreatePanel()
 		m_App.Panel.Frame.GetPanel()->SetTitleFont(m_App.ViewOptions.GetTitleBarFont());
 	m_App.Panel.Frame.Create(m_hwnd,
 		dynamic_cast<Layout::CSplitter*>(m_LayoutBase.GetContainerByID(CONTAINER_ID_PANELSPLITTER)),
-		CONTAINER_ID_PANEL,&m_App.Panel.Form,TEXT("ƒpƒlƒ‹"));
+		CONTAINER_ID_PANEL,&m_App.Panel.Form,TEXT("ãƒ‘ãƒãƒ«"));
 
 	if (m_fCustomFrame) {
 		HookWindows(m_App.Panel.Frame.GetPanel()->GetHandle());
@@ -429,7 +429,7 @@ void CMainWindow::AdjustWindowSize(int Width,int Height,bool fScreenSize)
 		}
 	}
 
-	// ƒEƒBƒ“ƒhƒE‚ªƒ‚ƒjƒ^‚ÌŠO‚Éo‚È‚¢‚æ‚¤‚É‚·‚é
+	// ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ãŒãƒ¢ãƒ‹ã‚¿ã®å¤–ã«å‡ºãªã„ã‚ˆã†ã«ã™ã‚‹
 	if (rcOld.left>=mi.rcWork.left && rcOld.top>=mi.rcWork.top
 			&& rcOld.right<=mi.rcWork.right && rcOld.bottom<=mi.rcWork.bottom) {
 		if (rc.right>mi.rcWork.right && rc.left>mi.rcWork.left)
@@ -487,7 +487,7 @@ bool CMainWindow::ReadSettings(CSettings &Settings)
 		m_ThinFrameWidth=max(Value,1);
 	Value=FRAME_NORMAL;
 	if (!Settings.Read(TEXT("FrameType"),&Value)) {
-		if (Settings.Read(TEXT("ThinFrame"),&f) && f)	// ˆÈ‘O‚Ìƒo[ƒWƒ‡ƒ“‚Æ‚ÌŒİŠ·—p
+		if (Settings.Read(TEXT("ThinFrame"),&f) && f)	// ä»¥å‰ã®ãƒãƒ¼ã‚¸ãƒ§ãƒ³ã¨ã®äº’æ›ç”¨
 			Value=FRAME_CUSTOM;
 	}
 	SetCustomFrame(Value!=FRAME_NORMAL,Value==FRAME_CUSTOM?m_ThinFrameWidth:0);
@@ -591,7 +591,7 @@ void CMainWindow::SetStatusBarVisible(bool fVisible)
 				RECT rc;
 
 				if (fVisible) {
-					// ˆêu•Ï‚ÈˆÊ’u‚Éo‚È‚¢‚æ‚¤‚ÉŒ©‚¦‚È‚¢ˆÊ’u‚ÉˆÚ“®
+					// ä¸€ç¬å¤‰ãªä½ç½®ã«å‡ºãªã„ã‚ˆã†ã«è¦‹ãˆãªã„ä½ç½®ã«ç§»å‹•
 					RECT rcClient;
 					::GetClientRect(m_App.StatusView.GetParent(),&rcClient);
 					m_App.StatusView.GetPosition(&rc);
@@ -652,7 +652,7 @@ bool CMainWindow::ShowStatusBarItem(int ID,bool fShow)
 			m_App.StatusView.SetPosition(&rc);
 		}
 
-		// ƒ|ƒbƒvƒAƒbƒv•\¦‚³‚ê‚½ƒTƒCƒhƒo[‚ÌˆÊ’u‚Ì’²®
+		// ãƒãƒƒãƒ—ã‚¢ãƒƒãƒ—è¡¨ç¤ºã•ã‚ŒãŸã‚µã‚¤ãƒ‰ãƒãƒ¼ã®ä½ç½®ã®èª¿æ•´
 		if (((!m_fShowSideBar && m_App.SideBar.GetVisible())
 				|| (m_pCore->GetFullscreen() && m_Fullscreen.IsSideBarVisible()))
 				&& m_App.SideBarOptions.GetPlace()==CSideBarOptions::PLACE_BOTTOM) {
@@ -678,7 +678,7 @@ void CMainWindow::OnStatusBarInitialized()
 
 void CMainWindow::OnStatusBarTraceEnd()
 {
-	// ‹N“®‚Éˆê“I‚É•\¦‚µ‚Ä‚¢‚½ƒXƒe[ƒ^ƒXƒo[‚ğ”ñ•\¦‚É‚·‚é
+	// èµ·å‹•æ™‚ã«ä¸€æ™‚çš„ã«è¡¨ç¤ºã—ã¦ã„ãŸã‚¹ãƒ†ãƒ¼ã‚¿ã‚¹ãƒãƒ¼ã‚’éè¡¨ç¤ºã«ã™ã‚‹
 	if (!m_fShowStatusBar)
 		ShowPopupStatusBar(false);
 }
@@ -726,7 +726,7 @@ void CMainWindow::SetTitleBarVisible(bool fVisible)
 }
 
 
-// ƒ^ƒCƒgƒ‹ƒo[‚ğ“Æ©‚Ì‚à‚Ì‚É‚·‚é‚©İ’è
+// ã‚¿ã‚¤ãƒˆãƒ«ãƒãƒ¼ã‚’ç‹¬è‡ªã®ã‚‚ã®ã«ã™ã‚‹ã‹è¨­å®š
 void CMainWindow::SetCustomTitleBar(bool fCustom)
 {
 	if (m_fCustomTitleBar!=fCustom) {
@@ -747,7 +747,7 @@ void CMainWindow::SetCustomTitleBar(bool fCustom)
 }
 
 
-// ƒ^ƒCƒgƒ‹ƒo[‚ğƒpƒlƒ‹‚Å•ªŠ„‚·‚é‚©İ’è
+// ã‚¿ã‚¤ãƒˆãƒ«ãƒãƒ¼ã‚’ãƒ‘ãƒãƒ«ã§åˆ†å‰²ã™ã‚‹ã‹è¨­å®š
 void CMainWindow::SetSplitTitleBar(bool fSplit)
 {
 	if (m_fSplitTitleBar!=fSplit) {
@@ -758,7 +758,7 @@ void CMainWindow::SetSplitTitleBar(bool fSplit)
 }
 
 
-// ƒEƒBƒ“ƒhƒE˜g‚ğ“Æ©‚Ì‚à‚Ì‚É‚·‚é‚©İ’è
+// ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦æ ã‚’ç‹¬è‡ªã®ã‚‚ã®ã«ã™ã‚‹ã‹è¨­å®š
 void CMainWindow::SetCustomFrame(bool fCustomFrame,int Width)
 {
 	if (m_fCustomFrame!=fCustomFrame || (fCustomFrame && m_CustomFrameWidth!=Width)) {
@@ -770,7 +770,7 @@ void CMainWindow::SetCustomFrame(bool fCustomFrame,int Width)
 		if (fCustomFrame)
 			m_CustomFrameWidth=Width;
 		if (m_hwnd!=nullptr) {
-			// Å‘å‰»ó‘Ô‚ÅƒEƒBƒ“ƒhƒE˜g‚ğ•Ï‚¦‚é‚Æ‚¨‚©‚µ‚­‚È‚é‚Ì‚ÅAŒ³‚É–ß‚³‚ê‚½‚É•Ï‚¦‚é
+			// æœ€å¤§åŒ–çŠ¶æ…‹ã§ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦æ ã‚’å¤‰ãˆã‚‹ã¨ãŠã‹ã—ããªã‚‹ã®ã§ã€å…ƒã«æˆ»ã•ã‚ŒãŸæ™‚ã«å¤‰ãˆã‚‹
 			if (::IsZoomed(m_hwnd))
 				m_fWindowFrameChanged=true;
 			else
@@ -794,7 +794,7 @@ void CMainWindow::SetSideBarVisible(bool fVisible)
 			RECT rc;
 
 			if (fVisible) {
-				// ˆêu•Ï‚ÈˆÊ’u‚Éo‚È‚¢‚æ‚¤‚ÉŒ©‚¦‚È‚¢ˆÊ’u‚ÉˆÚ“®
+				// ä¸€ç¬å¤‰ãªä½ç½®ã«å‡ºãªã„ã‚ˆã†ã«è¦‹ãˆãªã„ä½ç½®ã«ç§»å‹•
 				RECT rcClient;
 				::GetClientRect(m_App.SideBar.GetParent(),&rcClient);
 				m_App.SideBar.GetPosition(&rc);
@@ -1101,7 +1101,7 @@ LRESULT CMainWindow::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 			bool fHorz=uMsg==WM_MOUSEHWHEEL;
 
 			OnMouseWheel(wParam,lParam,fHorz);
-			// WM_MOUSEHWHEEL ‚Í 1‚ğ•Ô‚³‚È‚¢‚ÆŒJ‚è•Ô‚µ‘—‚ç‚ê‚Ä—ˆ‚È‚¢‚ç‚µ‚¢
+			// WM_MOUSEHWHEEL ã¯ 1ã‚’è¿”ã•ãªã„ã¨ç¹°ã‚Šè¿”ã—é€ã‚‰ã‚Œã¦æ¥ãªã„ã‚‰ã—ã„
 			return fHorz;
 		}
 
@@ -1130,7 +1130,7 @@ LRESULT CMainWindow::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 			return TRUE;
 		break;
 
-// ƒEƒBƒ“ƒhƒE˜g‚ğ“Æ©‚Ì‚à‚Ì‚É‚·‚é‚½‚ß‚ÌƒR[ƒh
+// ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦æ ã‚’ç‹¬è‡ªã®ã‚‚ã®ã«ã™ã‚‹ãŸã‚ã®ã‚³ãƒ¼ãƒ‰
 	case WM_NCACTIVATE:
 		if (m_fCustomFrame) {
 			DrawCustomFrame(wParam!=FALSE);
@@ -1143,8 +1143,8 @@ LRESULT CMainWindow::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 			if (wParam!=0) {
 				NCCALCSIZE_PARAMS *pnccsp=reinterpret_cast<NCCALCSIZE_PARAMS*>(lParam);
 
-				// Å‘å‰»ó‘Ô‚Å‹N“®‚³‚ê‚½ÛAÅ‰‚É‚±‚±‚É—ˆ‚é NCCALCSIZE_PARAMS::rgrc[0] ‚ª
-				// ƒfƒtƒHƒ‹ƒg‚ÌƒEƒBƒ“ƒhƒE˜g‚Ì•ª‘å‚«‚­‚³‚ê‚½ƒTƒCƒY‚É‚È‚Á‚Ä‚¢‚é
+				// æœ€å¤§åŒ–çŠ¶æ…‹ã§èµ·å‹•ã•ã‚ŒãŸéš›ã€æœ€åˆã«ã“ã“ã«æ¥ã‚‹æ™‚ NCCALCSIZE_PARAMS::rgrc[0] ãŒ
+				// ãƒ‡ãƒ•ã‚©ãƒ«ãƒˆã®ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦æ ã®åˆ†å¤§ããã•ã‚ŒãŸã‚µã‚¤ã‚ºã«ãªã£ã¦ã„ã‚‹
 				if (::IsZoomed(hwnd)) {
 					HMONITOR hMonitor=::MonitorFromRect(&pnccsp->rgrc[0],MONITOR_DEFAULTTONEAREST);
 					MONITORINFO mi;
@@ -1204,7 +1204,7 @@ LRESULT CMainWindow::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 			return Code;
 		}
 		break;
-// ƒEƒBƒ“ƒhƒE˜g‚ğ“Æ©‚Ì‚à‚Ì‚É‚·‚é‚½‚ß‚ÌƒR[ƒhI‚í‚è
+// ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦æ ã‚’ç‹¬è‡ªã®ã‚‚ã®ã«ã™ã‚‹ãŸã‚ã®ã‚³ãƒ¼ãƒ‰çµ‚ã‚ã‚Š
 
 	case WM_INITMENUPOPUP:
 		if (OnInitMenuPopup(reinterpret_cast<HMENU>(wParam)))
@@ -1275,7 +1275,7 @@ LRESULT CMainWindow::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 
 	case WM_POWERBROADCAST:
 		if (wParam==PBT_APMSUSPEND) {
-			m_App.AddLog(TEXT("ƒTƒXƒyƒ“ƒh‚Ö‚ÌˆÚs’Ê’m‚ğó‚¯‚Ü‚µ‚½B"));
+			m_App.AddLog(TEXT("ã‚µã‚¹ãƒšãƒ³ãƒ‰ã¸ã®ç§»è¡Œé€šçŸ¥ã‚’å—ã‘ã¾ã—ãŸã€‚"));
 			if (m_App.EpgCaptureManager.IsCapturing()) {
 				m_App.EpgCaptureManager.EndCapture(0);
 			} else if (!m_pCore->GetStandby()) {
@@ -1285,9 +1285,9 @@ LRESULT CMainWindow::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 			m_App.Core.CloseTuner();
 			FinalizeViewer();
 		} else if (wParam==PBT_APMRESUMESUSPEND) {
-			m_App.AddLog(TEXT("ƒTƒXƒyƒ“ƒh‚©‚ç‚Ì•œ‹A’Ê’m‚ğó‚¯‚Ü‚µ‚½B"));
+			m_App.AddLog(TEXT("ã‚µã‚¹ãƒšãƒ³ãƒ‰ã‹ã‚‰ã®å¾©å¸°é€šçŸ¥ã‚’å—ã‘ã¾ã—ãŸã€‚"));
 			if (!m_pCore->GetStandby()) {
-				// ’x‰„‚³‚¹‚½•û‚ª‚¢‚¢‚©‚à?
+				// é…å»¶ã•ã›ãŸæ–¹ãŒã„ã„ã‹ã‚‚?
 				ResumeTuner();
 			}
 			ResumeViewer(ResumeInfo::VIEWERSUSPEND_SUSPEND);
@@ -1302,7 +1302,7 @@ LRESULT CMainWindow::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 		return m_App.ReceiveInterprocessMessage(hwnd,wParam,lParam);
 
 	case WM_APP_SERVICEUPDATE:
-		// ƒT[ƒrƒX‚ªXV‚³‚ê‚½
+		// ã‚µãƒ¼ãƒ“ã‚¹ãŒæ›´æ–°ã•ã‚ŒãŸ
 		TRACE(TEXT("WM_APP_SERVICEUPDATE\n"));
 		{
 			CServiceUpdateInfo *pInfo=reinterpret_cast<CServiceUpdateInfo*>(lParam);
@@ -1329,14 +1329,14 @@ LRESULT CMainWindow::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 						&& pChInfo->GetTransportStreamID()!=TransportStreamID)
 						|| (pChInfo->GetServiceID()!=0
 						&& pChInfo->GetServiceID()!=ServiceID)))) {
-					// ŠO•”‚©‚çƒ`ƒƒƒ“ƒlƒ‹•ÏX‚³‚ê‚½‚©A
-					// BonDriver‚ªŠJ‚©‚ê‚½‚Æ‚«‚ÌƒfƒtƒHƒ‹ƒgƒ`ƒƒƒ“ƒlƒ‹
+					// å¤–éƒ¨ã‹ã‚‰ãƒãƒ£ãƒ³ãƒãƒ«å¤‰æ›´ã•ã‚ŒãŸã‹ã€
+					// BonDriverãŒé–‹ã‹ã‚ŒãŸã¨ãã®ãƒ‡ãƒ•ã‚©ãƒ«ãƒˆãƒãƒ£ãƒ³ãƒãƒ«
 					m_App.Core.FollowChannelChange(TransportStreamID,ServiceID);
 				}
 			} else if (pInfo->m_fServiceListEmpty && pInfo->m_fStreamChanged
 					&& !m_App.Core.IsChannelScanning()
 					&& !m_App.EpgCaptureManager.IsCapturing()) {
-				ShowNotificationBar(TEXT("‚±‚Ìƒ`ƒƒƒ“ƒlƒ‹‚Í•ú‘—‹x~’†‚Å‚·"),
+				ShowNotificationBar(TEXT("ã“ã®ãƒãƒ£ãƒ³ãƒãƒ«ã¯æ”¾é€ä¼‘æ­¢ä¸­ã§ã™"),
 									CNotificationBar::MESSAGE_INFO);
 			}
 
@@ -1353,7 +1353,7 @@ LRESULT CMainWindow::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 
 	case WM_APP_SERVICECHANGED:
 		TRACE(TEXT("WM_APP_SERVICECHANGED\n"));
-		m_App.AddLog(TEXT("ƒT[ƒrƒX‚ğ•ÏX‚µ‚Ü‚µ‚½B(SID %d)"),static_cast<int>(wParam));
+		m_App.AddLog(TEXT("ã‚µãƒ¼ãƒ“ã‚¹ã‚’å¤‰æ›´ã—ã¾ã—ãŸã€‚(SID %d)"),static_cast<int>(wParam));
 		m_pCore->UpdateTitle();
 		m_App.StatusView.UpdateItem(STATUS_ITEM_CHANNEL);
 		m_App.Panel.InfoPanel.UpdateItem(CInformationPanel::ITEM_SERVICE);
@@ -1382,7 +1382,7 @@ LRESULT CMainWindow::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 	/*
 	case WM_APP_IMAGESAVE:
 		{
-			::MessageBox(nullptr,TEXT("‰æ‘œ‚Ì•Û‘¶‚ÅƒGƒ‰[‚ª”­¶‚µ‚Ü‚µ‚½B"),nullptr,
+			::MessageBox(nullptr,TEXT("ç”»åƒã®ä¿å­˜ã§ã‚¨ãƒ©ãƒ¼ãŒç™ºç”Ÿã—ã¾ã—ãŸã€‚"),nullptr,
 						 MB_OK | MB_ICONEXCLAMATION);
 		}
 		return 0;
@@ -1396,11 +1396,11 @@ LRESULT CMainWindow::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 
 				Menu.EnableItem(CM_SHOW,
 								m_pCore->GetStandby() || IsMinimizeToTray());
-				// ‚¨–ñ‘©‚ª•K—v‚È——R‚ÍˆÈ‰º‚ğQÆ
+				// ãŠç´„æŸãŒå¿…è¦ãªç†ç”±ã¯ä»¥ä¸‹ã‚’å‚ç…§
 				// http://support.microsoft.com/kb/135788/en-us
-				ForegroundWindow(hwnd);				// ‚¨–ñ‘©
+				ForegroundWindow(hwnd);				// ãŠç´„æŸ
 				Menu.Show(hwnd);
-				::PostMessage(hwnd,WM_NULL,0,0);	// ‚¨–ñ‘©
+				::PostMessage(hwnd,WM_NULL,0,0);	// ãŠç´„æŸ
 			}
 			break;
 
@@ -1411,7 +1411,7 @@ LRESULT CMainWindow::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 		return 0;
 
 	case WM_APP_QUERYPORT:
-		// g‚Á‚Ä‚¢‚éƒ|[ƒg‚ğ•Ô‚·
+		// ä½¿ã£ã¦ã„ã‚‹ãƒãƒ¼ãƒˆã‚’è¿”ã™
 		TRACE(TEXT("WM_APP_QUERYPORT\n"));
 		if (!m_fClosing && m_App.CoreEngine.IsNetworkDriver()) {
 			WORD Port=m_App.ChannelManager.GetCurrentChannel()+
@@ -1421,13 +1421,13 @@ LRESULT CMainWindow::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 		return 0;
 
 	case WM_APP_FILEWRITEERROR:
-		// ƒtƒ@ƒCƒ‹‚Ì‘‚«o‚µƒGƒ‰[
+		// ãƒ•ã‚¡ã‚¤ãƒ«ã®æ›¸ãå‡ºã—ã‚¨ãƒ©ãƒ¼
 		TRACE(TEXT("WM_APP_FILEWRITEERROR\n"));
-		ShowErrorMessage(TEXT("ƒtƒ@ƒCƒ‹‚Ö‚Ì‘‚«o‚µ‚ÅƒGƒ‰[‚ª”­¶‚µ‚Ü‚µ‚½B"));
+		ShowErrorMessage(TEXT("ãƒ•ã‚¡ã‚¤ãƒ«ã¸ã®æ›¸ãå‡ºã—ã§ã‚¨ãƒ©ãƒ¼ãŒç™ºç”Ÿã—ã¾ã—ãŸã€‚"));
 		return 0;
 
 	case WM_APP_VIDEOSTREAMTYPECHANGED:
-		// ‰f‘œstream_type‚ª•Ï‚í‚Á‚½
+		// æ˜ åƒstream_typeãŒå¤‰ã‚ã£ãŸ
 		TRACE(TEXT("WM_APP_VIDEOSTREAMTYPECHANGED\n"));
 		if (m_fEnablePlayback
 				&& !IsMessageInQueue(hwnd,WM_APP_VIDEOSTREAMTYPECHANGED)) {
@@ -1439,11 +1439,11 @@ LRESULT CMainWindow::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 		return 0;
 
 	case WM_APP_VIDEOSIZECHANGED:
-		// ‰f‘œƒTƒCƒY‚ª•Ï‚í‚Á‚½
+		// æ˜ åƒã‚µã‚¤ã‚ºãŒå¤‰ã‚ã£ãŸ
 		TRACE(TEXT("WM_APP_VIDEOSIZECHANGED\n"));
 		/*
-			ƒXƒgƒŠ[ƒ€‚Ì‰f‘œƒTƒCƒY‚Ì•Ï‰»‚ğŒŸ’m‚µ‚Ä‚©‚çA‚»‚ê‚ªÀÛ‚É
-			•\¦‚³‚ê‚é‚Ü‚Å‚É‚Íƒ^ƒCƒ€ƒ‰ƒO‚ª‚ ‚é‚½‚ßAŒã‚Å’²®‚ğs‚¤
+			ã‚¹ãƒˆãƒªãƒ¼ãƒ ã®æ˜ åƒã‚µã‚¤ã‚ºã®å¤‰åŒ–ã‚’æ¤œçŸ¥ã—ã¦ã‹ã‚‰ã€ãã‚ŒãŒå®Ÿéš›ã«
+			è¡¨ç¤ºã•ã‚Œã‚‹ã¾ã§ã«ã¯ã‚¿ã‚¤ãƒ ãƒ©ã‚°ãŒã‚ã‚‹ãŸã‚ã€å¾Œã§èª¿æ•´ã‚’è¡Œã†
 		*/
 		m_VideoSizeChangedTimerCount=0;
 		::SetTimer(hwnd,TIMER_ID_VIDEOSIZECHANGED,500,nullptr);
@@ -1457,7 +1457,7 @@ LRESULT CMainWindow::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 		return 0;
 
 	case WM_APP_EPGLOADED:
-		// EPGƒtƒ@ƒCƒ‹‚ª“Ç‚İ‚Ü‚ê‚½
+		// EPGãƒ•ã‚¡ã‚¤ãƒ«ãŒèª­ã¿è¾¼ã¾ã‚ŒãŸ
 		TRACE(TEXT("WM_APP_EPGLOADED\n"));
 		m_App.Panel.EnableProgramListUpdate(true);
 		if (IsPanelVisible()
@@ -1468,17 +1468,17 @@ LRESULT CMainWindow::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 		return 0;
 
 	case WM_APP_CONTROLLERFOCUS:
-		// ƒRƒ“ƒgƒ[ƒ‰‚Ì‘€ì‘ÎÛ‚ª•Ï‚í‚Á‚½
+		// ã‚³ãƒ³ãƒˆãƒ­ãƒ¼ãƒ©ã®æ“ä½œå¯¾è±¡ãŒå¤‰ã‚ã£ãŸ
 		TRACE(TEXT("WM_APP_CONTROLLERFOCUS\n"));
 		m_App.ControllerManager.OnFocusChange(hwnd,wParam!=0);
 		return 0;
 
 	case WM_APP_PLUGINMESSAGE:
-		// ƒvƒ‰ƒOƒCƒ“‚ÌƒƒbƒZ[ƒW‚Ìˆ—
+		// ãƒ—ãƒ©ã‚°ã‚¤ãƒ³ã®ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸ã®å‡¦ç†
 		return CPlugin::OnPluginMessage(wParam,lParam);
 
 	case WM_APP_SHOWNOTIFICATIONBAR:
-		// ’Ê’mƒo[‚Ì•\¦
+		// é€šçŸ¥ãƒãƒ¼ã®è¡¨ç¤º
 		TRACE(TEXT("WM_APP_SHOWNOTIFICATIONBAR"));
 		{
 			LPCTSTR pszMessage=reinterpret_cast<LPCTSTR>(lParam);
@@ -1500,7 +1500,7 @@ LRESULT CMainWindow::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 		return 0;
 
 	case WM_APP_SPDIFPASSTHROUGHERROR:
-		// S/PDIFƒpƒXƒXƒ‹[o—Í‚ÌƒGƒ‰[
+		// S/PDIFãƒ‘ã‚¹ã‚¹ãƒ«ãƒ¼å‡ºåŠ›ã®ã‚¨ãƒ©ãƒ¼
 		TRACE(TEXT("WM_APP_SPDIFPASSTHROUGHERROR\n"));
 		{
 			//HRESULT hr=static_cast<HRESULT>(wParam);
@@ -1511,10 +1511,10 @@ LRESULT CMainWindow::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 			m_App.CoreEngine.SetSpdifOptions(Options);
 			m_App.CoreEngine.m_DtvEngine.ResetMediaViewer();
 
-			ShowMessage(TEXT("S/PDIFƒpƒXƒXƒ‹[o—Í‚ª‚Å‚«‚Ü‚¹‚ñB\n")
-						TEXT("ƒfƒoƒCƒX‚ªƒpƒXƒXƒ‹[o—Í‚É‘Î‰‚µ‚Ä‚¢‚é‚©A\n")
-						TEXT("‚Ü‚½ƒpƒXƒXƒ‹[o—Í‚Å‚«‚é‚æ‚¤‚Éİ’è‚³‚ê‚Ä‚¢‚é‚©Šm”F‚µ‚Ä‚­‚¾‚³‚¢B"),
-						TEXT("S/PDIFƒpƒXƒXƒ‹[o—ÍƒGƒ‰["),
+			ShowMessage(TEXT("S/PDIFãƒ‘ã‚¹ã‚¹ãƒ«ãƒ¼å‡ºåŠ›ãŒã§ãã¾ã›ã‚“ã€‚\n")
+						TEXT("ãƒ‡ãƒã‚¤ã‚¹ãŒãƒ‘ã‚¹ã‚¹ãƒ«ãƒ¼å‡ºåŠ›ã«å¯¾å¿œã—ã¦ã„ã‚‹ã‹ã€\n")
+						TEXT("ã¾ãŸãƒ‘ã‚¹ã‚¹ãƒ«ãƒ¼å‡ºåŠ›ã§ãã‚‹ã‚ˆã†ã«è¨­å®šã•ã‚Œã¦ã„ã‚‹ã‹ç¢ºèªã—ã¦ãã ã•ã„ã€‚"),
+						TEXT("S/PDIFãƒ‘ã‚¹ã‚¹ãƒ«ãƒ¼å‡ºåŠ›ã‚¨ãƒ©ãƒ¼"),
 						MB_OK | MB_ICONEXCLAMATION);
 		}
 		return 0;
@@ -1754,10 +1754,10 @@ bool CMainWindow::OnCreate(const CREATESTRUCT *pcs)
 	m_LayoutBase.UnlockLayout();
 	UpdateLayoutStructure();
 
-	// ‹N“®ó‹µ‚ğ•\¦‚·‚é‚½‚ß‚ÉA‹N“®‚Íí‚ÉƒXƒe[ƒ^ƒXƒo[‚ğ•\¦‚·‚é
+	// èµ·å‹•çŠ¶æ³ã‚’è¡¨ç¤ºã™ã‚‹ãŸã‚ã«ã€èµ·å‹•æ™‚ã¯å¸¸ã«ã‚¹ãƒ†ãƒ¼ã‚¿ã‚¹ãƒãƒ¼ã‚’è¡¨ç¤ºã™ã‚‹
 	if (!m_fShowStatusBar)
 		ShowPopupStatusBar(true);
-	m_App.StatusView.SetSingleText(TEXT("‹N“®’†..."));
+	m_App.StatusView.SetSingleText(TEXT("èµ·å‹•ä¸­..."));
 
 	m_App.OSDManager.Initialize();
 	m_App.OSDManager.SetEventHandler(this);
@@ -1769,7 +1769,7 @@ bool CMainWindow::OnCreate(const CREATESTRUCT *pcs)
 		//HookWindows(m_App.Panel.Form.GetHandle());
 	}
 
-	// IME–³Œø‰»
+	// IMEç„¡åŠ¹åŒ–
 	::ImmAssociateContext(m_hwnd,nullptr);
 	::ImmAssociateContextEx(m_hwnd,nullptr,IACE_CHILDREN);
 
@@ -1812,7 +1812,7 @@ bool CMainWindow::OnCreate(const CREATESTRUCT *pcs)
 
 	HMENU hSysMenu=::GetSystemMenu(m_hwnd,FALSE);
 	::InsertMenu(hSysMenu,0,MF_BYPOSITION | MF_STRING | MF_ENABLED,
-				 SC_ABOUT,TEXT("ƒo[ƒWƒ‡ƒ“î•ñ(&A)"));
+				 SC_ABOUT,TEXT("ãƒãƒ¼ã‚¸ãƒ§ãƒ³æƒ…å ±(&A)"));
 	::InsertMenu(hSysMenu,1,MF_BYPOSITION | MF_SEPARATOR,0,nullptr);
 
 	static const CIconMenu::ItemInfo AspectRatioMenuItems[] = {
@@ -1900,8 +1900,8 @@ void CMainWindow::OnDestroy()
 
 void CMainWindow::OnSizeChanged(UINT State,int Width,int Height)
 {
-	// WM_NCCREATE ‚Å EnableNonClientDpiScaling ‚ğŒÄ‚ñ‚¾‚É WM_SIZE ‚ª‘—‚ç‚ê‚Ä‚­‚é‚½‚ßA
-	// ‚Ü‚¾ WM_CREATE ‚ğˆ—‚µ‚Ä‚È‚¢ê‡‚Í‰½‚à‚µ‚È‚¢‚æ‚¤‚É‚·‚é
+	// WM_NCCREATE ã§ EnableNonClientDpiScaling ã‚’å‘¼ã‚“ã æ™‚ã« WM_SIZE ãŒé€ã‚‰ã‚Œã¦ãã‚‹ãŸã‚ã€
+	// ã¾ã  WM_CREATE ã‚’å‡¦ç†ã—ã¦ãªã„å ´åˆã¯ä½•ã‚‚ã—ãªã„ã‚ˆã†ã«ã™ã‚‹
 	if (!m_fCreated)
 		return;
 
@@ -2088,8 +2088,8 @@ void CMainWindow::OnGetMinMaxInfo(HWND hwnd,LPMINMAXINFO pmmi)
 			pmmi->ptMaxPosition.x=mi.rcWork.left-mi.rcMonitor.left-Border.left;
 			pmmi->ptMaxPosition.y=mi.rcWork.top-mi.rcMonitor.top-Border.top;
 			if (::IsZoomed(hwnd)) {
-				// ƒEƒBƒ“ƒhƒE‚Ì‚ ‚éƒ‚ƒjƒ^‚ªƒvƒ‰ƒCƒ}ƒŠƒ‚ƒjƒ^‚æ‚è‚à‘å‚«‚¢ê‡A
-				// ptMaxTrackSize ‚ğİ’è‚µ‚È‚¢‚ÆƒTƒCƒY‚ª‚¨‚©‚µ‚­‚È‚é
+				// ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã®ã‚ã‚‹ãƒ¢ãƒ‹ã‚¿ãŒãƒ—ãƒ©ã‚¤ãƒãƒªãƒ¢ãƒ‹ã‚¿ã‚ˆã‚Šã‚‚å¤§ãã„å ´åˆã€
+				// ptMaxTrackSize ã‚’è¨­å®šã—ãªã„ã¨ã‚µã‚¤ã‚ºãŒãŠã‹ã—ããªã‚‹
 				pmmi->ptMaxTrackSize=pmmi->ptMaxSize;
 			} else {
 				pmmi->ptMaxTrackSize.x=::GetSystemMetrics(SM_CXVIRTUALSCREEN);
@@ -2103,7 +2103,7 @@ void CMainWindow::OnGetMinMaxInfo(HWND hwnd,LPMINMAXINFO pmmi)
 void CMainWindow::OnMouseMove(int x,int y)
 {
 	if (m_fDragging) {
-		// ƒEƒBƒ“ƒhƒEˆÚ“®’†
+		// ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ç§»å‹•ä¸­
 		POINT pt;
 		RECT rc;
 
@@ -2264,8 +2264,8 @@ bool CMainWindow::OnKeyDown(WPARAM KeyCode)
 	if (KeyCode>=VK_F13 && KeyCode<=VK_F24
 			&& (::GetKeyState(VK_SHIFT)<0 || ::GetKeyState(VK_CONTROL)<0)
 			&& !m_App.ControllerManager.IsControllerEnabled(TEXT("HDUS Remocon"))) {
-		ShowMessage(TEXT("ƒŠƒ‚ƒRƒ“‚ğg—p‚·‚é‚½‚ß‚É‚ÍAƒƒjƒ…[‚Ì [ƒvƒ‰ƒOƒCƒ“] -> [HDUSƒŠƒ‚ƒRƒ“] ‚ÅƒŠƒ‚ƒRƒ“‚ğ—LŒø‚É‚µ‚Ä‚­‚¾‚³‚¢B"),
-					TEXT("‚¨’m‚ç‚¹"),MB_OK | MB_ICONINFORMATION);
+		ShowMessage(TEXT("ãƒªãƒ¢ã‚³ãƒ³ã‚’ä½¿ç”¨ã™ã‚‹ãŸã‚ã«ã¯ã€ãƒ¡ãƒ‹ãƒ¥ãƒ¼ã® [ãƒ—ãƒ©ã‚°ã‚¤ãƒ³] -> [HDUSãƒªãƒ¢ã‚³ãƒ³] ã§ãƒªãƒ¢ã‚³ãƒ³ã‚’æœ‰åŠ¹ã«ã—ã¦ãã ã•ã„ã€‚"),
+					TEXT("ãŠçŸ¥ã‚‰ã›"),MB_OK | MB_ICONINFORMATION);
 	}
 
 	return false;
@@ -2492,8 +2492,8 @@ void CMainWindow::OnCommand(HWND hwnd,int id,HWND hwndCtl,UINT codeNotify)
 			pDib=static_cast<BYTE*>(m_App.CoreEngine.GetCurrentImage());
 			if (pDib==nullptr) {
 				::SetCursor(hcurOld);
-				ShowMessage(TEXT("Œ»İ‚Ì‰æ‘œ‚ğæ“¾‚Å‚«‚Ü‚¹‚ñB\n")
-							TEXT("ƒŒƒ“ƒ_ƒ‰‚âƒfƒR[ƒ_‚ğ•Ï‚¦‚Ä‚İ‚Ä‚­‚¾‚³‚¢B"),TEXT("‚²‚ß‚ñ"),
+				ShowMessage(TEXT("ç¾åœ¨ã®ç”»åƒã‚’å–å¾—ã§ãã¾ã›ã‚“ã€‚\n")
+							TEXT("ãƒ¬ãƒ³ãƒ€ãƒ©ã‚„ãƒ‡ã‚³ãƒ¼ãƒ€ã‚’å¤‰ãˆã¦ã¿ã¦ãã ã•ã„ã€‚"),TEXT("ã”ã‚ã‚“"),
 							MB_OK | MB_ICONEXCLAMATION);
 				return;
 			}
@@ -2583,11 +2583,11 @@ void CMainWindow::OnCommand(HWND hwnd,int id,HWND hwndCtl,UINT codeNotify)
 			m_App.CaptureWindow.SetImage(pImage);
 			if (id==CM_COPY) {
 				if (!pImage->SetClipboard(hwnd)) {
-					ShowErrorMessage(TEXT("ƒNƒŠƒbƒvƒ{[ƒh‚Éƒf[ƒ^‚ğİ’è‚Å‚«‚Ü‚¹‚ñB"));
+					ShowErrorMessage(TEXT("ã‚¯ãƒªãƒƒãƒ—ãƒœãƒ¼ãƒ‰ã«ãƒ‡ãƒ¼ã‚¿ã‚’è¨­å®šã§ãã¾ã›ã‚“ã€‚"));
 				}
 			} else {
 				if (!m_App.CaptureOptions.SaveImage(pImage)) {
-					ShowErrorMessage(TEXT("‰æ‘œ‚Ì•Û‘¶‚ÅƒGƒ‰[‚ª”­¶‚µ‚Ü‚µ‚½B"));
+					ShowErrorMessage(TEXT("ç”»åƒã®ä¿å­˜ã§ã‚¨ãƒ©ãƒ¼ãŒç™ºç”Ÿã—ã¾ã—ãŸã€‚"));
 				}
 			}
 			if (!m_App.CaptureWindow.HasImage())
@@ -2663,10 +2663,10 @@ void CMainWindow::OnCommand(HWND hwnd,int id,HWND hwndCtl,UINT codeNotify)
 		} else {
 			if (m_App.RecordManager.IsReserved()) {
 				if (ShowMessage(
-						TEXT("Šù‚Éİ’è‚³‚ê‚Ä‚¢‚é˜^‰æ‚ª‚ ‚è‚Ü‚·B\n")
-						TEXT("˜^‰æ‚ğŠJn‚·‚é‚ÆŠù‘¶‚Ìİ’è‚ª”jŠü‚³‚ê‚Ü‚·B\n")
-						TEXT("˜^‰æ‚ğŠJn‚µ‚Ä‚à‚¢‚¢‚Å‚·‚©?"),
-						TEXT("˜^‰æŠJn‚ÌŠm”F"),
+						TEXT("æ—¢ã«è¨­å®šã•ã‚Œã¦ã„ã‚‹éŒ²ç”»ãŒã‚ã‚Šã¾ã™ã€‚\n")
+						TEXT("éŒ²ç”»ã‚’é–‹å§‹ã™ã‚‹ã¨æ—¢å­˜ã®è¨­å®šãŒç ´æ£„ã•ã‚Œã¾ã™ã€‚\n")
+						TEXT("éŒ²ç”»ã‚’é–‹å§‹ã—ã¦ã‚‚ã„ã„ã§ã™ã‹?"),
+						TEXT("éŒ²ç”»é–‹å§‹ã®ç¢ºèª"),
 						MB_OKCANCEL | MB_ICONQUESTION | MB_DEFBUTTON2)!=IDOK) {
 					return;
 				}
@@ -2701,7 +2701,7 @@ void CMainWindow::OnCommand(HWND hwnd,int id,HWND hwndCtl,UINT codeNotify)
 						m_App.Core.StartReservedRecord();
 					}
 				} else {
-					// —\–ñ‚ªƒLƒƒƒ“ƒZƒ‹‚³‚ê‚½ê‡‚à•\¦‚ğXV‚·‚é
+					// äºˆç´„ãŒã‚­ãƒ£ãƒ³ã‚»ãƒ«ã•ã‚ŒãŸå ´åˆã‚‚è¡¨ç¤ºã‚’æ›´æ–°ã™ã‚‹
 					m_App.StatusView.UpdateItem(STATUS_ITEM_RECORD);
 				}
 			}
@@ -2731,10 +2731,10 @@ void CMainWindow::OnCommand(HWND hwnd,int id,HWND hwndCtl,UINT codeNotify)
 		if (!m_App.RecordManager.IsRecording()) {
 			if (m_App.RecordManager.IsReserved()) {
 				if (ShowMessage(
-						TEXT("Šù‚Éİ’è‚³‚ê‚Ä‚¢‚é˜^‰æ‚ª‚ ‚è‚Ü‚·B\n")
-						TEXT("˜^‰æ‚ğŠJn‚·‚é‚ÆŠù‘¶‚Ìİ’è‚ª”jŠü‚³‚ê‚Ü‚·B\n")
-						TEXT("˜^‰æ‚ğŠJn‚µ‚Ä‚à‚¢‚¢‚Å‚·‚©?"),
-						TEXT("˜^‰æŠJn‚ÌŠm”F"),
+						TEXT("æ—¢ã«è¨­å®šã•ã‚Œã¦ã„ã‚‹éŒ²ç”»ãŒã‚ã‚Šã¾ã™ã€‚\n")
+						TEXT("éŒ²ç”»ã‚’é–‹å§‹ã™ã‚‹ã¨æ—¢å­˜ã®è¨­å®šãŒç ´æ£„ã•ã‚Œã¾ã™ã€‚\n")
+						TEXT("éŒ²ç”»ã‚’é–‹å§‹ã—ã¦ã‚‚ã„ã„ã§ã™ã‹?"),
+						TEXT("éŒ²ç”»é–‹å§‹ã®ç¢ºèª"),
 						MB_OKCANCEL | MB_ICONQUESTION | MB_DEFBUTTON2)!=IDOK) {
 					return;
 				}
@@ -2925,15 +2925,15 @@ void CMainWindow::OnCommand(HWND hwnd,int id,HWND hwndCtl,UINT codeNotify)
 
 #ifdef _DEBUG
 	case CM_UPDATECHANNELLIST:
-		// ƒ`ƒƒƒ“ƒlƒ‹ƒŠƒXƒg‚Ì©“®XV(Œ»ó–ğ‚É‚Í—§‚½‚È‚¢)
+		// ãƒãƒ£ãƒ³ãƒãƒ«ãƒªã‚¹ãƒˆã®è‡ªå‹•æ›´æ–°(ç¾çŠ¶å½¹ã«ã¯ç«‹ãŸãªã„)
 		//if (m_App.DriverOptions.IsChannelAutoUpdate(m_App.CoreEngine.GetDriverFileName()))
 		{
 			CTuningSpaceList TuningSpaceList(*m_App.ChannelManager.GetTuningSpaceList());
 			std::vector<TVTest::String> MessageList;
 
-			TRACE(TEXT("ƒ`ƒƒƒ“ƒlƒ‹ƒŠƒXƒg©“®XVŠJn\n"));
+			TRACE(TEXT("ãƒãƒ£ãƒ³ãƒãƒ«ãƒªã‚¹ãƒˆè‡ªå‹•æ›´æ–°é–‹å§‹\n"));
 			if (m_App.ChannelScan.AutoUpdateChannelList(&TuningSpaceList,&MessageList)) {
-				m_App.AddLog(TEXT("ƒ`ƒƒƒ“ƒlƒ‹ƒŠƒXƒg‚Ì©“®XV‚ğs‚¢‚Ü‚µ‚½B"));
+				m_App.AddLog(TEXT("ãƒãƒ£ãƒ³ãƒãƒ«ãƒªã‚¹ãƒˆã®è‡ªå‹•æ›´æ–°ã‚’è¡Œã„ã¾ã—ãŸã€‚"));
 				for (size_t i=0;i<MessageList.size();i++)
 					m_App.AddLog(TEXT("%s"),MessageList[i].c_str());
 
@@ -2948,9 +2948,9 @@ void CMainWindow::OnCommand(HWND hwnd,int id,HWND hwndCtl,UINT codeNotify)
 					::PathRenameExtension(szFileName,CHANNEL_FILE_EXTENSION);
 				}
 				if (TuningSpaceList.SaveToFile(szFileName))
-					m_App.AddLog(TEXT("ƒ`ƒƒƒ“ƒlƒ‹ƒtƒ@ƒCƒ‹‚ğ \"%s\" ‚É•Û‘¶‚µ‚Ü‚µ‚½B"),szFileName);
+					m_App.AddLog(TEXT("ãƒãƒ£ãƒ³ãƒãƒ«ãƒ•ã‚¡ã‚¤ãƒ«ã‚’ \"%s\" ã«ä¿å­˜ã—ã¾ã—ãŸã€‚"),szFileName);
 				else
-					m_App.AddLog(CLogItem::TYPE_ERROR,TEXT("ƒ`ƒƒƒ“ƒlƒ‹ƒtƒ@ƒCƒ‹ \"%s\" ‚ğ•Û‘¶‚Å‚«‚Ü‚¹‚ñB"),szFileName);
+					m_App.AddLog(CLogItem::TYPE_ERROR,TEXT("ãƒãƒ£ãƒ³ãƒãƒ«ãƒ•ã‚¡ã‚¤ãƒ« \"%s\" ã‚’ä¿å­˜ã§ãã¾ã›ã‚“ã€‚"),szFileName);
 			}
 		}
 		return;
@@ -3233,11 +3233,11 @@ void CMainWindow::OnCommand(HWND hwnd,int id,HWND hwndCtl,UINT codeNotify)
 			ofn.hwndOwner=GetVideoHostWindow();
 			ofn.lpstrFilter=
 				TEXT("BonDriver(BonDriver*.dll)\0BonDriver*.dll\0")
-				TEXT("‚·‚×‚Ä‚Ìƒtƒ@ƒCƒ‹\0*.*\0");
+				TEXT("ã™ã¹ã¦ã®ãƒ•ã‚¡ã‚¤ãƒ«\0*.*\0");
 			ofn.lpstrFile=szFileName;
 			ofn.nMaxFile=lengthof(szFileName);
 			ofn.lpstrInitialDir=szInitDir;
-			ofn.lpstrTitle=TEXT("BonDriver‚Ì‘I‘ğ");
+			ofn.lpstrTitle=TEXT("BonDriverã®é¸æŠ");
 			ofn.Flags=OFN_HIDEREADONLY | OFN_FILEMUSTEXIST | OFN_EXPLORER;
 			if (FileOpenDialog(&ofn)) {
 				m_App.Core.OpenTuner(szFileName);
@@ -3539,19 +3539,19 @@ void CMainWindow::OnTimer(HWND hwnd,UINT id)
 {
 	switch (id) {
 	case TIMER_ID_UPDATE:
-		// î•ñXV
+		// æƒ…å ±æ›´æ–°
 		{
 			DWORD UpdateStatus=m_App.CoreEngine.UpdateAsyncStatus();
 			DWORD UpdateStatistics=m_App.CoreEngine.UpdateStatistics();
 
-			// ‰f‘œƒTƒCƒY‚Ì•Ï‰»
+			// æ˜ åƒã‚µã‚¤ã‚ºã®å¤‰åŒ–
 			if ((UpdateStatus&CCoreEngine::STATUS_VIDEOSIZE)!=0) {
 				m_App.StatusView.UpdateItem(STATUS_ITEM_VIDEOSIZE);
 				m_App.Panel.InfoPanel.UpdateItem(CInformationPanel::ITEM_VIDEOINFO);
 				m_App.Panel.ControlPanel.UpdateItem(CONTROLPANEL_ITEM_VIDEO);
 			}
 
-			// ‰¹ºŒ`®‚Ì•Ï‰»
+			// éŸ³å£°å½¢å¼ã®å¤‰åŒ–
 			if ((UpdateStatus&(CCoreEngine::STATUS_AUDIOCHANNELS
 							 | CCoreEngine::STATUS_AUDIOSTREAMS
 							 | CCoreEngine::STATUS_AUDIOCOMPONENTTYPE
@@ -3570,10 +3570,10 @@ void CMainWindow::OnTimer(HWND hwnd,UINT id)
 			bool fUpdateEventInfo=false;
 
 			if ((UpdateStatus & CCoreEngine::STATUS_EVENTID)!=0) {
-				// ”Ô‘g‚ÌØ‚è‘Ö‚í‚è
+				// ç•ªçµ„ã®åˆ‡ã‚Šæ›¿ã‚ã‚Š
 				OnEventChanged();
 			} else if ((UpdateStatus & CCoreEngine::STATUS_EVENTINFO)!=0) {
-				// ”Ô‘gî•ñ‚ªXV‚³‚ê‚½
+				// ç•ªçµ„æƒ…å ±ãŒæ›´æ–°ã•ã‚ŒãŸ
 				fUpdateEventInfo=true;
 
 				m_pCore->UpdateTitle();
@@ -3631,10 +3631,10 @@ void CMainWindow::OnTimer(HWND hwnd,UINT id)
 			m_App.StatusView.UpdateItem(STATUS_ITEM_MEDIABITRATE);
 
 			if (IsPanelVisible()) {
-				// ƒpƒlƒ‹‚ÌXV
+				// ãƒ‘ãƒãƒ«ã®æ›´æ–°
 				switch (m_App.Panel.Form.GetCurPageID()) {
 				case PANEL_ID_INFORMATION:
-					// î•ñƒ^ƒuXV
+					// æƒ…å ±ã‚¿ãƒ–æ›´æ–°
 					m_App.Panel.InfoPanel.UpdateItem(CInformationPanel::ITEM_VIDEOINFO);
 
 					if ((UpdateStatistics&(CCoreEngine::STATISTIC_SIGNALLEVEL
@@ -3660,7 +3660,7 @@ void CMainWindow::OnTimer(HWND hwnd,UINT id)
 					break;
 
 				case PANEL_ID_CHANNEL:
-					// ƒ`ƒƒƒ“ƒlƒ‹ƒ^ƒuXV
+					// ãƒãƒ£ãƒ³ãƒãƒ«ã‚¿ãƒ–æ›´æ–°
 					if (!m_App.EpgOptions.IsEpgFileLoading()) {
 						if (m_App.Panel.ChannelPanel.QueryUpdate()) {
 							m_App.Panel.ChannelPanel.UpdateAllChannels(false);
@@ -3681,7 +3681,7 @@ void CMainWindow::OnTimer(HWND hwnd,UINT id)
 				}
 			}
 
-			// ‹ó‚«—e—Ê‚ª­‚È‚¢ê‡‚Ì’ˆÓ•\¦
+			// ç©ºãå®¹é‡ãŒå°‘ãªã„å ´åˆã®æ³¨æ„è¡¨ç¤º
 			if (m_App.RecordOptions.GetAlertLowFreeSpace()
 					&& !m_fAlertedLowFreeSpace
 					&& m_App.RecordManager.IsRecording()) {
@@ -3690,12 +3690,12 @@ void CMainWindow::OnTimer(HWND hwnd,UINT id)
 				if (FreeSpace>=0
 						&& (ULONGLONG)FreeSpace<=m_App.RecordOptions.GetLowFreeSpaceThresholdBytes()) {
 					m_App.NotifyBalloonTip.Show(
-						APP_NAME TEXT("‚Ì˜^‰æƒtƒ@ƒCƒ‹‚Ì•Û‘¶æ‚Ì‹ó‚«—e—Ê‚ª­‚È‚­‚È‚Á‚Ä‚¢‚Ü‚·B"),
-						TEXT("‹ó‚«—e—Ê‚ª­‚È‚­‚È‚Á‚Ä‚¢‚Ü‚·B"),
+						APP_NAME TEXT("ã®éŒ²ç”»ãƒ•ã‚¡ã‚¤ãƒ«ã®ä¿å­˜å…ˆã®ç©ºãå®¹é‡ãŒå°‘ãªããªã£ã¦ã„ã¾ã™ã€‚"),
+						TEXT("ç©ºãå®¹é‡ãŒå°‘ãªããªã£ã¦ã„ã¾ã™ã€‚"),
 						nullptr,CBalloonTip::ICON_WARNING);
 					::SetTimer(m_hwnd,TIMER_ID_HIDETOOLTIP,10000,nullptr);
 					ShowNotificationBar(
-						TEXT("˜^‰æƒtƒ@ƒCƒ‹‚Ì•Û‘¶æ‚Ì‹ó‚«—e—Ê‚ª­‚È‚­‚È‚Á‚Ä‚¢‚Ü‚·"),
+						TEXT("éŒ²ç”»ãƒ•ã‚¡ã‚¤ãƒ«ã®ä¿å­˜å…ˆã®ç©ºãå®¹é‡ãŒå°‘ãªããªã£ã¦ã„ã¾ã™"),
 						CNotificationBar::MESSAGE_WARNING,6000);
 					m_fAlertedLowFreeSpace=true;
 				}
@@ -3706,18 +3706,18 @@ void CMainWindow::OnTimer(HWND hwnd,UINT id)
 		break;
 
 	case TIMER_ID_OSD:
-		// OSD ‚ğÁ‚·
+		// OSD ã‚’æ¶ˆã™
 		m_App.OSDManager.ClearOSD();
 		::KillTimer(hwnd,TIMER_ID_OSD);
 		break;
 
 	case TIMER_ID_DISPLAY:
-		// ƒ‚ƒjƒ^‚ªƒIƒt‚É‚È‚ç‚È‚¢‚æ‚¤‚É‚·‚é
+		// ãƒ¢ãƒ‹ã‚¿ãŒã‚ªãƒ•ã«ãªã‚‰ãªã„ã‚ˆã†ã«ã™ã‚‹
 		::SetThreadExecutionState(ES_DISPLAY_REQUIRED);
 		break;
 
 	case TIMER_ID_WHEELCHANNELCHANGE:
-		// ƒzƒC[ƒ‹‚Å‚Ìƒ`ƒƒƒ“ƒlƒ‹•ÏX
+		// ãƒ›ã‚¤ãƒ¼ãƒ«ã§ã®ãƒãƒ£ãƒ³ãƒãƒ«å¤‰æ›´
 		{
 			const int Channel=m_App.ChannelManager.GetChangingChannel();
 
@@ -3729,7 +3729,7 @@ void CMainWindow::OnTimer(HWND hwnd,UINT id)
 		break;
 
 	case TIMER_ID_PROGRAMLISTUPDATE:
-		// EPGî•ñ‚Ì“¯Šú
+		// EPGæƒ…å ±ã®åŒæœŸ
 		if (!m_App.EpgOptions.IsEpgFileLoading()
 				&& !m_App.EpgOptions.IsEDCBDataLoading()) {
 			m_App.Panel.EnableProgramListUpdate(true);
@@ -3760,20 +3760,20 @@ void CMainWindow::OnTimer(HWND hwnd,UINT id)
 			}
 
 			m_ProgramListUpdateTimerCount++;
-			// XV•p“x‚ğ‰º‚°‚é
+			// æ›´æ–°é »åº¦ã‚’ä¸‹ã’ã‚‹
 			if (m_ProgramListUpdateTimerCount>=6 && m_ProgramListUpdateTimerCount<=10)
 				::SetTimer(hwnd,TIMER_ID_PROGRAMLISTUPDATE,(m_ProgramListUpdateTimerCount-5)*(60*1000),nullptr);
 		}
 		break;
 
 	case TIMER_ID_PROGRAMGUIDEUPDATE:
-		// ”Ô‘g•\‚Ìæ“¾
+		// ç•ªçµ„è¡¨ã®å–å¾—
 		if (!m_App.EpgCaptureManager.ProcessCapture())
 			::SetTimer(m_hwnd,TIMER_ID_PROGRAMGUIDEUPDATE,3000,nullptr);
 		break;
 
 	case TIMER_ID_VIDEOSIZECHANGED:
-		// ‰f‘œƒTƒCƒY‚Ì•Ï‰»‚É‡‚í‚¹‚é
+		// æ˜ åƒã‚µã‚¤ã‚ºã®å¤‰åŒ–ã«åˆã‚ã›ã‚‹
 
 		if (m_App.ViewOptions.GetRemember1SegWindowSize()) {
 			int Width,Height;
@@ -3812,8 +3812,8 @@ void CMainWindow::OnTimer(HWND hwnd,UINT id)
 		break;
 
 	case TIMER_ID_RESETERRORCOUNT:
-		// ƒGƒ‰[ƒJƒEƒ“ƒg‚ğƒŠƒZƒbƒg‚·‚é
-		// (Šù‚ÉƒT[ƒrƒX‚Ìî•ñ‚ªæ“¾‚³‚ê‚Ä‚¢‚éê‡‚Ì‚İ)
+		// ã‚¨ãƒ©ãƒ¼ã‚«ã‚¦ãƒ³ãƒˆã‚’ãƒªã‚»ãƒƒãƒˆã™ã‚‹
+		// (æ—¢ã«ã‚µãƒ¼ãƒ“ã‚¹ã®æƒ…å ±ãŒå–å¾—ã•ã‚Œã¦ã„ã‚‹å ´åˆã®ã¿)
 		if (m_App.CoreEngine.m_DtvEngine.m_TsAnalyzer.GetServiceNum()>0) {
 			SendCommand(CM_RESETERRORCOUNT);
 			m_ResetErrorCountTimer.End();
@@ -3821,13 +3821,13 @@ void CMainWindow::OnTimer(HWND hwnd,UINT id)
 		break;
 
 	case TIMER_ID_HIDETOOLTIP:
-		// ƒc[ƒ‹ƒ`ƒbƒv‚ğ”ñ•\¦‚É‚·‚é
+		// ãƒ„ãƒ¼ãƒ«ãƒãƒƒãƒ—ã‚’éè¡¨ç¤ºã«ã™ã‚‹
 		m_App.NotifyBalloonTip.Hide();
 		::KillTimer(hwnd,TIMER_ID_HIDETOOLTIP);
 		break;
 
 	case TIMER_ID_CHANNELNO:
-		// ƒ`ƒƒƒ“ƒlƒ‹”Ô†“ü—Í‚ÌŠÔØ‚ê
+		// ãƒãƒ£ãƒ³ãƒãƒ«ç•ªå·å…¥åŠ›ã®æ™‚é–“åˆ‡ã‚Œ
 		if (m_ChannelInput.IsInputting()
 				&& !m_App.Accelerator.GetChannelInputOptions().fKeyTimeoutCancel) {
 			EndChannelNoInput(true);
@@ -3948,7 +3948,7 @@ bool CMainWindow::OnInitMenuPopup(HMENU hmenu)
 					pChInfo->SetName(ServiceInfo.szServiceName);
 				} else {
 					TCHAR szName[32];
-					StdUtil::snprintf(szName,lengthof(szName),TEXT("ƒT[ƒrƒX%d"),i+1);
+					StdUtil::snprintf(szName,lengthof(szName),TEXT("ã‚µãƒ¼ãƒ“ã‚¹%d"),i+1);
 					pChInfo->SetName(szName);
 				}
 				pChInfo->SetServiceID(ServiceInfo.ServiceID);
@@ -3992,12 +3992,12 @@ bool CMainWindow::OnInitMenuPopup(HMENU hmenu)
 				} else if (Info.IsDualMono()) {
 					Length=StdUtil::snprintf(pszText,MaxText,
 						Info.DualMono==CAudioManager::DUALMONO_MAIN?
-							TEXT("å‰¹º"):
+							TEXT("ä¸»éŸ³å£°"):
 						Info.DualMono==CAudioManager::DUALMONO_SUB?
-							TEXT("•›‰¹º"):
-							TEXT("å+•›‰¹º"));
+							TEXT("å‰¯éŸ³å£°"):
+							TEXT("ä¸»+å‰¯éŸ³å£°"));
 				} else {
-					Length=StdUtil::snprintf(pszText,MaxText,TEXT("‰¹º%d"),StreamNumber+1);
+					Length=StdUtil::snprintf(pszText,MaxText,TEXT("éŸ³å£°%d"),StreamNumber+1);
 				}
 				if (Info.ComponentType!=CAudioManager::COMPONENT_TYPE_INVALID) {
 					LPCTSTR pszComponentType=EpgUtil::GetAudioComponentTypeText(Info.ComponentType);
@@ -4014,11 +4014,11 @@ bool CMainWindow::OnInitMenuPopup(HMENU hmenu)
 
 			if (DtvEngine.m_TsAnalyzer.GetEventComponentGroupList(ServiceIndex,&GroupList)
 					&& !GroupList.empty()) {
-				// ƒ}ƒ‹ƒ`ƒrƒ…[TV
+				// ãƒãƒ«ãƒãƒ“ãƒ¥ãƒ¼TV
 				const int NumGroup=static_cast<int>(GroupList.size());
 				int SubGroupCount=0;
 
-				// ƒOƒ‹[ƒv–ˆ‚Ì‰¹º
+				// ã‚°ãƒ«ãƒ¼ãƒ—æ¯ã®éŸ³å£°
 				for (int i=0;i<NumGroup;i++) {
 					const CTsAnalyzer::EventComponentGroupInfo &GroupInfo=GroupList[i];
 					int StreamNumber=-1;
@@ -4038,9 +4038,9 @@ bool CMainWindow::OnInitMenuPopup(HMENU hmenu)
 										Length=CopyToMenuText(GroupInfo.szText,szText,lengthof(szText));
 									} else {
 										if (GroupInfo.ComponentGroupID==0)
-											Length=StdUtil::snprintf(szText,lengthof(szText),TEXT("ƒƒCƒ“"));
+											Length=StdUtil::snprintf(szText,lengthof(szText),TEXT("ãƒ¡ã‚¤ãƒ³"));
 										else
-											Length=StdUtil::snprintf(szText,lengthof(szText),TEXT("ƒTƒu%d"),SubGroupCount+1);
+											Length=StdUtil::snprintf(szText,lengthof(szText),TEXT("ã‚µãƒ–%d"),SubGroupCount+1);
 									}
 
 									if (!AudioInfo.IsDualMono() || AudioInfo.DualMono==CAudioManager::DUALMONO_MAIN)
@@ -4174,7 +4174,7 @@ bool CMainWindow::OnInitMenuPopup(HMENU hmenu)
 		if (Menu.GetItemCount()>0) {
 			Menu.AppendSeparator();
 		} else {
-			Menu.Append(0U,TEXT("‰¹º‚È‚µ"),MF_GRAYED);
+			Menu.Append(0U,TEXT("éŸ³å£°ãªã—"),MF_GRAYED);
 			Menu.AppendSeparator();
 		}
 		static const int AdditionalMenuList[] = {
@@ -4210,7 +4210,7 @@ bool CMainWindow::OnInitMenuPopup(HMENU hmenu)
 
 		if (DtvEngine.m_TsAnalyzer.GetEventComponentGroupList(ServiceIndex,&GroupList)
 				&& !GroupList.empty()) {
-			// ƒ}ƒ‹ƒ`ƒrƒ…[TV
+			// ãƒãƒ«ãƒãƒ“ãƒ¥ãƒ¼TV
 			const int NumGroup=static_cast<int>(GroupList.size());
 			const BYTE CurVideoComponentTag=DtvEngine.GetVideoComponentTag();
 			int CurGroup=-1;
@@ -4224,9 +4224,9 @@ bool CMainWindow::OnInitMenuPopup(HMENU hmenu)
 					CopyToMenuText(GroupInfo.szText,szText,lengthof(szText));
 				} else {
 					if (GroupInfo.ComponentGroupID==0)
-						StdUtil::strncpy(szText,lengthof(szText),TEXT("ƒƒCƒ“"));
+						StdUtil::strncpy(szText,lengthof(szText),TEXT("ãƒ¡ã‚¤ãƒ³"));
 					else
-						StdUtil::snprintf(szText,lengthof(szText),TEXT("ƒTƒu%d"),SubGroupCount+1);
+						StdUtil::snprintf(szText,lengthof(szText),TEXT("ã‚µãƒ–%d"),SubGroupCount+1);
 					StdUtil::strncpy(GroupInfo.szText,lengthof(GroupInfo.szText),szText);
 				}
 				if (GroupInfo.ComponentGroupID!=0)
@@ -4260,7 +4260,7 @@ bool CMainWindow::OnInitMenuPopup(HMENU hmenu)
 
 				int CurVideoIndex=-1;
 
-				// ƒOƒ‹[ƒv–ˆ‚Ì‰f‘œ
+				// ã‚°ãƒ«ãƒ¼ãƒ—æ¯ã®æ˜ åƒ
 				for (int i=0;i<NumGroup;i++) {
 					const CTsAnalyzer::EventComponentGroupInfo &GroupInfo=GroupList[i];
 					int VideoCount=0;
@@ -4273,7 +4273,7 @@ bool CMainWindow::OnInitMenuPopup(HMENU hmenu)
 									TCHAR szText[80];
 									VideoCount++;
 									int Length=CopyToMenuText(GroupInfo.szText,szText,lengthof(szText));
-									StdUtil::snprintf(szText+Length,lengthof(szText)-Length,TEXT(": ‰f‘œ%d"),VideoCount);
+									StdUtil::snprintf(szText+Length,lengthof(szText)-Length,TEXT(": æ˜ åƒ%d"),VideoCount);
 									Menu.Append(CM_VIDEOSTREAM_FIRST+EsIndex,szText);
 									if (ComponentTag==CurVideoComponentTag)
 										CurVideoIndex=EsIndex;
@@ -4285,15 +4285,15 @@ bool CMainWindow::OnInitMenuPopup(HMENU hmenu)
 					}
 				}
 
-				// ƒOƒ‹[ƒv‚É‘®‚³‚È‚¢‰f‘œ
+				// ã‚°ãƒ«ãƒ¼ãƒ—ã«å±ã•ãªã„æ˜ åƒ
 				int VideoCount=0;
 				for (int i=0;i<static_cast<int>(EsList.size());i++) {
 					if (EsList[i].ComponentTag!=CTsAnalyzer::COMPONENTTAG_INVALID) {
 						TCHAR szText[64];
 						VideoCount++;
-						int Length=StdUtil::snprintf(szText,lengthof(szText),TEXT("‰f‘œ%d"),VideoCount);
+						int Length=StdUtil::snprintf(szText,lengthof(szText),TEXT("æ˜ åƒ%d"),VideoCount);
 						if (EsList[i].QualityLevel==0)
-							StdUtil::strncpy(szText+Length,lengthof(szText)-Length,TEXT(" (~‰J‘Î‰•ú‘—)"));
+							StdUtil::strncpy(szText+Length,lengthof(szText)-Length,TEXT(" (é™é›¨å¯¾å¿œæ”¾é€)"));
 						Menu.Append(CM_VIDEOSTREAM_FIRST+i,szText);
 						if (EsList[i].ComponentTag==CurVideoComponentTag)
 							CurVideoIndex=i;
@@ -4313,10 +4313,10 @@ bool CMainWindow::OnInitMenuPopup(HMENU hmenu)
 					&& !EsList.empty()) {
 				for (int i=0;i<static_cast<int>(EsList.size()) && CM_VIDEOSTREAM_FIRST+i<=CM_VIDEOSTREAM_LAST;i++) {
 					TCHAR szText[64];
-					int Length=StdUtil::snprintf(szText,lengthof(szText),TEXT("%s%d: ‰f‘œ%d"),
+					int Length=StdUtil::snprintf(szText,lengthof(szText),TEXT("%s%d: æ˜ åƒ%d"),
 												 i<9?TEXT("&"):TEXT(""),i+1,i+1);
 					if (EsList[i].QualityLevel==0)
-						StdUtil::strncpy(szText+Length,lengthof(szText)-Length,TEXT(" (~‰J‘Î‰•ú‘—)"));
+						StdUtil::strncpy(szText+Length,lengthof(szText)-Length,TEXT(" (é™é›¨å¯¾å¿œæ”¾é€)"));
 					Menu.Append(CM_VIDEOSTREAM_FIRST+i,szText);
 				}
 
@@ -4324,7 +4324,7 @@ bool CMainWindow::OnInitMenuPopup(HMENU hmenu)
 									CM_VIDEOSTREAM_FIRST+static_cast<int>(EsList.size())-1,
 									CM_VIDEOSTREAM_FIRST+DtvEngine.GetVideoStream());
 			} else {
-				Menu.Append(0U,TEXT("‰f‘œ‚È‚µ"),MF_GRAYED);
+				Menu.Append(0U,TEXT("æ˜ åƒãªã—"),MF_GRAYED);
 			}
 		}
 	} else if (hmenu==m_App.MainMenu.GetSubMenu(CMainMenu::SUBMENU_FILTERPROPERTY)) {
@@ -4361,7 +4361,7 @@ bool CMainWindow::OnClose(HWND hwnd)
 
 	::SetCursor(::LoadCursor(nullptr,IDC_WAIT));
 
-	m_App.AddLog(TEXT("ƒEƒBƒ“ƒhƒE‚ğ•Â‚¶‚Ä‚¢‚Ü‚·..."));
+	m_App.AddLog(TEXT("ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã‚’é–‰ã˜ã¦ã„ã¾ã™..."));
 
 	::KillTimer(hwnd,TIMER_ID_UPDATE);
 
@@ -4626,7 +4626,7 @@ void CMainWindow::UpdateLayoutStructure()
 
 void CMainWindow::AdjustWindowSizeOnDockPanel(bool fDock)
 {
-	// ƒpƒlƒ‹‚Ì•‚É‡‚í‚¹‚ÄƒEƒBƒ“ƒhƒEƒTƒCƒY‚ğŠgk
+	// ãƒ‘ãƒãƒ«ã®å¹…ã«åˆã‚ã›ã¦ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã‚µã‚¤ã‚ºã‚’æ‹¡ç¸®
 	RECT rc;
 
 	GetPosition(&rc);
@@ -4841,7 +4841,7 @@ void CMainWindow::OnEventChanged()
 {
 	const WORD EventID=m_App.CoreEngine.m_DtvEngine.GetEventID();
 
-	// ”Ô‘g‚ÌÅŒã‚Ü‚Å˜^‰æ
+	// ç•ªçµ„ã®æœ€å¾Œã¾ã§éŒ²ç”»
 	if (m_App.RecordManager.GetStopOnEventEnd())
 		m_App.Core.StopRecord();
 
@@ -4885,8 +4885,8 @@ void CMainWindow::OnEventChanged()
 		if (!m_pCore->GetFullscreen()
 				&& IsViewerEnabled()) {
 			AutoFitWindowToVideo();
-			// ‚±‚Ì“_‚Å‚Ü‚¾V‚µ‚¢‰f‘œƒTƒCƒY‚ªæ“¾‚Å‚«‚È‚¢ê‡‚ª‚ ‚é‚½‚ßA
-			// WM_APP_VIDEOSIZECHANGED ‚ª—ˆ‚½‚É’²®‚·‚é‚æ‚¤‚É‚·‚é
+			// ã“ã®æ™‚ç‚¹ã§ã¾ã æ–°ã—ã„æ˜ åƒã‚µã‚¤ã‚ºãŒå–å¾—ã§ããªã„å ´åˆãŒã‚ã‚‹ãŸã‚ã€
+			// WM_APP_VIDEOSIZECHANGED ãŒæ¥ãŸæ™‚ã«èª¿æ•´ã™ã‚‹ã‚ˆã†ã«ã™ã‚‹
 			m_AspectRatioResetTime=::GetTickCount();
 		}
 		m_AspectRatioType=ASPECTRATIO_DEFAULT;
@@ -4917,7 +4917,7 @@ void CMainWindow::OnRecordingStarted()
 	m_ResetErrorCountTimer.End();
 	m_fAlertedLowFreeSpace=false;
 	if (m_App.OSDOptions.IsOSDEnabled(COSDOptions::OSD_RECORDING))
-		m_App.OSDManager.ShowOSD(TEXT("œ˜^‰æ"));
+		m_App.OSDManager.ShowOSD(TEXT("â—éŒ²ç”»"));
 
 	m_pCore->UpdateTitle();
 }
@@ -4932,7 +4932,7 @@ void CMainWindow::OnRecordingStopped()
 	m_App.TaskbarManager.SetRecordingStatus(false);
 	m_App.RecordManager.SetStopOnEventEnd(false);
 	if (m_App.OSDOptions.IsOSDEnabled(COSDOptions::OSD_RECORDING))
-		m_App.OSDManager.ShowOSD(TEXT("¡˜^‰æ’â~"));
+		m_App.OSDManager.ShowOSD(TEXT("â– éŒ²ç”»åœæ­¢"));
 	if (m_pCore->GetStandby())
 		m_App.Core.CloseTuner();
 
@@ -5222,7 +5222,7 @@ void CMainWindow::OnAudioStreamChanged(int Stream)
 
 void CMainWindow::OnStartupDone()
 {
-	// TODO: ƒXƒe[ƒ^ƒXƒo[‚ÉŒv‚ª•\¦‚³‚ê‚Ä‚¢‚éê‡‚Ì‚İƒ^ƒCƒ}[‚ğ—LŒø‚É‚·‚é
+	// TODO: ã‚¹ãƒ†ãƒ¼ã‚¿ã‚¹ãƒãƒ¼ã«æ™‚è¨ˆãŒè¡¨ç¤ºã•ã‚Œã¦ã„ã‚‹å ´åˆã®ã¿ã‚¿ã‚¤ãƒãƒ¼ã‚’æœ‰åŠ¹ã«ã™ã‚‹
 	if (m_fAccurateClock)
 		m_ClockUpdateTimer.Begin(1000,200);
 }
@@ -5371,15 +5371,15 @@ bool CMainWindow::SetPanAndScan(int Command)
 
 	if (Command>=CM_ASPECTRATIO_FIRST && Command<=CM_ASPECTRATIO_3D_LAST) {
 		static const CCoreEngine::PanAndScanInfo PanAndScanList[] = {
-			{0, 0,  0,  0,  0,  0,  0,  0},	// ƒfƒtƒHƒ‹ƒg
+			{0, 0,  0,  0,  0,  0,  0,  0},	// ãƒ‡ãƒ•ã‚©ãƒ«ãƒˆ
 			{0, 0,  1,  1,  1,  1, 16,  9},	// 16:9
-			{0, 3,  1, 18,  1, 24, 16,  9},	// 16:9 ƒŒƒ^[ƒ{ƒbƒNƒX
-			{2, 3, 12, 18, 16, 24, 16,  9},	// 16:9 ’´Šz‰
-			{2, 0, 12,  1, 16,  1,  4,  3},	// 4:3 ƒTƒCƒhƒJƒbƒg
+			{0, 3,  1, 18,  1, 24, 16,  9},	// 16:9 ãƒ¬ã‚¿ãƒ¼ãƒœãƒƒã‚¯ã‚¹
+			{2, 3, 12, 18, 16, 24, 16,  9},	// 16:9 è¶…é¡ç¸
+			{2, 0, 12,  1, 16,  1,  4,  3},	// 4:3 ã‚µã‚¤ãƒ‰ã‚«ãƒƒãƒˆ
 			{0, 0,  1,  1,  1,  1,  4,  3},	// 4:3
 			{0, 0,  1,  1,  1,  1, 32,  9},	// 32:9
-			{0, 0,  1,  1,  2,  1, 16,  9},	// 16:9 ¶
-			{1, 0,  1,  1,  2,  1, 16,  9},	// 16:9 ‰E
+			{0, 0,  1,  1,  2,  1, 16,  9},	// 16:9 å·¦
+			{1, 0,  1,  1,  2,  1, 16,  9},	// 16:9 å³
 		};
 
 		Type=Command-CM_ASPECTRATIO_FIRST;
@@ -5488,7 +5488,7 @@ bool CMainWindow::ShowProgramGuide(bool fShow,unsigned int Flags,const ProgramGu
 
 		if (m_App.EpgOptions.IsEpgFileLoading()
 				|| m_App.EpgOptions.IsEDCBDataLoading()) {
-			m_App.Epg.ProgramGuide.SetMessage(TEXT("EPGƒtƒ@ƒCƒ‹‚Ì“Ç‚İ‚İ’†..."));
+			m_App.Epg.ProgramGuide.SetMessage(TEXT("EPGãƒ•ã‚¡ã‚¤ãƒ«ã®èª­ã¿è¾¼ã¿ä¸­..."));
 			m_App.EpgOptions.WaitEpgFileLoad();
 			m_App.EpgOptions.WaitEDCBDataLoad();
 			m_App.Epg.ProgramGuide.SetMessage(nullptr);
@@ -5730,8 +5730,8 @@ LRESULT CALLBACK CMainWindow::ChildHookProc(HWND hwnd,UINT uMsg,WPARAM wParam,LP
 
 void CMainWindow::SetMaximizedRegion(bool fSet)
 {
-	// ƒEƒBƒ“ƒhƒE˜g‚ğ“Æ©‚É‚µ‚Ä‚¢‚éê‡AÅ‘å‰»‚ÉƒNƒŠƒbƒsƒ“ƒO‚µ‚È‚¢‚Æ
-	// ˜g‚ª—×Ú‚·‚éƒ‚ƒjƒ^‚Ì’[‚É•\¦‚³‚ê‚Ä‚µ‚Ü‚¤‚±‚Æ‚ª‚ ‚é
+	// ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦æ ã‚’ç‹¬è‡ªã«ã—ã¦ã„ã‚‹å ´åˆã€æœ€å¤§åŒ–æ™‚ã«ã‚¯ãƒªãƒƒãƒ”ãƒ³ã‚°ã—ãªã„ã¨
+	// æ ãŒéš£æ¥ã™ã‚‹ãƒ¢ãƒ‹ã‚¿ã®ç«¯ã«è¡¨ç¤ºã•ã‚Œã¦ã—ã¾ã†ã“ã¨ãŒã‚ã‚‹
 	if (fSet) {
 		RECT rcWindow,rcClient;
 
@@ -5794,7 +5794,7 @@ void CMainWindow::SetWindowVisible()
 		ForegroundWindow(m_hwnd);
 	}
 	if (m_fMinimizeInit) {
-		// Å¬‰»ó‘Ô‚Å‚Ì‹N“®ŒãÅ‰‚Ì•\¦
+		// æœ€å°åŒ–çŠ¶æ…‹ã§ã®èµ·å‹•å¾Œæœ€åˆã®è¡¨ç¤º
 		ShowFloatingWindows(true);
 		m_fMinimizeInit=false;
 	}
@@ -5853,7 +5853,7 @@ bool CMainWindow::SetStandby(bool fStandby)
 	if (fStandby) {
 		if (m_fStandbyInit)
 			return true;
-		m_App.AddLog(TEXT("‘Ò‹@ó‘Ô‚ÉˆÚs‚µ‚Ü‚·B"));
+		m_App.AddLog(TEXT("å¾…æ©ŸçŠ¶æ…‹ã«ç§»è¡Œã—ã¾ã™ã€‚"));
 		SuspendViewer(ResumeInfo::VIEWERSUSPEND_STANDBY);
 		//FinalizeViewer();
 		m_Resume.fFullscreen=m_pCore->GetFullscreen();
@@ -5880,7 +5880,7 @@ bool CMainWindow::SetStandby(bool fStandby)
 				m_App.Core.CloseTuner();
 		}
 	} else {
-		m_App.AddLog(TEXT("‘Ò‹@ó‘Ô‚©‚ç•œ‹A‚µ‚Ü‚·B"));
+		m_App.AddLog(TEXT("å¾…æ©ŸçŠ¶æ…‹ã‹ã‚‰å¾©å¸°ã—ã¾ã™ã€‚"));
 		SetWindowVisible();
 		Util::CWaitCursor WaitCursor;
 		if (m_fStandbyInit) {
@@ -6068,7 +6068,7 @@ bool CMainWindow::BeginChannelNoInput(int Digits)
 	if (Digits<0 || Digits>5)
 		return false;
 
-	TRACE(TEXT("ƒ`ƒƒƒ“ƒlƒ‹”Ô†%dŒ…“ü—ÍŠJn\n"),Digits);
+	TRACE(TEXT("ãƒãƒ£ãƒ³ãƒãƒ«ç•ªå·%dæ¡å…¥åŠ›é–‹å§‹\n"),Digits);
 
 	m_ChannelInput.BeginInput(Digits);
 
@@ -6081,7 +6081,7 @@ bool CMainWindow::BeginChannelNoInput(int Digits)
 void CMainWindow::EndChannelNoInput(bool fDetermine)
 {
 	if (m_ChannelInput.IsInputting()) {
-		TRACE(TEXT("ƒ`ƒƒƒ“ƒlƒ‹”Ô†“ü—ÍI—¹\n"));
+		TRACE(TEXT("ãƒãƒ£ãƒ³ãƒãƒ«ç•ªå·å…¥åŠ›çµ‚äº†\n"));
 
 		int Number=0;
 		if (fDetermine)
@@ -6145,7 +6145,7 @@ int CMainWindow::GetNextChannel(bool fUp)
 		return -1;
 
 	if (m_App.OperationOptions.GetChannelUpDownSkipSubChannel()) {
-		// ˆÙ‚È‚é”Ô‘g‚ğ•ú‘—‚µ‚Ä‚¢‚éê‡ˆÈŠO‚ÍƒTƒuƒ`ƒƒƒ“ƒlƒ‹‚ğƒXƒLƒbƒv‚·‚é
+		// ç•°ãªã‚‹ç•ªçµ„ã‚’æ”¾é€ã—ã¦ã„ã‚‹å ´åˆä»¥å¤–ã¯ã‚µãƒ–ãƒãƒ£ãƒ³ãƒãƒ«ã‚’ã‚¹ã‚­ãƒƒãƒ—ã™ã‚‹
 		const CChannelList *pCurChannelList=m_App.ChannelManager.GetCurrentChannelList();
 		const int CurChannel=
 			m_App.ChannelManager.GetChangingChannel()>=0 ?
@@ -6209,7 +6209,7 @@ int CMainWindow::GetNextChannel(bool fUp)
 			return -1;
 
 		if (!fUp && !fDiffEvent) {
-			// “¯‚¶”Ô‘g‚ÌÅ‰‚ÌƒT[ƒrƒX‚ğ’T‚·
+			// åŒã˜ç•ªçµ„ã®æœ€åˆã®ã‚µãƒ¼ãƒ“ã‚¹ã‚’æ¢ã™
 			const CChannelInfo *pNextChannelInfo=pCurChannelList->GetChannelInfo(Channel);
 			CEventInfo::CommonEventInfo NextEvent={0};
 
@@ -6307,8 +6307,8 @@ bool CMainWindow::GetOSDClientInfo(COSDManager::OSDClientInfo *pInfo)
 		pInfo->fForcePseudoOSD=true;
 	}
 
-	// ‚Ü‚¾Ä¶‚ªŠJn‚³‚ê‚Ä‚¢‚È‚¢ê‡AƒAƒjƒ[ƒVƒ‡ƒ“‚ğ–³Œø‚É‚·‚é
-	// ƒAƒjƒ[ƒVƒ‡ƒ“‚Ì“r’†‚Å DirectShow ‚Ì‰Šú‰»ˆ—‚ª“ü‚èA’†“r”¼’[‚È•\¦‚É‚È‚é‚½‚ß
+	// ã¾ã å†ç”ŸãŒé–‹å§‹ã•ã‚Œã¦ã„ãªã„å ´åˆã€ã‚¢ãƒ‹ãƒ¡ãƒ¼ã‚·ãƒ§ãƒ³ã‚’ç„¡åŠ¹ã«ã™ã‚‹
+	// ã‚¢ãƒ‹ãƒ¡ãƒ¼ã‚·ãƒ§ãƒ³ã®é€”ä¸­ã§ DirectShow ã®åˆæœŸåŒ–å‡¦ç†ãŒå…¥ã‚Šã€ä¸­é€”åŠç«¯ãªè¡¨ç¤ºã«ãªã‚‹ãŸã‚
 	if (m_fEnablePlayback && !IsViewerEnabled())
 		pInfo->fAnimation=false;
 
@@ -6585,7 +6585,7 @@ bool CMainWindow::CFullscreen::Create(HWND hwndOwner,CMainDisplay *pDisplay)
 		Height=::GetSystemMetrics(SM_CYSCREEN);
 	}
 #ifdef _DEBUG
-	// ƒfƒoƒbƒO‚µˆÕ‚¢‚æ‚¤‚É¬‚³‚­•\¦
+	// ãƒ‡ãƒãƒƒã‚°ã—æ˜“ã„ã‚ˆã†ã«å°ã•ãè¡¨ç¤º
 	if (::GetKeyState(VK_SHIFT)<0) {
 		Width/=2;
 		Height/=2;
@@ -6705,7 +6705,7 @@ void CMainWindow::CFullscreen::ShowPanel(bool fShow)
 					m_PanelHeight=m_App.Panel.Frame.GetDockingHeight();
 				m_App.Panel.Frame.SetPanelVisible(false);
 				m_App.Panel.Frame.GetPanel()->SetWindow(nullptr,nullptr);
-				m_Panel.SetWindow(&m_App.Panel.Form,TEXT("ƒpƒlƒ‹"));
+				m_Panel.SetWindow(&m_App.Panel.Form,TEXT("ãƒ‘ãƒãƒ«"));
 				pSplitter->SetStyle(
 					fVertical ? Layout::CSplitter::STYLE_VERT : Layout::CSplitter::STYLE_HORZ);
 				pSplitter->SetPaneSize(CONTAINER_ID_PANEL,
@@ -6735,12 +6735,12 @@ void CMainWindow::CFullscreen::RestorePanel(bool fPreventForeground)
 	if (m_Panel.GetWindow()!=nullptr) {
 		m_Panel.SetWindow(nullptr,nullptr);
 		CPanel *pPanel=m_App.Panel.Frame.GetPanel();
-		pPanel->SetWindow(&m_App.Panel.Form,TEXT("ƒpƒlƒ‹"));
+		pPanel->SetWindow(&m_App.Panel.Form,TEXT("ãƒ‘ãƒãƒ«"));
 		pPanel->SendSizeMessage();
 
 		if (m_App.Panel.fShowPanelWindow) {
-			// ƒtƒ[ƒeƒBƒ“ƒO‚Ìƒpƒlƒ‹‚ğÄ•\¦‚µ‚½Û‚ÉA‚È‚º‚©‘S‰æ–ÊƒEƒBƒ“ƒhƒE‚Ì‘O‚Éo‚é‚½‚ß
-			// Œ©‚¦‚È‚¢ˆÊ’u‚ÉˆÚ“®‚µ‚½Œã‚ÅZƒI[ƒ_[‚ğ’²®‚·‚é
+			// ãƒ•ãƒ­ãƒ¼ãƒ†ã‚£ãƒ³ã‚°ã®ãƒ‘ãƒãƒ«ã‚’å†è¡¨ç¤ºã—ãŸéš›ã«ã€ãªãœã‹å…¨ç”»é¢ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã®å‰ã«å‡ºã‚‹ãŸã‚
+			// è¦‹ãˆãªã„ä½ç½®ã«ç§»å‹•ã—ãŸå¾Œã§Zã‚ªãƒ¼ãƒ€ãƒ¼ã‚’èª¿æ•´ã™ã‚‹
 			RECT rc;
 			if (fPreventForeground && m_App.Panel.IsFloating()) {
 				m_App.Panel.Frame.GetPosition(&rc);
@@ -6839,7 +6839,7 @@ void CMainWindow::CFullscreen::OnMouseCommand(int Command)
 {
 	if (Command==0)
 		return;
-	// ƒƒjƒ…[•\¦’†‚ÍƒJ[ƒ\ƒ‹‚ğÁ‚³‚È‚¢
+	// ãƒ¡ãƒ‹ãƒ¥ãƒ¼è¡¨ç¤ºä¸­ã¯ã‚«ãƒ¼ã‚½ãƒ«ã‚’æ¶ˆã•ãªã„
 	::KillTimer(m_hwnd,TIMER_ID_HIDECURSOR);
 	ShowCursor(true);
 	m_fMenu=true;
@@ -7094,10 +7094,10 @@ enum {
 bool CMainWindow::CFullscreen::CPanelEventHandler::OnMenuPopup(HMENU hmenu)
 {
 	::AppendMenu(hmenu,MF_SEPARATOR,0,NULL);
-	::AppendMenu(hmenu,MF_STRING | MF_ENABLED,PANEL_MENU_LEFT,TEXT("¶‚Ö(&L)"));
-	::AppendMenu(hmenu,MF_STRING | MF_ENABLED,PANEL_MENU_RIGHT,TEXT("‰E‚Ö(&R)"));
-	::AppendMenu(hmenu,MF_STRING | MF_ENABLED,PANEL_MENU_TOP,TEXT("ã‚Ö(&T)"));
-	::AppendMenu(hmenu,MF_STRING | MF_ENABLED,PANEL_MENU_BOTTOM,TEXT("‰º‚Ö(&B)"));
+	::AppendMenu(hmenu,MF_STRING | MF_ENABLED,PANEL_MENU_LEFT,TEXT("å·¦ã¸(&L)"));
+	::AppendMenu(hmenu,MF_STRING | MF_ENABLED,PANEL_MENU_RIGHT,TEXT("å³ã¸(&R)"));
+	::AppendMenu(hmenu,MF_STRING | MF_ENABLED,PANEL_MENU_TOP,TEXT("ä¸Šã¸(&T)"));
+	::AppendMenu(hmenu,MF_STRING | MF_ENABLED,PANEL_MENU_BOTTOM,TEXT("ä¸‹ã¸(&B)"));
 	::EnableMenuItem(hmenu,
 		m_Fullscreen.m_PanelPlace==CPanelFrame::DOCKING_LEFT?PANEL_MENU_LEFT:
 		m_Fullscreen.m_PanelPlace==CPanelFrame::DOCKING_RIGHT?PANEL_MENU_RIGHT:
@@ -7437,8 +7437,8 @@ bool CMainWindow::CSideBarManager::DrawIcon(const CSideBar::DrawIconInfo *pInfo)
 {
 	if (pInfo->Command>=CM_CHANNELNO_FIRST && pInfo->Command<=CM_CHANNELNO_LAST) {
 		if (m_pMainWindow->m_App.SideBarOptions.GetShowChannelLogo()) {
-			// ƒAƒCƒRƒ“‚É‹ÇƒƒS‚ğ•\¦
-			// TODO: V‚µ‚­ƒƒS‚ªæ“¾‚³‚ê‚½‚ÉÄ•`‰æ‚·‚é
+			// ã‚¢ã‚¤ã‚³ãƒ³ã«å±€ãƒ­ã‚´ã‚’è¡¨ç¤º
+			// TODO: æ–°ã—ããƒ­ã‚´ãŒå–å¾—ã•ã‚ŒãŸæ™‚ã«å†æç”»ã™ã‚‹
 			const CChannelInfo *pChannel=GetChannelInfoByCommand(pInfo->Command);
 			if (pChannel!=nullptr) {
 				HBITMAP hbmLogo=m_pMainWindow->m_App.LogoManager.GetAssociatedLogoBitmap(
@@ -7447,7 +7447,7 @@ bool CMainWindow::CSideBarManager::DrawIcon(const CSideBar::DrawIconInfo *pInfo)
 				if (hbmLogo!=nullptr) {
 					const int Width=pInfo->IconRect.right-pInfo->IconRect.left;
 					const int Height=pInfo->IconRect.bottom-pInfo->IconRect.top;
-					const int IconHeight=Height*10/16;	// –{—ˆ‚Ì”ä—¦‚æ‚èc’·‚É‚µ‚Ä‚¢‚é(Œ©‰h‚¦‚Ì‚½‚ß)
+					const int IconHeight=Height*10/16;	// æœ¬æ¥ã®æ¯”ç‡ã‚ˆã‚Šç¸¦é•·ã«ã—ã¦ã„ã‚‹(è¦‹æ „ãˆã®ãŸã‚)
 					HBITMAP hbmOld=SelectBitmap(pInfo->hdcBuffer,hbmLogo);
 					int OldStretchMode=::SetStretchBltMode(pInfo->hdc,STRETCH_HALFTONE);
 					BITMAP bm;
@@ -7599,7 +7599,7 @@ CMainWindow::CViewWindowEventHandler::CViewWindowEventHandler(CMainWindow *pMain
 
 void CMainWindow::CViewWindowEventHandler::OnSizeChanged(int Width,int Height)
 {
-	// ˆê“I‚É•\¦‚³‚ê‚Ä‚¢‚éƒo[‚ÌƒTƒCƒY‚ğ‡‚í‚¹‚é
+	// ä¸€æ™‚çš„ã«è¡¨ç¤ºã•ã‚Œã¦ã„ã‚‹ãƒãƒ¼ã®ã‚µã‚¤ã‚ºã‚’åˆã‚ã›ã‚‹
 	RECT rcView,rc;
 
 	m_pView->GetPosition(&rcView);

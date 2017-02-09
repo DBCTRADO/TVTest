@@ -143,7 +143,7 @@ int CKeywordSearch::InitializeMenu(HMENU hmenu,int Command,int MaxItems) const
 	for (i=0;i<static_cast<int>(m_SearchEngineList.size()) && (MaxItems<0 || i<MaxItems);i++) {
 		TCHAR szText[256],szMenu[256];
 
-		StdUtil::snprintf(szText,lengthof(szText),TEXT("%s ‚ÅŒŸõ"),
+		StdUtil::snprintf(szText,lengthof(szText),TEXT("%s ã§æ¤œç´¢"),
 						  m_SearchEngineList[i].Name.c_str());
 		CopyToMenuText(szText,szMenu,lengthof(szMenu));
 		::AppendMenu(hmenu,MF_STRING | MF_ENABLED,Command+i,szMenu);

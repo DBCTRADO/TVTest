@@ -31,13 +31,13 @@ private:
 
 
 const CEpgVariableStringMap::ParameterInfo CEpgVariableStringMap::m_EpgParameterList[] = {
-//	{TEXT("eid"),			TEXT("ƒCƒxƒ“ƒgID")},
-	{TEXT("nid"),			TEXT("ƒlƒbƒgƒ[ƒNID")},
-	{TEXT("tsid"),			TEXT("ƒXƒgƒŠ[ƒ€ID")},
-//	{TEXT("sid"),			TEXT("ƒT[ƒrƒXID")},
-	{TEXT("tvpid"),			TEXT("iEPGƒtƒ@ƒCƒ‹")},
-	{TEXT("duration-sec"),	TEXT("”Ô‘g‚Ì’·‚³(•b’PˆÊ)")},
-	{TEXT("duration-min"),	TEXT("”Ô‘g‚Ì’·‚³(•ª’PˆÊ)")},
+//	{TEXT("eid"),			TEXT("ã‚¤ãƒ™ãƒ³ãƒˆID")},
+	{TEXT("nid"),			TEXT("ãƒãƒƒãƒˆãƒ¯ãƒ¼ã‚¯ID")},
+	{TEXT("tsid"),			TEXT("ã‚¹ãƒˆãƒªãƒ¼ãƒ ID")},
+//	{TEXT("sid"),			TEXT("ã‚µãƒ¼ãƒ“ã‚¹ID")},
+	{TEXT("tvpid"),			TEXT("iEPGãƒ•ã‚¡ã‚¤ãƒ«")},
+	{TEXT("duration-sec"),	TEXT("ç•ªçµ„ã®é•·ã•(ç§’å˜ä½)")},
+	{TEXT("duration-min"),	TEXT("ç•ªçµ„ã®é•·ã•(åˆ†å˜ä½)")},
 };
 
 
@@ -158,7 +158,7 @@ bool CProgramGuideTool::Execute(const ProgramGuide::CServiceInfo *pServiceInfo,
 	pEventInfo->GetEndTime(&stEnd);
 	p=m_Command.c_str();
 	if (!GetCommandFileName(&p,szFileName,lengthof(szFileName))) {
-		::MessageBox(hwnd,TEXT("ƒpƒX‚ª’·‚·‚¬‚Ü‚·B"),nullptr,MB_OK | MB_ICONEXCLAMATION);
+		::MessageBox(hwnd,TEXT("ãƒ‘ã‚¹ãŒé•·ã™ãã¾ã™ã€‚"),nullptr,MB_OK | MB_ICONEXCLAMATION);
 		return false;
 	}
 
@@ -177,13 +177,13 @@ bool CProgramGuideTool::Execute(const ProgramGuide::CServiceInfo *pServiceInfo,
 	const TVTest::String &iEpgFileName=VarStrMap.GetiEpgFileName();
 	if (!iEpgFileName.empty()) {
 		if (!pServiceInfo->SaveiEpgFile(pEventInfo,iEpgFileName.c_str(),true)) {
-			::MessageBox(hwnd,TEXT("iEPGƒtƒ@ƒCƒ‹‚Ì‘‚«o‚µ‚ª‚Å‚«‚Ü‚¹‚ñB"),nullptr,
+			::MessageBox(hwnd,TEXT("iEPGãƒ•ã‚¡ã‚¤ãƒ«ã®æ›¸ãå‡ºã—ãŒã§ãã¾ã›ã‚“ã€‚"),nullptr,
 						 MB_OK | MB_ICONEXCLAMATION);
 			return false;
 		}
 	}
 
-	TRACE(TEXT("ŠO•”ƒc[ƒ‹Às : %s, %s\n"),szFileName,Parameter.c_str());
+	TRACE(TEXT("å¤–éƒ¨ãƒ„ãƒ¼ãƒ«å®Ÿè¡Œ : %s, %s\n"),szFileName,Parameter.c_str());
 
 	return ::ShellExecute(nullptr,nullptr,szFileName,Parameter.c_str(),nullptr,SW_SHOWNORMAL)>=(HINSTANCE)32;
 }
@@ -284,8 +284,8 @@ INT_PTR CProgramGuideTool::CProgramGuideToolDialog::DlgProc(HWND hDlg,UINT uMsg,
 				}
 				InitOpenFileName(&ofn);
 				ofn.hwndOwner=hDlg;
-				ofn.lpstrFilter=TEXT("Àsƒtƒ@ƒCƒ‹(*.exe;*.bat)\0*.exe;*.bat\0")
-								TEXT("‚·‚×‚Ä‚Ìƒtƒ@ƒCƒ‹\0*.*\0");
+				ofn.lpstrFilter=TEXT("å®Ÿè¡Œãƒ•ã‚¡ã‚¤ãƒ«(*.exe;*.bat)\0*.exe;*.bat\0")
+								TEXT("ã™ã¹ã¦ã®ãƒ•ã‚¡ã‚¤ãƒ«\0*.*\0");
 				ofn.nFilterIndex=1;
 				ofn.lpstrFile=szFileName;
 				ofn.nMaxFile=MAX_PATH;

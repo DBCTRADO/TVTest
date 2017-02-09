@@ -84,7 +84,7 @@ public:
 	typedef std::map<WORD,CEventInfoData> EventMap;
 #endif
 	typedef EventMap::iterator EventIterator;
-	EventMap EventDataMap; //ÉLÅ[ EventID
+	EventMap EventDataMap; //„Ç≠„Éº EventID
 	CEventManager::TimeEventMap EventTimeMap;
 
 	CEventInfoList();

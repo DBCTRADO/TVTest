@@ -12,26 +12,26 @@
 #include "../Common/DebugDef.h"
 
 
-// ƒfƒtƒHƒ‹ƒgü”g”(48kHz)
+// ãƒ‡ãƒ•ã‚©ãƒ«ãƒˆå‘¨æ³¢æ•°(48kHz)
 static const int FREQUENCY = 48000;
 
-// ƒtƒŒ[ƒ€“–‚½‚è‚ÌƒTƒ“ƒvƒ‹”(Å‘å)
+// ãƒ•ãƒ¬ãƒ¼ãƒ å½“ãŸã‚Šã®ã‚µãƒ³ãƒ—ãƒ«æ•°(æœ€å¤§)
 // AAC        : 1024
 // MPEG Audio : 1152
 // AC-3       : 1536 == 256 * 6
 static const int SAMPLES_PER_FRAME = 256 * 6;
 
-// REFERENCE_TIME‚Ìˆê•b
+// REFERENCE_TIMEã®ä¸€ç§’
 static const REFERENCE_TIME REFERENCE_TIME_SECOND = 10000000LL;
 
-// ƒTƒ“ƒvƒ‹‚Ìƒoƒbƒtƒ@ƒTƒCƒY
-// (ƒtƒŒ[ƒ€“–‚½‚è‚ÌƒTƒ“ƒvƒ‹” * 16ƒrƒbƒg * 5.1ch)
+// ã‚µãƒ³ãƒ—ãƒ«ã®ãƒãƒƒãƒ•ã‚¡ã‚µã‚¤ã‚º
+// (ãƒ•ãƒ¬ãƒ¼ãƒ å½“ãŸã‚Šã®ã‚µãƒ³ãƒ—ãƒ«æ•° * 16ãƒ“ãƒƒãƒˆ * 5.1ch)
 static const long SAMPLE_BUFFER_SIZE = SAMPLES_PER_FRAME * 2 * 6;
 
-// MediaSample—p‚ÉŠm•Û‚·‚éƒoƒbƒtƒ@”
+// MediaSampleç”¨ã«ç¢ºä¿ã™ã‚‹ãƒãƒƒãƒ•ã‚¡æ•°
 static const long NUM_SAMPLE_BUFFERS = 4;
 
-// ƒWƒbƒ^‚Ì‹–—eãŒÀ
+// ã‚¸ãƒƒã‚¿ã®è¨±å®¹ä¸Šé™
 static const REFERENCE_TIME MAX_JITTER = REFERENCE_TIME_SECOND / 5LL;
 
 
@@ -81,7 +81,7 @@ static void OutputLog(LPCTSTR pszFormat, ...)
 			::WriteFile(hFile,szText,Length*sizeof(TCHAR),&Wrote,NULL);
 			OutputSize+=Length;
 			if (OutputSize>=0x8000) {
-				Length=::wsprintf(szText,TEXT("‘½‚­‚È‚è‚·‚¬‚½‚Ì‚ÅƒƒO‚Ì‹L˜^‚ğ’â~‚µ‚Ü‚·B\r\n\r\n"));
+				Length=::wsprintf(szText,TEXT("å¤šããªã‚Šã™ããŸã®ã§ãƒ­ã‚°ã®è¨˜éŒ²ã‚’åœæ­¢ã—ã¾ã™ã€‚\r\n\r\n"));
 				::WriteFile(hFile,szText,Length*sizeof(TCHAR),&Wrote,NULL);
 				fStopLog=true;
 			}
@@ -131,7 +131,7 @@ CAudioDecFilter::CAudioDecFilter(LPUNKNOWN pUnk, HRESULT *phr)
 
 	*phr = S_OK;
 
-	// ƒƒfƒBƒAƒ^ƒCƒvİ’è
+	// ãƒ¡ãƒ‡ã‚£ã‚¢ã‚¿ã‚¤ãƒ—è¨­å®š
 	m_MediaType.InitMediaType();
 	m_MediaType.SetType(&MEDIATYPE_Audio);
 	m_MediaType.SetSubtype(&MEDIASUBTYPE_PCM);
@@ -139,7 +139,7 @@ CAudioDecFilter::CAudioDecFilter(LPUNKNOWN pUnk, HRESULT *phr)
 	m_MediaType.SetSampleSize(0);
 	m_MediaType.SetFormatType(&FORMAT_WaveFormatEx);
 
-	 // ƒtƒH[ƒ}ƒbƒg\‘¢‘ÌŠm•Û
+	 // ãƒ•ã‚©ãƒ¼ãƒãƒƒãƒˆæ§‹é€ ä½“ç¢ºä¿
 #if 1
 	// 2ch
 	WAVEFORMATEX *pWaveInfo = pointer_cast<WAVEFORMATEX *>(m_MediaType.AllocFormatBuffer(sizeof(WAVEFORMATEX)));
@@ -147,7 +147,7 @@ CAudioDecFilter::CAudioDecFilter(LPUNKNOWN pUnk, HRESULT *phr)
 		*phr = E_OUTOFMEMORY;
 		return;
 	}
-	// WAVEFORMATEX\‘¢‘Ìİ’è(48kHz 16bit ƒXƒeƒŒƒIŒÅ’è)
+	// WAVEFORMATEXæ§‹é€ ä½“è¨­å®š(48kHz 16bit ã‚¹ãƒ†ãƒ¬ã‚ªå›ºå®š)
 	pWaveInfo->wFormatTag = WAVE_FORMAT_PCM;
 	pWaveInfo->nChannels = 2;
 	pWaveInfo->nSamplesPerSec = FREQUENCY;
@@ -162,7 +162,7 @@ CAudioDecFilter::CAudioDecFilter(LPUNKNOWN pUnk, HRESULT *phr)
 		*phr = E_OUTOFMEMORY;
 		return;
 	}
-	// WAVEFORMATEXTENSIBLE\‘¢‘Ìİ’è(48KHz 16bit 5.1chŒÅ’è)
+	// WAVEFORMATEXTENSIBLEæ§‹é€ ä½“è¨­å®š(48KHz 16bit 5.1chå›ºå®š)
 	pWaveInfo->Format.wFormatTag = WAVE_FORMAT_EXTENSIBLE;
 	pWaveInfo->Format.nChannels = 6;
 	pWaveInfo->Format.nSamplesPerSec = FREQUENCY;
@@ -193,7 +193,7 @@ CAudioDecFilter::~CAudioDecFilter()
 
 IBaseFilter* WINAPI CAudioDecFilter::CreateInstance(LPUNKNOWN pUnk, HRESULT *phr)
 {
-	// ƒCƒ“ƒXƒ^ƒ“ƒX‚ğì¬‚·‚é
+	// ã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚¹ã‚’ä½œæˆã™ã‚‹
 	CAudioDecFilter *pNewFilter = new CAudioDecFilter(pUnk, phr);
 	if (FAILED(*phr))
 		goto OnError;
@@ -216,7 +216,7 @@ HRESULT CAudioDecFilter::CheckInputType(const CMediaType* mtIn)
 {
 	CheckPointer(mtIn, E_POINTER);
 
-	// ‰½‚Å‚àOK
+	// ä½•ã§ã‚‚OK
 
 	return S_OK;
 }
@@ -230,7 +230,7 @@ HRESULT CAudioDecFilter::CheckTransform(const CMediaType* mtIn, const CMediaType
 	if (*mtOut->Type() == MEDIATYPE_Audio) {
 		if (*mtOut->Subtype() == MEDIASUBTYPE_PCM) {
 
-			// GUID_NULL‚Å‚ÍƒfƒoƒbƒOƒAƒT[ƒg‚ª”­¶‚·‚é‚Ì‚Åƒ_ƒ~[‚ğİ’è‚µ‚Ä‰ñ”ğ
+			// GUID_NULLã§ã¯ãƒ‡ãƒãƒƒã‚°ã‚¢ã‚µãƒ¼ãƒˆãŒç™ºç”Ÿã™ã‚‹ã®ã§ãƒ€ãƒŸãƒ¼ã‚’è¨­å®šã—ã¦å›é¿
 			CMediaType MediaType;
 			MediaType.InitMediaType();
 			MediaType.SetType(&MEDIATYPE_Stream);
@@ -257,13 +257,13 @@ HRESULT CAudioDecFilter::DecideBufferSize(IMemAllocator * pAllocator, ALLOCATOR_
 	if (pprop->cbBuffer < SAMPLE_BUFFER_SIZE)
 		pprop->cbBuffer = SAMPLE_BUFFER_SIZE;
 
-	// ƒAƒƒP[ƒ^ƒvƒƒpƒeƒB‚ğİ’è‚µ‚È‚¨‚·
+	// ã‚¢ãƒ­ã‚±ãƒ¼ã‚¿ãƒ—ãƒ­ãƒ‘ãƒ†ã‚£ã‚’è¨­å®šã—ãªãŠã™
 	ALLOCATOR_PROPERTIES Actual;
 	HRESULT hr = pAllocator->SetProperties(pprop, &Actual);
 	if (FAILED(hr))
 		return hr;
 
-	// —v‹‚ğó‚¯“ü‚ê‚ç‚ê‚½‚©”»’è
+	// è¦æ±‚ã‚’å—ã‘å…¥ã‚Œã‚‰ã‚ŒãŸã‹åˆ¤å®š
 	if (Actual.cBuffers < pprop->cBuffers || Actual.cbBuffer < pprop->cbBuffer)
 		return E_FAIL;
 
@@ -345,7 +345,7 @@ HRESULT CAudioDecFilter::NewSegment(REFERENCE_TIME tStart, REFERENCE_TIME tStop,
 
 HRESULT CAudioDecFilter::Transform(IMediaSample *pIn, IMediaSample *pOut)
 {
-	// “ü—Íƒf[ƒ^ƒ|ƒCƒ“ƒ^‚ğæ“¾‚·‚é
+	// å…¥åŠ›ãƒ‡ãƒ¼ã‚¿ãƒã‚¤ãƒ³ã‚¿ã‚’å–å¾—ã™ã‚‹
 	const DWORD InSize = pIn->GetActualDataLength();
 	BYTE *pInData = NULL;
 	HRESULT hr = pIn->GetPointer(&pInData);
@@ -426,10 +426,10 @@ HRESULT CAudioDecFilter::Transform(IMediaSample *pIn, IMediaSample *pOut)
 				hr = ReconnectOutput(SampleInfo.MediaBufferSize, SampleInfo.MediaType);
 				if (FAILED(hr))
 					break;
-				OutputLog(TEXT("o—ÍƒƒfƒBƒAƒ^ƒCƒv‚ğXV‚µ‚Ü‚·B\r\n"));
+				OutputLog(TEXT("å‡ºåŠ›ãƒ¡ãƒ‡ã‚£ã‚¢ã‚¿ã‚¤ãƒ—ã‚’æ›´æ–°ã—ã¾ã™ã€‚\r\n"));
 				hr = m_pOutput->SetMediaType(&SampleInfo.MediaType);
 				if (FAILED(hr)) {
-					OutputLog(TEXT("o—ÍƒƒfƒBƒAƒ^ƒCƒv‚ğİ’è‚Å‚«‚Ü‚¹‚ñB(%08x)\r\n"), hr);
+					OutputLog(TEXT("å‡ºåŠ›ãƒ¡ãƒ‡ã‚£ã‚¢ã‚¿ã‚¤ãƒ—ã‚’è¨­å®šã§ãã¾ã›ã‚“ã€‚(%08x)\r\n"), hr);
 					break;
 				}
 				m_MediaType = SampleInfo.MediaType;
@@ -440,18 +440,18 @@ HRESULT CAudioDecFilter::Transform(IMediaSample *pIn, IMediaSample *pOut)
 			IMediaSample *pOutSample = NULL;
 			hr = m_pOutput->GetDeliveryBuffer(&pOutSample, NULL, NULL, 0);
 			if (FAILED(hr)) {
-				OutputLog(TEXT("o—ÍƒƒfƒBƒAƒTƒ“ƒvƒ‹‚ğæ“¾‚Å‚«‚Ü‚¹‚ñB(%08x)\r\n"), hr);
+				OutputLog(TEXT("å‡ºåŠ›ãƒ¡ãƒ‡ã‚£ã‚¢ã‚µãƒ³ãƒ—ãƒ«ã‚’å–å¾—ã§ãã¾ã›ã‚“ã€‚(%08x)\r\n"), hr);
 				break;
 			}
 
 			if (SampleInfo.bMediaTypeChanged)
 				pOutSample->SetMediaType(&m_MediaType);
 
-			// o—Íƒ|ƒCƒ“ƒ^æ“¾
+			// å‡ºåŠ›ãƒã‚¤ãƒ³ã‚¿å–å¾—
 			BYTE *pOutBuff = NULL;
 			hr = pOutSample->GetPointer(&pOutBuff);
 			if (FAILED(hr)) {
-				OutputLog(TEXT("o—ÍƒTƒ“ƒvƒ‹‚Ìƒoƒbƒtƒ@‚ğæ“¾‚Å‚«‚Ü‚¹‚ñB(%08x)\r\n"), hr);
+				OutputLog(TEXT("å‡ºåŠ›ã‚µãƒ³ãƒ—ãƒ«ã®ãƒãƒƒãƒ•ã‚¡ã‚’å–å¾—ã§ãã¾ã›ã‚“ã€‚(%08x)\r\n"), hr);
 				pOutSample->Release();
 				break;
 			}
@@ -464,9 +464,9 @@ HRESULT CAudioDecFilter::Transform(IMediaSample *pIn, IMediaSample *pOut)
 				rtDuration = REFERENCE_TIME_SECOND * (LONGLONG)SampleInfo.Samples / FrameInfo.Info.Frequency;
 				rtStart = m_StartTime;
 				m_StartTime += rtDuration;
-				// ‰¹‚¸‚ê•â³—pŠÔƒVƒtƒg
+				// éŸ³ãšã‚Œè£œæ­£ç”¨æ™‚é–“ã‚·ãƒ•ãƒˆ
 				if (m_DelayAdjustment > 0) {
-					// Å‘å2”{‚Ü‚ÅŠÔ‚ğ’x‚ç‚¹‚é
+					// æœ€å¤§2å€ã¾ã§æ™‚é–“ã‚’é…ã‚‰ã›ã‚‹
 					if (rtDuration >= m_DelayAdjustment) {
 						rtDuration += m_DelayAdjustment;
 						m_DelayAdjustment = 0;
@@ -475,7 +475,7 @@ HRESULT CAudioDecFilter::Transform(IMediaSample *pIn, IMediaSample *pOut)
 						rtDuration *= 2;
 					}
 				} else if (m_DelayAdjustment < 0) {
-					// Å’Z1/2‚Ü‚ÅŠÔ‚ğ‘‚ß‚é
+					// æœ€çŸ­1/2ã¾ã§æ™‚é–“ã‚’æ—©ã‚ã‚‹
 					if (rtDuration >= -m_DelayAdjustment * 2) {
 						rtDuration += m_DelayAdjustment;
 						m_DelayAdjustment = 0;
@@ -492,7 +492,7 @@ HRESULT CAudioDecFilter::Transform(IMediaSample *pIn, IMediaSample *pOut)
 			pOutSample->SetMediaTime(NULL, NULL);
 			pOutSample->SetPreroll(FALSE);
 #if 0
-			// Discontinuity‚ğİ’è‚·‚é‚Æ”{‘¬Ä¶‚ª‚¨‚©‚µ‚­‚È‚é–Í—l
+			// Discontinuityã‚’è¨­å®šã™ã‚‹ã¨å€é€Ÿå†ç”ŸãŒãŠã‹ã—ããªã‚‹æ¨¡æ§˜
 			pOutSample->SetDiscontinuity(m_bDiscontinuity);
 #else
 			pOutSample->SetDiscontinuity(m_bInputDiscontinuity);
@@ -504,7 +504,7 @@ HRESULT CAudioDecFilter::Transform(IMediaSample *pIn, IMediaSample *pOut)
 			hr = m_pOutput->Deliver(pOutSample);
 #ifdef _DEBUG
 			if (FAILED(hr)) {
-				OutputLog(TEXT("ƒTƒ“ƒvƒ‹‚ğ‘—M‚Å‚«‚Ü‚¹‚ñB(%08x)\r\n"), hr);
+				OutputLog(TEXT("ã‚µãƒ³ãƒ—ãƒ«ã‚’é€ä¿¡ã§ãã¾ã›ã‚“ã€‚(%08x)\r\n"), hr);
 				if (m_bPassthrough && !m_bPassthroughError) {
 					m_bPassthroughError = true;
 					if (m_pEventHandler)
@@ -802,7 +802,7 @@ HRESULT CAudioDecFilter::ProcessPcm(const BYTE *pData, const DWORD Samples,
 	const bool bSurround = (Info.Channels == 6 && !m_bDownMixSurround);
 	const int OutChannels = bSurround ? 6 : 2;
 
-	// ƒƒfƒBƒAƒ^ƒCƒv‚ÌXV
+	// ãƒ¡ãƒ‡ã‚£ã‚¢ã‚¿ã‚¤ãƒ—ã®æ›´æ–°
 	bool bMediaTypeChanged = false;
 	WAVEFORMATEX *pwfx = pointer_cast<WAVEFORMATEX*>(m_MediaType.Format());
 	if (*m_MediaType.FormatType() != FORMAT_WaveFormatEx
@@ -851,7 +851,7 @@ HRESULT CAudioDecFilter::ProcessPcm(const BYTE *pData, const DWORD Samples,
 	if (pData != NULL) {
 		DWORD OutSize;
 
-		// ƒ_ƒEƒ“ƒ~ƒbƒNƒX
+		// ãƒ€ã‚¦ãƒ³ãƒŸãƒƒã‚¯ã‚¹
 		switch (Info.Channels) {
 		case 1:
 			OutSize = MonoToStereo(pointer_cast<short *>(pOutBuff),
@@ -908,7 +908,7 @@ HRESULT CAudioDecFilter::ProcessSpdif(const CAudioDecoder::AudioInfo &Info,
 	const int DataBurstSize = PREAMBLE_SIZE + FrameSize;
 	const int PacketSize = FrameInfo.SamplesPerFrame * 4;
 	if (DataBurstSize > PacketSize) {
-		OutputLog(TEXT("S/PDIFƒrƒbƒgƒŒ[ƒg‚ª•s³‚Å‚·B(Frame size %d / Data-burst size %d / Packet size %d)\r\n"),
+		OutputLog(TEXT("S/PDIFãƒ“ãƒƒãƒˆãƒ¬ãƒ¼ãƒˆãŒä¸æ­£ã§ã™ã€‚(Frame size %d / Data-burst size %d / Packet size %d)\r\n"),
 				  FrameSize, DataBurstSize, PacketSize);
 		return E_FAIL;
 	}
@@ -916,7 +916,7 @@ HRESULT CAudioDecFilter::ProcessSpdif(const CAudioDecoder::AudioInfo &Info,
 #ifdef _DEBUG
 	static bool bFirst=true;
 	if (bFirst) {
-		OutputLog(TEXT("S/PDIFo—ÍŠJn(Frame size %d / Data-burst size %d / Packet size %d)\r\n"),
+		OutputLog(TEXT("S/PDIFå‡ºåŠ›é–‹å§‹(Frame size %d / Data-burst size %d / Packet size %d)\r\n"),
 				  FrameSize, DataBurstSize, PacketSize);
 		bFirst=false;
 	}
@@ -942,7 +942,7 @@ HRESULT CAudioDecFilter::ProcessSpdif(const CAudioDecoder::AudioInfo &Info,
 		pwfx->nAvgBytesPerSec = pwfx->nSamplesPerSec * pwfx->nBlockAlign;
 		pwfx->cbSize = 0;
 		/*
-		// Windows 7 ‚Å‚Í WAVEFORMATEXTENSIBLE_IEC61937 ‚ğg‚Á‚½•û‚ª‚¢‚¢?
+		// Windows 7 ã§ã¯ WAVEFORMATEXTENSIBLE_IEC61937 ã‚’ä½¿ã£ãŸæ–¹ãŒã„ã„?
 		WAVEFORMATEXTENSIBLE_IEC61937 *pwfx;
 		...
 		pwfx->FormatExt.Format.wFormatTag = WAVE_FORMAT_EXTENSIBLE;
@@ -978,7 +978,7 @@ HRESULT CAudioDecFilter::ProcessSpdif(const CAudioDecoder::AudioInfo &Info,
 			&pOutBuff[PREAMBLE_SIZE],
 			pSampleInfo->pData->GetBufferSize() - PREAMBLE_SIZE);
 	if ((PayloadSize < 1) || (PREAMBLE_SIZE + PayloadSize > PacketSize)) {
-		OutputLog(TEXT("S/PDIF Burst-payload ƒTƒCƒY‚ª•s³‚Å‚·B(Packet size %d / Payload size %d)\r\n"),
+		OutputLog(TEXT("S/PDIF Burst-payload ã‚µã‚¤ã‚ºãŒä¸æ­£ã§ã™ã€‚(Packet size %d / Payload size %d)\r\n"),
 				  PacketSize, PayloadSize);
 		return E_FAIL;
 	}
@@ -1004,17 +1004,17 @@ HRESULT CAudioDecFilter::ReconnectOutput(long BufferSize, const CMediaType &mt)
 	IMemInputPin *pMemInputPin = NULL;
 	hr = pPin->QueryInterface(IID_IMemInputPin, pointer_cast<void**>(&pMemInputPin));
 	if (FAILED(hr)) {
-		OutputLog(TEXT("IMemInputPinƒCƒ“ƒ^[ƒtƒF[ƒX‚ªæ“¾‚Å‚«‚Ü‚¹‚ñB(%08x)\r\n"), hr);
+		OutputLog(TEXT("IMemInputPinã‚¤ãƒ³ã‚¿ãƒ¼ãƒ•ã‚§ãƒ¼ã‚¹ãŒå–å¾—ã§ãã¾ã›ã‚“ã€‚(%08x)\r\n"), hr);
 	} else {
 		IMemAllocator *pAllocator = NULL;
 		hr = pMemInputPin->GetAllocator(&pAllocator);
 		if (FAILED(hr)) {
-			OutputLog(TEXT("IMemAllocatorƒCƒ“ƒ^[ƒtƒF[ƒX‚ªæ“¾‚Å‚«‚Ü‚¹‚ñB(%08x)\r\n"), hr);
+			OutputLog(TEXT("IMemAllocatorã‚¤ãƒ³ã‚¿ãƒ¼ãƒ•ã‚§ãƒ¼ã‚¹ãŒå–å¾—ã§ãã¾ã›ã‚“ã€‚(%08x)\r\n"), hr);
 		} else {
 			ALLOCATOR_PROPERTIES Props;
 			hr = pAllocator->GetProperties(&Props);
 			if (FAILED(hr)) {
-				OutputLog(TEXT("IMemAllocator‚ÌƒvƒƒpƒeƒB‚ªæ“¾‚Å‚«‚Ü‚¹‚ñB(%08x)\r\n"), hr);
+				OutputLog(TEXT("IMemAllocatorã®ãƒ—ãƒ­ãƒ‘ãƒ†ã‚£ãŒå–å¾—ã§ãã¾ã›ã‚“ã€‚(%08x)\r\n"), hr);
 			} else {
 				if (mt != m_pOutput->CurrentMediaType()
 						|| Props.cBuffers < NUM_SAMPLE_BUFFERS
@@ -1026,7 +1026,7 @@ HRESULT CAudioDecFilter::ReconnectOutput(long BufferSize, const CMediaType &mt)
 
 						Props.cBuffers = NUM_SAMPLE_BUFFERS;
 						Props.cbBuffer = BufferSize * 3 / 2;
-						OutputLog(TEXT("ƒoƒbƒtƒ@ƒTƒCƒY‚ğİ’è‚µ‚Ü‚·B(%ld bytes)\r\n"), Props.cbBuffer);
+						OutputLog(TEXT("ãƒãƒƒãƒ•ã‚¡ã‚µã‚¤ã‚ºã‚’è¨­å®šã—ã¾ã™ã€‚(%ld bytes)\r\n"), Props.cbBuffer);
 						if (SUCCEEDED(hr = m_pOutput->DeliverBeginFlush())
 								&& SUCCEEDED(hr = m_pOutput->DeliverEndFlush())
 								&& SUCCEEDED(hr = pAllocator->Decommit())
@@ -1034,16 +1034,16 @@ HRESULT CAudioDecFilter::ReconnectOutput(long BufferSize, const CMediaType &mt)
 								&& SUCCEEDED(hr = pAllocator->Commit())) {
 							if (ActualProps.cBuffers < Props.cBuffers
 									|| ActualProps.cbBuffer < BufferSize) {
-								OutputLog(TEXT("ƒoƒbƒtƒ@ƒTƒCƒY‚Ì—v‹‚ªó‚¯•t‚¯‚ç‚ê‚Ü‚¹‚ñB(%ld / %ld)\r\n"),
+								OutputLog(TEXT("ãƒãƒƒãƒ•ã‚¡ã‚µã‚¤ã‚ºã®è¦æ±‚ãŒå—ã‘ä»˜ã‘ã‚‰ã‚Œã¾ã›ã‚“ã€‚(%ld / %ld)\r\n"),
 										  ActualProps.cbBuffer, Props.cbBuffer);
 								hr = E_FAIL;
 								NotifyEvent(EC_ERRORABORT, hr, 0);
 							} else {
-								OutputLog(TEXT("ƒsƒ“‚ÌÄÚ‘±¬Œ÷\r\n"));
+								OutputLog(TEXT("ãƒ”ãƒ³ã®å†æ¥ç¶šæˆåŠŸ\r\n"));
 								hr = S_OK;
 							}
 						} else {
-							OutputLog(TEXT("ƒsƒ“‚ÌÄÚ‘±‚ª‚Å‚«‚Ü‚¹‚ñB(%08x)\r\n"), hr);
+							OutputLog(TEXT("ãƒ”ãƒ³ã®å†æ¥ç¶šãŒã§ãã¾ã›ã‚“ã€‚(%08x)\r\n"), hr);
 						}
 					}
 				} else {
@@ -1073,7 +1073,7 @@ void CAudioDecFilter::ResetSync()
 
 DWORD CAudioDecFilter::MonoToStereo(short *pDst, const short *pSrc, const DWORD Samples)
 {
-	// 1ch ¨ 2ch “ñd‰»
+	// 1ch â†’ 2ch äºŒé‡åŒ–
 	const short *p = pSrc, *pEnd = pSrc + Samples;
 	short *q = pDst;
 
@@ -1104,7 +1104,7 @@ DWORD CAudioDecFilter::MonoToStereo(short *pDst, const short *pSrc, const DWORD 
 		*q++ = Value;	// R
 	}
 
-	// ƒoƒbƒtƒ@ƒTƒCƒY‚ğ•Ô‚·
+	// ãƒãƒƒãƒ•ã‚¡ã‚µã‚¤ã‚ºã‚’è¿”ã™
 	return Samples * (sizeof(short) * 2);
 }
 
@@ -1112,7 +1112,7 @@ DWORD CAudioDecFilter::MonoToStereo(short *pDst, const short *pSrc, const DWORD 
 DWORD CAudioDecFilter::DownMixStereo(short *pDst, const short *pSrc, const DWORD Samples)
 {
 	if (m_StereoMode == STEREOMODE_STEREO) {
-		// 2ch ¨ 2ch ƒXƒ‹[
+		// 2ch â†’ 2ch ã‚¹ãƒ«ãƒ¼
 		::CopyMemory(pDst, pSrc, Samples * (sizeof(short) * 2));
 	} else {
 		const DWORD Length = Samples * 2;
@@ -1120,7 +1120,7 @@ DWORD CAudioDecFilter::DownMixStereo(short *pDst, const short *pSrc, const DWORD
 		short *q = pDst;
 
 		if (m_StereoMode == STEREOMODE_LEFT) {
-			// ¶‚Ì‚İ
+			// å·¦ã®ã¿
 
 #ifdef BONTSENGINE_SSE2
 			if (Length >= 32 && TsEngine::IsSSE2Enabled()) {
@@ -1156,7 +1156,7 @@ DWORD CAudioDecFilter::DownMixStereo(short *pDst, const short *pSrc, const DWORD
 				p += 2;
 			}
 		} else {
-			// ‰E‚Ì‚İ
+			// å³ã®ã¿
 
 #ifdef BONTSENGINE_SSE2
 			if (Length >= 32 && TsEngine::IsSSE2Enabled()) {
@@ -1194,14 +1194,14 @@ DWORD CAudioDecFilter::DownMixStereo(short *pDst, const short *pSrc, const DWORD
 		}
 	}
 
-	// ƒoƒbƒtƒ@ƒTƒCƒY‚ğ•Ô‚·
+	// ãƒãƒƒãƒ•ã‚¡ã‚µã‚¤ã‚ºã‚’è¿”ã™
 	return Samples * (sizeof(short) * 2);
 }
 
 
 DWORD CAudioDecFilter::DownMixSurround(short *pDst, const short *pSrc, const DWORD Samples)
 {
-	// 5.1ch ¨ 2ch ƒ_ƒEƒ“ƒ~ƒbƒNƒX
+	// 5.1ch â†’ 2ch ãƒ€ã‚¦ãƒ³ãƒŸãƒƒã‚¯ã‚¹
 
 	const double Level = m_bGainControl ? m_SurroundGain : 1.0;
 	int ChannelMap[6];
@@ -1212,7 +1212,7 @@ DWORD CAudioDecFilter::DownMixSurround(short *pDst, const short *pSrc, const DWO
 	}
 
 	if (m_bEnableCustomDownMixMatrix) {
-		// ƒJƒXƒ^ƒ€ƒ}ƒgƒŠƒbƒNƒX‚ğg—p
+		// ã‚«ã‚¹ã‚¿ãƒ ãƒãƒˆãƒªãƒƒã‚¯ã‚¹ã‚’ä½¿ç”¨
 		for (DWORD Pos = 0; Pos < Samples; Pos++) {
 			double Data[6];
 
@@ -1232,7 +1232,7 @@ DWORD CAudioDecFilter::DownMixSurround(short *pDst, const short *pSrc, const DWO
 			}
 		}
 	} else {
-		// ƒfƒtƒHƒ‹ƒg‚ÌŒW”‚ğg—p
+		// ãƒ‡ãƒ•ã‚©ãƒ«ãƒˆã®ä¿‚æ•°ã‚’ä½¿ç”¨
 		CAudioDecoder::DownmixInfo Info;
 		m_pDecoder->GetDownmixInfo(&Info);
 
@@ -1256,7 +1256,7 @@ DWORD CAudioDecFilter::DownMixSurround(short *pDst, const short *pSrc, const DWO
 		}
 	}
 
-	// ƒoƒbƒtƒ@ƒTƒCƒY‚ğ•Ô‚·
+	// ãƒãƒƒãƒ•ã‚¡ã‚µã‚¤ã‚ºã‚’è¿”ã™
 	return Samples * (sizeof(short) * 2);
 }
 
@@ -1264,7 +1264,7 @@ DWORD CAudioDecFilter::DownMixSurround(short *pDst, const short *pSrc, const DWO
 DWORD CAudioDecFilter::MapSurroundChannels(short *pDst, const short *pSrc, const DWORD Samples)
 {
 	if (m_bEnableCustomMixingMatrix) {
-		// ƒJƒXƒ^ƒ€ƒ}ƒgƒŠƒbƒNƒX‚ğg—p
+		// ã‚«ã‚¹ã‚¿ãƒ ãƒãƒˆãƒªãƒƒã‚¯ã‚¹ã‚’ä½¿ç”¨
 		int ChannelMap[6];
 
 		if (!m_pDecoder->GetChannelMap(6, ChannelMap)) {
@@ -1290,7 +1290,7 @@ DWORD CAudioDecFilter::MapSurroundChannels(short *pDst, const short *pSrc, const
 			}
 		}
 	} else {
-		// ƒfƒtƒHƒ‹ƒg‚ÌŠ„‚è“–‚Ä‚ğg—p
+		// ãƒ‡ãƒ•ã‚©ãƒ«ãƒˆã®å‰²ã‚Šå½“ã¦ã‚’ä½¿ç”¨
 		int ChannelMap[6];
 
 		if (m_pDecoder->GetChannelMap(6, ChannelMap)) {
@@ -1307,7 +1307,7 @@ DWORD CAudioDecFilter::MapSurroundChannels(short *pDst, const short *pSrc, const
 		}
 	}
 
-	// ƒoƒbƒtƒ@ƒTƒCƒY‚ğ•Ô‚·
+	// ãƒãƒƒãƒ•ã‚¡ã‚µã‚¤ã‚ºã‚’è¿”ã™
 	return Samples * (sizeof(short) * 6);
 }
 

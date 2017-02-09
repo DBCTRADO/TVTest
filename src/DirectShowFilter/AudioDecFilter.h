@@ -5,10 +5,10 @@
 #include "AudioDecoder.h"
 #include "TsUtilClass.h"
 
-// テンプレート名
+// 繝�繝ｳ繝励Ξ繝ｼ繝亥錐
 #define AUDIODECFILTER_NAME L"Audio Decoder Filter"
 
-// このフィルタのGUID {2AD583EC-1D57-4d0d-8991-487F2A0A0E8B}
+// 縺薙�ｮ繝輔ぅ繝ｫ繧ｿ縺ｮGUID {2AD583EC-1D57-4d0d-8991-487F2A0A0E8B}
 DEFINE_GUID(CLSID_AudioDecFilter, 0x2ad583ec, 0x1d57, 0x4d0d, 0x89, 0x91, 0x48, 0x7f, 0x2a, 0xa, 0xe, 0x8b);
 
 class __declspec(uuid("2AD583EC-1D57-4d0d-8991-487F2A0A0E8B")) CAudioDecFilter

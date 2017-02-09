@@ -69,7 +69,7 @@ CCaptionPanel::~CCaptionPanel()
 bool CCaptionPanel::Create(HWND hwndParent,DWORD Style,DWORD ExStyle,int ID)
 {
 	return CreateBasicWindow(hwndParent,Style,ExStyle,ID,
-							 m_pszClassName,TEXT("Žš–‹"),m_hinst);
+							 m_pszClassName,TEXT("å­—å¹•"),m_hinst);
 }
 
 
@@ -313,13 +313,13 @@ void CCaptionPanel::OnCommand(int Command)
 				InitOpenFileName(&ofn);
 				ofn.hwndOwner=m_hwnd;
 				ofn.lpstrFilter=
-					TEXT("ƒeƒLƒXƒgƒtƒ@ƒCƒ‹(UTF-16 LE)(*.*)\0*.*\0")
-					TEXT("ƒeƒLƒXƒgƒtƒ@ƒCƒ‹(UTF-8)(*.*)\0*.*\0")
-					TEXT("ƒeƒLƒXƒgƒtƒ@ƒCƒ‹(Shift_JIS)(*.*)\0*.*\0");
+					TEXT("ãƒ†ã‚­ã‚¹ãƒˆãƒ•ã‚¡ã‚¤ãƒ«(UTF-16 LE)(*.*)\0*.*\0")
+					TEXT("ãƒ†ã‚­ã‚¹ãƒˆãƒ•ã‚¡ã‚¤ãƒ«(UTF-8)(*.*)\0*.*\0")
+					TEXT("ãƒ†ã‚­ã‚¹ãƒˆãƒ•ã‚¡ã‚¤ãƒ«(Shift_JIS)(*.*)\0*.*\0");
 				ofn.nFilterIndex=(int)m_SaveCharEncoding+1;
 				ofn.lpstrFile=szFileName;
 				ofn.nMaxFile=lengthof(szFileName);
-				ofn.lpstrTitle=TEXT("Žš–‹‚Ì•Û‘¶");
+				ofn.lpstrTitle=TEXT("å­—å¹•ã®ä¿å­˜");
 				ofn.Flags=OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT | OFN_EXPLORER;
 				if (FileSaveDialog(&ofn)) {
 					m_SaveCharEncoding=(CharEncoding)(ofn.nFilterIndex-1);
@@ -363,7 +363,7 @@ void CCaptionPanel::OnCommand(int Command)
 					}
 
 					if (!fOK) {
-						::MessageBox(m_hwnd,TEXT("ƒtƒ@ƒCƒ‹‚ð•Û‘¶‚Å‚«‚Ü‚¹‚ñB"),NULL,
+						::MessageBox(m_hwnd,TEXT("ãƒ•ã‚¡ã‚¤ãƒ«ã‚’ä¿å­˜ã§ãã¾ã›ã‚“ã€‚"),NULL,
 									 MB_OK | MB_ICONEXCLAMATION);
 					}
 				}
@@ -472,7 +472,7 @@ LRESULT CCaptionPanel::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam
 							::SendMessage(m_hwndEdit,WM_SETREDRAW,TRUE,0);
 							::InvalidateRect(m_hwndEdit,NULL,TRUE);
 						} else {
-							// ”ñƒAƒNƒeƒBƒu‚Ìê‡‚ÍƒLƒ…[‚É—­‚ß‚é
+							// éžã‚¢ã‚¯ãƒ†ã‚£ãƒ–ã®å ´åˆã¯ã‚­ãƒ¥ãƒ¼ã«æºœã‚ã‚‹
 							if (Lang.CaptionList.size()>=MAX_QUEUE_TEXT) {
 								Lang.CaptionList.pop_front();
 								if (LangIndex==m_CurLanguage)
@@ -633,9 +633,9 @@ void CCaptionPanel::OnCaption(CCaptionDecoder *pDecoder,CCaptionParser *pParser,
 		}
 		Lang.fContinue=
 #ifdef UNICODE
-			DstLength>1 && pszBuff[DstLength-1]==L'¨';
+			DstLength>1 && pszBuff[DstLength-1]==L'â†’';
 #else
-			DstLength>2 && pszBuff[DstLength-2]=="¨"[0] && pszBuff[DstLength-1]=="¨"[1];
+			DstLength>2 && pszBuff[DstLength-2]=="â†’"[0] && pszBuff[DstLength-1]=="â†’"[1];
 #endif
 		if (Lang.fContinue)
 			pszBuff[DstLength-(3-sizeof(TCHAR))]='\0';
@@ -672,7 +672,7 @@ LRESULT CCaptionPanel::CEditSubclass::OnMessage(
 			Menu.CheckItem(CM_CAPTIONPANEL_HALFWIDTHEUROLANGS,m_pCaptionPanel->m_fHalfWidthEuroLanguagesOnly);
 			Menu.EnableItem(CM_CAPTIONPANEL_HALFWIDTHEUROLANGS,m_pCaptionPanel->m_fHalfWidthAlnum);
 
-			// Œ¾Œê‘I‘ð
+			// è¨€èªžé¸æŠž
 			m_pCaptionPanel->m_Lock.Lock();
 			if (!m_pCaptionPanel->m_LanguageList.empty()) {
 				Menu.AppendSeparator();
@@ -685,7 +685,7 @@ LRESULT CCaptionPanel::CEditSubclass::OnMessage(
 						m_pCaptionPanel->m_LanguageList[i].LanguageCode,
 						szText,lengthof(szText));
 					if (szText[0]==_T('\0'))
-						StdUtil::snprintf(szText,lengthof(szText),TEXT("Œ¾Œê%d"),i+1);
+						StdUtil::snprintf(szText,lengthof(szText),TEXT("è¨€èªž%d"),i+1);
 					Menu.Append(CM_CAPTIONPANEL_LANGUAGE_FIRST+i,szText);
 				}
 				Menu.CheckRadioItem(CM_CAPTIONPANEL_LANGUAGE_FIRST,

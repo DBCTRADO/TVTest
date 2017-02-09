@@ -137,7 +137,7 @@ DWORD WINAPI CAppTerminator::WatchThread(LPVOID lpParameter)
 		if (Result==WAIT_TIMEOUT) {
 			pThis->m_App.AddLog(
 				CLogItem::TYPE_WARNING,
-				TEXT("I—¹ˆ—‚ªƒ^ƒCƒ€ƒAƒEƒg‚µ‚Ü‚µ‚½(%ums)BƒvƒƒZƒX‚ğ‹­§“I‚ÉI—¹‚³‚¹‚Ü‚·B"),
+				TEXT("çµ‚äº†å‡¦ç†ãŒã‚¿ã‚¤ãƒ ã‚¢ã‚¦ãƒˆã—ã¾ã—ãŸ(%ums)ã€‚ãƒ—ãƒ­ã‚»ã‚¹ã‚’å¼·åˆ¶çš„ã«çµ‚äº†ã•ã›ã¾ã™ã€‚"),
 				pThis->m_Timeout);
 
 			if (pThis->m_hMainThread!=nullptr) {
@@ -294,7 +294,7 @@ void CAppMain::Initialize()
 	bool fExists=::PathFileExists(m_szIniFileName)!=FALSE;
 	m_fFirstExecute=!fExists && CmdLineOptions.m_IniFileName.empty();
 	if (fExists) {
-		AddLog(TEXT("İ’è‚ğ“Ç‚İ‚ñ‚Å‚¢‚Ü‚·..."));
+		AddLog(TEXT("è¨­å®šã‚’èª­ã¿è¾¼ã‚“ã§ã„ã¾ã™..."));
 		LoadSettings();
 	}
 }
@@ -336,7 +336,7 @@ void CAppMain::Finalize()
 
 	FINALIZE_CONTINUE
 
-	// I—¹‚Ì•‰‰×‚Å‘¼‚ÌƒvƒƒZƒX‚Ì˜^‰æ‚ªƒhƒƒbƒv‚·‚é‚±‚Æ‚ª‚ ‚é‚ç‚µ‚¢...
+	// çµ‚äº†æ™‚ã®è² è·ã§ä»–ã®ãƒ—ãƒ­ã‚»ã‚¹ã®éŒ²ç”»ãŒãƒ‰ãƒ­ãƒƒãƒ—ã™ã‚‹ã“ã¨ãŒã‚ã‚‹ã‚‰ã—ã„...
 	::SetPriorityClass(::GetCurrentProcess(),BELOW_NORMAL_PRIORITY_CLASS);
 
 	if (!CmdLineOptions.m_fNoEpg) {
@@ -356,7 +356,7 @@ void CAppMain::Finalize()
 	if (FavoritesManager.GetModified())
 		FavoritesManager.Save(m_szFavoritesFileName);
 
-	AddLog(TEXT("İ’è‚ğ•Û‘¶‚µ‚Ä‚¢‚Ü‚·..."));
+	AddLog(TEXT("è¨­å®šã‚’ä¿å­˜ã—ã¦ã„ã¾ã™..."));
 	SaveSettings(SETTINGS_SAVE_STATUS | (m_fInitialSettings ? SETTINGS_SAVE_OPTIONS : 0));
 }
 
@@ -372,7 +372,7 @@ bool CAppMain::LoadSettings()
 	CSettings &Settings=m_Settings;
 
 	if (!Settings.Open(m_szIniFileName,CSettings::OPEN_READ | CSettings::OPEN_WRITE_VOLATILE)) {
-		AddLog(CLogItem::TYPE_ERROR,TEXT("İ’èƒtƒ@ƒCƒ‹ \"%s\" ‚ğŠJ‚¯‚Ü‚¹‚ñB"),m_szIniFileName);
+		AddLog(CLogItem::TYPE_ERROR,TEXT("è¨­å®šãƒ•ã‚¡ã‚¤ãƒ« \"%s\" ã‚’é–‹ã‘ã¾ã›ã‚“ã€‚"),m_szIniFileName);
 		return false;
 	}
 
@@ -529,7 +529,7 @@ bool CAppMain::SaveSettings(unsigned int Flags)
 	if (!Settings.Open(m_szIniFileName,CSettings::OPEN_WRITE)) {
 		TCHAR szMessage[64+MAX_PATH];
 		StdUtil::snprintf(szMessage,lengthof(szMessage),
-						  TEXT("İ’èƒtƒ@ƒCƒ‹ \"%s\" ‚ğŠJ‚¯‚Ü‚¹‚ñB"),
+						  TEXT("è¨­å®šãƒ•ã‚¡ã‚¤ãƒ« \"%s\" ã‚’é–‹ã‘ã¾ã›ã‚“ã€‚"),
 						  m_szIniFileName);
 		AddLog(CLogItem::TYPE_ERROR,TEXT("%s"),szMessage);
 		if (!Core.IsSilent())
@@ -679,9 +679,9 @@ int CAppMain::Main(HINSTANCE hInstance,LPCTSTR pszCmdLine,int nCmdShow)
 {
 	m_hInst=hInstance;
 
-	// ƒRƒ}ƒ“ƒhƒ‰ƒCƒ“‚Ì‰ğÍ
+	// ã‚³ãƒãƒ³ãƒ‰ãƒ©ã‚¤ãƒ³ã®è§£æ
 	if (pszCmdLine[0]!=_T('\0')) {
-		AddLog(TEXT("ƒRƒ}ƒ“ƒhƒ‰ƒCƒ“ƒIƒvƒVƒ‡ƒ“ : %s"),pszCmdLine);
+		AddLog(TEXT("ã‚³ãƒãƒ³ãƒ‰ãƒ©ã‚¤ãƒ³ã‚ªãƒ—ã‚·ãƒ§ãƒ³ : %s"),pszCmdLine);
 
 		CmdLineOptions.Parse(pszCmdLine);
 
@@ -714,25 +714,25 @@ int CAppMain::Main(HINSTANCE hInstance,LPCTSTR pszCmdLine,int nCmdShow)
 	if (CmdLineOptions.m_fJumpList && TaskbarOptions.GetJumpListKeepSingleTask())
 		CmdLineOptions.m_fSingleTask=true;
 
-	// •¡”‹N“®‚Ìƒ`ƒFƒbƒN
+	// è¤‡æ•°èµ·å‹•ã®ãƒã‚§ãƒƒã‚¯
 	if (AppMutex.AlreadyExists()
 			&& (GeneralOptions.GetKeepSingleTask() || CmdLineOptions.m_fSingleTask)) {
-		AddLog(TEXT("•¡”‹N“®‚ª‹Ö~‚³‚ê‚Ä‚¢‚Ü‚·B"));
+		AddLog(TEXT("è¤‡æ•°èµ·å‹•ãŒç¦æ­¢ã•ã‚Œã¦ã„ã¾ã™ã€‚"));
 		CTVTestWindowFinder Finder;
 		HWND hwnd=Finder.FindCommandLineTarget();
 		if (::IsWindow(hwnd)) {
 			if (!SendInterprocessMessage(hwnd,PROCESS_MESSAGE_EXECUTE,
 										 pszCmdLine,(::lstrlen(pszCmdLine)+1)*sizeof(TCHAR))) {
-				AddLog(CLogItem::TYPE_ERROR,TEXT("Šù‘¶‚ÌƒvƒƒZƒX‚ÉƒƒbƒZ[ƒW‚ğ‘—M‚Å‚«‚Ü‚¹‚ñB"));
+				AddLog(CLogItem::TYPE_ERROR,TEXT("æ—¢å­˜ã®ãƒ—ãƒ­ã‚»ã‚¹ã«ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸ã‚’é€ä¿¡ã§ãã¾ã›ã‚“ã€‚"));
 			}
 			return 0;
 		}
 		if (!CmdLineOptions.m_fSingleTask) {
 			if (!Core.IsSilent()) {
 				::MessageBox(nullptr,
-					APP_NAME TEXT(" ‚ÍŠù‚É‹N“®‚µ‚Ä‚¢‚Ü‚·B\n")
-					TEXT("ƒEƒBƒ“ƒhƒE‚ªŒ©“–‚½‚ç‚È‚¢ê‡‚Íƒ^ƒXƒNƒ}ƒl[ƒWƒƒ‚É‰B‚ê‚Ä‚¢‚Ü‚·‚Ì‚Å\n")
-					TEXT("‹­§I—¹‚³‚¹‚Ä‚­‚¾‚³‚¢B"),
+					APP_NAME TEXT(" ã¯æ—¢ã«èµ·å‹•ã—ã¦ã„ã¾ã™ã€‚\n")
+					TEXT("ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ãŒè¦‹å½“ãŸã‚‰ãªã„å ´åˆã¯ã‚¿ã‚¹ã‚¯ãƒãƒãƒ¼ã‚¸ãƒ£ã«éš ã‚Œã¦ã„ã¾ã™ã®ã§\n")
+					TEXT("å¼·åˆ¶çµ‚äº†ã•ã›ã¦ãã ã•ã„ã€‚"),
 					APP_NAME,
 					MB_OK | MB_ICONEXCLAMATION);
 			}
@@ -740,7 +740,7 @@ int CAppMain::Main(HINSTANCE hInstance,LPCTSTR pszCmdLine,int nCmdShow)
 		}
 	}
 
-	// ƒRƒ‚ƒ“ƒRƒ“ƒgƒ[ƒ‹‚Ì‰Šú‰»
+	// ã‚³ãƒ¢ãƒ³ã‚³ãƒ³ãƒˆãƒ­ãƒ¼ãƒ«ã®åˆæœŸåŒ–
 	{
 		INITCOMMONCONTROLSEX iccex;
 
@@ -749,28 +749,28 @@ int CAppMain::Main(HINSTANCE hInstance,LPCTSTR pszCmdLine,int nCmdShow)
 		::InitCommonControlsEx(&iccex);
 	}
 
-	// Buffered paint ‚Ì‰Šú‰»
+	// Buffered paint ã®åˆæœŸåŒ–
 	CBufferedPaint::Initialize();
 
-	// BonDriver ‚ÌŒŸõ
+	// BonDriver ã®æ¤œç´¢
 	{
 		TCHAR szDirectory[MAX_PATH];
 		CoreEngine.GetDriverDirectory(szDirectory,lengthof(szDirectory));
 		DriverManager.Find(szDirectory);
 	}
-	// ƒ`ƒ…[ƒi[d—l’è‹`‚Ì“Ç‚İ‚İ
+	// ãƒãƒ¥ãƒ¼ãƒŠãƒ¼ä»•æ§˜å®šç¾©ã®èª­ã¿è¾¼ã¿
 	{
 		TCHAR szTunerSpecFileName[MAX_PATH];
 		::GetModuleFileName(nullptr,szTunerSpecFileName,lengthof(szTunerSpecFileName));
 		::PathRenameExtension(szTunerSpecFileName,TEXT(".tuner.ini"));
 		if (::PathFileExists(szTunerSpecFileName)) {
-			AddLog(TEXT("ƒ`ƒ…[ƒi[d—l’è‹`‚ğ \"%s\" ‚©‚ç“Ç‚İ‚İ‚Ü‚·..."),szTunerSpecFileName);
+			AddLog(TEXT("ãƒãƒ¥ãƒ¼ãƒŠãƒ¼ä»•æ§˜å®šç¾©ã‚’ \"%s\" ã‹ã‚‰èª­ã¿è¾¼ã¿ã¾ã™..."),szTunerSpecFileName);
 			DriverManager.LoadTunerSpec(szTunerSpecFileName);
 		}
 	}
 	DriverOptions.Initialize(&DriverManager);
 
-	// ‰Šúİ’èƒ_ƒCƒAƒƒO‚ğ•\¦‚·‚é‚©
+	// åˆæœŸè¨­å®šãƒ€ã‚¤ã‚¢ãƒ­ã‚°ã‚’è¡¨ç¤ºã™ã‚‹ã‹
 	m_fInitialSettings=
 		CmdLineOptions.m_fInitialSettings
 			|| (m_fFirstExecute && CmdLineOptions.m_DriverName.empty());
@@ -779,7 +779,7 @@ int CAppMain::Main(HINSTANCE hInstance,LPCTSTR pszCmdLine,int nCmdShow)
 
 	TCHAR szDriverFileName[MAX_PATH];
 
-	// ‰Šúİ’èƒ_ƒCƒAƒƒO‚Ì•\¦
+	// åˆæœŸè¨­å®šãƒ€ã‚¤ã‚¢ãƒ­ã‚°ã®è¡¨ç¤º
 	if (m_fInitialSettings) {
 		CInitialSettings InitialSettings(&DriverManager);
 
@@ -803,7 +803,7 @@ int CAppMain::Main(HINSTANCE hInstance,LPCTSTR pszCmdLine,int nCmdShow)
 		GeneralOptions.GetFirstDriverName(szDriverFileName);
 	}
 
-	// ƒXƒ^ƒCƒ‹İ’è‚Ì“Ç‚İ‚İ
+	// ã‚¹ã‚¿ã‚¤ãƒ«è¨­å®šã®èª­ã¿è¾¼ã¿
 	{
 		TCHAR szStyleFileName[MAX_PATH];
 		if (!CmdLineOptions.m_StyleFileName.empty()) {
@@ -813,12 +813,12 @@ int CAppMain::Main(HINSTANCE hInstance,LPCTSTR pszCmdLine,int nCmdShow)
 			::PathRenameExtension(szStyleFileName,TEXT(".style.ini"));
 		}
 		if (::PathFileExists(szStyleFileName)) {
-			AddLog(TEXT("ƒXƒ^ƒCƒ‹İ’è‚ğ \"%s\" ‚©‚ç“Ç‚İ‚İ‚Ü‚·..."),szStyleFileName);
+			AddLog(TEXT("ã‚¹ã‚¿ã‚¤ãƒ«è¨­å®šã‚’ \"%s\" ã‹ã‚‰èª­ã¿è¾¼ã¿ã¾ã™..."),szStyleFileName);
 			StyleManager.Load(szStyleFileName);
 		}
 	}
 
-	// ŠeƒEƒBƒ“ƒhƒE‚Ì‰Šú‰»
+	// å„ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã®åˆæœŸåŒ–
 	CMainWindow::Initialize(m_hInst);
 	CViewWindow::Initialize(m_hInst);
 	CVideoContainerWindow::Initialize(m_hInst);
@@ -844,7 +844,7 @@ int CAppMain::Main(HINSTANCE hInstance,LPCTSTR pszCmdLine,int nCmdShow)
 	CHomeDisplay::Initialize(m_hInst);
 	CChannelDisplay::Initialize(m_hInst);
 
-	// ƒEƒBƒ“ƒhƒEˆÊ’u‚ÆƒTƒCƒY‚Ìİ’è
+	// ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ä½ç½®ã¨ã‚µã‚¤ã‚ºã®è¨­å®š
 	if (CmdLineOptions.m_fMaximize)
 		MainWindow.SetMaximize(true);
 	{
@@ -864,11 +864,11 @@ int CAppMain::Main(HINSTANCE hInstance,LPCTSTR pszCmdLine,int nCmdShow)
 	ColorSchemeOptions.SetEventHandler(&UICore);
 	ColorSchemeOptions.ApplyColorScheme();
 
-	// ƒEƒBƒ“ƒhƒE‚Ìì¬
+	// ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã®ä½œæˆ
 	if (!MainWindow.Create(nullptr,WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN)) {
-		AddLog(CLogItem::TYPE_ERROR,TEXT("ƒEƒBƒ“ƒhƒE‚ªì¬‚Å‚«‚Ü‚¹‚ñB"));
+		AddLog(CLogItem::TYPE_ERROR,TEXT("ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ãŒä½œæˆã§ãã¾ã›ã‚“ã€‚"));
 		if (!Core.IsSilent())
-			MessageBox(nullptr,TEXT("ƒEƒBƒ“ƒhƒE‚ªì¬‚Å‚«‚Ü‚¹‚ñB"),nullptr,MB_OK | MB_ICONSTOP);
+			MessageBox(nullptr,TEXT("ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ãŒä½œæˆã§ãã¾ã›ã‚“ã€‚"),nullptr,MB_OK | MB_ICONSTOP);
 		return 0;
 	}
 
@@ -901,20 +901,20 @@ int CAppMain::Main(HINSTANCE hInstance,LPCTSTR pszCmdLine,int nCmdShow)
 	UICore.SetStatusBarTrace(true);
 	RecordOptions.Apply(COptions::UPDATE_ALL);
 
-	// ƒvƒ‰ƒOƒCƒ“‚Ì“Ç‚İ‚İ
+	// ãƒ—ãƒ©ã‚°ã‚¤ãƒ³ã®èª­ã¿è¾¼ã¿
 	if (!CmdLineOptions.m_fNoPlugin) {
 		TCHAR szPluginDir[MAX_PATH];
 		std::vector<LPCTSTR> ExcludePlugins;
 
 		CPlugin::SetMessageWindow(MainWindow.GetHandle(),WM_APP_PLUGINMESSAGE);
-		StatusView.SetSingleText(TEXT("ƒvƒ‰ƒOƒCƒ“‚ğ“Ç‚İ‚ñ‚Å‚¢‚Ü‚·..."));
+		StatusView.SetSingleText(TEXT("ãƒ—ãƒ©ã‚°ã‚¤ãƒ³ã‚’èª­ã¿è¾¼ã‚“ã§ã„ã¾ã™..."));
 		if (!CmdLineOptions.m_PluginsDirectory.empty()) {
 			GetAbsolutePath(CmdLineOptions.m_PluginsDirectory.c_str(),szPluginDir);
 		} else {
 			GetAppDirectory(szPluginDir);
 			::PathAppend(szPluginDir,TEXT("Plugins"));
 		}
-		AddLog(TEXT("ƒvƒ‰ƒOƒCƒ“‚ğ \"%s\" ‚©‚ç“Ç‚İ‚İ‚Ü‚·..."),szPluginDir);
+		AddLog(TEXT("ãƒ—ãƒ©ã‚°ã‚¤ãƒ³ã‚’ \"%s\" ã‹ã‚‰èª­ã¿è¾¼ã¿ã¾ã™..."),szPluginDir);
 		if (CmdLineOptions.m_NoLoadPlugins.size()>0) {
 			for (size_t i=0;i<CmdLineOptions.m_NoLoadPlugins.size();i++)
 				ExcludePlugins.push_back(CmdLineOptions.m_NoLoadPlugins[i].c_str());
@@ -943,25 +943,25 @@ int CAppMain::Main(HINSTANCE hInstance,LPCTSTR pszCmdLine,int nCmdShow)
 	CoreEngine.BuildDtvEngine(&m_DtvEngineHandler);
 	TSProcessorManager.OpenDefaultFilters();
 
-	// BonDriver ‚Ì“Ç‚İ‚İ
+	// BonDriver ã®èª­ã¿è¾¼ã¿
 	CoreEngine.SetDriverFileName(szDriverFileName);
 	if (!CmdLineOptions.m_fNoDriver && !CmdLineOptions.m_fStandby) {
 		if (CoreEngine.IsDriverSpecified()) {
-			StatusView.SetSingleText(TEXT("BonDriver‚Ì“Ç‚İ‚İ’†..."));
+			StatusView.SetSingleText(TEXT("BonDriverã®èª­ã¿è¾¼ã¿ä¸­..."));
 			if (Core.OpenAndInitializeTuner(
 					Core.IsSilent()?
 						CAppCore::OPENTUNER_NO_UI:
 						CAppCore::OPENTUNER_RETRY_DIALOG)) {
 				AppEventManager.OnTunerChanged();
 			} else {
-				Core.OnError(&CoreEngine,TEXT("BonDriver‚Ì‰Šú‰»‚ª‚Å‚«‚Ü‚¹‚ñB"));
+				Core.OnError(&CoreEngine,TEXT("BonDriverã®åˆæœŸåŒ–ãŒã§ãã¾ã›ã‚“ã€‚"));
 			}
 		} else {
-			AddLog(TEXT("ƒfƒtƒHƒ‹ƒg‚ÌBonDriver‚Í‚ ‚è‚Ü‚¹‚ñB"));
+			AddLog(TEXT("ãƒ‡ãƒ•ã‚©ãƒ«ãƒˆã®BonDriverã¯ã‚ã‚Šã¾ã›ã‚“ã€‚"));
 		}
 	}
 
-	// Ä¶‚Ì‰Šú‰»
+	// å†ç”Ÿã®åˆæœŸåŒ–
 	CoreEngine.m_DtvEngine.m_MediaViewer.SetUseAudioRendererClock(PlaybackOptions.GetUseAudioRendererClock());
 	CoreEngine.SetSpdifOptions(AudioOptions.GetSpdifOptions());
 	if (CmdLineOptions.m_Volume>=0)
@@ -969,7 +969,7 @@ int CAppMain::Main(HINSTANCE hInstance,LPCTSTR pszCmdLine,int nCmdShow)
 	if (PlaybackOptions.IsMuteOnStartUp() || CmdLineOptions.m_fMute)
 		UICore.SetMute(true);
 
-	// ˆê‚Â‚ÌƒR[ƒfƒbƒN‚Ì‚İw’è‚³‚ê‚Ä‚¢‚éê‡Aver.0.8.x‚Ü‚Å‚Æ‚ÌŒİŠ·“®ì‚Æ‚µ‚Äæ‚ÉƒtƒBƒ‹ƒ^ƒOƒ‰ƒt‚ğ\’z
+	// ä¸€ã¤ã®ã‚³ãƒ¼ãƒ‡ãƒƒã‚¯ã®ã¿æŒ‡å®šã•ã‚Œã¦ã„ã‚‹å ´åˆã€ver.0.8.xã¾ã§ã¨ã®äº’æ›å‹•ä½œã¨ã—ã¦å…ˆã«ãƒ•ã‚£ãƒ«ã‚¿ã‚°ãƒ©ãƒ•ã‚’æ§‹ç¯‰
 	if (!CmdLineOptions.m_fStandby && !CmdLineOptions.m_fNoDirectShow) {
 		unsigned int StreamTypeFlags=0;
 		if (CmdLineOptions.m_fMpeg2)
@@ -1009,16 +1009,16 @@ int CAppMain::Main(HINSTANCE hInstance,LPCTSTR pszCmdLine,int nCmdShow)
 			WORD UDPPort=CmdLineOptions.m_UDPPort>0?(WORD)CmdLineOptions.m_UDPPort:
 											CoreEngine.IsUDPDriver()?1234:2230;
 
-			StatusView.SetSingleText(TEXT("‹ó‚«ƒ|[ƒg‚ğŒŸõ‚µ‚Ä‚¢‚Ü‚·..."));
+			StatusView.SetSingleText(TEXT("ç©ºããƒãƒ¼ãƒˆã‚’æ¤œç´¢ã—ã¦ã„ã¾ã™..."));
 			PortQuery.Query(MainWindow.GetHandle(),&UDPPort,CoreEngine.IsUDPDriver()?1243:2239);
 			CmdLineOptions.m_UDPPort=UDPPort;
 		}
 	}
 
-	StatusView.SetSingleText(TEXT("ƒ`ƒƒƒ“ƒlƒ‹İ’è‚ğ“Ç‚İ‚ñ‚Å‚¢‚Ü‚·..."));
+	StatusView.SetSingleText(TEXT("ãƒãƒ£ãƒ³ãƒãƒ«è¨­å®šã‚’èª­ã¿è¾¼ã‚“ã§ã„ã¾ã™..."));
 	Core.InitializeChannel();
 
-	StatusView.SetSingleText(TEXT("ƒƒS‚ğ“Ç‚İ‚ñ‚Å‚¢‚Ü‚·..."));
+	StatusView.SetSingleText(TEXT("ãƒ­ã‚´ã‚’èª­ã¿è¾¼ã‚“ã§ã„ã¾ã™..."));
 	EpgOptions.LoadLogoFile();
 
 	{
@@ -1027,7 +1027,7 @@ int CAppMain::Main(HINSTANCE hInstance,LPCTSTR pszCmdLine,int nCmdShow)
 		GetAppDirectory(szDRCSMapName);
 		::PathAppend(szDRCSMapName,TEXT("DRCSMap.ini"));
 		if (::PathFileExists(szDRCSMapName)) {
-			StatusView.SetSingleText(TEXT("DRCSƒ}ƒbƒv‚ğ“Ç‚İ‚ñ‚Å‚¢‚Ü‚·..."));
+			StatusView.SetSingleText(TEXT("DRCSãƒãƒƒãƒ—ã‚’èª­ã¿è¾¼ã‚“ã§ã„ã¾ã™..."));
 			Panel.CaptionPanel.LoadDRCSMap(szDRCSMapName);
 		}
 	}
@@ -1038,7 +1038,7 @@ int CAppMain::Main(HINSTANCE hInstance,LPCTSTR pszCmdLine,int nCmdShow)
 		::GetModuleFileName(nullptr,szSearchFileName,lengthof(szSearchFileName));
 		::PathRenameExtension(szSearchFileName,TEXT(".search.ini"));
 		if (::PathFileExists(szSearchFileName)) {
-			StatusView.SetSingleText(TEXT("ƒL[ƒ[ƒhŒŸõİ’è‚ğ“Ç‚İ‚ñ‚Å‚¢‚Ü‚·..."));
+			StatusView.SetSingleText(TEXT("ã‚­ãƒ¼ãƒ¯ãƒ¼ãƒ‰æ¤œç´¢è¨­å®šã‚’èª­ã¿è¾¼ã‚“ã§ã„ã¾ã™..."));
 			KeywordSearch.Load(szSearchFileName);
 		}
 	}
@@ -1064,7 +1064,7 @@ int CAppMain::Main(HINSTANCE hInstance,LPCTSTR pszCmdLine,int nCmdShow)
 	if (CmdLineOptions.m_fFullscreen)
 		UICore.SetFullscreen(true);
 
-	// ‰Šúƒ`ƒƒƒ“ƒlƒ‹‚ğİ’è‚·‚é
+	// åˆæœŸãƒãƒ£ãƒ³ãƒãƒ«ã‚’è¨­å®šã™ã‚‹
 	if (CoreEngine.m_DtvEngine.IsSrcFilterOpen()) {
 		if (CoreEngine.IsNetworkDriver()) {
 			const int FirstPort=CoreEngine.IsUDPDriver()?1234:2230;
@@ -1079,9 +1079,9 @@ int CAppMain::Main(HINSTANCE hInstance,LPCTSTR pszCmdLine,int nCmdShow)
 		} else if (m_fFirstExecute
 				&& ChannelManager.GetFileAllChannelList()->NumChannels()==0) {
 			if (MainWindow.ShowMessage(
-					TEXT("Å‰‚Éƒ`ƒƒƒ“ƒlƒ‹ƒXƒLƒƒƒ“‚ğs‚¤‚±‚Æ‚ğ‚¨‚·‚·‚ß‚µ‚Ü‚·B\r\n")
-					TEXT("¡‚·‚®ƒ`ƒƒƒ“ƒlƒ‹ƒXƒLƒƒƒ“‚ğs‚¢‚Ü‚·‚©?"),
-					TEXT("ƒ`ƒƒƒ“ƒlƒ‹ƒXƒLƒƒƒ“‚ÌŠm”F"),
+					TEXT("æœ€åˆã«ãƒãƒ£ãƒ³ãƒãƒ«ã‚¹ã‚­ãƒ£ãƒ³ã‚’è¡Œã†ã“ã¨ã‚’ãŠã™ã™ã‚ã—ã¾ã™ã€‚\r\n")
+					TEXT("ä»Šã™ããƒãƒ£ãƒ³ãƒãƒ«ã‚¹ã‚­ãƒ£ãƒ³ã‚’è¡Œã„ã¾ã™ã‹?"),
+					TEXT("ãƒãƒ£ãƒ³ãƒãƒ«ã‚¹ã‚­ãƒ£ãƒ³ã®ç¢ºèª"),
 					MB_YESNO | MB_ICONQUESTION)==IDYES) {
 				ShowOptionDialog(MainWindow.GetHandle(),
 								 COptionDialog::PAGE_CHANNELSCAN);
@@ -1122,7 +1122,7 @@ int CAppMain::Main(HINSTANCE hInstance,LPCTSTR pszCmdLine,int nCmdShow)
 
 	FavoritesManager.Load(m_szFavoritesFileName);
 
-	// EPG”Ô‘g•\‚Ì•\¦
+	// EPGç•ªçµ„è¡¨ã®è¡¨ç¤º
 	if (CmdLineOptions.m_fShowProgramGuide)
 		ShowProgramGuideByCommandLine(CmdLineOptions);
 
@@ -1146,7 +1146,7 @@ int CAppMain::Main(HINSTANCE hInstance,LPCTSTR pszCmdLine,int nCmdShow)
 
 	AppEventManager.OnStartupDone();
 
-	// ƒƒbƒZ[ƒWƒ‹[ƒv
+	// ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸ãƒ«ãƒ¼ãƒ—
 	MSG msg;
 
 	UICore.RegisterModelessDialog(&StreamInfo);
@@ -1167,7 +1167,7 @@ int CAppMain::Main(HINSTANCE hInstance,LPCTSTR pszCmdLine,int nCmdShow)
 }
 
 
-// ƒAƒNƒZƒ‰ƒŒ[ƒ^‚É‚µ‚È‚¢ƒƒbƒZ[ƒW‚Ì”»’è
+// ã‚¢ã‚¯ã‚»ãƒ©ãƒ¬ãƒ¼ã‚¿ã«ã—ãªã„ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸ã®åˆ¤å®š
 bool CAppMain::IsNoAcceleratorMessage(const MSG *pmsg)
 {
 	HWND hwnd=::GetFocus();
@@ -1198,7 +1198,7 @@ bool CAppMain::IsNoAcceleratorMessage(const MSG *pmsg)
 }
 
 
-// İ’èƒ_ƒCƒAƒƒO‚ğ•\¦‚·‚é
+// è¨­å®šãƒ€ã‚¤ã‚¢ãƒ­ã‚°ã‚’è¡¨ç¤ºã™ã‚‹
 bool CAppMain::ShowOptionDialog(HWND hwndOwner,int StartPage)
 {
 	if (!m_OptionDialog.Show(hwndOwner,StartPage))
@@ -1209,7 +1209,7 @@ bool CAppMain::ShowOptionDialog(HWND hwndOwner,int StartPage)
 				|| UICore.IsViewerInitializeError()) {
 			bool fOldError=UICore.IsViewerInitializeError();
 			bool fResult=UICore.InitializeViewer();
-			// ƒGƒ‰[‚ÅÄ¶ƒIƒt‚É‚È‚Á‚Ä‚¢‚½ê‡‚ÍƒIƒ“‚É‚·‚é
+			// ã‚¨ãƒ©ãƒ¼ã§å†ç”Ÿã‚ªãƒ•ã«ãªã£ã¦ã„ãŸå ´åˆã¯ã‚ªãƒ³ã«ã™ã‚‹
 			if (fResult && fOldError && !UICore.IsViewerEnabled())
 				UICore.EnableViewer(true);
 		}
@@ -1242,27 +1242,27 @@ CAppMain::CreateDirectoryResult CAppMain::CreateDirectory(
 
 	if (!GetAbsolutePath(pszDirectory,szPath)) {
 		StdUtil::snprintf(szMessage,lengthof(szMessage),
-						  TEXT("ƒtƒHƒ‹ƒ_ \"%s\" ‚ÌƒpƒX‚ª’·‰ß‚¬‚Ü‚·B"),szPath);
+						  TEXT("ãƒ•ã‚©ãƒ«ãƒ€ \"%s\" ã®ãƒ‘ã‚¹ãŒé•·éãã¾ã™ã€‚"),szPath);
 		::MessageBox(hwnd,szMessage,nullptr,MB_OK | MB_ICONEXCLAMATION);
 		return CREATEDIRECTORY_RESULT_ERROR;
 	}
 
 	if (!::PathIsDirectory(szPath)) {
 		StdUtil::snprintf(szMessage,lengthof(szMessage),pszMessage,szPath);
-		if (::MessageBox(hwnd,szMessage,TEXT("ƒtƒHƒ‹ƒ_ì¬‚ÌŠm”F"),
+		if (::MessageBox(hwnd,szMessage,TEXT("ãƒ•ã‚©ãƒ«ãƒ€ä½œæˆã®ç¢ºèª"),
 						 MB_YESNO | MB_ICONQUESTION)!=IDYES)
 			return CREATEDIRECTORY_RESULT_CANCELLED;
 
 		int Result=::SHCreateDirectoryEx(hwnd,szPath,nullptr);
 		if (Result!=ERROR_SUCCESS && Result!=ERROR_ALREADY_EXISTS) {
 			StdUtil::snprintf(szMessage,lengthof(szMessage),
-							  TEXT("ƒtƒHƒ‹ƒ_ \"%s\" ‚ğì¬‚Å‚«‚Ü‚¹‚ñB(ƒGƒ‰[ƒR[ƒh %#x)"),szPath,Result);
+							  TEXT("ãƒ•ã‚©ãƒ«ãƒ€ \"%s\" ã‚’ä½œæˆã§ãã¾ã›ã‚“ã€‚(ã‚¨ãƒ©ãƒ¼ã‚³ãƒ¼ãƒ‰ %#x)"),szPath,Result);
 			AddLog(CLogItem::TYPE_ERROR,szMessage);
 			::MessageBox(hwnd,szMessage,nullptr,MB_OK | MB_ICONEXCLAMATION);
 			return CREATEDIRECTORY_RESULT_ERROR;
 		}
 
-		AddLog(CLogItem::TYPE_INFORMATION,TEXT("ƒtƒHƒ‹ƒ_ \"%s\" ‚ğì¬‚µ‚Ü‚µ‚½B"),szPath);
+		AddLog(CLogItem::TYPE_INFORMATION,TEXT("ãƒ•ã‚©ãƒ«ãƒ€ \"%s\" ã‚’ä½œæˆã—ã¾ã—ãŸã€‚"),szPath);
 	}
 
 	return CREATEDIRECTORY_RESULT_SUCCESS;
@@ -1299,7 +1299,7 @@ LRESULT CAppMain::ReceiveInterprocessMessage(HWND hwnd,WPARAM wParam,LPARAM lPar
 		break;
 
 	default:
-		AddLog(CLogItem::TYPE_WARNING,TEXT("–¢’m‚ÌƒƒbƒZ[ƒW %Ix ‚ğóM‚µ‚Ü‚µ‚½B"),pcds->dwData);
+		AddLog(CLogItem::TYPE_WARNING,TEXT("æœªçŸ¥ã®ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸ %Ix ã‚’å—ä¿¡ã—ã¾ã—ãŸã€‚"),pcds->dwData);
 		break;
 	}
 
@@ -1340,26 +1340,26 @@ void CAppMain::RegisterCommands()
 		LPCTSTR pszFileName=::PathFindFileName(pDriverInfo->GetFileName());
 		TCHAR szName[CCommandList::MAX_COMMAND_NAME];
 
-		StdUtil::snprintf(szName,lengthof(szName),TEXT("BonDriverØ‘Ö : %s"),pszFileName);
+		StdUtil::snprintf(szName,lengthof(szName),TEXT("BonDriveråˆ‡æ›¿ : %s"),pszFileName);
 		CommandList.RegisterCommand(CM_DRIVER_FIRST+i,pszFileName,szName);
 	}
 
-	// ƒvƒ‰ƒOƒCƒ“
+	// ãƒ—ãƒ©ã‚°ã‚¤ãƒ³
 	for (int i=0;i<PluginManager.NumPlugins();i++) {
 		const CPlugin *pPlugin=PluginManager.GetPlugin(i);
 		TCHAR szName[CCommandList::MAX_COMMAND_NAME];
 		//TCHAR szShortName[CCommandList::MAX_COMMAND_NAME];
 
 		StdUtil::snprintf(szName,lengthof(szName),
-						  TEXT("ƒvƒ‰ƒOƒCƒ“—LŒø/–³Œø : %s"),pPlugin->GetPluginName());
+						  TEXT("ãƒ—ãƒ©ã‚°ã‚¤ãƒ³æœ‰åŠ¹/ç„¡åŠ¹ : %s"),pPlugin->GetPluginName());
 		//StdUtil::snprintf(szShortName,lengthof(szShortName),
-		//				  TEXT("%s —LŒø/–³Œø"),pPlugin->GetPluginName());
+		//				  TEXT("%s æœ‰åŠ¹/ç„¡åŠ¹"),pPlugin->GetPluginName());
 		CommandList.RegisterCommand(CM_PLUGIN_FIRST+i,
 									::PathFindFileName(pPlugin->GetFileName()),szName,
 									/*szShortName*/pPlugin->GetPluginName());
 	}
 
-	// ƒvƒ‰ƒOƒCƒ“‚ÌŠeƒRƒ}ƒ“ƒh
+	// ãƒ—ãƒ©ã‚°ã‚¤ãƒ³ã®å„ã‚³ãƒãƒ³ãƒ‰
 	int ID=CM_PLUGINCOMMAND_FIRST;
 	for (int i=0;i<PluginManager.NumPlugins();i++) {
 		CPlugin *pPlugin=PluginManager.GetPlugin(i);
@@ -1439,8 +1439,8 @@ bool CAppMain::GetAbsolutePath(LPCTSTR pszPath,LPTSTR pszAbsolutePath) const
 
 bool CAppMain::ProcessCommandLine(LPCTSTR pszCmdLine)
 {
-	AddLog(TEXT("V‚µ‚¢ƒRƒ}ƒ“ƒhƒ‰ƒCƒ“ƒIƒvƒVƒ‡ƒ“‚ğóM‚µ‚Ü‚µ‚½B"));
-	AddLog(TEXT("ƒRƒ}ƒ“ƒhƒ‰ƒCƒ“ƒIƒvƒVƒ‡ƒ“ : %s"),pszCmdLine);
+	AddLog(TEXT("æ–°ã—ã„ã‚³ãƒãƒ³ãƒ‰ãƒ©ã‚¤ãƒ³ã‚ªãƒ—ã‚·ãƒ§ãƒ³ã‚’å—ä¿¡ã—ã¾ã—ãŸã€‚"));
+	AddLog(TEXT("ã‚³ãƒãƒ³ãƒ‰ãƒ©ã‚¤ãƒ³ã‚ªãƒ—ã‚·ãƒ§ãƒ³ : %s"),pszCmdLine);
 
 	CCommandLineOptions CmdLine;
 
@@ -1508,7 +1508,7 @@ bool CAppMain::ProcessCommandLine(LPCTSTR pszCmdLine)
 			UICore.DoCommand(Command);
 		} else {
 			AddLog(CLogItem::TYPE_ERROR,
-				   TEXT("w’è‚³‚ê‚½ƒRƒ}ƒ“ƒh \"%s\" ‚Í–³Œø‚Å‚·B"),
+				   TEXT("æŒ‡å®šã•ã‚ŒãŸã‚³ãƒãƒ³ãƒ‰ \"%s\" ã¯ç„¡åŠ¹ã§ã™ã€‚"),
 				   CmdLine.m_Command.c_str());
 		}
 	}
@@ -1583,7 +1583,7 @@ void CAppMain::CDtvEngineEventHandler::OnServiceInfoUpdated(CTsAnalyzer *pTsAnal
 {
 	const WORD NetworkID=pTsAnalyzer->GetNetworkID();
 
-	// ƒT[ƒrƒX‚ÆƒƒS‚ğŠÖ˜A•t‚¯‚é
+	// ã‚µãƒ¼ãƒ“ã‚¹ã¨ãƒ­ã‚´ã‚’é–¢é€£ä»˜ã‘ã‚‹
 	CTsAnalyzer::ServiceList ServiceList;
 	if (pTsAnalyzer->GetServiceList(&ServiceList)) {
 		for (size_t i=0;i<ServiceList.size();i++) {
@@ -1621,8 +1621,8 @@ void CAppMain::CDtvEngineEventHandler::OnVideoStreamTypeChanged(BYTE VideoStream
 void CAppMain::CDtvEngineEventHandler::OnVideoSizeChanged(CMediaViewer *pMediaViewer)
 {
 	/*
-		‚±‚Ì’Ê’m‚ª‘—‚ç‚ê‚½’iŠK‚Å‚Í‚Ü‚¾ƒŒƒ“ƒ_ƒ‰‚Ì‰f‘œƒTƒCƒY‚Í•Ï‚í‚Á‚Ä‚¢‚È‚¢‚½‚ßA
-		Œã‚Åƒpƒ“ƒXƒLƒƒƒ“‚Ìİ’è‚ğs‚¤•K—v‚ª‚ ‚é
+		ã“ã®é€šçŸ¥ãŒé€ã‚‰ã‚ŒãŸæ®µéšã§ã¯ã¾ã ãƒ¬ãƒ³ãƒ€ãƒ©ã®æ˜ åƒã‚µã‚¤ã‚ºã¯å¤‰ã‚ã£ã¦ã„ãªã„ãŸã‚ã€
+		å¾Œã§ãƒ‘ãƒ³ã‚¹ã‚­ãƒ£ãƒ³ã®è¨­å®šã‚’è¡Œã†å¿…è¦ãŒã‚ã‚‹
 	*/
 	m_App.MainWindow.PostMessage(WM_APP_VIDEOSIZECHANGED,0,0);
 }

@@ -7,7 +7,7 @@
 
 
 /////////////////////////////////////////////////////////////////////////////
-// EITƒe[ƒuƒ‹‰ğÍƒNƒ‰ƒX
+// EITãƒ†ãƒ¼ãƒ–ãƒ«è§£æã‚¯ãƒ©ã‚¹
 /////////////////////////////////////////////////////////////////////////////
 
 class CEitParserTable : public CPsiStreamTable
@@ -63,7 +63,7 @@ CEitParserTable::CEitParserTable(ISectionHandler *pHandler)
 
 void CEitParserTable::Reset(void)
 {
-	// ó‘Ô‚ğƒNƒŠƒA‚·‚é
+	// çŠ¶æ…‹ã‚’ã‚¯ãƒªã‚¢ã™ã‚‹
 	CPsiStreamTable::Reset();
 
 	m_ServiceID = 0;
@@ -144,7 +144,7 @@ BYTE CEitParserTable::GetRunningStatus(const int Index) const
 
 bool CEitParserTable::GetFreeCaMode(const int Index) const
 {
-	// Free CA Mode‚ğ•Ô‚·
+	// Free CA Modeã‚’è¿”ã™
 	if (Index < 0 || (size_t)Index >= m_EventList.size())
 		return 0;
 	return m_EventList[Index].bFreeCaMode;
@@ -152,7 +152,7 @@ bool CEitParserTable::GetFreeCaMode(const int Index) const
 
 const CDescBlock * CEitParserTable::GetItemDesc(const int Index) const
 {
-	// ƒAƒCƒeƒ€‚Ì‹LqqƒuƒƒbƒN‚ğ•Ô‚·
+	// ã‚¢ã‚¤ãƒ†ãƒ ã®è¨˜è¿°å­ãƒ–ãƒ­ãƒƒã‚¯ã‚’è¿”ã™
 	if (Index < 0 || (size_t)Index >= m_EventList.size())
 		return NULL;
 	return &m_EventList[Index].DescBlock;
@@ -201,7 +201,7 @@ const bool CEitParserTable::OnTableUpdate(const CPsiSection *pCurSection)
 
 
 
-// SYSTEMTIME ‚Ì·(ms’PˆÊ)‚ğæ“¾‚·‚é
+// SYSTEMTIME ã®å·®(mså˜ä½)ã‚’å–å¾—ã™ã‚‹
 static LONGLONG DiffSystemTime(const SYSTEMTIME *pTime1, const SYSTEMTIME *pTime2)
 {
 	FILETIME ft1, ft2;
@@ -212,7 +212,7 @@ static LONGLONG DiffSystemTime(const SYSTEMTIME *pTime1, const SYSTEMTIME *pTime
 			(((LONGLONG)ft2.dwHighDateTime << 32) | (LONGLONG)ft2.dwLowDateTime)) / 10000LL;
 }
 
-// EIT schedule ‚Ì‚ğæ“¾‚·‚é
+// EIT schedule ã®æ™‚åˆ»ã‚’å–å¾—ã™ã‚‹
 static ULONGLONG GetScheduleTime(ULONGLONG CurTime, WORD TableID, BYTE SectionNumber)
 {
 	static const ULONGLONG HOUR = 60 * 60;
@@ -238,7 +238,7 @@ CEventManager::~CEventManager()
 #ifdef _DEBUG
 
 #if 0
-	// ƒfƒoƒbƒO—pƒ_ƒ“ƒvo—Í
+	// ãƒ‡ãƒãƒƒã‚°ç”¨ãƒ€ãƒ³ãƒ—å‡ºåŠ›
 	{
 		TCHAR szFileName[MAX_PATH];
 		::GetModuleFileName(NULL, szFileName, MAX_PATH);
@@ -283,7 +283,7 @@ CEventManager::~CEventManager()
 #endif
 
 #ifdef EVENTMANAGER_USE_UNORDERED_MAP
-	// unordered_map ‚Ì“Œvî•ño—Í
+	// unordered_map ã®çµ±è¨ˆæƒ…å ±å‡ºåŠ›
 	{
 		TRACE(TEXT("Event map statistics\n"));
 
@@ -324,17 +324,17 @@ const bool CEventManager::InputMedia(CMediaData *pMediaData, const DWORD dwInput
 
 	CTsPacket *pTsPacket = dynamic_cast<CTsPacket *>(pMediaData);
 
-	// “ü—ÍƒƒfƒBƒAƒf[ƒ^‚ÍŒİŠ·«‚ª‚È‚¢
+	// å…¥åŠ›ãƒ¡ãƒ‡ã‚£ã‚¢ãƒ‡ãƒ¼ã‚¿ã¯äº’æ›æ€§ãŒãªã„
 	if (!pTsPacket)
 		return false;
 	*/
 
 	CTsPacket *pTsPacket = static_cast<CTsPacket *>(pMediaData);
 
-	// PIDƒ‹[ƒeƒBƒ“ƒO
+	// PIDãƒ«ãƒ¼ãƒ†ã‚£ãƒ³ã‚°
 	m_PidMapManager.StorePacket(pTsPacket);
 
-	// Ÿ‚ÌƒtƒBƒ‹ƒ^‚Éƒf[ƒ^‚ğ“n‚·
+	// æ¬¡ã®ãƒ•ã‚£ãƒ«ã‚¿ã«ãƒ‡ãƒ¼ã‚¿ã‚’æ¸¡ã™
 	OutputMedia(pMediaData);
 
 	return true;
@@ -345,19 +345,19 @@ void CEventManager::Reset()
 {
 	CBlockLock Lock(&m_DecoderLock);
 
-	// ‘Sƒe[ƒuƒ‹ƒAƒ“ƒ}ƒbƒv
+	// å…¨ãƒ†ãƒ¼ãƒ–ãƒ«ã‚¢ãƒ³ãƒãƒƒãƒ—
 	m_PidMapManager.UnmapAllTarget();
 
-	// H-EITƒe[ƒuƒ‹PIDƒ}ƒbƒv’Ç‰Á
+	// H-EITãƒ†ãƒ¼ãƒ–ãƒ«PIDãƒãƒƒãƒ—è¿½åŠ 
 	m_PidMapManager.MapTarget(PID_HEIT, new CEitParserTable(this));
 
-	// M-EITƒe[ƒuƒ‹PIDƒ}ƒbƒv’Ç‰Á
+	// M-EITãƒ†ãƒ¼ãƒ–ãƒ«PIDãƒãƒƒãƒ—è¿½åŠ 
 	//m_PidMapManager.MapTarget(PID_MEIT, new CEitParserTable(this));
 
-	// L-EITƒe[ƒuƒ‹PIDƒ}ƒbƒv’Ç‰Á
+	// L-EITãƒ†ãƒ¼ãƒ–ãƒ«PIDãƒãƒƒãƒ—è¿½åŠ 
 	m_PidMapManager.MapTarget(PID_LEIT, new CEitParserTable(this));
 
-	// TOTƒe[ƒuƒ‹PIDƒ}ƒbƒv’Ç‰Á
+	// TOTãƒ†ãƒ¼ãƒ–ãƒ«PIDãƒãƒƒãƒ—è¿½åŠ 
 	m_PidMapManager.MapTarget(PID_TOT, new CTotTable, OnTotUpdated, this);
 
 	::ZeroMemory(&m_CurTotTime, sizeof(SYSTEMTIME));
@@ -598,12 +598,12 @@ void CEventManager::OnSection(CPsiStreamTable *pTable, const CPsiSection *pSecti
 		for (int i = 0; i < NumEvents; i++) {
 			const CEitParserTable::EventInfo *pEventInfo = pEitTable->GetEventInfo(i);
 
-			// ŠJn/I—¹‚ª–¢’è‹`‚Ì‚à‚Ì‚ÍœŠO‚·‚é
+			// é–‹å§‹/çµ‚äº†æ™‚åˆ»ãŒæœªå®šç¾©ã®ã‚‚ã®ã¯é™¤å¤–ã™ã‚‹
 			if (!pEventInfo->bValidStartTime || pEventInfo->Duration == 0)
 				continue;
 
-			// Šù‚ÉI—¹‚µ‚Ä‚¢‚é‚à‚Ì‚ÍœŠO‚·‚é
-			// (Œv‚Ì‚¸‚ê‚ğl‚¦‚Ä3•ªƒ}[ƒWƒ“‚ğ‚Æ‚Á‚Ä‚¢‚é)
+			// æ—¢ã«çµ‚äº†ã—ã¦ã„ã‚‹ã‚‚ã®ã¯é™¤å¤–ã™ã‚‹
+			// (æ™‚è¨ˆã®ãšã‚Œã‚’è€ƒãˆã¦3åˆ†ãƒãƒ¼ã‚¸ãƒ³ã‚’ã¨ã£ã¦ã„ã‚‹)
 			SYSTEMTIME EndTime;
 			{
 				CDateTime Time(pEventInfo->StartTime);
@@ -624,12 +624,12 @@ void CEventManager::OnSection(CPsiStreamTable *pTable, const CPsiSection *pSecti
 					|| itrCur->Duration != TimeEvent.Duration
 					|| itrCur->EventID != TimeEvent.EventID) {
 				if (!TimeResult.second) {
-					// Šù‘¶‚Ìƒf[ƒ^‚Ì•û‚ªV‚µ‚¢ê‡‚ÍœŠO‚·‚é
+					// æ—¢å­˜ã®ãƒ‡ãƒ¼ã‚¿ã®æ–¹ãŒæ–°ã—ã„å ´åˆã¯é™¤å¤–ã™ã‚‹
 					if (itrCur->UpdateTime > TimeEvent.UpdateTime)
 						continue;
 				}
 
-				// ŠÔ‚ª”í‚Á‚Ä‚¢‚È‚¢‚©’²‚×‚é
+				// æ™‚é–“ãŒè¢«ã£ã¦ã„ãªã„ã‹èª¿ã¹ã‚‹
 				bool bSkip = false;
 				TimeEventMap::iterator itr = itrCur;
 				for (++itr; itr != Service.TimeMap.end();) {
@@ -678,7 +678,7 @@ void CEventManager::OnSection(CPsiStreamTable *pTable, const CPsiSection *pSecti
 				Service.TimeMap.insert(TimeEvent);
 			}
 
-			// ƒCƒxƒ“ƒg‚ğ’Ç‰Á or Šù‘¶‚ÌƒCƒxƒ“ƒg‚ğæ“¾
+			// ã‚¤ãƒ™ãƒ³ãƒˆã‚’è¿½åŠ  or æ—¢å­˜ã®ã‚¤ãƒ™ãƒ³ãƒˆã‚’å–å¾—
 			std::pair<EventMap::iterator, bool> EventResult =
 				Service.EventMap.insert(std::pair<WORD, CEventInfo>(pEventInfo->EventID, CEventInfo()));
 			CEventInfo *pEvent = &EventResult.first->second;
@@ -687,7 +687,7 @@ void CEventManager::OnSection(CPsiStreamTable *pTable, const CPsiSection *pSecti
 					continue;
 
 				if (DiffSystemTime(&pEvent->m_StartTime, &pEventInfo->StartTime) != 0) {
-					// ŠJn‚ª•Ï‚í‚Á‚½
+					// é–‹å§‹æ™‚åˆ»ãŒå¤‰ã‚ã£ãŸ
 					TimeEventInfo Key(pEvent->m_StartTime);
 					TimeEventMap::iterator itr = Service.TimeMap.find(Key);
 					if (itr != Service.TimeMap.end()
@@ -832,7 +832,7 @@ void CEventManager::OnSection(CPsiStreamTable *pTable, const CPsiSection *pSecti
 			bUpdated = true;
 		}
 	} else {
-		// ƒCƒxƒ“ƒg‚ªÁ–Å‚µ‚Ä‚¢‚éê‡‚Ííœ‚·‚é
+		// ã‚¤ãƒ™ãƒ³ãƒˆãŒæ¶ˆæ»…ã—ã¦ã„ã‚‹å ´åˆã¯å‰Šé™¤ã™ã‚‹
 		if (m_CurTotTime.wHour > 0 || m_CurTotTime.wMinute > 0 || m_CurTotTime.wSecond >= 30) {
 			if ((TableID >= 0x50 && TableID <= 0x57) || (TableID >= 0x60 && TableID <= 0x67)) {
 				// Schedule basic

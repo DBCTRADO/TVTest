@@ -173,7 +173,7 @@ bool CRecentChannelList::SetMenu(HMENU hmenu,bool fClear) const
 
 	if (fClear && NumChannels()>0) {
 		::AppendMenu(hmenu,MFT_SEPARATOR,0,NULL);
-		::AppendMenu(hmenu,MFT_STRING | MFS_ENABLED,CM_CHANNELHISTORY_CLEAR,TEXT("—š—ð‚ðƒNƒŠƒA"));
+		::AppendMenu(hmenu,MFT_STRING | MFS_ENABLED,CM_CHANNELHISTORY_CLEAR,TEXT("å±¥æ­´ã‚’ã‚¯ãƒªã‚¢"));
 	}
 
 	return true;

@@ -1,4 +1,4 @@
-// NCachedFile.cpp: CNCachedFile ƒNƒ‰ƒX‚ÌƒCƒ“ƒvƒŠƒƒ“ƒe[ƒVƒ‡ƒ“
+// NCachedFile.cpp: CNCachedFile ã‚¯ãƒ©ã‚¹ã®ã‚¤ãƒ³ãƒ—ãƒªãƒ¡ãƒ³ãƒ†ãƒ¼ã‚·ãƒ§ãƒ³
 //
 //////////////////////////////////////////////////////////////////////
 
@@ -8,7 +8,7 @@
 #include "../Common/DebugDef.h"
 
 //////////////////////////////////////////////////////////////////////
-// \’z/Á–Å
+// æ§‹ç¯‰/æ¶ˆæ»…
 //////////////////////////////////////////////////////////////////////
 
 CNCachedFile::CNCachedFile()
@@ -38,18 +38,18 @@ const bool CNCachedFile::Open(LPCTSTR lpszName, const UINT Flags)
 const bool CNCachedFile::Open(LPCTSTR lpszName, const UINT Flags, const DWORD dwBuffSize)
 {
 	if (IsOpen()) {
-		m_LastError = ERROR_BUSY;	// u—v‹‚µ‚½ƒŠƒ\[ƒX‚Íg—p’†‚Å‚·Bv
+		m_LastError = ERROR_BUSY;	// ã€Œè¦æ±‚ã—ãŸãƒªã‚½ãƒ¼ã‚¹ã¯ä½¿ç”¨ä¸­ã§ã™ã€‚ã€
 		return false;
 	}
 
 	if ((Flags & CNFile::CNF_WRITE) && !(Flags & CNFile::CNF_READ)) {
-		// ƒ‰ƒCƒgƒLƒƒƒbƒVƒ…—LŒø
+		// ãƒ©ã‚¤ãƒˆã‚­ãƒ£ãƒƒã‚·ãƒ¥æœ‰åŠ¹
 		m_bIsWritable = true;
 	} else if (!(Flags & CNFile::CNF_WRITE) && (Flags & CNFile::CNF_READ) && !(Flags & CNFile::CNF_NEW)) {
-		// ƒŠ[ƒhƒLƒƒƒbƒVƒ…—LŒø
+		// ãƒªãƒ¼ãƒ‰ã‚­ãƒ£ãƒƒã‚·ãƒ¥æœ‰åŠ¹
 		m_bIsWritable = false;
 	} else {
-		// ƒtƒ‰ƒO‚Ì‘g‚İ‡‚í‚¹‚ª”ñ‘Î‰
+		// ãƒ•ãƒ©ã‚°ã®çµ„ã¿åˆã‚ã›ãŒéå¯¾å¿œ
 		m_LastError = ERROR_INVALID_PARAMETER;
 		return false;
 	}
@@ -59,14 +59,14 @@ const bool CNCachedFile::Open(LPCTSTR lpszName, const UINT Flags, const DWORD dw
 		return false;
 	}
 
-	// ƒtƒ@ƒCƒ‹ƒI[ƒvƒ“
+	// ãƒ•ã‚¡ã‚¤ãƒ«ã‚ªãƒ¼ãƒ—ãƒ³
 	if (!CNFile::Open(lpszName, Flags))
 		return false;
 
-	// ƒoƒbƒtƒ@Šm•Û
+	// ãƒãƒƒãƒ•ã‚¡ç¢ºä¿
 	m_BuffSize = dwBuffSize;
 	if (!m_bIsWritable && (ULONGLONG)dwBuffSize > GetSize()) {
-		// “Ç‚İ‚İƒoƒbƒtƒ@
+		// èª­ã¿è¾¼ã¿ãƒãƒƒãƒ•ã‚¡
 		m_BuffSize = (DWORD)GetSize();
 	}
 	try {
@@ -77,7 +77,7 @@ const bool CNCachedFile::Open(LPCTSTR lpszName, const UINT Flags, const DWORD dw
 		return false;
 	}
 
-	// ƒoƒbƒtƒ@‰Šú‰»
+	// ãƒãƒƒãƒ•ã‚¡åˆæœŸåŒ–
 	m_DataSize = 0;
 	m_FilePos = 0;
 	m_CurPos = 0;
@@ -93,7 +93,7 @@ const bool CNCachedFile::Close(void)
 	m_LastError = ERROR_SUCCESS;
 
 	if (IsOpen()) {
-		// –¢‘‚«‚İƒf[ƒ^ƒtƒ‰ƒbƒVƒ…
+		// æœªæ›¸ãè¾¼ã¿ãƒ‡ãƒ¼ã‚¿ãƒ•ãƒ©ãƒƒã‚·ãƒ¥
 		Flush();
 		DWORD FlushError = m_LastError;
 
@@ -113,7 +113,7 @@ const bool CNCachedFile::Close(void)
 
 const DWORD CNCachedFile::Read(void *pBuff, const DWORD dwLen)
 {
-	// ƒGƒ‰[ˆ—
+	// ã‚¨ãƒ©ãƒ¼å‡¦ç†
 	if (m_bIsWritable) {
 		m_LastError = ERROR_INVALID_FUNCTION;
 		return 0;
@@ -130,7 +130,7 @@ const DWORD CNCachedFile::Read(void *pBuff, const DWORD dwLen, const ULONGLONG l
 		return 0;
 	}
 
-	// ƒtƒ@ƒCƒ‹ƒV[ƒN
+	// ãƒ•ã‚¡ã‚¤ãƒ«ã‚·ãƒ¼ã‚¯
 	if (!SetPos(llPos))
 		return 0;
 
@@ -140,7 +140,7 @@ const DWORD CNCachedFile::Read(void *pBuff, const DWORD dwLen, const ULONGLONG l
 
 const bool CNCachedFile::Write(const void *pBuff, const DWORD dwLen)
 {
-	// ƒtƒ@ƒCƒ‹‘‚«‚İ
+	// ãƒ•ã‚¡ã‚¤ãƒ«æ›¸ãè¾¼ã¿
 	if (!m_bIsWritable) {
 		m_LastError = ERROR_INVALID_FUNCTION;
 		return false;
@@ -151,14 +151,14 @@ const bool CNCachedFile::Write(const void *pBuff, const DWORD dwLen)
 		return false;
 	}
 
-	// ƒoƒbƒtƒ@ƒŠƒ“ƒO”»’è
+	// ãƒãƒƒãƒ•ã‚¡ãƒªãƒ³ã‚°åˆ¤å®š
 	if ((m_BuffSize - m_DataSize) < dwLen) {
-		// ƒoƒbƒtƒ@•s‘«
+		// ãƒãƒƒãƒ•ã‚¡ä¸è¶³
 		if (!Flush())
 			return false;
 	}
 
-	// ƒoƒbƒtƒ@ƒŠƒ“ƒO
+	// ãƒãƒƒãƒ•ã‚¡ãƒªãƒ³ã‚°
 	if ((m_BuffSize - m_DataSize) >= dwLen) {
 		::CopyMemory(m_pBuff + m_DataSize, pBuff, dwLen);
 		m_DataSize += dwLen;
@@ -172,7 +172,7 @@ const bool CNCachedFile::Write(const void *pBuff, const DWORD dwLen)
 		m_FilePos += dwLen;
 	}
 
-	// ƒtƒ@ƒCƒ‹ƒ|ƒWƒVƒ‡ƒ“XV
+	// ãƒ•ã‚¡ã‚¤ãƒ«ãƒã‚¸ã‚·ãƒ§ãƒ³æ›´æ–°
 	m_CurPos += (ULONGLONG)dwLen;
 
 	m_LastError = ERROR_SUCCESS;
@@ -183,13 +183,13 @@ const bool CNCachedFile::Write(const void *pBuff, const DWORD dwLen)
 
 const bool CNCachedFile::Write(const void *pBuff, const DWORD dwLen, const ULONGLONG llPos)
 {
-	// ƒtƒ@ƒCƒ‹‘‚«‚İ
+	// ãƒ•ã‚¡ã‚¤ãƒ«æ›¸ãè¾¼ã¿
 	if (!m_bIsWritable) {
 		m_LastError = ERROR_INVALID_FUNCTION;
 		return false;
 	}
 
-	// ƒtƒ@ƒCƒ‹ƒV[ƒN
+	// ãƒ•ã‚¡ã‚¤ãƒ«ã‚·ãƒ¼ã‚¯
 	if (!SetPos(llPos))
 		return false;
 
@@ -199,22 +199,22 @@ const bool CNCachedFile::Write(const void *pBuff, const DWORD dwLen, const ULONG
 
 const ULONGLONG CNCachedFile::GetPos(void)
 {
-	// ˜_—“I‚Èƒtƒ@ƒCƒ‹ƒ|ƒWƒVƒ‡ƒ“‚ğ•Ô‚·
+	// è«–ç†çš„ãªãƒ•ã‚¡ã‚¤ãƒ«ãƒã‚¸ã‚·ãƒ§ãƒ³ã‚’è¿”ã™
 	return m_bIsWritable ? m_CurPos : CNFile::GetPos();
 }
 
 
 const bool CNCachedFile::SetPos(const ULONGLONG llPos)
 {
-	// ƒV[ƒN‘O‚Éƒtƒ‰ƒbƒVƒ…
+	// ã‚·ãƒ¼ã‚¯å‰ã«ãƒ•ãƒ©ãƒƒã‚·ãƒ¥
 	if (!Flush())
 		return false;
 
-	// ƒV[ƒN
+	// ã‚·ãƒ¼ã‚¯
 	if (!CNFile::SetPos(llPos))
 		return false;
 
-	// ƒtƒ@ƒCƒ‹ƒ|ƒWƒVƒ‡ƒ“XV
+	// ãƒ•ã‚¡ã‚¤ãƒ«ãƒã‚¸ã‚·ãƒ§ãƒ³æ›´æ–°
 	m_FilePos = llPos;
 	m_CurPos = llPos;
 
@@ -229,12 +229,12 @@ const bool CNCachedFile::Flush(void)
 	if (!m_bIsWritable || m_DataSize == 0)
 		return true;
 
-	// ƒoƒbƒtƒ@æ“ªˆÊ’u‚É‘‚«‚İ
+	// ãƒãƒƒãƒ•ã‚¡å…ˆé ­ä½ç½®ã«æ›¸ãè¾¼ã¿
 	if (!CNFile::SetPos(m_FilePos) || !CNFile::Write(m_pBuff, m_DataSize))
 		return false;
 	m_FilePos += m_DataSize;
 
-	// ƒoƒbƒtƒ@ƒTƒCƒYƒNƒŠƒA
+	// ãƒãƒƒãƒ•ã‚¡ã‚µã‚¤ã‚ºã‚¯ãƒªã‚¢
 	m_DataSize = 0;
 
 	return true;
@@ -242,7 +242,7 @@ const bool CNCachedFile::Flush(void)
 
 
 #if 0
-// SetFileBandwidthReservation ‚Ìg‚¢•û‚ª‚æ‚­•ª‚©‚ç‚È‚¢
+// SetFileBandwidthReservation ã®ä½¿ã„æ–¹ãŒã‚ˆãåˆ†ã‹ã‚‰ãªã„
 const bool CNCachedFile::ReserveBandwidth(DWORD BytesPerSecond)
 {
 	if (m_hFile == INVALID_HANDLE_VALUE) {

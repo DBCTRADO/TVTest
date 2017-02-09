@@ -169,7 +169,7 @@ INT_PTR COptionDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 						::ImageList_Draw(m_himlIcons,(int)pdis->itemData,pdis->hDC,rc.left,y,ILD_TRANSPARENT);
 				} else {
 					HICON hicon=::ImageList_ExtractIcon(NULL,m_himlIcons,(int)pdis->itemData);
-#if 0				// DrawIconEx ‚Å•`‰æ‚·‚é‚Æ‰˜‚¢
+#if 0				// DrawIconEx ã§æç”»ã™ã‚‹ã¨æ±šã„
 					::DrawIconEx(pdis->hDC,rc.left,y,hicon,m_IconWidth,m_IconHeight,0,NULL,DI_NORMAL);
 					if (fSelected)
 						::DrawIconEx(pdis->hDC,rc.left,y,hicon,m_IconWidth,m_IconHeight,0,NULL,DI_NORMAL);

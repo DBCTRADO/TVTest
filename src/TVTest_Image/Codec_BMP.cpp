@@ -34,7 +34,7 @@ bool SaveBMPFile(const ImageSaveInfo *pInfo)
 	if (hFile==INVALID_HANDLE_VALUE) {
 		return false;
 	}
-	/* BITMAPFILEHEADER‚Ì‘‚«ž‚Ý */
+	/* BITMAPFILEHEADERã®æ›¸ãè¾¼ã¿ */
 	BITMAPFILEHEADER bmfh;
 
 	bmfh.bfType=0x4D42;
@@ -46,7 +46,7 @@ bool SaveBMPFile(const ImageSaveInfo *pInfo)
 		CloseHandle(hFile);
 		return false;
 	}
-	/* ƒwƒbƒ_‚ð‘‚«ž‚Þ */
+	/* ãƒ˜ãƒƒãƒ€ã‚’æ›¸ãè¾¼ã‚€ */
 	BITMAPINFOHEADER bmih;
 
 	bmih.biSize=sizeof(BITMAPINFOHEADER);
@@ -75,7 +75,7 @@ bool SaveBMPFile(const ImageSaveInfo *pInfo)
 			return false;
 		}
 	}
-	/* ƒrƒbƒgƒf[ƒ^‚ð‘‚«ž‚Þ */
+	/* ãƒ“ãƒƒãƒˆãƒ‡ãƒ¼ã‚¿ã‚’æ›¸ãè¾¼ã‚€ */
 	if (pInfo->pbmi->bmiHeader.biHeight>0) {
 		if (!WriteFile(hFile,pInfo->pBits,(DWORD)BitsBytes,&dwWrite,NULL)
 													|| dwWrite!=BitsBytes) {

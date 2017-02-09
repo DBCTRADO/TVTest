@@ -166,7 +166,7 @@ CBasicFile *CFileWriter::OpenFile(LPCTSTR pszFileName, UINT Flags, ULONGLONG Pre
 					 (!(Flags & CTsRecorder::OPEN_OVERWRITE) ? CBasicFile::OPEN_NEW : 0))) {
 		TCHAR szMessage[1024];
 		pFile->GetLastErrorMessage(szMessage, _countof(szMessage));
-		SetError(pFile->GetLastError(), TEXT("ƒtƒ@ƒCƒ‹‚ªŠJ‚¯‚Ü‚¹‚ñB"), nullptr, szMessage);
+		SetError(pFile->GetLastError(), TEXT("ãƒ•ã‚¡ã‚¤ãƒ«ãŒé–‹ã‘ã¾ã›ã‚“ã€‚"), nullptr, szMessage);
 		delete pFile;
 		return nullptr;
 	}
@@ -241,7 +241,7 @@ bool CEdcbPluginWriter::Load(LPCTSTR pszFileName)
 
 	HMODULE hLib = ::LoadLibrary(pszFileName);
 	if (!hLib) {
-		SetError(TEXT("DLL‚ðƒ[ƒh‚Å‚«‚Ü‚¹‚ñB"));
+		SetError(TEXT("DLLã‚’ãƒ­ãƒ¼ãƒ‰ã§ãã¾ã›ã‚“ã€‚"));
 		return false;
 	}
 
@@ -255,14 +255,14 @@ bool CEdcbPluginWriter::Load(LPCTSTR pszFileName)
 	if (!pCreateCtrl || !m_pDeleteCtrl || !m_pStartSave || !m_pStopSave
 			|| !m_pGetSaveFilePath || !m_pAddTSBuff) {
 		::FreeLibrary(hLib);
-		SetError(TEXT("ƒvƒ‰ƒOƒCƒ“‚©‚ç•K—v‚ÈŠÖ”‚ðŽæ“¾‚Å‚«‚Ü‚¹‚ñB"));
+		SetError(TEXT("ãƒ—ãƒ©ã‚°ã‚¤ãƒ³ã‹ã‚‰å¿…è¦ãªé–¢æ•°ã‚’å–å¾—ã§ãã¾ã›ã‚“ã€‚"));
 		return false;
 	}
 
 	DWORD ID;
 	if (!pCreateCtrl(&ID)) {
 		::FreeLibrary(hLib);
-		SetError(TEXT("•Û‘¶—pƒCƒ“ƒXƒ^ƒ“ƒX‚ðì¬‚Å‚«‚Ü‚¹‚ñB"));
+		SetError(TEXT("ä¿å­˜ç”¨ã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚¹ã‚’ä½œæˆã§ãã¾ã›ã‚“ã€‚"));
 		return false;
 	}
 
@@ -296,7 +296,7 @@ bool CEdcbPluginWriter::Open(LPCTSTR pszFileName, UINT Flags, ULONGLONG PreAlloc
 	if (!m_pStartSave(m_ID, pszFileName,
 					  (Flags & CTsRecorder::OPEN_OVERWRITE) != 0,
 					  PreAllocationUnit)) {
-		SetError(TEXT("ƒvƒ‰ƒOƒCƒ“‚Å‚Ì•Û‘¶‚ðŠJŽn‚Å‚«‚Ü‚¹‚ñB"));
+		SetError(TEXT("ãƒ—ãƒ©ã‚°ã‚¤ãƒ³ã§ã®ä¿å­˜ã‚’é–‹å§‹ã§ãã¾ã›ã‚“ã€‚"));
 		return false;
 	}
 
@@ -459,13 +459,13 @@ bool CTsRecorder::OpenFile(LPCTSTR pszFileName, UINT Flags)
 bool CTsRecorder::OpenFile(LPCTSTR pszPluginName, LPCTSTR pszFileName, UINT Flags)
 {
 	if (!pszFileName) {
-		SetError(TEXT("ˆø”‚ª•s³‚Å‚·B"));
+		SetError(TEXT("å¼•æ•°ãŒä¸æ­£ã§ã™ã€‚"));
 		return false;
 	}
 
 	CBlockLock Lock(&m_DecoderLock);
 
-	// ˆê’U•Â‚¶‚é
+	// ä¸€æ—¦é–‰ã˜ã‚‹
 	CloseFile();
 
 	m_InputSize = 0;
@@ -473,7 +473,7 @@ bool CTsRecorder::OpenFile(LPCTSTR pszPluginName, LPCTSTR pszFileName, UINT Flag
 	m_OutputCount = 0;
 	m_WriteErrorCount = 0;
 
-	// ƒtƒ@ƒCƒ‹‚ðŠJ‚­
+	// ãƒ•ã‚¡ã‚¤ãƒ«ã‚’é–‹ã
 	if (pszPluginName && pszPluginName[0]) {
 		CEdcbPluginWriter *pWriter = new CEdcbPluginWriter;
 		if (!pWriter->Load(pszPluginName)) {
@@ -501,22 +501,22 @@ bool CTsRecorder::OpenFile(LPCTSTR pszPluginName, LPCTSTR pszFileName, UINT Flag
 		} catch (...) {
 #if 0
 			CloseFile();
-			SetError(CTracer::TYPE_ERROR, TEXT("ƒƒ‚ƒŠ‚ªŠm•Û‚Å‚«‚Ü‚¹‚ñB"));
+			SetError(CTracer::TYPE_ERROR, TEXT("ãƒ¡ãƒ¢ãƒªãŒç¢ºä¿ã§ãã¾ã›ã‚“ã€‚"));
 			return false;
 #else
-			Trace(CTracer::TYPE_WARNING, TEXT("‘‚«o‚µƒoƒbƒtƒ@‚Ìƒƒ‚ƒŠ‚ðŠm•Û‚Å‚«‚Ü‚¹‚ñB"));
-			// ƒoƒbƒtƒ@ƒŠƒ“ƒO‚È‚µ‚Å‘±s
+			Trace(CTracer::TYPE_WARNING, TEXT("æ›¸ãå‡ºã—ãƒãƒƒãƒ•ã‚¡ã®ãƒ¡ãƒ¢ãƒªã‚’ç¢ºä¿ã§ãã¾ã›ã‚“ã€‚"));
+			// ãƒãƒƒãƒ•ã‚¡ãƒªãƒ³ã‚°ãªã—ã§ç¶šè¡Œ
 #endif
 		}
 	}
 	m_BufferUsed = 0;
 
-	// ‘‚«o‚µƒXƒŒƒbƒhŠJŽn
+	// æ›¸ãå‡ºã—ã‚¹ãƒ¬ãƒƒãƒ‰é–‹å§‹
 	m_EndEvent.Reset();
 	m_hThread = (HANDLE)::_beginthreadex(nullptr, 0, WriteThread, this, 0, nullptr);
 	if (!m_hThread) {
 		CloseFile();
-		SetError(TEXT("ƒXƒŒƒbƒh‚ªì¬‚Å‚«‚Ü‚¹‚ñB"));
+		SetError(TEXT("ã‚¹ãƒ¬ãƒƒãƒ‰ãŒä½œæˆã§ãã¾ã›ã‚“ã€‚"));
 		return false;
 	}
 
@@ -529,7 +529,7 @@ bool CTsRecorder::OpenFile(LPCTSTR pszPluginName, LPCTSTR pszFileName, UINT Flag
 bool CTsRecorder::RelayFile(LPCTSTR pszFileName, UINT Flags)
 {
 	if (!pszFileName) {
-		SetError(TEXT("ˆø”‚ª•s³‚Å‚·B"));
+		SetError(TEXT("å¼•æ•°ãŒä¸æ­£ã§ã™ã€‚"));
 		return false;
 	}
 
@@ -560,18 +560,18 @@ void CTsRecorder::CloseFile()
 {
 	CBlockLock Lock(&m_DecoderLock);
 
-	// ‘‚«o‚µƒXƒŒƒbƒhI—¹
+	// æ›¸ãå‡ºã—ã‚¹ãƒ¬ãƒƒãƒ‰çµ‚äº†
 	if (m_hThread) {
 		m_EndEvent.Set();
 		if (::WaitForSingleObject(m_hThread, 10000) != WAIT_OBJECT_0) {
-			Trace(CTracer::TYPE_WARNING, TEXT("ƒtƒ@ƒCƒ‹‘‚«o‚µƒXƒŒƒbƒh‚ª‰ž“š‚µ‚È‚¢‚½‚ß‹­§I—¹‚µ‚Ü‚·B"));
+			Trace(CTracer::TYPE_WARNING, TEXT("ãƒ•ã‚¡ã‚¤ãƒ«æ›¸ãå‡ºã—ã‚¹ãƒ¬ãƒƒãƒ‰ãŒå¿œç­”ã—ãªã„ãŸã‚å¼·åˆ¶çµ‚äº†ã—ã¾ã™ã€‚"));
 			::TerminateThread(m_hThread, -1);
 		}
 		::CloseHandle(m_hThread);
 		m_hThread = nullptr;
 	}
 
-	// ƒtƒ@ƒCƒ‹‚ð•Â‚¶‚é
+	// ãƒ•ã‚¡ã‚¤ãƒ«ã‚’é–‰ã˜ã‚‹
 	if (m_pWriter) {
 		m_pWriter->SetPreAllocationUnit(0);
 		FlushBuffer();
@@ -580,7 +580,7 @@ void CTsRecorder::CloseFile()
 		m_pWriter = nullptr;
 	}
 
-	// ƒoƒbƒtƒ@‰ð•ú
+	// ãƒãƒƒãƒ•ã‚¡è§£æ”¾
 	if (m_pWriteBuffer) {
 		delete [] m_pWriteBuffer;
 		m_pWriteBuffer = nullptr;
@@ -630,28 +630,28 @@ bool CTsRecorder::GetWriteStatistics(WriteStatistics *pStatistics) const
 
 ULONGLONG CTsRecorder::GetInputSize() const
 {
-	// “ü—Í‚³‚ê‚½ƒTƒCƒY‚ð•Ô‚·
+	// å…¥åŠ›ã•ã‚ŒãŸã‚µã‚¤ã‚ºã‚’è¿”ã™
 	return m_InputSize;
 }
 
 
 ULONGLONG CTsRecorder::GetOutputSize() const
 {
-	// o—Í‚µ‚½TSƒTƒCƒY‚ð•Ô‚·
+	// å‡ºåŠ›ã—ãŸTSã‚µã‚¤ã‚ºã‚’è¿”ã™
 	return m_OutputSize;
 }
 
 
 ULONGLONG CTsRecorder::GetOutputCount() const
 {
-	// o—Í‚µ‚½‰ñ”‚ð•Ô‚·
+	// å‡ºåŠ›ã—ãŸå›žæ•°ã‚’è¿”ã™
 	return m_OutputCount;
 }
 
 
 bool CTsRecorder::IsWriteSizeAvailable() const
 {
-	// ‘‚«o‚µÏ‚ÝƒTƒCƒY‚ªŽæ“¾‚Å‚«‚é‚©‚ð•Ô‚·
+	// æ›¸ãå‡ºã—æ¸ˆã¿ã‚µã‚¤ã‚ºãŒå–å¾—ã§ãã‚‹ã‹ã‚’è¿”ã™
 	if (!m_pWriter)
 		return false;
 	return m_pWriter->IsWriteSizeAvailable();
@@ -660,7 +660,7 @@ bool CTsRecorder::IsWriteSizeAvailable() const
 
 ULONGLONG CTsRecorder::GetWriteSize() const
 {
-	// ‘‚«o‚µÏ‚ÝƒTƒCƒY‚ð•Ô‚·
+	// æ›¸ãå‡ºã—æ¸ˆã¿ã‚µã‚¤ã‚ºã‚’è¿”ã™
 	if (!m_pWriter)
 		return 0;
 	return m_pWriter->GetWriteSize();
@@ -669,7 +669,7 @@ ULONGLONG CTsRecorder::GetWriteSize() const
 
 DWORD CTsRecorder::GetWriteErrorCount() const
 {
-	// ‘‚«o‚µƒGƒ‰[‰ñ”‚ð•Ô‚·
+	// æ›¸ãå‡ºã—ã‚¨ãƒ©ãƒ¼å›žæ•°ã‚’è¿”ã™
 	return m_WriteErrorCount;
 }
 
@@ -882,7 +882,7 @@ bool CTsRecorder::FlushBuffer()
 
 	while (!m_WriteQueue.empty()) {
 		if (::GetTickCount() - StartTime >= 10000) {
-			Trace(CTracer::TYPE_WARNING, TEXT("‘‚«o‚µ‘Ò‚¿ƒf[ƒ^‚ð‘S‚Ä‘‚«o‚·‚Ì‚ÉŽžŠÔ‚ªŠ|‚©‚è‰ß‚¬‚Ä‚¢‚é‚½‚ß’†Ž~‚µ‚Ü‚·B"));
+			Trace(CTracer::TYPE_WARNING, TEXT("æ›¸ãå‡ºã—å¾…ã¡ãƒ‡ãƒ¼ã‚¿ã‚’å…¨ã¦æ›¸ãå‡ºã™ã®ã«æ™‚é–“ãŒæŽ›ã‹ã‚ŠéŽãŽã¦ã„ã‚‹ãŸã‚ä¸­æ­¢ã—ã¾ã™ã€‚"));
 			return false;
 		}
 
@@ -969,7 +969,7 @@ unsigned int __stdcall CTsRecorder::WriteThread(LPVOID lpParameter)
 	try {
 		pThis->WriteMain();
 	} catch (...) {
-		pThis->Trace(CTracer::TYPE_ERROR, TEXT("ƒtƒ@ƒCƒ‹‘‚«o‚µƒXƒŒƒbƒh‚Å—áŠO‚ª”­¶‚µ‚Ü‚µ‚½B"));
+		pThis->Trace(CTracer::TYPE_ERROR, TEXT("ãƒ•ã‚¡ã‚¤ãƒ«æ›¸ãå‡ºã—ã‚¹ãƒ¬ãƒƒãƒ‰ã§ä¾‹å¤–ãŒç™ºç”Ÿã—ã¾ã—ãŸã€‚"));
 	}
 
 	return 0;

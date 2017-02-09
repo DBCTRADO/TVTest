@@ -724,7 +724,7 @@ int CEventSearcher::FindKeyword(LPCTSTR pszText,LPCTSTR pKeyword,int KeywordLeng
 	int Pos;
 
 	if (m_pFindNLSString!=NULL) {
-		// VistaˆÈ~
+		// Vistaä»¥é™
 		Pos=m_pFindNLSString(LOCALE_USER_DEFAULT,FIND_FROMSTART | Flags,
 							 pszText,-1,pKeyword,KeywordLength,pFoundLength);
 	} else {
@@ -1121,12 +1121,12 @@ bool CEventSearchSettingsDialog::GetSettings(CEventSearchSettings *pSettings) co
 void CEventSearchSettingsDialog::SetSettings(const CEventSearchSettings &Settings)
 {
 	if (m_hDlg!=NULL) {
-		// ƒL[ƒ[ƒh
+		// ã‚­ãƒ¼ãƒ¯ãƒ¼ãƒ‰
 		::SetDlgItemText(m_hDlg,IDC_EVENTSEARCH_KEYWORD,Settings.Keyword.c_str());
 		DlgCheckBox_Check(m_hDlg,IDC_EVENTSEARCH_CASESENSITIVE,!Settings.fIgnoreCase);
 		DlgCheckBox_Check(m_hDlg,IDC_EVENTSEARCH_REGEXP,Settings.fRegExp);
 
-		// ƒL[ƒ[ƒhŒŸõ‘ÎÛ
+		// ã‚­ãƒ¼ãƒ¯ãƒ¼ãƒ‰æ¤œç´¢å¯¾è±¡
 		int KeywordTarget=KEYWORDTARGET_EVENTNAME_AND_EVENTTEXT;
 		if (Settings.fEventName!=Settings.fEventText) {
 			if (Settings.fEventName)
@@ -1136,7 +1136,7 @@ void CEventSearchSettingsDialog::SetSettings(const CEventSearchSettings &Setting
 		}
 		DlgComboBox_SetCurSel(m_hDlg,IDC_EVENTSEARCH_KEYWORDTARGET,KeywordTarget);
 
-		// ƒWƒƒƒ“ƒ‹
+		// ã‚¸ãƒ£ãƒ³ãƒ«
 		HWND hwndGenre=::GetDlgItem(m_hDlg,IDC_EVENTSEARCH_GENRE);
 		HTREEITEM hItem=TreeView_GetChild(hwndGenre,TVI_ROOT);
 		TVITEM tvi;
@@ -1158,7 +1158,7 @@ void CEventSearchSettingsDialog::SetSettings(const CEventSearchSettings &Setting
 		}
 		SetGenreStatus();
 
-		// —j“ú
+		// æ›œæ—¥
 		DlgCheckBox_Check(m_hDlg,IDC_EVENTSEARCH_DAYOFWEEK,Settings.fDayOfWeek);
 		for (int i=0;i<7;i++) {
 			::CheckDlgButton(m_hDlg,IDC_EVENTSEARCH_DAYOFWEEK_SUNDAY+i,
@@ -1169,7 +1169,7 @@ void CEventSearchSettingsDialog::SetSettings(const CEventSearchSettings &Setting
 					   IDC_EVENTSEARCH_DAYOFWEEK_SATURDAY,
 					   Settings.fDayOfWeek);
 
-		// ŠÔ
+		// æ™‚é–“
 		TCHAR szText[16];
 		DlgCheckBox_Check(m_hDlg,IDC_EVENTSEARCH_TIME,Settings.fTime);
 		DlgEdit_SetInt(m_hDlg,IDC_EVENTSEARCH_TIME_START_HOUR,Settings.StartTime.Hour);
@@ -1181,7 +1181,7 @@ void CEventSearchSettingsDialog::SetSettings(const CEventSearchSettings &Setting
 		EnableDlgItems(m_hDlg,IDC_EVENTSEARCH_TIME_START_HOUR,IDC_EVENTSEARCH_TIME_END_MINUTE,
 					   Settings.fTime);
 
-		// ’·‚³
+		// é•·ã•
 		DlgCheckBox_Check(m_hDlg,IDC_EVENTSEARCH_DURATION,Settings.fDuration);
 		DlgEdit_SetInt(m_hDlg,IDC_EVENTSEARCH_DURATION_SHORT_INPUT,Settings.DurationShortest/60);
 		EnableDlgItems(m_hDlg,
@@ -1194,7 +1194,7 @@ void CEventSearchSettingsDialog::SetSettings(const CEventSearchSettings &Setting
 		DlgComboBox_SetCurSel(m_hDlg,IDC_EVENTSEARCH_CA_LIST,(int)Settings.CA);
 		EnableDlgItem(m_hDlg,IDC_EVENTSEARCH_CA_LIST,Settings.fCA);
 
-		// ‰f‘œ
+		// æ˜ åƒ
 		DlgCheckBox_Check(m_hDlg,IDC_EVENTSEARCH_VIDEO,Settings.fVideo);
 		DlgComboBox_SetCurSel(m_hDlg,IDC_EVENTSEARCH_VIDEO_LIST,(int)Settings.Video);
 		EnableDlgItem(m_hDlg,IDC_EVENTSEARCH_VIDEO_LIST,Settings.fVideo);
@@ -1308,7 +1308,7 @@ INT_PTR CEventSearchSettingsDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LP
 		AddControl(IDC_EVENTSEARCH_SEARCHTARGET,ALIGN_RIGHT);
 		AddControl(IDC_EVENTSEARCH_SEARCH,ALIGN_RIGHT);
 
-		// ƒL[ƒ[ƒh
+		// ã‚­ãƒ¼ãƒ¯ãƒ¼ãƒ‰
 		{
 			DlgComboBox_LimitText(hDlg,IDC_EVENTSEARCH_KEYWORD,CEventSearchSettings::MAX_KEYWORD_LENGTH-1);
 
@@ -1324,23 +1324,23 @@ INT_PTR CEventSearchSettingsDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LP
 			InitDropDownButton(hDlg,IDC_EVENTSEARCH_KEYWORDMENU);
 		}
 
-		// ƒL[ƒ[ƒhŒŸõ‘ÎÛ
+		// ã‚­ãƒ¼ãƒ¯ãƒ¼ãƒ‰æ¤œç´¢å¯¾è±¡
 		{
 			static const LPCTSTR KeywordTargetList[] = {
-				TEXT("”Ô‘g–¼‚Æ”Ô‘gî•ñ"),
-				TEXT("”Ô‘g–¼"),
-				TEXT("”Ô‘gî•ñ"),
+				TEXT("ç•ªçµ„åã¨ç•ªçµ„æƒ…å ±"),
+				TEXT("ç•ªçµ„å"),
+				TEXT("ç•ªçµ„æƒ…å ±"),
 			};
 
 			for (int i=0;i<lengthof(KeywordTargetList);i++)
 				DlgComboBox_AddString(hDlg,IDC_EVENTSEARCH_KEYWORDTARGET,KeywordTargetList[i]);
 		}
 
-		// ƒWƒƒƒ“ƒ‹
+		// ã‚¸ãƒ£ãƒ³ãƒ«
 		{
 			HWND hwndGenre=GetDlgItem(hDlg,IDC_EVENTSEARCH_GENRE);
 
-			// Å‰‚©‚çTVS_CHECKBOXES‚ğ•t‚¯‚é‚ÆƒfƒtƒHƒ‹ƒg‚Åƒ`ƒFƒbƒN‚Å‚«‚È‚¢
+			// æœ€åˆã‹ã‚‰TVS_CHECKBOXESã‚’ä»˜ã‘ã‚‹ã¨ãƒ‡ãƒ•ã‚©ãƒ«ãƒˆã§ãƒã‚§ãƒƒã‚¯ã§ããªã„
 			::SetWindowLong(hwndGenre,GWL_STYLE,
 				::GetWindowLong(hwndGenre,GWL_STYLE) | TVS_CHECKBOXES);
 
@@ -1374,21 +1374,21 @@ INT_PTR CEventSearchSettingsDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LP
 			}
 		}
 
-		// ’·‚³
+		// é•·ã•
 		DlgUpDown_SetRange(hDlg,IDC_EVENTSEARCH_DURATION_SHORT_SPIN,1,999);
 
 		// CA
 		{
 			static const LPCTSTR pszCAList[] = {
-				TEXT("–³—¿"),
-				TEXT("—L—¿"),
+				TEXT("ç„¡æ–™"),
+				TEXT("æœ‰æ–™"),
 			};
 
 			for (int i=0;i<lengthof(pszCAList);i++)
 				DlgComboBox_AddString(hDlg,IDC_EVENTSEARCH_CA_LIST,pszCAList[i]);
 		}
 
-		// ‰f‘œ
+		// æ˜ åƒ
 		{
 			static const LPCTSTR pszVideoList[] = {
 				TEXT("HD"),
@@ -1399,7 +1399,7 @@ INT_PTR CEventSearchSettingsDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LP
 				DlgComboBox_AddString(hDlg,IDC_EVENTSEARCH_VIDEO_LIST,pszVideoList[i]);
 		}
 
-		// İ’è•Û‘¶
+		// è¨­å®šä¿å­˜
 		{
 			DlgComboBox_LimitText(hDlg,IDC_EVENTSEARCH_SETTINGSLIST,CEventSearchSettings::MAX_NAME_LENGTH-1);
 
@@ -1411,10 +1411,10 @@ INT_PTR CEventSearchSettingsDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LP
 					pSettings->Name.c_str());
 			}
 
-			DlgComboBox_SetCueBanner(hDlg,IDC_EVENTSEARCH_SETTINGSLIST,TEXT("İ’è–¼"));
+			DlgComboBox_SetCueBanner(hDlg,IDC_EVENTSEARCH_SETTINGSLIST,TEXT("è¨­å®šå"));
 		}
 
-		// ŒŸõ‘ÎÛ
+		// æ¤œç´¢å¯¾è±¡
 		if (!m_SearchTargetList.empty()) {
 			for (auto it=m_SearchTargetList.begin();it!=m_SearchTargetList.end();++it)
 				DlgComboBox_AddString(hDlg,IDC_EVENTSEARCH_SEARCHTARGET,it->c_str());
@@ -1516,7 +1516,7 @@ INT_PTR CEventSearchSettingsDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LP
 				TCHAR szName[CEventSearchSettings::MAX_NAME_LENGTH];
 
 				if (::GetWindowText(hwndComboBox,szName,lengthof(szName))<1) {
-					::MessageBox(hDlg,TEXT("–¼‘O‚ğ“ü—Í‚µ‚Ä‚­‚¾‚³‚¢B"),TEXT("İ’è‚Ì•Û‘¶"),MB_OK | MB_ICONEXCLAMATION);
+					::MessageBox(hDlg,TEXT("åå‰ã‚’å…¥åŠ›ã—ã¦ãã ã•ã„ã€‚"),TEXT("è¨­å®šã®ä¿å­˜"),MB_OK | MB_ICONEXCLAMATION);
 					::SetFocus(hwndComboBox);
 					return TRUE;
 				}
@@ -1537,9 +1537,9 @@ INT_PTR CEventSearchSettingsDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LP
 				}
 
 				TCHAR szText[lengthof(szName)+64];
-				StdUtil::snprintf(szText,lengthof(szText),TEXT("İ’è \"%s\" ‚ğ%s‚µ‚Ü‚µ‚½B"),
-								  szName,pSettings==NULL?TEXT("•Û‘¶"):TEXT("ã‘‚«"));
-				::MessageBox(hDlg,szText,TEXT("İ’è‚Ì•Û‘¶"),MB_OK | MB_ICONINFORMATION);
+				StdUtil::snprintf(szText,lengthof(szText),TEXT("è¨­å®š \"%s\" ã‚’%sã—ã¾ã—ãŸã€‚"),
+								  szName,pSettings==NULL?TEXT("ä¿å­˜"):TEXT("ä¸Šæ›¸ã"));
+				::MessageBox(hDlg,szText,TEXT("è¨­å®šã®ä¿å­˜"),MB_OK | MB_ICONINFORMATION);
 			}
 			return TRUE;
 
@@ -1559,8 +1559,8 @@ INT_PTR CEventSearchSettingsDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LP
 						ComboBox_DeleteString(hwndComboBox,Index);
 
 						TCHAR szText[lengthof(szName)+64];
-						StdUtil::snprintf(szText,lengthof(szText),TEXT("İ’è \"%s\" ‚ğíœ‚µ‚Ü‚µ‚½B"),szName);
-						::MessageBox(hDlg,szText,TEXT("İ’è‚Ìíœ"),MB_OK | MB_ICONINFORMATION);
+						StdUtil::snprintf(szText,lengthof(szText),TEXT("è¨­å®š \"%s\" ã‚’å‰Šé™¤ã—ã¾ã—ãŸã€‚"),szName);
+						::MessageBox(hDlg,szText,TEXT("è¨­å®šã®å‰Šé™¤"),MB_OK | MB_ICONINFORMATION);
 					}
 				}
 			}
@@ -1668,7 +1668,7 @@ INT_PTR CEventSearchSettingsDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LP
 		return TRUE;
 
 	case WM_DESTROY:
-		// ƒWƒƒƒ“ƒ‹‚ÌƒcƒŠ[“WŠJó‘Ô‚ğ•Û‘¶
+		// ã‚¸ãƒ£ãƒ³ãƒ«ã®ãƒ„ãƒªãƒ¼å±•é–‹çŠ¶æ…‹ã‚’ä¿å­˜
 		{
 			HWND hwndGenre=::GetDlgItem(hDlg,IDC_EVENTSEARCH_GENRE);
 			HTREEITEM hItem=TreeView_GetChild(hwndGenre,TVI_ROOT);
@@ -1747,9 +1747,9 @@ void CEventSearchSettingsDialog::SetGenreStatus()
 
 	TCHAR szText[256];
 	if (CheckCount>0)
-		StdUtil::snprintf(szText,lengthof(szText),TEXT("%d ŒÂ‘I‘ğ"),CheckCount);
+		StdUtil::snprintf(szText,lengthof(szText),TEXT("%d å€‹é¸æŠ"),CheckCount);
 	else
-		::lstrcpy(szText,TEXT("w’è‚È‚µ"));
+		::lstrcpy(szText,TEXT("æŒ‡å®šãªã—"));
 	::SetDlgItemText(m_hDlg,IDC_EVENTSEARCH_GENRE_STATUS,szText);
 }
 
@@ -1946,7 +1946,7 @@ INT_PTR CProgramSearchDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM l
 		m_SearchSettingsDialog.Create(hDlg);
 		m_SearchSettingsDialog.CheckButton(IDC_EVENTSEARCH_HIGHLIGHT,m_fHighlightResult);
 
-		// ŒŸõŒ‹‰Êˆê——
+		// æ¤œç´¢çµæœä¸€è¦§
 		{
 			HWND hwndList=::GetDlgItem(hDlg,IDC_PROGRAMSEARCH_RESULT);
 			ListView_SetExtendedListViewStyle(hwndList,LVS_EX_FULLROWSELECT | LVS_EX_LABELTIP);
@@ -1970,20 +1970,20 @@ INT_PTR CProgramSearchDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM l
 			lvc.mask=LVCF_FMT | LVCF_WIDTH | LVCF_TEXT;
 			lvc.fmt=LVCFMT_LEFT;
 			lvc.cx=m_ColumnWidth[COLUMN_CHANNEL]>=0?m_ColumnWidth[COLUMN_CHANNEL]:8*FontSize;
-			lvc.pszText=TEXT("ƒ`ƒƒƒ“ƒlƒ‹");
+			lvc.pszText=TEXT("ãƒãƒ£ãƒ³ãƒãƒ«");
 			ListView_InsertColumn(hwndList,COLUMN_CHANNEL,&lvc);
 			lvc.cx=m_ColumnWidth[COLUMN_TIME]>=0?m_ColumnWidth[COLUMN_TIME]:12*FontSize;
-			lvc.pszText=TEXT("“ú");
+			lvc.pszText=TEXT("æ—¥æ™‚");
 			ListView_InsertColumn(hwndList,COLUMN_TIME,&lvc);
 			lvc.cx=m_ColumnWidth[COLUMN_EVENTNAME]>=0?m_ColumnWidth[COLUMN_EVENTNAME]:20*FontSize;
-			lvc.pszText=TEXT("”Ô‘g–¼");
+			lvc.pszText=TEXT("ç•ªçµ„å");
 			ListView_InsertColumn(hwndList,COLUMN_EVENTNAME,&lvc);
 
 			m_SortColumn=-1;
 			m_fSortDescending=false;
 		}
 
-		// ”Ô‘gî•ñ
+		// ç•ªçµ„æƒ…å ±
 		{
 			LOGFONT lf;
 			HDC hdc;
@@ -2163,7 +2163,7 @@ INT_PTR CProgramSearchDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM l
 				NMLVEMPTYMARKUP *pnmMarkup=reinterpret_cast<NMLVEMPTYMARKUP*>(lParam);
 
 				pnmMarkup->dwFlags=EMF_CENTERED;
-				::lstrcpyW(pnmMarkup->szMarkup,L"ŒŸõ‚³‚ê‚½”Ô‘g‚Í‚ ‚è‚Ü‚¹‚ñ");
+				::lstrcpyW(pnmMarkup->szMarkup,L"æ¤œç´¢ã•ã‚ŒãŸç•ªçµ„ã¯ã‚ã‚Šã¾ã›ã‚“");
 				::SetWindowLongPtr(hDlg,DWLP_MSGRESULT,TRUE);
 			}
 			return TRUE;
@@ -2187,7 +2187,7 @@ INT_PTR CProgramSearchDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM l
 		break;
 
 	case WM_DESTROY:
-		// ŒŸõŒ‹‰Ê‚ÌƒJƒ‰ƒ€‚Ì•‚ğ•Û‘¶
+		// æ¤œç´¢çµæœã®ã‚«ãƒ©ãƒ ã®å¹…ã‚’ä¿å­˜
 		{
 			HWND hwndList=::GetDlgItem(hDlg,IDC_PROGRAMSEARCH_RESULT);
 			for (int i=0;i<lengthof(m_ColumnWidth);i++)
@@ -2233,13 +2233,13 @@ int CALLBACK CProgramSearchDialog::ResultCompareFunc(LPARAM lParam1,LPARAM lPara
 	int Cmp;
 
 	switch (LOWORD(lParamSort)) {
-	case COLUMN_CHANNEL:	// ƒ`ƒƒƒ“ƒlƒ‹
+	case COLUMN_CHANNEL:	// ãƒãƒ£ãƒ³ãƒãƒ«
 		Cmp=::lstrcmpi(pInfo1->GetChannelInfo().GetName(),pInfo2->GetChannelInfo().GetName());
 		break;
-	case COLUMN_TIME:		// “ú
+	case COLUMN_TIME:		// æ—¥æ™‚
 		Cmp=CompareSystemTime(&pInfo1->m_StartTime,&pInfo2->m_StartTime);
 		break;
-	case COLUMN_EVENTNAME:	// ”Ô‘g–¼
+	case COLUMN_EVENTNAME:	// ç•ªçµ„å
 		if (pInfo1->m_EventName.empty()) {
 			if (pInfo2->m_EventName.empty())
 				Cmp=0;
@@ -2278,7 +2278,7 @@ bool CProgramSearchDialog::AddSearchResult(CSearchEventInfo *pEventInfo)
 	pEventInfo->GetEndTime(&stEnd);
 	EpgUtil::EpgTimeToDisplayTime(&stEnd);
 	StdUtil::snprintf(szText,lengthof(szText),
-					  TEXT("%02d/%02d(%s) %02d:%02d`%02d:%02d"),
+					  TEXT("%02d/%02d(%s) %02d:%02dï½%02d:%02d"),
 					  stStart.wMonth,stStart.wDay,
 					  GetDayOfWeekText(stStart.wDayOfWeek),
 					  stStart.wHour,stStart.wMinute,
@@ -2342,7 +2342,7 @@ int CProgramSearchDialog::FormatEventTimeText(const CEventInfoData *pEventInfo,L
 	SYSTEMTIME stEnd;
 	if (pEventInfo->m_Duration>0 && pEventInfo->GetEndTime(&stEnd))
 		StdUtil::snprintf(szEndTime,lengthof(szEndTime),
-						  TEXT("`%d:%02d"),stEnd.wHour,stEnd.wMinute);
+						  TEXT("ï½%d:%02d"),stEnd.wHour,stEnd.wMinute);
 	else
 		szEndTime[0]='\0';
 	return StdUtil::snprintf(pszText,MaxLength,TEXT("%d/%d/%d(%s) %d:%02d%s\r\n"),
@@ -2546,7 +2546,7 @@ void CProgramSearchDialog::OnSearch()
 
 		if (Settings.fRegExp) {
 			if (!m_Searcher.InitializeRegExp()) {
-				::MessageBox(m_hDlg,TEXT("³‹K•\Œ»‚ª—˜—p‚Å‚«‚Ü‚¹‚ñB"),NULL,MB_OK | MB_ICONEXCLAMATION);
+				::MessageBox(m_hDlg,TEXT("æ­£è¦è¡¨ç¾ãŒåˆ©ç”¨ã§ãã¾ã›ã‚“ã€‚"),NULL,MB_OK | MB_ICONEXCLAMATION);
 				return;
 			}
 		}
@@ -2568,16 +2568,16 @@ void CProgramSearchDialog::OnSearch()
 	CStaticStringFormatter StatusFormat(szStatus,lengthof(szStatus));
 	if (!m_SearchSettings.Keyword.empty()) {
 		if (m_SearchSettings.fGenre)
-			StatusFormat.Append(TEXT("w’èƒWƒƒƒ“ƒ‹‚©‚ç "));
-		StatusFormat.AppendFormat(TEXT("%s ‚Éˆê’v‚·‚é”Ô‘g"),m_SearchSettings.Keyword.c_str());
+			StatusFormat.Append(TEXT("æŒ‡å®šã‚¸ãƒ£ãƒ³ãƒ«ã‹ã‚‰ "));
+		StatusFormat.AppendFormat(TEXT("%s ã«ä¸€è‡´ã™ã‚‹ç•ªçµ„"),m_SearchSettings.Keyword.c_str());
 	} else {
 		if (m_SearchSettings.fGenre)
-			StatusFormat.Append(TEXT("w’èƒWƒƒƒ“ƒ‹‚Ì”Ô‘g"));
+			StatusFormat.Append(TEXT("æŒ‡å®šã‚¸ãƒ£ãƒ³ãƒ«ã®ç•ªçµ„"));
 		else
-			StatusFormat.Append(TEXT("‚·‚×‚Ä‚Ì”Ô‘g"));
+			StatusFormat.Append(TEXT("ã™ã¹ã¦ã®ç•ªçµ„"));
 	}
 	StatusFormat.AppendFormat(
-		TEXT(" %d Œ (%d.%02d •b)"),
+		TEXT(" %d ä»¶ (%d.%02d ç§’)"),
 		ListView_GetItemCount(::GetDlgItem(m_hDlg,IDC_PROGRAMSEARCH_RESULT)),
 		SearchTime/1000,SearchTime/10%100);
 	::SetDlgItemText(m_hDlg,IDC_PROGRAMSEARCH_STATUS,StatusFormat.GetString());

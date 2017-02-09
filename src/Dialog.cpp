@@ -167,7 +167,7 @@ int CBasicDialog::ShowDialog(HWND hwndOwner,HINSTANCE hinst,LPCTSTR pszTemplate)
 	if (m_hDlg!=NULL)
 		return -1;
 
-	// ƒ_ƒCƒAƒƒO‚Í Per-Monitor DPI ‘Î‰ž
+	// ãƒ€ã‚¤ã‚¢ãƒ­ã‚°ã¯ Per-Monitor DPI å¯¾å¿œ
 	TVTest::PerMonitorDPIBlock DPIBlock;
 
 	return (int)::DialogBoxParam(hinst,pszTemplate,hwndOwner,DialogProc,
@@ -180,7 +180,7 @@ bool CBasicDialog::CreateDialogWindow(HWND hwndOwner,HINSTANCE hinst,LPCTSTR psz
 	if (m_hDlg!=NULL)
 		return false;
 
-	// ƒ_ƒCƒAƒƒO‚Í Per-Monitor DPI ‘Î‰ž
+	// ãƒ€ã‚¤ã‚¢ãƒ­ã‚°ã¯ Per-Monitor DPI å¯¾å¿œ
 	TVTest::PerMonitorDPIBlock DPIBlock;
 
 	if (::CreateDialogParam(hinst,pszTemplate,hwndOwner,DialogProc,
@@ -214,7 +214,7 @@ INT_PTR CALLBACK CBasicDialog::DialogProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPAR
 			}
 			::RemoveProp(hDlg,TEXT("This"));
 			pThis->OnDestroyed();
-			// ‚±‚±‚ÅŠù‚É pThis ‚ª delete ‚³‚ê‚Ä‚¢‚é‰Â”\«‚ª‚ ‚é
+			// ã“ã“ã§æ—¢ã« pThis ãŒ delete ã•ã‚Œã¦ã„ã‚‹å¯èƒ½æ€§ãŒã‚ã‚‹
 			return TRUE;
 		}
 	}

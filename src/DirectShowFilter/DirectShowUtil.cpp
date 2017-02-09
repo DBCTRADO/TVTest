@@ -72,7 +72,7 @@ bool CDirectShowFilterFinder::GetFilterInfo(
 bool CDirectShowFilterFinder::FindFilter(const GUID *pInTypes,int InTypeCount,
 	const GUID *pOutTypes,int OutTypeCount,DWORD Merit)
 {
-	// ƒtƒBƒ‹ƒ^‚ğŒŸõ‚·‚é
+	// ãƒ•ã‚£ãƒ«ã‚¿ã‚’æ¤œç´¢ã™ã‚‹
 	bool bRet = false;
 	IFilterMapper2 *pMapper=NULL;
 	HRESULT hr=::CoCreateInstance(CLSID_FilterMapper2, NULL, CLSCTX_INPROC, IID_IFilterMapper2, (void **)&pMapper);
@@ -82,20 +82,20 @@ bool CDirectShowFilterFinder::FindFilter(const GUID *pInTypes,int InTypeCount,
 
 		hr = pMapper->EnumMatchingFilters(
 			&pEnum,
-			0,					// —\–ñÏ‚İ
-			TRUE,				// Š®‘Sˆê’v‚ğg—p‚·‚é‚©
-			Merit,				// Å¬‚ÌƒƒŠƒbƒg
-			TRUE,				// 1 ‚ÂˆÈã‚Ì“ü—Íƒsƒ“‚©?
-			InTypeCount,		// “ü—Í‚ÌƒƒWƒƒ[ƒ^ƒCƒv/ƒTƒuƒ^ƒCƒv‚Ì‘Î‚Ì”
-			pInTypes,			// “ü—Í‚ÌƒƒWƒƒ[ƒ^ƒCƒv/ƒTƒuƒ^ƒCƒv‚Ì‘Î‚Ì”z—ñ
-			NULL,				// “ü—ÍƒƒfƒBƒA
-			NULL,				// “ü—Íƒsƒ“‚ÌƒJƒeƒSƒŠ
-			FALSE,				// ƒŒƒ“ƒ_ƒ‰‚Å‚È‚¯‚ê‚Î‚È‚ç‚È‚¢‚©
-			TRUE,				// 1 ‚ÂˆÈã‚Ìo—Íƒsƒ“‚©
-			OutTypeCount,		// o—Í‚ÌƒƒWƒƒ[ƒ^ƒCƒv/ƒTƒuƒ^ƒCƒv‚Ì‘Î‚Ì”
-			pOutTypes,			// o—Í‚ÌƒƒWƒƒ[ƒ^ƒCƒv/ƒTƒuƒ^ƒCƒv‚Ì‘Î‚Ì”z—ñ
-			NULL,				// o—ÍƒƒfƒBƒA
-			NULL);				// o—Íƒsƒ“‚ÌƒJƒeƒSƒŠ
+			0,					// äºˆç´„æ¸ˆã¿
+			TRUE,				// å®Œå…¨ä¸€è‡´ã‚’ä½¿ç”¨ã™ã‚‹ã‹
+			Merit,				// æœ€å°ã®ãƒ¡ãƒªãƒƒãƒˆ
+			TRUE,				// 1 ã¤ä»¥ä¸Šã®å…¥åŠ›ãƒ”ãƒ³ã‹?
+			InTypeCount,		// å…¥åŠ›ã®ãƒ¡ã‚¸ãƒ£ãƒ¼ã‚¿ã‚¤ãƒ—/ã‚µãƒ–ã‚¿ã‚¤ãƒ—ã®å¯¾ã®æ•°
+			pInTypes,			// å…¥åŠ›ã®ãƒ¡ã‚¸ãƒ£ãƒ¼ã‚¿ã‚¤ãƒ—/ã‚µãƒ–ã‚¿ã‚¤ãƒ—ã®å¯¾ã®é…åˆ—
+			NULL,				// å…¥åŠ›ãƒ¡ãƒ‡ã‚£ã‚¢
+			NULL,				// å…¥åŠ›ãƒ”ãƒ³ã®ã‚«ãƒ†ã‚´ãƒª
+			FALSE,				// ãƒ¬ãƒ³ãƒ€ãƒ©ã§ãªã‘ã‚Œã°ãªã‚‰ãªã„ã‹
+			TRUE,				// 1 ã¤ä»¥ä¸Šã®å‡ºåŠ›ãƒ”ãƒ³ã‹
+			OutTypeCount,		// å‡ºåŠ›ã®ãƒ¡ã‚¸ãƒ£ãƒ¼ã‚¿ã‚¤ãƒ—/ã‚µãƒ–ã‚¿ã‚¤ãƒ—ã®å¯¾ã®æ•°
+			pOutTypes,			// å‡ºåŠ›ã®ãƒ¡ã‚¸ãƒ£ãƒ¼ã‚¿ã‚¤ãƒ—/ã‚µãƒ–ã‚¿ã‚¤ãƒ—ã®å¯¾ã®é…åˆ—
+			NULL,				// å‡ºåŠ›ãƒ¡ãƒ‡ã‚£ã‚¢
+			NULL);				// å‡ºåŠ›ãƒ”ãƒ³ã®ã‚«ãƒ†ã‚´ãƒª
 		if (SUCCEEDED(hr)) {
 			IMoniker *pMoniker;
 			ULONG cFetched;
@@ -151,7 +151,7 @@ bool CDirectShowFilterFinder::FindFilter(const GUID *pidInType,const GUID *pidIn
 					  Merit);
 }
 
-// —Dæ‚·‚éƒtƒBƒ‹ƒ^‚ğƒŠƒXƒgæ’[‚É‚Á‚Ä‚­‚é
+// å„ªå…ˆã™ã‚‹ãƒ•ã‚£ãƒ«ã‚¿ã‚’ãƒªã‚¹ãƒˆå…ˆç«¯ã«æŒã£ã¦ãã‚‹
 bool CDirectShowFilterFinder::SetPreferredFilter(const CLSID &idFilter)
 {
 	std::vector<CFilterInfo> TmpList;
@@ -178,7 +178,7 @@ bool CDirectShowFilterFinder::SetPreferredFilter(const CLSID &idFilter)
 	return true;
 }
 
-// –³‹‚·‚éƒtƒBƒ‹ƒ^‚ğƒŠƒXƒgI’[‚É‚Á‚Ä‚­‚é
+// ç„¡è¦–ã™ã‚‹ãƒ•ã‚£ãƒ«ã‚¿ã‚’ãƒªã‚¹ãƒˆçµ‚ç«¯ã«æŒã£ã¦ãã‚‹
 bool CDirectShowFilterFinder::IgnoreFilterGoToTail(const CLSID idIgnoreClass,bool bRemoveIt)
 {
 	std::vector<CFilterInfo> TmpList;
@@ -186,7 +186,7 @@ bool CDirectShowFilterFinder::IgnoreFilterGoToTail(const CLSID idIgnoreClass,boo
 
 	for (i=0;i<m_FilterList.size();i++) {
 		if (m_FilterList[i].m_clsid != idIgnoreClass) {
-			// –³‹‚·‚é‚à‚ÌˆÈŠO
+			// ç„¡è¦–ã™ã‚‹ã‚‚ã®ä»¥å¤–
 			TmpList.push_back(m_FilterList[i]);
 		}
 	}
@@ -419,7 +419,7 @@ void DirectShowUtil::RemoveFromRot(const DWORD dwRegister)
 }
 
 
-// ƒtƒBƒ‹ƒ^‚©‚çw’èƒƒfƒBƒA‚Ìƒsƒ“‚ğŒŸõ‚·‚é
+// ãƒ•ã‚£ãƒ«ã‚¿ã‹ã‚‰æŒ‡å®šãƒ¡ãƒ‡ã‚£ã‚¢ã®ãƒ”ãƒ³ã‚’æ¤œç´¢ã™ã‚‹
 IPin* DirectShowUtil::GetFilterPin(IBaseFilter *pFilter, const PIN_DIRECTION dir, const AM_MEDIA_TYPE *pMediaType)
 {
 	IEnumPins *pEnumPins=NULL;
@@ -433,11 +433,11 @@ IPin* DirectShowUtil::GetFilterPin(IBaseFilter *pFilter, const PIN_DIRECTION dir
 			if(pPin->QueryPinInfo(&stPin)==S_OK){
 				if(stPin.dir==dir){
 					if(!pMediaType){
-						// •ûŒü‚³‚¦‚ ‚Á‚Ä‚¢‚ê‚ÎOK
+						// æ–¹å‘ã•ãˆã‚ã£ã¦ã„ã‚Œã°OK
 						pRetPin=pPin;
 						pRetPin->AddRef();
 						} else {
-						// DirectShow‚É‚Ü‚©‚¹‚Äƒsƒ“‚ğŒŸõ
+						// DirectShowã«ã¾ã‹ã›ã¦ãƒ”ãƒ³ã‚’æ¤œç´¢
 						if(pPin->QueryAccept(pMediaType)==S_OK){
 							pRetPin=pPin;
 							pRetPin->AddRef();
@@ -453,7 +453,7 @@ IPin* DirectShowUtil::GetFilterPin(IBaseFilter *pFilter, const PIN_DIRECTION dir
 	return pRetPin;
 }
 
-// ƒtƒBƒ‹ƒ^‚ÌƒvƒƒpƒeƒBƒy[ƒW‚ğŠJ‚­
+// ãƒ•ã‚£ãƒ«ã‚¿ã®ãƒ—ãƒ­ãƒ‘ãƒ†ã‚£ãƒšãƒ¼ã‚¸ã‚’é–‹ã
 bool DirectShowUtil::ShowPropertyPage(IBaseFilter *pFilter, HWND hWndParent)
 {
 	if (!pFilter)
@@ -476,15 +476,15 @@ bool DirectShowUtil::ShowPropertyPage(IBaseFilter *pFilter, HWND hWndParent)
 				hr = pFilter->QueryInterface(IID_IUnknown, (void **)&pFilterUnk);
 				if (SUCCEEDED(hr)) {
 					::OleCreatePropertyFrame(
-						hWndParent,             // eƒEƒBƒ“ƒhƒEB
-						0, 0,                   // —\–ñÏ‚İB
-						stFilterInfo.achName,   // ƒ_ƒCƒAƒƒO ƒ{ƒbƒNƒX‚ÌƒLƒƒƒvƒVƒ‡ƒ“B
-						1,                      // ƒIƒuƒWƒFƒNƒg” (ƒtƒBƒ‹ƒ^‚Ì‚İ)B
-						&pFilterUnk,            // ƒIƒuƒWƒFƒNƒg ƒ|ƒCƒ“ƒ^‚Ì”z—ñB
-						caGUID.cElems,          // ƒvƒƒpƒeƒB ƒy[ƒW”B
-						caGUID.pElems,          // ƒvƒƒpƒeƒB ƒy[ƒW CLSID ‚Ì”z—ñB
-						0,                      // ƒƒP[ƒ‹¯•ÊqB
-						0, NULL                 // —\–ñÏ‚İB
+						hWndParent,             // è¦ªã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã€‚
+						0, 0,                   // äºˆç´„æ¸ˆã¿ã€‚
+						stFilterInfo.achName,   // ãƒ€ã‚¤ã‚¢ãƒ­ã‚° ãƒœãƒƒã‚¯ã‚¹ã®ã‚­ãƒ£ãƒ—ã‚·ãƒ§ãƒ³ã€‚
+						1,                      // ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆæ•° (ãƒ•ã‚£ãƒ«ã‚¿ã®ã¿)ã€‚
+						&pFilterUnk,            // ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆ ãƒã‚¤ãƒ³ã‚¿ã®é…åˆ—ã€‚
+						caGUID.cElems,          // ãƒ—ãƒ­ãƒ‘ãƒ†ã‚£ ãƒšãƒ¼ã‚¸æ•°ã€‚
+						caGUID.pElems,          // ãƒ—ãƒ­ãƒ‘ãƒ†ã‚£ ãƒšãƒ¼ã‚¸ CLSID ã®é…åˆ—ã€‚
+						0,                      // ãƒ­ã‚±ãƒ¼ãƒ«è­˜åˆ¥å­ã€‚
+						0, NULL                 // äºˆç´„æ¸ˆã¿ã€‚
 					);
 					SAFE_RELEASE(pFilterUnk);
 					bRet = true;
@@ -519,16 +519,16 @@ bool DirectShowUtil::HasPropertyPage(IBaseFilter *pFilter)
 }
 
 #if 0
-// MpegƒfƒR[ƒ_‚ğ’Ç‰Á‚µ‚Äƒsƒ“Ú‘±‚ğs‚¤B
-// pUtil‚É®—ñÏ‚İƒfƒR[ƒ_—ñ‹“‚ğ“ü‚ê‚Ä‚¨‚­‚Æ‚»‚Ì®—ñ‡‚ÉÚ‘±‚ªs‚í‚ê‚éBNULL‚È‚çƒfƒtƒHƒ‹ƒg‡B
-//   ‚í‚´‚í‚´w’è‚·‚é——R : ‚±‚ÌƒNƒ‰ƒX‚ÉŒŸõ‚³‚ê‚½ƒtƒBƒ‹ƒ^‚ªMpeg2‚Ì‚à‚Ì‚Æ‚ÍŒÀ‚ç‚È‚¢ˆ×B
+// Mpegãƒ‡ã‚³ãƒ¼ãƒ€ã‚’è¿½åŠ ã—ã¦ãƒ”ãƒ³æ¥ç¶šã‚’è¡Œã†ã€‚
+// pUtilã«æ•´åˆ—æ¸ˆã¿ãƒ‡ã‚³ãƒ¼ãƒ€åˆ—æŒ™ã‚’å…¥ã‚Œã¦ãŠãã¨ãã®æ•´åˆ—é †ã«æ¥ç¶šãŒè¡Œã‚ã‚Œã‚‹ã€‚NULLãªã‚‰ãƒ‡ãƒ•ã‚©ãƒ«ãƒˆé †ã€‚
+//   ã‚ã–ã‚ã–æŒ‡å®šã™ã‚‹ç†ç”± : ã“ã®ã‚¯ãƒ©ã‚¹ã«æ¤œç´¢ã•ã‚ŒãŸãƒ•ã‚£ãƒ«ã‚¿ãŒMpeg2ã®ã‚‚ã®ã¨ã¯é™ã‚‰ãªã„ç‚ºã€‚
 //
-// ppMpeg2DecoderFilter ‚ÍÚ‘±‚Ég‚í‚ê‚½Mpeg2ƒCƒ“ƒ^[ƒtƒF[ƒX‚ğó‚¯‚Æ‚éB
-// ppCurrentOutputPin ‚ªã—¬‚ÉÚ‘±‚³‚ê‚½—LŒø‚Èƒsƒ“‚Å‚ ‚é‚Ì‚ª‘O’ñB
-// ppCurrentOutputPin ‚Í³íI—¹‚È‚ç‰ğ•ú‚³‚êAƒfƒR[ƒ_ƒtƒBƒ‹ƒ^‚Ìo—Íƒsƒ“‚ª*ppNewOutputPin‚É‚È‚éB
-// ppNewOutputPin==NULL ‚Ìê‡AƒfƒR[ƒ_ƒtƒBƒ‹ƒ^‚Ìo—Íƒsƒ“‚ª*ppCurrentOutputPin‚É‚È‚éBŒ³‚Ì*ppCurrentOutputPin‚Í‰ğ•ú‚³‚ê‚é
+// ppMpeg2DecoderFilter ã¯æ¥ç¶šã«ä½¿ã‚ã‚ŒãŸMpeg2ã‚¤ãƒ³ã‚¿ãƒ¼ãƒ•ã‚§ãƒ¼ã‚¹ã‚’å—ã‘ã¨ã‚‹ã€‚
+// ppCurrentOutputPin ãŒä¸Šæµã«æ¥ç¶šã•ã‚ŒãŸæœ‰åŠ¹ãªãƒ”ãƒ³ã§ã‚ã‚‹ã®ãŒå‰æã€‚
+// ppCurrentOutputPin ã¯æ­£å¸¸çµ‚äº†ãªã‚‰è§£æ”¾ã•ã‚Œã€ãƒ‡ã‚³ãƒ¼ãƒ€ãƒ•ã‚£ãƒ«ã‚¿ã®å‡ºåŠ›ãƒ”ãƒ³ãŒ*ppNewOutputPinã«ãªã‚‹ã€‚
+// ppNewOutputPin==NULL ã®å ´åˆã€ãƒ‡ã‚³ãƒ¼ãƒ€ãƒ•ã‚£ãƒ«ã‚¿ã®å‡ºåŠ›ãƒ”ãƒ³ãŒ*ppCurrentOutputPinã«ãªã‚‹ã€‚å…ƒã®*ppCurrentOutputPinã¯è§£æ”¾ã•ã‚Œã‚‹
 //
-// ¸”s‚µ‚½ê‡‚Å‚àƒtƒBƒ‹ƒ^‰ğ•ú‚Ís‚í‚ê‚È‚¢ƒpƒX‚ª‚ ‚é(Šù‚ÉÚ‘±Ï‚İ‚Ìê‡)B–ß‚èƒtƒBƒ‹ƒ^‚ÍŠm”F‚µ‚Ä‰ğ•ú‚·‚é‚±‚Æ
+// å¤±æ•—ã—ãŸå ´åˆã§ã‚‚ãƒ•ã‚£ãƒ«ã‚¿è§£æ”¾ã¯è¡Œã‚ã‚Œãªã„ãƒ‘ã‚¹ãŒã‚ã‚‹(æ—¢ã«æ¥ç¶šæ¸ˆã¿ã®å ´åˆ)ã€‚æˆ»ã‚Šãƒ•ã‚£ãƒ«ã‚¿ã¯ç¢ºèªã—ã¦è§£æ”¾ã™ã‚‹ã“ã¨
 bool DirectShowUtil::AppendMpeg2Decoder_and_Connect(IGraphBuilder *pFilterGraph, CDirectShowFilterFinder *pUtil, IBaseFilter **ppMpeg2DecoderFilter,wchar_t *lpszDecoderName,int iDecNameBufLen, IPin **ppCurrentOutputPin, IPin **ppNewOutputPin)
 {
 	HRESULT hr;
@@ -542,16 +542,16 @@ bool DirectShowUtil::AppendMpeg2Decoder_and_Connect(IGraphBuilder *pFilterGraph,
 		iDecNameBufLen = 128;
 		}
 
-	// ƒ|ƒCƒ“ƒ^ƒ`ƒFƒbƒN
+	// ãƒã‚¤ãƒ³ã‚¿ãƒã‚§ãƒƒã‚¯
 	if(!pFilterGraph || !ppMpeg2DecoderFilter || !ppCurrentOutputPin) return false;
-	// “¯‚¶ƒsƒ“ƒAƒhƒŒƒX‚È‚ç New==NULL ‚Å“ü—Í‚³‚ê‚½‚Ì‚Æ“¯‹`
+	// åŒã˜ãƒ”ãƒ³ã‚¢ãƒ‰ãƒ¬ã‚¹ãªã‚‰ New==NULL ã§å…¥åŠ›ã•ã‚ŒãŸã®ã¨åŒç¾©
 	if(ppCurrentOutputPin==ppNewOutputPin) ppNewOutputPin = NULL;
-	// w’è‚ª‚È‚¢ê‡‚ÌƒtƒBƒ‹ƒ^ŒŸõ
+	// æŒ‡å®šãŒãªã„å ´åˆã®ãƒ•ã‚£ãƒ«ã‚¿æ¤œç´¢
 	if(!pUtil){
 		pUtil = &cUtil;
 		if(!pUtil->FindFilter(&MEDIATYPE_Video,&MEDIASUBTYPE_MPEG2_VIDEO)) return false;
 		}
-	// –ß‚è’l‚ğƒNƒŠƒA
+	// æˆ»ã‚Šå€¤ã‚’ã‚¯ãƒªã‚¢
 	*ppMpeg2DecoderFilter = NULL;
 
 	bRet=false;
@@ -580,38 +580,38 @@ bool DirectShowUtil::AppendMpeg2Decoder_and_Connect(IGraphBuilder *pFilterGraph,
 		}
 		}
 	if(!bRet) {
-		// ‘S‘g‚İ‡‚í‚¹‚Å“K‡ƒfƒR[ƒ_‚ª–³‚©‚Á‚½
+		// å…¨çµ„ã¿åˆã‚ã›ã§é©åˆãƒ‡ã‚³ãƒ¼ãƒ€ãŒç„¡ã‹ã£ãŸ
 		return false;
 	}
-	// Ú‘±‚Ég‚Á‚½ƒsƒ“‰ğ•ú
+	// æ¥ç¶šã«ä½¿ã£ãŸãƒ”ãƒ³è§£æ”¾
 	SAFE_RELEASE(*ppCurrentOutputPin);
 	SAFE_RELEASE(pInput);
-	// ŸƒtƒBƒ‹ƒ^‚Ö‚Ìo—Íƒsƒ“‚ğ’T‚·
+	// æ¬¡ãƒ•ã‚£ãƒ«ã‚¿ã¸ã®å‡ºåŠ›ãƒ”ãƒ³ã‚’æ¢ã™
 	IPin *pNewOutput = GetFilterPin(*ppMpeg2DecoderFilter, PINDIR_OUTPUT);
 	if(!pNewOutput){
-		// o—Íƒsƒ“‚ªŒ©‚Â‚©‚ç‚È‚¢
+		// å‡ºåŠ›ãƒ”ãƒ³ãŒè¦‹ã¤ã‹ã‚‰ãªã„
 		return false;
 		}
 	if(ppNewOutputPin){
-		// Vo—Íƒsƒ“‚Éo—Í
-		// Œ³‚Ìo—Íƒsƒ“‚ÍŠù‚É‰ğ•úÏ‚İ
+		// æ–°å‡ºåŠ›ãƒ”ãƒ³ã«å‡ºåŠ›
+		// å…ƒã®å‡ºåŠ›ãƒ”ãƒ³ã¯æ—¢ã«è§£æ”¾æ¸ˆã¿
 		*ppNewOutputPin = pNewOutput;
 		}else{
-		// o—Íƒsƒ“‚ğXV(ppCurrentOutputPin==ppNewOutputPin‚Ìê‡‚Å‚àÀ‘Ì‚ªã‘‚«‚¾‚©‚çXV‚Æ‚È‚é)
-		// Œ³‚Ìo—Íƒsƒ“‚ÍŠù‚É‰ğ•úÏ‚İ
+		// å‡ºåŠ›ãƒ”ãƒ³ã‚’æ›´æ–°(ppCurrentOutputPin==ppNewOutputPinã®å ´åˆã§ã‚‚å®Ÿä½“ãŒä¸Šæ›¸ãã ã‹ã‚‰æ›´æ–°ã¨ãªã‚‹)
+		// å…ƒã®å‡ºåŠ›ãƒ”ãƒ³ã¯æ—¢ã«è§£æ”¾æ¸ˆã¿
 		*ppCurrentOutputPin = pNewOutput;
 		}
 	return true;
 }
 #endif
 
-// w’èƒtƒBƒ‹ƒ^Œo—R‚µ‚Äƒsƒ“Ú‘±‚ğs‚¤(å‚É“ü—Í=1/o—Í=1‚ÌŒo—RŒ^ƒtƒBƒ‹ƒ^Ú‘±—p)
-// Filterw’è”Å
+// æŒ‡å®šãƒ•ã‚£ãƒ«ã‚¿çµŒç”±ã—ã¦ãƒ”ãƒ³æ¥ç¶šã‚’è¡Œã†(ä¸»ã«å…¥åŠ›=1/å‡ºåŠ›=1ã®çµŒç”±å‹ãƒ•ã‚£ãƒ«ã‚¿æ¥ç¶šç”¨)
+// FilteræŒ‡å®šç‰ˆ
 //
-// lpwszFilterName ‚Í NULL ‚Å‚à—Ç‚¢B
-// ppCurrentOutputPin ‚ªã—¬‚ÉÚ‘±‚³‚ê‚½—LŒø‚Èƒsƒ“‚Å‚ ‚é‚Ì‚ª‘O’ñB
-// ppCurrentOutputPin ‚Í³íI—¹‚È‚ç‰ğ•ú‚³‚êAƒtƒBƒ‹ƒ^‚Ìo—Íƒsƒ“‚ª*ppNewOutputPin‚É‚È‚éB
-// ppNewOutputPin==NULL ‚Ìê‡AƒtƒBƒ‹ƒ^‚Ìo—Íƒsƒ“‚ª*ppCurrentOutputPin‚É‚È‚éBŒ³‚Ì*ppCurrentOutputPin‚Í‰ğ•ú‚³‚ê‚é
+// lpwszFilterName ã¯ NULL ã§ã‚‚è‰¯ã„ã€‚
+// ppCurrentOutputPin ãŒä¸Šæµã«æ¥ç¶šã•ã‚ŒãŸæœ‰åŠ¹ãªãƒ”ãƒ³ã§ã‚ã‚‹ã®ãŒå‰æã€‚
+// ppCurrentOutputPin ã¯æ­£å¸¸çµ‚äº†ãªã‚‰è§£æ”¾ã•ã‚Œã€ãƒ•ã‚£ãƒ«ã‚¿ã®å‡ºåŠ›ãƒ”ãƒ³ãŒ*ppNewOutputPinã«ãªã‚‹ã€‚
+// ppNewOutputPin==NULL ã®å ´åˆã€ãƒ•ã‚£ãƒ«ã‚¿ã®å‡ºåŠ›ãƒ”ãƒ³ãŒ*ppCurrentOutputPinã«ãªã‚‹ã€‚å…ƒã®*ppCurrentOutputPinã¯è§£æ”¾ã•ã‚Œã‚‹
 //
 HRESULT DirectShowUtil::AppendFilterAndConnect(IGraphBuilder *pFilterGraph,
 				IBaseFilter *pFilter,LPCWSTR lpwszFilterName,
@@ -619,48 +619,48 @@ HRESULT DirectShowUtil::AppendFilterAndConnect(IGraphBuilder *pFilterGraph,
 {
 	HRESULT hr;
 
-	// ƒ|ƒCƒ“ƒ^ƒ`ƒFƒbƒN
+	// ãƒã‚¤ãƒ³ã‚¿ãƒã‚§ãƒƒã‚¯
 	if (!pFilterGraph || !pFilter || !ppCurrentOutputPin)
 		return E_INVALIDARG;
-	// “¯‚¶ƒsƒ“ƒAƒhƒŒƒX‚È‚ç New==NULL ‚Å“ü—Í‚³‚ê‚½‚Ì‚Æ“¯‹`
+	// åŒã˜ãƒ”ãƒ³ã‚¢ãƒ‰ãƒ¬ã‚¹ãªã‚‰ New==NULL ã§å…¥åŠ›ã•ã‚ŒãŸã®ã¨åŒç¾©
 	if (ppCurrentOutputPin==ppNewOutputPin)
 		ppNewOutputPin = NULL;
 	if (!lpwszFilterName)
 		lpwszFilterName = L"No Name";
 	hr = pFilterGraph->AddFilter(pFilter, lpwszFilterName);
 	if (FAILED(hr)) {
-		// ƒtƒBƒ‹ƒ^‚É’Ç‰Á¸”s
+		// ãƒ•ã‚£ãƒ«ã‚¿ã«è¿½åŠ å¤±æ•—
 		return hr;
 	}
 	IPin *pInput = GetFilterPin(pFilter, PINDIR_INPUT);
 	if (!pInput) {
-		// “ü—Íƒsƒ“‚ªŒ©‚Â‚©‚ç‚È‚¢
+		// å…¥åŠ›ãƒ”ãƒ³ãŒè¦‹ã¤ã‹ã‚‰ãªã„
 		pFilterGraph->RemoveFilter(pFilter);
 		return E_FAIL;
 	}
-	// Ú‘±
+	// æ¥ç¶š
 	if (fDirect)
 		hr = pFilterGraph->ConnectDirect(*ppCurrentOutputPin,pInput,NULL);
 	else
 		hr = pFilterGraph->Connect(*ppCurrentOutputPin,pInput);
 	if (FAILED(hr)) {
-		// Ú‘±‚Å‚«‚È‚¢
+		// æ¥ç¶šã§ããªã„
 		SAFE_RELEASE(pInput);
 		pFilterGraph->RemoveFilter(pFilter);
 		return hr;
 	}
-	// Ú‘±‚Ég‚Á‚½ƒsƒ“‰ğ•ú
+	// æ¥ç¶šã«ä½¿ã£ãŸãƒ”ãƒ³è§£æ”¾
 	SAFE_RELEASE(*ppCurrentOutputPin);
 	SAFE_RELEASE(pInput);
-	// ŸƒtƒBƒ‹ƒ^‚Ö‚Ìo—Íƒsƒ“‚ğ’T‚·(o—Íƒsƒ“‚ª–³‚­‚Ä‚àˆ—‚Í‘±s)
+	// æ¬¡ãƒ•ã‚£ãƒ«ã‚¿ã¸ã®å‡ºåŠ›ãƒ”ãƒ³ã‚’æ¢ã™(å‡ºåŠ›ãƒ”ãƒ³ãŒç„¡ãã¦ã‚‚å‡¦ç†ã¯ç¶šè¡Œ)
 	IPin *pNewOutput = GetFilterPin(pFilter, PINDIR_OUTPUT);
 	if (ppNewOutputPin) {
-		// Vo—Íƒsƒ“‚Éo—Í
-		// Œ³‚Ìo—Íƒsƒ“‚ÍŠù‚É‰ğ•úÏ‚İ
+		// æ–°å‡ºåŠ›ãƒ”ãƒ³ã«å‡ºåŠ›
+		// å…ƒã®å‡ºåŠ›ãƒ”ãƒ³ã¯æ—¢ã«è§£æ”¾æ¸ˆã¿
 		*ppNewOutputPin = pNewOutput;
 	} else {
-		// o—Íƒsƒ“‚ğXV(ppCurrentOutputPin==ppNewOutputPin‚Ìê‡‚Å‚àÀ‘Ì‚ªã‘‚«‚¾‚©‚çXV‚Æ‚È‚é)
-		// Œ³‚Ìo—Íƒsƒ“‚ÍŠù‚É‰ğ•úÏ‚İ
+		// å‡ºåŠ›ãƒ”ãƒ³ã‚’æ›´æ–°(ppCurrentOutputPin==ppNewOutputPinã®å ´åˆã§ã‚‚å®Ÿä½“ãŒä¸Šæ›¸ãã ã‹ã‚‰æ›´æ–°ã¨ãªã‚‹)
+		// å…ƒã®å‡ºåŠ›ãƒ”ãƒ³ã¯æ—¢ã«è§£æ”¾æ¸ˆã¿
 		*ppCurrentOutputPin = pNewOutput;
 	}
 #ifdef _DEBUG
@@ -669,21 +669,21 @@ HRESULT DirectShowUtil::AppendFilterAndConnect(IGraphBuilder *pFilterGraph,
 	return S_OK;
 }
 
-// w’èƒtƒBƒ‹ƒ^Œo—R‚µ‚Äƒsƒ“Ú‘±‚ğs‚¤(å‚É“ü—Í=1/o—Í=1‚ÌŒo—RŒ^ƒtƒBƒ‹ƒ^Ú‘±—p)
-// CLSIDw’è”Å
+// æŒ‡å®šãƒ•ã‚£ãƒ«ã‚¿çµŒç”±ã—ã¦ãƒ”ãƒ³æ¥ç¶šã‚’è¡Œã†(ä¸»ã«å…¥åŠ›=1/å‡ºåŠ›=1ã®çµŒç”±å‹ãƒ•ã‚£ãƒ«ã‚¿æ¥ç¶šç”¨)
+// CLSIDæŒ‡å®šç‰ˆ
 //
-// AppendFilterAndConnect(Filterw’è”Å)‚Ìà–¾‚ğQÆB
-// guidFilter‚Í—LŒø‚ÈDirectShowƒtƒBƒ‹ƒ^‚ÌGUID‚ğw’è‚·‚éB
-// ppAppendedFilter ‚Í’Ç‰Á‚µ‚½ƒtƒBƒ‹ƒ^‚ğó‚¯æ‚éB
+// AppendFilterAndConnect(FilteræŒ‡å®šç‰ˆ)ã®èª¬æ˜ã‚’å‚ç…§ã€‚
+// guidFilterã¯æœ‰åŠ¹ãªDirectShowãƒ•ã‚£ãƒ«ã‚¿ã®GUIDã‚’æŒ‡å®šã™ã‚‹ã€‚
+// ppAppendedFilter ã¯è¿½åŠ ã—ãŸãƒ•ã‚£ãƒ«ã‚¿ã‚’å—ã‘å–ã‚‹ã€‚
 HRESULT DirectShowUtil::AppendFilterAndConnect(IGraphBuilder *pFilterGraph,
 	const CLSID guidFilter,LPCWSTR lpwszFilterName,IBaseFilter **ppAppendedFilter,
 	IPin **ppCurrentOutputPin,IPin **ppNewOutputPin,bool fDirect)
 {
-	// ƒtƒBƒ‹ƒ^ƒCƒ“ƒXƒ^ƒ“ƒXì¬
+	// ãƒ•ã‚£ãƒ«ã‚¿ã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚¹ä½œæˆ
 	HRESULT hr = ::CoCreateInstance(guidFilter, NULL, CLSCTX_INPROC_SERVER,
 				IID_IBaseFilter, reinterpret_cast<LPVOID*>(ppAppendedFilter));
 	if (FAILED(hr)) {
-		// ƒCƒ“ƒXƒ^ƒ“ƒXì¬¸”s
+		// ã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚¹ä½œæˆå¤±æ•—
 		return hr;
 	}
 	hr = AppendFilterAndConnect(pFilterGraph,*ppAppendedFilter,lpwszFilterName,
@@ -695,17 +695,17 @@ HRESULT DirectShowUtil::AppendFilterAndConnect(IGraphBuilder *pFilterGraph,
 	return S_OK;
 }
 
-// F‹óŠÔ•ÏŠ·ƒtƒBƒ‹ƒ^‚ğŒo—R‚µ‚Äƒsƒ“Ú‘±‚ğs‚¤(“Á’èƒGƒtƒFƒNƒgƒtƒBƒ‹ƒ^‚Ö‚Ì‘Î‰‚Ì‚½‚ß‚ÌF‹óŠÔ•ÏŠ·‚ª•K—v‚Èê‡‚Ì‚½‚ß)
+// è‰²ç©ºé–“å¤‰æ›ãƒ•ã‚£ãƒ«ã‚¿ã‚’çµŒç”±ã—ã¦ãƒ”ãƒ³æ¥ç¶šã‚’è¡Œã†(ç‰¹å®šã‚¨ãƒ•ã‚§ã‚¯ãƒˆãƒ•ã‚£ãƒ«ã‚¿ã¸ã®å¯¾å¿œã®ãŸã‚ã®è‰²ç©ºé–“å¤‰æ›ãŒå¿…è¦ãªå ´åˆã®ãŸã‚)
 //
-// AppendFilterAndConnect(Filterw’è”Å)‚Ìà–¾‚ğQÆ
-// ppColorSpaceConverterFilter ‚Í’Ç‰Á‚µ‚½ƒtƒBƒ‹ƒ^‚ğó‚¯æ‚éˆ×‚Ìƒ|ƒCƒ“ƒ^
+// AppendFilterAndConnect(FilteræŒ‡å®šç‰ˆ)ã®èª¬æ˜ã‚’å‚ç…§
+// ppColorSpaceConverterFilter ã¯è¿½åŠ ã—ãŸãƒ•ã‚£ãƒ«ã‚¿ã‚’å—ã‘å–ã‚‹ç‚ºã®ãƒã‚¤ãƒ³ã‚¿
 HRESULT DirectShowUtil::AppendColorSpaceConverterFilter_and_Connect(IGraphBuilder *pFilterGraph, IBaseFilter **ppColorSpaceConverterFilter, IPin **ppCurrentOutputPin, IPin **ppNewOutputPin)
 {
 	return AppendFilterAndConnect(pFilterGraph,CLSID_ColorSpaceConverter,L"Color Space Converter",ppColorSpaceConverterFilter,ppCurrentOutputPin,ppNewOutputPin);
 }
 
-// ƒŒƒ“ƒ_ƒ‰‚Ìo—ÍæƒrƒfƒIƒEƒBƒ“ƒhƒE‚ÌƒCƒ“ƒ^[ƒtƒF[ƒXæ“¾
-// EVRg—p‚ÍMF_GetVideoDisplayControl()‚ğg‚¤
+// ãƒ¬ãƒ³ãƒ€ãƒ©ã®å‡ºåŠ›å…ˆãƒ“ãƒ‡ã‚ªã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã®ã‚¤ãƒ³ã‚¿ãƒ¼ãƒ•ã‚§ãƒ¼ã‚¹å–å¾—
+// EVRä½¿ç”¨æ™‚ã¯MF_GetVideoDisplayControl()ã‚’ä½¿ã†
 IVideoWindow* DirectShowUtil::GetVideoWindow(IGraphBuilder *pGraph)
 {
 	IVideoWindow *pVideoWindow;
@@ -783,22 +783,22 @@ bool DirectShowUtil::FilterGrapph_Pause(IGraphBuilder *pFilterGraph)
 
 
 //////////////////////////////////////////////////////////////////////
-// ˆÈ‰º EVRê—pƒ†[ƒeƒBƒŠƒeƒB
+// ä»¥ä¸‹ EVRå°‚ç”¨ãƒ¦ãƒ¼ãƒ†ã‚£ãƒªãƒ†ã‚£
 
 #ifdef USE_MEDIA_FOUNDATION
 
-// EVRê—p : ‰Šú‰»ˆ—
+// EVRå°‚ç”¨ : åˆæœŸåŒ–å‡¦ç†
 void DirectShowUtil::MF_Init()
 {
 	::MFStartup(MF_VERSION);
 };
 
-// EVRê—p : I—¹ˆ—
+// EVRå°‚ç”¨ : çµ‚äº†å‡¦ç†
 void DirectShowUtil::MF_Term() {
 	::MFShutdown();
 };
 
-// EVRê—p : EVRİ’è—pƒCƒ“ƒ^[ƒtƒF[ƒX‚Ìæ“¾
+// EVRå°‚ç”¨ : EVRè¨­å®šç”¨ã‚¤ãƒ³ã‚¿ãƒ¼ãƒ•ã‚§ãƒ¼ã‚¹ã®å–å¾—
 IEVRFilterConfig* DirectShowUtil::MF_GetEVRFilterConfig(IBaseFilter *pEvr)
 {
 	IEVRFilterConfig *pEvrFilterConfig;
@@ -809,7 +809,7 @@ IEVRFilterConfig* DirectShowUtil::MF_GetEVRFilterConfig(IBaseFilter *pEvr)
 	return NULL;
 }
 
-// EVRê—p : EVR‚©‚çMF‚ÌƒT[ƒrƒXæ“¾—pƒCƒ“ƒ^[ƒtƒF[ƒX‚Ìæ“¾
+// EVRå°‚ç”¨ : EVRã‹ã‚‰MFã®ã‚µãƒ¼ãƒ“ã‚¹å–å¾—ç”¨ã‚¤ãƒ³ã‚¿ãƒ¼ãƒ•ã‚§ãƒ¼ã‚¹ã®å–å¾—
 IMFGetService* DirectShowUtil::MF_GetService(IBaseFilter *pEvr)
 {
 	IMFGetService *pMFGetService;
@@ -820,7 +820,7 @@ IMFGetService* DirectShowUtil::MF_GetService(IBaseFilter *pEvr)
 	return NULL;
 }
 
-// EVRê—p : “ü—ÍƒXƒgƒŠ[ƒ€”‚ğİ’è‚·‚éi’Êí‚Í‚Pj
+// EVRå°‚ç”¨ : å…¥åŠ›ã‚¹ãƒˆãƒªãƒ¼ãƒ æ•°ã‚’è¨­å®šã™ã‚‹ï¼ˆé€šå¸¸ã¯ï¼‘ï¼‰
 bool DirectShowUtil::MF_SetNumberOfStreams(IBaseFilter *pEvr,int iStreamNumber)
 {
 	IEVRFilterConfig *pFilterConfig = MF_GetEVRFilterConfig(pEvr);
@@ -832,7 +832,7 @@ bool DirectShowUtil::MF_SetNumberOfStreams(IBaseFilter *pEvr,int iStreamNumber)
 	return false;
 }
 
-// EVRê—p : ƒfƒBƒXƒvƒŒƒC‘€ì—pƒCƒ“ƒ^[ƒtƒF[ƒX‚Ìæ“¾
+// EVRå°‚ç”¨ : ãƒ‡ã‚£ã‚¹ãƒ—ãƒ¬ã‚¤æ“ä½œç”¨ã‚¤ãƒ³ã‚¿ãƒ¼ãƒ•ã‚§ãƒ¼ã‚¹ã®å–å¾—
 IMFVideoDisplayControl* DirectShowUtil::MF_GetVideoDisplayControl(IBaseFilter *pEvr)
 {
 	IMFGetService *pService = MF_GetService(pEvr);
@@ -847,7 +847,7 @@ IMFVideoDisplayControl* DirectShowUtil::MF_GetVideoDisplayControl(IBaseFilter *p
 	return NULL;
 }
 
-// EVRê—p : ƒrƒfƒIƒ~ƒLƒT‘€ì—pƒCƒ“ƒ^[ƒtƒF[ƒX‚Ìæ“¾
+// EVRå°‚ç”¨ : ãƒ“ãƒ‡ã‚ªãƒŸã‚­ã‚µæ“ä½œç”¨ã‚¤ãƒ³ã‚¿ãƒ¼ãƒ•ã‚§ãƒ¼ã‚¹ã®å–å¾—
 IMFVideoMixerControl* DirectShowUtil::MF_GetVideoMixerControl(IBaseFilter *pEvr)
 {
 	IMFGetService *pService = MF_GetService(pEvr);
@@ -862,7 +862,7 @@ IMFVideoMixerControl* DirectShowUtil::MF_GetVideoMixerControl(IBaseFilter *pEvr)
 	return NULL;
 }
 
-// EVRê—p : ƒrƒfƒIƒvƒƒZƒbƒT‘€ì—pƒCƒ“ƒ^[ƒtƒF[ƒX‚Ìæ“¾
+// EVRå°‚ç”¨ : ãƒ“ãƒ‡ã‚ªãƒ—ãƒ­ã‚»ãƒƒã‚µæ“ä½œç”¨ã‚¤ãƒ³ã‚¿ãƒ¼ãƒ•ã‚§ãƒ¼ã‚¹ã®å–å¾—
 IMFVideoProcessor* DirectShowUtil::MF_GetVideoProcessor(IBaseFilter *pEvr)
 {
 	IMFGetService *pService = MF_GetService(pEvr);

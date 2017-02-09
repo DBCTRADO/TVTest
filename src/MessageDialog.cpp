@@ -75,7 +75,7 @@ INT_PTR CALLBACK CMessageDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARA
 				CRichEditUtil::AppendText(hwndEdit,pThis->m_Text.c_str(),&cf);
 			}
 			if (!pThis->m_SystemMessage.empty()) {
-				CRichEditUtil::AppendText(hwndEdit,TEXT("\n\nWindows‚ÌƒGƒ‰[ƒƒbƒZ[ƒW :\n"),&cfBold);
+				CRichEditUtil::AppendText(hwndEdit,TEXT("\n\nWindowsã®ã‚¨ãƒ©ãƒ¼ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸ :\n"),&cfBold);
 				CRichEditUtil::AppendText(hwndEdit,pThis->m_SystemMessage.c_str(),&cf);
 			}
 			const int MaxWidth=CRichEditUtil::GetMaxLineWidth(hwndEdit)+8;
@@ -178,7 +178,7 @@ INT_PTR CALLBACK CMessageDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARA
 				POINT pt;
 
 				hmenu=::CreatePopupMenu();
-				::AppendMenu(hmenu,MFT_STRING | MFS_ENABLED,IDC_ERROR_COPY,TEXT("ƒRƒs[(&C)"));
+				::AppendMenu(hmenu,MFT_STRING | MFS_ENABLED,IDC_ERROR_COPY,TEXT("ã‚³ãƒ”ãƒ¼(&C)"));
 				::GetCursorPos(&pt);
 				::TrackPopupMenu(hmenu,TPM_RIGHTBUTTON,pt.x,pt.y,0,hDlg,NULL);
 				::DestroyMenu(hmenu);
@@ -244,7 +244,7 @@ bool CMessageDialog::Show(HWND hwndOwner,MessageType Type,LPCTSTR pszText,LPCTST
 		if (pszSystemMessage!=NULL) {
 			if (!Formatter.IsEmpty())
 				Formatter.Append(TEXT("\n\n"));
-			Formatter.Append(TEXT("Windows‚ÌƒGƒ‰[ƒƒbƒZ[ƒW:\n"));
+			Formatter.Append(TEXT("Windowsã®ã‚¨ãƒ©ãƒ¼ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸:\n"));
 			Formatter.Append(pszSystemMessage);
 		}
 		return ::MessageBox(hwndOwner,Formatter.GetString(),pszCaption,

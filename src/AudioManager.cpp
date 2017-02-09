@@ -223,7 +223,7 @@ CAudioManager::DualMonoMode CAudioManager::GetSelectedDualMonoMode() const
 
 bool CAudioManager::OnServiceUpdated()
 {
-	// PMT �̏�񂩂特���̃��X�g���쐬
+	// PMT の情報から音声のリストを作成
 	CBlockLock Lock(&m_Lock);
 	CDtvEngine &DtvEngine=GetAppClass().CoreEngine.m_DtvEngine;
 
@@ -277,7 +277,7 @@ bool CAudioManager::OnServiceUpdated()
 			}
 		}
 	} else {
-		// �I������Ă���ID�̃X�g���[���������Ȃ����烊�Z�b�g
+		// 選択されていたIDのストリームが無くなったらリセット
 		if (m_SelectedAudio.ID!=ID_INVALID) {
 			if (std::find(m_AudioComponentList.begin(),
 						  m_AudioComponentList.end(),
@@ -292,7 +292,7 @@ bool CAudioManager::OnServiceUpdated()
 
 bool CAudioManager::OnEventUpdated()
 {
-	// EIT �̏�񂩂特���̃��X�g���쐬
+	// EIT の情報から音声のリストを作成
 	CBlockLock Lock(&m_Lock);
 	CDtvEngine &DtvEngine=GetAppClass().CoreEngine.m_DtvEngine;
 
@@ -383,7 +383,7 @@ bool CAudioManager::OnEventUpdated()
 
 void CAudioManager::MakeAudioList()
 {
-	// PMT �� EIT �̏��𓝍����ĉ����̃��X�g���쐬
+	// PMT と EIT の情報を統合して音声のリストを作成
 	m_AudioList.clear();
 
 	for (size_t i=0;i<m_AudioComponentList.size();i++) {

@@ -429,17 +429,17 @@ LRESULT CTitleBar::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 		case TTN_NEEDTEXT:
 			{
 				static const LPTSTR pszToolTip[] = {
-					TEXT("Å¬‰»"),
-					TEXT("Å‘å‰»"),
-					TEXT("‘S‰æ–Ê•\¦"),
-					TEXT("•Â‚¶‚é"),
+					TEXT("æœ€å°åŒ–"),
+					TEXT("æœ€å¤§åŒ–"),
+					TEXT("å…¨ç”»é¢è¡¨ç¤º"),
+					TEXT("é–‰ã˜ã‚‹"),
 				};
 				LPNMTTDISPINFO pnmttdi=reinterpret_cast<LPNMTTDISPINFO>(lParam);
 
 				if (m_fMaximized && pnmttdi->hdr.idFrom==ITEM_MAXIMIZE)
-					pnmttdi->lpszText=TEXT("Œ³‚ÌƒTƒCƒY‚É–ß‚·");
+					pnmttdi->lpszText=TEXT("å…ƒã®ã‚µã‚¤ã‚ºã«æˆ»ã™");
 				else if (m_fFullscreen && pnmttdi->hdr.idFrom==ITEM_FULLSCREEN)
-					pnmttdi->lpszText=TEXT("‘S‰æ–Ê•\¦‰ğœ");
+					pnmttdi->lpszText=TEXT("å…¨ç”»é¢è¡¨ç¤ºè§£é™¤");
 				else
 					pnmttdi->lpszText=pszToolTip[pnmttdi->hdr.idFrom-ITEM_BUTTON_FIRST];
 				pnmttdi->hinst=NULL;
@@ -612,8 +612,8 @@ void CTitleBar::Draw(HDC hdc,const RECT &PaintRect)
 				const TVTest::Theme::Style &Style=
 					fHighlight?m_Theme.HighlightIconStyle:m_Theme.IconStyle;
 
-				// ‚Æ‚è‚ ‚¦‚¸•Ï‚É‚È‚ç‚È‚¢‚æ‚¤‚É‚·‚éB
-				// ”wŒi‚ğ“§‰ßw’è‚Å‚«‚é‚æ‚¤‚É‚µ‚½•û‚ª—Ç‚¢B
+				// ã¨ã‚Šã‚ãˆãšå¤‰ã«ãªã‚‰ãªã„ã‚ˆã†ã«ã™ã‚‹ã€‚
+				// èƒŒæ™¯ã‚’é€éæŒ‡å®šã§ãã‚‹ã‚ˆã†ã«ã—ãŸæ–¹ãŒè‰¯ã„ã€‚
 				if (Style.Back.Border.Type!=TVTest::Theme::BORDER_NONE
 						|| Style.Back.Fill!=m_Theme.CaptionStyle.Back.Fill)
 					ThemeDraw.Draw(Style.Back,rc);

@@ -134,7 +134,7 @@ bool CSideBarOptions::ReadSettings(CSettings &Settings)
 		m_Place=(PlaceType)Value;
 
 	if (Settings.Read(TEXT("ItemCount"),&NumItems) && NumItems>0) {
-		// ‚Í‚Ü‚é‚Ì‚ð–h‚®‚½‚ß‚ÉA200‚ðãŒÀ‚É‚µ‚Ä‚¨‚­
+		// ã¯ã¾ã‚‹ã®ã‚’é˜²ããŸã‚ã«ã€200ã‚’ä¸Šé™ã«ã—ã¦ãŠã
 		if (NumItems>=200)
 			NumItems=200;
 
@@ -261,7 +261,7 @@ HBITMAP CSideBarOptions::CreateImage(IconSizeType SizeType,SIZE *pIconSize)
 									 IMAGE_BITMAP,0,0,LR_CREATEDIBSECTION);
 
 	if (hbm!=NULL) {
-		// •\Ž¦”{—¦‚ÌƒAƒCƒRƒ“‚ð•`‰æ‚·‚é
+		// è¡¨ç¤ºå€çŽ‡ã®ã‚¢ã‚¤ã‚³ãƒ³ã‚’æç”»ã™ã‚‹
 		HBITMAP hbmZoom=(HBITMAP)::LoadImage(hinst,pszZoomImageName,
 											 IMAGE_BITMAP,0,0,LR_CREATEDIBSECTION);
 
@@ -635,7 +635,7 @@ INT_PTR CSideBarOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam
 				lvi.mask=LVIF_TEXT | LVIF_IMAGE | LVIF_PARAM;
 				lvi.iItem=Sel>=0?Sel:ListView_GetItemCount(hwndList);
 				lvi.iSubItem=0;
-				lvi.pszText=TEXT("(‹æØ‚è)");
+				lvi.pszText=TEXT("(åŒºåˆ‡ã‚Š)");
 				lvi.iImage=-1;
 				lvi.lParam=ITEM_SEPARATOR;
 				ListView_InsertItem(hwndList,&lvi);
@@ -766,7 +766,7 @@ void CSideBarOptions::SetItemList(HWND hwndList,const int *pList,int NumItems)
 
 		lvi.iImage=-1;
 		if (ID==ITEM_SEPARATOR) {
-			::lstrcpy(szText,TEXT("(‹æØ‚è)"));
+			::lstrcpy(szText,TEXT("(åŒºåˆ‡ã‚Š)"));
 		} else {
 			pCommandList->GetCommandName(pCommandList->IDToIndex(ID),szText,lengthof(szText));
 			auto itr=m_IconIDMap.find(ID);

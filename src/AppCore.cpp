@@ -77,10 +77,10 @@ bool CAppCore::InitializeChannel()
 
 	if (!ChannelFilePath.IsEmpty()) {
 		if (m_App.ChannelManager.LoadChannelList(ChannelFilePath.GetPath())) {
-			m_App.AddLog(TEXT("ƒ`ƒƒƒ“ƒlƒ‹İ’è‚ğ \"%s\" ‚©‚ç“Ç‚İ‚İ‚Ü‚µ‚½B"),
+			m_App.AddLog(TEXT("ãƒãƒ£ãƒ³ãƒãƒ«è¨­å®šã‚’ \"%s\" ã‹ã‚‰èª­ã¿è¾¼ã¿ã¾ã—ãŸã€‚"),
 						 ChannelFilePath.GetPath());
 			if (!m_App.ChannelManager.ChannelFileHasStreamIDs())
-				m_App.AddLog(CLogItem::TYPE_WARNING,TEXT("ƒ`ƒƒƒ“ƒlƒ‹ƒtƒ@ƒCƒ‹‚ªŒÃ‚¢‚Ì‚ÅÄƒXƒLƒƒƒ“‚ğ‚¨‘E‚ß‚µ‚Ü‚·B"));
+				m_App.AddLog(CLogItem::TYPE_WARNING,TEXT("ãƒãƒ£ãƒ³ãƒãƒ«ãƒ•ã‚¡ã‚¤ãƒ«ãŒå¤ã„ã®ã§å†ã‚¹ã‚­ãƒ£ãƒ³ã‚’ãŠè–¦ã‚ã—ã¾ã™ã€‚"));
 		}
 	}
 
@@ -243,7 +243,7 @@ bool CAppCore::UpdateChannelList(LPCTSTR pszBonDriverName,const CTuningSpaceList
 		}
 	}
 
-	// ‚¨‹C‚É“ü‚èƒ`ƒƒƒ“ƒlƒ‹‚ÌXV
+	// ãŠæ°—ã«å…¥ã‚Šãƒãƒ£ãƒ³ãƒãƒ«ã®æ›´æ–°
 	class CFavoritesChannelUpdator : public CFavoriteItemEnumerator
 	{
 		LPCTSTR m_pszBonDriver;
@@ -273,7 +273,7 @@ bool CAppCore::UpdateChannelList(LPCTSTR pszBonDriverName,const CTuningSpaceList
 							if (NetworkDefinition.GetNetworkType(pChInfo->GetNetworkID())==ChannelNetworkType
 									&& (pChInfo->GetServiceID()==ChannelInfo.GetServiceID()
 										|| ::lstrcmp(pChInfo->GetName(),ChannelInfo.GetName())==0)) {
-								TRACE(TEXT("‚¨‹C‚É“ü‚èƒ`ƒƒƒ“ƒlƒ‹XV : %s -> %s / NID %d -> %d / TSID %04x -> %04x / SID %d -> %d\n"),
+								TRACE(TEXT("ãŠæ°—ã«å…¥ã‚Šãƒãƒ£ãƒ³ãƒãƒ«æ›´æ–° : %s -> %s / NID %d -> %d / TSID %04x -> %04x / SID %d -> %d\n"),
 									  ChannelInfo.GetName(),pChInfo->GetName(),
 									  ChannelInfo.GetNetworkID(),pChInfo->GetNetworkID(),
 									  ChannelInfo.GetTransportStreamID(),pChInfo->GetTransportStreamID(),
@@ -346,7 +346,7 @@ bool CAppCore::SetChannel(int Space,int Channel,int ServiceID/*=-1*/,bool fStric
 		}
 
 		LPCTSTR pszTuningSpace=m_App.ChannelManager.GetDriverTuningSpaceList()->GetTuningSpaceName(pChInfo->GetSpace());
-		m_App.AddLog(TEXT("BonDriver‚Éƒ`ƒƒƒ“ƒlƒ‹•ÏX‚ğ—v‹‚µ‚Ü‚·B(ƒ`ƒ…[ƒjƒ“ƒO‹óŠÔ %d[%s] / Ch %d[%s] / Sv %d)"),
+		m_App.AddLog(TEXT("BonDriverã«ãƒãƒ£ãƒ³ãƒãƒ«å¤‰æ›´ã‚’è¦æ±‚ã—ã¾ã™ã€‚(ãƒãƒ¥ãƒ¼ãƒ‹ãƒ³ã‚°ç©ºé–“ %d[%s] / Ch %d[%s] / Sv %d)"),
 					 pChInfo->GetSpace(),pszTuningSpace!=nullptr?pszTuningSpace:TEXT("\?\?\?"),
 					 pChInfo->GetChannelIndex(),pChInfo->GetName(),ServiceID);
 
@@ -357,7 +357,7 @@ bool CAppCore::SetChannel(int Space,int Channel,int ServiceID/*=-1*/,bool fStric
 		if (!fStrictService && m_f1SegMode) {
 			ServiceSel.OneSegSelect=CDtvEngine::ONESEG_SELECT_HIGHPRIORITY;
 
-			// ƒTƒuƒ`ƒƒƒ“ƒlƒ‹‚Ì‘I‘ğ‚Ìê‡Aƒƒ“ƒZƒO‚àƒTƒuƒ`ƒƒƒ“ƒlƒ‹‚ğ—Dæ‚·‚é
+			// ã‚µãƒ–ãƒãƒ£ãƒ³ãƒãƒ«ã®é¸æŠã®å ´åˆã€ãƒ¯ãƒ³ã‚»ã‚°ã‚‚ã‚µãƒ–ãƒãƒ£ãƒ³ãƒãƒ«ã‚’å„ªå…ˆã™ã‚‹
 			if (ServiceSel.ServiceID!=CDtvEngine::SID_INVALID) {
 				ServiceSel.PreferredServiceIndex=
 					(WORD)GetCorresponding1SegService(
@@ -581,7 +581,7 @@ bool CAppCore::SetCommandLineChannel(const CCommandLineOptions *pCmdLine)
 
 	const CChannelList *pChannelList;
 
-	// ‚Ü‚¸—LŒø‚Èƒ`ƒƒƒ“ƒlƒ‹‚©‚ç’T‚µA–³‚¯‚ê‚Î‘S‚Ä‚Ìƒ`ƒƒƒ“ƒlƒ‹‚©‚ç’T‚·
+	// ã¾ãšæœ‰åŠ¹ãªãƒãƒ£ãƒ³ãƒãƒ«ã‹ã‚‰æ¢ã—ã€ç„¡ã‘ã‚Œã°å…¨ã¦ã®ãƒãƒ£ãƒ³ãƒãƒ«ã‹ã‚‰æ¢ã™
 	for (int i=0;i<2;i++) {
 		for (int Space=0;(pChannelList=m_App.ChannelManager.GetChannelList(Space))!=nullptr;Space++) {
 			if (pCmdLine->m_TuningSpace<0 || Space==pCmdLine->m_TuningSpace) {
@@ -593,8 +593,8 @@ bool CAppCore::SetCommandLineChannel(const CCommandLineOptions *pCmdLine)
 		}
 	}
 
-	// w’è‚ÆŠ®‘S‚Éˆê’v‚·‚éƒ`ƒƒƒ“ƒlƒ‹‚ª–³‚¢ê‡AƒT[ƒrƒXID‚ğ–³‹‚µ‚Ä’T‚µ
-	// ƒ`ƒƒƒ“ƒlƒ‹İ’è‚ÉƒT[ƒrƒXID‚ğw’è‚·‚é
+	// æŒ‡å®šã¨å®Œå…¨ã«ä¸€è‡´ã™ã‚‹ãƒãƒ£ãƒ³ãƒãƒ«ãŒç„¡ã„å ´åˆã€ã‚µãƒ¼ãƒ“ã‚¹IDã‚’ç„¡è¦–ã—ã¦æ¢ã—
+	// ãƒãƒ£ãƒ³ãƒãƒ«è¨­å®šæ™‚ã«ã‚µãƒ¼ãƒ“ã‚¹IDã‚’æŒ‡å®šã™ã‚‹
 	if (pCmdLine->m_ServiceID>0
 			&& (pCmdLine->m_Channel>0 || pCmdLine->m_ChannelIndex>=0
 				|| pCmdLine->m_ControllerChannel>0
@@ -612,7 +612,7 @@ bool CAppCore::SetCommandLineChannel(const CCommandLineOptions *pCmdLine)
 		}
 	}
 
-	m_App.AddLog(CLogItem::TYPE_ERROR,TEXT("ƒRƒ}ƒ“ƒhƒ‰ƒCƒ“‚Åw’è‚³‚ê‚½ƒ`ƒƒƒ“ƒlƒ‹‚ªŒ©•t‚©‚è‚Ü‚¹‚ñB"));
+	m_App.AddLog(CLogItem::TYPE_ERROR,TEXT("ã‚³ãƒãƒ³ãƒ‰ãƒ©ã‚¤ãƒ³ã§æŒ‡å®šã•ã‚ŒãŸãƒãƒ£ãƒ³ãƒãƒ«ãŒè¦‹ä»˜ã‹ã‚Šã¾ã›ã‚“ã€‚"));
 
 	return false;
 }
@@ -648,7 +648,7 @@ bool CAppCore::FollowChannelChange(WORD TransportStreamID,WORD ServiceID)
 	const CChannelInfo *pCurChInfo=m_App.ChannelManager.GetCurrentChannelInfo();
 	if (pCurChInfo==nullptr
 			|| pCurChInfo->GetTransportStreamID()!=TransportStreamID) {
-		m_App.AddLog(TEXT("ƒXƒgƒŠ[ƒ€‚Ì•Ï‰»‚ğŒŸ’m‚µ‚Ü‚µ‚½B(TSID %d / SID %d)"),
+		m_App.AddLog(TEXT("ã‚¹ãƒˆãƒªãƒ¼ãƒ ã®å¤‰åŒ–ã‚’æ¤œçŸ¥ã—ã¾ã—ãŸã€‚(TSID %d / SID %d)"),
 					 TransportStreamID,ServiceID);
 	}
 	const bool fSpaceChanged=Space!=m_App.ChannelManager.GetCurrentSpace();
@@ -681,7 +681,7 @@ bool CAppCore::SetServiceByID(WORD ServiceID,unsigned int Flags)
 		ServiceSel.OneSegSelect=CDtvEngine::ONESEG_SELECT_HIGHPRIORITY;
 
 		if (pCurChInfo!=nullptr) {
-			// ƒTƒuƒ`ƒƒƒ“ƒlƒ‹‚Ì‘I‘ğ‚Ìê‡Aƒƒ“ƒZƒO‚àƒTƒuƒ`ƒƒƒ“ƒlƒ‹‚ğ—Dæ‚·‚é
+			// ã‚µãƒ–ãƒãƒ£ãƒ³ãƒãƒ«ã®é¸æŠã®å ´åˆã€ãƒ¯ãƒ³ã‚»ã‚°ã‚‚ã‚µãƒ–ãƒãƒ£ãƒ³ãƒãƒ«ã‚’å„ªå…ˆã™ã‚‹
 			if (ServiceSel.ServiceID!=CDtvEngine::SID_INVALID) {
 				ServiceSel.PreferredServiceIndex=
 					(WORD)GetCorresponding1SegService(
@@ -696,7 +696,7 @@ bool CAppCore::SetServiceByID(WORD ServiceID,unsigned int Flags)
 	bool fResult;
 
 	if (ServiceSel.ServiceID==CDtvEngine::SID_DEFAULT) {
-		m_App.AddLog(TEXT("ƒfƒtƒHƒ‹ƒg‚ÌƒT[ƒrƒX‚ğ‘I‘ğ‚µ‚Ü‚·..."));
+		m_App.AddLog(TEXT("ãƒ‡ãƒ•ã‚©ãƒ«ãƒˆã®ã‚µãƒ¼ãƒ“ã‚¹ã‚’é¸æŠã—ã¾ã™..."));
 		fResult=m_App.CoreEngine.m_DtvEngine.SetService(&ServiceSel);
 		if (fResult) {
 			if (!m_App.CoreEngine.m_DtvEngine.GetServiceID(&ServiceID))
@@ -704,13 +704,13 @@ bool CAppCore::SetServiceByID(WORD ServiceID,unsigned int Flags)
 		}
 	} else {
 		if (ServiceSel.OneSegSelect==CDtvEngine::ONESEG_SELECT_HIGHPRIORITY)
-			m_App.AddLog(TEXT("ƒT[ƒrƒX‚ğ‘I‘ğ‚µ‚Ü‚·..."));
+			m_App.AddLog(TEXT("ã‚µãƒ¼ãƒ“ã‚¹ã‚’é¸æŠã—ã¾ã™..."));
 		else
-			m_App.AddLog(TEXT("ƒT[ƒrƒX‚ğ‘I‘ğ‚µ‚Ü‚·(SID %d)..."),ServiceSel.ServiceID);
+			m_App.AddLog(TEXT("ã‚µãƒ¼ãƒ“ã‚¹ã‚’é¸æŠã—ã¾ã™(SID %d)..."),ServiceSel.ServiceID);
 		fResult=m_App.CoreEngine.m_DtvEngine.SetService(&ServiceSel);
 	}
 	if (!fResult) {
-		m_App.AddLog(CLogItem::TYPE_ERROR,TEXT("ƒT[ƒrƒX‚ğ‘I‘ğ‚Å‚«‚Ü‚¹‚ñB"));
+		m_App.AddLog(CLogItem::TYPE_ERROR,TEXT("ã‚µãƒ¼ãƒ“ã‚¹ã‚’é¸æŠã§ãã¾ã›ã‚“ã€‚"));
 		return false;
 	}
 
@@ -720,7 +720,7 @@ bool CAppCore::SetServiceByID(WORD ServiceID,unsigned int Flags)
 	if (ServiceID!=0) {
 		int ServiceIndex=m_App.CoreEngine.m_DtvEngine.m_TsAnalyzer.GetServiceIndexByID(ServiceID);
 		if (ServiceIndex>=0) {
-			//m_App.AddLog(TEXT("ƒT[ƒrƒX‚ğ•ÏX‚µ‚Ü‚µ‚½B(SID %d)"),ServiceID);
+			//m_App.AddLog(TEXT("ã‚µãƒ¼ãƒ“ã‚¹ã‚’å¤‰æ›´ã—ã¾ã—ãŸã€‚(SID %d)"),ServiceID);
 
 			if (fStrict && m_f1SegMode
 					&& !m_App.CoreEngine.m_DtvEngine.m_TsAnalyzer.Is1SegService(ServiceIndex)) {
@@ -891,7 +891,7 @@ bool CAppCore::OpenTuner(LPCTSTR pszFileName)
 		::SetCursor(hcurOld);
 	} else {
 		::SetCursor(hcurOld);
-		OnError(&m_App.CoreEngine,TEXT("BonDriver‚Ì‰Šú‰»‚ª‚Å‚«‚Ü‚¹‚ñB"));
+		OnError(&m_App.CoreEngine,TEXT("BonDriverã®åˆæœŸåŒ–ãŒã§ãã¾ã›ã‚“ã€‚"));
 	}
 
 	m_App.UICore.SetStatusBarTrace(false);
@@ -915,7 +915,7 @@ bool CAppCore::OpenTuner()
 		if (OpenAndInitializeTuner(OPENTUNER_NO_UI)) {
 			m_App.AppEventManager.OnTunerOpened();
 		} else {
-			OnError(&m_App.CoreEngine,TEXT("BonDriver‚Ì‰Šú‰»‚ª‚Å‚«‚Ü‚¹‚ñB"));
+			OnError(&m_App.CoreEngine,TEXT("BonDriverã®åˆæœŸåŒ–ãŒã§ãã¾ã›ã‚“ã€‚"));
 			fOK=false;
 		}
 	}
@@ -936,7 +936,7 @@ bool CAppCore::OpenAndInitializeTuner(unsigned int OpenFlags)
 	if (!m_App.CoreEngine.OpenTuner())
 		return false;
 
-	m_App.AddLog(TEXT("%s ‚ğ“Ç‚İ‚İ‚Ü‚µ‚½B"),m_App.CoreEngine.GetDriverFileName());
+	m_App.AddLog(TEXT("%s ã‚’èª­ã¿è¾¼ã¿ã¾ã—ãŸã€‚"),m_App.CoreEngine.GetDriverFileName());
 
 	ApplyBonDriverOptions();
 
@@ -996,7 +996,7 @@ bool CAppCore::Set1SegMode(bool f1Seg,bool fServiceChange)
 	if (m_f1SegMode != f1Seg) {
 		m_f1SegMode = f1Seg;
 
-		m_App.AddLog(TEXT("ƒƒ“ƒZƒOƒ‚[ƒh‚ğ%s‚É‚µ‚Ü‚·B"),f1Seg?TEXT("ƒIƒ“"):TEXT("ƒIƒt"));
+		m_App.AddLog(TEXT("ãƒ¯ãƒ³ã‚»ã‚°ãƒ¢ãƒ¼ãƒ‰ã‚’%sã«ã—ã¾ã™ã€‚"),f1Seg?TEXT("ã‚ªãƒ³"):TEXT("ã‚ªãƒ•"));
 
 		if (fServiceChange) {
 			if (m_f1SegMode) {
@@ -1051,8 +1051,8 @@ int CAppCore::GetCorresponding1SegService(
 		ServiceIndex=ServiceID-SID;
 	}
 
-	// ƒtƒ‹ƒZƒO‚Ìƒ}ƒ‹ƒ`•ú‘—‚ÌƒT[ƒrƒXID‚ª101/103‚Ì‚æ‚¤‚É”ò‚ñ‚Å‚¢‚éê‡‚ª‚ ‚é‚ªA
-	// ƒƒ“ƒZƒO‚ÌƒT[ƒrƒX‚Í˜A‘±‚µ‚Ä‚¢‚é‚½‚ßAƒTƒuƒ`ƒƒƒ“ƒlƒ‹‚Í1‚ÉŒÅ’è‚·‚é
+	// ãƒ•ãƒ«ã‚»ã‚°ã®ãƒãƒ«ãƒæ”¾é€ã®ã‚µãƒ¼ãƒ“ã‚¹IDãŒ101/103ã®ã‚ˆã†ã«é£›ã‚“ã§ã„ã‚‹å ´åˆãŒã‚ã‚‹ãŒã€
+	// ãƒ¯ãƒ³ã‚»ã‚°ã®ã‚µãƒ¼ãƒ“ã‚¹ã¯é€£ç¶šã—ã¦ã„ã‚‹ãŸã‚ã€ã‚µãƒ–ãƒãƒ£ãƒ³ãƒãƒ«ã¯1ã«å›ºå®šã™ã‚‹
 	return min(ServiceIndex,1);
 }
 
@@ -1106,11 +1106,11 @@ bool CAppCore::GenerateRecordFileName(LPTSTR pszFileName,int MaxFileName)
 
 	TVTest::String Path;
 	if (!m_App.RecordManager.GenerateFilePath(FormatInfo,NULL,&Path)) {
-		OnError(TEXT("˜^‰æƒtƒ@ƒCƒ‹‚ÌƒpƒX‚ğì¬‚Å‚«‚Ü‚¹‚ñB"));
+		OnError(TEXT("éŒ²ç”»ãƒ•ã‚¡ã‚¤ãƒ«ã®ãƒ‘ã‚¹ã‚’ä½œæˆã§ãã¾ã›ã‚“ã€‚"));
 		return false;
 	}
 	if (!GetAbsolutePath(Path.c_str(),pszFileName,MaxFileName)) {
-		OnError(TEXT("˜^‰æƒtƒ@ƒCƒ‹‚Ì•Û‘¶æƒtƒHƒ‹ƒ_‚Ìw’è‚ª³‚µ‚­‚È‚¢‚©AƒpƒX‚ª’·‰ß‚¬‚Ü‚·B"));
+		OnError(TEXT("éŒ²ç”»ãƒ•ã‚¡ã‚¤ãƒ«ã®ä¿å­˜å…ˆãƒ•ã‚©ãƒ«ãƒ€ã®æŒ‡å®šãŒæ­£ã—ããªã„ã‹ã€ãƒ‘ã‚¹ãŒé•·éãã¾ã™ã€‚"));
 		return false;
 	}
 
@@ -1120,7 +1120,7 @@ bool CAppCore::GenerateRecordFileName(LPTSTR pszFileName,int MaxFileName)
 	if (!::PathIsDirectory(szDir)) {
 		int Result=::SHCreateDirectoryEx(NULL,szDir,NULL);
 		if (Result!=ERROR_SUCCESS && Result!=ERROR_ALREADY_EXISTS) {
-			OnError(TEXT("˜^‰æƒtƒ@ƒCƒ‹‚Ì•Û‘¶æƒtƒHƒ‹ƒ_ \"%s\" ‚ğì¬‚Å‚«‚Ü‚¹‚ñB"),szDir);
+			OnError(TEXT("éŒ²ç”»ãƒ•ã‚¡ã‚¤ãƒ«ã®ä¿å­˜å…ˆãƒ•ã‚©ãƒ«ãƒ€ \"%s\" ã‚’ä½œæˆã§ãã¾ã›ã‚“ã€‚"),szDir);
 			return false;
 		}
 	}
@@ -1172,12 +1172,12 @@ bool CAppCore::StartRecord(LPCTSTR pszFileName,
 	m_App.AppEventManager.OnRecordingStart(&RecStartInfo);
 	m_App.CoreEngine.ResetErrorCount();
 	if (!m_App.RecordManager.StartRecord(&m_App.CoreEngine.m_DtvEngine,szFileName,fTimeShift)) {
-		OnError(&m_App.RecordManager,TEXT("˜^‰æ‚ğŠJn‚Å‚«‚Ü‚¹‚ñB"));
+		OnError(&m_App.RecordManager,TEXT("éŒ²ç”»ã‚’é–‹å§‹ã§ãã¾ã›ã‚“ã€‚"));
 		return false;
 	}
 	m_App.TaskTrayManager.SetStatus(CTaskTrayManager::STATUS_RECORDING,
 									CTaskTrayManager::STATUS_RECORDING);
-	m_App.AddLog(TEXT("˜^‰æŠJn %s"),szFileName);
+	m_App.AddLog(TEXT("éŒ²ç”»é–‹å§‹ %s"),szFileName);
 	m_App.AppEventManager.OnRecordingStarted();
 	return true;
 }
@@ -1233,11 +1233,11 @@ bool CAppCore::StartReservedRecord()
 	m_App.CoreEngine.ResetErrorCount();
 	if (!m_App.RecordManager.StartRecord(&m_App.CoreEngine.m_DtvEngine,szFileName)) {
 		m_App.RecordManager.CancelReserve();
-		OnError(&m_App.RecordManager,TEXT("˜^‰æ‚ğŠJn‚Å‚«‚Ü‚¹‚ñB"));
+		OnError(&m_App.RecordManager,TEXT("éŒ²ç”»ã‚’é–‹å§‹ã§ãã¾ã›ã‚“ã€‚"));
 		return false;
 	}
 	m_App.RecordManager.GetRecordTask()->GetFileName(szFileName,lengthof(szFileName));
-	m_App.AddLog(TEXT("˜^‰æŠJn %s"),szFileName);
+	m_App.AddLog(TEXT("éŒ²ç”»é–‹å§‹ %s"),szFileName);
 
 	m_App.TaskTrayManager.SetStatus(CTaskTrayManager::STATUS_RECORDING,
 									CTaskTrayManager::STATUS_RECORDING);
@@ -1269,7 +1269,7 @@ bool CAppCore::StopRecord()
 
 	CTsRecorder::WriteStatistics Stats;
 	m_App.CoreEngine.m_DtvEngine.m_TsRecorder.GetWriteStatistics(&Stats);
-	m_App.AddLog(TEXT("˜^‰æ’â~ %s (o—ÍTSƒTƒCƒY %llu Bytes / ‘‚«o‚µƒGƒ‰[‰ñ” %u)"),
+	m_App.AddLog(TEXT("éŒ²ç”»åœæ­¢ %s (å‡ºåŠ›TSã‚µã‚¤ã‚º %llu Bytes / æ›¸ãå‡ºã—ã‚¨ãƒ©ãƒ¼å›æ•° %u)"),
 				 szFileName,Stats.OutputSize,Stats.WriteErrorCount);
 
 	m_App.TaskTrayManager.SetStatus(0,CTaskTrayManager::STATUS_RECORDING);
@@ -1289,10 +1289,10 @@ bool CAppCore::PauseResumeRecording()
 		return false;
 
 	if (m_App.RecordManager.IsPaused()) {
-		m_App.AddLog(TEXT("˜^‰æˆê’â~"));
+		m_App.AddLog(TEXT("éŒ²ç”»ä¸€æ™‚åœæ­¢"));
 		m_App.AppEventManager.OnRecordingPaused();
 	} else {
-		m_App.AddLog(TEXT("˜^‰æÄŠJ"));
+		m_App.AddLog(TEXT("éŒ²ç”»å†é–‹"));
 		m_App.AppEventManager.OnRecordingResumed();
 	}
 
@@ -1305,10 +1305,10 @@ bool CAppCore::RelayRecord(LPCTSTR pszFileName)
 	if (IsStringEmpty(pszFileName) || !m_App.RecordManager.IsRecording())
 		return false;
 	if (!m_App.RecordManager.RelayFile(pszFileName)) {
-		OnError(&m_App.RecordManager,TEXT("˜^‰æƒtƒ@ƒCƒ‹‚ğØ‚è‘Ö‚¦‚Å‚«‚Ü‚¹‚ñB"));
+		OnError(&m_App.RecordManager,TEXT("éŒ²ç”»ãƒ•ã‚¡ã‚¤ãƒ«ã‚’åˆ‡ã‚Šæ›¿ãˆã§ãã¾ã›ã‚“ã€‚"));
 		return false;
 	}
-	m_App.AddLog(TEXT("˜^‰æƒtƒ@ƒCƒ‹‚ğØ‚è‘Ö‚¦‚Ü‚µ‚½ %s"),pszFileName);
+	m_App.AddLog(TEXT("éŒ²ç”»ãƒ•ã‚¡ã‚¤ãƒ«ã‚’åˆ‡ã‚Šæ›¿ãˆã¾ã—ãŸ %s"),pszFileName);
 	m_App.AppEventManager.OnRecordingFileChanged(pszFileName);
 	return true;
 }
@@ -1337,15 +1337,15 @@ bool CAppCore::CommandLineRecord(LPCTSTR pszFileName,const SYSTEMTIME *pStartTim
 			OffsetSystemTime(&StartTime.Time.DateTime,Delay*TimeConsts::SYSTEMTIME_SECOND);
 		SYSTEMTIME st;
 		::SystemTimeToTzSpecificLocalTime(NULL,&StartTime.Time.DateTime,&st);
-		m_App.AddLog(TEXT("ƒRƒ}ƒ“ƒhƒ‰ƒCƒ“‚©‚ç˜^‰æw’è‚³‚ê‚Ü‚µ‚½B(%d/%d/%d %d:%02d:%02d ŠJn)"),
+		m_App.AddLog(TEXT("ã‚³ãƒãƒ³ãƒ‰ãƒ©ã‚¤ãƒ³ã‹ã‚‰éŒ²ç”»æŒ‡å®šã•ã‚Œã¾ã—ãŸã€‚(%d/%d/%d %d:%02d:%02d é–‹å§‹)"),
 					 st.wYear,st.wMonth,st.wDay,st.wHour,st.wMinute,st.wSecond);
 	} else if (Delay>0) {
 		StartTime.Type=CRecordManager::TIME_DURATION;
 		StartTime.Time.Duration=Delay*1000;
-		m_App.AddLog(TEXT("ƒRƒ}ƒ“ƒhƒ‰ƒCƒ“‚©‚ç˜^‰æw’è‚³‚ê‚Ü‚µ‚½B(%d •bŒãŠJn)"),Delay);
+		m_App.AddLog(TEXT("ã‚³ãƒãƒ³ãƒ‰ãƒ©ã‚¤ãƒ³ã‹ã‚‰éŒ²ç”»æŒ‡å®šã•ã‚Œã¾ã—ãŸã€‚(%d ç§’å¾Œé–‹å§‹)"),Delay);
 	} else {
 		StartTime.Type=CRecordManager::TIME_NOTSPECIFIED;
-		m_App.AddLog(TEXT("ƒRƒ}ƒ“ƒhƒ‰ƒCƒ“‚©‚ç˜^‰æw’è‚³‚ê‚Ü‚µ‚½B"));
+		m_App.AddLog(TEXT("ã‚³ãƒãƒ³ãƒ‰ãƒ©ã‚¤ãƒ³ã‹ã‚‰éŒ²ç”»æŒ‡å®šã•ã‚Œã¾ã—ãŸã€‚"));
 	}
 	if (Duration>0) {
 		StopTime.Type=CRecordManager::TIME_DURATION;

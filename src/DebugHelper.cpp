@@ -136,7 +136,7 @@ LONG WINAPI CDebugHelper::ExceptionFilter(EXCEPTION_POINTERS *ExceptionInfo)
 		}
 
 		s.Length=::wsprintfA(s.szText,
-							 APP_NAME_A "‚Å—áŠO‚ª”­¶‚µ‚Ü‚µ‚½B\r\n\r\n"
+							 APP_NAME_A "ã§ä¾‹å¤–ãŒç™ºç”Ÿã—ã¾ã—ãŸã€‚\r\n\r\n"
 							 "Code %08x (%s) / Address %p\r\n"
 #if defined(_M_IX86)
 							 "EAX %08x / EBX %08x / ECX %08x / EDX %08x\r\n"
@@ -172,7 +172,7 @@ LONG WINAPI CDebugHelper::ExceptionFilter(EXCEPTION_POINTERS *ExceptionInfo)
 #endif
 							 );
 
-		// ƒ‚ƒWƒ…[ƒ‹‚Ì—ñ‹“
+		// ãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«ã®åˆ—æŒ™
 		s.NumModuleEntries=0;
 		if (m_pSymLoadModule!=NULL) {
 			s.hSnap=::CreateToolhelp32Snapshot(TH32CS_SNAPMODULE,::GetCurrentProcessId());
@@ -236,7 +236,7 @@ LONG WINAPI CDebugHelper::ExceptionFilter(EXCEPTION_POINTERS *ExceptionInfo)
 										  s.Stack.pSymbol,
 										  s.szText+s.Length);
 
-		// ƒXƒ^ƒbƒNƒgƒŒ[ƒX
+		// ã‚¹ã‚¿ãƒƒã‚¯ãƒˆãƒ¬ãƒ¼ã‚¹
 		for (s.i=0;s.i<10;s.i++) {
 			if (!m_pStackWalk(
 #if defined(_M_IX86)
@@ -266,21 +266,21 @@ LONG WINAPI CDebugHelper::ExceptionFilter(EXCEPTION_POINTERS *ExceptionInfo)
 
 		m_pSymCleanup(s.hProcess);
 
-		// ƒƒbƒZ[ƒW•\¦
+		// ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸è¡¨ç¤º
 		s.fContinueExecution=false;
 		if (m_ExceptionFilterMode==EXCEPTION_FILTER_DIALOG) {
 			if (ExceptionInfo->ExceptionRecord->ExceptionFlags==EXCEPTION_NONCONTINUABLE) {
 				::MessageBoxA(NULL,s.szText,NULL,MB_OK | MB_ICONSTOP);
 			} else {
 				::lstrcpyA(s.szText+s.Length,
-						   "\r\nÄs‚µ‚Ü‚·‚©H\r\n"
-						   "[‚¢‚¢‚¦] ‚ğ‘I‘ğ‚·‚é‚ÆƒvƒƒOƒ‰ƒ€‚ªI—¹‚µ‚Ü‚·B");
+						   "\r\nå†è©¦è¡Œã—ã¾ã™ã‹ï¼Ÿ\r\n"
+						   "[ã„ã„ãˆ] ã‚’é¸æŠã™ã‚‹ã¨ãƒ—ãƒ­ã‚°ãƒ©ãƒ ãŒçµ‚äº†ã—ã¾ã™ã€‚");
 				if (::MessageBoxA(NULL,s.szText,NULL,MB_YESNO | MB_ICONSTOP | MB_DEFBUTTON2)==IDYES)
 					s.fContinueExecution=true;
 			}
 		}
 
-		// ƒƒO•Û‘¶
+		// ãƒ­ã‚°ä¿å­˜
 		::GetModuleFileName(NULL,s.File.szFileName,lengthof(s.File.szFileName));
 		::lstrcat(s.File.szFileName,TEXT(".exception.log"));
 		s.File.hFile=::CreateFile(s.File.szFileName,GENERIC_WRITE,0,NULL,

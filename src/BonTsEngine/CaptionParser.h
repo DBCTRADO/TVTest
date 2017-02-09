@@ -1,6 +1,6 @@
 /*
-	�����f�[�^��̓N���X
-	�قƂ�ǍŒ���̋@�\���������B
+	字幕データ解析クラス
+	ほとんど最低限の機能しか無い。
 */
 #ifndef CAPTION_PARSER_H
 #define CAPTION_PARSER_H

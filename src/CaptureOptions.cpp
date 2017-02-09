@@ -30,8 +30,8 @@ private:
 
 const CVariableStringMap::ParameterInfo CCaptureVariableStringMap::m_CaptureParameterList[] =
 {
-	{TEXT("width"),		TEXT("‰æ‘œ‚Ì•")},
-	{TEXT("height"),	TEXT("‰æ‘œ‚Ì‚‚³")},
+	{TEXT("width"),		TEXT("ç”»åƒã®å¹…")},
+	{TEXT("height"),	TEXT("ç”»åƒã®é«˜ã•")},
 };
 
 
@@ -154,7 +154,7 @@ bool CCaptureOptions::ReadSettings(CSettings &Settings)
 {
 	Settings.Read(TEXT("CaptureFolder"),m_szSaveFolder,lengthof(m_szSaveFolder));
 	if (!Settings.Read(TEXT("CaptureFileNameFormat"),&m_FileName)) {
-		// ver.0.9.0 ‚æ‚è‘O‚Æ‚ÌŒİŠ·—p
+		// ver.0.9.0 ã‚ˆã‚Šå‰ã¨ã®äº’æ›ç”¨
 		if (Settings.Read(TEXT("CaptureFileName"),&m_FileName))
 			m_FileName+=TEXT("%date%-%time%");
 	}
@@ -326,7 +326,7 @@ bool CCaptureOptions::GenerateFileName(
 		if (Result!=ERROR_SUCCESS && Result!=ERROR_ALREADY_EXISTS) {
 			GetAppClass().AddLog(
 				CLogItem::TYPE_ERROR,
-				TEXT("ƒLƒƒƒvƒ`ƒƒ‚Ì•Û‘¶æƒtƒHƒ‹ƒ_ \"%s\" ‚ğì¬‚Å‚«‚Ü‚¹‚ñB"),
+				TEXT("ã‚­ãƒ£ãƒ—ãƒãƒ£ã®ä¿å­˜å…ˆãƒ•ã‚©ãƒ«ãƒ€ \"%s\" ã‚’ä½œæˆã§ãã¾ã›ã‚“ã€‚"),
 				szSaveFolder);
 			return false;
 		}
@@ -436,8 +436,8 @@ INT_PTR CCaptureOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam
 			InitDropDownButton(hDlg,IDC_CAPTUREOPTIONS_FILENAME_PARAMETERS);
 
 			static const LPCTSTR SizeTypeText[] = {
-				TEXT("Œ³‚Ì‘å‚«‚³"),
-				TEXT("•\¦‚³‚ê‚Ä‚¢‚é‘å‚«‚³"),
+				TEXT("å…ƒã®å¤§ãã•"),
+				TEXT("è¡¨ç¤ºã•ã‚Œã¦ã„ã‚‹å¤§ãã•"),
 			};
 			TCHAR szText[32];
 			for (i=0;i<lengthof(SizeTypeText);i++)
@@ -537,7 +537,7 @@ INT_PTR CCaptureOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam
 				TCHAR szFolder[MAX_PATH];
 
 				GetDlgItemText(hDlg,IDC_CAPTUREOPTIONS_SAVEFOLDER,szFolder,lengthof(szFolder));
-				if (BrowseFolderDialog(hDlg,szFolder,TEXT("‰æ‘œ‚Ì•Û‘¶æƒtƒHƒ‹ƒ_:")))
+				if (BrowseFolderDialog(hDlg,szFolder,TEXT("ç”»åƒã®ä¿å­˜å…ˆãƒ•ã‚©ãƒ«ãƒ€:")))
 					SetDlgItemText(hDlg,IDC_CAPTUREOPTIONS_SAVEFOLDER,szFolder);
 			}
 			return TRUE;
@@ -609,8 +609,8 @@ INT_PTR CCaptureOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam
 				CAppMain::CreateDirectoryResult CreateDirResult=
 					GetAppClass().CreateDirectory(
 						hDlg,szSaveFolder,
-						TEXT("ƒLƒƒƒvƒ`ƒƒ‰æ‘œ‚Ì•Û‘¶æƒtƒHƒ‹ƒ_ \"%s\" ‚ª‚ ‚è‚Ü‚¹‚ñB\n")
-						TEXT("ì¬‚µ‚Ü‚·‚©?"));
+						TEXT("ã‚­ãƒ£ãƒ—ãƒãƒ£ç”»åƒã®ä¿å­˜å…ˆãƒ•ã‚©ãƒ«ãƒ€ \"%s\" ãŒã‚ã‚Šã¾ã›ã‚“ã€‚\n")
+						TEXT("ä½œæˆã—ã¾ã™ã‹?"));
 				if (CreateDirResult==CAppMain::CREATEDIRECTORY_RESULT_ERROR) {
 					SettingError();
 					SetDlgItemFocus(hDlg,IDC_CAPTUREOPTIONS_SAVEFOLDER);

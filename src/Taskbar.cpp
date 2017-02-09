@@ -80,7 +80,7 @@ bool CTaskbarManager::Initialize(HWND hwnd)
 						m_fAppIDInvalid=true;
 						App.AddLog(
 							CLogItem::TYPE_ERROR,
-							TEXT("AppID \"%s\" ‚ðÝ’è‚Å‚«‚Ü‚¹‚ñB(%08x)"),
+							TEXT("AppID \"%s\" ã‚’è¨­å®šã§ãã¾ã›ã‚“ã€‚(%08x)"),
 							m_AppID.c_str(),hr);
 					}
 				}
@@ -164,7 +164,7 @@ bool CTaskbarManager::SetRecordingStatus(bool fRecording)
 
 			if (hico==NULL)
 				return false;
-			m_pTaskbarList->SetOverlayIcon(m_hwnd,hico,TEXT("˜^‰æ’†"));
+			m_pTaskbarList->SetOverlayIcon(m_hwnd,hico,TEXT("éŒ²ç”»ä¸­"));
 			::DestroyIcon(hico);
 		} else {
 			m_pTaskbarList->SetOverlayIcon(m_hwnd,NULL,NULL);
@@ -557,13 +557,13 @@ HRESULT CTaskbarManager::AddRecentChannelsCategory(ICustomDestinationList *pcdl)
 				if (Result!=ERROR_SUCCESS && Result!=ERROR_ALREADY_EXISTS) {
 					App.AddLog(
 						CLogItem::TYPE_ERROR,
-						TEXT("ƒWƒƒƒ“ƒvƒŠƒXƒgƒAƒCƒRƒ“ƒtƒHƒ‹ƒ_ \"%s\" ‚ªì¬‚Å‚«‚Ü‚¹‚ñB"),
+						TEXT("ã‚¸ãƒ£ãƒ³ãƒ—ãƒªã‚¹ãƒˆã‚¢ã‚¤ã‚³ãƒ³ãƒ•ã‚©ãƒ«ãƒ€ \"%s\" ãŒä½œæˆã§ãã¾ã›ã‚“ã€‚"),
 						szIconDir);
 					fShowIcon=false;
 				} else if (Result==ERROR_SUCCESS) {
 					App.AddLog(
 						CLogItem::TYPE_INFORMATION,
-						TEXT("ƒWƒƒƒ“ƒvƒŠƒXƒgƒAƒCƒRƒ“ƒtƒHƒ‹ƒ_ \"%s\" ‚ðì¬‚µ‚Ü‚µ‚½B"),
+						TEXT("ã‚¸ãƒ£ãƒ³ãƒ—ãƒªã‚¹ãƒˆã‚¢ã‚¤ã‚³ãƒ³ãƒ•ã‚©ãƒ«ãƒ€ \"%s\" ã‚’ä½œæˆã—ã¾ã—ãŸã€‚"),
 						szIconDir);
 				}
 			}

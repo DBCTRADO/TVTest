@@ -49,7 +49,7 @@ HRESULT CBonSrcPin::GetMediaType(int iPosition, CMediaType *pMediaType)
 	if (iPosition > 0)
 		return VFW_S_NO_MORE_ITEMS;
 
-	// ƒƒfƒBƒAƒ^ƒCƒvİ’è
+	// ãƒ¡ãƒ‡ã‚£ã‚¢ã‚¿ã‚¤ãƒ—è¨­å®š
 	pMediaType->InitMediaType();
 	pMediaType->SetType(&MEDIATYPE_Stream);
 	pMediaType->SetSubtype(&MEDIASUBTYPE_MPEG2_TRANSPORT);
@@ -65,7 +65,7 @@ HRESULT CBonSrcPin::CheckMediaType(const CMediaType *pMediaType)
 	CheckPointer(pMediaType, E_POINTER);
 	CAutoLock AutoLock(&m_pFilter->m_cStateLock);
 
-	// ƒƒfƒBƒAƒ^ƒCƒv‚ğƒ`ƒFƒbƒN‚·‚é
+	// ãƒ¡ãƒ‡ã‚£ã‚¢ã‚¿ã‚¤ãƒ—ã‚’ãƒã‚§ãƒƒã‚¯ã™ã‚‹
 	CMediaType mt;
 	GetMediaType(0, &mt);
 
@@ -152,21 +152,21 @@ HRESULT CBonSrcPin::DecideBufferSize(IMemAllocator *pAlloc, ALLOCATOR_PROPERTIES
 	CheckPointer(pAlloc, E_POINTER);
 	CheckPointer(pRequest, E_POINTER);
 
-	// ƒoƒbƒtƒ@‚Í1ŒÂ‚ ‚ê‚Î‚æ‚¢
+	// ãƒãƒƒãƒ•ã‚¡ã¯1å€‹ã‚ã‚Œã°ã‚ˆã„
 	if (pRequest->cBuffers < 1)
 		pRequest->cBuffers = 1;
 
-	// ƒoƒbƒtƒ@ƒTƒCƒYw’è
+	// ãƒãƒƒãƒ•ã‚¡ã‚µã‚¤ã‚ºæŒ‡å®š
 	if (pRequest->cbBuffer < SAMPLE_BUFFER_SIZE)
 		pRequest->cbBuffer = SAMPLE_BUFFER_SIZE;
 
-	// ƒAƒƒP[ƒ^ƒvƒƒpƒeƒB‚ğİ’è‚µ‚È‚¨‚·
+	// ã‚¢ãƒ­ã‚±ãƒ¼ã‚¿ãƒ—ãƒ­ãƒ‘ãƒ†ã‚£ã‚’è¨­å®šã—ãªãŠã™
 	ALLOCATOR_PROPERTIES Actual;
 	HRESULT hr = pAlloc->SetProperties(pRequest, &Actual);
 	if (FAILED(hr))
 		return hr;
 
-	// —v‹‚ğó‚¯“ü‚ê‚ç‚ê‚½‚©”»’è
+	// è¦æ±‚ã‚’å—ã‘å…¥ã‚Œã‚‰ã‚ŒãŸã‹åˆ¤å®š
 	if (Actual.cBuffers < pRequest->cBuffers
 			|| Actual.cbBuffer < pRequest->cbBuffer)
 		return E_FAIL;
@@ -181,7 +181,7 @@ bool CBonSrcPin::InputMedia(CMediaData *pMediaData)
 	if (Wait != 0 && m_SrcStream.IsBufferFull()) {
 		if (m_bInputTimeout)
 			return false;
-		// ƒTƒ“ƒvƒ‹‚ªo—Í‚³‚ê‚é‚Ì‚ğ‘Ò‚Â
+		// ã‚µãƒ³ãƒ—ãƒ«ãŒå‡ºåŠ›ã•ã‚Œã‚‹ã®ã‚’å¾…ã¤
 		const DWORD BeginTime = ::GetTickCount();
 		for (;;) {
 			::Sleep(10);
@@ -297,9 +297,9 @@ unsigned int __stdcall CBonSrcPin::StreamThread(LPVOID lpParameter)
 			const int PoolPercentage = pThis->m_InitialPoolPercentage;
 			if (pThis->m_SrcStream.GetFillPercentage() < PoolPercentage
 					/*
-						ƒoƒbƒtƒ@g—pŠ„‡‚Ì‚İ‚Å‚ÍAƒƒ“ƒZƒO“™ƒrƒbƒgƒŒ[ƒg‚ª’á‚¢ê‡‚É‚È‚©‚È‚©Ä¶‚ªŠJn‚³‚ê‚È‚¢‚Ì‚ÅA
-						ƒrƒbƒgƒŒ[ƒg‚ğ 2MB/s ‚Æ‚µ‚ÄŒo‰ßŠÔ‚Å‚à”»’è‚·‚éB
-						‚±‚ê‚àİ’è‚Å‚«‚é‚æ‚¤‚É‚·‚é‚©A‚ ‚é‚¢‚ÍŠÔ‚Å‚Ì”»’è‚É“ˆê‚·‚é•û‚ª‚¢‚¢‚©‚à’m‚ê‚È‚¢B
+						ãƒãƒƒãƒ•ã‚¡ä½¿ç”¨å‰²åˆã®ã¿ã§ã¯ã€ãƒ¯ãƒ³ã‚»ã‚°ç­‰ãƒ“ãƒƒãƒˆãƒ¬ãƒ¼ãƒˆãŒä½ã„å ´åˆã«ãªã‹ãªã‹å†ç”ŸãŒé–‹å§‹ã•ã‚Œãªã„ã®ã§ã€
+						ãƒ“ãƒƒãƒˆãƒ¬ãƒ¼ãƒˆã‚’ 2MB/s ã¨ã—ã¦çµŒéæ™‚é–“ã§ã‚‚åˆ¤å®šã™ã‚‹ã€‚
+						ã“ã‚Œã‚‚è¨­å®šã§ãã‚‹ã‚ˆã†ã«ã™ã‚‹ã‹ã€ã‚ã‚‹ã„ã¯æ™‚é–“ã§ã®åˆ¤å®šã«çµ±ä¸€ã™ã‚‹æ–¹ãŒã„ã„ã‹ã‚‚çŸ¥ã‚Œãªã„ã€‚
 					*/
 					&& pThis->m_SrcStream.GetPTSDuration() <
 						(LONGLONG)(pThis->m_SrcStream.GetQueueSize() * TS_PACKETSIZE) * PoolPercentage / (2000000LL * 100LL / 90000LL)) {
@@ -318,11 +318,11 @@ unsigned int __stdcall CBonSrcPin::StreamThread(LPVOID lpParameter)
 				bDiscontinuity = true;
 			}
 
-			// ‹ó‚ÌƒƒfƒBƒAƒTƒ“ƒvƒ‹‚ğ—v‹‚·‚é
+			// ç©ºã®ãƒ¡ãƒ‡ã‚£ã‚¢ã‚µãƒ³ãƒ—ãƒ«ã‚’è¦æ±‚ã™ã‚‹
 			IMediaSample *pSample = NULL;
 			HRESULT hr = pThis->GetDeliveryBuffer(&pSample, NULL, NULL, 0);
 			if (SUCCEEDED(hr)) {
-				// ‘‚«‚İæƒ|ƒCƒ“ƒ^‚ğæ“¾‚·‚é
+				// æ›¸ãè¾¼ã¿å…ˆãƒã‚¤ãƒ³ã‚¿ã‚’å–å¾—ã™ã‚‹
 				BYTE *pSampleData = NULL;
 				hr = pSample->GetPointer(&pSampleData);
 				if (SUCCEEDED(hr)) {

@@ -10,12 +10,12 @@ class CTsRecorder : public CMediaDecoder
 public:
 	enum
 	{
-		EVENT_WRITE_ERROR	// ‘‚«o‚µƒGƒ‰[
+		EVENT_WRITE_ERROR	// æ›¸ãå‡ºã—ã‚¨ãƒ©ãƒ¼
 	};
 
 	enum
 	{
-		OPEN_OVERWRITE	= 0x0001U	// ã‘‚«
+		OPEN_OVERWRITE	= 0x0001U	// ä¸Šæ›¸ã
 	};
 
 	class ABSTRACT_CLASS_DECL CWriter : public CBonErrorHandler

@@ -1,4 +1,4 @@
-// BonSrcDecoder.h: CBonSrcDecoder ƒNƒ‰ƒX‚ÌƒCƒ“ƒ^[ƒtƒFƒCƒX
+// BonSrcDecoder.h: CBonSrcDecoder ã‚¯ãƒ©ã‚¹ã®ã‚¤ãƒ³ã‚¿ãƒ¼ãƒ•ã‚§ã‚¤ã‚¹
 //
 //////////////////////////////////////////////////////////////////////
 
@@ -12,28 +12,28 @@
 
 
 /////////////////////////////////////////////////////////////////////////////
-// Bonƒ\[ƒXƒfƒR[ƒ_(ƒ`ƒ…[ƒi‚©‚çTS•½•ªƒXƒgƒŠ[ƒ€‚ðŽóM‚·‚é)
+// Bonã‚½ãƒ¼ã‚¹ãƒ‡ã‚³ãƒ¼ãƒ€(ãƒãƒ¥ãƒ¼ãƒŠã‹ã‚‰TSå¹³åˆ†ã‚¹ãƒˆãƒªãƒ¼ãƒ ã‚’å—ä¿¡ã™ã‚‹)
 /////////////////////////////////////////////////////////////////////////////
-// Output	#0	: CMediaData		•½•ªTSƒXƒgƒŠ[ƒ€
+// Output	#0	: CMediaData		å¹³åˆ†TSã‚¹ãƒˆãƒªãƒ¼ãƒ 
 /////////////////////////////////////////////////////////////////////////////
 
 class CBonSrcDecoder : public CMediaDecoder
 {
 public:
-	// ƒGƒ‰[ƒR[ƒh
+	// ã‚¨ãƒ©ãƒ¼ã‚³ãƒ¼ãƒ‰
 	enum {
-		ERR_NOERROR,		// ƒGƒ‰[‚È‚µ
-		ERR_NOTLOADED,		// ƒ‰ƒCƒuƒ‰ƒŠ‚ª“Ç‚Ýž‚Ü‚ê‚Ä‚¢‚È‚¢
-		ERR_DRIVER,			// ƒhƒ‰ƒCƒoƒGƒ‰[
-		ERR_TUNEROPEN,		// ƒ`ƒ…[ƒiƒI[ƒvƒ“ƒGƒ‰[
-		ERR_TUNER,			// ƒ`ƒ…[ƒiƒGƒ‰[
-		ERR_NOTOPEN,		// ƒ`ƒ…[ƒi‚ªŠJ‚©‚ê‚Ä‚¢‚È‚¢
-		ERR_ALREADYOPEN,	// ƒ`ƒ…[ƒi‚ªŠù‚ÉŠJ‚©‚ê‚Ä‚¢‚é
-		ERR_NOTPLAYING,		// Ä¶‚³‚ê‚Ä‚¢‚È‚¢
-		ERR_ALREADYPLAYING,	// Šù‚ÉÄ¶‚³‚ê‚Ä‚¢‚é
-		ERR_TIMEOUT,		// ƒ^ƒCƒ€ƒAƒEƒg
-		ERR_PENDING,		// ‘O‚Ìˆ—‚ªI‚í‚Á‚Ä‚¢‚È‚¢
-		ERR_INTERNAL		// “à•”ƒGƒ‰[
+		ERR_NOERROR,		// ã‚¨ãƒ©ãƒ¼ãªã—
+		ERR_NOTLOADED,		// ãƒ©ã‚¤ãƒ–ãƒ©ãƒªãŒèª­ã¿è¾¼ã¾ã‚Œã¦ã„ãªã„
+		ERR_DRIVER,			// ãƒ‰ãƒ©ã‚¤ãƒã‚¨ãƒ©ãƒ¼
+		ERR_TUNEROPEN,		// ãƒãƒ¥ãƒ¼ãƒŠã‚ªãƒ¼ãƒ—ãƒ³ã‚¨ãƒ©ãƒ¼
+		ERR_TUNER,			// ãƒãƒ¥ãƒ¼ãƒŠã‚¨ãƒ©ãƒ¼
+		ERR_NOTOPEN,		// ãƒãƒ¥ãƒ¼ãƒŠãŒé–‹ã‹ã‚Œã¦ã„ãªã„
+		ERR_ALREADYOPEN,	// ãƒãƒ¥ãƒ¼ãƒŠãŒæ—¢ã«é–‹ã‹ã‚Œã¦ã„ã‚‹
+		ERR_NOTPLAYING,		// å†ç”Ÿã•ã‚Œã¦ã„ãªã„
+		ERR_ALREADYPLAYING,	// æ—¢ã«å†ç”Ÿã•ã‚Œã¦ã„ã‚‹
+		ERR_TIMEOUT,		// ã‚¿ã‚¤ãƒ ã‚¢ã‚¦ãƒˆ
+		ERR_PENDING,		// å‰ã®å‡¦ç†ãŒçµ‚ã‚ã£ã¦ã„ãªã„
+		ERR_INTERNAL		// å†…éƒ¨ã‚¨ãƒ©ãƒ¼
 	};
 
 	enum {

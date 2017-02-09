@@ -53,16 +53,16 @@ const CAudioDecFilter::DownMixMatrix CAudioOptions::m_DefaultDownMixMatrix = {
 };
 
 const DWORD CAudioOptions::m_AudioLanguageList[] = {
-	LANGUAGE_CODE_JPN,	// “ú–{Œê
-	LANGUAGE_CODE_ENG,	// ‰pŒê
-	LANGUAGE_CODE_DEU,	// ƒhƒCƒcŒê
-	LANGUAGE_CODE_FRA,	// ƒtƒ‰ƒ“ƒXŒê
-	LANGUAGE_CODE_ITA,	// ƒCƒ^ƒŠƒAŒê
-	LANGUAGE_CODE_KOR,	// ŠØ‘Œê
-	LANGUAGE_CODE_RUS,	// ƒƒVƒAŒê
-	LANGUAGE_CODE_SPA,	// ƒXƒyƒCƒ“Œê
-	LANGUAGE_CODE_ZHO,	// ’†‘Œê
-	LANGUAGE_CODE_ETC,	// ‚»‚Ì‘¼
+	LANGUAGE_CODE_JPN,	// æ—¥æœ¬èªž
+	LANGUAGE_CODE_ENG,	// è‹±èªž
+	LANGUAGE_CODE_DEU,	// ãƒ‰ã‚¤ãƒ„èªž
+	LANGUAGE_CODE_FRA,	// ãƒ•ãƒ©ãƒ³ã‚¹èªž
+	LANGUAGE_CODE_ITA,	// ã‚¤ã‚¿ãƒªã‚¢èªž
+	LANGUAGE_CODE_KOR,	// éŸ“å›½èªž
+	LANGUAGE_CODE_RUS,	// ãƒ­ã‚·ã‚¢èªž
+	LANGUAGE_CODE_SPA,	// ã‚¹ãƒšã‚¤ãƒ³èªž
+	LANGUAGE_CODE_ZHO,	// ä¸­å›½èªž
+	LANGUAGE_CODE_ETC,	// ãã®ä»–
 };
 
 
@@ -245,7 +245,7 @@ INT_PTR CAudioOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 	case WM_INITDIALOG:
 		{
 			int Sel=0;
-			DlgComboBox_AddString(hDlg,IDC_OPTIONS_AUDIODEVICE,TEXT("ƒfƒtƒHƒ‹ƒg"));
+			DlgComboBox_AddString(hDlg,IDC_OPTIONS_AUDIODEVICE,TEXT("ãƒ‡ãƒ•ã‚©ãƒ«ãƒˆ"));
 			CDirectShowDeviceEnumerator DevEnum;
 			if (DevEnum.EnumDevice(CLSID_AudioRendererCategory)) {
 				for (int i=0;i<DevEnum.GetDeviceCount();i++) {
@@ -259,7 +259,7 @@ INT_PTR CAudioOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 			DlgComboBox_SetCurSel(hDlg,IDC_OPTIONS_AUDIODEVICE,Sel);
 
 			Sel=0;
-			DlgComboBox_AddString(hDlg,IDC_OPTIONS_AUDIOFILTER,TEXT("‚È‚µ"));
+			DlgComboBox_AddString(hDlg,IDC_OPTIONS_AUDIOFILTER,TEXT("ãªã—"));
 			CDirectShowFilterFinder FilterFinder;
 			static const GUID InputTypes[] = {
 				MEDIATYPE_Audio,	MEDIASUBTYPE_PCM
@@ -289,9 +289,9 @@ INT_PTR CAudioOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 			DlgComboBox_SetCurSel(hDlg,IDC_OPTIONS_AUDIOFILTER,Sel);
 
 			static const LPCTSTR SpdifModeList[] = {
-				TEXT("ƒpƒXƒXƒ‹[o—Í‚ðs‚í‚È‚¢"),
-				TEXT("í‚ÉƒpƒXƒXƒ‹[o—Í‚ðs‚¤"),
-				TEXT("‰¹º‚ÌŒ`Ž®‚É‰ž‚¶‚ÄƒpƒXƒXƒ‹[o—Í‚ðs‚¤"),
+				TEXT("ãƒ‘ã‚¹ã‚¹ãƒ«ãƒ¼å‡ºåŠ›ã‚’è¡Œã‚ãªã„"),
+				TEXT("å¸¸ã«ãƒ‘ã‚¹ã‚¹ãƒ«ãƒ¼å‡ºåŠ›ã‚’è¡Œã†"),
+				TEXT("éŸ³å£°ã®å½¢å¼ã«å¿œã˜ã¦ãƒ‘ã‚¹ã‚¹ãƒ«ãƒ¼å‡ºåŠ›ã‚’è¡Œã†"),
 			};
 			for (int i=0;i<lengthof(SpdifModeList);i++)
 				DlgComboBox_AddString(hDlg,IDC_OPTIONS_SPDIFMODE,SpdifModeList[i]);
@@ -500,7 +500,7 @@ void CAudioOptions::GetLanguageText(DWORD Language,bool fSub,LPTSTR pszText,int 
 {
 	EpgUtil::GetLanguageText(Language,pszText,MaxText,EpgUtil::LANGUAGE_TEXT_LONG);
 	if (fSub)
-		::StrCatBuff(pszText,TEXT("(•›‰¹º)"),MaxText);
+		::StrCatBuff(pszText,TEXT("(å‰¯éŸ³å£°)"),MaxText);
 }
 
 

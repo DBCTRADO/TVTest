@@ -1,4 +1,4 @@
-// DtvEngine.h: CDtvEngine ƒNƒ‰ƒX‚ÌƒCƒ“ƒ^[ƒtƒFƒCƒX
+// DtvEngine.h: CDtvEngine ã‚¯ãƒ©ã‚¹ã®ã‚¤ãƒ³ã‚¿ãƒ¼ãƒ•ã‚§ã‚¤ã‚¹
 //
 //////////////////////////////////////////////////////////////////////
 
@@ -19,11 +19,11 @@
 #include "LogoDownloader.h"
 #include "TsPacketCounter.h"
 
-// ¦‚±‚Ì•Ó‚Í‘S‚­‚Ìb’è‚Å‚·
+// â€»ã“ã®è¾ºã¯å…¨ãã®æš«å®šã§ã™
 
 
 //////////////////////////////////////////////////////////////////////
-// ƒfƒWƒ^ƒ‹TVƒGƒ“ƒWƒ“ƒNƒ‰ƒX
+// ãƒ‡ã‚¸ã‚¿ãƒ«TVã‚¨ãƒ³ã‚¸ãƒ³ã‚¯ãƒ©ã‚¹
 //////////////////////////////////////////////////////////////////////
 
 class CDtvEngine : protected CMediaDecoder::IEventHandler, public CBonBaseClass
@@ -186,12 +186,12 @@ public:
 	void SetTracer(CTracer *pTracer);
 
 //protected:
-	// CMediaDecoder ‚©‚ç”h¶‚µ‚½ƒƒfƒBƒAƒfƒR[ƒ_ƒNƒ‰ƒX
-	CBonSrcDecoder m_BonSrcDecoder;			// TSƒ\[ƒXƒ`ƒ…[ƒi[(HAL‰»‚·‚×‚«)
-	CTsPacketParser m_TsPacketParser;		// TSƒpƒPƒbƒ^ƒCƒU[
+	// CMediaDecoder ã‹ã‚‰æ´¾ç”Ÿã—ãŸãƒ¡ãƒ‡ã‚£ã‚¢ãƒ‡ã‚³ãƒ¼ãƒ€ã‚¯ãƒ©ã‚¹
+	CBonSrcDecoder m_BonSrcDecoder;			// TSã‚½ãƒ¼ã‚¹ãƒãƒ¥ãƒ¼ãƒŠãƒ¼(HALåŒ–ã™ã¹ã)
+	CTsPacketParser m_TsPacketParser;		// TSãƒ‘ã‚±ãƒƒã‚¿ã‚¤ã‚¶ãƒ¼
 	CTsAnalyzer m_TsAnalyzer;
-	CMediaViewer m_MediaViewer;				// ƒƒfƒBƒAƒrƒ…[ƒA[
-	CMediaTee m_MediaTee;					// ƒƒfƒBƒAƒeƒB[
+	CMediaViewer m_MediaViewer;				// ãƒ¡ãƒ‡ã‚£ã‚¢ãƒ“ãƒ¥ãƒ¼ã‚¢ãƒ¼
+	CMediaTee m_MediaTee;					// ãƒ¡ãƒ‡ã‚£ã‚¢ãƒ†ã‚£ãƒ¼
 	CTsRecorder m_TsRecorder;
 	CMediaGrabber m_MediaGrabber;
 	CTsSelector m_TsSelector;

@@ -1,4 +1,4 @@
-// AacDecoder.h: CAacDecoder ƒNƒ‰ƒX‚ÌƒCƒ“ƒ^[ƒtƒFƒCƒX
+// AacDecoder.h: CAacDecoder ã‚¯ãƒ©ã‚¹ã®ã‚¤ãƒ³ã‚¿ãƒ¼ãƒ•ã‚§ã‚¤ã‚¹
 //
 //////////////////////////////////////////////////////////////////////
 
@@ -10,7 +10,7 @@
 #include "TsMedia.h"
 
 
-// FAAD2 AACƒfƒR[ƒ_ƒ‰ƒbƒp[ƒNƒ‰ƒX 
+// FAAD2 AACãƒ‡ã‚³ãƒ¼ãƒ€ãƒ©ãƒƒãƒ‘ãƒ¼ã‚¯ãƒ©ã‚¹ 
 //
 // "Code from FAAD2 is copyright (c) Nero AG, www.nero.com"
 //

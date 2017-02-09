@@ -83,7 +83,7 @@ CInformationPanel::~CInformationPanel()
 bool CInformationPanel::Create(HWND hwndParent,DWORD Style,DWORD ExStyle,int ID)
 {
 	return CreateBasicWindow(hwndParent,Style,ExStyle,ID,
-							 m_pszClassName,TEXT("î•ñ"),m_hinst);
+							 m_pszClassName,TEXT("æƒ…å ±"),m_hinst);
 }
 
 
@@ -865,8 +865,8 @@ LRESULT CInformationPanel::CProgramInfoSubclass::OnMessage(
 			POINT pt;
 			int Command;
 
-			::AppendMenu(hmenu,MFT_STRING | MFS_ENABLED,1,TEXT("ƒRƒs[(&C)"));
-			::AppendMenu(hmenu,MFT_STRING | MFS_ENABLED,2,TEXT("‚·‚×‚Ä‘I‘ğ(&A)"));
+			::AppendMenu(hmenu,MFT_STRING | MFS_ENABLED,1,TEXT("ã‚³ãƒ”ãƒ¼(&C)"));
+			::AppendMenu(hmenu,MFT_STRING | MFS_ENABLED,2,TEXT("ã™ã¹ã¦é¸æŠ(&A)"));
 
 			::GetCursorPos(&pt);
 			Command=::TrackPopupMenu(hmenu,TPM_RETURNCMD,pt.x,pt.y,0,hwnd,NULL);
@@ -1311,15 +1311,15 @@ void CInformationPanel::CMediaBitRateItem::Draw(HDC hdc,const RECT &Rect)
 
 	if (m_VideoBitRate<1000*1000) {
 		Length=StdUtil::snprintf(szText,lengthof(szText),
-								 TEXT("‰f‘œ %u kbps"),
+								 TEXT("æ˜ åƒ %u kbps"),
 								 (m_VideoBitRate+500)/1000);
 	} else {
 		Length=StdUtil::snprintf(szText,lengthof(szText),
-								 TEXT("‰f‘œ %.2f Mbps"),
+								 TEXT("æ˜ åƒ %.2f Mbps"),
 								 (double)(m_VideoBitRate)/(double)(1000*1000));
 	}
 	StdUtil::snprintf(szText+Length,lengthof(szText)-Length,
-					  TEXT(" / ‰¹º %u kbps"),
+					  TEXT(" / éŸ³å£° %u kbps"),
 					  (m_AudioBitRate+500)/1000);
 
 	DrawItem(hdc,Rect,szText);
@@ -1437,7 +1437,7 @@ void CInformationPanel::CRecordItem::Draw(HDC hdc,const RECT &Rect)
 
 		unsigned int RecordSec=(unsigned int)(m_RecordTime/1000);
 		Length=StdUtil::snprintf(szText,lengthof(szText),
-			TEXT("œ %d:%02d:%02d"),
+			TEXT("â— %d:%02d:%02d"),
 			RecordSec/(60*60),(RecordSec/60)%60,RecordSec%60);
 		if (m_WroteSize>=0) {
 			unsigned int Size=
@@ -1450,12 +1450,12 @@ void CInformationPanel::CRecordItem::Draw(HDC hdc,const RECT &Rect)
 			unsigned int FreeSpace=
 				(unsigned int)(m_DiskFreeSpace/(ULONGLONG)(1024*1024*1024/100));
 			StdUtil::snprintf(szText+Length,lengthof(szText)-Length,
-							  TEXT(" / %d.%02d GB‹ó‚«"),
+							  TEXT(" / %d.%02d GBç©ºã"),
 							  FreeSpace/100,FreeSpace%100);
 		}
 		DrawItem(hdc,Rect,szText);
 	} else {
-		DrawItem(hdc,Rect,TEXT("¡ <˜^‰æ‚µ‚Ä‚¢‚Ü‚¹‚ñ>"));
+		DrawItem(hdc,Rect,TEXT("â–  <éŒ²ç”»ã—ã¦ã„ã¾ã›ã‚“>"));
 	}
 }
 
@@ -1524,7 +1524,7 @@ bool CInformationPanel::CProgramInfoItem::Update()
 	CStaticStringFormatter Formatter(szText,lengthof(szText));
 
 	if (m_fNext)
-		Formatter.Append(TEXT("Ÿ : "));
+		Formatter.Append(TEXT("æ¬¡ : "));
 
 	CEventInfoData EventInfo;
 
@@ -1552,16 +1552,16 @@ bool CInformationPanel::CProgramInfoItem::Update()
 	CTsAnalyzer::EventSeriesInfo SeriesInfo;
 	if (CoreEngine.m_DtvEngine.GetEventSeriesInfo(&SeriesInfo,m_fNext)
 			&& SeriesInfo.EpisodeNumber!=0 && SeriesInfo.LastEpisodeNumber!=0) {
-		Formatter.Append(TEXT("\r\n\r\n(ƒVƒŠ[ƒY"));
+		Formatter.Append(TEXT("\r\n\r\n(ã‚·ãƒªãƒ¼ã‚º"));
 		if (SeriesInfo.RepeatLabel!=0)
-			Formatter.Append(TEXT(" [Ä]"));
+			Formatter.Append(TEXT(" [å†]"));
 		if (SeriesInfo.EpisodeNumber!=0 && SeriesInfo.LastEpisodeNumber!=0)
-			Formatter.AppendFormat(TEXT(" ‘æ%d‰ñ / ‘S%d‰ñ"),
+			Formatter.AppendFormat(TEXT(" ç¬¬%då› / å…¨%då›"),
 								   SeriesInfo.EpisodeNumber,SeriesInfo.LastEpisodeNumber);
-		// expire_date ‚ÍÀÛ‚ÌÅI‰ñ‚Ì“ú‚Å‚È‚¢‚Ì‚ÅA•´‚ç‚í‚µ‚¢‚½‚ß•\¦‚µ‚È‚¢
+		// expire_date ã¯å®Ÿéš›ã®æœ€çµ‚å›ã®æ—¥æ™‚ã§ãªã„ã®ã§ã€ç´›ã‚‰ã‚ã—ã„ãŸã‚è¡¨ç¤ºã—ãªã„
 		/*
 		if (SeriesInfo.bIsExpireDateValid)
-			Formatter.AppendFormat(TEXT(" I—¹—\’è%d/%d/%d"),
+			Formatter.AppendFormat(TEXT(" çµ‚äº†äºˆå®š%d/%d/%d"),
 								   SeriesInfo.ExpireDate.wYear,
 								   SeriesInfo.ExpireDate.wMonth,
 								   SeriesInfo.ExpireDate.wDay);
@@ -1651,11 +1651,11 @@ bool CInformationPanel::CProgramInfoItem::GetButtonTipText(int Button,LPTSTR psz
 {
 	switch (Button) {
 	case BUTTON_PREV:
-		::lstrcpyn(pszText,TEXT("Œ»İ‚Ì”Ô‘g"),MaxText);
+		::lstrcpyn(pszText,TEXT("ç¾åœ¨ã®ç•ªçµ„"),MaxText);
 		return true;
 
 	case BUTTON_NEXT:
-		::lstrcpyn(pszText,TEXT("Ÿ‚Ì”Ô‘g"),MaxText);
+		::lstrcpyn(pszText,TEXT("æ¬¡ã®ç•ªçµ„"),MaxText);
 		return true;
 	}
 

@@ -156,7 +156,7 @@ bool CEpg::CChannelProviderManager::CFavoritesChannelProvider::Update()
 {
 	ClearGroupList();
 	AddFavoritesChannels(GetAppClass().FavoritesManager.GetRootFolder(),String());
-	m_GroupList.front()->Name=TEXT("‚¨‹C‚É“ü‚è");
+	m_GroupList.front()->Name=TEXT("ãŠæ°—ã«å…¥ã‚Š");
 
 	const int NumSpaces=static_cast<int>(m_GroupList.size());
 	m_TuningSpaceList.Clear();
@@ -181,7 +181,7 @@ bool CEpg::CChannelProviderManager::CFavoritesChannelProvider::GetName(
 	if (pszName==NULL || MaxName<1)
 		return false;
 
-	::lstrcpyn(pszName,TEXT("‚¨‹C‚É“ü‚èƒ`ƒƒƒ“ƒlƒ‹"),MaxName);
+	::lstrcpyn(pszName,TEXT("ãŠæ°—ã«å…¥ã‚Šãƒãƒ£ãƒ³ãƒãƒ«"),MaxName);
 
 	return true;
 }
@@ -208,7 +208,7 @@ int CEpg::CChannelProviderManager::CFavoritesChannelProvider::ParseGroupID(
 			return static_cast<int>(i);
 	}
 
-	// ˆÈ‘O‚Ìƒo[ƒWƒ‡ƒ“‚Æ‚ÌŒİŠ·—p
+	// ä»¥å‰ã®ãƒãƒ¼ã‚¸ãƒ§ãƒ³ã¨ã®äº’æ›ç”¨
 	if (::lstrcmp(pszID,TEXT("0"))==0)
 		return 0;
 

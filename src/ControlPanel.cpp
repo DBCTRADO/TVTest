@@ -53,7 +53,7 @@ CControlPanel::~CControlPanel()
 bool CControlPanel::Create(HWND hwndParent,DWORD Style,DWORD ExStyle,int ID)
 {
 	return CreateBasicWindow(hwndParent,Style,ExStyle,ID,
-							 m_pszClassName,TEXT("ëÄçÏ"),m_hinst);
+							 m_pszClassName,TEXT("Êìç‰Ωú"),m_hinst);
 }
 
 

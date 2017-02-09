@@ -62,7 +62,7 @@
 #ifndef SAFE_DELETE
 //#define SAFE_DELETE(p)		if (p) { delete p; (p)=NULL; }
 //#define SAFE_DELETE_ARRAY(p)	if (p) { delete [] p; (p)=NULL; }
-// delete NULL Ç≈Ç‡Ç¢Ç¢ÇÃÇ≈
+// delete NULL „Åß„ÇÇ„ÅÑ„ÅÑ„ÅÆ„Åß
 #define SAFE_DELETE(p)			((void)(delete p,(p)=NULL))
 #define SAFE_DELETE_ARRAY(p)	((void)(delete [] p,(p)=NULL))
 #endif

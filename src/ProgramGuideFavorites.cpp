@@ -90,7 +90,7 @@ void CProgramGuideFavorites::FavoriteInfo::SetDefaultColors()
 	unsigned int Space=0;
 	LPCTSTR pszLabel=Label.c_str();
 
-	if (::StrStr(pszLabel,TEXT("ín"))!=0
+	if (::StrStr(pszLabel,TEXT("Âú∞"))!=0
 			|| ::StrStrI(pszLabel,TEXT("UHF"))!=0
 			|| ::StrStrI(pszLabel,TEXT("VHF"))!=0)
 		Space|=SPACE_TERRESTRIAL;
@@ -98,7 +98,7 @@ void CProgramGuideFavorites::FavoriteInfo::SetDefaultColors()
 		Space|=SPACE_BS;
 	if (::StrStr(pszLabel,TEXT("CS"))!=0)
 		Space|=SPACE_CS;
-	if (::StrStr(pszLabel,TEXT("Ç®ãCÇ…ì¸ÇË"))!=0)
+	if (::StrStr(pszLabel,TEXT("„ÅäÊ∞ó„Å´ÂÖ•„Çä"))!=0)
 		Space|=SPACE_FAVORITES;
 
 	switch (Space) {

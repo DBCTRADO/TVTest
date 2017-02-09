@@ -5,7 +5,7 @@
 #include "../BonTsEngine/Exception.h"
 
 
-// ‰f‘œƒŒƒ“ƒ_ƒ‰Šî’êƒNƒ‰ƒX
+// æ˜ åƒãƒ¬ãƒ³ãƒ€ãƒ©åŸºåº•ã‚¯ãƒ©ã‚¹
 class __declspec(novtable) CVideoRenderer : public CBonErrorHandler
 {
 protected:

@@ -34,7 +34,7 @@ public:
 	CChannelStatusItem();
 // CStatusItem
 	LPCTSTR GetIDText() const override { return TEXT("Channel"); }
-	LPCTSTR GetName() const override { return TEXT("É`ÉÉÉìÉlÉã"); }
+	LPCTSTR GetName() const override { return TEXT("„ÉÅ„É£„É≥„Éç„É´"); }
 	void Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect,unsigned int Flags) override;
 	void OnLButtonDown(int x,int y) override;
 	void OnRButtonDown(int x,int y) override;
@@ -47,7 +47,7 @@ public:
 	CVideoSizeStatusItem();
 // CStatusItem
 	LPCTSTR GetIDText() const override { return TEXT("Video"); }
-	LPCTSTR GetName() const override { return TEXT("âfëúÉTÉCÉY"); }
+	LPCTSTR GetName() const override { return TEXT("Êò†ÂÉè„Çµ„Ç§„Ç∫"); }
 	bool UpdateContent() override;
 	void Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect,unsigned int Flags) override;
 	void OnLButtonDown(int x,int y) override;
@@ -65,7 +65,7 @@ public:
 	CVolumeStatusItem();
 // CStatusItem
 	LPCTSTR GetIDText() const override { return TEXT("Volume"); }
-	LPCTSTR GetName() const override { return TEXT("âπó "); }
+	LPCTSTR GetName() const override { return TEXT("Èü≥Èáè"); }
 	void Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect,unsigned int Flags) override;
 	void OnLButtonDown(int x,int y) override;
 	void OnRButtonDown(int x,int y) override;
@@ -94,7 +94,7 @@ public:
 	CAudioChannelStatusItem();
 // CStatusItem
 	LPCTSTR GetIDText() const override { return TEXT("Audio"); }
-	LPCTSTR GetName() const override { return TEXT("âπê∫"); }
+	LPCTSTR GetName() const override { return TEXT("Èü≥Â£∞"); }
 	void Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect,unsigned int Flags) override;
 	void OnLButtonDown(int x,int y) override;
 	void OnRButtonDown(int x,int y) override;
@@ -117,7 +117,7 @@ public:
 	CRecordStatusItem();
 // CStatusItem
 	LPCTSTR GetIDText() const override { return TEXT("Record"); }
-	LPCTSTR GetName() const override { return TEXT("ò^âÊ"); }
+	LPCTSTR GetName() const override { return TEXT("Èå≤Áîª"); }
 	void Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect,unsigned int Flags) override;
 	void OnLButtonDown(int x,int y) override;
 	void OnRButtonDown(int x,int y) override;
@@ -138,7 +138,7 @@ public:
 	CCaptureStatusItem();
 // CStatusItem
 	LPCTSTR GetIDText() const override { return TEXT("Capture"); }
-	LPCTSTR GetName() const override { return TEXT("ÉLÉÉÉvÉ`ÉÉ"); }
+	LPCTSTR GetName() const override { return TEXT("„Ç≠„É£„Éó„ÉÅ„É£"); }
 	void Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect,unsigned int Flags) override;
 	void OnLButtonDown(int x,int y) override;
 	void OnRButtonDown(int x,int y) override;
@@ -153,7 +153,7 @@ public:
 	CErrorStatusItem();
 // CStatusItem
 	LPCTSTR GetIDText() const override { return TEXT("Error"); }
-	LPCTSTR GetName() const override { return TEXT("ÉGÉâÅ["); }
+	LPCTSTR GetName() const override { return TEXT("„Ç®„É©„Éº"); }
 	bool UpdateContent() override;
 	void Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect,unsigned int Flags) override;
 	void OnLButtonDown(int x,int y) override;
@@ -171,7 +171,7 @@ public:
 	CSignalLevelStatusItem();
 // CStatusItem
 	LPCTSTR GetIDText() const override { return TEXT("Signal"); }
-	LPCTSTR GetName() const override { return TEXT("êMçÜÉåÉxÉã"); }
+	LPCTSTR GetName() const override { return TEXT("‰ø°Âè∑„É¨„Éô„É´"); }
 	bool UpdateContent() override;
 	void Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect,unsigned int Flags) override;
 // CSignalLevelStatusItem
@@ -189,7 +189,7 @@ public:
 	CClockStatusItem();
 // CStatusItem
 	LPCTSTR GetIDText() const override { return TEXT("Clock"); }
-	LPCTSTR GetName() const override { return TEXT("éûåv"); }
+	LPCTSTR GetName() const override { return TEXT("ÊôÇË®à"); }
 	bool UpdateContent() override;
 	void Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect,unsigned int Flags) override;
 	void OnLButtonDown(int x,int y) override;
@@ -230,7 +230,7 @@ public:
 	CProgramInfoStatusItem();
 // CStatusItem
 	LPCTSTR GetIDText() const override { return TEXT("Program"); }
-	LPCTSTR GetName() const override { return TEXT("î‘ëgèÓïÒ"); }
+	LPCTSTR GetName() const override { return TEXT("Áï™ÁµÑÊÉÖÂ†±"); }
 	void Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect,unsigned int Flags) override;
 	bool UpdateContent() override;
 	void OnLButtonDown(int x,int y) override;
@@ -258,7 +258,7 @@ public:
 	CBufferingStatusItem();
 // CStatusItem
 	LPCTSTR GetIDText() const override { return TEXT("Buffering"); }
-	LPCTSTR GetName() const override { return TEXT("ÉoÉbÉtÉ@ÉäÉìÉO"); }
+	LPCTSTR GetName() const override { return TEXT("„Éê„ÉÉ„Éï„Ç°„É™„É≥„Ç∞"); }
 	bool UpdateContent() override;
 	void Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect,unsigned int Flags) override;
 	void OnLButtonDown(int x,int y) override;
@@ -274,7 +274,7 @@ public:
 	CTunerStatusItem();
 // CStatusItem
 	LPCTSTR GetIDText() const override { return TEXT("Tuner"); }
-	LPCTSTR GetName() const override { return TEXT("É`ÉÖÅ[ÉiÅ["); }
+	LPCTSTR GetName() const override { return TEXT("„ÉÅ„É•„Éº„Éä„Éº"); }
 	void Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect,unsigned int Flags) override;
 	void OnLButtonDown(int x,int y) override;
 	void OnRButtonDown(int x,int y) override;
@@ -286,7 +286,7 @@ public:
 	CMediaBitRateStatusItem();
 // CStatusItem
 	LPCTSTR GetIDText() const override { return TEXT("Bitrate"); }
-	LPCTSTR GetName() const override { return TEXT("ÉrÉbÉgÉåÅ[Ég"); }
+	LPCTSTR GetName() const override { return TEXT("„Éì„ÉÉ„Éà„É¨„Éº„Éà"); }
 	bool UpdateContent() override;
 	void Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect,unsigned int Flags) override;
 
@@ -301,7 +301,7 @@ public:
 	CFavoritesStatusItem();
 // CStatusItem
 	LPCTSTR GetIDText() const override { return TEXT("Favorites"); }
-	LPCTSTR GetName() const override { return TEXT("Ç®ãCÇ…ì¸ÇË"); }
+	LPCTSTR GetName() const override { return TEXT("„ÅäÊ∞ó„Å´ÂÖ•„Çä"); }
 	void Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect,unsigned int Flags) override;
 	void OnLButtonDown(int x,int y) override;
 	void OnRButtonDown(int x,int y) override;

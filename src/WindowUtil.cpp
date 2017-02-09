@@ -6,8 +6,8 @@
 
 
 /*
-	�E�B���h�E�̒[�����ۂɕ\������Ă��邩���肷��
-	���ꂾ�ƕs���S(��ɍőO�ʂ̃E�B���h�E���l�����Ă��Ȃ�)
+	ウィンドウの端が実際に表示されているか判定する
+	これだと不完全(常に最前面のウィンドウを考慮していない)
 */
 static bool IsWindowEdgeVisible(HWND hwnd,HWND hwndTop,const RECT *pRect,HWND hwndTarget)
 {
@@ -213,7 +213,7 @@ void CMouseLeaveTrack::Initialize(HWND hwnd)
 
 bool CMouseLeaveTrack::OnMouseMove()
 {
-	// WM_MOUSELEAVE �������Ȃ��Ă������ɂ���鎖������悤��
+	// WM_MOUSELEAVE が送られなくても無効にされる事があるようだ
 	/*if (!m_fClientTrack)*/ {
 		TRACKMOUSEEVENT tme;
 

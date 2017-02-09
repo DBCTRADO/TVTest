@@ -115,8 +115,8 @@ bool CMenuOptions::WriteSettings(CSettings &Settings)
 	Settings.Write(TEXT("MaxChannelMenuEventInfo"),m_MaxChannelMenuEventInfo);
 
 	if (!m_MenuItemList.empty()) {
-		// ƒfƒtƒHƒ‹ƒg‚Æ“¯‚¶‚Å‚ ‚éê‡‚Í•Û‘¶‚µ‚È‚¢
-		// (V‚µ‚­€–Ú‚ª’Ç‰Á‚³‚ê‚½‚ÉƒfƒtƒHƒ‹ƒg‚Æ‚µ‚Ä”½‰f‚³‚ê‚é‚æ‚¤‚É‚·‚é‚½‚ß)
+		// ãƒ‡ãƒ•ã‚©ãƒ«ãƒˆã¨åŒã˜ã§ã‚ã‚‹å ´åˆã¯ä¿å­˜ã—ãªã„
+		// (æ–°ã—ãé …ç›®ãŒè¿½åŠ ã•ã‚ŒãŸæ™‚ã«ãƒ‡ãƒ•ã‚©ãƒ«ãƒˆã¨ã—ã¦åæ˜ ã•ã‚Œã‚‹ã‚ˆã†ã«ã™ã‚‹ãŸã‚)
 		bool fDefault=true;
 		if (m_MenuItemList.size()<lengthof(m_DefaultMenuItemList)) {
 			fDefault=false;
@@ -477,7 +477,7 @@ void CMenuOptions::SetDlgItemState(HWND hDlg)
 void CMenuOptions::GetItemText(int ID,LPTSTR pszText,int MaxLength) const
 {
 	if (ID==MENU_ID_SEPARATOR) {
-		::lstrcpyn(pszText,TEXT("@<‹æØ‚è>"),MaxLength);
+		::lstrcpyn(pszText,TEXT("ã€€<åŒºåˆ‡ã‚Š>"),MaxLength);
 	} else {
 		for (int i=0;i<lengthof(m_DefaultMenuItemList);i++) {
 			if (m_DefaultMenuItemList[i].ID==ID) {

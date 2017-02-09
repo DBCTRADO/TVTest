@@ -1,12 +1,12 @@
 #pragma once
 
-// EVR‚ğ—˜—p‚µ‚È‚¢ê‡‚ÍƒRƒƒ“ƒgƒAƒEƒg‚·‚é
+// EVRã‚’åˆ©ç”¨ã—ãªã„å ´åˆã¯ã‚³ãƒ¡ãƒ³ãƒˆã‚¢ã‚¦ãƒˆã™ã‚‹
 //#define USE_MEDIA_FOUNDATION
 
 /*
-	TVTest‚Å‚Ì’ˆÓ:
-	ã‚ÌƒRƒƒ“ƒg‚ÍMeru-co‚É‚æ‚éƒIƒŠƒWƒiƒ‹‚É‚¨‚¯‚é‚à‚Ì‚Å‚·B
-	TVTest‚Å‚ÍŠÖŒW‚ ‚è‚Ü‚¹‚ñB
+	TVTestã§ã®æ³¨æ„:
+	ä¸Šã®ã‚³ãƒ¡ãƒ³ãƒˆã¯Meru-coæ°ã«ã‚ˆã‚‹ã‚ªãƒªã‚¸ãƒŠãƒ«ã«ãŠã‘ã‚‹ã‚‚ã®ã§ã™ã€‚
+	TVTestã§ã¯é–¢ä¿‚ã‚ã‚Šã¾ã›ã‚“ã€‚
 */
 
 #include <vector>
@@ -21,7 +21,7 @@
 #include <string>
 
 
-// guid‚É“ü‚Á‚Ä‚¢‚È‚¢’Ç‰Á•ªGUID
+// guidã«å…¥ã£ã¦ã„ãªã„è¿½åŠ åˆ†GUID
 #ifndef WAVE_FORMAT_AAC
 #define WAVE_FORMAT_AAC 0x00FF
 #endif
@@ -123,15 +123,15 @@ public:
 
 namespace DirectShowUtil {
 
-// ˆÈ‰ºA•Ö—˜ŠÖ”
-// ƒfƒoƒbƒO—p(Àsƒe[ƒuƒ‹‚É’Ç‰ÁEíœ)
-// ERemoveFromRot()‚É‚ÍGraphedit‚ğ•Â‚¶‚Ä‚¨‚­•K—v‚ª‚ ‚è‚Ü‚·B
-// EWindowsVista‚Å‚±‚Ì‹@”\‚ğg‚¤‚É‚ÍAWindows SDK for Vista ‚Ì C:\Program Files\Microsoft SDKs\Windows\v6.0\Bin ‚É‚ ‚é
-//   proppage.dll ‚ğ regsvr32 ‚Å“o˜^‚µ‚Ä‚¨‚­•K—v‚ª‚ ‚è‚Ü‚·B
+// ä»¥ä¸‹ã€ä¾¿åˆ©é–¢æ•°
+// ãƒ‡ãƒãƒƒã‚°ç”¨(å®Ÿè¡Œãƒ†ãƒ¼ãƒ–ãƒ«ã«è¿½åŠ ãƒ»å‰Šé™¤)
+// ãƒ»RemoveFromRot()æ™‚ã«ã¯Grapheditã‚’é–‰ã˜ã¦ãŠãå¿…è¦ãŒã‚ã‚Šã¾ã™ã€‚
+// ãƒ»WindowsVistaã§ã“ã®æ©Ÿèƒ½ã‚’ä½¿ã†ã«ã¯ã€Windows SDK for Vista ã® C:\Program Files\Microsoft SDKs\Windows\v6.0\Bin ã«ã‚ã‚‹
+//   proppage.dll ã‚’ regsvr32 ã§ç™»éŒ²ã—ã¦ãŠãå¿…è¦ãŒã‚ã‚Šã¾ã™ã€‚
 HRESULT AddToRot(IUnknown *pUnkGraph, DWORD *pdwRegister);
 void RemoveFromRot(const DWORD dwRegister);
 
-// \’z—pƒ†[ƒeƒBƒŠƒeƒB
+// æ§‹ç¯‰ç”¨ãƒ¦ãƒ¼ãƒ†ã‚£ãƒªãƒ†ã‚£
 IPin* GetFilterPin(IBaseFilter *pFilter, const PIN_DIRECTION dir, const AM_MEDIA_TYPE *pMediaType=NULL);
 bool ShowPropertyPage(IBaseFilter *pFilter, HWND hWndParent);
 bool HasPropertyPage(IBaseFilter *pFilter);
@@ -144,7 +144,7 @@ HRESULT AppendFilterAndConnect(IGraphBuilder *pFilterGraph,
 	IPin **ppCurrentOutputPin, IPin **ppNewOutputPin=NULL, bool fDirect=false);
 HRESULT AppendColorSpaceConverterFilter_and_Connect(IGraphBuilder *pFilterGraph, IBaseFilter **ppColorSpaceConverterFilter, IPin **ppCurrentOutputPin, IPin **ppNewOutputPin=NULL);
 
-// ”Ä—pƒ†[ƒeƒBƒŠƒeƒB
+// æ±ç”¨ãƒ¦ãƒ¼ãƒ†ã‚£ãƒªãƒ†ã‚£
 IVideoWindow* GetVideoWindow(IGraphBuilder *pGraph);
 IBasicVideo2* GetBasicVideo2(IGraphBuilder *pGraph);
 IMediaControl* GetMediaControl(IGraphBuilder *pGraph);
@@ -152,7 +152,7 @@ bool FilterGrapph_Play(IGraphBuilder *pFilterGraph);
 bool FilterGrapph_Stop(IGraphBuilder *pFilterGraph);
 bool FilterGrapph_Pause(IGraphBuilder *pFilterGraph);
 
-// ƒtƒBƒ‹ƒ^QÆƒJƒEƒ“ƒ^æ“¾
+// ãƒ•ã‚£ãƒ«ã‚¿å‚ç…§ã‚«ã‚¦ãƒ³ã‚¿å–å¾—
 inline LONG GetRefCount(IUnknown *pUkn)
 {
 	if (!pUkn) {
@@ -178,7 +178,7 @@ inline LONG GetRefCount(IUnknown *pUkn)
 #endif
 
 //////////////////////////////////////////////////////////////////////
-// ˆÈ‰º EVRê—pƒ†[ƒeƒBƒŠƒeƒB
+// ä»¥ä¸‹ EVRå°‚ç”¨ãƒ¦ãƒ¼ãƒ†ã‚£ãƒªãƒ†ã‚£
 #ifdef USE_MEDIA_FOUNDATION
 void						MF_Init();
 void						MF_Term();

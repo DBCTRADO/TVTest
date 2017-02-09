@@ -389,8 +389,8 @@ INT_PTR CLogger::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 			}
 			ListView_SetImageList(hwndList,himl,LVSIL_SMALL);
 
-			// LVS_EX_SUBITEMIMAGES ���w�肷��ƁA�ŏ��̃J�����ɂ��A�C�R���p�̃X�y�[�X��
-			// �m�ۂ���Ă��܂��̂ŁA��0�̃_�~�[�̃J�������쐬���ĉ������
+			// LVS_EX_SUBITEMIMAGES を指定すると、最初のカラムにもアイコン用のスペースが
+			// 確保されてしまうので、幅0のダミーのカラムを作成して回避する
 			LVCOLUMN lvc;
 			lvc.mask=LVCF_FMT | LVCF_WIDTH | LVCF_TEXT;
 			lvc.fmt=LVCFMT_LEFT;
@@ -398,9 +398,9 @@ INT_PTR CLogger::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 			lvc.pszText=TEXT("");
 			ListView_InsertColumn(hwndList,COLUMN_DUMMY,&lvc);
 			lvc.cx=80;
-			lvc.pszText=TEXT("����");
+			lvc.pszText=TEXT("日時");
 			ListView_InsertColumn(hwndList,COLUMN_TIME,&lvc);
-			lvc.pszText=TEXT("���e");
+			lvc.pszText=TEXT("内容");
 			ListView_InsertColumn(hwndList,COLUMN_TEXT,&lvc);
 
 			LVITEM lvi;
@@ -457,13 +457,13 @@ INT_PTR CLogger::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 
 				if (!GetDefaultLogFileName(szFileName,lengthof(szFileName))
 						|| !SaveToFile(szFileName,false)) {
-					::MessageBox(hDlg,TEXT("�ۑ����ł��܂���B"),NULL,MB_OK | MB_ICONEXCLAMATION);
+					::MessageBox(hDlg,TEXT("保存ができません。"),NULL,MB_OK | MB_ICONEXCLAMATION);
 				} else {
 					TCHAR szMessage[MAX_PATH+64];
 
 					StdUtil::snprintf(szMessage,lengthof(szMessage),
-									  TEXT("���O�� \"%s\" �ɕۑ����܂����B"),szFileName);
-					::MessageBox(hDlg,szMessage,TEXT("���O�ۑ�"),MB_OK | MB_ICONINFORMATION);
+									  TEXT("ログを \"%s\" に保存しました。"),szFileName);
+					::MessageBox(hDlg,szMessage,TEXT("ログ保存"),MB_OK | MB_ICONINFORMATION);
 				}
 			}
 			return TRUE;
@@ -473,7 +473,7 @@ INT_PTR CLogger::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 	case WM_NOTIFY:
 		switch (((LPNMHDR)lParam)->code) {
 		case NM_CUSTOMDRAW:
-			// �_�~�[�̗񂪕`�悳��Ȃ��悤�ɂ���
+			// ダミーの列が描画されないようにする
 			{
 				LPNMLVCUSTOMDRAW pnmlvcd=reinterpret_cast<LPNMLVCUSTOMDRAW>(lParam);
 

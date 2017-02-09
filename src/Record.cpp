@@ -139,12 +139,12 @@ bool CRecordTask::Start(CDtvEngine *pDtvEngine,LPCTSTR pszFileName,const CRecord
 			WritePlugin=Settings.m_WritePlugin;
 		}
 		if (!WritePlugin.empty()) {
-			// o—Íƒvƒ‰ƒOƒCƒ“‚ªƒ[ƒh‚Å‚«‚È‚¯‚ê‚Îƒvƒ‰ƒOƒCƒ“‚ğg‚í‚È‚¢‚æ‚¤‚É‚·‚é
+			// å‡ºåŠ›ãƒ—ãƒ©ã‚°ã‚¤ãƒ³ãŒãƒ­ãƒ¼ãƒ‰ã§ããªã‘ã‚Œã°ãƒ—ãƒ©ã‚°ã‚¤ãƒ³ã‚’ä½¿ã‚ãªã„ã‚ˆã†ã«ã™ã‚‹
 			hWriteLib=::LoadLibrary(WritePlugin.c_str());
 			if (hWriteLib==NULL) {
 				GetAppClass().AddLog(
 					CLogItem::TYPE_WARNING,
-					TEXT("o—Íƒvƒ‰ƒOƒCƒ“ \"%s\" ‚ªƒ[ƒh‚Å‚«‚È‚¢‚½‚ßATSo—Í‚ğs‚¢‚Ü‚·B"),
+					TEXT("å‡ºåŠ›ãƒ—ãƒ©ã‚°ã‚¤ãƒ³ \"%s\" ãŒãƒ­ãƒ¼ãƒ‰ã§ããªã„ãŸã‚ã€TSå‡ºåŠ›ã‚’è¡Œã„ã¾ã™ã€‚"),
 					WritePlugin.c_str());
 				WritePlugin.clear();
 			}
@@ -420,7 +420,7 @@ bool CRecordManager::IsStopTimeSpecified() const
 bool CRecordManager::StartRecord(CDtvEngine *pDtvEngine,LPCTSTR pszFileName,bool fTimeShift)
 {
 	if (m_fRecording) {
-		SetError(TEXT("Šù‚É˜^‰æ’†‚Å‚·B"));
+		SetError(TEXT("æ—¢ã«éŒ²ç”»ä¸­ã§ã™ã€‚"));
 		return false;
 	}
 
@@ -658,7 +658,7 @@ INT_PTR CALLBACK CRecordManager::StopTimeDlgProc(HWND hDlg,UINT uMsg,
 					if (DateTime_GetSystemtime(
 							GetDlgItem(hDlg,IDC_RECORDSTOPTIME_TIME),&st)!=
 																GDT_VALID) {
-						MessageBox(hDlg,TEXT("ŠÔ‚Ìæ“¾ƒGƒ‰[B"),NULL,
+						MessageBox(hDlg,TEXT("æ™‚é–“ã®å–å¾—ã‚¨ãƒ©ãƒ¼ã€‚"),NULL,
 												MB_OK | MB_ICONEXCLAMATION);
 						return TRUE;
 					}
@@ -667,7 +667,7 @@ INT_PTR CALLBACK CRecordManager::StopTimeDlgProc(HWND hDlg,UINT uMsg,
 					SystemTimeToFileTime(&st,&ftCur);
 					if (CompareFileTime(&ft,&ftCur)<=0) {
 						MessageBox(hDlg,
-								TEXT("w’è‚³‚ê‚½’â~ŠÔ‚ğŠù‚É‰ß‚¬‚Ä‚¢‚Ü‚·B"),
+								TEXT("æŒ‡å®šã•ã‚ŒãŸåœæ­¢æ™‚é–“ã‚’æ—¢ã«éãã¦ã„ã¾ã™ã€‚"),
 											NULL,MB_OK | MB_ICONEXCLAMATION);
 						SetFocus(GetDlgItem(hDlg,IDC_RECORDSTOPTIME_TIME));
 						return TRUE;
@@ -750,8 +750,8 @@ bool CRecordManager::DoFileExistsOperation(HWND hwndOwner,LPTSTR pszFileName)
 	case EXISTS_CONFIRM:
 		if (PathFileExists(m_FileName.c_str())
 				&& MessageBox(hwndOwner,
-					TEXT("ƒtƒ@ƒCƒ‹‚ªŠù‚É‘¶İ‚µ‚Ü‚·B\nã‘‚«‚µ‚Ü‚·‚©?"),
-					TEXT("ã‘‚«‚ÌŠm”F"),MB_OKCANCEL | MB_ICONQUESTION)!=IDOK)
+					TEXT("ãƒ•ã‚¡ã‚¤ãƒ«ãŒæ—¢ã«å­˜åœ¨ã—ã¾ã™ã€‚\nä¸Šæ›¸ãã—ã¾ã™ã‹?"),
+					TEXT("ä¸Šæ›¸ãã®ç¢ºèª"),MB_OKCANCEL | MB_ICONQUESTION)!=IDOK)
 			return false;
 		break;
 	case EXISTS_SEQUENCIALNUMBER:
@@ -915,7 +915,7 @@ INT_PTR CRecordManager::CRecordSettingsDialog::DlgProc(HWND hDlg,UINT uMsg,WPARA
 			SYSTEMTIME stLocal;
 			::GetLocalTime(&stLocal);
 
-			// ŠJnŠÔ
+			// é–‹å§‹æ™‚é–“
 			SYSTEMTIME stStart;
 			DWORD Delay;
 			::CheckRadioButton(hDlg,IDC_RECORD_START_NOW,IDC_RECORD_START_DELAY,
@@ -970,7 +970,7 @@ INT_PTR CRecordManager::CRecordSettingsDialog::DlgProc(HWND hDlg,UINT uMsg,WPARA
 							   m_pRecManager->m_StartTimeSpec.Type==TIME_DURATION);
 			}
 
-			// I—¹ŠÔ
+			// çµ‚äº†æ™‚é–“
 			SYSTEMTIME stStop;
 			DWORD Duration;
 			::CheckDlgButton(hDlg,IDC_RECORD_STOPSPECTIME,
@@ -1049,8 +1049,8 @@ INT_PTR CRecordManager::CRecordSettingsDialog::DlgProc(HWND hDlg,UINT uMsg,WPARA
 				*/
 			}
 
-			// •Û‘¶ƒvƒ‰ƒOƒCƒ“
-			DlgComboBox_AddString(hDlg,IDC_RECORD_WRITEPLUGIN,TEXT("g—p‚µ‚È‚¢ (TSo—Í)"));
+			// ä¿å­˜ãƒ—ãƒ©ã‚°ã‚¤ãƒ³
+			DlgComboBox_AddString(hDlg,IDC_RECORD_WRITEPLUGIN,TEXT("ä½¿ç”¨ã—ãªã„ (TSå‡ºåŠ›)"));
 			if (!m_pRecManager->m_fRecording) {
 				GetWritePluginList(&m_pRecManager->m_WritePluginList);
 				int Sel=-1;
@@ -1101,14 +1101,14 @@ INT_PTR CRecordManager::CRecordSettingsDialog::DlgProc(HWND hDlg,UINT uMsg,WPARA
 				ofn.lStructSize=sizeof(OPENFILENAME);
 				ofn.hwndOwner=hDlg;
 				ofn.lpstrFilter=
-					TEXT("TSƒtƒ@ƒCƒ‹(*.ts)\0*.ts\0‚·‚×‚Ä‚Ìƒtƒ@ƒCƒ‹\0*.*\0");
+					TEXT("TSãƒ•ã‚¡ã‚¤ãƒ«(*.ts)\0*.ts\0ã™ã¹ã¦ã®ãƒ•ã‚¡ã‚¤ãƒ«\0*.*\0");
 				ofn.lpstrCustomFilter=NULL;
 				ofn.nFilterIndex=1;
 				ofn.lpstrFile=szFileName;
 				ofn.nMaxFile=MAX_PATH;
 				ofn.lpstrFileTitle=NULL;
 				ofn.lpstrInitialDir=NULL;
-				ofn.lpstrTitle=TEXT("•Û‘¶ƒtƒ@ƒCƒ‹–¼");
+				ofn.lpstrTitle=TEXT("ä¿å­˜ãƒ•ã‚¡ã‚¤ãƒ«å");
 				ofn.Flags=OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT;
 				ofn.lpstrDefExt=TEXT("ts");
 #if _WIN32_WINNT>=0x500
@@ -1226,7 +1226,7 @@ INT_PTR CRecordManager::CRecordSettingsDialog::DlgProc(HWND hDlg,UINT uMsg,WPARA
 						::TzSpecificLocalTimeToSystemTime(NULL,&st,&stStart);
 						if (CompareSystemTime(&stStart,&stCur)<=0) {
 							::MessageBox(hDlg,
-								TEXT("w’è‚³‚ê‚½ŠJn‚ğŠù‚É‰ß‚¬‚Ä‚¢‚Ü‚·B"),
+								TEXT("æŒ‡å®šã•ã‚ŒãŸé–‹å§‹æ™‚åˆ»ã‚’æ—¢ã«éãã¦ã„ã¾ã™ã€‚"),
 								NULL,MB_OK | MB_ICONEXCLAMATION);
 							SetDlgItemFocus(hDlg,IDC_RECORD_STARTTIME_TIME);
 							return TRUE;
@@ -1242,7 +1242,7 @@ INT_PTR CRecordManager::CRecordSettingsDialog::DlgProc(HWND hDlg,UINT uMsg,WPARA
 					::TzSpecificLocalTimeToSystemTime(NULL,&st,&stStop);
 					if (CompareSystemTime(&stStop,&stCur)<=0) {
 						::MessageBox(hDlg,
-							TEXT("w’è‚³‚ê‚½’â~‚ğŠù‚É‰ß‚¬‚Ä‚¢‚Ü‚·B"),
+							TEXT("æŒ‡å®šã•ã‚ŒãŸåœæ­¢æ™‚åˆ»ã‚’æ—¢ã«éãã¦ã„ã¾ã™ã€‚"),
 							NULL,MB_OK | MB_ICONEXCLAMATION);
 						SetDlgItemFocus(hDlg,IDC_RECORD_STOPTIME_TIME);
 						return TRUE;
@@ -1256,7 +1256,7 @@ INT_PTR CRecordManager::CRecordSettingsDialog::DlgProc(HWND hDlg,UINT uMsg,WPARA
 					CFilePath FilePath(szFileName);
 					if (szFileName[0]=='\0' || *FilePath.GetFileName()=='\0') {
 						::MessageBox(hDlg,
-							TEXT("ƒtƒ@ƒCƒ‹–¼‚ğ“ü—Í‚µ‚Ä‚­‚¾‚³‚¢B"),
+							TEXT("ãƒ•ã‚¡ã‚¤ãƒ«åã‚’å…¥åŠ›ã—ã¦ãã ã•ã„ã€‚"),
 							NULL,MB_OK | MB_ICONEXCLAMATION);
 						SetDlgItemFocus(hDlg,IDC_RECORD_FILENAME);
 						return TRUE;
@@ -1264,7 +1264,7 @@ INT_PTR CRecordManager::CRecordSettingsDialog::DlgProc(HWND hDlg,UINT uMsg,WPARA
 #if 0
 					if (!FilePath.IsValid()) {
 						::MessageBox(hDlg,
-							TEXT("ƒtƒ@ƒCƒ‹–¼‚Ég—p‚Å‚«‚È‚¢•¶š‚ªŠÜ‚Ü‚ê‚Ä‚¢‚Ü‚·B"),
+							TEXT("ãƒ•ã‚¡ã‚¤ãƒ«åã«ä½¿ç”¨ã§ããªã„æ–‡å­—ãŒå«ã¾ã‚Œã¦ã„ã¾ã™ã€‚"),
 							NULL,MB_OK | MB_ICONEXCLAMATION);
 						SetDlgItemFocus(hDlg,IDC_RECORD_FILENAME);
 						return TRUE;
@@ -1279,7 +1279,7 @@ INT_PTR CRecordManager::CRecordSettingsDialog::DlgProc(HWND hDlg,UINT uMsg,WPARA
 #endif
 					if (!FilePath.HasDirectory()) {
 						::MessageBox(hDlg,
-							TEXT("•Û‘¶æƒtƒHƒ‹ƒ_‚ğ“ü—Í‚µ‚Ä‚­‚¾‚³‚¢B"),
+							TEXT("ä¿å­˜å…ˆãƒ•ã‚©ãƒ«ãƒ€ã‚’å…¥åŠ›ã—ã¦ãã ã•ã„ã€‚"),
 							NULL,MB_OK | MB_ICONEXCLAMATION);
 						SetDlgItemFocus(hDlg,IDC_RECORD_FILENAME);
 						return TRUE;
@@ -1289,8 +1289,8 @@ INT_PTR CRecordManager::CRecordSettingsDialog::DlgProc(HWND hDlg,UINT uMsg,WPARA
 						CAppMain::CreateDirectoryResult CreateDirResult=
 							GetAppClass().CreateDirectory(
 								hDlg,szFileName,
-								TEXT("˜^‰æƒtƒ@ƒCƒ‹‚Ì•Û‘¶æƒtƒHƒ‹ƒ_ \"%s\" ‚ª‚ ‚è‚Ü‚¹‚ñB\n")
-								TEXT("ì¬‚µ‚Ü‚·‚©?"));
+								TEXT("éŒ²ç”»ãƒ•ã‚¡ã‚¤ãƒ«ã®ä¿å­˜å…ˆãƒ•ã‚©ãƒ«ãƒ€ \"%s\" ãŒã‚ã‚Šã¾ã›ã‚“ã€‚\n")
+								TEXT("ä½œæˆã—ã¾ã™ã‹?"));
 						if (CreateDirResult==CAppMain::CREATEDIRECTORY_RESULT_ERROR) {
 							SetDlgItemFocus(hDlg,IDC_RECORD_FILENAME);
 							return TRUE;

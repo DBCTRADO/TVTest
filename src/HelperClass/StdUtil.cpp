@@ -13,7 +13,7 @@ int StdUtil::snprintf(char *s,size_t n,const char *format, ...)
 
 	va_start(args,format);
 #if defined(__STDC_VERSION__) && __STDC_VERSION__>=199901L
-	// ŽÀŽ¿“I‚ÉVC‚Å‚µ‚©ƒRƒ“ƒpƒCƒ‹‚Å‚«‚È‚¢‚Ì‚Å–³ˆÓ–¡‚¾‚ª...
+	// å®Ÿè³ªçš„ã«VCã§ã—ã‹ã‚³ãƒ³ãƒ‘ã‚¤ãƒ«ã§ããªã„ã®ã§ç„¡æ„å‘³ã ãŒ...
 	Length=::vsnprintf(s,n,format,args);
 #else
 	if (n>0) {

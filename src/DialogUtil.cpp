@@ -197,7 +197,7 @@ bool SetListBoxHExtent(HWND hDlg,int ID)
 		}
 		SelectObject(hdc,hfontOld);
 		ReleaseDC(hwnd,hdc);
-		MaxWidth+=2;	/* —]”’ */
+		MaxWidth+=2;	/* ä½™ç™½ */
 	}
 	SendDlgItemMessage(hDlg,ID,LB_SETHORIZONTALEXTENT,MaxWidth,0);
 	return true;
@@ -496,7 +496,7 @@ bool AdjustListViewColumnWidth(HWND hwndList,bool fUseHeader)
 }
 
 
-// ƒ{ƒ^ƒ“‚ğƒhƒƒbƒvƒ_ƒEƒ“ƒƒjƒ…[•\¦—p‚É‰Šú‰»‚·‚é
+// ãƒœã‚¿ãƒ³ã‚’ãƒ‰ãƒ­ãƒƒãƒ—ãƒ€ã‚¦ãƒ³ãƒ¡ãƒ‹ãƒ¥ãƒ¼è¡¨ç¤ºç”¨ã«åˆæœŸåŒ–ã™ã‚‹
 bool InitDropDownButton(HWND hDlg,int ID)
 {
 #ifdef WIN_XP_SUPPORT

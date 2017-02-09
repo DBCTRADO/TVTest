@@ -6,7 +6,7 @@
 
 class CBonSrcPin;
 
-// Ç±ÇÃÉtÉBÉãÉ^ÇÃGUID {DCA86296-964A-4e64-857D-8D140E630707}
+// „Åì„ÅÆ„Éï„Ç£„É´„Çø„ÅÆGUID {DCA86296-964A-4e64-857D-8D140E630707}
 DEFINE_GUID(CLSID_BonSrcFilter, 0xdca86296, 0x964a, 0x4e64, 0x85, 0x7d, 0x8d, 0x14, 0x0e, 0x63, 0x07, 0x07);
 
 class __declspec(uuid("DCA86296-964A-4e64-857D-8D140E630707")) CBonSrcFilter

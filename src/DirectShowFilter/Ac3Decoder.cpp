@@ -218,7 +218,7 @@ bool CAc3Decoder::DecodeFrame(const BYTE *pData, DWORD *pDataSize, DecodeFrameIn
 		m_FramePos = 0;
 
 	if (m_FramePos == 0) {
-		// syncwordåüçı
+		// syncwordÊ§úÁ¥¢
 		WORD SyncWord = m_SyncWord;
 
 		while (Pos < DataSize) {
@@ -239,7 +239,7 @@ bool CAc3Decoder::DecodeFrame(const BYTE *pData, DWORD *pDataSize, DecodeFrameIn
 	}
 
 	if (m_FramePos < 7) {
-		// a52_syncinfo Ç…7ÉoÉCÉgïKóv
+		// a52_syncinfo „Å´7„Éê„Ç§„ÉàÂøÖË¶Å
 		int Remain = min((int)(DataSize - Pos), 7 - m_FramePos);
 		::CopyMemory(&m_FrameBuffer[m_FramePos], &pData[Pos], Remain);
 		m_FramePos += Remain;
@@ -254,7 +254,7 @@ bool CAc3Decoder::DecodeFrame(const BYTE *pData, DWORD *pDataSize, DecodeFrameIn
 
 			m_FramePos = 0;
 
-			// syncwordçƒåüçı
+			// syncwordÂÜçÊ§úÁ¥¢
 			for (int i = 2; i < 7; i++) {
 				if (m_FrameBuffer[i] == 0x0B) {
 					if (i == 6) {

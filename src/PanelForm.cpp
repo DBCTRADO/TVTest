@@ -64,7 +64,7 @@ CPanelForm::~CPanelForm()
 
 bool CPanelForm::Create(HWND hwndParent,DWORD Style,DWORD ExStyle,int ID)
 {
-	return CreateBasicWindow(hwndParent,Style,ExStyle,ID,m_pszClassName,TEXT("ÉpÉlÉã"),m_hinst);
+	return CreateBasicWindow(hwndParent,Style,ExStyle,ID,m_pszClassName,TEXT("„Éë„Éç„É´"),m_hinst);
 }
 
 

@@ -275,7 +275,7 @@ bool CEpgProgramList::UpdateService(CEventManager *pEventManager,
 
 		if (pOldServiceInfo->m_fMergeOldEvents
 				&& (Flags&SERVICE_UPDATE_DISCARD_OLD_EVENTS)==0) {
-			// Šù‘¶‚ÌƒCƒxƒ“ƒg‚ÅV‚µ‚¢ƒŠƒXƒg‚É–³‚¢‚à‚Ì‚ð’Ç‰Á‚·‚é
+			// æ—¢å­˜ã®ã‚¤ãƒ™ãƒ³ãƒˆã§æ–°ã—ã„ãƒªã‚¹ãƒˆã«ç„¡ã„ã‚‚ã®ã‚’è¿½åŠ ã™ã‚‹
 
 			const bool fDiscardEndedEvents=(Flags&SERVICE_UPDATE_DISCARD_ENDED_EVENTS)!=0;
 			ULONGLONG CurTime;
@@ -368,7 +368,7 @@ bool CEpgProgramList::UpdateService(CEventManager *pEventManager,
 				pServiceInfo->m_fMergeOldEvents=false;
 
 #ifdef _DEBUG
-			TRACE(TEXT("ŒÃ‚¢ƒCƒxƒ“ƒg %u / Šg’£ƒeƒLƒXƒg %u\n"),
+			TRACE(TEXT("å¤ã„ã‚¤ãƒ™ãƒ³ãƒˆ %u / æ‹¡å¼µãƒ†ã‚­ã‚¹ãƒˆ %u\n"),
 				  MergeEventCount,MergeExtTextCount);
 #endif
 		}
@@ -598,7 +598,7 @@ const CEventInfoData *CEpgProgramList::GetEventInfo(WORD NetworkID,WORD TSID,WOR
 
 bool CEpgProgramList::SetCommonEventInfo(CEventInfoData *pInfo)
 {
-	// ƒCƒxƒ“ƒg‹¤—L‚ÌŽQÆæ‚©‚çî•ñ‚ðŽæ“¾‚·‚é
+	// ã‚¤ãƒ™ãƒ³ãƒˆå…±æœ‰ã®å‚ç…§å…ˆã‹ã‚‰æƒ…å ±ã‚’å–å¾—ã™ã‚‹
 	if (pInfo->m_bCommonEvent) {
 		CEventInfo EventInfo;
 		if (m_pEventManager->GetEventInfo(pInfo->m_NetworkID,
@@ -663,65 +663,65 @@ bool CEpgProgramList::CopyEventExtText(CEventInfoData *pDstInfo,const CEventInfo
 #include <pshpack1.h>
 
 /*
-	EPGƒtƒ@ƒCƒ‹‚ÌƒtƒH[ƒ}ƒbƒg
-	„¡„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„¢
-	„ EpgListFileHeader                         „ 
-	„¥„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„§
-	„ „¡„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„¢„ 
-	„ „ ServiceInfoHeader2                    „ „ 
-	„ „¥„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„§„ 
-	„ „ „¡„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„¢„ „ 
-	„ „ „ EventInfoHeader2                  „ „ „ 
-	„ „ „¥„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„§„ „ 
-	„ „ „ „¡„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„¢„ „ „ 
-	„ „ „ „ EventAudioHeader              „ „ „ „ 
-	„ „ „ „¥„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„§„ „ „ 
-	„ „ „ „ ‰¹ºƒRƒ“ƒ|[ƒlƒ“ƒgƒeƒLƒXƒg    „ „ „ „ 
-	„ „ „ „¤„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„£„ „ „ 
-	„ „ „  ...                              „ „ „ 
-	„ „ „¥„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„§„ „ 
-	„ „ „ „¡„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„¢„ „ „ 
-	„ „ „ „ NibbleData                    „ „ „ „ 
-	„ „ „ „¤„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„£„ „ „ 
-	„ „ „  ...                              „ „ „ 
-	„ „ „¥„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„§„ „ 
-	„ „ „ (ƒCƒxƒ“ƒg–¼)                      „ „ „ 
-	„ „ „¥„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„§„ „ 
-	„ „ „ (ƒCƒxƒ“ƒgƒeƒLƒXƒg)                „ „ „ 
-	„ „ „¥„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„§„ „ 
-	„ „ „ (ƒCƒxƒ“ƒgŠg’£ƒeƒLƒXƒg)            „ „ „ 
-	„ „ „¥„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„§„ „ 
-	„ „ „ „¡„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„¢„ „ „ 
-	„ „ „ „ EventAudioExInfo              „ „ „ „ 
-	„ „ „ „¤„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„£„ „ „ 
-	„ „ „  ...                              „ „ „ 
-	„ „ „¥„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„§„ „ 
-	„ „ „ „¡„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„¢„ „ „ 
-	„ „ „ „ EventVideoInfo                „ „ „ „ 
-	„ „ „ „¥„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„§„ „ „ 
-	„ „ „ „ ‰f‘œƒRƒ“ƒ|[ƒlƒ“ƒgƒeƒLƒXƒg    „ „ „ „ 
-	„ „ „ „¤„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„£„ „ „ 
-	„ „ „  ...                              „ „ „ 
-	„ „ „¥„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„§„ „ 
-	„ „ „ „¡„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„¢„ „ „ 
-	„ „ „ „ EventGroupHeader              „ „ „ „ 
-	„ „ „ „¥„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„§„ „ „ 
-	„ „ „ „ „¡„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„¢„ „ „ „ 
-	„ „ „ „ „ CEventGroupDesc::EventInfo„ „ „ „ „ 
-	„ „ „ „ „¤„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„£„ „ „ „ 
-	„ „ „ „  ...                          „ „ „ „ 
-	„ „ „ „¤„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„£„ „ „ 
-	„ „ „  ...                              „ „ „ 
-	„ „ „¥„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„§„ „ 
-	„ „ „ CRC                               „ „ „ 
-	„ „ „¤„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„£„ „ 
-	„ „  ...                                  „ „ 
-	„ „¤„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„£„ 
-	„  ...                                      „ 
-	„¤„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„£
+	EPGãƒ•ã‚¡ã‚¤ãƒ«ã®ãƒ•ã‚©ãƒ¼ãƒžãƒƒãƒˆ
+	â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+	â”‚EpgListFileHeader                         â”‚
+	â”œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¤
+	â”‚â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”â”‚
+	â”‚â”‚ServiceInfoHeader2                    â”‚â”‚
+	â”‚â”œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¤â”‚
+	â”‚â”‚â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”â”‚â”‚
+	â”‚â”‚â”‚EventInfoHeader2                  â”‚â”‚â”‚
+	â”‚â”‚â”œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¤â”‚â”‚
+	â”‚â”‚â”‚â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”â”‚â”‚â”‚
+	â”‚â”‚â”‚â”‚EventAudioHeader              â”‚â”‚â”‚â”‚
+	â”‚â”‚â”‚â”œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¤â”‚â”‚â”‚
+	â”‚â”‚â”‚â”‚éŸ³å£°ã‚³ãƒ³ãƒãƒ¼ãƒãƒ³ãƒˆãƒ†ã‚­ã‚¹ãƒˆ    â”‚â”‚â”‚â”‚
+	â”‚â”‚â”‚â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜â”‚â”‚â”‚
+	â”‚â”‚â”‚ ...                              â”‚â”‚â”‚
+	â”‚â”‚â”œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¤â”‚â”‚
+	â”‚â”‚â”‚â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”â”‚â”‚â”‚
+	â”‚â”‚â”‚â”‚NibbleData                    â”‚â”‚â”‚â”‚
+	â”‚â”‚â”‚â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜â”‚â”‚â”‚
+	â”‚â”‚â”‚ ...                              â”‚â”‚â”‚
+	â”‚â”‚â”œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¤â”‚â”‚
+	â”‚â”‚â”‚(ã‚¤ãƒ™ãƒ³ãƒˆå)                      â”‚â”‚â”‚
+	â”‚â”‚â”œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¤â”‚â”‚
+	â”‚â”‚â”‚(ã‚¤ãƒ™ãƒ³ãƒˆãƒ†ã‚­ã‚¹ãƒˆ)                â”‚â”‚â”‚
+	â”‚â”‚â”œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¤â”‚â”‚
+	â”‚â”‚â”‚(ã‚¤ãƒ™ãƒ³ãƒˆæ‹¡å¼µãƒ†ã‚­ã‚¹ãƒˆ)            â”‚â”‚â”‚
+	â”‚â”‚â”œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¤â”‚â”‚
+	â”‚â”‚â”‚â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”â”‚â”‚â”‚
+	â”‚â”‚â”‚â”‚EventAudioExInfo              â”‚â”‚â”‚â”‚
+	â”‚â”‚â”‚â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜â”‚â”‚â”‚
+	â”‚â”‚â”‚ ...                              â”‚â”‚â”‚
+	â”‚â”‚â”œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¤â”‚â”‚
+	â”‚â”‚â”‚â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”â”‚â”‚â”‚
+	â”‚â”‚â”‚â”‚EventVideoInfo                â”‚â”‚â”‚â”‚
+	â”‚â”‚â”‚â”œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¤â”‚â”‚â”‚
+	â”‚â”‚â”‚â”‚æ˜ åƒã‚³ãƒ³ãƒãƒ¼ãƒãƒ³ãƒˆãƒ†ã‚­ã‚¹ãƒˆ    â”‚â”‚â”‚â”‚
+	â”‚â”‚â”‚â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜â”‚â”‚â”‚
+	â”‚â”‚â”‚ ...                              â”‚â”‚â”‚
+	â”‚â”‚â”œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¤â”‚â”‚
+	â”‚â”‚â”‚â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”â”‚â”‚â”‚
+	â”‚â”‚â”‚â”‚EventGroupHeader              â”‚â”‚â”‚â”‚
+	â”‚â”‚â”‚â”œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¤â”‚â”‚â”‚
+	â”‚â”‚â”‚â”‚â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”â”‚â”‚â”‚â”‚
+	â”‚â”‚â”‚â”‚â”‚CEventGroupDesc::EventInfoâ”‚â”‚â”‚â”‚â”‚
+	â”‚â”‚â”‚â”‚â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜â”‚â”‚â”‚â”‚
+	â”‚â”‚â”‚â”‚ ...                          â”‚â”‚â”‚â”‚
+	â”‚â”‚â”‚â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜â”‚â”‚â”‚
+	â”‚â”‚â”‚ ...                              â”‚â”‚â”‚
+	â”‚â”‚â”œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¤â”‚â”‚
+	â”‚â”‚â”‚CRC                               â”‚â”‚â”‚
+	â”‚â”‚â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜â”‚â”‚
+	â”‚â”‚ ...                                  â”‚â”‚
+	â”‚â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜â”‚
+	â”‚ ...                                      â”‚
+	â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
 */
 
-// ver.0.7.0‚æ‚è‘O‚ÌŒÃ‚¢EPGƒtƒ@ƒCƒ‹‚É‘Î‰ž
+// ver.0.7.0ã‚ˆã‚Šå‰ã®å¤ã„EPGãƒ•ã‚¡ã‚¤ãƒ«ã«å¯¾å¿œ
 //#define EPG_FILE_V0_SUPPORT
 
 struct EpgListFileHeader {
@@ -905,7 +905,7 @@ static bool ReadString(CNFile *pFile,TVTest::String *pString,CCrc32 *pCrc)
 }
 
 #ifdef EPG_FILE_V0_SUPPORT
-// ‹ŒŒ`Ž®—p
+// æ—§å½¢å¼ç”¨
 static bool ReadString(CNFile *pFile,TVTest::String *pString)
 {
 	DWORD Length;
@@ -983,7 +983,7 @@ bool CEpgProgramList::LoadFromFile(LPCTSTR pszFileName)
 				   CNFile::CNF_READ | CNFile::CNF_SHAREREAD |
 				   CNFile::CNF_SEQUENTIALREAD | CNFile::CNF_PRIORITY_LOW)) {
 		App.AddLog(CLogItem::TYPE_ERROR,
-				   TEXT("EPGƒtƒ@ƒCƒ‹‚ðŠJ‚¯‚Ü‚¹‚ñB(ƒGƒ‰[ƒR[ƒh 0x%lu)"),
+				   TEXT("EPGãƒ•ã‚¡ã‚¤ãƒ«ã‚’é–‹ã‘ã¾ã›ã‚“ã€‚(ã‚¨ãƒ©ãƒ¼ã‚³ãƒ¼ãƒ‰ 0x%lu)"),
 				   File.GetLastError());
 		return false;
 	}
@@ -996,12 +996,12 @@ bool CEpgProgramList::LoadFromFile(LPCTSTR pszFileName)
 		return false;
 #ifndef EPG_FILE_V0_SUPPORT
 	if (FileHeader.Version==0) {
-		App.AddLog(CLogItem::TYPE_ERROR,TEXT("EPGƒtƒ@ƒCƒ‹‚ªŒÃ‚¢Œ`Ž®‚Ì‚½‚ß“Ç‚Ýž‚ß‚Ü‚¹‚ñB"));
+		App.AddLog(CLogItem::TYPE_ERROR,TEXT("EPGãƒ•ã‚¡ã‚¤ãƒ«ãŒå¤ã„å½¢å¼ã®ãŸã‚èª­ã¿è¾¼ã‚ã¾ã›ã‚“ã€‚"));
 		return false;
 	}
 #endif
 	if (FileHeader.Version>EPGLISTFILEHEADER_VERSION) {
-		App.AddLog(CLogItem::TYPE_ERROR,TEXT("EPGƒtƒ@ƒCƒ‹‚ª–¢’m‚ÌŒ`Ž®‚Ì‚½‚ß“Ç‚Ýž‚ß‚Ü‚¹‚ñB"));
+		App.AddLog(CLogItem::TYPE_ERROR,TEXT("EPGãƒ•ã‚¡ã‚¤ãƒ«ãŒæœªçŸ¥ã®å½¢å¼ã®ãŸã‚èª­ã¿è¾¼ã‚ã¾ã›ã‚“ã€‚"));
 		return false;
 	}
 
@@ -1031,7 +1031,7 @@ bool CEpgProgramList::LoadFromFile(LPCTSTR pszFileName)
 				goto OnError;
 			if (ServiceHeader2.CRC!=CCrcCalculator::CalcCrc32((const BYTE*)&ServiceHeader2,
 															  sizeof(ServiceInfoHeader2)-sizeof(DWORD))) {
-				App.AddLog(CLogItem::TYPE_ERROR,TEXT("EPGƒtƒ@ƒCƒ‹‚Ì”j‘¹‚ªŒŸo‚³‚ê‚Ü‚µ‚½B"));
+				App.AddLog(CLogItem::TYPE_ERROR,TEXT("EPGãƒ•ã‚¡ã‚¤ãƒ«ã®ç ´æãŒæ¤œå‡ºã•ã‚Œã¾ã—ãŸã€‚"));
 				goto OnError;
 			}
 		}
@@ -1274,9 +1274,9 @@ bool CEpgProgramList::LoadFromFile(LPCTSTR pszFileName)
 				if (File.Read(&CRC32,sizeof(DWORD))!=sizeof(DWORD))
 					goto OnError;
 				if (CRC32!=CRC.GetCrc()) {
-					// 2‰ñ‘±‚¯‚ÄCRCƒGƒ‰[‚Ìê‡‚Í“Ç‚Ýž‚Ý’†Ž~
+					// 2å›žç¶šã‘ã¦CRCã‚¨ãƒ©ãƒ¼ã®å ´åˆã¯èª­ã¿è¾¼ã¿ä¸­æ­¢
 					if (fCRCError) {
-						App.AddLog(CLogItem::TYPE_ERROR,TEXT("EPGƒtƒ@ƒCƒ‹‚Ì”j‘¹‚ªŒŸo‚³‚ê‚Ü‚µ‚½B"));
+						App.AddLog(CLogItem::TYPE_ERROR,TEXT("EPGãƒ•ã‚¡ã‚¤ãƒ«ã®ç ´æãŒæ¤œå‡ºã•ã‚Œã¾ã—ãŸã€‚"));
 						goto OnError;
 					}
 					fCRCError=true;
@@ -1293,7 +1293,7 @@ bool CEpgProgramList::LoadFromFile(LPCTSTR pszFileName)
 	return true;
 
 OnError:
-	App.AddLog(CLogItem::TYPE_ERROR,TEXT("EPGƒtƒ@ƒCƒ‹‚Ì“Ç‚Ýž‚ÝƒGƒ‰[‚ª”­¶‚µ‚Ü‚µ‚½B"));
+	App.AddLog(CLogItem::TYPE_ERROR,TEXT("EPGãƒ•ã‚¡ã‚¤ãƒ«ã®èª­ã¿è¾¼ã¿ã‚¨ãƒ©ãƒ¼ãŒç™ºç”Ÿã—ã¾ã—ãŸã€‚"));
 	Clear();
 	return false;
 }
@@ -1315,13 +1315,13 @@ bool CEpgProgramList::SaveToFile(LPCTSTR pszFileName)
 	CGlobalLock GlobalLock;
 	if (GlobalLock.Create(szName)) {
 		if (!GlobalLock.Wait(10000)) {
-			App.AddLog(CLogItem::TYPE_ERROR,TEXT("EPGƒtƒ@ƒCƒ‹‚ªƒƒbƒN‚³‚ê‚Ä‚¢‚é‚½‚ß•Û‘¶‚Å‚«‚Ü‚¹‚ñB"));
+			App.AddLog(CLogItem::TYPE_ERROR,TEXT("EPGãƒ•ã‚¡ã‚¤ãƒ«ãŒãƒ­ãƒƒã‚¯ã•ã‚Œã¦ã„ã‚‹ãŸã‚ä¿å­˜ã§ãã¾ã›ã‚“ã€‚"));
 			return false;
 		}
 	}
 
-	// ƒtƒ@ƒCƒ‹‚ª“Ç‚Ýž‚ñ‚¾Žž‚©‚çXV‚³‚ê‚Ä‚¢‚éê‡“Ç‚Ýž‚Ý’¼‚·
-	// (•¡”‹N“®‚µ‚Ä‘¼‚ÌƒvƒƒZƒX‚ªXV‚µ‚½‰Â”\«‚ª‚ ‚é‚½‚ß)
+	// ãƒ•ã‚¡ã‚¤ãƒ«ãŒèª­ã¿è¾¼ã‚“ã æ™‚ã‹ã‚‰æ›´æ–°ã•ã‚Œã¦ã„ã‚‹å ´åˆèª­ã¿è¾¼ã¿ç›´ã™
+	// (è¤‡æ•°èµ·å‹•ã—ã¦ä»–ã®ãƒ—ãƒ­ã‚»ã‚¹ãŒæ›´æ–°ã—ãŸå¯èƒ½æ€§ãŒã‚ã‚‹ãŸã‚)
 	WIN32_FIND_DATA fd;
 	HANDLE hFind=::FindFirstFile(pszFileName,&fd);
 	if (hFind!=INVALID_HANDLE_VALUE) {
@@ -1340,7 +1340,7 @@ bool CEpgProgramList::SaveToFile(LPCTSTR pszFileName)
 	if (!File.Open(pszFileName,CNFile::CNF_WRITE | CNFile::CNF_NEW)) {
 		GlobalLock.Release();
 		App.AddLog(CLogItem::TYPE_ERROR,
-				   TEXT("EPGƒtƒ@ƒCƒ‹‚ªŠJ‚¯‚Ü‚¹‚ñB(ƒGƒ‰[ƒR[ƒh 0x%lx)"),
+				   TEXT("EPGãƒ•ã‚¡ã‚¤ãƒ«ãŒé–‹ã‘ã¾ã›ã‚“ã€‚(ã‚¨ãƒ©ãƒ¼ã‚³ãƒ¼ãƒ‰ 0x%lx)"),
 				   File.GetLastError());
 		return false;
 	}
@@ -1524,7 +1524,7 @@ bool CEpgProgramList::SaveToFile(LPCTSTR pszFileName)
 
 OnError:
 	App.AddLog(CLogItem::TYPE_ERROR,
-			   TEXT("EPGƒtƒ@ƒCƒ‹‚Ì‘‚«o‚µƒGƒ‰[‚ª”­¶‚µ‚Ü‚µ‚½B(ƒGƒ‰[ƒR[ƒh 0x%lx)"),
+			   TEXT("EPGãƒ•ã‚¡ã‚¤ãƒ«ã®æ›¸ãå‡ºã—ã‚¨ãƒ©ãƒ¼ãŒç™ºç”Ÿã—ã¾ã—ãŸã€‚(ã‚¨ãƒ©ãƒ¼ã‚³ãƒ¼ãƒ‰ 0x%lx)"),
 			   File.GetLastError());
 	delete [] pNumEvents;
 	File.Close();

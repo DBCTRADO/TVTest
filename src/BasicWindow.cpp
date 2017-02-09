@@ -101,12 +101,12 @@ void CBasicWindow::GetPosition(int *pLeft,int *pTop,int *pWidth,int *pHeight) co
 			wp.length=sizeof(WINDOWPLACEMENT);
 			::GetWindowPlacement(m_hwnd,&wp);
 			if (wp.showCmd==SW_SHOWNORMAL) {
-				// �ʏ�\������GetWindowRect�̕������W�ϊ��̖�肪�Ȃ��̂Ŋm��
+				// 通常表示時はGetWindowRectの方が座標変換の問題がないので確実
 				::GetWindowRect(m_hwnd,&rc);
 			} else {
 				/*
-					WS_EX_TOOLWINDOW�X�^�C�����t���Ă��Ȃ��ꍇ�́A
-					rcNormalPosition�̓��[�N�X�y�[�X���W�ɂȂ�(�d�l���Ӗ��s��...)
+					WS_EX_TOOLWINDOWスタイルが付いていない場合は、
+					rcNormalPositionはワークスペース座標になる(仕様が意味不明...)
 				*/
 				if ((GetWindowExStyle() & WS_EX_TOOLWINDOW)==0) {
 					HMONITOR hMonitor=::MonitorFromRect(&wp.rcNormalPosition,MONITOR_DEFAULTTONEAREST);
@@ -417,7 +417,7 @@ bool CBasicWindow::SetOpacity(int Opacity,bool fClearLayered)
 	if (Opacity<0 || Opacity>255 || m_hwnd==NULL)
 		return false;
 
-	// �q�E�B���h�E�����C���[�h�E�B���h�E�ɂł���̂� Windows 8 �ȍ~
+	// 子ウィンドウをレイヤードウィンドウにできるのは Windows 8 以降
 	if ((GetWindowStyle() & WS_CHILD)!=0 && !Util::OS::IsWindows8OrLater())
 		return false;
 

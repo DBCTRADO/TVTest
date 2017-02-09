@@ -10,21 +10,21 @@
 
 static const UINT MEGA_BYTES=1024*1024;
 
-// �����o���o�b�t�@�T�C�Y�̐���(�o�C�g�P��)
+// 書き出しバッファサイズの制限(バイト単位)
 static const UINT WRITE_BUFFER_SIZE_MIN=1024;
 static const UINT WRITE_BUFFER_SIZE_MAX=32*MEGA_BYTES;
 
-// �����̂ڂ�^��o�b�t�@�T�C�Y�̐���(MiB�P��)
+// さかのぼり録画バッファサイズの制限(MiB単位)
 static const UINT TIMESHIFT_BUFFER_SIZE_MIN=1;
 static const UINT TIMESHIFT_BUFFER_SIZE_MAX=1024;
 static const UINT TIMESHIFT_BUFFER_SIZE_DEFAULT=32;
 
-// �����o���҂��o�b�t�@�̐���(�o�C�g�P��)
+// 書き出し待ちバッファの制限(バイト単位)
 static const UINT MAX_PENDING_SIZE_MIN=32*MEGA_BYTES;
 static const UINT MAX_PENDING_SIZE_MAX=1024*MEGA_BYTES;
 static const UINT MAX_PENDING_SIZE_DEFAULT=512*MEGA_BYTES;
 
-// �X�e�[�^�X�o�[����̘^��̃R�}���h
+// ステータスバーからの録画のコマンド
 static const int StatusBarCommandList[] = {
 	CM_RECORD_START,
 	CM_RECORDOPTION,
@@ -88,7 +88,7 @@ bool CRecordOptions::ReadSettings(CSettings &Settings)
 	TCHAR szPath[MAX_PATH];
 	unsigned int Value;
 
-	// �Â��o�[�W�����̌݊��p
+	// 古いバージョンの互換用
 	if (Settings.Read(TEXT("RecordFile"),szPath,lengthof(szPath))
 			&& szPath[0]!='\0') {
 		LPTSTR pszFileName=::PathFindFileName(szPath);
@@ -106,7 +106,7 @@ bool CRecordOptions::ReadSettings(CSettings &Settings)
 			&& szPath[0]!='\0')
 		::lstrcpy(m_szFileName,szPath);
 #if 0
-	// �Â��o�[�W�����̌݊��p
+	// 古いバージョンの互換用
 	bool fAddTime;
 	if (Settings.Read(TEXT("AddRecordTime"),&fAddTime) && fAddTime) {
 		TCHAR szFormat[] = TEXT("%date%_%time%");
@@ -214,17 +214,17 @@ bool CRecordOptions::GenerateFilePath(LPTSTR pszFileName,int MaxLength,LPCTSTR *
 {
 	if (m_szSaveFolder[0]=='\0') {
 		if (ppszErrorMessage)
-			*ppszErrorMessage=TEXT("�ݒ�ŕۑ���t�H���_���w�肵�Ă��������B");
+			*ppszErrorMessage=TEXT("設定で保存先フォルダを指定してください。");
 		return false;
 	}
 	if (m_szFileName[0]=='\0') {
 		if (ppszErrorMessage)
-			*ppszErrorMessage=TEXT("�ݒ�Ńt�@�C�������w�肵�Ă��������B");
+			*ppszErrorMessage=TEXT("設定でファイル名を指定してください。");
 		return false;
 	}
 	if (::lstrlen(m_szSaveFolder)+1+::lstrlen(m_szFileName)>=MaxLength) {
 		if (ppszErrorMessage)
-			*ppszErrorMessage=TEXT("�t�@�C���p�X���������܂��B");
+			*ppszErrorMessage=TEXT("ファイルパスが長すぎます。");
 		return false;
 	}
 	::lstrcpy(pszFileName,m_szSaveFolder);
@@ -237,8 +237,8 @@ bool CRecordOptions::GenerateFilePath(LPTSTR pszFileName,int MaxLength,LPCTSTR *
 bool CRecordOptions::ConfirmChannelChange(HWND hwndOwner) const
 {
 	if (m_fConfirmChannelChange) {
-		if (::MessageBox(hwndOwner,TEXT("�^�撆�ł��B�`�����l���ύX���܂���?"),
-				TEXT("�`�����l���ύX�̊m�F"),
+		if (::MessageBox(hwndOwner,TEXT("録画中です。チャンネル変更しますか?"),
+				TEXT("チャンネル変更の確認"),
 				MB_OKCANCEL | MB_DEFBUTTON2 | MB_ICONQUESTION)!=IDOK)
 			return false;
 	}
@@ -250,10 +250,10 @@ bool CRecordOptions::ConfirmServiceChange(HWND hwndOwner,const CRecordManager *p
 {
 	if (pRecordManager->GetCurServiceOnly()) {
 		if (::MessageBox(hwndOwner,
-				TEXT("���݂̃T�[�r�X�̂ݘ^�撆�ł��B\r\n")
-				TEXT("�T�[�r�X�̕ύX������Ɛ���ɍĐ��ł��Ȃ��Ȃ邩���m��܂���B\r\n")
-				TEXT("�T�[�r�X��ύX���܂���?"),
-				TEXT("�ύX�̊m�F"),
+				TEXT("現在のサービスのみ録画中です。\r\n")
+				TEXT("サービスの変更をすると正常に再生できなくなるかも知れません。\r\n")
+				TEXT("サービスを変更しますか?"),
+				TEXT("変更の確認"),
 				MB_OKCANCEL | MB_DEFBUTTON2 | MB_ICONQUESTION)!=IDOK)
 			return false;
 	}
@@ -265,7 +265,7 @@ bool CRecordOptions::ConfirmStop(HWND hwndOwner) const
 {
 	if (m_fConfirmStop && !m_fConfirmStopStatusBarOnly) {
 		if (::MessageBox(hwndOwner,
-				TEXT("�^����~���܂���?"),TEXT("��~�̊m�F"),
+				TEXT("録画を停止しますか?"),TEXT("停止の確認"),
 				MB_OKCANCEL | MB_DEFBUTTON2 | MB_ICONQUESTION)!=IDOK)
 			return false;
 	}
@@ -277,7 +277,7 @@ bool CRecordOptions::ConfirmStatusBarStop(HWND hwndOwner) const
 {
 	if (m_fConfirmStop && m_fConfirmStopStatusBarOnly) {
 		if (::MessageBox(hwndOwner,
-				TEXT("�^����~���܂���?"),TEXT("��~�̊m�F"),
+				TEXT("録画を停止しますか?"),TEXT("停止の確認"),
 				MB_OKCANCEL | MB_DEFBUTTON2 | MB_ICONQUESTION)!=IDOK)
 			return false;
 	}
@@ -289,17 +289,17 @@ bool CRecordOptions::ConfirmExit(HWND hwndOwner,const CRecordManager *pRecordMan
 {
 	if (m_fConfirmExit && pRecordManager->IsRecording()) {
 		if (::MessageBox(hwndOwner,
-				TEXT("���ݘ^�撆�ł��B\r\n�I�����Ă������ł���?"),
-				TEXT("�I���̊m�F"),
+				TEXT("現在録画中です。\r\n終了してもいいですか?"),
+				TEXT("終了の確認"),
 				MB_OKCANCEL | MB_DEFBUTTON2 | MB_ICONQUESTION)!=IDOK)
 			return false;
 	}
 	if (pRecordManager->IsReserved()) {
 		if (::MessageBox(hwndOwner,
-				TEXT("�^��̐ݒ肪����Ă��܂��B\r\n")
-				TEXT("�I������Ƙ^��͍s���܂���B\r\n")
-				TEXT("�I�����Ă������ł���?"),
-				TEXT("�I���̊m�F"),
+				TEXT("録画の設定がされています。\r\n")
+				TEXT("終了すると録画は行われません。\r\n")
+				TEXT("終了してもいいですか?"),
+				TEXT("終了の確認"),
 				MB_OKCANCEL | MB_DEFBUTTON2 | MB_ICONQUESTION)!=IDOK)
 			return false;
 	}
@@ -372,8 +372,8 @@ INT_PTR CRecordOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 			DlgCheckBox_Check(hDlg,IDC_RECORDOPTIONS_SAVEDATACARROUSEL,
 							  m_Settings.IsSaveDataCarrousel());
 
-			// �ۑ��v���O�C��
-			DlgComboBox_AddString(hDlg,IDC_RECORDOPTIONS_WRITEPLUGIN,TEXT("�g�p���Ȃ� (TS�o��)"));
+			// 保存プラグイン
+			DlgComboBox_AddString(hDlg,IDC_RECORDOPTIONS_WRITEPLUGIN,TEXT("使用しない (TS出力)"));
 			CRecordManager::GetWritePluginList(&m_WritePluginList);
 			int Sel=-1;
 			for (size_t i=0;i<m_WritePluginList.size();i++) {
@@ -402,7 +402,7 @@ INT_PTR CRecordOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 				if (Command!=0)
 					CommandList.GetCommandNameByID(Command,szText,lengthof(szText));
 				else
-					::lstrcpy(szText,TEXT("�������Ȃ�"));
+					::lstrcpy(szText,TEXT("何もしない"));
 				DlgComboBox_AddString(hDlg,IDC_RECORDOPTIONS_STATUSBARCOMMAND,szText);
 				if (Command==m_StatusBarRecordCommand)
 					DlgComboBox_SetCurSel(hDlg,IDC_RECORDOPTIONS_STATUSBARCOMMAND,i);
@@ -432,7 +432,7 @@ INT_PTR CRecordOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 
 				::GetDlgItemText(hDlg,IDC_RECORDOPTIONS_SAVEFOLDER,szFolder,MAX_PATH);
 				if (BrowseFolderDialog(hDlg,szFolder,
-										TEXT("�^��t�@�C���̕ۑ���t�H���_:")))
+										TEXT("録画ファイルの保存先フォルダ:")))
 					::SetDlgItemText(hDlg,IDC_RECORDOPTIONS_SAVEFOLDER,szFolder);
 			}
 			return TRUE;
@@ -505,8 +505,8 @@ INT_PTR CRecordOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 				CAppMain::CreateDirectoryResult CreateDirResult=
 					GetAppClass().CreateDirectory(
 						hDlg,szSaveFolder,
-						TEXT("�^��t�@�C���̕ۑ���t�H���_ \"%s\" ������܂���B\n")
-						TEXT("�쐬���܂���?"));
+						TEXT("録画ファイルの保存先フォルダ \"%s\" がありません。\n")
+						TEXT("作成しますか?"));
 				if (CreateDirResult==CAppMain::CREATEDIRECTORY_RESULT_ERROR) {
 					SettingError();
 					SetDlgItemFocus(hDlg,IDC_RECORDOPTIONS_SAVEFOLDER);
@@ -519,7 +519,7 @@ INT_PTR CRecordOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 					CFilePath FilePath(szFileName);
 					if (!FilePath.IsValid()) {
 						::MessageBox(hDlg,
-							TEXT("�^��t�@�C�����ɁA�t�@�C�����Ɏg�p�ł��Ȃ��������܂܂�Ă��܂��B"),
+							TEXT("録画ファイル名に、ファイル名に使用できない文字が含まれています。"),
 							NULL,MB_OK | MB_ICONEXCLAMATION);
 					}
 #else

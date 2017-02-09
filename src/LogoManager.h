@@ -56,8 +56,8 @@ public:
 		LOGOTYPE_64x36,
 		LOGOTYPE_FIRST	=LOGOTYPE_48x24,
 		LOGOTYPE_LAST	=LOGOTYPE_64x36,
-		LOGOTYPE_SMALL	=0xFF,	// �擾�ł��钆���珬�������̗D��
-		LOGOTYPE_BIG	=0xFE	// �擾�ł��钆����傫�����̗D��
+		LOGOTYPE_SMALL	=0xFF,	// 取得できる中から小さいもの優先
+		LOGOTYPE_BIG	=0xFE	// 取得できる中から大きいもの優先
 	};
 
 private:

@@ -107,7 +107,7 @@ INT_PTR CStreamInfo::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 				HTREEITEM hItem=TreeView_HitTest(pnmhdr->hwndFrom,&tvhti);
 				if (hItem!=NULL) {
 					HMENU hmenu=::CreatePopupMenu();
-					::AppendMenu(hmenu,MFT_STRING | MFS_ENABLED,1,TEXT("ÉRÉsÅ[(&C)"));
+					::AppendMenu(hmenu,MFT_STRING | MFS_ENABLED,1,TEXT("„Ç≥„Éî„Éº(&C)"));
 					POINT pt;
 					::GetCursorPos(&pt);
 					switch (::TrackPopupMenu(hmenu,TPM_RIGHTBUTTON | TPM_RETURNCMD,pt.x,pt.y,0,hDlg,NULL)) {
@@ -186,13 +186,13 @@ void CStreamInfo::SetService()
 
 	TreeView_DeleteAllItems(hwndTree);
 
-	// ÉTÅ[ÉrÉXàÍóó
+	// „Çµ„Éº„Éì„Çπ‰∏ÄË¶ß
 	tvis.hParent=TVI_ROOT;
 	tvis.hInsertAfter=TVI_LAST;
 	tvis.item.mask=TVIF_STATE | TVIF_TEXT | TVIF_CHILDREN;
 	tvis.item.state=TVIS_EXPANDED;
 	tvis.item.stateMask=(UINT)-1;
-	tvis.item.pszText=TEXT("ÉTÅ[ÉrÉX");
+	tvis.item.pszText=TEXT("„Çµ„Éº„Éì„Çπ");
 	tvis.item.cChildren=!ServiceList.empty()?1:0;
 	hItem=TreeView_InsertItem(hwndTree,&tvis);
 	if (hItem!=NULL) {
@@ -203,7 +203,7 @@ void CStreamInfo::SetService()
 			tvis.hParent=hItem;
 			tvis.item.state=0;
 			tvis.item.cChildren=1;
-			Length=StdUtil::snprintf(szText,lengthof(szText),TEXT("ÉTÅ[ÉrÉX%d"),i+1);
+			Length=StdUtil::snprintf(szText,lengthof(szText),TEXT("„Çµ„Éº„Éì„Çπ%d"),i+1);
 			if (ServiceInfo.szServiceName[0]!='\0')
 				Length+=StdUtil::snprintf(szText+Length,lengthof(szText)-Length,
 										  TEXT(" (%s)"),ServiceInfo.szServiceName);
@@ -224,14 +224,14 @@ void CStreamInfo::SetService()
 
 			int NumVideoStreams=(int)ServiceInfo.VideoEsList.size();
 			for (int j=0;j<NumVideoStreams;j++) {
-				FormatEsInfo(TEXT("âfëú"),j,ServiceInfo.VideoEsList[j],
+				FormatEsInfo(TEXT("Êò†ÂÉè"),j,ServiceInfo.VideoEsList[j],
 							 szText,lengthof(szText));
 				TreeView_InsertItem(hwndTree,&tvis);
 			}
 
 			int NumAudioStreams=(int)ServiceInfo.AudioEsList.size();
 			for (int j=0;j<NumAudioStreams;j++) {
-				FormatEsInfo(TEXT("âπê∫"),j,ServiceInfo.AudioEsList[j],
+				FormatEsInfo(TEXT("Èü≥Â£∞"),j,ServiceInfo.AudioEsList[j],
 							 szText,lengthof(szText));
 				TreeView_InsertItem(hwndTree,&tvis);
 			}
@@ -240,7 +240,7 @@ void CStreamInfo::SetService()
 			for (int j=0;j<NumCaptionStreams;j++) {
 				PID=ServiceInfo.CaptionEsList[j].PID;
 				StdUtil::snprintf(szText,lengthof(szText),
-								  TEXT("éöñã%d : PID 0x%04x (%d) / component tag 0x%02x"),
+								  TEXT("Â≠óÂπï%d : PID 0x%04x (%d) / component tag 0x%02x"),
 								  j+1,PID,PID,ServiceInfo.CaptionEsList[j].ComponentTag);
 				TreeView_InsertItem(hwndTree,&tvis);
 			}
@@ -249,14 +249,14 @@ void CStreamInfo::SetService()
 			for (int j=0;j<NumDataStreams;j++) {
 				PID=ServiceInfo.DataCarrouselEsList[j].PID;
 				StdUtil::snprintf(szText,lengthof(szText),
-								  TEXT("ÉfÅ[É^%d : PID 0x%04x (%d) / component tag 0x%02x"),
+								  TEXT("„Éá„Éº„Çø%d : PID 0x%04x (%d) / component tag 0x%02x"),
 								  j+1,PID,PID,ServiceInfo.DataCarrouselEsList[j].ComponentTag);
 				TreeView_InsertItem(hwndTree,&tvis);
 			}
 
 			int NumOtherStreams=(int)ServiceInfo.OtherEsList.size();
 			for (int j=0;j<NumOtherStreams;j++) {
-				FormatEsInfo(TEXT("ÇªÇÃëº"),j,ServiceInfo.OtherEsList[j],
+				FormatEsInfo(TEXT("„Åù„ÅÆ‰ªñ"),j,ServiceInfo.OtherEsList[j],
 							 szText,lengthof(szText));
 				TreeView_InsertItem(hwndTree,&tvis);
 			}
@@ -278,7 +278,7 @@ void CStreamInfo::SetService()
 		}
 	}
 
-	// É`ÉÉÉìÉlÉãÉtÉ@ÉCÉãópÉtÉHÅ[É}ÉbÉgàÍóó
+	// „ÉÅ„É£„É≥„Éç„É´„Éï„Ç°„Ç§„É´Áî®„Éï„Ç©„Éº„Éû„ÉÉ„Éà‰∏ÄË¶ß
 	const CChannelInfo *pChannelInfo=GetAppClass().ChannelManager.GetCurrentChannelInfo();
 	if (pChannelInfo!=NULL) {
 		tvis.hParent=TVI_ROOT;
@@ -286,7 +286,7 @@ void CStreamInfo::SetService()
 		tvis.item.mask=TVIF_STATE | TVIF_TEXT | TVIF_CHILDREN;
 		tvis.item.state=TVIS_EXPANDED;
 		tvis.item.stateMask=~0U;
-		tvis.item.pszText=TEXT("É`ÉÉÉìÉlÉãÉtÉ@ÉCÉãópÉtÉHÅ[É}ÉbÉg");
+		tvis.item.pszText=TEXT("„ÉÅ„É£„É≥„Éç„É´„Éï„Ç°„Ç§„É´Áî®„Éï„Ç©„Éº„Éû„ÉÉ„Éà");
 		tvis.item.cChildren=!ServiceList.empty()?1:0;;
 		hItem=TreeView_InsertItem(hwndTree,&tvis);
 		if (hItem!=NULL) {
@@ -301,7 +301,7 @@ void CStreamInfo::SetService()
 				if (ServiceInfo.szServiceName[0]!='\0')
 					Length=StdUtil::snprintf(szText,lengthof(szText),TEXT("%s"),ServiceInfo.szServiceName);
 				else
-					Length=StdUtil::snprintf(szText,lengthof(szText),TEXT("ÉTÅ[ÉrÉX%d"),i+1);
+					Length=StdUtil::snprintf(szText,lengthof(szText),TEXT("„Çµ„Éº„Éì„Çπ%d"),i+1);
 				StdUtil::snprintf(szText+Length,lengthof(szText)-Length,
 								  TEXT(",%d,%d,%d,%d,%d,%d,%d"),
 								  pChannelInfo->GetSpace(),
@@ -315,7 +315,7 @@ void CStreamInfo::SetService()
 		}
 	}
 
-	// ÉlÉbÉgÉèÅ[ÉNTSàÍóó
+	// „Éç„ÉÉ„Éà„ÉØ„Éº„ÇØTS‰∏ÄË¶ß
 	CTsAnalyzer::NetworkTsList TsList;
 	if (pAnalyzer->GetNetworkTsList(&TsList) && !TsList.empty()) {
 		tvis.hParent=TVI_ROOT;
@@ -323,7 +323,7 @@ void CStreamInfo::SetService()
 		tvis.item.mask=TVIF_STATE | TVIF_TEXT | TVIF_CHILDREN;
 		tvis.item.state=0;
 		tvis.item.stateMask=~0U;
-		tvis.item.pszText=TEXT("ÉlÉbÉgÉèÅ[ÉNTS (NIT)");
+		tvis.item.pszText=TEXT("„Éç„ÉÉ„Éà„ÉØ„Éº„ÇØTS (NIT)");
 		tvis.item.cChildren=1;
 		hItem=TreeView_InsertItem(hwndTree,&tvis);
 		if (hItem!=NULL) {
@@ -344,7 +344,7 @@ void CStreamInfo::SetService()
 					for (size_t j=0;j<TsInfo.ServiceList.size();j++) {
 						const CTsAnalyzer::NetworkServiceInfo &ServiceInfo=TsInfo.ServiceList[j];
 						StdUtil::snprintf(szText,lengthof(szText),
-							TEXT("ÉTÅ[ÉrÉX%d : SID 0x%04x (%d) / Type 0x%02x"),
+							TEXT("„Çµ„Éº„Éì„Çπ%d : SID 0x%04x (%d) / Type 0x%02x"),
 							(int)j+1,
 							ServiceInfo.ServiceID,ServiceInfo.ServiceID,
 							ServiceInfo.ServiceType);
@@ -355,7 +355,7 @@ void CStreamInfo::SetService()
 		}
 	}
 
-	// ÉlÉbÉgÉèÅ[ÉNÉTÅ[ÉrÉXàÍóó
+	// „Éç„ÉÉ„Éà„ÉØ„Éº„ÇØ„Çµ„Éº„Éì„Çπ‰∏ÄË¶ß
 	CTsAnalyzer::SdtTsList SdtList;
 	if (pAnalyzer->GetSdtTsList(&SdtList) && !SdtList.empty()) {
 		tvis.hParent=TVI_ROOT;
@@ -363,7 +363,7 @@ void CStreamInfo::SetService()
 		tvis.item.mask=TVIF_STATE | TVIF_TEXT | TVIF_CHILDREN;
 		tvis.item.state=0;
 		tvis.item.stateMask=~0U;
-		tvis.item.pszText=TEXT("ÉlÉbÉgÉèÅ[ÉNÉTÅ[ÉrÉX (SDT)");
+		tvis.item.pszText=TEXT("„Éç„ÉÉ„Éà„ÉØ„Éº„ÇØ„Çµ„Éº„Éì„Çπ (SDT)");
 		tvis.item.cChildren=1;
 		hItem=TreeView_InsertItem(hwndTree,&tvis);
 		if (hItem!=NULL) {
@@ -384,7 +384,7 @@ void CStreamInfo::SetService()
 					for (size_t j=0;j<TsInfo.ServiceList.size();j++) {
 						const CTsAnalyzer::SdtServiceInfo &ServiceInfo=TsInfo.ServiceList[j];
 						StdUtil::snprintf(szText,lengthof(szText),
-							TEXT("ÉTÅ[ÉrÉX%d (%s) : SID 0x%04x (%d) / Type 0x%02x / CA %d"),
+							TEXT("„Çµ„Éº„Éì„Çπ%d (%s) : SID 0x%04x (%d) / Type 0x%02x / CA %d"),
 							(int)j+1,
 							ServiceInfo.szServiceName,
 							ServiceInfo.ServiceID,ServiceInfo.ServiceID,
@@ -397,7 +397,7 @@ void CStreamInfo::SetService()
 		}
 	}
 
-	// ínè„/âqêØï™îzÉVÉXÉeÉÄ
+	// Âú∞‰∏ä/Ë°õÊòüÂàÜÈÖç„Ç∑„Çπ„ÉÜ„É†
 	CTsAnalyzer::TerrestrialDeliverySystemList TerrestrialList;
 	if (pAnalyzer->GetTerrestrialDeliverySystemList(&TerrestrialList)) {
 		tvis.hParent=TVI_ROOT;
@@ -405,7 +405,7 @@ void CStreamInfo::SetService()
 		tvis.item.mask=TVIF_STATE | TVIF_TEXT | TVIF_CHILDREN;
 		tvis.item.state=TVIS_EXPANDED;
 		tvis.item.stateMask=~0U;
-		tvis.item.pszText=TEXT("ínè„ï™îzÉVÉXÉeÉÄ");
+		tvis.item.pszText=TEXT("Âú∞‰∏äÂàÜÈÖç„Ç∑„Çπ„ÉÜ„É†");
 		tvis.item.cChildren=!TerrestrialList.empty()?1:0;
 		hItem=TreeView_InsertItem(hwndTree,&tvis);
 		if (hItem!=NULL) {
@@ -414,7 +414,7 @@ void CStreamInfo::SetService()
 				LPCTSTR pszArea=TsEngine::GetAreaText(Info.AreaCode);
 
 				StdUtil::snprintf(szText,lengthof(szText),
-					TEXT("TSID 0x%04x (%d) / ÉGÉäÉA %s / ÉKÅ[ÉhÉCÉìÉ^Å[ÉoÉã %s / ì`ëóÉÇÅ[Éh %s"),
+					TEXT("TSID 0x%04x (%d) / „Ç®„É™„Ç¢ %s / „Ç¨„Éº„Éâ„Ç§„É≥„Çø„Éº„Éê„É´ %s / ‰ºùÈÄÅ„É¢„Éº„Éâ %s"),
 					Info.TransportStreamID,
 					Info.TransportStreamID,
 					pszArea!=NULL?pszArea:TEXT("?"),
@@ -432,7 +432,7 @@ void CStreamInfo::SetService()
 				tvis.hParent=TreeView_InsertItem(hwndTree,&tvis);
 				tvis.item.cChildren=0;
 				for (size_t j=0;j<TerrestrialList[i].Frequency.size();j++) {
-					StdUtil::snprintf(szText,lengthof(szText),TEXT("é¸îgêî%d : %d MHz"),
+					StdUtil::snprintf(szText,lengthof(szText),TEXT("Âë®Ê≥¢Êï∞%d : %d MHz"),
 									  (int)j+1,TerrestrialList[i].Frequency[j]/7);
 					TreeView_InsertItem(hwndTree,&tvis);
 				}
@@ -446,7 +446,7 @@ void CStreamInfo::SetService()
 			tvis.item.mask=TVIF_STATE | TVIF_TEXT | TVIF_CHILDREN;
 			tvis.item.state=0;
 			tvis.item.stateMask=~0U;
-			tvis.item.pszText=TEXT("âqêØï™îzÉVÉXÉeÉÄ");
+			tvis.item.pszText=TEXT("Ë°õÊòüÂàÜÈÖç„Ç∑„Çπ„ÉÜ„É†");
 			tvis.item.cChildren=!SatelliteList.empty()?1:0;
 			hItem=TreeView_InsertItem(hwndTree,&tvis);
 			if (hItem!=NULL) {
@@ -454,7 +454,7 @@ void CStreamInfo::SetService()
 					const CTsAnalyzer::SatelliteDeliverySystemInfo &Info=SatelliteList[i];
 
 					StdUtil::snprintf(szText,lengthof(szText),
-									  TEXT("TS%d : TSID 0x%04x (%d) / é¸îgêî %ld.%05ld GHz"),
+									  TEXT("TS%d : TSID 0x%04x (%d) / Âë®Ê≥¢Êï∞ %ld.%05ld GHz"),
 									  i+1,
 									  Info.TransportStreamID,
 									  Info.TransportStreamID,

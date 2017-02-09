@@ -1,4 +1,4 @@
-// TsTable.cpp: TSƒe[ƒuƒ‹ƒ‰ƒbƒp[ƒNƒ‰ƒX‚ÌƒCƒ“ƒvƒŠƒƒ“ƒe[ƒVƒ‡ƒ“
+// TsTable.cpp: TSãƒ†ãƒ¼ãƒ–ãƒ«ãƒ©ãƒƒãƒ‘ãƒ¼ã‚¯ãƒ©ã‚¹ã®ã‚¤ãƒ³ãƒ—ãƒªãƒ¡ãƒ³ãƒ†ãƒ¼ã‚·ãƒ§ãƒ³
 //
 //////////////////////////////////////////////////////////////////////
 
@@ -10,7 +10,7 @@
 
 
 /////////////////////////////////////////////////////////////////////////////
-// PSIƒe[ƒuƒ‹Šî’êƒNƒ‰ƒX
+// PSIãƒ†ãƒ¼ãƒ–ãƒ«åŸºåº•ã‚¯ãƒ©ã‚¹
 /////////////////////////////////////////////////////////////////////////////
 
 CPsiTableBase::CPsiTableBase(const bool bTargetSectionExt, const bool bIgnoreSectionNumber)
@@ -25,7 +25,7 @@ CPsiTableBase::~CPsiTableBase()
 
 void CPsiTableBase::Reset()
 {
-	// ó‘Ô‰Šú‰»
+	// çŠ¶æ…‹åˆæœŸåŒ–
 	m_PsiSectionParser.Reset();
 	m_bTableUpdated = false;
 }
@@ -47,7 +47,7 @@ const bool CPsiTableBase::StorePacket(const CTsPacket *pPacket)
 
 	m_bTableUpdated = false;
 
-	// ƒpƒPƒbƒgƒXƒgƒA
+	// ãƒ‘ã‚±ãƒƒãƒˆã‚¹ãƒˆã‚¢
 	m_PsiSectionParser.StorePacket(pPacket);
 
 	return m_bTableUpdated;
@@ -55,13 +55,13 @@ const bool CPsiTableBase::StorePacket(const CTsPacket *pPacket)
 
 void CPsiTableBase::OnPidUnmapped(const WORD wPID)
 {
-	// ƒCƒ“ƒXƒ^ƒ“ƒX‚ğŠJ•ú‚·‚é
+	// ã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚¹ã‚’é–‹æ”¾ã™ã‚‹
 	delete this;
 }
 
 
 //////////////////////////////////////////////////////////////////////
-// CPsiTableƒNƒ‰ƒX‚Ì\’z/Á–Å
+// CPsiTableã‚¯ãƒ©ã‚¹ã®æ§‹ç¯‰/æ¶ˆæ»…
 //////////////////////////////////////////////////////////////////////
 
 CPsiTable::CPsiTable()
@@ -76,7 +76,7 @@ CPsiTable::~CPsiTable()
 
 WORD CPsiTable::GetExtensionNum() const
 {
-	// ƒe[ƒuƒ‹‚Ì”‚ğ•Ô‚·
+	// ãƒ†ãƒ¼ãƒ–ãƒ«ã®æ•°ã‚’è¿”ã™
 	return (WORD)m_TableArray.size();
 }
 
@@ -85,7 +85,7 @@ bool CPsiTable::GetExtension(const WORD Index, WORD *pExtension) const
 	if (Index >= GetExtensionNum())
 		return false;
 
-	// ƒe[ƒuƒ‹IDŠg’£‚ğ•Ô‚·
+	// ãƒ†ãƒ¼ãƒ–ãƒ«IDæ‹¡å¼µã‚’è¿”ã™
 	*pExtension = m_TableArray[Index].TableIdExtension;
 
 	return true;
@@ -106,7 +106,7 @@ WORD CPsiTable::GetSectionNum(const WORD Index) const
 	if (Index >= GetExtensionNum())
 		return 0;
 
-	// ƒZƒNƒVƒ‡ƒ“”‚ğ•Ô‚·
+	// ã‚»ã‚¯ã‚·ãƒ§ãƒ³æ•°ã‚’è¿”ã™
 	return m_TableArray[Index].SectionNum;
 }
 
@@ -117,7 +117,7 @@ const CPsiTableBase * CPsiTable::GetSection(const WORD Index, const WORD Section
 	if (SectionNo >= m_TableArray[Index].SectionNum)
 		return NULL;
 
-	// ƒZƒNƒVƒ‡ƒ“ƒf[ƒ^‚ğ•Ô‚·
+	// ã‚»ã‚¯ã‚·ãƒ§ãƒ³ãƒ‡ãƒ¼ã‚¿ã‚’è¿”ã™
 	return m_TableArray[Index].SectionArray[SectionNo].pTable;
 }
 
@@ -146,7 +146,7 @@ void CPsiTable::Reset()
 
 void CPsiTable::ClearTable()
 {
-	// ‘S‚Ä‚Ìƒe[ƒuƒ‹‚ğíœ‚·‚é
+	// å…¨ã¦ã®ãƒ†ãƒ¼ãƒ–ãƒ«ã‚’å‰Šé™¤ã™ã‚‹
 	for (size_t i = 0; i < m_TableArray.size(); i++)
 		m_TableArray[i].ClearSection();
 
@@ -157,19 +157,19 @@ void CPsiTable::OnPsiSection(const CPsiSectionParser *pPsiSectionParser, const C
 {
 	m_bTableUpdated = false;
 
-	// ƒZƒNƒVƒ‡ƒ“”Ô†ƒ`ƒFƒbƒN
+	// ã‚»ã‚¯ã‚·ãƒ§ãƒ³ç•ªå·ãƒã‚§ãƒƒã‚¯
 	if (pSection->GetSectionNumber() > pSection->GetLastSectionNumber())
 		return;
 
-	// ƒZƒNƒVƒ‡ƒ“‚ÌƒTƒCƒY‚ğƒ`ƒFƒbƒN
+	// ã‚»ã‚¯ã‚·ãƒ§ãƒ³ã®ã‚µã‚¤ã‚ºã‚’ãƒã‚§ãƒƒã‚¯
 	if (!pSection->GetPayloadSize())
 		return;
 
-	// ƒJƒŒƒ“ƒgƒlƒNƒXƒgƒCƒ“ƒWƒP[ƒ^ƒ`ƒFƒbƒN(–{—ˆ‚Í•Êƒoƒ“ƒN‚É’™‚ß‚é‚×‚«H)
+	// ã‚«ãƒ¬ãƒ³ãƒˆãƒã‚¯ã‚¹ãƒˆã‚¤ãƒ³ã‚¸ã‚±ãƒ¼ã‚¿ãƒã‚§ãƒƒã‚¯(æœ¬æ¥ã¯åˆ¥ãƒãƒ³ã‚¯ã«è²¯ã‚ã‚‹ã¹ãï¼Ÿ)
 	if (!pSection->IsCurrentNext())
 		return;
 
-	// ƒe[ƒuƒ‹IDŠg’£‚ğŒŸõ‚·‚é
+	// ãƒ†ãƒ¼ãƒ–ãƒ«IDæ‹¡å¼µã‚’æ¤œç´¢ã™ã‚‹
 	size_t Index;
 
 	for (Index = 0; Index < m_TableArray.size(); Index++) {
@@ -178,7 +178,7 @@ void CPsiTable::OnPsiSection(const CPsiSectionParser *pPsiSectionParser, const C
 	}
 
 	if (Index == m_TableArray.size()) {
-		// ƒe[ƒuƒ‹IDŠg’£‚ªŒ©‚Â‚©‚ç‚È‚¢Aƒe[ƒuƒ‹’Ç‰Á
+		// ãƒ†ãƒ¼ãƒ–ãƒ«IDæ‹¡å¼µãŒè¦‹ã¤ã‹ã‚‰ãªã„ã€ãƒ†ãƒ¼ãƒ–ãƒ«è¿½åŠ 
 		m_TableArray.resize(Index + 1);
 		m_TableArray[Index].TableIdExtension = pSection->GetTableIdExtension();
 		m_TableArray[Index].SectionNum = (WORD)pSection->GetLastSectionNumber() + 1;
@@ -187,7 +187,7 @@ void CPsiTable::OnPsiSection(const CPsiSectionParser *pPsiSectionParser, const C
 		m_bTableUpdated = true;
 	} else if (m_TableArray[Index].VersionNo != pSection->GetVersionNo()
 			|| m_TableArray[Index].SectionNum != (WORD)pSection->GetLastSectionNumber() + 1) {
-		// ƒo[ƒWƒ‡ƒ“‚ª•sˆê’vAƒe[ƒuƒ‹‚ªXV‚³‚ê‚½
+		// ãƒãƒ¼ã‚¸ãƒ§ãƒ³ãŒä¸ä¸€è‡´ã€ãƒ†ãƒ¼ãƒ–ãƒ«ãŒæ›´æ–°ã•ã‚ŒãŸ
 		m_TableArray[Index].SectionNum = (WORD)pSection->GetLastSectionNumber() + 1;
 		m_TableArray[Index].VersionNo = pSection->GetVersionNo();
 		m_TableArray[Index].ClearSection();
@@ -195,7 +195,7 @@ void CPsiTable::OnPsiSection(const CPsiSectionParser *pPsiSectionParser, const C
 		m_bTableUpdated = true;
 	}
 
-	// ƒZƒNƒVƒ‡ƒ“ƒf[ƒ^‚ğXV‚·‚é
+	// ã‚»ã‚¯ã‚·ãƒ§ãƒ³ãƒ‡ãƒ¼ã‚¿ã‚’æ›´æ–°ã™ã‚‹
 	const WORD SectionNumber = pSection->GetSectionNumber();
 	TableItem::SectionItem &Section = m_TableArray[Index].SectionArray[SectionNumber];
 	if (!Section.pTable) {
@@ -221,7 +221,7 @@ void CPsiTable::TableItem::ClearSection()
 
 
 /////////////////////////////////////////////////////////////////////////////
-// PSIƒVƒ“ƒOƒ‹ƒe[ƒuƒ‹’ŠÛ‰»ƒNƒ‰ƒX
+// PSIã‚·ãƒ³ã‚°ãƒ«ãƒ†ãƒ¼ãƒ–ãƒ«æŠ½è±¡åŒ–ã‚¯ãƒ©ã‚¹
 /////////////////////////////////////////////////////////////////////////////
 
 CPsiSingleTable::CPsiSingleTable(const bool bTargetSectionExt)
@@ -237,20 +237,20 @@ CPsiSingleTable::~CPsiSingleTable()
 
 void CPsiSingleTable::Reset()
 {
-	// ó‘Ô‰Šú‰»
+	// çŠ¶æ…‹åˆæœŸåŒ–
 	CPsiTableBase::Reset();
 	m_CurSection.Reset();
 }
 
 void CPsiSingleTable::OnPsiSection(const CPsiSectionParser *pPsiSectionParser, const CPsiSection *pSection)
 {
-	// ƒZƒNƒVƒ‡ƒ“‚ÌƒtƒBƒ‹ƒ^ƒŠƒ“ƒO‚ğs‚¤ê‡‚Í”h¶ƒNƒ‰ƒX‚ÅƒI[ƒo[ƒ‰ƒCƒh‚·‚é
-	// ƒfƒtƒHƒ‹ƒg‚ÌÀ‘•‚Å‚ÍƒZƒNƒVƒ‡ƒ“ƒyƒCƒ[ƒhXV‚É‰¼‘zŠÖ”‚É’Ê’m‚·‚é
+	// ã‚»ã‚¯ã‚·ãƒ§ãƒ³ã®ãƒ•ã‚£ãƒ«ã‚¿ãƒªãƒ³ã‚°ã‚’è¡Œã†å ´åˆã¯æ´¾ç”Ÿã‚¯ãƒ©ã‚¹ã§ã‚ªãƒ¼ãƒãƒ¼ãƒ©ã‚¤ãƒ‰ã™ã‚‹
+	// ãƒ‡ãƒ•ã‚©ãƒ«ãƒˆã®å®Ÿè£…ã§ã¯ã‚»ã‚¯ã‚·ãƒ§ãƒ³ãƒšã‚¤ãƒ­ãƒ¼ãƒ‰æ›´æ–°æ™‚ã«ä»®æƒ³é–¢æ•°ã«é€šçŸ¥ã™ã‚‹
 	m_bTableUpdated = false;
 	if (*pSection != m_CurSection) {
-		// ƒZƒNƒVƒ‡ƒ“‚ªXV‚³‚ê‚½
+		// ã‚»ã‚¯ã‚·ãƒ§ãƒ³ãŒæ›´æ–°ã•ã‚ŒãŸ
 		if (OnTableUpdate(pSection, &m_CurSection)) {
-			// ƒZƒNƒVƒ‡ƒ“ƒXƒgƒA
+			// ã‚»ã‚¯ã‚·ãƒ§ãƒ³ã‚¹ãƒˆã‚¢
 			m_CurSection = *pSection;
 			m_bTableUpdated = true;
 		}
@@ -259,13 +259,13 @@ void CPsiSingleTable::OnPsiSection(const CPsiSectionParser *pPsiSectionParser, c
 
 const bool CPsiSingleTable::OnTableUpdate(const CPsiSection *pCurSection, const CPsiSection *pOldSection)
 {
-	// ƒfƒtƒHƒ‹ƒg‚ÌÀ‘•‚Å‚Í‰½‚à‚µ‚È‚¢
+	// ãƒ‡ãƒ•ã‚©ãƒ«ãƒˆã®å®Ÿè£…ã§ã¯ä½•ã‚‚ã—ãªã„
 	return true;
 }
 
 
 /////////////////////////////////////////////////////////////////////////////
-// ƒXƒgƒŠ[ƒ€Œ^ƒe[ƒuƒ‹’ŠÛ‰»ƒNƒ‰ƒX
+// ã‚¹ãƒˆãƒªãƒ¼ãƒ å‹ãƒ†ãƒ¼ãƒ–ãƒ«æŠ½è±¡åŒ–ã‚¯ãƒ©ã‚¹
 /////////////////////////////////////////////////////////////////////////////
 
 CPsiStreamTable::CPsiStreamTable(ISectionHandler *pHandler, const bool bTargetSectionExt, const bool bIgnoreSectionNumber)
@@ -282,7 +282,7 @@ CPsiStreamTable::~CPsiStreamTable()
 
 void CPsiStreamTable::Reset()
 {
-	// ó‘Ô‰Šú‰»
+	// çŠ¶æ…‹åˆæœŸåŒ–
 	CPsiTableBase::Reset();
 
 	if (m_pSectionHandler)
@@ -301,7 +301,7 @@ void CPsiStreamTable::OnPsiSection(const CPsiSectionParser *pPsiSectionParser, c
 
 const bool CPsiStreamTable::OnTableUpdate(const CPsiSection *pCurSection)
 {
-	// ƒfƒtƒHƒ‹ƒg‚ÌÀ‘•‚Å‚Í‰½‚à‚µ‚È‚¢
+	// ãƒ‡ãƒ•ã‚©ãƒ«ãƒˆã®å®Ÿè£…ã§ã¯ä½•ã‚‚ã—ãªã„
 	return true;
 }
 
@@ -311,7 +311,7 @@ CPsiStreamTable::ISectionHandler::~ISectionHandler()
 
 
 /////////////////////////////////////////////////////////////////////////////
-// PSI NULLƒe[ƒuƒ‹’ŠÛ‰»ƒNƒ‰ƒX
+// PSI NULLãƒ†ãƒ¼ãƒ–ãƒ«æŠ½è±¡åŒ–ã‚¯ãƒ©ã‚¹
 /////////////////////////////////////////////////////////////////////////////
 
 CPsiNullTable::CPsiNullTable()
@@ -325,7 +325,7 @@ CPsiNullTable::~CPsiNullTable()
 
 }
 
-/* ƒˆ‰¼‘zŠÖ”‚Æ‚µ‚ÄÀ‘•
+/* ç´”ç²‹ä»®æƒ³é–¢æ•°ã¨ã—ã¦å®Ÿè£…
 const bool CPsiNullTable::StorePacket(const CTsPacket *pPacket)
 {
 	if(!pPacket)return false;
@@ -335,13 +335,13 @@ const bool CPsiNullTable::StorePacket(const CTsPacket *pPacket)
 
 void CPsiNullTable::OnPidUnmapped(const WORD wPID)
 {
-	// ƒCƒ“ƒXƒ^ƒ“ƒX‚ğŠJ•ú‚·‚é
+	// ã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚¹ã‚’é–‹æ”¾ã™ã‚‹
 	delete this;
 }
 
 
 /////////////////////////////////////////////////////////////////////////////
-// PSIƒe[ƒuƒ‹ƒZƒbƒg’ŠÛ‰»ƒNƒ‰ƒX
+// PSIãƒ†ãƒ¼ãƒ–ãƒ«ã‚»ãƒƒãƒˆæŠ½è±¡åŒ–ã‚¯ãƒ©ã‚¹
 /////////////////////////////////////////////////////////////////////////////
 
 CPsiTableSet::CPsiTableSet(const bool bTargetSectionExt)
@@ -358,7 +358,7 @@ CPsiTableSet::~CPsiTableSet()
 
 void CPsiTableSet::Reset()
 {
-	// ó‘Ô‰Šú‰»
+	// çŠ¶æ…‹åˆæœŸåŒ–
 	CPsiTableBase::Reset();
 
 	m_LastUpdatedTableID = 0xFF;
@@ -441,7 +441,7 @@ void CPsiTableSet::OnPsiSection(const CPsiSectionParser *pPsiSectionParser, cons
 
 
 /////////////////////////////////////////////////////////////////////////////
-// PATƒe[ƒuƒ‹’ŠÛ‰»ƒNƒ‰ƒX
+// PATãƒ†ãƒ¼ãƒ–ãƒ«æŠ½è±¡åŒ–ã‚¯ãƒ©ã‚¹
 /////////////////////////////////////////////////////////////////////////////
 
 CPatTable::CPatTable(
@@ -459,7 +459,7 @@ CPatTable::CPatTable(
 
 void CPatTable::Reset()
 {
-	// ó‘Ô‚ğƒNƒŠƒA‚·‚é
+	// çŠ¶æ…‹ã‚’ã‚¯ãƒªã‚¢ã™ã‚‹
 	CPsiSingleTable::Reset();
 
 	m_NitPIDArray.clear();
@@ -473,37 +473,37 @@ const WORD CPatTable::GetTransportStreamID() const
 
 const WORD CPatTable::GetNitPID(const WORD wIndex) const
 {
-	// NIT‚ÌPID‚ğ•Ô‚·
-	return (wIndex < m_NitPIDArray.size())? m_NitPIDArray[wIndex] : 0xFFFFU;	// 0xFFFF‚Í–¢’è‹`‚ÌPID
+	// NITã®PIDã‚’è¿”ã™
+	return (wIndex < m_NitPIDArray.size())? m_NitPIDArray[wIndex] : 0xFFFFU;	// 0xFFFFã¯æœªå®šç¾©ã®PID
 }
 
 const WORD CPatTable::GetNitNum() const
 {
-	// NIT‚Ì”‚ğ•Ô‚·
+	// NITã®æ•°ã‚’è¿”ã™
 	return (WORD)m_NitPIDArray.size();
 }
 
 const WORD CPatTable::GetPmtPID(const WORD wIndex) const
 {
-	// PMT‚ÌPID‚ğ•Ô‚·
-	return (wIndex < m_PmtPIDArray.size())? m_PmtPIDArray[wIndex].wPID : 0xFFFFU;	// 0xFFFF‚Í–¢’è‹`‚ÌPID
+	// PMTã®PIDã‚’è¿”ã™
+	return (wIndex < m_PmtPIDArray.size())? m_PmtPIDArray[wIndex].wPID : 0xFFFFU;	// 0xFFFFã¯æœªå®šç¾©ã®PID
 }
 
 const WORD CPatTable::GetProgramID(const WORD wIndex) const
 {
-	// Program Number ID‚ğ•Ô‚·
-	return (wIndex < m_PmtPIDArray.size())? m_PmtPIDArray[wIndex].wProgramID : 0x0000U;	// 0xFFFF‚Í–¢’è‹`‚ÌPID
+	// Program Number IDã‚’è¿”ã™
+	return (wIndex < m_PmtPIDArray.size())? m_PmtPIDArray[wIndex].wProgramID : 0x0000U;	// 0xFFFFã¯æœªå®šç¾©ã®PID
 }
 
 const WORD CPatTable::GetProgramNum() const
 {
-	// PMT‚Ì”‚ğ•Ô‚·
+	// PMTã®æ•°ã‚’è¿”ã™
 	return (WORD)m_PmtPIDArray.size();
 }
 
 const bool CPatTable::IsPmtTablePID(const WORD wPID) const
 {
-	// PMT‚ÌPID‚©‚Ç‚¤‚©‚ğ•Ô‚·
+	// PMTã®PIDã‹ã©ã†ã‹ã‚’è¿”ã™
 	for (WORD wIndex = 0U ; wIndex < m_PmtPIDArray.size() ; wIndex++) {
 		if (wPID == m_PmtPIDArray[wIndex].wPID)
 			return true;
@@ -517,14 +517,14 @@ const bool CPatTable::OnTableUpdate(const CPsiSection *pCurSection, const CPsiSe
 	const WORD wDataSize = pCurSection->GetPayloadSize();
 	const BYTE *pHexData = pCurSection->GetPayloadData();
 
-	if(wDataSize % 4U)return false;						// ƒe[ƒuƒ‹‚ÌƒTƒCƒY‚ª•s³
-	if(pCurSection->GetTableID() != 0x00U)return false;	// ƒe[ƒuƒ‹ID‚ª•s³
+	if(wDataSize % 4U)return false;						// ãƒ†ãƒ¼ãƒ–ãƒ«ã®ã‚µã‚¤ã‚ºãŒä¸æ­£
+	if(pCurSection->GetTableID() != 0x00U)return false;	// ãƒ†ãƒ¼ãƒ–ãƒ«IDãŒä¸æ­£
 
-	// PID‚ğƒNƒŠƒA‚·‚é
+	// PIDã‚’ã‚¯ãƒªã‚¢ã™ã‚‹
 	m_NitPIDArray.clear();
 	m_PmtPIDArray.clear();
 
-	// ƒe[ƒuƒ‹‚ğ‰ğÍ‚·‚é
+	// ãƒ†ãƒ¼ãƒ–ãƒ«ã‚’è§£æã™ã‚‹
 
 #ifdef _DEBUG
 	if (m_bDebugTrace)
@@ -538,7 +538,7 @@ const bool CPatTable::OnTableUpdate(const CPsiSection *pCurSection, const CPsiSe
 		PatItem.wPID		= ((WORD)(pHexData[2] & 0x1FU) << 8) | (WORD)pHexData[3];	// +3,4
 
 		if (PatItem.wProgramID == 0) {
-			// NIT‚ÌPID
+			// NITã®PID
 #ifdef _DEBUG
 			if (m_bDebugTrace)
 				TRACE(TEXT("NIT #%u [ID:%04X][PID:%04X]\n"),
@@ -546,7 +546,7 @@ const bool CPatTable::OnTableUpdate(const CPsiSection *pCurSection, const CPsiSe
 #endif
 			m_NitPIDArray.push_back(PatItem.wPID);
 		} else {
-			// PMT‚ÌPID
+			// PMTã®PID
 #ifdef _DEBUG
 			if (m_bDebugTrace)
 				TRACE(TEXT("PMT #%u [ID:%04X][PID:%04X]\n"),
@@ -561,7 +561,7 @@ const bool CPatTable::OnTableUpdate(const CPsiSection *pCurSection, const CPsiSe
 
 
 /////////////////////////////////////////////////////////////////////////////
-// CATƒe[ƒuƒ‹’ŠÛ‰»ƒNƒ‰ƒX
+// CATãƒ†ãƒ¼ãƒ–ãƒ«æŠ½è±¡åŒ–ã‚¯ãƒ©ã‚¹
 /////////////////////////////////////////////////////////////////////////////
 
 CCatTable::CCatTable()
@@ -576,7 +576,7 @@ CCatTable::~CCatTable()
 
 void CCatTable::Reset()
 {
-	// ó‘Ô‚ğƒNƒŠƒA‚·‚é
+	// çŠ¶æ…‹ã‚’ã‚¯ãƒªã‚¢ã™ã‚‹
 	m_DescBlock.Reset();
 
 	CPsiSingleTable::Reset();
@@ -620,7 +620,7 @@ WORD CCatTable::GetEmmPID(const WORD CASystemID) const
 
 const CDescBlock * CCatTable::GetCatDesc() const
 {
-	// ‹Lqq—Ìˆæ‚ğ•Ô‚·
+	// è¨˜è¿°å­é ˜åŸŸã‚’è¿”ã™
 	return &m_DescBlock;
 }
 
@@ -634,7 +634,7 @@ const bool CCatTable::OnTableUpdate(const CPsiSection *pCurSection, const CPsiSe
 
 	TRACE(TEXT("\n------- CAT Table -------\n"));
 
-	// ƒe[ƒuƒ‹‚ğ‰ğÍ‚·‚é
+	// ãƒ†ãƒ¼ãƒ–ãƒ«ã‚’è§£æã™ã‚‹
 	m_DescBlock.ParseBlock(pCurSection->GetPayloadData(), pCurSection->GetPayloadSize());
 
 #ifdef _DEBUG
@@ -649,7 +649,7 @@ const bool CCatTable::OnTableUpdate(const CPsiSection *pCurSection, const CPsiSe
 
 
 /////////////////////////////////////////////////////////////////////////////
-// PMTƒe[ƒuƒ‹’ŠÛ‰»ƒNƒ‰ƒX
+// PMTãƒ†ãƒ¼ãƒ–ãƒ«æŠ½è±¡åŒ–ã‚¯ãƒ©ã‚¹
 /////////////////////////////////////////////////////////////////////////////
 
 CPmtTable::CPmtTable(
@@ -667,7 +667,7 @@ CPmtTable::CPmtTable(
 
 void CPmtTable::Reset()
 {
-	// ó‘Ô‚ğƒNƒŠƒA‚·‚é
+	// çŠ¶æ…‹ã‚’ã‚¯ãƒªã‚¢ã™ã‚‹
 	CPsiSingleTable::Reset();
 
 	m_wPcrPID = 0xFFFFU;
@@ -682,19 +682,19 @@ const WORD CPmtTable::GetProgramNumberID() const
 
 const WORD CPmtTable::GetPcrPID() const
 {
-	// PCR_PID ‚ğ•Ô‚·
+	// PCR_PID ã‚’è¿”ã™
 	return m_wPcrPID;
 }
 
 const CDescBlock * CPmtTable::GetTableDesc() const
 {
-	// ƒe[ƒuƒ‹‚Ì‹LqqƒuƒƒbƒN‚ğ•Ô‚·
+	// ãƒ†ãƒ¼ãƒ–ãƒ«ã®è¨˜è¿°å­ãƒ–ãƒ­ãƒƒã‚¯ã‚’è¿”ã™
 	return &m_TableDescBlock;
 }
 
 const WORD CPmtTable::GetEcmPID() const
 {
-	// ECM‚ÌPID‚ğ•Ô‚·
+	// ECMã®PIDã‚’è¿”ã™
 	const CCaMethodDesc *pCaMethodDesc = m_TableDescBlock.GetDesc<CCaMethodDesc>();
 
 	return (pCaMethodDesc)? pCaMethodDesc->GetCaPID() : 0xFFFFU;
@@ -702,7 +702,7 @@ const WORD CPmtTable::GetEcmPID() const
 
 const WORD CPmtTable::GetEcmPID(const WORD CASystemID) const
 {
-	// w’è‚³‚ê‚½CA_system_id‚É‘Î‰‚·‚éECM‚ÌPID‚ğ•Ô‚·
+	// æŒ‡å®šã•ã‚ŒãŸCA_system_idã«å¯¾å¿œã™ã‚‹ECMã®PIDã‚’è¿”ã™
 	for (WORD i = 0 ; i < m_TableDescBlock.GetDescNum() ; i++) {
 		const CBaseDesc *pDesc = m_TableDescBlock.GetDescByIndex(i);
 
@@ -719,25 +719,25 @@ const WORD CPmtTable::GetEcmPID(const WORD CASystemID) const
 
 const WORD CPmtTable::GetEsInfoNum() const
 {
-	// ESî•ñ‚Ì”‚ğ•Ô‚·
+	// ESæƒ…å ±ã®æ•°ã‚’è¿”ã™
 	return (WORD)m_EsInfoArray.size();
 }
 
 const BYTE CPmtTable::GetStreamTypeID(const WORD wIndex) const
 {
-	// Stream Type ID ‚ğ•Ô‚·
-	return (wIndex < m_EsInfoArray.size())? m_EsInfoArray[wIndex].byStreamTypeID : 0x00U;	// 0x00‚Í–¢’è‹`‚ÌID
+	// Stream Type ID ã‚’è¿”ã™
+	return (wIndex < m_EsInfoArray.size())? m_EsInfoArray[wIndex].byStreamTypeID : 0x00U;	// 0x00ã¯æœªå®šç¾©ã®ID
 }
 
 const WORD CPmtTable::GetEsPID(const WORD wIndex) const
 {
-	// Elementary Stream PID ‚ğ•Ô‚·
-	return (wIndex < m_EsInfoArray.size())? m_EsInfoArray[wIndex].wEsPID : 0xFFFFU;			// 0xFFFF‚Í–¢’è‹`‚ÌPID
+	// Elementary Stream PID ã‚’è¿”ã™
+	return (wIndex < m_EsInfoArray.size())? m_EsInfoArray[wIndex].wEsPID : 0xFFFFU;			// 0xFFFFã¯æœªå®šç¾©ã®PID
 }
 
 const CDescBlock * CPmtTable::GetItemDesc(const WORD wIndex) const
 {
-	// ƒAƒCƒeƒ€‚Ì‹LqqƒuƒƒbƒN‚ğ•Ô‚·
+	// ã‚¢ã‚¤ãƒ†ãƒ ã®è¨˜è¿°å­ãƒ–ãƒ­ãƒƒã‚¯ã‚’è¿”ã™
 	return (wIndex < m_EsInfoArray.size())? &m_EsInfoArray[wIndex].DescBlock : NULL;
 }
 
@@ -749,19 +749,19 @@ const bool CPmtTable::OnTableUpdate(const CPsiSection *pCurSection, const CPsiSe
 	if (wDataSize < 4)
 		return false;
 
-	if(pCurSection->GetTableID() != 0x02U)return false;	// ƒe[ƒuƒ‹ID‚ª•s³
+	if(pCurSection->GetTableID() != 0x02U)return false;	// ãƒ†ãƒ¼ãƒ–ãƒ«IDãŒä¸æ­£
 
-	// ó‘Ô‚ğƒNƒŠƒA‚·‚é
+	// çŠ¶æ…‹ã‚’ã‚¯ãƒªã‚¢ã™ã‚‹
 	m_wPcrPID = 0xFFFFU;
 	m_EsInfoArray.clear();
 
-	// ƒe[ƒuƒ‹‚ğ‰ğÍ‚·‚é
+	// ãƒ†ãƒ¼ãƒ–ãƒ«ã‚’è§£æã™ã‚‹
 	m_wPcrPID = ((WORD)(pHexData[0] & 0x1FU) << 8) | (WORD)pHexData[1];				// +0,1
 	WORD wDescLen = ((WORD)(pHexData[2] & 0x0FU) << 8) | (WORD)pHexData[3];
 	if (4 + wDescLen > wDataSize)
 		return false;
 
-	// ‹LqqƒuƒƒbƒN
+	// è¨˜è¿°å­ãƒ–ãƒ­ãƒƒã‚¯
 	m_TableDescBlock.ParseBlock(&pHexData[4], wDescLen);
 
 #ifdef _DEBUG
@@ -770,7 +770,7 @@ const bool CPmtTable::OnTableUpdate(const CPsiSection *pCurSection, const CPsiSe
 			pCurSection->GetTableIdExtension(), pCurSection->GetTableIdExtension(), m_wPcrPID , m_TableDescBlock.GetDesc<CCaMethodDesc>() ? m_TableDescBlock.GetDesc<CCaMethodDesc>()->GetCaPID() : 0xFFFFU);
 #endif
 
-	// ƒXƒgƒŠ[ƒ€î•ñ‚ğ‰ğÍ
+	// ã‚¹ãƒˆãƒªãƒ¼ãƒ æƒ…å ±ã‚’è§£æ
 	for (WORD wPos = wDescLen + 4 ; wPos + 5 <= wDataSize ; wPos += 5 + wDescLen) {
 		TAG_PMTITEM PmtItem;
 
@@ -780,7 +780,7 @@ const bool CPmtTable::OnTableUpdate(const CPsiSection *pCurSection, const CPsiSe
 		if (wPos + 5 + wDescLen > wDataSize)
 			break;
 
-		// ‹LqqƒuƒƒbƒN
+		// è¨˜è¿°å­ãƒ–ãƒ­ãƒƒã‚¯
 		PmtItem.DescBlock.ParseBlock(&pHexData[wPos + 5], wDescLen);
 
 #ifdef _DEBUG
@@ -789,7 +789,7 @@ const bool CPmtTable::OnTableUpdate(const CPsiSection *pCurSection, const CPsiSe
 				  m_EsInfoArray.size(), PmtItem.byStreamTypeID, PmtItem.wEsPID);
 #endif
 
-		// ƒe[ƒuƒ‹‚É’Ç‰Á‚·‚é
+		// ãƒ†ãƒ¼ãƒ–ãƒ«ã«è¿½åŠ ã™ã‚‹
 		m_EsInfoArray.push_back(PmtItem);
 	}
 
@@ -798,7 +798,7 @@ const bool CPmtTable::OnTableUpdate(const CPsiSection *pCurSection, const CPsiSe
 
 
 /////////////////////////////////////////////////////////////////////////////
-// SDTƒe[ƒuƒ‹’ŠÛ‰»ƒNƒ‰ƒX
+// SDTãƒ†ãƒ¼ãƒ–ãƒ«æŠ½è±¡åŒ–ã‚¯ãƒ©ã‚¹
 /////////////////////////////////////////////////////////////////////////////
 
 CSdtTable::CSdtTable(const BYTE TableID)
@@ -810,7 +810,7 @@ CSdtTable::CSdtTable(const BYTE TableID)
 
 void CSdtTable::Reset()
 {
-	// ó‘Ô‚ğƒNƒŠƒA‚·‚é
+	// çŠ¶æ…‹ã‚’ã‚¯ãƒªã‚¢ã™ã‚‹
 	CPsiSingleTable::Reset();
 
 	m_wNetworkID = 0xFFFF;
@@ -834,26 +834,26 @@ const WORD CSdtTable::GetNetworkID() const
 
 const WORD CSdtTable::GetServiceNum() const
 {
-	// ƒT[ƒrƒX”‚ğ•Ô‚·
+	// ã‚µãƒ¼ãƒ“ã‚¹æ•°ã‚’è¿”ã™
 	return (WORD)m_ServiceInfoArray.size();
 }
 
 const WORD CSdtTable::GetServiceIndexByID(const WORD wServiceID)
 {
-	// ƒT[ƒrƒXID‚©‚çƒCƒ“ƒfƒbƒNƒX‚ğ•Ô‚·
+	// ã‚µãƒ¼ãƒ“ã‚¹IDã‹ã‚‰ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹ã‚’è¿”ã™
 	for (WORD wIndex = 0U ; wIndex < GetServiceNum() ; wIndex++) {
 		if (m_ServiceInfoArray[wIndex].wServiceID == wServiceID) {
 			return wIndex;
 		}
 	}
 
-	// ƒT[ƒrƒXID‚ªŒ©‚Â‚©‚ç‚È‚¢
+	// ã‚µãƒ¼ãƒ“ã‚¹IDãŒè¦‹ã¤ã‹ã‚‰ãªã„
 	return 0xFFFFU;
 }
 
 const WORD CSdtTable::GetServiceID(const WORD wIndex) const
 {
-	// 	ƒT[ƒrƒXID‚ğ•Ô‚·
+	// 	ã‚µãƒ¼ãƒ“ã‚¹IDã‚’è¿”ã™
 	return (wIndex < GetServiceNum())? m_ServiceInfoArray[wIndex].wServiceID : 0xFFFFU;
 }
 
@@ -874,31 +874,31 @@ const bool CSdtTable::GetLEITFlag(const WORD wIndex) const
 
 const bool CSdtTable::GetEITScheduleFlag(const WORD wIndex) const
 {
-	// EIT Schedule Flag‚ğ•Ô‚·
+	// EIT Schedule Flagã‚’è¿”ã™
 	return (wIndex < GetServiceNum())? m_ServiceInfoArray[wIndex].bEITScheduleFlag : false;
 }
 
 const bool CSdtTable::GetEITPresentFollowingFlag(const WORD wIndex) const
 {
-	// EIT Present Following‚ğ•Ô‚·
+	// EIT Present Followingã‚’è¿”ã™
 	return (wIndex < GetServiceNum())? m_ServiceInfoArray[wIndex].bEITPresentFollowingFlag : false;
 }
 
 const BYTE CSdtTable::GetRunningStatus(const WORD wIndex) const
 {
-	// Running Status‚ğ•Ô‚·
+	// Running Statusã‚’è¿”ã™
 	return (wIndex < GetServiceNum())? m_ServiceInfoArray[wIndex].byRunningStatus : 0xFFU;
 }
 
 const bool CSdtTable::GetFreeCaMode(const WORD wIndex) const
 {
-	// Free CA Mode‚ğ•Ô‚·
+	// Free CA Modeã‚’è¿”ã™
 	return (wIndex < GetServiceNum())? m_ServiceInfoArray[wIndex].bFreeCaMode : false;
 }
 
 const CDescBlock * CSdtTable::GetItemDesc(const WORD wIndex) const
 {
-	// ƒAƒCƒeƒ€‚Ì‹LqqƒuƒƒbƒN‚ğ•Ô‚·
+	// ã‚¢ã‚¤ãƒ†ãƒ ã®è¨˜è¿°å­ãƒ–ãƒ­ãƒƒã‚¯ã‚’è¿”ã™
 	return (wIndex < m_ServiceInfoArray.size())? &m_ServiceInfoArray[wIndex].DescBlock : NULL;
 }
 
@@ -918,7 +918,7 @@ const bool CSdtTable::OnTableUpdate(const CPsiSection *pCurSection, const CPsiSe
 	if (pCurSection->GetTableID() != m_TableID)
 		return false;
 
-	// ó‘Ô‚ğƒNƒŠƒA‚·‚é
+	// çŠ¶æ…‹ã‚’ã‚¯ãƒªã‚¢ã™ã‚‹
 	m_ServiceInfoArray.clear();
 
 	m_wNetworkID = ((WORD)pHexData[0] << 8) | (WORD)pHexData[1];
@@ -927,7 +927,7 @@ const bool CSdtTable::OnTableUpdate(const CPsiSection *pCurSection, const CPsiSe
 		  m_TableID == TABLE_ID_ACTUAL ? TEXT("actual") : TEXT("other"),
 		  pCurSection->GetTableIdExtension(), m_wNetworkID);
 
-	// ƒe[ƒuƒ‹‚ğ‰ğÍ‚·‚é
+	// ãƒ†ãƒ¼ãƒ–ãƒ«ã‚’è§£æã™ã‚‹
 	WORD wDescLen;
 	for (WORD wPos = 3 ; wPos + 5 <= wDataSize ; wPos += 5 + wDescLen) {
 		TAG_SDTITEM SdtItem;
@@ -947,23 +947,23 @@ const bool CSdtTable::OnTableUpdate(const CPsiSection *pCurSection, const CPsiSe
 		if (wPos + 5 + wDescLen > wDataSize)
 			break;
 
-		// ‹LqqƒuƒƒbƒN
+		// è¨˜è¿°å­ãƒ–ãƒ­ãƒƒã‚¯
 		SdtItem.DescBlock.ParseBlock(&pHexData[wPos + 5], wDescLen);
 
-		// ƒe[ƒuƒ‹’Ç‰Á
+		// ãƒ†ãƒ¼ãƒ–ãƒ«è¿½åŠ 
 		m_ServiceInfoArray.push_back(SdtItem);
 
 #ifdef _DEBUG
-		// ƒfƒoƒbƒO—p‚±‚±‚©‚ç
+		// ãƒ‡ãƒãƒƒã‚°ç”¨ã“ã“ã‹ã‚‰
 		const CServiceDesc *pServiceDesc = SdtItem.DescBlock.GetDesc<CServiceDesc>();
 		if (pServiceDesc) {
 			TCHAR szServiceName[1024] = {TEXT('\0')};
 			pServiceDesc->GetServiceName(szServiceName,1024);
 			TRACE(TEXT("[%u] Service ID = %04X  Running Status = %01X  Free CA Mode = %u  Service Type = %02X  Service Name = %s\n"), m_ServiceInfoArray.size(), SdtItem.wServiceID, SdtItem.byRunningStatus, SdtItem.bFreeCaMode, pServiceDesc->GetServiceType(), szServiceName);
 		} else {
-			TRACE(TEXT("[%u] Service ID = %04X  Running Status = %01X  Free CA Mode = %u  ¦ƒT[ƒrƒX‹Lqq‚È‚µ\n"), m_ServiceInfoArray.size(), SdtItem.wServiceID, SdtItem.byRunningStatus, SdtItem.bFreeCaMode);
+			TRACE(TEXT("[%u] Service ID = %04X  Running Status = %01X  Free CA Mode = %u  â€»ã‚µãƒ¼ãƒ“ã‚¹è¨˜è¿°å­ãªã—\n"), m_ServiceInfoArray.size(), SdtItem.wServiceID, SdtItem.byRunningStatus, SdtItem.bFreeCaMode);
 		}
-		// ‚±‚±‚Ü‚Å
+		// ã“ã“ã¾ã§
 #endif
 	}
 
@@ -1003,7 +1003,7 @@ CSdtOtherTable *CSdtTableSet::GetOtherSdtTable()
 
 
 /////////////////////////////////////////////////////////////////////////////
-// NITƒe[ƒuƒ‹’ŠÛ‰»ƒNƒ‰ƒX
+// NITãƒ†ãƒ¼ãƒ–ãƒ«æŠ½è±¡åŒ–ã‚¯ãƒ©ã‚¹
 /////////////////////////////////////////////////////////////////////////////
 
 CNitTable::CNitTable()
@@ -1123,7 +1123,7 @@ CPsiTableBase * CNitMultiTable::CreateSectionTable(const CPsiSection *pSection)
 
 
 /////////////////////////////////////////////////////////////////////////////
-// EITƒe[ƒuƒ‹’ŠÛ‰»ƒNƒ‰ƒX
+// EITãƒ†ãƒ¼ãƒ–ãƒ«æŠ½è±¡åŒ–ã‚¯ãƒ©ã‚¹
 /////////////////////////////////////////////////////////////////////////////
 
 CEitTable::CEitTable()
@@ -1134,7 +1134,7 @@ CEitTable::CEitTable()
 
 void CEitTable::Reset()
 {
-	// ó‘Ô‚ğƒNƒŠƒA‚·‚é
+	// çŠ¶æ…‹ã‚’ã‚¯ãƒªã‚¢ã™ã‚‹
 	CPsiSingleTable::Reset();
 
 	m_ServiceID = 0;
@@ -1213,7 +1213,7 @@ BYTE CEitTable::GetRunningStatus(const int Index) const
 
 bool CEitTable::GetFreeCaMode(const int Index) const
 {
-	// Free CA Mode‚ğ•Ô‚·
+	// Free CA Modeã‚’è¿”ã™
 	if (Index < 0 || (size_t)Index >= m_EventList.size())
 		return 0;
 	return m_EventList[Index].bFreeCaMode;
@@ -1221,7 +1221,7 @@ bool CEitTable::GetFreeCaMode(const int Index) const
 
 const CDescBlock * CEitTable::GetItemDesc(const int Index) const
 {
-	// ƒAƒCƒeƒ€‚Ì‹LqqƒuƒƒbƒN‚ğ•Ô‚·
+	// ã‚¢ã‚¤ãƒ†ãƒ ã®è¨˜è¿°å­ãƒ–ãƒ­ãƒƒã‚¯ã‚’è¿”ã™
 	if (Index < 0 || (size_t)Index >= m_EventList.size())
 		return NULL;
 	return &m_EventList[Index].DescBlock;
@@ -1334,7 +1334,7 @@ const CEitTable * CEitPfActualTable::GetPfActualTable(const WORD ServiceID, cons
 
 
 /////////////////////////////////////////////////////////////////////////////
-// TOTƒe[ƒuƒ‹’ŠÛ‰»ƒNƒ‰ƒX
+// TOTãƒ†ãƒ¼ãƒ–ãƒ«æŠ½è±¡åŒ–ã‚¯ãƒ©ã‚¹
 /////////////////////////////////////////////////////////////////////////////
 
 CTotTable::CTotTable()
@@ -1422,7 +1422,7 @@ const bool CTotTable::OnTableUpdate(const CPsiSection *pCurSection, const CPsiSe
 
 
 /////////////////////////////////////////////////////////////////////////////
-// CDTƒe[ƒuƒ‹’ŠÛ‰»ƒNƒ‰ƒX
+// CDTãƒ†ãƒ¼ãƒ–ãƒ«æŠ½è±¡åŒ–ã‚¯ãƒ©ã‚¹
 /////////////////////////////////////////////////////////////////////////////
 
 CCdtTable::CCdtTable(ISectionHandler *pHandler)
@@ -1507,7 +1507,7 @@ const bool CCdtTable::OnTableUpdate(const CPsiSection *pCurSection)
 
 
 /////////////////////////////////////////////////////////////////////////////
-// SDTTƒe[ƒuƒ‹’ŠÛ‰»ƒNƒ‰ƒX
+// SDTTãƒ†ãƒ¼ãƒ–ãƒ«æŠ½è±¡åŒ–ã‚¯ãƒ©ã‚¹
 /////////////////////////////////////////////////////////////////////////////
 
 CSdttTable::CSdttTable(ISectionHandler *pHandler)
@@ -1669,7 +1669,7 @@ const bool CSdttTable::OnTableUpdate(const CPsiSection *pCurSection)
 
 
 /////////////////////////////////////////////////////////////////////////////
-// PCR’ŠÛ‰»ƒNƒ‰ƒX
+// PCRæŠ½è±¡åŒ–ã‚¯ãƒ©ã‚¹
 /////////////////////////////////////////////////////////////////////////////
 
 CPcrTable::CPcrTable()

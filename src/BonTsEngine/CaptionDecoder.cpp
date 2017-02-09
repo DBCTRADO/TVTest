@@ -57,10 +57,10 @@ void CCaptionDecoder::Reset()
 
 	m_TargetEsPID = 0;
 
-	// ‘Sƒe[ƒuƒ‹ƒAƒ“ƒ}ƒbƒv
+	// å…¨ãƒ†ãƒ¼ãƒ–ãƒ«ã‚¢ãƒ³ãƒãƒƒãƒ—
 	m_PidMapManager.UnmapAllTarget();
 
-	// PATƒe[ƒuƒ‹PIDƒ}ƒbƒv’Ç‰Á
+	// PATãƒ†ãƒ¼ãƒ–ãƒ«PIDãƒãƒƒãƒ—è¿½åŠ 
 	m_PidMapManager.MapTarget(PID_PAT, new CPatTable, OnPatUpdated, this);
 }
 
@@ -71,10 +71,10 @@ const bool CCaptionDecoder::InputMedia(CMediaData *pMediaData, const DWORD dwInp
 
 	CTsPacket *pTsPacket = static_cast<CTsPacket *>(pMediaData);
 
-	// PIDƒ‹[ƒeƒBƒ“ƒO
+	// PIDãƒ«ãƒ¼ãƒ†ã‚£ãƒ³ã‚°
 	m_PidMapManager.StorePacket(pTsPacket);
 
-	// Ÿ‚ÌƒtƒBƒ‹ƒ^‚Éƒf[ƒ^‚ğ“n‚·
+	// æ¬¡ã®ãƒ•ã‚£ãƒ«ã‚¿ã«ãƒ‡ãƒ¼ã‚¿ã‚’æ¸¡ã™
 	OutputMedia(pMediaData);
 
 	return true;
@@ -210,7 +210,7 @@ void CALLBACK CCaptionDecoder::OnPatUpdated(const WORD wPID, CTsPidMapTarget *pM
 	if (pPatTable == NULL)
 		return;
 
-	// Œ»PMT‚ÌPID‚ğƒAƒ“ƒ}ƒbƒv‚·‚é
+	// ç¾PMTã®PIDã‚’ã‚¢ãƒ³ãƒãƒƒãƒ—ã™ã‚‹
 	for (size_t i = 0; i < pThis->m_ServiceList.size(); i++) {
 		pMapManager->UnmapTarget(pThis->m_ServiceList[i].PmtPID);
 		for (size_t j = 0; j < pThis->m_ServiceList[i].CaptionEsList.size(); j++)
@@ -235,7 +235,7 @@ void CALLBACK CCaptionDecoder::OnPmtUpdated(const WORD wPID, CTsPidMapTarget *pM
 	if (pPmtTable == NULL)
 		return;
 
-	// ƒT[ƒrƒXƒCƒ“ƒfƒbƒNƒX‚ğŒŸõ
+	// ã‚µãƒ¼ãƒ“ã‚¹ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹ã‚’æ¤œç´¢
 	const int ServiceIndex = pThis->GetServiceIndexByID(pPmtTable->m_CurSection.GetTableIdExtension());
 	if (ServiceIndex < 0)
 		return;

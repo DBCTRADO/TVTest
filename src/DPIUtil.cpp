@@ -97,7 +97,7 @@ int GetSystemDPI()
 
 	auto pGetDpiForSystem = GET_MODULE_FUNCTION(TEXT("user32.dll"), GetDpiForSystem);
 	if (pGetDpiForSystem != nullptr) {
-		// GetDpiForSystem ‚ÌŒ‹‰Ê‚ÍƒLƒƒƒbƒVƒ…‚µ‚Ä‚Í‚¢‚¯‚È‚¢
+		// GetDpiForSystem ã®çµæœã¯ã‚­ãƒ£ãƒƒã‚·ãƒ¥ã—ã¦ã¯ã„ã‘ãªã„
 		DPI = pGetDpiForSystem();
 	} else {
 		if (SystemDPI == 0) {

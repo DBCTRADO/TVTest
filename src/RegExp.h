@@ -2,11 +2,11 @@
 #define TVTEST_REGEXP_H
 
 
-// std::regex ‘Î‰ž
+// std::regex å¯¾å¿œ
 #define TVTEST_STD_REGEX_SUPPORT
-// VBScript RegExp ‘Î‰ž
+// VBScript RegExp å¯¾å¿œ
 //#define TVTEST_VBSCRIPT_REGEXP_SUPPORT
-// bregonig.dll ‘Î‰ž
+// bregonig.dll å¯¾å¿œ
 #define TVTEST_BREGONIG_SUPPORT
 
 

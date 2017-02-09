@@ -49,7 +49,7 @@ bool COperationOptions::ReadSettings(CSettings &Settings)
 		m_ChannelUpDownOrder=(CChannelManager::UpDownOrder)Value;
 	Settings.Read(TEXT("ChannelUpDownSkipSubChannel"),&m_fChannelUpDownSkipSubChannel);
 
-	// ver.0.9.0 ‚æ‚è‘O‚Æ‚ÌŒİŠ·—p
+	// ver.0.9.0 ã‚ˆã‚Šå‰ã¨ã®äº’æ›ç”¨
 	static const int WheelModeList[] = {
 		0,
 		CM_WHEEL_VOLUME,
@@ -200,7 +200,7 @@ INT_PTR COperationOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPar
 
 			int LeftDoubleClick=0,RightClick=0,MiddleClick=0;
 			for (int i=IDC_OPTIONS_MOUSECOMMAND_FIRST;i<=IDC_OPTIONS_MOUSECOMMAND_LAST;i++) {
-				DlgComboBox_AddString(hDlg,i,TEXT("‚È‚µ"));
+				DlgComboBox_AddString(hDlg,i,TEXT("ãªã—"));
 				DlgComboBox_SetItemData(hDlg,i,0,0);
 			}
 			int NumCommands=m_pCommandList->NumCommands();
@@ -231,8 +231,8 @@ INT_PTR COperationOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPar
 			DlgUpDown_SetRange(hDlg,IDC_OPTIONS_AUDIODELAYSTEP_UD,1,1000);
 
 			static const LPCTSTR ChannelUpDownOrderList[] = {
-				TEXT("ƒŠƒXƒg‚Ì•À‚Ñ‡"),
-				TEXT("ƒ`ƒƒƒ“ƒlƒ‹”Ô†‡"),
+				TEXT("ãƒªã‚¹ãƒˆã®ä¸¦ã³é †"),
+				TEXT("ãƒãƒ£ãƒ³ãƒãƒ«ç•ªå·é †"),
 			};
 			for (int i=0;i<lengthof(ChannelUpDownOrderList);i++) {
 				DlgComboBox_AddString(hDlg,IDC_OPTIONS_CHANNELUPDOWNORDER,ChannelUpDownOrderList[i]);
@@ -304,7 +304,7 @@ void COperationOptions::InitWheelSettings(int ID,int CurCommand) const
 	const int CommandCount=m_WheelCommandManager.GetCommandCount();
 	int Sel=0;
 
-	DlgComboBox_AddString(m_hDlg,ID,TEXT("‰½‚à‚µ‚È‚¢"));
+	DlgComboBox_AddString(m_hDlg,ID,TEXT("ä½•ã‚‚ã—ãªã„"));
 	DlgComboBox_SetItemData(m_hDlg,ID,0,0);
 
 	for (int i=0;i<CommandCount;i++) {

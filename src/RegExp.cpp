@@ -22,9 +22,9 @@ namespace TVTest
 
 	inline bool CharToHalfWidth(WCHAR &Char)
 	{
-		if (Char >= L'ÅI' && Char <= L'Å`') {
-			Char -= L'ÅI' - L'!';
-		} else if (Char == L'Å@') {
+		if (Char >= L'ÔºÅ' && Char <= L'„Äú') {
+			Char -= L'ÔºÅ' - L'!';
+		} else if (Char == L'„ÄÄ') {
 			Char = L' ';
 		} else {
 			return false;
@@ -44,7 +44,7 @@ namespace TVTest
 			delete [] pMapText;
 		}
 #else
-		// ïœä∑ëOå„Ç≈í∑Ç≥Ç™ïœÇÌÇÈÇ∆ñ ì|Ç»ÇÃÇ≈ÅAASCIIÇÃîÕàÕÇÃÇ›Ç…ÇµÇƒÇ®Ç≠
+		// Â§âÊèõÂâçÂæå„ÅßÈï∑„Åï„ÅåÂ§â„Çè„Çã„Å®Èù¢ÂÄí„Å™„ÅÆ„Åß„ÄÅASCII„ÅÆÁØÑÂõ≤„ÅÆ„Åø„Å´„Åó„Å¶„Åä„Åè
 		for (size_t i = 0; i < Text.length(); i++)
 			CharToHalfWidth(Text[i]);
 #endif
@@ -84,7 +84,7 @@ namespace TVTest
 				if (m_Pattern[i] == L'\\') {
 					i++;
 				} else if (CharToHalfWidth(m_Pattern[i])) {
-					// ãLçÜÇÉGÉXÉPÅ[Év
+					// Ë®òÂè∑„Çí„Ç®„Çπ„Ç±„Éº„Éó
 					WCHAR c = m_Pattern[i];
 					if ((c >= L'!' && c <= L'/')
 							|| (c >= L':' && c <= L'?')
@@ -114,7 +114,7 @@ namespace TVTest
 #ifdef TVTEST_STD_REGEX_SUPPORT
 
 	/*
-		std::regex ÇégÇ¡ÇΩê≥ãKï\åªåüçı
+		std::regex „Çí‰Ωø„Å£„ÅüÊ≠£Ë¶èË°®ÁèæÊ§úÁ¥¢
 	*/
 
 	class CRegExpEngine_ECMAScript : public CRegExpEngine
@@ -238,7 +238,7 @@ namespace TVTest
 #ifdef TVTEST_VBSCRIPT_REGEXP_SUPPORT
 
 	/*
-		VBScript ÇÃ RegExp ÉIÉuÉWÉFÉNÉgÇégÇ¡ÇΩê≥ãKï\åªåüçı
+		VBScript „ÅÆ RegExp „Ç™„Éñ„Ç∏„Çß„ÇØ„Éà„Çí‰Ωø„Å£„ÅüÊ≠£Ë¶èË°®ÁèæÊ§úÁ¥¢
 	*/
 
 	class CRegExpEngine_VBScript : public CRegExpEngine
@@ -367,7 +367,7 @@ namespace TVTest
 #ifdef TVTEST_BREGONIG_SUPPORT
 
 	/*
-		bregonig.dll ÇégÇ¡ÇΩê≥ãKï\åªåüçı
+		bregonig.dll „Çí‰Ωø„Å£„ÅüÊ≠£Ë¶èË°®ÁèæÊ§úÁ¥¢
 
 		http://homepage3.nifty.com/k-takata/mysoft/bregonig.html
 	*/

@@ -32,10 +32,10 @@ static const struct {
 	{VK_NEXT,		TEXT("PgDown")},
 	{VK_END,		TEXT("End")},
 	{VK_HOME,		TEXT("Home")},
-	{VK_LEFT,		TEXT("��")},
-	{VK_UP,			TEXT("��")},
-	{VK_RIGHT,		TEXT("��")},
-	{VK_DOWN,		TEXT("��")},
+	{VK_LEFT,		TEXT("←")},
+	{VK_UP,			TEXT("↑")},
+	{VK_RIGHT,		TEXT("→")},
+	{VK_DOWN,		TEXT("↓")},
 	{VK_SELECT,		TEXT("Select")},
 	{VK_PRINT,		TEXT("Print")},
 	{VK_EXECUTE,	TEXT("Execute")},
@@ -89,7 +89,7 @@ static const struct {
 	{VK_OEM_COMMA,	TEXT(",")},
 	{VK_OEM_PERIOD,	TEXT(".")},
 	{VK_OEM_2,		TEXT("/")},
-	{VK_OEM_102,	TEXT("�_")},
+	{VK_OEM_102,	TEXT("＼")},
 	{VK_NUMPAD0,	TEXT("Num0")},
 	{VK_NUMPAD1,	TEXT("Num1")},
 	{VK_NUMPAD2,	TEXT("Num2")},
@@ -123,41 +123,41 @@ static const struct {
 	int Command;
 	LPCTSTR pszText;
 } AppCommandList[] = {
-	{APPCOMMAND_VOLUME_UP,				TEXT("����+")},
-	{APPCOMMAND_VOLUME_DOWN,			TEXT("����-")},
-	{APPCOMMAND_VOLUME_MUTE,			TEXT("����")},
-	{APPCOMMAND_MEDIA_PLAY_PAUSE,		TEXT("�Đ�/�ꎞ��~")},
-	{APPCOMMAND_MEDIA_PLAY,				TEXT("�Đ�")},
-	{APPCOMMAND_MEDIA_PAUSE,			TEXT("�ꎞ��~")},
-	{APPCOMMAND_MEDIA_STOP,				TEXT("��~")},
-	{APPCOMMAND_MEDIA_RECORD,			TEXT("�^��/�^��")},
-	{APPCOMMAND_MEDIA_CHANNEL_UP,		TEXT("�`�����l��+")},
-	{APPCOMMAND_MEDIA_CHANNEL_DOWN,		TEXT("�`�����l��-")},
-	{APPCOMMAND_MEDIA_PREVIOUSTRACK,	TEXT("�O�̃g���b�N")},
-	{APPCOMMAND_MEDIA_NEXTTRACK,		TEXT("���̃g���b�N")},
-	{APPCOMMAND_MEDIA_REWIND,			TEXT("�����߂�")},
-	{APPCOMMAND_MEDIA_FAST_FORWARD,		TEXT("������")},
-	{APPCOMMAND_BROWSER_BACKWARD,		TEXT("�߂�")},
-	{APPCOMMAND_BROWSER_FORWARD,		TEXT("�i��")},
-	{APPCOMMAND_BROWSER_HOME,			TEXT("�z�[��")},
-	{APPCOMMAND_BROWSER_STOP,			TEXT("���~")},
-	{APPCOMMAND_BROWSER_FAVORITES,		TEXT("���C�ɓ���")},
-	{APPCOMMAND_BROWSER_REFRESH,		TEXT("�X�V")},
-	{APPCOMMAND_BROWSER_SEARCH,			TEXT("Web����")},
-	{APPCOMMAND_NEW,					TEXT("�V�K�쐬")},
-	{APPCOMMAND_OPEN,					TEXT("�J��")},
-	{APPCOMMAND_SAVE,					TEXT("�ۑ�")},
-	{APPCOMMAND_PRINT,					TEXT("���")},
-	{APPCOMMAND_CLOSE,					TEXT("����")},
-	{APPCOMMAND_UNDO,					TEXT("���ɖ߂�")},
-	{APPCOMMAND_REDO,					TEXT("��蒼��")},
-	{APPCOMMAND_CUT,					TEXT("�؂���")},
-	{APPCOMMAND_COPY,					TEXT("�R�s�[")},
-	{APPCOMMAND_PASTE,					TEXT("�\��t��")},
-	{APPCOMMAND_FIND,					TEXT("����")},
-	{APPCOMMAND_HELP,					TEXT("�w���v")},
-	{APPCOMMAND_CORRECTION_LIST,		TEXT("�������")},
-	{APPCOMMAND_SPELL_CHECK,			TEXT("�X�y���`�F�b�N")},
+	{APPCOMMAND_VOLUME_UP,				TEXT("音量+")},
+	{APPCOMMAND_VOLUME_DOWN,			TEXT("音量-")},
+	{APPCOMMAND_VOLUME_MUTE,			TEXT("消音")},
+	{APPCOMMAND_MEDIA_PLAY_PAUSE,		TEXT("再生/一時停止")},
+	{APPCOMMAND_MEDIA_PLAY,				TEXT("再生")},
+	{APPCOMMAND_MEDIA_PAUSE,			TEXT("一時停止")},
+	{APPCOMMAND_MEDIA_STOP,				TEXT("停止")},
+	{APPCOMMAND_MEDIA_RECORD,			TEXT("録音/録画")},
+	{APPCOMMAND_MEDIA_CHANNEL_UP,		TEXT("チャンネル+")},
+	{APPCOMMAND_MEDIA_CHANNEL_DOWN,		TEXT("チャンネル-")},
+	{APPCOMMAND_MEDIA_PREVIOUSTRACK,	TEXT("前のトラック")},
+	{APPCOMMAND_MEDIA_NEXTTRACK,		TEXT("次のトラック")},
+	{APPCOMMAND_MEDIA_REWIND,			TEXT("巻き戻し")},
+	{APPCOMMAND_MEDIA_FAST_FORWARD,		TEXT("早送り")},
+	{APPCOMMAND_BROWSER_BACKWARD,		TEXT("戻る")},
+	{APPCOMMAND_BROWSER_FORWARD,		TEXT("進む")},
+	{APPCOMMAND_BROWSER_HOME,			TEXT("ホーム")},
+	{APPCOMMAND_BROWSER_STOP,			TEXT("中止")},
+	{APPCOMMAND_BROWSER_FAVORITES,		TEXT("お気に入り")},
+	{APPCOMMAND_BROWSER_REFRESH,		TEXT("更新")},
+	{APPCOMMAND_BROWSER_SEARCH,			TEXT("Web検索")},
+	{APPCOMMAND_NEW,					TEXT("新規作成")},
+	{APPCOMMAND_OPEN,					TEXT("開く")},
+	{APPCOMMAND_SAVE,					TEXT("保存")},
+	{APPCOMMAND_PRINT,					TEXT("印刷")},
+	{APPCOMMAND_CLOSE,					TEXT("閉じる")},
+	{APPCOMMAND_UNDO,					TEXT("元に戻す")},
+	{APPCOMMAND_REDO,					TEXT("やり直し")},
+	{APPCOMMAND_CUT,					TEXT("切り取り")},
+	{APPCOMMAND_COPY,					TEXT("コピー")},
+	{APPCOMMAND_PASTE,					TEXT("貼り付け")},
+	{APPCOMMAND_FIND,					TEXT("検索")},
+	{APPCOMMAND_HELP,					TEXT("ヘルプ")},
+	{APPCOMMAND_CORRECTION_LIST,		TEXT("訂正候補")},
+	{APPCOMMAND_SPELL_CHECK,			TEXT("スペルチェック")},
 	{APPCOMMAND_BASS_BOOST,				TEXT("Bass boost")},
 	{APPCOMMAND_BASS_DOWN,				TEXT("Bass down")},
 	{APPCOMMAND_BASS_UP,				TEXT("Bass up")},
@@ -395,7 +395,7 @@ bool CAccelerator::LoadSettings(CSettings &Settings)
 				m_ChannelInputOptions.KeyInputMode[i]=
 					static_cast<TVTest::CChannelInputOptions::KeyInputModeType>(Value);
 			} else {
-				// ver.0.9.0 ���O�Ƃ̌݊��p
+				// ver.0.9.0 より前との互換用
 				static const LPCTSTR KeyList[] = {
 					TEXT("DigitKeyChangeChannel"),
 					TEXT("NumPadChangeChannel"),
@@ -510,7 +510,7 @@ bool CAccelerator::SaveSettings(CSettings &Settings)
 	if (Settings.SetSection(TEXT("Accelerator"))) {
 		Settings.Clear();
 #if 1
-		/* �f�t�H���g�Ɠ����ꍇ�͕ۑ����Ȃ� */
+		/* デフォルトと同じ場合は保存しない */
 		bool fDefault=false;
 		if (m_KeyList.size()==lengthof(m_DefaultAccelList)) {
 			int i,j;
@@ -549,7 +549,7 @@ bool CAccelerator::SaveSettings(CSettings &Settings)
 	if (Settings.SetSection(TEXT("AppCommand"))) {
 		Settings.Clear();
 #if 1
-		/* �f�t�H���g�Ɠ����ꍇ�͕ۑ����Ȃ� */
+		/* デフォルトと同じ場合は保存しない */
 		bool fDefault=false;
 		if (m_AppCommandList.size()==lengthof(m_DefaultAppCommandList)) {
 			int i,j;
@@ -759,9 +759,9 @@ INT_PTR CAccelerator::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 			m_ListView.SetExtendedStyle(
 				LVS_EX_FULLROWSELECT | LVS_EX_GRIDLINES | LVS_EX_LABELTIP);
 
-			m_ListView.InsertColumn(COLUMN_COMMAND,TEXT("�@�\"));
-			m_ListView.InsertColumn(COLUMN_KEY,TEXT("�L�["));
-			m_ListView.InsertColumn(COLUMN_APPCOMMAND,TEXT("�}���`���f�B�A�L�["));
+			m_ListView.InsertColumn(COLUMN_COMMAND,TEXT("機能"));
+			m_ListView.InsertColumn(COLUMN_KEY,TEXT("キー"));
+			m_ListView.InsertColumn(COLUMN_APPCOMMAND,TEXT("マルチメディアキー"));
 
 			for (int i=0;i<m_pCommandList->NumCommands();i++) {
 				int Command=m_pCommandList->GetCommandID(i);
@@ -806,10 +806,10 @@ INT_PTR CAccelerator::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 
 			m_ListView.AdjustColumnWidth(true);
 
-			DlgComboBox_AddString(hDlg,IDC_ACCELERATOR_KEY,TEXT("�Ȃ�"));
+			DlgComboBox_AddString(hDlg,IDC_ACCELERATOR_KEY,TEXT("なし"));
 			for (int i=0;i<lengthof(AccelKeyList);i++)
 				DlgComboBox_AddString(hDlg,IDC_ACCELERATOR_KEY,AccelKeyList[i].pszText);
-			DlgComboBox_AddString(hDlg,IDC_ACCELERATOR_APPCOMMAND,TEXT("�Ȃ�"));
+			DlgComboBox_AddString(hDlg,IDC_ACCELERATOR_APPCOMMAND,TEXT("なし"));
 			for (size_t i=0;i<m_MediaKeyList.size();i++)
 				DlgComboBox_AddString(hDlg,IDC_ACCELERATOR_APPCOMMAND,m_MediaKeyList[i].pszText);
 
@@ -850,9 +850,9 @@ INT_PTR CAccelerator::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 
 						m_pCommandList->GetCommandName(i,szCommand,lengthof(szCommand));
 						StdUtil::snprintf(szText,lengthof(szText),
-										  TEXT("���� [%s] �Ɋ��蓖�Ă��Ă��܂��B\n���蓖�Ē����܂���?"),
+										  TEXT("既に [%s] に割り当てられています。\n割り当て直しますか?"),
 										  szCommand);
-						if (::MessageBox(hDlg,szText,TEXT("�m�F"),
+						if (::MessageBox(hDlg,szText,TEXT("確認"),
 										 MB_YESNO | MB_ICONQUESTION)!=IDYES)
 							return TRUE;
 						SetAccelItem(i,0,0,false,
@@ -892,9 +892,9 @@ INT_PTR CAccelerator::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 
 						m_pCommandList->GetCommandName(i,szCommand,lengthof(szCommand));
 						StdUtil::snprintf(szText,lengthof(szText),
-										  TEXT("���� [%s] �Ɋ��蓖�Ă��Ă��܂��B\n���蓖�Ē����܂���?"),
+										  TEXT("既に [%s] に割り当てられています。\n割り当て直しますか?"),
 										  szCommand);
-						if (::MessageBox(hDlg,szText,TEXT("�m�F"),
+						if (::MessageBox(hDlg,szText,TEXT("確認"),
 										 MB_YESNO | MB_ICONQUESTION)!=IDYES)
 							return TRUE;
 						LPARAM Param=m_ListView.GetItemParam(i);
@@ -1143,7 +1143,7 @@ void CAccelerator::OnUnknownInput(const BYTE *pData,int Size)
 		static const LPCTSTR pszHex=TEXT("0123456789ABCDEF");
 		TCHAR szText[256];
 
-		::lstrcpy(szText,TEXT("�f�[�^ : "));
+		::lstrcpy(szText,TEXT("データ : "));
 		i=::lstrlen(szText);
 		for (int j=0;j<min(Size,16);j++) {
 			szText[i++]=pszHex[pData[j]>>4];
@@ -1153,10 +1153,10 @@ void CAccelerator::OnUnknownInput(const BYTE *pData,int Size)
 			::lstrcpy(szText+i,TEXT(" ..."));
 			i+=4;
 		}
-		::lstrcpy(szText+i,TEXT("\n(�������L�[�ƃf�[�^�������Ă��炦��ΑΉ��ł��邩���m��܂���B)"));
+		::lstrcpy(szText+i,TEXT("\n(押したキーとデータを教えてもらえれば対応できるかも知れません。)"));
 		CMessageDialog MessageDialog;
 		MessageDialog.Show(m_hDlg,CMessageDialog::TYPE_INFO,szText,
-						   TEXT("�Ή����Ă��Ȃ��L�[��������܂����B"),NULL,TEXT("���߂�"));
+						   TEXT("対応していないキーが押されました。"),NULL,TEXT("ごめん"));
 	}
 	*/
 }

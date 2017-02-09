@@ -3,8 +3,8 @@
 #include "DrawUtil.h"
 #include "Util.h"
 
-// GDI+‚Ìƒwƒbƒ_‚Å®”Œ^‚Ìˆø”‚ÉNULL‚ğ“n‚µ‚Ä‚¢‚é‚Ì‚Å
-// #define NULL nullptr ‚É‚·‚é‚ÆƒGƒ‰[‚ªo‚é
+// GDI+ã®ãƒ˜ãƒƒãƒ€ã§æ•´æ•°å‹ã®å¼•æ•°ã«NULLã‚’æ¸¡ã—ã¦ã„ã‚‹ã®ã§
+// #define NULL nullptr ã«ã™ã‚‹ã¨ã‚¨ãƒ©ãƒ¼ãŒå‡ºã‚‹
 #ifndef NO_NULLPTR
 #undef NULL
 #define NULL 0
@@ -206,7 +206,7 @@ bool CImage::CreateFromBitmap(HBITMAP hbm,HPALETTE hpal)
 	if (::GetObject(hbm,sizeof(bm),&bm)!=sizeof(bm))
 		return false;
 
-	// Bitmap::FromHBITMAP() ‚ÍƒAƒ‹ƒtƒ@ƒ`ƒƒƒ“ƒlƒ‹‚ª–³‹‚³‚ê‚é
+	// Bitmap::FromHBITMAP() ã¯ã‚¢ãƒ«ãƒ•ã‚¡ãƒãƒ£ãƒ³ãƒãƒ«ãŒç„¡è¦–ã•ã‚Œã‚‹
 	if (bm.bmBitsPixel==32) {
 		if (!Create(bm.bmWidth,bm.bmHeight,32))
 			return false;

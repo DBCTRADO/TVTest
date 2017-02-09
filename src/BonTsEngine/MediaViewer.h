@@ -1,4 +1,4 @@
-// MediaViewer.h: CMediaViewer ƒNƒ‰ƒX‚ÌƒCƒ“ƒ^[ƒtƒFƒCƒX
+// MediaViewer.h: CMediaViewer ã‚¯ãƒ©ã‚¹ã®ã‚¤ãƒ³ã‚¿ãƒ¼ãƒ•ã‚§ã‚¤ã‚¹
 //
 //////////////////////////////////////////////////////////////////////
 
@@ -17,9 +17,9 @@
 
 
 /////////////////////////////////////////////////////////////////////////////
-// ƒƒfƒBƒAƒrƒ…[ƒA(‰f‘œ‹y‚Ñ‰¹º‚ğÄ¶‚·‚é)
+// ãƒ¡ãƒ‡ã‚£ã‚¢ãƒ“ãƒ¥ãƒ¼ã‚¢(æ˜ åƒåŠã³éŸ³å£°ã‚’å†ç”Ÿã™ã‚‹)
 /////////////////////////////////////////////////////////////////////////////
-// Input	#0	: CTsPacket		“ü—Íƒf[ƒ^
+// Input	#0	: CTsPacket		å…¥åŠ›ãƒ‡ãƒ¼ã‚¿
 /////////////////////////////////////////////////////////////////////////////
 
 class CMediaViewer
@@ -28,12 +28,12 @@ class CMediaViewer
 {
 public:
 	enum EVENTID {
-		EID_VIDEO_SIZE_CHANGED,			// ‰f‘œ‚ÌƒTƒCƒY‚ª•Ï‚í‚Á‚½
-		EID_FILTER_GRAPH_INITIALIZE,	// ƒtƒBƒ‹ƒ^ƒOƒ‰ƒt‚Ì‰Šú‰»
-		EID_FILTER_GRAPH_INITIALIZED,	// ƒtƒBƒ‹ƒ^ƒOƒ‰ƒt‚ª‰Šú‰»‚³‚ê‚½
-		EID_FILTER_GRAPH_FINALIZE,		// ƒtƒBƒ‹ƒ^ƒOƒ‰ƒt‚ÌI—¹ˆ—
-		EID_FILTER_GRAPH_FINALIZED,		// ƒtƒBƒ‹ƒ^ƒOƒ‰ƒt‚ªI—¹ˆ—‚³‚ê‚½
-		EID_SPDIF_PASSTHROUGH_ERROR		// S/PDIFƒpƒXƒXƒ‹[‚ÌƒGƒ‰[
+		EID_VIDEO_SIZE_CHANGED,			// æ˜ åƒã®ã‚µã‚¤ã‚ºãŒå¤‰ã‚ã£ãŸ
+		EID_FILTER_GRAPH_INITIALIZE,	// ãƒ•ã‚£ãƒ«ã‚¿ã‚°ãƒ©ãƒ•ã®åˆæœŸåŒ–
+		EID_FILTER_GRAPH_INITIALIZED,	// ãƒ•ã‚£ãƒ«ã‚¿ã‚°ãƒ©ãƒ•ãŒåˆæœŸåŒ–ã•ã‚ŒãŸ
+		EID_FILTER_GRAPH_FINALIZE,		// ãƒ•ã‚£ãƒ«ã‚¿ã‚°ãƒ©ãƒ•ã®çµ‚äº†å‡¦ç†
+		EID_FILTER_GRAPH_FINALIZED,		// ãƒ•ã‚£ãƒ«ã‚¿ã‚°ãƒ©ãƒ•ãŒçµ‚äº†å‡¦ç†ã•ã‚ŒãŸ
+		EID_SPDIF_PASSTHROUGH_ERROR		// S/PDIFãƒ‘ã‚¹ã‚¹ãƒ«ãƒ¼ã®ã‚¨ãƒ©ãƒ¼
 	};
 	enum {
 		PID_INVALID=0xFFFF
@@ -85,9 +85,9 @@ public:
 	bool SetPanAndScan(int AspectX, int AspectY, const ClippingInfo *pClipping = NULL);
 	bool GetClippingInfo(ClippingInfo *pClipping) const;
 	enum ViewStretchMode {
-		STRETCH_KEEPASPECTRATIO,	// ƒAƒXƒyƒNƒg”ä•Û
-		STRETCH_CUTFRAME,			// ‘S‘Ì•\¦(û‚Ü‚ç‚È‚¢•ª‚ÍƒJƒbƒg)
-		STRETCH_FIT					// ƒEƒBƒ“ƒhƒEƒTƒCƒY‚É‡‚í‚¹‚é
+		STRETCH_KEEPASPECTRATIO,	// ã‚¢ã‚¹ãƒšã‚¯ãƒˆæ¯”ä¿æŒ
+		STRETCH_CUTFRAME,			// å…¨ä½“è¡¨ç¤º(åã¾ã‚‰ãªã„åˆ†ã¯ã‚«ãƒƒãƒˆ)
+		STRETCH_FIT					// ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã‚µã‚¤ã‚ºã«åˆã‚ã›ã‚‹
 	};
 	bool SetViewStretchMode(ViewStretchMode Mode);
 	ViewStretchMode GetViewStretchMode() const { return m_ViewStretchMode; }
@@ -177,37 +177,37 @@ protected:
 
 	bool m_bInit;
 
-	// DirectShowƒCƒ“ƒ^ƒtƒF[ƒX
+	// DirectShowã‚¤ãƒ³ã‚¿ãƒ•ã‚§ãƒ¼ã‚¹
 	IGraphBuilder *m_pFilterGraph;
 	IMediaControl *m_pMediaControl;
 
-	// DirectShowƒtƒBƒ‹ƒ^
+	// DirectShowãƒ•ã‚£ãƒ«ã‚¿
 	IBaseFilter *m_pVideoDecoderFilter;
 	// Source
 	class CBonSrcFilter *m_pSrcFilter;
-	// ‰¹ºƒfƒR[ƒ_
+	// éŸ³å£°ãƒ‡ã‚³ãƒ¼ãƒ€
 	CAudioDecFilter *m_pAudioDecoder;
-	// ‰¹ºƒtƒBƒ‹ƒ^
+	// éŸ³å£°ãƒ•ã‚£ãƒ«ã‚¿
 	LPWSTR m_pszAudioFilterName;
 	IBaseFilter *m_pAudioFilter;
-	// ‰f‘œƒŒƒ“ƒ_ƒ‰
+	// æ˜ åƒãƒ¬ãƒ³ãƒ€ãƒ©
 	CVideoRenderer *m_pVideoRenderer;
-	// ‰¹ºƒŒƒ“ƒ_ƒ‰
+	// éŸ³å£°ãƒ¬ãƒ³ãƒ€ãƒ©
 	IBaseFilter *m_pAudioRenderer;
-	// ‰f‘œƒp[ƒT
+	// æ˜ åƒãƒ‘ãƒ¼ã‚µ
 	IBaseFilter *m_pVideoParserFilter;
 	CVideoParser *m_pVideoParser;
 
 	LPWSTR m_pszVideoDecoderName;
 
-	// MPEG2DemultiplexerƒCƒ“ƒ^ƒtƒF[ƒX
+	// MPEG2Demultiplexerã‚¤ãƒ³ã‚¿ãƒ•ã‚§ãƒ¼ã‚¹
 	IBaseFilter *m_pMp2DemuxFilter;
 
-	// PIDƒ}ƒbƒv
+	// PIDãƒãƒƒãƒ—
 	IMPEG2PIDMap *m_pMp2DemuxVideoMap;
 	IMPEG2PIDMap *m_pMp2DemuxAudioMap;
 
-	// Elementary Stream‚ÌPID
+	// Elementary Streamã®PID
 	WORD m_wVideoEsPID;
 	WORD m_wAudioEsPID;
 	WORD m_MapAudioPID;

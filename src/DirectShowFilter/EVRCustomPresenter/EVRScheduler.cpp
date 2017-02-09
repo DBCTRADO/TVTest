@@ -222,6 +222,7 @@ HRESULT CEVRScheduler::ProcessSample(IMFSample *pSample, LONG *pNextSleep)
 	MFTIME hnsSystemTime = 0;
 
 	bool bPresentNow = true;
+	bool bDrop = false;
 	LONG NextSleep = 0;
 
 	if (m_pClock != nullptr) {
@@ -236,8 +237,8 @@ HRESULT CEVRScheduler::ProcessSample(IMFSample *pSample, LONG *pNextSleep)
 			hnsDelta = -hnsDelta;
 		}
 
-		if (hnsDelta < -m_PerFrame_1_4th) {
-			bPresentNow = true;
+		if (hnsDelta < -m_PerFrameInterval * 6) {
+			bDrop = true;
 		} else if (hnsDelta > 3 * m_PerFrame_1_4th) {
 			NextSleep = MFTimeToMsec(hnsDelta - (3 * m_PerFrame_1_4th));
 
@@ -245,13 +246,29 @@ HRESULT CEVRScheduler::ProcessSample(IMFSample *pSample, LONG *pNextSleep)
 
 			bPresentNow = false;
 		}
+
+#ifdef _DEBUG
+		static DWORD Prev;
+		DWORD Cur=GetTickCount();
+		if (Cur-Prev>=5000) {
+			TRACE(TEXT("F %lld / D %lld / S %ld / %s\n"),m_PerFrameInterval,hnsDelta,NextSleep,bPresentNow?TEXT("present"):TEXT("wait"));
+			Prev=Cur;
+		}
+#endif
 	}
 
-	if (bPresentNow) {
-		hr = m_pCallback->PresentSample(pSample, hnsPresentationTime);
-	} else {
-		hr = m_ScheduledSamples.PutBack(pSample);
+	if (!bDrop) {
+		if (bPresentNow) {
+			hr = m_pCallback->PresentSample(pSample, hnsPresentationTime);
+		} else {
+			hr = m_ScheduledSamples.PutBack(pSample);
+		}
 	}
+#ifdef _DEBUG
+	else {
+		TRACE(TEXT("Frame dropped.\n"));
+	}
+#endif
 
 	*pNextSleep = NextSleep;
 
@@ -276,7 +293,7 @@ unsigned int CEVRScheduler::SchedulerThread()
 	LONG Wait = INFINITE;
 	bool bExitThread = false;
 
-	// ƒƒbƒZ[ƒWƒLƒ…[ì¬
+	// ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸ã‚­ãƒ¥ãƒ¼ä½œæˆ
 	::PeekMessage(&msg, nullptr, 0, 0, PM_NOREMOVE);
 
 	::SetEvent(m_hThreadReadyEvent);

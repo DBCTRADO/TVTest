@@ -126,7 +126,7 @@ private:
 	public:
 		CCaptureStatusItem(CCaptureWindow *pCaptureWindow,TVTest::Theme::IconList &Icons);
 		LPCTSTR GetIDText() const override { return TEXT("Capture"); }
-		LPCTSTR GetName() const override { return TEXT("ÉLÉÉÉvÉ`ÉÉ"); }
+		LPCTSTR GetName() const override { return TEXT("„Ç≠„É£„Éó„ÉÅ„É£"); }
 		void Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect,unsigned int Flags) override;
 		void OnLButtonDown(int x,int y) override;
 		void OnRButtonDown(int x,int y) override;
@@ -138,7 +138,7 @@ private:
 	public:
 		CSaveStatusItem(CCaptureWindow *pCaptureWindow,TVTest::Theme::IconList &Icons);
 		LPCTSTR GetIDText() const override { return TEXT("Save"); }
-		LPCTSTR GetName() const override { return TEXT("ï€ë∂"); }
+		LPCTSTR GetName() const override { return TEXT("‰øùÂ≠ò"); }
 		void Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect,unsigned int Flags) override;
 		void OnLButtonDown(int x,int y) override;
 	};
@@ -149,7 +149,7 @@ private:
 	public:
 		CCopyStatusItem(CCaptureWindow *pCaptureWindow,TVTest::Theme::IconList &Icons);
 		LPCTSTR GetIDText() const override { return TEXT("Copy"); }
-		LPCTSTR GetName() const override { return TEXT("ÉRÉsÅ["); }
+		LPCTSTR GetName() const override { return TEXT("„Ç≥„Éî„Éº"); }
 		void Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect,unsigned int Flags) override;
 		void OnLButtonDown(int x,int y) override;
 	};

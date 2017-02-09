@@ -4,7 +4,7 @@
 
 
 #ifdef _DEBUG
-// š–‹ƒf[ƒ^‚ğƒfƒoƒbƒOo—Í‚·‚é
+// å­—å¹•ãƒ‡ãƒ¼ã‚¿ã‚’ãƒ‡ãƒãƒƒã‚°å‡ºåŠ›ã™ã‚‹
 //#define TRACE_CAPTION_DATA
 #endif
 
@@ -104,10 +104,10 @@ void CCaptionParser::OnPesPacket(const CPesParser *pPesParser, const CPesPacket 
 	m_DataGroupID = DataGroupID;
 
 	if (DataGroupID == 0x00 || DataGroupID == 0x20) {
-		// š–‹ŠÇ—ƒf[ƒ^
+		// å­—å¹•ç®¡ç†ãƒ‡ãƒ¼ã‚¿
 		ParseManagementData(&pData[Pos], DataGroupSize);
 	} else {
-		// š–‹ƒf[ƒ^
+		// å­—å¹•ãƒ‡ãƒ¼ã‚¿
 		ParseCaptionData(&pData[Pos], DataGroupSize);
 	}
 }
@@ -320,7 +320,7 @@ bool CCaptionParser::ParseDRCSUnitData(const BYTE *pData, const DWORD DataSize)
 				pData += BitsSize;
 				RemainSize -= BitsSize;
 			} else {
-				// ƒWƒIƒƒgƒŠƒbƒN(”ñ‘Î‰)
+				// ã‚¸ã‚ªãƒ¡ãƒˆãƒªãƒƒã‚¯(éå¯¾å¿œ)
 				if (RemainSize < 4)
 					return false;
 				//const BYTE RegionX = pData[0];

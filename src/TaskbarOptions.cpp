@@ -77,7 +77,7 @@ bool CTaskbarOptions::ReadSettings(CSettings &Settings)
 
 bool CTaskbarOptions::WriteSettings(CSettings &Settings)
 {
-#if 0	// ‚Ü‚¾İ’èƒCƒ“ƒ^[ƒtƒF[ƒX‚ª–³‚¢
+#if 0	// ã¾ã è¨­å®šã‚¤ãƒ³ã‚¿ãƒ¼ãƒ•ã‚§ãƒ¼ã‚¹ãŒç„¡ã„
 	Settings.Clear();
 
 	Settings.Write(TEXT("ShowTasks"),m_fShowTasks);

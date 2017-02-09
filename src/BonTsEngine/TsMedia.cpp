@@ -1,4 +1,4 @@
-// TsMedia.cpp: TSƒƒfƒBƒAƒ‰ƒbƒp[ƒNƒ‰ƒX‚ÌƒCƒ“ƒvƒŠƒƒ“ƒe[ƒVƒ‡ƒ“
+// TsMedia.cpp: TSãƒ¡ãƒ‡ã‚£ã‚¢ãƒ©ãƒƒãƒ‘ãƒ¼ã‚¯ãƒ©ã‚¹ã®ã‚¤ãƒ³ãƒ—ãƒªãƒ¡ãƒ³ãƒ†ãƒ¼ã‚·ãƒ§ãƒ³
 //
 //////////////////////////////////////////////////////////////////////
 
@@ -9,7 +9,7 @@
 
 
 /////////////////////////////////////////////////////////////////////////////
-// CPesPacketƒNƒ‰ƒX‚Ì\’z/Á–Å
+// CPesPacketã‚¯ãƒ©ã‚¹ã®æ§‹ç¯‰/æ¶ˆæ»…
 /////////////////////////////////////////////////////////////////////////////
 
 CPesPacket::CPesPacket()
@@ -35,7 +35,7 @@ CPesPacket::CPesPacket(const CPesPacket &Operand)
 CPesPacket & CPesPacket::operator = (const CPesPacket &Operand)
 {
 	if (&Operand != this) {
-		// ƒCƒ“ƒXƒ^ƒ“ƒX‚ÌƒRƒs[
+		// ã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚¹ã®ã‚³ãƒ”ãƒ¼
 		CMediaData::operator = (Operand);
 		m_Header = Operand.m_Header;
 	}
@@ -45,11 +45,11 @@ CPesPacket & CPesPacket::operator = (const CPesPacket &Operand)
 
 const bool CPesPacket::ParseHeader(void)
 {
-	if(m_dwDataSize < 9UL)return false;														// PES_header_data_length‚Ü‚Å‚Í6ƒoƒCƒg
-	else if(m_pData[0] != 0x00U || m_pData[1] != 0x00U || m_pData[2] != 0x01U)return false;	// packet_start_code_prefixˆÙí
-	else if((m_pData[6] & 0xC0U) != 0x80U)return false;										// ŒÅ’èƒrƒbƒgˆÙí
+	if(m_dwDataSize < 9UL)return false;														// PES_header_data_lengthã¾ã§ã¯6ãƒã‚¤ãƒˆ
+	else if(m_pData[0] != 0x00U || m_pData[1] != 0x00U || m_pData[2] != 0x01U)return false;	// packet_start_code_prefixç•°å¸¸
+	else if((m_pData[6] & 0xC0U) != 0x80U)return false;										// å›ºå®šãƒ“ãƒƒãƒˆç•°å¸¸
 
-	// ƒwƒbƒ_‰ğÍ
+	// ãƒ˜ãƒƒãƒ€è§£æ
 	m_Header.byStreamID					= m_pData[3];										// +3 bit7-0
 	m_Header.wPacketLength				= ((WORD)m_pData[4] << 8) | (WORD)m_pData[5];		// +4, +5
 	m_Header.byScramblingCtrl			= (m_pData[6] & 0x30U) >> 4;						// +6 bit5-4
@@ -66,125 +66,125 @@ const bool CPesPacket::ParseHeader(void)
 	m_Header.bExtensionFlag				= (m_pData[7] & 0x01U)? true : false;				// +7 bit0
 	m_Header.byHeaderDataLength			= m_pData[8];										// +8 bit7-0
 
-	// ƒwƒbƒ_‚ÌƒtƒH[ƒ}ƒbƒg“K‡«‚ğƒ`ƒFƒbƒN‚·‚é
-	if(m_Header.byScramblingCtrl != 0U)return false;	// Not scrambled ‚Ì‚İ‘Î‰
-	else if(m_Header.byPtsDtsFlags == 1U)return false;	// –¢’è‹`‚Ìƒtƒ‰ƒO
+	// ãƒ˜ãƒƒãƒ€ã®ãƒ•ã‚©ãƒ¼ãƒãƒƒãƒˆé©åˆæ€§ã‚’ãƒã‚§ãƒƒã‚¯ã™ã‚‹
+	if(m_Header.byScramblingCtrl != 0U)return false;	// Not scrambled ã®ã¿å¯¾å¿œ
+	else if(m_Header.byPtsDtsFlags == 1U)return false;	// æœªå®šç¾©ã®ãƒ•ãƒ©ã‚°
 
 	return true;
 }
 
 void CPesPacket::Reset(void)
 {
-	// ƒf[ƒ^‚ğƒNƒŠƒA‚·‚é
+	// ãƒ‡ãƒ¼ã‚¿ã‚’ã‚¯ãƒªã‚¢ã™ã‚‹
 	ClearSize();
 	::ZeroMemory(&m_Header, sizeof(m_Header));
 }
 
 const BYTE CPesPacket::GetStreamID(void) const
 {
-	// Stream ID‚ğ•Ô‚·
+	// Stream IDã‚’è¿”ã™
 	return m_Header.byStreamID;
 }
 
 const WORD CPesPacket::GetPacketLength(void) const
 {
-	// PES Packet Length‚ğ•Ô‚·
+	// PES Packet Lengthã‚’è¿”ã™
 	return m_Header.wPacketLength;
 }
 
 const BYTE CPesPacket::GetScramblingCtrl(void) const
-{	// PES Scrambling Control‚ğ•Ô‚·
+{	// PES Scrambling Controlã‚’è¿”ã™
 	return m_Header.byScramblingCtrl;
 }
 
 const bool CPesPacket::IsPriority(void) const
-{	// PES Priority‚ğ•Ô‚·
+{	// PES Priorityã‚’è¿”ã™
 	return m_Header.bPriority;
 }
 
 const bool CPesPacket::IsDataAlignmentIndicator(void) const
 {
-	// Data Alignment Indicator‚ğ•Ô‚·
+	// Data Alignment Indicatorã‚’è¿”ã™
 	return m_Header.bDataAlignmentIndicator;
 }
 
 const bool CPesPacket::IsCopyright(void) const
 {
-	// Copyright‚ğ•Ô‚·
+	// Copyrightã‚’è¿”ã™
 	return m_Header.bCopyright;
 }
 
 const bool CPesPacket::IsOriginalOrCopy(void) const
 {
-	// Original or Copy‚ğ•Ô‚·
+	// Original or Copyã‚’è¿”ã™
 	return m_Header.bOriginalOrCopy;
 }
 
 const BYTE CPesPacket::GetPtsDtsFlags(void) const
 {
-	// PTS DTS Flags‚ğ•Ô‚·
+	// PTS DTS Flagsã‚’è¿”ã™
 	return m_Header.byPtsDtsFlags;
 }
 
 const bool CPesPacket::IsEscrFlag(void) const
 {
-	// ESCR Flag‚ğ•Ô‚·
+	// ESCR Flagã‚’è¿”ã™
 	return m_Header.bEscrFlag;
 }
 
 const bool CPesPacket::IsEsRateFlag(void) const
 {
-	// ES Rate Flag‚ğ•Ô‚·
+	// ES Rate Flagã‚’è¿”ã™
 	return m_Header.bEsRateFlag;
 }
 
 const bool CPesPacket::IsDsmTrickModeFlag(void) const
 {
-	// DSM Trick Mode Flag‚ğ•Ô‚·
+	// DSM Trick Mode Flagã‚’è¿”ã™
 	return m_Header.bDsmTrickModeFlag;
 }
 
 const bool CPesPacket::IsAdditionalCopyInfoFlag(void) const
 {
-	// Additional Copy Info Flag‚ğ•Ô‚·
+	// Additional Copy Info Flagã‚’è¿”ã™
 	return m_Header.bAdditionalCopyInfoFlag;
 }
 
 const bool CPesPacket::IsCrcFlag(void) const
 {
-	// PES CRC Flag‚ğ•Ô‚·
+	// PES CRC Flagã‚’è¿”ã™
 	return m_Header.bCrcFlag;
 }
 
 const bool CPesPacket::IsExtensionFlag(void) const
 {
-	// PES Extension Flag‚ğ•Ô‚·
+	// PES Extension Flagã‚’è¿”ã™
 	return m_Header.bExtensionFlag;
 }
 
 const BYTE CPesPacket::GetHeaderDataLength(void) const
 {
-	// PES Header Data Length‚ğ•Ô‚·
+	// PES Header Data Lengthã‚’è¿”ã™
 	return m_Header.byHeaderDataLength;
 }
 
 const LONGLONG CPesPacket::GetPtsCount(void)const
 {
-	// PTS(Presentation Time Stamp)‚ğ•Ô‚·
+	// PTS(Presentation Time Stamp)ã‚’è¿”ã™
 	if (m_Header.byPtsDtsFlags) {
 		return HexToTimeStamp(&m_pData[9]);
 	}
 
-	// ƒGƒ‰[(PTS‚ª‚È‚¢)
+	// ã‚¨ãƒ©ãƒ¼(PTSãŒãªã„)
 	return -1LL;
 }
 
 const WORD CPesPacket::GetPacketCrc(void) const
 {
-	// PES Packet CRC‚ğ•Ô‚·
+	// PES Packet CRCã‚’è¿”ã™
 	DWORD dwCrcPos = 9UL;
 
-	// ˆÊ’u‚ğŒvZ
+	// ä½ç½®ã‚’è¨ˆç®—
 	if(m_Header.byPtsDtsFlags == 2U)dwCrcPos += 5UL;
 	if(m_Header.byPtsDtsFlags == 3U)dwCrcPos += 10UL;
 	if(m_Header.bEscrFlag)dwCrcPos += 6UL;
@@ -199,7 +199,7 @@ const WORD CPesPacket::GetPacketCrc(void) const
 
 BYTE * CPesPacket::GetPayloadData(void) const
 {
-	// ƒyƒCƒ[ƒhƒ|ƒCƒ“ƒ^‚ğ•Ô‚·
+	// ãƒšã‚¤ãƒ­ãƒ¼ãƒ‰ãƒã‚¤ãƒ³ã‚¿ã‚’è¿”ã™
 	const DWORD dwPayloadPos = m_Header.byHeaderDataLength + 9UL;
 
 	return (m_dwDataSize >= (dwPayloadPos + 1UL))? &m_pData[dwPayloadPos] : NULL;
@@ -207,7 +207,7 @@ BYTE * CPesPacket::GetPayloadData(void) const
 
 const DWORD CPesPacket::GetPayloadSize(void) const
 {
-	// ƒyƒCƒ[ƒhƒTƒCƒY‚ğ•Ô‚·(ÀÛ‚Ì•Û‚µ‚Ä‚é@¦ƒpƒPƒbƒg’·‚æ‚è­‚È‚­‚È‚é‚±‚Æ‚à‚ ‚é)
+	// ãƒšã‚¤ãƒ­ãƒ¼ãƒ‰ã‚µã‚¤ã‚ºã‚’è¿”ã™(å®Ÿéš›ã®ä¿æŒã—ã¦ã‚‹ã€€â€»ãƒ‘ã‚±ãƒƒãƒˆé•·ã‚ˆã‚Šå°‘ãªããªã‚‹ã“ã¨ã‚‚ã‚ã‚‹)
 	const DWORD dwHeaderSize = m_Header.byHeaderDataLength + 9UL;
 
 	return (m_dwDataSize > dwHeaderSize)? (m_dwDataSize - dwHeaderSize) : 0UL;
@@ -215,7 +215,7 @@ const DWORD CPesPacket::GetPayloadSize(void) const
 
 inline const LONGLONG CPesPacket::HexToTimeStamp(const BYTE *pHexData)
 {
-	// 33bit 90KHz ƒ^ƒCƒ€ƒXƒ^ƒ“ƒv‚ğ‰ğÍ‚·‚é
+	// 33bit 90KHz ã‚¿ã‚¤ãƒ ã‚¹ã‚¿ãƒ³ãƒ—ã‚’è§£æã™ã‚‹
 	LONGLONG llCurPtsCount = 0LL;
 	llCurPtsCount |= (LONGLONG)(pHexData[0] & 0x0EU) << 29;
 	llCurPtsCount |= (LONGLONG)pHexData[1] << 22;
@@ -228,7 +228,7 @@ inline const LONGLONG CPesPacket::HexToTimeStamp(const BYTE *pHexData)
 
 
 //////////////////////////////////////////////////////////////////////
-// CPesParserƒNƒ‰ƒX‚Ì\’z/Á–Å
+// CPesParserã‚¯ãƒ©ã‚¹ã®æ§‹ç¯‰/æ¶ˆæ»…
 //////////////////////////////////////////////////////////////////////
 
 CPesParser::CPesParser(IPacketHandler *pPacketHandler)
@@ -249,7 +249,7 @@ CPesParser::CPesParser(const CPesParser &Operand)
 CPesParser & CPesParser::operator = (const CPesParser &Operand)
 {
 	if (&Operand != this) {
-		// ƒCƒ“ƒXƒ^ƒ“ƒX‚ÌƒRƒs[
+		// ã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚¹ã®ã‚³ãƒ”ãƒ¼
 		m_pPacketHandler = Operand.m_pPacketHandler;
 		m_PesPacket = Operand.m_PesPacket;
 		m_bIsStoring = Operand.m_bIsStoring;
@@ -269,9 +269,9 @@ const bool CPesParser::StorePacket(const CTsPacket *pPacket)
 	BYTE byPos = 0U;
 
 	if (pPacket->GetPayloadUnitStartIndicator()) {
-		// ƒwƒbƒ_æ“ª + [ƒyƒCƒ[ƒh’f•Ğ]
+		// ãƒ˜ãƒƒãƒ€å…ˆé ­ + [ãƒšã‚¤ãƒ­ãƒ¼ãƒ‰æ–­ç‰‡]
 
-		// PESƒpƒPƒbƒg‹«ŠE‚È‚µ‚ÌƒXƒgƒA‚ğŠ®—¹‚·‚é
+		// PESãƒ‘ã‚±ãƒƒãƒˆå¢ƒç•Œãªã—ã®ã‚¹ãƒˆã‚¢ã‚’å®Œäº†ã™ã‚‹
 		if(m_bIsStoring && !m_PesPacket.GetPacketLength()){
 			OnPesPacket(&m_PesPacket);
 			}
@@ -284,7 +284,7 @@ const bool CPesParser::StorePacket(const CTsPacket *pPacket)
 		byPos += StorePayload(&pData[byPos], bySize - byPos);
 		}
 	else{
-		// [ƒwƒbƒ_’f•Ğ] + ƒyƒCƒ[ƒh + [ƒXƒ^ƒbƒtƒBƒ“ƒOƒoƒCƒg]
+		// [ãƒ˜ãƒƒãƒ€æ–­ç‰‡] + ãƒšã‚¤ãƒ­ãƒ¼ãƒ‰ + [ã‚¹ã‚¿ãƒƒãƒ•ã‚£ãƒ³ã‚°ãƒã‚¤ãƒˆ]
 		byPos += StoreHeader(&pData[byPos], bySize - byPos);
 		byPos += StorePayload(&pData[byPos], bySize - byPos);
 		}
@@ -294,7 +294,7 @@ const bool CPesParser::StorePacket(const CTsPacket *pPacket)
 
 void CPesParser::Reset(void)
 {
-	// ó‘Ô‚ğ‰Šú‰»‚·‚é
+	// çŠ¶æ…‹ã‚’åˆæœŸåŒ–ã™ã‚‹
 	m_PesPacket.Reset();
 	m_bIsStoring = false;
 	m_dwStoreSize = 0UL;
@@ -302,35 +302,35 @@ void CPesParser::Reset(void)
 
 void CPesParser::OnPesPacket(const CPesPacket *pPacket) const
 {
-	// ƒnƒ“ƒhƒ‰ŒÄ‚Ño‚µ
+	// ãƒãƒ³ãƒ‰ãƒ©å‘¼ã³å‡ºã—
 	if(m_pPacketHandler)m_pPacketHandler->OnPesPacket(this, pPacket);
 }
 
 const BYTE CPesParser::StoreHeader(const BYTE *pPayload, const BYTE byRemain)
 {
-	// ƒwƒbƒ_‚ğ‰ğÍ‚µ‚ÄƒZƒNƒVƒ‡ƒ“‚ÌƒXƒgƒA‚ğŠJn‚·‚é
+	// ãƒ˜ãƒƒãƒ€ã‚’è§£æã—ã¦ã‚»ã‚¯ã‚·ãƒ§ãƒ³ã®ã‚¹ãƒˆã‚¢ã‚’é–‹å§‹ã™ã‚‹
 	if(m_bIsStoring)return 0U;
 
 	const BYTE byHeaderRemain = 9U - (BYTE)m_PesPacket.GetSize();
 
 	if(byRemain >= byHeaderRemain){
-		// ƒwƒbƒ_ƒXƒgƒAŠ®—¹Aƒwƒbƒ_‚ğ‰ğÍ‚µ‚ÄƒyƒCƒ[ƒh‚ÌƒXƒgƒA‚ğŠJn‚·‚é
+		// ãƒ˜ãƒƒãƒ€ã‚¹ãƒˆã‚¢å®Œäº†ã€ãƒ˜ãƒƒãƒ€ã‚’è§£æã—ã¦ãƒšã‚¤ãƒ­ãƒ¼ãƒ‰ã®ã‚¹ãƒˆã‚¢ã‚’é–‹å§‹ã™ã‚‹
 		m_PesPacket.AddData(pPayload, byHeaderRemain);
 		if(m_PesPacket.ParseHeader()){
-			// ƒwƒbƒ_ƒtƒH[ƒ}ƒbƒgOK
+			// ãƒ˜ãƒƒãƒ€ãƒ•ã‚©ãƒ¼ãƒãƒƒãƒˆOK
 			m_dwStoreSize = m_PesPacket.GetPacketLength();
 			if(m_dwStoreSize)m_dwStoreSize += 6UL;
 			m_bIsStoring = true;
 			return byHeaderRemain;
 			}
 		else{
-			// ƒwƒbƒ_ƒGƒ‰[
+			// ãƒ˜ãƒƒãƒ€ã‚¨ãƒ©ãƒ¼
 			m_PesPacket.Reset();
 			return byRemain;
 			}
 		}
 	else{
-		// ƒwƒbƒ_ƒXƒgƒA–¢Š®—¹AŸ‚Ìƒf[ƒ^‚ğ‘Ò‚Â
+		// ãƒ˜ãƒƒãƒ€ã‚¹ãƒˆã‚¢æœªå®Œäº†ã€æ¬¡ã®ãƒ‡ãƒ¼ã‚¿ã‚’å¾…ã¤
 		m_PesPacket.AddData(pPayload, byRemain);
 		return byRemain;
 		}
@@ -338,26 +338,26 @@ const BYTE CPesParser::StoreHeader(const BYTE *pPayload, const BYTE byRemain)
 
 const BYTE CPesParser::StorePayload(const BYTE *pPayload, const BYTE byRemain)
 {
-	// ƒZƒNƒVƒ‡ƒ“‚ÌƒXƒgƒA‚ğŠ®—¹‚·‚é
+	// ã‚»ã‚¯ã‚·ãƒ§ãƒ³ã®ã‚¹ãƒˆã‚¢ã‚’å®Œäº†ã™ã‚‹
 	if(!m_bIsStoring)return 0U;
 	
 	const DWORD dwStoreRemain = m_dwStoreSize - m_PesPacket.GetSize();
 
 	if(m_dwStoreSize && (dwStoreRemain <= (DWORD)byRemain)){
-		// ƒXƒgƒAŠ®—¹
+		// ã‚¹ãƒˆã‚¢å®Œäº†
 		m_PesPacket.AddData(pPayload, dwStoreRemain);
 
-		// CRC³íAƒR[ƒ‹ƒoƒbƒN‚ÉƒZƒNƒVƒ‡ƒ“‚ğ“n‚·
+		// CRCæ­£å¸¸ã€ã‚³ãƒ¼ãƒ«ãƒãƒƒã‚¯ã«ã‚»ã‚¯ã‚·ãƒ§ãƒ³ã‚’æ¸¡ã™
 		OnPesPacket(&m_PesPacket);
 
-		// ó‘Ô‚ğ‰Šú‰»‚µAŸ‚ÌƒZƒNƒVƒ‡ƒ“óM‚É”õ‚¦‚é
+		// çŠ¶æ…‹ã‚’åˆæœŸåŒ–ã—ã€æ¬¡ã®ã‚»ã‚¯ã‚·ãƒ§ãƒ³å—ä¿¡ã«å‚™ãˆã‚‹
 		m_PesPacket.Reset();
 		m_bIsStoring = false;
 
 		return (BYTE)dwStoreRemain;
 		}
 	else{
-		// ƒXƒgƒA–¢Š®—¹AŸ‚ÌƒyƒCƒ[ƒh‚ğ‘Ò‚Â
+		// ã‚¹ãƒˆã‚¢æœªå®Œäº†ã€æ¬¡ã®ãƒšã‚¤ãƒ­ãƒ¼ãƒ‰ã‚’å¾…ã¤
 		m_PesPacket.AddData(pPayload, byRemain);
 		return byRemain;
 		}
@@ -365,7 +365,7 @@ const BYTE CPesParser::StorePayload(const BYTE *pPayload, const BYTE byRemain)
 
 
 //////////////////////////////////////////////////////////////////////
-// CAdtsFrameƒNƒ‰ƒX‚Ì\’z/Á–Å
+// CAdtsFrameã‚¯ãƒ©ã‚¹ã®æ§‹ç¯‰/æ¶ˆæ»…
 //////////////////////////////////////////////////////////////////////
 
 CAdtsFrame::CAdtsFrame()
@@ -384,7 +384,7 @@ CAdtsFrame::CAdtsFrame(const CAdtsFrame &Operand)
 CAdtsFrame & CAdtsFrame::operator = (const CAdtsFrame &Operand)
 {
 	if (&Operand != this) {
-		// ƒCƒ“ƒXƒ^ƒ“ƒX‚ÌƒRƒs[
+		// ã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚¹ã®ã‚³ãƒ”ãƒ¼
 		CMediaData::operator = (Operand);
 		m_Header = Operand.m_Header;
 	}
@@ -395,8 +395,8 @@ CAdtsFrame & CAdtsFrame::operator = (const CAdtsFrame &Operand)
 const bool CAdtsFrame::ParseHeader(void)
 {
 	// adts_fixed_header()
-	if(m_dwDataSize < 7UL)return false;									// ADTSƒwƒbƒ_‚Í7ƒoƒCƒg
-	else if(m_pData[0] != 0xFFU || (m_pData[1] & 0xF6) != 0xF0U)return false;	// SyncwordAlayerˆÙí
+	if(m_dwDataSize < 7UL)return false;									// ADTSãƒ˜ãƒƒãƒ€ã¯7ãƒã‚¤ãƒˆ
+	else if(m_pData[0] != 0xFFU || (m_pData[1] & 0xF6) != 0xF0U)return false;	// Syncwordã€layerç•°å¸¸
 
 	m_Header.bMpegVersion			= (m_pData[1] & 0x08U)? true : false;							// +1 bit3
 	m_Header.bProtectionAbsent		= (m_pData[1] & 0x01U)? true : false;							// +1 bit0
@@ -414,37 +414,37 @@ const bool CAdtsFrame::ParseHeader(void)
 	m_Header.wBufferFullness		= ((WORD)(m_pData[5] & 0x1FU) << 6) | ((WORD)(m_pData[6] & 0xFCU) >> 2);
 	m_Header.byRawDataBlockNum		= m_pData[6] & 0x03U;
 
-	// ƒtƒH[ƒ}ƒbƒg“K‡«ƒ`ƒFƒbƒN
+	// ãƒ•ã‚©ãƒ¼ãƒãƒƒãƒˆé©åˆæ€§ãƒã‚§ãƒƒã‚¯
 	if(m_Header.byProfile == 3U)
-		return false;		// –¢’è‹`‚Ìƒvƒƒtƒ@ƒCƒ‹
+		return false;		// æœªå®šç¾©ã®ãƒ—ãƒ­ãƒ•ã‚¡ã‚¤ãƒ«
 	else if(m_Header.bySamplingFreqIndex > 0x0BU)
-		return false;		// –¢’è‹`‚ÌƒTƒ“ƒvƒŠƒ“ƒOü”g”
+		return false;		// æœªå®šç¾©ã®ã‚µãƒ³ãƒ—ãƒªãƒ³ã‚°å‘¨æ³¢æ•°
 	else if(m_Header.byChannelConfig >= 3 && m_Header.byChannelConfig != 6)
-		return false;		// ƒ`ƒƒƒ“ƒlƒ‹”ˆÙí
+		return false;		// ãƒãƒ£ãƒ³ãƒãƒ«æ•°ç•°å¸¸
 	else if(m_Header.wFrameLength < (m_Header.bProtectionAbsent ? 7 : 9))
-		return false;		// ƒtƒŒ[ƒ€’·ˆÙí
+		return false;		// ãƒ•ãƒ¬ãƒ¼ãƒ é•·ç•°å¸¸
 	else if(m_Header.byRawDataBlockNum)
-		return false;		// –{ƒNƒ‰ƒX‚Í’Pˆê‚ÌRaw Data Block‚É‚µ‚©‘Î‰‚µ‚È‚¢
+		return false;		// æœ¬ã‚¯ãƒ©ã‚¹ã¯å˜ä¸€ã®Raw Data Blockã«ã—ã‹å¯¾å¿œã—ãªã„
 
 	return true;
 }
 
 void CAdtsFrame::Reset(void)
 {
-	// ƒf[ƒ^‚ğƒNƒŠƒA‚·‚é
+	// ãƒ‡ãƒ¼ã‚¿ã‚’ã‚¯ãƒªã‚¢ã™ã‚‹
 	ClearSize();	
 	::ZeroMemory(&m_Header, sizeof(m_Header));
 }
 
 const BYTE CAdtsFrame::GetProfile(void) const
 {
-	// Profile ‚ğ•Ô‚·
+	// Profile ã‚’è¿”ã™
 	return m_Header.byProfile;
 }
 
 const BYTE CAdtsFrame::GetSamplingFreqIndex(void) const
 {
-	// Sampling Frequency Index ‚ğ•Ô‚·
+	// Sampling Frequency Index ã‚’è¿”ã™
 	return m_Header.bySamplingFreqIndex;
 }
 
@@ -458,67 +458,67 @@ const DWORD CAdtsFrame::GetSamplingFreq(void) const
 
 const bool CAdtsFrame::IsPrivateBit(void) const
 {
-	// Private Bit ‚ğ•Ô‚·
+	// Private Bit ã‚’è¿”ã™
 	return m_Header.bPrivateBit;
 }
 
 const BYTE CAdtsFrame::GetChannelConfig(void) const
 {
-	// Channel Configuration ‚ğ•Ô‚·
+	// Channel Configuration ã‚’è¿”ã™
 	return m_Header.byChannelConfig;
 }
 
 const bool CAdtsFrame::IsOriginalCopy(void) const
 {
-	// Original/Copy ‚ğ•Ô‚·
+	// Original/Copy ã‚’è¿”ã™
 	return m_Header.bOriginalCopy;
 }
 
 const bool CAdtsFrame::IsHome(void) const
 {
-	// Home ‚ğ•Ô‚·
+	// Home ã‚’è¿”ã™
 	return m_Header.bHome;
 }
 
 const bool CAdtsFrame::IsCopyrightIdBit(void) const
 {
-	// Copyright Identification Bit ‚ğ•Ô‚·
+	// Copyright Identification Bit ã‚’è¿”ã™
 	return m_Header.bCopyrightIdBit;
 }
 
 const bool CAdtsFrame::IsCopyrightIdStart(void) const
 {
-	// Copyright Identification Start ‚ğ•Ô‚·
+	// Copyright Identification Start ã‚’è¿”ã™
 	return m_Header.bCopyrightIdStart;
 }
 
 const WORD CAdtsFrame::GetFrameLength(void) const
 {
-	// Frame Length ‚ğ•Ô‚·
+	// Frame Length ã‚’è¿”ã™
 	return m_Header.wFrameLength;
 }
 
 const WORD CAdtsFrame::GetBufferFullness(void) const
 {
-	// ADTS Buffer Fullness ‚ğ•Ô‚·
+	// ADTS Buffer Fullness ã‚’è¿”ã™
 	return m_Header.wBufferFullness;
 }
 
 const BYTE CAdtsFrame::GetRawDataBlockNum(void) const
 {
-	// Number of Raw Data Blocks in Frame ‚ğ•Ô‚·
+	// Number of Raw Data Blocks in Frame ã‚’è¿”ã™
 	return m_Header.byRawDataBlockNum;
 }
 
 
 //////////////////////////////////////////////////////////////////////
-// CAdtsParserƒNƒ‰ƒX‚Ì\’z/Á–Å
+// CAdtsParserã‚¯ãƒ©ã‚¹ã®æ§‹ç¯‰/æ¶ˆæ»…
 //////////////////////////////////////////////////////////////////////
 
 CAdtsParser::CAdtsParser(IFrameHandler *pFrameHandler)
 	: m_pFrameHandler(pFrameHandler)
 {
-	// ADTSƒtƒŒ[ƒ€Å‘å’·‚Ìƒoƒbƒtƒ@Šm•Û
+	// ADTSãƒ•ãƒ¬ãƒ¼ãƒ æœ€å¤§é•·ã®ãƒãƒƒãƒ•ã‚¡ç¢ºä¿
 	m_AdtsFrame.GetBuffer(0x2000UL);
 
 	Reset();
@@ -532,7 +532,7 @@ CAdtsParser::CAdtsParser(const CAdtsParser &Operand)
 CAdtsParser & CAdtsParser::operator = (const CAdtsParser &Operand)
 {
 	if (&Operand != this) {
-		// ƒCƒ“ƒXƒ^ƒ“ƒX‚ÌƒRƒs[
+		// ã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚¹ã®ã‚³ãƒ”ãƒ¼
 		m_pFrameHandler = Operand.m_pFrameHandler;
 		m_AdtsFrame = Operand.m_AdtsFrame;
 		m_bIsStoring = Operand.m_bIsStoring;
@@ -557,30 +557,30 @@ const bool CAdtsParser::StoreEs(const BYTE *pData, const DWORD dwSize)
 
 	do {
 		if (!m_bIsStoring) {
-			// ƒwƒbƒ_‚ğŒŸõ‚·‚é
+			// ãƒ˜ãƒƒãƒ€ã‚’æ¤œç´¢ã™ã‚‹
 			m_bIsStoring = SyncFrame(pData[dwPos++]);
 			if(m_bIsStoring)bTrigger = true;
 		} else {
-			// ƒf[ƒ^‚ğƒXƒgƒA‚·‚é
+			// ãƒ‡ãƒ¼ã‚¿ã‚’ã‚¹ãƒˆã‚¢ã™ã‚‹
 			const DWORD dwStoreRemain = m_AdtsFrame.GetFrameLength() - (WORD)m_AdtsFrame.GetSize();
 			const DWORD dwDataRemain = dwSize - dwPos;
 
 			if (dwStoreRemain <= dwDataRemain) {
-				// ƒXƒgƒAŠ®—¹
+				// ã‚¹ãƒˆã‚¢å®Œäº†
 				m_AdtsFrame.AddData(&pData[dwPos], dwStoreRemain);
 				dwPos += dwStoreRemain;
 				m_bIsStoring = false;
 
-				// –{—ˆ‚È‚ç‚±‚±‚ÅCRCƒ`ƒFƒbƒN‚ğ‚·‚×‚«
-				// ƒ`ƒFƒbƒN‘ÎÛ—Ìˆæ‚ª‰Â•Ï‚Å•¡G‚È‚Ì‚Å•Û—¯A’N‚©À‘•‚µ‚Ü‚¹‚ñ‚©...
+				// æœ¬æ¥ãªã‚‰ã“ã“ã§CRCãƒã‚§ãƒƒã‚¯ã‚’ã™ã¹ã
+				// ãƒã‚§ãƒƒã‚¯å¯¾è±¡é ˜åŸŸãŒå¯å¤‰ã§è¤‡é›‘ãªã®ã§ä¿ç•™ã€èª°ã‹å®Ÿè£…ã—ã¾ã›ã‚“ã‹...
 
-				// ƒtƒŒ[ƒ€o—Í
+				// ãƒ•ãƒ¬ãƒ¼ãƒ å‡ºåŠ›
 				OnAdtsFrame(&m_AdtsFrame);
 
-				// Ÿ‚ÌƒtƒŒ[ƒ€‚ğˆ—‚·‚é‚½‚ßƒŠƒZƒbƒg
+				// æ¬¡ã®ãƒ•ãƒ¬ãƒ¼ãƒ ã‚’å‡¦ç†ã™ã‚‹ãŸã‚ãƒªã‚»ãƒƒãƒˆ
 				m_AdtsFrame.ClearSize();
 			} else {
-				// ƒXƒgƒA–¢Š®—¹AŸ‚ÌƒyƒCƒ[ƒh‚ğ‘Ò‚Â
+				// ã‚¹ãƒˆã‚¢æœªå®Œäº†ã€æ¬¡ã®ãƒšã‚¤ãƒ­ãƒ¼ãƒ‰ã‚’å¾…ã¤
 				m_AdtsFrame.AddData(&pData[dwPos], dwDataRemain);
 				break;
 			}
@@ -608,22 +608,22 @@ bool CAdtsParser::StoreEs(const BYTE *pData, DWORD *pSize, CAdtsFrame **ppFrame)
 
 	do {
 		if (!m_bIsStoring) {
-			// ƒwƒbƒ_‚ğŒŸõ‚·‚é
+			// ãƒ˜ãƒƒãƒ€ã‚’æ¤œç´¢ã™ã‚‹
 			m_bIsStoring = SyncFrame(pData[Pos++]);
 		} else {
-			// ƒf[ƒ^‚ğƒXƒgƒA‚·‚é
+			// ãƒ‡ãƒ¼ã‚¿ã‚’ã‚¹ãƒˆã‚¢ã™ã‚‹
 			const DWORD StoreRemain = m_AdtsFrame.GetFrameLength() - (WORD)m_AdtsFrame.GetSize();
 			const DWORD DataRemain = Size - Pos;
 
 			if (StoreRemain <= DataRemain) {
-				// ƒXƒgƒAŠ®—¹
+				// ã‚¹ãƒˆã‚¢å®Œäº†
 				m_AdtsFrame.AddData(&pData[Pos], StoreRemain);
 				Pos += StoreRemain;
 				if (ppFrame)
 					*ppFrame = &m_AdtsFrame;
 				bFrame = true;
 			} else {
-				// ƒXƒgƒA–¢Š®—¹AŸ‚ÌƒyƒCƒ[ƒh‚ğ‘Ò‚Â
+				// ã‚¹ãƒˆã‚¢æœªå®Œäº†ã€æ¬¡ã®ãƒšã‚¤ãƒ­ãƒ¼ãƒ‰ã‚’å¾…ã¤
 				m_AdtsFrame.AddData(&pData[Pos], DataRemain);
 				Pos += DataRemain;
 			}
@@ -638,20 +638,20 @@ bool CAdtsParser::StoreEs(const BYTE *pData, DWORD *pSize, CAdtsFrame **ppFrame)
 
 void CAdtsParser::Reset(void)
 {
-	// ó‘Ô‚ğ‰Šú‰»‚·‚é
+	// çŠ¶æ…‹ã‚’åˆæœŸåŒ–ã™ã‚‹
 	m_bIsStoring = false;
 	m_AdtsFrame.Reset();
 }
 
 void CAdtsParser::OnPesPacket(const CPesParser *pPesParser, const CPesPacket *pPacket)
 {
-	// CPesParser::IPacketHandlerƒCƒ“ƒ^ƒtƒF[ƒX‚ÌÀ‘•
+	// CPesParser::IPacketHandlerã‚¤ãƒ³ã‚¿ãƒ•ã‚§ãƒ¼ã‚¹ã®å®Ÿè£…
 	StorePacket(pPacket);
 }
 
 void CAdtsParser::OnAdtsFrame(const CAdtsFrame *pFrame) const
 {
-	// ƒnƒ“ƒhƒ‰ŒÄ‚Ño‚µ
+	// ãƒãƒ³ãƒ‰ãƒ©å‘¼ã³å‡ºã—
 	if(m_pFrameHandler)m_pFrameHandler->OnAdtsFrame(this, pFrame);
 }
 
@@ -681,17 +681,17 @@ inline const bool CAdtsParser::SyncFrame(const BYTE byData)
 		break;
 
 	case 6UL :
-		// ƒwƒbƒ_‚ª‘S‚Ä‚»‚ë‚Á‚½
+		// ãƒ˜ãƒƒãƒ€ãŒå…¨ã¦ãã‚ã£ãŸ
 		m_AdtsFrame.AddByte(byData);
 
-		// ƒwƒbƒ_‚ğ‰ğÍ‚·‚é
+		// ãƒ˜ãƒƒãƒ€ã‚’è§£æã™ã‚‹
 		if (m_AdtsFrame.ParseHeader())
 			return true;
 		m_AdtsFrame.ClearSize();
 		break;
 
 	default:
-		// —áŠO
+		// ä¾‹å¤–
 		m_AdtsFrame.ClearSize();
 		break;
 	}
@@ -701,7 +701,7 @@ inline const bool CAdtsParser::SyncFrame(const BYTE byData)
 
 
 /////////////////////////////////////////////////////////////////////////////
-// ‰f‘œƒXƒgƒŠ[ƒ€‰ğÍƒNƒ‰ƒX
+// æ˜ åƒã‚¹ãƒˆãƒªãƒ¼ãƒ è§£æã‚¯ãƒ©ã‚¹
 /////////////////////////////////////////////////////////////////////////////
 
 CVideoStreamParser::CVideoStreamParser()
@@ -721,7 +721,7 @@ void CVideoStreamParser::Reset()
 
 void CVideoStreamParser::OnPesPacket(const CPesParser *pPesParser, const CPesPacket *pPacket)
 {
-	// CPesParser::IPacketHandlerƒCƒ“ƒ^ƒtƒF[ƒX‚ÌÀ‘•
+	// CPesParser::IPacketHandlerã‚¤ãƒ³ã‚¿ãƒ•ã‚§ãƒ¼ã‚¹ã®å®Ÿè£…
 	StorePacket(pPacket);
 }
 
@@ -733,14 +733,14 @@ bool CVideoStreamParser::ParseSequence(
 	DWORD SyncState = m_SyncState;
 
 	for (Pos = 0UL; Pos < Size; Pos += Start) {
-		// ƒXƒ^[ƒgƒR[ƒh‚ğŒŸõ‚·‚é
+		// ã‚¹ã‚¿ãƒ¼ãƒˆã‚³ãƒ¼ãƒ‰ã‚’æ¤œç´¢ã™ã‚‹
 		const DWORD Remain = Size - Pos;
 
 		if (StartCodeMask == 0xFFFFFFFFUL) {
 			for (Start = 0UL; Start < Remain; Start++) {
 				SyncState = (SyncState << 8) | (DWORD)pData[Start + Pos];
 				if (SyncState == StartCode) {
-					// ƒXƒ^[ƒgƒR[ƒh”­Œ©
+					// ã‚¹ã‚¿ãƒ¼ãƒˆã‚³ãƒ¼ãƒ‰ç™ºè¦‹
 					break;
 				}
 			}
@@ -748,7 +748,7 @@ bool CVideoStreamParser::ParseSequence(
 			for (Start = 0UL; Start < Remain; Start++) {
 				SyncState = (SyncState << 8) | (DWORD)pData[Start + Pos];
 				if ((SyncState & StartCodeMask) == StartCode) {
-					// ƒXƒ^[ƒgƒR[ƒh”­Œ©
+					// ã‚¹ã‚¿ãƒ¼ãƒˆã‚³ãƒ¼ãƒ‰ç™ºè¦‹
 					break;
 				}
 			}
@@ -760,15 +760,15 @@ bool CVideoStreamParser::ParseSequence(
 				if (Start > 4) {
 					pSequenceData->AddData(&pData[Pos], Start - 4);
 				} else if (Start < 4) {
-					// ƒXƒ^[ƒgƒR[ƒh‚Ì’f•Ğ‚ğæ‚èœ‚­
+					// ã‚¹ã‚¿ãƒ¼ãƒˆã‚³ãƒ¼ãƒ‰ã®æ–­ç‰‡ã‚’å–ã‚Šé™¤ã
 					pSequenceData->TrimTail(4 - Start);
 				}
 
-				// ƒV[ƒPƒ“ƒX‚ğo—Í‚·‚é
+				// ã‚·ãƒ¼ã‚±ãƒ³ã‚¹ã‚’å‡ºåŠ›ã™ã‚‹
 				OnSequence(pSequenceData);
 			}
 
-			// ƒXƒ^[ƒgƒR[ƒh‚ğƒZƒbƒg‚·‚é
+			// ã‚¹ã‚¿ãƒ¼ãƒˆã‚³ãƒ¼ãƒ‰ã‚’ã‚»ãƒƒãƒˆã™ã‚‹
 			BYTE StartCode[4];
 			StartCode[0] = (BYTE)(SyncState >> 24);
 			StartCode[1] = (BYTE)((SyncState >> 16) & 0xFF);
@@ -776,14 +776,14 @@ bool CVideoStreamParser::ParseSequence(
 			StartCode[3] = (BYTE)(SyncState & 0xFF);
 			pSequenceData->SetData(StartCode, 4);
 
-			// ƒVƒtƒgƒŒƒWƒXƒ^‚ğ‰Šú‰»‚·‚é
+			// ã‚·ãƒ•ãƒˆãƒ¬ã‚¸ã‚¹ã‚¿ã‚’åˆæœŸåŒ–ã™ã‚‹
 			SyncState = 0xFFFFFFFFUL;
 			bTrigger = true;
 		} else {
 			if (pSequenceData->GetSize() >= 4) {
-				// ƒV[ƒPƒ“ƒXƒXƒgƒA
+				// ã‚·ãƒ¼ã‚±ãƒ³ã‚¹ã‚¹ãƒˆã‚¢
 				if (pSequenceData->AddData(&pData[Pos], Remain) >= 0x1000000UL) {
-					// —áŠO(ƒV[ƒPƒ“ƒX‚ª16MB‚ğ’´‚¦‚é)
+					// ä¾‹å¤–(ã‚·ãƒ¼ã‚±ãƒ³ã‚¹ãŒ16MBã‚’è¶…ãˆã‚‹)
 					pSequenceData->ClearSize();
 				}
 			}
@@ -798,7 +798,7 @@ bool CVideoStreamParser::ParseSequence(
 
 
 //////////////////////////////////////////////////////////////////////
-// CMpeg2SequenceƒNƒ‰ƒX‚Ì\’z/Á–Å
+// CMpeg2Sequenceã‚¯ãƒ©ã‚¹ã®æ§‹ç¯‰/æ¶ˆæ»…
 //////////////////////////////////////////////////////////////////////
 
 CMpeg2Sequence::CMpeg2Sequence()
@@ -810,7 +810,7 @@ CMpeg2Sequence::CMpeg2Sequence()
 
 bool CMpeg2Sequence::ParseHeader()
 {
-	// ‚±‚±‚Å‚ÍStart Code Prifix‚ÆStart Code‚µ‚©ƒ`ƒFƒbƒN‚µ‚È‚¢B(ƒV[ƒPƒ“ƒX‚Ì“¯Šú‚Ì‚İ‚ğ–Ú“I‚Æ‚·‚é)
+	// ã“ã“ã§ã¯Start Code Prifixã¨Start Codeã—ã‹ãƒã‚§ãƒƒã‚¯ã—ãªã„ã€‚(ã‚·ãƒ¼ã‚±ãƒ³ã‚¹ã®åŒæœŸã®ã¿ã‚’ç›®çš„ã¨ã™ã‚‹)
 
 	// next_start_code()
 	DWORD dwHeaderSize = 12UL;
@@ -840,23 +840,23 @@ bool CMpeg2Sequence::ParseHeader()
 			return false;
 	}
 
-	// ƒtƒH[ƒ}ƒbƒg“K‡«ƒ`ƒFƒbƒN
+	// ãƒ•ã‚©ãƒ¼ãƒãƒƒãƒˆé©åˆæ€§ãƒã‚§ãƒƒã‚¯
 	if (m_Header.wHorizontalSize == 0 || m_Header.wVerticalSize == 0)
 		return false;
-	if(!m_Header.byAspectRatioInfo || m_Header.byAspectRatioInfo > 4U)return false;		// ƒAƒXƒyƒNƒg”ä‚ªˆÙí
-	else if(!m_Header.byFrameRateCode || m_Header.byFrameRateCode > 8U)return false;	// ƒtƒŒ[ƒ€ƒŒ[ƒg‚ªˆÙí
-	else if(!m_Header.bMarkerBit)return false;											// ƒ}[ƒJ[ƒrƒbƒg‚ªˆÙí
-	else if(m_Header.bConstrainedParamFlag)return false;								// Constrained Parameters Flag ‚ªˆÙí
+	if(!m_Header.byAspectRatioInfo || m_Header.byAspectRatioInfo > 4U)return false;		// ã‚¢ã‚¹ãƒšã‚¯ãƒˆæ¯”ãŒç•°å¸¸
+	else if(!m_Header.byFrameRateCode || m_Header.byFrameRateCode > 8U)return false;	// ãƒ•ãƒ¬ãƒ¼ãƒ ãƒ¬ãƒ¼ãƒˆãŒç•°å¸¸
+	else if(!m_Header.bMarkerBit)return false;											// ãƒãƒ¼ã‚«ãƒ¼ãƒ“ãƒƒãƒˆãŒç•°å¸¸
+	else if(m_Header.bConstrainedParamFlag)return false;								// Constrained Parameters Flag ãŒç•°å¸¸
 
-	// Šg’£ƒwƒbƒ_ŒŸõ‚·‚é
+	// æ‹¡å¼µãƒ˜ãƒƒãƒ€æ¤œç´¢ã™ã‚‹
 	DWORD SyncState = 0xFFFFFFFF;
 	for (DWORD i = dwHeaderSize; i < min(m_dwDataSize - 1, 1024UL);) {
 		SyncState = (SyncState << 8) | m_pData[i++];
 		if (SyncState == 0x000001B5UL) {
-			// Šg’£ƒwƒbƒ_”­Œ©
+			// æ‹¡å¼µãƒ˜ãƒƒãƒ€ç™ºè¦‹
 			switch (m_pData[i] >> 4) {
 			case 1:
-				// ƒV[ƒPƒ“ƒXŠg’£(48bits)
+				// ã‚·ãƒ¼ã‚±ãƒ³ã‚¹æ‹¡å¼µ(48bits)
 				if (i + 6 > m_dwDataSize)
 					break;
 				m_Header.Extention.Sequence.byProfileAndLevel = (m_pData[i + 0] & 0x0FU) << 4 | (m_pData[i + 1] >> 4);
@@ -876,7 +876,7 @@ bool CMpeg2Sequence::ParseHeader()
 				break;
 
 			case 2:
-				// ƒfƒBƒXƒvƒŒƒCŠg’£(40bits(+24bits))
+				// ãƒ‡ã‚£ã‚¹ãƒ—ãƒ¬ã‚¤æ‹¡å¼µ(40bits(+24bits))
 				if (i + 5 > m_dwDataSize)
 					break;
 				m_Header.Extention.Display.byVideoFormat = (m_pData[i + 0] & 0x0EU) >> 1;
@@ -916,26 +916,26 @@ bool CMpeg2Sequence::ParseHeader()
 
 void CMpeg2Sequence::Reset()
 {
-	// ƒf[ƒ^‚ğƒNƒŠƒA‚·‚é
+	// ãƒ‡ãƒ¼ã‚¿ã‚’ã‚¯ãƒªã‚¢ã™ã‚‹
 	ClearSize();
 	::ZeroMemory(&m_Header, sizeof(m_Header));
 }
 
 WORD CMpeg2Sequence::GetHorizontalSize() const
 {
-	// Horizontal Size Value ‚ğ•Ô‚·
+	// Horizontal Size Value ã‚’è¿”ã™
 	return m_Header.wHorizontalSize;
 }
 
 WORD CMpeg2Sequence::GetVerticalSize() const
 {
-	// Vertical Size Value ‚ğ•Ô‚·
+	// Vertical Size Value ã‚’è¿”ã™
 	return m_Header.wVerticalSize;
 }
 
 BYTE CMpeg2Sequence::GetAspectRatioInfo() const
 {
-	// Aspect Ratio Information ‚ğ•Ô‚·
+	// Aspect Ratio Information ã‚’è¿”ã™
 	return m_Header.byAspectRatioInfo;
 }
 
@@ -972,7 +972,7 @@ bool CMpeg2Sequence::GetAspectRatio(BYTE *pAspectX, BYTE *pAspectY) const
 
 BYTE CMpeg2Sequence::GetFrameRateCode(void) const
 {
-	// Frame Rate Code ‚ğ•Ô‚·
+	// Frame Rate Code ã‚’è¿”ã™
 	return m_Header.byFrameRateCode;
 }
 
@@ -1002,49 +1002,49 @@ bool CMpeg2Sequence::GetFrameRate(DWORD *pNum, DWORD *pDenom) const
 
 DWORD CMpeg2Sequence::GetBitRate() const
 {
-	// Bit Rate Value ‚ğ•Ô‚·
+	// Bit Rate Value ã‚’è¿”ã™
 	return m_Header.dwBitRate;
 }
 
 bool CMpeg2Sequence::IsMarkerBit() const
 {
-	// Marker Bit ‚ğ•Ô‚·
+	// Marker Bit ã‚’è¿”ã™
 	return m_Header.bMarkerBit;
 }
 
 DWORD CMpeg2Sequence::GetVbvBufferSize() const
 {
-	// VBV Buffer Size Value ‚ğ•Ô‚·
+	// VBV Buffer Size Value ã‚’è¿”ã™
 	return m_Header.dwVbvBufferSize;
 }
 
 bool CMpeg2Sequence::IsConstrainedParamFlag() const
 {
-	// Constrained Parameters Flag ‚ğ•Ô‚·
+	// Constrained Parameters Flag ã‚’è¿”ã™
 	return m_Header.bConstrainedParamFlag;
 }
 
 bool CMpeg2Sequence::IsLoadIntraQuantiserMatrix() const
 {
-	// Load Intra Quantiser Matrix ‚ğ•Ô‚·
+	// Load Intra Quantiser Matrix ã‚’è¿”ã™
 	return m_Header.bLoadIntraQuantiserMatrix;
 }
 
 bool CMpeg2Sequence::GetExtendDisplayInfo() const
 {
-	// Extention Sequence Display ‚ª‚ ‚é‚©‚ğ•Ô‚·
+	// Extention Sequence Display ãŒã‚ã‚‹ã‹ã‚’è¿”ã™
 	return m_Header.Extention.Display.bHave;
 }
 
 WORD CMpeg2Sequence::GetExtendDisplayHorizontalSize() const
 {
-	// Horizontal Size Value ‚ğ•Ô‚·
+	// Horizontal Size Value ã‚’è¿”ã™
 	return m_Header.Extention.Display.wDisplayHorizontalSize;
 }
 
 WORD CMpeg2Sequence::GetExtendDisplayVerticalSize() const
 {
-	// Vertical Size Value ‚ğ•Ô‚·
+	// Vertical Size Value ã‚’è¿”ã™
 	return m_Header.Extention.Display.wDisplayVerticalSize;
 }
 
@@ -1055,7 +1055,7 @@ void CMpeg2Sequence::SetFixSquareDisplay(bool bFix)
 
 
 //////////////////////////////////////////////////////////////////////
-// CMpeg2ParserƒNƒ‰ƒX‚Ì\’z/Á–Å
+// CMpeg2Parserã‚¯ãƒ©ã‚¹ã®æ§‹ç¯‰/æ¶ˆæ»…
 //////////////////////////////////////////////////////////////////////
 
 CMpeg2Parser::CMpeg2Parser(ISequenceHandler *pSequenceHandler)
@@ -1071,7 +1071,7 @@ bool CMpeg2Parser::StoreEs(const BYTE *pData, const DWORD Size)
 
 void CMpeg2Parser::Reset()
 {
-	// ó‘Ô‚ğ‰Šú‰»‚·‚é
+	// çŠ¶æ…‹ã‚’åˆæœŸåŒ–ã™ã‚‹
 	CVideoStreamParser::Reset();
 
 	m_Mpeg2Sequence.Reset();
@@ -1087,7 +1087,7 @@ void CMpeg2Parser::OnSequence(CMediaData *pSequenceData)
 	CMpeg2Sequence *pMpeg2Sequence = static_cast<CMpeg2Sequence *>(pSequenceData);
 
 	if (pMpeg2Sequence->ParseHeader()) {
-		// ƒnƒ“ƒhƒ‰ŒÄ‚Ño‚µ
+		// ãƒãƒ³ãƒ‰ãƒ©å‘¼ã³å‡ºã—
 		if (m_pSequenceHandler)
 			m_pSequenceHandler->OnMpeg2Sequence(this, pMpeg2Sequence);
 	}
@@ -1124,10 +1124,10 @@ static DWORD EBSPToRBSP(BYTE *pData, DWORD DataSize)
 
 
 //////////////////////////////////////////////////////////////////////
-// CH264AccessUnitƒNƒ‰ƒX‚Ì\’z/Á–Å
+// CH264AccessUnitã‚¯ãƒ©ã‚¹ã®æ§‹ç¯‰/æ¶ˆæ»…
 //////////////////////////////////////////////////////////////////////
 
-//#define STRICT_1SEG	// ƒƒ“ƒZƒO‹KŠi€‹’
+//#define STRICT_1SEG	// ãƒ¯ãƒ³ã‚»ã‚°è¦æ ¼æº–æ‹ 
 
 CH264AccessUnit::CH264AccessUnit()
 {
@@ -1275,14 +1275,14 @@ bool CH264AccessUnit::ParseHeader()
 					m_Header.SPS.VUI.TimeScale = Bitstream.GetBits(32);
 					m_Header.SPS.VUI.bFixedFrameRateFlag = Bitstream.GetFlag();
 				}
-				// ˆÈ‰º‚Ü‚¾‚Ü‚¾‚ ‚é‚ªÈ—ª
+				// ä»¥ä¸‹ã¾ã ã¾ã ã‚ã‚‹ãŒçœç•¥
 			}
 			if (m_Header.SPS.bSeparateColourPlaneFlag)
 				m_Header.SPS.ChromaArrayType = 0;
 			else
 				m_Header.SPS.ChromaArrayType = m_Header.SPS.ChromaFormatIdc;
 #ifdef STRICT_1SEG
-			// ƒƒ“ƒZƒO‹KŠi‚É‡’v‚µ‚Ä‚¢‚é?
+			// ãƒ¯ãƒ³ã‚»ã‚°è¦æ ¼ã«åˆè‡´ã—ã¦ã„ã‚‹?
 			if (m_Header.SPS.ProfileIdc != 66
 					|| !m_Header.SPS.bConstraintSet0Flag
 					|| !m_Header.SPS.bConstraintSet1Flag
@@ -1441,7 +1441,7 @@ int CH264AccessUnit::GetSubHeightC() const
 
 
 //////////////////////////////////////////////////////////////////////
-// CH264ParserƒNƒ‰ƒX‚Ì\’z/Á–Å
+// CH264Parserã‚¯ãƒ©ã‚¹ã®æ§‹ç¯‰/æ¶ˆæ»…
 //////////////////////////////////////////////////////////////////////
 
 CH264Parser::CH264Parser(IAccessUnitHandler *pAccessUnitHandler)
@@ -1457,7 +1457,7 @@ bool CH264Parser::StoreEs(const BYTE *pData, const DWORD Size)
 
 void CH264Parser::Reset()
 {
-	// ó‘Ô‚ğ‰Šú‰»‚·‚é
+	// çŠ¶æ…‹ã‚’åˆæœŸåŒ–ã™ã‚‹
 	CVideoStreamParser::Reset();
 
 	m_AccessUnit.Reset();
@@ -1468,7 +1468,7 @@ void CH264Parser::OnSequence(CMediaData *pSequenceData)
 	CH264AccessUnit *pAccessUnit = static_cast<CH264AccessUnit *>(pSequenceData);
 
 	if (pAccessUnit->ParseHeader()) {
-		// ƒnƒ“ƒhƒ‰ŒÄ‚Ño‚µ
+		// ãƒãƒ³ãƒ‰ãƒ©å‘¼ã³å‡ºã—
 		if (m_pAccessUnitHandler)
 			m_pAccessUnitHandler->OnAccessUnit(this, pAccessUnit);
 	}
@@ -1476,7 +1476,7 @@ void CH264Parser::OnSequence(CMediaData *pSequenceData)
 
 
 //////////////////////////////////////////////////////////////////////
-// CH265AccessUnitƒNƒ‰ƒX‚Ì\’z/Á–Å
+// CH265AccessUnitã‚¯ãƒ©ã‚¹ã®æ§‹ç¯‰/æ¶ˆæ»…
 //////////////////////////////////////////////////////////////////////
 
 CH265AccessUnit::CH265AccessUnit()
@@ -1718,7 +1718,7 @@ bool CH265AccessUnit::ParseHeader()
 					if (m_Header.SPS.VUI.bVuiPocProportionalToTimingFlag)
 						m_Header.SPS.VUI.VuiNumTicksPocDiffOneMinus1 = Bitstream.GetUE_V();
 					m_Header.SPS.VUI.bVuiHrdParametersPresentFlag = Bitstream.GetFlag();
-#if 0	// Š„ˆ¤c
+#if 0	// å‰²æ„›â€¦
 					if (m_Header.SPS.VUI.bVuiHrdParametersPresentFlag) {
 						// hrd_parameters
 					}
@@ -1852,7 +1852,7 @@ int CH265AccessUnit::GetSubHeightC() const
 
 
 //////////////////////////////////////////////////////////////////////
-// CH265ParserƒNƒ‰ƒX‚Ì\’z/Á–Å
+// CH265Parserã‚¯ãƒ©ã‚¹ã®æ§‹ç¯‰/æ¶ˆæ»…
 //////////////////////////////////////////////////////////////////////
 
 CH265Parser::CH265Parser(IAccessUnitHandler *pAccessUnitHandler)
@@ -1868,7 +1868,7 @@ bool CH265Parser::StoreEs(const BYTE *pData, const DWORD Size)
 
 void CH265Parser::Reset()
 {
-	// ó‘Ô‚ğ‰Šú‰»‚·‚é
+	// çŠ¶æ…‹ã‚’åˆæœŸåŒ–ã™ã‚‹
 	CVideoStreamParser::Reset();
 
 	m_AccessUnit.Reset();
@@ -1879,7 +1879,7 @@ void CH265Parser::OnSequence(CMediaData *pSequenceData)
 	CH265AccessUnit *pAccessUnit = static_cast<CH265AccessUnit *>(pSequenceData);
 
 	if (pAccessUnit->ParseHeader()) {
-		// ƒnƒ“ƒhƒ‰ŒÄ‚Ño‚µ
+		// ãƒãƒ³ãƒ‰ãƒ©å‘¼ã³å‡ºã—
 		if (m_pAccessUnitHandler)
 			m_pAccessUnitHandler->OnAccessUnit(this, pAccessUnit);
 	}

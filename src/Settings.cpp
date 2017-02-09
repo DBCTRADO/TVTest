@@ -176,8 +176,8 @@ bool CSettings::Write(LPCTSTR pszValueName,LPCTSTR pszData)
 	if (pszData==NULL)
 		return false;
 
-	// ������ ' �� " �ň͂܂�Ă���Ɠǂݍ��ݎ��ɏ�������Ă��܂��̂ŁA
-	// �]���� " �ň͂��Ă����B
+	// 文字列が ' か " で囲まれていると読み込み時に除去されてしまうので、
+	// 余分に " で囲っておく。
 	if (pszData[0]==_T('"') || pszData[0]==_T('\'')) {
 		String Buff;
 		Buff=TEXT("\"");
@@ -232,8 +232,8 @@ bool CSettings::Read(LPCTSTR pszValueName,bool *pfData)
 
 bool CSettings::Write(LPCTSTR pszValueName,bool fData)
 {
-	// �悭�l������ے蕶������̂� yes/no �͕ς����c
-	// (���̐́Aini�t�@�C���𒼐ڕҏW���Đݒ肷��悤�ɂ��Ă������̖��c)
+	// よく考えたら否定文もあるので yes/no は変だが…
+	// (その昔、iniファイルを直接編集して設定するようにしていた頃の名残)
 	return Write(pszValueName,fData?TEXT("yes"):TEXT("no"));
 }
 

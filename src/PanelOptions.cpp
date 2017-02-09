@@ -28,11 +28,11 @@ CPanelOptions::CPanelOptions()
 		LPCTSTR pszID;
 		LPCTSTR pszTitle;
 	} DefaultItemList[] = {
-		{TEXT("Information"),	TEXT("î•ñ")},
-		{TEXT("ProgramList"),	TEXT("”Ô‘g•\")},
-		{TEXT("Channel"),		TEXT("ƒ`ƒƒƒ“ƒlƒ‹")},
-		{TEXT("Control"),		TEXT("‘€ì")},
-		{TEXT("Caption"),		TEXT("š–‹")},
+		{TEXT("Information"),	TEXT("æƒ…å ±")},
+		{TEXT("ProgramList"),	TEXT("ç•ªçµ„è¡¨")},
+		{TEXT("Channel"),		TEXT("ãƒãƒ£ãƒ³ãƒãƒ«")},
+		{TEXT("Control"),		TEXT("æ“ä½œ")},
+		{TEXT("Caption"),		TEXT("å­—å¹•")},
 	};
 
 	m_AvailItemList.resize(lengthof(DefaultItemList));
@@ -176,7 +176,7 @@ bool CPanelOptions::WriteSettings(CSettings &Settings)
 	TVTest::StyleUtil::WriteFontSettings(Settings,TEXT("CaptionPanelFont"),m_CaptionFont);
 	Settings.Write(TEXT("CaptionPanelFontSpec"),m_fSpecCaptionFont);
 
-	// ƒAƒCƒeƒ€ƒŠƒXƒg
+	// ã‚¢ã‚¤ãƒ†ãƒ ãƒªã‚¹ãƒˆ
 	Settings.Write(TEXT("PanelTabCount"),(int)m_ItemList.size());
 	for (int i=0;i<(int)m_ItemList.size();i++) {
 		const PanelItemInfo &Item=m_ItemList[i];
@@ -189,7 +189,7 @@ bool CPanelOptions::WriteSettings(CSettings &Settings)
 	}
 
 	// Information panel
-	// UI–¢À‘•
+	// UIæœªå®Ÿè£…
 	//Settings.Write(TEXT("InfoPanelUseRichEdit"),m_fProgramInfoUseRichEdit);
 
 	return true;
@@ -244,7 +244,7 @@ int CPanelOptions::RegisterPanelItem(LPCTSTR pszID,LPCTSTR pszTitle)
 	Item.fVisible=true;
 
 	if (GetItemIDFromIDText(Item.ID)>=0)
-		return -1;	// IDd•¡
+		return -1;	// IDé‡è¤‡
 
 	m_AvailItemList.push_back(Item);
 
@@ -383,7 +383,7 @@ INT_PTR CPanelOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 			}
 			UpdateItemListControlsState();
 
-			DlgComboBox_AddString(hDlg,IDC_PANELOPTIONS_FIRSTTAB,TEXT("ÅŒã‚É•\¦‚µ‚½ƒ^ƒu"));
+			DlgComboBox_AddString(hDlg,IDC_PANELOPTIONS_FIRSTTAB,TEXT("æœ€å¾Œã«è¡¨ç¤ºã—ãŸã‚¿ãƒ–"));
 			int Sel=0;
 			if (!m_InitialTab.empty()) {
 				LPTSTR p;
@@ -401,9 +401,9 @@ INT_PTR CPanelOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 			DlgComboBox_SetCurSel(hDlg,IDC_PANELOPTIONS_FIRSTTAB,Sel);
 
 			static const LPCTSTR TabStyleList[] = {
-				TEXT("•¶š‚Ì‚İ"),
-				TEXT("ƒAƒCƒRƒ“‚Ì‚İ"),
-				TEXT("ƒAƒCƒRƒ“‚Æ•¶š"),
+				TEXT("æ–‡å­—ã®ã¿"),
+				TEXT("ã‚¢ã‚¤ã‚³ãƒ³ã®ã¿"),
+				TEXT("ã‚¢ã‚¤ã‚³ãƒ³ã¨æ–‡å­—"),
 			};
 			for (int i=0;i<lengthof(TabStyleList);i++)
 				DlgComboBox_AddString(hDlg,IDC_PANELOPTIONS_TABSTYLE,TabStyleList[i]);

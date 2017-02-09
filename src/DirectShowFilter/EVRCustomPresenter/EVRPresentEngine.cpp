@@ -5,7 +5,7 @@
 #include "../../Common/DebugDef.h"
 
 
-// �L���v�`���Ƀ��b�N�\�o�b�N�o�b�t�@���g���ꍇ
+// キャプチャにロック可能バックバッファを使う場合
 //#define USE_LOCKABLE_BACKBUFFER
 
 

@@ -34,16 +34,16 @@ bool CEpgCaptureManager::BeginCapture(
 	if (App.CmdLineOptions.m_fNoEpg) {
 		if (!fNoUI) {
 			App.UICore.GetSkin()->ShowMessage(
-				TEXT("ƒRƒ}ƒ“ƒhƒ‰ƒCƒ“ƒIƒvƒVƒ‡ƒ“‚ÅEPGî•ñ‚ğæ“¾‚µ‚È‚¢‚æ‚¤‚Éw’è‚³‚ê‚Ä‚¢‚é‚½‚ßA\n”Ô‘g•\‚Ìæ“¾‚ª‚Å‚«‚Ü‚¹‚ñB"),
-				TEXT("‚¨’m‚ç‚¹"),MB_OK | MB_ICONINFORMATION);
+				TEXT("ã‚³ãƒãƒ³ãƒ‰ãƒ©ã‚¤ãƒ³ã‚ªãƒ—ã‚·ãƒ§ãƒ³ã§EPGæƒ…å ±ã‚’å–å¾—ã—ãªã„ã‚ˆã†ã«æŒ‡å®šã•ã‚Œã¦ã„ã‚‹ãŸã‚ã€\nç•ªçµ„è¡¨ã®å–å¾—ãŒã§ãã¾ã›ã‚“ã€‚"),
+				TEXT("ãŠçŸ¥ã‚‰ã›"),MB_OK | MB_ICONINFORMATION);
 		}
 		return false;
 	}
 	if (App.RecordManager.IsRecording()) {
 		if (!fNoUI) {
 			App.UICore.GetSkin()->ShowMessage(
-				TEXT("˜^‰æ’†‚Í”Ô‘g•\‚Ìæ“¾‚ğs‚¦‚Ü‚¹‚ñB"),
-				TEXT("‚¨’m‚ç‚¹"),MB_OK | MB_ICONINFORMATION);
+				TEXT("éŒ²ç”»ä¸­ã¯ç•ªçµ„è¡¨ã®å–å¾—ã‚’è¡Œãˆã¾ã›ã‚“ã€‚"),
+				TEXT("ãŠçŸ¥ã‚‰ã›"),MB_OK | MB_ICONINFORMATION);
 		}
 		return false;
 	}
@@ -55,8 +55,8 @@ bool CEpgCaptureManager::BeginCapture(
 					 CDriverManager::TunerSpec::FLAG_FILE))!=0) {
 			if (!fNoUI) {
 				App.UICore.GetSkin()->ShowMessage(
-					TEXT("ƒlƒbƒgƒ[ƒNÄ¶‹y‚Ñƒtƒ@ƒCƒ‹Ä¶‚Å‚Í”Ô‘g•\‚Ìæ“¾‚Í‚Å‚«‚Ü‚¹‚ñB"),
-					TEXT("‚¨’m‚ç‚¹"),MB_OK | MB_ICONINFORMATION);
+					TEXT("ãƒãƒƒãƒˆãƒ¯ãƒ¼ã‚¯å†ç”ŸåŠã³ãƒ•ã‚¡ã‚¤ãƒ«å†ç”Ÿã§ã¯ç•ªçµ„è¡¨ã®å–å¾—ã¯ã§ãã¾ã›ã‚“ã€‚"),
+					TEXT("ãŠçŸ¥ã‚‰ã›"),MB_OK | MB_ICONINFORMATION);
 			}
 			return false;
 		}
@@ -131,7 +131,7 @@ bool CEpgCaptureManager::BeginCapture(
 	m_fCapturing=true;
 	m_CurChannel=-1;
 
-	App.AddLog(TEXT("”Ô‘g•\‚Ìæ“¾‚ğŠJn‚µ‚Ü‚·B"));
+	App.AddLog(TEXT("ç•ªçµ„è¡¨ã®å–å¾—ã‚’é–‹å§‹ã—ã¾ã™ã€‚"));
 
 	if (m_pEventHandler!=nullptr)
 		m_pEventHandler->OnBeginCapture(Flags,Status);
@@ -149,7 +149,7 @@ void CEpgCaptureManager::EndCapture(unsigned int Flags)
 
 	CAppMain &App=GetAppClass();
 
-	App.AddLog(TEXT("”Ô‘g•\‚Ìæ“¾‚ğI—¹‚µ‚Ü‚·B"));
+	App.AddLog(TEXT("ç•ªçµ„è¡¨ã®å–å¾—ã‚’çµ‚äº†ã—ã¾ã™ã€‚"));
 
 	m_fCapturing=false;
 	m_CurChannel=-1;
@@ -214,7 +214,7 @@ bool CEpgCaptureManager::ProcessCapture()
 		WORD NetworkID=App.CoreEngine.m_DtvEngine.m_TsAnalyzer.GetNetworkID();
 		DWORD Timeout;
 
-		// ^–Ê–Ú‚É”»’è‚·‚éê‡BIT‚©‚çüŠú‚ğæ‚Á‚Ä‚­‚é•K—v‚ª‚ ‚é
+		// çœŸé¢ç›®ã«åˆ¤å®šã™ã‚‹å ´åˆBITã‹ã‚‰å‘¨æœŸã‚’å–ã£ã¦ãã‚‹å¿…è¦ãŒã‚ã‚‹
 		if (App.NetworkDefinition.IsSatelliteNetworkID(NetworkID))
 			Timeout=360000;
 		else
@@ -241,7 +241,7 @@ void CEpgCaptureManager::SetEventHandler(CEventHandler *pEventHandler)
 
 DWORD CEpgCaptureManager::GetRemainingTime() const
 {
-	// TODO: c‚èŠÔ‚ğ‚¿‚á‚ñ‚ÆZo‚·‚é
+	// TODO: æ®‹ã‚Šæ™‚é–“ã‚’ã¡ã‚ƒã‚“ã¨ç®—å‡ºã™ã‚‹
 	CAppMain &App=GetAppClass();
 	DWORD Time=0;
 

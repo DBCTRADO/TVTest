@@ -660,12 +660,12 @@ CChannelInfo *CTuningSpaceInfo::GetChannelInfo(int Index)
 
 bool CTuningSpaceInfo::SetName(LPCTSTR pszName)
 {
-	// ƒ`ƒ…[ƒjƒ“ƒO‹óŠÔ‚Ìí—Ş‚ğ”»’è‚·‚é
-	// BonDriver‚©‚çæ“¾‚Å‚«‚È‚¢‚Ì‚Å‹ê“÷‚Ìô
+	// ãƒãƒ¥ãƒ¼ãƒ‹ãƒ³ã‚°ç©ºé–“ã®ç¨®é¡ã‚’åˆ¤å®šã™ã‚‹
+	// BonDriverã‹ã‚‰å–å¾—ã§ããªã„ã®ã§è‹¦è‚‰ã®ç­–
 	m_Space=SPACE_UNKNOWN;
 	if (!IsStringEmpty(pszName)) {
 		m_Name=pszName;
-		if (::StrStr(pszName,TEXT("’n"))!=NULL
+		if (::StrStr(pszName,TEXT("åœ°"))!=NULL
 				|| ::StrStrI(pszName,TEXT("VHF"))!=NULL
 				|| ::StrStrI(pszName,TEXT("UHF"))!=NULL
 				|| ::StrStrI(pszName,TEXT("CATV"))!=NULL) {
@@ -866,8 +866,8 @@ bool CTuningSpaceList::SaveToFile(LPCTSTR pszFileName) const
 	TVTest::String Buffer;
 
 	Buffer=
-		TEXT("; ") APP_NAME TEXT(" ƒ`ƒƒƒ“ƒlƒ‹İ’èƒtƒ@ƒCƒ‹\r\n")
-		TEXT("; –¼Ì,ƒ`ƒ…[ƒjƒ“ƒO‹óŠÔ,ƒ`ƒƒƒ“ƒlƒ‹,ƒŠƒ‚ƒRƒ“”Ô†,ƒT[ƒrƒXƒ^ƒCƒv,ƒT[ƒrƒXID,ƒlƒbƒgƒ[ƒNID,TSID,ó‘Ô\r\n");
+		TEXT("; ") APP_NAME TEXT(" ãƒãƒ£ãƒ³ãƒãƒ«è¨­å®šãƒ•ã‚¡ã‚¤ãƒ«\r\n")
+		TEXT("; åç§°,ãƒãƒ¥ãƒ¼ãƒ‹ãƒ³ã‚°ç©ºé–“,ãƒãƒ£ãƒ³ãƒãƒ«,ãƒªãƒ¢ã‚³ãƒ³ç•ªå·,ã‚µãƒ¼ãƒ“ã‚¹ã‚¿ã‚¤ãƒ—,ã‚µãƒ¼ãƒ“ã‚¹ID,ãƒãƒƒãƒˆãƒ¯ãƒ¼ã‚¯ID,TSID,çŠ¶æ…‹\r\n");
 
 	for (int i=0;i<NumSpaces();i++) {
 		const CChannelList *pChannelList=m_TuningSpaceList[i]->GetChannelList();
@@ -887,7 +887,7 @@ bool CTuningSpaceList::SaveToFile(LPCTSTR pszFileName) const
 			LPCTSTR pszName=pChInfo->GetName();
 			TVTest::String Name;
 
-			// •K—v‚É‰‚¶‚Ä " ‚ÅˆÍ‚Ş
+			// å¿…è¦ã«å¿œã˜ã¦ " ã§å›²ã‚€
 			if (pszName[0]==_T('#') || pszName[0]==_T(';')
 					|| ::StrChr(pszName,_T(','))!=NULL
 					|| ::StrChr(pszName,_T('"'))!=NULL) {
@@ -1119,12 +1119,12 @@ bool CTuningSpaceList::LoadFromFile(LPCTSTR pszFileName)
 
 		p+=::StrSpn(p,TEXT("\r\n \t"));
 
-		if (*p==_T('#') || *p==_T(';')) {	// ƒRƒƒ“ƒg
+		if (*p==_T('#') || *p==_T(';')) {	// ã‚³ãƒ¡ãƒ³ãƒˆ
 			p++;
 			if (*p==_T('#')) {
 				p++;
 				if (::StrCmpNI(p,TEXT("SPACE("),6)==0) {
-					// ƒ`ƒ…[ƒjƒ“ƒO‹óŠÔ–¼ #space(ƒCƒ“ƒfƒbƒNƒX,–¼‘O)
+					// ãƒãƒ¥ãƒ¼ãƒ‹ãƒ³ã‚°ç©ºé–“å #space(ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹,åå‰)
 					p+=6;
 					SkipSpaces(&p);
 					if (IsDigit(*p)) {
@@ -1156,7 +1156,7 @@ bool CTuningSpaceList::LoadFromFile(LPCTSTR pszFileName)
 		{
 			CChannelInfo ChInfo;
 
-			// ƒ`ƒƒƒ“ƒlƒ‹–¼
+			// ãƒãƒ£ãƒ³ãƒãƒ«å
 			int NameLength=0;
 			bool fQuote=false;
 			if (*p==_T('"')) {
@@ -1185,35 +1185,35 @@ bool CTuningSpaceList::LoadFromFile(LPCTSTR pszFileName)
 			if (!NextToken(&p))
 				goto Next;
 
-			// ƒ`ƒ…[ƒjƒ“ƒO‹óŠÔ
+			// ãƒãƒ¥ãƒ¼ãƒ‹ãƒ³ã‚°ç©ºé–“
 			if (!IsDigit(*p))
 				goto Next;
 			ChInfo.SetSpace(ParseDigits(&p));
 			if (!NextToken(&p))
 				goto Next;
 
-			// ƒ`ƒƒƒ“ƒlƒ‹
+			// ãƒãƒ£ãƒ³ãƒãƒ«
 			if (!IsDigit(*p))
 				goto Next;
 			ChInfo.SetChannelIndex(ParseDigits(&p));
 
 			if (NextToken(&p)) {
-				// ƒŠƒ‚ƒRƒ“”Ô†(ƒIƒvƒVƒ‡ƒ“)
+				// ãƒªãƒ¢ã‚³ãƒ³ç•ªå·(ã‚ªãƒ—ã‚·ãƒ§ãƒ³)
 				ChInfo.SetChannelNo(ParseDigits(&p));
 				if (NextToken(&p)) {
-					// ƒT[ƒrƒXƒ^ƒCƒv(ƒIƒvƒVƒ‡ƒ“)
+					// ã‚µãƒ¼ãƒ“ã‚¹ã‚¿ã‚¤ãƒ—(ã‚ªãƒ—ã‚·ãƒ§ãƒ³)
 					ChInfo.SetServiceType(static_cast<BYTE>(ParseDigits(&p)));
 					if (NextToken(&p)) {
-						// ƒT[ƒrƒXID(ƒIƒvƒVƒ‡ƒ“)
+						// ã‚µãƒ¼ãƒ“ã‚¹ID(ã‚ªãƒ—ã‚·ãƒ§ãƒ³)
 						ChInfo.SetServiceID(static_cast<WORD>(ParseDigits(&p)));
 						if (NextToken(&p)) {
-							// ƒlƒbƒgƒ[ƒNID(ƒIƒvƒVƒ‡ƒ“)
+							// ãƒãƒƒãƒˆãƒ¯ãƒ¼ã‚¯ID(ã‚ªãƒ—ã‚·ãƒ§ãƒ³)
 							ChInfo.SetNetworkID(static_cast<WORD>(ParseDigits(&p)));
 							if (NextToken(&p)) {
-								// ƒgƒ‰ƒ“ƒXƒ|[ƒgƒXƒgƒŠ[ƒ€ID(ƒIƒvƒVƒ‡ƒ“)
+								// ãƒˆãƒ©ãƒ³ã‚¹ãƒãƒ¼ãƒˆã‚¹ãƒˆãƒªãƒ¼ãƒ ID(ã‚ªãƒ—ã‚·ãƒ§ãƒ³)
 								ChInfo.SetTransportStreamID(static_cast<WORD>(ParseDigits(&p)));
 								if (NextToken(&p)) {
-									// ó‘Ô(ƒIƒvƒVƒ‡ƒ“)
+									// çŠ¶æ…‹(ã‚ªãƒ—ã‚·ãƒ§ãƒ³)
 									if (IsDigit(*p)) {
 										int Flags=ParseDigits(&p);
 										ChInfo.Enable((Flags&1)!=0);

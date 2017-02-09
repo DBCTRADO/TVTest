@@ -93,9 +93,9 @@ bool CMainDisplay::BuildViewer(BYTE VideoStreamType)
 		EnableViewer(false);
 
 	m_App.AddLog(
-		TEXT("DirectShow‚Ì‰Šú‰»‚ğs‚¢‚Ü‚·(%s)..."),
+		TEXT("DirectShowã®åˆæœŸåŒ–ã‚’è¡Œã„ã¾ã™(%s)..."),
 		VideoStreamType==STREAM_TYPE_INVALID?
-			TEXT("‰f‘œ‚È‚µ"):
+			TEXT("æ˜ åƒãªã—"):
 			TsEngine::GetStreamTypeText(VideoStreamType));
 
 	m_App.CoreEngine.m_DtvEngine.m_MediaViewer.SetAudioFilter(m_App.AudioOptions.GetAudioFilterName());
@@ -105,12 +105,12 @@ bool CMainDisplay::BuildViewer(BYTE VideoStreamType)
 			m_App.VideoOptions.GetVideoRendererType(),
 			VideoStreamType,pszVideoDecoder,
 			m_App.AudioOptions.GetAudioDeviceName())) {
-		m_App.Core.OnError(&m_App.CoreEngine,TEXT("DirectShow‚Ì‰Šú‰»‚ª‚Å‚«‚Ü‚¹‚ñB"));
+		m_App.Core.OnError(&m_App.CoreEngine,TEXT("DirectShowã®åˆæœŸåŒ–ãŒã§ãã¾ã›ã‚“ã€‚"));
 		return false;
 	}
 	m_App.AudioOptions.ApplyMediaViewerOptions();
 
-	m_App.AddLog(TEXT("DirectShow‚Ì‰Šú‰»‚ğs‚¢‚Ü‚µ‚½B"));
+	m_App.AddLog(TEXT("DirectShowã®åˆæœŸåŒ–ã‚’è¡Œã„ã¾ã—ãŸã€‚"));
 
 	return true;
 }

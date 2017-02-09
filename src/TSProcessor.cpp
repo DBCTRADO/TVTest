@@ -290,7 +290,7 @@ bool CTSProcessor::ShowPropertyPage(HWND hwndOwner, HINSTANCE hinst)
 				hr = m_pTSProcessor->QueryInterface(IID_PPV_ARGS(&pObject));
 				if (SUCCEEDED(hr)) {
 					hr = ::OleCreatePropertyFrame(
-						hwndOwner, 0, 0, L"ƒvƒƒpƒeƒB",
+						hwndOwner, 0, 0, L"ãƒ—ãƒ­ãƒ‘ãƒ†ã‚£",
 						1, &pObject, Pages.cElems, Pages.pElems,
 						::GetUserDefaultLCID(),
 						0, nullptr);
@@ -350,7 +350,7 @@ bool CTSProcessor::GetModuleList(std::vector<String> *pList) const
 bool CTSProcessor::LoadModule(LPCWSTR pszName)
 {
 	if (m_pFilterModule == nullptr) {
-		SetError(E_NOTIMPL, TEXT("ƒ‚ƒWƒ…[ƒ‹‚Í—˜—p‚Å‚«‚Ü‚¹‚ñB"));
+		SetError(E_NOTIMPL, TEXT("ãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«ã¯åˆ©ç”¨ã§ãã¾ã›ã‚“ã€‚"));
 		return false;
 	}
 
@@ -707,7 +707,7 @@ bool CTSProcessor::OpenFilter(int Device, LPCWSTR pszName)
 	}
 
 	if (m_pFilterModule == nullptr) {
-		SetError(E_NOTIMPL, TEXT("ƒtƒBƒ‹ƒ^[‚Í—˜—p‚Å‚«‚Ü‚¹‚ñB"));
+		SetError(E_NOTIMPL, TEXT("ãƒ•ã‚£ãƒ«ã‚¿ãƒ¼ã¯åˆ©ç”¨ã§ãã¾ã›ã‚“ã€‚"));
 		return false;
 	}
 

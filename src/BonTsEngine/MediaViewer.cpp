@@ -1,4 +1,4 @@
-// MediaViewer.cpp: CMediaViewer ƒNƒ‰ƒX‚ÌƒCƒ“ƒvƒŠƒƒ“ƒe[ƒVƒ‡ƒ“
+// MediaViewer.cpp: CMediaViewer ã‚¯ãƒ©ã‚¹ã®ã‚¤ãƒ³ãƒ—ãƒªãƒ¡ãƒ³ãƒ†ãƒ¼ã‚·ãƒ§ãƒ³
 //
 //////////////////////////////////////////////////////////////////////
 
@@ -37,7 +37,7 @@ static HRESULT SetVideoMediaType(CMediaType *pMediaType, BYTE VideoStreamType, i
 	case STREAM_TYPE_MPEG2_VIDEO:
 		// MPEG-2
 		{
-			// ‰f‘œƒƒfƒBƒAƒtƒH[ƒ}ƒbƒgİ’è
+			// æ˜ åƒãƒ¡ãƒ‡ã‚£ã‚¢ãƒ•ã‚©ãƒ¼ãƒãƒƒãƒˆè¨­å®š
 			pMediaType->InitMediaType();
 			pMediaType->SetType(&MEDIATYPE_Video);
 			pMediaType->SetSubtype(&MEDIASUBTYPE_MPEG2_VIDEO);
@@ -45,13 +45,13 @@ static HRESULT SetVideoMediaType(CMediaType *pMediaType, BYTE VideoStreamType, i
 			pMediaType->SetTemporalCompression(TRUE);
 			pMediaType->SetSampleSize(0);
 			pMediaType->SetFormatType(&FORMAT_MPEG2Video);
-			// ƒtƒH[ƒ}ƒbƒg\‘¢‘ÌŠm•Û
+			// ãƒ•ã‚©ãƒ¼ãƒãƒƒãƒˆæ§‹é€ ä½“ç¢ºä¿
 			MPEG2VIDEOINFO *pVideoInfo =
 				pointer_cast<MPEG2VIDEOINFO *>(pMediaType->AllocFormatBuffer(sizeof(MPEG2VIDEOINFO)));
 			if (!pVideoInfo)
 				return E_OUTOFMEMORY;
 			::ZeroMemory(pVideoInfo, sizeof(MPEG2VIDEOINFO));
-			// ƒrƒfƒIƒwƒbƒ_İ’è
+			// ãƒ“ãƒ‡ã‚ªãƒ˜ãƒƒãƒ€è¨­å®š
 			VIDEOINFOHEADER2 &VideoHeader = pVideoInfo->hdr;
 			//::SetRect(&VideoHeader.rcSource, 0, 0, Width, Height);
 			VideoHeader.AvgTimePerFrame = TIME_PER_FRAME;
@@ -123,7 +123,7 @@ static HRESULT SetVideoMediaType(CMediaType *pMediaType, BYTE VideoStreamType, i
 
 
 //////////////////////////////////////////////////////////////////////
-// \’z/Á–Å
+// æ§‹ç¯‰/æ¶ˆæ»…
 //////////////////////////////////////////////////////////////////////
 
 CMediaViewer::CMediaViewer(CMediaDecoder::IEventHandler *pEventHandler)
@@ -190,7 +190,7 @@ CMediaViewer::CMediaViewer(CMediaDecoder::IEventHandler *pEventHandler)
 	, m_pAudioStreamCallbackParam(NULL)
 	, m_pImageMixer(NULL)
 {
-	// COMƒ‰ƒCƒuƒ‰ƒŠ‰Šú‰»
+	// COMãƒ©ã‚¤ãƒ–ãƒ©ãƒªåˆæœŸåŒ–
 	//::CoInitialize(NULL);
 }
 
@@ -201,7 +201,7 @@ CMediaViewer::~CMediaViewer()
 	if (m_pszAudioFilterName)
 		delete [] m_pszAudioFilterName;
 
-	// COMƒ‰ƒCƒuƒ‰ƒŠŠJ•ú
+	// COMãƒ©ã‚¤ãƒ–ãƒ©ãƒªé–‹æ”¾
 	//::CoUninitialize();
 }
 
@@ -230,12 +230,12 @@ const bool CMediaViewer::InputMedia(CMediaData *pMediaData, const DWORD dwInputI
 
 	CTsPacket *pTsPacket = dynamic_cast<CTsPacket *>(pMediaData);
 
-	// “ü—ÍƒƒfƒBƒAƒf[ƒ^‚ÍŒİŠ·«‚ª‚È‚¢
+	// å…¥åŠ›ãƒ¡ãƒ‡ã‚£ã‚¢ãƒ‡ãƒ¼ã‚¿ã¯äº’æ›æ€§ãŒãªã„
 	if(!pTsPacket)return false;
 	*/
 	CTsPacket *pTsPacket = static_cast<CTsPacket *>(pMediaData);
 
-	// ƒtƒBƒ‹ƒ^ƒOƒ‰ƒt‚É“ü—Í
+	// ãƒ•ã‚£ãƒ«ã‚¿ã‚°ãƒ©ãƒ•ã«å…¥åŠ›
 	if (m_pSrcFilter
 			&& pTsPacket->GetPID() != 0x1FFF
 			&& !pTsPacket->IsScrambled()) {
@@ -255,7 +255,7 @@ bool CMediaViewer::OpenViewer(
 
 	switch (VideoStreamType) {
 	default:
-		SetError(TEXT("‘Î‰‚µ‚Ä‚¢‚È‚¢‰f‘œŒ`®‚Å‚·B"));
+		SetError(TEXT("å¯¾å¿œã—ã¦ã„ãªã„æ˜ åƒå½¢å¼ã§ã™ã€‚"));
 		return false;
 	case STREAM_TYPE_INVALID:
 		bNoVideo = true;
@@ -274,16 +274,16 @@ bool CMediaViewer::OpenViewer(
 
 	CTryBlockLock Lock(&m_DecoderLock);
 	if (!Lock.TryLock(LOCK_TIMEOUT)) {
-		SetError(TEXT("ƒ^ƒCƒ€ƒAƒEƒgƒGƒ‰[‚Å‚·B"));
+		SetError(TEXT("ã‚¿ã‚¤ãƒ ã‚¢ã‚¦ãƒˆã‚¨ãƒ©ãƒ¼ã§ã™ã€‚"));
 		return false;
 	}
 
 	if (m_bInit) {
-		SetError(TEXT("Šù‚ÉƒtƒBƒ‹ƒ^ƒOƒ‰ƒt‚ª\’z‚³‚ê‚Ä‚¢‚Ü‚·B"));
+		SetError(TEXT("æ—¢ã«ãƒ•ã‚£ãƒ«ã‚¿ã‚°ãƒ©ãƒ•ãŒæ§‹ç¯‰ã•ã‚Œã¦ã„ã¾ã™ã€‚"));
 		return false;
 	}
 
-	TRACE(TEXT("CMediaViewer::OpenViewer() ƒtƒBƒ‹ƒ^ƒOƒ‰ƒtì¬ŠJn\n"));
+	TRACE(TEXT("CMediaViewer::OpenViewer() ãƒ•ã‚£ãƒ«ã‚¿ã‚°ãƒ©ãƒ•ä½œæˆé–‹å§‹\n"));
 
 	HRESULT hr=S_OK;
 
@@ -292,11 +292,11 @@ bool CMediaViewer::OpenViewer(
 	IPin *pOutputAudio=NULL;
 
 	try {
-		// ƒtƒBƒ‹ƒ^ƒOƒ‰ƒtƒ}ƒl[ƒWƒƒ‚ğ\’z‚·‚é
+		// ãƒ•ã‚£ãƒ«ã‚¿ã‚°ãƒ©ãƒ•ãƒãƒãƒ¼ã‚¸ãƒ£ã‚’æ§‹ç¯‰ã™ã‚‹
 		hr=::CoCreateInstance(CLSID_FilterGraph,NULL,CLSCTX_INPROC_SERVER,
 				IID_IGraphBuilder,pointer_cast<LPVOID*>(&m_pFilterGraph));
 		if (FAILED(hr)) {
-			throw CBonException(hr,TEXT("ƒtƒBƒ‹ƒ^ƒOƒ‰ƒtƒ}ƒl[ƒWƒƒ‚ğì¬‚Å‚«‚Ü‚¹‚ñB"));
+			throw CBonException(hr,TEXT("ãƒ•ã‚£ãƒ«ã‚¿ã‚°ãƒ©ãƒ•ãƒãƒãƒ¼ã‚¸ãƒ£ã‚’ä½œæˆã§ãã¾ã›ã‚“ã€‚"));
 		}
 
 		SendDecoderEvent(EID_FILTER_GRAPH_INITIALIZE, m_pFilterGraph);
@@ -305,29 +305,29 @@ bool CMediaViewer::OpenViewer(
 		AddToRot(m_pFilterGraph, &m_dwRegister);
 #endif
 
-		// IMediaControlƒCƒ“ƒ^ƒtƒF[ƒX‚ÌƒNƒGƒŠ[
+		// IMediaControlã‚¤ãƒ³ã‚¿ãƒ•ã‚§ãƒ¼ã‚¹ã®ã‚¯ã‚¨ãƒªãƒ¼
 		hr=m_pFilterGraph->QueryInterface(IID_IMediaControl, pointer_cast<void**>(&m_pMediaControl));
 		if (FAILED(hr)) {
-			throw CBonException(hr,TEXT("ƒƒfƒBƒAƒRƒ“ƒgƒ[ƒ‹‚ğæ“¾‚Å‚«‚Ü‚¹‚ñB"));
+			throw CBonException(hr,TEXT("ãƒ¡ãƒ‡ã‚£ã‚¢ã‚³ãƒ³ãƒˆãƒ­ãƒ¼ãƒ«ã‚’å–å¾—ã§ãã¾ã›ã‚“ã€‚"));
 		}
 
-		Trace(CTracer::TYPE_INFORMATION, TEXT("ƒ\[ƒXƒtƒBƒ‹ƒ^‚ÌÚ‘±’†..."));
+		Trace(CTracer::TYPE_INFORMATION, TEXT("ã‚½ãƒ¼ã‚¹ãƒ•ã‚£ãƒ«ã‚¿ã®æ¥ç¶šä¸­..."));
 
 		/* CBonSrcFilter */
 		{
-			// ƒCƒ“ƒXƒ^ƒ“ƒXì¬
+			// ã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚¹ä½œæˆ
 			m_pSrcFilter = static_cast<CBonSrcFilter*>(CBonSrcFilter::CreateInstance(NULL, &hr));
 			if (m_pSrcFilter == NULL || FAILED(hr))
-				throw CBonException(hr, TEXT("ƒ\[ƒXƒtƒBƒ‹ƒ^‚ğì¬‚Å‚«‚Ü‚¹‚ñB"));
+				throw CBonException(hr, TEXT("ã‚½ãƒ¼ã‚¹ãƒ•ã‚£ãƒ«ã‚¿ã‚’ä½œæˆã§ãã¾ã›ã‚“ã€‚"));
 			m_pSrcFilter->SetOutputWhenPaused(RendererType == CVideoRenderer::RENDERER_DEFAULT);
-			// ƒtƒBƒ‹ƒ^ƒOƒ‰ƒt‚É’Ç‰Á
+			// ãƒ•ã‚£ãƒ«ã‚¿ã‚°ãƒ©ãƒ•ã«è¿½åŠ 
 			hr = m_pFilterGraph->AddFilter(m_pSrcFilter, L"BonSrcFilter");
 			if (FAILED(hr))
-				throw CBonException(hr, TEXT("ƒ\[ƒXƒtƒBƒ‹ƒ^‚ğƒtƒBƒ‹ƒ^ƒOƒ‰ƒt‚É’Ç‰Á‚Å‚«‚Ü‚¹‚ñB"));
-			// o—Íƒsƒ“‚ğæ“¾
+				throw CBonException(hr, TEXT("ã‚½ãƒ¼ã‚¹ãƒ•ã‚£ãƒ«ã‚¿ã‚’ãƒ•ã‚£ãƒ«ã‚¿ã‚°ãƒ©ãƒ•ã«è¿½åŠ ã§ãã¾ã›ã‚“ã€‚"));
+			// å‡ºåŠ›ãƒ”ãƒ³ã‚’å–å¾—
 			pOutput = DirectShowUtil::GetFilterPin(m_pSrcFilter, PINDIR_OUTPUT);
 			if (pOutput==NULL)
-				throw CBonException(TEXT("ƒ\[ƒXƒtƒBƒ‹ƒ^‚Ìo—Íƒsƒ“‚ğæ“¾‚Å‚«‚Ü‚¹‚ñB"));
+				throw CBonException(TEXT("ã‚½ãƒ¼ã‚¹ãƒ•ã‚£ãƒ«ã‚¿ã®å‡ºåŠ›ãƒ”ãƒ³ã‚’å–å¾—ã§ãã¾ã›ã‚“ã€‚"));
 			m_pSrcFilter->EnableSync(m_bEnablePTSSync, m_b1SegMode);
 			if (m_BufferSize != 0)
 				m_pSrcFilter->SetBufferSize(m_BufferSize);
@@ -335,7 +335,7 @@ bool CMediaViewer::OpenViewer(
 			m_pSrcFilter->SetInputWait(m_PacketInputWait);
 		}
 
-		Trace(CTracer::TYPE_INFORMATION, TEXT("MPEG-2 DemultiplexerƒtƒBƒ‹ƒ^‚ÌÚ‘±’†..."));
+		Trace(CTracer::TYPE_INFORMATION, TEXT("MPEG-2 Demultiplexerãƒ•ã‚£ãƒ«ã‚¿ã®æ¥ç¶šä¸­..."));
 
 		/* MPEG-2 Demultiplexer */
 		{
@@ -345,38 +345,38 @@ bool CMediaViewer::OpenViewer(
 					CLSCTX_INPROC_SERVER,IID_IBaseFilter,
 					pointer_cast<LPVOID*>(&m_pMp2DemuxFilter));
 			if (FAILED(hr))
-				throw CBonException(hr,TEXT("MPEG-2 DemultiplexerƒtƒBƒ‹ƒ^‚ğì¬‚Å‚«‚Ü‚¹‚ñB"),
-									TEXT("MPEG-2 DemultiplexerƒtƒBƒ‹ƒ^‚ªƒCƒ“ƒXƒg[ƒ‹‚³‚ê‚Ä‚¢‚é‚©Šm”F‚µ‚Ä‚­‚¾‚³‚¢B"));
+				throw CBonException(hr,TEXT("MPEG-2 Demultiplexerãƒ•ã‚£ãƒ«ã‚¿ã‚’ä½œæˆã§ãã¾ã›ã‚“ã€‚"),
+									TEXT("MPEG-2 Demultiplexerãƒ•ã‚£ãƒ«ã‚¿ãŒã‚¤ãƒ³ã‚¹ãƒˆãƒ¼ãƒ«ã•ã‚Œã¦ã„ã‚‹ã‹ç¢ºèªã—ã¦ãã ã•ã„ã€‚"));
 			hr=DirectShowUtil::AppendFilterAndConnect(m_pFilterGraph,
 								m_pMp2DemuxFilter,L"Mpeg2Demuxer",&pOutput);
 			if (FAILED(hr))
-				throw CBonException(hr,TEXT("MPEG-2 Demultiplexer‚ğƒtƒBƒ‹ƒ^ƒOƒ‰ƒt‚É’Ç‰Á‚Å‚«‚Ü‚¹‚ñB"));
-			// ‚±‚Ì“_‚ÅpOutput==NULL‚Ì‚Í‚¸‚¾‚ª”O‚Ì‚½‚ß
+				throw CBonException(hr,TEXT("MPEG-2 Demultiplexerã‚’ãƒ•ã‚£ãƒ«ã‚¿ã‚°ãƒ©ãƒ•ã«è¿½åŠ ã§ãã¾ã›ã‚“ã€‚"));
+			// ã“ã®æ™‚ç‚¹ã§pOutput==NULLã®ã¯ãšã ãŒå¿µã®ãŸã‚
 			SAFE_RELEASE(pOutput);
 
-			// IMpeg2DemultiplexerƒCƒ“ƒ^ƒtƒF[ƒX‚ÌƒNƒGƒŠ[
+			// IMpeg2Demultiplexerã‚¤ãƒ³ã‚¿ãƒ•ã‚§ãƒ¼ã‚¹ã®ã‚¯ã‚¨ãƒªãƒ¼
 			hr=m_pMp2DemuxFilter->QueryInterface(IID_IMpeg2Demultiplexer,
 												 pointer_cast<void**>(&pMpeg2Demuxer));
 			if (FAILED(hr))
-				throw CBonException(hr,TEXT("MPEG-2 DemultiplexerƒCƒ“ƒ^[ƒtƒF[ƒX‚ğæ“¾‚Å‚«‚Ü‚¹‚ñB"),
-									TEXT("ŒİŠ·«‚Ì‚È‚¢ƒXƒvƒŠƒbƒ^‚Ì—Dæ“x‚ªMPEG-2 Demultiplexer‚æ‚è‚‚­‚È‚Á‚Ä‚¢‚é‰Â”\«‚ª‚ ‚è‚Ü‚·B"));
+				throw CBonException(hr,TEXT("MPEG-2 Demultiplexerã‚¤ãƒ³ã‚¿ãƒ¼ãƒ•ã‚§ãƒ¼ã‚¹ã‚’å–å¾—ã§ãã¾ã›ã‚“ã€‚"),
+									TEXT("äº’æ›æ€§ã®ãªã„ã‚¹ãƒ—ãƒªãƒƒã‚¿ã®å„ªå…ˆåº¦ãŒMPEG-2 Demultiplexerã‚ˆã‚Šé«˜ããªã£ã¦ã„ã‚‹å¯èƒ½æ€§ãŒã‚ã‚Šã¾ã™ã€‚"));
 
 			if (!bNoVideo) {
 				CMediaType MediaTypeVideo;
 
-				// ‰f‘œƒƒfƒBƒAƒtƒH[ƒ}ƒbƒgİ’è
+				// æ˜ åƒãƒ¡ãƒ‡ã‚£ã‚¢ãƒ•ã‚©ãƒ¼ãƒãƒƒãƒˆè¨­å®š
 				hr = SetVideoMediaType(&MediaTypeVideo, VideoStreamType, 1920, 1080);
 				if (FAILED(hr))
-					throw CBonException(TEXT("ƒƒ‚ƒŠ‚ªŠm•Û‚Å‚«‚Ü‚¹‚ñB"));
-				// ‰f‘œo—Íƒsƒ“ì¬
+					throw CBonException(TEXT("ãƒ¡ãƒ¢ãƒªãŒç¢ºä¿ã§ãã¾ã›ã‚“ã€‚"));
+				// æ˜ åƒå‡ºåŠ›ãƒ”ãƒ³ä½œæˆ
 				hr = pMpeg2Demuxer->CreateOutputPin(&MediaTypeVideo, L"Video", &pOutputVideo);
 				if (FAILED(hr)) {
 					pMpeg2Demuxer->Release();
-					throw CBonException(hr, TEXT("MPEG-2 Demultiplexer‚Ì‰f‘œo—Íƒsƒ“‚ğì¬‚Å‚«‚Ü‚¹‚ñB"));
+					throw CBonException(hr, TEXT("MPEG-2 Demultiplexerã®æ˜ åƒå‡ºåŠ›ãƒ”ãƒ³ã‚’ä½œæˆã§ãã¾ã›ã‚“ã€‚"));
 				}
 			}
 
-			// ‰¹ºƒƒfƒBƒAƒtƒH[ƒ}ƒbƒgİ’è
+			// éŸ³å£°ãƒ¡ãƒ‡ã‚£ã‚¢ãƒ•ã‚©ãƒ¼ãƒãƒƒãƒˆè¨­å®š
 			CMediaType MediaTypeAudio;
 			MediaTypeAudio.InitMediaType();
 			MediaTypeAudio.SetType(&MEDIATYPE_Audio);
@@ -385,42 +385,42 @@ bool CMediaViewer::OpenViewer(
 			MediaTypeAudio.SetTemporalCompression(TRUE);
 			MediaTypeAudio.SetSampleSize(0);
 			MediaTypeAudio.SetFormatType(&FORMAT_None);
-			// ‰¹ºo—Íƒsƒ“ì¬
+			// éŸ³å£°å‡ºåŠ›ãƒ”ãƒ³ä½œæˆ
 			hr=pMpeg2Demuxer->CreateOutputPin(&MediaTypeAudio,L"Audio",&pOutputAudio);
 			pMpeg2Demuxer->Release();
 			if (FAILED(hr))
-				throw CBonException(hr,TEXT("MPEG-2 Demultiplexer‚Ì‰¹ºo—Íƒsƒ“‚ğì¬‚Å‚«‚Ü‚¹‚ñB"));
+				throw CBonException(hr,TEXT("MPEG-2 Demultiplexerã®éŸ³å£°å‡ºåŠ›ãƒ”ãƒ³ã‚’ä½œæˆã§ãã¾ã›ã‚“ã€‚"));
 			if (pOutputVideo) {
-				// ‰f‘œo—Íƒsƒ“‚ÌIMPEG2PIDMapƒCƒ“ƒ^ƒtƒF[ƒX‚ÌƒNƒGƒŠ[
+				// æ˜ åƒå‡ºåŠ›ãƒ”ãƒ³ã®IMPEG2PIDMapã‚¤ãƒ³ã‚¿ãƒ•ã‚§ãƒ¼ã‚¹ã®ã‚¯ã‚¨ãƒªãƒ¼
 				hr=pOutputVideo->QueryInterface(__uuidof(IMPEG2PIDMap),pointer_cast<void**>(&m_pMp2DemuxVideoMap));
 				if (FAILED(hr))
-					throw CBonException(hr,TEXT("‰f‘œo—Íƒsƒ“‚ÌIMPEG2PIDMap‚ğæ“¾‚Å‚«‚Ü‚¹‚ñB"));
+					throw CBonException(hr,TEXT("æ˜ åƒå‡ºåŠ›ãƒ”ãƒ³ã®IMPEG2PIDMapã‚’å–å¾—ã§ãã¾ã›ã‚“ã€‚"));
 			}
-			// ‰¹ºo—Íƒsƒ“‚ÌIMPEG2PIDMapƒCƒ“ƒ^ƒtƒF[ƒX‚ÌƒNƒGƒŠ
+			// éŸ³å£°å‡ºåŠ›ãƒ”ãƒ³ã®IMPEG2PIDMapã‚¤ãƒ³ã‚¿ãƒ•ã‚§ãƒ¼ã‚¹ã®ã‚¯ã‚¨ãƒª
 			hr=pOutputAudio->QueryInterface(__uuidof(IMPEG2PIDMap),pointer_cast<void**>(&m_pMp2DemuxAudioMap));
 			if (FAILED(hr))
-				throw CBonException(hr,TEXT("‰¹ºo—Íƒsƒ“‚ÌIMPEG2PIDMap‚ğæ“¾‚Å‚«‚Ü‚¹‚ñB"));
+				throw CBonException(hr,TEXT("éŸ³å£°å‡ºåŠ›ãƒ”ãƒ³ã®IMPEG2PIDMapã‚’å–å¾—ã§ãã¾ã›ã‚“ã€‚"));
 		}
 
-		// ‰f‘œƒp[ƒTƒtƒBƒ‹ƒ^‚ÌÚ‘±
+		// æ˜ åƒãƒ‘ãƒ¼ã‚µãƒ•ã‚£ãƒ«ã‚¿ã®æ¥ç¶š
 		switch (VideoStreamType) {
 #ifdef BONTSENGINE_MPEG2_SUPPORT
 		case STREAM_TYPE_MPEG2_VIDEO:
 			{
-				Trace(CTracer::TYPE_INFORMATION, TEXT("MPEG-2ƒp[ƒTƒtƒBƒ‹ƒ^‚ÌÚ‘±’†..."));
+				Trace(CTracer::TYPE_INFORMATION, TEXT("MPEG-2ãƒ‘ãƒ¼ã‚µãƒ•ã‚£ãƒ«ã‚¿ã®æ¥ç¶šä¸­..."));
 
-				// ƒCƒ“ƒXƒ^ƒ“ƒXì¬
+				// ã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚¹ä½œæˆ
 				CMpeg2ParserFilter *pMpeg2Parser =
 					static_cast<CMpeg2ParserFilter*>(CMpeg2ParserFilter::CreateInstance(NULL, &hr));
 				if (!pMpeg2Parser || FAILED(hr))
-					throw CBonException(hr, TEXT("MPEG-2ƒp[ƒTƒtƒBƒ‹ƒ^‚ğì¬‚Å‚«‚Ü‚¹‚ñB"));
+					throw CBonException(hr, TEXT("MPEG-2ãƒ‘ãƒ¼ã‚µãƒ•ã‚£ãƒ«ã‚¿ã‚’ä½œæˆã§ãã¾ã›ã‚“ã€‚"));
 				m_pVideoParserFilter = pMpeg2Parser;
 				m_pVideoParser = pMpeg2Parser;
-				// ƒtƒBƒ‹ƒ^‚Ì’Ç‰Á‚ÆÚ‘±
+				// ãƒ•ã‚£ãƒ«ã‚¿ã®è¿½åŠ ã¨æ¥ç¶š
 				hr = DirectShowUtil::AppendFilterAndConnect(
 					m_pFilterGraph, pMpeg2Parser, L"Mpeg2ParserFilter", &pOutputVideo);
 				if (FAILED(hr))
-					throw CBonException(hr, TEXT("MPEG-2ƒp[ƒTƒtƒBƒ‹ƒ^‚ğƒtƒBƒ‹ƒ^ƒOƒ‰ƒt‚É’Ç‰Á‚Å‚«‚Ü‚¹‚ñB"));
+					throw CBonException(hr, TEXT("MPEG-2ãƒ‘ãƒ¼ã‚µãƒ•ã‚£ãƒ«ã‚¿ã‚’ãƒ•ã‚£ãƒ«ã‚¿ã‚°ãƒ©ãƒ•ã«è¿½åŠ ã§ãã¾ã›ã‚“ã€‚"));
 			}
 			break;
 #endif	// BONTSENGINE_MPEG2_SUPPORT
@@ -428,20 +428,20 @@ bool CMediaViewer::OpenViewer(
 #ifdef BONTSENGINE_H264_SUPPORT
 		case STREAM_TYPE_H264:
 			{
-				Trace(CTracer::TYPE_INFORMATION, TEXT("H.264ƒp[ƒTƒtƒBƒ‹ƒ^‚ÌÚ‘±’†..."));
+				Trace(CTracer::TYPE_INFORMATION, TEXT("H.264ãƒ‘ãƒ¼ã‚µãƒ•ã‚£ãƒ«ã‚¿ã®æ¥ç¶šä¸­..."));
 
-				// ƒCƒ“ƒXƒ^ƒ“ƒXì¬
+				// ã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚¹ä½œæˆ
 				CH264ParserFilter *pH264Parser =
 					static_cast<CH264ParserFilter*>(CH264ParserFilter::CreateInstance(NULL, &hr));
 				if (!pH264Parser || FAILED(hr))
-					throw CBonException(TEXT("H.264ƒp[ƒTƒtƒBƒ‹ƒ^‚ğì¬‚Å‚«‚Ü‚¹‚ñB"));
+					throw CBonException(TEXT("H.264ãƒ‘ãƒ¼ã‚µãƒ•ã‚£ãƒ«ã‚¿ã‚’ä½œæˆã§ãã¾ã›ã‚“ã€‚"));
 				m_pVideoParserFilter = pH264Parser;
 				m_pVideoParser = pH264Parser;
-				// ƒtƒBƒ‹ƒ^‚Ì’Ç‰Á‚ÆÚ‘±
+				// ãƒ•ã‚£ãƒ«ã‚¿ã®è¿½åŠ ã¨æ¥ç¶š
 				hr = DirectShowUtil::AppendFilterAndConnect(
 					m_pFilterGraph, pH264Parser, L"H264ParserFilter", &pOutputVideo);
 				if (FAILED(hr))
-					throw CBonException(hr,TEXT("H.264ƒp[ƒTƒtƒBƒ‹ƒ^‚ğƒtƒBƒ‹ƒ^ƒOƒ‰ƒt‚É’Ç‰Á‚Å‚«‚Ü‚¹‚ñB"));
+					throw CBonException(hr,TEXT("H.264ãƒ‘ãƒ¼ã‚µãƒ•ã‚£ãƒ«ã‚¿ã‚’ãƒ•ã‚£ãƒ«ã‚¿ã‚°ãƒ©ãƒ•ã«è¿½åŠ ã§ãã¾ã›ã‚“ã€‚"));
 			}
 			break;
 #endif	// BONTSENGINE_H264_SUPPORT
@@ -449,39 +449,39 @@ bool CMediaViewer::OpenViewer(
 #ifdef BONTSENGINE_H265_SUPPORT
 		case STREAM_TYPE_H265:
 			{
-				Trace(CTracer::TYPE_INFORMATION, TEXT("H.265ƒp[ƒTƒtƒBƒ‹ƒ^‚ÌÚ‘±’†..."));
+				Trace(CTracer::TYPE_INFORMATION, TEXT("H.265ãƒ‘ãƒ¼ã‚µãƒ•ã‚£ãƒ«ã‚¿ã®æ¥ç¶šä¸­..."));
 
-				// ƒCƒ“ƒXƒ^ƒ“ƒXì¬
+				// ã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚¹ä½œæˆ
 				CH265ParserFilter *pH265Parser =
 					static_cast<CH265ParserFilter*>(CH265ParserFilter::CreateInstance(NULL, &hr));
 				if (!pH265Parser || FAILED(hr))
-					throw CBonException(TEXT("H.265ƒp[ƒTƒtƒBƒ‹ƒ^‚ğì¬‚Å‚«‚Ü‚¹‚ñB"));
+					throw CBonException(TEXT("H.265ãƒ‘ãƒ¼ã‚µãƒ•ã‚£ãƒ«ã‚¿ã‚’ä½œæˆã§ãã¾ã›ã‚“ã€‚"));
 				m_pVideoParserFilter = pH265Parser;
 				m_pVideoParser = pH265Parser;
-				// ƒtƒBƒ‹ƒ^‚Ì’Ç‰Á‚ÆÚ‘±
+				// ãƒ•ã‚£ãƒ«ã‚¿ã®è¿½åŠ ã¨æ¥ç¶š
 				hr = DirectShowUtil::AppendFilterAndConnect(
 					m_pFilterGraph, pH265Parser, L"H265ParserFilter", &pOutputVideo);
 				if (FAILED(hr))
-					throw CBonException(hr,TEXT("H.265ƒp[ƒTƒtƒBƒ‹ƒ^‚ğƒtƒBƒ‹ƒ^ƒOƒ‰ƒt‚É’Ç‰Á‚Å‚«‚Ü‚¹‚ñB"));
+					throw CBonException(hr,TEXT("H.265ãƒ‘ãƒ¼ã‚µãƒ•ã‚£ãƒ«ã‚¿ã‚’ãƒ•ã‚£ãƒ«ã‚¿ã‚°ãƒ©ãƒ•ã«è¿½åŠ ã§ãã¾ã›ã‚“ã€‚"));
 			}
 			break;
 #endif	// BONTSENGINE_H265_SUPPORT
 		}
 
-		Trace(CTracer::TYPE_INFORMATION, TEXT("‰¹ºƒfƒR[ƒ_‚ÌÚ‘±’†..."));
+		Trace(CTracer::TYPE_INFORMATION, TEXT("éŸ³å£°ãƒ‡ã‚³ãƒ¼ãƒ€ã®æ¥ç¶šä¸­..."));
 
 #if 1
 		/* CAudioDecFilter */
 		{
-			// CAudioDecFilterƒCƒ“ƒXƒ^ƒ“ƒXì¬
+			// CAudioDecFilterã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚¹ä½œæˆ
 			m_pAudioDecoder = static_cast<CAudioDecFilter*>(CAudioDecFilter::CreateInstance(NULL, &hr));
 			if (!m_pAudioDecoder || FAILED(hr))
-				throw CBonException(hr,TEXT("‰¹ºƒfƒR[ƒ_ƒtƒBƒ‹ƒ^‚ğì¬‚Å‚«‚Ü‚¹‚ñB"));
-			// ƒtƒBƒ‹ƒ^‚Ì’Ç‰Á‚ÆÚ‘±
+				throw CBonException(hr,TEXT("éŸ³å£°ãƒ‡ã‚³ãƒ¼ãƒ€ãƒ•ã‚£ãƒ«ã‚¿ã‚’ä½œæˆã§ãã¾ã›ã‚“ã€‚"));
+			// ãƒ•ã‚£ãƒ«ã‚¿ã®è¿½åŠ ã¨æ¥ç¶š
 			hr=DirectShowUtil::AppendFilterAndConnect(
 				m_pFilterGraph,m_pAudioDecoder,L"AudioDecFilter",&pOutputAudio);
 			if (FAILED(hr))
-				throw CBonException(hr,TEXT("‰¹ºƒfƒR[ƒ_ƒtƒBƒ‹ƒ^‚ğƒtƒBƒ‹ƒ^ƒOƒ‰ƒt‚É’Ç‰Á‚Å‚«‚Ü‚¹‚ñB"));
+				throw CBonException(hr,TEXT("éŸ³å£°ãƒ‡ã‚³ãƒ¼ãƒ€ãƒ•ã‚£ãƒ«ã‚¿ã‚’ãƒ•ã‚£ãƒ«ã‚¿ã‚°ãƒ©ãƒ•ã«è¿½åŠ ã§ãã¾ã›ã‚“ã€‚"));
 
 			SetAudioDecoderType(m_AudioStreamType);
 
@@ -493,33 +493,33 @@ bool CMediaViewer::OpenViewer(
 		}
 #else
 		/*
-			ŠO•”AACƒfƒR[ƒ_‚ğ—˜—p‚·‚é‚ÆAƒ`ƒƒƒ“ƒlƒ‹”‚ªØ‚è‘Ö‚í‚Á‚½Û‚É‰¹‚ªo‚È‚­‚È‚éA
-			ƒfƒ…ƒAƒ‹ƒ‚ƒmƒ‰ƒ‹‚ªƒXƒeƒŒƒI‚Æ‚µ‚ÄÄ¶‚³‚ê‚éA‚Æ‚¢‚Á‚½–â‘è‚ªo‚é
+			å¤–éƒ¨AACãƒ‡ã‚³ãƒ¼ãƒ€ã‚’åˆ©ç”¨ã™ã‚‹ã¨ã€ãƒãƒ£ãƒ³ãƒãƒ«æ•°ãŒåˆ‡ã‚Šæ›¿ã‚ã£ãŸéš›ã«éŸ³ãŒå‡ºãªããªã‚‹ã€
+			ãƒ‡ãƒ¥ã‚¢ãƒ«ãƒ¢ãƒãƒ©ãƒ«ãŒã‚¹ãƒ†ãƒ¬ã‚ªã¨ã—ã¦å†ç”Ÿã•ã‚Œã‚‹ã€ã¨ã„ã£ãŸå•é¡ŒãŒå‡ºã‚‹
 		*/
 
 		/* CAacParserFilter */
 		{
 			CAacParserFilter *m_pAacParser;
-			// CAacParserFilterƒCƒ“ƒXƒ^ƒ“ƒXì¬
+			// CAacParserFilterã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚¹ä½œæˆ
 			m_pAacParser=static_cast<CAacParserFilter*>(CAacParserFilter::CreateInstance(NULL, &hr));
 			if (!m_pAacParser || FAILED(hr))
-				throw CBonException(hr,TEXT("AACƒp[ƒTƒtƒBƒ‹ƒ^‚ğì¬‚Å‚«‚Ü‚¹‚ñB"));
-			// ƒtƒBƒ‹ƒ^‚Ì’Ç‰Á‚ÆÚ‘±
+				throw CBonException(hr,TEXT("AACãƒ‘ãƒ¼ã‚µãƒ•ã‚£ãƒ«ã‚¿ã‚’ä½œæˆã§ãã¾ã›ã‚“ã€‚"));
+			// ãƒ•ã‚£ãƒ«ã‚¿ã®è¿½åŠ ã¨æ¥ç¶š
 			hr=DirectShowUtil::AppendFilterAndConnect(
 				m_pFilterGraph,m_pAacParser,L"AacParserFilter",&pOutputAudio);
 			if (FAILED(hr))
-				throw CBonException(TEXT("AACƒp[ƒTƒtƒBƒ‹ƒ^‚ğƒtƒBƒ‹ƒ^ƒOƒ‰ƒt‚É’Ç‰Á‚Å‚«‚Ü‚¹‚ñB"));
+				throw CBonException(TEXT("AACãƒ‘ãƒ¼ã‚µãƒ•ã‚£ãƒ«ã‚¿ã‚’ãƒ•ã‚£ãƒ«ã‚¿ã‚°ãƒ©ãƒ•ã«è¿½åŠ ã§ãã¾ã›ã‚“ã€‚"));
 			m_pAacParser->Release();
 		}
 
-		/* AACƒfƒR[ƒ_[ */
+		/* AACãƒ‡ã‚³ãƒ¼ãƒ€ãƒ¼ */
 		{
 			CDirectShowFilterFinder FilterFinder;
 
-			// ŒŸõ
+			// æ¤œç´¢
 			if(!FilterFinder.FindFilter(&MEDIATYPE_Audio,&MEDIASUBTYPE_AAC))
-				throw CBonException(TEXT("AACƒfƒR[ƒ_‚ªŒ©•t‚©‚è‚Ü‚¹‚ñB"),
-									TEXT("AACƒfƒR[ƒ_‚ªƒCƒ“ƒXƒg[ƒ‹‚³‚ê‚Ä‚¢‚é‚©Šm”F‚µ‚Ä‚­‚¾‚³‚¢B"));
+				throw CBonException(TEXT("AACãƒ‡ã‚³ãƒ¼ãƒ€ãŒè¦‹ä»˜ã‹ã‚Šã¾ã›ã‚“ã€‚"),
+									TEXT("AACãƒ‡ã‚³ãƒ¼ãƒ€ãŒã‚¤ãƒ³ã‚¹ãƒˆãƒ¼ãƒ«ã•ã‚Œã¦ã„ã‚‹ã‹ç¢ºèªã—ã¦ãã ã•ã„ã€‚"));
 
 			WCHAR szAacDecoder[128];
 			CLSID idAac;
@@ -541,22 +541,22 @@ bool CMediaViewer::OpenViewer(
 					}
 				}
 			}
-			// ‚Ç‚ê‚©‚ÌƒtƒBƒ‹ƒ^‚ÅÚ‘±‚Å‚«‚½‚©
+			// ã©ã‚Œã‹ã®ãƒ•ã‚£ãƒ«ã‚¿ã§æ¥ç¶šã§ããŸã‹
 			if (bConnectSuccess) {
 				SAFE_RELEASE(pAacDecFilter);
 				//m_pszAacDecoderName=StdUtil::strdup(szAacDecoder);
 			} else {
-				throw CBonException(TEXT("AACƒfƒR[ƒ_ƒtƒBƒ‹ƒ^‚ğƒtƒBƒ‹ƒ^ƒOƒ‰ƒt‚É’Ç‰Á‚Å‚«‚Ü‚¹‚ñB"),
-									TEXT("İ’è‚Å—LŒø‚ÈAACƒfƒR[ƒ_‚ª‘I‘ğ‚³‚ê‚Ä‚¢‚é‚©Šm”F‚µ‚Ä‚­‚¾‚³‚¢B"));
+				throw CBonException(TEXT("AACãƒ‡ã‚³ãƒ¼ãƒ€ãƒ•ã‚£ãƒ«ã‚¿ã‚’ãƒ•ã‚£ãƒ«ã‚¿ã‚°ãƒ©ãƒ•ã«è¿½åŠ ã§ãã¾ã›ã‚“ã€‚"),
+									TEXT("è¨­å®šã§æœ‰åŠ¹ãªAACãƒ‡ã‚³ãƒ¼ãƒ€ãŒé¸æŠã•ã‚Œã¦ã„ã‚‹ã‹ç¢ºèªã—ã¦ãã ã•ã„ã€‚"));
 			}
 		}
 #endif
 
-		/* ƒ†[ƒU[w’è‚Ì‰¹ºƒtƒBƒ‹ƒ^‚ÌÚ‘± */
+		/* ãƒ¦ãƒ¼ã‚¶ãƒ¼æŒ‡å®šã®éŸ³å£°ãƒ•ã‚£ãƒ«ã‚¿ã®æ¥ç¶š */
 		if (m_pszAudioFilterName) {
-			Trace(CTracer::TYPE_INFORMATION, TEXT("‰¹ºƒtƒBƒ‹ƒ^‚ÌÚ‘±’†..."));
+			Trace(CTracer::TYPE_INFORMATION, TEXT("éŸ³å£°ãƒ•ã‚£ãƒ«ã‚¿ã®æ¥ç¶šä¸­..."));
 
-			// ŒŸõ
+			// æ¤œç´¢
 			bool bConnectSuccess=false;
 			CDirectShowFilterFinder FilterFinder;
 			if (FilterFinder.FindFilter(&MEDIATYPE_Audio,&MEDIASUBTYPE_PCM)) {
@@ -571,7 +571,7 @@ bool CMediaViewer::OpenViewer(
 								idAudioFilter,szAudioFilter,&m_pAudioFilter,
 								&pOutputAudio,NULL,true);
 						if (SUCCEEDED(hr)) {
-							TRACE(TEXT("‰¹ºƒtƒBƒ‹ƒ^Ú‘± : %s\n"),szAudioFilter);
+							TRACE(TEXT("éŸ³å£°ãƒ•ã‚£ãƒ«ã‚¿æ¥ç¶š : %s\n"),szAudioFilter);
 							bConnectSuccess=true;
 						}
 						break;
@@ -580,12 +580,12 @@ bool CMediaViewer::OpenViewer(
 			}
 			if (!bConnectSuccess) {
 				throw CBonException(hr,
-					TEXT("‰¹ºƒtƒBƒ‹ƒ^‚ğƒtƒBƒ‹ƒ^ƒOƒ‰ƒt‚É’Ç‰Á‚Å‚«‚Ü‚¹‚ñB"),
-					TEXT("‰¹ºƒtƒBƒ‹ƒ^‚ª—˜—p‚Å‚«‚È‚¢‚©A‰¹ºƒfƒoƒCƒX‚É‘Î‰‚µ‚Ä‚¢‚È‚¢‰Â”\«‚ª‚ ‚è‚Ü‚·B"));
+					TEXT("éŸ³å£°ãƒ•ã‚£ãƒ«ã‚¿ã‚’ãƒ•ã‚£ãƒ«ã‚¿ã‚°ãƒ©ãƒ•ã«è¿½åŠ ã§ãã¾ã›ã‚“ã€‚"),
+					TEXT("éŸ³å£°ãƒ•ã‚£ãƒ«ã‚¿ãŒåˆ©ç”¨ã§ããªã„ã‹ã€éŸ³å£°ãƒ‡ãƒã‚¤ã‚¹ã«å¯¾å¿œã—ã¦ã„ãªã„å¯èƒ½æ€§ãŒã‚ã‚Šã¾ã™ã€‚"));
 			}
 		}
 
-		// ‰f‘œƒfƒR[ƒ_‚ÌÚ‘±
+		// æ˜ åƒãƒ‡ã‚³ãƒ¼ãƒ€ã®æ¥ç¶š
 		switch (VideoStreamType) {
 #ifdef BONTSENGINE_MPEG2_SUPPORT
 		case STREAM_TYPE_MPEG2_VIDEO:
@@ -613,7 +613,7 @@ bool CMediaViewer::OpenViewer(
 
 		if (m_pVideoParser) {
 			m_pVideoParser->SetVideoInfoCallback(OnVideoInfo, this);
-			// madVR ‚Í‰f‘œƒTƒCƒY‚Ì•Ï‰»‚É MediaType ‚ğİ’è‚µ‚È‚¢‚ÆV‚µ‚¢ƒTƒCƒY‚ª“K—p‚³‚ê‚È‚¢
+			// madVR ã¯æ˜ åƒã‚µã‚¤ã‚ºã®å¤‰åŒ–æ™‚ã« MediaType ã‚’è¨­å®šã—ãªã„ã¨æ–°ã—ã„ã‚µã‚¤ã‚ºãŒé©ç”¨ã•ã‚Œãªã„
 			m_pVideoParser->SetAttachMediaType(RendererType == CVideoRenderer::RENDERER_madVR);
 			if (m_pVideoStreamCallback)
 				m_pVideoParser->SetStreamCallback(m_pVideoStreamCallback);
@@ -621,11 +621,11 @@ bool CMediaViewer::OpenViewer(
 		}
 
 		if (!bNoVideo) {
-			Trace(CTracer::TYPE_INFORMATION, TEXT("‰f‘œƒŒƒ“ƒ_ƒ‰‚Ì\’z’†..."));
+			Trace(CTracer::TYPE_INFORMATION, TEXT("æ˜ åƒãƒ¬ãƒ³ãƒ€ãƒ©ã®æ§‹ç¯‰ä¸­..."));
 
 			if (!CVideoRenderer::CreateRenderer(RendererType, &m_pVideoRenderer)) {
-				throw CBonException(TEXT("‰f‘œƒŒƒ“ƒ_ƒ‰‚ğì¬‚Å‚«‚Ü‚¹‚ñB"),
-									TEXT("İ’è‚Å—LŒø‚ÈƒŒƒ“ƒ_ƒ‰‚ª‘I‘ğ‚³‚ê‚Ä‚¢‚é‚©Šm”F‚µ‚Ä‚­‚¾‚³‚¢B"));
+				throw CBonException(TEXT("æ˜ åƒãƒ¬ãƒ³ãƒ€ãƒ©ã‚’ä½œæˆã§ãã¾ã›ã‚“ã€‚"),
+									TEXT("è¨­å®šã§æœ‰åŠ¹ãªãƒ¬ãƒ³ãƒ€ãƒ©ãŒé¸æŠã•ã‚Œã¦ã„ã‚‹ã‹ç¢ºèªã—ã¦ãã ã•ã„ã€‚"));
 			}
 			m_pVideoRenderer->SetClipToDevice(m_bClipToDevice);
 			if (!m_pVideoRenderer->Initialize(m_pFilterGraph, pOutputVideo,
@@ -635,9 +635,9 @@ bool CMediaViewer::OpenViewer(
 			m_VideoRendererType = RendererType;
 		}
 
-		Trace(CTracer::TYPE_INFORMATION, TEXT("‰¹ºƒŒƒ“ƒ_ƒ‰‚Ì\’z’†..."));
+		Trace(CTracer::TYPE_INFORMATION, TEXT("éŸ³å£°ãƒ¬ãƒ³ãƒ€ãƒ©ã®æ§‹ç¯‰ä¸­..."));
 
-		// ‰¹ºƒŒƒ“ƒ_ƒ‰\’z
+		// éŸ³å£°ãƒ¬ãƒ³ãƒ€ãƒ©æ§‹ç¯‰
 		{
 			bool fOK = false;
 
@@ -665,7 +665,7 @@ bool CMediaViewer::OpenViewer(
 				if (SUCCEEDED(hr)) {
 #ifdef _DEBUG
 					if (pszAudioDevice != NULL && pszAudioDevice[0] != '\0')
-						TRACE(TEXT("‰¹ºƒfƒoƒCƒX %s ‚ğÚ‘±\n"), pszAudioDevice);
+						TRACE(TEXT("éŸ³å£°ãƒ‡ãƒã‚¤ã‚¹ %s ã‚’æ¥ç¶š\n"), pszAudioDevice);
 #endif
 					if (m_bUseAudioRendererClock) {
 						IMediaFilter *pMediaFilter;
@@ -678,7 +678,7 @@ bool CMediaViewer::OpenViewer(
 									pointer_cast<void**>(&pReferenceClock)))) {
 								pMediaFilter->SetSyncSource(pReferenceClock);
 								pReferenceClock->Release();
-								TRACE(TEXT("ƒOƒ‰ƒt‚ÌƒNƒƒbƒN‚É‰¹ºƒŒƒ“ƒ_ƒ‰‚ğ‘I‘ğ\n"));
+								TRACE(TEXT("ã‚°ãƒ©ãƒ•ã®ã‚¯ãƒ­ãƒƒã‚¯ã«éŸ³å£°ãƒ¬ãƒ³ãƒ€ãƒ©ã‚’é¸æŠ\n"));
 							}
 							pMediaFilter->Release();
 						}
@@ -690,12 +690,12 @@ bool CMediaViewer::OpenViewer(
 				if (!fOK) {
 					hr = m_pFilterGraph->Render(pOutputAudio);
 					if (FAILED(hr))
-						throw CBonException(hr, TEXT("‰¹ºƒŒƒ“ƒ_ƒ‰‚ğÚ‘±‚Å‚«‚Ü‚¹‚ñB"),
-							TEXT("İ’è‚Å—LŒø‚È‰¹ºƒfƒoƒCƒX‚ª‘I‘ğ‚³‚ê‚Ä‚¢‚é‚©Šm”F‚µ‚Ä‚­‚¾‚³‚¢B"));
+						throw CBonException(hr, TEXT("éŸ³å£°ãƒ¬ãƒ³ãƒ€ãƒ©ã‚’æ¥ç¶šã§ãã¾ã›ã‚“ã€‚"),
+							TEXT("è¨­å®šã§æœ‰åŠ¹ãªéŸ³å£°ãƒ‡ãƒã‚¤ã‚¹ãŒé¸æŠã•ã‚Œã¦ã„ã‚‹ã‹ç¢ºèªã—ã¦ãã ã•ã„ã€‚"));
 				}
 			} else {
-				// ‰¹ºƒfƒoƒCƒX‚ª–³‚¢?
-				// NullƒŒƒ“ƒ_ƒ‰‚ğŒq‚°‚Ä‚¨‚­
+				// éŸ³å£°ãƒ‡ãƒã‚¤ã‚¹ãŒç„¡ã„?
+				// Nullãƒ¬ãƒ³ãƒ€ãƒ©ã‚’ç¹‹ã’ã¦ãŠã
 				hr = ::CoCreateInstance(CLSID_NullRenderer, NULL,
 										CLSCTX_INPROC_SERVER, IID_IBaseFilter,
 										pointer_cast<LPVOID*>(&m_pAudioRenderer));
@@ -703,17 +703,17 @@ bool CMediaViewer::OpenViewer(
 					hr = DirectShowUtil::AppendFilterAndConnect(m_pFilterGraph,
 						m_pAudioRenderer, L"Null Audio Renderer", &pOutputAudio);
 					if (FAILED(hr)) {
-						throw CBonException(hr, TEXT("Null‰¹ºƒŒƒ“ƒ_ƒ‰‚ğÚ‘±‚Å‚«‚Ü‚¹‚ñB"));
+						throw CBonException(hr, TEXT("NulléŸ³å£°ãƒ¬ãƒ³ãƒ€ãƒ©ã‚’æ¥ç¶šã§ãã¾ã›ã‚“ã€‚"));
 					}
 					m_pszAudioRendererName=StdUtil::strdup(TEXT("Null Renderer"));
-					TRACE(TEXT("NullƒŒƒ“ƒ_ƒ‰‚ğÚ‘±\n"));
+					TRACE(TEXT("Nullãƒ¬ãƒ³ãƒ€ãƒ©ã‚’æ¥ç¶š\n"));
 				}
 			}
 		}
 
 		/*
-			ƒfƒtƒHƒ‹ƒg‚ÅMPEG-2 Demultiplexer‚ªƒOƒ‰ƒt‚ÌƒNƒƒbƒN‚É
-			İ’è‚³‚ê‚é‚ç‚µ‚¢‚ªAˆê‰İ’è‚µ‚Ä‚¨‚­
+			ãƒ‡ãƒ•ã‚©ãƒ«ãƒˆã§MPEG-2 DemultiplexerãŒã‚°ãƒ©ãƒ•ã®ã‚¯ãƒ­ãƒƒã‚¯ã«
+			è¨­å®šã•ã‚Œã‚‹ã‚‰ã—ã„ãŒã€ä¸€å¿œè¨­å®šã—ã¦ãŠã
 		*/
 		if (!m_bUseAudioRendererClock) {
 			IMediaFilter *pMediaFilter;
@@ -726,13 +726,13 @@ bool CMediaViewer::OpenViewer(
 						IID_IReferenceClock,pointer_cast<void**>(&pReferenceClock)))) {
 					pMediaFilter->SetSyncSource(pReferenceClock);
 					pReferenceClock->Release();
-					TRACE(TEXT("ƒOƒ‰ƒt‚ÌƒNƒƒbƒN‚ÉMPEG-2 Demultiplexer‚ğ‘I‘ğ\n"));
+					TRACE(TEXT("ã‚°ãƒ©ãƒ•ã®ã‚¯ãƒ­ãƒƒã‚¯ã«MPEG-2 Demultiplexerã‚’é¸æŠ\n"));
 				}
 				pMediaFilter->Release();
 			}
 		}
 
-		// ƒI[ƒiƒEƒBƒ“ƒhƒEİ’è
+		// ã‚ªãƒ¼ãƒŠã‚¦ã‚£ãƒ³ãƒ‰ã‚¦è¨­å®š
 		m_hOwnerWnd = hOwnerHwnd;
 		RECT rc;
 		::GetClientRect(hOwnerHwnd, &rc);
@@ -757,7 +757,7 @@ bool CMediaViewer::OpenViewer(
 
 			Length=::AMGetErrorText(Exception.GetErrorCode(),szText,MAX_ERROR_TEXT_LEN);
 			StdUtil::snprintf(szText+Length,_countof(szText)-Length,
-							  TEXT("\nƒGƒ‰[ƒR[ƒh(HRESULT) 0x%08X"),Exception.GetErrorCode());
+							  TEXT("\nã‚¨ãƒ©ãƒ¼ã‚³ãƒ¼ãƒ‰(HRESULT) 0x%08X"),Exception.GetErrorCode());
 			SetErrorSystemMessage(szText);
 		}
 
@@ -766,7 +766,7 @@ bool CMediaViewer::OpenViewer(
 		SAFE_RELEASE(pOutputAudio);
 		CloseViewer();
 
-		TRACE(TEXT("ƒtƒBƒ‹ƒ^ƒOƒ‰ƒt\’z¸”s : %s\n"), GetLastErrorText());
+		TRACE(TEXT("ãƒ•ã‚£ãƒ«ã‚¿ã‚°ãƒ©ãƒ•æ§‹ç¯‰å¤±æ•— : %s\n"), GetLastErrorText());
 		return false;
 	}
 
@@ -777,7 +777,7 @@ bool CMediaViewer::OpenViewer(
 
 	ClearError();
 
-	TRACE(TEXT("ƒtƒBƒ‹ƒ^ƒOƒ‰ƒt\’z¬Œ÷\n"));
+	TRACE(TEXT("ãƒ•ã‚£ãƒ«ã‚¿ã‚°ãƒ©ãƒ•æ§‹ç¯‰æˆåŠŸ\n"));
 	return true;
 }
 
@@ -792,16 +792,16 @@ void CMediaViewer::CloseViewer()
 	*/
 
 	if (m_pFilterGraph) {
-		Trace(CTracer::TYPE_INFORMATION, TEXT("ƒtƒBƒ‹ƒ^ƒOƒ‰ƒt‚ğ’â~‚µ‚Ä‚¢‚Ü‚·..."));
+		Trace(CTracer::TYPE_INFORMATION, TEXT("ãƒ•ã‚£ãƒ«ã‚¿ã‚°ãƒ©ãƒ•ã‚’åœæ­¢ã—ã¦ã„ã¾ã™..."));
 		m_pFilterGraph->Abort();
 		Stop();
 
 		SendDecoderEvent(EID_FILTER_GRAPH_FINALIZE, m_pFilterGraph);
 	}
 
-	Trace(CTracer::TYPE_INFORMATION, TEXT("COMƒCƒ“ƒXƒ^ƒ“ƒX‚ğ‰ğ•ú‚µ‚Ä‚¢‚Ü‚·..."));
+	Trace(CTracer::TYPE_INFORMATION, TEXT("COMã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚¹ã‚’è§£æ”¾ã—ã¦ã„ã¾ã™..."));
 
-	// COMƒCƒ“ƒXƒ^ƒ“ƒX‚ğŠJ•ú‚·‚é
+	// COMã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚¹ã‚’é–‹æ”¾ã™ã‚‹
 	if (m_pVideoRenderer!=NULL) {
 		m_pVideoRenderer->Finalize();
 	}
@@ -844,7 +844,7 @@ void CMediaViewer::CloseViewer()
 #endif
 
 	if (m_pFilterGraph) {
-		Trace(CTracer::TYPE_INFORMATION, TEXT("ƒtƒBƒ‹ƒ^ƒOƒ‰ƒt‚ğ‰ğ•ú‚µ‚Ä‚¢‚Ü‚·..."));
+		Trace(CTracer::TYPE_INFORMATION, TEXT("ãƒ•ã‚£ãƒ«ã‚¿ã‚°ãƒ©ãƒ•ã‚’è§£æ”¾ã—ã¦ã„ã¾ã™..."));
 		SendDecoderEvent(EID_FILTER_GRAPH_FINALIZED, m_pFilterGraph);
 #ifdef _DEBUG
 		TRACE(TEXT("FilterGraph RefCount = %d\n"),DirectShowUtil::GetRefCount(m_pFilterGraph));
@@ -884,7 +884,7 @@ bool CMediaViewer::Play()
 
 	if(!m_pMediaControl)return false;
 
-	// ƒtƒBƒ‹ƒ^ƒOƒ‰ƒt‚ğÄ¶‚·‚é
+	// ãƒ•ã‚£ãƒ«ã‚¿ã‚°ãƒ©ãƒ•ã‚’å†ç”Ÿã™ã‚‹
 
 	//return m_pMediaControl->Run()==S_OK;
 
@@ -917,7 +917,7 @@ bool CMediaViewer::Stop()
 		//m_pSrcFilter->Reset();
 		m_pSrcFilter->Flush();
 
-	// ƒtƒBƒ‹ƒ^ƒOƒ‰ƒt‚ğ’â~‚·‚é
+	// ãƒ•ã‚£ãƒ«ã‚¿ã‚°ãƒ©ãƒ•ã‚’åœæ­¢ã™ã‚‹
 	return m_pMediaControl->Stop()==S_OK;
 }
 
@@ -1024,7 +1024,7 @@ bool CMediaViewer::Is1SegMode() const
 
 bool CMediaViewer::SetVideoPID(const WORD wPID)
 {
-	// ‰f‘œo—Íƒsƒ“‚ÉPID‚ğƒ}ƒbƒsƒ“ƒO‚·‚é
+	// æ˜ åƒå‡ºåŠ›ãƒ”ãƒ³ã«PIDã‚’ãƒãƒƒãƒ”ãƒ³ã‚°ã™ã‚‹
 
 	CBlockLock Lock(&m_DecoderLock);
 
@@ -1034,7 +1034,7 @@ bool CMediaViewer::SetVideoPID(const WORD wPID)
 	TRACE(TEXT("CMediaViewer::SetVideoPID() %04X <- %04X\n"), wPID, m_wVideoEsPID);
 
 	if (m_pMp2DemuxVideoMap) {
-		// Œ»İ‚ÌPID‚ğƒAƒ“ƒ}ƒbƒv
+		// ç¾åœ¨ã®PIDã‚’ã‚¢ãƒ³ãƒãƒƒãƒ—
 		if (m_wVideoEsPID != PID_INVALID) {
 			ULONG TempPID = m_wVideoEsPID;
 			if (m_pMp2DemuxVideoMap->UnmapPID(1UL, &TempPID) != S_OK)
@@ -1055,7 +1055,7 @@ bool CMediaViewer::SetVideoPID(const WORD wPID)
 
 bool CMediaViewer::SetAudioPID(const WORD wPID, const bool bUseMap)
 {
-	// ‰¹ºo—Íƒsƒ“‚ÉPID‚ğƒ}ƒbƒsƒ“ƒO‚·‚é
+	// éŸ³å£°å‡ºåŠ›ãƒ”ãƒ³ã«PIDã‚’ãƒãƒƒãƒ”ãƒ³ã‚°ã™ã‚‹
 
 	CBlockLock Lock(&m_DecoderLock);
 
@@ -1067,14 +1067,14 @@ bool CMediaViewer::SetAudioPID(const WORD wPID, const bool bUseMap)
 
 	if (bUseMap && wPID != PID_INVALID && m_MapAudioPID != PID_INVALID) {
 		/*
-			bUseMap ‚ª true ‚Ìê‡APID ‚ğ‘‚«Š·‚¦‚Ä‰¹ºƒXƒgƒŠ[ƒ€‚ğ•ÏX‚·‚é
-			IMPEG2PIDMap::MapPID() ‚ğŒÄ‚Ô‚ÆÄ¶‚ªˆêu~‚Ü‚é‚Ì‚ÅA‚»‚ê‚ğ‰ñ”ğ‚·‚é‚½‚ß
+			bUseMap ãŒ true ã®å ´åˆã€PID ã‚’æ›¸ãæ›ãˆã¦éŸ³å£°ã‚¹ãƒˆãƒªãƒ¼ãƒ ã‚’å¤‰æ›´ã™ã‚‹
+			IMPEG2PIDMap::MapPID() ã‚’å‘¼ã¶ã¨å†ç”ŸãŒä¸€ç¬æ­¢ã¾ã‚‹ã®ã§ã€ãã‚Œã‚’å›é¿ã™ã‚‹ãŸã‚
 		*/
 		if (m_pSrcFilter)
 			m_pSrcFilter->MapAudioPID(wPID, m_MapAudioPID);
 	} else {
 		if (m_pMp2DemuxAudioMap) {
-			// Œ»İ‚ÌPID‚ğƒAƒ“ƒ}ƒbƒv
+			// ç¾åœ¨ã®PIDã‚’ã‚¢ãƒ³ãƒãƒƒãƒ—
 			if (m_MapAudioPID != PID_INVALID) {
 				ULONG TempPID = m_MapAudioPID;
 				if (m_pMp2DemuxAudioMap->UnmapPID(1UL, &TempPID) != S_OK)
@@ -1109,11 +1109,11 @@ WORD CMediaViewer::GetAudioPID() const
 
 void CMediaViewer::OnVideoInfo(const CVideoParser::VideoInfo *pVideoInfo, const LPVOID pParam)
 {
-	// ƒrƒfƒIî•ñ‚ÌXV
+	// ãƒ“ãƒ‡ã‚ªæƒ…å ±ã®æ›´æ–°
 	CMediaViewer *pThis=static_cast<CMediaViewer*>(pParam);
 
 	/*if (pThis->m_VideoInfo != *pVideoInfo)*/ {
-		// ƒrƒfƒIî•ñ‚ÌXV
+		// ãƒ“ãƒ‡ã‚ªæƒ…å ±ã®æ›´æ–°
 		CBlockLock Lock(&pThis->m_ResizeLock);
 
 		pThis->m_VideoInfo = *pVideoInfo;
@@ -1126,7 +1126,7 @@ void CMediaViewer::OnVideoInfo(const CVideoParser::VideoInfo *pVideoInfo, const 
 
 bool CMediaViewer::AdjustVideoPosition()
 {
-	// ‰f‘œ‚ÌˆÊ’u‚ğ’²®‚·‚é
+	// æ˜ åƒã®ä½ç½®ã‚’èª¿æ•´ã™ã‚‹
 	if (m_pVideoRenderer && m_wVideoWindowX > 0 && m_wVideoWindowY > 0
 			&& m_VideoInfo.m_OrigWidth > 0 && m_VideoInfo.m_OrigHeight > 0) {
 		long WindowWidth, WindowHeight, DestWidth, DestHeight;
@@ -1134,18 +1134,18 @@ bool CMediaViewer::AdjustVideoPosition()
 		WindowWidth = m_wVideoWindowX;
 		WindowHeight = m_wVideoWindowY;
 		if (m_ViewStretchMode == STRETCH_FIT) {
-			// ƒEƒBƒ“ƒhƒEƒTƒCƒY‚É‡‚í‚¹‚é
+			// ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã‚µã‚¤ã‚ºã«åˆã‚ã›ã‚‹
 			DestWidth = WindowWidth;
 			DestHeight = WindowHeight;
 		} else {
 			int AspectX, AspectY;
 
 			if (m_ForceAspectX > 0 && m_ForceAspectY > 0) {
-				// ƒAƒXƒyƒNƒg”ä‚ªw’è‚³‚ê‚Ä‚¢‚é
+				// ã‚¢ã‚¹ãƒšã‚¯ãƒˆæ¯”ãŒæŒ‡å®šã•ã‚Œã¦ã„ã‚‹
 				AspectX = m_ForceAspectX;
 				AspectY = m_ForceAspectY;
 			} else if (m_VideoInfo.m_AspectRatioX > 0 && m_VideoInfo.m_AspectRatioY > 0) {
-				// ‰f‘œ‚ÌƒAƒXƒyƒNƒg”ä‚ğg—p‚·‚é
+				// æ˜ åƒã®ã‚¢ã‚¹ãƒšã‚¯ãƒˆæ¯”ã‚’ä½¿ç”¨ã™ã‚‹
 				AspectX = m_VideoInfo.m_AspectRatioX;
 				AspectY = m_VideoInfo.m_AspectRatioY;
 				if (m_bIgnoreDisplayExtension
@@ -1155,7 +1155,7 @@ bool CMediaViewer::AdjustVideoPosition()
 					AspectY = AspectY * 3 * m_VideoInfo.m_OrigHeight / m_VideoInfo.m_DisplayHeight;
 				}
 			} else {
-				// ƒAƒXƒyƒNƒg”ä•s–¾
+				// ã‚¢ã‚¹ãƒšã‚¯ãƒˆæ¯”ä¸æ˜
 				if (m_VideoInfo.m_DisplayHeight == 1080) {
 					AspectX = 16;
 					AspectY = 9;
@@ -1182,7 +1182,7 @@ bool CMediaViewer::AdjustVideoPosition()
 		RECT rcSrc,rcDst,rcWindow;
 		CalcSourceRect(&rcSrc);
 #if 0
-		// À•W’l‚ªƒ}ƒCƒiƒX‚É‚È‚é‚Æƒ}ƒ‹ƒ`ƒfƒBƒXƒvƒŒƒC‚Å‚¨‚©‚µ‚­‚È‚é?
+		// åº§æ¨™å€¤ãŒãƒã‚¤ãƒŠã‚¹ã«ãªã‚‹ã¨ãƒãƒ«ãƒãƒ‡ã‚£ã‚¹ãƒ—ãƒ¬ã‚¤ã§ãŠã‹ã—ããªã‚‹?
 		rcDst.left = (WindowWidth - DestWidth) / 2;
 		rcDst.top = (WindowHeight - DestHeight) / 2,
 		rcDst.right = rcDst.left + DestWidth;
@@ -1242,7 +1242,7 @@ bool CMediaViewer::AdjustVideoPosition()
 }
 
 
-// ‰f‘œƒEƒBƒ“ƒhƒE‚ÌƒTƒCƒY‚ğİ’è‚·‚é
+// æ˜ åƒã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã®ã‚µã‚¤ã‚ºã‚’è¨­å®šã™ã‚‹
 bool CMediaViewer::SetViewSize(const int Width, const int Height)
 {
 	CBlockLock Lock(&m_ResizeLock);
@@ -1256,7 +1256,7 @@ bool CMediaViewer::SetViewSize(const int Width, const int Height)
 }
 
 
-// ‰f‘œ‚ÌƒTƒCƒY‚ğæ“¾‚·‚é
+// æ˜ åƒã®ã‚µã‚¤ã‚ºã‚’å–å¾—ã™ã‚‹
 bool CMediaViewer::GetVideoSize(WORD *pwWidth, WORD *pwHeight) const
 {
 	if (m_bIgnoreDisplayExtension)
@@ -1275,7 +1275,7 @@ bool CMediaViewer::GetVideoSize(WORD *pwWidth, WORD *pwHeight) const
 }
 
 
-// ‰f‘œ‚ÌƒAƒXƒyƒNƒg”ä‚ğæ“¾‚·‚é
+// æ˜ åƒã®ã‚¢ã‚¹ãƒšã‚¯ãƒˆæ¯”ã‚’å–å¾—ã™ã‚‹
 bool CMediaViewer::GetVideoAspectRatio(BYTE *pbyAspectRatioX, BYTE *pbyAspectRatioY) const
 {
 	CBlockLock Lock(&m_ResizeLock);
@@ -1291,7 +1291,7 @@ bool CMediaViewer::GetVideoAspectRatio(BYTE *pbyAspectRatioX, BYTE *pbyAspectRat
 }
 
 
-// ‰f‘œ‚ÌƒAƒXƒyƒNƒg”ä‚ğİ’è‚·‚é
+// æ˜ åƒã®ã‚¢ã‚¹ãƒšã‚¯ãƒˆæ¯”ã‚’è¨­å®šã™ã‚‹
 bool CMediaViewer::ForceAspectRatio(int AspectX, int AspectY)
 {
 	m_ForceAspectX=AspectX;
@@ -1300,7 +1300,7 @@ bool CMediaViewer::ForceAspectRatio(int AspectX, int AspectY)
 }
 
 
-// İ’è‚³‚ê‚½ƒAƒXƒyƒNƒg”ä‚ğæ“¾‚·‚é
+// è¨­å®šã•ã‚ŒãŸã‚¢ã‚¹ãƒšã‚¯ãƒˆæ¯”ã‚’å–å¾—ã™ã‚‹
 bool CMediaViewer::GetForceAspectRatio(int *pAspectX, int *pAspectY) const
 {
 	if (pAspectX)
@@ -1311,7 +1311,7 @@ bool CMediaViewer::GetForceAspectRatio(int *pAspectX, int *pAspectY) const
 }
 
 
-// —LŒø‚ÈƒAƒXƒyƒNƒg”ä‚ğæ“¾‚·‚é
+// æœ‰åŠ¹ãªã‚¢ã‚¹ãƒšã‚¯ãƒˆæ¯”ã‚’å–å¾—ã™ã‚‹
 bool CMediaViewer::GetEffectiveAspectRatio(BYTE *pAspectX, BYTE *pAspectY) const
 {
 	if (m_ForceAspectX > 0 && m_ForceAspectY > 0) {
@@ -1557,7 +1557,7 @@ void CMediaViewer::SaveVideoDecoderSettings()
 
 bool CMediaViewer::SetVolume(const float fVolume)
 {
-	// ƒI[ƒfƒBƒIƒ{ƒŠƒ…[ƒ€‚ğdB‚Åİ’è‚·‚é( -100.0(–³‰¹) < fVolume < 0(Å‘å) )
+	// ã‚ªãƒ¼ãƒ‡ã‚£ã‚ªãƒœãƒªãƒ¥ãƒ¼ãƒ ã‚’dBã§è¨­å®šã™ã‚‹( -100.0(ç„¡éŸ³) < fVolume < 0(æœ€å¤§) )
 	IBasicAudio *pBasicAudio;
 	bool fOK=false;
 
@@ -1580,7 +1580,7 @@ bool CMediaViewer::SetVolume(const float fVolume)
 
 BYTE CMediaViewer::GetAudioChannelNum() const
 {
-	// ƒI[ƒfƒBƒI‚Ì“ü—Íƒ`ƒƒƒ“ƒlƒ‹”‚ğæ“¾‚·‚é
+	// ã‚ªãƒ¼ãƒ‡ã‚£ã‚ªã®å…¥åŠ›ãƒãƒ£ãƒ³ãƒãƒ«æ•°ã‚’å–å¾—ã™ã‚‹
 	if (m_pAudioDecoder)
 		return m_pAudioDecoder->GetCurrentChannelNum();
 	return AUDIO_CHANNEL_INVALID;
@@ -1605,7 +1605,7 @@ CAudioDecFilter::DualMonoMode CMediaViewer::GetDualMonoMode() const
 
 bool CMediaViewer::SetStereoMode(CAudioDecFilter::StereoMode Mode)
 {
-	// ƒXƒeƒŒƒIo—Íƒ`ƒƒƒ“ƒlƒ‹‚Ìİ’è
+	// ã‚¹ãƒ†ãƒ¬ã‚ªå‡ºåŠ›ãƒãƒ£ãƒ³ãƒãƒ«ã®è¨­å®š
 	if (m_pAudioDecoder)
 		return m_pAudioDecoder->SetStereoMode(Mode);
 	return false;
@@ -1715,7 +1715,7 @@ bool CMediaViewer::SetAudioStreamType(BYTE StreamType)
 
 bool CMediaViewer::GetVideoDecoderName(LPWSTR pszName, int Length) const
 {
-	// ‘I‘ğ‚³‚ê‚Ä‚¢‚éƒrƒfƒIƒfƒR[ƒ_[–¼‚Ìæ“¾
+	// é¸æŠã•ã‚Œã¦ã„ã‚‹ãƒ“ãƒ‡ã‚ªãƒ‡ã‚³ãƒ¼ãƒ€ãƒ¼åã®å–å¾—
 	if (pszName == NULL || Length < 1)
 		return false;
 
@@ -2031,7 +2031,7 @@ bool CMediaViewer::SetPacketInputWait(DWORD Wait)
 void CMediaViewer::ConnectVideoDecoder(
 	LPCTSTR pszCodecName, const GUID &MediaSubType, LPCTSTR pszDecoderName, IPin **ppOutputPin)
 {
-	Trace(CTracer::TYPE_INFORMATION, TEXT("%sƒfƒR[ƒ_‚ÌÚ‘±’†..."), pszCodecName);
+	Trace(CTracer::TYPE_INFORMATION, TEXT("%sãƒ‡ã‚³ãƒ¼ãƒ€ã®æ¥ç¶šä¸­..."), pszCodecName);
 
 	const bool bDefault = (pszDecoderName == NULL || pszDecoderName[0] == '\0');
 	bool bConnectSuccess = false;
@@ -2062,12 +2062,12 @@ void CMediaViewer::ConnectVideoDecoder(
 	if (!bConnectSuccess) {
 		CDirectShowFilterFinder FilterFinder;
 
-		// ŒŸõ
+		// æ¤œç´¢
 		if (!FilterFinder.FindFilter(&MEDIATYPE_Video, &MediaSubType)) {
 			StdUtil::snprintf(szText1, _countof(szText1),
-							  TEXT("%sƒfƒR[ƒ_‚ªŒ©•t‚©‚è‚Ü‚¹‚ñB"), pszCodecName);
+							  TEXT("%sãƒ‡ã‚³ãƒ¼ãƒ€ãŒè¦‹ä»˜ã‹ã‚Šã¾ã›ã‚“ã€‚"), pszCodecName);
 			StdUtil::snprintf(szText2, _countof(szText2),
-							  TEXT("%sƒfƒR[ƒ_‚ªƒCƒ“ƒXƒg[ƒ‹‚³‚ê‚Ä‚¢‚é‚©Šm”F‚µ‚Ä‚­‚¾‚³‚¢B"), pszCodecName);
+							  TEXT("%sãƒ‡ã‚³ãƒ¼ãƒ€ãŒã‚¤ãƒ³ã‚¹ãƒˆãƒ¼ãƒ«ã•ã‚Œã¦ã„ã‚‹ã‹ç¢ºèªã—ã¦ãã ã•ã„ã€‚"), pszCodecName);
 			throw CBonException(szText1, szText2);
 		}
 
@@ -2095,15 +2095,15 @@ void CMediaViewer::ConnectVideoDecoder(
 		}
 	}
 
-	// ‚Ç‚ê‚©‚ÌƒtƒBƒ‹ƒ^‚ÅÚ‘±‚Å‚«‚½‚©
+	// ã©ã‚Œã‹ã®ãƒ•ã‚£ãƒ«ã‚¿ã§æ¥ç¶šã§ããŸã‹
 	if (bConnectSuccess) {
 		m_pszVideoDecoderName = StdUtil::strdup(szFilter);
 	} else {
 		StdUtil::snprintf(szText1, _countof(szText1),
-						  TEXT("%sƒfƒR[ƒ_ƒtƒBƒ‹ƒ^‚ğƒtƒBƒ‹ƒ^ƒOƒ‰ƒt‚É’Ç‰Á‚Å‚«‚Ü‚¹‚ñB"),
+						  TEXT("%sãƒ‡ã‚³ãƒ¼ãƒ€ãƒ•ã‚£ãƒ«ã‚¿ã‚’ãƒ•ã‚£ãƒ«ã‚¿ã‚°ãƒ©ãƒ•ã«è¿½åŠ ã§ãã¾ã›ã‚“ã€‚"),
 						  pszCodecName);
 		throw CBonException(hr, szText1,
-			TEXT("İ’è‚Å—LŒø‚ÈƒfƒR[ƒ_‚ª‘I‘ğ‚³‚ê‚Ä‚¢‚é‚©Šm”F‚µ‚Ä‚­‚¾‚³‚¢B\n‚Ü‚½AƒŒƒ“ƒ_ƒ‰‚ğ•Ï‚¦‚Ä‚İ‚Ä‚­‚¾‚³‚¢B"));
+			TEXT("è¨­å®šã§æœ‰åŠ¹ãªãƒ‡ã‚³ãƒ¼ãƒ€ãŒé¸æŠã•ã‚Œã¦ã„ã‚‹ã‹ç¢ºèªã—ã¦ãã ã•ã„ã€‚\nã¾ãŸã€ãƒ¬ãƒ³ãƒ€ãƒ©ã‚’å¤‰ãˆã¦ã¿ã¦ãã ã•ã„ã€‚"));
 	}
 }
 
@@ -2111,7 +2111,7 @@ void CMediaViewer::ConnectVideoDecoder(
 bool CMediaViewer::MapVideoPID(WORD PID)
 {
 	if (m_pMp2DemuxVideoMap) {
-		// V‹K‚ÉPID‚ğƒ}ƒbƒv
+		// æ–°è¦ã«PIDã‚’ãƒãƒƒãƒ—
 		if (PID != PID_INVALID) {
 			ULONG TempPID = PID;
 			if (m_pMp2DemuxVideoMap->MapPID(1UL, &TempPID, MEDIA_ELEMENTARY_STREAM) != S_OK)
@@ -2129,7 +2129,7 @@ bool CMediaViewer::MapVideoPID(WORD PID)
 bool CMediaViewer::MapAudioPID(WORD PID)
 {
 	if (m_pMp2DemuxAudioMap) {
-		// V‹K‚ÉPID‚ğƒ}ƒbƒv
+		// æ–°è¦ã«PIDã‚’ãƒãƒƒãƒ—
 		if (PID != PID_INVALID) {
 			ULONG TempPID = PID;
 			if (m_pMp2DemuxAudioMap->MapPID(1UL, &TempPID, MEDIA_ELEMENTARY_STREAM) != S_OK)
@@ -2152,7 +2152,7 @@ void CMediaViewer::ApplyAdjustVideoSampleOptions()
 
 		if (m_b1SegMode) {
 			Flags = CVideoParser::ADJUST_SAMPLE_1SEG;
-			// Microsoft DTV-DVD Video Decoder ‚Å‚Í‰½ŒÌ‚©‰f‘œ‚ªo‚È‚­‚È‚Á‚Ä‚µ‚Ü‚¤‚½‚ß–³Œø‚Æ‚·‚é
+			// Microsoft DTV-DVD Video Decoder ã§ã¯ä½•æ•…ã‹æ˜ åƒãŒå‡ºãªããªã£ã¦ã—ã¾ã†ãŸã‚ç„¡åŠ¹ã¨ã™ã‚‹
 			if (::lstrcmpi(m_pszVideoDecoderName, TEXT("Microsoft DTV-DVD Video Decoder")) != 0) {
 				if (m_bAdjust1SegVideoSampleTime)
 					Flags |= CVideoParser::ADJUST_SAMPLE_TIME;
@@ -2194,7 +2194,7 @@ void CMediaViewer::OnSpdifPassthroughError(HRESULT hr)
 
 HRESULT CMediaViewer::AddToRot(IUnknown *pUnkGraph, DWORD *pdwRegister) const
 {
-	// ƒfƒoƒbƒO—p
+	// ãƒ‡ãƒãƒƒã‚°ç”¨
 	IMoniker * pMoniker;
 	IRunningObjectTable *pROT;
 	if(FAILED(::GetRunningObjectTable(0, &pROT)))return E_FAIL;
@@ -2217,7 +2217,7 @@ HRESULT CMediaViewer::AddToRot(IUnknown *pUnkGraph, DWORD *pdwRegister) const
 
 void CMediaViewer::RemoveFromRot(const DWORD dwRegister) const
 {
-	// ƒfƒoƒbƒO—p
+	// ãƒ‡ãƒãƒƒã‚°ç”¨
 	IRunningObjectTable *pROT;
 
 	if(SUCCEEDED(::GetRunningObjectTable(0, &pROT))){

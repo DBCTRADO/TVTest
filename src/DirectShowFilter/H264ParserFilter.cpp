@@ -5,19 +5,19 @@
 #include "../Common/DebugDef.h"
 
 /*
-	ƒ^ƒCƒ€ƒXƒ^ƒ“ƒv’²®‚Ìˆ—“à—e‚Íƒƒ“ƒZƒOd—l‘O’ñ‚È‚Ì‚ÅA
-	‚»‚êˆÈŠO‚Ìê‡‚Í–â‘è‚ªo‚é‚Æv‚¢‚Ü‚·B
+	ã‚¿ã‚¤ãƒ ã‚¹ã‚¿ãƒ³ãƒ—èª¿æ•´ã®å‡¦ç†å†…å®¹ã¯ãƒ¯ãƒ³ã‚»ã‚°ä»•æ§˜å‰æãªã®ã§ã€
+	ãã‚Œä»¥å¤–ã®å ´åˆã¯å•é¡ŒãŒå‡ºã‚‹ã¨æ€ã„ã¾ã™ã€‚
 */
 
-// REFERENCE_TIME‚Ìˆê•b
+// REFERENCE_TIMEã®ä¸€ç§’
 #define REFERENCE_TIME_SECOND 10000000LL
 
-// ƒtƒŒ[ƒ€ƒŒ[ƒg
+// ãƒ•ãƒ¬ãƒ¼ãƒ ãƒ¬ãƒ¼ãƒˆ
 #define FRAME_RATE_NUM			30000
 #define FRAME_RATE_FACTOR		1001
 #define FRAME_RATE_1SEG_NUM		15000
 
-// ƒoƒbƒtƒ@ƒTƒCƒY
+// ãƒãƒƒãƒ•ã‚¡ã‚µã‚¤ã‚º
 #define SAMPLE_BUFFER_SIZE	0x800000L	// 8MiB
 
 #define INITIAL_BITRATE		32000000
@@ -27,7 +27,7 @@
 #define MAX_SAMPLE_TIME_DIFF	(REFERENCE_TIME_SECOND * 3LL)
 #define MAX_SAMPLE_TIME_JITTER	(REFERENCE_TIME_SECOND / 4LL)
 
-// ƒtƒŒ[ƒ€‚Ì•\¦ŠÔ‚ğZo
+// ãƒ•ãƒ¬ãƒ¼ãƒ ã®è¡¨ç¤ºæ™‚é–“ã‚’ç®—å‡º
 inline REFERENCE_TIME CalcFrameTime(LONGLONG Frames, bool b1Seg = false) {
 	return Frames * REFERENCE_TIME_SECOND * FRAME_RATE_FACTOR / (b1Seg ? FRAME_RATE_1SEG_NUM : FRAME_RATE_NUM);
 }
@@ -75,7 +75,7 @@ CH264ParserFilter::~CH264ParserFilter(void)
 
 IBaseFilter* WINAPI CH264ParserFilter::CreateInstance(LPUNKNOWN pUnk, HRESULT *phr)
 {
-	// ƒCƒ“ƒXƒ^ƒ“ƒX‚ğì¬‚·‚é
+	// ã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚¹ã‚’ä½œæˆã™ã‚‹
 	CH264ParserFilter *pNewFilter = new CH264ParserFilter(pUnk, phr);
 	if (FAILED(*phr)) {
 		delete pNewFilter;
@@ -128,20 +128,20 @@ HRESULT CH264ParserFilter::DecideBufferSize(IMemAllocator * pAllocator, ALLOCATO
 	CheckPointer(pAllocator, E_POINTER);
 	CheckPointer(pprop, E_POINTER);
 
-	// ƒoƒbƒtƒ@‚Í1ŒÂ‚ ‚ê‚Î‚æ‚¢
+	// ãƒãƒƒãƒ•ã‚¡ã¯1å€‹ã‚ã‚Œã°ã‚ˆã„
 	if (pprop->cBuffers < 1)
 		pprop->cBuffers = 1;
 
 	if (pprop->cbBuffer < SAMPLE_BUFFER_SIZE)
 		pprop->cbBuffer = SAMPLE_BUFFER_SIZE;
 
-	// ƒAƒƒP[ƒ^ƒvƒƒpƒeƒB‚ğİ’è‚µ‚È‚¨‚·
+	// ã‚¢ãƒ­ã‚±ãƒ¼ã‚¿ãƒ—ãƒ­ãƒ‘ãƒ†ã‚£ã‚’è¨­å®šã—ãªãŠã™
 	ALLOCATOR_PROPERTIES Actual;
 	HRESULT hr = pAllocator->SetProperties(pprop, &Actual);
 	if (FAILED(hr))
 		return hr;
 
-	// —v‹‚ğó‚¯“ü‚ê‚ç‚ê‚½‚©”»’è
+	// è¦æ±‚ã‚’å—ã‘å…¥ã‚Œã‚‰ã‚ŒãŸã‹åˆ¤å®š
 	if (Actual.cBuffers < pprop->cBuffers
 			|| Actual.cbBuffer < pprop->cbBuffer)
 		return E_FAIL;
@@ -198,14 +198,14 @@ HRESULT CH264ParserFilter::BeginFlush()
 
 HRESULT CH264ParserFilter::Transform(IMediaSample *pIn, IMediaSample *pOut)
 {
-	// “ü—Íƒf[ƒ^ƒ|ƒCƒ“ƒ^‚ğæ“¾‚·‚é
+	// å…¥åŠ›ãƒ‡ãƒ¼ã‚¿ãƒã‚¤ãƒ³ã‚¿ã‚’å–å¾—ã™ã‚‹
 	BYTE *pInData = NULL;
 	HRESULT hr = pIn->GetPointer(&pInData);
 	if (FAILED(hr))
 		return hr;
 	LONG InDataSize = pIn->GetActualDataLength();
 
-	// o—Íƒf[ƒ^ƒ|ƒCƒ“ƒ^‚ğæ“¾‚·‚é
+	// å‡ºåŠ›ãƒ‡ãƒ¼ã‚¿ãƒã‚¤ãƒ³ã‚¿ã‚’å–å¾—ã™ã‚‹
 	BYTE *pOutData = NULL;
 	hr = pOut->GetPointer(&pOutData);
 	if (FAILED(hr))
@@ -218,7 +218,7 @@ HRESULT CH264ParserFilter::Transform(IMediaSample *pIn, IMediaSample *pOut)
 		CAutoLock Lock(&m_ParserLock);
 
 		if (m_bAdjustTime) {
-			// ƒ^ƒCƒ€ƒXƒ^ƒ“ƒvæ“¾
+			// ã‚¿ã‚¤ãƒ ã‚¹ã‚¿ãƒ³ãƒ—å–å¾—
 			REFERENCE_TIME StartTime, EndTime;
 			hr = pIn->GetTime(&StartTime, &EndTime);
 			if (hr == S_OK || hr == VFW_S_NO_STOP_TIME) {
@@ -425,7 +425,7 @@ void CH264ParserFilter::OnAccessUnit(const CH264Parser *pParser, const CH264Acce
 	}
 
 	if (m_bAdjustTime) {
-		// ƒƒ“ƒZƒO‚Í1ƒtƒŒ[ƒ€’PˆÊ‚Åƒ^ƒCƒ€ƒXƒ^ƒ“ƒv‚ğİ’è‚µ‚È‚¢‚Æ‚©‚­‚Â‚­
+		// ãƒ¯ãƒ³ã‚»ã‚°ã¯1ãƒ•ãƒ¬ãƒ¼ãƒ å˜ä½ã§ã‚¿ã‚¤ãƒ ã‚¹ã‚¿ãƒ³ãƒ—ã‚’è¨­å®šã—ãªã„ã¨ã‹ãã¤ã
 		CSampleData *pSampleData = m_SampleDataPool.Get(*pAccessUnit);
 
 		if (pSampleData != NULL) {
@@ -463,20 +463,20 @@ void CH264ParserFilter::OnAccessUnit(const CH264Parser *pParser, const CH264Acce
 
 	CH264AccessUnit::TimingInfo TimingInfo;
 	if (pAccessUnit->GetTimingInfo(&TimingInfo)) {
-		// ÀÛ‚ÌƒtƒŒ[ƒ€ƒŒ[ƒg‚Å‚Í‚È‚¢
+		// å®Ÿéš›ã®ãƒ•ãƒ¬ãƒ¼ãƒ ãƒ¬ãƒ¼ãƒˆã§ã¯ãªã„
 		Info.m_FrameRate.Num = TimingInfo.TimeScale;
 		Info.m_FrameRate.Denom = TimingInfo.NumUnitsInTick;
 	}
 
 	if (Info != m_VideoInfo) {
-		// ‰f‘œ‚ÌƒTƒCƒY‹y‚ÑƒtƒŒ[ƒ€ƒŒ[ƒg‚ª•Ï‚í‚Á‚½
+		// æ˜ åƒã®ã‚µã‚¤ã‚ºåŠã³ãƒ•ãƒ¬ãƒ¼ãƒ ãƒ¬ãƒ¼ãƒˆãŒå¤‰ã‚ã£ãŸ
 		m_VideoInfo = Info;
 
 		TRACE(TEXT("H.264 access unit %d x %d [SAR %d:%d (DAR %d:%d)] %lu/%lu\n"),
 			  OrigWidth, OrigHeight, SarX, SarY, AspectX, AspectY,
 			  Info.m_FrameRate.Num, Info.m_FrameRate.Denom);
 
-		// ’Ê’m
+		// é€šçŸ¥
 		NotifyVideoInfo();
 	}
 }

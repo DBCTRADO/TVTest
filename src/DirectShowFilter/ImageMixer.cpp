@@ -112,7 +112,7 @@ bool CImageMixer_VMR::SetText(LPCTSTR pszText,int x,int y,HFONT hfont,COLORREF C
 		return false;
 	::SelectObject(m_hdc,hbm);
 #if 0
-	// ‚±‚ê‚¾‚Æ‚È‚º‚©EVR‚Å“§‰ß‚³‚ê‚È‚¢
+	// ã“ã‚Œã ã¨ãªãœã‹EVRã§é€éã•ã‚Œãªã„
 	//crTransColor=Color^0x00FFFFFF;
 #else
 	if (GetRValue(Color)<8 && GetGValue(Color)<8 && GetBValue(Color)<8)

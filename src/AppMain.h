@@ -324,7 +324,7 @@ private:
 	static HICON m_hicoApp;
 	static HICON m_hicoAppSmall;
 
-	// ÉRÉsÅ[ã÷é~
+	// „Ç≥„Éî„ÉºÁ¶ÅÊ≠¢
 	CAppMain(const CAppMain &) /* = delete */;
 	CAppMain &operator=(const CAppMain &) /* = delete */;
 

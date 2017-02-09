@@ -324,7 +324,7 @@ namespace TVTest
 			int Command=CM_FAVORITECHANNEL_FIRST;
 			SetFolderMenu(hmenu,0,&Command,&m_RootFolder);
 		} else {
-			::InsertMenu(hmenu,0,MF_BYPOSITION | MF_STRING | MF_GRAYED,0,TEXT("‚È‚µ"));
+			::InsertMenu(hmenu,0,MF_BYPOSITION | MF_STRING | MF_GRAYED,0,TEXT("ãªã—"));
 		}
 
 		return true;
@@ -842,7 +842,7 @@ namespace TVTest
 		} else {
 			m_LastCommand=Command;
 
-			::AppendMenu(hmenu,MF_STRING | MF_GRAYED,0,TEXT("‚È‚µ"));
+			::AppendMenu(hmenu,MF_STRING | MF_GRAYED,0,TEXT("ãªã—"));
 			::AppendMenu(hmenu,MF_SEPARATOR,0,nullptr);
 			::LoadString(hinstRes,IDS_MENU_ADDTOFAVORITES,szText,lengthof(szText));
 			::AppendMenu(hmenu,MF_STRING | MF_ENABLED,CM_ADDTOFAVORITES,szText);
@@ -1541,10 +1541,10 @@ namespace TVTest
 						if (pItem==nullptr)
 							break;
 						HMENU hmenu=::CreatePopupMenu();
-						::AppendMenu(hmenu,MF_STRING | MF_ENABLED,IDC_FAVORITES_DELETE,TEXT("íœ(&D)"));
-						::AppendMenu(hmenu,MF_STRING | MF_ENABLED,IDC_FAVORITES_RENAME,TEXT("–¼‘O‚Ì•ÏX(&R)"));
+						::AppendMenu(hmenu,MF_STRING | MF_ENABLED,IDC_FAVORITES_DELETE,TEXT("å‰Šé™¤(&D)"));
+						::AppendMenu(hmenu,MF_STRING | MF_ENABLED,IDC_FAVORITES_RENAME,TEXT("åå‰ã®å¤‰æ›´(&R)"));
 						if (pItem->GetType()==CFavoriteItem::ITEM_CHANNEL)
-							::AppendMenu(hmenu,MF_STRING | MF_ENABLED,IDC_FAVORITES_PROPERTIES,TEXT("ƒvƒƒpƒeƒB(&P)..."));
+							::AppendMenu(hmenu,MF_STRING | MF_ENABLED,IDC_FAVORITES_PROPERTIES,TEXT("ãƒ—ãƒ­ãƒ‘ãƒ†ã‚£(&P)..."));
 						int Result=::TrackPopupMenu(hmenu,TPM_RIGHTBUTTON | TPM_RETURNCMD,pt.x,pt.y,0,hDlg,nullptr);
 						::DestroyMenu(hmenu);
 						switch (Result) {
@@ -1601,7 +1601,7 @@ namespace TVTest
 					HTREEITEM hSelItem=TreeView_GetSelection(hwndTree);
 
 					CFavoriteFolder *pNewFolder=new CFavoriteFolder;
-					pNewFolder->SetName(TEXT("V‹KƒtƒHƒ‹ƒ_"));
+					pNewFolder->SetName(TEXT("æ–°è¦ãƒ•ã‚©ãƒ«ãƒ€"));
 
 					TVINSERTSTRUCT tvis;
 					if (hSelItem==nullptr) {
@@ -1631,7 +1631,7 @@ namespace TVTest
 				{
 					HWND hwndTree=::GetDlgItem(hDlg,IDC_FAVORITES_FOLDERTREE);
 
-					// TreeView‚ÌEdit‚©‚ç‚àIDOK‚Æ“¯‚¶ID‚Å’Ê’m‚ª‘—‚ç‚ê‚Ä‚­‚é‚Æ‚¢‚¤ã©
+					// TreeViewã®Editã‹ã‚‰ã‚‚IDOKã¨åŒã˜IDã§é€šçŸ¥ãŒé€ã‚‰ã‚Œã¦ãã‚‹ã¨ã„ã†ç½ 
 					HWND hwndEdit=TreeView_GetEditControl(hwndTree);
 					if (hwndEdit!=nullptr && reinterpret_cast<HWND>(lParam)==hwndEdit)
 						break;

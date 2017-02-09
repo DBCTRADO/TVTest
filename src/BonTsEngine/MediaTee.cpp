@@ -1,4 +1,4 @@
-// MediaTee.cpp: CMediaTee ƒNƒ‰ƒX‚ÌƒCƒ“ƒvƒŠƒƒ“ƒe[ƒVƒ‡ƒ“
+// MediaTee.cpp: CMediaTee ã‚¯ãƒ©ã‚¹ã®ã‚¤ãƒ³ãƒ—ãƒªãƒ¡ãƒ³ãƒ†ãƒ¼ã‚·ãƒ§ãƒ³
 //
 //////////////////////////////////////////////////////////////////////
 
@@ -7,7 +7,7 @@
 #include "../Common/DebugDef.h"
 
 //////////////////////////////////////////////////////////////////////
-// \’z/Á–Å
+// æ§‹ç¯‰/æ¶ˆæ»…
 //////////////////////////////////////////////////////////////////////
 
 CMediaTee::CMediaTee(IEventHandler *pEventHandler, const DWORD dwOutputNum)
@@ -28,7 +28,7 @@ const bool CMediaTee::InputMedia(CMediaData *pMediaData, const DWORD dwInputInde
 		return false;
 	*/
 
-	// ‰ºˆÊƒfƒR[ƒ_‚Éƒf[ƒ^‚ğ“n‚·
+	// ä¸‹ä½ãƒ‡ã‚³ãƒ¼ãƒ€ã«ãƒ‡ãƒ¼ã‚¿ã‚’æ¸¡ã™
 	for (DWORD dwOutIndex = 0UL ; dwOutIndex < GetOutputNum() ; dwOutIndex++) {
 		OutputMedia(pMediaData, dwOutIndex);
 	}

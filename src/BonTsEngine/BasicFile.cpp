@@ -1,4 +1,4 @@
-// BasicFile.cpp: CBasicFile ƒNƒ‰ƒX‚ÌƒCƒ“ƒvƒŠƒƒ“ƒe[ƒVƒ‡ƒ“
+// BasicFile.cpp: CBasicFile ã‚¯ãƒ©ã‚¹ã®ã‚¤ãƒ³ãƒ—ãƒªãƒ¡ãƒ³ãƒ†ãƒ¼ã‚·ãƒ§ãƒ³
 //
 //////////////////////////////////////////////////////////////////////
 
@@ -12,7 +12,7 @@ static const LARGE_INTEGER liZero = {0, 0};
 
 
 //////////////////////////////////////////////////////////////////////
-// \’z/Á–Å
+// æ§‹ç¯‰/æ¶ˆæ»…
 //////////////////////////////////////////////////////////////////////
 
 CBasicFile::CBasicFile()
@@ -36,12 +36,12 @@ CBasicFile::~CBasicFile()
 bool CBasicFile::Open(LPCTSTR pszName, const UINT Flags)
 {
 	if (m_hFile != INVALID_HANDLE_VALUE) {
-		m_LastError = ERROR_BUSY;	// u—v‹‚µ‚½ƒŠƒ\[ƒX‚Íg—p’†‚Å‚·Bv
+		m_LastError = ERROR_BUSY;	// ã€Œè¦æ±‚ã—ãŸãƒªã‚½ãƒ¼ã‚¹ã¯ä½¿ç”¨ä¸­ã§ã™ã€‚ã€
 		return false;
 	}
 
 	if (pszName == nullptr) {
-		m_LastError = ERROR_INVALID_PARAMETER;	// uƒpƒ‰ƒ[ƒ^‚ª³‚µ‚­‚ ‚è‚Ü‚¹‚ñBv
+		m_LastError = ERROR_INVALID_PARAMETER;	// ã€Œãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿ãŒæ­£ã—ãã‚ã‚Šã¾ã›ã‚“ã€‚ã€
 		return false;
 	}
 
@@ -73,7 +73,7 @@ bool CBasicFile::Open(LPCTSTR pszName, const UINT Flags)
 	if (Flags & OPEN_RANDOMACCESS)
 		Attributes |= FILE_FLAG_RANDOM_ACCESS;
 
-	// ’·‚¢ƒpƒX‘Î‰
+	// é•·ã„ãƒ‘ã‚¹å¯¾å¿œ
 	LPTSTR pszPath = nullptr;
 	const int PathLength = ::lstrlen(pszName);
 	if (PathLength >= MAX_PATH && ::StrCmpN(pszName, TEXT("\\\\?"), 3) != 0) {
@@ -88,7 +88,7 @@ bool CBasicFile::Open(LPCTSTR pszName, const UINT Flags)
 		}
 	}
 
-	// ƒtƒ@ƒCƒ‹ƒI[ƒvƒ“
+	// ãƒ•ã‚¡ã‚¤ãƒ«ã‚ªãƒ¼ãƒ—ãƒ³
 	TRACE(TEXT("CBasicFile::Open() : Open file \"%s\"\n"), pszPath ? pszPath : pszName);
 	m_hFile = ::CreateFile(pszPath ? pszPath : pszName,
 						   Access, Share, nullptr, Create, Attributes, nullptr);
@@ -99,7 +99,7 @@ bool CBasicFile::Open(LPCTSTR pszName, const UINT Flags)
 	}
 
 #if _WIN32_WINNT >= 0x0600
-	// I/O—Dæ“x‚Ìİ’è
+	// I/Oå„ªå…ˆåº¦ã®è¨­å®š
 	if (Flags & (OPEN_PRIORITY_LOW | OPEN_PRIORITY_IDLE)) {
 		alignas(8) FILE_IO_PRIORITY_HINT_INFO PriorityHint;
 		PriorityHint.PriorityHint = (Flags & OPEN_PRIORITY_IDLE) ? IoPriorityHintVeryLow : IoPriorityHintLow;
@@ -109,12 +109,12 @@ bool CBasicFile::Open(LPCTSTR pszName, const UINT Flags)
 			::GetProcAddress(::GetModuleHandle(TEXT("kernel32.dll")), "SetFileInformationByHandle"));
 		if (pSetFileInformationByHandle) {
 			if (!pSetFileInformationByHandle(m_hFile, FileIoPriorityHintInfo, &PriorityHint, sizeof(PriorityHint))) {
-				TRACE(TEXT("ƒtƒ@ƒCƒ‹I/O—Dæ“x‚Ìİ’è¸”s (Error %#x)\n"), ::GetLastError());
+				TRACE(TEXT("ãƒ•ã‚¡ã‚¤ãƒ«I/Oå„ªå…ˆåº¦ã®è¨­å®šå¤±æ•— (Error %#x)\n"), ::GetLastError());
 			}
 		}
 #else
 		if (!::SetFileInformationByHandle(m_hFile, FileIoPriorityHintInfo, &PriorityHint, sizeof(PriorityHint))) {
-			TRACE(TEXT("ƒtƒ@ƒCƒ‹I/O—Dæ“x‚Ìİ’è¸”s (Error %#x)\n"), ::GetLastError());
+			TRACE(TEXT("ãƒ•ã‚¡ã‚¤ãƒ«I/Oå„ªå…ˆåº¦ã®è¨­å®šå¤±æ•— (Error %#x)\n"), ::GetLastError());
 		}
 #endif
 	}
@@ -133,7 +133,7 @@ bool CBasicFile::Open(LPCTSTR pszName, const UINT Flags)
 
 bool CBasicFile::Close()
 {
-	// ƒtƒ@ƒCƒ‹ƒNƒ[ƒY
+	// ãƒ•ã‚¡ã‚¤ãƒ«ã‚¯ãƒ­ãƒ¼ã‚º
 
 	m_LastError = ERROR_SUCCESS;
 
@@ -173,7 +173,7 @@ DWORD CBasicFile::Read(void *pBuff, const DWORD Size)
 		return 0;
 	}
 
-	// ƒtƒ@ƒCƒ‹“Ç‚İ‚İ
+	// ãƒ•ã‚¡ã‚¤ãƒ«èª­ã¿è¾¼ã¿
 	DWORD Read = 0;
 
 	if (!::ReadFile(m_hFile, pBuff, Size, &Read, nullptr)) {
@@ -206,14 +206,14 @@ DWORD CBasicFile::Write(const void *pBuff, const DWORD Size)
 				&& ::GetFileSizeEx(m_hFile, &FileSize)
 				&& CurPos.QuadPart + (LONGLONG)Size > FileSize.QuadPart) {
 			LONGLONG ExtendSize = ((ULONGLONG)Size + m_PreAllocationUnit - 1) / m_PreAllocationUnit * m_PreAllocationUnit;
-			TRACE(TEXT("ƒtƒ@ƒCƒ‹ƒTƒCƒY‚ğL’·‚µ‚Ü‚·: %lld + %lld bytes (%s)\n"),
+			TRACE(TEXT("ãƒ•ã‚¡ã‚¤ãƒ«ã‚µã‚¤ã‚ºã‚’ä¼¸é•·ã—ã¾ã™: %lld + %lld bytes (%s)\n"),
 				  FileSize.QuadPart, ExtendSize, m_pszFileName);
 			FileSize.QuadPart += ExtendSize;
 			if (::SetFilePointerEx(m_hFile, FileSize, nullptr, FILE_BEGIN)) {
 				if (::SetEndOfFile(m_hFile)) {
 					m_AllocatedSize = FileSize.QuadPart;
 				} else {
-					TRACE(TEXT("ƒtƒ@ƒCƒ‹ƒTƒCƒY‚ğL’·‚Å‚«‚Ü‚¹‚ñB(Error %#x)\n"),::GetLastError());
+					TRACE(TEXT("ãƒ•ã‚¡ã‚¤ãƒ«ã‚µã‚¤ã‚ºã‚’ä¼¸é•·ã§ãã¾ã›ã‚“ã€‚(Error %#x)\n"),::GetLastError());
 					m_bAllocationFailed = true;
 				}
 				::SetFilePointerEx(m_hFile, CurPos, nullptr, FILE_BEGIN);
@@ -221,7 +221,7 @@ DWORD CBasicFile::Write(const void *pBuff, const DWORD Size)
 		}
 	}
 
-	// ƒtƒ@ƒCƒ‹‘‚«o‚µ
+	// ãƒ•ã‚¡ã‚¤ãƒ«æ›¸ãå‡ºã—
 	DWORD Written = 0;
 
 	if (!::WriteFile(m_hFile, pBuff, Size, &Written, nullptr)) {
@@ -260,7 +260,7 @@ ULONGLONG CBasicFile::GetSize()
 		return 0;
 	}
 
-	// ƒtƒ@ƒCƒ‹ƒTƒCƒYæ“¾
+	// ãƒ•ã‚¡ã‚¤ãƒ«ã‚µã‚¤ã‚ºå–å¾—
 	LARGE_INTEGER FileSize;
 
 	if (!::GetFileSizeEx(m_hFile, &FileSize)) {
@@ -281,7 +281,7 @@ ULONGLONG CBasicFile::GetPos()
 		return 0;
 	}
 
-	// ƒ|ƒWƒVƒ‡ƒ“æ“¾
+	// ãƒã‚¸ã‚·ãƒ§ãƒ³å–å¾—
 	LARGE_INTEGER Pos;
 
 	if (!::SetFilePointerEx(m_hFile, liZero, &Pos, FILE_CURRENT)) {
@@ -302,7 +302,7 @@ bool CBasicFile::SetPos(const ULONGLONG Pos)
 		return false;
 	}
 
-	// ƒtƒ@ƒCƒ‹ƒV[ƒN
+	// ãƒ•ã‚¡ã‚¤ãƒ«ã‚·ãƒ¼ã‚¯
 	LARGE_INTEGER DistanceToMove;
 	DistanceToMove.QuadPart = Pos;
 	if (!::SetFilePointerEx(m_hFile, DistanceToMove, nullptr, FILE_BEGIN)) {

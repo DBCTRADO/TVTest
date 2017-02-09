@@ -5,7 +5,7 @@
 #include "BonTsEngine/EventManager.h"
 
 
-// EpgDataCap_BonのEPGデータを読み込むクラス
+// EpgDataCap_Bon縺ｮEPG繝�繝ｼ繧ｿ繧定ｪｭ縺ｿ霎ｼ繧繧ｯ繝ｩ繧ｹ
 class CEpgDataLoader
 {
 public:

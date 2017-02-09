@@ -1,4 +1,4 @@
-// MediaDecoder.cpp: CMediaDecoder ƒNƒ‰ƒX‚ÌƒCƒ“ƒvƒŠƒƒ“ƒe[ƒVƒ‡ƒ“
+// MediaDecoder.cpp: CMediaDecoder ã‚¯ãƒ©ã‚¹ã®ã‚¤ãƒ³ãƒ—ãƒªãƒ¡ãƒ³ãƒ†ãƒ¼ã‚·ãƒ§ãƒ³
 //
 //////////////////////////////////////////////////////////////////////
 
@@ -8,7 +8,7 @@
 
 
 //////////////////////////////////////////////////////////////////////
-// CMediaDecoder \’z/Á–Å
+// CMediaDecoder æ§‹ç¯‰/æ¶ˆæ»…
 //////////////////////////////////////////////////////////////////////
 
 CMediaDecoder::CMediaDecoder(IEventHandler *pEventHandler, const DWORD dwInputNum, const DWORD dwOutputNum)
@@ -16,7 +16,7 @@ CMediaDecoder::CMediaDecoder(IEventHandler *pEventHandler, const DWORD dwInputNu
 	, m_dwInputNum(dwInputNum)
 	, m_dwOutputNum(dwOutputNum)
 {
-	// o—ÍƒtƒBƒ‹ƒ^”z—ñ‚ğƒNƒŠƒA‚·‚é
+	// å‡ºåŠ›ãƒ•ã‚£ãƒ«ã‚¿é…åˆ—ã‚’ã‚¯ãƒªã‚¢ã™ã‚‹
 	::ZeroMemory(m_aOutputDecoder, sizeof(m_aOutputDecoder));
 }
 
@@ -47,13 +47,13 @@ void CMediaDecoder::ResetGraph()
 
 DWORD CMediaDecoder::GetInputNum() const
 {
-	// “ü—Í”‚ğ•Ô‚·
+	// å…¥åŠ›æ•°ã‚’è¿”ã™
 	return m_dwInputNum;
 }
 
 DWORD CMediaDecoder::GetOutputNum() const
 {
-	// o—Í”‚ğ•Ô‚·
+	// å‡ºåŠ›æ•°ã‚’è¿”ã™
 	return m_dwOutputNum;
 }
 
@@ -64,7 +64,7 @@ bool CMediaDecoder::SetOutputDecoder(CMediaDecoder *pDecoder, const DWORD dwOutp
 	if (dwOutputIndex >= m_dwOutputNum)
 		return false;
 
-	// o—ÍƒtƒBƒ‹ƒ^‚ğƒZƒbƒg‚·‚é
+	// å‡ºåŠ›ãƒ•ã‚£ãƒ«ã‚¿ã‚’ã‚»ãƒƒãƒˆã™ã‚‹
 	m_aOutputDecoder[dwOutputIndex].pDecoder = pDecoder;
 	m_aOutputDecoder[dwOutputIndex].dwInputIndex = dwInputIndex;
 	return true;
@@ -106,11 +106,11 @@ void CMediaDecoder::SetEventHandler(IEventHandler *pEventHandler)
 
 bool CMediaDecoder::OutputMedia(CMediaData *pMediaData, const DWORD dwOutptIndex)
 {
-	// o—Íˆ—
+	// å‡ºåŠ›å‡¦ç†
 	if (dwOutptIndex >= m_dwOutputNum)
 		return false;
 
-	// Ÿ‚ÌƒtƒBƒ‹ƒ^‚Éƒf[ƒ^‚ğ“n‚·
+	// æ¬¡ã®ãƒ•ã‚£ãƒ«ã‚¿ã«ãƒ‡ãƒ¼ã‚¿ã‚’æ¸¡ã™
 	if (m_aOutputDecoder[dwOutptIndex].pDecoder) {
 		return m_aOutputDecoder[dwOutptIndex].pDecoder->InputMedia(pMediaData, m_aOutputDecoder[dwOutptIndex].dwInputIndex);
 	}
@@ -119,7 +119,7 @@ bool CMediaDecoder::OutputMedia(CMediaData *pMediaData, const DWORD dwOutptIndex
 
 void CMediaDecoder::ResetDownstreamDecoder()
 {
-	// Ÿ‚ÌƒtƒBƒ‹ƒ^‚ğƒŠƒZƒbƒg‚·‚é
+	// æ¬¡ã®ãƒ•ã‚£ãƒ«ã‚¿ã‚’ãƒªã‚»ãƒƒãƒˆã™ã‚‹
 	for (DWORD dwOutputIndex = 0UL ; dwOutputIndex < m_dwOutputNum ; dwOutputIndex++) {
 		if (m_aOutputDecoder[dwOutputIndex].pDecoder)
 			m_aOutputDecoder[dwOutputIndex].pDecoder->ResetGraph();
@@ -128,7 +128,7 @@ void CMediaDecoder::ResetDownstreamDecoder()
 
 DWORD CMediaDecoder::SendDecoderEvent(const DWORD dwEventID, PVOID pParam)
 {
-	// ƒCƒxƒ“ƒg‚ğ’Ê’m‚·‚é
+	// ã‚¤ãƒ™ãƒ³ãƒˆã‚’é€šçŸ¥ã™ã‚‹
 	if (m_pEventHandler==NULL)
 		return 0;
 	return m_pEventHandler->OnDecoderEvent(this, dwEventID, pParam);

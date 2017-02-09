@@ -1,4 +1,4 @@
-// TsEncode.cpp: TSƒGƒ“ƒR[ƒhƒNƒ‰ƒX‚ÌƒCƒ“ƒvƒŠƒƒ“ƒe[ƒVƒ‡ƒ“
+// TsEncode.cpp: TSã‚¨ãƒ³ã‚³ãƒ¼ãƒ‰ã‚¯ãƒ©ã‚¹ã®ã‚¤ãƒ³ãƒ—ãƒªãƒ¡ãƒ³ãƒ†ãƒ¼ã‚·ãƒ§ãƒ³
 //
 //////////////////////////////////////////////////////////////////////
 
@@ -26,12 +26,12 @@ inline void CopyChar(LPTSTR pDst,LPCTSTR pSrc,int Index)
 
 
 //////////////////////////////////////////////////////////////////////
-// CAribString ƒNƒ‰ƒX‚Ì\’z/Á–Å
+// CAribString ã‚¯ãƒ©ã‚¹ã®æ§‹ç¯‰/æ¶ˆæ»…
 //////////////////////////////////////////////////////////////////////
 
 static const bool abCharSizeTable[] =
 {
-	false,	// CODE_UNKNOWN					•s–¾‚ÈƒOƒ‰ƒtƒBƒbƒNƒZƒbƒg(”ñ‘Î‰)
+	false,	// CODE_UNKNOWN					ä¸æ˜ãªã‚°ãƒ©ãƒ•ã‚£ãƒƒã‚¯ã‚»ãƒƒãƒˆ(éå¯¾å¿œ)
 	true,	// CODE_KANJI					Kanji
 	false,	// CODE_ALPHANUMERIC			Alphanumeric
 	false,	// CODE_HIRAGANA				Hiragana
@@ -69,7 +69,7 @@ static const bool abCharSizeTable[] =
 const DWORD CAribString::AribToString(
 	TCHAR *lpszDst, const DWORD dwDstLen, const BYTE *pSrcData, const DWORD dwSrcLen, const unsigned int Flags)
 {
-	// ARIB STD-B24 Part1 ¨ Shift-JIS / Unicode•ÏŠ·
+	// ARIB STD-B24 Part1 â†’ Shift-JIS / Unicodeå¤‰æ›
 	CAribString WorkObject;
 
 	return WorkObject.AribToStringInternal(lpszDst, dwDstLen, pSrcData, dwSrcLen, Flags);
@@ -97,7 +97,7 @@ const DWORD CAribString::AribToStringInternal(TCHAR *lpszDst, const DWORD dwDstL
 	const bool bCaption = (Flags & FLAG_CAPTION) != 0;
 	const bool b1Seg = (Flags & FLAG_1SEG) != 0;
 
-	// ó‘Ô‰Šúİ’è
+	// çŠ¶æ…‹åˆæœŸè¨­å®š
 	m_byEscSeqCount = 0U;
 	m_pSingleGL = NULL;
 
@@ -144,14 +144,14 @@ const DWORD CAribString::ProcessString(TCHAR *lpszDst, const DWORD dwDstLen, con
 
 	while (dwSrcPos < dwSrcLen && dwDstPos < dwDstLen - 1) {
 		if (!m_byEscSeqCount) {
-			// GL/GR—Ìˆæ
+			// GL/GRé ˜åŸŸ
 			if ((pSrcData[dwSrcPos] >= 0x21U) && (pSrcData[dwSrcPos] <= 0x7EU)) {
-				// GL—Ìˆæ
+				// GLé ˜åŸŸ
 				const CODE_SET CurCodeSet = (m_pSingleGL)? *m_pSingleGL : *m_pLockingGL;
 				m_pSingleGL = NULL;
 
 				if (abCharSizeTable[CurCodeSet]) {
-					// 2ƒoƒCƒgƒR[ƒh
+					// 2ãƒã‚¤ãƒˆã‚³ãƒ¼ãƒ‰
 					if ((dwSrcLen - dwSrcPos) < 2UL)
 						break;
 
@@ -161,18 +161,18 @@ const DWORD CAribString::ProcessString(TCHAR *lpszDst, const DWORD dwDstLen, con
 					dwDstPos += Length;
 					dwSrcPos++;
 				} else {
-					// 1ƒoƒCƒgƒR[ƒh
+					// 1ãƒã‚¤ãƒˆã‚³ãƒ¼ãƒ‰
 					Length = ProcessCharCode(&lpszDst[dwDstPos], dwDstLen - dwDstPos - 1, (WORD)pSrcData[dwSrcPos], CurCodeSet);
 					if (Length < 0)
 						break;
 					dwDstPos += Length;
 				}
 			} else if ((pSrcData[dwSrcPos] >= 0xA1U) && (pSrcData[dwSrcPos] <= 0xFEU)) {
-				// GR—Ìˆæ
+				// GRé ˜åŸŸ
 				const CODE_SET CurCodeSet = *m_pLockingGR;
 
 				if (abCharSizeTable[CurCodeSet]) {
-					// 2ƒoƒCƒgƒR[ƒh
+					// 2ãƒã‚¤ãƒˆã‚³ãƒ¼ãƒ‰
 					if ((dwSrcLen - dwSrcPos) < 2UL) break;
 
 					Length = ProcessCharCode(&lpszDst[dwDstPos], dwDstLen - dwDstPos -1, ((WORD)(pSrcData[dwSrcPos + 0] & 0x7FU) << 8) | (WORD)(pSrcData[dwSrcPos + 1] & 0x7FU), CurCodeSet);
@@ -181,14 +181,14 @@ const DWORD CAribString::ProcessString(TCHAR *lpszDst, const DWORD dwDstLen, con
 					dwDstPos += Length;
 					dwSrcPos++;
 				} else {
-					// 1ƒoƒCƒgƒR[ƒh
+					// 1ãƒã‚¤ãƒˆã‚³ãƒ¼ãƒ‰
 					Length = ProcessCharCode(&lpszDst[dwDstPos], dwDstLen - dwDstPos - 1, (WORD)(pSrcData[dwSrcPos] & 0x7FU), CurCodeSet);
 					if (Length < 0)
 						break;
 					dwDstPos += Length;
 				}
 			} else {
-				// §ŒäƒR[ƒh
+				// åˆ¶å¾¡ã‚³ãƒ¼ãƒ‰
 				switch (pSrcData[dwSrcPos]) {
 				case 0x0D:	// APR
 							lpszDst[dwDstPos++] = '\r';
@@ -205,11 +205,11 @@ const DWORD CAribString::ProcessString(TCHAR *lpszDst, const DWORD dwDstLen, con
 						lpszDst[dwDstPos++] = TEXT(' ');
 					} else {
 #ifdef _UNICODE
-						lpszDst[dwDstPos++] = L'@';
+						lpszDst[dwDstPos++] = L'ã€€';
 #else
 						if (dwDstPos + 2 < dwDstLen) {
-							lpszDst[dwDstPos++] = "@"[0];
-							lpszDst[dwDstPos++] = "@"[1];
+							lpszDst[dwDstPos++] = "ã€€"[0];
+							lpszDst[dwDstPos++] = "ã€€"[1];
 						} else {
 							lpszDst[dwDstPos++] = ' ';
 						}
@@ -230,28 +230,28 @@ const DWORD CAribString::ProcessString(TCHAR *lpszDst, const DWORD dwDstLen, con
 					SetFormat(dwDstPos);
 					break;
 
-				case 0x88:	// SSZ ¬Œ^
+				case 0x88:	// SSZ å°å‹
 					m_CharSize = SIZE_SMALL;
 					SetFormat(dwDstPos);
 					break;
-				case 0x89:	// MSZ ’†Œ^
+				case 0x89:	// MSZ ä¸­å‹
 					m_CharSize = SIZE_MEDIUM;
 					SetFormat(dwDstPos);
 					break;
-				case 0x8A:	// NSZ •W€
+				case 0x8A:	// NSZ æ¨™æº–
 					m_CharSize = SIZE_NORMAL;
 					SetFormat(dwDstPos);
 					break;
-				case 0x8B:	// SZX w’èƒTƒCƒY
+				case 0x8B:	// SZX æŒ‡å®šã‚µã‚¤ã‚º
 					if (++dwSrcPos >= dwSrcLen)
 						break;
 					switch (pSrcData[dwSrcPos]) {
-					case 0x60:	m_CharSize = SIZE_MICRO;		break;	// ’´¬Œ^
-					case 0x41:	m_CharSize = SIZE_HIGH_W;		break;	// c”{
-					case 0x44:	m_CharSize = SIZE_WIDTH_W;		break;	// ‰¡”{
-					case 0x45:	m_CharSize = SIZE_W;			break;	// c‰¡”{
-					case 0x6B:	m_CharSize = SIZE_SPECIAL_1;	break;	// “Áê1
-					case 0x64:	m_CharSize = SIZE_SPECIAL_2;	break;	// “Áê2
+					case 0x60:	m_CharSize = SIZE_MICRO;		break;	// è¶…å°å‹
+					case 0x41:	m_CharSize = SIZE_HIGH_W;		break;	// ç¸¦å€
+					case 0x44:	m_CharSize = SIZE_WIDTH_W;		break;	// æ¨ªå€
+					case 0x45:	m_CharSize = SIZE_W;			break;	// ç¸¦æ¨ªå€
+					case 0x6B:	m_CharSize = SIZE_SPECIAL_1;	break;	// ç‰¹æ®Š1
+					case 0x64:	m_CharSize = SIZE_SPECIAL_2;	break;	// ç‰¹æ®Š2
 					}
 					SetFormat(dwDstPos);
 					break;
@@ -316,11 +316,11 @@ const DWORD CAribString::ProcessString(TCHAR *lpszDst, const DWORD dwDstLen, con
 							dwSrcPos++;
 					}
 					break;
-				default:	break;	// ”ñ‘Î‰
+				default:	break;	// éå¯¾å¿œ
 				}
 			}
 		} else {
-			// ƒGƒXƒP[ƒvƒV[ƒPƒ“ƒXˆ—
+			// ã‚¨ã‚¹ã‚±ãƒ¼ãƒ—ã‚·ãƒ¼ã‚±ãƒ³ã‚¹å‡¦ç†
 			ProcessEscapeSeq(pSrcData[dwSrcPos]);
 		}
 
@@ -328,7 +328,7 @@ const DWORD CAribString::ProcessString(TCHAR *lpszDst, const DWORD dwDstLen, con
 	}
 
 End:
-	// I’[•¶š
+	// çµ‚ç«¯æ–‡å­—
 	lpszDst[dwDstPos] = TEXT('\0');
 
 	return dwDstPos;
@@ -342,35 +342,35 @@ inline const int CAribString::ProcessCharCode(TCHAR *lpszDst, const DWORD dwDstL
 	case CODE_KANJI	:
 	case CODE_JIS_KANJI_PLANE_1 :
 	case CODE_JIS_KANJI_PLANE_2 :
-		// Š¿šƒR[ƒho—Í
+		// æ¼¢å­—ã‚³ãƒ¼ãƒ‰å‡ºåŠ›
 		Length = PutKanjiChar(lpszDst, dwDstLen, wCode);
 		break;
 
 	case CODE_ALPHANUMERIC :
 	case CODE_PROP_ALPHANUMERIC :
-		// ‰p”šƒR[ƒho—Í
+		// è‹±æ•°å­—ã‚³ãƒ¼ãƒ‰å‡ºåŠ›
 		Length = PutAlphanumericChar(lpszDst, dwDstLen, wCode);
 		break;
 
 	case CODE_HIRAGANA :
 	case CODE_PROP_HIRAGANA :
-		// ‚Ğ‚ç‚ª‚ÈƒR[ƒho—Í
+		// ã²ã‚‰ãŒãªã‚³ãƒ¼ãƒ‰å‡ºåŠ›
 		Length = PutHiraganaChar(lpszDst, dwDstLen, wCode);
 		break;
 
 	case CODE_PROP_KATAKANA :
 	case CODE_KATAKANA :
-		// ƒJƒ^ƒJƒiƒR[ƒho—Í
+		// ã‚«ã‚¿ã‚«ãƒŠã‚³ãƒ¼ãƒ‰å‡ºåŠ›
 		Length = PutKatakanaChar(lpszDst, dwDstLen, wCode);
 		break;
 
 	case CODE_JIS_X0201_KATAKANA :
-		// JISƒJƒ^ƒJƒiƒR[ƒho—Í
+		// JISã‚«ã‚¿ã‚«ãƒŠã‚³ãƒ¼ãƒ‰å‡ºåŠ›
 		Length = PutJisKatakanaChar(lpszDst, dwDstLen, wCode);
 		break;
 
 	case CODE_ADDITIONAL_SYMBOLS :
-		// ’Ç‰ÁƒVƒ“ƒ{ƒ‹ƒR[ƒho—Í
+		// è¿½åŠ ã‚·ãƒ³ãƒœãƒ«ã‚³ãƒ¼ãƒ‰å‡ºåŠ›
 		Length = PutSymbolsChar(lpszDst, dwDstLen, wCode);
 		break;
 
@@ -402,12 +402,12 @@ inline const int CAribString::ProcessCharCode(TCHAR *lpszDst, const DWORD dwDstL
 
 	default:
 #ifdef _UNICODE
-		lpszDst[0] = L' ';
+		lpszDst[0] = L'â–¡';
 #else
 		if (dwDstLen < 2)
 			return -1;
-		lpszDst[0] = " "[0];
-		lpszDst[1] = " "[1];
+		lpszDst[0] = "â–¡"[0];
+		lpszDst[1] = "â–¡"[1];
 #endif
 		Length = MB_CHAR_LENGTH;
 	}
@@ -429,7 +429,7 @@ inline const int CAribString::PutKanjiChar(TCHAR *lpszDst, const DWORD dwDstLen,
 
 	BYTE First = (BYTE)(wCode >> 8), Second = (BYTE)(wCode & 0x00FF);
 
-	// ‘SŠp ¨ ”¼Šp‰p”š•ÏŠ·
+	// å…¨è§’ â†’ åŠè§’è‹±æ•°å­—å¤‰æ›
 	if (m_bUseCharSize && m_CharSize == SIZE_MEDIUM) {
 		BYTE AlnumCode = 0;
 		if (First == 0x23) {
@@ -461,7 +461,7 @@ inline const int CAribString::PutKanjiChar(TCHAR *lpszDst, const DWORD dwDstLen,
 			return PutAlphanumericChar(lpszDst, dwDstLen, AlnumCode);
 	}
 
-	// JIS ¨ Shift_JISŠ¿šƒR[ƒh•ÏŠ·
+	// JIS â†’ Shift_JISæ¼¢å­—ã‚³ãƒ¼ãƒ‰å¤‰æ›
 	First -= 0x21;
 	if ((First & 0x01) == 0) {
 		Second += 0x1F;
@@ -477,7 +477,7 @@ inline const int CAribString::PutKanjiChar(TCHAR *lpszDst, const DWORD dwDstLen,
 		First += 0x81;
 
 #ifdef _UNICODE
-	// Shift_JIS ¨ UNICODE
+	// Shift_JIS â†’ UNICODE
 	if (dwDstLen < 1)
 		return -1;
 	char cShiftJIS[2];
@@ -486,12 +486,12 @@ inline const int CAribString::PutKanjiChar(TCHAR *lpszDst, const DWORD dwDstLen,
 	// Shift_JIS = Code page 932
 	int Length = ::MultiByteToWideChar(932, MB_PRECOMPOSED, cShiftJIS, 2, lpszDst, dwDstLen);
 	if (Length == 0) {
-		lpszDst[0] = L' ';
+		lpszDst[0] = L'â–¡';
 		return 1;
 	}
 	return Length;
 #else
-	// Shift_JIS ¨ Shift_JIS
+	// Shift_JIS â†’ Shift_JIS
 	if (dwDstLen < 2)
 		return -1;
 	lpszDst[0] = (char)First;
@@ -502,16 +502,16 @@ inline const int CAribString::PutKanjiChar(TCHAR *lpszDst, const DWORD dwDstLen,
 
 inline const int CAribString::PutAlphanumericChar(TCHAR *lpszDst, const DWORD dwDstLen, const WORD wCode)
 {
-	// ‰p”š•¶šƒR[ƒh•ÏŠ·
+	// è‹±æ•°å­—æ–‡å­—ã‚³ãƒ¼ãƒ‰å¤‰æ›
 	static const LPCTSTR acAlphanumericTable =
-		TEXT("@@@@@@@@@@@@@@@@")
-		TEXT("@@@@@@@@@@@@@@@@")
-		TEXT("@Ih”“•fij–{C|D^")
-		TEXT("‚O‚P‚Q‚R‚S‚T‚U‚V‚W‚XFGƒ„H")
-		TEXT("—‚`‚a‚b‚c‚d‚e‚f‚g‚h‚i‚j‚k‚l‚m‚n")
-		TEXT("‚o‚p‚q‚r‚s‚t‚u‚v‚w‚x‚ymnOQ")
-		TEXT("M‚‚‚‚ƒ‚„‚…‚†‚‡‚ˆ‚‰‚Š‚‹‚Œ‚‚‚")
-		TEXT("‚‚‘‚’‚“‚”‚•‚–‚—‚˜‚™‚šobpP@");
+		TEXT("ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€")
+		TEXT("ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€")
+		TEXT("ã€€ï¼â€ï¼ƒï¼„ï¼…ï¼†â€™ï¼ˆï¼‰ï¼Šï¼‹ï¼Œâˆ’ï¼ï¼")
+		TEXT("ï¼ï¼‘ï¼’ï¼“ï¼”ï¼•ï¼–ï¼—ï¼˜ï¼™ï¼šï¼›ï¼œï¼ï¼ï¼Ÿ")
+		TEXT("ï¼ ï¼¡ï¼¢ï¼£ï¼¤ï¼¥ï¼¦ï¼§ï¼¨ï¼©ï¼ªï¼«ï¼¬ï¼­ï¼®ï¼¯")
+		TEXT("ï¼°ï¼±ï¼²ï¼³ï¼´ï¼µï¼¶ï¼·ï¼¸ï¼¹ï¼ºï¼»Â¥ï¼½ï¼¾ï¼¿")
+		TEXT("ï½€ï½ï½‚ï½ƒï½„ï½…ï½†ï½‡ï½ˆï½‰ï½Šï½‹ï½Œï½ï½ï½")
+		TEXT("ï½ï½‘ï½’ï½“ï½”ï½•ï½–ï½—ï½˜ï½™ï½šï½›ï½œï½â€¾ã€€");
 	static const LPCWSTR acAlphanumericHalfWidthTable =
 		L"                "
 		L"                "
@@ -538,16 +538,16 @@ inline const int CAribString::PutAlphanumericChar(TCHAR *lpszDst, const DWORD dw
 
 inline const int CAribString::PutHiraganaChar(TCHAR *lpszDst, const DWORD dwDstLen, const WORD wCode)
 {
-	// ‚Ğ‚ç‚ª‚È•¶šƒR[ƒh•ÏŠ·
+	// ã²ã‚‰ãŒãªæ–‡å­—ã‚³ãƒ¼ãƒ‰å¤‰æ›
 	static const LPCTSTR acHiraganaTable =
-		TEXT("@@@@@@@@@@@@@@@@")
-		TEXT("@@@@@@@@@@@@@@@@")
-		TEXT("@‚Ÿ‚ ‚¡‚¢‚£‚¤‚¥‚¦‚§‚¨‚©‚ª‚«‚¬‚­")
-		TEXT("‚®‚¯‚°‚±‚²‚³‚´‚µ‚¶‚·‚¸‚¹‚º‚»‚¼‚½")
-		TEXT("‚¾‚¿‚À‚Á‚Â‚Ã‚Ä‚Å‚Æ‚Ç‚È‚É‚Ê‚Ë‚Ì‚Í")
-		TEXT("‚Î‚Ï‚Ğ‚Ñ‚Ò‚Ó‚Ô‚Õ‚Ö‚×‚Ø‚Ù‚Ú‚Û‚Ü‚İ")
-		TEXT("‚Ş‚ß‚à‚á‚â‚ã‚ä‚å‚æ‚ç‚è‚é‚ê‚ë‚ì‚í")
-		TEXT("‚î‚ï‚ğ‚ñ@@@TU[BuvAE@");
+		TEXT("ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€")
+		TEXT("ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€")
+		TEXT("ã€€ãã‚ãƒã„ã…ã†ã‡ãˆã‰ãŠã‹ãŒããã")
+		TEXT("ãã‘ã’ã“ã”ã•ã–ã—ã˜ã™ãšã›ãœãããŸ")
+		TEXT("ã ã¡ã¢ã£ã¤ã¥ã¦ã§ã¨ã©ãªã«ã¬ã­ã®ã¯")
+		TEXT("ã°ã±ã²ã³ã´ãµã¶ã·ã¸ã¹ãºã»ã¼ã½ã¾ã¿")
+		TEXT("ã‚€ã‚ã‚‚ã‚ƒã‚„ã‚…ã‚†ã‚‡ã‚ˆã‚‰ã‚Šã‚‹ã‚Œã‚ã‚ã‚")
+		TEXT("ã‚ã‚‘ã‚’ã‚“ã€€ã€€ã€€ã‚ã‚ãƒ¼ã€‚ã€Œã€ã€ãƒ»ã€€");
 
 	if (dwDstLen < MB_CHAR_LENGTH)
 		return -1;
@@ -558,16 +558,16 @@ inline const int CAribString::PutHiraganaChar(TCHAR *lpszDst, const DWORD dwDstL
 
 inline const int CAribString::PutKatakanaChar(TCHAR *lpszDst, const DWORD dwDstLen, const WORD wCode)
 {
-	// ƒJƒ^ƒJƒi•¶šƒR[ƒh•ÏŠ·
+	// ã‚«ã‚¿ã‚«ãƒŠæ–‡å­—ã‚³ãƒ¼ãƒ‰å¤‰æ›
 	static const LPCTSTR acKatakanaTable =
-		TEXT("@@@@@@@@@@@@@@@@")
-		TEXT("@@@@@@@@@@@@@@@@")
-		TEXT("@ƒ@ƒAƒBƒCƒDƒEƒFƒGƒHƒIƒJƒKƒLƒMƒN")
-		TEXT("ƒOƒPƒQƒRƒSƒTƒUƒVƒWƒXƒYƒZƒ[ƒ\ƒ]ƒ^")
-		TEXT("ƒ_ƒ`ƒaƒbƒcƒdƒeƒfƒgƒhƒiƒjƒkƒlƒmƒn")
-		TEXT("ƒoƒpƒqƒrƒsƒtƒuƒvƒwƒxƒyƒzƒ{ƒ|ƒ}ƒ~")
-		TEXT("ƒ€ƒƒ‚ƒƒƒ„ƒ…ƒ†ƒ‡ƒˆƒ‰ƒŠƒ‹ƒŒƒƒƒ")
-		TEXT("ƒƒ‘ƒ’ƒ“ƒ”ƒ•ƒ–RS[BuvAE@");
+		TEXT("ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€")
+		TEXT("ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€")
+		TEXT("ã€€ã‚¡ã‚¢ã‚£ã‚¤ã‚¥ã‚¦ã‚§ã‚¨ã‚©ã‚ªã‚«ã‚¬ã‚­ã‚®ã‚¯")
+		TEXT("ã‚°ã‚±ã‚²ã‚³ã‚´ã‚µã‚¶ã‚·ã‚¸ã‚¹ã‚ºã‚»ã‚¼ã‚½ã‚¾ã‚¿")
+		TEXT("ãƒ€ãƒãƒ‚ãƒƒãƒ„ãƒ…ãƒ†ãƒ‡ãƒˆãƒ‰ãƒŠãƒ‹ãƒŒãƒãƒãƒ")
+		TEXT("ãƒãƒ‘ãƒ’ãƒ“ãƒ”ãƒ•ãƒ–ãƒ—ãƒ˜ãƒ™ãƒšãƒ›ãƒœãƒãƒãƒŸ")
+		TEXT("ãƒ ãƒ¡ãƒ¢ãƒ£ãƒ¤ãƒ¥ãƒ¦ãƒ§ãƒ¨ãƒ©ãƒªãƒ«ãƒ¬ãƒ­ãƒ®ãƒ¯")
+		TEXT("ãƒ°ãƒ±ãƒ²ãƒ³ãƒ´ãƒµãƒ¶ãƒ½ãƒ¾ãƒ¼ã€‚ã€Œã€ã€ãƒ»ã€€");
 
 	if (dwDstLen < MB_CHAR_LENGTH)
 		return -1;
@@ -578,16 +578,16 @@ inline const int CAribString::PutKatakanaChar(TCHAR *lpszDst, const DWORD dwDstL
 
 inline const int CAribString::PutJisKatakanaChar(TCHAR *lpszDst, const DWORD dwDstLen, const WORD wCode)
 {
-	// JISƒJƒ^ƒJƒi•¶šƒR[ƒh•ÏŠ·
+	// JISã‚«ã‚¿ã‚«ãƒŠæ–‡å­—ã‚³ãƒ¼ãƒ‰å¤‰æ›
 	static const LPCTSTR acJisKatakanaTable =
-		TEXT("@@@@@@@@@@@@@@@@")
-		TEXT("@@@@@@@@@@@@@@@@")
-		TEXT("@BuvAEƒ’ƒ@ƒBƒDƒFƒHƒƒƒ…ƒ‡ƒb")
-		TEXT("[ƒAƒCƒEƒGƒIƒJƒLƒNƒPƒRƒTƒVƒXƒZƒ\")
-		TEXT("ƒ^ƒ`ƒcƒeƒgƒiƒjƒkƒlƒmƒnƒqƒtƒwƒzƒ}")
-		TEXT("ƒ~ƒ€ƒƒ‚ƒ„ƒ†ƒˆƒ‰ƒŠƒ‹ƒŒƒƒƒ“JK")
-		TEXT("@@@@@@@@@@@@@@@@")
-		TEXT("@@@@@@@@@@@@@@@@");
+		TEXT("ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€")
+		TEXT("ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€")
+		TEXT("ã€€ã€‚ã€Œã€ã€ãƒ»ãƒ²ã‚¡ã‚£ã‚¥ã‚§ã‚©ãƒ£ãƒ¥ãƒ§ãƒƒ")
+		TEXT("ãƒ¼ã‚¢ã‚¤ã‚¦ã‚¨ã‚ªã‚«ã‚­ã‚¯ã‚±ã‚³ã‚µã‚·ã‚¹ã‚»ã‚½")
+		TEXT("ã‚¿ãƒãƒ„ãƒ†ãƒˆãƒŠãƒ‹ãƒŒãƒãƒãƒãƒ’ãƒ•ãƒ˜ãƒ›ãƒ")
+		TEXT("ãƒŸãƒ ãƒ¡ãƒ¢ãƒ¤ãƒ¦ãƒ¨ãƒ©ãƒªãƒ«ãƒ¬ãƒ­ãƒ¯ãƒ³ã‚›ã‚œ")
+		TEXT("ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€")
+		TEXT("ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€");
 
 	if (dwDstLen < MB_CHAR_LENGTH)
 		return -1;
@@ -598,7 +598,7 @@ inline const int CAribString::PutJisKatakanaChar(TCHAR *lpszDst, const DWORD dwD
 
 inline const int CAribString::PutSymbolsChar(TCHAR *lpszDst, const DWORD dwDstLen, const WORD wCode)
 {
-	// ’Ç‰ÁƒVƒ“ƒ{ƒ‹•¶šƒR[ƒh•ÏŠ·
+	// è¿½åŠ ã‚·ãƒ³ãƒœãƒ«æ–‡å­—ã‚³ãƒ¼ãƒ‰å¤‰æ›
 
 	static const LPCWSTR SymbolsTable_90_01[] =
 	{
@@ -611,11 +611,11 @@ inline const int CAribString::PutSymbolsChar(TCHAR *lpszDst, const DWORD dwDstLe
 
 	static const LPCTSTR SymbolsTable_90_45[] =
 	{
-		_T("10."),		_T("11."),		_T("12."),			_T("[HV]"),		_T("[SD]"),		_T("[‚o]"),		_T("[‚v]"),		_T("[MV]"),		// 0x7A4D - 0x7A54	90/45 - 90/52
-		_T("[è]"),		_T("[š]"),		_T("[‘o]"),			_T("[ƒf]"),		_T("[‚r]"),		_T("[“ñ]"),		_T("[‘½]"),		_T("[‰ğ]"),		// 0x7A55 - 0x7A5C	90/53 - 90/60
-		_T("[SS]"),		_T("[‚a]"),		_T("[‚m]"),			_T("¡"),		_T("œ"),		_T("[“V]"),		_T("[Œğ]"),		_T("[‰f]"),		// 0x7A5D - 0x7A64	90/61 - 90/68
-		_T("[–³]"),		_T("[—¿]"),		_T("[”N—î§ŒÀ]"),	_T("[‘O]"),		_T("[Œã]"),		_T("[Ä]"),		_T("[V]"),		_T("[‰]"),		// 0x7A65 - 0x7A6C	90/69 - 90/76
-		_T("[I]"),		_T("[¶]"),		_T("[”Ì]"),			_T("[º]"),		_T("[]"),		_T("[PPV]"),	_T("(”é)"),		_T("‚Ù‚©")		// 0x7A6D - 0x7A74	90/77 - 90/84
+		_T("10."),		_T("11."),		_T("12."),			_T("[HV]"),		_T("[SD]"),		_T("[ï¼°]"),		_T("[ï¼·]"),		_T("[MV]"),		// 0x7A4D - 0x7A54	90/45 - 90/52
+		_T("[æ‰‹]"),		_T("[å­—]"),		_T("[åŒ]"),			_T("[ãƒ‡]"),		_T("[ï¼³]"),		_T("[äºŒ]"),		_T("[å¤š]"),		_T("[è§£]"),		// 0x7A55 - 0x7A5C	90/53 - 90/60
+		_T("[SS]"),		_T("[ï¼¢]"),		_T("[ï¼®]"),			_T("â– "),		_T("â—"),		_T("[å¤©]"),		_T("[äº¤]"),		_T("[æ˜ ]"),		// 0x7A5D - 0x7A64	90/61 - 90/68
+		_T("[ç„¡]"),		_T("[æ–™]"),		_T("[å¹´é½¢åˆ¶é™]"),	_T("[å‰]"),		_T("[å¾Œ]"),		_T("[å†]"),		_T("[æ–°]"),		_T("[åˆ]"),		// 0x7A65 - 0x7A6C	90/69 - 90/76
+		_T("[çµ‚]"),		_T("[ç”Ÿ]"),		_T("[è²©]"),			_T("[å£°]"),		_T("[å¹]"),		_T("[PPV]"),	_T("(ç§˜)"),		_T("ã»ã‹")		// 0x7A6D - 0x7A74	90/77 - 90/84
 	};
 	static const LPCWSTR SymbolsTable_90_45_U[] =
 	{
@@ -639,25 +639,25 @@ inline const int CAribString::PutSymbolsChar(TCHAR *lpszDst, const DWORD dwDstLe
 
 	static const LPCTSTR SymbolsTable_92[] =
 	{
-		_T("¨"),		_T("©"),		_T("ª"),		_T("«"),		_T("›"),		_T("œ"),		_T("”N"),		_T("Œ"),			// 0x7C21 - 0x7C28	92/01 - 92/08
-		_T("“ú"),		_T("‰~"),		_T("‡u"),		_T("—§•û‚"),	_T("‡p"),		_T("•½•û‡p"),	_T("—§•û‡p"),	_T("‚O."),			// 0x7C29 - 0x7C30	92/09 - 92/16
-		_T("‚P."),		_T("‚Q."),		_T("‚R."),		_T("‚S."),		_T("‚T."),		_T("‚U."),		_T("‚V."),		_T("‚W."),			// 0x7C31 - 0x7C38	92/17 - 92/24
-		_T("‚X."),		_T(""),		_T("•›"),		_T("Œ³"),		_T("ŒÌ"),		_T("‘O"),		_T("V"),		_T("‚O,"),			// 0x7C39 - 0x7C40	92/25 - 92/32
-		_T("‚P,"),		_T("‚Q,"),		_T("‚R,"),		_T("‚S,"),		_T("‚T,"),		_T("‚U,"),		_T("‚V,"),		_T("‚W,"),			// 0x7C41 - 0x7C48	92/33 - 92/40
-		_T("‚X,"),		_T("(Ğ)"),		_T("(à)"),		_T("(—L)"),		_T("(Š”)"),		_T("(‘ã)"),		_T("(–â)"),		_T("„"),			// 0x7C49 - 0x7C50	92/41 - 92/48
-		_T("ƒ"),		_T("y"),		_T("z"),		_T(""),		_T("^2"),		_T("^3"),		_T("(CD)"),		_T("(vn)"),			// 0x7C51 - 0x7C58	92/49 - 92/56
+		_T("â†’"),		_T("â†"),		_T("â†‘"),		_T("â†“"),		_T("â—‹"),		_T("â—"),		_T("å¹´"),		_T("æœˆ"),			// 0x7C21 - 0x7C28	92/01 - 92/08
+		_T("æ—¥"),		_T("å††"),		_T("ã¡"),		_T("ç«‹æ–¹ï½"),	_T("ã"),		_T("å¹³æ–¹ã"),	_T("ç«‹æ–¹ã"),	_T("ï¼."),			// 0x7C29 - 0x7C30	92/09 - 92/16
+		_T("ï¼‘."),		_T("ï¼’."),		_T("ï¼“."),		_T("ï¼”."),		_T("ï¼•."),		_T("ï¼–."),		_T("ï¼—."),		_T("ï¼˜."),			// 0x7C31 - 0x7C38	92/17 - 92/24
+		_T("ï¼™."),		_T("æ°"),		_T("å‰¯"),		_T("å…ƒ"),		_T("æ•…"),		_T("å‰"),		_T("æ–°"),		_T("ï¼,"),			// 0x7C39 - 0x7C40	92/25 - 92/32
+		_T("ï¼‘,"),		_T("ï¼’,"),		_T("ï¼“,"),		_T("ï¼”,"),		_T("ï¼•,"),		_T("ï¼–,"),		_T("ï¼—,"),		_T("ï¼˜,"),			// 0x7C41 - 0x7C48	92/33 - 92/40
+		_T("ï¼™,"),		_T("(ç¤¾)"),		_T("(è²¡)"),		_T("(æœ‰)"),		_T("(æ ª)"),		_T("(ä»£)"),		_T("(å•)"),		_T("ï¼"),			// 0x7C49 - 0x7C50	92/41 - 92/48
+		_T("ï¼œ"),		_T("ã€"),		_T("ã€‘"),		_T("â—‡"),		_T("^2"),		_T("^3"),		_T("(CD)"),		_T("(vn)"),			// 0x7C51 - 0x7C58	92/49 - 92/56
 		_T("(ob)"),		_T("(cb)"),		_T("(ce"),		_T("mb)"),		_T("(hp)"),		_T("(br)"),		_T("(p)"),		_T("(s)"),			// 0x7C59 - 0x7C60	92/57 - 92/64
 		_T("(ms)"),		_T("(t)"),		_T("(bs)"),		_T("(b)"),		_T("(tb)"),		_T("(tp)"),		_T("(ds)"),		_T("(ag)"),			// 0x7C61 - 0x7C68	92/65 - 92/72
 		_T("(eg)"),		_T("(vo)"),		_T("(fl)"),		_T("(ke"),		_T("y)"),		_T("(sa"),		_T("x)"),		_T("(sy"),			// 0x7C69 - 0x7C70	92/73 - 92/80
-		_T("n)"),		_T("(or"),		_T("g)"),		_T("(pe"),		_T("r)"),		_T("(R)"),		_T("(C)"),		_T("(âµ)"),			// 0x7C71 - 0x7C78	92/81 - 92/88
-		_T("DJ"),		_T("[‰‰]"),		_T("Fax")																							// 0x7C79 - 0x7C7B	92/89 - 92/91
+		_T("n)"),		_T("(or"),		_T("g)"),		_T("(pe"),		_T("r)"),		_T("(R)"),		_T("(C)"),		_T("(ç®)"),			// 0x7C71 - 0x7C78	92/81 - 92/88
+		_T("DJ"),		_T("[æ¼”]"),		_T("Fax")																							// 0x7C79 - 0x7C7B	92/89 - 92/91
 	};
 	static const LPCWSTR SymbolsTable_92_U[] =
 	{
-		L"\u27a1",		L"\u2b05",		L"\u2b06",		L"\u2b07",		L"\u2b2f",		L"\u2b2e",		L"”N",			L"Œ",				// 0x7C21 - 0x7C28	92/01 - 92/08
-		L"“ú",			L"‰~",			L"‡u",			L"\u33a5",		L"‡p",			L"\u33a0",		L"\u33a4",		L"\U0001f100",		// 0x7C29 - 0x7C30	92/09 - 92/16
+		L"\u27a1",		L"\u2b05",		L"\u2b06",		L"\u2b07",		L"\u2b2f",		L"\u2b2e",		L"å¹´",			L"æœˆ",				// 0x7C21 - 0x7C28	92/01 - 92/08
+		L"æ—¥",			L"å††",			L"ã¡",			L"\u33a5",		L"ã",			L"\u33a0",		L"\u33a4",		L"\U0001f100",		// 0x7C29 - 0x7C30	92/09 - 92/16
 		L"\u2488",		L"\u2489",		L"\u248a",		L"\u248b",		L"\u248c",		L"\u248d",		L"\u248e",		L"\u248f",			// 0x7C31 - 0x7C38	92/17 - 92/24
-		L"\u2490",		L"",			L"•›",			L"Œ³",			L"ŒÌ",			L"‘O",			L"V",			L"\U0001f101",		// 0x7C39 - 0x7C40	92/25 - 92/32
+		L"\u2490",		L"æ°",			L"å‰¯",			L"å…ƒ",			L"æ•…",			L"å‰",			L"æ–°",			L"\U0001f101",		// 0x7C39 - 0x7C40	92/25 - 92/32
 		L"\U0001f102",	L"\U0001f103",	L"\U0001f104",	L"\U0001f105",	L"\U0001f106",	L"\U0001f107",	L"\U0001f108",	L"\U0001f109",		// 0x7C41 - 0x7C48	92/33 - 92/40
 		L"\U0001f10a",	L"\u3233",		L"\u3236",		L"\u3232",		L"\u3231",		L"\u3239",		L"\u3244",		L"\u25b6",			// 0x7C49 - 0x7C50	92/41 - 92/48
 		L"\u25c0",		L"\u3016",		L"\u3017",		L"\u27d0",		L"\u00b2",		L"\u00b3",		L"\U0001f12d",	L"(vn)",			// 0x7C51 - 0x7C58	92/49 - 92/56
@@ -670,62 +670,62 @@ inline const int CAribString::PutSymbolsChar(TCHAR *lpszDst, const DWORD dwDstLe
 
 	static const LPCTSTR SymbolsTable_93[] =
 	{
-		_T("(Œ)"),		_T("(‰Î)"),		_T("(…)"),		_T("(–Ø)"),		_T("(‹à)"),		_T("(“y)"),		_T("(“ú)"),		_T("(j)"),			// 0x7D21 - 0x7D28	93/01 - 93/08
-		_T("‡"),		_T("‡"),		_T("‡"),		_T("‡~"),		_T("‡‚"),		_T("‡„"),		_T("(§)"),		_T("›"),			// 0x7D29 - 0x7D30	93/09 - 93/16
-		_T("k–{l"),	_T("kOl"),	_T("k“ñl"),	_T("kˆÀl"),	_T("k“_l"),	_T("k‘Ål"),	_T("k“l"),	_T("kŸl"),		// 0x7D31 - 0x7D38	93/17 - 93/24
-		_T("k”sl"),	_T("k‚rl"),	_T("m“Šn"),	_T("m•ßn"),	_T("mˆên"),	_T("m“ñn"),	_T("mOn"),	_T("m—Vn"),		// 0x7D39 - 0x7D40	93/25 - 93/32
-		_T("m¶n"),	_T("m’†n"),	_T("m‰En"),	_T("mwn"),	_T("m‘–n"),	_T("m‘Ån"),	_T("‡g"),		_T("‡s"),			// 0x7D41 - 0x7D48	93/33 - 93/40
-		_T("Hz"),		_T("ha"),		_T("km"),		_T("•½•ûkm"),	_T("hPa"),		nullptr,		nullptr,		_T("1/2"),			// 0x7D49 - 0x7D50	93/41 - 93/48
+		_T("(æœˆ)"),		_T("(ç«)"),		_T("(æ°´)"),		_T("(æœ¨)"),		_T("(é‡‘)"),		_T("(åœŸ)"),		_T("(æ—¥)"),		_T("(ç¥)"),			// 0x7D21 - 0x7D28	93/01 - 93/08
+		_T("ã¾"),		_T("ã½"),		_T("ã¼"),		_T("ã»"),		_T("â„–"),		_T("â„¡"),		_T("(ã€’)"),		_T("â—‹"),			// 0x7D29 - 0x7D30	93/09 - 93/16
+		_T("ã€”æœ¬ã€•"),	_T("ã€”ä¸‰ã€•"),	_T("ã€”äºŒã€•"),	_T("ã€”å®‰ã€•"),	_T("ã€”ç‚¹ã€•"),	_T("ã€”æ‰“ã€•"),	_T("ã€”ç›—ã€•"),	_T("ã€”å‹ã€•"),		// 0x7D31 - 0x7D38	93/17 - 93/24
+		_T("ã€”æ•—ã€•"),	_T("ã€”ï¼³ã€•"),	_T("ï¼»æŠ•ï¼½"),	_T("ï¼»æ•ï¼½"),	_T("ï¼»ä¸€ï¼½"),	_T("ï¼»äºŒï¼½"),	_T("ï¼»ä¸‰ï¼½"),	_T("ï¼»éŠï¼½"),		// 0x7D39 - 0x7D40	93/25 - 93/32
+		_T("ï¼»å·¦ï¼½"),	_T("ï¼»ä¸­ï¼½"),	_T("ï¼»å³ï¼½"),	_T("ï¼»æŒ‡ï¼½"),	_T("ï¼»èµ°ï¼½"),	_T("ï¼»æ‰“ï¼½"),	_T("ã‘"),		_T("ã"),			// 0x7D41 - 0x7D48	93/33 - 93/40
+		_T("Hz"),		_T("ha"),		_T("km"),		_T("å¹³æ–¹km"),	_T("hPa"),		nullptr,		nullptr,		_T("1/2"),			// 0x7D49 - 0x7D50	93/41 - 93/48
 		_T("0/3"),		_T("1/3"),		_T("2/3"),		_T("1/4"),		_T("3/4"),		_T("1/5"),		_T("2/5"),		_T("3/5"),			// 0x7D51 - 0x7D58	93/49 - 93/56
-		_T("4/5"),		_T("1/6"),		_T("5/6"),		_T("1/7"),		_T("1/8"),		_T("1/9"),		_T("1/10"),		_T("°‚ê"),			// 0x7D59 - 0x7D60	93/57 - 93/64
-		_T("“Ü‚è"),		_T("‰J"),		_T("á"),		_T("¢"),		_T("£"),		_T("¤"),		_T("¥"),		_T("Ÿ"),			// 0x7D61 - 0x7D68	93/65 - 93/72
-		_T("E"),		_T("E"),		_T("E"),		_T(""),		_T(""),		_T("!!"),		_T("!?"),		_T("“Ü/°"),		// 0x7D69 - 0x7D70	93/73 - 93/80
-		_T("‰J"),		_T("‰J"),		_T("á"),		_T("‘åá"),		_T("—‹"),		_T("—‹‰J"),		_T("@"),		_T("E"),			// 0x7D71 - 0x7D78	93/81 - 93/88
-		_T("E"),		_T("ô"),		_T("‡„")																							// 0x7D79 - 0x7D7B	93/89 - 93/91
+		_T("4/5"),		_T("1/6"),		_T("5/6"),		_T("1/7"),		_T("1/8"),		_T("1/9"),		_T("1/10"),		_T("æ™´ã‚Œ"),			// 0x7D59 - 0x7D60	93/57 - 93/64
+		_T("æ›‡ã‚Š"),		_T("é›¨"),		_T("é›ª"),		_T("â–³"),		_T("â–²"),		_T("â–½"),		_T("â–¼"),		_T("â—†"),			// 0x7D61 - 0x7D68	93/65 - 93/72
+		_T("ãƒ»"),		_T("ãƒ»"),		_T("ãƒ»"),		_T("â—‡"),		_T("â—"),		_T("!!"),		_T("!?"),		_T("æ›‡/æ™´"),		// 0x7D69 - 0x7D70	93/73 - 93/80
+		_T("é›¨"),		_T("é›¨"),		_T("é›ª"),		_T("å¤§é›ª"),		_T("é›·"),		_T("é›·é›¨"),		_T("ã€€"),		_T("ãƒ»"),			// 0x7D71 - 0x7D78	93/81 - 93/88
+		_T("ãƒ»"),		_T("â™ª"),		_T("â„¡")																							// 0x7D79 - 0x7D7B	93/89 - 93/91
 	};
 	static const LPCWSTR SymbolsTable_93_U[] =
 	{
 		L"\u322a",		L"\u322b",		L"\u322c",		L"\u322d",		L"\u322e",		L"\u322f",		L"\u3230",		L"\u3237",			// 0x7D21 - 0x7D28	93/01 - 93/08
-		L"‡",			L"‡",			L"‡",			L"‡~",			L"‡‚",			L"‡„",			L"\u3036",		L"\u26be",			// 0x7D29 - 0x7D30	93/09 - 93/16
+		L"ã¾",			L"ã½",			L"ã¼",			L"ã»",			L"â„–",			L"â„¡",			L"\u3036",		L"\u26be",			// 0x7D29 - 0x7D30	93/09 - 93/16
 		L"\U0001f240",	L"\U0001f241",	L"\U0001f242",	L"\U0001f243",	L"\U0001f244",	L"\U0001f245",	L"\U0001f246",	L"\U0001f247",		// 0x7D31 - 0x7D38	93/17 - 93/24
 		L"\U0001f248",	L"\U0001f12a",	L"\U0001f227",	L"\U0001f228",	L"\U0001f229",	L"\U0001f214",	L"\U0001f22a",	L"\U0001f22b",		// 0x7D39 - 0x7D40	93/25 - 93/32
-		L"\U0001f22c",	L"\U0001f22d",	L"\U0001f22e",	L"\U0001f22f",	L"\U0001f230",	L"\U0001f231",	L"\u2113",		L"‡s",				// 0x7D41 - 0x7D48	93/33 - 93/40
+		L"\U0001f22c",	L"\U0001f22d",	L"\U0001f22e",	L"\U0001f22f",	L"\U0001f230",	L"\U0001f231",	L"\u2113",		L"ã",				// 0x7D41 - 0x7D48	93/33 - 93/40
 		L"\u3390",		L"\u33ca",		L"\u339e",		L"\u33a2",		L"\u3371",		nullptr,		nullptr,		L"\u00bd",			// 0x7D49 - 0x7D50	93/41 - 93/48
 		L"\u2189",		L"\u2153",		L"\u2154",		L"\u00bc",		L"\u00be",		L"\u2155",		L"\u2156",		L"\u2157",			// 0x7D51 - 0x7D58	93/49 - 93/56
 		L"\u2158",		L"\u2159",		L"\u215a",		L"\u2150",		L"\u215b",		L"\u2151",		L"\u2152",		L"\u2600",			// 0x7D59 - 0x7D60	93/57 - 93/64
 		L"\u2601",		L"\u2602",		L"\u26c4",		L"\u2616",		L"\u2617",		L"\u26c9",		L"\u26ca",		L"\u2666",			// 0x7D61 - 0x7D68	93/65 - 93/72
 		L"\u2665",		L"\u2663",		L"\u2660",		L"\u26cb",		L"\u2a00",		L"\u203c",		L"\u2049",		L"\u26c5",			// 0x7D69 - 0x7D70	93/73 - 93/80
-		L"\u2614",		L"\u26c6",		L"\u2603",		L"\u26c7",		L"\u26a1",		L"\u26c8",		L"@",			L"\u269e",			// 0x7D71 - 0x7D78	93/81 - 93/88
+		L"\u2614",		L"\u26c6",		L"\u2603",		L"\u26c7",		L"\u26a1",		L"\u26c8",		L"ã€€",			L"\u269e",			// 0x7D71 - 0x7D78	93/81 - 93/88
 		L"\u269f",		L"\u266c",		L"\u260e"																							// 0x7D79 - 0x7D7B	93/89 - 93/91
 	};
 
 	static const LPCTSTR SymbolsTable_94[] =
 	{
-		_T("‡T"),		_T("‡U"),		_T("‡V"),		_T("‡W"),		_T("‡X"),		_T("‡Y"),		_T("‡Z"),		_T("‡["),			// 0x7E21 - 0x7E28	94/01 - 94/08
-		_T("‡\"),		_T("‡]"),		_T("XI"),		_T("X‡U"),		_T("‡P"),		_T("‡Q"),		_T("‡R"),		_T("‡S"),			// 0x7E29 - 0x7E30	94/09 - 94/16
+		_T("â… "),		_T("â…¡"),		_T("â…¢"),		_T("â…£"),		_T("â…¤"),		_T("â…¥"),		_T("â…¦"),		_T("â…§"),			// 0x7E21 - 0x7E28	94/01 - 94/08
+		_T("â…¨"),		_T("â…©"),		_T("XI"),		_T("Xâ…¡"),		_T("â‘°"),		_T("â‘±"),		_T("â‘²"),		_T("â‘³"),			// 0x7E29 - 0x7E30	94/09 - 94/16
 		_T("(1)"),		_T("(2)"),		_T("(3)"),		_T("(4)"),		_T("(5)"),		_T("(6)"),		_T("(7)"),		_T("(8)"),			// 0x7E31 - 0x7E38	94/17 - 94/24
 		_T("(9)"),		_T("(10)"),		_T("(11)"),		_T("(12)"),		_T("(21)"),		_T("(22)"),		_T("(23)"),		_T("(24)"),			// 0x7E39 - 0x7E40	94/25 - 94/32
 		_T("(A)"),		_T("(B)"),		_T("(C)"),		_T("(D)"),		_T("(E)"),		_T("(F)"),		_T("(G)"),		_T("(H)"),			// 0x7E41 - 0x7E48	94/33 - 94/40
 		_T("(I)"),		_T("(J)"),		_T("(K)"),		_T("(L)"),		_T("(M)"),		_T("(N)"),		_T("(O)"),		_T("(P)"),			// 0x7E49 - 0x7E50	94/41 - 94/48
 		_T("(Q)"),		_T("(R)"),		_T("(S)"),		_T("(T)"),		_T("(U)"),		_T("(V)"),		_T("(W)"),		_T("(X)"),			// 0x7E51 - 0x7E58	94/49 - 94/56
 		_T("(Y)"),		_T("(Z)"),		_T("(25)"),		_T("(26)"),		_T("(27)"),		_T("(28)"),		_T("(29)"),		_T("(30)"),			// 0x7E59 - 0x7E60	94/57 - 94/64
-		_T("‡@"),		_T("‡A"),		_T("‡B"),		_T("‡C"),		_T("‡D"),		_T("‡E"),		_T("‡F"),		_T("‡G"),			// 0x7E61 - 0x7E68	94/65 - 94/72
-		_T("‡H"),		_T("‡I"),		_T("‡J"),		_T("‡K"),		_T("‡L"),		_T("‡M"),		_T("‡N"),		_T("‡O"),			// 0x7E69 - 0x7E70	94/73 - 94/80
-		_T("‡@"),		_T("‡A"),		_T("‡B"),		_T("‡C"),		_T("‡D"),		_T("‡E"),		_T("‡F"),		_T("‡G"),			// 0x7E71 - 0x7E78	94/81 - 94/88
-		_T("‡H"),		_T("‡I"),		_T("‡J"),		_T("‡K"),		_T("(31)")															// 0x7E79 - 0x7E7D	94/89 - 94/93
+		_T("â‘ "),		_T("â‘¡"),		_T("â‘¢"),		_T("â‘£"),		_T("â‘¤"),		_T("â‘¥"),		_T("â‘¦"),		_T("â‘§"),			// 0x7E61 - 0x7E68	94/65 - 94/72
+		_T("â‘¨"),		_T("â‘©"),		_T("â‘ª"),		_T("â‘«"),		_T("â‘¬"),		_T("â‘­"),		_T("â‘®"),		_T("â‘¯"),			// 0x7E69 - 0x7E70	94/73 - 94/80
+		_T("â‘ "),		_T("â‘¡"),		_T("â‘¢"),		_T("â‘£"),		_T("â‘¤"),		_T("â‘¥"),		_T("â‘¦"),		_T("â‘§"),			// 0x7E71 - 0x7E78	94/81 - 94/88
+		_T("â‘¨"),		_T("â‘©"),		_T("â‘ª"),		_T("â‘«"),		_T("(31)")															// 0x7E79 - 0x7E7D	94/89 - 94/93
 	};
 	static const LPCWSTR SymbolsTable_94_U[] =
 	{
-		L"‡T",			L"‡U",			L"‡V",			L"‡W",			L"‡X",			L"‡Y",			L"‡Z",			L"‡[",				// 0x7E21 - 0x7E28	94/01 - 94/08
-		L"‡\",			L"‡]",			L"\u216a",		L"\u216b",		L"‡P",			L"‡Q",			L"‡R",			L"‡S",				// 0x7E29 - 0x7E30	94/09 - 94/16
+		L"â… ",			L"â…¡",			L"â…¢",			L"â…£",			L"â…¤",			L"â…¥",			L"â…¦",			L"â…§",				// 0x7E21 - 0x7E28	94/01 - 94/08
+		L"â…¨",			L"â…©",			L"\u216a",		L"\u216b",		L"â‘°",			L"â‘±",			L"â‘²",			L"â‘³",				// 0x7E29 - 0x7E30	94/09 - 94/16
 		L"\u2474",		L"\u2475",		L"\u2476",		L"\u2477",		L"\u2478",		L"\u2479",		L"\u247a",		L"\u247b",			// 0x7E31 - 0x7E38	94/17 - 94/24
 		L"\u247c",		L"\u247d",		L"\u247e",		L"\u247f",		L"\u3251",		L"\u3252",		L"\u3253",		L"\u3254",			// 0x7E39 - 0x7E40	94/25 - 94/32
 		L"\U0001f1110",	L"\U0001f111",	L"\U0001f112",	L"\U0001f113",	L"\U0001f114",	L"\U0001f115",	L"\U0001f116",	L"\U0001f117",		// 0x7E41 - 0x7E48	94/33 - 94/40
 		L"\U0001f1118",	L"\U0001f119",	L"\U0001f11a",	L"\U0001f11b",	L"\U0001f11c",	L"\U0001f11d",	L"\U0001f11e",	L"\U0001f11f",		// 0x7E49 - 0x7E50	94/41 - 94/48
 		L"\U0001f120",	L"\U0001f121",	L"\U0001f122",	L"\U0001f123",	L"\U0001f124",	L"\U0001f125",	L"\U0001f126",	L"\U0001f127",		// 0x7E51 - 0x7E58	94/49 - 94/56
 		L"\U0001f128",	L"\U0001f129",	L"\u3255",		L"\u3256",		L"\u3257",		L"\u3258",		L"\u3259",		L"\u325a",			// 0x7E59 - 0x7E60	94/57 - 94/64
-		L"‡@",			L"‡A",			L"‡B",			L"‡C",			L"‡D",			L"‡E",			L"‡F",			L"‡G",				// 0x7E61 - 0x7E68	94/65 - 94/72
-		L"‡H",			L"‡I",			L"‡J",			L"‡K",			L"‡L",			L"‡M",			L"‡N",			L"‡O",				// 0x7E69 - 0x7E70	94/73 - 94/80
+		L"â‘ ",			L"â‘¡",			L"â‘¢",			L"â‘£",			L"â‘¤",			L"â‘¥",			L"â‘¦",			L"â‘§",				// 0x7E61 - 0x7E68	94/65 - 94/72
+		L"â‘¨",			L"â‘©",			L"â‘ª",			L"â‘«",			L"â‘¬",			L"â‘­",			L"â‘®",			L"â‘¯",				// 0x7E69 - 0x7E70	94/73 - 94/80
 		L"\u2776",		L"\u2777",		L"\u2778",		L"\u2779",		L"\u277a",		L"\u277b",		L"\u277c",		L"\u277d",			// 0x7E71 - 0x7E78	94/81 - 94/88
 		L"\u277e",		L"\u277f",		L"\u24eb",		L"\u24ec",		L"\u325b"															// 0x7E79 - 0x7E7D	94/89 - 94/93
 	};
@@ -770,7 +770,7 @@ inline const int CAribString::PutSymbolsChar(TCHAR *lpszDst, const DWORD dwDstLe
 		{0x7E21,	0x7E7D,	SymbolsTable_94,	SymbolsTable_94_U},
 	};
 
-	// ƒVƒ“ƒ{ƒ‹‚ğ•ÏŠ·‚·‚é
+	// ã‚·ãƒ³ãƒœãƒ«ã‚’å¤‰æ›ã™ã‚‹
 	LPCTSTR pszSrc = nullptr;
 	for (int i = 0; i < _countof(SymbolTable); i++) {
 		if ((wCode >= SymbolTable[i].First) && (wCode <= SymbolTable[i].Last)) {
@@ -787,7 +787,7 @@ inline const int CAribString::PutSymbolsChar(TCHAR *lpszDst, const DWORD dwDstLe
 		}
 	}
 	if (!pszSrc)
-		pszSrc = TEXT(" ");
+		pszSrc = TEXT("â–¡");
 	DWORD Length = ::lstrlen(pszSrc);
 	if (dwDstLen < Length)
 		return -1;
@@ -837,22 +837,22 @@ inline const int CAribString::PutDRCSChar(TCHAR *lpszDst, const DWORD dwDstLen, 
 #ifdef _UNICODE
 	if (dwDstLen < 1)
 		return -1;
-	lpszDst[0] = L' ';
+	lpszDst[0] = L'â–¡';
 	return 1;
 #else
 	if (dwDstLen < 2)
 		return -1;
-	lpszDst[0] = " "[0];
-	lpszDst[1] = " "[1];
+	lpszDst[0] = "â–¡"[0];
+	lpszDst[1] = "â–¡"[1];
 	return 2;
 #endif
 }
 
 inline void CAribString::ProcessEscapeSeq(const BYTE byCode)
 {
-	// ƒGƒXƒP[ƒvƒV[ƒPƒ“ƒXˆ—
+	// ã‚¨ã‚¹ã‚±ãƒ¼ãƒ—ã‚·ãƒ¼ã‚±ãƒ³ã‚¹å‡¦ç†
 	switch(m_byEscSeqCount){
-		// 1ƒoƒCƒg–Ú
+		// 1ãƒã‚¤ãƒˆç›®
 		case 1U	:
 			switch(byCode){
 				// Invocation of code elements
@@ -868,11 +868,11 @@ inline void CAribString::ProcessEscapeSeq(const BYTE byCode)
 				case 0x29U	: m_byEscSeqIndex = 1U;		break;
 				case 0x2AU	: m_byEscSeqIndex = 2U;		break;
 				case 0x2BU	: m_byEscSeqIndex = 3U;		break;
-				default		: m_byEscSeqCount = 0U;		return;		// ƒGƒ‰[
+				default		: m_byEscSeqCount = 0U;		return;		// ã‚¨ãƒ©ãƒ¼
 				}
 			break;
 
-		// 2ƒoƒCƒg–Ú
+		// 2ãƒã‚¤ãƒˆç›®
 		case 2U	:
 			if(DesignationGSET(m_byEscSeqIndex, byCode)){
 				m_byEscSeqCount = 0U;
@@ -885,11 +885,11 @@ inline void CAribString::ProcessEscapeSeq(const BYTE byCode)
 				case 0x29	: m_bIsEscSeqDrcs = false;	m_byEscSeqIndex = 1U;	break;
 				case 0x2A	: m_bIsEscSeqDrcs = false;	m_byEscSeqIndex = 2U;	break;
 				case 0x2B	: m_bIsEscSeqDrcs = false;	m_byEscSeqIndex = 3U;	break;
-				default		: m_byEscSeqCount = 0U;		return;		// ƒGƒ‰[
+				default		: m_byEscSeqCount = 0U;		return;		// ã‚¨ãƒ©ãƒ¼
 				}
 			break;
 
-		// 3ƒoƒCƒg–Ú
+		// 3ãƒã‚¤ãƒˆç›®
 		case 3U	:
 			if(!m_bIsEscSeqDrcs){
 				if(DesignationGSET(m_byEscSeqIndex, byCode)){
@@ -908,13 +908,13 @@ inline void CAribString::ProcessEscapeSeq(const BYTE byCode)
 				m_bIsEscSeqDrcs = true;
 				}
 			else{
-				// ƒGƒ‰[
+				// ã‚¨ãƒ©ãƒ¼
 				m_byEscSeqCount = 0U;
 				return;
 				}
 			break;
 
-		// 4ƒoƒCƒg–Ú
+		// 4ãƒã‚¤ãƒˆç›®
 		case 4U	:
 			DesignationDRCS(m_byEscSeqIndex, byCode);
 			m_byEscSeqCount = 0U;
@@ -944,7 +944,7 @@ inline void CAribString::SingleShiftGL(const BYTE byIndexG)
 
 inline const bool CAribString::DesignationGSET(const BYTE byIndexG, const BYTE byCode)
 {
-	// G‚ÌƒOƒ‰ƒtƒBƒbƒNƒZƒbƒg‚ğŠ„‚è“–‚Ä‚é
+	// Gã®ã‚°ãƒ©ãƒ•ã‚£ãƒƒã‚¯ã‚»ãƒƒãƒˆã‚’å‰²ã‚Šå½“ã¦ã‚‹
 	switch(byCode){
 		case 0x42U	: m_CodeG[byIndexG] = CODE_KANJI;				return true;	// Kanji
 		case 0x4AU	: m_CodeG[byIndexG] = CODE_ALPHANUMERIC;		return true;	// Alphanumeric
@@ -961,13 +961,13 @@ inline const bool CAribString::DesignationGSET(const BYTE byIndexG, const BYTE b
 		case 0x39U	: m_CodeG[byIndexG] = CODE_JIS_KANJI_PLANE_1;	return true;	// JIS compatible Kanji Plane 1
 		case 0x3AU	: m_CodeG[byIndexG] = CODE_JIS_KANJI_PLANE_2;	return true;	// JIS compatible Kanji Plane 2
 		case 0x3BU	: m_CodeG[byIndexG] = CODE_ADDITIONAL_SYMBOLS;	return true;	// Additional symbols
-		default		: return false;		// •s–¾‚ÈƒOƒ‰ƒtƒBƒbƒNƒZƒbƒg
+		default		: return false;		// ä¸æ˜ãªã‚°ãƒ©ãƒ•ã‚£ãƒƒã‚¯ã‚»ãƒƒãƒˆ
 		}
 }
 
 inline const bool CAribString::DesignationDRCS(const BYTE byIndexG, const BYTE byCode)
 {
-	// DRCS‚ÌƒOƒ‰ƒtƒBƒbƒNƒZƒbƒg‚ğŠ„‚è“–‚Ä‚é
+	// DRCSã®ã‚°ãƒ©ãƒ•ã‚£ãƒƒã‚¯ã‚»ãƒƒãƒˆã‚’å‰²ã‚Šå½“ã¦ã‚‹
 	if (byCode >= 0x40 && byCode <= 0x4F) {		// DRCS
 		m_CodeG[byIndexG] = (CODE_SET)(CODE_DRCS_0 + (byCode - 0x40));
 	} else if (byCode == 0x70) {				// Macro
@@ -1002,21 +1002,21 @@ bool CAribString::SetFormat(DWORD Pos)
 
 
 /////////////////////////////////////////////////////////////////////////////
-// ARIB STD-B10 Part2 Annex C MJD+JTC ˆ—ƒNƒ‰ƒX
+// ARIB STD-B10 Part2 Annex C MJD+JTC å‡¦ç†ã‚¯ãƒ©ã‚¹
 /////////////////////////////////////////////////////////////////////////////
 
 const bool CAribTime::AribToSystemTime(const BYTE *pHexData, SYSTEMTIME *pSysTime)
 {
-	// ‘Sƒrƒbƒg‚ª1‚Ì‚Æ‚«‚Í–¢’è‹`
+	// å…¨ãƒ“ãƒƒãƒˆãŒ1ã®ã¨ãã¯æœªå®šç¾©
 	if((*((DWORD *)pHexData) == 0xFFFFFFFFUL) && (pHexData[4] == 0xFFU))return false;
 
-	// MJDŒ`®‚Ì“ú•t‚ğ‰ğÍ
+	// MJDå½¢å¼ã®æ—¥ä»˜ã‚’è§£æ
 	SplitAribMjd(((WORD)pHexData[0] << 8) | (WORD)pHexData[1], &pSysTime->wYear, &pSysTime->wMonth, &pSysTime->wDay, &pSysTime->wDayOfWeek);
 
-	// BCDŒ`®‚Ì‚ğ‰ğÍ
+	// BCDå½¢å¼ã®æ™‚åˆ»ã‚’è§£æ
 	SplitAribBcd(&pHexData[2], &pSysTime->wHour, &pSysTime->wMinute, &pSysTime->wSecond);
 
-	// ƒ~ƒŠ•b‚Íí‚É0
+	// ãƒŸãƒªç§’ã¯å¸¸ã«0
 	pSysTime->wMilliseconds = 0U;
 
 	return true;
@@ -1024,7 +1024,7 @@ const bool CAribTime::AribToSystemTime(const BYTE *pHexData, SYSTEMTIME *pSysTim
 
 void CAribTime::SplitAribMjd(const WORD wAribMjd, WORD *pwYear, WORD *pwMonth, WORD *pwDay, WORD *pwDayOfWeek)
 {
-	// MJDŒ`®‚Ì“ú•t‚ğ‰ğÍ‚·‚é
+	// MJDå½¢å¼ã®æ—¥ä»˜ã‚’è§£æã™ã‚‹
 	const DWORD dwYd = (DWORD)(((double)wAribMjd - 15078.2) / 365.25);
 	const DWORD dwMd = (DWORD)(((double)wAribMjd - 14956.1 - (double)((int)((double)dwYd * 365.25))) / 30.6001);
 	const DWORD dwK = ((dwMd == 14UL) || (dwMd == 15UL))? 1U : 0U;
@@ -1037,7 +1037,7 @@ void CAribTime::SplitAribMjd(const WORD wAribMjd, WORD *pwYear, WORD *pwMonth, W
 
 bool CAribTime::BuildAribMjd(const WORD Year, const WORD Month, const WORD Day, WORD *pMjd)
 {
-	// “ú•t‚ğMJDŒ`®‚É•ÏŠ·‚·‚é
+	// æ—¥ä»˜ã‚’MJDå½¢å¼ã«å¤‰æ›ã™ã‚‹
 	if (!pMjd)
 		return false;
 
@@ -1067,7 +1067,7 @@ const bool CAribTime::SystemTimeToMjd(const SYSTEMTIME *pSysTime, WORD *pMjd)
 
 void CAribTime::SplitAribBcd(const BYTE *pAribBcd, WORD *pwHour, WORD *pwMinute, WORD *pwSecond)
 {
-	// BCDŒ`®‚Ì‚ğ‰ğÍ‚·‚é
+	// BCDå½¢å¼ã®æ™‚åˆ»ã‚’è§£æã™ã‚‹
 	if(pwHour)*pwHour		= (WORD)(pAribBcd[0] >> 4) * 10U + (WORD)(pAribBcd[0] & 0x0FU);
 	if(pwMinute)*pwMinute	= (WORD)(pAribBcd[1] >> 4) * 10U + (WORD)(pAribBcd[1] & 0x0FU);
 	if(pwSecond)*pwSecond	= (WORD)(pAribBcd[2] >> 4) * 10U + (WORD)(pAribBcd[2] & 0x0FU);
@@ -1075,11 +1075,11 @@ void CAribTime::SplitAribBcd(const BYTE *pAribBcd, WORD *pwHour, WORD *pwMinute,
 
 const DWORD CAribTime::AribBcdToSecond(const BYTE *pAribBcd)
 {
-	// ‘Sƒrƒbƒg‚ª1‚Ì‚Æ‚«‚Í–¢’è‹`
+	// å…¨ãƒ“ãƒƒãƒˆãŒ1ã®ã¨ãã¯æœªå®šç¾©
 	if (pAribBcd[0] == 0xFF && pAribBcd[1] == 0xFF && pAribBcd[2] == 0xFF)
 		return 0;
 
-	// BCDŒ`®‚Ì‚ğ•b‚É•ÏŠ·‚·‚é
+	// BCDå½¢å¼ã®æ™‚åˆ»ã‚’ç§’ã«å¤‰æ›ã™ã‚‹
 	const DWORD dwSecond = (((DWORD)(pAribBcd[0] >> 4) * 10U + (DWORD)(pAribBcd[0] & 0x0FU)) * 3600UL)
 						 + (((DWORD)(pAribBcd[1] >> 4) * 10U + (DWORD)(pAribBcd[1] & 0x0FU)) * 60UL)
 						 + ((DWORD)(pAribBcd[2] >> 4) * 10U + (DWORD)(pAribBcd[2] & 0x0FU));

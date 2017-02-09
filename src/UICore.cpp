@@ -461,13 +461,13 @@ int CUICore::FormatCurrentAudioText(LPTSTR pszText,int MaxLength) const
 		if (m_App.CoreEngine.m_DtvEngine.GetEventAudioInfo(&AudioInfo)
 				&& AudioInfo.ComponentType==0x02
 				&& AudioInfo.bESMultiLingualFlag
-				// ES multilingual flag ‚ª—§‚Á‚Ä‚¢‚é‚Ì‚É—¼•û“ú–{Œê‚Ìê‡‚ª‚ ‚é
+				// ES multilingual flag ãŒç«‹ã£ã¦ã„ã‚‹ã®ã«ä¸¡æ–¹æ—¥æœ¬èªã®å ´åˆãŒã‚ã‚‹
 				&& AudioInfo.LanguageCode!=AudioInfo.LanguageCode2) {
-			// “ñƒJ‘Œê
+			// äºŒã‚«å›½èª
 			TCHAR szLang1[EpgUtil::MAX_LANGUAGE_TEXT_LENGTH];
 			TCHAR szLang2[EpgUtil::MAX_LANGUAGE_TEXT_LENGTH];
 
-			Formatter.Append(TEXT("[“ñ] "));
+			Formatter.Append(TEXT("[äºŒ] "));
 
 			switch (DualMonoMode) {
 			case CAudioDecFilter::DUALMONO_MAIN:
@@ -495,10 +495,10 @@ int CUICore::FormatCurrentAudioText(LPTSTR pszText,int MaxLength) const
 		} else {
 			Formatter.Append(
 				DualMonoMode==CAudioDecFilter::DUALMONO_MAIN?
-					TEXT("å‰¹º"):
+					TEXT("ä¸»éŸ³å£°"):
 				DualMonoMode==CAudioDecFilter::DUALMONO_SUB?
-					TEXT("•›‰¹º"):
-					TEXT("å+•›‰¹º"));
+					TEXT("å‰¯éŸ³å£°"):
+					TEXT("ä¸»+å‰¯éŸ³å£°"));
 		}
 	} else if (NumAudio>1 && m_App.CoreEngine.m_DtvEngine.GetEventAudioInfo(&AudioInfo)) {
 		TCHAR szFormat[16];
@@ -544,7 +544,7 @@ int CUICore::FormatCurrentAudioText(LPTSTR pszText,int MaxLength) const
 					AudioInfo.szText,szAudio,lengthof(szAudio));
 			}
 
-			// [S] ‚È‚Ç‚ª‚ ‚ê‚Îœ‹‚·‚é
+			// [S] ãªã©ãŒã‚ã‚Œã°é™¤å»ã™ã‚‹
 			p=::StrStrI(szAudio,szFormat);
 			if (p!=NULL) {
 				int Length=::lstrlen(szFormat);
@@ -621,16 +621,16 @@ bool CUICore::GetSelectedAudioText(LPTSTR pszText,int MaxLength) const
 			}
 			if (AudioInfo.bESMultiLingualFlag
 					&& AudioInfo.LanguageCode!=AudioInfo.LanguageCode2) {
-				// “ñƒJ‘Œê
+				// äºŒã‚«å›½èª
 				if (szAudio1[0]==_T('\0'))
 					EpgUtil::GetLanguageText(AudioInfo.LanguageCode,szAudio1,lengthof(szAudio1));
 				if (szAudio2[0]==_T('\0'))
 					EpgUtil::GetLanguageText(AudioInfo.LanguageCode2,szAudio2,lengthof(szAudio2));
 			} else {
 				if (szAudio1[0]==_T('\0'))
-					::lstrcpy(szAudio1,TEXT("å‰¹º"));
+					::lstrcpy(szAudio1,TEXT("ä¸»éŸ³å£°"));
 				if (szAudio2[0]==_T('\0'))
-					::lstrcpy(szAudio2,TEXT("•›‰¹º"));
+					::lstrcpy(szAudio2,TEXT("å‰¯éŸ³å£°"));
 			}
 			switch (GetActualDualMonoMode()) {
 			case CAudioDecFilter::DUALMONO_MAIN:
@@ -650,18 +650,18 @@ bool CUICore::GetSelectedAudioText(LPTSTR pszText,int MaxLength) const
 				EpgUtil::GetLanguageText(AudioInfo.LanguageCode,
 										 AudioInfo.szText,lengthof(AudioInfo.szText));
 			}
-			StdUtil::snprintf(pszText,MaxLength,TEXT("‰¹º%d: %s"),
+			StdUtil::snprintf(pszText,MaxLength,TEXT("éŸ³å£°%d: %s"),
 							  GetAudioStream()+1,AudioInfo.szText);
 		}
 	} else if (m_App.CoreEngine.m_DtvEngine.GetAudioChannelNum()==2
 			&& GetStereoMode()!=CAudioDecFilter::STEREOMODE_STEREO) {
 		int Pos=0;
 		if (GetNumAudioStreams()>1)
-			Pos=StdUtil::snprintf(pszText,MaxLength,TEXT("‰¹º%d: "),GetAudioStream()+1);
-		StdUtil::snprintf(pszText+Pos,MaxLength-Pos,TEXT("ƒXƒeƒŒƒI%s"),
-						  GetStereoMode()==CAudioDecFilter::STEREOMODE_LEFT?TEXT("¶"):TEXT("‰E"));
+			Pos=StdUtil::snprintf(pszText,MaxLength,TEXT("éŸ³å£°%d: "),GetAudioStream()+1);
+		StdUtil::snprintf(pszText+Pos,MaxLength-Pos,TEXT("ã‚¹ãƒ†ãƒ¬ã‚ª%s"),
+						  GetStereoMode()==CAudioDecFilter::STEREOMODE_LEFT?TEXT("å·¦"):TEXT("å³"));
 	} else {
-		StdUtil::snprintf(pszText,MaxLength,TEXT("‰¹º%d"),GetAudioStream()+1);
+		StdUtil::snprintf(pszText,MaxLength,TEXT("éŸ³å£°%d"),GetAudioStream()+1);
 	}
 
 	return true;
@@ -778,7 +778,7 @@ bool CUICore::PreventDisplaySave(bool fPrevent)
 		}
 		if (fNoMonitorLowPower && !fNoMonitorLowPowerActiveOnly) {
 #if 1
-			// SetThreadExecutionState() ‚ğŒÄ‚Ôƒ^ƒCƒ}[
+			// SetThreadExecutionState() ã‚’å‘¼ã¶ã‚¿ã‚¤ãƒãƒ¼
 			if (hwnd!=nullptr)
 				::SetTimer(hwnd,CUISkin::TIMER_ID_DISPLAY,10000,nullptr);
 #else
@@ -994,15 +994,15 @@ void CUICore::InitTunerMenu(HMENU hmenu)
 	int Length;
 	int i;
 
-	// Šeƒ`ƒ…[ƒjƒ“ƒO‹óŠÔ‚Ìƒƒjƒ…[‚ğ’Ç‰Á‚·‚é
-	// ÀÛ‚Ìƒƒjƒ…[‚Ìİ’è‚Í WM_INITMENUPOPUP ‚Ås‚Á‚Ä‚¢‚é
+	// å„ãƒãƒ¥ãƒ¼ãƒ‹ãƒ³ã‚°ç©ºé–“ã®ãƒ¡ãƒ‹ãƒ¥ãƒ¼ã‚’è¿½åŠ ã™ã‚‹
+	// å®Ÿéš›ã®ãƒ¡ãƒ‹ãƒ¥ãƒ¼ã®è¨­å®šã¯ WM_INITMENUPOPUP ã§è¡Œã£ã¦ã„ã‚‹
 	if (m_App.ChannelManager.NumSpaces()>0) {
 		HMENU hmenuSpace;
 		LPCTSTR pszName;
 
 		if (m_App.ChannelManager.NumSpaces()>1) {
 			hmenuSpace=::CreatePopupMenu();
-			Menu.Append(hmenuSpace,TEXT("&A: ‚·‚×‚Ä"));
+			Menu.Append(hmenuSpace,TEXT("&A: ã™ã¹ã¦"));
 		}
 		for (i=0;i<m_App.ChannelManager.NumSpaces();i++) {
 			const CChannelList *pChannelList=m_App.ChannelManager.GetChannelList(i);
@@ -1014,7 +1014,7 @@ void CUICore::InitTunerMenu(HMENU hmenu)
 				CopyToMenuText(pszName,szText+Length,lengthof(szText)-Length);
 			else
 				StdUtil::snprintf(szText+Length,lengthof(szText)-Length,
-								  TEXT("ƒ`ƒ…[ƒjƒ“ƒO‹óŠÔ%d"),i);
+								  TEXT("ãƒãƒ¥ãƒ¼ãƒ‹ãƒ³ã‚°ç©ºé–“%d"),i);
 			Menu.Append(hmenuSpace,szText,
 						pChannelList->NumEnableChannels()>0?MF_ENABLED:MF_GRAYED);
 		}
@@ -1045,7 +1045,7 @@ void CUICore::InitTunerMenu(HMENU hmenu)
 		Menu.CheckRadioItem(CM_DRIVER_FIRST,CM_DRIVER_FIRST+i-1,
 							CM_DRIVER_FIRST+CurDriver);
 
-	Menu.Append(CM_DRIVER_BROWSE,TEXT("QÆ..."));
+	Menu.Append(CM_DRIVER_BROWSE,TEXT("å‚ç…§..."));
 	Menu.AppendSeparator();
 	m_App.CommandList.GetCommandNameByID(CM_CLOSETUNER,szText,lengthof(szText));
 	Menu.Append(CM_CLOSETUNER,szText);
@@ -1240,7 +1240,7 @@ bool CUICore::UpdateIcon()
 
 static void RemoveMultipleSpaces(TVTest::String &Str)
 {
-	// ˜A‘±‚·‚é‹ó”’‚ğœ‹‚·‚é
+	// é€£ç¶šã™ã‚‹ç©ºç™½ã‚’é™¤å»ã™ã‚‹
 	TVTest::String::size_type i,j;
 	for (i=0;i<Str.length() && Str[i]==L' ';i++);
 	WCHAR LastChar=L'\0';
@@ -1385,7 +1385,7 @@ const CColorScheme *CUICore::GetCurrentColorScheme() const
 }
 
 
-// ”zF‚ğ“K—p‚·‚é
+// é…è‰²ã‚’é©ç”¨ã™ã‚‹
 bool CUICore::ApplyColorScheme(const CColorScheme *pColorScheme)
 {
 	TVTest::Theme::CThemeManager ThemeManager(pColorScheme);
@@ -1564,7 +1564,7 @@ bool CUICore::CTitleStringMap::GetLocalString(LPCWSTR pszKeyword,TVTest::String 
 			*pString=szTime;
 	} else if (::lstrcmpi(pszKeyword,TEXT("rec-circle"))==0) {
 		if (m_App.RecordManager.IsRecording())
-			*pString=TEXT("œ");
+			*pString=TEXT("â—");
 	} else {
 		return CEventVariableStringMap::GetLocalString(pszKeyword,pString);
 	}
@@ -1578,8 +1578,8 @@ bool CUICore::CTitleStringMap::GetParameterList(ParameterGroupList *pList) const
 		return false;
 
 	static const ParameterInfo ParameterList[] = {
-		{TEXT("event-time"),	TEXT("”Ô‘gŠJn`I—¹ŠÔ")},
-		{TEXT("rec-circle"),	TEXT("˜^‰æœ")},
+		{TEXT("event-time"),	TEXT("ç•ªçµ„é–‹å§‹ï½çµ‚äº†æ™‚é–“")},
+		{TEXT("rec-circle"),	TEXT("éŒ²ç”»â—")},
 	};
 
 	pList->push_back(ParameterGroup());
@@ -1626,7 +1626,7 @@ bool CUICore::CTunerSelectMenu::Create(HWND hwnd)
 	pChannelList=ChannelManager.GetAllChannelList();
 	if (ChannelManager.NumSpaces()>1) {
 		hmenuSpace=::CreatePopupMenu();
-		m_Menu.Append(hmenuSpace,TEXT("&A: ‚·‚×‚Ä"));
+		m_Menu.Append(hmenuSpace,TEXT("&A: ã™ã¹ã¦"));
 	}
 	Command+=pChannelList->NumChannels();
 	for (i=0;i<ChannelManager.NumSpaces();i++) {
@@ -1637,7 +1637,7 @@ bool CUICore::CTunerSelectMenu::Create(HWND hwnd)
 		if (!IsStringEmpty(pszName))
 			CopyToMenuText(pszName,szText+Length,lengthof(szText)-Length);
 		else
-			StdUtil::snprintf(szText+Length,lengthof(szText)-Length,TEXT("ƒ`ƒ…[ƒjƒ“ƒO‹óŠÔ%d"),i);
+			StdUtil::snprintf(szText+Length,lengthof(szText)-Length,TEXT("ãƒãƒ¥ãƒ¼ãƒ‹ãƒ³ã‚°ç©ºé–“%d"),i);
 		m_Menu.Append(hmenuSpace,szText,
 					  pChannelList->NumEnableChannels()>0?MF_ENABLED:MF_GRAYED);
 		Command+=pChannelList->NumChannels();
@@ -1688,7 +1688,7 @@ bool CUICore::CTunerSelectMenu::Create(HWND hwnd)
 						CopyToMenuText(pszName,szText+Length,lengthof(szText)-Length);
 					else
 						StdUtil::snprintf(szText+Length,lengthof(szText)-Length,
-										  TEXT("ƒ`ƒ…[ƒjƒ“ƒO‹óŠÔ%d"),j);
+										  TEXT("ãƒãƒ¥ãƒ¼ãƒ‹ãƒ³ã‚°ç©ºé–“%d"),j);
 					::AppendMenu(hmenuDriver,MF_POPUP | MF_ENABLED,
 								 reinterpret_cast<UINT_PTR>(hmenuSpace),szText);
 				}

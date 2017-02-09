@@ -1,4 +1,4 @@
-// TsPacketParser.cpp: CTsPacketParser ƒNƒ‰ƒX‚ÌƒCƒ“ƒvƒŠƒƒ“ƒe[ƒVƒ‡ƒ“
+// TsPacketParser.cpp: CTsPacketParser ã‚¯ãƒ©ã‚¹ã®ã‚¤ãƒ³ãƒ—ãƒªãƒ¡ãƒ³ãƒ†ãƒ¼ã‚·ãƒ§ãƒ³
 //
 //////////////////////////////////////////////////////////////////////
 
@@ -11,7 +11,7 @@
 
 
 //////////////////////////////////////////////////////////////////////
-// \’z/Á–Å
+// æ§‹ç¯‰/æ¶ˆæ»…
 //////////////////////////////////////////////////////////////////////
 
 
@@ -24,7 +24,7 @@ CTsPacketParser::CTsPacketParser(IEventHandler *pEventHandler)
 	, m_ContinuityErrorPacketCount(0)
 	, m_bGeneratePAT(true)
 {
-	// ƒpƒPƒbƒg˜A‘±«ƒJƒEƒ“ƒ^‚ğ‰Šú‰»‚·‚é
+	// ãƒ‘ã‚±ãƒƒãƒˆé€£ç¶šæ€§ã‚«ã‚¦ãƒ³ã‚¿ã‚’åˆæœŸåŒ–ã™ã‚‹
 	::FillMemory(m_abyContCounter, sizeof(m_abyContCounter), 0x10UL);
 }
 
@@ -36,16 +36,16 @@ void CTsPacketParser::Reset()
 {
 	CBlockLock Lock(&m_DecoderLock);
 
-	// ƒpƒPƒbƒgƒJƒEƒ“ƒ^‚ğƒNƒŠƒA‚·‚é
+	// ãƒ‘ã‚±ãƒƒãƒˆã‚«ã‚¦ãƒ³ã‚¿ã‚’ã‚¯ãƒªã‚¢ã™ã‚‹
 	m_InputPacketCount = 0;
 	m_OutputPacketCount = 0;
 	m_ErrorPacketCount = 0;
 	m_ContinuityErrorPacketCount = 0;
 
-	// ƒpƒPƒbƒg˜A‘±«ƒJƒEƒ“ƒ^‚ğ‰Šú‰»‚·‚é
+	// ãƒ‘ã‚±ãƒƒãƒˆé€£ç¶šæ€§ã‚«ã‚¦ãƒ³ã‚¿ã‚’åˆæœŸåŒ–ã™ã‚‹
 	::FillMemory(m_abyContCounter, sizeof(m_abyContCounter), 0x10UL);
 
-	// ó‘Ô‚ğƒŠƒZƒbƒg‚·‚é
+	// çŠ¶æ…‹ã‚’ãƒªã‚»ãƒƒãƒˆã™ã‚‹
 	m_TsPacket.ClearSize();
 
 	m_PATGenerator.Reset();
@@ -60,7 +60,7 @@ const bool CTsPacketParser::InputMedia(CMediaData *pMediaData, const DWORD dwInp
 		return false;
 	*/
 
-	// TSƒpƒPƒbƒg‚ğˆ—‚·‚é
+	// TSãƒ‘ã‚±ãƒƒãƒˆã‚’å‡¦ç†ã™ã‚‹
 	SyncPacket(pMediaData->GetData(), pMediaData->GetSize());
 
 	return true;
@@ -68,31 +68,31 @@ const bool CTsPacketParser::InputMedia(CMediaData *pMediaData, const DWORD dwInp
 
 void CTsPacketParser::SetOutputNullPacket(const bool bEnable)
 {
-	// NULLƒpƒPƒbƒg‚Ìo—Í—L–³‚ğİ’è‚·‚é
+	// NULLãƒ‘ã‚±ãƒƒãƒˆã®å‡ºåŠ›æœ‰ç„¡ã‚’è¨­å®šã™ã‚‹
 	m_bOutputNullPacket = bEnable;
 }
 
 ULONGLONG CTsPacketParser::GetInputPacketCount() const
 {
-	// “ü—ÍƒpƒPƒbƒg”‚ğ•Ô‚·
+	// å…¥åŠ›ãƒ‘ã‚±ãƒƒãƒˆæ•°ã‚’è¿”ã™
 	return m_InputPacketCount;
 }
 
 ULONGLONG CTsPacketParser::GetOutputPacketCount() const
 {
-	// o—ÍƒpƒPƒbƒg”‚ğ•Ô‚·
+	// å‡ºåŠ›ãƒ‘ã‚±ãƒƒãƒˆæ•°ã‚’è¿”ã™
 	return m_OutputPacketCount;
 }
 
 ULONGLONG CTsPacketParser::GetErrorPacketCount() const
 {
-	// ƒGƒ‰[ƒpƒPƒbƒg”‚ğ•Ô‚·
+	// ã‚¨ãƒ©ãƒ¼ãƒ‘ã‚±ãƒƒãƒˆæ•°ã‚’è¿”ã™
 	return m_ErrorPacketCount;
 }
 
 ULONGLONG CTsPacketParser::GetContinuityErrorPacketCount() const
 {
-	// ˜A‘±«ƒGƒ‰[ƒpƒPƒbƒg”‚ğ•Ô‚·
+	// é€£ç¶šæ€§ã‚¨ãƒ©ãƒ¼ãƒ‘ã‚±ãƒƒãƒˆæ•°ã‚’è¿”ã™
 	return m_ContinuityErrorPacketCount;
 }
 
@@ -104,7 +104,7 @@ void CTsPacketParser::ResetErrorPacketCount()
 
 void inline CTsPacketParser::SyncPacket(const BYTE *pData, const DWORD dwSize)
 {
-	// ¦‚±‚Ì•û–@‚ÍŠ®‘S‚Å‚Í‚È‚¢A“¯Šú‚ª—‚ê‚½ê‡‚É‘O‰ñŒÄ‚Ño‚µ‚Ìƒf[ƒ^‚Ü‚Å‚³‚©‚Ì‚Ú‚Á‚Ä‚ÍÄ“¯Šú‚Í‚Å‚«‚È‚¢
+	// â€»ã“ã®æ–¹æ³•ã¯å®Œå…¨ã§ã¯ãªã„ã€åŒæœŸãŒä¹±ã‚ŒãŸå ´åˆã«å‰å›å‘¼ã³å‡ºã—æ™‚ã®ãƒ‡ãƒ¼ã‚¿ã¾ã§ã•ã‹ã®ã¼ã£ã¦ã¯å†åŒæœŸã¯ã§ããªã„
 	DWORD dwCurSize;
 	DWORD dwCurPos = 0UL;
 
@@ -112,32 +112,32 @@ void inline CTsPacketParser::SyncPacket(const BYTE *pData, const DWORD dwSize)
 		dwCurSize = m_TsPacket.GetSize();
 
 		if (dwCurSize==0) {
-			// “¯ŠúƒoƒCƒg‘Ò‚¿’†
+			// åŒæœŸãƒã‚¤ãƒˆå¾…ã¡ä¸­
 			do {
 				if (pData[dwCurPos++] == TS_HEADSYNCBYTE) {
-					// “¯ŠúƒoƒCƒg”­Œ©
+					// åŒæœŸãƒã‚¤ãƒˆç™ºè¦‹
 					m_TsPacket.AddByte(TS_HEADSYNCBYTE);
 					break;
 				}
 			} while (dwCurPos < dwSize);
 		} else if (dwCurSize == TS_PACKETSIZE) {
-			// ƒpƒPƒbƒgƒTƒCƒY•ªƒf[ƒ^‚ª‚»‚ë‚Á‚½
+			// ãƒ‘ã‚±ãƒƒãƒˆã‚µã‚¤ã‚ºåˆ†ãƒ‡ãƒ¼ã‚¿ãŒãã‚ã£ãŸ
 
 			if (pData[dwCurPos] == TS_HEADSYNCBYTE) {
-				// Ÿ‚Ìƒf[ƒ^‚Í“¯ŠúƒoƒCƒg
+				// æ¬¡ã®ãƒ‡ãƒ¼ã‚¿ã¯åŒæœŸãƒã‚¤ãƒˆ
 				ParsePacket();
 			} else {
-				// “¯ŠúƒGƒ‰[
+				// åŒæœŸã‚¨ãƒ©ãƒ¼
 				m_TsPacket.ClearSize();
 
-				// ˆÊ’u‚ğŒ³‚É–ß‚·
+				// ä½ç½®ã‚’å…ƒã«æˆ»ã™
 				if (dwCurPos >= (TS_PACKETSIZE - 1UL))
 					dwCurPos -= (TS_PACKETSIZE - 1UL);
 				else
 					dwCurPos = 0UL;
 			}
 		} else {
-			// ƒf[ƒ^‘Ò‚¿
+			// ãƒ‡ãƒ¼ã‚¿å¾…ã¡
 			DWORD dwRemain = (TS_PACKETSIZE - dwCurSize);
 			if ((dwSize - dwCurPos) >= dwRemain) {
 				m_TsPacket.AddData(&pData[dwCurPos], dwRemain);
@@ -154,17 +154,17 @@ bool inline CTsPacketParser::ParsePacket()
 {
 	bool bOK;
 
-	// “ü—ÍƒJƒEƒ“ƒgƒCƒ“ƒNƒŠƒƒ“ƒg
+	// å…¥åŠ›ã‚«ã‚¦ãƒ³ãƒˆã‚¤ãƒ³ã‚¯ãƒªãƒ¡ãƒ³ãƒˆ
 	m_InputPacketCount++;
 
-	// ƒpƒPƒbƒg‚ğ‰ğÍ/ƒ`ƒFƒbƒN‚·‚é
+	// ãƒ‘ã‚±ãƒƒãƒˆã‚’è§£æ/ãƒã‚§ãƒƒã‚¯ã™ã‚‹
 	switch (m_TsPacket.ParsePacket(m_abyContCounter)) {
 	case CTsPacket::EC_CONTINUITY:
 		m_ContinuityErrorPacketCount++;
 	case CTsPacket::EC_VALID:
 		{
 #if 0
-			// PAT ‚Ì–³‚¢ó‘Ô‚ğƒVƒ~ƒ…ƒŒ[ƒg
+			// PAT ã®ç„¡ã„çŠ¶æ…‹ã‚’ã‚·ãƒŸãƒ¥ãƒ¬ãƒ¼ãƒˆ
 			if (m_TsPacket.GetPID() == PID_PAT) {
 				bOK = true;
 				break;
@@ -176,9 +176,9 @@ bool inline CTsPacketParser::ParsePacket()
 				}
 			}
 
-			// Ÿ‚ÌƒfƒR[ƒ_‚Éƒf[ƒ^‚ğ“n‚·
+			// æ¬¡ã®ãƒ‡ã‚³ãƒ¼ãƒ€ã«ãƒ‡ãƒ¼ã‚¿ã‚’æ¸¡ã™
 			if (m_bOutputNullPacket || m_TsPacket.GetPID() != 0x1FFFU) {
-				// o—ÍƒJƒEƒ“ƒgƒCƒ“ƒNƒŠƒƒ“ƒg
+				// å‡ºåŠ›ã‚«ã‚¦ãƒ³ãƒˆã‚¤ãƒ³ã‚¯ãƒªãƒ¡ãƒ³ãƒˆ
 				OutputMedia(&m_TsPacket);
 
 				m_OutputPacketCount++;
@@ -188,13 +188,13 @@ bool inline CTsPacketParser::ParsePacket()
 		break;
 	case CTsPacket::EC_FORMAT:
 	case CTsPacket::EC_TRANSPORT:
-		// ƒGƒ‰[ƒJƒEƒ“ƒgƒCƒ“ƒNƒŠƒƒ“ƒg
+		// ã‚¨ãƒ©ãƒ¼ã‚«ã‚¦ãƒ³ãƒˆã‚¤ãƒ³ã‚¯ãƒªãƒ¡ãƒ³ãƒˆ
 		m_ErrorPacketCount++;
 		bOK=false;
 		break;
 	}
 
-	// ƒTƒCƒY‚ğƒNƒŠƒA‚µŸ‚ÌƒXƒgƒA‚É”õ‚¦‚é
+	// ã‚µã‚¤ã‚ºã‚’ã‚¯ãƒªã‚¢ã—æ¬¡ã®ã‚¹ãƒˆã‚¢ã«å‚™ãˆã‚‹
 	m_TsPacket.ClearSize();
 
 	return bOK;

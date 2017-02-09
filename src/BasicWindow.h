@@ -12,7 +12,7 @@ inline DWORD GetWindowExStyle(HWND hwnd) {
 }
 
 
-// ウィンドウの基底クラス
+// 繧ｦ繧｣繝ｳ繝峨え縺ｮ蝓ｺ蠎輔け繝ｩ繧ｹ
 class ABSTRACT_CLASS(CBasicWindow)
 {
 protected:

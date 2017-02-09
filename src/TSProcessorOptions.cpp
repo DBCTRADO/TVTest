@@ -60,14 +60,14 @@ INT_PTR CTSProcessorOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lP
 				LPCTSTR pszText;
 				int Format;
 			} TunerMapColumns[] = {
-				{TEXT("ƒ`ƒ…[ƒi["),		LVCFMT_LEFT},
-				{TEXT("ƒlƒbƒgƒ[ƒNID"),	LVCFMT_RIGHT},
+				{TEXT("ãƒãƒ¥ãƒ¼ãƒŠãƒ¼"),		LVCFMT_LEFT},
+				{TEXT("ãƒãƒƒãƒˆãƒ¯ãƒ¼ã‚¯ID"),	LVCFMT_RIGHT},
 				{TEXT("TSID"),				LVCFMT_RIGHT},
-				{TEXT("ƒT[ƒrƒXID"),		LVCFMT_RIGHT},
-				{TEXT("ˆ—"),				LVCFMT_LEFT},
-				{TEXT("ƒ‚ƒWƒ…[ƒ‹"),		LVCFMT_LEFT},
-				{TEXT("ƒfƒoƒCƒX"),			LVCFMT_LEFT},
-				{TEXT("ƒtƒBƒ‹ƒ^["),		LVCFMT_LEFT},
+				{TEXT("ã‚µãƒ¼ãƒ“ã‚¹ID"),		LVCFMT_RIGHT},
+				{TEXT("å‡¦ç†"),				LVCFMT_LEFT},
+				{TEXT("ãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«"),		LVCFMT_LEFT},
+				{TEXT("ãƒ‡ãƒã‚¤ã‚¹"),			LVCFMT_LEFT},
+				{TEXT("ãƒ•ã‚£ãƒ«ã‚¿ãƒ¼"),		LVCFMT_LEFT},
 			};
 			for (int i=0;i<lengthof(TunerMapColumns);i++)
 				m_TunerMapListView.InsertColumn(i,TunerMapColumns[i].pszText,TunerMapColumns[i].Format);
@@ -105,7 +105,7 @@ INT_PTR CTSProcessorOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lP
 				if (Util::OS::IsWindowsVistaOrLater())
 #endif
 					DlgComboBox_SetCueBanner(hDlg,IDC_TSPROCESSOR_TSPROCESSORLIST,
-											 TEXT("TSƒvƒƒZƒbƒT[‚Í‚ ‚è‚Ü‚¹‚ñ"));
+											 TEXT("TSãƒ—ãƒ­ã‚»ãƒƒã‚µãƒ¼ã¯ã‚ã‚Šã¾ã›ã‚“"));
 			}
 
 			UpdateCurSettings();
@@ -506,23 +506,23 @@ void CTSProcessorOptions::UpdateTunerMapItem(int Index)
 
 	m_TunerMapListView.CheckItem(Index,Settings.fEnable);
 	m_TunerMapListView.SetItemText(Index,0,
-		!Settings.Tuner.empty() ? Settings.Tuner.c_str() : TEXT("(Žw’è‚È‚µ)"));
+		!Settings.Tuner.empty() ? Settings.Tuner.c_str() : TEXT("(æŒ‡å®šãªã—)"));
 	if (Settings.IsNetworkIDEnabled())
 		StdUtil::snprintf(szText,lengthof(szText),TEXT("%d"),Settings.NetworkID);
 	else
-		StdUtil::strncpy(szText,lengthof(szText),TEXT("(Žw’è‚È‚µ)"));
+		StdUtil::strncpy(szText,lengthof(szText),TEXT("(æŒ‡å®šãªã—)"));
 	m_TunerMapListView.SetItemText(Index,1,szText);
 	if (Settings.IsTransportStreamIDEnabled())
 		StdUtil::snprintf(szText,lengthof(szText),TEXT("%d"),Settings.TransportStreamID);
 	else
-		StdUtil::strncpy(szText,lengthof(szText),TEXT("(Žw’è‚È‚µ)"));
+		StdUtil::strncpy(szText,lengthof(szText),TEXT("(æŒ‡å®šãªã—)"));
 	m_TunerMapListView.SetItemText(Index,2,szText);
 	if (Settings.IsServiceIDEnabled())
 		StdUtil::snprintf(szText,lengthof(szText),TEXT("%d"),Settings.ServiceID);
 	else
-		StdUtil::strncpy(szText,lengthof(szText),TEXT("(Žw’è‚È‚µ)"));
+		StdUtil::strncpy(szText,lengthof(szText),TEXT("(æŒ‡å®šãªã—)"));
 	m_TunerMapListView.SetItemText(Index,3,szText);
-	m_TunerMapListView.SetItemText(Index,4,Settings.fEnableProcessing?TEXT("—LŒø"):TEXT("–³Œø"));
+	m_TunerMapListView.SetItemText(Index,4,Settings.fEnableProcessing?TEXT("æœ‰åŠ¹"):TEXT("ç„¡åŠ¹"));
 	m_TunerMapListView.SetItemText(Index,5,Settings.Module.c_str());
 	m_TunerMapListView.SetItemText(Index,6,Settings.Device.c_str());
 	m_TunerMapListView.SetItemText(Index,7,Settings.Filter.c_str());

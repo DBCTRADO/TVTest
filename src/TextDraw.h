@@ -98,8 +98,8 @@ namespace TVTest
 	{
 	public:
 		enum {
-			FLAG_END_ELLIPSIS			=0x0001U,	// ���܂肫��Ȃ��ꍇ�ȗ��L����t��
-			FLAG_JAPANESE_HYPHNATION	=0x0002U	// �֑�����
+			FLAG_END_ELLIPSIS			=0x0001U,	// 収まりきらない場合省略記号を付加
+			FLAG_JAPANESE_HYPHNATION	=0x0002U	// 禁則処理
 		};
 
 		enum {

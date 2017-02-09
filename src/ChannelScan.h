@@ -46,7 +46,7 @@ private:
 		NUM_COLUMNS
 	};
 
-	// チャンネルリストのソートクラス
+	// 繝√Ε繝ｳ繝阪Ν繝ｪ繧ｹ繝医�ｮ繧ｽ繝ｼ繝医け繝ｩ繧ｹ
 	class CChannelListSort
 	{
 		static int CALLBACK CompareFunc(LPARAM lParam1,LPARAM lParam2,LPARAM lParamSort);

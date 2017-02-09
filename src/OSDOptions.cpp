@@ -75,7 +75,7 @@ bool COSDOptions::ReadSettings(CSettings &Settings)
 	Settings.Read(TEXT("OSDFadeTime"),&m_FadeTime);
 	unsigned int EnabledOSD=m_EnabledOSD;
 	if (Settings.Read(TEXT("EnabledOSD"),&EnabledOSD)) {
-		// €–Ú‚ª‘‚¦‚½‚ÉƒfƒtƒHƒ‹ƒg’l‚ª”½‰f‚³‚ê‚é‚æ‚¤‚É‚·‚é
+		// é …ç›®ãŒå¢—ãˆãŸæ™‚ã«ãƒ‡ãƒ•ã‚©ãƒ«ãƒˆå€¤ãŒåæ˜ ã•ã‚Œã‚‹ã‚ˆã†ã«ã™ã‚‹
 		unsigned int EnabledOSDMask;
 		if (!Settings.Read(TEXT("EnabledOSDMask"),&EnabledOSDMask)
 				|| EnabledOSDMask==0)
@@ -202,9 +202,9 @@ INT_PTR COSDOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 			DlgCheckBox_Check(hDlg,IDC_OSDOPTIONS_SHOW_RECORDING,(m_EnabledOSD&OSD_FLAG(OSD_RECORDING))!=0);
 			DlgCheckBox_Check(hDlg,IDC_OSDOPTIONS_SHOW_CHANNELNOINPUT,(m_EnabledOSD&OSD_FLAG(OSD_CHANNELNOINPUT))!=0);
 			static const LPCTSTR ChannelChangeModeText[] = {
-				TEXT("ƒƒS‚ÆƒeƒLƒXƒg"),
-				TEXT("ƒeƒLƒXƒg‚Ì‚İ"),
-				TEXT("ƒƒS‚Ì‚İ"),
+				TEXT("ãƒ­ã‚´ã¨ãƒ†ã‚­ã‚¹ãƒˆ"),
+				TEXT("ãƒ†ã‚­ã‚¹ãƒˆã®ã¿"),
+				TEXT("ãƒ­ã‚´ã®ã¿"),
 			};
 			SetComboBoxList(hDlg,IDC_OSDOPTIONS_CHANNELCHANGE_TYPE,
 							ChannelChangeModeText,lengthof(ChannelChangeModeText));
@@ -404,7 +404,7 @@ UINT_PTR CALLBACK COSDOptions::ChooseFontHookProc(HWND hDlg,UINT uMsg,WPARAM wPa
 {
 	switch (uMsg) {
 	case WM_INITDIALOG:
-		// ƒTƒCƒY‚Ì€–Ú‚ğ”ñ•\¦‚É‚·‚é
+		// ã‚µã‚¤ã‚ºã®é …ç›®ã‚’éè¡¨ç¤ºã«ã™ã‚‹
 		ShowDlgItem(hDlg,stc3,false);
 		ShowDlgItem(hDlg,cmb3,false);
 		break;

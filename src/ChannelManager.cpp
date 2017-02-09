@@ -46,7 +46,7 @@ bool CChannelManager::LoadChannelList(LPCTSTR pszFileName)
 		if (!m_TuningSpaceList.LoadFromFile(pszFileName))
 			return false;
 
-		// ŒÃ‚¢ƒo[ƒWƒ‡ƒ“‚Ìƒ`ƒƒƒ“ƒlƒ‹ƒtƒ@ƒCƒ‹‚ÍTSID‚âNID‚ª–³‚¢ê‡‚ª‚ ‚é
+		// å¤ã„ãƒãƒ¼ã‚¸ãƒ§ãƒ³ã®ãƒãƒ£ãƒ³ãƒãƒ«ãƒ•ã‚¡ã‚¤ãƒ«ã¯TSIDã‚„NIDãŒç„¡ã„å ´åˆãŒã‚ã‚‹
 		m_fChannelFileHasStreamIDs=true;
 		for (int i=0;i<m_TuningSpaceList.NumSpaces();i++) {
 			const CTuningSpaceInfo *pSpace=m_TuningSpaceList.GetTuningSpaceInfo(i);

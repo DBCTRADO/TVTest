@@ -14,7 +14,7 @@ CBonSrcFilter::CBonSrcFilter(LPUNKNOWN pUnk, HRESULT *phr)
 {
 	TRACE(TEXT("CBonSrcFilter::CBonSrcFilter %p\n"), this);
 
-	// ƒsƒ“‚ÌƒCƒ“ƒXƒ^ƒ“ƒX¶¬
+	// ãƒ”ãƒ³ã®ã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚¹ç”Ÿæˆ
 	m_pSrcPin = new CBonSrcPin(phr, this);
 
 	//*phr = (m_pSrcPin)? S_OK : E_OUTOFMEMORY;
@@ -24,14 +24,14 @@ CBonSrcFilter::CBonSrcFilter(LPUNKNOWN pUnk, HRESULT *phr)
 
 CBonSrcFilter::~CBonSrcFilter()
 {
-	// ƒsƒ“‚ÌƒCƒ“ƒXƒ^ƒ“ƒX‚ðíœ‚·‚é
+	// ãƒ”ãƒ³ã®ã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚¹ã‚’å‰Šé™¤ã™ã‚‹
 	if(m_pSrcPin)delete m_pSrcPin;
 }
 
 
 IBaseFilter* WINAPI CBonSrcFilter::CreateInstance(LPUNKNOWN pUnk, HRESULT *phr)
 {
-	// ƒCƒ“ƒXƒ^ƒ“ƒX‚ðì¬‚·‚é
+	// ã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚¹ã‚’ä½œæˆã™ã‚‹
 	CBonSrcFilter *pNewFilter = new CBonSrcFilter(pUnk, phr);
 	if (FAILED(*phr)) {
 		delete pNewFilter;
@@ -51,14 +51,14 @@ IBaseFilter* WINAPI CBonSrcFilter::CreateInstance(LPUNKNOWN pUnk, HRESULT *phr)
 
 int CBonSrcFilter::GetPinCount()
 {
-	// ƒsƒ“”‚ð•Ô‚·
+	// ãƒ”ãƒ³æ•°ã‚’è¿”ã™
 	return 1;
 }
 
 
 CBasePin * CBonSrcFilter::GetPin(int n)
 {
-	// ƒsƒ“‚ÌƒCƒ“ƒXƒ^ƒ“ƒX‚ð•Ô‚·
+	// ãƒ”ãƒ³ã®ã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚¹ã‚’è¿”ã™
 	return (n == 0)? m_pSrcPin : NULL;
 }
 
@@ -67,7 +67,7 @@ CBasePin * CBonSrcFilter::GetPin(int n)
 
 STDMETHODIMP CBonSrcFilter::Run(REFERENCE_TIME tStart)
 {
-	TRACE(L"¡CBonSrcFilter::Run()\n");
+	TRACE(L"â– CBonSrcFilter::Run()\n");
 
 	return CBaseFilter::Run(tStart);
 }
@@ -75,7 +75,7 @@ STDMETHODIMP CBonSrcFilter::Run(REFERENCE_TIME tStart)
 
 STDMETHODIMP CBonSrcFilter::Pause()
 {
-	TRACE(L"¡CBonSrcFilter::Pause()\n");
+	TRACE(L"â– CBonSrcFilter::Pause()\n");
 
 	return CBaseFilter::Pause();
 }
@@ -83,7 +83,7 @@ STDMETHODIMP CBonSrcFilter::Pause()
 
 STDMETHODIMP CBonSrcFilter::Stop()
 {
-	TRACE(L"¡CBonSrcFilter::Stop()\n");
+	TRACE(L"â– CBonSrcFilter::Stop()\n");
 
 	return CBaseFilter::Stop();
 }

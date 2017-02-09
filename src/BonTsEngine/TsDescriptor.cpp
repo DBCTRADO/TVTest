@@ -1,4 +1,4 @@
-// TsDescriptor.h: ‹Lqqƒ‰ƒbƒp[ƒNƒ‰ƒX‚ÌƒCƒ“ƒvƒŠƒƒ“ƒe[ƒVƒ‡ƒ“
+// TsDescriptor.h: è¨˜è¿°å­ãƒ©ãƒƒãƒ‘ãƒ¼ã‚¯ãƒ©ã‚¹ã®ã‚¤ãƒ³ãƒ—ãƒªãƒ¡ãƒ³ãƒ†ãƒ¼ã‚·ãƒ§ãƒ³
 //
 //////////////////////////////////////////////////////////////////////
 
@@ -17,7 +17,7 @@ inline DWORD MSBFirst32(const BYTE *p)
 
 
 /////////////////////////////////////////////////////////////////////////////
-// ‹Lqq‚ÌŠî’êƒNƒ‰ƒX
+// è¨˜è¿°å­ã®åŸºåº•ã‚¯ãƒ©ã‚¹
 /////////////////////////////////////////////////////////////////////////////
 
 CBaseDesc::CBaseDesc()
@@ -31,7 +31,7 @@ CBaseDesc::~CBaseDesc()
 
 void CBaseDesc::CopyDesc(const CBaseDesc *pOperand)
 {
-	// ƒCƒ“ƒXƒ^ƒ“ƒX‚ÌƒRƒs[
+	// ã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚¹ã®ã‚³ãƒ”ãƒ¼
 	*this = *pOperand;
 }
 
@@ -39,15 +39,15 @@ bool CBaseDesc::ParseDesc(const BYTE *pHexData, const WORD wDataLength)
 {
 	Reset();
 
-	// ‹¤’ÊƒtƒH[ƒ}ƒbƒg‚ğƒ`ƒFƒbƒN
-	if(!pHexData)return false;										// ƒf[ƒ^‚ª‹ó
-	else if(wDataLength < 2U)return false;							// ƒf[ƒ^‚ªÅ’á‹LqqƒTƒCƒY–¢–
-	else if(wDataLength < (WORD)(pHexData[1] + 2U))return false;	// ƒf[ƒ^‚ª‹Lqq‚ÌƒTƒCƒY‚æ‚è‚à¬‚³‚¢
+	// å…±é€šãƒ•ã‚©ãƒ¼ãƒãƒƒãƒˆã‚’ãƒã‚§ãƒƒã‚¯
+	if(!pHexData)return false;										// ãƒ‡ãƒ¼ã‚¿ãŒç©º
+	else if(wDataLength < 2U)return false;							// ãƒ‡ãƒ¼ã‚¿ãŒæœ€ä½è¨˜è¿°å­ã‚µã‚¤ã‚ºæœªæº€
+	else if(wDataLength < (WORD)(pHexData[1] + 2U))return false;	// ãƒ‡ãƒ¼ã‚¿ãŒè¨˜è¿°å­ã®ã‚µã‚¤ã‚ºã‚ˆã‚Šã‚‚å°ã•ã„
 
 	m_byDescTag = pHexData[0];
 	m_byDescLen = pHexData[1];
 
-	// ƒyƒCƒ[ƒh‰ğÍ
+	// ãƒšã‚¤ãƒ­ãƒ¼ãƒ‰è§£æ
 	if (m_byDescLen > 0 && StoreContents(&pHexData[2])) {
 		m_bIsValid = true;
 	}
@@ -57,25 +57,25 @@ bool CBaseDesc::ParseDesc(const BYTE *pHexData, const WORD wDataLength)
 
 bool CBaseDesc::IsValid() const
 {
-	// ƒf[ƒ^‚ª—LŒø(‰ğÍÏ)‚©‚Ç‚¤‚©‚ğ•Ô‚·
+	// ãƒ‡ãƒ¼ã‚¿ãŒæœ‰åŠ¹(è§£ææ¸ˆ)ã‹ã©ã†ã‹ã‚’è¿”ã™
 	return m_bIsValid;
 }
 
 BYTE CBaseDesc::GetTag() const
 {
-	// ‹Lqqƒ^ƒO‚ğ•Ô‚·
+	// è¨˜è¿°å­ã‚¿ã‚°ã‚’è¿”ã™
 	return m_byDescTag;
 }
 
 BYTE CBaseDesc::GetLength() const
 {
-	// ‹Lqq’·‚ğ•Ô‚·
+	// è¨˜è¿°å­é•·ã‚’è¿”ã™
 	return m_byDescLen;
 }
 
 void CBaseDesc::Reset()
 {
-	// ó‘Ô‚ğƒNƒŠƒA‚·‚é
+	// çŠ¶æ…‹ã‚’ã‚¯ãƒªã‚¢ã™ã‚‹
 	m_byDescTag = 0x00U;
 	m_byDescLen = 0U;
 	m_bIsValid = false;
@@ -83,13 +83,13 @@ void CBaseDesc::Reset()
 
 bool CBaseDesc::StoreContents(const BYTE *pPayload)
 {
-	// ƒfƒtƒHƒ‹ƒg‚ÌÀ‘•‚Å‚Í‰½‚à‚µ‚È‚¢
+	// ãƒ‡ãƒ•ã‚©ãƒ«ãƒˆã®å®Ÿè£…ã§ã¯ä½•ã‚‚ã—ãªã„
 	return true;
 }
 
 
 /////////////////////////////////////////////////////////////////////////////
-// [0x09] Conditional Access ‹Lqq’ŠÛ‰»ƒNƒ‰ƒX
+// [0x09] Conditional Access è¨˜è¿°å­æŠ½è±¡åŒ–ã‚¯ãƒ©ã‚¹
 /////////////////////////////////////////////////////////////////////////////
 
 CCaMethodDesc::CCaMethodDesc()
@@ -108,7 +108,7 @@ void CCaMethodDesc::Reset()
 
 WORD CCaMethodDesc::GetCaMethodID() const
 {
-	// Conditional Access Method ID ‚ğ•Ô‚·
+	// Conditional Access Method ID ã‚’è¿”ã™
 	return m_wCaMethodID;
 }
 
@@ -120,18 +120,18 @@ WORD CCaMethodDesc::GetCaPID() const
 
 const CMediaData * CCaMethodDesc::GetPrivateData() const
 {
-	// Private Data ‚ğ•Ô‚·
+	// Private Data ã‚’è¿”ã™
 	return &m_PrivateData;
 }
 
 bool CCaMethodDesc::StoreContents(const BYTE *pPayload)
 {
-	// ƒtƒH[ƒ}ƒbƒg‚ğƒ`ƒFƒbƒN
-	if(m_byDescTag != DESC_TAG)return false;							// ƒ^ƒO‚ª•s³
-	if(m_byDescLen < 4U)return false;								// CAƒƒ\ƒbƒh‹Lqq‚ÌÅ¬ƒTƒCƒY‚Í4
-	if((pPayload[2] & 0xE0U) != 0xE0U)return false;				// ŒÅ’èƒrƒbƒg‚ª•s³
+	// ãƒ•ã‚©ãƒ¼ãƒãƒƒãƒˆã‚’ãƒã‚§ãƒƒã‚¯
+	if(m_byDescTag != DESC_TAG)return false;							// ã‚¿ã‚°ãŒä¸æ­£
+	if(m_byDescLen < 4U)return false;								// CAãƒ¡ã‚½ãƒƒãƒ‰è¨˜è¿°å­ã®æœ€å°ã‚µã‚¤ã‚ºã¯4
+	if((pPayload[2] & 0xE0U) != 0xE0U)return false;				// å›ºå®šãƒ“ãƒƒãƒˆãŒä¸æ­£
 
-	// ‹Lqq‚ğ‰ğÍ
+	// è¨˜è¿°å­ã‚’è§£æ
 	m_wCaMethodID = ((WORD)pPayload[0] << 8) | (WORD)pPayload[1];			// +0,1	Conditional Access Method ID
 	m_wCaPID = ((WORD)(pPayload[2] & 0x1FU) << 8) | (WORD)pPayload[3];	// +2,3	Conditional Access PID
 	m_PrivateData.SetData(&pPayload[4], m_byDescLen - 4U);				// +4-	Private Data
@@ -141,7 +141,7 @@ bool CCaMethodDesc::StoreContents(const BYTE *pPayload)
 
 
 /////////////////////////////////////////////////////////////////////////////
-// [0x48] Service ‹Lqq’ŠÛ‰»ƒNƒ‰ƒX
+// [0x48] Service è¨˜è¿°å­æŠ½è±¡åŒ–ã‚¯ãƒ©ã‚¹
 /////////////////////////////////////////////////////////////////////////////
 
 CServiceDesc::CServiceDesc()
@@ -178,13 +178,13 @@ void CServiceDesc::Reset()
 
 BYTE CServiceDesc::GetServiceType() const
 {
-	// Service Type‚ğ•Ô‚·
+	// Service Typeã‚’è¿”ã™
 	return m_byServiceType;
 }
 
 DWORD CServiceDesc::GetProviderName(LPTSTR lpszDst, int MaxLength) const
 {
-	// Service Provider Name‚ğ•Ô‚·
+	// Service Provider Nameã‚’è¿”ã™
 	if (lpszDst && MaxLength > 0)
 		::lstrcpyn(lpszDst, m_szProviderName, MaxLength);
 
@@ -193,7 +193,7 @@ DWORD CServiceDesc::GetProviderName(LPTSTR lpszDst, int MaxLength) const
 
 DWORD CServiceDesc::GetServiceName(LPTSTR lpszDst, int MaxLength) const
 {
-	// Service Provider Name‚ğ•Ô‚·
+	// Service Provider Nameã‚’è¿”ã™
 	if (lpszDst && MaxLength > 0)
 		::lstrcpyn(lpszDst, m_szServiceName, MaxLength);
 
@@ -202,11 +202,11 @@ DWORD CServiceDesc::GetServiceName(LPTSTR lpszDst, int MaxLength) const
 
 bool CServiceDesc::StoreContents(const BYTE *pPayload)
 {
-	// ƒtƒH[ƒ}ƒbƒg‚ğƒ`ƒFƒbƒN
-	if(m_byDescTag != DESC_TAG)return false;	// ƒ^ƒO‚ª•s³
-	else if(m_byDescLen < 3U)return false;		// ƒT[ƒrƒX‹Lqq‚ÌƒTƒCƒY‚ÍÅ’á3
+	// ãƒ•ã‚©ãƒ¼ãƒãƒƒãƒˆã‚’ãƒã‚§ãƒƒã‚¯
+	if(m_byDescTag != DESC_TAG)return false;	// ã‚¿ã‚°ãŒä¸æ­£
+	else if(m_byDescLen < 3U)return false;		// ã‚µãƒ¼ãƒ“ã‚¹è¨˜è¿°å­ã®ã‚µã‚¤ã‚ºã¯æœ€ä½3
 
-	// ‹Lqq‚ğ‰ğÍ
+	// è¨˜è¿°å­ã‚’è§£æ
 	m_byServiceType = pPayload[0];				// +0	Service Type
 
 	int Pos = 1, Length;
@@ -235,7 +235,7 @@ bool CServiceDesc::StoreContents(const BYTE *pPayload)
 
 
 /////////////////////////////////////////////////////////////////////////////
-// [0x4D] Short Event ‹Lqq’ŠÛ‰»ƒNƒ‰ƒX
+// [0x4D] Short Event è¨˜è¿°å­æŠ½è±¡åŒ–ã‚¯ãƒ©ã‚¹
 /////////////////////////////////////////////////////////////////////////////
 
 CShortEventDesc::CShortEventDesc()
@@ -272,13 +272,13 @@ void CShortEventDesc::Reset()
 
 DWORD CShortEventDesc::GetLanguageCode() const
 {
-	// Language Code‚ğ•Ô‚·
+	// Language Codeã‚’è¿”ã™
 	return m_dwLanguageCode;
 }
 
 DWORD CShortEventDesc::GetEventName(LPTSTR lpszDst, int MaxLength) const
 {
-	// Event Name‚ğ•Ô‚·
+	// Event Nameã‚’è¿”ã™
 	if (lpszDst && MaxLength > 0)
 		::lstrcpyn(lpszDst, m_szEventName, MaxLength);
 
@@ -287,7 +287,7 @@ DWORD CShortEventDesc::GetEventName(LPTSTR lpszDst, int MaxLength) const
 
 DWORD CShortEventDesc::GetEventDesc(LPTSTR lpszDst, int MaxLength) const
 {
-	// Event Description‚ğ•Ô‚·
+	// Event Descriptionã‚’è¿”ã™
 	if (lpszDst && MaxLength > 0)
 		::lstrcpyn(lpszDst, m_szEventDesc, MaxLength);
 
@@ -296,11 +296,11 @@ DWORD CShortEventDesc::GetEventDesc(LPTSTR lpszDst, int MaxLength) const
 
 bool CShortEventDesc::StoreContents(const BYTE *pPayload)
 {
-	// ƒtƒH[ƒ}ƒbƒg‚ğƒ`ƒFƒbƒN
-	if(m_byDescTag != DESC_TAG)return false;	// ƒ^ƒO‚ª•s³
-	else if(m_byDescLen < 5U)return false;		// Short Event‹Lqq‚ÌƒTƒCƒY‚ÍÅ’á5
+	// ãƒ•ã‚©ãƒ¼ãƒãƒƒãƒˆã‚’ãƒã‚§ãƒƒã‚¯
+	if(m_byDescTag != DESC_TAG)return false;	// ã‚¿ã‚°ãŒä¸æ­£
+	else if(m_byDescLen < 5U)return false;		// Short Eventè¨˜è¿°å­ã®ã‚µã‚¤ã‚ºã¯æœ€ä½5
 
-	// ‹Lqq‚ğ‰ğÍ
+	// è¨˜è¿°å­ã‚’è§£æ
 	m_dwLanguageCode = ((DWORD)pPayload[0] << 16) | ((DWORD)pPayload[1] << 8) | (DWORD)pPayload[2];		// +0 - +2	ISO639  Language Code
 
 	int Pos = 3, Length;
@@ -329,7 +329,7 @@ bool CShortEventDesc::StoreContents(const BYTE *pPayload)
 
 
 /////////////////////////////////////////////////////////////////////////////
-// [0x4E] Extended Event ‹Lqq’ŠÛ‰»ƒNƒ‰ƒX
+// [0x4E] Extended Event è¨˜è¿°å­æŠ½è±¡åŒ–ã‚¯ãƒ©ã‚¹
 /////////////////////////////////////////////////////////////////////////////
 
 CExtendedEventDesc::CExtendedEventDesc()
@@ -413,7 +413,7 @@ bool CExtendedEventDesc::StoreContents(const BYTE *pPayload)
 
 
 /////////////////////////////////////////////////////////////////////////////
-// [0x52] Stream Identifier ‹Lqq’ŠÛ‰»ƒNƒ‰ƒX
+// [0x52] Stream Identifier è¨˜è¿°å­æŠ½è±¡åŒ–ã‚¯ãƒ©ã‚¹
 /////////////////////////////////////////////////////////////////////////////
 
 CStreamIdDesc::CStreamIdDesc()
@@ -430,17 +430,17 @@ void CStreamIdDesc::Reset()
 
 BYTE CStreamIdDesc::GetComponentTag() const
 {
-	// Component Tag ‚ğ•Ô‚·
+	// Component Tag ã‚’è¿”ã™
 	return m_byComponentTag;
 }
 
 bool CStreamIdDesc::StoreContents(const BYTE *pPayload)
 {
-	// ƒtƒH[ƒ}ƒbƒg‚ğƒ`ƒFƒbƒN
-	if(m_byDescTag != DESC_TAG)return false;	// ƒ^ƒO‚ª•s³
-	else if(m_byDescLen != 1U)return false;		// ƒXƒgƒŠ[ƒ€ID‹Lqq‚ÌƒTƒCƒY‚Íí‚É1
+	// ãƒ•ã‚©ãƒ¼ãƒãƒƒãƒˆã‚’ãƒã‚§ãƒƒã‚¯
+	if(m_byDescTag != DESC_TAG)return false;	// ã‚¿ã‚°ãŒä¸æ­£
+	else if(m_byDescLen != 1U)return false;		// ã‚¹ãƒˆãƒªãƒ¼ãƒ IDè¨˜è¿°å­ã®ã‚µã‚¤ã‚ºã¯å¸¸ã«1
 
-	// ‹Lqq‚ğ‰ğÍ
+	// è¨˜è¿°å­ã‚’è§£æ
 	m_byComponentTag = pPayload[0];				// +0	Component Tag
 
 	return true;
@@ -448,7 +448,7 @@ bool CStreamIdDesc::StoreContents(const BYTE *pPayload)
 
 
 /////////////////////////////////////////////////////////////////////////////
-// [0xC0] Hierarchical Transmission ‹Lqq’ŠÛ‰»ƒNƒ‰ƒX
+// [0xC0] Hierarchical Transmission è¨˜è¿°å­æŠ½è±¡åŒ–ã‚¯ãƒ©ã‚¹
 /////////////////////////////////////////////////////////////////////////////
 
 CHierarchicalTransmissionDesc::CHierarchicalTransmissionDesc()
@@ -492,7 +492,7 @@ bool CHierarchicalTransmissionDesc::StoreContents(const BYTE *pPayload)
 
 
 /////////////////////////////////////////////////////////////////////////////
-// [0x40] Network Name ‹Lqq’ŠÛ‰»ƒNƒ‰ƒX
+// [0x40] Network Name è¨˜è¿°å­æŠ½è±¡åŒ–ã‚¯ãƒ©ã‚¹
 /////////////////////////////////////////////////////////////////////////////
 
 CNetworkNameDesc::CNetworkNameDesc()
@@ -542,7 +542,7 @@ bool CNetworkNameDesc::StoreContents(const BYTE *pPayload)
 
 
 /////////////////////////////////////////////////////////////////////////////
-// [0x41] Service List ‹Lqq’ŠÛ‰»ƒNƒ‰ƒX
+// [0x41] Service List è¨˜è¿°å­æŠ½è±¡åŒ–ã‚¯ãƒ©ã‚¹
 /////////////////////////////////////////////////////////////////////////////
 
 CServiceListDesc::CServiceListDesc()
@@ -611,7 +611,7 @@ bool CServiceListDesc::StoreContents(const BYTE *pPayload)
 
 
 /////////////////////////////////////////////////////////////////////////////
-// [0x43] Satellite Delivery System ‹Lqq’ŠÛ‰»ƒNƒ‰ƒX
+// [0x43] Satellite Delivery System è¨˜è¿°å­æŠ½è±¡åŒ–ã‚¯ãƒ©ã‚¹
 /////////////////////////////////////////////////////////////////////////////
 
 CSatelliteDeliverySystemDesc::CSatelliteDeliverySystemDesc()
@@ -698,7 +698,7 @@ bool CSatelliteDeliverySystemDesc::StoreContents(const BYTE *pPayload)
 
 
 /////////////////////////////////////////////////////////////////////////////
-// [0xFA] Terrestrial Delivery System ‹Lqq’ŠÛ‰»ƒNƒ‰ƒX
+// [0xFA] Terrestrial Delivery System è¨˜è¿°å­æŠ½è±¡åŒ–ã‚¯ãƒ©ã‚¹
 /////////////////////////////////////////////////////////////////////////////
 
 CTerrestrialDeliverySystemDesc::CTerrestrialDeliverySystemDesc()
@@ -764,7 +764,7 @@ bool CTerrestrialDeliverySystemDesc::StoreContents(const BYTE *pPayload)
 
 
 /////////////////////////////////////////////////////////////////////////////
-// [0xFE] System Management ‹Lqq’ŠÛ‰»ƒNƒ‰ƒX
+// [0xFE] System Management è¨˜è¿°å­æŠ½è±¡åŒ–ã‚¯ãƒ©ã‚¹
 /////////////////////////////////////////////////////////////////////////////
 
 CSystemManageDesc::CSystemManageDesc()
@@ -810,7 +810,7 @@ bool CSystemManageDesc::StoreContents(const BYTE *pPayload)
 
 
 /////////////////////////////////////////////////////////////////////////////
-// [0xCD] TS Information ‹Lqq’ŠÛ‰»ƒNƒ‰ƒX
+// [0xCD] TS Information è¨˜è¿°å­æŠ½è±¡åŒ–ã‚¯ãƒ©ã‚¹
 /////////////////////////////////////////////////////////////////////////////
 
 CTSInfoDesc::CTSInfoDesc()
@@ -874,7 +874,7 @@ bool CTSInfoDesc::StoreContents(const BYTE *pPayload)
 
 
 /////////////////////////////////////////////////////////////////////////////
-// [0x50] Component ‹Lqq’ŠÛ‰»ƒNƒ‰ƒX
+// [0x50] Component è¨˜è¿°å­æŠ½è±¡åŒ–ã‚¯ãƒ©ã‚¹
 /////////////////////////////////////////////////////////////////////////////
 
 CComponentDesc::CComponentDesc()
@@ -959,7 +959,7 @@ bool CComponentDesc::StoreContents(const BYTE *pPayload)
 
 
 /////////////////////////////////////////////////////////////////////////////
-// [0xC4] Audio Component ‹Lqq’ŠÛ‰»ƒNƒ‰ƒX
+// [0xC4] Audio Component è¨˜è¿°å­æŠ½è±¡åŒ–ã‚¯ãƒ©ã‚¹
 /////////////////////////////////////////////////////////////////////////////
 
 CAudioComponentDesc::CAudioComponentDesc()
@@ -1101,7 +1101,7 @@ bool CAudioComponentDesc::StoreContents(const BYTE *pPayload)
 
 
 /////////////////////////////////////////////////////////////////////////////
-// [0x54] Content ‹Lqq’ŠÛ‰»ƒNƒ‰ƒX
+// [0x54] Content è¨˜è¿°å­æŠ½è±¡åŒ–ã‚¯ãƒ©ã‚¹
 /////////////////////////////////////////////////////////////////////////////
 
 CContentDesc::CContentDesc()
@@ -1146,7 +1146,7 @@ bool CContentDesc::StoreContents(const BYTE *pPayload)
 
 
 /////////////////////////////////////////////////////////////////////////////
-// [0xCF] Logo Transmission ‹Lqq’ŠÛ‰»ƒNƒ‰ƒX
+// [0xCF] Logo Transmission è¨˜è¿°å­æŠ½è±¡åŒ–ã‚¯ãƒ©ã‚¹
 /////////////////////////////////////////////////////////////////////////////
 
 CLogoTransmissionDesc::CLogoTransmissionDesc()
@@ -1204,19 +1204,19 @@ bool CLogoTransmissionDesc::StoreContents(const BYTE *pPayload)
 	m_DownloadDataID = DATAID_INVALID;
 	m_LogoChar[0] = '\0';
 	if (m_LogoTransmissionType == 0x01) {
-		// CDT“`‘—•û®1
+		// CDTä¼é€æ–¹å¼1
 		if (m_byDescLen < 7)
 			return false;
 		m_LogoID = ((WORD)(pPayload[1] & 0x01) << 8) | (WORD)pPayload[2];
 		m_LogoVersion = ((WORD)(pPayload[3] & 0x0F) << 8) | (WORD) pPayload[4];
 		m_DownloadDataID = ((WORD)pPayload[5] << 8) | (WORD)pPayload[6];
 	} else if (m_LogoTransmissionType == 0x02) {
-		// CDT“`‘—•û®2
+		// CDTä¼é€æ–¹å¼2
 		if (m_byDescLen < 3)
 			return false;
 		m_LogoID = ((WORD)(pPayload[1] & 0x01) << 8) | (WORD)pPayload[2];
 	} else if (m_LogoTransmissionType == 0x03) {
-		// ŠÈˆÕƒƒS•û®
+		// ç°¡æ˜“ãƒ­ã‚´æ–¹å¼
 		int i;
 		for (i = 0; i < (int)m_byDescLen - 1 && i < MAX_LOGO_CHAR - 1; i++) {
 			m_LogoChar[i] = pPayload[1 + i];
@@ -1228,7 +1228,7 @@ bool CLogoTransmissionDesc::StoreContents(const BYTE *pPayload)
 
 
 /////////////////////////////////////////////////////////////////////////////
-// [0xD5] Series ‹Lqq’ŠÛ‰»ƒNƒ‰ƒX
+// [0xD5] Series è¨˜è¿°å­æŠ½è±¡åŒ–ã‚¯ãƒ©ã‚¹
 /////////////////////////////////////////////////////////////////////////////
 
 CSeriesDesc::CSeriesDesc()
@@ -1339,7 +1339,7 @@ bool CSeriesDesc::StoreContents(const BYTE *pPayload)
 
 
 /////////////////////////////////////////////////////////////////////////////
-// [0xD6] Event Group ‹Lqq’ŠÛ‰»ƒNƒ‰ƒX
+// [0xD6] Event Group è¨˜è¿°å­æŠ½è±¡åŒ–ã‚¯ãƒ©ã‚¹
 /////////////////////////////////////////////////////////////////////////////
 
 CEventGroupDesc::CEventGroupDesc()
@@ -1413,7 +1413,7 @@ bool CEventGroupDesc::StoreContents(const BYTE *pPayload)
 
 
 /////////////////////////////////////////////////////////////////////////////
-// [0xD9] Component Group ‹Lqq’ŠÛ‰»ƒNƒ‰ƒX
+// [0xD9] Component Group è¨˜è¿°å­æŠ½è±¡åŒ–ã‚¯ãƒ©ã‚¹
 /////////////////////////////////////////////////////////////////////////////
 
 CComponentGroupDesc::CComponentGroupDesc()
@@ -1514,7 +1514,7 @@ bool CComponentGroupDesc::StoreContents(const BYTE *pPayload)
 
 
 /////////////////////////////////////////////////////////////////////////////
-// [0x58] Local Time Offset ‹Lqq’ŠÛ‰»ƒNƒ‰ƒX
+// [0x58] Local Time Offset è¨˜è¿°å­æŠ½è±¡åŒ–ã‚¯ãƒ©ã‚¹
 /////////////////////////////////////////////////////////////////////////////
 
 CLocalTimeOffsetDesc::CLocalTimeOffsetDesc()
@@ -1581,7 +1581,7 @@ bool CLocalTimeOffsetDesc::StoreContents(const BYTE *pPayload)
 
 
 /////////////////////////////////////////////////////////////////////////////
-// [0xC9] Download Content ‹Lqq’ŠÛ‰»ƒNƒ‰ƒX
+// [0xC9] Download Content è¨˜è¿°å­æŠ½è±¡åŒ–ã‚¯ãƒ©ã‚¹
 /////////////////////////////////////////////////////////////////////////////
 
 CDownloadContentDesc::CDownloadContentDesc()
@@ -1647,7 +1647,7 @@ bool CDownloadContentDesc::StoreContents(const BYTE *pPayload)
 	m_Info.LeakRate = ((DWORD)pPayload[13] << 14) | ((DWORD)pPayload[14] << 6) | (DWORD)(pPayload[15] >> 2);
 	m_Info.ComponentTag = pPayload[16];
 
-	// –¢g—p‚È‚Ì‚Å‚Æ‚è‚ ‚¦‚¸Œã‰ñ‚µ
+	// æœªä½¿ç”¨ãªã®ã§ã¨ã‚Šã‚ãˆãšå¾Œå›ã—
 	/*
 	if (m_Info.bCompatibilityFlag) {
 	}
@@ -1667,7 +1667,7 @@ bool CDownloadContentDesc::StoreContents(const BYTE *pPayload)
 
 
 /////////////////////////////////////////////////////////////////////////////
-// [0xCB] CA Contract Info ‹Lqq’ŠÛ‰»ƒNƒ‰ƒX
+// [0xCB] CA Contract Info è¨˜è¿°å­æŠ½è±¡åŒ–ã‚¯ãƒ©ã‚¹
 /////////////////////////////////////////////////////////////////////////////
 
 CCaContractInfoDesc::CCaContractInfoDesc()
@@ -1803,7 +1803,7 @@ bool CCaContractInfoDesc::StoreContents(const BYTE *pPayload)
 
 
 /////////////////////////////////////////////////////////////////////////////
-// [0xFB] •”•ªóM‹Lqq’ŠÛ‰»ƒNƒ‰ƒX
+// [0xFB] éƒ¨åˆ†å—ä¿¡è¨˜è¿°å­æŠ½è±¡åŒ–ã‚¯ãƒ©ã‚¹
 /////////////////////////////////////////////////////////////////////////////
 
 CPartialReceptionDesc::CPartialReceptionDesc()
@@ -1847,7 +1847,7 @@ bool CPartialReceptionDesc::StoreContents(const BYTE *pPayload)
 
 
 /////////////////////////////////////////////////////////////////////////////
-// ‹LqqƒuƒƒbƒN’ŠÛ‰»ƒNƒ‰ƒX
+// è¨˜è¿°å­ãƒ–ãƒ­ãƒƒã‚¯æŠ½è±¡åŒ–ã‚¯ãƒ©ã‚¹
 /////////////////////////////////////////////////////////////////////////////
 
 CDescBlock::CDescBlock()
@@ -1870,7 +1870,7 @@ CDescBlock & CDescBlock::operator = (const CDescBlock &Operand)
 	if (&Operand == this)
 		return *this;
 
-	// ƒCƒ“ƒXƒ^ƒ“ƒX‚ÌƒRƒs[
+	// ã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚¹ã®ã‚³ãƒ”ãƒ¼
 	Reset();
 	m_DescArray.resize(Operand.m_DescArray.size());
 
@@ -1887,23 +1887,23 @@ WORD CDescBlock::ParseBlock(const BYTE *pHexData, const WORD wDataLength)
 	if (!pHexData || wDataLength < 2U)
 		return 0U;
 
-	// ó‘Ô‚ğƒNƒŠƒA
+	// çŠ¶æ…‹ã‚’ã‚¯ãƒªã‚¢
 	Reset();
 
-	// w’è‚³‚ê‚½ƒuƒƒbƒN‚ÉŠÜ‚Ü‚ê‚é‹Lqq‚ğ‰ğÍ‚·‚é
+	// æŒ‡å®šã•ã‚ŒãŸãƒ–ãƒ­ãƒƒã‚¯ã«å«ã¾ã‚Œã‚‹è¨˜è¿°å­ã‚’è§£æã™ã‚‹
 	WORD wPos = 0UL;
 
 	do {
 		CBaseDesc *pNewDesc;
 
-		// ƒuƒƒbƒN‚ğ‰ğÍ‚·‚é
+		// ãƒ–ãƒ­ãƒƒã‚¯ã‚’è§£æã™ã‚‹
 		if (!(pNewDesc = ParseDesc(&pHexData[wPos], wDataLength - wPos)))
 			break;
 
-		// ƒŠƒXƒg‚É’Ç‰Á‚·‚é
+		// ãƒªã‚¹ãƒˆã«è¿½åŠ ã™ã‚‹
 		m_DescArray.push_back(pNewDesc);
 
-		// ˆÊ’uXV
+		// ä½ç½®æ›´æ–°
 		wPos += (pNewDesc->GetLength() + 2U);
 	} while (wPos + 2 <= wDataLength);
 
@@ -1912,13 +1912,13 @@ WORD CDescBlock::ParseBlock(const BYTE *pHexData, const WORD wDataLength)
 
 const CBaseDesc * CDescBlock::ParseBlock(const BYTE *pHexData, const WORD wDataLength, const BYTE byTag)
 {
-	// w’è‚³‚ê‚½ƒuƒƒbƒN‚ÉŠÜ‚Ü‚ê‚é‹Lqq‚ğ‰ğÍ‚µ‚Äw’è‚³‚ê‚½ƒ^ƒO‚Ì‹Lqq‚ğ•Ô‚·
+	// æŒ‡å®šã•ã‚ŒãŸãƒ–ãƒ­ãƒƒã‚¯ã«å«ã¾ã‚Œã‚‹è¨˜è¿°å­ã‚’è§£æã—ã¦æŒ‡å®šã•ã‚ŒãŸã‚¿ã‚°ã®è¨˜è¿°å­ã‚’è¿”ã™
 	return (ParseBlock(pHexData, wDataLength))? GetDescByTag(byTag) : NULL;
 }
 
 void CDescBlock::Reset()
 {
-	// ‘S‚Ä‚ÌƒCƒ“ƒXƒ^ƒ“ƒX‚ğŠJ•ú‚·‚é
+	// å…¨ã¦ã®ã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚¹ã‚’é–‹æ”¾ã™ã‚‹
 	for (size_t Index = 0 ; Index < m_DescArray.size() ; Index++) {
 		delete m_DescArray[Index];
 	}
@@ -1928,19 +1928,19 @@ void CDescBlock::Reset()
 
 WORD CDescBlock::GetDescNum() const
 {
-	// ‹Lqq‚Ì”‚ğ•Ô‚·
+	// è¨˜è¿°å­ã®æ•°ã‚’è¿”ã™
 	return (WORD)m_DescArray.size();
 }
 
 const CBaseDesc * CDescBlock::GetDescByIndex(const WORD wIndex) const
 {
-	// ƒCƒ“ƒfƒbƒNƒX‚Åw’è‚µ‚½‹Lqq‚ğ•Ô‚·
+	// ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹ã§æŒ‡å®šã—ãŸè¨˜è¿°å­ã‚’è¿”ã™
 	return (wIndex < m_DescArray.size())? m_DescArray[wIndex] : NULL;
 }
 
 const CBaseDesc * CDescBlock::GetDescByTag(const BYTE byTag) const
 {
-	// w’è‚µ‚½ƒ^ƒO‚Éˆê’v‚·‚é‹Lqq‚ğ•Ô‚·
+	// æŒ‡å®šã—ãŸã‚¿ã‚°ã«ä¸€è‡´ã™ã‚‹è¨˜è¿°å­ã‚’è¿”ã™
 	for (size_t Index = 0 ; Index < m_DescArray.size() ; Index++){
 		if (m_DescArray[Index]->GetTag() == byTag)
 			return m_DescArray[Index];
@@ -1954,17 +1954,17 @@ CBaseDesc * CDescBlock::ParseDesc(const BYTE *pHexData, const WORD wDataLength)
 	if (!pHexData || wDataLength < 2U)
 		return NULL;
 
-	// ƒ^ƒO‚É‘Î‰‚µ‚½ƒCƒ“ƒXƒ^ƒ“ƒX‚ğ¶¬‚·‚é
+	// ã‚¿ã‚°ã«å¯¾å¿œã—ãŸã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚¹ã‚’ç”Ÿæˆã™ã‚‹
 	CBaseDesc *pNewDesc = CreateDescInstance(pHexData[0]);
 
 	/*
-	// ƒƒ‚ƒŠ•s‘«
+	// ãƒ¡ãƒ¢ãƒªä¸è¶³
 	if(!pNewDesc)return NULL;
 	*/
 
-	// ‹Lqq‚ğ‰ğÍ‚·‚é
+	// è¨˜è¿°å­ã‚’è§£æã™ã‚‹
 	if (!pNewDesc->ParseDesc(pHexData, wDataLength)) {
-		// ƒGƒ‰[‚ ‚è
+		// ã‚¨ãƒ©ãƒ¼ã‚ã‚Š
 		delete pNewDesc;
 		return NULL;
 	}
@@ -1974,7 +1974,7 @@ CBaseDesc * CDescBlock::ParseDesc(const BYTE *pHexData, const WORD wDataLength)
 
 CBaseDesc * CDescBlock::CreateDescInstance(const BYTE byTag)
 {
-	// ƒ^ƒO‚É‘Î‰‚µ‚½ƒCƒ“ƒXƒ^ƒ“ƒX‚ğ¶¬‚·‚é
+	// ã‚¿ã‚°ã«å¯¾å¿œã—ãŸã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚¹ã‚’ç”Ÿæˆã™ã‚‹
 	switch (byTag) {
 	case CCaMethodDesc::DESC_TAG					: return new CCaMethodDesc;
 	case CServiceDesc::DESC_TAG						: return new CServiceDesc;

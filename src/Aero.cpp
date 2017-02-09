@@ -44,7 +44,7 @@ bool CAeroGlass::LoadDwmLib()
 #endif
 
 
-// ƒRƒ“ƒ|ƒWƒVƒ‡ƒ“‚ª—LŒø‚©æ“¾‚·‚é
+// ã‚³ãƒ³ãƒã‚¸ã‚·ãƒ§ãƒ³ãŒæœ‰åŠ¹ã‹å–å¾—ã™ã‚‹
 bool CAeroGlass::IsEnabled()
 {
 	BOOL fEnabled;
@@ -63,7 +63,7 @@ bool CAeroGlass::IsEnabled()
 }
 
 
-// ƒNƒ‰ƒCƒAƒ“ƒg—Ìˆæ‚ğ“§‚¯‚³‚¹‚é
+// ã‚¯ãƒ©ã‚¤ã‚¢ãƒ³ãƒˆé ˜åŸŸã‚’é€ã‘ã•ã›ã‚‹
 bool CAeroGlass::ApplyAeroGlass(HWND hwnd,const RECT *pRect)
 {
 	if (!IsEnabled())
@@ -90,7 +90,7 @@ bool CAeroGlass::ApplyAeroGlass(HWND hwnd,const RECT *pRect)
 }
 
 
-// ƒtƒŒ[ƒ€‚Ì•`‰æ‚ğ–³Œø‚É‚·‚é
+// ãƒ•ãƒ¬ãƒ¼ãƒ ã®æç”»ã‚’ç„¡åŠ¹ã«ã™ã‚‹
 bool CAeroGlass::EnableNcRendering(HWND hwnd,bool fEnable)
 {
 	DWMNCRENDERINGPOLICY ncrp=fEnable?DWMNCRP_USEWINDOWSTYLE:DWMNCRP_DISABLED;

@@ -1,4 +1,4 @@
-// TsDescriptor.h: ‹Lqqƒ‰ƒbƒp[ƒNƒ‰ƒX‚ÌƒCƒ“ƒ^[ƒtƒFƒCƒX
+// TsDescriptor.h: è¨˜è¿°å­ãƒ©ãƒƒãƒ‘ãƒ¼ã‚¯ãƒ©ã‚¹ã®ã‚¤ãƒ³ã‚¿ãƒ¼ãƒ•ã‚§ã‚¤ã‚¹
 //
 //////////////////////////////////////////////////////////////////////
 
@@ -11,7 +11,7 @@
 
 
 /////////////////////////////////////////////////////////////////////////////
-// ‹Lqq‚ÌŠî’êƒNƒ‰ƒX
+// è¨˜è¿°å­ã®åŸºåº•ã‚¯ãƒ©ã‚¹
 /////////////////////////////////////////////////////////////////////////////
 
 class CBaseDesc
@@ -32,14 +32,14 @@ public:
 protected:
 	virtual bool StoreContents(const BYTE *pPayload);
 
-	BYTE m_byDescTag;	// ‹Lqqƒ^ƒO
-	BYTE m_byDescLen;	// ‹Lqq’·
-	bool m_bIsValid;	// ‰ğÍŒ‹‰Ê
+	BYTE m_byDescTag;	// è¨˜è¿°å­ã‚¿ã‚°
+	BYTE m_byDescLen;	// è¨˜è¿°å­é•·
+	bool m_bIsValid;	// è§£æçµæœ
 };
 
 
 /////////////////////////////////////////////////////////////////////////////
-// ‹Lqq‚Ìƒeƒ“ƒvƒŒ[ƒgƒNƒ‰ƒX
+// è¨˜è¿°å­ã®ãƒ†ãƒ³ãƒ—ãƒ¬ãƒ¼ãƒˆã‚¯ãƒ©ã‚¹
 /////////////////////////////////////////////////////////////////////////////
 
 template<typename T, BYTE Tag> class CDescTemplate : public CBaseDesc
@@ -63,7 +63,7 @@ public:
 
 
 /////////////////////////////////////////////////////////////////////////////
-// [0x09] Conditional Access Method ‹Lqq’ŠÛ‰»ƒNƒ‰ƒX
+// [0x09] Conditional Access Method è¨˜è¿°å­æŠ½è±¡åŒ–ã‚¯ãƒ©ã‚¹
 /////////////////////////////////////////////////////////////////////////////
 
 class CCaMethodDesc : public CDescTemplate<CCaMethodDesc, 0x09>
@@ -89,7 +89,7 @@ protected:
 
 
 /////////////////////////////////////////////////////////////////////////////
-// [0x48] Service ‹Lqq’ŠÛ‰»ƒNƒ‰ƒX
+// [0x48] Service è¨˜è¿°å­æŠ½è±¡åŒ–ã‚¯ãƒ©ã‚¹
 /////////////////////////////////////////////////////////////////////////////
 
 class CServiceDesc : public CDescTemplate<CServiceDesc, 0x48>
@@ -117,7 +117,7 @@ protected:
 
 
 /////////////////////////////////////////////////////////////////////////////
-// [0x4D] Short Event ‹Lqq’ŠÛ‰»ƒNƒ‰ƒX
+// [0x4D] Short Event è¨˜è¿°å­æŠ½è±¡åŒ–ã‚¯ãƒ©ã‚¹
 /////////////////////////////////////////////////////////////////////////////
 
 class CShortEventDesc : public CDescTemplate<CShortEventDesc, 0x4D>
@@ -145,7 +145,7 @@ protected:
 
 
 /////////////////////////////////////////////////////////////////////////////
-// [0x4E] Extended Event ‹Lqq’ŠÛ‰»ƒNƒ‰ƒX
+// [0x4E] Extended Event è¨˜è¿°å­æŠ½è±¡åŒ–ã‚¯ãƒ©ã‚¹
 /////////////////////////////////////////////////////////////////////////////
 
 class CExtendedEventDesc : public CDescTemplate<CExtendedEventDesc, 0x4E>
@@ -183,7 +183,7 @@ protected:
 
 
 /////////////////////////////////////////////////////////////////////////////
-// [0x52] Stream Identifier ‹Lqq’ŠÛ‰»ƒNƒ‰ƒX
+// [0x52] Stream Identifier è¨˜è¿°å­æŠ½è±¡åŒ–ã‚¯ãƒ©ã‚¹
 /////////////////////////////////////////////////////////////////////////////
 
 class CStreamIdDesc : public CDescTemplate<CStreamIdDesc, 0x52>
@@ -205,7 +205,7 @@ protected:
 
 
 /////////////////////////////////////////////////////////////////////////////
-// [0xC0] Hierarchical Transmission ‹Lqq’ŠÛ‰»ƒNƒ‰ƒX
+// [0xC0] Hierarchical Transmission è¨˜è¿°å­æŠ½è±¡åŒ–ã‚¯ãƒ©ã‚¹
 /////////////////////////////////////////////////////////////////////////////
 
 class CHierarchicalTransmissionDesc : public CDescTemplate<CHierarchicalTransmissionDesc, 0xC0>
@@ -229,7 +229,7 @@ protected:
 
 
 /////////////////////////////////////////////////////////////////////////////
-// [0x40] Network Name ‹Lqq’ŠÛ‰»ƒNƒ‰ƒX
+// [0x40] Network Name è¨˜è¿°å­æŠ½è±¡åŒ–ã‚¯ãƒ©ã‚¹
 /////////////////////////////////////////////////////////////////////////////
 
 class CNetworkNameDesc : public CDescTemplate<CNetworkNameDesc, 0x40>
@@ -253,7 +253,7 @@ protected:
 
 
 /////////////////////////////////////////////////////////////////////////////
-// [0x41] Service List ‹Lqq’ŠÛ‰»ƒNƒ‰ƒX
+// [0x41] Service List è¨˜è¿°å­æŠ½è±¡åŒ–ã‚¯ãƒ©ã‚¹
 /////////////////////////////////////////////////////////////////////////////
 
 class CServiceListDesc : public CDescTemplate<CServiceListDesc, 0x41>
@@ -283,7 +283,7 @@ protected:
 
 
 /////////////////////////////////////////////////////////////////////////////
-// [0x43] Satellite Delivery System ‹Lqq’ŠÛ‰»ƒNƒ‰ƒX
+// [0x43] Satellite Delivery System è¨˜è¿°å­æŠ½è±¡åŒ–ã‚¯ãƒ©ã‚¹
 /////////////////////////////////////////////////////////////////////////////
 
 class CSatelliteDeliverySystemDesc : public CDescTemplate<CSatelliteDeliverySystemDesc, 0x43>
@@ -317,7 +317,7 @@ protected:
 
 
 /////////////////////////////////////////////////////////////////////////////
-// [0xFA] Terrestrial Delivery System ‹Lqq’ŠÛ‰»ƒNƒ‰ƒX
+// [0xFA] Terrestrial Delivery System è¨˜è¿°å­æŠ½è±¡åŒ–ã‚¯ãƒ©ã‚¹
 /////////////////////////////////////////////////////////////////////////////
 
 class CTerrestrialDeliverySystemDesc : public CDescTemplate<CTerrestrialDeliverySystemDesc, 0xFA>
@@ -346,7 +346,7 @@ protected:
 
 
 /////////////////////////////////////////////////////////////////////////////
-// [0xFE] System Management ‹Lqq’ŠÛ‰»ƒNƒ‰ƒX
+// [0xFE] System Management è¨˜è¿°å­æŠ½è±¡åŒ–ã‚¯ãƒ©ã‚¹
 /////////////////////////////////////////////////////////////////////////////
 
 class CSystemManageDesc : public CDescTemplate<CSystemManageDesc, 0xFE>
@@ -372,7 +372,7 @@ protected:
 
 
 /////////////////////////////////////////////////////////////////////////////
-// [0xCD] TS Information ‹Lqq’ŠÛ‰»ƒNƒ‰ƒX
+// [0xCD] TS Information è¨˜è¿°å­æŠ½è±¡åŒ–ã‚¯ãƒ©ã‚¹
 /////////////////////////////////////////////////////////////////////////////
 
 class CTSInfoDesc : public CDescTemplate<CTSInfoDesc, 0xCD>
@@ -398,7 +398,7 @@ protected:
 
 
 /////////////////////////////////////////////////////////////////////////////
-// [0x50] Component ‹Lqq’ŠÛ‰»ƒNƒ‰ƒX
+// [0x50] Component è¨˜è¿°å­æŠ½è±¡åŒ–ã‚¯ãƒ©ã‚¹
 /////////////////////////////////////////////////////////////////////////////
 
 class CComponentDesc : public CDescTemplate<CComponentDesc, 0x50>
@@ -430,7 +430,7 @@ protected:
 
 
 /////////////////////////////////////////////////////////////////////////////
-// [0xC4] Audio Component ‹Lqq’ŠÛ‰»ƒNƒ‰ƒX
+// [0xC4] Audio Component è¨˜è¿°å­æŠ½è±¡åŒ–ã‚¯ãƒ©ã‚¹
 /////////////////////////////////////////////////////////////////////////////
 
 class CAudioComponentDesc : public CDescTemplate<CAudioComponentDesc, 0xC4>
@@ -475,7 +475,7 @@ protected:
 
 
 /////////////////////////////////////////////////////////////////////////////
-// [0x54] Content ‹Lqq’ŠÛ‰»ƒNƒ‰ƒX
+// [0x54] Content è¨˜è¿°å­æŠ½è±¡åŒ–ã‚¯ãƒ©ã‚¹
 /////////////////////////////////////////////////////////////////////////////
 
 class CContentDesc : public CDescTemplate<CContentDesc, 0x54>
@@ -514,7 +514,7 @@ protected:
 
 
 /////////////////////////////////////////////////////////////////////////////
-// [0xCF] Logo Transmission ‹Lqq’ŠÛ‰»ƒNƒ‰ƒX
+// [0xCF] Logo Transmission è¨˜è¿°å­æŠ½è±¡åŒ–ã‚¯ãƒ©ã‚¹
 /////////////////////////////////////////////////////////////////////////////
 
 class CLogoTransmissionDesc : public CDescTemplate<CLogoTransmissionDesc, 0xCF>
@@ -529,15 +529,15 @@ public:
 	// logo_transmission_type
 	enum {
 		TRANSMISSION_UNDEFINED,
-		TRANSMISSION_CDT1,		// CDT“`‘—•û®1
-		TRANSMISSION_CDT2,		// CDT“`‘—•û®2
-		TRANSMISSION_CHAR		// ŠÈˆÕƒƒS•û®
+		TRANSMISSION_CDT1,		// CDTä¼é€æ–¹å¼1
+		TRANSMISSION_CDT2,		// CDTä¼é€æ–¹å¼2
+		TRANSMISSION_CHAR		// ç°¡æ˜“ãƒ­ã‚´æ–¹å¼
 	};
 	enum {
-		MAX_LOGO_CHAR		= 12,		// Å‘åŠÈˆÕƒƒS’·
-		LOGOID_INVALID		= 0xFFFF,	// –³Œø‚È logo_id
-		LOGOVERSION_INVALID	= 0xFFFF,	// –³Œø‚È logo_version
-		DATAID_INVALID		= 0xFFFF	// –³Œø‚È download_data_id
+		MAX_LOGO_CHAR		= 12,		// æœ€å¤§ç°¡æ˜“ãƒ­ã‚´é•·
+		LOGOID_INVALID		= 0xFFFF,	// ç„¡åŠ¹ãª logo_id
+		LOGOVERSION_INVALID	= 0xFFFF,	// ç„¡åŠ¹ãª logo_version
+		DATAID_INVALID		= 0xFFFF	// ç„¡åŠ¹ãª download_data_id
 	};
 
 	BYTE GetLogoTransmissionType() const;
@@ -558,7 +558,7 @@ protected:
 
 
 /////////////////////////////////////////////////////////////////////////////
-// [0xD5] Series ‹Lqq’ŠÛ‰»ƒNƒ‰ƒX
+// [0xD5] Series è¨˜è¿°å­æŠ½è±¡åŒ–ã‚¯ãƒ©ã‚¹
 /////////////////////////////////////////////////////////////////////////////
 
 class CSeriesDesc : public CDescTemplate<CSeriesDesc, 0xD5>
@@ -577,12 +577,12 @@ public:
 		MAX_SERIES_NAME		= 64
 	};
 	enum {
-		PROGRAMPATTERN_IRREGULAR,					// •s’èŠú
-		PROGRAMPATTERN_ACROSS_THE_BOARD,			// ‘Ñ”Ô‘g
-		PROGRAMPATTERN_WEEKLY,						// Tˆê‰ñ
-		PROGRAMPATTERN_MONTHLY,						// Œˆê‰ñ
-		PROGRAMPATTERN_MULTIPLE_EPISODES_IN_DAY,	// “¯“ú“à‚É•¡”˜b•Ò¬
-		PROGRAMPATTERN_DIVISION_LONG_PROGRAM,		// ’·ŠÔ”Ô‘g‚Ì•ªŠ„
+		PROGRAMPATTERN_IRREGULAR,					// ä¸å®šæœŸ
+		PROGRAMPATTERN_ACROSS_THE_BOARD,			// å¸¯ç•ªçµ„
+		PROGRAMPATTERN_WEEKLY,						// é€±ä¸€å›
+		PROGRAMPATTERN_MONTHLY,						// æœˆä¸€å›
+		PROGRAMPATTERN_MULTIPLE_EPISODES_IN_DAY,	// åŒæ—¥å†…ã«è¤‡æ•°è©±ç·¨æˆ
+		PROGRAMPATTERN_DIVISION_LONG_PROGRAM,		// é•·æ™‚é–“ç•ªçµ„ã®åˆ†å‰²
 		PROGRAMPATTERN_INVALID = 0xFF
 	};
 
@@ -610,7 +610,7 @@ protected:
 
 
 /////////////////////////////////////////////////////////////////////////////
-// [0xD6] Event Group ‹Lqq’ŠÛ‰»ƒNƒ‰ƒX
+// [0xD6] Event Group è¨˜è¿°å­æŠ½è±¡åŒ–ã‚¯ãƒ©ã‚¹
 /////////////////////////////////////////////////////////////////////////////
 
 class CEventGroupDesc : public CDescTemplate<CEventGroupDesc, 0xD6>
@@ -664,7 +664,7 @@ protected:
 
 
 /////////////////////////////////////////////////////////////////////////////
-// [0xD9] Component Group ‹Lqq’ŠÛ‰»ƒNƒ‰ƒX
+// [0xD9] Component Group è¨˜è¿°å­æŠ½è±¡åŒ–ã‚¯ãƒ©ã‚¹
 /////////////////////////////////////////////////////////////////////////////
 
 class CComponentGroupDesc : public CDescTemplate<CComponentGroupDesc, 0xD9>
@@ -709,7 +709,7 @@ protected:
 
 
 /////////////////////////////////////////////////////////////////////////////
-// [0x58] Local Time Offset ‹Lqq’ŠÛ‰»ƒNƒ‰ƒX
+// [0x58] Local Time Offset è¨˜è¿°å­æŠ½è±¡åŒ–ã‚¯ãƒ©ã‚¹
 /////////////////////////////////////////////////////////////////////////////
 
 class CLocalTimeOffsetDesc : public CDescTemplate<CLocalTimeOffsetDesc, 0x58>
@@ -750,7 +750,7 @@ protected:
 
 
 /////////////////////////////////////////////////////////////////////////////
-// [0xC9] Download Content ‹Lqq’ŠÛ‰»ƒNƒ‰ƒX
+// [0xC9] Download Content è¨˜è¿°å­æŠ½è±¡åŒ–ã‚¯ãƒ©ã‚¹
 /////////////////////////////////////////////////////////////////////////////
 
 class CDownloadContentDesc : public CDescTemplate<CDownloadContentDesc, 0xC9>
@@ -794,7 +794,7 @@ protected:
 
 
 /////////////////////////////////////////////////////////////////////////////
-// [0xCB] CA Contract Info ‹Lqq’ŠÛ‰»ƒNƒ‰ƒX
+// [0xCB] CA Contract Info è¨˜è¿°å­æŠ½è±¡åŒ–ã‚¯ãƒ©ã‚¹
 /////////////////////////////////////////////////////////////////////////////
 
 class CCaContractInfoDesc : public CDescTemplate<CCaContractInfoDesc, 0xCB>
@@ -836,7 +836,7 @@ protected:
 
 
 /////////////////////////////////////////////////////////////////////////////
-// [0xFB] •”•ªóM‹Lqq’ŠÛ‰»ƒNƒ‰ƒX
+// [0xFB] éƒ¨åˆ†å—ä¿¡è¨˜è¿°å­æŠ½è±¡åŒ–ã‚¯ãƒ©ã‚¹
 /////////////////////////////////////////////////////////////////////////////
 
 class CPartialReceptionDesc : public CDescTemplate<CPartialReceptionDesc, 0xFB>
@@ -860,7 +860,7 @@ protected:
 
 
 /////////////////////////////////////////////////////////////////////////////
-// ‹LqqƒuƒƒbƒN’ŠÛ‰»ƒNƒ‰ƒX
+// è¨˜è¿°å­ãƒ–ãƒ­ãƒƒã‚¯æŠ½è±¡åŒ–ã‚¯ãƒ©ã‚¹
 /////////////////////////////////////////////////////////////////////////////
 
 class CDescBlock

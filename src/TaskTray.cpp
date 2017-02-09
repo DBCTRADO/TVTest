@@ -237,7 +237,7 @@ bool CTaskTrayManager::ShowMessage(LPCTSTR pszText,LPCTSTR pszTitle,int Icon,DWO
 
 bool CTaskTrayManager::HandleMessage(UINT Message,WPARAM wParam,LPARAM lParam)
 {
-	// ƒVƒFƒ‹‚ªÄ‹N“®‚µ‚½‚Ì‘Îô
+	// ã‚·ã‚§ãƒ«ãŒå†èµ·å‹•ã—ãŸæ™‚ã®å¯¾ç­–
 	if (m_TaskbarCreatedMessage!=0
 			&& Message==m_TaskbarCreatedMessage) {
 		if (NeedTrayIcon())

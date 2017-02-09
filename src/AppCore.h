@@ -123,7 +123,7 @@ private:
 	int GetCorresponding1SegService(int Space,WORD NetworkID,WORD TSID,WORD ServiceID) const;
 	bool GenerateRecordFileName(LPTSTR pszFileName,int MaxFileName);
 
-	// ÉRÉsÅ[ã÷é~
+	// „Ç≥„Éî„ÉºÁ¶ÅÊ≠¢
 	CAppCore(const CAppCore &) /* = delete */;
 	CAppCore &operator=(const CAppCore &) /* = delete */;
 };

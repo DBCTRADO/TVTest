@@ -98,7 +98,7 @@ bool CMainMenu::Show(UINT Flags,int x,int y,HWND hwnd,bool fToggle,const std::ve
 				if (ID<0) {
 					::AppendMenu(hmenuCustom,MF_SEPARATOR,0,NULL);
 				} else if (ID>=CM_COMMAND_FIRST) {
-					// �g�b�v���x���̍��ڂɂ���΃R�s�[
+					// トップレベルの項目にあればコピー
 					int i;
 					for (i=0;i<OrigItemCount;i++) {
 						if (::GetMenuItemID(m_hmenuPopup,i)==(UINT)ID)
@@ -1298,8 +1298,8 @@ bool CIconMenu::Initialize(HMENU hmenu,HINSTANCE hinst,const ItemInfo *pItemList
 
 				if (::GetIconInfo(hicon,&ii)) {
 					/*
-						ii.hbmColor �� DDB �ɂȂ��Ă��āA���̂܂܃��j���[�̉摜�Ɏw�肷���
-						�A���t�@�`�����l������������邽�߁ADIB �ɕϊ�����
+						ii.hbmColor は DDB になっていて、そのままメニューの画像に指定すると
+						アルファチャンネルが無視されるため、DIB に変換する
 					*/
 					HBITMAP hbm=(HBITMAP)::CopyImage(ii.hbmColor,IMAGE_BITMAP,0,0,LR_CREATEDIBSECTION);
 					if (hbm!=NULL) {

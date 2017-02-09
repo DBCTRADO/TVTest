@@ -319,13 +319,13 @@ bool CCoreEngine::OpenTuner()
 	TRACE(TEXT("CCoreEngine::OpenTuner()\n"));
 
 	if (IsTunerOpen()) {
-		SetError(TEXT("ƒ`ƒ…[ƒi‚ªŠù‚ÉŠJ‚©‚ê‚Ä‚¢‚Ü‚·B"));
+		SetError(TEXT("ãƒãƒ¥ãƒ¼ãƒŠãŒæ—¢ã«é–‹ã‹ã‚Œã¦ã„ã¾ã™ã€‚"));
 		return false;
 	}
 
 	TCHAR szDriverPath[MAX_PATH];
 	if (!GetDriverPath(szDriverPath,lengthof(szDriverPath))) {
-		SetError(TEXT("BonDriver‚ÌƒpƒX‚ğæ“¾‚Å‚«‚Ü‚¹‚ñB"));
+		SetError(TEXT("BonDriverã®ãƒ‘ã‚¹ã‚’å–å¾—ã§ãã¾ã›ã‚“ã€‚"));
 		return false;
 	}
 
@@ -527,7 +527,7 @@ bool CCoreEngine::IsSpdifPassthroughEnabled() const
 }
 
 
-// TODO: •Ï‰»‚ª‚ ‚Á‚½ê‡ DtvEngine ‘¤‚©‚ç’Ê’m‚·‚é‚æ‚¤‚É‚·‚é
+// TODO: å¤‰åŒ–ãŒã‚ã£ãŸå ´åˆ DtvEngine å´ã‹ã‚‰é€šçŸ¥ã™ã‚‹ã‚ˆã†ã«ã™ã‚‹
 DWORD CCoreEngine::UpdateAsyncStatus()
 {
 	DWORD Updated=0;

@@ -123,7 +123,7 @@ INT_PTR CTSProcessorErrorDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARA
 				} else if (LOWORD(wParam)==IDC_TSPROCESSORERROR_SEARCH) {
 					String Message,Text;
 
-					Message=TEXT("ÉtÉBÉãÉ^Å[Ç™å©ïtÇ©ÇËÇ‹ÇπÇÒÅB");
+					Message=TEXT("„Éï„Ç£„É´„Çø„Éº„ÅåË¶ã‰ªò„Åã„Çä„Åæ„Åõ„Çì„ÄÇ");
 					bool fAvailable;
 					if (m_pTSProcessor->CheckDeviceAvailability(0,&fAvailable,&Text)
 							&& !fAvailable
@@ -131,7 +131,7 @@ INT_PTR CTSProcessorErrorDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARA
 						Message+=TEXT("\n");
 						Message+=Text;
 					}
-					::MessageBox(hDlg,Message.c_str(),TEXT("åãâ "),MB_OK | MB_ICONINFORMATION);
+					::MessageBox(hDlg,Message.c_str(),TEXT("ÁµêÊûú"),MB_OK | MB_ICONINFORMATION);
 				}
 			}
 			return TRUE;
@@ -143,7 +143,7 @@ INT_PTR CTSProcessorErrorDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARA
 					int FilterSel=(int)DlgListBox_GetCurSel(hDlg,IDC_TSPROCESSORERROR_FILTERLIST);
 
 					if (DeviceSel<0 || FilterSel<0) {
-						::MessageBox(hDlg,TEXT("ÉtÉBÉãÉ^Å[ÇëIëÇµÇƒÇ≠ÇæÇ≥Ç¢ÅB"),TEXT("Ç®äËÇ¢"),MB_OK | MB_ICONINFORMATION);
+						::MessageBox(hDlg,TEXT("„Éï„Ç£„É´„Çø„Éº„ÇíÈÅ∏Êäû„Åó„Å¶„Åè„Å†„Åï„ÅÑ„ÄÇ"),TEXT("„ÅäÈ°ò„ÅÑ"),MB_OK | MB_ICONINFORMATION);
 						return TRUE;
 					}
 

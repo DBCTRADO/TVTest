@@ -237,7 +237,7 @@ bool CMainPanel::CFrameEventHandler::OnMoving(RECT *pRect)
 	pt.y=m_ptStartPos.y+(pt.y-m_ptDragStartCursorPos.y);
 	::OffsetRect(pRect,pt.x-pRect->left,pt.y-pRect->top);
 	if (App.PanelOptions.GetSnapAtMainWindow()) {
-		// メインウィンドウにスナップさせる
+		// 繝｡繧､繝ｳ繧ｦ繧｣繝ｳ繝峨え縺ｫ繧ｹ繝翫ャ繝励＆縺帙ｋ
 		int SnapMargin=App.PanelOptions.GetSnapMargin();
 		int XOffset,YOffset;
 		bool fSnap;

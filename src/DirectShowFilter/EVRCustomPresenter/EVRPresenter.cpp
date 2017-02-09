@@ -428,48 +428,48 @@ HRESULT CEVRPresenter::ProcessMessage(MFVP_MESSAGE_TYPE eMessage, ULONG_PTR ulPa
 	}
 
 	switch (eMessage) {
-	// ‘Ò‹@’†‚ÌƒTƒ“ƒvƒ‹‚ðƒtƒ‰ƒbƒVƒ…
+	// å¾…æ©Ÿä¸­ã®ã‚µãƒ³ãƒ—ãƒ«ã‚’ãƒ•ãƒ©ãƒƒã‚·ãƒ¥
 	case MFVP_MESSAGE_FLUSH:
 		TRACE(TEXT("MFVP_MESSAGE_FLUSH\n"));
 		hr = Flush();
 		break;
 
-	// ƒƒfƒBƒAƒ^ƒCƒv‚ÌŒðÂ
+	// ãƒ¡ãƒ‡ã‚£ã‚¢ã‚¿ã‚¤ãƒ—ã®äº¤æ¸‰
 	case MFVP_MESSAGE_INVALIDATEMEDIATYPE:
 		TRACE(TEXT("MFVP_MESSAGE_INVALIDATEMEDIATYPE\n"));
 		hr = RenegotiateMediaType();
 		break;
 
-	// ƒ~ƒLƒT[‚ªƒTƒ“ƒvƒ‹‚ðŽó‚¯Žæ‚Á‚½
+	// ãƒŸã‚­ã‚µãƒ¼ãŒã‚µãƒ³ãƒ—ãƒ«ã‚’å—ã‘å–ã£ãŸ
 	case MFVP_MESSAGE_PROCESSINPUTNOTIFY:
 		hr = ProcessInputNotify();
 		break;
 
-	// ƒXƒgƒŠ[ƒ~ƒ“ƒOŠJŽn
+	// ã‚¹ãƒˆãƒªãƒ¼ãƒŸãƒ³ã‚°é–‹å§‹
 	case MFVP_MESSAGE_BEGINSTREAMING:
 		TRACE(TEXT("MFVP_MESSAGE_BEGINSTREAMING\n"));
 		hr = BeginStreaming();
 		break;
 
-	// ƒXƒgƒŠ[ƒ€ƒ“ƒOI—¹(EVR’âŽ~)
+	// ã‚¹ãƒˆãƒªãƒ¼ãƒ ãƒ³ã‚°çµ‚äº†(EVRåœæ­¢)
 	case MFVP_MESSAGE_ENDSTREAMING:
 		TRACE(TEXT("MFVP_MESSAGE_ENDSTREAMING\n"));
 		hr = EndStreaming();
 		break;
 
-	// “ü—ÍƒXƒgƒŠ[ƒ€I—¹
+	// å…¥åŠ›ã‚¹ãƒˆãƒªãƒ¼ãƒ çµ‚äº†
 	case MFVP_MESSAGE_ENDOFSTREAM:
 		TRACE(TEXT("MFVP_MESSAGE_ENDOFSTREAM\n"));
 		m_bEndStreaming = true; 
 		hr = CheckEndOfStream();
 		break;
 
-	// ƒtƒŒ[ƒ€”ò‚Î‚µ
+	// ãƒ•ãƒ¬ãƒ¼ãƒ é£›ã°ã—
 	case MFVP_MESSAGE_STEP:
 		hr = PrepareFrameStep(LODWORD(ulParam));
 		break;
 
-	// ƒtƒŒ[ƒ€”ò‚Î‚µƒLƒƒƒ“ƒZƒ‹
+	// ãƒ•ãƒ¬ãƒ¼ãƒ é£›ã°ã—ã‚­ãƒ£ãƒ³ã‚»ãƒ«
 	case MFVP_MESSAGE_CANCELSTEP:
 		hr = CancelFrameStep();
 		break;
@@ -1622,7 +1622,7 @@ HRESULT CEVRPresenter::DeliverFrameStepSample(IMFSample *pSample)
 	HRESULT hr = S_OK;
 
 	if (IsScrubbing() && m_pClock && IsSampleTimePassed(m_pClock, pSample)) {
-		// ƒTƒ“ƒvƒ‹”jŠü
+		// ã‚µãƒ³ãƒ—ãƒ«ç ´æ£„
 	} else if (m_FrameStep.State >= FrameStep_Scheduled) {
 		hr = m_FrameStep.Samples.InsertBack(pSample);
 	} else {
@@ -1631,7 +1631,7 @@ HRESULT CEVRPresenter::DeliverFrameStepSample(IMFSample *pSample)
 		}
 
 		if (m_FrameStep.Steps > 0) {
-			// ƒTƒ“ƒvƒ‹”jŠü
+			// ã‚µãƒ³ãƒ—ãƒ«ç ´æ£„
 		} else if (m_FrameStep.State == FrameStep_WaitingStart) {
 			hr = m_FrameStep.Samples.InsertBack(pSample);
 		} else {

@@ -1,4 +1,4 @@
-// TsEncode.h: TSƒGƒ“ƒR[ƒhƒNƒ‰ƒX‚ÌƒCƒ“ƒ^[ƒtƒFƒCƒX
+// TsEncode.h: TSã‚¨ãƒ³ã‚³ãƒ¼ãƒ‰ã‚¯ãƒ©ã‚¹ã®ã‚¤ãƒ³ã‚¿ãƒ¼ãƒ•ã‚§ã‚¤ã‚¹
 //
 //////////////////////////////////////////////////////////////////////
 
@@ -8,29 +8,29 @@
 
 
 /////////////////////////////////////////////////////////////////////////////
-// ARIB STD-B24 Part1•¶Žš—ñˆ—ƒNƒ‰ƒX
+// ARIB STD-B24 Part1æ–‡å­—åˆ—å‡¦ç†ã‚¯ãƒ©ã‚¹
 /////////////////////////////////////////////////////////////////////////////
 
 class CAribString
 {
 public:
 	enum {
-		FLAG_CAPTION		= 0x0001U,	// Žš–‹
-		FLAG_1SEG			= 0x0002U,	// ƒƒ“ƒZƒO
-		FLAG_USE_CHAR_SIZE	= 0x0004U,	// •¶ŽšƒTƒCƒY‚ð”½‰f
-		FLAG_UNICODE_SYMBOL	= 0x0008U	// Unicode‚Ì‹L†‚ð—˜—p(Unicode 5.2ˆÈ~)
+		FLAG_CAPTION		= 0x0001U,	// å­—å¹•
+		FLAG_1SEG			= 0x0002U,	// ãƒ¯ãƒ³ã‚»ã‚°
+		FLAG_USE_CHAR_SIZE	= 0x0004U,	// æ–‡å­—ã‚µã‚¤ã‚ºã‚’åæ˜ 
+		FLAG_UNICODE_SYMBOL	= 0x0008U	// Unicodeã®è¨˜å·ã‚’åˆ©ç”¨(Unicode 5.2ä»¥é™)
 	};
 
 	enum CHAR_SIZE {
-		SIZE_SMALL,		// ¬Œ^
-		SIZE_MEDIUM,	// ’†Œ^
-		SIZE_NORMAL,	// •W€
-		SIZE_MICRO,		// ’´¬Œ^
-		SIZE_HIGH_W,	// c”{
-		SIZE_WIDTH_W,	// ‰¡”{
-		SIZE_W,			// c‰¡”{
-		SIZE_SPECIAL_1,	// “ÁŽê1
-		SIZE_SPECIAL_2	// “ÁŽê2
+		SIZE_SMALL,		// å°åž‹
+		SIZE_MEDIUM,	// ä¸­åž‹
+		SIZE_NORMAL,	// æ¨™æº–
+		SIZE_MICRO,		// è¶…å°åž‹
+		SIZE_HIGH_W,	// ç¸¦å€
+		SIZE_WIDTH_W,	// æ¨ªå€
+		SIZE_W,			// ç¸¦æ¨ªå€
+		SIZE_SPECIAL_1,	// ç‰¹æ®Š1
+		SIZE_SPECIAL_2	// ç‰¹æ®Š2
 	};
 
 	struct FormatInfo {
@@ -65,7 +65,7 @@ public:
 private:
 	enum CODE_SET
 	{
-		CODE_UNKNOWN,				// •s–¾‚ÈƒOƒ‰ƒtƒBƒbƒNƒZƒbƒg(”ñ‘Î‰ž)
+		CODE_UNKNOWN,				// ä¸æ˜Žãªã‚°ãƒ©ãƒ•ã‚£ãƒƒã‚¯ã‚»ãƒƒãƒˆ(éžå¯¾å¿œ)
 		CODE_KANJI,					// Kanji
 		CODE_ALPHANUMERIC,			// Alphanumeric
 		CODE_HIRAGANA,				// Hiragana
@@ -154,7 +154,7 @@ private:
 
 
 /////////////////////////////////////////////////////////////////////////////
-// ARIB STD-B10 Part2 Annex C MJD+JTC ˆ—ƒNƒ‰ƒX
+// ARIB STD-B10 Part2 Annex C MJD+JTC å‡¦ç†ã‚¯ãƒ©ã‚¹
 /////////////////////////////////////////////////////////////////////////////
 
 class CAribTime

@@ -1260,7 +1260,7 @@ CChannelDisplay::CTuner::CTuner(const CDriverInfo *pDriverInfo)
 						&& pSrcTuningSpace->GetType()==CTuningSpaceInfo::SPACE_TERRESTRIAL
 						&& m_TuningSpaceList[m_TuningSpaceList.size()-1]->GetType()==CTuningSpaceInfo::SPACE_TERRESTRIAL) {
 					pTuningSpace=m_TuningSpaceList[m_TuningSpaceList.size()-1];
-					pTuningSpace->SetName(TEXT("’nã"));
+					pTuningSpace->SetName(TEXT("åœ°ä¸Š"));
 				} else {
 					pTuningSpace=new CTuningSpaceInfo;
 					pTuningSpace->Create(NULL,pSrcTuningSpace->GetName());

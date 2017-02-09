@@ -26,11 +26,11 @@ void CTunerControlItem::Draw(HDC hdc,const RECT &Rect)
 			ChannelManager.GetTuningSpaceName(
 				pChInfo!=NULL?pChInfo->GetSpace():ChannelManager.GetCurrentSpace());
 		if (pszText==NULL)
-			pszText=TEXT("<チューナー>");
+			pszText=TEXT("<繝√Η繝ｼ繝翫�ｼ>");
 	} else if (ChannelManager.GetCurrentSpace()==CChannelManager::SPACE_ALL) {
-		pszText=TEXT("すべて");
+		pszText=TEXT("縺吶∋縺ｦ");
 	} else {
-		pszText=TEXT("<チューナー>");
+		pszText=TEXT("<繝√Η繝ｼ繝翫�ｼ>");
 	}
 	RECT rc=Rect;
 	TVTest::Style::Subtract(&rc,m_pControlPanel->GetItemPadding());
@@ -79,7 +79,7 @@ void CChannelControlItem::Draw(HDC hdc,const RECT &Rect)
 	} else if ((pInfo=ChannelManager.GetCurrentChannelInfo())!=NULL) {
 		::wsprintf(szText,TEXT("%d: %s"),pInfo->GetChannelNo(),pInfo->GetName());
 	} else {
-		::lstrcpy(szText,TEXT("<チャンネル>"));
+		::lstrcpy(szText,TEXT("<繝√Ε繝ｳ繝阪Ν>"));
 	}
 	RECT rc=Rect;
 	TVTest::Style::Subtract(&rc,m_pControlPanel->GetItemPadding());
@@ -271,7 +271,7 @@ void CAudioControlItem::Draw(HDC hdc,const RECT &Rect)
 
 	TCHAR szText[64];
 	if (App.UICore.FormatCurrentAudioText(szText,lengthof(szText))<=0)
-		::lstrcpy(szText,TEXT("<音声>"));
+		::lstrcpy(szText,TEXT("<髻ｳ螢ｰ>"));
 	::DrawText(hdc,szText,-1,&rc,
 			   DT_LEFT | DT_SINGLELINE | DT_VCENTER | DT_NOPREFIX | DT_END_ELLIPSIS);
 }

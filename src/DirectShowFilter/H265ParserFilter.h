@@ -4,10 +4,10 @@
 #include "VideoParser.h"
 
 
-// テンプレート名
+// 繝�繝ｳ繝励Ξ繝ｼ繝亥錐
 #define H265PARSERFILTER_NAME L"H.265 Parser Filter"
 
-// このフィルタのGUID {0F3CFFD1-C30D-43f7-B4DC-57E5F73D074A}
+// 縺薙�ｮ繝輔ぅ繝ｫ繧ｿ縺ｮGUID {0F3CFFD1-C30D-43f7-B4DC-57E5F73D074A}
 DEFINE_GUID(CLSID_H265ParserFilter, 0xf3cffd1, 0xc30d, 0x43f7, 0xb4, 0xdc, 0x57, 0xe5, 0xf7, 0x3d, 0x7, 0x4a);
 
 class __declspec(uuid("0F3CFFD1-C30D-43f7-B4DC-57E5F73D074A")) CH265ParserFilter

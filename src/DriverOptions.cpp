@@ -508,7 +508,7 @@ void CDriverOptions::InitDlgItem(int Driver)
 				if (NumSpaces<pDriverInfo->GetDriverSpaceList()->NumSpaces())
 					NumSpaces=pDriverInfo->GetDriverSpaceList()->NumSpaces();
 			}
-			DlgComboBox_AddString(m_hDlg,IDC_DRIVEROPTIONS_INITCHANNEL_SPACE,TEXT("Ç∑Ç◊Çƒ"));
+			DlgComboBox_AddString(m_hDlg,IDC_DRIVEROPTIONS_INITCHANNEL_SPACE,TEXT("„Åô„Åπ„Å¶"));
 			for (i=0;i<NumSpaces;i++) {
 				LPCTSTR pszName=pTuningSpaceList->GetTuningSpaceName(i);
 				TCHAR szName[16];
@@ -564,14 +564,14 @@ void CDriverOptions::InitDlgItem(int Driver)
 		DlgUpDown_SetRange(m_hDlg,IDC_DRIVEROPTIONS_FIRSTCHANNELSETDELAY_SPIN,
 						   0,CBonSrcDecoder::FIRST_CHANNEL_SET_DELAY_MAX);
 		TCHAR szText[64];
-		::wsprintf(szText,TEXT("ms (0Å`%u)"),CBonSrcDecoder::FIRST_CHANNEL_SET_DELAY_MAX);
+		::wsprintf(szText,TEXT("ms (0ÔΩû%u)"),CBonSrcDecoder::FIRST_CHANNEL_SET_DELAY_MAX);
 		::SetDlgItemText(m_hDlg,IDC_DRIVEROPTIONS_FIRSTCHANNELSETDELAY_UNIT,szText);
 
 		::SetDlgItemInt(m_hDlg,IDC_DRIVEROPTIONS_MINCHANNELCHANGEINTERVAL,
 						pSettings->GetMinChannelChangeInterval(),FALSE);
 		DlgUpDown_SetRange(m_hDlg,IDC_DRIVEROPTIONS_MINCHANNELCHANGEINTERVAL_SPIN,
 						   0,CBonSrcDecoder::CHANNEL_CHANGE_INTERVAL_MAX);
-		::wsprintf(szText,TEXT("ms (0Å`%u)"),CBonSrcDecoder::CHANNEL_CHANGE_INTERVAL_MAX);
+		::wsprintf(szText,TEXT("ms (0ÔΩû%u)"),CBonSrcDecoder::CHANNEL_CHANGE_INTERVAL_MAX);
 		::SetDlgItemText(m_hDlg,IDC_DRIVEROPTIONS_MINCHANNELCHANGEINTERVAL_UNIT,szText);
 	} else {
 		::SetDlgItemText(m_hDlg,IDC_DRIVEROPTIONS_FIRSTCHANNELSETDELAY,TEXT(""));
@@ -596,7 +596,7 @@ void CDriverOptions::SetChannelList(int Driver)
 		pDriverInfo=m_pDriverManager->GetDriverInfo(Driver);
 	}
 	if (pSettings->GetAllChannels()) {
-		DlgComboBox_AddString(m_hDlg,IDC_DRIVEROPTIONS_INITCHANNEL_CHANNEL,TEXT("éwíËÇ»Çµ"));
+		DlgComboBox_AddString(m_hDlg,IDC_DRIVEROPTIONS_INITCHANNEL_CHANNEL,TEXT("ÊåáÂÆö„Å™„Åó"));
 		DlgComboBox_SetItemData(m_hDlg,IDC_DRIVEROPTIONS_INITCHANNEL_CHANNEL,0,-1);
 		for (i=0;;i++) {
 			const CChannelList *pChannelList;
@@ -619,7 +619,7 @@ void CDriverOptions::SetChannelList(int Driver)
 			else
 				pChannelList=pDriverInfo->GetChannelList(i);
 			if (pChannelList!=NULL) {
-				DlgComboBox_AddString(m_hDlg,IDC_DRIVEROPTIONS_INITCHANNEL_CHANNEL,TEXT("éwíËÇ»Çµ"));
+				DlgComboBox_AddString(m_hDlg,IDC_DRIVEROPTIONS_INITCHANNEL_CHANNEL,TEXT("ÊåáÂÆö„Å™„Åó"));
 				DlgComboBox_SetItemData(m_hDlg,IDC_DRIVEROPTIONS_INITCHANNEL_CHANNEL,0,-1);
 				AddChannelList(pChannelList);
 			}
@@ -687,7 +687,7 @@ INT_PTR CDriverOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 				DlgComboBox_SetCurSel(hDlg,IDC_DRIVEROPTIONS_DRIVERLIST,CurDriver);
 				if (Util::OS::IsWindowsVistaOrLater()) {
 					DlgComboBox_SetCueBanner(hDlg,IDC_DRIVEROPTIONS_DRIVERLIST,
-											 TEXT("ê›íËÇ∑ÇÈ BonDriver ÇëIëÇµÇƒÇ≠ÇæÇ≥Ç¢"));
+											 TEXT("Ë®≠ÂÆö„Åô„Çã BonDriver „ÇíÈÅ∏Êäû„Åó„Å¶„Åè„Å†„Åï„ÅÑ"));
 				}
 				InitDlgItem(CurDriver);
 			} else {

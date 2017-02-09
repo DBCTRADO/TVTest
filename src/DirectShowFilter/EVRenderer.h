@@ -3,9 +3,9 @@
 
 
 /*
-	EVR�̃o�O(?)�ɂ��E�B���h�E�̈ꕔ��]����Ɏw�肷���
-	�o�b�N�o�b�t�@���N���A���ꂸ�Ƀt���b�J����������̂ŁA
-	�]���p�̃E�B���h�E���쐬����
+	EVRのバグ(?)によりウィンドウの一部を転送先に指定すると
+	バックバッファがクリアされずにフリッカが発生するので、
+	転送用のウィンドウを作成する
 */
 #define EVR_USE_VIDEO_WINDOW
 

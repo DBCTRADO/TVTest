@@ -1,4 +1,4 @@
-// TsTable.h: TSƒe[ƒuƒ‹ƒ‰ƒbƒp[ƒNƒ‰ƒX‚ÌƒCƒ“ƒ^[ƒtƒFƒCƒX
+// TsTable.h: TSãƒ†ãƒ¼ãƒ–ãƒ«ãƒ©ãƒƒãƒ‘ãƒ¼ã‚¯ãƒ©ã‚¹ã®ã‚¤ãƒ³ã‚¿ãƒ¼ãƒ•ã‚§ã‚¤ã‚¹
 //
 //////////////////////////////////////////////////////////////////////
 
@@ -13,7 +13,7 @@
 
 
 /////////////////////////////////////////////////////////////////////////////
-// PSIƒe[ƒuƒ‹Šî’êƒNƒ‰ƒX
+// PSIãƒ†ãƒ¼ãƒ–ãƒ«åŸºåº•ã‚¯ãƒ©ã‚¹
 /////////////////////////////////////////////////////////////////////////////
 
 class ABSTRACT_CLASS_DECL CPsiTableBase
@@ -40,7 +40,7 @@ protected:
 
 
 /////////////////////////////////////////////////////////////////////////////
-// PSIƒe[ƒuƒ‹’ŠÛ‰»ƒNƒ‰ƒX
+// PSIãƒ†ãƒ¼ãƒ–ãƒ«æŠ½è±¡åŒ–ã‚¯ãƒ©ã‚¹
 /////////////////////////////////////////////////////////////////////////////
 
 class ABSTRACT_CLASS_DECL CPsiTable : public CPsiTableBase
@@ -77,19 +77,19 @@ protected:
 			SectionItem() : pTable(NULL), bUpdated(false) {}
 		};
 
-		WORD TableIdExtension;					// ƒe[ƒuƒ‹IDŠg’£
-		WORD SectionNum;						// ƒZƒNƒVƒ‡ƒ“”
-		BYTE VersionNo;							// ƒo[ƒWƒ‡ƒ“”Ô†
-		std::vector<SectionItem> SectionArray;	// ƒZƒNƒVƒ‡ƒ“ƒf[ƒ^
+		WORD TableIdExtension;					// ãƒ†ãƒ¼ãƒ–ãƒ«IDæ‹¡å¼µ
+		WORD SectionNum;						// ã‚»ã‚¯ã‚·ãƒ§ãƒ³æ•°
+		BYTE VersionNo;							// ãƒãƒ¼ã‚¸ãƒ§ãƒ³ç•ªå·
+		std::vector<SectionItem> SectionArray;	// ã‚»ã‚¯ã‚·ãƒ§ãƒ³ãƒ‡ãƒ¼ã‚¿
 
 		void ClearSection();
 	};
 
-	std::vector<TableItem> m_TableArray;		// ƒe[ƒuƒ‹
+	std::vector<TableItem> m_TableArray;		// ãƒ†ãƒ¼ãƒ–ãƒ«
 };
 
 /////////////////////////////////////////////////////////////////////////////
-// PSIƒVƒ“ƒOƒ‹ƒe[ƒuƒ‹’ŠÛ‰»ƒNƒ‰ƒX
+// PSIã‚·ãƒ³ã‚°ãƒ«ãƒ†ãƒ¼ãƒ–ãƒ«æŠ½è±¡åŒ–ã‚¯ãƒ©ã‚¹
 /////////////////////////////////////////////////////////////////////////////
 
 class ABSTRACT_CLASS_DECL CPsiSingleTable : public CPsiTableBase
@@ -111,7 +111,7 @@ protected:
 };
 
 /////////////////////////////////////////////////////////////////////////////
-// ƒXƒgƒŠ[ƒ€Œ^ƒe[ƒuƒ‹’ŠÛ‰»ƒNƒ‰ƒX
+// ã‚¹ãƒˆãƒªãƒ¼ãƒ å‹ãƒ†ãƒ¼ãƒ–ãƒ«æŠ½è±¡åŒ–ã‚¯ãƒ©ã‚¹
 /////////////////////////////////////////////////////////////////////////////
 
 class ABSTRACT_CLASS_DECL CPsiStreamTable : public CPsiTableBase
@@ -141,8 +141,8 @@ protected:
 };
 
 /////////////////////////////////////////////////////////////////////////////
-// ‰½‚àˆ—‚ª‚È‚¢ƒe[ƒuƒ‹’ŠÛ‰»ƒNƒ‰ƒX(å‚ÉAdaptationFieldˆ——p)
-// PSIƒe[ƒuƒ‹‚Æ‚µ‚Äˆ—‚·‚é‚×‚«‚Å‚Í‚È‚¢‚©‚à‚µ‚ê‚È‚¢‚ªA—¬‚êã‚±‚±‚É‹Lq
+// ä½•ã‚‚å‡¦ç†ãŒãªã„ãƒ†ãƒ¼ãƒ–ãƒ«æŠ½è±¡åŒ–ã‚¯ãƒ©ã‚¹(ä¸»ã«AdaptationFieldå‡¦ç†ç”¨)
+// PSIãƒ†ãƒ¼ãƒ–ãƒ«ã¨ã—ã¦å‡¦ç†ã™ã‚‹ã¹ãã§ã¯ãªã„ã‹ã‚‚ã—ã‚Œãªã„ãŒã€æµã‚Œä¸Šã“ã“ã«è¨˜è¿°
 /////////////////////////////////////////////////////////////////////////////
 class CPsiNullTable :	public CTsPidMapTarget
 {
@@ -159,7 +159,7 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////
-// PSIƒe[ƒuƒ‹ƒZƒbƒg’ŠÛ‰»ƒNƒ‰ƒX
+// PSIãƒ†ãƒ¼ãƒ–ãƒ«ã‚»ãƒƒãƒˆæŠ½è±¡åŒ–ã‚¯ãƒ©ã‚¹
 /////////////////////////////////////////////////////////////////////////////
 
 class CPsiTableSet : public CPsiTableBase
@@ -191,7 +191,7 @@ protected:
 
 
 /////////////////////////////////////////////////////////////////////////////
-// PATƒe[ƒuƒ‹’ŠÛ‰»ƒNƒ‰ƒX
+// PATãƒ†ãƒ¼ãƒ–ãƒ«æŠ½è±¡åŒ–ã‚¯ãƒ©ã‚¹
 /////////////////////////////////////////////////////////////////////////////
 
 class CPatTable : public CPsiSingleTable
@@ -223,8 +223,8 @@ protected:
 
 	struct TAG_PATITEM
 	{
-		WORD wProgramID;	// •ú‘—”Ô‘g”Ô†ID
-		WORD wPID;			// PMT‚ÌPID
+		WORD wProgramID;	// æ”¾é€ç•ªçµ„ç•ªå·ID
+		WORD wPID;			// PMTã®PID
 	};
 
 	std::vector<WORD> m_NitPIDArray;
@@ -237,7 +237,7 @@ protected:
 
 
 /////////////////////////////////////////////////////////////////////////////
-// CATƒe[ƒuƒ‹’ŠÛ‰»ƒNƒ‰ƒX
+// CATãƒ†ãƒ¼ãƒ–ãƒ«æŠ½è±¡åŒ–ã‚¯ãƒ©ã‚¹
 /////////////////////////////////////////////////////////////////////////////
 
 class CCatTable : public CPsiSingleTable
@@ -263,7 +263,7 @@ protected:
 
 
 /////////////////////////////////////////////////////////////////////////////
-// PMTƒe[ƒuƒ‹’ŠÛ‰»ƒNƒ‰ƒX
+// PMTãƒ†ãƒ¼ãƒ–ãƒ«æŠ½è±¡åŒ–ã‚¯ãƒ©ã‚¹
 /////////////////////////////////////////////////////////////////////////////
 
 class CPmtTable : public CPsiSingleTable
@@ -298,13 +298,13 @@ protected:
 	{
 		BYTE byStreamTypeID;			// Stream Type ID
 		WORD wEsPID;					// Elementary Stream PID
-		CDescBlock DescBlock;			// Stream ID Descriptor ‘¼
+		CDescBlock DescBlock;			// Stream ID Descriptor ä»–
 	};
 
 	std::vector<TAG_PMTITEM> m_EsInfoArray;
 
 	WORD m_wPcrPID;						// PCR_PID
-	CDescBlock m_TableDescBlock;		// Conditional Access Method Descriptor ‘¼
+	CDescBlock m_TableDescBlock;		// Conditional Access Method Descriptor ä»–
 
 #ifdef _DEBUG
 	bool m_bDebugTrace;
@@ -313,7 +313,7 @@ protected:
 
 
 /////////////////////////////////////////////////////////////////////////////
-// SDTƒe[ƒuƒ‹’ŠÛ‰»ƒNƒ‰ƒX
+// SDTãƒ†ãƒ¼ãƒ–ãƒ«æŠ½è±¡åŒ–ã‚¯ãƒ©ã‚¹
 /////////////////////////////////////////////////////////////////////////////
 
 class CSdtTable : public CPsiSingleTable
@@ -359,7 +359,7 @@ protected:
 		bool bEITPresentFollowingFlag;	// EIT Present Following Flag
 		BYTE byRunningStatus;			// Running Status
 		bool bFreeCaMode;				// Free CA Mode(true: CA / false: Free)
-		CDescBlock DescBlock;			// Service Descriptor ‘¼
+		CDescBlock DescBlock;			// Service Descriptor ä»–
 	};
 
 	BYTE m_TableID;
@@ -388,7 +388,7 @@ public:
 
 
 /////////////////////////////////////////////////////////////////////////////
-// NITƒe[ƒuƒ‹’ŠÛ‰»ƒNƒ‰ƒX
+// NITãƒ†ãƒ¼ãƒ–ãƒ«æŠ½è±¡åŒ–ã‚¯ãƒ©ã‚¹
 /////////////////////////////////////////////////////////////////////////////
 
 class CNitTable : public CPsiSingleTable
@@ -435,7 +435,7 @@ protected:
 
 
 /////////////////////////////////////////////////////////////////////////////
-// EITƒe[ƒuƒ‹’ŠÛ‰»ƒNƒ‰ƒX
+// EITãƒ†ãƒ¼ãƒ–ãƒ«æŠ½è±¡åŒ–ã‚¯ãƒ©ã‚¹
 /////////////////////////////////////////////////////////////////////////////
 
 class CEitTable : public CPsiSingleTable
@@ -518,7 +518,7 @@ public:
 
 
 /////////////////////////////////////////////////////////////////////////////
-// TOTƒe[ƒuƒ‹’ŠÛ‰»ƒNƒ‰ƒX
+// TOTãƒ†ãƒ¼ãƒ–ãƒ«æŠ½è±¡åŒ–ã‚¯ãƒ©ã‚¹
 /////////////////////////////////////////////////////////////////////////////
 
 class CTotTable : public CPsiSingleTable
@@ -541,13 +541,13 @@ protected:
 	virtual const bool OnTableUpdate(const CPsiSection *pCurSection, const CPsiSection *pOldSection) override;
 
 	bool m_bValidDateTime;
-	SYSTEMTIME m_DateTime;	// Œ»İ“ú•t/
-	CDescBlock m_DescBlock;	// ‹Lqq—Ìˆæ
+	SYSTEMTIME m_DateTime;	// ç¾åœ¨æ—¥ä»˜/æ™‚åˆ»
+	CDescBlock m_DescBlock;	// è¨˜è¿°å­é ˜åŸŸ
 };
 
 
 /////////////////////////////////////////////////////////////////////////////
-// CDTƒe[ƒuƒ‹’ŠÛ‰»ƒNƒ‰ƒX
+// CDTãƒ†ãƒ¼ãƒ–ãƒ«æŠ½è±¡åŒ–ã‚¯ãƒ©ã‚¹
 /////////////////////////////////////////////////////////////////////////////
 
 class CCdtTable : public CPsiStreamTable
@@ -562,10 +562,10 @@ public:
 	virtual void Reset() override;
 
 // CCdtTable
-	// ƒf[ƒ^‚Ìí—Ş
+	// ãƒ‡ãƒ¼ã‚¿ã®ç¨®é¡
 	enum {
-		DATATYPE_LOGO		= 0x01,	// ƒƒS
-		DATATYPE_INVALID	= 0xFF	// –³Œø
+		DATATYPE_LOGO		= 0x01,	// ãƒ­ã‚´
+		DATATYPE_INVALID	= 0xFF	// ç„¡åŠ¹
 	};
 
 	const WORD GetOriginalNetworkId() const;
@@ -579,13 +579,13 @@ protected:
 
 	WORD m_OriginalNetworkId;	// original_network_id
 	BYTE m_DataType;			// data_type
-	CDescBlock m_DescBlock;		// ‹Lqq—Ìˆæ
+	CDescBlock m_DescBlock;		// è¨˜è¿°å­é ˜åŸŸ
 	CMediaData m_ModuleData;
 };
 
 
 /////////////////////////////////////////////////////////////////////////////
-// SDTTƒe[ƒuƒ‹’ŠÛ‰»ƒNƒ‰ƒX
+// SDTTãƒ†ãƒ¼ãƒ–ãƒ«æŠ½è±¡åŒ–ã‚¯ãƒ©ã‚¹
 /////////////////////////////////////////////////////////////////////////////
 
 class CSdttTable : public CPsiStreamTable
@@ -608,7 +608,7 @@ public:
 		BYTE VersionIndicator;				// version_indicator
 		BYTE ScheduleTimeShiftInformation;	// schedule_time-shift_information
 		std::vector<ScheduleDescription> ScheduleList;
-		CDescBlock DescBlock;				// ‹Lqq—Ìˆæ
+		CDescBlock DescBlock;				// è¨˜è¿°å­é ˜åŸŸ
 	};
 
 	CSdttTable(ISectionHandler *pHandler = NULL);
@@ -642,9 +642,9 @@ protected:
 
 
 /////////////////////////////////////////////////////////////////////////////
-// PCR’ŠÛ‰»ƒNƒ‰ƒX
-// Œ³XDemux‚Ì‰ÓŠ‚É‚ ‚Á‚½‚à‚Ì‚¾‚ªg‚Á‚Ä‚È‚¢‚æ‚¤‚¾‚Á‚½‚Ì‚ÅATable‘¤‚ÉˆÚ“®
-// Œ»“_‚Åg‚¦‚é‚à‚Ì‚Æ‚ÍŒ¾‚¢“ï‚¢
+// PCRæŠ½è±¡åŒ–ã‚¯ãƒ©ã‚¹
+// å…ƒã€…Demuxã®ç®‡æ‰€ã«ã‚ã£ãŸã‚‚ã®ã ãŒä½¿ã£ã¦ãªã„ã‚ˆã†ã ã£ãŸã®ã§ã€Tableå´ã«ç§»å‹•
+// ç¾æ™‚ç‚¹ã§ä½¿ãˆã‚‹ã‚‚ã®ã¨ã¯è¨€ã„é›£ã„
 /////////////////////////////////////////////////////////////////////////////
 
 class CPcrTable : public CPsiNullTable

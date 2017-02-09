@@ -361,7 +361,7 @@ bool CCommandList::RegisterCommand(
 #else
 	if (!m_CommandTextMap.insert(std::pair<TVTest::String,int>(Info.Text,ID)).second
 			|| !m_CommandIDMap.insert(std::pair<int,size_t>(ID,m_CommandList.size()-1)).second) {
-		// ¯•Êqd•¡
+		// è­˜åˆ¥å­é‡è¤‡
 		::DebugBreak();
 	}
 #endif

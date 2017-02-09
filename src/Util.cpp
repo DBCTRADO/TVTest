@@ -323,8 +323,8 @@ int CalcDayOfWeek(int Year,int Month,int Day)
 LPCTSTR GetDayOfWeekText(int DayOfWeek)
 {
 	if (DayOfWeek<0 || DayOfWeek>6)
-		return TEXT("H");
-	return TEXT("“ú\0Œ\0‰Î\0…\0–Ø\0‹à\0“y")+DayOfWeek*((3-sizeof(TCHAR))+1);
+		return TEXT("ï¼Ÿ");
+	return TEXT("æ—¥\0æœˆ\0ç«\0æ°´\0æœ¨\0é‡‘\0åœŸ")+DayOfWeek*((3-sizeof(TCHAR))+1);
 }
 
 
@@ -720,13 +720,13 @@ bool IsValidFileName(LPCTSTR pszFileName,unsigned int Flags,TVTest::String *pMes
 {
 	if (pszFileName==NULL || pszFileName[0]==_T('\0')) {
 		if (pMessage!=NULL)
-			*pMessage=TEXT("ƒtƒ@ƒCƒ‹–¼‚ªw’è‚³‚ê‚Ä‚¢‚Ü‚¹‚ñB");
+			*pMessage=TEXT("ãƒ•ã‚¡ã‚¤ãƒ«åãŒæŒ‡å®šã•ã‚Œã¦ã„ã¾ã›ã‚“ã€‚");
 		return false;
 	}
 	int Length=lstrlen(pszFileName);
 	if (Length>=MAX_PATH) {
 		if (pMessage!=NULL)
-			*pMessage=TEXT("ƒtƒ@ƒCƒ‹–¼‚ª’·‚·‚¬‚Ü‚·B");
+			*pMessage=TEXT("ãƒ•ã‚¡ã‚¤ãƒ«åãŒé•·ã™ãã¾ã™ã€‚");
 		return false;
 	}
 	if (Length==3) {
@@ -736,7 +736,7 @@ bool IsValidFileName(LPCTSTR pszFileName,unsigned int Flags,TVTest::String *pMes
 		for (int i=0;i<_countof(pszNGList);i++) {
 			if (lstrcmpi(pszNGList[i],pszFileName)==0) {
 				if (pMessage!=NULL)
-					*pMessage=TEXT("‰¼‘zƒfƒoƒCƒX–¼‚Íƒtƒ@ƒCƒ‹–¼‚Ég—p‚Å‚«‚Ü‚¹‚ñB");
+					*pMessage=TEXT("ä»®æƒ³ãƒ‡ãƒã‚¤ã‚¹åã¯ãƒ•ã‚¡ã‚¤ãƒ«åã«ä½¿ç”¨ã§ãã¾ã›ã‚“ã€‚");
 				return false;
 			}
 		}
@@ -747,7 +747,7 @@ bool IsValidFileName(LPCTSTR pszFileName,unsigned int Flags,TVTest::String *pMes
 			wsprintf(szName,TEXT("COM%d"),i);
 			if (lstrcmpi(szName,pszFileName)==0) {
 				if (pMessage!=NULL)
-					*pMessage=TEXT("‰¼‘zƒfƒoƒCƒX–¼‚Íƒtƒ@ƒCƒ‹–¼‚Ég—p‚Å‚«‚Ü‚¹‚ñB");
+					*pMessage=TEXT("ä»®æƒ³ãƒ‡ãƒã‚¤ã‚¹åã¯ãƒ•ã‚¡ã‚¤ãƒ«åã«ä½¿ç”¨ã§ãã¾ã›ã‚“ã€‚");
 				return false;
 			}
 		}
@@ -755,7 +755,7 @@ bool IsValidFileName(LPCTSTR pszFileName,unsigned int Flags,TVTest::String *pMes
 			wsprintf(szName,TEXT("LPT%d"),i);
 			if (lstrcmpi(szName,pszFileName)==0) {
 				if (pMessage!=NULL)
-					*pMessage=TEXT("‰¼‘zƒfƒoƒCƒX–¼‚Íƒtƒ@ƒCƒ‹–¼‚Ég—p‚Å‚«‚Ü‚¹‚ñB");
+					*pMessage=TEXT("ä»®æƒ³ãƒ‡ãƒã‚¤ã‚¹åã¯ãƒ•ã‚¡ã‚¤ãƒ«åã«ä½¿ç”¨ã§ãã¾ã›ã‚“ã€‚");
 				return false;
 			}
 		}
@@ -773,24 +773,24 @@ bool IsValidFileName(LPCTSTR pszFileName,unsigned int Flags,TVTest::String *pMes
 			if (pMessage!=NULL) {
 				if (*p<=31) {
 					TVTest::StringUtility::Format(*pMessage,
-						TEXT("ƒtƒ@ƒCƒ‹–¼‚Ég—p‚Å‚«‚È‚¢•¶š %#02x ‚ªŠÜ‚Ü‚ê‚Ä‚¢‚Ü‚·B"),*p);
+						TEXT("ãƒ•ã‚¡ã‚¤ãƒ«åã«ä½¿ç”¨ã§ããªã„æ–‡å­— %#02x ãŒå«ã¾ã‚Œã¦ã„ã¾ã™ã€‚"),*p);
 				} else {
 					TVTest::StringUtility::Format(*pMessage,
-						TEXT("ƒtƒ@ƒCƒ‹–¼‚Ég—p‚Å‚«‚È‚¢•¶š %c ‚ªŠÜ‚Ü‚ê‚Ä‚¢‚Ü‚·B"),*p);
+						TEXT("ãƒ•ã‚¡ã‚¤ãƒ«åã«ä½¿ç”¨ã§ããªã„æ–‡å­— %c ãŒå«ã¾ã‚Œã¦ã„ã¾ã™ã€‚"),*p);
 				}
 			}
 			return false;
 		}
 		if ((*p==_T(' ') || *p==_T('.')) && *(p+1)==_T('\0')) {
 			if (pMessage!=NULL)
-				*pMessage=TEXT("ƒtƒ@ƒCƒ‹–¼‚Ì––”ö‚É”¼Šp‹ó”’‹y‚Ñ . ‚Íg—p‚Å‚«‚Ü‚¹‚ñB");
+				*pMessage=TEXT("ãƒ•ã‚¡ã‚¤ãƒ«åã®æœ«å°¾ã«åŠè§’ç©ºç™½åŠã³ . ã¯ä½¿ç”¨ã§ãã¾ã›ã‚“ã€‚");
 			return false;
 		}
 #ifndef UNICODE
 		if (IsDBCSLeadByteEx(CP_ACP,*p)) {
 			if (*(p+1)==_T('\0')) {
 				if (pMessage!=NULL)
-					*pMessage=TEXT("2ƒoƒCƒg•¶š‚Ì2ƒoƒCƒg–Ú‚ªŒ‡‚¯‚Ä‚¢‚Ü‚·B");
+					*pMessage=TEXT("2ãƒã‚¤ãƒˆæ–‡å­—ã®2ãƒã‚¤ãƒˆç›®ãŒæ¬ ã‘ã¦ã„ã¾ã™ã€‚");
 				return false;
 			}
 			p++;
@@ -1025,8 +1025,8 @@ struct ICONDIR
 #include <poppack.h>
 
 /*
-	ƒAƒCƒRƒ“‚ğƒtƒ@ƒCƒ‹‚É•Û‘¶‚·‚é
-	•Û‘¶‚³‚ê‚éƒAƒCƒRƒ“‚Í24ƒrƒbƒgŒÅ’è
+	ã‚¢ã‚¤ã‚³ãƒ³ã‚’ãƒ•ã‚¡ã‚¤ãƒ«ã«ä¿å­˜ã™ã‚‹
+	ä¿å­˜ã•ã‚Œã‚‹ã‚¢ã‚¤ã‚³ãƒ³ã¯24ãƒ“ãƒƒãƒˆå›ºå®š
 */
 bool SaveIconFromBitmap(LPCTSTR pszFileName,HBITMAP hbm,
 						int IconWidth,int IconHeight,int ImageWidth,int ImageHeight)

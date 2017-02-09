@@ -191,11 +191,11 @@ bool CArgsParser::GetValue(SYSTEMTIME *pValue) const
 		return false;
 
 	/*
-		���t�Ǝ����̃p�[�X���s��
-		Y-M-DTh:m:s �� Y/M/D-h:m:s �Ȃǂ��A�o�E�g�Ɏ󂯕t����
-		Y�AM�As�͏ȗ��\
-		���t�݂̂��w�肵���ꍇ�A���̓���0��0��0�b����Ƃ���
-		�����݂̂��w�肵���ꍇ�A���ɂ��̎��������鎞�Ƃ���
+		日付と時刻のパースを行う
+		Y-M-DTh:m:s や Y/M/D-h:m:s などをアバウトに受け付ける
+		Y、M、sは省略可能
+		日付のみを指定した場合、その日の0時0分0秒からとする
+		時刻のみを指定した場合、次にその時刻が来る時とする
 	*/
 	SYSTEMTIME CurTime,Time;
 	::GetLocalTime(&CurTime);
@@ -270,7 +270,7 @@ bool CArgsParser::GetValue(SYSTEMTIME *pValue) const
 				return false;
 			if (TimeCount>2) {
 				Time.wSecond=TimeValue[2];
-				if (Time.wSecond>59)	// Windows�ɉ[�b�͖����炵��
+				if (Time.wSecond>59)	// Windowsに閏秒は無いらしい
 					return false;
 			}
 		}
@@ -302,8 +302,8 @@ bool CArgsParser::GetDurationValue(int *pValue) const
 	if (IsEnd())
 		return false;
 
-	// ?h?m?s �`���̎��Ԏw����p�[�X����
-	// �P�ʂ̎w�肪�����ꍇ�͕b�P�ʂƉ��߂���
+	// ?h?m?s 形式の時間指定をパースする
+	// 単位の指定が無い場合は秒単位と解釈する
 	LPCWSTR p=m_ppszArgList[m_CurPos];
 	int DurationSec=0,Duration=0;
 
@@ -423,65 +423,65 @@ CCommandLineOptions::CCommandLineOptions()
 
 
 /*
-	���p�\�ȃR�}���h���C���I�v�V����
+	利用可能なコマンドラインオプション
 
-	/ch				�����`�����l�� (e.g. /ch 13)
-	/chi			�`�����l���C���f�b�N�X
-	/chspace		�`���[�j���O��� (e.g. /chspace 1)
-	/d				�h���C�o�̎w�� (e.g. /d BonDriver.dll)
-	/f /fullscreen	�t���X�N���[��
-	/ini			INI�t�@�C����
-	/init			�����ݒ�_�C�A���O��\������
-	/inikey			INI�t�@�C���̒l��ݒ�
-	/log			�I�����Ƀ��O��ۑ�����
-	/max			�ő剻��ԂŋN��
-	/min			�ŏ�����ԂŋN��
-	/tray			�N�����Ƀ^�X�N�g���C�Ɋi�[
-	/posx			�E�B���h�E�̍��ʒu�̎w��
-	/posy			�E�B���h�E�̏�ʒu�̎w��
-	/width			�E�B���h�E�̕��̎w��
-	/height			�E�B���h�E�̍����̎w��
-	/mute			����
-	/nd				TS�v���Z�b�T�[�𖳌��ɂ���
-	/nid			�l�b�g���[�NID
-	/nodriver		BonDriver��ǂݍ��܂Ȃ�
-	/nodshow		DirectShow�̏����������Ȃ�
-	/noplugin		�v���O�C����ǂݍ��܂Ȃ�
-	/noview			�v���r���[����
-	/mpeg2			MPEG-2��L��
-	/h264			H.264��L��
-	/h265			H.265��L��
-	/1seg			�����Z�O���[�h
-	/nr				�l�b�g���[�N�����R�����g�p����
-	/p /port		UDP �̃|�[�g�ԍ� (e.g. /p 1234)
-	/plugin-		�w�肳�ꂽ�v���O�C����ǂݍ��܂Ȃ�
-	/plugindir		�v���O�C���̃t�H���_
-	/rch			�����R���`�����l��
-	/rec			�^��
-	/reccurservice	���݂̃T�[�r�X�̂ݘ^��
-	/recstarttime	�^��J�n����
-	/recdelay		�^��܂ł̎���
-	/recduration	�^�掞��
-	/recexit		�^��I�����Ƀv���O�������I��
-	/recfile		�^��t�@�C����
-	/reconly		�^���p���[�h
-	/recstop		�^���~
-	/s				�����N�����Ȃ�
-	/sid			�T�[�r�XID
-	/silent			�G���[���Ƀ_�C�A���O��\�����Ȃ�
-	/standby		�ҋ@��ԂŋN��
-	/tsid			�g�����X�|�[�g�X�g���[��ID
-	/volume			����
-	/noepg			EPG���̎擾���s��Ȃ�
-	/epg			EPG�ԑg�\��\������
-	/epgonly		EPG�ԑg�\�̂ݕ\������
-	/epgtuner		EPG�ԑg�\�̃f�t�H���g�`���[�i�[
-	/epgspace		EPG�ԑg�\�̃f�t�H���g�`���[�j���O���
-	/home			�z�[����ʕ\��
-	/chdisplay		�`�����l���I����ʕ\��
-	/style			�X�^�C���t�@�C����
-	/command		�R�}���h���s
-	/jumplist		�W�����v���X�g����̋N��
+	/ch				物理チャンネル (e.g. /ch 13)
+	/chi			チャンネルインデックス
+	/chspace		チューニング空間 (e.g. /chspace 1)
+	/d				ドライバの指定 (e.g. /d BonDriver.dll)
+	/f /fullscreen	フルスクリーン
+	/ini			INIファイル名
+	/init			初期設定ダイアログを表示する
+	/inikey			INIファイルの値を設定
+	/log			終了時にログを保存する
+	/max			最大化状態で起動
+	/min			最小化状態で起動
+	/tray			起動時にタスクトレイに格納
+	/posx			ウィンドウの左位置の指定
+	/posy			ウィンドウの上位置の指定
+	/width			ウィンドウの幅の指定
+	/height			ウィンドウの高さの指定
+	/mute			消音
+	/nd				TSプロセッサーを無効にする
+	/nid			ネットワークID
+	/nodriver		BonDriverを読み込まない
+	/nodshow		DirectShowの初期化をしない
+	/noplugin		プラグインを読み込まない
+	/noview			プレビュー無効
+	/mpeg2			MPEG-2を有効
+	/h264			H.264を有効
+	/h265			H.265を有効
+	/1seg			ワンセグモード
+	/nr				ネットワークリモコンを使用する
+	/p /port		UDP のポート番号 (e.g. /p 1234)
+	/plugin-		指定されたプラグインを読み込まない
+	/plugindir		プラグインのフォルダ
+	/rch			リモコンチャンネル
+	/rec			録画
+	/reccurservice	現在のサービスのみ録画
+	/recstarttime	録画開始日時
+	/recdelay		録画までの時間
+	/recduration	録画時間
+	/recexit		録画終了時にプログラムを終了
+	/recfile		録画ファイル名
+	/reconly		録画専用モード
+	/recstop		録画停止
+	/s				複数起動しない
+	/sid			サービスID
+	/silent			エラー時にダイアログを表示しない
+	/standby		待機状態で起動
+	/tsid			トランスポートストリームID
+	/volume			音量
+	/noepg			EPG情報の取得を行わない
+	/epg			EPG番組表を表示する
+	/epgonly		EPG番組表のみ表示する
+	/epgtuner		EPG番組表のデフォルトチューナー
+	/epgspace		EPG番組表のデフォルトチューニング空間
+	/home			ホーム画面表示
+	/chdisplay		チャンネル選択画面表示
+	/style			スタイルファイル名
+	/command		コマンド実行
+	/jumplist		ジャンプリストからの起動
 */
 void CCommandLineOptions::Parse(LPCWSTR pszCmdLine)
 {
@@ -574,13 +574,13 @@ void CCommandLineOptions::Parse(LPCWSTR pszCmdLine)
 #ifdef _DEBUG
 				else {
 					TRACE(TEXT("Unknown command line option %s\n"),Args.GetText());
-					// �v���O�C���ŉ��߂���I�v�V����������̂Łc
-					//GetAppClass().AddLong(TEXT("�s���ȃR�}���h���C���I�v�V���� %s �𖳎����܂��B"),Args.GetText());
+					// プラグインで解釈するオプションもあるので…
+					//GetAppClass().AddLong(TEXT("不明なコマンドラインオプション %s を無視します。"),Args.GetText());
 				}
 #endif
 			}
 		} else {
-			// �Ȃ���udp://@:1234�̂悤�Ƀ|�[�g���w��ł���Ǝv���Ă���l�������̂ŁA�Ή����Ă���
+			// なぜかudp://@:1234のようにポートを指定できると思っている人が多いので、対応しておく
 			if (::wcsncmp(Args.GetText(),L"udp://@:",8)==0)
 				m_UDPPort=::_wtoi(Args.GetText()+8);
 		}
@@ -591,7 +591,7 @@ void CCommandLineOptions::Parse(LPCWSTR pszCmdLine)
 
 /*
 #ifdef _DEBUG
-	// �R�}���h���C���̉�͂̃e�X�g
+	// コマンドラインの解析のテスト
 	{
 		CArgsParser Args(L"/d 120 /d -45 /d 1h30m5s /t 2011/12/25-1:30:25 /t 1:30 /t 12/25 /t 12/25-1:30 /t 12/25-26:25");
 		do {

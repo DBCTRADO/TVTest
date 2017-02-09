@@ -299,12 +299,12 @@ bool CVideoRenderer_VMR7Renderless::Initialize(IGraphBuilder *pFilterGraph,
 	hr=::CoCreateInstance(CLSID_VideoMixingRenderer,NULL,CLSCTX_INPROC,
 					IID_IBaseFilter,reinterpret_cast<LPVOID*>(&m_pRenderer));
 	if (FAILED(hr)) {
-		SetError(hr,TEXT("VMR‚ÌƒCƒ“ƒXƒ^ƒ“ƒX‚ğì¬‚Å‚«‚Ü‚¹‚ñB"));
+		SetError(hr,TEXT("VMRã®ã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚¹ã‚’ä½œæˆã§ãã¾ã›ã‚“ã€‚"));
 		return false;
 	}
 	hr=pFilterGraph->AddFilter(m_pRenderer, L"VMR");
 	if (FAILED(hr)) {
-		SetError(hr,TEXT("VMR‚ğƒtƒBƒ‹ƒ^ƒOƒ‰ƒt‚É’Ç‰Á‚Å‚«‚Ü‚¹‚ñB"));
+		SetError(hr,TEXT("VMRã‚’ãƒ•ã‚£ãƒ«ã‚¿ã‚°ãƒ©ãƒ•ã«è¿½åŠ ã§ãã¾ã›ã‚“ã€‚"));
 		return false;
 	}
 	IVMRFilterConfig *pFilterConfig;
@@ -319,14 +319,14 @@ bool CVideoRenderer_VMR7Renderless::Initialize(IGraphBuilder *pFilterGraph,
 	hr=pFilterGraph->QueryInterface(IID_IFilterGraph2,
 									reinterpret_cast<LPVOID*>(&pFilterGraph2));
 	if (FAILED(hr)) {
-		SetError(hr,TEXT("IFilterGraph2‚ğæ“¾‚Å‚«‚Ü‚¹‚ñB"));
+		SetError(hr,TEXT("IFilterGraph2ã‚’å–å¾—ã§ãã¾ã›ã‚“ã€‚"));
 		return false;
 	}
 	hr=pFilterGraph2->RenderEx(pInputPin,
 								AM_RENDEREX_RENDERTOEXISTINGRENDERERS,NULL);
 	pFilterGraph2->Release();
 	if (FAILED(hr)) {
-		SetError(hr,TEXT("‰f‘œƒŒƒ“ƒ_ƒ‰‚ğ\’z‚Å‚«‚Ü‚¹‚ñB"));
+		SetError(hr,TEXT("æ˜ åƒãƒ¬ãƒ³ãƒ€ãƒ©ã‚’æ§‹ç¯‰ã§ãã¾ã›ã‚“ã€‚"));
 		return false;
 	}
 	m_pFilterGraph=pFilterGraph;
@@ -466,7 +466,7 @@ bool CVideoRenderer_VMR7Renderless::DisplayModeChanged()
 
 bool CVideoRenderer_VMR7Renderless::SetVisible(bool fVisible)
 {
-	// ƒEƒBƒ“ƒhƒE‚ğÄ•`‰æ‚³‚¹‚é
+	// ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã‚’å†æç”»ã•ã›ã‚‹
 	if (m_hwndRender)
 		return ::InvalidateRect(m_hwndRender,NULL,TRUE)!=FALSE;
 	return false;

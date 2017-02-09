@@ -268,7 +268,7 @@ CProgramListPanel::~CProgramListPanel()
 bool CProgramListPanel::Create(HWND hwndParent,DWORD Style,DWORD ExStyle,int ID)
 {
 	return CreateBasicWindow(hwndParent,Style,ExStyle,ID,
-							 m_pszClassName,TEXT("”Ô‘g•\"),m_hinst);
+							 m_pszClassName,TEXT("ç•ªçµ„è¡¨"),m_hinst);
 }
 
 
@@ -1072,7 +1072,7 @@ LRESULT CProgramListPanel::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lP
 		}
 		return 0;
 
-#if 0	// ƒeƒLƒXƒg‚ª’·‰ß‚¬‚Äƒc[ƒ‹ƒ`ƒbƒv‚ğg‚¤‚Æ–â‘è‚ª‚ ‚é
+#if 0	// ãƒ†ã‚­ã‚¹ãƒˆãŒé•·éãã¦ãƒ„ãƒ¼ãƒ«ãƒãƒƒãƒ—ã‚’ä½¿ã†ã¨å•é¡ŒãŒã‚ã‚‹
 	case WM_NOTIFY:
 		switch (reinterpret_cast<LPNMHDR>(lParam)->code) {
 		case TTN_NEEDTEXT:
@@ -1087,7 +1087,7 @@ LRESULT CProgramListPanel::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lP
 					SYSTEMTIME stEnd;
 					if (EventInfo.m_Duration>0 && EventInfo.GetEndTime(&stEnd))
 						StdUtil::snprintf(szEndTime,lengthof(szEndTime),
-										  TEXT("`%d:%02d"),stEnd.wHour,stEnd.wMinute);
+										  TEXT("ï½%d:%02d"),stEnd.wHour,stEnd.wMinute);
 					else
 						szEndTime[0]='\0';
 					StdUtil::snprintf(szText,lengthof(szText),
@@ -1114,8 +1114,8 @@ LRESULT CProgramListPanel::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lP
 
 		case TTN_SHOW:
 			{
-				// ƒc[ƒ‹ƒ`ƒbƒv‚ÌˆÊ’u‚ªƒJ[ƒ\ƒ‹‚Æd‚È‚Á‚Ä‚¢‚é‚Æ
-				// o‚½‚èÁ‚¦‚½‚è‚ğŒJ‚è•Ô‚µ‚Ä‚¨‚©‚µ‚­‚È‚é‚Ì‚Å‚¸‚ç‚·
+				// ãƒ„ãƒ¼ãƒ«ãƒãƒƒãƒ—ã®ä½ç½®ãŒã‚«ãƒ¼ã‚½ãƒ«ã¨é‡ãªã£ã¦ã„ã‚‹ã¨
+				// å‡ºãŸã‚Šæ¶ˆãˆãŸã‚Šã‚’ç¹°ã‚Šè¿”ã—ã¦ãŠã‹ã—ããªã‚‹ã®ã§ãšã‚‰ã™
 				LPNMHDR pnmh=reinterpret_cast<LPNMHDR>(lParam);
 				RECT rcTip;
 				POINT pt;
@@ -1278,7 +1278,7 @@ void CProgramListPanel::Draw(HDC hdc,const RECT *prcPaint)
 		DrawUtil::SelectObject(hdc,m_Font);
 		::SetTextColor(hdc,m_Theme.EventTextStyle.Fore.Fill.GetSolidColor());
 		TVTest::Style::Subtract(&rc,m_Style.TitlePadding);
-		DrawText.Draw(TEXT("”Ô‘g•\‚Ìæ“¾’†‚Å‚·..."),rc,LineHeight);
+		DrawText.Draw(TEXT("ç•ªçµ„è¡¨ã®å–å¾—ä¸­ã§ã™..."),rc,LineHeight);
 	} else {
 		HRGN hrgn=::CreateRectRgnIndirect(&rc);
 		::SelectClipRgn(hdc,hrgn);

@@ -10,7 +10,7 @@ public:
 	CVideoRenderer_EVRCustomPresenter();
 	~CVideoRenderer_EVRCustomPresenter();
 	bool Finalize() override;
-	bool HasProperty() override { return false; }	// ƒvƒƒpƒeƒB‚Ì”’l‚ª•s’è’l‚É‚È‚é
+	bool HasProperty() override { return false; }	// ãƒ—ãƒ­ãƒ‘ãƒ†ã‚£ã®æ•°å€¤ãŒä¸å®šå€¤ã«ãªã‚‹
 
 private:
 	HRESULT InitializePresenter(IBaseFilter *pFilter) override;

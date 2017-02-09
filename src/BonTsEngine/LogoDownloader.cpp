@@ -308,7 +308,7 @@ const bool CLogoDownloader::InputMedia(CMediaData *pMediaData, const DWORD dwInp
 
 	m_PidMapManager.StorePacket(pTsPacket);
 
-	// Ÿ‚ÌƒtƒBƒ‹ƒ^‚Éƒf[ƒ^‚ğ“n‚·
+	// æ¬¡ã®ãƒ•ã‚£ãƒ«ã‚¿ã«ãƒ‡ãƒ¼ã‚¿ã‚’æ¸¡ã™
 	OutputMedia(pMediaData);
 
 	return true;
@@ -328,7 +328,7 @@ void CLogoDownloader::OnSection(CPsiStreamTable *pTable, const CPsiSection *pSec
 	const BYTE TableID = pSection->GetTableID();
 
 	if (TableID == CCdtTable::TABLE_ID) {
-		// CDT‚©‚çƒƒSæ“¾
+		// CDTã‹ã‚‰ãƒ­ã‚´å–å¾—
 		const CCdtTable *pCdtTable = dynamic_cast<const CCdtTable*>(pTable);
 
 		if (pCdtTable
@@ -354,8 +354,8 @@ void CLogoDownloader::OnSection(CPsiStreamTable *pTable, const CPsiSection *pSec
 			}
 		}
 	} else if (TableID == CSdttTable::TABLE_ID) {
-		// SDTT‚©‚çƒo[ƒWƒ‡ƒ“‚ğæ“¾
-		// (SDTT‚ğŒ³‚Éƒ_ƒEƒ“ƒ[ƒh‚·‚é‚Ì‚ª–{—ˆ‚¾‚Æv‚¤‚ªASDTT‚ª‚ ‚Ü‚è—¬‚ê‚Ä—ˆ‚È‚¢‚Ì‚Å‚±‚Ì‚æ‚¤‚ÈŒ`‚É‚È‚Á‚Ä‚¢‚é)
+		// SDTTã‹ã‚‰ãƒãƒ¼ã‚¸ãƒ§ãƒ³ã‚’å–å¾—
+		// (SDTTã‚’å…ƒã«ãƒ€ã‚¦ãƒ³ãƒ­ãƒ¼ãƒ‰ã™ã‚‹ã®ãŒæœ¬æ¥ã ã¨æ€ã†ãŒã€SDTTãŒã‚ã¾ã‚Šæµã‚Œã¦æ¥ãªã„ã®ã§ã“ã®ã‚ˆã†ãªå½¢ã«ãªã£ã¦ã„ã‚‹)
 		const CSdttTable *pSdttTable = dynamic_cast<const CSdttTable*>(pTable);
 
 		if (pSdttTable && pSdttTable->IsCommon()) {
@@ -418,7 +418,7 @@ void CALLBACK CLogoDownloader::OnLogoDataModule(LogoData *pData, DWORD DownloadI
 
 void CALLBACK CLogoDownloader::OnPatUpdated(const WORD wPID, CTsPidMapTarget *pMapTarget, CTsPidMapManager *pMapManager, const PVOID pParam)
 {
-	// PAT‚ªXV‚³‚ê‚½
+	// PATãŒæ›´æ–°ã•ã‚ŒãŸ
 	CLogoDownloader *pThis = static_cast<CLogoDownloader *>(pParam);
 	CPatTable *pPatTable = dynamic_cast<CPatTable *>(pMapTarget);
 	if (pPatTable == NULL)
@@ -448,7 +448,7 @@ void CALLBACK CLogoDownloader::OnPatUpdated(const WORD wPID, CTsPidMapTarget *pM
 
 void CALLBACK CLogoDownloader::OnPmtUpdated(const WORD wPID, CTsPidMapTarget *pMapTarget, CTsPidMapManager *pMapManager, const PVOID pParam)
 {
-	// PMT‚ªXV‚³‚ê‚½
+	// PMTãŒæ›´æ–°ã•ã‚ŒãŸ
 	CLogoDownloader *pThis = static_cast<CLogoDownloader *>(pParam);
 	CPmtTable *pPmtTable = dynamic_cast<CPmtTable *>(pMapTarget);
 	if (pPmtTable == NULL)
@@ -474,7 +474,7 @@ void CALLBACK CLogoDownloader::OnPmtUpdated(const WORD wPID, CTsPidMapTarget *pM
 				if (pStreamIdDesc
 						&& (pStreamIdDesc->GetComponentTag() == 0x79
 							|| pStreamIdDesc->GetComponentTag() == 0x7A)) {
-					// ‘SóM‹@‹¤’Êƒf[ƒ^
+					// å…¨å—ä¿¡æ©Ÿå…±é€šãƒ‡ãƒ¼ã‚¿
 					Info.EsList.push_back(pPmtTable->GetEsPID(EsIndex));
 				}
 			}
@@ -489,7 +489,7 @@ void CALLBACK CLogoDownloader::OnPmtUpdated(const WORD wPID, CTsPidMapTarget *pM
 
 void CALLBACK CLogoDownloader::OnNitUpdated(const WORD wPID, CTsPidMapTarget *pMapTarget, CTsPidMapManager *pMapManager, const PVOID pParam)
 {
-	// NIT‚ªXV‚³‚ê‚½
+	// NITãŒæ›´æ–°ã•ã‚ŒãŸ
 	CLogoDownloader *pThis = static_cast<CLogoDownloader*>(pParam);
 	CNitMultiTable *pNitMultiTable = dynamic_cast<CNitMultiTable*>(pMapTarget);
 	if (pNitMultiTable == NULL || !pNitMultiTable->IsNitComplete())

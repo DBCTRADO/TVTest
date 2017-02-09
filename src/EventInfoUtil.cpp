@@ -22,8 +22,8 @@ bool EventInfoContextMenu(HWND hwndParent,HWND hwndEdit)
 	};
 	HMENU hmenu=::CreatePopupMenu();
 
-	::AppendMenu(hmenu,MF_STRING | MF_ENABLED,COMMAND_COPY,TEXT("ÉRÉsÅ[(&C)"));
-	::AppendMenu(hmenu,MF_STRING | MF_ENABLED,COMMAND_SELECTALL,TEXT("Ç∑Ç◊ÇƒëIë(&A)"));
+	::AppendMenu(hmenu,MF_STRING | MF_ENABLED,COMMAND_COPY,TEXT("„Ç≥„Éî„Éº(&C)"));
+	::AppendMenu(hmenu,MF_STRING | MF_ENABLED,COMMAND_SELECTALL,TEXT("„Åô„Åπ„Å¶ÈÅ∏Êäû(&A)"));
 
 	if (CRichEditUtil::IsSelected(hwndEdit)) {
 		const TVTest::CKeywordSearch &KeywordSearch=GetAppClass().KeywordSearch;

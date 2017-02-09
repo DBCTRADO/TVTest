@@ -86,7 +86,7 @@ bool CVideoRenderer_EVR::Initialize(IGraphBuilder *pFilterGraph,IPin *pInputPin,
 		wc.lpszMenuName=NULL;
 		wc.lpszClassName=EVR_VIDEO_WINDOW_CLASS;
 		if (::RegisterClass(&wc)==0) {
-			SetError(TEXT("EVRƒEƒBƒ“ƒhƒEƒNƒ‰ƒX‚ğ“o˜^‚Å‚«‚Ü‚¹‚ñB"));
+			SetError(TEXT("EVRã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã‚¯ãƒ©ã‚¹ã‚’ç™»éŒ²ã§ãã¾ã›ã‚“ã€‚"));
 			return false;
 		}
 		fRegistered=true;
@@ -95,31 +95,31 @@ bool CVideoRenderer_EVR::Initialize(IGraphBuilder *pFilterGraph,IPin *pInputPin,
 								 WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS,0,0,0,0,
 								 hwndRender,NULL,hinst,this);
 	if (m_hwndVideo==NULL) {
-		SetError(TEXT("EVRƒEƒBƒ“ƒhƒE‚ğì¬‚Å‚«‚Ü‚¹‚ñB"));
+		SetError(TEXT("EVRã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã‚’ä½œæˆã§ãã¾ã›ã‚“ã€‚"));
 		return false;
 	}
 #endif
 
 	HRESULT hr;
 
-	// MFStartup‚ÍŒÄ‚Î‚È‚­‚Ä‚¢‚¢‚ç‚µ‚¢
+	// MFStartupã¯å‘¼ã°ãªãã¦ã„ã„ã‚‰ã—ã„
 	/*
 	TCHAR szPath[MAX_PATH];
 	::GetSystemDirectory(szPath,_countof(szPath));
 	::PathAppend(szPath,TEXT("mfplat.dll"));
 	m_hMFPlatLib=::LoadLibrary(szPath);
 	if (m_hMFPlatLib==NULL) {
-		SetError(TEXT("mfplat.dll‚ğƒ[ƒh‚Å‚«‚Ü‚¹‚ñB"));
+		SetError(TEXT("mfplat.dllã‚’ãƒ­ãƒ¼ãƒ‰ã§ãã¾ã›ã‚“ã€‚"));
 		return false;
 	}
 	MFStartupFunc pStartup=reinterpret_cast<MFStartupFunc>(::GetProcAddress(m_hMFPlatLib,"MFStartup"));
 	if (pStartup==NULL) {
-		SetError(TEXT("MFStartupŠÖ”‚ÌƒAƒhƒŒƒX‚ğæ“¾‚Å‚«‚Ü‚¹‚ñB"));
+		SetError(TEXT("MFStartupé–¢æ•°ã®ã‚¢ãƒ‰ãƒ¬ã‚¹ã‚’å–å¾—ã§ãã¾ã›ã‚“ã€‚"));
 		goto OnError;
 	}
 	hr=pStartup(MF_VERSION,MFSTARTUP_LITE);
 	if (FAILED(hr)) {
-		SetError(TEXT("Media Foundation‚Ì‰Šú‰»‚ª‚Å‚«‚Ü‚¹‚ñB"));
+		SetError(TEXT("Media Foundationã®åˆæœŸåŒ–ãŒã§ãã¾ã›ã‚“ã€‚"));
 		goto OnError;
 	}
 	*/
@@ -127,27 +127,27 @@ bool CVideoRenderer_EVR::Initialize(IGraphBuilder *pFilterGraph,IPin *pInputPin,
 	hr=::CoCreateInstance(CLSID_EnhancedVideoRenderer,NULL,CLSCTX_INPROC_SERVER,
 						IID_IBaseFilter,reinterpret_cast<LPVOID*>(&m_pRenderer));
 	if (FAILED(hr)) {
-		SetError(hr,TEXT("EVR‚ÌƒCƒ“ƒXƒ^ƒ“ƒX‚ğì¬‚Å‚«‚Ü‚¹‚ñB"),
-					TEXT("ƒVƒXƒeƒ€‚ªEVR‚É‘Î‰‚µ‚Ä‚¢‚È‚¢‰Â”\«‚ª‚ ‚è‚Ü‚·B"));
+		SetError(hr,TEXT("EVRã®ã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚¹ã‚’ä½œæˆã§ãã¾ã›ã‚“ã€‚"),
+					TEXT("ã‚·ã‚¹ãƒ†ãƒ ãŒEVRã«å¯¾å¿œã—ã¦ã„ãªã„å¯èƒ½æ€§ãŒã‚ã‚Šã¾ã™ã€‚"));
 		goto OnError;
 	}
 
 	hr=pFilterGraph->AddFilter(m_pRenderer,L"EVR");
 	if (FAILED(hr)) {
-		SetError(hr,TEXT("EVR‚ğƒtƒBƒ‹ƒ^ƒOƒ‰ƒt‚É’Ç‰Á‚Å‚«‚Ü‚¹‚ñB"));
+		SetError(hr,TEXT("EVRã‚’ãƒ•ã‚£ãƒ«ã‚¿ã‚°ãƒ©ãƒ•ã«è¿½åŠ ã§ãã¾ã›ã‚“ã€‚"));
 		goto OnError;
 	}
 
 	hr=InitializePresenter(m_pRenderer);
 	if (FAILED(hr)) {
-		SetError(hr,TEXT("ƒJƒXƒ^ƒ€ƒvƒŒƒ[ƒ“ƒ^‚ğ‰Šú‰»‚Å‚«‚Ü‚¹‚ñB"));
+		SetError(hr,TEXT("ã‚«ã‚¹ã‚¿ãƒ ãƒ—ãƒ¬ã‚¼ãƒ³ã‚¿ã‚’åˆæœŸåŒ–ã§ãã¾ã›ã‚“ã€‚"));
 		goto OnError;
 	}
 
 	IEVRFilterConfig *pFilterConfig;
 	hr=m_pRenderer->QueryInterface(IID_IEVRFilterConfig,reinterpret_cast<LPVOID*>(&pFilterConfig));
 	if (FAILED(hr)) {
-		SetError(hr,TEXT("IEVRFilterConfig‚ğæ“¾‚Å‚«‚Ü‚¹‚ñB"));
+		SetError(hr,TEXT("IEVRFilterConfigã‚’å–å¾—ã§ãã¾ã›ã‚“ã€‚"));
 		goto OnError;
 	}
 	pFilterConfig->SetNumberOfStreams(1);
@@ -156,7 +156,7 @@ bool CVideoRenderer_EVR::Initialize(IGraphBuilder *pFilterGraph,IPin *pInputPin,
 	IMFGetService *pGetService;
 	hr=m_pRenderer->QueryInterface(IID_IMFGetService,reinterpret_cast<LPVOID*>(&pGetService));
 	if (FAILED(hr)) {
-		SetError(hr,TEXT("IMFGetService‚ğæ“¾‚Å‚«‚Ü‚¹‚ñB"));
+		SetError(hr,TEXT("IMFGetServiceã‚’å–å¾—ã§ãã¾ã›ã‚“ã€‚"));
 		goto OnError;
 	}
 
@@ -164,7 +164,7 @@ bool CVideoRenderer_EVR::Initialize(IGraphBuilder *pFilterGraph,IPin *pInputPin,
 	hr=pGetService->GetService(MR_VIDEO_RENDER_SERVICE,IID_IMFVideoDisplayControl,reinterpret_cast<LPVOID*>(&pDisplayControl));
 	if (FAILED(hr)) {
 		pGetService->Release();
-		SetError(hr,TEXT("IMFVideoDisplayControl‚ğæ“¾‚Å‚«‚Ü‚¹‚ñB"));
+		SetError(hr,TEXT("IMFVideoDisplayControlã‚’å–å¾—ã§ãã¾ã›ã‚“ã€‚"));
 		goto OnError;
 	}
 #ifdef EVR_USE_VIDEO_WINDOW
@@ -188,7 +188,7 @@ bool CVideoRenderer_EVR::Initialize(IGraphBuilder *pFilterGraph,IPin *pInputPin,
 	hr=pGetService->GetService(MR_VIDEO_MIXER_SERVICE,IID_IMFVideoProcessor,reinterpret_cast<LPVOID*>(&pVideoProcessor));
 	if (FAILED(hr)) {
 		pGetService->Release();
-		SetError(hr,TEXT("IMFVideoProcessor‚ğæ“¾‚Å‚«‚Ü‚¹‚ñB"));
+		SetError(hr,TEXT("IMFVideoProcessorã‚’å–å¾—ã§ãã¾ã›ã‚“ã€‚"));
 		goto OnError;
 	}
 	pVideoProcessor->SetBackgroundColor(RGB(0,0,0));
@@ -233,14 +233,14 @@ bool CVideoRenderer_EVR::Initialize(IGraphBuilder *pFilterGraph,IPin *pInputPin,
 	hr=pFilterGraph->QueryInterface(IID_IFilterGraph2,
 									reinterpret_cast<LPVOID*>(&pFilterGraph2));
 	if (FAILED(hr)) {
-		SetError(hr,TEXT("IFilterGraph2‚ğæ“¾‚Å‚«‚Ü‚¹‚ñB"));
+		SetError(hr,TEXT("IFilterGraph2ã‚’å–å¾—ã§ãã¾ã›ã‚“ã€‚"));
 		goto OnError;
 	}
 	hr=pFilterGraph2->RenderEx(pInputPin,
 								AM_RENDEREX_RENDERTOEXISTINGRENDERERS,NULL);
 	pFilterGraph2->Release();
 	if (FAILED(hr)) {
-		SetError(hr,TEXT("‰f‘œƒŒƒ“ƒ_ƒ‰‚ğ\’z‚Å‚«‚Ü‚¹‚ñB"));
+		SetError(hr,TEXT("æ˜ åƒãƒ¬ãƒ³ãƒ€ãƒ©ã‚’æ§‹ç¯‰ã§ãã¾ã›ã‚“ã€‚"));
 		goto OnError;
 	}
 
@@ -314,7 +314,7 @@ bool CVideoRenderer_EVR::SetVideoPosition(int SourceWidth,int SourceHeight,const
 #else
 			fOK=SUCCEEDED(pDisplayControl->SetVideoPosition(&rcSrc,&rcDest));
 
-			// EVR‚ÌƒoƒO‚ÅƒoƒbƒNƒoƒbƒtƒ@‚ªƒNƒŠƒA‚³‚ê‚È‚¢‚ª‚ ‚é‚Ì‚ÅA‹­§“I‚ÉƒNƒŠƒA‚·‚é
+			// EVRã®ãƒã‚°ã§ãƒãƒƒã‚¯ãƒãƒƒãƒ•ã‚¡ãŒã‚¯ãƒªã‚¢ã•ã‚Œãªã„æ™‚ãŒã‚ã‚‹ã®ã§ã€å¼·åˆ¶çš„ã«ã‚¯ãƒªã‚¢ã™ã‚‹
 			COLORREF crBorder;
 			pDisplayControl->GetBorderColor(&crBorder);
 			pDisplayControl->SetBorderColor(crBorder==0?RGB(1,1,1):RGB(0,0,0));

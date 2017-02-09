@@ -23,7 +23,7 @@
 #define MAIN_WINDOW_CLASS		APP_NAME TEXT(" Window")
 #define FULLSCREEN_WINDOW_CLASS	APP_NAME TEXT(" Fullscreen")
 
-// (*) ���t�������̂́A�ς���ƈقȂ�o�[�W�����Ԃł̌݊����������Ȃ�̂Œ���
+// (*) が付いたものは、変えると異なるバージョン間での互換性が無くなるので注意
 #define WM_APP_SERVICEUPDATE			(WM_APP+0)
 #define WM_APP_IMAGESAVE				(WM_APP+2)
 #define WM_APP_TRAYICON					(WM_APP+3)

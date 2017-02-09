@@ -53,7 +53,7 @@ const bool CTsPacketCounter::InputMedia(CMediaData *pMediaData, const DWORD dwIn
 
 	CTsPacket *pTsPacket = dynamic_cast<CTsPacket *>(pMediaData);
 
-	// “ü—ÍƒƒfƒBƒAƒf[ƒ^‚ÍŒİŠ·«‚ª‚È‚¢
+	// å…¥åŠ›ãƒ¡ãƒ‡ã‚£ã‚¢ãƒ‡ãƒ¼ã‚¿ã¯äº’æ›æ€§ãŒãªã„
 	if(!pTsPacket)return false;
 	*/
 
@@ -188,7 +188,7 @@ void CTsPacketCounter::UnmapServiceESs(size_t Index)
 
 void CALLBACK CTsPacketCounter::OnPatUpdated(const WORD wPID, CTsPidMapTarget *pMapTarget, CTsPidMapManager *pMapManager, const PVOID pParam)
 {
-	// PAT‚ªXV‚³‚ê‚½
+	// PATãŒæ›´æ–°ã•ã‚ŒãŸ
 	CTsPacketCounter *pThis = static_cast<CTsPacketCounter *>(pParam);
 	CPatTable *pPatTable = dynamic_cast<CPatTable *>(pMapTarget);
 	if (pPatTable == nullptr)
@@ -218,7 +218,7 @@ void CALLBACK CTsPacketCounter::OnPatUpdated(const WORD wPID, CTsPidMapTarget *p
 
 void CALLBACK CTsPacketCounter::OnPmtUpdated(const WORD wPID, CTsPidMapTarget *pMapTarget, CTsPidMapManager *pMapManager, const PVOID pParam)
 {
-	// PMT‚ªXV‚³‚ê‚½
+	// PMTãŒæ›´æ–°ã•ã‚ŒãŸ
 	CTsPacketCounter *pThis = static_cast<CTsPacketCounter *>(pParam);
 	CPmtTable *pPmtTable = dynamic_cast<CPmtTable *>(pMapTarget);
 	if (pPmtTable == nullptr)

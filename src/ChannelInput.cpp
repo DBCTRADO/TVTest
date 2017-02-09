@@ -152,9 +152,9 @@ INT_PTR CChannelInputOptionsDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LP
 	case WM_INITDIALOG:
 		{
 			static const LPCTSTR KeyModeList[] = {
-				TEXT("–³Œø"),
-				TEXT("’PƒL["),
-				TEXT("˜A‘±“ü—Í"),
+				TEXT("ç„¡åŠ¹"),
+				TEXT("å˜ã‚­ãƒ¼"),
+				TEXT("é€£ç¶šå…¥åŠ›"),
 			};
 
 			for (int i=0;i<=CChannelInputOptions::KEY_LAST;i++) {
@@ -166,8 +166,8 @@ INT_PTR CChannelInputOptionsDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LP
 
 			DlgEdit_SetUInt(hDlg,IDC_CHANNELINPUT_TIMEOUT,m_Options.KeyTimeout);
 
-			DlgComboBox_AddString(hDlg,IDC_CHANNELINPUT_TIMEOUTMODE,TEXT("Šm’è"));
-			DlgComboBox_AddString(hDlg,IDC_CHANNELINPUT_TIMEOUTMODE,TEXT("ƒLƒƒƒ“ƒZƒ‹"));
+			DlgComboBox_AddString(hDlg,IDC_CHANNELINPUT_TIMEOUTMODE,TEXT("ç¢ºå®š"));
+			DlgComboBox_AddString(hDlg,IDC_CHANNELINPUT_TIMEOUTMODE,TEXT("ã‚­ãƒ£ãƒ³ã‚»ãƒ«"));
 			DlgComboBox_SetCurSel(hDlg,IDC_CHANNELINPUT_TIMEOUTMODE,
 								  m_Options.fKeyTimeoutCancel?1:0);
 		}

@@ -5,12 +5,12 @@
 #include "Common/DebugDef.h"
 
 
-// ƒ^ƒCƒ}[‚Ì¯•Êq
+// ã‚¿ã‚¤ãƒãƒ¼ã®è­˜åˆ¥å­
 #define TIMER_ID_HIDE		0x0001U
 #define TIMER_ID_ANIMATION	0x0002U
 
-#define ANIMATION_FRAMES	4	// ƒAƒjƒ[ƒVƒ‡ƒ“‚Ì’iŠK”
-#define ANIMATION_INTERVAL	50	// ƒAƒjƒ[ƒVƒ‡ƒ“‚ÌŠÔŠu
+#define ANIMATION_FRAMES	4	// ã‚¢ãƒ‹ãƒ¡ãƒ¼ã‚·ãƒ§ãƒ³ã®æ®µéšæ•°
+#define ANIMATION_INTERVAL	50	// ã‚¢ãƒ‹ãƒ¡ãƒ¼ã‚·ãƒ§ãƒ³ã®é–“éš”
 
 
 
@@ -538,7 +538,7 @@ void CPseudoOSD::UpdateLayeredWindow()
 				GetRValue(m_crTextColor),
 				GetGValue(m_crTextColor),
 				GetBValue(m_crTextColor),
-				254);	// 255‚É‚·‚é‚Æ•`‰æ‚ª‚¨‚©‚µ‚­‚È‚é
+				254);	// 255ã«ã™ã‚‹ã¨æç”»ãŒãŠã‹ã—ããªã‚‹
 			LOGFONT lf;
 			m_Font.GetLogFont(&lf);
 

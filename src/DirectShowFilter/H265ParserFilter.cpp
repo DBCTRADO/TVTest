@@ -23,7 +23,7 @@ CH265ParserFilter::~CH265ParserFilter()
 
 IBaseFilter* WINAPI CH265ParserFilter::CreateInstance(LPUNKNOWN pUnk, HRESULT *phr)
 {
-	// ƒCƒ“ƒXƒ^ƒ“ƒX‚ğì¬‚·‚é
+	// ã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚¹ã‚’ä½œæˆã™ã‚‹
 	CH265ParserFilter *pNewFilter = new CH265ParserFilter(pUnk, phr);
 	if (FAILED(*phr)) {
 		delete pNewFilter;
@@ -65,7 +65,7 @@ HRESULT CH265ParserFilter::Transform(IMediaSample *pSample)
 
 	CAutoLock Lock(&m_ParserLock);
 
-	// ƒV[ƒPƒ“ƒX‚ğæ“¾
+	// ã‚·ãƒ¼ã‚±ãƒ³ã‚¹ã‚’å–å¾—
 	m_H265Parser.StoreEs(pData, DataSize);
 
 	if (m_pStreamCallback)
@@ -155,14 +155,14 @@ void CH265ParserFilter::OnAccessUnit(const CH265Parser *pParser, const CH265Acce
 	}
 
 	if (Info != m_VideoInfo) {
-		// ‰f‘œ‚ÌƒTƒCƒY‹y‚ÑƒtƒŒ[ƒ€ƒŒ[ƒg‚ª•Ï‚í‚Á‚½
+		// æ˜ åƒã®ã‚µã‚¤ã‚ºåŠã³ãƒ•ãƒ¬ãƒ¼ãƒ ãƒ¬ãƒ¼ãƒˆãŒå¤‰ã‚ã£ãŸ
 		m_VideoInfo = Info;
 
 		TRACE(TEXT("H.265 access unit %d x %d [SAR %d:%d (DAR %d:%d)] %lu/%lu\n"),
 			  OrigWidth, OrigHeight, SarX, SarY, AspectX, AspectY,
 			  Info.m_FrameRate.Num, Info.m_FrameRate.Denom);
 
-		// ’Ê’m
+		// é€šçŸ¥
 		NotifyVideoInfo();
 	}
 }

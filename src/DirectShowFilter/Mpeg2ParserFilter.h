@@ -4,13 +4,13 @@
 #include "VideoParser.h"
 
 
-// InPlaceフィルタにする
+// InPlace繝輔ぅ繝ｫ繧ｿ縺ｫ縺吶ｋ
 #define MPEG2PARSERFILTER_INPLACE
 
-// テンプレート名
+// 繝�繝ｳ繝励Ξ繝ｼ繝亥錐
 #define MPEG2PARSERFILTER_NAME L"Mpeg2 Parser Filter"
 
-// このフィルタのGUID {3F8400DA-65F1-4694-BB05-303CDE739680}
+// 縺薙�ｮ繝輔ぅ繝ｫ繧ｿ縺ｮGUID {3F8400DA-65F1-4694-BB05-303CDE739680}
 DEFINE_GUID(CLSID_Mpeg2ParserFilter, 0x3f8400da, 0x65f1, 0x4694, 0xbb, 0x5, 0x30, 0x3c, 0xde, 0x73, 0x96, 0x80);
 
 class __declspec(uuid("3F8400DA-65F1-4694-BB05-303CDE739680")) CMpeg2ParserFilter

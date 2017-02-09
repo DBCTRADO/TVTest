@@ -523,14 +523,14 @@ INT_PTR CControllerManager::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPa
 			lvc.mask=LVCF_FMT | LVCF_WIDTH | LVCF_TEXT;
 			lvc.fmt=LVCFMT_LEFT;
 			lvc.cx=120;
-			lvc.pszText=TEXT("É{É^Éì");
+			lvc.pszText=TEXT("„Éú„Çø„É≥");
 			ListView_InsertColumn(hwndList,0,&lvc);
-			lvc.pszText=TEXT("ÉRÉ}ÉìÉh");
+			lvc.pszText=TEXT("„Ç≥„Éû„É≥„Éâ");
 			ListView_InsertColumn(hwndList,1,&lvc);
 
 			const CCommandList &CommandList=GetAppClass().CommandList;
 			TCHAR szText[CCommandList::MAX_COMMAND_NAME];
-			DlgComboBox_AddString(hDlg,IDC_CONTROLLER_COMMAND,TEXT("Ç»Çµ"));
+			DlgComboBox_AddString(hDlg,IDC_CONTROLLER_COMMAND,TEXT("„Å™„Åó"));
 			for (int i=0;i<CommandList.NumCommands();i++) {
 				CommandList.GetCommandName(i,szText,lengthof(szText));
 				DlgComboBox_AddString(hDlg,IDC_CONTROLLER_COMMAND,szText);

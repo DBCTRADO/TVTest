@@ -1,4 +1,4 @@
-// TsUtilClass.cpp: TSƒ†[ƒeƒBƒŠƒeƒB[ƒNƒ‰ƒX‚ÌƒCƒ“ƒvƒŠƒƒ“ƒe[ƒVƒ‡ƒ“
+// TsUtilClass.cpp: TSãƒ¦ãƒ¼ãƒ†ã‚£ãƒªãƒ†ã‚£ãƒ¼ã‚¯ãƒ©ã‚¹ã®ã‚¤ãƒ³ãƒ—ãƒªãƒ¡ãƒ³ãƒ†ãƒ¼ã‚·ãƒ§ãƒ³
 //
 //////////////////////////////////////////////////////////////////////
 
@@ -9,7 +9,7 @@
 
 
 //////////////////////////////////////////////////////////////////////
-// CDynamicReferenceable ƒNƒ‰ƒX‚Ì\’z/Á–Å
+// CDynamicReferenceable ã‚¯ãƒ©ã‚¹ã®æ§‹ç¯‰/æ¶ˆæ»…
 //////////////////////////////////////////////////////////////////////
 
 CDynamicReferenceable::CDynamicReferenceable()
@@ -25,22 +25,22 @@ CDynamicReferenceable::~CDynamicReferenceable()
 
 void CDynamicReferenceable::AddRef(void)
 {
-	// QÆƒJƒEƒ“ƒgƒCƒ“ƒNƒŠƒƒ“ƒg
+	// å‚ç…§ã‚«ã‚¦ãƒ³ãƒˆã‚¤ãƒ³ã‚¯ãƒªãƒ¡ãƒ³ãƒˆ
 	::InterlockedIncrement(&m_RefCount);
 }
 
 void CDynamicReferenceable::ReleaseRef(void)
 {
-	// QÆƒJƒEƒ“ƒgƒfƒNƒŠƒƒ“ƒg
+	// å‚ç…§ã‚«ã‚¦ãƒ³ãƒˆãƒ‡ã‚¯ãƒªãƒ¡ãƒ³ãƒˆ
 #ifndef _DEBUG
 	if (::InterlockedDecrement(&m_RefCount) == 0) {
-		// ƒCƒ“ƒXƒ^ƒ“ƒXŠJ•ú
+		// ã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚¹é–‹æ”¾
 		delete this;
 	}
 #else
 	const LONG Count = ::InterlockedDecrement(&m_RefCount);
 	if (Count == 0) {
-		// ƒCƒ“ƒXƒ^ƒ“ƒXŠJ•ú
+		// ã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚¹é–‹æ”¾
 		delete this;
 	} else if (Count < 0) {
 		::DebugBreak();
@@ -50,30 +50,30 @@ void CDynamicReferenceable::ReleaseRef(void)
 
 
 //////////////////////////////////////////////////////////////////////
-// CCriticalLock ƒNƒ‰ƒX‚Ì\’z/Á–Å
+// CCriticalLock ã‚¯ãƒ©ã‚¹ã®æ§‹ç¯‰/æ¶ˆæ»…
 //////////////////////////////////////////////////////////////////////
 
 CCriticalLock::CCriticalLock()
 {
-	// ƒNƒŠƒeƒBƒJƒ‹ƒZƒNƒVƒ‡ƒ“‰Šú‰»
+	// ã‚¯ãƒªãƒ†ã‚£ã‚«ãƒ«ã‚»ã‚¯ã‚·ãƒ§ãƒ³åˆæœŸåŒ–
 	::InitializeCriticalSection(&m_CriticalSection);
 }
 
 CCriticalLock::~CCriticalLock()
 {
-	// ƒNƒŠƒeƒBƒJƒ‹ƒZƒNƒVƒ‡ƒ“íœ
+	// ã‚¯ãƒªãƒ†ã‚£ã‚«ãƒ«ã‚»ã‚¯ã‚·ãƒ§ãƒ³å‰Šé™¤
 	::DeleteCriticalSection(&m_CriticalSection);
 }
 
 void CCriticalLock::Lock(void)
 {
-	// ƒNƒŠƒeƒBƒJƒ‹ƒZƒNƒVƒ‡ƒ“æ“¾
+	// ã‚¯ãƒªãƒ†ã‚£ã‚«ãƒ«ã‚»ã‚¯ã‚·ãƒ§ãƒ³å–å¾—
 	::EnterCriticalSection(&m_CriticalSection);
 }
 
 void CCriticalLock::Unlock(void)
 {
-	// ƒNƒŠƒeƒBƒJƒ‹ƒZƒNƒVƒ‡ƒ“ŠJ•ú
+	// ã‚¯ãƒªãƒ†ã‚£ã‚«ãƒ«ã‚»ã‚¯ã‚·ãƒ§ãƒ³é–‹æ”¾
 	::LeaveCriticalSection(&m_CriticalSection);
 }
 
@@ -85,7 +85,7 @@ bool CCriticalLock::TryLock(DWORD TimeOut)
 		if (::TryEnterCriticalSection(&m_CriticalSection))
 			bLocked = true;
 	} else {
-		// ‚±‚¤‚¢‚¤‚Ì‚Í–³—‚É Critical section g‚í‚È‚¢•û‚ª‚¢‚¢‚©‚à...
+		// ã“ã†ã„ã†ã®ã¯ç„¡ç†ã« Critical section ä½¿ã‚ãªã„æ–¹ãŒã„ã„ã‹ã‚‚...
 		const DWORD StartTime = ::GetTickCount();
 		while (true) {
 			if (::TryEnterCriticalSection(&m_CriticalSection)) {
@@ -102,19 +102,19 @@ bool CCriticalLock::TryLock(DWORD TimeOut)
 
 
 //////////////////////////////////////////////////////////////////////
-// CBlockLock ƒNƒ‰ƒX‚Ì\’z/Á–Å
+// CBlockLock ã‚¯ãƒ©ã‚¹ã®æ§‹ç¯‰/æ¶ˆæ»…
 //////////////////////////////////////////////////////////////////////
 
 CBlockLock::CBlockLock(CCriticalLock *pCriticalLock)
 	: m_pCriticalLock(pCriticalLock)
 {
-	// ƒƒbƒNæ“¾
+	// ãƒ­ãƒƒã‚¯å–å¾—
 	m_pCriticalLock->Lock();
 }
 
 CBlockLock::~CBlockLock()
 {
-	// ƒƒbƒNŠJ•ú
+	// ãƒ­ãƒƒã‚¯é–‹æ”¾
 	m_pCriticalLock->Unlock();
 }
 
@@ -140,7 +140,7 @@ bool CTryBlockLock::TryLock(DWORD TimeOut)
 
 
 /////////////////////////////////////////////////////////////////////////////
-// ƒCƒxƒ“ƒgƒNƒ‰ƒX
+// ã‚¤ãƒ™ãƒ³ãƒˆã‚¯ãƒ©ã‚¹
 /////////////////////////////////////////////////////////////////////////////
 
 CLocalEvent::CLocalEvent()
@@ -218,7 +218,7 @@ bool CLocalEvent::IsSignaled()
 
 
 /////////////////////////////////////////////////////////////////////////////
-// “úƒNƒ‰ƒX
+// æ—¥æ™‚ã‚¯ãƒ©ã‚¹
 /////////////////////////////////////////////////////////////////////////////
 
 CDateTime::CDateTime()
@@ -315,7 +315,7 @@ void CDateTime::Get(SYSTEMTIME *pTime) const
 
 
 /////////////////////////////////////////////////////////////////////////////
-// ƒgƒŒ[ƒXƒNƒ‰ƒX
+// ãƒˆãƒ¬ãƒ¼ã‚¹ã‚¯ãƒ©ã‚¹
 /////////////////////////////////////////////////////////////////////////////
 
 void CTracer::Trace(TraceType Type, LPCTSTR pszOutput, ...)
@@ -337,12 +337,12 @@ void CTracer::TraceV(TraceType Type, LPCTSTR pszOutput, va_list Args)
 
 
 /////////////////////////////////////////////////////////////////////////////
-// CRCŒvZƒNƒ‰ƒX
+// CRCè¨ˆç®—ã‚¯ãƒ©ã‚¹
 /////////////////////////////////////////////////////////////////////////////
 
 WORD CCrcCalculator::CalcCrc16(const BYTE *pData, SIZE_T DataSize, WORD wCurCrc)
 {
-	// CRC16ŒvZ(ISO/IEC 13818-1 €‹’)
+	// CRC16è¨ˆç®—(ISO/IEC 13818-1 æº–æ‹ )
 	static const WORD Crc16Table[256] = {
 		0x0000U, 0x8005U, 0x800FU, 0x000AU, 0x801BU, 0x001EU, 0x0014U, 0x8011U, 0x8033U, 0x0036U, 0x003CU, 0x8039U, 0x0028U, 0x802DU, 0x8027U, 0x0022U,
 		0x8063U, 0x0066U, 0x006CU, 0x8069U, 0x0078U, 0x807DU, 0x8077U, 0x0072U, 0x0050U, 0x8055U, 0x805FU, 0x005AU, 0x804BU, 0x004EU, 0x0044U, 0x8041U,
@@ -390,7 +390,7 @@ static const DWORD g_Crc32Table[256] = {
 
 #if 0
 
-// Dilip V. Sarwate ‚ÌƒAƒ‹ƒSƒŠƒYƒ€
+// Dilip V. Sarwate ã®ã‚¢ãƒ«ã‚´ãƒªã‚ºãƒ 
 
 DWORD CCrcCalculator::CalcCrc32(const BYTE *pData, SIZE_T DataSize, DWORD dwCurCrc)
 {
@@ -403,7 +403,7 @@ DWORD CCrcCalculator::CalcCrc32(const BYTE *pData, SIZE_T DataSize, DWORD dwCurC
 
 #else
 
-// Slicing-by-4/8 ƒAƒ‹ƒSƒŠƒYƒ€
+// Slicing-by-4/8 ã‚¢ãƒ«ã‚´ãƒªã‚ºãƒ 
 
 #define CRC_SLICING_BY_4	// Slicing-by-4
 
@@ -420,7 +420,7 @@ class CCrcSlicingTableInitializer
 public:
 	CCrcSlicingTableInitializer()
 	{
-		// Slicing-by-4/8 —pƒe[ƒuƒ‹‚Ì‰Šú‰»
+		// Slicing-by-4/8 ç”¨ãƒ†ãƒ¼ãƒ–ãƒ«ã®åˆæœŸåŒ–
 		for (size_t i = 0; i < 256; i++) {
 			DWORD c = g_Crc32Table[i];
 			g_Crc32SlicingTable[0][i] = c;
@@ -516,7 +516,7 @@ void CCrc32::Reset()
 
 
 /////////////////////////////////////////////////////////////////////////////
-// MD5ŒvZƒNƒ‰ƒX
+// MD5è¨ˆç®—ã‚¯ãƒ©ã‚¹
 /////////////////////////////////////////////////////////////////////////////
 
 #define F1(x, y, z) ((z) ^ ((x) & ((y) ^ (z))))
@@ -649,7 +649,7 @@ void CMD5Calculator::CalcMD5(const void *pData, SIZE_T DataSize, BYTE pMD5[16])
 
 
 /////////////////////////////////////////////////////////////////////////////
-// ƒrƒbƒgƒŒ[ƒgŒvZƒNƒ‰ƒX
+// ãƒ“ãƒƒãƒˆãƒ¬ãƒ¼ãƒˆè¨ˆç®—ã‚¯ãƒ©ã‚¹
 /////////////////////////////////////////////////////////////////////////////
 
 CBitRateCalculator::CBitRateCalculator()

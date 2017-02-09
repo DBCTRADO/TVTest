@@ -36,7 +36,7 @@ bool CTextDrawClient::Initialize(TextDrawEngine Engine,HWND hwnd)
 
 	case ENGINE_DIRECTWRITE:
 		if (!m_DirectWriteRenderer.GetSystem().Initialize()) {
-			GetAppClass().AddLog(CLogItem::TYPE_ERROR,TEXT("DirectWrite ‚Ì‰Šú‰»‚ª‚Å‚«‚Ü‚¹‚ñB"));
+			GetAppClass().AddLog(CLogItem::TYPE_ERROR,TEXT("DirectWrite ã®åˆæœŸåŒ–ãŒã§ãã¾ã›ã‚“ã€‚"));
 			return false;
 		}
 		if (!m_DirectWriteRenderer.Initialize(hwnd))

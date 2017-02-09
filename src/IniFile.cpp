@@ -292,7 +292,7 @@ namespace TVTest
 
 		auto itrValue=FindValue(pSection->Entries,pszName);
 		if (itrValue==pSection->Entries.end()) {
-			//TRACE(TEXT("V‹Kİ’è : %s=%s\n"),pszName,pszValue);
+			//TRACE(TEXT("æ–°è¦è¨­å®š : %s=%s\n"),pszName,pszValue);
 			bool fInserted=false;
 			for (auto i=pSection->Entries.rbegin();i!=pSection->Entries.rend();i++) {
 				if (!i->Name.empty()) {
@@ -461,7 +461,7 @@ namespace TVTest
 
 	bool CIniFile::CreateSection(LPCWSTR pszName)
 	{
-		//TRACE(L"INIƒZƒNƒVƒ‡ƒ“ì¬ : [%s]\n",pszName);
+		//TRACE(L"INIã‚»ã‚¯ã‚·ãƒ§ãƒ³ä½œæˆ : [%s]\n",pszName);
 
 		m_SectionList.push_back(CSectionData(pszName));
 

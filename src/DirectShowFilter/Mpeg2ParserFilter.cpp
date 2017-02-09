@@ -31,7 +31,7 @@ CMpeg2ParserFilter::~CMpeg2ParserFilter()
 
 IBaseFilter* WINAPI CMpeg2ParserFilter::CreateInstance(LPUNKNOWN pUnk, HRESULT *phr)
 {
-	// ƒCƒ“ƒXƒ^ƒ“ƒX‚ğì¬‚·‚é
+	// ã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚¹ã‚’ä½œæˆã™ã‚‹
 	CMpeg2ParserFilter *pNewFilter = new CMpeg2ParserFilter(pUnk, phr);
 	if (FAILED(*phr)) {
 		delete pNewFilter;
@@ -86,20 +86,20 @@ HRESULT CMpeg2ParserFilter::DecideBufferSize(IMemAllocator * pAllocator, ALLOCAT
 	CheckPointer(pAllocator, E_POINTER);
 	CheckPointer(pprop, E_POINTER);
 
-	// ƒoƒbƒtƒ@‚Í1ŒÂ‚ ‚ê‚Î‚æ‚¢
+	// ãƒãƒƒãƒ•ã‚¡ã¯1å€‹ã‚ã‚Œã°ã‚ˆã„
 	if (pprop->cBuffers < 1)
 		pprop->cBuffers = 1;
 
 	if (pprop->cbBuffer < SAMPLE_BUFFER_SIZE)
 		pprop->cbBuffer = SAMPLE_BUFFER_SIZE;
 
-	// ƒAƒƒP[ƒ^ƒvƒƒpƒeƒB‚ğİ’è‚µ‚È‚¨‚·
+	// ã‚¢ãƒ­ã‚±ãƒ¼ã‚¿ãƒ—ãƒ­ãƒ‘ãƒ†ã‚£ã‚’è¨­å®šã—ãªãŠã™
 	ALLOCATOR_PROPERTIES Actual;
 	HRESULT hr = pAllocator->SetProperties(pprop, &Actual);
 	if (FAILED(hr))
 		return hr;
 
-	// —v‹‚ğó‚¯“ü‚ê‚ç‚ê‚½‚©”»’è
+	// è¦æ±‚ã‚’å—ã‘å…¥ã‚Œã‚‰ã‚ŒãŸã‹åˆ¤å®š
 	if (Actual.cBuffers < pprop->cBuffers
 			|| Actual.cbBuffer < pprop->cbBuffer)
 		return E_FAIL;
@@ -137,7 +137,7 @@ HRESULT CMpeg2ParserFilter::Transform(IMediaSample *pIn, IMediaSample *pOut)
 
 	CAutoLock Lock(&m_ParserLock);
 
-	// ƒV[ƒPƒ“ƒX‚ğæ“¾
+	// ã‚·ãƒ¼ã‚±ãƒ³ã‚¹ã‚’å–å¾—
 	m_Mpeg2Parser.StoreEs(pInData, InDataSize);
 
 	if (m_pStreamCallback)
@@ -167,7 +167,7 @@ HRESULT CMpeg2ParserFilter::Transform(IMediaSample *pSample)
 
 	CAutoLock Lock(&m_ParserLock);
 
-	// ƒV[ƒPƒ“ƒX‚ğæ“¾
+	// ã‚·ãƒ¼ã‚±ãƒ³ã‚¹ã‚’å–å¾—
 	m_Mpeg2Parser.StoreEs(pData, DataSize);
 
 	if (m_pStreamCallback)
@@ -271,7 +271,7 @@ void CMpeg2ParserFilter::OnMpeg2Sequence(const CMpeg2Parser *pMpeg2Parser, const
 	pSequence->GetFrameRate(&Info.m_FrameRate.Num, &Info.m_FrameRate.Denom);
 
 	if (Info != m_VideoInfo) {
-		// ‰f‘œ‚ÌƒTƒCƒY‹y‚ÑƒtƒŒ[ƒ€ƒŒ[ƒg‚ª•Ï‚í‚Á‚½
+		// æ˜ åƒã®ã‚µã‚¤ã‚ºåŠã³ãƒ•ãƒ¬ãƒ¼ãƒ ãƒ¬ãƒ¼ãƒˆãŒå¤‰ã‚ã£ãŸ
 		if (m_bAttachMediaType
 				&& (m_VideoInfo.m_OrigWidth != OrigWidth ||
 					m_VideoInfo.m_OrigHeight != OrigHeight)) {
@@ -293,7 +293,7 @@ void CMpeg2ParserFilter::OnMpeg2Sequence(const CMpeg2Parser *pMpeg2Parser, const
 			  OrigWidth, OrigHeight, DisplayWidth, DisplayHeight,
 			  pSequence->GetAspectRatioInfo(), AspectX, AspectY);
 
-		// ’Ê’m
+		// é€šçŸ¥
 		NotifyVideoInfo();
 	}
 }

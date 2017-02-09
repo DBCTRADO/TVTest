@@ -52,7 +52,7 @@ bool CTSProcessorManager::ReadSettings(CSettings &Settings)
 				Settings.Read(szKey,&pTSProcessorSettings->m_DefaultFilter.Filter);
 
 #if 1
-				// ‹Œd—l‚Ìİ’è‚ğ“Ç‚İ‚İ
+				// æ—§ä»•æ§˜ã®è¨­å®šã‚’èª­ã¿è¾¼ã¿
 				for (int j=0;;j++) {
 					TunerFilterInfo TunerDecInfo;
 					int Value;
@@ -553,8 +553,8 @@ void CTSProcessorManager::OpenFilter(
 	TRACE(TEXT("CTSProcessorManager::OpenFilter() : %s %s %s\n"),
 		  Filter.Module.c_str(),Filter.Device.c_str(),Filter.Filter.c_str());
 
-	// ƒI[ƒvƒ“‚É¸”s‚µ‚½ƒtƒBƒ‹ƒ^‚ğŒJ‚è•Ô‚µƒI[ƒvƒ“‚µ‚æ‚¤‚Æ‚·‚é‚Ì‚ğ”ğ‚¯‚é‚½‚ßA
-	// ‘O‰ñƒI[ƒvƒ“‚ğ‚İ‚½ƒtƒBƒ‹ƒ^‚ğ‹L‰¯‚µ‚Ä‚¨‚­
+	// ã‚ªãƒ¼ãƒ—ãƒ³ã«å¤±æ•—ã—ãŸãƒ•ã‚£ãƒ«ã‚¿ã‚’ç¹°ã‚Šè¿”ã—ã‚ªãƒ¼ãƒ—ãƒ³ã—ã‚ˆã†ã¨ã™ã‚‹ã®ã‚’é¿ã‘ã‚‹ãŸã‚ã€
+	// å‰å›ã‚ªãƒ¼ãƒ—ãƒ³ã‚’è©¦ã¿ãŸãƒ•ã‚£ãƒ«ã‚¿ã‚’è¨˜æ†¶ã—ã¦ãŠã
 	if (pSettings->m_fLastOpenFailed && pSettings->m_LastOpenFilter==Filter)
 		return;
 	pSettings->m_LastOpenFilter=Filter;
@@ -567,13 +567,13 @@ void CTSProcessorManager::OpenFilter(
 					|| !IsEqualFileName(pTSProcessor->GetModuleName().c_str(),Filter.Module.c_str())) {
 				if (!pTSProcessor->LoadModule(Filter.Module.c_str())) {
 					pSettings->m_fLastOpenFailed=true;
-					App.AddLog(CLogItem::TYPE_ERROR,TEXT("\"%s\" ‚ğ“Ç‚İ‚ß‚Ü‚¹‚ñB"),Filter.Module.c_str());
+					App.AddLog(CLogItem::TYPE_ERROR,TEXT("\"%s\" ã‚’èª­ã¿è¾¼ã‚ã¾ã›ã‚“ã€‚"),Filter.Module.c_str());
 					return;
 				}
 
 				CTSProcessor::FilterModuleInfo ModuleInfo;
 				pTSProcessor->GetModuleInfo(&ModuleInfo);
-				App.AddLog(TEXT("ƒ‚ƒWƒ…[ƒ‹ \"%s\" (%s %s) ‚ğ“Ç‚İ‚İ‚Ü‚µ‚½B"),
+				App.AddLog(TEXT("ãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ« \"%s\" (%s %s) ã‚’èª­ã¿è¾¼ã¿ã¾ã—ãŸã€‚"),
 						   Filter.Module.c_str(),ModuleInfo.Name.c_str(),ModuleInfo.Version.c_str());
 			}
 		} else {
@@ -587,7 +587,7 @@ void CTSProcessorManager::OpenFilter(
 	if (DeviceName.empty()) {
 		int DeviceNo=pTSProcessor->GetDefaultDevice();
 		if (DeviceNo<0) {
-			App.AddLog(CLogItem::TYPE_ERROR,TEXT("TSƒtƒBƒ‹ƒ^[‚ÌƒfƒtƒHƒ‹ƒgƒfƒoƒCƒX‚ª‚ ‚è‚Ü‚¹‚ñB"));
+			App.AddLog(CLogItem::TYPE_ERROR,TEXT("TSãƒ•ã‚£ãƒ«ã‚¿ãƒ¼ã®ãƒ‡ãƒ•ã‚©ãƒ«ãƒˆãƒ‡ãƒã‚¤ã‚¹ãŒã‚ã‚Šã¾ã›ã‚“ã€‚"));
 			return;
 		}
 		pTSProcessor->GetDeviceName(DeviceNo,&DeviceName);
@@ -597,9 +597,9 @@ void CTSProcessorManager::OpenFilter(
 	pSettings->m_fLastOpenFailed=!fResult;
 	if (!fResult) {
 		if (!Filter.Filter.empty())
-			App.AddLog(CLogItem::TYPE_ERROR,TEXT("TSƒtƒBƒ‹ƒ^[ \"%s\" : \"%s\" ‚ğƒI[ƒvƒ“‚Å‚«‚Ü‚¹‚ñB"),DeviceName.c_str(),Filter.Filter.c_str());
+			App.AddLog(CLogItem::TYPE_ERROR,TEXT("TSãƒ•ã‚£ãƒ«ã‚¿ãƒ¼ \"%s\" : \"%s\" ã‚’ã‚ªãƒ¼ãƒ—ãƒ³ã§ãã¾ã›ã‚“ã€‚"),DeviceName.c_str(),Filter.Filter.c_str());
 		else
-			App.AddLog(CLogItem::TYPE_ERROR,TEXT("TSƒtƒBƒ‹ƒ^[ \"%s\" ‚ğƒI[ƒvƒ“‚Å‚«‚Ü‚¹‚ñB"),DeviceName.c_str());
+			App.AddLog(CLogItem::TYPE_ERROR,TEXT("TSãƒ•ã‚£ãƒ«ã‚¿ãƒ¼ \"%s\" ã‚’ã‚ªãƒ¼ãƒ—ãƒ³ã§ãã¾ã›ã‚“ã€‚"),DeviceName.c_str());
 
 		if ((FilterOpenFlags & FILTER_OPEN_RETRY_DIALOG)!=0) {
 			String Message;
@@ -616,7 +616,7 @@ void CTSProcessorManager::OpenFilter(
 			}
 
 			Dialog.SetMessage(
-				!Message.empty() ? Message.c_str() : TEXT("TSƒtƒBƒ‹ƒ^[‚ğƒI[ƒvƒ“‚Å‚«‚Ü‚¹‚ñB"));
+				!Message.empty() ? Message.c_str() : TEXT("TSãƒ•ã‚£ãƒ«ã‚¿ãƒ¼ã‚’ã‚ªãƒ¼ãƒ—ãƒ³ã§ãã¾ã›ã‚“ã€‚"));
 			Dialog.SetDevice(DeviceName);
 			Dialog.SetFilter(Filter.Filter);
 
@@ -633,7 +633,7 @@ void CTSProcessorManager::OpenFilter(
 		} else {
 			if ((FilterOpenFlags & FILTER_OPEN_NOTIFY_ERROR)!=0) {
 				App.UICore.GetSkin()->ShowNotificationBar(
-					TEXT("TSƒtƒBƒ‹ƒ^[‚ğƒI[ƒvƒ“‚Å‚«‚Ü‚¹‚ñB"),
+					TEXT("TSãƒ•ã‚£ãƒ«ã‚¿ãƒ¼ã‚’ã‚ªãƒ¼ãƒ—ãƒ³ã§ãã¾ã›ã‚“ã€‚"),
 					CNotificationBar::MESSAGE_ERROR,6000);
 			}
 
@@ -653,7 +653,7 @@ void CTSProcessorManager::CloseFilter(CTSProcessor *pTSProcessor)
 	if (pTSProcessor->IsModuleLoaded()) {
 		String ModuleName=pTSProcessor->GetModuleName();
 		pTSProcessor->UnloadModule();
-		GetAppClass().AddLog(TEXT("ƒ‚ƒWƒ…[ƒ‹ \"%s\" ‚ğŠJ•ú‚µ‚Ü‚µ‚½B"),ModuleName.c_str());
+		GetAppClass().AddLog(TEXT("ãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ« \"%s\" ã‚’é–‹æ”¾ã—ã¾ã—ãŸã€‚"),ModuleName.c_str());
 	}
 #endif
 }

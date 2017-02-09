@@ -44,13 +44,13 @@ INT_PTR CDirectWriteOptionsDialog::DlgProc(
 			bool fEnable;
 
 			static const LPCTSTR RenderingModeList[] = {
-				TEXT("Ž©“®"),
-				TEXT("ƒAƒ“ƒ`ƒGƒCƒŠƒAƒVƒ“ƒO‚È‚µ"),
-				TEXT("GDIŒÝŠ·(2’lŒÝŠ·)"),
-				TEXT("GDIŒÝŠ·"),
-				TEXT("…•½ƒAƒ“ƒ`ƒGƒCƒŠƒAƒVƒ“ƒO"),
-				TEXT("…•½/‚’¼ƒAƒ“ƒ`ƒGƒCƒŠƒAƒVƒ“ƒO"),
-				TEXT("ƒAƒEƒgƒ‰ƒCƒ“"),
+				TEXT("è‡ªå‹•"),
+				TEXT("ã‚¢ãƒ³ãƒã‚¨ã‚¤ãƒªã‚¢ã‚·ãƒ³ã‚°ãªã—"),
+				TEXT("GDIäº’æ›(2å€¤äº’æ›)"),
+				TEXT("GDIäº’æ›"),
+				TEXT("æ°´å¹³ã‚¢ãƒ³ãƒã‚¨ã‚¤ãƒªã‚¢ã‚·ãƒ³ã‚°"),
+				TEXT("æ°´å¹³/åž‚ç›´ã‚¢ãƒ³ãƒã‚¨ã‚¤ãƒªã‚¢ã‚·ãƒ³ã‚°"),
+				TEXT("ã‚¢ã‚¦ãƒˆãƒ©ã‚¤ãƒ³"),
 			};
 			fEnable = (m_pParams->Mask & CDirectWriteRenderer::RenderingParams::PARAM_RENDERING_MODE) != 0;
 			DlgCheckBox_Check(hDlg, IDC_DIRECTWRITEOPTIONS_RENDERINGMODE_ENABLE, fEnable);
@@ -85,7 +85,7 @@ INT_PTR CDirectWriteOptionsDialog::DlgProc(
 			SetItemFloatValue(IDC_DIRECTWRITEOPTIONS_CLEARTYPELEVEL, m_pParams->ClearTypeLevel);
 
 			static const LPCTSTR PixelGeometryList[] = {
-				TEXT("ƒtƒ‰ƒbƒg"),
+				TEXT("ãƒ•ãƒ©ãƒƒãƒˆ"),
 				TEXT("RGB"),
 				TEXT("BGR"),
 			};
@@ -211,7 +211,7 @@ INT_PTR CDirectWriteOptionsDialog::DlgProc(
 			TextDraw.Begin(pdis->hDC, pdis->rcItem);
 			TextDraw.SetFont(m_Font);
 			TextDraw.SetTextColor(RGB(0, 0, 0));
-			TextDraw.Draw(L"ABCabc123‚ ‚ŸƒAƒ@Š¿ŽšŸTæÛ\U0002a6a5",
+			TextDraw.Draw(L"ABCabc123ã‚ãã‚¢ã‚¡æ¼¢å­—é¬±è´”\U0002a6a5",
 						  pdis->rcItem,
 						  pdis->rcItem.bottom - pdis->rcItem.top,
 						  CTextDraw::DRAW_FLAG_ALIGN_HORZ_CENTER |

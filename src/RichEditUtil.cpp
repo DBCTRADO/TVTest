@@ -12,10 +12,10 @@ const LPCTSTR CRichEditUtil::m_pszURLChars=
 	TEXT("abcdefghijklmnopqrstuvwxyz")
 	TEXT("!#$%&'()*+,-./:;=?@[]_~");
 const LPCTSTR CRichEditUtil::m_pszURLFullWidthChars=
-	TEXT("‚O‚P‚Q‚R‚S‚T‚U‚V‚W‚X")
-	TEXT("‚`‚a‚b‚c‚d‚e‚f‚g‚h‚i‚j‚k‚l‚m‚n‚o‚p‚q‚r‚s‚t‚u‚v‚w‚x‚y")
-	TEXT("‚‚‚‚ƒ‚„‚…‚†‚‡‚ˆ‚‰‚Š‚‹‚Œ‚‚Ž‚‚‚‘‚’‚“‚”‚•‚–‚—‚˜‚™‚š")
-	TEXT("I”“•fij–{C|D^FGH—mnQ`");
+	TEXT("ï¼ï¼‘ï¼’ï¼“ï¼”ï¼•ï¼–ï¼—ï¼˜ï¼™")
+	TEXT("ï¼¡ï¼¢ï¼£ï¼¤ï¼¥ï¼¦ï¼§ï¼¨ï¼©ï¼ªï¼«ï¼¬ï¼­ï¼®ï¼¯ï¼°ï¼±ï¼²ï¼³ï¼´ï¼µï¼¶ï¼·ï¼¸ï¼¹ï¼º")
+	TEXT("ï½ï½‚ï½ƒï½„ï½…ï½†ï½‡ï½ˆï½‰ï½Šï½‹ï½Œï½ï½Žï½ï½ï½‘ï½’ï½“ï½”ï½•ï½–ï½—ï½˜ï½™ï½š")
+	TEXT("ï¼ï¼ƒï¼„ï¼…ï¼†â€™ï¼ˆï¼‰ï¼Šï¼‹ï¼Œâˆ’ï¼Žï¼ï¼šï¼›ï¼ï¼Ÿï¼ ï¼»ï¼½ï¼¿ã€œ");
 
 
 CRichEditUtil::CRichEditUtil()
@@ -224,7 +224,7 @@ bool CRichEditUtil::DetectURL(HWND hwndEdit,const CHARFORMAT *pcf,int FirstLine,
 	CHARFORMAT2 cfLink;
 	CharFormatToCharFormat2(pcf,&cfLink);
 	if ((Flags & URL_NO_LINK)==0) {
-		// ƒŠƒ“ƒN‚Ì•¶ŽšF‚ÍÝ’è‚Å‚«‚È‚¢–Í—l
+		// ãƒªãƒ³ã‚¯ã®æ–‡å­—è‰²ã¯è¨­å®šã§ããªã„æ¨¡æ§˜
 		cfLink.dwMask|=CFM_UNDERLINE | CFM_LINK/* | CFM_COLOR*/;
 		cfLink.dwEffects|=CFE_UNDERLINE | CFE_LINK;
 		//cfLink.crTextColor=::GetSysColor(COLOR_HOTLIGHT);

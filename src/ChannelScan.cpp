@@ -9,13 +9,13 @@
 #include "Common/DebugDef.h"
 
 
-// ѓXѓLѓѓѓ“ѓXѓЊѓbѓh‚©‚з‘—‚з‚к‚йѓЃѓbѓZЃ[ѓW
+// г‚№г‚­гѓЈгѓіг‚№гѓ¬гѓѓгѓ‰гЃ‹г‚‰йЂЃг‚‰г‚Њг‚‹гѓЎгѓѓг‚»гѓјг‚ё
 #define WM_APP_BEGINSCAN	(WM_APP+0)
 #define WM_APP_CHANNELFOUND	(WM_APP+1)
 #define WM_APP_ENDCHANNEL	(WM_APP+2)
 #define WM_APP_ENDSCAN		(WM_APP+3)
 
-// ѓXѓLѓѓѓ“Њ‹‰К
+// г‚№г‚­гѓЈгѓізµђжћњ
 enum ScanResult
 {
 	SCAN_RESULT_SUCCEEDED,
@@ -101,7 +101,7 @@ INT_PTR CChannelPropDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPa
 
 				::GetDlgItemText(hDlg,IDC_CHANNELPROP_NAME,szName,lengthof(szName));
 				if (szName[0]=='\0') {
-					::MessageBox(hDlg,TEXT("–ј‘O‚р“ь—Н‚µ‚Д‚­‚ѕ‚і‚ўЃB"),TEXT("‚ЁЉи‚ў"),MB_OK | MB_ICONINFORMATION);
+					::MessageBox(hDlg,TEXT("еђЌе‰Ќг‚’е…ҐеЉ›гЃ—гЃ¦гЃЏгЃ гЃ•гЃ„гЂ‚"),TEXT("гЃЉйЎгЃ„"),MB_OK | MB_ICONINFORMATION);
 					::SetFocus(::GetDlgItem(hDlg,IDC_CHANNELPROP_NAME));
 					return TRUE;
 				}
@@ -230,11 +230,11 @@ bool CChannelScan::CChannelListSort::UpdateChannelList(HWND hwndList,CChannelLis
 CChannelScan::CChannelScan()
 	: m_pOriginalTuningSpaceList(NULL)
 	, m_fScanService(true)
-	, m_fIgnoreSignalLevel(false)	// ђMЌ†ѓЊѓxѓ‹‚р–іЋ‹
-	, m_SignalLevelThreshold(7.0f)	// ђMЌ†ѓЊѓxѓ‹‚Ми‡’l
-	, m_ScanWait(5000)				// ѓ`ѓѓѓ“ѓlѓ‹ђШ‚и‘Ц‚¦Њг‚М‘Т‚їЋћЉФ(ms)
-	, m_RetryCount(4)				// Џо•сЋж“ѕ‚МЌДЋЋЌs‰сђ”
-	, m_RetryInterval(1000)			// ЌДЋЋЌs‚МЉФЉu(ms)
+	, m_fIgnoreSignalLevel(false)	// дїЎеЏ·гѓ¬гѓ™гѓ«г‚’з„Ўи¦–
+	, m_SignalLevelThreshold(7.0f)	// дїЎеЏ·гѓ¬гѓ™гѓ«гЃ®й–ѕеЂ¤
+	, m_ScanWait(5000)				// гѓЃгѓЈгѓігѓЌгѓ«е€‡г‚Љж›їгЃ€еѕЊгЃ®еѕ…гЃЎж™‚й–“(ms)
+	, m_RetryCount(4)				// жѓ…е ±еЏ–еѕ—гЃ®е†Ќи©¦иЎЊе›ћж•°
+	, m_RetryInterval(1000)			// е†Ќи©¦иЎЊгЃ®й–“йљ”(ms)
 	, m_fDetectDataService(true)
 	, m_fDetect1SegService(true)
 	, m_fDetectAudioService(true)
@@ -314,8 +314,8 @@ bool CChannelScan::SetTuningSpaceList(const CTuningSpaceList *pTuningSpaceList)
 
 bool CChannelScan::AutoUpdateChannelList(CTuningSpaceList *pTuningSpaceList,std::vector<TVTest::String> *pMessageList)
 {
-	// ѓXѓLѓѓѓ“‚і‚к‚Ѕѓ`ѓѓѓ“ѓlѓ‹ѓЉѓXѓg‚МЋ©“®ЌXђV(ѓeѓXѓg)
-	// CS‚НѓlѓbѓgѓЏЃ[ѓN‚Є•Ўђ”‚Й•Є‚©‚к‚Д‚ў‚й‚М‚Е‚±‚М‚Ь‚Ь‚¶‚б‘К–Ъ
+	// г‚№г‚­гѓЈгѓігЃ•г‚ЊгЃџгѓЃгѓЈгѓігѓЌгѓ«гѓЄг‚№гѓ€гЃ®и‡Єе‹•ж›ґж–°(гѓ†г‚№гѓ€)
+	// CSгЃЇгѓЌгѓѓгѓ€гѓЇгѓјг‚ЇгЃЊи¤‡ж•°гЃ«е€†гЃ‹г‚ЊгЃ¦гЃ„г‚‹гЃ®гЃ§гЃ“гЃ®гЃѕгЃѕгЃг‚ѓй§„з›®
 
 	if (pTuningSpaceList==NULL)
 		return false;
@@ -331,7 +331,7 @@ bool CChannelScan::AutoUpdateChannelList(CTuningSpaceList *pTuningSpaceList,std:
 	bool fUpdated=false;
 	TVTest::String Message;
 
-	// Њ»ЌЭ‚Мѓ`ѓѓѓ“ѓlѓ‹ѓЉѓXѓg‚Й‘¶ЌЭ‚µ‚И‚ўѓTЃ[ѓrѓX‚р’T‚·
+	// зЏѕењЁгЃ®гѓЃгѓЈгѓігѓЌгѓ«гѓЄг‚№гѓ€гЃ«е­ењЁгЃ—гЃЄгЃ„г‚µгѓјгѓ“г‚№г‚’жЋўгЃ™
 	for (size_t TsIndex=0;TsIndex<TsList.size();TsIndex++) {
 		const CTsAnalyzer::SdtTsInfo &TsInfo=TsList[TsIndex];
 
@@ -355,7 +355,7 @@ bool CChannelScan::AutoUpdateChannelList(CTuningSpaceList *pTuningSpaceList,std:
 			}
 
 			if (!fFound) {
-				// ђV‹KѓTЃ[ѓrѓX
+				// ж–°и¦Џг‚µгѓјгѓ“г‚№
 				bool fInserted=false;
 
 				for (int Space=0;Space<pTuningSpaceList->NumSpaces();Space++) {
@@ -386,7 +386,7 @@ bool CChannelScan::AutoUpdateChannelList(CTuningSpaceList *pTuningSpaceList,std:
 
 							if (pMessageList!=NULL) {
 								TVTest::StringUtility::Format(Message,
-									TEXT("ђV‚µ‚ўѓTЃ[ѓrѓX %d \"%s\" (NID %d TSID 0x%04x) ‚р’З‰Б‚µ‚Ь‚µ‚ЅЃB"),
+									TEXT("ж–°гЃ—гЃ„г‚µгѓјгѓ“г‚№ %d \"%s\" (NID %d TSID 0x%04x) г‚’иїЅеЉ гЃ—гЃѕгЃ—гЃџгЂ‚"),
 									ChannelInfo.GetServiceID(),
 									ChannelInfo.GetName(),
 									ChannelInfo.GetNetworkID(),
@@ -403,7 +403,7 @@ bool CChannelScan::AutoUpdateChannelList(CTuningSpaceList *pTuningSpaceList,std:
 
 				if (!fInserted && pMessageList!=NULL) {
 					TVTest::StringUtility::Format(Message,
-						TEXT("ђV‚µ‚ўѓTЃ[ѓrѓX %d \"%s\" (NID %d TSID 0x%04x) ‚ЄЊџЏo‚і‚к‚Ь‚µ‚Ѕ‚ЄЃA“–ЉY TS ‚ЄЊ©•t‚©‚и‚Ь‚№‚сЃB"),
+						TEXT("ж–°гЃ—гЃ„г‚µгѓјгѓ“г‚№ %d \"%s\" (NID %d TSID 0x%04x) гЃЊж¤ње‡єгЃ•г‚ЊгЃѕгЃ—гЃџгЃЊгЂЃеЅ“и©І TS гЃЊи¦‹д»гЃ‹г‚ЉгЃѕгЃ›г‚“гЂ‚"),
 						ServiceInfo.ServiceID,
 						ServiceInfo.szServiceName,
 						TsInfo.OriginalNetworkID,
@@ -414,7 +414,7 @@ bool CChannelScan::AutoUpdateChannelList(CTuningSpaceList *pTuningSpaceList,std:
 		}
 	}
 
-	// ѓ`ѓѓѓ“ѓlѓ‹ѓЉѓXѓg‚©‚зЉщ‚Й‘¶ЌЭ‚µ‚И‚ўѓTЃ[ѓrѓX‚р’T‚·
+	// гѓЃгѓЈгѓігѓЌгѓ«гѓЄг‚№гѓ€гЃ‹г‚‰ж—ўгЃ«е­ењЁгЃ—гЃЄгЃ„г‚µгѓјгѓ“г‚№г‚’жЋўгЃ™
 	for (int Space=0;Space<pTuningSpaceList->NumSpaces();Space++) {
 		CChannelList *pChannelList=pTuningSpaceList->GetChannelList(Space);
 
@@ -436,7 +436,7 @@ bool CChannelScan::AutoUpdateChannelList(CTuningSpaceList *pTuningSpaceList,std:
 								fServiceFound=true;
 
 								if (TsInfo.TransportStreamID!=pChannelInfo->GetTransportStreamID()) {
-									// TS€Ъ“®
+									// TSз§»е‹•
 									int Index=pChannelList->FindByIDs(TsInfo.OriginalNetworkID,TsInfo.TransportStreamID,0,false);
 									if (Index>=0) {
 										const CChannelInfo *pMoveChInfo=pChannelList->GetChannelInfo(Index);
@@ -461,7 +461,7 @@ bool CChannelScan::AutoUpdateChannelList(CTuningSpaceList *pTuningSpaceList,std:
 
 										if (pMessageList!=NULL) {
 											TVTest::StringUtility::Format(Message,
-												TEXT("ѓTЃ[ѓrѓX %d \"%s\" ‚Є TS 0x%04x ‚©‚з 0x%04x ‚Й€Ъ“®‚µ‚Ь‚µ‚ЅЃB"),
+												TEXT("г‚µгѓјгѓ“г‚№ %d \"%s\" гЃЊ TS 0x%04x гЃ‹г‚‰ 0x%04x гЃ«з§»е‹•гЃ—гЃѕгЃ—гЃџгЂ‚"),
 												ChannelInfo.GetServiceID(),
 												ChannelInfo.GetName(),
 												pChannelInfo->GetTransportStreamID(),
@@ -474,7 +474,7 @@ bool CChannelScan::AutoUpdateChannelList(CTuningSpaceList *pTuningSpaceList,std:
 									} else {
 										if (pMessageList!=NULL) {
 											TVTest::StringUtility::Format(Message,
-												TEXT("ѓTЃ[ѓrѓX %d \"%s\" ‚М TS 0x%04x ‚©‚з 0x%04x ‚Ц‚М€Ъ“®‚рЊџЏo‚µ‚Ь‚µ‚Ѕ‚ЄЃA€Ъ“®ђж TS ‚ЄЊ©•t‚©‚и‚Ь‚№‚сЃB"),
+												TEXT("г‚µгѓјгѓ“г‚№ %d \"%s\" гЃ® TS 0x%04x гЃ‹г‚‰ 0x%04x гЃёгЃ®з§»е‹•г‚’ж¤ње‡єгЃ—гЃѕгЃ—гЃџгЃЊгЂЃз§»е‹•е…€ TS гЃЊи¦‹д»гЃ‹г‚ЉгЃѕгЃ›г‚“гЂ‚"),
 												ServiceInfo.ServiceID,
 												pChannelInfo->GetName(),
 												pChannelInfo->GetTransportStreamID(),
@@ -494,10 +494,10 @@ bool CChannelScan::AutoUpdateChannelList(CTuningSpaceList *pTuningSpaceList,std:
 				if (!fNetworkFound || (fServiceFound && !fServiceMoved)) {
 					Channel++;
 				} else {
-					// ѓTЃ[ѓrѓXЌнЏњ
+					// г‚µгѓјгѓ“г‚№е‰Љй™¤
 					if (!fServiceMoved && pMessageList!=NULL) {
 						TVTest::StringUtility::Format(Message,
-							TEXT("ѓTЃ[ѓrѓX %d \"%s\" ‚НЌнЏњ‚і‚к‚Ь‚µ‚ЅЃB"),
+							TEXT("г‚µгѓјгѓ“г‚№ %d \"%s\" гЃЇе‰Љй™¤гЃ•г‚ЊгЃѕгЃ—гЃџгЂ‚"),
 							pChannelInfo->GetServiceID(),
 							pChannelInfo->GetName());
 						pMessageList->push_back(Message);
@@ -534,12 +534,12 @@ void CChannelScan::InsertChannelInfo(int Index,const CChannelInfo *pChInfo,bool 
 	if (fServiceType) {
 		switch (pChInfo->GetServiceType()) {
 		case SERVICE_TYPE_DIGITALTV:		::lstrcpy(szText,TEXT("TV"));					break;
-		case SERVICE_TYPE_DIGITALAUDIO:		::lstrcpy(szText,TEXT("‰№ђє"));					break;
-		case SERVICE_TYPE_PROMOTIONVIDEO:	::lstrcpy(szText,TEXT("ѓvѓЌѓ‚Ѓ[ѓVѓ‡ѓ“‰f‘њ"));	break;
-		case SERVICE_TYPE_DATA:				::lstrcpy(szText,TEXT("ѓfЃ[ѓ^/ѓЏѓ“ѓZѓO"));		break;
+		case SERVICE_TYPE_DIGITALAUDIO:		::lstrcpy(szText,TEXT("йџіеЈ°"));					break;
+		case SERVICE_TYPE_PROMOTIONVIDEO:	::lstrcpy(szText,TEXT("гѓ—гѓ­гѓўгѓјг‚·гѓ§гѓіж еѓЏ"));	break;
+		case SERVICE_TYPE_DATA:				::lstrcpy(szText,TEXT("гѓ‡гѓјг‚ї/гѓЇгѓіг‚»г‚°"));		break;
 		case SERVICE_TYPE_4KTV:				::lstrcpy(szText,TEXT("4K TV"));				break;
 		default:
-			StdUtil::snprintf(szText,lengthof(szText),TEXT("‘ј(%02x)"),pChInfo->GetServiceType());
+			StdUtil::snprintf(szText,lengthof(szText),TEXT("д»–(%02x)"),pChInfo->GetServiceType());
 			break;
 		}
 	} else {
@@ -706,10 +706,10 @@ bool CChannelScan::SetPreset(bool fAuto)
 		if (fAuto)
 			return false;
 		if (::MessageBox(m_hDlg,
-						 TEXT("‚±‚М BonDriver ‚НѓvѓЉѓZѓbѓg‚Жѓ`ѓѓѓ“ѓlѓ‹‚Є€Щ‚И‚Б‚Д‚ў‚й‰В”\ђ«‚Є‚ ‚и‚Ь‚·ЃB\n")
-						 TEXT("ѓvѓЉѓZѓbѓg‚рЋg—p‚№‚ё‚ЙЃAѓXѓLѓѓѓ“‚рЌs‚¤‚±‚Ж‚р‚ЁЉ©‚Я‚µ‚Ь‚·ЃB\n")
-						 TEXT("ѓvѓЉѓZѓbѓg‚р“З‚ЭЌћ‚Э‚Ь‚·‚©ЃH"),
-						 TEXT("ѓvѓЉѓZѓbѓg“З‚ЭЌћ‚Э"),
+						 TEXT("гЃ“гЃ® BonDriver гЃЇгѓ—гѓЄг‚»гѓѓгѓ€гЃЁгѓЃгѓЈгѓігѓЌгѓ«гЃЊз•°гЃЄгЃЈгЃ¦гЃ„г‚‹еЏЇиѓЅжЂ§гЃЊгЃ‚г‚ЉгЃѕгЃ™гЂ‚\n")
+						 TEXT("гѓ—гѓЄг‚»гѓѓгѓ€г‚’дЅїз”ЁгЃ›гЃљгЃ«гЂЃг‚№г‚­гѓЈгѓіг‚’иЎЊгЃ†гЃ“гЃЁг‚’гЃЉе‹§г‚ЃгЃ—гЃѕгЃ™гЂ‚\n")
+						 TEXT("гѓ—гѓЄг‚»гѓѓгѓ€г‚’иЄ­гЃїиѕјгЃїгЃѕгЃ™гЃ‹пјџ"),
+						 TEXT("гѓ—гѓЄг‚»гѓѓгѓ€иЄ­гЃїиѕјгЃї"),
 						 MB_YESNO | MB_DEFBUTTON2 | MB_ICONQUESTION)!=IDYES)
 			return false;
 	}
@@ -774,23 +774,23 @@ INT_PTR CChannelScan::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 			lvc.mask=LVCF_FMT | LVCF_WIDTH | LVCF_TEXT;
 			lvc.fmt=LVCFMT_LEFT;
 			lvc.cx=10*FontSize;
-			lvc.pszText=TEXT("–ј‘O");
+			lvc.pszText=TEXT("еђЌе‰Ќ");
 			ListView_InsertColumn(hwndList,COLUMN_NAME,&lvc);
 			lvc.cx=6*FontSize;
-			lvc.pszText=TEXT("Ћн•К");
+			lvc.pszText=TEXT("зЁ®е€Ґ");
 			ListView_InsertColumn(hwndList,COLUMN_SERVICETYPE,&lvc);
 			lvc.fmt=LVCFMT_RIGHT;
 			lvc.cx=6*FontSize;
-			lvc.pszText=TEXT("ѓ`ѓѓѓ“ѓlѓ‹");
+			lvc.pszText=TEXT("гѓЃгѓЈгѓігѓЌгѓ«");
 			ListView_InsertColumn(hwndList,COLUMN_CHANNELNAME,&lvc);
 			lvc.cx=6*FontSize;
-			lvc.pszText=TEXT("ѓTЃ[ѓrѓXID");
+			lvc.pszText=TEXT("г‚µгѓјгѓ“г‚№ID");
 			ListView_InsertColumn(hwndList,COLUMN_SERVICEID,&lvc);
 			lvc.cx=7*FontSize;
-			lvc.pszText=TEXT("ѓЉѓ‚ѓRѓ“ѓLЃ[");
+			lvc.pszText=TEXT("гѓЄгѓўг‚ігѓіг‚­гѓј");
 			ListView_InsertColumn(hwndList,COLUMN_REMOTECONTROLKEYID,&lvc);
 			lvc.cx=4*FontSize;
-			lvc.pszText=TEXT("ѓCѓ“ѓfѓbѓNѓX");
+			lvc.pszText=TEXT("г‚¤гѓігѓ‡гѓѓг‚Їг‚№");
 			ListView_InsertColumn(hwndList,COLUMN_CHANNELINDEX,&lvc);
 			if (NumSpaces>0) {
 				//SetChannelList(hDlg,m_ScanSpace);
@@ -877,7 +877,7 @@ INT_PTR CChannelScan::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 							MAKEINTRESOURCE(IDD_CHANNELSCAN),::GetParent(hDlg),
 							ScanDialogProc,reinterpret_cast<LPARAM>(this))==IDOK) {
 						if (ListView_GetItemCount(hwndList)>0) {
-							// Њі‚ ‚Б‚Ѕѓ`ѓѓѓ“ѓlѓ‹‚ЕЊџЏo‚і‚к‚И‚©‚Б‚Ѕ‚а‚М‚Є‚ ‚йЏкЌ‡ЃAЋc‚·‚©–в‚ўЌ‡‚н‚№‚й
+							// е…ѓгЃ‚гЃЈгЃџгѓЃгѓЈгѓігѓЌгѓ«гЃ§ж¤ње‡єгЃ•г‚ЊгЃЄгЃ‹гЃЈгЃџг‚‚гЃ®гЃЊгЃ‚г‚‹е ґеђ€гЂЃж®‹гЃ™гЃ‹е•ЏгЃ„еђ€г‚ЏгЃ›г‚‹
 							CChannelList *pChannelList=m_TuningSpaceList.GetChannelList(Space);
 							std::vector<const CChannelInfo*> MissingChannels;
 							for (int i=0;i<pChannelList->NumChannels();i++) {
@@ -892,17 +892,17 @@ INT_PTR CChannelScan::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 								CStaticStringFormatter Formatter(szMessage,lengthof(szMessage));
 
 								Formatter.AppendFormat(
-									TEXT("Њі‚ ‚Б‚Ѕѓ`ѓѓѓ“ѓlѓ‹‚М‚¤‚їЃA€И‰є‚М%d%s‚Мѓ`ѓѓѓ“ѓlѓ‹‚ЄЊџЏo‚і‚к‚Ь‚№‚с‚Е‚µ‚ЅЃB\n\n"),
-									Channels,Channels<10?TEXT("‚В"):TEXT(""));
+									TEXT("е…ѓгЃ‚гЃЈгЃџгѓЃгѓЈгѓігѓЌгѓ«гЃ®гЃ†гЃЎгЂЃд»Ґдё‹гЃ®%d%sгЃ®гѓЃгѓЈгѓігѓЌгѓ«гЃЊж¤ње‡єгЃ•г‚ЊгЃѕгЃ›г‚“гЃ§гЃ—гЃџгЂ‚\n\n"),
+									Channels,Channels<10?TEXT("гЃ¤"):TEXT(""));
 								for (int i=0;i<Channels;i++) {
 									if (i==10) {
 										Formatter.Append(TEXT("...\n"));
 										break;
 									}
-									Formatter.AppendFormat(TEXT("ЃE%s\n"),MissingChannels[i]->GetName());
+									Formatter.AppendFormat(TEXT("гѓ»%s\n"),MissingChannels[i]->GetName());
 								}
-								Formatter.Append(TEXT("\nЊџЏo‚і‚к‚И‚©‚Б‚Ѕѓ`ѓѓѓ“ѓlѓ‹‚рЋc‚µ‚Ь‚·‚©ЃH"));
-								if (::MessageBox(hDlg,Formatter.GetString(),TEXT("–в‚ўЌ‡‚н‚№"),
+								Formatter.Append(TEXT("\nж¤ње‡єгЃ•г‚ЊгЃЄгЃ‹гЃЈгЃџгѓЃгѓЈгѓігѓЌгѓ«г‚’ж®‹гЃ—гЃѕгЃ™гЃ‹пјџ"));
+								if (::MessageBox(hDlg,Formatter.GetString(),TEXT("е•ЏгЃ„еђ€г‚ЏгЃ›"),
 												 MB_YESNO | MB_ICONQUESTION)==IDYES) {
 									bool fServiceType=true;
 									for (int i=0;i<pChannelList->NumChannels();i++) {
@@ -939,22 +939,22 @@ INT_PTR CChannelScan::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 							SetListViewSortMark(hwndList,m_SortColumn,!m_fSortDescending);
 							ListView_EnsureVisible(hwndList,0,FALSE);
 						} else {
-							// ѓ`ѓѓѓ“ѓlѓ‹‚ЄЊџЏo‚Е‚«‚И‚©‚Б‚Ѕ
+							// гѓЃгѓЈгѓігѓЌгѓ«гЃЊж¤ње‡єгЃ§гЃЌгЃЄгЃ‹гЃЈгЃџ
 							TCHAR szText[1024];
 
-							::lstrcpy(szText,TEXT("ѓ`ѓѓѓ“ѓlѓ‹‚ЄЊџЏo‚Е‚«‚Ь‚№‚с‚Е‚µ‚ЅЃB"));
+							::lstrcpy(szText,TEXT("гѓЃгѓЈгѓігѓЌгѓ«гЃЊж¤ње‡єгЃ§гЃЌгЃѕгЃ›г‚“гЃ§гЃ—гЃџгЂ‚"));
 							if ((m_fIgnoreSignalLevel
 										&& m_MaxSignalLevel<1.0f)
 									|| (!m_fIgnoreSignalLevel
 										&& m_MaxSignalLevel<m_SignalLevelThreshold)) {
-								::lstrcat(szText,TEXT("\nђMЌ†ѓЊѓxѓ‹‚Є’б‚·‚¬‚й‚©ЃAЋж“ѕ‚Е‚«‚Ь‚№‚сЃB"));
+								::lstrcat(szText,TEXT("\nдїЎеЏ·гѓ¬гѓ™гѓ«гЃЊдЅЋгЃ™гЃЋг‚‹гЃ‹гЂЃеЏ–еѕ—гЃ§гЃЌгЃѕгЃ›г‚“гЂ‚"));
 								if (!m_fIgnoreSignalLevel
 										&& m_MaxBitRate>8000000)
-									::lstrcat(szText,TEXT("\n[ђMЌ†ѓЊѓxѓ‹‚р–іЋ‹‚·‚й] ‚рѓ`ѓFѓbѓN‚µ‚ДѓXѓLѓѓѓ“‚µ‚Д‚Э‚Д‚­‚ѕ‚і‚ўЃB"));
+									::lstrcat(szText,TEXT("\n[дїЎеЏ·гѓ¬гѓ™гѓ«г‚’з„Ўи¦–гЃ™г‚‹] г‚’гѓЃг‚§гѓѓг‚ЇгЃ—гЃ¦г‚№г‚­гѓЈгѓігЃ—гЃ¦гЃїгЃ¦гЃЏгЃ гЃ•гЃ„гЂ‚"));
 							} else if (m_MaxBitRate<8000000) {
-								::lstrcat(szText,TEXT("\nѓXѓgѓЉЃ[ѓЂ‚рЋуђM‚Е‚«‚Ь‚№‚сЃB"));
+								::lstrcat(szText,TEXT("\nг‚№гѓ€гѓЄгѓјгѓ г‚’еЏ—дїЎгЃ§гЃЌгЃѕгЃ›г‚“гЂ‚"));
 							}
-							::MessageBox(hDlg,szText,TEXT("ѓXѓLѓѓѓ“Њ‹‰К"),MB_OK | MB_ICONEXCLAMATION);
+							::MessageBox(hDlg,szText,TEXT("г‚№г‚­гѓЈгѓізµђжћњ"),MB_OK | MB_ICONEXCLAMATION);
 						}
 						m_fUpdated=true;
 					} else {
@@ -1124,11 +1124,11 @@ INT_PTR CChannelScan::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 					}
 					bool fOK=m_TuningSpaceList.SaveToFile(szFileName);
 					if (fOK) {
-						App.AddLog(TEXT("ѓ`ѓѓѓ“ѓlѓ‹ѓtѓ@ѓCѓ‹‚р \"%s\" ‚Й•Ы‘¶‚µ‚Ь‚µ‚ЅЃB"),szFileName);
+						App.AddLog(TEXT("гѓЃгѓЈгѓігѓЌгѓ«гѓ•г‚Ўг‚¤гѓ«г‚’ \"%s\" гЃ«дїќе­гЃ—гЃѕгЃ—гЃџгЂ‚"),szFileName);
 					} else {
 						TCHAR szText[32+MAX_PATH];
 						StdUtil::snprintf(szText,lengthof(szText),
-										  TEXT("ѓ`ѓѓѓ“ѓlѓ‹ѓtѓ@ѓCѓ‹ \"%s\" ‚р•Ы‘¶‚Е‚«‚Ь‚№‚сЃB"),szFileName);
+										  TEXT("гѓЃгѓЈгѓігѓЌгѓ«гѓ•г‚Ўг‚¤гѓ« \"%s\" г‚’дїќе­гЃ§гЃЌгЃѕгЃ›г‚“гЂ‚"),szFileName);
 						App.AddLog(CLogItem::TYPE_ERROR,TEXT("%s"),szText);
 						::MessageBox(hDlg,szText,NULL,MB_OK | MB_ICONEXCLAMATION);
 					}
@@ -1150,25 +1150,25 @@ INT_PTR CChannelScan::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 								CStaticStringFormatter Formatter(szText,lengthof(szText));
 
 								*pSequence=_T('0');
-								Formatter.AppendFormat(TEXT("%s ‚Мѓ`ѓѓѓ“ѓlѓ‹ѓXѓLѓѓѓ“Њ‹‰К‚р\n€И‰є‚М BonDriver ‚Й‚а”Ѕ‰f‚і‚№‚Ь‚·‚©ЃH\n\n"),pszName);
+								Formatter.AppendFormat(TEXT("%s гЃ®гѓЃгѓЈгѓігѓЌгѓ«г‚№г‚­гѓЈгѓізµђжћњг‚’\nд»Ґдё‹гЃ® BonDriver гЃ«г‚‚еЏЌж гЃ•гЃ›гЃѕгЃ™гЃ‹пјџ\n\n"),pszName);
 								for (int i=1;i<=9;i++) {
 									if ((Exists&(1U<<i))!=0) {
 										*pSequence=_T('0')+i;
-										Formatter.AppendFormat(TEXT("ЃE%s\n"),pszName);
+										Formatter.AppendFormat(TEXT("гѓ»%s\n"),pszName);
 									}
 								}
-								if (::MessageBox(hDlg,Formatter.GetString(),TEXT("ѓ`ѓѓѓ“ѓlѓ‹ѓXѓLѓѓѓ“"),MB_YESNO | MB_ICONQUESTION)==IDYES) {
+								if (::MessageBox(hDlg,Formatter.GetString(),TEXT("гѓЃгѓЈгѓігѓЌгѓ«г‚№г‚­гѓЈгѓі"),MB_YESNO | MB_ICONQUESTION)==IDYES) {
 									for (int i=1;i<=9;i++) {
 										if ((Exists&(1U<<i))!=0) {
 											::PathRenameExtension(szFileName,CHANNEL_FILE_EXTENSION);
 											*pSequence=_T('0')+i;
 											if (m_TuningSpaceList.SaveToFile(szFileName)) {
-												App.AddLog(TEXT("ѓ`ѓѓѓ“ѓlѓ‹ѓtѓ@ѓCѓ‹‚р \"%s\" ‚Й•Ы‘¶‚µ‚Ь‚µ‚ЅЃB"),szFileName);
+												App.AddLog(TEXT("гѓЃгѓЈгѓігѓЌгѓ«гѓ•г‚Ўг‚¤гѓ«г‚’ \"%s\" гЃ«дїќе­гЃ—гЃѕгЃ—гЃџгЂ‚"),szFileName);
 												::PathRenameExtension(szFileName,TEXT(".dll"));
 												App.Core.UpdateChannelList(szFileName,&m_TuningSpaceList);
 											} else {
 												StdUtil::snprintf(szText,lengthof(szText),
-																  TEXT("ѓ`ѓѓѓ“ѓlѓ‹ѓtѓ@ѓCѓ‹ \"%s\" ‚р•Ы‘¶‚Е‚«‚Ь‚№‚сЃB"),szFileName);
+																  TEXT("гѓЃгѓЈгѓігѓЌгѓ«гѓ•г‚Ўг‚¤гѓ« \"%s\" г‚’дїќе­гЃ§гЃЌгЃѕгЃ›г‚“гЂ‚"),szFileName);
 												App.AddLog(CLogItem::TYPE_ERROR,TEXT("%s"),szText);
 												if (::MessageBox(hDlg,szText,NULL,MB_OKCANCEL | MB_ICONEXCLAMATION)!=IDOK)
 													break;
@@ -1203,7 +1203,7 @@ INT_PTR CChannelScan::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 		{
 			CChannelInfo *pChInfo=reinterpret_cast<CChannelInfo*>(lParam);
 
-			// Њі‚М—LЊш/–іЊшЏу‘Ф‚р”Ѕ‰f
+			// е…ѓгЃ®жњ‰еЉ№/з„ЎеЉ№зЉ¶ж…‹г‚’еЏЌж 
 			const CChannelList *pOldChList=m_TuningSpaceList.GetChannelList(m_ScanSpace);
 			int OldChIndex=pOldChList->FindByIDs(pChInfo->GetNetworkID(),0,pChInfo->GetServiceID(),false);
 			if (OldChIndex>=0)
@@ -1367,7 +1367,7 @@ INT_PTR CChannelScan::ScanDlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPara
 				EstimateRemain+=(NumChannels-CurChannel)*m_RetryCount*m_RetryInterval;
 			EstimateRemain=(EstimateRemain+500)/1000;
 			StdUtil::snprintf(szText,lengthof(szText),
-				TEXT("ѓ`ѓѓѓ“ѓlѓ‹ %d/%d ‚рѓXѓLѓѓѓ“‚µ‚Д‚ў‚Ь‚·... (Ћc‚иЋћЉФ %u:%02u)"),
+				TEXT("гѓЃгѓЈгѓігѓЌгѓ« %d/%d г‚’г‚№г‚­гѓЈгѓігЃ—гЃ¦гЃ„гЃѕгЃ™... (ж®‹г‚Љж™‚й–“ %u:%02u)"),
 				CurChannel+1,NumChannels,
 				EstimateRemain/60,EstimateRemain%60);
 			::SetDlgItemText(hDlg,IDC_CHANNELSCAN_INFO,szText);
@@ -1415,17 +1415,17 @@ INT_PTR CChannelScan::ScanDlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPara
 					TVTest::String Message;
 					if (ErrorCount<ChannelCount) {
 						TVTest::StringUtility::Format(Message,
-							TEXT("%dѓ`ѓѓѓ“ѓlѓ‹‚М‚¤‚їЃA%d‰с‚Мѓ`ѓѓѓ“ѓlѓ‹•ПЌX‚Є BonDriver ‚ЙЋу‚Ї•t‚Ї‚з‚к‚Ь‚№‚с‚Е‚µ‚ЅЃB\n")
-							TEXT("(ЋуђM‚Е‚«‚йѓ`ѓѓѓ“ѓlѓ‹‚Є‘S‚ДѓXѓLѓѓѓ“‚Е‚«‚Д‚ў‚к‚О–в‘и‚Н‚ ‚и‚Ь‚№‚с)"),
+							TEXT("%dгѓЃгѓЈгѓігѓЌгѓ«гЃ®гЃ†гЃЎгЂЃ%dе›ћгЃ®гѓЃгѓЈгѓігѓЌгѓ«е¤‰ж›ґгЃЊ BonDriver гЃ«еЏ—гЃ‘д»гЃ‘г‚‰г‚ЊгЃѕгЃ›г‚“гЃ§гЃ—гЃџгЂ‚\n")
+							TEXT("(еЏ—дїЎгЃ§гЃЌг‚‹гѓЃгѓЈгѓігѓЌгѓ«гЃЊе…ЁгЃ¦г‚№г‚­гѓЈгѓігЃ§гЃЌгЃ¦гЃ„г‚ЊгЃ°е•ЏйЎЊгЃЇгЃ‚г‚ЉгЃѕгЃ›г‚“)"),
 							ChannelCount,ErrorCount);
-						Dialog.Show(hDlg,CMessageDialog::TYPE_INFO,Message.c_str(),NULL,NULL,TEXT("‚Ё’m‚з‚№"));
+						Dialog.Show(hDlg,CMessageDialog::TYPE_INFO,Message.c_str(),NULL,NULL,TEXT("гЃЉзџҐг‚‰гЃ›"));
 					} else {
 						Dialog.Show(hDlg,CMessageDialog::TYPE_WARNING,
-									TEXT("ѓ`ѓѓѓ“ѓlѓ‹•ПЌX‚М—v‹Ѓ‚Є BonDriver ‚ЙЋу‚Ї•t‚Ї‚з‚к‚И‚ў‚Ѕ‚ЯЃAѓXѓLѓѓѓ“‚рЌs‚¦‚Ь‚№‚с‚Е‚µ‚ЅЃB"));
+									TEXT("гѓЃгѓЈгѓігѓЌгѓ«е¤‰ж›ґгЃ®и¦Ѓж±‚гЃЊ BonDriver гЃ«еЏ—гЃ‘д»гЃ‘г‚‰г‚ЊгЃЄгЃ„гЃџг‚ЃгЂЃг‚№г‚­гѓЈгѓіг‚’иЎЊгЃ€гЃѕгЃ›г‚“гЃ§гЃ—гЃџгЂ‚"));
 					}
 				} else if (Result==SCAN_RESULT_SET_CHANNEL_TIMEOUT) {
 					Dialog.Show(hDlg,CMessageDialog::TYPE_WARNING,
-								TEXT("ѓ^ѓCѓЂѓAѓEѓg‚М‚Ѕ‚Яѓ`ѓѓѓ“ѓlѓ‹•ПЌX‚Є‚Е‚«‚Ь‚№‚сЃB"));
+								TEXT("г‚їг‚¤гѓ г‚ўг‚¦гѓ€гЃ®гЃџг‚ЃгѓЃгѓЈгѓігѓЌгѓ«е¤‰ж›ґгЃЊгЃ§гЃЌгЃѕгЃ›г‚“гЂ‚"));
 				}
 
 				::EndDialog(hDlg,IDOK);
@@ -1438,7 +1438,7 @@ INT_PTR CChannelScan::ScanDlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPara
 			if (m_hScanThread!=NULL) {
 				::SetEvent(m_hCancelEvent);
 				if (::WaitForSingleObject(m_hScanThread,30000)==WAIT_TIMEOUT) {
-					GetAppClass().AddLog(CLogItem::TYPE_WARNING,TEXT("ѓ`ѓѓѓ“ѓlѓ‹ѓXѓLѓѓѓ“ѓXѓЊѓbѓh‚р‹­ђ§ЏI—№‚µ‚Ь‚·ЃB"));
+					GetAppClass().AddLog(CLogItem::TYPE_WARNING,TEXT("гѓЃгѓЈгѓігѓЌгѓ«г‚№г‚­гѓЈгѓіг‚№гѓ¬гѓѓгѓ‰г‚’еј·е€¶зµ‚дє†гЃ—гЃѕгЃ™гЂ‚"));
 					::TerminateThread(m_hScanThread,-1);
 				}
 				::CloseHandle(m_hScanThread);
@@ -1513,7 +1513,7 @@ void CChannelScan::Scan()
 		if (m_ScanWait>2000) {
 			DWORD Wait=m_ScanWait-2000;
 			while (true) {
-				// SDT‚Є—€‚Ѕ‚з‘Т‚їЋћЉФЏI—№
+				// SDTгЃЊжќҐгЃџг‚‰еѕ…гЃЎж™‚й–“зµ‚дє†
 				if (pTsAnalyzer->IsSdtUpdated())
 					break;
 				if (::WaitForSingleObject(m_hCancelEvent,min(Wait,1000))!=WAIT_TIMEOUT)
@@ -1547,8 +1547,8 @@ void CChannelScan::Scan()
 						&& !ServiceList.empty()) {
 					if (fScanService) {
 						if (pTsAnalyzer->GetServiceNum()>0) {
-							// ѓTЃ[ѓrѓX‚МPMT‚Є‘µ‚Б‚Ѕ‚зЉ®—№
-							// (ѓTЃ[ѓrѓX‚ЄЋ‹’®‰В”\‚©‚З‚¤‚©PMT‚МЏо•с‚Е”»’и‚·‚й‚Ѕ‚Я)
+							// г‚µгѓјгѓ“г‚№гЃ®PMTгЃЊжЏѓгЃЈгЃџг‚‰е®Њдє†
+							// (г‚µгѓјгѓ“г‚№гЃЊи¦–иЃґеЏЇиѓЅгЃ‹гЃ©гЃ†гЃ‹PMTгЃ®жѓ…е ±гЃ§е€¤е®љгЃ™г‚‹гЃџг‚Ѓ)
 							size_t i;
 							for (i=0;i<ServiceList.size();i++) {
 								if (IsScanService(ServiceList[i])) {
@@ -1562,7 +1562,7 @@ void CChannelScan::Scan()
 								break;
 							}
 						}
-						// ЋћЉФ“а‚ЙPMT‚Є—€‚И‚ўЏкЌ‡ЃAPMT‚МЏо•с‚И‚µ‚ЕЊp‘±‚·‚й
+						// ж™‚й–“е†…гЃ«PMTгЃЊжќҐгЃЄгЃ„е ґеђ€гЂЃPMTгЃ®жѓ…е ±гЃЄгЃ—гЃ§з¶™з¶љгЃ™г‚‹
 						if (!fFound && i==m_RetryCount) {
 							fFound=true;
 							break;
@@ -1573,7 +1573,7 @@ void CChannelScan::Scan()
 								fFound=true;
 								break;
 							} else {
-								// BS/CS ‚МЏкЌ‡‚НѓTЃ[ѓrѓX‚МЊџЌх‚р—LЊш‚Й‚·‚й
+								// BS/CS гЃ®е ґеђ€гЃЇг‚µгѓјгѓ“г‚№гЃ®ж¤њзґўг‚’жњ‰еЉ№гЃ«гЃ™г‚‹
 								WORD NetworkID=pTsAnalyzer->GetNetworkID();
 								if (App.NetworkDefinition.IsSatelliteNetworkID(NetworkID))
 									fScanService=true;
@@ -1587,7 +1587,7 @@ void CChannelScan::Scan()
 			const WORD TransportStreamID=pTsAnalyzer->GetTransportStreamID();
 			const WORD NetworkID=pTsAnalyzer->GetNetworkID();
 
-			// Њ©•t‚©‚Б‚Ѕѓ`ѓѓѓ“ѓlѓ‹‚р’З‰Б‚·‚й
+			// и¦‹д»гЃ‹гЃЈгЃџгѓЃгѓЈгѓігѓЌгѓ«г‚’иїЅеЉ гЃ™г‚‹
 			if (fScanService) {
 				int ServiceCount=0;
 				for (size_t i=0;i<ServiceList.size();i++) {
@@ -1598,7 +1598,7 @@ void CChannelScan::Scan()
 
 					const WORD ServiceID=ServiceInfo.ServiceID;
 
-					// Ћ‹’®•s‰В‚МѓTЃ[ѓrѓX‚рЏњЉO
+					// и¦–иЃґдёЌеЏЇгЃ®г‚µгѓјгѓ“г‚№г‚’й™¤е¤–
 					int ServiceIndex=pTsAnalyzer->GetServiceIndexByID(ServiceID);
 					if (ServiceIndex>=0
 							&& pTsAnalyzer->IsServiceUpdated(ServiceIndex)) {
@@ -1633,7 +1633,7 @@ void CChannelScan::Scan()
 					pChInfo->SetServiceID(ServiceID);
 					pChInfo->SetServiceType(ServiceInfo.ServiceType);
 
-					// €к•”ѓTЃ[ѓrѓX‚НѓfѓtѓHѓ‹ѓg‚Е–іЊш‚Й‚·‚й
+					// дёЂйѓЁг‚µгѓјгѓ“г‚№гЃЇгѓ‡гѓ•г‚©гѓ«гѓ€гЃ§з„ЎеЉ№гЃ«гЃ™г‚‹
 					if ((ServiceInfo.ServiceType!=SERVICE_TYPE_DIGITALTV
 							&& ServiceInfo.ServiceType!=SERVICE_TYPE_PROMOTIONVIDEO
 							&& ServiceInfo.ServiceType!=SERVICE_TYPE_4KTV
@@ -1642,9 +1642,9 @@ void CChannelScan::Scan()
 #endif
 							&& ServiceInfo.ServiceType!=SERVICE_TYPE_DIGITALAUDIO
 							)
-							// BS‚МѓTѓuѓ`ѓѓѓ“ѓlѓ‹
+							// BSгЃ®г‚µгѓ–гѓЃгѓЈгѓігѓЌгѓ«
 							|| (App.NetworkDefinition.IsBSNetworkID(NetworkID) && ServiceID<190 && ServiceCount>0)
-							// ’nѓfѓW‚МѓTѓuѓ`ѓѓѓ“ѓlѓ‹
+							// ењ°гѓ‡г‚ёгЃ®г‚µгѓ–гѓЃгѓЈгѓігѓЌгѓ«
 							|| (NetworkID==TransportStreamID && ServiceCount>0)
 						)
 						pChInfo->Enable(false);
@@ -1732,7 +1732,7 @@ bool CChannelScan::IsScanService(const CTsAnalyzer::SdtServiceInfo &ServiceInfo,
 {
 	return ServiceInfo.szServiceName[0]!='\0'
 		&& ::lstrcmp(ServiceInfo.szServiceName,TEXT(" "))!=0
-		&& ::lstrcmp(ServiceInfo.szServiceName,TEXT("Ѓ@"))!=0
+		&& ::lstrcmp(ServiceInfo.szServiceName,TEXT("гЂЂ"))!=0
 		&& IsScanServiceType(ServiceInfo.ServiceType,fData);
 }
 
@@ -1776,13 +1776,13 @@ INT_PTR CChannelScan::CScanSettingsDialog::DlgProc(
 			::SetDlgItemText(hDlg,IDC_CHANNELSCANSETTINGS_SIGNALLEVELTHRESHOLD,szText);
 
 			for (int i=1;i<=10;i++) {
-				StdUtil::snprintf(szText,lengthof(szText),TEXT("%d •b"),i);
+				StdUtil::snprintf(szText,lengthof(szText),TEXT("%d з§’"),i);
 				DlgComboBox_AddString(hDlg,IDC_CHANNELSCANSETTINGS_SCANWAIT,szText);
 			}
 			DlgComboBox_SetCurSel(hDlg,IDC_CHANNELSCANSETTINGS_SCANWAIT,
 								  m_pChannelScan->m_ScanWait/1000-1);
 			for (int i=0;i<=10;i++) {
-				StdUtil::snprintf(szText,lengthof(szText),TEXT("%d •b"),i);
+				StdUtil::snprintf(szText,lengthof(szText),TEXT("%d з§’"),i);
 				DlgComboBox_AddString(hDlg,IDC_CHANNELSCANSETTINGS_RETRYCOUNT,szText);
 			}
 			DlgComboBox_SetCurSel(hDlg,IDC_CHANNELSCANSETTINGS_RETRYCOUNT,

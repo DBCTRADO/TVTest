@@ -62,7 +62,7 @@ const bool CTsAnalyzer::InputMedia(CMediaData *pMediaData, const DWORD dwInputIn
 
 		CTsPacket *pTsPacket = dynamic_cast<CTsPacket *>(pMediaData);
 
-		// “ü—ÍƒƒfƒBƒAƒf[ƒ^‚ÍŒİŠ·«‚ª‚È‚¢
+		// å…¥åŠ›ãƒ¡ãƒ‡ã‚£ã‚¢ãƒ‡ãƒ¼ã‚¿ã¯äº’æ›æ€§ãŒãªã„
 		if (!pTsPacket)
 			return false;
 		*/
@@ -71,20 +71,20 @@ const bool CTsAnalyzer::InputMedia(CMediaData *pMediaData, const DWORD dwInputIn
 
 		m_DecoderEvent = EVENT_INVALID;
 
-		// PIDƒ‹[ƒeƒBƒ“ƒO
+		// PIDãƒ«ãƒ¼ãƒ†ã‚£ãƒ³ã‚°
 		m_PidMapManager.StorePacket(pTsPacket);
 
-		// Ÿ‚ÌƒtƒBƒ‹ƒ^‚Éƒf[ƒ^‚ğ“n‚·
+		// æ¬¡ã®ãƒ•ã‚£ãƒ«ã‚¿ã«ãƒ‡ãƒ¼ã‚¿ã‚’æ¸¡ã™
 		OutputMedia(pMediaData);
 	}
 
-	// ƒCƒxƒ“ƒg‚ª”­¶‚µ‚Ä‚¢‚½‚ç’Ê’m‚·‚é
+	// ã‚¤ãƒ™ãƒ³ãƒˆãŒç™ºç”Ÿã—ã¦ã„ãŸã‚‰é€šçŸ¥ã™ã‚‹
 	if (m_DecoderEvent != EVENT_INVALID) {
 		SendDecoderEvent((DWORD)m_DecoderEvent);
 	}
 
 #ifdef TS_ANALYZER_EIT_SUPPORT
-	// •Û—¯‚³‚ê‚Ä‚¢‚½EITXVƒCƒxƒ“ƒg‚ğ’Ê’m‚·‚é
+	// ä¿ç•™ã•ã‚Œã¦ã„ãŸEITæ›´æ–°ã‚¤ãƒ™ãƒ³ãƒˆã‚’é€šçŸ¥ã™ã‚‹
 	if (m_bSendEitUpdatedEvent) {
 		m_bSendEitUpdatedEvent = false;
 		SendDecoderEvent(EVENT_EIT_UPDATED);
@@ -99,67 +99,67 @@ void CTsAnalyzer::Reset()
 {
 	CBlockLock Lock(&m_DecoderLock);
 
-	// ‘Sƒe[ƒuƒ‹ƒAƒ“ƒ}ƒbƒv
+	// å…¨ãƒ†ãƒ¼ãƒ–ãƒ«ã‚¢ãƒ³ãƒãƒƒãƒ—
 	m_PidMapManager.UnmapAllTarget();
 
-	// ƒgƒ‰ƒ“ƒXƒ|[ƒgƒXƒgƒŠ[ƒ€ID‰Šú‰»
+	// ãƒˆãƒ©ãƒ³ã‚¹ãƒãƒ¼ãƒˆã‚¹ãƒˆãƒªãƒ¼ãƒ IDåˆæœŸåŒ–
 	m_TransportStreamID = 0x0000;
 
-	// ƒlƒbƒgƒ[ƒNID‰Šú‰»
+	// ãƒãƒƒãƒˆãƒ¯ãƒ¼ã‚¯IDåˆæœŸåŒ–
 	m_NetworkID = 0x0000;
 
-	// PATXVƒtƒ‰ƒO‰Šú‰»
+	// PATæ›´æ–°ãƒ•ãƒ©ã‚°åˆæœŸåŒ–
 	m_bPatUpdated = false;
 
-	// SDTXVƒtƒ‰ƒO‰Šú‰»
+	// SDTæ›´æ–°ãƒ•ãƒ©ã‚°åˆæœŸåŒ–
 	m_bSdtUpdated = false;
 
-	// NITXVƒtƒ‰ƒO‰Šú‰»
+	// NITæ›´æ–°ãƒ•ãƒ©ã‚°åˆæœŸåŒ–
 	m_bNitUpdated = false;
 
 #ifdef TS_ANALYZER_EIT_SUPPORT
-	// EITXVƒtƒ‰ƒO‰Šú‰»
+	// EITæ›´æ–°ãƒ•ãƒ©ã‚°åˆæœŸåŒ–
 	m_bEitUpdated = false;
 	m_bSendEitUpdatedEvent = false;
 #endif
 
 	m_TotInterpolation.PcrPID = PID_INVALID;
 
-	// ƒT[ƒrƒXƒŠƒXƒgƒNƒŠƒA
+	// ã‚µãƒ¼ãƒ“ã‚¹ãƒªã‚¹ãƒˆã‚¯ãƒªã‚¢
 	m_ServiceList.clear();
 
-	// SDTƒT[ƒrƒXƒŠƒXƒgƒNƒŠƒA
+	// SDTã‚µãƒ¼ãƒ“ã‚¹ãƒªã‚¹ãƒˆã‚¯ãƒªã‚¢
 	m_SdtServiceList.clear();
 
-	// SDT TSƒŠƒXƒgƒNƒŠƒA
+	// SDT TSãƒªã‚¹ãƒˆã‚¯ãƒªã‚¢
 	m_SdtTsMap.clear();
 
-	// ƒlƒbƒgƒ[ƒNTSƒŠƒXƒgƒNƒŠƒA
+	// ãƒãƒƒãƒˆãƒ¯ãƒ¼ã‚¯TSãƒªã‚¹ãƒˆã‚¯ãƒªã‚¢
 	m_NetworkTsList.clear();
 
-	// ƒlƒbƒgƒ[ƒNî•ñƒNƒŠƒA
+	// ãƒãƒƒãƒˆãƒ¯ãƒ¼ã‚¯æƒ…å ±ã‚¯ãƒªã‚¢
 	m_NitInfo.Clear();
 
-	// PATƒe[ƒuƒ‹PIDƒ}ƒbƒv’Ç‰Á
+	// PATãƒ†ãƒ¼ãƒ–ãƒ«PIDãƒãƒƒãƒ—è¿½åŠ 
 	m_PidMapManager.MapTarget(PID_PAT, new CPatTable(TABLE_DEBUG), OnPatUpdated, this);
 
-	// NITƒe[ƒuƒ‹PIDƒ}ƒbƒv’Ç‰Á
+	// NITãƒ†ãƒ¼ãƒ–ãƒ«PIDãƒãƒƒãƒ—è¿½åŠ 
 	m_PidMapManager.MapTarget(PID_NIT, new CNitMultiTable, OnNitUpdated, this);
 
-	// SDTƒe[ƒuƒ‹PIDƒ}ƒbƒv’Ç‰Á
+	// SDTãƒ†ãƒ¼ãƒ–ãƒ«PIDãƒãƒƒãƒ—è¿½åŠ 
 	m_PidMapManager.MapTarget(PID_SDT, new CSdtTableSet, OnSdtUpdated, this);
 
 #ifdef TS_ANALYZER_EIT_SUPPORT
-	// H-EITƒe[ƒuƒ‹PIDƒ}ƒbƒv’Ç‰Á
+	// H-EITãƒ†ãƒ¼ãƒ–ãƒ«PIDãƒãƒƒãƒ—è¿½åŠ 
 	m_PidMapManager.MapTarget(PID_HEIT, new CEitPfActualTable, OnEitUpdated, this);
 
 #ifdef TS_ANALYZER_L_EIT_SUPPORT
-	// L-EITƒe[ƒuƒ‹PIDƒ}ƒbƒv’Ç‰Á
+	// L-EITãƒ†ãƒ¼ãƒ–ãƒ«PIDãƒãƒƒãƒ—è¿½åŠ 
 	m_PidMapManager.MapTarget(PID_LEIT, new CEitPfActualTable, OnEitUpdated, this);
 #endif
 #endif
 
-	// TOTƒe[ƒuƒ‹PIDƒ}ƒbƒv’Ç‰Á
+	// TOTãƒ†ãƒ¼ãƒ–ãƒ«PIDãƒãƒƒãƒ—è¿½åŠ 
 	m_PidMapManager.MapTarget(PID_TOT, new CTotTable, OnTotUpdated, this);
 }
 
@@ -168,7 +168,7 @@ WORD CTsAnalyzer::GetServiceNum() const
 {
 	CBlockLock Lock(&m_DecoderLock);
 
-	// ƒT[ƒrƒX”‚ğ•Ô‚·
+	// ã‚µãƒ¼ãƒ“ã‚¹æ•°ã‚’è¿”ã™
 	return (WORD)m_ServiceList.size();
 }
 
@@ -180,7 +180,7 @@ bool CTsAnalyzer::GetServiceID(const int Index, WORD *pServiceID) const
 
 	CBlockLock Lock(&m_DecoderLock);
 
-	// ƒT[ƒrƒXID‚ğæ“¾‚·‚é
+	// ã‚µãƒ¼ãƒ“ã‚¹IDã‚’å–å¾—ã™ã‚‹
 	if (Index < 0) {
 		if (Is1SegStream()) {
 			WORD MinPID = 0xFFFF;
@@ -213,13 +213,13 @@ int CTsAnalyzer::GetServiceIndexByID(const WORD ServiceID) const
 {
 	CBlockLock Lock(&m_DecoderLock);
 
-	// ƒvƒƒOƒ‰ƒ€ID‚©‚çƒT[ƒrƒXƒCƒ“ƒfƒbƒNƒX‚ğŒŸõ‚·‚é
+	// ãƒ—ãƒ­ã‚°ãƒ©ãƒ IDã‹ã‚‰ã‚µãƒ¼ãƒ“ã‚¹ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹ã‚’æ¤œç´¢ã™ã‚‹
 	for (size_t Index = 0 ; Index < m_ServiceList.size() ; Index++) {
 		if (m_ServiceList[Index].ServiceID == ServiceID)
 			return (int)Index;
 	}
 
-	// ƒvƒƒOƒ‰ƒ€ID‚ªŒ©‚Â‚©‚ç‚È‚¢
+	// ãƒ—ãƒ­ã‚°ãƒ©ãƒ IDãŒè¦‹ã¤ã‹ã‚‰ãªã„
 	return -1;
 }
 
@@ -723,7 +723,7 @@ int CTsAnalyzer::GetServiceName(const int Index, LPTSTR pszName, const int MaxLe
 {
 	CBlockLock Lock(&m_DecoderLock);
 
-	// ƒT[ƒrƒX–¼‚ğæ“¾‚·‚é
+	// ã‚µãƒ¼ãƒ“ã‚¹åã‚’å–å¾—ã™ã‚‹
 	if (Index >= 0 && (size_t)Index < m_ServiceList.size()) {
 		if (pszName != NULL && MaxLength > 0)
 			::lstrcpyn(pszName, m_ServiceList[Index].szServiceName, MaxLength);
@@ -1338,7 +1338,7 @@ int CTsAnalyzer::GetEventExtendedText(const int ServiceIndex, LPTSTR pszText, in
 		if (!bUseEventGroup)
 			return 0;
 
-		// ƒCƒxƒ“ƒg‹¤—L‚ÌQÆæ‚©‚çî•ñ‚ğæ“¾‚·‚é
+		// ã‚¤ãƒ™ãƒ³ãƒˆå…±æœ‰ã®å‚ç…§å…ˆã‹ã‚‰æƒ…å ±ã‚’å–å¾—ã™ã‚‹
 		const CEventGroupDesc *pEventGroup = pDescBlock->GetDesc<CEventGroupDesc>();
 		if (pEventGroup == NULL
 				|| pEventGroup->GetGroupType() != CEventGroupDesc::GROUPTYPE_COMMON
@@ -1346,7 +1346,7 @@ int CTsAnalyzer::GetEventExtendedText(const int ServiceIndex, LPTSTR pszText, in
 			return 0;
 		const WORD EventID = GetEventID(ServiceIndex, bNext);
 		int i;
-		// ©ŒÈ‚Ì‹Lq‚ª‚È‚¢ê‡‚ÍQÆŒ³
+		// è‡ªå·±ã®è¨˜è¿°ãŒãªã„å ´åˆã¯å‚ç…§å…ƒ
 		for (i = 0; i < pEventGroup->GetEventNum(); i++) {
 			CEventGroupDesc::EventInfo EventInfo;
 			if (pEventGroup->GetEventInfo(i, &EventInfo)
@@ -1688,7 +1688,7 @@ bool CTsAnalyzer::GetTotTime(SYSTEMTIME *pTime) const
 
 bool CTsAnalyzer::GetInterpolatedTotTime(SYSTEMTIME *pTime, bool *pbInterpolated) const
 {
-	// PCR‚Å•âŠÔ‚µ‚½TOT‚ğæ“¾‚·‚é
+	// PCRã§è£œé–“ã—ãŸTOTæ™‚åˆ»ã‚’å–å¾—ã™ã‚‹
 	CBlockLock Lock(&m_DecoderLock);
 
 	if (!GetTotTime(pTime))
@@ -1708,7 +1708,7 @@ bool CTsAnalyzer::GetInterpolatedTotTime(SYSTEMTIME *pTime, bool *pbInterpolated
 						Diff = PcrTime - m_TotInterpolation.PcrTime;
 					else
 						Diff = (0x200000000ULL - m_TotInterpolation.PcrTime) + PcrTime;
-					if (Diff <= 15 * 90000LL) {	// Å‘å15•b
+					if (Diff <= 15 * 90000LL) {	// æœ€å¤§15ç§’
 						CDateTime Time(*pTime);
 
 						Time.Offset(Diff / 90LL);
@@ -1831,7 +1831,7 @@ void CTsAnalyzer::SetDecoderEvent(EventType Type)
 
 void CALLBACK CTsAnalyzer::OnPatUpdated(const WORD wPID, CTsPidMapTarget *pMapTarget, CTsPidMapManager *pMapManager, const PVOID pParam)
 {
-	// PAT‚ªXV‚³‚ê‚½
+	// PATãŒæ›´æ–°ã•ã‚ŒãŸ
 	TRACE(TEXT("CTsAnalyzer::OnPatUpdated()\n"));
 
 	CTsAnalyzer *pThis = static_cast<CTsAnalyzer *>(pParam);
@@ -1839,20 +1839,20 @@ void CALLBACK CTsAnalyzer::OnPatUpdated(const WORD wPID, CTsPidMapTarget *pMapTa
 	if (pPatTable == NULL)
 		return;
 
-	// ƒgƒ‰ƒ“ƒXƒ|[ƒgƒXƒgƒŠ[ƒ€IDXV
+	// ãƒˆãƒ©ãƒ³ã‚¹ãƒãƒ¼ãƒˆã‚¹ãƒˆãƒªãƒ¼ãƒ IDæ›´æ–°
 	pThis->m_TransportStreamID = pPatTable->GetTransportStreamID();
 
-	// Œ»PMT/PCR‚ÌPID‚ğƒAƒ“ƒ}ƒbƒv‚·‚é
+	// ç¾PMT/PCRã®PIDã‚’ã‚¢ãƒ³ãƒãƒƒãƒ—ã™ã‚‹
 	for (size_t Index = 0; Index < pThis->m_ServiceList.size(); Index++) {
 		pMapManager->UnmapTarget(pThis->m_ServiceList[Index].PmtPID);
 		pMapManager->UnmapTarget(pThis->m_ServiceList[Index].PcrPID);
 	}
 
-	// VPMT‚ğƒXƒgƒA‚·‚é
+	// æ–°PMTã‚’ã‚¹ãƒˆã‚¢ã™ã‚‹
 	pThis->m_ServiceList.resize(pPatTable->GetProgramNum());
 
 	for (size_t Index = 0; Index < pThis->m_ServiceList.size(); Index++) {
-		// ƒT[ƒrƒXƒŠƒXƒgXV
+		// ã‚µãƒ¼ãƒ“ã‚¹ãƒªã‚¹ãƒˆæ›´æ–°
 		pThis->m_ServiceList[Index].bIsUpdated = false;
 		pThis->m_ServiceList[Index].ServiceID = pPatTable->GetProgramID((WORD)Index);
 		pThis->m_ServiceList[Index].PmtPID = pPatTable->GetPmtPID((WORD)Index);
@@ -1869,34 +1869,34 @@ void CALLBACK CTsAnalyzer::OnPatUpdated(const WORD wPID, CTsPidMapTarget *pMapTa
 		pThis->m_ServiceList[Index].ServiceType = SERVICE_TYPE_INVALID;
 		pThis->m_ServiceList[Index].LogoID = LOGOID_INVALID;
 
-		// PMT‚ÌPID‚ğƒ}ƒbƒv
+		// PMTã®PIDã‚’ãƒãƒƒãƒ—
 		pMapManager->MapTarget(pPatTable->GetPmtPID((WORD)Index), new CPmtTable(TABLE_DEBUG), OnPmtUpdated, pParam);
 	}
 
 #ifdef TS_ANALYZER_EIT_SUPPORT
-	// PAT‚ª—ˆ‚é‘O‚ÉEIT‚ª—ˆ‚Ä‚¢‚½ê‡‚±‚±‚Å’Ê’m‚·‚é
+	// PATãŒæ¥ã‚‹å‰ã«EITãŒæ¥ã¦ã„ãŸå ´åˆã“ã“ã§é€šçŸ¥ã™ã‚‹
 	if (!pThis->m_bPatUpdated && pThis->m_bEitUpdated)
 		pThis->m_bSendEitUpdatedEvent = true;
 #endif
 
 	pThis->m_bPatUpdated = true;
 
-	// ’Ê’mƒCƒxƒ“ƒgİ’è
+	// é€šçŸ¥ã‚¤ãƒ™ãƒ³ãƒˆè¨­å®š
 	pThis->SetDecoderEvent(EVENT_PAT_UPDATED);
 }
 
 
 static void GetSdtServiceInfo(CTsAnalyzer::ServiceInfo *pServiceInfo, const CSdtTable *pSdtTable, int SdtIndex)
 {
-	// SDT‚©‚çƒT[ƒrƒXî•ñ‚ğæ“¾
+	// SDTã‹ã‚‰ã‚µãƒ¼ãƒ“ã‚¹æƒ…å ±ã‚’å–å¾—
 
-	// ƒT[ƒrƒXî•ñXV
+	// ã‚µãƒ¼ãƒ“ã‚¹æƒ…å ±æ›´æ–°
 	pServiceInfo->RunningStatus = pSdtTable->GetRunningStatus(SdtIndex);
 	pServiceInfo->bIsCaService = pSdtTable->GetFreeCaMode(SdtIndex);
 
 	const CDescBlock *pDescBlock = pSdtTable->GetItemDesc(SdtIndex);
 
-	// ƒT[ƒrƒX–¼XV
+	// ã‚µãƒ¼ãƒ“ã‚¹åæ›´æ–°
 	pServiceInfo->szServiceName[0] = '\0';
 	pServiceInfo->ServiceType = SERVICE_TYPE_INVALID;
 	const CServiceDesc *pServiceDesc = pDescBlock->GetDesc<CServiceDesc>();
@@ -1905,7 +1905,7 @@ static void GetSdtServiceInfo(CTsAnalyzer::ServiceInfo *pServiceInfo, const CSdt
 		pServiceInfo->ServiceType = pServiceDesc->GetServiceType();
 	}
 
-	// ƒƒSIDXV
+	// ãƒ­ã‚´IDæ›´æ–°
 	const CLogoTransmissionDesc *pLogoDesc = pDescBlock->GetDesc<CLogoTransmissionDesc>();
 	if (pLogoDesc) {
 		pServiceInfo->LogoID = pLogoDesc->GetLogoID();
@@ -1917,7 +1917,7 @@ static void GetSdtServiceInfo(CTsAnalyzer::ServiceInfo *pServiceInfo, const CSdt
 
 void CALLBACK CTsAnalyzer::OnPmtUpdated(const WORD wPID, CTsPidMapTarget *pMapTarget, CTsPidMapManager *pMapManager, const PVOID pParam)
 {
-	// PMT‚ªXV‚³‚ê‚½
+	// PMTãŒæ›´æ–°ã•ã‚ŒãŸ
 	TRACE(TEXT("CTsAnalyzer::OnPmtUpdated()\n"));
 
 	CTsAnalyzer *pThis = static_cast<CTsAnalyzer *>(pParam);
@@ -1925,13 +1925,13 @@ void CALLBACK CTsAnalyzer::OnPmtUpdated(const WORD wPID, CTsPidMapTarget *pMapTa
 	if (pPmtTable == NULL)
 		return;
 
-	// ƒT[ƒrƒXƒCƒ“ƒfƒbƒNƒX‚ğŒŸõ
+	// ã‚µãƒ¼ãƒ“ã‚¹ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹ã‚’æ¤œç´¢
 	const int ServiceIndex = pThis->GetServiceIndexByID(pPmtTable->m_CurSection.GetTableIdExtension());
 	if (ServiceIndex < 0)
 		return;
 	ServiceInfo &Info = pThis->m_ServiceList[ServiceIndex];
 
-	// ES‚ÌPID‚ğƒXƒgƒA
+	// ESã®PIDã‚’ã‚¹ãƒˆã‚¢
 	Info.VideoEsList.clear();
 	Info.AudioEsList.clear();
 	Info.CaptionEsList.clear();
@@ -1991,7 +1991,7 @@ void CALLBACK CTsAnalyzer::OnPmtUpdated(const WORD wPID, CTsPidMapTarget *pMapTa
 		}
 	}
 
-	// component_tag ‡‚Éƒ\[ƒg
+	// component_tag é †ã«ã‚½ãƒ¼ãƒˆ
 	auto ComponentTagCmp =
 		[](const EsInfo &Info1, const EsInfo &Info2) {
 			return Info1.ComponentTag < Info2.ComponentTag;
@@ -2006,7 +2006,7 @@ void CALLBACK CTsAnalyzer::OnPmtUpdated(const WORD wPID, CTsPidMapTarget *pMapTa
 		Info.PcrPID = PcrPID;
 		CTsPidMapTarget *pMap = pMapManager->GetMapTarget(PcrPID);
 		if (!pMap) {
-			// V‹KMap
+			// æ–°è¦Map
 			pMapManager->MapTarget(PcrPID, new CPcrTable);
 		}
 	}
@@ -2032,10 +2032,10 @@ void CALLBACK CTsAnalyzer::OnPmtUpdated(const WORD wPID, CTsPidMapTarget *pMapTa
 		}
 	}
 
-	// XVÏ‚İƒ}[ƒN
+	// æ›´æ–°æ¸ˆã¿ãƒãƒ¼ã‚¯
 	Info.bIsUpdated = true;
 
-	// SDT‚©‚çƒT[ƒrƒXî•ñ‚ğæ“¾
+	// SDTã‹ã‚‰ã‚µãƒ¼ãƒ“ã‚¹æƒ…å ±ã‚’å–å¾—
 	CSdtTableSet *pSdtTableSet = dynamic_cast<CSdtTableSet *>(pMapManager->GetMapTarget(PID_SDT));
 	if (pSdtTableSet) {
 		CSdtTable *pSdtTable = pSdtTableSet->GetActualSdtTable();
@@ -2046,7 +2046,7 @@ void CALLBACK CTsAnalyzer::OnPmtUpdated(const WORD wPID, CTsPidMapTarget *pMapTa
 		}
 	}
 
-	// ’Ê’mƒCƒxƒ“ƒgİ’è
+	// é€šçŸ¥ã‚¤ãƒ™ãƒ³ãƒˆè¨­å®š
 	pThis->SetDecoderEvent(EVENT_PMT_UPDATED);
 }
 
@@ -2092,7 +2092,7 @@ static void UpdateSdtTsMap(const CSdtTable *pSdtTable, CTsAnalyzer::SdtTsMap *pS
 
 void CALLBACK CTsAnalyzer::OnSdtUpdated(const WORD wPID, CTsPidMapTarget *pMapTarget, CTsPidMapManager *pMapManager, const PVOID pParam)
 {
-	// SDT‚ªXV‚³‚ê‚½
+	// SDTãŒæ›´æ–°ã•ã‚ŒãŸ
 	TRACE(TEXT("CTsAnalyzer::OnSdtUpdated()\n"));
 
 	CTsAnalyzer *pThis = static_cast<CTsAnalyzer *>(pParam);
@@ -2103,7 +2103,7 @@ void CALLBACK CTsAnalyzer::OnSdtUpdated(const WORD wPID, CTsPidMapTarget *pMapTa
 	const BYTE TableID = pTableSet->GetLastUpdatedTableID();
 
 	if (TableID == CSdtTable::TABLE_ID_ACTUAL) {
-		// Œ»İ‚ÌTS‚ÌSDT
+		// ç¾åœ¨ã®TSã®SDT
 		const CSdtTable *pSdtTable = pTableSet->GetActualSdtTable();
 		if (pSdtTable == NULL)
 			return;
@@ -2114,7 +2114,7 @@ void CALLBACK CTsAnalyzer::OnSdtUpdated(const WORD wPID, CTsPidMapTarget *pMapTa
 		UpdateSdtServiceList(pSdtTable, &pThis->m_SdtServiceList);
 
 		for (WORD SdtIndex = 0 ; SdtIndex < pSdtTable->GetServiceNum() ; SdtIndex++) {
-			// ƒT[ƒrƒXID‚ğŒŸõ
+			// ã‚µãƒ¼ãƒ“ã‚¹IDã‚’æ¤œç´¢
 			const int ServiceIndex = pThis->GetServiceIndexByID(pSdtTable->GetServiceID(SdtIndex));
 			if (ServiceIndex >= 0)
 				GetSdtServiceInfo(&pThis->m_ServiceList[ServiceIndex], pSdtTable, SdtIndex);
@@ -2124,10 +2124,10 @@ void CALLBACK CTsAnalyzer::OnSdtUpdated(const WORD wPID, CTsPidMapTarget *pMapTa
 
 		pThis->m_bSdtUpdated = true;
 
-		// ’Ê’mƒCƒxƒ“ƒgİ’è
+		// é€šçŸ¥ã‚¤ãƒ™ãƒ³ãƒˆè¨­å®š
 		pThis->SetDecoderEvent(EVENT_SDT_UPDATED);
 	} else if (TableID == CSdtTable::TABLE_ID_OTHER) {
-		// ‘¼‚ÌTS‚ÌSDT
+		// ä»–ã®TSã®SDT
 		const CSdtOtherTable *pSdtOtherTable = pTableSet->GetOtherSdtTable();
 		if (pSdtOtherTable == NULL)
 			return;
@@ -2149,7 +2149,7 @@ void CALLBACK CTsAnalyzer::OnSdtUpdated(const WORD wPID, CTsPidMapTarget *pMapTa
 
 void CALLBACK CTsAnalyzer::OnNitUpdated(const WORD wPID, CTsPidMapTarget *pMapTarget, CTsPidMapManager *pMapManager, const PVOID pParam)
 {
-	// NIT‚ªXV‚³‚ê‚½
+	// NITãŒæ›´æ–°ã•ã‚ŒãŸ
 	TRACE(TEXT("CTsAnalyzer::OnNitUpdated()\n"));
 
 	CTsAnalyzer *pThis = static_cast<CTsAnalyzer*>(pParam);
@@ -2167,7 +2167,7 @@ void CALLBACK CTsAnalyzer::OnNitUpdated(const WORD wPID, CTsPidMapTarget *pMapTa
 
 	const CDescBlock *pDescBlock;
 
-	// ƒlƒbƒgƒ[ƒNî•ñæ“¾
+	// ãƒãƒƒãƒˆãƒ¯ãƒ¼ã‚¯æƒ…å ±å–å¾—
 	pDescBlock = pNitTable->GetNetworkDesc();
 	if (pDescBlock) {
 		const CNetworkNameDesc *pNetworkDesc = pDescBlock->GetDesc<CNetworkNameDesc>();
@@ -2183,7 +2183,7 @@ void CALLBACK CTsAnalyzer::OnNitUpdated(const WORD wPID, CTsPidMapTarget *pMapTa
 		}
 	}
 
-	// TSƒŠƒXƒgæ“¾
+	// TSãƒªã‚¹ãƒˆå–å¾—
 	pThis->m_NetworkTsList.clear();
 
 	for (WORD SectionNo = 0; SectionNo < pNitMultiTable->GetNitSectionNum(); SectionNo++) {
@@ -2201,7 +2201,7 @@ void CALLBACK CTsAnalyzer::OnNitUpdated(const WORD wPID, CTsPidMapTarget *pMapTa
 				TsInfo.TransportStreamID = pNitTable->GetTransportStreamID(i);
 				TsInfo.OriginalNetworkID = pNitTable->GetOriginalNetworkID(i);
 
-				// ƒT[ƒrƒXƒŠƒXƒgæ“¾
+				// ã‚µãƒ¼ãƒ“ã‚¹ãƒªã‚¹ãƒˆå–å¾—
 				const CServiceListDesc *pServiceListDesc = pDescBlock->GetDesc<CServiceListDesc>();
 				if (pServiceListDesc) {
 					for (int j = 0; j < pServiceListDesc->GetServiceNum(); j++) {
@@ -2233,7 +2233,7 @@ void CALLBACK CTsAnalyzer::OnNitUpdated(const WORD wPID, CTsPidMapTarget *pMapTa
 
 	pThis->m_bNitUpdated = true;
 
-	// ’Ê’mƒCƒxƒ“ƒgİ’è
+	// é€šçŸ¥ã‚¤ãƒ™ãƒ³ãƒˆè¨­å®š
 	pThis->SetDecoderEvent(EVENT_NIT_UPDATED);
 }
 
@@ -2241,15 +2241,15 @@ void CALLBACK CTsAnalyzer::OnNitUpdated(const WORD wPID, CTsPidMapTarget *pMapTa
 #ifdef TS_ANALYZER_EIT_SUPPORT
 void CALLBACK CTsAnalyzer::OnEitUpdated(const WORD wPID, CTsPidMapTarget *pMapTarget, CTsPidMapManager *pMapManager, const PVOID pParam)
 {
-	// EIT‚ªXV‚³‚ê‚½
+	// EITãŒæ›´æ–°ã•ã‚ŒãŸ
 	TRACE(TEXT("CTsAnalyzer::OnEitUpdated()\n"));
 
 	CTsAnalyzer *pThis = static_cast<CTsAnalyzer*>(pParam);
 
 	pThis->m_bEitUpdated = true;
 
-	// ’Ê’mƒCƒxƒ“ƒgİ’è
-	// (PAT‚ª‚Ü‚¾—ˆ‚Ä‚¢‚È‚¢ê‡‚Í”Ô‘gî•ñ‚Ìæ“¾ŠÖ”‚ª¸”s‚·‚é‚½‚ß•Û—¯‚É‚·‚é)
+	// é€šçŸ¥ã‚¤ãƒ™ãƒ³ãƒˆè¨­å®š
+	// (PATãŒã¾ã æ¥ã¦ã„ãªã„å ´åˆã¯ç•ªçµ„æƒ…å ±ã®å–å¾—é–¢æ•°ãŒå¤±æ•—ã™ã‚‹ãŸã‚ä¿ç•™ã«ã™ã‚‹)
 	if (pThis->m_bPatUpdated)
 		pThis->SetDecoderEvent(EVENT_EIT_UPDATED);
 }
@@ -2258,10 +2258,10 @@ void CALLBACK CTsAnalyzer::OnEitUpdated(const WORD wPID, CTsPidMapTarget *pMapTa
 
 void CALLBACK CTsAnalyzer::OnTotUpdated(const WORD wPID, CTsPidMapTarget *pMapTarget, CTsPidMapManager *pMapManager, const PVOID pParam)
 {
-	// TOT‚ªXV‚³‚ê‚½
+	// TOTãŒæ›´æ–°ã•ã‚ŒãŸ
 	CTsAnalyzer *pThis = static_cast<CTsAnalyzer *>(pParam);
 
-	// Œ»İ‚ÌPCR‚ğ‹L‰¯
+	// ç¾åœ¨ã®PCRã‚’è¨˜æ†¶
 	WORD PcrPID = PID_INVALID;
 
 	if (!pThis->m_ServiceList.empty()) {
@@ -2295,6 +2295,6 @@ void CALLBACK CTsAnalyzer::OnTotUpdated(const WORD wPID, CTsPidMapTarget *pMapTa
 
 	pThis->m_TotInterpolation.PcrPID = PcrPID;
 
-	// ’Ê’mƒCƒxƒ“ƒgİ’è
+	// é€šçŸ¥ã‚¤ãƒ™ãƒ³ãƒˆè¨­å®š
 	pThis->SetDecoderEvent(EVENT_TOT_UPDATED);
 }

@@ -78,7 +78,7 @@ bool CTsSrcStream::InputMedia(CMediaData *pMediaData)
 	CBlockLock Lock(&m_Lock);
 
 	/*
-		PTS‚ğ“¯Šú‚·‚éˆ—‚ÍATBS–â‘è‘ÎôˆÄ(up0357)‚ğŒ³‚É‚µ‚Ä‚¢‚Ü‚·B
+		PTSã‚’åŒæœŸã™ã‚‹å‡¦ç†ã¯ã€TBSå•é¡Œå¯¾ç­–æ¡ˆ(up0357)ã‚’å…ƒã«ã—ã¦ã„ã¾ã™ã€‚
 	*/
 
 	CTsPacket *pPacket = static_cast<CTsPacket*>(pMediaData);
@@ -251,7 +251,7 @@ size_t CTsSrcStream::GetData(BYTE *pData, size_t Size)
 
 	const size_t ActualSize = m_PacketQueue.Read(pData, Size);
 
-	// •s—v‚»‚¤‚Èƒƒ‚ƒŠ‚ğ‰ğ•ú
+	// ä¸è¦ãã†ãªãƒ¡ãƒ¢ãƒªã‚’è§£æ”¾
 	if (m_PacketQueue.GetAllocatedChunkCount() >= 8
 			&& m_PacketQueue.GetUsed() + m_PacketQueue.GetChunkSize() < m_PacketQueue.GetAllocatedSize() / 2) {
 		TRACE(TEXT("CTsSrcStream::GetData() : Shrink to fit\n"));

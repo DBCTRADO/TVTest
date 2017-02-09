@@ -3,8 +3,8 @@
 
 #ifndef TVTEST_IMAGE_STATIC
 /*
-	TVTEST_IMAGE_STATIC ���`����ƁATVTest_Image.dll �̋@�\���ÓI�����N����
-	TVTest_Image.dll ���g�p���Ȃ��Ȃ�B
+	TVTEST_IMAGE_STATIC を定義すると、TVTest_Image.dll の機能が静的リンクされ
+	TVTest_Image.dll を使用しなくなる。
 */
 //#define TVTEST_IMAGE_STATIC
 #endif

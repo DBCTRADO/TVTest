@@ -141,7 +141,7 @@ bool CProgramGuideOptions::LoadSettings(CSettings &Settings)
 		Settings.Read(TEXT("InfoPopupHeight"),&Height);
 		m_pProgramGuide->SetInfoPopupSize(Width,Height);
 
-		// åüçıóöó
+		// Ê§úÁ¥¢Â±•Ê≠¥
 		int NumSearchKeywords;
 		if (Settings.Read(TEXT("NumSearchKeywords"),&NumSearchKeywords)
 				&& NumSearchKeywords>0) {
@@ -282,9 +282,9 @@ bool CProgramGuideOptions::LoadSettings(CSettings &Settings)
 	if (!fFavoritesExists) {
 		CProgramGuideFavorites::FavoriteInfo FavoriteInfo;
 
-		FavoriteInfo.Name=TEXT("Ç®ãCÇ…ì¸ÇËÉ`ÉÉÉìÉlÉã");
+		FavoriteInfo.Name=TEXT("„ÅäÊ∞ó„Å´ÂÖ•„Çä„ÉÅ„É£„É≥„Éç„É´");
 		FavoriteInfo.GroupID=TEXT("\\");
-		FavoriteInfo.Label=TEXT("Ç®ãCÇ…ì¸ÇË");
+		FavoriteInfo.Label=TEXT("„ÅäÊ∞ó„Å´ÂÖ•„Çä");
 		FavoriteInfo.SetDefaultColors();
 		pFavorites->Add(FavoriteInfo);
 	}
@@ -472,10 +472,10 @@ INT_PTR CProgramGuideOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM l
 		{
 			DlgCheckBox_Check(hDlg,IDC_PROGRAMGUIDEOPTIONS_ONSCREEN,m_fOnScreen);
 			DlgCheckBox_Check(hDlg,IDC_PROGRAMGUIDEOPTIONS_SCROLLTOCURCHANNEL,m_fScrollToCurChannel);
-			DlgComboBox_AddString(hDlg,IDC_PROGRAMGUIDEOPTIONS_BEGINHOUR,TEXT("åªç›éû"));
+			DlgComboBox_AddString(hDlg,IDC_PROGRAMGUIDEOPTIONS_BEGINHOUR,TEXT("ÁèæÂú®ÊôÇ"));
 			for (int i=0;i<=23;i++) {
 				TCHAR szText[8];
-				::wsprintf(szText,TEXT("%déû"),i);
+				::wsprintf(szText,TEXT("%dÊôÇ"),i);
 				DlgComboBox_AddString(hDlg,IDC_PROGRAMGUIDEOPTIONS_BEGINHOUR,szText);
 			}
 			DlgComboBox_SetCurSel(hDlg,IDC_PROGRAMGUIDEOPTIONS_BEGINHOUR,m_BeginHour+1);
@@ -544,8 +544,8 @@ INT_PTR CProgramGuideOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM l
 			DlgUpDown_SetRange(hDlg,IDC_PROGRAMGUIDEOPTIONS_WHEELSCROLLLINES_UD,0,100);
 
 			int Sel=m_ProgramLDoubleClickCommand.empty()?0:-1;
-			DlgComboBox_AddString(hDlg,IDC_PROGRAMGUIDEOPTIONS_PROGRAMLDOUBLECLICK,TEXT("âΩÇ‡ÇµÇ»Ç¢"));
-			DlgComboBox_AddString(hDlg,IDC_PROGRAMGUIDEOPTIONS_PROGRAMLDOUBLECLICK,TEXT("iEPGä÷òAïtÇØé¿çs"));
+			DlgComboBox_AddString(hDlg,IDC_PROGRAMGUIDEOPTIONS_PROGRAMLDOUBLECLICK,TEXT("‰Ωï„ÇÇ„Åó„Å™„ÅÑ"));
+			DlgComboBox_AddString(hDlg,IDC_PROGRAMGUIDEOPTIONS_PROGRAMLDOUBLECLICK,TEXT("iEPGÈñ¢ÈÄ£‰ªò„ÅëÂÆüË°å"));
 			if (Sel<0 && m_ProgramLDoubleClickCommand.compare(IEPG_ASSOCIATE_COMMAND)==0)
 				Sel=1;
 			for (int i=0;i<m_pPluginManager->NumPlugins();i++) {
@@ -587,13 +587,13 @@ INT_PTR CProgramGuideOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM l
 			lvc.mask=LVCF_FMT | LVCF_WIDTH | LVCF_TEXT;
 			lvc.fmt=LVCFMT_LEFT;
 			lvc.cx=80;
-			lvc.pszText=TEXT("ñºëO");
+			lvc.pszText=TEXT("ÂêçÂâç");
 			ListView_InsertColumn(hwndList,0,&lvc);
 			lvc.fmt=LVCFMT_LEFT;
 			GetClientRect(hwndList,&rc);
 			rc.right-=GetSystemMetrics(SM_CXVSCROLL);
 			lvc.cx=rc.right-lvc.cx;
-			lvc.pszText=TEXT("ÉRÉ}ÉìÉh");
+			lvc.pszText=TEXT("„Ç≥„Éû„É≥„Éâ");
 			ListView_InsertColumn(hwndList,1,&lvc);
 			if (pToolList->NumTools()>0) {
 				ListView_SetItemCount(hwndList,pToolList->NumTools());

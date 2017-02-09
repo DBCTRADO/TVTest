@@ -32,21 +32,21 @@ void CTsSelector::Reset(void)
 {
 	CBlockLock Lock(&m_DecoderLock);
 
-	// “à•”ó‘Ô‚ğ‰Šú‰»‚·‚é
+	// å†…éƒ¨çŠ¶æ…‹ã‚’åˆæœŸåŒ–ã™ã‚‹
 	m_PidMapManager.UnmapAllTarget();
 
-	// PATƒe[ƒuƒ‹PIDƒ}ƒbƒv’Ç‰Á
+	// PATãƒ†ãƒ¼ãƒ–ãƒ«PIDãƒãƒƒãƒ—è¿½åŠ 
 	m_PidMapManager.MapTarget(PID_PAT, new CPatTable, OnPatUpdated, this);
-	// CATƒe[ƒuƒ‹PIDƒ}ƒbƒv’Ç‰Á
+	// CATãƒ†ãƒ¼ãƒ–ãƒ«PIDãƒãƒƒãƒ—è¿½åŠ 
 	m_PidMapManager.MapTarget(PID_CAT, new CCatTable, OnCatUpdated, this);
 
 	/*
-	// “Œvƒf[ƒ^‰Šú‰»
+	// çµ±è¨ˆãƒ‡ãƒ¼ã‚¿åˆæœŸåŒ–
 	m_InputPacketCount = 0;
 	m_OutputPacketCount = 0;
 	*/
 
-	// ‘ÎÛƒT[ƒrƒX‰Šú‰»
+	// å¯¾è±¡ã‚µãƒ¼ãƒ“ã‚¹åˆæœŸåŒ–
 	m_TargetServiceID = 0;
 	m_TargetPmtPID = 0;
 	//m_TargetStream = STREAM_ALL;
@@ -71,16 +71,16 @@ const bool CTsSelector::InputMedia(CMediaData *pMediaData, const DWORD dwInputIn
 
 	CTsPacket *pTsPacket = dynamic_cast<CTsPacket *>(pMediaData);
 
-	// “ü—ÍƒƒfƒBƒAƒf[ƒ^‚ÍŒİŠ·«‚ª‚È‚¢
+	// å…¥åŠ›ãƒ¡ãƒ‡ã‚£ã‚¢ãƒ‡ãƒ¼ã‚¿ã¯äº’æ›æ€§ãŒãªã„
 	if(!pTsPacket)return false;
 	*/
 
 	CTsPacket *pTsPacket = static_cast<CTsPacket *>(pMediaData);
 
-	// “ü—ÍƒpƒPƒbƒg”ƒJƒEƒ“ƒg
+	// å…¥åŠ›ãƒ‘ã‚±ãƒƒãƒˆæ•°ã‚«ã‚¦ãƒ³ãƒˆ
 	m_InputPacketCount++;
 
-	// PIDƒ‹[ƒeƒBƒ“ƒO
+	// PIDãƒ«ãƒ¼ãƒ†ã‚£ãƒ³ã‚°
 	m_PidMapManager.StorePacket(pTsPacket);
 
 	if (m_TargetServiceID == 0 && m_TargetStream == STREAM_ALL) {
@@ -89,7 +89,7 @@ const bool CTsSelector::InputMedia(CMediaData *pMediaData, const DWORD dwInputIn
 		WORD PID = pTsPacket->GetPID();
 		if (PID < 0x0030 || IsTargetPID(PID)) {
 			m_OutputPacketCount++;
-			// ƒpƒPƒbƒg‚ğ‰º—¬ƒfƒR[ƒ_‚Éƒf[ƒ^‚ğ“n‚·
+			// ãƒ‘ã‚±ãƒƒãƒˆã‚’ä¸‹æµãƒ‡ã‚³ãƒ¼ãƒ€ã«ãƒ‡ãƒ¼ã‚¿ã‚’æ¸¡ã™
 			if (PID == PID_PAT && m_TargetPmtPID != 0
 					&& MakePat(pTsPacket, &m_PatPacket)) {
 				OutputMedia(&m_PatPacket);
@@ -105,14 +105,14 @@ const bool CTsSelector::InputMedia(CMediaData *pMediaData, const DWORD dwInputIn
 
 ULONGLONG CTsSelector::GetInputPacketCount() const
 {
-	// “ü—ÍƒpƒPƒbƒg”‚ğ•Ô‚·
+	// å…¥åŠ›ãƒ‘ã‚±ãƒƒãƒˆæ•°ã‚’è¿”ã™
 	return m_InputPacketCount;
 }
 
 
 ULONGLONG CTsSelector::GetOutputPacketCount() const
 {
-	// o—ÍƒpƒPƒbƒg”‚ğ•Ô‚·
+	// å‡ºåŠ›ãƒ‘ã‚±ãƒƒãƒˆæ•°ã‚’è¿”ã™
 	return m_OutputPacketCount;
 }
 
@@ -187,7 +187,7 @@ int CTsSelector::GetServiceIndexByID(WORD ServiceID) const
 {
 	int Index;
 
-	// ƒvƒƒOƒ‰ƒ€ID‚©‚çƒT[ƒrƒXƒCƒ“ƒfƒbƒNƒX‚ğŒŸõ‚·‚é
+	// ãƒ—ãƒ­ã‚°ãƒ©ãƒ IDã‹ã‚‰ã‚µãƒ¼ãƒ“ã‚¹ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹ã‚’æ¤œç´¢ã™ã‚‹
 	for (Index = (int)m_PmtPIDList.size() - 1 ; Index >= 0  ; Index--) {
 		if (m_PmtPIDList[Index].ServiceID == ServiceID)
 			break;
@@ -199,7 +199,7 @@ int CTsSelector::GetServiceIndexByID(WORD ServiceID) const
 
 void CALLBACK CTsSelector::OnPatUpdated(const WORD wPID, CTsPidMapTarget *pMapTarget, CTsPidMapManager *pMapManager, const PVOID pParam)
 {
-	// PAT‚ªXV‚³‚ê‚½
+	// PATãŒæ›´æ–°ã•ã‚ŒãŸ
 	CTsSelector *pThis = static_cast<CTsSelector *>(pParam);
 	CPatTable *pPatTable = static_cast<CPatTable *>(pMapTarget);
 
@@ -208,7 +208,7 @@ void CALLBACK CTsSelector::OnPatUpdated(const WORD wPID, CTsPidMapTarget *pMapTa
 	pThis->m_PmtPIDList.clear();
 	pThis->m_TargetPmtPID = 0;
 
-	// PMTƒe[ƒuƒ‹PIDƒ}ƒbƒv’Ç‰Á
+	// PMTãƒ†ãƒ¼ãƒ–ãƒ«PIDãƒãƒƒãƒ—è¿½åŠ 
 	for (WORD i = 0 ; i < pPatTable->GetProgramNum() ; i++) {
 		if (pThis->m_TargetServiceID == 0
 				|| pPatTable->GetProgramID(i) == pThis->m_TargetServiceID) {
@@ -231,7 +231,7 @@ void CALLBACK CTsSelector::OnPatUpdated(const WORD wPID, CTsPidMapTarget *pMapTa
 
 void CALLBACK CTsSelector::OnPmtUpdated(const WORD wPID, CTsPidMapTarget *pMapTarget, CTsPidMapManager *pMapManager, const PVOID pParam)
 {
-	// PMT‚ªXV‚³‚ê‚½
+	// PMTãŒæ›´æ–°ã•ã‚ŒãŸ
 	CTsSelector *pThis = static_cast<CTsSelector *>(pParam);
 	CPmtTable *pPmtTable = static_cast<CPmtTable *>(pMapTarget);
 
@@ -240,7 +240,7 @@ void CALLBACK CTsSelector::OnPmtUpdated(const WORD wPID, CTsPidMapTarget *pMapTa
 		return;
 	TAG_PMTPIDINFO &PIDInfo = pThis->m_PmtPIDList[ServiceIndex];
 
-	// PCR‚ÌPID’Ç‰Á
+	// PCRã®PIDè¿½åŠ 
 	WORD PcrPID = pPmtTable->GetPcrPID();
 	if (PcrPID < 0x1FFF) {
 		PIDInfo.PcrPID = PcrPID;
@@ -248,7 +248,7 @@ void CALLBACK CTsSelector::OnPmtUpdated(const WORD wPID, CTsPidMapTarget *pMapTa
 		PIDInfo.PcrPID = 0xFFFF;
 	}
 
-	// ECM‚ÌPID’Ç‰Á
+	// ECMã®PIDè¿½åŠ 
 	PIDInfo.EcmPIDs.clear();
 	const CDescBlock *pDescBlock = pPmtTable->GetTableDesc();
 	for (WORD i = 0 ; i < pDescBlock->GetDescNum() ; i++) {
@@ -262,7 +262,7 @@ void CALLBACK CTsSelector::OnPmtUpdated(const WORD wPID, CTsPidMapTarget *pMapTa
 		}
 	}
 
-	// ES‚ÌPID’Ç‰Á
+	// ESã®PIDè¿½åŠ 
 	PIDInfo.EsPIDs.clear();
 	static const BYTE StreamTypeList [] = {
 		STREAM_TYPE_MPEG1_VIDEO,
@@ -304,11 +304,11 @@ void CALLBACK CTsSelector::OnPmtUpdated(const WORD wPID, CTsPidMapTarget *pMapTa
 
 void CALLBACK CTsSelector::OnCatUpdated(const WORD wPID, CTsPidMapTarget *pMapTarget, CTsPidMapManager *pMapManager, const PVOID pParam)
 {
-	// CAT‚ªXV‚³‚ê‚½
+	// CATãŒæ›´æ–°ã•ã‚ŒãŸ
 	CTsSelector *pThis = static_cast<CTsSelector *>(pParam);
 	CCatTable *pCatTable = static_cast<CCatTable *>(pMapTarget);
 
-	// EMM‚ÌPID’Ç‰Á
+	// EMMã®PIDè¿½åŠ 
 	pThis->m_EmmPIDList.clear();
 	const CDescBlock *pDescBlock = pCatTable->GetCatDesc();
 	for (WORD i = 0 ; i < pDescBlock->GetDescNum() ; i++) {
@@ -345,7 +345,7 @@ bool CTsSelector::MakePat(const CTsPacket *pSrcPacket, CTsPacket *pDstPacket)
 	::CopyMemory(pDstData, pSrcData, HeaderSize);
 	pDstData += HeaderSize;
 
-	if (pPayloadData[0] != 0)	// table_id •s³
+	if (pPayloadData[0] != 0)	// table_id ä¸æ­£
 		return false;
 
 	WORD SectionLength = ((WORD)(pPayloadData[1]&0x0F)<<8) | pPayloadData[2];

@@ -8,7 +8,7 @@
 
 
 /*
-	ロゴデータ取得クラス
+	繝ｭ繧ｴ繝�繝ｼ繧ｿ蜿門ｾ励け繝ｩ繧ｹ
 */
 class CLogoDownloader : public CMediaDecoder
 					  , public CPsiStreamTable::ISectionHandler

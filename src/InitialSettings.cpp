@@ -21,7 +21,7 @@ CInitialSettings::CInitialSettings(const CDriverManager *pDriverManager)
 {
 	m_szDriverFileName[0]='\0';
 
-	// VistaˆÈ~‚Å‚ÍƒrƒfƒIƒŒƒ“ƒ_ƒ‰‚ÌƒfƒtƒHƒ‹ƒg‚ğEVR‚É‚·‚é
+	// Vistaä»¥é™ã§ã¯ãƒ“ãƒ‡ã‚ªãƒ¬ãƒ³ãƒ€ãƒ©ã®ãƒ‡ãƒ•ã‚©ãƒ«ãƒˆã‚’EVRã«ã™ã‚‹
 	m_VideoRenderer=
 #ifdef WIN_XP_SUPPORT
 		!Util::OS::IsWindowsVistaOrLater() ? CVideoRenderer::RENDERER_DEFAULT :
@@ -104,7 +104,7 @@ INT_PTR CInitialSettings::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPara
 					CDriverManager::TunerSpec Spec;
 					int Index;
 
-					// ƒlƒbƒgƒ[ƒN‚âƒtƒ@ƒCƒ‹Ä¶—p‚Ì“Áê‚ÈBonDriver‚ÍŒã‚É‚È‚é‚æ‚¤‚É‚·‚é
+					// ãƒãƒƒãƒˆãƒ¯ãƒ¼ã‚¯ã‚„ãƒ•ã‚¡ã‚¤ãƒ«å†ç”Ÿç”¨ã®ç‰¹æ®ŠãªBonDriverã¯å¾Œã«ãªã‚‹ã‚ˆã†ã«ã™ã‚‹
 					if (m_pDriverManager->GetTunerSpec(pDriverInfo->GetFileName(),&Spec)
 							&& (Spec.Flags &
 								(CDriverManager::TunerSpec::FLAG_NETWORK |
@@ -123,7 +123,7 @@ INT_PTR CInitialSettings::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPara
 				}
 			}
 
-			// ‰f‘œƒfƒR[ƒ_
+			// æ˜ åƒãƒ‡ã‚³ãƒ¼ãƒ€
 			InitDecoderList(IDC_INITIALSETTINGS_MPEG2DECODER,
 							MEDIASUBTYPE_MPEG2_VIDEO,
 							m_Mpeg2DecoderName.c_str());
@@ -148,7 +148,7 @@ INT_PTR CInitialSettings::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPara
 				DlgComboBox_SetCurSel(hDlg,IDC_INITIALSETTINGS_VIDEORENDERER,Sel);
 			}
 
-			// ˜^‰æƒtƒHƒ‹ƒ_
+			// éŒ²ç”»ãƒ•ã‚©ãƒ«ãƒ€
 			::SetDlgItemText(hDlg,IDC_INITIALSETTINGS_RECORDFOLDER,m_RecordFolder.c_str());
 			::SendDlgItemMessage(hDlg,IDC_INITIALSETTINGS_RECORDFOLDER,EM_LIMITTEXT,MAX_PATH-1,0);
 
@@ -175,11 +175,11 @@ INT_PTR CInitialSettings::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPara
 				ofn.hwndOwner=hDlg;
 				ofn.lpstrFilter=
 					TEXT("BonDriver(BonDriver*.dll)\0BonDriver*.dll\0")
-					TEXT("‚·‚×‚Ä‚Ìƒtƒ@ƒCƒ‹\0*.*\0");
+					TEXT("ã™ã¹ã¦ã®ãƒ•ã‚¡ã‚¤ãƒ«\0*.*\0");
 				ofn.lpstrFile=szFileName;
 				ofn.nMaxFile=lengthof(szFileName);
 				ofn.lpstrInitialDir=szInitDir;
-				ofn.lpstrTitle=TEXT("BonDriver‚Ì‘I‘ğ");
+				ofn.lpstrTitle=TEXT("BonDriverã®é¸æŠ");
 				ofn.Flags=OFN_HIDEREADONLY | OFN_FILEMUSTEXIST | OFN_EXPLORER;
 				if (FileOpenDialog(&ofn)) {
 					::SetDlgItemText(hDlg,IDC_INITIALSETTINGS_DRIVER,szFileName);
@@ -193,7 +193,7 @@ INT_PTR CInitialSettings::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPara
 
 				::GetDlgItemText(hDlg,IDC_INITIALSETTINGS_RECORDFOLDER,szFolder,lengthof(szFolder));
 				if (BrowseFolderDialog(hDlg,szFolder,
-										TEXT("˜^‰æƒtƒ@ƒCƒ‹‚Ì•Û‘¶æƒtƒHƒ‹ƒ_:")))
+										TEXT("éŒ²ç”»ãƒ•ã‚¡ã‚¤ãƒ«ã®ä¿å­˜å…ˆãƒ•ã‚©ãƒ«ãƒ€:")))
 					::SetDlgItemText(hDlg,IDC_INITIALSETTINGS_RECORDFOLDER,szFolder);
 			}
 			return TRUE;
@@ -226,10 +226,10 @@ INT_PTR CInitialSettings::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPara
 						::lstrcat(szCodecs,TEXT("H.265(HEVC)"));
 					}
 					StdUtil::snprintf(szMessage,lengthof(szMessage),
-						TEXT("%s ‚ÌƒfƒR[ƒ_‚ªŒ©•t‚©‚ç‚È‚¢‚½‚ßA%s ‚Ì‰f‘œ‚ÍÄ¶‚Å‚«‚Ü‚¹‚ñB\n")
-						TEXT("‰f‘œ‚ğÄ¶‚·‚é‚É‚ÍƒfƒR[ƒ_‚ğƒCƒ“ƒXƒg[ƒ‹‚µ‚Ä‚­‚¾‚³‚¢B"),
+						TEXT("%s ã®ãƒ‡ã‚³ãƒ¼ãƒ€ãŒè¦‹ä»˜ã‹ã‚‰ãªã„ãŸã‚ã€%s ã®æ˜ åƒã¯å†ç”Ÿã§ãã¾ã›ã‚“ã€‚\n")
+						TEXT("æ˜ åƒã‚’å†ç”Ÿã™ã‚‹ã«ã¯ãƒ‡ã‚³ãƒ¼ãƒ€ã‚’ã‚¤ãƒ³ã‚¹ãƒˆãƒ¼ãƒ«ã—ã¦ãã ã•ã„ã€‚"),
 						szCodecs,szCodecs);
-					::MessageBox(hDlg,szMessage,TEXT("‚¨’m‚ç‚¹"),MB_OK | MB_ICONINFORMATION);
+					::MessageBox(hDlg,szMessage,TEXT("ãŠçŸ¥ã‚‰ã›"),MB_OK | MB_ICONINFORMATION);
 				}
 
 				TVTest::String Mpeg2DecoderName,H264DecoderName,H265DecoderName;
@@ -244,17 +244,17 @@ INT_PTR CInitialSettings::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPara
 					DlgComboBox_GetItemData(hDlg,IDC_INITIALSETTINGS_VIDEORENDERER,
 						DlgComboBox_GetCurSel(hDlg,IDC_INITIALSETTINGS_VIDEORENDERER));
 
-				// ‘Š«‚Ìˆ«‚¢‘g‚İ‡‚í‚¹‚É‘Î‚µ‚Ä’ˆÓ‚ğ•\¦‚·‚é
+				// ç›¸æ€§ã®æ‚ªã„çµ„ã¿åˆã‚ã›ã«å¯¾ã—ã¦æ³¨æ„ã‚’è¡¨ç¤ºã™ã‚‹
 				static const struct {
 					LPCTSTR pszDecoder;
 					CVideoRenderer::RendererType Renderer;
 					LPCTSTR pszMessage;
 				} ConflictList[] = {
 					{TEXT("CyberLink"),	CVideoRenderer::RENDERER_DEFAULT,
-						TEXT("CyberLink ‚ÌƒfƒR[ƒ_‚ÆƒfƒtƒHƒ‹ƒgƒŒƒ“ƒ_ƒ‰‚Ì‘g‚İ‡‚í‚¹‚ÅA\n")
-						TEXT("ˆê•”‚Ì”Ô‘g‚Å”ä—¦‚ª‚¨‚©‚µ‚­‚È‚éŒ»Û‚ªo‚é–‚ª‚ ‚é‚½‚ßA\n")
-						TEXT("ƒŒƒ“ƒ_ƒ‰‚ğƒfƒtƒHƒ‹ƒgˆÈŠO‚É‚·‚é‚±‚Æ‚ğ‚¨§‚ß‚µ‚Ü‚·B\n")
-						TEXT("Œ»İ‚Ìİ’è‚ğ•ÏX‚µ‚Ü‚·‚©?")},
+						TEXT("CyberLink ã®ãƒ‡ã‚³ãƒ¼ãƒ€ã¨ãƒ‡ãƒ•ã‚©ãƒ«ãƒˆãƒ¬ãƒ³ãƒ€ãƒ©ã®çµ„ã¿åˆã‚ã›ã§ã€\n")
+						TEXT("ä¸€éƒ¨ã®ç•ªçµ„ã§æ¯”ç‡ãŒãŠã‹ã—ããªã‚‹ç¾è±¡ãŒå‡ºã‚‹äº‹ãŒã‚ã‚‹ãŸã‚ã€\n")
+						TEXT("ãƒ¬ãƒ³ãƒ€ãƒ©ã‚’ãƒ‡ãƒ•ã‚©ãƒ«ãƒˆä»¥å¤–ã«ã™ã‚‹ã“ã¨ã‚’ãŠå¥¨ã‚ã—ã¾ã™ã€‚\n")
+						TEXT("ç¾åœ¨ã®è¨­å®šã‚’å¤‰æ›´ã—ã¾ã™ã‹?")},
 				};
 				for (int i=0;i<lengthof(ConflictList);i++) {
 					int Length=::lstrlen(ConflictList[i].pszDecoder);
@@ -262,7 +262,7 @@ INT_PTR CInitialSettings::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPara
 							&& (::StrCmpNI(Mpeg2DecoderName.c_str(),ConflictList[i].pszDecoder,Length)==0
 								|| ::StrCmpNI(H264DecoderName.c_str(),ConflictList[i].pszDecoder,Length)==0)
 								|| ::StrCmpNI(H265DecoderName.c_str(),ConflictList[i].pszDecoder,Length)==0) {
-						if (::MessageBox(hDlg,ConflictList[i].pszMessage,TEXT("’ˆÓ"),
+						if (::MessageBox(hDlg,ConflictList[i].pszMessage,TEXT("æ³¨æ„"),
 										 MB_YESNO | MB_ICONINFORMATION)==IDYES)
 							return TRUE;
 						break;
@@ -270,7 +270,7 @@ INT_PTR CInitialSettings::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPara
 				}
 
 				if (!CVideoRenderer::IsAvailable(VideoRenderer)) {
-					::MessageBox(hDlg,TEXT("‘I‘ğ‚³‚ê‚½ƒŒƒ“ƒ_ƒ‰‚Í‚±‚ÌŠÂ‹«‚Å—˜—p‰Â”\‚É‚È‚Á‚Ä‚¢‚Ü‚¹‚ñB"),
+					::MessageBox(hDlg,TEXT("é¸æŠã•ã‚ŒãŸãƒ¬ãƒ³ãƒ€ãƒ©ã¯ã“ã®ç’°å¢ƒã§åˆ©ç”¨å¯èƒ½ã«ãªã£ã¦ã„ã¾ã›ã‚“ã€‚"),
 								 NULL,MB_OK | MB_ICONEXCLAMATION);
 					return TRUE;
 				}
@@ -290,8 +290,8 @@ INT_PTR CInitialSettings::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPara
 				CAppMain::CreateDirectoryResult CreateDirResult=
 					GetAppClass().CreateDirectory(
 						hDlg,szRecordFolder,
-						TEXT("˜^‰æƒtƒ@ƒCƒ‹‚Ì•Û‘¶æƒtƒHƒ‹ƒ_ \"%s\" ‚ª‚ ‚è‚Ü‚¹‚ñB\n")
-						TEXT("ì¬‚µ‚Ü‚·‚©?"));
+						TEXT("éŒ²ç”»ãƒ•ã‚¡ã‚¤ãƒ«ã®ä¿å­˜å…ˆãƒ•ã‚©ãƒ«ãƒ€ \"%s\" ãŒã‚ã‚Šã¾ã›ã‚“ã€‚\n")
+						TEXT("ä½œæˆã—ã¾ã™ã‹?"));
 				if (CreateDirResult==CAppMain::CREATEDIRECTORY_RESULT_ERROR) {
 					SetDlgItemFocus(hDlg,IDC_INITIALSETTINGS_RECORDFOLDER);
 					return TRUE;
@@ -393,7 +393,7 @@ void CInitialSettings::InitDecoderList(int ID,const GUID &SubType,LPCTSTR pszDec
 		Sel=(int)DlgComboBox_FindStringExact(m_hDlg,ID,-1,pszDecoderName)+1;
 
 	DlgComboBox_InsertString(m_hDlg,ID,
-		0,!FilterList.empty() || pszDefaultDecoderName!=NULL?TEXT("©“®"):TEXT("<ƒfƒR[ƒ_‚ªŒ©•t‚©‚è‚Ü‚¹‚ñ>"));
+		0,!FilterList.empty() || pszDefaultDecoderName!=NULL?TEXT("è‡ªå‹•"):TEXT("<ãƒ‡ã‚³ãƒ¼ãƒ€ãŒè¦‹ä»˜ã‹ã‚Šã¾ã›ã‚“>"));
 	DlgComboBox_SetCurSel(m_hDlg,ID,Sel);
 }
 

@@ -13,7 +13,7 @@
 namespace DrawUtil {
 
 
-// ’PF‚Å“h‚è‚Â‚Ô‚·
+// å˜è‰²ã§å¡—ã‚Šã¤ã¶ã™
 bool Fill(HDC hdc,const RECT *pRect,COLORREF Color)
 {
 	if (hdc==NULL || pRect==NULL)
@@ -25,7 +25,7 @@ bool Fill(HDC hdc,const RECT *pRect,COLORREF Color)
 }
 
 
-// ƒOƒ‰ƒf[ƒVƒ‡ƒ“‚Å“h‚è‚Â‚Ô‚·
+// ã‚°ãƒ©ãƒ‡ãƒ¼ã‚·ãƒ§ãƒ³ã§å¡—ã‚Šã¤ã¶ã™
 bool FillGradient(HDC hdc,const RECT *pRect,COLORREF Color1,COLORREF Color2,
 				  FillDirection Direction)
 {
@@ -167,7 +167,7 @@ bool FillGradient(HDC hdc,const RECT *pRect,const RGBA &Color1,const RGBA &Color
 }
 
 
-// Œõ‘ò‚Ì‚ ‚éƒOƒ‰ƒf[ƒVƒ‡ƒ“‚Å“h‚è‚Â‚Ô‚·
+// å…‰æ²¢ã®ã‚ã‚‹ã‚°ãƒ©ãƒ‡ãƒ¼ã‚·ãƒ§ãƒ³ã§å¡—ã‚Šã¤ã¶ã™
 bool FillGlossyGradient(HDC hdc,const RECT *pRect,
 						COLORREF Color1,COLORREF Color2,
 						FillDirection Direction,int GlossRatio1,int GlossRatio2)
@@ -210,7 +210,7 @@ bool FillGlossyGradient(HDC hdc,const RECT *pRect,
 }
 
 
-// ŽÈX‚ÌƒOƒ‰ƒf[ƒVƒ‡ƒ“‚Å“h‚è‚Â‚Ô‚·
+// ç¸žã€…ã®ã‚°ãƒ©ãƒ‡ãƒ¼ã‚·ãƒ§ãƒ³ã§å¡—ã‚Šã¤ã¶ã™
 bool FillInterlacedGradient(HDC hdc,const RECT *pRect,
 							COLORREF Color1,COLORREF Color2,FillDirection Direction,
 							COLORREF LineColor,int LineOpacity)
@@ -269,7 +269,7 @@ bool FillInterlacedGradient(HDC hdc,const RECT *pRect,
 }
 
 
-// Œõ‘ò‚ð•`‰æ‚·‚é
+// å…‰æ²¢ã‚’æç”»ã™ã‚‹
 bool GlossOverlay(HDC hdc,const RECT *pRect,
 				  int Highlight1,int Highlight2,int Shadow1,int Shadow2)
 {
@@ -323,7 +323,7 @@ bool GlossOverlay(HDC hdc,const RECT *pRect,
 }
 
 
-// ’PF‚ð‡¬‚·‚é
+// å˜è‰²ã‚’åˆæˆã™ã‚‹
 bool ColorOverlay(HDC hdc,const RECT *pRect,COLORREF Color,BYTE Opacity)
 {
 	const int Width=pRect->right-pRect->left;
@@ -366,7 +366,7 @@ bool ColorOverlay(HDC hdc,const RECT *pRect,COLORREF Color,BYTE Opacity)
 }
 
 
-// Žw’è‚³‚ê‚½‹éŒ`‚ÌŽüˆÍ‚ð“h‚è‚Â‚Ô‚·
+// æŒ‡å®šã•ã‚ŒãŸçŸ©å½¢ã®å‘¨å›²ã‚’å¡—ã‚Šã¤ã¶ã™
 bool FillBorder(HDC hdc,const RECT *pBorderRect,const RECT *pEmptyRect,const RECT *pPaintRect,HBRUSH hbr)
 {
 	RECT rc;
@@ -409,7 +409,7 @@ bool FillBorder(HDC hdc,const RECT *pBorderRect,const RECT *pEmptyRect,const REC
 }
 
 
-// ƒrƒbƒgƒ}ƒbƒv‚ð•`‰æ‚·‚é
+// ãƒ“ãƒƒãƒˆãƒžãƒƒãƒ—ã‚’æç”»ã™ã‚‹
 bool DrawBitmap(HDC hdc,int DstX,int DstY,int DstWidth,int DstHeight,
 				HBITMAP hbm,const RECT *pSrcRect,BYTE Opacity)
 {
@@ -458,7 +458,7 @@ bool DrawBitmap(HDC hdc,int DstX,int DstY,int DstWidth,int DstHeight,
 }
 
 
-// ’PF‚Å‰æ‘œ‚ð•`‰æ‚·‚é
+// å˜è‰²ã§ç”»åƒã‚’æç”»ã™ã‚‹
 bool DrawMonoColorDIB(HDC hdcDst,int DstX,int DstY,
 					  HDC hdcSrc,int SrcX,int SrcY,int Width,int Height,COLORREF Color)
 {
@@ -602,7 +602,7 @@ HBITMAP ResizeBitmap(HBITMAP hbmSrc,int Width,int Height,int BitCount,int Stretc
 }
 
 
-// ƒeƒLƒXƒg‚ð•`‰æ‚·‚é
+// ãƒ†ã‚­ã‚¹ãƒˆã‚’æç”»ã™ã‚‹
 bool DrawText(HDC hdc,LPCTSTR pszText,const RECT &Rect,UINT Format,
 			  const CFont *pFont,COLORREF Color)
 {
@@ -629,7 +629,7 @@ bool DrawText(HDC hdc,LPCTSTR pszText,const RECT &Rect,UINT Format,
 }
 
 
-// ƒVƒXƒeƒ€ƒtƒHƒ“ƒg‚ðŽæ“¾‚·‚é
+// ã‚·ã‚¹ãƒ†ãƒ ãƒ•ã‚©ãƒ³ãƒˆã‚’å–å¾—ã™ã‚‹
 bool GetSystemFont(FontType Type,LOGFONT *pLogFont)
 {
 	if (pLogFont==NULL)
@@ -656,7 +656,7 @@ bool GetSystemFont(FontType Type,LOGFONT *pLogFont)
 }
 
 
-// UI‚ÉŽg—p‚·‚éƒfƒtƒHƒ‹ƒg‚ÌƒtƒHƒ“ƒg‚ðŽæ“¾‚·‚é
+// UIã«ä½¿ç”¨ã™ã‚‹ãƒ‡ãƒ•ã‚©ãƒ«ãƒˆã®ãƒ•ã‚©ãƒ³ãƒˆã‚’å–å¾—ã™ã‚‹
 bool GetDefaultUIFont(LOGFONT *pFont)
 {
 	if (pFont==NULL)
@@ -666,8 +666,8 @@ bool GetDefaultUIFont(LOGFONT *pFont)
 
 	LOGFONT MessageFont;
 	if (GetSystemFont(FONT_MESSAGE,&MessageFont)) {
-		// ƒƒCƒŠƒI‚¾‚ÆsŠÔ‚ª‹ó‚«‚·‚¬‚é‚Ì‚ªc
-		if (::lstrcmp(MessageFont.lfFaceName,TEXT("ƒƒCƒŠƒI"))==0
+		// ãƒ¡ã‚¤ãƒªã‚ªã ã¨è¡Œé–“ãŒç©ºãã™ãŽã‚‹ã®ãŒâ€¦
+		if (::lstrcmp(MessageFont.lfFaceName,TEXT("ãƒ¡ã‚¤ãƒªã‚ª"))==0
 				|| ::lstrcmpi(MessageFont.lfFaceName,TEXT("Meiryo"))==0) {
 			pFont->lfHeight=-abs(MessageFont.lfHeight);
 			pFont->lfWeight=FW_NORMAL;
@@ -1431,7 +1431,7 @@ bool CMonoColorIconList::Draw(
 	if (hdc==NULL || DstWidth<=0 || DstHeight<=0)
 		return false;
 
-	// GdiAlphaBlend() ‚ÍƒŠƒTƒCƒY‚ª‰˜‚¢‚½‚ßAGDI+ ‚ðŽg‚¤
+	// GdiAlphaBlend() ã¯ãƒªã‚µã‚¤ã‚ºãŒæ±šã„ãŸã‚ã€GDI+ ã‚’ä½¿ã†
 	if (DstWidth!=m_IconWidth || DstHeight!=m_IconHeight) {
 		TVTest::Graphics::CCanvas Canvas(hdc);
 
