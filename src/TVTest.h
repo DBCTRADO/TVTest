@@ -5,13 +5,13 @@
 #define APP_NAME_A	"TVTest"
 
 #define VERSION_MAJOR		0
-#define VERSION_MINOR		9
+#define VERSION_MINOR		10
 #define VERSION_BUILD		0
 #define VERSION_REVISION	0
 
-#define VERSION_TEXT_A	"0.9.0"
+#define VERSION_TEXT_A	"0.10.0"
 
-//#define VERSION_STATUS_A	"dev"
+#define VERSION_STATUS_A	"dev"
 
 #define LTEXT_(text)	L##text
 #define LTEXT(text)		LTEXT_(text)
