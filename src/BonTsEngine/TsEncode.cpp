@@ -506,12 +506,12 @@ inline const int CAribString::PutAlphanumericChar(TCHAR *lpszDst, const DWORD dw
 	static const LPCTSTR acAlphanumericTable =
 		TEXT("　　　　　　　　　　　　　　　　")
 		TEXT("　　　　　　　　　　　　　　　　")
-		TEXT("　！”＃＄％＆’（）＊＋，−．／")
+		TEXT("　！”＃＄％＆’（）＊＋，－．／")
 		TEXT("０１２３４５６７８９：；＜＝＞？")
 		TEXT("＠ＡＢＣＤＥＦＧＨＩＪＫＬＭＮＯ")
-		TEXT("ＰＱＲＳＴＵＶＷＸＹＺ［¥］＾＿")
+		TEXT("ＰＱＲＳＴＵＶＷＸＹＺ［￥］＾＿")
 		TEXT("｀ａｂｃｄｅｆｇｈｉｊｋｌｍｎｏ")
-		TEXT("ｐｑｒｓｔｕｖｗｘｙｚ｛｜｝‾　");
+		TEXT("ｐｑｒｓｔｕｖｗｘｙｚ｛｜｝￣　");
 	static const LPCWSTR acAlphanumericHalfWidthTable =
 		L"                "
 		L"                "
