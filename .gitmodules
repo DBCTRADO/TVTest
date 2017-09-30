@@ -1,0 +1,3 @@
+[submodule "src/LibISDB"]
+	path = src/LibISDB
+	url = git@github.com:DBCTRADO/LibISDB.git
