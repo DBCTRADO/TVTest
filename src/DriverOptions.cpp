@@ -562,16 +562,16 @@ void CDriverOptions::InitDlgItem(int Driver)
 		::SetDlgItemInt(m_hDlg,IDC_DRIVEROPTIONS_FIRSTCHANNELSETDELAY,
 						pSettings->GetFirstChannelSetDelay(),FALSE);
 		DlgUpDown_SetRange(m_hDlg,IDC_DRIVEROPTIONS_FIRSTCHANNELSETDELAY_SPIN,
-						   0,CBonSrcDecoder::FIRST_CHANNEL_SET_DELAY_MAX);
+						   0,LibISDB::BonDriverSourceFilter::FIRST_CHANNEL_SET_DELAY_MAX);
 		TCHAR szText[64];
-		::wsprintf(szText,TEXT("ms (0～%u)"),CBonSrcDecoder::FIRST_CHANNEL_SET_DELAY_MAX);
+		::wsprintf(szText,TEXT("ms (0～%u)"),LibISDB::BonDriverSourceFilter::FIRST_CHANNEL_SET_DELAY_MAX);
 		::SetDlgItemText(m_hDlg,IDC_DRIVEROPTIONS_FIRSTCHANNELSETDELAY_UNIT,szText);
 
 		::SetDlgItemInt(m_hDlg,IDC_DRIVEROPTIONS_MINCHANNELCHANGEINTERVAL,
 						pSettings->GetMinChannelChangeInterval(),FALSE);
 		DlgUpDown_SetRange(m_hDlg,IDC_DRIVEROPTIONS_MINCHANNELCHANGEINTERVAL_SPIN,
-						   0,CBonSrcDecoder::CHANNEL_CHANGE_INTERVAL_MAX);
-		::wsprintf(szText,TEXT("ms (0～%u)"),CBonSrcDecoder::CHANNEL_CHANGE_INTERVAL_MAX);
+						   0,LibISDB::BonDriverSourceFilter::CHANNEL_CHANGE_INTERVAL_MAX);
+		::wsprintf(szText,TEXT("ms (0～%u)"),LibISDB::BonDriverSourceFilter::CHANNEL_CHANGE_INTERVAL_MAX);
 		::SetDlgItemText(m_hDlg,IDC_DRIVEROPTIONS_MINCHANNELCHANGEINTERVAL_UNIT,szText);
 	} else {
 		::SetDlgItemText(m_hDlg,IDC_DRIVEROPTIONS_FIRSTCHANNELSETDELAY,TEXT(""));
@@ -820,7 +820,7 @@ INT_PTR CDriverOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 
 				if (pSettings!=NULL) {
 					DWORD Delay=::GetDlgItemInt(hDlg,IDC_DRIVEROPTIONS_FIRSTCHANNELSETDELAY,NULL,FALSE);
-					if (Delay<=CBonSrcDecoder::FIRST_CHANNEL_SET_DELAY_MAX)
+					if (Delay<=LibISDB::BonDriverSourceFilter::FIRST_CHANNEL_SET_DELAY_MAX)
 						pSettings->SetFirstChannelSetDelay(Delay);
 				}
 			}
@@ -832,7 +832,7 @@ INT_PTR CDriverOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 
 				if (pSettings!=NULL) {
 					DWORD Interval=::GetDlgItemInt(hDlg,IDC_DRIVEROPTIONS_MINCHANNELCHANGEINTERVAL,NULL,FALSE);
-					if (Interval<=CBonSrcDecoder::CHANNEL_CHANGE_INTERVAL_MAX)
+					if (Interval<=LibISDB::BonDriverSourceFilter::CHANNEL_CHANGE_INTERVAL_MAX)
 						pSettings->SetMinChannelChangeInterval(Interval);
 				}
 			}

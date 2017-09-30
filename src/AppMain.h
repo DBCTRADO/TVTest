@@ -78,35 +78,29 @@ public:
 };
 
 class CEpgLoadEventHandler
-	: public CEpgOptions::CEpgFileLoadEventHandler
+	: public TVTest::CEpgDataStore::CEventHandler
 	, public CEpgOptions::CEDCBDataLoadEventHandler
 {
-// CEpgFileLoadEventHandler
-	void OnBeginLoad() override;
-	void OnEndLoad(bool fSuccess) override;
+// CEpgDataStore::CEventHandler
+	void OnBeginLoading() override;
+	void OnEndLoading(bool fSuccess) override;
 
 // CEDCBDataLoadEventHandler
 	void OnStart() override;
-	void OnEnd(bool fSuccess,CEventManager *pEventManager) override;
+	void OnEnd(bool fSuccess,LibISDB::EPGDatabase *pEPGDatabase) override;
 };
 
 class CServiceUpdateInfo
 {
 public:
-	struct ServiceInfo {
-		WORD ServiceID;
-		TCHAR szServiceName[256];
-		WORD LogoID;
-	};
-	ServiceInfo *m_pServiceList;
-	int m_NumServices;
+	LibISDB::AnalyzerFilter::ServiceList m_ServiceList;
 	int m_CurService;
 	WORD m_NetworkID;
 	WORD m_TransportStreamID;
 	bool m_fStreamChanged;
 	bool m_fServiceListEmpty;
-	CServiceUpdateInfo(CDtvEngine *pEngine,CTsAnalyzer *pTsAnalyzer);
-	~CServiceUpdateInfo();
+
+	CServiceUpdateInfo(LibISDB::TSEngine *pEngine,LibISDB::AnalyzerFilter *pAnalyzer);
 };
 
 
@@ -132,7 +126,7 @@ public:
 	CCommandList CommandList;
 	CCommandLineOptions CmdLineOptions;
 	CPluginManager PluginManager;
-	CEpgProgramList EpgProgramList;
+	LibISDB::EPGDatabase EPGDatabase;
 	CMainWindow MainWindow;
 	CStatusView StatusView;
 	CSideBar SideBar;
@@ -248,31 +242,34 @@ public:
 	static HICON GetAppIconSmall();
 
 private:
-	class CDtvEngineEventHandler : public CDtvEngine::CEventHandler
+	class CEngineEventListener : public CCoreEngine::EventListener
 	{
 	public:
-		CDtvEngineEventHandler(CAppMain &App);
+		CEngineEventListener(CAppMain &App);
 
 	private:
 		CAppMain &m_App;
 
-	// CDtvEngine::CEventHandler
-		void OnServiceListUpdated(CTsAnalyzer *pTsAnalyzer,bool bStreamChanged) override;
-		void OnServiceInfoUpdated(CTsAnalyzer *pTsAnalyzer) override;
-		void OnServiceChanged(WORD ServiceID) override;
-		void OnFileWriteError(CTsRecorder *pTsRecorder) override;
-		void OnVideoStreamTypeChanged(BYTE VideoStreamType) override;
-		void OnVideoSizeChanged(CMediaViewer *pMediaViewer) override;
-		void OnEventChanged(CTsAnalyzer *pTsAnalyzer,WORD EventID) override;
-		void OnEventUpdated(CTsAnalyzer *pTsAnalyzer) override;
-		void OnTotUpdated(CTsAnalyzer *pTsAnalyzer) override;
-		void OnFilterGraphInitialize(CMediaViewer *pMediaViewer,IGraphBuilder *pGraphBuilder) override;
-		void OnFilterGraphInitialized(CMediaViewer *pMediaViewer,IGraphBuilder *pGraphBuilder) override;
-		void OnFilterGraphFinalize(CMediaViewer *pMediaViewer,IGraphBuilder *pGraphBuilder) override;
-		void OnFilterGraphFinalized(CMediaViewer *pMediaViewer,IGraphBuilder *pGraphBuilder) override;
-		void OnSpdifPassthroughError(HRESULT hr) override;
-	// CDtvEngineEventHandler
-		void OnServiceUpdated(CTsAnalyzer *pTsAnalyzer,bool fListUpdated,bool fStreamChanged);
+	// CCoreEngine::EventListener
+		void OnServiceChanged(uint16_t ServiceID) override;
+		void OnPATUpdated(LibISDB::AnalyzerFilter *pAnalyzer, bool StreamChanged) override;
+		void OnPMTUpdated(LibISDB::AnalyzerFilter *pAnalyzer, uint16_t ServiceID) override;
+		void OnSDTUpdated(LibISDB::AnalyzerFilter *pAnalyzer) override;
+		void OnWriteError(LibISDB::RecorderFilter *pRecorder) override;
+		void OnVideoStreamTypeChanged(uint8_t VideoStreamType) override;
+		void OnVideoSizeChanged(LibISDB::ViewerFilter *pViewer) override;
+		void OnEventChanged(LibISDB::AnalyzerFilter *pAnalyzer, uint16_t EventID) override;
+		void OnEventUpdated(LibISDB::AnalyzerFilter *pAnalyzer) override;
+		void OnTOTUpdated(LibISDB::AnalyzerFilter *pAnalyzer) override;
+		void OnFilterGraphInitialize(LibISDB::ViewerFilter *pViewer, IGraphBuilder *pGraphBuilder) override;
+		void OnFilterGraphInitialized(LibISDB::ViewerFilter *pViewer, IGraphBuilder *pGraphBuilder) override;
+		void OnFilterGraphFinalize(LibISDB::ViewerFilter *pViewer, IGraphBuilder *pGraphBuilder) override;
+		void OnFilterGraphFinalized(LibISDB::ViewerFilter *pViewer, IGraphBuilder *pGraphBuilder) override;
+		void OnSPDIFPassthroughError(LibISDB::ViewerFilter *pViewer, HRESULT hr) override;
+
+	// CEngineEventListener
+		void OnServiceUpdated(LibISDB::AnalyzerFilter *pAnalyzer,bool fListUpdated,bool fStreamChanged);
+		void OnServiceInfoUpdated(LibISDB::AnalyzerFilter *pAnalyzer);
 	};
 
 	class CStreamInfoEventHandler : public CStreamInfo::CEventHandler
@@ -313,7 +310,7 @@ private:
 	CSettings m_Settings;
 	bool m_fFirstExecute;
 	bool m_fInitialSettings;
-	CDtvEngineEventHandler m_DtvEngineHandler;
+	CEngineEventListener m_EngineEventListener;
 	CStreamInfoEventHandler m_StreamInfoEventHandler;
 	CCaptureWindowEventHandler m_CaptureWindowEventHandler;
 	COptionDialog m_OptionDialog;

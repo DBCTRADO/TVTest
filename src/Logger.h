@@ -81,7 +81,7 @@ private:
 	std::vector<CLogItem*> m_LogList;
 	DWORD m_SerialNumber;
 	bool m_fOutputToFile;
-	mutable CCriticalLock m_Lock;
+	mutable TVTest::MutexLock m_Lock;
 };
 
 

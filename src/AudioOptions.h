@@ -3,7 +3,7 @@
 
 
 #include "Options.h"
-#include "BonTsEngine/MediaViewer.h"
+#include "LibISDB/LibISDB/Windows/Viewer/ViewerFilter.hpp"
 #include <vector>
 
 
@@ -37,8 +37,8 @@ public:
 	bool ApplyMediaViewerOptions();
 	LPCTSTR GetAudioDeviceName() const { return TVTest::StringUtility::GetCStrOrNull(m_AudioDeviceName); }
 	LPCTSTR GetAudioFilterName() const { return TVTest::StringUtility::GetCStrOrNull(m_AudioFilterName); }
-	const CAudioDecFilter::SpdifOptions &GetSpdifOptions() const { return m_SpdifOptions; }
-	bool SetSpdifOptions(const CAudioDecFilter::SpdifOptions &Options);
+	const LibISDB::DirectShow::AudioDecoderFilter::SPDIFOptions &GetSpdifOptions() const { return m_SPDIFOptions; }
+	bool SetSpdifOptions(const LibISDB::DirectShow::AudioDecoderFilter::SPDIFOptions &Options);
 	bool GetDownMixSurround() const { return m_fDownMixSurround; }
 	bool GetEnableLanguagePriority() const { return m_fEnableLanguagePriority; }
 	const AudioLanguageList &GetLanguagePriority() const { return m_LanguagePriority; }
@@ -55,23 +55,23 @@ private:
 		CAudioOptions *m_pOptions;
 
 		INT_PTR DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
-		void SetDownMixMatrix(const CAudioDecFilter::DownMixMatrix &Matrix);
+		void SetDownMixMatrix(const LibISDB::DirectShow::AudioDecoderFilter::DownMixMatrix &Matrix);
 	};
 
-	static const CAudioDecFilter::SurroundMixingMatrix m_DefaultSurroundMixingMatrix;
-	static const CAudioDecFilter::DownMixMatrix m_DefaultDownMixMatrix;
+	static const LibISDB::DirectShow::AudioDecoderFilter::SurroundMixingMatrix m_DefaultSurroundMixingMatrix;
+	static const LibISDB::DirectShow::AudioDecoderFilter::DownMixMatrix m_DefaultDownMixMatrix;
 	static const DWORD m_AudioLanguageList[];
 	static const DWORD LANGUAGE_FLAG_SUB=0x01000000;
 
 	TVTest::String m_AudioDeviceName;
 	TVTest::String m_AudioFilterName;
 
-	CAudioDecFilter::SpdifOptions m_SpdifOptions;
+	LibISDB::DirectShow::AudioDecoderFilter::SPDIFOptions m_SPDIFOptions;
 	bool m_fDownMixSurround;
 	bool m_fUseCustomSurroundMixingMatrix;
-	CAudioDecFilter::SurroundMixingMatrix m_SurroundMixingMatrix;
+	LibISDB::DirectShow::AudioDecoderFilter::SurroundMixingMatrix m_SurroundMixingMatrix;
 	bool m_fUseCustomDownMixMatrix;
-	CAudioDecFilter::DownMixMatrix m_DownMixMatrix;
+	LibISDB::DirectShow::AudioDecoderFilter::DownMixMatrix m_DownMixMatrix;
 	bool m_fEnableLanguagePriority;
 	AudioLanguageList m_LanguagePriority;
 	bool m_fResetAudioDelayOnChannelChange;

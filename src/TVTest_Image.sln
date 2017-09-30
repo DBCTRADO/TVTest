@@ -1,8 +1,7 @@
-﻿
-Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 14
-VisualStudioVersion = 14.0.25420.1
-MinimumVisualStudioVersion = 10.0.40219.1
+﻿Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.26730.3
+MinimumVisualStudioVersion = 15.0.26730.3
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TVTest_Image", "TVTest_Image\TVTest_Image.vcxproj", "{77F6A763-E1AD-4A5F-BFD1-A99756FE412C}"
 	ProjectSection(ProjectDependencies) = postProject
 		{49A52336-1C89-4567-9127-7741D153D5CA} = {49A52336-1C89-4567-9127-7741D153D5CA}

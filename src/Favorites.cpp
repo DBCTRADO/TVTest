@@ -666,7 +666,7 @@ namespace TVTest
 		const CFavoriteChannel *m_pChannel;
 		struct Event {
 			bool fValid;
-			CEventInfoData EventInfo;
+			LibISDB::EventInfo EventInfo;
 			Event() : fValid(false) {}
 		};
 		Event m_EventList[2];
@@ -675,9 +675,9 @@ namespace TVTest
 
 	public:
 		CChannelItem(const CFavoriteChannel *pChannel);
-		const CEventInfoData *GetEventInfo(CEpgProgramList *pProgramList,
-										   int Index,const SYSTEMTIME *pCurTime=NULL);
-		const CEventInfoData *GetEventInfo(int Index) const;
+		const LibISDB::EventInfo *GetEventInfo(
+			LibISDB::EPGDatabase *pEPGDatabase,int Index,const LibISDB::DateTime *pCurTime=NULL);
+		const LibISDB::EventInfo *GetEventInfo(int Index) const;
 		LPCTSTR GetName() const { return m_pChannel->GetName(); }
 		const CChannelInfo &GetChannelInfo() const { return m_pChannel->GetChannelInfo(); }
 		int GetNameWidth() const { return m_NameWidth; }
@@ -693,8 +693,8 @@ namespace TVTest
 	{
 	}
 
-	const CEventInfoData *CFavoritesMenu::CChannelItem::GetEventInfo(
-		CEpgProgramList *pProgramList,int Index,const SYSTEMTIME *pCurTime)
+	const LibISDB::EventInfo *CFavoritesMenu::CChannelItem::GetEventInfo(
+		LibISDB::EPGDatabase *pEPGDatabase,int Index,const LibISDB::DateTime *pCurTime)
 	{
 		if (Index<0 || Index>=lengthof(m_EventList)
 				|| (Index>0 && !m_EventList[Index-1].fValid)
@@ -702,22 +702,22 @@ namespace TVTest
 			return NULL;
 
 		if (!m_EventList[Index].fValid) {
-			SYSTEMTIME st;
+			LibISDB::DateTime Time;
 
 			if (Index==0) {
 				if (pCurTime!=NULL)
-					st=*pCurTime;
+					Time=*pCurTime;
 				else
-					GetCurrentEpgTime(&st);
+					LibISDB::GetCurrentEPGTime(&Time);
 			} else {
-				if (!m_EventList[Index-1].EventInfo.GetEndTime(&st))
+				if (!m_EventList[Index-1].EventInfo.GetEndTime(&Time))
 					return NULL;
 			}
 			const CChannelInfo &ChannelInfo=GetChannelInfo();
-			if (!pProgramList->GetEventInfo(ChannelInfo.GetNetworkID(),
+			if (!pEPGDatabase->GetEventInfo(ChannelInfo.GetNetworkID(),
 											ChannelInfo.GetTransportStreamID(),
 											ChannelInfo.GetServiceID(),
-											&st,&m_EventList[Index].EventInfo))
+											Time,&m_EventList[Index].EventInfo))
 				return NULL;
 			m_EventList[Index].fValid=true;
 		}
@@ -725,7 +725,7 @@ namespace TVTest
 		return &m_EventList[Index].EventInfo;
 	}
 
-	const CEventInfoData *CFavoritesMenu::CChannelItem::GetEventInfo(int Index) const
+	const LibISDB::EventInfo *CFavoritesMenu::CChannelItem::GetEventInfo(int Index) const
 	{
 		if (Index<0 || Index>=lengthof(m_EventList) || !m_EventList[Index].fValid)
 			return NULL;
@@ -866,8 +866,6 @@ namespace TVTest
 
 	void CFavoritesMenu::SetFolderMenu(HMENU hmenu,int MenuPos,HDC hdc,UINT *pCommand,const CFavoriteFolder *pFolder)
 	{
-		CEpgProgramList &ProgramList=GetAppClass().EpgProgramList;
-
 		int ChannelNameWidth=0;
 		RECT rc;
 
@@ -940,7 +938,8 @@ namespace TVTest
 						MenuPos++;
 
 						if ((m_Flags&FLAG_SHOWEVENTINFO)!=0) {
-							const CEventInfoData *pEventInfo=pMenuItem->GetEventInfo(&ProgramList,0,&m_BaseTime);
+							const LibISDB::EventInfo *pEventInfo=
+								pMenuItem->GetEventInfo(&GetAppClass().EPGDatabase,0,&m_BaseTime);
 							if (pEventInfo!=NULL) {
 								TCHAR szText[256];
 								GetEventText(pEventInfo,szText,lengthof(szText));
@@ -1070,7 +1069,7 @@ namespace TVTest
 									   DT_LEFT | DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX);
 
 			if ((m_Flags&FLAG_SHOWEVENTINFO)!=0) {
-				const CEventInfoData *pEventInfo=pItem->GetEventInfo(0);
+				const LibISDB::EventInfo *pEventInfo=pItem->GetEventInfo(0);
 				if (pEventInfo!=NULL) {
 					GetEventText(pEventInfo,szText,lengthof(szText));
 					rc.left=rc.right+m_TextHeight;
@@ -1138,10 +1137,10 @@ namespace TVTest
 				if (pItem==NULL)
 					return false;
 
-				const CEventInfoData *pEventInfo1,*pEventInfo2;
+				const LibISDB::EventInfo *pEventInfo1,*pEventInfo2;
 				pEventInfo1=pItem->GetEventInfo(0);
 				if (pEventInfo1==NULL) {
-					pEventInfo1=pItem->GetEventInfo(&GetAppClass().EpgProgramList,0);
+					pEventInfo1=pItem->GetEventInfo(&GetAppClass().EPGDatabase,0);
 				}
 				if (pEventInfo1!=NULL) {
 					TCHAR szText[256*2+1];
@@ -1149,7 +1148,7 @@ namespace TVTest
 					POINT pt;
 
 					Length=GetEventText(pEventInfo1,szText,lengthof(szText)/2);
-					pEventInfo2=pItem->GetEventInfo(&GetAppClass().EpgProgramList,1);
+					pEventInfo2=pItem->GetEventInfo(&GetAppClass().EPGDatabase,1);
 					if (pEventInfo2!=NULL) {
 						szText[Length++]=_T('\r');
 						szText[Length++]=_T('\n');
@@ -1179,16 +1178,16 @@ namespace TVTest
 		return false;
 	}
 
-	int CFavoritesMenu::GetEventText(const CEventInfoData *pEventInfo,
+	int CFavoritesMenu::GetEventText(const LibISDB::EventInfo *pEventInfo,
 									 LPTSTR pszText,int MaxLength) const
 	{
 		TCHAR szTime[EpgUtil::MAX_EVENT_TIME_LENGTH];
 
 		EpgUtil::FormatEventTime(
-			pEventInfo,szTime,lengthof(szTime),EpgUtil::EVENT_TIME_HOUR_2DIGITS);
+			*pEventInfo,szTime,lengthof(szTime),EpgUtil::EVENT_TIME_HOUR_2DIGITS);
 
 		return StdUtil::snprintf(pszText,MaxLength,TEXT("%s %s"),
-								 szTime,pEventInfo->m_EventName.c_str());
+								 szTime,pEventInfo->EventName.c_str());
 	}
 
 	void CFavoritesMenu::CreateFont(HDC hdc)
@@ -1206,10 +1205,10 @@ namespace TVTest
 			m_TextHeight=abs(lf.lfHeight);
 	}
 
-	void CFavoritesMenu::GetBaseTime(SYSTEMTIME *pTime)
+	void CFavoritesMenu::GetBaseTime(LibISDB::DateTime *pTime)
 	{
-		GetCurrentEpgTime(pTime);
-		OffsetSystemTime(pTime,2*TimeConsts::SYSTEMTIME_MINUTE);
+		LibISDB::GetCurrentEPGTime(pTime);
+		pTime->OffsetMinutes(2);
 	}
 
 

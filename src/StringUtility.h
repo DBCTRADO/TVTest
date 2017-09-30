@@ -4,6 +4,8 @@
 
 #include <string>
 #include <vector>
+#include "LibISDB/LibISDB/LibISDBBase.hpp"
+#include "LibISDB/LibISDB/Utilities/StringUtilities.hpp"
 
 
 LONGLONG StringToInt64(LPCTSTR pszString);
@@ -71,6 +73,13 @@ namespace TVTest
 
 	typedef std::wstring String;
 	typedef std::string AnsiString;
+
+	using LibISDB::StringLength;
+	using LibISDB::StringPrintf;
+	using LibISDB::StringPrintfV;
+	using LibISDB::StringCopy;
+	using LibISDB::StringCompare;
+	using LibISDB::StringCompareI;
 
 	namespace StringUtility
 	{

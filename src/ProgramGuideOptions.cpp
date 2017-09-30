@@ -442,15 +442,12 @@ bool CProgramGuideOptions::Create(HWND hwndOwner)
 }
 
 
-bool CProgramGuideOptions::GetTimeRange(SYSTEMTIME *pstFirst,SYSTEMTIME *pstLast)
+bool CProgramGuideOptions::GetTimeRange(LibISDB::DateTime *pFirst,LibISDB::DateTime *pLast)
 {
-	SYSTEMTIME st;
-
-	GetCurrentEpgTime(&st);
-	SystemTimeTruncateHour(&st);
-	*pstFirst=st;
-	OffsetSystemTime(&st,(LONGLONG)m_ViewHours*TimeConsts::SYSTEMTIME_HOUR);
-	*pstLast=st;
+	LibISDB::GetCurrentEPGTime(pFirst);
+	pFirst->TruncateToHours();
+	*pLast=*pFirst;
+	pLast->OffsetHours(m_ViewHours);
 	return true;
 }
 
@@ -926,13 +923,13 @@ INT_PTR CProgramGuideOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM l
 				Value=::GetDlgItemInt(hDlg,IDC_PROGRAMGUIDEOPTIONS_VIEWHOURS,NULL,TRUE);
 				Value=CLAMP(Value,(int)MIN_VIEW_HOURS,(int)MAX_VIEW_HOURS);
 				if (m_ViewHours!=Value) {
-					SYSTEMTIME stFirst,stLast;
+					LibISDB::DateTime First,Last;
 
 					m_ViewHours=Value;
-					m_pProgramGuide->GetTimeRange(&stFirst,NULL);
-					stLast=stFirst;
-					OffsetSystemTime(&stLast,(LONGLONG)m_ViewHours*TimeConsts::SYSTEMTIME_HOUR);
-					m_pProgramGuide->SetTimeRange(&stFirst,&stLast);
+					m_pProgramGuide->GetTimeRange(&First,NULL);
+					Last=First;
+					Last.OffsetHours(m_ViewHours);
+					m_pProgramGuide->SetTimeRange(First,Last);
 					fUpdate=true;
 				}
 				if (fUpdate)

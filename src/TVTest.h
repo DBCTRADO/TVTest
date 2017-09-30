@@ -50,7 +50,15 @@
 #ifndef RC_INVOKED
 
 
+#include "LibISDB/LibISDB/LibISDB.hpp"
 #include "Util.h"
+
+
+namespace TVTest
+{
+	using namespace LibISDB::Literals;
+	using namespace LibISDB::EnumFlags;
+}
 
 #define lengthof _countof
 

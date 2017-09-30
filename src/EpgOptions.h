@@ -3,9 +3,9 @@
 
 
 #include "CoreEngine.h"
-#include "EpgProgramList.h"
 #include "Options.h"
 #include "LogoManager.h"
+#include "EpgDataStore.h"
 #include "EpgDataLoader.h"
 #include "Style.h"
 
@@ -52,11 +52,13 @@ public:
 
 	const TVTest::Style::Font &GetEventInfoFont() const { return m_EventInfoFont; }
 
-	bool LoadEpgFile(CEpgProgramList *pEpgList);
-	bool AsyncLoadEpgFile(CEpgProgramList *pEpgList,CEpgFileLoadEventHandler *pEventHandler=NULL);
+	bool LoadEpgFile(LibISDB::EPGDatabase *pEPGDatabase);
+	bool AsyncLoadEpgFile(
+		LibISDB::EPGDatabase *pEPGDatabase,
+		TVTest::CEpgDataStore::CEventHandler *pEventHandler=NULL);
 	bool IsEpgFileLoading() const;
 	bool WaitEpgFileLoad(DWORD Timeout=INFINITE);
-	bool SaveEpgFile(CEpgProgramList *pEpgList);
+	bool SaveEpgFile(LibISDB::EPGDatabase *pEPGDatabase);
 
 	bool LoadEDCBData();
 	bool AsyncLoadEDCBData(CEDCBDataLoadEventHandler *pEventHandler=NULL);
@@ -79,7 +81,8 @@ private:
 	EpgTimeMode m_EpgTimeMode;
 	bool m_fSaveLogoFile;
 	TCHAR m_szLogoFileName[MAX_PATH];
-	HANDLE m_hLoadThread;
+
+	TVTest::CEpgDataStore m_EpgDataStore;
 	CEpgDataLoader *m_pEpgDataLoader;
 
 	TVTest::Style::Font m_EventInfoFont;

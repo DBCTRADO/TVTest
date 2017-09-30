@@ -4,23 +4,23 @@
 
 #include "TVTestInterface.h"
 #include "ComUtility.h"
-#include "BonTsEngine/MediaDecoder.h"
-#include "BonTsEngine/TsStream.h"
+#include "LibISDB/LibISDB/Filters/FilterBase.hpp"
+#include "LibISDB/LibISDB/TS/TSPacket.hpp"
 #include <vector>
 
 
 namespace TVTest
 {
 
-	MIDL_INTERFACE("9E0B0063-94EA-45ed-A736-6BC51A4AB5EF") ITsMediaData : public IUnknown
+	MIDL_INTERFACE("9E0B0063-94EA-45ed-A736-6BC51A4AB5EF") ITSDataBuffer : public IUnknown
 	{
-		STDMETHOD(SetMediaData)(CMediaData *pMediaData) = 0;
-		STDMETHOD_(CMediaData*, GetMediaData)() = 0;
+		STDMETHOD(SetDataBuffer)(LibISDB::DataBuffer *pData) = 0;
+		STDMETHOD_(LibISDB::DataBuffer*, GetDataBuffer)() = 0;
 	};
 
 	class CTSPacketInterface
 		: public Interface::ITSPacket
-		, public ITsMediaData
+		, public ITSDataBuffer
 		, protected CIUnknownImpl
 	{
 	public:
@@ -37,19 +37,19 @@ namespace TVTest
 		STDMETHODIMP SetModified(BOOL fModified) override;
 		STDMETHODIMP GetModified() override;
 
-	// ITsMediaData
-		STDMETHODIMP SetMediaData(CMediaData *pMediaData) override;
-		STDMETHODIMP_(CMediaData*) GetMediaData() override { return m_pMediaData; }
+	// ITSDataBuffer
+		STDMETHODIMP SetDataBuffer(LibISDB::DataBuffer *pData) override;
+		STDMETHODIMP_(LibISDB::DataBuffer*) GetDataBuffer() override { return m_pData; }
 
 	protected:
-		CMediaData *m_pMediaData;
+		LibISDB::DataBuffer *m_pData;
 		bool m_fModified;
 
 		~CTSPacketInterface();
 	};
 
 	class CTSProcessor
-		: public CMediaDecoder
+		: public LibISDB::SingleIOFilter
 		, protected Interface::IStreamingClient
 		, protected Interface::ITSOutput
 		, protected CIUnknownImpl
@@ -87,16 +87,19 @@ namespace TVTest
 			std::vector<ModuleDeviceInfo> DeviceList;
 		};
 
-		CTSProcessor(Interface::ITSProcessor *pTSProcessor,
-					 IEventHandler *pEventHandler = nullptr);
+		CTSProcessor(Interface::ITSProcessor *pTSProcessor);
 
-	// CMediaDecoder
+	// LibISDB::ObjectBase
+		const LibISDB::CharType * GetObjectName() const noexcept override { return LIBISDB_STR("TSProcessor"); }
+
+	// LibISDB::FilterBase
 		bool Initialize() override;
 		void Finalize() override;
 		void Reset() override;
-		const bool InputMedia(CMediaData *pMediaData, const DWORD dwInputIndex) override;
-		bool SetActiveServiceID(WORD ServiceID) override;
-		WORD GetActiveServiceID() const override;
+		void SetActiveServiceID(uint16_t ServiceID) override;
+
+	// LibISDB::FilterSink
+		bool ReceiveData(LibISDB::DataStream *pData) override;
 
 	// IUnknown
 		STDMETHODIMP QueryInterface(REFIID riid, void **ppvObject) override;
@@ -155,7 +158,9 @@ namespace TVTest
 		Interface::IFilterModule *m_pFilterModule;
 		Interface::IFilter *m_pFilter;
 		CTSPacketInterface *m_pTSPacket;
-		CTsPacket m_OutputPacket;
+		LibISDB::DataBuffer m_OutputData;
+		std::vector<LibISDB::TSPacket> m_OutputPacket;
+		LibISDB::DataStreamSequence<LibISDB::DataBuffer *> m_OutputSequence;
 		bool m_fSourceProcessor;
 		CEventHandler *m_pEventHandler;
 		String m_ModuleName;

@@ -16,7 +16,7 @@ HINSTANCE CVideoContainerWindow::m_hinst=NULL;
 
 
 CVideoContainerWindow::CVideoContainerWindow()
-	: m_pDtvEngine(NULL)
+	: m_pViewer(NULL)
 	, m_pDisplayBase(NULL)
 	, m_pEventHandler(NULL)
 {
@@ -67,11 +67,11 @@ LRESULT CVideoContainerWindow::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARA
 
 			::BeginPaint(hwnd,&ps);
 			hbr=static_cast<HBRUSH>(::GetStockObject(BLACK_BRUSH));
-			if (!m_pDtvEngine->m_MediaViewer.GetDestRect(&rcDest)
+			if (!m_pViewer->GetDestRect(&rcDest)
 					|| ::IsRectEmpty(&rcDest)) {
 				::FillRect(ps.hdc,&ps.rcPaint,hbr);
 			} else {
-				m_pDtvEngine->m_MediaViewer.RepaintVideo(hwnd,ps.hdc);
+				m_pViewer->RepaintVideo(hwnd,ps.hdc);
 				::GetClientRect(hwnd,&rc);
 				if (!::EqualRect(&rc,&rcDest))
 					DrawUtil::FillBorder(ps.hdc,&rc,&rcDest,&ps.rcPaint,hbr);
@@ -82,18 +82,18 @@ LRESULT CVideoContainerWindow::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARA
 
 	case WM_MOVE:
 		{
-			CVideoRenderer::RendererType Renderer=
-				m_pDtvEngine->m_MediaViewer.GetVideoRendererType();
+			LibISDB::DirectShow::VideoRenderer::RendererType Renderer=
+				m_pViewer->GetVideoRendererType();
 
-			if (Renderer!=CVideoRenderer::RENDERER_VMR7
-					&& Renderer!=CVideoRenderer::RENDERER_VMR9)
+			if (Renderer!=LibISDB::DirectShow::VideoRenderer::RendererType::VMR7
+					&& Renderer!=LibISDB::DirectShow::VideoRenderer::RendererType::VMR9)
 				break;
 		}
 	case WM_SIZE:
 		{
 			int Width=LOWORD(lParam),Height=HIWORD(lParam);
 
-			m_pDtvEngine->m_MediaViewer.SetViewSize(Width,Height);
+			m_pViewer->SetViewSize(Width,Height);
 			if (m_pDisplayBase!=NULL)
 				m_pDisplayBase->AdjustPosition();
 			if (uMsg==WM_SIZE
@@ -144,11 +144,12 @@ bool CVideoContainerWindow::Create(HWND hwndParent,DWORD Style,DWORD ExStyle,int
 }
 
 
-bool CVideoContainerWindow::Create(HWND hwndParent,DWORD Style,DWORD ExStyle,int ID,CDtvEngine *pDtvEngine)
+bool CVideoContainerWindow::Create(
+	HWND hwndParent,DWORD Style,DWORD ExStyle,int ID,LibISDB::ViewerFilter *pViewer)
 {
-	m_pDtvEngine=pDtvEngine;
+	m_pViewer=pViewer;
 	if (!Create(hwndParent,Style,ExStyle,ID)) {
-		m_pDtvEngine=NULL;
+		m_pViewer=NULL;
 		return false;
 	}
 	return true;

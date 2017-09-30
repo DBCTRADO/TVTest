@@ -64,7 +64,7 @@ bool CEpgVariableStringMap::GetLocalString(LPCWSTR pszKeyword,TVTest::String *pS
 		}
 		*pString=m_iEpgFileName;
 	} else if (::lstrcmpi(pszKeyword,TEXT("eid"))==0) {
-		TVTest::StringUtility::Format(*pString,TEXT("%d"),m_EventInfo.Event.m_EventID);
+		TVTest::StringUtility::Format(*pString,TEXT("%d"),m_EventInfo.Event.EventID);
 	} else if (::lstrcmpi(pszKeyword,TEXT("nid"))==0) {
 		TVTest::StringUtility::Format(*pString,TEXT("%d"),m_EventInfo.Channel.GetNetworkID());
 	} else if (::lstrcmpi(pszKeyword,TEXT("tsid"))==0) {
@@ -72,9 +72,9 @@ bool CEpgVariableStringMap::GetLocalString(LPCWSTR pszKeyword,TVTest::String *pS
 	} else if (::lstrcmpi(pszKeyword,TEXT("sid"))==0) {
 		TVTest::StringUtility::Format(*pString,TEXT("%d"),m_EventInfo.Channel.GetServiceID());
 	} else if (::lstrcmpi(pszKeyword,TEXT("duration-sec"))==0) {
-		TVTest::StringUtility::Format(*pString,TEXT("%d"),m_EventInfo.Event.m_Duration);
+		TVTest::StringUtility::Format(*pString,TEXT("%d"),m_EventInfo.Event.Duration);
 	} else if (::lstrcmpi(pszKeyword,TEXT("duration-min"))==0) {
-		TVTest::StringUtility::Format(*pString,TEXT("%d"),(m_EventInfo.Event.m_Duration+59)/60);
+		TVTest::StringUtility::Format(*pString,TEXT("%d"),(m_EventInfo.Event.Duration+59)/60);
 	} else {
 		return CEventVariableStringMap::GetLocalString(pszKeyword,pString);
 	}
@@ -145,17 +145,14 @@ HICON CProgramGuideTool::GetIcon()
 
 
 bool CProgramGuideTool::Execute(const ProgramGuide::CServiceInfo *pServiceInfo,
-								const CEventInfoData *pEventInfo,HWND hwnd)
+								const LibISDB::EventInfo *pEventInfo,HWND hwnd)
 {
 	if (pServiceInfo==nullptr || pEventInfo==nullptr)
 		return false;
 
-	SYSTEMTIME stStart,stEnd;
 	TCHAR szFileName[MAX_PATH];
 	LPCTSTR p;
 
-	pEventInfo->GetStartTime(&stStart);
-	pEventInfo->GetEndTime(&stEnd);
 	p=m_Command.c_str();
 	if (!GetCommandFileName(&p,szFileName,lengthof(szFileName))) {
 		::MessageBox(hwnd,TEXT("パスが長すぎます。"),nullptr,MB_OK | MB_ICONEXCLAMATION);
@@ -169,7 +166,7 @@ bool CProgramGuideTool::Execute(const ProgramGuide::CServiceInfo *pServiceInfo,
 	Info.Channel=pServiceInfo->GetChannelInfo();
 	Info.Event=*pEventInfo;
 	Info.ServiceName=pServiceInfo->GetServiceName();
-	::GetLocalTime(&Info.TotTime);
+	Info.TOTTime.NowLocal();
 
 	CEpgVariableStringMap VarStrMap(Info);
 	TVTest::String Parameter;

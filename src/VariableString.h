@@ -3,7 +3,7 @@
 
 
 #include "ChannelList.h"
-#include "EpgProgramList.h"
+#include "LibISDB/LibISDB/EPG/EventInfo.hpp"
 #include <vector>
 
 
@@ -35,7 +35,7 @@ namespace TVTest
 		bool InputParameter(HWND hDlg,int EditID,const POINT &MenuPos);
 
 	protected:
-		bool GetTimeString(LPCWSTR pszKeyword,const SYSTEMTIME &Time,String *pString) const;
+		bool GetTimeString(LPCWSTR pszKeyword,const LibISDB::DateTime &Time,String *pString) const;
 		bool IsDateTimeParameter(LPCTSTR pszKeyword);
 	};
 
@@ -66,9 +66,9 @@ namespace TVTest
 		struct EventInfo
 		{
 			CTunerChannelInfo Channel;
-			CEventInfo Event;
+			LibISDB::EventInfo Event;
 			String ServiceName;
-			SYSTEMTIME TotTime;
+			LibISDB::DateTime TOTTime;
 		};
 
 		CEventVariableStringMap();
@@ -76,7 +76,7 @@ namespace TVTest
 		bool BeginFormat() override;
 		bool NormalizeString(String *pString) const override;
 		bool GetParameterList(ParameterGroupList *pList) const override;
-		void SetCurrentTime(const SYSTEMTIME *pTime);
+		void SetCurrentTime(const LibISDB::DateTime *pTime);
 		void SetSampleEventInfo();
 
 		static bool GetSampleEventInfo(EventInfo *pInfo);
@@ -90,7 +90,7 @@ namespace TVTest
 		unsigned int m_Flags;
 		EventInfo m_EventInfo;
 		bool m_fCurrentTimeSet;
-		SYSTEMTIME m_CurrentTime;
+		LibISDB::DateTime m_CurrentTime;
 	};
 
 }

@@ -37,13 +37,14 @@ CPlaybackOptions::~CPlaybackOptions()
 bool CPlaybackOptions::Apply(DWORD Flags)
 {
 	CCoreEngine &CoreEngine=GetAppClass().CoreEngine;
+	LibISDB::ViewerFilter *pViewer=CoreEngine.GetFilter<LibISDB::ViewerFilter>();
 
-	if ((Flags&UPDATE_ADJUSTAUDIOSTREAMTIME)!=0) {
-		CoreEngine.m_DtvEngine.m_MediaViewer.SetAdjustAudioStreamTime(m_fAdjustAudioStreamTime);
+	if ((Flags&UPDATE_ADJUSTAUDIOSTREAMTIME)!=0 && pViewer!=nullptr) {
+		pViewer->SetAdjustAudioStreamTime(m_fAdjustAudioStreamTime);
 	}
 
-	if ((Flags&UPDATE_PTSSYNC)!=0) {
-		CoreEngine.m_DtvEngine.m_MediaViewer.EnablePTSSync(m_fEnablePTSSync);
+	if ((Flags&UPDATE_PTSSYNC)!=0 && pViewer!=nullptr) {
+		pViewer->EnablePTSSync(m_fEnablePTSSync);
 	}
 
 	if ((Flags&UPDATE_PACKETBUFFERING)!=0) {
@@ -52,11 +53,14 @@ bool CPlaybackOptions::Apply(DWORD Flags)
 	}
 
 	if ((Flags&UPDATE_STREAMTHREADPRIORITY)!=0) {
-		CoreEngine.m_DtvEngine.m_BonSrcDecoder.SetStreamThreadPriority(m_StreamThreadPriority);
+		LibISDB::BonDriverSourceFilter *pSource=
+			CoreEngine.GetFilter<LibISDB::BonDriverSourceFilter>();
+		if (pSource!=nullptr)
+			pSource->SetStreamingThreadPriority(m_StreamThreadPriority);
 	}
 
-	if ((Flags&UPDATE_ADJUSTFRAMERATE)!=0) {
-		CoreEngine.m_DtvEngine.m_MediaViewer.SetAdjust1SegVideoSample(m_fAdjust1SegFrameRate, true);
+	if ((Flags&UPDATE_ADJUSTFRAMERATE)!=0 && pViewer!=nullptr) {
+		pViewer->SetAdjust1SegVideoSample(m_fAdjust1SegFrameRate, true);
 	}
 
 	return true;
@@ -77,7 +81,7 @@ bool CPlaybackOptions::ReadSettings(CSettings &Settings)
 	Settings.Read(TEXT("PacketBuffering"),&m_fPacketBuffering);
 	unsigned int BufferLength;
 	if (Settings.Read(TEXT("PacketBufferLength"),&BufferLength))
-		m_PacketBufferLength=min(BufferLength,MAX_PACKET_BUFFER_LENGTH);
+		m_PacketBufferLength=min(BufferLength,(unsigned int)MAX_PACKET_BUFFER_LENGTH);
 	if (Settings.Read(TEXT("PacketBufferPoolPercentage"),&m_PacketBufferPoolPercentage))
 		m_PacketBufferPoolPercentage=CLAMP(m_PacketBufferPoolPercentage,0,100);
 	if (Settings.Read(TEXT("StreamThreadPriority"),&m_StreamThreadPriority))
@@ -213,7 +217,10 @@ INT_PTR CPlaybackOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPara
 				f=!DlgCheckBox_IsChecked(hDlg,IDC_OPTIONS_USEDEMUXERCLOCK);
 				if (f!=m_fUseAudioRendererClock) {
 					m_fUseAudioRendererClock=f;
-					GetAppClass().CoreEngine.m_DtvEngine.m_MediaViewer.SetUseAudioRendererClock(f);
+					LibISDB::ViewerFilter *pViewer=
+						GetAppClass().CoreEngine.GetFilter<LibISDB::ViewerFilter>();
+					if (pViewer!=nullptr)
+						pViewer->SetUseAudioRendererClock(f);
 					SetGeneralUpdateFlag(UPDATE_GENERAL_BUILDMEDIAVIEWER);
 				}
 

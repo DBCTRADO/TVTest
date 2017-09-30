@@ -16,9 +16,6 @@ class CRecordOptions : public COptions
 	bool m_fConfirmStopStatusBarOnly;
 	bool m_fAlertLowFreeSpace;
 	unsigned int m_LowFreeSpaceThreshold;
-	unsigned int m_TimeShiftBufferSize;
-	bool m_fEnableTimeShiftRecording;
-	unsigned int m_MaxPendingSize;
 	bool m_fShowRemainTime;
 	int m_StatusBarRecordCommand;
 	CRecordingSettings m_Settings;
@@ -30,10 +27,7 @@ class CRecordOptions : public COptions
 
 public:
 	enum {
-		UPDATE_RECORDSTREAM		=0x00000001UL,
-		UPDATE_TIMESHIFTBUFFER	=0x00000002UL,
-		UPDATE_ENABLETIMESHIFT	=0x00000004UL,
-		UPDATE_MAXPENDINGSIZE	=0x00000008UL
+		UPDATE_RECORDINGSETTINGS	=0x00000001UL,
 	};
 
 	CRecordOptions();
@@ -56,12 +50,12 @@ public:
 	bool ConfirmStop(HWND hwndOwner) const;
 	bool ConfirmStatusBarStop(HWND hwndOwner) const;
 	bool ConfirmExit(HWND hwndOwner,const CRecordManager *pRecordManager) const;
-	bool GetRecordingSettings(CRecordingSettings *pSettings);
+	const CRecordingSettings &GetRecordingSettings() const { return m_Settings; }
 	bool GetAlertLowFreeSpace() const { return m_fAlertLowFreeSpace; }
 	ULONGLONG GetLowFreeSpaceThresholdBytes() const {
 		return (ULONGLONG)m_LowFreeSpaceThreshold*(1024*1024);
 	}
-	bool IsTimeShiftRecordingEnabled() const { return m_fEnableTimeShiftRecording; }
+	bool IsTimeShiftRecordingEnabled() const { return m_Settings.m_fEnableTimeShift; }
 	bool EnableTimeShiftRecording(bool fEnable);
 	void SetShowRemainTime(bool fShow) { m_fShowRemainTime=fShow; }
 	bool GetShowRemainTime() const { return m_fShowRemainTime; }

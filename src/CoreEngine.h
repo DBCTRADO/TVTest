@@ -2,12 +2,23 @@
 #define CORE_ENGINE_H
 
 
-#include "DtvEngine.h"
+#include "LibISDB/LibISDB/Windows/Viewer/ViewerEngine.hpp"
+#include "LibISDB/LibISDB/Filters/TSPacketParserFilter.hpp"
+#include "LibISDB/LibISDB/Filters/TeeFilter.hpp"
+#include "LibISDB/LibISDB/Filters/EPGDatabaseFilter.hpp"
+#include "LibISDB/LibISDB/Filters/LogoDownloaderFilter.hpp"
+#include "LibISDB/LibISDB/Filters/GrabberFilter.hpp"
+#include "LibISDB/LibISDB/Filters/RecorderFilter.hpp"
+#include "LibISDB/LibISDB/Filters/TSPacketCounterFilter.hpp"
+#include "LibISDB/LibISDB/Filters/CaptionFilter.hpp"
+#include "LibISDB/LibISDB/Windows/Filters/BonDriverSourceFilter.hpp"
 #include "TSProcessor.h"
-#include "EpgProgramList.h"
 
 
-class CCoreEngine : public CBonErrorHandler
+class CCoreEngine
+	: public LibISDB::ViewerEngine
+	, protected LibISDB::ViewerFilter::EventListener
+	, protected LibISDB::RecorderFilter::EventListener
 {
 public:
 	enum TSProcessorConnectPosition {
@@ -24,7 +35,7 @@ public:
 		DRIVER_TCP
 	};
 
-	enum { MAX_VOLUME=100 };
+	static constexpr int MAX_VOLUME = 100;
 
 	struct PanAndScanInfo
 	{
@@ -42,22 +53,43 @@ public:
 		bool operator!=(const PanAndScanInfo &Op) const { return !(*this==Op); }
 	};
 
+	class EventListener : public LibISDB::EventListener
+	{
+	public:
+		virtual void OnServiceChanged(uint16_t ServiceID) {}
+		virtual void OnPATUpdated(LibISDB::AnalyzerFilter *pAnalyzer, bool StreamChanged) {}
+		virtual void OnPMTUpdated(LibISDB::AnalyzerFilter *pAnalyzer, uint16_t ServiceID) {}
+		virtual void OnSDTUpdated(LibISDB::AnalyzerFilter *pAnalyzer) {}
+		virtual void OnWriteError(LibISDB::RecorderFilter *pRecorder) {}
+		virtual void OnVideoStreamTypeChanged(uint8_t VideoStreamType) {}
+		virtual void OnVideoSizeChanged(LibISDB::ViewerFilter *pViewer) {}
+		virtual void OnEventChanged(LibISDB::AnalyzerFilter *pAnalyzer, uint16_t EventID) {}
+		virtual void OnEventUpdated(LibISDB::AnalyzerFilter *pAnalyzer) {}
+		virtual void OnTOTUpdated(LibISDB::AnalyzerFilter *pAnalyzer) {}
+		virtual void OnFilterGraphInitialize(LibISDB::ViewerFilter *pViewer, IGraphBuilder *pGraphBuilder) {}
+		virtual void OnFilterGraphInitialized(LibISDB::ViewerFilter *pViewer, IGraphBuilder *pGraphBuilder) {}
+		virtual void OnFilterGraphFinalize(LibISDB::ViewerFilter *pViewer, IGraphBuilder *pGraphBuilder) {}
+		virtual void OnFilterGraphFinalized(LibISDB::ViewerFilter *pViewer, IGraphBuilder *pGraphBuilder) {}
+		virtual void OnSPDIFPassthroughError(LibISDB::ViewerFilter *pViewer, HRESULT hr) {}
+	};
+
 	CCoreEngine();
 	~CCoreEngine();
 	void Close();
-	bool BuildDtvEngine(CDtvEngine::CEventHandler *pEventHandler);
+	void CreateFilters();
+	bool BuildEngine();
 	bool RegisterTSProcessor(TVTest::CTSProcessor *pTSProcessor,
 							 TSProcessorConnectPosition ConnectPosition);
 	size_t GetTSProcessorCount() const { return m_TSProcessorList.size(); }
 	TVTest::CTSProcessor *GetTSProcessorByIndex(size_t Index);
 	void EnableTSProcessor(bool fEnable);
 	bool IsTSProcessorEnabled() const { return m_fEnableTSProcessor; }
-	bool BuildMediaViewer(HWND hwndHost,HWND hwndMessage,
-		CVideoRenderer::RendererType VideoRenderer,
-		BYTE VideoStreamType,LPCWSTR pszVideoDecoder=NULL,
-		LPCWSTR pszAudioDevice=NULL);
+	bool BuildMediaViewer(const LibISDB::ViewerFilter::OpenSettings &Settings);
 	bool CloseMediaViewer();
 	bool EnableMediaViewer(bool fEnable);
+
+	bool AddEventListener(EventListener *pEventListener);
+	bool RemoveEventListener(EventListener *pEventListener);
 
 	LPCTSTR GetDriverDirectory() const { return m_szDriverDirectory; }
 	bool GetDriverDirectory(LPTSTR pszDirectory,int MaxLength) const;
@@ -93,13 +125,13 @@ public:
 	bool GetMute() const { return m_fMute; }
 	bool SetAudioGainControl(int Gain,int SurroundGain);
 	bool GetAudioGainControl(int *pGain,int *pSurroundGain) const;
-	bool SetDualMonoMode(CAudioDecFilter::DualMonoMode Mode);
-	CAudioDecFilter::DualMonoMode GetDualMonoMode() const { return m_DualMonoMode; }
-	bool SetStereoMode(CAudioDecFilter::StereoMode Mode);
-	CAudioDecFilter::StereoMode GetStereoMode() const { return m_StereoMode; }
-	bool SetSpdifOptions(const CAudioDecFilter::SpdifOptions &Options);
-	bool GetSpdifOptions(CAudioDecFilter::SpdifOptions *pOptions) const;
-	bool IsSpdifPassthroughEnabled() const;
+	bool SetDualMonoMode(LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode Mode);
+	LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode GetDualMonoMode() const { return m_DualMonoMode; }
+	bool SetStereoMode(LibISDB::DirectShow::AudioDecoderFilter::StereoMode Mode);
+	LibISDB::DirectShow::AudioDecoderFilter::StereoMode GetStereoMode() const { return m_StereoMode; }
+	bool SetSPDIFOptions(const LibISDB::DirectShow::AudioDecoderFilter::SPDIFOptions &Options);
+	bool GetSPDIFOptions(LibISDB::DirectShow::AudioDecoderFilter::SPDIFOptions *pOptions) const;
+	bool IsSPDIFPassthroughEnabled() const;
 
 	enum {
 		STATUS_VIDEOSIZE			=0x00000001UL,
@@ -123,46 +155,52 @@ public:
 		STATISTIC_PACKETBUFFERRATE				=0x00000040UL
 	};
 	DWORD UpdateStatistics();
-	ULONGLONG GetErrorPacketCount() const { return m_ErrorPacketCount; }
-	ULONGLONG GetContinuityErrorPacketCount() const { return m_ContinuityErrorPacketCount; }
-	ULONGLONG GetScramblePacketCount() const { return m_ScramblePacketCount; }
+	unsigned long long GetErrorPacketCount() const { return m_ErrorPacketCount; }
+	unsigned long long GetContinuityErrorPacketCount() const { return m_ContinuityErrorPacketCount; }
+	unsigned long long GetScramblePacketCount() const { return m_ScrambledPacketCount; }
 	void ResetErrorCount();
 	float GetSignalLevel() const { return m_SignalLevel; }
 	int GetSignalLevelText(LPTSTR pszText,int MaxLength) const;
 	int GetSignalLevelText(float SignalLevel,LPTSTR pszText,int MaxLength) const;
-	DWORD GetBitRate() const { return m_BitRate; }
-	static float BitRateToFloat(DWORD BitRate) { return (float)BitRate/(float)(1000*1000); }
+	unsigned long GetBitRate() const { return m_BitRate; }
+	static float BitRateToFloat(unsigned long BitRate) { return (float)BitRate/(float)(1000*1000); }
 	float GetBitRateFloat() const { return BitRateToFloat(m_BitRate); }
 	int GetBitRateText(LPTSTR pszText,int MaxLength) const;
-	int GetBitRateText(DWORD BitRate,LPTSTR pszText,int MaxLength) const;
+	int GetBitRateText(unsigned long BitRate,LPTSTR pszText,int MaxLength) const;
 	int GetBitRateText(float BitRate,LPTSTR pszText,int MaxLength,int Precision=2) const;
-	DWORD GetStreamRemain() const { return m_StreamRemain; }
+	uint32_t GetStreamRemain() const { return m_StreamRemain; }
 	int GetPacketBufferUsedPercentage() const;
-	bool GetCurrentEventInfo(CEventInfoData *pInfo,WORD ServiceID=0xFFFF,bool fNext=false);
-	void *GetCurrentImage();
+	bool GetCurrentEventInfo(LibISDB::EventInfo *pInfo,uint16_t ServiceID=LibISDB::SERVICE_ID_INVALID,bool fNext=false);
+	bool GetCurrentEventInfo(LibISDB::EventInfo *pInfo,bool fNext) { return GetCurrentEventInfo(pInfo,LibISDB::SERVICE_ID_INVALID,fNext); }
+	LibISDB::COMMemoryPointer<> GetCurrentImage();
 	bool SetMinTimerResolution(bool fMin);
 	bool SetNoEpg(bool fNoEpg) { m_fNoEpg=fNoEpg; return true; }
-
-//private:
-	CDtvEngine m_DtvEngine;
 
 private:
 	struct TSProcessorInfo
 	{
 		TVTest::CTSProcessor *pTSProcessor;
 		TSProcessorConnectPosition ConnectPosition;
-		int DecoderID;
+		LibISDB::FilterGraph::IDType FilterID;
 	};
 
 	struct TSProcessorConnectionList
 	{
-		std::vector<CDtvEngine::DecoderConnectionInfo> List;
+		std::vector<LibISDB::FilterGraph::ConnectionInfo> List;
 
-		void Add(int OutputDecoder,int InputDecoder,int OutputIndex=0)
+		void Add(LibISDB::FilterGraph::IDType UpstreamFilter,
+				 LibISDB::FilterGraph::IDType DownstreamFilter,
+				 int OutputIndex=0)
 		{
-			List.push_back(CDtvEngine::DecoderConnectionInfo(OutputDecoder,InputDecoder,OutputIndex));
+			LibISDB::FilterGraph::ConnectionInfo Info;
+			Info.UpstreamFilterID=UpstreamFilter;
+			Info.DownstreamFilterID=DownstreamFilter;
+			Info.OutputIndex=OutputIndex;
+			List.push_back(Info);
 		}
 	};
+
+	LibISDB::EventListenerList<EventListener> m_EventListenerList;
 
 	TCHAR m_szDriverDirectory[MAX_PATH];
 	TCHAR m_szDriverFileName[MAX_PATH];
@@ -179,30 +217,58 @@ private:
 	int m_DisplayVideoHeight;
 	int m_NumAudioChannels;
 	int m_NumAudioStreams;
-	BYTE m_AudioComponentType;
+	uint8_t m_AudioComponentType;
 	bool m_fMute;
 	int m_Volume;
 	int m_AudioGain;
 	int m_SurroundAudioGain;
-	CAudioDecFilter::DualMonoMode m_DualMonoMode;
-	CAudioDecFilter::StereoMode m_StereoMode;
-	CAudioDecFilter::SpdifOptions m_SpdifOptions;
-	bool m_fSpdifPassthrough;
-	ULONGLONG m_ErrorPacketCount;
-	ULONGLONG m_ContinuityErrorPacketCount;
-	ULONGLONG m_ScramblePacketCount;
+	LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode m_DualMonoMode;
+	LibISDB::DirectShow::AudioDecoderFilter::StereoMode m_StereoMode;
+	LibISDB::DirectShow::AudioDecoderFilter::SPDIFOptions m_SPDIFOptions;
+	bool m_fSPDIFPassthrough;
+	unsigned long long m_ErrorPacketCount;
+	unsigned long long m_ContinuityErrorPacketCount;
+	unsigned long long m_ScrambledPacketCount;
 	float m_SignalLevel;
-	DWORD m_BitRate;
-	DWORD m_StreamRemain;
+	unsigned long m_BitRate;
+	uint32_t m_StreamRemain;
 	int m_PacketBufferFillPercentage;
 	UINT m_TimerResolution;
 	bool m_fNoEpg;
 
 	DWORD m_AsyncStatusUpdatedFlags;
 
+	void ConnectFilter(TSProcessorConnectionList *pList,
+					   LibISDB::FilterGraph::IDType ID,
+					   LibISDB::FilterGraph::IDType *pFilterID,
+					   int OutputIndex=0);
 	void ConnectTSProcessor(TSProcessorConnectionList *pList,
 							TSProcessorConnectPosition ConnectPosition,
-							int *pDecoderID,int *pOutputIndex=NULL);
+							LibISDB::FilterGraph::IDType *pFilterID,
+							int *pOutputIndex=NULL);
+
+// TSEngine
+	void OnServiceChanged(uint16_t ServiceID) override;
+	void OnEventChanged(uint16_t EventID) override;
+	void OnVideoStreamTypeChanged(uint8_t StreamType) override;
+
+// AnalyzerFilter::EventListener
+	void OnPATUpdated(LibISDB::AnalyzerFilter *pAnalyzer) override;
+	void OnPMTUpdated(LibISDB::AnalyzerFilter *pAnalyzer, uint16_t ServiceID) override;
+	void OnEITUpdated(LibISDB::AnalyzerFilter *pAnalyzer) override;
+	void OnSDTUpdated(LibISDB::AnalyzerFilter *pAnalyzer) override;
+	void OnTOTUpdated(LibISDB::AnalyzerFilter *pAnalyzer) override;
+
+// ViewerFilter::EventListener
+	void OnVideoSizeChanged(LibISDB::ViewerFilter *pViewer, const LibISDB::DirectShow::VideoParser::VideoInfo &Info) override;
+	void OnFilterGraphInitialize(LibISDB::ViewerFilter *pViewer, IGraphBuilder *pGraphBuilder) override;
+	void OnFilterGraphInitialized(LibISDB::ViewerFilter *pViewer, IGraphBuilder *pGraphBuilder) override;
+	void OnFilterGraphFinalize(LibISDB::ViewerFilter *pViewer, IGraphBuilder *pGraphBuilder) override;
+	void OnFilterGraphFinalized(LibISDB::ViewerFilter *pViewer, IGraphBuilder *pGraphBuilder) override;
+	void OnSPDIFPassthroughError(LibISDB::ViewerFilter *pViewer, HRESULT hr) override;
+
+// RecorderFilter::EventListener
+	void OnWriteError(LibISDB::RecorderFilter *pRecorder, LibISDB::RecorderFilter::RecordingTask *pTask) override;
 };
 
 

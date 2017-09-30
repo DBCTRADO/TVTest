@@ -15,11 +15,15 @@ CVideoDecoderOptions::CVideoDecoderOptions()
 
 bool CVideoDecoderOptions::ReadSettings(CSettings &Settings)
 {
-	CMediaViewer &MediaViewer = GetAppClass().CoreEngine.m_DtvEngine.m_MediaViewer;
-	VideoDecoderSettings DecoderSettings;
+	LibISDB::ViewerFilter *pViewer = GetAppClass().CoreEngine.GetFilter<LibISDB::ViewerFilter>();
+
+	if (pViewer == nullptr)
+		return false;
+
+	LibISDB::DirectShow::KnownDecoderManager::VideoDecoderSettings DecoderSettings;
 	int Value;
 
-	MediaViewer.GetVideoDecoderSettings(&DecoderSettings);
+	pViewer->GetVideoDecoderSettings(&DecoderSettings);
 
 	Settings.Read(TEXT("EnableDeinterlace"), &DecoderSettings.bEnableDeinterlace);
 	if (Settings.Read(TEXT("DeinterlaceMethod"), &Value))
@@ -34,7 +38,7 @@ bool CVideoDecoderOptions::ReadSettings(CSettings &Settings)
 	Settings.Read(TEXT("NumThreads"), &DecoderSettings.NumThreads);
 	Settings.Read(TEXT("EnableDXVA2"), &DecoderSettings.bEnableDXVA2);
 
-	MediaViewer.SetVideoDecoderSettings(DecoderSettings);
+	pViewer->SetVideoDecoderSettings(DecoderSettings);
 
 	return true;
 }
@@ -42,10 +46,14 @@ bool CVideoDecoderOptions::ReadSettings(CSettings &Settings)
 
 bool CVideoDecoderOptions::WriteSettings(CSettings &Settings)
 {
-	CMediaViewer &MediaViewer = GetAppClass().CoreEngine.m_DtvEngine.m_MediaViewer;
-	VideoDecoderSettings DecoderSettings;
+	LibISDB::ViewerFilter *pViewer = GetAppClass().CoreEngine.GetFilter<LibISDB::ViewerFilter>();
 
-	if (!MediaViewer.GetVideoDecoderSettings(&DecoderSettings))
+	if (pViewer == nullptr)
+		return false;
+
+	LibISDB::DirectShow::KnownDecoderManager::VideoDecoderSettings DecoderSettings;
+
+	if (!pViewer->GetVideoDecoderSettings(&DecoderSettings))
 		return false;
 
 	Settings.Write(TEXT("EnableDeinterlace"), DecoderSettings.bEnableDeinterlace);

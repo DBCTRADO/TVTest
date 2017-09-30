@@ -15,8 +15,6 @@ namespace TVTest
 		typedef WORD IDType;
 
 		static const IDType ID_INVALID=0xFFFF;
-		static const BYTE COMPONENT_TAG_INVALID=0xFF;
-		static const BYTE COMPONENT_TYPE_INVALID=0xFF;
 
 		enum DualMonoMode {
 			DUALMONO_INVALID,
@@ -71,9 +69,9 @@ namespace TVTest
 
 		static inline IDType MakeID(int Index,BYTE ComponentTag)
 		{
-			return ComponentTag!=COMPONENT_TAG_INVALID ?
+			return ComponentTag!=LibISDB::COMPONENT_TAG_INVALID ?
 				ComponentTag :
-				(IDType)(((BYTE)(INT8)Index<<8) | COMPONENT_TAG_INVALID);
+				(IDType)(((BYTE)(INT8)Index<<8) | LibISDB::COMPONENT_TAG_INVALID);
 		}
 		static inline BYTE IDToComponentTag(IDType ID) { return (BYTE)(ID&0xFF); }
 		static inline int IDToStreamIndex(IDType ID) { return (INT8)(BYTE)(ID>>8); }
@@ -102,7 +100,7 @@ namespace TVTest
 			WORD EventID;
 		};
 
-		mutable CCriticalLock m_Lock;
+		mutable MutexLock m_Lock;
 		AudioComponentList m_AudioComponentList;
 		AudioList m_EventAudioList;
 		AudioList m_AudioList;

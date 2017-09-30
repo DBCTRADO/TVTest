@@ -5,7 +5,6 @@
 #include <vector>
 #include "BasicWindow.h"
 #include "UIBase.h"
-#include "TsUtilClass.h"
 #include "Theme.h"
 #include "DrawUtil.h"
 #include "WindowUtil.h"

@@ -320,11 +320,11 @@ bool CChannelScan::AutoUpdateChannelList(CTuningSpaceList *pTuningSpaceList,std:
 	if (pTuningSpaceList==NULL)
 		return false;
 
-	CTsAnalyzer *pTsAnalyzer=&GetAppClass().CoreEngine.m_DtvEngine.m_TsAnalyzer;
-	CTsAnalyzer::SdtTsList TsList;
+	LibISDB::AnalyzerFilter *pAnalyzer=GetAppClass().CoreEngine.GetFilter<LibISDB::AnalyzerFilter>();
+	LibISDB::AnalyzerFilter::SDTStreamList TsList;
 
-	if (!pTsAnalyzer->IsSdtComplete()
-			|| !pTsAnalyzer->GetSdtTsList(&TsList)
+	if (!pAnalyzer->IsSDTComplete()
+			|| !pAnalyzer->GetSDTStreamList(&TsList)
 			|| TsList.empty())
 		return false;
 
@@ -333,10 +333,10 @@ bool CChannelScan::AutoUpdateChannelList(CTuningSpaceList *pTuningSpaceList,std:
 
 	// 現在のチャンネルリストに存在しないサービスを探す
 	for (size_t TsIndex=0;TsIndex<TsList.size();TsIndex++) {
-		const CTsAnalyzer::SdtTsInfo &TsInfo=TsList[TsIndex];
+		const LibISDB::AnalyzerFilter::SDTStreamInfo &TsInfo=TsList[TsIndex];
 
 		for (size_t ServiceIndex=0;ServiceIndex<TsInfo.ServiceList.size();ServiceIndex++) {
-			const CTsAnalyzer::SdtServiceInfo &ServiceInfo=TsInfo.ServiceList[ServiceIndex];
+			const LibISDB::AnalyzerFilter::SDTServiceInfo &ServiceInfo=TsInfo.ServiceList[ServiceIndex];
 
 			if (!IsScanService(ServiceInfo,false))
 				continue;
@@ -367,7 +367,7 @@ bool CChannelScan::AutoUpdateChannelList(CTuningSpaceList *pTuningSpaceList,std:
 							CChannelInfo ChannelInfo(*pChannelList->GetChannelInfo(Index));
 
 							ChannelInfo.SetChannelNo(ServiceInfo.ServiceID);
-							ChannelInfo.SetName(ServiceInfo.szServiceName);
+							ChannelInfo.SetName(ServiceInfo.ServiceName.c_str());
 							ChannelInfo.SetServiceID(ServiceInfo.ServiceID);
 							ChannelInfo.Enable(true);
 
@@ -405,7 +405,7 @@ bool CChannelScan::AutoUpdateChannelList(CTuningSpaceList *pTuningSpaceList,std:
 					TVTest::StringUtility::Format(Message,
 						TEXT("新しいサービス %d \"%s\" (NID %d TSID 0x%04x) が検出されましたが、当該 TS が見付かりません。"),
 						ServiceInfo.ServiceID,
-						ServiceInfo.szServiceName,
+						ServiceInfo.ServiceName.c_str(),
 						TsInfo.OriginalNetworkID,
 						TsInfo.TransportStreamID);
 					pMessageList->push_back(Message);
@@ -424,13 +424,13 @@ bool CChannelScan::AutoUpdateChannelList(CTuningSpaceList *pTuningSpaceList,std:
 				bool fNetworkFound=false,fServiceFound=false,fServiceMoved=false;
 
 				for (size_t TsIndex=0;TsIndex<TsList.size();TsIndex++) {
-					const CTsAnalyzer::SdtTsInfo &TsInfo=TsList[TsIndex];
+					const LibISDB::AnalyzerFilter::SDTStreamInfo &TsInfo=TsList[TsIndex];
 
 					if (TsInfo.OriginalNetworkID==pChannelInfo->GetNetworkID()) {
 						fNetworkFound=true;
 
 						for (size_t ServiceIndex=0;ServiceIndex<TsInfo.ServiceList.size();ServiceIndex++) {
-							const CTsAnalyzer::SdtServiceInfo &ServiceInfo=TsInfo.ServiceList[ServiceIndex];
+							const LibISDB::AnalyzerFilter::SDTServiceInfo &ServiceInfo=TsInfo.ServiceList[ServiceIndex];
 
 							if (ServiceInfo.ServiceID==pChannelInfo->GetServiceID()) {
 								fServiceFound=true;
@@ -533,11 +533,11 @@ void CChannelScan::InsertChannelInfo(int Index,const CChannelInfo *pChInfo,bool 
 	lvi.pszText=szText;
 	if (fServiceType) {
 		switch (pChInfo->GetServiceType()) {
-		case SERVICE_TYPE_DIGITALTV:		::lstrcpy(szText,TEXT("TV"));					break;
-		case SERVICE_TYPE_DIGITALAUDIO:		::lstrcpy(szText,TEXT("音声"));					break;
-		case SERVICE_TYPE_PROMOTIONVIDEO:	::lstrcpy(szText,TEXT("プロモーション映像"));	break;
-		case SERVICE_TYPE_DATA:				::lstrcpy(szText,TEXT("データ/ワンセグ"));		break;
-		case SERVICE_TYPE_4KTV:				::lstrcpy(szText,TEXT("4K TV"));				break;
+		case LibISDB::SERVICE_TYPE_DIGITAL_TV:		::lstrcpy(szText,TEXT("TV"));					break;
+		case LibISDB::SERVICE_TYPE_DIGITAL_AUDIO:	::lstrcpy(szText,TEXT("音声"));					break;
+		case LibISDB::SERVICE_TYPE_PROMOTION_VIDEO:	::lstrcpy(szText,TEXT("プロモーション映像"));	break;
+		case LibISDB::SERVICE_TYPE_DATA:			::lstrcpy(szText,TEXT("データ/ワンセグ"));		break;
+		case LibISDB::SERVICE_TYPE_4K_TV:			::lstrcpy(szText,TEXT("4K TV"));				break;
 		default:
 			StdUtil::snprintf(szText,lengthof(szText),TEXT("他(%02x)"),pChInfo->GetServiceType());
 			break;
@@ -548,7 +548,9 @@ void CChannelScan::InsertChannelInfo(int Index,const CChannelInfo *pChInfo,bool 
 	ListView_SetItem(hwndList,&lvi);
 
 	lvi.iSubItem=COLUMN_CHANNELNAME;
-	LPCTSTR pszChannelName=GetAppClass().CoreEngine.m_DtvEngine.m_BonSrcDecoder.GetChannelName(pChInfo->GetSpace(),pChInfo->GetChannelIndex());
+	LPCTSTR pszChannelName=
+		GetAppClass().CoreEngine.GetFilter<LibISDB::BonDriverSourceFilter>()->GetChannelName(
+			pChInfo->GetSpace(),pChInfo->GetChannelIndex());
 	::lstrcpyn(szText,!IsStringEmpty(pszChannelName)?pszChannelName:TEXT("\?\?\?"),lengthof(szText));
 	ListView_SetItem(hwndList,&lvi);
 
@@ -620,10 +622,13 @@ bool CChannelScan::LoadPreset(LPCTSTR pszFileName,CChannelList *pChannelList,int
 	if (!PresetList.LoadFromFile(szPresetFileName))
 		return false;
 
-	CBonSrcDecoder &BonSrcDecoder=GetAppClass().CoreEngine.m_DtvEngine.m_BonSrcDecoder;
+	LibISDB::BonDriverSourceFilter *pSourceFilter=
+		GetAppClass().CoreEngine.GetFilter<LibISDB::BonDriverSourceFilter>();
+	if (pSourceFilter==NULL)
+		return false;
 	std::vector<TVTest::String> BonDriverChannelList;
 	LPCTSTR pszName;
-	for (int i=0;(pszName=BonSrcDecoder.GetChannelName(Space,i))!=NULL;i++) {
+	for (int i=0;(pszName=pSourceFilter->GetChannelName(Space,i))!=NULL;i++) {
 		BonDriverChannelList.push_back(TVTest::String(pszName));
 	}
 	if (BonDriverChannelList.empty())
@@ -676,7 +681,11 @@ bool CChannelScan::LoadPreset(LPCTSTR pszFileName,CChannelList *pChannelList,int
 
 bool CChannelScan::SetPreset(bool fAuto)
 {
-	LPCTSTR pszName=GetAppClass().CoreEngine.m_DtvEngine.m_BonSrcDecoder.GetSpaceName(m_ScanSpace);
+	const LibISDB::BonDriverSourceFilter *pSourceFilter=
+		GetAppClass().CoreEngine.GetFilter<LibISDB::BonDriverSourceFilter>();
+	if (pSourceFilter==NULL)
+		return false;
+	LPCTSTR pszName=pSourceFilter->GetSpaceName(m_ScanSpace);
 	if (pszName==NULL)
 		return false;
 
@@ -731,12 +740,14 @@ INT_PTR CChannelScan::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 	case WM_INITDIALOG:
 		{
 			CAppMain &App=GetAppClass();
-			CCoreEngine *pCoreEngine=&App.CoreEngine;
+			CCoreEngine &CoreEngine=App.CoreEngine;
+			LibISDB::BonDriverSourceFilter *pSourceFilter=
+				CoreEngine.GetFilter<LibISDB::BonDriverSourceFilter>();
 			int NumSpaces;
 			LPCTSTR pszName;
 
 			m_TuningSpaceList=*m_pOriginalTuningSpaceList;
-			for (NumSpaces=0;(pszName=pCoreEngine->m_DtvEngine.m_BonSrcDecoder.GetSpaceName(NumSpaces))!=NULL;NumSpaces++) {
+			for (NumSpaces=0;(pszName=pSourceFilter->GetSpaceName(NumSpaces))!=NULL;NumSpaces++) {
 				DlgComboBox_AddString(hDlg,IDC_CHANNELSCAN_SPACE,pszName);
 			}
 			if (NumSpaces>0) {
@@ -804,7 +815,7 @@ INT_PTR CChannelScan::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 			DlgCheckBox_Check(hDlg,IDC_CHANNELSCAN_SCANSERVICE,true);
 			DlgCheckBox_Check(hDlg,IDC_CHANNELSCAN_IGNORESIGNALLEVEL,m_fIgnoreSignalLevel);
 
-			if (pCoreEngine->IsNetworkDriver())
+			if (CoreEngine.IsNetworkDriver())
 				EnableDlgItems(hDlg,IDC_CHANNELSCAN_FIRST,IDC_CHANNELSCAN_LAST,false);
 		}
 		return TRUE;
@@ -818,7 +829,7 @@ INT_PTR CChannelScan::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 					return TRUE;
 
 				m_ScanSpace=Space;
-				LPCTSTR pszName=GetAppClass().CoreEngine.m_DtvEngine.m_BonSrcDecoder.GetSpaceName(Space);
+				LPCTSTR pszName=GetAppClass().CoreEngine.GetFilter<LibISDB::BonDriverSourceFilter>()->GetSpaceName(Space);
 				bool fBS=false,fCS=false;
 				if (pszName!=NULL) {
 					fBS=::StrStrI(pszName,TEXT("BS"))!=NULL;
@@ -932,7 +943,7 @@ INT_PTR CChannelScan::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 							ListSort.UpdateChannelList(hwndList,m_TuningSpaceList.GetChannelList(Space));
 							if (IsStringEmpty(m_TuningSpaceList.GetTuningSpaceName(Space))) {
 								m_TuningSpaceList.GetTuningSpaceInfo(Space)->SetName(
-									GetAppClass().CoreEngine.m_DtvEngine.m_BonSrcDecoder.GetSpaceName(Space));
+									GetAppClass().CoreEngine.GetFilter<LibISDB::BonDriverSourceFilter>()->GetSpaceName(Space));
 							}
 							m_SortColumn=SortColumn;
 							m_fSortDescending=false;
@@ -1255,12 +1266,13 @@ INT_PTR CChannelScan::ScanDlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPara
 	switch (uMsg) {
 	case WM_INITDIALOG:
 		{
-			CBonSrcDecoder &BonSrcDecoder=GetAppClass().CoreEngine.m_DtvEngine.m_BonSrcDecoder;
+			LibISDB::BonDriverSourceFilter *pSourceFilter=
+				GetAppClass().CoreEngine.GetFilter<LibISDB::BonDriverSourceFilter>();
 			m_BonDriverChannelList.clear();
 			if (m_ScanChannel>0)
 				m_BonDriverChannelList.resize(m_ScanChannel);
 			LPCTSTR pszName;
-			for (int i=m_ScanChannel;(pszName=BonSrcDecoder.GetChannelName(m_ScanSpace,i))!=NULL;i++) {
+			for (int i=m_ScanChannel;(pszName=pSourceFilter->GetChannelName(m_ScanSpace,i))!=NULL;i++) {
 				m_BonDriverChannelList.push_back(TVTest::String(pszName));
 			}
 
@@ -1469,8 +1481,10 @@ unsigned int __stdcall CChannelScan::ScanProc(LPVOID lpParameter)
 void CChannelScan::Scan()
 {
 	CAppMain &App=GetAppClass();
-	CDtvEngine *pDtvEngine=&App.CoreEngine.m_DtvEngine;
-	CTsAnalyzer *pTsAnalyzer=&pDtvEngine->m_TsAnalyzer;
+	LibISDB::AnalyzerFilter *pAnalyzer=
+		App.CoreEngine.GetFilter<LibISDB::AnalyzerFilter>();
+	LibISDB::BonDriverSourceFilter *pSource=
+		App.CoreEngine.GetFilter<LibISDB::BonDriverSourceFilter>();
 
 	ScanResult Result=SCAN_RESULT_CANCELLED;
 	int SetChannelCount=0,SetChannelErrorCount=0;
@@ -1480,9 +1494,9 @@ void CChannelScan::Scan()
 	m_ChannelMaxSignalLevel=0.0f;
 	m_MaxBitRate=0;
 
-	bool fPurgeStream=pDtvEngine->m_BonSrcDecoder.IsPurgeStreamOnChannelChange();
+	bool fPurgeStream=pSource->IsPurgeStreamOnChannelChange();
 	if (!fPurgeStream)
-		pDtvEngine->m_BonSrcDecoder.SetPurgeStreamOnChannelChange(true);
+		pSource->SetPurgeStreamOnChannelChange(true);
 
 	for (;;m_ScanChannel++) {
 		if (m_ScanChannel>=(int)m_BonDriverChannelList.size()) {
@@ -1494,9 +1508,11 @@ void CChannelScan::Scan()
 		::PostMessage(m_hScanDlg,WM_APP_BEGINSCAN,m_ScanChannel,0);
 
 		SetChannelCount++;
-		if (!pDtvEngine->SetChannel(m_ScanSpace,m_ScanChannel)) {
+		App.CoreEngine.SetServiceSelectInfo(nullptr);
+		if (!pSource->SetChannel(m_ScanSpace,m_ScanChannel)) {
 			SetChannelErrorCount++;
-			if (pDtvEngine->GetLastErrorCode()==CBonSrcDecoder::ERR_TIMEOUT) {
+			if (pSource->GetLastErrorCode().category()==std::generic_category()
+					&& (std::errc)pSource->GetLastErrorCode().value()==std::errc::timed_out) {
 				Result=SCAN_RESULT_SET_CHANNEL_TIMEOUT;
 				break;
 			} else {
@@ -1508,15 +1524,15 @@ void CChannelScan::Scan()
 		}
 
 		if (::WaitForSingleObject(m_hCancelEvent,
-								  min(m_ScanWait,2000))!=WAIT_TIMEOUT)
+								  min(m_ScanWait,2000U))!=WAIT_TIMEOUT)
 			break;
-		if (m_ScanWait>2000) {
+		if (m_ScanWait>2000U) {
 			DWORD Wait=m_ScanWait-2000;
 			while (true) {
 				// SDTが来たら待ち時間終了
-				if (pTsAnalyzer->IsSdtUpdated())
+				if (pAnalyzer->IsSDTUpdated())
 					break;
-				if (::WaitForSingleObject(m_hCancelEvent,min(Wait,1000))!=WAIT_TIMEOUT)
+				if (::WaitForSingleObject(m_hCancelEvent,min(Wait,(DWORD)1000))!=WAIT_TIMEOUT)
 					goto End;
 				if (Wait<=1000)
 					break;
@@ -1526,13 +1542,13 @@ void CChannelScan::Scan()
 
 		bool fScanService=m_fScanService;
 		bool fFound=false;
-		CTsAnalyzer::SdtServiceList ServiceList;
-		TCHAR szName[256];
+		LibISDB::AnalyzerFilter::SDTServiceList ServiceList;
+		LibISDB::String Name;
 
 		m_ChannelMaxSignalLevel=0.0f;
 		float SignalLevel=GetSignalLevel();
 
-		if (pTsAnalyzer->IsSdtUpdated()
+		if (pAnalyzer->IsSDTUpdated()
 				|| m_fIgnoreSignalLevel
 				|| SignalLevel>=m_SignalLevelThreshold) {
 			for (int i=0;i<=m_RetryCount;i++) {
@@ -1542,18 +1558,18 @@ void CChannelScan::Scan()
 						goto End;
 					GetSignalLevel();
 				}
-				if (pTsAnalyzer->IsSdtUpdated()
-						&& pTsAnalyzer->GetSdtServiceList(&ServiceList)
+				if (pAnalyzer->IsSDTUpdated()
+						&& pAnalyzer->GetSDTServiceList(&ServiceList)
 						&& !ServiceList.empty()) {
 					if (fScanService) {
-						if (pTsAnalyzer->GetServiceNum()>0) {
+						if (pAnalyzer->GetServiceCount()>0) {
 							// サービスのPMTが揃ったら完了
 							// (サービスが視聴可能かどうかPMTの情報で判定するため)
 							size_t i;
 							for (i=0;i<ServiceList.size();i++) {
 								if (IsScanService(ServiceList[i])) {
-									int ServiceIndex=pTsAnalyzer->GetServiceIndexByID(ServiceList[i].ServiceID);
-									if (ServiceIndex>=0 && !pTsAnalyzer->IsServiceUpdated(ServiceIndex))
+									int ServiceIndex=pAnalyzer->GetServiceIndexByID(ServiceList[i].ServiceID);
+									if (ServiceIndex>=0 && !pAnalyzer->IsServicePMTAcquired(ServiceIndex))
 										break;
 								}
 							}
@@ -1568,13 +1584,13 @@ void CChannelScan::Scan()
 							break;
 						}
 					} else {
-						if (pTsAnalyzer->IsNitUpdated()) {
-							if (pTsAnalyzer->GetTsName(szName,lengthof(szName))>0) {
+						if (pAnalyzer->IsNITUpdated()) {
+							if (pAnalyzer->GetTSName(&Name)) {
 								fFound=true;
 								break;
 							} else {
 								// BS/CS の場合はサービスの検索を有効にする
-								WORD NetworkID=pTsAnalyzer->GetNetworkID();
+								WORD NetworkID=pAnalyzer->GetNetworkID();
 								if (App.NetworkDefinition.IsSatelliteNetworkID(NetworkID))
 									fScanService=true;
 							}
@@ -1584,14 +1600,14 @@ void CChannelScan::Scan()
 			}
 		}
 		if (fFound) {
-			const WORD TransportStreamID=pTsAnalyzer->GetTransportStreamID();
-			const WORD NetworkID=pTsAnalyzer->GetNetworkID();
+			const WORD TransportStreamID=pAnalyzer->GetTransportStreamID();
+			const WORD NetworkID=pAnalyzer->GetNetworkID();
 
 			// 見付かったチャンネルを追加する
 			if (fScanService) {
 				int ServiceCount=0;
 				for (size_t i=0;i<ServiceList.size();i++) {
-					const CTsAnalyzer::SdtServiceInfo &ServiceInfo=ServiceList[i];
+					const LibISDB::AnalyzerFilter::SDTServiceInfo &ServiceInfo=ServiceList[i];
 
 					if (!IsScanService(ServiceInfo))
 						continue;
@@ -1599,17 +1615,17 @@ void CChannelScan::Scan()
 					const WORD ServiceID=ServiceInfo.ServiceID;
 
 					// 視聴不可のサービスを除外
-					int ServiceIndex=pTsAnalyzer->GetServiceIndexByID(ServiceID);
+					int ServiceIndex=pAnalyzer->GetServiceIndexByID(ServiceID);
 					if (ServiceIndex>=0
-							&& pTsAnalyzer->IsServiceUpdated(ServiceIndex)) {
-						if (!pTsAnalyzer->IsViewableService(ServiceIndex))
+							&& pAnalyzer->IsServicePMTAcquired(ServiceIndex)) {
+						if (!App.CoreEngine.IsSelectableService(ServiceIndex))
 							continue;
 					} else {
-						if (ServiceInfo.ServiceType==SERVICE_TYPE_PROMOTIONVIDEO)
+						if (ServiceInfo.ServiceType==LibISDB::SERVICE_TYPE_PROMOTION_VIDEO)
 							continue;
 					}
-					if (ServiceInfo.ServiceType==SERVICE_TYPE_DATA) {
-						if (pTsAnalyzer->Is1SegService(ServiceIndex)) {
+					if (ServiceInfo.ServiceType==LibISDB::SERVICE_TYPE_DATA) {
+						if (pAnalyzer->Is1SegService(ServiceIndex)) {
 							if (!m_fDetect1SegService)
 								continue;
 						} else {
@@ -1618,7 +1634,7 @@ void CChannelScan::Scan()
 						}
 					}
 
-					int RemoteControlKeyID=pTsAnalyzer->GetRemoteControlKeyID();
+					int RemoteControlKeyID=pAnalyzer->GetRemoteControlKeyID();
 					if (RemoteControlKeyID==0) {
 						RemoteControlKeyID=
 							App.NetworkDefinition.GetRemoteControlKeyID(NetworkID,ServiceID);
@@ -1627,20 +1643,20 @@ void CChannelScan::Scan()
 					CChannelInfo *pChInfo=
 						new CChannelInfo(m_ScanSpace,m_ScanChannel,
 										 RemoteControlKeyID,
-										 ServiceInfo.szServiceName);
+										 ServiceInfo.ServiceName.c_str());
 					pChInfo->SetNetworkID(NetworkID);
 					pChInfo->SetTransportStreamID(TransportStreamID);
 					pChInfo->SetServiceID(ServiceID);
 					pChInfo->SetServiceType(ServiceInfo.ServiceType);
 
 					// 一部サービスはデフォルトで無効にする
-					if ((ServiceInfo.ServiceType!=SERVICE_TYPE_DIGITALTV
-							&& ServiceInfo.ServiceType!=SERVICE_TYPE_PROMOTIONVIDEO
-							&& ServiceInfo.ServiceType!=SERVICE_TYPE_4KTV
+					if ((ServiceInfo.ServiceType!=LibISDB::SERVICE_TYPE_DIGITAL_TV
+							&& ServiceInfo.ServiceType!=LibISDB::SERVICE_TYPE_PROMOTION_VIDEO
+							&& ServiceInfo.ServiceType!=LibISDB::SERVICE_TYPE_4K_TV
 #ifdef TVTEST_FOR_1SEG
-							&& ServiceInfo.ServiceType!=SERVICE_TYPE_DATA
+							&& ServiceInfo.ServiceType!=LibISDB::SERVICE_TYPE_DATA
 #endif
-							&& ServiceInfo.ServiceType!=SERVICE_TYPE_DIGITALAUDIO
+							&& ServiceInfo.ServiceType!=LibISDB::SERVICE_TYPE_DIGITAL_AUDIO
 							)
 							// BSのサブチャンネル
 							|| (App.NetworkDefinition.IsBSNetworkID(NetworkID) && ServiceID<190 && ServiceCount>0)
@@ -1650,7 +1666,7 @@ void CChannelScan::Scan()
 						pChInfo->Enable(false);
 
 					TRACE(TEXT("Channel found [%2d][%2d] : %s NID 0x%04x TSID 0x%04x SID 0x%04x\n"),
-						  m_ScanChannel,(int)i,ServiceInfo.szServiceName,
+						  m_ScanChannel,(int)i,ServiceInfo.ServiceName.c_str(),
 						  NetworkID,TransportStreamID,ServiceID);
 
 					m_ScanningChannelList.AddChannel(pChInfo);
@@ -1662,7 +1678,7 @@ void CChannelScan::Scan()
 			} else {
 				CChannelInfo *pChInfo=
 					new CChannelInfo(m_ScanSpace,m_ScanChannel,
-									 pTsAnalyzer->GetRemoteControlKeyID(),szName);
+									 pAnalyzer->GetRemoteControlKeyID(),Name.c_str());
 				pChInfo->SetNetworkID(NetworkID);
 				pChInfo->SetTransportStreamID(TransportStreamID);
 
@@ -1670,12 +1686,12 @@ void CChannelScan::Scan()
 					if (IsScanService(*it)
 							&& (
 #ifdef TVTEST_FOR_1SEG
-							it->ServiceType==SERVICE_TYPE_DATA
+							it->ServiceType==LibISDB::SERVICE_TYPE_DATA
 #else
-							it->ServiceType==SERVICE_TYPE_DIGITALTV
-							|| it->ServiceType==SERVICE_TYPE_4KTV
+							it->ServiceType==LibISDB::SERVICE_TYPE_DIGITAL_TV
+							|| it->ServiceType==LibISDB::SERVICE_TYPE_4K_TV
 #endif
-							|| it->ServiceType==SERVICE_TYPE_DIGITALAUDIO)) {
+							|| it->ServiceType==LibISDB::SERVICE_TYPE_DIGITAL_AUDIO)) {
 						pChInfo->SetServiceID(it->ServiceID);
 						pChInfo->SetServiceType(it->ServiceType);
 						break;
@@ -1683,7 +1699,7 @@ void CChannelScan::Scan()
 				}
 
 				TRACE(TEXT("Channel found [%2d] : %s NID 0x%04x TSID 0x%04x SID 0x%04x\n"),
-					  m_ScanChannel,szName,TransportStreamID,NetworkID,pChInfo->GetServiceID());
+					  m_ScanChannel,Name.c_str(),TransportStreamID,NetworkID,pChInfo->GetServiceID());
 
 				m_ScanningChannelList.AddChannel(pChInfo);
 
@@ -1703,7 +1719,7 @@ void CChannelScan::Scan()
 
 End:
 	if (!fPurgeStream)
-		pDtvEngine->m_BonSrcDecoder.SetPurgeStreamOnChannelChange(false);
+		pSource->SetPurgeStreamOnChannelChange(false);
 
 	::PostMessage(m_hScanDlg,WM_APP_ENDSCAN,
 				  (WPARAM)Result,MAKELPARAM(SetChannelCount,SetChannelErrorCount));
@@ -1712,15 +1728,16 @@ End:
 
 float CChannelScan::GetSignalLevel()
 {
-	CBonSrcDecoder *pBonSrcDecoder=&GetAppClass().CoreEngine.m_DtvEngine.m_BonSrcDecoder;
+	LibISDB::BonDriverSourceFilter *pSource=
+		GetAppClass().CoreEngine.GetFilter<LibISDB::BonDriverSourceFilter>();
 
-	float SignalLevel=pBonSrcDecoder->GetSignalLevel();
+	float SignalLevel=pSource->GetSignalLevel();
 	if (SignalLevel>m_MaxSignalLevel)
 		m_MaxSignalLevel=SignalLevel;
 	if (SignalLevel>m_ChannelMaxSignalLevel)
 		m_ChannelMaxSignalLevel=SignalLevel;
 
-	DWORD BitRate=pBonSrcDecoder->GetBitRate();
+	DWORD BitRate=pSource->GetBitRate();
 	if (BitRate>m_MaxBitRate)
 		m_MaxBitRate=BitRate;
 
@@ -1728,22 +1745,22 @@ float CChannelScan::GetSignalLevel()
 }
 
 
-bool CChannelScan::IsScanService(const CTsAnalyzer::SdtServiceInfo &ServiceInfo,bool fData) const
+bool CChannelScan::IsScanService(const LibISDB::AnalyzerFilter::SDTServiceInfo &ServiceInfo,bool fData) const
 {
-	return ServiceInfo.szServiceName[0]!='\0'
-		&& ::lstrcmp(ServiceInfo.szServiceName,TEXT(" "))!=0
-		&& ::lstrcmp(ServiceInfo.szServiceName,TEXT("　"))!=0
+	return !ServiceInfo.ServiceName.empty()
+		&& ServiceInfo.ServiceName.compare(TEXT(" "))!=0
+		&& ServiceInfo.ServiceName.compare(TEXT("　"))!=0
 		&& IsScanServiceType(ServiceInfo.ServiceType,fData);
 }
 
 
 bool CChannelScan::IsScanServiceType(BYTE ServiceType,bool fData) const
 {
-	return ServiceType==SERVICE_TYPE_DIGITALTV
-		|| ServiceType==SERVICE_TYPE_PROMOTIONVIDEO
-		|| ServiceType==SERVICE_TYPE_4KTV
-		|| (m_fDetectAudioService && ServiceType==SERVICE_TYPE_DIGITALAUDIO)
-		|| (fData && ServiceType==SERVICE_TYPE_DATA);
+	return ServiceType==LibISDB::SERVICE_TYPE_DIGITAL_TV
+		|| ServiceType==LibISDB::SERVICE_TYPE_PROMOTION_VIDEO
+		|| ServiceType==LibISDB::SERVICE_TYPE_4K_TV
+		|| (m_fDetectAudioService && ServiceType==LibISDB::SERVICE_TYPE_DIGITAL_AUDIO)
+		|| (fData && ServiceType==LibISDB::SERVICE_TYPE_DATA);
 }
 
 

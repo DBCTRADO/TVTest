@@ -5,13 +5,14 @@
 #include <vector>
 #include <set>
 #include <deque>
+#include <map>
 #include "Dialog.h"
-#include "EpgProgramList.h"
 #include "ChannelList.h"
 #include "RichEditUtil.h"
 #include "RegExp.h"
 #include "Settings.h"
 #include "WindowUtil.h"
+#include "LibISDB/LibISDB/EPG/EventInfo.hpp"
 
 
 class CEventSearchServiceList
@@ -166,8 +167,9 @@ public:
 	bool InitializeRegExp();
 	void Finalize();
 	bool BeginSearch(const CEventSearchSettings &Settings);
-	bool Match(const CEventInfoData *pEventInfo);
+	bool Match(const LibISDB::EventInfo *pEventInfo);
 	int FindKeyword(LPCTSTR pszText,LPCTSTR pKeyword,int KeywordLength,int *pFoundLength=NULL) const;
+	bool FindExtendedText(const LibISDB::EventInfo::ExtendedTextInfoList &ExtendedText,LPCTSTR pKeyword,int KeywordLength) const;
 	const CEventSearchSettings &GetSearchSettings() const { return m_Settings; }
 	TVTest::CRegExp &GetRegExp() { return m_RegExp; }
 
@@ -178,8 +180,8 @@ private:
 	decltype(FindNLSString) *m_pFindNLSString;
 #endif
 
-	bool MatchKeyword(const CEventInfoData *pEventInfo,LPCTSTR pszKeyword) const;
-	bool MatchRegExp(const CEventInfoData *pEventInfo);
+	bool MatchKeyword(const LibISDB::EventInfo *pEventInfo,LPCTSTR pszKeyword) const;
+	bool MatchRegExp(const LibISDB::EventInfo *pEventInfo);
 };
 
 class CEventSearchOptions
@@ -273,10 +275,10 @@ private:
 	int m_SearchTarget;
 };
 
-class CSearchEventInfo : public CEventInfoData
+class CSearchEventInfo : public LibISDB::EventInfo
 {
 public:
-	CSearchEventInfo(const CEventInfoData &EventInfo,
+	CSearchEventInfo(const LibISDB::EventInfo &EventInfo,
 					 const CTunerChannelInfo &ChannelInfo);
 	const CTunerChannelInfo &GetChannelInfo() const { return m_ChannelInfo; }
 
@@ -318,7 +320,7 @@ public:
 		CEventSearcher *m_pSearcher;
 
 		bool AddSearchResult(CSearchEventInfo *pEventInfo);
-		bool Match(const CEventInfoData *pEventInfo) const;
+		bool Match(const LibISDB::EventInfo *pEventInfo) const;
 	};
 
 	CProgramSearchDialog(CEventSearchOptions &Options);
@@ -330,7 +332,7 @@ public:
 	bool Search(LPTSTR pszKeyword);
 	bool SetHighlightResult(bool fHighlight);
 	bool GetHighlightResult() const { return m_fHighlightResult; }
-	bool IsHitEvent(const CEventInfoData *pEventInfo) const;
+	bool IsHitEvent(const LibISDB::EventInfo *pEventInfo) const;
 	const CEventSearchOptions &GetOptions() const { return m_Options; }
 	CEventSearchOptions &GetOptions() { return m_Options; }
 	void SetResultListHeight(int Height);
@@ -367,8 +369,8 @@ private:
 	bool AddSearchResult(CSearchEventInfo *pEventInfo);
 	void ClearSearchResult();
 	void SortSearchResult();
-	int FormatEventTimeText(const CEventInfoData *pEventInfo,LPTSTR pszText,int MaxLength) const;
-	void FormatEventInfoText(const CEventInfoData *pEventInfo,TVTest::String *pText) const;
+	int FormatEventTimeText(const LibISDB::EventInfo *pEventInfo,LPTSTR pszText,int MaxLength) const;
+	void FormatEventInfoText(const LibISDB::EventInfo *pEventInfo,TVTest::String *pText) const;
 	void HighlightKeyword();
 	bool SearchNextKeyword(LPCTSTR *ppszText,LPCTSTR pKeyword,int KeywordLength,int *pLength) const;
 	bool IsSplitterPos(int x,int y) const;

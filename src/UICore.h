@@ -10,7 +10,7 @@
 #include "Menu.h"
 #include "GUIUtil.h"
 #include "VariableString.h"
-#include "BonTsEngine/TsUtilClass.h"
+#include "LibISDB/LibISDB/Base/Logger.hpp"
 
 
 class CAppMain;
@@ -18,7 +18,7 @@ class CBasicDialog;
 
 class CUICore
 	: public CColorSchemeOptions::CEventHandler
-	, public CTracer
+	, public LibISDB::Logger
 {
 public:
 	enum {
@@ -71,14 +71,15 @@ public:
 	bool SetVolume(int Volume,bool fOSD=true);
 	bool GetMute() const;
 	bool SetMute(bool fMute);
-	bool SetDualMonoMode(CAudioDecFilter::DualMonoMode Mode,bool fApplyStereo=true);
-	CAudioDecFilter::DualMonoMode GetDualMonoMode() const;
-	CAudioDecFilter::DualMonoMode GetActualDualMonoMode() const;
-	bool SetStereoMode(CAudioDecFilter::StereoMode Mode);
-	CAudioDecFilter::StereoMode GetStereoMode() const;
+	bool SetDualMonoMode(LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode Mode,bool fApplyStereo=true);
+	LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode GetDualMonoMode() const;
+	LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode GetActualDualMonoMode() const;
+	bool SetStereoMode(LibISDB::DirectShow::AudioDecoderFilter::StereoMode Mode);
+	LibISDB::DirectShow::AudioDecoderFilter::StereoMode GetStereoMode() const;
 	int GetNumAudioStreams() const;
 	int GetAudioStream() const;
 	bool SetAudioStream(int Stream);
+	int GetAudioChannelCount() const;
 	bool SelectAudio(int Index);
 	bool AutoSelectAudio();
 	bool SwitchAudio();
@@ -201,7 +202,7 @@ private:
 
 	bool SelectAudio(const TVTest::CAudioManager::AudioSelectInfo &Info,bool fUpdate=true);
 	bool SelectAudioStream(int Stream);
-	bool SelectDualMonoMode(CAudioDecFilter::DualMonoMode Mode,bool fUpdate=true);
+	bool SelectDualMonoMode(LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode Mode,bool fUpdate=true);
 
 	bool CreateChannelMenu(
 		const CChannelList *pChannelList,int CurChannel,
@@ -211,8 +212,8 @@ private:
 // CColorSchemeOptions::CEventHandler
 	bool ApplyColorScheme(const CColorScheme *pColorScheme) override;
 
-// CTracer
-	void OnTrace(CTracer::TraceType Type,LPCTSTR pszOutput) override;
+// LibISDB::Logger
+	void OnLog(LibISDB::Logger::LogType Type,LPCTSTR pszOutput) override;
 };
 
 

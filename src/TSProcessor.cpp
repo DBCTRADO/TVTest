@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "TVTest.h"
 #include "TSProcessor.h"
+#include <OleCtl.h>
 #include <algorithm>
 #include <utility>
 #include "Common/DebugDef.h"
@@ -11,7 +12,7 @@ namespace TVTest
 
 
 CTSPacketInterface::CTSPacketInterface()
-	: m_pMediaData(nullptr)
+	: m_pData(nullptr)
 	, m_fModified(false)
 {
 }
@@ -29,8 +30,8 @@ STDMETHODIMP CTSPacketInterface::QueryInterface(REFIID riid, void **ppvObject)
 
 	if (riid == IID_IUnknown || riid == __uuidof(ITSPacket)) {
 		*ppvObject = static_cast<ITSPacket*>(this);
-	} else if (riid == __uuidof(ITsMediaData)) {
-		*ppvObject = static_cast<ITsMediaData*>(this);
+	} else if (riid == __uuidof(ITSDataBuffer)) {
+		*ppvObject = static_cast<ITSDataBuffer*>(this);
 	} else {
 		*ppvObject = nullptr;
 		return E_NOINTERFACE;
@@ -47,12 +48,12 @@ STDMETHODIMP CTSPacketInterface::GetData(BYTE **ppData)
 	if (ppData == nullptr)
 		return E_POINTER;
 
-	if (m_pMediaData == nullptr) {
+	if (m_pData == nullptr) {
 		*ppData = nullptr;
 		return E_FAIL;
 	}
 
-	*ppData = m_pMediaData->GetData();
+	*ppData = m_pData->GetData();
 
 	return S_OK;
 }
@@ -63,10 +64,10 @@ STDMETHODIMP CTSPacketInterface::GetSize(ULONG *pSize)
 	if (pSize == nullptr)
 		return E_POINTER;
 
-	if (m_pMediaData == nullptr)
+	if (m_pData == nullptr)
 		return E_UNEXPECTED;
 
-	*pSize = m_pMediaData->GetSize();
+	*pSize = static_cast<ULONG>(m_pData->GetSize());
 
 	return S_OK;
 }
@@ -85,18 +86,17 @@ STDMETHODIMP CTSPacketInterface::GetModified()
 }
 
 
-STDMETHODIMP CTSPacketInterface::SetMediaData(CMediaData *pMediaData)
+STDMETHODIMP CTSPacketInterface::SetDataBuffer(LibISDB::DataBuffer *pData)
 {
-	m_pMediaData = pMediaData;
+	m_pData = pData;
 	return S_OK;
 }
 
 
 
 
-CTSProcessor::CTSProcessor(Interface::ITSProcessor *pTSProcessor, IEventHandler *pEventHandler)
-	: CMediaDecoder(pEventHandler, 1, 1)
-	, m_pTSProcessor(pTSProcessor)
+CTSProcessor::CTSProcessor(Interface::ITSProcessor *pTSProcessor)
+	: m_pTSProcessor(pTSProcessor)
 	, m_pFilterManager(nullptr)
 	, m_pFilterModule(nullptr)
 	, m_pFilter(nullptr)
@@ -146,26 +146,26 @@ void CTSProcessor::Reset()
 }
 
 
-const bool CTSProcessor::InputMedia(CMediaData *pMediaData, const DWORD dwInputIndex)
+void CTSProcessor::SetActiveServiceID(uint16_t ServiceID)
 {
-	m_pTSPacket->SetMediaData(pMediaData);
-
-	return SUCCEEDED(m_pTSProcessor->InputPacket(m_pTSPacket));
+	m_pTSProcessor->SetActiveServiceID(ServiceID);
 }
 
 
-bool CTSProcessor::SetActiveServiceID(WORD ServiceID)
+bool CTSProcessor::ReceiveData(LibISDB::DataStream *pData)
 {
-	return SUCCEEDED(m_pTSProcessor->SetActiveServiceID(ServiceID));
-}
+	do {
+		m_pTSPacket->SetDataBuffer(pData->GetData());
+		m_pTSProcessor->InputPacket(m_pTSPacket);
+	} while (pData->Next());
 
+	if (m_OutputSequence.GetDataCount() > 0) {
+		OutputData(m_OutputSequence);
+		m_OutputSequence.SetDataCount(0);
+		m_OutputPacket.clear();
+	}
 
-WORD CTSProcessor::GetActiveServiceID() const
-{
-	WORD ServiceID = 0;
-	if (FAILED(m_pTSProcessor->GetActiveServiceID(&ServiceID)))
-		return 0;
-	return ServiceID;
+	return true;
 }
 
 
@@ -350,7 +350,7 @@ bool CTSProcessor::GetModuleList(std::vector<String> *pList) const
 bool CTSProcessor::LoadModule(LPCWSTR pszName)
 {
 	if (m_pFilterModule == nullptr) {
-		SetError(E_NOTIMPL, TEXT("モジュールは利用できません。"));
+		SetHRESULTError(E_NOTIMPL, TEXT("モジュールは利用できません。"));
 		return false;
 	}
 
@@ -371,7 +371,7 @@ bool CTSProcessor::LoadModule(LPCWSTR pszName)
 
 	StringUtility::Assign(m_ModuleName, pszName);
 
-	ClearError();
+	ResetError();
 
 	return true;
 }
@@ -707,7 +707,7 @@ bool CTSProcessor::OpenFilter(int Device, LPCWSTR pszName)
 	}
 
 	if (m_pFilterModule == nullptr) {
-		SetError(E_NOTIMPL, TEXT("フィルターは利用できません。"));
+		SetHRESULTError(E_NOTIMPL, TEXT("フィルターは利用できません。"));
 		return false;
 	}
 
@@ -721,7 +721,7 @@ bool CTSProcessor::OpenFilter(int Device, LPCWSTR pszName)
 	m_CurDevice = Device;
 	StringUtility::Assign(m_CurFilter, pszName);
 
-	ClearError();
+	ResetError();
 
 	return true;
 }
@@ -848,7 +848,9 @@ STDMETHODIMP CTSProcessor::OnError(const Interface::ErrorInfo *pInfo)
 	if (pInfo == nullptr)
 		return E_POINTER;
 
-	SetError(pInfo->hr, pInfo->pszText, pInfo->pszAdvise, pInfo->pszSystemMessage);
+	SetHRESULTError(pInfo->hr, pInfo->pszText);
+	SetErrorAdvise(pInfo->pszAdvise);
+	SetErrorSystemMessage(pInfo->pszSystemMessage);
 
 	return S_OK;
 }
@@ -859,27 +861,25 @@ STDMETHODIMP CTSProcessor::OutLog(Interface::LogType Type, LPCWSTR pszMessage)
 	if (pszMessage == nullptr)
 		return E_POINTER;
 
-	if (Type == Interface::LOG_VERBOSE) {
-		TRACE(L"%s\n", pszMessage);
-		return S_OK;
-	}
-
-	CTracer::TraceType TraceType;
+	LibISDB::Logger::LogType LogType;
 
 	switch (Type) {
+	case Interface::LOG_VERBOSE:
+		LogType = LibISDB::Logger::LogType::Verbose;
+		break;
 	case Interface::LOG_INFO:
 	default:
-		TraceType = CTracer::TYPE_INFORMATION;
+		LogType = LibISDB::Logger::LogType::Information;
 		break;
 	case Interface::LOG_WARNING:
-		TraceType = CTracer::TYPE_WARNING;
+		LogType = LibISDB::Logger::LogType::Warning;
 		break;
 	case Interface::LOG_ERROR:
-		TraceType = CTracer::TYPE_ERROR;
+		LogType = LibISDB::Logger::LogType::Error;
 		break;
 	}
 
-	Trace(TraceType, TEXT("%s"), pszMessage);
+	LogRaw(LogType, pszMessage);
 
 	return S_OK;
 }
@@ -902,28 +902,36 @@ STDMETHODIMP CTSProcessor::OutputPacket(Interface::ITSPacket *pPacket)
 	if (pPacket == nullptr)
 		return E_POINTER;
 
-	ITsMediaData *pTsMediaData;
+	ITSDataBuffer *pTsDataBuffer;
 
-	if (SUCCEEDED(pPacket->QueryInterface(IID_PPV_ARGS(&pTsMediaData)))) {
-		CMediaData *pMediaData = pTsMediaData->GetMediaData();
+	if (SUCCEEDED(pPacket->QueryInterface(IID_PPV_ARGS(&pTsDataBuffer)))) {
+		LibISDB::DataBuffer *pData = pTsDataBuffer->GetDataBuffer();
 
-		if (!m_fSourceProcessor && pPacket->GetModified() == S_OK) {
+		if (m_fSourceProcessor) {
+			OutputData(pData);
+		} else {
 #ifndef _DEBUG
-			CTsPacket *pTsPacket = static_cast<CTsPacket*>(pMediaData);
-			pTsPacket->ReparsePacket();
+			LibISDB::TSPacket *pPacketData = static_cast<LibISDB::TSPacket *>(pData);
 #else
-			CTsPacket *pTsPacket = dynamic_cast<CTsPacket*>(pMediaData);
-			_ASSERT(pTsPacket != nullptr);
-			if (pTsPacket->ParsePacket() != CTsPacket::EC_VALID) {
-				pTsMediaData->Release();
-				return E_FAIL;
-			}
+			LibISDB::TSPacket *pPacketData = dynamic_cast<LibISDB::TSPacket *>(pData);
+			_ASSERT(pPacketData != nullptr);
 #endif
+
+			if (pPacket->GetModified() == S_OK) {
+#ifndef _DEBUG
+				pPacketData->ReparsePacket();
+#else
+				if (pPacketData->ParsePacket() != LibISDB::TSPacket::ParseResult::OK) {
+					pTsDataBuffer->Release();
+					return E_FAIL;
+				}
+#endif
+			}
+
+			m_OutputSequence.AddData(pPacketData);
 		}
 
-		OutputMedia(pMediaData);
-
-		pTsMediaData->Release();
+		pTsDataBuffer->Release();
 	} else {
 		HRESULT hr;
 		ULONG Size = 0;
@@ -938,18 +946,24 @@ STDMETHODIMP CTSProcessor::OutputPacket(Interface::ITSPacket *pPacket)
 			return E_FAIL;
 
 		if (m_fSourceProcessor) {
-			if (m_OutputPacket.SetData(pData, Size) != Size)
+			if (m_OutputData.SetData(pData, Size) != Size)
 				return E_OUTOFMEMORY;
+			OutputData(&m_OutputData);
 		} else {
-			if (Size != TS_PACKETSIZE)
+			if (Size != LibISDB::TS_PACKET_SIZE)
 				return E_FAIL;
-			if (m_OutputPacket.SetData(pData, TS_PACKETSIZE) != TS_PACKETSIZE)
+			m_OutputPacket.emplace_back();
+			LibISDB::TSPacket &Packet = m_OutputPacket.back();
+			if (Packet.SetData(pData, LibISDB::TS_PACKET_SIZE) != LibISDB::TS_PACKET_SIZE) {
+				m_OutputPacket.pop_back();
 				return E_OUTOFMEMORY;
-			if (m_OutputPacket.ParsePacket() != CTsPacket::EC_VALID)
+			}
+			if (Packet.ParsePacket() != LibISDB::TSPacket::ParseResult::OK) {
+				m_OutputPacket.pop_back();
 				return E_FAIL;
+			}
+			m_OutputSequence.AddData(&Packet);
 		}
-
-		OutputMedia(&m_OutputPacket);
 	}
 
 	return S_OK;

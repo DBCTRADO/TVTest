@@ -129,16 +129,16 @@ namespace TVTest
 		MARGINS m_Margins;
 		int m_MenuLogoMargin;
 		CTooltip m_Tooltip;
-		SYSTEMTIME m_BaseTime;
+		LibISDB::DateTime m_BaseTime;
 		std::vector<CMenuItem*> m_ItemList;
 		HIMAGELIST m_himlIcons;
 		CChannelMenuLogo m_Logo;
 
 		void SetFolderMenu(HMENU hmenu,int MenuPos,HDC hdc,UINT *pCommand,const CFavoriteFolder *pFolder);
-		int GetEventText(const CEventInfoData *pEventInfo,
+		int GetEventText(const LibISDB::EventInfo *pEventInfo,
 						 LPTSTR pszText,int MaxLength) const;
 		void CreateFont(HDC hdc);
-		static void GetBaseTime(SYSTEMTIME *pTime);
+		static void GetBaseTime(LibISDB::DateTime *pTime);
 	};
 
 	class COrganizeFavoritesDialog : public CResizableDialog

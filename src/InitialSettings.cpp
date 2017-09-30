@@ -2,7 +2,7 @@
 #include "TVTest.h"
 #include "AppMain.h"
 #include "InitialSettings.h"
-#include "DirectShowFilter/DirectShowUtil.h"
+#include "LibISDB/LibISDB/Windows/Viewer/DirectShow/DirectShowUtilities.hpp"
 #include "VideoOptions.h"
 #include "DialogUtil.h"
 #include "DrawUtil.h"
@@ -24,9 +24,9 @@ CInitialSettings::CInitialSettings(const CDriverManager *pDriverManager)
 	// Vista以降ではビデオレンダラのデフォルトをEVRにする
 	m_VideoRenderer=
 #ifdef WIN_XP_SUPPORT
-		!Util::OS::IsWindowsVistaOrLater() ? CVideoRenderer::RENDERER_DEFAULT :
+		!Util::OS::IsWindowsVistaOrLater() ? LibISDB::DirectShow::VideoRenderer::RendererType::Default :
 #endif
-		CVideoRenderer::RENDERER_EVR;
+		LibISDB::DirectShow::VideoRenderer::RendererType::EVR;
 
 #ifdef WIN_XP_SUPPORT
 	TCHAR szRecFolder[MAX_PATH];
@@ -240,17 +240,17 @@ INT_PTR CInitialSettings::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPara
 				if (fH265Decoder)
 					GetDecoderSetting(IDC_INITIALSETTINGS_H265DECODER,&H265DecoderName);
 
-				CVideoRenderer::RendererType VideoRenderer=(CVideoRenderer::RendererType)
+				LibISDB::DirectShow::VideoRenderer::RendererType VideoRenderer=(LibISDB::DirectShow::VideoRenderer::RendererType)
 					DlgComboBox_GetItemData(hDlg,IDC_INITIALSETTINGS_VIDEORENDERER,
 						DlgComboBox_GetCurSel(hDlg,IDC_INITIALSETTINGS_VIDEORENDERER));
 
 				// 相性の悪い組み合わせに対して注意を表示する
 				static const struct {
 					LPCTSTR pszDecoder;
-					CVideoRenderer::RendererType Renderer;
+					LibISDB::DirectShow::VideoRenderer::RendererType Renderer;
 					LPCTSTR pszMessage;
 				} ConflictList[] = {
-					{TEXT("CyberLink"),	CVideoRenderer::RENDERER_DEFAULT,
+					{TEXT("CyberLink"),	LibISDB::DirectShow::VideoRenderer::RendererType::Default,
 						TEXT("CyberLink のデコーダとデフォルトレンダラの組み合わせで、\n")
 						TEXT("一部の番組で比率がおかしくなる現象が出る事があるため、\n")
 						TEXT("レンダラをデフォルト以外にすることをお奨めします。\n")
@@ -269,7 +269,7 @@ INT_PTR CInitialSettings::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPara
 					}
 				}
 
-				if (!CVideoRenderer::IsAvailable(VideoRenderer)) {
+				if (!LibISDB::DirectShow::VideoRenderer::IsAvailable(VideoRenderer)) {
 					::MessageBox(hDlg,TEXT("選択されたレンダラはこの環境で利用可能になっていません。"),
 								 NULL,MB_OK | MB_ICONEXCLAMATION);
 					return TRUE;
@@ -355,13 +355,13 @@ INT_PTR CInitialSettings::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPara
 void CInitialSettings::InitDecoderList(int ID,const GUID &SubType,LPCTSTR pszDecoderName)
 {
 	LPCWSTR pszDefaultDecoderName=
-		CInternalDecoderManager::IsDecoderAvailable(SubType)?
-			CInternalDecoderManager::GetDecoderName(SubType):NULL;
-	CDirectShowFilterFinder FilterFinder;
+		LibISDB::DirectShow::KnownDecoderManager::IsDecoderAvailable(SubType)?
+			LibISDB::DirectShow::KnownDecoderManager::GetDecoderName(SubType):NULL;
+	LibISDB::DirectShow::FilterFinder FilterFinder;
 	std::vector<TVTest::String> FilterList;
 	int Sel=0;
 
-	if (FilterFinder.FindFilter(&MEDIATYPE_Video,&SubType)) {
+	if (FilterFinder.FindFilters(&MEDIATYPE_Video,&SubType)) {
 		FilterList.reserve(FilterFinder.GetFilterCount());
 		for (int i=0;i<FilterFinder.GetFilterCount();i++) {
 			TVTest::String FilterName;

@@ -34,13 +34,19 @@ void CUISkin::ShowErrorMessage(LPCTSTR pszText) const
 }
 
 
-void CUISkin::ShowErrorMessage(const CBonErrorHandler *pErrorHandler,
+void CUISkin::ShowErrorMessage(const LibISDB::ErrorHandler *pErrorHandler,
 							   LPCTSTR pszTitle) const
 {
-	TCHAR szText[1024];
+	TVTest::String Text;
 
-	pErrorHandler->FormatLastErrorText(szText,lengthof(szText));
-	MessageDialog.Show(GetVideoHostWindow(),CMessageDialog::TYPE_WARNING,szText,
+	Text=pErrorHandler->GetLastErrorText();
+	if (!IsStringEmpty(pErrorHandler->GetLastErrorAdvise())) {
+		if (!Text.empty())
+			Text+=TEXT('\n');
+		Text+=pErrorHandler->GetLastErrorAdvise();
+	}
+
+	MessageDialog.Show(GetVideoHostWindow(),CMessageDialog::TYPE_WARNING,Text.c_str(),
 					   pszTitle,pErrorHandler->GetLastErrorSystemMessage());
 }
 

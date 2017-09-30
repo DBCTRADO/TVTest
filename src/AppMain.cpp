@@ -172,12 +172,11 @@ CAppMain::CAppMain()
 	: m_hInst(nullptr)
 	, Core(*this)
 	, UICore(*this)
-	, EpgProgramList(&CoreEngine.m_DtvEngine.m_EventManager)
 	, MainWindow(*this)
 	, SideBar(&CommandList)
-	, ChannelDisplay(&EpgProgramList)
+	, ChannelDisplay(&EPGDatabase)
 
-	, Epg(EpgProgramList,EventSearchOptions)
+	, Epg(EPGDatabase,EventSearchOptions)
 
 	, OSDManager(&OSDOptions)
 	, StatusOptions(&StatusView)
@@ -190,7 +189,7 @@ CAppMain::CAppMain()
 	, m_fFirstExecute(false)
 	, m_fInitialSettings(false)
 
-	, m_DtvEngineHandler(*this)
+	, m_EngineEventListener(*this)
 	, m_StreamInfoEventHandler(*this)
 	, m_CaptureWindowEventHandler(*this)
 
@@ -311,6 +310,8 @@ void CAppMain::Finalize()
 #define FINALIZE_CONTINUE
 #endif
 
+	RecordManager.Terminate();
+
 	TaskTrayManager.Finalize();
 	ChannelMenu.Destroy();
 	FavoritesMenu.Destroy();
@@ -326,7 +327,7 @@ void CAppMain::Finalize()
 	FINALIZE_CONTINUE
 
 	CoreEngine.Close();
-	CoreEngine.m_DtvEngine.SetTracer(nullptr);
+	CoreEngine.SetLogger(nullptr);
 
 	FINALIZE_CONTINUE
 
@@ -340,8 +341,7 @@ void CAppMain::Finalize()
 	::SetPriorityClass(::GetCurrentProcess(),BELOW_NORMAL_PRIORITY_CLASS);
 
 	if (!CmdLineOptions.m_fNoEpg) {
-		EpgProgramList.UpdateProgramList(CEpgProgramList::SERVICE_UPDATE_DISCARD_ENDED_EVENTS);
-		EpgOptions.SaveEpgFile(&EpgProgramList);
+		EpgOptions.SaveEpgFile(&EPGDatabase);
 	}
 
 	FINALIZE_CONTINUE
@@ -696,15 +696,6 @@ int CAppMain::Main(HINSTANCE hInstance,LPCTSTR pszCmdLine,int nCmdShow)
 			CmdLineOptions.m_fShowProgramGuide=true;
 			CmdLineOptions.m_fStandby=true;
 		}
-
-		if (CmdLineOptions.m_fMpeg2 || CmdLineOptions.m_fH264 || CmdLineOptions.m_fH265) {
-			CoreEngine.m_DtvEngine.m_TsAnalyzer.SetVideoStreamTypeViewable(
-				STREAM_TYPE_MPEG2_VIDEO,CmdLineOptions.m_fMpeg2);
-			CoreEngine.m_DtvEngine.m_TsAnalyzer.SetVideoStreamTypeViewable(
-				STREAM_TYPE_H264,CmdLineOptions.m_fH264);
-			CoreEngine.m_DtvEngine.m_TsAnalyzer.SetVideoStreamTypeViewable(
-				STREAM_TYPE_H265,CmdLineOptions.m_fH265);
-		}
 	}
 
 	Initialize();
@@ -864,6 +855,16 @@ int CAppMain::Main(HINSTANCE hInstance,LPCTSTR pszCmdLine,int nCmdShow)
 	ColorSchemeOptions.SetEventHandler(&UICore);
 	ColorSchemeOptions.ApplyColorScheme();
 
+	if (CmdLineOptions.m_fNoTSProcessor)
+		CoreEngine.EnableTSProcessor(false);
+	CoreEngine.SetNoEpg(CmdLineOptions.m_fNoEpg);
+
+	CoreEngine.CreateFilters();
+
+	LibISDB::EPGDatabaseFilter *pEPGDatabaseFilter=CoreEngine.GetFilter<LibISDB::EPGDatabaseFilter>();
+	if (pEPGDatabaseFilter!=nullptr)
+		pEPGDatabaseFilter->SetEPGDatabase(&EPGDatabase);
+
 	// ウィンドウの作成
 	if (!MainWindow.Create(nullptr,WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN)) {
 		AddLog(CLogItem::TYPE_ERROR,TEXT("ウィンドウが作成できません。"));
@@ -886,18 +887,37 @@ int CAppMain::Main(HINSTANCE hInstance,LPCTSTR pszCmdLine,int nCmdShow)
 	if (CmdLineOptions.m_fMinimize)
 		MainWindow.InitMinimize();
 
-	ViewOptions.Apply(COptions::UPDATE_ALL);
-	VideoOptions.Apply(COptions::UPDATE_ALL);
+	if (CmdLineOptions.m_fMpeg2 || CmdLineOptions.m_fH264 || CmdLineOptions.m_fH265) {
+		CoreEngine.SetStreamTypePlayable(
+			LibISDB::STREAM_TYPE_MPEG2_VIDEO,CmdLineOptions.m_fMpeg2);
+		CoreEngine.SetStreamTypePlayable(
+			LibISDB::STREAM_TYPE_H264,CmdLineOptions.m_fH264);
+		CoreEngine.SetStreamTypePlayable(
+			LibISDB::STREAM_TYPE_H265,CmdLineOptions.m_fH265);
+	} else {
+		CoreEngine.SetStreamTypePlayable(LibISDB::STREAM_TYPE_MPEG2_VIDEO,true);
+		CoreEngine.SetStreamTypePlayable(LibISDB::STREAM_TYPE_H264,true);
+		CoreEngine.SetStreamTypePlayable(LibISDB::STREAM_TYPE_H265,true);
+	}
+	CoreEngine.SetStreamTypePlayable(LibISDB::STREAM_TYPE_MPEG1_AUDIO,true);
+	CoreEngine.SetStreamTypePlayable(LibISDB::STREAM_TYPE_MPEG2_AUDIO,true);
+	CoreEngine.SetStreamTypePlayable(LibISDB::STREAM_TYPE_AAC,true);
+	CoreEngine.SetStreamTypePlayable(LibISDB::STREAM_TYPE_AC3,true);
 
 	if (CmdLineOptions.m_f1Seg || PlaybackOptions.Is1SegModeOnStartup())
 		Core.Set1SegMode(true,false);
-	if (CmdLineOptions.m_fNoTSProcessor)
-		CoreEngine.EnableTSProcessor(false);
 	CoreEngine.SetMinTimerResolution(PlaybackOptions.GetMinTimerResolution());
-	CoreEngine.SetNoEpg(CmdLineOptions.m_fNoEpg);
+
+	RecordManager.SetRecorderFilter(&CoreEngine,CoreEngine.GetFilter<LibISDB::RecorderFilter>());
+
+	ViewOptions.Apply(COptions::UPDATE_ALL);
+	VideoOptions.Apply(COptions::UPDATE_ALL);
 	PlaybackOptions.Apply(COptions::UPDATE_ALL);
-	CoreEngine.m_DtvEngine.m_LogoDownloader.SetLogoHandler(&LogoManager);
-	CoreEngine.m_DtvEngine.SetTracer(&UICore);
+	LibISDB::LogoDownloaderFilter *pLogoDownloader=
+		CoreEngine.GetFilter<LibISDB::LogoDownloaderFilter>();
+	if (pLogoDownloader!=nullptr)
+		pLogoDownloader->SetLogoHandler(&LogoManager);
+	CoreEngine.SetLogger(&UICore);
 	UICore.SetStatusBarTrace(true);
 	RecordOptions.Apply(COptions::UPDATE_ALL);
 
@@ -940,7 +960,8 @@ int CAppMain::Main(HINSTANCE hInstance,LPCTSTR pszCmdLine,int nCmdShow)
 		SideBar.Update();
 	}
 
-	CoreEngine.BuildDtvEngine(&m_DtvEngineHandler);
+	CoreEngine.AddEventListener(&m_EngineEventListener);
+	CoreEngine.BuildEngine();
 	TSProcessorManager.OpenDefaultFilters();
 
 	// BonDriver の読み込み
@@ -962,8 +983,10 @@ int CAppMain::Main(HINSTANCE hInstance,LPCTSTR pszCmdLine,int nCmdShow)
 	}
 
 	// 再生の初期化
-	CoreEngine.m_DtvEngine.m_MediaViewer.SetUseAudioRendererClock(PlaybackOptions.GetUseAudioRendererClock());
-	CoreEngine.SetSpdifOptions(AudioOptions.GetSpdifOptions());
+	LibISDB::ViewerFilter *pViewerFilter=CoreEngine.GetFilter<LibISDB::ViewerFilter>();
+	if (pViewerFilter!=nullptr)
+		pViewerFilter->SetUseAudioRendererClock(PlaybackOptions.GetUseAudioRendererClock());
+	CoreEngine.SetSPDIFOptions(AudioOptions.GetSpdifOptions());
 	if (CmdLineOptions.m_Volume>=0)
 		CoreEngine.SetVolume(min(CmdLineOptions.m_Volume,CCoreEngine::MAX_VOLUME));
 	if (PlaybackOptions.IsMuteOnStartUp() || CmdLineOptions.m_fMute)
@@ -980,9 +1003,9 @@ int CAppMain::Main(HINSTANCE hInstance,LPCTSTR pszCmdLine,int nCmdShow)
 			StreamTypeFlags|=0x04;
 		BYTE VideoStreamType=0;
 		switch (StreamTypeFlags) {
-		case 0x01:	VideoStreamType=STREAM_TYPE_MPEG2_VIDEO;	break;
-		case 0x02:	VideoStreamType=STREAM_TYPE_H264;			break;
-		case 0x04:	VideoStreamType=STREAM_TYPE_H265;			break;
+		case 0x01:	VideoStreamType=LibISDB::STREAM_TYPE_MPEG2_VIDEO;	break;
+		case 0x02:	VideoStreamType=LibISDB::STREAM_TYPE_H264;			break;
+		case 0x04:	VideoStreamType=LibISDB::STREAM_TYPE_H265;			break;
 		}
 		if (VideoStreamType!=0)
 			UICore.InitializeViewer(VideoStreamType);
@@ -991,7 +1014,7 @@ int CAppMain::Main(HINSTANCE hInstance,LPCTSTR pszCmdLine,int nCmdShow)
 	const bool fEnablePlayback=
 		!PlaybackOptions.GetRestorePlayStatus() || m_fEnablePlaybackOnStart;
 	if (fEnablePlayback
-			&& CoreEngine.m_DtvEngine.m_MediaViewer.IsOpen()
+			&& CoreEngine.IsViewerOpen()
 			&& !CmdLineOptions.m_fNoView
 			&& !CmdLineOptions.m_fMinimize) {
 		UICore.EnableViewer(true);
@@ -1055,7 +1078,7 @@ int CAppMain::Main(HINSTANCE hInstance,LPCTSTR pszCmdLine,int nCmdShow)
 	}
 
 	if (!CmdLineOptions.m_fNoEpg) {
-		EpgOptions.AsyncLoadEpgFile(&EpgProgramList,&EpgLoadEventHandler);
+		EpgOptions.AsyncLoadEpgFile(&EPGDatabase,&EpgLoadEventHandler);
 		EpgOptions.AsyncLoadEDCBData(&EpgLoadEventHandler);
 	}
 
@@ -1065,7 +1088,7 @@ int CAppMain::Main(HINSTANCE hInstance,LPCTSTR pszCmdLine,int nCmdShow)
 		UICore.SetFullscreen(true);
 
 	// 初期チャンネルを設定する
-	if (CoreEngine.m_DtvEngine.IsSrcFilterOpen()) {
+	if (CoreEngine.IsSourceOpen()) {
 		if (CoreEngine.IsNetworkDriver()) {
 			const int FirstPort=CoreEngine.IsUDPDriver()?1234:2230;
 			int Port=FirstPort;
@@ -1092,13 +1115,17 @@ int CAppMain::Main(HINSTANCE hInstance,LPCTSTR pszCmdLine,int nCmdShow)
 				&& RestoreChannelInfo.Channel>=0) {
 			Core.RestoreChannel();
 		} else {
-			const int CurSpace=(int)CoreEngine.m_DtvEngine.m_BonSrcDecoder.GetCurSpace();
-			const int CurChannel=(int)CoreEngine.m_DtvEngine.m_BonSrcDecoder.GetCurChannel();
-			if (CurSpace>=0 && CurChannel>=0) {
-				const CChannelList *pList=ChannelManager.GetCurrentChannelList();
-				int i=pList->FindByIndex(CurSpace,CurChannel);
-				if (i>=0)
-					UICore.DoCommand(CM_CHANNEL_FIRST+i);
+			const LibISDB::BonDriverSourceFilter *pSourceFilter=
+				CoreEngine.GetFilter<LibISDB::BonDriverSourceFilter>();
+			if (pSourceFilter!=nullptr) {
+				const int CurSpace=(int)pSourceFilter->GetCurSpace();
+				const int CurChannel=(int)pSourceFilter->GetCurChannel();
+				if (CurSpace>=0 && CurChannel>=0) {
+					const CChannelList *pList=ChannelManager.GetCurrentChannelList();
+					int i=pList->FindByIndex(CurSpace,CurChannel);
+					if (i>=0)
+						UICore.DoCommand(CM_CHANNEL_FIRST+i);
+				}
 			}
 		}
 	}
@@ -1205,8 +1232,10 @@ bool CAppMain::ShowOptionDialog(HWND hwndOwner,int StartPage)
 		return false;
 
 	if ((COptions::GetGeneralUpdateFlags() & COptions::UPDATE_GENERAL_BUILDMEDIAVIEWER)!=0) {
-		if (CoreEngine.m_DtvEngine.m_MediaViewer.IsOpen()
-				|| UICore.IsViewerInitializeError()) {
+		const LibISDB::ViewerFilter *pViewer=CoreEngine.GetFilter<LibISDB::ViewerFilter>();
+		if (pViewer!=nullptr
+				&& (pViewer->IsOpen()
+					|| UICore.IsViewerInitializeError())) {
 			bool fOldError=UICore.IsViewerInitializeError();
 			bool fResult=UICore.InitializeViewer();
 			// エラーで再生オフになっていた場合はオンにする
@@ -1556,69 +1585,62 @@ HICON CAppMain::GetAppIconSmall()
 }
 
 
-CAppMain::CDtvEngineEventHandler::CDtvEngineEventHandler(CAppMain &App)
+CAppMain::CEngineEventListener::CEngineEventListener(CAppMain &App)
 	: m_App(App)
 {
 }
 
-void CAppMain::CDtvEngineEventHandler::OnServiceUpdated(
-	CTsAnalyzer *pTsAnalyzer,bool fListUpdated,bool fStreamChanged)
-{
-	CServiceUpdateInfo *pInfo=new CServiceUpdateInfo(m_pDtvEngine,pTsAnalyzer);
-
-	pInfo->m_fStreamChanged=fStreamChanged;
-	m_App.MainWindow.PostMessage(WM_APP_SERVICEUPDATE,fListUpdated,
-								 reinterpret_cast<LPARAM>(pInfo));
-}
-
-void CAppMain::CDtvEngineEventHandler::OnServiceListUpdated(
-	CTsAnalyzer *pTsAnalyzer,bool bStreamChanged)
-{
-	OnServiceUpdated(pTsAnalyzer,true,bStreamChanged);
-	if (m_App.AudioManager.OnServiceUpdated())
-		m_App.MainWindow.PostMessage(WM_APP_AUDIOLISTCHANGED,0,0);
-}
-
-void CAppMain::CDtvEngineEventHandler::OnServiceInfoUpdated(CTsAnalyzer *pTsAnalyzer)
-{
-	const WORD NetworkID=pTsAnalyzer->GetNetworkID();
-
-	// サービスとロゴを関連付ける
-	CTsAnalyzer::ServiceList ServiceList;
-	if (pTsAnalyzer->GetServiceList(&ServiceList)) {
-		for (size_t i=0;i<ServiceList.size();i++) {
-			const CTsAnalyzer::ServiceInfo &ServiceInfo=ServiceList[i];
-			const WORD LogoID=ServiceInfo.LogoID;
-			if (LogoID!=0xFFFF)
-				m_App.LogoManager.AssociateLogoID(NetworkID,ServiceInfo.ServiceID,LogoID);
-		}
-	}
-
-	OnServiceUpdated(pTsAnalyzer,false,false);
-	m_App.MainWindow.PostMessage(WM_APP_SERVICEINFOUPDATED,0,
-								 MAKELPARAM(NetworkID, pTsAnalyzer->GetTransportStreamID()));
-}
-
-void CAppMain::CDtvEngineEventHandler::OnServiceChanged(WORD ServiceID)
+void CAppMain::CEngineEventListener::OnServiceChanged(uint16_t ServiceID)
 {
 	m_App.MainWindow.PostMessage(WM_APP_SERVICECHANGED,ServiceID,0);
 	if (m_App.AudioManager.OnServiceUpdated())
 		m_App.MainWindow.PostMessage(WM_APP_AUDIOLISTCHANGED,0,0);
-	if (m_App.AudioOptions.GetResetAudioDelayOnChannelChange())
-		m_App.CoreEngine.m_DtvEngine.m_MediaViewer.SetAudioDelay(0);
+	if (m_App.AudioOptions.GetResetAudioDelayOnChannelChange()) {
+		LibISDB::ViewerFilter *pViewer=m_App.CoreEngine.GetFilter<LibISDB::ViewerFilter>();
+		if (pViewer!=nullptr)
+			pViewer->SetAudioDelay(0);
+	}
 }
 
-void CAppMain::CDtvEngineEventHandler::OnFileWriteError(CTsRecorder *pTsRecorder)
+void CAppMain::CEngineEventListener::OnPATUpdated(
+	LibISDB::AnalyzerFilter *pAnalyzer,bool StreamChanged)
+{
+	OnServiceUpdated(pAnalyzer,true,StreamChanged);
+	if (m_App.AudioManager.OnServiceUpdated())
+		m_App.MainWindow.PostMessage(WM_APP_AUDIOLISTCHANGED,0,0);
+}
+
+void CAppMain::CEngineEventListener::OnPMTUpdated(LibISDB::AnalyzerFilter *pAnalyzer, uint16_t ServiceID)
+{
+	OnServiceInfoUpdated(pAnalyzer);
+}
+
+void CAppMain::CEngineEventListener::OnSDTUpdated(LibISDB::AnalyzerFilter *pAnalyzer)
+{
+	// サービスとロゴを関連付ける
+	LibISDB::AnalyzerFilter::SDTServiceList ServiceList;
+	if (pAnalyzer->GetSDTServiceList(&ServiceList)) {
+		const uint16_t NetworkID=pAnalyzer->GetNetworkID();
+		for (auto const &e : ServiceList) {
+			if (e.LogoID!=LibISDB::AnalyzerFilter::LOGO_ID_INVALID)
+				m_App.LogoManager.AssociateLogoID(NetworkID,e.ServiceID,e.LogoID);
+		}
+	}
+
+	OnServiceInfoUpdated(pAnalyzer);
+}
+
+void CAppMain::CEngineEventListener::OnWriteError(LibISDB::RecorderFilter *pRecorder)
 {
 	m_App.MainWindow.PostMessage(WM_APP_FILEWRITEERROR,0,0);
 }
 
-void CAppMain::CDtvEngineEventHandler::OnVideoStreamTypeChanged(BYTE VideoStreamType)
+void CAppMain::CEngineEventListener::OnVideoStreamTypeChanged(uint8_t VideoStreamType)
 {
 	m_App.MainWindow.PostMessage(WM_APP_VIDEOSTREAMTYPECHANGED,VideoStreamType,0);
 }
 
-void CAppMain::CDtvEngineEventHandler::OnVideoSizeChanged(CMediaViewer *pMediaViewer)
+void CAppMain::CEngineEventListener::OnVideoSizeChanged(LibISDB::ViewerFilter *pViewer)
 {
 	/*
 		この通知が送られた段階ではまだレンダラの映像サイズは変わっていないため、
@@ -1627,55 +1649,73 @@ void CAppMain::CDtvEngineEventHandler::OnVideoSizeChanged(CMediaViewer *pMediaVi
 	m_App.MainWindow.PostMessage(WM_APP_VIDEOSIZECHANGED,0,0);
 }
 
-void CAppMain::CDtvEngineEventHandler::OnEventChanged(CTsAnalyzer *pTsAnalyzer,WORD EventID)
+void CAppMain::CEngineEventListener::OnEventChanged(LibISDB::AnalyzerFilter *pAnalyzer, uint16_t EventID)
 {
-	TRACE(TEXT("CDtvEngineEventHandler::OnEventChanged() : event_id %#04x\n"),EventID);
-	if (EventID!=CTsAnalyzer::EVENTID_INVALID) {
+	TRACE(TEXT("CEngineEventListener::OnEventChanged() : event_id %#04x\n"),EventID);
+	if (EventID!=LibISDB::EVENT_ID_INVALID) {
 		m_App.CoreEngine.SetAsyncStatusUpdatedFlag(CCoreEngine::STATUS_EVENTID);
 		if (m_App.AudioManager.OnEventUpdated())
 			m_App.MainWindow.PostMessage(WM_APP_AUDIOLISTCHANGED,0,0);
 	}
 }
 
-void CAppMain::CDtvEngineEventHandler::OnEventUpdated(CTsAnalyzer *pTsAnalyzer)
+void CAppMain::CEngineEventListener::OnEventUpdated(LibISDB::AnalyzerFilter *pAnalyzer)
 {
 	m_App.CoreEngine.SetAsyncStatusUpdatedFlag(CCoreEngine::STATUS_EVENTINFO);
 	if (m_App.AudioManager.OnEventUpdated())
 		m_App.MainWindow.PostMessage(WM_APP_AUDIOLISTCHANGED,0,0);
 }
 
-void CAppMain::CDtvEngineEventHandler::OnTotUpdated(CTsAnalyzer *pTsAnalyzer)
+void CAppMain::CEngineEventListener::OnTOTUpdated(LibISDB::AnalyzerFilter *pAnalyzer)
 {
 	m_App.CoreEngine.SetAsyncStatusUpdatedFlag(CCoreEngine::STATUS_TOT);
 }
 
-void CAppMain::CDtvEngineEventHandler::OnFilterGraphInitialize(
-	CMediaViewer *pMediaViewer,IGraphBuilder *pGraphBuilder)
+void CAppMain::CEngineEventListener::OnFilterGraphInitialize(
+	LibISDB::ViewerFilter *pViewer,IGraphBuilder *pGraphBuilder)
 {
-	m_App.PluginManager.SendFilterGraphInitializeEvent(pMediaViewer,pGraphBuilder);
+	m_App.PluginManager.SendFilterGraphInitializeEvent(pViewer,pGraphBuilder);
 }
 
-void CAppMain::CDtvEngineEventHandler::OnFilterGraphInitialized(
-	CMediaViewer *pMediaViewer,IGraphBuilder *pGraphBuilder)
+void CAppMain::CEngineEventListener::OnFilterGraphInitialized(
+	LibISDB::ViewerFilter *pViewer,IGraphBuilder *pGraphBuilder)
 {
-	m_App.PluginManager.SendFilterGraphInitializedEvent(pMediaViewer,pGraphBuilder);
+	m_App.PluginManager.SendFilterGraphInitializedEvent(pViewer,pGraphBuilder);
 }
 
-void CAppMain::CDtvEngineEventHandler::OnFilterGraphFinalize(
-	CMediaViewer *pMediaViewer,IGraphBuilder *pGraphBuilder)
+void CAppMain::CEngineEventListener::OnFilterGraphFinalize(
+	LibISDB::ViewerFilter *pViewer,IGraphBuilder *pGraphBuilder)
 {
-	m_App.PluginManager.SendFilterGraphFinalizeEvent(pMediaViewer,pGraphBuilder);
+	m_App.PluginManager.SendFilterGraphFinalizeEvent(pViewer,pGraphBuilder);
 }
 
-void CAppMain::CDtvEngineEventHandler::OnFilterGraphFinalized(
-	CMediaViewer *pMediaViewer,IGraphBuilder *pGraphBuilder)
+void CAppMain::CEngineEventListener::OnFilterGraphFinalized(
+	LibISDB::ViewerFilter *pViewer,IGraphBuilder *pGraphBuilder)
 {
-	m_App.PluginManager.SendFilterGraphFinalizedEvent(pMediaViewer,pGraphBuilder);
+	m_App.PluginManager.SendFilterGraphFinalizedEvent(pViewer,pGraphBuilder);
 }
 
-void CAppMain::CDtvEngineEventHandler::OnSpdifPassthroughError(HRESULT hr)
+void CAppMain::CEngineEventListener::OnSPDIFPassthroughError(LibISDB::ViewerFilter *pViewer,HRESULT hr)
 {
 	m_App.MainWindow.PostMessage(WM_APP_SPDIFPASSTHROUGHERROR,hr,0);
+}
+
+void CAppMain::CEngineEventListener::OnServiceUpdated(
+	LibISDB::AnalyzerFilter *pAnalyzer,bool fListUpdated,bool fStreamChanged)
+{
+	CServiceUpdateInfo *pInfo=new CServiceUpdateInfo(&m_App.CoreEngine,pAnalyzer);
+
+	pInfo->m_fStreamChanged=fStreamChanged;
+	m_App.MainWindow.PostMessage(WM_APP_SERVICEUPDATE,fListUpdated,
+								 reinterpret_cast<LPARAM>(pInfo));
+}
+
+void CAppMain::CEngineEventListener::OnServiceInfoUpdated(LibISDB::AnalyzerFilter *pAnalyzer)
+{
+	OnServiceUpdated(pAnalyzer,false,false);
+	m_App.MainWindow.PostMessage(
+		WM_APP_SERVICEINFOUPDATED,0,
+		MAKELPARAM(pAnalyzer->GetNetworkID(),pAnalyzer->GetTransportStreamID()));
 }
 
 

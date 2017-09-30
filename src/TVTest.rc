@@ -805,11 +805,9 @@ FONT 9,"ＭＳ Ｐゴシック"
 BEGIN
 	CONTROL "",IDC_ABOUT_LOGO,STATIC,SS_BITMAP | SS_CENTERIMAGE | WS_CHILD | WS_VISIBLE,0,0,68,80
 	CTEXT "",IDC_ABOUT_HEADER,72,0,144,24,SS_OWNERDRAW
-	// クレジットを追加する場合、下に書き足してください。
+	// クレジットを追加する場合、\r\n で区切って書き足してください。
 	// (サイズは変えなくてもダイアログ表示時に調整されます)
-	CTEXT L"\x00A9 デジタル放送総合技術研究開発機構\r\n\
-BonTest オリジナル作者: 拡張ツール中の人 氏\r\n\
-BonTest 改造版作者: Meru-co 氏",IDC_ABOUT_INFO,72,32,144,32,SS_OWNERDRAW
+	CTEXT L"\x00A9 デジタル放送総合技術研究開発機構",IDC_ABOUT_INFO,72,32,144,32,SS_OWNERDRAW
 	CTEXT "https://github.com/DBCTRADO/TVTest",IDC_ABOUT_LINK,72,64,144,8,SS_OWNERDRAW | SS_NOTIFY
 END
 

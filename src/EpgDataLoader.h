@@ -2,7 +2,7 @@
 #define EPG_DATA_LOADER_H
 
 
-#include "BonTsEngine/EventManager.h"
+#include "LibISDB/LibISDB/Filters/EPGDatabaseFilter.hpp"
 
 
 // EpgDataCap_BonのEPGデータを読み込むクラス
@@ -14,7 +14,7 @@ public:
 	public:
 		virtual ~CEventHandler() = 0;
 		virtual void OnStart() {}
-		virtual void OnEnd(bool fSuccess,CEventManager *pEventManager) {}
+		virtual void OnEnd(bool fSuccess,LibISDB::EPGDatabase *pEPGDatabase) {}
 	};
 
 	CEpgDataLoader();
@@ -26,7 +26,8 @@ public:
 	bool Wait(DWORD Timeout=INFINITE);
 
 private:
-	CEventManager m_EventManager;
+	LibISDB::EPGDatabase m_EPGDatabase;
+	LibISDB::EPGDatabaseFilter m_EPGDatabaseFilter;
 	HANDLE m_hThread;
 	HANDLE m_hAbortEvent;
 	TVTest::String m_Folder;

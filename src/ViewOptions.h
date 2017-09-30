@@ -3,8 +3,8 @@
 
 
 #include "Options.h"
-#include "MediaViewer.h"
 #include "Style.h"
+#include "LibISDB/LibISDB/Windows/Viewer/ViewerFilter.hpp"
 
 
 class CViewOptions : public COptions

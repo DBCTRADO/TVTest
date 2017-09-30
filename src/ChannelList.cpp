@@ -1068,14 +1068,14 @@ bool CTuningSpaceList::LoadFromFile(LPCTSTR pszFileName)
 	}
 	::CloseHandle(hFile);
 	LPTSTR pszBuffer=NULL,p;
-	if (FileSize.LowPart>=2 && *pointer_cast<LPWSTR>(pFileBuffer)==0xFEFF) {
+	if (FileSize.LowPart>=2 && *reinterpret_cast<LPWSTR>(pFileBuffer)==0xFEFF) {
 #ifdef UNICODE
-		p=pointer_cast<LPWSTR>(pFileBuffer)+1;
+		p=reinterpret_cast<LPWSTR>(pFileBuffer)+1;
 		p[FileSize.LowPart/2-1]=L'\0';
 #else
 		int Length=::WideCharToMultiByte(
 			CP_ACP,0,
-			pointer_cast<LPCSTR>(pFileBuffer),FileSize.LowPart,
+			reinterpret_cast<LPCSTR>(pFileBuffer),FileSize.LowPart,
 			NULL,0,NULL,NULL);
 		if (Length<1) {
 			delete [] pFileBuffer;
@@ -1084,7 +1084,7 @@ bool CTuningSpaceList::LoadFromFile(LPCTSTR pszFileName)
 		pszBuffer=new char[Length+1];
 		Length=::WideCharToMultiByte(
 			CP_ACP,0,
-			pointer_cast<LPCWTR>(pFileBuffer)+1,FileSize.LowPart/2-1,
+			reinterpret_cast<LPCWTR>(pFileBuffer)+1,FileSize.LowPart/2-1,
 			pszBuffer,Length,NULL,NULL);
 		pszBuffer[Length]='\0';
 		p=pszBuffer;
@@ -1093,7 +1093,7 @@ bool CTuningSpaceList::LoadFromFile(LPCTSTR pszFileName)
 #ifdef UNICODE
 		int Length=::MultiByteToWideChar(
 			CP_SHIFT_JIS,0,
-			pointer_cast<LPCSTR>(pFileBuffer),FileSize.LowPart,
+			reinterpret_cast<LPCSTR>(pFileBuffer),FileSize.LowPart,
 			NULL,0);
 		if (Length<1) {
 			delete [] pFileBuffer;
@@ -1102,12 +1102,12 @@ bool CTuningSpaceList::LoadFromFile(LPCTSTR pszFileName)
 		pszBuffer=new WCHAR[Length+1];
 		Length=::MultiByteToWideChar(
 			CP_SHIFT_JIS,0,
-			pointer_cast<LPCSTR>(pFileBuffer),FileSize.LowPart,
+			reinterpret_cast<LPCSTR>(pFileBuffer),FileSize.LowPart,
 			pszBuffer,Length);
 		pszBuffer[Length]=L'\0';
 		p=pszBuffer;
 #else
-		p=pointer_cast<LPSTR>(pFileBuffer);
+		p=reinterpret_cast<LPSTR>(pFileBuffer);
 		p[FileSize.LowPart]='\0';
 #endif
 	}
@@ -1134,7 +1134,7 @@ bool CTuningSpaceList::LoadFromFile(LPCTSTR pszFileName)
 							if (p[Length]==_T(')') && p[Length+1]==_T(')'))
 								Length++;
 							if (Length>0) {
-								::lstrcpyn(szName,p,min(Length+1,lengthof(szName)));
+								::lstrcpyn(szName,p,min(Length+1,(int)lengthof(szName)));
 								if ((int)m_TuningSpaceList.size()<=Space) {
 									Reserve(Space+1);
 									m_TuningSpaceList[Space]->SetName(szName);

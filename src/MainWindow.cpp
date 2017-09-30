@@ -37,11 +37,11 @@ static int CalcZoomSize(int Size,int Rate,int Factor)
 const BYTE CMainWindow::m_AudioGainList[] = {100, 125, 150, 200};
 
 const CMainWindow::DirectShowFilterPropertyInfo CMainWindow::m_DirectShowFilterPropertyList[] = {
-	{CMediaViewer::PROPERTY_FILTER_VIDEODECODER,		CM_VIDEODECODERPROPERTY},
-	{CMediaViewer::PROPERTY_FILTER_VIDEORENDERER,		CM_VIDEORENDERERPROPERTY},
-	{CMediaViewer::PROPERTY_FILTER_AUDIOFILTER,			CM_AUDIOFILTERPROPERTY},
-	{CMediaViewer::PROPERTY_FILTER_AUDIORENDERER,		CM_AUDIORENDERERPROPERTY},
-	{CMediaViewer::PROPERTY_FILTER_MPEG2DEMULTIPLEXER,	CM_DEMULTIPLEXERPROPERTY},
+	{LibISDB::ViewerFilter::PropertyFilterType::VideoDecoder,       CM_VIDEODECODERPROPERTY},
+	{LibISDB::ViewerFilter::PropertyFilterType::VideoRenderer,      CM_VIDEORENDERERPROPERTY},
+	{LibISDB::ViewerFilter::PropertyFilterType::AudioFilter,        CM_AUDIOFILTERPROPERTY},
+	{LibISDB::ViewerFilter::PropertyFilterType::AudioRenderer,      CM_AUDIORENDERERPROPERTY},
+	{LibISDB::ViewerFilter::PropertyFilterType::MPEG2Demultiplexer, CM_DEMULTIPLEXERPROPERTY},
 };
 
 ATOM CMainWindow::m_atomChildOldWndProcProp=0;
@@ -227,7 +227,7 @@ void CMainWindow::CreatePanel()
 	PageInfo.fVisible=true;
 	m_App.Panel.Form.AddPage(PageInfo);
 
-	m_App.Panel.ProgramListPanel.SetEpgProgramList(&m_App.EpgProgramList);
+	m_App.Panel.ProgramListPanel.SetEPGDatabase(&m_App.EPGDatabase);
 	m_App.Panel.ProgramListPanel.SetVisibleEventIcons(m_App.ProgramGuideOptions.GetVisibleEventIcons());
 	m_App.Panel.ProgramListPanel.Create(m_App.Panel.Form.GetHandle(),WS_CHILD | WS_VSCROLL);
 	PageInfo.pPage=&m_App.Panel.ProgramListPanel;
@@ -236,7 +236,7 @@ void CMainWindow::CreatePanel()
 	PageInfo.Icon=1;
 	m_App.Panel.Form.AddPage(PageInfo);
 
-	m_App.Panel.ChannelPanel.SetEpgProgramList(&m_App.EpgProgramList);
+	m_App.Panel.ChannelPanel.SetEPGDatabase(&m_App.EPGDatabase);
 	m_App.Panel.ChannelPanel.SetLogoManager(&m_App.LogoManager);
 	m_App.Panel.ChannelPanel.Create(m_App.Panel.Form.GetHandle(),WS_CHILD | WS_VSCROLL);
 	PageInfo.pPage=&m_App.Panel.ChannelPanel;
@@ -283,12 +283,13 @@ bool CMainWindow::InitializeViewer(BYTE VideoStreamType)
 	m_pCore->SetStatusBarTrace(true);
 
 	if (m_Display.BuildViewer(VideoStreamType)) {
-		CMediaViewer &MediaViewer=m_App.CoreEngine.m_DtvEngine.m_MediaViewer;
+		const LibISDB::ViewerFilter *pViewer=
+			m_App.CoreEngine.GetFilter<LibISDB::ViewerFilter>();
 
 		for (int i=0;i<lengthof(m_DirectShowFilterPropertyList);i++) {
 			m_pCore->SetCommandEnabledState(
 				m_DirectShowFilterPropertyList[i].Command,
-				m_App.CoreEngine.m_DtvEngine.m_MediaViewer.FilterHasProperty(
+				pViewer->FilterHasProperty(
 					m_DirectShowFilterPropertyList[i].Filter));
 		}
 
@@ -336,9 +337,12 @@ bool CMainWindow::SetFullscreen(bool fFullscreen)
 	} else {
 		ForegroundWindow(m_hwnd);
 		m_Fullscreen.Destroy();
-		m_App.CoreEngine.m_DtvEngine.m_MediaViewer.SetViewStretchMode(
-			m_fFrameCut?CMediaViewer::STRETCH_CUTFRAME:
-						CMediaViewer::STRETCH_KEEPASPECTRATIO);
+		LibISDB::ViewerFilter *pViewer=m_App.CoreEngine.GetFilter<LibISDB::ViewerFilter>();
+		if (pViewer!=nullptr) {
+			pViewer->SetViewStretchMode(
+				m_fFrameCut?LibISDB::ViewerFilter::ViewStretchMode::Crop:
+							LibISDB::ViewerFilter::ViewStretchMode::KeepAspectRatio);
+		}
 	}
 	m_App.StatusView.UpdateItem(STATUS_ITEM_VIDEOSIZE);
 	m_App.Panel.ControlPanel.UpdateItem(CONTROLPANEL_ITEM_VIDEO);
@@ -1315,12 +1319,12 @@ LRESULT CMainWindow::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 			}
 
 			if (!m_App.Core.IsChannelScanning()
-					&& pInfo->m_NumServices>0 && pInfo->m_CurService>=0) {
+					&& !pInfo->m_ServiceList.empty() && pInfo->m_CurService>=0) {
 				const CChannelInfo *pChInfo=m_App.ChannelManager.GetCurrentChannelInfo();
 				WORD ServiceID,TransportStreamID;
 
 				TransportStreamID=pInfo->m_TransportStreamID;
-				ServiceID=pInfo->m_pServiceList[pInfo->m_CurService].ServiceID;
+				ServiceID=pInfo->m_ServiceList[pInfo->m_CurService].ServiceID;
 				if (/*pInfo->m_fStreamChanged
 						&& */TransportStreamID!=0 && ServiceID!=0
 						&& !m_App.CoreEngine.IsNetworkDriver()
@@ -1433,7 +1437,7 @@ LRESULT CMainWindow::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 				&& !IsMessageInQueue(hwnd,WM_APP_VIDEOSTREAMTYPECHANGED)) {
 			BYTE StreamType=static_cast<BYTE>(wParam);
 
-			if (StreamType==m_App.CoreEngine.m_DtvEngine.GetVideoStreamType())
+			if (StreamType==m_App.CoreEngine.GetVideoStreamType())
 				m_pCore->EnableViewer(true);
 		}
 		return 0;
@@ -1504,12 +1508,12 @@ LRESULT CMainWindow::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 		TRACE(TEXT("WM_APP_SPDIFPASSTHROUGHERROR\n"));
 		{
 			//HRESULT hr=static_cast<HRESULT>(wParam);
-			CAudioDecFilter::SpdifOptions Options;
+			LibISDB::DirectShow::AudioDecoderFilter::SPDIFOptions Options;
 
-			m_App.CoreEngine.GetSpdifOptions(&Options);
-			Options.Mode=CAudioDecFilter::SPDIF_MODE_DISABLED;
-			m_App.CoreEngine.SetSpdifOptions(Options);
-			m_App.CoreEngine.m_DtvEngine.ResetMediaViewer();
+			m_App.CoreEngine.GetSPDIFOptions(&Options);
+			Options.Mode=LibISDB::DirectShow::AudioDecoderFilter::SPDIFMode::Disabled;
+			m_App.CoreEngine.SetSPDIFOptions(Options);
+			m_App.CoreEngine.ResetViewer();
 
 			ShowMessage(TEXT("S/PDIFパススルー出力ができません。\n")
 						TEXT("デバイスがパススルー出力に対応しているか、\n")
@@ -1534,7 +1538,11 @@ LRESULT CMainWindow::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 		return 0;
 
 	case WM_DISPLAYCHANGE:
-		m_App.CoreEngine.m_DtvEngine.m_MediaViewer.DisplayModeChanged();
+		{
+			LibISDB::ViewerFilter *pViewer=m_App.CoreEngine.GetFilter<LibISDB::ViewerFilter>();
+			if (pViewer!=nullptr)
+				pViewer->DisplayModeChanged();
+		}
 		break;
 
 	case WM_DPICHANGED:
@@ -1799,7 +1807,7 @@ bool CMainWindow::OnCreate(const CREATESTRUCT *pcs)
 	m_pCore->SetCommandCheckedState(CM_1SEGMODE,m_App.Core.Is1SegMode());
 
 	m_pCore->SetCommandCheckedState(CM_SPDIF_TOGGLE,
-		m_App.CoreEngine.IsSpdifPassthroughEnabled());
+		m_App.CoreEngine.IsSPDIFPassthroughEnabled());
 
 	m_pCore->SetCommandCheckedState(CM_TITLEBAR,m_fShowTitleBar);
 	m_pCore->SetCommandCheckedState(CM_STATUSBAR,m_fShowStatusBar);
@@ -1844,11 +1852,14 @@ bool CMainWindow::OnCreate(const CREATESTRUCT *pcs)
 
 	m_App.NotifyBalloonTip.Initialize(m_hwnd);
 
-	m_App.CoreEngine.m_DtvEngine.m_MediaViewer.SetViewStretchMode(
-		(pcs->style&WS_MAXIMIZE)!=0?
-			m_App.VideoOptions.GetMaximizeStretchMode():
-			m_fFrameCut?CMediaViewer::STRETCH_CUTFRAME:
-						CMediaViewer::STRETCH_KEEPASPECTRATIO);
+	LibISDB::ViewerFilter *pViewer=m_App.CoreEngine.GetFilter<LibISDB::ViewerFilter>();
+	if (pViewer!=nullptr) {
+		pViewer->SetViewStretchMode(
+			(pcs->style&WS_MAXIMIZE)!=0?
+				m_App.VideoOptions.GetMaximizeStretchMode():
+				m_fFrameCut?LibISDB::ViewerFilter::ViewStretchMode::Crop:
+							LibISDB::ViewerFilter::ViewStretchMode::KeepAspectRatio);
+	}
 
 	m_App.EpgCaptureManager.SetEventHandler(&m_EpgCaptureEventHandler);
 
@@ -1945,13 +1956,16 @@ void CMainWindow::OnSizeChanged(UINT State,int Width,int Height)
 	m_LayoutBase.SetPosition(0,0,Width,Height);
 
 	if (!m_pCore->GetFullscreen()) {
-		if (State==SIZE_MAXIMIZED) {
-			m_App.CoreEngine.m_DtvEngine.m_MediaViewer.SetViewStretchMode(
-				m_App.VideoOptions.GetMaximizeStretchMode());
-		} else if (State==SIZE_RESTORED) {
-			m_App.CoreEngine.m_DtvEngine.m_MediaViewer.SetViewStretchMode(
-				m_fFrameCut?CMediaViewer::STRETCH_CUTFRAME:
-							CMediaViewer::STRETCH_KEEPASPECTRATIO);
+		LibISDB::ViewerFilter *pViewer=m_App.CoreEngine.GetFilter<LibISDB::ViewerFilter>();
+		if (pViewer!=nullptr) {
+			if (State==SIZE_MAXIMIZED) {
+				pViewer->SetViewStretchMode(
+					m_App.VideoOptions.GetMaximizeStretchMode());
+			} else if (State==SIZE_RESTORED) {
+				pViewer->SetViewStretchMode(
+					m_fFrameCut?LibISDB::ViewerFilter::ViewStretchMode::Crop:
+								LibISDB::ViewerFilter::ViewStretchMode::KeepAspectRatio);
+			}
 		}
 	}
 
@@ -1989,9 +2003,10 @@ bool CMainWindow::OnSizeChanging(UINT Edge,RECT *pRect)
 			fKeepRatio=!fKeepRatio;
 	}
 	if (fKeepRatio) {
-		BYTE XAspect,YAspect;
+		const LibISDB::ViewerFilter *pViewer=m_App.CoreEngine.GetFilter<LibISDB::ViewerFilter>();
+		int XAspect,YAspect;
 
-		if (m_App.CoreEngine.m_DtvEngine.m_MediaViewer.GetEffectiveAspectRatio(&XAspect,&YAspect)) {
+		if (pViewer!=nullptr && pViewer->GetEffectiveAspectRatio(&XAspect,&YAspect)) {
 			RECT rcWindow,rcClient;
 			int XMargin,YMargin,Width,Height;
 
@@ -2335,10 +2350,15 @@ void CMainWindow::OnCommand(HWND hwnd,int id,HWND hwndCtl,UINT codeNotify)
 		return;
 
 	case CM_FRAMECUT:
-		m_fFrameCut=!m_fFrameCut;
-		m_App.CoreEngine.m_DtvEngine.m_MediaViewer.SetViewStretchMode(
-			m_fFrameCut?CMediaViewer::STRETCH_CUTFRAME:
-						CMediaViewer::STRETCH_KEEPASPECTRATIO);
+		{
+			m_fFrameCut=!m_fFrameCut;
+			LibISDB::ViewerFilter *pViewer=m_App.CoreEngine.GetFilter<LibISDB::ViewerFilter>();
+			if (pViewer!=nullptr) {
+				pViewer->SetViewStretchMode(
+					m_fFrameCut?LibISDB::ViewerFilter::ViewStretchMode::Crop:
+								LibISDB::ViewerFilter::ViewStretchMode::KeepAspectRatio);
+			}
+		}
 		return;
 
 	case CM_FULLSCREEN:
@@ -2405,24 +2425,26 @@ void CMainWindow::OnCommand(HWND hwnd,int id,HWND hwndCtl,UINT codeNotify)
 	case CM_AUDIODELAY_PLUS:
 	case CM_AUDIODELAY_RESET:
 		{
-			CMediaViewer &MediaViewer=m_App.CoreEngine.m_DtvEngine.m_MediaViewer;
+			LibISDB::ViewerFilter *pViewer=m_App.CoreEngine.GetFilter<LibISDB::ViewerFilter>();
+			if (pViewer==nullptr)
+				return;
 			static const LONGLONG MaxDelay=10000000LL;
 			const LONGLONG Step=m_App.OperationOptions.GetAudioDelayStep()*10000LL;
 			LONGLONG Delay;
 
 			switch (id) {
 			case CM_AUDIODELAY_MINUS:
-				Delay=MediaViewer.GetAudioDelay()-Step;
+				Delay=pViewer->GetAudioDelay()-Step;
 				break;
 			case CM_AUDIODELAY_PLUS:
-				Delay=MediaViewer.GetAudioDelay()+Step;
+				Delay=pViewer->GetAudioDelay()+Step;
 				break;
 			case CM_AUDIODELAY_RESET:
 				Delay=0;
 				break;
 			}
 
-			MediaViewer.SetAudioDelay(CLAMP(Delay,-MaxDelay,MaxDelay));
+			pViewer->SetAudioDelay(CLAMP(Delay,-MaxDelay,MaxDelay));
 		}
 		return;
 
@@ -2430,9 +2452,9 @@ void CMainWindow::OnCommand(HWND hwnd,int id,HWND hwndCtl,UINT codeNotify)
 	case CM_DUALMONO_SUB:
 	case CM_DUALMONO_BOTH:
 		m_pCore->SetDualMonoMode(
-			id==CM_DUALMONO_MAIN?CAudioDecFilter::DUALMONO_MAIN:
-			id==CM_DUALMONO_SUB ?CAudioDecFilter::DUALMONO_SUB:
-			                     CAudioDecFilter::DUALMONO_BOTH);
+			id==CM_DUALMONO_MAIN?LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode::Main:
+			id==CM_DUALMONO_SUB ?LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode::Sub:
+			                     LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode::Both);
 		ShowAudioOSD();
 		return;
 
@@ -2440,9 +2462,9 @@ void CMainWindow::OnCommand(HWND hwnd,int id,HWND hwndCtl,UINT codeNotify)
 	case CM_STEREOMODE_LEFT:
 	case CM_STEREOMODE_RIGHT:
 		m_pCore->SetStereoMode(
-			id==CM_STEREOMODE_STEREO?CAudioDecFilter::STEREOMODE_STEREO:
-			id==CM_STEREOMODE_LEFT  ?CAudioDecFilter::STEREOMODE_LEFT:
-			                         CAudioDecFilter::STEREOMODE_RIGHT);
+			id==CM_STEREOMODE_STEREO?LibISDB::DirectShow::AudioDecoderFilter::StereoMode::Stereo:
+			id==CM_STEREOMODE_LEFT  ?LibISDB::DirectShow::AudioDecoderFilter::StereoMode::Left:
+			                         LibISDB::DirectShow::AudioDecoderFilter::StereoMode::Right);
 		ShowAudioOSD();
 		return;
 
@@ -2455,27 +2477,27 @@ void CMainWindow::OnCommand(HWND hwnd,int id,HWND hwndCtl,UINT codeNotify)
 	case CM_SPDIF_PASSTHROUGH:
 	case CM_SPDIF_AUTO:
 		{
-			CAudioDecFilter::SpdifOptions Options(m_App.AudioOptions.GetSpdifOptions());
+			LibISDB::DirectShow::AudioDecoderFilter::SPDIFOptions Options(m_App.AudioOptions.GetSpdifOptions());
 
-			Options.Mode=(CAudioDecFilter::SpdifMode)(id-CM_SPDIF_DISABLED);
-			m_App.CoreEngine.SetSpdifOptions(Options);
+			Options.Mode=(LibISDB::DirectShow::AudioDecoderFilter::SPDIFMode)(id-CM_SPDIF_DISABLED);
+			m_App.CoreEngine.SetSPDIFOptions(Options);
 			m_pCore->SetCommandCheckedState(CM_SPDIF_TOGGLE,
-				m_App.CoreEngine.IsSpdifPassthroughEnabled());
+				m_App.CoreEngine.IsSPDIFPassthroughEnabled());
 		}
 		return;
 
 	case CM_SPDIF_TOGGLE:
 		{
-			CAudioDecFilter::SpdifOptions Options;
+			LibISDB::DirectShow::AudioDecoderFilter::SPDIFOptions Options;
 
-			m_App.CoreEngine.GetSpdifOptions(&Options);
-			if (m_App.CoreEngine.IsSpdifPassthroughEnabled())
-				Options.Mode=CAudioDecFilter::SPDIF_MODE_DISABLED;
+			m_App.CoreEngine.GetSPDIFOptions(&Options);
+			if (m_App.CoreEngine.IsSPDIFPassthroughEnabled())
+				Options.Mode=LibISDB::DirectShow::AudioDecoderFilter::SPDIFMode::Disabled;
 			else
-				Options.Mode=CAudioDecFilter::SPDIF_MODE_PASSTHROUGH;
-			m_App.CoreEngine.SetSpdifOptions(Options);
+				Options.Mode=LibISDB::DirectShow::AudioDecoderFilter::SPDIFMode::Passthrough;
+			m_App.CoreEngine.SetSPDIFOptions(Options);
 			m_pCore->SetCommandCheckedState(CM_SPDIF_TOGGLE,
-				m_App.CoreEngine.IsSpdifPassthroughEnabled());
+				m_App.CoreEngine.IsSPDIFPassthroughEnabled());
 		}
 		return;
 
@@ -2487,10 +2509,9 @@ void CMainWindow::OnCommand(HWND hwnd,int id,HWND hwndCtl,UINT codeNotify)
 	case CM_SAVEIMAGE:
 		if (IsViewerEnabled()) {
 			HCURSOR hcurOld=::SetCursor(::LoadCursor(nullptr,IDC_WAIT));
-			BYTE *pDib;
+			LibISDB::COMMemoryPointer<> Image(m_App.CoreEngine.GetCurrentImage());
 
-			pDib=static_cast<BYTE*>(m_App.CoreEngine.GetCurrentImage());
-			if (pDib==nullptr) {
+			if (!Image) {
 				::SetCursor(hcurOld);
 				ShowMessage(TEXT("現在の画像を取得できません。\n")
 							TEXT("レンダラやデコーダを変えてみてください。"),TEXT("ごめん"),
@@ -2498,7 +2519,8 @@ void CMainWindow::OnCommand(HWND hwnd,int id,HWND hwndCtl,UINT codeNotify)
 				return;
 			}
 
-			CMediaViewer &MediaViewer=m_App.CoreEngine.m_DtvEngine.m_MediaViewer;
+			LibISDB::ViewerFilter *pViewer=m_App.CoreEngine.GetFilter<LibISDB::ViewerFilter>();
+			const uint8_t *pDib=Image.get();
 			BITMAPINFOHEADER *pbmih=(BITMAPINFOHEADER*)pDib;
 			RECT rc;
 			int Width,Height,OrigWidth,OrigHeight;
@@ -2506,10 +2528,10 @@ void CMainWindow::OnCommand(HWND hwnd,int id,HWND hwndCtl,UINT codeNotify)
 
 			OrigWidth=pbmih->biWidth;
 			OrigHeight=abs(pbmih->biHeight);
-			if (MediaViewer.GetSourceRect(&rc)) {
-				WORD VideoWidth,VideoHeight;
+			if (pViewer->GetSourceRect(&rc)) {
+				int VideoWidth,VideoHeight;
 
-				if (MediaViewer.GetOriginalVideoSize(&VideoWidth,&VideoHeight)
+				if (pViewer->GetOriginalVideoSize(&VideoWidth,&VideoHeight)
 						&& (VideoWidth!=OrigWidth
 							|| VideoHeight!=OrigHeight)) {
 					rc.left=rc.left*OrigWidth/VideoWidth;
@@ -2536,13 +2558,7 @@ void CMainWindow::OnCommand(HWND hwnd,int id,HWND hwndCtl,UINT codeNotify)
 				m_App.CoreEngine.GetVideoViewSize(&Width,&Height);
 				break;
 			case CCaptureOptions::SIZE_TYPE_VIEW:
-				{
-					WORD w,h;
-
-					MediaViewer.GetDestSize(&w,&h);
-					Width=w;
-					Height=h;
-				}
+				pViewer->GetDestSize(&Width,&Height);
 				break;
 			/*
 			case CCaptureOptions::SIZE_RAW:
@@ -2569,7 +2585,7 @@ void CMainWindow::OnCommand(HWND hwnd,int id,HWND hwndCtl,UINT codeNotify)
 			}
 			hGlobal=ResizeImage((BITMAPINFO*)pbmih,
 								pDib+CalcDIBInfoSize(pbmih),&rc,Width,Height);
-			::CoTaskMemFree(pDib);
+			Image.reset();
 			::SetCursor(hcurOld);
 			if (hGlobal==nullptr) {
 				return;
@@ -2630,7 +2646,7 @@ void CMainWindow::OnCommand(HWND hwnd,int id,HWND hwndCtl,UINT codeNotify)
 		return;
 
 	case CM_RESETVIEWER:
-		m_App.CoreEngine.m_DtvEngine.ResetMediaViewer();
+		m_App.CoreEngine.ResetViewer();
 		return;
 
 	case CM_REBUILDVIEWER:
@@ -2691,8 +2707,6 @@ void CMainWindow::OnCommand(HWND hwnd,int id,HWND hwndCtl,UINT codeNotify)
 					if (m_App.RecordOptions.GetFilePath(szFileName,MAX_PATH))
 						m_App.RecordManager.SetFileName(szFileName);
 				}
-				if (!m_App.RecordManager.IsReserved())
-					m_App.RecordOptions.GetRecordingSettings(&m_App.RecordManager.GetRecordingSettings());
 				if (m_App.RecordManager.RecordDialog(GetVideoHostWindow())) {
 					m_App.RecordManager.SetClient(CRecordManager::CLIENT_USER);
 					if (m_App.RecordManager.IsReserved()) {
@@ -2814,23 +2828,22 @@ void CMainWindow::OnCommand(HWND hwnd,int id,HWND hwndCtl,UINT codeNotify)
 			if (hwndOwner==nullptr || ::IsWindowEnabled(hwndOwner)) {
 				for (int i=0;i<lengthof(m_DirectShowFilterPropertyList);i++) {
 					if (m_DirectShowFilterPropertyList[i].Command==id) {
-						CMediaViewer &MediaViewer=m_App.CoreEngine.m_DtvEngine.m_MediaViewer;
+						LibISDB::ViewerFilter *pViewer=m_App.CoreEngine.GetFilter<LibISDB::ViewerFilter>();
 						bool fOK=false;
 
-						if (m_DirectShowFilterPropertyList[i].Filter==CMediaViewer::PROPERTY_FILTER_VIDEODECODER) {
-							IBaseFilter *pDecoder = MediaViewer.GetVideoDecoderFilter();
-							if (pDecoder!=nullptr) {
-								HRESULT hr=ShowPropertyPageFrame(pDecoder,hwndOwner,m_App.GetResourceInstance());
+						if (m_DirectShowFilterPropertyList[i].Filter==LibISDB::ViewerFilter::PropertyFilterType::VideoDecoder) {
+							LibISDB::COMPointer<IBaseFilter> Decoder(pViewer->GetVideoDecoderFilter());
+							if (Decoder) {
+								HRESULT hr=ShowPropertyPageFrame(Decoder.Get(),hwndOwner,m_App.GetResourceInstance());
 								if (SUCCEEDED(hr)) {
-									MediaViewer.SaveVideoDecoderSettings();
+									pViewer->SaveVideoDecoderSettings();
 									fOK=true;
 								}
-								pDecoder->Release();
 							}
 						}
 
 						if (!fOK) {
-							MediaViewer.DisplayFilterProperty(m_DirectShowFilterPropertyList[i].Filter,hwndOwner);
+							pViewer->DisplayFilterProperty(hwndOwner,m_DirectShowFilterPropertyList[i].Filter);
 						}
 						break;
 					}
@@ -3283,9 +3296,10 @@ void CMainWindow::OnCommand(HWND hwnd,int id,HWND hwndCtl,UINT codeNotify)
 
 	case CM_SWITCHVIDEO:
 		{
-			CDtvEngine &DtvEngine=m_App.CoreEngine.m_DtvEngine;
+			const LibISDB::AnalyzerFilter *pAnalyzer=
+				m_App.CoreEngine.GetFilter<LibISDB::AnalyzerFilter>();
 
-			if (DtvEngine.m_TsAnalyzer.GetEventComponentGroupNum(DtvEngine.GetServiceIndex())>0)
+			if (pAnalyzer!=nullptr && pAnalyzer->GetEventComponentGroupCount(m_App.CoreEngine.GetServiceIndex())>0)
 				SendCommand(CM_MULTIVIEW_SWITCH);
 			else
 				SendCommand(CM_VIDEOSTREAM_SWITCH);
@@ -3294,22 +3308,28 @@ void CMainWindow::OnCommand(HWND hwnd,int id,HWND hwndCtl,UINT codeNotify)
 
 	case CM_VIDEOSTREAM_SWITCH:
 		{
-			CDtvEngine &DtvEngine=m_App.CoreEngine.m_DtvEngine;
-			const int StreamCount=DtvEngine.GetVideoStreamNum();
+			const int StreamCount=m_App.CoreEngine.GetVideoStreamCount();
 
 			if (StreamCount>1) {
-				DtvEngine.SetVideoStream((DtvEngine.GetVideoStream()+1)%StreamCount);
+				m_App.CoreEngine.SetVideoStream((m_App.CoreEngine.GetVideoStream()+1)%StreamCount);
 			}
 		}
 		return;
 
 	case CM_MULTIVIEW_SWITCH:
 		{
-			CDtvEngine &DtvEngine=m_App.CoreEngine.m_DtvEngine;
-			const int GroupCount=DtvEngine.m_TsAnalyzer.GetEventComponentGroupNum(DtvEngine.GetServiceIndex());
+			const LibISDB::AnalyzerFilter *pAnalyzer=
+				m_App.CoreEngine.GetFilter<LibISDB::AnalyzerFilter>();
 
-			if (GroupCount>1) {
-				SendCommand(CM_MULTIVIEW_FIRST+(DtvEngine.GetCurComponentGroup()+1)%GroupCount);
+			if (pAnalyzer!=nullptr) {
+				const int ServiceIndex=m_App.CoreEngine.GetServiceIndex();
+				const int GroupCount=pAnalyzer->GetEventComponentGroupCount(ServiceIndex);
+
+				if (GroupCount>1) {
+					SendCommand(CM_MULTIVIEW_FIRST+
+						(pAnalyzer->GetEventComponentGroupIndexByComponentTag(
+							ServiceIndex,m_App.CoreEngine.GetVideoComponentTag())+1)%GroupCount);
+				}
 			}
 		}
 		return;
@@ -3439,7 +3459,7 @@ void CMainWindow::OnCommand(HWND hwnd,int id,HWND hwndCtl,UINT codeNotify)
 		}
 
 		if (id>=CM_VIDEOSTREAM_FIRST && id<=CM_VIDEOSTREAM_LAST) {
-			m_App.CoreEngine.m_DtvEngine.SetVideoStream(id-CM_VIDEOSTREAM_FIRST);
+			m_App.CoreEngine.SetVideoStream(id-CM_VIDEOSTREAM_FIRST);
 			return;
 		}
 
@@ -3456,29 +3476,30 @@ void CMainWindow::OnCommand(HWND hwnd,int id,HWND hwndCtl,UINT codeNotify)
 		}
 
 		if (id>=CM_MULTIVIEW_FIRST && id<=CM_MULTIVIEW_LAST) {
-			const WORD ServiceIndex=m_App.CoreEngine.m_DtvEngine.GetServiceIndex();
-			CTsAnalyzer &TsAnalyzer=m_App.CoreEngine.m_DtvEngine.m_TsAnalyzer;
-			CTsAnalyzer::EventComponentGroupInfo GroupInfo;
+			const int ServiceIndex=m_App.CoreEngine.GetServiceIndex();
+			LibISDB::AnalyzerFilter *pAnalyzer=m_App.CoreEngine.GetFilter<LibISDB::AnalyzerFilter>();
+			LibISDB::AnalyzerFilter::EventComponentGroupInfo GroupInfo;
 
-			if (ServiceIndex!=CDtvEngine::SERVICE_INVALID
-					&& TsAnalyzer.GetEventComponentGroupInfo(ServiceIndex,id-CM_MULTIVIEW_FIRST,&GroupInfo)) {
+			if (ServiceIndex>=0
+					&& pAnalyzer!=nullptr
+					&& pAnalyzer->GetEventComponentGroupInfo(ServiceIndex,id-CM_MULTIVIEW_FIRST,&GroupInfo)) {
 				int VideoIndex=-1,AudioIndex=-1;
 
-				for (int i=0;i<GroupInfo.CAUnitNum;i++) {
-					for (int j=0;j<GroupInfo.CAUnit[i].ComponentNum;j++) {
-						const BYTE ComponentTag=GroupInfo.CAUnit[i].ComponentTag[j];
+				for (int i=0;i<GroupInfo.NumOfCAUnit;i++) {
+					for (int j=0;j<GroupInfo.CAUnitList[i].NumOfComponent;j++) {
+						const BYTE ComponentTag=GroupInfo.CAUnitList[i].ComponentTag[j];
 						if (VideoIndex<0) {
-							int Index=TsAnalyzer.GetVideoIndexByComponentTag(ServiceIndex,ComponentTag);
+							int Index=pAnalyzer->GetVideoIndexByComponentTag(ServiceIndex,ComponentTag);
 							if (Index>=0)
 								VideoIndex=Index;
 						}
 						if (AudioIndex<0) {
-							int Index=TsAnalyzer.GetAudioIndexByComponentTag(ServiceIndex,ComponentTag);
+							int Index=pAnalyzer->GetAudioIndexByComponentTag(ServiceIndex,ComponentTag);
 							if (Index>=0)
 								AudioIndex=Index;
 						}
 						if (VideoIndex>=0 && AudioIndex>=0) {
-							m_App.CoreEngine.m_DtvEngine.SetVideoStream(VideoIndex);
+							m_App.CoreEngine.SetVideoStream(VideoIndex);
 							m_pCore->SetAudioStream(AudioIndex);
 							return;
 						}
@@ -3564,7 +3585,7 @@ void CMainWindow::OnTimer(HWND hwnd,UINT id)
 				m_App.StatusView.UpdateItem(STATUS_ITEM_AUDIOCHANNEL);
 				m_App.Panel.ControlPanel.UpdateItem(CONTROLPANEL_ITEM_AUDIO);
 				m_pCore->SetCommandCheckedState(CM_SPDIF_TOGGLE,
-					m_App.CoreEngine.IsSpdifPassthroughEnabled());
+					m_App.CoreEngine.IsSPDIFPassthroughEnabled());
 			}
 
 			bool fUpdateEventInfo=false;
@@ -3663,7 +3684,7 @@ void CMainWindow::OnTimer(HWND hwnd,UINT id)
 					// チャンネルタブ更新
 					if (!m_App.EpgOptions.IsEpgFileLoading()) {
 						if (m_App.Panel.ChannelPanel.QueryUpdate()) {
-							m_App.Panel.ChannelPanel.UpdateAllChannels(false);
+							m_App.Panel.ChannelPanel.UpdateAllChannels();
 						} else if (fUpdateEventInfo) {
 							CAppCore::StreamIDInfo Info;
 							if (m_App.Core.GetCurrentStreamIDInfo(&Info))
@@ -3740,17 +3761,7 @@ void CMainWindow::OnTimer(HWND hwnd,UINT id)
 					&& m_App.Core.GetCurrentStreamChannelInfo(&ChInfo)) {
 				if (m_App.Panel.Form.GetCurPageID()==PANEL_ID_PROGRAMLIST) {
 					if (ChInfo.GetServiceID()!=0) {
-						const HANDLE hThread=::GetCurrentThread();
-						const int OldPriority=::GetThreadPriority(hThread);
-						::SetThreadPriority(hThread,THREAD_PRIORITY_BELOW_NORMAL);
-
-						m_App.EpgProgramList.UpdateService(
-							ChInfo.GetNetworkID(),
-							ChInfo.GetTransportStreamID(),
-							ChInfo.GetServiceID());
 						m_App.Panel.ProgramListPanel.UpdateProgramList(&ChInfo);
-
-						::SetThreadPriority(hThread,OldPriority);
 					}
 				} else if (m_App.Panel.Form.GetCurPageID()==PANEL_ID_CHANNEL) {
 					m_App.Panel.ChannelPanel.UpdateChannels(
@@ -3814,9 +3825,14 @@ void CMainWindow::OnTimer(HWND hwnd,UINT id)
 	case TIMER_ID_RESETERRORCOUNT:
 		// エラーカウントをリセットする
 		// (既にサービスの情報が取得されている場合のみ)
-		if (m_App.CoreEngine.m_DtvEngine.m_TsAnalyzer.GetServiceNum()>0) {
-			SendCommand(CM_RESETERRORCOUNT);
-			m_ResetErrorCountTimer.End();
+		{
+			const LibISDB::AnalyzerFilter *pAnalyzer=
+				m_App.CoreEngine.GetFilter<LibISDB::AnalyzerFilter>();
+
+			if (pAnalyzer!=nullptr && pAnalyzer->GetServiceCount()>0) {
+				SendCommand(CM_RESETERRORCOUNT);
+				m_ResetErrorCountTimer.End();
+			}
 		}
 		break;
 
@@ -3918,8 +3934,9 @@ bool CMainWindow::OnInitMenuPopup(HMENU hmenu)
 			}
 		}
 
+		const LibISDB::ViewerFilter *pViewer=m_App.CoreEngine.GetFilter<LibISDB::ViewerFilter>();
 		m_App.AspectRatioIconMenu.CheckItem(CM_FRAMECUT,
-			m_App.CoreEngine.m_DtvEngine.m_MediaViewer.GetViewStretchMode()==CMediaViewer::STRETCH_CUTFRAME);
+			pViewer!=nullptr && pViewer->GetViewStretchMode()==LibISDB::ViewerFilter::ViewStretchMode::Crop);
 
 		m_App.Accelerator.SetMenuAccel(hmenu);
 		if (!m_App.AspectRatioIconMenu.OnInitMenuPopup(m_hwnd,hmenu))
@@ -3933,19 +3950,19 @@ bool CMainWindow::OnInitMenuPopup(HMENU hmenu)
 		CAppCore::StreamIDInfo StreamID;
 
 		if (m_App.Core.GetCurrentStreamIDInfo(&StreamID)) {
-			CTsAnalyzer::ServiceList ServiceList;
+			LibISDB::AnalyzerFilter::ServiceList ServiceList;
 			CChannelList ChList;
 			int CurService=-1;
 
-			m_App.CoreEngine.m_DtvEngine.m_TsAnalyzer.GetViewableServiceList(&ServiceList);
+			m_App.CoreEngine.GetSelectableServiceList(&ServiceList);
 
 			for (int i=0;i<static_cast<int>(ServiceList.size());i++) {
-				const CTsAnalyzer::ServiceInfo &ServiceInfo=ServiceList[i];
+				const LibISDB::AnalyzerFilter::ServiceInfo &ServiceInfo=ServiceList[i];
 				CChannelInfo *pChInfo=new CChannelInfo;
 
 				pChInfo->SetChannelNo(i+1);
-				if (ServiceInfo.szServiceName[0]!='\0') {
-					pChInfo->SetName(ServiceInfo.szServiceName);
+				if (!ServiceInfo.ServiceName.empty()) {
+					pChInfo->SetName(ServiceInfo.ServiceName.c_str());
 				} else {
 					TCHAR szName[32];
 					StdUtil::snprintf(szName,lengthof(szName),TEXT("サービス%d"),i+1);
@@ -3968,9 +3985,9 @@ bool CMainWindow::OnInitMenuPopup(HMENU hmenu)
 		CPopupMenu Menu(hmenu);
 		Menu.Clear();
 
-		CDtvEngine &DtvEngine=m_App.CoreEngine.m_DtvEngine;
+		LibISDB::AnalyzerFilter *pAnalyzer=m_App.CoreEngine.GetFilter<LibISDB::AnalyzerFilter>();
 		CAudioManager::AudioList AudioList;
-		const CAudioDecFilter::DualMonoMode CurDualMonoMode=m_pCore->GetDualMonoMode();
+		const LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode CurDualMonoMode=m_pCore->GetDualMonoMode();
 		bool fDualMono=false;
 
 		if (m_App.AudioManager.GetAudioList(&AudioList) && !AudioList.empty()) {
@@ -3982,11 +3999,11 @@ bool CMainWindow::OnInitMenuPopup(HMENU hmenu)
 				if (!Info.Text.empty()) {
 					Length=CopyToMenuText(Info.Text.c_str(),pszText,MaxText);
 				} else if (Info.Language!=0 && (!Info.IsDualMono() || Info.fMultiLingual)) {
-					EpgUtil::GetLanguageText(Info.Language,pszText,MaxText);
+					LibISDB::GetLanguageText_ja(Info.Language,pszText,MaxText);
 					Length=::lstrlen(pszText);
 					if (Info.DualMono==CAudioManager::DUALMONO_BOTH) {
-						TCHAR szLang2[EpgUtil::MAX_LANGUAGE_TEXT_LENGTH];
-						EpgUtil::GetLanguageText(Info.Language2,szLang2,lengthof(szLang2));
+						TCHAR szLang2[LibISDB::MAX_LANGUAGE_TEXT_LENGTH];
+						LibISDB::GetLanguageText_ja(Info.Language2,szLang2,lengthof(szLang2));
 						Length+=StdUtil::snprintf(pszText+Length,MaxText-Length,TEXT("+%s"),szLang2);
 					}
 				} else if (Info.IsDualMono()) {
@@ -3999,8 +4016,8 @@ bool CMainWindow::OnInitMenuPopup(HMENU hmenu)
 				} else {
 					Length=StdUtil::snprintf(pszText,MaxText,TEXT("音声%d"),StreamNumber+1);
 				}
-				if (Info.ComponentType!=CAudioManager::COMPONENT_TYPE_INVALID) {
-					LPCTSTR pszComponentType=EpgUtil::GetAudioComponentTypeText(Info.ComponentType);
+				if (Info.ComponentType!=LibISDB::COMPONENT_TYPE_INVALID) {
+					LPCTSTR pszComponentType=LibISDB::GetAudioComponentTypeText_ja(Info.ComponentType);
 					if (pszComponentType!=nullptr) {
 						StdUtil::snprintf(pszText+Length,MaxText-Length,
 										  TEXT(" [%s]"),pszComponentType);
@@ -4008,11 +4025,11 @@ bool CMainWindow::OnInitMenuPopup(HMENU hmenu)
 				}
 			};
 
-			const WORD ServiceIndex=DtvEngine.GetServiceIndex();
-			CTsAnalyzer::EventComponentGroupList GroupList;
+			const int ServiceIndex=m_App.CoreEngine.GetServiceIndex();
+			LibISDB::AnalyzerFilter::EventComponentGroupList GroupList;
 			int Sel=-1;
 
-			if (DtvEngine.m_TsAnalyzer.GetEventComponentGroupList(ServiceIndex,&GroupList)
+			if (pAnalyzer->GetEventComponentGroupList(ServiceIndex,&GroupList)
 					&& !GroupList.empty()) {
 				// マルチビューTV
 				const int NumGroup=static_cast<int>(GroupList.size());
@@ -4020,12 +4037,12 @@ bool CMainWindow::OnInitMenuPopup(HMENU hmenu)
 
 				// グループ毎の音声
 				for (int i=0;i<NumGroup;i++) {
-					const CTsAnalyzer::EventComponentGroupInfo &GroupInfo=GroupList[i];
+					const LibISDB::AnalyzerFilter::EventComponentGroupInfo &GroupInfo=GroupList[i];
 					int StreamNumber=-1;
 
-					for (int j=0;j<GroupInfo.CAUnitNum;j++) {
-						for (int k=0;k<GroupInfo.CAUnit[j].ComponentNum;k++) {
-							const BYTE ComponentTag=GroupInfo.CAUnit[j].ComponentTag[k];
+					for (int j=0;j<GroupInfo.NumOfCAUnit;j++) {
+						for (int k=0;k<GroupInfo.CAUnitList[j].NumOfComponent;k++) {
+							const BYTE ComponentTag=GroupInfo.CAUnitList[j].ComponentTag[k];
 
 							for (int AudioIndex=0;AudioIndex<static_cast<int>(AudioList.size());AudioIndex++) {
 								CAudioManager::AudioInfo &AudioInfo=AudioList[AudioIndex];
@@ -4034,8 +4051,8 @@ bool CMainWindow::OnInitMenuPopup(HMENU hmenu)
 									TCHAR szText[80];
 									int Length;
 
-									if (GroupInfo.szText[0]!=_T('\0')) {
-										Length=CopyToMenuText(GroupInfo.szText,szText,lengthof(szText));
+									if (!GroupInfo.Text.empty()) {
+										Length=CopyToMenuText(GroupInfo.Text.c_str(),szText,lengthof(szText));
 									} else {
 										if (GroupInfo.ComponentGroupID==0)
 											Length=StdUtil::snprintf(szText,lengthof(szText),TEXT("メイン"));
@@ -4054,10 +4071,10 @@ bool CMainWindow::OnInitMenuPopup(HMENU hmenu)
 									AudioInfo.ID=CAudioManager::ID_INVALID;
 
 									if (AudioInfo.IsDualMono()) {
-										if (CurDualMonoMode==CAudioDecFilter::DUALMONO_MAIN) {
+										if (CurDualMonoMode==LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode::Main) {
 											if (AudioInfo.DualMono==CAudioManager::DUALMONO_MAIN)
 												Sel=AudioIndex;
-										} else if (CurDualMonoMode==CAudioDecFilter::DUALMONO_SUB) {
+										} else if (CurDualMonoMode==LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode::Sub) {
 											if (AudioInfo.DualMono==CAudioManager::DUALMONO_SUB)
 												Sel=AudioIndex;
 										} else {
@@ -4080,8 +4097,8 @@ bool CMainWindow::OnInitMenuPopup(HMENU hmenu)
 
 			const CAudioManager::IDType CurAudioID=
 				CAudioManager::MakeID(
-					DtvEngine.GetAudioStream(),
-					DtvEngine.GetAudioComponentTag());
+					m_App.CoreEngine.GetAudioStream(),
+					m_App.CoreEngine.GetAudioComponentTag());
 			int StreamNumber=-1;
 
 			for (int i=0;i<static_cast<int>(AudioList.size()) && i<=CM_AUDIO_LAST-CM_AUDIO_FIRST;i++) {
@@ -4103,10 +4120,10 @@ bool CMainWindow::OnInitMenuPopup(HMENU hmenu)
 
 				if (AudioInfo.ID==CurAudioID) {
 					if (AudioInfo.IsDualMono()) {
-						if (CurDualMonoMode==CAudioDecFilter::DUALMONO_MAIN) {
+						if (CurDualMonoMode==LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode::Main) {
 							if (AudioInfo.DualMono==CAudioManager::DUALMONO_MAIN)
 								Sel=i;
-						} else if (CurDualMonoMode==CAudioDecFilter::DUALMONO_SUB) {
+						} else if (CurDualMonoMode==LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode::Sub) {
 							if (AudioInfo.DualMono==CAudioManager::DUALMONO_SUB)
 								Sel=i;
 						} else {
@@ -4130,9 +4147,10 @@ bool CMainWindow::OnInitMenuPopup(HMENU hmenu)
 		HINSTANCE hinstRes=m_App.GetResourceInstance();
 
 		if (!fDualMono) {
-			const BYTE Channels=DtvEngine.GetAudioChannelNum();
+			LibISDB::ViewerFilter *pViewer=m_App.CoreEngine.GetFilter<LibISDB::ViewerFilter>();
+			const int Channels=pViewer->GetAudioChannelCount();
 
-			if (Channels==CMediaViewer::AUDIO_CHANNEL_DUALMONO) {
+			if (Channels==LibISDB::ViewerFilter::AudioChannelCount_DualMono) {
 				if (Menu.GetItemCount()>0)
 					Menu.AppendSeparator();
 				static const int DualMonoMenuList[] = {
@@ -4146,9 +4164,12 @@ bool CMainWindow::OnInitMenuPopup(HMENU hmenu)
 					Menu.Append(DualMonoMenuList[i],szText);
 				}
 				Menu.CheckRadioItem(CM_DUALMONO_MAIN,CM_DUALMONO_BOTH,
-					CurDualMonoMode==CAudioDecFilter::DUALMONO_MAIN?CM_DUALMONO_MAIN:
-					CurDualMonoMode==CAudioDecFilter::DUALMONO_SUB?CM_DUALMONO_SUB:CM_DUALMONO_BOTH);
-			} else if (Channels==2 && DtvEngine.GetAudioComponentType()==0) {
+					CurDualMonoMode==LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode::Main?CM_DUALMONO_MAIN:
+					CurDualMonoMode==LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode::Sub?CM_DUALMONO_SUB:CM_DUALMONO_BOTH);
+			} else if (Channels==2
+					&& pAnalyzer->GetAudioComponentType(
+						m_App.CoreEngine.GetServiceIndex(),
+						m_App.CoreEngine.GetAudioStream())==0) {
 				if (Menu.GetItemCount()>0)
 					Menu.AppendSeparator();
 				static const int StereoModeMenuList[] = {
@@ -4161,11 +4182,11 @@ bool CMainWindow::OnInitMenuPopup(HMENU hmenu)
 					::LoadString(hinstRes,StereoModeMenuList[i],szText,lengthof(szText));
 					Menu.Append(StereoModeMenuList[i],szText);
 				}
-				const CAudioDecFilter::StereoMode CurStereoMode=m_pCore->GetStereoMode();
+				const LibISDB::DirectShow::AudioDecoderFilter::StereoMode CurStereoMode=m_pCore->GetStereoMode();
 				Menu.CheckRadioItem(CM_STEREOMODE_STEREO,CM_STEREOMODE_RIGHT,
-					CurStereoMode==CAudioDecFilter::STEREOMODE_STEREO?
+					CurStereoMode==LibISDB::DirectShow::AudioDecoderFilter::StereoMode::Stereo?
 						CM_STEREOMODE_STEREO:
-					CurStereoMode==CAudioDecFilter::STEREOMODE_LEFT?
+					CurStereoMode==LibISDB::DirectShow::AudioDecoderFilter::StereoMode::Left?
 						CM_STEREOMODE_LEFT:
 						CM_STEREOMODE_RIGHT);
 			}
@@ -4195,39 +4216,39 @@ bool CMainWindow::OnInitMenuPopup(HMENU hmenu)
 				Menu.AppendSeparator();
 			}
 		}
-		CAudioDecFilter::SpdifOptions SpdifOptions;
-		m_App.CoreEngine.GetSpdifOptions(&SpdifOptions);
+		LibISDB::DirectShow::AudioDecoderFilter::SPDIFOptions SPDIFOptions;
+		m_App.CoreEngine.GetSPDIFOptions(&SPDIFOptions);
 		Menu.CheckRadioItem(CM_SPDIF_DISABLED,CM_SPDIF_AUTO,
-							CM_SPDIF_DISABLED+(int)SpdifOptions.Mode);
+							CM_SPDIF_DISABLED+(int)SPDIFOptions.Mode);
 		m_App.Accelerator.SetMenuAccel(hmenu);
 	} else if (hmenu==m_App.MainMenu.GetSubMenu(CMainMenu::SUBMENU_VIDEO)) {
 		CPopupMenu Menu(hmenu);
 		Menu.Clear();
 
-		CDtvEngine &DtvEngine=m_App.CoreEngine.m_DtvEngine;
-		const WORD ServiceIndex=DtvEngine.GetServiceIndex();
-		CTsAnalyzer::EventComponentGroupList GroupList;
+		LibISDB::AnalyzerFilter *pAnalyzer=m_App.CoreEngine.GetFilter<LibISDB::AnalyzerFilter>();
+		const int ServiceIndex=m_App.CoreEngine.GetServiceIndex();
+		LibISDB::AnalyzerFilter::EventComponentGroupList GroupList;
 
-		if (DtvEngine.m_TsAnalyzer.GetEventComponentGroupList(ServiceIndex,&GroupList)
+		if (pAnalyzer->GetEventComponentGroupList(ServiceIndex,&GroupList)
 				&& !GroupList.empty()) {
 			// マルチビューTV
 			const int NumGroup=static_cast<int>(GroupList.size());
-			const BYTE CurVideoComponentTag=DtvEngine.GetVideoComponentTag();
+			const BYTE CurVideoComponentTag=m_App.CoreEngine.GetVideoComponentTag();
 			int CurGroup=-1;
 			int SubGroupCount=0;
 
 			for (int i=0;i<NumGroup;i++) {
-				CTsAnalyzer::EventComponentGroupInfo &GroupInfo=GroupList[i];
+				LibISDB::AnalyzerFilter::EventComponentGroupInfo &GroupInfo=GroupList[i];
 				TCHAR szText[80];
 
-				if (GroupInfo.szText[0]!=_T('\0')) {
-					CopyToMenuText(GroupInfo.szText,szText,lengthof(szText));
+				if (!GroupInfo.Text.empty()) {
+					CopyToMenuText(GroupInfo.Text.c_str(),szText,lengthof(szText));
 				} else {
 					if (GroupInfo.ComponentGroupID==0)
 						StdUtil::strncpy(szText,lengthof(szText),TEXT("メイン"));
 					else
 						StdUtil::snprintf(szText,lengthof(szText),TEXT("サブ%d"),SubGroupCount+1);
-					StdUtil::strncpy(GroupInfo.szText,lengthof(GroupInfo.szText),szText);
+					GroupInfo.Text=szText;
 				}
 				if (GroupInfo.ComponentGroupID!=0)
 					SubGroupCount++;
@@ -4235,9 +4256,9 @@ bool CMainWindow::OnInitMenuPopup(HMENU hmenu)
 				Menu.Append(CM_MULTIVIEW_FIRST+i,szText);
 
 				if (CurGroup<0) {
-					for (int j=0;j<GroupInfo.CAUnitNum;j++) {
-						for (int k=0;k<GroupInfo.CAUnit[j].ComponentNum;k++) {
-							if (GroupInfo.CAUnit[j].ComponentTag[k]==CurVideoComponentTag) {
+					for (int j=0;j<GroupInfo.NumOfCAUnit;j++) {
+						for (int k=0;k<GroupInfo.CAUnitList[j].NumOfComponent;k++) {
+							if (GroupInfo.CAUnitList[j].ComponentTag[k]==CurVideoComponentTag) {
 								CurGroup=i;
 								break;
 							}
@@ -4252,9 +4273,9 @@ bool CMainWindow::OnInitMenuPopup(HMENU hmenu)
 									CM_MULTIVIEW_FIRST+CurGroup);
 			}
 
-			CTsAnalyzer::EsInfoList EsList;
+			LibISDB::AnalyzerFilter::ESInfoList EsList;
 
-			if (DtvEngine.m_TsAnalyzer.GetVideoEsList(ServiceIndex,&EsList)
+			if (pAnalyzer->GetVideoESList(ServiceIndex,&EsList)
 					&& !EsList.empty()) {
 				Menu.AppendSeparator();
 
@@ -4262,22 +4283,22 @@ bool CMainWindow::OnInitMenuPopup(HMENU hmenu)
 
 				// グループ毎の映像
 				for (int i=0;i<NumGroup;i++) {
-					const CTsAnalyzer::EventComponentGroupInfo &GroupInfo=GroupList[i];
+					const LibISDB::AnalyzerFilter::EventComponentGroupInfo &GroupInfo=GroupList[i];
 					int VideoCount=0;
 
-					for (int j=0;j<GroupInfo.CAUnitNum;j++) {
-						for (int k=0;k<GroupInfo.CAUnit[j].ComponentNum;k++) {
-							const BYTE ComponentTag=GroupInfo.CAUnit[j].ComponentTag[k];
+					for (int j=0;j<GroupInfo.NumOfCAUnit;j++) {
+						for (int k=0;k<GroupInfo.CAUnitList[j].NumOfComponent;k++) {
+							const BYTE ComponentTag=GroupInfo.CAUnitList[j].ComponentTag[k];
 							for (int EsIndex=0;EsIndex<static_cast<int>(EsList.size());EsIndex++) {
 								if (EsList[EsIndex].ComponentTag==ComponentTag) {
 									TCHAR szText[80];
 									VideoCount++;
-									int Length=CopyToMenuText(GroupInfo.szText,szText,lengthof(szText));
+									int Length=CopyToMenuText(GroupInfo.Text.c_str(),szText,lengthof(szText));
 									StdUtil::snprintf(szText+Length,lengthof(szText)-Length,TEXT(": 映像%d"),VideoCount);
 									Menu.Append(CM_VIDEOSTREAM_FIRST+EsIndex,szText);
 									if (ComponentTag==CurVideoComponentTag)
 										CurVideoIndex=EsIndex;
-									EsList[EsIndex].ComponentTag=CTsAnalyzer::COMPONENTTAG_INVALID;
+									EsList[EsIndex].ComponentTag=LibISDB::COMPONENT_TAG_INVALID;
 									break;
 								}
 							}
@@ -4288,7 +4309,7 @@ bool CMainWindow::OnInitMenuPopup(HMENU hmenu)
 				// グループに属さない映像
 				int VideoCount=0;
 				for (int i=0;i<static_cast<int>(EsList.size());i++) {
-					if (EsList[i].ComponentTag!=CTsAnalyzer::COMPONENTTAG_INVALID) {
+					if (EsList[i].ComponentTag!=LibISDB::COMPONENT_TAG_INVALID) {
 						TCHAR szText[64];
 						VideoCount++;
 						int Length=StdUtil::snprintf(szText,lengthof(szText),TEXT("映像%d"),VideoCount);
@@ -4307,9 +4328,9 @@ bool CMainWindow::OnInitMenuPopup(HMENU hmenu)
 				}
 			}
 		} else {
-			CTsAnalyzer::EsInfoList EsList;
+			LibISDB::AnalyzerFilter::ESInfoList EsList;
 
-			if (DtvEngine.m_TsAnalyzer.GetVideoEsList(ServiceIndex,&EsList)
+			if (pAnalyzer->GetVideoESList(ServiceIndex,&EsList)
 					&& !EsList.empty()) {
 				for (int i=0;i<static_cast<int>(EsList.size()) && CM_VIDEOSTREAM_FIRST+i<=CM_VIDEOSTREAM_LAST;i++) {
 					TCHAR szText[64];
@@ -4322,16 +4343,16 @@ bool CMainWindow::OnInitMenuPopup(HMENU hmenu)
 
 				Menu.CheckRadioItem(CM_VIDEOSTREAM_FIRST,
 									CM_VIDEOSTREAM_FIRST+static_cast<int>(EsList.size())-1,
-									CM_VIDEOSTREAM_FIRST+DtvEngine.GetVideoStream());
+									CM_VIDEOSTREAM_FIRST+m_App.CoreEngine.GetVideoStream());
 			} else {
 				Menu.Append(0U,TEXT("映像なし"),MF_GRAYED);
 			}
 		}
 	} else if (hmenu==m_App.MainMenu.GetSubMenu(CMainMenu::SUBMENU_FILTERPROPERTY)) {
+		LibISDB::ViewerFilter *pViewer=m_App.CoreEngine.GetFilter<LibISDB::ViewerFilter>();
 		for (int i=0;i<lengthof(m_DirectShowFilterPropertyList);i++) {
 			m_App.MainMenu.EnableItem(m_DirectShowFilterPropertyList[i].Command,
-				m_App.CoreEngine.m_DtvEngine.m_MediaViewer.FilterHasProperty(
-					m_DirectShowFilterPropertyList[i].Filter));
+				pViewer!=nullptr && pViewer->FilterHasProperty(m_DirectShowFilterPropertyList[i].Filter));
 		}
 	} else if (hmenu==m_App.MainMenu.GetSubMenu(CMainMenu::SUBMENU_BAR)) {
 		m_App.MainMenu.CheckRadioItem(CM_WINDOWFRAME_NORMAL,CM_WINDOWFRAME_NONE,
@@ -4771,7 +4792,9 @@ void CMainWindow::ShowPopupSideBar(bool fShow)
 
 void CMainWindow::ShowCursor(bool fShow)
 {
-	m_App.CoreEngine.m_DtvEngine.m_MediaViewer.HideCursor(!fShow);
+	LibISDB::ViewerFilter *pViewer=m_App.CoreEngine.GetFilter<LibISDB::ViewerFilter>();
+	if (pViewer!=nullptr)
+		pViewer->HideCursor(!fShow);
 	m_Display.GetViewWindow().ShowCursor(fShow);
 	m_fShowCursor=fShow;
 	::SetCursor(fShow ? ::LoadCursor(nullptr,IDC_ARROW) : nullptr);
@@ -4794,16 +4817,16 @@ void CMainWindow::ShowChannelOSD()
 				TVTest::CEventVariableStringMap::EventInfo Event;
 
 				m_App.Core.GetVariableStringEventInfo(&Event);
-				if (Event.Event.m_EventName.empty()) {
-					SYSTEMTIME st;
-					CEventInfoData EventData;
+				if (Event.Event.EventName.empty()) {
+					LibISDB::DateTime Time;
+					LibISDB::EventInfo EventData;
 
-					GetCurrentEpgTime(&st);
-					if (m_App.EpgProgramList.GetEventInfo(
+					LibISDB::GetCurrentEPGTime(&Time);
+					if (m_App.EPGDatabase.GetEventInfo(
 							pInfo->GetNetworkID(),
 							pInfo->GetTransportStreamID(),
 							pInfo->GetServiceID(),
-							&st,&EventData))
+							Time,&EventData))
 						Event.Event=EventData;
 				}
 				CUICore::CTitleStringMap Map(m_App,&Event);
@@ -4818,11 +4841,11 @@ void CMainWindow::ShowChannelOSD()
 void CMainWindow::OnServiceChanged()
 {
 	int CurService=0;
-	WORD ServiceID;
-	if (m_App.CoreEngine.m_DtvEngine.GetServiceID(&ServiceID))
-		CurService=m_App.CoreEngine.m_DtvEngine.m_TsAnalyzer.GetViewableServiceIndexByID(ServiceID);
+	WORD ServiceID=m_App.CoreEngine.GetServiceID();
+	if (ServiceID!=LibISDB::SERVICE_ID_INVALID)
+		CurService=m_App.CoreEngine.GetSelectableServiceIndexByID(ServiceID);
 	m_App.MainMenu.CheckRadioItem(CM_SERVICE_FIRST,
-		CM_SERVICE_FIRST+m_App.CoreEngine.m_DtvEngine.m_TsAnalyzer.GetViewableServiceNum()-1,
+		CM_SERVICE_FIRST+m_App.CoreEngine.GetSelectableServiceCount()-1,
 		CM_SERVICE_FIRST+CurService);
 
 	m_App.StatusView.UpdateItem(STATUS_ITEM_CHANNEL);
@@ -4839,7 +4862,7 @@ void CMainWindow::OnServiceChanged()
 
 void CMainWindow::OnEventChanged()
 {
-	const WORD EventID=m_App.CoreEngine.m_DtvEngine.GetEventID();
+	const WORD EventID=m_App.CoreEngine.GetEventID();
 
 	// 番組の最後まで録画
 	if (m_App.RecordManager.GetStopOnEventEnd())
@@ -4849,22 +4872,21 @@ void CMainWindow::OnEventChanged()
 
 	if (m_App.OSDOptions.IsNotifyEnabled(COSDOptions::NOTIFY_EVENTNAME)
 			&& !m_App.Core.IsChannelScanning()) {
-		TCHAR szEventName[256];
+		LibISDB::EventInfo EventInfo;
 
-		if (m_App.CoreEngine.m_DtvEngine.GetEventName(szEventName,lengthof(szEventName))>0) {
-			TCHAR szBarText[EpgUtil::MAX_EVENT_TIME_LENGTH+lengthof(szEventName)];
-			int Length=0;
-			SYSTEMTIME StartTime;
-			DWORD Duration;
+		if (m_App.CoreEngine.GetCurrentEventInfo(&EventInfo)) {
+			TVTest::String Text;
 
-			if (m_App.CoreEngine.m_DtvEngine.GetEventTime(&StartTime,&Duration)) {
-				Length=EpgUtil::FormatEventTime(StartTime,Duration,
-												szBarText,EpgUtil::MAX_EVENT_TIME_LENGTH);
-				if (Length>0)
-					szBarText[Length++]=_T(' ');
+			if (EventInfo.StartTime.IsValid()) {
+				TCHAR szTime[EpgUtil::MAX_EVENT_TIME_LENGTH];
+
+				if (EpgUtil::FormatEventTime(EventInfo,szTime,lengthof(szTime))>0) {
+					Text=szTime;
+					Text+=_T(' ');
+				}
 			}
-			::lstrcpy(szBarText+Length,szEventName);
-			ShowNotificationBar(szBarText,CNotificationBar::MESSAGE_INFO,0,true);
+			Text+=EventInfo.EventName;
+			ShowNotificationBar(Text.c_str(),CNotificationBar::MESSAGE_INFO,0,true);
 		}
 	}
 
@@ -4881,7 +4903,9 @@ void CMainWindow::OnEventChanged()
 			&& (m_fForceResetPanAndScan
 			|| (m_App.VideoOptions.GetResetPanScanEventChange()
 				&& m_AspectRatioType<ASPECTRATIO_CUSTOM))) {
-		m_App.CoreEngine.m_DtvEngine.m_MediaViewer.SetPanAndScan(0,0);
+		LibISDB::ViewerFilter *pViewer=m_App.CoreEngine.GetFilter<LibISDB::ViewerFilter>();
+		if (pViewer!=nullptr)
+			pViewer->SetPanAndScan(0,0);
 		if (!m_pCore->GetFullscreen()
 				&& IsViewerEnabled()) {
 			AutoFitWindowToVideo();
@@ -5125,18 +5149,18 @@ void CMainWindow::OnMouseWheel(WPARAM wParam,LPARAM lParam,bool fHorz)
 
 bool CMainWindow::EnableViewer(bool fEnable)
 {
-	CMediaViewer &MediaViewer=m_App.CoreEngine.m_DtvEngine.m_MediaViewer;
+	LibISDB::ViewerFilter *pViewer=m_App.CoreEngine.GetFilter<LibISDB::ViewerFilter>();
 
 	if (fEnable) {
 		bool fInit;
 
-		if (!MediaViewer.IsOpen()) {
+		if (!pViewer->IsOpen()) {
 			fInit=true;
 		} else {
-			BYTE VideoStreamType=m_App.CoreEngine.m_DtvEngine.GetVideoStreamType();
+			BYTE VideoStreamType=m_App.CoreEngine.GetVideoStreamType();
 			fInit=
-				VideoStreamType!=STREAM_TYPE_UNINITIALIZED &&
-				VideoStreamType!=MediaViewer.GetVideoStreamType();
+				VideoStreamType!=LibISDB::STREAM_TYPE_UNINITIALIZED &&
+				VideoStreamType!=pViewer->GetVideoStreamType();
 		}
 
 		if (fInit) {
@@ -5145,7 +5169,7 @@ bool CMainWindow::EnableViewer(bool fEnable)
 		}
 	}
 
-	if (MediaViewer.IsOpen()) {
+	if (pViewer->IsOpen()) {
 		if (!m_Display.EnableViewer(fEnable))
 			return false;
 
@@ -5199,14 +5223,14 @@ void CMainWindow::OnMuteChanged(bool fMute)
 }
 
 
-void CMainWindow::OnDualMonoModeChanged(CAudioDecFilter::DualMonoMode Mode)
+void CMainWindow::OnDualMonoModeChanged(LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode Mode)
 {
 	m_App.StatusView.UpdateItem(STATUS_ITEM_AUDIOCHANNEL);
 	m_App.Panel.ControlPanel.UpdateItem(CONTROLPANEL_ITEM_AUDIO);
 }
 
 
-void CMainWindow::OnStereoModeChanged(CAudioDecFilter::StereoMode Mode)
+void CMainWindow::OnStereoModeChanged(LibISDB::DirectShow::AudioDecoderFilter::StereoMode Mode)
 {
 	m_App.StatusView.UpdateItem(STATUS_ITEM_AUDIOCHANNEL);
 	m_App.Panel.ControlPanel.UpdateItem(CONTROLPANEL_ITEM_AUDIO);
@@ -5292,8 +5316,9 @@ bool CMainWindow::GetZoomRate(int *pRate,int *pFactor)
 		Rate=sz.cy;
 		Factor=Height;
 		*/
-		WORD DstWidth,DstHeight;
-		if (m_App.CoreEngine.m_DtvEngine.m_MediaViewer.GetDestSize(&DstWidth,&DstHeight)) {
+		LibISDB::ViewerFilter *pViewer=m_App.CoreEngine.GetFilter<LibISDB::ViewerFilter>();
+		int DstWidth,DstHeight;
+		if (pViewer!=nullptr && pViewer->GetDestSize(&DstWidth,&DstHeight)) {
 			Rate=DstHeight;
 			Factor=Height;
 		}
@@ -5338,9 +5363,10 @@ void CMainWindow::OnPanAndScanChanged()
 					AdjustWindowSize(CalcZoomSize(Width,ZoomRate,ZoomFactor),
 									 CalcZoomSize(Height,ZoomRate,ZoomFactor));
 				} else {
-					WORD DstWidth,DstHeight;
+					LibISDB::ViewerFilter *pViewer=m_App.CoreEngine.GetFilter<LibISDB::ViewerFilter>();
+					int DstWidth,DstHeight;
 
-					if (m_App.CoreEngine.m_DtvEngine.m_MediaViewer.GetDestSize(&DstWidth,&DstHeight))
+					if (pViewer!=nullptr && pViewer->GetDestSize(&DstWidth,&DstHeight))
 						AdjustWindowSize(DstWidth,DstHeight);
 				}
 			}
@@ -5474,9 +5500,9 @@ bool CMainWindow::ShowProgramGuide(bool fShow,unsigned int Flags,const ProgramGu
 					WS_THICKFRAME | WS_CLIPCHILDREN);
 		}
 
-		SYSTEMTIME stFirst,stLast;
-		m_App.ProgramGuideOptions.GetTimeRange(&stFirst,&stLast);
-		m_App.Epg.ProgramGuide.SetTimeRange(&stFirst,&stLast);
+		LibISDB::DateTime First,Last;
+		m_App.ProgramGuideOptions.GetTimeRange(&First,&Last);
+		m_App.Epg.ProgramGuide.SetTimeRange(First,Last);
 		m_App.Epg.ProgramGuide.SetViewDay(CProgramGuide::DAY_TODAY);
 
 		if (fOnScreen) {
@@ -5528,7 +5554,7 @@ bool CMainWindow::ShowProgramGuide(bool fShow,unsigned int Flags,const ProgramGu
 			Space=-1;
 		}
 		m_App.Epg.ProgramGuide.SetCurrentChannelProvider(Provider,Space);
-		m_App.Epg.ProgramGuide.UpdateProgramGuide(true);
+		m_App.Epg.ProgramGuide.UpdateProgramGuide();
 		if (m_App.ProgramGuideOptions.ScrollToCurChannel())
 			m_App.Epg.ProgramGuide.ScrollToCurrentService();
 	} else {
@@ -6152,21 +6178,21 @@ int CMainWindow::GetNextChannel(bool fUp)
 				m_App.ChannelManager.GetChangingChannel() :
 				m_App.ChannelManager.GetCurrentChannel();
 		const CChannelInfo *pCurChannelInfo=pCurChannelList->GetChannelInfo(CurChannel);
-		SYSTEMTIME st;
-		CEventInfoData EventInfo;
-		CEventInfo::CommonEventInfo CurEvent={0};
+		LibISDB::DateTime Time;
+		LibISDB::EventInfo EventInfo;
+		LibISDB::EventInfo::CommonEventInfo CurEvent;
 
-		GetCurrentEpgTime(&st);
-		if (m_App.EpgProgramList.GetEventInfo(
+		LibISDB::GetCurrentEPGTime(&Time);
+		if (m_App.EPGDatabase.GetEventInfo(
 				pCurChannelInfo->GetNetworkID(),
 				pCurChannelInfo->GetTransportStreamID(),
 				pCurChannelInfo->GetServiceID(),
-				&st,&EventInfo)) {
-			if (EventInfo.m_bCommonEvent) {
-				CurEvent=EventInfo.m_CommonEventInfo;
+				Time,&EventInfo)) {
+			if (EventInfo.IsCommonEvent) {
+				CurEvent=EventInfo.CommonEvent;
 			} else {
-				CurEvent.ServiceID=EventInfo.m_ServiceID;
-				CurEvent.EventID=EventInfo.m_EventID;
+				CurEvent.ServiceID=EventInfo.ServiceID;
+				CurEvent.EventID=EventInfo.EventID;
 			}
 		}
 
@@ -6180,18 +6206,18 @@ int CMainWindow::GetNextChannel(bool fUp)
 					|| pCurChannelInfo->GetTransportStreamID()!=pNextChannelInfo->GetTransportStreamID())
 				break;
 
-			if (CurEvent.ServiceID!=0
-					&& m_App.EpgProgramList.GetEventInfo(
+			if (CurEvent.ServiceID!=LibISDB::SERVICE_ID_INVALID
+					&& m_App.EPGDatabase.GetEventInfo(
 						pNextChannelInfo->GetNetworkID(),
 						pNextChannelInfo->GetTransportStreamID(),
 						pNextChannelInfo->GetServiceID(),
-						&st,&EventInfo)) {
-				CEventInfo::CommonEventInfo Event;
-				if (EventInfo.m_bCommonEvent) {
-					Event=EventInfo.m_CommonEventInfo;
+						Time,&EventInfo)) {
+				LibISDB::EventInfo::CommonEventInfo Event;
+				if (EventInfo.IsCommonEvent) {
+					Event=EventInfo.CommonEvent;
 				} else {
-					Event.ServiceID=EventInfo.m_ServiceID;
-					Event.EventID=EventInfo.m_EventID;
+					Event.ServiceID=EventInfo.ServiceID;
+					Event.EventID=EventInfo.EventID;
 				}
 				if (CurEvent!=Event) {
 					fDiffEvent=true;
@@ -6211,18 +6237,18 @@ int CMainWindow::GetNextChannel(bool fUp)
 		if (!fUp && !fDiffEvent) {
 			// 同じ番組の最初のサービスを探す
 			const CChannelInfo *pNextChannelInfo=pCurChannelList->GetChannelInfo(Channel);
-			CEventInfo::CommonEventInfo NextEvent={0};
+			LibISDB::EventInfo::CommonEventInfo NextEvent;
 
-			if (m_App.EpgProgramList.GetEventInfo(
+			if (m_App.EPGDatabase.GetEventInfo(
 					pNextChannelInfo->GetNetworkID(),
 					pNextChannelInfo->GetTransportStreamID(),
 					pNextChannelInfo->GetServiceID(),
-					&st,&EventInfo)) {
-				if (EventInfo.m_bCommonEvent) {
-					NextEvent=EventInfo.m_CommonEventInfo;
+					Time,&EventInfo)) {
+				if (EventInfo.IsCommonEvent) {
+					NextEvent=EventInfo.CommonEvent;
 				} else {
-					NextEvent.ServiceID=EventInfo.m_ServiceID;
-					NextEvent.EventID=EventInfo.m_EventID;
+					NextEvent.ServiceID=EventInfo.ServiceID;
+					NextEvent.EventID=EventInfo.EventID;
 				}
 			}
 
@@ -6236,18 +6262,18 @@ int CMainWindow::GetNextChannel(bool fUp)
 						|| pNextChannelInfo->GetTransportStreamID()!=pChannelInfo->GetTransportStreamID())
 					break;
 
-				if (NextEvent.ServiceID!=0
-						&& m_App.EpgProgramList.GetEventInfo(
+				if (NextEvent.ServiceID!=LibISDB::SERVICE_ID_INVALID
+						&& m_App.EPGDatabase.GetEventInfo(
 							pChannelInfo->GetNetworkID(),
 							pChannelInfo->GetTransportStreamID(),
 							pChannelInfo->GetServiceID(),
-							&st,&EventInfo)) {
-					CEventInfo::CommonEventInfo Event;
-					if (EventInfo.m_bCommonEvent) {
-						Event=EventInfo.m_CommonEventInfo;
+							Time,&EventInfo)) {
+					LibISDB::EventInfo::CommonEventInfo Event;
+					if (EventInfo.IsCommonEvent) {
+						Event=EventInfo.CommonEvent;
 					} else {
-						Event.ServiceID=EventInfo.m_ServiceID;
-						Event.EventID=EventInfo.m_EventID;
+						Event.ServiceID=EventInfo.ServiceID;
+						Event.EventID=EventInfo.EventID;
 					}
 					if (Event!=NextEvent)
 						break;
@@ -6661,8 +6687,9 @@ bool CMainWindow::CFullscreen::OnCreate()
 
 	m_App.OSDManager.Reset();
 
-	m_App.CoreEngine.m_DtvEngine.m_MediaViewer.SetViewStretchMode(
-		m_App.VideoOptions.GetFullscreenStretchMode());
+	LibISDB::ViewerFilter *pViewer=m_App.CoreEngine.GetFilter<LibISDB::ViewerFilter>();
+	if (pViewer!=nullptr)
+		pViewer->SetViewStretchMode(m_App.VideoOptions.GetFullscreenStretchMode());
 
 	m_fShowCursor=true;
 	m_fMenu=false;
@@ -6681,7 +6708,9 @@ bool CMainWindow::CFullscreen::OnCreate()
 
 void CMainWindow::CFullscreen::ShowCursor(bool fShow)
 {
-	m_App.CoreEngine.m_DtvEngine.m_MediaViewer.HideCursor(!fShow);
+	LibISDB::ViewerFilter *pViewer=m_App.CoreEngine.GetFilter<LibISDB::ViewerFilter>();
+	if (pViewer!=nullptr)
+		pViewer->HideCursor(!fShow);
 	m_ViewWindow.ShowCursor(fShow);
 	m_fShowCursor=fShow;
 	::SetCursor(fShow ? ::LoadCursor(nullptr,IDC_ARROW) : nullptr);
@@ -7704,8 +7733,7 @@ void CMainWindow::CEpgCaptureEventHandler::OnEndCapture(unsigned int Flags)
 	} else {
 		::SetCursor(::LoadCursor(nullptr,IDC_WAIT));
 	}
-	App.EpgProgramList.UpdateProgramList();
-	App.EpgOptions.SaveEpgFile(&App.EpgProgramList);
+	App.EpgOptions.SaveEpgFile(&App.EPGDatabase);
 	App.Epg.ProgramGuide.OnEpgCaptureEnd();
 	if (m_pMainWindow->m_pCore->GetStandby()) {
 		App.Epg.ProgramGuide.Refresh();
@@ -7718,7 +7746,7 @@ void CMainWindow::CEpgCaptureEventHandler::OnEndCapture(unsigned int Flags)
 			m_pMainWindow->ResumeChannel();
 		if (m_pMainWindow->IsPanelVisible()
 				&& App.Panel.Form.GetCurPageID()==PANEL_ID_CHANNEL)
-			App.Panel.ChannelPanel.UpdateAllChannels(false);
+			App.Panel.ChannelPanel.UpdateAllChannels();
 	}
 
 	m_pMainWindow->ResumeViewer(ResumeInfo::VIEWERSUSPEND_EPGUPDATE);

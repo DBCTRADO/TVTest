@@ -14,9 +14,9 @@
 class CProgramItemInfo
 {
 public:
-	CProgramItemInfo(const CEventInfoData &EventInfo);
+	CProgramItemInfo(const LibISDB::EventInfo &EventInfo);
 	//~CProgramItemInfo();
-	const CEventInfoData &GetEventInfo() const { return m_EventInfo; }
+	const LibISDB::EventInfo &GetEventInfo() const { return m_EventInfo; }
 	WORD GetEventID() const { return m_EventID; }
 	int GetTitleLines() const { return m_NameLines; }
 	int GetTextLines() const { return m_TextLines; }
@@ -33,21 +33,21 @@ private:
 		MAX_EVENT_TITLE = 256
 	};
 
-	CEventInfoData m_EventInfo;
+	LibISDB::EventInfo m_EventInfo;
 	WORD m_EventID;
 	int m_NameLines;
 	int m_TextLines;
 
-	LPCTSTR GetEventText() const;
+	TVTest::String GetEventText() const;
 	void GetEventTitleText(LPTSTR pszText,int MaxLength) const;
 	void GetEventTimeText(LPTSTR pszText,int MaxLength) const;
 };
 
 
-CProgramItemInfo::CProgramItemInfo(const CEventInfoData &EventInfo)
+CProgramItemInfo::CProgramItemInfo(const LibISDB::EventInfo &EventInfo)
 {
 	m_EventInfo=EventInfo;
-	m_EventID=EventInfo.m_EventID;
+	m_EventID=EventInfo.EventID;
 	m_NameLines=0;
 	m_TextLines=0;
 }
@@ -65,10 +65,10 @@ int CProgramItemInfo::CalcTitleLines(TVTest::CTextDraw &DrawText,int Width)
 
 int CProgramItemInfo::CalcTextLines(TVTest::CTextDraw &DrawText,int Width)
 {
-	LPCTSTR pszEventText=GetEventText();
+	TVTest::String Text=GetEventText();
 
-	if (pszEventText!=NULL)
-		m_TextLines=DrawText.CalcLineCount(pszEventText,Width);
+	if (!Text.empty())
+		m_TextLines=DrawText.CalcLineCount(Text.c_str(),Width);
 	else
 		m_TextLines=0;
 	return m_TextLines;
@@ -86,9 +86,9 @@ void CProgramItemInfo::DrawTitle(TVTest::CTextDraw &DrawText,const RECT &Rect,in
 
 void CProgramItemInfo::DrawText(TVTest::CTextDraw &DrawText,const RECT &Rect,int LineHeight)
 {
-	LPCTSTR pszEventText=GetEventText();
-	if (pszEventText!=NULL) {
-		DrawText.Draw(pszEventText,Rect,LineHeight);
+	TVTest::String Text=GetEventText();
+	if (!Text.empty()) {
+		DrawText.Draw(Text.c_str(),Rect,LineHeight);
 	}
 }
 
@@ -107,12 +107,12 @@ SIZE CProgramItemInfo::GetTimeSize(HDC hdc) const
 bool CProgramItemInfo::IsChanged(const CProgramItemInfo *pItem) const
 {
 	return m_EventID!=pItem->m_EventID
-		|| CompareSystemTime(&m_EventInfo.m_StartTime,&pItem->m_EventInfo.m_StartTime)!=0
-		|| m_EventInfo.m_Duration!=pItem->m_EventInfo.m_Duration;
+		|| m_EventInfo.StartTime!=pItem->m_EventInfo.StartTime
+		|| m_EventInfo.Duration!=pItem->m_EventInfo.Duration;
 }
 
 
-LPCTSTR CProgramItemInfo::GetEventText() const
+TVTest::String CProgramItemInfo::GetEventText() const
 {
 	return EpgUtil::GetEventDisplayText(m_EventInfo);
 }
@@ -124,13 +124,13 @@ void CProgramItemInfo::GetEventTitleText(LPTSTR pszText,int MaxLength) const
 
 	GetEventTimeText(szTime,lengthof(szTime));
 	StdUtil::snprintf(pszText,MaxLength,TEXT("%s %s"),
-					  szTime,m_EventInfo.m_EventName.c_str());
+					  szTime,m_EventInfo.EventName.c_str());
 }
 
 
 void CProgramItemInfo::GetEventTimeText(LPTSTR pszText,int MaxLength) const
 {
-	EpgUtil::FormatEventTime(&m_EventInfo,pszText,MaxLength,
+	EpgUtil::FormatEventTime(m_EventInfo,pszText,MaxLength,
 							 EpgUtil::EVENT_TIME_HOUR_2DIGITS);
 }
 
@@ -138,9 +138,6 @@ void CProgramItemInfo::GetEventTimeText(LPTSTR pszText,int MaxLength) const
 
 
 CProgramItemList::CProgramItemList()
-	: m_NumItems(0)
-	, m_ppItemList(NULL)
-	, m_ItemListLength(0)
 {
 }
 
@@ -153,61 +150,41 @@ CProgramItemList::~CProgramItemList()
 
 CProgramItemInfo *CProgramItemList::GetItem(int Index)
 {
-	if (Index<0 || Index>=m_NumItems)
+	if ((unsigned int)Index>=m_ItemList.size())
 		return NULL;
-	return m_ppItemList[Index];
+	return m_ItemList[Index];
 }
 
 
 const CProgramItemInfo *CProgramItemList::GetItem(int Index) const
 {
-	if (Index<0 || Index>=m_NumItems)
+	if ((unsigned int)Index>=m_ItemList.size())
 		return NULL;
-	return m_ppItemList[Index];
+	return m_ItemList[Index];
 }
 
 
 bool CProgramItemList::Add(CProgramItemInfo *pItem)
 {
-	if (m_NumItems==m_ItemListLength)
-		return false;
-	m_ppItemList[m_NumItems++]=pItem;
+	m_ItemList.push_back(pItem);
 	return true;
 }
 
 
 void CProgramItemList::Clear()
 {
-	if (m_ppItemList!=NULL) {
-		int i;
-
-		for (i=0;i<m_NumItems;i++)
-			delete m_ppItemList[i];
-		delete [] m_ppItemList;
-		m_ppItemList=NULL;
-		m_NumItems=0;
-		m_ItemListLength=0;
+	if (!m_ItemList.empty()) {
+		for (CProgramItemInfo *pItem : m_ItemList)
+			delete pItem;
+		m_ItemList.clear();
 	}
-}
-
-
-void CProgramItemList::Reserve(int NumItems)
-{
-	Clear();
-	m_ppItemList=new CProgramItemInfo*[NumItems];
-	m_ItemListLength=NumItems;
 }
 
 
 void CProgramItemList::Attach(CProgramItemList *pList)
 {
-	Clear();
-	m_NumItems=pList->m_NumItems;
-	m_ppItemList=pList->m_ppItemList;
-	m_ItemListLength=pList->m_ItemListLength;
-	pList->m_NumItems=0;
-	pList->m_ppItemList=NULL;
-	pList->m_ItemListLength=0;
+	m_ItemList.swap(pList->m_ItemList);
+	pList->Clear();
 }
 
 
@@ -243,7 +220,7 @@ bool CProgramListPanel::Initialize(HINSTANCE hinst)
 CProgramListPanel::CProgramListPanel()
 	: m_EventInfoPopupManager(&m_EventInfoPopup)
 	, m_EventInfoPopupHandler(this)
-	, m_pProgramList(NULL)
+	, m_pEPGDatabase(NULL)
 	, m_FontHeight(0)
 	, m_fMouseOverEventInfo(true)
 	, m_fUseEpgColorScheme(false)
@@ -365,7 +342,7 @@ bool CProgramListPanel::WriteSettings(CSettings &Settings)
 
 bool CProgramListPanel::UpdateProgramList(const CChannelInfo *pChannelInfo)
 {
-	if (m_pProgramList==NULL || pChannelInfo==NULL)
+	if (m_pEPGDatabase==NULL || pChannelInfo==NULL)
 		return false;
 	if (m_hwnd!=NULL
 			&& m_SelectedChannel.GetNetworkID()==pChannelInfo->GetNetworkID()
@@ -391,49 +368,33 @@ bool CProgramListPanel::UpdateProgramList(const CChannelInfo *pChannelInfo)
 
 bool CProgramListPanel::UpdateListInfo(const CChannelInfo *pChannelInfo)
 {
-	if (m_pProgramList==NULL || pChannelInfo==NULL)
+	if (m_pEPGDatabase==NULL || pChannelInfo==NULL)
 		return false;
 
-	const CEpgServiceInfo *pServiceInfo=m_pProgramList->GetServiceInfo(
+	LibISDB::DateTime Earliest;
+	LibISDB::GetCurrentEPGTime(&Earliest);
+	Earliest.TruncateToMinutes();
+	LibISDB::DateTime Latest=Earliest;
+	Latest.OffsetHours(24);
+
+	CProgramItemList NewItemList;
+
+	m_pEPGDatabase->EnumEventsSortedByTime(
 		pChannelInfo->GetNetworkID(),
 		pChannelInfo->GetTransportStreamID(),
-		pChannelInfo->GetServiceID());
-	int NumEvents=0;
-	if (pServiceInfo!=NULL)
-		NumEvents=(int)pServiceInfo->m_EventList.EventDataMap.size();
-	if (NumEvents==0) {
+		pChannelInfo->GetServiceID(),
+		&Earliest,&Latest,
+		[&](const LibISDB::EventInfo &Event) -> bool {
+			NewItemList.Add(new CProgramItemInfo(Event));
+			return true;
+		});
+
+	if (NewItemList.NumItems()==0) {
 		if (m_ItemList.NumItems()>0) {
 			m_ItemList.Clear();
 			return true;
 		}
 		return false;
-	}
-	CProgramItemList NewItemList;
-	NewItemList.Reserve(NumEvents);
-
-	const CEventInfoList &EventList=pServiceInfo->m_EventList;
-	SYSTEMTIME stFirst;
-	GetCurrentEpgTime(&stFirst);
-	stFirst.wSecond=0;
-	stFirst.wMilliseconds=0;
-	CEventManager::TimeEventInfo Key(stFirst);
-	auto itrTime=EventList.EventTimeMap.lower_bound(Key);
-	if (itrTime!=EventList.EventTimeMap.begin()) {
-		--itrTime;
-		if (itrTime->StartTime+itrTime->Duration>Key.StartTime) {
-			auto itrEvent=EventList.EventDataMap.find(itrTime->EventID);
-			if (itrEvent!=EventList.EventDataMap.end())
-				NewItemList.Add(new CProgramItemInfo(itrEvent->second));
-		}
-		++itrTime;
-	}
-	Key.StartTime+=24*60*60;
-	for (;itrTime!=EventList.EventTimeMap.end();++itrTime) {
-		if (itrTime->StartTime>=Key.StartTime)
-			break;
-		auto itrEvent=EventList.EventDataMap.find(itrTime->EventID);
-		if (itrEvent!=EventList.EventDataMap.end())
-			NewItemList.Add(new CProgramItemInfo(itrEvent->second));
 	}
 
 	bool fChanged;
@@ -1082,7 +1043,7 @@ LRESULT CProgramListPanel::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lP
 
 				if (pItem!=NULL) {
 					static TCHAR szText[1024];
-					const CEventInfoData &EventInfo=pItem->GetEventInfo();
+					const LibISDB::EventInfo &EventInfo=pItem->GetEventInfo();
 					TCHAR szEndTime[16];
 					SYSTEMTIME stEnd;
 					if (EventInfo.m_Duration>0 && EventInfo.GetEndTime(&stEnd))

@@ -1344,7 +1344,7 @@ int CStatusView::CalcTextHeight(int *pFontHeight) const
 
 int CStatusView::CalcItemHeight(int TextHeight) const
 {
-	return max(TextHeight,m_Style.IconSize.Height)+m_Style.ItemPadding.Vert();
+	return max(TextHeight,(int)m_Style.IconSize.Height)+m_Style.ItemPadding.Vert();
 }
 
 

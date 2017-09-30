@@ -3,12 +3,12 @@
 
 
 #include <map>
-#include "BonTsEngine/LogoDownloader.h"
+#include "LibISDB/LibISDB/Filters/LogoDownloaderFilter.hpp"
 #include "Graphics.h"
 #include "Image.h"
 
 
-class CLogoManager : public CLogoDownloader::ILogoHandler
+class CLogoManager : public LibISDB::LogoDownloaderFilter::LogoHandler
 {
 public:
 	struct LogoInfo
@@ -69,12 +69,12 @@ private:
 		BYTE m_LogoType;
 		WORD m_DataSize;
 		BYTE *m_pData;
-		SYSTEMTIME m_Time;
+		LibISDB::DateTime m_Time;
 		HBITMAP m_hbm;
 		TVTest::Graphics::CImage m_Image;
 
 	public:
-		CLogoData(const CLogoDownloader::LogoData *pData);
+		CLogoData(const LibISDB::LogoDownloaderFilter::LogoData *pData);
 		CLogoData(const CLogoData &Src);
 		~CLogoData();
 		CLogoData &operator=(const CLogoData &Src);
@@ -85,7 +85,7 @@ private:
 		BYTE GetLogoType() const { return m_LogoType; }
 		WORD GetDataSize() const { return m_DataSize; }
 		const BYTE *GetData() const { return m_pData; }
-		const SYSTEMTIME &GetTime() const { return m_Time; }
+		const LibISDB::DateTime &GetTime() const { return m_Time; }
 		HBITMAP GetBitmap(CImageCodec *pCodec);
 		const TVTest::Graphics::CImage *GetImage(CImageCodec *pCodec);
 		bool SaveToFile(LPCTSTR pszFileName) const;
@@ -107,7 +107,7 @@ private:
 	LogoMap m_LogoMap;
 	LogoIDMap m_LogoIDMap;
 	CImageCodec m_ImageCodec;
-	mutable CCriticalLock m_Lock;
+	mutable TVTest::MutexLock m_Lock;
 	bool m_fLogoUpdated;
 	bool m_fLogoIDMapUpdated;
 	FILETIME m_LogoFileLastWriteTime;
@@ -116,8 +116,8 @@ private:
 	bool SetLogoIDMap(WORD NetworkID,WORD ServiceID,WORD LogoID,bool fUpdate=true);
 	CLogoData *LoadLogoData(WORD NetworkID,WORD LogoID,BYTE LogoType);
 
-// CLogoDownloader::ILogoHandler
-	void OnLogoDownloaded(const CLogoDownloader::LogoData *pData) override;
+// LibISDB::LogoDownloaderFilter::LogoHandler
+	void OnLogoDownloaded(const LibISDB::LogoDownloaderFilter::LogoData &Data) override;
 };
 
 

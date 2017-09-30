@@ -106,10 +106,10 @@ namespace TVTest
 
 		struct BorderWidth
 		{
-			Style::IntValue Left;
-			Style::IntValue Top;
-			Style::IntValue Right;
-			Style::IntValue Bottom;
+			TVTest::Style::IntValue Left;
+			TVTest::Style::IntValue Top;
+			TVTest::Style::IntValue Right;
+			TVTest::Style::IntValue Bottom;
 
 			BorderWidth() : Left(1), Top(1), Right(1), Bottom(1) {}
 			BorderWidth(int Width) : Left(Width), Top(Width), Right(Width), Bottom(Width) {}

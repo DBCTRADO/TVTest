@@ -67,9 +67,15 @@ bool CTotTimeAdjuster::AdjustTime()
 		return false;
 	}
 
-	SYSTEMTIME st;
-	if (!g_App.CoreEngine.m_DtvEngine.m_TsAnalyzer.GetTotTime(&st))
+	LibISDB::AnalyzerFilter *pAnalyzer=
+		GetAppClass().CoreEngine.GetFilter<LibISDB::AnalyzerFilter>();
+	if (pAnalyzer==NULL)
 		return false;
+	LibISDB::DateTime TOTTime;
+	if (!pAnalyzer->GetTOTTime(&TOTTime))
+		return false;
+
+	SYSTEMTIME st=TOTTime.ToSYSTEMTIME();
 	if (m_PrevTime.wYear==0) {
 		m_PrevTime=st;
 		return false;
@@ -106,13 +112,13 @@ bool CTotTimeAdjuster::AdjustTime()
 
 
 
-void CEpgLoadEventHandler::OnBeginLoad()
+void CEpgLoadEventHandler::OnBeginLoading()
 {
 	TRACE(TEXT("Start EPG file loading ...\n"));
 }
 
 
-void CEpgLoadEventHandler::OnEndLoad(bool fSuccess)
+void CEpgLoadEventHandler::OnEndLoading(bool fSuccess)
 {
 	TRACE(TEXT("End EPG file loading : %s\n"),fSuccess?TEXT("Succeeded"):TEXT("Failed"));
 	if (fSuccess)
@@ -126,17 +132,11 @@ void CEpgLoadEventHandler::OnStart()
 }
 
 
-void CEpgLoadEventHandler::OnEnd(bool fSuccess,CEventManager *pEventManager)
+void CEpgLoadEventHandler::OnEnd(bool fSuccess,LibISDB::EPGDatabase *pEPGDatabase)
 {
 	TRACE(TEXT("End EDCB data loading : %s\n"),fSuccess?TEXT("Succeeded"):TEXT("Failed"));
 	if (fSuccess) {
-		CEventManager::ServiceList ServiceList;
-
-		if (pEventManager->GetServiceList(&ServiceList)) {
-			for (size_t i=0;i<ServiceList.size();i++) {
-				g_App.EpgProgramList.UpdateService(pEventManager,&ServiceList[i],
-					CEpgProgramList::SERVICE_UPDATE_DATABASE);
-			}
+		if (g_App.EPGDatabase.Merge(pEPGDatabase,LibISDB::EPGDatabase::MergeFlag::Database)) {
 			g_App.MainWindow.PostMessage(WM_APP_EPGLOADED,0,0);
 		}
 	}
@@ -145,42 +145,24 @@ void CEpgLoadEventHandler::OnEnd(bool fSuccess,CEventManager *pEventManager)
 
 
 
-CServiceUpdateInfo::CServiceUpdateInfo(CDtvEngine *pEngine,CTsAnalyzer *pTsAnalyzer)
+CServiceUpdateInfo::CServiceUpdateInfo(LibISDB::TSEngine *pEngine,LibISDB::AnalyzerFilter *pAnalyzer)
 {
-	CTsAnalyzer::ServiceList ServiceList;
-
-	pTsAnalyzer->GetViewableServiceList(&ServiceList);
-	m_NumServices=(int)ServiceList.size();
+	pEngine->GetSelectableServiceList(&m_ServiceList);
 	m_CurService=-1;
-	if (m_NumServices>0) {
-		m_pServiceList=new ServiceInfo[m_NumServices];
-		for (int i=0;i<m_NumServices;i++) {
-			const CTsAnalyzer::ServiceInfo *pServiceInfo=&ServiceList[i];
-			m_pServiceList[i].ServiceID=pServiceInfo->ServiceID;
-			::lstrcpy(m_pServiceList[i].szServiceName,pServiceInfo->szServiceName);
-			m_pServiceList[i].LogoID=pServiceInfo->LogoID;
-		}
-		WORD ServiceID;
-		if (pEngine->GetServiceID(&ServiceID)) {
-			for (int i=0;i<m_NumServices;i++) {
-				if (m_pServiceList[i].ServiceID==ServiceID) {
-					m_CurService=i;
+	if (!m_ServiceList.empty()) {
+		WORD ServiceID=pEngine->GetServiceID();
+		if (ServiceID!=LibISDB::SERVICE_ID_INVALID) {
+			for (size_t i=0;i<m_ServiceList.size();i++) {
+				if (m_ServiceList[i].ServiceID==ServiceID) {
+					m_CurService=(int)i;
 					break;
 				}
 			}
 		}
-	} else {
-		m_pServiceList=NULL;
 	}
-	m_NetworkID=pTsAnalyzer->GetNetworkID();
-	m_TransportStreamID=pTsAnalyzer->GetTransportStreamID();
-	m_fServiceListEmpty=pTsAnalyzer->GetServiceNum()==0;
-}
-
-
-CServiceUpdateInfo::~CServiceUpdateInfo()
-{
-	delete [] m_pServiceList;
+	m_NetworkID=pAnalyzer->GetNetworkID();
+	m_TransportStreamID=pAnalyzer->GetTransportStreamID();
+	m_fServiceListEmpty=pAnalyzer->GetServiceCount()==0;
 }
 
 
@@ -202,11 +184,21 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,HINSTANCE /*hPrevInstance*/,
 
 	SetErrorMode(SEM_FAILCRITICALERRORS | SEM_NOOPENFILEERRORBOX);
 
-	g_App.AddLog(TEXT("******** ") ABOUT_VERSION_TEXT
-#ifdef VERSION_PLATFORM
-				 TEXT(" (") VERSION_PLATFORM TEXT(")")
+	g_App.AddLog(TEXT("******** ") ABOUT_VERSION_TEXT TEXT(" (")
+#ifdef _DEBUG
+				 TEXT("Debug")
+#else
+				 TEXT("Release")
 #endif
-				 TEXT(" 起動 ********"));
+#ifdef VERSION_PLATFORM
+				 TEXT(" ") VERSION_PLATFORM
+#endif
+				 TEXT(") 起動 ********"));
+	g_App.AddLog(TEXT("Work with LibISDB ver.") LIBISDB_VERSION_STRING);
+#ifdef _MSC_FULL_VER
+	g_App.AddLog(TEXT("Compiled with MSVC %d.%d.%d.%d"),
+				 _MSC_FULL_VER/10000000,(_MSC_FULL_VER/100000)%100,_MSC_FULL_VER%100000,_MSC_BUILD);
+#endif
 
 	CoInitializeEx(NULL,COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE | COINIT_SPEED_OVER_MEMORY);
 

@@ -6,12 +6,11 @@
 #include "DialogUtil.h"
 #include "DPIUtil.h"
 #include "Command.h"
-#include "EpgProgramList.h"
 #include "DriverManager.h"
 #include "LogoManager.h"
 #include "Controller.h"
 #include "TSProcessor.h"
-#include "BonTsEngine/TsEncode.h"
+#include "LibISDB/LibISDB/Base/ARIBString.hpp"
 #include "resource.h"
 #include <algorithm>
 #include "Common/DebugDef.h"
@@ -26,15 +25,15 @@ struct PluginMessageParam
 };
 
 
-static void EventInfoToProgramGuideProgramInfo(const CEventInfoData &EventInfo,
+static void EventInfoToProgramGuideProgramInfo(const LibISDB::EventInfo &EventInfo,
 											   TVTest::ProgramGuideProgramInfo *pProgramInfo)
 {
-	pProgramInfo->NetworkID=EventInfo.m_NetworkID;
-	pProgramInfo->TransportStreamID=EventInfo.m_TransportStreamID;
-	pProgramInfo->ServiceID=EventInfo.m_ServiceID;
-	pProgramInfo->EventID=EventInfo.m_EventID;
-	pProgramInfo->StartTime=EventInfo.m_StartTime;
-	pProgramInfo->Duration=EventInfo.m_Duration;
+	pProgramInfo->NetworkID=EventInfo.NetworkID;
+	pProgramInfo->TransportStreamID=EventInfo.TransportStreamID;
+	pProgramInfo->ServiceID=EventInfo.ServiceID;
+	pProgramInfo->EventID=EventInfo.EventID;
+	pProgramInfo->StartTime=EventInfo.StartTime.ToSYSTEMTIME();
+	pProgramInfo->Duration=EventInfo.Duration;
 }
 
 
@@ -223,10 +222,9 @@ static void ConvertChannelInfo(const CChannelInfo *pChInfo,TVTest::ChannelInfo *
 
 class CEpgDataConverter
 {
-	static void GetEventInfoSize(const CEventInfoData &EventInfo,SIZE_T *pInfoSize,SIZE_T *pStringSize);
-	static void ConvertEventInfo(const CEventInfoData &EventData,
+	static void GetEventInfoSize(const LibISDB::EventInfo &EventInfo,SIZE_T *pInfoSize,SIZE_T *pStringSize);
+	static void ConvertEventInfo(const LibISDB::EventInfo &EventData,
 								 TVTest::EpgEventInfo **ppEventInfo,LPWSTR *ppStringBuffer);
-	static void SortEventList(TVTest::EpgEventInfo **ppFirst,TVTest::EpgEventInfo **ppLast);
 	static LPWSTR CopyString(LPWSTR pDstString,LPCWSTR pSrcString)
 	{
 		LPCWSTR p=pSrcString;
@@ -240,87 +238,89 @@ class CEpgDataConverter
 	}
 
 public:
-	TVTest::EpgEventInfo *Convert(const CEventInfoData &EventData) const;
-	TVTest::EpgEventInfo **Convert(const CEventInfoList &EventList) const;
+	TVTest::EpgEventInfo *Convert(const LibISDB::EventInfo &EventData) const;
+	TVTest::EpgEventInfo **Convert(const LibISDB::EPGDatabase::EventList &EventList) const;
 	static void FreeEventInfo(TVTest::EpgEventInfo *pEventInfo);
 	static void FreeEventList(TVTest::EpgEventInfo **ppEventList);
 };
 
 
-void CEpgDataConverter::GetEventInfoSize(const CEventInfoData &EventInfo,
+void CEpgDataConverter::GetEventInfoSize(const LibISDB::EventInfo &EventInfo,
 										 SIZE_T *pInfoSize,SIZE_T *pStringSize)
 {
 	SIZE_T InfoSize=sizeof(TVTest::EpgEventInfo);
 	SIZE_T StringSize=0;
 
-	if (!EventInfo.m_EventName.empty())
-		StringSize+=EventInfo.m_EventName.length()+1;
-	if (!EventInfo.m_EventText.empty())
-		StringSize+=EventInfo.m_EventText.length()+1;
-	if (!EventInfo.m_EventExtendedText.empty())
-		StringSize+=EventInfo.m_EventExtendedText.length()+1;
-	InfoSize+=(sizeof(TVTest::EpgEventVideoInfo)+sizeof(TVTest::EpgEventVideoInfo*))*EventInfo.m_VideoList.size();
-	for (size_t i=0;i<EventInfo.m_VideoList.size();i++) {
-		if (EventInfo.m_VideoList[i].szText[0]!='\0')
-			StringSize+=::lstrlenW(EventInfo.m_VideoList[i].szText)+1;
+	if (!EventInfo.EventName.empty())
+		StringSize+=EventInfo.EventName.length()+1;
+	if (!EventInfo.EventText.empty())
+		StringSize+=EventInfo.EventText.length()+1;
+	if (!EventInfo.ExtendedText.empty())
+		StringSize+=EventInfo.GetConcatenatedExtendedTextLength()+1;
+	InfoSize+=(sizeof(TVTest::EpgEventVideoInfo)+sizeof(TVTest::EpgEventVideoInfo*))*EventInfo.VideoList.size();
+	for (size_t i=0;i<EventInfo.VideoList.size();i++) {
+		if (!EventInfo.VideoList[i].Text.empty())
+			StringSize+=EventInfo.VideoList[i].Text.length()+1;
 	}
-	InfoSize+=(sizeof(TVTest::EpgEventAudioInfo)+sizeof(TVTest::EpgEventAudioInfo*))*EventInfo.m_AudioList.size();
-	for (size_t i=0;i<EventInfo.m_AudioList.size();i++) {
-		if (EventInfo.m_AudioList[i].szText[0]!='\0')
-			StringSize+=::lstrlenW(EventInfo.m_AudioList[i].szText)+1;
+	InfoSize+=(sizeof(TVTest::EpgEventAudioInfo)+sizeof(TVTest::EpgEventAudioInfo*))*EventInfo.AudioList.size();
+	for (size_t i=0;i<EventInfo.AudioList.size();i++) {
+		if (!EventInfo.AudioList[i].Text.empty())
+			StringSize+=EventInfo.AudioList[i].Text.length()+1;
 	}
-	InfoSize+=sizeof(TVTest::EpgEventContentInfo)*EventInfo.m_ContentNibble.NibbleCount;
-	InfoSize+=(sizeof(TVTest::EpgEventGroupInfo)+sizeof(TVTest::EpgEventGroupInfo*))*EventInfo.m_EventGroupList.size();
-	for (size_t i=0;i<EventInfo.m_EventGroupList.size();i++)
-		InfoSize+=sizeof(TVTest::EpgGroupEventInfo)*EventInfo.m_EventGroupList[i].EventList.size();
+	InfoSize+=sizeof(TVTest::EpgEventContentInfo)*EventInfo.ContentNibble.NibbleCount;
+	InfoSize+=(sizeof(TVTest::EpgEventGroupInfo)+sizeof(TVTest::EpgEventGroupInfo*))*EventInfo.EventGroupList.size();
+	for (size_t i=0;i<EventInfo.EventGroupList.size();i++)
+		InfoSize+=sizeof(TVTest::EpgGroupEventInfo)*EventInfo.EventGroupList[i].EventList.size();
 
 	*pInfoSize=InfoSize;
 	*pStringSize=StringSize*sizeof(WCHAR);
 }
 
 
-void CEpgDataConverter::ConvertEventInfo(const CEventInfoData &EventData,
+void CEpgDataConverter::ConvertEventInfo(const LibISDB::EventInfo &EventData,
 										 TVTest::EpgEventInfo **ppEventInfo,LPWSTR *ppStringBuffer)
 {
 	LPWSTR pString=*ppStringBuffer;
 
 	TVTest::EpgEventInfo *pEventInfo=*ppEventInfo;
-	pEventInfo->EventID=EventData.m_EventID;
-	pEventInfo->RunningStatus=EventData.m_RunningStatus;
-	pEventInfo->FreeCaMode=EventData.m_bFreeCaMode;
+	pEventInfo->EventID=EventData.EventID;
+	pEventInfo->RunningStatus=EventData.RunningStatus;
+	pEventInfo->FreeCaMode=EventData.FreeCAMode;
 	pEventInfo->Reserved=0;
-	pEventInfo->StartTime=EventData.m_StartTime;
-	pEventInfo->Duration=EventData.m_Duration;
-	pEventInfo->VideoListLength=(BYTE)EventData.m_VideoList.size();
-	pEventInfo->AudioListLength=(BYTE)EventData.m_AudioList.size();
-	pEventInfo->ContentListLength=(BYTE)EventData.m_ContentNibble.NibbleCount;
-	pEventInfo->EventGroupListLength=(BYTE)EventData.m_EventGroupList.size();
-	if (!EventData.m_EventName.empty()) {
+	pEventInfo->StartTime=EventData.StartTime.ToSYSTEMTIME();
+	pEventInfo->Duration=EventData.Duration;
+	pEventInfo->VideoListLength=(BYTE)EventData.VideoList.size();
+	pEventInfo->AudioListLength=(BYTE)EventData.AudioList.size();
+	pEventInfo->ContentListLength=(BYTE)EventData.ContentNibble.NibbleCount;
+	pEventInfo->EventGroupListLength=(BYTE)EventData.EventGroupList.size();
+	if (!EventData.EventName.empty()) {
 		pEventInfo->pszEventName=pString;
-		pString=CopyString(pString,EventData.m_EventName.c_str());
+		pString=CopyString(pString,EventData.EventName.c_str());
 	} else {
 		pEventInfo->pszEventName=NULL;
 	}
-	if (!EventData.m_EventText.empty()) {
+	if (!EventData.EventText.empty()) {
 		pEventInfo->pszEventText=pString;
-		pString=CopyString(pString,EventData.m_EventText.c_str());
+		pString=CopyString(pString,EventData.EventText.c_str());
 	} else {
 		pEventInfo->pszEventText=NULL;
 	}
-	if (!EventData.m_EventExtendedText.empty()) {
+	if (!EventData.ExtendedText.empty()) {
+		TVTest::String ExtendedText;
+		EventData.GetConcatenatedExtendedText(&ExtendedText);
 		pEventInfo->pszEventExtendedText=pString;
-		pString=CopyString(pString,EventData.m_EventExtendedText.c_str());
+		pString=CopyString(pString,ExtendedText.c_str());
 	} else {
 		pEventInfo->pszEventExtendedText=NULL;
 	}
 
 	BYTE *p=(BYTE*)(pEventInfo+1);
 
-	if (!EventData.m_VideoList.empty()) {
+	if (!EventData.VideoList.empty()) {
 		pEventInfo->VideoList=(TVTest::EpgEventVideoInfo**)p;
-		p+=sizeof(TVTest::EpgEventVideoInfo*)*EventData.m_VideoList.size();
-		for (size_t i=0;i<EventData.m_VideoList.size();i++) {
-			const CEventInfoData::VideoInfo &Video=EventData.m_VideoList[i];
+		p+=sizeof(TVTest::EpgEventVideoInfo*)*EventData.VideoList.size();
+		for (size_t i=0;i<EventData.VideoList.size();i++) {
+			const LibISDB::EventInfo::VideoInfo &Video=EventData.VideoList[i];
 			pEventInfo->VideoList[i]=(TVTest::EpgEventVideoInfo*)p;
 			pEventInfo->VideoList[i]->StreamContent=Video.StreamContent;
 			pEventInfo->VideoList[i]->ComponentType=Video.ComponentType;
@@ -328,9 +328,9 @@ void CEpgDataConverter::ConvertEventInfo(const CEventInfoData &EventData,
 			pEventInfo->VideoList[i]->Reserved=0;
 			pEventInfo->VideoList[i]->LanguageCode=Video.LanguageCode;
 			p+=sizeof(TVTest::EpgEventVideoInfo);
-			if (Video.szText[i]!='\0') {
+			if (!Video.Text.empty()) {
 				pEventInfo->VideoList[i]->pszText=pString;
-				pString=CopyString(pString,Video.szText);
+				pString=CopyString(pString,Video.Text.c_str());
 			} else {
 				pEventInfo->VideoList[i]->pszText=NULL;
 			}
@@ -339,17 +339,17 @@ void CEpgDataConverter::ConvertEventInfo(const CEventInfoData &EventData,
 		pEventInfo->VideoList=NULL;
 	}
 
-	if (EventData.m_AudioList.size()>0) {
+	if (EventData.AudioList.size()>0) {
 		pEventInfo->AudioList=(TVTest::EpgEventAudioInfo**)p;
-		p+=sizeof(TVTest::EpgEventAudioInfo*)*EventData.m_AudioList.size();
-		for (size_t i=0;i<EventData.m_AudioList.size();i++) {
-			const CEventInfoData::AudioInfo &Audio=EventData.m_AudioList[i];
+		p+=sizeof(TVTest::EpgEventAudioInfo*)*EventData.AudioList.size();
+		for (size_t i=0;i<EventData.AudioList.size();i++) {
+			const LibISDB::EventInfo::AudioInfo &Audio=EventData.AudioList[i];
 			TVTest::EpgEventAudioInfo *pAudioInfo=(TVTest::EpgEventAudioInfo*)p;
 			pEventInfo->AudioList[i]=pAudioInfo;
 			pAudioInfo->Flags=0;
-			if (Audio.bESMultiLingualFlag)
+			if (Audio.ESMultiLingualFlag)
 				pAudioInfo->Flags|=TVTest::EPG_EVENT_AUDIO_FLAG_MULTILINGUAL;
-			if (Audio.bMainComponentFlag)
+			if (Audio.MainComponentFlag)
 				pAudioInfo->Flags|=TVTest::EPG_EVENT_AUDIO_FLAG_MAINCOMPONENT;
 			pAudioInfo->StreamContent=Audio.StreamContent;
 			pAudioInfo->ComponentType=Audio.ComponentType;
@@ -361,9 +361,9 @@ void CEpgDataConverter::ConvertEventInfo(const CEventInfoData &EventData,
 			pAudioInfo->LanguageCode=Audio.LanguageCode;
 			pAudioInfo->LanguageCode2=Audio.LanguageCode2;
 			p+=sizeof(TVTest::EpgEventAudioInfo);
-			if (Audio.szText[0]!='\0') {
+			if (!Audio.Text.empty()) {
 				pAudioInfo->pszText=pString;
-				pString=CopyString(pString,Audio.szText);
+				pString=CopyString(pString,Audio.Text.c_str());
 			} else {
 				pAudioInfo->pszText=NULL;
 			}
@@ -372,28 +372,28 @@ void CEpgDataConverter::ConvertEventInfo(const CEventInfoData &EventData,
 		pEventInfo->AudioList=NULL;
 	}
 
-	if (EventData.m_ContentNibble.NibbleCount>0) {
+	if (EventData.ContentNibble.NibbleCount>0) {
 		pEventInfo->ContentList=(TVTest::EpgEventContentInfo*)p;
-		p+=sizeof(TVTest::EpgEventContentInfo)*EventData.m_ContentNibble.NibbleCount;
-		for (int i=0;i<EventData.m_ContentNibble.NibbleCount;i++) {
+		p+=sizeof(TVTest::EpgEventContentInfo)*EventData.ContentNibble.NibbleCount;
+		for (int i=0;i<EventData.ContentNibble.NibbleCount;i++) {
 			pEventInfo->ContentList[i].ContentNibbleLevel1=
-				EventData.m_ContentNibble.NibbleList[i].ContentNibbleLevel1;
+				EventData.ContentNibble.NibbleList[i].ContentNibbleLevel1;
 			pEventInfo->ContentList[i].ContentNibbleLevel2=
-				EventData.m_ContentNibble.NibbleList[i].ContentNibbleLevel2;
+				EventData.ContentNibble.NibbleList[i].ContentNibbleLevel2;
 			pEventInfo->ContentList[i].UserNibble1=
-				EventData.m_ContentNibble.NibbleList[i].UserNibble1;
+				EventData.ContentNibble.NibbleList[i].UserNibble1;
 			pEventInfo->ContentList[i].UserNibble2=
-				EventData.m_ContentNibble.NibbleList[i].UserNibble2;
+				EventData.ContentNibble.NibbleList[i].UserNibble2;
 		}
 	} else {
 		pEventInfo->ContentList=NULL;
 	}
 
-	if (EventData.m_EventGroupList.size()>0) {
+	if (EventData.EventGroupList.size()>0) {
 		pEventInfo->EventGroupList=(TVTest::EpgEventGroupInfo**)p;
-		p+=sizeof(TVTest::EpgEventGroupInfo*)*EventData.m_EventGroupList.size();
-		for (size_t i=0;i<EventData.m_EventGroupList.size();i++) {
-			const CEventInfoData::EventGroupInfo &Group=EventData.m_EventGroupList[i];
+		p+=sizeof(TVTest::EpgEventGroupInfo*)*EventData.EventGroupList.size();
+		for (size_t i=0;i<EventData.EventGroupList.size();i++) {
+			const LibISDB::EventInfo::EventGroupInfo &Group=EventData.EventGroupList[i];
 			TVTest::EpgEventGroupInfo *pGroupInfo=(TVTest::EpgEventGroupInfo*)p;
 			p+=sizeof(TVTest::EpgEventGroupInfo);
 			pEventInfo->EventGroupList[i]=pGroupInfo;
@@ -402,7 +402,7 @@ void CEpgDataConverter::ConvertEventInfo(const CEventInfoData &EventData,
 			::ZeroMemory(pGroupInfo->Reserved,sizeof(pGroupInfo->Reserved));
 			pGroupInfo->EventList=(TVTest::EpgGroupEventInfo*)p;
 			for (size_t j=0;j<Group.EventList.size();j++) {
-				pGroupInfo->EventList[j].NetworkID=Group.EventList[j].OriginalNetworkID;
+				pGroupInfo->EventList[j].NetworkID=Group.EventList[j].NetworkID;
 				pGroupInfo->EventList[j].TransportStreamID=Group.EventList[j].TransportStreamID;
 				pGroupInfo->EventList[j].ServiceID=Group.EventList[j].ServiceID;
 				pGroupInfo->EventList[j].EventID=Group.EventList[j].EventID;
@@ -418,36 +418,7 @@ void CEpgDataConverter::ConvertEventInfo(const CEventInfoData &EventData,
 }
 
 
-void CEpgDataConverter::SortEventList(TVTest::EpgEventInfo **ppFirst,TVTest::EpgEventInfo **ppLast)
-{
-	SYSTEMTIME stKey=ppFirst[(ppLast-ppFirst)/2]->StartTime;
-	TVTest::EpgEventInfo **p,**q;
-
-	p=ppFirst;
-	q=ppLast;
-	while (p<=q) {
-		while (CompareSystemTime(&(*p)->StartTime,&stKey)<0)
-			p++;
-		while (CompareSystemTime(&(*q)->StartTime,&stKey)>0)
-			q--;
-		if (p<=q) {
-			TVTest::EpgEventInfo *pTemp;
-
-			pTemp=*p;
-			*p=*q;
-			*q=pTemp;
-			p++;
-			q--;
-		}
-	}
-	if (q>ppFirst)
-		SortEventList(ppFirst,q);
-	if (p<ppLast)
-		SortEventList(p,ppLast);
-}
-
-
-TVTest::EpgEventInfo *CEpgDataConverter::Convert(const CEventInfoData &EventData) const
+TVTest::EpgEventInfo *CEpgDataConverter::Convert(const LibISDB::EventInfo &EventData) const
 {
 	SIZE_T InfoSize,StringSize;
 
@@ -467,16 +438,15 @@ TVTest::EpgEventInfo *CEpgDataConverter::Convert(const CEventInfoData &EventData
 }
 
 
-TVTest::EpgEventInfo **CEpgDataConverter::Convert(const CEventInfoList &EventList) const
+TVTest::EpgEventInfo **CEpgDataConverter::Convert(const LibISDB::EPGDatabase::EventList &EventList) const
 {
-	const SIZE_T ListSize=EventList.EventDataMap.size()*sizeof(TVTest::EpgEventInfo*);
-	CEventInfoList::EventMap::const_iterator i;
+	const SIZE_T ListSize=EventList.size()*sizeof(TVTest::EpgEventInfo*);
 	SIZE_T InfoSize=0,StringSize=0;
 
-	for (i=EventList.EventDataMap.begin();i!=EventList.EventDataMap.end();i++) {
+	for (auto &Event : EventList) {
 		SIZE_T Info,String;
 
-		GetEventInfoSize(i->second,&Info,&String);
+		GetEventInfoSize(Event,&Info,&String);
 		InfoSize+=Info;
 		StringSize+=String;
 	}
@@ -486,18 +456,16 @@ TVTest::EpgEventInfo **CEpgDataConverter::Convert(const CEventInfoList &EventLis
 	TVTest::EpgEventInfo **ppEventList=(TVTest::EpgEventInfo**)pBuffer;
 	TVTest::EpgEventInfo *pEventInfo=(TVTest::EpgEventInfo*)(pBuffer+ListSize);
 	LPWSTR pString=(LPWSTR)(pBuffer+ListSize+InfoSize);
-	int j=0;
-	for (i=EventList.EventDataMap.begin();i!=EventList.EventDataMap.end();i++) {
-		ppEventList[j++]=pEventInfo;
-		ConvertEventInfo(i->second,&pEventInfo,&pString);
+	int i=0;
+	for (auto &Event : EventList) {
+		ppEventList[i++]=pEventInfo;
+		ConvertEventInfo(Event,&pEventInfo,&pString);
 	}
 #ifdef _DEBUG
 	if ((BYTE*)pEventInfo-(pBuffer+ListSize)!=InfoSize
 			|| (BYTE*)pString-(pBuffer+ListSize+InfoSize)!=StringSize)
 		::DebugBreak();
 #endif
-	if (j>1)
-		SortEventList(&ppEventList[0],&ppEventList[j-1]);
 	return ppEventList;
 }
 
@@ -605,11 +573,11 @@ static bool GetFavoriteList(const TVTest::CFavoriteFolder &Folder,TVTest::Favori
 	BYTE *pBuffer=static_cast<BYTE*>(std::malloc(StructSize+StringSize));
 	if (pBuffer==NULL)
 		return false;
-	pList->ItemList=pointer_cast<TVTest::FavoriteItemInfo*>(pBuffer);
+	pList->ItemList=reinterpret_cast<TVTest::FavoriteItemInfo*>(pBuffer);
 	pList->ItemCount=static_cast<DWORD>(Folder.GetItemCount());
 
 	TVTest::FavoriteItemInfo *pItemInfo=pList->ItemList;
-	LPWSTR pStringBuffer=pointer_cast<LPWSTR>(pBuffer+StructSize);
+	LPWSTR pStringBuffer=reinterpret_cast<LPWSTR>(pBuffer+StructSize);
 
 	for (size_t i=0;i<Folder.GetItemCount();i++)
 		GetFavoriteItemInfo(Folder.GetItem(i),&pItemInfo,&pStringBuffer);
@@ -681,10 +649,11 @@ HWND CPlugin::m_hwndMessage=NULL;
 UINT CPlugin::m_MessageCode=0;
 
 std::vector<CPlugin::CAudioStreamCallbackInfo> CPlugin::m_AudioStreamCallbackList;
-CCriticalLock CPlugin::m_AudioStreamLock;
+TVTest::MutexLock CPlugin::m_AudioStreamLock;
+CPlugin::CAudioSampleCallback CPlugin::m_AudioSampleCallback;
 std::vector<CPlugin::CVideoStreamCallbackInfo> CPlugin::m_VideoStreamCallbackList;
 CPlugin::CVideoStreamCallback CPlugin::m_VideoStreamCallback;
-CCriticalLock CPlugin::m_VideoStreamLock;
+TVTest::MutexLock CPlugin::m_VideoStreamLock;
 
 
 CPlugin::CPlugin()
@@ -721,7 +690,7 @@ bool CPlugin::Load(LPCTSTR pszFileName)
 
 		StdUtil::snprintf(szText,lengthof(szText),
 						  TEXT("DLLがロードできません。(エラーコード 0x%lx)"),ErrorCode);
-		SetError(szText);
+		SetWin32Error(ErrorCode,szText);
 		switch (ErrorCode) {
 		case ERROR_BAD_EXE_FORMAT:
 			SetErrorAdvise(
@@ -743,21 +712,21 @@ bool CPlugin::Load(LPCTSTR pszFileName)
 		reinterpret_cast<TVTest::GetVersionFunc>(::GetProcAddress(hLib,"TVTGetVersion"));
 	if (pGetVersion==NULL) {
 		::FreeLibrary(hLib);
-		SetError(TEXT("TVTGetVersion()関数のアドレスを取得できません。"));
+		SetErrorText(TEXT("TVTGetVersion()関数のアドレスを取得できません。"));
 		return false;
 	}
 	m_Version=pGetVersion();
 	if (TVTest::GetMajorVersion(m_Version)!=TVTest::GetMajorVersion(TVTEST_PLUGIN_VERSION)
 		|| TVTest::GetMinorVersion(m_Version)!=TVTest::GetMinorVersion(TVTEST_PLUGIN_VERSION)) {
 		::FreeLibrary(hLib);
-		SetError(TEXT("対応していないバージョンです。"));
+		SetErrorText(TEXT("対応していないバージョンです。"));
 		return false;
 	}
 	TVTest::GetPluginInfoFunc pGetPluginInfo=
 		reinterpret_cast<TVTest::GetPluginInfoFunc>(::GetProcAddress(hLib,"TVTGetPluginInfo"));
 	if (pGetPluginInfo==NULL) {
 		::FreeLibrary(hLib);
-		SetError(TEXT("TVTGetPluginInfo()関数のアドレスを取得できません。"));
+		SetErrorText(TEXT("TVTGetPluginInfo()関数のアドレスを取得できません。"));
 		return false;
 	}
 	TVTest::PluginInfo PluginInfo;
@@ -765,14 +734,14 @@ bool CPlugin::Load(LPCTSTR pszFileName)
 	if (!pGetPluginInfo(&PluginInfo)
 			|| IsStringEmpty(PluginInfo.pszPluginName)) {
 		::FreeLibrary(hLib);
-		SetError(TEXT("プラグインの情報を取得できません。"));
+		SetErrorText(TEXT("プラグインの情報を取得できません。"));
 		return false;
 	}
 	TVTest::InitializeFunc pInitialize=
 		reinterpret_cast<TVTest::InitializeFunc>(::GetProcAddress(hLib,"TVTInitialize"));
 	if (pInitialize==NULL) {
 		::FreeLibrary(hLib);
-		SetError(TEXT("TVTInitialize()関数のアドレスを取得できません。"));
+		SetErrorText(TEXT("TVTInitialize()関数のアドレスを取得できません。"));
 		return false;
 	}
 	m_FileName=pszFileName;
@@ -789,11 +758,11 @@ bool CPlugin::Load(LPCTSTR pszFileName)
 	if (!pInitialize(&m_PluginParam)) {
 		Free();
 		::FreeLibrary(hLib);
-		SetError(TEXT("プラグインの初期化でエラー発生しました。"));
+		SetErrorText(TEXT("プラグインの初期化でエラー発生しました。"));
 		return false;
 	}
 	m_hLib=hLib;
-	ClearError();
+	ResetError();
 	return true;
 }
 
@@ -808,8 +777,11 @@ void CPlugin::Free()
 
 	m_GrabberLock.Lock();
 	if (!m_StreamGrabberList.empty()) {
+		LibISDB::GrabberFilter *pGrabberFilter=
+			App.CoreEngine.GetFilter<LibISDB::GrabberFilter>();
 		for (auto it=m_StreamGrabberList.begin();it!=m_StreamGrabberList.end();++it) {
-			App.CoreEngine.m_DtvEngine.m_MediaGrabber.RemoveGrabber(*it);
+			if (pGrabberFilter!=nullptr)
+				pGrabberFilter->RemoveGrabber(*it);
 			delete *it;
 		}
 		m_StreamGrabberList.clear();
@@ -1030,7 +1002,7 @@ bool CPlugin::GetProgramGuideCommandInfo(int Index,TVTest::ProgramGuideCommandIn
 }
 
 
-bool CPlugin::NotifyProgramGuideCommand(LPCTSTR pszCommand,UINT Action,const CEventInfoData *pEvent,
+bool CPlugin::NotifyProgramGuideCommand(LPCTSTR pszCommand,UINT Action,const LibISDB::EventInfo *pEvent,
 										const POINT *pCursorPos,const RECT *pItemRect)
 {
 	for (size_t i=0;i<m_ProgramGuideCommandList.size();i++) {
@@ -1269,15 +1241,15 @@ LRESULT CPlugin::OnCallback(TVTest::PluginParam *pParam,UINT Message,LPARAM lPar
 
 	case TVTest::MESSAGE_GETSERVICE:
 		{
-			CDtvEngine &DtvEngine=GetAppClass().CoreEngine.m_DtvEngine;
+			CCoreEngine &CoreEngine=GetAppClass().CoreEngine;
 			int *pNumServices=reinterpret_cast<int*>(lParam1);
-			WORD ServiceID;
 
 			if (pNumServices)
-				*pNumServices=DtvEngine.m_TsAnalyzer.GetViewableServiceNum();
-			if (!DtvEngine.GetServiceID(&ServiceID))
+				*pNumServices=CoreEngine.GetSelectableServiceCount();
+			uint16_t ServiceID=CoreEngine.GetServiceID();
+			if (ServiceID==LibISDB::SERVICE_ID_INVALID)
 				return -1;
-			return DtvEngine.m_TsAnalyzer.GetViewableServiceIndexByID(ServiceID);;
+			return CoreEngine.GetSelectableServiceIndexByID(ServiceID);;
 		}
 
 	case TVTest::MESSAGE_SETSERVICE:
@@ -1294,27 +1266,33 @@ LRESULT CPlugin::OnCallback(TVTest::PluginParam *pParam,UINT Message,LPARAM lPar
 					|| (pServiceInfo->Size!=sizeof(TVTest::ServiceInfo)
 						&& pServiceInfo->Size!=TVTest::SERVICEINFO_SIZE_V1))
 				return FALSE;
-			CTsAnalyzer *pTsAnalyzer=&GetAppClass().CoreEngine.m_DtvEngine.m_TsAnalyzer;
-			WORD ServiceID;
-			CTsAnalyzer::ServiceInfo Info;
-			if (!pTsAnalyzer->GetViewableServiceID(Index,&ServiceID)
-					|| !pTsAnalyzer->GetServiceInfo(pTsAnalyzer->GetServiceIndexByID(ServiceID),&Info))
+
+			CCoreEngine &CoreEngine=GetAppClass().CoreEngine;
+			LibISDB::AnalyzerFilter *pAnalyzer=CoreEngine.GetFilter<LibISDB::AnalyzerFilter>();
+			if (pAnalyzer==NULL)
+				return FALSE;
+
+			WORD ServiceID=CoreEngine.GetSelectableServiceID(Index);
+			if (ServiceID==LibISDB::SERVICE_ID_INVALID)
+				return FALSE;
+			LibISDB::AnalyzerFilter::ServiceInfo Info;
+			if (!pAnalyzer->GetServiceInfo(pAnalyzer->GetServiceIndexByID(ServiceID),&Info))
 				return FALSE;
 			pServiceInfo->ServiceID=ServiceID;
 			pServiceInfo->VideoPID=
-				Info.VideoEsList.empty()?CTsAnalyzer::PID_INVALID:Info.VideoEsList[0].PID;
-			pServiceInfo->NumAudioPIDs=(int)Info.AudioEsList.size();
-			for (size_t i=0;i<Info.AudioEsList.size();i++)
-				pServiceInfo->AudioPID[i]=Info.AudioEsList[i].PID;
-			::lstrcpyn(pServiceInfo->szServiceName,Info.szServiceName,32);
+				Info.VideoESList.empty()?LibISDB::PID_INVALID:Info.VideoESList[0].PID;
+			pServiceInfo->NumAudioPIDs=(int)Info.AudioESList.size();
+			for (size_t i=0;i<Info.AudioESList.size();i++)
+				pServiceInfo->AudioPID[i]=Info.AudioESList[i].PID;
+			::lstrcpyn(pServiceInfo->szServiceName,Info.ServiceName.c_str(),32);
 			if (pServiceInfo->Size==sizeof(TVTest::ServiceInfo)) {
-				int ServiceIndex=pTsAnalyzer->GetServiceIndexByID(ServiceID);
-				for (size_t i=0;i<Info.AudioEsList.size();i++) {
+				int ServiceIndex=pAnalyzer->GetServiceIndexByID(ServiceID);
+				for (size_t i=0;i<Info.AudioESList.size();i++) {
 					pServiceInfo->AudioComponentType[i]=
-						pTsAnalyzer->GetAudioComponentType(ServiceIndex,(int)i);
+						pAnalyzer->GetAudioComponentType(ServiceIndex,(int)i);
 				}
-				if (Info.CaptionEsList.size()>0)
-					pServiceInfo->SubtitlePID=Info.CaptionEsList[0].PID;
+				if (Info.CaptionESList.size()>0)
+					pServiceInfo->SubtitlePID=Info.CaptionESList[0].PID;
 				else
 					pServiceInfo->SubtitlePID=0;
 				pServiceInfo->Reserved=0;
@@ -1364,7 +1342,6 @@ LRESULT CPlugin::OnCallback(TVTest::PluginParam *pParam,UINT Message,LPARAM lPar
 
 			if (pInfo==NULL || pInfo->Size!=sizeof(TVTest::PanScanInfo))
 				return FALSE;
-			const CMediaViewer *pMediaViewer=&GetAppClass().CoreEngine.m_DtvEngine.m_MediaViewer;
 			int Command;
 			switch (pInfo->Type) {
 			case TVTest::PANSCAN_NONE:
@@ -1428,16 +1405,21 @@ LRESULT CPlugin::OnCallback(TVTest::PluginParam *pParam,UINT Message,LPARAM lPar
 	case TVTest::MESSAGE_GETVIDEOINFO:
 		{
 			TVTest::VideoInfo *pVideoInfo=reinterpret_cast<TVTest::VideoInfo*>(lParam1);
-			CMediaViewer *pMediaViewer;
-			WORD VideoWidth,VideoHeight;
-			BYTE XAspect,YAspect;
 
 			if (pVideoInfo==NULL || pVideoInfo->Size!=sizeof(TVTest::VideoInfo))
 				return FALSE;
-			pMediaViewer=&GetAppClass().CoreEngine.m_DtvEngine.m_MediaViewer;
-			if (pMediaViewer->GetOriginalVideoSize(&VideoWidth,&VideoHeight)
-					&& pMediaViewer->GetVideoAspectRatio(&XAspect,&YAspect)
-					&& pMediaViewer->GetSourceRect(&pVideoInfo->SourceRect)) {
+
+			const LibISDB::ViewerFilter *pViewer=
+				GetAppClass().CoreEngine.GetFilter<LibISDB::ViewerFilter>();
+			if (pViewer==nullptr)
+				return FALSE;
+
+			int VideoWidth,VideoHeight;
+			int XAspect,YAspect;
+
+			if (pViewer->GetOriginalVideoSize(&VideoWidth,&VideoHeight)
+					&& pViewer->GetVideoAspectRatio(&XAspect,&YAspect)
+					&& pViewer->GetSourceRect(&pVideoInfo->SourceRect)) {
 				pVideoInfo->Width=VideoWidth;
 				pVideoInfo->Height=VideoHeight;
 				pVideoInfo->XAspect=XAspect;
@@ -1467,13 +1449,13 @@ LRESULT CPlugin::OnCallback(TVTest::PluginParam *pParam,UINT Message,LPARAM lPar
 			int StereoMode;
 
 			switch (GetAppClass().UICore.GetActualDualMonoMode()) {
-			case CAudioDecFilter::DUALMONO_MAIN:
+			case LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode::Main:
 				StereoMode=TVTest::STEREOMODE_LEFT;
 				break;
-			case CAudioDecFilter::DUALMONO_SUB:
+			case LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode::Sub:
 				StereoMode=TVTest::STEREOMODE_RIGHT;
 				break;
-			case CAudioDecFilter::DUALMONO_BOTH:
+			case LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode::Both:
 			default:
 				StereoMode=TVTest::STEREOMODE_STEREO;
 				break;
@@ -1512,16 +1494,15 @@ LRESULT CPlugin::OnCallback(TVTest::PluginParam *pParam,UINT Message,LPARAM lPar
 
 	case TVTest::MESSAGE_CAPTUREIMAGE:
 		{
-			void *pBuffer=GetAppClass().CoreEngine.GetCurrentImage();
+			LibISDB::COMMemoryPointer<> Image(GetAppClass().CoreEngine.GetCurrentImage());
 
-			if (pBuffer!=NULL) {
-				SIZE_T Size=CalcDIBSize(static_cast<BITMAPINFOHEADER*>(pBuffer));
+			if (Image) {
+				SIZE_T Size=CalcDIBSize(reinterpret_cast<BITMAPINFOHEADER*>(Image.get()));
 				void *pDib;
 
 				pDib=malloc(Size);
 				if (pDib!=NULL)
-					::CopyMemory(pDib,pBuffer,Size);
-				::CoTaskMemFree(pBuffer);
+					::CopyMemory(pDib,Image.get(),Size);
 				return (LRESULT)pDib;
 			}
 		}
@@ -1559,7 +1540,12 @@ LRESULT CPlugin::OnCallback(TVTest::PluginParam *pParam,UINT Message,LPARAM lPar
 					|| pInfo->Callback==NULL)
 				return FALSE;
 
-			CBlockLock Lock(&m_GrabberLock);
+			LibISDB::GrabberFilter *pGrabberFilter=
+				GetAppClass().CoreEngine.GetFilter<LibISDB::GrabberFilter>();
+			if (pGrabberFilter==nullptr)
+				return false;
+
+			TVTest::BlockLock Lock(m_GrabberLock);
 
 			if ((pInfo->Flags & TVTest::STREAM_CALLBACK_REMOVE)==0) {
 				// コールバック登録
@@ -1574,13 +1560,13 @@ LRESULT CPlugin::OnCallback(TVTest::PluginParam *pParam,UINT Message,LPARAM lPar
 				}
 				CStreamGrabber *pGrabber=new CStreamGrabber(pInfo->Callback,pInfo->pClientData);
 				m_StreamGrabberList.push_back(pGrabber);
-				GetAppClass().CoreEngine.m_DtvEngine.m_MediaGrabber.AddGrabber(pGrabber);
+				pGrabberFilter->AddGrabber(pGrabber);
 			} else {
 				// コールバック削除
 				for (auto it=m_StreamGrabberList.begin();it!=m_StreamGrabberList.end();++it) {
 					CStreamGrabber *pGrabber=*it;
 					if (pGrabber->GetCallbackFunc()==pInfo->Callback) {
-						GetAppClass().CoreEngine.m_DtvEngine.m_MediaGrabber.RemoveGrabber(pGrabber);
+						pGrabberFilter->RemoveGrabber(pGrabber);
 						m_StreamGrabberList.erase(it);
 						delete pGrabber;
 						return TRUE;
@@ -1611,8 +1597,13 @@ LRESULT CPlugin::OnCallback(TVTest::PluginParam *pParam,UINT Message,LPARAM lPar
 					|| pInfo->pSrcData==NULL
 					|| pInfo->pszDest==NULL || pInfo->DestLength==0)
 				return FALSE;
-			if (CAribString::AribToString(pInfo->pszDest,pInfo->DestLength,
-					static_cast<const BYTE*>(pInfo->pSrcData),pInfo->SrcLength)==0) {
+
+			LibISDB::ARIBStringDecoder Decoder;
+			LibISDB::String Str;
+			if (Decoder.Decode(
+					static_cast<const uint8_t *>(pInfo->pSrcData),pInfo->SrcLength,&Str)) {
+				StdUtil::strncpy(pInfo->pszDest,pInfo->DestLength,Str.c_str());
+			} else {
 				pInfo->pszDest[0]='\0';
 			}
 		}
@@ -1626,32 +1617,25 @@ LRESULT CPlugin::OnCallback(TVTest::PluginParam *pParam,UINT Message,LPARAM lPar
 					|| pProgramInfo->Size!=sizeof(TVTest::ProgramInfo))
 				return FALSE;
 
-			const bool fNext=lParam2!=0;
-			CDtvEngine *pDtvEngine=&GetAppClass().CoreEngine.m_DtvEngine;
+			LibISDB::EventInfo EventInfo;
+			if (!GetAppClass().CoreEngine.GetCurrentEventInfo(&EventInfo,lParam2!=0))
+				return FALSE;
 
-			pProgramInfo->ServiceID=0;
-			pDtvEngine->GetServiceID(&pProgramInfo->ServiceID);
-			pProgramInfo->EventID=pDtvEngine->GetEventID(fNext);
+			pProgramInfo->ServiceID=EventInfo.ServiceID;
+			pProgramInfo->EventID=EventInfo.EventID;
 			if (pProgramInfo->pszEventName!=NULL && pProgramInfo->MaxEventName>0) {
-				pProgramInfo->pszEventName[0]='\0';
-				pDtvEngine->GetEventName(pProgramInfo->pszEventName,
-										 pProgramInfo->MaxEventName,fNext);
+				::lstrcpyn(pProgramInfo->pszEventName,EventInfo.EventName.c_str(),pProgramInfo->MaxEventName);
 			}
 			if (pProgramInfo->pszEventText!=NULL && pProgramInfo->MaxEventText>0) {
-				pProgramInfo->pszEventText[0]='\0';
-				pDtvEngine->GetEventText(pProgramInfo->pszEventText,
-										 pProgramInfo->MaxEventText,fNext);
+				::lstrcpyn(pProgramInfo->pszEventText,EventInfo.EventText.c_str(),pProgramInfo->MaxEventText);
 			}
 			if (pProgramInfo->pszEventExtText!=NULL && pProgramInfo->MaxEventExtText>0) {
-				pProgramInfo->pszEventExtText[0]='\0';
-				pDtvEngine->GetEventExtendedText(pProgramInfo->pszEventExtText,
-												 pProgramInfo->MaxEventExtText,
-												 fNext);
+				LibISDB::String ExtendedText;
+				EventInfo.GetConcatenatedExtendedText(&ExtendedText);
+				::lstrcpyn(pProgramInfo->pszEventExtText,ExtendedText.c_str(),pProgramInfo->MaxEventExtText);
 			}
-			if (!pDtvEngine->GetEventTime(&pProgramInfo->StartTime,&pProgramInfo->Duration,fNext)) {
-				::ZeroMemory(&pProgramInfo->StartTime,sizeof(SYSTEMTIME));
-				pProgramInfo->Duration=0;
-			}
+			pProgramInfo->StartTime=EventInfo.StartTime.ToSYSTEMTIME();
+			pProgramInfo->Duration=EventInfo.Duration;
 		}
 		return TRUE;
 
@@ -1713,11 +1697,15 @@ LRESULT CPlugin::OnCallback(TVTest::PluginParam *pParam,UINT Message,LPARAM lPar
 	case TVTest::MESSAGE_SETAUDIOCALLBACK:
 		{
 			TVTest::AudioCallbackFunc pCallback=reinterpret_cast<TVTest::AudioCallbackFunc>(lParam1);
+			LibISDB::ViewerFilter *pViewer=
+				GetAppClass().CoreEngine.GetFilter<LibISDB::ViewerFilter>();
+			if (pViewer==nullptr)
+				return FALSE;
 
 			m_AudioStreamLock.Lock();
 			if (pCallback!=NULL) {
 				if (m_AudioStreamCallbackList.empty()) {
-					GetAppClass().CoreEngine.m_DtvEngine.m_MediaViewer.SetAudioStreamCallback(AudioStreamCallback);
+					pViewer->SetAudioSampleCallback(&m_AudioSampleCallback);
 				} else {
 					for (std::vector<CAudioStreamCallbackInfo>::iterator i=m_AudioStreamCallbackList.begin();
 							i!=m_AudioStreamCallbackList.end();i++) {
@@ -1743,7 +1731,7 @@ LRESULT CPlugin::OnCallback(TVTest::PluginParam *pParam,UINT Message,LPARAM lPar
 				if (!fFound)
 					return FALSE;
 				if (m_AudioStreamCallbackList.empty())
-					GetAppClass().CoreEngine.m_DtvEngine.m_MediaViewer.SetAudioStreamCallback(NULL);
+					pViewer->SetAudioSampleCallback(NULL);
 			}
 		}
 		return TRUE;
@@ -1866,26 +1854,29 @@ LRESULT CPlugin::OnCallback(TVTest::PluginParam *pParam,UINT Message,LPARAM lPar
 			if (pQueryInfo==NULL)
 				return reinterpret_cast<LRESULT>((TVTest::EpgEventInfo*)NULL);
 
-			CEpgProgramList *pEpgProgramList=&GetAppClass().EpgProgramList;
-			CEventInfoData EventData;
+			LibISDB::EPGDatabase &EPGDatabase=GetAppClass().EPGDatabase;
+			LibISDB::EventInfo EventData;
 			if (pQueryInfo->Type==TVTest::EPG_EVENT_QUERY_EVENTID) {
-				if (!pEpgProgramList->GetEventInfo(pQueryInfo->NetworkID,
-												   pQueryInfo->TransportStreamID,
-												   pQueryInfo->ServiceID,
-												   pQueryInfo->EventID,
-												   &EventData))
+				if (!EPGDatabase.GetEventInfo(pQueryInfo->NetworkID,
+											  pQueryInfo->TransportStreamID,
+											  pQueryInfo->ServiceID,
+											  pQueryInfo->EventID,
+											  &EventData))
 					return reinterpret_cast<LRESULT>((TVTest::EpgEventInfo*)NULL);
 			} else if (pQueryInfo->Type==TVTest::EPG_EVENT_QUERY_TIME) {
-				SYSTEMTIME stUTC,stEpg;
+				SYSTEMTIME stUTC;
+				LibISDB::DateTime UTCTime,EPGTime;
 
-				if (!::FileTimeToSystemTime(&pQueryInfo->Time,&stUTC)
-						|| !UtcToEpgTime(&stUTC,&stEpg))
+				if (!::FileTimeToSystemTime(&pQueryInfo->Time,&stUTC))
 					return reinterpret_cast<LRESULT>((TVTest::EpgEventInfo*)NULL);
-				if (!pEpgProgramList->GetEventInfo(pQueryInfo->NetworkID,
-												   pQueryInfo->TransportStreamID,
-												   pQueryInfo->ServiceID,
-												   &stEpg,
-												   &EventData))
+				UTCTime.FromSYSTEMTIME(stUTC);
+				if (!LibISDB::UTCTimeToEPGTime(UTCTime,&EPGTime))
+					return reinterpret_cast<LRESULT>((TVTest::EpgEventInfo*)NULL);
+				if (!EPGDatabase.GetEventInfo(pQueryInfo->NetworkID,
+											  pQueryInfo->TransportStreamID,
+											  pQueryInfo->ServiceID,
+											  EPGTime,
+											  &EventData))
 					return reinterpret_cast<LRESULT>((TVTest::EpgEventInfo*)NULL);
 			} else {
 				return reinterpret_cast<LRESULT>((TVTest::EpgEventInfo*)NULL);
@@ -1913,22 +1904,21 @@ LRESULT CPlugin::OnCallback(TVTest::PluginParam *pParam,UINT Message,LPARAM lPar
 			pEventList->NumEvents=0;
 			pEventList->EventList=NULL;
 
-			CEpgProgramList *pEpgProgramList=&GetAppClass().EpgProgramList;
-			pEpgProgramList->UpdateService(pEventList->NetworkID,
-										   pEventList->TransportStreamID,
-										   pEventList->ServiceID);
-			const CEpgServiceInfo *pServiceInfo=
-				pEpgProgramList->GetServiceInfo(pEventList->NetworkID,
-												pEventList->TransportStreamID,
-												pEventList->ServiceID);
-			if (pServiceInfo==NULL || pServiceInfo->m_EventList.EventDataMap.size()==0)
+			LibISDB::EPGDatabase::EventList EventList;
+
+			if (!GetAppClass().EPGDatabase.GetEventListSortedByTime(
+						pEventList->NetworkID,
+						pEventList->TransportStreamID,
+						pEventList->ServiceID,
+						&EventList)
+					|| EventList.empty())
 				return FALSE;
 
 			CEpgDataConverter Converter;
-			pEventList->EventList=Converter.Convert(pServiceInfo->m_EventList);
+			pEventList->EventList=Converter.Convert(EventList);
 			if (pEventList->EventList==NULL)
 				return FALSE;
-			pEventList->NumEvents=(WORD)pServiceInfo->m_EventList.EventDataMap.size();
+			pEventList->NumEvents=(WORD)EventList.size();
 		}
 		return TRUE;
 
@@ -2232,23 +2222,23 @@ LRESULT CPlugin::OnCallback(TVTest::PluginParam *pParam,UINT Message,LPARAM lPar
 					|| pInfo->Flags!=0)
 				return FALSE;
 
-			CEventManager &EventManager=GetAppClass().CoreEngine.m_DtvEngine.m_EventManager;
+			const LibISDB::EPGDatabase &EPGDatabase=GetAppClass().EPGDatabase;
 			DWORD Status=0;
 
 			if ((pInfo->Status & TVTest::EPG_CAPTURE_STATUS_SCHEDULEBASICCOMPLETED)!=0) {
-				if (EventManager.IsScheduleComplete(pInfo->NetworkID,pInfo->TransportStreamID,pInfo->ServiceID,false))
+				if (EPGDatabase.IsScheduleComplete(pInfo->NetworkID,pInfo->TransportStreamID,pInfo->ServiceID,false))
 					Status|=TVTest::EPG_CAPTURE_STATUS_SCHEDULEBASICCOMPLETED;
 			}
 			if ((pInfo->Status & TVTest::EPG_CAPTURE_STATUS_SCHEDULEEXTENDEDCOMPLETED)!=0) {
-				if (EventManager.IsScheduleComplete(pInfo->NetworkID,pInfo->TransportStreamID,pInfo->ServiceID,true))
+				if (EPGDatabase.IsScheduleComplete(pInfo->NetworkID,pInfo->TransportStreamID,pInfo->ServiceID,true))
 					Status|=TVTest::EPG_CAPTURE_STATUS_SCHEDULEEXTENDEDCOMPLETED;
 			}
 			if ((pInfo->Status & TVTest::EPG_CAPTURE_STATUS_HASSCHEDULEBASIC)!=0) {
-				if (EventManager.HasSchedule(pInfo->NetworkID,pInfo->TransportStreamID,pInfo->ServiceID,false))
+				if (EPGDatabase.HasSchedule(pInfo->NetworkID,pInfo->TransportStreamID,pInfo->ServiceID,false))
 					Status|=TVTest::EPG_CAPTURE_STATUS_HASSCHEDULEBASIC;
 			}
 			if ((pInfo->Status & TVTest::EPG_CAPTURE_STATUS_HASSCHEDULEEXTENDED)!=0) {
-				if (EventManager.HasSchedule(pInfo->NetworkID,pInfo->TransportStreamID,pInfo->ServiceID,true))
+				if (EPGDatabase.HasSchedule(pInfo->NetworkID,pInfo->TransportStreamID,pInfo->ServiceID,true))
 					Status|=TVTest::EPG_CAPTURE_STATUS_HASSCHEDULEEXTENDED;
 			}
 
@@ -2287,10 +2277,10 @@ LRESULT CPlugin::OnCallback(TVTest::PluginParam *pParam,UINT Message,LPARAM lPar
 		return GetAppClass().CommandList.NumCommands();
 
 	case TVTest::MESSAGE_GETVIDEOSTREAMCOUNT:
-		return GetAppClass().CoreEngine.m_DtvEngine.GetVideoStreamNum();
+		return GetAppClass().CoreEngine.GetVideoStreamCount();
 
 	case TVTest::MESSAGE_GETVIDEOSTREAM:
-		return GetAppClass().CoreEngine.m_DtvEngine.GetVideoStream();
+		return GetAppClass().CoreEngine.GetVideoStream();
 
 	case TVTest::MESSAGE_SETVIDEOSTREAM:
 		return SendPluginMessage(pParam,Message,lParam1,lParam2);
@@ -2738,9 +2728,13 @@ LRESULT CPlugin::OnCallback(TVTest::PluginParam *pParam,UINT Message,LPARAM lPar
 				break;
 
 			case TVTest::CONVERT_TIME_TYPE_EPG:
-				if (!EpgTimeToUtc(&stFrom,&stTo))
-					return FALSE;
-				stFrom=stTo;
+				{
+					LibISDB::DateTime From,To;
+					From.FromSYSTEMTIME(stFrom);
+					if (!LibISDB::EPGTimeToUTCTime(From,&To))
+						return FALSE;
+					stFrom=To.ToSYSTEMTIME();
+				}
 				break;
 
 			default:
@@ -2758,8 +2752,13 @@ LRESULT CPlugin::OnCallback(TVTest::PluginParam *pParam,UINT Message,LPARAM lPar
 				break;
 
 			case TVTest::CONVERT_TIME_TYPE_EPG:
-				if (!UtcToEpgTime(&stFrom,&stTo))
-					return FALSE;
+				{
+					LibISDB::DateTime From,To;
+					From.FromSYSTEMTIME(stFrom);
+					if (!LibISDB::UTCTimeToEPGTime(From,&To))
+						return FALSE;
+					stTo=To.ToSYSTEMTIME();
+				}
 				break;
 
 			case TVTest::CONVERT_TIME_TYPE_EPG_DISPLAY:
@@ -2768,8 +2767,13 @@ LRESULT CPlugin::OnCallback(TVTest::PluginParam *pParam,UINT Message,LPARAM lPar
 
 					switch (EpgOptions.GetEpgTimeMode()) {
 					case CEpgOptions::EPGTIME_RAW:
-						if (!UtcToEpgTime(&stFrom,&stTo))
-							return FALSE;
+						{
+							LibISDB::DateTime From,To;
+							From.FromSYSTEMTIME(stFrom);
+							if (!LibISDB::UTCTimeToEPGTime(From,&To))
+								return FALSE;
+							stTo=To.ToSYSTEMTIME();
+						}
 						break;
 
 					case CEpgOptions::EPGTIME_JST:
@@ -2782,8 +2786,13 @@ LRESULT CPlugin::OnCallback(TVTest::PluginParam *pParam,UINT Message,LPARAM lPar
 						break;
 
 					case CEpgOptions::EPGTIME_LOCAL:
-						if (!EpgTimeToLocalTime(&stFrom,&stTo))
-							return FALSE;
+						{
+							LibISDB::DateTime From,To;
+							From.FromSYSTEMTIME(stFrom);
+							if (!LibISDB::EPGTimeToLocalTime(From,&To))
+								return FALSE;
+							stTo=To.ToSYSTEMTIME();
+						}
 						break;
 
 					case CEpgOptions::EPGTIME_UTC:
@@ -2819,11 +2828,15 @@ LRESULT CPlugin::OnCallback(TVTest::PluginParam *pParam,UINT Message,LPARAM lPar
 		{
 			TVTest::VideoStreamCallbackFunc pCallback=
 				reinterpret_cast<TVTest::VideoStreamCallbackFunc>(lParam1);
-			CBlockLock Lock(&m_VideoStreamLock);
+			LibISDB::ViewerFilter *pViewer=
+				GetAppClass().CoreEngine.GetFilter<LibISDB::ViewerFilter>();
+			if (pViewer==nullptr)
+				return FALSE;
+			TVTest::BlockLock Lock(m_VideoStreamLock);
 
 			if (pCallback!=NULL) {
 				if (m_VideoStreamCallbackList.empty()) {
-					GetAppClass().CoreEngine.m_DtvEngine.m_MediaViewer.SetVideoStreamCallback(&m_VideoStreamCallback);
+					pViewer->SetVideoStreamCallback(&m_VideoStreamCallback);
 				} else {
 					for (auto it=m_VideoStreamCallbackList.begin();it!=m_VideoStreamCallbackList.end();++it) {
 						if (it->m_pPlugin==this) {
@@ -2846,7 +2859,7 @@ LRESULT CPlugin::OnCallback(TVTest::PluginParam *pParam,UINT Message,LPARAM lPar
 				if (!fFound)
 					return FALSE;
 				if (m_VideoStreamCallbackList.empty())
-					GetAppClass().CoreEngine.m_DtvEngine.m_MediaViewer.SetVideoStreamCallback(NULL);
+					pViewer->SetVideoStreamCallback(NULL);
 			}
 		}
 		return TRUE;
@@ -2972,13 +2985,23 @@ LRESULT CPlugin::OnPluginMessage(WPARAM wParam,LPARAM lParam)
 			if (pChInfo==NULL)
 				return FALSE;
 			ConvertChannelInfo(pChInfo,pChannelInfo);
-			CTsAnalyzer *pTsAnalyzer=&GetAppClass().CoreEngine.m_DtvEngine.m_TsAnalyzer;
-			if (!pTsAnalyzer->GetNetworkName(pChannelInfo->szNetworkName,
-											 lengthof(pChannelInfo->szNetworkName)))
+			LibISDB::AnalyzerFilter *pAnalyzer=
+				GetAppClass().CoreEngine.GetFilter<LibISDB::AnalyzerFilter>();
+			LibISDB::String Name;
+			if (pAnalyzer->GetNetworkName(&Name)) {
+				::lstrcpyn(
+					pChannelInfo->szNetworkName,Name.c_str(),
+					lengthof(pChannelInfo->szNetworkName));
+			} else {
 				pChannelInfo->szNetworkName[0]='\0';
-			if (!pTsAnalyzer->GetTsName(pChannelInfo->szTransportStreamName,
-										lengthof(pChannelInfo->szTransportStreamName)))
+			}
+			if (!pAnalyzer->GetTSName(&Name)) {
+				::lstrcpyn(
+					pChannelInfo->szTransportStreamName,Name.c_str(),
+					lengthof(pChannelInfo->szTransportStreamName));
+			} else {
 				pChannelInfo->szTransportStreamName[0]='\0';
+			}
 		}
 		return TRUE;
 
@@ -3347,8 +3370,9 @@ LRESULT CPlugin::OnPluginMessage(WPARAM wParam,LPARAM lParam)
 			if (pInfo->Size>TVTest::RECORDSTATUSINFO_SIZE_V1) {
 				if (pInfo->pszFileName!=NULL && pInfo->MaxFileName>0) {
 					if (pRecordManager->IsRecording()) {
-						pRecordManager->GetRecordTask()->GetFileName(
-							pInfo->pszFileName,pInfo->MaxFileName);
+						TVTest::String FileName;
+						pRecordManager->GetRecordTask()->GetFileName(&FileName);
+						StdUtil::strncpy(pInfo->pszFileName,pInfo->MaxFileName,FileName.c_str());
 					} else {
 						pInfo->pszFileName[0]='\0';
 					}
@@ -3369,15 +3393,15 @@ LRESULT CPlugin::OnPluginMessage(WPARAM wParam,LPARAM lParam)
 
 	case TVTest::MESSAGE_SETSTEREOMODE:
 #if 0	// ver.0.9.0 より前
-		return GetAppClass().UICore.SetStereoMode(static_cast<CAudioDecFilter::StereoMode>(pParam->lParam1));
+		return GetAppClass().UICore.SetStereoMode(static_cast<LibISDB::DirectShow::AudioDecoderFilter::StereoMode>(pParam->lParam1));
 #else
 		{
-			CAudioDecFilter::DualMonoMode Mode;
+			LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode Mode;
 
 			switch ((int)pParam->lParam1) {
-			case TVTest::STEREOMODE_STEREO:	Mode=CAudioDecFilter::DUALMONO_BOTH;	break;
-			case TVTest::STEREOMODE_LEFT:	Mode=CAudioDecFilter::DUALMONO_MAIN;	break;
-			case TVTest::STEREOMODE_RIGHT:	Mode=CAudioDecFilter::DUALMONO_SUB;		break;
+			case TVTest::STEREOMODE_STEREO:	Mode=LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode::Both;	break;
+			case TVTest::STEREOMODE_LEFT:	Mode=LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode::Main;	break;
+			case TVTest::STEREOMODE_RIGHT:	Mode=LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode::Sub;	break;
 			default:
 				return FALSE;
 			}
@@ -3476,7 +3500,7 @@ LRESULT CPlugin::OnPluginMessage(WPARAM wParam,LPARAM lParam)
 		return TRUE;
 
 	case TVTest::MESSAGE_SETVIDEOSTREAM:
-		return GetAppClass().CoreEngine.m_DtvEngine.SetVideoStream((int)pParam->lParam1);
+		return GetAppClass().CoreEngine.SetVideoStream((int)pParam->lParam1);
 
 	case TVTest::MESSAGE_SELECTCHANNEL:
 		{
@@ -3689,18 +3713,6 @@ LRESULT CPlugin::OnPluginMessage(WPARAM wParam,LPARAM lParam)
 }
 
 
-void CALLBACK CPlugin::AudioStreamCallback(short *pData,DWORD Samples,int Channels,void *pParam)
-{
-	CBlockLock Lock(&m_AudioStreamLock);
-
-	for (size_t i=0;i<m_AudioStreamCallbackList.size();i++) {
-		CAudioStreamCallbackInfo &Info=m_AudioStreamCallbackList[i];
-
-		(Info.m_pCallback)(pData,Samples,Channels,Info.m_pClientData);
-	}
-}
-
-
 static bool GetSettingString(TVTest::SettingInfo *pSetting,LPCWSTR pszString)
 {
 	if (pSetting->Type!=TVTest::SETTING_TYPE_STRING)
@@ -3850,9 +3862,11 @@ void CPlugin::CStreamGrabber::SetClientData(void *pClientData)
 }
 
 
-bool CPlugin::CStreamGrabber::OnInputMedia(CMediaData *pMediaData)
+bool CPlugin::CStreamGrabber::ReceiveData(LibISDB::DataBuffer *pData)
 {
-	return m_Callback(pMediaData->GetData(),m_pClientData)!=FALSE;
+	if (pData->GetSize() != LibISDB::TS_PACKET_SIZE)
+		return true;
+	return m_Callback(pData->GetData(),m_pClientData)!=FALSE;
 }
 
 
@@ -4340,12 +4354,26 @@ bool CPlugin::CPluginPanelItem::NeedKeyboardFocus() const
 
 
 
-void CPlugin::CVideoStreamCallback::OnStream(DWORD Format,const void *pData,SIZE_T Size)
+void CPlugin::CVideoStreamCallback::OnStream(DWORD Format,const void *pData,size_t Size)
 {
-	CBlockLock Lock(&CPlugin::m_VideoStreamLock);
+	TVTest::BlockLock Lock(CPlugin::m_VideoStreamLock);
 
 	for (auto it=CPlugin::m_VideoStreamCallbackList.begin();it!=CPlugin::m_VideoStreamCallbackList.end();++it) {
 		it->m_pCallback(Format,pData,Size,it->m_pClientData);
+	}
+}
+
+
+
+
+void CPlugin::CAudioSampleCallback::OnSamples(short *pData,size_t Length,int Channels)
+{
+	TVTest::BlockLock Lock(CPlugin::m_AudioStreamLock);
+
+	for (size_t i=0;i<CPlugin::m_AudioStreamCallbackList.size();i++) {
+		CAudioStreamCallbackInfo &Info=m_AudioStreamCallbackList[i];
+
+		(Info.m_pCallback)(pData,(DWORD)Length,Channels,Info.m_pClientData);
 	}
 }
 
@@ -4615,7 +4643,7 @@ bool CPluginManager::OnPluginCommand(LPCTSTR pszCommand)
 }
 
 
-bool CPluginManager::OnProgramGuideCommand(LPCTSTR pszCommand,UINT Action,const CEventInfoData *pEvent,
+bool CPluginManager::OnProgramGuideCommand(LPCTSTR pszCommand,UINT Action,const LibISDB::EventInfo *pEvent,
 										   const POINT *pCursorPos,const RECT *pItemRect)
 {
 	if (pszCommand==NULL)
@@ -4663,7 +4691,7 @@ bool CPluginManager::SendProgramGuideEvent(UINT Event,LPARAM Param1,LPARAM Param
 }
 
 
-bool CPluginManager::SendProgramGuideProgramEvent(UINT Event,const CEventInfoData &EventInfo,LPARAM Param)
+bool CPluginManager::SendProgramGuideProgramEvent(UINT Event,const LibISDB::EventInfo &EventInfo,LPARAM Param)
 {
 	TVTest::ProgramGuideProgramInfo ProgramInfo;
 	EventInfoToProgramGuideProgramInfo(EventInfo,&ProgramInfo);
@@ -4682,7 +4710,7 @@ bool CPluginManager::SendProgramGuideProgramEvent(UINT Event,const CEventInfoDat
 
 
 bool CPluginManager::SendFilterGraphEvent(
-	UINT Event,CMediaViewer *pMediaViewer,IGraphBuilder *pGraphBuilder)
+	UINT Event,LibISDB::ViewerFilter *pMediaViewer,IGraphBuilder *pGraphBuilder)
 {
 	TVTest::FilterGraphInfo Info;
 
@@ -4855,18 +4883,18 @@ void CPluginManager::OnMuteChanged(bool fMute)
 }
 
 
-void CPluginManager::OnDualMonoModeChanged(CAudioDecFilter::DualMonoMode Mode)
+void CPluginManager::OnDualMonoModeChanged(LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode Mode)
 {
 	int StereoMode;
 
 	switch (Mode) {
-	case CAudioDecFilter::DUALMONO_MAIN:
+	case LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode::Main:
 		StereoMode=TVTest::STEREOMODE_LEFT;
 		break;
-	case CAudioDecFilter::DUALMONO_SUB:
+	case LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode::Sub:
 		StereoMode=TVTest::STEREOMODE_RIGHT;
 		break;
-	case CAudioDecFilter::DUALMONO_BOTH:
+	case LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode::Both:
 		StereoMode=TVTest::STEREOMODE_STEREO;
 		break;
 	default:
@@ -4877,18 +4905,18 @@ void CPluginManager::OnDualMonoModeChanged(CAudioDecFilter::DualMonoMode Mode)
 }
 
 
-void CPluginManager::OnStereoModeChanged(CAudioDecFilter::StereoMode Mode)
+void CPluginManager::OnStereoModeChanged(LibISDB::DirectShow::AudioDecoderFilter::StereoMode Mode)
 {
 	int StereoMode;
 
 	switch (Mode) {
-	case CAudioDecFilter::STEREOMODE_STEREO:
+	case LibISDB::DirectShow::AudioDecoderFilter::StereoMode::Stereo:
 		StereoMode=TVTest::STEREOMODE_STEREO;
 		break;
-	case CAudioDecFilter::STEREOMODE_LEFT:
+	case LibISDB::DirectShow::AudioDecoderFilter::StereoMode::Left:
 		StereoMode=TVTest::STEREOMODE_LEFT;
 		break;
-	case CAudioDecFilter::STEREOMODE_RIGHT:
+	case LibISDB::DirectShow::AudioDecoderFilter::StereoMode::Right:
 		StereoMode=TVTest::STEREOMODE_RIGHT;
 		break;
 	default:
@@ -5029,7 +5057,7 @@ bool CPluginManager::SendProgramGuideMenuSelectedEvent(UINT Command)
 }
 
 
-bool CPluginManager::SendProgramGuideProgramDrawBackgroundEvent(const CEventInfoData &Event,HDC hdc,
+bool CPluginManager::SendProgramGuideProgramDrawBackgroundEvent(const LibISDB::EventInfo &Event,HDC hdc,
 	const RECT &ItemRect,const RECT &TitleRect,const RECT &ContentRect,COLORREF BackgroundColor)
 {
 	TVTest::ProgramGuideProgramDrawBackgroundInfo Info;
@@ -5044,7 +5072,7 @@ bool CPluginManager::SendProgramGuideProgramDrawBackgroundEvent(const CEventInfo
 }
 
 
-bool CPluginManager::SendProgramGuideProgramInitializeMenuEvent(const CEventInfoData &Event,
+bool CPluginManager::SendProgramGuideProgramInitializeMenuEvent(const LibISDB::EventInfo &Event,
 	HMENU hmenu,UINT *pCommand,const POINT &CursorPos,const RECT &ItemRect)
 {
 	TVTest::ProgramGuideProgramInfo ProgramInfo;
@@ -5086,7 +5114,7 @@ bool CPluginManager::SendProgramGuideProgramInitializeMenuEvent(const CEventInfo
 }
 
 
-bool CPluginManager::SendProgramGuideProgramMenuSelectedEvent(const CEventInfoData &Event,UINT Command)
+bool CPluginManager::SendProgramGuideProgramMenuSelectedEvent(const LibISDB::EventInfo &Event,UINT Command)
 {
 	bool fResult=false;
 
@@ -5124,28 +5152,28 @@ bool CPluginManager::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam,L
 
 
 void CPluginManager::SendFilterGraphInitializeEvent(
-	CMediaViewer *pMediaViewer,IGraphBuilder *pGraphBuilder)
+	LibISDB::ViewerFilter *pMediaViewer,IGraphBuilder *pGraphBuilder)
 {
 	SendFilterGraphEvent(TVTest::EVENT_FILTERGRAPH_INITIALIZE,pMediaViewer,pGraphBuilder);
 }
 
 
 void CPluginManager::SendFilterGraphInitializedEvent(
-	CMediaViewer *pMediaViewer,IGraphBuilder *pGraphBuilder)
+	LibISDB::ViewerFilter *pMediaViewer,IGraphBuilder *pGraphBuilder)
 {
 	SendFilterGraphEvent(TVTest::EVENT_FILTERGRAPH_INITIALIZED,pMediaViewer,pGraphBuilder);
 }
 
 
 void CPluginManager::SendFilterGraphFinalizeEvent(
-	CMediaViewer *pMediaViewer,IGraphBuilder *pGraphBuilder)
+	LibISDB::ViewerFilter *pMediaViewer,IGraphBuilder *pGraphBuilder)
 {
 	SendFilterGraphEvent(TVTest::EVENT_FILTERGRAPH_FINALIZE,pMediaViewer,pGraphBuilder);
 }
 
 
 void CPluginManager::SendFilterGraphFinalizedEvent(
-	CMediaViewer *pMediaViewer,IGraphBuilder *pGraphBuilder)
+	LibISDB::ViewerFilter *pMediaViewer,IGraphBuilder *pGraphBuilder)
 {
 	SendFilterGraphEvent(TVTest::EVENT_FILTERGRAPH_FINALIZED,pMediaViewer,pGraphBuilder);
 }

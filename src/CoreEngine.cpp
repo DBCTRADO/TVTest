@@ -19,19 +19,19 @@ CCoreEngine::CCoreEngine()
 	, m_OriginalVideoHeight(0)
 	, m_DisplayVideoWidth(0)
 	, m_DisplayVideoHeight(0)
-	, m_NumAudioChannels(CMediaViewer::AUDIO_CHANNEL_INVALID)
+	, m_NumAudioChannels(LibISDB::ViewerFilter::AudioChannelCount_Invalid)
 	, m_NumAudioStreams(0)
 	, m_AudioComponentType(0)
 	, m_fMute(false)
 	, m_Volume(50)
 	, m_AudioGain(100)
 	, m_SurroundAudioGain(100)
-	, m_DualMonoMode(CAudioDecFilter::DUALMONO_MAIN)
-	, m_StereoMode(CAudioDecFilter::STEREOMODE_STEREO)
-	, m_fSpdifPassthrough(false)
+	, m_DualMonoMode(LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode::Main)
+	, m_StereoMode(LibISDB::DirectShow::AudioDecoderFilter::StereoMode::Stereo)
+	, m_fSPDIFPassthrough(false)
 	, m_ErrorPacketCount(0)
 	, m_ContinuityErrorPacketCount(0)
-	, m_ScramblePacketCount(0)
+	, m_ScrambledPacketCount(0)
 	, m_SignalLevel(0.0)
 	, m_BitRate(0)
 	, m_PacketBufferFillPercentage(0)
@@ -57,63 +57,89 @@ CCoreEngine::~CCoreEngine()
 
 void CCoreEngine::Close()
 {
-	m_DtvEngine.CloseEngine();
+	CloseEngine();
 
 	if (!m_TSProcessorList.empty()) {
-		for (auto it=m_TSProcessorList.begin();it!=m_TSProcessorList.end();++it)
+		for (auto it=m_TSProcessorList.begin();it!=m_TSProcessorList.end();++it) {
+			m_FilterGraph.UnregisterFilter(it->pTSProcessor,false);
 			it->pTSProcessor->Release();
+		}
 		m_TSProcessorList.clear();
 	}
 }
 
 
-bool CCoreEngine::BuildDtvEngine(CDtvEngine::CEventHandler *pEventHandler)
+void CCoreEngine::CreateFilters()
+{
+	LibISDB::BonDriverSourceFilter *pSourceFilter=new LibISDB::BonDriverSourceFilter;
+	RegisterFilter(pSourceFilter);
+
+	LibISDB::TSPacketParserFilter *pPacketParser=new LibISDB::TSPacketParserFilter;
+	RegisterFilter(pPacketParser);
+
+	LibISDB::AnalyzerFilter *pAnalyzer=new LibISDB::AnalyzerFilter;
+	RegisterFilter(pAnalyzer);
+
+	LibISDB::TeeFilter *pTee=new LibISDB::TeeFilter;
+	RegisterFilter(pTee);
+
+	if (!m_fNoEpg) {
+		LibISDB::EPGDatabaseFilter *pEPGDatabaseFilter=new LibISDB::EPGDatabaseFilter;
+		RegisterFilter(pEPGDatabaseFilter);
+	}
+
+	LibISDB::LogoDownloaderFilter *pLogoDownloader=new LibISDB::LogoDownloaderFilter;
+	RegisterFilter(pLogoDownloader);
+
+	LibISDB::GrabberFilter *pGrabber=new LibISDB::GrabberFilter;
+	RegisterFilter(pGrabber);
+
+	LibISDB::RecorderFilter *pRecorder=new LibISDB::RecorderFilter;
+	pRecorder->AddEventListener(this);
+	RegisterFilter(pRecorder);
+
+	LibISDB::TSPacketCounterFilter *pPacketCounter=new LibISDB::TSPacketCounterFilter;
+	RegisterFilter(pPacketCounter);
+
+	LibISDB::CaptionFilter *pCaptionFilter=new LibISDB::CaptionFilter;
+	RegisterFilter(pCaptionFilter);
+
+	LibISDB::ViewerFilter *pViewer=new LibISDB::ViewerFilter;
+	pViewer->AddEventListener(this);
+	RegisterFilter(pViewer);
+}
+
+
+bool CCoreEngine::BuildEngine()
 {
 	TSProcessorConnectionList ConnectionList;
-	int DecoderID,OutputIndex;
+	LibISDB::FilterGraph::IDType FilterID;
+	int OutputIndex;
 
-	DecoderID=CDtvEngine::DECODER_ID_BonSrcDecoder;
-	ConnectTSProcessor(&ConnectionList,TSPROCESSOR_CONNECTPOSITION_SOURCE,&DecoderID);
-	ConnectionList.Add(DecoderID,
-					   CDtvEngine::DECODER_ID_TsPacketParser);
-	DecoderID=CDtvEngine::DECODER_ID_TsPacketParser;
-	ConnectTSProcessor(&ConnectionList,TSPROCESSOR_CONNECTPOSITION_PREPROCESSING,&DecoderID);
-	ConnectionList.Add(DecoderID,
-					   CDtvEngine::DECODER_ID_TsAnalyzer);
-	DecoderID=CDtvEngine::DECODER_ID_TsAnalyzer;
-	ConnectTSProcessor(&ConnectionList,TSPROCESSOR_CONNECTPOSITION_POSTPROCESSING,&DecoderID);
-	ConnectionList.Add(DecoderID,
-					   CDtvEngine::DECODER_ID_MediaTee);
+	FilterID=m_FilterGraph.GetFilterID<LibISDB::BonDriverSourceFilter>();
+	ConnectTSProcessor(&ConnectionList,TSPROCESSOR_CONNECTPOSITION_SOURCE,&FilterID);
+	ConnectFilter(&ConnectionList,m_FilterGraph.GetFilterID<LibISDB::TSPacketParserFilter>(),&FilterID);
+	ConnectTSProcessor(&ConnectionList,TSPROCESSOR_CONNECTPOSITION_PREPROCESSING,&FilterID);
+	ConnectFilter(&ConnectionList,m_FilterGraph.GetFilterID<LibISDB::AnalyzerFilter>(),&FilterID);
+	ConnectTSProcessor(&ConnectionList,TSPROCESSOR_CONNECTPOSITION_POSTPROCESSING,&FilterID);
+	ConnectFilter(&ConnectionList,m_FilterGraph.GetFilterID<LibISDB::TeeFilter>(),&FilterID);
+	LibISDB::FilterGraph::IDType TeeFilterID=FilterID;
 	if (!m_fNoEpg) {
-		ConnectionList.Add(CDtvEngine::DECODER_ID_MediaTee,
-						   CDtvEngine::DECODER_ID_EventManager,0);
-		ConnectionList.Add(CDtvEngine::DECODER_ID_EventManager,
-						   CDtvEngine::DECODER_ID_LogoDownloader);
-	} else {
-		ConnectionList.Add(CDtvEngine::DECODER_ID_MediaTee,
-						   CDtvEngine::DECODER_ID_LogoDownloader,0);
+		ConnectFilter(&ConnectionList,m_FilterGraph.GetFilterID<LibISDB::EPGDatabaseFilter>(),&FilterID,0);
 	}
-	DecoderID=CDtvEngine::DECODER_ID_LogoDownloader;
-	ConnectTSProcessor(&ConnectionList,TSPROCESSOR_CONNECTPOSITION_RECORDER,&DecoderID);
-	ConnectionList.Add(DecoderID,
-					   CDtvEngine::DECODER_ID_MediaGrabber);
-	ConnectionList.Add(CDtvEngine::DECODER_ID_MediaGrabber,
-					   CDtvEngine::DECODER_ID_TsSelector);
-	ConnectionList.Add(CDtvEngine::DECODER_ID_TsSelector,
-					   CDtvEngine::DECODER_ID_TsRecorder);
-	DecoderID=CDtvEngine::DECODER_ID_MediaTee;
+	ConnectFilter(&ConnectionList,m_FilterGraph.GetFilterID<LibISDB::LogoDownloaderFilter>(),&FilterID,0);
+	ConnectTSProcessor(&ConnectionList,TSPROCESSOR_CONNECTPOSITION_RECORDER,&FilterID);
+	ConnectFilter(&ConnectionList,m_FilterGraph.GetFilterID<LibISDB::GrabberFilter>(),&FilterID);
+	ConnectFilter(&ConnectionList,m_FilterGraph.GetFilterID<LibISDB::RecorderFilter>(),&FilterID);
+	FilterID=TeeFilterID;
 	OutputIndex=1;
-	ConnectTSProcessor(&ConnectionList,TSPROCESSOR_CONNECTPOSITION_VIEWER,&DecoderID,&OutputIndex);
-	ConnectionList.Add(DecoderID,
-					   CDtvEngine::DECODER_ID_TsPacketCounter,OutputIndex);
-	ConnectionList.Add(CDtvEngine::DECODER_ID_TsPacketCounter,
-					   CDtvEngine::DECODER_ID_CaptionDecoder);
-	ConnectionList.Add(CDtvEngine::DECODER_ID_CaptionDecoder,
-					   CDtvEngine::DECODER_ID_MediaViewer);
+	ConnectTSProcessor(&ConnectionList,TSPROCESSOR_CONNECTPOSITION_VIEWER,&FilterID,&OutputIndex);
+	ConnectFilter(&ConnectionList,m_FilterGraph.GetFilterID<LibISDB::TSPacketCounterFilter>(),&FilterID,OutputIndex);
+	ConnectFilter(&ConnectionList,m_FilterGraph.GetFilterID<LibISDB::CaptionFilter>(),&FilterID);
+	ConnectFilter(&ConnectionList,m_FilterGraph.GetFilterID<LibISDB::ViewerFilter>(),&FilterID);
 
-	if (!m_DtvEngine.BuildEngine(
-			ConnectionList.List.data(),static_cast<int>(ConnectionList.List.size()),
-			pEventHandler)) {
+	if (!TSEngine::BuildEngine(
+			ConnectionList.List.data(),ConnectionList.List.size())) {
 		return false;
 	}
 
@@ -121,25 +147,36 @@ bool CCoreEngine::BuildDtvEngine(CDtvEngine::CEventHandler *pEventHandler)
 }
 
 
+void CCoreEngine::ConnectFilter(TSProcessorConnectionList *pList,
+								LibISDB::FilterGraph::IDType ID,
+								LibISDB::FilterGraph::IDType *pFilterID,
+								int OutputIndex)
+{
+	pList->Add(*pFilterID,ID,OutputIndex);
+	*pFilterID=ID;
+}
+
+
 void CCoreEngine::ConnectTSProcessor(TSProcessorConnectionList *pList,
 									 TSProcessorConnectPosition ConnectPosition,
-									 int *pDecoderID,int *pOutputIndex)
+									 LibISDB::FilterGraph::IDType *pFilterID,
+									 int *pOutputIndex)
 {
 	if (!m_fEnableTSProcessor)
 		return;
 
-	int DecoderID=*pDecoderID;
+	LibISDB::FilterGraph::IDType FilterID=*pFilterID;
 	int OutputIndex=pOutputIndex!=NULL?*pOutputIndex:0;
 
 	for (auto it=m_TSProcessorList.begin();it!=m_TSProcessorList.end();++it) {
 		if (it->ConnectPosition==ConnectPosition) {
-			pList->Add(DecoderID,it->DecoderID,OutputIndex);
-			DecoderID=it->DecoderID;
+			pList->Add(FilterID,it->FilterID,OutputIndex);
+			FilterID=it->FilterID;
 			OutputIndex=0;
 		}
 	}
 
-	*pDecoderID=DecoderID;
+	*pFilterID=FilterID;
 	if (pOutputIndex!=NULL)
 		*pOutputIndex=OutputIndex;
 }
@@ -163,7 +200,7 @@ bool CCoreEngine::RegisterTSProcessor(TVTest::CTSProcessor *pTSProcessor,
 
 	Info.pTSProcessor=pTSProcessor;
 	Info.ConnectPosition=ConnectPosition;
-	Info.DecoderID=m_DtvEngine.RegisterDecoder(pTSProcessor);
+	Info.FilterID=RegisterFilter(pTSProcessor);
 
 	if (ConnectPosition==TSPROCESSOR_CONNECTPOSITION_SOURCE)
 		pTSProcessor->SetSourceProcessor(true);
@@ -180,50 +217,55 @@ void CCoreEngine::EnableTSProcessor(bool fEnable)
 }
 
 
-bool CCoreEngine::BuildMediaViewer(HWND hwndHost,HWND hwndMessage,
-	CVideoRenderer::RendererType VideoRenderer,
-	BYTE VideoStreamType,LPCWSTR pszVideoDecoder,
-	LPCWSTR pszAudioDevice)
+bool CCoreEngine::BuildMediaViewer(const LibISDB::ViewerFilter::OpenSettings &Settings)
 {
-	if (!m_DtvEngine.m_MediaViewer.IsOpen()) {
-		if (!m_DtvEngine.BuildMediaViewer(hwndHost,hwndMessage,VideoRenderer,
-										  VideoStreamType,pszVideoDecoder,
-										  pszAudioDevice)) {
-			SetError(m_DtvEngine.GetLastErrorException());
+	if (!IsViewerOpen()) {
+		if (!BuildViewer(Settings)) {
 			return false;
 		}
 	} else {
-		if (!m_DtvEngine.RebuildMediaViewer(hwndHost,hwndMessage,VideoRenderer,
-											VideoStreamType,pszVideoDecoder,
-											pszAudioDevice)) {
-			SetError(m_DtvEngine.GetLastErrorException());
+		if (!RebuildViewer(Settings)) {
 			return false;
 		}
 	}
-	m_DtvEngine.m_MediaViewer.SetVolume(m_fMute?-100.0f:LevelToDeciBel(m_Volume));
-	m_DtvEngine.m_MediaViewer.SetAudioGainControl(
+
+	m_pViewer->SetVolume(m_fMute?-100.0f:LevelToDeciBel(m_Volume));
+	m_pViewer->SetAudioGainControl(
 		m_AudioGain!=100 || m_SurroundAudioGain!=100,
 		(float)m_AudioGain/100.0f,(float)m_SurroundAudioGain/100.0f);
-	m_DtvEngine.m_MediaViewer.SetStereoMode(m_StereoMode);
-	m_DtvEngine.m_MediaViewer.SetDualMonoMode(m_DualMonoMode);
-	m_DtvEngine.m_MediaViewer.SetSpdifOptions(&m_SpdifOptions);
+	m_pViewer->SetStereoMode(m_StereoMode);
+	m_pViewer->SetDualMonoMode(m_DualMonoMode);
+	m_pViewer->SetSPDIFOptions(m_SPDIFOptions);
+
 	return true;
 }
 
 
 bool CCoreEngine::CloseMediaViewer()
 {
-	return m_DtvEngine.CloseMediaViewer();
+	return CloseViewer();
 }
 
 
 bool CCoreEngine::EnableMediaViewer(bool fEnable)
 {
-	if (!m_DtvEngine.EnableMediaViewer(fEnable))
+	if (!EnableViewer(fEnable))
 		return false;
 	if (fEnable)
-		m_DtvEngine.m_MediaViewer.SetVolume(m_fMute?-100.0f:LevelToDeciBel(m_Volume));
+		m_pViewer->SetVolume(m_fMute?-100.0f:LevelToDeciBel(m_Volume));
 	return true;
+}
+
+
+bool CCoreEngine::AddEventListener(EventListener *pEventListener)
+{
+	return m_EventListenerList.AddEventListener(pEventListener);
+}
+
+
+bool CCoreEngine::RemoveEventListener(EventListener *pEventListener)
+{
+	return m_EventListenerList.RemoveEventListener(pEventListener);
 }
 
 
@@ -319,27 +361,26 @@ bool CCoreEngine::OpenTuner()
 	TRACE(TEXT("CCoreEngine::OpenTuner()\n"));
 
 	if (IsTunerOpen()) {
-		SetError(TEXT("チューナが既に開かれています。"));
+		SetError(std::errc::operation_in_progress,TEXT("チューナが既に開かれています。"));
 		return false;
 	}
 
 	TCHAR szDriverPath[MAX_PATH];
 	if (!GetDriverPath(szDriverPath,lengthof(szDriverPath))) {
-		SetError(TEXT("BonDriverのパスを取得できません。"));
+		SetError(std::errc::operation_not_permitted,TEXT("BonDriverのパスを取得できません。"));
 		return false;
 	}
 
-	if (!m_DtvEngine.OpenBonDriver(szDriverPath)) {
-		SetError(m_DtvEngine.GetLastErrorException());
+	if (!OpenSource(szDriverPath)) {
 		return false;
 	}
 
-	LPCTSTR pszName=m_DtvEngine.m_BonSrcDecoder.GetTunerName();
+	LPCWSTR pszName=static_cast<LibISDB::BonDriverSourceFilter*>(m_pSource)->GetTunerName();
 	m_DriverType=DRIVER_UNKNOWN;
 	if (pszName!=NULL) {
-		if (::_tcsncmp(pszName,TEXT("UDP/"),4)==0)
+		if (std::wcsncmp(pszName,L"UDP/",4)==0)
 			m_DriverType=DRIVER_UDP;
-		else if (::_tcsncmp(pszName,TEXT("TCP"),3)==0)
+		else if (std::wcsncmp(pszName,L"TCP",3)==0)
 			m_DriverType=DRIVER_TCP;
 	}
 
@@ -351,25 +392,29 @@ bool CCoreEngine::CloseTuner()
 {
 	TRACE(TEXT("CCoreEngine::CloseTuner()\n"));
 
-	return m_DtvEngine.ReleaseSrcFilter();
+	return CloseSource();
 }
 
 
 bool CCoreEngine::IsTunerOpen() const
 {
-	return m_DtvEngine.IsSrcFilterOpen();
+	return IsSourceOpen();
 }
 
 
 bool CCoreEngine::SetPacketBufferLength(DWORD BufferLength)
 {
-	return m_DtvEngine.m_MediaViewer.SetBufferSize(BufferLength);
+	if (m_pViewer==nullptr)
+		return false;
+	return m_pViewer->SetBufferSize(BufferLength);
 }
 
 
 bool CCoreEngine::SetPacketBufferPool(bool fBuffering,int Percentage)
 {
-	if (!m_DtvEngine.m_MediaViewer.SetInitialPoolPercentage(fBuffering?Percentage:0))
+	if (m_pViewer==nullptr)
+		return false;
+	if (!m_pViewer->SetInitialPoolPercentage(fBuffering?Percentage:0))
 		return false;
 	m_fPacketBuffering=fBuffering;
 	return true;
@@ -378,19 +423,23 @@ bool CCoreEngine::SetPacketBufferPool(bool fBuffering,int Percentage)
 
 void CCoreEngine::ResetPacketBuffer()
 {
-	m_DtvEngine.m_MediaViewer.ResetBuffer();
+	if (m_pViewer!=nullptr)
+		m_pViewer->ResetBuffer();
 }
 
 
 bool CCoreEngine::GetVideoViewSize(int *pWidth,int *pHeight)
 {
-	WORD Width,Height;
+	if (m_pViewer==nullptr)
+		return false;
 
-	if (m_DtvEngine.m_MediaViewer.GetCroppedVideoSize(&Width,&Height)
+	int Width,Height;
+
+	if (m_pViewer->GetCroppedVideoSize(&Width,&Height)
 			&& Width>0 && Height>0) {
-		BYTE XAspect,YAspect;
+		int XAspect,YAspect;
 
-		if (m_DtvEngine.m_MediaViewer.GetEffectiveAspectRatio(&XAspect,&YAspect)) {
+		if (m_pViewer->GetEffectiveAspectRatio(&XAspect,&YAspect)) {
 			Width=Height*XAspect/YAspect;
 		}
 		if (pWidth)
@@ -399,13 +448,17 @@ bool CCoreEngine::GetVideoViewSize(int *pWidth,int *pHeight)
 			*pHeight=Height;
 		return true;
 	}
+
 	return false;
 }
 
 
 bool CCoreEngine::SetPanAndScan(const PanAndScanInfo &Info)
 {
-	CMediaViewer::ClippingInfo Clipping;
+	if (m_pViewer==nullptr)
+		return false;
+
+	LibISDB::ViewerFilter::ClippingInfo Clipping;
 
 	Clipping.Left=Info.XPos;
 	Clipping.Right=Info.XFactor-(Info.XPos+Info.Width);
@@ -414,20 +467,19 @@ bool CCoreEngine::SetPanAndScan(const PanAndScanInfo &Info)
 	Clipping.Bottom=Info.YFactor-(Info.YPos+Info.Height);
 	Clipping.VertFactor=Info.YFactor;
 
-	return m_DtvEngine.m_MediaViewer.SetPanAndScan(Info.XAspect,Info.YAspect,&Clipping);
+	return m_pViewer->SetPanAndScan(Info.XAspect,Info.YAspect,&Clipping);
 }
 
 
 bool CCoreEngine::GetPanAndScan(PanAndScanInfo *pInfo) const
 {
-	if (pInfo==nullptr)
+	if (pInfo==nullptr || m_pViewer==nullptr)
 		return false;
 
-	const CMediaViewer &MediaViewer=m_DtvEngine.m_MediaViewer;
-	CMediaViewer::ClippingInfo Clipping;
+	LibISDB::ViewerFilter::ClippingInfo Clipping;
 
-	MediaViewer.GetForceAspectRatio(&pInfo->XAspect,&pInfo->YAspect);
-	MediaViewer.GetClippingInfo(&Clipping);
+	m_pViewer->GetForcedAspectRatio(&pInfo->XAspect,&pInfo->YAspect);
+	m_pViewer->GetClippingInfo(&Clipping);
 
 	pInfo->XPos=Clipping.Left;
 	pInfo->YPos=Clipping.Top;
@@ -444,7 +496,8 @@ bool CCoreEngine::SetVolume(int Volume)
 {
 	if (Volume<0 || Volume>MAX_VOLUME)
 		return false;
-	m_DtvEngine.m_MediaViewer.SetVolume(LevelToDeciBel(Volume));
+	if (m_pViewer!=nullptr)
+		m_pViewer->SetVolume(LevelToDeciBel(Volume));
 	m_Volume=Volume;
 	m_fMute=false;
 	return true;
@@ -454,7 +507,8 @@ bool CCoreEngine::SetVolume(int Volume)
 bool CCoreEngine::SetMute(bool fMute)
 {
 	if (fMute!=m_fMute) {
-		m_DtvEngine.m_MediaViewer.SetVolume(fMute?-100.0f:LevelToDeciBel(m_Volume));
+		if (m_pViewer!=nullptr)
+			m_pViewer->SetVolume(fMute?-100.0f:LevelToDeciBel(m_Volume));
 		m_fMute=fMute;
 	}
 	return true;
@@ -466,9 +520,11 @@ bool CCoreEngine::SetAudioGainControl(int Gain,int SurroundGain)
 	if (Gain<0 || SurroundGain<0)
 		return false;
 	if (Gain!=m_AudioGain || SurroundGain!=m_SurroundAudioGain) {
-		m_DtvEngine.m_MediaViewer.SetAudioGainControl(
-			Gain!=100 || SurroundGain!=100,
-			(float)Gain/100.0f,(float)SurroundGain/100.0f);
+		if (m_pViewer!=nullptr) {
+			m_pViewer->SetAudioGainControl(
+				Gain!=100 || SurroundGain!=100,
+				(float)Gain/100.0f,(float)SurroundGain/100.0f);
+		}
 		m_AudioGain=Gain;
 		m_SurroundAudioGain=SurroundGain;
 	}
@@ -486,44 +542,47 @@ bool CCoreEngine::GetAudioGainControl(int *pGain,int *pSurroundGain) const
 }
 
 
-bool CCoreEngine::SetDualMonoMode(CAudioDecFilter::DualMonoMode Mode)
+bool CCoreEngine::SetDualMonoMode(LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode Mode)
 {
 	m_DualMonoMode=Mode;
-	m_DtvEngine.m_MediaViewer.SetDualMonoMode(Mode);
+	if (m_pViewer!=nullptr)
+		m_pViewer->SetDualMonoMode(Mode);
 	return true;
 }
 
 
-bool CCoreEngine::SetStereoMode(CAudioDecFilter::StereoMode Mode)
+bool CCoreEngine::SetStereoMode(LibISDB::DirectShow::AudioDecoderFilter::StereoMode Mode)
 {
 	m_StereoMode=Mode;
-	m_DtvEngine.m_MediaViewer.SetStereoMode(Mode);
+	if (m_pViewer!=nullptr)
+		m_pViewer->SetStereoMode(Mode);
 	return true;
 }
 
 
-bool CCoreEngine::SetSpdifOptions(const CAudioDecFilter::SpdifOptions &Options)
+bool CCoreEngine::SetSPDIFOptions(const LibISDB::DirectShow::AudioDecoderFilter::SPDIFOptions &Options)
 {
-	m_SpdifOptions=Options;
-	m_DtvEngine.m_MediaViewer.SetSpdifOptions(&Options);
+	m_SPDIFOptions=Options;
+	if (m_pViewer!=nullptr)
+		m_pViewer->SetSPDIFOptions(Options);
 	return true;
 }
 
 
-bool CCoreEngine::GetSpdifOptions(CAudioDecFilter::SpdifOptions *pOptions) const
+bool CCoreEngine::GetSPDIFOptions(LibISDB::DirectShow::AudioDecoderFilter::SPDIFOptions *pOptions) const
 {
 	if (pOptions==NULL)
 		return false;
-	*pOptions=m_SpdifOptions;
+	*pOptions=m_SPDIFOptions;
 	return true;
 }
 
 
-bool CCoreEngine::IsSpdifPassthroughEnabled() const
+bool CCoreEngine::IsSPDIFPassthroughEnabled() const
 {
-	if (m_DtvEngine.m_MediaViewer.IsOpen())
-		return m_DtvEngine.m_MediaViewer.IsSpdifPassthrough();
-	return m_SpdifOptions.Mode==CAudioDecFilter::SPDIF_MODE_PASSTHROUGH;
+	if (IsViewerOpen())
+		return m_pViewer->IsSPDIFPassthrough();
+	return m_SPDIFOptions.Mode==LibISDB::DirectShow::AudioDecoderFilter::SPDIFMode::Passthrough;
 }
 
 
@@ -532,53 +591,59 @@ DWORD CCoreEngine::UpdateAsyncStatus()
 {
 	DWORD Updated=0;
 
-	WORD Width,Height;
-	if (m_DtvEngine.m_MediaViewer.GetOriginalVideoSize(&Width,&Height)) {
-		if (Width!=m_OriginalVideoWidth || Height!=m_OriginalVideoHeight) {
-			m_OriginalVideoWidth=Width;
-			m_OriginalVideoHeight=Height;
-			Updated|=STATUS_VIDEOSIZE;
+	if (m_pViewer!=nullptr) {
+		int Width,Height;
+
+		if (m_pViewer->GetOriginalVideoSize(&Width,&Height)) {
+			if (Width!=m_OriginalVideoWidth || Height!=m_OriginalVideoHeight) {
+				m_OriginalVideoWidth=Width;
+				m_OriginalVideoHeight=Height;
+				Updated|=STATUS_VIDEOSIZE;
+			}
+		}
+
+		if (m_pViewer->GetCroppedVideoSize(&Width,&Height)) {
+			if (Width!=m_DisplayVideoWidth || Height!=m_DisplayVideoHeight) {
+				m_DisplayVideoWidth=Width;
+				m_DisplayVideoHeight=Height;
+				Updated|=STATUS_VIDEOSIZE;
+			}
+		}
+
+		int NumAudioChannels=m_pViewer->GetAudioChannelCount();
+		if (NumAudioChannels!=m_NumAudioChannels) {
+			m_NumAudioChannels=NumAudioChannels;
+			Updated|=STATUS_AUDIOCHANNELS;
+			TRACE(TEXT("Audio channels = %dch\n"),NumAudioChannels);
+		}
+
+		bool fSPDIFPassthrough=m_pViewer->IsSPDIFPassthrough();
+		if (fSPDIFPassthrough!=m_fSPDIFPassthrough) {
+			m_fSPDIFPassthrough=fSPDIFPassthrough;
+			Updated|=STATUS_SPDIFPASSTHROUGH;
+			TRACE(TEXT("S/PDIF passthrough %s\n"),fSPDIFPassthrough?TEXT("ON"):TEXT("OFF"));
 		}
 	}
 
-	if (m_DtvEngine.m_MediaViewer.GetCroppedVideoSize(&Width,&Height)) {
-		if (Width!=m_DisplayVideoWidth || Height!=m_DisplayVideoHeight) {
-			m_DisplayVideoWidth=Width;
-			m_DisplayVideoHeight=Height;
-			Updated|=STATUS_VIDEOSIZE;
-		}
-	}
-
-	int NumAudioChannels=m_DtvEngine.GetAudioChannelNum();
-	if (NumAudioChannels!=m_NumAudioChannels) {
-		m_NumAudioChannels=NumAudioChannels;
-		Updated|=STATUS_AUDIOCHANNELS;
-		TRACE(TEXT("Audio channels = %dch\n"),NumAudioChannels);
-	}
-
-	int NumAudioStreams=m_DtvEngine.GetAudioStreamNum();
+	int NumAudioStreams=GetAudioStreamCount();
 	if (NumAudioStreams!=m_NumAudioStreams) {
 		m_NumAudioStreams=NumAudioStreams;
 		Updated|=STATUS_AUDIOSTREAMS;
-		TRACE(TEXT("Audio streams = %dch\n"),NumAudioChannels);
+		TRACE(TEXT("Audio streams = %dch\n"),NumAudioStreams);
 	}
 
-	BYTE AudioComponentType=m_DtvEngine.GetAudioComponentType();
-	if (AudioComponentType!=m_AudioComponentType) {
-		m_AudioComponentType=AudioComponentType;
-		Updated|=STATUS_AUDIOCOMPONENTTYPE;
-		TRACE(TEXT("AudioComponentType = %x\n"),AudioComponentType);
-	}
-
-	bool fSpdifPassthrough=m_DtvEngine.m_MediaViewer.IsSpdifPassthrough();
-	if (fSpdifPassthrough!=m_fSpdifPassthrough) {
-		m_fSpdifPassthrough=fSpdifPassthrough;
-		Updated|=STATUS_SPDIFPASSTHROUGH;
-		TRACE(TEXT("S/PDIF passthrough %s\n"),fSpdifPassthrough?TEXT("ON"):TEXT("OFF"));
+	if (m_pAnalyzer!=nullptr) {
+		BYTE AudioComponentType=m_pAnalyzer->GetAudioComponentType(
+			m_pAnalyzer->GetServiceIndexByID(m_CurServiceID),m_CurAudioStream);
+		if (AudioComponentType!=m_AudioComponentType) {
+			m_AudioComponentType=AudioComponentType;
+			Updated|=STATUS_AUDIOCOMPONENTTYPE;
+			TRACE(TEXT("AudioComponentType = %x\n"),AudioComponentType);
+		}
 	}
 
 	if (m_AsyncStatusUpdatedFlags!=0) {
-		Updated|=::InterlockedExchange(pointer_cast<LONG*>(&m_AsyncStatusUpdatedFlags),0);
+		Updated|=::InterlockedExchange(reinterpret_cast<LONG*>(&m_AsyncStatusUpdatedFlags),0);
 	}
 
 	return Updated;
@@ -587,7 +652,7 @@ DWORD CCoreEngine::UpdateAsyncStatus()
 
 void CCoreEngine::SetAsyncStatusUpdatedFlag(DWORD Status)
 {
-	_InterlockedOr(pointer_cast<long*>(&m_AsyncStatusUpdatedFlags),Status);
+	_InterlockedOr(reinterpret_cast<long*>(&m_AsyncStatusUpdatedFlags),Status);
 }
 
 
@@ -595,24 +660,41 @@ DWORD CCoreEngine::UpdateStatistics()
 {
 	DWORD Updated=0;
 
-	ULONGLONG ErrorCount=m_DtvEngine.m_TsPacketParser.GetErrorPacketCount();
-	if (ErrorCount!=m_ErrorPacketCount) {
-		m_ErrorPacketCount=ErrorCount;
-		Updated|=STATISTIC_ERRORPACKETCOUNT;
+	const LibISDB::TSPacketParserFilter *pParser=GetFilter<LibISDB::TSPacketParserFilter>();
+	if (pParser!=nullptr) {
+		const LibISDB::TSPacketParserFilter::PacketCountInfo Count=pParser->GetPacketCount();
+		if (Count.TransportError+Count.FormatError!=m_ErrorPacketCount) {
+			m_ErrorPacketCount=Count.TransportError+Count.FormatError;
+			Updated|=STATISTIC_ERRORPACKETCOUNT;
+		}
+		if (Count.ContinuityError!=m_ContinuityErrorPacketCount) {
+			m_ContinuityErrorPacketCount=Count.ContinuityError;
+			Updated|=STATISTIC_CONTINUITYERRORPACKETCOUNT;
+		}
 	}
-	ULONGLONG ContinuityErrorCount=m_DtvEngine.m_TsPacketParser.GetContinuityErrorPacketCount();
-	if (ContinuityErrorCount!=m_ContinuityErrorPacketCount) {
-		m_ContinuityErrorPacketCount=ContinuityErrorCount;
-		Updated|=STATISTIC_CONTINUITYERRORPACKETCOUNT;
+
+	const LibISDB::TSPacketCounterFilter *pCounter=GetFilter<LibISDB::TSPacketCounterFilter>();
+	if (pCounter!=nullptr) {
+		unsigned long long ScrambledCount=pCounter->GetScrambledPacketCount();
+		if (ScrambledCount!=m_ScrambledPacketCount) {
+			m_ScrambledPacketCount=ScrambledCount;
+			Updated|=STATISTIC_SCRAMBLEPACKETCOUNT;
+		}
 	}
-	ULONGLONG ScrambleCount=m_DtvEngine.m_TsPacketCounter.GetScrambledPacketCount();
-	if (ScrambleCount!=m_ScramblePacketCount) {
-		m_ScramblePacketCount=ScrambleCount;
-		Updated|=STATISTIC_SCRAMBLEPACKETCOUNT;
+
+	float SignalLevel;
+	unsigned long BitRate;
+	uint32_t StreamRemain;
+	const LibISDB::BonDriverSourceFilter *pSource=GetFilter<LibISDB::BonDriverSourceFilter>();
+	if (pSource!=nullptr) {
+		SignalLevel=pSource->GetSignalLevel();
+		BitRate=pSource->GetBitRate();
+		StreamRemain=pSource->GetStreamRemain();
+	} else {
+		SignalLevel=0.0f;
+		BitRate=0;
+		StreamRemain=0;
 	}
-	float SignalLevel=m_DtvEngine.m_BonSrcDecoder.GetSignalLevel();
-	DWORD BitRate=m_DtvEngine.m_BonSrcDecoder.GetBitRate();
-	DWORD StreamRemain=m_DtvEngine.m_BonSrcDecoder.GetStreamRemain();
 	if (SignalLevel!=m_SignalLevel) {
 		m_SignalLevel=SignalLevel;
 		Updated|=STATISTIC_SIGNALLEVEL;
@@ -625,22 +707,32 @@ DWORD CCoreEngine::UpdateStatistics()
 		m_StreamRemain=StreamRemain;
 		Updated|=STATISTIC_STREAMREMAIN;
 	}
-	int BufferFillPercentage=m_DtvEngine.m_MediaViewer.GetBufferFillPercentage();
+
+	int BufferFillPercentage;
+	if (m_pViewer!=nullptr)
+		BufferFillPercentage=m_pViewer->GetBufferFillPercentage();
+	else
+		BufferFillPercentage=0;
 	if (BufferFillPercentage!=m_PacketBufferFillPercentage) {
 		m_PacketBufferFillPercentage=BufferFillPercentage;
 		Updated|=STATISTIC_PACKETBUFFERRATE;
 	}
+
 	return Updated;
 }
 
 
 void CCoreEngine::ResetErrorCount()
 {
-	m_DtvEngine.m_TsPacketParser.ResetErrorPacketCount();
+	LibISDB::TSPacketParserFilter *pParser=GetFilter<LibISDB::TSPacketParserFilter>();
+	if (pParser!=nullptr)
+		pParser->ResetErrorPacketCount();
 	m_ErrorPacketCount=0;
 	m_ContinuityErrorPacketCount=0;
-	m_DtvEngine.m_TsPacketCounter.ResetScrambledPacketCount();
-	m_ScramblePacketCount=0;
+	LibISDB::TSPacketCounterFilter *pCounter=GetFilter<LibISDB::TSPacketCounterFilter>();
+	if (pCounter!=nullptr)
+		pCounter->ResetScrambledPacketCount();
+	m_ScrambledPacketCount=0;
 }
 
 
@@ -652,7 +744,7 @@ int CCoreEngine::GetSignalLevelText(LPTSTR pszText,int MaxLength) const
 
 int CCoreEngine::GetSignalLevelText(float SignalLevel,LPTSTR pszText,int MaxLength) const
 {
-	return StdUtil::snprintf(pszText,MaxLength,TEXT("%.2f dB"),SignalLevel);
+	return TVTest::StringPrintf(pszText,MaxLength,TEXT("%.2f dB"),SignalLevel);
 }
 
 
@@ -662,7 +754,7 @@ int CCoreEngine::GetBitRateText(LPTSTR pszText,int MaxLength) const
 }
 
 
-int CCoreEngine::GetBitRateText(DWORD BitRate,LPTSTR pszText,int MaxLength) const
+int CCoreEngine::GetBitRateText(unsigned long BitRate,LPTSTR pszText,int MaxLength) const
 {
 	return GetBitRateText(BitRateToFloat(BitRate),pszText,MaxLength);
 }
@@ -670,7 +762,7 @@ int CCoreEngine::GetBitRateText(DWORD BitRate,LPTSTR pszText,int MaxLength) cons
 
 int CCoreEngine::GetBitRateText(float BitRate,LPTSTR pszText,int MaxLength,int Precision) const
 {
-	return StdUtil::snprintf(pszText,MaxLength,TEXT("%.*f Mbps"),Precision,BitRate);
+	return TVTest::StringPrintf(pszText,MaxLength,TEXT("%.*f Mbps"),Precision,BitRate);
 }
 
 
@@ -680,41 +772,41 @@ int CCoreEngine::GetPacketBufferUsedPercentage() const
 }
 
 
-bool CCoreEngine::GetCurrentEventInfo(CEventInfoData *pInfo,WORD ServiceID,bool fNext)
+bool CCoreEngine::GetCurrentEventInfo(LibISDB::EventInfo *pInfo,uint16_t ServiceID,bool fNext)
 {
-	if (pInfo==NULL)
+	if (pInfo==nullptr || m_pAnalyzer==nullptr)
 		return false;
 
-	if (ServiceID==0xFFFF) {
-		if (!m_DtvEngine.GetServiceID(&ServiceID))
+	if (ServiceID==LibISDB::SERVICE_ID_INVALID) {
+		if (m_CurServiceID==LibISDB::SERVICE_ID_INVALID)
 			return false;
+		ServiceID=m_CurServiceID;
 	}
-	int ServiceIndex=m_DtvEngine.m_TsAnalyzer.GetServiceIndexByID(ServiceID);
+
+	int ServiceIndex=m_pAnalyzer->GetServiceIndexByID(ServiceID);
 	if (ServiceIndex<0)
 		return false;
 
-	CEventInfo EventInfo;
-	if (!m_DtvEngine.m_TsAnalyzer.GetEventInfo(ServiceIndex,&EventInfo,true,fNext))
-		return false;
-	*pInfo=EventInfo;
-
-	return true;
+	return m_pAnalyzer->GetEventInfo(ServiceIndex,pInfo,true,fNext);
 }
 
 
-void *CCoreEngine::GetCurrentImage()
+LibISDB::COMMemoryPointer<> CCoreEngine::GetCurrentImage()
 {
-	BYTE *pDib;
+	if (m_pViewer==nullptr)
+		return nullptr;
 
-	bool fPause=m_DtvEngine.m_MediaViewer.GetVideoRendererType()==CVideoRenderer::RENDERER_DEFAULT;
+	bool fPause=m_pViewer->GetVideoRendererType()==LibISDB::DirectShow::VideoRenderer::RendererType::Default;
 
 	if (fPause)
-		m_DtvEngine.m_MediaViewer.Pause();
-	if (!m_DtvEngine.m_MediaViewer.GetCurrentImage(&pDib))
-		pDib=NULL;
+		m_pViewer->Pause();
+
+	LibISDB::COMMemoryPointer<> Image(m_pViewer->GetCurrentImage());
+
 	if (fPause)
-		m_DtvEngine.m_MediaViewer.Play();
-	return pDib;
+		m_pViewer->Play();
+
+	return std::move(Image);
 }
 
 
@@ -737,4 +829,99 @@ bool CCoreEngine::SetMinTimerResolution(bool fMin)
 		}
 	}
 	return true;
+}
+
+
+void CCoreEngine::OnServiceChanged(uint16_t ServiceID)
+{
+	m_EventListenerList.CallEventListener(&CCoreEngine::EventListener::OnServiceChanged, ServiceID);
+}
+
+
+void CCoreEngine::OnEventChanged(uint16_t EventID)
+{
+	m_EventListenerList.CallEventListener(&CCoreEngine::EventListener::OnEventChanged, m_pAnalyzer, EventID);
+}
+
+
+void CCoreEngine::OnVideoStreamTypeChanged(uint8_t StreamType)
+{
+	m_EventListenerList.CallEventListener(&CCoreEngine::EventListener::OnVideoStreamTypeChanged, StreamType);
+}
+
+
+void CCoreEngine::OnPATUpdated(LibISDB::AnalyzerFilter *pAnalyzer)
+{
+	const uint16_t OldTSID = m_CurTransportStreamID;
+	ViewerEngine::OnPATUpdated(pAnalyzer);
+	m_EventListenerList.CallEventListener(&CCoreEngine::EventListener::OnPATUpdated, pAnalyzer, OldTSID != m_CurTransportStreamID);
+}
+
+
+void CCoreEngine::OnPMTUpdated(LibISDB::AnalyzerFilter *pAnalyzer, uint16_t ServiceID)
+{
+	ViewerEngine::OnPMTUpdated(pAnalyzer, ServiceID);
+	m_EventListenerList.CallEventListener(&CCoreEngine::EventListener::OnPMTUpdated, pAnalyzer, ServiceID);
+}
+
+
+void CCoreEngine::OnSDTUpdated(LibISDB::AnalyzerFilter *pAnalyzer)
+{
+	ViewerEngine::OnEITUpdated(pAnalyzer);
+	m_EventListenerList.CallEventListener(&CCoreEngine::EventListener::OnSDTUpdated, pAnalyzer);
+}
+
+
+void CCoreEngine::OnEITUpdated(LibISDB::AnalyzerFilter *pAnalyzer)
+{
+	ViewerEngine::OnEITUpdated(pAnalyzer);
+	m_EventListenerList.CallEventListener(&CCoreEngine::EventListener::OnEventUpdated, pAnalyzer);
+}
+
+
+void CCoreEngine::OnTOTUpdated(LibISDB::AnalyzerFilter *pAnalyzer)
+{
+	m_EventListenerList.CallEventListener(&CCoreEngine::EventListener::OnTOTUpdated, pAnalyzer);
+}
+
+
+void CCoreEngine::OnVideoSizeChanged(LibISDB::ViewerFilter *pViewer, const LibISDB::DirectShow::VideoParser::VideoInfo &Info)
+{
+	m_EventListenerList.CallEventListener(&CCoreEngine::EventListener::OnVideoSizeChanged, pViewer);
+}
+
+
+void CCoreEngine::OnFilterGraphInitialize(LibISDB::ViewerFilter *pViewer, IGraphBuilder *pGraphBuilder)
+{
+	m_EventListenerList.CallEventListener(&CCoreEngine::EventListener::OnFilterGraphInitialize, pViewer, pGraphBuilder);
+}
+
+
+void CCoreEngine::OnFilterGraphInitialized(LibISDB::ViewerFilter *pViewer, IGraphBuilder *pGraphBuilder)
+{
+	m_EventListenerList.CallEventListener(&CCoreEngine::EventListener::OnFilterGraphInitialized, pViewer, pGraphBuilder);
+}
+
+
+void CCoreEngine::OnFilterGraphFinalize(LibISDB::ViewerFilter *pViewer, IGraphBuilder *pGraphBuilder)
+{
+	m_EventListenerList.CallEventListener(&CCoreEngine::EventListener::OnFilterGraphFinalize, pViewer, pGraphBuilder);
+}
+
+
+void CCoreEngine::OnFilterGraphFinalized(LibISDB::ViewerFilter *pViewer, IGraphBuilder *pGraphBuilder)
+{
+	m_EventListenerList.CallEventListener(&CCoreEngine::EventListener::OnFilterGraphFinalized, pViewer, pGraphBuilder);
+}
+
+
+void CCoreEngine::OnSPDIFPassthroughError(LibISDB::ViewerFilter *pViewer, HRESULT hr)
+{
+	m_EventListenerList.CallEventListener(&CCoreEngine::EventListener::OnSPDIFPassthroughError, pViewer, hr);
+}
+
+
+void CCoreEngine::OnWriteError(LibISDB::RecorderFilter *pRecorder, LibISDB::RecorderFilter::RecordingTask *pTask)
+{
+	m_EventListenerList.CallEventListener(&CCoreEngine::EventListener::OnWriteError, pRecorder);
 }

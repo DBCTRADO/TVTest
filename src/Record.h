@@ -3,7 +3,7 @@
 
 
 #include <vector>
-#include "DtvEngine.h"
+#include "LibISDB/LibISDB/Filters/RecorderFilter.hpp"
 #include "VariableString.h"
 #include "Dialog.h"
 
@@ -11,14 +11,18 @@
 class CRecordingSettings
 {
 public:
-	static const DWORD DEFAULT_BUFFER_SIZE=0x100000;
+	static const DWORD WRITE_CACHE_SIZE_DEFAULT=0x100000;
+	static const DWORD MAX_PENDING_SIZE_DEFAULT=0x10000000;
+	static const DWORD TIMESHIFT_BUFFER_SIZE_DEFAULT=32*0x100000;
 
 	bool m_fCurServiceOnly;
-	DWORD m_SaveStream;
+	LibISDB::StreamSelector::StreamFlag m_SaveStream;
 	TVTest::String m_WritePlugin;
-	DWORD m_BufferSize;
+	DWORD m_WriteCacheSize;
+	DWORD m_MaxPendingSize;
 	ULONGLONG m_PreAllocationUnit;
-	bool m_fTimeShift;
+	DWORD m_TimeShiftBufferSize;
+	bool m_fEnableTimeShift;
 
 	CRecordingSettings();
 	bool IsSaveCaption() const;
@@ -27,8 +31,8 @@ public:
 	void SetSaveDataCarrousel(bool fSave);
 
 private:
-	bool TestSaveStreamFlag(DWORD Flag) const;
-	void SetSaveStreamFlag(DWORD Flag,bool fSet);
+	bool TestSaveStreamFlag(LibISDB::StreamSelector::StreamFlag Flag) const;
+	void SetSaveStreamFlag(LibISDB::StreamSelector::StreamFlag Flag,bool fSet);
 };
 
 class CRecordTime {
@@ -44,7 +48,7 @@ public:
 	bool IsValid() const;
 };
 
-class CRecordTask {
+class CRecordTask : public LibISDB::ErrorHandler {
 public:
 	enum State {
 		STATE_STOP,
@@ -56,15 +60,22 @@ public:
 
 protected:
 	State m_State;
-	CDtvEngine *m_pDtvEngine;
+	LibISDB::TSEngine *m_pTSEngine;
+	LibISDB::RecorderFilter *m_pRecorderFilter;
+	std::shared_ptr<LibISDB::RecorderFilter::RecordingTask> m_RecordingTask;
 	CRecordTime m_StartTime;
 	DurationType m_PauseStartTime;
 	DurationType m_TotalPauseTime;
+	LibISDB::RecorderFilter::RecordingStatistics m_Statistics;
 
 public:
 	CRecordTask();
 	virtual ~CRecordTask();
-	bool Start(CDtvEngine *pDtvEngine,LPCTSTR pszFileName,const CRecordingSettings &Settings);
+	void SetRecorderFilter(
+		LibISDB::TSEngine *pTSEngine,
+		LibISDB::RecorderFilter *pRecorderFilter);
+	bool UpdateRecordingSettings(const CRecordingSettings &Settings);
+	bool Start(LPCTSTR pszFileName,const CRecordingSettings &Settings);
 	bool Stop();
 	bool Pause();
 	State GetState() const;
@@ -77,13 +88,14 @@ public:
 	DurationType GetRecordTime() const;
 	DurationType GetPauseTime() const;
 	LONGLONG GetWroteSize() const;
-	int GetFileName(LPTSTR pszFileName,int MaxFileName) const;
+	bool GetFileName(TVTest::String *pFileName) const;
+	bool GetStatistics(LibISDB::RecorderFilter::RecordingStatistics *pStats) const;
 	bool RelayFile(LPCTSTR pszFileName);
 #undef GetFreeSpace
 	LONGLONG GetFreeSpace() const;
 };
 
-class CRecordManager : public CBonErrorHandler {
+class CRecordManager : public LibISDB::ErrorHandler {
 public:
 	enum TimeSpecType {
 		TIME_NOTSPECIFIED,
@@ -116,11 +128,12 @@ private:
 	class CRecordSettingsDialog : public CBasicDialog
 	{
 	public:
-		CRecordSettingsDialog(CRecordManager *pRecManager);
+		CRecordSettingsDialog(CRecordManager *pRecManager,CRecordingSettings *pSettings);
 		bool Show(HWND hwndOwner) override;
 
 	private:
 		CRecordManager *m_pRecManager;
+		CRecordingSettings *m_pSettings;
 
 		INT_PTR DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
 	};
@@ -134,15 +147,18 @@ private:
 	bool m_fStopOnEventEnd;
 	RecordClient m_Client;
 	CRecordTask m_RecordTask;
-	CDtvEngine *m_pDtvEngine;
+	LibISDB::TSEngine *m_pTSEngine;
+	LibISDB::RecorderFilter *m_pRecorderFilter;
 	//FileExistsOperation m_ExistsOperation;
 	CRecordingSettings m_Settings;
+	CRecordingSettings m_ReserveSettings;
 
 	std::vector<TVTest::String> m_WritePluginList;
 
 public:
 	CRecordManager();
 	~CRecordManager();
+	void Terminate();
 	bool SetFileName(LPCTSTR pszFileName);
 	LPCTSTR GetFileName() const { return TVTest::StringUtility::GetCStrOrNull(m_FileName); }
 	/*
@@ -161,7 +177,11 @@ public:
 	bool GetStopOnEventEnd() const { return m_fStopOnEventEnd; }
 	RecordClient GetClient() const { return m_Client; }
 	void SetClient(RecordClient Client) { m_Client=Client; }
-	bool StartRecord(CDtvEngine *pDtvEngine,LPCTSTR pszFileName,bool fTimeShift=false);
+	void SetRecorderFilter(
+		LibISDB::TSEngine *pTSEngine,
+		LibISDB::RecorderFilter *pRecorderFilter);
+	bool SetRecordingSettings(const CRecordingSettings &Settings);
+	bool StartRecord(LPCTSTR pszFileName,bool fTimeShift=false,bool fReserved=false);
 	void StopRecord();
 	bool PauseRecord();
 	bool RelayFile(LPCTSTR pszFileName);
@@ -184,10 +204,6 @@ public:
 	const CRecordingSettings &GetRecordingSettings() const { return m_Settings; }
 	bool SetCurServiceOnly(bool fOnly);
 	bool GetCurServiceOnly() const { return m_Settings.m_fCurServiceOnly; }
-	bool SetSaveStream(DWORD Stream);
-	bool SetWritePlugin(LPCTSTR pszPlugin);
-	LPCTSTR GetWritePlugin() const;
-	bool SetBufferSize(DWORD BufferSize);
 
 	static bool GetWritePluginList(std::vector<TVTest::String> *pList);
 	static bool ShowWritePluginSetting(HWND hwndOwner,LPCTSTR pszPlugin);

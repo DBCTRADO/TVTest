@@ -5,12 +5,12 @@
 #include <vector>
 #include "View.h"
 #include "DriverManager.h"
-#include "EpgProgramList.h"
 #include "LogoManager.h"
 #include "DrawUtil.h"
 #include "Theme.h"
 #include "WindowUtil.h"
 #include "GUIUtil.h"
+#include "LibISDB/LibISDB/EPG/EPGDatabase.hpp"
 
 
 class CChannelDisplay : public CDisplayView
@@ -32,7 +32,7 @@ public:
 		friend class CChannelDisplay;
 	};
 
-	CChannelDisplay(CEpgProgramList *pEpgProgramList);
+	CChannelDisplay(LibISDB::EPGDatabase *pEPGDatabase);
 	~CChannelDisplay();
 
 // CBasicWindow
@@ -65,7 +65,7 @@ private:
 		class CChannel : public CChannelInfo {
 			HBITMAP m_hbmSmallLogo;
 			HBITMAP m_hbmBigLogo;
-			CEventInfoData m_Event[2];
+			LibISDB::EventInfo m_Event[2];
 		public:
 			CChannel(const CChannelInfo &Info)
 				: CChannelInfo(Info)
@@ -78,8 +78,8 @@ private:
 			void SetBigLogo(HBITMAP hbm) { m_hbmBigLogo=hbm; }
 			HBITMAP GetBigLogo() const { return m_hbmBigLogo; }
 			bool HasLogo() const { return m_hbmSmallLogo!=NULL || m_hbmBigLogo!=NULL; }
-			bool SetEvent(int Index,const CEventInfoData *pEvent);
-			const CEventInfoData *GetEvent(int Index) const;
+			bool SetEvent(int Index,const LibISDB::EventInfo *pEvent);
+			const LibISDB::EventInfo *GetEvent(int Index) const;
 		};
 		CTuner(const CDriverInfo *pDriverInfo);
 		~CTuner();
@@ -149,15 +149,15 @@ private:
 	HWND m_hwndTunerScroll;
 	HWND m_hwndChannelScroll;
 	CMouseWheelHandler m_MouseWheel;
-	SYSTEMTIME m_EpgBaseTime;
-	SYSTEMTIME m_ClockTime;
+	LibISDB::DateTime m_EpgBaseTime;
+	LibISDB::DateTime m_ClockTime;
 	enum { TIMER_CLOCK=1 };
 
 	std::vector<CTuner*> m_TunerList;
 	int m_TotalTuningSpaces;
 	int m_CurTuner;
 	int m_CurChannel;
-	CEpgProgramList *m_pEpgProgramList;
+	LibISDB::EPGDatabase *m_pEPGDatabase;
 	CLogoManager *m_pLogoManager;
 	CChannelDisplayEventHandler *m_pChannelDisplayEventHandler;
 	POINT m_LastCursorPos;

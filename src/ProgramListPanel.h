@@ -4,7 +4,6 @@
 
 #include "PanelForm.h"
 #include "UIBase.h"
-#include "EpgProgramList.h"
 #include "EpgUtil.h"
 #include "ChannelList.h"
 #include "Theme.h"
@@ -13,25 +12,23 @@
 #include "EventInfoPopup.h"
 #include "WindowUtil.h"
 #include "FeaturedEvents.h"
+#include "LibISDB/LibISDB/EPG/EPGDatabase.hpp"
 
 
 class CProgramItemInfo;
 
 class CProgramItemList
 {
-	int m_NumItems;
-	CProgramItemInfo **m_ppItemList;
-	int m_ItemListLength;
+	std::vector<CProgramItemInfo *> m_ItemList;
 
 public:
 	CProgramItemList();
 	~CProgramItemList();
-	int NumItems() const { return m_NumItems; }
+	int NumItems() const { return (int)m_ItemList.size(); }
 	CProgramItemInfo *GetItem(int Index);
 	const CProgramItemInfo *GetItem(int Index) const;
 	bool Add(CProgramItemInfo *pItem);
 	void Clear();
-	void Reserve(int NumItems);
 	void Attach(CProgramItemList *pList);
 };
 
@@ -77,7 +74,7 @@ public:
 	bool WriteSettings(CSettings &Settings) override;
 
 // CProgramListPanel
-	void SetEpgProgramList(CEpgProgramList *pList) { m_pProgramList=pList; }
+	void SetEPGDatabase(LibISDB::EPGDatabase *pEPGDatabase) { m_pEPGDatabase=pEPGDatabase; }
 	bool UpdateProgramList(const CChannelInfo *pChannelInfo);
 	void ClearProgramList();
 	void SelectChannel(const CChannelInfo *pChannelInfo,bool fUpdate=true);
@@ -123,7 +120,7 @@ private:
 		ITEM_CHANNELLISTBUTTON
 	};
 
-	CEpgProgramList *m_pProgramList;
+	LibISDB::EPGDatabase *m_pEPGDatabase;
 	TVTest::Style::Font m_StyleFont;
 	DrawUtil::CFont m_Font;
 	DrawUtil::CFont m_TitleFont;

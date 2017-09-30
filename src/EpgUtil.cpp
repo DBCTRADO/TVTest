@@ -31,119 +31,26 @@ namespace EpgUtil
 	}
 
 
-	LPCTSTR GetComponentTypeText(BYTE StreamContent,BYTE ComponentType)
-	{
-		switch (StreamContent) {
-		case 0x01:
-		case 0x05:
-			return GetVideoComponentTypeText(ComponentType);
-
-		case 0x02:
-			return GetAudioComponentTypeText(ComponentType);
-		}
-
-		return NULL;
-	}
-
-
-	LPCTSTR GetVideoComponentTypeText(BYTE ComponentType)
-	{
-		static const struct {
-			BYTE ComponentType;
-			LPCTSTR pszText;
-		} VideoComponentTypeList[] = {
-			{0x01,TEXT("480i[4:3]")},
-			{0x02,TEXT("480i[16:9]")},	// パンベクトルあり
-			{0x03,TEXT("480i[16:9]")},	// パンベクトルなし
-			{0x04,TEXT("480i[>16:9]")},
-			{0x91,TEXT("2160p[4:3]")},
-			{0x92,TEXT("2160p[16:9]")},	// パンベクトルあり
-			{0x93,TEXT("2160p[16:9]")},	// パンベクトルなし
-			{0x94,TEXT("2160p[>16:9]")},
-			{0xA1,TEXT("480p[4:3]")},
-			{0xA2,TEXT("480p[16:9]")},	// パンベクトルあり
-			{0xA3,TEXT("480p[16:9]")},	// パンベクトルなし
-			{0xA4,TEXT("480p[>16:9]")},
-			{0xB1,TEXT("1080i[4:3]")},
-			{0xB2,TEXT("1080i[16:9]")},	// パンベクトルあり
-			{0xB3,TEXT("1080i[16:9]")},	// パンベクトルなし
-			{0xB4,TEXT("1080i[>16:9]")},
-			{0xC1,TEXT("720p[4:3]")},
-			{0xC2,TEXT("720p[16:9]")},	// パンベクトルあり
-			{0xC3,TEXT("720p[16:9]")},	// パンベクトルなし
-			{0xC4,TEXT("720p[>16:9]")},
-			{0xD1,TEXT("240p[4:3]")},
-			{0xD2,TEXT("240p[16:9]")},	// パンベクトルあり
-			{0xD3,TEXT("240p[16:9]")},	// パンベクトルなし
-			{0xD4,TEXT("240p[>16:9]")},
-			{0xE1,TEXT("1080p[4:3]")},
-			{0xE2,TEXT("1080p[16:9]")},	// パンベクトルあり
-			{0xE3,TEXT("1080p[16:9]")},	// パンベクトルなし
-			{0xE4,TEXT("1080p[>16:9]")},
-			{0xF1,TEXT("180p[4:3]")},
-			{0xF2,TEXT("180p[16:9]")},	// パンベクトルあり
-			{0xF3,TEXT("180p[16:9]")},	// パンベクトルなし
-			{0xF4,TEXT("180p[>16:9]")},
-		};
-
-		for (int i=0;i<lengthof(VideoComponentTypeList);i++) {
-			if (VideoComponentTypeList[i].ComponentType==ComponentType)
-				return VideoComponentTypeList[i].pszText;
-		}
-
-		return NULL;
-	}
-
-
-	LPCTSTR GetAudioComponentTypeText(BYTE ComponentType)
-	{
-		static const struct {
-			BYTE ComponentType;
-			LPCTSTR pszText;
-		} AudioComponentTypeList[] = {
-			{0x01,TEXT("Mono")},					// 1/0
-			{0x02,TEXT("Dual mono")},				// 1/0 + 1/0
-			{0x03,TEXT("Stereo")},					// 2/0
-			{0x04,TEXT("3ch[2/1]")},
-			{0x05,TEXT("3ch[3/0]")},
-			{0x06,TEXT("4ch[2/2]")},
-			{0x07,TEXT("4ch[3/1]")},
-			{0x08,TEXT("5ch")},						// 3/2
-			{0x09,TEXT("5.1ch")},					// 3/2.1
-			{0x0A,TEXT("6.1ch[3/3.1]")},
-			{0x0B,TEXT("6.1ch[2/0/0-2/0/2-0.1]")},
-			{0x0C,TEXT("7.1ch[5/2.1]")},
-			{0x0D,TEXT("7.1ch[3/2/2.1]")},
-			{0x0E,TEXT("7.1ch[2/0/0-3/0/2-0.1]")},
-			{0x0F,TEXT("7.1ch[0/2/0-3/0/2-0.1]")},
-			{0x10,TEXT("10.2ch")},					// 2/0/0-3/2/3-0.2
-			{0x11,TEXT("22.2ch")},					// 3/3/3-5/2/3-3/0/0.2
-			{0x40,TEXT("視覚障害者用音声解説")},
-			{0x41,TEXT("聴覚障害者用音声")},
-		};
-
-		for (int i=0;i<lengthof(AudioComponentTypeList);i++) {
-			if (AudioComponentTypeList[i].ComponentType==ComponentType)
-				return AudioComponentTypeList[i].pszText;
-		}
-
-		return NULL;
-	}
-
-
-	int FormatEventTime(const CEventInfoData *pEventInfo,
+	int FormatEventTime(const LibISDB::EventInfo &EventInfo,
 						LPTSTR pszTime,int MaxLength,unsigned int Flags)
 	{
 		if (pszTime==NULL || MaxLength<1)
 			return 0;
 
-		if (pEventInfo==NULL || !pEventInfo->m_bValidStartTime) {
+		if (!EventInfo.StartTime.IsValid()) {
 			pszTime[0]=_T('\0');
 			return 0;
 		}
 
-		return FormatEventTime(pEventInfo->m_StartTime,pEventInfo->m_Duration,
+		return FormatEventTime(EventInfo.StartTime,EventInfo.Duration,
 							   pszTime,MaxLength,Flags);
+	}
+
+
+	int FormatEventTime(const LibISDB::DateTime &StartTime,DWORD Duration,
+						LPTSTR pszTime,int MaxLength,unsigned int Flags)
+	{
+		return FormatEventTime(StartTime.ToSYSTEMTIME(),Duration,pszTime,MaxLength,Flags);
 	}
 
 
@@ -220,22 +127,58 @@ namespace EpgUtil
 
 		case CEpgOptions::EPGTIME_JST:
 			{
+				LibISDB::DateTime From,To;
 				SYSTEMTIME st;
 				TIME_ZONE_INFORMATION tzi;
 
-				return EpgTimeToUtc(&EpgTime,&st)
-					&& GetJSTTimeZoneInformation(&tzi)
+				From.FromSYSTEMTIME(EpgTime);
+				if (!LibISDB::EPGTimeToUTCTime(From,&To))
+					return false;
+				st=To.ToSYSTEMTIME();
+				return GetJSTTimeZoneInformation(&tzi)
 					&& ::SystemTimeToTzSpecificLocalTime(&tzi,&st,pDisplayTime);
 			}
 
 		case CEpgOptions::EPGTIME_LOCAL:
-			return EpgTimeToLocalTime(&EpgTime,pDisplayTime);
+			{
+				LibISDB::DateTime From,To;
+
+				From.FromSYSTEMTIME(EpgTime);
+				if (!LibISDB::EPGTimeToLocalTime(From,&To))
+					return false;
+				*pDisplayTime=To.ToSYSTEMTIME();
+			}
+			return true;
 
 		case CEpgOptions::EPGTIME_UTC:
-			return EpgTimeToUtc(&EpgTime,pDisplayTime);
+			{
+				LibISDB::DateTime From,To;
+
+				From.FromSYSTEMTIME(EpgTime);
+				if (!LibISDB::EPGTimeToUTCTime(From,&To))
+					return false;
+				*pDisplayTime=To.ToSYSTEMTIME();
+			}
+			return true;
 		}
 
 		return false;
+	}
+
+
+	bool EpgTimeToDisplayTime(const LibISDB::DateTime &EpgTime,LibISDB::DateTime *pDisplayTime)
+	{
+		if (pDisplayTime==NULL)
+			return false;
+
+		SYSTEMTIME st;
+
+		if (!EpgTimeToDisplayTime(EpgTime.ToSYSTEMTIME(),&st))
+			return false;
+
+		pDisplayTime->FromSYSTEMTIME(st);
+
+		return true;
 	}
 
 
@@ -255,6 +198,22 @@ namespace EpgUtil
 	}
 
 
+	bool EpgTimeToDisplayTime(LibISDB::DateTime *pTime)
+	{
+		if (pTime==NULL)
+			return false;
+
+		LibISDB::DateTime Time;
+
+		if (!EpgTimeToDisplayTime(*pTime,&Time))
+			return false;
+
+		*pTime=Time;
+
+		return true;
+	}
+
+
 	bool DisplayTimeToEpgTime(const SYSTEMTIME &DisplayTime,SYSTEMTIME *pEpgTime)
 	{
 		if (pEpgTime==NULL)
@@ -269,25 +228,61 @@ namespace EpgUtil
 			{
 				SYSTEMTIME st;
 				TIME_ZONE_INFORMATION tzi;
+				LibISDB::DateTime From,To;
 
-				return GetJSTTimeZoneInformation(&tzi)
-					&& ::TzSpecificLocalTimeToSystemTime(&tzi,&DisplayTime,&st)
-					&& UtcToEpgTime(&st,pEpgTime);
+				if (!GetJSTTimeZoneInformation(&tzi)
+						|| !::TzSpecificLocalTimeToSystemTime(&tzi,&DisplayTime,&st))
+					return false;
+				From.FromSYSTEMTIME(st);
+				if (!LibISDB::UTCTimeToEPGTime(From,&To))
+					return false;
+				*pEpgTime=To.ToSYSTEMTIME();
 			}
+			return true;
 
 		case CEpgOptions::EPGTIME_LOCAL:
 			{
 				SYSTEMTIME st;
+				LibISDB::DateTime From,To;
 
-				return ::TzSpecificLocalTimeToSystemTime(NULL,&DisplayTime,&st)
-					&& UtcToEpgTime(&st,pEpgTime);
+				if (!::TzSpecificLocalTimeToSystemTime(NULL,&DisplayTime,&st))
+					return false;
+				From.FromSYSTEMTIME(st);
+				if (!LibISDB::UTCTimeToEPGTime(From,&To))
+					return false;
+				*pEpgTime=To.ToSYSTEMTIME();
 			}
+			return true;
 
 		case CEpgOptions::EPGTIME_UTC:
-			return UtcToEpgTime(&DisplayTime,pEpgTime);
+			{
+				LibISDB::DateTime From, To;
+
+				From.FromSYSTEMTIME(DisplayTime);
+				if (!LibISDB::UTCTimeToEPGTime(From,&To))
+					return false;
+				*pEpgTime=To.ToSYSTEMTIME();
+			}
+			return true;
 		}
 
 		return false;
+	}
+
+
+	bool DisplayTimeToEpgTime(const LibISDB::DateTime &DisplayTime,LibISDB::DateTime *pEpgTime)
+	{
+		if (pEpgTime==NULL)
+			return false;
+
+		SYSTEMTIME st;
+
+		if (!DisplayTimeToEpgTime(DisplayTime.ToSYSTEMTIME(),&st))
+			return false;
+
+		pEpgTime->FromSYSTEMTIME(st);
+
+		return true;
 	}
 
 
@@ -307,66 +302,30 @@ namespace EpgUtil
 	}
 
 
-	bool GetLanguageText(DWORD LanguageCode,LPTSTR pszText,int MaxText,LanguageTextType Type)
+	bool DisplayTimeToEpgTime(LibISDB::DateTime *pTime)
 	{
-		static const struct {
-			DWORD LanguageCode;
-			LPCTSTR pszLongText;
-			LPCTSTR pszSimpleText;
-			LPCTSTR pszShortText;
-		} LanguageList[] = {
-			{LANGUAGE_CODE_JPN,	TEXT("日本語"),		TEXT("日本語"),	TEXT("日")},
-			{LANGUAGE_CODE_ENG,	TEXT("英語"),		TEXT("英語"),	TEXT("英")},
-			{LANGUAGE_CODE_DEU,	TEXT("ドイツ語"),	TEXT("独語"),	TEXT("独")},
-			{LANGUAGE_CODE_FRA,	TEXT("フランス語"),	TEXT("仏語"),	TEXT("仏")},
-			{LANGUAGE_CODE_ITA,	TEXT("イタリア語"),	TEXT("伊語"),	TEXT("伊")},
-			{LANGUAGE_CODE_RUS,	TEXT("ロシア語"),	TEXT("露語"),	TEXT("露")},
-			{LANGUAGE_CODE_ZHO,	TEXT("中国語"),		TEXT("中国語"),	TEXT("中")},
-			{LANGUAGE_CODE_KOR,	TEXT("韓国語"),		TEXT("韓国語"),	TEXT("韓")},
-			{LANGUAGE_CODE_SPA,	TEXT("スペイン語"),	TEXT("西語"),	TEXT("西")},
-			{LANGUAGE_CODE_ETC,	TEXT("外国語"),		TEXT("外国語"),	TEXT("外")},
-		};
-
-		if (pszText==NULL || MaxText<1)
+		if (pTime==NULL)
 			return false;
 
-		for (int i=0;i<lengthof(LanguageList);i++) {
-			if (LanguageList[i].LanguageCode==LanguageCode) {
-				LPCTSTR pszLang;
+		LibISDB::DateTime Time;
 
-				switch (Type) {
-				default:
-				case LANGUAGE_TEXT_LONG:	pszLang=LanguageList[i].pszLongText;	break;
-				case LANGUAGE_TEXT_SIMPLE:	pszLang=LanguageList[i].pszSimpleText;	break;
-				case LANGUAGE_TEXT_SHORT:	pszLang=LanguageList[i].pszShortText;	break;
-				}
+		if (!DisplayTimeToEpgTime(*pTime,&Time))
+			return false;
 
-				::lstrcpyn(pszText,pszLang,MaxText);
-
-				return true;
-			}
-		}
-
-		TCHAR szLang[4];
-		szLang[0]=static_cast<TCHAR>((LanguageCode>>16)&0xFF);
-		szLang[1]=static_cast<TCHAR>((LanguageCode>>8)&0xFF);
-		szLang[2]=static_cast<TCHAR>(LanguageCode&0xFF);
-		szLang[3]=_T('\0');
-		::CharUpperBuff(szLang,3);
-		::lstrcpyn(pszText,szLang,MaxText);
+		*pTime=Time;
 
 		return true;
 	}
 
 
-	bool GetEventGenre(const CEventInfoData &EventInfo,
+	bool GetEventGenre(const LibISDB::EventInfo &EventInfo,
 					   int *pLevel1,int *pLevel2)
 	{
-		return GetEventGenre(EventInfo.m_ContentNibble,pLevel1,pLevel2);
+		return GetEventGenre(EventInfo.ContentNibble,pLevel1,pLevel2);
 	}
 
 
-	bool GetEventGenre(const CEventInfoData::ContentNibble &ContentNibble,
+	bool GetEventGenre(const LibISDB::EventInfo::ContentNibbleInfo &ContentNibble,
 					   int *pLevel1,int *pLevel2)
 	{
 		for (int i=0;i<ContentNibble.NibbleCount;i++) {
@@ -388,36 +347,41 @@ namespace EpgUtil
 	}
 
 
-	LPCTSTR GetEventDisplayText(const CEventInfo &EventInfo)
+	TVTest::String GetEventDisplayText(const LibISDB::EventInfo &EventInfo)
 	{
-		LPCTSTR p;
-
-		if (!EventInfo.m_EventText.empty()) {
-			p=EventInfo.m_EventText.c_str();
+		if (!EventInfo.EventText.empty()) {
+			LPCTSTR p=EventInfo.EventText.c_str();
 			while (*p!='\0') {
 				if (*p<=0x20) {
 					p++;
 					continue;
 				}
-				return p;
+				return TVTest::String(p);
 			}
 		}
 
-		if (!EventInfo.m_EventExtendedText.empty()) {
-			p=EventInfo.m_EventExtendedText.c_str();
-			TCHAR szContent[]=TEXT("番組内容");
-			if (::StrCmpN(p,szContent,lengthof(szContent)-1)==0)
-				p+=lengthof(szContent)-1;
-			while (*p!='\0') {
-				if (*p<=0x20) {
-					p++;
-					continue;
+		if (!EventInfo.ExtendedText.empty()) {
+			TVTest::String Text;
+
+			for (auto it=EventInfo.ExtendedText.begin();it!=EventInfo.ExtendedText.end();++it) {
+				if (!it->Description.empty()
+						&& (it!=EventInfo.ExtendedText.begin()
+							|| it->Description.find(TEXT("番組内容"))==TVTest::String::npos)) {
+					Text+=it->Description;
+					Text+=TEXT("\r\n");
 				}
-				return p;
+
+				LPCTSTR p=it->Text.c_str();
+				while (*p!='\0' && *p<=0x20)
+					p++;
+				Text+=p;
+				Text+=TEXT("\r\n");
 			}
+
+			return Text;
 		}
 
-		return NULL;
+		return TVTest::String();
 	}
 
 }
@@ -849,23 +813,23 @@ bool CEpgIcons::DrawIcons(
 }
 
 
-unsigned int CEpgIcons::GetEventIcons(const CEventInfoData *pEventInfo)
+unsigned int CEpgIcons::GetEventIcons(const LibISDB::EventInfo *pEventInfo)
 {
 	unsigned int ShowIcons=0;
 
-	if (!pEventInfo->m_VideoList.empty()) {
-		EpgUtil::VideoType Video=EpgUtil::GetVideoType(pEventInfo->m_VideoList[0].ComponentType);
+	if (!pEventInfo->VideoList.empty()) {
+		EpgUtil::VideoType Video=EpgUtil::GetVideoType(pEventInfo->VideoList[0].ComponentType);
 		if (Video==EpgUtil::VIDEO_TYPE_HD)
 			ShowIcons|=IconFlag(ICON_HD);
 		else if (Video==EpgUtil::VIDEO_TYPE_SD)
 			ShowIcons|=IconFlag(ICON_SD);
 	}
 
-	if (!pEventInfo->m_AudioList.empty()) {
-		const CEventInfoData::AudioInfo *pAudioInfo=pEventInfo->GetMainAudioInfo();
+	if (!pEventInfo->AudioList.empty()) {
+		const LibISDB::EventInfo::AudioInfo *pAudioInfo=pEventInfo->GetMainAudioInfo();
 
 		if (pAudioInfo->ComponentType==0x02) {
-			if (pAudioInfo->bESMultiLingualFlag
+			if (pAudioInfo->ESMultiLingualFlag
 					&& pAudioInfo->LanguageCode!=pAudioInfo->LanguageCode2)
 				ShowIcons|=IconFlag(ICON_MULTILINGUAL);
 			else
@@ -873,11 +837,11 @@ unsigned int CEpgIcons::GetEventIcons(const CEventInfoData *pEventInfo)
 		} else {
 			if (pAudioInfo->ComponentType==0x09)
 				ShowIcons|=IconFlag(ICON_5_1CH);
-			if (pEventInfo->m_AudioList.size()>=2
-					&& pEventInfo->m_AudioList[0].LanguageCode!=0
-					&& pEventInfo->m_AudioList[1].LanguageCode!=0) {
-				if (pEventInfo->m_AudioList[0].LanguageCode!=
-						pEventInfo->m_AudioList[1].LanguageCode)
+			if (pEventInfo->AudioList.size()>=2
+					&& pEventInfo->AudioList[0].LanguageCode!=0
+					&& pEventInfo->AudioList[1].LanguageCode!=0) {
+				if (pEventInfo->AudioList[0].LanguageCode!=
+						pEventInfo->AudioList[1].LanguageCode)
 					ShowIcons|=IconFlag(ICON_MULTILINGUAL);
 				else
 					ShowIcons|=IconFlag(ICON_SUB);
@@ -885,8 +849,8 @@ unsigned int CEpgIcons::GetEventIcons(const CEventInfoData *pEventInfo)
 		}
 	}
 
-	if (GetAppClass().NetworkDefinition.IsSatelliteNetworkID(pEventInfo->m_NetworkID)) {
-		if (pEventInfo->m_bFreeCaMode)
+	if (GetAppClass().NetworkDefinition.IsSatelliteNetworkID(pEventInfo->NetworkID)) {
+		if (pEventInfo->FreeCAMode)
 			ShowIcons|=IconFlag(ICON_PAY);
 		else
 			ShowIcons|=IconFlag(ICON_FREE);
@@ -950,13 +914,13 @@ TVTest::Theme::ThemeColor CEpgTheme::GetColor(int Type) const
 
 TVTest::Theme::ThemeColor CEpgTheme::GetGenreColor(int Genre) const
 {
-	return m_ColorList[Genre>=0 && Genre<=CEventInfoData::CONTENT_LAST?
+	return m_ColorList[Genre>=0 && Genre<=CEpgGenre::GENRE_LAST?
 					   COLOR_CONTENT_FIRST+Genre:
 					   COLOR_CONTENT_OTHER];
 }
 
 
-TVTest::Theme::ThemeColor CEpgTheme::GetGenreColor(const CEventInfoData &EventInfo) const
+TVTest::Theme::ThemeColor CEpgTheme::GetGenreColor(const LibISDB::EventInfo &EventInfo) const
 {
 	int Genre;
 
@@ -975,7 +939,7 @@ TVTest::Theme::BackgroundStyle CEpgTheme::GetContentBackgroundStyle(
 
 
 TVTest::Theme::BackgroundStyle CEpgTheme::GetContentBackgroundStyle(
-	const CEventInfoData &EventInfo,unsigned int Flags) const
+	const LibISDB::EventInfo &EventInfo,unsigned int Flags) const
 {
 	return GetContentBackgroundStyle(GetGenreColor(EventInfo),Flags);
 }
@@ -983,7 +947,7 @@ TVTest::Theme::BackgroundStyle CEpgTheme::GetContentBackgroundStyle(
 
 bool CEpgTheme::DrawContentBackground(
 	HDC hdc,TVTest::Theme::CThemeDraw &ThemeDraw,const RECT &Rect,
-	const CEventInfoData &EventInfo,unsigned int Flags) const
+	const LibISDB::EventInfo &EventInfo,unsigned int Flags) const
 {
 	if (hdc==nullptr)
 		return false;

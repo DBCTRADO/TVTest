@@ -160,13 +160,13 @@ void CAppEventManager::OnMuteChanged(bool fMute)
 }
 
 
-void CAppEventManager::OnDualMonoModeChanged(CAudioDecFilter::DualMonoMode Mode)
+void CAppEventManager::OnDualMonoModeChanged(LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode Mode)
 {
 	CALL_HANDLERS(OnDualMonoModeChanged(Mode));
 }
 
 
-void CAppEventManager::OnStereoModeChanged(CAudioDecFilter::StereoMode Mode)
+void CAppEventManager::OnStereoModeChanged(LibISDB::DirectShow::AudioDecoderFilter::StereoMode Mode)
 {
 	CALL_HANDLERS(OnStereoModeChanged(Mode));
 }

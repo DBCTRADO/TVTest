@@ -4,7 +4,7 @@
 
 #include <deque>
 #include <map>
-#include "BonTsEngine/CaptionDecoder.h"
+#include "LibISDB/LibISDB/Filters/CaptionFilter.hpp"
 #include "PanelForm.h"
 #include "UIBase.h"
 #include "Settings.h"
@@ -12,7 +12,7 @@
 #include "WindowUtil.h"
 
 
-class CCaptionDRCSMap : public CCaptionDecoder::IDRCSMap
+class CCaptionDRCSMap : public LibISDB::CaptionFilter::DRCSMap
 {
 	class CHashCmp {
 	public:
@@ -28,14 +28,14 @@ class CCaptionDRCSMap : public CCaptionDecoder::IDRCSMap
 	bool m_fSaveBMP;
 	bool m_fSaveRaw;
 	TCHAR m_szSaveDirectory[MAX_PATH];
-	CCriticalLock m_Lock;
+	TVTest::MutexLock m_Lock;
 
-	static bool SaveBMP(const CCaptionParser::DRCSBitmap *pBitmap,LPCTSTR pszFileName);
-	static bool SaveRaw(const CCaptionParser::DRCSBitmap *pBitmap,LPCTSTR pszFileName);
+	static bool SaveBMP(const LibISDB::CaptionParser::DRCSBitmap *pBitmap,LPCTSTR pszFileName);
+	static bool SaveRaw(const LibISDB::CaptionParser::DRCSBitmap *pBitmap,LPCTSTR pszFileName);
 
-// CCaptionDecoder::IDRCSMap
-	LPCTSTR GetString(WORD Code) override;
-	bool SetDRCS(WORD Code, const CCaptionParser::DRCSBitmap *pBitmap) override;
+// LibISDB::CaptionFilter::DRCSMap
+	LPCTSTR GetString(uint16_t Code) override;
+	bool SetDRCS(uint16_t Code, const LibISDB::CaptionParser::DRCSBitmap *pBitmap) override;
 
 public:
 	CCaptionDRCSMap();
@@ -47,7 +47,7 @@ public:
 
 class CCaptionPanel
 	: public CPanelForm::CPage
-	, protected CCaptionDecoder::IHandler
+	, protected LibISDB::CaptionFilter::Handler
 	, public CSettingsBase
 {
 public:
@@ -120,15 +120,15 @@ private:
 	bool m_fHalfWidthEuroLanguagesOnly;
 	BYTE m_CurLanguage;
 	std::vector<LanguageInfo> m_LanguageList;
-	CCriticalLock m_Lock;
+	TVTest::MutexLock m_Lock;
 	CCaptionDRCSMap m_DRCSMap;
 	CharEncoding m_SaveCharEncoding;
 
-// CCaptionDecoder::IHandler
-	virtual void OnLanguageUpdate(CCaptionDecoder *pDecoder,CCaptionParser *pParser) override;
-	virtual void OnCaption(CCaptionDecoder *pDecoder,CCaptionParser *pParser,
-						   BYTE Language,LPCTSTR pszText,
-						   const CAribString::FormatList *pFormatList) override;
+// LibISDB::CaptionFilter::Handler
+	virtual void OnLanguageUpdate(LibISDB::CaptionFilter *pFilter,LibISDB::CaptionParser *pParser) override;
+	virtual void OnCaption(LibISDB::CaptionFilter *pFilter,LibISDB::CaptionParser *pParser,
+						   uint8_t Language,const LibISDB::CharType *pText,
+						   const LibISDB::ARIBStringDecoder::FormatList *pFormatList) override;
 
 	void ClearCaptionList();
 	void AppendText(LPCTSTR pszText);

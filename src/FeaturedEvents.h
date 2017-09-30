@@ -61,11 +61,11 @@ public:
 	void Clear();
 	bool Update();
 	size_t GetEventCount() const;
-	const CEventInfoData *GetEventInfo(size_t Index) const;
+	const LibISDB::EventInfo *GetEventInfo(size_t Index) const;
 
 private:
 	const CFeaturedEventsSettings &m_Settings;
-	std::vector<CEventInfoData*> m_EventList;
+	std::vector<LibISDB::EventInfo*> m_EventList;
 };
 
 class CFeaturedEventsMatcher
@@ -73,7 +73,7 @@ class CFeaturedEventsMatcher
 public:
 	bool BeginMatching(const CFeaturedEventsSettings &Settings);
 	void EndMatching();
-	bool IsMatch(const CEventInfoData &EventInfo);
+	bool IsMatch(const LibISDB::EventInfo &EventInfo);
 
 private:
 	CEventSearchServiceList m_DefaultServiceList;

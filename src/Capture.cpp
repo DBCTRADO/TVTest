@@ -26,7 +26,7 @@ CCaptureImage::CCaptureImage(HGLOBAL hData)
 	: m_hData(hData)
 	, m_fLocked(false)
 {
-	::GetLocalTime(&m_stCaptureTime);
+	m_CaptureTime.NowLocal();
 }
 
 
@@ -50,7 +50,7 @@ CCaptureImage::CCaptureImage(const BITMAPINFO *pbmi,const void *pBits)
 		}
 	}
 	m_fLocked=false;
-	::GetLocalTime(&m_stCaptureTime);
+	m_CaptureTime.NowLocal();
 }
 
 

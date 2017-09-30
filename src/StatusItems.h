@@ -201,12 +201,12 @@ public:
 	bool IsInterpolateTOT() const { return m_fInterpolateTOT; }
 
 private:
-	void FormatTime(const SYSTEMTIME &Time,LPTSTR pszText,int MaxLength) const;
+	void FormatTime(const LibISDB::DateTime &Time,LPTSTR pszText,int MaxLength) const;
 
 	bool m_fTOT;
 	bool m_fInterpolateTOT;
-	SYSTEMTIME m_Time;
-	CCriticalLock m_Lock;
+	LibISDB::DateTime m_Time;
+	LibISDB::MutexLock m_Lock;
 };
 
 class CProgramInfoStatusItem : public CStatusItem
@@ -220,9 +220,8 @@ class CProgramInfoStatusItem : public CStatusItem
 	TVTest::Theme::BackgroundStyle m_ProgressBackStyle;
 	TVTest::Theme::BackgroundStyle m_ProgressElapsedStyle;
 	bool m_fValidProgress;
-	SYSTEMTIME m_EventStartTime;
-	DWORD m_EventDuration;
-	SYSTEMTIME m_CurTime;
+	LibISDB::EventInfo m_EventInfo;
+	LibISDB::DateTime m_CurTime;
 
 	void ShowPopupInfo();
 

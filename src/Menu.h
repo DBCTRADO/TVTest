@@ -5,12 +5,12 @@
 #include <vector>
 #include "Accelerator.h"
 #include "ChannelList.h"
-#include "EpgProgramList.h"
 #include "Theme.h"
 #include "LogoManager.h"
 #include "DrawUtil.h"
 #include "Graphics.h"
 #include "Tooltip.h"
+#include "LibISDB/LibISDB/EPG/EventInfo.hpp"
 
 
 class CMainMenu
@@ -125,10 +125,10 @@ class CChannelMenu
 	int m_MenuLogoMargin;
 	CTooltip m_Tooltip;
 
-	int GetEventText(const CEventInfoData *pEventInfo,
+	int GetEventText(const LibISDB::EventInfo *pEventInfo,
 					 LPTSTR pszText,int MaxLength) const;
 	void CreateFont(HDC hdc);
-	static void GetBaseTime(SYSTEMTIME *pTime);
+	static void GetBaseTime(LibISDB::DateTime *pTime);
 
 public:
 	enum {

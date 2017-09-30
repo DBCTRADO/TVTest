@@ -4,8 +4,8 @@
 
 #include "BasicWindow.h"
 #include "UIBase.h"
-#include "DtvEngine.h"
 #include "Theme.h"
+#include "LibISDB/LibISDB/Windows/Viewer/ViewerFilter.hpp"
 
 
 class ABSTRACT_CLASS(CDisplayView)
@@ -143,9 +143,7 @@ public:
 
 	CVideoContainerWindow();
 	~CVideoContainerWindow();
-	bool Create(HWND hwndParent,DWORD Style,DWORD ExStyle,int ID,CDtvEngine *pDtvEngine);
-	CDtvEngine *GetDtvEngine() { return m_pDtvEngine; }
-	const CDtvEngine *GetDtvEngine() const { return m_pDtvEngine; }
+	bool Create(HWND hwndParent,DWORD Style,DWORD ExStyle,int ID,LibISDB::ViewerFilter *pViewer);
 	void SetDisplayBase(CDisplayBase *pDisplayBase);
 	void SetEventHandler(CEventHandler *pEventHandler);
 
@@ -154,7 +152,7 @@ public:
 private:
 	static HINSTANCE m_hinst;
 
-	CDtvEngine *m_pDtvEngine;
+	LibISDB::ViewerFilter *m_pViewer;
 	CDisplayBase *m_pDisplayBase;
 	CEventHandler *m_pEventHandler;
 	SIZE m_ClientSize;

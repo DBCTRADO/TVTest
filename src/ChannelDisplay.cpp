@@ -36,14 +36,14 @@ bool CChannelDisplay::Initialize(HINSTANCE hinst)
 }
 
 
-CChannelDisplay::CChannelDisplay(CEpgProgramList *pEpgProgramList)
+CChannelDisplay::CChannelDisplay(LibISDB::EPGDatabase *pEPGDatabase)
 	: m_fAutoFontSize(true)
 	, m_hwndTunerScroll(NULL)
 	, m_hwndChannelScroll(NULL)
 	, m_TotalTuningSpaces(0)
 	, m_CurTuner(-1)
 	, m_CurChannel(-1)
-	, m_pEpgProgramList(pEpgProgramList)
+	, m_pEPGDatabase(pEPGDatabase)
 	, m_pLogoManager(NULL)
 	, m_pChannelDisplayEventHandler(NULL)
 {
@@ -374,7 +374,7 @@ void CChannelDisplay::Layout()
 	m_TunerItemWidth=TunerNameWidth+m_ChannelDisplayStyle.TunerItemPadding.Horz();
 	if (fTunerIcon)
 		m_TunerItemWidth+=m_ChannelDisplayStyle.TunerIconSize.Width+m_ChannelDisplayStyle.TunerIconTextMargin;
-	m_TunerItemHeight=max(m_ChannelDisplayStyle.TunerIconSize.Height,m_FontHeight)+
+	m_TunerItemHeight=max((int)m_ChannelDisplayStyle.TunerIconSize.Height,m_FontHeight)+
 		m_ChannelDisplayStyle.TunerItemPadding.Vert();
 	int CategoriesHeight=rc.bottom-m_Style.CategoriesMargin.Vert();
 	m_VisibleTunerItems=CategoriesHeight/m_TunerItemHeight;
@@ -431,7 +431,7 @@ void CChannelDisplay::Layout()
 	}
 	m_ChannelItemLeft=m_TunerAreaWidth+m_Style.ContentMargin.Left;
 	m_ChannelItemWidth=max(
-		rc.right-m_ChannelItemLeft-m_Style.ContentMargin.Right,
+		(int)rc.right-m_ChannelItemLeft-m_Style.ContentMargin.Right,
 		m_ChannelNameWidth+m_ChannelDisplayStyle.ChannelItemPadding.Horz()+
 			m_ChannelDisplayStyle.ChannelEventMargin+m_FontHeight*8);
 	m_ChannelItemHeight=m_FontHeight*2+m_ChannelDisplayStyle.ChannelItemPadding.Vert();
@@ -598,9 +598,9 @@ bool CChannelDisplay::SetCurTuner(int Index,bool fUpdate)
 		}
 		m_CurChannel=-1;
 		m_ChannelScrollPos=0;
-		GetCurrentEpgTime(&m_EpgBaseTime);
-		m_EpgBaseTime.wSecond=0;
-		m_EpgBaseTime.wMilliseconds=0;
+		LibISDB::GetCurrentEPGTime(&m_EpgBaseTime);
+		m_EpgBaseTime.Second=0;
+		m_EpgBaseTime.Millisecond=0;
 		UpdateChannelInfo(Index);
 		Layout();
 		Invalidate();
@@ -619,34 +619,34 @@ bool CChannelDisplay::UpdateChannelInfo(int Index)
 	for (int i=0;i<pChannelList->NumChannels();i++) {
 		CTuner::CChannel *pChannel=static_cast<CTuner::CChannel*>(pChannelList->GetChannelInfo(i));
 
-		CEventInfoData EventInfo;
-		if (m_pEpgProgramList->GetEventInfo(
+		LibISDB::EventInfo EventInfo;
+		if (m_pEPGDatabase->GetEventInfo(
 				pChannel->GetNetworkID(),
 				pChannel->GetTransportStreamID(),
 				pChannel->GetServiceID(),
-				&m_EpgBaseTime,&EventInfo)) {
+				m_EpgBaseTime,&EventInfo)) {
 			pChannel->SetEvent(0,&EventInfo);
-			SYSTEMTIME st;
-			if (EventInfo.m_bValidStartTime
-					&& EventInfo.m_Duration>0
-					&& EventInfo.GetEndTime(&st)
-					&& m_pEpgProgramList->GetEventInfo(
+			LibISDB::DateTime EndTime;
+			if (EventInfo.StartTime.IsValid()
+					&& EventInfo.Duration>0
+					&& EventInfo.GetEndTime(&EndTime)
+					&& m_pEPGDatabase->GetEventInfo(
 						pChannel->GetNetworkID(),
 						pChannel->GetTransportStreamID(),
 						pChannel->GetServiceID(),
-						&st,&EventInfo)) {
+						EndTime,&EventInfo)) {
 				pChannel->SetEvent(1,&EventInfo);
 			} else {
 				pChannel->SetEvent(1,NULL);
 			}
 		} else {
 			pChannel->SetEvent(0,NULL);
-			if (m_pEpgProgramList->GetNextEventInfo(
+			if (m_pEPGDatabase->GetNextEventInfo(
 						pChannel->GetNetworkID(),
 						pChannel->GetTransportStreamID(),
 						pChannel->GetServiceID(),
-						&m_EpgBaseTime,&EventInfo)
-					&& DiffSystemTime(&m_EpgBaseTime,&EventInfo.m_StartTime)<8*TimeConsts::SYSTEMTIME_HOUR) {
+						m_EpgBaseTime,&EventInfo)
+					&& EventInfo.StartTime.DiffSeconds(m_EpgBaseTime)<8*60*60) {
 				pChannel->SetEvent(1,&EventInfo);
 			} else {
 				pChannel->SetEvent(1,NULL);
@@ -863,17 +863,17 @@ void CChannelDisplay::Draw(HDC hdc,const RECT *pPaintRect)
 					rc.left+=m_ChannelNameWidth+m_ChannelDisplayStyle.ChannelEventMargin;
 					rc.bottom=(rc.top+rc.bottom)/2;
 					for (int j=0;j<2;j++) {
-						const CEventInfoData *pEventInfo=pChannel->GetEvent(j);
+						const LibISDB::EventInfo *pEventInfo=pChannel->GetEvent(j);
 						if (pEventInfo!=NULL) {
 							int Length;
-							Length=EpgUtil::FormatEventTime(pEventInfo,szText,lengthof(szText),
+							Length=EpgUtil::FormatEventTime(*pEventInfo,szText,lengthof(szText),
 								EpgUtil::EVENT_TIME_HOUR_2DIGITS | EpgUtil::EVENT_TIME_START_ONLY);
-							if (!pEventInfo->m_EventName.empty()) {
+							if (!pEventInfo->EventName.empty()) {
 								Length+=StdUtil::snprintf(
 									szText+Length,lengthof(szText)-Length,
 									TEXT("%s%s"),
 									Length>0?TEXT(" "):TEXT(""),
-									pEventInfo->m_EventName.c_str());
+									pEventInfo->EventName.c_str());
 							}
 							if (Length>0) {
 								TVTest::Theme::Draw(hdc,rc,pStyle->Fore,szText,
@@ -913,7 +913,7 @@ void CChannelDisplay::DrawClock(HDC hdc) const
 	TVTest::Theme::Draw(hdc,rc,m_ClockStyle.Back);
 	TVTest::Style::Subtract(&rc,m_ChannelDisplayStyle.ClockPadding);
 	OldBkMode=SetBkMode(hdc,TRANSPARENT);
-	::wsprintf(szText,TEXT("%d:%02d"),m_ClockTime.wHour,m_ClockTime.wMinute);
+	::wsprintf(szText,TEXT("%d:%02d"),m_ClockTime.Hour,m_ClockTime.Minute);
 	TVTest::Theme::Draw(hdc,rc,m_ClockStyle.Fore,szText,
 						DT_CENTER | DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX);
 	SetBkMode(hdc,OldBkMode);
@@ -980,7 +980,7 @@ LRESULT CChannelDisplay::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lPar
 			m_LastCursorPos.x=-1;
 			m_LastCursorPos.y=-1;
 			::SetTimer(hwnd,TIMER_CLOCK,1000,NULL);
-			::GetLocalTime(&m_ClockTime);
+			m_ClockTime.NowLocal();
 		}
 		return 0;
 
@@ -1200,11 +1200,11 @@ LRESULT CChannelDisplay::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lPar
 
 	case WM_TIMER:
 		if (wParam==TIMER_CLOCK) {
-			SYSTEMTIME CurTime;
+			LibISDB::DateTime CurTime;
 
-			::GetLocalTime(&CurTime);
-			if (m_ClockTime.wHour!=CurTime.wHour
-					|| m_ClockTime.wMinute!=CurTime.wMinute) {
+			CurTime.NowLocal();
+			if (m_ClockTime.Hour!=CurTime.Hour
+					|| m_ClockTime.Minute!=CurTime.Minute) {
 				HDC hdc;
 
 				m_ClockTime=CurTime;
@@ -1370,23 +1370,23 @@ void CChannelDisplay::CTuner::SetIcon(HICON hico)
 
 
 
-bool CChannelDisplay::CTuner::CChannel::SetEvent(int Index,const CEventInfoData *pEvent)
+bool CChannelDisplay::CTuner::CChannel::SetEvent(int Index,const LibISDB::EventInfo *pEvent)
 {
 	if (Index<0 || Index>1)
 		return false;
 	if (pEvent!=NULL)
 		m_Event[Index]=*pEvent;
 	else
-		m_Event[Index].m_EventName.clear();
+		m_Event[Index].EventName.clear();
 	return true;
 }
 
 
-const CEventInfoData *CChannelDisplay::CTuner::CChannel::GetEvent(int Index) const
+const LibISDB::EventInfo *CChannelDisplay::CTuner::CChannel::GetEvent(int Index) const
 {
 	if (Index<0 || Index>1)
 		return NULL;
-	if (m_Event[Index].m_EventName.empty())
+	if (m_Event[Index].EventName.empty())
 		return NULL;
 	return &m_Event[Index];
 }

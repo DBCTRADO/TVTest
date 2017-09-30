@@ -5,7 +5,6 @@
 #include "HomeDisplay.h"
 #include "AppMain.h"
 #include "Favorites.h"
-#include "EpgProgramList.h"
 #include "EpgUtil.h"
 #include "LogoManager.h"
 #include "ChannelHistory.h"
@@ -63,14 +62,14 @@ protected:
 		void SetSmallLogo(HBITMAP hbm) { m_hbmSmallLogo=hbm; }
 		void SetBigLogo(HBITMAP hbm) { m_hbmBigLogo=hbm; }
 		HBITMAP GetStretchedLogo(int Width,int Height) const;
-		bool SetEvent(int Index,const CEventInfoData *pEvent);
-		const CEventInfoData *GetEvent(int Index) const;
+		bool SetEvent(int Index,const LibISDB::EventInfo *pEvent);
+		const LibISDB::EventInfo *GetEvent(int Index) const;
 
 	protected:
 		HBITMAP m_hbmSmallLogo;
 		HBITMAP m_hbmBigLogo;
 		mutable DrawUtil::CBitmap m_StretchedLogo;
-		CEventInfoData m_Event[2];
+		LibISDB::EventInfo m_Event[2];
 	};
 
 	typedef std::vector<CChannelItemBase*> ItemList;
@@ -170,20 +169,20 @@ void CChannelListCategoryBase::Draw(
 		rc.bottom=rc.top+Style.FontHeight;
 
 		for (int j=0;j<2;j++) {
-			const CEventInfoData *pEventInfo=pItem->GetEvent(j);
+			const LibISDB::EventInfo *pEventInfo=pItem->GetEvent(j);
 
 			if (pEventInfo!=NULL) {
 				TCHAR szText[1024];
 				int Length;
 
-				Length=EpgUtil::FormatEventTime(pEventInfo,szText,lengthof(szText),
+				Length=EpgUtil::FormatEventTime(*pEventInfo,szText,lengthof(szText),
 					EpgUtil::EVENT_TIME_HOUR_2DIGITS | EpgUtil::EVENT_TIME_START_ONLY);
-				if (!pEventInfo->m_EventName.empty()) {
+				if (!pEventInfo->EventName.empty()) {
 					Length+=StdUtil::snprintf(
 						szText+Length,lengthof(szText)-Length,
 						TEXT("%s%s"),
 						Length>0?TEXT(" "):TEXT(""),
-						pEventInfo->m_EventName.c_str());
+						pEventInfo->EventName.c_str());
 				}
 				if (Length>0) {
 					ThemeDraw.Draw(pItemStyle->Fore,rc,szText,
@@ -298,43 +297,43 @@ void CChannelListCategoryBase::Clear()
 
 void CChannelListCategoryBase::UpdateChannelInfo()
 {
-	CEpgProgramList &EpgProgramList=GetAppClass().EpgProgramList;
+	LibISDB::EPGDatabase &EPGDatabase=GetAppClass().EPGDatabase;
 	CLogoManager &LogoManager=GetAppClass().LogoManager;
-	SYSTEMTIME stCurTime;
+	LibISDB::DateTime CurTime;
 
-	GetCurrentEpgTime(&stCurTime);
+	LibISDB::GetCurrentEPGTime(&CurTime);
 
 	for (size_t i=0;i<m_ItemList.size();i++) {
 		CChannelItemBase *pItem=m_ItemList[i];
-		CEventInfoData EventInfo;
+		LibISDB::EventInfo EventInfo;
 
-		if (EpgProgramList.GetEventInfo(
+		if (EPGDatabase.GetEventInfo(
 				pItem->GetNetworkID(),
 				pItem->GetTransportStreamID(),
 				pItem->GetServiceID(),
-				&stCurTime,&EventInfo)) {
+				CurTime,&EventInfo)) {
 			pItem->SetEvent(0,&EventInfo);
-			SYSTEMTIME st;
-			if (EventInfo.m_bValidStartTime
-					&& EventInfo.m_Duration>0
-					&& EventInfo.GetEndTime(&st)
-					&& EpgProgramList.GetEventInfo(
+			LibISDB::DateTime EndTime;
+			if (EventInfo.StartTime.IsValid()
+					&& EventInfo.Duration>0
+					&& EventInfo.GetEndTime(&EndTime)
+					&& EPGDatabase.GetEventInfo(
 						pItem->GetNetworkID(),
 						pItem->GetTransportStreamID(),
 						pItem->GetServiceID(),
-						&st,&EventInfo)) {
+						EndTime,&EventInfo)) {
 				pItem->SetEvent(1,&EventInfo);
 			} else {
 				pItem->SetEvent(1,NULL);
 			}
 		} else {
 			pItem->SetEvent(0,NULL);
-			if (EpgProgramList.GetNextEventInfo(
+			if (EPGDatabase.GetNextEventInfo(
 						pItem->GetNetworkID(),
 						pItem->GetTransportStreamID(),
 						pItem->GetServiceID(),
-						&stCurTime,&EventInfo)
-					&& DiffSystemTime(&stCurTime,&EventInfo.m_StartTime)<8*TimeConsts::SYSTEMTIME_HOUR) {
+						CurTime,&EventInfo)
+					&& EventInfo.StartTime.DiffSeconds(CurTime)<8*60*60) {
 				pItem->SetEvent(1,&EventInfo);
 			} else {
 				pItem->SetEvent(1,NULL);
@@ -444,23 +443,23 @@ HBITMAP CChannelListCategoryBase::CChannelItemBase::GetStretchedLogo(int Width,i
 }
 
 
-bool CChannelListCategoryBase::CChannelItemBase::SetEvent(int Index,const CEventInfoData *pEvent)
+bool CChannelListCategoryBase::CChannelItemBase::SetEvent(int Index,const LibISDB::EventInfo *pEvent)
 {
 	if (Index<0 || Index>1)
 		return false;
 	if (pEvent!=NULL)
 		m_Event[Index]=*pEvent;
 	else
-		m_Event[Index].m_EventName.clear();
+		m_Event[Index].EventName.clear();
 	return true;
 }
 
 
-const CEventInfoData *CChannelListCategoryBase::CChannelItemBase::GetEvent(int Index) const
+const LibISDB::EventInfo *CChannelListCategoryBase::CChannelItemBase::GetEvent(int Index) const
 {
 	if (Index<0 || Index>1)
 		return NULL;
-	if (m_Event[Index].m_EventName.empty())
+	if (m_Event[Index].EventName.empty())
 		return NULL;
 	return &m_Event[Index];
 }
@@ -675,9 +674,9 @@ private:
 	class CEventItem
 	{
 	public:
-		CEventItem(const CChannelInfo &ChannelInfo,const CEventInfoData &EventInfo);
+		CEventItem(const CChannelInfo &ChannelInfo,const LibISDB::EventInfo &EventInfo);
 		const CChannelInfo &GetChannelInfo() const { return m_ChannelInfo; }
-		const CEventInfoData &GetEventInfo() const { return m_EventInfo; }
+		const LibISDB::EventInfo &GetEventInfo() const { return m_EventInfo; }
 		int GetExpandedHeight() const { return m_ExpandedHeight; }
 		void SetExpandedHeight(int Height) { m_ExpandedHeight=Height; }
 		bool IsExpanded() const { return m_fExpanded; }
@@ -688,7 +687,7 @@ private:
 
 	private:
 		CChannelInfo m_ChannelInfo;
-		CEventInfoData m_EventInfo;
+		LibISDB::EventInfo m_EventInfo;
 		int m_ExpandedHeight;
 		bool m_fExpanded;
 		HBITMAP m_hbmLogo;
@@ -750,9 +749,9 @@ bool CFeaturedEventsCategory::Create()
 
 	const size_t EventCount=Searcher.GetEventCount();
 	for (size_t i=0;i<EventCount;i++) {
-		const CEventInfoData *pEventInfo=Searcher.GetEventInfo(i);
+		const LibISDB::EventInfo *pEventInfo=Searcher.GetEventInfo(i);
 		int Index=ServiceList.FindByIDs(
-			pEventInfo->m_NetworkID,pEventInfo->m_TransportStreamID,pEventInfo->m_ServiceID);
+			pEventInfo->NetworkID,pEventInfo->TransportStreamID,pEventInfo->ServiceID);
 
 		if (Index>=0)
 			m_ItemList.push_back(new CEventItem(*ServiceList.GetChannelInfo(Index),*pEventInfo));
@@ -888,9 +887,9 @@ void CFeaturedEventsCategory::Draw(
 		rc.left=rc.right+Style.FontHeight;
 		rc.right=rcItem.right-Style.ItemMargins.Right;
 
-		const CEventInfoData &EventInfo=pItem->GetEventInfo();
+		const LibISDB::EventInfo &EventInfo=pItem->GetEventInfo();
 		TCHAR szText[1024];
-		int Length=EpgUtil::FormatEventTime(&EventInfo,szText,lengthof(szText),
+		int Length=EpgUtil::FormatEventTime(EventInfo,szText,lengthof(szText),
 											EpgUtil::EVENT_TIME_DATE);
 		if (Length>0) {
 			::DrawText(hdc,szText,Length,&rc,
@@ -899,10 +898,10 @@ void CFeaturedEventsCategory::Draw(
 		rc.left=rcItem.left+Style.ItemMargins.Left;
 		rc.top=rc.bottom;
 		rc.bottom=rc.top+Style.FontHeight;
-		if (!EventInfo.m_EventName.empty()) {
+		if (!EventInfo.EventName.empty()) {
 			::SelectObject(hdc,hfontTitle);
 			::DrawText(hdc,
-				EventInfo.m_EventName.data(),(int)EventInfo.m_EventName.length(),&rc,
+				EventInfo.EventName.data(),(int)EventInfo.EventName.length(),&rc,
 				DT_LEFT | DT_SINGLELINE | DT_VCENTER | DT_NOPREFIX | DT_END_ELLIPSIS);
 			::SelectObject(hdc,hfontText);
 		}
@@ -1122,11 +1121,10 @@ void CFeaturedEventsCategory::SortItems(CFeaturedEventsSettings::SortType SortTy
 		{
 			int Cmp;
 
-			Cmp=CompareSystemTime(&pItem1->GetEventInfo().m_StartTime,
-								  &pItem2->GetEventInfo().m_StartTime);
+			Cmp=pItem1->GetEventInfo().StartTime.Compare(pItem2->GetEventInfo().StartTime);
 			if (Cmp==0) {
-				Cmp=(int)pItem1->GetEventInfo().m_Duration-
-					(int)pItem2->GetEventInfo().m_Duration;
+				Cmp=(int)pItem1->GetEventInfo().Duration-
+					(int)pItem2->GetEventInfo().Duration;
 			}
 			return Cmp;
 		}
@@ -1280,7 +1278,7 @@ void CFeaturedEventsCategory::OnFeaturedEventsSettingsChanged(CFeaturedEvents &F
 }
 
 
-CFeaturedEventsCategory::CEventItem::CEventItem(const CChannelInfo &ChannelInfo,const CEventInfoData &EventInfo)
+CFeaturedEventsCategory::CEventItem::CEventItem(const CChannelInfo &ChannelInfo,const LibISDB::EventInfo &EventInfo)
 	: m_ChannelInfo(ChannelInfo)
 	, m_EventInfo(EventInfo)
 	, m_ExpandedHeight(0)
@@ -1320,10 +1318,13 @@ HBITMAP CFeaturedEventsCategory::CEventItem::GetStretchedLogo(int Width,int Heig
 bool CFeaturedEventsCategory::CEventItem::GetEventText(TVTest::String *pText) const
 {
 	pText->clear();
-	if (!m_EventInfo.m_EventText.empty())
-		AppendEventText(pText,m_EventInfo.m_EventText.c_str());
-	if (!m_EventInfo.m_EventExtendedText.empty())
-		AppendEventText(pText,m_EventInfo.m_EventExtendedText.c_str());
+	if (!m_EventInfo.EventText.empty())
+		AppendEventText(pText,m_EventInfo.EventText.c_str());
+	if (!m_EventInfo.ExtendedText.empty()) {
+		LibISDB::String ExtendedText;
+		m_EventInfo.GetConcatenatedExtendedText(&ExtendedText);
+		AppendEventText(pText,ExtendedText.c_str());
+	}
 	return !pText->empty();
 }
 

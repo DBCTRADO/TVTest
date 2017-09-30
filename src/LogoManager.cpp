@@ -3,6 +3,7 @@
 #include "AppMain.h"
 #include "LogoManager.h"
 #include "HelperClass/NFile.h"
+#include "LibISDB/LibISDB/Utilities/CRC.hpp"
 #include "Common/DebugDef.h"
 
 
@@ -130,7 +131,7 @@ void CLogoManager::Clear()
 
 bool CLogoManager::SetLogoDirectory(LPCTSTR pszDirectory)
 {
-	CBlockLock Lock(&m_Lock);
+	TVTest::BlockLock Lock(m_Lock);
 
 	::lstrcpy(m_szLogoDirectory,pszDirectory);
 	return true;
@@ -139,7 +140,7 @@ bool CLogoManager::SetLogoDirectory(LPCTSTR pszDirectory)
 
 bool CLogoManager::SetSaveLogo(bool fSave)
 {
-	CBlockLock Lock(&m_Lock);
+	TVTest::BlockLock Lock(m_Lock);
 
 	m_fSaveLogo=fSave;
 	return true;
@@ -148,7 +149,7 @@ bool CLogoManager::SetSaveLogo(bool fSave)
 
 bool CLogoManager::SetSaveLogoBmp(bool fSave)
 {
-	CBlockLock Lock(&m_Lock);
+	TVTest::BlockLock Lock(m_Lock);
 
 	m_fSaveBmp=fSave;
 	return true;
@@ -157,7 +158,7 @@ bool CLogoManager::SetSaveLogoBmp(bool fSave)
 
 bool CLogoManager::AssociateLogoID(WORD NetworkID,WORD ServiceID,WORD LogoID)
 {
-	CBlockLock Lock(&m_Lock);
+	TVTest::BlockLock Lock(m_Lock);
 
 	SetLogoIDMap(NetworkID,ServiceID,LogoID);
 	return true;
@@ -166,7 +167,7 @@ bool CLogoManager::AssociateLogoID(WORD NetworkID,WORD ServiceID,WORD LogoID)
 
 bool CLogoManager::SaveLogoFile(LPCTSTR pszFileName)
 {
-	CBlockLock Lock(&m_Lock);
+	TVTest::BlockLock Lock(m_Lock);
 
 	if (m_LogoMap.empty())
 		return true;
@@ -207,9 +208,9 @@ bool CLogoManager::SaveLogoFile(LPCTSTR pszFileName)
 		ImageHeader.LogoVersion=itr->second->GetLogoVersion();
 		ImageHeader.LogoType=itr->second->GetLogoType();
 		ImageHeader.DataSize=itr->second->GetDataSize();
-		ImageHeader.Time=SystemTimeToUInt64(itr->second->GetTime());
-		DWORD CRC=CCrcCalculator::CalcCrc32((const BYTE*)&ImageHeader,sizeof(ImageHeader));
-		CRC=CCrcCalculator::CalcCrc32(itr->second->GetData(),ImageHeader.DataSize,CRC);
+		ImageHeader.Time=SystemTimeToUInt64(itr->second->GetTime().ToSYSTEMTIME());
+		DWORD CRC=LibISDB::CRC32MPEG2::Calc((const uint8_t*)&ImageHeader,sizeof(ImageHeader));
+		CRC=LibISDB::CRC32MPEG2::Calc(itr->second->GetData(),ImageHeader.DataSize,CRC);
 		if (!File.Write(&ImageHeader,sizeof(ImageHeader))
 				|| !File.Write(itr->second->GetData(),ImageHeader.DataSize)
 				|| !File.Write(&CRC,sizeof(CRC)))
@@ -227,7 +228,7 @@ OnError:
 
 bool CLogoManager::LoadLogoFile(LPCTSTR pszFileName)
 {
-	CBlockLock Lock(&m_Lock);
+	TVTest::BlockLock Lock(m_Lock);
 
 	CNFile File;
 
@@ -265,24 +266,22 @@ bool CLogoManager::LoadLogoFile(LPCTSTR pszFileName)
 		if (File.Read(Buffer,ImageHeader.DataSize)!=ImageHeader.DataSize
 				|| std::memcmp(Buffer,PNG_SIGNATURE,PNG_SIGNATURE_BYTES)!=0
 				|| File.Read(&CRC,sizeof(CRC))!=sizeof(CRC)
-				|| CRC!=CCrcCalculator::CalcCrc32(Buffer,ImageHeader.DataSize,
-					CCrcCalculator::CalcCrc32((const BYTE*)&ImageHeader,ImageHeaderSize))) {
+				|| CRC!=LibISDB::CRC32MPEG2::Calc(Buffer,ImageHeader.DataSize,
+					LibISDB::CRC32MPEG2::Calc((const uint8_t*)&ImageHeader,ImageHeaderSize))) {
 			return false;
 		}
 
-		CLogoDownloader::LogoData Data;
-		Data.OriginalNetworkID=ImageHeader.NetworkID;
+		LibISDB::LogoDownloaderFilter::LogoData Data;
+		Data.NetworkID=ImageHeader.NetworkID;
 		Data.LogoID=ImageHeader.LogoID;
 		Data.LogoVersion=ImageHeader.LogoVersion;
 		Data.LogoType=ImageHeader.LogoType;
 		Data.DataSize=ImageHeader.DataSize;
 		Data.pData=Buffer;
-		if (FileHeader.Version==0)
-			::ZeroMemory(&Data.Time,sizeof(SYSTEMTIME));
-		else
-			Data.Time=UInt64ToSystemTime(ImageHeader.Time);
+		if (FileHeader.Version!=0)
+			Data.Time.FromSYSTEMTIME(UInt64ToSystemTime(ImageHeader.Time));
 
-		ULONGLONG Key=GetMapKey(Data.OriginalNetworkID,Data.LogoID,Data.LogoType);
+		ULONGLONG Key=GetMapKey(Data.NetworkID,Data.LogoID,Data.LogoType);
 		LogoMap::iterator itr=m_LogoMap.find(Key);
 		CLogoData *pLogoData;
 		if (itr!=m_LogoMap.end()) {
@@ -305,7 +304,7 @@ bool CLogoManager::LoadLogoFile(LPCTSTR pszFileName)
 
 bool CLogoManager::SaveLogoIDMap(LPCTSTR pszFileName)
 {
-	CBlockLock Lock(&m_Lock);
+	TVTest::BlockLock Lock(m_Lock);
 
 	if (m_LogoIDMap.empty())
 		return true;
@@ -338,7 +337,7 @@ bool CLogoManager::SaveLogoIDMap(LPCTSTR pszFileName)
 
 bool CLogoManager::LoadLogoIDMap(LPCTSTR pszFileName)
 {
-	CBlockLock Lock(&m_Lock);
+	TVTest::BlockLock Lock(m_Lock);
 
 	m_fLogoIDMapUpdated=false;
 
@@ -378,7 +377,7 @@ bool CLogoManager::LoadLogoIDMap(LPCTSTR pszFileName)
 
 HBITMAP CLogoManager::GetLogoBitmap(WORD NetworkID,WORD LogoID,BYTE LogoType)
 {
-	CBlockLock Lock(&m_Lock);
+	TVTest::BlockLock Lock(m_Lock);
 
 	ULONGLONG Key;
 	LogoMap::iterator itr;
@@ -413,7 +412,7 @@ HBITMAP CLogoManager::GetLogoBitmap(WORD NetworkID,WORD LogoID,BYTE LogoType)
 
 HBITMAP CLogoManager::GetAssociatedLogoBitmap(WORD NetworkID,WORD ServiceID,BYTE LogoType)
 {
-	CBlockLock Lock(&m_Lock);
+	TVTest::BlockLock Lock(m_Lock);
 	LogoIDMap::iterator itr=m_LogoIDMap.find(GetIDMapKey(NetworkID,ServiceID));
 	if (itr==m_LogoIDMap.end())
 		return NULL;
@@ -423,7 +422,7 @@ HBITMAP CLogoManager::GetAssociatedLogoBitmap(WORD NetworkID,WORD ServiceID,BYTE
 
 const TVTest::Graphics::CImage *CLogoManager::GetLogoImage(WORD NetworkID,WORD LogoID,BYTE LogoType)
 {
-	CBlockLock Lock(&m_Lock);
+	TVTest::BlockLock Lock(m_Lock);
 	ULONGLONG Key=GetMapKey(NetworkID,LogoID,LogoType);
 	LogoMap::iterator itr=m_LogoMap.find(Key);
 	if (itr==m_LogoMap.end())
@@ -434,7 +433,7 @@ const TVTest::Graphics::CImage *CLogoManager::GetLogoImage(WORD NetworkID,WORD L
 
 const TVTest::Graphics::CImage *CLogoManager::GetAssociatedLogoImage(WORD NetworkID,WORD ServiceID,BYTE LogoType)
 {
-	CBlockLock Lock(&m_Lock);
+	TVTest::BlockLock Lock(m_Lock);
 	LogoIDMap::iterator itr=m_LogoIDMap.find(GetIDMapKey(NetworkID,ServiceID));
 	if (itr==m_LogoIDMap.end())
 		return NULL;
@@ -482,7 +481,7 @@ bool CLogoManager::SaveLogoIcon(
 
 bool CLogoManager::IsLogoAvailable(WORD NetworkID,WORD ServiceID,BYTE LogoType) const
 {
-	CBlockLock Lock(&m_Lock);
+	TVTest::BlockLock Lock(m_Lock);
 	LogoMap::const_iterator itr=m_LogoMap.find(GetMapKey(NetworkID,ServiceID,LogoType));
 	return itr!=m_LogoMap.end();
 }
@@ -490,7 +489,7 @@ bool CLogoManager::IsLogoAvailable(WORD NetworkID,WORD ServiceID,BYTE LogoType) 
 
 DWORD CLogoManager::GetAvailableLogoType(WORD NetworkID,WORD ServiceID) const
 {
-	CBlockLock Lock(&m_Lock);
+	TVTest::BlockLock Lock(m_Lock);
 
 	LogoIDMap::const_iterator itrID=m_LogoIDMap.find(GetIDMapKey(NetworkID,ServiceID));
 	if (itrID==m_LogoIDMap.end())
@@ -511,7 +510,7 @@ bool CLogoManager::GetLogoInfo(WORD NetworkID,WORD ServiceID,BYTE LogoType,LogoI
 	if (pInfo==NULL)
 		return false;
 
-	CBlockLock Lock(&m_Lock);
+	TVTest::BlockLock Lock(m_Lock);
 
 	auto itrID=m_LogoIDMap.find(GetIDMapKey(NetworkID,ServiceID));
 	if (itrID==m_LogoIDMap.end())
@@ -526,46 +525,47 @@ bool CLogoManager::GetLogoInfo(WORD NetworkID,WORD ServiceID,BYTE LogoType,LogoI
 	pInfo->LogoID=pLogoData->GetLogoID();
 	pInfo->LogoVersion=pLogoData->GetLogoVersion();
 	pInfo->LogoType=pLogoData->GetLogoType();
-	SYSTEMTIME st;
-	EpgTimeToUtc(&pLogoData->GetTime(),&st);
+	LibISDB::DateTime Time;
+	LibISDB::EPGTimeToUTCTime(pLogoData->GetTime(),&Time);
+	SYSTEMTIME st=Time.ToSYSTEMTIME();
 	::SystemTimeToFileTime(&st,&pInfo->UpdatedTime);
 
 	return true;
 }
 
 
-void CLogoManager::OnLogoDownloaded(const CLogoDownloader::LogoData *pData)
+void CLogoManager::OnLogoDownloaded(const LibISDB::LogoDownloaderFilter::LogoData &Data)
 {
 	// 透明なロゴは除外
-	if (pData->DataSize<=93)
+	if (Data.DataSize<=93)
 		return;
 
-	CBlockLock Lock(&m_Lock);
+	TVTest::BlockLock Lock(m_Lock);
 
-	const ULONGLONG Key=GetMapKey(pData->OriginalNetworkID,pData->LogoID,pData->LogoType);
+	const ULONGLONG Key=GetMapKey(Data.NetworkID,Data.LogoID,Data.LogoType);
 	LogoMap::iterator itr=m_LogoMap.find(Key);
 	bool fUpdated=false,fDataUpdated=false;
 	CLogoData *pLogoData;
 	if (itr!=m_LogoMap.end()) {
 		// バージョンが新しい場合のみ更新
-		int VerCmp=CompareLogoVersion(itr->second->GetLogoVersion(),pData->LogoVersion);
+		int VerCmp=CompareLogoVersion(itr->second->GetLogoVersion(),Data.LogoVersion);
 		if (VerCmp<0
-				|| (VerCmp==0 && CompareSystemTime(&itr->second->GetTime(),&pData->Time)<0)) {
+				|| (VerCmp==0 && itr->second->GetTime()<Data.Time)) {
 			// BS/CSはバージョンが共通のため、データを比較して更新を確認する
-			if (pData->DataSize!=itr->second->GetDataSize()
-					|| std::memcmp(pData->pData,itr->second->GetData(),pData->DataSize)!=0) {
-				pLogoData=new CLogoData(pData);
+			if (Data.DataSize!=itr->second->GetDataSize()
+					|| std::memcmp(Data.pData,itr->second->GetData(),Data.DataSize)!=0) {
+				pLogoData=new CLogoData(&Data);
 				delete itr->second;
 				itr->second=pLogoData;
 				fUpdated=true;
 				fDataUpdated=true;
 			} else if (VerCmp<0) {
-				itr->second->SetLogoVersion(pData->LogoVersion);
+				itr->second->SetLogoVersion(Data.LogoVersion);
 				fUpdated=true;
 			}
 		}
 	} else {
-		pLogoData=new CLogoData(pData);
+		pLogoData=new CLogoData(&Data);
 		m_LogoMap.insert(std::pair<ULONGLONG,CLogoData*>(Key,pLogoData));
 		fUpdated=true;
 		fDataUpdated=true;
@@ -574,10 +574,10 @@ void CLogoManager::OnLogoDownloaded(const CLogoDownloader::LogoData *pData)
 	if (fUpdated)
 		m_fLogoUpdated=true;
 
-	if (pData->ServiceList.size()>0) {
-		for (size_t i=0;i<pData->ServiceList.size();i++) {
-			const CLogoDownloader::LogoService &Service=pData->ServiceList[i];
-			SetLogoIDMap(Service.OriginalNetworkID,Service.ServiceID,pData->LogoID,fUpdated);
+	if (Data.ServiceList.size()>0) {
+		for (size_t i=0;i<Data.ServiceList.size();i++) {
+			const LibISDB::LogoDownloaderFilter::LogoService &Service=Data.ServiceList[i];
+			SetLogoIDMap(Service.NetworkID,Service.ServiceID,Data.LogoID,fUpdated);
 		}
 	}
 
@@ -594,14 +594,14 @@ void CLogoManager::OnLogoDownloaded(const CLogoDownloader::LogoData *pData)
 		}
 		if (m_fSaveLogo) {
 			::wsprintf(szFileName,TEXT("%04X_%03X_%03X_%02X"),
-					   pData->OriginalNetworkID,pData->LogoID,pData->LogoVersion,pData->LogoType);
+					   Data.NetworkID,Data.LogoID,Data.LogoVersion,Data.LogoType);
 			::PathCombine(szFilePath,szDirectory,szFileName);
 			if (!::PathFileExists(szFilePath))
 				pLogoData->SaveToFile(szFilePath);
 		}
 		if (m_fSaveBmp) {
 			::wsprintf(szFileName,TEXT("%04X_%03X_%03X_%02X.bmp"),
-					   pData->OriginalNetworkID,pData->LogoID,pData->LogoVersion,pData->LogoType);
+					   Data.NetworkID,Data.LogoID,Data.LogoVersion,Data.LogoType);
 			::PathCombine(szFilePath,szDirectory,szFileName);
 			if (!::PathFileExists(szFilePath))
 				pLogoData->SaveBmpToFile(&m_ImageCodec,szFilePath);
@@ -685,14 +685,13 @@ CLogoManager::CLogoData *CLogoManager::LoadLogoData(WORD NetworkID,WORD LogoID,B
 		return NULL;
 	}
 	::CloseHandle(hFile);
-	CLogoDownloader::LogoData LogoData;
-	LogoData.OriginalNetworkID=NetworkID;
+	LibISDB::LogoDownloaderFilter::LogoData LogoData;
+	LogoData.NetworkID=NetworkID;
 	LogoData.LogoID=LogoID;
-	LogoData.LogoVersion=(WORD)NewerVersion;
+	LogoData.LogoVersion=(uint16_t)NewerVersion;
 	LogoData.LogoType=LogoType;
-	LogoData.DataSize=(WORD)Read;
+	LogoData.DataSize=(uint16_t)Read;
 	LogoData.pData=pData;
-	::ZeroMemory(&LogoData.Time,sizeof(SYSTEMTIME));
 	CLogoData *pLogoData=new CLogoData(&LogoData);
 	delete [] pData;
 	return pLogoData;
@@ -701,8 +700,8 @@ CLogoManager::CLogoData *CLogoManager::LoadLogoData(WORD NetworkID,WORD LogoID,B
 
 
 
-CLogoManager::CLogoData::CLogoData(const CLogoDownloader::LogoData *pData)
-	: m_NetworkID(pData->OriginalNetworkID)
+CLogoManager::CLogoData::CLogoData(const LibISDB::LogoDownloaderFilter::LogoData *pData)
+	: m_NetworkID(pData->NetworkID)
 	, m_LogoID(pData->LogoID)
 	, m_LogoVersion(pData->LogoVersion)
 	, m_LogoType(pData->LogoType)

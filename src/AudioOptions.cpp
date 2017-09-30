@@ -2,7 +2,7 @@
 #include "TVTest.h"
 #include "AppMain.h"
 #include "AudioOptions.h"
-#include "DirectShowFilter/DirectShowUtil.h"
+#include "LibISDB/LibISDB/Windows/Viewer/DirectShow/DirectShowUtilities.hpp"
 #include "DialogUtil.h"
 #include "EpgUtil.h"
 #include "resource.h"
@@ -10,7 +10,7 @@
 #include "Common/DebugDef.h"
 
 
-static const int MAX_LANGUAGE_TEXT_LENGTH=EpgUtil::MAX_LANGUAGE_TEXT_LENGTH+16;
+static const size_t MAX_LANGUAGE_TEXT_LENGTH=LibISDB::MAX_LANGUAGE_TEXT_LENGTH+16;
 
 
 static const int MAX_FORMAT_DOUBLE_LENGTH=16;
@@ -33,7 +33,7 @@ static void FormatDouble(double Value,LPTSTR pszString,int MaxString)
 
 
 
-const CAudioDecFilter::SurroundMixingMatrix CAudioOptions::m_DefaultSurroundMixingMatrix = {
+const LibISDB::DirectShow::AudioDecoderFilter::SurroundMixingMatrix CAudioOptions::m_DefaultSurroundMixingMatrix = {
 	{
 		{1.0, 0.0, 0.0, 0.0, 0.0, 0.0},
 		{0.0, 1.0, 0.0, 0.0, 0.0, 0.0},
@@ -45,7 +45,7 @@ const CAudioDecFilter::SurroundMixingMatrix CAudioOptions::m_DefaultSurroundMixi
 };
 
 static const double PSQR = 1.0 / 1.4142135623730950488016887242097;
-const CAudioDecFilter::DownMixMatrix CAudioOptions::m_DefaultDownMixMatrix = {
+const LibISDB::DirectShow::AudioDecoderFilter::DownMixMatrix CAudioOptions::m_DefaultDownMixMatrix = {
 	{
 		{1.0, 0.0, PSQR, PSQR, PSQR, 0.0},
 		{0.0, 1.0, PSQR, PSQR, 0.0,  PSQR}
@@ -53,21 +53,23 @@ const CAudioDecFilter::DownMixMatrix CAudioOptions::m_DefaultDownMixMatrix = {
 };
 
 const DWORD CAudioOptions::m_AudioLanguageList[] = {
-	LANGUAGE_CODE_JPN,	// 日本語
-	LANGUAGE_CODE_ENG,	// 英語
-	LANGUAGE_CODE_DEU,	// ドイツ語
-	LANGUAGE_CODE_FRA,	// フランス語
-	LANGUAGE_CODE_ITA,	// イタリア語
-	LANGUAGE_CODE_KOR,	// 韓国語
-	LANGUAGE_CODE_RUS,	// ロシア語
-	LANGUAGE_CODE_SPA,	// スペイン語
-	LANGUAGE_CODE_ZHO,	// 中国語
-	LANGUAGE_CODE_ETC,	// その他
+	LibISDB::LANGUAGE_CODE_JPN,	// 日本語
+	LibISDB::LANGUAGE_CODE_ENG,	// 英語
+	LibISDB::LANGUAGE_CODE_DEU,	// ドイツ語
+	LibISDB::LANGUAGE_CODE_FRA,	// フランス語
+	LibISDB::LANGUAGE_CODE_ITA,	// イタリア語
+	LibISDB::LANGUAGE_CODE_KOR,	// 韓国語
+	LibISDB::LANGUAGE_CODE_RUS,	// ロシア語
+	LibISDB::LANGUAGE_CODE_SPA,	// スペイン語
+	LibISDB::LANGUAGE_CODE_ZHO,	// 中国語
+	LibISDB::LANGUAGE_CODE_ETC,	// その他
 };
 
 
 CAudioOptions::CAudioOptions()
-	: m_SpdifOptions(CAudioDecFilter::SPDIF_MODE_DISABLED,CAudioDecFilter::SPDIF_CHANNELS_SURROUND)
+	: m_SPDIFOptions(
+		LibISDB::DirectShow::AudioDecoderFilter::SPDIFMode::Disabled,
+		LibISDB::DirectShow::AudioDecoderFilter::SPDIFOptions::Channel_Surround)
 	, m_fDownMixSurround(true)
 	, m_fUseCustomSurroundMixingMatrix(false)
 	, m_SurroundMixingMatrix(m_DefaultSurroundMixingMatrix)
@@ -91,8 +93,8 @@ bool CAudioOptions::ReadSettings(CSettings &Settings)
 	Settings.Read(TEXT("AudioFilter"),&m_AudioFilterName);
 	int SpdifMode;
 	if (Settings.Read(TEXT("SpdifMode"),&SpdifMode))
-		m_SpdifOptions.Mode=(CAudioDecFilter::SpdifMode)SpdifMode;
-	Settings.Read(TEXT("SpdifChannels"),&m_SpdifOptions.PassthroughChannels);
+		m_SPDIFOptions.Mode=(LibISDB::DirectShow::AudioDecoderFilter::SPDIFMode)SpdifMode;
+	Settings.Read(TEXT("SpdifChannels"),&m_SPDIFOptions.PassthroughChannels);
 	Settings.Read(TEXT("DownMixSurround"),&m_fDownMixSurround);
 
 	Settings.Read(TEXT("UseCustomSurroundMixingMatrix"),&m_fUseCustomSurroundMixingMatrix);
@@ -151,8 +153,8 @@ bool CAudioOptions::WriteSettings(CSettings &Settings)
 {
 	Settings.Write(TEXT("AudioDevice"),m_AudioDeviceName);
 	Settings.Write(TEXT("AudioFilter"),m_AudioFilterName);
-	Settings.Write(TEXT("SpdifMode"),(int)m_SpdifOptions.Mode);
-	Settings.Write(TEXT("SpdifChannels"),m_SpdifOptions.PassthroughChannels);
+	Settings.Write(TEXT("SpdifMode"),(int)m_SPDIFOptions.Mode);
+	Settings.Write(TEXT("SpdifChannels"),m_SPDIFOptions.PassthroughChannels);
 	Settings.Write(TEXT("DownMixSurround"),m_fDownMixSurround);
 
 	Settings.Write(TEXT("UseCustomSurroundMixingMatrix"),m_fUseCustomSurroundMixingMatrix);
@@ -215,26 +217,28 @@ bool CAudioOptions::Create(HWND hwndOwner)
 
 bool CAudioOptions::ApplyMediaViewerOptions()
 {
-	CMediaViewer &MediaViewer=GetAppClass().CoreEngine.m_DtvEngine.m_MediaViewer;
+	LibISDB::ViewerFilter *pViewer=GetAppClass().CoreEngine.GetFilter<LibISDB::ViewerFilter>();
 
-	MediaViewer.SetDownMixSurround(m_fDownMixSurround);
+	if (pViewer==NULL)
+		return false;
 
-	CAudioDecFilter *pAudioDecFilter;
-	if (MediaViewer.GetAudioDecFilter(&pAudioDecFilter)) {
-		pAudioDecFilter->SetSurroundMixingMatrix(
+	pViewer->SetDownMixSurround(m_fDownMixSurround);
+
+	LibISDB::COMPointer<LibISDB::DirectShow::AudioDecoderFilter> AudioFilter(pViewer->GetAudioDecoderFilter());
+	if (AudioFilter) {
+		AudioFilter->SetSurroundMixingMatrix(
 			m_fUseCustomSurroundMixingMatrix?&m_SurroundMixingMatrix:NULL);
-		pAudioDecFilter->SetDownMixMatrix(
+		AudioFilter->SetDownMixMatrix(
 			m_fUseCustomDownMixMatrix?&m_DownMixMatrix:NULL);
-		pAudioDecFilter->Release();
 	}
 
 	return true;
 }
 
 
-bool CAudioOptions::SetSpdifOptions(const CAudioDecFilter::SpdifOptions &Options)
+bool CAudioOptions::SetSpdifOptions(const LibISDB::DirectShow::AudioDecoderFilter::SPDIFOptions &Options)
 {
-	m_SpdifOptions=Options;
+	m_SPDIFOptions=Options;
 	return true;
 }
 
@@ -246,7 +250,7 @@ INT_PTR CAudioOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 		{
 			int Sel=0;
 			DlgComboBox_AddString(hDlg,IDC_OPTIONS_AUDIODEVICE,TEXT("デフォルト"));
-			CDirectShowDeviceEnumerator DevEnum;
+			LibISDB::DirectShow::DeviceEnumerator DevEnum;
 			if (DevEnum.EnumDevice(CLSID_AudioRendererCategory)) {
 				for (int i=0;i<DevEnum.GetDeviceCount();i++) {
 					LPCTSTR pszName=DevEnum.GetDeviceFriendlyName(i);
@@ -260,7 +264,7 @@ INT_PTR CAudioOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 
 			Sel=0;
 			DlgComboBox_AddString(hDlg,IDC_OPTIONS_AUDIOFILTER,TEXT("なし"));
-			CDirectShowFilterFinder FilterFinder;
+			LibISDB::DirectShow::FilterFinder FilterFinder;
 			static const GUID InputTypes[] = {
 				MEDIATYPE_Audio,	MEDIASUBTYPE_PCM
 			};
@@ -271,9 +275,10 @@ INT_PTR CAudioOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 				MEDIATYPE_Audio,	MEDIASUBTYPE_DTS,
 				MEDIATYPE_Audio,	MEDIASUBTYPE_AAC,
 			};
-			if (FilterFinder.FindFilter(InputTypes,lengthof(InputTypes),
-										OutputTypes,lengthof(OutputTypes),
-										0/*MERIT_DO_NOT_USE*/)) {
+			if (FilterFinder.FindFilters(
+					InputTypes,lengthof(InputTypes),
+					OutputTypes,lengthof(OutputTypes),
+					0/*MERIT_DO_NOT_USE*/)) {
 				TVTest::String AudioFilter;
 				CLSID idAudioFilter;
 
@@ -295,17 +300,17 @@ INT_PTR CAudioOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 			};
 			for (int i=0;i<lengthof(SpdifModeList);i++)
 				DlgComboBox_AddString(hDlg,IDC_OPTIONS_SPDIFMODE,SpdifModeList[i]);
-			DlgComboBox_SetCurSel(hDlg,IDC_OPTIONS_SPDIFMODE,(int)m_SpdifOptions.Mode);
+			DlgComboBox_SetCurSel(hDlg,IDC_OPTIONS_SPDIFMODE,(int)m_SPDIFOptions.Mode);
 			DlgCheckBox_Check(hDlg,IDC_OPTIONS_SPDIF_CHANNELS_MONO,
-							  (m_SpdifOptions.PassthroughChannels&CAudioDecFilter::SPDIF_CHANNELS_MONO)!=0);
+							  (m_SPDIFOptions.PassthroughChannels&LibISDB::DirectShow::AudioDecoderFilter::SPDIFOptions::Channel_Mono)!=0);
 			DlgCheckBox_Check(hDlg,IDC_OPTIONS_SPDIF_CHANNELS_DUALMONO,
-							  (m_SpdifOptions.PassthroughChannels&CAudioDecFilter::SPDIF_CHANNELS_DUALMONO)!=0);
+							  (m_SPDIFOptions.PassthroughChannels&LibISDB::DirectShow::AudioDecoderFilter::SPDIFOptions::Channel_DualMono)!=0);
 			DlgCheckBox_Check(hDlg,IDC_OPTIONS_SPDIF_CHANNELS_STEREO,
-							  (m_SpdifOptions.PassthroughChannels&CAudioDecFilter::SPDIF_CHANNELS_STEREO)!=0);
+							  (m_SPDIFOptions.PassthroughChannels&LibISDB::DirectShow::AudioDecoderFilter::SPDIFOptions::Channel_Stereo)!=0);
 			DlgCheckBox_Check(hDlg,IDC_OPTIONS_SPDIF_CHANNELS_SURROUND,
-							  (m_SpdifOptions.PassthroughChannels&CAudioDecFilter::SPDIF_CHANNELS_SURROUND)!=0);
+							  (m_SPDIFOptions.PassthroughChannels&LibISDB::DirectShow::AudioDecoderFilter::SPDIFOptions::Channel_Surround)!=0);
 			EnableDlgItems(hDlg,IDC_OPTIONS_SPDIF_CHANNELS_LABEL,IDC_OPTIONS_SPDIF_CHANNELS_SURROUND,
-						   m_SpdifOptions.Mode==CAudioDecFilter::SPDIF_MODE_AUTO);
+						   m_SPDIFOptions.Mode==LibISDB::DirectShow::AudioDecoderFilter::SPDIFMode::Auto);
 
 			DlgCheckBox_Check(hDlg,IDC_OPTIONS_DOWNMIXSURROUND,
 							  m_fDownMixSurround);
@@ -346,10 +351,12 @@ INT_PTR CAudioOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 		switch (LOWORD(wParam)) {
 		case IDC_OPTIONS_SPDIFMODE:
 			if (HIWORD(wParam)==CBN_SELCHANGE) {
-				EnableDlgItems(hDlg,
-							   IDC_OPTIONS_SPDIF_CHANNELS_LABEL,
-							   IDC_OPTIONS_SPDIF_CHANNELS_SURROUND,
-							   DlgComboBox_GetCurSel(hDlg,IDC_OPTIONS_SPDIFMODE)==CAudioDecFilter::SPDIF_MODE_AUTO);
+				EnableDlgItems(
+					hDlg,
+					IDC_OPTIONS_SPDIF_CHANNELS_LABEL,
+					IDC_OPTIONS_SPDIF_CHANNELS_SURROUND,
+					(LibISDB::DirectShow::AudioDecoderFilter::SPDIFMode)DlgComboBox_GetCurSel(hDlg,IDC_OPTIONS_SPDIFMODE)==
+						LibISDB::DirectShow::AudioDecoderFilter::SPDIFMode::Auto);
 			}
 			return TRUE;
 
@@ -452,21 +459,21 @@ INT_PTR CAudioOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 					SetGeneralUpdateFlag(UPDATE_GENERAL_BUILDMEDIAVIEWER);
 				}
 
-				CAudioDecFilter::SpdifOptions SpdifOptions;
-				SpdifOptions.Mode=(CAudioDecFilter::SpdifMode)
+				LibISDB::DirectShow::AudioDecoderFilter::SPDIFOptions SPDIFOptions;
+				SPDIFOptions.Mode=(LibISDB::DirectShow::AudioDecoderFilter::SPDIFMode)
 					DlgComboBox_GetCurSel(hDlg,IDC_OPTIONS_SPDIFMODE);
-				SpdifOptions.PassthroughChannels=0;
+				SPDIFOptions.PassthroughChannels=0;
 				if (DlgCheckBox_IsChecked(hDlg,IDC_OPTIONS_SPDIF_CHANNELS_MONO))
-					SpdifOptions.PassthroughChannels|=CAudioDecFilter::SPDIF_CHANNELS_MONO;
+					SPDIFOptions.PassthroughChannels|=LibISDB::DirectShow::AudioDecoderFilter::SPDIFOptions::Channel_Mono;
 				if (DlgCheckBox_IsChecked(hDlg,IDC_OPTIONS_SPDIF_CHANNELS_DUALMONO))
-					SpdifOptions.PassthroughChannels|=CAudioDecFilter::SPDIF_CHANNELS_DUALMONO;
+					SPDIFOptions.PassthroughChannels|=LibISDB::DirectShow::AudioDecoderFilter::SPDIFOptions::Channel_DualMono;
 				if (DlgCheckBox_IsChecked(hDlg,IDC_OPTIONS_SPDIF_CHANNELS_STEREO))
-					SpdifOptions.PassthroughChannels|=CAudioDecFilter::SPDIF_CHANNELS_STEREO;
+					SPDIFOptions.PassthroughChannels|=LibISDB::DirectShow::AudioDecoderFilter::SPDIFOptions::Channel_Stereo;
 				if (DlgCheckBox_IsChecked(hDlg,IDC_OPTIONS_SPDIF_CHANNELS_SURROUND))
-					SpdifOptions.PassthroughChannels|=CAudioDecFilter::SPDIF_CHANNELS_SURROUND;
-				if (SpdifOptions!=m_SpdifOptions) {
-					m_SpdifOptions=SpdifOptions;
-					GetAppClass().CoreEngine.SetSpdifOptions(m_SpdifOptions);
+					SPDIFOptions.PassthroughChannels|=LibISDB::DirectShow::AudioDecoderFilter::SPDIFOptions::Channel_Surround;
+				if (SPDIFOptions!=m_SPDIFOptions) {
+					m_SPDIFOptions=SPDIFOptions;
+					GetAppClass().CoreEngine.SetSPDIFOptions(m_SPDIFOptions);
 				}
 
 				m_fDownMixSurround=
@@ -498,7 +505,7 @@ INT_PTR CAudioOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 
 void CAudioOptions::GetLanguageText(DWORD Language,bool fSub,LPTSTR pszText,int MaxText) const
 {
-	EpgUtil::GetLanguageText(Language,pszText,MaxText,EpgUtil::LANGUAGE_TEXT_LONG);
+	LibISDB::GetLanguageText_ja(Language,pszText,MaxText);
 	if (fSub)
 		::StrCatBuff(pszText,TEXT("(副音声)"),MaxText);
 }
@@ -637,7 +644,7 @@ INT_PTR CAudioOptions::CSurroundOptionsDialog::DlgProc(
 
 
 void CAudioOptions::CSurroundOptionsDialog::SetDownMixMatrix(
-	const CAudioDecFilter::DownMixMatrix &Matrix)
+	const LibISDB::DirectShow::AudioDecoderFilter::DownMixMatrix &Matrix)
 {
 	int ID=IDC_SURROUND_DOWNMIXMATRIX_L_FL;
 	for (int i=0;i<2;i++) {

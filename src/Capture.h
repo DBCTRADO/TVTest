@@ -10,7 +10,7 @@ class CCaptureImage
 {
 	HGLOBAL m_hData;
 	bool m_fLocked;
-	SYSTEMTIME m_stCaptureTime;
+	LibISDB::DateTime m_CaptureTime;
 	TVTest::String m_Comment;
 
 public:
@@ -21,7 +21,7 @@ public:
 	bool GetBitmapInfoHeader(BITMAPINFOHEADER *pbmih) const;
 	bool LockData(BITMAPINFO **ppbmi,BYTE **ppBits);
 	bool UnlockData();
-	const SYSTEMTIME &GetCaptureTime() const { return m_stCaptureTime; }
+	const LibISDB::DateTime &GetCaptureTime() const { return m_CaptureTime; }
 	void SetComment(LPCTSTR pszComment);
 	LPCTSTR GetComment() const;
 };

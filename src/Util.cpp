@@ -287,7 +287,7 @@ bool GetJSTTimeZoneInformation(TIME_ZONE_INFORMATION *pInfo)
 		DWORD Type,Size=sizeof(REG_TZI_FORMAT);
 
 		if (::RegQueryValueEx(hkey,TEXT("TZI"),NULL,&Type,
-					pointer_cast<BYTE*>(&TimeZoneInfo),&Size)==ERROR_SUCCESS
+					reinterpret_cast<BYTE*>(&TimeZoneInfo),&Size)==ERROR_SUCCESS
 				&& Type==REG_BINARY
 				&& Size==sizeof(REG_TZI_FORMAT)) {
 			pInfo->Bias=TimeZoneInfo.Bias;
@@ -972,10 +972,10 @@ HICON CreateIconFromBitmap(HBITMAP hbm,int IconWidth,int IconHeight,int ImageWid
 			ImageWidth=bm.bmWidth;
 			ImageHeight=bm.bmHeight;
 		} else {
-			ImageWidth=min(bm.bmWidth*IconHeight/bm.bmHeight,IconWidth);
+			ImageWidth=min(bm.bmWidth*IconHeight/bm.bmHeight,(long)IconWidth);
 			if (ImageWidth<1)
 				ImageWidth=1;
-			ImageHeight=min(bm.bmHeight*IconWidth/bm.bmWidth,IconHeight);
+			ImageHeight=min(bm.bmHeight*IconWidth/bm.bmWidth,(long)IconHeight);
 			if (ImageHeight<1)
 				ImageHeight=1;
 		}
@@ -1046,10 +1046,10 @@ bool SaveIconFromBitmap(LPCTSTR pszFileName,HBITMAP hbm,
 			ImageWidth=bm.bmWidth;
 			ImageHeight=bm.bmHeight;
 		} else {
-			ImageWidth=min(bm.bmWidth*IconHeight/bm.bmHeight,IconWidth);
+			ImageWidth=min(bm.bmWidth*IconHeight/bm.bmHeight,(long)IconWidth);
 			if (ImageWidth<1)
 				ImageWidth=1;
-			ImageHeight=min(bm.bmHeight*IconWidth/bm.bmWidth,IconHeight);
+			ImageHeight=min(bm.bmHeight*IconWidth/bm.bmWidth,(long)IconHeight);
 			if (ImageHeight<1)
 				ImageHeight=1;
 		}
@@ -1090,7 +1090,7 @@ bool SaveIconFromBitmap(LPCTSTR pszFileName,HBITMAP hbm,
 	bool fOK=false;
 	void *pColorBits;
 	HBITMAP hbmColor=::CreateDIBSection(
-		NULL,pointer_cast<BITMAPINFO*>(&bmih),DIB_RGB_COLORS,&pColorBits,NULL,0);
+		NULL,reinterpret_cast<BITMAPINFO*>(&bmih),DIB_RGB_COLORS,&pColorBits,NULL,0);
 	if (hbmColor!=NULL) {
 		HDC hdcSrc=::CreateCompatibleDC(NULL);
 		HBITMAP hbmSrcOld=static_cast<HBITMAP>(::SelectObject(hdcSrc,hbm));
@@ -1113,7 +1113,7 @@ bool SaveIconFromBitmap(LPCTSTR pszFileName,HBITMAP hbm,
 		HBITMAP hbmMask=CreateIconMaskBitmap(IconWidth,IconHeight,ImageWidth,ImageHeight);
 		if (hbmMask!=NULL) {
 			BYTE MaskInfoBuff[sizeof(BITMAPINFOHEADER)+sizeof(RGBQUAD)*2];
-			BITMAPINFO *pbmiMask=pointer_cast<BITMAPINFO*>(MaskInfoBuff);
+			BITMAPINFO *pbmiMask=reinterpret_cast<BITMAPINFO*>(MaskInfoBuff);
 			::CopyMemory(pbmiMask,&bmih,sizeof(BITMAPINFOHEADER));
 			pbmiMask->bmiHeader.biBitCount=1;
 			static const RGBQUAD Palette[2]={{0,0,0,0},{255,255,255,0}};

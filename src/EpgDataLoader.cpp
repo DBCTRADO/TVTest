@@ -7,11 +7,11 @@
 
 
 CEpgDataLoader::CEpgDataLoader()
-	: m_EventManager(NULL)
-	, m_hThread(NULL)
+	: m_hThread(NULL)
 	, m_hAbortEvent(NULL)
 	, m_pEventHandler(NULL)
 {
+	m_EPGDatabaseFilter.SetEPGDatabase(&m_EPGDatabase);
 }
 
 
@@ -56,7 +56,7 @@ bool CEpgDataLoader::LoadFromFile(LPCTSTR pszFileName)
 	DWORD ReadSize,RemainSize;
 	BYTE *pBuffer;
 	DWORD Size,Read;
-	CTsPacket Packet;
+	LibISDB::TSPacket Packet;
 
 	hFile=::CreateFile(pszFileName,GENERIC_READ,FILE_SHARE_READ,NULL,
 					   OPEN_EXISTING,FILE_FLAG_SEQUENTIAL_SCAN,NULL);
@@ -80,7 +80,7 @@ bool CEpgDataLoader::LoadFromFile(LPCTSTR pszFileName)
 		::CloseHandle(hFile);
 		return false;
 	}
-	m_EventManager.Reset();
+	m_EPGDatabaseFilter.Reset();
 	for (RemainSize=ReadSize;RemainSize>=188;RemainSize-=Size) {
 		Size=min(RemainSize,BUFFER_SIZE);
 		if (!::ReadFile(hFile,pBuffer,Size,&Read,NULL))
@@ -91,8 +91,10 @@ bool CEpgDataLoader::LoadFromFile(LPCTSTR pszFileName)
 			// H-EIT / TOT / M-EIT / L-EIT
 			if (PID==0x0012 || PID==0x0014 /*|| PID==0x0026*/ || PID==0x0027) {
 				Packet.SetData(p,188);
-				if (Packet.ParsePacket()==CTsPacket::EC_VALID)
-					m_EventManager.InputMedia(&Packet);
+				if (Packet.ParsePacket()==LibISDB::TSPacket::ParseResult::OK) {
+					LibISDB::SingleDataStream<LibISDB::TSPacket> Stream(&Packet);
+					m_EPGDatabaseFilter.ReceiveData(&Stream);
+				}
 			}
 			p+=188;
 		}
@@ -203,8 +205,8 @@ unsigned int __stdcall CEpgDataLoader::LoadThread(void *pParameter)
 	::SetThreadPriority(::GetCurrentThread(),THREAD_PRIORITY_LOWEST);
 	bool fSuccess=pThis->Load(pThis->m_Folder.c_str(),pThis->m_hAbortEvent);
 	if (pThis->m_pEventHandler!=NULL)
-		pThis->m_pEventHandler->OnEnd(fSuccess,&pThis->m_EventManager);
-	pThis->m_EventManager.Clear();
+		pThis->m_pEventHandler->OnEnd(fSuccess,&pThis->m_EPGDatabase);
+	pThis->m_EPGDatabase.Clear();
 	pThis->m_Folder.clear();
 	return 0;
 }

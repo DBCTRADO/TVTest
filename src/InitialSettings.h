@@ -25,7 +25,7 @@ public:
 	LPCTSTR GetMpeg2DecoderName() const { return m_Mpeg2DecoderName.c_str(); }
 	LPCTSTR GetH264DecoderName() const { return m_H264DecoderName.c_str(); }
 	LPCTSTR GetH265DecoderName() const { return m_H265DecoderName.c_str(); }
-	CVideoRenderer::RendererType GetVideoRenderer() const { return m_VideoRenderer; }
+	LibISDB::DirectShow::VideoRenderer::RendererType GetVideoRenderer() const { return m_VideoRenderer; }
 	LPCTSTR GetRecordFolder() const { return m_RecordFolder.c_str(); }
 
 private:
@@ -34,7 +34,7 @@ private:
 	TVTest::String m_Mpeg2DecoderName;
 	TVTest::String m_H264DecoderName;
 	TVTest::String m_H265DecoderName;
-	CVideoRenderer::RendererType m_VideoRenderer;
+	LibISDB::DirectShow::VideoRenderer::RendererType m_VideoRenderer;
 	TVTest::String m_RecordFolder;
 	CAeroGlass m_AeroGlass;
 	TVTest::Graphics::CImage m_LogoImage;

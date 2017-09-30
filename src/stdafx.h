@@ -5,30 +5,25 @@
 #pragma once
 
 #ifndef WINVER
-#define WINVER 0x0601		// Windows 7
+#define WINVER _WIN32_WINNT_WIN10
 #endif
 
 #ifndef _WIN32_WINNT
-#define _WIN32_WINNT 0x0601	// Windows 7
+#define _WIN32_WINNT _WIN32_WINNT_WIN10
 #endif
 
 #ifndef NTDDI_VERSION
-#define NTDDI_VERSION NTDDI_WIN7
+#define NTDDI_VERSION NTDDI_WIN10
 #endif
 
 #ifndef _WIN32_IE
-#define _WIN32_IE 0x0600	// Internet Explorer 6.0
+#define _WIN32_IE _WIN32_IE_WIN10
 #endif
 
 #define WIN32_LEAN_AND_MEAN
+#define NOMINMAX
 
 #define _WIN32_DCOM	// for CoInitializeEx()
-
-#if defined(_MSC_VER) && (_MSC_VER <= 1800)
-#ifndef _ALLOW_KEYWORD_MACROS
-#define _ALLOW_KEYWORD_MACROS
-#endif
-#endif
 
 #ifdef WIN_XP_SUPPORT
 #define PSAPI_VERSION 1
@@ -48,7 +43,6 @@
 #include <shellapi.h>
 #include <shlobj.h>
 #include <shlwapi.h>
-#include <streams.h>	// DirectShow BaseClasses
 
 #pragma warning(pop)
 
@@ -65,8 +59,6 @@
 #define strdup strdup
 #define DEBUG_NEW new(_NORMAL_BLOCK,__FILE__,__LINE__)
 #endif // _DEBUG
-
-#include "Common/Common.h"
 
 
 // 警告の無効設定
@@ -88,12 +80,6 @@
 #pragma comment(lib, "Winmm.lib")
 #pragma comment(lib, "ShLwApi.lib")
 
-#ifdef _DEBUG
-#pragma comment(lib, "StrmBasd.lib")
-#else
-#pragma comment(lib, "StrmBase.lib")
-#endif
-
 // トレース出力
 #ifdef _DEBUG
 	#undef TRACE
@@ -109,20 +95,10 @@
 
 #ifndef NO_NULLPTR
 #undef NULL
-#define NULL nullptr
+constexpr std::nullptr_t NULL = nullptr;
 #endif
 
-// アラインメント指定
-#if defined(_MSC_VER) && (_MSC_VER <= 1800)
-#define alignas(n) __declspec(align(n))
-#define alignof(t) __alignof(t)
+#ifdef NOMINMAX
+template<typename T> constexpr const T & min(const T &a, const T &b) { return a < b ? a : b; }
+template<typename T> constexpr const T & max(const T &a, const T &b) { return a > b ? a : b; }
 #endif
-
-
-// BonTsEngine の設定
-#define BONTSENGINE_SSE2				// SSE2 を利用
-#define BONTSENGINE_MPEG2_SUPPORT		// MPEG-2 対応
-#define BONTSENGINE_H264_SUPPORT		// H.264 対応
-#define BONTSENGINE_H265_SUPPORT		// H.265 対応
-#define BONTSENGINE_MPEG_AUDIO_SUPPORT	// MPEG-1/2 Audio 対応
-#define BONTSENGINE_AC3_SUPPORT			// AC-3 対応

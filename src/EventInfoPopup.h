@@ -4,11 +4,11 @@
 
 #include "BasicWindow.h"
 #include "UIBase.h"
-#include "EpgProgramList.h"
 #include "DrawUtil.h"
 #include "RichEditUtil.h"
 #include "GUIUtil.h"
 #include "WindowUtil.h"
+#include "LibISDB/LibISDB/EPG/EventInfo.hpp"
 
 
 class CEventInfoPopup
@@ -32,7 +32,7 @@ public:
 
 	CEventInfoPopup();
 	~CEventInfoPopup();
-	bool Show(const CEventInfoData *pEventInfo,const RECT *pPos=NULL,
+	bool Show(const LibISDB::EventInfo *pEventInfo,const RECT *pPos=NULL,
 			  HICON hIcon=NULL,LPCTSTR pszTitle=NULL);
 	bool Hide();
 	bool IsVisible();
@@ -54,7 +54,7 @@ public:
 	static bool Initialize(HINSTANCE hinst);
 
 private:
-	CEventInfoData m_EventInfo;
+	LibISDB::EventInfo m_EventInfo;
 	HWND m_hwndEdit;
 	CRichEditUtil m_RichEditUtil;
 	TVTest::Style::CStyleScaling m_StyleScaling;
@@ -89,8 +89,8 @@ private:
 	void RealizeStyle() override;
 
 	bool Create(HWND hwndParent,DWORD Style,DWORD ExStyle,int ID) override;
-	void SetEventInfo(const CEventInfoData *pEventInfo);
-	void FormatAudioInfo(const CEventInfoData::AudioInfo *pAudioInfo,
+	void SetEventInfo(const LibISDB::EventInfo *pEventInfo);
+	void FormatAudioInfo(const LibISDB::EventInfo::AudioInfo *pAudioInfo,
 						 LPTSTR pszText,int MaxLength) const;
 	void CalcTitleHeight();
 	void GetCloseButtonRect(RECT *pRect) const;

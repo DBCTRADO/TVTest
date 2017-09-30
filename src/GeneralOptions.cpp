@@ -36,7 +36,10 @@ bool CGeneralOptions::Apply(DWORD Flags)
 	}
 
 	if ((Flags & UPDATE_1SEGFALLBACK)!=0) {
-		App.CoreEngine.m_DtvEngine.m_TsPacketParser.EnablePATGeneration(m_fEnable1SegFallback);
+		LibISDB::TSPacketParserFilter *pPacketParser=
+			App.CoreEngine.GetFilter<LibISDB::TSPacketParserFilter>();
+		if (pPacketParser!=nullptr)
+			pPacketParser->SetGenerate1SegPAT(m_fEnable1SegFallback);
 	}
 
 	return true;

@@ -2,7 +2,7 @@
 #define TVTEST_APP_EVENT_H
 
 
-#include "DirectShowFilter/AudioDecFilter.h"
+#include "LibISDB/LibISDB/Windows/Viewer/DirectShow/AudioDecoders/AudioDecoderFilter.hpp"
 #include <vector>
 
 
@@ -51,8 +51,8 @@ namespace TVTest
 		virtual void OnPanAndScanChanged() {}
 		virtual void OnVolumeChanged(int Volume) {}
 		virtual void OnMuteChanged(bool fMute) {}
-		virtual void OnDualMonoModeChanged(CAudioDecFilter::DualMonoMode Mode) {}
-		virtual void OnStereoModeChanged(CAudioDecFilter::StereoMode Mode) {}
+		virtual void OnDualMonoModeChanged(LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode Mode) {}
+		virtual void OnStereoModeChanged(LibISDB::DirectShow::AudioDecoderFilter::StereoMode Mode) {}
 		virtual void OnAudioStreamChanged(int Stream) {}
 		virtual void OnColorSchemeChanged() {}
 		virtual void OnStandbyChanged(bool fStandby) {}
@@ -93,8 +93,8 @@ namespace TVTest
 		void OnPanAndScanChanged();
 		void OnVolumeChanged(int Volume);
 		void OnMuteChanged(bool fMute);
-		void OnDualMonoModeChanged(CAudioDecFilter::DualMonoMode Mode);
-		void OnStereoModeChanged(CAudioDecFilter::StereoMode Mode);
+		void OnDualMonoModeChanged(LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode Mode);
+		void OnStereoModeChanged(LibISDB::DirectShow::AudioDecoderFilter::StereoMode Mode);
 		void OnAudioStreamChanged(int Stream);
 		void OnColorSchemeChanged();
 		void OnStandbyChanged(bool fStandby);

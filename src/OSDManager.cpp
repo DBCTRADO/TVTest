@@ -43,7 +43,9 @@ void COSDManager::Reset()
 
 void COSDManager::ClearOSD()
 {
-	GetAppClass().CoreEngine.m_DtvEngine.m_MediaViewer.ClearOSD();
+	LibISDB::ViewerFilter *pViewer=GetAppClass().CoreEngine.GetFilter<LibISDB::ViewerFilter>();
+	if (pViewer!=nullptr)
+		pViewer->ClearOSD();
 	m_OSD.Hide();
 	m_VolumeOSD.Hide();
 }
@@ -63,6 +65,10 @@ bool COSDManager::ShowOSD(LPCTSTR pszText,unsigned int Flags)
 
 	CAppMain &App=GetAppClass();
 	CCoreEngine &CoreEngine=App.CoreEngine;
+	LibISDB::ViewerFilter *pViewer=CoreEngine.GetFilter<LibISDB::ViewerFilter>();
+
+	if (pViewer==nullptr)
+		return false;
 
 	OSDClientInfo ClientInfo;
 	ClientInfo.fForcePseudoOSD=false;
@@ -78,10 +84,10 @@ bool COSDManager::ShowOSD(LPCTSTR pszText,unsigned int Flags)
 		FadeTime=m_pOptions->GetFadeTime();
 
 	if (!m_pOptions->GetPseudoOSD() && !ClientInfo.fForcePseudoOSD
-			&& CoreEngine.m_DtvEngine.m_MediaViewer.IsDrawTextSupported()) {
+			&& pViewer->IsDrawTextSupported()) {
 		CompositeText(pszText,ClientInfo.ClientRect,0,FadeTime);
 	} else {
-		int FontSize=max((ClientInfo.ClientRect.right-ClientInfo.ClientRect.left)/m_Style.TextSizeRatio,12);
+		int FontSize=max((ClientInfo.ClientRect.right-ClientInfo.ClientRect.left)/m_Style.TextSizeRatio,12L);
 		LOGFONT lf;
 		SIZE sz;
 
@@ -119,6 +125,10 @@ bool COSDManager::ShowChannelOSD(const CChannelInfo *pInfo,LPCTSTR pszText,bool 
 
 	CAppMain &App=GetAppClass();
 	CCoreEngine &CoreEngine=App.CoreEngine;
+	LibISDB::ViewerFilter *pViewer=CoreEngine.GetFilter<LibISDB::ViewerFilter>();
+
+	if (pViewer==nullptr)
+		return false;
 
 	OSDClientInfo ClientInfo;
 	ClientInfo.fForcePseudoOSD=false;
@@ -154,7 +164,7 @@ bool COSDManager::ShowChannelOSD(const CChannelInfo *pInfo,LPCTSTR pszText,bool 
 	}
 
 	if (!m_pOptions->GetPseudoOSD() && !ClientInfo.fForcePseudoOSD
-			&& CoreEngine.m_DtvEngine.m_MediaViewer.IsDrawTextSupported()) {
+			&& pViewer->IsDrawTextSupported()) {
 		if (hbmLogo!=NULL) {
 			m_OSD.Create(ClientInfo.hwndParent,m_pOptions->GetLayeredWindow());
 			m_OSD.SetImage(hbmLogo,ImageEffect);
@@ -168,7 +178,7 @@ bool COSDManager::ShowChannelOSD(const CChannelInfo *pInfo,LPCTSTR pszText,bool 
 			CompositeText(pszText,ClientInfo.ClientRect,hbmLogo!=NULL?m_Style.LogoSize.Width:0,m_pOptions->GetFadeTime());
 		}
 	} else {
-		int FontSize=max((ClientInfo.ClientRect.right-ClientInfo.ClientRect.left)/m_Style.TextSizeRatio,12);
+		int FontSize=max((ClientInfo.ClientRect.right-ClientInfo.ClientRect.left)/m_Style.TextSizeRatio,12L);
 		LOGFONT lf;
 		SIZE sz;
 		COLORREF cr;
@@ -183,7 +193,7 @@ bool COSDManager::ShowChannelOSD(const CChannelInfo *pInfo,LPCTSTR pszText,bool 
 		m_OSD.SetPosition(ClientInfo.ClientRect.left+m_Style.Margin.Left,
 						  ClientInfo.ClientRect.top+m_Style.Margin.Top,
 						  sz.cx+FontSize/4+m_Style.LogoSize.Width,
-						  max(sz.cy,m_Style.LogoSize.Height));
+						  max(sz.cy,(LONG)m_Style.LogoSize.Height));
 		m_OSD.SetTextStyle(
 			CPseudoOSD::TEXT_STYLE_HORZ_CENTER | CPseudoOSD::TEXT_STYLE_VERT_CENTER |
 			CPseudoOSD::TEXT_STYLE_OUTLINE | CPseudoOSD::TEXT_STYLE_FILL_BACKGROUND);
@@ -212,6 +222,10 @@ bool COSDManager::ShowVolumeOSD(int Volume)
 
 	CAppMain &App=GetAppClass();
 	CCoreEngine &CoreEngine=App.CoreEngine;
+	LibISDB::ViewerFilter *pViewer=CoreEngine.GetFilter<LibISDB::ViewerFilter>();
+
+	if (pViewer==nullptr)
+		return false;
 
 	OSDClientInfo ClientInfo;
 	ClientInfo.fForcePseudoOSD=false;
@@ -230,10 +244,10 @@ bool COSDManager::ShowVolumeOSD(int Volume)
 	::wsprintf(szText+::lstrlen(szText),TEXT(" %d"),Volume);
 
 	if (!m_pOptions->GetPseudoOSD() && !ClientInfo.fForcePseudoOSD
-			&& CoreEngine.m_DtvEngine.m_MediaViewer.IsDrawTextSupported()) {
+			&& pViewer->IsDrawTextSupported()) {
 		RECT rcSrc;
 
-		if (CoreEngine.m_DtvEngine.m_MediaViewer.GetSourceRect(&rcSrc)) {
+		if (pViewer->GetSourceRect(&rcSrc)) {
 			int FontSize=((rcSrc.right-rcSrc.left)-m_Style.VolumeMargin.Horz())/(VolumeSteps*2);
 			if (FontSize<m_Style.VolumeTextSizeMin)
 				FontSize=m_Style.VolumeTextSizeMin;
@@ -249,7 +263,7 @@ bool COSDManager::ShowVolumeOSD(int Volume)
 			rcSrc.top=rcSrc.bottom-FontSize-
 				m_Style.VolumeMargin.Bottom*(rcSrc.bottom-rcSrc.top)/
 					(ClientInfo.ClientRect.bottom-ClientInfo.ClientRect.top);
-			if (CoreEngine.m_DtvEngine.m_MediaViewer.DrawText(szText,
+			if (pViewer->DrawText(szText,
 					rcSrc.left,rcSrc.top,hfont,
 					m_pOptions->GetTextColor(),m_pOptions->GetOpacity())) {
 				if (m_pOptions->GetFadeTime()>0)
@@ -295,13 +309,17 @@ bool COSDManager::CompositeText(
 	LPCTSTR pszText,const RECT &rcClient,int LeftOffset,DWORD FadeTime)
 {
 	CAppMain &App=GetAppClass();
+	LibISDB::ViewerFilter *pViewer=App.CoreEngine.GetFilter<LibISDB::ViewerFilter>();
+
+	if (pViewer==nullptr)
+		return false;
 
 	RECT rcSrc;
-	if (!App.CoreEngine.m_DtvEngine.m_MediaViewer.GetSourceRect(&rcSrc))
+	if (!pViewer->GetSourceRect(&rcSrc))
 		return false;
 
 	LOGFONT lf=*m_pOptions->GetOSDFont();
-	int FontSize=max((rcSrc.right-rcSrc.left)/m_Style.CompositeTextSizeRatio,12);
+	int FontSize=max((rcSrc.right-rcSrc.left)/m_Style.CompositeTextSizeRatio,12L);
 	lf.lfHeight=-FontSize;
 	lf.lfWidth=0;
 	lf.lfQuality=NONANTIALIASED_QUALITY;
@@ -326,7 +344,7 @@ bool COSDManager::CompositeText(
 		rcSrc.top+=48;
 	}
 	bool fOK=false;
-	if (App.CoreEngine.m_DtvEngine.m_MediaViewer.DrawText(pszText,
+	if (pViewer->DrawText(pszText,
 			rcSrc.left,rcSrc.top,hfont,
 			m_pOptions->GetTextColor(),m_pOptions->GetOpacity())) {
 		fOK=true;

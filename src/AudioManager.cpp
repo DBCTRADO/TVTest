@@ -12,16 +12,16 @@ namespace TVTest
 
 
 CAudioManager::CAudioManager()
-	: m_CurTransportStreamID(0)
-	, m_CurServiceID(0)
-	, m_CurEventID(CTsAnalyzer::EVENTID_INVALID)
+	: m_CurTransportStreamID(LibISDB::TRANSPORT_STREAM_ID_INVALID)
+	, m_CurServiceID(LibISDB::SERVICE_ID_INVALID)
+	, m_CurEventID(LibISDB::EVENT_ID_INVALID)
 {
 }
 
 
 int CAudioManager::GetAudioCount() const
 {
-	CBlockLock Lock(&m_Lock);
+	LibISDB::BlockLock Lock(m_Lock);
 
 	return (int)m_AudioList.size();
 }
@@ -29,7 +29,7 @@ int CAudioManager::GetAudioCount() const
 
 bool CAudioManager::GetAudioInfo(int Index,AudioInfo *pInfo) const
 {
-	CBlockLock Lock(&m_Lock);
+	LibISDB::BlockLock Lock(m_Lock);
 
 	if (Index<0 || (size_t)Index>=m_AudioList.size() || pInfo==nullptr)
 		return false;
@@ -45,7 +45,7 @@ bool CAudioManager::GetAudioList(AudioList *pList) const
 	if (pList==nullptr)
 		return false;
 
-	CBlockLock Lock(&m_Lock);
+	LibISDB::BlockLock Lock(m_Lock);
 
 	*pList=m_AudioList;
 
@@ -55,7 +55,7 @@ bool CAudioManager::GetAudioList(AudioList *pList) const
 
 int CAudioManager::FindAudioInfoByID(IDType ID) const
 {
-	CBlockLock Lock(&m_Lock);
+	LibISDB::BlockLock Lock(m_Lock);
 
 	for (auto it=m_AudioList.begin();it!=m_AudioList.end();++it) {
 		if (it->ID==ID)
@@ -68,7 +68,7 @@ int CAudioManager::FindAudioInfoByID(IDType ID) const
 
 int CAudioManager::GetDefaultAudio(AudioSelectInfo *pSelectInfo) const
 {
-	CBlockLock Lock(&m_Lock);
+	LibISDB::BlockLock Lock(m_Lock);
 
 	if (m_AudioList.empty())
 		return -1;
@@ -123,7 +123,7 @@ bool CAudioManager::GetAudioSelectInfoByID(
 	if (pSelectInfo==nullptr)
 		return false;
 
-	CBlockLock Lock(&m_Lock);
+	LibISDB::BlockLock Lock(m_Lock);
 
 	const int Index=FindAudioInfoByID(ID);
 	if (Index<0)
@@ -147,7 +147,7 @@ bool CAudioManager::GetAudioSelectInfoByID(
 
 void CAudioManager::SetSelectedAudio(const AudioSelectInfo *pSelectInfo)
 {
-	CBlockLock Lock(&m_Lock);
+	LibISDB::BlockLock Lock(m_Lock);
 
 	if (pSelectInfo!=nullptr) {
 		m_SelectedAudio=*pSelectInfo;
@@ -159,7 +159,7 @@ void CAudioManager::SetSelectedAudio(const AudioSelectInfo *pSelectInfo)
 
 bool CAudioManager::GetSelectedAudio(AudioSelectInfo *pSelectInfo) const
 {
-	CBlockLock Lock(&m_Lock);
+	BlockLock Lock(m_Lock);
 
 	if (pSelectInfo!=nullptr)
 		*pSelectInfo=m_SelectedAudio;
@@ -169,7 +169,7 @@ bool CAudioManager::GetSelectedAudio(AudioSelectInfo *pSelectInfo) const
 
 int CAudioManager::FindSelectedAudio() const
 {
-	CBlockLock Lock(&m_Lock);
+	LibISDB::BlockLock Lock(m_Lock);
 
 	if (m_SelectedAudio.ID==ID_INVALID)
 		return -1;
@@ -186,7 +186,7 @@ int CAudioManager::FindSelectedAudio() const
 
 void CAudioManager::SetSelectedID(IDType ID)
 {
-	CBlockLock Lock(&m_Lock);
+	LibISDB::BlockLock Lock(m_Lock);
 
 	m_SelectedAudio.ID=ID;
 }
@@ -194,7 +194,7 @@ void CAudioManager::SetSelectedID(IDType ID)
 
 CAudioManager::IDType CAudioManager::GetSelectedID() const
 {
-	CBlockLock Lock(&m_Lock);
+	LibISDB::BlockLock Lock(m_Lock);
 
 	return m_SelectedAudio.ID;
 }
@@ -205,7 +205,7 @@ bool CAudioManager::SetSelectedDualMonoMode(DualMonoMode Mode)
 	if (Mode<DUALMONO_INVALID || Mode>DUALMONO_BOTH)
 		return false;
 
-	CBlockLock Lock(&m_Lock);
+	LibISDB::BlockLock Lock(m_Lock);
 
 	m_SelectedAudio.DualMono=Mode;
 
@@ -215,7 +215,7 @@ bool CAudioManager::SetSelectedDualMonoMode(DualMonoMode Mode)
 
 CAudioManager::DualMonoMode CAudioManager::GetSelectedDualMonoMode() const
 {
-	CBlockLock Lock(&m_Lock);
+	LibISDB::BlockLock Lock(m_Lock);
 
 	return m_SelectedAudio.DualMono;
 }
@@ -224,22 +224,25 @@ CAudioManager::DualMonoMode CAudioManager::GetSelectedDualMonoMode() const
 bool CAudioManager::OnServiceUpdated()
 {
 	// PMT の情報から音声のリストを作成
-	CBlockLock Lock(&m_Lock);
-	CDtvEngine &DtvEngine=GetAppClass().CoreEngine.m_DtvEngine;
+	LibISDB::BlockLock Lock(m_Lock);
+	CCoreEngine &Engine=GetAppClass().CoreEngine;
+	LibISDB::AnalyzerFilter *pAnalyzer=Engine.GetFilter<LibISDB::AnalyzerFilter>();
 
-	const int StreamCount=DtvEngine.GetAudioStreamNum();
-	const int ServiceIndex=DtvEngine.GetServiceIndex();
+	if (pAnalyzer==nullptr)
+		return false;
+
+	const int StreamCount=Engine.GetAudioStreamCount();
+	const int ServiceIndex=Engine.GetServiceIndex();
 
 	AudioComponentList ComponentList;
 
 	ComponentList.resize(StreamCount);
 	for (int i=0;i<StreamCount;i++)
-		ComponentList[i]=MakeID(i,DtvEngine.m_TsAnalyzer.GetAudioComponentTag(ServiceIndex,i));
+		ComponentList[i]=MakeID(i,pAnalyzer->GetAudioComponentTag(ServiceIndex,i));
 
 	WORD TransportStreamID,ServiceID;
-	TransportStreamID=DtvEngine.m_TsAnalyzer.GetTransportStreamID();
-	if (!DtvEngine.GetServiceID(&ServiceID))
-		ServiceID=0;
+	TransportStreamID=Engine.GetTransportStreamID();
+	ServiceID=Engine.GetServiceID();
 	const bool fServiceChanged=
 		TransportStreamID!=m_CurTransportStreamID || ServiceID!=m_CurServiceID;
 
@@ -265,7 +268,7 @@ bool CAudioManager::OnServiceUpdated()
 
 		m_CurTransportStreamID=TransportStreamID;
 		m_CurServiceID=ServiceID;
-		m_CurEventID=CTsAnalyzer::EVENTID_INVALID;
+		m_CurEventID=LibISDB::EVENT_ID_INVALID;
 
 		SetSelectedAudio(nullptr);
 
@@ -293,78 +296,80 @@ bool CAudioManager::OnServiceUpdated()
 bool CAudioManager::OnEventUpdated()
 {
 	// EIT の情報から音声のリストを作成
-	CBlockLock Lock(&m_Lock);
-	CDtvEngine &DtvEngine=GetAppClass().CoreEngine.m_DtvEngine;
-
+	LibISDB::BlockLock Lock(m_Lock);
+	CCoreEngine &Engine=GetAppClass().CoreEngine;
+	const LibISDB::AnalyzerFilter *pAnalyzer=Engine.GetFilter<LibISDB::AnalyzerFilter>();
 	AudioList EventAudioList;
 
-	for (int i=0;;i++) {
-		CTsAnalyzer::EventAudioInfo EventAudio;
+	if (pAnalyzer!=nullptr) {
+		LibISDB::AnalyzerFilter::EventAudioList EITAudioList;
 
-		if (!DtvEngine.GetEventAudioInfo(&EventAudio,i))
-			break;
+		pAnalyzer->GetEventAudioList(Engine.GetServiceIndex(), &EITAudioList);
 
-		AudioInfo Audio1;
+		for (auto const &EventAudio : EITAudioList) {
+			AudioInfo Audio1;
 
-		Audio1.ComponentType=EventAudio.ComponentType;
-		Audio1.ComponentTag=EventAudio.ComponentTag;
-		if (Audio1.IsDualMono()) {
-			Audio1.DualMono=DUALMONO_MAIN;
-			Audio1.fMultiLingual=
-				EventAudio.bESMultiLingualFlag &&
-				EventAudio.LanguageCode!=EventAudio.LanguageCode2;
-		} else {
-			Audio1.DualMono=DUALMONO_INVALID;
-			Audio1.fMultiLingual=false;
-		}
-		Audio1.Language=EventAudio.LanguageCode;
-		Audio1.Language2=0;
-		LPCTSTR pszDelimiter=::StrChr(EventAudio.szText,TEXT('\r'));
-		if (pszDelimiter==nullptr)
-			Audio1.Text=EventAudio.szText;
-		else
-			Audio1.Text.assign(EventAudio.szText,pszDelimiter-EventAudio.szText);
-
-		EventAudioList.push_back(Audio1);
-
-		if (Audio1.IsDualMono()) {
-			AudioInfo Audio2;
-
-			Audio2.ComponentType=EventAudio.ComponentType;
-			Audio2.ComponentTag=EventAudio.ComponentTag;
-			Audio2.DualMono=DUALMONO_SUB;
-			Audio2.fMultiLingual=Audio1.fMultiLingual;
-			Audio2.Language=
-				EventAudio.bESMultiLingualFlag?
-					EventAudio.LanguageCode2 : EventAudio.LanguageCode;
-			Audio2.Language2=0;
-			if (pszDelimiter!=nullptr) {
-				pszDelimiter++;
-				if (*pszDelimiter==TEXT('\n'))
-					pszDelimiter++;
-				Audio2.Text.assign(pszDelimiter);
-			}
-
-			EventAudioList.push_back(Audio2);
-
-			Audio1.DualMono=DUALMONO_BOTH;
-			Audio1.Language2=Audio2.Language;
-			if (pszDelimiter!=nullptr) {
-				Audio1.Text+=TEXT('+');
-				Audio1.Text+=Audio2.Text;
+			Audio1.ComponentType=EventAudio.ComponentType;
+			Audio1.ComponentTag=EventAudio.ComponentTag;
+			if (Audio1.IsDualMono()) {
+				Audio1.DualMono=DUALMONO_MAIN;
+				Audio1.fMultiLingual=
+					EventAudio.ESMultiLingualFlag &&
+					EventAudio.LanguageCode!=EventAudio.LanguageCode2;
 			} else {
-				Audio1.Text.clear();
+				Audio1.DualMono=DUALMONO_INVALID;
+				Audio1.fMultiLingual=false;
 			}
+			Audio1.Language=EventAudio.LanguageCode;
+			Audio1.Language2=0;
+			String::size_type DelimiterPos=EventAudio.Text.find(TEXT('\r'));
+			if (DelimiterPos==String::npos)
+				Audio1.Text=EventAudio.Text;
+			else
+				Audio1.Text=EventAudio.Text.substr(0,DelimiterPos);
 
 			EventAudioList.push_back(Audio1);
+
+			if (Audio1.IsDualMono()) {
+				AudioInfo Audio2;
+
+				Audio2.ComponentType=EventAudio.ComponentType;
+				Audio2.ComponentTag=EventAudio.ComponentTag;
+				Audio2.DualMono=DUALMONO_SUB;
+				Audio2.fMultiLingual=Audio1.fMultiLingual;
+				Audio2.Language=
+					EventAudio.ESMultiLingualFlag?
+						EventAudio.LanguageCode2 : EventAudio.LanguageCode;
+				Audio2.Language2=0;
+				if (DelimiterPos!=String::npos) {
+					DelimiterPos++;
+					if (DelimiterPos<EventAudio.Text.length()
+							&& EventAudio.Text[DelimiterPos]==TEXT('\n'))
+						DelimiterPos++;
+					Audio2.Text=EventAudio.Text.substr(DelimiterPos);
+				}
+
+				EventAudioList.push_back(Audio2);
+
+				Audio1.DualMono=DUALMONO_BOTH;
+				Audio1.Language2=Audio2.Language;
+				if (DelimiterPos!=String::npos) {
+					Audio1.Text+=TEXT('+');
+					Audio1.Text+=Audio2.Text;
+				} else {
+					Audio1.Text.clear();
+				}
+
+				EventAudioList.push_back(Audio1);
+			}
 		}
 	}
 
 	bool fChanged=false;
 
-	const WORD EventID=DtvEngine.GetEventID();
+	const WORD EventID=Engine.GetEventID();
 	if (m_CurEventID!=EventID) {
-		if (m_CurEventID!=CTsAnalyzer::EVENTID_INVALID) {
+		if (m_CurEventID!=LibISDB::EVENT_ID_INVALID) {
 			SetSelectedAudio(nullptr);
 			fChanged=true;
 		}
@@ -391,7 +396,7 @@ void CAudioManager::MakeAudioList()
 		const BYTE ComponentTag=IDToComponentTag(ID);
 		bool fFound=false;
 
-		if (ComponentTag!=COMPONENT_TAG_INVALID) {
+		if (ComponentTag!=LibISDB::COMPONENT_TAG_INVALID) {
 			for (size_t j=0;j<m_EventAudioList.size();j++) {
 				const AudioInfo &Info=m_EventAudioList[j];
 
@@ -415,7 +420,7 @@ void CAudioManager::MakeAudioList()
 
 			Info.ID=ID;
 			Info.ComponentTag=ComponentTag;
-			Info.ComponentType=COMPONENT_TYPE_INVALID;
+			Info.ComponentType=LibISDB::COMPONENT_TYPE_INVALID;
 			Info.DualMono=DUALMONO_INVALID;
 			Info.fMultiLingual=false;
 			Info.Language=0;

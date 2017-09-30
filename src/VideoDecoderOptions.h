@@ -3,13 +3,13 @@
 
 
 #include "Settings.h"
-#include "DirectShowFilter/InternalDecoder.h"
+#include "LibISDB/LibISDB/Windows/Viewer/DirectShow/KnownDecoderManager.hpp"
 
 
 class CVideoDecoderOptions : public CSettingsBase
 {
 public:
-	typedef CInternalDecoderManager::VideoDecoderSettings VideoDecoderSettings;
+	typedef LibISDB::DirectShow::KnownDecoderManager::VideoDecoderSettings VideoDecoderSettings;
 
 	CVideoDecoderOptions();
 	bool ReadSettings(CSettings &Settings) override;

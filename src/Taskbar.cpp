@@ -4,6 +4,7 @@
 #include "TVTest.h"
 #include "Taskbar.h"
 #include "AppMain.h"
+#include "LibISDB/LibISDB/Utilities/MD5.hpp"
 #include "resource.h"
 #include "Common/DebugDef.h"
 
@@ -287,13 +288,13 @@ HRESULT CTaskbarManager::InitializeJumpList()
 			TCHAR szAppPath[MAX_PATH];
 			DWORD Length=::GetModuleFileName(NULL,szAppPath,lengthof(szAppPath));
 			::CharLowerBuff(szAppPath,Length);
-			BYTE Hash[16];
-			CMD5Calculator::CalcMD5(szAppPath,Length*sizeof(TCHAR),Hash);
+			LibISDB::MD5Value Hash=
+				LibISDB::CalcMD5(reinterpret_cast<const uint8_t *>(szAppPath),Length*sizeof(TCHAR));
 			TVTest::StringUtility::Format(
 				PropName,
 				APP_NAME TEXT("_%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x_TaskbarProp"),
-				Hash[ 0],Hash[ 1],Hash[ 2],Hash[ 3],Hash[ 4],Hash[ 5],Hash[ 6],Hash[ 7],
-				Hash[ 8],Hash[ 9],Hash[10],Hash[11],Hash[12],Hash[13],Hash[14],Hash[15]);
+				Hash.Value[ 0],Hash.Value[ 1],Hash.Value[ 2],Hash.Value[ 3],Hash.Value[ 4],Hash.Value[ 5],Hash.Value[ 6],Hash.Value[ 7],
+				Hash.Value[ 8],Hash.Value[ 9],Hash.Value[10],Hash.Value[11],Hash.Value[12],Hash.Value[13],Hash.Value[14],Hash.Value[15]);
 		} else {
 			PropName=m_AppID;
 			PropName+=TEXT("_TaskbarProp");

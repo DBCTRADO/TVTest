@@ -570,7 +570,7 @@ private:
 	bool m_fAccurateClock;
 
 	struct DirectShowFilterPropertyInfo {
-		CMediaViewer::PropertyFilter Filter;
+		LibISDB::ViewerFilter::PropertyFilterType Filter;
 		int Command;
 	};
 
@@ -618,8 +618,8 @@ private:
 	void OnPanAndScanChanged() override;
 	void OnVolumeChanged(int Volume) override;
 	void OnMuteChanged(bool fMute) override;
-	void OnDualMonoModeChanged(CAudioDecFilter::DualMonoMode Mode) override;
-	void OnStereoModeChanged(CAudioDecFilter::StereoMode Mode) override;
+	void OnDualMonoModeChanged(LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode Mode) override;
+	void OnStereoModeChanged(LibISDB::DirectShow::AudioDecoderFilter::StereoMode Mode) override;
 	void OnAudioStreamChanged(int Stream) override;
 	void OnStartupDone() override;
 	void OnVariableChanged() override;

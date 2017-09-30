@@ -23,7 +23,7 @@ public:
 	bool GetPath(LPTSTR pszPath,int MaxLength) const;
 	HICON GetIcon();
 	bool Execute(const ProgramGuide::CServiceInfo *pServiceInfo,
-				 const CEventInfoData *pEventInfo,HWND hwnd);
+				 const LibISDB::EventInfo *pEventInfo,HWND hwnd);
 	bool ShowDialog(HWND hwndOwner);
 
 private:

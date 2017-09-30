@@ -114,7 +114,7 @@ CLogger::~CLogger()
 
 bool CLogger::ReadSettings(CSettings &Settings)
 {
-	CBlockLock Lock(&m_Lock);
+	TVTest::BlockLock Lock(m_Lock);
 
 	Settings.Read(TEXT("OutputLogToFile"),&m_fOutputToFile);
 	if (m_fOutputToFile && m_LogList.size()>0) {
@@ -172,7 +172,7 @@ bool CLogger::AddLogRaw(CLogItem::LogType Type,LPCTSTR pszText)
 	if (pszText==NULL)
 		return false;
 
-	CBlockLock Lock(&m_Lock);
+	TVTest::BlockLock Lock(m_Lock);
 
 	CLogItem *pLogItem=new CLogItem(Type,pszText,m_SerialNumber++);
 	m_LogList.push_back(pLogItem);
@@ -216,7 +216,7 @@ bool CLogger::AddLogRaw(CLogItem::LogType Type,LPCTSTR pszText)
 
 void CLogger::Clear()
 {
-	CBlockLock Lock(&m_Lock);
+	TVTest::BlockLock Lock(m_Lock);
 
 	for (auto itr=m_LogList.begin();itr!=m_LogList.end();++itr)
 		delete *itr;
@@ -226,7 +226,7 @@ void CLogger::Clear()
 
 std::size_t CLogger::GetLogCount() const
 {
-	CBlockLock Lock(&m_Lock);
+	TVTest::BlockLock Lock(m_Lock);
 
 	return m_LogList.size();
 }
@@ -237,7 +237,7 @@ bool CLogger::GetLog(std::size_t Index,CLogItem *pItem) const
 	if (pItem==NULL)
 		return false;
 
-	CBlockLock Lock(&m_Lock);
+	TVTest::BlockLock Lock(m_Lock);
 
 	if (Index>=m_LogList.size())
 		return false;
@@ -253,7 +253,7 @@ bool CLogger::GetLogBySerialNumber(DWORD SerialNumber,CLogItem *pItem) const
 	if (pItem==NULL)
 		return false;
 
-	CBlockLock Lock(&m_Lock);
+	TVTest::BlockLock Lock(m_Lock);
 
 	if (m_LogList.empty())
 		return false;
@@ -270,7 +270,7 @@ bool CLogger::GetLogBySerialNumber(DWORD SerialNumber,CLogItem *pItem) const
 
 bool CLogger::SetOutputToFile(bool fOutput)
 {
-	CBlockLock Lock(&m_Lock);
+	TVTest::BlockLock Lock(m_Lock);
 
 	m_fOutputToFile=fOutput;
 	return true;
@@ -327,7 +327,7 @@ bool CLogger::GetDefaultLogFileName(LPTSTR pszFileName,DWORD MaxLength) const
 
 void CLogger::GetLogText(TVTest::String *pText) const
 {
-	CBlockLock Lock(&m_Lock);
+	TVTest::BlockLock Lock(m_Lock);
 
 	for (auto itr=m_LogList.begin();itr!=m_LogList.end();++itr) {
 		WCHAR szText[MAX_LOG_TEXT_LENGTH];
@@ -341,7 +341,7 @@ void CLogger::GetLogText(TVTest::String *pText) const
 
 void CLogger::GetLogText(TVTest::AnsiString *pText) const
 {
-	CBlockLock Lock(&m_Lock);
+	TVTest::BlockLock Lock(m_Lock);
 
 	for (auto itr=m_LogList.begin();itr!=m_LogList.end();++itr) {
 		char szText[MAX_LOG_TEXT_LENGTH];
@@ -506,7 +506,7 @@ INT_PTR CLogger::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 				bool fOutput=DlgCheckBox_IsChecked(hDlg,IDC_LOG_OUTPUTTOFILE);
 
 				if (fOutput!=m_fOutputToFile) {
-					CBlockLock Lock(&m_Lock);
+					TVTest::BlockLock Lock(m_Lock);
 
 					if (fOutput && m_LogList.size()>0) {
 						TCHAR szFileName[MAX_PATH];

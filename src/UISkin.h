@@ -4,7 +4,7 @@
 
 #include "AppEvent.h"
 #include "NotificationBar.h"
-#include "BonTsEngine/Exception.h"
+#include "LibISDB/LibISDB/Base/ErrorHandler.hpp"
 
 
 class CUICore;
@@ -58,7 +58,7 @@ public:
 	virtual int ShowMessage(LPCTSTR pszText,LPCTSTR pszCaption=NULL,
 							UINT Type=MB_OK | MB_ICONEXCLAMATION) const;
 	virtual void ShowErrorMessage(LPCTSTR pszText) const;
-	virtual void ShowErrorMessage(const CBonErrorHandler *pErrorHandler,
+	virtual void ShowErrorMessage(const LibISDB::ErrorHandler *pErrorHandler,
 								  LPCTSTR pszTitle=NULL) const;
 	virtual void ShowNotificationBar(LPCTSTR pszText,
 		CNotificationBar::MessageType Type=CNotificationBar::MESSAGE_INFO,

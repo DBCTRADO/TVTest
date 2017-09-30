@@ -137,10 +137,6 @@ void CMainPanel::UpdateProgramListPanel()
 
 	if (App.Core.GetCurrentStreamChannelInfo(&ChInfo)
 			&& ChInfo.GetServiceID()!=0) {
-		App.EpgProgramList.UpdateService(
-			ChInfo.GetNetworkID(),
-			ChInfo.GetTransportStreamID(),
-			ChInfo.GetServiceID());
 		ProgramListPanel.UpdateProgramList(&ChInfo);
 	}
 }
@@ -157,7 +153,7 @@ void CMainPanel::UpdateChannelPanel()
 			!App.EpgOptions.IsEpgFileLoading());
 	} else {
 		if (!App.EpgOptions.IsEpgFileLoading())
-			ChannelPanel.UpdateAllChannels(false);
+			ChannelPanel.UpdateAllChannels();
 	}
 	ChannelPanel.SetCurrentChannel(App.ChannelManager.GetCurrentChannel());
 }

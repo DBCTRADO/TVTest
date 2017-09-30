@@ -3,8 +3,8 @@
 
 
 #include "Options.h"
-#include "BonTsEngine/MediaViewer.h"
-#include "DirectShowFilter/VideoRenderer.h"
+#include "LibISDB/LibISDB/Windows/Viewer/ViewerFilter.hpp"
+#include "LibISDB/LibISDB/Windows/Viewer/DirectShow/VideoRenderers/VideoRenderer.hpp"
 
 
 class CVideoOptions : public COptions
@@ -12,7 +12,7 @@ class CVideoOptions : public COptions
 public:
 	struct RendererInfo
 	{
-		CVideoRenderer::RendererType Renderer;
+		LibISDB::DirectShow::VideoRenderer::RendererType Renderer;
 		LPCTSTR pszName;
 	};
 
@@ -36,12 +36,12 @@ public:
 	void SetH264DecoderName(LPCTSTR pszDecoderName);
 	LPCTSTR GetH265DecoderName() const;
 	void SetH265DecoderName(LPCTSTR pszDecoderName);
-	CVideoRenderer::RendererType GetVideoRendererType() const;
-	bool SetVideoRendererType(CVideoRenderer::RendererType Renderer);
+	LibISDB::DirectShow::VideoRenderer::RendererType GetVideoRendererType() const;
+	bool SetVideoRendererType(LibISDB::DirectShow::VideoRenderer::RendererType Renderer);
 	bool GetResetPanScanEventChange() const { return m_fResetPanScanEventChange; }
 	bool GetNoMaskSideCut() const { return m_fNoMaskSideCut; }
-	CMediaViewer::ViewStretchMode GetFullscreenStretchMode() const { return m_FullscreenStretchMode; }
-	CMediaViewer::ViewStretchMode GetMaximizeStretchMode() const { return m_MaximizeStretchMode; }
+	LibISDB::ViewerFilter::ViewStretchMode GetFullscreenStretchMode() const { return m_FullscreenStretchMode; }
+	LibISDB::ViewerFilter::ViewStretchMode GetMaximizeStretchMode() const { return m_MaximizeStretchMode; }
 	bool GetIgnoreDisplayExtension() const { return m_fIgnoreDisplayExtension; }
 	bool GetClipToDevice() const { return m_fClipToDevice; }
 
@@ -71,11 +71,11 @@ private:
 	TVTest::String m_Mpeg2DecoderName;
 	TVTest::String m_H264DecoderName;
 	TVTest::String m_H265DecoderName;
-	CVideoRenderer::RendererType m_VideoRendererType;
+	LibISDB::DirectShow::VideoRenderer::RendererType m_VideoRendererType;
 	bool m_fResetPanScanEventChange;
 	bool m_fNoMaskSideCut;
-	CMediaViewer::ViewStretchMode m_FullscreenStretchMode;
-	CMediaViewer::ViewStretchMode m_MaximizeStretchMode;
+	LibISDB::ViewerFilter::ViewStretchMode m_FullscreenStretchMode;
+	LibISDB::ViewerFilter::ViewStretchMode m_MaximizeStretchMode;
 	bool m_fIgnoreDisplayExtension;
 	bool m_fClipToDevice;
 };

@@ -189,24 +189,29 @@ bool CUICore::SetMute(bool fMute)
 }
 
 
-bool CUICore::SetDualMonoMode(CAudioDecFilter::DualMonoMode Mode,bool fApplyStereo)
+bool CUICore::SetDualMonoMode(LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode Mode,bool fApplyStereo)
 {
 	if (fApplyStereo) {
-		const BYTE ComponentType=m_App.CoreEngine.m_DtvEngine.GetAudioComponentType();
+		const LibISDB::AnalyzerFilter *pAnalyzer=m_App.CoreEngine.GetFilter<LibISDB::AnalyzerFilter>();
+		const BYTE ComponentType=
+			pAnalyzer!=nullptr ?
+				pAnalyzer->GetAudioComponentType(
+					m_App.CoreEngine.GetServiceIndex(),m_App.CoreEngine.GetAudioStream()) :
+				0;
 
 		if (ComponentType==0x03	// 0x03 = Stereo
-				|| (ComponentType==0 && m_App.CoreEngine.m_DtvEngine.GetAudioChannelNum()==2)) {
-			CAudioDecFilter::StereoMode StereoMode;
+				|| (ComponentType==0 && GetAudioChannelCount()==2)) {
+			LibISDB::DirectShow::AudioDecoderFilter::StereoMode StereoMode;
 
 			switch (Mode) {
-			case CAudioDecFilter::DUALMONO_MAIN:
-				StereoMode=CAudioDecFilter::STEREOMODE_STEREO;
+			case LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode::Main:
+				StereoMode=LibISDB::DirectShow::AudioDecoderFilter::StereoMode::Left;
 				break;
-			case CAudioDecFilter::DUALMONO_SUB:
-				StereoMode=CAudioDecFilter::STEREOMODE_LEFT;
+			case LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode::Sub:
+				StereoMode=LibISDB::DirectShow::AudioDecoderFilter::StereoMode::Right;
 				break;
-			case CAudioDecFilter::DUALMONO_BOTH:
-				StereoMode=CAudioDecFilter::STEREOMODE_RIGHT;
+			case LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode::Both:
+				StereoMode=LibISDB::DirectShow::AudioDecoderFilter::StereoMode::Stereo;
 				break;
 			default:
 				return false;
@@ -220,31 +225,31 @@ bool CUICore::SetDualMonoMode(CAudioDecFilter::DualMonoMode Mode,bool fApplySter
 }
 
 
-CAudioDecFilter::DualMonoMode CUICore::GetDualMonoMode() const
+LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode CUICore::GetDualMonoMode() const
 {
 	return m_App.CoreEngine.GetDualMonoMode();
 }
 
 
-CAudioDecFilter::DualMonoMode CUICore::GetActualDualMonoMode() const
+LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode CUICore::GetActualDualMonoMode() const
 {
-	CAudioDecFilter::DualMonoMode Mode=GetDualMonoMode();
+	LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode Mode=GetDualMonoMode();
 
 	switch (Mode) {
-	case CAudioDecFilter::DUALMONO_MAIN:
-	case CAudioDecFilter::DUALMONO_SUB:
-	case CAudioDecFilter::DUALMONO_BOTH:
+	case LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode::Main:
+	case LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode::Sub:
+	case LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode::Both:
 		break;
 	default:
 		switch (GetStereoMode()) {
-		case CAudioDecFilter::STEREOMODE_STEREO:
-			Mode=CAudioDecFilter::DUALMONO_BOTH;
+		case LibISDB::DirectShow::AudioDecoderFilter::StereoMode::Stereo:
+			Mode=LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode::Both;
 			break;
-		case CAudioDecFilter::STEREOMODE_LEFT:
-			Mode=CAudioDecFilter::DUALMONO_MAIN;
+		case LibISDB::DirectShow::AudioDecoderFilter::StereoMode::Left:
+			Mode=LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode::Main;
 			break;
-		case CAudioDecFilter::STEREOMODE_RIGHT:
-			Mode=CAudioDecFilter::DUALMONO_SUB;
+		case LibISDB::DirectShow::AudioDecoderFilter::StereoMode::Right:
+			Mode=LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode::Sub;
 			break;
 		}
 		break;
@@ -254,7 +259,7 @@ CAudioDecFilter::DualMonoMode CUICore::GetActualDualMonoMode() const
 }
 
 
-bool CUICore::SetStereoMode(CAudioDecFilter::StereoMode Mode)
+bool CUICore::SetStereoMode(LibISDB::DirectShow::AudioDecoderFilter::StereoMode Mode)
 {
 	if (!m_App.CoreEngine.SetStereoMode(Mode))
 		return false;
@@ -263,7 +268,7 @@ bool CUICore::SetStereoMode(CAudioDecFilter::StereoMode Mode)
 }
 
 
-CAudioDecFilter::StereoMode CUICore::GetStereoMode() const
+LibISDB::DirectShow::AudioDecoderFilter::StereoMode CUICore::GetStereoMode() const
 {
 	return m_App.CoreEngine.GetStereoMode();
 }
@@ -271,13 +276,22 @@ CAudioDecFilter::StereoMode CUICore::GetStereoMode() const
 
 int CUICore::GetNumAudioStreams() const
 {
-	return m_App.CoreEngine.m_DtvEngine.GetAudioStreamNum();
+	return m_App.CoreEngine.GetAudioStreamCount();
 }
 
 
 int CUICore::GetAudioStream() const
 {
-	return m_App.CoreEngine.m_DtvEngine.GetAudioStream();
+	return m_App.CoreEngine.GetAudioStream();
+}
+
+
+int CUICore::GetAudioChannelCount() const
+{
+	const LibISDB::ViewerFilter *pViewer=m_App.CoreEngine.GetFilter<LibISDB::ViewerFilter>();
+	if (pViewer==nullptr)
+		return LibISDB::ViewerFilter::AudioChannelCount_Invalid;
+	return pViewer->GetAudioChannelCount();
 }
 
 
@@ -286,10 +300,16 @@ bool CUICore::SetAudioStream(int Stream)
 	if (Stream<0 || Stream>=GetNumAudioStreams())
 		return false;
 
+	uint8_t ComponentTag;
+	const LibISDB::AnalyzerFilter *pAnalyzer=m_App.CoreEngine.GetFilter<LibISDB::AnalyzerFilter>();
+	if (pAnalyzer!=nullptr)
+		ComponentTag=pAnalyzer->GetAudioComponentTag(m_App.CoreEngine.GetServiceIndex(),Stream);
+	else
+		ComponentTag=LibISDB::COMPONENT_TAG_INVALID;
+
 	TVTest::CAudioManager::AudioSelectInfo SelInfo;
 	if (!m_App.AudioManager.GetAudioSelectInfoByID(
-			TVTest::CAudioManager::MakeID(
-				Stream,m_App.CoreEngine.m_DtvEngine.GetAudioComponentTag(Stream)),
+			TVTest::CAudioManager::MakeID(Stream,ComponentTag),
 			&SelInfo))
 		return false;
 
@@ -332,31 +352,37 @@ bool CUICore::SelectAudio(const TVTest::CAudioManager::AudioSelectInfo &Info,boo
 	int AudioIndex;
 	const BYTE ComponentTag=TVTest::CAudioManager::IDToComponentTag(Info.ID);
 
-	if (ComponentTag!=TVTest::CAudioManager::COMPONENT_TAG_INVALID) {
-		AudioIndex=m_App.CoreEngine.m_DtvEngine.m_TsAnalyzer.GetAudioIndexByComponentTag(
-			m_App.CoreEngine.m_DtvEngine.GetServiceIndex(),ComponentTag);
+	if (ComponentTag!=LibISDB::COMPONENT_TAG_INVALID) {
+		const LibISDB::AnalyzerFilter *pAnalyzer=m_App.CoreEngine.GetFilter<LibISDB::AnalyzerFilter>();
+		if (pAnalyzer!=nullptr) {
+			AudioIndex=pAnalyzer->GetAudioIndexByComponentTag(
+				m_App.CoreEngine.GetServiceIndex(),ComponentTag);
+		} else {
+			AudioIndex=-1;
+		}
 	} else {
 		AudioIndex=TVTest::CAudioManager::IDToStreamIndex(Info.ID);
 	}
 
 	if (AudioIndex>=0) {
-		CAudioDecFilter::DualMonoMode DualMonoMode=CAudioDecFilter::DUALMONO_INVALID;
+		LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode DualMonoMode=
+			LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode::Invalid;
 
 		switch (Info.DualMono) {
 		case TVTest::CAudioManager::DUALMONO_MAIN:
-			DualMonoMode=CAudioDecFilter::DUALMONO_MAIN;
+			DualMonoMode=LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode::Main;
 			break;
 		case TVTest::CAudioManager::DUALMONO_SUB:
-			DualMonoMode=CAudioDecFilter::DUALMONO_SUB;
+			DualMonoMode=LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode::Sub;
 			break;
 		case TVTest::CAudioManager::DUALMONO_BOTH:
-			DualMonoMode=CAudioDecFilter::DUALMONO_BOTH;
+			DualMonoMode=LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode::Both;
 			break;
 		}
 
 		SelectAudioStream(AudioIndex);
-		SetStereoMode(CAudioDecFilter::STEREOMODE_STEREO);
-		if (DualMonoMode!=CAudioDecFilter::DUALMONO_INVALID)
+		SetStereoMode(LibISDB::DirectShow::AudioDecoderFilter::StereoMode::Stereo);
+		if (DualMonoMode!=LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode::Invalid)
 			SelectDualMonoMode(DualMonoMode,fUpdate);
 	}
 
@@ -370,7 +396,7 @@ bool CUICore::SelectAudio(const TVTest::CAudioManager::AudioSelectInfo &Info,boo
 bool CUICore::SelectAudioStream(int Stream)
 {
 	if (Stream!=GetAudioStream()) {
-		if (!m_App.CoreEngine.m_DtvEngine.SetAudioStream(Stream))
+		if (!m_App.CoreEngine.SetAudioStream(Stream))
 			return false;
 		m_App.AppEventManager.OnAudioStreamChanged(Stream);
 	}
@@ -379,16 +405,19 @@ bool CUICore::SelectAudioStream(int Stream)
 }
 
 
-bool CUICore::SelectDualMonoMode(CAudioDecFilter::DualMonoMode Mode,bool fUpdate)
+bool CUICore::SelectDualMonoMode(LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode Mode,bool fUpdate)
 {
 	if (!m_App.CoreEngine.SetDualMonoMode(Mode))
 		return false;
 	if (fUpdate) {
 		m_App.AudioManager.SetSelectedDualMonoMode(
-			Mode==CAudioDecFilter::DUALMONO_MAIN?TVTest::CAudioManager::DUALMONO_MAIN:
-			Mode==CAudioDecFilter::DUALMONO_SUB ?TVTest::CAudioManager::DUALMONO_SUB:
-			Mode==CAudioDecFilter::DUALMONO_BOTH?TVTest::CAudioManager::DUALMONO_BOTH:
-			                                     TVTest::CAudioManager::DUALMONO_INVALID);
+			Mode==LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode::Main?
+				TVTest::CAudioManager::DUALMONO_MAIN:
+			Mode==LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode::Sub?
+				TVTest::CAudioManager::DUALMONO_SUB:
+			Mode==LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode::Both?
+				TVTest::CAudioManager::DUALMONO_BOTH:
+				TVTest::CAudioManager::DUALMONO_INVALID);
 	}
 	m_App.AppEventManager.OnDualMonoModeChanged(Mode);
 	return true;
@@ -397,10 +426,10 @@ bool CUICore::SelectDualMonoMode(CAudioDecFilter::DualMonoMode Mode,bool fUpdate
 
 bool CUICore::SwitchAudio()
 {
-	const int NumChannels=m_App.CoreEngine.m_DtvEngine.GetAudioChannelNum();
+	const int NumChannels=GetAudioChannelCount();
 	bool fResult;
 
-	if (NumChannels==CMediaViewer::AUDIO_CHANNEL_DUALMONO) {
+	if (NumChannels==LibISDB::ViewerFilter::AudioChannelCount_DualMono) {
 		fResult=SwitchDualMonoMode();
 	} else {
 		const int NumStreams=GetNumAudioStreams();
@@ -417,18 +446,18 @@ bool CUICore::SwitchAudio()
 
 bool CUICore::SwitchDualMonoMode()
 {
-	CAudioDecFilter::DualMonoMode Mode;
+	LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode Mode;
 
 	switch (GetDualMonoMode()) {
-	case CAudioDecFilter::DUALMONO_MAIN:
-		Mode=CAudioDecFilter::DUALMONO_SUB;
+	case LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode::Main:
+		Mode=LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode::Sub;
 		break;
-	case CAudioDecFilter::DUALMONO_SUB:
-		Mode=CAudioDecFilter::DUALMONO_BOTH;
+	case LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode::Sub:
+		Mode=LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode::Both;
 		break;
-	case CAudioDecFilter::DUALMONO_BOTH:
+	case LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode::Both:
 	default:
-		Mode=CAudioDecFilter::DUALMONO_MAIN;
+		Mode=LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode::Main;
 		break;
 	}
 
@@ -443,64 +472,69 @@ int CUICore::FormatCurrentAudioText(LPTSTR pszText,int MaxLength) const
 
 	CStaticStringFormatter Formatter(pszText,MaxLength);
 
-	const int NumChannels=m_App.CoreEngine.m_DtvEngine.GetAudioChannelNum();
-	if (NumChannels==CMediaViewer::AUDIO_CHANNEL_INVALID)
+	const LibISDB::AnalyzerFilter *pAnalyzer=m_App.CoreEngine.GetFilter<LibISDB::AnalyzerFilter>();
+	if (pAnalyzer==nullptr)
+		return 0;
+
+	const int NumChannels=GetAudioChannelCount();
+	if (NumChannels==LibISDB::ViewerFilter::AudioChannelCount_Invalid)
 		return 0;
 
 	const int NumAudio=GetNumAudioStreams();
-	const CAudioDecFilter::StereoMode StereoMode=GetStereoMode();
-	CTsAnalyzer::EventAudioInfo AudioInfo;
+	const LibISDB::DirectShow::AudioDecoderFilter::StereoMode StereoMode=GetStereoMode();
+	LibISDB::AnalyzerFilter::EventAudioInfo AudioInfo;
 
 	if (NumAudio>1)
 		Formatter.AppendFormat(TEXT("#%d: "),GetAudioStream()+1);
 
-	if (NumChannels==CMediaViewer::AUDIO_CHANNEL_DUALMONO) {
+	if (NumChannels==LibISDB::ViewerFilter::AudioChannelCount_DualMono) {
 		// Dual mono
-		const CAudioDecFilter::DualMonoMode DualMonoMode=GetActualDualMonoMode();
+		const LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode DualMonoMode=GetActualDualMonoMode();
 
-		if (m_App.CoreEngine.m_DtvEngine.GetEventAudioInfo(&AudioInfo)
+		if (pAnalyzer->GetEventAudioInfo(m_App.CoreEngine.GetServiceIndex(),GetAudioStream(),&AudioInfo)
 				&& AudioInfo.ComponentType==0x02
-				&& AudioInfo.bESMultiLingualFlag
+				&& AudioInfo.ESMultiLingualFlag
 				// ES multilingual flag が立っているのに両方日本語の場合がある
 				&& AudioInfo.LanguageCode!=AudioInfo.LanguageCode2) {
 			// 二カ国語
-			TCHAR szLang1[EpgUtil::MAX_LANGUAGE_TEXT_LENGTH];
-			TCHAR szLang2[EpgUtil::MAX_LANGUAGE_TEXT_LENGTH];
+			TCHAR szLang1[LibISDB::MAX_LANGUAGE_TEXT_LENGTH];
+			TCHAR szLang2[LibISDB::MAX_LANGUAGE_TEXT_LENGTH];
 
 			Formatter.Append(TEXT("[二] "));
 
 			switch (DualMonoMode) {
-			case CAudioDecFilter::DUALMONO_MAIN:
-				EpgUtil::GetLanguageText(AudioInfo.LanguageCode,
-										 szLang1,lengthof(szLang1),
-										 EpgUtil::LANGUAGE_TEXT_SIMPLE);
+			case LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode::Main:
+				LibISDB::GetLanguageText_ja(AudioInfo.LanguageCode,
+											szLang1,lengthof(szLang1),
+											LibISDB::LanguageTextType::Simple);
 				Formatter.Append(szLang1);
 				break;
-			case CAudioDecFilter::DUALMONO_SUB:
-				EpgUtil::GetLanguageText(AudioInfo.LanguageCode2,
-										 szLang2,lengthof(szLang2),
-										 EpgUtil::LANGUAGE_TEXT_SIMPLE);
+			case LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode::Sub:
+				LibISDB::GetLanguageText_ja(AudioInfo.LanguageCode2,
+											szLang2,lengthof(szLang2),
+											LibISDB::LanguageTextType::Simple);
 				Formatter.Append(szLang2);
 				break;
-			case CAudioDecFilter::DUALMONO_BOTH:
-				EpgUtil::GetLanguageText(AudioInfo.LanguageCode,
-										 szLang1,lengthof(szLang1),
-										 EpgUtil::LANGUAGE_TEXT_SHORT);
-				EpgUtil::GetLanguageText(AudioInfo.LanguageCode2,
-										 szLang2,lengthof(szLang2),
-										 EpgUtil::LANGUAGE_TEXT_SHORT);
+			case LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode::Both:
+				LibISDB::GetLanguageText_ja(AudioInfo.LanguageCode,
+											szLang1,lengthof(szLang1),
+											LibISDB::LanguageTextType::Short);
+				LibISDB::GetLanguageText_ja(AudioInfo.LanguageCode2,
+											szLang2,lengthof(szLang2),
+											LibISDB::LanguageTextType::Short);
 				Formatter.AppendFormat(TEXT("%s+%s"),szLang1,szLang2);
 				break;
 			}
 		} else {
 			Formatter.Append(
-				DualMonoMode==CAudioDecFilter::DUALMONO_MAIN?
+				DualMonoMode==LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode::Main?
 					TEXT("主音声"):
-				DualMonoMode==CAudioDecFilter::DUALMONO_SUB?
+				DualMonoMode==LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode::Sub?
 					TEXT("副音声"):
 					TEXT("主+副音声"));
 		}
-	} else if (NumAudio>1 && m_App.CoreEngine.m_DtvEngine.GetEventAudioInfo(&AudioInfo)) {
+	} else if (NumAudio>1
+			&& pAnalyzer->GetEventAudioInfo(m_App.CoreEngine.GetServiceIndex(),GetAudioStream(),&AudioInfo)) {
 		TCHAR szFormat[16];
 
 		switch (NumChannels) {
@@ -510,9 +544,9 @@ int CUICore::FormatCurrentAudioText(LPTSTR pszText,int MaxLength) const
 
 		case 2:
 			::lstrcpy(szFormat,
-				StereoMode==CAudioDecFilter::STEREOMODE_LEFT?
+				StereoMode==LibISDB::DirectShow::AudioDecoderFilter::StereoMode::Left?
 					TEXT("[S(L)]"):
-				StereoMode==CAudioDecFilter::STEREOMODE_RIGHT?
+				StereoMode==LibISDB::DirectShow::AudioDecoderFilter::StereoMode::Right?
 					TEXT("[S(R)]"):
 					TEXT("[S]"));
 			break;
@@ -526,26 +560,25 @@ int CUICore::FormatCurrentAudioText(LPTSTR pszText,int MaxLength) const
 			break;
 		}
 
-		TCHAR szAudio[CTsAnalyzer::EventAudioInfo::MAX_TEXT];
-		if (AudioInfo.szText[0]!='\0') {
-			LPTSTR p=::StrChr(AudioInfo.szText,_T('\r'));
-			if (p!=nullptr) {
-				TCHAR szBuf[CTsAnalyzer::EventAudioInfo::MAX_TEXT];
-				StdUtil::strncpy(szBuf,p-AudioInfo.szText,AudioInfo.szText);
-				p++;
-				if (*p==_T('\n'))
-					p++;
-				int Length=::lstrlen(szBuf);
-				StdUtil::snprintf(szBuf+Length,lengthof(szBuf)-Length,TEXT("/%s"),p);
+		TCHAR szAudio[64];
+		if (!AudioInfo.Text.empty()) {
+			LibISDB::String::size_type Pos=AudioInfo.Text.find(TEXT('\r'));
+			if (Pos!=LibISDB::String::npos) {
+				TCHAR szBuf[64];
+				StdUtil::strncpy(szBuf,Pos,AudioInfo.Text.c_str());
+				Pos++;
+				if (Pos<AudioInfo.Text.length() && AudioInfo.Text[Pos]==TEXT('\n'))
+					Pos++;
+				StdUtil::snprintf(szBuf+Pos,lengthof(szBuf)-Pos,TEXT("/%s"),AudioInfo.Text.c_str()+Pos);
 				TVTest::StringUtility::ToHalfWidthNoKatakana(
 					szBuf,szAudio,lengthof(szAudio));
 			} else {
 				TVTest::StringUtility::ToHalfWidthNoKatakana(
-					AudioInfo.szText,szAudio,lengthof(szAudio));
+					AudioInfo.Text.c_str(),szAudio,lengthof(szAudio));
 			}
 
 			// [S] などがあれば除去する
-			p=::StrStrI(szAudio,szFormat);
+			LPTSTR p=::StrStrI(szAudio,szFormat);
 			if (p!=NULL) {
 				int Length=::lstrlen(szFormat);
 				if (p>szAudio && *(p-1)==_T(' ')) {
@@ -555,17 +588,17 @@ int CUICore::FormatCurrentAudioText(LPTSTR pszText,int MaxLength) const
 				if (p[Length]==_T(' '))
 					Length++;
 				if (p==szAudio && ::lstrlen(szAudio)==Length) {
-					EpgUtil::GetLanguageText(AudioInfo.LanguageCode,
-											 szAudio,lengthof(szAudio),
-											 EpgUtil::LANGUAGE_TEXT_SIMPLE);
+					LibISDB::GetLanguageText_ja(AudioInfo.LanguageCode,
+												szAudio,lengthof(szAudio),
+												LibISDB::LanguageTextType::Simple);
 				} else {
 					std::memmove(p,p+Length,(::lstrlen(p+Length)+1)*sizeof(TCHAR));
 				}
 			}
 		} else {
-			EpgUtil::GetLanguageText(AudioInfo.LanguageCode,
-									 szAudio,lengthof(szAudio),
-									 EpgUtil::LANGUAGE_TEXT_SIMPLE);
+			LibISDB::GetLanguageText_ja(AudioInfo.LanguageCode,
+										szAudio,lengthof(szAudio),
+										LibISDB::LanguageTextType::Simple);
 		}
 
 		Formatter.AppendFormat(TEXT("%s %s"),szFormat,szAudio);
@@ -577,8 +610,8 @@ int CUICore::FormatCurrentAudioText(LPTSTR pszText,int MaxLength) const
 
 		case 2:
 			Formatter.Append(TEXT("Stereo"));
-			if (StereoMode!=CAudioDecFilter::STEREOMODE_STEREO)
-				Formatter.Append(StereoMode==CAudioDecFilter::STEREOMODE_LEFT?TEXT("(L)"):TEXT("(R)"));
+			if (StereoMode!=LibISDB::DirectShow::AudioDecoderFilter::StereoMode::Stereo)
+				Formatter.Append(StereoMode==LibISDB::DirectShow::AudioDecoderFilter::StereoMode::Left?TEXT("(L)"):TEXT("(R)"));
 			break;
 
 		case 6:
@@ -600,32 +633,34 @@ bool CUICore::GetSelectedAudioText(LPTSTR pszText,int MaxLength) const
 	if (pszText==nullptr || MaxLength<1)
 		return false;
 
-	CTsAnalyzer::EventAudioInfo AudioInfo;
+	const LibISDB::AnalyzerFilter *pAnalyzer=m_App.CoreEngine.GetFilter<LibISDB::AnalyzerFilter>();
+	LibISDB::AnalyzerFilter::EventAudioInfo AudioInfo;
 
-	if (m_App.CoreEngine.m_DtvEngine.GetEventAudioInfo(&AudioInfo)) {
+	if (pAnalyzer!=nullptr
+			&& pAnalyzer->GetEventAudioInfo(m_App.CoreEngine.GetServiceIndex(),GetAudioStream(),&AudioInfo)) {
 		if (AudioInfo.ComponentType==0x02) {
 			// Dual mono
 			TCHAR szAudio1[64],szAudio2[64];
 
 			szAudio1[0]=_T('\0');
 			szAudio2[0]=_T('\0');
-			if (AudioInfo.szText[0]!=_T('\0')) {
-				LPTSTR pszDelimiter=::StrChr(AudioInfo.szText,_T('\r'));
-				if (pszDelimiter!=nullptr) {
-					*pszDelimiter=_T('\0');
-					if (*(pszDelimiter+1)==_T('\n'))
-						pszDelimiter++;
-					::lstrcpyn(szAudio1,AudioInfo.szText,lengthof(szAudio1));
-					::lstrcpyn(szAudio2,pszDelimiter+1,lengthof(szAudio2));
+			if (!AudioInfo.Text.empty()) {
+				LibISDB::String::size_type Pos=AudioInfo.Text.find(TEXT('\r'));
+				if (Pos!=LibISDB::String::npos) {
+					StdUtil::strncpy(szAudio1,min(lengthof(szAudio1),Pos),AudioInfo.Text.c_str());
+					Pos++;
+					if (Pos<AudioInfo.Text.length() && AudioInfo.Text[Pos]==TEXT('\n'))
+						Pos++;
+					StdUtil::strncpy(szAudio2,lengthof(szAudio2),AudioInfo.Text.c_str()+Pos);
 				}
 			}
-			if (AudioInfo.bESMultiLingualFlag
+			if (AudioInfo.ESMultiLingualFlag
 					&& AudioInfo.LanguageCode!=AudioInfo.LanguageCode2) {
 				// 二カ国語
 				if (szAudio1[0]==_T('\0'))
-					EpgUtil::GetLanguageText(AudioInfo.LanguageCode,szAudio1,lengthof(szAudio1));
+					LibISDB::GetLanguageText_ja(AudioInfo.LanguageCode,szAudio1,lengthof(szAudio1));
 				if (szAudio2[0]==_T('\0'))
-					EpgUtil::GetLanguageText(AudioInfo.LanguageCode2,szAudio2,lengthof(szAudio2));
+					LibISDB::GetLanguageText_ja(AudioInfo.LanguageCode2,szAudio2,lengthof(szAudio2));
 			} else {
 				if (szAudio1[0]==_T('\0'))
 					::lstrcpy(szAudio1,TEXT("主音声"));
@@ -633,33 +668,33 @@ bool CUICore::GetSelectedAudioText(LPTSTR pszText,int MaxLength) const
 					::lstrcpy(szAudio2,TEXT("副音声"));
 			}
 			switch (GetActualDualMonoMode()) {
-			case CAudioDecFilter::DUALMONO_MAIN:
+			case LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode::Main:
 				::lstrcpyn(pszText,szAudio1,MaxLength);
 				break;
-			case CAudioDecFilter::DUALMONO_SUB:
+			case LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode::Sub:
 				::lstrcpyn(pszText,szAudio2,MaxLength);
 				break;
-			case CAudioDecFilter::DUALMONO_BOTH:
+			case LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode::Both:
 				StdUtil::snprintf(pszText,MaxLength,TEXT("%s+%s"),szAudio1,szAudio2);
 				break;
 			default:
 				return false;
 			}
 		} else {
-			if (AudioInfo.szText[0]==_T('\0')) {
-				EpgUtil::GetLanguageText(AudioInfo.LanguageCode,
-										 AudioInfo.szText,lengthof(AudioInfo.szText));
-			}
+			TCHAR szText[LibISDB::MAX_LANGUAGE_TEXT_LENGTH];
+			if (AudioInfo.Text.empty())
+				LibISDB::GetLanguageText_ja(AudioInfo.LanguageCode,szText,lengthof(szText));
 			StdUtil::snprintf(pszText,MaxLength,TEXT("音声%d: %s"),
-							  GetAudioStream()+1,AudioInfo.szText);
+							  GetAudioStream()+1,
+							  AudioInfo.Text.empty()?szText:AudioInfo.Text.c_str());
 		}
-	} else if (m_App.CoreEngine.m_DtvEngine.GetAudioChannelNum()==2
-			&& GetStereoMode()!=CAudioDecFilter::STEREOMODE_STEREO) {
+	} else if (GetAudioChannelCount()==2
+			&& GetStereoMode()!=LibISDB::DirectShow::AudioDecoderFilter::StereoMode::Stereo) {
 		int Pos=0;
 		if (GetNumAudioStreams()>1)
 			Pos=StdUtil::snprintf(pszText,MaxLength,TEXT("音声%d: "),GetAudioStream()+1);
 		StdUtil::snprintf(pszText+Pos,MaxLength-Pos,TEXT("ステレオ%s"),
-						  GetStereoMode()==CAudioDecFilter::STEREOMODE_LEFT?TEXT("左"):TEXT("右"));
+						  GetStereoMode()==LibISDB::DirectShow::AudioDecoderFilter::StereoMode::Left?TEXT("左"):TEXT("右"));
 	} else {
 		StdUtil::snprintf(pszText,MaxLength,TEXT("音声%d"),GetAudioStream()+1);
 	}
@@ -1521,19 +1556,26 @@ bool CUICore::InitChannelMenuPopup(HMENU hmenuParent,HMENU hmenu)
 }
 
 
-void CUICore::OnTrace(CTracer::TraceType Type,LPCTSTR pszOutput)
+void CUICore::OnLog(LibISDB::Logger::LogType Type,LPCTSTR pszOutput)
 {
 	CLogItem::LogType LogType;
 
 	switch (Type) {
-	case CTracer::TYPE_INFORMATION:	LogType=CLogItem::TYPE_INFORMATION;	break;
-	case CTracer::TYPE_WARNING:		LogType=CLogItem::TYPE_WARNING;		break;
-	case CTracer::TYPE_ERROR:		LogType=CLogItem::TYPE_ERROR;		break;
+	case LibISDB::Logger::LogType::Verbose:
+	case LibISDB::Logger::LogType::Information:
+		LogType=CLogItem::TYPE_INFORMATION;
+		break;
+	case LibISDB::Logger::LogType::Warning:
+		LogType=CLogItem::TYPE_WARNING;
+		break;
+	case LibISDB::Logger::LogType::Error:
+		LogType=CLogItem::TYPE_ERROR;
+		break;
 	default:
 		return;
 	}
 
-	if (m_fStatusBarTrace && Type==CTracer::TYPE_INFORMATION)
+	if (m_fStatusBarTrace && LogType==CLogItem::TYPE_INFORMATION)
 		m_App.StatusView.SetSingleText(pszOutput);
 	else
 		m_App.Logger.AddLogRaw(LogType,pszOutput);
@@ -1556,10 +1598,9 @@ bool CUICore::CTitleStringMap::GetLocalString(LPCWSTR pszKeyword,TVTest::String 
 {
 	if (::lstrcmpi(pszKeyword,TEXT("event-time"))==0) {
 		TCHAR szTime[EpgUtil::MAX_EVENT_TIME_LENGTH+1];
-		if (m_EventInfo.Event.m_bValidStartTime
+		if (m_EventInfo.Event.StartTime.IsValid()
 				&& EpgUtil::FormatEventTime(
-					m_EventInfo.Event.m_StartTime,
-					m_EventInfo.Event.m_Duration,
+					m_EventInfo.Event,
 					szTime,lengthof(szTime))>0)
 			*pString=szTime;
 	} else if (::lstrcmpi(pszKeyword,TEXT("rec-circle"))==0) {

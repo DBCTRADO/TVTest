@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "TVTest.h"
 #include "AppMain.h"
-#include "BonTsEngine/TsInformation.h"
+#include "LibISDB/LibISDB/TS/TSInformation.hpp"
 #include "resource.h"
 #include "Common/DebugDef.h"
 
@@ -25,7 +25,7 @@ bool CMainDisplay::Create(HWND hwndParent,int ViewID,int ContainerID,HWND hwndMe
 	m_ViewWindow.SetMessageWindow(hwndMessage);
 	m_VideoContainer.Create(m_ViewWindow.GetHandle(),
 		WS_CHILD | WS_CLIPCHILDREN | WS_CLIPSIBLINGS,0,ContainerID,
-		&m_App.CoreEngine.m_DtvEngine);
+		m_App.CoreEngine.GetFilter<LibISDB::ViewerFilter>());
 	m_ViewWindow.SetVideoContainer(&m_VideoContainer);
 
 	m_DisplayBase.SetParent(&m_VideoContainer);
@@ -38,11 +38,15 @@ bool CMainDisplay::Create(HWND hwndParent,int ViewID,int ContainerID,HWND hwndMe
 bool CMainDisplay::EnableViewer(bool fEnable)
 {
 	if (m_fViewerEnabled!=fEnable) {
-		if (fEnable && !m_App.CoreEngine.m_DtvEngine.m_MediaViewer.IsOpen())
+		LibISDB::ViewerFilter *pViewer=m_App.CoreEngine.GetFilter<LibISDB::ViewerFilter>();
+
+		if (pViewer==nullptr)
+			return false;
+		if (fEnable && !pViewer->IsOpen())
 			return false;
 		if (fEnable || (!fEnable && !m_DisplayBase.IsVisible()))
 			m_VideoContainer.SetVisible(fEnable);
-		m_App.CoreEngine.m_DtvEngine.m_MediaViewer.SetVisible(fEnable);
+		pViewer->SetVisible(fEnable);
 		if (!m_App.CoreEngine.EnableMediaViewer(fEnable))
 			return false;
 		if (m_App.PlaybackOptions.GetMinTimerResolution())
@@ -57,35 +61,29 @@ bool CMainDisplay::EnableViewer(bool fEnable)
 bool CMainDisplay::BuildViewer(BYTE VideoStreamType)
 {
 	if (VideoStreamType==0) {
-		VideoStreamType=m_App.CoreEngine.m_DtvEngine.GetVideoStreamType();
-		if (VideoStreamType==STREAM_TYPE_UNINITIALIZED)
+		VideoStreamType=m_App.CoreEngine.GetVideoStreamType();
+		if (VideoStreamType==LibISDB::STREAM_TYPE_UNINITIALIZED)
 			return false;
 	}
 	LPCWSTR pszVideoDecoder=nullptr;
 
 	switch (VideoStreamType) {
-#ifdef BONTSENGINE_MPEG2_SUPPORT
-	case STREAM_TYPE_MPEG2_VIDEO:
+	case LibISDB::STREAM_TYPE_MPEG2_VIDEO:
 		pszVideoDecoder=m_App.VideoOptions.GetMpeg2DecoderName();
 		break;
-#endif
 
-#ifdef BONTSENGINE_H264_SUPPORT
-	case STREAM_TYPE_H264:
+	case LibISDB::STREAM_TYPE_H264:
 		pszVideoDecoder=m_App.VideoOptions.GetH264DecoderName();
 		break;
-#endif
 
-#ifdef BONTSENGINE_H265_SUPPORT
-	case STREAM_TYPE_H265:
+	case LibISDB::STREAM_TYPE_H265:
 		pszVideoDecoder=m_App.VideoOptions.GetH265DecoderName();
 		break;
-#endif
 
 	default:
-		if (m_App.CoreEngine.m_DtvEngine.GetAudioStreamNum()==0)
+		if (m_App.CoreEngine.GetAudioStreamCount()==0)
 			return false;
-		VideoStreamType=STREAM_TYPE_INVALID;
+		VideoStreamType=LibISDB::STREAM_TYPE_INVALID;
 		break;
 	}
 
@@ -94,17 +92,26 @@ bool CMainDisplay::BuildViewer(BYTE VideoStreamType)
 
 	m_App.AddLog(
 		TEXT("DirectShowの初期化を行います(%s)..."),
-		VideoStreamType==STREAM_TYPE_INVALID?
+		VideoStreamType==LibISDB::STREAM_TYPE_INVALID?
 			TEXT("映像なし"):
-			TsEngine::GetStreamTypeText(VideoStreamType));
+			LibISDB::GetStreamTypeText(VideoStreamType));
 
-	m_App.CoreEngine.m_DtvEngine.m_MediaViewer.SetAudioFilter(m_App.AudioOptions.GetAudioFilterName());
-	if (!m_App.CoreEngine.BuildMediaViewer(
-			m_VideoContainer.GetHandle(),
-			m_VideoContainer.GetHandle(),
-			m_App.VideoOptions.GetVideoRendererType(),
-			VideoStreamType,pszVideoDecoder,
-			m_App.AudioOptions.GetAudioDeviceName())) {
+	LibISDB::ViewerFilter *pViewer=m_App.CoreEngine.GetFilter<LibISDB::ViewerFilter>();
+	if (pViewer==nullptr)
+		return false;
+
+	LibISDB::ViewerFilter::OpenSettings OpenSettings;
+
+	OpenSettings.hwndRender=m_VideoContainer.GetHandle();
+	OpenSettings.hwndMessageDrain=m_VideoContainer.GetHandle();
+	OpenSettings.VideoRenderer=m_App.VideoOptions.GetVideoRendererType();
+	OpenSettings.VideoStreamType=VideoStreamType;
+	OpenSettings.pszVideoDecoder=pszVideoDecoder;
+	OpenSettings.pszAudioDevice=m_App.AudioOptions.GetAudioDeviceName();
+	if (m_App.AudioOptions.GetAudioFilterName()!=nullptr)
+		OpenSettings.AudioFilterList.emplace_back(m_App.AudioOptions.GetAudioFilterName());
+
+	if (!m_App.CoreEngine.BuildMediaViewer(OpenSettings)) {
 		m_App.Core.OnError(&m_App.CoreEngine,TEXT("DirectShowの初期化ができません。"));
 		return false;
 	}

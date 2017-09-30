@@ -253,7 +253,8 @@ void CAudioControlItem::Draw(HDC hdc,const RECT &Rect)
 	RECT rc=Rect;
 	TVTest::Style::Subtract(&rc,m_pControlPanel->GetItemPadding());
 
-	if (App.CoreEngine.m_DtvEngine.m_MediaViewer.IsSpdifPassthrough()) {
+	const LibISDB::ViewerFilter *pViewer=App.CoreEngine.GetFilter<LibISDB::ViewerFilter>();
+	if (pViewer!=nullptr && pViewer->IsSPDIFPassthrough()) {
 		TVTest::Style::Size IconSize=m_pControlPanel->GetIconSize();
 		if (!m_Icons.IsCreated()) {
 			static const TVTest::Theme::IconList::ResourceInfo ResourceList[] = {

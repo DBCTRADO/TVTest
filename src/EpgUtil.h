@@ -2,10 +2,11 @@
 #define EPG_UTIL_H
 
 
-#include "EpgProgramList.h"
 #include "DrawUtil.h"
 #include "ThemeManager.h"
 #include "ThemeDraw.h"
+#include "LibISDB/LibISDB/EPG/EventInfo.hpp"
+#include "LibISDB/LibISDB/TS/TSInformation.hpp"
 
 
 namespace EpgUtil
@@ -18,9 +19,6 @@ namespace EpgUtil
 	};
 
 	VideoType GetVideoType(BYTE ComponentType);
-	LPCTSTR GetComponentTypeText(BYTE StreamContent,BYTE ComponentType);
-	LPCTSTR GetVideoComponentTypeText(BYTE ComponentType);
-	LPCTSTR GetAudioComponentTypeText(BYTE ComponentType);
 
 	enum {
 		EVENT_TIME_HOUR_2DIGITS   = 0x0001U,
@@ -34,34 +32,27 @@ namespace EpgUtil
 		MAX_EVENT_TIME_LENGTH = 64
 	};
 
-	int FormatEventTime(const CEventInfoData *pEventInfo,
+	int FormatEventTime(const LibISDB::EventInfo &EventInfo,
+						LPTSTR pszTime,int MaxLength,unsigned int Flags=0);
+	int FormatEventTime(const LibISDB::DateTime &StartTime,DWORD Duration,
 						LPTSTR pszTime,int MaxLength,unsigned int Flags=0);
 	int FormatEventTime(const SYSTEMTIME &StartTime,DWORD Duration,
 						LPTSTR pszTime,int MaxLength,unsigned int Flags=0);
 	bool EpgTimeToDisplayTime(const SYSTEMTIME &EpgTime,SYSTEMTIME *pDisplayTime);
+	bool EpgTimeToDisplayTime(const LibISDB::DateTime &EpgTime,LibISDB::DateTime *pDisplayTime);
 	bool EpgTimeToDisplayTime(SYSTEMTIME *pTime);
+	bool EpgTimeToDisplayTime(LibISDB::DateTime *pTime);
 	bool DisplayTimeToEpgTime(const SYSTEMTIME &DisplayTime,SYSTEMTIME *pEpgTime);
+	bool DisplayTimeToEpgTime(const LibISDB::DateTime &DisplayTime,LibISDB::DateTime *pEpgTime);
 	bool DisplayTimeToEpgTime(SYSTEMTIME *pTime);
+	bool DisplayTimeToEpgTime(LibISDB::DateTime *pTime);
 
-	enum LanguageTextType {
-		LANGUAGE_TEXT_LONG,
-		LANGUAGE_TEXT_SIMPLE,
-		LANGUAGE_TEXT_SHORT
-	};
-	enum {
-		MAX_LANGUAGE_TEXT_LENGTH = 16
-	};
-
-	bool GetLanguageText(DWORD LanguageCode,
-						 LPTSTR pszText,int MaxText,
-						 LanguageTextType Type=LANGUAGE_TEXT_LONG);
-
-	bool GetEventGenre(const CEventInfoData &EventInfo,
+	bool GetEventGenre(const LibISDB::EventInfo &EventInfo,
 					   int *pLevel1,int *pLevel2=nullptr);
-	bool GetEventGenre(const CEventInfoData::ContentNibble &ContentNibble,
+	bool GetEventGenre(const LibISDB::EventInfo::ContentNibbleInfo &ContentNibble,
 					   int *pLevel1,int *pLevel2=nullptr);
 
-	LPCTSTR GetEventDisplayText(const CEventInfo &EventInfo);
+	TVTest::String GetEventDisplayText(const LibISDB::EventInfo &EventInfo);
 
 }
 
@@ -85,7 +76,8 @@ public:
 		GENRE_RESERVED1,
 		GENRE_RESERVED2,
 		GENRE_EXTEND,
-		GENRE_OTHER
+		GENRE_OTHER,
+		GENRE_LAST=GENRE_WELFARE
 	};
 	enum {
 		NUM_GENRE=16,
@@ -132,7 +124,7 @@ public:
 		int IntervalX,int IntervalY,
 		BYTE Opacity=255,const RECT *pClipping=nullptr);
 
-	static unsigned int GetEventIcons(const CEventInfoData *pEventInfo);
+	static unsigned int GetEventIcons(const LibISDB::EventInfo *pEventInfo);
 
 protected:
 	HDC m_hdc;
@@ -183,13 +175,13 @@ public:
 	bool SetColor(int Type,const TVTest::Theme::ThemeColor &Color);
 	TVTest::Theme::ThemeColor GetColor(int Type) const;
 	TVTest::Theme::ThemeColor GetGenreColor(int Genre) const;
-	TVTest::Theme::ThemeColor GetGenreColor(const CEventInfoData &EventInfo) const;
+	TVTest::Theme::ThemeColor GetGenreColor(const LibISDB::EventInfo &EventInfo) const;
 	TVTest::Theme::BackgroundStyle GetContentBackgroundStyle(
 		int Genre,unsigned int Flags=0) const;
 	TVTest::Theme::BackgroundStyle GetContentBackgroundStyle(
-		const CEventInfoData &EventInfo,unsigned int Flags=0) const;
+		const LibISDB::EventInfo &EventInfo,unsigned int Flags=0) const;
 	bool DrawContentBackground(HDC hdc,TVTest::Theme::CThemeDraw &ThemeDraw,const RECT &Rect,
-							   const CEventInfoData &EventInfo,unsigned int Flags=0) const;
+							   const LibISDB::EventInfo &EventInfo,unsigned int Flags=0) const;
 
 private:
 	TVTest::Theme::BackgroundStyle GetContentBackgroundStyle(

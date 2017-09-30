@@ -26,7 +26,7 @@ public:
 	bool Create(HWND hwndOwner) override;
 
 // CProgramGuideOptions
-	bool GetTimeRange(SYSTEMTIME *pstFirst,SYSTEMTIME *pstLast);
+	bool GetTimeRange(LibISDB::DateTime *pFirst,LibISDB::DateTime *pLast);
 	bool GetOnScreen() const { return m_fOnScreen; }
 	bool ScrollToCurChannel() const { return m_fScrollToCurChannel; }
 	const TVTest::Style::Font &GetFont() const { return m_Font; }

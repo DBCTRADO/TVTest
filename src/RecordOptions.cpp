@@ -14,15 +14,13 @@ static const UINT MEGA_BYTES=1024*1024;
 static const UINT WRITE_BUFFER_SIZE_MIN=1024;
 static const UINT WRITE_BUFFER_SIZE_MAX=32*MEGA_BYTES;
 
-// さかのぼり録画バッファサイズの制限(MiB単位)
-static const UINT TIMESHIFT_BUFFER_SIZE_MIN=1;
-static const UINT TIMESHIFT_BUFFER_SIZE_MAX=1024;
-static const UINT TIMESHIFT_BUFFER_SIZE_DEFAULT=32;
+// さかのぼり録画バッファサイズの制限(バイト単位)
+static const UINT TIMESHIFT_BUFFER_SIZE_MIN=1*MEGA_BYTES;
+static const UINT TIMESHIFT_BUFFER_SIZE_MAX=1024*MEGA_BYTES;
 
 // 書き出し待ちバッファの制限(バイト単位)
 static const UINT MAX_PENDING_SIZE_MIN=32*MEGA_BYTES;
 static const UINT MAX_PENDING_SIZE_MAX=1024*MEGA_BYTES;
-static const UINT MAX_PENDING_SIZE_DEFAULT=512*MEGA_BYTES;
 
 // ステータスバーからの録画のコマンド
 static const int StatusBarCommandList[] = {
@@ -42,9 +40,6 @@ CRecordOptions::CRecordOptions()
 	, m_fConfirmStopStatusBarOnly(false)
 	, m_fAlertLowFreeSpace(true)
 	, m_LowFreeSpaceThreshold(2048)
-	, m_TimeShiftBufferSize(TIMESHIFT_BUFFER_SIZE_DEFAULT)
-	, m_fEnableTimeShiftRecording(false)
-	, m_MaxPendingSize(MAX_PENDING_SIZE_DEFAULT)
 	, m_fShowRemainTime(false)
 	, m_StatusBarRecordCommand(CM_RECORD_START)
 {
@@ -61,23 +56,8 @@ CRecordOptions::~CRecordOptions()
 
 bool CRecordOptions::Apply(DWORD Flags)
 {
-	CDtvEngine &DtvEngine=GetAppClass().CoreEngine.m_DtvEngine;
-
-	if ((Flags&UPDATE_RECORDSTREAM)!=0
-			&& !GetAppClass().RecordManager.IsRecording()) {
-		DtvEngine.SetWriteCurServiceOnly(m_Settings.m_fCurServiceOnly,
-										 m_Settings.m_SaveStream);
-		DtvEngine.m_TsRecorder.ClearQueue();
-	}
-
-	if ((Flags&UPDATE_TIMESHIFTBUFFER)!=0)
-		DtvEngine.m_TsRecorder.SetQueueSize(MEGA_BYTES,m_TimeShiftBufferSize);
-
-	if ((Flags&UPDATE_ENABLETIMESHIFT)!=0)
-		DtvEngine.m_TsRecorder.EnableQueueing(m_fEnableTimeShiftRecording);
-
-	if ((Flags&UPDATE_MAXPENDINGSIZE)!=0)
-		DtvEngine.m_TsRecorder.SetMaxPendingSize(m_MaxPendingSize);
+	if ((Flags&UPDATE_RECORDINGSETTINGS)!=0)
+		GetAppClass().RecordManager.SetRecordingSettings(m_Settings);
 
 	return true;
 }
@@ -130,14 +110,14 @@ bool CRecordOptions::ReadSettings(CSettings &Settings)
 		m_Settings.SetSaveDataCarrousel(f);
 	Settings.Read(TEXT("WritePlugin"),&m_Settings.m_WritePlugin);
 	if (Settings.Read(TEXT("RecordBufferSize"),&Value))
-		m_Settings.m_BufferSize=CLAMP(Value,WRITE_BUFFER_SIZE_MIN,WRITE_BUFFER_SIZE_MAX);
+		m_Settings.m_WriteCacheSize=CLAMP(Value,WRITE_BUFFER_SIZE_MIN,WRITE_BUFFER_SIZE_MAX);
 	Settings.Read(TEXT("AlertLowFreeSpace"),&m_fAlertLowFreeSpace);
 	Settings.Read(TEXT("LowFreeSpaceThreshold"),&m_LowFreeSpaceThreshold);
 	if (Settings.Read(TEXT("TimeShiftRecBufferSize"),&Value))
-		m_TimeShiftBufferSize=CLAMP(Value,TIMESHIFT_BUFFER_SIZE_MIN,TIMESHIFT_BUFFER_SIZE_MAX);
-	Settings.Read(TEXT("TimeShiftRecording"),&m_fEnableTimeShiftRecording);
+		m_Settings.m_TimeShiftBufferSize=CLAMP(Value*MEGA_BYTES,TIMESHIFT_BUFFER_SIZE_MIN,TIMESHIFT_BUFFER_SIZE_MAX);
+	Settings.Read(TEXT("TimeShiftRecording"),&m_Settings.m_fEnableTimeShift);
 	if (Settings.Read(TEXT("RecMaxPendingSize"),&Value))
-		m_MaxPendingSize=CLAMP(Value,MAX_PENDING_SIZE_MIN,MAX_PENDING_SIZE_MAX);
+		m_Settings.m_MaxPendingSize=CLAMP(Value,MAX_PENDING_SIZE_MIN,MAX_PENDING_SIZE_MAX);
 	Settings.Read(TEXT("ShowRecordRemainTime"),&m_fShowRemainTime);
 
 	TCHAR szCommand[CCommandList::MAX_COMMAND_TEXT];
@@ -167,12 +147,12 @@ bool CRecordOptions::WriteSettings(CSettings &Settings)
 	Settings.Write(TEXT("RecordSubtitle"),m_Settings.IsSaveCaption());
 	Settings.Write(TEXT("RecordDataCarrousel"),m_Settings.IsSaveDataCarrousel());
 	Settings.Write(TEXT("WritePlugin"),m_Settings.m_WritePlugin);
-	Settings.Write(TEXT("RecordBufferSize"),static_cast<unsigned int>(m_Settings.m_BufferSize));
+	Settings.Write(TEXT("RecordBufferSize"),static_cast<unsigned int>(m_Settings.m_WriteCacheSize));
 	Settings.Write(TEXT("AlertLowFreeSpace"),m_fAlertLowFreeSpace);
 	Settings.Write(TEXT("LowFreeSpaceThreshold"),m_LowFreeSpaceThreshold);
-	Settings.Write(TEXT("TimeShiftRecBufferSize"),m_TimeShiftBufferSize);
-	Settings.Write(TEXT("TimeShiftRecording"),m_fEnableTimeShiftRecording);
-	Settings.Write(TEXT("RecMaxPendingSize"),m_MaxPendingSize);
+	Settings.Write(TEXT("TimeShiftRecBufferSize"),static_cast<unsigned int>(m_Settings.m_TimeShiftBufferSize/MEGA_BYTES));
+	Settings.Write(TEXT("TimeShiftRecording"),m_Settings.m_fEnableTimeShift);
+	Settings.Write(TEXT("RecMaxPendingSize"),static_cast<unsigned int>(m_Settings.m_MaxPendingSize));
 	Settings.Write(TEXT("ShowRecordRemainTime"),m_fShowRemainTime);
 	if (m_StatusBarRecordCommand!=0) {
 		LPCTSTR pszCommand=GetAppClass().CommandList.GetCommandTextByID(m_StatusBarRecordCommand);
@@ -309,22 +289,10 @@ bool CRecordOptions::ConfirmExit(HWND hwndOwner,const CRecordManager *pRecordMan
 
 bool CRecordOptions::EnableTimeShiftRecording(bool fEnable)
 {
-	if (m_fEnableTimeShiftRecording!=fEnable) {
-		if (!GetAppClass().CoreEngine.m_DtvEngine.m_TsRecorder.EnableQueueing(fEnable))
-			return false;
-		m_fEnableTimeShiftRecording=fEnable;
+	if (m_Settings.m_fEnableTimeShift!=fEnable) {
+		m_Settings.m_fEnableTimeShift=fEnable;
+		Apply(UPDATE_RECORDINGSETTINGS);
 	}
-	return true;
-}
-
-
-bool CRecordOptions::GetRecordingSettings(CRecordingSettings *pSettings)
-{
-	if (pSettings==NULL)
-		return false;
-
-	*pSettings=m_Settings;
-
 	return true;
 }
 
@@ -409,16 +377,17 @@ INT_PTR CRecordOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 			}
 
 			::SetDlgItemInt(hDlg,IDC_RECORDOPTIONS_BUFFERSIZE,
-							m_Settings.m_BufferSize/1024,FALSE);
+							m_Settings.m_WriteCacheSize/1024,FALSE);
 			DlgUpDown_SetRange(hDlg,IDC_RECORDOPTIONS_BUFFERSIZE_UD,
 							   WRITE_BUFFER_SIZE_MIN/1024,WRITE_BUFFER_SIZE_MAX/1024);
 
-			::SetDlgItemInt(hDlg,IDC_RECORDOPTIONS_TIMESHIFTBUFFERSIZE,m_TimeShiftBufferSize,FALSE);
+			::SetDlgItemInt(hDlg,IDC_RECORDOPTIONS_TIMESHIFTBUFFERSIZE,
+							m_Settings.m_TimeShiftBufferSize/MEGA_BYTES,FALSE);
 			DlgUpDown_SetRange(hDlg,IDC_RECORDOPTIONS_TIMESHIFTBUFFERSIZE_SPIN,
 							   TIMESHIFT_BUFFER_SIZE_MIN,TIMESHIFT_BUFFER_SIZE_MAX);
 
 			::SetDlgItemInt(hDlg,IDC_RECORDOPTIONS_MAXPENDINGSIZE,
-							m_MaxPendingSize/MEGA_BYTES,FALSE);
+							m_Settings.m_MaxPendingSize/MEGA_BYTES,FALSE);
 			DlgUpDown_SetRange(hDlg,IDC_RECORDOPTIONS_MAXPENDINGSIZE_SPIN,
 							   MAX_PENDING_SIZE_MIN/MEGA_BYTES,MAX_PENDING_SIZE_MAX/MEGA_BYTES);
 		}
@@ -545,24 +514,12 @@ INT_PTR CRecordOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 				m_fConfirmStopStatusBarOnly=
 					DlgCheckBox_IsChecked(hDlg,IDC_RECORDOPTIONS_CONFIRMSTATUSBARSTOP);
 
-				bool fOptionChanged=false;
-				bool f=DlgCheckBox_IsChecked(hDlg,IDC_RECORDOPTIONS_CURSERVICEONLY);
-				if (m_Settings.m_fCurServiceOnly!=f) {
-					m_Settings.m_fCurServiceOnly=f;
-					fOptionChanged=true;
-				}
-				f=DlgCheckBox_IsChecked(hDlg,IDC_RECORDOPTIONS_SAVESUBTITLE);
-				if (m_Settings.IsSaveCaption()!=f) {
-					m_Settings.SetSaveCaption(f);
-					fOptionChanged=true;
-				}
-				f=DlgCheckBox_IsChecked(hDlg,IDC_RECORDOPTIONS_SAVEDATACARROUSEL);
-				if (m_Settings.IsSaveDataCarrousel()!=f) {
-					m_Settings.SetSaveDataCarrousel(f);
-					fOptionChanged=true;
-				}
-				if (fOptionChanged)
-					SetUpdateFlag(UPDATE_RECORDSTREAM);
+				m_Settings.m_fCurServiceOnly=
+					DlgCheckBox_IsChecked(hDlg,IDC_RECORDOPTIONS_CURSERVICEONLY);
+				m_Settings.SetSaveCaption(
+					DlgCheckBox_IsChecked(hDlg,IDC_RECORDOPTIONS_SAVESUBTITLE));
+				m_Settings.SetSaveDataCarrousel(
+					DlgCheckBox_IsChecked(hDlg,IDC_RECORDOPTIONS_SAVEDATACARROUSEL));
 
 				m_fAlertLowFreeSpace=
 					DlgCheckBox_IsChecked(hDlg,IDC_RECORDOPTIONS_ALERTLOWFREESPACE);
@@ -582,25 +539,21 @@ INT_PTR CRecordOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 				unsigned int BufferSize=
 					::GetDlgItemInt(hDlg,IDC_RECORDOPTIONS_BUFFERSIZE,NULL,FALSE);
 				if (BufferSize!=0)
-					m_Settings.m_BufferSize=CLAMP(BufferSize*1024,WRITE_BUFFER_SIZE_MIN,WRITE_BUFFER_SIZE_MAX);
+					m_Settings.m_WriteCacheSize=CLAMP(BufferSize*1024,WRITE_BUFFER_SIZE_MIN,WRITE_BUFFER_SIZE_MAX);
 
 				BufferSize=::GetDlgItemInt(hDlg,IDC_RECORDOPTIONS_TIMESHIFTBUFFERSIZE,NULL,FALSE);
 				if (BufferSize!=0) {
-					BufferSize=CLAMP(BufferSize,TIMESHIFT_BUFFER_SIZE_MIN,TIMESHIFT_BUFFER_SIZE_MAX);
-					if (BufferSize!=m_TimeShiftBufferSize) {
-						m_TimeShiftBufferSize=BufferSize;
-						SetUpdateFlag(UPDATE_TIMESHIFTBUFFER);
+					BufferSize=CLAMP(BufferSize*MEGA_BYTES,TIMESHIFT_BUFFER_SIZE_MIN,TIMESHIFT_BUFFER_SIZE_MAX);
+					if (BufferSize!=m_Settings.m_TimeShiftBufferSize) {
+						m_Settings.m_TimeShiftBufferSize=BufferSize;
 					}
 				}
 
 				BufferSize=::GetDlgItemInt(hDlg,IDC_RECORDOPTIONS_MAXPENDINGSIZE,NULL,FALSE);
-				if (BufferSize!=0) {
-					BufferSize=CLAMP(BufferSize*MEGA_BYTES,MAX_PENDING_SIZE_MIN,MAX_PENDING_SIZE_MAX);
-					if (BufferSize!=m_MaxPendingSize) {
-						m_MaxPendingSize=BufferSize;
-						SetUpdateFlag(UPDATE_MAXPENDINGSIZE);
-					}
-				}
+				if (BufferSize!=0)
+					m_Settings.m_MaxPendingSize=CLAMP(BufferSize*MEGA_BYTES,MAX_PENDING_SIZE_MIN,MAX_PENDING_SIZE_MAX);
+
+				SetUpdateFlag(UPDATE_RECORDINGSETTINGS);
 
 				m_fChanged=true;
 			}

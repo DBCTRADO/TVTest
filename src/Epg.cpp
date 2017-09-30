@@ -9,13 +9,13 @@ namespace TVTest
 {
 
 
-CEpg::CEpg(CEpgProgramList &EpgProgramList,CEventSearchOptions &EventSearchOptions)
+CEpg::CEpg(LibISDB::EPGDatabase &EPGDatabase,CEventSearchOptions &EventSearchOptions)
 	: ProgramGuide(EventSearchOptions)
 	, ProgramGuideFrame(&ProgramGuide,&ProgramGuideFrameSettings)
 	, ProgramGuideDisplay(&ProgramGuide,&ProgramGuideFrameSettings)
 	, fShowProgramGuide(false)
 {
-	ProgramGuide.SetEpgProgramList(&EpgProgramList);
+	ProgramGuide.SetEPGDatabase(&EPGDatabase);
 	ProgramGuide.SetEventHandler(&m_ProgramGuideEventHandler);
 	ProgramGuide.SetProgramCustomizer(&m_ProgramCustomizer);
 	ProgramGuide.SetChannelProviderManager(&m_ChannelProviderManager);
@@ -366,13 +366,13 @@ void CEpg::CProgramGuideEventHandler::OnDestroy()
 }
 
 
-int CEpg::CProgramGuideEventHandler::FindChannel(const CChannelList *pChannelList,const CServiceInfoData *pServiceInfo)
+int CEpg::CProgramGuideEventHandler::FindChannel(const CChannelList *pChannelList,const LibISDB::EPGDatabase::ServiceInfo *pServiceInfo)
 {
 	for (int i=0;i<pChannelList->NumChannels();i++) {
 		const CChannelInfo *pChannelInfo=pChannelList->GetChannelInfo(i);
 
-		if (pChannelInfo->GetTransportStreamID()==pServiceInfo->m_TSID
-				&& pChannelInfo->GetServiceID()==pServiceInfo->m_ServiceID
+		if (pChannelInfo->GetTransportStreamID()==pServiceInfo->TransportStreamID
+				&& pChannelInfo->GetServiceID()==pServiceInfo->ServiceID
 				&& pChannelInfo->IsEnabled())
 			return i;
 	}
@@ -380,7 +380,7 @@ int CEpg::CProgramGuideEventHandler::FindChannel(const CChannelList *pChannelLis
 }
 
 
-void CEpg::CProgramGuideEventHandler::OnServiceTitleLButtonDown(LPCTSTR pszDriverFileName,const CServiceInfoData *pServiceInfo)
+void CEpg::CProgramGuideEventHandler::OnServiceTitleLButtonDown(LPCTSTR pszDriverFileName,const LibISDB::EPGDatabase::ServiceInfo *pServiceInfo)
 {
 	CAppMain &App=GetAppClass();
 
@@ -481,7 +481,7 @@ void CEpg::CProgramGuideProgramCustomizer::Finalize()
 
 
 bool CEpg::CProgramGuideProgramCustomizer::DrawBackground(
-	const CEventInfoData &Event,HDC hdc,
+	const LibISDB::EventInfo &Event,HDC hdc,
 	const RECT &ItemRect,const RECT &TitleRect,const RECT &ContentRect,
 	COLORREF BackgroundColor)
 {
@@ -491,7 +491,7 @@ bool CEpg::CProgramGuideProgramCustomizer::DrawBackground(
 
 
 bool CEpg::CProgramGuideProgramCustomizer::InitializeMenu(
-	const CEventInfoData &Event,HMENU hmenu,UINT CommandBase,
+	const LibISDB::EventInfo &Event,HMENU hmenu,UINT CommandBase,
 	const POINT &CursorPos,const RECT &ItemRect)
 {
 	return GetAppClass().PluginManager.SendProgramGuideProgramInitializeMenuEvent(
@@ -500,14 +500,14 @@ bool CEpg::CProgramGuideProgramCustomizer::InitializeMenu(
 
 
 bool CEpg::CProgramGuideProgramCustomizer::ProcessMenu(
-	const CEventInfoData &Event,UINT Command)
+	const LibISDB::EventInfo &Event,UINT Command)
 {
 	return GetAppClass().PluginManager.SendProgramGuideProgramMenuSelectedEvent(Event,Command);
 }
 
 
 bool CEpg::CProgramGuideProgramCustomizer::OnLButtonDoubleClick(
-	const CEventInfoData &Event,const POINT &CursorPos,const RECT &ItemRect)
+	const LibISDB::EventInfo &Event,const POINT &CursorPos,const RECT &ItemRect)
 {
 	CAppMain &App=GetAppClass();
 

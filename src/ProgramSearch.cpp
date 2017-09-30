@@ -612,20 +612,20 @@ bool CEventSearcher::BeginSearch(const CEventSearchSettings &Settings)
 }
 
 
-bool CEventSearcher::Match(const CEventInfoData *pEventInfo)
+bool CEventSearcher::Match(const LibISDB::EventInfo *pEventInfo)
 {
 	if (m_Settings.fServiceList) {
 		if (!m_Settings.ServiceList.IsExists(
-				pEventInfo->m_NetworkID,
-				pEventInfo->m_TransportStreamID,
-				pEventInfo->m_ServiceID))
+				pEventInfo->NetworkID,
+				pEventInfo->TransportStreamID,
+				pEventInfo->ServiceID))
 			return false;
 	}
 
 	if (m_Settings.fGenre) {
 		bool fMatch=false;
-		for (int i=0;i<pEventInfo->m_ContentNibble.NibbleCount;i++) {
-			int Level1=pEventInfo->m_ContentNibble.NibbleList[i].ContentNibbleLevel1;
+		for (int i=0;i<pEventInfo->ContentNibble.NibbleCount;i++) {
+			int Level1=pEventInfo->ContentNibble.NibbleList[i].ContentNibbleLevel1;
 			if (Level1!=0xE) {
 				if (Level1>15)
 					return false;
@@ -633,7 +633,7 @@ bool CEventSearcher::Match(const CEventInfoData *pEventInfo)
 						&& m_Settings.Genre2[Level1]==0) {
 					fMatch=true;
 				} else {
-					int Level2=pEventInfo->m_ContentNibble.NibbleList[i].ContentNibbleLevel2;
+					int Level2=pEventInfo->ContentNibble.NibbleList[i].ContentNibbleLevel2;
 					if ((m_Settings.Genre2[Level1]&(1<<Level2))!=0)
 						fMatch=true;
 				}
@@ -645,15 +645,15 @@ bool CEventSearcher::Match(const CEventInfoData *pEventInfo)
 	}
 
 	if (m_Settings.fDayOfWeek) {
-		if ((m_Settings.DayOfWeekFlags&(1<<pEventInfo->m_StartTime.wDayOfWeek))==0)
+		if ((m_Settings.DayOfWeekFlags&(1<<pEventInfo->StartTime.DayOfWeek))==0)
 			return false;
 	}
 
 	if (m_Settings.fTime) {
 		int RangeStart=(m_Settings.StartTime.Hour*60+m_Settings.StartTime.Minute)%(24*60);
 		int RangeEnd=(m_Settings.EndTime.Hour*60+m_Settings.EndTime.Minute)%(24*60);
-		int EventStart=pEventInfo->m_StartTime.wHour*60+pEventInfo->m_StartTime.wMinute;
-		int EventEnd=EventStart+pEventInfo->m_Duration/60;
+		int EventStart=pEventInfo->StartTime.Hour*60+pEventInfo->StartTime.Minute;
+		int EventEnd=EventStart+pEventInfo->Duration/60;
 
 		if (RangeStart<=RangeEnd) {
 			if (EventEnd<=RangeStart || EventStart>RangeEnd)
@@ -665,35 +665,35 @@ bool CEventSearcher::Match(const CEventInfoData *pEventInfo)
 	}
 
 	if (m_Settings.fDuration) {
-		if (pEventInfo->m_Duration<m_Settings.DurationShortest)
+		if (pEventInfo->Duration<m_Settings.DurationShortest)
 			return false;
 		if (m_Settings.DurationLongest>0
-				&& pEventInfo->m_Duration>m_Settings.DurationLongest)
+				&& pEventInfo->Duration>m_Settings.DurationLongest)
 			return false;
 	}
 
 	if (m_Settings.fCA) {
 		switch (m_Settings.CA) {
 		case CEventSearchSettings::CA_FREE:
-			if (pEventInfo->m_bFreeCaMode)
+			if (pEventInfo->FreeCAMode)
 				return false;
 			break;
 		case CEventSearchSettings::CA_CHARGEABLE:
-			if (!pEventInfo->m_bFreeCaMode)
+			if (!pEventInfo->FreeCAMode)
 				return false;
 			break;
 		}
 	}
 
 	if (m_Settings.fVideo
-			&& !pEventInfo->m_VideoList.empty()) {
+			&& !pEventInfo->VideoList.empty()) {
 		switch (m_Settings.Video) {
 		case CEventSearchSettings::VIDEO_HD:
-			if (EpgUtil::GetVideoType(pEventInfo->m_VideoList[0].ComponentType)!=EpgUtil::VIDEO_TYPE_HD)
+			if (EpgUtil::GetVideoType(pEventInfo->VideoList[0].ComponentType)!=EpgUtil::VIDEO_TYPE_HD)
 				return false;
 			break;
 		case CEventSearchSettings::VIDEO_SD:
-			if (EpgUtil::GetVideoType(pEventInfo->m_VideoList[0].ComponentType)!=EpgUtil::VIDEO_TYPE_SD)
+			if (EpgUtil::GetVideoType(pEventInfo->VideoList[0].ComponentType)!=EpgUtil::VIDEO_TYPE_SD)
 				return false;
 			break;
 		}
@@ -753,7 +753,20 @@ int CEventSearcher::FindKeyword(LPCTSTR pszText,LPCTSTR pKeyword,int KeywordLeng
 }
 
 
-bool CEventSearcher::MatchKeyword(const CEventInfoData *pEventInfo,LPCTSTR pszKeyword) const
+bool CEventSearcher::FindExtendedText(
+	const LibISDB::EventInfo::ExtendedTextInfoList &ExtendedText,LPCTSTR pKeyword,int KeywordLength) const
+{
+	for (auto &e : ExtendedText) {
+		if (FindKeyword(e.Description.c_str(),pKeyword,KeywordLength)>=0)
+			return true;
+		if (FindKeyword(e.Text.c_str(),pKeyword,KeywordLength)>=0)
+			return true;
+	}
+	return false;
+}
+
+
+bool CEventSearcher::MatchKeyword(const LibISDB::EventInfo *pEventInfo,LPCTSTR pszKeyword) const
 {
 	bool fMatch=false,fMinusOnly=true;
 	bool fOr=false,fPrevOr=false,fOrMatch;
@@ -795,11 +808,11 @@ bool CEventSearcher::MatchKeyword(const CEventInfoData *pEventInfo,LPCTSTR pszKe
 		}
 		if (i>0) {
 			if ((m_Settings.fEventName
-						&& FindKeyword(pEventInfo->m_EventName.c_str(),szWord,i)>=0)
+						&& FindKeyword(pEventInfo->EventName.c_str(),szWord,i)>=0)
 					|| (m_Settings.fEventText
-						&& FindKeyword(pEventInfo->m_EventText.c_str(),szWord,i)>=0)
+						&& FindKeyword(pEventInfo->EventText.c_str(),szWord,i)>=0)
 					|| (m_Settings.fEventText
-						&& FindKeyword(pEventInfo->m_EventExtendedText.c_str(),szWord,i)>=0)) {
+						&& FindExtendedText(pEventInfo->ExtendedText,szWord,i))) {
 				if (fMinus)
 					return false;
 				fMatch=true;
@@ -821,17 +834,31 @@ bool CEventSearcher::MatchKeyword(const CEventInfoData *pEventInfo,LPCTSTR pszKe
 }
 
 
-bool CEventSearcher::MatchRegExp(const CEventInfoData *pEventInfo)
+bool CEventSearcher::MatchRegExp(const LibISDB::EventInfo *pEventInfo)
 {
-	return (m_Settings.fEventName
-			&& !pEventInfo->m_EventName.empty()
-			&& m_RegExp.Match(pEventInfo->m_EventName.c_str()))
-		|| (m_Settings.fEventText
-			&& !pEventInfo->m_EventText.empty()
-			&& m_RegExp.Match(pEventInfo->m_EventText.c_str()))
-		|| (m_Settings.fEventText
-			&& !pEventInfo->m_EventExtendedText.empty()
-			&& m_RegExp.Match(pEventInfo->m_EventExtendedText.c_str()));
+	if (m_Settings.fEventName
+			&& !pEventInfo->EventName.empty()
+			&& m_RegExp.Match(pEventInfo->EventName.c_str()))
+		return true;
+
+	if (m_Settings.fEventText
+			&& !pEventInfo->EventText.empty()
+			&& m_RegExp.Match(pEventInfo->EventText.c_str()))
+		return true;
+
+	if (m_Settings.fEventText
+			&& !pEventInfo->ExtendedText.empty()) {
+		for (auto &e : pEventInfo->ExtendedText) {
+			if (!e.Description.empty()
+					&& m_RegExp.Match(e.Description.c_str()))
+				return true;
+			if (!e.Text.empty()
+					&& m_RegExp.Match(e.Text.c_str()))
+				return true;
+		}
+	}
+
+	return false;
 }
 
 
@@ -1013,12 +1040,12 @@ typedef struct tagNMLVEMPTYMARKUP {
 #define GENRE_LPARAM_LEVEL2(lParam) ((SHORT)(WORD)((lParam)&0xFFFF))
 
 
-static ULONGLONG GetResultMapKey(const CEventInfoData *pEventInfo)
+static ULONGLONG GetResultMapKey(const LibISDB::EventInfo *pEventInfo)
 {
-	return ((ULONGLONG)pEventInfo->m_NetworkID<<48)
-		| ((ULONGLONG)pEventInfo->m_TransportStreamID<<32)
-		| ((DWORD)pEventInfo->m_ServiceID<<16)
-		| pEventInfo->m_EventID;
+	return ((ULONGLONG)pEventInfo->NetworkID<<48)
+		| ((ULONGLONG)pEventInfo->TransportStreamID<<32)
+		| ((DWORD)pEventInfo->ServiceID<<16)
+		| pEventInfo->EventID;
 }
 
 
@@ -1813,8 +1840,8 @@ LRESULT CEventSearchSettingsDialog::CKeywordEditSubclass::OnMessage(
 
 
 CSearchEventInfo::CSearchEventInfo(
-	const CEventInfoData &EventInfo,const CTunerChannelInfo &ChannelInfo)
-	: CEventInfoData(EventInfo)
+	const LibISDB::EventInfo &EventInfo,const CTunerChannelInfo &ChannelInfo)
+	: LibISDB::EventInfo(EventInfo)
 	, m_ChannelInfo(ChannelInfo)
 {
 }
@@ -1900,7 +1927,7 @@ bool CProgramSearchDialog::SetHighlightResult(bool fHighlight)
 }
 
 
-bool CProgramSearchDialog::IsHitEvent(const CEventInfoData *pEventInfo) const
+bool CProgramSearchDialog::IsHitEvent(const LibISDB::EventInfo *pEventInfo) const
 {
 	if (pEventInfo==NULL)
 		return false;
@@ -2237,19 +2264,19 @@ int CALLBACK CProgramSearchDialog::ResultCompareFunc(LPARAM lParam1,LPARAM lPara
 		Cmp=::lstrcmpi(pInfo1->GetChannelInfo().GetName(),pInfo2->GetChannelInfo().GetName());
 		break;
 	case COLUMN_TIME:		// 日時
-		Cmp=CompareSystemTime(&pInfo1->m_StartTime,&pInfo2->m_StartTime);
+		Cmp=pInfo1->StartTime.Compare(pInfo2->StartTime);
 		break;
 	case COLUMN_EVENTNAME:	// 番組名
-		if (pInfo1->m_EventName.empty()) {
-			if (pInfo2->m_EventName.empty())
+		if (pInfo1->EventName.empty()) {
+			if (pInfo2->EventName.empty())
 				Cmp=0;
 			else
 				Cmp=-1;
 		} else {
-			if (pInfo2->m_EventName.empty())
+			if (pInfo2->EventName.empty())
 				Cmp=1;
 			else
-				Cmp=::lstrcmpi(pInfo1->m_EventName.c_str(),pInfo2->m_EventName.c_str());
+				Cmp=::lstrcmpi(pInfo1->EventName.c_str(),pInfo2->EventName.c_str());
 		}
 		break;
 	}
@@ -2273,23 +2300,23 @@ bool CProgramSearchDialog::AddSearchResult(CSearchEventInfo *pEventInfo)
 	lvi.pszText=szText;
 	lvi.lParam=reinterpret_cast<LPARAM>(pEventInfo);
 	ListView_InsertItem(hwndList,&lvi);
-	SYSTEMTIME stStart,stEnd;
-	EpgUtil::EpgTimeToDisplayTime(pEventInfo->m_StartTime,&stStart);
-	pEventInfo->GetEndTime(&stEnd);
-	EpgUtil::EpgTimeToDisplayTime(&stEnd);
+	LibISDB::DateTime Start,End;
+	EpgUtil::EpgTimeToDisplayTime(pEventInfo->StartTime,&Start);
+	pEventInfo->GetEndTime(&End);
+	EpgUtil::EpgTimeToDisplayTime(&End);
 	StdUtil::snprintf(szText,lengthof(szText),
 					  TEXT("%02d/%02d(%s) %02d:%02d～%02d:%02d"),
-					  stStart.wMonth,stStart.wDay,
-					  GetDayOfWeekText(stStart.wDayOfWeek),
-					  stStart.wHour,stStart.wMinute,
-					  stEnd.wHour,stEnd.wMinute);
+					  Start.Month,Start.Day,
+					  GetDayOfWeekText(Start.DayOfWeek),
+					  Start.Hour,Start.Minute,
+					  End.Hour,End.Minute);
 	lvi.mask=LVIF_TEXT;
 	lvi.iSubItem=COLUMN_TIME;
 	//lvi.pszText=szText;
 	ListView_SetItem(hwndList,&lvi);
 	//lvi.mask=LVIF_TEXT;
 	lvi.iSubItem=COLUMN_EVENTNAME;
-	::lstrcpyn(szText,pEventInfo->m_EventName.c_str(),lengthof(szText));
+	::lstrcpyn(szText,pEventInfo->EventName.c_str(),lengthof(szText));
 	//lvi.pszText=szText;
 	ListView_SetItem(hwndList,&lvi);
 
@@ -2331,7 +2358,7 @@ void CProgramSearchDialog::SortSearchResult()
 }
 
 
-int CProgramSearchDialog::FormatEventTimeText(const CEventInfoData *pEventInfo,LPTSTR pszText,int MaxLength) const
+int CProgramSearchDialog::FormatEventTimeText(const LibISDB::EventInfo *pEventInfo,LPTSTR pszText,int MaxLength) const
 {
 	if (pEventInfo==NULL) {
 		pszText[0]='\0';
@@ -2339,40 +2366,42 @@ int CProgramSearchDialog::FormatEventTimeText(const CEventInfoData *pEventInfo,L
 	}
 
 	TCHAR szEndTime[16];
-	SYSTEMTIME stEnd;
-	if (pEventInfo->m_Duration>0 && pEventInfo->GetEndTime(&stEnd))
+	LibISDB::DateTime End;
+	if (pEventInfo->Duration>0 && pEventInfo->GetEndTime(&End))
 		StdUtil::snprintf(szEndTime,lengthof(szEndTime),
-						  TEXT("～%d:%02d"),stEnd.wHour,stEnd.wMinute);
+						  TEXT("～%d:%02d"),End.Hour,End.Minute);
 	else
 		szEndTime[0]='\0';
 	return StdUtil::snprintf(pszText,MaxLength,TEXT("%d/%d/%d(%s) %d:%02d%s\r\n"),
-							 pEventInfo->m_StartTime.wYear,
-							 pEventInfo->m_StartTime.wMonth,
-							 pEventInfo->m_StartTime.wDay,
-							 GetDayOfWeekText(pEventInfo->m_StartTime.wDayOfWeek),
-							 pEventInfo->m_StartTime.wHour,
-							 pEventInfo->m_StartTime.wMinute,
+							 pEventInfo->StartTime.Year,
+							 pEventInfo->StartTime.Month,
+							 pEventInfo->StartTime.Day,
+							 GetDayOfWeekText(pEventInfo->StartTime.DayOfWeek),
+							 pEventInfo->StartTime.Hour,
+							 pEventInfo->StartTime.Minute,
 							 szEndTime);
 }
 
 
-void CProgramSearchDialog::FormatEventInfoText(const CEventInfoData *pEventInfo,TVTest::String *pText) const
+void CProgramSearchDialog::FormatEventInfoText(const LibISDB::EventInfo *pEventInfo,TVTest::String *pText) const
 {
 	pText->clear();
 
 	if (pEventInfo==NULL)
 		return;
 
-	*pText=pEventInfo->m_EventName;
+	*pText=pEventInfo->EventName;
 	*pText+=TEXT("\r\n\r\n");
-	if (!pEventInfo->m_EventText.empty()) {
-		*pText+=pEventInfo->m_EventText;
+	if (!pEventInfo->EventText.empty()) {
+		*pText+=pEventInfo->EventText;
 		*pText+=TEXT("\r\n");
 	}
-	if (!pEventInfo->m_EventExtendedText.empty()) {
-		if (!pEventInfo->m_EventText.empty())
+	if (!pEventInfo->ExtendedText.empty()) {
+		if (!pEventInfo->EventText.empty())
 			*pText+=TEXT("\r\n");
-		*pText+=pEventInfo->m_EventExtendedText;
+		LibISDB::String ExtendedText;
+		pEventInfo->GetConcatenatedExtendedText(&ExtendedText);
+		*pText+=ExtendedText;
 	}
 
 	TVTest::String::size_type Pos=pText->find_last_not_of(TEXT("\r\n"));
@@ -2528,7 +2557,7 @@ void CProgramSearchDialog::AdjustResultListHeight(int Height)
 				 rcPane.left,rcPane.top,rcPane.right-rcPane.left,Height,TRUE);
 	rcInfo.top=rcPane.top+Height+SplitterHeight;
 	::MoveWindow(::GetDlgItem(m_hDlg,IDC_PROGRAMSEARCH_INFO),
-				 rcPane.left,rcInfo.top,rcPane.right-rcPane.left,max(rcPane.bottom-rcInfo.top,0),TRUE);
+				 rcPane.left,rcInfo.top,rcPane.right-rcPane.left,max(rcPane.bottom-rcInfo.top,0L),TRUE);
 }
 
 
@@ -2624,7 +2653,7 @@ bool CProgramSearchDialog::CEventHandler::AddSearchResult(CSearchEventInfo *pEve
 }
 
 
-bool CProgramSearchDialog::CEventHandler::Match(const CEventInfoData *pEventInfo) const
+bool CProgramSearchDialog::CEventHandler::Match(const LibISDB::EventInfo *pEventInfo) const
 {
 	return m_pSearcher->Match(pEventInfo);
 }

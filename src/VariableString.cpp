@@ -229,40 +229,40 @@ bool CVariableStringMap::InputParameter(HWND hDlg,int EditID,const POINT &MenuPo
 }
 
 
-bool CVariableStringMap::GetTimeString(LPCWSTR pszKeyword,const SYSTEMTIME &Time,String *pString) const
+bool CVariableStringMap::GetTimeString(LPCWSTR pszKeyword,const LibISDB::DateTime &Time,String *pString) const
 {
 	if (::lstrcmpiW(pszKeyword,L"date")==0) {
 		StringUtility::Format(*pString,L"%d%02d%02d",
-							  Time.wYear,Time.wMonth,Time.wDay);
+							  Time.Year,Time.Month,Time.Day);
 	} else if (::lstrcmpiW(pszKeyword,L"time")==0) {
 		StringUtility::Format(*pString,L"%02d%02d%02d",
-							  Time.wHour,Time.wMinute,Time.wSecond);
+							  Time.Hour,Time.Minute,Time.Second);
 	} else if (::lstrcmpiW(pszKeyword,L"year")==0) {
-		StringUtility::Format(*pString,L"%d",Time.wYear);
+		StringUtility::Format(*pString,L"%d",Time.Year);
 	} else if (::lstrcmpiW(pszKeyword,L"year2")==0) {
-		StringUtility::Format(*pString,L"%02d",Time.wYear%100);
+		StringUtility::Format(*pString,L"%02d",Time.Year%100);
 	} else if (::lstrcmpiW(pszKeyword,L"month")==0) {
-		StringUtility::Format(*pString,L"%d",Time.wMonth);
+		StringUtility::Format(*pString,L"%d",Time.Month);
 	} else if (::lstrcmpiW(pszKeyword,L"month2")==0) {
-		StringUtility::Format(*pString,L"%02d",Time.wMonth);
+		StringUtility::Format(*pString,L"%02d",Time.Month);
 	} else if (::lstrcmpiW(pszKeyword,L"day")==0) {
-		StringUtility::Format(*pString,L"%d",Time.wDay);
+		StringUtility::Format(*pString,L"%d",Time.Day);
 	} else if (::lstrcmpiW(pszKeyword,L"day2")==0) {
-		StringUtility::Format(*pString,L"%02d",Time.wDay);
+		StringUtility::Format(*pString,L"%02d",Time.Day);
 	} else if (::lstrcmpiW(pszKeyword,L"hour")==0) {
-		StringUtility::Format(*pString,L"%d",Time.wHour);
+		StringUtility::Format(*pString,L"%d",Time.Hour);
 	} else if (::lstrcmpiW(pszKeyword,L"hour2")==0) {
-		StringUtility::Format(*pString,L"%02d",Time.wHour);
+		StringUtility::Format(*pString,L"%02d",Time.Hour);
 	} else if (::lstrcmpiW(pszKeyword,L"minute")==0) {
-		StringUtility::Format(*pString,L"%d",Time.wMinute);
+		StringUtility::Format(*pString,L"%d",Time.Minute);
 	} else if (::lstrcmpiW(pszKeyword,L"minute2")==0) {
-		StringUtility::Format(*pString,L"%02d",Time.wMinute);
+		StringUtility::Format(*pString,L"%02d",Time.Minute);
 	} else if (::lstrcmpiW(pszKeyword,L"second")==0) {
-		StringUtility::Format(*pString,L"%d",Time.wSecond);
+		StringUtility::Format(*pString,L"%d",Time.Second);
 	} else if (::lstrcmpiW(pszKeyword,L"second2")==0) {
-		StringUtility::Format(*pString,L"%02d",Time.wSecond);
+		StringUtility::Format(*pString,L"%02d",Time.Second);
 	} else if (::lstrcmpiW(pszKeyword,L"day-of-week")==0) {
-		*pString=GetDayOfWeekText(Time.wDayOfWeek);
+		*pString=GetDayOfWeekText(Time.DayOfWeek);
 	} else {
 		return false;
 	}
@@ -320,7 +320,7 @@ CEventVariableStringMap::CEventVariableStringMap(const EventInfo &Info)
 bool CEventVariableStringMap::BeginFormat()
 {
 	if (!m_fCurrentTimeSet)
-		::GetLocalTime(&m_CurrentTime);
+		m_CurrentTime.NowLocal();
 
 	return true;
 }
@@ -343,17 +343,17 @@ bool CEventVariableStringMap::GetLocalString(LPCWSTR pszKeyword,String *pString)
 			return false;
 		StringUtility::Format(*pString,TEXT("%03d"),m_EventInfo.Channel.GetChannelNo());
 	} else if (::lstrcmpi(pszKeyword,TEXT("event-name"))==0) {
-		*pString=m_EventInfo.Event.m_EventName;
+		*pString=m_EventInfo.Event.EventName;
 	} else if (::lstrcmpi(pszKeyword,TEXT("event-title"))==0) {
-		GetEventTitle(m_EventInfo.Event.m_EventName,pString);
+		GetEventTitle(m_EventInfo.Event.EventName,pString);
 	} else if (::lstrcmpi(pszKeyword,TEXT("event-mark"))==0) {
-		GetEventMark(m_EventInfo.Event.m_EventName,pString);
+		GetEventMark(m_EventInfo.Event.EventName,pString);
 	} else if (::lstrcmpi(pszKeyword,TEXT("event-id"))==0) {
-		StringUtility::Format(*pString,TEXT("%04X"),m_EventInfo.Event.m_EventID);
+		StringUtility::Format(*pString,TEXT("%04X"),m_EventInfo.Event.EventID);
 	} else if (::lstrcmpi(pszKeyword,TEXT("service-name"))==0) {
 		*pString=m_EventInfo.ServiceName;
 	} else if (::lstrcmpi(pszKeyword,TEXT("service-id"))==0) {
-		StringUtility::Format(*pString,TEXT("%04X"),m_EventInfo.Event.m_ServiceID);
+		StringUtility::Format(*pString,TEXT("%04X"),m_EventInfo.Event.ServiceID);
 	} else if (::lstrcmpi(pszKeyword,TEXT("tuner-filename"))==0) {
 		*pString=m_EventInfo.Channel.GetTunerName();
 	} else if (::lstrcmpi(pszKeyword,TEXT("tuner-name"))==0) {
@@ -363,36 +363,36 @@ bool CEventVariableStringMap::GetLocalString(LPCWSTR pszKeyword,String *pString)
 		pString->assign(pszTuner,::PathFindExtension(pszTuner)-pszTuner);
 	} else if (::lstrcmpi(pszKeyword,TEXT("event-duration-hour"))==0) {
 		StringUtility::Format(*pString,TEXT("%d"),
-							  (int)(m_EventInfo.Event.m_Duration/(60*60)));
+							  (int)(m_EventInfo.Event.Duration/(60*60)));
 	} else if (::lstrcmpi(pszKeyword,TEXT("event-duration-hour2"))==0) {
 		StringUtility::Format(*pString,TEXT("%02d"),
-							  (int)(m_EventInfo.Event.m_Duration/(60*60)));
+							  (int)(m_EventInfo.Event.Duration/(60*60)));
 	} else if (::lstrcmpi(pszKeyword,TEXT("event-duration-min"))==0) {
 		StringUtility::Format(*pString,TEXT("%d"),
-							  (int)(m_EventInfo.Event.m_Duration/60%60));
+							  (int)(m_EventInfo.Event.Duration/60%60));
 	} else if (::lstrcmpi(pszKeyword,TEXT("event-duration-min2"))==0) {
 		StringUtility::Format(*pString,TEXT("%02d"),
-							  (int)(m_EventInfo.Event.m_Duration/60%60));
+							  (int)(m_EventInfo.Event.Duration/60%60));
 	} else if (::lstrcmpi(pszKeyword,TEXT("event-duration-sec"))==0) {
 		StringUtility::Format(*pString,TEXT("%d"),
-							  (int)(m_EventInfo.Event.m_Duration%60));
+							  (int)(m_EventInfo.Event.Duration%60));
 	} else if (::lstrcmpi(pszKeyword,TEXT("event-duration-sec2"))==0) {
 		StringUtility::Format(*pString,TEXT("%02d"),
-							  (int)(m_EventInfo.Event.m_Duration%60));
+							  (int)(m_EventInfo.Event.Duration%60));
 	} else if (IsDateTimeParameter(pszKeyword)) {
 		if ((m_Flags & FLAG_NO_CURRENT_TIME)!=0)
 			return false;
 		return GetTimeString(pszKeyword,m_CurrentTime,pString);
 	} else if (::StrCmpNI(pszKeyword,TEXT("start-"),6)==0
 			&& IsDateTimeParameter(pszKeyword+6)) {
-		if (!m_EventInfo.Event.m_bValidStartTime) {
+		if (!m_EventInfo.Event.StartTime.IsValid()) {
 			*pString=TEXT("x");
 			return true;
 		}
-		return GetTimeString(pszKeyword+6,m_EventInfo.Event.m_StartTime,pString);
+		return GetTimeString(pszKeyword+6,m_EventInfo.Event.StartTime,pString);
 	} else if (::StrCmpNI(pszKeyword,TEXT("end-"),4)==0
 			&& IsDateTimeParameter(pszKeyword+4)) {
-		SYSTEMTIME EndTime;
+		LibISDB::DateTime EndTime;
 		if (!m_EventInfo.Event.GetEndTime(&EndTime)) {
 			*pString=TEXT("x");
 			return true;
@@ -402,7 +402,7 @@ bool CEventVariableStringMap::GetLocalString(LPCWSTR pszKeyword,String *pString)
 			&& IsDateTimeParameter(pszKeyword+4)) {
 		if ((m_Flags & FLAG_NO_TOT_TIME)!=0)
 			return false;
-		return GetTimeString(pszKeyword+4,m_EventInfo.TotTime,pString);
+		return GetTimeString(pszKeyword+4,m_EventInfo.TOTTime,pString);
 	} else {
 		return false;
 	}
@@ -600,7 +600,7 @@ void CEventVariableStringMap::SetSampleEventInfo()
 }
 
 
-void CEventVariableStringMap::SetCurrentTime(const SYSTEMTIME *pTime)
+void CEventVariableStringMap::SetCurrentTime(const LibISDB::DateTime *pTime)
 {
 	if (pTime!=nullptr) {
 		m_fCurrentTimeSet=true;
@@ -616,10 +616,10 @@ bool CEventVariableStringMap::GetSampleEventInfo(EventInfo *pInfo)
 	if (pInfo==nullptr)
 		return false;
 
-	SYSTEMTIME st;
+	LibISDB::DateTime Time;
 
-	::GetLocalTime(&st);
-	st.wMilliseconds=0;
+	Time.NowLocal();
+	Time.Millisecond=0;
 
 	pInfo->Channel.SetSpace(0);
 	pInfo->Channel.SetChannelIndex(8);
@@ -630,19 +630,18 @@ bool CEventVariableStringMap::GetSampleEventInfo(EventInfo *pInfo)
 	pInfo->Channel.SetServiceID(123);
 	pInfo->Channel.SetTunerName(TEXT("BonDriver_TV.dll"));
 	pInfo->ServiceName=TEXT("アフテレ1");
-	pInfo->TotTime=st;
-	pInfo->Event.m_NetworkID=0x1234;
-	pInfo->Event.m_TransportStreamID=0x1234;
-	pInfo->Event.m_ServiceID=123;
-	pInfo->Event.m_EventID=0xABCD;
-	pInfo->Event.m_EventName=TEXT("[二][字]今日のニュース");
-	pInfo->Event.m_EventText=TEXT("本日のニュースをお伝えします。");
-	pInfo->Event.m_bValidStartTime=true;
-	OffsetSystemTime(&st,5*TimeConsts::SYSTEMTIME_MINUTE);
-	st.wMinute=st.wMinute/5*5;
-	st.wSecond=0;
-	pInfo->Event.m_StartTime=st;
-	pInfo->Event.m_Duration=60*60;
+	pInfo->TOTTime=Time;
+	pInfo->Event.NetworkID=0x1234;
+	pInfo->Event.TransportStreamID=0x1234;
+	pInfo->Event.ServiceID=123;
+	pInfo->Event.EventID=0xABCD;
+	pInfo->Event.EventName=TEXT("[二][字]今日のニュース");
+	pInfo->Event.EventText=TEXT("本日のニュースをお伝えします。");
+	Time.OffsetMinutes(5);
+	Time.Minute=Time.Minute/5*5;
+	Time.Second=0;
+	pInfo->Event.StartTime=Time;
+	pInfo->Event.Duration=60*60;
 
 	return true;
 }

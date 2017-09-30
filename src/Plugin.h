@@ -7,13 +7,11 @@
 #include "AppEvent.h"
 #include "Options.h"
 #include "VariableManager.h"
-#include "MediaData.h"
-#include "BonTsEngine/Exception.h"
-#include "BonTsEngine/TsUtilClass.h"
+#include "LibISDB/LibISDB/Base/ErrorHandler.hpp"
 
 
 class CPlugin
-	: public CBonErrorHandler
+	: public LibISDB::ErrorHandler
 {
 public:
 	class CPluginCommandInfo
@@ -74,7 +72,7 @@ public:
 	bool DrawPluginCommandIcon(const TVTest::DrawCommandIconInfo *pInfo);
 	int NumProgramGuideCommands() const;
 	bool GetProgramGuideCommandInfo(int Index,TVTest::ProgramGuideCommandInfo *pInfo) const;
-	bool NotifyProgramGuideCommand(LPCTSTR pszCommand,UINT Action,const CEventInfoData *pEvent,
+	bool NotifyProgramGuideCommand(LPCTSTR pszCommand,UINT Action,const LibISDB::EventInfo *pEvent,
 								   const POINT *pCursorPos,const RECT *pItemRect);
 	bool IsDisableOnStart() const;
 	bool IsProgramGuideEventEnabled(UINT EventFlag) const { return (m_ProgramGuideEventFlags&EventFlag)!=0; }
@@ -96,7 +94,7 @@ private:
 		UINT GetType() const { return m_Type; }
 	};
 
-	class CStreamGrabber : public CMediaGrabber::IGrabber
+	class CStreamGrabber : public LibISDB::GrabberFilter::Grabber
 	{
 	public:
 		CStreamGrabber(TVTest::StreamCallbackFunc Callback,void *pClientData);
@@ -107,8 +105,8 @@ private:
 		TVTest::StreamCallbackFunc m_Callback;
 		void *m_pClientData;
 
-	// CMediaGrabber::IGrabber
-		bool OnInputMedia(CMediaData *pMediaData) override;
+	// GrabberFilter::Grabber
+		bool ReceiveData(LibISDB::DataBuffer *pData) override;
 	};
 
 	class CPluginStatusItem;
@@ -245,7 +243,7 @@ private:
 	TVTest::WindowMessageCallbackFunc m_pMessageCallback;
 	void *m_pMessageCallbackClientData;
 	std::vector<CStreamGrabber*> m_StreamGrabberList;
-	CCriticalLock m_GrabberLock;
+	TVTest::MutexLock m_GrabberLock;
 	std::vector<CPluginCommandInfo> m_CommandList;
 	std::vector<CProgramGuideCommand> m_ProgramGuideCommandList;
 	std::vector<TVTest::String> m_ControllerList;
@@ -268,7 +266,7 @@ private:
 		{
 		}
 	};
-	static CCriticalLock m_AudioStreamLock;
+	static TVTest::MutexLock m_AudioStreamLock;
 	static std::vector<CAudioStreamCallbackInfo> m_AudioStreamCallbackList;
 
 	class CVideoStreamCallbackInfo {
@@ -284,16 +282,22 @@ private:
 		}
 	};
 
-	class CVideoStreamCallback : public CVideoParser::IStreamCallback
+	class CVideoStreamCallback : public LibISDB::DirectShow::VideoParser::StreamCallback
 	{
-		void OnStream(DWORD Format,const void *pData,SIZE_T Size) override;
+		void OnStream(DWORD Format,const void *pData,size_t Size) override;
 	};
 
 	static std::vector<CVideoStreamCallbackInfo> m_VideoStreamCallbackList;
 	static CVideoStreamCallback m_VideoStreamCallback;
-	static CCriticalLock m_VideoStreamLock;
+	static TVTest::MutexLock m_VideoStreamLock;
 
-	static void CALLBACK AudioStreamCallback(short *pData,DWORD Samples,int Channels,void *pParam);
+	class CAudioSampleCallback : public LibISDB::DirectShow::AudioDecoderFilter::SampleCallback
+	{
+		void OnSamples(short *pData,size_t Length,int Channels) override;
+	};
+
+	static CAudioSampleCallback m_AudioSampleCallback;
+
 	static LRESULT CALLBACK Callback(TVTest::PluginParam *pParam,UINT Message,LPARAM lParam1,LPARAM lParam2);
 
 // CPlugin
@@ -318,8 +322,8 @@ class CPluginManager : public TVTest::CAppEventHandler
 	static bool CompareName(const CPlugin *pPlugin1,const CPlugin *pPlugin2);
 	bool SendEvent(UINT Event,LPARAM lParam1=0,LPARAM lParam2=0);
 	bool SendProgramGuideEvent(UINT Event,LPARAM Param1=0,LPARAM Param2=0);
-	bool SendProgramGuideProgramEvent(UINT Event,const CEventInfoData &EventInfo,LPARAM Param);
-	bool SendFilterGraphEvent(UINT Event,CMediaViewer *pMediaViewer,IGraphBuilder *pGraphBuilder);
+	bool SendProgramGuideProgramEvent(UINT Event,const LibISDB::EventInfo &EventInfo,LPARAM Param);
+	bool SendFilterGraphEvent(UINT Event,LibISDB::ViewerFilter *pMediaViewer,IGraphBuilder *pGraphBuilder);
 	void OnRecordingStateChanged();
 
 // CAppEventHandler
@@ -340,8 +344,8 @@ class CPluginManager : public TVTest::CAppEventHandler
 	void OnPlaybackStateChanged(bool fPlayback) override;
 	void OnVolumeChanged(int Volume) override;
 	void OnMuteChanged(bool fMute) override;
-	void OnDualMonoModeChanged(CAudioDecFilter::DualMonoMode Mode) override;
-	void OnStereoModeChanged(CAudioDecFilter::StereoMode Mode) override;
+	void OnDualMonoModeChanged(LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode Mode) override;
+	void OnStereoModeChanged(LibISDB::DirectShow::AudioDecoderFilter::StereoMode Mode) override;
 	void OnAudioStreamChanged(int Stream) override;
 	void OnColorSchemeChanged() override;
 	void OnStandbyChanged(bool fStandby) override;
@@ -370,22 +374,22 @@ public:
 	bool DeletePlugin(int Index);
 	bool SetMenu(HMENU hmenu) const;
 	bool OnPluginCommand(LPCTSTR pszCommand);
-	bool OnProgramGuideCommand(LPCTSTR pszCommand,UINT Action,const CEventInfoData *pEvent=NULL,
+	bool OnProgramGuideCommand(LPCTSTR pszCommand,UINT Action,const LibISDB::EventInfo *pEvent=NULL,
 							   const POINT *pCursorPos=NULL,const RECT *pItemRect=NULL);
 	bool SendProgramGuideInitializeEvent(HWND hwnd);
 	bool SendProgramGuideFinalizeEvent(HWND hwnd);
 	bool SendProgramGuideInitializeMenuEvent(HMENU hmenu,UINT *pCommand);
 	bool SendProgramGuideMenuSelectedEvent(UINT Command);
-	bool SendProgramGuideProgramDrawBackgroundEvent(const CEventInfoData &Event,HDC hdc,
+	bool SendProgramGuideProgramDrawBackgroundEvent(const LibISDB::EventInfo &Event,HDC hdc,
 		const RECT &ItemRect,const RECT &TitleRect,const RECT &ContentRect,COLORREF BackgroundColor);
-	bool SendProgramGuideProgramInitializeMenuEvent(const CEventInfoData &Event,
+	bool SendProgramGuideProgramInitializeMenuEvent(const LibISDB::EventInfo &Event,
 		HMENU hmenu,UINT *pCommand,const POINT &CursorPos,const RECT &ItemRect);
-	bool SendProgramGuideProgramMenuSelectedEvent(const CEventInfoData &Event,UINT Command);
+	bool SendProgramGuideProgramMenuSelectedEvent(const LibISDB::EventInfo &Event,UINT Command);
 	bool OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam,LRESULT *pResult);
-	void SendFilterGraphInitializeEvent(CMediaViewer *pMediaViewer,IGraphBuilder *pGraphBuilder);
-	void SendFilterGraphInitializedEvent(CMediaViewer *pMediaViewer,IGraphBuilder *pGraphBuilder);
-	void SendFilterGraphFinalizeEvent(CMediaViewer *pMediaViewer,IGraphBuilder *pGraphBuilder);
-	void SendFilterGraphFinalizedEvent(CMediaViewer *pMediaViewer,IGraphBuilder *pGraphBuilder);
+	void SendFilterGraphInitializeEvent(LibISDB::ViewerFilter *pMediaViewer,IGraphBuilder *pGraphBuilder);
+	void SendFilterGraphInitializedEvent(LibISDB::ViewerFilter *pMediaViewer,IGraphBuilder *pGraphBuilder);
+	void SendFilterGraphFinalizeEvent(LibISDB::ViewerFilter *pMediaViewer,IGraphBuilder *pGraphBuilder);
+	void SendFilterGraphFinalizedEvent(LibISDB::ViewerFilter *pMediaViewer,IGraphBuilder *pGraphBuilder);
 	void RegisterStatusItems();
 	void SendStatusItemCreatedEvent();
 	void SendStatusItemUpdateTimerEvent();

@@ -264,7 +264,8 @@ void CAudioChannelStatusItem::Draw(HDC hdc,const RECT &ItemRect,const RECT &Draw
 	CAppMain &App=GetAppClass();
 	RECT rc=DrawRect;
 
-	if (App.CoreEngine.m_DtvEngine.m_MediaViewer.IsSpdifPassthrough()) {
+	const LibISDB::ViewerFilter *pViewer=App.CoreEngine.GetFilter<LibISDB::ViewerFilter>();
+	if (pViewer!=nullptr && pViewer->IsSPDIFPassthrough()) {
 		TVTest::Style::Size IconSize=m_pStatus->GetIconSize();
 		if (!m_Icons.IsCreated()) {
 			static const TVTest::Theme::IconList::ResourceInfo ResourceList[] = {
@@ -698,53 +699,59 @@ CClockStatusItem::CClockStatusItem()
 	, m_fTOT(false)
 	, m_fInterpolateTOT(true)
 {
-	::ZeroMemory(&m_Time,sizeof(m_Time));
 }
 
 bool CClockStatusItem::UpdateContent()
 {
-	CBlockLock Lock(&m_Lock);
+	LibISDB::BlockLock Lock(m_Lock);
 
-	SYSTEMTIME st;
+	LibISDB::DateTime Time;
 
 	if (m_fTOT) {
-		CTsAnalyzer &TsAnalyzer=GetAppClass().CoreEngine.m_DtvEngine.m_TsAnalyzer;
+		const LibISDB::AnalyzerFilter *pAnalyzer=
+			GetAppClass().CoreEngine.GetFilter<LibISDB::AnalyzerFilter>();
 		bool fResult;
 
 		if (m_fInterpolateTOT)
-			fResult=TsAnalyzer.GetInterpolatedTotTime(&st);
+			fResult=pAnalyzer->GetInterpolatedTOTTime(&Time);
 		else
-			fResult=TsAnalyzer.GetTotTime(&st);
+			fResult=pAnalyzer->GetTOTTime(&Time);
 		if (!fResult)
-			::ZeroMemory(&st,sizeof(st));
+			Time.Reset();
 	} else {
-		::GetLocalTime(&st);
+		Time.NowLocal();
 	}
 
-	st.wMilliseconds=0;
+	Time.Millisecond=0;
 
-	if (CompareSystemTime(&st,&m_Time)==0)
+	if (Time==m_Time)
 		return false;
 
-	m_Time=st;
+	m_Time=Time;
 
 	return true;
 }
 
 void CClockStatusItem::Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect,unsigned int Flags)
 {
-	CBlockLock Lock(&m_Lock);
+	LibISDB::BlockLock Lock(m_Lock);
 
 	TCHAR szText[64];
 
 	if ((Flags & DRAW_PREVIEW)==0) {
-		if (m_Time.wYear==0)
+		if (!m_Time.IsValid())
 			return;
 		FormatTime(m_Time,szText,lengthof(szText));
 	} else {
-		SYSTEMTIME st={2112,9,0,3,12,9,3,0};
-		st.wDayOfWeek=CalcDayOfWeek(st.wYear,st.wMonth,st.wDay);
-		FormatTime(st,szText,lengthof(szText));
+		LibISDB::DateTime Time;
+		Time.Year=2112;
+		Time.Month=9;
+		Time.Day=3;
+		Time.Hour=17;
+		Time.Minute=31;
+		Time.Second=15;
+		Time.SetDayOfWeek();
+		FormatTime(Time,szText,lengthof(szText));
 	}
 
 	DrawText(hdc,DrawRect,szText);
@@ -768,48 +775,49 @@ void CClockStatusItem::OnRButtonDown(int x,int y)
 
 void CClockStatusItem::SetTOT(bool fTOT)
 {
-	CBlockLock Lock(&m_Lock);
+	LibISDB::BlockLock Lock(m_Lock);
 
 	if (m_fTOT!=fTOT) {
 		m_fTOT=fTOT;
-		::ZeroMemory(&m_Time,sizeof(m_Time));
+		m_Time.Reset();
 		Update();
 	}
 }
 
 void CClockStatusItem::SetInterpolateTOT(bool fInterpolate)
 {
-	CBlockLock Lock(&m_Lock);
+	LibISDB::BlockLock Lock(m_Lock);
 
 	m_fInterpolateTOT=fInterpolate;
 }
 
-void CClockStatusItem::FormatTime(const SYSTEMTIME &Time,LPTSTR pszText,int MaxLength) const
+void CClockStatusItem::FormatTime(const LibISDB::DateTime &Time,LPTSTR pszText,int MaxLength) const
 {
 #if 0
 	if (m_fTOT) {
 		StdUtil::snprintf(pszText,MaxLength,TEXT("TOT %d/%d/%d %d:%02d:%02d"),
-						  Time.wYear,Time.wMonth,Time.wDay,
-						  Time.wHour,Time.wMinute,Time.wSecond);
+						  Time.Year,Time.Month,Time.Day,
+						  Time.Hour,Time.Minute,Time.Second);
 	} else {
 		StdUtil::snprintf(pszText,MaxLength,TEXT("%d:%02d:%02d"),
-						  Time.wHour,Time.wMinute,Time.wSecond);
+						  Time.Hour,Time.Minute,Time.Second);
 	}
 #else
+	SYSTEMTIME st=Time.ToSYSTEMTIME();
 	if (m_fTOT) {
 		TCHAR szDate[32],szTime[32];
 		if (::GetDateFormat(LOCALE_USER_DEFAULT,DATE_SHORTDATE,
-							&Time,NULL,szDate,lengthof(szDate))==0)
+							&st,NULL,szDate,lengthof(szDate))==0)
 			szDate[0]=_T('\0');
 		if (::GetTimeFormat(LOCALE_USER_DEFAULT,
 							TIME_FORCE24HOURFORMAT | TIME_NOTIMEMARKER,
-							&Time,NULL,szTime,lengthof(szTime))==0)
+							&st,NULL,szTime,lengthof(szTime))==0)
 			szTime[0]=_T('\0');
 		StdUtil::snprintf(pszText,MaxLength,
 						  TEXT("TOT %s %s"),szDate,szTime);
 	} else {
 		::GetTimeFormat(LOCALE_USER_DEFAULT,0,
-						&Time,NULL,pszText,MaxLength);
+						&st,NULL,pszText,MaxLength);
 	}
 #endif
 }
@@ -838,11 +846,11 @@ void CProgramInfoStatusItem::Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawR
 		RECT rcProgress=DrawRect;
 		rcProgress.top=rcProgress.bottom-(DrawRect.bottom-DrawRect.top)/3;
 		ThemeDraw.Draw(m_ProgressBackStyle,&rcProgress);
-		LONGLONG Elapsed=DiffSystemTime(&m_EventStartTime,&m_CurTime)/TimeConsts::SYSTEMTIME_SECOND;
+		long long Elapsed=m_CurTime.DiffSeconds(m_EventInfo.StartTime);
 		if (Elapsed>0) {
-			if (m_EventDuration>0 && Elapsed<static_cast<LONGLONG>(m_EventDuration)) {
+			if (m_EventInfo.Duration>0 && Elapsed<static_cast<long long>(m_EventInfo.Duration)) {
 				rcProgress.right=rcProgress.left+
-					::MulDiv((rcProgress.right-rcProgress.left),static_cast<int>(Elapsed),m_EventDuration);
+					::MulDiv(rcProgress.right-rcProgress.left,(int)Elapsed,m_EventInfo.Duration);
 			}
 			ThemeDraw.Draw(m_ProgressElapsedStyle,rcProgress);
 		}
@@ -855,22 +863,23 @@ void CProgramInfoStatusItem::Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawR
 bool CProgramInfoStatusItem::UpdateContent()
 {
 	CCoreEngine &CoreEngine=GetAppClass().CoreEngine;
-	TCHAR szText[256],szEventName[256];
+
+	CoreEngine.GetCurrentEventInfo(&m_EventInfo,m_fNext);
+
+	TCHAR szText[256];
 	CStaticStringFormatter Formatter(szText,lengthof(szText));
-	SYSTEMTIME StartTime;
-	DWORD Duration;
 
 	if (m_fNext)
 		Formatter.Append(TEXT("次: "));
-	if (CoreEngine.m_DtvEngine.GetEventTime(&StartTime,&Duration,m_fNext)) {
+	if (m_EventInfo.StartTime.IsValid()) {
 		TCHAR szTime[EpgUtil::MAX_EVENT_TIME_LENGTH];
-		if (EpgUtil::FormatEventTime(StartTime,Duration,szTime,lengthof(szTime))>0) {
+		if (EpgUtil::FormatEventTime(m_EventInfo,szTime,lengthof(szTime))>0) {
 			Formatter.Append(szTime);
 			Formatter.Append(TEXT(" "));
 		}
 	}
-	if (CoreEngine.m_DtvEngine.GetEventName(szEventName,lengthof(szEventName),m_fNext)>0)
-		Formatter.Append(szEventName);
+	if (!m_EventInfo.EventName.empty())
+		Formatter.Append(m_EventInfo.EventName.c_str());
 
 	bool fUpdated=false;
 
@@ -976,22 +985,17 @@ void CProgramInfoStatusItem::EnablePopupInfo(bool fEnable)
 bool CProgramInfoStatusItem::UpdateProgress()
 {
 	if (m_fShowProgress) {
-		CDtvEngine &DtvEngine=GetAppClass().CoreEngine.m_DtvEngine;
-		SYSTEMTIME StartTime,CurTime;
-		DWORD Duration;
+		const LibISDB::AnalyzerFilter *pAnalyzer=
+			GetAppClass().CoreEngine.GetFilter<LibISDB::AnalyzerFilter>();
+		LibISDB::DateTime CurTime;
 		bool fValid=
-			DtvEngine.GetEventTime(&StartTime,&Duration) &&
-			DtvEngine.m_TsAnalyzer.GetTotTime(&CurTime);
+			m_EventInfo.StartTime.IsValid() &&
+			pAnalyzer!=nullptr &&
+			pAnalyzer->GetTOTTime(&CurTime);
 		bool fUpdated;
 
 		if (fValid) {
-			fUpdated=
-				!m_fValidProgress
-				|| CompareSystemTime(&m_EventStartTime,&StartTime)!=0
-				|| m_EventDuration!=Duration
-				|| CompareSystemTime(&m_CurTime,&CurTime)!=0;
-			m_EventStartTime=StartTime;
-			m_EventDuration=Duration;
+			fUpdated=!m_fValidProgress || m_CurTime!=CurTime;
 			m_CurTime=CurTime;
 		} else {
 			fUpdated=m_fValidProgress;
@@ -1014,7 +1018,7 @@ void CProgramInfoStatusItem::ShowPopupInfo()
 
 	if (App.Core.GetCurrentStreamChannelInfo(&ChInfo)
 			&& ChInfo.GetServiceID()!=0) {
-		CEventInfoData EventInfo;
+		LibISDB::EventInfo EventInfo;
 
 		if (App.CoreEngine.GetCurrentEventInfo(
 				&EventInfo,ChInfo.GetServiceID(),m_fNext)) {
@@ -1170,9 +1174,17 @@ CMediaBitRateStatusItem::CMediaBitRateStatusItem()
 
 bool CMediaBitRateStatusItem::UpdateContent()
 {
-	const CTsPacketCounter &PacketCounter=GetAppClass().CoreEngine.m_DtvEngine.m_TsPacketCounter;
-	const DWORD VideoBitRate=PacketCounter.GetVideoBitRate();
-	const DWORD AudioBitRate=PacketCounter.GetAudioBitRate();
+	const LibISDB::TSPacketCounterFilter *pPacketCounter=
+		GetAppClass().CoreEngine.GetFilter<LibISDB::TSPacketCounterFilter>();
+	DWORD VideoBitRate,AudioBitRate;
+
+	if (pPacketCounter!=nullptr) {
+		VideoBitRate=pPacketCounter->GetVideoBitRate();
+		AudioBitRate=pPacketCounter->GetAudioBitRate();
+	} else {
+		VideoBitRate=0;
+		AudioBitRate=0;
+	}
 
 	if (VideoBitRate==m_VideoBitRate && AudioBitRate==m_AudioBitRate)
 		return false;

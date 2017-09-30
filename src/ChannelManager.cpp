@@ -107,9 +107,9 @@ bool CChannelManager::SetTuningSpaceList(const CTuningSpaceList *pList)
 }
 
 
-bool CChannelManager::MakeDriverTuningSpaceList(const CBonSrcDecoder *pSrcDecoder)
+bool CChannelManager::MakeDriverTuningSpaceList(const LibISDB::BonDriverSourceFilter *pSrcDecoder)
 {
-	const int NumSpaces=pSrcDecoder->NumSpaces();
+	const int NumSpaces=pSrcDecoder->GetSpaceCount();
 
 	m_DriverTuningSpaceList.Clear();
 	if (!m_DriverTuningSpaceList.Reserve(NumSpaces))

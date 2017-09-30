@@ -388,4 +388,16 @@ namespace Util
 }	// namespace Util
 
 
+#include "LibISDB/LibISDB/Utilities/Lock.hpp"
+
+namespace TVTest
+{
+
+	using LibISDB::MutexLock;
+	using LibISDB::BlockLock;
+	using LibISDB::TryBlockLock;
+
+}	// namespace TVTest
+
+
 #endif

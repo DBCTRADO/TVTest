@@ -41,11 +41,25 @@ void CAppCore::OnError(LPCTSTR pszText, ...)
 }
 
 
-void CAppCore::OnError(const CBonErrorHandler *pErrorHandler,LPCTSTR pszTitle)
+void CAppCore::OnError(const LibISDB::ErrorHandler *pErrorHandler,LPCTSTR pszTitle)
 {
 	if (pErrorHandler==nullptr)
 		return;
-	m_App.AddLog(CLogItem::TYPE_ERROR,TEXT("%s"),pErrorHandler->GetLastErrorText());
+
+	if (!IsStringEmpty(pErrorHandler->GetLastErrorText())) {
+		m_App.AddLog(CLogItem::TYPE_ERROR,TEXT("%s"),pErrorHandler->GetLastErrorText());
+	} else if (pErrorHandler->GetLastErrorCode()) {
+		std::string Message=pErrorHandler->GetLastErrorCode().message();
+		if (!Message.empty()) {
+			int Length=::MultiByteToWideChar(CP_ACP,0,Message.data(),(int)Message.length(),nullptr,0);
+			TVTest::String Text(Length,TEXT('\0'));
+			::MultiByteToWideChar(CP_ACP,0,Message.data(),(int)Message.length(),&Text[0],Length);
+			m_App.AddLog(CLogItem::TYPE_ERROR,TEXT("%s"),Text.c_str());
+		}
+	} else {
+		m_App.AddLog(CLogItem::TYPE_ERROR,TEXT("Unknown error"));
+	}
+
 	if (!m_fSilent)
 		m_App.UICore.GetSkin()->ShowErrorMessage(pErrorHandler,pszTitle);
 }
@@ -67,7 +81,7 @@ bool CAppCore::InitializeChannel()
 	CFilePath ChannelFilePath;
 
 	m_App.ChannelManager.Reset();
-	m_App.ChannelManager.MakeDriverTuningSpaceList(&m_App.CoreEngine.m_DtvEngine.m_BonSrcDecoder);
+	m_App.ChannelManager.MakeDriverTuningSpaceList(m_App.CoreEngine.GetFilter<LibISDB::BonDriverSourceFilter>());
 
 	if (!fNetworkDriver) {
 		TCHAR szPath[MAX_PATH];
@@ -218,9 +232,9 @@ bool CAppCore::UpdateCurrentChannelList(const CTuningSpaceList *pList)
 		fAllChannels?CChannelManager::SPACE_ALL:(Space>=0?Space:0),
 		-1);
 	m_App.ChannelManager.SetCurrentServiceID(0);
-	WORD ServiceID;
-	if (m_App.CoreEngine.m_DtvEngine.GetServiceID(&ServiceID))
-		FollowChannelChange(m_App.CoreEngine.m_DtvEngine.m_TsAnalyzer.GetTransportStreamID(),ServiceID);
+	WORD ServiceID=m_App.CoreEngine.GetServiceID();
+	if (ServiceID!=LibISDB::SERVICE_ID_INVALID)
+		FollowChannelChange(m_App.CoreEngine.GetTransportStreamID(),ServiceID);
 
 	m_App.AppEventManager.OnChannelListChanged();
 
@@ -350,17 +364,17 @@ bool CAppCore::SetChannel(int Space,int Channel,int ServiceID/*=-1*/,bool fStric
 					 pChInfo->GetSpace(),pszTuningSpace!=nullptr?pszTuningSpace:TEXT("\?\?\?"),
 					 pChInfo->GetChannelIndex(),pChInfo->GetName(),ServiceID);
 
-		CDtvEngine::ServiceSelectInfo ServiceSel;
-		ServiceSel.ServiceID=ServiceID>0?ServiceID:CDtvEngine::SID_INVALID;
-		ServiceSel.bFollowViewableService=!m_App.NetworkDefinition.IsCSNetworkID(pChInfo->GetNetworkID());
+		LibISDB::TSEngine::ServiceSelectInfo ServiceSel;
+		ServiceSel.ServiceID=ServiceID>0?ServiceID:LibISDB::SERVICE_ID_INVALID;
+		ServiceSel.FollowViewableService=!m_App.NetworkDefinition.IsCSNetworkID(pChInfo->GetNetworkID());
 
 		if (!fStrictService && m_f1SegMode) {
-			ServiceSel.OneSegSelect=CDtvEngine::ONESEG_SELECT_HIGHPRIORITY;
+			ServiceSel.OneSegSelect=LibISDB::TSEngine::OneSegSelectType::HighPriority;
 
 			// サブチャンネルの選択の場合、ワンセグもサブチャンネルを優先する
-			if (ServiceSel.ServiceID!=CDtvEngine::SID_INVALID) {
+			if (ServiceSel.ServiceID!=LibISDB::SERVICE_ID_INVALID) {
 				ServiceSel.PreferredServiceIndex=
-					(WORD)GetCorresponding1SegService(
+					GetCorresponding1SegService(
 						pChInfo->GetSpace(),
 						pChInfo->GetNetworkID(),
 						pChInfo->GetTransportStreamID(),
@@ -368,9 +382,15 @@ bool CAppCore::SetChannel(int Space,int Channel,int ServiceID/*=-1*/,bool fStric
 			}
 		}
 
-		if (!m_App.CoreEngine.m_DtvEngine.SetChannel(
-				pChInfo->GetSpace(),pChInfo->GetChannelIndex(),&ServiceSel)) {
-			m_App.AddLog(CLogItem::TYPE_ERROR,TEXT("%s"),m_App.CoreEngine.m_DtvEngine.GetLastErrorText());
+		LibISDB::BonDriverSourceFilter *pSourceFilter=
+			m_App.CoreEngine.GetFilter<LibISDB::BonDriverSourceFilter>();
+		if (pSourceFilter==nullptr)
+			return false;
+
+		m_App.CoreEngine.SetServiceSelectInfo(&ServiceSel);
+
+		if (!pSourceFilter->SetChannelAndPlay(pChInfo->GetSpace(),pChInfo->GetChannelIndex())) {
+			m_App.AddLog(CLogItem::TYPE_ERROR,TEXT("%s"),pSourceFilter->GetLastErrorText());
 			m_App.ChannelManager.SetCurrentChannel(OldSpace,OldChannel);
 			return false;
 		}
@@ -668,23 +688,28 @@ bool CAppCore::SetServiceByID(WORD ServiceID,unsigned int Flags)
 
 	const bool fStrict=(Flags & SET_SERVICE_STRICT_ID)!=0;
 	const CChannelInfo *pCurChInfo=m_App.ChannelManager.GetCurrentChannelInfo();
-	WORD NetworkID=m_App.CoreEngine.m_DtvEngine.m_TsAnalyzer.GetNetworkID();
-	if (NetworkID==0 && pCurChInfo!=nullptr && pCurChInfo->GetNetworkID()>0)
+	const LibISDB::AnalyzerFilter *pAnalyzer=
+		m_App.CoreEngine.GetFilter<LibISDB::AnalyzerFilter>();
+	if (pAnalyzer==nullptr)
+		return false;
+	WORD NetworkID=pAnalyzer->GetNetworkID();
+	if (NetworkID==LibISDB::NETWORK_ID_INVALID
+			&& pCurChInfo!=nullptr && pCurChInfo->GetNetworkID()>0)
 		NetworkID=pCurChInfo->GetNetworkID();
 
-	CDtvEngine::ServiceSelectInfo ServiceSel;
+	LibISDB::TSEngine::ServiceSelectInfo ServiceSel;
 
-	ServiceSel.ServiceID=ServiceID!=0?ServiceID:CDtvEngine::SID_INVALID;
-	ServiceSel.bFollowViewableService=!m_App.NetworkDefinition.IsCSNetworkID(NetworkID);
+	ServiceSel.ServiceID=ServiceID;
+	ServiceSel.FollowViewableService=!m_App.NetworkDefinition.IsCSNetworkID(NetworkID);
 
 	if (!fStrict && m_f1SegMode) {
-		ServiceSel.OneSegSelect=CDtvEngine::ONESEG_SELECT_HIGHPRIORITY;
+		ServiceSel.OneSegSelect=LibISDB::TSEngine::OneSegSelectType::HighPriority;
 
 		if (pCurChInfo!=nullptr) {
 			// サブチャンネルの選択の場合、ワンセグもサブチャンネルを優先する
-			if (ServiceSel.ServiceID!=CDtvEngine::SID_INVALID) {
+			if (ServiceSel.ServiceID!=LibISDB::SERVICE_ID_INVALID) {
 				ServiceSel.PreferredServiceIndex=
-					(WORD)GetCorresponding1SegService(
+					GetCorresponding1SegService(
 						pCurChInfo->GetSpace(),
 						pCurChInfo->GetNetworkID(),
 						pCurChInfo->GetTransportStreamID(),
@@ -695,19 +720,18 @@ bool CAppCore::SetServiceByID(WORD ServiceID,unsigned int Flags)
 
 	bool fResult;
 
-	if (ServiceSel.ServiceID==CDtvEngine::SID_DEFAULT) {
+	if (ServiceSel.ServiceID==LibISDB::SERVICE_ID_INVALID) {
 		m_App.AddLog(TEXT("デフォルトのサービスを選択します..."));
-		fResult=m_App.CoreEngine.m_DtvEngine.SetService(&ServiceSel);
+		fResult=m_App.CoreEngine.SetService(ServiceSel);
 		if (fResult) {
-			if (!m_App.CoreEngine.m_DtvEngine.GetServiceID(&ServiceID))
-				ServiceID=0;
+			ServiceID=m_App.CoreEngine.GetServiceID();
 		}
 	} else {
-		if (ServiceSel.OneSegSelect==CDtvEngine::ONESEG_SELECT_HIGHPRIORITY)
+		if (ServiceSel.OneSegSelect==LibISDB::TSEngine::OneSegSelectType::HighPriority)
 			m_App.AddLog(TEXT("サービスを選択します..."));
 		else
 			m_App.AddLog(TEXT("サービスを選択します(SID %d)..."),ServiceSel.ServiceID);
-		fResult=m_App.CoreEngine.m_DtvEngine.SetService(&ServiceSel);
+		fResult=m_App.CoreEngine.SetService(ServiceSel);
 	}
 	if (!fResult) {
 		m_App.AddLog(CLogItem::TYPE_ERROR,TEXT("サービスを選択できません。"));
@@ -717,25 +741,25 @@ bool CAppCore::SetServiceByID(WORD ServiceID,unsigned int Flags)
 	if ((Flags & SET_SERVICE_NO_CHANGE_CUR_SERVICE_ID)==0)
 		m_App.ChannelManager.SetCurrentServiceID(ServiceID);
 
-	if (ServiceID!=0) {
-		int ServiceIndex=m_App.CoreEngine.m_DtvEngine.m_TsAnalyzer.GetServiceIndexByID(ServiceID);
+	if (ServiceID!=LibISDB::SERVICE_ID_INVALID) {
+		int ServiceIndex=pAnalyzer->GetServiceIndexByID(ServiceID);
 		if (ServiceIndex>=0) {
 			//m_App.AddLog(TEXT("サービスを変更しました。(SID %d)"),ServiceID);
 
 			if (fStrict && m_f1SegMode
-					&& !m_App.CoreEngine.m_DtvEngine.m_TsAnalyzer.Is1SegService(ServiceIndex)) {
+					&& !pAnalyzer->Is1SegService(ServiceIndex)) {
 				Set1SegMode(false,false);
 			}
 		}
 	}
 
-	if (m_f1SegMode && ServiceSel.OneSegSelect!=CDtvEngine::ONESEG_SELECT_HIGHPRIORITY) {
+	if (m_f1SegMode && ServiceSel.OneSegSelect!=LibISDB::TSEngine::OneSegSelectType::HighPriority) {
 		Set1SegMode(false,false);
 	}
 
 	bool fChannelChanged=false;
 
-	if (/*!m_f1SegMode && */ServiceID!=0 && pCurChInfo!=nullptr) {
+	if (/*!m_f1SegMode && */ServiceID!=LibISDB::SERVICE_ID_INVALID && pCurChInfo!=nullptr) {
 		const CChannelList *pChList=m_App.ChannelManager.GetCurrentChannelList();
 		int Index=pChList->FindByIndex(pCurChInfo->GetSpace(),
 									   pCurChInfo->GetChannelIndex(),
@@ -759,9 +783,8 @@ bool CAppCore::SetServiceByIndex(int Service,unsigned int Flags)
 	if (Service < 0)
 		return false;
 
-	WORD ServiceID;
-
-	if (!m_App.CoreEngine.m_DtvEngine.m_TsAnalyzer.GetViewableServiceID(Service,&ServiceID))
+	WORD ServiceID=m_App.CoreEngine.GetSelectableServiceID(Service);
+	if (ServiceID==LibISDB::SERVICE_ID_INVALID)
 		return false;
 
 	return SetServiceByID(ServiceID,Flags);
@@ -773,17 +796,18 @@ bool CAppCore::GetCurrentStreamIDInfo(StreamIDInfo *pInfo) const
 	if (pInfo==nullptr)
 		return false;
 
-	pInfo->NetworkID=
-		m_App.CoreEngine.m_DtvEngine.m_TsAnalyzer.GetNetworkID();
-	pInfo->TransportStreamID=
-		m_App.CoreEngine.m_DtvEngine.m_TsAnalyzer.GetTransportStreamID();
-	WORD ServiceID;
-	if (!m_App.CoreEngine.m_DtvEngine.GetServiceID(&ServiceID)) {
+	const LibISDB::AnalyzerFilter *pAnalyzer=
+		m_App.CoreEngine.GetFilter<LibISDB::AnalyzerFilter>();
+	if (pAnalyzer==nullptr)
+		return false;
+
+	pInfo->NetworkID=pAnalyzer->GetNetworkID();
+	pInfo->TransportStreamID=pAnalyzer->GetTransportStreamID();
+	WORD ServiceID=m_App.CoreEngine.GetServiceID();
+	if (ServiceID==LibISDB::SERVICE_ID_INVALID) {
 		int CurServiceID=m_App.ChannelManager.GetCurrentServiceID();
 		if (CurServiceID>0)
 			ServiceID=(WORD)CurServiceID;
-		else
-			ServiceID=0;
 	}
 	pInfo->ServiceID=ServiceID;
 
@@ -823,15 +847,14 @@ bool CAppCore::GetCurrentServiceName(LPTSTR pszName,int MaxLength,bool fUseChann
 	if (pszName==nullptr || MaxLength<1)
 		return false;
 
-	WORD ServiceID;
-	if (!m_App.CoreEngine.m_DtvEngine.GetServiceID(&ServiceID))
-		ServiceID=0;
+	WORD ServiceID=m_App.CoreEngine.GetServiceID();
 
 	const CChannelInfo *pChannelInfo=nullptr;
 	if (fUseChannelName) {
 		pChannelInfo=m_App.ChannelManager.GetCurrentChannelInfo();
 		if (pChannelInfo!=nullptr) {
-			if (ServiceID==0 || pChannelInfo->GetServiceID()<=0
+			if (ServiceID==LibISDB::SERVICE_ID_INVALID
+					|| pChannelInfo->GetServiceID()<=0
 					|| pChannelInfo->GetServiceID()==ServiceID) {
 				::lstrcpyn(pszName,pChannelInfo->GetName(),MaxLength);
 				return true;
@@ -841,10 +864,15 @@ bool CAppCore::GetCurrentServiceName(LPTSTR pszName,int MaxLength,bool fUseChann
 
 	pszName[0]=_T('\0');
 
-	if (ServiceID==0)
+	if (ServiceID==LibISDB::SERVICE_ID_INVALID)
 		return false;
 
-	int Index=m_App.CoreEngine.m_DtvEngine.m_TsAnalyzer.GetServiceIndexByID(ServiceID);
+	const LibISDB::AnalyzerFilter *pAnalyzer=
+		m_App.CoreEngine.GetFilter<LibISDB::AnalyzerFilter>();
+	if (pAnalyzer==nullptr)
+		return false;
+
+	int Index=pAnalyzer->GetServiceIndexByID(ServiceID);
 	if (Index<0)
 		return false;
 #if 0
@@ -854,8 +882,10 @@ bool CAppCore::GetCurrentServiceName(LPTSTR pszName,int MaxLength,bool fUseChann
 		MaxLength-=Length;
 	}
 #endif
-	if (m_App.CoreEngine.m_DtvEngine.m_TsAnalyzer.GetServiceName(Index,pszName,MaxLength)<1)
+	LibISDB::String Name;
+	if (!pAnalyzer->GetServiceName(Index,&Name))
 		return false;
+	::lstrcpyn(pszName,Name.c_str(),MaxLength);
 
 	return true;
 }
@@ -931,7 +961,7 @@ bool CAppCore::OpenAndInitializeTuner(unsigned int OpenFlags)
 	CDriverOptions::BonDriverOptions Options(m_App.CoreEngine.GetDriverFileName());
 	m_App.DriverOptions.GetBonDriverOptions(m_App.CoreEngine.GetDriverFileName(),&Options);
 
-	m_App.CoreEngine.m_DtvEngine.SetStartStreamingOnDriverOpen(!Options.fIgnoreInitialStream);
+	m_App.CoreEngine.SetStartStreamingOnSourceOpen(!Options.fIgnoreInitialStream);
 
 	if (!m_App.CoreEngine.OpenTuner())
 		return false;
@@ -986,7 +1016,7 @@ void CAppCore::ShutDownTuner()
 
 void CAppCore::ResetEngine()
 {
-	m_App.CoreEngine.m_DtvEngine.ResetEngine();
+	m_App.CoreEngine.ResetEngine();
 	m_App.AppEventManager.OnEngineReset();
 }
 
@@ -1000,10 +1030,11 @@ bool CAppCore::Set1SegMode(bool f1Seg,bool fServiceChange)
 
 		if (fServiceChange) {
 			if (m_f1SegMode) {
-				CTsAnalyzer &TsAnalyzer=m_App.CoreEngine.m_DtvEngine.m_TsAnalyzer;
+				LibISDB::AnalyzerFilter *pAnalyzer=
+					m_App.CoreEngine.GetFilter<LibISDB::AnalyzerFilter>();
 
-				if (TsAnalyzer.Has1SegService()) {
-					WORD ServiceID=CDtvEngine::SID_DEFAULT;
+				if (pAnalyzer->Has1SegService()) {
+					WORD ServiceID=LibISDB::SERVICE_ID_INVALID;
 					CChannelInfo ChInfo;
 
 					if (GetCurrentStreamChannelInfo(&ChInfo)) {
@@ -1012,20 +1043,18 @@ bool CAppCore::Set1SegMode(bool f1Seg,bool fServiceChange)
 							ChInfo.GetNetworkID(),
 							ChInfo.GetTransportStreamID(),
 							ChInfo.GetServiceID());
-						WORD SID;
-						if (TsAnalyzer.Get1SegServiceIDByIndex(Index,&SID))
-							ServiceID=SID;
+						ServiceID=pAnalyzer->Get1SegServiceIDByIndex(Index);
 					}
 
 					SetServiceByID(ServiceID,SET_SERVICE_NO_CHANGE_CUR_SERVICE_ID);
 				} else {
-					m_App.CoreEngine.m_DtvEngine.SetOneSegSelectType(
-						CDtvEngine::ONESEG_SELECT_HIGHPRIORITY);
+					m_App.CoreEngine.SetOneSegSelectType(
+						LibISDB::TSEngine::OneSegSelectType::HighPriority);
 				}
 			} else {
 				SetServiceByID(
 					m_App.ChannelManager.GetCurrentServiceID()>0?
-						m_App.ChannelManager.GetCurrentServiceID():CDtvEngine::SID_DEFAULT,
+						m_App.ChannelManager.GetCurrentServiceID():LibISDB::SERVICE_ID_INVALID,
 					SET_SERVICE_NO_CHANGE_CUR_SERVICE_ID);
 			}
 		}
@@ -1065,16 +1094,21 @@ void CAppCore::ApplyBonDriverOptions()
 	CDriverOptions::BonDriverOptions Options(m_App.CoreEngine.GetDriverFileName());
 	m_App.DriverOptions.GetBonDriverOptions(m_App.CoreEngine.GetDriverFileName(),&Options);
 
-	//m_App.CoreEngine.m_DtvEngine.SetStartStreamingOnDriverOpen(!Options.fIgnoreInitialStream);
+	//m_App.CoreEngine.SetStartStreamingOnSourceOpen(!Options.fIgnoreInitialStream);
 
-	CBonSrcDecoder &BonSrcDecoder=m_App.CoreEngine.m_DtvEngine.m_BonSrcDecoder;
+	LibISDB::BonDriverSourceFilter *pSourceFilter=
+		m_App.CoreEngine.GetFilter<LibISDB::BonDriverSourceFilter>();
+	if (pSourceFilter!=nullptr) {
+		pSourceFilter->SetPurgeStreamOnChannelChange(Options.fPurgeStreamOnChannelChange);
+		pSourceFilter->SetFirstChannelSetDelay(Options.FirstChannelSetDelay);
+		pSourceFilter->SetMinChannelChangeInterval(Options.MinChannelChangeInterval);
+	}
 
-	BonSrcDecoder.SetPurgeStreamOnChannelChange(Options.fPurgeStreamOnChannelChange);
-	BonSrcDecoder.SetFirstChannelSetDelay(Options.FirstChannelSetDelay);
-	BonSrcDecoder.SetMinChannelChangeInterval(Options.MinChannelChangeInterval);
-
-	m_App.CoreEngine.m_DtvEngine.m_MediaViewer.SetPacketInputWait(
-		Options.fPumpStreamSyncPlayback?3000:0);
+	LibISDB::ViewerFilter *pViewerFilter=
+		m_App.CoreEngine.GetFilter<LibISDB::ViewerFilter>();
+	if (pViewerFilter!=nullptr) {
+		pViewerFilter->SetPacketInputWait(Options.fPumpStreamSyncPlayback?3000:0);
+	}
 }
 
 
@@ -1142,7 +1176,6 @@ bool CAppCore::StartRecord(LPCTSTR pszFileName,
 	m_App.RecordManager.SetStopTimeSpec(pStopTime);
 	m_App.RecordManager.SetStopOnEventEnd(false);
 	m_App.RecordManager.SetClient(Client);
-	m_App.RecordOptions.GetRecordingSettings(&m_App.RecordManager.GetRecordingSettings());
 	if (m_App.CmdLineOptions.m_fRecordCurServiceOnly)
 		m_App.RecordManager.SetCurServiceOnly(true);
 	if (m_App.RecordManager.IsReserved()) {
@@ -1171,7 +1204,7 @@ bool CAppCore::StartRecord(LPCTSTR pszFileName,
 	RecStartInfo.MaxFileName=lengthof(szFileName);
 	m_App.AppEventManager.OnRecordingStart(&RecStartInfo);
 	m_App.CoreEngine.ResetErrorCount();
-	if (!m_App.RecordManager.StartRecord(&m_App.CoreEngine.m_DtvEngine,szFileName,fTimeShift)) {
+	if (!m_App.RecordManager.StartRecord(szFileName,fTimeShift)) {
 		OnError(&m_App.RecordManager,TEXT("録画を開始できません。"));
 		return false;
 	}
@@ -1231,13 +1264,14 @@ bool CAppCore::StartReservedRecord()
 	RecStartInfo.MaxFileName=lengthof(szFileName);
 	m_App.AppEventManager.OnRecordingStart(&RecStartInfo);
 	m_App.CoreEngine.ResetErrorCount();
-	if (!m_App.RecordManager.StartRecord(&m_App.CoreEngine.m_DtvEngine,szFileName)) {
+	if (!m_App.RecordManager.StartRecord(szFileName,false,true)) {
 		m_App.RecordManager.CancelReserve();
 		OnError(&m_App.RecordManager,TEXT("録画を開始できません。"));
 		return false;
 	}
-	m_App.RecordManager.GetRecordTask()->GetFileName(szFileName,lengthof(szFileName));
-	m_App.AddLog(TEXT("録画開始 %s"),szFileName);
+	TVTest::String ActualFileName;
+	m_App.RecordManager.GetRecordTask()->GetFileName(&ActualFileName);
+	m_App.AddLog(TEXT("録画開始 %s"),ActualFileName.c_str());
 
 	m_App.TaskTrayManager.SetStatus(CTaskTrayManager::STATUS_RECORDING,
 									CTaskTrayManager::STATUS_RECORDING);
@@ -1261,16 +1295,16 @@ bool CAppCore::StopRecord()
 	if (!m_App.RecordManager.IsRecording())
 		return false;
 
-	TCHAR szFileName[MAX_PATH];
-	m_App.RecordManager.GetRecordTask()->GetFileName(szFileName,lengthof(szFileName));
+	const CRecordTask *pTask=m_App.RecordManager.GetRecordTask();
+	TVTest::String FileName;
+	pTask->GetFileName(&FileName);
 
 	m_App.RecordManager.StopRecord();
-	m_App.RecordOptions.Apply(CRecordOptions::UPDATE_RECORDSTREAM);
 
-	CTsRecorder::WriteStatistics Stats;
-	m_App.CoreEngine.m_DtvEngine.m_TsRecorder.GetWriteStatistics(&Stats);
-	m_App.AddLog(TEXT("録画停止 %s (出力TSサイズ %llu Bytes / 書き出しエラー回数 %u)"),
-				 szFileName,Stats.OutputSize,Stats.WriteErrorCount);
+	LibISDB::RecorderFilter::RecordingStatistics Stats;
+	pTask->GetStatistics(&Stats);
+	m_App.AddLog(TEXT("録画停止 %s (出力TSサイズ %llu Bytes / 書き出しエラー回数 %lu)"),
+				 FileName.c_str(),Stats.OutputBytes,Stats.WriteErrorCount);
 
 	m_App.TaskTrayManager.SetStatus(0,CTaskTrayManager::STATUS_RECORDING);
 	m_App.AppEventManager.OnRecordingStopped();
@@ -1417,38 +1451,41 @@ bool CAppCore::GetVariableStringEventInfo(
 		pInfo->Channel.SetTunerName(m_App.CoreEngine.GetDriverFileName());
 	}
 
-	SYSTEMTIME stCur;
-	if (!m_App.CoreEngine.m_DtvEngine.m_TsAnalyzer.GetInterpolatedTotTime(&stCur))
-		GetCurrentEpgTime(&stCur);
-	pInfo->TotTime=stCur;
+	const LibISDB::AnalyzerFilter *pAnalyzer=m_App.CoreEngine.GetFilter<LibISDB::AnalyzerFilter>();
+
+	LibISDB::DateTime CurTime;
+	if (pAnalyzer!=nullptr && !pAnalyzer->GetInterpolatedTOTTime(&CurTime))
+		LibISDB::GetCurrentEPGTime(&CurTime);
+	pInfo->TOTTime=CurTime;
 
 	WORD ServiceID;
-	if (m_App.CoreEngine.m_DtvEngine.GetServiceID(&ServiceID)) {
-		int Index=m_App.CoreEngine.m_DtvEngine.m_TsAnalyzer.GetServiceIndexByID(ServiceID);
-		TCHAR szServiceName[32];
-		if (m_App.CoreEngine.m_DtvEngine.m_TsAnalyzer.GetServiceName(Index,szServiceName,lengthof(szServiceName)))
-			pInfo->ServiceName=szServiceName;
+	if (pAnalyzer!=nullptr
+			&& (ServiceID=m_App.CoreEngine.GetServiceID())!=LibISDB::SERVICE_ID_INVALID) {
+		int Index=pAnalyzer->GetServiceIndexByID(ServiceID);
+		LibISDB::String ServiceName;
+		if (pAnalyzer->GetServiceName(Index,&ServiceName))
+			pInfo->ServiceName=ServiceName;
 		bool fNext=false;
 		if (NextEventMargin>0) {
-			SYSTEMTIME stStart;
-			if (m_App.CoreEngine.m_DtvEngine.GetEventTime(&stStart,nullptr,true)) {
-				LONGLONG Diff=DiffSystemTime(&stCur,&stStart);
-				if (Diff>=0 && Diff<(LONGLONG)NextEventMargin)
+			LibISDB::DateTime StartTime;
+			if (pAnalyzer->GetEventTime(Index,&StartTime,nullptr,true)) {
+				long long Diff=StartTime.DiffMilliseconds(CurTime);
+				if (Diff>=0 && Diff<(long long)NextEventMargin)
 					fNext=true;
 			}
 		}
-		if (m_App.CoreEngine.m_DtvEngine.GetEventInfo(&pInfo->Event,fNext))
+		if (pAnalyzer->GetEventInfo(Index,&pInfo->Event,fNext))
 			fEventInfoValid=true;
-		pInfo->Event.m_ServiceID=ServiceID;
+		pInfo->Event.ServiceID=ServiceID;
 	} else {
-		pInfo->Event.m_ServiceID=0;
+		pInfo->Event.ServiceID=LibISDB::SERVICE_ID_INVALID;
 	}
 	if (!fEventInfoValid) {
-		pInfo->Event.m_NetworkID=0;
-		pInfo->Event.m_TransportStreamID=0;
-		pInfo->Event.m_EventID=0;
-		pInfo->Event.m_bValidStartTime=false;
-		pInfo->Event.m_Duration=0;
+		pInfo->Event.NetworkID=LibISDB::NETWORK_ID_INVALID;
+		pInfo->Event.TransportStreamID=LibISDB::TRANSPORT_STREAM_ID_INVALID;
+		pInfo->Event.EventID=LibISDB::EVENT_ID_INVALID;
+		pInfo->Event.StartTime.Reset();
+		pInfo->Event.Duration=0;
 	}
 
 	return true;

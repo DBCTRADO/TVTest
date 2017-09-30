@@ -61,15 +61,31 @@ INT_PTR CAboutDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 
 			::SetWindowText(hwndHeader,
 				ABOUT_VERSION_TEXT
-#ifdef VERSION_PLATFORM
-				TEXT(" (") VERSION_PLATFORM TEXT(")")
+				TEXT(" (")
+#ifdef _DEBUG
+				TEXT("Debug")
+#else
+				TEXT("Release")
 #endif
+#ifdef VERSION_PLATFORM
+				TEXT(" ") VERSION_PLATFORM
+#endif
+				TEXT(")")
 				);
 
 			HDC hdc=::GetDC(hDlg);
 			HFONT hfontOld=DrawUtil::SelectObject(hdc,m_Font);
 			TCHAR szText[MAX_INFO_TEXT];
-			::GetWindowText(hwndInfo,szText,lengthof(szText));
+			int Length=StdUtil::snprintf(
+				szText,lengthof(szText),
+				TEXT("Work with LibISDB ver.") LIBISDB_VERSION_STRING TEXT("\r\n")
+#ifdef _MSC_FULL_VER
+				TEXT("Compiled with MSVC %d.%d.%d.%d\r\n"),
+				_MSC_FULL_VER/10000000,(_MSC_FULL_VER/100000)%100,_MSC_FULL_VER%100000,_MSC_BUILD
+#endif
+				);
+			::GetWindowText(hwndInfo,szText+Length,lengthof(szText)-Length);
+			::SetWindowText(hwndInfo,szText);
 			RECT rcText={0,0,0,0};
 			::DrawText(hdc,szText,-1,&rcText,DT_CALCRECT | DT_NOPREFIX);
 			DrawUtil::SelectObject(hdc,m_LinkFont);

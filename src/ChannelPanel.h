@@ -5,7 +5,6 @@
 #include <vector>
 #include "PanelForm.h"
 #include "UIBase.h"
-#include "EpgProgramList.h"
 #include "ChannelList.h"
 #include "Theme.h"
 #include "DrawUtil.h"
@@ -17,6 +16,7 @@
 #include "EpgUtil.h"
 #include "FeaturedEvents.h"
 #include "TextDraw.h"
+#include "LibISDB/LibISDB/EPG/EPGDatabase.hpp"
 
 
 class CChannelPanel
@@ -73,10 +73,10 @@ public:
 	bool WriteSettings(CSettings &Settings) override;
 
 // CChannelPanel
-	bool SetEpgProgramList(CEpgProgramList *pList);
+	bool SetEPGDatabase(LibISDB::EPGDatabase *pEPGDatabase);
 	bool SetChannelList(const CChannelList *pChannelList,bool fSetEvent=true);
 	void ClearChannelList() { SetChannelList(NULL); }
-	bool UpdateAllChannels(bool fUpdateProgramList);
+	bool UpdateAllChannels();
 	bool UpdateChannel(int ChannelIndex);
 	bool UpdateChannels(WORD NetworkID,WORD TransportStreamID);
 	bool IsChannelListEmpty() const;
@@ -117,7 +117,7 @@ private:
 	{
 		CChannelInfo m_ChannelInfo;
 		int m_OriginalChannelIndex;
-		std::vector<CEventInfoData> m_EventList;
+		std::vector<LibISDB::EventInfo> m_EventList;
 		HBITMAP m_hbmLogo;
 		DrawUtil::CBitmap m_StretchedLogo;
 		bool m_fExpanded;
@@ -125,9 +125,9 @@ private:
 	public:
 		CChannelEventInfo(const CChannelInfo *pChannelInfo,int OriginalIndex);
 		~CChannelEventInfo();
-		bool SetEventInfo(int Index,const CEventInfoData *pInfo);
+		bool SetEventInfo(int Index,const LibISDB::EventInfo *pInfo);
 		const CChannelInfo &GetChannelInfo() const { return m_ChannelInfo; }
-		const CEventInfoData &GetEventInfo(int Index) const { return m_EventList[Index]; }
+		const LibISDB::EventInfo &GetEventInfo(int Index) const { return m_EventList[Index]; }
 		int NumEvents() const { return (int)m_EventList.size(); }
 		void SetMaxEvents(int Events);
 		bool IsEventEnabled(int Index) const;
@@ -160,7 +160,7 @@ private:
 			const TVTest::Style::CStyleScaling *pStyleScaling);
 	};
 
-	CEpgProgramList *m_pProgramList;
+	LibISDB::EPGDatabase *m_pEPGDatabase;
 	ChannelPanelStyle m_Style;
 	TVTest::Style::Font m_StyleFont;
 	DrawUtil::CFont m_Font;
@@ -205,15 +205,15 @@ private:
 	};
 	CEventInfoPopupHandler m_EventInfoPopupHandler;
 	CLogoManager *m_pLogoManager;
-	SYSTEMTIME m_UpdatedTime;
-	SYSTEMTIME m_CurTime;
+	LibISDB::DateTime m_UpdatedTime;
+	LibISDB::DateTime m_CurTime;
 	CFeaturedEventsMatcher m_FeaturedEventsMatcher;
 
 	static const LPCTSTR m_pszClassName;
 	static HINSTANCE m_hinst;
 
 	void ClearChannels();
-	bool UpdateEvents(CChannelEventInfo *pInfo,const SYSTEMTIME *pTime=NULL);
+	bool UpdateEvents(CChannelEventInfo *pInfo,const LibISDB::DateTime *pTime=NULL);
 	void Draw(HDC hdc,const RECT *prcPaint);
 	void OnCommand(int ID);
 	void SetScrollPos(int Pos);

@@ -166,7 +166,8 @@ bool CEpgCaptureManager::ProcessCapture()
 		return true;
 
 	CAppMain &App=GetAppClass();
-	CEventManager &EventManager=App.CoreEngine.m_DtvEngine.m_EventManager;
+	LibISDB::EPGDatabase &EPGDatabase=App.EPGDatabase;
+
 	const CChannelList *pChannelList=App.ChannelManager.GetCurrentChannelList();
 	const CChannelInfo *pCurChannelInfo=App.ChannelManager.GetCurrentChannelInfo();
 	if (pChannelList==nullptr || pCurChannelInfo==nullptr) {
@@ -184,17 +185,17 @@ bool CEpgCaptureManager::ProcessCapture()
 		const CNetworkDefinition::NetworkType Network=
 			App.NetworkDefinition.GetNetworkType(NetworkID);
 
-		if (EventManager.HasSchedule(NetworkID,TSID,ServiceID,false)) {
+		if (EPGDatabase.HasSchedule(NetworkID,TSID,ServiceID,false)) {
 			fBasic=true;
-			if (!EventManager.IsScheduleComplete(NetworkID,TSID,ServiceID,false)) {
+			if (!EPGDatabase.IsScheduleComplete(NetworkID,TSID,ServiceID,false)) {
 				fComplete=false;
 				break;
 			}
 			if ((Network!=CNetworkDefinition::NETWORK_BS && Network!=CNetworkDefinition::NETWORK_CS)
 					|| (Network==CNetworkDefinition::NETWORK_BS && App.EpgOptions.GetUpdateBSExtended())
 					|| (Network==CNetworkDefinition::NETWORK_CS && App.EpgOptions.GetUpdateCSExtended())) {
-				if (EventManager.HasSchedule(NetworkID,TSID,ServiceID,true)
-						&& !EventManager.IsScheduleComplete(NetworkID,TSID,ServiceID,true)) {
+				if (EPGDatabase.HasSchedule(NetworkID,TSID,ServiceID,true)
+						&& !EPGDatabase.IsScheduleComplete(NetworkID,TSID,ServiceID,true)) {
 					fComplete=false;
 					break;
 				}
@@ -211,7 +212,7 @@ bool CEpgCaptureManager::ProcessCapture()
 	if (fComplete) {
 		TRACE(TEXT("EPG schedule complete\n"));
 	} else {
-		WORD NetworkID=App.CoreEngine.m_DtvEngine.m_TsAnalyzer.GetNetworkID();
+		WORD NetworkID=App.CoreEngine.GetNetworkID();
 		DWORD Timeout;
 
 		// 真面目に判定する場合BITから周期を取ってくる必要がある

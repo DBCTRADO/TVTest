@@ -69,7 +69,7 @@ namespace TVTest
 		CProgramGuideDisplay ProgramGuideDisplay;
 		bool fShowProgramGuide;
 
-		CEpg(CEpgProgramList &EpgProgramList,CEventSearchOptions &EventSearchOptions);
+		CEpg(LibISDB::EPGDatabase &EPGDatabase,CEventSearchOptions &EventSearchOptions);
 		CChannelProviderManager *CreateChannelProviderManager(LPCTSTR pszDefaultTuner=NULL);
 
 	private:
@@ -77,12 +77,12 @@ namespace TVTest
 		{
 			bool OnClose() override;
 			void OnDestroy() override;
-			void OnServiceTitleLButtonDown(LPCTSTR pszDriverFileName,const CServiceInfoData *pServiceInfo) override;
+			void OnServiceTitleLButtonDown(LPCTSTR pszDriverFileName,const LibISDB::EPGDatabase::ServiceInfo *pServiceInfo) override;
 			bool OnKeyDown(UINT KeyCode,UINT Flags) override;
 			bool OnMenuInitialize(HMENU hmenu,UINT CommandBase) override;
 			bool OnMenuSelected(UINT Command) override;
 
-			int FindChannel(const CChannelList *pChannelList,const CServiceInfoData *pServiceInfo);
+			int FindChannel(const CChannelList *pChannelList,const LibISDB::EPGDatabase::ServiceInfo *pServiceInfo);
 		};
 
 		class CProgramGuideDisplayEventHandler
@@ -100,13 +100,13 @@ namespace TVTest
 		{
 			bool Initialize() override;
 			void Finalize() override;
-			bool DrawBackground(const CEventInfoData &Event,HDC hdc,
+			bool DrawBackground(const LibISDB::EventInfo &Event,HDC hdc,
 				const RECT &ItemRect,const RECT &TitleRect,const RECT &ContentRect,
 				COLORREF BackgroundColor) override;
-			bool InitializeMenu(const CEventInfoData &Event,HMENU hmenu,UINT CommandBase,
+			bool InitializeMenu(const LibISDB::EventInfo &Event,HMENU hmenu,UINT CommandBase,
 								const POINT &CursorPos,const RECT &ItemRect) override;
-			bool ProcessMenu(const CEventInfoData &Event,UINT Command) override;
-			bool OnLButtonDoubleClick(const CEventInfoData &Event,
+			bool ProcessMenu(const LibISDB::EventInfo &Event,UINT Command) override;
+			bool OnLButtonDoubleClick(const LibISDB::EventInfo &Event,
 									  const POINT &CursorPos,const RECT &ItemRect) override;
 		};
 

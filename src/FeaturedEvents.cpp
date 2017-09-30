@@ -97,10 +97,10 @@ bool CFeaturedEventsSearcher::Update()
 {
 	Clear();
 
-	SYSTEMTIME StartTime,PeriodTime;
-	GetCurrentEpgTime(&StartTime);
+	LibISDB::DateTime StartTime,PeriodTime;
+	LibISDB::GetCurrentEPGTime(&StartTime);
 	PeriodTime=StartTime;
-	OffsetSystemTime(&PeriodTime,(LONGLONG)m_Settings.GetPeriodSeconds()*TimeConsts::SYSTEMTIME_SECOND);
+	PeriodTime.OffsetSeconds(m_Settings.GetPeriodSeconds());
 
 	const CEventSearchServiceList &DefaultServiceList=m_Settings.GetDefaultServiceList();
 	CEventSearchServiceList ServiceIDList(DefaultServiceList);
@@ -121,36 +121,37 @@ bool CFeaturedEventsSearcher::Update()
 		}
 	}
 
-	CEpgProgramList &EpgProgramList=GetAppClass().EpgProgramList;
+	LibISDB::EPGDatabase &EPGDatabase=GetAppClass().EPGDatabase;
 
 	for (auto itService=ServiceIDList.Begin();itService!=ServiceIDList.End();++itService) {
-		const CEpgServiceInfo *pServiceInfo=EpgProgramList.GetServiceInfo(
+		EPGDatabase.EnumEventsUnsorted(
 			CEventSearchServiceList::ServiceKey_GetNetworkID(*itService),
 			CEventSearchServiceList::ServiceKey_GetTransportStreamID(*itService),
-			CEventSearchServiceList::ServiceKey_GetServiceID(*itService));
-		if (pServiceInfo!=NULL) {
-			const CEventInfoList &EventList=pServiceInfo->m_EventList;
-			for (auto itEvent=EventList.EventDataMap.begin();itEvent!=EventList.EventDataMap.end();++itEvent) {
-				if (itEvent->second.m_bCommonEvent)
-					continue;
-				if (CompareSystemTime(&itEvent->second.m_StartTime,&PeriodTime)>=0)
-					continue;
-				SYSTEMTIME stEnd;
-				itEvent->second.GetEndTime(&stEnd);
-				if (CompareSystemTime(&stEnd,&StartTime)<=0)
-					continue;
+			CEventSearchServiceList::ServiceKey_GetServiceID(*itService),
+			[&](const LibISDB::EventInfo &Event) -> bool {
+				if (Event.IsCommonEvent)
+					return true;
+				if (Event.StartTime >= PeriodTime)
+					return true;
+
+				LibISDB::DateTime EndTime;
+				Event.GetEndTime(&EndTime);
+				if (EndTime <= StartTime)
+					return true;
+
 				for (auto itSearcher=SearcherList.begin();itSearcher!=SearcherList.end();++itSearcher) {
 					if (!itSearcher->GetSearchSettings().fServiceList) {
 						if (!DefaultServiceList.IsExists(*itService))
 							continue;
 					}
-					if (itSearcher->Match(&itEvent->second)) {
-						m_EventList.push_back(new CEventInfoData(itEvent->second));
+					if (itSearcher->Match(&Event)) {
+						m_EventList.push_back(new LibISDB::EventInfo(Event));
 						break;
 					}
 				}
-			}
-		}
+
+				return true;
+			});
 	}
 
 	return true;
@@ -163,7 +164,7 @@ size_t CFeaturedEventsSearcher::GetEventCount() const
 }
 
 
-const CEventInfoData *CFeaturedEventsSearcher::GetEventInfo(size_t Index) const
+const LibISDB::EventInfo *CFeaturedEventsSearcher::GetEventInfo(size_t Index) const
 {
 	if (Index>=m_EventList.size())
 		return NULL;
@@ -200,13 +201,13 @@ void CFeaturedEventsMatcher::EndMatching()
 }
 
 
-bool CFeaturedEventsMatcher::IsMatch(const CEventInfoData &EventInfo)
+bool CFeaturedEventsMatcher::IsMatch(const LibISDB::EventInfo &EventInfo)
 {
 	for (auto itSearcher=m_SearcherList.begin();itSearcher!=m_SearcherList.end();++itSearcher) {
 		if (!itSearcher->GetSearchSettings().fServiceList) {
-			if (!m_DefaultServiceList.IsExists(EventInfo.m_NetworkID,
-											   EventInfo.m_TransportStreamID,
-											   EventInfo.m_ServiceID))
+			if (!m_DefaultServiceList.IsExists(EventInfo.NetworkID,
+											   EventInfo.TransportStreamID,
+											   EventInfo.ServiceID))
 				continue;
 		}
 		if (itSearcher->Match(&EventInfo)) {

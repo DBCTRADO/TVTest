@@ -548,36 +548,36 @@ class CChannelMenuItem
 	const CChannelInfo *m_pChannelInfo;
 	struct Event {
 		bool fValid;
-		CEventInfoData EventInfo;
+		LibISDB::EventInfo EventInfo;
 		Event() : fValid(false) {}
 	};
 	Event m_EventList[2];
 public:
 	CChannelMenuItem(const CChannelInfo *pChannelInfo)
 		: m_pChannelInfo(pChannelInfo) {}
-	const CEventInfoData *GetEventInfo(CEpgProgramList *pProgramList,
-									   int Index,const SYSTEMTIME *pCurTime=NULL);
-	const CEventInfoData *GetEventInfo(int Index) const;
+	const LibISDB::EventInfo *GetEventInfo(
+		LibISDB::EPGDatabase *pEPGDatabase,int Index,const LibISDB::DateTime *pCurTime=NULL);
+	const LibISDB::EventInfo *GetEventInfo(int Index) const;
 	const CChannelInfo *GetChannelInfo() const { return m_pChannelInfo; }
 };
 
-const CEventInfoData *CChannelMenuItem::GetEventInfo(CEpgProgramList *pProgramList,
-													 int Index,const SYSTEMTIME *pCurTime)
+const LibISDB::EventInfo *CChannelMenuItem::GetEventInfo(
+	LibISDB::EPGDatabase *pEPGDatabase,int Index,const LibISDB::DateTime *pCurTime)
 {
 	if (Index<0 || Index>=lengthof(m_EventList)
 			|| (Index>0 && !m_EventList[Index-1].fValid)
 			|| m_pChannelInfo->GetServiceID()==0)
 		return NULL;
 	if (!m_EventList[Index].fValid) {
-		SYSTEMTIME st;
+		LibISDB::DateTime Time;
 
 		if (Index==0) {
 			if (pCurTime!=NULL)
-				st=*pCurTime;
+				Time=*pCurTime;
 			else
-				GetCurrentEpgTime(&st);
+				LibISDB::GetCurrentEPGTime(&Time);
 		} else {
-			if (!m_EventList[Index-1].EventInfo.GetEndTime(&st))
+			if (!m_EventList[Index-1].EventInfo.GetEndTime(&Time))
 				return NULL;
 		}
 
@@ -598,10 +598,10 @@ const CEventInfoData *CChannelMenuItem::GetEventInfo(CEpgProgramList *pProgramLi
 		}
 
 		if (!fCurrent) {
-			if (!pProgramList->GetEventInfo(m_pChannelInfo->GetNetworkID(),
+			if (!pEPGDatabase->GetEventInfo(m_pChannelInfo->GetNetworkID(),
 											m_pChannelInfo->GetTransportStreamID(),
 											m_pChannelInfo->GetServiceID(),
-											&st,&m_EventList[Index].EventInfo))
+											Time,&m_EventList[Index].EventInfo))
 				return NULL;
 		}
 
@@ -611,7 +611,7 @@ const CEventInfoData *CChannelMenuItem::GetEventInfo(CEpgProgramList *pProgramLi
 	return &m_EventList[Index].EventInfo;
 }
 
-const CEventInfoData *CChannelMenuItem::GetEventInfo(int Index) const
+const LibISDB::EventInfo *CChannelMenuItem::GetEventInfo(int Index) const
 {
 	if (!m_EventList[Index].fValid)
 		return NULL;
@@ -664,11 +664,11 @@ bool CChannelMenu::Create(const CChannelList *pChannelList,int CurChannel,UINT C
 	CreateFont(hdc);
 	HFONT hfontOld=DrawUtil::SelectObject(hdc,m_Font);
 
-	CEpgProgramList &EpgProgramList=GetAppClass().EpgProgramList;
+	LibISDB::EPGDatabase &EPGDatabase=GetAppClass().EPGDatabase;
 	const bool fCurServices=(Flags & FLAG_CURSERVICES)!=0;
-	SYSTEMTIME st;
+	LibISDB::DateTime Time;
 	if (!fCurServices)
-		GetBaseTime(&st);
+		GetBaseTime(&Time);
 	m_ChannelNameWidth=0;
 	m_EventNameWidth=0;
 	if (hmenu==NULL) {
@@ -715,8 +715,8 @@ bool CChannelMenu::Create(const CChannelList *pChannelList,int CurChannel,UINT C
 		CChannelMenuItem *pItem=new CChannelMenuItem(pChInfo);
 		mii.dwItemData=reinterpret_cast<ULONG_PTR>(pItem);
 		if ((Flags&FLAG_SHOWEVENTINFO)!=0) {
-			const CEventInfoData *pEventInfo=
-				pItem->GetEventInfo(&EpgProgramList,0,fCurServices?NULL:&st);
+			const LibISDB::EventInfo *pEventInfo=
+				pItem->GetEventInfo(&EPGDatabase,0,fCurServices?NULL:&Time);
 
 			if (pEventInfo!=NULL) {
 				GetEventText(pEventInfo,szText,lengthof(szText));
@@ -865,7 +865,7 @@ bool CChannelMenu::OnDrawItem(HWND hwnd,WPARAM wParam,LPARAM lParam)
 			   DT_LEFT | DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX);
 
 	if ((m_Flags&FLAG_SHOWEVENTINFO)!=0) {
-		const CEventInfoData *pEventInfo=pItem->GetEventInfo(0);
+		const LibISDB::EventInfo *pEventInfo=pItem->GetEventInfo(0);
 		if (pEventInfo!=NULL) {
 			int Length=GetEventText(pEventInfo,szText,lengthof(szText));
 			rc.left=rc.right+m_TextHeight;
@@ -905,10 +905,10 @@ bool CChannelMenu::OnMenuSelect(HWND hwnd,WPARAM wParam,LPARAM lParam)
 			if (pItem==NULL)
 				return false;
 
-			const CEventInfoData *pEventInfo1,*pEventInfo2;
+			const LibISDB::EventInfo *pEventInfo1,*pEventInfo2;
 			pEventInfo1=pItem->GetEventInfo(0);
 			if (pEventInfo1==NULL) {
-				pEventInfo1=pItem->GetEventInfo(&GetAppClass().EpgProgramList,0);
+				pEventInfo1=pItem->GetEventInfo(&GetAppClass().EPGDatabase,0);
 			}
 			if (pEventInfo1!=NULL) {
 				TCHAR szText[256*2+1];
@@ -916,7 +916,7 @@ bool CChannelMenu::OnMenuSelect(HWND hwnd,WPARAM wParam,LPARAM lParam)
 				POINT pt;
 
 				Length=GetEventText(pEventInfo1,szText,lengthof(szText)/2);
-				pEventInfo2=pItem->GetEventInfo(&GetAppClass().EpgProgramList,1);
+				pEventInfo2=pItem->GetEventInfo(&GetAppClass().EPGDatabase,1);
 				if (pEventInfo2!=NULL) {
 					szText[Length++]=_T('\r');
 					szText[Length++]=_T('\n');
@@ -987,16 +987,16 @@ bool CChannelMenu::HandleMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam
 }
 
 
-int CChannelMenu::GetEventText(const CEventInfoData *pEventInfo,
+int CChannelMenu::GetEventText(const LibISDB::EventInfo *pEventInfo,
 							   LPTSTR pszText,int MaxLength) const
 {
 	TCHAR szTime[EpgUtil::MAX_EVENT_TIME_LENGTH];
 
 	EpgUtil::FormatEventTime(
-		pEventInfo,szTime,lengthof(szTime),EpgUtil::EVENT_TIME_HOUR_2DIGITS);
+		*pEventInfo,szTime,lengthof(szTime),EpgUtil::EVENT_TIME_HOUR_2DIGITS);
 
 	return StdUtil::snprintf(pszText,MaxLength,TEXT("%s %s"),
-							 szTime,pEventInfo->m_EventName.c_str());
+							 szTime,pEventInfo->EventName.c_str());
 }
 
 
@@ -1018,10 +1018,10 @@ void CChannelMenu::CreateFont(HDC hdc)
 }
 
 
-void CChannelMenu::GetBaseTime(SYSTEMTIME *pTime)
+void CChannelMenu::GetBaseTime(LibISDB::DateTime *pTime)
 {
-	GetCurrentEpgTime(pTime);
-	OffsetSystemTime(pTime,2*TimeConsts::SYSTEMTIME_MINUTE);
+	LibISDB::GetCurrentEPGTime(pTime);
+	pTime->OffsetMinutes(2);
 }
 
 
@@ -1720,9 +1720,9 @@ bool CDropDownMenu::Show(HWND hwndOwner,HWND hwndMessage,const POINT *pPos,int C
 		int Width=Columns*m_ItemWidth+HorzMargin;
 		int Height=m_MaxRows*m_ItemHeight+VertMargin;
 		if (x+Width>mi.rcMonitor.right)
-			x=max(mi.rcMonitor.right-Width,0);
+			x=max(mi.rcMonitor.right-Width,0L);
 		if (y+Height>mi.rcMonitor.bottom)
-			y=max(mi.rcMonitor.bottom-Height,0);
+			y=max(mi.rcMonitor.bottom-Height,0L);
 	}
 
 	::MoveWindow(hwnd,x,y,

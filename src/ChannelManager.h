@@ -3,7 +3,7 @@
 
 
 #include "ChannelList.h"
-#include "BonSrcDecoder.h"
+#include "LibISDB/LibISDB/Windows/Filters/BonDriverSourceFilter.hpp"
 
 
 class CChannelManager
@@ -35,7 +35,7 @@ public:
 	void Reset();
 	bool LoadChannelList(LPCTSTR pszFileName);
 	bool SetTuningSpaceList(const CTuningSpaceList *pList);
-	bool MakeDriverTuningSpaceList(const CBonSrcDecoder *pSrcDecoder);
+	bool MakeDriverTuningSpaceList(const LibISDB::BonDriverSourceFilter *pSrcDecoder);
 	bool SetUseDriverChannelList(bool fUse);
 	bool GetUseDriverChannelList() const { return m_fUseDriverChannelList; }
 	bool SetCurrentChannel(int Space,int Channel);

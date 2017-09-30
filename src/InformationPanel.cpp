@@ -1051,15 +1051,17 @@ void CInformationPanel::CVideoInfoItem::Reset()
 bool CInformationPanel::CVideoInfoItem::Update()
 {
 	const CCoreEngine &CoreEngine=GetAppClass().CoreEngine;
+	const LibISDB::ViewerFilter *pViewer=
+		GetAppClass().CoreEngine.GetFilter<LibISDB::ViewerFilter>();
 	int OriginalVideoWidth,OriginalVideoHeight;
 	int DisplayVideoWidth,DisplayVideoHeight;
-	BYTE AspectX,AspectY;
+	int AspectX,AspectY;
 
 	OriginalVideoWidth=CoreEngine.GetOriginalVideoWidth();
 	OriginalVideoHeight=CoreEngine.GetOriginalVideoHeight();
 	DisplayVideoWidth=CoreEngine.GetDisplayVideoWidth();
 	DisplayVideoHeight=CoreEngine.GetDisplayVideoHeight();
-	if (!CoreEngine.m_DtvEngine.m_MediaViewer.GetEffectiveAspectRatio(&AspectX,&AspectY))
+	if (pViewer==nullptr || !pViewer->GetEffectiveAspectRatio(&AspectX,&AspectY))
 		AspectX=AspectY=0;
 
 	if (OriginalVideoWidth==m_OriginalVideoWidth
@@ -1110,13 +1112,14 @@ void CInformationPanel::CVideoDecoderItem::Reset()
 
 bool CInformationPanel::CVideoDecoderItem::Update()
 {
-	TCHAR szDecoder[256];
+	const LibISDB::ViewerFilter *pViewer=
+		GetAppClass().CoreEngine.GetFilter<LibISDB::ViewerFilter>();
+	LibISDB::String DecoderName;
 
-	if (GetAppClass().CoreEngine.m_DtvEngine.m_MediaViewer.GetVideoDecoderName(
-			szDecoder,lengthof(szDecoder))) {
-		if (m_VideoDecoderName.compare(szDecoder)==0)
+	if (pViewer!=nullptr && pViewer->GetVideoDecoderName(&DecoderName)) {
+		if (m_VideoDecoderName==DecoderName)
 			return false;
-		m_VideoDecoderName=szDecoder;
+		m_VideoDecoderName=DecoderName;
 	} else {
 		if (m_VideoDecoderName.empty())
 			return false;
@@ -1149,13 +1152,14 @@ void CInformationPanel::CVideoRendererItem::Reset()
 
 bool CInformationPanel::CVideoRendererItem::Update()
 {
-	TCHAR szRenderer[256];
+	const LibISDB::ViewerFilter *pViewer=
+		GetAppClass().CoreEngine.GetFilter<LibISDB::ViewerFilter>();
+	LibISDB::String RendererName;
 
-	if (GetAppClass().CoreEngine.m_DtvEngine.m_MediaViewer.GetVideoRendererName(
-			szRenderer,lengthof(szRenderer))) {
-		if (m_VideoRendererName.compare(szRenderer)==0)
+	if (pViewer!=nullptr && pViewer->GetVideoRendererName(&RendererName)) {
+		if (m_VideoRendererName==RendererName)
 			return false;
-		m_VideoRendererName=szRenderer;
+		m_VideoRendererName=RendererName;
 	} else {
 		if (m_VideoRendererName.empty())
 			return false;
@@ -1188,13 +1192,14 @@ void CInformationPanel::CAudioDeviceItem::Reset()
 
 bool CInformationPanel::CAudioDeviceItem::Update()
 {
-	TCHAR szDevice[256];
+	const LibISDB::ViewerFilter *pViewer=
+		GetAppClass().CoreEngine.GetFilter<LibISDB::ViewerFilter>();
+	LibISDB::String DeviceName;
 
-	if (GetAppClass().CoreEngine.m_DtvEngine.m_MediaViewer.GetAudioRendererName(
-			szDevice,lengthof(szDevice))) {
-		if (m_AudioDeviceName.compare(szDevice)==0)
+	if (pViewer!=nullptr && pViewer->GetAudioRendererName(&DeviceName)) {
+		if (m_AudioDeviceName==DeviceName)
 			return false;
-		m_AudioDeviceName=szDevice;
+		m_AudioDeviceName=DeviceName;
 	} else {
 		if (m_AudioDeviceName.empty())
 			return false;
@@ -1290,9 +1295,17 @@ void CInformationPanel::CMediaBitRateItem::Reset()
 
 bool CInformationPanel::CMediaBitRateItem::Update()
 {
-	const CTsPacketCounter &PacketCounter=GetAppClass().CoreEngine.m_DtvEngine.m_TsPacketCounter;
-	const DWORD VideoBitRate=PacketCounter.GetVideoBitRate();
-	const DWORD AudioBitRate=PacketCounter.GetAudioBitRate();
+	const LibISDB::TSPacketCounterFilter *pPacketCounter=
+		GetAppClass().CoreEngine.GetFilter<LibISDB::TSPacketCounterFilter>();
+	DWORD VideoBitRate,AudioBitRate;
+
+	if (pPacketCounter!=nullptr) {
+		VideoBitRate=pPacketCounter->GetVideoBitRate();
+		AudioBitRate=pPacketCounter->GetAudioBitRate();
+	} else {
+		VideoBitRate=0;
+		AudioBitRate=0;
+	}
 
 	if (VideoBitRate==m_VideoBitRate && AudioBitRate==m_AudioBitRate)
 		return false;
@@ -1477,14 +1490,14 @@ void CInformationPanel::CServiceItem::Reset()
 bool CInformationPanel::CServiceItem::Update()
 {
 	const CCoreEngine &CoreEngine=GetAppClass().CoreEngine;
-	TCHAR szService[256];
+	const LibISDB::AnalyzerFilter *pAnalyzer=CoreEngine.GetFilter<LibISDB::AnalyzerFilter>();
+	TVTest::String ServiceName;
 
-	if (CoreEngine.m_DtvEngine.m_TsAnalyzer.GetServiceName(
-			CoreEngine.m_DtvEngine.GetServiceIndex(),
-			szService,lengthof(szService))>0) {
-		if (m_ServiceName.compare(szService)==0)
+	if (pAnalyzer!=nullptr
+			&& pAnalyzer->GetServiceName(CoreEngine.GetServiceIndex(),&ServiceName)) {
+		if (m_ServiceName==ServiceName)
 			return false;
-		m_ServiceName=szService;
+		m_ServiceName=ServiceName;
 	} else {
 		if (m_ServiceName.empty())
 			return false;
@@ -1526,31 +1539,34 @@ bool CInformationPanel::CProgramInfoItem::Update()
 	if (m_fNext)
 		Formatter.Append(TEXT("次 : "));
 
-	CEventInfoData EventInfo;
+	LibISDB::EventInfo EventInfo;
 
-	if (CoreEngine.GetCurrentEventInfo(&EventInfo,0xFFFF,m_fNext)) {
-		if (EpgUtil::FormatEventTime(&EventInfo,szTemp,lengthof(szTemp),
+	if (CoreEngine.GetCurrentEventInfo(&EventInfo,m_fNext)) {
+		if (EpgUtil::FormatEventTime(EventInfo,szTemp,lengthof(szTemp),
 									 EpgUtil::EVENT_TIME_DATE |
 									 EpgUtil::EVENT_TIME_YEAR |
 									 EpgUtil::EVENT_TIME_UNDECIDED_TEXT)>0) {
 			Formatter.Append(szTemp);
 			Formatter.Append(TEXT("\r\n"));
 		}
-		if (!EventInfo.m_EventName.empty()) {
-			Formatter.Append(EventInfo.m_EventName.c_str());
+		if (!EventInfo.EventName.empty()) {
+			Formatter.Append(EventInfo.EventName.c_str());
 			Formatter.Append(TEXT("\r\n\r\n"));
 		}
-		if (!EventInfo.m_EventText.empty()) {
-			Formatter.Append(EventInfo.m_EventText.c_str());
+		if (!EventInfo.EventText.empty()) {
+			Formatter.Append(EventInfo.EventText.c_str());
 			Formatter.Append(TEXT("\r\n\r\n"));
 		}
-		if (!EventInfo.m_EventExtendedText.empty()) {
-			Formatter.Append(EventInfo.m_EventExtendedText.c_str());
+		if (!EventInfo.ExtendedText.empty()) {
+			LibISDB::String ExtendedText;
+			EventInfo.GetConcatenatedExtendedText(&ExtendedText);
+			Formatter.Append(ExtendedText.c_str());
 		}
 	}
 
-	CTsAnalyzer::EventSeriesInfo SeriesInfo;
-	if (CoreEngine.m_DtvEngine.GetEventSeriesInfo(&SeriesInfo,m_fNext)
+	const LibISDB::AnalyzerFilter *pAnalyzer=CoreEngine.GetFilter<LibISDB::AnalyzerFilter>();
+	LibISDB::AnalyzerFilter::EventSeriesInfo SeriesInfo;
+	if (pAnalyzer->GetEventSeriesInfo(CoreEngine.GetServiceIndex(),&SeriesInfo,m_fNext)
 			&& SeriesInfo.EpisodeNumber!=0 && SeriesInfo.LastEpisodeNumber!=0) {
 		Formatter.Append(TEXT("\r\n\r\n(シリーズ"));
 		if (SeriesInfo.RepeatLabel!=0)
@@ -1560,11 +1576,11 @@ bool CInformationPanel::CProgramInfoItem::Update()
 								   SeriesInfo.EpisodeNumber,SeriesInfo.LastEpisodeNumber);
 		// expire_date は実際の最終回の日時でないので、紛らわしいため表示しない
 		/*
-		if (SeriesInfo.bIsExpireDateValid)
+		if (SeriesInfo.ExpireDate.IsValid())
 			Formatter.AppendFormat(TEXT(" 終了予定%d/%d/%d"),
-								   SeriesInfo.ExpireDate.wYear,
-								   SeriesInfo.ExpireDate.wMonth,
-								   SeriesInfo.ExpireDate.wDay);
+								   SeriesInfo.ExpireDate.Year,
+								   SeriesInfo.ExpireDate.Month,
+								   SeriesInfo.ExpireDate.Day);
 		*/
 		Formatter.Append(TEXT(")"));
 	}

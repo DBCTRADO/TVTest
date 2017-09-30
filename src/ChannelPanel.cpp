@@ -38,7 +38,7 @@ bool CChannelPanel::Initialize(HINSTANCE hinst)
 CChannelPanel::CChannelPanel()
 	: m_EventInfoPopupManager(&m_EventInfoPopup)
 	, m_EventInfoPopupHandler(this)
-	, m_pProgramList(NULL)
+	, m_pEPGDatabase(NULL)
 	, m_FontHeight(0)
 	, m_EventNameLines(2)
 	, m_ChannelNameHeight(0)
@@ -193,9 +193,9 @@ bool CChannelPanel::WriteSettings(CSettings &Settings)
 }
 
 
-bool CChannelPanel::SetEpgProgramList(CEpgProgramList *pList)
+bool CChannelPanel::SetEPGDatabase(LibISDB::EPGDatabase *pEPGDatabase)
 {
-	m_pProgramList=pList;
+	m_pEPGDatabase=pEPGDatabase;
 	return true;
 }
 
@@ -208,22 +208,22 @@ void CChannelPanel::ClearChannels()
 }
 
 
-bool CChannelPanel::UpdateEvents(CChannelEventInfo *pInfo,const SYSTEMTIME *pTime)
+bool CChannelPanel::UpdateEvents(CChannelEventInfo *pInfo,const LibISDB::DateTime *pTime)
 {
 	const WORD NetworkID=pInfo->GetNetworkID();
 	const WORD TransportStreamID=pInfo->GetTransportStreamID();
 	const WORD ServiceID=pInfo->GetServiceID();
-	SYSTEMTIME st;
-	CEventInfoData EventInfo;
+	LibISDB::DateTime Time;
+	LibISDB::EventInfo EventInfo;
 	bool fChanged=false;
 
 	if (pTime!=NULL)
-		st=*pTime;
+		Time=*pTime;
 	else
-		GetCurrentEpgTime(&st);
+		LibISDB::GetCurrentEPGTime(&Time);
 	const int NumEvents=pInfo->IsExpanded()?m_ExpandEvents:m_EventsPerChannel;
 	for (int i=0;i<NumEvents;i++) {
-		if (m_pProgramList->GetEventInfo(NetworkID,TransportStreamID,ServiceID,&st,&EventInfo)) {
+		if (m_pEPGDatabase->GetEventInfo(NetworkID,TransportStreamID,ServiceID,Time,&EventInfo)) {
 			if (pInfo->SetEventInfo(i,&EventInfo))
 				fChanged=true;
 		} else {
@@ -234,8 +234,8 @@ bool CChannelPanel::UpdateEvents(CChannelEventInfo *pInfo,const SYSTEMTIME *pTim
 					break;
 				i++;
 			}
-			if (m_pProgramList->GetNextEventInfo(NetworkID,TransportStreamID,ServiceID,&st,&EventInfo)
-					&& DiffSystemTime(&st,&EventInfo.m_StartTime)<8*TimeConsts::SYSTEMTIME_HOUR) {
+			if (m_pEPGDatabase->GetNextEventInfo(NetworkID,TransportStreamID,ServiceID,Time,&EventInfo)
+					&& EventInfo.StartTime.DiffSeconds(Time)<8*60*60) {
 				if (pInfo->SetEventInfo(i,&EventInfo))
 					fChanged=true;
 			} else {
@@ -246,7 +246,7 @@ bool CChannelPanel::UpdateEvents(CChannelEventInfo *pInfo,const SYSTEMTIME *pTim
 				break;
 			}
 		}
-		EventInfo.GetEndTime(&st);
+		EventInfo.GetEndTime(&Time);
 	}
 	return fChanged;
 }
@@ -260,9 +260,9 @@ bool CChannelPanel::SetChannelList(const CChannelList *pChannelList,bool fSetEve
 	m_CurChannel=-1;
 
 	if (pChannelList!=NULL) {
-		SYSTEMTIME stCurrent;
+		LibISDB::DateTime Current;
 
-		GetCurrentEpgTime(&stCurrent);
+		LibISDB::GetCurrentEPGTime(&Current);
 		for (int i=0;i<pChannelList->NumChannels();i++) {
 			const CChannelInfo *pChInfo=pChannelList->GetChannelInfo(i);
 
@@ -271,8 +271,8 @@ bool CChannelPanel::SetChannelList(const CChannelList *pChannelList,bool fSetEve
 
 			CChannelEventInfo *pEventInfo=new CChannelEventInfo(pChInfo,i);
 
-			if (fSetEvent && m_pProgramList!=NULL)
-				UpdateEvents(pEventInfo,&stCurrent);
+			if (fSetEvent && m_pEPGDatabase!=NULL)
+				UpdateEvents(pEventInfo,&Current);
 			if (m_pLogoManager!=NULL) {
 				HBITMAP hbmLogo=m_pLogoManager->GetAssociatedLogoBitmap(
 					pEventInfo->GetNetworkID(),pEventInfo->GetServiceID(),
@@ -295,20 +295,15 @@ bool CChannelPanel::SetChannelList(const CChannelList *pChannelList,bool fSetEve
 }
 
 
-bool CChannelPanel::UpdateAllChannels(bool fUpdateProgramList)
+bool CChannelPanel::UpdateAllChannels()
 {
-	if (m_pProgramList!=NULL && !m_ChannelList.empty()) {
+	if (m_pEPGDatabase!=NULL && !m_ChannelList.empty()) {
 		bool fChanged=false;
 
-		GetCurrentEpgTime(&m_UpdatedTime);
+		LibISDB::GetCurrentEPGTime(&m_UpdatedTime);
 		for (size_t i=0;i<m_ChannelList.size();i++) {
 			CChannelEventInfo *pInfo=m_ChannelList[i];
 
-			if (fUpdateProgramList) {
-				m_pProgramList->UpdateService(pInfo->GetNetworkID(),
-											  pInfo->GetTransportStreamID(),
-											  pInfo->GetServiceID());
-			}
 			if (UpdateEvents(pInfo,&m_UpdatedTime))
 				fChanged=true;
 		}
@@ -322,7 +317,7 @@ bool CChannelPanel::UpdateAllChannels(bool fUpdateProgramList)
 
 bool CChannelPanel::UpdateChannel(int ChannelIndex)
 {
-	if (m_pProgramList!=NULL) {
+	if (m_pEPGDatabase!=NULL) {
 		for (int i=0;i<(int)m_ChannelList.size();i++) {
 			CChannelEventInfo *pEventInfo=m_ChannelList[i];
 
@@ -346,19 +341,19 @@ bool CChannelPanel::UpdateChannels(WORD NetworkID,WORD TransportStreamID)
 {
 	if (NetworkID==0 && TransportStreamID==0)
 		return false;
-	if (m_pProgramList==NULL)
+	if (m_pEPGDatabase==NULL)
 		return false;
 
-	SYSTEMTIME st;
+	LibISDB::DateTime Time;
 	bool fChanged=false;
 
-	GetCurrentEpgTime(&st);
+	LibISDB::GetCurrentEPGTime(&Time);
 	for (size_t i=0;i<m_ChannelList.size();i++) {
 		CChannelEventInfo *pInfo=m_ChannelList[i];
 
 		if ((NetworkID==0 || pInfo->GetNetworkID()==NetworkID)
 				&& (TransportStreamID==0 || pInfo->GetTransportStreamID()==TransportStreamID)) {
-			if (UpdateEvents(pInfo,&st))
+			if (UpdateEvents(pInfo,&Time))
 				fChanged=true;
 		}
 	}
@@ -496,7 +491,7 @@ bool CChannelPanel::SetEventsPerChannel(int Events,int Expand)
 		}
 		if (m_hwnd!=NULL)
 			CalcItemHeight();
-		UpdateAllChannels(false);
+		UpdateAllChannels();
 		if (m_hwnd!=NULL) {
 			m_ScrollPos=0;
 			SetScrollBar();
@@ -529,7 +524,7 @@ bool CChannelPanel::ExpandChannel(int Channel,bool fExpand)
 				int Height=CalcHeight();
 
 				if (m_ScrollPos>Height-rcClient.bottom) {
-					m_ScrollPos=max(Height-rcClient.bottom,0);
+					m_ScrollPos=max(Height-rcClient.bottom,0L);
 					Invalidate();
 				} else {
 					rc.bottom=rcClient.bottom;
@@ -589,7 +584,7 @@ void CChannelPanel::SetShowProgressBar(bool fShowProgressBar)
 		m_fShowProgressBar=fShowProgressBar;
 		if (m_hwnd!=NULL) {
 			if (m_fShowProgressBar)
-				GetCurrentEpgTime(&m_CurTime);
+				LibISDB::GetCurrentEPGTime(&m_CurTime);
 			Invalidate();
 		}
 	}
@@ -609,14 +604,14 @@ void CChannelPanel::SetProgressBarStyle(ProgressBarStyle Style)
 bool CChannelPanel::QueryUpdateProgress()
 {
 	if (m_fShowProgressBar && m_hwnd!=NULL) {
-		SYSTEMTIME st;
-		GetCurrentEpgTime(&st);
-		return m_CurTime.wSecond/10!=st.wSecond/10
-			|| m_CurTime.wMinute!=st.wMinute
-			|| m_CurTime.wHour!=st.wHour
-			|| m_CurTime.wDay!=st.wDay
-			|| m_CurTime.wMonth!=st.wMonth
-			|| m_CurTime.wYear!=st.wYear;
+		LibISDB::DateTime Time;
+		LibISDB::GetCurrentEPGTime(&Time);
+		return m_CurTime.Second/10!=Time.Second/10
+			|| m_CurTime.Minute!=Time.Minute
+			|| m_CurTime.Hour!=Time.Hour
+			|| m_CurTime.Day!=Time.Day
+			|| m_CurTime.Month!=Time.Month
+			|| m_CurTime.Year!=Time.Year;
 	}
 	return false;
 }
@@ -625,7 +620,7 @@ bool CChannelPanel::QueryUpdateProgress()
 void CChannelPanel::UpdateProgress()
 {
 	if (m_fShowProgressBar && m_hwnd!=NULL) {
-		GetCurrentEpgTime(&m_CurTime);
+		LibISDB::GetCurrentEPGTime(&m_CurTime);
 		Invalidate();
 	}
 }
@@ -639,14 +634,14 @@ void CChannelPanel::SetLogoManager(CLogoManager *pLogoManager)
 
 bool CChannelPanel::QueryUpdate() const
 {
-	SYSTEMTIME st;
+	LibISDB::DateTime Time;
 
-	GetCurrentEpgTime(&st);
-	return m_UpdatedTime.wMinute!=st.wMinute
-		|| m_UpdatedTime.wHour!=st.wHour
-		|| m_UpdatedTime.wDay!=st.wDay
-		|| m_UpdatedTime.wMonth!=st.wMonth
-		|| m_UpdatedTime.wYear!=st.wYear;
+	LibISDB::GetCurrentEPGTime(&Time);
+	return m_UpdatedTime.Minute!=Time.Minute
+		|| m_UpdatedTime.Hour!=Time.Hour
+		|| m_UpdatedTime.Day!=Time.Day
+		|| m_UpdatedTime.Month!=Time.Month
+		|| m_UpdatedTime.Year!=Time.Year;
 }
 
 
@@ -666,7 +661,7 @@ LRESULT CChannelPanel::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam
 				CreateTooltip();
 
 			if (m_fShowProgressBar)
-				GetCurrentEpgTime(&m_CurTime);
+				LibISDB::GetCurrentEPGTime(&m_CurTime);
 
 			CFeaturedEvents &FeaturedEvents=GetAppClass().FeaturedEvents;
 			FeaturedEvents.AddEventHandler(this);
@@ -991,19 +986,18 @@ void CChannelPanel::Draw(HDC hdc,const RECT *prcPaint)
 				TVTest::Style::Subtract(&rcText,m_Style.EventNameMargin);
 
 				if (m_fShowProgressBar && j==0 && pChannelInfo->IsEventEnabled(0)) {
-					const CEventInfoData &EventInfo=pChannelInfo->GetEventInfo(0);
-					LONGLONG Elapsed=
-						DiffSystemTime(&EventInfo.m_StartTime,&m_CurTime)/
-							TimeConsts::SYSTEMTIME_SECOND;
+					const LibISDB::EventInfo &EventInfo=pChannelInfo->GetEventInfo(0);
+					LONGLONG Elapsed=m_CurTime.DiffSeconds(EventInfo.StartTime);
+
 					if (Elapsed>=0) {
 						RECT rcProgress=rcText;
-						if (EventInfo.m_Duration>0) {
-							if (Elapsed>static_cast<LONGLONG>(EventInfo.m_Duration))
-								Elapsed=EventInfo.m_Duration;
+						if (EventInfo.Duration>0) {
+							if (Elapsed>static_cast<LONGLONG>(EventInfo.Duration))
+								Elapsed=EventInfo.Duration;
 							int Width=
 								::MulDiv(rcProgress.right-rcProgress.left,
 										 static_cast<int>(Elapsed),
-										 EventInfo.m_Duration);
+										 EventInfo.Duration);
 							if (m_ProgressBarStyle==PROGRESSBAR_STYLE_ELAPSED)
 								rcProgress.right=rcProgress.left+Width;
 							else
@@ -1048,7 +1042,7 @@ void CChannelPanel::OnCommand(int ID)
 {
 	switch (ID) {
 	case CM_CHANNELPANEL_UPDATE:
-		UpdateAllChannels(true);
+		UpdateAllChannels();
 		return;
 
 	case CM_CHANNELPANEL_CURCHANNEL:
@@ -1117,7 +1111,7 @@ void CChannelPanel::SetScrollPos(int Pos)
 		Pos=0;
 	} else {
 		int Height=CalcHeight();
-		int Max=max(Height-rc.bottom,0);
+		int Max=max(Height-rc.bottom,0L);
 		if (Pos>Max)
 			Pos=Max;
 	}
@@ -1161,7 +1155,7 @@ void CChannelPanel::CalcItemHeight()
 	if (hdc==NULL)
 		return;
 	m_FontHeight=m_Font.GetHeight(hdc);
-	m_ChannelNameHeight=max(m_FontHeight,m_Style.ChannelChevronSize.Height)+
+	m_ChannelNameHeight=max(m_FontHeight,(int)m_Style.ChannelChevronSize.Height)+
 		m_Style.ChannelNameMargin.Top+m_Style.ChannelNameMargin.Bottom;
 	m_EventNameHeight=m_FontHeight*m_EventNameLines+
 		m_Style.EventNameMargin.Top+m_Style.EventNameMargin.Bottom;
@@ -1431,7 +1425,7 @@ CChannelPanel::CChannelEventInfo::~CChannelEventInfo()
 }
 
 
-bool CChannelPanel::CChannelEventInfo::SetEventInfo(int Index,const CEventInfoData *pInfo)
+bool CChannelPanel::CChannelEventInfo::SetEventInfo(int Index,const LibISDB::EventInfo *pInfo)
 {
 	if (Index<0)
 		return false;
@@ -1445,8 +1439,8 @@ bool CChannelPanel::CChannelEventInfo::SetEventInfo(int Index,const CEventInfoDa
 		}
 	} else {
 		if (Index<(int)m_EventList.size()
-				&& m_EventList[Index].m_bValidStartTime) {
-			m_EventList[Index]=CEventInfoData();
+				&& m_EventList[Index].StartTime.IsValid()) {
+			m_EventList[Index]=LibISDB::EventInfo();
 			fChanged=true;
 		}
 	}
@@ -1465,7 +1459,7 @@ bool CChannelPanel::CChannelEventInfo::IsEventEnabled(int Index) const
 {
 	if (Index<0 || Index>=(int)m_EventList.size())
 		return false;
-	return m_EventList[Index].m_bValidStartTime;
+	return m_EventList[Index].StartTime.IsValid();
 }
 
 
@@ -1476,14 +1470,14 @@ int CChannelPanel::CChannelEventInfo::FormatEventText(LPTSTR pszText,int MaxLeng
 		return 0;
 	}
 
-	const CEventInfoData &Info=m_EventList[Index];
+	const LibISDB::EventInfo &Info=m_EventList[Index];
 	TCHAR szTime[EpgUtil::MAX_EVENT_TIME_LENGTH];
-	EpgUtil::FormatEventTime(&Info,szTime,lengthof(szTime));
+	EpgUtil::FormatEventTime(Info,szTime,lengthof(szTime));
 	return StdUtil::snprintf(pszText,MaxLength,TEXT("%s %s%s%s"),
 							 szTime,
-							 Info.m_EventName.c_str(),
-							 !Info.m_EventText.empty()?TEXT("\n\n"):TEXT(""),
-							 Info.m_EventText.c_str());
+							 Info.EventName.c_str(),
+							 !Info.EventText.empty()?TEXT("\n\n"):TEXT(""),
+							 Info.EventText.c_str());
 }
 
 
@@ -1531,13 +1525,13 @@ void CChannelPanel::CChannelEventInfo::DrawEventName(
 	int Index,TVTest::CTextDraw &TextDraw,const RECT &Rect,int LineHeight)
 {
 	if (IsEventEnabled(Index)) {
-		const CEventInfoData &Info=m_EventList[Index];
+		const LibISDB::EventInfo &Info=m_EventList[Index];
 		TCHAR szText[256],szTime[EpgUtil::MAX_EVENT_TIME_LENGTH];
 
-		EpgUtil::FormatEventTime(&Info,szTime,lengthof(szTime),
+		EpgUtil::FormatEventTime(Info,szTime,lengthof(szTime),
 								 EpgUtil::EVENT_TIME_HOUR_2DIGITS);
 		StdUtil::snprintf(szText,lengthof(szText),TEXT("%s %s"),
-						  szTime,Info.m_EventName.c_str());
+						  szTime,Info.EventName.c_str());
 		TextDraw.Draw(szText,Rect,LineHeight);
 	}
 }

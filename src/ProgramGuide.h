@@ -3,7 +3,6 @@
 
 
 #include "View.h"
-#include "EpgProgramList.h"
 #include "EpgUtil.h"
 #include "ChannelList.h"
 #include "UIBase.h"
@@ -20,6 +19,7 @@
 #include "Settings.h"
 #include "WindowUtil.h"
 #include "GUIUtil.h"
+#include "LibISDB/LibISDB/EPG/EPGDatabase.hpp"
 
 
 namespace ProgramGuide
@@ -45,38 +45,37 @@ namespace ProgramGuide
 	class CServiceInfo
 	{
 		CChannelInfo m_ChannelInfo;
-		CServiceInfoData m_ServiceData;
+		LibISDB::EPGDatabase::ServiceInfo m_ServiceInfo;
 		LPTSTR m_pszBonDriverFileName;
 		HBITMAP m_hbmLogo;
 		DrawUtil::CBitmap m_StretchedLogo;
-		std::vector<CEventInfoData*> m_EventList;
-		typedef std::map<WORD,CEventInfoData*> EventIDMap;
+		std::vector<LibISDB::EventInfo*> m_EventList;
+		typedef std::map<WORD,LibISDB::EventInfo*> EventIDMap;
 		EventIDMap m_EventIDMap;
 
 	public:
 		CServiceInfo(const CChannelInfo &ChannelInfo,LPCTSTR pszBonDriver);
-		CServiceInfo(const CChannelInfo &ChannelInfo,const CEpgServiceInfo &Info,LPCTSTR pszBonDriver);
 		~CServiceInfo();
 		const CChannelInfo &GetChannelInfo() const { return m_ChannelInfo; }
-		const CServiceInfoData &GetServiceInfoData() const { return m_ServiceData; }
-		WORD GetNetworkID() const { return m_ServiceData.m_NetworkID; }
-		WORD GetTSID() const { return m_ServiceData.m_TSID; }
-		WORD GetServiceID() const { return m_ServiceData.m_ServiceID; }
+		const LibISDB::EPGDatabase::ServiceInfo &GetServiceInfo() const { return m_ServiceInfo; }
+		WORD GetNetworkID() const { return m_ServiceInfo.NetworkID; }
+		WORD GetTSID() const { return m_ServiceInfo.TransportStreamID; }
+		WORD GetServiceID() const { return m_ServiceInfo.ServiceID; }
 		LPCTSTR GetServiceName() const { return m_ChannelInfo.GetName(); }
 		LPCTSTR GetBonDriverFileName() const { return m_pszBonDriverFileName; }
 		void SetLogo(HBITMAP hbm) { m_hbmLogo=hbm; }
 		HBITMAP GetLogo() const { return m_hbmLogo; }
 		HBITMAP GetStretchedLogo(int Width,int Height);
 		int NumEvents() const { return (int)m_EventList.size(); }
-		CEventInfoData *GetEvent(int Index);
-		const CEventInfoData *GetEvent(int Index) const;
-		CEventInfoData *GetEventByEventID(WORD EventID);
-		const CEventInfoData *GetEventByEventID(WORD EventID) const;
-		bool AddEvent(CEventInfoData *pEvent);
+		LibISDB::EventInfo *GetEvent(int Index);
+		const LibISDB::EventInfo *GetEvent(int Index) const;
+		LibISDB::EventInfo *GetEventByEventID(WORD EventID);
+		const LibISDB::EventInfo *GetEventByEventID(WORD EventID) const;
+		bool AddEvent(LibISDB::EventInfo *pEvent);
 		void ClearEvents();
 		void CalcLayout(CEventLayout *pEventList,const CServiceList *pServiceList,
-			const SYSTEMTIME &FirstTime,const SYSTEMTIME &LastTime,int LinesPerHour);
-		bool SaveiEpgFile(const CEventInfoData *pEventInfo,LPCTSTR pszFileName,bool fVersion2) const;
+			const LibISDB::DateTime &FirstTime,const LibISDB::DateTime &LastTime,int LinesPerHour);
+		bool SaveiEpgFile(const LibISDB::EventInfo *pEventInfo,LPCTSTR pszFileName,bool fVersion2) const;
 	};
 
 	class CServiceList
@@ -91,8 +90,8 @@ namespace ProgramGuide
 		CServiceInfo *GetItemByIDs(WORD TransportStreamID,WORD ServiceID);
 		const CServiceInfo *GetItemByIDs(WORD TransportStreamID,WORD ServiceID) const;
 		int FindItemByIDs(WORD TransportStreamID,WORD ServiceID) const;
-		CEventInfoData *GetEventByIDs(WORD TransportStreamID,WORD ServiceID,WORD EventID);
-		const CEventInfoData *GetEventByIDs(WORD TransportStreamID,WORD ServiceID,WORD EventID) const;
+		LibISDB::EventInfo *GetEventByIDs(WORD TransportStreamID,WORD ServiceID,WORD EventID);
+		const LibISDB::EventInfo *GetEventByIDs(WORD TransportStreamID,WORD ServiceID,WORD EventID) const;
 		void Add(CServiceInfo *pInfo);
 		void Clear();
 	};
@@ -261,7 +260,7 @@ public:
 		virtual ~CEventHandler();
 		virtual bool OnClose() { return true; }
 		virtual void OnDestroy() {}
-		virtual void OnServiceTitleLButtonDown(LPCTSTR pszDriverFileName,const CServiceInfoData *pServiceInfo) {}
+		virtual void OnServiceTitleLButtonDown(LPCTSTR pszDriverFileName,const LibISDB::EPGDatabase::ServiceInfo *pServiceInfo) {}
 		virtual bool OnRefresh() { return true; }
 		virtual bool OnKeyDown(UINT KeyCode,UINT Flags) { return false; }
 		virtual bool OnMenuInitialize(HMENU hmenu,UINT CommandBase) { return false; }
@@ -278,21 +277,21 @@ public:
 		virtual ~CProgramCustomizer();
 		virtual bool Initialize() { return true; }
 		virtual void Finalize() {}
-		virtual bool DrawBackground(const CEventInfoData &Event,HDC hdc,
+		virtual bool DrawBackground(const LibISDB::EventInfo &Event,HDC hdc,
 			const RECT &ItemRect,const RECT &TitleRect,const RECT &ContentRect,
 			COLORREF BackgroundColor) { return false; }
-		virtual bool InitializeMenu(const CEventInfoData &Event,HMENU hmenu,UINT CommandBase,
+		virtual bool InitializeMenu(const LibISDB::EventInfo &Event,HMENU hmenu,UINT CommandBase,
 									const POINT &CursorPos,const RECT &ItemRect) { return false; }
-		virtual bool ProcessMenu(const CEventInfoData &Event,UINT Command) { return false; }
-		virtual bool OnLButtonDoubleClick(const CEventInfoData &Event,
+		virtual bool ProcessMenu(const LibISDB::EventInfo &Event,UINT Command) { return false; }
+		virtual bool OnLButtonDoubleClick(const LibISDB::EventInfo &Event,
 										  const POINT &CursorPos,const RECT &ItemRect) { return false; }
 		friend class CProgramGuide;
 	};
 
 	struct DateInfo
 	{
-		SYSTEMTIME BeginningTime;
-		SYSTEMTIME EndTime;
+		LibISDB::DateTime BeginningTime;
+		LibISDB::DateTime EndTime;
 		LPCTSTR pszRelativeDayText;
 	};
 
@@ -312,10 +311,10 @@ public:
 	void SetTheme(const TVTest::Theme::CThemeManager *pThemeManager) override;
 
 // CProgramGuide
-	bool SetEpgProgramList(CEpgProgramList *pList);
+	bool SetEPGDatabase(LibISDB::EPGDatabase *pEPGDatabase);
 	void Clear();
 	bool Refresh();
-	bool UpdateProgramGuide(bool fUpdateList=false);
+	bool UpdateProgramGuide();
 	bool SetChannelProviderManager(CProgramGuideChannelProviderManager *pManager);
 	bool EnumChannelProvider(int Index,LPTSTR pszName,int MaxName) const;
 	bool SetChannelProvider(int Provider,int Group);
@@ -347,18 +346,18 @@ public:
 	bool SetWeekListMode(int Service);
 	int GetWeekListService() const { return m_WeekListService; }
 	bool SetBeginHour(int Hour);
-	bool SetTimeRange(const SYSTEMTIME *pFirstTime,const SYSTEMTIME *pLastTime);
-	bool GetTimeRange(SYSTEMTIME *pFirstTime,SYSTEMTIME *pLastTime) const;
-	bool GetCurrentTimeRange(SYSTEMTIME *pFirstTime,SYSTEMTIME *pLastTime) const;
-	bool GetDayTimeRange(int Day,SYSTEMTIME *pFirstTime,SYSTEMTIME *pLastTime) const;
+	bool SetTimeRange(const LibISDB::DateTime &FirstTime,const LibISDB::DateTime &LastTime);
+	bool GetTimeRange(LibISDB::DateTime *pFirstTime,LibISDB::DateTime *pLastTime) const;
+	bool GetCurrentTimeRange(LibISDB::DateTime *pFirstTime,LibISDB::DateTime *pLastTime) const;
+	bool GetDayTimeRange(int Day,LibISDB::DateTime *pFirstTime,LibISDB::DateTime *pLastTime) const;
 	bool GetCurrentDateInfo(DateInfo *pInfo) const;
 	bool GetDateInfo(int Day,DateInfo *pInfo) const;
-	bool ScrollToTime(const SYSTEMTIME &Time,bool fHour=false);
+	bool ScrollToTime(const LibISDB::DateTime &Time,bool fHour=false);
 	bool ScrollToCurrentTime();
 	bool SetViewDay(int Day);
 	int GetViewDay() const { return m_Day; }
 	bool JumpEvent(WORD NetworkID,WORD TSID,WORD ServiceID,WORD EventID);
-	bool JumpEvent(const CEventInfoData &EventInfo);
+	bool JumpEvent(const LibISDB::EventInfo &EventInfo);
 	bool ScrollToCurrentService();
 
 	int GetLinesPerHour() const { return m_LinesPerHour; }
@@ -448,7 +447,7 @@ private:
 		TVTest::Theme::BackgroundStyle FeaturedMarkStyle;
 	};
 
-	CEpgProgramList *m_pProgramList;
+	LibISDB::EPGDatabase *m_pEPGDatabase;
 	ProgramGuide::CServiceList m_ServiceList;
 	ProgramGuide::CEventLayoutList m_EventLayoutList;
 	ProgramGuideStyle m_Style;
@@ -517,9 +516,9 @@ private:
 	WORD m_CurrentEventID;
 
 	int m_BeginHour;
-	SYSTEMTIME m_stFirstTime;
-	SYSTEMTIME m_stLastTime;
-	SYSTEMTIME m_stCurTime;
+	LibISDB::DateTime m_FirstTime;
+	LibISDB::DateTime m_LastTime;
+	LibISDB::DateTime m_CurTime;
 	int m_Day;
 	int m_Hours;
 
@@ -581,8 +580,8 @@ private:
 
 	static LPCTSTR GetRelativeDayText(int Day);
 
-	bool UpdateList(bool fUpdateList=false);
-	bool UpdateService(ProgramGuide::CServiceInfo *pService,bool fUpdateEpg);
+	bool UpdateList();
+	bool UpdateService(ProgramGuide::CServiceInfo *pService);
 	void UpdateServiceList();
 	void CalcLayout();
 	enum {
@@ -643,8 +642,8 @@ private:
 	void OnCommand(int id);
 	void ShowPopupMenu(int x,int y);
 	void AppendToolMenu(HMENU hmenu) const;
-	bool ExecuteiEpgAssociate(const ProgramGuide::CServiceInfo *pServiceInfo,const CEventInfoData *pEventInfo);
-	bool ExecuteTool(int Tool,const ProgramGuide::CServiceInfo *pServiceInfo,const CEventInfoData *pEventInfo);
+	bool ExecuteiEpgAssociate(const ProgramGuide::CServiceInfo *pServiceInfo,const LibISDB::EventInfo *pEventInfo);
+	bool ExecuteTool(int Tool,const ProgramGuide::CServiceInfo *pServiceInfo,const LibISDB::EventInfo *pEventInfo);
 
 // CCustomWindow
 	LRESULT OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam) override;

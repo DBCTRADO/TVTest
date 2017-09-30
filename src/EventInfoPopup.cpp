@@ -80,7 +80,7 @@ bool CEventInfoPopup::Create(HWND hwndParent,DWORD Style,DWORD ExStyle,int ID)
 }
 
 
-void CEventInfoPopup::SetEventInfo(const CEventInfoData *pEventInfo)
+void CEventInfoPopup::SetEventInfo(const LibISDB::EventInfo *pEventInfo)
 {
 	if (m_EventInfo.IsEqual(*pEventInfo))
 		return;
@@ -103,15 +103,15 @@ void CEventInfoPopup::SetEventInfo(const CEventInfoData *pEventInfo)
 
 	{
 		TCHAR szBuf[EpgUtil::MAX_EVENT_TIME_LENGTH];
-		if (EpgUtil::FormatEventTime(pEventInfo,szBuf,lengthof(szBuf),
+		if (EpgUtil::FormatEventTime(*pEventInfo,szBuf,lengthof(szBuf),
 									 EpgUtil::EVENT_TIME_DATE | EpgUtil::EVENT_TIME_YEAR)>0) {
 			Formatter.Append(szBuf);
 			Formatter.Append(TEXT("\r\n"));
 		}
 	}
 
-	if (!m_EventInfo.m_EventName.empty()) {
-		Formatter.Append(m_EventInfo.m_EventName.c_str());
+	if (!m_EventInfo.EventName.empty()) {
+		Formatter.Append(m_EventInfo.EventName.c_str());
 		Formatter.Append(TEXT("\r\n"));
 	}
 
@@ -124,43 +124,45 @@ void CEventInfoPopup::SetEventInfo(const CEventInfoData *pEventInfo)
 		Formatter.Clear();
 	}
 
-	if (!m_EventInfo.m_EventText.empty()) {
-		Formatter.Append(m_EventInfo.m_EventText.c_str());
+	if (!m_EventInfo.EventText.empty()) {
+		Formatter.Append(m_EventInfo.EventText.c_str());
 		Formatter.RemoveTrailingWhitespace();
 	}
-	if (!m_EventInfo.m_EventExtendedText.empty()) {
-		if (!m_EventInfo.m_EventText.empty())
+	if (!m_EventInfo.ExtendedText.empty()) {
+		if (!m_EventInfo.EventText.empty())
 			Formatter.Append(TEXT("\r\n\r\n"));
-		Formatter.Append(m_EventInfo.m_EventExtendedText.c_str());
+		TVTest::String Text;
+		m_EventInfo.GetConcatenatedExtendedText(&Text);
+		Formatter.Append(Text.c_str());
 		Formatter.RemoveTrailingWhitespace();
 	}
 
 	Formatter.Append(TEXT("\r\n"));
 
-	if (!m_EventInfo.m_VideoList.empty()) {
+	if (!m_EventInfo.VideoList.empty()) {
 		// TODO: 複数映像対応
-		LPCTSTR pszVideo=EpgUtil::GetComponentTypeText(
-			m_EventInfo.m_VideoList[0].StreamContent,
-			m_EventInfo.m_VideoList[0].ComponentType);
+		LPCTSTR pszVideo=LibISDB::GetComponentTypeText_ja(
+			m_EventInfo.VideoList[0].StreamContent,
+			m_EventInfo.VideoList[0].ComponentType);
 		if (pszVideo!=NULL) {
 			Formatter.AppendFormat(TEXT("\r\n■ 映像： %s"),pszVideo);
 		}
 	}
 
-	if (!m_EventInfo.m_AudioList.empty()) {
-		const CEventInfoData::AudioInfo *pMainAudioInfo=m_EventInfo.GetMainAudioInfo();
+	if (!m_EventInfo.AudioList.empty()) {
+		const LibISDB::EventInfo::AudioInfo *pMainAudioInfo=m_EventInfo.GetMainAudioInfo();
 		TCHAR szBuff[64];
 
 		Formatter.Append(TEXT("\r\n■ 音声： "));
-		if (m_EventInfo.m_AudioList.size()==1) {
+		if (m_EventInfo.AudioList.size()==1) {
 			FormatAudioInfo(pMainAudioInfo,szBuff,lengthof(szBuff));
 			Formatter.Append(szBuff);
 		} else {
 			Formatter.Append(TEXT("主: "));
 			FormatAudioInfo(pMainAudioInfo,szBuff,lengthof(szBuff));
 			Formatter.Append(szBuff);
-			for (size_t i=0;i<m_EventInfo.m_AudioList.size();i++) {
-				const CEventInfoData::AudioInfo *pAudioInfo=&m_EventInfo.m_AudioList[i];
+			for (size_t i=0;i<m_EventInfo.AudioList.size();i++) {
+				const LibISDB::EventInfo::AudioInfo *pAudioInfo=&m_EventInfo.AudioList[i];
 				if (pAudioInfo!=pMainAudioInfo) {
 					Formatter.Append(TEXT(" / 副: "));
 					FormatAudioInfo(pAudioInfo,szBuff,lengthof(szBuff));
@@ -183,11 +185,11 @@ void CEventInfoPopup::SetEventInfo(const CEventInfoData *pEventInfo)
 	}
 
 	if (m_fDetailInfo) {
-		Formatter.AppendFormat(TEXT("\r\n■ イベントID： 0x%04X"),m_EventInfo.m_EventID);
-		if (m_EventInfo.m_bCommonEvent)
+		Formatter.AppendFormat(TEXT("\r\n■ イベントID： 0x%04X"),m_EventInfo.EventID);
+		if (m_EventInfo.IsCommonEvent)
 			Formatter.AppendFormat(TEXT(" (イベント共有 サービスID 0x%04X / イベントID 0x%04X)"),
-								   m_EventInfo.m_CommonEventInfo.ServiceID,
-								   m_EventInfo.m_CommonEventInfo.EventID);
+								   m_EventInfo.CommonEvent.ServiceID,
+								   m_EventInfo.CommonEvent.EventID);
 	}
 
 	CRichEditUtil::AppendText(m_hwndEdit,
@@ -202,28 +204,28 @@ void CEventInfoPopup::SetEventInfo(const CEventInfoData *pEventInfo)
 	CalcTitleHeight();
 	RECT rc;
 	GetClientRect(&rc);
-	::MoveWindow(m_hwndEdit,0,m_TitleHeight,rc.right,max(rc.bottom-m_TitleHeight,0),TRUE);
+	::MoveWindow(m_hwndEdit,0,m_TitleHeight,rc.right,max(rc.bottom-m_TitleHeight,0L),TRUE);
 	Invalidate();
 }
 
 
 void CEventInfoPopup::FormatAudioInfo(
-	const CEventInfoData::AudioInfo *pAudioInfo,LPTSTR pszText,int MaxLength) const
+	const LibISDB::EventInfo::AudioInfo *pAudioInfo,LPTSTR pszText,int MaxLength) const
 {
 	LPCTSTR pszAudio;
 	bool fBilingual=false;
 
 	if (pAudioInfo->ComponentType==0x02
-			&& pAudioInfo->bESMultiLingualFlag
+			&& pAudioInfo->ESMultiLingualFlag
 			&& pAudioInfo->LanguageCode!=pAudioInfo->LanguageCode2) {
 		pszAudio=TEXT("Mono 二カ国語");
 		fBilingual=true;
 	} else {
-		pszAudio=EpgUtil::GetComponentTypeText(
+		pszAudio=LibISDB::GetComponentTypeText_ja(
 			pAudioInfo->StreamContent,pAudioInfo->ComponentType);
 	}
 
-	LPCTSTR p=pAudioInfo->szText;
+	LPCTSTR p=pAudioInfo->Text.c_str();
 	TCHAR szAudioComponent[64];
 	szAudioComponent[0]=_T('\0');
 	if (*p!=_T('\0')) {
@@ -243,15 +245,15 @@ void CEventInfoPopup::FormatAudioInfo(
 		szAudioComponent[i+0]=_T(']');
 		szAudioComponent[i+1]=_T('\0');
 	} else if (fBilingual) {
-		TCHAR szLang1[EpgUtil::MAX_LANGUAGE_TEXT_LENGTH];
-		TCHAR szLang2[EpgUtil::MAX_LANGUAGE_TEXT_LENGTH];
-		EpgUtil::GetLanguageText(pAudioInfo->LanguageCode,szLang1,lengthof(szLang1));
-		EpgUtil::GetLanguageText(pAudioInfo->LanguageCode2,szLang2,lengthof(szLang2));
+		TCHAR szLang1[LibISDB::MAX_LANGUAGE_TEXT_LENGTH];
+		TCHAR szLang2[LibISDB::MAX_LANGUAGE_TEXT_LENGTH];
+		LibISDB::GetLanguageText_ja(pAudioInfo->LanguageCode,szLang1,lengthof(szLang1));
+		LibISDB::GetLanguageText_ja(pAudioInfo->LanguageCode2,szLang2,lengthof(szLang2));
 		StdUtil::snprintf(szAudioComponent,lengthof(szAudioComponent),
 						  TEXT(" [%s/%s]"),szLang1,szLang2);
 	} else {
-		TCHAR szLang[EpgUtil::MAX_LANGUAGE_TEXT_LENGTH];
-		EpgUtil::GetLanguageText(pAudioInfo->LanguageCode,szLang,lengthof(szLang));
+		TCHAR szLang[LibISDB::MAX_LANGUAGE_TEXT_LENGTH];
+		LibISDB::GetLanguageText_ja(pAudioInfo->LanguageCode,szLang,lengthof(szLang));
 		StdUtil::snprintf(szAudioComponent,lengthof(szAudioComponent),
 						  TEXT(" [%s]"),szLang);
 	}
@@ -284,7 +286,7 @@ void CEventInfoPopup::CalcTitleHeight()
 }
 
 
-bool CEventInfoPopup::Show(const CEventInfoData *pEventInfo,const RECT *pPos,
+bool CEventInfoPopup::Show(const LibISDB::EventInfo *pEventInfo,const RECT *pPos,
 						   HICON hIcon,LPCTSTR pszTitle)
 {
 	if (pEventInfo==NULL)
@@ -463,7 +465,7 @@ bool CEventInfoPopup::GetPopupPosition(int x,int y,RECT *pPos) const
 			if (y+Height>mi.rcMonitor.bottom) {
 				y=mi.rcMonitor.bottom-Height;
 				if (x+Width<mi.rcMonitor.right)
-					x+=min(16,mi.rcMonitor.right-(x+Width));
+					x+=min(16L,mi.rcMonitor.right-(x+Width));
 			}
 		}
 	}
@@ -639,7 +641,7 @@ LRESULT CEventInfoPopup::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lPar
 			::DestroyMenu(hmenu);
 			switch (Command) {
 			case 1:
-				CopyTextToClipboard(hwnd,m_EventInfo.m_EventName.c_str());
+				CopyTextToClipboard(hwnd,m_EventInfo.EventName.c_str());
 				break;
 			}
 			return 0;
@@ -774,7 +776,7 @@ LRESULT CEventInfoPopup::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lPar
 					break;
 
 				case COMMAND_COPYEVENTNAME:
-					CopyTextToClipboard(hwnd,m_EventInfo.m_EventName.c_str());
+					CopyTextToClipboard(hwnd,m_EventInfo.EventName.c_str());
 					break;
 
 				default:

@@ -114,7 +114,7 @@ private:
 	void Scan();
 	float GetSignalLevel();
 	INT_PTR ScanDlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam);
-	bool IsScanService(const CTsAnalyzer::SdtServiceInfo &ServiceInfo,bool fData=true) const;
+	bool IsScanService(const LibISDB::AnalyzerFilter::SDTServiceInfo &ServiceInfo,bool fData=true) const;
 	bool IsScanServiceType(BYTE ServiceType,bool fData=true) const;
 
 	static unsigned int __stdcall ScanProc(LPVOID lpParameter);
