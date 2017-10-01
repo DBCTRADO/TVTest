@@ -913,6 +913,7 @@ int CAppMain::Main(HINSTANCE hInstance,LPCTSTR pszCmdLine,int nCmdShow)
 	ViewOptions.Apply(COptions::UPDATE_ALL);
 	VideoOptions.Apply(COptions::UPDATE_ALL);
 	PlaybackOptions.Apply(COptions::UPDATE_ALL);
+	VideoDecoderOptions.ApplyVideoDecoderSettings();
 	LibISDB::LogoDownloaderFilter *pLogoDownloader=
 		CoreEngine.GetFilter<LibISDB::LogoDownloaderFilter>();
 	if (pLogoDownloader!=nullptr)

@@ -15,30 +15,20 @@ CVideoDecoderOptions::CVideoDecoderOptions()
 
 bool CVideoDecoderOptions::ReadSettings(CSettings &Settings)
 {
-	LibISDB::ViewerFilter *pViewer = GetAppClass().CoreEngine.GetFilter<LibISDB::ViewerFilter>();
-
-	if (pViewer == nullptr)
-		return false;
-
-	LibISDB::DirectShow::KnownDecoderManager::VideoDecoderSettings DecoderSettings;
 	int Value;
 
-	pViewer->GetVideoDecoderSettings(&DecoderSettings);
-
-	Settings.Read(TEXT("EnableDeinterlace"), &DecoderSettings.bEnableDeinterlace);
+	Settings.Read(TEXT("EnableDeinterlace"), &m_VideoDecoderSettings.bEnableDeinterlace);
 	if (Settings.Read(TEXT("DeinterlaceMethod"), &Value))
-		DecoderSettings.DeinterlaceMethod = static_cast<TVTVIDEODEC_DeinterlaceMethod>(Value);
-	Settings.Read(TEXT("AdaptProgressive"), &DecoderSettings.bAdaptProgressive);
-	Settings.Read(TEXT("AdaptTelecine"), &DecoderSettings.bAdaptTelecine);
-	Settings.Read(TEXT("SetInterlacedFlag"), &DecoderSettings.bSetInterlacedFlag);
-	Settings.Read(TEXT("Brightness"), &DecoderSettings.Brightness);
-	Settings.Read(TEXT("Contrast"), &DecoderSettings.Contrast);
-	Settings.Read(TEXT("Hue"), &DecoderSettings.Hue);
-	Settings.Read(TEXT("Saturation"), &DecoderSettings.Saturation);
-	Settings.Read(TEXT("NumThreads"), &DecoderSettings.NumThreads);
-	Settings.Read(TEXT("EnableDXVA2"), &DecoderSettings.bEnableDXVA2);
-
-	pViewer->SetVideoDecoderSettings(DecoderSettings);
+		m_VideoDecoderSettings.DeinterlaceMethod = static_cast<TVTVIDEODEC_DeinterlaceMethod>(Value);
+	Settings.Read(TEXT("AdaptProgressive"), &m_VideoDecoderSettings.bAdaptProgressive);
+	Settings.Read(TEXT("AdaptTelecine"), &m_VideoDecoderSettings.bAdaptTelecine);
+	Settings.Read(TEXT("SetInterlacedFlag"), &m_VideoDecoderSettings.bSetInterlacedFlag);
+	Settings.Read(TEXT("Brightness"), &m_VideoDecoderSettings.Brightness);
+	Settings.Read(TEXT("Contrast"), &m_VideoDecoderSettings.Contrast);
+	Settings.Read(TEXT("Hue"), &m_VideoDecoderSettings.Hue);
+	Settings.Read(TEXT("Saturation"), &m_VideoDecoderSettings.Saturation);
+	Settings.Read(TEXT("NumThreads"), &m_VideoDecoderSettings.NumThreads);
+	Settings.Read(TEXT("EnableDXVA2"), &m_VideoDecoderSettings.bEnableDXVA2);
 
 	return true;
 }
@@ -46,27 +36,30 @@ bool CVideoDecoderOptions::ReadSettings(CSettings &Settings)
 
 bool CVideoDecoderOptions::WriteSettings(CSettings &Settings)
 {
+	Settings.Write(TEXT("EnableDeinterlace"), m_VideoDecoderSettings.bEnableDeinterlace);
+	Settings.Write(TEXT("DeinterlaceMethod"), static_cast<int>(m_VideoDecoderSettings.DeinterlaceMethod));
+	Settings.Write(TEXT("AdaptProgressive"), m_VideoDecoderSettings.bAdaptProgressive);
+	Settings.Write(TEXT("AdaptTelecine"), m_VideoDecoderSettings.bAdaptTelecine);
+	Settings.Write(TEXT("SetInterlacedFlag"), m_VideoDecoderSettings.bSetInterlacedFlag);
+	Settings.Write(TEXT("Brightness"), m_VideoDecoderSettings.Brightness);
+	Settings.Write(TEXT("Contrast"), m_VideoDecoderSettings.Contrast);
+	Settings.Write(TEXT("Hue"), m_VideoDecoderSettings.Hue);
+	Settings.Write(TEXT("Saturation"), m_VideoDecoderSettings.Saturation);
+	Settings.Write(TEXT("NumThreads"), m_VideoDecoderSettings.NumThreads);
+	Settings.Write(TEXT("EnableDXVA2"), m_VideoDecoderSettings.bEnableDXVA2);
+
+	return true;
+}
+
+
+bool CVideoDecoderOptions::ApplyVideoDecoderSettings()
+{
 	LibISDB::ViewerFilter *pViewer = GetAppClass().CoreEngine.GetFilter<LibISDB::ViewerFilter>();
 
 	if (pViewer == nullptr)
 		return false;
 
-	LibISDB::DirectShow::KnownDecoderManager::VideoDecoderSettings DecoderSettings;
-
-	if (!pViewer->GetVideoDecoderSettings(&DecoderSettings))
-		return false;
-
-	Settings.Write(TEXT("EnableDeinterlace"), DecoderSettings.bEnableDeinterlace);
-	Settings.Write(TEXT("DeinterlaceMethod"), static_cast<int>(DecoderSettings.DeinterlaceMethod));
-	Settings.Write(TEXT("AdaptProgressive"), DecoderSettings.bAdaptProgressive);
-	Settings.Write(TEXT("AdaptTelecine"), DecoderSettings.bAdaptTelecine);
-	Settings.Write(TEXT("SetInterlacedFlag"), DecoderSettings.bSetInterlacedFlag);
-	Settings.Write(TEXT("Brightness"), DecoderSettings.Brightness);
-	Settings.Write(TEXT("Contrast"), DecoderSettings.Contrast);
-	Settings.Write(TEXT("Hue"), DecoderSettings.Hue);
-	Settings.Write(TEXT("Saturation"), DecoderSettings.Saturation);
-	Settings.Write(TEXT("NumThreads"), DecoderSettings.NumThreads);
-	Settings.Write(TEXT("EnableDXVA2"), DecoderSettings.bEnableDXVA2);
+	pViewer->SetVideoDecoderSettings(m_VideoDecoderSettings);
 
 	return true;
 }

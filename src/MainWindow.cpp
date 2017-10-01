@@ -2837,6 +2837,9 @@ void CMainWindow::OnCommand(HWND hwnd,int id,HWND hwndCtl,UINT codeNotify)
 								HRESULT hr=ShowPropertyPageFrame(Decoder.Get(),hwndOwner,m_App.GetResourceInstance());
 								if (SUCCEEDED(hr)) {
 									pViewer->SaveVideoDecoderSettings();
+									CVideoDecoderOptions::VideoDecoderSettings Settings;
+									if (pViewer->GetVideoDecoderSettings(&Settings))
+										m_App.VideoDecoderOptions.SetVideoDecoderSettings(Settings);
 									fOK=true;
 								}
 							}
