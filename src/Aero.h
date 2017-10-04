@@ -8,8 +8,8 @@ public:
 	CAeroGlass();
 	~CAeroGlass();
 	bool IsEnabled();
-	bool ApplyAeroGlass(HWND hwnd,const RECT *pRect);
-	bool EnableNcRendering(HWND hwnd,bool fEnable);
+	bool ApplyAeroGlass(HWND hwnd, const RECT *pRect);
+	bool EnableNcRendering(HWND hwnd, bool fEnable);
 
 #ifdef WIN_XP_SUPPORT
 private:
@@ -23,9 +23,9 @@ class CBufferedPaint
 public:
 	CBufferedPaint();
 	~CBufferedPaint();
-	HDC Begin(HDC hdc,const RECT *pRect,bool fErase=false);
-	bool End(bool fUpdate=true);
-	bool Clear(const RECT *pRect=NULL);
+	HDC Begin(HDC hdc, const RECT *pRect, bool fErase = false);
+	bool End(bool fUpdate = true);
+	bool Clear(const RECT *pRect = NULL);
 	bool SetAlpha(BYTE Alpha);
 	bool SetOpaque() { return SetAlpha(255); }
 
@@ -39,7 +39,7 @@ private:
 class CDoubleBufferingDraw
 {
 public:
-	virtual void Draw(HDC hdc,const RECT &PaintRect) = 0;
+	virtual void Draw(HDC hdc, const RECT &PaintRect) = 0;
 	void OnPaint(HWND hwnd);
 };
 
