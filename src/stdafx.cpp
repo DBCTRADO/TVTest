@@ -11,8 +11,9 @@ void DebugTrace(LPCTSTR szFormat, ...)
 	::GetLocalTime(&st);
 	Length = ::_stprintf_s(
 		szTempStr, _countof(szTempStr),
-		TEXT("%02d/%02d %02d:%02d:%02d > "),
-		st.wMonth, st.wDay, st.wHour, st.wMinute, st.wSecond);
+		TEXT("%02d/%02d %02d:%02d:%02d %04X > "),
+		st.wMonth, st.wDay, st.wHour, st.wMinute, st.wSecond,
+		::GetCurrentThreadId());
 
 	va_list Args;
 	va_start(Args, szFormat);
