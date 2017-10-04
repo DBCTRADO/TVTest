@@ -28,14 +28,15 @@ public:
 	bool Create(HWND hwndOwner) override;
 
 // CAccelerator
-	bool Initialize(HWND hwndHotKey,CMainMenu *pMainMenu,
-					CSettings &Settings,const CCommandList *pCommandList);
+	bool Initialize(
+		HWND hwndHotKey, CMainMenu *pMainMenu,
+		CSettings &Settings, const CCommandList *pCommandList);
 	void Finalize();
-	bool TranslateMessage(HWND hwnd,LPMSG pmsg);
-	int TranslateHotKey(WPARAM wParam,LPARAM lParam) const;
-	int TranslateAppCommand(WPARAM wParam,LPARAM lParam) const;
-	LRESULT OnInput(HWND hwnd,WPARAM wParam,LPARAM lParam) {
-		return m_RawInput.OnInput(hwnd,wParam,lParam);
+	bool TranslateMessage(HWND hwnd, LPMSG pmsg);
+	int TranslateHotKey(WPARAM wParam, LPARAM lParam) const;
+	int TranslateAppCommand(WPARAM wParam, LPARAM lParam) const;
+	LRESULT OnInput(HWND hwnd, WPARAM wParam, LPARAM lParam) {
+		return m_RawInput.OnInput(hwnd, wParam, lParam);
 	}
 	void SetMenuAccel(HMENU hmenu);
 	const TVTest::CChannelInputOptions &GetChannelInputOptions() const { return m_ChannelInputOptions; }
@@ -54,8 +55,8 @@ private:
 		BYTE Modifiers;
 		bool fGlobal;
 		bool operator==(const KeyInfo &Info) const {
-			return Command==Info.Command && KeyCode==Info.KeyCode
-				&& Modifiers==Info.Modifiers && fGlobal==Info.fGlobal;
+			return Command == Info.Command && KeyCode == Info.KeyCode
+				&& Modifiers == Info.Modifiers && fGlobal == Info.fGlobal;
 		}
 	};
 	std::vector<KeyInfo> m_KeyList;
@@ -74,7 +75,7 @@ private:
 		MediaKeyType Type;
 		WORD AppCommand;
 		bool operator==(const AppCommandInfo &Info) const {
-			return Command==Info.Command && Type==Info.Type && AppCommand==Info.AppCommand;
+			return Command == Info.Command && Type == Info.Type && AppCommand == Info.AppCommand;
 		}
 	};
 	std::vector<AppCommandInfo> m_AppCommandList;
@@ -87,7 +88,7 @@ private:
 	TVTest::CListView m_ListView;
 
 // CBasicDialog
-	INT_PTR DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
+	INT_PTR DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
 
 // CUIBase
 	void RealizeStyle() override;
@@ -95,19 +96,19 @@ private:
 // CAccelerator
 	static const KeyInfo m_DefaultAccelList[];
 	static const AppCommandInfo m_DefaultAppCommandList[];
-	static void FormatAccelText(LPTSTR pszText,int Key,int Modifiers,bool fGlobal=false);
-	void SetMenuAccelText(HMENU hmenu,int Command);
+	static void FormatAccelText(LPTSTR pszText, int Key, int Modifiers, bool fGlobal = false);
+	void SetMenuAccelText(HMENU hmenu, int Command);
 	HACCEL CreateAccel();
 	bool RegisterHotKey();
 	bool UnregisterHotKey();
-	int CheckAccelKey(BYTE Mod,WORD Key);
+	int CheckAccelKey(BYTE Mod, WORD Key);
 	int CheckAppCommand(int AppCommand);
-	void SetAccelItem(int Index,BYTE Mod,WORD Key,bool fGlobal,BYTE AppCommand);
+	void SetAccelItem(int Index, BYTE Mod, WORD Key, bool fGlobal, BYTE AppCommand);
 	void SetDlgItemStatus(HWND hDlg);
 
 // CRawInput::CEventHandler
 	void OnInput(int Type) override;
-	void OnUnknownInput(const BYTE *pData,int Size) override;
+	void OnUnknownInput(const BYTE *pData, int Size) override;
 };
 
 

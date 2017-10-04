@@ -57,7 +57,7 @@
 #ifdef _DEBUG
 #undef strdup
 #define strdup strdup
-#define DEBUG_NEW new(_NORMAL_BLOCK,__FILE__,__LINE__)
+#define DEBUG_NEW new(_NORMAL_BLOCK, __FILE__, __LINE__)
 #endif // _DEBUG
 
 
@@ -82,15 +82,15 @@
 
 // トレース出力
 #ifdef _DEBUG
-	#undef TRACE
-	#define TRACE ::DebugTrace
-	void DebugTrace(LPCTSTR szFormat, ...);
+#undef TRACE
+#define TRACE ::DebugTrace
+void DebugTrace(LPCTSTR szFormat, ...);
 #else
-	#define TRACE __noop
+#define TRACE __noop
 #endif
 
 #ifndef _DEBUG
-	#define _SECURE_SCL 0
+#define _SECURE_SCL 0
 #endif
 
 #ifndef NO_NULLPTR

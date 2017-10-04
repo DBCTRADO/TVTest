@@ -32,13 +32,15 @@ namespace TVTest
 		DPI_AWARENESS_CONTEXT m_OldContext;
 	};
 
-	class SystemDPIBlock : public DPIBlockBase
+	class SystemDPIBlock
+		: public DPIBlockBase
 	{
 	public:
 		SystemDPIBlock() : DPIBlockBase(DPI_AWARENESS_CONTEXT_SYSTEM_AWARE) {}
 	};
 
-	class PerMonitorDPIBlock : public DPIBlockBase
+	class PerMonitorDPIBlock
+		: public DPIBlockBase
 	{
 	public:
 		PerMonitorDPIBlock() : DPIBlockBase(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE) {}

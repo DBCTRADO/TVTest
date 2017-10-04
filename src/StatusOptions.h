@@ -8,7 +8,8 @@
 #include "WindowUtil.h"
 
 
-class CStatusOptions : public COptions
+class CStatusOptions
+	: public COptions
 {
 public:
 	static const int OPACITY_MIN = 20;
@@ -16,31 +17,34 @@ public:
 
 	CStatusOptions(CStatusView *pStatusView);
 	~CStatusOptions();
+
 // CSettingsBase
 	bool ReadSettings(CSettings &Settings) override;
 	bool WriteSettings(CSettings &Settings) override;
+
 // CBasicDialog
 	bool Create(HWND hwndOwner) override;
+
 // CStatusOptions
 	bool ApplyOptions();
 	bool ApplyItemList();
 	void ApplyItemWidth();
 	int RegisterItem(LPCTSTR pszID);
-	bool SetItemVisibility(int ID,bool fVisible);
+	bool SetItemVisibility(int ID, bool fVisible);
 	const TVTest::Style::Font &GetFont() const { return m_ItemFont; }
 	bool GetShowPopup() const { return m_fShowPopup; }
 	int GetPopupOpacity() const { return m_PopupOpacity; }
 	bool GetShowTOTTime() const { return m_fShowTOTTime; }
-	void SetShowTOTTime(bool fShow) { m_fShowTOTTime=fShow; }
+	void SetShowTOTTime(bool fShow) { m_fShowTOTTime = fShow; }
 	bool GetInterpolateTOTTime() const { return m_fInterpolateTOTTime; }
-	void SetInterpolateTOTTime(bool fInterpolate) { m_fInterpolateTOTTime=fInterpolate; }
+	void SetInterpolateTOTTime(bool fInterpolate) { m_fInterpolateTOTTime = fInterpolate; }
 	bool IsPopupProgramInfoEnabled() const { return m_fEnablePopupProgramInfo; }
-	void EnablePopupProgramInfo(bool fEnable) { m_fEnablePopupProgramInfo=fEnable; }
+	void EnablePopupProgramInfo(bool fEnable) { m_fEnablePopupProgramInfo = fEnable; }
 	bool GetShowEventProgress() const { return m_fShowEventProgress; }
-	void SetShowEventProgress(bool fShow) { m_fShowEventProgress=fShow; }
+	void SetShowEventProgress(bool fShow) { m_fShowEventProgress = fShow; }
 	int GetPopupEventInfoWidth() const { return m_PopupEventInfoWidth; }
 	int GetPopupEventInfoHeight() const { return m_PopupEventInfoHeight; }
-	void SetPopupEventInfoSize(int Width,int Height) { m_PopupEventInfoWidth=Width; m_PopupEventInfoHeight=Height; }
+	void SetPopupEventInfoSize(int Width, int Height) { m_PopupEventInfoWidth = Width; m_PopupEventInfoHeight = Height; }
 
 private:
 	struct StatusItemInfo
@@ -53,13 +57,14 @@ private:
 
 	typedef std::vector<StatusItemInfo> StatusItemInfoList;
 
-	class CItemListSubclass : public CWindowSubclass
+	class CItemListSubclass
+		: public CWindowSubclass
 	{
 	public:
 		CItemListSubclass(CStatusOptions *pStatusOptions);
 
 	private:
-		LRESULT OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
+		LRESULT OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
 
 		CStatusOptions *m_pStatusOptions;
 	};
@@ -95,7 +100,7 @@ private:
 	int m_PopupEventInfoHeight;
 
 // CBasicDialog
-	INT_PTR DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
+	INT_PTR DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
 
 // CUIBase
 	void ApplyStyle() override;
@@ -104,9 +109,9 @@ private:
 	void InitListBox();
 	void CalcTextWidth();
 	void SetListHExtent();
-	void DrawInsertMark(HWND hwndList,int Pos);
-	bool GetItemPreviewRect(HWND hwndList,int Index,RECT *pRect);
-	bool IsCursorResize(HWND hwndList,int x,int y);
+	void DrawInsertMark(HWND hwndList, int Pos);
+	bool GetItemPreviewRect(HWND hwndList, int Index, RECT *pRect);
+	bool IsCursorResize(HWND hwndList, int x, int y);
 	void MakeItemList(StatusItemInfoList *pList) const;
 };
 

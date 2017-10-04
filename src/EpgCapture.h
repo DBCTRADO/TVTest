@@ -29,7 +29,7 @@ namespace TVTest
 		class ABSTRACT_CLASS(CEventHandler)
 		{
 		public:
-			virtual void OnBeginCapture(unsigned int Flags,unsigned int Status) {}
+			virtual void OnBeginCapture(unsigned int Flags, unsigned int Status) {}
 			virtual void OnEndCapture(unsigned int Flags) {}
 			virtual void OnChannelChanged() {}
 			virtual void OnChannelEnd(bool fComplete) {}
@@ -37,10 +37,11 @@ namespace TVTest
 
 		CEpgCaptureManager();
 		~CEpgCaptureManager();
-		bool BeginCapture(LPCTSTR pszTuner=nullptr,
-						  const CChannelList *pChannelList=nullptr,
-						  unsigned int Flags=0);
-		void EndCapture(unsigned int Flags=END_DEFAULT);
+		bool BeginCapture(
+			LPCTSTR pszTuner = nullptr,
+			const CChannelList *pChannelList = nullptr,
+			unsigned int Flags = 0);
+		void EndCapture(unsigned int Flags = END_DEFAULT);
 		bool IsCapturing() const { return m_fCapturing; }
 		bool ProcessCapture();
 		void SetEventHandler(CEventHandler *pEventHandler);

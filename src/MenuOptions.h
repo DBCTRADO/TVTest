@@ -7,7 +7,8 @@
 #include "ListView.h"
 
 
-class CMenuOptions : public COptions
+class CMenuOptions
+	: public COptions
 {
 public:
 	CMenuOptions();
@@ -28,27 +29,30 @@ public:
 
 private:
 // CBasicDialog
-	INT_PTR DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
+	INT_PTR DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
 
 	int IDToCommand(int ID) const;
 	int CommandToID(int Command) const;
 	int GetIDFromString(const TVTest::String &Str) const;
 	void SetDlgItemState(HWND hDlg);
-	void GetItemText(int ID,LPTSTR pszText,int MaxLength) const;
+	void GetItemText(int ID, LPTSTR pszText, int MaxLength) const;
 
-	struct MenuInfo {
+	struct MenuInfo
+	{
 		int ID;
 		int TextID;
 		int Command;
 	};
 
-	struct MenuItemInfo {
+	struct MenuItemInfo
+	{
 		TVTest::String Name;
 		int ID;
 		bool fVisible;
 	};
 
-	struct AdditionalItemInfo {
+	struct AdditionalItemInfo
+	{
 		int First;
 		int Last;
 	};

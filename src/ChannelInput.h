@@ -27,7 +27,7 @@ namespace TVTest
 		static const KeyType KEY_FIRST = KEY_DIGIT;
 		static const KeyType KEY_LAST  = KEY_FUNCTION;
 
-		KeyInputModeType KeyInputMode[KEY_LAST+1];
+		KeyInputModeType KeyInputMode[KEY_LAST + 1];
 		unsigned int KeyTimeout;
 		bool fKeyTimeoutCancel;
 
@@ -63,17 +63,18 @@ namespace TVTest
 		int m_Number;
 	};
 
-	class CChannelInputOptionsDialog : public CBasicDialog
+	class CChannelInputOptionsDialog
+		: public CBasicDialog
 	{
 	public:
 		CChannelInputOptionsDialog(CChannelInputOptions &Options);
 
-	// CBasicDialog
+		// CBasicDialog
 		bool Show(HWND hwndOwner) override;
 
 	private:
-	// CBasicDialog
-		INT_PTR DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
+		// CBasicDialog
+		INT_PTR DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
 
 		CChannelInputOptions &m_Options;
 	};

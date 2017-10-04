@@ -15,7 +15,7 @@
 CFeaturedEventsSettings::CFeaturedEventsSettings()
 	: CSettingsBase(TEXT("FeaturedEvents"))
 	, m_SortType(SORT_TIME)
-	, m_PeriodSeconds(24*60*60)
+	, m_PeriodSeconds(24 * 60 * 60)
 	, m_fShowEventText(true)
 	, m_EventTextLines(2)
 {
@@ -30,23 +30,23 @@ CFeaturedEventsSettings::~CFeaturedEventsSettings()
 bool CFeaturedEventsSettings::ReadSettings(CSettings &Settings)
 {
 	TVTest::String Services;
-	if (Settings.Read(TEXT("DefaultServices"),&Services))
+	if (Settings.Read(TEXT("DefaultServices"), &Services))
 		m_DefaultServiceList.FromString(Services.c_str());
 
-	m_SearchSettingsList.Load(Settings,TEXT("Settings"));
+	m_SearchSettingsList.Load(Settings, TEXT("Settings"));
 
 	int Sort;
-	if (Settings.Read(TEXT("Sort"),&Sort)
-			&& Sort>=SORT_FIRST && Sort<=SORT_LAST)
-		m_SortType=(SortType)Sort;
+	if (Settings.Read(TEXT("Sort"), &Sort)
+			&& Sort >= SORT_FIRST && Sort <= SORT_LAST)
+		m_SortType = (SortType)Sort;
 
-	Settings.Read(TEXT("Period"),&m_PeriodSeconds);
-	Settings.Read(TEXT("ShowEventText"),&m_fShowEventText);
+	Settings.Read(TEXT("Period"), &m_PeriodSeconds);
+	Settings.Read(TEXT("ShowEventText"), &m_fShowEventText);
 
 	int Lines;
-	if (Settings.Read(TEXT("EventTextLines"),&Lines)
-			&& Lines>0 && Lines<=MAX_EVENT_TEXT_LINES)
-		m_EventTextLines=Lines;
+	if (Settings.Read(TEXT("EventTextLines"), &Lines)
+			&& Lines > 0 && Lines <= MAX_EVENT_TEXT_LINES)
+		m_EventTextLines = Lines;
 
 	return true;
 }
@@ -58,14 +58,14 @@ bool CFeaturedEventsSettings::WriteSettings(CSettings &Settings)
 
 	TVTest::String Services;
 	m_DefaultServiceList.ToString(&Services);
-	Settings.Write(TEXT("DefaultServices"),Services);
+	Settings.Write(TEXT("DefaultServices"), Services);
 
-	m_SearchSettingsList.Save(Settings,TEXT("Settings"));
+	m_SearchSettingsList.Save(Settings, TEXT("Settings"));
 
-	Settings.Write(TEXT("Sort"),(int)m_SortType);
-	Settings.Write(TEXT("Period"),m_PeriodSeconds);
-	Settings.Write(TEXT("ShowEventText"),m_fShowEventText);
-	Settings.Write(TEXT("EventTextLines"),m_EventTextLines);
+	Settings.Write(TEXT("Sort"), (int)m_SortType);
+	Settings.Write(TEXT("Period"), m_PeriodSeconds);
+	Settings.Write(TEXT("ShowEventText"), m_fShowEventText);
+	Settings.Write(TEXT("EventTextLines"), m_EventTextLines);
 
 	return true;
 }
@@ -87,7 +87,7 @@ CFeaturedEventsSearcher::~CFeaturedEventsSearcher()
 
 void CFeaturedEventsSearcher::Clear()
 {
-	for (auto it=m_EventList.begin();it!=m_EventList.end();++it)
+	for (auto it = m_EventList.begin(); it != m_EventList.end(); ++it)
 		delete *it;
 	m_EventList.clear();
 }
@@ -97,20 +97,20 @@ bool CFeaturedEventsSearcher::Update()
 {
 	Clear();
 
-	LibISDB::DateTime StartTime,PeriodTime;
+	LibISDB::DateTime StartTime, PeriodTime;
 	LibISDB::GetCurrentEPGTime(&StartTime);
-	PeriodTime=StartTime;
+	PeriodTime = StartTime;
 	PeriodTime.OffsetSeconds(m_Settings.GetPeriodSeconds());
 
-	const CEventSearchServiceList &DefaultServiceList=m_Settings.GetDefaultServiceList();
+	const CEventSearchServiceList &DefaultServiceList = m_Settings.GetDefaultServiceList();
 	CEventSearchServiceList ServiceIDList(DefaultServiceList);
 
-	const CEventSearchSettingsList &SearchSettingsList=m_Settings.GetSearchSettingsList();
+	const CEventSearchSettingsList &SearchSettingsList = m_Settings.GetSearchSettingsList();
 	std::vector<CEventSearcher> SearcherList;
 	SearcherList.resize(SearchSettingsList.GetEnabledCount());
 
-	for (size_t i=0;i<SearchSettingsList.GetCount();i++) {
-		const CEventSearchSettings *pSettings=SearchSettingsList.Get(i);
+	for (size_t i = 0; i < SearchSettingsList.GetCount(); i++) {
+		const CEventSearchSettings *pSettings = SearchSettingsList.Get(i);
 
 		if (!pSettings->fDisabled) {
 			if (pSettings->fServiceList) {
@@ -121,14 +121,14 @@ bool CFeaturedEventsSearcher::Update()
 		}
 	}
 
-	LibISDB::EPGDatabase &EPGDatabase=GetAppClass().EPGDatabase;
+	LibISDB::EPGDatabase &EPGDatabase = GetAppClass().EPGDatabase;
 
-	for (auto itService=ServiceIDList.Begin();itService!=ServiceIDList.End();++itService) {
+	for (auto itService = ServiceIDList.Begin(); itService != ServiceIDList.End(); ++itService) {
 		EPGDatabase.EnumEventsUnsorted(
 			CEventSearchServiceList::ServiceKey_GetNetworkID(*itService),
 			CEventSearchServiceList::ServiceKey_GetTransportStreamID(*itService),
 			CEventSearchServiceList::ServiceKey_GetServiceID(*itService),
-			[&](const LibISDB::EventInfo &Event) -> bool {
+			[&](const LibISDB::EventInfo & Event) -> bool {
 				if (Event.IsCommonEvent)
 					return true;
 				if (Event.StartTime >= PeriodTime)
@@ -139,7 +139,7 @@ bool CFeaturedEventsSearcher::Update()
 				if (EndTime <= StartTime)
 					return true;
 
-				for (auto itSearcher=SearcherList.begin();itSearcher!=SearcherList.end();++itSearcher) {
+				for (auto itSearcher = SearcherList.begin(); itSearcher != SearcherList.end(); ++itSearcher) {
 					if (!itSearcher->GetSearchSettings().fServiceList) {
 						if (!DefaultServiceList.IsExists(*itService))
 							continue;
@@ -166,7 +166,7 @@ size_t CFeaturedEventsSearcher::GetEventCount() const
 
 const LibISDB::EventInfo *CFeaturedEventsSearcher::GetEventInfo(size_t Index) const
 {
-	if (Index>=m_EventList.size())
+	if (Index >= m_EventList.size())
 		return NULL;
 
 	return m_EventList[Index];
@@ -177,13 +177,13 @@ const LibISDB::EventInfo *CFeaturedEventsSearcher::GetEventInfo(size_t Index) co
 
 bool CFeaturedEventsMatcher::BeginMatching(const CFeaturedEventsSettings &Settings)
 {
-	m_DefaultServiceList=Settings.GetDefaultServiceList();
+	m_DefaultServiceList = Settings.GetDefaultServiceList();
 
-	const CEventSearchSettingsList &SearchSettingsList=Settings.GetSearchSettingsList();
+	const CEventSearchSettingsList &SearchSettingsList = Settings.GetSearchSettingsList();
 	m_SearcherList.resize(SearchSettingsList.GetEnabledCount());
 
-	for (size_t i=0;i<SearchSettingsList.GetCount();i++) {
-		const CEventSearchSettings *pSettings=SearchSettingsList.Get(i);
+	for (size_t i = 0; i < SearchSettingsList.GetCount(); i++) {
+		const CEventSearchSettings *pSettings = SearchSettingsList.Get(i);
 
 		if (!pSettings->fDisabled) {
 			m_SearcherList[i].BeginSearch(*pSettings);
@@ -203,11 +203,12 @@ void CFeaturedEventsMatcher::EndMatching()
 
 bool CFeaturedEventsMatcher::IsMatch(const LibISDB::EventInfo &EventInfo)
 {
-	for (auto itSearcher=m_SearcherList.begin();itSearcher!=m_SearcherList.end();++itSearcher) {
+	for (auto itSearcher = m_SearcherList.begin(); itSearcher != m_SearcherList.end(); ++itSearcher) {
 		if (!itSearcher->GetSearchSettings().fServiceList) {
-			if (!m_DefaultServiceList.IsExists(EventInfo.NetworkID,
-											   EventInfo.TransportStreamID,
-											   EventInfo.ServiceID))
+			if (!m_DefaultServiceList.IsExists(
+						EventInfo.NetworkID,
+						EventInfo.TransportStreamID,
+						EventInfo.ServiceID))
 				continue;
 		}
 		if (itSearcher->Match(&EventInfo)) {
@@ -226,26 +227,27 @@ static void InitServiceListView(
 	const CChannelList &ServiceList,
 	const CEventSearchServiceList &SearchServiceList)
 {
-	const bool fVista=Util::OS::IsWindowsVistaOrLater();
+	const bool fVista = Util::OS::IsWindowsVistaOrLater();
 
 	if (fVista)
-		::SetWindowTheme(hwndList,L"explorer",NULL);
-	ListView_SetExtendedListViewStyle(hwndList,
-		LVS_EX_CHECKBOXES | LVS_EX_FULLROWSELECT | LVS_EX_INFOTIP);
+		::SetWindowTheme(hwndList, L"explorer", NULL);
+	ListView_SetExtendedListViewStyle(
+		hwndList, LVS_EX_CHECKBOXES | LVS_EX_FULLROWSELECT | LVS_EX_INFOTIP);
 
-	const int IconWidth=::GetSystemMetrics(SM_CXSMICON);
-	const int IconHeight=::GetSystemMetrics(SM_CYSMICON);
-	HIMAGELIST himl=::ImageList_Create(IconWidth,IconHeight,ILC_COLOR24 | ILC_MASK,
-									   ServiceList.NumChannels()+1,100);
-	HICON hico=CreateEmptyIcon(IconWidth,IconHeight);
-	ImageList_AddIcon(himl,hico);
+	const int IconWidth = ::GetSystemMetrics(SM_CXSMICON);
+	const int IconHeight = ::GetSystemMetrics(SM_CYSMICON);
+	HIMAGELIST himl = ::ImageList_Create(
+		IconWidth, IconHeight, ILC_COLOR24 | ILC_MASK,
+		ServiceList.NumChannels() + 1, 100);
+	HICON hico = CreateEmptyIcon(IconWidth, IconHeight);
+	ImageList_AddIcon(himl, hico);
 	::DestroyIcon(hico);
-	ListView_SetImageList(hwndList,himl,LVSIL_SMALL);
-	CAppMain &App=GetAppClass();
-	CLogoManager &LogoManager=App.LogoManager;
+	ListView_SetImageList(hwndList, himl, LVSIL_SMALL);
+	CAppMain &App = GetAppClass();
+	CLogoManager &LogoManager = App.LogoManager;
 
 	enum {
-		GROUP_ID_TERRESTRIAL=1,
+		GROUP_ID_TERRESTRIAL = 1,
 		GROUP_ID_BS,
 		GROUP_ID_CS
 	};
@@ -254,85 +256,86 @@ static void InitServiceListView(
 	//lvg.cbSize=LVGROUP_V5_SIZE;
 #if _WIN32_WINNT>=0x0600
 	if (fVista)
-		lvg.cbSize=sizeof(LVGROUP);
+		lvg.cbSize = sizeof(LVGROUP);
 	else
-		lvg.cbSize=offsetof(LVGROUP,pszSubtitle);
+		lvg.cbSize = offsetof(LVGROUP, pszSubtitle);
 #else
-	lvg.cbSize=sizeof(LVGROUP);
+	lvg.cbSize = sizeof(LVGROUP);
 #endif
-	lvg.mask=LVGF_HEADER | LVGF_GROUPID;
+	lvg.mask = LVGF_HEADER | LVGF_GROUPID;
 	if (fVista) {
-		lvg.mask|=LVGF_STATE;
-		lvg.stateMask=~0U;
-		lvg.state=LVGS_COLLAPSIBLE;
+		lvg.mask |= LVGF_STATE;
+		lvg.stateMask = ~0U;
+		lvg.state = LVGS_COLLAPSIBLE;
 #if _WIN32_WINNT>=0x0600
-		lvg.mask|=LVGF_TASK;
-		lvg.pszTask=TEXT("選択");
+		lvg.mask |= LVGF_TASK;
+		lvg.pszTask = TEXT("選択");
 #endif
 	}
-	lvg.pszHeader=TEXT("地上");
-	lvg.iGroupId=GROUP_ID_TERRESTRIAL;
-	ListView_InsertGroup(hwndList,-1,&lvg);
-	lvg.pszHeader=TEXT("BS");
-	lvg.iGroupId=GROUP_ID_BS;
-	ListView_InsertGroup(hwndList,-1,&lvg);
-	lvg.pszHeader=TEXT("CS");
-	lvg.iGroupId=GROUP_ID_CS;
-	ListView_InsertGroup(hwndList,-1,&lvg);
+	lvg.pszHeader = TEXT("地上");
+	lvg.iGroupId = GROUP_ID_TERRESTRIAL;
+	ListView_InsertGroup(hwndList, -1, &lvg);
+	lvg.pszHeader = TEXT("BS");
+	lvg.iGroupId = GROUP_ID_BS;
+	ListView_InsertGroup(hwndList, -1, &lvg);
+	lvg.pszHeader = TEXT("CS");
+	lvg.iGroupId = GROUP_ID_CS;
+	ListView_InsertGroup(hwndList, -1, &lvg);
 
 	LVCOLUMN lvc;
 	RECT rc;
-	::GetClientRect(hwndList,&rc);
-	lvc.mask=LVCF_FMT | LVCF_WIDTH;
-	lvc.fmt=LVCFMT_LEFT;
-	lvc.cx=rc.right-::GetSystemMetrics(SM_CXVSCROLL);
-	ListView_InsertColumn(hwndList,0,&lvc);
+	::GetClientRect(hwndList, &rc);
+	lvc.mask = LVCF_FMT | LVCF_WIDTH;
+	lvc.fmt = LVCFMT_LEFT;
+	lvc.cx = rc.right - ::GetSystemMetrics(SM_CXVSCROLL);
+	ListView_InsertColumn(hwndList, 0, &lvc);
 
 	LVITEM lvi;
-	lvi.mask=LVIF_TEXT | LVIF_IMAGE | LVIF_PARAM | LVIF_GROUPID;
-	lvi.iSubItem=0;
-	for (int i=0;i<ServiceList.NumChannels();i++) {
-		const CChannelInfo *pChannelInfo=ServiceList.GetChannelInfo(i);
+	lvi.mask = LVIF_TEXT | LVIF_IMAGE | LVIF_PARAM | LVIF_GROUPID;
+	lvi.iSubItem = 0;
+	for (int i = 0; i < ServiceList.NumChannels(); i++) {
+		const CChannelInfo *pChannelInfo = ServiceList.GetChannelInfo(i);
 
-		lvi.iItem=i;
-		lvi.pszText=const_cast<LPTSTR>(pChannelInfo->GetName());
+		lvi.iItem = i;
+		lvi.pszText = const_cast<LPTSTR>(pChannelInfo->GetName());
 
-		HICON hico=LogoManager.CreateLogoIcon(
+		HICON hico = LogoManager.CreateLogoIcon(
 			pChannelInfo->GetNetworkID(),
 			pChannelInfo->GetServiceID(),
-			IconWidth,IconHeight);
-		if (hico!=NULL) {
-			lvi.iImage=ImageList_AddIcon(himl,hico);
+			IconWidth, IconHeight);
+		if (hico != NULL) {
+			lvi.iImage = ImageList_AddIcon(himl, hico);
 			::DestroyIcon(hico);
 		} else {
-			lvi.iImage=0;
+			lvi.iImage = 0;
 		}
 
-		lvi.lParam=i;
+		lvi.lParam = i;
 
 		switch (App.NetworkDefinition.GetNetworkType(pChannelInfo->GetNetworkID())) {
 		default:
 		case TVTest::CNetworkDefinition::NETWORK_TERRESTRIAL:
-			lvi.iGroupId=GROUP_ID_TERRESTRIAL;
+			lvi.iGroupId = GROUP_ID_TERRESTRIAL;
 			break;
 		case TVTest::CNetworkDefinition::NETWORK_BS:
-			lvi.iGroupId=GROUP_ID_BS;
+			lvi.iGroupId = GROUP_ID_BS;
 			break;
 		case TVTest::CNetworkDefinition::NETWORK_CS:
-			lvi.iGroupId=GROUP_ID_CS;
+			lvi.iGroupId = GROUP_ID_CS;
 			break;
 		}
 
-		int Index=ListView_InsertItem(hwndList,&lvi);
+		int Index = ListView_InsertItem(hwndList, &lvi);
 
-		ListView_SetCheckState(hwndList,Index,
+		ListView_SetCheckState(
+			hwndList, Index,
 			SearchServiceList.IsExists(
 				pChannelInfo->GetNetworkID(),
 				pChannelInfo->GetTransportStreamID(),
 				pChannelInfo->GetServiceID()));
 	}
 
-	ListView_EnableGroupView(hwndList,TRUE);
+	ListView_EnableGroupView(hwndList, TRUE);
 }
 
 
@@ -341,38 +344,39 @@ static BOOL ServiceListViewGetInfoTip(
 	const CChannelList &ServiceList)
 {
 	LVITEM lvi;
-	lvi.mask=LVIF_PARAM;
-	lvi.iItem=pGetInfoTip->iItem;
-	lvi.iSubItem=0;
-	if (!ListView_GetItem(pGetInfoTip->hdr.hwndFrom,&lvi))
+	lvi.mask = LVIF_PARAM;
+	lvi.iItem = pGetInfoTip->iItem;
+	lvi.iSubItem = 0;
+	if (!ListView_GetItem(pGetInfoTip->hdr.hwndFrom, &lvi))
 		return FALSE;
 
-	const CChannelInfo *pChannelInfo=ServiceList.GetChannelInfo((int)lvi.lParam);
-	if (pChannelInfo==NULL)
+	const CChannelInfo *pChannelInfo = ServiceList.GetChannelInfo((int)lvi.lParam);
+	if (pChannelInfo == NULL)
 		return FALSE;
 
-	StdUtil::snprintf(pGetInfoTip->pszText,pGetInfoTip->cchTextMax,
+	StdUtil::snprintf(
+		pGetInfoTip->pszText, pGetInfoTip->cchTextMax,
 		TEXT("%s\r\nサービス: %d (0x%04x)\r\nネットワークID: %d (0x%04x)\r\nTSID: %d (0x%04x)"),
 		pChannelInfo->GetName(),
-		pChannelInfo->GetServiceID(),pChannelInfo->GetServiceID(),
-		pChannelInfo->GetNetworkID(),pChannelInfo->GetNetworkID(),
-		pChannelInfo->GetTransportStreamID(),pChannelInfo->GetTransportStreamID());
+		pChannelInfo->GetServiceID(), pChannelInfo->GetServiceID(),
+		pChannelInfo->GetNetworkID(), pChannelInfo->GetNetworkID(),
+		pChannelInfo->GetTransportStreamID(), pChannelInfo->GetTransportStreamID());
 
 	return TRUE;
 }
 
 
-#if _WIN32_WINNT>=0x0600
+#if _WIN32_WINNT >= 0x0600
 
-static BOOL ServiceListViewOnLinkClick(HWND hDlg,NMLVLINK *pLink)
+static BOOL ServiceListViewOnLinkClick(HWND hDlg, NMLVLINK *pLink)
 {
-	HWND hwndList=pLink->hdr.hwndFrom;
+	HWND hwndList = pLink->hdr.hwndFrom;
 	RECT rc;
-	if (!ListView_GetGroupRect(hwndList,pLink->iSubItem,LVGGR_HEADER,&rc))
+	if (!ListView_GetGroupRect(hwndList, pLink->iSubItem, LVGGR_HEADER, &rc))
 		return FALSE;
 
 	enum {
-		COMMAND_CHECKALL=1,
+		COMMAND_CHECKALL = 1,
 		COMMAND_UNCHECKALL,
 		COMMAND_INVERTCHECK
 	};
@@ -380,41 +384,42 @@ static BOOL ServiceListViewOnLinkClick(HWND hDlg,NMLVLINK *pLink)
 		int ID;
 		LPCTSTR pszText;
 	} CommandList[] = {
-		{COMMAND_CHECKALL,		TEXT("すべて選択")},
-		{COMMAND_UNCHECKALL,	TEXT("すべて解除")},
-		{COMMAND_INVERTCHECK,	TEXT("選択の反転")},
+		{COMMAND_CHECKALL,    TEXT("すべて選択")},
+		{COMMAND_UNCHECKALL,  TEXT("すべて解除")},
+		{COMMAND_INVERTCHECK, TEXT("選択の反転")},
 	};
 
-	HMENU hmenu=::CreatePopupMenu();
-	for (int i=0;i<lengthof(CommandList);i++) {
-		::AppendMenu(hmenu,MF_STRING | MF_ENABLED,CommandList[i].ID,CommandList[i].pszText);
+	HMENU hmenu = ::CreatePopupMenu();
+	for (int i = 0; i < lengthof(CommandList); i++) {
+		::AppendMenu(hmenu, MF_STRING | MF_ENABLED, CommandList[i].ID, CommandList[i].pszText);
 	}
 
 	POINT pt;
-	pt.x=rc.right;
-	pt.y=rc.bottom;
-	::ClientToScreen(hwndList,&pt);
-	int Command=::TrackPopupMenu(hmenu,TPM_RIGHTALIGN | TPM_RIGHTBUTTON | TPM_RETURNCMD,
-								 pt.x,pt.y,0,hDlg,NULL);
+	pt.x = rc.right;
+	pt.y = rc.bottom;
+	::ClientToScreen(hwndList, &pt);
+	int Command = ::TrackPopupMenu(
+		hmenu, TPM_RIGHTALIGN | TPM_RIGHTBUTTON | TPM_RETURNCMD,
+		pt.x, pt.y, 0, hDlg, NULL);
 	::DestroyMenu(hmenu);
-	if (Command>0) {
-		const int ItemCount=ListView_GetItemCount(hwndList);
-		bool fCheck=Command==COMMAND_CHECKALL;
+	if (Command > 0) {
+		const int ItemCount = ListView_GetItemCount(hwndList);
+		bool fCheck = Command == COMMAND_CHECKALL;
 
-		for (int i=0;i<ItemCount;i++) {
+		for (int i = 0; i < ItemCount; i++) {
 			LVITEM lvi;
 
-			lvi.mask=LVIF_GROUPID;
-			lvi.iItem=i;
-			lvi.iSubItem=0;
-			ListView_GetItem(hwndList,&lvi);
+			lvi.mask = LVIF_GROUPID;
+			lvi.iItem = i;
+			lvi.iSubItem = 0;
+			ListView_GetItem(hwndList, &lvi);
 
-			if (lvi.iGroupId==pLink->iSubItem) {
-				if (Command==COMMAND_INVERTCHECK) {
-					fCheck=!ListView_GetCheckState(hwndList,i);
+			if (lvi.iGroupId == pLink->iSubItem) {
+				if (Command == COMMAND_INVERTCHECK) {
+					fCheck = !ListView_GetCheckState(hwndList, i);
 				}
 
-				ListView_SetCheckState(hwndList,i,fCheck);
+				ListView_SetCheckState(hwndList, i, fCheck);
 			}
 		}
 	}
@@ -427,7 +432,8 @@ static BOOL ServiceListViewOnLinkClick(HWND hDlg,NMLVLINK *pLink)
 
 
 
-class CFeaturedEventsSearchDialog : public CBasicDialog
+class CFeaturedEventsSearchDialog
+	: public CBasicDialog
 {
 public:
 	CFeaturedEventsSearchDialog(
@@ -440,7 +446,7 @@ public:
 
 private:
 // CBasicDialog
-	INT_PTR DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
+	INT_PTR DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
 
 	CEventSearchSettings &m_SearchSettings;
 	CEventSearchSettingsDialog m_SearchSettingsDialog;
@@ -463,44 +469,47 @@ CFeaturedEventsSearchDialog::CFeaturedEventsSearchDialog(
 
 bool CFeaturedEventsSearchDialog::Show(HWND hwndOwner)
 {
-	return ShowDialog(hwndOwner,
-					  GetAppClass().GetResourceInstance(),
-					  MAKEINTRESOURCE(IDD_FEATUREDEVENTSSEARCH))==IDOK;
+	return ShowDialog(
+		hwndOwner,
+		GetAppClass().GetResourceInstance(),
+		MAKEINTRESOURCE(IDD_FEATUREDEVENTSSEARCH)) == IDOK;
 }
 
 
-INT_PTR CFeaturedEventsSearchDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
+INT_PTR CFeaturedEventsSearchDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	switch (uMsg) {
 	case WM_INITDIALOG:
 		m_SearchSettingsDialog.SetSettings(m_SearchSettings);
 		m_SearchSettingsDialog.Create(hDlg);
-		m_SearchSettingsDialog.ShowButton(IDC_EVENTSEARCH_HIGHLIGHT,false);
-		m_SearchSettingsDialog.ShowButton(IDC_EVENTSEARCH_SEARCHTARGET,false);
-		m_SearchSettingsDialog.ShowButton(IDC_EVENTSEARCH_SEARCH,false);
+		m_SearchSettingsDialog.ShowButton(IDC_EVENTSEARCH_HIGHLIGHT, false);
+		m_SearchSettingsDialog.ShowButton(IDC_EVENTSEARCH_SEARCHTARGET, false);
+		m_SearchSettingsDialog.ShowButton(IDC_EVENTSEARCH_SEARCH, false);
 		{
 			RECT rc;
-			GetDlgItemRect(hDlg,IDC_FEATUREDEVENTSSEARCH_SETTINGSPLACE,&rc);
+			GetDlgItemRect(hDlg, IDC_FEATUREDEVENTSSEARCH_SETTINGSPLACE, &rc);
 			m_SearchSettingsDialog.SetPosition(&rc);
 		}
 
-		DlgEdit_LimitText(hDlg,IDC_FEATUREDEVENTSSEARCH_NAME,CEventSearchSettings::MAX_NAME_LENGTH-1);
-		DlgEdit_SetText(hDlg,IDC_FEATUREDEVENTSSEARCH_NAME,m_SearchSettings.Name.c_str());
+		DlgEdit_LimitText(hDlg, IDC_FEATUREDEVENTSSEARCH_NAME, CEventSearchSettings::MAX_NAME_LENGTH - 1);
+		DlgEdit_SetText(hDlg, IDC_FEATUREDEVENTSSEARCH_NAME, m_SearchSettings.Name.c_str());
 
-		InitServiceListView(::GetDlgItem(hDlg,IDC_FEATUREDEVENTSSEARCH_SERVICELIST),
-							m_ServiceList,m_SearchSettings.ServiceList);
+		InitServiceListView(
+			::GetDlgItem(hDlg, IDC_FEATUREDEVENTSSEARCH_SERVICELIST),
+			m_ServiceList, m_SearchSettings.ServiceList);
 
-		DlgCheckBox_Check(hDlg,IDC_FEATUREDEVENTSSEARCH_USESERVICELIST,m_SearchSettings.fServiceList);
-		EnableDlgItems(hDlg,
-					   IDC_FEATUREDEVENTSSEARCH_SERVICELIST,
-					   IDC_FEATUREDEVENTSSEARCH_SERVICELIST_UNCHECKALL,
-					   m_SearchSettings.fServiceList);
+		DlgCheckBox_Check(hDlg, IDC_FEATUREDEVENTSSEARCH_USESERVICELIST, m_SearchSettings.fServiceList);
+		EnableDlgItems(
+			hDlg,
+			IDC_FEATUREDEVENTSSEARCH_SERVICELIST,
+			IDC_FEATUREDEVENTSSEARCH_SERVICELIST_UNCHECKALL,
+			m_SearchSettings.fServiceList);
 		return TRUE;
 
 	case WM_SIZE:
 		{
 			RECT rc;
-			GetDlgItemRect(hDlg,IDC_FEATUREDEVENTSSEARCH_SETTINGSPLACE,&rc);
+			GetDlgItemRect(hDlg, IDC_FEATUREDEVENTSSEARCH_SETTINGSPLACE, &rc);
 			m_SearchSettingsDialog.SetPosition(&rc);
 		}
 		return TRUE;
@@ -508,21 +517,22 @@ INT_PTR CFeaturedEventsSearchDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,L
 	case WM_COMMAND:
 		switch (LOWORD(wParam)) {
 		case IDC_FEATUREDEVENTSSEARCH_USESERVICELIST:
-			EnableDlgItemsSyncCheckBox(hDlg,
-									   IDC_FEATUREDEVENTSSEARCH_SERVICELIST,
-									   IDC_FEATUREDEVENTSSEARCH_SERVICELIST_UNCHECKALL,
-									   IDC_FEATUREDEVENTSSEARCH_USESERVICELIST);
+			EnableDlgItemsSyncCheckBox(
+				hDlg,
+				IDC_FEATUREDEVENTSSEARCH_SERVICELIST,
+				IDC_FEATUREDEVENTSSEARCH_SERVICELIST_UNCHECKALL,
+				IDC_FEATUREDEVENTSSEARCH_USESERVICELIST);
 			return TRUE;
 
 		case IDC_FEATUREDEVENTSSEARCH_SERVICELIST_CHECKALL:
 		case IDC_FEATUREDEVENTSSEARCH_SERVICELIST_UNCHECKALL:
 			{
-				HWND hwndList=::GetDlgItem(hDlg,IDC_FEATUREDEVENTSSEARCH_SERVICELIST);
-				const int ItemCount=ListView_GetItemCount(hwndList);
-				const BOOL fCheck=LOWORD(wParam)==IDC_FEATUREDEVENTSSEARCH_SERVICELIST_CHECKALL;
+				HWND hwndList = ::GetDlgItem(hDlg, IDC_FEATUREDEVENTSSEARCH_SERVICELIST);
+				const int ItemCount = ListView_GetItemCount(hwndList);
+				const BOOL fCheck = LOWORD(wParam) == IDC_FEATUREDEVENTSSEARCH_SERVICELIST_CHECKALL;
 
-				for (int i=0;i<ItemCount;i++) {
-					ListView_SetCheckState(hwndList,i,fCheck);
+				for (int i = 0; i < ItemCount; i++) {
+					ListView_SetCheckState(hwndList, i, fCheck);
 				}
 			}
 			return TRUE;
@@ -532,24 +542,24 @@ INT_PTR CFeaturedEventsSearchDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,L
 				m_SearchSettingsDialog.GetSettings(&m_SearchSettings);
 
 				TCHAR szName[CEventSearchSettings::MAX_NAME_LENGTH];
-				DlgEdit_GetText(hDlg,IDC_FEATUREDEVENTSSEARCH_NAME,szName,lengthof(szName));
-				m_SearchSettings.Name=szName;
+				DlgEdit_GetText(hDlg, IDC_FEATUREDEVENTSSEARCH_NAME, szName, lengthof(szName));
+				m_SearchSettings.Name = szName;
 
-				m_SearchSettings.fServiceList=
-					DlgCheckBox_IsChecked(hDlg,IDC_FEATUREDEVENTSSEARCH_USESERVICELIST);
+				m_SearchSettings.fServiceList =
+					DlgCheckBox_IsChecked(hDlg, IDC_FEATUREDEVENTSSEARCH_USESERVICELIST);
 
 				if (m_SearchSettings.fServiceList) {
-					HWND hwndList=::GetDlgItem(hDlg,IDC_FEATUREDEVENTSSEARCH_SERVICELIST);
-					const int ItemCount=ListView_GetItemCount(hwndList);
+					HWND hwndList = ::GetDlgItem(hDlg, IDC_FEATUREDEVENTSSEARCH_SERVICELIST);
+					const int ItemCount = ListView_GetItemCount(hwndList);
 					LVITEM lvi;
-					lvi.mask=LVIF_PARAM;
-					lvi.iSubItem=0;
-					for (int i=0;i<ItemCount;i++) {
-						if (ListView_GetCheckState(hwndList,i)) {
-							lvi.iItem=i;
-							ListView_GetItem(hwndList,&lvi);
-							const CChannelInfo *pChannelInfo=m_ServiceList.GetChannelInfo((int)lvi.lParam);
-							if (pChannelInfo!=NULL) {
+					lvi.mask = LVIF_PARAM;
+					lvi.iSubItem = 0;
+					for (int i = 0; i < ItemCount; i++) {
+						if (ListView_GetCheckState(hwndList, i)) {
+							lvi.iItem = i;
+							ListView_GetItem(hwndList, &lvi);
+							const CChannelInfo *pChannelInfo = m_ServiceList.GetChannelInfo((int)lvi.lParam);
+							if (pChannelInfo != NULL) {
 								m_SearchSettings.ServiceList.Add(
 									pChannelInfo->GetNetworkID(),
 									pChannelInfo->GetTransportStreamID(),
@@ -562,28 +572,28 @@ INT_PTR CFeaturedEventsSearchDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,L
 				}
 			}
 		case IDCANCEL:
-			::EndDialog(hDlg,LOWORD(wParam));
+			::EndDialog(hDlg, LOWORD(wParam));
 			return TRUE;
 		}
 		return TRUE;
 
 	case WM_NOTIFY:
 		{
-			LPNMHDR pnmh=reinterpret_cast<LPNMHDR>(lParam);
+			LPNMHDR pnmh = reinterpret_cast<LPNMHDR>(lParam);
 
 			switch (pnmh->code) {
 			case LVN_GETINFOTIP:
-				if (pnmh->idFrom==IDC_FEATUREDEVENTSSEARCH_SERVICELIST) {
+				if (pnmh->idFrom == IDC_FEATUREDEVENTSSEARCH_SERVICELIST) {
 					return ServiceListViewGetInfoTip(
-						reinterpret_cast<NMLVGETINFOTIP*>(lParam),m_ServiceList);
+						reinterpret_cast<NMLVGETINFOTIP*>(lParam), m_ServiceList);
 				}
 				break;
 
 #if _WIN32_WINNT>=0x0600
 			case LVN_LINKCLICK:
-				if (pnmh->idFrom==IDC_FEATUREDEVENTSSEARCH_SERVICELIST) {
+				if (pnmh->idFrom == IDC_FEATUREDEVENTSSEARCH_SERVICELIST) {
 					return ServiceListViewOnLinkClick(
-						hDlg,reinterpret_cast<NMLVLINK*>(lParam));
+						hDlg, reinterpret_cast<NMLVLINK*>(lParam));
 				}
 				break;
 #endif
@@ -604,9 +614,9 @@ CFeaturedEventsDialog::CFeaturedEventsDialog(
 	: m_Settings(Settings)
 	, m_Options(Options)
 {
-	m_SettingsColumnWidth[SETTINGS_COLUMN_NAME]=120;
-	m_SettingsColumnWidth[SETTINGS_COLUMN_KEYWORD]=200;
-	m_SettingsColumnWidth[SETTINGS_COLUMN_GENRE]=200;
+	m_SettingsColumnWidth[SETTINGS_COLUMN_NAME] = 120;
+	m_SettingsColumnWidth[SETTINGS_COLUMN_KEYWORD] = 200;
+	m_SettingsColumnWidth[SETTINGS_COLUMN_GENRE] = 200;
 }
 
 
@@ -617,75 +627,82 @@ CFeaturedEventsDialog::~CFeaturedEventsDialog()
 
 bool CFeaturedEventsDialog::Show(HWND hwndOwner)
 {
-	return ShowDialog(hwndOwner,
-					  GetAppClass().GetResourceInstance(),
-					  MAKEINTRESOURCE(IDD_FEATUREDEVENTS))==IDOK;
+	return ShowDialog(
+		hwndOwner,
+		GetAppClass().GetResourceInstance(),
+		MAKEINTRESOURCE(IDD_FEATUREDEVENTS)) == IDOK;
 }
 
 
-INT_PTR CFeaturedEventsDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
+INT_PTR CFeaturedEventsDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-	static const int PERIOD_UNIT=60*60;
+	static const int PERIOD_UNIT = 60 * 60;
 
 	switch (uMsg) {
 	case WM_INITDIALOG:
-		AddControl(IDC_FEATUREDEVENTS_SERVICELIST,ALIGN_VERT);
-		AddControls(IDC_FEATUREDEVENTS_SERVICELIST_CHECKALL,
-					IDC_FEATUREDEVENTS_SERVICELIST_UNCHECKALL,
-					ALIGN_BOTTOM);
-		AddControl(IDC_FEATUREDEVENTS_SEARCHSETTINGSLIST,ALIGN_ALL);
-		AddControls(IDC_FEATUREDEVENTS_SEARCHSETTINGSLIST_EDIT,
-					IDC_FEATUREDEVENTS_SEARCHSETTINGSLIST_DOWN,
-					ALIGN_BOTTOM);
-		AddControls(IDC_FEATUREDEVENTS_PERIOD_LABEL,
-					IDC_FEATUREDEVENTS_PERIOD_UNIT,
-					ALIGN_BOTTOM);
-		AddControls(IDC_FEATUREDEVENTS_EVENTTEXTLINES_LABEL,
-					IDC_FEATUREDEVENTS_EVENTTEXTLINES_UNIT,
-					ALIGN_BOTTOM);
-		AddControl(IDOK,ALIGN_BOTTOM_RIGHT);
-		AddControl(IDCANCEL,ALIGN_BOTTOM_RIGHT);
+		AddControl(IDC_FEATUREDEVENTS_SERVICELIST, ALIGN_VERT);
+		AddControls(
+			IDC_FEATUREDEVENTS_SERVICELIST_CHECKALL,
+			IDC_FEATUREDEVENTS_SERVICELIST_UNCHECKALL,
+			ALIGN_BOTTOM);
+		AddControl(IDC_FEATUREDEVENTS_SEARCHSETTINGSLIST, ALIGN_ALL);
+		AddControls(
+			IDC_FEATUREDEVENTS_SEARCHSETTINGSLIST_EDIT,
+			IDC_FEATUREDEVENTS_SEARCHSETTINGSLIST_DOWN,
+			ALIGN_BOTTOM);
+		AddControls(
+			IDC_FEATUREDEVENTS_PERIOD_LABEL,
+			IDC_FEATUREDEVENTS_PERIOD_UNIT,
+			ALIGN_BOTTOM);
+		AddControls(
+			IDC_FEATUREDEVENTS_EVENTTEXTLINES_LABEL,
+			IDC_FEATUREDEVENTS_EVENTTEXTLINES_UNIT,
+			ALIGN_BOTTOM);
+		AddControl(IDOK, ALIGN_BOTTOM_RIGHT);
+		AddControl(IDCANCEL, ALIGN_BOTTOM_RIGHT);
 
 		GetAppClass().DriverManager.GetAllServiceList(&m_ServiceList);
-		InitServiceListView(::GetDlgItem(hDlg,IDC_FEATUREDEVENTS_SERVICELIST),
-							m_ServiceList,m_Settings.GetDefaultServiceList());
+		InitServiceListView(
+			::GetDlgItem(hDlg, IDC_FEATUREDEVENTS_SERVICELIST),
+			m_ServiceList, m_Settings.GetDefaultServiceList());
 
 		{
-			const CEventSearchSettingsList &SettingsList=m_Settings.GetSearchSettingsList();
-			HWND hwndList=::GetDlgItem(hDlg,IDC_FEATUREDEVENTS_SEARCHSETTINGSLIST);
+			const CEventSearchSettingsList &SettingsList = m_Settings.GetSearchSettingsList();
+			HWND hwndList = ::GetDlgItem(hDlg, IDC_FEATUREDEVENTS_SEARCHSETTINGSLIST);
 
-			ListView_SetExtendedListViewStyle(hwndList,
-				LVS_EX_CHECKBOXES | LVS_EX_FULLROWSELECT | LVS_EX_LABELTIP);
+			ListView_SetExtendedListViewStyle(
+				hwndList, LVS_EX_CHECKBOXES | LVS_EX_FULLROWSELECT | LVS_EX_LABELTIP);
 
 			LVCOLUMN lvc;
-			lvc.mask=LVCF_FMT | LVCF_WIDTH | LVCF_TEXT | LVCF_SUBITEM;
-			lvc.fmt=LVCFMT_LEFT;
-			lvc.cx=m_SettingsColumnWidth[SETTINGS_COLUMN_NAME];
-			lvc.pszText=TEXT("名前");
-			lvc.iSubItem=0;
-			ListView_InsertColumn(hwndList,0,&lvc);
-			lvc.cx=m_SettingsColumnWidth[SETTINGS_COLUMN_KEYWORD];
-			lvc.pszText=TEXT("キーワード");
-			lvc.iSubItem=1;
-			ListView_InsertColumn(hwndList,1,&lvc);
-			lvc.cx=m_SettingsColumnWidth[SETTINGS_COLUMN_GENRE];
-			lvc.pszText=TEXT("ジャンル");
-			lvc.iSubItem=2;
-			ListView_InsertColumn(hwndList,2,&lvc);
+			lvc.mask = LVCF_FMT | LVCF_WIDTH | LVCF_TEXT | LVCF_SUBITEM;
+			lvc.fmt = LVCFMT_LEFT;
+			lvc.cx = m_SettingsColumnWidth[SETTINGS_COLUMN_NAME];
+			lvc.pszText = TEXT("名前");
+			lvc.iSubItem = 0;
+			ListView_InsertColumn(hwndList, 0, &lvc);
+			lvc.cx = m_SettingsColumnWidth[SETTINGS_COLUMN_KEYWORD];
+			lvc.pszText = TEXT("キーワード");
+			lvc.iSubItem = 1;
+			ListView_InsertColumn(hwndList, 1, &lvc);
+			lvc.cx = m_SettingsColumnWidth[SETTINGS_COLUMN_GENRE];
+			lvc.pszText = TEXT("ジャンル");
+			lvc.iSubItem = 2;
+			ListView_InsertColumn(hwndList, 2, &lvc);
 
-			for (int i=0;i<(int)SettingsList.GetCount();i++) {
-				AddSearchSettingsItem(hDlg,*SettingsList.Get(i));
+			for (int i = 0; i < (int)SettingsList.GetCount(); i++) {
+				AddSearchSettingsItem(hDlg, *SettingsList.Get(i));
 			}
 
 			SetSearchSettingsListItemStatus(hDlg);
 		}
 
-		DlgEdit_SetInt(hDlg,IDC_FEATUREDEVENTS_PERIOD,m_Settings.GetPeriodSeconds()/PERIOD_UNIT);
-		DlgUpDown_SetRange(hDlg,IDC_FEATUREDEVENTS_PERIOD_SPIN,1,7*24);
+		DlgEdit_SetInt(hDlg, IDC_FEATUREDEVENTS_PERIOD, m_Settings.GetPeriodSeconds() / PERIOD_UNIT);
+		DlgUpDown_SetRange(hDlg, IDC_FEATUREDEVENTS_PERIOD_SPIN, 1, 7 * 24);
 
-		DlgEdit_SetInt(hDlg,IDC_FEATUREDEVENTS_EVENTTEXTLINES,m_Settings.GetEventTextLines());
-		DlgUpDown_SetRange(hDlg,IDC_FEATUREDEVENTS_EVENTTEXTLINES_SPIN,
-						   1,CFeaturedEventsSettings::MAX_EVENT_TEXT_LINES);
+		DlgEdit_SetInt(hDlg, IDC_FEATUREDEVENTS_EVENTTEXTLINES, m_Settings.GetEventTextLines());
+		DlgUpDown_SetRange(
+			hDlg, IDC_FEATUREDEVENTS_EVENTTEXTLINES_SPIN,
+			1, CFeaturedEventsSettings::MAX_EVENT_TEXT_LINES);
 
 		ApplyPosition();
 
@@ -696,33 +713,33 @@ INT_PTR CFeaturedEventsDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM 
 		case IDC_FEATUREDEVENTS_SERVICELIST_CHECKALL:
 		case IDC_FEATUREDEVENTS_SERVICELIST_UNCHECKALL:
 			{
-				HWND hwndList=::GetDlgItem(hDlg,IDC_FEATUREDEVENTS_SERVICELIST);
-				const int ItemCount=ListView_GetItemCount(hwndList);
-				const BOOL fCheck=LOWORD(wParam)==IDC_FEATUREDEVENTS_SERVICELIST_CHECKALL;
+				HWND hwndList = ::GetDlgItem(hDlg, IDC_FEATUREDEVENTS_SERVICELIST);
+				const int ItemCount = ListView_GetItemCount(hwndList);
+				const BOOL fCheck = LOWORD(wParam) == IDC_FEATUREDEVENTS_SERVICELIST_CHECKALL;
 
-				for (int i=0;i<ItemCount;i++) {
-					ListView_SetCheckState(hwndList,i,fCheck);
+				for (int i = 0; i < ItemCount; i++) {
+					ListView_SetCheckState(hwndList, i, fCheck);
 				}
 			}
 			return TRUE;
 
 		case IDC_FEATUREDEVENTS_SEARCHSETTINGSLIST_EDIT:
 			{
-				HWND hwndList=::GetDlgItem(hDlg,IDC_FEATUREDEVENTS_SEARCHSETTINGSLIST);
-				int Sel=ListView_GetNextItem(hwndList,-1,LVNI_SELECTED);
+				HWND hwndList = ::GetDlgItem(hDlg, IDC_FEATUREDEVENTS_SEARCHSETTINGSLIST);
+				int Sel = ListView_GetNextItem(hwndList, -1, LVNI_SELECTED);
 
-				if (Sel>=0) {
+				if (Sel >= 0) {
 					LVITEM lvi;
-					lvi.mask=LVIF_PARAM;
-					lvi.iItem=Sel;
-					lvi.iSubItem=0;
-					if (ListView_GetItem(hwndList,&lvi)) {
-						CEventSearchSettings *pSettings=
+					lvi.mask = LVIF_PARAM;
+					lvi.iItem = Sel;
+					lvi.iSubItem = 0;
+					if (ListView_GetItem(hwndList, &lvi)) {
+						CEventSearchSettings *pSettings =
 							reinterpret_cast<CEventSearchSettings*>(lvi.lParam);
-						CFeaturedEventsSearchDialog Dialog(*pSettings,m_Options,m_ServiceList);
+						CFeaturedEventsSearchDialog Dialog(*pSettings, m_Options, m_ServiceList);
 
 						if (Dialog.Show(hDlg)) {
-							UpdateSearchSettingsItem(hDlg,Sel);
+							UpdateSearchSettingsItem(hDlg, Sel);
 						}
 					}
 				}
@@ -732,14 +749,15 @@ INT_PTR CFeaturedEventsDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM 
 		case IDC_FEATUREDEVENTS_SEARCHSETTINGSLIST_ADD:
 			{
 				CEventSearchSettings Settings;
-				CFeaturedEventsSearchDialog Dialog(Settings,m_Options,m_ServiceList);
+				CFeaturedEventsSearchDialog Dialog(Settings, m_Options, m_ServiceList);
 
 				if (Dialog.Show(hDlg)) {
-					HWND hwndList=::GetDlgItem(hDlg,IDC_FEATUREDEVENTS_SEARCHSETTINGSLIST);
-					int Item=AddSearchSettingsItem(hDlg,Settings);
-					ListView_SetItemState(hwndList,Item,
-										  LVIS_FOCUSED | LVIS_SELECTED,
-										  LVIS_FOCUSED | LVIS_SELECTED);
+					HWND hwndList = ::GetDlgItem(hDlg, IDC_FEATUREDEVENTS_SEARCHSETTINGSLIST);
+					int Item = AddSearchSettingsItem(hDlg, Settings);
+					ListView_SetItemState(
+						hwndList, Item,
+						LVIS_FOCUSED | LVIS_SELECTED,
+						LVIS_FOCUSED | LVIS_SELECTED);
 					SetSearchSettingsListItemStatus(hDlg);
 				}
 			}
@@ -747,23 +765,24 @@ INT_PTR CFeaturedEventsDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM 
 
 		case IDC_FEATUREDEVENTS_SEARCHSETTINGSLIST_DUPLICATE:
 			{
-				HWND hwndList=::GetDlgItem(hDlg,IDC_FEATUREDEVENTS_SEARCHSETTINGSLIST);
-				int Sel=ListView_GetNextItem(hwndList,-1,LVNI_SELECTED);
+				HWND hwndList = ::GetDlgItem(hDlg, IDC_FEATUREDEVENTS_SEARCHSETTINGSLIST);
+				int Sel = ListView_GetNextItem(hwndList, -1, LVNI_SELECTED);
 
-				if (Sel>=0) {
+				if (Sel >= 0) {
 					LVITEM lvi;
-					lvi.mask=LVIF_STATE | LVIF_PARAM;
-					lvi.iItem=Sel;
-					lvi.iSubItem=0;
-					lvi.stateMask=~0U;
-					if (ListView_GetItem(hwndList,&lvi)) {
+					lvi.mask = LVIF_STATE | LVIF_PARAM;
+					lvi.iItem = Sel;
+					lvi.iSubItem = 0;
+					lvi.stateMask = ~0U;
+					if (ListView_GetItem(hwndList, &lvi)) {
 						CEventSearchSettings Settings(
 							*reinterpret_cast<CEventSearchSettings*>(lvi.lParam));
-						CFeaturedEventsSearchDialog Dialog(Settings,m_Options,m_ServiceList);
+						CFeaturedEventsSearchDialog Dialog(Settings, m_Options, m_ServiceList);
 
 						if (Dialog.Show(hDlg)) {
-							int Item=AddSearchSettingsItem(hDlg,Settings);
-							ListView_SetItemState(hwndList,Item,
+							int Item = AddSearchSettingsItem(hDlg, Settings);
+							ListView_SetItemState(
+								hwndList, Item,
 								LVIS_FOCUSED | LVIS_SELECTED | (lvi.state & LVIS_STATEIMAGEMASK),
 								LVIS_FOCUSED | LVIS_SELECTED | LVIS_STATEIMAGEMASK);
 							SetSearchSettingsListItemStatus(hDlg);
@@ -776,49 +795,50 @@ INT_PTR CFeaturedEventsDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM 
 		case IDC_FEATUREDEVENTS_SEARCHSETTINGSLIST_UP:
 		case IDC_FEATUREDEVENTS_SEARCHSETTINGSLIST_DOWN:
 			{
-				HWND hwndList=::GetDlgItem(hDlg,IDC_FEATUREDEVENTS_SEARCHSETTINGSLIST);
-				int Sel=ListView_GetNextItem(hwndList,-1,LVNI_SELECTED);
+				HWND hwndList = ::GetDlgItem(hDlg, IDC_FEATUREDEVENTS_SEARCHSETTINGSLIST);
+				int Sel = ListView_GetNextItem(hwndList, -1, LVNI_SELECTED);
 				int To;
 
-				if (LOWORD(wParam)==IDC_FEATUREDEVENTS_SEARCHSETTINGSLIST_UP) {
-					if (Sel<1)
+				if (LOWORD(wParam) == IDC_FEATUREDEVENTS_SEARCHSETTINGSLIST_UP) {
+					if (Sel < 1)
 						return TRUE;
-					To=Sel-1;
+					To = Sel - 1;
 				} else {
-					if (Sel<0 || Sel>=ListView_GetItemCount(hwndList)-1)
+					if (Sel < 0 || Sel >= ListView_GetItemCount(hwndList) - 1)
 						return TRUE;
-					To=Sel+1;
+					To = Sel + 1;
 				}
 
 				LVITEM lvi;
-				lvi.mask=LVIF_STATE | LVIF_PARAM;
-				lvi.iItem=Sel;
-				lvi.iSubItem=0;
-				lvi.stateMask=~0U;
-				ListView_GetItem(hwndList,&lvi);
-				ListView_DeleteItem(hwndList,Sel);
-				lvi.iItem=To;
-				ListView_InsertItem(hwndList,&lvi);
-				UpdateSearchSettingsItem(hDlg,To);
-				ListView_SetItemState(hwndList,To,
-									  LVIS_FOCUSED | LVIS_SELECTED | (lvi.state & LVIS_STATEIMAGEMASK),
-									  LVIS_FOCUSED | LVIS_SELECTED | LVIS_STATEIMAGEMASK);
+				lvi.mask = LVIF_STATE | LVIF_PARAM;
+				lvi.iItem = Sel;
+				lvi.iSubItem = 0;
+				lvi.stateMask = ~0U;
+				ListView_GetItem(hwndList, &lvi);
+				ListView_DeleteItem(hwndList, Sel);
+				lvi.iItem = To;
+				ListView_InsertItem(hwndList, &lvi);
+				UpdateSearchSettingsItem(hDlg, To);
+				ListView_SetItemState(
+					hwndList, To,
+					LVIS_FOCUSED | LVIS_SELECTED | (lvi.state & LVIS_STATEIMAGEMASK),
+					LVIS_FOCUSED | LVIS_SELECTED | LVIS_STATEIMAGEMASK);
 				SetSearchSettingsListItemStatus(hDlg);
 			}
 			return TRUE;
 
 		case IDC_FEATUREDEVENTS_SEARCHSETTINGSLIST_DELETE:
 			{
-				HWND hwndList=::GetDlgItem(hDlg,IDC_FEATUREDEVENTS_SEARCHSETTINGSLIST);
-				int Sel=ListView_GetNextItem(hwndList,-1,LVNI_SELECTED);
+				HWND hwndList = ::GetDlgItem(hDlg, IDC_FEATUREDEVENTS_SEARCHSETTINGSLIST);
+				int Sel = ListView_GetNextItem(hwndList, -1, LVNI_SELECTED);
 
-				if (Sel>=0) {
+				if (Sel >= 0) {
 					LVITEM lvi;
-					lvi.mask=LVIF_PARAM;
-					lvi.iItem=Sel;
-					lvi.iSubItem=0;
-					if (ListView_GetItem(hwndList,&lvi)) {
-						ListView_DeleteItem(hwndList,Sel);
+					lvi.mask = LVIF_PARAM;
+					lvi.iItem = Sel;
+					lvi.iSubItem = 0;
+					if (ListView_GetItem(hwndList, &lvi)) {
+						ListView_DeleteItem(hwndList, Sel);
 						delete reinterpret_cast<CEventSearchSettings*>(lvi.lParam);
 						SetSearchSettingsListItemStatus(hDlg);
 					}
@@ -828,21 +848,21 @@ INT_PTR CFeaturedEventsDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM 
 
 		case IDOK:
 			{
-				CEventSearchServiceList &DefaultServiceList=m_Settings.GetDefaultServiceList();
-				HWND hwndList=::GetDlgItem(hDlg,IDC_FEATUREDEVENTS_SERVICELIST);
-				const int ItemCount=ListView_GetItemCount(hwndList);
+				CEventSearchServiceList &DefaultServiceList = m_Settings.GetDefaultServiceList();
+				HWND hwndList = ::GetDlgItem(hDlg, IDC_FEATUREDEVENTS_SERVICELIST);
+				const int ItemCount = ListView_GetItemCount(hwndList);
 
 				DefaultServiceList.Clear();
 
 				LVITEM lvi;
-				lvi.mask=LVIF_PARAM;
-				lvi.iSubItem=0;
-				for (int i=0;i<ItemCount;i++) {
-					if (ListView_GetCheckState(hwndList,i)) {
-						lvi.iItem=i;
-						ListView_GetItem(hwndList,&lvi);
-						const CChannelInfo *pChannelInfo=m_ServiceList.GetChannelInfo((int)lvi.lParam);
-						if (pChannelInfo!=NULL) {
+				lvi.mask = LVIF_PARAM;
+				lvi.iSubItem = 0;
+				for (int i = 0; i < ItemCount; i++) {
+					if (ListView_GetCheckState(hwndList, i)) {
+						lvi.iItem = i;
+						ListView_GetItem(hwndList, &lvi);
+						const CChannelInfo *pChannelInfo = m_ServiceList.GetChannelInfo((int)lvi.lParam);
+						if (pChannelInfo != NULL) {
 							DefaultServiceList.Add(
 								pChannelInfo->GetNetworkID(),
 								pChannelInfo->GetTransportStreamID(),
@@ -853,74 +873,74 @@ INT_PTR CFeaturedEventsDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM 
 			}
 
 			{
-				CEventSearchSettingsList &SettingsList=m_Settings.GetSearchSettingsList();
-				HWND hwndList=::GetDlgItem(hDlg,IDC_FEATUREDEVENTS_SEARCHSETTINGSLIST);
-				const int ItemCount=ListView_GetItemCount(hwndList);
+				CEventSearchSettingsList &SettingsList = m_Settings.GetSearchSettingsList();
+				HWND hwndList = ::GetDlgItem(hDlg, IDC_FEATUREDEVENTS_SEARCHSETTINGSLIST);
+				const int ItemCount = ListView_GetItemCount(hwndList);
 
 				SettingsList.Clear();
 
 				LVITEM lvi;
-				lvi.mask=LVIF_PARAM;
-				lvi.iSubItem=0;
-				for (int i=0;i<ItemCount;i++) {
-					lvi.iItem=i;
-					ListView_GetItem(hwndList,&lvi);
-					CEventSearchSettings *pSettings=
+				lvi.mask = LVIF_PARAM;
+				lvi.iSubItem = 0;
+				for (int i = 0; i < ItemCount; i++) {
+					lvi.iItem = i;
+					ListView_GetItem(hwndList, &lvi);
+					CEventSearchSettings *pSettings =
 						reinterpret_cast<CEventSearchSettings*>(lvi.lParam);
-					pSettings->fDisabled=!ListView_GetCheckState(hwndList,i);
+					pSettings->fDisabled = !ListView_GetCheckState(hwndList, i);
 					SettingsList.Add(*pSettings);
 				}
 			}
 
 			m_Settings.SetPeriodSeconds(
-				DlgEdit_GetInt(hDlg,IDC_FEATUREDEVENTS_PERIOD)*PERIOD_UNIT);
+				DlgEdit_GetInt(hDlg, IDC_FEATUREDEVENTS_PERIOD) * PERIOD_UNIT);
 
 			{
-				int Lines=DlgEdit_GetInt(hDlg,IDC_FEATUREDEVENTS_EVENTTEXTLINES);
+				int Lines = DlgEdit_GetInt(hDlg, IDC_FEATUREDEVENTS_EVENTTEXTLINES);
 
-				if (Lines>0 && Lines<=CFeaturedEventsSettings::MAX_EVENT_TEXT_LINES)
+				if (Lines > 0 && Lines <= CFeaturedEventsSettings::MAX_EVENT_TEXT_LINES)
 					m_Settings.SetEventTextLines(Lines);
 			}
 
 		case IDCANCEL:
-			::EndDialog(hDlg,LOWORD(wParam));
+			::EndDialog(hDlg, LOWORD(wParam));
 			return TRUE;
 		}
 		return TRUE;
 
 	case WM_NOTIFY:
 		{
-			LPNMHDR pnmh=reinterpret_cast<LPNMHDR>(lParam);
+			LPNMHDR pnmh = reinterpret_cast<LPNMHDR>(lParam);
 
 			switch (pnmh->code) {
 			case LVN_GETINFOTIP:
-				if (pnmh->idFrom==IDC_FEATUREDEVENTS_SERVICELIST) {
+				if (pnmh->idFrom == IDC_FEATUREDEVENTS_SERVICELIST) {
 					return ServiceListViewGetInfoTip(
-						reinterpret_cast<NMLVGETINFOTIP*>(lParam),m_ServiceList);
+						reinterpret_cast<NMLVGETINFOTIP*>(lParam), m_ServiceList);
 				}
 				break;
 
 #if _WIN32_WINNT>=0x0600
 			case LVN_LINKCLICK:
-				if (pnmh->idFrom==IDC_FEATUREDEVENTS_SERVICELIST) {
+				if (pnmh->idFrom == IDC_FEATUREDEVENTS_SERVICELIST) {
 					return ServiceListViewOnLinkClick(
-						hDlg,reinterpret_cast<NMLVLINK*>(lParam));
+						hDlg, reinterpret_cast<NMLVLINK*>(lParam));
 				}
 				break;
 #endif
 
 			case LVN_ITEMCHANGED:
-				if (pnmh->idFrom==IDC_FEATUREDEVENTS_SEARCHSETTINGSLIST) {
+				if (pnmh->idFrom == IDC_FEATUREDEVENTS_SEARCHSETTINGSLIST) {
 					SetSearchSettingsListItemStatus(hDlg);
 					return TRUE;
 				}
 				break;
 
 			case NM_DBLCLK:
-				if (pnmh->idFrom==IDC_FEATUREDEVENTS_SEARCHSETTINGSLIST) {
-					LPNMITEMACTIVATE pnmia=reinterpret_cast<LPNMITEMACTIVATE>(lParam);
-					if (pnmia->iItem>=0) {
-						::SendMessage(hDlg,WM_COMMAND,IDC_FEATUREDEVENTS_SEARCHSETTINGSLIST_EDIT,0);
+				if (pnmh->idFrom == IDC_FEATUREDEVENTS_SEARCHSETTINGSLIST) {
+					LPNMITEMACTIVATE pnmia = reinterpret_cast<LPNMITEMACTIVATE>(lParam);
+					if (pnmia->iItem >= 0) {
+						::SendMessage(hDlg, WM_COMMAND, IDC_FEATUREDEVENTS_SEARCHSETTINGSLIST_EDIT, 0);
 					}
 					return TRUE;
 				}
@@ -933,18 +953,18 @@ INT_PTR CFeaturedEventsDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM 
 		m_ServiceList.Clear();
 
 		{
-			HWND hwndList=::GetDlgItem(hDlg,IDC_FEATUREDEVENTS_SEARCHSETTINGSLIST);
+			HWND hwndList = ::GetDlgItem(hDlg, IDC_FEATUREDEVENTS_SEARCHSETTINGSLIST);
 
-			for (int i=0;i<lengthof(m_SettingsColumnWidth);i++)
-				m_SettingsColumnWidth[i]=ListView_GetColumnWidth(hwndList,i);
+			for (int i = 0; i < lengthof(m_SettingsColumnWidth); i++)
+				m_SettingsColumnWidth[i] = ListView_GetColumnWidth(hwndList, i);
 
-			const int ItemCount=ListView_GetItemCount(hwndList);
+			const int ItemCount = ListView_GetItemCount(hwndList);
 			LVITEM lvi;
-			lvi.mask=LVIF_PARAM;
-			lvi.iSubItem=0;
-			for (int i=0;i<ItemCount;i++) {
-				lvi.iItem=i;
-				ListView_GetItem(hwndList,&lvi);
+			lvi.mask = LVIF_PARAM;
+			lvi.iSubItem = 0;
+			for (int i = 0; i < ItemCount; i++) {
+				lvi.iItem = i;
+				ListView_GetItem(hwndList, &lvi);
 				delete reinterpret_cast<CEventSearchSettings*>(lvi.lParam);
 			}
 			ListView_DeleteAllItems(hwndList);
@@ -958,89 +978,89 @@ INT_PTR CFeaturedEventsDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM 
 
 void CFeaturedEventsDialog::SetSearchSettingsListItemStatus(HWND hDlg)
 {
-	HWND hwndList=::GetDlgItem(hDlg,IDC_FEATUREDEVENTS_SEARCHSETTINGSLIST);
-	int Sel=ListView_GetNextItem(hwndList,-1,LVNI_SELECTED);
+	HWND hwndList = ::GetDlgItem(hDlg, IDC_FEATUREDEVENTS_SEARCHSETTINGSLIST);
+	int Sel = ListView_GetNextItem(hwndList, -1, LVNI_SELECTED);
 
-	EnableDlgItem(hDlg,IDC_FEATUREDEVENTS_SEARCHSETTINGSLIST_EDIT,Sel>=0);
-	EnableDlgItem(hDlg,IDC_FEATUREDEVENTS_SEARCHSETTINGSLIST_DUPLICATE,Sel>=0);
-	EnableDlgItem(hDlg,IDC_FEATUREDEVENTS_SEARCHSETTINGSLIST_UP,Sel>0);
-	EnableDlgItem(hDlg,IDC_FEATUREDEVENTS_SEARCHSETTINGSLIST_DOWN,Sel>=0 && Sel<ListView_GetItemCount(hwndList)-1);
-	EnableDlgItem(hDlg,IDC_FEATUREDEVENTS_SEARCHSETTINGSLIST_DELETE,Sel>=0);
+	EnableDlgItem(hDlg, IDC_FEATUREDEVENTS_SEARCHSETTINGSLIST_EDIT, Sel >= 0);
+	EnableDlgItem(hDlg, IDC_FEATUREDEVENTS_SEARCHSETTINGSLIST_DUPLICATE, Sel >= 0);
+	EnableDlgItem(hDlg, IDC_FEATUREDEVENTS_SEARCHSETTINGSLIST_UP, Sel > 0);
+	EnableDlgItem(hDlg, IDC_FEATUREDEVENTS_SEARCHSETTINGSLIST_DOWN, Sel >= 0 && Sel < ListView_GetItemCount(hwndList) - 1);
+	EnableDlgItem(hDlg, IDC_FEATUREDEVENTS_SEARCHSETTINGSLIST_DELETE, Sel >= 0);
 }
 
 
-int CFeaturedEventsDialog::AddSearchSettingsItem(HWND hDlg,const CEventSearchSettings &Settings)
+int CFeaturedEventsDialog::AddSearchSettingsItem(HWND hDlg, const CEventSearchSettings &Settings)
 {
-	HWND hwndList=::GetDlgItem(hDlg,IDC_FEATUREDEVENTS_SEARCHSETTINGSLIST);
-	CEventSearchSettings *pSettings=new CEventSearchSettings(Settings);
+	HWND hwndList = ::GetDlgItem(hDlg, IDC_FEATUREDEVENTS_SEARCHSETTINGSLIST);
+	CEventSearchSettings *pSettings = new CEventSearchSettings(Settings);
 
 	LVITEM lvi;
-	lvi.mask=LVIF_TEXT | LVIF_PARAM;
-	lvi.iItem=ListView_GetItemCount(hwndList);
-	lvi.iSubItem=0;
-	lvi.pszText=TEXT("");
-	lvi.lParam=reinterpret_cast<LPARAM>(pSettings);
-	int Item=ListView_InsertItem(hwndList,&lvi);
-	UpdateSearchSettingsItem(hDlg,Item);
+	lvi.mask = LVIF_TEXT | LVIF_PARAM;
+	lvi.iItem = ListView_GetItemCount(hwndList);
+	lvi.iSubItem = 0;
+	lvi.pszText = TEXT("");
+	lvi.lParam = reinterpret_cast<LPARAM>(pSettings);
+	int Item = ListView_InsertItem(hwndList, &lvi);
+	UpdateSearchSettingsItem(hDlg, Item);
 	return Item;
 }
 
 
-void CFeaturedEventsDialog::UpdateSearchSettingsItem(HWND hDlg,int Item)
+void CFeaturedEventsDialog::UpdateSearchSettingsItem(HWND hDlg, int Item)
 {
-	HWND hwndList=::GetDlgItem(hDlg,IDC_FEATUREDEVENTS_SEARCHSETTINGSLIST);
+	HWND hwndList = ::GetDlgItem(hDlg, IDC_FEATUREDEVENTS_SEARCHSETTINGSLIST);
 
 	LVITEM lvi;
-	lvi.mask=LVIF_PARAM;
-	lvi.iItem=Item;
-	lvi.iSubItem=0;
-	if (!ListView_GetItem(hwndList,&lvi))
+	lvi.mask = LVIF_PARAM;
+	lvi.iItem = Item;
+	lvi.iSubItem = 0;
+	if (!ListView_GetItem(hwndList, &lvi))
 		return;
 
-	const CEventSearchSettings *pSettings=
+	const CEventSearchSettings *pSettings =
 		reinterpret_cast<const CEventSearchSettings *>(lvi.lParam);
 
-	ListView_SetCheckState(hwndList,Item,!pSettings->fDisabled);
-	ListView_SetItemText(hwndList,Item,0,const_cast<LPTSTR>(pSettings->Name.c_str()));
-	ListView_SetItemText(hwndList,Item,1,const_cast<LPTSTR>(pSettings->Keyword.c_str()));
+	ListView_SetCheckState(hwndList, Item, !pSettings->fDisabled);
+	ListView_SetItemText(hwndList, Item, 0, const_cast<LPTSTR>(pSettings->Name.c_str()));
+	ListView_SetItemText(hwndList, Item, 1, const_cast<LPTSTR>(pSettings->Keyword.c_str()));
 
 	CEpgGenre EpgGenre;
 	TVTest::String Genre;
 
-	for (int i=0;i<CEpgGenre::NUM_GENRE;i++) {
-		if ((pSettings->Genre1&(1<<i))!=0 || pSettings->Genre2[i]!=0) {
-			LPCTSTR pszText=EpgGenre.GetText(i,-1);
-			if (pszText!=NULL) {
-				Genre+=pszText;
-				bool fFirst=true;
-				for (int j=0;j<CEpgGenre::NUM_SUB_GENRE;j++) {
-					if ((pSettings->Genre2[i]&(1<<j))!=0) {
-						pszText=EpgGenre.GetText(i,j);
-						if (pszText!=NULL) {
+	for (int i = 0; i < CEpgGenre::NUM_GENRE; i++) {
+		if ((pSettings->Genre1 & (1 << i)) != 0 || pSettings->Genre2[i] != 0) {
+			LPCTSTR pszText = EpgGenre.GetText(i, -1);
+			if (pszText != NULL) {
+				Genre += pszText;
+				bool fFirst = true;
+				for (int j = 0; j < CEpgGenre::NUM_SUB_GENRE; j++) {
+					if ((pSettings->Genre2[i] & (1 << j)) != 0) {
+						pszText = EpgGenre.GetText(i, j);
+						if (pszText != NULL) {
 							if (fFirst) {
-								Genre+=TEXT("（");
-								fFirst=false;
+								Genre += TEXT("（");
+								fFirst = false;
 							} else {
-								Genre+=TEXT("、");
+								Genre += TEXT("、");
 							}
-							Genre+=pszText;
+							Genre += pszText;
 						}
 					}
 				}
 				if (!fFirst)
-					Genre+=TEXT("）");
+					Genre += TEXT("）");
 			}
 		}
 	}
 
-	ListView_SetItemText(hwndList,Item,2,const_cast<LPTSTR>(Genre.c_str()));
+	ListView_SetItemText(hwndList, Item, 2, const_cast<LPTSTR>(Genre.c_str()));
 }
 
 
 
 
 CFeaturedEvents::CFeaturedEvents(CEventSearchOptions &EventSearchOptions)
-	: m_Dialog(m_Settings,EventSearchOptions)
+	: m_Dialog(m_Settings, EventSearchOptions)
 {
 }
 
@@ -1051,10 +1071,10 @@ bool CFeaturedEvents::LoadSettings(CSettings &Settings)
 
 	if (Settings.SetSection(TEXT("FeaturedEvents"))) {
 		CBasicDialog::Position Pos;
-		if (Settings.Read(TEXT("DialogLeft"),&Pos.x)
-				&& Settings.Read(TEXT("DialogTop"),&Pos.y)) {
-			Settings.Read(TEXT("DialogWidth"),&Pos.Width);
-			Settings.Read(TEXT("DialogHeight"),&Pos.Height);
+		if (Settings.Read(TEXT("DialogLeft"), &Pos.x)
+				&& Settings.Read(TEXT("DialogTop"), &Pos.y)) {
+			Settings.Read(TEXT("DialogWidth"), &Pos.Width);
+			Settings.Read(TEXT("DialogHeight"), &Pos.Height);
 			m_Dialog.SetPosition(Pos);
 		}
 	}
@@ -1071,10 +1091,10 @@ bool CFeaturedEvents::SaveSettings(CSettings &Settings)
 		if (m_Dialog.IsPositionSet()) {
 			CBasicDialog::Position Pos;
 			m_Dialog.GetPosition(&Pos);
-			Settings.Write(TEXT("DialogLeft"),Pos.x);
-			Settings.Write(TEXT("DialogTop"),Pos.y);
-			Settings.Write(TEXT("DialogWidth"),Pos.Width);
-			Settings.Write(TEXT("DialogHeight"),Pos.Height);
+			Settings.Write(TEXT("DialogLeft"), Pos.x);
+			Settings.Write(TEXT("DialogTop"), Pos.y);
+			Settings.Write(TEXT("DialogWidth"), Pos.Width);
+			Settings.Write(TEXT("DialogHeight"), Pos.Height);
 		}
 	}
 
@@ -1084,7 +1104,7 @@ bool CFeaturedEvents::SaveSettings(CSettings &Settings)
 
 bool CFeaturedEvents::AddEventHandler(CEventHandler *pEventHandler)
 {
-	if (pEventHandler==nullptr)
+	if (pEventHandler == nullptr)
 		return false;
 
 	m_EventHandlerList.push_back(pEventHandler);
@@ -1095,8 +1115,8 @@ bool CFeaturedEvents::AddEventHandler(CEventHandler *pEventHandler)
 
 bool CFeaturedEvents::RemoveEventHandler(CEventHandler *pEventHandler)
 {
-	for (auto itr=m_EventHandlerList.begin();itr!=m_EventHandlerList.end();++itr) {
-		if (*itr==pEventHandler) {
+	for (auto itr = m_EventHandlerList.begin(); itr != m_EventHandlerList.end(); ++itr) {
+		if (*itr == pEventHandler) {
 			m_EventHandlerList.erase(itr);
 			return true;
 		}
@@ -1111,7 +1131,7 @@ bool CFeaturedEvents::ShowDialog(HWND hwndOwner)
 	if (!m_Dialog.Show(hwndOwner))
 		return false;
 
-	for (auto itr=m_EventHandlerList.begin();itr!=m_EventHandlerList.end();++itr)
+	for (auto itr = m_EventHandlerList.begin(); itr != m_EventHandlerList.end(); ++itr)
 		(*itr)->OnFeaturedEventsSettingsChanged(*this);
 
 	return true;

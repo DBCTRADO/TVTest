@@ -7,7 +7,8 @@
 #include "Capture.h"
 
 
-class CCaptureOptions : public COptions
+class CCaptureOptions
+	: public COptions
 {
 public:
 	enum {
@@ -16,7 +17,7 @@ public:
 		SIZE_TYPE_RAW,
 		SIZE_TYPE_CUSTOM,
 		SIZE_TYPE_PERCENTAGE,
-		SIZE_TYPE_LAST=SIZE_TYPE_PERCENTAGE
+		SIZE_TYPE_LAST = SIZE_TYPE_PERCENTAGE
 	};
 	enum {
 		SIZE_1920x1080,
@@ -34,7 +35,7 @@ public:
 		SIZE_720x540,
 		SIZE_640x480,
 		SIZE_320x240,
-		SIZE_LAST=SIZE_320x240
+		SIZE_LAST = SIZE_320x240
 	};
 	enum {
 		PERCENTAGE_75,
@@ -42,7 +43,7 @@ public:
 		PERCENTAGE_50,
 		PERCENTAGE_33,
 		PERCENTAGE_25,
-		PERCENTAGE_LAST=PERCENTAGE_25
+		PERCENTAGE_LAST = PERCENTAGE_25
 	};
 
 	CCaptureOptions();
@@ -60,11 +61,11 @@ public:
 	bool SetPresetCaptureSize(int Size);
 	int GetPresetCaptureSize() const;
 	int GetCaptureSizeType() const { return m_CaptureSizeType; }
-	bool GetSizePercentage(int *pNum,int *pDenom) const;
-	bool GetCustomSize(int *pWidth,int *pHeight) const;
-	bool GenerateFileName(TVTest::String *pFileName,const CCaptureImage *pImage) const;
-	bool GetOptionText(LPTSTR pszOption,int MaxLength) const;
-	bool GetCommentText(TVTest::String *pComment,const CCaptureImage *pImage) const;
+	bool GetSizePercentage(int *pNum, int *pDenom) const;
+	bool GetCustomSize(int *pWidth, int *pHeight) const;
+	bool GenerateFileName(TVTest::String *pFileName, const CCaptureImage *pImage) const;
+	bool GetOptionText(LPTSTR pszOption, int MaxLength) const;
+	bool GetCommentText(TVTest::String *pComment, const CCaptureImage *pImage) const;
 	bool SaveImage(CCaptureImage *pImage);
 	int TranslateCommand(int Command);
 	bool OpenSaveFolder() const;
@@ -84,15 +85,15 @@ private:
 	CImageCodec m_ImageCodec;
 
 // CBasicDialog
-	INT_PTR DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
+	INT_PTR DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
 
 	void UpdateFileNamePreview();
 
-	static const SIZE m_SizeList[SIZE_LAST+1];
+	static const SIZE m_SizeList[SIZE_LAST + 1];
 	struct PercentageType {
-		BYTE Num,Denom;
+		BYTE Num, Denom;
 	};
-	static const PercentageType m_PercentageList[PERCENTAGE_LAST+1];
+	static const PercentageType m_PercentageList[PERCENTAGE_LAST + 1];
 };
 
 

@@ -5,8 +5,6 @@
 #include "Common/DebugDef.h"
 
 
-
-
 namespace TVTest
 {
 
@@ -24,10 +22,10 @@ CListView::~CListView()
 
 bool CListView::Attach(HWND hwnd)
 {
-	if (hwnd==NULL)
+	if (hwnd == NULL)
 		return false;
 
-	m_hwnd=hwnd;
+	m_hwnd = hwnd;
 
 	return true;
 }
@@ -35,117 +33,117 @@ bool CListView::Attach(HWND hwnd)
 
 void CListView::Detach()
 {
-	m_hwnd=NULL;
+	m_hwnd = NULL;
 }
 
 
 void CListView::SetExtendedStyle(DWORD Style)
 {
-	if (m_hwnd!=NULL)
-		ListView_SetExtendedListViewStyle(m_hwnd,Style);
+	if (m_hwnd != NULL)
+		ListView_SetExtendedListViewStyle(m_hwnd, Style);
 }
 
 
 bool CListView::InitCheckList()
 {
-	if (m_hwnd==NULL)
+	if (m_hwnd == NULL)
 		return false;
 
-	ListView_SetExtendedListViewStyle(m_hwnd,
-		LVS_EX_FULLROWSELECT | LVS_EX_CHECKBOXES | LVS_EX_LABELTIP);
+	ListView_SetExtendedListViewStyle(
+		m_hwnd, LVS_EX_FULLROWSELECT | LVS_EX_CHECKBOXES | LVS_EX_LABELTIP);
 
 	RECT rc;
-	::GetClientRect(m_hwnd,&rc);
+	::GetClientRect(m_hwnd, &rc);
 	LVCOLUMN lvc;
-	lvc.mask=LVCF_FMT | LVCF_WIDTH | LVCF_TEXT | LVCF_SUBITEM;
-	lvc.fmt=LVCFMT_LEFT;
-	lvc.cx=rc.right-::GetSystemMetrics(SM_CXVSCROLL);
-	lvc.pszText=TEXT("");
-	lvc.iSubItem=0;
-	ListView_InsertColumn(m_hwnd,0,&lvc);
+	lvc.mask = LVCF_FMT | LVCF_WIDTH | LVCF_TEXT | LVCF_SUBITEM;
+	lvc.fmt = LVCFMT_LEFT;
+	lvc.cx = rc.right - ::GetSystemMetrics(SM_CXVSCROLL);
+	lvc.pszText = TEXT("");
+	lvc.iSubItem = 0;
+	ListView_InsertColumn(m_hwnd, 0, &lvc);
 
 	return true;
 }
 
 
-int CListView::InsertItem(int Index,LPCTSTR pszText,LPARAM Param)
+int CListView::InsertItem(int Index, LPCTSTR pszText, LPARAM Param)
 {
-	if (m_hwnd==NULL)
+	if (m_hwnd == NULL)
 		return -1;
 
-	if (Index<0)
-		Index=GetItemCount();
+	if (Index < 0)
+		Index = GetItemCount();
 
 	LVITEM lvi;
 
-	lvi.mask=LVIF_TEXT | LVIF_PARAM;
-	lvi.iItem=Index;
-	lvi.iSubItem=0;
-	lvi.pszText=const_cast<LPTSTR>(pszText);
-	lvi.lParam=Param;
+	lvi.mask = LVIF_TEXT | LVIF_PARAM;
+	lvi.iItem = Index;
+	lvi.iSubItem = 0;
+	lvi.pszText = const_cast<LPTSTR>(pszText);
+	lvi.lParam = Param;
 
-	return ListView_InsertItem(m_hwnd,&lvi);
+	return ListView_InsertItem(m_hwnd, &lvi);
 }
 
 
 bool CListView::DeleteItem(int Index)
 {
-	if (m_hwnd==NULL)
+	if (m_hwnd == NULL)
 		return false;
-	return ListView_DeleteItem(m_hwnd,Index)!=FALSE;
+	return ListView_DeleteItem(m_hwnd, Index) != FALSE;
 }
 
 
 void CListView::DeleteAllItems()
 {
-	if (m_hwnd!=NULL)
+	if (m_hwnd != NULL)
 		ListView_DeleteAllItems(m_hwnd);
 }
 
 
-bool CListView::SetItemText(int Index,LPCTSTR pszText)
+bool CListView::SetItemText(int Index, LPCTSTR pszText)
 {
-	if (m_hwnd==NULL)
+	if (m_hwnd == NULL)
 		return false;
 
-	ListView_SetItemText(m_hwnd,Index,0,const_cast<LPTSTR>(pszText));
+	ListView_SetItemText(m_hwnd, Index, 0, const_cast<LPTSTR>(pszText));
 
 	return true;
 }
 
 
-bool CListView::SetItemText(int Index,int SubItem,LPCTSTR pszText)
+bool CListView::SetItemText(int Index, int SubItem, LPCTSTR pszText)
 {
-	if (m_hwnd==NULL)
+	if (m_hwnd == NULL)
 		return false;
 
 	LVITEM lvi;
-	lvi.mask=LVIF_TEXT;
-	lvi.iItem=Index;
-	lvi.iSubItem=SubItem;
-	lvi.pszText=const_cast<LPTSTR>(pszText);
+	lvi.mask = LVIF_TEXT;
+	lvi.iItem = Index;
+	lvi.iSubItem = SubItem;
+	lvi.pszText = const_cast<LPTSTR>(pszText);
 
-	return ListView_SetItem(m_hwnd,&lvi)!=FALSE;
+	return ListView_SetItem(m_hwnd, &lvi) != FALSE;
 }
 
 
-bool CListView::SetItemState(int Index,UINT State,UINT Mask)
+bool CListView::SetItemState(int Index, UINT State, UINT Mask)
 {
-	if (m_hwnd==NULL)
+	if (m_hwnd == NULL)
 		return false;
 
-	ListView_SetItemState(m_hwnd,Index,State,Mask);
+	ListView_SetItemState(m_hwnd, Index, State, Mask);
 
 	return true;
 }
 
 
-bool CListView::CheckItem(int Index,bool fCheck)
+bool CListView::CheckItem(int Index, bool fCheck)
 {
-	if (m_hwnd==NULL)
+	if (m_hwnd == NULL)
 		return false;
 
-	ListView_SetCheckState(m_hwnd,Index,fCheck);
+	ListView_SetCheckState(m_hwnd, Index, fCheck);
 
 	return true;
 }
@@ -153,41 +151,41 @@ bool CListView::CheckItem(int Index,bool fCheck)
 
 bool CListView::IsItemChecked(int Index) const
 {
-	if (m_hwnd==NULL)
+	if (m_hwnd == NULL)
 		return false;
 
-	return ListView_GetCheckState(m_hwnd,Index)!=FALSE;
+	return ListView_GetCheckState(m_hwnd, Index) != FALSE;
 }
 
 
-bool CListView::SetItemParam(int Index,LPARAM Param)
+bool CListView::SetItemParam(int Index, LPARAM Param)
 {
-	if (m_hwnd==NULL)
+	if (m_hwnd == NULL)
 		return false;
 
 	LVITEM lvi;
 
-	lvi.mask=LVIF_PARAM;
-	lvi.iItem=Index;
-	lvi.iSubItem=0;
-	lvi.lParam=Param;
+	lvi.mask = LVIF_PARAM;
+	lvi.iItem = Index;
+	lvi.iSubItem = 0;
+	lvi.lParam = Param;
 
-	return ListView_SetItem(m_hwnd,&lvi)!=FALSE;
+	return ListView_SetItem(m_hwnd, &lvi) != FALSE;
 }
 
 
 LPARAM CListView::GetItemParam(int Index) const
 {
-	if (m_hwnd==NULL)
+	if (m_hwnd == NULL)
 		return 0;
 
 	LVITEM lvi;
 
-	lvi.mask=LVIF_PARAM;
-	lvi.iItem=Index;
-	lvi.iSubItem=0;
+	lvi.mask = LVIF_PARAM;
+	lvi.iItem = Index;
+	lvi.iSubItem = 0;
 
-	if (!ListView_GetItem(m_hwnd,&lvi))
+	if (!ListView_GetItem(m_hwnd, &lvi))
 		return 0;
 
 	return lvi.lParam;
@@ -196,7 +194,7 @@ LPARAM CListView::GetItemParam(int Index) const
 
 int CListView::GetItemCount() const
 {
-	if (m_hwnd==NULL)
+	if (m_hwnd == NULL)
 		return 0;
 
 	return ListView_GetItemCount(m_hwnd);
@@ -205,67 +203,67 @@ int CListView::GetItemCount() const
 
 int CListView::GetSelectedItem() const
 {
-	if (m_hwnd==NULL)
+	if (m_hwnd == NULL)
 		return -1;
 
-	return ListView_GetNextItem(m_hwnd,-1,LVNI_SELECTED);
+	return ListView_GetNextItem(m_hwnd, -1, LVNI_SELECTED);
 }
 
 
-bool CListView::MoveItem(int From,int To)
+bool CListView::MoveItem(int From, int To)
 {
-	if (m_hwnd==NULL)
+	if (m_hwnd == NULL)
 		return false;
 
 	LVITEM lvi;
 	TCHAR szText[1024];
-	lvi.mask=LVIF_STATE | LVIF_TEXT | LVIF_PARAM;
-	lvi.iItem=From;
-	lvi.iSubItem=0;
-	lvi.stateMask=~0U;
-	lvi.pszText=szText;
-	lvi.cchTextMax=lengthof(szText);
-	if (!ListView_GetItem(m_hwnd,&lvi))
+	lvi.mask = LVIF_STATE | LVIF_TEXT | LVIF_PARAM;
+	lvi.iItem = From;
+	lvi.iSubItem = 0;
+	lvi.stateMask = ~0U;
+	lvi.pszText = szText;
+	lvi.cchTextMax = lengthof(szText);
+	if (!ListView_GetItem(m_hwnd, &lvi))
 		return false;
-	BOOL fChecked=ListView_GetCheckState(m_hwnd,From);
-	ListView_DeleteItem(m_hwnd,From);
-	lvi.iItem=To;
-	ListView_InsertItem(m_hwnd,&lvi);
-	ListView_SetCheckState(m_hwnd,To,fChecked);
+	BOOL fChecked = ListView_GetCheckState(m_hwnd, From);
+	ListView_DeleteItem(m_hwnd, From);
+	lvi.iItem = To;
+	ListView_InsertItem(m_hwnd, &lvi);
+	ListView_SetCheckState(m_hwnd, To, fChecked);
 
 	return true;
 }
 
 
-bool CListView::EnsureItemVisible(int Index,bool fPartialOK)
+bool CListView::EnsureItemVisible(int Index, bool fPartialOK)
 {
-	if (m_hwnd==NULL)
+	if (m_hwnd == NULL)
 		return false;
 
-	return ListView_EnsureVisible(m_hwnd,Index,fPartialOK)!=FALSE;
+	return ListView_EnsureVisible(m_hwnd, Index, fPartialOK) != FALSE;
 }
 
 
-int CListView::InsertColumn(int Index,LPCTSTR pszText,int Format)
+int CListView::InsertColumn(int Index, LPCTSTR pszText, int Format)
 {
-	if (m_hwnd==NULL)
+	if (m_hwnd == NULL)
 		return false;
 
 	LVCOLUMN lvc;
 
-	lvc.mask=LVCF_FMT | LVCF_TEXT | LVCF_SUBITEM;
-	lvc.fmt=Format;
-	lvc.pszText=const_cast<LPTSTR>(pszText);
-	lvc.iSubItem=Index;
+	lvc.mask = LVCF_FMT | LVCF_TEXT | LVCF_SUBITEM;
+	lvc.fmt = Format;
+	lvc.pszText = const_cast<LPTSTR>(pszText);
+	lvc.iSubItem = Index;
 
-	return ListView_InsertColumn(m_hwnd,Index,&lvc);
+	return ListView_InsertColumn(m_hwnd, Index, &lvc);
 }
 
 
 void CListView::AdjustColumnWidth(bool fUseHeader)
 {
-	if (m_hwnd!=NULL)
-		AdjustListViewColumnWidth(m_hwnd,fUseHeader);
+	if (m_hwnd != NULL)
+		AdjustListViewColumnWidth(m_hwnd, fUseHeader);
 }
 
 

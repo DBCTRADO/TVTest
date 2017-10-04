@@ -21,7 +21,8 @@ namespace TVTest
 			FLAG_IGNORE_WIDTH = 0x0002U
 		};
 
-		struct TextRange {
+		struct TextRange
+		{
 			size_t Start;
 			size_t Length;
 		};

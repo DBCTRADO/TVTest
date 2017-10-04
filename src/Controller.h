@@ -10,20 +10,26 @@
 class ABSTRACT_CLASS(CController)
 {
 public:
-	class ABSTRACT_CLASS(CEventHandler) {
+	class ABSTRACT_CLASS(CEventHandler)
+	{
 	public:
 		virtual ~CEventHandler() {}
-		virtual bool OnButtonDown(CController *pController,int Index) = 0;
+		virtual bool OnButtonDown(CController * pController, int Index) = 0;
 	};
 
-	struct ButtonInfo {
+	struct ButtonInfo
+	{
 		LPCTSTR pszName;
 		int DefaultCommand;
-		struct {
-			WORD Left,Top,Width,Height;
+
+		struct
+		{
+			WORD Left, Top, Width, Height;
 		} ImageButtonRect;
-		struct {
-			WORD Left,Top;
+
+		struct
+		{
+			WORD Left, Top;
 		} ImageSelButtonPos;
 	};
 
@@ -37,16 +43,16 @@ public:
 	virtual LPCTSTR GetName() const = 0;
 	virtual LPCTSTR GetText() const = 0;
 	virtual int NumButtons() const = 0;
-	virtual bool GetButtonInfo(int Index,ButtonInfo *pInfo) const = 0;
+	virtual bool GetButtonInfo(int Index, ButtonInfo * pInfo) const = 0;
 	virtual bool Enable(bool fEnable) = 0;
 	virtual bool IsEnabled() const = 0;
 	virtual bool IsActiveOnly() const { return false; }
 	virtual bool SetTargetWindow(HWND hwnd) = 0;
-	virtual bool TranslateMessage(HWND hwnd,MSG *pMessage);
+	virtual bool TranslateMessage(HWND hwnd, MSG * pMessage);
 	virtual HBITMAP GetImage(ImageType Type) const;
-	virtual bool GetIniFileName(LPTSTR pszFileName,int MaxLength) const;
+	virtual bool GetIniFileName(LPTSTR pszFileName, int MaxLength) const;
 	virtual LPCTSTR GetIniFileSection() const;
-	void SetEventHandler(CEventHandler *pEventHandler);
+	void SetEventHandler(CEventHandler * pEventHandler);
 
 protected:
 	CEventHandler *m_pEventHandler;
@@ -54,7 +60,9 @@ protected:
 	bool OnButtonDown(int Index);
 };
 
-class CControllerManager : public COptions, public CController::CEventHandler
+class CControllerManager
+	: public COptions
+	, public CController::CEventHandler
 {
 public:
 	struct ControllerSettings {
@@ -62,7 +70,7 @@ public:
 		bool fActiveOnly;
 
 		bool operator==(const ControllerSettings &Operand) const;
-		bool operator!=(const ControllerSettings &Operand) const { return !(*this==Operand); }
+		bool operator!=(const ControllerSettings &Operand) const { return !(*this == Operand); }
 	};
 
 	CControllerManager();
@@ -79,16 +87,17 @@ public:
 	bool IsControllerEnabled(LPCTSTR pszName) const;
 	bool LoadControllerSettings(LPCTSTR pszName);
 	bool SaveControllerSettings(LPCTSTR pszName) const;
-	bool TranslateMessage(HWND hwnd,MSG *pMessage);
+	bool TranslateMessage(HWND hwnd, MSG *pMessage);
 	bool IsFocus() const { return m_fFocus; }
 	bool IsActive() const { return m_fActive; }
-	bool OnActiveChange(HWND hwnd,bool fActive);
-	bool OnFocusChange(HWND hwnd,bool fFocus);
-	bool OnButtonDown(LPCTSTR pszName,int Button) const;
+	bool OnActiveChange(HWND hwnd, bool fActive);
+	bool OnFocusChange(HWND hwnd, bool fFocus);
+	bool OnButtonDown(LPCTSTR pszName, int Button) const;
 	const ControllerSettings *GetControllerSettings(LPCTSTR pszName) const;
 
 private:
-	struct ControllerInfo {
+	struct ControllerInfo
+	{
 		CController *pController;
 		bool fSettingsLoaded;
 		bool fSettingsChanged;
@@ -113,15 +122,15 @@ private:
 	CTooltip m_Tooltip;
 
 // CController::CEventHandler
-	bool OnButtonDown(CController *pController,int Index) override;
+	bool OnButtonDown(CController *pController, int Index) override;
 // CBasicDialog
-	INT_PTR DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
+	INT_PTR DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
 // CUIBase
 	void RealizeStyle() override;
 // CControllerManager
 	int FindController(LPCTSTR pszName) const;
 	void InitDlgItems();
-	void SetButtonCommand(HWND hwndList,int Index,int Command);
+	void SetButtonCommand(HWND hwndList, int Index, int Command);
 	void SetDlgItemStatus();
 	CController *GetCurController() const;
 };

@@ -8,7 +8,8 @@
 #include "Graphics.h"
 
 
-class CAboutDialog : public CBasicDialog
+class CAboutDialog
+	: public CBasicDialog
 {
 public:
 	CAboutDialog();
@@ -22,7 +23,7 @@ private:
 	DrawUtil::CFont m_Font;
 	DrawUtil::CFont m_LinkFont;
 
-	INT_PTR DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
+	INT_PTR DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
 	void ApplyStyle() override;
 };
 

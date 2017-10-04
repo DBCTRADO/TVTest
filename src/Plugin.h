@@ -25,16 +25,16 @@ public:
 		TVTest::Theme::ThemeBitmap m_Icon;
 
 	public:
-		CPluginCommandInfo(int ID,LPCWSTR pszText,LPCWSTR pszName);
+		CPluginCommandInfo(int ID, LPCWSTR pszText, LPCWSTR pszName);
 		CPluginCommandInfo(const TVTest::PluginCommandInfo &Info);
 		CPluginCommandInfo(const TVTest::CommandInfo &Info);
 		virtual ~CPluginCommandInfo();
 		int GetID() const { return m_ID; }
 		int GetCommand() const { return m_Command; }
-		void SetCommand(int Command) { m_Command=Command; }
+		void SetCommand(int Command) { m_Command = Command; }
 		unsigned int GetFlags() const { return m_Flags; }
 		unsigned int GetState() const { return m_State; }
-		void SetState(unsigned int State) { m_State=State; }
+		void SetState(unsigned int State) { m_State = State; }
 		LPCWSTR GetText() const { return m_Text.c_str(); }
 		LPCWSTR GetName() const { return m_Name.c_str(); }
 		TVTest::Theme::ThemeBitmap &GetIcon() { return m_Icon; }
@@ -44,7 +44,7 @@ public:
 	~CPlugin();
 	bool Load(LPCTSTR pszFileName);
 	void Free();
-	bool IsLoaded() const { return m_hLib!=NULL; }
+	bool IsLoaded() const { return m_hLib != NULL; }
 	bool IsEnabled() const { return m_fEnabled; }
 	bool Enable(bool fEnable);
 	HMODULE GetModuleHandle() { return m_hLib; }
@@ -52,12 +52,12 @@ public:
 	LPCTSTR GetPluginName() const { return m_PluginName.c_str(); }
 	LPCTSTR GetCopyright() const { return m_Copyright.c_str(); }
 	LPCTSTR GetDescription() const { return m_Description.c_str(); }
-	LRESULT SendEvent(UINT Event,LPARAM lParam1=0,LPARAM lParam2=0);
-	bool OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam,LRESULT *pResult);
+	LRESULT SendEvent(UINT Event, LPARAM lParam1 = 0, LPARAM lParam2 = 0);
+	bool OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT *pResult);
 	bool Settings(HWND hwndOwner);
-	bool HasSettings() const { return (m_Flags&TVTest::PLUGIN_FLAG_HASSETTINGS)!=0; }
-	bool CanUnload() const { return (m_Flags&TVTest::PLUGIN_FLAG_NOUNLOAD)==0; }
-	bool IsNoEnabledDisabled() const { return (m_Flags & TVTest::PLUGIN_FLAG_NOENABLEDDISABLED)!=0; }
+	bool HasSettings() const { return (m_Flags & TVTest::PLUGIN_FLAG_HASSETTINGS) != 0; }
+	bool CanUnload() const { return (m_Flags & TVTest::PLUGIN_FLAG_NOUNLOAD) == 0; }
+	bool IsNoEnabledDisabled() const { return (m_Flags & TVTest::PLUGIN_FLAG_NOENABLEDDISABLED) != 0; }
 	int GetCommand() const { return m_Command; }
 	bool SetCommand(int Command);
 	TVTest::Theme::ThemeBitmap &GetIcon() { return m_PluginIcon; }
@@ -67,25 +67,27 @@ public:
 	const CPluginCommandInfo *GetPluginCommandInfo(int Index) const;
 	CPluginCommandInfo *GetPluginCommandInfo(LPCWSTR pszCommand);
 	const CPluginCommandInfo *GetPluginCommandInfo(LPCWSTR pszCommand) const;
-	bool GetPluginCommandInfo(int Index,TVTest::CommandInfo *pInfo) const;
+	bool GetPluginCommandInfo(int Index, TVTest::CommandInfo *pInfo) const;
 	bool NotifyCommand(LPCWSTR pszCommand);
 	bool DrawPluginCommandIcon(const TVTest::DrawCommandIconInfo *pInfo);
 	int NumProgramGuideCommands() const;
-	bool GetProgramGuideCommandInfo(int Index,TVTest::ProgramGuideCommandInfo *pInfo) const;
-	bool NotifyProgramGuideCommand(LPCTSTR pszCommand,UINT Action,const LibISDB::EventInfo *pEvent,
-								   const POINT *pCursorPos,const RECT *pItemRect);
+	bool GetProgramGuideCommandInfo(int Index, TVTest::ProgramGuideCommandInfo *pInfo) const;
+	bool NotifyProgramGuideCommand(
+		LPCTSTR pszCommand, UINT Action, const LibISDB::EventInfo *pEvent,
+		const POINT *pCursorPos, const RECT *pItemRect);
 	bool IsDisableOnStart() const;
-	bool IsProgramGuideEventEnabled(UINT EventFlag) const { return (m_ProgramGuideEventFlags&EventFlag)!=0; }
+	bool IsProgramGuideEventEnabled(UINT EventFlag) const { return (m_ProgramGuideEventFlags & EventFlag) != 0; }
 	void RegisterStatusItems();
 	void SendStatusItemCreatedEvent();
 	void SendStatusItemUpdateTimerEvent();
 	void RegisterPanelItems();
 
-	static void SetMessageWindow(HWND hwnd,UINT Message);
-	static LRESULT OnPluginMessage(WPARAM wParam,LPARAM lParam);
+	static void SetMessageWindow(HWND hwnd, UINT Message);
+	static LRESULT OnPluginMessage(WPARAM wParam, LPARAM lParam);
 
 private:
-	class CProgramGuideCommand : public CPluginCommandInfo
+	class CProgramGuideCommand
+		: public CPluginCommandInfo
 	{
 		UINT m_Type;
 
@@ -94,10 +96,11 @@ private:
 		UINT GetType() const { return m_Type; }
 	};
 
-	class CStreamGrabber : public LibISDB::GrabberFilter::Grabber
+	class CStreamGrabber
+		: public LibISDB::GrabberFilter::Grabber
 	{
 	public:
-		CStreamGrabber(TVTest::StreamCallbackFunc Callback,void *pClientData);
+		CStreamGrabber(TVTest::StreamCallbackFunc Callback, void *pClientData);
 		TVTest::StreamCallbackFunc GetCallbackFunc() const { return m_Callback; }
 		void SetClientData(void *pClientData);
 
@@ -105,7 +108,7 @@ private:
 		TVTest::StreamCallbackFunc m_Callback;
 		void *m_pClientData;
 
-	// GrabberFilter::Grabber
+		// GrabberFilter::Grabber
 		bool ReceiveData(LibISDB::DataBuffer *pData) override;
 	};
 
@@ -127,27 +130,28 @@ private:
 		CPluginStatusItem *pItem;
 	};
 
-	class CPluginStatusItem : public CStatusItem
+	class CPluginStatusItem
+		: public CStatusItem
 	{
 	public:
-		CPluginStatusItem(CPlugin *pPlugin,StatusItem *pItem);
+		CPluginStatusItem(CPlugin *pPlugin, StatusItem *pItem);
 		~CPluginStatusItem();
 
 	// CStatusItem
 		LPCTSTR GetIDText() const override { return m_IDText.c_str(); }
 		LPCTSTR GetName() const override { return m_pItem->Name.c_str(); }
-		void Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect,unsigned int Flags) override;
-		void OnLButtonDown(int x,int y) override;
-		void OnLButtonUp(int x,int y) override;
-		void OnLButtonDoubleClick(int x,int y) override;
-		void OnRButtonDown(int x,int y) override;
-		void OnRButtonUp(int x,int y) override;
-		void OnRButtonDoubleClick(int x,int y) override;
-		void OnMButtonDown(int x,int y) override;
-		void OnMButtonUp(int x,int y) override;
-		void OnMButtonDoubleClick(int x,int y) override;
-		void OnMouseMove(int x,int y) override;
-		bool OnMouseWheel(int x,int y,bool fHorz,int Delta,int *pCommand) override;
+		void Draw(HDC hdc, const RECT &ItemRect, const RECT &DrawRect, unsigned int Flags) override;
+		void OnLButtonDown(int x, int y) override;
+		void OnLButtonUp(int x, int y) override;
+		void OnLButtonDoubleClick(int x, int y) override;
+		void OnRButtonDown(int x, int y) override;
+		void OnRButtonUp(int x, int y) override;
+		void OnRButtonDoubleClick(int x, int y) override;
+		void OnMButtonDown(int x, int y) override;
+		void OnMButtonUp(int x, int y) override;
+		void OnMButtonDoubleClick(int x, int y) override;
+		void OnMouseMove(int x, int y) override;
+		bool OnMouseWheel(int x, int y, bool fHorz, int Delta, int *pCommand) override;
 		void OnVisibilityChanged() override;
 		void OnFocus(bool fFocus) override;
 		void OnSizeChanged() override;
@@ -167,8 +171,8 @@ private:
 	// CUIBase
 		void RealizeStyle() override;
 
-		void NotifyDraw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect,unsigned int Flags);
-		LRESULT NotifyMouseEvent(UINT Action,int x,int y,int WheelDelta=0);
+		void NotifyDraw(HDC hdc, const RECT &ItemRect, const RECT &DrawRect, unsigned int Flags);
+		LRESULT NotifyMouseEvent(UINT Action, int x, int y, int WheelDelta = 0);
 	};
 
 	class CPluginPanelItem;
@@ -186,25 +190,27 @@ private:
 		TVTest::Theme::ThemeBitmap Icon;
 	};
 
-	class CPluginPanelItem : public CPanelForm::CPage
+	class CPluginPanelItem
+		: public CPanelForm::CPage
 	{
 	public:
-		CPluginPanelItem(CPlugin *pPlugin,PanelItem *pItem);
+		CPluginPanelItem(CPlugin *pPlugin, PanelItem *pItem);
 		~CPluginPanelItem();
-		bool Create(HWND hwndParent,DWORD Style,DWORD ExStyle=0,int ID=0) override;
+		bool Create(HWND hwndParent, DWORD Style, DWORD ExStyle = 0, int ID = 0) override;
 		void DetachItem();
 		HWND GetItemHandle() const { return m_hwndItem; }
 
 	private:
-		LRESULT OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
+		LRESULT OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
 		void RealizeStyle() override;
 		bool SetFont(const TVTest::Style::Font &Font) override;
 		void OnActivate() override;
 		void OnDeactivate() override;
 		void OnVisibilityChanged(bool fVisible) override;
 		void OnFormDelete() override;
-		bool DrawIcon(HDC hdc,int x,int y,int Width,int Height,
-					  const TVTest::Theme::ThemeColor &Color) override;
+		bool DrawIcon(
+			HDC hdc, int x, int y, int Width, int Height,
+			const TVTest::Theme::ThemeColor &Color) override;
 		bool NeedKeyboardFocus() const override;
 
 		CPlugin *m_pPlugin;
@@ -214,11 +220,12 @@ private:
 		static bool m_fInitialized;
 	};
 
-	class CGetVariable : public TVTest::CVariableManager::IGetVariable
+	class CGetVariable
+		: public TVTest::CVariableManager::IGetVariable
 	{
 	public:
 		CGetVariable(CPlugin *pPlugin);
-		bool GetVariable(LPCWSTR pszKeyword,TVTest::String *pValue) override;
+		bool GetVariable(LPCWSTR pszKeyword, TVTest::String *pValue) override;
 
 	private:
 		CPlugin *m_pPlugin;
@@ -254,12 +261,13 @@ private:
 	static HWND m_hwndMessage;
 	static UINT m_MessageCode;
 
-	class CAudioStreamCallbackInfo {
+	class CAudioStreamCallbackInfo
+	{
 	public:
 		CPlugin *m_pPlugin;
 		TVTest::AudioCallbackFunc m_pCallback;
 		void *m_pClientData;
-		CAudioStreamCallbackInfo(CPlugin *pPlugin,TVTest::AudioCallbackFunc pCallback,void *pClientData)
+		CAudioStreamCallbackInfo(CPlugin *pPlugin, TVTest::AudioCallbackFunc pCallback, void *pClientData)
 			: m_pPlugin(pPlugin)
 			, m_pCallback(pCallback)
 			, m_pClientData(pClientData)
@@ -269,12 +277,13 @@ private:
 	static TVTest::MutexLock m_AudioStreamLock;
 	static std::vector<CAudioStreamCallbackInfo> m_AudioStreamCallbackList;
 
-	class CVideoStreamCallbackInfo {
+	class CVideoStreamCallbackInfo
+	{
 	public:
 		CPlugin *m_pPlugin;
 		TVTest::VideoStreamCallbackFunc m_pCallback;
 		void *m_pClientData;
-		CVideoStreamCallbackInfo(CPlugin *pPlugin,TVTest::VideoStreamCallbackFunc pCallback,void *pClientData)
+		CVideoStreamCallbackInfo(CPlugin *pPlugin, TVTest::VideoStreamCallbackFunc pCallback, void *pClientData)
 			: m_pPlugin(pPlugin)
 			, m_pCallback(pCallback)
 			, m_pClientData(pClientData)
@@ -282,34 +291,39 @@ private:
 		}
 	};
 
-	class CVideoStreamCallback : public LibISDB::DirectShow::VideoParser::StreamCallback
+	class CVideoStreamCallback
+		: public LibISDB::DirectShow::VideoParser::StreamCallback
 	{
-		void OnStream(DWORD Format,const void *pData,size_t Size) override;
+		void OnStream(DWORD Format, const void *pData, size_t Size) override;
 	};
 
 	static std::vector<CVideoStreamCallbackInfo> m_VideoStreamCallbackList;
 	static CVideoStreamCallback m_VideoStreamCallback;
 	static TVTest::MutexLock m_VideoStreamLock;
 
-	class CAudioSampleCallback : public LibISDB::DirectShow::AudioDecoderFilter::SampleCallback
+	class CAudioSampleCallback
+		: public LibISDB::DirectShow::AudioDecoderFilter::SampleCallback
 	{
-		void OnSamples(short *pData,size_t Length,int Channels) override;
+		void OnSamples(short *pData, size_t Length, int Channels) override;
 	};
 
 	static CAudioSampleCallback m_AudioSampleCallback;
 
-	static LRESULT CALLBACK Callback(TVTest::PluginParam *pParam,UINT Message,LPARAM lParam1,LPARAM lParam2);
+	static LRESULT CALLBACK Callback(TVTest::PluginParam *pParam, UINT Message, LPARAM lParam1, LPARAM lParam2);
 
 // CPlugin
-	LRESULT SendPluginMessage(TVTest::PluginParam *pParam,UINT Message,LPARAM lParam1,LPARAM lParam2,
-							  LRESULT FailedResult=0);
-	LRESULT OnCallback(TVTest::PluginParam *pParam,UINT Message,LPARAM lParam1,LPARAM lParam2);
+	LRESULT SendPluginMessage(
+		TVTest::PluginParam *pParam, UINT Message, LPARAM lParam1, LPARAM lParam2,
+		LRESULT FailedResult = 0);
+	LRESULT OnCallback(TVTest::PluginParam *pParam, UINT Message, LPARAM lParam1, LPARAM lParam2);
 	bool OnGetSetting(TVTest::SettingInfo *pSetting) const;
 };
 
-class CPluginManager : public TVTest::CAppEventHandler
+class CPluginManager
+	: public TVTest::CAppEventHandler
 {
-	struct MenuCommandInfo {
+	struct MenuCommandInfo
+	{
 		CPlugin *pPlugin;
 		UINT CommandFirst;
 		UINT CommandEnd;
@@ -319,11 +333,11 @@ class CPluginManager : public TVTest::CAppEventHandler
 	std::vector<MenuCommandInfo> m_ProgramGuideMenuList;
 
 	void SortPluginsByName();
-	static bool CompareName(const CPlugin *pPlugin1,const CPlugin *pPlugin2);
-	bool SendEvent(UINT Event,LPARAM lParam1=0,LPARAM lParam2=0);
-	bool SendProgramGuideEvent(UINT Event,LPARAM Param1=0,LPARAM Param2=0);
-	bool SendProgramGuideProgramEvent(UINT Event,const LibISDB::EventInfo &EventInfo,LPARAM Param);
-	bool SendFilterGraphEvent(UINT Event,LibISDB::ViewerFilter *pMediaViewer,IGraphBuilder *pGraphBuilder);
+	static bool CompareName(const CPlugin *pPlugin1, const CPlugin *pPlugin2);
+	bool SendEvent(UINT Event, LPARAM lParam1 = 0, LPARAM lParam2 = 0);
+	bool SendProgramGuideEvent(UINT Event, LPARAM Param1 = 0, LPARAM Param2 = 0);
+	bool SendProgramGuideProgramEvent(UINT Event, const LibISDB::EventInfo &EventInfo, LPARAM Param);
+	bool SendFilterGraphEvent(UINT Event, LibISDB::ViewerFilter *pMediaViewer, IGraphBuilder *pGraphBuilder);
 	void OnRecordingStateChanged();
 
 // CAppEventHandler
@@ -360,43 +374,47 @@ class CPluginManager : public TVTest::CAppEventHandler
 public:
 	CPluginManager();
 	~CPluginManager();
-	bool LoadPlugins(LPCTSTR pszDirectory,const std::vector<LPCTSTR> *pExcludePlugins=NULL);
+	bool LoadPlugins(LPCTSTR pszDirectory, const std::vector<LPCTSTR> *pExcludePlugins = NULL);
 	void FreePlugins();
 	int NumPlugins() const { return (int)m_PluginList.size(); }
 	CPlugin *GetPlugin(int Index);
 	const CPlugin *GetPlugin(int Index) const;
-	bool EnablePlugins(bool fEnable=true);
+	bool EnablePlugins(bool fEnable = true);
 	int FindPlugin(const CPlugin *pPlugin) const;
 	int FindPluginByFileName(LPCTSTR pszFileName) const;
 	int FindPluginByCommand(int Command) const;
 	CPlugin *GetPluginByCommand(int Command);
-	CPlugin *GetPluginByPluginCommand(LPCTSTR pszCommand,LPCTSTR *ppszCommandText=NULL);
+	CPlugin *GetPluginByPluginCommand(LPCTSTR pszCommand, LPCTSTR *ppszCommandText = NULL);
 	bool DeletePlugin(int Index);
 	bool SetMenu(HMENU hmenu) const;
 	bool OnPluginCommand(LPCTSTR pszCommand);
-	bool OnProgramGuideCommand(LPCTSTR pszCommand,UINT Action,const LibISDB::EventInfo *pEvent=NULL,
-							   const POINT *pCursorPos=NULL,const RECT *pItemRect=NULL);
+	bool OnProgramGuideCommand(
+		LPCTSTR pszCommand, UINT Action, const LibISDB::EventInfo *pEvent = NULL,
+		const POINT *pCursorPos = NULL, const RECT *pItemRect = NULL);
 	bool SendProgramGuideInitializeEvent(HWND hwnd);
 	bool SendProgramGuideFinalizeEvent(HWND hwnd);
-	bool SendProgramGuideInitializeMenuEvent(HMENU hmenu,UINT *pCommand);
+	bool SendProgramGuideInitializeMenuEvent(HMENU hmenu, UINT *pCommand);
 	bool SendProgramGuideMenuSelectedEvent(UINT Command);
-	bool SendProgramGuideProgramDrawBackgroundEvent(const LibISDB::EventInfo &Event,HDC hdc,
-		const RECT &ItemRect,const RECT &TitleRect,const RECT &ContentRect,COLORREF BackgroundColor);
-	bool SendProgramGuideProgramInitializeMenuEvent(const LibISDB::EventInfo &Event,
-		HMENU hmenu,UINT *pCommand,const POINT &CursorPos,const RECT &ItemRect);
-	bool SendProgramGuideProgramMenuSelectedEvent(const LibISDB::EventInfo &Event,UINT Command);
-	bool OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam,LRESULT *pResult);
-	void SendFilterGraphInitializeEvent(LibISDB::ViewerFilter *pMediaViewer,IGraphBuilder *pGraphBuilder);
-	void SendFilterGraphInitializedEvent(LibISDB::ViewerFilter *pMediaViewer,IGraphBuilder *pGraphBuilder);
-	void SendFilterGraphFinalizeEvent(LibISDB::ViewerFilter *pMediaViewer,IGraphBuilder *pGraphBuilder);
-	void SendFilterGraphFinalizedEvent(LibISDB::ViewerFilter *pMediaViewer,IGraphBuilder *pGraphBuilder);
+	bool SendProgramGuideProgramDrawBackgroundEvent(
+		const LibISDB::EventInfo &Event, HDC hdc,
+		const RECT &ItemRect, const RECT &TitleRect, const RECT &ContentRect, COLORREF BackgroundColor);
+	bool SendProgramGuideProgramInitializeMenuEvent(
+		const LibISDB::EventInfo &Event,
+		HMENU hmenu, UINT *pCommand, const POINT &CursorPos, const RECT &ItemRect);
+	bool SendProgramGuideProgramMenuSelectedEvent(const LibISDB::EventInfo &Event, UINT Command);
+	bool OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT *pResult);
+	void SendFilterGraphInitializeEvent(LibISDB::ViewerFilter *pMediaViewer, IGraphBuilder *pGraphBuilder);
+	void SendFilterGraphInitializedEvent(LibISDB::ViewerFilter *pMediaViewer, IGraphBuilder *pGraphBuilder);
+	void SendFilterGraphFinalizeEvent(LibISDB::ViewerFilter *pMediaViewer, IGraphBuilder *pGraphBuilder);
+	void SendFilterGraphFinalizedEvent(LibISDB::ViewerFilter *pMediaViewer, IGraphBuilder *pGraphBuilder);
 	void RegisterStatusItems();
 	void SendStatusItemCreatedEvent();
 	void SendStatusItemUpdateTimerEvent();
 	void RegisterPanelItems();
 };
 
-class CPluginOptions : public COptions
+class CPluginOptions
+	: public COptions
 {
 	enum {
 		COLUMN_FILENAME,
@@ -410,20 +428,25 @@ class CPluginOptions : public COptions
 	std::vector<LPTSTR> m_EnablePluginList;
 
 // CBasicDialog
-	INT_PTR DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
+	INT_PTR DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
+
 // CUIBase
 	void RealizeStyle() override;
+
 // CPluginOptions
 	void ClearList();
 
 public:
 	CPluginOptions(CPluginManager *pPluginManager);
 	~CPluginOptions();
+
 // CSettingsBase
 	bool LoadSettings(CSettings &Settings) override;
 	bool SaveSettings(CSettings &Settings) override;
+
 // CBasicDialog
 	bool Create(HWND hwndOwner) override;
+
 // CPluginOptions
 	bool RestorePluginOptions();
 	bool StorePluginOptions();

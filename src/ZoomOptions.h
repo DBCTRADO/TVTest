@@ -19,26 +19,29 @@ public:
 		ZOOM_SIZE
 	};
 
-	struct ZoomRate {
+	struct ZoomRate
+	{
 		int Rate;
 		int Factor;
 
-		int GetPercentage() const { return Factor!=0?::MulDiv(Rate,100,Factor):0; }
+		int GetPercentage() const { return Factor != 0 ?::MulDiv(Rate, 100, Factor) : 0; }
 	};
 
-	struct ZoomSize {
+	struct ZoomSize
+	{
 		int Width;
 		int Height;
 	};
 
-	struct ZoomInfo {
+	struct ZoomInfo
+	{
 		ZoomType Type;
 		ZoomRate Rate;
 		ZoomSize Size;
 		bool fVisible;
 	};
 
-	enum { NUM_ZOOM_COMMANDS = 11+10 };
+	enum { NUM_ZOOM_COMMANDS = 11 + 10 };
 	enum { MAX_RATE = 1000 };
 
 	CZoomOptions();
@@ -52,11 +55,12 @@ public:
 	bool WriteSettings(CSettings &Settings) override;
 
 //CZoomOptions
-	bool SetMenu(HMENU hmenu,const ZoomInfo *pCurZoom) const;
-	bool GetZoomInfoByCommand(int Command,ZoomInfo *pInfo) const;
+	bool SetMenu(HMENU hmenu, const ZoomInfo *pCurZoom) const;
+	bool GetZoomInfoByCommand(int Command, ZoomInfo *pInfo) const;
 
 private:
-	struct ZoomCommandInfo {
+	struct ZoomCommandInfo
+	{
 		int Command;
 		ZoomInfo Info;
 	};
@@ -70,17 +74,17 @@ private:
 	TVTest::CListView m_ItemListView;
 
 	int GetIndexByCommand(int Command) const;
-	void FormatCommandText(int Command,const ZoomInfo &Info,LPTSTR pszText,int MaxLength) const;
+	void FormatCommandText(int Command, const ZoomInfo &Info, LPTSTR pszText, int MaxLength) const;
 
 	void SetItemState(HWND hDlg);
 	int GetItemIndex(int Item);
 	void UpdateItemText(int Item);
 
 // CBasicDialog
-	INT_PTR DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
+	INT_PTR DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
 
 //CCommandCustomizer
-	bool GetCommandName(int Command,LPTSTR pszName,int MaxLength) override;
+	bool GetCommandName(int Command, LPTSTR pszName, int MaxLength) override;
 };
 
 

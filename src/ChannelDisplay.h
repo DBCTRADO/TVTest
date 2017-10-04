@@ -13,22 +13,24 @@
 #include "LibISDB/LibISDB/EPG/EPGDatabase.hpp"
 
 
-class CChannelDisplay : public CDisplayView
+class CChannelDisplay
+	: public CDisplayView
 {
 public:
-	class ABSTRACT_CLASS(CChannelDisplayEventHandler) : public CDisplayView::CEventHandler
+	class ABSTRACT_CLASS(CChannelDisplayEventHandler)
+		: public CDisplayView::CEventHandler
 	{
 	protected:
-		class CChannelDisplay *m_pChannelDisplay;
+		class CChannelDisplay * m_pChannelDisplay;
 	public:
 		enum {
-			SPACE_NOTSPECIFIED	=-2,
-			SPACE_ALL			=-1
+			SPACE_NOTSPECIFIED = -2,
+			SPACE_ALL          = -1
 		};
 		CChannelDisplayEventHandler() : m_pChannelDisplay(NULL) {}
-		virtual void OnTunerSelect(LPCTSTR pszDriverFileName,int TuningSpace)=0;
-		virtual void OnChannelSelect(LPCTSTR pszDriverFileName,const CChannelInfo *pChannelInfo)=0;
-		virtual void OnClose()=0;
+		virtual void OnTunerSelect(LPCTSTR pszDriverFileName, int TuningSpace) = 0;
+		virtual void OnChannelSelect(LPCTSTR pszDriverFileName, const CChannelInfo *pChannelInfo) = 0;
+		virtual void OnClose() = 0;
 		friend class CChannelDisplay;
 	};
 
@@ -36,7 +38,7 @@ public:
 	~CChannelDisplay();
 
 // CBasicWindow
-	bool Create(HWND hwndParent,DWORD Style,DWORD ExStyle=0,int ID=0) override;
+	bool Create(HWND hwndParent, DWORD Style, DWORD ExStyle = 0, int ID = 0) override;
 
 // CUIBase
 	void SetStyle(const TVTest::Style::CStyleManager *pStyleManager) override;
@@ -47,25 +49,29 @@ public:
 // CDisplayView
 	bool Close() override;
 	bool IsMessageNeed(const MSG *pMsg) const override;
-	bool OnMouseWheel(UINT Msg,WPARAM wParam,LPARAM lParam) override;
+	bool OnMouseWheel(UINT Msg, WPARAM wParam, LPARAM lParam) override;
 
 // CChannelDisplay
 	void Clear();
 	bool SetDriverManager(CDriverManager *pDriverManager);
 	void SetLogoManager(CLogoManager *pLogoManager);
 	void SetEventHandler(CChannelDisplayEventHandler *pEventHandler);
-	bool SetSelect(LPCTSTR pszDriverFileName,const CChannelInfo *pChannelInfo);
-	bool SetFont(const TVTest::Style::Font &Font,bool fAutoSize);
+	bool SetSelect(LPCTSTR pszDriverFileName, const CChannelInfo *pChannelInfo);
+	bool SetFont(const TVTest::Style::Font &Font, bool fAutoSize);
 
 	static bool Initialize(HINSTANCE hinst);
 
 private:
-	class CTuner {
+	class CTuner
+	{
 	public:
-		class CChannel : public CChannelInfo {
+		class CChannel
+			: public CChannelInfo
+		{
 			HBITMAP m_hbmSmallLogo;
 			HBITMAP m_hbmBigLogo;
 			LibISDB::EventInfo m_Event[2];
+
 		public:
 			CChannel(const CChannelInfo &Info)
 				: CChannelInfo(Info)
@@ -73,14 +79,15 @@ private:
 				, m_hbmBigLogo(NULL)
 			{
 			}
-			void SetSmallLogo(HBITMAP hbm) { m_hbmSmallLogo=hbm; }
+			void SetSmallLogo(HBITMAP hbm) { m_hbmSmallLogo = hbm; }
 			HBITMAP GetSmallLogo() const { return m_hbmSmallLogo; }
-			void SetBigLogo(HBITMAP hbm) { m_hbmBigLogo=hbm; }
+			void SetBigLogo(HBITMAP hbm) { m_hbmBigLogo = hbm; }
 			HBITMAP GetBigLogo() const { return m_hbmBigLogo; }
-			bool HasLogo() const { return m_hbmSmallLogo!=NULL || m_hbmBigLogo!=NULL; }
-			bool SetEvent(int Index,const LibISDB::EventInfo *pEvent);
+			bool HasLogo() const { return m_hbmSmallLogo != NULL || m_hbmBigLogo != NULL; }
+			bool SetEvent(int Index, const LibISDB::EventInfo *pEvent);
 			const LibISDB::EventInfo *GetEvent(int Index) const;
 		};
+
 		CTuner(const CDriverInfo *pDriverInfo);
 		~CTuner();
 		void Clear();
@@ -88,12 +95,13 @@ private:
 		LPCTSTR GetTunerName() const { return m_TunerName.c_str(); }
 		LPCTSTR GetDisplayName() const;
 		void SetDisplayName(LPCTSTR pszName);
-		void GetDisplayName(int Space,LPTSTR pszName,int MaxName) const;
+		void GetDisplayName(int Space, LPTSTR pszName, int MaxName) const;
 		int NumSpaces() const;
 		CTuningSpaceInfo *GetTuningSpaceInfo(int Index);
 		const CTuningSpaceInfo *GetTuningSpaceInfo(int Index) const;
 		void SetIcon(HICON hico);
 		HICON GetIcon() const { return m_Icon; }
+
 	private:
 		std::vector<CTuningSpaceInfo*> m_TuningSpaceList;
 		TVTest::String m_DriverFileName;
@@ -151,7 +159,7 @@ private:
 	CMouseWheelHandler m_MouseWheel;
 	LibISDB::DateTime m_EpgBaseTime;
 	LibISDB::DateTime m_ClockTime;
-	enum { TIMER_CLOCK=1 };
+	enum { TIMER_CLOCK = 1 };
 
 	std::vector<CTuner*> m_TunerList;
 	int m_TotalTuningSpaces;
@@ -162,7 +170,8 @@ private:
 	CChannelDisplayEventHandler *m_pChannelDisplayEventHandler;
 	POINT m_LastCursorPos;
 
-	struct TunerInfo {
+	struct TunerInfo
+	{
 		TCHAR DriverMasks[MAX_PATH];
 		TCHAR szDisplayName[64];
 		TCHAR szIconFile[MAX_PATH];
@@ -178,25 +187,25 @@ private:
 	void Layout();
 	const CTuningSpaceInfo *GetTuningSpaceInfo(int Index) const;
 	CTuningSpaceInfo *GetTuningSpaceInfo(int Index);
-	const CTuner *GetTuner(int Index,int *pSpace=NULL) const;
-	void GetTunerItemRect(int Index,RECT *pRect) const;
-	void GetChannelItemRect(int Index,RECT *pRect) const;
+	const CTuner *GetTuner(int Index, int *pSpace = NULL) const;
+	void GetTunerItemRect(int Index, RECT *pRect) const;
+	void GetChannelItemRect(int Index, RECT *pRect) const;
 	void UpdateTunerItem(int Index) const;
 	void UpdateChannelItem(int Index) const;
-	int TunerItemHitTest(int x,int y) const;
-	int ChannelItemHitTest(int x,int y) const;
-	bool SetCurTuner(int Index,bool fUpdate=false);
+	int TunerItemHitTest(int x, int y) const;
+	int ChannelItemHitTest(int x, int y) const;
+	bool SetCurTuner(int Index, bool fUpdate = false);
 	bool UpdateChannelInfo(int Index);
 	bool SetCurChannel(int Index);
-	void SetTunerScrollPos(int Pos,bool fScroll);
-	void SetChannelScrollPos(int Pos,bool fScroll);
-	void Draw(HDC hdc,const RECT *pPaintRect);
+	void SetTunerScrollPos(int Pos, bool fScroll);
+	void SetChannelScrollPos(int Pos, bool fScroll);
+	void Draw(HDC hdc, const RECT *pPaintRect);
 	void DrawClock(HDC hdc) const;
 	void NotifyTunerSelect() const;
 	void NotifyChannelSelect() const;
 
 // CCustomWindow
-	LRESULT OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
+	LRESULT OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
 
 // CUIBase
 	void ApplyStyle() override;

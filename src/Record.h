@@ -11,9 +11,9 @@
 class CRecordingSettings
 {
 public:
-	static const DWORD WRITE_CACHE_SIZE_DEFAULT=0x100000;
-	static const DWORD MAX_PENDING_SIZE_DEFAULT=0x10000000;
-	static const DWORD TIMESHIFT_BUFFER_SIZE_DEFAULT=32*0x100000;
+	static const DWORD WRITE_CACHE_SIZE_DEFAULT = 0x100000;
+	static const DWORD MAX_PENDING_SIZE_DEFAULT = 0x10000000;
+	static const DWORD TIMESHIFT_BUFFER_SIZE_DEFAULT = 32 * 0x100000;
 
 	bool m_fCurServiceOnly;
 	LibISDB::StreamSelector::StreamFlag m_SaveStream;
@@ -32,10 +32,11 @@ public:
 
 private:
 	bool TestSaveStreamFlag(LibISDB::StreamSelector::StreamFlag Flag) const;
-	void SetSaveStreamFlag(LibISDB::StreamSelector::StreamFlag Flag,bool fSet);
+	void SetSaveStreamFlag(LibISDB::StreamSelector::StreamFlag Flag, bool fSet);
 };
 
-class CRecordTime {
+class CRecordTime
+{
 	SYSTEMTIME m_Time;
 	Util::TickCountType m_TickTime;
 
@@ -48,7 +49,9 @@ public:
 	bool IsValid() const;
 };
 
-class CRecordTask : public LibISDB::ErrorHandler {
+class CRecordTask
+	: public LibISDB::ErrorHandler
+{
 public:
 	enum State {
 		STATE_STOP,
@@ -75,13 +78,13 @@ public:
 		LibISDB::TSEngine *pTSEngine,
 		LibISDB::RecorderFilter *pRecorderFilter);
 	bool UpdateRecordingSettings(const CRecordingSettings &Settings);
-	bool Start(LPCTSTR pszFileName,const CRecordingSettings &Settings);
+	bool Start(LPCTSTR pszFileName, const CRecordingSettings &Settings);
 	bool Stop();
 	bool Pause();
 	State GetState() const;
-	bool IsStopped() const { return m_State==STATE_STOP; }
-	bool IsRecording() const { return m_State==STATE_RECORDING; }
-	bool IsPaused() const { return m_State==STATE_PAUSE; }
+	bool IsStopped() const { return m_State == STATE_STOP; }
+	bool IsRecording() const { return m_State == STATE_RECORDING; }
+	bool IsPaused() const { return m_State == STATE_PAUSE; }
 	DurationType GetStartTime() const;
 	bool GetStartTime(SYSTEMTIME *pTime) const;
 	bool GetStartTime(CRecordTime *pTime) const;
@@ -95,25 +98,31 @@ public:
 	LONGLONG GetFreeSpace() const;
 };
 
-class CRecordManager : public LibISDB::ErrorHandler {
+class CRecordManager
+	: public LibISDB::ErrorHandler
+{
 public:
 	enum TimeSpecType {
 		TIME_NOTSPECIFIED,
 		TIME_DATETIME,
 		TIME_DURATION
 	};
-	struct TimeSpecInfo {
+
+	struct TimeSpecInfo
+	{
 		TimeSpecType Type;
 		union {
 			SYSTEMTIME DateTime;
 			ULONGLONG Duration;
 		} Time;
 	};
+
 	enum RecordClient {
 		CLIENT_USER,
 		CLIENT_COMMANDLINE,
 		CLIENT_PLUGIN
 	};
+
 	/*
 	enum FileExistsOperation {
 		EXISTS_OVERWRITE,
@@ -125,17 +134,18 @@ public:
 	typedef TVTest::CEventVariableStringMap::EventInfo FileNameFormatInfo;
 
 private:
-	class CRecordSettingsDialog : public CBasicDialog
+	class CRecordSettingsDialog
+		: public CBasicDialog
 	{
 	public:
-		CRecordSettingsDialog(CRecordManager *pRecManager,CRecordingSettings *pSettings);
+		CRecordSettingsDialog(CRecordManager *pRecManager, CRecordingSettings *pSettings);
 		bool Show(HWND hwndOwner) override;
 
 	private:
 		CRecordManager *m_pRecManager;
 		CRecordingSettings *m_pSettings;
 
-		INT_PTR DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
+		INT_PTR DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
 	};
 
 	bool m_fRecording;
@@ -173,15 +183,15 @@ public:
 	bool SetStopTimeSpec(const TimeSpecInfo *pInfo);
 	bool GetStopTimeSpec(TimeSpecInfo *pInfo) const;
 	bool IsStopTimeSpecified() const;
-	void SetStopOnEventEnd(bool fStop) { m_fStopOnEventEnd=fStop; }
+	void SetStopOnEventEnd(bool fStop) { m_fStopOnEventEnd = fStop; }
 	bool GetStopOnEventEnd() const { return m_fStopOnEventEnd; }
 	RecordClient GetClient() const { return m_Client; }
-	void SetClient(RecordClient Client) { m_Client=Client; }
+	void SetClient(RecordClient Client) { m_Client = Client; }
 	void SetRecorderFilter(
 		LibISDB::TSEngine *pTSEngine,
 		LibISDB::RecorderFilter *pRecorderFilter);
 	bool SetRecordingSettings(const CRecordingSettings &Settings);
-	bool StartRecord(LPCTSTR pszFileName,bool fTimeShift=false,bool fReserved=false);
+	bool StartRecord(LPCTSTR pszFileName, bool fTimeShift = false, bool fReserved = false);
 	void StopRecord();
 	bool PauseRecord();
 	bool RelayFile(LPCTSTR pszFileName);
@@ -193,12 +203,13 @@ public:
 	CRecordTask::DurationType GetPauseTime() const;
 	LONGLONG GetRemainTime() const;
 	const CRecordTask *GetRecordTask() const { return &m_RecordTask; }
-	bool QueryStart(int Offset=0) const;
-	bool QueryStop(int Offset=0) const;
+	bool QueryStart(int Offset = 0) const;
+	bool QueryStop(int Offset = 0) const;
 	bool RecordDialog(HWND hwndOwner);
-	bool GenerateFilePath(const FileNameFormatInfo &FormatInfo,LPCWSTR pszFormat,
-						  TVTest::String *pFilePath) const;
-	//bool DoFileExistsOperation(HWND hwndOwner,LPTSTR pszFileName);
+	bool GenerateFilePath(
+		const FileNameFormatInfo &FormatInfo, LPCWSTR pszFormat,
+		TVTest::String *pFilePath) const;
+	//bool DoFileExistsOperation(HWND hwndOwner, LPTSTR pszFileName);
 
 	CRecordingSettings &GetRecordingSettings() { return m_Settings; }
 	const CRecordingSettings &GetRecordingSettings() const { return m_Settings; }
@@ -206,7 +217,7 @@ public:
 	bool GetCurServiceOnly() const { return m_Settings.m_fCurServiceOnly; }
 
 	static bool GetWritePluginList(std::vector<TVTest::String> *pList);
-	static bool ShowWritePluginSetting(HWND hwndOwner,LPCTSTR pszPlugin);
+	static bool ShowWritePluginSetting(HWND hwndOwner, LPCTSTR pszPlugin);
 };
 
 

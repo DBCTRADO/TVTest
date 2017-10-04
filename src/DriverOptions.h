@@ -27,10 +27,12 @@ public:
 	int Find(LPCTSTR pszFileName) const;
 };
 
-class CDriverOptions : public COptions
+class CDriverOptions
+	: public COptions
 {
 public:
-	struct ChannelInfo {
+	struct ChannelInfo
+	{
 		int Space;
 		int Channel;
 		int ServiceID;
@@ -38,7 +40,8 @@ public:
 		bool fAllChannels;
 	};
 
-	struct BonDriverOptions {
+	struct BonDriverOptions
+	{
 		bool fNoSignalLevel;
 		bool fIgnoreInitialStream;
 		bool fPurgeStreamOnChannelChange;
@@ -60,11 +63,11 @@ public:
 	bool Create(HWND hwndOwner) override;
 // CDriverOptions
 	bool Initialize(CDriverManager *pDriverManager);
-	bool GetInitialChannel(LPCTSTR pszFileName,ChannelInfo *pChannelInfo) const;
-	bool SetLastChannel(LPCTSTR pszFileName,const ChannelInfo *pChannelInfo);
+	bool GetInitialChannel(LPCTSTR pszFileName, ChannelInfo *pChannelInfo) const;
+	bool SetLastChannel(LPCTSTR pszFileName, const ChannelInfo *pChannelInfo);
 	bool IsNoSignalLevel(LPCTSTR pszFileName) const;
 	bool IsResetChannelChangeErrorCount(LPCTSTR pszFileName) const;
-	bool GetBonDriverOptions(LPCTSTR pszFileName,BonDriverOptions *pOptions) const;
+	bool GetBonDriverOptions(LPCTSTR pszFileName, BonDriverOptions *pOptions) const;
 
 private:
 	CDriverManager *m_pDriverManager;
@@ -76,7 +79,7 @@ private:
 	const CDriverSettings *GetBonDriverSettings(LPCTSTR pszFileName) const;
 
 // CBasicDialog
-	INT_PTR DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
+	INT_PTR DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
 
 	void InitDlgItem(int Driver);
 	void SetChannelList(int Driver);

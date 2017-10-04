@@ -38,7 +38,8 @@ class CProgramListPanel
 	, protected CFeaturedEvents::CEventHandler
 {
 public:
-	struct ProgramListPanelTheme {
+	struct ProgramListPanelTheme
+	{
 		TVTest::Theme::Style ChannelNameStyle;
 		TVTest::Theme::Style CurChannelNameStyle;
 		TVTest::Theme::Style ChannelButtonStyle;
@@ -57,7 +58,7 @@ public:
 	~CProgramListPanel();
 
 // CBasicWindow
-	bool Create(HWND hwndParent,DWORD Style,DWORD ExStyle=0,int ID=0) override;
+	bool Create(HWND hwndParent, DWORD Style, DWORD ExStyle = 0, int ID = 0) override;
 
 // CUIBase
 	void SetStyle(const TVTest::Style::CStyleManager *pStyleManager) override;
@@ -74,10 +75,10 @@ public:
 	bool WriteSettings(CSettings &Settings) override;
 
 // CProgramListPanel
-	void SetEPGDatabase(LibISDB::EPGDatabase *pEPGDatabase) { m_pEPGDatabase=pEPGDatabase; }
+	void SetEPGDatabase(LibISDB::EPGDatabase *pEPGDatabase) { m_pEPGDatabase = pEPGDatabase; }
 	bool UpdateProgramList(const CChannelInfo *pChannelInfo);
 	void ClearProgramList();
-	void SelectChannel(const CChannelInfo *pChannelInfo,bool fUpdate=true);
+	void SelectChannel(const CChannelInfo *pChannelInfo, bool fUpdate = true);
 	void SetCurrentChannel(const CChannelInfo *pChannelInfo);
 	void SetCurrentEventID(int EventID);
 	bool SetProgramListPanelTheme(const ProgramListPanelTheme &Theme);
@@ -148,13 +149,15 @@ private:
 	//HWND m_hwndToolTip;
 	CEventInfoPopup m_EventInfoPopup;
 	CEventInfoPopupManager m_EventInfoPopupManager;
-	class CEventInfoPopupHandler : public CEventInfoPopupManager::CEventHandler
+	class CEventInfoPopupHandler
+		: public CEventInfoPopupManager::CEventHandler
 	{
 		CProgramListPanel *m_pPanel;
+
 	public:
 		CEventInfoPopupHandler(CProgramListPanel *pPanel);
-		bool HitTest(int x,int y,LPARAM *pParam);
-		bool ShowPopup(LPARAM Param,CEventInfoPopup *pPopup);
+		bool HitTest(int x, int y, LPARAM *pParam);
+		bool ShowPopup(LPARAM Param, CEventInfoPopup *pPopup);
 	};
 	CEventInfoPopupHandler m_EventInfoPopupHandler;
 	CFeaturedEventsMatcher m_FeaturedEventsMatcher;
@@ -163,7 +166,7 @@ private:
 	static const LPCTSTR m_pszClassName;
 	static HINSTANCE m_hinst;
 
-	void Draw(HDC hdc,const RECT *prcPaint);
+	void Draw(HDC hdc, const RECT *prcPaint);
 	bool UpdateListInfo(const CChannelInfo *pChannelInfo);
 	void GetHeaderRect(RECT *pRect) const;
 	void GetChannelButtonRect(RECT *pRect) const;
@@ -174,15 +177,15 @@ private:
 	void SetScrollBar();
 	void CalcFontHeight();
 	int GetTextLeftMargin() const;
-	int ItemHitTest(int x,int y) const;
-	int ProgramHitTest(int x,int y) const;
-	bool GetItemRect(int Item,RECT *pRect) const;
+	int ItemHitTest(int x, int y) const;
+	int ProgramHitTest(int x, int y) const;
+	bool GetItemRect(int Item, RECT *pRect) const;
 	void SetHotItem(int Item);
 	void ShowChannelListMenu();
 	//void SetToolTip();
 
 // CCustomWindow
-	LRESULT OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
+	LRESULT OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
 
 // CUIBase
 	void ApplyStyle() override;

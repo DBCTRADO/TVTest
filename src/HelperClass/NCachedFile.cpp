@@ -54,7 +54,7 @@ const bool CNCachedFile::Open(LPCTSTR lpszName, const UINT Flags, const DWORD dw
 		return false;
 	}
 
-	if (dwBuffSize==0) {
+	if (dwBuffSize == 0) {
 		m_LastError = ERROR_INVALID_PARAMETER;
 		return false;
 	}
@@ -250,13 +250,14 @@ const bool CNCachedFile::ReserveBandwidth(DWORD BytesPerSecond)
 		return false;
 	}
 
-	HMODULE hKernel=::GetModuleHandle(TEXT("kernel32.dll"));
+	HMODULE hKernel =::GetModuleHandle(TEXT("kernel32.dll"));
 	if (!hKernel) {
 		m_LastError = ERROR_INVALID_FUNCTION;
 		return false;
 	}
 
-	typedef BOOL (WINAPI *SetFileBandwidthReservationFunc)(HANDLE hFile,
+	typedef BOOL (WINAPI * SetFileBandwidthReservationFunc)(
+		HANDLE hFile,
 		DWORD nPeriodMilliseconds, DWORD nBytesPerPeriod, BOOL bDiscardable,
 		LPDWORD lpTransferSize, LPDWORD lpNumOutstandingRequests);
 	SetFileBandwidthReservationFunc pSetFileBandwidthReservation =
@@ -267,8 +268,9 @@ const bool CNCachedFile::ReserveBandwidth(DWORD BytesPerSecond)
 	}
 
 	DWORD TransferSize, NumOutstandingRequests;
-	if (!pSetFileBandwidthReservation(m_hFile, 1000, BytesPerSecond, FALSE,
-									  &TransferSize, &NumOutstandingRequests)) {
+	if (!pSetFileBandwidthReservation(
+				m_hFile, 1000, BytesPerSecond, FALSE,
+				&TransferSize, &NumOutstandingRequests)) {
 		m_LastError = ::GetLastError();
 		return false;
 	}

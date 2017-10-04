@@ -91,9 +91,9 @@ const bool CNFile::Open(LPCTSTR lpszName, const UINT Flags)
 
 	// ファイルオープン
 	TRACE(TEXT("CNFile::Open() : Open file \"%s\"\n"), pszPath ? pszPath : lpszName);
-	m_hFile = ::CreateFile(pszPath ? pszPath : lpszName,
-						   dwAccess, dwShare, NULL, dwCreate,
-						   dwAttributes, NULL);
+	m_hFile = ::CreateFile(
+		pszPath ? pszPath : lpszName,
+		dwAccess, dwShare, NULL, dwCreate, dwAttributes, NULL);
 	delete [] pszPath;
 	if (m_hFile == INVALID_HANDLE_VALUE) {
 		m_LastError = ::GetLastError();
@@ -103,7 +103,8 @@ const bool CNFile::Open(LPCTSTR lpszName, const UINT Flags)
 #if _WIN32_WINNT >= 0x0600
 	// I/O優先度の設定
 	if (Flags & (CNF_PRIORITY_LOW | CNF_PRIORITY_IDLE)) {
-		typedef BOOL (WINAPI *SetFileInformationByHandleFunc)(HANDLE hFile,
+		typedef BOOL (WINAPI * SetFileInformationByHandleFunc)(
+			HANDLE hFile,
 			FILE_INFO_BY_HANDLE_CLASS FileInformationClass, LPVOID lpFileInformation, DWORD dwBufferSize);
 		HMODULE hKernel = ::GetModuleHandle(TEXT("kernel32.dll"));
 		SetFileInformationByHandleFunc pSetFileInformationByHandle =

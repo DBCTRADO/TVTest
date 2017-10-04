@@ -19,8 +19,8 @@ namespace TVTest
 		struct VariableInfo
 		{
 			LPCWSTR pszKeyword;
-			LPCWSTR pszDescription;
 			unsigned int Flags;
+			LPCWSTR pszDescription;
 		};
 
 		class IGetVariable
@@ -29,9 +29,10 @@ namespace TVTest
 			virtual bool GetVariable(LPCWSTR pszKeyword, String *pValue) = 0;
 		};
 
-		bool RegisterVariable(LPCWSTR pszKeyword,
-							  LPCWSTR pszValue, IGetVariable *pGetVariable,
-							  LPCWSTR pszDescription, unsigned int Flags = 0);
+		bool RegisterVariable(
+			LPCWSTR pszKeyword,
+			LPCWSTR pszValue, IGetVariable *pGetVariable,
+			LPCWSTR pszDescription, unsigned int Flags = 0);
 		bool GetVariable(LPCWSTR pszKeyword, String *pValue) const;
 		bool GetPreferredVariable(LPCWSTR pszKeyword, String *pValue) const;
 		bool GetVariableList(std::vector<VariableInfo> *pList) const;

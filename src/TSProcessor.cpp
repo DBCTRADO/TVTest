@@ -278,8 +278,7 @@ bool CTSProcessor::ShowPropertyPage(HWND hwndOwner, HINSTANCE hinst)
 						ppPropPages[PageCount++] = pPropPage;
 				}
 				if (PageCount > 0) {
-					hr = ShowPropertyPageFrame(ppPropPages, PageCount,
-											   m_pTSProcessor, hwndOwner, hinst);
+					hr = ShowPropertyPageFrame(ppPropPages, PageCount, m_pTSProcessor, hwndOwner, hinst);
 				}
 				for (ULONG i = 0; i < PageCount; i++)
 					ppPropPages[i]->Release();
@@ -337,10 +336,11 @@ bool CTSProcessor::GetModuleList(std::vector<String> *pList) const
 	pEnumModule->Release();
 
 	if (pList->size() > 1) {
-		std::sort(pList->begin(), pList->end(),
-				  [](const String &Lib1, const String &Lib2) {
-				      return StringUtility::CompareNoCase(Lib1, Lib2) < 0;
-				  });
+		std::sort(
+			pList->begin(), pList->end(),
+			[](const String &Lib1, const String &Lib2) {
+				return StringUtility::CompareNoCase(Lib1, Lib2) < 0;
+			});
 	}
 
 	return true;

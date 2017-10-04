@@ -270,7 +270,8 @@ STDMETHODIMP CPropertyPageSite::GetLocaleID(LCID *pLocaleID)
 
 
 
-class CPropertyPageFrame : public CBasicDialog
+class CPropertyPageFrame
+	: public CBasicDialog
 {
 public:
 	CPropertyPageFrame(IPropertyPage **ppPropPages, int NumPages, CPropertyPageSite *pPageSite);
@@ -389,21 +390,25 @@ INT_PTR CPropertyPageFrame::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM 
 			else
 				YOffset = 0;
 			::GetWindowRect(hDlg, &rc);
-			::MoveWindow(hDlg, rc.left, rc.top,
-						 rc.right - rc.left + XOffset,
-						 rc.bottom - rc.top + YOffset,
-						 FALSE);
-			::MoveWindow(hwndTab,
-						 rcTab.left, rcTab.top,
-						 rcTab.right - rcTab.left, rcTab.bottom - rcTab.top, FALSE);
+			::MoveWindow(
+				hDlg, rc.left, rc.top,
+				rc.right - rc.left + XOffset,
+				rc.bottom - rc.top + YOffset,
+				FALSE);
+			::MoveWindow(
+				hwndTab,
+				rcTab.left, rcTab.top,
+				rcTab.right - rcTab.left, rcTab.bottom - rcTab.top, FALSE);
 			GetDlgItemRect(hDlg, IDOK, &rc);
-			::MoveWindow(::GetDlgItem(hDlg, IDOK),
-						 rc.left + XOffset, rc.top + YOffset,
-						 rc.right - rc.left, rc.bottom - rc.top, FALSE);
+			::MoveWindow(
+				::GetDlgItem(hDlg, IDOK),
+				rc.left + XOffset, rc.top + YOffset,
+				rc.right - rc.left, rc.bottom - rc.top, FALSE);
 			GetDlgItemRect(hDlg, IDCANCEL, &rc);
-			::MoveWindow(::GetDlgItem(hDlg, IDCANCEL),
-						 rc.left + XOffset, rc.top + YOffset,
-						 rc.right - rc.left, rc.bottom - rc.top, FALSE);
+			::MoveWindow(
+				::GetDlgItem(hDlg, IDCANCEL),
+				rc.left + XOffset, rc.top + YOffset,
+				rc.right - rc.left, rc.bottom - rc.top, FALSE);
 
 			m_PageRect = rcTab;
 			TabCtrl_AdjustRect(hwndTab, FALSE, &m_PageRect);
@@ -424,7 +429,7 @@ INT_PTR CPropertyPageFrame::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM 
 					it->pPropPage->Apply();
 			}
 		case IDCANCEL:
-			::EndDialog(hDlg,LOWORD(wParam));
+			::EndDialog(hDlg, LOWORD(wParam));
 			return TRUE;
 		}
 		return TRUE;
@@ -485,8 +490,9 @@ void CPropertyPageFrame::SetCurTab(int Tab)
 
 
 
-HRESULT ShowPropertyPageFrame(IPropertyPage **ppPropPages, int NumPages,
-							  IUnknown *pObject, HWND hwndOwner, HINSTANCE hinst)
+HRESULT ShowPropertyPageFrame(
+	IPropertyPage **ppPropPages, int NumPages,
+	IUnknown *pObject, HWND hwndOwner, HINSTANCE hinst)
 {
 	if (ppPropPages == nullptr)
 		return E_POINTER;

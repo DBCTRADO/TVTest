@@ -12,16 +12,18 @@
 #include "WindowUtil.h"
 
 
-class CCaptionDRCSMap : public LibISDB::CaptionFilter::DRCSMap
+class CCaptionDRCSMap
+	: public LibISDB::CaptionFilter::DRCSMap
 {
-	class CHashCmp {
+	class CHashCmp
+	{
 	public:
-		bool operator()(const PBYTE &Key1,const PBYTE &Key2) const {
-			return memcmp(Key1,Key2,16)<0;
+		bool operator()(const PBYTE &Key1, const PBYTE &Key2) const {
+			return memcmp(Key1, Key2, 16) < 0;
 		}
 	};
-	typedef std::map<PBYTE,LPCTSTR,CHashCmp> HashMap;
-	typedef std::map<WORD,LPCTSTR> CodeMap;
+	typedef std::map<PBYTE, LPCTSTR, CHashCmp> HashMap;
+	typedef std::map<WORD, LPCTSTR> CodeMap;
 	HashMap m_HashMap;
 	CodeMap m_CodeMap;
 	LPTSTR m_pBuffer;
@@ -30,8 +32,8 @@ class CCaptionDRCSMap : public LibISDB::CaptionFilter::DRCSMap
 	TCHAR m_szSaveDirectory[MAX_PATH];
 	TVTest::MutexLock m_Lock;
 
-	static bool SaveBMP(const LibISDB::CaptionParser::DRCSBitmap *pBitmap,LPCTSTR pszFileName);
-	static bool SaveRaw(const LibISDB::CaptionParser::DRCSBitmap *pBitmap,LPCTSTR pszFileName);
+	static bool SaveBMP(const LibISDB::CaptionParser::DRCSBitmap *pBitmap, LPCTSTR pszFileName);
+	static bool SaveRaw(const LibISDB::CaptionParser::DRCSBitmap *pBitmap, LPCTSTR pszFileName);
 
 // LibISDB::CaptionFilter::DRCSMap
 	LPCTSTR GetString(uint16_t Code) override;
@@ -55,7 +57,7 @@ public:
 	~CCaptionPanel();
 
 // CBasicWindow
-	bool Create(HWND hwndParent,DWORD Style,DWORD ExStyle=0,int ID=0) override;
+	bool Create(HWND hwndParent, DWORD Style, DWORD ExStyle = 0, int ID = 0) override;
 
 // CUIBase
 	void SetTheme(const TVTest::Theme::CThemeManager *pThemeManager) override;
@@ -68,20 +70,21 @@ public:
 	bool WriteSettings(CSettings &Settings) override;
 
 // CCaptionPanel
-	void SetColor(COLORREF BackColor,COLORREF TextColor);
+	void SetColor(COLORREF BackColor, COLORREF TextColor);
 	void Reset();
 	bool LoadDRCSMap(LPCTSTR pszFileName);
 
 	static bool Initialize(HINSTANCE hinst);
 
 private:
-	class CEditSubclass : public CWindowSubclass
+	class CEditSubclass
+		: public CWindowSubclass
 	{
 	public:
 		CEditSubclass(CCaptionPanel *pCaptionPanel);
 
 	private:
-		LRESULT OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
+		LRESULT OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
 
 		CCaptionPanel *m_pCaptionPanel;
 	};
@@ -94,7 +97,7 @@ private:
 		bool fClearLast;
 		bool fContinue;
 	};
-	enum { MAX_QUEUE_TEXT=10000 };
+	enum { MAX_QUEUE_TEXT = 10000 };
 
 	enum CharEncoding
 	{
@@ -125,10 +128,11 @@ private:
 	CharEncoding m_SaveCharEncoding;
 
 // LibISDB::CaptionFilter::Handler
-	virtual void OnLanguageUpdate(LibISDB::CaptionFilter *pFilter,LibISDB::CaptionParser *pParser) override;
-	virtual void OnCaption(LibISDB::CaptionFilter *pFilter,LibISDB::CaptionParser *pParser,
-						   uint8_t Language,const LibISDB::CharType *pText,
-						   const LibISDB::ARIBStringDecoder::FormatList *pFormatList) override;
+	virtual void OnLanguageUpdate(LibISDB::CaptionFilter *pFilter, LibISDB::CaptionParser *pParser) override;
+	virtual void OnCaption(
+		LibISDB::CaptionFilter *pFilter, LibISDB::CaptionParser *pParser,
+		uint8_t Language, const LibISDB::CharType *pText,
+		const LibISDB::ARIBStringDecoder::FormatList *pFormatList) override;
 
 	void ClearCaptionList();
 	void AppendText(LPCTSTR pszText);
@@ -141,7 +145,7 @@ private:
 	static HINSTANCE m_hinst;
 
 // CCustomWindow
-	LRESULT OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
+	LRESULT OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
 
 // CUIBase
 	void ApplyStyle() override;

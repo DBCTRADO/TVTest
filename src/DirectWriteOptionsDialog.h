@@ -9,7 +9,8 @@
 namespace TVTest
 {
 
-	class CDirectWriteOptionsDialog : public CBasicDialog
+	class CDirectWriteOptionsDialog
+		: public CBasicDialog
 	{
 	public:
 		class CRenderingTester

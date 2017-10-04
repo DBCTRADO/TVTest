@@ -11,36 +11,36 @@
 #define IDC_PROGRAMINFO		1000
 
 
-static inline UINT GetTooltipID(int Item,int Button)
+static inline UINT GetTooltipID(int Item, int Button)
 {
-	return ((Item+1)<<8)|Button;
+	return ((Item + 1) << 8) | Button;
 }
 
 
 
 
-const LPCTSTR CInformationPanel::m_pszClassName=APP_NAME TEXT(" Information Panel");
-HINSTANCE CInformationPanel::m_hinst=NULL;
+const LPCTSTR CInformationPanel::m_pszClassName = APP_NAME TEXT(" Information Panel");
+HINSTANCE CInformationPanel::m_hinst = NULL;
 
 
 bool CInformationPanel::Initialize(HINSTANCE hinst)
 {
-	if (m_hinst==NULL) {
+	if (m_hinst == NULL) {
 		WNDCLASS wc;
 
-		wc.style=CS_HREDRAW | CS_VREDRAW;
-		wc.lpfnWndProc=WndProc;
-		wc.cbClsExtra=0;
-		wc.cbWndExtra=0;
-		wc.hInstance=hinst;
-		wc.hIcon=NULL;
-		wc.hCursor=LoadCursor(NULL,IDC_ARROW);
-		wc.hbrBackground=NULL;
-		wc.lpszMenuName=NULL;
-		wc.lpszClassName=m_pszClassName;
-		if (::RegisterClass(&wc)==0)
+		wc.style = CS_HREDRAW | CS_VREDRAW;
+		wc.lpfnWndProc = WndProc;
+		wc.cbClsExtra = 0;
+		wc.cbWndExtra = 0;
+		wc.hInstance = hinst;
+		wc.hIcon = NULL;
+		wc.hCursor = LoadCursor(NULL, IDC_ARROW);
+		wc.hbrBackground = NULL;
+		wc.lpszMenuName = NULL;
+		wc.lpszClassName = m_pszClassName;
+		if (::RegisterClass(&wc) == 0)
 			return false;
-		m_hinst=hinst;
+		m_hinst = hinst;
 	}
 	return true;
 }
@@ -75,15 +75,16 @@ CInformationPanel::~CInformationPanel()
 {
 	Destroy();
 
-	for (int i=0;i<NUM_ITEMS;i++)
+	for (int i = 0; i < NUM_ITEMS; i++)
 		delete m_ItemList[i];
 }
 
 
-bool CInformationPanel::Create(HWND hwndParent,DWORD Style,DWORD ExStyle,int ID)
+bool CInformationPanel::Create(HWND hwndParent, DWORD Style, DWORD ExStyle, int ID)
 {
-	return CreateBasicWindow(hwndParent,Style,ExStyle,ID,
-							 m_pszClassName,TEXT("情報"),m_hinst);
+	return CreateBasicWindow(
+		hwndParent, Style, ExStyle, ID,
+		m_pszClassName, TEXT("情報"), m_hinst);
 }
 
 
@@ -97,37 +98,42 @@ void CInformationPanel::NormalizeStyle(
 	const TVTest::Style::CStyleManager *pStyleManager,
 	const TVTest::Style::CStyleScaling *pStyleScaling)
 {
-	m_Style.NormalizeStyle(pStyleManager,pStyleScaling);
+	m_Style.NormalizeStyle(pStyleManager, pStyleScaling);
 }
 
 
 void CInformationPanel::SetTheme(const TVTest::Theme::CThemeManager *pThemeManager)
 {
-	pThemeManager->GetStyle(TVTest::Theme::CThemeManager::STYLE_PANEL_CONTENT,
-							&m_Theme.Style);
-	pThemeManager->GetStyle(TVTest::Theme::CThemeManager::STYLE_INFORMATIONPANEL_EVENTINFO,
-							&m_Theme.ProgramInfoStyle);
-	pThemeManager->GetStyle(TVTest::Theme::CThemeManager::STYLE_INFORMATIONPANEL_BUTTON,
-							&m_Theme.ButtonStyle);
-	pThemeManager->GetStyle(TVTest::Theme::CThemeManager::STYLE_INFORMATIONPANEL_BUTTON_HOT,
-							&m_Theme.ButtonHotStyle);
+	pThemeManager->GetStyle(
+		TVTest::Theme::CThemeManager::STYLE_PANEL_CONTENT,
+		&m_Theme.Style);
+	pThemeManager->GetStyle(
+		TVTest::Theme::CThemeManager::STYLE_INFORMATIONPANEL_EVENTINFO,
+		&m_Theme.ProgramInfoStyle);
+	pThemeManager->GetStyle(
+		TVTest::Theme::CThemeManager::STYLE_INFORMATIONPANEL_BUTTON,
+		&m_Theme.ButtonStyle);
+	pThemeManager->GetStyle(
+		TVTest::Theme::CThemeManager::STYLE_INFORMATIONPANEL_BUTTON_HOT,
+		&m_Theme.ButtonHotStyle);
 
-	if (m_hwnd!=NULL) {
+	if (m_hwnd != NULL) {
 		m_BackBrush.Create(m_Theme.Style.Back.Fill.GetSolidColor());
 		m_ProgramInfoBackBrush.Create(m_Theme.ProgramInfoStyle.Back.Fill.GetSolidColor());
 
 		Invalidate();
 
-		if (m_hwndProgramInfo!=NULL) {
+		if (m_hwndProgramInfo != NULL) {
 			if (m_fUseRichEdit) {
-				::SendMessage(m_hwndProgramInfo,EM_SETBKGNDCOLOR,0,
-							  (COLORREF)m_Theme.ProgramInfoStyle.Back.Fill.GetSolidColor());
+				::SendMessage(
+					m_hwndProgramInfo, EM_SETBKGNDCOLOR, 0,
+					(COLORREF)m_Theme.ProgramInfoStyle.Back.Fill.GetSolidColor());
 				POINT ptScroll;
-				::SendMessage(m_hwndProgramInfo,EM_GETSCROLLPOS,0,reinterpret_cast<LPARAM>(&ptScroll));
+				::SendMessage(m_hwndProgramInfo, EM_GETSCROLLPOS, 0, reinterpret_cast<LPARAM>(&ptScroll));
 				UpdateProgramInfoText();
-				::SendMessage(m_hwndProgramInfo,EM_SETSCROLLPOS,0,reinterpret_cast<LPARAM>(&ptScroll));
+				::SendMessage(m_hwndProgramInfo, EM_SETSCROLLPOS, 0, reinterpret_cast<LPARAM>(&ptScroll));
 			}
-			::InvalidateRect(m_hwndProgramInfo,NULL,TRUE);
+			::InvalidateRect(m_hwndProgramInfo, NULL, TRUE);
 
 			if (IsItemVisible(ITEM_PROGRAMINFO))
 				SendSizeMessage();
@@ -138,9 +144,9 @@ void CInformationPanel::SetTheme(const TVTest::Theme::CThemeManager *pThemeManag
 
 bool CInformationPanel::SetFont(const TVTest::Style::Font &Font)
 {
-	m_StyleFont=Font;
+	m_StyleFont = Font;
 
-	if (m_hwnd!=NULL) {
+	if (m_hwnd != NULL) {
 		ApplyStyle();
 		RealizeStyle();
 	}
@@ -151,13 +157,13 @@ bool CInformationPanel::SetFont(const TVTest::Style::Font &Font)
 
 bool CInformationPanel::IsVisible() const
 {
-	return m_hwnd!=NULL;
+	return m_hwnd != NULL;
 }
 
 
 CInformationPanel::CItem *CInformationPanel::GetItem(int Item)
 {
-	if (Item<0 || Item>=NUM_ITEMS)
+	if (Item < 0 || Item >= NUM_ITEMS)
 		return NULL;
 	return m_ItemList[Item];
 }
@@ -165,28 +171,28 @@ CInformationPanel::CItem *CInformationPanel::GetItem(int Item)
 
 const CInformationPanel::CItem *CInformationPanel::GetItem(int Item) const
 {
-	if (Item<0 || Item>=NUM_ITEMS)
+	if (Item < 0 || Item >= NUM_ITEMS)
 		return NULL;
 	return m_ItemList[Item];
 }
 
 
-bool CInformationPanel::SetItemVisible(int Item,bool fVisible)
+bool CInformationPanel::SetItemVisible(int Item, bool fVisible)
 {
-	CItem *pItem=GetItem(Item);
+	CItem *pItem = GetItem(Item);
 
-	if (pItem==NULL)
+	if (pItem == NULL)
 		return false;
 
-	if (pItem->IsVisible()!=fVisible) {
+	if (pItem->IsVisible() != fVisible) {
 		pItem->SetVisible(fVisible);
 
-		if (m_hwnd!=NULL) {
+		if (m_hwnd != NULL) {
 			if (IsItemVisible(ITEM_PROGRAMINFO))
 				SendSizeMessage();
-			if (Item==ITEM_PROGRAMINFO)
-				::ShowWindow(m_hwndProgramInfo,fVisible?SW_SHOW:SW_HIDE);
-			::InvalidateRect(m_hwnd,NULL,TRUE);
+			if (Item == ITEM_PROGRAMINFO)
+				::ShowWindow(m_hwndProgramInfo, fVisible ? SW_SHOW : SW_HIDE);
+			::InvalidateRect(m_hwnd, NULL, TRUE);
 		}
 	}
 
@@ -196,20 +202,20 @@ bool CInformationPanel::SetItemVisible(int Item,bool fVisible)
 
 bool CInformationPanel::IsItemVisible(int Item) const
 {
-	const CItem *pItem=GetItem(Item);
+	const CItem *pItem = GetItem(Item);
 
-	return pItem!=NULL && pItem->IsVisible();
+	return pItem != NULL && pItem->IsVisible();
 }
 
 
 bool CInformationPanel::UpdateItem(int Item)
 {
-	CItem *pItem=GetItem(Item);
+	CItem *pItem = GetItem(Item);
 
-	if (pItem==NULL || !pItem->Update())
+	if (pItem == NULL || !pItem->Update())
 		return false;
 
-	if (m_hwnd!=NULL && pItem->IsVisible())
+	if (m_hwnd != NULL && pItem->IsVisible())
 		RedrawItem(Item);
 
 	return true;
@@ -218,14 +224,14 @@ bool CInformationPanel::UpdateItem(int Item)
 
 void CInformationPanel::RedrawItem(int Item)
 {
-	if (m_hwnd!=NULL && IsItemVisible(Item)) {
+	if (m_hwnd != NULL && IsItemVisible(Item)) {
 		RECT rc;
 
-		GetItemRect(Item,&rc);
-		if (Item==ITEM_PROGRAMINFO) {
+		GetItemRect(Item, &rc);
+		if (Item == ITEM_PROGRAMINFO) {
 			RECT rcClient;
 			GetClientRect(&rcClient);
-			rc.bottom=rcClient.bottom;
+			rc.bottom = rcClient.bottom;
 		}
 		Invalidate(&rc);
 	}
@@ -234,21 +240,21 @@ void CInformationPanel::RedrawItem(int Item)
 
 bool CInformationPanel::ResetItem(int Item)
 {
-	CItem *pItem=GetItem(Item);
+	CItem *pItem = GetItem(Item);
 
-	if (pItem==NULL)
+	if (pItem == NULL)
 		return false;
 
 	pItem->Reset();
 
-	if (Item==ITEM_PROGRAMINFO) {
+	if (Item == ITEM_PROGRAMINFO) {
 		m_ProgramInfoLinkList.clear();
-		m_fProgramInfoCursorOverLink=false;
-		if (m_hwnd!=NULL)
-			::SetWindowText(m_hwndProgramInfo,TEXT(""));
+		m_fProgramInfoCursorOverLink = false;
+		if (m_hwnd != NULL)
+			::SetWindowText(m_hwndProgramInfo, TEXT(""));
 	}
 
-	if (m_hwnd!=NULL && pItem->IsVisible())
+	if (m_hwnd != NULL && pItem->IsVisible())
 		RedrawItem(Item);
 
 	return true;
@@ -257,17 +263,17 @@ bool CInformationPanel::ResetItem(int Item)
 
 bool CInformationPanel::UpdateAllItems()
 {
-	bool fUpdated=false;
+	bool fUpdated = false;
 
-	for (int i=0;i<NUM_ITEMS;i++) {
+	for (int i = 0; i < NUM_ITEMS; i++) {
 		if (m_ItemList[i]->Update())
-			fUpdated=true;
+			fUpdated = true;
 	}
 
 	if (!fUpdated)
 		return false;
 
-	if (m_hwnd!=NULL)
+	if (m_hwnd != NULL)
 		Invalidate();
 
 	return true;
@@ -276,17 +282,17 @@ bool CInformationPanel::UpdateAllItems()
 
 bool CInformationPanel::SetProgramInfoRichEdit(bool fRichEdit)
 {
-	if (fRichEdit!=m_fUseRichEdit) {
-		if (m_hwndProgramInfo!=NULL) {
+	if (fRichEdit != m_fUseRichEdit) {
+		if (m_hwndProgramInfo != NULL) {
 			::DestroyWindow(m_hwndProgramInfo);
-			m_hwndProgramInfo=NULL;
+			m_hwndProgramInfo = NULL;
 		}
-		m_fUseRichEdit=fRichEdit;
-		if (m_hwnd!=NULL) {
+		m_fUseRichEdit = fRichEdit;
+		if (m_hwnd != NULL) {
 			CreateProgramInfoEdit();
 			SendSizeMessage();
 			if (IsItemVisible(ITEM_PROGRAMINFO))
-				::ShowWindow(m_hwndProgramInfo,SW_SHOW);
+				::ShowWindow(m_hwndProgramInfo, SW_SHOW);
 		}
 	}
 
@@ -296,34 +302,35 @@ bool CInformationPanel::SetProgramInfoRichEdit(bool fRichEdit)
 
 void CInformationPanel::UpdateProgramInfoText()
 {
-	if (m_hwndProgramInfo!=NULL) {
-		const TVTest::String &InfoText=
+	if (m_hwndProgramInfo != NULL) {
+		const TVTest::String &InfoText =
 			static_cast<const CProgramInfoItem*>(m_ItemList[ITEM_PROGRAMINFO])->GetInfoText();
 
 		if (m_fUseRichEdit) {
-			::SendMessage(m_hwndProgramInfo,WM_SETREDRAW,FALSE,0);
-			::SetWindowText(m_hwndProgramInfo,TEXT(""));
+			::SendMessage(m_hwndProgramInfo, WM_SETREDRAW, FALSE, 0);
+			::SetWindowText(m_hwndProgramInfo, TEXT(""));
 			if (!InfoText.empty()) {
 				LOGFONT lf;
 				CHARFORMAT cf;
-				HDC hdc=::GetDC(m_hwndProgramInfo);
+				HDC hdc = ::GetDC(m_hwndProgramInfo);
 
 				m_Font.GetLogFont(&lf);
-				CRichEditUtil::LogFontToCharFormat(hdc,&lf,&cf);
-				cf.dwMask|=CFM_COLOR;
-				cf.crTextColor=m_Theme.ProgramInfoStyle.Fore.Fill.GetSolidColor();
-				::ReleaseDC(m_hwndProgramInfo,hdc);
-				CRichEditUtil::AppendText(m_hwndProgramInfo,InfoText.c_str(),&cf);
-				CRichEditUtil::DetectURL(m_hwndProgramInfo,&cf,0,-1,
-										 CRichEditUtil::URL_NO_LINK | CRichEditUtil::URL_TO_HALF_WIDTH,
-										 &m_ProgramInfoLinkList);
-				POINT pt={0,0};
-				::SendMessage(m_hwndProgramInfo,EM_SETSCROLLPOS,0,reinterpret_cast<LPARAM>(&pt));
+				CRichEditUtil::LogFontToCharFormat(hdc, &lf, &cf);
+				cf.dwMask |= CFM_COLOR;
+				cf.crTextColor = m_Theme.ProgramInfoStyle.Fore.Fill.GetSolidColor();
+				::ReleaseDC(m_hwndProgramInfo, hdc);
+				CRichEditUtil::AppendText(m_hwndProgramInfo, InfoText.c_str(), &cf);
+				CRichEditUtil::DetectURL(
+					m_hwndProgramInfo, &cf, 0, -1,
+					CRichEditUtil::URL_NO_LINK | CRichEditUtil::URL_TO_HALF_WIDTH,
+					&m_ProgramInfoLinkList);
+				POINT pt = {0, 0};
+				::SendMessage(m_hwndProgramInfo, EM_SETSCROLLPOS, 0, reinterpret_cast<LPARAM>(&pt));
 			}
-			::SendMessage(m_hwndProgramInfo,WM_SETREDRAW,TRUE,0);
-			::InvalidateRect(m_hwndProgramInfo,NULL,TRUE);
+			::SendMessage(m_hwndProgramInfo, WM_SETREDRAW, TRUE, 0);
+			::InvalidateRect(m_hwndProgramInfo, NULL, TRUE);
 		} else {
-			::SetWindowText(m_hwndProgramInfo,InfoText.c_str());
+			::SetWindowText(m_hwndProgramInfo, InfoText.c_str());
 		}
 	}
 }
@@ -331,38 +338,41 @@ void CInformationPanel::UpdateProgramInfoText()
 
 bool CInformationPanel::CreateProgramInfoEdit()
 {
-	if (m_hwnd==NULL || m_hwndProgramInfo!=NULL)
+	if (m_hwnd == NULL || m_hwndProgramInfo != NULL)
 		return false;
 
 	if (m_fUseRichEdit) {
 		m_RichEditUtil.LoadRichEditLib();
-		m_hwndProgramInfo=::CreateWindowEx(0,m_RichEditUtil.GetWindowClassName(),TEXT(""),
+		m_hwndProgramInfo = ::CreateWindowEx(
+			0, m_RichEditUtil.GetWindowClassName(), TEXT(""),
 			WS_CHILD | WS_CLIPSIBLINGS | WS_VSCROLL
 				| ES_MULTILINE | ES_READONLY | ES_AUTOVSCROLL | ES_NOHIDESEL,
-			0,0,0,0,m_hwnd,reinterpret_cast<HMENU>(IDC_PROGRAMINFO),m_hinst,NULL);
-		if (m_hwndProgramInfo==NULL)
+			0, 0, 0, 0, m_hwnd, reinterpret_cast<HMENU>(IDC_PROGRAMINFO), m_hinst, NULL);
+		if (m_hwndProgramInfo == NULL)
 			return false;
-		::SendMessage(m_hwndProgramInfo,EM_SETEVENTMASK,0,ENM_MOUSEEVENTS | ENM_LINK);
-		::SendMessage(m_hwndProgramInfo,EM_SETBKGNDCOLOR,0,
-					  (COLORREF)m_Theme.ProgramInfoStyle.Back.Fill.GetSolidColor());
-		m_fProgramInfoCursorOverLink=false;
+		::SendMessage(m_hwndProgramInfo, EM_SETEVENTMASK, 0, ENM_MOUSEEVENTS | ENM_LINK);
+		::SendMessage(
+			m_hwndProgramInfo, EM_SETBKGNDCOLOR, 0,
+			(COLORREF)m_Theme.ProgramInfoStyle.Back.Fill.GetSolidColor());
+		m_fProgramInfoCursorOverLink = false;
 	} else {
-		m_hwndProgramInfo=::CreateWindowEx(0,TEXT("EDIT"),TEXT(""),
+		m_hwndProgramInfo = ::CreateWindowEx(
+			0, TEXT("EDIT"), TEXT(""),
 			WS_CHILD | WS_CLIPSIBLINGS | WS_VSCROLL
 				| ES_MULTILINE | ES_READONLY | ES_AUTOVSCROLL,
-			0,0,0,0,m_hwnd,reinterpret_cast<HMENU>(IDC_PROGRAMINFO),m_hinst,NULL);
-		if (m_hwndProgramInfo==NULL)
+			0, 0, 0, 0, m_hwnd, reinterpret_cast<HMENU>(IDC_PROGRAMINFO), m_hinst, NULL);
+		if (m_hwndProgramInfo == NULL)
 			return false;
 		m_ProgramInfoSubclass.SetSubclass(m_hwndProgramInfo);
 	}
-	SetWindowFont(m_hwndProgramInfo,m_Font.GetHandle(),FALSE);
+	SetWindowFont(m_hwndProgramInfo, m_Font.GetHandle(), FALSE);
 	UpdateProgramInfoText();
 
 	return true;
 }
 
 
-LRESULT CInformationPanel::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
+LRESULT CInformationPanel::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	switch (uMsg) {
 	case WM_CREATE:
@@ -372,54 +382,55 @@ LRESULT CInformationPanel::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lP
 			m_BackBrush.Create(m_Theme.Style.Back.Fill.GetSolidColor());
 			m_ProgramInfoBackBrush.Create(m_Theme.ProgramInfoStyle.Back.Fill.GetSolidColor());
 
-			m_HotButton.Item=-1;
-			m_HotButton.Button=-1;
+			m_HotButton.Item = -1;
+			m_HotButton.Button = -1;
 
 			m_Tooltip.Create(hwnd);
 			m_Tooltip.SetFont(m_Font.GetHandle());
-			for (int i=0;i<NUM_ITEMS;i++) {
-				const CItem *pItem=m_ItemList[i];
-				const int ButtonCount=pItem->GetButtonCount();
-				for (int j=0;j<ButtonCount;j++) {
+			for (int i = 0; i < NUM_ITEMS; i++) {
+				const CItem *pItem = m_ItemList[i];
+				const int ButtonCount = pItem->GetButtonCount();
+				for (int j = 0; j < ButtonCount; j++) {
 					RECT rc;
 					TCHAR szText[CCommandList::MAX_COMMAND_NAME];
-					pItem->GetButtonRect(j,&rc);
-					pItem->GetButtonTipText(j,szText,lengthof(szText));
-					m_Tooltip.AddTool(GetTooltipID(i,j),rc,szText);
+					pItem->GetButtonRect(j, &rc);
+					pItem->GetButtonTipText(j, szText, lengthof(szText));
+					m_Tooltip.AddTool(GetTooltipID(i, j), rc, szText);
 				}
 			}
 
-			CProgramInfoItem *pProgramInfoItem=
+			CProgramInfoItem *pProgramInfoItem =
 				static_cast<CProgramInfoItem*>(GetItem(ITEM_PROGRAMINFO));
 			CreateProgramInfoEdit();
 			if (pProgramInfoItem->IsVisible())
-				::ShowWindow(m_hwndProgramInfo,SW_SHOW);
+				::ShowWindow(m_hwndProgramInfo, SW_SHOW);
 		}
 		return 0;
 
-	HANDLE_MSG(hwnd,WM_COMMAND,OnCommand);
+		HANDLE_MSG(hwnd, WM_COMMAND, OnCommand);
 
 	case WM_SIZE:
 		{
-			for (int i=0;i<NUM_ITEMS;i++) {
-				const CItem *pItem=m_ItemList[i];
-				const int ButtonCount=pItem->GetButtonCount();
-				for (int j=0;j<ButtonCount;j++) {
+			for (int i = 0; i < NUM_ITEMS; i++) {
+				const CItem *pItem = m_ItemList[i];
+				const int ButtonCount = pItem->GetButtonCount();
+				for (int j = 0; j < ButtonCount; j++) {
 					RECT rc;
-					pItem->GetButtonRect(j,&rc);
-					m_Tooltip.SetToolRect(GetTooltipID(i,j),rc);
+					pItem->GetButtonRect(j, &rc);
+					m_Tooltip.SetToolRect(GetTooltipID(i, j), rc);
 				}
 			}
 		}
 
 		if (IsItemVisible(ITEM_PROGRAMINFO)) {
-			TVTest::Theme::BorderStyle Style=m_Theme.ProgramInfoStyle.Back.Border;
+			TVTest::Theme::BorderStyle Style = m_Theme.ProgramInfoStyle.Back.Border;
 			ConvertBorderWidthsInPixels(&Style);
 			RECT rc;
-			GetItemRect(ITEM_PROGRAMINFO,&rc);
-			TVTest::Theme::SubtractBorderRect(Style,&rc);
-			::MoveWindow(m_hwndProgramInfo,rc.left,rc.top,
-						 rc.right-rc.left,rc.bottom-rc.top,TRUE);
+			GetItemRect(ITEM_PROGRAMINFO, &rc);
+			TVTest::Theme::SubtractBorderRect(Style, &rc);
+			::MoveWindow(
+				m_hwndProgramInfo, rc.left, rc.top,
+				rc.right - rc.left, rc.bottom - rc.top, TRUE);
 		}
 		return 0;
 
@@ -427,26 +438,26 @@ LRESULT CInformationPanel::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lP
 		{
 			PAINTSTRUCT ps;
 
-			::BeginPaint(hwnd,&ps);
-			Draw(ps.hdc,ps.rcPaint);
-			::EndPaint(hwnd,&ps);
+			::BeginPaint(hwnd, &ps);
+			Draw(ps.hdc, ps.rcPaint);
+			::EndPaint(hwnd, &ps);
 		}
 		return 0;
 
 	case WM_CTLCOLORSTATIC:
 		{
-			HDC hdc=reinterpret_cast<HDC>(wParam);
+			HDC hdc = reinterpret_cast<HDC>(wParam);
 
-			::SetTextColor(hdc,m_Theme.ProgramInfoStyle.Fore.Fill.GetSolidColor());
-			::SetBkColor(hdc,m_Theme.ProgramInfoStyle.Back.Fill.GetSolidColor());
+			::SetTextColor(hdc, m_Theme.ProgramInfoStyle.Fore.Fill.GetSolidColor());
+			::SetBkColor(hdc, m_Theme.ProgramInfoStyle.Back.Fill.GetSolidColor());
 			return reinterpret_cast<LRESULT>(m_ProgramInfoBackBrush.GetHandle());
 		}
 
 	case WM_LBUTTONDOWN:
 		{
-			ItemButtonNumber Button=ButtonHitTest(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam));
+			ItemButtonNumber Button = ButtonHitTest(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
 
-			if (Button.Item>=0) {
+			if (Button.Item >= 0) {
 				SetHotButton(Button);
 				::SetCapture(hwnd);
 			}
@@ -454,10 +465,10 @@ LRESULT CInformationPanel::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lP
 		return 0;
 
 	case WM_LBUTTONUP:
-		if (::GetCapture()==hwnd) {
+		if (::GetCapture() == hwnd) {
 			if (m_HotButton.IsValid()) {
-				SetHotButton(ButtonHitTest(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam)));
-				ItemButtonNumber Button=m_HotButton;
+				SetHotButton(ButtonHitTest(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam)));
+				ItemButtonNumber Button = m_HotButton;
 				::ReleaseCapture();
 				if (Button.IsValid())
 					m_ItemList[Button.Item]->OnButtonPushed(Button.Button);
@@ -472,27 +483,29 @@ LRESULT CInformationPanel::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lP
 			HMENU hmenu;
 			POINT pt;
 
-			hmenu=::LoadMenu(m_hinst,MAKEINTRESOURCE(IDM_INFORMATIONPANEL));
-			for (int i=0;i<NUM_ITEMS;i++)
-				CheckMenuItem(hmenu,CM_INFORMATIONPANEL_ITEM_FIRST+i,
-							  MF_BYCOMMAND | (IsItemVisible(i)?MFS_CHECKED:MFS_UNCHECKED));
-			pt.x=GET_X_LPARAM(lParam);
-			pt.y=GET_Y_LPARAM(lParam);
-			::ClientToScreen(hwnd,&pt);
-			::TrackPopupMenu(::GetSubMenu(hmenu,0),TPM_RIGHTBUTTON,pt.x,pt.y,0,hwnd,NULL);
+			hmenu = ::LoadMenu(m_hinst, MAKEINTRESOURCE(IDM_INFORMATIONPANEL));
+			for (int i = 0; i < NUM_ITEMS; i++) {
+				CheckMenuItem(
+					hmenu, CM_INFORMATIONPANEL_ITEM_FIRST + i,
+					MF_BYCOMMAND | (IsItemVisible(i) ? MFS_CHECKED : MFS_UNCHECKED));
+			}
+			pt.x = GET_X_LPARAM(lParam);
+			pt.y = GET_Y_LPARAM(lParam);
+			::ClientToScreen(hwnd, &pt);
+			::TrackPopupMenu(::GetSubMenu(hmenu, 0), TPM_RIGHTBUTTON, pt.x, pt.y, 0, hwnd, NULL);
 			::DestroyMenu(hmenu);
 		}
 		return TRUE;
 
 	case WM_MOUSEMOVE:
 		{
-			SetHotButton(ButtonHitTest(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam)));
+			SetHotButton(ButtonHitTest(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam)));
 
-			if (::GetCapture()==NULL) {
+			if (::GetCapture() == NULL) {
 				TRACKMOUSEEVENT tme;
-				tme.cbSize=sizeof(TRACKMOUSEEVENT);
-				tme.dwFlags=TME_LEAVE;
-				tme.hwndTrack=hwnd;
+				tme.cbSize = sizeof(TRACKMOUSEEVENT);
+				tme.dwFlags = TME_LEAVE;
+				tme.hwndTrack = hwnd;
 				::TrackMouseEvent(&tme);
 			}
 		}
@@ -506,13 +519,13 @@ LRESULT CInformationPanel::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lP
 		return 0;
 
 	case WM_SETCURSOR:
-		if ((HWND)wParam==hwnd) {
-			if (LOWORD(lParam)==HTCLIENT && m_HotButton.IsValid()) {
+		if ((HWND)wParam == hwnd) {
+			if (LOWORD(lParam) == HTCLIENT && m_HotButton.IsValid()) {
 				::SetCursor(GetActionCursor());
 				return TRUE;
 			}
-		} else if ((HWND)wParam==m_hwndProgramInfo
-				&& LOWORD(lParam)==HTCLIENT
+		} else if ((HWND)wParam == m_hwndProgramInfo
+				&& LOWORD(lParam) == HTCLIENT
 				&& m_fUseRichEdit
 				&& m_fProgramInfoCursorOverLink) {
 			::SetCursor(GetLinkCursor());
@@ -524,39 +537,39 @@ LRESULT CInformationPanel::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lP
 		switch (reinterpret_cast<LPNMHDR>(lParam)->code) {
 		case EN_MSGFILTER:
 			{
-				MSGFILTER *pMsgFilter=reinterpret_cast<MSGFILTER*>(lParam);
+				MSGFILTER *pMsgFilter = reinterpret_cast<MSGFILTER*>(lParam);
 
 				switch (pMsgFilter->msg) {
 				case WM_RBUTTONUP:
-					TVTest::EventInfoUtil::EventInfoContextMenu(hwnd,m_hwndProgramInfo);
+					TVTest::EventInfoUtil::EventInfoContextMenu(hwnd, m_hwndProgramInfo);
 					break;
 
 				case WM_LBUTTONDOWN:
-					m_ProgramInfoClickPos.x=GET_X_LPARAM(pMsgFilter->lParam);
-					m_ProgramInfoClickPos.y=GET_Y_LPARAM(pMsgFilter->lParam);
+					m_ProgramInfoClickPos.x = GET_X_LPARAM(pMsgFilter->lParam);
+					m_ProgramInfoClickPos.y = GET_Y_LPARAM(pMsgFilter->lParam);
 					break;
 
 				case WM_MOUSEMOVE:
-					m_ProgramInfoClickPos.x=-1;
-					m_ProgramInfoClickPos.y=-1;
+					m_ProgramInfoClickPos.x = -1;
+					m_ProgramInfoClickPos.y = -1;
 					{
-						POINT pt={GET_X_LPARAM(pMsgFilter->lParam),GET_Y_LPARAM(pMsgFilter->lParam)};
+						POINT pt = {GET_X_LPARAM(pMsgFilter->lParam), GET_Y_LPARAM(pMsgFilter->lParam)};
 
-						if (CRichEditUtil::LinkHitTest(m_hwndProgramInfo,pt,m_ProgramInfoLinkList)>=0) {
-							m_fProgramInfoCursorOverLink=true;
+						if (CRichEditUtil::LinkHitTest(m_hwndProgramInfo, pt, m_ProgramInfoLinkList) >= 0) {
+							m_fProgramInfoCursorOverLink = true;
 							::SetCursor(GetLinkCursor());
 						} else {
-							m_fProgramInfoCursorOverLink=false;
+							m_fProgramInfoCursorOverLink = false;
 						}
 					}
 					break;
 
 				case WM_LBUTTONUP:
 					{
-						POINT pt={GET_X_LPARAM(pMsgFilter->lParam),GET_Y_LPARAM(pMsgFilter->lParam)};
+						POINT pt = {GET_X_LPARAM(pMsgFilter->lParam), GET_Y_LPARAM(pMsgFilter->lParam)};
 
-						if (m_ProgramInfoClickPos.x==pt.x && m_ProgramInfoClickPos.y==pt.y)
-							CRichEditUtil::HandleLinkClick(m_hwndProgramInfo,pt,m_ProgramInfoLinkList);
+						if (m_ProgramInfoClickPos.x == pt.x && m_ProgramInfoClickPos.y == pt.y)
+							CRichEditUtil::HandleLinkClick(m_hwndProgramInfo, pt, m_ProgramInfoLinkList);
 					}
 					break;
 				}
@@ -566,9 +579,9 @@ LRESULT CInformationPanel::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lP
 #if 0
 		case EN_LINK:
 			{
-				ENLINK *penl=reinterpret_cast<ENLINK*>(lParam);
+				ENLINK *penl = reinterpret_cast<ENLINK*>(lParam);
 
-				if (penl->msg==WM_LBUTTONUP)
+				if (penl->msg == WM_LBUTTONUP)
 					CRichEditUtil::HandleLinkClick(penl);
 			}
 			return 0;
@@ -585,40 +598,40 @@ LRESULT CInformationPanel::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lP
 		m_ProgramInfoBackBrush.Destroy();
 		m_Offscreen.Destroy();
 		m_IconFont.Destroy();
-		m_hwndProgramInfo=NULL;
+		m_hwndProgramInfo = NULL;
 		return 0;
 	}
 
-	return ::DefWindowProc(hwnd,uMsg,wParam,lParam);
+	return ::DefWindowProc(hwnd, uMsg, wParam, lParam);
 }
 
 
 void CInformationPanel::ApplyStyle()
 {
-	if (m_hwnd!=NULL) {
-		CreateDrawFont(m_StyleFont,&m_Font);
+	if (m_hwnd != NULL) {
+		CreateDrawFont(m_StyleFont, &m_Font);
 
-		LOGFONT lf={};
-		lf.lfHeight=m_Style.ButtonSize.Height;
-		lf.lfCharSet=SYMBOL_CHARSET;
-		::lstrcpy(lf.lfFaceName,TEXT("Marlett"));
+		LOGFONT lf = {};
+		lf.lfHeight = m_Style.ButtonSize.Height;
+		lf.lfCharSet = SYMBOL_CHARSET;
+		::lstrcpy(lf.lfFaceName, TEXT("Marlett"));
 		m_IconFont.Create(&lf);
 
 		CalcFontHeight();
 
-		m_ItemButtonWidth=m_FontHeight*15/10+m_Style.ItemButtonPadding.Horz();
+		m_ItemButtonWidth = m_FontHeight * 15 / 10 + m_Style.ItemButtonPadding.Horz();
 	}
 }
 
 
 void CInformationPanel::RealizeStyle()
 {
-	if (m_hwnd!=NULL) {
+	if (m_hwnd != NULL) {
 		if (m_fUseRichEdit) {
-			SetWindowFont(m_hwndProgramInfo,m_Font.GetHandle(),FALSE);
+			SetWindowFont(m_hwndProgramInfo, m_Font.GetHandle(), FALSE);
 			UpdateProgramInfoText();
 		} else {
-			SetWindowFont(m_hwndProgramInfo,m_Font.GetHandle(),TRUE);
+			SetWindowFont(m_hwndProgramInfo, m_Font.GetHandle(), TRUE);
 		}
 		SendSizeMessage();
 		Invalidate();
@@ -627,36 +640,36 @@ void CInformationPanel::RealizeStyle()
 }
 
 
-void CInformationPanel::OnCommand(HWND hwnd,int id,HWND hwndCtl,UINT codeNotify)
+void CInformationPanel::OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
 {
-	if (id>=CM_INFORMATIONPANEL_ITEM_FIRST
-			&& id<CM_INFORMATIONPANEL_ITEM_FIRST+NUM_ITEMS) {
-		int Item=id-CM_INFORMATIONPANEL_ITEM_FIRST;
+	if (id >= CM_INFORMATIONPANEL_ITEM_FIRST
+			&& id < CM_INFORMATIONPANEL_ITEM_FIRST + NUM_ITEMS) {
+		int Item = id - CM_INFORMATIONPANEL_ITEM_FIRST;
 
-		SetItemVisible(Item,!IsItemVisible(Item));
+		SetItemVisible(Item, !IsItemVisible(Item));
 		return;
 	}
 }
 
 
-void CInformationPanel::GetItemRect(int Item,RECT *pRect) const
+void CInformationPanel::GetItemRect(int Item, RECT *pRect) const
 {
 	int VisibleItemCount;
 
 	GetClientRect(pRect);
-	VisibleItemCount=0;
-	for (int i=0;i<Item;i++) {
+	VisibleItemCount = 0;
+	for (int i = 0; i < Item; i++) {
 		if (IsItemVisible(i))
 			VisibleItemCount++;
 	}
-	pRect->top=(m_FontHeight+m_Style.LineSpacing)*VisibleItemCount;
+	pRect->top = (m_FontHeight + m_Style.LineSpacing) * VisibleItemCount;
 	if (!IsItemVisible(Item)) {
-		pRect->bottom=pRect->top;
+		pRect->bottom = pRect->top;
 	} else {
-		if (Item==ITEM_PROGRAMINFO)
-			pRect->bottom-=m_Style.ButtonSize.Height;
-		if (Item!=ITEM_PROGRAMINFO || pRect->top>=pRect->bottom)
-			pRect->bottom=pRect->top+m_FontHeight;
+		if (Item == ITEM_PROGRAMINFO)
+			pRect->bottom -= m_Style.ButtonSize.Height;
+		if (Item != ITEM_PROGRAMINFO || pRect->top >= pRect->bottom)
+			pRect->bottom = pRect->top + m_FontHeight;
 	}
 }
 
@@ -665,119 +678,119 @@ void CInformationPanel::CalcFontHeight()
 {
 	HDC hdc;
 
-	hdc=::GetDC(m_hwnd);
-	if (hdc!=NULL) {
-		m_FontHeight=m_Font.GetHeight(hdc);
-		::ReleaseDC(m_hwnd,hdc);
+	hdc = ::GetDC(m_hwnd);
+	if (hdc != NULL) {
+		m_FontHeight = m_Font.GetHeight(hdc);
+		::ReleaseDC(m_hwnd, hdc);
 	}
 }
 
 
-void CInformationPanel::Draw(HDC hdc,const RECT &PaintRect)
+void CInformationPanel::Draw(HDC hdc, const RECT &PaintRect)
 {
 	HDC hdcDst;
 	RECT rc;
 
 	GetClientRect(&rc);
-	if (rc.right>m_Offscreen.GetWidth()
-			|| m_FontHeight+m_Style.LineSpacing>m_Offscreen.GetHeight())
-		m_Offscreen.Create(rc.right,m_FontHeight+m_Style.LineSpacing);
-	hdcDst=m_Offscreen.GetDC();
-	if (hdcDst==NULL)
-		hdcDst=hdc;
+	if (rc.right > m_Offscreen.GetWidth()
+			|| m_FontHeight + m_Style.LineSpacing > m_Offscreen.GetHeight())
+		m_Offscreen.Create(rc.right, m_FontHeight + m_Style.LineSpacing);
+	hdcDst = m_Offscreen.GetDC();
+	if (hdcDst == NULL)
+		hdcDst = hdc;
 
-	GetItemRect(ITEM_PROGRAMINFO,&rc);
-	if (PaintRect.bottom>rc.bottom) {
-		rc.left=PaintRect.left;
-		rc.top=max(PaintRect.top,rc.bottom);
-		rc.right=PaintRect.right;
-		rc.bottom=PaintRect.bottom;
-		::FillRect(hdc,&rc,m_BackBrush.GetHandle());
+	GetItemRect(ITEM_PROGRAMINFO, &rc);
+	if (PaintRect.bottom > rc.bottom) {
+		rc.left = PaintRect.left;
+		rc.top = max(PaintRect.top, rc.bottom);
+		rc.right = PaintRect.right;
+		rc.bottom = PaintRect.bottom;
+		::FillRect(hdc, &rc, m_BackBrush.GetHandle());
 	}
 
-	HFONT hfontOld=DrawUtil::SelectObject(hdcDst,m_Font);
+	HFONT hfontOld = DrawUtil::SelectObject(hdcDst, m_Font);
 
-	for (int i=0;i<NUM_ITEMS;i++) {
-		if (GetDrawItemRect(i,&rc,PaintRect))
-			m_ItemList[i]->Draw(hdc,rc);
+	for (int i = 0; i < NUM_ITEMS; i++) {
+		if (GetDrawItemRect(i, &rc, PaintRect))
+			m_ItemList[i]->Draw(hdc, rc);
 	}
 
 	if (IsItemVisible(ITEM_PROGRAMINFO)) {
-		if (m_Theme.ProgramInfoStyle.Back.Border.Type!=TVTest::Theme::BORDER_NONE) {
+		if (m_Theme.ProgramInfoStyle.Back.Border.Type != TVTest::Theme::BORDER_NONE) {
 			TVTest::Theme::CThemeDraw ThemeDraw(BeginThemeDraw(hdc));
 
-			GetItemRect(ITEM_PROGRAMINFO,&rc);
-			ThemeDraw.Draw(m_Theme.ProgramInfoStyle.Back.Border,rc);
+			GetItemRect(ITEM_PROGRAMINFO, &rc);
+			ThemeDraw.Draw(m_Theme.ProgramInfoStyle.Back.Border, rc);
 		}
 	}
 
-	::SelectObject(hdcDst,hfontOld);
+	::SelectObject(hdcDst, hfontOld);
 }
 
 
-bool CInformationPanel::GetDrawItemRect(int Item,RECT *pRect,const RECT &PaintRect) const
+bool CInformationPanel::GetDrawItemRect(int Item, RECT *pRect, const RECT &PaintRect) const
 {
 	if (!IsItemVisible(Item))
 		return false;
-	GetItemRect(Item,pRect);
-	pRect->bottom+=m_Style.LineSpacing;
-	return ::IsRectIntersect(&PaintRect,pRect)!=FALSE;
+	GetItemRect(Item, pRect);
+	pRect->bottom += m_Style.LineSpacing;
+	return ::IsRectIntersect(&PaintRect, pRect) != FALSE;
 }
 
 
 void CInformationPanel::DrawItem(
-	CItem *pItem,HDC hdc,LPCTSTR pszText,const RECT &Rect)
+	CItem *pItem, HDC hdc, LPCTSTR pszText, const RECT &Rect)
 {
-	HDC hdcDst=NULL;
+	HDC hdcDst = NULL;
 	RECT rcDraw;
 
 	if (pItem->IsSingleRow())
-		hdcDst=m_Offscreen.GetDC();
-	if (hdcDst!=NULL) {
-		::SetRect(&rcDraw,0,0,Rect.right-Rect.left,Rect.bottom-Rect.top);
+		hdcDst = m_Offscreen.GetDC();
+	if (hdcDst != NULL) {
+		::SetRect(&rcDraw, 0, 0, Rect.right - Rect.left, Rect.bottom - Rect.top);
 	} else {
-		hdcDst=hdc;
-		rcDraw=Rect;
+		hdcDst = hdc;
+		rcDraw = Rect;
 	}
 	TVTest::Theme::CThemeDraw ThemeDraw(BeginThemeDraw(hdcDst));
 
-	::FillRect(hdcDst,&rcDraw,m_BackBrush.GetHandle());
+	::FillRect(hdcDst, &rcDraw, m_BackBrush.GetHandle());
 
-	const int ButtonCount=pItem->GetButtonCount();
+	const int ButtonCount = pItem->GetButtonCount();
 
-	if (pszText!=NULL && pszText[0]!='\0') {
-		RECT rc=rcDraw;
-		if (ButtonCount>0)
-			rc.right-=ButtonCount*m_ItemButtonWidth+m_Style.ItemButtonMargin.Horz();
-		ThemeDraw.Draw(m_Theme.Style.Fore,rc,pszText,DT_LEFT | DT_SINGLELINE | DT_END_ELLIPSIS);
+	if (pszText != NULL && pszText[0] != '\0') {
+		RECT rc = rcDraw;
+		if (ButtonCount > 0)
+			rc.right -= ButtonCount * m_ItemButtonWidth + m_Style.ItemButtonMargin.Horz();
+		ThemeDraw.Draw(m_Theme.Style.Fore, rc, pszText, DT_LEFT | DT_SINGLELINE | DT_END_ELLIPSIS);
 	}
 
-	for (int i=0;i<ButtonCount;i++) {
+	for (int i = 0; i < ButtonCount; i++) {
 		RECT rc;
-		pItem->GetButtonRect(i,&rc);
-		if (hdcDst!=hdc)
-			::OffsetRect(&rc,-Rect.left,-Rect.top);
+		pItem->GetButtonRect(i, &rc);
+		if (hdcDst != hdc)
+			::OffsetRect(&rc, -Rect.left, -Rect.top);
 
-		const bool fEnabled=pItem->IsButtonEnabled(i);
-		const bool fHot=m_HotButton.Item==pItem->GetID() && m_HotButton.Button==i;
-		const TVTest::Theme::Style &Style=
+		const bool fEnabled = pItem->IsButtonEnabled(i);
+		const bool fHot = m_HotButton.Item == pItem->GetID() && m_HotButton.Button == i;
+		const TVTest::Theme::Style &Style =
 			fEnabled && fHot ? m_Theme.ButtonHotStyle : m_Theme.ButtonStyle;
 
-		ThemeDraw.Draw(Style.Back,&rc);
-		RECT rcText=rc;
-		TVTest::Style::Subtract(&rcText,m_Style.ItemButtonPadding);
+		ThemeDraw.Draw(Style.Back, &rc);
+		RECT rcText = rc;
+		TVTest::Style::Subtract(&rcText, m_Style.ItemButtonPadding);
 		TVTest::Theme::ForegroundStyle Fore;
 		if (fEnabled)
-			Fore.Fill=Style.Fore.Fill;
+			Fore.Fill = Style.Fore.Fill;
 		else
-			Fore.Fill=TVTest::Theme::MixStyle(Style.Fore.Fill,Style.Back.Fill);
-		pItem->DrawButton(hdcDst,ThemeDraw,Fore,rc,rcText,i);
+			Fore.Fill = TVTest::Theme::MixStyle(Style.Fore.Fill, Style.Back.Fill);
+		pItem->DrawButton(hdcDst, ThemeDraw, Fore, rc, rcText, i);
 	}
 
 	ThemeDraw.End();
 
-	if (hdcDst!=hdc)
-		m_Offscreen.CopyTo(hdc,&Rect);
+	if (hdcDst != hdc)
+		m_Offscreen.CopyTo(hdc, &Rect);
 }
 
 
@@ -785,23 +798,23 @@ void CInformationPanel::RedrawButton(ItemButtonNumber Button)
 {
 	if (Button.IsValid() && IsItemVisible(Button.Item)) {
 		RECT rc;
-		if (m_ItemList[Button.Item]->GetButtonRect(Button.Button,&rc))
+		if (m_ItemList[Button.Item]->GetButtonRect(Button.Button, &rc))
 			Invalidate(&rc);
 	}
 }
 
 
-CInformationPanel::ItemButtonNumber CInformationPanel::ButtonHitTest(int x,int y) const
+CInformationPanel::ItemButtonNumber CInformationPanel::ButtonHitTest(int x, int y) const
 {
 	ItemButtonNumber ItemButton;
 
-	for (int i=0;i<NUM_ITEMS;i++) {
+	for (int i = 0; i < NUM_ITEMS; i++) {
 		if (IsItemVisible(i)) {
-			const CItem *pItem=m_ItemList[i];
-			int Button=pItem->ButtonHitTest(x,y);
-			if (Button>=0 && pItem->IsButtonEnabled(Button)) {
-				ItemButton.Item=i;
-				ItemButton.Button=Button;
+			const CItem *pItem = m_ItemList[i];
+			int Button = pItem->ButtonHitTest(x, y);
+			if (Button >= 0 && pItem->IsButtonEnabled(Button)) {
+				ItemButton.Item = i;
+				ItemButton.Button = Button;
 				break;
 			}
 		}
@@ -813,10 +826,10 @@ CInformationPanel::ItemButtonNumber CInformationPanel::ButtonHitTest(int x,int y
 
 void CInformationPanel::SetHotButton(ItemButtonNumber Button)
 {
-	if (Button!=m_HotButton) {
+	if (Button != m_HotButton) {
 		if (m_HotButton.IsValid())
 			RedrawButton(m_HotButton);
-		m_HotButton=Button;
+		m_HotButton = Button;
 		if (m_HotButton.IsValid())
 			RedrawButton(m_HotButton);
 	}
@@ -825,11 +838,11 @@ void CInformationPanel::SetHotButton(ItemButtonNumber Button)
 
 bool CInformationPanel::ReadSettings(CSettings &Settings)
 {
-	for (int i=0;i<NUM_ITEMS;i++) {
-		CItem *pItem=m_ItemList[i];
+	for (int i = 0; i < NUM_ITEMS; i++) {
+		CItem *pItem = m_ItemList[i];
 		bool f;
 
-		if (Settings.Read(pItem->GetName(),&f))
+		if (Settings.Read(pItem->GetName(), &f))
 			pItem->SetVisible(f);
 	}
 	return true;
@@ -838,9 +851,9 @@ bool CInformationPanel::ReadSettings(CSettings &Settings)
 
 bool CInformationPanel::WriteSettings(CSettings &Settings)
 {
-	for (int i=0;i<NUM_ITEMS;i++) {
-		const CItem *pItem=m_ItemList[i];
-		Settings.Write(pItem->GetName(),pItem->IsVisible());
+	for (int i = 0; i < NUM_ITEMS; i++) {
+		const CItem *pItem = m_ItemList[i];
+		Settings.Write(pItem->GetName(), pItem->IsVisible());
 	}
 	return true;
 }
@@ -853,7 +866,7 @@ CInformationPanel::CProgramInfoSubclass::CProgramInfoSubclass(CInformationPanel 
 
 
 LRESULT CInformationPanel::CProgramInfoSubclass::OnMessage(
-	HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
+	HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	switch (uMsg) {
 	case WM_RBUTTONDOWN:
@@ -861,48 +874,48 @@ LRESULT CInformationPanel::CProgramInfoSubclass::OnMessage(
 
 	case WM_RBUTTONUP:
 		if (!static_cast<const CProgramInfoItem*>(m_pInfoPanel->GetItem(ITEM_PROGRAMINFO))->GetInfoText().empty()) {
-			HMENU hmenu=::CreatePopupMenu();
+			HMENU hmenu = ::CreatePopupMenu();
 			POINT pt;
 			int Command;
 
-			::AppendMenu(hmenu,MFT_STRING | MFS_ENABLED,1,TEXT("コピー(&C)"));
-			::AppendMenu(hmenu,MFT_STRING | MFS_ENABLED,2,TEXT("すべて選択(&A)"));
+			::AppendMenu(hmenu, MFT_STRING | MFS_ENABLED, 1, TEXT("コピー(&C)"));
+			::AppendMenu(hmenu, MFT_STRING | MFS_ENABLED, 2, TEXT("すべて選択(&A)"));
 
 			::GetCursorPos(&pt);
-			Command=::TrackPopupMenu(hmenu,TPM_RETURNCMD,pt.x,pt.y,0,hwnd,NULL);
-			if (Command==1) {
-				DWORD Start,End;
+			Command = ::TrackPopupMenu(hmenu, TPM_RETURNCMD, pt.x, pt.y, 0, hwnd, NULL);
+			if (Command == 1) {
+				DWORD Start, End;
 
-				::SendMessage(hwnd,WM_SETREDRAW,FALSE,0);
-				::SendMessage(hwnd,EM_GETSEL,(WPARAM)&Start,(LPARAM)&End);
-				if (Start==End)
-					::SendMessage(hwnd,EM_SETSEL,0,-1);
-				::SendMessage(hwnd,WM_COPY,0,0);
-				if (Start==End)
-					::SendMessage(hwnd,EM_SETSEL,Start,End);
-				::SendMessage(hwnd,WM_SETREDRAW,TRUE,0);
-			} else if (Command==2) {
-				::SendMessage(hwnd,EM_SETSEL,0,-1);
+				::SendMessage(hwnd, WM_SETREDRAW, FALSE, 0);
+				::SendMessage(hwnd, EM_GETSEL, (WPARAM)&Start, (LPARAM)&End);
+				if (Start == End)
+					::SendMessage(hwnd, EM_SETSEL, 0, -1);
+				::SendMessage(hwnd, WM_COPY, 0, 0);
+				if (Start == End)
+					::SendMessage(hwnd, EM_SETSEL, Start, End);
+				::SendMessage(hwnd, WM_SETREDRAW, TRUE, 0);
+			} else if (Command == 2) {
+				::SendMessage(hwnd, EM_SETSEL, 0, -1);
 			}
 			::DestroyMenu(hmenu);
 		}
 		return 0;
 
 	case WM_NCDESTROY:
-		m_pInfoPanel->m_hwndProgramInfo=NULL;
+		m_pInfoPanel->m_hwndProgramInfo = NULL;
 		break;
 	}
 
-	return CWindowSubclass::OnMessage(hwnd,uMsg,wParam,lParam);
+	return CWindowSubclass::OnMessage(hwnd, uMsg, wParam, lParam);
 }
 
 
 
 
 CInformationPanel::InformationPanelStyle::InformationPanelStyle()
-	: ButtonSize(16,16)
+	: ButtonSize(16, 16)
 	, LineSpacing(1)
-	, ItemButtonMargin(4,0,0,0)
+	, ItemButtonMargin(4, 0, 0, 0)
 	, ItemButtonPadding(2)
 {
 }
@@ -910,11 +923,11 @@ CInformationPanel::InformationPanelStyle::InformationPanelStyle()
 
 void CInformationPanel::InformationPanelStyle::SetStyle(const TVTest::Style::CStyleManager *pStyleManager)
 {
-	*this=InformationPanelStyle();
-	pStyleManager->Get(TEXT("info-panel.button"),&ButtonSize);
-	pStyleManager->Get(TEXT("info-panel.line-spacing"),&LineSpacing);
-	pStyleManager->Get(TEXT("info-panel.item.button.margin"),&ItemButtonMargin);
-	pStyleManager->Get(TEXT("info-panel.item.button.padding"),&ItemButtonPadding);
+	*this = InformationPanelStyle();
+	pStyleManager->Get(TEXT("info-panel.button"), &ButtonSize);
+	pStyleManager->Get(TEXT("info-panel.line-spacing"), &LineSpacing);
+	pStyleManager->Get(TEXT("info-panel.item.button.margin"), &ItemButtonMargin);
+	pStyleManager->Get(TEXT("info-panel.item.button.padding"), &ItemButtonPadding);
 }
 
 
@@ -931,7 +944,7 @@ void CInformationPanel::InformationPanelStyle::NormalizeStyle(
 
 
 
-CInformationPanel::CItem::CItem(CInformationPanel *pPanel,bool fVisible,int PropertyID)
+CInformationPanel::CItem::CItem(CInformationPanel *pPanel, bool fVisible, int PropertyID)
 	: m_pPanel(pPanel)
 	, m_fVisible(fVisible)
 	, m_PropertyID(PropertyID)
@@ -939,20 +952,20 @@ CInformationPanel::CItem::CItem(CInformationPanel *pPanel,bool fVisible,int Prop
 }
 
 
-void CInformationPanel::CItem::DrawItem(HDC hdc,const RECT &Rect,LPCTSTR pszText)
+void CInformationPanel::CItem::DrawItem(HDC hdc, const RECT &Rect, LPCTSTR pszText)
 {
-	m_pPanel->DrawItem(this,hdc,pszText,Rect);
+	m_pPanel->DrawItem(this, hdc, pszText, Rect);
 }
 
 
 void CInformationPanel::CItem::DrawButton(
-	HDC hdc,TVTest::Theme::CThemeDraw &ThemeDraw,
+	HDC hdc, TVTest::Theme::CThemeDraw &ThemeDraw,
 	const TVTest::Theme::ForegroundStyle Style,
-	const RECT &ButtonRect,const RECT &TextRect,
+	const RECT &ButtonRect, const RECT &TextRect,
 	int Button)
 {
-	if (Button==0)
-		ThemeDraw.Draw(Style,TextRect,TEXT("..."),DT_CENTER | DT_SINGLELINE | DT_BOTTOM);
+	if (Button == 0)
+		ThemeDraw.Draw(Style, TextRect, TEXT("..."), DT_CENTER | DT_SINGLELINE | DT_BOTTOM);
 }
 
 
@@ -962,14 +975,14 @@ int CInformationPanel::CItem::GetButtonCount() const
 }
 
 
-bool CInformationPanel::CItem::GetButtonRect(int Button,RECT *pRect) const
+bool CInformationPanel::CItem::GetButtonRect(int Button, RECT *pRect) const
 {
-	if (HasProperty() && Button==0) {
-		m_pPanel->GetItemRect(GetID(),pRect);
-		pRect->right-=m_pPanel->m_Style.ItemButtonMargin.Right;
-		pRect->left=pRect->right-m_pPanel->m_ItemButtonWidth;
-		pRect->top-=m_pPanel->m_Style.ItemButtonMargin.Top;
-		pRect->bottom-=m_pPanel->m_Style.ItemButtonMargin.Bottom;
+	if (HasProperty() && Button == 0) {
+		m_pPanel->GetItemRect(GetID(), pRect);
+		pRect->right -= m_pPanel->m_Style.ItemButtonMargin.Right;
+		pRect->left = pRect->right - m_pPanel->m_ItemButtonWidth;
+		pRect->top -= m_pPanel->m_Style.ItemButtonMargin.Top;
+		pRect->bottom -= m_pPanel->m_Style.ItemButtonMargin.Bottom;
 		return true;
 	}
 	return false;
@@ -978,14 +991,14 @@ bool CInformationPanel::CItem::GetButtonRect(int Button,RECT *pRect) const
 
 bool CInformationPanel::CItem::IsButtonEnabled(int Button) const
 {
-	return Button==0 && HasProperty()
+	return Button == 0 && HasProperty()
 		&& GetAppClass().UICore.GetCommandEnabledState(m_PropertyID);
 }
 
 
 bool CInformationPanel::CItem::OnButtonPushed(int Button)
 {
-	if (Button==0 && HasProperty()) {
+	if (Button == 0 && HasProperty()) {
 		GetAppClass().UICore.DoCommand(m_PropertyID);
 		return true;
 	}
@@ -993,23 +1006,23 @@ bool CInformationPanel::CItem::OnButtonPushed(int Button)
 }
 
 
-bool CInformationPanel::CItem::GetButtonTipText(int Button,LPTSTR pszText,int MaxText) const
+bool CInformationPanel::CItem::GetButtonTipText(int Button, LPTSTR pszText, int MaxText) const
 {
-	if (Button==0 && HasProperty()) {
-		return GetAppClass().CommandList.GetCommandNameByID(m_PropertyID,pszText,MaxText)>0;
+	if (Button == 0 && HasProperty()) {
+		return GetAppClass().CommandList.GetCommandNameByID(m_PropertyID, pszText, MaxText) > 0;
 	}
 	return false;
 }
 
 
-int CInformationPanel::CItem::ButtonHitTest(int x,int y) const
+int CInformationPanel::CItem::ButtonHitTest(int x, int y) const
 {
-	const int ButtonCount=GetButtonCount();
-	for (int i=0;i<ButtonCount;i++) {
+	const int ButtonCount = GetButtonCount();
+	for (int i = 0; i < ButtonCount; i++) {
 		RECT rc;
-		GetButtonRect(i,&rc);
-		POINT pt={x,y};
-		if (::PtInRect(&rc,pt))
+		GetButtonRect(i, &rc);
+		POINT pt = {x, y};
+		if (::PtInRect(&rc, pt))
 			return i;
 	}
 	return -1;
@@ -1030,8 +1043,8 @@ void CInformationPanel::CItem::Redraw()
 
 
 
-CInformationPanel::CVideoInfoItem::CVideoInfoItem(CInformationPanel *pPanel,bool fVisible)
-	: CItemTemplate(pPanel,fVisible)
+CInformationPanel::CVideoInfoItem::CVideoInfoItem(CInformationPanel *pPanel, bool fVisible)
+	: CItemTemplate(pPanel, fVisible)
 {
 	Reset();
 }
@@ -1039,67 +1052,68 @@ CInformationPanel::CVideoInfoItem::CVideoInfoItem(CInformationPanel *pPanel,bool
 
 void CInformationPanel::CVideoInfoItem::Reset()
 {
-	m_OriginalVideoWidth=0;
-	m_OriginalVideoHeight=0;
-	m_DisplayVideoWidth=0;
-	m_DisplayVideoHeight=0;
-	m_AspectX=0;
-	m_AspectY=0;
+	m_OriginalVideoWidth = 0;
+	m_OriginalVideoHeight = 0;
+	m_DisplayVideoWidth = 0;
+	m_DisplayVideoHeight = 0;
+	m_AspectX = 0;
+	m_AspectY = 0;
 }
 
 
 bool CInformationPanel::CVideoInfoItem::Update()
 {
-	const CCoreEngine &CoreEngine=GetAppClass().CoreEngine;
-	const LibISDB::ViewerFilter *pViewer=
+	const CCoreEngine &CoreEngine = GetAppClass().CoreEngine;
+	const LibISDB::ViewerFilter *pViewer =
 		GetAppClass().CoreEngine.GetFilter<LibISDB::ViewerFilter>();
-	int OriginalVideoWidth,OriginalVideoHeight;
-	int DisplayVideoWidth,DisplayVideoHeight;
-	int AspectX,AspectY;
+	int OriginalVideoWidth, OriginalVideoHeight;
+	int DisplayVideoWidth, DisplayVideoHeight;
+	int AspectX, AspectY;
 
-	OriginalVideoWidth=CoreEngine.GetOriginalVideoWidth();
-	OriginalVideoHeight=CoreEngine.GetOriginalVideoHeight();
-	DisplayVideoWidth=CoreEngine.GetDisplayVideoWidth();
-	DisplayVideoHeight=CoreEngine.GetDisplayVideoHeight();
-	if (pViewer==nullptr || !pViewer->GetEffectiveAspectRatio(&AspectX,&AspectY))
-		AspectX=AspectY=0;
+	OriginalVideoWidth = CoreEngine.GetOriginalVideoWidth();
+	OriginalVideoHeight = CoreEngine.GetOriginalVideoHeight();
+	DisplayVideoWidth = CoreEngine.GetDisplayVideoWidth();
+	DisplayVideoHeight = CoreEngine.GetDisplayVideoHeight();
+	if (pViewer == nullptr || !pViewer->GetEffectiveAspectRatio(&AspectX, &AspectY))
+		AspectX = AspectY = 0;
 
-	if (OriginalVideoWidth==m_OriginalVideoWidth
-			&& OriginalVideoHeight==m_OriginalVideoHeight
-			&& DisplayVideoWidth==m_DisplayVideoWidth
-			&& DisplayVideoHeight==m_DisplayVideoHeight
-			&& AspectX==m_AspectX
-			&& AspectY==m_AspectY)
+	if (OriginalVideoWidth == m_OriginalVideoWidth
+			&& OriginalVideoHeight == m_OriginalVideoHeight
+			&& DisplayVideoWidth == m_DisplayVideoWidth
+			&& DisplayVideoHeight == m_DisplayVideoHeight
+			&& AspectX == m_AspectX
+			&& AspectY == m_AspectY)
 		return false;
 
-	m_OriginalVideoWidth=OriginalVideoWidth;
-	m_OriginalVideoHeight=OriginalVideoHeight;
-	m_DisplayVideoWidth=DisplayVideoWidth;
-	m_DisplayVideoHeight=DisplayVideoHeight;
-	m_AspectX=AspectX;
-	m_AspectY=AspectY;
+	m_OriginalVideoWidth = OriginalVideoWidth;
+	m_OriginalVideoHeight = OriginalVideoHeight;
+	m_DisplayVideoWidth = DisplayVideoWidth;
+	m_DisplayVideoHeight = DisplayVideoHeight;
+	m_AspectX = AspectX;
+	m_AspectY = AspectY;
 
 	return true;
 }
 
 
-void CInformationPanel::CVideoInfoItem::Draw(HDC hdc,const RECT &Rect)
+void CInformationPanel::CVideoInfoItem::Draw(HDC hdc, const RECT &Rect)
 {
 	TCHAR szText[256];
 
-	StdUtil::snprintf(szText,lengthof(szText),
-					  TEXT("%d x %d [%d x %d (%d:%d)]"),
-					  m_OriginalVideoWidth,m_OriginalVideoHeight,
-					  m_DisplayVideoWidth,m_DisplayVideoHeight,
-					  m_AspectX,m_AspectY);
-	DrawItem(hdc,Rect,szText);
+	StdUtil::snprintf(
+		szText, lengthof(szText),
+		TEXT("%d x %d [%d x %d (%d:%d)]"),
+		m_OriginalVideoWidth, m_OriginalVideoHeight,
+		m_DisplayVideoWidth, m_DisplayVideoHeight,
+		m_AspectX, m_AspectY);
+	DrawItem(hdc, Rect, szText);
 }
 
 
 
 
-CInformationPanel::CVideoDecoderItem::CVideoDecoderItem(CInformationPanel *pPanel,bool fVisible)
-	: CItemTemplate(pPanel,fVisible,CM_VIDEODECODERPROPERTY)
+CInformationPanel::CVideoDecoderItem::CVideoDecoderItem(CInformationPanel *pPanel, bool fVisible)
+	: CItemTemplate(pPanel, fVisible, CM_VIDEODECODERPROPERTY)
 {
 }
 
@@ -1112,14 +1126,14 @@ void CInformationPanel::CVideoDecoderItem::Reset()
 
 bool CInformationPanel::CVideoDecoderItem::Update()
 {
-	const LibISDB::ViewerFilter *pViewer=
+	const LibISDB::ViewerFilter *pViewer =
 		GetAppClass().CoreEngine.GetFilter<LibISDB::ViewerFilter>();
 	LibISDB::String DecoderName;
 
-	if (pViewer!=nullptr && pViewer->GetVideoDecoderName(&DecoderName)) {
-		if (m_VideoDecoderName==DecoderName)
+	if (pViewer != nullptr && pViewer->GetVideoDecoderName(&DecoderName)) {
+		if (m_VideoDecoderName == DecoderName)
 			return false;
-		m_VideoDecoderName=DecoderName;
+		m_VideoDecoderName = DecoderName;
 	} else {
 		if (m_VideoDecoderName.empty())
 			return false;
@@ -1130,16 +1144,16 @@ bool CInformationPanel::CVideoDecoderItem::Update()
 }
 
 
-void CInformationPanel::CVideoDecoderItem::Draw(HDC hdc,const RECT &Rect)
+void CInformationPanel::CVideoDecoderItem::Draw(HDC hdc, const RECT &Rect)
 {
-	DrawItem(hdc,Rect,m_VideoDecoderName.c_str());
+	DrawItem(hdc, Rect, m_VideoDecoderName.c_str());
 }
 
 
 
 
-CInformationPanel::CVideoRendererItem::CVideoRendererItem(CInformationPanel *pPanel,bool fVisible)
-	: CItemTemplate(pPanel,fVisible,CM_VIDEORENDERERPROPERTY)
+CInformationPanel::CVideoRendererItem::CVideoRendererItem(CInformationPanel *pPanel, bool fVisible)
+	: CItemTemplate(pPanel, fVisible, CM_VIDEORENDERERPROPERTY)
 {
 }
 
@@ -1152,14 +1166,14 @@ void CInformationPanel::CVideoRendererItem::Reset()
 
 bool CInformationPanel::CVideoRendererItem::Update()
 {
-	const LibISDB::ViewerFilter *pViewer=
+	const LibISDB::ViewerFilter *pViewer =
 		GetAppClass().CoreEngine.GetFilter<LibISDB::ViewerFilter>();
 	LibISDB::String RendererName;
 
-	if (pViewer!=nullptr && pViewer->GetVideoRendererName(&RendererName)) {
-		if (m_VideoRendererName==RendererName)
+	if (pViewer != nullptr && pViewer->GetVideoRendererName(&RendererName)) {
+		if (m_VideoRendererName == RendererName)
 			return false;
-		m_VideoRendererName=RendererName;
+		m_VideoRendererName = RendererName;
 	} else {
 		if (m_VideoRendererName.empty())
 			return false;
@@ -1170,16 +1184,16 @@ bool CInformationPanel::CVideoRendererItem::Update()
 }
 
 
-void CInformationPanel::CVideoRendererItem::Draw(HDC hdc,const RECT &Rect)
+void CInformationPanel::CVideoRendererItem::Draw(HDC hdc, const RECT &Rect)
 {
-	DrawItem(hdc,Rect,m_VideoRendererName.c_str());
+	DrawItem(hdc, Rect, m_VideoRendererName.c_str());
 }
 
 
 
 
-CInformationPanel::CAudioDeviceItem::CAudioDeviceItem(CInformationPanel *pPanel,bool fVisible)
-	: CItemTemplate(pPanel,fVisible,CM_AUDIORENDERERPROPERTY)
+CInformationPanel::CAudioDeviceItem::CAudioDeviceItem(CInformationPanel *pPanel, bool fVisible)
+	: CItemTemplate(pPanel, fVisible, CM_AUDIORENDERERPROPERTY)
 {
 }
 
@@ -1192,14 +1206,14 @@ void CInformationPanel::CAudioDeviceItem::Reset()
 
 bool CInformationPanel::CAudioDeviceItem::Update()
 {
-	const LibISDB::ViewerFilter *pViewer=
+	const LibISDB::ViewerFilter *pViewer =
 		GetAppClass().CoreEngine.GetFilter<LibISDB::ViewerFilter>();
 	LibISDB::String DeviceName;
 
-	if (pViewer!=nullptr && pViewer->GetAudioRendererName(&DeviceName)) {
-		if (m_AudioDeviceName==DeviceName)
+	if (pViewer != nullptr && pViewer->GetAudioRendererName(&DeviceName)) {
+		if (m_AudioDeviceName == DeviceName)
 			return false;
-		m_AudioDeviceName=DeviceName;
+		m_AudioDeviceName = DeviceName;
 	} else {
 		if (m_AudioDeviceName.empty())
 			return false;
@@ -1210,16 +1224,16 @@ bool CInformationPanel::CAudioDeviceItem::Update()
 }
 
 
-void CInformationPanel::CAudioDeviceItem::Draw(HDC hdc,const RECT &Rect)
+void CInformationPanel::CAudioDeviceItem::Draw(HDC hdc, const RECT &Rect)
 {
-	DrawItem(hdc,Rect,m_AudioDeviceName.c_str());
+	DrawItem(hdc, Rect, m_AudioDeviceName.c_str());
 }
 
 
 
 
-CInformationPanel::CSignalLevelItem::CSignalLevelItem(CInformationPanel *pPanel,bool fVisible)
-	: CItemTemplate(pPanel,fVisible)
+CInformationPanel::CSignalLevelItem::CSignalLevelItem(CInformationPanel *pPanel, bool fVisible)
+	: CItemTemplate(pPanel, fVisible)
 	, m_fShowSignalLevel(true)
 {
 	Reset();
@@ -1228,49 +1242,49 @@ CInformationPanel::CSignalLevelItem::CSignalLevelItem(CInformationPanel *pPanel,
 
 void CInformationPanel::CSignalLevelItem::Reset()
 {
-	m_SignalLevel=0.0f;
-	m_BitRate=0;
+	m_SignalLevel = 0.0f;
+	m_BitRate = 0;
 }
 
 
 bool CInformationPanel::CSignalLevelItem::Update()
 {
-	const CCoreEngine &CoreEngine=GetAppClass().CoreEngine;
-	const float SignalLevel=
+	const CCoreEngine &CoreEngine = GetAppClass().CoreEngine;
+	const float SignalLevel =
 		m_fShowSignalLevel ? CoreEngine.GetSignalLevel() : 0.0f;
-	const DWORD BitRate=CoreEngine.GetBitRate();
+	const DWORD BitRate = CoreEngine.GetBitRate();
 
-	if (SignalLevel==m_SignalLevel && BitRate==m_BitRate)
+	if (SignalLevel == m_SignalLevel && BitRate == m_BitRate)
 		return false;
 
-	m_SignalLevel=SignalLevel;
-	m_BitRate=BitRate;
+	m_SignalLevel = SignalLevel;
+	m_BitRate = BitRate;
 
 	return true;
 }
 
 
-void CInformationPanel::CSignalLevelItem::Draw(HDC hdc,const RECT &Rect)
+void CInformationPanel::CSignalLevelItem::Draw(HDC hdc, const RECT &Rect)
 {
-	const CCoreEngine &CoreEngine=GetAppClass().CoreEngine;
+	const CCoreEngine &CoreEngine = GetAppClass().CoreEngine;
 	TCHAR szText[64];
-	int Length=0;
+	int Length = 0;
 
 	if (m_fShowSignalLevel) {
 		TCHAR szSignalLevel[32];
-		CoreEngine.GetSignalLevelText(m_SignalLevel,szSignalLevel,lengthof(szSignalLevel));
-		Length=StdUtil::snprintf(szText,lengthof(szText),TEXT("%s / "),szSignalLevel);
+		CoreEngine.GetSignalLevelText(m_SignalLevel, szSignalLevel, lengthof(szSignalLevel));
+		Length = StdUtil::snprintf(szText, lengthof(szText), TEXT("%s / "), szSignalLevel);
 	}
-	CoreEngine.GetBitRateText(m_BitRate,szText+Length,lengthof(szText)-Length);
+	CoreEngine.GetBitRateText(m_BitRate, szText + Length, lengthof(szText) - Length);
 
-	DrawItem(hdc,Rect,szText);
+	DrawItem(hdc, Rect, szText);
 }
 
 
 void CInformationPanel::CSignalLevelItem::ShowSignalLevel(bool fShow)
 {
-	if (m_fShowSignalLevel!=fShow) {
-		m_fShowSignalLevel=fShow;
+	if (m_fShowSignalLevel != fShow) {
+		m_fShowSignalLevel = fShow;
 		Update();
 		Redraw();
 	}
@@ -1279,8 +1293,8 @@ void CInformationPanel::CSignalLevelItem::ShowSignalLevel(bool fShow)
 
 
 
-CInformationPanel::CMediaBitRateItem::CMediaBitRateItem(CInformationPanel *pPanel,bool fVisible)
-	: CItemTemplate(pPanel,fVisible)
+CInformationPanel::CMediaBitRateItem::CMediaBitRateItem(CInformationPanel *pPanel, bool fVisible)
+	: CItemTemplate(pPanel, fVisible)
 {
 	Reset();
 }
@@ -1288,61 +1302,64 @@ CInformationPanel::CMediaBitRateItem::CMediaBitRateItem(CInformationPanel *pPane
 
 void CInformationPanel::CMediaBitRateItem::Reset()
 {
-	m_VideoBitRate=0;
-	m_AudioBitRate=0;
+	m_VideoBitRate = 0;
+	m_AudioBitRate = 0;
 }
 
 
 bool CInformationPanel::CMediaBitRateItem::Update()
 {
-	const LibISDB::TSPacketCounterFilter *pPacketCounter=
+	const LibISDB::TSPacketCounterFilter *pPacketCounter =
 		GetAppClass().CoreEngine.GetFilter<LibISDB::TSPacketCounterFilter>();
-	DWORD VideoBitRate,AudioBitRate;
+	DWORD VideoBitRate, AudioBitRate;
 
-	if (pPacketCounter!=nullptr) {
-		VideoBitRate=pPacketCounter->GetVideoBitRate();
-		AudioBitRate=pPacketCounter->GetAudioBitRate();
+	if (pPacketCounter != nullptr) {
+		VideoBitRate = pPacketCounter->GetVideoBitRate();
+		AudioBitRate = pPacketCounter->GetAudioBitRate();
 	} else {
-		VideoBitRate=0;
-		AudioBitRate=0;
+		VideoBitRate = 0;
+		AudioBitRate = 0;
 	}
 
-	if (VideoBitRate==m_VideoBitRate && AudioBitRate==m_AudioBitRate)
+	if (VideoBitRate == m_VideoBitRate && AudioBitRate == m_AudioBitRate)
 		return false;
 
-	m_VideoBitRate=VideoBitRate;
-	m_AudioBitRate=AudioBitRate;
+	m_VideoBitRate = VideoBitRate;
+	m_AudioBitRate = AudioBitRate;
 
 	return true;
 }
 
 
-void CInformationPanel::CMediaBitRateItem::Draw(HDC hdc,const RECT &Rect)
+void CInformationPanel::CMediaBitRateItem::Draw(HDC hdc, const RECT &Rect)
 {
 	TCHAR szText[64];
 	int Length;
 
-	if (m_VideoBitRate<1000*1000) {
-		Length=StdUtil::snprintf(szText,lengthof(szText),
-								 TEXT("映像 %u kbps"),
-								 (m_VideoBitRate+500)/1000);
+	if (m_VideoBitRate < 1000 * 1000) {
+		Length = StdUtil::snprintf(
+			szText, lengthof(szText),
+			TEXT("映像 %u kbps"),
+			(m_VideoBitRate + 500) / 1000);
 	} else {
-		Length=StdUtil::snprintf(szText,lengthof(szText),
-								 TEXT("映像 %.2f Mbps"),
-								 (double)(m_VideoBitRate)/(double)(1000*1000));
+		Length = StdUtil::snprintf(
+			szText, lengthof(szText),
+			TEXT("映像 %.2f Mbps"),
+			(double)(m_VideoBitRate) / (double)(1000 * 1000));
 	}
-	StdUtil::snprintf(szText+Length,lengthof(szText)-Length,
-					  TEXT(" / 音声 %u kbps"),
-					  (m_AudioBitRate+500)/1000);
+	StdUtil::snprintf(
+		szText + Length, lengthof(szText) - Length,
+		TEXT(" / 音声 %u kbps"),
+		(m_AudioBitRate + 500) / 1000);
 
-	DrawItem(hdc,Rect,szText);
+	DrawItem(hdc, Rect, szText);
 }
 
 
 
 
-CInformationPanel::CErrorItem::CErrorItem(CInformationPanel *pPanel,bool fVisible)
-	: CItemTemplate(pPanel,fVisible)
+CInformationPanel::CErrorItem::CErrorItem(CInformationPanel *pPanel, bool fVisible)
+	: CItemTemplate(pPanel, fVisible)
 {
 	Reset();
 }
@@ -1350,54 +1367,56 @@ CInformationPanel::CErrorItem::CErrorItem(CInformationPanel *pPanel,bool fVisibl
 
 void CInformationPanel::CErrorItem::Reset()
 {
-	m_fShowScramble=true;
-	m_ContinuityErrorPacketCount=0;
-	m_ErrorPacketCount=0;
-	m_ScramblePacketCount=0;
+	m_fShowScramble = true;
+	m_ContinuityErrorPacketCount = 0;
+	m_ErrorPacketCount = 0;
+	m_ScramblePacketCount = 0;
 }
 
 
 bool CInformationPanel::CErrorItem::Update()
 {
-	const CCoreEngine &CoreEngine=GetAppClass().CoreEngine;
-	const ULONGLONG ContinuityErrorPacketCount=CoreEngine.GetContinuityErrorPacketCount();
-	const ULONGLONG ErrorPacketCount=CoreEngine.GetErrorPacketCount();
-	const ULONGLONG ScramblePacketCount=CoreEngine.GetScramblePacketCount();
+	const CCoreEngine &CoreEngine = GetAppClass().CoreEngine;
+	const ULONGLONG ContinuityErrorPacketCount = CoreEngine.GetContinuityErrorPacketCount();
+	const ULONGLONG ErrorPacketCount = CoreEngine.GetErrorPacketCount();
+	const ULONGLONG ScramblePacketCount = CoreEngine.GetScramblePacketCount();
 
-	if (ContinuityErrorPacketCount==m_ContinuityErrorPacketCount
-			&& ErrorPacketCount==m_ErrorPacketCount
-			&& ScramblePacketCount==m_ScramblePacketCount)
+	if (ContinuityErrorPacketCount == m_ContinuityErrorPacketCount
+			&& ErrorPacketCount == m_ErrorPacketCount
+			&& ScramblePacketCount == m_ScramblePacketCount)
 		return false;
 
-	m_ContinuityErrorPacketCount=ContinuityErrorPacketCount;
-	m_ErrorPacketCount=ErrorPacketCount;
-	m_ScramblePacketCount=ScramblePacketCount;
+	m_ContinuityErrorPacketCount = ContinuityErrorPacketCount;
+	m_ErrorPacketCount = ErrorPacketCount;
+	m_ScramblePacketCount = ScramblePacketCount;
 
 	return true;
 }
 
 
-void CInformationPanel::CErrorItem::Draw(HDC hdc,const RECT &Rect)
+void CInformationPanel::CErrorItem::Draw(HDC hdc, const RECT &Rect)
 {
 	TCHAR szText[256];
 	int Length;
 
-	Length=StdUtil::snprintf(szText,lengthof(szText),
-							 TEXT("D %llu / E %llu"),
-							 m_ContinuityErrorPacketCount,
-							 m_ErrorPacketCount);
+	Length = StdUtil::snprintf(
+		szText, lengthof(szText),
+		TEXT("D %llu / E %llu"),
+		m_ContinuityErrorPacketCount,
+		m_ErrorPacketCount);
 	if (m_fShowScramble) {
-		StdUtil::snprintf(szText+Length,lengthof(szText)-Length,
-						  TEXT(" / S %llu"),m_ScramblePacketCount);
+		StdUtil::snprintf(
+			szText + Length, lengthof(szText) - Length,
+			TEXT(" / S %llu"), m_ScramblePacketCount);
 	}
-	DrawItem(hdc,Rect,szText);
+	DrawItem(hdc, Rect, szText);
 }
 
 
 
 
-CInformationPanel::CRecordItem::CRecordItem(CInformationPanel *pPanel,bool fVisible)
-	: CItemTemplate(pPanel,fVisible)
+CInformationPanel::CRecordItem::CRecordItem(CInformationPanel *pPanel, bool fVisible)
+	: CItemTemplate(pPanel, fVisible)
 {
 	Reset();
 }
@@ -1405,78 +1424,81 @@ CInformationPanel::CRecordItem::CRecordItem(CInformationPanel *pPanel,bool fVisi
 
 void CInformationPanel::CRecordItem::Reset()
 {
-	m_fRecording=false;
+	m_fRecording = false;
 }
 
 
 bool CInformationPanel::CRecordItem::Update()
 {
-	CAppMain &App=GetAppClass();
-	bool fRecording=App.RecordManager.IsRecording();
+	CAppMain &App = GetAppClass();
+	bool fRecording = App.RecordManager.IsRecording();
 	LONGLONG WroteSize;
 	CRecordTask::DurationType RecordTime;
 	LONGLONG DiskFreeSpace;
 
 	if (fRecording) {
-		const CRecordTask *pRecordTask=App.RecordManager.GetRecordTask();
-		WroteSize=pRecordTask->GetWroteSize();
-		RecordTime=pRecordTask->GetRecordTime();
-		DiskFreeSpace=pRecordTask->GetFreeSpace();
+		const CRecordTask *pRecordTask = App.RecordManager.GetRecordTask();
+		WroteSize = pRecordTask->GetWroteSize();
+		RecordTime = pRecordTask->GetRecordTime();
+		DiskFreeSpace = pRecordTask->GetFreeSpace();
 	}
 
-	if (fRecording==m_fRecording
+	if (fRecording == m_fRecording
 			&& (!fRecording
-				|| (WroteSize==m_WroteSize
-					&& RecordTime==m_RecordTime
-					&& DiskFreeSpace==m_DiskFreeSpace)))
+				|| (WroteSize == m_WroteSize
+					&& RecordTime == m_RecordTime
+					&& DiskFreeSpace == m_DiskFreeSpace)))
 		return false;
 
-	m_fRecording=fRecording;
+	m_fRecording = fRecording;
 	if (fRecording) {
-		m_WroteSize=WroteSize;
-		m_RecordTime=RecordTime;
-		m_DiskFreeSpace=DiskFreeSpace;
+		m_WroteSize = WroteSize;
+		m_RecordTime = RecordTime;
+		m_DiskFreeSpace = DiskFreeSpace;
 	}
 
 	return true;
 }
 
 
-void CInformationPanel::CRecordItem::Draw(HDC hdc,const RECT &Rect)
+void CInformationPanel::CRecordItem::Draw(HDC hdc, const RECT &Rect)
 {
 	if (m_fRecording) {
 		TCHAR szText[256];
 		int Length;
 
-		unsigned int RecordSec=(unsigned int)(m_RecordTime/1000);
-		Length=StdUtil::snprintf(szText,lengthof(szText),
+		unsigned int RecordSec = (unsigned int)(m_RecordTime / 1000);
+		Length = StdUtil::snprintf(
+			szText, lengthof(szText),
 			TEXT("● %d:%02d:%02d"),
-			RecordSec/(60*60),(RecordSec/60)%60,RecordSec%60);
-		if (m_WroteSize>=0) {
-			unsigned int Size=
-				(unsigned int)(m_WroteSize/(ULONGLONG)(1024*1024/100));
-			Length+=StdUtil::snprintf(szText+Length,lengthof(szText)-Length,
-									  TEXT(" / %d.%02d MB"),
-									  Size/100,Size%100);
+			RecordSec / (60 * 60), (RecordSec / 60) % 60, RecordSec % 60);
+		if (m_WroteSize >= 0) {
+			unsigned int Size =
+				(unsigned int)(m_WroteSize / (ULONGLONG)(1024 * 1024 / 100));
+			Length += StdUtil::snprintf(
+				szText + Length, lengthof(szText) - Length,
+				TEXT(" / %d.%02d MB"),
+				Size / 100, Size % 100);
 		}
-		if (m_DiskFreeSpace>=0) {
-			unsigned int FreeSpace=
-				(unsigned int)(m_DiskFreeSpace/(ULONGLONG)(1024*1024*1024/100));
-			StdUtil::snprintf(szText+Length,lengthof(szText)-Length,
-							  TEXT(" / %d.%02d GB空き"),
-							  FreeSpace/100,FreeSpace%100);
+		if (m_DiskFreeSpace >= 0) {
+			unsigned int FreeSpace =
+				(unsigned int)(m_DiskFreeSpace / (ULONGLONG)(1024 * 1024 * 1024 / 100));
+			StdUtil::snprintf(
+				szText + Length, lengthof(szText) - Length,
+				TEXT(" / %d.%02d GB空き"),
+				FreeSpace / 100, FreeSpace % 100);
 		}
-		DrawItem(hdc,Rect,szText);
+		DrawItem(hdc, Rect, szText);
 	} else {
-		DrawItem(hdc,Rect,TEXT("■ <録画していません>"));
+		DrawItem(hdc, Rect, TEXT("■ <録画していません>"));
 	}
 }
 
 
 
 
-CInformationPanel::CServiceItem::CServiceItem(CInformationPanel *pPanel,bool fVisible)
-	: CItemTemplate(pPanel,fVisible)
+CInformationPanel::CServiceItem::CServiceItem(CInformationPanel *pPanel, bool fVisible)
+	: CItemTemplate(pPanel, fVisible)
 {
 }
 
@@ -1489,15 +1511,15 @@ void CInformationPanel::CServiceItem::Reset()
 
 bool CInformationPanel::CServiceItem::Update()
 {
-	const CCoreEngine &CoreEngine=GetAppClass().CoreEngine;
-	const LibISDB::AnalyzerFilter *pAnalyzer=CoreEngine.GetFilter<LibISDB::AnalyzerFilter>();
+	const CCoreEngine &CoreEngine = GetAppClass().CoreEngine;
+	const LibISDB::AnalyzerFilter *pAnalyzer = CoreEngine.GetFilter<LibISDB::AnalyzerFilter>();
 	TVTest::String ServiceName;
 
-	if (pAnalyzer!=nullptr
-			&& pAnalyzer->GetServiceName(CoreEngine.GetServiceIndex(),&ServiceName)) {
-		if (m_ServiceName==ServiceName)
+	if (pAnalyzer != nullptr
+			&& pAnalyzer->GetServiceName(CoreEngine.GetServiceIndex(), &ServiceName)) {
+		if (m_ServiceName == ServiceName)
 			return false;
-		m_ServiceName=ServiceName;
+		m_ServiceName = ServiceName;
 	} else {
 		if (m_ServiceName.empty())
 			return false;
@@ -1508,16 +1530,16 @@ bool CInformationPanel::CServiceItem::Update()
 }
 
 
-void CInformationPanel::CServiceItem::Draw(HDC hdc,const RECT &Rect)
+void CInformationPanel::CServiceItem::Draw(HDC hdc, const RECT &Rect)
 {
-	DrawItem(hdc,Rect,m_ServiceName.c_str());
+	DrawItem(hdc, Rect, m_ServiceName.c_str());
 }
 
 
 
 
-CInformationPanel::CProgramInfoItem::CProgramInfoItem(CInformationPanel *pPanel,bool fVisible)
-	: CItemTemplate(pPanel,fVisible)
+CInformationPanel::CProgramInfoItem::CProgramInfoItem(CInformationPanel *pPanel, bool fVisible)
+	: CItemTemplate(pPanel, fVisible)
 {
 	Reset();
 }
@@ -1525,27 +1547,28 @@ CInformationPanel::CProgramInfoItem::CProgramInfoItem(CInformationPanel *pPanel,
 
 void CInformationPanel::CProgramInfoItem::Reset()
 {
-	m_fNext=false;
+	m_fNext = false;
 	m_InfoText.clear();
 }
 
 
 bool CInformationPanel::CProgramInfoItem::Update()
 {
-	CCoreEngine &CoreEngine=GetAppClass().CoreEngine;
-	TCHAR szText[4096],szTemp[256];
-	CStaticStringFormatter Formatter(szText,lengthof(szText));
+	CCoreEngine &CoreEngine = GetAppClass().CoreEngine;
+	TCHAR szText[4096], szTemp[256];
+	CStaticStringFormatter Formatter(szText, lengthof(szText));
 
 	if (m_fNext)
 		Formatter.Append(TEXT("次 : "));
 
 	LibISDB::EventInfo EventInfo;
 
-	if (CoreEngine.GetCurrentEventInfo(&EventInfo,m_fNext)) {
-		if (EpgUtil::FormatEventTime(EventInfo,szTemp,lengthof(szTemp),
-									 EpgUtil::EVENT_TIME_DATE |
-									 EpgUtil::EVENT_TIME_YEAR |
-									 EpgUtil::EVENT_TIME_UNDECIDED_TEXT)>0) {
+	if (CoreEngine.GetCurrentEventInfo(&EventInfo, m_fNext)) {
+		if (EpgUtil::FormatEventTime(
+					EventInfo, szTemp, lengthof(szTemp),
+					EpgUtil::EVENT_TIME_DATE |
+					EpgUtil::EVENT_TIME_YEAR |
+					EpgUtil::EVENT_TIME_UNDECIDED_TEXT) > 0) {
 			Formatter.Append(szTemp);
 			Formatter.Append(TEXT("\r\n"));
 		}
@@ -1564,31 +1587,34 @@ bool CInformationPanel::CProgramInfoItem::Update()
 		}
 	}
 
-	const LibISDB::AnalyzerFilter *pAnalyzer=CoreEngine.GetFilter<LibISDB::AnalyzerFilter>();
+	const LibISDB::AnalyzerFilter *pAnalyzer = CoreEngine.GetFilter<LibISDB::AnalyzerFilter>();
 	LibISDB::AnalyzerFilter::EventSeriesInfo SeriesInfo;
-	if (pAnalyzer->GetEventSeriesInfo(CoreEngine.GetServiceIndex(),&SeriesInfo,m_fNext)
-			&& SeriesInfo.EpisodeNumber!=0 && SeriesInfo.LastEpisodeNumber!=0) {
+	if (pAnalyzer->GetEventSeriesInfo(CoreEngine.GetServiceIndex(), &SeriesInfo, m_fNext)
+			&& SeriesInfo.EpisodeNumber != 0 && SeriesInfo.LastEpisodeNumber != 0) {
 		Formatter.Append(TEXT("\r\n\r\n(シリーズ"));
-		if (SeriesInfo.RepeatLabel!=0)
+		if (SeriesInfo.RepeatLabel != 0)
 			Formatter.Append(TEXT(" [再]"));
-		if (SeriesInfo.EpisodeNumber!=0 && SeriesInfo.LastEpisodeNumber!=0)
-			Formatter.AppendFormat(TEXT(" 第%d回 / 全%d回"),
-								   SeriesInfo.EpisodeNumber,SeriesInfo.LastEpisodeNumber);
+		if (SeriesInfo.EpisodeNumber != 0 && SeriesInfo.LastEpisodeNumber != 0)
+			Formatter.AppendFormat(
+				TEXT(" 第%d回 / 全%d回"),
+				SeriesInfo.EpisodeNumber, SeriesInfo.LastEpisodeNumber);
 		// expire_date は実際の最終回の日時でないので、紛らわしいため表示しない
 		/*
-		if (SeriesInfo.ExpireDate.IsValid())
-			Formatter.AppendFormat(TEXT(" 終了予定%d/%d/%d"),
-								   SeriesInfo.ExpireDate.Year,
-								   SeriesInfo.ExpireDate.Month,
-								   SeriesInfo.ExpireDate.Day);
+		if (SeriesInfo.ExpireDate.IsValid()) {
+			Formatter.AppendFormat(
+				TEXT(" 終了予定%d/%d/%d"),
+				SeriesInfo.ExpireDate.Year,
+				SeriesInfo.ExpireDate.Month,
+				SeriesInfo.ExpireDate.Day);
+		}
 		*/
 		Formatter.Append(TEXT(")"));
 	}
 
-	if (m_InfoText.compare(Formatter.GetString())==0)
+	if (m_InfoText.compare(Formatter.GetString()) == 0)
 		return false;
 
-	m_InfoText=Formatter.GetString();
+	m_InfoText = Formatter.GetString();
 
 	m_pPanel->UpdateProgramInfoText();
 
@@ -1596,36 +1622,37 @@ bool CInformationPanel::CProgramInfoItem::Update()
 }
 
 
-void CInformationPanel::CProgramInfoItem::Draw(HDC hdc,const RECT &Rect)
+void CInformationPanel::CProgramInfoItem::Draw(HDC hdc, const RECT &Rect)
 {
-	DrawItem(hdc,Rect,NULL);
+	DrawItem(hdc, Rect, NULL);
 }
 
 
 void CInformationPanel::CProgramInfoItem::DrawButton(
-	HDC hdc,TVTest::Theme::CThemeDraw &ThemeDraw,
+	HDC hdc, TVTest::Theme::CThemeDraw &ThemeDraw,
 	const TVTest::Theme::ForegroundStyle Style,
-	const RECT &ButtonRect,const RECT &TextRect,
+	const RECT &ButtonRect, const RECT &TextRect,
 	int Button)
 {
-	HFONT hfontOld=DrawUtil::SelectObject(hdc,m_pPanel->m_IconFont);
-	ThemeDraw.Draw(Style,ButtonRect,
-				   Button==BUTTON_NEXT?TEXT("4"):TEXT("3"),
-				   DT_CENTER | DT_VCENTER | DT_SINGLELINE);
-	::SelectObject(hdc,hfontOld);
+	HFONT hfontOld = DrawUtil::SelectObject(hdc, m_pPanel->m_IconFont);
+	ThemeDraw.Draw(
+		Style, ButtonRect,
+		Button == BUTTON_NEXT ? TEXT("4") : TEXT("3"),
+		DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+	::SelectObject(hdc, hfontOld);
 }
 
 
-bool CInformationPanel::CProgramInfoItem::GetButtonRect(int Button,RECT *pRect) const
+bool CInformationPanel::CProgramInfoItem::GetButtonRect(int Button, RECT *pRect) const
 {
-	if (Button==BUTTON_PREV || Button==BUTTON_NEXT) {
+	if (Button == BUTTON_PREV || Button == BUTTON_NEXT) {
 		RECT rc;
 
-		m_pPanel->GetItemRect(GetID(),&rc);
-		pRect->left=rc.right-m_pPanel->m_Style.ButtonSize.Width*(2-Button);
-		pRect->right=pRect->left+m_pPanel->m_Style.ButtonSize.Width;
-		pRect->top=rc.bottom;
-		pRect->bottom=rc.bottom+m_pPanel->m_Style.ButtonSize.Height;
+		m_pPanel->GetItemRect(GetID(), &rc);
+		pRect->left = rc.right - m_pPanel->m_Style.ButtonSize.Width * (2 - Button);
+		pRect->right = pRect->left + m_pPanel->m_Style.ButtonSize.Width;
+		pRect->top = rc.bottom;
+		pRect->bottom = rc.bottom + m_pPanel->m_Style.ButtonSize.Height;
 
 		return true;
 	}
@@ -1653,9 +1680,9 @@ bool CInformationPanel::CProgramInfoItem::OnButtonPushed(int Button)
 	switch (Button) {
 	case BUTTON_PREV:
 	case BUTTON_NEXT:
-		SetNext(Button==BUTTON_NEXT);
-		m_pPanel->RedrawButton(GetID(),BUTTON_PREV);
-		m_pPanel->RedrawButton(GetID(),BUTTON_NEXT);
+		SetNext(Button == BUTTON_NEXT);
+		m_pPanel->RedrawButton(GetID(), BUTTON_PREV);
+		m_pPanel->RedrawButton(GetID(), BUTTON_NEXT);
 		return true;
 	}
 
@@ -1663,15 +1690,15 @@ bool CInformationPanel::CProgramInfoItem::OnButtonPushed(int Button)
 }
 
 
-bool CInformationPanel::CProgramInfoItem::GetButtonTipText(int Button,LPTSTR pszText,int MaxText) const
+bool CInformationPanel::CProgramInfoItem::GetButtonTipText(int Button, LPTSTR pszText, int MaxText) const
 {
 	switch (Button) {
 	case BUTTON_PREV:
-		::lstrcpyn(pszText,TEXT("現在の番組"),MaxText);
+		::lstrcpyn(pszText, TEXT("現在の番組"), MaxText);
 		return true;
 
 	case BUTTON_NEXT:
-		::lstrcpyn(pszText,TEXT("次の番組"),MaxText);
+		::lstrcpyn(pszText, TEXT("次の番組"), MaxText);
 		return true;
 	}
 
@@ -1681,8 +1708,8 @@ bool CInformationPanel::CProgramInfoItem::GetButtonTipText(int Button,LPTSTR psz
 
 void CInformationPanel::CProgramInfoItem::SetNext(bool fNext)
 {
-	if (m_fNext!=fNext) {
-		m_fNext=fNext;
+	if (m_fNext != fNext) {
+		m_fNext = fNext;
 		Update();
 	}
 }

@@ -5,7 +5,8 @@
 #include "Options.h"
 
 
-class CPlaybackOptions : public COptions
+class CPlaybackOptions
+	: public COptions
 {
 public:
 	CPlaybackOptions();
@@ -38,11 +39,11 @@ public:
 
 private:
 	enum {
-		UPDATE_ADJUSTAUDIOSTREAMTIME	= 0x00000001UL,
-		UPDATE_PTSSYNC					= 0x00000002UL,
-		UPDATE_PACKETBUFFERING			= 0x00000004UL,
-		UPDATE_STREAMTHREADPRIORITY		= 0x00000008UL,
-		UPDATE_ADJUSTFRAMERATE			= 0x00000010UL
+		UPDATE_ADJUSTAUDIOSTREAMTIME = 0x00000001UL,
+		UPDATE_PTSSYNC               = 0x00000002UL,
+		UPDATE_PACKETBUFFERING       = 0x00000004UL,
+		UPDATE_STREAMTHREADPRIORITY  = 0x00000008UL,
+		UPDATE_ADJUSTFRAMERATE       = 0x00000010UL
 	};
 	enum {
 		MAX_PACKET_BUFFER_LENGTH = 0x00100000UL
@@ -67,7 +68,7 @@ private:
 	bool m_fAdjust1SegFrameRate;
 
 // CBasicDialog
-	INT_PTR DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
+	INT_PTR DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
 };
 
 

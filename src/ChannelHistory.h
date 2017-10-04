@@ -13,7 +13,7 @@ public:
 	CChannelHistory();
 	~CChannelHistory();
 	void Clear();
-	bool SetCurrentChannel(LPCTSTR pszDriverName,const CChannelInfo *pChannelInfo);
+	bool SetCurrentChannel(LPCTSTR pszDriverName, const CChannelInfo *pChannelInfo);
 	const CTunerChannelInfo *Forward();
 	const CTunerChannelInfo *Backward();
 
@@ -23,7 +23,8 @@ private:
 	int m_CurrentChannel;
 };
 
-class CRecentChannelList : public CSettingsBase
+class CRecentChannelList
+	: public CSettingsBase
 {
 public:
 	CRecentChannelList();
@@ -32,8 +33,8 @@ public:
 	void Clear();
 	const CTunerChannelInfo *GetChannelInfo(int Index) const;
 	bool Add(const CTunerChannelInfo &ChannelInfo);
-	bool Add(LPCTSTR pszDriverName,const CChannelInfo *pChannelInfo);
-	bool SetMenu(HMENU hmenu,bool fClear=true) const;
+	bool Add(LPCTSTR pszDriverName, const CChannelInfo *pChannelInfo);
+	bool SetMenu(HMENU hmenu, bool fClear = true) const;
 // CSettingsBase
 	bool ReadSettings(CSettings &Settings) override;
 	bool WriteSettings(CSettings &Settings) override;

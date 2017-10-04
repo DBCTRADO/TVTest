@@ -9,7 +9,8 @@
 namespace TVTest
 {
 
-	class CTSProcessorErrorDialog : public CBasicDialog
+	class CTSProcessorErrorDialog
+		: public CBasicDialog
 	{
 	public:
 		CTSProcessorErrorDialog(CTSProcessor *pTSProcessor);
@@ -27,7 +28,7 @@ namespace TVTest
 		String m_Device;
 		String m_Filter;
 
-		INT_PTR DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
+		INT_PTR DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
 		bool SearchFilters();
 	};
 

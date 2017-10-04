@@ -6,7 +6,9 @@
 #include "DrawUtil.h"
 
 
-class COptionDialog : public COptionFrame, public CBasicDialog
+class COptionDialog
+	: public COptionFrame
+	, public CBasicDialog
 {
 public:
 	enum {
@@ -33,23 +35,27 @@ public:
 		PAGE_PLUGIN,
 		PAGE_TSPROCESSOR,
 		PAGE_LOG,
-		PAGE_LAST=PAGE_LOG
+		PAGE_LAST = PAGE_LOG
 	};
 
 	COptionDialog();
 	~COptionDialog();
-	bool Show(HWND hwndOwner,int StartPage=-1);
+	bool Show(HWND hwndOwner, int StartPage = -1);
 	int GetCurrentPage() const { return m_CurrentPage; }
 	bool SetCurrentPage(int Page);
 
 private:
-	enum { NUM_PAGES=PAGE_LAST+1 };
-	struct PageInfo {
+	enum { NUM_PAGES = PAGE_LAST + 1 };
+
+	struct PageInfo
+	{
 		LPCTSTR pszTitle;
 		COptions *pOptions;
 		int HelpID;
 	};
+
 	static const PageInfo m_PageList[NUM_PAGES];
+
 	int m_CurrentPage;
 	int m_StartPage;
 	HIMAGELIST m_himlIcons;
@@ -71,7 +77,7 @@ private:
 	void OnSettingError(COptions *pOptions) override;
 
 // CBasicDialog
-	INT_PTR DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
+	INT_PTR DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
 
 // CUIBase
 	void ApplyStyle() override;

@@ -9,7 +9,8 @@
 #include "ZoomOptions.h"
 
 
-class CSideBarOptions : public COptions
+class CSideBarOptions
+	: public COptions
 {
 public:
 	static const int OPACITY_MIN = 20;
@@ -20,17 +21,20 @@ public:
 		PLACE_RIGHT,
 		PLACE_TOP,
 		PLACE_BOTTOM,
-		PLACE_FIRST=PLACE_LEFT,
-		PLACE_LAST=PLACE_BOTTOM
+		PLACE_FIRST = PLACE_LEFT,
+		PLACE_LAST = PLACE_BOTTOM
 	};
 
-	CSideBarOptions(CSideBar *pSideBar,const CZoomOptions *pZoomOptions);
+	CSideBarOptions(CSideBar *pSideBar, const CZoomOptions *pZoomOptions);
 	~CSideBarOptions();
+
 // CSettingsBase
 	bool ReadSettings(CSettings &Settings) override;
 	bool WriteSettings(CSettings &Settings) override;
+
 // CBasicDialog
 	bool Create(HWND hwndOwner) override;
+
 // CSideBarOptions
 	bool ApplySideBarOptions();
 	void ApplyItemList();
@@ -43,7 +47,7 @@ public:
 	bool GetShowChannelLogo() const { return m_fShowChannelLogo; }
 
 protected:
-	enum { ITEM_SEPARATOR=0 };
+	enum { ITEM_SEPARATOR = 0 };
 
 	enum IconSizeType {
 		ICON_SIZE_SMALL,
@@ -61,13 +65,13 @@ protected:
 	int m_PopupOpacity;
 	PlaceType m_Place;
 	HIMAGELIST m_himlIcons;
-	std::map<int,int> m_IconIDMap;
+	std::map<int, int> m_IconIDMap;
 
 // CBasicDialog
-	INT_PTR DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
+	INT_PTR DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
 
-	HBITMAP CreateImage(IconSizeType SizeType,SIZE *pIconSize);
-	void SetItemList(HWND hwndList,const int *pList,int NumItems);
+	HBITMAP CreateImage(IconSizeType SizeType, SIZE *pIconSize);
+	void SetItemList(HWND hwndList, const int *pList, int NumItems);
 	bool IsAvailableItem(int ID) const;
 };
 

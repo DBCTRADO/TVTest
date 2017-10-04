@@ -7,13 +7,14 @@
 #include "LibISDB/LibISDB/Windows/Viewer/ViewerFilter.hpp"
 
 
-class CViewOptions : public COptions
+class CViewOptions
+	: public COptions
 {
 public:
 	enum {
-		UPDATE_MASKCUTAREA				=0x00000001UL,
-		UPDATE_IGNOREDISPLAYEXTENSION	=0x00000002UL,
-		UPDATE_LOGO						=0x00000004UL
+		UPDATE_MASKCUTAREA            = 0x00000001UL,
+		UPDATE_IGNOREDISPLAYEXTENSION = 0x00000002UL,
+		UPDATE_LOGO                   = 0x00000004UL
 	};
 
 	enum AdjustWindowMode {
@@ -61,7 +62,7 @@ public:
 
 private:
 // CBasicDialog
-	INT_PTR DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
+	INT_PTR DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
 
 	bool m_fAdjustAspectResizing;
 	bool m_fSnapAtWindowEdge;

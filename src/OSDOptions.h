@@ -6,15 +6,16 @@
 #include "Style.h"
 
 
-class COSDOptions : public COptions
+class COSDOptions
+	: public COptions
 {
 public:
 	enum ChannelChangeType {
 		CHANNELCHANGE_LOGOANDTEXT,
 		CHANNELCHANGE_TEXTONLY,
 		CHANNELCHANGE_LOGOONLY,
-		CHANNELCHANGE_FIRST	=CHANNELCHANGE_LOGOANDTEXT,
-		CHANNELCHANGE_LAST	=CHANNELCHANGE_LOGOONLY
+		CHANNELCHANGE_FIRST = CHANNELCHANGE_LOGOANDTEXT,
+		CHANNELCHANGE_LAST  = CHANNELCHANGE_LOGOONLY
 	};
 
 	enum OSDType {
@@ -27,17 +28,20 @@ public:
 	};
 
 	enum {
-		NOTIFY_EVENTNAME		=0x00000001,
-		NOTIFY_TSPROCESSORERROR	=0x00000002
+		NOTIFY_EVENTNAME        = 0x00000001,
+		NOTIFY_TSPROCESSORERROR = 0x00000002
 	};
 
 	COSDOptions();
 	~COSDOptions();
+
 // CSettingsBase
 	bool ReadSettings(CSettings &Settings) override;
 	bool WriteSettings(CSettings &Settings) override;
+
 // CBasicDialog
 	bool Create(HWND hwndOwner) override;
+
 // COSDOptions
 	bool GetShowOSD() const { return m_fShowOSD; }
 	bool GetPseudoOSD() const { return m_fPseudoOSD; }
@@ -59,11 +63,11 @@ public:
 
 private:
 // CBasicDialog
-	INT_PTR DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
+	INT_PTR DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
 
-	static UINT_PTR CALLBACK ChooseFontHookProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam);
+	static UINT_PTR CALLBACK ChooseFontHookProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
-	void EnableNotify(unsigned int Type,bool fEnabled);
+	void EnableNotify(unsigned int Type, bool fEnabled);
 
 	bool m_fShowOSD;
 	bool m_fPseudoOSD;

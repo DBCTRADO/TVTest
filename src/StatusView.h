@@ -18,9 +18,9 @@ class ABSTRACT_CLASS(CStatusItem)
 {
 public:
 	enum {
-		STYLE_VARIABLEWIDTH	= 0x00000001U,
-		STYLE_FULLROW		= 0x00000002U,
-		STYLE_FORCEFULLROW	= 0x00000004U
+		STYLE_VARIABLEWIDTH = 0x00000001U,
+		STYLE_FULLROW       = 0x00000002U,
+		STYLE_FORCEFULLROW  = 0x00000004U
 	};
 
 	enum SizeUnit {
@@ -28,23 +28,23 @@ public:
 		SIZE_EM
 	};
 
-	static const int EM_FACTOR=1000;
+	static const int EM_FACTOR = 1000;
 
 	struct SizeValue
 	{
 		int Value;
 		SizeUnit Unit;
 
-		SizeValue(int v,SizeUnit u) : Value(v), Unit(u) {}
+		SizeValue(int v, SizeUnit u) : Value(v), Unit(u) {}
 	};
 
 	enum {
-		DRAW_HIGHLIGHT	= 0x00000001U,
-		DRAW_BOTTOM		= 0x00000002U,
-		DRAW_PREVIEW	= 0x00000004U
+		DRAW_HIGHLIGHT = 0x00000001U,
+		DRAW_BOTTOM    = 0x00000002U,
+		DRAW_PREVIEW   = 0x00000004U
 	};
 
-	CStatusItem(int ID,const SizeValue &DefaultWidth);
+	CStatusItem(int ID, const SizeValue &DefaultWidth);
 	virtual ~CStatusItem() {}
 	int GetIndex() const;
 	bool GetRect(RECT *pRect) const;
@@ -61,32 +61,32 @@ public:
 	void SetVisible(bool fVisible);
 	bool GetVisible() const { return m_fVisible; }
 	void SetItemStyle(unsigned int Style);
-	void SetItemStyle(unsigned int Mask,unsigned int Style);
+	void SetItemStyle(unsigned int Mask, unsigned int Style);
 	unsigned int GetItemStyle() const { return m_Style; }
-	bool IsVariableWidth() const { return (m_Style & STYLE_VARIABLEWIDTH)!=0; }
-	bool IsFullRow() const { return (m_Style & STYLE_FULLROW)!=0; }
-	bool IsForceFullRow() const { return (m_Style & STYLE_FORCEFULLROW)!=0; }
+	bool IsVariableWidth() const { return (m_Style & STYLE_VARIABLEWIDTH) != 0; }
+	bool IsFullRow() const { return (m_Style & STYLE_FULLROW) != 0; }
+	bool IsForceFullRow() const { return (m_Style & STYLE_FORCEFULLROW) != 0; }
 	bool Update();
 	void Redraw();
-	virtual LPCTSTR GetIDText() const=0;
-	virtual LPCTSTR GetName() const=0;
+	virtual LPCTSTR GetIDText() const = 0;
+	virtual LPCTSTR GetName() const = 0;
 	virtual bool UpdateContent() { return true; }
-	virtual void Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect,unsigned int Flags)=0;
-	virtual void OnLButtonDown(int x,int y) {}
-	virtual void OnLButtonUp(int x,int y) {}
-	virtual void OnLButtonDoubleClick(int x,int y) { OnLButtonDown(x,y); }
-	virtual void OnRButtonDown(int x,int y) { OnLButtonDown(x,y); }
-	virtual void OnRButtonUp(int x,int y) {}
-	virtual void OnRButtonDoubleClick(int x,int y) {}
-	virtual void OnMButtonDown(int x,int y) {}
-	virtual void OnMButtonUp(int x,int y) {}
-	virtual void OnMButtonDoubleClick(int x,int y) {}
-	virtual void OnMouseMove(int x,int y) {}
-	virtual bool OnMouseWheel(int x,int y,bool fHorz,int Delta,int *pCommand) { return false; }
+	virtual void Draw(HDC hdc, const RECT &ItemRect, const RECT &DrawRect, unsigned int Flags) = 0;
+	virtual void OnLButtonDown(int x, int y) {}
+	virtual void OnLButtonUp(int x, int y) {}
+	virtual void OnLButtonDoubleClick(int x, int y) { OnLButtonDown(x, y); }
+	virtual void OnRButtonDown(int x, int y) { OnLButtonDown(x, y); }
+	virtual void OnRButtonUp(int x, int y) {}
+	virtual void OnRButtonDoubleClick(int x, int y) {}
+	virtual void OnMButtonDown(int x, int y) {}
+	virtual void OnMButtonUp(int x, int y) {}
+	virtual void OnMButtonDoubleClick(int x, int y) {}
+	virtual void OnMouseMove(int x, int y) {}
+	virtual bool OnMouseWheel(int x, int y, bool fHorz, int Delta, int *pCommand) { return false; }
 	virtual void OnVisibilityChanged() {}
 	virtual void OnPresentStatusChange(bool fPresent) {}
 	virtual void OnFocus(bool fFocus) {}
-	virtual bool OnMouseHover(int x,int y) { return false; }
+	virtual bool OnMouseHover(int x, int y) { return false; }
 	virtual void OnSizeChanged() {}
 	virtual void OnCaptureReleased() {}
 	virtual LRESULT OnNotifyMessage(LPNMHDR pnmh) { return 0; }
@@ -107,20 +107,22 @@ protected:
 	bool m_fBreak;
 	unsigned int m_Style;
 
-	bool GetMenuPos(POINT *pPos,UINT *pFlags,RECT *pExcludeRect);
+	bool GetMenuPos(POINT *pPos, UINT *pFlags, RECT *pExcludeRect);
 	enum {
 		DRAWTEXT_HCENTER       = 0x00000001UL,
 		DRAWTEXT_NOENDELLIPSIS = 0x00000002UL
 	};
-	void DrawText(HDC hdc,const RECT &Rect,LPCTSTR pszText,DWORD Flags=0) const;
-	void DrawIcon(HDC hdc,const RECT &Rect,DrawUtil::CMonoColorIconList &IconList,
-				  int IconIndex=0,bool fEnabled=true) const;
+	void DrawText(HDC hdc, const RECT &Rect, LPCTSTR pszText, DWORD Flags = 0) const;
+	void DrawIcon(
+		HDC hdc, const RECT &Rect, DrawUtil::CMonoColorIconList &IconList,
+		int IconIndex = 0, bool fEnabled = true) const;
 };
 
-class CIconStatusItem : public CStatusItem
+class CIconStatusItem
+	: public CStatusItem
 {
 public:
-	CIconStatusItem(int ID,int DefaultWidth);
+	CIconStatusItem(int ID, int DefaultWidth);
 	void NormalizeStyle(
 		const TVTest::Style::CStyleManager *pStyleManager,
 		const TVTest::Style::CStyleScaling *pStyleScaling) override;
@@ -145,7 +147,8 @@ public:
 		friend CStatusView;
 	};
 
-	struct StatusViewTheme {
+	struct StatusViewTheme
+	{
 		TVTest::Theme::Style ItemStyle;
 		TVTest::Theme::Style HighlightItemStyle;
 		TVTest::Theme::Style BottomItemStyle;
@@ -157,7 +160,7 @@ public:
 	~CStatusView();
 
 // CBasicWindow
-	bool Create(HWND hwndParent,DWORD Style,DWORD ExStyle=0,int ID=0) override;
+	bool Create(HWND hwndParent, DWORD Style, DWORD ExStyle = 0, int ID = 0) override;
 	void SetVisible(bool fVisible) override;
 
 // CUIBase
@@ -178,9 +181,9 @@ public:
 	int IndexToID(int Index) const;
 	bool UpdateItem(int ID);
 	void RedrawItem(int ID);
-	bool GetItemRect(int ID,RECT *pRect) const;
-	bool GetItemRectByIndex(int Index,RECT *pRect) const;
-	bool GetItemClientRect(int ID,RECT *pRect) const;
+	bool GetItemRect(int ID, RECT *pRect) const;
+	bool GetItemRectByIndex(int Index, RECT *pRect) const;
+	bool GetItemClientRect(int ID, RECT *pRect) const;
 	int GetItemHeight() const;
 	int CalcItemHeight(const DrawUtil::CFont &Font) const;
 	const TVTest::Style::Margins &GetItemPadding() const;
@@ -190,7 +193,7 @@ public:
 	bool AdjustSize();
 	void SetSingleText(LPCTSTR pszText);
 	static bool GetStatusViewThemeFromThemeManager(
-		const TVTest::Theme::CThemeManager *pThemeManager,StatusViewTheme *pTheme);
+		const TVTest::Theme::CThemeManager *pThemeManager, StatusViewTheme *pTheme);
 	bool SetStatusViewTheme(const StatusViewTheme &Theme);
 	bool GetStatusViewTheme(StatusViewTheme *pTheme) const;
 	void SetItemTheme(const TVTest::Theme::CThemeManager *pThemeManager);
@@ -204,9 +207,10 @@ public:
 	bool SetEventHandler(CEventHandler *pEventHandler);
 	bool SetItemOrder(const int *pOrderList);
 	bool CreateItemPreviewFont(
-		const TVTest::Style::Font &Font,DrawUtil::CFont *pDrawFont) const;
-	bool DrawItemPreview(CStatusItem *pItem,HDC hdc,const RECT &ItemRect,
-						 bool fHighlight=false,HFONT hfont=NULL) const;
+		const TVTest::Style::Font &Font, DrawUtil::CFont *pDrawFont) const;
+	bool DrawItemPreview(
+		CStatusItem *pItem, HDC hdc, const RECT &ItemRect,
+		bool fHighlight = false, HFONT hfont = NULL) const;
 	bool EnableBufferedPaint(bool fEnable);
 	void EnableSizeAdjustment(bool fEnable);
 	int CalcItemPixelSize(const CStatusItem::SizeValue &Size) const;
@@ -252,17 +256,17 @@ private:
 	bool m_fAdjustSize;
 
 	void SetHotItem(int Item);
-	void Draw(HDC hdc,const RECT *pPaintRect);
+	void Draw(HDC hdc, const RECT *pPaintRect);
 	void CalcLayout();
-	int CalcRows(const std::vector<const CStatusItem*> &ItemList,int MaxRowWidth) const;
-	int CalcRows(const std::vector<CStatusItem*> &ItemList,int MaxRowWidth);
-	int CalcTextHeight(const DrawUtil::CFont &Font,int *pFontHeight=nullptr) const;
-	int CalcTextHeight(int *pFontHeight=nullptr) const;
+	int CalcRows(const std::vector<const CStatusItem*> &ItemList, int MaxRowWidth) const;
+	int CalcRows(const std::vector<CStatusItem*> &ItemList, int MaxRowWidth);
+	int CalcTextHeight(const DrawUtil::CFont &Font, int *pFontHeight = nullptr) const;
+	int CalcTextHeight(int *pFontHeight = nullptr) const;
 	int CalcItemHeight(int TextHeight) const;
 	int CalcItemHeight() const;
 
 // CCustomWindow
-	LRESULT OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
+	LRESULT OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
 
 // CUIBase
 	void ApplyStyle() override;

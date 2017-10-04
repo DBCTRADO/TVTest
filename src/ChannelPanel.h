@@ -25,7 +25,8 @@ class CChannelPanel
 	, protected CFeaturedEvents::CEventHandler
 {
 public:
-	struct ChannelPanelTheme {
+	struct ChannelPanelTheme
+	{
 		TVTest::Theme::Style ChannelNameStyle;
 		TVTest::Theme::Style CurChannelNameStyle;
 		TVTest::Theme::Style EventStyle[2];
@@ -36,7 +37,8 @@ public:
 		TVTest::Theme::BackgroundStyle CurProgressStyle;
 	};
 
-	class CEventHandler {
+	class CEventHandler
+	{
 	public:
 		virtual ~CEventHandler() {}
 		virtual void OnChannelClick(const CChannelInfo *pChannelInfo) {}
@@ -56,7 +58,7 @@ public:
 	~CChannelPanel();
 
 // CBasicWindow
-	bool Create(HWND hwndParent,DWORD Style,DWORD ExStyle=0,int ID=0) override;
+	bool Create(HWND hwndParent, DWORD Style, DWORD ExStyle = 0, int ID = 0) override;
 
 // CUIBase
 	void SetStyle(const TVTest::Style::CStyleManager *pStyleManager) override;
@@ -74,11 +76,11 @@ public:
 
 // CChannelPanel
 	bool SetEPGDatabase(LibISDB::EPGDatabase *pEPGDatabase);
-	bool SetChannelList(const CChannelList *pChannelList,bool fSetEvent=true);
+	bool SetChannelList(const CChannelList *pChannelList, bool fSetEvent = true);
 	void ClearChannelList() { SetChannelList(NULL); }
 	bool UpdateAllChannels();
 	bool UpdateChannel(int ChannelIndex);
-	bool UpdateChannels(WORD NetworkID,WORD TransportStreamID);
+	bool UpdateChannels(WORD NetworkID, WORD TransportStreamID);
 	bool IsChannelListEmpty() const;
 	bool SetCurrentChannel(int CurChannel);
 	bool ScrollToChannel(int Channel);
@@ -89,10 +91,10 @@ public:
 	bool SetEventInfoFont(const TVTest::Style::Font &Font);
 	void SetDetailToolTip(bool fDetail);
 	bool GetDetailToolTip() const { return m_fDetailToolTip; }
-	bool SetEventsPerChannel(int Events,int Expand=-1);
+	bool SetEventsPerChannel(int Events, int Expand = -1);
 	int GetEventsPerChannel() const { return m_EventsPerChannel; }
 	int GetExpandAdditionalEvents() const { return m_ExpandAdditionalEvents; }
-	bool ExpandChannel(int Channel,bool fExpand);
+	bool ExpandChannel(int Channel, bool fExpand);
 	void SetScrollToCurChannel(bool fScroll);
 	bool GetScrollToCurChannel() const { return m_fScrollToCurChannel; }
 	void SetUseEpgColorScheme(bool fUseEpgColorScheme);
@@ -123,9 +125,9 @@ private:
 		bool m_fExpanded;
 
 	public:
-		CChannelEventInfo(const CChannelInfo *pChannelInfo,int OriginalIndex);
+		CChannelEventInfo(const CChannelInfo *pChannelInfo, int OriginalIndex);
 		~CChannelEventInfo();
-		bool SetEventInfo(int Index,const LibISDB::EventInfo *pInfo);
+		bool SetEventInfo(int Index, const LibISDB::EventInfo *pInfo);
 		const CChannelInfo &GetChannelInfo() const { return m_ChannelInfo; }
 		const LibISDB::EventInfo &GetEventInfo(int Index) const { return m_EventList[Index]; }
 		int NumEvents() const { return (int)m_EventList.size(); }
@@ -134,14 +136,14 @@ private:
 		WORD GetNetworkID() const { return m_ChannelInfo.GetNetworkID(); }
 		WORD GetTransportStreamID() const { return m_ChannelInfo.GetTransportStreamID(); }
 		WORD GetServiceID() const { return m_ChannelInfo.GetServiceID(); }
-		int FormatEventText(LPTSTR pszText,int MaxLength,int Index) const;
-		void DrawChannelName(HDC hdc,const RECT *pRect,const TVTest::Style::Margins &LogoMargins);
-		void DrawEventName(int Index,TVTest::CTextDraw &TextDraw,const RECT &Rect,int LineHeight);
+		int FormatEventText(LPTSTR pszText, int MaxLength, int Index) const;
+		void DrawChannelName(HDC hdc, const RECT *pRect, const TVTest::Style::Margins &LogoMargins);
+		void DrawEventName(int Index, TVTest::CTextDraw &TextDraw, const RECT &Rect, int LineHeight);
 		int GetOriginalChannelIndex() const { return m_OriginalChannelIndex; }
 		HBITMAP GetLogo() const { return m_hbmLogo; }
-		void SetLogo(HBITMAP hbm) { m_hbmLogo=hbm; }
+		void SetLogo(HBITMAP hbm) { m_hbmLogo = hbm; }
 		bool IsExpanded() const { return m_fExpanded; }
-		void Expand(bool fExpand) { m_fExpanded=fExpand; }
+		void Expand(bool fExpand) { m_fExpanded = fExpand; }
 	};
 
 	struct ChannelPanelStyle
@@ -195,13 +197,14 @@ private:
 	bool m_fDetailToolTip;
 	CEventInfoPopup m_EventInfoPopup;
 	CEventInfoPopupManager m_EventInfoPopupManager;
-	class CEventInfoPopupHandler : public CEventInfoPopupManager::CEventHandler
+	class CEventInfoPopupHandler
+		: public CEventInfoPopupManager::CEventHandler
 	{
 		CChannelPanel *m_pChannelPanel;
 	public:
 		CEventInfoPopupHandler(CChannelPanel *pChannelPanel);
-		bool HitTest(int x,int y,LPARAM *pParam);
-		bool ShowPopup(LPARAM Param,CEventInfoPopup *pPopup);
+		bool HitTest(int x, int y, LPARAM *pParam);
+		bool ShowPopup(LPARAM Param, CEventInfoPopup *pPopup);
 	};
 	CEventInfoPopupHandler m_EventInfoPopupHandler;
 	CLogoManager *m_pLogoManager;
@@ -213,30 +216,30 @@ private:
 	static HINSTANCE m_hinst;
 
 	void ClearChannels();
-	bool UpdateEvents(CChannelEventInfo *pInfo,const LibISDB::DateTime *pTime=NULL);
-	void Draw(HDC hdc,const RECT *prcPaint);
+	bool UpdateEvents(CChannelEventInfo *pInfo, const LibISDB::DateTime *pTime = NULL);
+	void Draw(HDC hdc, const RECT *prcPaint);
 	void OnCommand(int ID);
 	void SetScrollPos(int Pos);
 	void SetScrollBar();
 	void CalcItemHeight();
 	int CalcHeight() const;
-	void GetItemRect(int Index,RECT *pRect);
+	void GetItemRect(int Index, RECT *pRect);
 	enum HitType {
 		HIT_CHANNELNAME,
 		HIT_CHEVRON,
 		HIT_MARGIN,
 		HIT_EVENT1
 	};
-	int HitTest(int x,int y,HitType *pType=NULL) const;
+	int HitTest(int x, int y, HitType *pType = NULL) const;
 	bool CreateTooltip();
 	void SetTooltipFont();
-	void SetTooltips(bool fRectOnly=false);
-	bool EventInfoPopupHitTest(int x,int y,LPARAM *pParam);
-	bool ShowEventInfoPopup(LPARAM Param,CEventInfoPopup *pPopup);
-	void ShowMenu(int x,int y);
+	void SetTooltips(bool fRectOnly = false);
+	bool EventInfoPopupHitTest(int x, int y, LPARAM *pParam);
+	bool ShowEventInfoPopup(LPARAM Param, CEventInfoPopup *pPopup);
+	void ShowMenu(int x, int y);
 
 // CCustomWindow
-	LRESULT OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
+	LRESULT OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
 
 // CUIBase
 	void ApplyStyle() override;

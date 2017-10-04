@@ -18,13 +18,14 @@ CMainDisplay::CMainDisplay(CAppMain &App)
 }
 
 
-bool CMainDisplay::Create(HWND hwndParent,int ViewID,int ContainerID,HWND hwndMessage)
+bool CMainDisplay::Create(HWND hwndParent, int ViewID, int ContainerID, HWND hwndMessage)
 {
-	m_ViewWindow.Create(hwndParent,
-		WS_CHILD | WS_VISIBLE | WS_CLIPCHILDREN | WS_CLIPSIBLINGS,0,ViewID);
+	m_ViewWindow.Create(
+		hwndParent, WS_CHILD | WS_VISIBLE | WS_CLIPCHILDREN | WS_CLIPSIBLINGS, 0, ViewID);
 	m_ViewWindow.SetMessageWindow(hwndMessage);
-	m_VideoContainer.Create(m_ViewWindow.GetHandle(),
-		WS_CHILD | WS_CLIPCHILDREN | WS_CLIPSIBLINGS,0,ContainerID,
+	m_VideoContainer.Create(
+		m_ViewWindow.GetHandle(),
+		WS_CHILD | WS_CLIPCHILDREN | WS_CLIPSIBLINGS, 0, ContainerID,
 		m_App.CoreEngine.GetFilter<LibISDB::ViewerFilter>());
 	m_ViewWindow.SetVideoContainer(&m_VideoContainer);
 
@@ -37,10 +38,10 @@ bool CMainDisplay::Create(HWND hwndParent,int ViewID,int ContainerID,HWND hwndMe
 
 bool CMainDisplay::EnableViewer(bool fEnable)
 {
-	if (m_fViewerEnabled!=fEnable) {
-		LibISDB::ViewerFilter *pViewer=m_App.CoreEngine.GetFilter<LibISDB::ViewerFilter>();
+	if (m_fViewerEnabled != fEnable) {
+		LibISDB::ViewerFilter *pViewer = m_App.CoreEngine.GetFilter<LibISDB::ViewerFilter>();
 
-		if (pViewer==nullptr)
+		if (pViewer == nullptr)
 			return false;
 		if (fEnable && !pViewer->IsOpen())
 			return false;
@@ -51,7 +52,7 @@ bool CMainDisplay::EnableViewer(bool fEnable)
 			return false;
 		if (m_App.PlaybackOptions.GetMinTimerResolution())
 			m_App.CoreEngine.SetMinTimerResolution(fEnable);
-		m_fViewerEnabled=fEnable;
+		m_fViewerEnabled = fEnable;
 		m_App.AppEventManager.OnPlaybackStateChanged(fEnable);
 	}
 	return true;
@@ -60,30 +61,30 @@ bool CMainDisplay::EnableViewer(bool fEnable)
 
 bool CMainDisplay::BuildViewer(BYTE VideoStreamType)
 {
-	if (VideoStreamType==0) {
-		VideoStreamType=m_App.CoreEngine.GetVideoStreamType();
-		if (VideoStreamType==LibISDB::STREAM_TYPE_UNINITIALIZED)
+	if (VideoStreamType == 0) {
+		VideoStreamType = m_App.CoreEngine.GetVideoStreamType();
+		if (VideoStreamType == LibISDB::STREAM_TYPE_UNINITIALIZED)
 			return false;
 	}
-	LPCWSTR pszVideoDecoder=nullptr;
+	LPCWSTR pszVideoDecoder = nullptr;
 
 	switch (VideoStreamType) {
 	case LibISDB::STREAM_TYPE_MPEG2_VIDEO:
-		pszVideoDecoder=m_App.VideoOptions.GetMpeg2DecoderName();
+		pszVideoDecoder = m_App.VideoOptions.GetMpeg2DecoderName();
 		break;
 
 	case LibISDB::STREAM_TYPE_H264:
-		pszVideoDecoder=m_App.VideoOptions.GetH264DecoderName();
+		pszVideoDecoder = m_App.VideoOptions.GetH264DecoderName();
 		break;
 
 	case LibISDB::STREAM_TYPE_H265:
-		pszVideoDecoder=m_App.VideoOptions.GetH265DecoderName();
+		pszVideoDecoder = m_App.VideoOptions.GetH265DecoderName();
 		break;
 
 	default:
-		if (m_App.CoreEngine.GetAudioStreamCount()==0)
+		if (m_App.CoreEngine.GetAudioStreamCount() == 0)
 			return false;
-		VideoStreamType=LibISDB::STREAM_TYPE_INVALID;
+		VideoStreamType = LibISDB::STREAM_TYPE_INVALID;
 		break;
 	}
 
@@ -92,27 +93,27 @@ bool CMainDisplay::BuildViewer(BYTE VideoStreamType)
 
 	m_App.AddLog(
 		TEXT("DirectShowの初期化を行います(%s)..."),
-		VideoStreamType==LibISDB::STREAM_TYPE_INVALID?
-			TEXT("映像なし"):
+		VideoStreamType == LibISDB::STREAM_TYPE_INVALID ?
+			TEXT("映像なし") :
 			LibISDB::GetStreamTypeText(VideoStreamType));
 
-	LibISDB::ViewerFilter *pViewer=m_App.CoreEngine.GetFilter<LibISDB::ViewerFilter>();
-	if (pViewer==nullptr)
+	LibISDB::ViewerFilter *pViewer = m_App.CoreEngine.GetFilter<LibISDB::ViewerFilter>();
+	if (pViewer == nullptr)
 		return false;
 
 	LibISDB::ViewerFilter::OpenSettings OpenSettings;
 
-	OpenSettings.hwndRender=m_VideoContainer.GetHandle();
-	OpenSettings.hwndMessageDrain=m_VideoContainer.GetHandle();
-	OpenSettings.VideoRenderer=m_App.VideoOptions.GetVideoRendererType();
-	OpenSettings.VideoStreamType=VideoStreamType;
-	OpenSettings.pszVideoDecoder=pszVideoDecoder;
-	OpenSettings.pszAudioDevice=m_App.AudioOptions.GetAudioDeviceName();
-	if (m_App.AudioOptions.GetAudioFilterName()!=nullptr)
+	OpenSettings.hwndRender = m_VideoContainer.GetHandle();
+	OpenSettings.hwndMessageDrain = m_VideoContainer.GetHandle();
+	OpenSettings.VideoRenderer = m_App.VideoOptions.GetVideoRendererType();
+	OpenSettings.VideoStreamType = VideoStreamType;
+	OpenSettings.pszVideoDecoder = pszVideoDecoder;
+	OpenSettings.pszAudioDevice = m_App.AudioOptions.GetAudioDeviceName();
+	if (m_App.AudioOptions.GetAudioFilterName() != nullptr)
 		OpenSettings.AudioFilterList.emplace_back(m_App.AudioOptions.GetAudioFilterName());
 
 	if (!m_App.CoreEngine.BuildMediaViewer(OpenSettings)) {
-		m_App.Core.OnError(&m_App.CoreEngine,TEXT("DirectShowの初期化ができません。"));
+		m_App.Core.OnError(&m_App.CoreEngine, TEXT("DirectShowの初期化ができません。"));
 		return false;
 	}
 	m_App.AudioOptions.ApplyMediaViewerOptions();
@@ -145,9 +146,9 @@ void CMainDisplay::CHomeDisplayEventHandler::OnClose()
 }
 
 
-void CMainDisplay::CHomeDisplayEventHandler::OnMouseMessage(UINT Msg,int x,int y)
+void CMainDisplay::CHomeDisplayEventHandler::OnMouseMessage(UINT Msg, int x, int y)
 {
-	RelayMouseMessage(m_pHomeDisplay,Msg,x,y);
+	RelayMouseMessage(m_pHomeDisplay, Msg, x, y);
 }
 
 
@@ -160,20 +161,20 @@ CMainDisplay::CChannelDisplayEventHandler::CChannelDisplayEventHandler(CAppMain 
 
 
 void CMainDisplay::CChannelDisplayEventHandler::OnTunerSelect(
-	LPCTSTR pszDriverFileName,int TuningSpace)
+	LPCTSTR pszDriverFileName, int TuningSpace)
 {
 	if (m_App.CoreEngine.IsTunerOpen()
-			&& IsEqualFileName(m_App.CoreEngine.GetDriverFileName(),pszDriverFileName)) {
+			&& IsEqualFileName(m_App.CoreEngine.GetDriverFileName(), pszDriverFileName)) {
 		m_App.UICore.DoCommand(CM_CHANNELDISPLAY);
 	} else {
 		if (!m_App.UICore.ConfirmChannelChange())
 			return;
 
 		if (m_App.Core.OpenTuner(pszDriverFileName)) {
-			if (TuningSpace!=SPACE_NOTSPECIFIED) {
-				m_App.UICore.DoCommand(CM_SPACE_FIRST+TuningSpace);
-				if (TuningSpace==SPACE_ALL
-						|| TuningSpace==m_App.RestoreChannelInfo.Space)
+			if (TuningSpace != SPACE_NOTSPECIFIED) {
+				m_App.UICore.DoCommand(CM_SPACE_FIRST + TuningSpace);
+				if (TuningSpace == SPACE_ALL
+						|| TuningSpace == m_App.RestoreChannelInfo.Space)
 					m_App.Core.RestoreChannel();
 			} else {
 				m_App.Core.RestoreChannel();
@@ -185,7 +186,7 @@ void CMainDisplay::CChannelDisplayEventHandler::OnTunerSelect(
 
 
 void CMainDisplay::CChannelDisplayEventHandler::OnChannelSelect(
-	LPCTSTR pszDriverFileName,const CChannelInfo *pChannelInfo)
+	LPCTSTR pszDriverFileName, const CChannelInfo *pChannelInfo)
 {
 	if (!m_App.UICore.ConfirmChannelChange())
 		return;
@@ -193,25 +194,27 @@ void CMainDisplay::CChannelDisplayEventHandler::OnChannelSelect(
 	if (m_App.Core.OpenTuner(pszDriverFileName)) {
 		int Space;
 		if (m_App.RestoreChannelInfo.fAllChannels)
-			Space=CChannelManager::SPACE_ALL;
+			Space = CChannelManager::SPACE_ALL;
 		else
-			Space=pChannelInfo->GetSpace();
-		const CChannelList *pList=m_App.ChannelManager.GetChannelList(Space);
-		if (pList!=NULL) {
-			int Index=pList->FindByIndex(pChannelInfo->GetSpace(),
-										 pChannelInfo->GetChannelIndex(),
-										 pChannelInfo->GetServiceID());
+			Space = pChannelInfo->GetSpace();
+		const CChannelList *pList = m_App.ChannelManager.GetChannelList(Space);
+		if (pList != NULL) {
+			int Index = pList->FindByIndex(
+				pChannelInfo->GetSpace(),
+				pChannelInfo->GetChannelIndex(),
+				pChannelInfo->GetServiceID());
 
-			if (Index<0 && Space==CChannelManager::SPACE_ALL) {
-				Space=pChannelInfo->GetSpace();
-				pList=m_App.ChannelManager.GetChannelList(Space);
-				if (pList!=NULL)
-					Index=pList->FindByIndex(-1,
-											 pChannelInfo->GetChannelIndex(),
-											 pChannelInfo->GetServiceID());
+			if (Index < 0 && Space == CChannelManager::SPACE_ALL) {
+				Space = pChannelInfo->GetSpace();
+				pList = m_App.ChannelManager.GetChannelList(Space);
+				if (pList != NULL)
+					Index = pList->FindByIndex(
+						-1,
+						pChannelInfo->GetChannelIndex(),
+						pChannelInfo->GetServiceID());
 			}
-			if (Index>=0)
-				m_App.Core.SetChannel(Space,Index);
+			if (Index >= 0)
+				m_App.Core.SetChannel(Space, Index);
 		}
 		m_App.UICore.DoCommand(CM_CHANNELDISPLAY);
 	}
@@ -224,9 +227,9 @@ void CMainDisplay::CChannelDisplayEventHandler::OnClose()
 }
 
 
-void CMainDisplay::CChannelDisplayEventHandler::OnMouseMessage(UINT Msg,int x,int y)
+void CMainDisplay::CChannelDisplayEventHandler::OnMouseMessage(UINT Msg, int x, int y)
 {
-	RelayMouseMessage(m_pChannelDisplay,Msg,x,y);
+	RelayMouseMessage(m_pChannelDisplay, Msg, x, y);
 }
 
 

@@ -12,7 +12,8 @@
 namespace TVTest
 {
 
-	MIDL_INTERFACE("9E0B0063-94EA-45ed-A736-6BC51A4AB5EF") ITSDataBuffer : public IUnknown
+	MIDL_INTERFACE("9E0B0063-94EA-45ed-A736-6BC51A4AB5EF") ITSDataBuffer
+		: public IUnknown
 	{
 		STDMETHOD(SetDataBuffer)(LibISDB::DataBuffer *pData) = 0;
 		STDMETHOD_(LibISDB::DataBuffer*, GetDataBuffer)() = 0;
@@ -59,8 +60,9 @@ namespace TVTest
 		{
 		public:
 			virtual void OnFinalize(CTSProcessor *pTSProcessor) {}
-			virtual void OnNotify(CTSProcessor *pTSProcessor,
-								  Interface::NotifyType Type, LPCWSTR pszMessage) {}
+			virtual void OnNotify(
+				CTSProcessor *pTSProcessor,
+				Interface::NotifyType Type, LPCWSTR pszMessage) {}
 		};
 
 		struct FilterModuleInfo
@@ -77,7 +79,8 @@ namespace TVTest
 			String Text;
 		};
 
-		struct ModuleDeviceInfo : public FilterDeviceInfo
+		struct ModuleDeviceInfo
+			: public FilterDeviceInfo
 		{
 			std::vector<String> FilterList;
 		};

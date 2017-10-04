@@ -16,10 +16,11 @@ static HANDLE GetCurrentThreadHandle()
 {
 	HANDLE hThread;
 
-	if (!::DuplicateHandle(::GetCurrentProcess(),
-						   ::GetCurrentThread(),
-						   ::GetCurrentProcess(),
-						   &hThread,0,FALSE,DUPLICATE_SAME_ACCESS))
+	if (!::DuplicateHandle(
+				::GetCurrentProcess(),
+				::GetCurrentThread(),
+				::GetCurrentProcess(),
+				&hThread, 0, FALSE, DUPLICATE_SAME_ACCESS))
 		return NULL;
 	return hThread;
 }
@@ -66,16 +67,16 @@ CAppTerminator::CAppTerminator(CAppMain &App)
 
 bool CAppTerminator::BeginWatching(DWORD Timeout)
 {
-	m_hEndEvent=::CreateEvent(nullptr,TRUE,FALSE,nullptr);
-	m_hContinueEvent=::CreateEvent(nullptr,FALSE,FALSE,nullptr);
-	if (m_hEndEvent==nullptr || m_hContinueEvent==nullptr) {
+	m_hEndEvent = ::CreateEvent(nullptr, TRUE, FALSE, nullptr);
+	m_hContinueEvent = ::CreateEvent(nullptr, FALSE, FALSE, nullptr);
+	if (m_hEndEvent == nullptr || m_hContinueEvent == nullptr) {
 		Finalize();
 		return false;
 	}
-	m_hMainThread=GetCurrentThreadHandle();
-	m_Timeout=Timeout;
-	m_hThread=::CreateThread(nullptr,0,WatchThread,this,0,nullptr);
-	if (m_hThread==nullptr) {
+	m_hMainThread = GetCurrentThreadHandle();
+	m_Timeout = Timeout;
+	m_hThread = ::CreateThread(nullptr, 0, WatchThread, this, 0, nullptr);
+	if (m_hThread == nullptr) {
 		Finalize();
 		return false;
 	}
@@ -86,11 +87,11 @@ bool CAppTerminator::BeginWatching(DWORD Timeout)
 
 void CAppTerminator::EndWatching()
 {
-	if (m_hThread!=nullptr) {
-		if (::SignalObjectAndWait(m_hEndEvent,m_hThread,5000,FALSE)!=WAIT_OBJECT_0)
-			::TerminateThread(m_hThread,-1);
+	if (m_hThread != nullptr) {
+		if (::SignalObjectAndWait(m_hEndEvent, m_hThread, 5000, FALSE) != WAIT_OBJECT_0)
+			::TerminateThread(m_hThread, -1);
 		::CloseHandle(m_hThread);
-		m_hThread=nullptr;
+		m_hThread = nullptr;
 	}
 
 	Finalize();
@@ -99,52 +100,52 @@ void CAppTerminator::EndWatching()
 
 void CAppTerminator::Continue()
 {
-	if (m_hContinueEvent!=nullptr)
+	if (m_hContinueEvent != nullptr)
 		::SetEvent(m_hContinueEvent);
 }
 
 
 void CAppTerminator::Finalize()
 {
-	if (m_hEndEvent!=nullptr) {
+	if (m_hEndEvent != nullptr) {
 		::CloseHandle(m_hEndEvent);
-		m_hEndEvent=nullptr;
+		m_hEndEvent = nullptr;
 	}
-	if (m_hContinueEvent!=nullptr) {
+	if (m_hContinueEvent != nullptr) {
 		::CloseHandle(m_hContinueEvent);
-		m_hContinueEvent=nullptr;
+		m_hContinueEvent = nullptr;
 	}
-	if (m_hMainThread!=nullptr) {
+	if (m_hMainThread != nullptr) {
 		::CloseHandle(m_hMainThread);
-		m_hMainThread=nullptr;
+		m_hMainThread = nullptr;
 	}
 }
 
 
 DWORD WINAPI CAppTerminator::WatchThread(LPVOID lpParameter)
 {
-	CAppTerminator *pThis=static_cast<CAppTerminator*>(lpParameter);
+	CAppTerminator *pThis = static_cast<CAppTerminator*>(lpParameter);
 	HANDLE hEvents[2];
 
-	hEvents[0]=pThis->m_hEndEvent;
-	hEvents[1]=pThis->m_hContinueEvent;
+	hEvents[0] = pThis->m_hEndEvent;
+	hEvents[1] = pThis->m_hContinueEvent;
 
 	for (;;) {
-		DWORD Result=::WaitForMultipleObjects(2,hEvents,FALSE,pThis->m_Timeout);
-		if (Result==WAIT_OBJECT_0)
+		DWORD Result = ::WaitForMultipleObjects(2, hEvents, FALSE, pThis->m_Timeout);
+		if (Result == WAIT_OBJECT_0)
 			break;
 
-		if (Result==WAIT_TIMEOUT) {
+		if (Result == WAIT_TIMEOUT) {
 			pThis->m_App.AddLog(
 				CLogItem::TYPE_WARNING,
 				TEXT("終了処理がタイムアウトしました(%ums)。プロセスを強制的に終了させます。"),
 				pThis->m_Timeout);
 
-			if (pThis->m_hMainThread!=nullptr) {
+			if (pThis->m_hMainThread != nullptr) {
 #ifdef WIN_XP_SUPPORT
-				auto pCancelSynchronousIo=
-					GET_MODULE_FUNCTION(TEXT("kernel32.dll"),CancelSynchronousIo);
-				if (pCancelSynchronousIo!=nullptr)
+				auto pCancelSynchronousIo =
+					GET_MODULE_FUNCTION(TEXT("kernel32.dll"), CancelSynchronousIo);
+				if (pCancelSynchronousIo != nullptr)
 					pCancelSynchronousIo(pThis->m_hMainThread);
 #else
 				::CancelSynchronousIo(pThis->m_hMainThread);
@@ -164,8 +165,8 @@ DWORD WINAPI CAppTerminator::WatchThread(LPVOID lpParameter)
 
 
 
-HICON CAppMain::m_hicoApp=NULL;
-HICON CAppMain::m_hicoAppSmall=NULL;
+HICON CAppMain::m_hicoApp = NULL;
+HICON CAppMain::m_hicoAppSmall = NULL;
 
 
 CAppMain::CAppMain()
@@ -176,12 +177,12 @@ CAppMain::CAppMain()
 	, SideBar(&CommandList)
 	, ChannelDisplay(&EPGDatabase)
 
-	, Epg(EPGDatabase,EventSearchOptions)
+	, Epg(EPGDatabase, EventSearchOptions)
 
 	, OSDManager(&OSDOptions)
 	, StatusOptions(&StatusView)
-	, SideBarOptions(&SideBar,&ZoomOptions)
-	, ProgramGuideOptions(&Epg.ProgramGuide,&PluginManager)
+	, SideBarOptions(&SideBar, &ZoomOptions)
+	, ProgramGuideOptions(&Epg.ProgramGuide, &PluginManager)
 	, PluginOptions(&PluginManager)
 	, TSProcessorOptions(TSProcessorManager)
 	, FeaturedEvents(EventSearchOptions)
@@ -208,13 +209,13 @@ CAppMain::CAppMain()
 
 CAppMain::~CAppMain()
 {
-	if (m_hicoApp!=NULL) {
+	if (m_hicoApp != NULL) {
 		::DestroyIcon(m_hicoApp);
-		m_hicoApp=NULL;
+		m_hicoApp = NULL;
 	}
-	if (m_hicoAppSmall!=NULL) {
+	if (m_hicoAppSmall != NULL) {
 		::DestroyIcon(m_hicoAppSmall);
-		m_hicoAppSmall=NULL;
+		m_hicoAppSmall = NULL;
 	}
 }
 
@@ -233,7 +234,7 @@ HINSTANCE CAppMain::GetResourceInstance() const
 
 bool CAppMain::GetAppDirectory(LPTSTR pszDirectory) const
 {
-	if (::GetModuleFileName(nullptr,pszDirectory,MAX_PATH)==0)
+	if (::GetModuleFileName(nullptr, pszDirectory, MAX_PATH) == 0)
 		return false;
 	CFilePath FilePath(pszDirectory);
 	FilePath.RemoveFileName();
@@ -242,12 +243,12 @@ bool CAppMain::GetAppDirectory(LPTSTR pszDirectory) const
 }
 
 
-void CAppMain::AddLog(CLogItem::LogType Type,LPCTSTR pszText, ...)
+void CAppMain::AddLog(CLogItem::LogType Type, LPCTSTR pszText, ...)
 {
 	va_list Args;
 
-	va_start(Args,pszText);
-	Logger.AddLogV(Type,pszText,Args);
+	va_start(Args, pszText);
+	Logger.AddLogV(Type, pszText, Args);
 	va_end(Args);
 }
 
@@ -256,8 +257,8 @@ void CAppMain::AddLog(LPCTSTR pszText, ...)
 {
 	va_list Args;
 
-	va_start(Args,pszText);
-	Logger.AddLogV(CLogItem::TYPE_INFORMATION,pszText,Args);
+	va_start(Args, pszText);
+	Logger.AddLogV(CLogItem::TYPE_INFORMATION, pszText, Args);
 	va_end(Args);
 }
 
@@ -272,26 +273,26 @@ void CAppMain::Initialize()
 {
 	TCHAR szModuleFileName[MAX_PATH];
 
-	::GetModuleFileName(nullptr,szModuleFileName,MAX_PATH);
+	::GetModuleFileName(nullptr, szModuleFileName, MAX_PATH);
 	if (CmdLineOptions.m_IniFileName.empty()) {
-		::lstrcpy(m_szIniFileName,szModuleFileName);
-		::PathRenameExtension(m_szIniFileName,TEXT(".ini"));
+		::lstrcpy(m_szIniFileName, szModuleFileName);
+		::PathRenameExtension(m_szIniFileName, TEXT(".ini"));
 	} else {
-		LPCTSTR pszIniFileName=CmdLineOptions.m_IniFileName.c_str();
+		LPCTSTR pszIniFileName = CmdLineOptions.m_IniFileName.c_str();
 		if (::PathIsRelative(pszIniFileName)) {
 			TCHAR szTemp[MAX_PATH];
-			::lstrcpy(szTemp,szModuleFileName);
-			::lstrcpy(::PathFindFileName(szTemp),pszIniFileName);
-			::PathCanonicalize(m_szIniFileName,szTemp);
+			::lstrcpy(szTemp, szModuleFileName);
+			::lstrcpy(::PathFindFileName(szTemp), pszIniFileName);
+			::PathCanonicalize(m_szIniFileName, szTemp);
 		} else {
-			::lstrcpy(m_szIniFileName,pszIniFileName);
+			::lstrcpy(m_szIniFileName, pszIniFileName);
 		}
 	}
-	::lstrcpy(m_szFavoritesFileName,szModuleFileName);
-	::PathRenameExtension(m_szFavoritesFileName,TEXT(".tvfavorites"));
+	::lstrcpy(m_szFavoritesFileName, szModuleFileName);
+	::PathRenameExtension(m_szFavoritesFileName, TEXT(".tvfavorites"));
 
-	bool fExists=::PathFileExists(m_szIniFileName)!=FALSE;
-	m_fFirstExecute=!fExists && CmdLineOptions.m_IniFileName.empty();
+	bool fExists = ::PathFileExists(m_szIniFileName) != FALSE;
+	m_fFirstExecute = !fExists && CmdLineOptions.m_IniFileName.empty();
 	if (fExists) {
 		AddLog(TEXT("設定を読み込んでいます..."));
 		LoadSettings();
@@ -303,7 +304,7 @@ void CAppMain::Finalize()
 {
 #ifdef WATCH_EXIT
 	CAppTerminator Terminator(*this);
-	if (m_ExitTimeout!=0)
+	if (m_ExitTimeout != 0)
 		Terminator.BeginWatching(m_ExitTimeout);
 #define FINALIZE_CONTINUE Terminator.Continue();
 #else
@@ -338,7 +339,7 @@ void CAppMain::Finalize()
 	FINALIZE_CONTINUE
 
 	// 終了時の負荷で他のプロセスの録画がドロップすることがあるらしい...
-	::SetPriorityClass(::GetCurrentProcess(),BELOW_NORMAL_PRIORITY_CLASS);
+	::SetPriorityClass(::GetCurrentProcess(), BELOW_NORMAL_PRIORITY_CLASS);
 
 	if (!CmdLineOptions.m_fNoEpg) {
 		EpgOptions.SaveEpgFile(&EPGDatabase);
@@ -369,21 +370,22 @@ void CAppMain::Exit()
 
 bool CAppMain::LoadSettings()
 {
-	CSettings &Settings=m_Settings;
+	CSettings &Settings = m_Settings;
 
-	if (!Settings.Open(m_szIniFileName,CSettings::OPEN_READ | CSettings::OPEN_WRITE_VOLATILE)) {
-		AddLog(CLogItem::TYPE_ERROR,TEXT("設定ファイル \"%s\" を開けません。"),m_szIniFileName);
+	if (!Settings.Open(m_szIniFileName, CSettings::OPEN_READ | CSettings::OPEN_WRITE_VOLATILE)) {
+		AddLog(CLogItem::TYPE_ERROR, TEXT("設定ファイル \"%s\" を開けません。"), m_szIniFileName);
 		return false;
 	}
 
 	if (!CmdLineOptions.m_IniValueList.empty()) {
-		for (size_t i=0;i<CmdLineOptions.m_IniValueList.size();i++) {
-			const CCommandLineOptions::IniEntry &Entry=CmdLineOptions.m_IniValueList[i];
+		for (size_t i = 0; i < CmdLineOptions.m_IniValueList.size(); i++) {
+			const CCommandLineOptions::IniEntry &Entry = CmdLineOptions.m_IniValueList[i];
 
-			TRACE(TEXT("Override INI entry : [%s] %s=%s\n"),
-				  Entry.Section.c_str(),Entry.Name.c_str(),Entry.Value.c_str());
-			if (Settings.SetSection(Entry.Section.empty()?TEXT("Settings"):Entry.Section.c_str())) {
-				Settings.Write(Entry.Name.c_str(),Entry.Value);
+			TRACE(
+				TEXT("Override INI entry : [%s] %s=%s\n"),
+				Entry.Section.c_str(), Entry.Name.c_str(), Entry.Value.c_str());
+			if (Settings.SetSection(Entry.Section.empty() ? TEXT("Settings") : Entry.Section.c_str())) {
+				Settings.Write(Entry.Name.c_str(), Entry.Value);
 			}
 		}
 	}
@@ -391,94 +393,93 @@ bool CAppMain::LoadSettings()
 	if (Settings.SetSection(TEXT("Settings"))) {
 		int Value;
 		TCHAR szText[MAX_PATH];
-		int Left,Top,Width,Height;
+		int Left, Top, Width, Height;
 		bool f;
 
-		Settings.Read(TEXT("EnablePlay"),&m_fEnablePlaybackOnStart);
-		if (Settings.Read(TEXT("Volume"),&Value))
-			CoreEngine.SetVolume(CLAMP(Value,0,CCoreEngine::MAX_VOLUME));
-		int Gain=100,SurroundGain;
-		Settings.Read(TEXT("VolumeNormalizeLevel"),&Gain);
-		if (!Settings.Read(TEXT("SurroundGain"),&SurroundGain))
-			SurroundGain=Gain;
-		CoreEngine.SetAudioGainControl(Gain,SurroundGain);
-		Settings.Read(TEXT("ShowInfoWindow"),&Panel.fShowPanelWindow);
-		if (Settings.Read(TEXT("OptionPage"),&Value))
+		Settings.Read(TEXT("EnablePlay"), &m_fEnablePlaybackOnStart);
+		if (Settings.Read(TEXT("Volume"), &Value))
+			CoreEngine.SetVolume(CLAMP(Value, 0, CCoreEngine::MAX_VOLUME));
+		int Gain = 100, SurroundGain;
+		Settings.Read(TEXT("VolumeNormalizeLevel"), &Gain);
+		if (!Settings.Read(TEXT("SurroundGain"), &SurroundGain))
+			SurroundGain = Gain;
+		CoreEngine.SetAudioGainControl(Gain, SurroundGain);
+		Settings.Read(TEXT("ShowInfoWindow"), &Panel.fShowPanelWindow);
+		if (Settings.Read(TEXT("OptionPage"), &Value))
 			m_OptionDialog.SetCurrentPage(Value);
 
-		if (Settings.Read(TEXT("RecOptionFileName"),szText,MAX_PATH) && szText[0]!='\0')
+		if (Settings.Read(TEXT("RecOptionFileName"), szText, MAX_PATH) && szText[0] != '\0')
 			RecordManager.SetFileName(szText);
 		/*
-		if (Settings.Read(TEXT("RecOptionExistsOperation"),&Value))
-			RecordManager.SetFileExistsOperation(
-								(CRecordManager::FileExistsOperation)Value);
+		if (Settings.Read(TEXT("RecOptionExistsOperation"), &Value))
+			RecordManager.SetFileExistsOperation((CRecordManager::FileExistsOperation)Value);
 		*/
 		/*
-		if (Settings.Read(TEXT("RecOptionStopTimeSpec"),&f))
+		if (Settings.Read(TEXT("RecOptionStopTimeSpec"), &f))
 			RecordManager.SetStopTimeSpec(f);
 		unsigned int Time;
-		if (Settings.Read(TEXT("RecOptionStopTime"),&Time))
+		if (Settings.Read(TEXT("RecOptionStopTime"), &Time))
 			RecordManager.SetStopTime(Time);
 		*/
 
-		Panel.Frame.GetPosition(&Left,&Top,&Width,&Height);
-		Settings.Read(TEXT("InfoLeft"),&Left);
-		Settings.Read(TEXT("InfoTop"),&Top);
-		Settings.Read(TEXT("InfoWidth"),&Width);
-		Settings.Read(TEXT("InfoHeight"),&Height);
-		Panel.Frame.SetPosition(Left,Top,Width,Height);
+		Panel.Frame.GetPosition(&Left, &Top, &Width, &Height);
+		Settings.Read(TEXT("InfoLeft"), &Left);
+		Settings.Read(TEXT("InfoTop"), &Top);
+		Settings.Read(TEXT("InfoWidth"), &Width);
+		Settings.Read(TEXT("InfoHeight"), &Height);
+		Panel.Frame.SetPosition(Left, Top, Width, Height);
 		Panel.Frame.MoveToMonitorInside();
-		if (Settings.Read(TEXT("PanelFloating"),&f))
+		if (Settings.Read(TEXT("PanelFloating"), &f))
 			Panel.Frame.SetFloating(f);
-		if (Settings.Read(TEXT("PanelDockingWidth"),&Value))
+		if (Settings.Read(TEXT("PanelDockingWidth"), &Value))
 			Panel.Frame.SetDockingWidth(Value);
-		if (Settings.Read(TEXT("PanelDockingHeight"),&Value))
+		if (Settings.Read(TEXT("PanelDockingHeight"), &Value))
 			Panel.Frame.SetDockingHeight(Value);
 
-		Epg.ProgramGuideFrame.GetPosition(&Left,&Top,&Width,&Height);
-		Settings.Read(TEXT("ProgramGuideLeft"),&Left);
-		Settings.Read(TEXT("ProgramGuideTop"),&Top);
-		Settings.Read(TEXT("ProgramGuideWidth"),&Width);
-		Settings.Read(TEXT("ProgramGuideHeight"),&Height);
-		Epg.ProgramGuideFrame.SetPosition(Left,Top,Width,Height);
+		Epg.ProgramGuideFrame.GetPosition(&Left, &Top, &Width, &Height);
+		Settings.Read(TEXT("ProgramGuideLeft"), &Left);
+		Settings.Read(TEXT("ProgramGuideTop"), &Top);
+		Settings.Read(TEXT("ProgramGuideWidth"), &Width);
+		Settings.Read(TEXT("ProgramGuideHeight"), &Height);
+		Epg.ProgramGuideFrame.SetPosition(Left, Top, Width, Height);
 		Epg.ProgramGuideFrame.MoveToMonitorInside();
-		if (Settings.Read(TEXT("ProgramGuideMaximized"),&f) && f)
+		if (Settings.Read(TEXT("ProgramGuideMaximized"), &f) && f)
 			Epg.ProgramGuideFrame.SetMaximize(f);
-		if (Settings.Read(TEXT("ProgramGuideAlwaysOnTop"),&f))
+		if (Settings.Read(TEXT("ProgramGuideAlwaysOnTop"), &f))
 			Epg.ProgramGuideFrame.SetAlwaysOnTop(f);
 
-		CaptureWindow.GetPosition(&Left,&Top,&Width,&Height);
-		Settings.Read(TEXT("CapturePreviewLeft"),&Left);
-		Settings.Read(TEXT("CapturePreviewTop"),&Top);
-		Settings.Read(TEXT("CapturePreviewWidth"),&Width);
-		Settings.Read(TEXT("CapturePreviewHeight"),&Height);
-		CaptureWindow.SetPosition(Left,Top,Width,Height);
+		CaptureWindow.GetPosition(&Left, &Top, &Width, &Height);
+		Settings.Read(TEXT("CapturePreviewLeft"), &Left);
+		Settings.Read(TEXT("CapturePreviewTop"), &Top);
+		Settings.Read(TEXT("CapturePreviewWidth"), &Width);
+		Settings.Read(TEXT("CapturePreviewHeight"), &Height);
+		CaptureWindow.SetPosition(Left, Top, Width, Height);
 		CaptureWindow.MoveToMonitorInside();
-		if (Settings.Read(TEXT("CaptureStatusBar"),&f))
+		if (Settings.Read(TEXT("CaptureStatusBar"), &f))
 			CaptureWindow.ShowStatusBar(f);
 
-		if (Settings.Read(TEXT("StreamInfoLeft"),&Left)
-				&& Settings.Read(TEXT("StreamInfoTop"),&Top)) {
-			StreamInfo.GetPosition(NULL,NULL,&Width,&Height);
-			Settings.Read(TEXT("StreamInfoWidth"),&Width);
-			Settings.Read(TEXT("StreamInfoHeight"),&Height);
-			StreamInfo.SetPosition(Left,Top,Width,Height);
+		if (Settings.Read(TEXT("StreamInfoLeft"), &Left)
+				&& Settings.Read(TEXT("StreamInfoTop"), &Top)) {
+			StreamInfo.GetPosition(NULL, NULL, &Width, &Height);
+			Settings.Read(TEXT("StreamInfoWidth"), &Width);
+			Settings.Read(TEXT("StreamInfoHeight"), &Height);
+			StreamInfo.SetPosition(Left, Top, Width, Height);
 		}
 
 		CBasicDialog::Position Pos;
-		if (Settings.Read(TEXT("OrganizeFavoritesLeft"),&Pos.x)
-				&& Settings.Read(TEXT("OrganizeFavoritesTop"),&Pos.y)) {
-			Settings.Read(TEXT("OrganizeFavoritesWidth"),&Pos.Width);
-			Settings.Read(TEXT("OrganizeFavoritesHeight"),&Pos.Height);
+		if (Settings.Read(TEXT("OrganizeFavoritesLeft"), &Pos.x)
+				&& Settings.Read(TEXT("OrganizeFavoritesTop"), &Pos.y)) {
+			Settings.Read(TEXT("OrganizeFavoritesWidth"), &Pos.Width);
+			Settings.Read(TEXT("OrganizeFavoritesHeight"), &Pos.Height);
 			FavoritesManager.SetOrganizeDialogPos(Pos);
 		}
 
-		if (Settings.Read(TEXT("OptionDialogLeft"),&Left)
-				&& Settings.Read(TEXT("OptionDialogTop"),&Top))
-			m_OptionDialog.SetPosition(Left,Top);
+		if (Settings.Read(TEXT("OptionDialogLeft"), &Left)
+				&& Settings.Read(TEXT("OptionDialogTop"), &Top))
+			m_OptionDialog.SetPosition(Left, Top);
 
-		Settings.Read(TEXT("ExitTimeout"),&m_ExitTimeout);
-		Settings.Read(TEXT("IncrementUDPPort"),&m_fIncrementNetworkPort);
+		Settings.Read(TEXT("ExitTimeout"), &m_ExitTimeout);
+		Settings.Read(TEXT("IncrementUDPPort"), &m_fIncrementNetworkPort);
 
 		MainWindow.ReadSettings(Settings);
 		GeneralOptions.ReadSettings(Settings);
@@ -526,92 +527,92 @@ bool CAppMain::LoadSettings()
 bool CAppMain::SaveSettings(unsigned int Flags)
 {
 	CSettings Settings;
-	if (!Settings.Open(m_szIniFileName,CSettings::OPEN_WRITE)) {
-		TCHAR szMessage[64+MAX_PATH];
-		StdUtil::snprintf(szMessage,lengthof(szMessage),
-						  TEXT("設定ファイル \"%s\" を開けません。"),
-						  m_szIniFileName);
-		AddLog(CLogItem::TYPE_ERROR,TEXT("%s"),szMessage);
+	if (!Settings.Open(m_szIniFileName, CSettings::OPEN_WRITE)) {
+		TCHAR szMessage[64 + MAX_PATH];
+		StdUtil::snprintf(
+			szMessage, lengthof(szMessage),
+			TEXT("設定ファイル \"%s\" を開けません。"),
+			m_szIniFileName);
+		AddLog(CLogItem::TYPE_ERROR, TEXT("%s"), szMessage);
 		if (!Core.IsSilent())
 			UICore.GetSkin()->ShowErrorMessage(szMessage);
 		return false;
 	}
 
 	if (Settings.SetSection(TEXT("Settings"))) {
-		Settings.Write(TEXT("Version"),VERSION_TEXT);
+		Settings.Write(TEXT("Version"), VERSION_TEXT);
 
-		if ((Flags&SETTINGS_SAVE_STATUS)!=0) {
-			int Left,Top,Width,Height;
+		if ((Flags & SETTINGS_SAVE_STATUS) != 0) {
+			int Left, Top, Width, Height;
 			CBasicDialog::Position Pos;
 
-			Settings.Write(TEXT("EnablePlay"),m_fEnablePlaybackOnStart);
-			Settings.Write(TEXT("Volume"),CoreEngine.GetVolume());
-			int Gain,SurroundGain;
-			CoreEngine.GetAudioGainControl(&Gain,&SurroundGain);
-			Settings.Write(TEXT("VolumeNormalizeLevel"),Gain);
-			Settings.Write(TEXT("SurroundGain"),SurroundGain);
-			Settings.Write(TEXT("ShowInfoWindow"),Panel.fShowPanelWindow);
-			Settings.Write(TEXT("OptionPage"),m_OptionDialog.GetCurrentPage());
+			Settings.Write(TEXT("EnablePlay"), m_fEnablePlaybackOnStart);
+			Settings.Write(TEXT("Volume"), CoreEngine.GetVolume());
+			int Gain, SurroundGain;
+			CoreEngine.GetAudioGainControl(&Gain, &SurroundGain);
+			Settings.Write(TEXT("VolumeNormalizeLevel"), Gain);
+			Settings.Write(TEXT("SurroundGain"), SurroundGain);
+			Settings.Write(TEXT("ShowInfoWindow"), Panel.fShowPanelWindow);
+			Settings.Write(TEXT("OptionPage"), m_OptionDialog.GetCurrentPage());
 
-			if (RecordManager.GetFileName()!=nullptr)
-				Settings.Write(TEXT("RecOptionFileName"),RecordManager.GetFileName());
+			if (RecordManager.GetFileName() != nullptr)
+				Settings.Write(TEXT("RecOptionFileName"), RecordManager.GetFileName());
 			/*
-			Settings.Write(TEXT("RecOptionExistsOperation"),
-						   RecordManager.GetFileExistsOperation());
+			Settings.Write(TEXT("RecOptionExistsOperation"), RecordManager.GetFileExistsOperation());
 			*/
 			/*
-			Settings.Write(TEXT("RecOptionStopTimeSpec"),RecordManager.GetStopTimeSpec());
-			Settings.Write(TEXT("RecOptionStopTime"),RecordManager.GetStopTime());
+			Settings.Write(TEXT("RecOptionStopTimeSpec"), RecordManager.GetStopTimeSpec());
+			Settings.Write(TEXT("RecOptionStopTime"), RecordManager.GetStopTime());
 			*/
 
-			Panel.Frame.GetPosition(&Left,&Top,&Width,&Height);
-			Settings.Write(TEXT("InfoLeft"),Left);
-			Settings.Write(TEXT("InfoTop"),Top);
-			Settings.Write(TEXT("InfoWidth"),Width);
-			Settings.Write(TEXT("InfoHeight"),Height);
-			Settings.Write(TEXT("PanelFloating"),Panel.Frame.GetFloating());
-			Settings.Write(TEXT("PanelDockingWidth"),Panel.Frame.GetDockingWidth());
-			Settings.Write(TEXT("PanelDockingHeight"),Panel.Frame.GetDockingHeight());
+			Panel.Frame.GetPosition(&Left, &Top, &Width, &Height);
+			Settings.Write(TEXT("InfoLeft"), Left);
+			Settings.Write(TEXT("InfoTop"), Top);
+			Settings.Write(TEXT("InfoWidth"), Width);
+			Settings.Write(TEXT("InfoHeight"), Height);
+			Settings.Write(TEXT("PanelFloating"), Panel.Frame.GetFloating());
+			Settings.Write(TEXT("PanelDockingWidth"), Panel.Frame.GetDockingWidth());
+			Settings.Write(TEXT("PanelDockingHeight"), Panel.Frame.GetDockingHeight());
 
-			Epg.ProgramGuideFrame.GetPosition(&Left,&Top,&Width,&Height);
-			Settings.Write(TEXT("ProgramGuideLeft"),Left);
-			Settings.Write(TEXT("ProgramGuideTop"),Top);
-			Settings.Write(TEXT("ProgramGuideWidth"),Width);
-			Settings.Write(TEXT("ProgramGuideHeight"),Height);
-			Settings.Write(TEXT("ProgramGuideMaximized"),Epg.ProgramGuideFrame.GetMaximize());
-			Settings.Write(TEXT("ProgramGuideAlwaysOnTop"),Epg.ProgramGuideFrame.GetAlwaysOnTop());
+			Epg.ProgramGuideFrame.GetPosition(&Left, &Top, &Width, &Height);
+			Settings.Write(TEXT("ProgramGuideLeft"), Left);
+			Settings.Write(TEXT("ProgramGuideTop"), Top);
+			Settings.Write(TEXT("ProgramGuideWidth"), Width);
+			Settings.Write(TEXT("ProgramGuideHeight"), Height);
+			Settings.Write(TEXT("ProgramGuideMaximized"), Epg.ProgramGuideFrame.GetMaximize());
+			Settings.Write(TEXT("ProgramGuideAlwaysOnTop"), Epg.ProgramGuideFrame.GetAlwaysOnTop());
 
-			CaptureWindow.GetPosition(&Left,&Top,&Width,&Height);
-			Settings.Write(TEXT("CapturePreviewLeft"),Left);
-			Settings.Write(TEXT("CapturePreviewTop"),Top);
-			Settings.Write(TEXT("CapturePreviewWidth"),Width);
-			Settings.Write(TEXT("CapturePreviewHeight"),Height);
-			Settings.Write(TEXT("CaptureStatusBar"),CaptureWindow.IsStatusBarVisible());
+			CaptureWindow.GetPosition(&Left, &Top, &Width, &Height);
+			Settings.Write(TEXT("CapturePreviewLeft"), Left);
+			Settings.Write(TEXT("CapturePreviewTop"), Top);
+			Settings.Write(TEXT("CapturePreviewWidth"), Width);
+			Settings.Write(TEXT("CapturePreviewHeight"), Height);
+			Settings.Write(TEXT("CaptureStatusBar"), CaptureWindow.IsStatusBarVisible());
 
 			if (StreamInfo.IsPositionSet()) {
 				StreamInfo.GetPosition(&Pos);
-				Settings.Write(TEXT("StreamInfoLeft"),Pos.x);
-				Settings.Write(TEXT("StreamInfoTop"),Pos.y);
-				Settings.Write(TEXT("StreamInfoWidth"),Pos.Width);
-				Settings.Write(TEXT("StreamInfoHeight"),Pos.Height);
+				Settings.Write(TEXT("StreamInfoLeft"), Pos.x);
+				Settings.Write(TEXT("StreamInfoTop"), Pos.y);
+				Settings.Write(TEXT("StreamInfoWidth"), Pos.Width);
+				Settings.Write(TEXT("StreamInfoHeight"), Pos.Height);
 			}
 
 			if (FavoritesManager.IsOrganizeDialogPosSet()) {
 				FavoritesManager.GetOrganizeDialogPos(&Pos);
-				Settings.Write(TEXT("OrganizeFavoritesLeft"),Pos.x);
-				Settings.Write(TEXT("OrganizeFavoritesTop"),Pos.y);
-				Settings.Write(TEXT("OrganizeFavoritesWidth"),Pos.Width);
-				Settings.Write(TEXT("OrganizeFavoritesHeight"),Pos.Height);
+				Settings.Write(TEXT("OrganizeFavoritesLeft"), Pos.x);
+				Settings.Write(TEXT("OrganizeFavoritesTop"), Pos.y);
+				Settings.Write(TEXT("OrganizeFavoritesWidth"), Pos.Width);
+				Settings.Write(TEXT("OrganizeFavoritesHeight"), Pos.Height);
 			}
 
 			if (m_OptionDialog.IsPositionSet()) {
-				m_OptionDialog.GetPosition(&Left,&Top);
-				Settings.Write(TEXT("OptionDialogLeft"),Left);
-				Settings.Write(TEXT("OptionDialogTop"),Top);
+				m_OptionDialog.GetPosition(&Left, &Top);
+				Settings.Write(TEXT("OptionDialogLeft"), Left);
+				Settings.Write(TEXT("OptionDialogTop"), Top);
 			}
 
-			//Settings.Write(TEXT("ExitTimeout"),m_ExitTimeout);
-			//Settings.Write(TEXT("IncrementUDPPort"),m_fIncrementNetworkPort);
+			//Settings.Write(TEXT("ExitTimeout"), m_ExitTimeout);
+			//Settings.Write(TEXT("IncrementUDPPort"), m_fIncrementNetworkPort);
 
 			MainWindow.WriteSettings(Settings);
 		}
@@ -621,48 +622,48 @@ bool CAppMain::SaveSettings(unsigned int Flags)
 		CSettingsBase *pSettings;
 		bool fHasStatus;
 	} SettingsList[] = {
-		{&GeneralOptions,					true},
-		{&StatusOptions,					true},
-		{&SideBarOptions,					true},
-		{&PanelOptions,						true},
-		{&DriverOptions,					true},
-		{&VideoOptions,						false},
-		{&AudioOptions,						false},
-		{&PlaybackOptions,					true},
-		{&RecordOptions,					true},
-		{&CaptureOptions,					true},
-		{&PluginOptions,					true},
-		{&ViewOptions,						false},
-		{&OSDOptions,						false},
-		{&MenuOptions,						false},
-		{&ColorSchemeOptions,				false},
-		{&OperationOptions,					false},
-		{&Accelerator,						false},
-		{&ControllerManager,				false},
-		{&ChannelScan,						false},
-		{&EpgOptions,						false},
-		{&ProgramGuideOptions,				true},
-		{&TSProcessorOptions,				true},
-		{&TaskbarOptions,					false},
-		{&VideoDecoderOptions,				true},
-		{&Logger,							false},
-	//	{&ZoomOptions,						false},
-	//	{&PanAndScanOptions,				false},
-		{&Epg.ProgramGuideFrameSettings,	true},
-		{&HomeDisplay,						true},
-		{&FeaturedEvents,					true},
+		{&GeneralOptions,                true},
+		{&StatusOptions,                 true},
+		{&SideBarOptions,                true},
+		{&PanelOptions,                  true},
+		{&DriverOptions,                 true},
+		{&VideoOptions,                  false},
+		{&AudioOptions,                  false},
+		{&PlaybackOptions,               true},
+		{&RecordOptions,                 true},
+		{&CaptureOptions,                true},
+		{&PluginOptions,                 true},
+		{&ViewOptions,                   false},
+		{&OSDOptions,                    false},
+		{&MenuOptions,                   false},
+		{&ColorSchemeOptions,            false},
+		{&OperationOptions,              false},
+		{&Accelerator,                   false},
+		{&ControllerManager,             false},
+		{&ChannelScan,                   false},
+		{&EpgOptions,                    false},
+		{&ProgramGuideOptions,           true},
+		{&TSProcessorOptions,            true},
+		{&TaskbarOptions,                false},
+		{&VideoDecoderOptions,           true},
+		{&Logger,                        false},
+//		{&ZoomOptions,                   false},
+//		{&PanAndScanOptions,             false},
+		{&Epg.ProgramGuideFrameSettings, true},
+		{&HomeDisplay,                   true},
+		{&FeaturedEvents,                true},
 	};
 
-	for (size_t i=0;i<lengthof(SettingsList);i++) {
-		CSettingsBase *pSettings=SettingsList[i].pSettings;
-		if (((Flags&SETTINGS_SAVE_OPTIONS)!=0 && pSettings->IsChanged())
-				|| ((Flags&SETTINGS_SAVE_STATUS)!=0 && SettingsList[i].fHasStatus)) {
+	for (size_t i = 0; i < lengthof(SettingsList); i++) {
+		CSettingsBase *pSettings = SettingsList[i].pSettings;
+		if (((Flags & SETTINGS_SAVE_OPTIONS) != 0 && pSettings->IsChanged())
+				|| ((Flags & SETTINGS_SAVE_STATUS) != 0 && SettingsList[i].fHasStatus)) {
 			if (pSettings->SaveSettings(Settings))
 				pSettings->ClearChanged();
 		}
 	}
 
-	if ((Flags&SETTINGS_SAVE_STATUS)!=0) {
+	if ((Flags & SETTINGS_SAVE_STATUS) != 0) {
 		RecentChannelList.SaveSettings(Settings);
 		Panel.InfoPanel.SaveSettings(Settings);
 		Panel.ProgramListPanel.SaveSettings(Settings);
@@ -675,26 +676,26 @@ bool CAppMain::SaveSettings(unsigned int Flags)
 }
 
 
-int CAppMain::Main(HINSTANCE hInstance,LPCTSTR pszCmdLine,int nCmdShow)
+int CAppMain::Main(HINSTANCE hInstance, LPCTSTR pszCmdLine, int nCmdShow)
 {
-	m_hInst=hInstance;
+	m_hInst = hInstance;
 
 	// コマンドラインの解析
-	if (pszCmdLine[0]!=_T('\0')) {
-		AddLog(TEXT("コマンドラインオプション : %s"),pszCmdLine);
+	if (pszCmdLine[0] != _T('\0')) {
+		AddLog(TEXT("コマンドラインオプション : %s"), pszCmdLine);
 
 		CmdLineOptions.Parse(pszCmdLine);
 
-		if (CmdLineOptions.m_TvRockDID>=0)
-			CmdLineOptions.m_fSilent=true;
+		if (CmdLineOptions.m_TvRockDID >= 0)
+			CmdLineOptions.m_fSilent = true;
 		if (CmdLineOptions.m_fSilent)
 			Core.SetSilent(true);
 		if (CmdLineOptions.m_fTray)
-			CmdLineOptions.m_fMinimize=true;
+			CmdLineOptions.m_fMinimize = true;
 
 		if (CmdLineOptions.m_fProgramGuideOnly) {
-			CmdLineOptions.m_fShowProgramGuide=true;
-			CmdLineOptions.m_fStandby=true;
+			CmdLineOptions.m_fShowProgramGuide = true;
+			CmdLineOptions.m_fStandby = true;
 		}
 	}
 
@@ -703,24 +704,26 @@ int CAppMain::Main(HINSTANCE hInstance,LPCTSTR pszCmdLine,int nCmdShow)
 	CAppMutex AppMutex(true);
 
 	if (CmdLineOptions.m_fJumpList && TaskbarOptions.GetJumpListKeepSingleTask())
-		CmdLineOptions.m_fSingleTask=true;
+		CmdLineOptions.m_fSingleTask = true;
 
 	// 複数起動のチェック
 	if (AppMutex.AlreadyExists()
 			&& (GeneralOptions.GetKeepSingleTask() || CmdLineOptions.m_fSingleTask)) {
 		AddLog(TEXT("複数起動が禁止されています。"));
 		CTVTestWindowFinder Finder;
-		HWND hwnd=Finder.FindCommandLineTarget();
+		HWND hwnd = Finder.FindCommandLineTarget();
 		if (::IsWindow(hwnd)) {
-			if (!SendInterprocessMessage(hwnd,PROCESS_MESSAGE_EXECUTE,
-										 pszCmdLine,(::lstrlen(pszCmdLine)+1)*sizeof(TCHAR))) {
-				AddLog(CLogItem::TYPE_ERROR,TEXT("既存のプロセスにメッセージを送信できません。"));
+			if (!SendInterprocessMessage(
+						hwnd, PROCESS_MESSAGE_EXECUTE,
+						pszCmdLine, (::lstrlen(pszCmdLine) + 1) * sizeof(TCHAR))) {
+				AddLog(CLogItem::TYPE_ERROR, TEXT("既存のプロセスにメッセージを送信できません。"));
 			}
 			return 0;
 		}
 		if (!CmdLineOptions.m_fSingleTask) {
 			if (!Core.IsSilent()) {
-				::MessageBox(nullptr,
+				::MessageBox(
+					nullptr,
 					APP_NAME TEXT(" は既に起動しています。\n")
 					TEXT("ウィンドウが見当たらない場合はタスクマネージャに隠れていますので\n")
 					TEXT("強制終了させてください。"),
@@ -735,8 +738,8 @@ int CAppMain::Main(HINSTANCE hInstance,LPCTSTR pszCmdLine,int nCmdShow)
 	{
 		INITCOMMONCONTROLSEX iccex;
 
-		iccex.dwSize=sizeof(INITCOMMONCONTROLSEX);
-		iccex.dwICC=ICC_UPDOWN_CLASS | ICC_BAR_CLASSES | ICC_LISTVIEW_CLASSES | ICC_TREEVIEW_CLASSES | ICC_DATE_CLASSES | ICC_PROGRESS_CLASS;
+		iccex.dwSize = sizeof(INITCOMMONCONTROLSEX);
+		iccex.dwICC = ICC_UPDOWN_CLASS | ICC_BAR_CLASSES | ICC_LISTVIEW_CLASSES | ICC_TREEVIEW_CLASSES | ICC_DATE_CLASSES | ICC_PROGRESS_CLASS;
 		::InitCommonControlsEx(&iccex);
 	}
 
@@ -746,25 +749,25 @@ int CAppMain::Main(HINSTANCE hInstance,LPCTSTR pszCmdLine,int nCmdShow)
 	// BonDriver の検索
 	{
 		TCHAR szDirectory[MAX_PATH];
-		CoreEngine.GetDriverDirectory(szDirectory,lengthof(szDirectory));
+		CoreEngine.GetDriverDirectory(szDirectory, lengthof(szDirectory));
 		DriverManager.Find(szDirectory);
 	}
 	// チューナー仕様定義の読み込み
 	{
 		TCHAR szTunerSpecFileName[MAX_PATH];
-		::GetModuleFileName(nullptr,szTunerSpecFileName,lengthof(szTunerSpecFileName));
-		::PathRenameExtension(szTunerSpecFileName,TEXT(".tuner.ini"));
+		::GetModuleFileName(nullptr, szTunerSpecFileName, lengthof(szTunerSpecFileName));
+		::PathRenameExtension(szTunerSpecFileName, TEXT(".tuner.ini"));
 		if (::PathFileExists(szTunerSpecFileName)) {
-			AddLog(TEXT("チューナー仕様定義を \"%s\" から読み込みます..."),szTunerSpecFileName);
+			AddLog(TEXT("チューナー仕様定義を \"%s\" から読み込みます..."), szTunerSpecFileName);
 			DriverManager.LoadTunerSpec(szTunerSpecFileName);
 		}
 	}
 	DriverOptions.Initialize(&DriverManager);
 
 	// 初期設定ダイアログを表示するか
-	m_fInitialSettings=
+	m_fInitialSettings =
 		CmdLineOptions.m_fInitialSettings
-			|| (m_fFirstExecute && CmdLineOptions.m_DriverName.empty());
+		|| (m_fFirstExecute && CmdLineOptions.m_DriverName.empty());
 
 	GraphicsCore.Initialize();
 
@@ -776,7 +779,7 @@ int CAppMain::Main(HINSTANCE hInstance,LPCTSTR pszCmdLine,int nCmdShow)
 
 		if (!InitialSettings.Show(nullptr))
 			return 0;
-		InitialSettings.GetDriverFileName(szDriverFileName,lengthof(szDriverFileName));
+		InitialSettings.GetDriverFileName(szDriverFileName, lengthof(szDriverFileName));
 		GeneralOptions.SetDefaultDriverName(szDriverFileName);
 		GeneralOptions.SetChanged();
 		VideoOptions.SetMpeg2DecoderName(InitialSettings.GetMpeg2DecoderName());
@@ -787,9 +790,9 @@ int CAppMain::Main(HINSTANCE hInstance,LPCTSTR pszCmdLine,int nCmdShow)
 		RecordOptions.SetSaveFolder(InitialSettings.GetRecordFolder());
 		RecordOptions.SetChanged();
 	} else if (!CmdLineOptions.m_DriverName.empty()) {
-		::lstrcpy(szDriverFileName,CmdLineOptions.m_DriverName.c_str());
+		::lstrcpy(szDriverFileName, CmdLineOptions.m_DriverName.c_str());
 	} else if (CmdLineOptions.m_fNoDriver) {
-		szDriverFileName[0]=_T('\0');
+		szDriverFileName[0] = _T('\0');
 	} else {
 		GeneralOptions.GetFirstDriverName(szDriverFileName);
 	}
@@ -798,13 +801,13 @@ int CAppMain::Main(HINSTANCE hInstance,LPCTSTR pszCmdLine,int nCmdShow)
 	{
 		TCHAR szStyleFileName[MAX_PATH];
 		if (!CmdLineOptions.m_StyleFileName.empty()) {
-			GetAbsolutePath(CmdLineOptions.m_StyleFileName.c_str(),szStyleFileName);
+			GetAbsolutePath(CmdLineOptions.m_StyleFileName.c_str(), szStyleFileName);
 		} else {
-			::GetModuleFileName(nullptr,szStyleFileName,lengthof(szStyleFileName));
-			::PathRenameExtension(szStyleFileName,TEXT(".style.ini"));
+			::GetModuleFileName(nullptr, szStyleFileName, lengthof(szStyleFileName));
+			::PathRenameExtension(szStyleFileName, TEXT(".style.ini"));
 		}
 		if (::PathFileExists(szStyleFileName)) {
-			AddLog(TEXT("スタイル設定を \"%s\" から読み込みます..."),szStyleFileName);
+			AddLog(TEXT("スタイル設定を \"%s\" から読み込みます..."), szStyleFileName);
 			StyleManager.Load(szStyleFileName);
 		}
 	}
@@ -839,17 +842,17 @@ int CAppMain::Main(HINSTANCE hInstance,LPCTSTR pszCmdLine,int nCmdShow)
 	if (CmdLineOptions.m_fMaximize)
 		MainWindow.SetMaximize(true);
 	{
-		int Left,Top,Width,Height;
-		MainWindow.GetPosition(&Left,&Top,&Width,&Height);
-		if (CmdLineOptions.m_WindowLeft!=CCommandLineOptions::INVALID_WINDOW_POS)
-			Left=CmdLineOptions.m_WindowLeft;
-		if (CmdLineOptions.m_WindowTop!=CCommandLineOptions::INVALID_WINDOW_POS)
-			Top=CmdLineOptions.m_WindowTop;
-		if (CmdLineOptions.m_WindowWidth>0)
-			Width=CmdLineOptions.m_WindowWidth;
-		if (CmdLineOptions.m_WindowHeight>0)
-			Height=CmdLineOptions.m_WindowHeight;
-		MainWindow.SetPosition(Left,Top,Width,Height);
+		int Left, Top, Width, Height;
+		MainWindow.GetPosition(&Left, &Top, &Width, &Height);
+		if (CmdLineOptions.m_WindowLeft != CCommandLineOptions::INVALID_WINDOW_POS)
+			Left = CmdLineOptions.m_WindowLeft;
+		if (CmdLineOptions.m_WindowTop != CCommandLineOptions::INVALID_WINDOW_POS)
+			Top = CmdLineOptions.m_WindowTop;
+		if (CmdLineOptions.m_WindowWidth > 0)
+			Width = CmdLineOptions.m_WindowWidth;
+		if (CmdLineOptions.m_WindowHeight > 0)
+			Height = CmdLineOptions.m_WindowHeight;
+		MainWindow.SetPosition(Left, Top, Width, Height);
 	}
 
 	ColorSchemeOptions.SetEventHandler(&UICore);
@@ -861,62 +864,62 @@ int CAppMain::Main(HINSTANCE hInstance,LPCTSTR pszCmdLine,int nCmdShow)
 
 	CoreEngine.CreateFilters();
 
-	LibISDB::EPGDatabaseFilter *pEPGDatabaseFilter=CoreEngine.GetFilter<LibISDB::EPGDatabaseFilter>();
-	if (pEPGDatabaseFilter!=nullptr)
+	LibISDB::EPGDatabaseFilter *pEPGDatabaseFilter = CoreEngine.GetFilter<LibISDB::EPGDatabaseFilter>();
+	if (pEPGDatabaseFilter != nullptr)
 		pEPGDatabaseFilter->SetEPGDatabase(&EPGDatabase);
 
 	// ウィンドウの作成
-	if (!MainWindow.Create(nullptr,WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN)) {
-		AddLog(CLogItem::TYPE_ERROR,TEXT("ウィンドウが作成できません。"));
+	if (!MainWindow.Create(nullptr, WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN)) {
+		AddLog(CLogItem::TYPE_ERROR, TEXT("ウィンドウが作成できません。"));
 		if (!Core.IsSilent())
-			MessageBox(nullptr,TEXT("ウィンドウが作成できません。"),nullptr,MB_OK | MB_ICONSTOP);
+			MessageBox(nullptr, TEXT("ウィンドウが作成できません。"), nullptr, MB_OK | MB_ICONSTOP);
 		return 0;
 	}
 
-	if (nCmdShow==SW_SHOWMINIMIZED || nCmdShow==SW_SHOWMINNOACTIVE || nCmdShow==SW_MINIMIZE)
-		CmdLineOptions.m_fMinimize=true;
+	if (nCmdShow == SW_SHOWMINIMIZED || nCmdShow == SW_SHOWMINNOACTIVE || nCmdShow == SW_MINIMIZE)
+		CmdLineOptions.m_fMinimize = true;
 	if (CmdLineOptions.m_fStandby && CmdLineOptions.m_fMinimize)
-		CmdLineOptions.m_fMinimize=false;
+		CmdLineOptions.m_fMinimize = false;
 	if (!CmdLineOptions.m_fStandby && !CmdLineOptions.m_fMinimize)
 		MainWindow.Show(nCmdShow);
 
 	GeneralOptions.Apply(COptions::UPDATE_ALL);
 
-	TaskTrayManager.Initialize(MainWindow.GetHandle(),WM_APP_TRAYICON);
+	TaskTrayManager.Initialize(MainWindow.GetHandle(), WM_APP_TRAYICON);
 	TaskTrayManager.SetMinimizeToTray(CmdLineOptions.m_fTray || ViewOptions.GetMinimizeToTray());
 	if (CmdLineOptions.m_fMinimize)
 		MainWindow.InitMinimize();
 
 	if (CmdLineOptions.m_fMpeg2 || CmdLineOptions.m_fH264 || CmdLineOptions.m_fH265) {
 		CoreEngine.SetStreamTypePlayable(
-			LibISDB::STREAM_TYPE_MPEG2_VIDEO,CmdLineOptions.m_fMpeg2);
+			LibISDB::STREAM_TYPE_MPEG2_VIDEO, CmdLineOptions.m_fMpeg2);
 		CoreEngine.SetStreamTypePlayable(
-			LibISDB::STREAM_TYPE_H264,CmdLineOptions.m_fH264);
+			LibISDB::STREAM_TYPE_H264, CmdLineOptions.m_fH264);
 		CoreEngine.SetStreamTypePlayable(
-			LibISDB::STREAM_TYPE_H265,CmdLineOptions.m_fH265);
+			LibISDB::STREAM_TYPE_H265, CmdLineOptions.m_fH265);
 	} else {
-		CoreEngine.SetStreamTypePlayable(LibISDB::STREAM_TYPE_MPEG2_VIDEO,true);
-		CoreEngine.SetStreamTypePlayable(LibISDB::STREAM_TYPE_H264,true);
-		CoreEngine.SetStreamTypePlayable(LibISDB::STREAM_TYPE_H265,true);
+		CoreEngine.SetStreamTypePlayable(LibISDB::STREAM_TYPE_MPEG2_VIDEO, true);
+		CoreEngine.SetStreamTypePlayable(LibISDB::STREAM_TYPE_H264, true);
+		CoreEngine.SetStreamTypePlayable(LibISDB::STREAM_TYPE_H265, true);
 	}
-	CoreEngine.SetStreamTypePlayable(LibISDB::STREAM_TYPE_MPEG1_AUDIO,true);
-	CoreEngine.SetStreamTypePlayable(LibISDB::STREAM_TYPE_MPEG2_AUDIO,true);
-	CoreEngine.SetStreamTypePlayable(LibISDB::STREAM_TYPE_AAC,true);
-	CoreEngine.SetStreamTypePlayable(LibISDB::STREAM_TYPE_AC3,true);
+	CoreEngine.SetStreamTypePlayable(LibISDB::STREAM_TYPE_MPEG1_AUDIO, true);
+	CoreEngine.SetStreamTypePlayable(LibISDB::STREAM_TYPE_MPEG2_AUDIO, true);
+	CoreEngine.SetStreamTypePlayable(LibISDB::STREAM_TYPE_AAC, true);
+	CoreEngine.SetStreamTypePlayable(LibISDB::STREAM_TYPE_AC3, true);
 
 	if (CmdLineOptions.m_f1Seg || PlaybackOptions.Is1SegModeOnStartup())
-		Core.Set1SegMode(true,false);
+		Core.Set1SegMode(true, false);
 	CoreEngine.SetMinTimerResolution(PlaybackOptions.GetMinTimerResolution());
 
-	RecordManager.SetRecorderFilter(&CoreEngine,CoreEngine.GetFilter<LibISDB::RecorderFilter>());
+	RecordManager.SetRecorderFilter(&CoreEngine, CoreEngine.GetFilter<LibISDB::RecorderFilter>());
 
 	ViewOptions.Apply(COptions::UPDATE_ALL);
 	VideoOptions.Apply(COptions::UPDATE_ALL);
 	PlaybackOptions.Apply(COptions::UPDATE_ALL);
 	VideoDecoderOptions.ApplyVideoDecoderSettings();
-	LibISDB::LogoDownloaderFilter *pLogoDownloader=
+	LibISDB::LogoDownloaderFilter *pLogoDownloader =
 		CoreEngine.GetFilter<LibISDB::LogoDownloaderFilter>();
-	if (pLogoDownloader!=nullptr)
+	if (pLogoDownloader != nullptr)
 		pLogoDownloader->SetLogoHandler(&LogoManager);
 	CoreEngine.SetLogger(&UICore);
 	UICore.SetStatusBarTrace(true);
@@ -927,20 +930,20 @@ int CAppMain::Main(HINSTANCE hInstance,LPCTSTR pszCmdLine,int nCmdShow)
 		TCHAR szPluginDir[MAX_PATH];
 		std::vector<LPCTSTR> ExcludePlugins;
 
-		CPlugin::SetMessageWindow(MainWindow.GetHandle(),WM_APP_PLUGINMESSAGE);
+		CPlugin::SetMessageWindow(MainWindow.GetHandle(), WM_APP_PLUGINMESSAGE);
 		StatusView.SetSingleText(TEXT("プラグインを読み込んでいます..."));
 		if (!CmdLineOptions.m_PluginsDirectory.empty()) {
-			GetAbsolutePath(CmdLineOptions.m_PluginsDirectory.c_str(),szPluginDir);
+			GetAbsolutePath(CmdLineOptions.m_PluginsDirectory.c_str(), szPluginDir);
 		} else {
 			GetAppDirectory(szPluginDir);
-			::PathAppend(szPluginDir,TEXT("Plugins"));
+			::PathAppend(szPluginDir, TEXT("Plugins"));
 		}
-		AddLog(TEXT("プラグインを \"%s\" から読み込みます..."),szPluginDir);
-		if (CmdLineOptions.m_NoLoadPlugins.size()>0) {
-			for (size_t i=0;i<CmdLineOptions.m_NoLoadPlugins.size();i++)
+		AddLog(TEXT("プラグインを \"%s\" から読み込みます..."), szPluginDir);
+		if (CmdLineOptions.m_NoLoadPlugins.size() > 0) {
+			for (size_t i = 0; i < CmdLineOptions.m_NoLoadPlugins.size(); i++)
 				ExcludePlugins.push_back(CmdLineOptions.m_NoLoadPlugins[i].c_str());
 		}
-		PluginManager.LoadPlugins(szPluginDir,&ExcludePlugins);
+		PluginManager.LoadPlugins(szPluginDir, &ExcludePlugins);
 	}
 
 	RegisterCommands();
@@ -957,7 +960,7 @@ int CAppMain::Main(HINSTANCE hInstance,LPCTSTR pszCmdLine,int nCmdShow)
 
 	SideBarOptions.ApplyItemList();
 	if (MainWindow.GetSideBarVisible()) {
-		MainWindow.GetLayoutBase().SetContainerVisible(CONTAINER_ID_SIDEBAR,true);
+		MainWindow.GetLayoutBase().SetContainerVisible(CONTAINER_ID_SIDEBAR, true);
 		SideBar.Update();
 	}
 
@@ -971,12 +974,12 @@ int CAppMain::Main(HINSTANCE hInstance,LPCTSTR pszCmdLine,int nCmdShow)
 		if (CoreEngine.IsDriverSpecified()) {
 			StatusView.SetSingleText(TEXT("BonDriverの読み込み中..."));
 			if (Core.OpenAndInitializeTuner(
-					Core.IsSilent()?
-						CAppCore::OPENTUNER_NO_UI:
-						CAppCore::OPENTUNER_RETRY_DIALOG)) {
+						Core.IsSilent() ?
+							CAppCore::OPENTUNER_NO_UI :
+							CAppCore::OPENTUNER_RETRY_DIALOG)) {
 				AppEventManager.OnTunerChanged();
 			} else {
-				Core.OnError(&CoreEngine,TEXT("BonDriverの初期化ができません。"));
+				Core.OnError(&CoreEngine, TEXT("BonDriverの初期化ができません。"));
 			}
 		} else {
 			AddLog(TEXT("デフォルトのBonDriverはありません。"));
@@ -984,35 +987,35 @@ int CAppMain::Main(HINSTANCE hInstance,LPCTSTR pszCmdLine,int nCmdShow)
 	}
 
 	// 再生の初期化
-	LibISDB::ViewerFilter *pViewerFilter=CoreEngine.GetFilter<LibISDB::ViewerFilter>();
-	if (pViewerFilter!=nullptr)
+	LibISDB::ViewerFilter *pViewerFilter = CoreEngine.GetFilter<LibISDB::ViewerFilter>();
+	if (pViewerFilter != nullptr)
 		pViewerFilter->SetUseAudioRendererClock(PlaybackOptions.GetUseAudioRendererClock());
 	CoreEngine.SetSPDIFOptions(AudioOptions.GetSpdifOptions());
-	if (CmdLineOptions.m_Volume>=0)
-		CoreEngine.SetVolume(min(CmdLineOptions.m_Volume,CCoreEngine::MAX_VOLUME));
+	if (CmdLineOptions.m_Volume >= 0)
+		CoreEngine.SetVolume(min(CmdLineOptions.m_Volume, CCoreEngine::MAX_VOLUME));
 	if (PlaybackOptions.IsMuteOnStartUp() || CmdLineOptions.m_fMute)
 		UICore.SetMute(true);
 
 	// 一つのコーデックのみ指定されている場合、ver.0.8.xまでとの互換動作として先にフィルタグラフを構築
 	if (!CmdLineOptions.m_fStandby && !CmdLineOptions.m_fNoDirectShow) {
-		unsigned int StreamTypeFlags=0;
+		unsigned int StreamTypeFlags = 0;
 		if (CmdLineOptions.m_fMpeg2)
-			StreamTypeFlags|=0x01;
+			StreamTypeFlags |= 0x01;
 		if (CmdLineOptions.m_fH264)
-			StreamTypeFlags|=0x02;
+			StreamTypeFlags |= 0x02;
 		if (CmdLineOptions.m_fH265)
-			StreamTypeFlags|=0x04;
-		BYTE VideoStreamType=0;
+			StreamTypeFlags |= 0x04;
+		BYTE VideoStreamType = 0;
 		switch (StreamTypeFlags) {
-		case 0x01:	VideoStreamType=LibISDB::STREAM_TYPE_MPEG2_VIDEO;	break;
-		case 0x02:	VideoStreamType=LibISDB::STREAM_TYPE_H264;			break;
-		case 0x04:	VideoStreamType=LibISDB::STREAM_TYPE_H265;			break;
+		case 0x01: VideoStreamType = LibISDB::STREAM_TYPE_MPEG2_VIDEO; break;
+		case 0x02: VideoStreamType = LibISDB::STREAM_TYPE_H264;        break;
+		case 0x04: VideoStreamType = LibISDB::STREAM_TYPE_H265;        break;
 		}
-		if (VideoStreamType!=0)
+		if (VideoStreamType != 0)
 			UICore.InitializeViewer(VideoStreamType);
 	}
 
-	const bool fEnablePlayback=
+	const bool fEnablePlayback =
 		!PlaybackOptions.GetRestorePlayStatus() || m_fEnablePlaybackOnStart;
 	if (fEnablePlayback
 			&& CoreEngine.IsViewerOpen()
@@ -1030,12 +1033,13 @@ int CAppMain::Main(HINSTANCE hInstance,LPCTSTR pszCmdLine,int nCmdShow)
 	if (CoreEngine.IsNetworkDriver()) {
 		if (m_fIncrementNetworkPort) {
 			CPortQuery PortQuery;
-			WORD UDPPort=CmdLineOptions.m_UDPPort>0?(WORD)CmdLineOptions.m_UDPPort:
-											CoreEngine.IsUDPDriver()?1234:2230;
+			WORD UDPPort =
+				CmdLineOptions.m_UDPPort > 0 ? (WORD)CmdLineOptions.m_UDPPort :
+				CoreEngine.IsUDPDriver() ? 1234 : 2230;
 
 			StatusView.SetSingleText(TEXT("空きポートを検索しています..."));
-			PortQuery.Query(MainWindow.GetHandle(),&UDPPort,CoreEngine.IsUDPDriver()?1243:2239);
-			CmdLineOptions.m_UDPPort=UDPPort;
+			PortQuery.Query(MainWindow.GetHandle(), &UDPPort, CoreEngine.IsUDPDriver() ? 1243 : 2239);
+			CmdLineOptions.m_UDPPort = UDPPort;
 		}
 	}
 
@@ -1049,7 +1053,7 @@ int CAppMain::Main(HINSTANCE hInstance,LPCTSTR pszCmdLine,int nCmdShow)
 		TCHAR szDRCSMapName[MAX_PATH];
 
 		GetAppDirectory(szDRCSMapName);
-		::PathAppend(szDRCSMapName,TEXT("DRCSMap.ini"));
+		::PathAppend(szDRCSMapName, TEXT("DRCSMap.ini"));
 		if (::PathFileExists(szDRCSMapName)) {
 			StatusView.SetSingleText(TEXT("DRCSマップを読み込んでいます..."));
 			Panel.CaptionPanel.LoadDRCSMap(szDRCSMapName);
@@ -1059,8 +1063,8 @@ int CAppMain::Main(HINSTANCE hInstance,LPCTSTR pszCmdLine,int nCmdShow)
 	{
 		TCHAR szSearchFileName[MAX_PATH];
 
-		::GetModuleFileName(nullptr,szSearchFileName,lengthof(szSearchFileName));
-		::PathRenameExtension(szSearchFileName,TEXT(".search.ini"));
+		::GetModuleFileName(nullptr, szSearchFileName, lengthof(szSearchFileName));
+		::PathRenameExtension(szSearchFileName, TEXT(".search.ini"));
 		if (::PathFileExists(szSearchFileName)) {
 			StatusView.SetSingleText(TEXT("キーワード検索設定を読み込んでいます..."));
 			KeywordSearch.Load(szSearchFileName);
@@ -1074,12 +1078,12 @@ int CAppMain::Main(HINSTANCE hInstance,LPCTSTR pszCmdLine,int nCmdShow)
 	if (Panel.fShowPanelWindow
 			&& (!Panel.IsFloating()
 				|| (!CmdLineOptions.m_fStandby && !CmdLineOptions.m_fMinimize))) {
-		Panel.Frame.SetPanelVisible(true,true);
+		Panel.Frame.SetPanelVisible(true, true);
 		Panel.Frame.Update();
 	}
 
 	if (!CmdLineOptions.m_fNoEpg) {
-		EpgOptions.AsyncLoadEpgFile(&EPGDatabase,&EpgLoadEventHandler);
+		EpgOptions.AsyncLoadEpgFile(&EPGDatabase, &EpgLoadEventHandler);
 		EpgOptions.AsyncLoadEDCBData(&EpgLoadEventHandler);
 	}
 
@@ -1091,41 +1095,40 @@ int CAppMain::Main(HINSTANCE hInstance,LPCTSTR pszCmdLine,int nCmdShow)
 	// 初期チャンネルを設定する
 	if (CoreEngine.IsSourceOpen()) {
 		if (CoreEngine.IsNetworkDriver()) {
-			const int FirstPort=CoreEngine.IsUDPDriver()?1234:2230;
-			int Port=FirstPort;
-			if ((int)CmdLineOptions.m_UDPPort>=FirstPort && (int)CmdLineOptions.m_UDPPort<FirstPort+10)
-				Port=CmdLineOptions.m_UDPPort;
-			else if (RestoreChannelInfo.Channel>=0 && RestoreChannelInfo.Channel<10)
-				Port=FirstPort+RestoreChannelInfo.Channel;
-			Core.SetChannel(0,Port-FirstPort,CmdLineOptions.m_ServiceID);
-			if (CmdLineOptions.m_ControllerChannel>0)
+			const int FirstPort = CoreEngine.IsUDPDriver() ? 1234 : 2230;
+			int Port = FirstPort;
+			if ((int)CmdLineOptions.m_UDPPort >= FirstPort && (int)CmdLineOptions.m_UDPPort < FirstPort + 10)
+				Port = CmdLineOptions.m_UDPPort;
+			else if (RestoreChannelInfo.Channel >= 0 && RestoreChannelInfo.Channel < 10)
+				Port = FirstPort + RestoreChannelInfo.Channel;
+			Core.SetChannel(0, Port - FirstPort, CmdLineOptions.m_ServiceID);
+			if (CmdLineOptions.m_ControllerChannel > 0)
 				Core.SetCommandLineChannel(&CmdLineOptions);
 		} else if (m_fFirstExecute
-				&& ChannelManager.GetFileAllChannelList()->NumChannels()==0) {
+				&& ChannelManager.GetFileAllChannelList()->NumChannels() == 0) {
 			if (MainWindow.ShowMessage(
-					TEXT("最初にチャンネルスキャンを行うことをおすすめします。\r\n")
-					TEXT("今すぐチャンネルスキャンを行いますか?"),
-					TEXT("チャンネルスキャンの確認"),
-					MB_YESNO | MB_ICONQUESTION)==IDYES) {
-				ShowOptionDialog(MainWindow.GetHandle(),
-								 COptionDialog::PAGE_CHANNELSCAN);
+						TEXT("最初にチャンネルスキャンを行うことをおすすめします。\r\n")
+						TEXT("今すぐチャンネルスキャンを行いますか?"),
+						TEXT("チャンネルスキャンの確認"),
+						MB_YESNO | MB_ICONQUESTION) == IDYES) {
+				ShowOptionDialog(MainWindow.GetHandle(), COptionDialog::PAGE_CHANNELSCAN);
 			}
 		} else if (CmdLineOptions.IsChannelSpecified()) {
 			Core.SetCommandLineChannel(&CmdLineOptions);
-		} else if (RestoreChannelInfo.Space>=0
-				&& RestoreChannelInfo.Channel>=0) {
+		} else if (RestoreChannelInfo.Space >= 0
+				&& RestoreChannelInfo.Channel >= 0) {
 			Core.RestoreChannel();
 		} else {
-			const LibISDB::BonDriverSourceFilter *pSourceFilter=
+			const LibISDB::BonDriverSourceFilter *pSourceFilter =
 				CoreEngine.GetFilter<LibISDB::BonDriverSourceFilter>();
-			if (pSourceFilter!=nullptr) {
-				const int CurSpace=(int)pSourceFilter->GetCurSpace();
-				const int CurChannel=(int)pSourceFilter->GetCurChannel();
-				if (CurSpace>=0 && CurChannel>=0) {
-					const CChannelList *pList=ChannelManager.GetCurrentChannelList();
-					int i=pList->FindByIndex(CurSpace,CurChannel);
-					if (i>=0)
-						UICore.DoCommand(CM_CHANNEL_FIRST+i);
+			if (pSourceFilter != nullptr) {
+				const int CurSpace = (int)pSourceFilter->GetCurSpace();
+				const int CurChannel = (int)pSourceFilter->GetCurChannel();
+				if (CurSpace >= 0 && CurChannel >= 0) {
+					const CChannelList *pList = ChannelManager.GetCurrentChannelList();
+					int i = pList->FindByIndex(CurSpace, CurChannel);
+					if (i >= 0)
+						UICore.DoCommand(CM_CHANNEL_FIRST + i);
 				}
 			}
 		}
@@ -1139,12 +1142,11 @@ int CAppMain::Main(HINSTANCE hInstance,LPCTSTR pszCmdLine,int nCmdShow)
 	if (CmdLineOptions.m_fExitOnRecordEnd)
 		Core.SetExitOnRecordingStop(true);
 
-	if (Panel.fShowPanelWindow && Panel.Form.GetCurPageID()==PANEL_ID_CHANNEL)
-		Panel.ChannelPanel.SetChannelList(ChannelManager.GetCurrentChannelList(),false);
+	if (Panel.fShowPanelWindow && Panel.Form.GetCurPageID() == PANEL_ID_CHANNEL)
+		Panel.ChannelPanel.SetChannelList(ChannelManager.GetCurrentChannelList(), false);
 
-	Accelerator.Initialize(UICore.GetMainWindow(),&MainMenu,
-						   m_Settings,&CommandList);
-	OperationOptions.Initialize(m_Settings,&CommandList);
+	Accelerator.Initialize(UICore.GetMainWindow(), &MainMenu, m_Settings, &CommandList);
+	OperationOptions.Initialize(m_Settings, &CommandList);
 
 	m_Settings.Close();
 
@@ -1163,12 +1165,12 @@ int CAppMain::Main(HINSTANCE hInstance,LPCTSTR pszCmdLine,int nCmdShow)
 	::SetFocus(MainWindow.GetHandle());
 
 	{
-		HWND hwndForeground=::GetForegroundWindow();
-		if (hwndForeground!=nullptr) {
-			DWORD ProcessID=0;
-			::GetWindowThreadProcessId(hwndForeground,&ProcessID);
-			if (ProcessID==::GetCurrentProcessId())
-				BroadcastControllerFocusMessage(nullptr,false,true);
+		HWND hwndForeground = ::GetForegroundWindow();
+		if (hwndForeground != nullptr) {
+			DWORD ProcessID = 0;
+			::GetWindowThreadProcessId(hwndForeground, &ProcessID);
+			if (ProcessID == ::GetCurrentProcessId())
+				BroadcastControllerFocusMessage(nullptr, false, true);
 		}
 	}
 
@@ -1179,13 +1181,13 @@ int CAppMain::Main(HINSTANCE hInstance,LPCTSTR pszCmdLine,int nCmdShow)
 
 	UICore.RegisterModelessDialog(&StreamInfo);
 
-	while (::GetMessage(&msg,nullptr,0,0)>0) {
+	while (::GetMessage(&msg, nullptr, 0, 0) > 0) {
 		if (HtmlHelpClass.PreTranslateMessage(&msg)
 				|| UICore.ProcessDialogMessage(&msg))
 			continue;
 		if ((IsNoAcceleratorMessage(&msg)
-				|| !Accelerator.TranslateMessage(MainWindow.GetHandle(),&msg))
-				&& !ControllerManager.TranslateMessage(MainWindow.GetHandle(),&msg)) {
+					|| !Accelerator.TranslateMessage(MainWindow.GetHandle(), &msg))
+				&& !ControllerManager.TranslateMessage(MainWindow.GetHandle(), &msg)) {
 			::TranslateMessage(&msg);
 			::DispatchMessage(&msg);
 		}
@@ -1198,20 +1200,20 @@ int CAppMain::Main(HINSTANCE hInstance,LPCTSTR pszCmdLine,int nCmdShow)
 // アクセラレータにしないメッセージの判定
 bool CAppMain::IsNoAcceleratorMessage(const MSG *pmsg)
 {
-	HWND hwnd=::GetFocus();
+	HWND hwnd = ::GetFocus();
 
-	if (hwnd!=nullptr && ::IsWindowVisible(hwnd)) {
+	if (hwnd != nullptr && ::IsWindowVisible(hwnd)) {
 		if (MainWindow.IsNoAcceleratorMessage(pmsg))
 			return true;
 
-		const CDisplayView *pDisplayView=MainWindow.GetDisplayBase().GetDisplayView();
-		if (pDisplayView!=nullptr && hwnd==pDisplayView->GetHandle()) {
+		const CDisplayView *pDisplayView = MainWindow.GetDisplayBase().GetDisplayView();
+		if (pDisplayView != nullptr && hwnd == pDisplayView->GetHandle()) {
 			return pDisplayView->IsMessageNeed(pmsg);
-		} else if (pmsg->message==WM_KEYDOWN || pmsg->message==WM_KEYUP) {
-			LRESULT Result=::SendMessage(hwnd,WM_GETDLGCODE,pmsg->wParam,reinterpret_cast<LPARAM>(pmsg));
-			if ((Result & (DLGC_WANTALLKEYS | DLGC_WANTCHARS))!=0)
+		} else if (pmsg->message == WM_KEYDOWN || pmsg->message == WM_KEYUP) {
+			LRESULT Result = ::SendMessage(hwnd, WM_GETDLGCODE, pmsg->wParam, reinterpret_cast<LPARAM>(pmsg));
+			if ((Result & (DLGC_WANTALLKEYS | DLGC_WANTCHARS)) != 0)
 				return true;
-			if ((Result & DLGC_WANTARROWS)!=0) {
+			if ((Result & DLGC_WANTARROWS) != 0) {
 				switch (pmsg->wParam) {
 				case VK_LEFT:
 				case VK_RIGHT:
@@ -1227,29 +1229,29 @@ bool CAppMain::IsNoAcceleratorMessage(const MSG *pmsg)
 
 
 // 設定ダイアログを表示する
-bool CAppMain::ShowOptionDialog(HWND hwndOwner,int StartPage)
+bool CAppMain::ShowOptionDialog(HWND hwndOwner, int StartPage)
 {
-	if (!m_OptionDialog.Show(hwndOwner,StartPage))
+	if (!m_OptionDialog.Show(hwndOwner, StartPage))
 		return false;
 
-	if ((COptions::GetGeneralUpdateFlags() & COptions::UPDATE_GENERAL_BUILDMEDIAVIEWER)!=0) {
-		const LibISDB::ViewerFilter *pViewer=CoreEngine.GetFilter<LibISDB::ViewerFilter>();
-		if (pViewer!=nullptr
+	if ((COptions::GetGeneralUpdateFlags() & COptions::UPDATE_GENERAL_BUILDMEDIAVIEWER) != 0) {
+		const LibISDB::ViewerFilter *pViewer = CoreEngine.GetFilter<LibISDB::ViewerFilter>();
+		if (pViewer != nullptr
 				&& (pViewer->IsOpen()
 					|| UICore.IsViewerInitializeError())) {
-			bool fOldError=UICore.IsViewerInitializeError();
-			bool fResult=UICore.InitializeViewer();
+			bool fOldError = UICore.IsViewerInitializeError();
+			bool fResult = UICore.InitializeViewer();
 			// エラーで再生オフになっていた場合はオンにする
 			if (fResult && fOldError && !UICore.IsViewerEnabled())
 				UICore.EnableViewer(true);
 		}
 	}
 
-	if ((COptions::GetGeneralUpdateFlags() & COptions::UPDATE_GENERAL_EVENTINFOFONT)!=0) {
+	if ((COptions::GetGeneralUpdateFlags() & COptions::UPDATE_GENERAL_EVENTINFOFONT) != 0) {
 		ApplyEventInfoFont();
 	}
 
-	if ((ProgramGuideOptions.GetUpdateFlags() & CProgramGuideOptions::UPDATE_EVENTICONS)!=0)
+	if ((ProgramGuideOptions.GetUpdateFlags() & CProgramGuideOptions::UPDATE_EVENTICONS) != 0)
 		Panel.ProgramListPanel.SetVisibleEventIcons(ProgramGuideOptions.GetVisibleEventIcons());
 	TaskTrayManager.SetMinimizeToTray(ViewOptions.GetMinimizeToTray());
 
@@ -1262,74 +1264,78 @@ bool CAppMain::ShowOptionDialog(HWND hwndOwner,int StartPage)
 
 
 CAppMain::CreateDirectoryResult CAppMain::CreateDirectory(
-	HWND hwnd,LPCTSTR pszDirectory,LPCTSTR pszMessage)
+	HWND hwnd, LPCTSTR pszDirectory, LPCTSTR pszMessage)
 {
 	if (IsStringEmpty(pszDirectory))
 		return CREATEDIRECTORY_RESULT_NOPATH;
 
 	TCHAR szPath[MAX_PATH];
-	TCHAR szMessage[MAX_PATH+80];
+	TCHAR szMessage[MAX_PATH + 80];
 
-	if (!GetAbsolutePath(pszDirectory,szPath)) {
-		StdUtil::snprintf(szMessage,lengthof(szMessage),
-						  TEXT("フォルダ \"%s\" のパスが長過ぎます。"),szPath);
-		::MessageBox(hwnd,szMessage,nullptr,MB_OK | MB_ICONEXCLAMATION);
+	if (!GetAbsolutePath(pszDirectory, szPath)) {
+		StdUtil::snprintf(
+			szMessage, lengthof(szMessage),
+			TEXT("フォルダ \"%s\" のパスが長過ぎます。"), szPath);
+		::MessageBox(hwnd, szMessage, nullptr, MB_OK | MB_ICONEXCLAMATION);
 		return CREATEDIRECTORY_RESULT_ERROR;
 	}
 
 	if (!::PathIsDirectory(szPath)) {
-		StdUtil::snprintf(szMessage,lengthof(szMessage),pszMessage,szPath);
-		if (::MessageBox(hwnd,szMessage,TEXT("フォルダ作成の確認"),
-						 MB_YESNO | MB_ICONQUESTION)!=IDYES)
+		StdUtil::snprintf(szMessage, lengthof(szMessage), pszMessage, szPath);
+		if (::MessageBox(
+					hwnd, szMessage, TEXT("フォルダ作成の確認"),
+					MB_YESNO | MB_ICONQUESTION) != IDYES)
 			return CREATEDIRECTORY_RESULT_CANCELLED;
 
-		int Result=::SHCreateDirectoryEx(hwnd,szPath,nullptr);
-		if (Result!=ERROR_SUCCESS && Result!=ERROR_ALREADY_EXISTS) {
-			StdUtil::snprintf(szMessage,lengthof(szMessage),
-							  TEXT("フォルダ \"%s\" を作成できません。(エラーコード %#x)"),szPath,Result);
-			AddLog(CLogItem::TYPE_ERROR,szMessage);
-			::MessageBox(hwnd,szMessage,nullptr,MB_OK | MB_ICONEXCLAMATION);
+		int Result = ::SHCreateDirectoryEx(hwnd, szPath, nullptr);
+		if (Result != ERROR_SUCCESS && Result != ERROR_ALREADY_EXISTS) {
+			StdUtil::snprintf(
+				szMessage, lengthof(szMessage),
+				TEXT("フォルダ \"%s\" を作成できません。(エラーコード %#x)"), szPath, Result);
+			AddLog(CLogItem::TYPE_ERROR, szMessage);
+			::MessageBox(hwnd, szMessage, nullptr, MB_OK | MB_ICONEXCLAMATION);
 			return CREATEDIRECTORY_RESULT_ERROR;
 		}
 
-		AddLog(CLogItem::TYPE_INFORMATION,TEXT("フォルダ \"%s\" を作成しました。"),szPath);
+		AddLog(CLogItem::TYPE_INFORMATION, TEXT("フォルダ \"%s\" を作成しました。"), szPath);
 	}
 
 	return CREATEDIRECTORY_RESULT_SUCCESS;
 }
 
 
-bool CAppMain::SendInterprocessMessage(HWND hwnd,UINT Message,const void *pParam,DWORD ParamSize)
+bool CAppMain::SendInterprocessMessage(HWND hwnd, UINT Message, const void *pParam, DWORD ParamSize)
 {
 	COPYDATASTRUCT cds;
-	cds.dwData=Message;
-	cds.cbData=ParamSize;
-	cds.lpData=const_cast<void*>(pParam);
+	cds.dwData = Message;
+	cds.cbData = ParamSize;
+	cds.lpData = const_cast<void*>(pParam);
 
-	DWORD_PTR Result=0;
-	return ::SendMessageTimeout(hwnd,WM_COPYDATA,0,reinterpret_cast<LPARAM>(&cds),
-								SMTO_NORMAL | SMTO_NOTIMEOUTIFNOTHUNG,10000,&Result)!=0
-		&& Result!=0;
+	DWORD_PTR Result = 0;
+	return ::SendMessageTimeout(
+		hwnd, WM_COPYDATA, 0, reinterpret_cast<LPARAM>(&cds),
+		SMTO_NORMAL | SMTO_NOTIMEOUTIFNOTHUNG, 10000, &Result) != 0
+		&& Result != 0;
 }
 
 
-LRESULT CAppMain::ReceiveInterprocessMessage(HWND hwnd,WPARAM wParam,LPARAM lParam)
+LRESULT CAppMain::ReceiveInterprocessMessage(HWND hwnd, WPARAM wParam, LPARAM lParam)
 {
 	::ReplyMessage(TRUE);
 
-	const COPYDATASTRUCT *pcds=reinterpret_cast<const COPYDATASTRUCT*>(lParam);
+	const COPYDATASTRUCT *pcds = reinterpret_cast<const COPYDATASTRUCT*>(lParam);
 
 	switch (pcds->dwData) {
 	case PROCESS_MESSAGE_EXECUTE:
-		if (pcds->cbData>=sizeof(TCHAR) && pcds->lpData!=nullptr) {
-			LPCTSTR pszCommandLine=static_cast<LPCTSTR>(pcds->lpData);
-			if (pszCommandLine[pcds->cbData/sizeof(TCHAR)-1]==_T('\0'))
+		if (pcds->cbData >= sizeof(TCHAR) && pcds->lpData != nullptr) {
+			LPCTSTR pszCommandLine = static_cast<LPCTSTR>(pcds->lpData);
+			if (pszCommandLine[pcds->cbData / sizeof(TCHAR) - 1] == _T('\0'))
 				ProcessCommandLine(pszCommandLine);
 		}
 		break;
 
 	default:
-		AddLog(CLogItem::TYPE_WARNING,TEXT("未知のメッセージ %Ix を受信しました。"),pcds->dwData);
+		AddLog(CLogItem::TYPE_WARNING, TEXT("未知のメッセージ %Ix を受信しました。"), pcds->dwData);
 		break;
 	}
 
@@ -1338,25 +1344,24 @@ LRESULT CAppMain::ReceiveInterprocessMessage(HWND hwnd,WPARAM wParam,LPARAM lPar
 
 
 bool CAppMain::BroadcastControllerFocusMessage(
-	HWND hwnd,bool fSkipSelf,bool fFocus,DWORD ActiveThreadID)
+	HWND hwnd, bool fSkipSelf, bool fFocus, DWORD ActiveThreadID)
 {
 	ControllerFocusInfo Info;
 
-	Info.hwnd=hwnd;
-	Info.fSkipSelf=fSkipSelf;
-	Info.fFocus=fFocus;
-	return EnumTVTestWindows(ControllerFocusCallback,
-							 reinterpret_cast<LPARAM>(&Info));
+	Info.hwnd = hwnd;
+	Info.fSkipSelf = fSkipSelf;
+	Info.fFocus = fFocus;
+	return EnumTVTestWindows(ControllerFocusCallback, reinterpret_cast<LPARAM>(&Info));
 }
 
 
-BOOL CALLBACK CAppMain::ControllerFocusCallback(HWND hwnd,LPARAM Param)
+BOOL CALLBACK CAppMain::ControllerFocusCallback(HWND hwnd, LPARAM Param)
 {
-	ControllerFocusInfo *pInfo=reinterpret_cast<ControllerFocusInfo*>(Param);
+	ControllerFocusInfo *pInfo = reinterpret_cast<ControllerFocusInfo*>(Param);
 
-	if (!pInfo->fSkipSelf || hwnd!=pInfo->hwnd) {
-		::PostMessage(hwnd,WM_APP_CONTROLLERFOCUS,pInfo->fFocus,0);
-		pInfo->fFocus=false;
+	if (!pInfo->fSkipSelf || hwnd != pInfo->hwnd) {
+		::PostMessage(hwnd, WM_APP_CONTROLLERFOCUS, pInfo->fFocus, 0);
+		pInfo->fFocus = false;
 	}
 	return TRUE;
 }
@@ -1365,63 +1370,69 @@ BOOL CALLBACK CAppMain::ControllerFocusCallback(HWND hwnd,LPARAM Param)
 void CAppMain::RegisterCommands()
 {
 	// BonDriver
-	for (int i=0;i<DriverManager.NumDrivers();i++) {
-		const CDriverInfo *pDriverInfo=DriverManager.GetDriverInfo(i);
-		LPCTSTR pszFileName=::PathFindFileName(pDriverInfo->GetFileName());
+	for (int i = 0; i < DriverManager.NumDrivers(); i++) {
+		const CDriverInfo *pDriverInfo = DriverManager.GetDriverInfo(i);
+		LPCTSTR pszFileName = ::PathFindFileName(pDriverInfo->GetFileName());
 		TCHAR szName[CCommandList::MAX_COMMAND_NAME];
 
-		StdUtil::snprintf(szName,lengthof(szName),TEXT("BonDriver切替 : %s"),pszFileName);
-		CommandList.RegisterCommand(CM_DRIVER_FIRST+i,pszFileName,szName);
+		StdUtil::snprintf(szName, lengthof(szName), TEXT("BonDriver切替 : %s"), pszFileName);
+		CommandList.RegisterCommand(CM_DRIVER_FIRST + i, pszFileName, szName);
 	}
 
 	// プラグイン
-	for (int i=0;i<PluginManager.NumPlugins();i++) {
-		const CPlugin *pPlugin=PluginManager.GetPlugin(i);
+	for (int i = 0; i < PluginManager.NumPlugins(); i++) {
+		const CPlugin *pPlugin = PluginManager.GetPlugin(i);
 		TCHAR szName[CCommandList::MAX_COMMAND_NAME];
 		//TCHAR szShortName[CCommandList::MAX_COMMAND_NAME];
 
-		StdUtil::snprintf(szName,lengthof(szName),
-						  TEXT("プラグイン有効/無効 : %s"),pPlugin->GetPluginName());
-		//StdUtil::snprintf(szShortName,lengthof(szShortName),
-		//				  TEXT("%s 有効/無効"),pPlugin->GetPluginName());
-		CommandList.RegisterCommand(CM_PLUGIN_FIRST+i,
-									::PathFindFileName(pPlugin->GetFileName()),szName,
-									/*szShortName*/pPlugin->GetPluginName());
+		StdUtil::snprintf(
+			szName, lengthof(szName),
+			TEXT("プラグイン有効/無効 : %s"), pPlugin->GetPluginName());
+		/*
+		StdUtil::snprintf(
+			szShortName, lengthof(szShortName),
+			TEXT("%s 有効/無効"), pPlugin->GetPluginName());
+		*/
+		CommandList.RegisterCommand(
+			CM_PLUGIN_FIRST + i,
+			::PathFindFileName(pPlugin->GetFileName()), szName,
+			/*szShortName*/pPlugin->GetPluginName());
 	}
 
 	// プラグインの各コマンド
-	int ID=CM_PLUGINCOMMAND_FIRST;
-	for (int i=0;i<PluginManager.NumPlugins();i++) {
-		CPlugin *pPlugin=PluginManager.GetPlugin(i);
+	int ID = CM_PLUGINCOMMAND_FIRST;
+	for (int i = 0; i < PluginManager.NumPlugins(); i++) {
+		CPlugin *pPlugin = PluginManager.GetPlugin(i);
 
 		if (pPlugin->GetIcon().IsCreated())
 			SideBarOptions.RegisterCommand(pPlugin->GetCommand());
 
-		LPCTSTR pszFileName=::PathFindFileName(pPlugin->GetFileName());
+		LPCTSTR pszFileName = ::PathFindFileName(pPlugin->GetFileName());
 
-		for (int j=0;j<pPlugin->NumPluginCommands();j++) {
-			CPlugin::CPluginCommandInfo *pInfo=pPlugin->GetPluginCommandInfo(j);
+		for (int j = 0; j < pPlugin->NumPluginCommands(); j++) {
+			CPlugin::CPluginCommandInfo *pInfo = pPlugin->GetPluginCommandInfo(j);
 
 			pInfo->SetCommand(ID);
 
 			TVTest::String Text;
-			Text=pszFileName;
-			Text+=_T(':');
-			Text+=pInfo->GetText();
+			Text = pszFileName;
+			Text += _T(':');
+			Text += pInfo->GetText();
 
 			TCHAR szName[CCommandList::MAX_COMMAND_NAME];
-			StdUtil::snprintf(szName,lengthof(szName),TEXT("%s : %s"),
-							  pPlugin->GetPluginName(),pInfo->GetName());
+			StdUtil::snprintf(
+				szName, lengthof(szName), TEXT("%s : %s"),
+				pPlugin->GetPluginName(), pInfo->GetName());
 
-			unsigned int State=0;
-			if ((pInfo->GetState() & TVTest::PLUGIN_COMMAND_STATE_DISABLED)!=0)
-				State|=CCommandList::COMMAND_STATE_DISABLED;
-			if ((pInfo->GetState() & TVTest::PLUGIN_COMMAND_STATE_CHECKED)!=0)
-				State|=CCommandList::COMMAND_STATE_CHECKED;
+			unsigned int State = 0;
+			if ((pInfo->GetState() & TVTest::PLUGIN_COMMAND_STATE_DISABLED) != 0)
+				State |= CCommandList::COMMAND_STATE_DISABLED;
+			if ((pInfo->GetState() & TVTest::PLUGIN_COMMAND_STATE_CHECKED) != 0)
+				State |= CCommandList::COMMAND_STATE_CHECKED;
 
-			CommandList.RegisterCommand(ID,Text.c_str(),szName,pInfo->GetName(),State);
+			CommandList.RegisterCommand(ID, Text.c_str(), szName, pInfo->GetName(), State);
 
-			if ((pInfo->GetFlags() & TVTest::PLUGIN_COMMAND_FLAG_ICONIZE)!=0)
+			if ((pInfo->GetFlags() & TVTest::PLUGIN_COMMAND_FLAG_ICONIZE) != 0)
 				SideBarOptions.RegisterCommand(ID);
 
 			ID++;
@@ -1435,32 +1446,32 @@ void CAppMain::ApplyEventInfoFont()
 	Panel.ProgramListPanel.SetEventInfoFont(EpgOptions.GetEventInfoFont());
 	Panel.ChannelPanel.SetEventInfoFont(EpgOptions.GetEventInfoFont());
 	Epg.ProgramGuide.SetEventInfoFont(EpgOptions.GetEventInfoFont());
-	CProgramInfoStatusItem *pProgramInfo=dynamic_cast<CProgramInfoStatusItem*>(StatusView.GetItemByID(STATUS_ITEM_PROGRAMINFO));
-	if (pProgramInfo!=nullptr)
+	CProgramInfoStatusItem *pProgramInfo = dynamic_cast<CProgramInfoStatusItem*>(StatusView.GetItemByID(STATUS_ITEM_PROGRAMINFO));
+	if (pProgramInfo != nullptr)
 		pProgramInfo->SetEventInfoFont(EpgOptions.GetEventInfoFont());
 }
 
 
-bool CAppMain::GetAbsolutePath(LPCTSTR pszPath,LPTSTR pszAbsolutePath) const
+bool CAppMain::GetAbsolutePath(LPCTSTR pszPath, LPTSTR pszAbsolutePath) const
 {
-	if (pszAbsolutePath==nullptr)
+	if (pszAbsolutePath == nullptr)
 		return false;
 
-	pszAbsolutePath[0]=_T('\0');
+	pszAbsolutePath[0] = _T('\0');
 
 	if (IsStringEmpty(pszPath))
 		return false;
 
 	if (::PathIsRelative(pszPath)) {
-		TCHAR szDir[MAX_PATH],szTemp[MAX_PATH];
+		TCHAR szDir[MAX_PATH], szTemp[MAX_PATH];
 		GetAppDirectory(szDir);
-		if (::PathCombine(szTemp,szDir,pszPath)==nullptr
-				|| !::PathCanonicalize(pszAbsolutePath,szTemp))
+		if (::PathCombine(szTemp, szDir, pszPath) == nullptr
+				|| !::PathCanonicalize(pszAbsolutePath, szTemp))
 			return false;
 	} else {
-		if (::lstrlen(pszPath)>=MAX_PATH)
+		if (::lstrlen(pszPath) >= MAX_PATH)
 			return false;
-		::lstrcpy(pszAbsolutePath,pszPath);
+		::lstrcpy(pszAbsolutePath, pszPath);
 	}
 
 	return true;
@@ -1470,7 +1481,7 @@ bool CAppMain::GetAbsolutePath(LPCTSTR pszPath,LPTSTR pszAbsolutePath) const
 bool CAppMain::ProcessCommandLine(LPCTSTR pszCmdLine)
 {
 	AddLog(TEXT("新しいコマンドラインオプションを受信しました。"));
-	AddLog(TEXT("コマンドラインオプション : %s"),pszCmdLine);
+	AddLog(TEXT("コマンドラインオプション : %s"), pszCmdLine);
 
 	CCommandLineOptions CmdLine;
 
@@ -1492,13 +1503,13 @@ bool CAppMain::ProcessCommandLine(LPCTSTR pszCmdLine)
 		else if (CmdLine.m_fMaximize)
 			MainWindow.SetMaximize(true);
 		else if (CmdLine.m_fMinimize)
-			::ShowWindow(MainWindow.GetHandle(),SW_MINIMIZE);
+			::ShowWindow(MainWindow.GetHandle(), SW_MINIMIZE);
 	}
 
-	if (CmdLine.m_fSilent || CmdLine.m_TvRockDID>=0)
+	if (CmdLine.m_fSilent || CmdLine.m_TvRockDID >= 0)
 		Core.SetSilent(true);
 	if (CmdLine.m_fSaveLog)
-		CmdLineOptions.m_fSaveLog=true;
+		CmdLineOptions.m_fSaveLog = true;
 
 	if (!CmdLine.m_DriverName.empty()) {
 		if (Core.OpenTuner(CmdLine.m_DriverName.c_str())) {
@@ -1514,14 +1525,14 @@ bool CAppMain::ProcessCommandLine(LPCTSTR pszCmdLine)
 
 	if (CmdLine.m_fRecord) {
 		if (CmdLine.m_fRecordCurServiceOnly)
-			CmdLineOptions.m_fRecordCurServiceOnly=true;
+			CmdLineOptions.m_fRecordCurServiceOnly = true;
 		Core.CommandLineRecord(&CmdLine);
 	} else if (CmdLine.m_fRecordStop) {
 		Core.StopRecord();
 	}
 
-	if (CmdLine.m_Volume>=0)
-		UICore.SetVolume(min(CmdLine.m_Volume,CCoreEngine::MAX_VOLUME),false);
+	if (CmdLine.m_Volume >= 0)
+		UICore.SetVolume(min(CmdLine.m_Volume, CCoreEngine::MAX_VOLUME), false);
 	if (CmdLine.m_fMute)
 		UICore.SetMute(true);
 
@@ -1533,13 +1544,14 @@ bool CAppMain::ProcessCommandLine(LPCTSTR pszCmdLine)
 		UICore.DoCommandAsync(CM_CHANNELDISPLAY);
 
 	if (!CmdLine.m_Command.empty()) {
-		int Command=CommandList.ParseText(CmdLine.m_Command.c_str());
-		if (Command!=0) {
+		int Command = CommandList.ParseText(CmdLine.m_Command.c_str());
+		if (Command != 0) {
 			UICore.DoCommand(Command);
 		} else {
-			AddLog(CLogItem::TYPE_ERROR,
-				   TEXT("指定されたコマンド \"%s\" は無効です。"),
-				   CmdLine.m_Command.c_str());
+			AddLog(
+				CLogItem::TYPE_ERROR,
+				TEXT("指定されたコマンド \"%s\" は無効です。"),
+				CmdLine.m_Command.c_str());
 		}
 	}
 
@@ -1552,25 +1564,26 @@ void CAppMain::ShowProgramGuideByCommandLine(const CCommandLineOptions &CmdLine)
 	CMainWindow::ProgramGuideSpaceInfo SpaceInfo;
 
 	if (!CmdLine.m_ProgramGuideTuner.empty())
-		SpaceInfo.pszTuner=CmdLine.m_ProgramGuideTuner.c_str();
+		SpaceInfo.pszTuner = CmdLine.m_ProgramGuideTuner.c_str();
 	else
-		SpaceInfo.pszTuner=nullptr;
+		SpaceInfo.pszTuner = nullptr;
 	if (!CmdLine.m_ProgramGuideSpace.empty())
-		SpaceInfo.pszSpace=CmdLine.m_ProgramGuideSpace.c_str();
+		SpaceInfo.pszSpace = CmdLine.m_ProgramGuideSpace.c_str();
 	else
-		SpaceInfo.pszSpace=nullptr;
+		SpaceInfo.pszSpace = nullptr;
 
-	MainWindow.ShowProgramGuide(true,
-		UICore.GetFullscreen()?0:CMainWindow::PROGRAMGUIDE_SHOW_POPUP,
+	MainWindow.ShowProgramGuide(
+		true,
+		UICore.GetFullscreen() ? 0 : CMainWindow::PROGRAMGUIDE_SHOW_POPUP,
 		&SpaceInfo);
 }
 
 
 HICON CAppMain::GetAppIcon()
 {
-	if (m_hicoApp==nullptr) {
-		m_hicoApp=LoadIconStandardSize(
-			::GetModuleHandle(NULL),MAKEINTRESOURCE(IDI_ICON),ICON_SIZE_NORMAL);
+	if (m_hicoApp == nullptr) {
+		m_hicoApp = LoadIconStandardSize(
+			::GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_ICON), ICON_SIZE_NORMAL);
 	}
 	return m_hicoApp;
 }
@@ -1578,9 +1591,9 @@ HICON CAppMain::GetAppIcon()
 
 HICON CAppMain::GetAppIconSmall()
 {
-	if (m_hicoAppSmall==nullptr) {
-		m_hicoAppSmall=LoadIconStandardSize(
-			::GetModuleHandle(NULL),MAKEINTRESOURCE(IDI_ICON),ICON_SIZE_SMALL);
+	if (m_hicoAppSmall == nullptr) {
+		m_hicoAppSmall = LoadIconStandardSize(
+			::GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_ICON), ICON_SIZE_SMALL);
 	}
 	return m_hicoAppSmall;
 }
@@ -1593,22 +1606,22 @@ CAppMain::CEngineEventListener::CEngineEventListener(CAppMain &App)
 
 void CAppMain::CEngineEventListener::OnServiceChanged(uint16_t ServiceID)
 {
-	m_App.MainWindow.PostMessage(WM_APP_SERVICECHANGED,ServiceID,0);
+	m_App.MainWindow.PostMessage(WM_APP_SERVICECHANGED, ServiceID, 0);
 	if (m_App.AudioManager.OnServiceUpdated())
-		m_App.MainWindow.PostMessage(WM_APP_AUDIOLISTCHANGED,0,0);
+		m_App.MainWindow.PostMessage(WM_APP_AUDIOLISTCHANGED, 0, 0);
 	if (m_App.AudioOptions.GetResetAudioDelayOnChannelChange()) {
-		LibISDB::ViewerFilter *pViewer=m_App.CoreEngine.GetFilter<LibISDB::ViewerFilter>();
-		if (pViewer!=nullptr)
+		LibISDB::ViewerFilter *pViewer = m_App.CoreEngine.GetFilter<LibISDB::ViewerFilter>();
+		if (pViewer != nullptr)
 			pViewer->SetAudioDelay(0);
 	}
 }
 
 void CAppMain::CEngineEventListener::OnPATUpdated(
-	LibISDB::AnalyzerFilter *pAnalyzer,bool StreamChanged)
+	LibISDB::AnalyzerFilter *pAnalyzer, bool StreamChanged)
 {
-	OnServiceUpdated(pAnalyzer,true,StreamChanged);
+	OnServiceUpdated(pAnalyzer, true, StreamChanged);
 	if (m_App.AudioManager.OnServiceUpdated())
-		m_App.MainWindow.PostMessage(WM_APP_AUDIOLISTCHANGED,0,0);
+		m_App.MainWindow.PostMessage(WM_APP_AUDIOLISTCHANGED, 0, 0);
 }
 
 void CAppMain::CEngineEventListener::OnPMTUpdated(LibISDB::AnalyzerFilter *pAnalyzer, uint16_t ServiceID)
@@ -1621,10 +1634,10 @@ void CAppMain::CEngineEventListener::OnSDTUpdated(LibISDB::AnalyzerFilter *pAnal
 	// サービスとロゴを関連付ける
 	LibISDB::AnalyzerFilter::SDTServiceList ServiceList;
 	if (pAnalyzer->GetSDTServiceList(&ServiceList)) {
-		const uint16_t NetworkID=pAnalyzer->GetNetworkID();
+		const uint16_t NetworkID = pAnalyzer->GetNetworkID();
 		for (auto const &e : ServiceList) {
-			if (e.LogoID!=LibISDB::AnalyzerFilter::LOGO_ID_INVALID)
-				m_App.LogoManager.AssociateLogoID(NetworkID,e.ServiceID,e.LogoID);
+			if (e.LogoID != LibISDB::AnalyzerFilter::LOGO_ID_INVALID)
+				m_App.LogoManager.AssociateLogoID(NetworkID, e.ServiceID, e.LogoID);
 		}
 	}
 
@@ -1633,12 +1646,12 @@ void CAppMain::CEngineEventListener::OnSDTUpdated(LibISDB::AnalyzerFilter *pAnal
 
 void CAppMain::CEngineEventListener::OnWriteError(LibISDB::RecorderFilter *pRecorder)
 {
-	m_App.MainWindow.PostMessage(WM_APP_FILEWRITEERROR,0,0);
+	m_App.MainWindow.PostMessage(WM_APP_FILEWRITEERROR, 0, 0);
 }
 
 void CAppMain::CEngineEventListener::OnVideoStreamTypeChanged(uint8_t VideoStreamType)
 {
-	m_App.MainWindow.PostMessage(WM_APP_VIDEOSTREAMTYPECHANGED,VideoStreamType,0);
+	m_App.MainWindow.PostMessage(WM_APP_VIDEOSTREAMTYPECHANGED, VideoStreamType, 0);
 }
 
 void CAppMain::CEngineEventListener::OnVideoSizeChanged(LibISDB::ViewerFilter *pViewer)
@@ -1647,16 +1660,16 @@ void CAppMain::CEngineEventListener::OnVideoSizeChanged(LibISDB::ViewerFilter *p
 		この通知が送られた段階ではまだレンダラの映像サイズは変わっていないため、
 		後でパンスキャンの設定を行う必要がある
 	*/
-	m_App.MainWindow.PostMessage(WM_APP_VIDEOSIZECHANGED,0,0);
+	m_App.MainWindow.PostMessage(WM_APP_VIDEOSIZECHANGED, 0, 0);
 }
 
 void CAppMain::CEngineEventListener::OnEventChanged(LibISDB::AnalyzerFilter *pAnalyzer, uint16_t EventID)
 {
-	TRACE(TEXT("CEngineEventListener::OnEventChanged() : event_id %#04x\n"),EventID);
-	if (EventID!=LibISDB::EVENT_ID_INVALID) {
+	TRACE(TEXT("CEngineEventListener::OnEventChanged() : event_id %#04x\n"), EventID);
+	if (EventID != LibISDB::EVENT_ID_INVALID) {
 		m_App.CoreEngine.SetAsyncStatusUpdatedFlag(CCoreEngine::STATUS_EVENTID);
 		if (m_App.AudioManager.OnEventUpdated())
-			m_App.MainWindow.PostMessage(WM_APP_AUDIOLISTCHANGED,0,0);
+			m_App.MainWindow.PostMessage(WM_APP_AUDIOLISTCHANGED, 0, 0);
 	}
 }
 
@@ -1664,7 +1677,7 @@ void CAppMain::CEngineEventListener::OnEventUpdated(LibISDB::AnalyzerFilter *pAn
 {
 	m_App.CoreEngine.SetAsyncStatusUpdatedFlag(CCoreEngine::STATUS_EVENTINFO);
 	if (m_App.AudioManager.OnEventUpdated())
-		m_App.MainWindow.PostMessage(WM_APP_AUDIOLISTCHANGED,0,0);
+		m_App.MainWindow.PostMessage(WM_APP_AUDIOLISTCHANGED, 0, 0);
 }
 
 void CAppMain::CEngineEventListener::OnTOTUpdated(LibISDB::AnalyzerFilter *pAnalyzer)
@@ -1673,50 +1686,49 @@ void CAppMain::CEngineEventListener::OnTOTUpdated(LibISDB::AnalyzerFilter *pAnal
 }
 
 void CAppMain::CEngineEventListener::OnFilterGraphInitialize(
-	LibISDB::ViewerFilter *pViewer,IGraphBuilder *pGraphBuilder)
+	LibISDB::ViewerFilter *pViewer, IGraphBuilder *pGraphBuilder)
 {
-	m_App.PluginManager.SendFilterGraphInitializeEvent(pViewer,pGraphBuilder);
+	m_App.PluginManager.SendFilterGraphInitializeEvent(pViewer, pGraphBuilder);
 }
 
 void CAppMain::CEngineEventListener::OnFilterGraphInitialized(
-	LibISDB::ViewerFilter *pViewer,IGraphBuilder *pGraphBuilder)
+	LibISDB::ViewerFilter *pViewer, IGraphBuilder *pGraphBuilder)
 {
-	m_App.PluginManager.SendFilterGraphInitializedEvent(pViewer,pGraphBuilder);
+	m_App.PluginManager.SendFilterGraphInitializedEvent(pViewer, pGraphBuilder);
 }
 
 void CAppMain::CEngineEventListener::OnFilterGraphFinalize(
-	LibISDB::ViewerFilter *pViewer,IGraphBuilder *pGraphBuilder)
+	LibISDB::ViewerFilter *pViewer, IGraphBuilder *pGraphBuilder)
 {
-	m_App.PluginManager.SendFilterGraphFinalizeEvent(pViewer,pGraphBuilder);
+	m_App.PluginManager.SendFilterGraphFinalizeEvent(pViewer, pGraphBuilder);
 }
 
 void CAppMain::CEngineEventListener::OnFilterGraphFinalized(
-	LibISDB::ViewerFilter *pViewer,IGraphBuilder *pGraphBuilder)
+	LibISDB::ViewerFilter *pViewer, IGraphBuilder *pGraphBuilder)
 {
-	m_App.PluginManager.SendFilterGraphFinalizedEvent(pViewer,pGraphBuilder);
+	m_App.PluginManager.SendFilterGraphFinalizedEvent(pViewer, pGraphBuilder);
 }
 
-void CAppMain::CEngineEventListener::OnSPDIFPassthroughError(LibISDB::ViewerFilter *pViewer,HRESULT hr)
+void CAppMain::CEngineEventListener::OnSPDIFPassthroughError(LibISDB::ViewerFilter *pViewer, HRESULT hr)
 {
-	m_App.MainWindow.PostMessage(WM_APP_SPDIFPASSTHROUGHERROR,hr,0);
+	m_App.MainWindow.PostMessage(WM_APP_SPDIFPASSTHROUGHERROR, hr, 0);
 }
 
 void CAppMain::CEngineEventListener::OnServiceUpdated(
-	LibISDB::AnalyzerFilter *pAnalyzer,bool fListUpdated,bool fStreamChanged)
+	LibISDB::AnalyzerFilter *pAnalyzer, bool fListUpdated, bool fStreamChanged)
 {
-	CServiceUpdateInfo *pInfo=new CServiceUpdateInfo(&m_App.CoreEngine,pAnalyzer);
+	CServiceUpdateInfo *pInfo = new CServiceUpdateInfo(&m_App.CoreEngine, pAnalyzer);
 
-	pInfo->m_fStreamChanged=fStreamChanged;
-	m_App.MainWindow.PostMessage(WM_APP_SERVICEUPDATE,fListUpdated,
-								 reinterpret_cast<LPARAM>(pInfo));
+	pInfo->m_fStreamChanged = fStreamChanged;
+	m_App.MainWindow.PostMessage(WM_APP_SERVICEUPDATE, fListUpdated, reinterpret_cast<LPARAM>(pInfo));
 }
 
 void CAppMain::CEngineEventListener::OnServiceInfoUpdated(LibISDB::AnalyzerFilter *pAnalyzer)
 {
-	OnServiceUpdated(pAnalyzer,false,false);
+	OnServiceUpdated(pAnalyzer, false, false);
 	m_App.MainWindow.PostMessage(
-		WM_APP_SERVICEINFOUPDATED,0,
-		MAKELPARAM(pAnalyzer->GetNetworkID(),pAnalyzer->GetTransportStreamID()));
+		WM_APP_SERVICEINFOUPDATED, 0,
+		MAKELPARAM(pAnalyzer->GetNetworkID(), pAnalyzer->GetTransportStreamID()));
 }
 
 
@@ -1730,16 +1742,16 @@ void CAppMain::CStreamInfoEventHandler::OnRestoreSettings()
 #if 0
 	CSettings Settings;
 
-	if (Settings.Open(m_App.Core.GetIniFileName(),CSettings::OPEN_READ)
+	if (Settings.Open(m_App.Core.GetIniFileName(), CSettings::OPEN_READ)
 			&& Settings.SetSection(TEXT("Settings"))) {
-		int Left,Top,Width,Height;
+		int Left, Top, Width, Height;
 
-		m_App.StreamInfo.GetPosition(&Left,&Top,&Width,&Height);
-		Settings.Read(TEXT("StreamInfoLeft"),&Left);
-		Settings.Read(TEXT("StreamInfoTop"),&Top);
-		Settings.Read(TEXT("StreamInfoWidth"),&Width);
-		Settings.Read(TEXT("StreamInfoHeight"),&Height);
-		m_App.StreamInfo.SetPosition(Left,Top,Width,Height);
+		m_App.StreamInfo.GetPosition(&Left, &Top, &Width, &Height);
+		Settings.Read(TEXT("StreamInfoLeft"), &Left);
+		Settings.Read(TEXT("StreamInfoTop"), &Top);
+		Settings.Read(TEXT("StreamInfoWidth"), &Width);
+		Settings.Read(TEXT("StreamInfoHeight"), &Height);
+		m_App.StreamInfo.SetPosition(Left, Top, Width, Height);
 		//m_App.StreamInfo.MoveToMonitorInside();
 	}
 #endif
@@ -1747,7 +1759,7 @@ void CAppMain::CStreamInfoEventHandler::OnRestoreSettings()
 
 bool CAppMain::CStreamInfoEventHandler::OnClose()
 {
-	m_App.UICore.SetCommandCheckedState(CM_STREAMINFO,false);
+	m_App.UICore.SetCommandCheckedState(CM_STREAMINFO, false);
 	return true;
 }
 
@@ -1762,19 +1774,19 @@ void CAppMain::CCaptureWindowEventHandler::OnRestoreSettings()
 #if 0
 	CSettings Settings;
 
-	if (Settings.Open(m_App.Core.GetIniFileName(),CSettings::OPEN_READ)
+	if (Settings.Open(m_App.Core.GetIniFileName(), CSettings::OPEN_READ)
 			&& Settings.SetSection(TEXT("Settings"))) {
-		int Left,Top,Width,Height;
-		m_pCaptureWindow->GetPosition(&Left,&Top,&Width,&Height);
-		Settings.Read(TEXT("CapturePreviewLeft"),&Left);
-		Settings.Read(TEXT("CapturePreviewTop"),&Top);
-		Settings.Read(TEXT("CapturePreviewWidth"),&Width);
-		Settings.Read(TEXT("CapturePreviewHeight"),&Height);
-		m_pCaptureWindow->SetPosition(Left,Top,Width,Height);
+		int Left, Top, Width, Height;
+		m_pCaptureWindow->GetPosition(&Left, &Top, &Width, &Height);
+		Settings.Read(TEXT("CapturePreviewLeft"), &Left);
+		Settings.Read(TEXT("CapturePreviewTop"), &Top);
+		Settings.Read(TEXT("CapturePreviewWidth"), &Width);
+		Settings.Read(TEXT("CapturePreviewHeight"), &Height);
+		m_pCaptureWindow->SetPosition(Left, Top, Width, Height);
 		m_pCaptureWindow->MoveToMonitorInside();
 
 		bool fStatusBar;
-		if (Settings.Read(TEXT("CaptureStatusBar"),&fStatusBar))
+		if (Settings.Read(TEXT("CaptureStatusBar"), &fStatusBar))
 			m_pCaptureWindow->ShowStatusBar(fStatusBar);
 	}
 #endif
@@ -1782,7 +1794,7 @@ void CAppMain::CCaptureWindowEventHandler::OnRestoreSettings()
 
 bool CAppMain::CCaptureWindowEventHandler::OnClose()
 {
-	m_App.UICore.SetCommandCheckedState(CM_CAPTUREPREVIEW,false);
+	m_App.UICore.SetCommandCheckedState(CM_CAPTUREPREVIEW, false);
 	m_pCaptureWindow->ClearImage();
 	return true;
 }
@@ -1792,8 +1804,8 @@ bool CAppMain::CCaptureWindowEventHandler::OnSave(CCaptureImage *pImage)
 	return m_App.CaptureOptions.SaveImage(pImage);
 }
 
-bool CAppMain::CCaptureWindowEventHandler::OnKeyDown(UINT KeyCode,UINT Flags)
+bool CAppMain::CCaptureWindowEventHandler::OnKeyDown(UINT KeyCode, UINT Flags)
 {
-	m_App.MainWindow.SendMessage(WM_KEYDOWN,KeyCode,Flags);
+	m_App.MainWindow.SendMessage(WM_KEYDOWN, KeyCode, Flags);
 	return true;
 }

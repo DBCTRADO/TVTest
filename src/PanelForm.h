@@ -20,30 +20,33 @@ public:
 	{
 	public:
 		CPage();
-		virtual ~CPage()=0;
-		virtual bool SetFont(const TVTest::Style::Font &Font) { return true; }
+		virtual ~CPage() = 0;
+		virtual bool SetFont(const TVTest::Style::Font & Font) { return true; }
 		virtual void OnActivate() {}
 		virtual void OnDeactivate() {}
 		virtual void OnVisibilityChanged(bool fVisible) {}
 		virtual void OnFormDelete() {}
-		virtual bool DrawIcon(HDC hdc,int x,int y,int Width,int Height,
-							  const TVTest::Theme::ThemeColor &Color) { return false; }
+		virtual bool DrawIcon(
+			HDC hdc, int x, int y, int Width, int Height,
+			const TVTest::Theme::ThemeColor &Color) { return false; }
 		virtual bool NeedKeyboardFocus() const { return false; }
 
 	protected:
 		bool CreateDefaultFont(DrawUtil::CFont *pFont);
 	};
 
-	class ABSTRACT_CLASS(CEventHandler) {
+	class ABSTRACT_CLASS(CEventHandler)
+	{
 	public:
 		virtual void OnSelChange() {}
-		virtual void OnRButtonUp(int x,int y) {}
-		virtual void OnTabRButtonUp(int x,int y) {}
-		virtual bool OnKeyDown(UINT KeyCode,UINT Flags) { return false; }
+		virtual void OnRButtonUp(int x, int y) {}
+		virtual void OnTabRButtonUp(int x, int y) {}
+		virtual bool OnKeyDown(UINT KeyCode, UINT Flags) { return false; }
 		virtual void OnVisibleChange(bool fVisible) {}
 	};
 
-	struct PageInfo {
+	struct PageInfo
+	{
 		CPage *pPage;
 		LPCTSTR pszTitle;
 		int ID;
@@ -51,12 +54,14 @@ public:
 		bool fVisible;
 	};
 
-	struct TabInfo {
+	struct TabInfo
+	{
 		int ID;
 		bool fVisible;
 	};
 
-	struct PanelFormTheme {
+	struct PanelFormTheme
+	{
 		TVTest::Theme::Style TabStyle;
 		TVTest::Theme::Style CurTabStyle;
 		TVTest::Theme::Style TabMarginStyle;
@@ -78,7 +83,7 @@ public:
 	~CPanelForm();
 
 // CBasicWindow
-	bool Create(HWND hwndParent,DWORD Style,DWORD ExStyle=0,int ID=0) override;
+	bool Create(HWND hwndParent, DWORD Style, DWORD ExStyle = 0, int ID = 0) override;
 	void SetVisible(bool fVisible) override;
 
 // CUIBase
@@ -96,12 +101,12 @@ public:
 	int IDToIndex(int ID) const;
 	int GetCurPageID() const;
 	bool SetCurPageByID(int ID);
-	bool SetTabVisible(int ID,bool fVisible);
+	bool SetTabVisible(int ID, bool fVisible);
 	bool GetTabVisible(int ID) const;
-	bool SetTabOrder(const int *pOrder,int Count);
-	bool GetTabInfo(int Index,TabInfo *pInfo) const;
+	bool SetTabOrder(const int *pOrder, int Count);
+	bool GetTabInfo(int Index, TabInfo *pInfo) const;
 	int GetTabID(int Index) const;
-	bool GetTabTitle(int ID,TVTest::String *pTitle) const;
+	bool GetTabTitle(int ID, TVTest::String *pTitle) const;
 	void SetEventHandler(CEventHandler *pHandler);
 	bool SetPanelFormTheme(const PanelFormTheme &Theme);
 	bool GetPanelFormTheme(PanelFormTheme *pTheme) const;
@@ -109,12 +114,12 @@ public:
 	bool SetPageFont(const TVTest::Style::Font &Font);
 	bool GetPageClientRect(RECT *pRect) const;
 	bool SetTabStyle(TabStyle Style);
-	bool SetIconImage(HBITMAP hbm,int Width,int Height);
+	bool SetIconImage(HBITMAP hbm, int Width, int Height);
 	SIZE GetIconDrawSize() const;
 	bool EnableTooltip(bool fEnable);
 
 private:
-	enum {MAX_WINDOWS=8};
+	enum {MAX_WINDOWS = 8};
 
 	class CWindowInfo
 	{
@@ -168,12 +173,12 @@ private:
 	bool SetCurTab(int Index);
 	void CalcTabSize();
 	int GetRealTabWidth() const;
-	int HitTest(int x,int y) const;
-	void Draw(HDC hdc,const RECT &PaintRect);
+	int HitTest(int x, int y) const;
+	void Draw(HDC hdc, const RECT &PaintRect);
 	void UpdateTooltip();
 
 // CCustomWindow
-	LRESULT OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
+	LRESULT OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
 
 // CUIBase
 	void ApplyStyle() override;

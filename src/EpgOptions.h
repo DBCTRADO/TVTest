@@ -10,7 +10,8 @@
 #include "Style.h"
 
 
-class CEpgOptions : public COptions
+class CEpgOptions
+	: public COptions
 {
 public:
 	class ABSTRACT_CLASS(CEpgFileLoadEventHandler)
@@ -55,15 +56,15 @@ public:
 	bool LoadEpgFile(LibISDB::EPGDatabase *pEPGDatabase);
 	bool AsyncLoadEpgFile(
 		LibISDB::EPGDatabase *pEPGDatabase,
-		TVTest::CEpgDataStore::CEventHandler *pEventHandler=NULL);
+		TVTest::CEpgDataStore::CEventHandler *pEventHandler = NULL);
 	bool IsEpgFileLoading() const;
-	bool WaitEpgFileLoad(DWORD Timeout=INFINITE);
+	bool WaitEpgFileLoad(DWORD Timeout = INFINITE);
 	bool SaveEpgFile(LibISDB::EPGDatabase *pEPGDatabase);
 
 	bool LoadEDCBData();
-	bool AsyncLoadEDCBData(CEDCBDataLoadEventHandler *pEventHandler=NULL);
+	bool AsyncLoadEDCBData(CEDCBDataLoadEventHandler *pEventHandler = NULL);
 	bool IsEDCBDataLoading() const;
-	bool WaitEDCBDataLoad(DWORD Timeout=INFINITE);
+	bool WaitEDCBDataLoad(DWORD Timeout = INFINITE);
 
 	EpgTimeMode GetEpgTimeMode() const { return m_EpgTimeMode; }
 
@@ -89,7 +90,7 @@ private:
 	TVTest::Style::Font m_CurEventInfoFont;
 
 // CBasicDialog
-	INT_PTR DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
+	INT_PTR DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
 
 	bool GetEpgFileFullPath(LPTSTR pszFileName);
 	static unsigned int __stdcall EpgFileLoadThread(void *pParameter);

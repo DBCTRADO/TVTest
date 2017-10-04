@@ -9,22 +9,22 @@
 
 
 class ABSTRACT_CLASS(CDisplayView)
-	: public CCustomWindow
-	, public TVTest::CUIBase
+		: public CCustomWindow
+		, public TVTest::CUIBase
 {
 public:
 	class ABSTRACT_CLASS(CEventHandler)
 	{
 	public:
 		virtual ~CEventHandler() = 0;
-		virtual void OnMouseMessage(UINT Msg,int x,int y) {}
+		virtual void OnMouseMessage(UINT Msg, int x, int y) {}
 	};
 
 	CDisplayView();
 	virtual ~CDisplayView() = 0;
 	virtual bool Close() = 0;
 	virtual bool IsMessageNeed(const MSG *pMsg) const;
-	virtual bool OnMouseWheel(UINT Msg,WPARAM wParam,LPARAM lParam) { return false; }
+	virtual bool OnMouseWheel(UINT Msg, WPARAM wParam, LPARAM lParam) { return false; }
 
 // CBasicWindow
 	void SetVisible(bool fVisible) override;
@@ -75,16 +75,16 @@ protected:
 
 	virtual bool OnVisibleChange(bool fVisible);
 	virtual bool GetCloseButtonRect(RECT *pRect) const;
-	bool CloseButtonHitTest(int x,int y) const;
+	bool CloseButtonHitTest(int x, int y) const;
 	void DrawCloseButton(HDC hdc) const;
-	bool GetItemStyle(ItemType Type,TVTest::Theme::Style *pStyle) const;
-	bool GetBackgroundStyle(BackgroundType Type,TVTest::Theme::BackgroundStyle *pStyle) const;
-	int GetDefaultFontSize(int Width,int Height) const;
+	bool GetItemStyle(ItemType Type, TVTest::Theme::Style *pStyle) const;
+	bool GetBackgroundStyle(BackgroundType Type, TVTest::Theme::BackgroundStyle *pStyle) const;
+	int GetDefaultFontSize(int Width, int Height) const;
 	void SetEventHandler(CEventHandler *pEventHandler);
-	bool HandleMessage(HWND hwnd,UINT Msg,WPARAM wParam,LPARAM lParam,LRESULT *pResult);
+	bool HandleMessage(HWND hwnd, UINT Msg, WPARAM wParam, LPARAM lParam, LRESULT *pResult);
 
 // CCustomWindow
-	LRESULT OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
+	LRESULT OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
 
 private:
 	void SetDisplayVisible(bool fVisible);
@@ -95,7 +95,8 @@ private:
 class CDisplayBase
 {
 public:
-	class ABSTRACT_CLASS(CEventHandler) {
+	class ABSTRACT_CLASS(CEventHandler)
+	{
 	public:
 		virtual ~CEventHandler() = 0;
 		virtual bool OnVisibleChange(bool fVisible) { return true; }
@@ -111,7 +112,7 @@ public:
 	bool SetVisible(bool fVisible);
 	bool IsVisible() const;
 	void AdjustPosition();
-	void SetPosition(int Left,int Top,int Width,int Height);
+	void SetPosition(int Left, int Top, int Width, int Height);
 	void SetPosition(const RECT *pRect);
 	void SetFocus();
 
@@ -125,25 +126,28 @@ private:
 class CDisplayEventHandlerBase
 {
 protected:
-	void RelayMouseMessage(CDisplayView *pView,UINT Message,int x,int y);
+	void RelayMouseMessage(CDisplayView *pView, UINT Message, int x, int y);
 };
 
-class CVideoContainerWindow : public CCustomWindow
+class CVideoContainerWindow
+	: public CCustomWindow
 {
 public:
-	class ABSTRACT_CLASS(CEventHandler) {
+	class ABSTRACT_CLASS(CEventHandler)
+	{
 	protected:
 		CVideoContainerWindow *m_pVideoContainer;
+
 	public:
 		CEventHandler();
 		virtual ~CEventHandler();
-		virtual void OnSizeChanged(int Width,int Height) {}
+		virtual void OnSizeChanged(int Width, int Height) {}
 		friend class CVideoContainerWindow;
 	};
 
 	CVideoContainerWindow();
 	~CVideoContainerWindow();
-	bool Create(HWND hwndParent,DWORD Style,DWORD ExStyle,int ID,LibISDB::ViewerFilter *pViewer);
+	bool Create(HWND hwndParent, DWORD Style, DWORD ExStyle, int ID, LibISDB::ViewerFilter *pViewer);
 	void SetDisplayBase(CDisplayBase *pDisplayBase);
 	void SetEventHandler(CEventHandler *pEventHandler);
 
@@ -158,9 +162,10 @@ private:
 	SIZE m_ClientSize;
 
 // CBasicWindow
-	bool Create(HWND hwndParent,DWORD Style,DWORD ExStyle=0,int ID=0) override;
+	bool Create(HWND hwndParent, DWORD Style, DWORD ExStyle = 0, int ID = 0) override;
+
 // CCustomWindow
-	LRESULT OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
+	LRESULT OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
 };
 
 class CViewWindow
@@ -168,20 +173,24 @@ class CViewWindow
 	, public TVTest::CUIBase
 {
 public:
-	class ABSTRACT_CLASS(CEventHandler) {
+	class ABSTRACT_CLASS(CEventHandler)
+	{
 	protected:
 		CViewWindow *m_pView;
+
 	public:
 		CEventHandler();
 		virtual ~CEventHandler();
-		virtual void OnSizeChanged(int Width,int Height) {}
+		virtual void OnSizeChanged(int Width, int Height) {}
 		friend class CViewWindow;
 	};
 
 	CViewWindow();
 	~CViewWindow();
+
 // CBasicWindow
-	bool Create(HWND hwndParent,DWORD Style,DWORD ExStyle=0,int ID=0) override;
+	bool Create(HWND hwndParent, DWORD Style, DWORD ExStyle = 0, int ID = 0) override;
+
 // CViewWindow
 	void SetVideoContainer(CVideoContainerWindow *pVideoContainer);
 	void SetMessageWindow(HWND hwnd);
@@ -207,7 +216,7 @@ private:
 	bool m_fShowCursor;
 
 // CCustomWindow
-	LRESULT OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
+	LRESULT OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
 };
 
 

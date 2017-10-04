@@ -14,7 +14,7 @@
 
 
 
-CProgramGuideOptions::CProgramGuideOptions(CProgramGuide *pProgramGuide,CPluginManager *pPluginManager)
+CProgramGuideOptions::CProgramGuideOptions(CProgramGuide *pProgramGuide, CPluginManager *pPluginManager)
 	: m_pProgramGuide(pProgramGuide)
 	, m_pPluginManager(pPluginManager)
 	, m_fOnScreen(false)
@@ -45,149 +45,149 @@ CProgramGuideOptions::~CProgramGuideOptions()
 
 static bool CSVNextValue(LPTSTR *ppszText)
 {
-	LPTSTR p=*ppszText;
-	while (*p==_T(' ') || *p==_T('\t'))
+	LPTSTR p = *ppszText;
+	while (*p == _T(' ') || *p == _T('\t'))
 		p++;
-	if (*p!=_T(','))
+	if (*p != _T(','))
 		return false;
-	*ppszText=p+1;
+	*ppszText = p + 1;
 	return true;
 }
 
 bool CProgramGuideOptions::LoadSettings(CSettings &Settings)
 {
-	CProgramSearchDialog *pProgramSearch=m_pProgramGuide->GetProgramSearch();
+	CProgramSearchDialog *pProgramSearch = m_pProgramGuide->GetProgramSearch();
 
 	if (Settings.SetSection(TEXT("ProgramGuide"))) {
 		int Value;
 		bool f;
 
-		Settings.Read(TEXT("OnScreen"),&m_fOnScreen);
-		Settings.Read(TEXT("ScrollToCurChannel"),&m_fScrollToCurChannel);
-		if (Settings.Read(TEXT("BeginHour"),&Value)
-				&& Value>=-1 && Value<=23)
-			m_BeginHour=Value;
+		Settings.Read(TEXT("OnScreen"), &m_fOnScreen);
+		Settings.Read(TEXT("ScrollToCurChannel"), &m_fScrollToCurChannel);
+		if (Settings.Read(TEXT("BeginHour"), &Value)
+				&& Value >= -1 && Value <= 23)
+			m_BeginHour = Value;
 		m_pProgramGuide->SetBeginHour(m_BeginHour);
-		if (Settings.Read(TEXT("ViewHours"),&Value)
-				&& Value>=MIN_VIEW_HOURS && Value<=MAX_VIEW_HOURS)
-			m_ViewHours=Value;
-		if (Settings.Read(TEXT("ItemWidth"),&Value)
-				&& Value>=CProgramGuide::MIN_ITEM_WIDTH
-				&& Value<=CProgramGuide::MAX_ITEM_WIDTH)
-			m_ItemWidth=Value;
-		if (Settings.Read(TEXT("LinesPerHour"),&Value)
-				&& Value>=CProgramGuide::MIN_LINES_PER_HOUR
-				&& Value<=CProgramGuide::MAX_LINES_PER_HOUR)
-			m_LinesPerHour=Value;
-		m_pProgramGuide->SetUIOptions(m_LinesPerHour,m_ItemWidth);
+		if (Settings.Read(TEXT("ViewHours"), &Value)
+				&& Value >= MIN_VIEW_HOURS && Value <= MAX_VIEW_HOURS)
+			m_ViewHours = Value;
+		if (Settings.Read(TEXT("ItemWidth"), &Value)
+				&& Value >= CProgramGuide::MIN_ITEM_WIDTH
+				&& Value <= CProgramGuide::MAX_ITEM_WIDTH)
+			m_ItemWidth = Value;
+		if (Settings.Read(TEXT("LinesPerHour"), &Value)
+				&& Value >= CProgramGuide::MIN_LINES_PER_HOUR
+				&& Value <= CProgramGuide::MAX_LINES_PER_HOUR)
+			m_LinesPerHour = Value;
+		m_pProgramGuide->SetUIOptions(m_LinesPerHour, m_ItemWidth);
 
-		Settings.Read(TEXT("EventIcons"),&m_VisibleEventIcons);
+		Settings.Read(TEXT("EventIcons"), &m_VisibleEventIcons);
 		m_pProgramGuide->SetVisibleEventIcons(m_VisibleEventIcons);
 
-		if (Settings.Read(TEXT("WheelScrollLines"),&Value))
-			m_WheelScrollLines=Value;
+		if (Settings.Read(TEXT("WheelScrollLines"), &Value))
+			m_WheelScrollLines = Value;
 		m_pProgramGuide->SetWheelScrollLines(m_WheelScrollLines);
 
-		Settings.Read(TEXT("ProgramLDoubleClick"),&m_ProgramLDoubleClickCommand);
+		Settings.Read(TEXT("ProgramLDoubleClick"), &m_ProgramLDoubleClickCommand);
 
-		if (Settings.Read(TEXT("ShowToolTip"),&f))
+		if (Settings.Read(TEXT("ShowToolTip"), &f))
 			m_pProgramGuide->SetShowToolTip(f);
 
-		if (TVTest::StyleUtil::ReadFontSettings(Settings,TEXT("Font"),&m_Font,true,&f)) {
+		if (TVTest::StyleUtil::ReadFontSettings(Settings, TEXT("Font"), &m_Font, true, &f)) {
 			if (!f)
-				m_fChanged=true;
+				m_fChanged = true;
 		}
 		m_pProgramGuide->SetFont(m_Font);
 
-		Settings.Read(TEXT("UseDirectWrite"),&m_fUseDirectWrite);
+		Settings.Read(TEXT("UseDirectWrite"), &m_fUseDirectWrite);
 		m_pProgramGuide->SetTextDrawEngine(
-			m_fUseDirectWrite?
-				TVTest::CTextDrawClient::ENGINE_DIRECTWRITE:
-				TVTest::CTextDrawClient::ENGINE_GDI);
+			m_fUseDirectWrite ?
+			TVTest::CTextDrawClient::ENGINE_DIRECTWRITE :
+			TVTest::CTextDrawClient::ENGINE_GDI);
 
-		Settings.Read(TEXT("DirectWriteRenderingParamsMask"),&m_DirectWriteRenderingParams.Mask);
-		Settings.Read(TEXT("DirectWriteGamma"),&m_DirectWriteRenderingParams.Gamma);
-		Settings.Read(TEXT("DirectWriteEnhancedContrast"),&m_DirectWriteRenderingParams.EnhancedContrast);
-		Settings.Read(TEXT("DirectWriteClearTypeLevel"),&m_DirectWriteRenderingParams.ClearTypeLevel);
-		if (Settings.Read(TEXT("DirectWritePixelGeometry"),&Value))
-			m_DirectWriteRenderingParams.PixelGeometry=static_cast<DWRITE_PIXEL_GEOMETRY>(Value);
-		if (Settings.Read(TEXT("DirectWriteRenderingMode"),&Value))
-			m_DirectWriteRenderingParams.RenderingMode=static_cast<DWRITE_RENDERING_MODE>(Value);
+		Settings.Read(TEXT("DirectWriteRenderingParamsMask"), &m_DirectWriteRenderingParams.Mask);
+		Settings.Read(TEXT("DirectWriteGamma"), &m_DirectWriteRenderingParams.Gamma);
+		Settings.Read(TEXT("DirectWriteEnhancedContrast"), &m_DirectWriteRenderingParams.EnhancedContrast);
+		Settings.Read(TEXT("DirectWriteClearTypeLevel"), &m_DirectWriteRenderingParams.ClearTypeLevel);
+		if (Settings.Read(TEXT("DirectWritePixelGeometry"), &Value))
+			m_DirectWriteRenderingParams.PixelGeometry = static_cast<DWRITE_PIXEL_GEOMETRY>(Value);
+		if (Settings.Read(TEXT("DirectWriteRenderingMode"), &Value))
+			m_DirectWriteRenderingParams.RenderingMode = static_cast<DWRITE_RENDERING_MODE>(Value);
 		m_pProgramGuide->SetDirectWriteRenderingParams(m_DirectWriteRenderingParams);
 
 		bool fDragScroll;
-		if (Settings.Read(TEXT("DragScroll"),&fDragScroll))
+		if (Settings.Read(TEXT("DragScroll"), &fDragScroll))
 			m_pProgramGuide->SetDragScroll(fDragScroll);
 
 		unsigned int Filter;
-		if (Settings.Read(TEXT("Filter"),&Filter))
+		if (Settings.Read(TEXT("Filter"), &Filter))
 			m_pProgramGuide->SetFilter(Filter);
 
 		bool fKeepTimePos;
-		if (Settings.Read(TEXT("KeepTimePos"),&fKeepTimePos))
+		if (Settings.Read(TEXT("KeepTimePos"), &fKeepTimePos))
 			m_pProgramGuide->SetKeepTimePos(fKeepTimePos);
 
 		bool fShowFeaturedMark;
-		if (Settings.Read(TEXT("ShowFeaturedMark"),&fShowFeaturedMark))
+		if (Settings.Read(TEXT("ShowFeaturedMark"), &fShowFeaturedMark))
 			m_pProgramGuide->SetShowFeaturedMark(fShowFeaturedMark);
 
 		bool fExcludeNoEvent;
-		if (Settings.Read(TEXT("ExcludeNoEventServices"),&fExcludeNoEvent))
+		if (Settings.Read(TEXT("ExcludeNoEventServices"), &fExcludeNoEvent))
 			m_pProgramGuide->SetExcludeNoEventServices(fExcludeNoEvent);
 
-		int Width,Height;
-		m_pProgramGuide->GetInfoPopupSize(&Width,&Height);
-		Settings.Read(TEXT("InfoPopupWidth"),&Width);
-		Settings.Read(TEXT("InfoPopupHeight"),&Height);
-		m_pProgramGuide->SetInfoPopupSize(Width,Height);
+		int Width, Height;
+		m_pProgramGuide->GetInfoPopupSize(&Width, &Height);
+		Settings.Read(TEXT("InfoPopupWidth"), &Width);
+		Settings.Read(TEXT("InfoPopupHeight"), &Height);
+		m_pProgramGuide->SetInfoPopupSize(Width, Height);
 
 		// 検索履歴
 		int NumSearchKeywords;
-		if (Settings.Read(TEXT("NumSearchKeywords"),&NumSearchKeywords)
-				&& NumSearchKeywords>0) {
-			if (NumSearchKeywords>CProgramSearchDialog::MAX_KEYWORD_HISTORY)
-				NumSearchKeywords=CProgramSearchDialog::MAX_KEYWORD_HISTORY;
-			LPTSTR *ppszKeywords=new LPTSTR[NumSearchKeywords];
-			int j=0;
-			for (int i=0;i<NumSearchKeywords;i++) {
-				TCHAR szName[32],szKeyword[CEventSearchSettings::MAX_KEYWORD_LENGTH];
+		if (Settings.Read(TEXT("NumSearchKeywords"), &NumSearchKeywords)
+				&& NumSearchKeywords > 0) {
+			if (NumSearchKeywords > CProgramSearchDialog::MAX_KEYWORD_HISTORY)
+				NumSearchKeywords = CProgramSearchDialog::MAX_KEYWORD_HISTORY;
+			LPTSTR *ppszKeywords = new LPTSTR[NumSearchKeywords];
+			int j = 0;
+			for (int i = 0; i < NumSearchKeywords; i++) {
+				TCHAR szName[32], szKeyword[CEventSearchSettings::MAX_KEYWORD_LENGTH];
 
-				::wsprintf(szName,TEXT("SearchKeyword%d"),i);
-				if (Settings.Read(szName,szKeyword,lengthof(szKeyword))
-						&& szKeyword[0]!='\0')
-					ppszKeywords[j++]=DuplicateString(szKeyword);
+				::wsprintf(szName, TEXT("SearchKeyword%d"), i);
+				if (Settings.Read(szName, szKeyword, lengthof(szKeyword))
+						&& szKeyword[0] != '\0')
+					ppszKeywords[j++] = DuplicateString(szKeyword);
 			}
-			if (j>0) {
-				pProgramSearch->GetOptions().SetKeywordHistory(ppszKeywords,j);
-				for (j--;j>=0;j--)
+			if (j > 0) {
+				pProgramSearch->GetOptions().SetKeywordHistory(ppszKeywords, j);
+				for (j--; j >= 0; j--)
 					delete [] ppszKeywords[j];
 			}
 			delete [] ppszKeywords;
 		}
 
-		if (Settings.Read(TEXT("HighlightSearchResult"),&f))
+		if (Settings.Read(TEXT("HighlightSearchResult"), &f))
 			pProgramSearch->SetHighlightResult(f);
 
-		for (int i=0;i<CProgramSearchDialog::NUM_COLUMNS;i++) {
+		for (int i = 0; i < CProgramSearchDialog::NUM_COLUMNS; i++) {
 			TCHAR szName[32];
 
-			::wsprintf(szName,TEXT("SearchColumn%d_Width"),i);
-			if (Settings.Read(szName,&Value))
-				pProgramSearch->SetColumnWidth(i,Value);
+			::wsprintf(szName, TEXT("SearchColumn%d_Width"), i);
+			if (Settings.Read(szName, &Value))
+				pProgramSearch->SetColumnWidth(i, Value);
 		}
 
-		if (Settings.Read(TEXT("SearchResultListHeight"),&Value))
+		if (Settings.Read(TEXT("SearchResultListHeight"), &Value))
 			pProgramSearch->SetResultListHeight(Value);
 
-		if (Settings.Read(TEXT("SearchTarget"),&Value))
+		if (Settings.Read(TEXT("SearchTarget"), &Value))
 			pProgramSearch->SetSearchTarget(Value);
 
 		CBasicDialog::Position Pos;
-		if (Settings.Read(TEXT("SearchLeft"),&Pos.x)
-				&& Settings.Read(TEXT("SearchTop"),&Pos.y)) {
-			pProgramSearch->GetPosition(NULL,NULL,&Pos.Width,&Pos.Height);
-			Settings.Read(TEXT("SearchWidth"),&Pos.Width);
-			Settings.Read(TEXT("SearchHeight"),&Pos.Height);
+		if (Settings.Read(TEXT("SearchLeft"), &Pos.x)
+				&& Settings.Read(TEXT("SearchTop"), &Pos.y)) {
+			pProgramSearch->GetPosition(NULL, NULL, &Pos.Width, &Pos.Height);
+			Settings.Read(TEXT("SearchWidth"), &Pos.Width);
+			Settings.Read(TEXT("SearchHeight"), &Pos.Height);
 			pProgramSearch->SetPosition(Pos);
 		}
 	}
@@ -195,80 +195,80 @@ bool CProgramGuideOptions::LoadSettings(CSettings &Settings)
 	if (Settings.SetSection(TEXT("ProgramGuideTools"))) {
 		unsigned int NumTools;
 
-		if (Settings.Read(TEXT("ToolCount"),&NumTools) && NumTools>0) {
-			CProgramGuideToolList *pToolList=m_pProgramGuide->GetToolList();
-			TVTest::String ToolName,Command;
+		if (Settings.Read(TEXT("ToolCount"), &NumTools) && NumTools > 0) {
+			CProgramGuideToolList *pToolList = m_pProgramGuide->GetToolList();
+			TVTest::String ToolName, Command;
 
-			for (unsigned int i=0;i<NumTools;i++) {
+			for (unsigned int i = 0; i < NumTools; i++) {
 				TCHAR szName[32];
 
-				wsprintf(szName,TEXT("Tool%u_Name"),i);
-				if (!Settings.Read(szName,&ToolName) || ToolName.empty())
+				wsprintf(szName, TEXT("Tool%u_Name"), i);
+				if (!Settings.Read(szName, &ToolName) || ToolName.empty())
 					break;
-				wsprintf(szName,TEXT("Tool%u_Command"),i);
-				if (!Settings.Read(szName,&Command) || Command.empty())
+				wsprintf(szName, TEXT("Tool%u_Command"), i);
+				if (!Settings.Read(szName, &Command) || Command.empty())
 					break;
-				pToolList->Add(new CProgramGuideTool(ToolName,Command));
+				pToolList->Add(new CProgramGuideTool(ToolName, Command));
 			}
 		}
 	}
 
 	if (Settings.SetSection(TEXT("ProgramGuideService"))) {
 		int ServiceCount;
-		if (Settings.Read(TEXT("ExcludeServiceCount"),&ServiceCount) && ServiceCount>0) {
-			for (int i=0;i<ServiceCount;i++) {
-				TCHAR szName[32],szText[64];
+		if (Settings.Read(TEXT("ExcludeServiceCount"), &ServiceCount) && ServiceCount > 0) {
+			for (int i = 0; i < ServiceCount; i++) {
+				TCHAR szName[32], szText[64];
 
-				::wsprintf(szName,TEXT("ExcludeService%d"),i);
-				if (!Settings.Read(szName,szText,lengthof(szText))
-						|| szText[0]==_T('\0'))
+				::wsprintf(szName, TEXT("ExcludeService%d"), i);
+				if (!Settings.Read(szName, szText, lengthof(szText))
+						|| szText[0] == _T('\0'))
 					break;
 
-				LPTSTR p=szText;
-				WORD NetworkID=(WORD)_tcstoul(p,&p,0);
+				LPTSTR p = szText;
+				WORD NetworkID = (WORD)_tcstoul(p, &p, 0);
 				if (!CSVNextValue(&p))
 					continue;
-				WORD TransportStreamID=(WORD)_tcstoul(p,&p,0);
+				WORD TransportStreamID = (WORD)_tcstoul(p, &p, 0);
 				if (!CSVNextValue(&p))
 					continue;
-				WORD ServiceID=(WORD)_tcstoul(p,&p,0);
-				if (ServiceID==0)
+				WORD ServiceID = (WORD)_tcstoul(p, &p, 0);
+				if (ServiceID == 0)
 					continue;
 
-				m_pProgramGuide->SetExcludeService(NetworkID,TransportStreamID,ServiceID,true);
+				m_pProgramGuide->SetExcludeService(NetworkID, TransportStreamID, ServiceID, true);
 			}
 		}
 	}
 
-	CProgramGuideFavorites *pFavorites=m_pProgramGuide->GetFavorites();
-	bool fFavoritesExists=false;
+	CProgramGuideFavorites *pFavorites = m_pProgramGuide->GetFavorites();
+	bool fFavoritesExists = false;
 	if (Settings.SetSection(TEXT("ProgramGuideFavorites"))) {
 		int FavoritesCount;
 
-		if (Settings.Read(TEXT("FavoritesCount"),&FavoritesCount)) {
-			fFavoritesExists=true;
+		if (Settings.Read(TEXT("FavoritesCount"), &FavoritesCount)) {
+			fFavoritesExists = true;
 
-			if (FavoritesCount>=0) {
+			if (FavoritesCount >= 0) {
 				CProgramGuideFavorites::FavoriteInfo FavoriteInfo;
 
-				for (int i=0;i<FavoritesCount;i++) {
+				for (int i = 0; i < FavoritesCount; i++) {
 					TCHAR szName[32];
 
-					::wsprintf(szName,TEXT("Favorite%d_Name"),i);
-					if (!Settings.Read(szName,&FavoriteInfo.Name)
+					::wsprintf(szName, TEXT("Favorite%d_Name"), i);
+					if (!Settings.Read(szName, &FavoriteInfo.Name)
 							|| FavoriteInfo.Name.empty())
 						break;
-					::wsprintf(szName,TEXT("Favorite%d_Group"),i);
-					if (!Settings.Read(szName,&FavoriteInfo.GroupID))
+					::wsprintf(szName, TEXT("Favorite%d_Group"), i);
+					if (!Settings.Read(szName, &FavoriteInfo.GroupID))
 						break;
-					::wsprintf(szName,TEXT("Favorite%d_Label"),i);
-					if (!Settings.Read(szName,&FavoriteInfo.Label))
+					::wsprintf(szName, TEXT("Favorite%d_Label"), i);
+					if (!Settings.Read(szName, &FavoriteInfo.Label))
 						break;
 					FavoriteInfo.SetDefaultColors();
-					::wsprintf(szName,TEXT("Favorite%d_BackColor"),i);
-					Settings.ReadColor(szName,&FavoriteInfo.BackColor);
-					::wsprintf(szName,TEXT("Favorite%d_TextColor"),i);
-					Settings.ReadColor(szName,&FavoriteInfo.TextColor);
+					::wsprintf(szName, TEXT("Favorite%d_BackColor"), i);
+					Settings.ReadColor(szName, &FavoriteInfo.BackColor);
+					::wsprintf(szName, TEXT("Favorite%d_TextColor"), i);
+					Settings.ReadColor(szName, &FavoriteInfo.TextColor);
 
 					pFavorites->Add(FavoriteInfo);
 				}
@@ -276,21 +276,21 @@ bool CProgramGuideOptions::LoadSettings(CSettings &Settings)
 		}
 
 		bool fFixedWidth;
-		if (Settings.Read(TEXT("FixedWidth"),&fFixedWidth))
+		if (Settings.Read(TEXT("FixedWidth"), &fFixedWidth))
 			pFavorites->SetFixedWidth(fFixedWidth);
 	}
 	if (!fFavoritesExists) {
 		CProgramGuideFavorites::FavoriteInfo FavoriteInfo;
 
-		FavoriteInfo.Name=TEXT("お気に入りチャンネル");
-		FavoriteInfo.GroupID=TEXT("\\");
-		FavoriteInfo.Label=TEXT("お気に入り");
+		FavoriteInfo.Name = TEXT("お気に入りチャンネル");
+		FavoriteInfo.GroupID = TEXT("\\");
+		FavoriteInfo.Label = TEXT("お気に入り");
 		FavoriteInfo.SetDefaultColors();
 		pFavorites->Add(FavoriteInfo);
 	}
 
 	if (Settings.SetSection(TEXT("ProgramGuideSearchSettings"))) {
-		pProgramSearch->GetOptions().LoadSearchSettings(Settings,TEXT("Settings"));
+		pProgramSearch->GetOptions().LoadSearchSettings(Settings, TEXT("Settings"));
 	}
 
 	return true;
@@ -299,87 +299,89 @@ bool CProgramGuideOptions::LoadSettings(CSettings &Settings)
 
 bool CProgramGuideOptions::SaveSettings(CSettings &Settings)
 {
-	const CProgramSearchDialog *pProgramSearch=m_pProgramGuide->GetProgramSearch();
+	const CProgramSearchDialog *pProgramSearch = m_pProgramGuide->GetProgramSearch();
 
 	if (Settings.SetSection(TEXT("ProgramGuide"))) {
-		Settings.Write(TEXT("OnScreen"),m_fOnScreen);
-		Settings.Write(TEXT("ScrollToCurChannel"),m_fScrollToCurChannel);
-		Settings.Write(TEXT("BeginHour"),m_BeginHour);
-		Settings.Write(TEXT("ViewHours"),m_ViewHours);
-		Settings.Write(TEXT("ItemWidth"),m_ItemWidth);
-		Settings.Write(TEXT("LinesPerHour"),m_LinesPerHour);
-		Settings.Write(TEXT("EventIcons"),m_VisibleEventIcons);
-		Settings.Write(TEXT("WheelScrollLines"),m_WheelScrollLines);
-		Settings.Write(TEXT("ProgramLDoubleClick"),m_ProgramLDoubleClickCommand);
+		Settings.Write(TEXT("OnScreen"), m_fOnScreen);
+		Settings.Write(TEXT("ScrollToCurChannel"), m_fScrollToCurChannel);
+		Settings.Write(TEXT("BeginHour"), m_BeginHour);
+		Settings.Write(TEXT("ViewHours"), m_ViewHours);
+		Settings.Write(TEXT("ItemWidth"), m_ItemWidth);
+		Settings.Write(TEXT("LinesPerHour"), m_LinesPerHour);
+		Settings.Write(TEXT("EventIcons"), m_VisibleEventIcons);
+		Settings.Write(TEXT("WheelScrollLines"), m_WheelScrollLines);
+		Settings.Write(TEXT("ProgramLDoubleClick"), m_ProgramLDoubleClickCommand);
 
-		TVTest::StyleUtil::WriteFontSettings(Settings,TEXT("Font"),m_Font);
+		TVTest::StyleUtil::WriteFontSettings(Settings, TEXT("Font"), m_Font);
 
-		Settings.Write(TEXT("UseDirectWrite"),m_fUseDirectWrite);
-		Settings.Write(TEXT("DirectWriteRenderingParamsMask"),m_DirectWriteRenderingParams.Mask);
-		Settings.Write(TEXT("DirectWriteGamma"),m_DirectWriteRenderingParams.Gamma,2);
-		Settings.Write(TEXT("DirectWriteEnhancedContrast"),m_DirectWriteRenderingParams.EnhancedContrast,2);
-		Settings.Write(TEXT("DirectWriteClearTypeLevel"),m_DirectWriteRenderingParams.ClearTypeLevel,2);
-		Settings.Write(TEXT("DirectWritePixelGeometry"),
+		Settings.Write(TEXT("UseDirectWrite"), m_fUseDirectWrite);
+		Settings.Write(TEXT("DirectWriteRenderingParamsMask"), m_DirectWriteRenderingParams.Mask);
+		Settings.Write(TEXT("DirectWriteGamma"), m_DirectWriteRenderingParams.Gamma, 2);
+		Settings.Write(TEXT("DirectWriteEnhancedContrast"), m_DirectWriteRenderingParams.EnhancedContrast, 2);
+		Settings.Write(TEXT("DirectWriteClearTypeLevel"), m_DirectWriteRenderingParams.ClearTypeLevel, 2);
+		Settings.Write(
+			TEXT("DirectWritePixelGeometry"),
 			static_cast<int>(m_DirectWriteRenderingParams.PixelGeometry));
-		Settings.Write(TEXT("DirectWriteRenderingMode"),
+		Settings.Write(
+			TEXT("DirectWriteRenderingMode"),
 			static_cast<int>(m_DirectWriteRenderingParams.RenderingMode));
 
-		Settings.Write(TEXT("DragScroll"),m_pProgramGuide->GetDragScroll());
-		Settings.Write(TEXT("ShowToolTip"),m_pProgramGuide->GetShowToolTip());
-		Settings.Write(TEXT("Filter"),m_pProgramGuide->GetFilter());
-		Settings.Write(TEXT("KeepTimePos"),m_pProgramGuide->GetKeepTimePos());
-		Settings.Write(TEXT("ShowFeaturedMark"),m_pProgramGuide->GetShowFeaturedMark());
-		Settings.Write(TEXT("ExcludeNoEventServices"),m_pProgramGuide->GetExcludeNoEventServices());
+		Settings.Write(TEXT("DragScroll"), m_pProgramGuide->GetDragScroll());
+		Settings.Write(TEXT("ShowToolTip"), m_pProgramGuide->GetShowToolTip());
+		Settings.Write(TEXT("Filter"), m_pProgramGuide->GetFilter());
+		Settings.Write(TEXT("KeepTimePos"), m_pProgramGuide->GetKeepTimePos());
+		Settings.Write(TEXT("ShowFeaturedMark"), m_pProgramGuide->GetShowFeaturedMark());
+		Settings.Write(TEXT("ExcludeNoEventServices"), m_pProgramGuide->GetExcludeNoEventServices());
 
-		int Width,Height;
-		m_pProgramGuide->GetInfoPopupSize(&Width,&Height);
-		Settings.Write(TEXT("InfoPopupWidth"),Width);
-		Settings.Write(TEXT("InfoPopupHeight"),Height);
+		int Width, Height;
+		m_pProgramGuide->GetInfoPopupSize(&Width, &Height);
+		Settings.Write(TEXT("InfoPopupWidth"), Width);
+		Settings.Write(TEXT("InfoPopupHeight"), Height);
 
-		int NumSearchKeywords=pProgramSearch->GetOptions().GetKeywordHistoryCount();
-		Settings.Write(TEXT("NumSearchKeywords"),NumSearchKeywords);
-		for (int i=0;i<NumSearchKeywords;i++) {
+		int NumSearchKeywords = pProgramSearch->GetOptions().GetKeywordHistoryCount();
+		Settings.Write(TEXT("NumSearchKeywords"), NumSearchKeywords);
+		for (int i = 0; i < NumSearchKeywords; i++) {
 			TCHAR szName[32];
 
-			::wsprintf(szName,TEXT("SearchKeyword%d"),i);
-			Settings.Write(szName,pProgramSearch->GetOptions().GetKeywordHistory(i));
+			::wsprintf(szName, TEXT("SearchKeyword%d"), i);
+			Settings.Write(szName, pProgramSearch->GetOptions().GetKeywordHistory(i));
 		}
 
-		Settings.Write(TEXT("HighlightSearchResult"),pProgramSearch->GetHighlightResult());
+		Settings.Write(TEXT("HighlightSearchResult"), pProgramSearch->GetHighlightResult());
 
-		for (int i=0;i<CProgramSearchDialog::NUM_COLUMNS;i++) {
+		for (int i = 0; i < CProgramSearchDialog::NUM_COLUMNS; i++) {
 			TCHAR szName[32];
 
-			::wsprintf(szName,TEXT("SearchColumn%d_Width"),i);
-			Settings.Write(szName,pProgramSearch->GetColumnWidth(i));
+			::wsprintf(szName, TEXT("SearchColumn%d_Width"), i);
+			Settings.Write(szName, pProgramSearch->GetColumnWidth(i));
 		}
 
-		Settings.Write(TEXT("SearchResultListHeight"),pProgramSearch->GetResultListHeight());
-		Settings.Write(TEXT("SearchTarget"),pProgramSearch->GetSearchTarget());
+		Settings.Write(TEXT("SearchResultListHeight"), pProgramSearch->GetResultListHeight());
+		Settings.Write(TEXT("SearchTarget"), pProgramSearch->GetSearchTarget());
 
 		if (pProgramSearch->IsPositionSet()) {
-			int Left,Top;
-			pProgramSearch->GetPosition(&Left,&Top,&Width,&Height);
-			Settings.Write(TEXT("SearchLeft"),Left);
-			Settings.Write(TEXT("SearchTop"),Top);
-			Settings.Write(TEXT("SearchWidth"),Width);
-			Settings.Write(TEXT("SearchHeight"),Height);
+			int Left, Top;
+			pProgramSearch->GetPosition(&Left, &Top, &Width, &Height);
+			Settings.Write(TEXT("SearchLeft"), Left);
+			Settings.Write(TEXT("SearchTop"), Top);
+			Settings.Write(TEXT("SearchWidth"), Width);
+			Settings.Write(TEXT("SearchHeight"), Height);
 		}
 	}
 
 	if (Settings.SetSection(TEXT("ProgramGuideTools"))) {
-		const CProgramGuideToolList *pToolList=m_pProgramGuide->GetToolList();
+		const CProgramGuideToolList *pToolList = m_pProgramGuide->GetToolList();
 
 		Settings.Clear();
-		Settings.Write(TEXT("ToolCount"),(unsigned int)pToolList->NumTools());
-		for (size_t i=0;i<pToolList->NumTools();i++) {
-			const CProgramGuideTool *pTool=pToolList->GetTool(i);
+		Settings.Write(TEXT("ToolCount"), (unsigned int)pToolList->NumTools());
+		for (size_t i = 0; i < pToolList->NumTools(); i++) {
+			const CProgramGuideTool *pTool = pToolList->GetTool(i);
 			TCHAR szName[32];
 
-			::wsprintf(szName,TEXT("Tool%u_Name"),(UINT)i);
-			Settings.Write(szName,pTool->GetName());
-			::wsprintf(szName,TEXT("Tool%u_Command"),(UINT)i);
-			Settings.Write(szName,pTool->GetCommand());
+			::wsprintf(szName, TEXT("Tool%u_Name"), (UINT)i);
+			Settings.Write(szName, pTool->GetName());
+			::wsprintf(szName, TEXT("Tool%u_Command"), (UINT)i);
+			Settings.Write(szName, pTool->GetCommand());
 		}
 	}
 
@@ -388,47 +390,48 @@ bool CProgramGuideOptions::SaveSettings(CSettings &Settings)
 
 		if (m_pProgramGuide->GetExcludeServiceList(&ExcludeServiceList)) {
 			Settings.Clear();
-			Settings.Write(TEXT("ExcludeServiceCount"),(unsigned int)ExcludeServiceList.size());
-			for (size_t i=0;i<ExcludeServiceList.size();i++) {
-				TCHAR szName[32],szText[64];
-				::wsprintf(szName,TEXT("ExcludeService%u"),(unsigned int)i);
-				::wsprintf(szText,TEXT("%u,%u,%u"),
-						   ExcludeServiceList[i].NetworkID,
-						   ExcludeServiceList[i].TransportStreamID,
-						   ExcludeServiceList[i].ServiceID);
-				Settings.Write(szName,szText);
+			Settings.Write(TEXT("ExcludeServiceCount"), (unsigned int)ExcludeServiceList.size());
+			for (size_t i = 0; i < ExcludeServiceList.size(); i++) {
+				TCHAR szName[32], szText[64];
+				::wsprintf(szName, TEXT("ExcludeService%u"), (unsigned int)i);
+				::wsprintf(
+					szText, TEXT("%u,%u,%u"),
+					ExcludeServiceList[i].NetworkID,
+					ExcludeServiceList[i].TransportStreamID,
+					ExcludeServiceList[i].ServiceID);
+				Settings.Write(szName, szText);
 			}
 		}
 	}
 
 	if (Settings.SetSection(TEXT("ProgramGuideFavorites"))) {
-		const CProgramGuideFavorites *pFavorites=m_pProgramGuide->GetFavorites();
-		const int FavoritesCount=(int)pFavorites->GetCount();
+		const CProgramGuideFavorites *pFavorites = m_pProgramGuide->GetFavorites();
+		const int FavoritesCount = (int)pFavorites->GetCount();
 
 		Settings.Clear();
-		Settings.Write(TEXT("FavoritesCount"),FavoritesCount);
-		for (int i=0;i<FavoritesCount;i++) {
-			const CProgramGuideFavorites::FavoriteInfo *pFavoriteInfo=pFavorites->Get(i);
+		Settings.Write(TEXT("FavoritesCount"), FavoritesCount);
+		for (int i = 0; i < FavoritesCount; i++) {
+			const CProgramGuideFavorites::FavoriteInfo *pFavoriteInfo = pFavorites->Get(i);
 			TCHAR szName[32];
 
-			::wsprintf(szName,TEXT("Favorite%d_Name"),i);
-			Settings.Write(szName,pFavoriteInfo->Name);
-			::wsprintf(szName,TEXT("Favorite%d_Group"),i);
-			Settings.Write(szName,pFavoriteInfo->GroupID);
-			::wsprintf(szName,TEXT("Favorite%d_Label"),i);
-			Settings.Write(szName,pFavoriteInfo->Label);
-			::wsprintf(szName,TEXT("Favorite%d_BackColor"),i);
-			Settings.WriteColor(szName,pFavoriteInfo->BackColor);
-			::wsprintf(szName,TEXT("Favorite%d_TextColor"),i);
-			Settings.WriteColor(szName,pFavoriteInfo->TextColor);
+			::wsprintf(szName, TEXT("Favorite%d_Name"), i);
+			Settings.Write(szName, pFavoriteInfo->Name);
+			::wsprintf(szName, TEXT("Favorite%d_Group"), i);
+			Settings.Write(szName, pFavoriteInfo->GroupID);
+			::wsprintf(szName, TEXT("Favorite%d_Label"), i);
+			Settings.Write(szName, pFavoriteInfo->Label);
+			::wsprintf(szName, TEXT("Favorite%d_BackColor"), i);
+			Settings.WriteColor(szName, pFavoriteInfo->BackColor);
+			::wsprintf(szName, TEXT("Favorite%d_TextColor"), i);
+			Settings.WriteColor(szName, pFavoriteInfo->TextColor);
 		}
 
-		Settings.Write(TEXT("FixedWidth"),pFavorites->GetFixedWidth());
+		Settings.Write(TEXT("FixedWidth"), pFavorites->GetFixedWidth());
 	}
 
 	if (Settings.SetSection(TEXT("ProgramGuideSearchSettings"))) {
 		Settings.Clear();
-		pProgramSearch->GetOptions().SaveSearchSettings(Settings,TEXT("Settings"));
+		pProgramSearch->GetOptions().SaveSearchSettings(Settings, TEXT("Settings"));
 	}
 
 	return true;
@@ -437,16 +440,17 @@ bool CProgramGuideOptions::SaveSettings(CSettings &Settings)
 
 bool CProgramGuideOptions::Create(HWND hwndOwner)
 {
-	return CreateDialogWindow(hwndOwner,
-							  GetAppClass().GetResourceInstance(),MAKEINTRESOURCE(IDD_OPTIONS_PROGRAMGUIDE));
+	return CreateDialogWindow(
+		hwndOwner,
+		GetAppClass().GetResourceInstance(), MAKEINTRESOURCE(IDD_OPTIONS_PROGRAMGUIDE));
 }
 
 
-bool CProgramGuideOptions::GetTimeRange(LibISDB::DateTime *pFirst,LibISDB::DateTime *pLast)
+bool CProgramGuideOptions::GetTimeRange(LibISDB::DateTime *pFirst, LibISDB::DateTime *pLast)
 {
 	LibISDB::GetCurrentEPGTime(pFirst);
 	pFirst->TruncateToHours();
-	*pLast=*pFirst;
+	*pLast = *pFirst;
 	pLast->OffsetHours(m_ViewHours);
 	return true;
 }
@@ -456,40 +460,42 @@ int CProgramGuideOptions::ParseCommand(LPCTSTR pszCommand) const
 {
 	if (IsStringEmpty(pszCommand))
 		return 0;
-	if (::lstrcmpi(pszCommand,IEPG_ASSOCIATE_COMMAND)==0)
+	if (::lstrcmpi(pszCommand, IEPG_ASSOCIATE_COMMAND) == 0)
 		return CM_PROGRAMGUIDE_IEPGASSOCIATE;
 	return 0;
 }
 
 
-INT_PTR CProgramGuideOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
+INT_PTR CProgramGuideOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	switch (uMsg) {
 	case WM_INITDIALOG:
 		{
-			DlgCheckBox_Check(hDlg,IDC_PROGRAMGUIDEOPTIONS_ONSCREEN,m_fOnScreen);
-			DlgCheckBox_Check(hDlg,IDC_PROGRAMGUIDEOPTIONS_SCROLLTOCURCHANNEL,m_fScrollToCurChannel);
-			DlgComboBox_AddString(hDlg,IDC_PROGRAMGUIDEOPTIONS_BEGINHOUR,TEXT("現在時"));
-			for (int i=0;i<=23;i++) {
+			DlgCheckBox_Check(hDlg, IDC_PROGRAMGUIDEOPTIONS_ONSCREEN, m_fOnScreen);
+			DlgCheckBox_Check(hDlg, IDC_PROGRAMGUIDEOPTIONS_SCROLLTOCURCHANNEL, m_fScrollToCurChannel);
+			DlgComboBox_AddString(hDlg, IDC_PROGRAMGUIDEOPTIONS_BEGINHOUR, TEXT("現在時"));
+			for (int i = 0; i <= 23; i++) {
 				TCHAR szText[8];
-				::wsprintf(szText,TEXT("%d時"),i);
-				DlgComboBox_AddString(hDlg,IDC_PROGRAMGUIDEOPTIONS_BEGINHOUR,szText);
+				::wsprintf(szText, TEXT("%d時"), i);
+				DlgComboBox_AddString(hDlg, IDC_PROGRAMGUIDEOPTIONS_BEGINHOUR, szText);
 			}
-			DlgComboBox_SetCurSel(hDlg,IDC_PROGRAMGUIDEOPTIONS_BEGINHOUR,m_BeginHour+1);
-			DlgEdit_SetInt(hDlg,IDC_PROGRAMGUIDEOPTIONS_VIEWHOURS,m_ViewHours);
-			DlgUpDown_SetRange(hDlg,IDC_PROGRAMGUIDEOPTIONS_VIEWHOURS_UD,MIN_VIEW_HOURS,MAX_VIEW_HOURS);
-			DlgEdit_SetInt(hDlg,IDC_PROGRAMGUIDEOPTIONS_CHANNELWIDTH,m_ItemWidth);
-			DlgUpDown_SetRange(hDlg,IDC_PROGRAMGUIDEOPTIONS_CHANNELWIDTH_UD,
-				CProgramGuide::MIN_ITEM_WIDTH,CProgramGuide::MAX_ITEM_WIDTH);
-			DlgEdit_SetInt(hDlg,IDC_PROGRAMGUIDEOPTIONS_LINESPERHOUR,m_LinesPerHour);
-			DlgUpDown_SetRange(hDlg,IDC_PROGRAMGUIDEOPTIONS_LINESPERHOUR_UD,
-				CProgramGuide::MIN_LINES_PER_HOUR,CProgramGuide::MAX_LINES_PER_HOUR);
+			DlgComboBox_SetCurSel(hDlg, IDC_PROGRAMGUIDEOPTIONS_BEGINHOUR, m_BeginHour + 1);
+			DlgEdit_SetInt(hDlg, IDC_PROGRAMGUIDEOPTIONS_VIEWHOURS, m_ViewHours);
+			DlgUpDown_SetRange(hDlg, IDC_PROGRAMGUIDEOPTIONS_VIEWHOURS_UD, MIN_VIEW_HOURS, MAX_VIEW_HOURS);
+			DlgEdit_SetInt(hDlg, IDC_PROGRAMGUIDEOPTIONS_CHANNELWIDTH, m_ItemWidth);
+			DlgUpDown_SetRange(
+				hDlg, IDC_PROGRAMGUIDEOPTIONS_CHANNELWIDTH_UD,
+				CProgramGuide::MIN_ITEM_WIDTH, CProgramGuide::MAX_ITEM_WIDTH);
+			DlgEdit_SetInt(hDlg, IDC_PROGRAMGUIDEOPTIONS_LINESPERHOUR, m_LinesPerHour);
+			DlgUpDown_SetRange(
+				hDlg, IDC_PROGRAMGUIDEOPTIONS_LINESPERHOUR_UD,
+				CProgramGuide::MIN_LINES_PER_HOUR, CProgramGuide::MAX_LINES_PER_HOUR);
 
-			m_CurSettingFont=m_Font;
-			TVTest::StyleUtil::SetFontInfoItem(hDlg,IDC_PROGRAMGUIDEOPTIONS_FONTINFO,m_CurSettingFont);
+			m_CurSettingFont = m_Font;
+			TVTest::StyleUtil::SetFontInfoItem(hDlg, IDC_PROGRAMGUIDEOPTIONS_FONTINFO, m_CurSettingFont);
 
 			if (Util::OS::IsWindowsVistaOrLater()) {
-				DlgCheckBox_Check(hDlg,IDC_PROGRAMGUIDEOPTIONS_USEDIRECTWRITE,m_fUseDirectWrite);
+				DlgCheckBox_Check(hDlg, IDC_PROGRAMGUIDEOPTIONS_USEDIRECTWRITE, m_fUseDirectWrite);
 				EnableDlgItem(
 					hDlg,
 					IDC_PROGRAMGUIDEOPTIONS_DIRECTWRITEOPTIONS,
@@ -506,119 +512,124 @@ INT_PTR CProgramGuideOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM l
 			m_Tooltip.SetFont(GetWindowFont(hDlg));
 
 			{
-				HDC hdc=::GetDC(hDlg);
-				HDC hdcMem=::CreateCompatibleDC(hdc);
+				HDC hdc = ::GetDC(hDlg);
+				HDC hdcMem = ::CreateCompatibleDC(hdc);
 				RECT rc;
-				::GetClientRect(::GetDlgItem(hDlg,IDC_PROGRAMGUIDEOPTIONS_ICON_FIRST),&rc);
+				::GetClientRect(::GetDlgItem(hDlg, IDC_PROGRAMGUIDEOPTIONS_ICON_FIRST), &rc);
 				int IconSize;
-				if (rc.bottom<=CEpgIcons::DEFAULT_ICON_HEIGHT+4)
-					IconSize=CEpgIcons::DEFAULT_ICON_HEIGHT;
+				if (rc.bottom <= CEpgIcons::DEFAULT_ICON_HEIGHT + 4)
+					IconSize = CEpgIcons::DEFAULT_ICON_HEIGHT;
 				else
-					IconSize=rc.bottom;
+					IconSize = rc.bottom;
 				CEpgIcons EpgIcons;
 				EpgIcons.Load();
 				EpgIcons.BeginDraw(hdc);
-				for (int i=0;i<=CEpgIcons::ICON_LAST;i++) {
-					DlgCheckBox_Check(hDlg,IDC_PROGRAMGUIDEOPTIONS_ICON_FIRST+i,
-									  (m_VisibleEventIcons&CEpgIcons::IconFlag(i))!=0);
-					HBITMAP hbm=::CreateCompatibleBitmap(hdc,IconSize,IconSize);
-					HGDIOBJ hOldBmp=::SelectObject(hdcMem,hbm);
-					EpgIcons.DrawIcon(hdcMem,0,0,IconSize,IconSize,i);
-					::SelectObject(hdcMem,hOldBmp);
-					::SendDlgItemMessage(hDlg,IDC_PROGRAMGUIDEOPTIONS_ICON_FIRST+i,
-										 BM_SETIMAGE,IMAGE_BITMAP,
-										 reinterpret_cast<LPARAM>(hbm));
+				for (int i = 0; i <= CEpgIcons::ICON_LAST; i++) {
+					DlgCheckBox_Check(
+						hDlg, IDC_PROGRAMGUIDEOPTIONS_ICON_FIRST + i,
+						(m_VisibleEventIcons & CEpgIcons::IconFlag(i)) != 0);
+					HBITMAP hbm = ::CreateCompatibleBitmap(hdc, IconSize, IconSize);
+					HGDIOBJ hOldBmp = ::SelectObject(hdcMem, hbm);
+					EpgIcons.DrawIcon(hdcMem, 0, 0, IconSize, IconSize, i);
+					::SelectObject(hdcMem, hOldBmp);
+					::SendDlgItemMessage(
+						hDlg, IDC_PROGRAMGUIDEOPTIONS_ICON_FIRST + i,
+						BM_SETIMAGE, IMAGE_BITMAP,
+						reinterpret_cast<LPARAM>(hbm));
 					TCHAR szText[64];
-					::GetDlgItemText(hDlg,IDC_PROGRAMGUIDEOPTIONS_ICON_FIRST+i,szText,lengthof(szText));
-					m_Tooltip.AddTool(::GetDlgItem(hDlg,IDC_PROGRAMGUIDEOPTIONS_ICON_FIRST+i),szText);
+					::GetDlgItemText(hDlg, IDC_PROGRAMGUIDEOPTIONS_ICON_FIRST + i, szText, lengthof(szText));
+					m_Tooltip.AddTool(::GetDlgItem(hDlg, IDC_PROGRAMGUIDEOPTIONS_ICON_FIRST + i), szText);
 				}
 				EpgIcons.EndDraw();
 				::DeleteDC(hdcMem);
-				::ReleaseDC(hDlg,hdc);
+				::ReleaseDC(hDlg, hdc);
 			}
 
-			DlgEdit_SetInt(hDlg,IDC_PROGRAMGUIDEOPTIONS_WHEELSCROLLLINES,m_WheelScrollLines);
-			DlgUpDown_SetRange(hDlg,IDC_PROGRAMGUIDEOPTIONS_WHEELSCROLLLINES_UD,0,100);
+			DlgEdit_SetInt(hDlg, IDC_PROGRAMGUIDEOPTIONS_WHEELSCROLLLINES, m_WheelScrollLines);
+			DlgUpDown_SetRange(hDlg, IDC_PROGRAMGUIDEOPTIONS_WHEELSCROLLLINES_UD, 0, 100);
 
-			int Sel=m_ProgramLDoubleClickCommand.empty()?0:-1;
-			DlgComboBox_AddString(hDlg,IDC_PROGRAMGUIDEOPTIONS_PROGRAMLDOUBLECLICK,TEXT("何もしない"));
-			DlgComboBox_AddString(hDlg,IDC_PROGRAMGUIDEOPTIONS_PROGRAMLDOUBLECLICK,TEXT("iEPG関連付け実行"));
-			if (Sel<0 && m_ProgramLDoubleClickCommand.compare(IEPG_ASSOCIATE_COMMAND)==0)
-				Sel=1;
-			for (int i=0;i<m_pPluginManager->NumPlugins();i++) {
-				const CPlugin *pPlugin=m_pPluginManager->GetPlugin(i);
+			int Sel = m_ProgramLDoubleClickCommand.empty() ? 0 : -1;
+			DlgComboBox_AddString(hDlg, IDC_PROGRAMGUIDEOPTIONS_PROGRAMLDOUBLECLICK, TEXT("何もしない"));
+			DlgComboBox_AddString(hDlg, IDC_PROGRAMGUIDEOPTIONS_PROGRAMLDOUBLECLICK, TEXT("iEPG関連付け実行"));
+			if (Sel < 0 && m_ProgramLDoubleClickCommand.compare(IEPG_ASSOCIATE_COMMAND) == 0)
+				Sel = 1;
+			for (int i = 0; i < m_pPluginManager->NumPlugins(); i++) {
+				const CPlugin *pPlugin = m_pPluginManager->GetPlugin(i);
 
-				for (int j=0;j<pPlugin->NumProgramGuideCommands();j++) {
+				for (int j = 0; j < pPlugin->NumProgramGuideCommands(); j++) {
 					TVTest::ProgramGuideCommandInfo CommandInfo;
 
-					pPlugin->GetProgramGuideCommandInfo(j,&CommandInfo);
-					if (CommandInfo.Type==TVTest::PROGRAMGUIDE_COMMAND_TYPE_PROGRAM) {
+					pPlugin->GetProgramGuideCommandInfo(j, &CommandInfo);
+					if (CommandInfo.Type == TVTest::PROGRAMGUIDE_COMMAND_TYPE_PROGRAM) {
 						TCHAR szCommand[512];
 
-						StdUtil::snprintf(szCommand,lengthof(szCommand),TEXT("%s:%s"),
-										  ::PathFindFileName(pPlugin->GetFileName()),
-										  CommandInfo.pszText);
-						LRESULT Index=DlgComboBox_AddString(hDlg,IDC_PROGRAMGUIDEOPTIONS_PROGRAMLDOUBLECLICK,
-															CommandInfo.pszName);
-						DlgComboBox_SetItemData(hDlg,IDC_PROGRAMGUIDEOPTIONS_PROGRAMLDOUBLECLICK,
-												Index,reinterpret_cast<LPARAM>(DuplicateString(szCommand)));
-						if (Sel<0 && !m_ProgramLDoubleClickCommand.empty()
-								&& TVTest::StringUtility::CompareNoCase(m_ProgramLDoubleClickCommand,szCommand)==0)
-							Sel=(int)Index;
+						StdUtil::snprintf(
+							szCommand, lengthof(szCommand), TEXT("%s:%s"),
+							::PathFindFileName(pPlugin->GetFileName()),
+							CommandInfo.pszText);
+						LRESULT Index = DlgComboBox_AddString(
+							hDlg, IDC_PROGRAMGUIDEOPTIONS_PROGRAMLDOUBLECLICK,
+							CommandInfo.pszName);
+						DlgComboBox_SetItemData(
+							hDlg, IDC_PROGRAMGUIDEOPTIONS_PROGRAMLDOUBLECLICK,
+							Index, reinterpret_cast<LPARAM>(DuplicateString(szCommand)));
+						if (Sel < 0 && !m_ProgramLDoubleClickCommand.empty()
+								&& TVTest::StringUtility::CompareNoCase(m_ProgramLDoubleClickCommand, szCommand) == 0)
+							Sel = (int)Index;
 					}
 				}
 			}
-			if (Sel>=0)
-				DlgComboBox_SetCurSel(hDlg,IDC_PROGRAMGUIDEOPTIONS_PROGRAMLDOUBLECLICK,Sel);
+			if (Sel >= 0)
+				DlgComboBox_SetCurSel(hDlg, IDC_PROGRAMGUIDEOPTIONS_PROGRAMLDOUBLECLICK, Sel);
 
-			CProgramGuideToolList *pToolList=m_pProgramGuide->GetToolList();
-			HWND hwndList=GetDlgItem(hDlg,IDC_PROGRAMGUIDETOOL_LIST);
-			HIMAGELIST himl=::ImageList_Create(
-				::GetSystemMetrics(SM_CXSMICON),::GetSystemMetrics(SM_CYSMICON),
-				ILC_COLOR32 | ILC_MASK,1,4);
+			CProgramGuideToolList *pToolList = m_pProgramGuide->GetToolList();
+			HWND hwndList = GetDlgItem(hDlg, IDC_PROGRAMGUIDETOOL_LIST);
+			HIMAGELIST himl = ::ImageList_Create(
+				::GetSystemMetrics(SM_CXSMICON), ::GetSystemMetrics(SM_CYSMICON),
+				ILC_COLOR32 | ILC_MASK, 1, 4);
 			RECT rc;
 			LV_COLUMN lvc;
 
-			ListView_SetImageList(hwndList,himl,LVSIL_SMALL);
-			ListView_SetExtendedListViewStyle(hwndList,LVS_EX_FULLROWSELECT | LVS_EX_LABELTIP);
-			lvc.mask=LVCF_FMT | LVCF_WIDTH | LVCF_TEXT;
-			lvc.fmt=LVCFMT_LEFT;
-			lvc.cx=80;
-			lvc.pszText=TEXT("名前");
-			ListView_InsertColumn(hwndList,0,&lvc);
-			lvc.fmt=LVCFMT_LEFT;
-			GetClientRect(hwndList,&rc);
-			rc.right-=GetSystemMetrics(SM_CXVSCROLL);
-			lvc.cx=rc.right-lvc.cx;
-			lvc.pszText=TEXT("コマンド");
-			ListView_InsertColumn(hwndList,1,&lvc);
-			if (pToolList->NumTools()>0) {
-				ListView_SetItemCount(hwndList,pToolList->NumTools());
-				for (size_t i=0;i<pToolList->NumTools();i++) {
-					CProgramGuideTool *pTool=new CProgramGuideTool(*pToolList->GetTool(i));
+			ListView_SetImageList(hwndList, himl, LVSIL_SMALL);
+			ListView_SetExtendedListViewStyle(hwndList, LVS_EX_FULLROWSELECT | LVS_EX_LABELTIP);
+			lvc.mask = LVCF_FMT | LVCF_WIDTH | LVCF_TEXT;
+			lvc.fmt = LVCFMT_LEFT;
+			lvc.cx = 80;
+			lvc.pszText = TEXT("名前");
+			ListView_InsertColumn(hwndList, 0, &lvc);
+			lvc.fmt = LVCFMT_LEFT;
+			GetClientRect(hwndList, &rc);
+			rc.right -= GetSystemMetrics(SM_CXVSCROLL);
+			lvc.cx = rc.right - lvc.cx;
+			lvc.pszText = TEXT("コマンド");
+			ListView_InsertColumn(hwndList, 1, &lvc);
+			if (pToolList->NumTools() > 0) {
+				ListView_SetItemCount(hwndList, pToolList->NumTools());
+				for (size_t i = 0; i < pToolList->NumTools(); i++) {
+					CProgramGuideTool *pTool = new CProgramGuideTool(*pToolList->GetTool(i));
 					LV_ITEM lvi;
 
-					lvi.mask=LVIF_TEXT | LVIF_PARAM;
-					lvi.iItem=(int)i;
-					lvi.iSubItem=0;
-					lvi.pszText=const_cast<LPTSTR>(pTool->GetName());
-					lvi.lParam=reinterpret_cast<LPARAM>(pTool);
-					if (pTool->GetIcon()!=NULL) {
-						lvi.iImage=::ImageList_AddIcon(himl,pTool->GetIcon());
-						if (lvi.iImage>=0)
-							lvi.mask|=LVIF_IMAGE;
+					lvi.mask = LVIF_TEXT | LVIF_PARAM;
+					lvi.iItem = (int)i;
+					lvi.iSubItem = 0;
+					lvi.pszText = const_cast<LPTSTR>(pTool->GetName());
+					lvi.lParam = reinterpret_cast<LPARAM>(pTool);
+					if (pTool->GetIcon() != NULL) {
+						lvi.iImage = ::ImageList_AddIcon(himl, pTool->GetIcon());
+						if (lvi.iImage >= 0)
+							lvi.mask |= LVIF_IMAGE;
 					}
-					ListView_InsertItem(hwndList,&lvi);
-					lvi.mask=LVIF_TEXT;
-					lvi.iSubItem=1;
-					lvi.pszText=const_cast<LPTSTR>(pTool->GetCommand());
-					ListView_SetItem(hwndList,&lvi);
+					ListView_InsertItem(hwndList, &lvi);
+					lvi.mask = LVIF_TEXT;
+					lvi.iSubItem = 1;
+					lvi.pszText = const_cast<LPTSTR>(pTool->GetCommand());
+					ListView_SetItem(hwndList, &lvi);
 				}
-				ListView_SetColumnWidth(hwndList,0,LVSCW_AUTOSIZE_USEHEADER);
-				int Width=ListView_GetColumnWidth(hwndList,0);
-				ListView_SetColumnWidth(hwndList,1,LVSCW_AUTOSIZE_USEHEADER);
-				if (ListView_GetColumnWidth(hwndList,1)<rc.right-Width)
-					ListView_SetColumnWidth(hwndList,1,rc.right-Width);
+				ListView_SetColumnWidth(hwndList, 0, LVSCW_AUTOSIZE_USEHEADER);
+				int Width = ListView_GetColumnWidth(hwndList, 0);
+				ListView_SetColumnWidth(hwndList, 1, LVSCW_AUTOSIZE_USEHEADER);
+				if (ListView_GetColumnWidth(hwndList, 1) < rc.right - Width)
+					ListView_SetColumnWidth(hwndList, 1, rc.right - Width);
 				SetDlgItemState();
 			}
 		}
@@ -627,8 +638,8 @@ INT_PTR CProgramGuideOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM l
 	case WM_COMMAND:
 		switch (LOWORD(wParam)) {
 		case IDC_PROGRAMGUIDEOPTIONS_CHOOSEFONT:
-			if (TVTest::StyleUtil::ChooseStyleFont(hDlg,&m_CurSettingFont))
-				TVTest::StyleUtil::SetFontInfoItem(hDlg,IDC_PROGRAMGUIDEOPTIONS_FONTINFO,m_CurSettingFont);
+			if (TVTest::StyleUtil::ChooseStyleFont(hDlg, &m_CurSettingFont))
+				TVTest::StyleUtil::SetFontInfoItem(hDlg, IDC_PROGRAMGUIDEOPTIONS_FONTINFO, m_CurSettingFont);
 			return TRUE;
 
 		case IDC_PROGRAMGUIDEOPTIONS_USEDIRECTWRITE:
@@ -640,7 +651,8 @@ INT_PTR CProgramGuideOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM l
 
 		case IDC_PROGRAMGUIDEOPTIONS_DIRECTWRITEOPTIONS:
 			{
-				class CRenderingTester : public TVTest::CDirectWriteOptionsDialog::CRenderingTester
+				class CRenderingTester
+					: public TVTest::CDirectWriteOptionsDialog::CRenderingTester
 				{
 				public:
 					CRenderingTester(
@@ -660,16 +672,16 @@ INT_PTR CProgramGuideOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM l
 						if (!m_fApplied) {
 							TVTest::Style::Font Font;
 
-							m_OldEngine=m_pProgramGuide->GetTextDrawEngine();
-							if (m_OldEngine!=TVTest::CTextDrawClient::ENGINE_DIRECTWRITE)
+							m_OldEngine = m_pProgramGuide->GetTextDrawEngine();
+							if (m_OldEngine != TVTest::CTextDrawClient::ENGINE_DIRECTWRITE)
 								m_pProgramGuide->SetTextDrawEngine(TVTest::CTextDrawClient::ENGINE_DIRECTWRITE);
 							m_pProgramGuide->GetFont(&Font);
-							if (m_Font!=Font) {
+							if (m_Font != Font) {
 								m_pProgramGuide->SetFont(m_Font);
-								m_OldFont=Font;
-								m_fFontChanged=true;
+								m_OldFont = Font;
+								m_fFontChanged = true;
 							}
-							m_fApplied=true;
+							m_fApplied = true;
 						}
 						m_pProgramGuide->SetDirectWriteRenderingParams(Params);
 					}
@@ -677,12 +689,12 @@ INT_PTR CProgramGuideOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM l
 					void Reset() override
 					{
 						if (m_fApplied) {
-							if (m_OldEngine!=TVTest::CTextDrawClient::ENGINE_DIRECTWRITE)
+							if (m_OldEngine != TVTest::CTextDrawClient::ENGINE_DIRECTWRITE)
 								m_pProgramGuide->SetTextDrawEngine(m_OldEngine);
 							if (m_fFontChanged)
 								m_pProgramGuide->SetFont(m_OldFont);
 							m_pProgramGuide->SetDirectWriteRenderingParams(m_OldParams);
-							m_fApplied=false;
+							m_fApplied = false;
 						}
 					}
 
@@ -715,17 +727,17 @@ INT_PTR CProgramGuideOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM l
 							m_pProgramGuide->SetFont(m_Font);
 #else
 						if (!m_fUseDirectWrite) {
-							m_fUseDirectWrite=true;
+							m_fUseDirectWrite = true;
 							m_pProgramGuide->SetTextDrawEngine(TVTest::CTextDrawClient::ENGINE_DIRECTWRITE);
 						}
 						if (RenderingTester.IsFontChanged()) {
-							m_Font=m_CurSettingFont;
+							m_Font = m_CurSettingFont;
 							m_pProgramGuide->SetFont(m_Font);
 						}
 #endif
 					}
 					m_pProgramGuide->SetDirectWriteRenderingParams(m_DirectWriteRenderingParams);
-					m_fChanged=true;
+					m_fChanged = true;
 				}
 			}
 			return TRUE;
@@ -734,29 +746,29 @@ INT_PTR CProgramGuideOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM l
 			{
 				CProgramGuideTool *pTool;
 
-				pTool=new CProgramGuideTool;
+				pTool = new CProgramGuideTool;
 				if (pTool->ShowDialog(hDlg)) {
-					HWND hwndList=GetDlgItem(hDlg,IDC_PROGRAMGUIDETOOL_LIST);
+					HWND hwndList = GetDlgItem(hDlg, IDC_PROGRAMGUIDETOOL_LIST);
 					LV_ITEM lvi;
 
-					lvi.mask=LVIF_STATE | LVIF_TEXT | LVIF_PARAM;
-					lvi.iItem=ListView_GetItemCount(hwndList);
-					lvi.iSubItem=0;
-					lvi.state=LVIS_FOCUSED | LVIS_SELECTED;
-					lvi.stateMask=lvi.state;
-					lvi.pszText=const_cast<LPTSTR>(pTool->GetName());
-					lvi.lParam=reinterpret_cast<LPARAM>(pTool);
-					if (pTool->GetIcon()!=NULL) {
-						lvi.iImage=::ImageList_AddIcon(ListView_GetImageList(hwndList,LVSIL_SMALL),pTool->GetIcon());
-						if (lvi.iImage>=0)
-							lvi.mask|=LVIF_IMAGE;
+					lvi.mask = LVIF_STATE | LVIF_TEXT | LVIF_PARAM;
+					lvi.iItem = ListView_GetItemCount(hwndList);
+					lvi.iSubItem = 0;
+					lvi.state = LVIS_FOCUSED | LVIS_SELECTED;
+					lvi.stateMask = lvi.state;
+					lvi.pszText = const_cast<LPTSTR>(pTool->GetName());
+					lvi.lParam = reinterpret_cast<LPARAM>(pTool);
+					if (pTool->GetIcon() != NULL) {
+						lvi.iImage = ::ImageList_AddIcon(ListView_GetImageList(hwndList, LVSIL_SMALL), pTool->GetIcon());
+						if (lvi.iImage >= 0)
+							lvi.mask |= LVIF_IMAGE;
 					}
-					ListView_InsertItem(hwndList,&lvi);
-					lvi.mask=LVIF_TEXT;
-					lvi.iSubItem=1;
-					lvi.pszText=const_cast<LPTSTR>(pTool->GetCommand());
-					ListView_SetItem(hwndList,&lvi);
-					ListView_EnsureVisible(hwndList,lvi.iItem,FALSE);
+					ListView_InsertItem(hwndList, &lvi);
+					lvi.mask = LVIF_TEXT;
+					lvi.iSubItem = 1;
+					lvi.pszText = const_cast<LPTSTR>(pTool->GetCommand());
+					ListView_SetItem(hwndList, &lvi);
+					ListView_EnsureVisible(hwndList, lvi.iItem, FALSE);
 				} else {
 					delete pTool;
 				}
@@ -765,102 +777,102 @@ INT_PTR CProgramGuideOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM l
 
 		case IDC_PROGRAMGUIDETOOL_EDIT:
 			{
-				HWND hwndList=GetDlgItem(hDlg,IDC_PROGRAMGUIDETOOL_LIST);
+				HWND hwndList = GetDlgItem(hDlg, IDC_PROGRAMGUIDETOOL_LIST);
 				LV_ITEM lvi;
 				CProgramGuideTool *pTool;
 
-				lvi.mask=LVIF_PARAM;
-				lvi.iItem=ListView_GetNextItem(hwndList,-1,LVNI_SELECTED);
-				lvi.iSubItem=0;
-				if (!ListView_GetItem(hwndList,&lvi))
+				lvi.mask = LVIF_PARAM;
+				lvi.iItem = ListView_GetNextItem(hwndList, -1, LVNI_SELECTED);
+				lvi.iSubItem = 0;
+				if (!ListView_GetItem(hwndList, &lvi))
 					return TRUE;
-				pTool=reinterpret_cast<CProgramGuideTool*>(lvi.lParam);
+				pTool = reinterpret_cast<CProgramGuideTool*>(lvi.lParam);
 				if (pTool->ShowDialog(hDlg)) {
-					lvi.mask=LVIF_TEXT;
-					lvi.pszText=const_cast<LPTSTR>(pTool->GetName());
-					if (pTool->GetIcon()!=NULL) {
-						lvi.iImage=::ImageList_AddIcon(ListView_GetImageList(hwndList,LVSIL_SMALL),pTool->GetIcon());
-						if (lvi.iImage>=0)
-							lvi.mask|=LVIF_IMAGE;
+					lvi.mask = LVIF_TEXT;
+					lvi.pszText = const_cast<LPTSTR>(pTool->GetName());
+					if (pTool->GetIcon() != NULL) {
+						lvi.iImage = ::ImageList_AddIcon(ListView_GetImageList(hwndList, LVSIL_SMALL), pTool->GetIcon());
+						if (lvi.iImage >= 0)
+							lvi.mask |= LVIF_IMAGE;
 					}
-					ListView_SetItem(hwndList,&lvi);
-					lvi.iSubItem=1;
-					lvi.pszText=const_cast<LPTSTR>(pTool->GetCommand());
-					ListView_SetItem(hwndList,&lvi);
+					ListView_SetItem(hwndList, &lvi);
+					lvi.iSubItem = 1;
+					lvi.pszText = const_cast<LPTSTR>(pTool->GetCommand());
+					ListView_SetItem(hwndList, &lvi);
 				}
 			}
 			return TRUE;
 
 		case IDC_PROGRAMGUIDETOOL_UP:
 			{
-				HWND hwndList=GetDlgItem(hDlg,IDC_PROGRAMGUIDETOOL_LIST);
+				HWND hwndList = GetDlgItem(hDlg, IDC_PROGRAMGUIDETOOL_LIST);
 				LV_ITEM lvi;
 				CProgramGuideTool *pTool;
 
-				lvi.mask=LVIF_IMAGE | LVIF_PARAM;
-				lvi.iItem=ListView_GetNextItem(hwndList,-1,LVNI_SELECTED);
-				if (lvi.iItem<=0)
+				lvi.mask = LVIF_IMAGE | LVIF_PARAM;
+				lvi.iItem = ListView_GetNextItem(hwndList, -1, LVNI_SELECTED);
+				if (lvi.iItem <= 0)
 					return TRUE;
-				lvi.iSubItem=0;
-				ListView_GetItem(hwndList,&lvi);
-				pTool=reinterpret_cast<CProgramGuideTool*>(lvi.lParam);
-				ListView_DeleteItem(hwndList,lvi.iItem);
-				lvi.mask=LVIF_STATE | LVIF_TEXT | LVIF_IMAGE | LVIF_PARAM;
+				lvi.iSubItem = 0;
+				ListView_GetItem(hwndList, &lvi);
+				pTool = reinterpret_cast<CProgramGuideTool*>(lvi.lParam);
+				ListView_DeleteItem(hwndList, lvi.iItem);
+				lvi.mask = LVIF_STATE | LVIF_TEXT | LVIF_IMAGE | LVIF_PARAM;
 				lvi.iItem--;
-				lvi.state=LVIS_FOCUSED | LVIS_SELECTED;
-				lvi.stateMask=lvi.state;
-				lvi.pszText=const_cast<LPTSTR>(pTool->GetName());
-				ListView_InsertItem(hwndList,&lvi);
-				lvi.mask=LVIF_TEXT;
-				lvi.iSubItem=1;
-				lvi.pszText=const_cast<LPTSTR>(pTool->GetCommand());
-				ListView_SetItem(hwndList,&lvi);
-				ListView_EnsureVisible(hwndList,lvi.iItem,FALSE);
+				lvi.state = LVIS_FOCUSED | LVIS_SELECTED;
+				lvi.stateMask = lvi.state;
+				lvi.pszText = const_cast<LPTSTR>(pTool->GetName());
+				ListView_InsertItem(hwndList, &lvi);
+				lvi.mask = LVIF_TEXT;
+				lvi.iSubItem = 1;
+				lvi.pszText = const_cast<LPTSTR>(pTool->GetCommand());
+				ListView_SetItem(hwndList, &lvi);
+				ListView_EnsureVisible(hwndList, lvi.iItem, FALSE);
 			}
 			return TRUE;
 
 		case IDC_PROGRAMGUIDETOOL_DOWN:
 			{
-				HWND hwndList=GetDlgItem(hDlg,IDC_PROGRAMGUIDETOOL_LIST);
+				HWND hwndList = GetDlgItem(hDlg, IDC_PROGRAMGUIDETOOL_LIST);
 				LV_ITEM lvi;
 				CProgramGuideTool *pTool;
 
-				lvi.mask=LVIF_IMAGE | LVIF_PARAM;
-				lvi.iItem=ListView_GetNextItem(hwndList,-1,LVNI_SELECTED);
-				if (lvi.iItem<0
-						|| lvi.iItem+1==ListView_GetItemCount(hwndList))
+				lvi.mask = LVIF_IMAGE | LVIF_PARAM;
+				lvi.iItem = ListView_GetNextItem(hwndList, -1, LVNI_SELECTED);
+				if (lvi.iItem < 0
+						|| lvi.iItem + 1 == ListView_GetItemCount(hwndList))
 					return TRUE;
-				lvi.iSubItem=0;
-				ListView_GetItem(hwndList,&lvi);
-				pTool=reinterpret_cast<CProgramGuideTool*>(lvi.lParam);
-				ListView_DeleteItem(hwndList,lvi.iItem);
-				lvi.mask=LVIF_STATE | LVIF_TEXT | LVIF_IMAGE | LVIF_PARAM;
+				lvi.iSubItem = 0;
+				ListView_GetItem(hwndList, &lvi);
+				pTool = reinterpret_cast<CProgramGuideTool*>(lvi.lParam);
+				ListView_DeleteItem(hwndList, lvi.iItem);
+				lvi.mask = LVIF_STATE | LVIF_TEXT | LVIF_IMAGE | LVIF_PARAM;
 				lvi.iItem++;
-				lvi.state=LVIS_FOCUSED | LVIS_SELECTED;
-				lvi.stateMask=lvi.state;
-				lvi.pszText=const_cast<LPTSTR>(pTool->GetName());
-				ListView_InsertItem(hwndList,&lvi);
-				lvi.mask=LVIF_TEXT;
-				lvi.iSubItem=1;
-				lvi.pszText=const_cast<LPTSTR>(pTool->GetCommand());
-				ListView_SetItem(hwndList,&lvi);
-				ListView_EnsureVisible(hwndList,lvi.iItem,FALSE);
+				lvi.state = LVIS_FOCUSED | LVIS_SELECTED;
+				lvi.stateMask = lvi.state;
+				lvi.pszText = const_cast<LPTSTR>(pTool->GetName());
+				ListView_InsertItem(hwndList, &lvi);
+				lvi.mask = LVIF_TEXT;
+				lvi.iSubItem = 1;
+				lvi.pszText = const_cast<LPTSTR>(pTool->GetCommand());
+				ListView_SetItem(hwndList, &lvi);
+				ListView_EnsureVisible(hwndList, lvi.iItem, FALSE);
 			}
 			return TRUE;
 
 		case IDC_PROGRAMGUIDETOOL_REMOVE:
 			{
-				HWND hwndList=GetDlgItem(hDlg,IDC_PROGRAMGUIDETOOL_LIST);
+				HWND hwndList = GetDlgItem(hDlg, IDC_PROGRAMGUIDETOOL_LIST);
 				LV_ITEM lvi;
 
-				lvi.mask=LVIF_PARAM;
-				lvi.iItem=ListView_GetNextItem(hwndList,-1,LVNI_SELECTED);
-				lvi.iSubItem=0;
-				if (ListView_GetItem(hwndList,&lvi)) {
+				lvi.mask = LVIF_PARAM;
+				lvi.iItem = ListView_GetNextItem(hwndList, -1, LVNI_SELECTED);
+				lvi.iSubItem = 0;
+				if (ListView_GetItem(hwndList, &lvi)) {
 					CProgramGuideTool *pTool;
 
-					ListView_DeleteItem(hwndList,lvi.iItem);
-					pTool=reinterpret_cast<CProgramGuideTool*>(lvi.lParam);
+					ListView_DeleteItem(hwndList, lvi.iItem);
+					pTool = reinterpret_cast<CProgramGuideTool*>(lvi.lParam);
 					delete pTool;
 				}
 			}
@@ -868,7 +880,7 @@ INT_PTR CProgramGuideOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM l
 
 		case IDC_PROGRAMGUIDETOOL_REMOVEALL:
 			{
-				HWND hwndList=GetDlgItem(hDlg,IDC_PROGRAMGUIDETOOL_LIST);
+				HWND hwndList = GetDlgItem(hDlg, IDC_PROGRAMGUIDETOOL_LIST);
 
 				DeleteAllTools();
 				ListView_DeleteAllItems(hwndList);
@@ -886,11 +898,11 @@ INT_PTR CProgramGuideOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM l
 
 		case NM_RCLICK:
 			{
-				LPNMITEMACTIVATE pnmia=(LPNMITEMACTIVATE)lParam;
-				HWND hwndList=GetDlgItem(hDlg,IDC_PROGRAMGUIDETOOL_LIST);
+				LPNMITEMACTIVATE pnmia = (LPNMITEMACTIVATE)lParam;
+				HWND hwndList = GetDlgItem(hDlg, IDC_PROGRAMGUIDETOOL_LIST);
 
-				if (pnmia->hdr.hwndFrom==hwndList
-						&& ListView_GetNextItem(hwndList,-1,LVNI_SELECTED)>=0) {
+				if (pnmia->hdr.hwndFrom == hwndList
+						&& ListView_GetNextItem(hwndList, -1, LVNI_SELECTED) >= 0) {
 					static const int MenuIDs[] = {
 						IDC_PROGRAMGUIDETOOL_EDIT,
 						0,
@@ -900,7 +912,7 @@ INT_PTR CProgramGuideOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM l
 						IDC_PROGRAMGUIDETOOL_REMOVE
 					};
 
-					PopupMenuFromControls(hDlg,MenuIDs,lengthof(MenuIDs),TPM_RIGHTBUTTON);
+					PopupMenuFromControls(hDlg, MenuIDs, lengthof(MenuIDs), TPM_RIGHTBUTTON);
 				}
 			}
 			return TRUE;
@@ -908,103 +920,101 @@ INT_PTR CProgramGuideOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM l
 		case PSN_APPLY:
 			{
 				int Value;
-				bool fUpdate=false;
+				bool fUpdate = false;
 
-				m_fOnScreen=
-					DlgCheckBox_IsChecked(hDlg,IDC_PROGRAMGUIDEOPTIONS_ONSCREEN);
-				m_fScrollToCurChannel=
-					DlgCheckBox_IsChecked(hDlg,IDC_PROGRAMGUIDEOPTIONS_SCROLLTOCURCHANNEL);
-				Value=(int)DlgComboBox_GetCurSel(hDlg,IDC_PROGRAMGUIDEOPTIONS_BEGINHOUR)-1;
-				if (m_BeginHour!=Value) {
-					m_BeginHour=Value;
+				m_fOnScreen =
+					DlgCheckBox_IsChecked(hDlg, IDC_PROGRAMGUIDEOPTIONS_ONSCREEN);
+				m_fScrollToCurChannel =
+					DlgCheckBox_IsChecked(hDlg, IDC_PROGRAMGUIDEOPTIONS_SCROLLTOCURCHANNEL);
+				Value = (int)DlgComboBox_GetCurSel(hDlg, IDC_PROGRAMGUIDEOPTIONS_BEGINHOUR) - 1;
+				if (m_BeginHour != Value) {
+					m_BeginHour = Value;
 					m_pProgramGuide->SetBeginHour(Value);
-					fUpdate=true;
+					fUpdate = true;
 				}
-				Value=::GetDlgItemInt(hDlg,IDC_PROGRAMGUIDEOPTIONS_VIEWHOURS,NULL,TRUE);
-				Value=CLAMP(Value,(int)MIN_VIEW_HOURS,(int)MAX_VIEW_HOURS);
-				if (m_ViewHours!=Value) {
-					LibISDB::DateTime First,Last;
+				Value = ::GetDlgItemInt(hDlg, IDC_PROGRAMGUIDEOPTIONS_VIEWHOURS, NULL, TRUE);
+				Value = CLAMP(Value, (int)MIN_VIEW_HOURS, (int)MAX_VIEW_HOURS);
+				if (m_ViewHours != Value) {
+					LibISDB::DateTime First, Last;
 
-					m_ViewHours=Value;
-					m_pProgramGuide->GetTimeRange(&First,NULL);
-					Last=First;
+					m_ViewHours = Value;
+					m_pProgramGuide->GetTimeRange(&First, NULL);
+					Last = First;
 					Last.OffsetHours(m_ViewHours);
-					m_pProgramGuide->SetTimeRange(First,Last);
-					fUpdate=true;
+					m_pProgramGuide->SetTimeRange(First, Last);
+					fUpdate = true;
 				}
 				if (fUpdate)
 					m_pProgramGuide->UpdateProgramGuide();
-				Value=::GetDlgItemInt(hDlg,IDC_PROGRAMGUIDEOPTIONS_CHANNELWIDTH,NULL,TRUE);
-				m_ItemWidth=CLAMP(Value,
-					(int)CProgramGuide::MIN_ITEM_WIDTH,(int)CProgramGuide::MAX_ITEM_WIDTH);
-				Value=::GetDlgItemInt(hDlg,IDC_PROGRAMGUIDEOPTIONS_LINESPERHOUR,NULL,TRUE);
-				m_LinesPerHour=CLAMP(Value,
-					(int)CProgramGuide::MIN_LINES_PER_HOUR,(int)CProgramGuide::MAX_LINES_PER_HOUR);
-				m_pProgramGuide->SetUIOptions(m_LinesPerHour,m_ItemWidth);
+				Value = ::GetDlgItemInt(hDlg, IDC_PROGRAMGUIDEOPTIONS_CHANNELWIDTH, NULL, TRUE);
+				m_ItemWidth = CLAMP(Value, (int)CProgramGuide::MIN_ITEM_WIDTH, (int)CProgramGuide::MAX_ITEM_WIDTH);
+				Value = ::GetDlgItemInt(hDlg, IDC_PROGRAMGUIDEOPTIONS_LINESPERHOUR, NULL, TRUE);
+				m_LinesPerHour = CLAMP(Value, (int)CProgramGuide::MIN_LINES_PER_HOUR, (int)CProgramGuide::MAX_LINES_PER_HOUR);
+				m_pProgramGuide->SetUIOptions(m_LinesPerHour, m_ItemWidth);
 
-				if (m_Font!=m_CurSettingFont) {
-					m_Font=m_CurSettingFont;
+				if (m_Font != m_CurSettingFont) {
+					m_Font = m_CurSettingFont;
 					m_pProgramGuide->SetFont(m_Font);
 				}
 
 				if (Util::OS::IsWindowsVistaOrLater()) {
-					bool fUseDirectWrite=
-						DlgCheckBox_IsChecked(hDlg,IDC_PROGRAMGUIDEOPTIONS_USEDIRECTWRITE);
-					if (m_fUseDirectWrite!=fUseDirectWrite) {
-						m_fUseDirectWrite=fUseDirectWrite;
+					bool fUseDirectWrite =
+						DlgCheckBox_IsChecked(hDlg, IDC_PROGRAMGUIDEOPTIONS_USEDIRECTWRITE);
+					if (m_fUseDirectWrite != fUseDirectWrite) {
+						m_fUseDirectWrite = fUseDirectWrite;
 						m_pProgramGuide->SetTextDrawEngine(
-							m_fUseDirectWrite?
-								TVTest::CTextDrawClient::ENGINE_DIRECTWRITE:
-								TVTest::CTextDrawClient::ENGINE_GDI);
+							m_fUseDirectWrite ?
+							TVTest::CTextDrawClient::ENGINE_DIRECTWRITE :
+							TVTest::CTextDrawClient::ENGINE_GDI);
 					}
 				}
 
-				UINT VisibleEventIcons=0;
-				for (int i=0;i<=CEpgIcons::ICON_LAST;i++) {
-					if (DlgCheckBox_IsChecked(hDlg,IDC_PROGRAMGUIDEOPTIONS_ICON_FIRST+i))
-						VisibleEventIcons|=CEpgIcons::IconFlag(i);
+				UINT VisibleEventIcons = 0;
+				for (int i = 0; i <= CEpgIcons::ICON_LAST; i++) {
+					if (DlgCheckBox_IsChecked(hDlg, IDC_PROGRAMGUIDEOPTIONS_ICON_FIRST + i))
+						VisibleEventIcons |= CEpgIcons::IconFlag(i);
 				}
-				if (m_VisibleEventIcons!=VisibleEventIcons) {
-					m_VisibleEventIcons=VisibleEventIcons;
+				if (m_VisibleEventIcons != VisibleEventIcons) {
+					m_VisibleEventIcons = VisibleEventIcons;
 					m_pProgramGuide->SetVisibleEventIcons(VisibleEventIcons);
-					m_UpdateFlags|=UPDATE_EVENTICONS;
+					m_UpdateFlags |= UPDATE_EVENTICONS;
 				}
 
-				m_WheelScrollLines=::GetDlgItemInt(hDlg,IDC_PROGRAMGUIDEOPTIONS_WHEELSCROLLLINES,NULL,TRUE);
+				m_WheelScrollLines = ::GetDlgItemInt(hDlg, IDC_PROGRAMGUIDEOPTIONS_WHEELSCROLLLINES, NULL, TRUE);
 				m_pProgramGuide->SetWheelScrollLines(m_WheelScrollLines);
 
-				LRESULT Sel=DlgComboBox_GetCurSel(hDlg,IDC_PROGRAMGUIDEOPTIONS_PROGRAMLDOUBLECLICK);
-				if (Sel>=0) {
-					if (Sel==0) {
+				LRESULT Sel = DlgComboBox_GetCurSel(hDlg, IDC_PROGRAMGUIDEOPTIONS_PROGRAMLDOUBLECLICK);
+				if (Sel >= 0) {
+					if (Sel == 0) {
 						m_ProgramLDoubleClickCommand.clear();
-					} else if (Sel==1) {
-						m_ProgramLDoubleClickCommand=IEPG_ASSOCIATE_COMMAND;
+					} else if (Sel == 1) {
+						m_ProgramLDoubleClickCommand = IEPG_ASSOCIATE_COMMAND;
 					} else {
-						m_ProgramLDoubleClickCommand=
+						m_ProgramLDoubleClickCommand =
 							reinterpret_cast<LPCTSTR>(
-								DlgComboBox_GetItemData(hDlg,IDC_PROGRAMGUIDEOPTIONS_PROGRAMLDOUBLECLICK,Sel));
+								DlgComboBox_GetItemData(hDlg, IDC_PROGRAMGUIDEOPTIONS_PROGRAMLDOUBLECLICK, Sel));
 					}
 				}
 
-				CProgramGuideToolList *pToolList=m_pProgramGuide->GetToolList();
-				HWND hwndList=GetDlgItem(hDlg,IDC_PROGRAMGUIDETOOL_LIST);
-				int Items,i;
+				CProgramGuideToolList *pToolList = m_pProgramGuide->GetToolList();
+				HWND hwndList = GetDlgItem(hDlg, IDC_PROGRAMGUIDETOOL_LIST);
+				int Items, i;
 
 				pToolList->Clear();
-				Items=ListView_GetItemCount(hwndList);
-				if (Items>0) {
+				Items = ListView_GetItemCount(hwndList);
+				if (Items > 0) {
 					LV_ITEM lvi;
 
-					lvi.mask=LVIF_PARAM;
-					lvi.iSubItem=0;
-					for (i=0;i<Items;i++) {
-						lvi.iItem=i;
-						ListView_GetItem(hwndList,&lvi);
+					lvi.mask = LVIF_PARAM;
+					lvi.iSubItem = 0;
+					for (i = 0; i < Items; i++) {
+						lvi.iItem = i;
+						ListView_GetItem(hwndList, &lvi);
 						pToolList->Add(reinterpret_cast<CProgramGuideTool*>(lvi.lParam));
 					}
 				}
 
-				m_fChanged=true;
+				m_fChanged = true;
 			}
 			break;
 
@@ -1016,17 +1026,18 @@ INT_PTR CProgramGuideOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM l
 
 	case WM_DESTROY:
 		{
-			for (LRESULT i=DlgComboBox_GetCount(hDlg,IDC_PROGRAMGUIDEOPTIONS_PROGRAMLDOUBLECLICK)-1;i>1;i--) {
+			for (LRESULT i = DlgComboBox_GetCount(hDlg, IDC_PROGRAMGUIDEOPTIONS_PROGRAMLDOUBLECLICK) - 1; i > 1; i--) {
 				delete [] reinterpret_cast<LPTSTR>(
-					DlgComboBox_GetItemData(hDlg,IDC_PROGRAMGUIDEOPTIONS_PROGRAMLDOUBLECLICK,i));
+					DlgComboBox_GetItemData(hDlg, IDC_PROGRAMGUIDEOPTIONS_PROGRAMLDOUBLECLICK, i));
 			}
 
-			for (int i=0;i<=CEpgIcons::ICON_LAST;i++) {
-				HBITMAP hbm=reinterpret_cast<HBITMAP>(
-					::SendDlgItemMessage(hDlg,IDC_PROGRAMGUIDEOPTIONS_ICON_FIRST+i,
-										 BM_SETIMAGE,IMAGE_BITMAP,
-										 reinterpret_cast<LPARAM>((HBITMAP)NULL)));
-				if (hbm!=NULL)
+			for (int i = 0; i <= CEpgIcons::ICON_LAST; i++) {
+				HBITMAP hbm = reinterpret_cast<HBITMAP>(
+					::SendDlgItemMessage(
+						hDlg, IDC_PROGRAMGUIDEOPTIONS_ICON_FIRST + i,
+						BM_SETIMAGE, IMAGE_BITMAP,
+						reinterpret_cast<LPARAM>((HBITMAP)NULL)));
+				if (hbm != NULL)
 					::DeleteObject(hbm);
 			}
 
@@ -1048,36 +1059,36 @@ void CProgramGuideOptions::RealizeStyle()
 
 void CProgramGuideOptions::SetDlgItemState()
 {
-	HWND hwndList=::GetDlgItem(m_hDlg,IDC_PROGRAMGUIDETOOL_LIST);
-	int Items,Sel;
+	HWND hwndList = ::GetDlgItem(m_hDlg, IDC_PROGRAMGUIDETOOL_LIST);
+	int Items, Sel;
 
-	Items=ListView_GetItemCount(hwndList);
-	Sel=ListView_GetNextItem(hwndList,-1,LVNI_SELECTED);
-	EnableDlgItem(m_hDlg,IDC_PROGRAMGUIDETOOL_EDIT,Sel>=0);
-	EnableDlgItem(m_hDlg,IDC_PROGRAMGUIDETOOL_UP,Sel>0);
-	EnableDlgItem(m_hDlg,IDC_PROGRAMGUIDETOOL_DOWN,Sel>=0 && Sel+1<Items);
-	EnableDlgItem(m_hDlg,IDC_PROGRAMGUIDETOOL_REMOVE,Sel>=0);
-	EnableDlgItem(m_hDlg,IDC_PROGRAMGUIDETOOL_REMOVEALL,Items>0);
+	Items = ListView_GetItemCount(hwndList);
+	Sel = ListView_GetNextItem(hwndList, -1, LVNI_SELECTED);
+	EnableDlgItem(m_hDlg, IDC_PROGRAMGUIDETOOL_EDIT, Sel >= 0);
+	EnableDlgItem(m_hDlg, IDC_PROGRAMGUIDETOOL_UP, Sel > 0);
+	EnableDlgItem(m_hDlg, IDC_PROGRAMGUIDETOOL_DOWN, Sel >= 0 && Sel + 1 < Items);
+	EnableDlgItem(m_hDlg, IDC_PROGRAMGUIDETOOL_REMOVE, Sel >= 0);
+	EnableDlgItem(m_hDlg, IDC_PROGRAMGUIDETOOL_REMOVEALL, Items > 0);
 }
 
 
 void CProgramGuideOptions::DeleteAllTools()
 {
-	HWND hwndList=::GetDlgItem(m_hDlg,IDC_PROGRAMGUIDETOOL_LIST);
+	HWND hwndList = ::GetDlgItem(m_hDlg, IDC_PROGRAMGUIDETOOL_LIST);
 	int Items;
 
-	Items=ListView_GetItemCount(hwndList);
-	if (Items>0) {
+	Items = ListView_GetItemCount(hwndList);
+	if (Items > 0) {
 		LV_ITEM lvi;
 		int i;
 		CProgramGuideTool *pTool;
 
-		lvi.mask=LVIF_PARAM;
-		lvi.iSubItem=0;
-		for (i=Items-1;i>=0;i--) {
-			lvi.iItem=i;
-			ListView_GetItem(hwndList,&lvi);
-			pTool=reinterpret_cast<CProgramGuideTool*>(lvi.lParam);
+		lvi.mask = LVIF_PARAM;
+		lvi.iSubItem = 0;
+		for (i = Items - 1; i >= 0; i--) {
+			lvi.iItem = i;
+			ListView_GetItem(hwndList, &lvi);
+			pTool = reinterpret_cast<CProgramGuideTool*>(lvi.lParam);
 			delete pTool;
 		}
 	}

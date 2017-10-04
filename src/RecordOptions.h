@@ -6,7 +6,8 @@
 #include "Record.h"
 
 
-class CRecordOptions : public COptions
+class CRecordOptions
+	: public COptions
 {
 	TCHAR m_szSaveFolder[MAX_PATH];
 	TCHAR m_szFileName[MAX_PATH];
@@ -23,11 +24,11 @@ class CRecordOptions : public COptions
 	std::vector<TVTest::String> m_WritePluginList;
 
 // CBasicDialog
-	INT_PTR DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
+	INT_PTR DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
 
 public:
 	enum {
-		UPDATE_RECORDINGSETTINGS	=0x00000001UL,
+		UPDATE_RECORDINGSETTINGS	= 0x00000001UL,
 	};
 
 	CRecordOptions();
@@ -43,21 +44,22 @@ public:
 	bool SetSaveFolder(LPCTSTR pszFolder);
 	LPCTSTR GetSaveFolder() const { return m_szSaveFolder; }
 	LPCTSTR GetFileName() const { return m_szFileName; }
-	bool GetFilePath(LPTSTR pszFileName,int MaxLength) const;
-	bool GenerateFilePath(LPTSTR pszFileName,int MaxLength,LPCTSTR *ppszErrorMessage=NULL) const;
+	bool GetFilePath(LPTSTR pszFileName, int MaxLength) const;
+	bool GenerateFilePath(LPTSTR pszFileName, int MaxLength, LPCTSTR *ppszErrorMessage = NULL) const;
 	bool ConfirmChannelChange(HWND hwndOwner) const;
-	bool ConfirmServiceChange(HWND hwndOwner,const CRecordManager *pRecordManager) const;
+	bool ConfirmServiceChange(HWND hwndOwner, const CRecordManager *pRecordManager) const;
 	bool ConfirmStop(HWND hwndOwner) const;
 	bool ConfirmStatusBarStop(HWND hwndOwner) const;
-	bool ConfirmExit(HWND hwndOwner,const CRecordManager *pRecordManager) const;
+	bool ConfirmExit(HWND hwndOwner, const CRecordManager *pRecordManager) const;
 	const CRecordingSettings &GetRecordingSettings() const { return m_Settings; }
 	bool GetAlertLowFreeSpace() const { return m_fAlertLowFreeSpace; }
-	ULONGLONG GetLowFreeSpaceThresholdBytes() const {
-		return (ULONGLONG)m_LowFreeSpaceThreshold*(1024*1024);
+	ULONGLONG GetLowFreeSpaceThresholdBytes() const
+	{
+		return (ULONGLONG)m_LowFreeSpaceThreshold * (1024 * 1024);
 	}
 	bool IsTimeShiftRecordingEnabled() const { return m_Settings.m_fEnableTimeShift; }
 	bool EnableTimeShiftRecording(bool fEnable);
-	void SetShowRemainTime(bool fShow) { m_fShowRemainTime=fShow; }
+	void SetShowRemainTime(bool fShow) { m_fShowRemainTime = fShow; }
 	bool GetShowRemainTime() const { return m_fShowRemainTime; }
 	int GetStatusBarRecordCommand() const { return m_StatusBarRecordCommand; }
 };

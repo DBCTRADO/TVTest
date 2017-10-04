@@ -8,13 +8,15 @@
 #include "NFile.h"
 
 
-class CNCachedFile : public CNFile
+class CNCachedFile
+	: public CNFile
 {
 public:
 	CNCachedFile();
 	virtual ~CNCachedFile();
 
 	enum { DEFBUFFSIZE = 0x00200000UL };
+
 	const bool Open(LPCTSTR lpszName, const UINT Flags);
 	const bool Open(LPCTSTR lpszName, const UINT Flags, const DWORD dwBuffSize);
 	const bool Close(void);

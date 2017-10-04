@@ -24,22 +24,22 @@ CContainer::~CContainer()
 
 void CContainer::SetPosition(const RECT &Pos)
 {
-	m_Position=Pos;
+	m_Position = Pos;
 }
 
 
 void CContainer::GetMinSize(SIZE *pSize) const
 {
-	pSize->cx=0;
-	pSize->cy=0;
+	pSize->cx = 0;
+	pSize->cy = 0;
 }
 
 
 void CContainer::SetVisible(bool fVisible)
 {
-	if (m_fVisible!=fVisible) {
-		m_fVisible=fVisible;
-		if (m_pBase!=NULL)
+	if (m_fVisible != fVisible) {
+		m_fVisible = fVisible;
+		if (m_pBase != NULL)
 			m_pBase->Adjust();
 	}
 }
@@ -77,21 +77,21 @@ CWindowContainer::~CWindowContainer()
 void CWindowContainer::SetPosition(const RECT &Pos)
 {
 	CContainer::SetPosition(Pos);
-	if (m_pWindow!=NULL)
+	if (m_pWindow != NULL)
 		m_pWindow->SetPosition(&Pos);
 }
 
 
 void CWindowContainer::GetMinSize(SIZE *pSize) const
 {
-	pSize->cx=m_MinWidth;
-	pSize->cy=m_MinHeight;
+	pSize->cx = m_MinWidth;
+	pSize->cy = m_MinHeight;
 }
 
 
 void CWindowContainer::SetVisible(bool fVisible)
 {
-	if (m_pWindow!=NULL) {
+	if (m_pWindow != NULL) {
 		if (!fVisible)
 			m_pWindow->SetVisible(false);
 		CContainer::SetVisible(fVisible);
@@ -103,24 +103,24 @@ void CWindowContainer::SetVisible(bool fVisible)
 }
 
 
-void CWindowContainer::SetWindow(CBasicWindow *pWindow,TVTest::CUIBase *pUIBase)
+void CWindowContainer::SetWindow(CBasicWindow *pWindow, TVTest::CUIBase *pUIBase)
 {
-	if (m_pUIBase!=NULL)
+	if (m_pUIBase != NULL)
 		RemoveUIChild(m_pUIBase);
-	m_pWindow=pWindow;
-	m_pUIBase=pUIBase;
-	if (pUIBase!=NULL)
+	m_pWindow = pWindow;
+	m_pUIBase = pUIBase;
+	if (pUIBase != NULL)
 		RegisterUIChild(pUIBase);
-	if (pWindow!=NULL && m_pBase!=NULL
-			&& pWindow->GetParent()!=m_pBase->GetHandle())
+	if (pWindow != NULL && m_pBase != NULL
+			&& pWindow->GetParent() != m_pBase->GetHandle())
 		pWindow->SetParent(m_pBase);
 }
 
 
-bool CWindowContainer::SetMinSize(int Width,int Height)
+bool CWindowContainer::SetMinSize(int Width, int Height)
 {
-	m_MinWidth=max(Width,0);
-	m_MinHeight=max(Height,0);
+	m_MinWidth = max(Width, 0);
+	m_MinHeight = max(Height, 0);
 	return true;
 }
 
@@ -139,29 +139,29 @@ CSplitter::CSplitter(int ID)
 
 CSplitter::~CSplitter()
 {
-	for (int i=0;i<2;i++)
+	for (int i = 0; i < 2; i++)
 		delete m_PaneList[i].pContainer;
 }
 
 
 void CSplitter::SetPosition(const RECT &Pos)
 {
-	if (m_PaneList[0].pContainer!=NULL && m_PaneList[0].pContainer->GetVisible()
-			&& m_PaneList[1].pContainer!=NULL
-			&& m_AdjustPane==m_PaneList[0].pContainer->GetID()) {
-		if ((m_Style&STYLE_FIXED)==0 || m_PaneList[1].FixedSize<0) {
-			if ((m_Style&STYLE_VERT)==0)
-				m_BarPos+=(Pos.right-Pos.left)-(m_Position.right-m_Position.left);
+	if (m_PaneList[0].pContainer != NULL && m_PaneList[0].pContainer->GetVisible()
+			&& m_PaneList[1].pContainer != NULL
+			&& m_AdjustPane == m_PaneList[0].pContainer->GetID()) {
+		if ((m_Style & STYLE_FIXED) == 0 || m_PaneList[1].FixedSize < 0) {
+			if ((m_Style & STYLE_VERT) == 0)
+				m_BarPos += (Pos.right - Pos.left) - (m_Position.right - m_Position.left);
 			else
-				m_BarPos+=(Pos.bottom-Pos.top)-(m_Position.bottom-m_Position.top);
+				m_BarPos += (Pos.bottom - Pos.top) - (m_Position.bottom - m_Position.top);
 		} else {
-			if ((m_Style&STYLE_VERT)==0)
-				m_BarPos=(Pos.right-Pos.left)-m_PaneList[1].FixedSize;
+			if ((m_Style & STYLE_VERT) == 0)
+				m_BarPos = (Pos.right - Pos.left) - m_PaneList[1].FixedSize;
 			else
-				m_BarPos=(Pos.bottom-Pos.top)-m_PaneList[1].FixedSize;
+				m_BarPos = (Pos.bottom - Pos.top) - m_PaneList[1].FixedSize;
 		}
-		if (m_BarPos<0)
-			m_BarPos=0;
+		if (m_BarPos < 0)
+			m_BarPos = 0;
 	}
 	CContainer::SetPosition(Pos);
 	Adjust();
@@ -170,31 +170,31 @@ void CSplitter::SetPosition(const RECT &Pos)
 
 void CSplitter::GetMinSize(SIZE *pSize) const
 {
-	if (m_PaneList[0].pContainer!=NULL && m_PaneList[0].pContainer->GetVisible()) {
+	if (m_PaneList[0].pContainer != NULL && m_PaneList[0].pContainer->GetVisible()) {
 		m_PaneList[0].pContainer->GetMinSize(pSize);
-		if (m_PaneList[1].pContainer!=NULL && m_PaneList[1].pContainer->GetVisible()) {
+		if (m_PaneList[1].pContainer != NULL && m_PaneList[1].pContainer->GetVisible()) {
 			SIZE sz;
 
 			m_PaneList[1].pContainer->GetMinSize(&sz);
-			if ((m_Style&STYLE_VERT)==0) {
-				pSize->cx+=sz.cx;
-				if (pSize->cy<sz.cy)
-					pSize->cy=sz.cy;
-				if ((m_Style&STYLE_FIXED)==0)
-					pSize->cx+=m_BarWidth;
+			if ((m_Style & STYLE_VERT) == 0) {
+				pSize->cx += sz.cx;
+				if (pSize->cy < sz.cy)
+					pSize->cy = sz.cy;
+				if ((m_Style & STYLE_FIXED) == 0)
+					pSize->cx += m_BarWidth;
 			} else {
-				pSize->cy+=sz.cy;
-				if (pSize->cx<sz.cx)
-					pSize->cx=sz.cx;
-				if ((m_Style&STYLE_FIXED)==0)
-					pSize->cy+=m_BarWidth;
+				pSize->cy += sz.cy;
+				if (pSize->cx < sz.cx)
+					pSize->cx = sz.cx;
+				if ((m_Style & STYLE_FIXED) == 0)
+					pSize->cy += m_BarWidth;
 			}
 		}
-	} else if (m_PaneList[1].pContainer!=NULL && m_PaneList[1].pContainer->GetVisible()) {
+	} else if (m_PaneList[1].pContainer != NULL && m_PaneList[1].pContainer->GetVisible()) {
 		m_PaneList[1].pContainer->GetMinSize(pSize);
 	} else {
-		pSize->cx=0;
-		pSize->cy=0;
+		pSize->cx = 0;
+		pSize->cy = 0;
 	}
 	return;
 }
@@ -202,10 +202,10 @@ void CSplitter::GetMinSize(SIZE *pSize) const
 
 int CSplitter::NumChildContainers() const
 {
-	int NumChildren=0;
+	int NumChildren = 0;
 
-	for (int i=0;i<2;i++) {
-		if (m_PaneList[i].pContainer!=NULL)
+	for (int i = 0; i < 2; i++) {
+		if (m_PaneList[i].pContainer != NULL)
 			NumChildren++;
 	}
 	return NumChildren;
@@ -214,11 +214,11 @@ int CSplitter::NumChildContainers() const
 
 CContainer *CSplitter::GetChildContainer(int Index) const
 {
-	int j=0;
+	int j = 0;
 
-	for (int i=0;i<2;i++) {
-		if (m_PaneList[i].pContainer!=NULL) {
-			if (Index==j)
+	for (int i = 0; i < 2; i++) {
+		if (m_PaneList[i].pContainer != NULL) {
+			if (Index == j)
 				return m_PaneList[i].pContainer;
 			j++;
 		}
@@ -227,88 +227,88 @@ CContainer *CSplitter::GetChildContainer(int Index) const
 }
 
 
-void CSplitter::OnLButtonDown(int x,int y)
+void CSplitter::OnLButtonDown(int x, int y)
 {
-	POINT pt={x,y};
+	POINT pt = {x, y};
 	RECT rc;
 
-	if ((m_Style&STYLE_FIXED)==0
-			&& m_PaneList[0].pContainer!=NULL && m_PaneList[0].pContainer->GetVisible()
-			&& m_PaneList[1].pContainer!=NULL && m_PaneList[1].pContainer->GetVisible()
-			&& GetBarRect(&rc) && ::PtInRect(&rc,pt))
+	if ((m_Style & STYLE_FIXED) == 0
+			&& m_PaneList[0].pContainer != NULL && m_PaneList[0].pContainer->GetVisible()
+			&& m_PaneList[1].pContainer != NULL && m_PaneList[1].pContainer->GetVisible()
+			&& GetBarRect(&rc) && ::PtInRect(&rc, pt))
 		::SetCapture(m_pBase->GetHandle());
 }
 
 
-void CSplitter::OnLButtonUp(int x,int y)
+void CSplitter::OnLButtonUp(int x, int y)
 {
-	if (::GetCapture()==m_pBase->GetHandle())
+	if (::GetCapture() == m_pBase->GetHandle())
 		::ReleaseCapture();
 }
 
 
-void CSplitter::OnMouseMove(int x,int y)
+void CSplitter::OnMouseMove(int x, int y)
 {
-	POINT pt={x,y};
+	POINT pt = {x, y};
 	RECT rc;
 	LPCTSTR pszCursor;
 
-	if (::GetCapture()==m_pBase->GetHandle()) {
-		SIZE MinSize1,MinSize2;
+	if (::GetCapture() == m_pBase->GetHandle()) {
+		SIZE MinSize1, MinSize2;
 		int BarPos;
 
 		m_PaneList[0].pContainer->GetMinSize(&MinSize1);
 		m_PaneList[1].pContainer->GetMinSize(&MinSize2);
-		if ((m_Style&STYLE_VERT)==0) {
-			BarPos=x-m_Position.left;
-			if ((m_Position.right-m_Position.left)-BarPos-m_BarWidth<MinSize2.cx)
-				BarPos=(m_Position.right-m_Position.left)-m_BarWidth-MinSize2.cx;
-			if (BarPos<MinSize1.cx)
-				BarPos=MinSize1.cx;
+		if ((m_Style & STYLE_VERT) == 0) {
+			BarPos = x - m_Position.left;
+			if ((m_Position.right - m_Position.left) - BarPos - m_BarWidth < MinSize2.cx)
+				BarPos = (m_Position.right - m_Position.left) - m_BarWidth - MinSize2.cx;
+			if (BarPos < MinSize1.cx)
+				BarPos = MinSize1.cx;
 		} else {
-			BarPos=y-m_Position.top;
-			if ((m_Position.bottom-m_Position.top)-BarPos-m_BarWidth<MinSize2.cy)
-				BarPos=(m_Position.bottom-m_Position.top)-m_BarWidth-MinSize2.cy;
-			if (BarPos<MinSize1.cy)
-				BarPos=MinSize1.cy;
+			BarPos = y - m_Position.top;
+			if ((m_Position.bottom - m_Position.top) - BarPos - m_BarWidth < MinSize2.cy)
+				BarPos = (m_Position.bottom - m_Position.top) - m_BarWidth - MinSize2.cy;
+			if (BarPos < MinSize1.cy)
+				BarPos = MinSize1.cy;
 		}
-		if (m_BarPos!=BarPos) {
-			m_BarPos=BarPos;
+		if (m_BarPos != BarPos) {
+			m_BarPos = BarPos;
 			Adjust();
 		}
-		pszCursor=(m_Style&STYLE_VERT)!=0?IDC_SIZENS:IDC_SIZEWE;
+		pszCursor = (m_Style & STYLE_VERT) != 0 ? IDC_SIZENS : IDC_SIZEWE;
 	} else {
-		if ((m_Style&STYLE_FIXED)==0
-				&& m_PaneList[0].pContainer!=NULL && m_PaneList[0].pContainer->GetVisible()
-				&& m_PaneList[1].pContainer!=NULL && m_PaneList[1].pContainer->GetVisible()
-				&& GetBarRect(&rc) && ::PtInRect(&rc,pt))
-			pszCursor=(m_Style&STYLE_VERT)!=0?IDC_SIZENS:IDC_SIZEWE;
+		if ((m_Style & STYLE_FIXED) == 0
+				&& m_PaneList[0].pContainer != NULL && m_PaneList[0].pContainer->GetVisible()
+				&& m_PaneList[1].pContainer != NULL && m_PaneList[1].pContainer->GetVisible()
+				&& GetBarRect(&rc) && ::PtInRect(&rc, pt))
+			pszCursor = (m_Style & STYLE_VERT) != 0 ? IDC_SIZENS : IDC_SIZEWE;
 		else
-			pszCursor=IDC_ARROW;
+			pszCursor = IDC_ARROW;
 	}
-	::SetCursor(::LoadCursor(NULL,pszCursor));
+	::SetCursor(::LoadCursor(NULL, pszCursor));
 }
 
 
-bool CSplitter::SetPane(int Index,CContainer *pContainer)
+bool CSplitter::SetPane(int Index, CContainer *pContainer)
 {
-	if (Index<0 || Index>1)
+	if (Index < 0 || Index > 1)
 		return false;
-	CContainer *pOldContainer=m_PaneList[Index].pContainer;
-	ReplacePane(Index,pContainer);
+	CContainer *pOldContainer = m_PaneList[Index].pContainer;
+	ReplacePane(Index, pContainer);
 	delete pOldContainer;
 	return true;
 }
 
 
-bool CSplitter::ReplacePane(int Index,CContainer *pContainer)
+bool CSplitter::ReplacePane(int Index, CContainer *pContainer)
 {
-	if (Index<0 || Index>1)
+	if (Index < 0 || Index > 1)
 		return false;
-	if (m_PaneList[Index].pContainer!=NULL)
+	if (m_PaneList[Index].pContainer != NULL)
 		RemoveUIChild(m_PaneList[Index].pContainer);
-	m_PaneList[Index].pContainer=pContainer;
-	if (pContainer!=NULL)
+	m_PaneList[Index].pContainer = pContainer;
+	if (pContainer != NULL)
 		RegisterUIChild(pContainer);
 	return true;
 }
@@ -316,7 +316,7 @@ bool CSplitter::ReplacePane(int Index,CContainer *pContainer)
 
 CContainer *CSplitter::GetPane(int Index) const
 {
-	if (Index<0 || Index>1)
+	if (Index < 0 || Index > 1)
 		return false;
 	return m_PaneList[Index].pContainer;
 }
@@ -324,9 +324,9 @@ CContainer *CSplitter::GetPane(int Index) const
 
 CContainer *CSplitter::GetPaneByID(int ID) const
 {
-	int Index=IDToIndex(ID);
+	int Index = IDToIndex(ID);
 
-	if (Index<0)
+	if (Index < 0)
 		return NULL;
 	return m_PaneList[Index].pContainer;
 }
@@ -336,47 +336,47 @@ void CSplitter::SwapPane()
 {
 	PaneInfo Temp;
 
-	Temp=m_PaneList[0];
-	m_PaneList[0]=m_PaneList[1];
-	m_PaneList[1]=Temp;
-	if ((m_Style&STYLE_VERT)==0)
-		m_BarPos=(m_Position.right-m_Position.left)-(m_BarPos+m_BarWidth);
+	Temp = m_PaneList[0];
+	m_PaneList[0] = m_PaneList[1];
+	m_PaneList[1] = Temp;
+	if ((m_Style & STYLE_VERT) == 0)
+		m_BarPos = (m_Position.right - m_Position.left) - (m_BarPos + m_BarWidth);
 	else
-		m_BarPos=(m_Position.bottom-m_Position.top)-(m_BarPos+m_BarWidth);
-	if (m_BarPos<0)
-		m_BarPos=0;
+		m_BarPos = (m_Position.bottom - m_Position.top) - (m_BarPos + m_BarWidth);
+	if (m_BarPos < 0)
+		m_BarPos = 0;
 	Adjust();
 }
 
 
-bool CSplitter::SetPaneSize(int ID,int Size)
+bool CSplitter::SetPaneSize(int ID, int Size)
 {
-	int Index=IDToIndex(ID);
+	int Index = IDToIndex(ID);
 
-	if (Index<0)
+	if (Index < 0)
 		return false;
-	if ((m_Style&STYLE_VERT)==0) {
-		if (Index==0) {
-			m_BarPos=Size;
+	if ((m_Style & STYLE_VERT) == 0) {
+		if (Index == 0) {
+			m_BarPos = Size;
 		} else {
-			m_BarPos=(m_Position.right-m_Position.left)-Size;
-			if ((m_Style&STYLE_FIXED)==0)
-				m_BarPos-=m_BarWidth;
-			if (m_BarPos<0)
-				m_BarPos=0;
+			m_BarPos = (m_Position.right - m_Position.left) - Size;
+			if ((m_Style & STYLE_FIXED) == 0)
+				m_BarPos -= m_BarWidth;
+			if (m_BarPos < 0)
+				m_BarPos = 0;
 		}
 	} else {
-		if (Index==0) {
-			m_BarPos=Size;
+		if (Index == 0) {
+			m_BarPos = Size;
 		} else {
-			m_BarPos=(m_Position.bottom-m_Position.top)-Size;
-			if ((m_Style&STYLE_FIXED)==0)
-				m_BarPos-=m_BarWidth;
-			if (m_BarPos<0)
-				m_BarPos=0;
+			m_BarPos = (m_Position.bottom - m_Position.top) - Size;
+			if ((m_Style & STYLE_FIXED) == 0)
+				m_BarPos -= m_BarWidth;
+			if (m_BarPos < 0)
+				m_BarPos = 0;
 		}
 	}
-	m_PaneList[Index].FixedSize=Size;
+	m_PaneList[Index].FixedSize = Size;
 	Adjust();
 	return true;
 }
@@ -384,47 +384,47 @@ bool CSplitter::SetPaneSize(int ID,int Size)
 
 int CSplitter::GetPaneSize(int ID)
 {
-	int Index=IDToIndex(ID);
+	int Index = IDToIndex(ID);
 
-	if (Index<0)
+	if (Index < 0)
 		return false;
-	if (Index==0)
+	if (Index == 0)
 		return m_BarPos;
 	int Size;
-	if ((m_Style&STYLE_VERT)==0)
-		Size=m_Position.right-m_Position.left;
+	if ((m_Style & STYLE_VERT) == 0)
+		Size = m_Position.right - m_Position.left;
 	else
-		Size=m_Position.bottom-m_Position.top;
-	Size-=m_BarPos+m_BarWidth;
-	return max(Size,0);
+		Size = m_Position.bottom - m_Position.top;
+	Size -= m_BarPos + m_BarWidth;
+	return max(Size, 0);
 }
 
 
 int CSplitter::IDToIndex(int ID) const
 {
-	for (int i=0;i<2;i++) {
-		if (m_PaneList[i].pContainer!=NULL && m_PaneList[i].pContainer->GetID()==ID)
+	for (int i = 0; i < 2; i++) {
+		if (m_PaneList[i].pContainer != NULL && m_PaneList[i].pContainer->GetID() == ID)
 			return i;
 	}
 	return -1;
 }
 
 
-bool CSplitter::SetStyle(unsigned int Style,bool fAdjust)
+bool CSplitter::SetStyle(unsigned int Style, bool fAdjust)
 {
-	if (m_Style!=Style) {
-		if ((m_Style&STYLE_VERT)!=(Style&STYLE_VERT)) {
-			if ((Style&STYLE_FIXED)!=0
-					&& m_PaneList[1].pContainer!=NULL
-					&& m_PaneList[1].FixedSize>=0) {
-				if ((Style&STYLE_VERT)!=0) {
-					m_BarPos=(m_Position.bottom-m_Position.top)-m_PaneList[1].FixedSize;
+	if (m_Style != Style) {
+		if ((m_Style & STYLE_VERT) != (Style & STYLE_VERT)) {
+			if ((Style & STYLE_FIXED) != 0
+					&& m_PaneList[1].pContainer != NULL
+					&& m_PaneList[1].FixedSize >= 0) {
+				if ((Style & STYLE_VERT) != 0) {
+					m_BarPos = (m_Position.bottom - m_Position.top) - m_PaneList[1].FixedSize;
 				} else {
-					m_BarPos=(m_Position.right-m_Position.left)-m_PaneList[1].FixedSize;
+					m_BarPos = (m_Position.right - m_Position.left) - m_PaneList[1].FixedSize;
 				}
 			}
 		}
-		m_Style=Style;
+		m_Style = Style;
 		if (fAdjust)
 			Adjust();
 	}
@@ -434,52 +434,52 @@ bool CSplitter::SetStyle(unsigned int Style,bool fAdjust)
 
 bool CSplitter::SetAdjustPane(int ID)
 {
-	m_AdjustPane=ID;
+	m_AdjustPane = ID;
 	return true;
 }
 
 
 bool CSplitter::SetBarPos(int Pos)
 {
-	m_BarPos=Pos;
+	m_BarPos = Pos;
 	return true;
 }
 
 
 void CSplitter::Adjust()
 {
-	if (m_pBase==NULL || m_pBase->IsLayoutLocked())
+	if (m_pBase == NULL || m_pBase->IsLayoutLocked())
 		return;
 
-	if (m_PaneList[0].pContainer==NULL || !m_PaneList[0].pContainer->GetVisible()
-			|| m_PaneList[1].pContainer==NULL || !m_PaneList[1].pContainer->GetVisible()) {
-		if (m_PaneList[0].pContainer!=NULL && m_PaneList[0].pContainer->GetVisible())
+	if (m_PaneList[0].pContainer == NULL || !m_PaneList[0].pContainer->GetVisible()
+			|| m_PaneList[1].pContainer == NULL || !m_PaneList[1].pContainer->GetVisible()) {
+		if (m_PaneList[0].pContainer != NULL && m_PaneList[0].pContainer->GetVisible())
 			m_PaneList[0].pContainer->SetPosition(m_Position);
-		else if (m_PaneList[1].pContainer!=NULL && m_PaneList[1].pContainer->GetVisible())
+		else if (m_PaneList[1].pContainer != NULL && m_PaneList[1].pContainer->GetVisible())
 			m_PaneList[1].pContainer->SetPosition(m_Position);
 	} else {
-		RECT rcBar,rc;
+		RECT rcBar, rc;
 		SIZE MinSize;
 
 		GetBarRect(&rcBar);
 		m_PaneList[1].pContainer->GetMinSize(&MinSize);
-		if ((m_Style&STYLE_VERT)==0) {
-			rc=m_Position;
-			rc.right=rcBar.left;
+		if ((m_Style & STYLE_VERT) == 0) {
+			rc = m_Position;
+			rc.right = rcBar.left;
 			m_PaneList[0].pContainer->SetPosition(rc);
-			rc.left=rcBar.right;
-			rc.right=m_Position.right;
-			if (rc.right-rc.left<MinSize.cx)
-				rc.right=rc.left+MinSize.cx;
+			rc.left = rcBar.right;
+			rc.right = m_Position.right;
+			if (rc.right - rc.left < MinSize.cx)
+				rc.right = rc.left + MinSize.cx;
 			m_PaneList[1].pContainer->SetPosition(rc);
 		} else {
-			rc=m_Position;
-			rc.bottom=rcBar.top;
+			rc = m_Position;
+			rc.bottom = rcBar.top;
 			m_PaneList[0].pContainer->SetPosition(rc);
-			rc.top=rcBar.bottom;
-			rc.bottom=m_Position.bottom;
-			if (rc.bottom-rc.top<MinSize.cy)
-				rc.bottom=rc.top+MinSize.cy;
+			rc.top = rcBar.bottom;
+			rc.bottom = m_Position.bottom;
+			if (rc.bottom - rc.top < MinSize.cy)
+				rc.bottom = rc.top + MinSize.cy;
 			m_PaneList[1].pContainer->SetPosition(rc);
 		}
 	}
@@ -488,69 +488,69 @@ void CSplitter::Adjust()
 
 bool CSplitter::GetBarRect(RECT *pRect) const
 {
-	if (m_PaneList[0].pContainer==NULL || !m_PaneList[0].pContainer->GetVisible()
-			|| m_PaneList[1].pContainer==NULL || !m_PaneList[1].pContainer->GetVisible())
+	if (m_PaneList[0].pContainer == NULL || !m_PaneList[0].pContainer->GetVisible()
+			|| m_PaneList[1].pContainer == NULL || !m_PaneList[1].pContainer->GetVisible())
 		return false;
 
 	int BarPos;
-	SIZE MinSize1,MinSize2;
+	SIZE MinSize1, MinSize2;
 	RECT rc;
 
-	BarPos=m_BarPos;
+	BarPos = m_BarPos;
 	m_PaneList[0].pContainer->GetMinSize(&MinSize1);
 	m_PaneList[1].pContainer->GetMinSize(&MinSize2);
-	rc=m_Position;
-	if ((m_Style&STYLE_VERT)==0) {
+	rc = m_Position;
+	if ((m_Style & STYLE_VERT) == 0) {
 		int Width;
 
-		if ((m_Style&STYLE_FIXED)==0 || m_PaneList[1].FixedSize<0) {
-			Width=(m_Position.right-m_Position.left)-BarPos;
-			if ((m_Style&STYLE_FIXED)==0)
-				Width-=m_BarWidth;
-			if (Width<MinSize2.cx)
-				Width=MinSize2.cx;
+		if ((m_Style & STYLE_FIXED) == 0 || m_PaneList[1].FixedSize < 0) {
+			Width = (m_Position.right - m_Position.left) - BarPos;
+			if ((m_Style & STYLE_FIXED) == 0)
+				Width -= m_BarWidth;
+			if (Width < MinSize2.cx)
+				Width = MinSize2.cx;
 		} else {
-			Width=m_PaneList[1].FixedSize;
+			Width = m_PaneList[1].FixedSize;
 		}
-		BarPos=(m_Position.right-m_Position.left)-Width;
-		if ((m_Style&STYLE_FIXED)==0)
-			BarPos-=m_BarWidth;
-		if (BarPos<MinSize1.cx)
-			BarPos=MinSize1.cx;
-		rc.left=m_Position.left+BarPos;
-		rc.right=rc.left;
-		if ((m_Style&STYLE_FIXED)==0)
-			rc.right+=m_BarWidth;
+		BarPos = (m_Position.right - m_Position.left) - Width;
+		if ((m_Style & STYLE_FIXED) == 0)
+			BarPos -= m_BarWidth;
+		if (BarPos < MinSize1.cx)
+			BarPos = MinSize1.cx;
+		rc.left = m_Position.left + BarPos;
+		rc.right = rc.left;
+		if ((m_Style & STYLE_FIXED) == 0)
+			rc.right += m_BarWidth;
 	} else {
 		int Height;
 
-		if ((m_Style&STYLE_FIXED)==0 || m_PaneList[1].FixedSize<0) {
-			Height=(m_Position.bottom-m_Position.top)-BarPos;
-			if ((m_Style&STYLE_FIXED)==0)
-				Height-=m_BarWidth;
-			if (Height<MinSize2.cy)
-				Height=MinSize2.cy;
+		if ((m_Style & STYLE_FIXED) == 0 || m_PaneList[1].FixedSize < 0) {
+			Height = (m_Position.bottom - m_Position.top) - BarPos;
+			if ((m_Style & STYLE_FIXED) == 0)
+				Height -= m_BarWidth;
+			if (Height < MinSize2.cy)
+				Height = MinSize2.cy;
 		} else {
-			Height=m_PaneList[1].FixedSize;
+			Height = m_PaneList[1].FixedSize;
 		}
-		BarPos=(m_Position.bottom-m_Position.top)-Height;
-		if ((m_Style&STYLE_FIXED)==0)
-			BarPos-=m_BarWidth;
-		if (BarPos<MinSize1.cy)
-			BarPos=MinSize1.cy;
-		rc.top=m_Position.top+BarPos;
-		rc.bottom=rc.top;
-		if ((m_Style&STYLE_FIXED)==0)
-			rc.bottom+=m_BarWidth;
+		BarPos = (m_Position.bottom - m_Position.top) - Height;
+		if ((m_Style & STYLE_FIXED) == 0)
+			BarPos -= m_BarWidth;
+		if (BarPos < MinSize1.cy)
+			BarPos = MinSize1.cy;
+		rc.top = m_Position.top + BarPos;
+		rc.bottom = rc.top;
+		if ((m_Style & STYLE_FIXED) == 0)
+			rc.bottom += m_BarWidth;
 	}
-	*pRect=rc;
+	*pRect = rc;
 	return true;
 }
 
 
 void CSplitter::ApplyStyle()
 {
-	m_BarWidth=m_pStyleScaling->LogicalPixelsToPhysicalPixels(4);
+	m_BarWidth = m_pStyleScaling->LogicalPixelsToPhysicalPixels(4);
 }
 
 
@@ -563,29 +563,29 @@ void CSplitter::RealizeStyle()
 
 
 // 過去のバージョンとの互換のために Splitter にしておく
-//const LPCTSTR CLayoutBase::m_pszWindowClass=APP_NAME TEXT(" Layout Base");
-const LPCTSTR CLayoutBase::m_pszWindowClass=APP_NAME TEXT(" Splitter");
-HINSTANCE CLayoutBase::m_hinst=NULL;
+//const LPCTSTR CLayoutBase::m_pszWindowClass = APP_NAME TEXT(" Layout Base");
+const LPCTSTR CLayoutBase::m_pszWindowClass = APP_NAME TEXT(" Splitter");
+HINSTANCE CLayoutBase::m_hinst = NULL;
 
 
 bool CLayoutBase::Initialize(HINSTANCE hinst)
 {
-	if (m_hinst==NULL) {
+	if (m_hinst == NULL) {
 		WNDCLASS wc;
 
-		wc.style=0;
-		wc.lpfnWndProc=WndProc;
-		wc.cbClsExtra=0;
-		wc.cbWndExtra=0;
-		wc.hInstance=hinst;
-		wc.hIcon=NULL;
-		wc.hCursor=NULL;
-		wc.hbrBackground=NULL;
-		wc.lpszMenuName=NULL;
-		wc.lpszClassName=m_pszWindowClass;
-		if (RegisterClass(&wc)==0)
+		wc.style = 0;
+		wc.lpfnWndProc = WndProc;
+		wc.cbClsExtra = 0;
+		wc.cbWndExtra = 0;
+		wc.hInstance = hinst;
+		wc.hIcon = NULL;
+		wc.hCursor = NULL;
+		wc.hbrBackground = NULL;
+		wc.lpszMenuName = NULL;
+		wc.lpszClassName = m_pszWindowClass;
+		if (RegisterClass(&wc) == 0)
 			return false;
-		m_hinst=hinst;
+		m_hinst = hinst;
 	}
 	return true;
 }
@@ -603,25 +603,26 @@ CLayoutBase::CLayoutBase()
 
 CLayoutBase::~CLayoutBase()
 {
-	if (m_pEventHandler!=NULL)
-		m_pEventHandler->m_pBase=NULL;
+	if (m_pEventHandler != NULL)
+		m_pEventHandler->m_pBase = NULL;
 	delete m_pContainer;
 }
 
 
-bool CLayoutBase::Create(HWND hwndParent,DWORD Style,DWORD ExStyle,int ID)
+bool CLayoutBase::Create(HWND hwndParent, DWORD Style, DWORD ExStyle, int ID)
 {
-	return CreateBasicWindow(hwndParent,Style,ExStyle,ID,
-							 m_pszWindowClass,NULL,m_hinst);
+	return CreateBasicWindow(
+		hwndParent, Style, ExStyle, ID,
+		m_pszWindowClass, NULL, m_hinst);
 }
 
 
-LRESULT CLayoutBase::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
+LRESULT CLayoutBase::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	switch (uMsg) {
 	case WM_CREATE:
 		{
-			m_pFocusContainer=NULL;
+			m_pFocusContainer = NULL;
 		}
 		return 0;
 
@@ -629,11 +630,11 @@ LRESULT CLayoutBase::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 		{
 			RECT rc;
 
-			rc.left=0;
-			rc.top=0;
-			rc.right=LOWORD(lParam);
-			rc.bottom=HIWORD(lParam);
-			if (m_pContainer!=NULL)
+			rc.left = 0;
+			rc.top = 0;
+			rc.right = LOWORD(lParam);
+			rc.bottom = HIWORD(lParam);
+			if (m_pContainer != NULL)
 				m_pContainer->SetPosition(rc);
 		}
 		return 0;
@@ -642,67 +643,68 @@ LRESULT CLayoutBase::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 		{
 			PAINTSTRUCT ps;
 
-			::BeginPaint(hwnd,&ps);
-			::FillRect(ps.hdc,&ps.rcPaint,GetBackBrush());
-			::EndPaint(hwnd,&ps);
+			::BeginPaint(hwnd, &ps);
+			::FillRect(ps.hdc, &ps.rcPaint, GetBackBrush());
+			::EndPaint(hwnd, &ps);
 		}
 		return 0;
 
 	case WM_LBUTTONDOWN:
-		if (m_pContainer!=NULL) {
-			int x=GET_X_LPARAM(lParam),y=GET_Y_LPARAM(lParam);
-			CContainer *pContainer=GetContainerFromPoint(x,y);
+		if (m_pContainer != NULL) {
+			int x = GET_X_LPARAM(lParam), y = GET_Y_LPARAM(lParam);
+			CContainer *pContainer = GetContainerFromPoint(x, y);
 
-			if (pContainer!=NULL)
-				pContainer->OnLButtonDown(x,y);
-			m_pFocusContainer=pContainer;
+			if (pContainer != NULL)
+				pContainer->OnLButtonDown(x, y);
+			m_pFocusContainer = pContainer;
 		}
 		return 0;
 
 	case WM_LBUTTONUP:
-		if (m_pFocusContainer!=NULL) {
-			int x=GET_X_LPARAM(lParam),y=GET_Y_LPARAM(lParam);
+		if (m_pFocusContainer != NULL) {
+			int x = GET_X_LPARAM(lParam), y = GET_Y_LPARAM(lParam);
 
-			m_pFocusContainer->OnLButtonUp(x,y);
-			m_pFocusContainer=NULL;
+			m_pFocusContainer->OnLButtonUp(x, y);
+			m_pFocusContainer = NULL;
 		}
 		return 0;
 
 	case WM_MOUSEMOVE:
 		{
-			int x=GET_X_LPARAM(lParam),y=GET_Y_LPARAM(lParam);
+			int x = GET_X_LPARAM(lParam), y = GET_Y_LPARAM(lParam);
 
-			if (m_pFocusContainer!=NULL) {
-				m_pFocusContainer->OnMouseMove(x,y);
+			if (m_pFocusContainer != NULL) {
+				m_pFocusContainer->OnMouseMove(x, y);
 			} else {
-				CContainer *pContainer=GetContainerFromPoint(x,y);
+				CContainer *pContainer = GetContainerFromPoint(x, y);
 
-				if (pContainer!=NULL)
-					pContainer->OnMouseMove(x,y);
+				if (pContainer != NULL)
+					pContainer->OnMouseMove(x, y);
 			}
 		}
 		return 0;
 
 	case WM_CAPTURECHANGED:
-		m_pFocusContainer=NULL;
+		m_pFocusContainer = NULL;
 		return 0;
 
 	case WM_COMMAND:
 	case WM_NOTIFY:
-		return ::SendMessage(::GetParent(hwnd),uMsg,wParam,lParam);
+		return ::SendMessage(::GetParent(hwnd), uMsg, wParam, lParam);
 	}
-	return ::DefWindowProc(hwnd,uMsg,wParam,lParam);
+
+	return ::DefWindowProc(hwnd, uMsg, wParam, lParam);
 }
 
 
 bool CLayoutBase::SetTopContainer(CContainer *pContainer)
 {
-	if (m_pContainer!=NULL)
+	if (m_pContainer != NULL)
 		RemoveUIChild(m_pContainer);
-	m_pContainer=pContainer;
-	m_pFocusContainer=NULL;
-	if (pContainer!=NULL) {
-		SetBasePointer(pContainer,this);
+	m_pContainer = pContainer;
+	m_pFocusContainer = NULL;
+	if (pContainer != NULL) {
+		SetBasePointer(pContainer, this);
 		RegisterUIChild(pContainer);
 		pContainer->SetStyleScaling(m_pStyleScaling);
 		Adjust();
@@ -711,42 +713,42 @@ bool CLayoutBase::SetTopContainer(CContainer *pContainer)
 }
 
 
-void CLayoutBase::SetBasePointer(CContainer *pContainer,CLayoutBase *pBase)
+void CLayoutBase::SetBasePointer(CContainer *pContainer, CLayoutBase *pBase)
 {
-	int NumChildren=pContainer->NumChildContainers();
+	int NumChildren = pContainer->NumChildContainers();
 
-	pContainer->m_pBase=pBase;
-	for (int i=0;i<NumChildren;i++) {
-		CContainer *pChild=pContainer->GetChildContainer(i);
+	pContainer->m_pBase = pBase;
+	for (int i = 0; i < NumChildren; i++) {
+		CContainer *pChild = pContainer->GetChildContainer(i);
 
-		if (pChild!=NULL)
-			SetBasePointer(pChild,pBase);
+		if (pChild != NULL)
+			SetBasePointer(pChild, pBase);
 	}
 }
 
 
 CContainer *CLayoutBase::GetContainerByID(int ID) const
 {
-	if (m_pContainer==NULL)
+	if (m_pContainer == NULL)
 		return NULL;
-	if (m_pContainer->GetID()==ID)
+	if (m_pContainer->GetID() == ID)
 		return m_pContainer;
-	return GetChildContainerByID(m_pContainer,ID);
+	return GetChildContainerByID(m_pContainer, ID);
 }
 
 
-CContainer *CLayoutBase::GetChildContainerByID(const CContainer *pContainer,int ID) const
+CContainer *CLayoutBase::GetChildContainerByID(const CContainer *pContainer, int ID) const
 {
-	int NumChildren=pContainer->NumChildContainers();
+	int NumChildren = pContainer->NumChildContainers();
 
-	for (int i=0;i<NumChildren;i++) {
-		CContainer *pChild=pContainer->GetChildContainer(i);
+	for (int i = 0; i < NumChildren; i++) {
+		CContainer *pChild = pContainer->GetChildContainer(i);
 
-		if (pChild!=NULL) {
-			if (pChild->GetID()==ID)
+		if (pChild != NULL) {
+			if (pChild->GetID() == ID)
 				return pChild;
-			pChild=GetChildContainerByID(pChild,ID);
-			if (pChild!=NULL)
+			pChild = GetChildContainerByID(pChild, ID);
+			if (pChild != NULL)
 				return pChild;
 		}
 	}
@@ -754,34 +756,34 @@ CContainer *CLayoutBase::GetChildContainerByID(const CContainer *pContainer,int 
 }
 
 
-CContainer *CLayoutBase::GetContainerFromPoint(int x,int y) const
+CContainer *CLayoutBase::GetContainerFromPoint(int x, int y) const
 {
-	if (m_pContainer==NULL)
+	if (m_pContainer == NULL)
 		return NULL;
-	return GetChildContainerFromPoint(m_pContainer,x,y);
+	return GetChildContainerFromPoint(m_pContainer, x, y);
 }
 
 
-CContainer *CLayoutBase::GetChildContainerFromPoint(const CContainer *pContainer,int x,int y) const
+CContainer *CLayoutBase::GetChildContainerFromPoint(const CContainer *pContainer, int x, int y) const
 {
-	if (pContainer==NULL || !pContainer->GetVisible())
+	if (pContainer == NULL || !pContainer->GetVisible())
 		return NULL;
 
-	POINT pt={x,y};
+	POINT pt = {x, y};
 	RECT rc;
 
-	rc=pContainer->GetPosition();
-	if (::PtInRect(&rc,pt)) {
-		int NumChildren=pContainer->NumChildContainers();
+	rc = pContainer->GetPosition();
+	if (::PtInRect(&rc, pt)) {
+		int NumChildren = pContainer->NumChildContainers();
 
-		for (int i=0;i<NumChildren;i++) {
-			CContainer *pChild=pContainer->GetChildContainer(i);
+		for (int i = 0; i < NumChildren; i++) {
+			CContainer *pChild = pContainer->GetChildContainer(i);
 
-			if (pChild!=NULL) {
-				rc=pChild->GetPosition();
-				if (::PtInRect(&rc,pt)) {
+			if (pChild != NULL) {
+				rc = pChild->GetPosition();
+				if (::PtInRect(&rc, pt)) {
 					if (pChild->GetVisible())
-						return GetChildContainerFromPoint(pChild,x,y);
+						return GetChildContainerFromPoint(pChild, x, y);
 					break;;
 				}
 			}
@@ -792,13 +794,13 @@ CContainer *CLayoutBase::GetChildContainerFromPoint(const CContainer *pContainer
 }
 
 
-bool CLayoutBase::SetContainerVisible(int ID,bool fVisible)
+bool CLayoutBase::SetContainerVisible(int ID, bool fVisible)
 {
-	CContainer *pContainer=GetContainerByID(ID);
+	CContainer *pContainer = GetContainerByID(ID);
 
-	if (pContainer==NULL)
+	if (pContainer == NULL)
 		return false;
-	if (pContainer->GetVisible()!=fVisible) {
+	if (pContainer->GetVisible() != fVisible) {
 		pContainer->SetVisible(fVisible);
 		Adjust();
 	}
@@ -808,9 +810,9 @@ bool CLayoutBase::SetContainerVisible(int ID,bool fVisible)
 
 bool CLayoutBase::GetContainerVisible(int ID) const
 {
-	const CContainer *pContainer=GetContainerByID(ID);
+	const CContainer *pContainer = GetContainerByID(ID);
 
-	if (pContainer==NULL)
+	if (pContainer == NULL)
 		return false;
 	return pContainer->GetVisible();
 }
@@ -818,9 +820,9 @@ bool CLayoutBase::GetContainerVisible(int ID) const
 
 void CLayoutBase::GetMinSize(SIZE *pSize) const
 {
-	if (m_pContainer==NULL) {
-		pSize->cx=0;
-		pSize->cy=0;
+	if (m_pContainer == NULL) {
+		pSize->cx = 0;
+		pSize->cy = 0;
 	} else {
 		m_pContainer->GetMinSize(pSize);
 	}
@@ -829,7 +831,7 @@ void CLayoutBase::GetMinSize(SIZE *pSize) const
 
 void CLayoutBase::Adjust()
 {
-	if (m_pContainer!=NULL && m_hwnd!=NULL && !m_fLockLayout) {
+	if (m_pContainer != NULL && m_hwnd != NULL && !m_fLockLayout) {
 		RECT rc;
 
 		GetClientRect(&rc);
@@ -840,14 +842,14 @@ void CLayoutBase::Adjust()
 
 void CLayoutBase::LockLayout()
 {
-	m_fLockLayout=true;
+	m_fLockLayout = true;
 }
 
 
 void CLayoutBase::UnlockLayout(bool fAdjust)
 {
 	if (m_fLockLayout) {
-		m_fLockLayout=false;
+		m_fLockLayout = false;
 
 		if (fAdjust)
 			Adjust();
@@ -857,20 +859,20 @@ void CLayoutBase::UnlockLayout(bool fAdjust)
 
 void CLayoutBase::SetEventHandler(CEventHandler *pHandler)
 {
-	if (m_pEventHandler!=NULL)
-		m_pEventHandler->m_pBase=NULL;
-	if (pHandler!=NULL)
-		pHandler->m_pBase=this;
-	m_pEventHandler=pHandler;
+	if (m_pEventHandler != NULL)
+		m_pEventHandler->m_pBase = NULL;
+	if (pHandler != NULL)
+		pHandler->m_pBase = this;
+	m_pEventHandler = pHandler;
 }
 
 
 bool CLayoutBase::SetBackColor(COLORREF Color)
 {
-	if (m_BackColor!=Color) {
-		m_BackColor=Color;
+	if (m_BackColor != Color) {
+		m_BackColor = Color;
 		m_BackBrush.Destroy();
-		if (m_hwnd!=NULL)
+		if (m_hwnd != NULL)
 			Invalidate();
 	}
 	return true;
@@ -895,7 +897,7 @@ CLayoutBase::CEventHandler::CEventHandler()
 
 CLayoutBase::CEventHandler::~CEventHandler()
 {
-	if (m_pBase!=NULL)
+	if (m_pBase != NULL)
 		m_pBase->SetEventHandler(NULL);
 }
 

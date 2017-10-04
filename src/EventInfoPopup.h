@@ -20,8 +20,9 @@ public:
 	{
 	protected:
 		CEventInfoPopup *m_pPopup;
+
 	public:
-		enum { COMMAND_FIRST=100 };
+		enum { COMMAND_FIRST = 100 };
 
 		CEventHandler();
 		virtual ~CEventHandler();
@@ -32,21 +33,22 @@ public:
 
 	CEventInfoPopup();
 	~CEventInfoPopup();
-	bool Show(const LibISDB::EventInfo *pEventInfo,const RECT *pPos=NULL,
-			  HICON hIcon=NULL,LPCTSTR pszTitle=NULL);
+	bool Show(
+		const LibISDB::EventInfo *pEventInfo, const RECT *pPos = NULL,
+		HICON hIcon = NULL, LPCTSTR pszTitle = NULL);
 	bool Hide();
 	bool IsVisible();
 	bool IsOwnWindow(HWND hwnd) const;
-	void GetSize(int *pWidth,int *pHeight) const;
-	bool SetSize(int Width,int Height);
-	void SetColor(COLORREF BackColor,COLORREF TextColor);
-	void SetTitleColor(COLORREF BackColor,COLORREF TextColor);
+	void GetSize(int *pWidth, int *pHeight) const;
+	bool SetSize(int Width, int Height);
+	void SetColor(COLORREF BackColor, COLORREF TextColor);
+	void SetTitleColor(COLORREF BackColor, COLORREF TextColor);
 	bool SetFont(const TVTest::Style::Font &Font);
 	void SetEventHandler(CEventHandler *pEventHandler);
 	bool IsSelected() const;
 	LPTSTR GetSelectedText() const;
-	void GetPreferredIconSize(int *pWidth,int *pHeight) const;
-	bool GetPopupPosition(int x,int y,RECT *pPos) const;
+	void GetPreferredIconSize(int *pWidth, int *pHeight) const;
+	bool GetPopupPosition(int x, int y, RECT *pPos) const;
 	bool AdjustPopupPosition(POINT *pPos) const;
 	bool GetDefaultPopupPosition(RECT *pPos) const;
 	bool GetDefaultPopupPosition(POINT *pPos) const;
@@ -79,46 +81,49 @@ private:
 
 	static const LPCTSTR m_pszWindowClass;
 	static HINSTANCE m_hinst;
-	static const UINT TIMER_ID_HIDE=1;
+	static const UINT TIMER_ID_HIDE = 1;
 
 // CCustomWindow
-	LRESULT OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
+	LRESULT OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
 
 // CUIBase
 	void ApplyStyle() override;
 	void RealizeStyle() override;
 
-	bool Create(HWND hwndParent,DWORD Style,DWORD ExStyle,int ID) override;
+	bool Create(HWND hwndParent, DWORD Style, DWORD ExStyle, int ID) override;
 	void SetEventInfo(const LibISDB::EventInfo *pEventInfo);
-	void FormatAudioInfo(const LibISDB::EventInfo::AudioInfo *pAudioInfo,
-						 LPTSTR pszText,int MaxLength) const;
+	void FormatAudioInfo(
+		const LibISDB::EventInfo::AudioInfo *pAudioInfo,
+		LPTSTR pszText, int MaxLength) const;
 	void CalcTitleHeight();
 	void GetCloseButtonRect(RECT *pRect) const;
 	void SetNcRendering();
 };
 
-class CEventInfoPopupManager : protected CWindowSubclass
+class CEventInfoPopupManager
+	: protected CWindowSubclass
 {
 public:
 	class ABSTRACT_CLASS(CEventHandler)
 	{
 	protected:
 		CEventInfoPopup *m_pPopup;
+
 	public:
 		CEventHandler();
 		virtual ~CEventHandler();
-		virtual bool HitTest(int x,int y,LPARAM *pParam)=0;
-		virtual bool ShowPopup(LPARAM Param,CEventInfoPopup *pPopup)=0;
+		virtual bool HitTest(int x, int y, LPARAM * pParam) = 0;
+		virtual bool ShowPopup(LPARAM Param, CEventInfoPopup * pPopup) = 0;
 		friend class CEventInfoPopupManager;
 	};
 
 	CEventInfoPopupManager(CEventInfoPopup *pPopup);
 	~CEventInfoPopupManager();
-	bool Initialize(HWND hwnd,CEventHandler *pEventHandler);
+	bool Initialize(HWND hwnd, CEventHandler *pEventHandler);
 	void Finalize();
 	bool SetEnable(bool fEnable);
 	bool GetEnable() const { return m_fEnable; }
-	bool Popup(int x,int y);
+	bool Popup(int x, int y);
 
 private:
 	CEventInfoPopup *m_pPopup;
@@ -127,7 +132,7 @@ private:
 	bool m_fTrackMouseEvent;
 	LPARAM m_HitTestParam;
 
-	LRESULT OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
+	LRESULT OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
 };
 
 

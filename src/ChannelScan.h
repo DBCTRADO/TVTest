@@ -7,7 +7,8 @@
 #include "Options.h"
 
 
-class CChannelScan : public COptions
+class CChannelScan
+	: public COptions
 {
 public:
 	CChannelScan();
@@ -26,9 +27,9 @@ public:
 // CChannelScan
 	bool SetTuningSpaceList(const CTuningSpaceList *pTuningSpaceList);
 	const CTuningSpaceList *GetTuningSpaceList() const { return &m_TuningSpaceList; }
-	bool IsScanning() const { return m_hScanThread!=NULL; }
+	bool IsScanning() const { return m_hScanThread != NULL; }
 
-	bool AutoUpdateChannelList(CTuningSpaceList *pTuningSpaceList,std::vector<TVTest::String> *pMessageList=NULL);
+	bool AutoUpdateChannelList(CTuningSpaceList *pTuningSpaceList, std::vector<TVTest::String> *pMessageList = NULL);
 
 private:
 	enum {
@@ -49,26 +50,27 @@ private:
 	// チャンネルリストのソートクラス
 	class CChannelListSort
 	{
-		static int CALLBACK CompareFunc(LPARAM lParam1,LPARAM lParam2,LPARAM lParamSort);
+		static int CALLBACK CompareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort);
 
 	public:
 		CChannelListSort();
-		CChannelListSort(int Column,bool fDescending=false);
+		CChannelListSort(int Column, bool fDescending = false);
 		void Sort(HWND hwndList);
-		bool UpdateChannelList(HWND hwndList,CChannelList *pList);
+		bool UpdateChannelList(HWND hwndList, CChannelList *pList);
 
 		int m_Column;
 		bool m_fDescending;
 	};
 
-	class CScanSettingsDialog : public CBasicDialog
+	class CScanSettingsDialog
+		: public CBasicDialog
 	{
 	public:
 		CScanSettingsDialog(CChannelScan *pChannelScan);
 		bool Show(HWND hwndOwner) override;
 
 	private:
-		INT_PTR DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
+		INT_PTR DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
 
 		CChannelScan *m_pChannelScan;
 	};
@@ -104,21 +106,21 @@ private:
 	std::vector<float> m_ChannelSignalLevel;
 
 // CBasicDialog
-	INT_PTR DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
+	INT_PTR DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
 
-	void InsertChannelInfo(int Index,const CChannelInfo *pChInfo,bool fServiceType);
+	void InsertChannelInfo(int Index, const CChannelInfo *pChInfo, bool fServiceType);
 	void SetChannelList(int Space);
 	CChannelInfo *GetSelectedChannelInfo() const;
-	bool LoadPreset(LPCTSTR pszFileName,CChannelList *pChannelList,int Space,bool *pfCorrupted);
+	bool LoadPreset(LPCTSTR pszFileName, CChannelList *pChannelList, int Space, bool *pfCorrupted);
 	bool SetPreset(bool fAuto);
 	void Scan();
 	float GetSignalLevel();
-	INT_PTR ScanDlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam);
-	bool IsScanService(const LibISDB::AnalyzerFilter::SDTServiceInfo &ServiceInfo,bool fData=true) const;
-	bool IsScanServiceType(BYTE ServiceType,bool fData=true) const;
+	INT_PTR ScanDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
+	bool IsScanService(const LibISDB::AnalyzerFilter::SDTServiceInfo &ServiceInfo, bool fData = true) const;
+	bool IsScanServiceType(BYTE ServiceType, bool fData = true) const;
 
 	static unsigned int __stdcall ScanProc(LPVOID lpParameter);
-	static INT_PTR CALLBACK ScanDialogProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam);
+	static INT_PTR CALLBACK ScanDialogProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 };
 
 

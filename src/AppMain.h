@@ -73,7 +73,7 @@ public:
 		: m_fEnable(false)
 	{
 	}
-	bool BeginAdjust(DWORD TimeOut=10000UL);
+	bool BeginAdjust(DWORD TimeOut = 10000UL);
 	bool AdjustTime();
 };
 
@@ -87,7 +87,7 @@ class CEpgLoadEventHandler
 
 // CEDCBDataLoadEventHandler
 	void OnStart() override;
-	void OnEnd(bool fSuccess,LibISDB::EPGDatabase *pEPGDatabase) override;
+	void OnEnd(bool fSuccess, LibISDB::EPGDatabase *pEPGDatabase) override;
 };
 
 class CServiceUpdateInfo
@@ -100,15 +100,15 @@ public:
 	bool m_fStreamChanged;
 	bool m_fServiceListEmpty;
 
-	CServiceUpdateInfo(LibISDB::TSEngine *pEngine,LibISDB::AnalyzerFilter *pAnalyzer);
+	CServiceUpdateInfo(LibISDB::TSEngine *pEngine, LibISDB::AnalyzerFilter *pAnalyzer);
 };
 
 
 class CAppMain
 {
 public:
-	static const UINT WM_INTERPROCESS=WM_COPYDATA;
-	static const UINT PROCESS_MESSAGE_EXECUTE=0x54565400;
+	static const UINT WM_INTERPROCESS = WM_COPYDATA;
+	static const UINT PROCESS_MESSAGE_EXECUTE = 0x54565400;
 
 #ifndef _DEBUG
 	static CDebugHelper DebugHelper;
@@ -209,10 +209,10 @@ public:
 	bool GetAppDirectory(LPTSTR pszDirectory) const;
 	LPCTSTR GetIniFileName() const { return m_szIniFileName; }
 	LPCTSTR GetFavoritesFileName() const { return m_szFavoritesFileName; }
-	void AddLog(CLogItem::LogType Type,LPCTSTR pszText, ...);
+	void AddLog(CLogItem::LogType Type, LPCTSTR pszText, ...);
 	void AddLog(LPCTSTR pszText, ...);
 	bool IsFirstExecute() const;
-	int Main(HINSTANCE hInstance,LPCTSTR pszCmdLine,int nCmdShow);
+	int Main(HINSTANCE hInstance, LPCTSTR pszCmdLine, int nCmdShow);
 	void Initialize();
 	void Finalize();
 	void Exit();
@@ -223,26 +223,27 @@ public:
 		SETTINGS_SAVE_ALL     = SETTINGS_SAVE_STATUS | SETTINGS_SAVE_OPTIONS
 	};
 	bool SaveSettings(unsigned int Flags);
-	bool ShowOptionDialog(HWND hwndOwner,int StartPage=-1);
+	bool ShowOptionDialog(HWND hwndOwner, int StartPage = -1);
 	enum CreateDirectoryResult {
 		CREATEDIRECTORY_RESULT_SUCCESS,
 		CREATEDIRECTORY_RESULT_ERROR,
 		CREATEDIRECTORY_RESULT_CANCELLED,
 		CREATEDIRECTORY_RESULT_NOPATH
 	};
-	CreateDirectoryResult CreateDirectory(HWND hwnd,LPCTSTR pszDirectory,LPCTSTR pszMessage);
-	bool SendInterprocessMessage(HWND hwnd,UINT Message,const void *pParam,DWORD ParamSize);
-	LRESULT ReceiveInterprocessMessage(HWND hwnd,WPARAM wParam,LPARAM lParam);
-	bool BroadcastControllerFocusMessage(HWND hwnd,bool fSkipSelf,bool fFocus,
-										 DWORD ActiveThreadID=0);
-	void SetEnablePlaybackOnStart(bool fEnable) { m_fEnablePlaybackOnStart=fEnable; }
+	CreateDirectoryResult CreateDirectory(HWND hwnd, LPCTSTR pszDirectory, LPCTSTR pszMessage);
+	bool SendInterprocessMessage(HWND hwnd, UINT Message, const void *pParam, DWORD ParamSize);
+	LRESULT ReceiveInterprocessMessage(HWND hwnd, WPARAM wParam, LPARAM lParam);
+	bool BroadcastControllerFocusMessage(
+		HWND hwnd, bool fSkipSelf, bool fFocus, DWORD ActiveThreadID = 0);
+	void SetEnablePlaybackOnStart(bool fEnable) { m_fEnablePlaybackOnStart = fEnable; }
 	bool GetEnablePlaybackOnStart() const { return m_fEnablePlaybackOnStart; }
 
 	static HICON GetAppIcon();
 	static HICON GetAppIconSmall();
 
 private:
-	class CEngineEventListener : public CCoreEngine::EventListener
+	class CEngineEventListener
+		: public CCoreEngine::EventListener
 	{
 	public:
 		CEngineEventListener(CAppMain &App);
@@ -250,7 +251,7 @@ private:
 	private:
 		CAppMain &m_App;
 
-	// CCoreEngine::EventListener
+		// CCoreEngine::EventListener
 		void OnServiceChanged(uint16_t ServiceID) override;
 		void OnPATUpdated(LibISDB::AnalyzerFilter *pAnalyzer, bool StreamChanged) override;
 		void OnPMTUpdated(LibISDB::AnalyzerFilter *pAnalyzer, uint16_t ServiceID) override;
@@ -267,12 +268,13 @@ private:
 		void OnFilterGraphFinalized(LibISDB::ViewerFilter *pViewer, IGraphBuilder *pGraphBuilder) override;
 		void OnSPDIFPassthroughError(LibISDB::ViewerFilter *pViewer, HRESULT hr) override;
 
-	// CEngineEventListener
-		void OnServiceUpdated(LibISDB::AnalyzerFilter *pAnalyzer,bool fListUpdated,bool fStreamChanged);
+		// CEngineEventListener
+		void OnServiceUpdated(LibISDB::AnalyzerFilter *pAnalyzer, bool fListUpdated, bool fStreamChanged);
 		void OnServiceInfoUpdated(LibISDB::AnalyzerFilter *pAnalyzer);
 	};
 
-	class CStreamInfoEventHandler : public CStreamInfo::CEventHandler
+	class CStreamInfoEventHandler
+		: public CStreamInfo::CEventHandler
 	{
 	public:
 		CStreamInfoEventHandler(CAppMain &App);
@@ -284,7 +286,8 @@ private:
 		bool OnClose() override;
 	};
 
-	class CCaptureWindowEventHandler : public CCaptureWindow::CEventHandler
+	class CCaptureWindowEventHandler
+		: public CCaptureWindow::CEventHandler
 	{
 	public:
 		CCaptureWindowEventHandler(CAppMain &App);
@@ -295,7 +298,7 @@ private:
 		void OnRestoreSettings() override;
 		bool OnClose() override;
 		bool OnSave(CCaptureImage *pImage) override;
-		bool OnKeyDown(UINT KeyCode,UINT Flags) override;
+		bool OnKeyDown(UINT KeyCode, UINT Flags) override;
 	};
 
 	struct ControllerFocusInfo {
@@ -328,10 +331,10 @@ private:
 	void RegisterCommands();
 	bool IsNoAcceleratorMessage(const MSG *pmsg);
 	void ApplyEventInfoFont();
-	bool GetAbsolutePath(LPCTSTR pszPath,LPTSTR pszAbsolutePath) const;
+	bool GetAbsolutePath(LPCTSTR pszPath, LPTSTR pszAbsolutePath) const;
 	bool ProcessCommandLine(LPCTSTR pszCmdLine);
 	void ShowProgramGuideByCommandLine(const CCommandLineOptions &CmdLine);
-	static BOOL CALLBACK ControllerFocusCallback(HWND hwnd,LPARAM Param);
+	static BOOL CALLBACK ControllerFocusCallback(HWND hwnd, LPARAM Param);
 };
 
 

@@ -15,7 +15,8 @@ class CControlPanel
 	: public CPanelForm::CPage
 {
 public:
-	struct ControlPanelTheme {
+	struct ControlPanelTheme
+	{
 		TVTest::Theme::Style ItemStyle;
 		TVTest::Theme::Style OverItemStyle;
 		TVTest::Theme::Style CheckedItemStyle;
@@ -28,7 +29,7 @@ public:
 	~CControlPanel();
 
 // CBasicWindow
-	bool Create(HWND hwndParent,DWORD Style,DWORD ExStyle=0,int ID=0) override;
+	bool Create(HWND hwndParent, DWORD Style, DWORD ExStyle = 0, int ID = 0) override;
 
 // CUIBase
 	void SetStyle(const TVTest::Style::CStyleManager *pStyleManager) override;
@@ -44,13 +45,13 @@ public:
 	bool AddItem(CControlPanelItem *pItem);
 	CControlPanelItem *GetItem(int Index) const;
 	bool UpdateItem(int Index);
-	bool GetItemPosition(int Index,RECT *pRect) const;
+	bool GetItemPosition(int Index, RECT *pRect) const;
 	void UpdateLayout();
 	bool SetControlPanelTheme(const ControlPanelTheme &Theme);
 	bool GetControlPanelTheme(ControlPanelTheme *pTheme) const;
 	int GetFontHeight() const { return m_FontHeight; }
 	void SetSendMessageWindow(HWND hwnd);
-	bool CheckRadioItem(int FirstID,int LastID,int CheckID);
+	bool CheckRadioItem(int FirstID, int LastID, int CheckID);
 	const TVTest::Style::Margins &GetItemPadding() const;
 	const TVTest::Style::Size &GetIconSize() const;
 
@@ -87,16 +88,16 @@ private:
 	static HINSTANCE m_hinst;
 
 // CCustomWindow
-	LRESULT OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
+	LRESULT OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
 
 // CUIBase
 	void ApplyStyle() override;
 	void RealizeStyle() override;
 
 // CControlPanel
-	void Draw(HDC hdc,const RECT &PaintRect);
+	void Draw(HDC hdc, const RECT &PaintRect);
 	void SendCommand(int Command);
-	bool CalcTextSize(LPCTSTR pszText,SIZE *pSize);
+	bool CalcTextSize(LPCTSTR pszText, SIZE *pSize);
 	int CalcFontHeight() const;
 	int GetTextItemHeight() const;
 };
@@ -111,18 +112,18 @@ protected:
 	bool m_fEnable;
 	bool m_fCheck;
 	bool m_fBreak;
-	CControlPanel *m_pControlPanel;
+	CControlPanel * m_pControlPanel;
 
-	bool CalcTextSize(LPCTSTR pszText,SIZE *pSize) const;
+	bool CalcTextSize(LPCTSTR pszText, SIZE * pSize) const;
 	int GetTextItemHeight() const;
-	void GetMenuPos(POINT *pPos) const;
+	void GetMenuPos(POINT * pPos) const;
 
 public:
 	CControlPanelItem();
-	virtual ~CControlPanelItem()=0;
-	void GetPosition(int *pLeft,int *pTop,int *pWidth,int *pHeight) const;
-	bool SetPosition(int Left,int Top,int Width,int Height);
-	void GetPosition(RECT *pRect) const;
+	virtual ~CControlPanelItem() = 0;
+	void GetPosition(int *pLeft, int *pTop, int *pWidth, int *pHeight) const;
+	bool SetPosition(int Left, int Top, int Width, int Height);
+	void GetPosition(RECT * pRect) const;
 	bool GetVisible() const { return m_fVisible; }
 	void SetVisible(bool fVisible);
 	bool GetEnable() const { return m_fEnable; }
@@ -131,13 +132,13 @@ public:
 	void SetCheck(bool fCheck);
 	bool GetBreak() const { return m_fBreak; }
 	void SetBreak(bool fBreak);
-	virtual void CalcSize(int Width,SIZE *pSize);
-	virtual void Draw(HDC hdc,const RECT &Rect)=0;
-	virtual void OnLButtonDown(int x,int y);
-	virtual void OnLButtonUp(int x,int y) {}
-	virtual void OnRButtonDown(int x,int y) {}
-	virtual void OnRButtonUp(int x,int y) {}
-	virtual void OnMouseMove(int x,int y) {}
+	virtual void CalcSize(int Width, SIZE *pSize);
+	virtual void Draw(HDC hdc, const RECT &Rect) = 0;
+	virtual void OnLButtonDown(int x, int y);
+	virtual void OnLButtonUp(int x, int y) {}
+	virtual void OnRButtonDown(int x, int y) {}
+	virtual void OnRButtonUp(int x, int y) {}
+	virtual void OnMouseMove(int x, int y) {}
 
 	friend CControlPanel;
 };

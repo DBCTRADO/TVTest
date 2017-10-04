@@ -15,13 +15,13 @@ public:
 	~CRichEditUtil();
 	bool LoadRichEditLib();
 	void UnloadRichEditLib();
-	bool IsRichEditLibLoaded() const { return m_hLib!=NULL; }
+	bool IsRichEditLibLoaded() const { return m_hLib != NULL; }
 	LPCTSTR GetWindowClassName() const { return TEXT("RichEdit20W"); }
-	static bool LogFontToCharFormat(HDC hdc,const LOGFONT *plf,CHARFORMAT *pcf);
-	static bool LogFontToCharFormat2(HDC hdc,const LOGFONT *plf,CHARFORMAT2 *pcf);
-	static void CharFormatToCharFormat2(const CHARFORMAT *pcf,CHARFORMAT2 *pcf2);
-	static bool AppendText(HWND hwndEdit,LPCTSTR pszText,const CHARFORMAT *pcf);
-	static bool AppendText(HWND hwndEdit,LPCTSTR pszText,const CHARFORMAT2 *pcf);
+	static bool LogFontToCharFormat(HDC hdc, const LOGFONT *plf, CHARFORMAT *pcf);
+	static bool LogFontToCharFormat2(HDC hdc, const LOGFONT *plf, CHARFORMAT2 *pcf);
+	static void CharFormatToCharFormat2(const CHARFORMAT *pcf, CHARFORMAT2 *pcf2);
+	static bool AppendText(HWND hwndEdit, LPCTSTR pszText, const CHARFORMAT *pcf);
+	static bool AppendText(HWND hwndEdit, LPCTSTR pszText, const CHARFORMAT2 *pcf);
 	static bool CopyAllText(HWND hwndEdit);
 	static void SelectAll(HWND hwndEdit);
 	static bool IsSelected(HWND hwndEdit);
@@ -31,11 +31,12 @@ public:
 		URL_NO_LINK       = 0x0001,
 		URL_TO_HALF_WIDTH = 0x0002
 	};
-	static bool DetectURL(HWND hwndEdit,const CHARFORMAT *pcf,int FirstLine=0,int LastLine=-1,
-						  unsigned int Flags=URL_TO_HALF_WIDTH,CharRangeList *pCharRangeList=NULL);
+	static bool DetectURL(
+		HWND hwndEdit, const CHARFORMAT *pcf, int FirstLine = 0, int LastLine = -1,
+		unsigned int Flags = URL_TO_HALF_WIDTH, CharRangeList *pCharRangeList = NULL);
 	static bool HandleLinkClick(const ENLINK *penl);
-	static bool HandleLinkClick(HWND hwndEdit,const POINT &Pos,const CharRangeList &LinkList);
-	static int LinkHitTest(HWND hwndEdit,const POINT &Pos,const CharRangeList &LinkList);
+	static bool HandleLinkClick(HWND hwndEdit, const POINT &Pos, const CharRangeList &LinkList);
+	static int LinkHitTest(HWND hwndEdit, const POINT &Pos, const CharRangeList &LinkList);
 
 private:
 	HMODULE m_hLib;
@@ -43,8 +44,8 @@ private:
 	static const LPCTSTR m_pszURLChars;
 	static const LPCTSTR m_pszURLFullWidthChars;
 
-	static bool SearchNextURL(LPCTSTR *ppszText,int *pLength);
-	static bool OpenLink(HWND hwndEdit,const CHARRANGE &Range);
+	static bool SearchNextURL(LPCTSTR *ppszText, int *pLength);
+	static bool OpenLink(HWND hwndEdit, const CHARRANGE &Range);
 };
 
 

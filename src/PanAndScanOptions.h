@@ -15,7 +15,8 @@ class CPanAndScanOptions
 	, public CCommandList::CCommandCustomizer
 {
 public:
-	enum { MAX_NAME=64 };
+	enum { MAX_NAME = 64 };
+
 	struct PanAndScanInfo
 	{
 		CCoreEngine::PanAndScanInfo Info;
@@ -25,21 +26,24 @@ public:
 
 	CPanAndScanOptions();
 	~CPanAndScanOptions();
+
 // CBasicDialog
 	bool Show(HWND hwndOwner) override;
+
 // CSettingsBase
 	bool ReadSettings(CSettings &Settings) override;
 	bool WriteSettings(CSettings &Settings) override;
+
 // CPanAndScanOptions
 	size_t GetPresetCount() const;
-	bool GetPreset(size_t Index,PanAndScanInfo *pInfo) const;
-	bool GetPresetByID(UINT ID,PanAndScanInfo *pInfo) const;
+	bool GetPreset(size_t Index, PanAndScanInfo *pInfo) const;
+	bool GetPresetByID(UINT ID, PanAndScanInfo *pInfo) const;
 	UINT GetPresetID(size_t Index) const;
 	int FindPresetByID(UINT ID) const;
 
 private:
 //CBasicDialog
-	INT_PTR DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
+	INT_PTR DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
 
 	void SetItemStatus() const;
 	bool GetSettings(PanAndScanInfo *pInfo) const;
@@ -49,7 +53,7 @@ private:
 	bool Export(LPCTSTR pszFileName) const;
 
 //CCommandCustomizer
-	bool GetCommandName(int Command,LPTSTR pszName,int MaxLength) override;
+	bool GetCommandName(int Command, LPTSTR pszName, int MaxLength) override;
 
 	std::vector<PanAndScanInfo> m_PresetList;
 	UINT m_PresetID;

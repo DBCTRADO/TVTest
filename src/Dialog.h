@@ -10,21 +10,23 @@ class CBasicDialog
 	: public TVTest::CUIBase
 {
 public:
-	struct Position {
-		int x,y;
-		int Width,Height;
+	struct Position
+	{
+		int x, y;
+		int Width, Height;
+
 		Position() : x(0), y(0), Width(0), Height(0) {}
 		void Set(const RECT *pRect) {
-			x=pRect->left;
-			y=pRect->top;
-			Width=pRect->right-x;
-			Height=pRect->bottom-y;
+			x = pRect->left;
+			y = pRect->top;
+			Width = pRect->right - x;
+			Height = pRect->bottom - y;
 		}
 		void Get(RECT *pRect) const {
-			pRect->left=x;
-			pRect->top=y;
-			pRect->right=x+Width;
-			pRect->bottom=y+Height;
+			pRect->left = x;
+			pRect->top = y;
+			pRect->right = x + Width;
+			pRect->bottom = y + Height;
 		}
 	};
 
@@ -40,13 +42,13 @@ public:
 	bool SetVisible(bool fVisible);
 	bool GetPosition(Position *pPosition) const;
 	bool GetPosition(RECT *pPosition) const;
-	bool GetPosition(int *pLeft,int *pTop,int *pWidth=nullptr,int *pHeight=nullptr) const;
+	bool GetPosition(int *pLeft, int *pTop, int *pWidth = nullptr, int *pHeight = nullptr) const;
 	bool SetPosition(const Position &Pos);
 	bool SetPosition(const RECT *pPosition);
-	bool SetPosition(int Left,int Top,int Width,int Height);
-	bool SetPosition(int Left,int Top);
+	bool SetPosition(int Left, int Top, int Width, int Height);
+	bool SetPosition(int Left, int Top);
 	bool IsPositionSet() const { return m_fSetPosition; }
-	LRESULT SendMessage(UINT uMsg,WPARAM wParam,LPARAM lParam);
+	LRESULT SendMessage(UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 protected:
 	HWND m_hDlg;
@@ -55,7 +57,8 @@ protected:
 	Position m_Position;
 	TVTest::Style::CStyleScaling m_StyleScaling;
 
-	struct ItemInfo {
+	struct ItemInfo
+	{
 		HWND hwnd;
 		RECT rcOriginal;
 	};
@@ -67,11 +70,11 @@ protected:
 	bool m_fInitializing;
 
 	static CBasicDialog *GetThis(HWND hDlg);
-	static INT_PTR CALLBACK DialogProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam);
-	int ShowDialog(HWND hwndOwner,HINSTANCE hinst,LPCTSTR pszTemplate);
-	bool CreateDialogWindow(HWND hwndOwner,HINSTANCE hinst,LPCTSTR pszTemplate);
-	virtual INT_PTR HandleMessage(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam);
-	virtual INT_PTR DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam);
+	static INT_PTR CALLBACK DialogProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
+	int ShowDialog(HWND hwndOwner, HINSTANCE hinst, LPCTSTR pszTemplate);
+	bool CreateDialogWindow(HWND hwndOwner, HINSTANCE hinst, LPCTSTR pszTemplate);
+	virtual INT_PTR HandleMessage(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
+	virtual INT_PTR DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 	virtual bool ApplyPosition();
 	void StorePosition();
 	void InitDialog();
@@ -82,19 +85,22 @@ protected:
 	void RealizeStyle() override;
 };
 
-class CResizableDialog : public CBasicDialog
+class CResizableDialog
+	: public CBasicDialog
 {
 public:
 	CResizableDialog();
 	virtual ~CResizableDialog();
 
 protected:
-	struct LayoutItem {
+	struct LayoutItem
+	{
 		int ID;
 		RECT rcOriginal;
 		int DPI;
 		unsigned int Align;
 	};
+
 	enum {
 		ALIGN_NONE		= 0x00000000,
 		ALIGN_LEFT		= 0x00000001,
@@ -118,11 +124,11 @@ protected:
 	HWND m_hwndSizeGrip;
 	std::vector<LayoutItem> m_ControlList;
 
-	INT_PTR HandleMessage(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
+	INT_PTR HandleMessage(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
 	bool ApplyPosition() override;
 	void DoLayout();
-	bool AddControl(int ID,unsigned int Align);
-	bool AddControls(int FirstID,int LastID,unsigned int Align);
+	bool AddControl(int ID, unsigned int Align);
+	bool AddControls(int FirstID, int LastID, unsigned int Align);
 	bool UpdateControlPosition(int ID);
 
 // CUIBase

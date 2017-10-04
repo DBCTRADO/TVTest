@@ -25,52 +25,57 @@ enum {
 	CONTROLPANEL_ITEM_AUDIO
 };
 
-class CTunerControlItem : public CControlPanelItem
+class CTunerControlItem
+	: public CControlPanelItem
 {
 public:
 // CControlPanelItem
-	void CalcSize(int Width,SIZE *pSize);
-	void Draw(HDC hdc,const RECT &Rect);
-	void OnLButtonDown(int x,int y);
-	void OnRButtonDown(int x,int y);
+	void CalcSize(int Width, SIZE *pSize);
+	void Draw(HDC hdc, const RECT &Rect);
+	void OnLButtonDown(int x, int y);
+	void OnRButtonDown(int x, int y);
 };
 
-class CChannelControlItem : public CControlPanelItem
+class CChannelControlItem
+	: public CControlPanelItem
 {
 public:
 // CControlPanelItem
-	void CalcSize(int Width,SIZE *pSize);
-	void Draw(HDC hdc,const RECT &Rect);
-	void OnLButtonDown(int x,int y);
-	void OnRButtonDown(int x,int y);
+	void CalcSize(int Width, SIZE *pSize);
+	void Draw(HDC hdc, const RECT &Rect);
+	void OnLButtonDown(int x, int y);
+	void OnRButtonDown(int x, int y);
 };
 
-class CVideoControlItem : public CControlPanelItem
+class CVideoControlItem
+	: public CControlPanelItem
 {
 public:
 // CControlPanelItem
-	void CalcSize(int Width,SIZE *pSize);
-	void Draw(HDC hdc,const RECT &Rect);
-	void OnLButtonDown(int x,int y);
-	void OnRButtonDown(int x,int y);
+	void CalcSize(int Width, SIZE *pSize);
+	void Draw(HDC hdc, const RECT &Rect);
+	void OnLButtonDown(int x, int y);
+	void OnRButtonDown(int x, int y);
 };
 
-class CVolumeControlItem : public CControlPanelItem
+class CVolumeControlItem
+	: public CControlPanelItem
 {
 public:
 // CControlPanelItem
-	void CalcSize(int Width,SIZE *pSize);
-	void Draw(HDC hdc,const RECT &Rect);
-	void OnLButtonDown(int x,int y);
-	void OnRButtonDown(int x,int y);
-	void OnMouseMove(int x,int y);
+	void CalcSize(int Width, SIZE *pSize);
+	void Draw(HDC hdc, const RECT &Rect);
+	void OnLButtonDown(int x, int y);
+	void OnRButtonDown(int x, int y);
+	void OnMouseMove(int x, int y);
 	void SetStyle(const TVTest::Style::CStyleManager *pStyleManager);
 	void NormalizeStyle(
 		const TVTest::Style::CStyleManager *pStyleManager,
 		const TVTest::Style::CStyleScaling *pStyleScaling);
 
 private:
-	struct VolumeControlStyle {
+	struct VolumeControlStyle
+	{
 		TVTest::Style::IntValue BarHeight;
 		TVTest::Style::Margins BarPadding;
 		TVTest::Style::IntValue BarBorderWidth;
@@ -81,31 +86,33 @@ private:
 	VolumeControlStyle m_Style;
 };
 
-class CAudioControlItem : public CControlPanelItem
+class CAudioControlItem
+	: public CControlPanelItem
 {
 public:
 // CControlPanelItem
-	void CalcSize(int Width,SIZE *pSize);
-	void Draw(HDC hdc,const RECT &Rect);
-	void OnLButtonDown(int x,int y);
-	void OnRButtonDown(int x,int y);
+	void CalcSize(int Width, SIZE *pSize);
+	void Draw(HDC hdc, const RECT &Rect);
+	void OnLButtonDown(int x, int y);
+	void OnRButtonDown(int x, int y);
 
 private:
 	TVTest::Theme::IconList m_Icons;
 };
 
-class CControlPanelButton : public CControlPanelItem
+class CControlPanelButton
+	: public CControlPanelItem
 {
 protected:
 	TVTest::String m_Text;
 	int m_Width;
 
 public:
-	CControlPanelButton(int Command,LPCTSTR pszText,bool fBreak=true,int Width=-1);
+	CControlPanelButton(int Command, LPCTSTR pszText, bool fBreak = true, int Width = -1);
 	virtual ~CControlPanelButton();
 // CControlPanelItem
-	virtual void CalcSize(int Width,SIZE *pSize);
-	virtual void Draw(HDC hdc,const RECT &Rect);
+	virtual void CalcSize(int Width, SIZE *pSize);
+	virtual void Draw(HDC hdc, const RECT &Rect);
 };
 
 

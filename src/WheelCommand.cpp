@@ -16,18 +16,18 @@ CWheelCommandManager::CWheelCommandManager()
 		int ID;
 		LPCTSTR pszIDText;
 	} CommandList[] = {
-		{CM_WHEEL_VOLUME,		TEXT("WheelVolume")},
-		{CM_WHEEL_CHANNEL,		TEXT("WheelChannel")},
-		{CM_WHEEL_AUDIO,		TEXT("WheelAudio")},
-		{CM_WHEEL_ZOOM,			TEXT("WheelZoom")},
-		{CM_WHEEL_ASPECTRATIO,	TEXT("WheelAspectRatio")},
-		{CM_WHEEL_AUDIODELAY,	TEXT("WheelAudioDelay")},
+		{CM_WHEEL_VOLUME,      TEXT("WheelVolume")},
+		{CM_WHEEL_CHANNEL,     TEXT("WheelChannel")},
+		{CM_WHEEL_AUDIO,       TEXT("WheelAudio")},
+		{CM_WHEEL_ZOOM,        TEXT("WheelZoom")},
+		{CM_WHEEL_ASPECTRATIO, TEXT("WheelAspectRatio")},
+		{CM_WHEEL_AUDIODELAY,  TEXT("WheelAudioDelay")},
 	};
 
 	m_CommandList.resize(lengthof(CommandList));
-	for (int i=0;i<lengthof(CommandList);i++) {
-		m_CommandList[i].ID=CommandList[i].ID;
-		m_CommandList[i].IDText=CommandList[i].pszIDText;
+	for (int i = 0; i < lengthof(CommandList); i++) {
+		m_CommandList[i].ID = CommandList[i].ID;
+		m_CommandList[i].IDText = CommandList[i].pszIDText;
 	}
 }
 
@@ -40,26 +40,26 @@ int CWheelCommandManager::GetCommandCount() const
 
 int CWheelCommandManager::GetCommandID(int Index) const
 {
-	if (Index<0 || static_cast<size_t>(Index)>=m_CommandList.size())
+	if (Index < 0 || static_cast<size_t>(Index) >= m_CommandList.size())
 		return 0;
 
 	return m_CommandList[Index].ID;
 }
 
 
-int CWheelCommandManager::GetCommandParsableName(int ID,LPTSTR pszName,int MaxName) const
+int CWheelCommandManager::GetCommandParsableName(int ID, LPTSTR pszName, int MaxName) const
 {
-	if (pszName==nullptr || MaxName<1)
+	if (pszName == nullptr || MaxName < 1)
 		return -1;
 
-	pszName[0]='\0';
+	pszName[0] = '\0';
 
-	if (ID<=0)
+	if (ID <= 0)
 		return 0;
 
-	for (auto it=m_CommandList.begin();it!=m_CommandList.end();++it) {
-		if (it->ID==ID) {
-			::lstrcpyn(pszName,it->IDText.c_str(),MaxName);
+	for (auto it = m_CommandList.begin(); it != m_CommandList.end(); ++it) {
+		if (it->ID == ID) {
+			::lstrcpyn(pszName, it->IDText.c_str(), MaxName);
 			return static_cast<int>(it->IDText.length());
 		}
 	}
@@ -68,13 +68,12 @@ int CWheelCommandManager::GetCommandParsableName(int ID,LPTSTR pszName,int MaxNa
 }
 
 
-int CWheelCommandManager::GetCommandText(int ID,LPTSTR pszText,int MaxText) const
+int CWheelCommandManager::GetCommandText(int ID, LPTSTR pszText, int MaxText) const
 {
-	if (pszText==nullptr || MaxText<1)
+	if (pszText == nullptr || MaxText < 1)
 		return 0;
 
-	return ::LoadString(GetAppClass().GetResourceInstance(),
-						ID,pszText,MaxText);
+	return ::LoadString(GetAppClass().GetResourceInstance(), ID, pszText, MaxText);
 }
 
 
@@ -83,8 +82,8 @@ int CWheelCommandManager::ParseCommand(LPCTSTR pszCommand) const
 	if (IsStringEmpty(pszCommand))
 		return 0;
 
-	for (auto it=m_CommandList.begin();it!=m_CommandList.end();++it) {
-		if (StringUtility::CompareNoCase(it->IDText,pszCommand)==0) {
+	for (auto it = m_CommandList.begin(); it != m_CommandList.end(); ++it) {
+		if (StringUtility::CompareNoCase(it->IDText, pszCommand) == 0) {
 			return it->ID;
 		}
 	}

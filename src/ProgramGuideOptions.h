@@ -8,14 +8,15 @@
 #include "Tooltip.h"
 
 
-class CProgramGuideOptions : public COptions
+class CProgramGuideOptions
+	: public COptions
 {
 public:
 	enum {
-		UPDATE_EVENTICONS	=0x00000001UL
+		UPDATE_EVENTICONS	= 0x00000001UL
 	};
 
-	CProgramGuideOptions(CProgramGuide *pProgramGuide,CPluginManager *pPluginManager);
+	CProgramGuideOptions(CProgramGuide *pProgramGuide, CPluginManager *pPluginManager);
 	~CProgramGuideOptions();
 
 // CSettingsBase
@@ -26,7 +27,7 @@ public:
 	bool Create(HWND hwndOwner) override;
 
 // CProgramGuideOptions
-	bool GetTimeRange(LibISDB::DateTime *pFirst,LibISDB::DateTime *pLast);
+	bool GetTimeRange(LibISDB::DateTime *pFirst, LibISDB::DateTime *pLast);
 	bool GetOnScreen() const { return m_fOnScreen; }
 	bool ScrollToCurChannel() const { return m_fScrollToCurChannel; }
 	const TVTest::Style::Font &GetFont() const { return m_Font; }
@@ -36,8 +37,8 @@ public:
 
 private:
 	enum {
-		MIN_VIEW_HOURS=1,
-		MAX_VIEW_HOURS=24*8
+		MIN_VIEW_HOURS = 1,
+		MAX_VIEW_HOURS = 24 * 8
 	};
 
 	CProgramGuide *m_pProgramGuide;
@@ -59,7 +60,7 @@ private:
 	CTooltip m_Tooltip;
 
 // CBasicDialog
-	INT_PTR DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
+	INT_PTR DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
 
 // CUIBase
 	void RealizeStyle() override;

@@ -6,7 +6,8 @@
 #include "LibISDB/LibISDB/Windows/Viewer/DirectShow/KnownDecoderManager.hpp"
 
 
-class CVideoDecoderOptions : public CSettingsBase
+class CVideoDecoderOptions
+	: public CSettingsBase
 {
 public:
 	typedef LibISDB::DirectShow::KnownDecoderManager::VideoDecoderSettings VideoDecoderSettings;

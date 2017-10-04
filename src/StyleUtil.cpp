@@ -54,8 +54,9 @@ void SetFontInfoItem(HWND hDlg, int ID, const Style::Font &Font)
 		Size = CalcFontPointHeight(hdc, &Font.LogFont);
 		::ReleaseDC(hDlg, hdc);
 	}
-	StdUtil::snprintf(szText, lengthof(szText), TEXT("%s, %d pt"),
-					  Font.LogFont.lfFaceName, Size);
+	StdUtil::snprintf(
+		szText, lengthof(szText), TEXT("%s, %d pt"),
+		Font.LogFont.lfFaceName, Size);
 	SetDlgItemText(hDlg, ID, szText);
 }
 
@@ -75,8 +76,9 @@ bool ChooseStyleFont(HWND hwndOwner, Style::Font *pFont)
 }
 
 
-bool ReadFontSettings(CSettings &Settings, LPCTSTR pszValueName, Style::Font *pFont,
-					  bool fCompatible, bool *pfPointSize)
+bool ReadFontSettings(
+	CSettings &Settings, LPCTSTR pszValueName, Style::Font *pFont,
+	bool fCompatible, bool *pfPointSize)
 {
 	if (pfPointSize != nullptr)
 		*pfPointSize = false;

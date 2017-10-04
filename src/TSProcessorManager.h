@@ -21,12 +21,13 @@ namespace TVTest
 			String Filter;
 
 			bool operator==(const FilterInfo &op) const {
-				return Module==op.Module && Device==op.Device && Filter==op.Filter;
+				return Module == op.Module && Device == op.Device && Filter == op.Filter;
 			}
-			bool operator!=(const FilterInfo &op) const { return !(*this==op); }
+			bool operator!=(const FilterInfo &op) const { return !(*this == op); }
 		};
 
-		struct TunerFilterInfo : public FilterInfo
+		struct TunerFilterInfo
+			: public FilterInfo
 		{
 			bool fEnable;
 			bool fEnableProcessing;
@@ -35,9 +36,9 @@ namespace TVTest
 			WORD TransportStreamID;
 			WORD ServiceID;
 
-			static const WORD NID_INVALID=0xFFFF;
-			static const WORD TSID_INVALID=0xFFFF;
-			static const WORD SID_INVALID=0xFFFF;
+			static const WORD NID_INVALID = 0xFFFF;
+			static const WORD TSID_INVALID = 0xFFFF;
+			static const WORD SID_INVALID = 0xFFFF;
 
 			TunerFilterInfo()
 				: fEnable(true)
@@ -48,16 +49,16 @@ namespace TVTest
 			{
 			}
 
-			bool IsNetworkIDEnabled() const { return NetworkID!=NID_INVALID; }
-			bool IsTransportStreamIDEnabled() const { return TransportStreamID!=TSID_INVALID; }
-			bool IsServiceIDEnabled() const { return ServiceID!=SID_INVALID; }
+			bool IsNetworkIDEnabled() const { return NetworkID != NID_INVALID; }
+			bool IsTransportStreamIDEnabled() const { return TransportStreamID != TSID_INVALID; }
+			bool IsServiceIDEnabled() const { return ServiceID != SID_INVALID; }
 		};
 
 		template<typename T> struct Optional
 		{
 			Optional() : m_fValid(false), m_Value(T()) {}
 			Optional(const T &Value) : m_fValid(true), m_Value(Value) {}
-			Optional<T> &operator=(const T &Value) { m_Value=Value; m_fValid=true; return *this; }
+			Optional<T> &operator=(const T &Value) { m_Value = Value; m_fValid = true; return *this; }
 			operator bool() const { return m_fValid; }
 			T &value() { return m_Value; }
 			const T &value() const { return m_Value; }
@@ -83,9 +84,9 @@ namespace TVTest
 			CTSProcessorSettings(const GUID &guid);
 			const TunerFilterInfo *GetTunerFilterInfo(
 				LPCTSTR pszTuner,
-				WORD NetworkID=TunerFilterInfo::NID_INVALID,
-				WORD TransportStreamID=TunerFilterInfo::TSID_INVALID,
-				WORD ServiceID=TunerFilterInfo::SID_INVALID) const;
+				WORD NetworkID = TunerFilterInfo::NID_INVALID,
+				WORD TransportStreamID = TunerFilterInfo::TSID_INVALID,
+				WORD ServiceID = TunerFilterInfo::SID_INVALID) const;
 			bool IsTunerFilterMapEnabled() const;
 		};
 
@@ -102,37 +103,39 @@ namespace TVTest
 		CTSProcessorSettings *GetTSProcessorSettings(const GUID &guid);
 		const CTSProcessorSettings *GetTSProcessorSettings(const GUID &guid) const;
 		bool SetTSProcessorSettings(CTSProcessorSettings *pSettings);
-		bool ApplyTSProcessorSettings(const GUID &guid,bool fSetProperties=true);
-		bool ApplyTSProcessorSettings(CTSProcessor *pTSProcessor,bool fSetProperties=true);
+		bool ApplyTSProcessorSettings(const GUID &guid, bool fSetProperties = true);
+		bool ApplyTSProcessorSettings(CTSProcessor *pTSProcessor, bool fSetProperties = true);
 		bool SaveTSProcessorProperties(CTSProcessor *pTSProcessor);
-		bool RegisterTSProcessor(CTSProcessor *pTSProcessor,
-								 CCoreEngine::TSProcessorConnectPosition ConnectPosition);
+		bool RegisterTSProcessor(
+			CTSProcessor *pTSProcessor,
+			CCoreEngine::TSProcessorConnectPosition ConnectPosition);
 		CTSProcessor *GetTSProcessor(const GUID &guid) const;
 		bool GetTSProcessorList(std::vector<CTSProcessor*> *pList) const;
-		void OpenDefaultFilters(unsigned int FilterOpenFlags=0);
+		void OpenDefaultFilters(unsigned int FilterOpenFlags = 0);
 		void CloseAllFilters();
-		void OnTunerChange(LPCTSTR pszOldTuner,LPCTSTR pszNewTuner);
-		void OnTunerOpened(LPCTSTR pszTuner,unsigned int FilterOpenFlags=0);
+		void OnTunerChange(LPCTSTR pszOldTuner, LPCTSTR pszNewTuner);
+		void OnTunerOpened(LPCTSTR pszTuner, unsigned int FilterOpenFlags = 0);
 		void OnNetworkChanged(
 			LPCTSTR pszTuner,
-			WORD NetworkID=TunerFilterInfo::NID_INVALID,
-			WORD TransportStreamID=TunerFilterInfo::TSID_INVALID,
-			WORD ServiceID=TunerFilterInfo::SID_INVALID,
-			unsigned int FilterOpenFlags=0);
+			WORD NetworkID = TunerFilterInfo::NID_INVALID,
+			WORD TransportStreamID = TunerFilterInfo::TSID_INVALID,
+			WORD ServiceID = TunerFilterInfo::SID_INVALID,
+			unsigned int FilterOpenFlags = 0);
 
 	private:
 		std::vector<CTSProcessorSettings*> m_SettingsList;
 
-		bool ApplyTSProcessorSettings(CTSProcessor *pTSProcessor,const GUID &guid,bool fSetProperties=true);
+		bool ApplyTSProcessorSettings(CTSProcessor *pTSProcessor, const GUID &guid, bool fSetProperties = true);
 		void OpenFilter(
-			CTSProcessor *pTSProcessor,CTSProcessorSettings *pSettings,
-			const FilterInfo &Filter,unsigned int FilterOpenFlags);
+			CTSProcessor *pTSProcessor, CTSProcessorSettings *pSettings,
+			const FilterInfo &Filter, unsigned int FilterOpenFlags);
 		void CloseFilter(CTSProcessor *pTSProcessor);
 
-	// CTSProcessor::CEventHandler
+		// CTSProcessor::CEventHandler
 		void OnFinalize(CTSProcessor *pTSProcessor) override;
-		void OnNotify(CTSProcessor *pTSProcessor,
-					  Interface::NotifyType Type, LPCWSTR pszMessage) override;
+		void OnNotify(
+			CTSProcessor *pTSProcessor,
+			Interface::NotifyType Type, LPCWSTR pszMessage) override;
 	};
 
 }	// namespace TVTest

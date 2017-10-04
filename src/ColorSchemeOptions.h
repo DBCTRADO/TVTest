@@ -7,13 +7,14 @@
 #include "ColorPalette.h"
 
 
-class CColorSchemeOptions : public COptions
+class CColorSchemeOptions
+	: public COptions
 {
 public:
 	class ABSTRACT_CLASS(CEventHandler)
 	{
 	public:
-		virtual bool ApplyColorScheme(const CColorScheme *pColorScheme) = 0;
+		virtual bool ApplyColorScheme(const CColorScheme * pColorScheme) = 0;
 	};
 
 	CColorSchemeOptions();
@@ -29,7 +30,7 @@ public:
 	const CColorScheme *GetColorScheme() const { return m_pColorScheme; }
 	COLORREF GetColor(int Type) const;
 	COLORREF GetColor(LPCTSTR pszText) const;
-	static bool GetThemesDirectory(LPTSTR pszDirectory,int MaxLength,bool fCreate=false);
+	static bool GetThemesDirectory(LPTSTR pszDirectory, int MaxLength, bool fCreate = false);
 
 private:
 	CColorScheme *m_pColorScheme;
@@ -45,7 +46,7 @@ private:
 	static const LPCTSTR m_pszExtension;
 
 // CBasicDialog
-	INT_PTR DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
+	INT_PTR DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
 
 // CUIBase
 	void ApplyStyle() override;
@@ -55,7 +56,7 @@ private:
 	void GetCurrentSettings(CColorScheme *pColorScheme);
 	void SetListItemSize();
 
-	static INT_PTR CALLBACK SaveDlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam);
+	static INT_PTR CALLBACK SaveDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 };
 
 

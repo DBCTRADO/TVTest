@@ -7,7 +7,8 @@
 #include <vector>
 
 
-class CAudioOptions : public COptions
+class CAudioOptions
+	: public COptions
 {
 public:
 	struct AudioLanguageInfo
@@ -16,9 +17,9 @@ public:
 		bool fSub;
 
 		bool operator==(const AudioLanguageInfo &Op) const {
-			return Language==Op.Language && fSub==Op.fSub;
+			return Language == Op.Language && fSub == Op.fSub;
 		}
-		bool operator!=(const AudioLanguageInfo &Op) const { return !(*this==Op); }
+		bool operator!=(const AudioLanguageInfo &Op) const { return !(*this == Op); }
 	};
 
 	typedef std::vector<AudioLanguageInfo> AudioLanguageList;
@@ -45,7 +46,8 @@ public:
 	bool GetResetAudioDelayOnChannelChange() const { return m_fResetAudioDelayOnChannelChange; }
 
 private:
-	class CSurroundOptionsDialog : public CBasicDialog
+	class CSurroundOptionsDialog
+		: public CBasicDialog
 	{
 	public:
 		CSurroundOptionsDialog(CAudioOptions *pOptions);
@@ -54,14 +56,14 @@ private:
 	private:
 		CAudioOptions *m_pOptions;
 
-		INT_PTR DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
+		INT_PTR DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
 		void SetDownMixMatrix(const LibISDB::DirectShow::AudioDecoderFilter::DownMixMatrix &Matrix);
 	};
 
 	static const LibISDB::DirectShow::AudioDecoderFilter::SurroundMixingMatrix m_DefaultSurroundMixingMatrix;
 	static const LibISDB::DirectShow::AudioDecoderFilter::DownMixMatrix m_DefaultDownMixMatrix;
 	static const DWORD m_AudioLanguageList[];
-	static const DWORD LANGUAGE_FLAG_SUB=0x01000000;
+	static const DWORD LANGUAGE_FLAG_SUB = 0x01000000;
 
 	TVTest::String m_AudioDeviceName;
 	TVTest::String m_AudioFilterName;
@@ -77,9 +79,9 @@ private:
 	bool m_fResetAudioDelayOnChannelChange;
 
 // CBasicDialog
-	INT_PTR DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
+	INT_PTR DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
 
-	void GetLanguageText(DWORD Language,bool fSub,LPTSTR pszText,int MaxText) const;
+	void GetLanguageText(DWORD Language, bool fSub, LPTSTR pszText, int MaxText) const;
 	void UpdateLanguagePriorityControls();
 };
 

@@ -16,18 +16,20 @@ class CProgramGuideTool
 {
 public:
 	CProgramGuideTool();
-	CProgramGuideTool(const TVTest::String &Name,const TVTest::String &Command);
-	CProgramGuideTool(LPCTSTR pszName,LPCTSTR pszCommand);
+	CProgramGuideTool(const TVTest::String &Name, const TVTest::String &Command);
+	CProgramGuideTool(LPCTSTR pszName, LPCTSTR pszCommand);
 	LPCTSTR GetName() const { return m_Name.c_str(); }
 	LPCTSTR GetCommand() const { return m_Command.c_str(); }
-	bool GetPath(LPTSTR pszPath,int MaxLength) const;
+	bool GetPath(LPTSTR pszPath, int MaxLength) const;
 	HICON GetIcon();
-	bool Execute(const ProgramGuide::CServiceInfo *pServiceInfo,
-				 const LibISDB::EventInfo *pEventInfo,HWND hwnd);
+	bool Execute(
+		const ProgramGuide::CServiceInfo *pServiceInfo,
+		const LibISDB::EventInfo *pEventInfo, HWND hwnd);
 	bool ShowDialog(HWND hwndOwner);
 
 private:
-	class CProgramGuideToolDialog : public CBasicDialog
+	class CProgramGuideToolDialog
+		: public CBasicDialog
 	{
 	public:
 		CProgramGuideToolDialog(CProgramGuideTool *pTool);
@@ -36,14 +38,14 @@ private:
 	private:
 		CProgramGuideTool *m_pTool;
 
-		INT_PTR DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
+		INT_PTR DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
 	};
 
 	TVTest::String m_Name;
 	TVTest::String m_Command;
 	TVTest::CIcon m_Icon;
 
-	static bool GetCommandFileName(LPCTSTR *ppszCommand,LPTSTR pszFileName,int MaxFileName);
+	static bool GetCommandFileName(LPCTSTR *ppszCommand, LPTSTR pszFileName, int MaxFileName);
 };
 
 class CProgramGuideToolList

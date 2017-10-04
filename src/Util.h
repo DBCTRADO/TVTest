@@ -10,49 +10,50 @@ inline bool operator==(const POINT &pt1, const POINT &pt2) { return pt1.x == pt2
 inline bool operator!=(const POINT &pt1, const POINT &pt2) { return !(pt1 == pt2); }
 
 int HexCharToInt(TCHAR Code);
-unsigned int HexStringToUInt(LPCTSTR pszString,int Length,LPCTSTR *ppszEnd=NULL);
+unsigned int HexStringToUInt(LPCTSTR pszString, int Length, LPCTSTR *ppszEnd = NULL);
 
-bool IsRectIntersect(const RECT *pRect1,const RECT *pRect2);
+bool IsRectIntersect(const RECT *pRect1, const RECT *pRect2);
 
 float LevelToDeciBel(int Level);
 
-COLORREF MixColor(COLORREF Color1,COLORREF Color2,BYTE Ratio=128);
-COLORREF HSVToRGB(double Hue,double Saturation,double Value);
-void RGBToHSV(BYTE Red,BYTE Green,BYTE Blue,
-			  double *pHue,double *pSaturation,double *pValue);
+COLORREF MixColor(COLORREF Color1, COLORREF Color2, BYTE Ratio = 128);
+COLORREF HSVToRGB(double Hue, double Saturation, double Value);
+void RGBToHSV(
+	BYTE Red, BYTE Green, BYTE Blue,
+	double *pHue, double *pSaturation, double *pValue);
 
-inline DWORD TickTimeSpan(DWORD Start,DWORD End) { return End-Start; }
-inline ULONGLONG TickTimeSpan(ULONGLONG Start,ULONGLONG End) { _ASSERT(Start<=End); return End-Start; }
+inline DWORD TickTimeSpan(DWORD Start, DWORD End) { return End - Start; }
+inline ULONGLONG TickTimeSpan(ULONGLONG Start, ULONGLONG End) { _ASSERT(Start <= End); return End - Start; }
 
-extern __declspec(selectany) const FILETIME FILETIME_NULL={0,0};
-#define FILETIME_MILLISECOND	10000LL
-#define FILETIME_SECOND			(1000LL*FILETIME_MILLISECOND)
-#define FILETIME_MINUTE			(60LL*FILETIME_SECOND)
-#define FILETIME_HOUR			(60LL*FILETIME_MINUTE)
-FILETIME &operator+=(FILETIME &ft,LONGLONG Offset);
-LONGLONG operator-(const FILETIME &ft1,const FILETIME &ft2);
+extern __declspec(selectany) const FILETIME FILETIME_NULL = {0, 0};
+#define FILETIME_MILLISECOND 10000LL
+#define FILETIME_SECOND      (1000LL * FILETIME_MILLISECOND)
+#define FILETIME_MINUTE      (60LL * FILETIME_SECOND)
+#define FILETIME_HOUR        (60LL*FILETIME_MINUTE)
+FILETIME &operator+=(FILETIME &ft, LONGLONG Offset);
+LONGLONG operator-(const FILETIME &ft1, const FILETIME &ft2);
 struct TimeConsts {
-	static const LONGLONG SYSTEMTIME_SECOND=1000LL;
-	static const LONGLONG SYSTEMTIME_MINUTE=60LL*SYSTEMTIME_SECOND;
-	static const LONGLONG SYSTEMTIME_HOUR  =60LL*SYSTEMTIME_MINUTE;
-	static const LONGLONG SYSTEMTIME_DAY   =24LL*SYSTEMTIME_HOUR;
+	static const LONGLONG SYSTEMTIME_SECOND = 1000LL;
+	static const LONGLONG SYSTEMTIME_MINUTE = 60LL * SYSTEMTIME_SECOND;
+	static const LONGLONG SYSTEMTIME_HOUR   = 60LL * SYSTEMTIME_MINUTE;
+	static const LONGLONG SYSTEMTIME_DAY    = 24LL * SYSTEMTIME_HOUR;
 };
-int CompareSystemTime(const SYSTEMTIME *pTime1,const SYSTEMTIME *pTime2);
-bool OffsetSystemTime(SYSTEMTIME *pTime,LONGLONG Offset);
-LONGLONG DiffSystemTime(const SYSTEMTIME *pStartTime,const SYSTEMTIME *pEndTime);
+int CompareSystemTime(const SYSTEMTIME *pTime1, const SYSTEMTIME *pTime2);
+bool OffsetSystemTime(SYSTEMTIME *pTime, LONGLONG Offset);
+LONGLONG DiffSystemTime(const SYSTEMTIME *pStartTime, const SYSTEMTIME *pEndTime);
 void GetLocalTimeAsFileTime(FILETIME *pTime);
 void SystemTimeTruncateDay(SYSTEMTIME *pTime);
 void SystemTimeTruncateHour(SYSTEMTIME *pTime);
 void SystemTimeTruncateMinute(SYSTEMTIME *pTime);
 void SystemTimeTruncateSecond(SYSTEMTIME *pTime);
 bool GetJSTTimeZoneInformation(TIME_ZONE_INFORMATION *pInfo);
-int CalcDayOfWeek(int Year,int Month,int Day);
+int CalcDayOfWeek(int Year, int Month, int Day);
 LPCTSTR GetDayOfWeekText(int DayOfWeek);
 
-bool CopyTextToClipboard(HWND hwndOwner,LPCTSTR pszText);
+bool CopyTextToClipboard(HWND hwndOwner, LPCTSTR pszText);
 
 void ClearMenu(HMENU hmenu);
-int CopyToMenuText(LPCTSTR pszSrcText,LPTSTR pszDstText,int MaxLength);
+int CopyToMenuText(LPCTSTR pszSrcText, LPTSTR pszDstText, int MaxLength);
 TVTest::String FormatMenuString(const TVTest::String &Str);
 TVTest::String FormatMenuString(LPCWSTR pszText);
 
@@ -62,66 +63,71 @@ bool FileSaveDialog(OPENFILENAME *pofn);
 
 void ForegroundWindow(HWND hwnd);
 
-bool ChooseColorDialog(HWND hwndOwner,COLORREF *pcrResult);
-bool ChooseFontDialog(HWND hwndOwner,LOGFONT *plf,int *pPointSize=nullptr);
-bool BrowseFolderDialog(HWND hwndOwner,LPTSTR pszDirectory,LPCTSTR pszTitle);
+bool ChooseColorDialog(HWND hwndOwner, COLORREF *pcrResult);
+bool ChooseFontDialog(HWND hwndOwner, LOGFONT *plf, int *pPointSize = nullptr);
+bool BrowseFolderDialog(HWND hwndOwner, LPTSTR pszDirectory, LPCTSTR pszTitle);
 
-bool CompareLogFont(const LOGFONT *pFont1,const LOGFONT *pFont2);
+bool CompareLogFont(const LOGFONT *pFont1, const LOGFONT *pFont2);
 int PixelsToPoints(int Pixels);
 int PointsToPixels(int Points);
-int CalcFontPointHeight(HDC hdc,const LOGFONT *pFont);
+int CalcFontPointHeight(HDC hdc, const LOGFONT *pFont);
 
-int GetErrorText(DWORD ErrorCode,LPTSTR pszText,int MaxLength);
+int GetErrorText(DWORD ErrorCode, LPTSTR pszText, int MaxLength);
 
-bool IsEqualFileName(LPCWSTR pszFileName1,LPCWSTR pszFileName2);
+bool IsEqualFileName(LPCWSTR pszFileName1, LPCWSTR pszFileName2);
 enum {
 	FILENAME_VALIDATE_WILDCARD       = 0x0001U,
 	FILENAME_VALIDATE_ALLOWDELIMITER = 0x0002U
 };
-bool IsValidFileName(LPCTSTR pszFileName,unsigned int Flags=0,TVTest::String *pMessage=NULL);
-bool MakeUniqueFileName(TVTest::String *pFileName,size_t MaxLength=MAX_PATH-1,
-						LPCTSTR pszNumberFormat=NULL);
-bool GetAbsolutePath(LPCTSTR pszFilePath,LPTSTR pszAbsolutePath,int MaxLength);
+bool IsValidFileName(LPCTSTR pszFileName, unsigned int Flags = 0, TVTest::String *pMessage = NULL);
+bool MakeUniqueFileName(
+	TVTest::String *pFileName, size_t MaxLength = MAX_PATH - 1,
+	LPCTSTR pszNumberFormat = NULL);
+bool GetAbsolutePath(LPCTSTR pszFilePath, LPTSTR pszAbsolutePath, int MaxLength);
 
-HICON CreateIconFromBitmap(HBITMAP hbm,int IconWidth,int IconHeight,int ImageWidth=0,int ImageHeight=0);
-bool SaveIconFromBitmap(LPCTSTR pszFileName,HBITMAP hbm,
-						int IconWidth,int IconHeight,int ImageWidth=0,int ImageHeight=0);
-HICON CreateEmptyIcon(int Width,int Height,int BitsPerPixel=1);
+HICON CreateIconFromBitmap(HBITMAP hbm, int IconWidth, int IconHeight, int ImageWidth = 0, int ImageHeight = 0);
+bool SaveIconFromBitmap(
+	LPCTSTR pszFileName, HBITMAP hbm,
+	int IconWidth, int IconHeight, int ImageWidth = 0, int ImageHeight = 0);
+HICON CreateEmptyIcon(int Width, int Height, int BitsPerPixel = 1);
 enum IconSizeType {
 	ICON_SIZE_SMALL,
 	ICON_SIZE_NORMAL
 };
-bool GetStandardIconSize(IconSizeType Size,int *pWidth,int *pHeight);
-HICON LoadIconStandardSize(HINSTANCE hinst,LPCTSTR pszName,IconSizeType Size);
-HICON LoadSystemIcon(LPCTSTR pszName,IconSizeType Size);
-HICON LoadSystemIcon(LPCTSTR pszName,int Width,int Height);
+bool GetStandardIconSize(IconSizeType Size, int *pWidth, int *pHeight);
+HICON LoadIconStandardSize(HINSTANCE hinst, LPCTSTR pszName, IconSizeType Size);
+HICON LoadSystemIcon(LPCTSTR pszName, IconSizeType Size);
+HICON LoadSystemIcon(LPCTSTR pszName, int Width, int Height);
 
 class CStaticStringFormatter
 {
 public:
-	CStaticStringFormatter(LPTSTR pBuffer,size_t BufferLength);
+	CStaticStringFormatter(LPTSTR pBuffer, size_t BufferLength);
 	size_t Length() const { return m_Length; }
-	bool IsEmpty() const { return m_Length==0; }
+	bool IsEmpty() const { return m_Length == 0; }
 	LPCTSTR GetString() const { return m_pBuffer; }
 	void Clear();
 	void Append(LPCTSTR pszString);
 	void AppendFormat(LPCTSTR pszFormat, ...);
-	void AppendFormatV(LPCTSTR pszFormat,va_list Args);
+	void AppendFormatV(LPCTSTR pszFormat, va_list Args);
 	void RemoveTrailingWhitespace();
+
 private:
 	const LPTSTR m_pBuffer;
 	const size_t m_BufferLength;
 	size_t m_Length;
 };
 
-class CFilePath {
+class CFilePath
+{
 	TCHAR m_szPath[MAX_PATH];
+
 public:
 	CFilePath();
 	CFilePath(const CFilePath &Path);
 	explicit CFilePath(LPCTSTR pszPath);
 	~CFilePath();
-	bool IsEmpty() const { return m_szPath[0]==_T('\0'); }
+	bool IsEmpty() const { return m_szPath[0] == _T('\0'); }
 	bool SetPath(LPCTSTR pszPath);
 	LPCTSTR GetPath() const { return m_szPath; }
 	void GetPath(LPTSTR pszPath) const;
@@ -133,7 +139,7 @@ public:
 	bool SetExtension(LPCTSTR pszExtension);
 	bool RemoveExtension();
 	bool AppendExtension(LPCTSTR pszExtension);
-	bool Make(LPCTSTR pszDirectory,LPCTSTR pszFileName);
+	bool Make(LPCTSTR pszDirectory, LPCTSTR pszFileName);
 	bool Append(LPCTSTR pszMore);
 	bool GetDirectory(LPTSTR pszDirectory) const;
 	bool SetDirectory(LPCTSTR pszDirectory);
@@ -141,25 +147,27 @@ public:
 	bool HasDirectory() const;
 	bool IsRelative() const;
 	bool IsExists() const;
-	bool IsValid(bool fWildcard=false) const;
+	bool IsValid(bool fWildcard = false) const;
 };
 
-class CLocalTime {
+class CLocalTime
+{
 protected:
 	FILETIME m_Time;
+
 public:
 	CLocalTime();
 	CLocalTime(const FILETIME &Time);
 	CLocalTime(const SYSTEMTIME &Time);
 	virtual ~CLocalTime();
 	bool operator==(const CLocalTime &Time) const;
-	bool operator!=(const CLocalTime &Time) const { return !(*this==Time); }
+	bool operator!=(const CLocalTime &Time) const { return !(*this == Time); }
 	bool operator<(const CLocalTime &Time) const;
 	bool operator>(const CLocalTime &Time) const;
 	bool operator<=(const CLocalTime &Time) const;
 	bool operator>=(const CLocalTime &Time) const;
 	CLocalTime &operator+=(LONGLONG Offset);
-	CLocalTime &operator-=(LONGLONG Offset) { return *this+=-Offset; }
+	CLocalTime &operator-=(LONGLONG Offset) { return *this += -Offset; }
 	LONGLONG operator-(const CLocalTime &Time) const;
 	void SetCurrentTime();
 	bool GetTime(FILETIME *pTime) const;
@@ -178,16 +186,18 @@ class CGlobalLock
 public:
 	CGlobalLock();
 	~CGlobalLock();
-	bool Create(LPCTSTR pszName,bool fInheritHandle=false);
-	bool Open(LPCTSTR pszName,
-			  DWORD DesiredAccess=MUTEX_ALL_ACCESS,
-			  bool fInheritHandle=false);
-	bool Wait(DWORD Timeout=INFINITE);
+	bool Create(LPCTSTR pszName, bool fInheritHandle = false);
+	bool Open(
+		LPCTSTR pszName,
+		DWORD DesiredAccess = MUTEX_ALL_ACCESS,
+		bool fInheritHandle = false);
+	bool Wait(DWORD Timeout = INFINITE);
 	void Close();
 	void Release();
 };
 
-class CBasicSecurityAttributes : public SECURITY_ATTRIBUTES
+class CBasicSecurityAttributes
+	: public SECURITY_ATTRIBUTES
 {
 public:
 	CBasicSecurityAttributes();
@@ -203,14 +213,14 @@ private:
 namespace Util
 {
 
-	template<typename T> T *GetLibraryFunction(HMODULE hLib,LPCSTR pszFunc)
+	template<typename T> T *GetLibraryFunction(HMODULE hLib, LPCSTR pszFunc)
 	{
-		return reinterpret_cast<T*>(::GetProcAddress(hLib,pszFunc));
+		return reinterpret_cast<T*>(::GetProcAddress(hLib, pszFunc));
 	}
 
-	template<typename T> T *GetModuleFunction(LPCTSTR pszModule,LPCSTR pszFunc)
+	template<typename T> T *GetModuleFunction(LPCTSTR pszModule, LPCSTR pszFunc)
 	{
-		return reinterpret_cast<T*>(::GetProcAddress(::GetModuleHandle(pszModule),pszFunc));
+		return reinterpret_cast<T*>(::GetProcAddress(::GetModuleHandle(pszModule), pszFunc));
 	}
 
 #define GET_LIBRARY_FUNCTION(hLib,Func) \
@@ -248,61 +258,62 @@ namespace Util
 
 	}	// namespace OS
 
-	class CRect : public ::RECT
+	class CRect
+		: public ::RECT
 	{
 	public:
 		CRect() { Empty(); }
 
-		CRect(int Left,int Top,int Right,int Bottom)
+		CRect(int Left, int Top, int Right, int Bottom)
 		{
-			Set(Left,Top,Right,Bottom);
+			Set(Left, Top, Right, Bottom);
 		}
 
 		CRect &operator=(const RECT &Op)
 		{
-			left=Op.left;
-			top=Op.top;
-			right=Op.right;
-			bottom=Op.bottom;
+			left = Op.left;
+			top = Op.top;
+			right = Op.right;
+			bottom = Op.bottom;
 			return *this;
 		}
 
 		bool operator==(const CRect &Op)
 		{
-			return left==Op.left
-				&& top==Op.top
-				&& right==Op.right
-				&& bottom==Op.bottom;
+			return left == Op.left
+				&& top == Op.top
+				&& right == Op.right
+				&& bottom == Op.bottom;
 		}
 
-		bool operator!=(const CRect &Op) { return !(*this==Op); }
+		bool operator!=(const CRect &Op) { return !(*this == Op); }
 
-		void Set(int Left,int Top,int Right,int Bottom)
+		void Set(int Left, int Top, int Right, int Bottom)
 		{
-			left=Left; top=Top; right=Right; bottom=Bottom;
+			left = Left; top = Top; right = Right; bottom = Bottom;
 		}
 
-		void Empty() { left=0; top=0; right=0; bottom=0; }
+		void Empty() { left = 0; top = 0; right = 0; bottom = 0; }
 
-		bool IsEmpty() const { return left==right && top==bottom; }
+		bool IsEmpty() const { return left == right && top == bottom; }
 
-		int GetWidth() const { return right-left; }
+		int GetWidth() const { return right - left; }
 
-		int GetHeight() const { return bottom-top; }
+		int GetHeight() const { return bottom - top; }
 
 		bool Intersect(const RECT &Rect)
 		{
 			RECT rc;
-			bool fResult=::IntersectRect(&rc,this,&Rect)!=FALSE;
-			*this=rc;
+			bool fResult =::IntersectRect(&rc, this, &Rect) != FALSE;
+			*this = rc;
 			return fResult;
 		}
 
 		bool Union(const RECT &Rect)
 		{
 			RECT rc;
-			bool fResult=::UnionRect(&rc,this,&Rect)!=FALSE;
-			*this=rc;
+			bool fResult =::UnionRect(&rc, this, &Rect) != FALSE;
+			*this = rc;
 			return fResult;
 		}
 	};
@@ -310,8 +321,8 @@ namespace Util
 	class CClock
 	{
 	public:
-		void Start() { m_Clock=::GetTickCount(); }
-		DWORD GetSpan() const { return TickTimeSpan(m_Clock,::GetTickCount()); }
+		void Start() { m_Clock = ::GetTickCount(); }
+		DWORD GetSpan() const { return TickTimeSpan(m_Clock, ::GetTickCount()); }
 
 	private:
 		DWORD m_Clock;
@@ -321,7 +332,7 @@ namespace Util
 	{
 	public:
 		CWaitCursor()
-			: m_hcurOld(::SetCursor(::LoadCursor(NULL,IDC_WAIT)))
+			: m_hcurOld(::SetCursor(::LoadCursor(NULL, IDC_WAIT)))
 		{
 		}
 
@@ -339,19 +350,19 @@ namespace Util
 	public:
 		CTimer();
 		virtual ~CTimer();
-		bool Begin(DWORD DueTime,DWORD Period);
+		bool Begin(DWORD DueTime, DWORD Period);
 		void End();
 
 	protected:
 		virtual void OnTimer() = 0;
 
 	private:
-		static void CALLBACK TimerCallback(PVOID lpParameter,BOOLEAN TimerOrWaitFired);
+		static void CALLBACK TimerCallback(PVOID lpParameter, BOOLEAN TimerOrWaitFired);
 
 		HANDLE m_hTimer;
 	};
 
-	template<typename T,std::size_t N> class CTempBuffer
+	template<typename T, std::size_t N> class CTempBuffer
 	{
 	public:
 		CTempBuffer() : m_pBuffer(m_FixedBuffer) {}
@@ -359,25 +370,28 @@ namespace Util
 		~CTempBuffer() { Free(); }
 		T &operator[](std::size_t i) { return m_pBuffer[i]; }
 		const T &operator[](std::size_t i) const { return m_pBuffer[i]; }
-		void Allocate(std::size_t Elements) {
+		void Allocate(std::size_t Elements)
+		{
 			Free();
 			Allocate_(Elements);
 		}
-		void Free() {
-			if (m_pBuffer!=m_FixedBuffer) {
+		void Free()
+		{
+			if (m_pBuffer != m_FixedBuffer) {
 				delete [] m_pBuffer;
-				m_pBuffer=m_FixedBuffer;
+				m_pBuffer = m_FixedBuffer;
 			}
 		}
 		T *GetBuffer() { return m_pBuffer; }
 		const T *GetBuffer() const { return m_pBuffer; }
 
 	private:
-		void Allocate_(std::size_t Elements) {
-			if (Elements<=N) {
-				m_pBuffer=m_FixedBuffer;
+		void Allocate_(std::size_t Elements)
+		{
+			if (Elements <= N) {
+				m_pBuffer = m_FixedBuffer;
 			} else {
-				m_pBuffer=new T[Elements];
+				m_pBuffer = new T[Elements];
 			}
 		}
 

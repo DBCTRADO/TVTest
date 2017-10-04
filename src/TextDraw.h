@@ -27,35 +27,36 @@ namespace TVTest
 
 		virtual ~CTextDrawEngine() {}
 		virtual void Finalize();
-		virtual bool BeginDraw(HDC hdc,const RECT &Rect);
+		virtual bool BeginDraw(HDC hdc, const RECT &Rect);
 		virtual bool EndDraw();
-		virtual bool BindDC(HDC hdc,const RECT &Rect);
+		virtual bool BindDC(HDC hdc, const RECT &Rect);
 		virtual bool SetFont(HFONT hfont) = 0;
 		virtual bool SetTextColor(COLORREF Color) = 0;
-		virtual bool DrawText(LPCWSTR pText,int Length,const RECT &Rect,unsigned int Flags) = 0;
-		virtual int GetFitCharCount(LPCWSTR pText,int Length,int Width) = 0;
+		virtual bool DrawText(LPCWSTR pText, int Length, const RECT &Rect, unsigned int Flags) = 0;
+		virtual int GetFitCharCount(LPCWSTR pText, int Length, int Width) = 0;
 		virtual bool GetFontMetrics(FontMetrics *pMetrics) = 0;
-		virtual bool GetTextMetrics(LPCWSTR pText,int Length,TextMetrics *pMetrics) = 0;
+		virtual bool GetTextMetrics(LPCWSTR pText, int Length, TextMetrics *pMetrics) = 0;
 		virtual bool SetClippingRect(const RECT &Rect);
 		virtual bool ResetClipping();
 		virtual bool OnWindowPosChanged();
 	};
 
-	class CTextDrawEngine_GDI : public CTextDrawEngine
+	class CTextDrawEngine_GDI
+		: public CTextDrawEngine
 	{
 	public:
 		CTextDrawEngine_GDI();
 		~CTextDrawEngine_GDI();
 		void Finalize() override;
-		bool BeginDraw(HDC hdc,const RECT &Rect) override;
+		bool BeginDraw(HDC hdc, const RECT &Rect) override;
 		bool EndDraw() override;
-		bool BindDC(HDC hdc,const RECT &Rect) override;
+		bool BindDC(HDC hdc, const RECT &Rect) override;
 		bool SetFont(HFONT hfont) override;
 		bool SetTextColor(COLORREF Color) override;
-		bool DrawText(LPCWSTR pText,int Length,const RECT &Rect,unsigned int Flags) override;
-		int GetFitCharCount(LPCWSTR pText,int Length,int Width) override;
+		bool DrawText(LPCWSTR pText, int Length, const RECT &Rect, unsigned int Flags) override;
+		int GetFitCharCount(LPCWSTR pText, int Length, int Width) override;
 		bool GetFontMetrics(FontMetrics *pMetrics) override;
-		bool GetTextMetrics(LPCWSTR pText,int Length,TextMetrics *pMetrics) override;
+		bool GetTextMetrics(LPCWSTR pText, int Length, TextMetrics *pMetrics) override;
 
 	private:
 		void UnbindDC();
@@ -65,21 +66,22 @@ namespace TVTest
 		COLORREF m_OldTextColor;
 	};
 
-	class CTextDrawEngine_DirectWrite : public CTextDrawEngine
+	class CTextDrawEngine_DirectWrite
+		: public CTextDrawEngine
 	{
 	public:
 		CTextDrawEngine_DirectWrite(CDirectWriteRenderer &Renderer);
 		~CTextDrawEngine_DirectWrite();
 		void Finalize() override;
-		bool BeginDraw(HDC hdc,const RECT &Rect) override;
+		bool BeginDraw(HDC hdc, const RECT &Rect) override;
 		bool EndDraw() override;
-		bool BindDC(HDC hdc,const RECT &Rect) override;
+		bool BindDC(HDC hdc, const RECT &Rect) override;
 		bool SetFont(HFONT hfont) override;
 		bool SetTextColor(COLORREF Color) override;
-		bool DrawText(LPCWSTR pText,int Length,const RECT &Rect,unsigned int Flags) override;
-		int GetFitCharCount(LPCWSTR pText,int Length,int Width) override;
+		bool DrawText(LPCWSTR pText, int Length, const RECT &Rect, unsigned int Flags) override;
+		int GetFitCharCount(LPCWSTR pText, int Length, int Width) override;
 		bool GetFontMetrics(FontMetrics *pMetrics) override;
-		bool GetTextMetrics(LPCWSTR pText,int Length,TextMetrics *pMetrics) override;
+		bool GetTextMetrics(LPCWSTR pText, int Length, TextMetrics *pMetrics) override;
 		bool SetClippingRect(const RECT &Rect) override;
 		bool ResetClipping() override;
 		bool OnWindowPosChanged() override;
@@ -98,8 +100,8 @@ namespace TVTest
 	{
 	public:
 		enum {
-			FLAG_END_ELLIPSIS			=0x0001U,	// 収まりきらない場合省略記号を付加
-			FLAG_JAPANESE_HYPHNATION	=0x0002U	// 禁則処理
+			FLAG_END_ELLIPSIS        = 0x0001U,	// 収まりきらない場合省略記号を付加
+			FLAG_JAPANESE_HYPHNATION = 0x0002U	// 禁則処理
 		};
 
 		enum {
@@ -117,18 +119,18 @@ namespace TVTest
 		CTextDraw();
 		~CTextDraw();
 		bool SetEngine(CTextDrawEngine *pEngine);
-		bool Begin(HDC hdc,const RECT &Rect,unsigned int Flags=0);
+		bool Begin(HDC hdc, const RECT &Rect, unsigned int Flags = 0);
 		void End();
-		bool BindDC(HDC hdc,const RECT &Rect);
-		void SetFlags(unsigned int Flags) { m_Flags=Flags; }
+		bool BindDC(HDC hdc, const RECT &Rect);
+		void SetFlags(unsigned int Flags) { m_Flags = Flags; }
 		unsigned int GetFlags() const { return m_Flags; }
 		bool SetFont(HFONT hfont);
 		bool SetFont(const LOGFONT &Font);
 		bool SetTextColor(COLORREF Color);
-		int CalcLineCount(LPCWSTR pszText,int Width);
-		bool Draw(LPCWSTR pszText,const RECT &Rect,int LineHeight,unsigned int Flags=0);
+		int CalcLineCount(LPCWSTR pszText, int Width);
+		bool Draw(LPCWSTR pszText, const RECT &Rect, int LineHeight, unsigned int Flags = 0);
 		bool GetFontMetrics(FontMetrics *pMetrics);
-		bool GetTextMetrics(LPCWSTR pText,int Length,TextMetrics *pMetrics);
+		bool GetTextMetrics(LPCWSTR pText, int Length, TextMetrics *pMetrics);
 		bool SetClippingRect(const RECT &Rect);
 		bool ResetClipping();
 
@@ -139,8 +141,8 @@ namespace TVTest
 		std::vector<WCHAR> m_StringBuffer;
 
 		int GetLineLength(LPCWSTR pszText);
-		int AdjustLineLength(LPCWSTR pszText,int Length);
-		int GetFitCharCount(LPCWSTR pText,int Length,int Width);
+		int AdjustLineLength(LPCWSTR pszText, int Length);
+		int GetFitCharCount(LPCWSTR pText, int Length, int Width);
 
 		static const LPCWSTR m_pszStartProhibitChars;
 		static const LPCWSTR m_pszEndProhibitChars;

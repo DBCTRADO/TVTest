@@ -9,10 +9,10 @@ namespace TVTest
 {
 
 
-CEpg::CEpg(LibISDB::EPGDatabase &EPGDatabase,CEventSearchOptions &EventSearchOptions)
+CEpg::CEpg(LibISDB::EPGDatabase &EPGDatabase, CEventSearchOptions &EventSearchOptions)
 	: ProgramGuide(EventSearchOptions)
-	, ProgramGuideFrame(&ProgramGuide,&ProgramGuideFrameSettings)
-	, ProgramGuideDisplay(&ProgramGuide,&ProgramGuideFrameSettings)
+	, ProgramGuideFrame(&ProgramGuide, &ProgramGuideFrameSettings)
+	, ProgramGuideDisplay(&ProgramGuide, &ProgramGuideFrameSettings)
 	, fShowProgramGuide(false)
 {
 	ProgramGuide.SetEPGDatabase(&EPGDatabase);
@@ -51,7 +51,7 @@ size_t CEpg::CChannelProviderManager::GetChannelProviderCount() const
 
 CProgramGuideChannelProvider *CEpg::CChannelProviderManager::GetChannelProvider(size_t Index) const
 {
-	if (Index>=m_ChannelProviderList.size())
+	if (Index >= m_ChannelProviderList.size())
 		return NULL;
 	return m_ChannelProviderList[Index];
 }
@@ -62,43 +62,43 @@ bool CEpg::CChannelProviderManager::Create(LPCTSTR pszDefaultTuner)
 	Clear();
 
 	m_ChannelProviderList.push_back(new CFavoritesChannelProvider);
-	if (pszDefaultTuner!=NULL && ::lstrcmpi(pszDefaultTuner,TEXT("favorites"))==0)
-		m_CurChannelProvider=0;
+	if (pszDefaultTuner != NULL && ::lstrcmpi(pszDefaultTuner, TEXT("favorites")) == 0)
+		m_CurChannelProvider = 0;
 
-	CAppMain &App=GetAppClass();
+	CAppMain &App = GetAppClass();
 
-	CProgramGuideBaseChannelProvider *pCurChannelProvider=NULL;
+	CProgramGuideBaseChannelProvider *pCurChannelProvider = NULL;
 	String DefaultTuner;
-	if (m_CurChannelProvider<0) {
+	if (m_CurChannelProvider < 0) {
 		if (!IsStringEmpty(pszDefaultTuner)) {
-			pCurChannelProvider=new CBonDriverChannelProvider(pszDefaultTuner);
-			DefaultTuner=pszDefaultTuner;
-		} else if (pszDefaultTuner==NULL
+			pCurChannelProvider = new CBonDriverChannelProvider(pszDefaultTuner);
+			DefaultTuner = pszDefaultTuner;
+		} else if (pszDefaultTuner == NULL
 				&& App.CoreEngine.IsDriverSpecified()
 				&& !App.CoreEngine.IsNetworkDriver()) {
-			DefaultTuner=App.CoreEngine.GetDriverFileName();
-			pCurChannelProvider=new CProgramGuideBaseChannelProvider(
+			DefaultTuner = App.CoreEngine.GetDriverFileName();
+			pCurChannelProvider = new CProgramGuideBaseChannelProvider(
 				App.ChannelManager.GetTuningSpaceList(),
 				DefaultTuner.c_str());
 		}
 	}
 
-	for (int i=0;i<App.DriverManager.NumDrivers();i++) {
-		const CDriverInfo *pDriverInfo=App.DriverManager.GetDriverInfo(i);
+	for (int i = 0; i < App.DriverManager.NumDrivers(); i++) {
+		const CDriverInfo *pDriverInfo = App.DriverManager.GetDriverInfo(i);
 
-		if (pDriverInfo!=NULL) {
-			if (pCurChannelProvider!=NULL
-					&& IsEqualFileName(DefaultTuner.c_str(),pDriverInfo->GetFileName())) {
-				m_CurChannelProvider=(int)m_ChannelProviderList.size();
+		if (pDriverInfo != NULL) {
+			if (pCurChannelProvider != NULL
+					&& IsEqualFileName(DefaultTuner.c_str(), pDriverInfo->GetFileName())) {
+				m_CurChannelProvider = (int)m_ChannelProviderList.size();
 				m_ChannelProviderList.push_back(pCurChannelProvider);
-				pCurChannelProvider=NULL;
+				pCurChannelProvider = NULL;
 			} else {
 				CDriverManager::TunerSpec Spec;
-				if (!App.DriverManager.GetTunerSpec(pDriverInfo->GetFileName(),&Spec)
+				if (!App.DriverManager.GetTunerSpec(pDriverInfo->GetFileName(), &Spec)
 						|| (Spec.Flags &
 							(CDriverManager::TunerSpec::FLAG_NETWORK |
-							 CDriverManager::TunerSpec::FLAG_FILE))==0) {
-					CBonDriverChannelProvider *pDriverChannelProvider=
+							 CDriverManager::TunerSpec::FLAG_FILE)) == 0) {
+					CBonDriverChannelProvider *pDriverChannelProvider =
 						new CBonDriverChannelProvider(pDriverInfo->GetFileName());
 
 					m_ChannelProviderList.push_back(pDriverChannelProvider);
@@ -107,11 +107,11 @@ bool CEpg::CChannelProviderManager::Create(LPCTSTR pszDefaultTuner)
 		}
 	}
 
-	if (pCurChannelProvider!=NULL) {
-		auto itr=m_ChannelProviderList.begin();
+	if (pCurChannelProvider != NULL) {
+		auto itr = m_ChannelProviderList.begin();
 		++itr;
-		m_ChannelProviderList.insert(itr,pCurChannelProvider);
-		m_CurChannelProvider=1;
+		m_ChannelProviderList.insert(itr, pCurChannelProvider);
+		m_CurChannelProvider = 1;
 	}
 
 	return true;
@@ -120,15 +120,15 @@ bool CEpg::CChannelProviderManager::Create(LPCTSTR pszDefaultTuner)
 
 void CEpg::CChannelProviderManager::Clear()
 {
-	for (size_t i=0;i<m_ChannelProviderList.size();i++)
+	for (size_t i = 0; i < m_ChannelProviderList.size(); i++)
 		delete m_ChannelProviderList[i];
 	m_ChannelProviderList.clear();
-	m_CurChannelProvider=-1;
+	m_CurChannelProvider = -1;
 }
 
 
 CEpg::CChannelProviderManager::CBonDriverChannelProvider::CBonDriverChannelProvider(LPCTSTR pszFileName)
-	: CProgramGuideBaseChannelProvider(NULL,pszFileName)
+	: CProgramGuideBaseChannelProvider(NULL, pszFileName)
 {
 }
 
@@ -140,7 +140,7 @@ bool CEpg::CChannelProviderManager::CBonDriverChannelProvider::Update()
 	if (!DriverInfo.LoadTuningSpaceList())
 		return false;
 
-	m_TuningSpaceList=*DriverInfo.GetTuningSpaceList();
+	m_TuningSpaceList = *DriverInfo.GetTuningSpaceList();
 
 	return true;
 }
@@ -155,18 +155,18 @@ CEpg::CChannelProviderManager::CFavoritesChannelProvider::~CFavoritesChannelProv
 bool CEpg::CChannelProviderManager::CFavoritesChannelProvider::Update()
 {
 	ClearGroupList();
-	AddFavoritesChannels(GetAppClass().FavoritesManager.GetRootFolder(),String());
-	m_GroupList.front()->Name=TEXT("お気に入り");
+	AddFavoritesChannels(GetAppClass().FavoritesManager.GetRootFolder(), String());
+	m_GroupList.front()->Name = TEXT("お気に入り");
 
-	const int NumSpaces=static_cast<int>(m_GroupList.size());
+	const int NumSpaces = static_cast<int>(m_GroupList.size());
 	m_TuningSpaceList.Clear();
 	m_TuningSpaceList.Reserve(NumSpaces);
-	for (int i=0;i<NumSpaces;i++) {
-		const GroupInfo *pGroup=m_GroupList[i];
-		CTuningSpaceInfo *pTuningSpace=m_TuningSpaceList.GetTuningSpaceInfo(i);
+	for (int i = 0; i < NumSpaces; i++) {
+		const GroupInfo *pGroup = m_GroupList[i];
+		CTuningSpaceInfo *pTuningSpace = m_TuningSpaceList.GetTuningSpaceInfo(i);
 		pTuningSpace->SetName(pGroup->Name.c_str());
-		CChannelList *pChannelList=pTuningSpace->GetChannelList();
-		for (auto itr=pGroup->ChannelList.begin();itr!=pGroup->ChannelList.end();++itr) {
+		CChannelList *pChannelList = pTuningSpace->GetChannelList();
+		for (auto itr = pGroup->ChannelList.begin(); itr != pGroup->ChannelList.end(); ++itr) {
 			pChannelList->AddChannel(itr->GetChannelInfo());
 		}
 	}
@@ -176,23 +176,23 @@ bool CEpg::CChannelProviderManager::CFavoritesChannelProvider::Update()
 
 
 bool CEpg::CChannelProviderManager::CFavoritesChannelProvider::GetName(
-	LPTSTR pszName,int MaxName) const
+	LPTSTR pszName, int MaxName) const
 {
-	if (pszName==NULL || MaxName<1)
+	if (pszName == NULL || MaxName < 1)
 		return false;
 
-	::lstrcpyn(pszName,TEXT("お気に入りチャンネル"),MaxName);
+	::lstrcpyn(pszName, TEXT("お気に入りチャンネル"), MaxName);
 
 	return true;
 }
 
 
 bool CEpg::CChannelProviderManager::CFavoritesChannelProvider::GetGroupID(
-	size_t Group,String *pID) const
+	size_t Group, String *pID) const
 {
-	if (Group>=m_GroupList.size() || pID==NULL)
+	if (Group >= m_GroupList.size() || pID == NULL)
 		return false;
-	*pID=m_GroupList[Group]->ID;
+	*pID = m_GroupList[Group]->ID;
 	return true;
 }
 
@@ -203,13 +203,13 @@ int CEpg::CChannelProviderManager::CFavoritesChannelProvider::ParseGroupID(
 	if (IsStringEmpty(pszID))
 		return -1;
 
-	for (size_t i=0;i<m_GroupList.size();i++) {
-		if (m_GroupList[i]->ID.compare(pszID)==0)
+	for (size_t i = 0; i < m_GroupList.size(); i++) {
+		if (m_GroupList[i]->ID.compare(pszID) == 0)
 			return static_cast<int>(i);
 	}
 
 	// 以前のバージョンとの互換用
-	if (::lstrcmp(pszID,TEXT("0"))==0)
+	if (::lstrcmp(pszID, TEXT("0")) == 0)
 		return 0;
 
 	return -1;
@@ -217,70 +217,72 @@ int CEpg::CChannelProviderManager::CFavoritesChannelProvider::ParseGroupID(
 
 
 bool CEpg::CChannelProviderManager::CFavoritesChannelProvider::GetBonDriver(
-	LPTSTR pszFileName,int MaxLength) const
+	LPTSTR pszFileName, int MaxLength) const
 {
-	if (pszFileName==NULL || MaxLength<1
+	if (pszFileName == NULL || MaxLength < 1
 			|| m_GroupList.empty()
 			|| m_GroupList.front()->ChannelList.empty())
 		return false;
 
-	LPCTSTR pszBonDriver=m_GroupList.front()->ChannelList.front().GetBonDriverFileName();
+	LPCTSTR pszBonDriver = m_GroupList.front()->ChannelList.front().GetBonDriverFileName();
 	if (IsStringEmpty(pszBonDriver))
 		return false;
 
-	for (size_t i=0;i<m_GroupList.size();i++) {
-		const GroupInfo *pGroup=m_GroupList[i];
-		for (auto itr=pGroup->ChannelList.begin();
-				itr!=pGroup->ChannelList.end();++itr) {
-			if (!IsEqualFileName(itr->GetBonDriverFileName(),pszBonDriver))
+	for (size_t i = 0; i < m_GroupList.size(); i++) {
+		const GroupInfo *pGroup = m_GroupList[i];
+		for (auto itr = pGroup->ChannelList.begin();
+				itr != pGroup->ChannelList.end(); ++itr) {
+			if (!IsEqualFileName(itr->GetBonDriverFileName(), pszBonDriver))
 				return false;
 		}
 	}
 
-	::lstrcpyn(pszFileName,pszBonDriver,MaxLength);
+	::lstrcpyn(pszFileName, pszBonDriver, MaxLength);
 
 	return false;
 }
 
 
 bool CEpg::CChannelProviderManager::CFavoritesChannelProvider::GetBonDriverFileName(
-	size_t Group,size_t Channel,LPTSTR pszFileName,int MaxLength) const
+	size_t Group, size_t Channel, LPTSTR pszFileName, int MaxLength) const
 {
-	if (Group>=m_GroupList.size()
-			|| Channel>=m_GroupList[Group]->ChannelList.size()
-			|| pszFileName==NULL || MaxLength<1)
+	if (Group >= m_GroupList.size()
+			|| Channel >= m_GroupList[Group]->ChannelList.size()
+			|| pszFileName == NULL || MaxLength < 1)
 		return false;
 
-	CAppMain &App=GetAppClass();
-	const CFavoriteChannel &FavoriteChannel=m_GroupList[Group]->ChannelList[Channel];
-	const CChannelInfo &ChannelInfo=FavoriteChannel.GetChannelInfo();
+	CAppMain &App = GetAppClass();
+	const CFavoriteChannel &FavoriteChannel = m_GroupList[Group]->ChannelList[Channel];
+	const CChannelInfo &ChannelInfo = FavoriteChannel.GetChannelInfo();
 
 	if (!FavoriteChannel.GetForceBonDriverChange()
 			&& App.CoreEngine.IsTunerOpen()) {
-		int Space=App.ChannelManager.GetCurrentSpace();
-		if (Space!=CChannelManager::SPACE_INVALID) {
-			int Index=App.ChannelManager.FindChannelByIDs(Space,
+		int Space = App.ChannelManager.GetCurrentSpace();
+		if (Space != CChannelManager::SPACE_INVALID) {
+			int Index = App.ChannelManager.FindChannelByIDs(
+				Space,
 				ChannelInfo.GetNetworkID(),
 				ChannelInfo.GetTransportStreamID(),
 				ChannelInfo.GetServiceID());
-			if (Index<0 && Space!=CChannelManager::SPACE_ALL) {
-				for (Space=0;Space<App.ChannelManager.NumSpaces();Space++) {
-					Index=App.ChannelManager.FindChannelByIDs(Space,
+			if (Index < 0 && Space != CChannelManager::SPACE_ALL) {
+				for (Space = 0; Space < App.ChannelManager.NumSpaces(); Space++) {
+					Index = App.ChannelManager.FindChannelByIDs(
+						Space,
 						ChannelInfo.GetNetworkID(),
 						ChannelInfo.GetTransportStreamID(),
 						ChannelInfo.GetServiceID());
-					if (Index>=0)
+					if (Index >= 0)
 						break;
 				}
 			}
-			if (Index>=0) {
-				pszFileName[0]=_T('\0');
+			if (Index >= 0) {
+				pszFileName[0] = _T('\0');
 				return true;
 			}
 		}
 	}
 
-	::lstrcpyn(pszFileName,FavoriteChannel.GetBonDriverFileName(),MaxLength);
+	::lstrcpyn(pszFileName, FavoriteChannel.GetBonDriverFileName(), MaxLength);
 
 	return true;
 }
@@ -289,7 +291,7 @@ bool CEpg::CChannelProviderManager::CFavoritesChannelProvider::GetBonDriverFileN
 void CEpg::CChannelProviderManager::CFavoritesChannelProvider::ClearGroupList()
 {
 	if (!m_GroupList.empty()) {
-		for (auto itr=m_GroupList.begin();itr!=m_GroupList.end();++itr)
+		for (auto itr = m_GroupList.begin(); itr != m_GroupList.end(); ++itr)
 			delete *itr;
 		m_GroupList.clear();
 	}
@@ -297,30 +299,30 @@ void CEpg::CChannelProviderManager::CFavoritesChannelProvider::ClearGroupList()
 
 
 void CEpg::CChannelProviderManager::CFavoritesChannelProvider::AddFavoritesChannels(
-	const CFavoriteFolder &Folder,const String &Path)
+	const CFavoriteFolder &Folder, const String &Path)
 {
-	GroupInfo *pGroup=new GroupInfo;
-	pGroup->Name=Folder.GetName();
+	GroupInfo *pGroup = new GroupInfo;
+	pGroup->Name = Folder.GetName();
 	if (Path.empty())
-		pGroup->ID=TEXT("\\");
+		pGroup->ID = TEXT("\\");
 	else
-		pGroup->ID=Path;
+		pGroup->ID = Path;
 	m_GroupList.push_back(pGroup);
 
-	for (size_t i=0;i<Folder.GetItemCount();i++) {
-		const CFavoriteItem *pItem=Folder.GetItem(i);
+	for (size_t i = 0; i < Folder.GetItemCount(); i++) {
+		const CFavoriteItem *pItem = Folder.GetItem(i);
 
-		if (pItem->GetType()==CFavoriteItem::ITEM_FOLDER) {
-			const CFavoriteFolder *pFolder=static_cast<const CFavoriteFolder*>(pItem);
-			String FolderPath,Name;
-			StringUtility::Encode(pItem->GetName(),&Name);
-			FolderPath=Path;
-			FolderPath+=_T('\\');
-			FolderPath+=Name;
-			AddSubItems(pGroup,*pFolder);
-			AddFavoritesChannels(*pFolder,FolderPath);
-		} else if (pItem->GetType()==CFavoriteItem::ITEM_CHANNEL) {
-			const CFavoriteChannel *pChannel=static_cast<const CFavoriteChannel*>(pItem);
+		if (pItem->GetType() == CFavoriteItem::ITEM_FOLDER) {
+			const CFavoriteFolder *pFolder = static_cast<const CFavoriteFolder*>(pItem);
+			String FolderPath, Name;
+			StringUtility::Encode(pItem->GetName(), &Name);
+			FolderPath = Path;
+			FolderPath += _T('\\');
+			FolderPath += Name;
+			AddSubItems(pGroup, *pFolder);
+			AddFavoritesChannels(*pFolder, FolderPath);
+		} else if (pItem->GetType() == CFavoriteItem::ITEM_CHANNEL) {
+			const CFavoriteChannel *pChannel = static_cast<const CFavoriteChannel*>(pItem);
 			pGroup->ChannelList.push_back(*pChannel);
 		}
 	}
@@ -328,14 +330,14 @@ void CEpg::CChannelProviderManager::CFavoritesChannelProvider::AddFavoritesChann
 
 
 void CEpg::CChannelProviderManager::CFavoritesChannelProvider::AddSubItems(
-	GroupInfo *pGroup,const CFavoriteFolder &Folder)
+	GroupInfo *pGroup, const CFavoriteFolder &Folder)
 {
-	for (size_t i=0;i<Folder.GetItemCount();i++) {
-		const CFavoriteItem *pItem=Folder.GetItem(i);
+	for (size_t i = 0; i < Folder.GetItemCount(); i++) {
+		const CFavoriteItem *pItem = Folder.GetItem(i);
 
-		if (pItem->GetType()==CFavoriteItem::ITEM_FOLDER) {
-			AddSubItems(pGroup,*static_cast<const CFavoriteFolder*>(pItem));
-		} else if (pItem->GetType()==CFavoriteItem::ITEM_CHANNEL) {
+		if (pItem->GetType() == CFavoriteItem::ITEM_FOLDER) {
+			AddSubItems(pGroup, *static_cast<const CFavoriteFolder*>(pItem));
+		} else if (pItem->GetType() == CFavoriteItem::ITEM_CHANNEL) {
 			pGroup->ChannelList.push_back(*static_cast<const CFavoriteChannel*>(pItem));
 		}
 	}
@@ -344,10 +346,10 @@ void CEpg::CChannelProviderManager::CFavoritesChannelProvider::AddSubItems(
 
 bool CEpg::CProgramGuideEventHandler::OnClose()
 {
-	CAppMain &App=GetAppClass();
+	CAppMain &App = GetAppClass();
 
-	App.Epg.fShowProgramGuide=false;
-	App.UICore.SetCommandCheckedState(CM_PROGRAMGUIDE,false);
+	App.Epg.fShowProgramGuide = false;
+	App.UICore.SetCommandCheckedState(CM_PROGRAMGUIDE, false);
 	return true;
 }
 
@@ -356,7 +358,7 @@ void CEpg::CProgramGuideEventHandler::OnDestroy()
 {
 	m_pProgramGuide->Clear();
 
-	CAppMain &App=GetAppClass();
+	CAppMain &App = GetAppClass();
 
 	if (App.UICore.GetStandby()
 			&& App.UICore.GetTransientStandby()
@@ -366,13 +368,13 @@ void CEpg::CProgramGuideEventHandler::OnDestroy()
 }
 
 
-int CEpg::CProgramGuideEventHandler::FindChannel(const CChannelList *pChannelList,const LibISDB::EPGDatabase::ServiceInfo *pServiceInfo)
+int CEpg::CProgramGuideEventHandler::FindChannel(const CChannelList *pChannelList, const LibISDB::EPGDatabase::ServiceInfo *pServiceInfo)
 {
-	for (int i=0;i<pChannelList->NumChannels();i++) {
-		const CChannelInfo *pChannelInfo=pChannelList->GetChannelInfo(i);
+	for (int i = 0; i < pChannelList->NumChannels(); i++) {
+		const CChannelInfo *pChannelInfo = pChannelList->GetChannelInfo(i);
 
-		if (pChannelInfo->GetTransportStreamID()==pServiceInfo->TransportStreamID
-				&& pChannelInfo->GetServiceID()==pServiceInfo->ServiceID
+		if (pChannelInfo->GetTransportStreamID() == pServiceInfo->TransportStreamID
+				&& pChannelInfo->GetServiceID() == pServiceInfo->ServiceID
 				&& pChannelInfo->IsEnabled())
 			return i;
 	}
@@ -380,17 +382,17 @@ int CEpg::CProgramGuideEventHandler::FindChannel(const CChannelList *pChannelLis
 }
 
 
-void CEpg::CProgramGuideEventHandler::OnServiceTitleLButtonDown(LPCTSTR pszDriverFileName,const LibISDB::EPGDatabase::ServiceInfo *pServiceInfo)
+void CEpg::CProgramGuideEventHandler::OnServiceTitleLButtonDown(LPCTSTR pszDriverFileName, const LibISDB::EPGDatabase::ServiceInfo *pServiceInfo)
 {
-	CAppMain &App=GetAppClass();
+	CAppMain &App = GetAppClass();
 
 	if (!App.UICore.ConfirmChannelChange())
 		return;
 
-	const bool fSetBonDriver=!IsStringEmpty(pszDriverFileName);
-	CMainWindow::ResumeInfo &ResumeInfo=App.MainWindow.GetResumeInfo();
-	ResumeInfo.fSetChannel=false;
-	ResumeInfo.fOpenTuner=!fSetBonDriver;
+	const bool fSetBonDriver = !IsStringEmpty(pszDriverFileName);
+	CMainWindow::ResumeInfo &ResumeInfo = App.MainWindow.GetResumeInfo();
+	ResumeInfo.fSetChannel = false;
+	ResumeInfo.fOpenTuner = !fSetBonDriver;
 
 	App.UICore.DoCommand(CM_SHOW);
 
@@ -399,20 +401,20 @@ void CEpg::CProgramGuideEventHandler::OnServiceTitleLButtonDown(LPCTSTR pszDrive
 			return;
 	}
 
-	const CChannelList *pChannelList=App.ChannelManager.GetCurrentChannelList();
-	if (pChannelList!=NULL) {
-		int Index=FindChannel(pChannelList,pServiceInfo);
-		if (Index>=0) {
-			App.Core.SetChannel(App.ChannelManager.GetCurrentSpace(),Index);
+	const CChannelList *pChannelList = App.ChannelManager.GetCurrentChannelList();
+	if (pChannelList != NULL) {
+		int Index = FindChannel(pChannelList, pServiceInfo);
+		if (Index >= 0) {
+			App.Core.SetChannel(App.ChannelManager.GetCurrentSpace(), Index);
 			return;
 		}
 	}
-	for (int i=0;i<App.ChannelManager.NumSpaces();i++) {
-		pChannelList=App.ChannelManager.GetChannelList(i);
-		if (pChannelList!=NULL) {
-			int Index=FindChannel(pChannelList,pServiceInfo);
-			if (Index>=0) {
-				App.Core.SetChannel(i,Index);
+	for (int i = 0; i < App.ChannelManager.NumSpaces(); i++) {
+		pChannelList = App.ChannelManager.GetChannelList(i);
+		if (pChannelList != NULL) {
+			int Index = FindChannel(pChannelList, pServiceInfo);
+			if (Index >= 0) {
+				App.Core.SetChannel(i, Index);
 				return;
 			}
 		}
@@ -420,16 +422,16 @@ void CEpg::CProgramGuideEventHandler::OnServiceTitleLButtonDown(LPCTSTR pszDrive
 }
 
 
-bool CEpg::CProgramGuideEventHandler::OnKeyDown(UINT KeyCode,UINT Flags)
+bool CEpg::CProgramGuideEventHandler::OnKeyDown(UINT KeyCode, UINT Flags)
 {
-	GetAppClass().MainWindow.SendMessage(WM_KEYDOWN,KeyCode,Flags);
+	GetAppClass().MainWindow.SendMessage(WM_KEYDOWN, KeyCode, Flags);
 	return true;
 }
 
 
-bool CEpg::CProgramGuideEventHandler::OnMenuInitialize(HMENU hmenu,UINT CommandBase)
+bool CEpg::CProgramGuideEventHandler::OnMenuInitialize(HMENU hmenu, UINT CommandBase)
 {
-	return GetAppClass().PluginManager.SendProgramGuideInitializeMenuEvent(hmenu,&CommandBase);
+	return GetAppClass().PluginManager.SendProgramGuideInitializeMenuEvent(hmenu, &CommandBase);
 }
 
 
@@ -441,11 +443,11 @@ bool CEpg::CProgramGuideEventHandler::OnMenuSelected(UINT Command)
 
 bool CEpg::CProgramGuideDisplayEventHandler::OnHide()
 {
-	CAppMain &App=GetAppClass();
+	CAppMain &App = GetAppClass();
 
 	m_pProgramGuideDisplay->Destroy();
-	App.Epg.fShowProgramGuide=false;
-	App.UICore.SetCommandCheckedState(CM_PROGRAMGUIDE,App.Epg.fShowProgramGuide);
+	App.Epg.fShowProgramGuide = false;
+	App.UICore.SetCommandCheckedState(CM_PROGRAMGUIDE, App.Epg.fShowProgramGuide);
 	return true;
 }
 
@@ -462,9 +464,9 @@ bool CEpg::CProgramGuideDisplayEventHandler::GetAlwaysOnTop() const
 }
 
 
-void CEpg::CProgramGuideDisplayEventHandler::OnMouseMessage(UINT Msg,int x,int y)
+void CEpg::CProgramGuideDisplayEventHandler::OnMouseMessage(UINT Msg, int x, int y)
 {
-	RelayMouseMessage(m_pProgramGuideDisplay,Msg,x,y);
+	RelayMouseMessage(m_pProgramGuideDisplay, Msg, x, y);
 }
 
 
@@ -481,46 +483,47 @@ void CEpg::CProgramGuideProgramCustomizer::Finalize()
 
 
 bool CEpg::CProgramGuideProgramCustomizer::DrawBackground(
-	const LibISDB::EventInfo &Event,HDC hdc,
-	const RECT &ItemRect,const RECT &TitleRect,const RECT &ContentRect,
+	const LibISDB::EventInfo &Event, HDC hdc,
+	const RECT &ItemRect, const RECT &TitleRect, const RECT &ContentRect,
 	COLORREF BackgroundColor)
 {
 	return GetAppClass().PluginManager.SendProgramGuideProgramDrawBackgroundEvent(
-		Event,hdc,ItemRect,TitleRect,ContentRect,BackgroundColor);
+		Event, hdc, ItemRect, TitleRect, ContentRect, BackgroundColor);
 }
 
 
 bool CEpg::CProgramGuideProgramCustomizer::InitializeMenu(
-	const LibISDB::EventInfo &Event,HMENU hmenu,UINT CommandBase,
-	const POINT &CursorPos,const RECT &ItemRect)
+	const LibISDB::EventInfo &Event, HMENU hmenu, UINT CommandBase,
+	const POINT &CursorPos, const RECT &ItemRect)
 {
 	return GetAppClass().PluginManager.SendProgramGuideProgramInitializeMenuEvent(
-		Event,hmenu,&CommandBase,CursorPos,ItemRect);
+		Event, hmenu, &CommandBase, CursorPos, ItemRect);
 }
 
 
 bool CEpg::CProgramGuideProgramCustomizer::ProcessMenu(
-	const LibISDB::EventInfo &Event,UINT Command)
+	const LibISDB::EventInfo &Event, UINT Command)
 {
-	return GetAppClass().PluginManager.SendProgramGuideProgramMenuSelectedEvent(Event,Command);
+	return GetAppClass().PluginManager.SendProgramGuideProgramMenuSelectedEvent(Event, Command);
 }
 
 
 bool CEpg::CProgramGuideProgramCustomizer::OnLButtonDoubleClick(
-	const LibISDB::EventInfo &Event,const POINT &CursorPos,const RECT &ItemRect)
+	const LibISDB::EventInfo &Event, const POINT &CursorPos, const RECT &ItemRect)
 {
-	CAppMain &App=GetAppClass();
+	CAppMain &App = GetAppClass();
 
-	LPCTSTR pszCommand=App.ProgramGuideOptions.GetProgramLDoubleClickCommand();
+	LPCTSTR pszCommand = App.ProgramGuideOptions.GetProgramLDoubleClickCommand();
 	if (IsStringEmpty(pszCommand))
 		return false;
-	int Command=App.ProgramGuideOptions.ParseCommand(pszCommand);
-	if (Command>0) {
-		m_pProgramGuide->SendMessage(WM_COMMAND,Command,0);
+	int Command = App.ProgramGuideOptions.ParseCommand(pszCommand);
+	if (Command > 0) {
+		m_pProgramGuide->SendMessage(WM_COMMAND, Command, 0);
 		return true;
 	}
-	return App.PluginManager.OnProgramGuideCommand(pszCommand,
-		PROGRAMGUIDE_COMMAND_ACTION_MOUSE,&Event,&CursorPos,&ItemRect);
+	return App.PluginManager.OnProgramGuideCommand(
+		pszCommand,
+		PROGRAMGUIDE_COMMAND_ACTION_MOUSE, &Event, &CursorPos, &ItemRect);
 }
 
 

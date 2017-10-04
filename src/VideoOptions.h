@@ -7,7 +7,8 @@
 #include "LibISDB/LibISDB/Windows/Viewer/DirectShow/VideoRenderers/VideoRenderer.hpp"
 
 
-class CVideoOptions : public COptions
+class CVideoOptions
+	: public COptions
 {
 public:
 	struct RendererInfo
@@ -45,25 +46,25 @@ public:
 	bool GetIgnoreDisplayExtension() const { return m_fIgnoreDisplayExtension; }
 	bool GetClipToDevice() const { return m_fClipToDevice; }
 
-	static bool GetRendererInfo(int Index,RendererInfo *pInfo);
+	static bool GetRendererInfo(int Index, RendererInfo *pInfo);
 
 private:
 // CBasicDialog
-	INT_PTR DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
+	INT_PTR DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
 
 	void SetVideoDecoderList(
-		int ID,const GUID &SubType,BYTE StreamType,const TVTest::String &DecoderName);
-	void GetVideoDecoderSetting(int ID,BYTE StreamType,TVTest::String *pDecoderName);
+		int ID, const GUID &SubType, BYTE StreamType, const TVTest::String &DecoderName);
+	void GetVideoDecoderSetting(int ID, BYTE StreamType, TVTest::String *pDecoderName);
 
 	enum {
-		UPDATE_DECODER					= 0x00000001UL,
-		UPDATE_RENDERER					= 0x00000002UL,
-		UPDATE_MASKCUTAREA				= 0x00000004UL,
-		UPDATE_IGNOREDISPLAYEXTENSION	= 0x00000008UL,
-		UPDATE_CLIPTODEVICE				= 0x00000010UL
+		UPDATE_DECODER                = 0x00000001UL,
+		UPDATE_RENDERER               = 0x00000002UL,
+		UPDATE_MASKCUTAREA            = 0x00000004UL,
+		UPDATE_IGNOREDISPLAYEXTENSION = 0x00000008UL,
+		UPDATE_CLIPTODEVICE           = 0x00000010UL
 	};
 	enum {
-		MAX_VIDEO_DECODER_NAME=128
+		MAX_VIDEO_DECODER_NAME = 128
 	};
 
 	static const RendererInfo m_RendererList[];

@@ -8,11 +8,12 @@
 #include "ChannelManager.h"
 
 
-class COperationOptions : public COptions
+class COperationOptions
+	: public COptions
 {
 public:
 	enum {
-		WHEEL_CHANNEL_DELAY_MIN=100
+		WHEEL_CHANNEL_DELAY_MIN = 100
 	};
 
 	COperationOptions();
@@ -23,7 +24,7 @@ public:
 // CBasicDialog
 	bool Create(HWND hwndOwner) override;
 // COperationOptions
-	bool Initialize(CSettings &Settings,const CCommandList *pCommandList);
+	bool Initialize(CSettings &Settings, const CCommandList *pCommandList);
 	bool GetDisplayDragMove() const { return m_fDisplayDragMove; }
 	int GetVolumeStep() const { return m_VolumeStep; }
 	int GetAudioDelayStep() const { return m_AudioDelayStep; }
@@ -64,9 +65,9 @@ private:
 	int m_MiddleClickCommand;
 
 // CBasicDialog
-	INT_PTR DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
+	INT_PTR DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
 
-	void InitWheelSettings(int ID,int CurCommand) const;
+	void InitWheelSettings(int ID, int CurCommand) const;
 };
 
 

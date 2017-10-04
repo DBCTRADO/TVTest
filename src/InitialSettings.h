@@ -9,10 +9,11 @@
 #include "Graphics.h"
 
 
-class CInitialSettings : public CBasicDialog
+class CInitialSettings
+	: public CBasicDialog
 {
 public:
-	enum { MAX_DECODER_NAME=128 };
+	enum { MAX_DECODER_NAME = 128 };
 
 	CInitialSettings(const CDriverManager *pDriverManager);
 	~CInitialSettings();
@@ -21,7 +22,7 @@ public:
 	bool Show(HWND hwndOwner) override;
 
 	LPCTSTR GetDriverFileName() const { return m_szDriverFileName; }
-	bool GetDriverFileName(LPTSTR pszFileName,int MaxLength) const;
+	bool GetDriverFileName(LPTSTR pszFileName, int MaxLength) const;
 	LPCTSTR GetMpeg2DecoderName() const { return m_Mpeg2DecoderName.c_str(); }
 	LPCTSTR GetH264DecoderName() const { return m_H264DecoderName.c_str(); }
 	LPCTSTR GetH265DecoderName() const { return m_H265DecoderName.c_str(); }
@@ -41,10 +42,10 @@ private:
 	bool m_fDrawLogo;
 
 // CBasicDialog
-	INT_PTR DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
+	INT_PTR DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
 
-	void InitDecoderList(int ID,const GUID &SubType,LPCTSTR pszDecoderName);
-	void GetDecoderSetting(int ID,TVTest::String *pDecoderName) const;
+	void InitDecoderList(int ID, const GUID &SubType, LPCTSTR pszDecoderName);
+	void GetDecoderSetting(int ID, TVTest::String *pDecoderName) const;
 };
 
 

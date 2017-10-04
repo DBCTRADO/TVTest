@@ -19,22 +19,24 @@ class CPanel
 	, public TVTest::CUIBase
 {
 public:
-	class ABSTRACT_CLASS(CEventHandler) {
+	class ABSTRACT_CLASS(CEventHandler)
+	{
 	public:
 		virtual ~CEventHandler() {}
 		virtual bool OnFloating() { return false; }
 		virtual bool OnClose() { return false; }
 		virtual bool OnEnterSizeMove() { return false; }
-		virtual bool OnMoving(RECT *pRect) { return false; }
-		virtual bool OnKeyDown(UINT KeyCode,UINT Flags) { return false; }
-		virtual void OnSizeChanged(int Width,int Height) {}
+		virtual bool OnMoving(RECT * pRect) { return false; }
+		virtual bool OnKeyDown(UINT KeyCode, UINT Flags) { return false; }
+		virtual void OnSizeChanged(int Width, int Height) {}
 		virtual bool OnMenuPopup(HMENU hmenu) { return true; }
 		virtual bool OnMenuSelected(int Command) { return false; }
 	};
 
-	enum { MENU_USER=100 };
+	enum { MENU_USER = 100 };
 
-	struct PanelTheme {
+	struct PanelTheme
+	{
 		TVTest::Theme::Style TitleStyle;
 		TVTest::Theme::Style TitleIconStyle;
 		TVTest::Theme::Style TitleIconHighlightStyle;
@@ -46,7 +48,7 @@ public:
 	~CPanel();
 
 // CBasicWindow
-	bool Create(HWND hwndParent,DWORD Style,DWORD ExStyle=0,int ID=0) override;
+	bool Create(HWND hwndParent, DWORD Style, DWORD ExStyle = 0, int ID = 0) override;
 
 // CUIBase
 	void SetStyle(const TVTest::Style::CStyleManager *pStyleManager) override;
@@ -56,7 +58,7 @@ public:
 	void SetTheme(const TVTest::Theme::CThemeManager *pThemeManager) override;
 
 // CPanel
-	bool SetWindow(CPanelContent *pContent,LPCTSTR pszTitle);
+	bool SetWindow(CPanelContent *pContent, LPCTSTR pszTitle);
 	void ShowTitle(bool fShow);
 	void EnableFloating(bool fEnable);
 	void SetEventHandler(CEventHandler *pHandler);
@@ -109,26 +111,30 @@ private:
 	static HINSTANCE m_hinst;
 
 	void CalcDimensions();
-	void Draw(HDC hdc,const RECT &PaintRect) const;
-	void OnSize(int Width,int Height);
+	void Draw(HDC hdc, const RECT &PaintRect) const;
+	void OnSize(int Width, int Height);
 	void GetCloseButtonRect(RECT *pRect) const;
 	void SetHotItem(ItemType Item);
+
 // CCustomWindow
-	LRESULT OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
+	LRESULT OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
+
 // CUIBase
 	void ApplyStyle() override;
 	void RealizeStyle() override;
 };
 
-class CDropHelper : public CCustomWindow
+class CDropHelper
+	: public CCustomWindow
 {
 	int m_Opacity;
 	static HINSTANCE m_hinst;
 
 // CBasicWindow
-	bool Create(HWND hwndParent,DWORD Style,DWORD ExStyle=0,int ID=0) override;
+	bool Create(HWND hwndParent, DWORD Style, DWORD ExStyle = 0, int ID = 0) override;
+
 // CCustomWindow
-	LRESULT OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
+	LRESULT OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
 
 public:
 	static bool Initialize(HINSTANCE hinst);
@@ -153,14 +159,15 @@ public:
 		DOCKING_BOTTOM
 	};
 
-	class ABSTRACT_CLASS(CEventHandler) {
+	class ABSTRACT_CLASS(CEventHandler)
+	{
 	public:
 		virtual ~CEventHandler() {}
 		virtual bool OnClose() { return true; }
-		virtual bool OnMoving(RECT *pRect) { return false; }
+		virtual bool OnMoving(RECT * pRect) { return false; }
 		virtual bool OnEnterSizeMove() { return false; }
-		virtual bool OnKeyDown(UINT KeyCode,UINT Flags) { return false; }
-		virtual bool OnMouseWheel(WPARAM wParam,LPARAM lParam) { return false; }
+		virtual bool OnKeyDown(UINT KeyCode, UINT Flags) { return false; }
+		virtual bool OnMouseWheel(WPARAM wParam, LPARAM lParam) { return false; }
 		virtual void OnVisibleChange(bool fVisible) {}
 		virtual bool OnFloatingChange(bool fFloating) { return true; }
 		virtual void OnDocking(DockingPlace Place) {}
@@ -171,14 +178,15 @@ public:
 
 	CPanelFrame();
 	~CPanelFrame();
-	bool Create(HWND hwndOwner,Layout::CSplitter *pSplitter,int PanelID,
-				CPanelContent *pContent,LPCTSTR pszTitle);
+	bool Create(
+		HWND hwndOwner, Layout::CSplitter *pSplitter, int PanelID,
+		CPanelContent *pContent, LPCTSTR pszTitle);
 	CPanel *GetPanel() { return &m_Panel; }
 	CBasicWindow *GetWindow() { return m_Panel.GetWindow(); }
 	bool SetFloating(bool fFloating);
 	bool GetFloating() const { return m_fFloating; }
 	void SetEventHandler(CEventHandler *pHandler);
-	bool SetPanelVisible(bool fVisible,bool fNoActivate=false);
+	bool SetPanelVisible(bool fVisible, bool fNoActivate = false);
 	int GetDockingWidth() const { return m_DockingWidth; }
 	bool SetDockingWidth(int Width);
 	int GetDockingHeight() const { return m_DockingHeight; }
@@ -211,16 +219,18 @@ private:
 	static HINSTANCE m_hinst;
 
 // CBasicWindow
-	bool Create(HWND hwndParent,DWORD Sytle,DWORD ExStyle=0,int ID=0) override;
+	bool Create(HWND hwndParent, DWORD Sytle, DWORD ExStyle = 0, int ID = 0) override;
+
 // CCustomWindow
-	LRESULT OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
+	LRESULT OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
+
 // CPanel::CEventHandler
 	bool OnFloating() override;
 	bool OnClose() override;
 	bool OnEnterSizeMove() override;
 	bool OnMoving(RECT *pRect) override;
-	bool OnKeyDown(UINT KeyCode,UINT Flags) override;
-	void OnSizeChanged(int Width,int Height) override;
+	bool OnKeyDown(UINT KeyCode, UINT Flags) override;
+	void OnSizeChanged(int Width, int Height) override;
 	bool OnMenuPopup(HMENU hmenu) override;
 	bool OnMenuSelected(int Command) override;
 };

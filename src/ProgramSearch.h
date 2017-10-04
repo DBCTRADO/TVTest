@@ -20,24 +20,24 @@ class CEventSearchServiceList
 public:
 	typedef ULONGLONG ServiceKey;
 
-	static ServiceKey GetServiceKey(WORD NetworkID,WORD TSID,WORD ServiceID)
+	static ServiceKey GetServiceKey(WORD NetworkID, WORD TSID, WORD ServiceID)
 	{
-		return ((ULONGLONG)NetworkID<<32) | ((TSID<<16) | ServiceID);
+		return ((ULONGLONG)NetworkID << 32) | ((TSID << 16) | ServiceID);
 	};
 
 	static WORD ServiceKey_GetNetworkID(ServiceKey Key)
 	{
-		return (WORD)(Key>>32);
+		return (WORD)(Key >> 32);
 	}
 
 	static WORD ServiceKey_GetTransportStreamID(ServiceKey Key)
 	{
-		return (WORD)((Key>>16)&0xFFFF);
+		return (WORD)((Key >> 16) & 0xFFFF);
 	}
 
 	static WORD ServiceKey_GetServiceID(ServiceKey Key)
 	{
-		return (WORD)(Key&0xFFFF);
+		return (WORD)(Key & 0xFFFF);
 	}
 
 	typedef std::set<ServiceKey>::const_iterator Iterator;
@@ -46,9 +46,9 @@ public:
 	bool IsEmpty() const;
 	size_t GetServiceCount() const;
 	void Add(ServiceKey Key);
-	void Add(WORD NetworkID,WORD TSID,WORD ServiceID);
+	void Add(WORD NetworkID, WORD TSID, WORD ServiceID);
 	bool IsExists(ServiceKey Key) const;
-	bool IsExists(WORD NetworkID,WORD TSID,WORD ServiceID) const;
+	bool IsExists(WORD NetworkID, WORD TSID, WORD ServiceID) const;
 	void Combine(const CEventSearchServiceList &List);
 	Iterator Begin() const;
 	Iterator End() const;
@@ -56,8 +56,8 @@ public:
 	bool FromString(LPCTSTR pszString);
 
 private:
-	static int EncodeServiceKey(ServiceKey Key,LPTSTR pText);
-	static bool DecodeServiceKey(LPCTSTR pText,size_t Length,ServiceKey *pKey);
+	static int EncodeServiceKey(ServiceKey Key, LPTSTR pText);
+	static bool DecodeServiceKey(LPCTSTR pText, size_t Length, ServiceKey *pKey);
 
 	std::set<ServiceKey> m_ServiceList;
 };
@@ -66,8 +66,8 @@ class CEventSearchSettings
 {
 public:
 	enum {
-		MAX_NAME_LENGTH=256,
-		MAX_KEYWORD_LENGTH=1024
+		MAX_NAME_LENGTH = 256,
+		MAX_KEYWORD_LENGTH = 1024
 	};
 
 	struct TimeInfo {
@@ -133,7 +133,7 @@ private:
 		FLAG_EVENT_TEXT   = 0x00001000U
 	};
 
-	static void ParseTime(LPCWSTR pszString,TimeInfo *pTime);
+	static void ParseTime(LPCWSTR pszString, TimeInfo *pTime);
 };
 
 class CEventSearchSettingsList
@@ -153,8 +153,8 @@ public:
 	bool Add(const CEventSearchSettings &Settings);
 	bool Erase(size_t Index);
 	int FindByName(LPCTSTR pszName) const;
-	bool Load(CSettings &Settings,LPCTSTR pszPrefix);
-	bool Save(CSettings &Settings,LPCTSTR pszPrefix) const;
+	bool Load(CSettings &Settings, LPCTSTR pszPrefix);
+	bool Save(CSettings &Settings, LPCTSTR pszPrefix) const;
 
 private:
 	std::vector<CEventSearchSettings*> m_List;
@@ -168,8 +168,8 @@ public:
 	void Finalize();
 	bool BeginSearch(const CEventSearchSettings &Settings);
 	bool Match(const LibISDB::EventInfo *pEventInfo);
-	int FindKeyword(LPCTSTR pszText,LPCTSTR pKeyword,int KeywordLength,int *pFoundLength=NULL) const;
-	bool FindExtendedText(const LibISDB::EventInfo::ExtendedTextInfoList &ExtendedText,LPCTSTR pKeyword,int KeywordLength) const;
+	int FindKeyword(LPCTSTR pszText, LPCTSTR pKeyword, int KeywordLength, int *pFoundLength = NULL) const;
+	bool FindExtendedText(const LibISDB::EventInfo::ExtendedTextInfoList &ExtendedText, LPCTSTR pKeyword, int KeywordLength) const;
 	const CEventSearchSettings &GetSearchSettings() const { return m_Settings; }
 	TVTest::CRegExp &GetRegExp() { return m_RegExp; }
 
@@ -180,7 +180,7 @@ private:
 	decltype(FindNLSString) *m_pFindNLSString;
 #endif
 
-	bool MatchKeyword(const LibISDB::EventInfo *pEventInfo,LPCTSTR pszKeyword) const;
+	bool MatchKeyword(const LibISDB::EventInfo *pEventInfo, LPCTSTR pszKeyword) const;
 	bool MatchRegExp(const LibISDB::EventInfo *pEventInfo);
 };
 
@@ -189,7 +189,7 @@ class CEventSearchOptions
 public:
 	CEventSearchOptions();
 
-	bool SetKeywordHistory(const LPTSTR *pKeywordList,int NumKeywords);
+	bool SetKeywordHistory(const LPTSTR *pKeywordList, int NumKeywords);
 	int GetKeywordHistoryCount() const;
 	LPCTSTR GetKeywordHistory(int Index) const;
 	bool AddKeywordHistory(LPCTSTR pszKeyword);
@@ -207,8 +207,8 @@ public:
 	bool AddSearchSettings(const CEventSearchSettings &Settings);
 	bool DeleteSearchSettings(size_t Index);
 	int FindSearchSettings(LPCTSTR pszName) const;
-	bool LoadSearchSettings(CSettings &Settings,LPCTSTR pszPrefix);
-	bool SaveSearchSettings(CSettings &Settings,LPCTSTR pszPrefix) const;
+	bool LoadSearchSettings(CSettings &Settings, LPCTSTR pszPrefix);
+	bool SaveSearchSettings(CSettings &Settings, LPCTSTR pszPrefix) const;
 
 private:
 	std::deque<TVTest::String> m_KeywordHistory;
@@ -216,7 +216,8 @@ private:
 	CEventSearchSettingsList m_SettingsList;
 };
 
-class CEventSearchSettingsDialog : public CResizableDialog
+class CEventSearchSettingsDialog
+	: public CResizableDialog
 {
 public:
 	class ABSTRACT_CLASS(CEventHandler)
@@ -239,26 +240,27 @@ public:
 	bool BeginSearch();
 	bool SetKeyword(LPCTSTR pszKeyword);
 	bool AddToKeywordHistory(LPCTSTR pszKeyword);
-	void ShowButton(int ID,bool fShow);
-	void CheckButton(int ID,bool fCheck);
+	void ShowButton(int ID, bool fShow);
+	void CheckButton(int ID, bool fCheck);
 	void SetFocus(int ID);
-	void SetSearchTargetList(const LPCTSTR *ppszList,int Count);
+	void SetSearchTargetList(const LPCTSTR *ppszList, int Count);
 	bool SetSearchTarget(int Target);
 	int GetSearchTarget() const { return m_SearchTarget; }
 
 private:
-	class CKeywordEditSubclass : public CWindowSubclass
+	class CKeywordEditSubclass
+		: public CWindowSubclass
 	{
-		LRESULT OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
+		LRESULT OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
 	};
 
 // CBasicDialog
-	INT_PTR DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
+	INT_PTR DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
 
 	void GetGenreSettings(CEventSearchSettings *pSettings) const;
 	void SetGenreStatus();
 
-	static LRESULT CALLBACK EditProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam);
+	static LRESULT CALLBACK EditProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 	enum {
 		KEYWORDTARGET_EVENTNAME_AND_EVENTTEXT,
@@ -275,11 +277,13 @@ private:
 	int m_SearchTarget;
 };
 
-class CSearchEventInfo : public LibISDB::EventInfo
+class CSearchEventInfo
+	: public LibISDB::EventInfo
 {
 public:
-	CSearchEventInfo(const LibISDB::EventInfo &EventInfo,
-					 const CTunerChannelInfo &ChannelInfo);
+	CSearchEventInfo(
+		const LibISDB::EventInfo &EventInfo,
+		const CTunerChannelInfo &ChannelInfo);
 	const CTunerChannelInfo &GetChannelInfo() const { return m_ChannelInfo; }
 
 protected:
@@ -292,7 +296,7 @@ class CProgramSearchDialog
 {
 public:
 	enum {
-		MAX_KEYWORD_HISTORY=50
+		MAX_KEYWORD_HISTORY = 50
 	};
 	enum {
 		COLUMN_CHANNEL,
@@ -328,7 +332,7 @@ public:
 	bool Create(HWND hwndOwner);
 	bool SetEventHandler(CEventHandler *pHandler);
 	int GetColumnWidth(int Index) const;
-	bool SetColumnWidth(int Index,int Width);
+	bool SetColumnWidth(int Index, int Width);
 	bool Search(LPTSTR pszKeyword);
 	bool SetHighlightResult(bool fHighlight);
 	bool GetHighlightResult() const { return m_fHighlightResult; }
@@ -337,7 +341,7 @@ public:
 	CEventSearchOptions &GetOptions() { return m_Options; }
 	void SetResultListHeight(int Height);
 	int GetResultListHeight() const { return m_ResultListHeight; }
-	void SetSearchTargetList(const LPCTSTR *ppszList,int Count);
+	void SetSearchTargetList(const LPCTSTR *ppszList, int Count);
 	bool SetSearchTarget(int Target);
 	int GetSearchTarget() const;
 
@@ -347,7 +351,7 @@ private:
 	CEventSearchSettings m_SearchSettings;
 	CEventSearcher m_Searcher;
 	CEventSearchSettingsDialog m_SearchSettingsDialog;
-	std::map<ULONGLONG,CSearchEventInfo*> m_ResultMap;
+	std::map<ULONGLONG, CSearchEventInfo*> m_ResultMap;
 	bool m_fHighlightResult;
 	int m_SortColumn;
 	bool m_fSortDescending;
@@ -358,10 +362,10 @@ private:
 	CRichEditUtil m_RichEditUtil;
 	CHARFORMAT m_InfoTextFormat;
 
-	static const int MIN_PANE_HEIGHT=16;
+	static const int MIN_PANE_HEIGHT = 16;
 
 // CBasicDialog
-	INT_PTR DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
+	INT_PTR DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
 
 // CUIBase
 	void ApplyStyle() override;
@@ -369,18 +373,18 @@ private:
 	bool AddSearchResult(CSearchEventInfo *pEventInfo);
 	void ClearSearchResult();
 	void SortSearchResult();
-	int FormatEventTimeText(const LibISDB::EventInfo *pEventInfo,LPTSTR pszText,int MaxLength) const;
-	void FormatEventInfoText(const LibISDB::EventInfo *pEventInfo,TVTest::String *pText) const;
+	int FormatEventTimeText(const LibISDB::EventInfo *pEventInfo, LPTSTR pszText, int MaxLength) const;
+	void FormatEventInfoText(const LibISDB::EventInfo *pEventInfo, TVTest::String *pText) const;
 	void HighlightKeyword();
-	bool SearchNextKeyword(LPCTSTR *ppszText,LPCTSTR pKeyword,int KeywordLength,int *pLength) const;
-	bool IsSplitterPos(int x,int y) const;
+	bool SearchNextKeyword(LPCTSTR *ppszText, LPCTSTR pKeyword, int KeywordLength, int *pLength) const;
+	bool IsSplitterPos(int x, int y) const;
 	void AdjustResultListHeight(int Height);
 
 // CEventSearchSettings::CEventHandler
 	void OnSearch() override;
 	void OnHighlightResult(bool fHighlight) override;
 
-	static int CALLBACK ResultCompareFunc(LPARAM lParam1,LPARAM lParam2,LPARAM lParamSort);
+	static int CALLBACK ResultCompareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort);
 };
 
 

@@ -230,9 +230,9 @@ public:
 		COLOR_PROGRAMGUIDE_CONTENT_EDUCATION,
 		COLOR_PROGRAMGUIDE_CONTENT_WELFARE,
 		COLOR_PROGRAMGUIDE_CONTENT_OTHER,
-		COLOR_PROGRAMGUIDE_CONTENT_FIRST=COLOR_PROGRAMGUIDE_CONTENT_NEWS,
-		COLOR_PROGRAMGUIDE_CONTENT_LAST=COLOR_PROGRAMGUIDE_CONTENT_OTHER,
-		COLOR_LAST=COLOR_PROGRAMGUIDE_CONTENT_LAST,
+		COLOR_PROGRAMGUIDE_CONTENT_FIRST = COLOR_PROGRAMGUIDE_CONTENT_NEWS,
+		COLOR_PROGRAMGUIDE_CONTENT_LAST = COLOR_PROGRAMGUIDE_CONTENT_OTHER,
+		COLOR_LAST = COLOR_PROGRAMGUIDE_CONTENT_LAST,
 		NUM_COLORS
 	};
 	enum {
@@ -338,15 +338,16 @@ public:
 		NUM_BORDERS
 	};
 
-	struct GradientStyle {
+	struct GradientStyle
+	{
 		TVTest::Theme::GradientType Type;
 		TVTest::Theme::GradientDirection Direction;
 
 		bool operator==(const GradientStyle &Op) const {
-			return Type==Op.Type && Direction==Op.Direction;
+			return Type == Op.Type && Direction == Op.Direction;
 		}
 		bool operator!=(const GradientStyle &Op) const {
-			return !(*this==Op);
+			return !(*this == Op);
 		}
 	};
 
@@ -361,23 +362,23 @@ public:
 	CColorScheme &operator=(const CColorScheme &ColorScheme);
 	COLORREF GetColor(int Type) const;
 	COLORREF GetColor(LPCTSTR pszText) const;
-	bool SetColor(int Type,COLORREF Color);
+	bool SetColor(int Type, COLORREF Color);
 	TVTest::Theme::GradientType GetGradientType(int Gradient) const;
 	TVTest::Theme::GradientType GetGradientType(LPCTSTR pszText) const;
-	bool SetGradientStyle(int Gradient,const GradientStyle &Style);
-	bool GetGradientStyle(int Gradient,GradientStyle *pStyle) const;
-	bool GetGradientStyle(int Gradient,TVTest::Theme::GradientStyle *pStyle) const;
+	bool SetGradientStyle(int Gradient, const GradientStyle &Style);
+	bool GetGradientStyle(int Gradient, GradientStyle *pStyle) const;
+	bool GetGradientStyle(int Gradient, TVTest::Theme::GradientStyle *pStyle) const;
 	TVTest::Theme::BorderType GetBorderType(int Border) const;
-	bool SetBorderType(int Border,TVTest::Theme::BorderType Type);
-	bool GetBorderStyle(int Border,TVTest::Theme::BorderStyle *pStyle) const;
+	bool SetBorderType(int Border, TVTest::Theme::BorderType Type);
+	bool GetBorderStyle(int Border, TVTest::Theme::BorderStyle *pStyle) const;
 	LPCTSTR GetName() const { return m_Name.c_str(); }
 	void SetName(LPCTSTR pszName);
 	LPCTSTR GetFileName() const { return m_FileName.c_str(); }
 	bool IsLoadedFromFile() const { return !m_FileName.empty(); }
 	bool Load(CSettings &Settings);
-	bool Save(CSettings &Settings,unsigned int Flags=0) const;
+	bool Save(CSettings &Settings, unsigned int Flags = 0) const;
 	bool Load(LPCTSTR pszFileName);
-	bool Save(LPCTSTR pszFileName,unsigned int Flags=0) const;
+	bool Save(LPCTSTR pszFileName, unsigned int Flags = 0) const;
 	bool SetFileName(LPCTSTR pszFileName);
 	void SetDefault();
 	bool IsLoaded(int Type) const;
@@ -387,7 +388,7 @@ public:
 	static LPCTSTR GetColorName(int Type);
 	static COLORREF GetDefaultColor(int Type);
 	static TVTest::Theme::GradientType GetDefaultGradientType(int Gradient);
-	static bool GetDefaultGradientStyle(int Gradient,GradientStyle *pStyle);
+	static bool GetDefaultGradientStyle(int Gradient, GradientStyle *pStyle);
 	static bool IsGradientDirectionEnabled(int Gradient);
 	static TVTest::Theme::BorderType GetDefaultBorderType(int Border);
 	static int GetColorGradient(int Type);
@@ -399,25 +400,28 @@ private:
 	TVTest::Theme::BorderType m_BorderList[NUM_BORDERS];
 	TVTest::String m_Name;
 	TVTest::String m_FileName;
-	struct ColorInfo {
+	struct ColorInfo
+	{
 		COLORREF DefaultColor;
 		LPCTSTR pszText;
 		LPCTSTR pszName;
 	};
-	struct GradientInfo {
+	struct GradientInfo
+	{
 		LPCTSTR pszText;
 		TVTest::Theme::GradientDirection Direction;
 		bool fEnableDirection;
 		int Color1;
 		int Color2;
 	};
-	struct BorderInfo {
+	struct BorderInfo
+	{
 		LPCTSTR pszText;
 		TVTest::Theme::BorderType DefaultType;
 		int Color;
 	};
 
-	DWORD m_LoadedFlags[(NUM_COLORS+31)/32];
+	DWORD m_LoadedFlags[(NUM_COLORS + 31) / 32];
 	void SetLoadedFlag(int Color);
 	static const ColorInfo m_ColorInfoList[NUM_COLORS];
 	static const GradientInfo m_GradientInfoList[NUM_GRADIENTS];
@@ -432,12 +436,12 @@ public:
 	~CColorSchemeList();
 	int NumColorSchemes() const { return (int)m_List.size(); }
 	bool Add(CColorScheme *pColorScheme);
-	bool Insert(int Index,CColorScheme *pColorScheme);
+	bool Insert(int Index, CColorScheme *pColorScheme);
 	bool Load(LPCTSTR pszDirectory);
 	void Clear();
 	CColorScheme *GetColorScheme(int Index);
-	bool SetColorScheme(int Index,const CColorScheme *pColorScheme);
-	int FindByName(LPCTSTR pszName,int FirstIndex=0) const;
+	bool SetColorScheme(int Index, const CColorScheme *pColorScheme);
+	int FindByName(LPCTSTR pszName, int FirstIndex = 0) const;
 	void SortByName();
 
 private:

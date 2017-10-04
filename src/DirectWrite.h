@@ -37,7 +37,8 @@ namespace TVTest
 		virtual bool IsCreated() const = 0;
 	};
 
-	class CDirectWriteFont : public CDirectWriteResource
+	class CDirectWriteFont
+		: public CDirectWriteResource
 	{
 	public:
 		CDirectWriteFont();
@@ -53,7 +54,8 @@ namespace TVTest
 		LOGFONT m_LogFont;
 	};
 
-	class CDirectWriteBrush : public CDirectWriteResource
+	class CDirectWriteBrush
+		: public CDirectWriteResource
 	{
 	public:
 		CDirectWriteBrush();

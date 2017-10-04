@@ -8,7 +8,8 @@
 
 class CProgramGuide;
 
-class CEpgChannelSettings : public CResizableDialog
+class CEpgChannelSettings
+	: public CResizableDialog
 {
 public:
 	CEpgChannelSettings(CProgramGuide *pProgramGuide);
@@ -17,7 +18,7 @@ public:
 	bool Show(HWND hwndOwner) override;
 
 private:
-	INT_PTR DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
+	INT_PTR DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
 
 	CProgramGuide *m_pProgramGuide;
 	CChannelList m_ChannelList;

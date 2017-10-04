@@ -38,7 +38,8 @@ namespace TVTest
 		virtual ~CIUnknownImpl() {}
 	};
 
-	class CVariant : public VARIANT
+	class CVariant
+		: public VARIANT
 	{
 	public:
 		CVariant();
@@ -62,20 +63,20 @@ namespace TVTest
 		, protected CIUnknownImpl
 	{
 	public:
-		typedef std::map<String,CVariant> PropertyListType;
+		typedef std::map<String, CVariant> PropertyListType;
 
 		CPropertyBag();
 
-	// IUnknown
+		// IUnknown
 		STDMETHODIMP QueryInterface(REFIID riid, void **ppvObject) override;
 		STDMETHODIMP_(ULONG) AddRef() override { return AddRefImpl(); }
 		STDMETHODIMP_(ULONG) Release() override { return ReleaseImpl(); }
 
-	// IPropertyBag
+		// IPropertyBag
 		STDMETHODIMP Read(LPCOLESTR pszPropName, VARIANT *pVar, IErrorLog *pErrorLog) override;
 		STDMETHODIMP Write(LPCOLESTR pszPropName, VARIANT *pVar) override;
 
-	// CPropertyBag
+		// CPropertyBag
 		PropertyListType::iterator begin() { return m_Properties.begin(); }
 		PropertyListType::iterator end() { return m_Properties.end(); }
 
@@ -86,9 +87,11 @@ namespace TVTest
 	};
 
 
-	HRESULT ShowPropertyPageFrame(IPropertyPage **pPropPages, int NumPages,
-								  IUnknown *pObject, HWND hwndOwner, HINSTANCE hinst);
-	HRESULT ShowPropertyPageFrame(IUnknown *pObject, HWND hwndOwner, HINSTANCE hinst);
+	HRESULT ShowPropertyPageFrame(
+		IPropertyPage **pPropPages, int NumPages,
+		IUnknown *pObject, HWND hwndOwner, HINSTANCE hinst);
+	HRESULT ShowPropertyPageFrame(
+		IUnknown *pObject, HWND hwndOwner, HINSTANCE hinst);
 
 }	// namespace TVTest
 

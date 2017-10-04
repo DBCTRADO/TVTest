@@ -5,10 +5,12 @@
 #include "Dialog.h"
 
 
-class CStreamInfo : public CResizableDialog
+class CStreamInfo
+	: public CResizableDialog
 {
 public:
-	class CEventHandler {
+	class CEventHandler
+	{
 	public:
 		virtual ~CEventHandler() {}
 		virtual void OnRestoreSettings() {}
@@ -21,9 +23,9 @@ public:
 	void SetEventHandler(CEventHandler *pHandler);
 
 private:
-	INT_PTR DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
+	INT_PTR DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
 	void SetService();
-	static int GetTreeViewText(HWND hwndTree,HTREEITEM hItem,bool fSiblings,LPTSTR pszText,int MaxText,int Level=0);
+	static int GetTreeViewText(HWND hwndTree, HTREEITEM hItem, bool fSiblings, LPTSTR pszText, int MaxText, int Level = 0);
 
 	CEventHandler *m_pEventHandler;
 	bool m_fCreateFirst;

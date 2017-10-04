@@ -29,9 +29,9 @@ static const struct {
 // ver.0.9.0 開発途中の変更なので長く残さなくていい
 static void TitleFormatMakeCompatible(TVTest::String &Str)
 {
-	if (Str.find(L"%event-sep%")!=TVTest::String::npos) {
-		TVTest::StringUtility::Replace(Str,L"%event-sep%",L"%sep-slash%");
-		TVTest::StringUtility::Replace(Str,L"- TVTest",L"%sep-hyphen% " APP_NAME);
+	if (Str.find(L"%event-sep%") != TVTest::String::npos) {
+		TVTest::StringUtility::Replace(Str, L"%event-sep%", L"%sep-slash%");
+		TVTest::StringUtility::Replace(Str, L"- TVTest", L"%sep-hyphen% " APP_NAME);
 	}
 }
 
@@ -56,9 +56,9 @@ CViewOptions::CViewOptions()
 	, m_fNoMonitorLowPower(false)
 	, m_fNoMonitorLowPowerActiveOnly(false)
 {
-	TVTest::StyleUtil::GetSystemFont(DrawUtil::FONT_CAPTION,&m_TitleBarFont);
+	TVTest::StyleUtil::GetSystemFont(DrawUtil::FONT_CAPTION, &m_TitleBarFont);
 
-	::lstrcpy(m_szLogoFileName,APP_NAME TEXT("_Logo.bmp"));
+	::lstrcpy(m_szLogoFileName, APP_NAME TEXT("_Logo.bmp"));
 }
 
 
@@ -70,10 +70,10 @@ CViewOptions::~CViewOptions()
 
 bool CViewOptions::Apply(DWORD Flags)
 {
-	CAppMain &App=GetAppClass();
+	CAppMain &App = GetAppClass();
 
-	if ((Flags&UPDATE_LOGO)!=0) {
-		App.UICore.SetLogo(m_fShowLogo?m_szLogoFileName:NULL);
+	if ((Flags & UPDATE_LOGO) != 0) {
+		App.UICore.SetLogo(m_fShowLogo ? m_szLogoFileName : NULL);
 	}
 
 	return true;
@@ -84,39 +84,39 @@ bool CViewOptions::ReadSettings(CSettings &Settings)
 {
 	int Value;
 
-	Settings.Read(TEXT("AdjustAspectResizing"),&m_fAdjustAspectResizing);
-	Settings.Read(TEXT("SnapToWindowEdge"),&m_fSnapAtWindowEdge);
-	Settings.Read(TEXT("NearCornerResizeOrigin"),&m_fNearCornerResizeOrigin);
-	Settings.Read(TEXT("ZoomKeepAspectRatio"),&m_fZoomKeepAspectRatio);
-	if (Settings.Read(TEXT("PanScanAdjustWindow"),&Value)
-			&& Value>=ADJUSTWINDOW_FIRST && Value<=ADJUSTWINDOW_LAST) {
-		m_PanScanAdjustWindowMode=(AdjustWindowMode)Value;
+	Settings.Read(TEXT("AdjustAspectResizing"), &m_fAdjustAspectResizing);
+	Settings.Read(TEXT("SnapToWindowEdge"), &m_fSnapAtWindowEdge);
+	Settings.Read(TEXT("NearCornerResizeOrigin"), &m_fNearCornerResizeOrigin);
+	Settings.Read(TEXT("ZoomKeepAspectRatio"), &m_fZoomKeepAspectRatio);
+	if (Settings.Read(TEXT("PanScanAdjustWindow"), &Value)
+			&& Value >= ADJUSTWINDOW_FIRST && Value <= ADJUSTWINDOW_LAST) {
+		m_PanScanAdjustWindowMode = (AdjustWindowMode)Value;
 	} else {
 		// 以前のバージョンとの互換用
 		bool f;
-		if (Settings.Read(TEXT("PanScanNoResizeWindow"),&f))
-			m_PanScanAdjustWindowMode=f?ADJUSTWINDOW_WIDTH:ADJUSTWINDOW_FIT;
+		if (Settings.Read(TEXT("PanScanNoResizeWindow"), &f))
+			m_PanScanAdjustWindowMode = f ? ADJUSTWINDOW_WIDTH : ADJUSTWINDOW_FIT;
 	}
-	Settings.Read(TEXT("Remember1SegWindowSize"),&m_fRemember1SegWindowSize);
-	Settings.Read(TEXT("MinimizeToTray"),&m_fMinimizeToTray);
-	Settings.Read(TEXT("DisablePreviewWhenMinimized"),&m_fDisablePreviewWhenMinimized);
-	Settings.Read(TEXT("HideCursor"),&m_fHideCursor);
-	Settings.Read(TEXT("UseLogoIcon"),&m_fUseLogoIcon);
-	Settings.Read(TEXT("TitleTextFormat"),&m_TitleTextFormat);
+	Settings.Read(TEXT("Remember1SegWindowSize"), &m_fRemember1SegWindowSize);
+	Settings.Read(TEXT("MinimizeToTray"), &m_fMinimizeToTray);
+	Settings.Read(TEXT("DisablePreviewWhenMinimized"), &m_fDisablePreviewWhenMinimized);
+	Settings.Read(TEXT("HideCursor"), &m_fHideCursor);
+	Settings.Read(TEXT("UseLogoIcon"), &m_fUseLogoIcon);
+	Settings.Read(TEXT("TitleTextFormat"), &m_TitleTextFormat);
 	TitleFormatMakeCompatible(m_TitleTextFormat);
-	Settings.Read(TEXT("MinimizedTitleTextFormat"),&m_MinimizedTitleTextFormat);
+	Settings.Read(TEXT("MinimizedTitleTextFormat"), &m_MinimizedTitleTextFormat);
 	TitleFormatMakeCompatible(m_MinimizedTitleTextFormat);
-	Settings.Read(TEXT("MaximizedTitleTextFormat"),&m_MaximizedTitleTextFormat);
+	Settings.Read(TEXT("MaximizedTitleTextFormat"), &m_MaximizedTitleTextFormat);
 	TitleFormatMakeCompatible(m_MaximizedTitleTextFormat);
-	Settings.Read(TEXT("TaskbarTitleTextFormat"),&m_TaskbarTitleTextFormat);
+	Settings.Read(TEXT("TaskbarTitleTextFormat"), &m_TaskbarTitleTextFormat);
 	TitleFormatMakeCompatible(m_TaskbarTitleTextFormat);
-	Settings.Read(TEXT("EnableTitleBarFont"),&m_fEnableTitleBarFont);
-	TVTest::StyleUtil::ReadFontSettings(Settings,TEXT("TitleBarFont"),&m_TitleBarFont);
-	Settings.Read(TEXT("ShowLogo"),&m_fShowLogo);
-	Settings.Read(TEXT("LogoFileName"),m_szLogoFileName,lengthof(m_szLogoFileName));
-	Settings.Read(TEXT("NoScreenSaver"),&m_fNoScreenSaver);
-	Settings.Read(TEXT("NoMonitorLowPower"),&m_fNoMonitorLowPower);
-	Settings.Read(TEXT("NoMonitorLowPowerActiveOnly"),&m_fNoMonitorLowPowerActiveOnly);
+	Settings.Read(TEXT("EnableTitleBarFont"), &m_fEnableTitleBarFont);
+	TVTest::StyleUtil::ReadFontSettings(Settings, TEXT("TitleBarFont"), &m_TitleBarFont);
+	Settings.Read(TEXT("ShowLogo"), &m_fShowLogo);
+	Settings.Read(TEXT("LogoFileName"), m_szLogoFileName, lengthof(m_szLogoFileName));
+	Settings.Read(TEXT("NoScreenSaver"), &m_fNoScreenSaver);
+	Settings.Read(TEXT("NoMonitorLowPower"), &m_fNoMonitorLowPower);
+	Settings.Read(TEXT("NoMonitorLowPowerActiveOnly"), &m_fNoMonitorLowPowerActiveOnly);
 
 	return true;
 }
@@ -124,31 +124,31 @@ bool CViewOptions::ReadSettings(CSettings &Settings)
 
 bool CViewOptions::WriteSettings(CSettings &Settings)
 {
-	Settings.Write(TEXT("AdjustAspectResizing"),m_fAdjustAspectResizing);
-	Settings.Write(TEXT("SnapToWindowEdge"),m_fSnapAtWindowEdge);
-	Settings.Write(TEXT("NearCornerResizeOrigin"),m_fNearCornerResizeOrigin);
-	Settings.Write(TEXT("ZoomKeepAspectRatio"),m_fZoomKeepAspectRatio);
-	Settings.Write(TEXT("PanScanAdjustWindow"),(int)m_PanScanAdjustWindowMode);
-	Settings.Write(TEXT("Remember1SegWindowSize"),m_fRemember1SegWindowSize);
-	Settings.Write(TEXT("MinimizeToTray"),m_fMinimizeToTray);
-	Settings.Write(TEXT("DisablePreviewWhenMinimized"),m_fDisablePreviewWhenMinimized);
-	Settings.Write(TEXT("HideCursor"),m_fHideCursor);
-	Settings.Write(TEXT("UseLogoIcon"),m_fUseLogoIcon);
-	Settings.Write(TEXT("TitleTextFormat"),m_TitleTextFormat);
+	Settings.Write(TEXT("AdjustAspectResizing"), m_fAdjustAspectResizing);
+	Settings.Write(TEXT("SnapToWindowEdge"), m_fSnapAtWindowEdge);
+	Settings.Write(TEXT("NearCornerResizeOrigin"), m_fNearCornerResizeOrigin);
+	Settings.Write(TEXT("ZoomKeepAspectRatio"), m_fZoomKeepAspectRatio);
+	Settings.Write(TEXT("PanScanAdjustWindow"), (int)m_PanScanAdjustWindowMode);
+	Settings.Write(TEXT("Remember1SegWindowSize"), m_fRemember1SegWindowSize);
+	Settings.Write(TEXT("MinimizeToTray"), m_fMinimizeToTray);
+	Settings.Write(TEXT("DisablePreviewWhenMinimized"), m_fDisablePreviewWhenMinimized);
+	Settings.Write(TEXT("HideCursor"), m_fHideCursor);
+	Settings.Write(TEXT("UseLogoIcon"), m_fUseLogoIcon);
+	Settings.Write(TEXT("TitleTextFormat"), m_TitleTextFormat);
 	// 設定UI未実装
 	/*
-	Settings.Write(TEXT("MinimizedTitleTextFormat"),m_MinimizedTitleTextFormat);
-	Settings.Write(TEXT("MaximizedTitleTextFormat"),m_MaximizedTitleTextFormat);
-	Settings.Write(TEXT("TaskbarTitleTextFormat"),m_TaskbarTitleTextFormat);
+	Settings.Write(TEXT("MinimizedTitleTextFormat"), m_MinimizedTitleTextFormat);
+	Settings.Write(TEXT("MaximizedTitleTextFormat"), m_MaximizedTitleTextFormat);
+	Settings.Write(TEXT("TaskbarTitleTextFormat"), m_TaskbarTitleTextFormat);
 	*/
 	Settings.DeleteValue(TEXT("TitleEventTime"));
-	Settings.Write(TEXT("EnableTitleBarFont"),m_fEnableTitleBarFont);
-	TVTest::StyleUtil::WriteFontSettings(Settings,TEXT("TitleBarFont"),m_TitleBarFont);
-	Settings.Write(TEXT("ShowLogo"),m_fShowLogo);
-	Settings.Write(TEXT("LogoFileName"),m_szLogoFileName);
-	Settings.Write(TEXT("NoScreenSaver"),m_fNoScreenSaver);
-	Settings.Write(TEXT("NoMonitorLowPower"),m_fNoMonitorLowPower);
-	Settings.Write(TEXT("NoMonitorLowPowerActiveOnly"),m_fNoMonitorLowPowerActiveOnly);
+	Settings.Write(TEXT("EnableTitleBarFont"), m_fEnableTitleBarFont);
+	TVTest::StyleUtil::WriteFontSettings(Settings, TEXT("TitleBarFont"), m_TitleBarFont);
+	Settings.Write(TEXT("ShowLogo"), m_fShowLogo);
+	Settings.Write(TEXT("LogoFileName"), m_szLogoFileName);
+	Settings.Write(TEXT("NoScreenSaver"), m_fNoScreenSaver);
+	Settings.Write(TEXT("NoMonitorLowPower"), m_fNoMonitorLowPower);
+	Settings.Write(TEXT("NoMonitorLowPowerActiveOnly"), m_fNoMonitorLowPowerActiveOnly);
 
 	return true;
 }
@@ -156,68 +156,73 @@ bool CViewOptions::WriteSettings(CSettings &Settings)
 
 bool CViewOptions::Create(HWND hwndOwner)
 {
-	return CreateDialogWindow(hwndOwner,
-							  GetAppClass().GetResourceInstance(),MAKEINTRESOURCE(IDD_OPTIONS_VIEW));
+	return CreateDialogWindow(
+		hwndOwner,
+		GetAppClass().GetResourceInstance(), MAKEINTRESOURCE(IDD_OPTIONS_VIEW));
 }
 
 
-INT_PTR CViewOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
+INT_PTR CViewOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	switch (uMsg) {
 	case WM_INITDIALOG:
 		{
 			// ウィンドウ設定
-			DlgCheckBox_Check(hDlg,IDC_OPTIONS_SNAPATWINDOWEDGE,
-							  m_fSnapAtWindowEdge);
-			DlgCheckBox_Check(hDlg,IDC_OPTIONS_ADJUSTASPECTRESIZING,
-							  m_fAdjustAspectResizing);
-			DlgCheckBox_Check(hDlg,IDC_OPTIONS_NEARCORNERRESIZEORIGIN,
-							  m_fNearCornerResizeOrigin);
-			DlgCheckBox_Check(hDlg,IDC_OPTIONS_ZOOMKEEPASPECTRATIO,m_fZoomKeepAspectRatio);
+			DlgCheckBox_Check(
+				hDlg, IDC_OPTIONS_SNAPATWINDOWEDGE,
+				m_fSnapAtWindowEdge);
+			DlgCheckBox_Check(
+				hDlg, IDC_OPTIONS_ADJUSTASPECTRESIZING,
+				m_fAdjustAspectResizing);
+			DlgCheckBox_Check(
+				hDlg, IDC_OPTIONS_NEARCORNERRESIZEORIGIN,
+				m_fNearCornerResizeOrigin);
+			DlgCheckBox_Check(hDlg, IDC_OPTIONS_ZOOMKEEPASPECTRATIO, m_fZoomKeepAspectRatio);
 			{
 				static const LPCTSTR AdjustWindowModeList[] = {
 					TEXT("サイズを変えない"),
 					TEXT("幅のみ変える"),
 					TEXT("幅と高さを変える"),
 				};
-				for (int i=0;i<lengthof(AdjustWindowModeList);i++) {
-					DlgComboBox_AddString(hDlg,IDC_OPTIONS_PANSCANADJUSTWINDOW,
-										  AdjustWindowModeList[i]);
+				for (int i = 0; i < lengthof(AdjustWindowModeList); i++) {
+					DlgComboBox_AddString(
+						hDlg, IDC_OPTIONS_PANSCANADJUSTWINDOW,
+						AdjustWindowModeList[i]);
 				}
-				DlgComboBox_SetCurSel(hDlg,IDC_OPTIONS_PANSCANADJUSTWINDOW,
-									  m_PanScanAdjustWindowMode);
+				DlgComboBox_SetCurSel(
+					hDlg, IDC_OPTIONS_PANSCANADJUSTWINDOW,
+					m_PanScanAdjustWindowMode);
 			}
-			DlgCheckBox_Check(hDlg,IDC_OPTIONS_REMEMBER1SEGWINDOWSIZE,m_fRemember1SegWindowSize);
-			DlgCheckBox_Check(hDlg,IDC_OPTIONS_MINIMIZETOTRAY,m_fMinimizeToTray);
-			DlgCheckBox_Check(hDlg,IDC_OPTIONS_MINIMIZEDISABLEPREVIEW,
-							  m_fDisablePreviewWhenMinimized);
-			DlgCheckBox_Check(hDlg,IDC_OPTIONS_HIDECURSOR,m_fHideCursor);
-			DlgCheckBox_Check(hDlg,IDC_OPTIONS_USELOGOICON,
-							  m_fUseLogoIcon);
-			::SetDlgItemText(hDlg,IDC_OPTIONS_TITLETEXTFORMAT,m_TitleTextFormat.c_str());
-			InitDropDownButton(hDlg,IDC_OPTIONS_TITLETEXTFORMAT_PARAMETERS);
-			InitDropDownButtonWithText(hDlg,IDC_OPTIONS_TITLETEXTFORMAT_PRESETS);
+			DlgCheckBox_Check(hDlg, IDC_OPTIONS_REMEMBER1SEGWINDOWSIZE, m_fRemember1SegWindowSize);
+			DlgCheckBox_Check(hDlg, IDC_OPTIONS_MINIMIZETOTRAY, m_fMinimizeToTray);
+			DlgCheckBox_Check(hDlg, IDC_OPTIONS_MINIMIZEDISABLEPREVIEW, m_fDisablePreviewWhenMinimized);
+			DlgCheckBox_Check(hDlg, IDC_OPTIONS_HIDECURSOR, m_fHideCursor);
+			DlgCheckBox_Check(hDlg, IDC_OPTIONS_USELOGOICON, m_fUseLogoIcon);
+			::SetDlgItemText(hDlg, IDC_OPTIONS_TITLETEXTFORMAT, m_TitleTextFormat.c_str());
+			InitDropDownButton(hDlg, IDC_OPTIONS_TITLETEXTFORMAT_PARAMETERS);
+			InitDropDownButtonWithText(hDlg, IDC_OPTIONS_TITLETEXTFORMAT_PRESETS);
 
-			m_CurTitleBarFont=m_TitleBarFont;
-			DlgCheckBox_Check(hDlg,IDC_OPTIONS_TITLEBARFONT_ENABLE,m_fEnableTitleBarFont);
-			TVTest::StyleUtil::SetFontInfoItem(hDlg,IDC_OPTIONS_TITLEBARFONT_INFO,m_CurTitleBarFont);
-			EnableDlgItems(hDlg,
-						   IDC_OPTIONS_TITLEBARFONT_INFO,
-						   IDC_OPTIONS_TITLEBARFONT_CHOOSE,
-						   m_fEnableTitleBarFont);
+			m_CurTitleBarFont = m_TitleBarFont;
+			DlgCheckBox_Check(hDlg, IDC_OPTIONS_TITLEBARFONT_ENABLE, m_fEnableTitleBarFont);
+			TVTest::StyleUtil::SetFontInfoItem(hDlg, IDC_OPTIONS_TITLEBARFONT_INFO, m_CurTitleBarFont);
+			EnableDlgItems(
+				hDlg,
+				IDC_OPTIONS_TITLEBARFONT_INFO,
+				IDC_OPTIONS_TITLEBARFONT_CHOOSE,
+				m_fEnableTitleBarFont);
 
-			DlgCheckBox_Check(hDlg,IDC_OPTIONS_SHOWLOGO,m_fShowLogo);
-			::SetDlgItemText(hDlg,IDC_OPTIONS_LOGOFILENAME,m_szLogoFileName);
-			::SendDlgItemMessage(hDlg,IDC_OPTIONS_LOGOFILENAME,EM_LIMITTEXT,MAX_PATH-1,0);
-			::EnableDlgItems(hDlg,IDC_OPTIONS_LOGOFILENAME,IDC_OPTIONS_LOGOFILENAME_BROWSE,
-							 m_fShowLogo);
+			DlgCheckBox_Check(hDlg, IDC_OPTIONS_SHOWLOGO, m_fShowLogo);
+			::SetDlgItemText(hDlg, IDC_OPTIONS_LOGOFILENAME, m_szLogoFileName);
+			::SendDlgItemMessage(hDlg, IDC_OPTIONS_LOGOFILENAME, EM_LIMITTEXT, MAX_PATH - 1, 0);
+			::EnableDlgItems(
+				hDlg, IDC_OPTIONS_LOGOFILENAME, IDC_OPTIONS_LOGOFILENAME_BROWSE,
+				m_fShowLogo);
 
 			// 抑止設定
-			DlgCheckBox_Check(hDlg,IDC_OPTIONS_NOSCREENSAVER,m_fNoScreenSaver);
-			DlgCheckBox_Check(hDlg,IDC_OPTIONS_NOMONITORLOWPOWER,m_fNoMonitorLowPower);
-			DlgCheckBox_Check(hDlg,IDC_OPTIONS_NOMONITORLOWPOWERACTIVEONLY,
-							  m_fNoMonitorLowPowerActiveOnly);
-			EnableDlgItem(hDlg,IDC_OPTIONS_NOMONITORLOWPOWERACTIVEONLY,m_fNoMonitorLowPower);
+			DlgCheckBox_Check(hDlg, IDC_OPTIONS_NOSCREENSAVER, m_fNoScreenSaver);
+			DlgCheckBox_Check(hDlg, IDC_OPTIONS_NOMONITORLOWPOWER, m_fNoMonitorLowPower);
+			DlgCheckBox_Check(hDlg, IDC_OPTIONS_NOMONITORLOWPOWERACTIVEONLY, m_fNoMonitorLowPowerActiveOnly);
+			EnableDlgItem(hDlg, IDC_OPTIONS_NOMONITORLOWPOWERACTIVEONLY, m_fNoMonitorLowPower);
 		}
 		return TRUE;
 
@@ -228,80 +233,85 @@ INT_PTR CViewOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 				RECT rc;
 				POINT pt;
 
-				::GetWindowRect(::GetDlgItem(hDlg,IDC_OPTIONS_TITLETEXTFORMAT_PARAMETERS),&rc);
-				pt.x=rc.left;
-				pt.y=rc.bottom;
+				::GetWindowRect(::GetDlgItem(hDlg, IDC_OPTIONS_TITLETEXTFORMAT_PARAMETERS), &rc);
+				pt.x = rc.left;
+				pt.y = rc.bottom;
 				CUICore::CTitleStringMap StrMap(GetAppClass());
-				StrMap.InputParameter(hDlg,IDC_OPTIONS_TITLETEXTFORMAT,pt);
+				StrMap.InputParameter(hDlg, IDC_OPTIONS_TITLETEXTFORMAT, pt);
 			}
 			return TRUE;
 
 		case IDC_OPTIONS_TITLETEXTFORMAT_PRESETS:
 			{
 				RECT rc;
-				::GetWindowRect(::GetDlgItem(hDlg,IDC_OPTIONS_TITLETEXTFORMAT_PRESETS),&rc);
-				HMENU hmenu=::CreatePopupMenu();
-				for (int i=0;i<lengthof(TitleTextFormatPresets);i++) {
-					::AppendMenu(hmenu,MF_STRING | MF_ENABLED,i+1,
-								 TitleTextFormatPresets[i].pszDescript);
+				::GetWindowRect(::GetDlgItem(hDlg, IDC_OPTIONS_TITLETEXTFORMAT_PRESETS), &rc);
+				HMENU hmenu = ::CreatePopupMenu();
+				for (int i = 0; i < lengthof(TitleTextFormatPresets); i++) {
+					::AppendMenu(
+						hmenu, MF_STRING | MF_ENABLED, i + 1,
+						TitleTextFormatPresets[i].pszDescript);
 				}
-				int Result=::TrackPopupMenu(hmenu,TPM_RETURNCMD,rc.left,rc.bottom,0,hDlg,NULL);
-				if (Result>0 && Result<=lengthof(TitleTextFormatPresets)) {
-					::SetDlgItemText(hDlg,IDC_OPTIONS_TITLETEXTFORMAT,
-									 TitleTextFormatPresets[Result-1].pszFormat);
+				int Result = ::TrackPopupMenu(hmenu, TPM_RETURNCMD, rc.left, rc.bottom, 0, hDlg, NULL);
+				if (Result > 0 && Result <= lengthof(TitleTextFormatPresets)) {
+					::SetDlgItemText(
+						hDlg, IDC_OPTIONS_TITLETEXTFORMAT,
+						TitleTextFormatPresets[Result - 1].pszFormat);
 				}
 			}
 			return TRUE;
 
 		case IDC_OPTIONS_TITLEBARFONT_ENABLE:
-			EnableDlgItemsSyncCheckBox(hDlg,
-									   IDC_OPTIONS_TITLEBARFONT_INFO,
-									   IDC_OPTIONS_TITLEBARFONT_CHOOSE,
-									   IDC_OPTIONS_TITLEBARFONT_ENABLE);
+			EnableDlgItemsSyncCheckBox(
+				hDlg,
+				IDC_OPTIONS_TITLEBARFONT_INFO,
+				IDC_OPTIONS_TITLEBARFONT_CHOOSE,
+				IDC_OPTIONS_TITLEBARFONT_ENABLE);
 			return TRUE;
 
 		case IDC_OPTIONS_TITLEBARFONT_CHOOSE:
-			if (TVTest::StyleUtil::ChooseStyleFont(hDlg,&m_CurTitleBarFont))
-				TVTest::StyleUtil::SetFontInfoItem(hDlg,IDC_OPTIONS_TITLEBARFONT_INFO,m_CurTitleBarFont);
+			if (TVTest::StyleUtil::ChooseStyleFont(hDlg, &m_CurTitleBarFont))
+				TVTest::StyleUtil::SetFontInfoItem(hDlg, IDC_OPTIONS_TITLEBARFONT_INFO, m_CurTitleBarFont);
 			return TRUE;
 
 		case IDC_OPTIONS_SHOWLOGO:
-			EnableDlgItemsSyncCheckBox(hDlg,IDC_OPTIONS_LOGOFILENAME,IDC_OPTIONS_LOGOFILENAME_BROWSE,
-									   IDC_OPTIONS_SHOWLOGO);
+			EnableDlgItemsSyncCheckBox(
+				hDlg, IDC_OPTIONS_LOGOFILENAME, IDC_OPTIONS_LOGOFILENAME_BROWSE,
+				IDC_OPTIONS_SHOWLOGO);
 			return TRUE;
 
 		case IDC_OPTIONS_LOGOFILENAME_BROWSE:
 			{
 				OPENFILENAME ofn;
-				TCHAR szFileName[MAX_PATH],szInitDir[MAX_PATH];
+				TCHAR szFileName[MAX_PATH], szInitDir[MAX_PATH];
 				CFilePath FilePath;
 
-				::GetDlgItemText(hDlg,IDC_OPTIONS_LOGOFILENAME,szFileName,lengthof(szFileName));
+				::GetDlgItemText(hDlg, IDC_OPTIONS_LOGOFILENAME, szFileName, lengthof(szFileName));
 				FilePath.SetPath(szFileName);
 				if (FilePath.GetDirectory(szInitDir)) {
-					::lstrcpy(szFileName,FilePath.GetFileName());
+					::lstrcpy(szFileName, FilePath.GetFileName());
 				} else {
 					GetAppClass().GetAppDirectory(szInitDir);
 				}
 				InitOpenFileName(&ofn);
-				ofn.hwndOwner=hDlg;
-				ofn.lpstrFilter=
+				ofn.hwndOwner = hDlg;
+				ofn.lpstrFilter =
 					TEXT("BMPファイル(*.bmp)\0*.bmp\0")
 					TEXT("すべてのファイル\0*.*\0");
-				ofn.lpstrFile=szFileName;
-				ofn.nMaxFile=lengthof(szFileName);
-				ofn.lpstrInitialDir=szInitDir;
-				ofn.lpstrTitle=TEXT("ロゴ画像の選択");
-				ofn.Flags=OFN_HIDEREADONLY | OFN_FILEMUSTEXIST | OFN_EXPLORER;
+				ofn.lpstrFile = szFileName;
+				ofn.nMaxFile = lengthof(szFileName);
+				ofn.lpstrInitialDir = szInitDir;
+				ofn.lpstrTitle = TEXT("ロゴ画像の選択");
+				ofn.Flags = OFN_HIDEREADONLY | OFN_FILEMUSTEXIST | OFN_EXPLORER;
 				if (FileOpenDialog(&ofn)) {
-					::SetDlgItemText(hDlg,IDC_OPTIONS_LOGOFILENAME,szFileName);
+					::SetDlgItemText(hDlg, IDC_OPTIONS_LOGOFILENAME, szFileName);
 				}
 			}
 			return TRUE;
 
 		case IDC_OPTIONS_NOMONITORLOWPOWER:
-			EnableDlgItemSyncCheckBox(hDlg,IDC_OPTIONS_NOMONITORLOWPOWERACTIVEONLY,
-									  IDC_OPTIONS_NOMONITORLOWPOWER);
+			EnableDlgItemSyncCheckBox(
+				hDlg, IDC_OPTIONS_NOMONITORLOWPOWERACTIVEONLY,
+				IDC_OPTIONS_NOMONITORLOWPOWER);
 			return TRUE;
 		}
 		return TRUE;
@@ -310,84 +320,84 @@ INT_PTR CViewOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 		switch (((LPNMHDR)lParam)->code) {
 		case PSN_APPLY:
 			{
-				CAppMain &App=GetAppClass();
+				CAppMain &App = GetAppClass();
 				bool f;
 
-				m_fSnapAtWindowEdge=
-					DlgCheckBox_IsChecked(hDlg,IDC_OPTIONS_SNAPATWINDOWEDGE);
-				m_fAdjustAspectResizing=
-					DlgCheckBox_IsChecked(hDlg,IDC_OPTIONS_ADJUSTASPECTRESIZING);
-				m_fNearCornerResizeOrigin=
-					DlgCheckBox_IsChecked(hDlg,IDC_OPTIONS_NEARCORNERRESIZEORIGIN);
-				m_fZoomKeepAspectRatio=
-					DlgCheckBox_IsChecked(hDlg,IDC_OPTIONS_ZOOMKEEPASPECTRATIO);
-				m_PanScanAdjustWindowMode=(AdjustWindowMode)
-					DlgComboBox_GetCurSel(hDlg,IDC_OPTIONS_PANSCANADJUSTWINDOW);
-				m_fRemember1SegWindowSize=
-					DlgCheckBox_IsChecked(hDlg,IDC_OPTIONS_REMEMBER1SEGWINDOWSIZE);
-				m_fMinimizeToTray=
-					DlgCheckBox_IsChecked(hDlg,IDC_OPTIONS_MINIMIZETOTRAY);
-				m_fDisablePreviewWhenMinimized=
-					DlgCheckBox_IsChecked(hDlg,IDC_OPTIONS_MINIMIZEDISABLEPREVIEW);
-				m_fHideCursor=
-					DlgCheckBox_IsChecked(hDlg,IDC_OPTIONS_HIDECURSOR);
-				f=DlgCheckBox_IsChecked(hDlg,IDC_OPTIONS_USELOGOICON);
-				if (m_fUseLogoIcon!=f) {
-					m_fUseLogoIcon=f;
+				m_fSnapAtWindowEdge =
+					DlgCheckBox_IsChecked(hDlg, IDC_OPTIONS_SNAPATWINDOWEDGE);
+				m_fAdjustAspectResizing =
+					DlgCheckBox_IsChecked(hDlg, IDC_OPTIONS_ADJUSTASPECTRESIZING);
+				m_fNearCornerResizeOrigin =
+					DlgCheckBox_IsChecked(hDlg, IDC_OPTIONS_NEARCORNERRESIZEORIGIN);
+				m_fZoomKeepAspectRatio =
+					DlgCheckBox_IsChecked(hDlg, IDC_OPTIONS_ZOOMKEEPASPECTRATIO);
+				m_PanScanAdjustWindowMode =
+					(AdjustWindowMode)DlgComboBox_GetCurSel(hDlg, IDC_OPTIONS_PANSCANADJUSTWINDOW);
+				m_fRemember1SegWindowSize =
+					DlgCheckBox_IsChecked(hDlg, IDC_OPTIONS_REMEMBER1SEGWINDOWSIZE);
+				m_fMinimizeToTray =
+					DlgCheckBox_IsChecked(hDlg, IDC_OPTIONS_MINIMIZETOTRAY);
+				m_fDisablePreviewWhenMinimized =
+					DlgCheckBox_IsChecked(hDlg, IDC_OPTIONS_MINIMIZEDISABLEPREVIEW);
+				m_fHideCursor =
+					DlgCheckBox_IsChecked(hDlg, IDC_OPTIONS_HIDECURSOR);
+				f = DlgCheckBox_IsChecked(hDlg, IDC_OPTIONS_USELOGOICON);
+				if (m_fUseLogoIcon != f) {
+					m_fUseLogoIcon = f;
 					App.UICore.UpdateIcon();
 				}
 				{
 					TVTest::String Text;
-					GetDlgItemString(hDlg,IDC_OPTIONS_TITLETEXTFORMAT,&Text);
-					if (m_TitleTextFormat!=Text) {
-						m_TitleTextFormat=std::move(Text);
+					GetDlgItemString(hDlg, IDC_OPTIONS_TITLETEXTFORMAT, &Text);
+					if (m_TitleTextFormat != Text) {
+						m_TitleTextFormat = std::move(Text);
 						App.UICore.UpdateTitle();
 					}
 				}
 				{
-					bool fLogo=DlgCheckBox_IsChecked(hDlg,IDC_OPTIONS_SHOWLOGO);
+					bool fLogo = DlgCheckBox_IsChecked(hDlg, IDC_OPTIONS_SHOWLOGO);
 					TCHAR szFileName[MAX_PATH];
 
-					::GetDlgItemText(hDlg,IDC_OPTIONS_LOGOFILENAME,szFileName,MAX_PATH);
-					if (fLogo!=m_fShowLogo
-							|| ::lstrcmp(szFileName,m_szLogoFileName)!=0) {
-						m_fShowLogo=fLogo;
-						::lstrcpy(m_szLogoFileName,szFileName);
+					::GetDlgItemText(hDlg, IDC_OPTIONS_LOGOFILENAME, szFileName, MAX_PATH);
+					if (fLogo != m_fShowLogo
+							|| ::lstrcmp(szFileName, m_szLogoFileName) != 0) {
+						m_fShowLogo = fLogo;
+						::lstrcpy(m_szLogoFileName, szFileName);
 						SetUpdateFlag(UPDATE_LOGO);
 					}
 				}
 
-				bool fTitleBarFontChanged=false;
-				bool fEnableTitleBarFont=
-					DlgCheckBox_IsChecked(hDlg,IDC_OPTIONS_TITLEBARFONT_ENABLE);
-				if (m_fEnableTitleBarFont!=fEnableTitleBarFont) {
-					m_fEnableTitleBarFont=fEnableTitleBarFont;
-					fTitleBarFontChanged=true;
+				bool fTitleBarFontChanged = false;
+				bool fEnableTitleBarFont =
+					DlgCheckBox_IsChecked(hDlg, IDC_OPTIONS_TITLEBARFONT_ENABLE);
+				if (m_fEnableTitleBarFont != fEnableTitleBarFont) {
+					m_fEnableTitleBarFont = fEnableTitleBarFont;
+					fTitleBarFontChanged = true;
 				}
-				if (m_TitleBarFont!=m_CurTitleBarFont) {
-					m_TitleBarFont=m_CurTitleBarFont;
+				if (m_TitleBarFont != m_CurTitleBarFont) {
+					m_TitleBarFont = m_CurTitleBarFont;
 					if (m_fEnableTitleBarFont)
-						fTitleBarFontChanged=true;
+						fTitleBarFontChanged = true;
 				}
 				if (fTitleBarFontChanged) {
 					TVTest::Style::Font Font;
 					if (m_fEnableTitleBarFont)
-						Font=m_TitleBarFont;
+						Font = m_TitleBarFont;
 					else
-						TVTest::StyleUtil::GetSystemFont(DrawUtil::FONT_CAPTION,&Font);
+						TVTest::StyleUtil::GetSystemFont(DrawUtil::FONT_CAPTION, &Font);
 					App.UICore.SetTitleFont(Font);
 					App.Panel.Frame.GetPanel()->SetTitleFont(Font);
 				}
 
-				m_fNoScreenSaver=
-					DlgCheckBox_IsChecked(hDlg,IDC_OPTIONS_NOSCREENSAVER);
-				m_fNoMonitorLowPower=
-					DlgCheckBox_IsChecked(hDlg,IDC_OPTIONS_NOMONITORLOWPOWER);
-				m_fNoMonitorLowPowerActiveOnly=
-					DlgCheckBox_IsChecked(hDlg,IDC_OPTIONS_NOMONITORLOWPOWERACTIVEONLY);
+				m_fNoScreenSaver =
+					DlgCheckBox_IsChecked(hDlg, IDC_OPTIONS_NOSCREENSAVER);
+				m_fNoMonitorLowPower =
+					DlgCheckBox_IsChecked(hDlg, IDC_OPTIONS_NOMONITORLOWPOWER);
+				m_fNoMonitorLowPowerActiveOnly =
+					DlgCheckBox_IsChecked(hDlg, IDC_OPTIONS_NOMONITORLOWPOWERACTIVEONLY);
 				App.UICore.PreventDisplaySave(true);
 
-				m_fChanged=true;
+				m_fChanged = true;
 			}
 			break;
 		}

@@ -8,7 +8,8 @@
 #include "Image.h"
 
 
-class CLogoManager : public LibISDB::LogoDownloaderFilter::LogoHandler
+class CLogoManager
+	: public LibISDB::LogoDownloaderFilter::LogoHandler
 {
 public:
 	struct LogoInfo
@@ -29,23 +30,24 @@ public:
 	bool GetSaveLogo() const { return m_fSaveLogo; }
 	bool SetSaveLogoBmp(bool fSave);
 	bool GetSaveLogoBmp() const { return m_fSaveBmp; }
-	bool AssociateLogoID(WORD NetworkID,WORD ServiceID,WORD LogoID);
+	bool AssociateLogoID(WORD NetworkID, WORD ServiceID, WORD LogoID);
 	bool SaveLogoFile(LPCTSTR pszFileName);
 	bool LoadLogoFile(LPCTSTR pszFileName);
 	bool IsLogoDataUpdated() const { return m_fLogoUpdated; }
 	bool SaveLogoIDMap(LPCTSTR pszFileName);
 	bool LoadLogoIDMap(LPCTSTR pszFileName);
 	bool IsLogoIDMapUpdated() const { return m_fLogoIDMapUpdated; }
-	HBITMAP GetLogoBitmap(WORD NetworkID,WORD LogoID,BYTE LogoType);
-	HBITMAP GetAssociatedLogoBitmap(WORD NetworkID,WORD ServiceID,BYTE LogoType);
-	const TVTest::Graphics::CImage *GetLogoImage(WORD NetworkID,WORD LogoID,BYTE LogoType);
-	const TVTest::Graphics::CImage *GetAssociatedLogoImage(WORD NetworkID,WORD ServiceID,BYTE LogoType);
-	HICON CreateLogoIcon(WORD NetworkID,WORD ServiceID,int Width,int Height);
-	bool SaveLogoIcon(WORD NetworkID,WORD ServiceID,BYTE LogoType,
-					  int Width,int Height,LPCTSTR pszFileName);
-	bool IsLogoAvailable(WORD NetworkID,WORD ServiceID,BYTE LogoType) const;
-	DWORD GetAvailableLogoType(WORD NetworkID,WORD ServiceID) const;
-	bool GetLogoInfo(WORD NetworkID,WORD ServiceID,BYTE LogoType,LogoInfo *pInfo) const;
+	HBITMAP GetLogoBitmap(WORD NetworkID, WORD LogoID, BYTE LogoType);
+	HBITMAP GetAssociatedLogoBitmap(WORD NetworkID, WORD ServiceID, BYTE LogoType);
+	const TVTest::Graphics::CImage *GetLogoImage(WORD NetworkID, WORD LogoID, BYTE LogoType);
+	const TVTest::Graphics::CImage *GetAssociatedLogoImage(WORD NetworkID, WORD ServiceID, BYTE LogoType);
+	HICON CreateLogoIcon(WORD NetworkID, WORD ServiceID, int Width, int Height);
+	bool SaveLogoIcon(
+		WORD NetworkID, WORD ServiceID, BYTE LogoType,
+		int Width, int Height, LPCTSTR pszFileName);
+	bool IsLogoAvailable(WORD NetworkID, WORD ServiceID, BYTE LogoType) const;
+	DWORD GetAvailableLogoType(WORD NetworkID, WORD ServiceID) const;
+	bool GetLogoInfo(WORD NetworkID, WORD ServiceID, BYTE LogoType, LogoInfo *pInfo) const;
 
 	enum {
 		LOGOTYPE_48x24,
@@ -54,10 +56,10 @@ public:
 		LOGOTYPE_72x36,
 		LOGOTYPE_54x36,
 		LOGOTYPE_64x36,
-		LOGOTYPE_FIRST	=LOGOTYPE_48x24,
-		LOGOTYPE_LAST	=LOGOTYPE_64x36,
-		LOGOTYPE_SMALL	=0xFF,	// 取得できる中から小さいもの優先
-		LOGOTYPE_BIG	=0xFE	// 取得できる中から大きいもの優先
+		LOGOTYPE_FIRST	= LOGOTYPE_48x24,
+		LOGOTYPE_LAST	= LOGOTYPE_64x36,
+		LOGOTYPE_SMALL	= 0xFF,	// 取得できる中から小さいもの優先
+		LOGOTYPE_BIG	= 0xFE	// 取得できる中から大きいもの優先
 	};
 
 private:
@@ -81,7 +83,7 @@ private:
 		WORD GetNetworkID() const { return m_NetworkID; }
 		WORD GetLogoID() const { return m_LogoID; }
 		WORD GetLogoVersion() const { return m_LogoVersion; }
-		void SetLogoVersion(WORD Version) { m_LogoVersion=Version; }
+		void SetLogoVersion(WORD Version) { m_LogoVersion = Version; }
 		BYTE GetLogoType() const { return m_LogoType; }
 		WORD GetDataSize() const { return m_DataSize; }
 		const BYTE *GetData() const { return m_pData; }
@@ -89,17 +91,17 @@ private:
 		HBITMAP GetBitmap(CImageCodec *pCodec);
 		const TVTest::Graphics::CImage *GetImage(CImageCodec *pCodec);
 		bool SaveToFile(LPCTSTR pszFileName) const;
-		bool SaveBmpToFile(CImageCodec *pCodec,LPCTSTR pszFileName) const;
+		bool SaveBmpToFile(CImageCodec *pCodec, LPCTSTR pszFileName) const;
 	};
 
-	static inline ULONGLONG GetMapKey(WORD NID,WORD LogoID,BYTE LogoType) {
-		return ((ULONGLONG)NID<<24) | ((ULONGLONG)LogoID<<8) | LogoType;
+	static inline ULONGLONG GetMapKey(WORD NID, WORD LogoID, BYTE LogoType) {
+		return ((ULONGLONG)NID << 24) | ((ULONGLONG)LogoID << 8) | LogoType;
 	}
-	typedef std::map<ULONGLONG,CLogoData*> LogoMap;
-	static inline DWORD GetIDMapKey(WORD NID,WORD SID) {
-		return ((DWORD)NID<<16) | (DWORD)SID;
+	typedef std::map<ULONGLONG, CLogoData*> LogoMap;
+	static inline DWORD GetIDMapKey(WORD NID, WORD SID) {
+		return ((DWORD)NID << 16) | (DWORD)SID;
 	}
-	typedef std::map<DWORD,WORD> LogoIDMap;
+	typedef std::map<DWORD, WORD> LogoIDMap;
 
 	TCHAR m_szLogoDirectory[MAX_PATH];
 	bool m_fSaveLogo;
@@ -113,8 +115,8 @@ private:
 	FILETIME m_LogoFileLastWriteTime;
 	FILETIME m_LogoIDMapFileLastWriteTime;
 
-	bool SetLogoIDMap(WORD NetworkID,WORD ServiceID,WORD LogoID,bool fUpdate=true);
-	CLogoData *LoadLogoData(WORD NetworkID,WORD LogoID,BYTE LogoType);
+	bool SetLogoIDMap(WORD NetworkID, WORD ServiceID, WORD LogoID, bool fUpdate = true);
+	CLogoData *LoadLogoData(WORD NetworkID, WORD LogoID, BYTE LogoType);
 
 // LibISDB::LogoDownloaderFilter::LogoHandler
 	void OnLogoDownloaded(const LibISDB::LogoDownloaderFilter::LogoData &Data) override;

@@ -11,20 +11,20 @@
 
 class CChannelInfo
 {
-	int m_Space;				// チューニング空間
-	int m_ChannelIndex;			// チャンネルインデックス(BonDriverでの番号)
-	int m_ChannelNo;			// リモコンチャンネル番号
-	int m_PhysicalChannel;		// 物理チャンネル番号
-	TVTest::String m_Name;		// チャンネル名
-	WORD m_NetworkID;			// ネットワークID
-	WORD m_TransportStreamID;	// トランスポートストリームID
-	WORD m_ServiceID;			// サービスID
-	BYTE m_ServiceType;			// サービスの種類
-	bool m_fEnabled;			// 有効
+	int m_Space;              // チューニング空間
+	int m_ChannelIndex;       // チャンネルインデックス(BonDriverでの番号)
+	int m_ChannelNo;          // リモコンチャンネル番号
+	int m_PhysicalChannel;    // 物理チャンネル番号
+	TVTest::String m_Name;    // チャンネル名
+	WORD m_NetworkID;         // ネットワークID
+	WORD m_TransportStreamID; // トランスポートストリームID
+	WORD m_ServiceID;         // サービスID
+	BYTE m_ServiceType;       // サービスの種類
+	bool m_fEnabled;          // 有効
 
 public:
 	CChannelInfo();
-	CChannelInfo(int Space,int ChannelIndex,int No,LPCTSTR pszName);
+	CChannelInfo(int Space, int ChannelIndex, int No, LPCTSTR pszName);
 	virtual ~CChannelInfo() {}
 	int GetSpace() const { return m_Space; }
 	bool SetSpace(int Space);
@@ -44,15 +44,16 @@ public:
 	WORD GetServiceID() const { return m_ServiceID; }
 	void SetServiceType(BYTE ServiceType);
 	BYTE GetServiceType() const { return m_ServiceType; }
-	void Enable(bool fEnable) { m_fEnabled=fEnable; }
+	void Enable(bool fEnable) { m_fEnabled = fEnable; }
 	bool IsEnabled() const { return m_fEnabled; }
 };
 
-class CTunerChannelInfo : public CChannelInfo
+class CTunerChannelInfo
+	: public CChannelInfo
 {
 public:
 	CTunerChannelInfo();
-	CTunerChannelInfo(const CChannelInfo &ChannelInfo,LPCTSTR pszTunerName=NULL);
+	CTunerChannelInfo(const CChannelInfo &ChannelInfo, LPCTSTR pszTunerName = NULL);
 	CTunerChannelInfo &operator=(const CChannelInfo &Src);
 	void SetTunerName(LPCTSTR pszName);
 	LPCTSTR GetTunerName() const { return m_TunerName.c_str(); }
@@ -72,7 +73,7 @@ public:
 	int NumEnableChannels() const;
 	bool AddChannel(const CChannelInfo &Info);
 	bool AddChannel(CChannelInfo *pInfo);
-	bool InsertChannel(int Index,const CChannelInfo &Info);
+	bool InsertChannel(int Index, const CChannelInfo &Info);
 	CChannelInfo *GetChannelInfo(int Index);
 	const CChannelInfo *GetChannelInfo(int Index) const;
 	int GetSpace(int Index) const;
@@ -84,15 +85,15 @@ public:
 	bool DeleteChannel(int Index);
 	void Clear();
 	int Find(const CChannelInfo *pInfo) const;
-	int Find(const CChannelInfo &Info,bool fEnabledOnly=true) const;
-	int FindByIndex(int Space,int ChannelIndex,int ServiceID=-1,bool fEnabledOnly=true) const;
+	int Find(const CChannelInfo &Info, bool fEnabledOnly = true) const;
+	int FindByIndex(int Space, int ChannelIndex, int ServiceID = -1, bool fEnabledOnly = true) const;
 	int FindPhysicalChannel(int Channel) const;
-	int FindChannelNo(int No,bool fEnabledOnly=true) const;
+	int FindChannelNo(int No, bool fEnabledOnly = true) const;
 	int FindServiceID(WORD ServiceID) const;
-	int FindByIDs(WORD NetworkID,WORD TransportStreamID,WORD ServiceID,bool fEnabledOnly=true) const;
+	int FindByIDs(WORD NetworkID, WORD TransportStreamID, WORD ServiceID, bool fEnabledOnly = true) const;
 	int FindByName(LPCTSTR pszName) const;
-	int GetNextChannel(int Index,bool fWrap=false) const;
-	int GetPrevChannel(int Index,bool fWrap=false) const;
+	int GetNextChannel(int Index, bool fWrap = false) const;
+	int GetPrevChannel(int Index, bool fWrap = false) const;
 	int GetMaxChannelNo() const;
 	enum SortType {
 		SORT_SPACE,
@@ -104,7 +105,7 @@ public:
 		SORT_SERVICEID,
 		SORT_TRAILER
 	};
-	bool Sort(SortType Type,bool fDescending=false);
+	bool Sort(SortType Type, bool fDescending = false);
 	bool HasRemoteControlKeyID() const;
 	bool HasMultiService() const;
 
@@ -116,8 +117,8 @@ class CTuningSpaceInfo
 {
 public:
 	enum TuningSpaceType {
-		SPACE_ERROR=-1,
-		SPACE_UNKNOWN=0,
+		SPACE_ERROR = -1,
+		SPACE_UNKNOWN = 0,
 		SPACE_TERRESTRIAL,
 		SPACE_BS,
 		SPACE_110CS
@@ -127,7 +128,7 @@ public:
 	CTuningSpaceInfo(const CTuningSpaceInfo &Info);
 	~CTuningSpaceInfo();
 	CTuningSpaceInfo &operator=(const CTuningSpaceInfo &Info);
-	bool Create(const CChannelList *pList=NULL,LPCTSTR pszName=NULL);
+	bool Create(const CChannelList *pList = NULL, LPCTSTR pszName = NULL);
 	CChannelList *GetChannelList() { return m_pChannelList; }
 	const CChannelList *GetChannelList() const { return m_pChannelList; }
 	CChannelInfo *GetChannelInfo(int Index);
@@ -160,7 +161,7 @@ public:
 	const CChannelList *GetAllChannelList() const { return &m_AllChannelList; }
 	LPCTSTR GetTuningSpaceName(int Space) const;
 	CTuningSpaceInfo::TuningSpaceType GetTuningSpaceType(int Space) const;
-	bool Create(const CChannelList *pList,int Spaces=0);
+	bool Create(const CChannelList *pList, int Spaces = 0);
 	bool Reserve(int Spaces);
 	bool MakeAllChannelList();
 	void Clear();
@@ -170,7 +171,7 @@ public:
 private:
 	std::vector<CTuningSpaceInfo*> m_TuningSpaceList;
 	CChannelList m_AllChannelList;
-	bool MakeTuningSpaceList(const CChannelList *pList,int Spaces=0);
+	bool MakeTuningSpaceList(const CChannelList *pList, int Spaces = 0);
 };
 
 

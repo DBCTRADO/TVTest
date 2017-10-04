@@ -41,8 +41,8 @@ CCoreEngine::CCoreEngine()
 
 	, m_AsyncStatusUpdatedFlags(0)
 {
-	m_szDriverDirectory[0]='\0';
-	m_szDriverFileName[0]='\0';
+	m_szDriverDirectory[0] = '\0';
+	m_szDriverFileName[0] = '\0';
 }
 
 
@@ -50,7 +50,7 @@ CCoreEngine::~CCoreEngine()
 {
 	Close();
 
-	if (m_TimerResolution!=0)
+	if (m_TimerResolution != 0)
 		::timeEndPeriod(m_TimerResolution);
 }
 
@@ -60,8 +60,8 @@ void CCoreEngine::Close()
 	CloseEngine();
 
 	if (!m_TSProcessorList.empty()) {
-		for (auto it=m_TSProcessorList.begin();it!=m_TSProcessorList.end();++it) {
-			m_FilterGraph.UnregisterFilter(it->pTSProcessor,false);
+		for (auto it = m_TSProcessorList.begin(); it != m_TSProcessorList.end(); ++it) {
+			m_FilterGraph.UnregisterFilter(it->pTSProcessor, false);
 			it->pTSProcessor->Release();
 		}
 		m_TSProcessorList.clear();
@@ -71,40 +71,40 @@ void CCoreEngine::Close()
 
 void CCoreEngine::CreateFilters()
 {
-	LibISDB::BonDriverSourceFilter *pSourceFilter=new LibISDB::BonDriverSourceFilter;
+	LibISDB::BonDriverSourceFilter *pSourceFilter = new LibISDB::BonDriverSourceFilter;
 	RegisterFilter(pSourceFilter);
 
-	LibISDB::TSPacketParserFilter *pPacketParser=new LibISDB::TSPacketParserFilter;
+	LibISDB::TSPacketParserFilter *pPacketParser = new LibISDB::TSPacketParserFilter;
 	RegisterFilter(pPacketParser);
 
-	LibISDB::AnalyzerFilter *pAnalyzer=new LibISDB::AnalyzerFilter;
+	LibISDB::AnalyzerFilter *pAnalyzer = new LibISDB::AnalyzerFilter;
 	RegisterFilter(pAnalyzer);
 
-	LibISDB::TeeFilter *pTee=new LibISDB::TeeFilter;
+	LibISDB::TeeFilter *pTee = new LibISDB::TeeFilter;
 	RegisterFilter(pTee);
 
 	if (!m_fNoEpg) {
-		LibISDB::EPGDatabaseFilter *pEPGDatabaseFilter=new LibISDB::EPGDatabaseFilter;
+		LibISDB::EPGDatabaseFilter *pEPGDatabaseFilter = new LibISDB::EPGDatabaseFilter;
 		RegisterFilter(pEPGDatabaseFilter);
 	}
 
-	LibISDB::LogoDownloaderFilter *pLogoDownloader=new LibISDB::LogoDownloaderFilter;
+	LibISDB::LogoDownloaderFilter *pLogoDownloader = new LibISDB::LogoDownloaderFilter;
 	RegisterFilter(pLogoDownloader);
 
-	LibISDB::GrabberFilter *pGrabber=new LibISDB::GrabberFilter;
+	LibISDB::GrabberFilter *pGrabber = new LibISDB::GrabberFilter;
 	RegisterFilter(pGrabber);
 
-	LibISDB::RecorderFilter *pRecorder=new LibISDB::RecorderFilter;
+	LibISDB::RecorderFilter *pRecorder = new LibISDB::RecorderFilter;
 	pRecorder->AddEventListener(this);
 	RegisterFilter(pRecorder);
 
-	LibISDB::TSPacketCounterFilter *pPacketCounter=new LibISDB::TSPacketCounterFilter;
+	LibISDB::TSPacketCounterFilter *pPacketCounter = new LibISDB::TSPacketCounterFilter;
 	RegisterFilter(pPacketCounter);
 
-	LibISDB::CaptionFilter *pCaptionFilter=new LibISDB::CaptionFilter;
+	LibISDB::CaptionFilter *pCaptionFilter = new LibISDB::CaptionFilter;
 	RegisterFilter(pCaptionFilter);
 
-	LibISDB::ViewerFilter *pViewer=new LibISDB::ViewerFilter;
+	LibISDB::ViewerFilter *pViewer = new LibISDB::ViewerFilter;
 	pViewer->AddEventListener(this);
 	RegisterFilter(pViewer);
 }
@@ -116,30 +116,30 @@ bool CCoreEngine::BuildEngine()
 	LibISDB::FilterGraph::IDType FilterID;
 	int OutputIndex;
 
-	FilterID=m_FilterGraph.GetFilterID<LibISDB::BonDriverSourceFilter>();
-	ConnectTSProcessor(&ConnectionList,TSPROCESSOR_CONNECTPOSITION_SOURCE,&FilterID);
-	ConnectFilter(&ConnectionList,m_FilterGraph.GetFilterID<LibISDB::TSPacketParserFilter>(),&FilterID);
-	ConnectTSProcessor(&ConnectionList,TSPROCESSOR_CONNECTPOSITION_PREPROCESSING,&FilterID);
-	ConnectFilter(&ConnectionList,m_FilterGraph.GetFilterID<LibISDB::AnalyzerFilter>(),&FilterID);
-	ConnectTSProcessor(&ConnectionList,TSPROCESSOR_CONNECTPOSITION_POSTPROCESSING,&FilterID);
-	ConnectFilter(&ConnectionList,m_FilterGraph.GetFilterID<LibISDB::TeeFilter>(),&FilterID);
-	LibISDB::FilterGraph::IDType TeeFilterID=FilterID;
+	FilterID = m_FilterGraph.GetFilterID<LibISDB::BonDriverSourceFilter>();
+	ConnectTSProcessor(&ConnectionList, TSPROCESSOR_CONNECTPOSITION_SOURCE, &FilterID);
+	ConnectFilter(&ConnectionList, m_FilterGraph.GetFilterID<LibISDB::TSPacketParserFilter>(), &FilterID);
+	ConnectTSProcessor(&ConnectionList, TSPROCESSOR_CONNECTPOSITION_PREPROCESSING, &FilterID);
+	ConnectFilter(&ConnectionList, m_FilterGraph.GetFilterID<LibISDB::AnalyzerFilter>(), &FilterID);
+	ConnectTSProcessor(&ConnectionList, TSPROCESSOR_CONNECTPOSITION_POSTPROCESSING, &FilterID);
+	ConnectFilter(&ConnectionList, m_FilterGraph.GetFilterID<LibISDB::TeeFilter>(), &FilterID);
+	LibISDB::FilterGraph::IDType TeeFilterID = FilterID;
 	if (!m_fNoEpg) {
-		ConnectFilter(&ConnectionList,m_FilterGraph.GetFilterID<LibISDB::EPGDatabaseFilter>(),&FilterID,0);
+		ConnectFilter(&ConnectionList, m_FilterGraph.GetFilterID<LibISDB::EPGDatabaseFilter>(), &FilterID, 0);
 	}
-	ConnectFilter(&ConnectionList,m_FilterGraph.GetFilterID<LibISDB::LogoDownloaderFilter>(),&FilterID,0);
-	ConnectTSProcessor(&ConnectionList,TSPROCESSOR_CONNECTPOSITION_RECORDER,&FilterID);
-	ConnectFilter(&ConnectionList,m_FilterGraph.GetFilterID<LibISDB::GrabberFilter>(),&FilterID);
-	ConnectFilter(&ConnectionList,m_FilterGraph.GetFilterID<LibISDB::RecorderFilter>(),&FilterID);
-	FilterID=TeeFilterID;
-	OutputIndex=1;
-	ConnectTSProcessor(&ConnectionList,TSPROCESSOR_CONNECTPOSITION_VIEWER,&FilterID,&OutputIndex);
-	ConnectFilter(&ConnectionList,m_FilterGraph.GetFilterID<LibISDB::TSPacketCounterFilter>(),&FilterID,OutputIndex);
-	ConnectFilter(&ConnectionList,m_FilterGraph.GetFilterID<LibISDB::CaptionFilter>(),&FilterID);
-	ConnectFilter(&ConnectionList,m_FilterGraph.GetFilterID<LibISDB::ViewerFilter>(),&FilterID);
+	ConnectFilter(&ConnectionList, m_FilterGraph.GetFilterID<LibISDB::LogoDownloaderFilter>(), &FilterID, 0);
+	ConnectTSProcessor(&ConnectionList, TSPROCESSOR_CONNECTPOSITION_RECORDER, &FilterID);
+	ConnectFilter(&ConnectionList, m_FilterGraph.GetFilterID<LibISDB::GrabberFilter>(), &FilterID);
+	ConnectFilter(&ConnectionList, m_FilterGraph.GetFilterID<LibISDB::RecorderFilter>(), &FilterID);
+	FilterID = TeeFilterID;
+	OutputIndex = 1;
+	ConnectTSProcessor(&ConnectionList, TSPROCESSOR_CONNECTPOSITION_VIEWER, &FilterID, &OutputIndex);
+	ConnectFilter(&ConnectionList, m_FilterGraph.GetFilterID<LibISDB::TSPacketCounterFilter>(), &FilterID, OutputIndex);
+	ConnectFilter(&ConnectionList, m_FilterGraph.GetFilterID<LibISDB::CaptionFilter>(), &FilterID);
+	ConnectFilter(&ConnectionList, m_FilterGraph.GetFilterID<LibISDB::ViewerFilter>(), &FilterID);
 
 	if (!TSEngine::BuildEngine(
-			ConnectionList.List.data(),ConnectionList.List.size())) {
+				ConnectionList.List.data(), ConnectionList.List.size())) {
 		return false;
 	}
 
@@ -147,62 +147,65 @@ bool CCoreEngine::BuildEngine()
 }
 
 
-void CCoreEngine::ConnectFilter(TSProcessorConnectionList *pList,
-								LibISDB::FilterGraph::IDType ID,
-								LibISDB::FilterGraph::IDType *pFilterID,
-								int OutputIndex)
+void CCoreEngine::ConnectFilter(
+	TSProcessorConnectionList *pList,
+	LibISDB::FilterGraph::IDType ID,
+	LibISDB::FilterGraph::IDType *pFilterID,
+	int OutputIndex)
 {
-	pList->Add(*pFilterID,ID,OutputIndex);
-	*pFilterID=ID;
+	pList->Add(*pFilterID, ID, OutputIndex);
+	*pFilterID = ID;
 }
 
 
-void CCoreEngine::ConnectTSProcessor(TSProcessorConnectionList *pList,
-									 TSProcessorConnectPosition ConnectPosition,
-									 LibISDB::FilterGraph::IDType *pFilterID,
-									 int *pOutputIndex)
+void CCoreEngine::ConnectTSProcessor(
+	TSProcessorConnectionList *pList,
+	TSProcessorConnectPosition ConnectPosition,
+	LibISDB::FilterGraph::IDType *pFilterID,
+	int *pOutputIndex)
 {
 	if (!m_fEnableTSProcessor)
 		return;
 
-	LibISDB::FilterGraph::IDType FilterID=*pFilterID;
-	int OutputIndex=pOutputIndex!=NULL?*pOutputIndex:0;
+	LibISDB::FilterGraph::IDType FilterID = *pFilterID;
+	int OutputIndex = pOutputIndex != NULL ? *pOutputIndex : 0;
 
-	for (auto it=m_TSProcessorList.begin();it!=m_TSProcessorList.end();++it) {
-		if (it->ConnectPosition==ConnectPosition) {
-			pList->Add(FilterID,it->FilterID,OutputIndex);
-			FilterID=it->FilterID;
-			OutputIndex=0;
+	for (auto it = m_TSProcessorList.begin(); it != m_TSProcessorList.end(); ++it) {
+		if (it->ConnectPosition == ConnectPosition) {
+			pList->Add(FilterID, it->FilterID, OutputIndex);
+			FilterID = it->FilterID;
+			OutputIndex = 0;
 		}
 	}
 
-	*pFilterID=FilterID;
-	if (pOutputIndex!=NULL)
-		*pOutputIndex=OutputIndex;
+	*pFilterID = FilterID;
+	if (pOutputIndex != NULL)
+		*pOutputIndex = OutputIndex;
 }
 
 
 TVTest::CTSProcessor *CCoreEngine::GetTSProcessorByIndex(size_t Index)
 {
-	if (Index>=m_TSProcessorList.size())
+	if (Index >= m_TSProcessorList.size())
 		return NULL;
 	return m_TSProcessorList[Index].pTSProcessor;
 }
 
 
-bool CCoreEngine::RegisterTSProcessor(TVTest::CTSProcessor *pTSProcessor,
-									  TSProcessorConnectPosition ConnectPosition)
+bool CCoreEngine::RegisterTSProcessor(
+	TVTest::CTSProcessor *pTSProcessor,
+	TSProcessorConnectPosition ConnectPosition)
 {
-	if (pTSProcessor==NULL)
+	if (pTSProcessor == NULL)
 		return false;
 
 	TSProcessorInfo Info;
 
-	Info.pTSProcessor=pTSProcessor;
-	Info.ConnectPosition=ConnectPosition;
-	Info.FilterID=RegisterFilter(pTSProcessor);
+	Info.pTSProcessor = pTSProcessor;
+	Info.ConnectPosition = ConnectPosition;
+	Info.FilterID = RegisterFilter(pTSProcessor);
 
-	if (ConnectPosition==TSPROCESSOR_CONNECTPOSITION_SOURCE)
+	if (ConnectPosition == TSPROCESSOR_CONNECTPOSITION_SOURCE)
 		pTSProcessor->SetSourceProcessor(true);
 
 	m_TSProcessorList.push_back(Info);
@@ -213,7 +216,7 @@ bool CCoreEngine::RegisterTSProcessor(TVTest::CTSProcessor *pTSProcessor,
 
 void CCoreEngine::EnableTSProcessor(bool fEnable)
 {
-	m_fEnableTSProcessor=fEnable;
+	m_fEnableTSProcessor = fEnable;
 }
 
 
@@ -229,10 +232,10 @@ bool CCoreEngine::BuildMediaViewer(const LibISDB::ViewerFilter::OpenSettings &Se
 		}
 	}
 
-	m_pViewer->SetVolume(m_fMute?-100.0f:LevelToDeciBel(m_Volume));
+	m_pViewer->SetVolume(m_fMute ? -100.0f : LevelToDeciBel(m_Volume));
 	m_pViewer->SetAudioGainControl(
-		m_AudioGain!=100 || m_SurroundAudioGain!=100,
-		(float)m_AudioGain/100.0f,(float)m_SurroundAudioGain/100.0f);
+		m_AudioGain != 100 || m_SurroundAudioGain != 100,
+		(float)m_AudioGain / 100.0f, (float)m_SurroundAudioGain / 100.0f);
 	m_pViewer->SetStereoMode(m_StereoMode);
 	m_pViewer->SetDualMonoMode(m_DualMonoMode);
 	m_pViewer->SetSPDIFOptions(m_SPDIFOptions);
@@ -252,7 +255,7 @@ bool CCoreEngine::EnableMediaViewer(bool fEnable)
 	if (!EnableViewer(fEnable))
 		return false;
 	if (fEnable)
-		m_pViewer->SetVolume(m_fMute?-100.0f:LevelToDeciBel(m_Volume));
+		m_pViewer->SetVolume(m_fMute ? -100.0f : LevelToDeciBel(m_Volume));
 	return true;
 }
 
@@ -269,31 +272,31 @@ bool CCoreEngine::RemoveEventListener(EventListener *pEventListener)
 }
 
 
-bool CCoreEngine::GetDriverDirectory(LPTSTR pszDirectory,int MaxLength) const
+bool CCoreEngine::GetDriverDirectory(LPTSTR pszDirectory, int MaxLength) const
 {
-	if (pszDirectory==NULL || MaxLength<1)
+	if (pszDirectory == NULL || MaxLength < 1)
 		return false;
 
-	pszDirectory[0]='\0';
+	pszDirectory[0] = '\0';
 
-	if (m_szDriverDirectory[0]!='\0') {
+	if (m_szDriverDirectory[0] != '\0') {
 		if (::PathIsRelative(m_szDriverDirectory)) {
-			TCHAR szBaseDir[MAX_PATH],szPath[MAX_PATH];
+			TCHAR szBaseDir[MAX_PATH], szPath[MAX_PATH];
 
-			::GetModuleFileName(NULL,szBaseDir,lengthof(szBaseDir));
+			::GetModuleFileName(NULL, szBaseDir, lengthof(szBaseDir));
 			::PathRemoveFileSpec(szBaseDir);
-			if (::PathCombine(szPath,szBaseDir,m_szDriverDirectory)==NULL
-					|| ::lstrlen(szPath)>=MaxLength)
+			if (::PathCombine(szPath, szBaseDir, m_szDriverDirectory) == NULL
+					|| ::lstrlen(szPath) >= MaxLength)
 				return false;
-			::lstrcpy(pszDirectory,szPath);
+			::lstrcpy(pszDirectory, szPath);
 		} else {
-			if (::lstrlen(m_szDriverDirectory)>=MaxLength)
+			if (::lstrlen(m_szDriverDirectory) >= MaxLength)
 				return false;
-			::lstrcpy(pszDirectory,m_szDriverDirectory);
+			::lstrcpy(pszDirectory, m_szDriverDirectory);
 		}
 	} else {
-		DWORD Length=::GetModuleFileName(NULL,pszDirectory,MaxLength);
-		if (Length==0 || Length>=(DWORD)(MaxLength-1))
+		DWORD Length = ::GetModuleFileName(NULL, pszDirectory, MaxLength);
+		if (Length == 0 || Length >= (DWORD)(MaxLength - 1))
 			return false;
 		::PathRemoveFileSpec(pszDirectory);
 	}
@@ -304,12 +307,12 @@ bool CCoreEngine::GetDriverDirectory(LPTSTR pszDirectory,int MaxLength) const
 
 bool CCoreEngine::SetDriverDirectory(LPCTSTR pszDirectory)
 {
-	if (pszDirectory==NULL) {
-		m_szDriverDirectory[0]='\0';
+	if (pszDirectory == NULL) {
+		m_szDriverDirectory[0] = '\0';
 	} else {
-		if (::lstrlen(pszDirectory)>=MAX_PATH)
+		if (::lstrlen(pszDirectory) >= MAX_PATH)
 			return false;
-		::lstrcpy(m_szDriverDirectory,pszDirectory);
+		::lstrcpy(m_szDriverDirectory, pszDirectory);
 	}
 	return true;
 }
@@ -318,38 +321,38 @@ bool CCoreEngine::SetDriverDirectory(LPCTSTR pszDirectory)
 bool CCoreEngine::SetDriverFileName(LPCTSTR pszFileName)
 {
 	if (IsStringEmpty(pszFileName)) {
-		m_szDriverFileName[0]='\0';
+		m_szDriverFileName[0] = '\0';
 	} else {
-		if (::lstrlen(pszFileName)>=MAX_PATH)
+		if (::lstrlen(pszFileName) >= MAX_PATH)
 			return false;
-		::lstrcpy(m_szDriverFileName,pszFileName);
+		::lstrcpy(m_szDriverFileName, pszFileName);
 	}
 	return true;
 }
 
 
-bool CCoreEngine::GetDriverPath(LPTSTR pszPath,int MaxLength) const
+bool CCoreEngine::GetDriverPath(LPTSTR pszPath, int MaxLength) const
 {
-	if (pszPath==NULL || MaxLength<1)
+	if (pszPath == NULL || MaxLength < 1)
 		return false;
 
-	pszPath[0]='\0';
+	pszPath[0] = '\0';
 
-	if (m_szDriverFileName[0]=='\0')
+	if (m_szDriverFileName[0] == '\0')
 		return false;
 
 	if (::PathIsRelative(m_szDriverFileName)) {
-		TCHAR szDir[MAX_PATH],szPath[MAX_PATH];
+		TCHAR szDir[MAX_PATH], szPath[MAX_PATH];
 
-		if (!GetDriverDirectory(szDir,lengthof(szDir))
-				|| ::PathCombine(szPath,szDir,m_szDriverFileName)==NULL
-				|| ::lstrlen(szPath)>=MaxLength)
+		if (!GetDriverDirectory(szDir, lengthof(szDir))
+				|| ::PathCombine(szPath, szDir, m_szDriverFileName) == NULL
+				|| ::lstrlen(szPath) >= MaxLength)
 			return false;
-		::lstrcpy(pszPath,szPath);
+		::lstrcpy(pszPath, szPath);
 	} else {
-		if (::lstrlen(m_szDriverFileName)>=MaxLength)
+		if (::lstrlen(m_szDriverFileName) >= MaxLength)
 			return false;
-		::lstrcpy(pszPath,m_szDriverFileName);
+		::lstrcpy(pszPath, m_szDriverFileName);
 	}
 
 	return true;
@@ -361,13 +364,13 @@ bool CCoreEngine::OpenTuner()
 	TRACE(TEXT("CCoreEngine::OpenTuner()\n"));
 
 	if (IsTunerOpen()) {
-		SetError(std::errc::operation_in_progress,TEXT("チューナが既に開かれています。"));
+		SetError(std::errc::operation_in_progress, TEXT("チューナが既に開かれています。"));
 		return false;
 	}
 
 	TCHAR szDriverPath[MAX_PATH];
-	if (!GetDriverPath(szDriverPath,lengthof(szDriverPath))) {
-		SetError(std::errc::operation_not_permitted,TEXT("BonDriverのパスを取得できません。"));
+	if (!GetDriverPath(szDriverPath, lengthof(szDriverPath))) {
+		SetError(std::errc::operation_not_permitted, TEXT("BonDriverのパスを取得できません。"));
 		return false;
 	}
 
@@ -375,13 +378,13 @@ bool CCoreEngine::OpenTuner()
 		return false;
 	}
 
-	LPCWSTR pszName=static_cast<LibISDB::BonDriverSourceFilter*>(m_pSource)->GetTunerName();
-	m_DriverType=DRIVER_UNKNOWN;
-	if (pszName!=NULL) {
-		if (std::wcsncmp(pszName,L"UDP/",4)==0)
-			m_DriverType=DRIVER_UDP;
-		else if (std::wcsncmp(pszName,L"TCP",3)==0)
-			m_DriverType=DRIVER_TCP;
+	LPCWSTR pszName = static_cast<LibISDB::BonDriverSourceFilter*>(m_pSource)->GetTunerName();
+	m_DriverType = DRIVER_UNKNOWN;
+	if (pszName != NULL) {
+		if (std::wcsncmp(pszName, L"UDP/", 4) == 0)
+			m_DriverType = DRIVER_UDP;
+		else if (std::wcsncmp(pszName, L"TCP", 3) == 0)
+			m_DriverType = DRIVER_TCP;
 	}
 
 	return true;
@@ -404,48 +407,48 @@ bool CCoreEngine::IsTunerOpen() const
 
 bool CCoreEngine::SetPacketBufferLength(DWORD BufferLength)
 {
-	if (m_pViewer==nullptr)
+	if (m_pViewer == nullptr)
 		return false;
 	return m_pViewer->SetBufferSize(BufferLength);
 }
 
 
-bool CCoreEngine::SetPacketBufferPool(bool fBuffering,int Percentage)
+bool CCoreEngine::SetPacketBufferPool(bool fBuffering, int Percentage)
 {
-	if (m_pViewer==nullptr)
+	if (m_pViewer == nullptr)
 		return false;
-	if (!m_pViewer->SetInitialPoolPercentage(fBuffering?Percentage:0))
+	if (!m_pViewer->SetInitialPoolPercentage(fBuffering ? Percentage : 0))
 		return false;
-	m_fPacketBuffering=fBuffering;
+	m_fPacketBuffering = fBuffering;
 	return true;
 }
 
 
 void CCoreEngine::ResetPacketBuffer()
 {
-	if (m_pViewer!=nullptr)
+	if (m_pViewer != nullptr)
 		m_pViewer->ResetBuffer();
 }
 
 
-bool CCoreEngine::GetVideoViewSize(int *pWidth,int *pHeight)
+bool CCoreEngine::GetVideoViewSize(int *pWidth, int *pHeight)
 {
-	if (m_pViewer==nullptr)
+	if (m_pViewer == nullptr)
 		return false;
 
-	int Width,Height;
+	int Width, Height;
 
-	if (m_pViewer->GetCroppedVideoSize(&Width,&Height)
-			&& Width>0 && Height>0) {
-		int XAspect,YAspect;
+	if (m_pViewer->GetCroppedVideoSize(&Width, &Height)
+			&& Width > 0 && Height > 0) {
+		int XAspect, YAspect;
 
-		if (m_pViewer->GetEffectiveAspectRatio(&XAspect,&YAspect)) {
-			Width=Height*XAspect/YAspect;
+		if (m_pViewer->GetEffectiveAspectRatio(&XAspect, &YAspect)) {
+			Width = Height * XAspect / YAspect;
 		}
 		if (pWidth)
-			*pWidth=Width;
+			*pWidth = Width;
 		if (pHeight)
-			*pHeight=Height;
+			*pHeight = Height;
 		return true;
 	}
 
@@ -455,38 +458,38 @@ bool CCoreEngine::GetVideoViewSize(int *pWidth,int *pHeight)
 
 bool CCoreEngine::SetPanAndScan(const PanAndScanInfo &Info)
 {
-	if (m_pViewer==nullptr)
+	if (m_pViewer == nullptr)
 		return false;
 
 	LibISDB::ViewerFilter::ClippingInfo Clipping;
 
-	Clipping.Left=Info.XPos;
-	Clipping.Right=Info.XFactor-(Info.XPos+Info.Width);
-	Clipping.HorzFactor=Info.XFactor;
-	Clipping.Top=Info.YPos;
-	Clipping.Bottom=Info.YFactor-(Info.YPos+Info.Height);
-	Clipping.VertFactor=Info.YFactor;
+	Clipping.Left = Info.XPos;
+	Clipping.Right = Info.XFactor - (Info.XPos + Info.Width);
+	Clipping.HorzFactor = Info.XFactor;
+	Clipping.Top = Info.YPos;
+	Clipping.Bottom = Info.YFactor - (Info.YPos + Info.Height);
+	Clipping.VertFactor = Info.YFactor;
 
-	return m_pViewer->SetPanAndScan(Info.XAspect,Info.YAspect,&Clipping);
+	return m_pViewer->SetPanAndScan(Info.XAspect, Info.YAspect, &Clipping);
 }
 
 
 bool CCoreEngine::GetPanAndScan(PanAndScanInfo *pInfo) const
 {
-	if (pInfo==nullptr || m_pViewer==nullptr)
+	if (pInfo == nullptr || m_pViewer == nullptr)
 		return false;
 
 	LibISDB::ViewerFilter::ClippingInfo Clipping;
 
-	m_pViewer->GetForcedAspectRatio(&pInfo->XAspect,&pInfo->YAspect);
+	m_pViewer->GetForcedAspectRatio(&pInfo->XAspect, &pInfo->YAspect);
 	m_pViewer->GetClippingInfo(&Clipping);
 
-	pInfo->XPos=Clipping.Left;
-	pInfo->YPos=Clipping.Top;
-	pInfo->Width=Clipping.HorzFactor-(Clipping.Left+Clipping.Right);
-	pInfo->Height=Clipping.VertFactor-(Clipping.Top+Clipping.Bottom);
-	pInfo->XFactor=Clipping.HorzFactor;
-	pInfo->YFactor=Clipping.VertFactor;
+	pInfo->XPos = Clipping.Left;
+	pInfo->YPos = Clipping.Top;
+	pInfo->Width = Clipping.HorzFactor - (Clipping.Left + Clipping.Right);
+	pInfo->Height = Clipping.VertFactor - (Clipping.Top + Clipping.Bottom);
+	pInfo->XFactor = Clipping.HorzFactor;
+	pInfo->YFactor = Clipping.VertFactor;
 
 	return true;
 }
@@ -494,58 +497,58 @@ bool CCoreEngine::GetPanAndScan(PanAndScanInfo *pInfo) const
 
 bool CCoreEngine::SetVolume(int Volume)
 {
-	if (Volume<0 || Volume>MAX_VOLUME)
+	if (Volume < 0 || Volume > MAX_VOLUME)
 		return false;
-	if (m_pViewer!=nullptr)
+	if (m_pViewer != nullptr)
 		m_pViewer->SetVolume(LevelToDeciBel(Volume));
-	m_Volume=Volume;
-	m_fMute=false;
+	m_Volume = Volume;
+	m_fMute = false;
 	return true;
 }
 
 
 bool CCoreEngine::SetMute(bool fMute)
 {
-	if (fMute!=m_fMute) {
-		if (m_pViewer!=nullptr)
-			m_pViewer->SetVolume(fMute?-100.0f:LevelToDeciBel(m_Volume));
-		m_fMute=fMute;
+	if (fMute != m_fMute) {
+		if (m_pViewer != nullptr)
+			m_pViewer->SetVolume(fMute ? -100.0f : LevelToDeciBel(m_Volume));
+		m_fMute = fMute;
 	}
 	return true;
 }
 
 
-bool CCoreEngine::SetAudioGainControl(int Gain,int SurroundGain)
+bool CCoreEngine::SetAudioGainControl(int Gain, int SurroundGain)
 {
-	if (Gain<0 || SurroundGain<0)
+	if (Gain < 0 || SurroundGain < 0)
 		return false;
-	if (Gain!=m_AudioGain || SurroundGain!=m_SurroundAudioGain) {
-		if (m_pViewer!=nullptr) {
+	if (Gain != m_AudioGain || SurroundGain != m_SurroundAudioGain) {
+		if (m_pViewer != nullptr) {
 			m_pViewer->SetAudioGainControl(
-				Gain!=100 || SurroundGain!=100,
-				(float)Gain/100.0f,(float)SurroundGain/100.0f);
+				Gain != 100 || SurroundGain != 100,
+				(float)Gain / 100.0f, (float)SurroundGain / 100.0f);
 		}
-		m_AudioGain=Gain;
-		m_SurroundAudioGain=SurroundGain;
+		m_AudioGain = Gain;
+		m_SurroundAudioGain = SurroundGain;
 	}
 	return true;
 }
 
 
-bool CCoreEngine::GetAudioGainControl(int *pGain,int *pSurroundGain) const
+bool CCoreEngine::GetAudioGainControl(int *pGain, int *pSurroundGain) const
 {
 	if (pGain)
-		*pGain=m_AudioGain;
+		*pGain = m_AudioGain;
 	if (pSurroundGain)
-		*pSurroundGain=m_SurroundAudioGain;
+		*pSurroundGain = m_SurroundAudioGain;
 	return true;
 }
 
 
 bool CCoreEngine::SetDualMonoMode(LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode Mode)
 {
-	m_DualMonoMode=Mode;
-	if (m_pViewer!=nullptr)
+	m_DualMonoMode = Mode;
+	if (m_pViewer != nullptr)
 		m_pViewer->SetDualMonoMode(Mode);
 	return true;
 }
@@ -553,8 +556,8 @@ bool CCoreEngine::SetDualMonoMode(LibISDB::DirectShow::AudioDecoderFilter::DualM
 
 bool CCoreEngine::SetStereoMode(LibISDB::DirectShow::AudioDecoderFilter::StereoMode Mode)
 {
-	m_StereoMode=Mode;
-	if (m_pViewer!=nullptr)
+	m_StereoMode = Mode;
+	if (m_pViewer != nullptr)
 		m_pViewer->SetStereoMode(Mode);
 	return true;
 }
@@ -562,8 +565,8 @@ bool CCoreEngine::SetStereoMode(LibISDB::DirectShow::AudioDecoderFilter::StereoM
 
 bool CCoreEngine::SetSPDIFOptions(const LibISDB::DirectShow::AudioDecoderFilter::SPDIFOptions &Options)
 {
-	m_SPDIFOptions=Options;
-	if (m_pViewer!=nullptr)
+	m_SPDIFOptions = Options;
+	if (m_pViewer != nullptr)
 		m_pViewer->SetSPDIFOptions(Options);
 	return true;
 }
@@ -571,9 +574,9 @@ bool CCoreEngine::SetSPDIFOptions(const LibISDB::DirectShow::AudioDecoderFilter:
 
 bool CCoreEngine::GetSPDIFOptions(LibISDB::DirectShow::AudioDecoderFilter::SPDIFOptions *pOptions) const
 {
-	if (pOptions==NULL)
+	if (pOptions == NULL)
 		return false;
-	*pOptions=m_SPDIFOptions;
+	*pOptions = m_SPDIFOptions;
 	return true;
 }
 
@@ -582,68 +585,68 @@ bool CCoreEngine::IsSPDIFPassthroughEnabled() const
 {
 	if (IsViewerOpen())
 		return m_pViewer->IsSPDIFPassthrough();
-	return m_SPDIFOptions.Mode==LibISDB::DirectShow::AudioDecoderFilter::SPDIFMode::Passthrough;
+	return m_SPDIFOptions.Mode == LibISDB::DirectShow::AudioDecoderFilter::SPDIFMode::Passthrough;
 }
 
 
 // TODO: 変化があった場合 DtvEngine 側から通知するようにする
 DWORD CCoreEngine::UpdateAsyncStatus()
 {
-	DWORD Updated=0;
+	DWORD Updated = 0;
 
-	if (m_pViewer!=nullptr) {
-		int Width,Height;
+	if (m_pViewer != nullptr) {
+		int Width, Height;
 
-		if (m_pViewer->GetOriginalVideoSize(&Width,&Height)) {
-			if (Width!=m_OriginalVideoWidth || Height!=m_OriginalVideoHeight) {
-				m_OriginalVideoWidth=Width;
-				m_OriginalVideoHeight=Height;
-				Updated|=STATUS_VIDEOSIZE;
+		if (m_pViewer->GetOriginalVideoSize(&Width, &Height)) {
+			if (Width != m_OriginalVideoWidth || Height != m_OriginalVideoHeight) {
+				m_OriginalVideoWidth = Width;
+				m_OriginalVideoHeight = Height;
+				Updated |= STATUS_VIDEOSIZE;
 			}
 		}
 
-		if (m_pViewer->GetCroppedVideoSize(&Width,&Height)) {
-			if (Width!=m_DisplayVideoWidth || Height!=m_DisplayVideoHeight) {
-				m_DisplayVideoWidth=Width;
-				m_DisplayVideoHeight=Height;
-				Updated|=STATUS_VIDEOSIZE;
+		if (m_pViewer->GetCroppedVideoSize(&Width, &Height)) {
+			if (Width != m_DisplayVideoWidth || Height != m_DisplayVideoHeight) {
+				m_DisplayVideoWidth = Width;
+				m_DisplayVideoHeight = Height;
+				Updated |= STATUS_VIDEOSIZE;
 			}
 		}
 
-		int NumAudioChannels=m_pViewer->GetAudioChannelCount();
-		if (NumAudioChannels!=m_NumAudioChannels) {
-			m_NumAudioChannels=NumAudioChannels;
-			Updated|=STATUS_AUDIOCHANNELS;
-			TRACE(TEXT("Audio channels = %dch\n"),NumAudioChannels);
+		int NumAudioChannels = m_pViewer->GetAudioChannelCount();
+		if (NumAudioChannels != m_NumAudioChannels) {
+			m_NumAudioChannels = NumAudioChannels;
+			Updated |= STATUS_AUDIOCHANNELS;
+			TRACE(TEXT("Audio channels = %dch\n"), NumAudioChannels);
 		}
 
-		bool fSPDIFPassthrough=m_pViewer->IsSPDIFPassthrough();
-		if (fSPDIFPassthrough!=m_fSPDIFPassthrough) {
-			m_fSPDIFPassthrough=fSPDIFPassthrough;
-			Updated|=STATUS_SPDIFPASSTHROUGH;
-			TRACE(TEXT("S/PDIF passthrough %s\n"),fSPDIFPassthrough?TEXT("ON"):TEXT("OFF"));
-		}
-	}
-
-	int NumAudioStreams=GetAudioStreamCount();
-	if (NumAudioStreams!=m_NumAudioStreams) {
-		m_NumAudioStreams=NumAudioStreams;
-		Updated|=STATUS_AUDIOSTREAMS;
-		TRACE(TEXT("Audio streams = %dch\n"),NumAudioStreams);
-	}
-
-	if (m_pAnalyzer!=nullptr) {
-		BYTE AudioComponentType=m_pAnalyzer->GetAudioComponentType(
-			m_pAnalyzer->GetServiceIndexByID(m_CurServiceID),m_CurAudioStream);
-		if (AudioComponentType!=m_AudioComponentType) {
-			m_AudioComponentType=AudioComponentType;
-			Updated|=STATUS_AUDIOCOMPONENTTYPE;
-			TRACE(TEXT("AudioComponentType = %x\n"),AudioComponentType);
+		bool fSPDIFPassthrough = m_pViewer->IsSPDIFPassthrough();
+		if (fSPDIFPassthrough != m_fSPDIFPassthrough) {
+			m_fSPDIFPassthrough = fSPDIFPassthrough;
+			Updated |= STATUS_SPDIFPASSTHROUGH;
+			TRACE(TEXT("S/PDIF passthrough %s\n"), fSPDIFPassthrough ? TEXT("ON") : TEXT("OFF"));
 		}
 	}
 
-	if (m_AsyncStatusUpdatedFlags!=0) {
-		Updated|=::InterlockedExchange(reinterpret_cast<LONG*>(&m_AsyncStatusUpdatedFlags),0);
+	int NumAudioStreams = GetAudioStreamCount();
+	if (NumAudioStreams != m_NumAudioStreams) {
+		m_NumAudioStreams = NumAudioStreams;
+		Updated |= STATUS_AUDIOSTREAMS;
+		TRACE(TEXT("Audio streams = %dch\n"), NumAudioStreams);
+	}
+
+	if (m_pAnalyzer != nullptr) {
+		BYTE AudioComponentType = m_pAnalyzer->GetAudioComponentType(
+			m_pAnalyzer->GetServiceIndexByID(m_CurServiceID), m_CurAudioStream);
+		if (AudioComponentType != m_AudioComponentType) {
+			m_AudioComponentType = AudioComponentType;
+			Updated |= STATUS_AUDIOCOMPONENTTYPE;
+			TRACE(TEXT("AudioComponentType = %x\n"), AudioComponentType);
+		}
+	}
+
+	if (m_AsyncStatusUpdatedFlags != 0) {
+		Updated |= ::InterlockedExchange(reinterpret_cast<LONG*>(&m_AsyncStatusUpdatedFlags), 0);
 	}
 
 	return Updated;
@@ -652,70 +655,70 @@ DWORD CCoreEngine::UpdateAsyncStatus()
 
 void CCoreEngine::SetAsyncStatusUpdatedFlag(DWORD Status)
 {
-	_InterlockedOr(reinterpret_cast<long*>(&m_AsyncStatusUpdatedFlags),Status);
+	_InterlockedOr(reinterpret_cast<long*>(&m_AsyncStatusUpdatedFlags), Status);
 }
 
 
 DWORD CCoreEngine::UpdateStatistics()
 {
-	DWORD Updated=0;
+	DWORD Updated = 0;
 
-	const LibISDB::TSPacketParserFilter *pParser=GetFilter<LibISDB::TSPacketParserFilter>();
-	if (pParser!=nullptr) {
-		const LibISDB::TSPacketParserFilter::PacketCountInfo Count=pParser->GetPacketCount();
-		if (Count.TransportError+Count.FormatError!=m_ErrorPacketCount) {
-			m_ErrorPacketCount=Count.TransportError+Count.FormatError;
-			Updated|=STATISTIC_ERRORPACKETCOUNT;
+	const LibISDB::TSPacketParserFilter *pParser = GetFilter<LibISDB::TSPacketParserFilter>();
+	if (pParser != nullptr) {
+		const LibISDB::TSPacketParserFilter::PacketCountInfo Count = pParser->GetPacketCount();
+		if (Count.TransportError + Count.FormatError != m_ErrorPacketCount) {
+			m_ErrorPacketCount = Count.TransportError + Count.FormatError;
+			Updated |= STATISTIC_ERRORPACKETCOUNT;
 		}
-		if (Count.ContinuityError!=m_ContinuityErrorPacketCount) {
-			m_ContinuityErrorPacketCount=Count.ContinuityError;
-			Updated|=STATISTIC_CONTINUITYERRORPACKETCOUNT;
+		if (Count.ContinuityError != m_ContinuityErrorPacketCount) {
+			m_ContinuityErrorPacketCount = Count.ContinuityError;
+			Updated |= STATISTIC_CONTINUITYERRORPACKETCOUNT;
 		}
 	}
 
-	const LibISDB::TSPacketCounterFilter *pCounter=GetFilter<LibISDB::TSPacketCounterFilter>();
-	if (pCounter!=nullptr) {
-		unsigned long long ScrambledCount=pCounter->GetScrambledPacketCount();
-		if (ScrambledCount!=m_ScrambledPacketCount) {
-			m_ScrambledPacketCount=ScrambledCount;
-			Updated|=STATISTIC_SCRAMBLEPACKETCOUNT;
+	const LibISDB::TSPacketCounterFilter *pCounter = GetFilter<LibISDB::TSPacketCounterFilter>();
+	if (pCounter != nullptr) {
+		unsigned long long ScrambledCount = pCounter->GetScrambledPacketCount();
+		if (ScrambledCount != m_ScrambledPacketCount) {
+			m_ScrambledPacketCount = ScrambledCount;
+			Updated |= STATISTIC_SCRAMBLEPACKETCOUNT;
 		}
 	}
 
 	float SignalLevel;
 	unsigned long BitRate;
 	uint32_t StreamRemain;
-	const LibISDB::BonDriverSourceFilter *pSource=GetFilter<LibISDB::BonDriverSourceFilter>();
-	if (pSource!=nullptr) {
-		SignalLevel=pSource->GetSignalLevel();
-		BitRate=pSource->GetBitRate();
-		StreamRemain=pSource->GetStreamRemain();
+	const LibISDB::BonDriverSourceFilter *pSource = GetFilter<LibISDB::BonDriverSourceFilter>();
+	if (pSource != nullptr) {
+		SignalLevel = pSource->GetSignalLevel();
+		BitRate = pSource->GetBitRate();
+		StreamRemain = pSource->GetStreamRemain();
 	} else {
-		SignalLevel=0.0f;
-		BitRate=0;
-		StreamRemain=0;
+		SignalLevel = 0.0f;
+		BitRate = 0;
+		StreamRemain = 0;
 	}
-	if (SignalLevel!=m_SignalLevel) {
-		m_SignalLevel=SignalLevel;
-		Updated|=STATISTIC_SIGNALLEVEL;
+	if (SignalLevel != m_SignalLevel) {
+		m_SignalLevel = SignalLevel;
+		Updated |= STATISTIC_SIGNALLEVEL;
 	}
-	if (BitRate!=m_BitRate) {
-		m_BitRate=BitRate;
-		Updated|=STATISTIC_BITRATE;
+	if (BitRate != m_BitRate) {
+		m_BitRate = BitRate;
+		Updated |= STATISTIC_BITRATE;
 	}
-	if (StreamRemain!=m_StreamRemain) {
-		m_StreamRemain=StreamRemain;
-		Updated|=STATISTIC_STREAMREMAIN;
+	if (StreamRemain != m_StreamRemain) {
+		m_StreamRemain = StreamRemain;
+		Updated |= STATISTIC_STREAMREMAIN;
 	}
 
 	int BufferFillPercentage;
-	if (m_pViewer!=nullptr)
-		BufferFillPercentage=m_pViewer->GetBufferFillPercentage();
+	if (m_pViewer != nullptr)
+		BufferFillPercentage = m_pViewer->GetBufferFillPercentage();
 	else
-		BufferFillPercentage=0;
-	if (BufferFillPercentage!=m_PacketBufferFillPercentage) {
-		m_PacketBufferFillPercentage=BufferFillPercentage;
-		Updated|=STATISTIC_PACKETBUFFERRATE;
+		BufferFillPercentage = 0;
+	if (BufferFillPercentage != m_PacketBufferFillPercentage) {
+		m_PacketBufferFillPercentage = BufferFillPercentage;
+		Updated |= STATISTIC_PACKETBUFFERRATE;
 	}
 
 	return Updated;
@@ -724,45 +727,45 @@ DWORD CCoreEngine::UpdateStatistics()
 
 void CCoreEngine::ResetErrorCount()
 {
-	LibISDB::TSPacketParserFilter *pParser=GetFilter<LibISDB::TSPacketParserFilter>();
-	if (pParser!=nullptr)
+	LibISDB::TSPacketParserFilter *pParser = GetFilter<LibISDB::TSPacketParserFilter>();
+	if (pParser != nullptr)
 		pParser->ResetErrorPacketCount();
-	m_ErrorPacketCount=0;
-	m_ContinuityErrorPacketCount=0;
-	LibISDB::TSPacketCounterFilter *pCounter=GetFilter<LibISDB::TSPacketCounterFilter>();
-	if (pCounter!=nullptr)
+	m_ErrorPacketCount = 0;
+	m_ContinuityErrorPacketCount = 0;
+	LibISDB::TSPacketCounterFilter *pCounter = GetFilter<LibISDB::TSPacketCounterFilter>();
+	if (pCounter != nullptr)
 		pCounter->ResetScrambledPacketCount();
-	m_ScrambledPacketCount=0;
+	m_ScrambledPacketCount = 0;
 }
 
 
-int CCoreEngine::GetSignalLevelText(LPTSTR pszText,int MaxLength) const
+int CCoreEngine::GetSignalLevelText(LPTSTR pszText, int MaxLength) const
 {
-	return GetSignalLevelText(m_SignalLevel,pszText,MaxLength);
+	return GetSignalLevelText(m_SignalLevel, pszText, MaxLength);
 }
 
 
-int CCoreEngine::GetSignalLevelText(float SignalLevel,LPTSTR pszText,int MaxLength) const
+int CCoreEngine::GetSignalLevelText(float SignalLevel, LPTSTR pszText, int MaxLength) const
 {
-	return TVTest::StringPrintf(pszText,MaxLength,TEXT("%.2f dB"),SignalLevel);
+	return TVTest::StringPrintf(pszText, MaxLength, TEXT("%.2f dB"), SignalLevel);
 }
 
 
-int CCoreEngine::GetBitRateText(LPTSTR pszText,int MaxLength) const
+int CCoreEngine::GetBitRateText(LPTSTR pszText, int MaxLength) const
 {
-	return GetBitRateText(GetBitRateFloat(),pszText,MaxLength);
+	return GetBitRateText(GetBitRateFloat(), pszText, MaxLength);
 }
 
 
-int CCoreEngine::GetBitRateText(unsigned long BitRate,LPTSTR pszText,int MaxLength) const
+int CCoreEngine::GetBitRateText(unsigned long BitRate, LPTSTR pszText, int MaxLength) const
 {
-	return GetBitRateText(BitRateToFloat(BitRate),pszText,MaxLength);
+	return GetBitRateText(BitRateToFloat(BitRate), pszText, MaxLength);
 }
 
 
-int CCoreEngine::GetBitRateText(float BitRate,LPTSTR pszText,int MaxLength,int Precision) const
+int CCoreEngine::GetBitRateText(float BitRate, LPTSTR pszText, int MaxLength, int Precision) const
 {
-	return TVTest::StringPrintf(pszText,MaxLength,TEXT("%.*f Mbps"),Precision,BitRate);
+	return TVTest::StringPrintf(pszText, MaxLength, TEXT("%.*f Mbps"), Precision, BitRate);
 }
 
 
@@ -772,31 +775,31 @@ int CCoreEngine::GetPacketBufferUsedPercentage() const
 }
 
 
-bool CCoreEngine::GetCurrentEventInfo(LibISDB::EventInfo *pInfo,uint16_t ServiceID,bool fNext)
+bool CCoreEngine::GetCurrentEventInfo(LibISDB::EventInfo *pInfo, uint16_t ServiceID, bool fNext)
 {
-	if (pInfo==nullptr || m_pAnalyzer==nullptr)
+	if (pInfo == nullptr || m_pAnalyzer == nullptr)
 		return false;
 
-	if (ServiceID==LibISDB::SERVICE_ID_INVALID) {
-		if (m_CurServiceID==LibISDB::SERVICE_ID_INVALID)
+	if (ServiceID == LibISDB::SERVICE_ID_INVALID) {
+		if (m_CurServiceID == LibISDB::SERVICE_ID_INVALID)
 			return false;
-		ServiceID=m_CurServiceID;
+		ServiceID = m_CurServiceID;
 	}
 
-	int ServiceIndex=m_pAnalyzer->GetServiceIndexByID(ServiceID);
-	if (ServiceIndex<0)
+	int ServiceIndex = m_pAnalyzer->GetServiceIndexByID(ServiceID);
+	if (ServiceIndex < 0)
 		return false;
 
-	return m_pAnalyzer->GetEventInfo(ServiceIndex,pInfo,true,fNext);
+	return m_pAnalyzer->GetEventInfo(ServiceIndex, pInfo, true, fNext);
 }
 
 
 LibISDB::COMMemoryPointer<> CCoreEngine::GetCurrentImage()
 {
-	if (m_pViewer==nullptr)
+	if (m_pViewer == nullptr)
 		return nullptr;
 
-	bool fPause=m_pViewer->GetVideoRendererType()==LibISDB::DirectShow::VideoRenderer::RendererType::Default;
+	bool fPause = m_pViewer->GetVideoRendererType() == LibISDB::DirectShow::VideoRenderer::RendererType::Default;
 
 	if (fPause)
 		m_pViewer->Pause();
@@ -812,19 +815,19 @@ LibISDB::COMMemoryPointer<> CCoreEngine::GetCurrentImage()
 
 bool CCoreEngine::SetMinTimerResolution(bool fMin)
 {
-	if ((m_TimerResolution!=0)!=fMin) {
+	if ((m_TimerResolution != 0) != fMin) {
 		if (fMin) {
 			TIMECAPS tc;
 
-			if (::timeGetDevCaps(&tc,sizeof(tc))!=TIMERR_NOERROR)
-				tc.wPeriodMin=1;
-			if (::timeBeginPeriod(tc.wPeriodMin)!=TIMERR_NOERROR)
+			if (::timeGetDevCaps(&tc, sizeof(tc)) != TIMERR_NOERROR)
+				tc.wPeriodMin = 1;
+			if (::timeBeginPeriod(tc.wPeriodMin) != TIMERR_NOERROR)
 				return false;
-			m_TimerResolution=tc.wPeriodMin;
-			TRACE(TEXT("CCoreEngine::SetMinTimerResolution() Set %u\n"),m_TimerResolution);
+			m_TimerResolution = tc.wPeriodMin;
+			TRACE(TEXT("CCoreEngine::SetMinTimerResolution() Set %u\n"), m_TimerResolution);
 		} else {
 			::timeEndPeriod(m_TimerResolution);
-			m_TimerResolution=0;
+			m_TimerResolution = 0;
 			TRACE(TEXT("CCoreEngine::SetMinTimerResolution() Reset\n"));
 		}
 	}

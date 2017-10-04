@@ -15,16 +15,19 @@ class CTitleBar
 	, public TVTest::CUIBase
 {
 public:
-	struct TitleBarTheme {
+	struct TitleBarTheme
+	{
 		TVTest::Theme::Style CaptionStyle;
 		TVTest::Theme::Style IconStyle;
 		TVTest::Theme::Style HighlightIconStyle;
 		TVTest::Theme::BorderStyle Border;
 	};
 
-	class ABSTRACT_CLASS(CEventHandler) {
+	class ABSTRACT_CLASS(CEventHandler)
+	{
 	protected:
 		class CTitleBar *m_pTitleBar;
+
 	public:
 		CEventHandler();
 		virtual ~CEventHandler();
@@ -33,11 +36,11 @@ public:
 		virtual bool OnMaximize() { return false; }
 		virtual bool OnFullscreen() { return false; }
 		virtual void OnMouseLeave() {}
-		virtual void OnLabelLButtonDown(int x,int y) {}
-		virtual void OnLabelLButtonDoubleClick(int x,int y) {}
-		virtual void OnLabelRButtonUp(int x,int y) {}
-		virtual void OnIconLButtonDown(int x,int y) {}
-		virtual void OnIconLButtonDoubleClick(int x,int y) {}
+		virtual void OnLabelLButtonDown(int x, int y) {}
+		virtual void OnLabelLButtonDoubleClick(int x, int y) {}
+		virtual void OnLabelRButtonUp(int x, int y) {}
+		virtual void OnIconLButtonDown(int x, int y) {}
+		virtual void OnIconLButtonDoubleClick(int x, int y) {}
 		virtual void OnHeightChanged(int Height) {}
 		friend class CTitleBar;
 	};
@@ -48,7 +51,7 @@ public:
 	~CTitleBar();
 
 // CBasicWindow
-	bool Create(HWND hwndParent,DWORD Style,DWORD ExStyle=0,int ID=0) override;
+	bool Create(HWND hwndParent, DWORD Style, DWORD ExStyle = 0, int ID = 0) override;
 	void SetVisible(bool fVisible) override;
 
 // CUIBase
@@ -81,8 +84,8 @@ private:
 		ITEM_MAXIMIZE,
 		ITEM_FULLSCREEN,
 		ITEM_CLOSE,
-		ITEM_BUTTON_FIRST=ITEM_MINIMIZE,
-		ITEM_LAST=ITEM_CLOSE
+		ITEM_BUTTON_FIRST = ITEM_MINIMIZE,
+		ITEM_LAST = ITEM_CLOSE
 	};
 
 	struct TitleBarStyle
@@ -123,15 +126,15 @@ private:
 
 	void AdjustSize();
 	int CalcFontHeight() const;
-	bool GetItemRect(int Item,RECT *pRect) const;
+	bool GetItemRect(int Item, RECT *pRect) const;
 	bool UpdateItem(int Item);
-	int HitTest(int x,int y) const;
-	bool PtInIcon(int x,int y) const;
+	int HitTest(int x, int y) const;
+	bool PtInIcon(int x, int y) const;
 	void UpdateTooltipsRect();
-	void Draw(HDC hdc,const RECT &PaintRect);
+	void Draw(HDC hdc, const RECT &PaintRect);
 
 // CCustomWindow
-	LRESULT OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
+	LRESULT OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
 
 // CUIBase
 	void ApplyStyle() override;

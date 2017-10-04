@@ -33,30 +33,31 @@ public:
 	class CItem
 	{
 	public:
-		CItem(CInformationPanel *pPanel,bool fVisible,int PropertyID=0);
+		CItem(CInformationPanel *pPanel, bool fVisible, int PropertyID = 0);
 		virtual ~CItem() {}
 		virtual int GetID() const = 0;
 		virtual LPCTSTR GetName() const = 0;
 		virtual bool IsSingleRow() const { return true; }
 		virtual void Reset() {}
 		virtual bool Update() = 0;
-		virtual void Draw(HDC hdc,const RECT &Rect) {}
-		virtual void DrawButton(HDC hdc,TVTest::Theme::CThemeDraw &ThemeDraw,
-								const TVTest::Theme::ForegroundStyle Style,
-								const RECT &ButtonRect,const RECT &TextRect,
-								int Button);
+		virtual void Draw(HDC hdc, const RECT &Rect) {}
+		virtual void DrawButton(
+			HDC hdc, TVTest::Theme::CThemeDraw &ThemeDraw,
+			const TVTest::Theme::ForegroundStyle Style,
+			const RECT &ButtonRect, const RECT &TextRect,
+			int Button);
 		virtual int GetButtonCount() const;
-		virtual bool GetButtonRect(int Button,RECT *pRect) const;
+		virtual bool GetButtonRect(int Button, RECT *pRect) const;
 		virtual bool IsButtonEnabled(int Button) const;
 		virtual bool OnButtonPushed(int Button);
-		virtual bool GetButtonTipText(int Button,LPTSTR pszText,int MaxText) const;
-		int ButtonHitTest(int x,int y) const;
+		virtual bool GetButtonTipText(int Button, LPTSTR pszText, int MaxText) const;
+		int ButtonHitTest(int x, int y) const;
 		bool IsVisible() const { return m_fVisible; }
-		void SetVisible(bool fVisible) { m_fVisible=fVisible; }
-		bool HasProperty() const { return m_PropertyID!=0; }
+		void SetVisible(bool fVisible) { m_fVisible = fVisible; }
+		bool HasProperty() const { return m_PropertyID != 0; }
 
 	protected:
-		void DrawItem(HDC hdc,const RECT &Rect,LPCTSTR pszText);
+		void DrawItem(HDC hdc, const RECT &Rect, LPCTSTR pszText);
 		void UpdateItem();
 		void Redraw();
 
@@ -65,23 +66,25 @@ public:
 		const int m_PropertyID;
 	};
 
-	template<int id> class CItemTemplate : public CItem
+	template<int id> class CItemTemplate
+		: public CItem
 	{
 	public:
-		static const int ID=id;
-		CItemTemplate(CInformationPanel *pPanel,bool fVisible,int PropertyID=0)
-			: CItem(pPanel,fVisible,PropertyID) {}
+		static const int ID = id;
+		CItemTemplate(CInformationPanel *pPanel, bool fVisible, int PropertyID = 0)
+			: CItem(pPanel, fVisible, PropertyID) {}
 		int GetID() const override { return id; }
 	};
 
-	class CVideoInfoItem : public CItemTemplate<ITEM_VIDEOINFO>
+	class CVideoInfoItem
+		: public CItemTemplate<ITEM_VIDEOINFO>
 	{
 	public:
-		CVideoInfoItem(CInformationPanel *pPanel,bool fVisible);
+		CVideoInfoItem(CInformationPanel *pPanel, bool fVisible);
 		LPCTSTR GetName() const override { return TEXT("VideoInfo"); }
 		void Reset() override;
 		bool Update() override;
-		void Draw(HDC hdc,const RECT &Rect) override;
+		void Draw(HDC hdc, const RECT &Rect) override;
 
 	private:
 		int m_OriginalVideoWidth;
@@ -92,53 +95,57 @@ public:
 		int m_AspectY;
 	};
 
-	class CVideoDecoderItem : public CItemTemplate<ITEM_VIDEODECODER>
+	class CVideoDecoderItem
+		: public CItemTemplate<ITEM_VIDEODECODER>
 	{
 	public:
-		CVideoDecoderItem(CInformationPanel *pPanel,bool fVisible);
+		CVideoDecoderItem(CInformationPanel *pPanel, bool fVisible);
 		LPCTSTR GetName() const override { return TEXT("VideoDecoder"); }
 		void Reset() override;
 		bool Update() override;
-		void Draw(HDC hdc,const RECT &Rect) override;
+		void Draw(HDC hdc, const RECT &Rect) override;
 
 	private:
 		TVTest::String m_VideoDecoderName;
 	};
 
-	class CVideoRendererItem : public CItemTemplate<ITEM_VIDEORENDERER>
+	class CVideoRendererItem
+		: public CItemTemplate<ITEM_VIDEORENDERER>
 	{
 	public:
-		CVideoRendererItem(CInformationPanel *pPanel,bool fVisible);
+		CVideoRendererItem(CInformationPanel *pPanel, bool fVisible);
 		LPCTSTR GetName() const override { return TEXT("VideoRenderer"); }
 		void Reset() override;
 		bool Update() override;
-		void Draw(HDC hdc,const RECT &Rect) override;
+		void Draw(HDC hdc, const RECT &Rect) override;
 
 	private:
 		TVTest::String m_VideoRendererName;
 	};
 
-	class CAudioDeviceItem : public CItemTemplate<ITEM_AUDIODEVICE>
+	class CAudioDeviceItem
+		: public CItemTemplate<ITEM_AUDIODEVICE>
 	{
 	public:
-		CAudioDeviceItem(CInformationPanel *pPanel,bool fVisible);
+		CAudioDeviceItem(CInformationPanel *pPanel, bool fVisible);
 		LPCTSTR GetName() const override { return TEXT("AudioDevice"); }
 		void Reset() override;
 		bool Update() override;
-		void Draw(HDC hdc,const RECT &Rect) override;
+		void Draw(HDC hdc, const RECT &Rect) override;
 
 	private:
 		TVTest::String m_AudioDeviceName;
 	};
 
-	class CSignalLevelItem : public CItemTemplate<ITEM_SIGNALLEVEL>
+	class CSignalLevelItem
+		: public CItemTemplate<ITEM_SIGNALLEVEL>
 	{
 	public:
-		CSignalLevelItem(CInformationPanel *pPanel,bool fVisible);
+		CSignalLevelItem(CInformationPanel *pPanel, bool fVisible);
 		LPCTSTR GetName() const override { return TEXT("SignalLevel"); }
 		void Reset() override;
 		bool Update() override;
-		void Draw(HDC hdc,const RECT &Rect) override;
+		void Draw(HDC hdc, const RECT &Rect) override;
 		void ShowSignalLevel(bool fShow);
 
 	private:
@@ -147,28 +154,30 @@ public:
 		DWORD m_BitRate;
 	};
 
-	class CMediaBitRateItem : public CItemTemplate<ITEM_MEDIABITRATE>
+	class CMediaBitRateItem
+		: public CItemTemplate<ITEM_MEDIABITRATE>
 	{
 	public:
-		CMediaBitRateItem(CInformationPanel *pPanel,bool fVisible);
+		CMediaBitRateItem(CInformationPanel *pPanel, bool fVisible);
 		LPCTSTR GetName() const override { return TEXT("MediaBitrate"); }
 		void Reset() override;
 		bool Update() override;
-		void Draw(HDC hdc,const RECT &Rect) override;
+		void Draw(HDC hdc, const RECT &Rect) override;
 
 	private:
 		DWORD m_VideoBitRate;
 		DWORD m_AudioBitRate;
 	};
 
-	class CErrorItem : public CItemTemplate<ITEM_ERROR>
+	class CErrorItem
+		: public CItemTemplate<ITEM_ERROR>
 	{
 	public:
-		CErrorItem(CInformationPanel *pPanel,bool fVisible);
+		CErrorItem(CInformationPanel *pPanel, bool fVisible);
 		LPCTSTR GetName() const override { return TEXT("Error"); }
 		void Reset() override;
 		bool Update() override;
-		void Draw(HDC hdc,const RECT &Rect) override;
+		void Draw(HDC hdc, const RECT &Rect) override;
 
 	private:
 		bool m_fShowScramble;
@@ -177,14 +186,15 @@ public:
 		ULONGLONG m_ScramblePacketCount;
 	};
 
-	class CRecordItem : public CItemTemplate<ITEM_RECORD>
+	class CRecordItem
+		: public CItemTemplate<ITEM_RECORD>
 	{
 	public:
-		CRecordItem(CInformationPanel *pPanel,bool fVisible);
+		CRecordItem(CInformationPanel *pPanel, bool fVisible);
 		LPCTSTR GetName() const override { return TEXT("Record"); }
 		void Reset() override;
 		bool Update() override;
-		void Draw(HDC hdc,const RECT &Rect) override;
+		void Draw(HDC hdc, const RECT &Rect) override;
 
 	private:
 		bool m_fRecording;
@@ -193,37 +203,39 @@ public:
 		LONGLONG m_DiskFreeSpace;
 	};
 
-	class CServiceItem : public CItemTemplate<ITEM_SERVICE>
+	class CServiceItem
+		: public CItemTemplate<ITEM_SERVICE>
 	{
 	public:
-		CServiceItem(CInformationPanel *pPanel,bool fVisible);
+		CServiceItem(CInformationPanel *pPanel, bool fVisible);
 		LPCTSTR GetName() const override { return TEXT("Service"); }
 		void Reset() override;
 		bool Update() override;
-		void Draw(HDC hdc,const RECT &Rect) override;
+		void Draw(HDC hdc, const RECT &Rect) override;
 
 	private:
 		TVTest::String m_ServiceName;
 	};
 
-	class CProgramInfoItem : public CItemTemplate<ITEM_PROGRAMINFO>
+	class CProgramInfoItem
+		: public CItemTemplate<ITEM_PROGRAMINFO>
 	{
 	public:
-		CProgramInfoItem(CInformationPanel *pPanel,bool fVisible);
+		CProgramInfoItem(CInformationPanel *pPanel, bool fVisible);
 		LPCTSTR GetName() const override { return TEXT("ProgramInfo"); }
 		bool IsSingleRow() const { return false; }
 		void Reset() override;
 		bool Update() override;
-		void Draw(HDC hdc,const RECT &Rect) override;
-		void DrawButton(HDC hdc,TVTest::Theme::CThemeDraw &ThemeDraw,
+		void Draw(HDC hdc, const RECT &Rect) override;
+		void DrawButton(HDC hdc, TVTest::Theme::CThemeDraw &ThemeDraw,
 						const TVTest::Theme::ForegroundStyle Style,
-						const RECT &ButtonRect,const RECT &TextRect,
+						const RECT &ButtonRect, const RECT &TextRect,
 						int Button) override;
 		int GetButtonCount() const override { return 2; }
-		bool GetButtonRect(int Button,RECT *pRect) const override;
+		bool GetButtonRect(int Button, RECT *pRect) const override;
 		bool IsButtonEnabled(int Button) const override;
 		bool OnButtonPushed(int Button) override;
-		bool GetButtonTipText(int Button,LPTSTR pszText,int MaxText) const;
+		bool GetButtonTipText(int Button, LPTSTR pszText, int MaxText) const;
 		const TVTest::String &GetInfoText() const { return m_InfoText; }
 		void SetNext(bool fNext);
 		bool IsNext() const { return m_fNext; }
@@ -244,7 +256,7 @@ public:
 	~CInformationPanel();
 
 // CBasicWindow
-	bool Create(HWND hwndParent,DWORD Style,DWORD ExStyle=0,int ID=0) override;
+	bool Create(HWND hwndParent, DWORD Style, DWORD ExStyle = 0, int ID = 0) override;
 
 // CUIBase
 	void SetStyle(const TVTest::Style::CStyleManager *pStyleManager) override;
@@ -266,7 +278,7 @@ public:
 	const CItem *GetItem(int Item) const;
 	template<typename T> T *GetItem() { return static_cast<T*>(GetItem(T::ID)); }
 	template<typename T> const T *GetItem() const { return static_cast<const T*>(GetItem(T::ID)); }
-	bool SetItemVisible(int Item,bool fVisible);
+	bool SetItemVisible(int Item, bool fVisible);
 	bool IsItemVisible(int Item) const;
 	bool UpdateItem(int Item);
 	void RedrawItem(int Item);
@@ -297,19 +309,20 @@ private:
 		TVTest::Theme::Style ButtonHotStyle;
 	};
 
-	template<typename T> void RegisterItem(bool fVisible=true)
+	template<typename T> void RegisterItem(bool fVisible = true)
 	{
-		T *pItem=new T(this,fVisible);
-		m_ItemList[pItem->GetID()]=pItem;
+		T *pItem = new T(this, fVisible);
+		m_ItemList[pItem->GetID()] = pItem;
 	}
 
-	class CProgramInfoSubclass : public CWindowSubclass
+	class CProgramInfoSubclass
+		: public CWindowSubclass
 	{
 	public:
 		CProgramInfoSubclass(CInformationPanel *pInfoPanel);
 
 	private:
-		LRESULT OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
+		LRESULT OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
 
 		CInformationPanel *m_pInfoPanel;
 	};
@@ -320,10 +333,10 @@ private:
 		int Button;
 
 		ItemButtonNumber() : Item(-1), Button(-1) {}
-		ItemButtonNumber(int item,int button) : Item(item), Button(button) {}
-		bool operator==(const ItemButtonNumber &rhs) const { return Item==rhs.Item && Button==rhs.Button; }
-		bool operator!=(const ItemButtonNumber &rhs) const { return !(*this==rhs); }
-		bool IsValid() const { return Item>=0 && Button>=0; }
+		ItemButtonNumber(int item, int button) : Item(item), Button(button) {}
+		bool operator==(const ItemButtonNumber &rhs) const { return Item == rhs.Item && Button == rhs.Button; }
+		bool operator!=(const ItemButtonNumber &rhs) const { return !(*this == rhs); }
+		bool IsValid() const { return Item >= 0 && Button >= 0; }
 	};
 
 	static const LPCTSTR m_pszClassName;
@@ -357,19 +370,19 @@ private:
 
 	void UpdateProgramInfoText();
 	bool CreateProgramInfoEdit();
-	void OnCommand(HWND hwnd,int id,HWND hwndCtl,UINT codeNotify);
-	void GetItemRect(int Item,RECT *pRect) const;
+	void OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify);
+	void GetItemRect(int Item, RECT *pRect) const;
 	void CalcFontHeight();
-	void Draw(HDC hdc,const RECT &PaintRect);
-	bool GetDrawItemRect(int Item,RECT *pRect,const RECT &PaintRect) const;
-	void DrawItem(CItem *pItem,HDC hdc,LPCTSTR pszText,const RECT &Rect);
+	void Draw(HDC hdc, const RECT &PaintRect);
+	bool GetDrawItemRect(int Item, RECT *pRect, const RECT &PaintRect) const;
+	void DrawItem(CItem *pItem, HDC hdc, LPCTSTR pszText, const RECT &Rect);
 	void RedrawButton(ItemButtonNumber Button);
-	void RedrawButton(int Item,int Button) { RedrawButton(ItemButtonNumber(Item,Button)); }
-	ItemButtonNumber ButtonHitTest(int x,int y) const;
+	void RedrawButton(int Item, int Button) { RedrawButton(ItemButtonNumber(Item, Button)); }
+	ItemButtonNumber ButtonHitTest(int x, int y) const;
 	void SetHotButton(ItemButtonNumber Button);
 
 // CCustomWindow
-	LRESULT OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
+	LRESULT OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
 
 // CUIBase
 	void ApplyStyle() override;

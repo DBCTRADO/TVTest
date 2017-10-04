@@ -22,46 +22,48 @@ CTaskbarSharedProperties::~CTaskbarSharedProperties()
 }
 
 
-bool CTaskbarSharedProperties::Open(LPCTSTR pszName,const CRecentChannelList *pRecentChannels)
+bool CTaskbarSharedProperties::Open(LPCTSTR pszName, const CRecentChannelList *pRecentChannels)
 {
 	bool fExists;
 
-	if (!m_SharedMemory.Create(pszName,
-			sizeof(SharedInfoHeader)+sizeof(RecentChannelInfo)*MAX_RECENT_CHANNELS,
-			&fExists)) {
-		GetAppClass().AddLog(CLogItem::TYPE_ERROR,
-							 TEXT("共有メモリ(%s)を作成できません。"),
-							 pszName);
+	if (!m_SharedMemory.Create(
+				pszName,
+				sizeof(SharedInfoHeader) + sizeof(RecentChannelInfo) * MAX_RECENT_CHANNELS,
+				&fExists)) {
+		GetAppClass().AddLog(
+			CLogItem::TYPE_ERROR,
+			TEXT("共有メモリ(%s)を作成できません。"),
+			pszName);
 		return false;
 	}
 
-	m_pHeader=static_cast<SharedInfoHeader*>(m_SharedMemory.Map());
-	if (m_pHeader==nullptr) {
+	m_pHeader = static_cast<SharedInfoHeader*>(m_SharedMemory.Map());
+	if (m_pHeader == nullptr) {
 		m_SharedMemory.Close();
 		return false;
 	}
 
 	if (!fExists) {
-		m_pHeader->Size=sizeof(SharedInfoHeader);
-		m_pHeader->Version=SharedInfoHeader::VERSION_CURRENT;
-		m_pHeader->MaxRecentChannels=MAX_RECENT_CHANNELS;
+		m_pHeader->Size = sizeof(SharedInfoHeader);
+		m_pHeader->Version = SharedInfoHeader::VERSION_CURRENT;
+		m_pHeader->MaxRecentChannels = MAX_RECENT_CHANNELS;
 
-		if (pRecentChannels!=nullptr) {
-			DWORD ChannelCount=pRecentChannels->NumChannels();
-			if (ChannelCount>MAX_RECENT_CHANNELS)
-				ChannelCount=MAX_RECENT_CHANNELS;
+		if (pRecentChannels != nullptr) {
+			DWORD ChannelCount = pRecentChannels->NumChannels();
+			if (ChannelCount > MAX_RECENT_CHANNELS)
+				ChannelCount = MAX_RECENT_CHANNELS;
 
-			RecentChannelInfo *pChannelList=reinterpret_cast<RecentChannelInfo*>(m_pHeader+1);
+			RecentChannelInfo *pChannelList = reinterpret_cast<RecentChannelInfo*>(m_pHeader + 1);
 
-			for (DWORD i=0;i<ChannelCount;i++) {
+			for (DWORD i = 0; i < ChannelCount; i++) {
 				TunerChannelInfoToRecentChannelInfo(
-					pRecentChannels->GetChannelInfo(ChannelCount-1-i),
-					pChannelList+i);
+					pRecentChannels->GetChannelInfo(ChannelCount - 1 - i),
+					pChannelList + i);
 			}
 
-			m_pHeader->RecentChannelCount=ChannelCount;
+			m_pHeader->RecentChannelCount = ChannelCount;
 		} else {
-			m_pHeader->RecentChannelCount=0;
+			m_pHeader->RecentChannelCount = 0;
 		}
 	} else {
 		if (!ValidateHeader(m_pHeader)) {
@@ -79,7 +81,7 @@ bool CTaskbarSharedProperties::Open(LPCTSTR pszName,const CRecentChannelList *pR
 void CTaskbarSharedProperties::Close()
 {
 	m_SharedMemory.Close();
-	m_pHeader=nullptr;
+	m_pHeader = nullptr;
 }
 
 
@@ -91,16 +93,16 @@ bool CTaskbarSharedProperties::IsOpened() const
 
 bool CTaskbarSharedProperties::GetRecentChannelList(CRecentChannelList *pList)
 {
-	if (pList==nullptr)
+	if (pList == nullptr)
 		return false;
 
-	if (m_pHeader==nullptr)
+	if (m_pHeader == nullptr)
 		return false;
 
 	if (!m_SharedMemory.Lock(m_LockTimeout))
 		return false;
 
-	ReadRecentChannelList(m_pHeader,pList);
+	ReadRecentChannelList(m_pHeader, pList);
 
 	m_SharedMemory.Unlock();
 
@@ -110,7 +112,7 @@ bool CTaskbarSharedProperties::GetRecentChannelList(CRecentChannelList *pList)
 
 bool CTaskbarSharedProperties::AddRecentChannel(const CTunerChannelInfo &Info)
 {
-	if (m_pHeader==nullptr)
+	if (m_pHeader == nullptr)
 		return false;
 
 	if (!m_SharedMemory.Lock(m_LockTimeout))
@@ -118,21 +120,21 @@ bool CTaskbarSharedProperties::AddRecentChannel(const CTunerChannelInfo &Info)
 
 	CRecentChannelList ChannelList;
 
-	ReadRecentChannelList(m_pHeader,&ChannelList);
+	ReadRecentChannelList(m_pHeader, &ChannelList);
 	ChannelList.Add(Info);
 
-	DWORD ChannelCount=ChannelList.NumChannels();
-	if (ChannelCount>m_pHeader->MaxRecentChannels)
-		ChannelCount=m_pHeader->MaxRecentChannels;
-	RecentChannelInfo *pChannelList=reinterpret_cast<RecentChannelInfo*>(m_pHeader+1);
+	DWORD ChannelCount = ChannelList.NumChannels();
+	if (ChannelCount > m_pHeader->MaxRecentChannels)
+		ChannelCount = m_pHeader->MaxRecentChannels;
+	RecentChannelInfo *pChannelList = reinterpret_cast<RecentChannelInfo*>(m_pHeader + 1);
 
-	for (DWORD i=0;i<ChannelCount;i++) {
+	for (DWORD i = 0; i < ChannelCount; i++) {
 		TunerChannelInfoToRecentChannelInfo(
-			ChannelList.GetChannelInfo(ChannelCount-1-i),
-			pChannelList+i);
+			ChannelList.GetChannelInfo(ChannelCount - 1 - i),
+			pChannelList + i);
 	}
 
-	m_pHeader->RecentChannelCount=ChannelCount;
+	m_pHeader->RecentChannelCount = ChannelCount;
 
 	m_SharedMemory.Unlock();
 
@@ -142,13 +144,13 @@ bool CTaskbarSharedProperties::AddRecentChannel(const CTunerChannelInfo &Info)
 
 bool CTaskbarSharedProperties::ClearRecentChannelList()
 {
-	if (m_pHeader==nullptr)
+	if (m_pHeader == nullptr)
 		return false;
 
 	if (!m_SharedMemory.Lock(m_LockTimeout))
 		return false;
 
-	m_pHeader->RecentChannelCount=0;
+	m_pHeader->RecentChannelCount = 0;
 
 	m_SharedMemory.Unlock();
 
@@ -158,19 +160,19 @@ bool CTaskbarSharedProperties::ClearRecentChannelList()
 
 bool CTaskbarSharedProperties::ValidateHeader(const SharedInfoHeader *pHeader) const
 {
-	return pHeader!=nullptr
-		&& pHeader->Size==sizeof(SharedInfoHeader)
-		&& pHeader->Version==SharedInfoHeader::VERSION_CURRENT;
+	return pHeader != nullptr
+		&& pHeader->Size == sizeof(SharedInfoHeader)
+		&& pHeader->Version == SharedInfoHeader::VERSION_CURRENT;
 }
 
 
 void CTaskbarSharedProperties::ReadRecentChannelList(
-	const SharedInfoHeader *pHeader,CRecentChannelList *pList) const
+	const SharedInfoHeader *pHeader, CRecentChannelList *pList) const
 {
-	const RecentChannelInfo *pChannelList=reinterpret_cast<const RecentChannelInfo*>(pHeader+1);
+	const RecentChannelInfo *pChannelList = reinterpret_cast<const RecentChannelInfo*>(pHeader + 1);
 
-	for (DWORD i=0;i<pHeader->RecentChannelCount;i++) {
-		const RecentChannelInfo *pChannelInfo=pChannelList+i;
+	for (DWORD i = 0; i < pHeader->RecentChannelCount; i++) {
+		const RecentChannelInfo *pChannelInfo = pChannelList + i;
 		CTunerChannelInfo ChannelInfo;
 
 		ChannelInfo.SetSpace(pChannelInfo->Space);
@@ -189,18 +191,18 @@ void CTaskbarSharedProperties::ReadRecentChannelList(
 
 
 void CTaskbarSharedProperties::TunerChannelInfoToRecentChannelInfo(
-	const CTunerChannelInfo *pTunerChInfo,RecentChannelInfo *pChannelInfo) const
+	const CTunerChannelInfo *pTunerChInfo, RecentChannelInfo *pChannelInfo) const
 {
-	pChannelInfo->Space=pTunerChInfo->GetSpace();
-	pChannelInfo->ChannelIndex=pTunerChInfo->GetChannelIndex();
-	pChannelInfo->ChannelNo=pTunerChInfo->GetChannelNo();
-	pChannelInfo->PhysicalChannel=pTunerChInfo->GetPhysicalChannel();
-	pChannelInfo->NetworkID=pTunerChInfo->GetNetworkID();
-	pChannelInfo->TransportStreamID=pTunerChInfo->GetTransportStreamID();
-	pChannelInfo->ServiceID=pTunerChInfo->GetServiceID();
-	pChannelInfo->ServiceType=pTunerChInfo->GetServiceType();
-	::lstrcpynW(pChannelInfo->szChannelName,pTunerChInfo->GetName(),MAX_CHANNEL_NAME);
-	::lstrcpynW(pChannelInfo->szTunerName,pTunerChInfo->GetTunerName(),MAX_PATH);
+	pChannelInfo->Space = pTunerChInfo->GetSpace();
+	pChannelInfo->ChannelIndex = pTunerChInfo->GetChannelIndex();
+	pChannelInfo->ChannelNo = pTunerChInfo->GetChannelNo();
+	pChannelInfo->PhysicalChannel = pTunerChInfo->GetPhysicalChannel();
+	pChannelInfo->NetworkID = pTunerChInfo->GetNetworkID();
+	pChannelInfo->TransportStreamID = pTunerChInfo->GetTransportStreamID();
+	pChannelInfo->ServiceID = pTunerChInfo->GetServiceID();
+	pChannelInfo->ServiceType = pTunerChInfo->GetServiceType();
+	::lstrcpynW(pChannelInfo->szChannelName, pTunerChInfo->GetName(), MAX_CHANNEL_NAME);
+	::lstrcpynW(pChannelInfo->szTunerName, pTunerChInfo->GetTunerName(), MAX_PATH);
 }
 
 

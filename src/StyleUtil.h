@@ -18,8 +18,9 @@ namespace TVTest
 		void SetFontInfoItem(HWND hDlg, int ID, const Style::Font &Font);
 		bool ChooseStyleFont(HWND hwndOwner, Style::Font *pFont);
 
-		bool ReadFontSettings(CSettings &Settings, LPCTSTR pszValueName, Style::Font *pFont,
-							  bool fCompatible = false, bool *pfPointSize = nullptr);
+		bool ReadFontSettings(
+			CSettings &Settings, LPCTSTR pszValueName, Style::Font *pFont,
+			bool fCompatible = false, bool *pfPointSize = nullptr);
 		bool WriteFontSettings(CSettings &Settings, LPCTSTR pszValueName, const Style::Font &Font);
 		bool ReadPointSize(CSettings &Settings, LPCTSTR pszValueName, Style::Font *pFont);
 		bool WritePointSize(CSettings &Settings, LPCTSTR pszValueName, const Style::Font &Font);

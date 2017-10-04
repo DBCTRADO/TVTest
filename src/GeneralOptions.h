@@ -5,7 +5,8 @@
 #include "Options.h"
 
 
-class CGeneralOptions : public COptions
+class CGeneralOptions
+	: public COptions
 {
 public:
 	enum DefaultDriverType {
@@ -38,11 +39,11 @@ public:
 
 private:
 // CBasicDialog
-	INT_PTR DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
+	INT_PTR DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
 
 	enum {
-		UPDATE_RESIDENT				= 0x00000001UL,
-		UPDATE_1SEGFALLBACK			= 0x00000002UL
+		UPDATE_RESIDENT     = 0x00000001UL,
+		UPDATE_1SEGFALLBACK = 0x00000002UL
 	};
 
 	TVTest::String m_BonDriverDirectory;

@@ -6,7 +6,8 @@
 #include "Tooltip.h"
 
 
-class CColorPalette : public CCustomWindow
+class CColorPalette
+	: public CCustomWindow
 {
 	int m_NumColors;
 	RGBQUAD *m_pPalette;
@@ -20,25 +21,25 @@ class CColorPalette : public CCustomWindow
 
 	static HINSTANCE m_hinst;
 
-	void GetItemRect(int Index,RECT *pRect) const;
-	void DrawSelRect(HDC hdc,int Sel,bool fSel);
-	void DrawNewSelHighlight(int OldSel,int NewSel);
+	void GetItemRect(int Index, RECT *pRect) const;
+	void DrawSelRect(HDC hdc, int Sel, bool fSel);
+	void DrawNewSelHighlight(int OldSel, int NewSel);
 	void SetToolTip();
 	void SendNotify(int Code);
 
 // CCustomWindow
-	LRESULT OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
+	LRESULT OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
 
 public:
 	CColorPalette();
 	~CColorPalette();
 // CBasicWindow
-	bool Create(HWND hwndParent,DWORD Style,DWORD ExStyle=0,int ID=0) override;
+	bool Create(HWND hwndParent, DWORD Style, DWORD ExStyle = 0, int ID = 0) override;
 // CColorPalette
 	bool GetPalette(RGBQUAD *pPalette);
-	bool SetPalette(const RGBQUAD *pPalette,int NumColors);
+	bool SetPalette(const RGBQUAD *pPalette, int NumColors);
 	COLORREF GetColor(int Index) const;
-	bool SetColor(int Index,COLORREF Color);
+	bool SetColor(int Index, COLORREF Color);
 	int GetSel() const;
 	bool SetSel(int Sel);
 	int GetHot() const;
@@ -46,7 +47,7 @@ public:
 	bool SetTooltipFont(HFONT hfont);
 	static bool Initialize(HINSTANCE hinst);
 	enum {
-		NOTIFY_SELCHANGE=1,
+		NOTIFY_SELCHANGE = 1,
 		NOTIFY_HOTCHANGE,
 		NOTIFY_RBUTTONDOWN,
 		NOTIFY_DOUBLECLICK

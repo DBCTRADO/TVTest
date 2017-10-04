@@ -6,7 +6,8 @@
 #include "Options.h"
 
 
-class CTaskbarOptions : public COptions
+class CTaskbarOptions
+	: public COptions
 {
 public:
 	typedef std::vector<int> TaskList;
@@ -28,9 +29,9 @@ public:
 	int GetMaxRecentChannels() const { return m_MaxRecentChannels; }
 	bool GetShowChannelIcon() const { return m_fShowChannelIcon; }
 	const TVTest::String &GetIconDirectory() const { return m_IconDirectory; }
-	void SetJumpListKeepSingleTask(bool fSingleTask) { m_fJumpListKeepSingleTask=fSingleTask; }
+	void SetJumpListKeepSingleTask(bool fSingleTask) { m_fJumpListKeepSingleTask = fSingleTask; }
 	bool GetJumpListKeepSingleTask() const { return m_fJumpListKeepSingleTask; }
-	void SetUseUniqueAppID(bool fUnique) { m_fUseUniqueAppID=fUnique; }
+	void SetUseUniqueAppID(bool fUnique) { m_fUseUniqueAppID = fUnique; }
 	bool GetUseUniqueAppID() const { return m_fUseUniqueAppID; }
 	const TVTest::String &GetAppID() const { return m_AppID; }
 

@@ -60,7 +60,7 @@ public:
 	int m_WindowTop;
 	int m_WindowWidth;
 	int m_WindowHeight;
-	static const int INVALID_WINDOW_POS=INT_MIN;
+	static const int INVALID_WINDOW_POS = INT_MIN;
 
 	int m_Volume;
 	bool m_fMute;
@@ -79,7 +79,8 @@ public:
 
 	TVTest::String m_StyleFileName;
 
-	struct IniEntry {
+	struct IniEntry
+	{
 		TVTest::String Section;
 		TVTest::String Name;
 		TVTest::String Value;

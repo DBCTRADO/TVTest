@@ -9,18 +9,19 @@
 #include "Dialog.h"
 
 
-class CFeaturedEventsSettings : public CSettingsBase
+class CFeaturedEventsSettings
+	: public CSettingsBase
 {
 public:
 	enum SortType {
 		SORT_TIME,
 		SORT_SERVICE,
-		SORT_FIRST=SORT_TIME,
-		SORT_LAST =SORT_SERVICE
+		SORT_FIRST = SORT_TIME,
+		SORT_LAST = SORT_SERVICE
 	};
 
 	enum {
-		MAX_EVENT_TEXT_LINES=10
+		MAX_EVENT_TEXT_LINES = 10
 	};
 
 	CFeaturedEventsSettings();
@@ -36,13 +37,13 @@ public:
 	CEventSearchSettingsList &GetSearchSettingsList() { return m_SearchSettingsList; }
 	const CEventSearchSettingsList &GetSearchSettingsList() const { return m_SearchSettingsList; }
 	SortType GetSortType() const { return m_SortType; }
-	void SetSortType(SortType Type) { m_SortType=Type; }
+	void SetSortType(SortType Type) { m_SortType = Type; }
 	int GetPeriodSeconds() const { return m_PeriodSeconds; }
-	void SetPeriodSeconds(int Period) { m_PeriodSeconds=Period; }
+	void SetPeriodSeconds(int Period) { m_PeriodSeconds = Period; }
 	bool GetShowEventText() const { return m_fShowEventText; }
-	void SetShowEventText(bool fShow) { m_fShowEventText=fShow; }
+	void SetShowEventText(bool fShow) { m_fShowEventText = fShow; }
 	int GetEventTextLines() const { return m_EventTextLines; }
-	void SetEventTextLines(int Lines) { m_EventTextLines=Lines; }
+	void SetEventTextLines(int Lines) { m_EventTextLines = Lines; }
 
 private:
 	CEventSearchServiceList m_DefaultServiceList;
@@ -80,7 +81,8 @@ private:
 	std::vector<CEventSearcher> m_SearcherList;
 };
 
-class CFeaturedEventsDialog : public CResizableDialog
+class CFeaturedEventsDialog
+	: public CResizableDialog
 {
 public:
 	CFeaturedEventsDialog(
@@ -100,11 +102,11 @@ private:
 	};
 
 // CBasicDialog
-	INT_PTR DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
+	INT_PTR DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
 
 	void SetSearchSettingsListItemStatus(HWND hDlg);
-	int AddSearchSettingsItem(HWND hDlg,const CEventSearchSettings &Settings);
-	void UpdateSearchSettingsItem(HWND hDlg,int Item);
+	int AddSearchSettingsItem(HWND hDlg, const CEventSearchSettings &Settings);
+	void UpdateSearchSettingsItem(HWND hDlg, int Item);
 
 	CFeaturedEventsSettings &m_Settings;
 	CEventSearchOptions &m_Options;
@@ -112,13 +114,14 @@ private:
 	int m_SettingsColumnWidth[NUM_SETTINGS_COLUMNS];
 };
 
-class CFeaturedEvents : public CSettingsBase
+class CFeaturedEvents
+	: public CSettingsBase
 {
 public:
 	class ABSTRACT_CLASS(CEventHandler)
 	{
 	public:
-		virtual void OnFeaturedEventsSettingsChanged(CFeaturedEvents &FeaturedEvents) {}
+		virtual void OnFeaturedEventsSettingsChanged(CFeaturedEvents & FeaturedEvents) {}
 	};
 
 	CFeaturedEvents(CEventSearchOptions &EventSearchOptions);

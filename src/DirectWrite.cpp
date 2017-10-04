@@ -68,10 +68,10 @@ bool CDirectWriteSystem::Initialize()
 	}
 
 	if (m_pD2DFactory == nullptr) {
-		typedef HRESULT (WINAPI *D2D1CreateFactoryFunc)(
+		typedef HRESULT (WINAPI * D2D1CreateFactoryFunc)(
 			D2D1_FACTORY_TYPE factoryType,
 			REFIID riid,
-			const D2D1_FACTORY_OPTIONS *pFactoryOptions,
+			const D2D1_FACTORY_OPTIONS * pFactoryOptions,
 			void **ppIFactory);
 		D2D1CreateFactoryFunc pD2D1CreateFactory =
 			reinterpret_cast<D2D1CreateFactoryFunc>(::GetProcAddress(m_hD2DLib, "D2D1CreateFactory"));
@@ -396,7 +396,7 @@ ID2D1RenderTarget *CDirectWriteRenderer::GetRenderTarget()
 
 bool CDirectWriteRenderer::BeginDraw(HDC hdc, const RECT &Rect)
 {
-	if (hdc==nullptr)
+	if (hdc == nullptr)
 		return false;
 
 	if (m_pRenderTarget == nullptr) {
@@ -566,8 +566,7 @@ bool CDirectWriteRenderer::DrawText(
 					DWRITE_TEXT_ALIGNMENT_CENTER :
 				(Flags & DRAW_TEXT_ALIGN_RIGHT) != 0 ?
 					DWRITE_TEXT_ALIGNMENT_TRAILING :
-				((Flags & DRAW_TEXT_ALIGN_JUSTIFIED) != 0
-					&& Util::OS::IsWindows8OrLater()) ?
+				((Flags & DRAW_TEXT_ALIGN_JUSTIFIED) != 0 && Util::OS::IsWindows8OrLater()) ?
 					DWRITE_TEXT_ALIGNMENT_JUSTIFIED :
 					DWRITE_TEXT_ALIGNMENT_LEADING);
 			pTextFormat->SetParagraphAlignment(

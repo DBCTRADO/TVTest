@@ -35,14 +35,15 @@ public:
 		MENU_PROGRAMINFO
 	};
 
-	class CTitleStringMap : public TVTest::CEventVariableStringMap
+	class CTitleStringMap
+		: public TVTest::CEventVariableStringMap
 	{
 	public:
-		CTitleStringMap(CAppMain &App,const EventInfo *pInfo=nullptr);
+		CTitleStringMap(CAppMain &App, const EventInfo *pInfo = nullptr);
 		bool GetParameterList(ParameterGroupList *pList) const override;
 
 	private:
-		bool GetLocalString(LPCWSTR pszKeyword,TVTest::String *pString) override;
+		bool GetLocalString(LPCWSTR pszKeyword, TVTest::String *pString) override;
 
 		CAppMain &m_App;
 	};
@@ -54,24 +55,24 @@ public:
 	HWND GetMainWindow() const;
 	HWND GetDialogOwner() const;
 
-	bool InitializeViewer(BYTE VideoStreamType=0);
+	bool InitializeViewer(BYTE VideoStreamType = 0);
 	bool IsViewerInitializeError() const { return m_fViewerInitializeError; }
 	bool FinalizeViewer();
 	bool IsViewerEnabled() const;
 	bool EnableViewer(bool fEnable);
 	HWND GetViewerWindow() const;
 
-	bool SetZoomRate(int Rate,int Factor=100);
-	bool GetZoomRate(int *pRate,int *pFactor) const;
+	bool SetZoomRate(int Rate, int Factor = 100);
+	bool GetZoomRate(int *pRate, int *pFactor) const;
 	int GetZoomPercentage() const;
 	bool GetPanAndScan(CCoreEngine::PanAndScanInfo *pInfo) const;
 	bool SetPanAndScan(const CCoreEngine::PanAndScanInfo &Info);
 
 	int GetVolume() const;
-	bool SetVolume(int Volume,bool fOSD=true);
+	bool SetVolume(int Volume, bool fOSD = true);
 	bool GetMute() const;
 	bool SetMute(bool fMute);
-	bool SetDualMonoMode(LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode Mode,bool fApplyStereo=true);
+	bool SetDualMonoMode(LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode Mode, bool fApplyStereo = true);
 	LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode GetDualMonoMode() const;
 	LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode GetActualDualMonoMode() const;
 	bool SetStereoMode(LibISDB::DirectShow::AudioDecoderFilter::StereoMode Mode);
@@ -84,11 +85,11 @@ public:
 	bool AutoSelectAudio();
 	bool SwitchAudio();
 	bool SwitchDualMonoMode();
-	int FormatCurrentAudioText(LPTSTR pszText,int MaxLength) const;
-	bool GetSelectedAudioText(LPTSTR pszText,int MaxLength) const;
+	int FormatCurrentAudioText(LPTSTR pszText, int MaxLength) const;
+	bool GetSelectedAudioText(LPTSTR pszText, int MaxLength) const;
 
 	bool GetStandby() const { return m_fStandby; }
-	bool SetStandby(bool fStandby,bool fTransient=false);
+	bool SetStandby(bool fStandby, bool fTransient = false);
 	bool GetTransientStandby() const { return m_fTransientStandby; }
 	bool GetResident() const;
 	bool SetResident(bool fResident);
@@ -99,11 +100,13 @@ public:
 	bool SetAlwaysOnTop(bool fTop);
 	bool PreventDisplaySave(bool fPrevent);
 
-	void PopupMenu(const POINT *pPos=NULL,UINT Flags=0);
-	void PopupSubMenu(int SubMenu,const POINT *pPos=NULL,UINT Flags=0,
-					  const RECT *pExcludeRect=NULL);
-	bool ShowSpecialMenu(MenuType Menu,const POINT *pPos=NULL,UINT Flags=0,
-						 const RECT *pExcludeRect=NULL);
+	void PopupMenu(const POINT *pPos = NULL, UINT Flags = 0);
+	void PopupSubMenu(
+		int SubMenu, const POINT *pPos = NULL, UINT Flags = 0,
+		const RECT *pExcludeRect = NULL);
+	bool ShowSpecialMenu(
+		MenuType Menu, const POINT *pPos = NULL, UINT Flags = 0,
+		const RECT *pExcludeRect = NULL);
 	void InitChannelMenu(HMENU hmenu);
 	void InitTunerMenu(HMENU hmenu);
 	bool ProcessTunerMenu(int Command);
@@ -114,11 +117,11 @@ public:
 	bool DoCommandAsync(int Command);
 	bool DoCommandAsync(LPCTSTR pszCommand);
 
-	bool SetCommandEnabledState(int Command,bool fEnabled);
+	bool SetCommandEnabledState(int Command, bool fEnabled);
 	bool GetCommandEnabledState(int Command) const;
-	bool SetCommandCheckedState(int Command,bool fChecked);
+	bool SetCommandCheckedState(int Command, bool fChecked);
 	bool GetCommandCheckedState(int Command) const;
-	bool SetCommandRadioCheckedState(int FirstCommand,int LastCommand,int CheckedCommand);
+	bool SetCommandRadioCheckedState(int FirstCommand, int LastCommand, int CheckedCommand);
 
 	bool ConfirmChannelChange();
 	bool ConfirmStopRecording();
@@ -140,7 +143,7 @@ public:
 
 	bool ShowHelpContent(int ID);
 
-	void SetProgress(int Pos,int Max);
+	void SetProgress(int Pos, int Max);
 	void EndProgress();
 
 	void SetStatusBarTrace(bool fStatusBarTrace);
@@ -153,14 +156,15 @@ private:
 		~CTunerSelectMenu();
 		bool Create(HWND hwnd);
 		void Destroy();
-		int Show(UINT Flags,int x,int y,const RECT *pExcludeRect=NULL);
+		int Show(UINT Flags, int x, int y, const RECT *pExcludeRect = NULL);
 		bool OnInitMenuPopup(HMENU hmenu);
 
 	private:
-		struct PopupInfo {
+		struct PopupInfo
+		{
 			const CChannelList *pChannelList;
 			int Command;
-			PopupInfo(const CChannelList *pList,int Cmd)
+			PopupInfo(const CChannelList *pList, int Cmd)
 				: pChannelList(pList)
 				, Command(Cmd)
 			{
@@ -200,20 +204,20 @@ private:
 
 	bool m_fStatusBarTrace;
 
-	bool SelectAudio(const TVTest::CAudioManager::AudioSelectInfo &Info,bool fUpdate=true);
+	bool SelectAudio(const TVTest::CAudioManager::AudioSelectInfo &Info, bool fUpdate = true);
 	bool SelectAudioStream(int Stream);
-	bool SelectDualMonoMode(LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode Mode,bool fUpdate=true);
+	bool SelectDualMonoMode(LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode Mode, bool fUpdate = true);
 
 	bool CreateChannelMenu(
-		const CChannelList *pChannelList,int CurChannel,
-		UINT Command,HMENU hmenu,HWND hwnd,unsigned int Flags=0);
-	bool InitChannelMenuPopup(HMENU hmenuParent,HMENU hmenu);
+		const CChannelList *pChannelList, int CurChannel,
+		UINT Command, HMENU hmenu, HWND hwnd, unsigned int Flags = 0);
+	bool InitChannelMenuPopup(HMENU hmenuParent, HMENU hmenu);
 
 // CColorSchemeOptions::CEventHandler
 	bool ApplyColorScheme(const CColorScheme *pColorScheme) override;
 
 // LibISDB::Logger
-	void OnLog(LibISDB::Logger::LogType Type,LPCTSTR pszOutput) override;
+	void OnLog(LibISDB::Logger::LogType Type, LPCTSTR pszOutput) override;
 };
 
 

@@ -20,29 +20,29 @@
 #include "ChannelInput.h"
 
 
-#define MAIN_WINDOW_CLASS		APP_NAME TEXT(" Window")
-#define FULLSCREEN_WINDOW_CLASS	APP_NAME TEXT(" Fullscreen")
+#define MAIN_WINDOW_CLASS       APP_NAME TEXT(" Window")
+#define FULLSCREEN_WINDOW_CLASS APP_NAME TEXT(" Fullscreen")
 
 // (*) が付いたものは、変えると異なるバージョン間での互換性が無くなるので注意
-#define WM_APP_SERVICEUPDATE			(WM_APP+0)
-#define WM_APP_IMAGESAVE				(WM_APP+2)
-#define WM_APP_TRAYICON					(WM_APP+3)
-#define WM_APP_QUERYPORT				(WM_APP+5)	// (*)
-#define WM_APP_FILEWRITEERROR			(WM_APP+6)
-#define WM_APP_VIDEOSIZECHANGED			(WM_APP+7)
-#define WM_APP_CONTROLLERFOCUS			(WM_APP+11)	// (*)
-#define WM_APP_EPGLOADED				(WM_APP+12)
-#define WM_APP_PLUGINMESSAGE			(WM_APP+13)
-#define WM_APP_SHOWNOTIFICATIONBAR		(WM_APP+14)
-#define WM_APP_SERVICECHANGED			(WM_APP+15)
-#define WM_APP_VIDEOSTREAMTYPECHANGED	(WM_APP+16)
-#define WM_APP_SERVICEINFOUPDATED		(WM_APP+17)
-#define WM_APP_AUDIOLISTCHANGED			(WM_APP+18)
-#define WM_APP_SPDIFPASSTHROUGHERROR	(WM_APP+19)
-#define WM_APP_UPDATECLOCK				(WM_APP+20)
+#define WM_APP_SERVICEUPDATE          (WM_APP + 0)
+#define WM_APP_IMAGESAVE              (WM_APP + 2)
+#define WM_APP_TRAYICON               (WM_APP + 3)
+#define WM_APP_QUERYPORT              (WM_APP + 5)  // (*)
+#define WM_APP_FILEWRITEERROR         (WM_APP + 6)
+#define WM_APP_VIDEOSIZECHANGED       (WM_APP + 7)
+#define WM_APP_CONTROLLERFOCUS        (WM_APP + 11) // (*)
+#define WM_APP_EPGLOADED              (WM_APP + 12)
+#define WM_APP_PLUGINMESSAGE          (WM_APP + 13)
+#define WM_APP_SHOWNOTIFICATIONBAR    (WM_APP + 14)
+#define WM_APP_SERVICECHANGED         (WM_APP + 15)
+#define WM_APP_VIDEOSTREAMTYPECHANGED (WM_APP + 16)
+#define WM_APP_SERVICEINFOUPDATED     (WM_APP + 17)
+#define WM_APP_AUDIOLISTCHANGED       (WM_APP + 18)
+#define WM_APP_SPDIFPASSTHROUGHERROR  (WM_APP + 19)
+#define WM_APP_UPDATECLOCK            (WM_APP + 20)
 
 enum {
-	CONTAINER_ID_VIEW=1,
+	CONTAINER_ID_VIEW = 1,
 	CONTAINER_ID_PANELSPLITTER,
 	CONTAINER_ID_PANEL,
 	CONTAINER_ID_STATUSSPLITTER,
@@ -63,15 +63,16 @@ class CMainWindow
 	, public COSDManager::CEventHandler
 {
 public:
-	enum { COMMAND_FROM_MOUSE=8 };
-	static const DWORD HIDE_CURSOR_DELAY=1000UL;
+	enum { COMMAND_FROM_MOUSE = 8 };
+	static const DWORD HIDE_CURSOR_DELAY = 1000UL;
 
-	struct ResumeInfo {
+	struct ResumeInfo
+	{
 		enum {
-			VIEWERSUSPEND_MINIMIZE	=0x0001U,
-			VIEWERSUSPEND_STANDBY	=0x0002U,
-			VIEWERSUSPEND_SUSPEND	=0x0004U,
-			VIEWERSUSPEND_EPGUPDATE	=0x0008U
+			VIEWERSUSPEND_MINIMIZE	= 0x0001U,
+			VIEWERSUSPEND_STANDBY	= 0x0002U,
+			VIEWERSUSPEND_SUSPEND	= 0x0004U,
+			VIEWERSUSPEND_EPGUPDATE	= 0x0008U
 		};
 
 		CChannelSpec Channel;
@@ -93,16 +94,16 @@ public:
 
 	CMainWindow(CAppMain &App);
 	~CMainWindow();
-	bool Create(HWND hwndParent,DWORD Style,DWORD ExStyle=0,int ID=0);
-	bool Show(int CmdShow,bool fForce=false);
+	bool Create(HWND hwndParent, DWORD Style, DWORD ExStyle = 0, int ID = 0);
+	bool Show(int CmdShow, bool fForce = false);
 	void CreatePanel();
-	void AdjustWindowSize(int Width,int Height,bool fScreenSize=true);
+	void AdjustWindowSize(int Width, int Height, bool fScreenSize = true);
 	bool ReadSettings(CSettings &Settings);
 	bool WriteSettings(CSettings &Settings);
 	void ShowPanel(bool fShow);
 	void SetStatusBarVisible(bool fVisible);
 	bool GetStatusBarVisible() const { return m_fShowStatusBar; }
-	bool ShowStatusBarItem(int ID,bool fShow);
+	bool ShowStatusBarItem(int ID, bool fShow);
 	void OnStatusBarInitialized();
 	void OnStatusBarTraceEnd();
 	void SetTitleBarVisible(bool fVisible);
@@ -111,7 +112,7 @@ public:
 	bool GetCustomTitleBar() const { return m_fCustomTitleBar; }
 	void SetSplitTitleBar(bool fSplit);
 	bool GetSplitTitleBar() const { return m_fSplitTitleBar; }
-	void SetCustomFrame(bool fCustomFrame,int Width=0);
+	void SetCustomFrame(bool fCustomFrame, int Width = 0);
 	bool GetCustomFrame() const { return m_fCustomFrame; }
 	void SetSideBarVisible(bool fVisible);
 	bool GetSideBarVisible() const { return m_fShowSideBar; }
@@ -132,11 +133,11 @@ public:
 	ResumeInfo &GetResumeInfo() { return m_Resume; }
 	bool IsMinimizeToTray() const;
 	bool ConfirmExit();
-	void OnMouseWheel(WPARAM wParam,LPARAM lParam,bool fHorz);
+	void OnMouseWheel(WPARAM wParam, LPARAM lParam, bool fHorz);
 
 	bool IsNoAcceleratorMessage(const MSG *pMsg);
 	bool BeginChannelNoInput(int Digits);
-	void EndChannelNoInput(bool fDetermine=false);
+	void EndChannelNoInput(bool fDetermine = false);
 
 	Layout::CLayoutBase &GetLayoutBase() { return m_LayoutBase; }
 	CDisplayBase &GetDisplayBase() { return m_Display.GetDisplayBase(); }
@@ -148,11 +149,12 @@ public:
 		PROGRAMGUIDE_SHOW_ONSCREEN = 0x0001U,
 		PROGRAMGUIDE_SHOW_POPUP    = 0x0002U
 	};
-	struct ProgramGuideSpaceInfo {
+	struct ProgramGuideSpaceInfo
+	{
 		LPCTSTR pszTuner;
 		LPCTSTR pszSpace;
 	};
-	bool ShowProgramGuide(bool fShow,unsigned int Flags=0,const ProgramGuideSpaceInfo *pSpaceInfo=NULL);
+	bool ShowProgramGuide(bool fShow, unsigned int Flags = 0, const ProgramGuideSpaceInfo *pSpaceInfo = NULL);
 
 	static bool Initialize(HINSTANCE hinst);
 
@@ -191,11 +193,11 @@ private:
 	public:
 		CBarLayout() {}
 		virtual ~CBarLayout() {}
-		virtual void Layout(RECT *pArea,RECT *pBarRect) = 0;
+		virtual void Layout(RECT *pArea, RECT *pBarRect) = 0;
 
-		bool IsSpot(const RECT *pArea,const POINT *pPos);
+		bool IsSpot(const RECT *pArea, const POINT *pPos);
 		void AdjustArea(RECT *pArea);
-		void ReserveArea(RECT *pArea,bool fNoMove);
+		void ReserveArea(RECT *pArea, bool fNoMove);
 	};
 
 	class CTitleBarManager
@@ -203,39 +205,41 @@ private:
 		, public CBarLayout
 	{
 	public:
-		CTitleBarManager(CMainWindow *pMainWindow,bool fMainWindow);
-	// CBarLayout
-		void Layout(RECT *pArea,RECT *pBarRect) override;
-	// CTitleBarManager
+		CTitleBarManager(CMainWindow *pMainWindow, bool fMainWindow);
+		// CBarLayout
+		void Layout(RECT *pArea, RECT *pBarRect) override;
+		// CTitleBarManager
 		void EndDrag();
 
 	private:
-	// CTitleBar::CEventHandler
+		// CTitleBar::CEventHandler
 		bool OnClose() override;
 		bool OnMinimize() override;
 		bool OnMaximize() override;
 		bool OnFullscreen() override;
 		void OnMouseLeave() override;
-		void OnLabelLButtonDown(int x,int y) override;
-		void OnLabelLButtonDoubleClick(int x,int y) override;
-		void OnLabelRButtonUp(int x,int y) override;
-		void OnIconLButtonDown(int x,int y) override;
-		void OnIconLButtonDoubleClick(int x,int y) override;
+		void OnLabelLButtonDown(int x, int y) override;
+		void OnLabelLButtonDoubleClick(int x, int y) override;
+		void OnLabelRButtonUp(int x, int y) override;
+		void OnIconLButtonDown(int x, int y) override;
+		void OnIconLButtonDoubleClick(int x, int y) override;
 		void OnHeightChanged(int Height) override;
-	// CTitleBarManager
-		void ShowSystemMenu(int x,int y);
+		// CTitleBarManager
+		void ShowSystemMenu(int x, int y);
 
 		CMainWindow *m_pMainWindow;
 		bool m_fMainWindow;
 		bool m_fFixed;
 	};
 
-	class CSideBarManager : public CSideBar::CEventHandler, public CBarLayout
+	class CSideBarManager
+		: public CSideBar::CEventHandler
+		, public CBarLayout
 	{
 	public:
 		CSideBarManager(CMainWindow *pMainWindow);
-	// CBarLayout
-		void Layout(RECT *pArea,RECT *pBarRect) override;
+		// CBarLayout
+		void Layout(RECT *pArea, RECT *pBarRect) override;
 
 	private:
 		CMainWindow *m_pMainWindow;
@@ -243,11 +247,11 @@ private:
 
 		const CChannelInfo *GetChannelInfoByCommand(int Command);
 
-	// CSideBar::CEventHandler
+		// CSideBar::CEventHandler
 		void OnCommand(int Command) override;
-		void OnRButtonUp(int x,int y) override;
+		void OnRButtonUp(int x, int y) override;
 		void OnMouseLeave() override;
-		bool GetTooltipText(int Command,LPTSTR pszText,int MaxText) override;
+		bool GetTooltipText(int Command, LPTSTR pszText, int MaxText) override;
 		bool DrawIcon(const CSideBar::DrawIconInfo *pInfo) override;
 		void OnBarWidthChanged(int BarWidth) override;
 		void OnStyleChanged() override;
@@ -258,9 +262,9 @@ private:
 	public:
 		CCursorTracker();
 		void Reset();
-		bool OnCursorMove(int x,int y);
+		bool OnCursorMove(int x, int y);
 		POINT GetLastCursorPos() const { return m_LastCursorPos; }
-		void SetMoveDelta(int Delta) { m_MoveDelta=Delta; }
+		void SetMoveDelta(int Delta) { m_MoveDelta = Delta; }
 
 	private:
 		int m_MoveDelta;
@@ -275,7 +279,7 @@ private:
 	public:
 		CFullscreen(CMainWindow &MainWindow);
 		~CFullscreen();
-		bool Create(HWND hwndOwner,TVTest::CMainDisplay *pDisplay);
+		bool Create(HWND hwndOwner, TVTest::CMainDisplay *pDisplay);
 		void ShowStatusBar(bool fShow);
 		bool IsStatusBarVisible() const { return m_fShowStatusView; }
 		void ShowTitleBar(bool fShow);
@@ -296,13 +300,15 @@ private:
 		CViewWindow &GetViewWindow() { return m_ViewWindow; }
 		void SetTitleFont(const TVTest::Style::Font &Font);
 
-	// CUIBase
+		// CUIBase
 		void SetTheme(const TVTest::Theme::CThemeManager *pThemeManager) override;
 
 		static bool Initialize(HINSTANCE hinst);
 
 	private:
-		class CPanelEventHandler : public CPanel::CEventHandler {
+		class CPanelEventHandler
+			: public CPanel::CEventHandler
+		{
 		public:
 			CPanelEventHandler(CFullscreen &Fullscreen);
 			bool OnClose() override;
@@ -341,15 +347,16 @@ private:
 		void ShowCursor(bool fShow);
 		void ShowSideBar(bool fShow);
 		void OnBarHide(CBasicWindow &Window);
-		void OnSharedBarVisibilityChange(CBasicWindow &Window,TVTest::CUIBase &UIBase,bool fVisible);
+		void OnSharedBarVisibilityChange(CBasicWindow &Window, TVTest::CUIBase &UIBase, bool fVisible);
 		void RestorePanel(bool fPreventForeground);
-	// CBasicWindow
-		bool Create(HWND hwndParent,DWORD Style,DWORD ExStyle=0,int ID=0) override;
-	// CCustomWindow
-		LRESULT OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
+		// CBasicWindow
+		bool Create(HWND hwndParent, DWORD Style, DWORD ExStyle = 0, int ID = 0) override;
+		// CCustomWindow
+		LRESULT OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
 	};
 
-	class CStatusViewEventHandler : public CStatusView::CEventHandler
+	class CStatusViewEventHandler
+		: public CStatusView::CEventHandler
 	{
 	public:
 		CStatusViewEventHandler(CMainWindow *pMainWindow);
@@ -362,7 +369,8 @@ private:
 		void OnStyleChanged() override;
 	};
 
-	class CVideoContainerEventHandler : public CVideoContainerWindow::CEventHandler
+	class CVideoContainerEventHandler
+		: public CVideoContainerWindow::CEventHandler
 	{
 	public:
 		CVideoContainerEventHandler(CMainWindow *pMainWindow);
@@ -370,10 +378,11 @@ private:
 	private:
 		CMainWindow *m_pMainWindow;
 
-		void OnSizeChanged(int Width,int Height) override;
+		void OnSizeChanged(int Width, int Height) override;
 	};
 
-	class CViewWindowEventHandler : public CViewWindow::CEventHandler
+	class CViewWindowEventHandler
+		: public CViewWindow::CEventHandler
 	{
 	public:
 		CViewWindowEventHandler(CMainWindow *pMainWindow);
@@ -381,10 +390,11 @@ private:
 	private:
 		CMainWindow *m_pMainWindow;
 
-		void OnSizeChanged(int Width,int Height) override;
+		void OnSizeChanged(int Width, int Height) override;
 	};
 
-	class CEpgCaptureEventHandler : public TVTest::CEpgCaptureManager::CEventHandler
+	class CEpgCaptureEventHandler
+		: public TVTest::CEpgCaptureManager::CEventHandler
 	{
 	public:
 		CEpgCaptureEventHandler(CMainWindow *pMainWindow);
@@ -392,13 +402,14 @@ private:
 	private:
 		CMainWindow *m_pMainWindow;
 
-		void OnBeginCapture(unsigned int Flags,unsigned int Status) override;
+		void OnBeginCapture(unsigned int Flags, unsigned int Status) override;
 		void OnEndCapture(unsigned int Flags) override;
 		void OnChannelChanged() override;
 		void OnChannelEnd(bool fComplete) override;
 	};
 
-	class CCommandEventHandler : public CCommandList::CEventHandler
+	class CCommandEventHandler
+		: public CCommandList::CEventHandler
 	{
 	public:
 		CCommandEventHandler(CMainWindow *pMainWindow);
@@ -406,11 +417,11 @@ private:
 	private:
 		CMainWindow *m_pMainWindow;
 
-		void OnCommandStateChanged(int ID,unsigned int OldState,unsigned int NewState) override;
-		void OnCommandRadioCheckedStateChanged(int FirstID,int LastID,int CheckedID) override;
+		void OnCommandStateChanged(int ID, unsigned int OldState, unsigned int NewState) override;
+		void OnCommandRadioCheckedStateChanged(int FirstID, int LastID, int CheckedID) override;
 	};
 
-	enum { UPDATE_TIMER_INTERVAL=500 };
+	enum { UPDATE_TIMER_INTERVAL = 500 };
 
 	CAppMain &m_App;
 	TVTest::Style::CStyleScaling m_StyleScaling;
@@ -465,16 +476,17 @@ private:
 		WINDOW_SIZE_HD,
 		WINDOW_SIZE_1SEG
 	};
-	struct WindowSize {
+	struct WindowSize
+	{
 		int Width;
 		int Height;
 		WindowSize() : Width(0), Height(0) {}
 		WindowSize &operator=(const RECT &rc) {
-			Width=rc.right-rc.left;
-			Height=rc.bottom-rc.top;
+			Width = rc.right - rc.left;
+			Height = rc.bottom - rc.top;
 			return *this;
 		}
-		bool IsValid() const { return Width>0 && Height>0; }
+		bool IsValid() const { return Width > 0 && Height > 0; }
 	};
 	WindowSizeMode m_WindowSizeMode;
 	WindowSize m_HDWindowSize;
@@ -522,30 +534,34 @@ private:
 	unsigned int m_ProgramListUpdateTimerCount;
 	bool m_fAlertedLowFreeSpace;
 
-	class CTimer {
+	class CTimer
+	{
 		HWND m_hwnd;
 		UINT m_ID;
+
 	public:
 		CTimer(UINT ID) : m_hwnd(NULL), m_ID(ID) {}
-		bool Begin(HWND hwnd,DWORD Interval) {
-			if (::SetTimer(hwnd,m_ID,Interval,NULL)==0) {
-				m_hwnd=NULL;
+		bool Begin(HWND hwnd, DWORD Interval) {
+			if (::SetTimer(hwnd, m_ID, Interval, NULL) == 0) {
+				m_hwnd = NULL;
 				return false;
 			}
-			m_hwnd=hwnd;
+			m_hwnd = hwnd;
 			return true;
 		}
 		void End() {
-			if (m_hwnd!=NULL) {
-				::KillTimer(m_hwnd,m_ID);
-				m_hwnd=NULL;
+			if (m_hwnd != NULL) {
+				::KillTimer(m_hwnd, m_ID);
+				m_hwnd = NULL;
 			}
 		}
-		bool IsEnabled() const { return m_hwnd!=NULL; }
+		bool IsEnabled() const { return m_hwnd != NULL; }
 	};
 	CTimer m_ResetErrorCountTimer;
 
-	class CDisplayBaseEventHandler : public CDisplayBase::CEventHandler {
+	class CDisplayBaseEventHandler
+		: public CDisplayBase::CEventHandler
+	{
 		CMainWindow *m_pMainWindow;
 		bool OnVisibleChange(bool fVisible) override;
 	public:
@@ -558,7 +574,8 @@ private:
 
 	CEpgCaptureEventHandler m_EpgCaptureEventHandler;
 
-	class CClockUpdateTimer : public Util::CTimer
+	class CClockUpdateTimer
+		: public Util::CTimer
 	{
 	public:
 		CClockUpdateTimer(CMainWindow *pMainWindow);
@@ -569,7 +586,8 @@ private:
 	CClockUpdateTimer m_ClockUpdateTimer;
 	bool m_fAccurateClock;
 
-	struct DirectShowFilterPropertyInfo {
+	struct DirectShowFilterPropertyInfo
+	{
 		LibISDB::ViewerFilter::PropertyFilterType Filter;
 		int Command;
 	};
@@ -584,17 +602,18 @@ private:
 	HWND GetFullscreenWindow() const override { return m_Fullscreen.GetHandle(); }
 	const TVTest::CUIBase *GetUIBase() const override { return this; }
 	const TVTest::CUIBase *GetFullscreenUIBase() const override { return &m_Fullscreen; }
-	void ShowNotificationBar(LPCTSTR pszText,
-							 CNotificationBar::MessageType Type=CNotificationBar::MESSAGE_INFO,
-							 DWORD Duration=0,bool fSkippable=false) override;
-	bool InitializeViewer(BYTE VideoStreamType=0) override;
+	void ShowNotificationBar(
+		LPCTSTR pszText,
+		CNotificationBar::MessageType Type = CNotificationBar::MESSAGE_INFO,
+		DWORD Duration = 0, bool fSkippable = false) override;
+	bool InitializeViewer(BYTE VideoStreamType = 0) override;
 	bool FinalizeViewer() override;
 	bool EnableViewer(bool fEnable) override;
 	bool IsViewerEnabled() const override;
 	HWND GetViewerWindow() const override;
-	bool SetZoomRate(int Rate,int Factor) override;
-	bool GetZoomRate(int *pRate,int *pFactor) override;
-	void SetTitleText(LPCTSTR pszTitleText,LPCTSTR pszWindowText) override;
+	bool SetZoomRate(int Rate, int Factor) override;
+	bool GetZoomRate(int *pRate, int *pFactor) override;
+	void SetTitleText(LPCTSTR pszTitleText, LPCTSTR pszWindowText) override;
 	bool SetTitleFont(const TVTest::Style::Font &Font) override;
 	bool SetLogo(HBITMAP hbm) override;
 	bool SetAlwaysOnTop(bool fTop) override;
@@ -629,19 +648,19 @@ private:
 	bool SetOSDHideTimer(DWORD Delay) override;
 
 // CMainWindow
-	LRESULT OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam);
+	LRESULT OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 	bool OnNCCreate(const CREATESTRUCT *pcs);
 	bool OnCreate(const CREATESTRUCT *pcs);
 	void OnDestroy();
-	void OnSizeChanged(UINT State,int Width,int Height);
-	bool OnSizeChanging(UINT Edge,RECT *pRect);
-	void OnGetMinMaxInfo(HWND hwnd,LPMINMAXINFO pmmi);
-	void OnMouseMove(int x,int y);
-	bool OnSetCursor(HWND hwndCursor,int HitTestCode,int MouseMessage);
+	void OnSizeChanged(UINT State, int Width, int Height);
+	bool OnSizeChanging(UINT Edge, RECT *pRect);
+	void OnGetMinMaxInfo(HWND hwnd, LPMINMAXINFO pmmi);
+	void OnMouseMove(int x, int y);
+	bool OnSetCursor(HWND hwndCursor, int HitTestCode, int MouseMessage);
 	bool OnKeyDown(WPARAM KeyCode);
-	void OnCommand(HWND hwnd,int id,HWND hwndCtl,UINT codeNotify);
+	void OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify);
 	bool OnSysCommand(UINT Command);
-	void OnTimer(HWND hwnd,UINT id);
+	void OnTimer(HWND hwnd, UINT id);
 	bool OnInitMenuPopup(HMENU hmenu);
 	bool OnClose(HWND hwnd);
 	void OnRecordingStateChanged();
@@ -652,8 +671,8 @@ private:
 	void UpdateLayout();
 	void UpdateLayoutStructure();
 	void AdjustWindowSizeOnDockPanel(bool fDock);
-	void GetPanelDockingAdjustedPos(bool fDock,RECT *pPos) const;
-	void SetFixedPaneSize(int SplitterID,int ContainerID,int Width,int Height);
+	void GetPanelDockingAdjustedPos(bool fDock, RECT *pPos) const;
+	void SetFixedPaneSize(int SplitterID, int ContainerID, int Width, int Height);
 	void ShowPopupTitleBar(bool fShow);
 	void ShowPopupStatusBar(bool fShow);
 	void ShowPopupSideBar(bool fShow);
@@ -661,7 +680,7 @@ private:
 	void ShowChannelOSD();
 	void ShowAudioOSD();
 	void SetWindowVisible();
-	void ShowFloatingWindows(bool fShow,bool fNoProgramGuide=false);
+	void ShowFloatingWindows(bool fShow, bool fNoProgramGuide = false);
 	void DrawCustomFrame(bool fActive);
 	CViewWindow &GetCurrentViewWindow();
 	void StoreTunerResumeInfo();
@@ -675,11 +694,11 @@ private:
 	void HookChildWindow(HWND hwnd);
 	void SetMaximizedRegion(bool fSet);
 	void UpdateWindowFrame();
-	void SendCommand(int Command) { SendMessage(WM_COMMAND,Command,0); }
-	void PostCommand(int Command) { PostMessage(WM_COMMAND,Command,0); }
+	void SendCommand(int Command) { SendMessage(WM_COMMAND, Command, 0); }
+	void PostCommand(int Command) { PostMessage(WM_COMMAND, Command, 0); }
 
-	static LRESULT CALLBACK WndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam);
-	static LRESULT CALLBACK ChildHookProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam);
+	static LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+	static LRESULT CALLBACK ChildHookProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 };
 
 

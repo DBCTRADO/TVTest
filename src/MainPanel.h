@@ -26,7 +26,7 @@ public:
 
 	CMainPanel();
 	bool IsFloating() const;
-	bool OnOwnerWindowPosChanging(const RECT *pOldRect,const RECT *pNewRect);
+	bool OnOwnerWindowPosChanging(const RECT *pOldRect, const RECT *pNewRect);
 	bool IsAttached();
 	void SetTheme(const TVTest::Theme::CThemeManager *pThemeManager);
 	void UpdateContent();
@@ -35,10 +35,11 @@ public:
 	void UpdateChannelPanel();
 	void UpdateControlPanel();
 	void InitControlPanel();
-	void EnableProgramListUpdate(bool fEnable) { m_fEnableProgramListUpdate=fEnable; }
+	void EnableProgramListUpdate(bool fEnable) { m_fEnableProgramListUpdate = fEnable; }
 
 private:
-	class CFrameEventHandler : public CPanelFrame::CEventHandler
+	class CFrameEventHandler
+		: public CPanelFrame::CEventHandler
 	{
 		CPanelFrame *m_pFrame;
 		POINT m_ptDragStartCursorPos;
@@ -57,26 +58,28 @@ private:
 		bool OnClose() override;
 		bool OnMoving(RECT *pRect) override;
 		bool OnEnterSizeMove() override;
-		bool OnKeyDown(UINT KeyCode,UINT Flags) override;
-		bool OnMouseWheel(WPARAM wParam,LPARAM lParam) override;
+		bool OnKeyDown(UINT KeyCode, UINT Flags) override;
+		bool OnMouseWheel(WPARAM wParam, LPARAM lParam) override;
 		void OnVisibleChange(bool fVisible) override;
 		bool OnFloatingChange(bool fFloating) override;
 		void OnDocking(CPanelFrame::DockingPlace Place) override;
 	};
 
-	class CFormEventHandler : public CPanelForm::CEventHandler
+	class CFormEventHandler
+		: public CPanelForm::CEventHandler
 	{
 		CPanelForm *m_pForm;
 
 	public:
 		CFormEventHandler(CPanelForm *pForm);
 		void OnSelChange() override;
-		void OnRButtonUp(int x,int y) override;
-		void OnTabRButtonUp(int x,int y) override;
-		bool OnKeyDown(UINT KeyCode,UINT Flags) override;
+		void OnRButtonUp(int x, int y) override;
+		void OnTabRButtonUp(int x, int y) override;
+		bool OnKeyDown(UINT KeyCode, UINT Flags) override;
 	};
 
-	class CChannelPanelEventHandler : public CChannelPanel::CEventHandler
+	class CChannelPanelEventHandler
+		: public CChannelPanel::CEventHandler
 	{
 		void OnChannelClick(const CChannelInfo *pChannelInfo) override;
 	};

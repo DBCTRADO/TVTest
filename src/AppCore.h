@@ -37,72 +37,73 @@ public:
 	};
 
 	CAppCore(CAppMain &App);
-	bool GetDriverDirectory(LPTSTR pszDirectory,int MaxLength) const;
+	bool GetDriverDirectory(LPTSTR pszDirectory, int MaxLength) const;
 	void OnError(LPCTSTR pszText, ...);
-	void OnError(const LibISDB::ErrorHandler *pErrorHandler,LPCTSTR pszTitle=NULL);
+	void OnError(const LibISDB::ErrorHandler *pErrorHandler, LPCTSTR pszTitle = NULL);
 	void SetSilent(bool fSilent);
 	bool IsSilent() const { return m_fSilent; }
 	bool SaveCurrentChannel();
 
 	bool InitializeChannel();
-	bool GetChannelFileName(LPCTSTR pszDriverFileName,
-							LPTSTR pszChannelFileName,int MaxChannelFileName);
+	bool GetChannelFileName(LPCTSTR pszDriverFileName, LPTSTR pszChannelFileName, int MaxChannelFileName);
 	bool RestoreChannel();
 	bool UpdateCurrentChannelList(const CTuningSpaceList *pList);
-	bool UpdateChannelList(LPCTSTR pszBonDriverName,const CTuningSpaceList *pList);
+	bool UpdateChannelList(LPCTSTR pszBonDriverName, const CTuningSpaceList *pList);
 	const CChannelInfo *GetCurrentChannelInfo() const;
-	bool SetChannel(int Space,int Channel,int ServiceID=-1,bool fStrictService=false);
-	bool SetChannelByIndex(int Space,int Channel,int ServiceID=-1);
+	bool SetChannel(int Space, int Channel, int ServiceID = -1, bool fStrictService = false);
+	bool SetChannelByIndex(int Space, int Channel, int ServiceID = -1);
 	enum {
 		SELECT_CHANNEL_USE_CUR_TUNER  = 0x0001U,
 		SELECT_CHANNEL_STRICT_SERVICE = 0x0002U
 	};
-	bool SelectChannel(LPCTSTR pszTunerName,const CChannelInfo &ChannelInfo,unsigned int Flags=0);
+	bool SelectChannel(LPCTSTR pszTunerName, const CChannelInfo &ChannelInfo, unsigned int Flags = 0);
 	bool SwitchChannel(int Channel);
-	bool SwitchChannelByNo(int ChannelNo,bool fSwitchService);
+	bool SwitchChannelByNo(int ChannelNo, bool fSwitchService);
 	bool SetCommandLineChannel(const CCommandLineOptions *pCmdLine);
-	bool FollowChannelChange(WORD TransportStreamID,WORD ServiceID);
+	bool FollowChannelChange(WORD TransportStreamID, WORD ServiceID);
 	enum {
-		SET_SERVICE_STRICT_ID					= 0x0001U,
-		SET_SERVICE_NO_CHANGE_CUR_SERVICE_ID	= 0x0002U
+		SET_SERVICE_STRICT_ID                = 0x0001U,
+		SET_SERVICE_NO_CHANGE_CUR_SERVICE_ID = 0x0002U
 	};
-	bool SetServiceByID(WORD ServiceID,unsigned int Flags=0);
-	bool SetServiceByIndex(int Service,unsigned int Flags=0);
+	bool SetServiceByID(WORD ServiceID, unsigned int Flags = 0);
+	bool SetServiceByIndex(int Service, unsigned int Flags = 0);
 	bool GetCurrentStreamIDInfo(StreamIDInfo *pInfo) const;
 	bool GetCurrentStreamChannelInfo(CChannelInfo *pInfo) const;
-	bool GetCurrentServiceName(LPTSTR pszName,int MaxLength,bool fUseChannelName=true);
+	bool GetCurrentServiceName(LPTSTR pszName, int MaxLength, bool fUseChannelName = true);
 
 	bool OpenTuner(LPCTSTR pszFileName);
 	bool OpenTuner();
-	bool OpenAndInitializeTuner(unsigned int OpenFlags=0);
+	bool OpenAndInitializeTuner(unsigned int OpenFlags = 0);
 	bool CloseTuner();
 	void ShutDownTuner();
 	void ResetEngine();
 
-	bool Set1SegMode(bool f1Seg,bool fServiceChange);
+	bool Set1SegMode(bool f1Seg, bool fServiceChange);
 	bool Is1SegMode() const { return m_f1SegMode; }
 
 	void ApplyBonDriverOptions();
 
-	bool StartRecord(LPCTSTR pszFileName=NULL,
-					 const CRecordManager::TimeSpecInfo *pStartTime=NULL,
-					 const CRecordManager::TimeSpecInfo *pStopTime=NULL,
-					 CRecordManager::RecordClient Client=CRecordManager::CLIENT_USER,
-					 bool fTimeShift=false);
-	bool ModifyRecord(LPCTSTR pszFileName=NULL,
-					  const CRecordManager::TimeSpecInfo *pStartTime=NULL,
-					  const CRecordManager::TimeSpecInfo *pStopTime=NULL,
-					  CRecordManager::RecordClient Client=CRecordManager::CLIENT_USER);
+	bool StartRecord(
+		LPCTSTR pszFileName = NULL,
+		const CRecordManager::TimeSpecInfo *pStartTime = NULL,
+		const CRecordManager::TimeSpecInfo *pStopTime = NULL,
+		CRecordManager::RecordClient Client = CRecordManager::CLIENT_USER,
+		bool fTimeShift = false);
+	bool ModifyRecord(
+		LPCTSTR pszFileName = NULL,
+		const CRecordManager::TimeSpecInfo *pStartTime = NULL,
+		const CRecordManager::TimeSpecInfo *pStopTime = NULL,
+		CRecordManager::RecordClient Client = CRecordManager::CLIENT_USER);
 	bool StartReservedRecord();
 	bool CancelReservedRecord();
 	bool StopRecord();
 	bool PauseResumeRecording();
 	bool RelayRecord(LPCTSTR pszFileName);
 	bool CommandLineRecord(const CCommandLineOptions *pCmdLine);
-	bool CommandLineRecord(LPCTSTR pszFileName,const SYSTEMTIME *pStartTime,int Delay,int Duration);
+	bool CommandLineRecord(LPCTSTR pszFileName, const SYSTEMTIME *pStartTime, int Delay, int Duration);
 	LPCTSTR GetDefaultRecordFolder() const;
 	bool GetExitOnRecordingStop() const { return m_fExitOnRecordingStop; }
-	void SetExitOnRecordingStop(bool fExit) { m_fExitOnRecordingStop=fExit; }
+	void SetExitOnRecordingStop(bool fExit) { m_fExitOnRecordingStop = fExit; }
 
 	void BeginChannelScan(int Space);
 	bool IsChannelScanning() const;
@@ -110,8 +111,9 @@ public:
 
 	void NotifyTSProcessorNetworkChanged(unsigned int FilterOpenFlags);
 
-	bool GetVariableStringEventInfo(TVTest::CEventVariableStringMap::EventInfo *pInfo,
-									DWORD NextEventMargin=0) const;
+	bool GetVariableStringEventInfo(
+		TVTest::CEventVariableStringMap::EventInfo *pInfo,
+		DWORD NextEventMargin = 0) const;
 
 private:
 	CAppMain &m_App;
@@ -119,8 +121,8 @@ private:
 	bool m_fExitOnRecordingStop;
 	bool m_f1SegMode;
 
-	int GetCorresponding1SegService(int Space,WORD NetworkID,WORD TSID,WORD ServiceID) const;
-	bool GenerateRecordFileName(LPTSTR pszFileName,int MaxFileName);
+	int GetCorresponding1SegService(int Space, WORD NetworkID, WORD TSID, WORD ServiceID) const;
+	bool GenerateRecordFileName(LPTSTR pszFileName, int MaxFileName);
 
 	// コピー禁止
 	CAppCore(const CAppCore &) /* = delete */;

@@ -23,9 +23,10 @@ CDirectWriteOptionsDialog::CDirectWriteOptionsDialog(
 
 bool CDirectWriteOptionsDialog::Show(HWND hwndOwner)
 {
-	return ShowDialog(hwndOwner,
-					  GetAppClass().GetResourceInstance(),
-					  MAKEINTRESOURCE(IDD_DIRECTWRITEOPTIONS))==IDOK;
+	return ShowDialog(
+		hwndOwner,
+		GetAppClass().GetResourceInstance(),
+		MAKEINTRESOURCE(IDD_DIRECTWRITEOPTIONS)) == IDOK;
 }
 
 
@@ -55,33 +56,38 @@ INT_PTR CDirectWriteOptionsDialog::DlgProc(
 			fEnable = (m_pParams->Mask & CDirectWriteRenderer::RenderingParams::PARAM_RENDERING_MODE) != 0;
 			DlgCheckBox_Check(hDlg, IDC_DIRECTWRITEOPTIONS_RENDERINGMODE_ENABLE, fEnable);
 			EnableDlgItem(hDlg, IDC_DIRECTWRITEOPTIONS_RENDERINGMODE, fEnable);
-			SetComboBoxList(hDlg, IDC_DIRECTWRITEOPTIONS_RENDERINGMODE,
-							RenderingModeList, lengthof(RenderingModeList));
-			DlgComboBox_SetCurSel(hDlg, IDC_DIRECTWRITEOPTIONS_RENDERINGMODE,
-								  m_pParams->RenderingMode);
+			SetComboBoxList(
+				hDlg, IDC_DIRECTWRITEOPTIONS_RENDERINGMODE,
+				RenderingModeList, lengthof(RenderingModeList));
+			DlgComboBox_SetCurSel(
+				hDlg, IDC_DIRECTWRITEOPTIONS_RENDERINGMODE,
+				m_pParams->RenderingMode);
 
 			fEnable = (m_pParams->Mask & CDirectWriteRenderer::RenderingParams::PARAM_GAMMA) != 0;
 			DlgCheckBox_Check(hDlg, IDC_DIRECTWRITEOPTIONS_GAMMA_ENABLE, fEnable);
-			EnableDlgItems(hDlg,
-						   IDC_DIRECTWRITEOPTIONS_GAMMA,
-						   IDC_DIRECTWRITEOPTIONS_GAMMA_RANGE,
-						   fEnable);
+			EnableDlgItems(
+				hDlg,
+				IDC_DIRECTWRITEOPTIONS_GAMMA,
+				IDC_DIRECTWRITEOPTIONS_GAMMA_RANGE,
+				fEnable);
 			SetItemFloatValue(IDC_DIRECTWRITEOPTIONS_GAMMA, m_pParams->Gamma);
 
 			fEnable = (m_pParams->Mask & CDirectWriteRenderer::RenderingParams::PARAM_ENHANCED_CONTRAST) != 0;
 			DlgCheckBox_Check(hDlg, IDC_DIRECTWRITEOPTIONS_ENHANCEDCONTRAST_ENABLE, fEnable);
-			EnableDlgItems(hDlg,
-						   IDC_DIRECTWRITEOPTIONS_ENHANCEDCONTRAST,
-						   IDC_DIRECTWRITEOPTIONS_ENHANCEDCONTRAST_RANGE,
-						   fEnable);
+			EnableDlgItems(
+				hDlg,
+				IDC_DIRECTWRITEOPTIONS_ENHANCEDCONTRAST,
+				IDC_DIRECTWRITEOPTIONS_ENHANCEDCONTRAST_RANGE,
+				fEnable);
 			SetItemFloatValue(IDC_DIRECTWRITEOPTIONS_ENHANCEDCONTRAST, m_pParams->EnhancedContrast);
 
 			fEnable = (m_pParams->Mask & CDirectWriteRenderer::RenderingParams::PARAM_CLEARTYPE_LEVEL) != 0;
 			DlgCheckBox_Check(hDlg, IDC_DIRECTWRITEOPTIONS_CLEARTYPELEVEL_ENABLE, fEnable);
-			EnableDlgItems(hDlg,
-						   IDC_DIRECTWRITEOPTIONS_CLEARTYPELEVEL,
-						   IDC_DIRECTWRITEOPTIONS_CLEARTYPELEVEL_RANGE,
-						   fEnable);
+			EnableDlgItems(
+				hDlg,
+				IDC_DIRECTWRITEOPTIONS_CLEARTYPELEVEL,
+				IDC_DIRECTWRITEOPTIONS_CLEARTYPELEVEL_RANGE,
+				fEnable);
 			SetItemFloatValue(IDC_DIRECTWRITEOPTIONS_CLEARTYPELEVEL, m_pParams->ClearTypeLevel);
 
 			static const LPCTSTR PixelGeometryList[] = {
@@ -90,12 +96,14 @@ INT_PTR CDirectWriteOptionsDialog::DlgProc(
 				TEXT("BGR"),
 			};
 			fEnable = (m_pParams->Mask & CDirectWriteRenderer::RenderingParams::PARAM_PIXEL_GEOMETRY) != 0;
-			DlgCheckBox_Check(hDlg, IDC_DIRECTWRITEOPTIONS_PIXELGEOMETRY_ENABLE,fEnable);
-			EnableDlgItem(hDlg, IDC_DIRECTWRITEOPTIONS_PIXELGEOMETRY,fEnable);
-			SetComboBoxList(hDlg,IDC_DIRECTWRITEOPTIONS_PIXELGEOMETRY,
-							PixelGeometryList, lengthof(PixelGeometryList));
-			DlgComboBox_SetCurSel(hDlg, IDC_DIRECTWRITEOPTIONS_PIXELGEOMETRY,
-								  m_pParams->PixelGeometry);
+			DlgCheckBox_Check(hDlg, IDC_DIRECTWRITEOPTIONS_PIXELGEOMETRY_ENABLE, fEnable);
+			EnableDlgItem(hDlg, IDC_DIRECTWRITEOPTIONS_PIXELGEOMETRY, fEnable);
+			SetComboBoxList(
+				hDlg, IDC_DIRECTWRITEOPTIONS_PIXELGEOMETRY,
+				PixelGeometryList, lengthof(PixelGeometryList));
+			DlgComboBox_SetCurSel(
+				hDlg, IDC_DIRECTWRITEOPTIONS_PIXELGEOMETRY,
+				m_pParams->PixelGeometry);
 
 			ShowDlgItem(hDlg, IDC_DIRECTWRITEOPTIONS_TEST, m_pRenderingTester != nullptr);
 
@@ -204,18 +212,20 @@ INT_PTR CDirectWriteOptionsDialog::DlgProc(
 			GetRenderingParams(&Params);
 			m_TextDrawClient.SetDirectWriteRenderingParams(Params);
 
-			::FillRect(pdis->hDC, &pdis->rcItem,
-					   static_cast<HBRUSH>(::GetStockObject(WHITE_BRUSH)));
+			::FillRect(
+				pdis->hDC, &pdis->rcItem,
+				static_cast<HBRUSH>(::GetStockObject(WHITE_BRUSH)));
 
 			m_TextDrawClient.InitializeTextDraw(&TextDraw);
 			TextDraw.Begin(pdis->hDC, pdis->rcItem);
 			TextDraw.SetFont(m_Font);
 			TextDraw.SetTextColor(RGB(0, 0, 0));
-			TextDraw.Draw(L"ABCabc123あぁアァ漢字鬱贔\U0002a6a5",
-						  pdis->rcItem,
-						  pdis->rcItem.bottom - pdis->rcItem.top,
-						  CTextDraw::DRAW_FLAG_ALIGN_HORZ_CENTER |
-						  CTextDraw::DRAW_FLAG_ALIGN_VERT_CENTER);
+			TextDraw.Draw(
+				L"ABCabc123あぁアァ漢字鬱贔\U0002a6a5",
+				pdis->rcItem,
+				pdis->rcItem.bottom - pdis->rcItem.top,
+				CTextDraw::DRAW_FLAG_ALIGN_HORZ_CENTER |
+				CTextDraw::DRAW_FLAG_ALIGN_VERT_CENTER);
 			TextDraw.End();
 		}
 		return TRUE;

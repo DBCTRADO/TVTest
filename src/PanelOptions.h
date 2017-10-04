@@ -18,10 +18,11 @@ enum {
 	NUM_PANELS
 };
 
-#define PANEL_ID_FIRST	PANEL_ID_INFORMATION
-#define PANEL_ID_LAST	PANEL_ID_CAPTION
+#define PANEL_ID_FIRST PANEL_ID_INFORMATION
+#define PANEL_ID_LAST  PANEL_ID_CAPTION
 
-class CPanelOptions : public COptions
+class CPanelOptions
+	: public COptions
 {
 public:
 	CPanelOptions();
@@ -43,13 +44,14 @@ public:
 	int GetInitialTab() const;
 	CPanelForm::TabStyle GetTabStyle() const { return m_TabStyle; }
 	bool GetProgramInfoUseRichEdit() const { return m_fProgramInfoUseRichEdit; }
-	int RegisterPanelItem(LPCTSTR pszID,LPCTSTR pszTitle);
-	bool SetPanelItemVisibility(int ID,bool fVisible);
+	int RegisterPanelItem(LPCTSTR pszID, LPCTSTR pszTitle);
+	bool SetPanelItemVisibility(int ID, bool fVisible);
 	bool GetPanelItemVisibility(int ID) const;
 	bool ApplyItemList(CPanelForm *pPanelForm) const;
 
 private:
-	struct PanelItemInfo {
+	struct PanelItemInfo
+	{
 		TVTest::String ID;
 		TVTest::String Title;
 		bool fVisible;
@@ -57,8 +59,9 @@ private:
 
 	typedef std::vector<PanelItemInfo> PanelItemInfoList;
 
-	static bool CompareID(const TVTest::String &ID1,const TVTest::String &ID2) {
-		return TVTest::StringUtility::CompareNoCase(ID1,ID2)==0;
+	static bool CompareID(const TVTest::String &ID1, const TVTest::String &ID2)
+	{
+		return TVTest::StringUtility::CompareNoCase(ID1, ID2) == 0;
 	}
 
 	bool m_fSnapAtMainWindow;
@@ -80,7 +83,7 @@ private:
 	TVTest::CListView m_ItemListView;
 
 // CBasicDialog
-	INT_PTR DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
+	INT_PTR DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
 
 	void UpdateItemListControlsState();
 	int GetItemIDFromIDText(const TVTest::String &IDText) const;

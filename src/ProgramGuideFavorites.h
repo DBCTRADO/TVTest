@@ -24,19 +24,20 @@ public:
 	void Clear();
 	size_t GetCount() const;
 	bool Add(const FavoriteInfo &Info);
-	bool Get(size_t Index,FavoriteInfo *pInfo) const;
+	bool Get(size_t Index, FavoriteInfo *pInfo) const;
 	FavoriteInfo *Get(size_t Index);
 	const FavoriteInfo *Get(size_t Index) const;
-	bool Set(size_t Index,const FavoriteInfo &Info);
+	bool Set(size_t Index, const FavoriteInfo &Info);
 	bool GetFixedWidth() const { return m_fFixedWidth; }
-	void SetFixedWidth(bool fFixed) { m_fFixedWidth=fFixed; }
+	void SetFixedWidth(bool fFixed) { m_fFixedWidth = fFixed; }
 
 private:
 	std::vector<FavoriteInfo> m_List;
 	bool m_fFixedWidth;
 };
 
-class CProgramGuideFavoritesDialog : public CBasicDialog
+class CProgramGuideFavoritesDialog
+	: public CBasicDialog
 {
 public:
 	CProgramGuideFavoritesDialog(const CProgramGuideFavorites &Favorites);
@@ -55,7 +56,7 @@ private:
 	bool m_fChanging;
 
 // CBasicDialog
-	INT_PTR DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
+	INT_PTR DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
 
 	void SetItemState(HWND hDlg);
 	CProgramGuideFavorites::FavoriteInfo *GetCurItemInfo();

@@ -21,8 +21,8 @@ class CChannelManager
 
 public:
 	enum {
-		SPACE_INVALID=-2,
-		SPACE_ALL=-1
+		SPACE_INVALID = -2,
+		SPACE_ALL = -1
 	};
 
 	enum UpDownOrder {
@@ -38,7 +38,7 @@ public:
 	bool MakeDriverTuningSpaceList(const LibISDB::BonDriverSourceFilter *pSrcDecoder);
 	bool SetUseDriverChannelList(bool fUse);
 	bool GetUseDriverChannelList() const { return m_fUseDriverChannelList; }
-	bool SetCurrentChannel(int Space,int Channel);
+	bool SetCurrentChannel(int Space, int Channel);
 	int GetCurrentSpace() const { return m_CurrentSpace; }
 	int GetCurrentChannel() const { return m_CurrentChannel; }
 	int GetCurrentServiceID() const { return m_CurrentServiceID; }
@@ -47,8 +47,8 @@ public:
 	int GetChangingChannel() const { return m_ChangingChannel; }
 	const CChannelInfo *GetCurrentChannelInfo() const;
 	const CChannelInfo *GetChangingChannelInfo() const;
-	int GetNextChannel(int CurChannel,UpDownOrder Order,bool fNext) const;
-	int GetNextChannel(UpDownOrder Order,bool fNext) const;
+	int GetNextChannel(int CurChannel, UpDownOrder Order, bool fNext) const;
+	int GetNextChannel(UpDownOrder Order, bool fNext) const;
 	const CChannelList *GetCurrentChannelList() const;
 	const CChannelList *GetChannelList(int Space) const;
 	const CChannelList *GetFileChannelList(int Space) const;
@@ -60,10 +60,11 @@ public:
 	const CTuningSpaceList *GetDriverTuningSpaceList() const { return &m_DriverTuningSpaceList; }
 	LPCTSTR GetTuningSpaceName(int Space) const;
 	int FindChannelInfo(const CChannelInfo *pInfo) const;
-	int FindChannelByIDs(int Space,WORD NetworkID,WORD TransportStreamID,WORD ServiceID,
-						 bool fEnabledOnly=true) const;
+	int FindChannelByIDs(
+		int Space, WORD NetworkID, WORD TransportStreamID, WORD ServiceID,
+		bool fEnabledOnly = true) const;
 	int NumSpaces() const;
-	bool GetChannelFileName(LPTSTR pszFileName,int MaxLength) const;
+	bool GetChannelFileName(LPTSTR pszFileName, int MaxLength) const;
 
 	bool ChannelFileHasStreamIDs() const { return m_fChannelFileHasStreamIDs; }
 };
@@ -84,7 +85,7 @@ public:
 	int GetChannel() const { return m_Channel; }
 	bool SetServiceID(int ServiceID);
 	int GetServiceID() const { return m_ServiceID; }
-	bool IsValid() const { return m_Space>CChannelManager::SPACE_INVALID && m_Channel>=0; }
+	bool IsValid() const { return m_Space > CChannelManager::SPACE_INVALID && m_Channel >= 0; }
 };
 
 

@@ -9,9 +9,10 @@ void DebugTrace(LPCTSTR szFormat, ...)
 
 	SYSTEMTIME st;
 	::GetLocalTime(&st);
-	Length = ::_stprintf_s(szTempStr, _countof(szTempStr),
-						   TEXT("%02d/%02d %02d:%02d:%02d > "),
-						   st.wMonth, st.wDay, st.wHour, st.wMinute, st.wSecond);
+	Length = ::_stprintf_s(
+		szTempStr, _countof(szTempStr),
+		TEXT("%02d/%02d %02d:%02d:%02d > "),
+		st.wMonth, st.wDay, st.wHour, st.wMinute, st.wSecond);
 
 	va_list Args;
 	va_start(Args, szFormat);
