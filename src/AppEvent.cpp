@@ -15,7 +15,7 @@ namespace TVTest
 
 bool CAppEventManager::AddEventHandler(CAppEventHandler *pHandler)
 {
-	if (pHandler==nullptr)
+	if (pHandler == nullptr)
 		return false;
 
 	m_HandlerList.push_back(pHandler);
@@ -26,8 +26,8 @@ bool CAppEventManager::AddEventHandler(CAppEventHandler *pHandler)
 
 bool CAppEventManager::RemoveEventHandler(CAppEventHandler *pHandler)
 {
-	auto itr=std::find(m_HandlerList.begin(),m_HandlerList.end(),pHandler);
-	if (itr==m_HandlerList.end())
+	auto itr = std::find(m_HandlerList.begin(), m_HandlerList.end(), pHandler);
+	if (itr == m_HandlerList.end())
 		return false;
 	m_HandlerList.erase(itr);
 	return true;

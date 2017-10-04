@@ -24,8 +24,8 @@ public:
 	{
 	public:
 		virtual ~CEventHandler() {}
-		virtual bool GetOSDClientInfo(OSDClientInfo *pInfo)=0;
-		virtual bool SetOSDHideTimer(DWORD Delay)=0;
+		virtual bool GetOSDClientInfo(OSDClientInfo * pInfo) = 0;
+		virtual bool SetOSDHideTimer(DWORD Delay) = 0;
 	};
 
 	enum {
@@ -40,9 +40,9 @@ public:
 	void Reset();
 	void ClearOSD();
 	void OnParentMove();
-	bool ShowOSD(LPCTSTR pszText,unsigned int Flags=0);
+	bool ShowOSD(LPCTSTR pszText, unsigned int Flags = 0);
 	void HideOSD();
-	bool ShowChannelOSD(const CChannelInfo *pInfo,LPCTSTR pszText,bool fChanging=false);
+	bool ShowChannelOSD(const CChannelInfo *pInfo, LPCTSTR pszText, bool fChanging = false);
 	void HideChannelOSD();
 	bool ShowVolumeOSD(int Volume);
 	void HideVolumeOSD();
@@ -72,7 +72,7 @@ private:
 	CPseudoOSD m_OSD;
 	CPseudoOSD m_VolumeOSD;
 
-	bool CompositeText(LPCTSTR pszText,const RECT &rcClient,int LeftOffset,DWORD FadeTime);
+	bool CompositeText(LPCTSTR pszText, const RECT &rcClient, int LeftOffset, DWORD FadeTime);
 
 // CUIBase
 	void SetStyle(const TVTest::Style::CStyleManager *pStyleManager) override;

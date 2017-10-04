@@ -23,7 +23,7 @@ public:
 
 	CSettings();
 	~CSettings();
-	bool Open(LPCTSTR pszFileName,unsigned int Flags);
+	bool Open(LPCTSTR pszFileName, unsigned int Flags);
 	void Close();
 	bool IsOpened() const;
 	bool Clear();
@@ -32,23 +32,23 @@ public:
 	bool GetEntries(EntryList *pEntries);
 	bool IsValueExists(LPCTSTR pszValueName);
 	bool DeleteValue(LPCTSTR pszValueName);
-	bool Read(LPCTSTR pszValueName,int *pData);
-	bool Write(LPCTSTR pszValueName,int Data);
-	bool Read(LPCTSTR pszValueName,unsigned int *pData);
-	bool Write(LPCTSTR pszValueName,unsigned int Data);
-	bool Read(LPCTSTR pszValueName,LPTSTR pszData,unsigned int Max);
-	bool Write(LPCTSTR pszValueName,LPCTSTR pszData);
-	bool Read(LPCTSTR pszValueName,TVTest::String *pValue);
-	bool Write(LPCTSTR pszValueName,const TVTest::String &Value);
-	bool Read(LPCTSTR pszValueName,bool *pfData);
-	bool Write(LPCTSTR pszValueName,bool fData);
-	bool Read(LPCTSTR pszValueName,double *pData);
-	bool Write(LPCTSTR pszValueName,double Data,int Digits);
-	bool Read(LPCTSTR pszValueName,float *pData);
-	bool ReadColor(LPCTSTR pszValueName,COLORREF *pcrData);
-	bool WriteColor(LPCTSTR pszValueName,COLORREF crData);
-	bool Read(LPCTSTR pszValueName,LOGFONT *pFont);
-	bool Write(LPCTSTR pszValueName,const LOGFONT *pFont);
+	bool Read(LPCTSTR pszValueName, int *pData);
+	bool Write(LPCTSTR pszValueName, int Data);
+	bool Read(LPCTSTR pszValueName, unsigned int *pData);
+	bool Write(LPCTSTR pszValueName, unsigned int Data);
+	bool Read(LPCTSTR pszValueName, LPTSTR pszData, unsigned int Max);
+	bool Write(LPCTSTR pszValueName, LPCTSTR pszData);
+	bool Read(LPCTSTR pszValueName, TVTest::String *pValue);
+	bool Write(LPCTSTR pszValueName, const TVTest::String &Value);
+	bool Read(LPCTSTR pszValueName, bool *pfData);
+	bool Write(LPCTSTR pszValueName, bool fData);
+	bool Read(LPCTSTR pszValueName, double *pData);
+	bool Write(LPCTSTR pszValueName, double Data, int Digits);
+	bool Read(LPCTSTR pszValueName, float *pData);
+	bool ReadColor(LPCTSTR pszValueName, COLORREF *pcrData);
+	bool WriteColor(LPCTSTR pszValueName, COLORREF crData);
+	bool Read(LPCTSTR pszValueName, LOGFONT *pFont);
+	bool Write(LPCTSTR pszValueName, const LOGFONT *pFont);
 };
 
 class ABSTRACT_CLASS(CSettingsBase)
@@ -64,8 +64,8 @@ public:
 	bool LoadSettings(LPCTSTR pszFileName);
 	bool SaveSettings(LPCTSTR pszFileName);
 	bool IsChanged() const { return m_fChanged; }
-	void SetChanged() { m_fChanged=true; }
-	void ClearChanged() { m_fChanged=false; }
+	void SetChanged() { m_fChanged = true; }
+	void ClearChanged() { m_fChanged = false; }
 
 protected:
 	LPCTSTR m_pszSection;
