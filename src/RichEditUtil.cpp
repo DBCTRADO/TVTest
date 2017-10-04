@@ -15,7 +15,7 @@ const LPCTSTR CRichEditUtil::m_pszURLFullWidthChars =
 	TEXT("０１２３４５６７８９")
 	TEXT("ＡＢＣＤＥＦＧＨＩＪＫＬＭＮＯＰＱＲＳＴＵＶＷＸＹＺ")
 	TEXT("ａｂｃｄｅｆｇｈｉｊｋｌｍｎｏｐｑｒｓｔｕｖｗｘｙｚ")
-	TEXT("！＃＄％＆’（）＊＋，−．／：；＝？＠［］＿〜");
+	TEXT("！＃＄％＆’（）＊＋，－．／：；＝？＠［］＿〜");
 
 
 CRichEditUtil::CRichEditUtil()
