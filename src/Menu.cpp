@@ -1267,9 +1267,6 @@ int CPopupMenu::Show(
 
 CIconMenu::CIconMenu()
 	: m_hmenu(NULL)
-#ifdef WIN_XP_SUPPORT
-	, m_hImageList(NULL)
-#endif
 {
 }
 
@@ -1287,50 +1284,29 @@ bool CIconMenu::Initialize(HMENU hmenu, HINSTANCE hinst, const ItemInfo *pItemLi
 	if (hmenu == NULL || pItemList == NULL || ItemCount < 1)
 		return false;
 
-#ifdef WIN_XP_SUPPORT
-	if (!Util::OS::IsWindowsVistaOrLater()) {
-		LPCTSTR *pIcons = new LPCTSTR[ItemCount];
-		for (int i = 0; i < ItemCount; i++)
-			pIcons[i] = pItemList[i].pszIcon;
-		m_hImageList = TVTest::CreateImageListFromIcons(hinst, pIcons, ItemCount, ICON_SIZE_SMALL);
-		delete [] pIcons;
-		if (m_hImageList == NULL)
-			return false;
+	for (int i = 0; i < ItemCount; i++) {
+		HICON hicon = LoadIconStandardSize(hinst, pItemList[i].pszIcon, ICON_SIZE_SMALL);
 
-		m_ItemList.reserve(ItemCount);
-		for (int i = 0; i < ItemCount; i++) {
-			ItemIconInfo Item;
-			Item.ID = pItemList[i].ID;
-			Item.Icon = i;
-			m_ItemList.push_back(Item);
-		}
-	} else
-#endif
-	{
-		for (int i = 0; i < ItemCount; i++) {
-			HICON hicon = LoadIconStandardSize(hinst, pItemList[i].pszIcon, ICON_SIZE_SMALL);
+		if (hicon != NULL) {
+			ICONINFO ii;
 
-			if (hicon != NULL) {
-				ICONINFO ii;
-
-				if (::GetIconInfo(hicon, &ii)) {
-					/*
-						ii.hbmColor は DDB になっていて、そのままメニューの画像に指定すると
-						アルファチャンネルが無視されるため、DIB に変換する
-					*/
-					HBITMAP hbm = (HBITMAP)::CopyImage(ii.hbmColor, IMAGE_BITMAP, 0, 0, LR_CREATEDIBSECTION);
-					if (hbm != NULL) {
-						m_BitmapList.push_back(hbm);
-						ItemIconInfo Item;
-						Item.ID = pItemList[i].ID;
-						Item.Icon = (int)m_BitmapList.size() - 1;
-						m_ItemList.push_back(Item);
-					}
-					::DeleteObject(ii.hbmColor);
-					::DeleteObject(ii.hbmMask);
+			if (::GetIconInfo(hicon, &ii)) {
+				/*
+					ii.hbmColor は DDB になっていて、そのままメニューの画像に指定すると
+					アルファチャンネルが無視されるため、DIB に変換する
+				*/
+				HBITMAP hbm = (HBITMAP)::CopyImage(ii.hbmColor, IMAGE_BITMAP, 0, 0, LR_CREATEDIBSECTION);
+				if (hbm != NULL) {
+					m_BitmapList.push_back(hbm);
+					ItemIconInfo Item;
+					Item.ID = pItemList[i].ID;
+					Item.Icon = (int)m_BitmapList.size() - 1;
+					m_ItemList.push_back(Item);
 				}
-				::DestroyIcon(hicon);
+				::DeleteObject(ii.hbmColor);
+				::DeleteObject(ii.hbmMask);
 			}
+			::DestroyIcon(hicon);
 		}
 	}
 
@@ -1344,12 +1320,6 @@ void CIconMenu::Finalize()
 {
 	m_hmenu = NULL;
 	m_ItemList.clear();
-#ifdef WIN_XP_SUPPORT
-	if (m_hImageList != NULL) {
-		::ImageList_Destroy(m_hImageList);
-		m_hImageList = NULL;
-	}
-#endif
 	if (!m_BitmapList.empty()) {
 		for (auto i = m_BitmapList.begin(); i != m_BitmapList.end(); i++)
 			::DeleteObject(*i);
@@ -1374,20 +1344,9 @@ bool CIconMenu::OnInitMenuPopup(HWND hwnd, HMENU hmenu)
 				if (itrItem->ID == mii.wID) {
 					mii.fMask = MIIM_STATE | MIIM_BITMAP | MIIM_DATA;
 					mii.dwItemData = (mii.dwItemData & ~ITEM_DATA_IMAGEMASK) | (itrItem->Icon + 1);
-#ifdef WIN_XP_SUPPORT
-					if (m_hImageList != NULL) {
-						mii.hbmpItem = HBMMENU_CALLBACK;
-						if ((mii.fState & MFS_CHECKED) != 0) {
-							mii.fState &= ~MFS_CHECKED;
-							mii.dwItemData |= ITEM_DATA_CHECKED;
-						}
-					} else
-#endif
-					{
-						mii.hbmpItem = m_BitmapList[itrItem->Icon];
-						if ((mii.dwItemData & ITEM_DATA_CHECKED) != 0) {
-							mii.fState |= MFS_CHECKED;
-						}
+					mii.hbmpItem = m_BitmapList[itrItem->Icon];
+					if ((mii.dwItemData & ITEM_DATA_CHECKED) != 0) {
+						mii.fState |= MFS_CHECKED;
 					}
 					::SetMenuItemInfo(hmenu, i, TRUE, &mii);
 				}
@@ -1395,95 +1354,19 @@ bool CIconMenu::OnInitMenuPopup(HWND hwnd, HMENU hmenu)
 		}
 	}
 
-#ifdef WIN_XP_SUPPORT
-	if (m_hImageList != NULL) {
-		MENUINFO mi;
-		mi.cbSize = sizeof(mi);
-		mi.fMask = MIM_STYLE;
-		::GetMenuInfo(hmenu, &mi);
-		if ((mi.dwStyle & MNS_CHECKORBMP) == 0) {
-			mi.dwStyle |= MNS_CHECKORBMP;
-			::SetMenuInfo(hmenu, &mi);
-		}
-	}
-#endif
-
 	return true;
 }
 
 
 bool CIconMenu::OnMeasureItem(HWND hwnd, WPARAM wParam, LPARAM lParam)
 {
-#ifdef WIN_XP_SUPPORT
-	LPMEASUREITEMSTRUCT pmis = reinterpret_cast<LPMEASUREITEMSTRUCT>(lParam);
-
-	if (pmis->CtlType != ODT_MENU)
-		return false;
-
-	for (auto i = m_ItemList.begin(); i != m_ItemList.end(); i++) {
-		if (i->ID == pmis->itemID) {
-			int cx, cy;
-			::ImageList_GetIconSize(m_hImageList, &cx, &cy);
-			pmis->itemHeight = max(pmis->itemHeight + 3, (UINT)cy + ICON_MARGIN * 2);
-			pmis->itemWidth = cx + ICON_MARGIN * 2 + TEXT_MARGIN;
-			return true;
-		}
-	}
-#endif
-
 	return false;
 }
 
 
 bool CIconMenu::OnDrawItem(HWND hwnd, WPARAM wParam, LPARAM lParam)
 {
-#ifdef WIN_XP_SUPPORT
-	LPDRAWITEMSTRUCT pdis = reinterpret_cast<LPDRAWITEMSTRUCT>(lParam);
-
-	if (pdis->CtlType != ODT_MENU || (HMENU)pdis->hwndItem != m_hmenu)
-		return false;
-
-	const int Image = (int)(pdis->itemData & ITEM_DATA_IMAGEMASK) - 1;
-	if (Image < 0)
-		return false;
-
-	int cx, cy;
-	::ImageList_GetIconSize(m_hImageList, &cx, &cy);
-	int x = pdis->rcItem.left + ICON_MARGIN;
-	int y = pdis->rcItem.top + ((pdis->rcItem.bottom - pdis->rcItem.top) - cy) / 2;
-
-	if ((pdis->itemData & ITEM_DATA_CHECKED) != 0) {
-		RECT rc;
-		COLORREF cr;
-		int r, g, b;
-		HPEN hpen1, hpen2, hpenOld;
-
-		::SetRect(&rc, x, y, x + cx, y + cy);
-		::FillRect(pdis->hDC, &rc, reinterpret_cast<HBRUSH>(COLOR_MENU + 1));
-		cr = ::GetSysColor(COLOR_MENU);
-		r = GetRValue(cr);
-		g = GetGValue(cr);
-		b = GetBValue(cr);
-		hpen1 = ::CreatePen(PS_SOLID, 1, RGB(r / 2, g / 2, b / 2));
-		hpen2 = ::CreatePen(PS_SOLID, 1, RGB(r + (255 - r) / 2, g + (255 - g) / 2, b + (255 - b) / 2));
-		hpenOld = static_cast<HPEN>(::SelectObject(pdis->hDC, hpen1));
-		::MoveToEx(pdis->hDC, x + cx + ICON_MARGIN, y - ICON_MARGIN, NULL);
-		::LineTo(pdis->hDC, x - ICON_MARGIN, y - ICON_MARGIN);
-		::LineTo(pdis->hDC, x - ICON_MARGIN, y + cy + ICON_MARGIN - 1);
-		::SelectObject(pdis->hDC, hpen2);
-		::LineTo(pdis->hDC, x + cx + ICON_MARGIN - 1, y + cy + ICON_MARGIN - 1);
-		::LineTo(pdis->hDC, x + cx + ICON_MARGIN - 1, y - ICON_MARGIN);
-		::SelectObject(pdis->hDC, hpenOld);
-		::DeleteObject(hpen1);
-		::DeleteObject(hpen2);
-	}
-
-	m_MenuPainter.DrawIcon(m_hImageList, Image, pdis->hDC, x, y, pdis->itemState);
-
-	return true;
-#else
 	return false;
-#endif
 }
 
 
@@ -1552,11 +1435,7 @@ bool CDropDownMenu::Initialize(HINSTANCE hinst)
 	if (m_hinst == NULL) {
 		WNDCLASS wc;
 
-		if (Util::OS::IsWindowsXPOrLater()) {
-			wc.style = CS_DROPSHADOW;
-		} else {
-			wc.style = 0;
-		}
+		wc.style = CS_DROPSHADOW;
 		wc.lpfnWndProc = WndProc;
 		wc.cbClsExtra = 0;
 		wc.cbWndExtra = 0;

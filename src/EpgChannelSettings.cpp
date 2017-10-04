@@ -39,8 +39,7 @@ INT_PTR CEpgChannelSettings::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM
 			m_pProgramGuide->GetChannelList(&m_ChannelList, false);
 
 			HWND hwndList = ::GetDlgItem(hDlg, IDC_EPGCHANNELSETTINGS_CHANNELLIST);
-			if (Util::OS::IsWindowsVistaOrLater())
-				::SetWindowTheme(hwndList, L"explorer", NULL);
+			::SetWindowTheme(hwndList, L"explorer", NULL);
 			ListView_SetExtendedListViewStyle(
 				hwndList,
 				LVS_EX_FULLROWSELECT | LVS_EX_CHECKBOXES | LVS_EX_LABELTIP);

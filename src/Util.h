@@ -230,13 +230,8 @@ namespace Util
 
 	HMODULE LoadSystemLibrary(LPCTSTR pszName);
 
-#ifdef WIN_XP_SUPPORT
-	typedef DWORD TickCountType;
-	inline TickCountType GetTickCount() { return ::GetTickCount(); }
-#else
 	typedef ULONGLONG TickCountType;
 	inline TickCountType GetTickCount() { return ::GetTickCount64(); }
-#endif
 
 	namespace OS
 	{

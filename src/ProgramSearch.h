@@ -163,7 +163,6 @@ private:
 class CEventSearcher
 {
 public:
-	CEventSearcher();
 	bool InitializeRegExp();
 	void Finalize();
 	bool BeginSearch(const CEventSearchSettings &Settings);
@@ -176,9 +175,6 @@ public:
 private:
 	CEventSearchSettings m_Settings;
 	TVTest::CRegExp m_RegExp;
-#ifdef WIN_XP_SUPPORT
-	decltype(FindNLSString) *m_pFindNLSString;
-#endif
 
 	bool MatchKeyword(const LibISDB::EventInfo *pEventInfo, LPCTSTR pszKeyword) const;
 	bool MatchRegExp(const LibISDB::EventInfo *pEventInfo);

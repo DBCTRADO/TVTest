@@ -243,9 +243,6 @@ private:
 
 	HMENU m_hmenu;
 	std::vector<ItemIconInfo> m_ItemList;
-#ifdef WIN_XP_SUPPORT
-	HIMAGELIST m_hImageList;
-#endif
 	std::vector<HBITMAP> m_BitmapList;
 	CMenuPainter m_MenuPainter;
 };

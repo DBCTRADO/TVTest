@@ -227,10 +227,7 @@ static void InitServiceListView(
 	const CChannelList &ServiceList,
 	const CEventSearchServiceList &SearchServiceList)
 {
-	const bool fVista = Util::OS::IsWindowsVistaOrLater();
-
-	if (fVista)
-		::SetWindowTheme(hwndList, L"explorer", NULL);
+	::SetWindowTheme(hwndList, L"explorer", NULL);
 	ListView_SetExtendedListViewStyle(
 		hwndList, LVS_EX_CHECKBOXES | LVS_EX_FULLROWSELECT | LVS_EX_INFOTIP);
 
@@ -254,24 +251,15 @@ static void InitServiceListView(
 	LVGROUP lvg;
 	// LVGROUP_V5_SIZE は x64 で間違った値になっている
 	//lvg.cbSize=LVGROUP_V5_SIZE;
-#if _WIN32_WINNT>=0x0600
-	if (fVista)
-		lvg.cbSize = sizeof(LVGROUP);
-	else
-		lvg.cbSize = offsetof(LVGROUP, pszSubtitle);
-#else
 	lvg.cbSize = sizeof(LVGROUP);
-#endif
 	lvg.mask = LVGF_HEADER | LVGF_GROUPID;
-	if (fVista) {
-		lvg.mask |= LVGF_STATE;
-		lvg.stateMask = ~0U;
-		lvg.state = LVGS_COLLAPSIBLE;
+	lvg.mask |= LVGF_STATE;
+	lvg.stateMask = ~0U;
+	lvg.state = LVGS_COLLAPSIBLE;
 #if _WIN32_WINNT>=0x0600
-		lvg.mask |= LVGF_TASK;
-		lvg.pszTask = TEXT("選択");
+	lvg.mask |= LVGF_TASK;
+	lvg.pszTask = TEXT("選択");
 #endif
-	}
 	lvg.pszHeader = TEXT("地上");
 	lvg.iGroupId = GROUP_ID_TERRESTRIAL;
 	ListView_InsertGroup(hwndList, -1, &lvg);

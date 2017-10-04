@@ -506,11 +506,6 @@ bool AdjustListViewColumnWidth(HWND hwndList, bool fUseHeader)
 // ボタンをドロップダウンメニュー表示用に初期化する
 bool InitDropDownButton(HWND hDlg, int ID)
 {
-#ifdef WIN_XP_SUPPORT
-	if (!Util::OS::IsWindowsVistaOrLater())
-		return false;
-#endif
-
 	HWND hwnd = ::GetDlgItem(hDlg, ID);
 	if (hwnd == NULL)
 		return false;
@@ -532,11 +527,6 @@ bool InitDropDownButton(HWND hDlg, int ID)
 
 bool InitDropDownButtonWithText(HWND hDlg, int ID)
 {
-#ifdef WIN_XP_SUPPORT
-	if (!Util::OS::IsWindowsVistaOrLater())
-		return false;
-#endif
-
 	HWND hwnd = ::GetDlgItem(hDlg, ID);
 	if (hwnd == NULL)
 		return false;

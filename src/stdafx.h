@@ -25,10 +25,6 @@
 
 #define _WIN32_DCOM	// for CoInitializeEx()
 
-#ifdef WIN_XP_SUPPORT
-#define PSAPI_VERSION 1
-#endif
-
 // Windows のヘッダで出る警告を抑止
 #pragma warning(push)
 #pragma warning(disable: 4091)

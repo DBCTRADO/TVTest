@@ -7253,16 +7253,11 @@ CMainWindow::MainWindowStyle::MainWindowStyle()
 {
 	int SizingBorderX = 0, SizingBorderY;
 
-#ifdef WIN_XP_SUPPORT
-	if (Util::OS::IsWindowsVistaOrLater())
-#endif
-	{
-		NONCLIENTMETRICS ncm;
+	NONCLIENTMETRICS ncm;
+	ncm.cbSize = sizeof(NONCLIENTMETRICS);
+	if (::SystemParametersInfo(SPI_GETNONCLIENTMETRICS, ncm.cbSize, &ncm, 0))
+		SizingBorderX = SizingBorderY = ncm.iBorderWidth + ncm.iPaddedBorderWidth;
 
-		ncm.cbSize = sizeof(NONCLIENTMETRICS);
-		if (::SystemParametersInfo(SPI_GETNONCLIENTMETRICS, ncm.cbSize, &ncm, 0))
-			SizingBorderX = SizingBorderY = ncm.iBorderWidth + ncm.iPaddedBorderWidth;
-	}
 	if (SizingBorderX == 0) {
 		SizingBorderX = ::GetSystemMetrics(SM_CXSIZEFRAME);
 		SizingBorderY = ::GetSystemMetrics(SM_CYSIZEFRAME);

@@ -21,26 +21,15 @@ CInitialSettings::CInitialSettings(const CDriverManager *pDriverManager)
 {
 	m_szDriverFileName[0] = '\0';
 
-	// Vista以降ではビデオレンダラのデフォルトをEVRにする
-	m_VideoRenderer =
-#ifdef WIN_XP_SUPPORT
-		!Util::OS::IsWindowsVistaOrLater() ? LibISDB::DirectShow::VideoRenderer::RendererType::Default :
-#endif
-		LibISDB::DirectShow::VideoRenderer::RendererType::EVR;
+	// ビデオレンダラのデフォルトをEVRにする
+	m_VideoRenderer = LibISDB::DirectShow::VideoRenderer::RendererType::EVR;
 
-#ifdef WIN_XP_SUPPORT
-	TCHAR szRecFolder[MAX_PATH];
-	if (::SHGetSpecialFolderPath(NULL, szRecFolder, CSIDL_MYVIDEO, FALSE)
-			|| ::SHGetSpecialFolderPath(NULL, szRecFolder, CSIDL_PERSONAL, FALSE))
-		m_RecordFolder = szRecFolder;
-#else
 	PWSTR pszRecFolder;
 	if (::SHGetKnownFolderPath(FOLDERID_Videos, 0, NULL, &pszRecFolder) == S_OK
 			|| ::SHGetKnownFolderPath(FOLDERID_Documents, 0, NULL, &pszRecFolder) == S_OK) {
 		m_RecordFolder = pszRecFolder;
 		::CoTaskMemFree(pszRecFolder);
 	}
-#endif
 }
 
 

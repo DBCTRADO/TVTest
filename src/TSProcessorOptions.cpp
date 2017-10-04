@@ -103,12 +103,9 @@ INT_PTR CTSProcessorOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM
 
 				DlgComboBox_SetCurSel(hDlg, IDC_TSPROCESSOR_TSPROCESSORLIST, 0);
 			} else {
-#ifdef WIN_XP_SUPPORT
-				if (Util::OS::IsWindowsVistaOrLater())
-#endif
-					DlgComboBox_SetCueBanner(
-						hDlg, IDC_TSPROCESSOR_TSPROCESSORLIST,
-						TEXT("TSプロセッサーはありません"));
+				DlgComboBox_SetCueBanner(
+					hDlg, IDC_TSPROCESSOR_TSPROCESSORLIST,
+					TEXT("TSプロセッサーはありません"));
 			}
 
 			UpdateCurSettings();

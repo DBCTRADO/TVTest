@@ -22,14 +22,7 @@ CEpgDataLoader::~CEpgDataLoader()
 			if (m_hAbortEvent != NULL)
 				::SetEvent(m_hAbortEvent);
 
-#ifdef WIN_XP_SUPPORT
-			auto pCancelSynchronousIo =
-				GET_MODULE_FUNCTION(TEXT("kernel32.dll"), CancelSynchronousIo);
-			if (pCancelSynchronousIo != NULL)
-				pCancelSynchronousIo(m_hThread);
-#else
 			::CancelSynchronousIo(m_hThread);
-#endif
 
 			if (::WaitForSingleObject(m_hThread, 10000) == WAIT_TIMEOUT) {
 				TRACE(TEXT("Terminate EPG data loading thread\n"));

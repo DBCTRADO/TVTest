@@ -699,11 +699,9 @@ INT_PTR CDriverOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 						-1, ::PathFindFileName(pszCurDriverName));
 				}
 				DlgComboBox_SetCurSel(hDlg, IDC_DRIVEROPTIONS_DRIVERLIST, CurDriver);
-				if (Util::OS::IsWindowsVistaOrLater()) {
-					DlgComboBox_SetCueBanner(
-						hDlg, IDC_DRIVEROPTIONS_DRIVERLIST,
-						TEXT("設定する BonDriver を選択してください"));
-				}
+				DlgComboBox_SetCueBanner(
+					hDlg, IDC_DRIVEROPTIONS_DRIVERLIST,
+					TEXT("設定する BonDriver を選択してください"));
 				InitDlgItem(CurDriver);
 			} else {
 				EnableDlgItems(hDlg, IDC_DRIVEROPTIONS_FIRST, IDC_DRIVEROPTIONS_LAST, false);

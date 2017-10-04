@@ -142,14 +142,7 @@ DWORD WINAPI CAppTerminator::WatchThread(LPVOID lpParameter)
 				pThis->m_Timeout);
 
 			if (pThis->m_hMainThread != nullptr) {
-#ifdef WIN_XP_SUPPORT
-				auto pCancelSynchronousIo =
-					GET_MODULE_FUNCTION(TEXT("kernel32.dll"), CancelSynchronousIo);
-				if (pCancelSynchronousIo != nullptr)
-					pCancelSynchronousIo(pThis->m_hMainThread);
-#else
 				::CancelSynchronousIo(pThis->m_hMainThread);
-#endif
 			}
 
 			pThis->Finalize();

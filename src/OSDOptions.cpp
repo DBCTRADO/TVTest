@@ -35,11 +35,9 @@ COSDOptions::COSDOptions()
 	, m_NotificationBarFlags(NOTIFY_EVENTNAME | NOTIFY_TSPROCESSORERROR)
 	, m_fDisplayFontAutoSize(false)
 {
-	if (Util::OS::IsWindowsVistaOrLater()) {
-		CAeroGlass Aero;
-		if (Aero.IsEnabled())
-			m_fCompositionEnabled = true;
-	}
+	CAeroGlass Aero;
+	if (Aero.IsEnabled())
+		m_fCompositionEnabled = true;
 
 	DrawUtil::GetSystemFont(DrawUtil::FONT_DEFAULT, &m_OSDFont);
 

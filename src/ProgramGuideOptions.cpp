@@ -494,19 +494,11 @@ INT_PTR CProgramGuideOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 			m_CurSettingFont = m_Font;
 			TVTest::StyleUtil::SetFontInfoItem(hDlg, IDC_PROGRAMGUIDEOPTIONS_FONTINFO, m_CurSettingFont);
 
-			if (Util::OS::IsWindowsVistaOrLater()) {
-				DlgCheckBox_Check(hDlg, IDC_PROGRAMGUIDEOPTIONS_USEDIRECTWRITE, m_fUseDirectWrite);
-				EnableDlgItem(
-					hDlg,
-					IDC_PROGRAMGUIDEOPTIONS_DIRECTWRITEOPTIONS,
-					m_fUseDirectWrite);
-			} else {
-				EnableDlgItems(
-					hDlg,
-					IDC_PROGRAMGUIDEOPTIONS_USEDIRECTWRITE,
-					IDC_PROGRAMGUIDEOPTIONS_DIRECTWRITEOPTIONS,
-					false);
-			}
+			DlgCheckBox_Check(hDlg, IDC_PROGRAMGUIDEOPTIONS_USEDIRECTWRITE, m_fUseDirectWrite);
+			EnableDlgItem(
+				hDlg,
+				IDC_PROGRAMGUIDEOPTIONS_DIRECTWRITEOPTIONS,
+				m_fUseDirectWrite);
 
 			m_Tooltip.Create(hDlg);
 			m_Tooltip.SetFont(GetWindowFont(hDlg));
@@ -957,16 +949,14 @@ INT_PTR CProgramGuideOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 					m_pProgramGuide->SetFont(m_Font);
 				}
 
-				if (Util::OS::IsWindowsVistaOrLater()) {
-					bool fUseDirectWrite =
-						DlgCheckBox_IsChecked(hDlg, IDC_PROGRAMGUIDEOPTIONS_USEDIRECTWRITE);
-					if (m_fUseDirectWrite != fUseDirectWrite) {
-						m_fUseDirectWrite = fUseDirectWrite;
-						m_pProgramGuide->SetTextDrawEngine(
-							m_fUseDirectWrite ?
-							TVTest::CTextDrawClient::ENGINE_DIRECTWRITE :
-							TVTest::CTextDrawClient::ENGINE_GDI);
-					}
+				bool fUseDirectWrite =
+					DlgCheckBox_IsChecked(hDlg, IDC_PROGRAMGUIDEOPTIONS_USEDIRECTWRITE);
+				if (m_fUseDirectWrite != fUseDirectWrite) {
+					m_fUseDirectWrite = fUseDirectWrite;
+					m_pProgramGuide->SetTextDrawEngine(
+						m_fUseDirectWrite ?
+						TVTest::CTextDrawClient::ENGINE_DIRECTWRITE :
+						TVTest::CTextDrawClient::ENGINE_GDI);
 				}
 
 				UINT VisibleEventIcons = 0;

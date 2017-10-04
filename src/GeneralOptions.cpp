@@ -186,26 +186,18 @@ INT_PTR CGeneralOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 			DlgCheckBox_Check(hDlg, IDC_OPTIONS_STANDALONEPROGRAMGUIDE, m_fStandaloneProgramGuide);
 			DlgCheckBox_Check(hDlg, IDC_OPTIONS_ENABLE1SEGFALLBACK, m_fEnable1SegFallback);
 
-			if (Util::OS::IsWindows7OrLater()) {
-				DlgCheckBox_Check(
-					hDlg, IDC_OPTIONS_USEUNIQUEAPPID,
-					App.TaskbarOptions.GetUseUniqueAppID());
-				DlgCheckBox_Check(
-					hDlg, IDC_OPTIONS_ENABLEJUMPLIST,
-					App.TaskbarOptions.GetEnableJumpList());
-				DlgCheckBox_Check(
-					hDlg, IDC_OPTIONS_JUMPLISTKEEPSINGLETASK,
-					App.TaskbarOptions.GetJumpListKeepSingleTask());
-				EnableDlgItem(
-					hDlg, IDC_OPTIONS_JUMPLISTKEEPSINGLETASK,
-					App.TaskbarOptions.GetEnableJumpList());
-			} else {
-				EnableDlgItems(
-					hDlg,
-					IDC_OPTIONS_ENABLEJUMPLIST,
-					IDC_OPTIONS_USEUNIQUEAPPID,
-					false);
-			}
+			DlgCheckBox_Check(
+				hDlg, IDC_OPTIONS_USEUNIQUEAPPID,
+				App.TaskbarOptions.GetUseUniqueAppID());
+			DlgCheckBox_Check(
+				hDlg, IDC_OPTIONS_ENABLEJUMPLIST,
+				App.TaskbarOptions.GetEnableJumpList());
+			DlgCheckBox_Check(
+				hDlg, IDC_OPTIONS_JUMPLISTKEEPSINGLETASK,
+				App.TaskbarOptions.GetJumpListKeepSingleTask());
+			EnableDlgItem(
+				hDlg, IDC_OPTIONS_JUMPLISTKEEPSINGLETASK,
+				App.TaskbarOptions.GetEnableJumpList());
 		}
 		return TRUE;
 
@@ -319,17 +311,15 @@ INT_PTR CGeneralOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 					SetUpdateFlag(UPDATE_1SEGFALLBACK);
 				}
 
-				if (Util::OS::IsWindows7OrLater()) {
-					CTaskbarOptions &TaskbarOptions = GetAppClass().TaskbarOptions;
+				CTaskbarOptions &TaskbarOptions = GetAppClass().TaskbarOptions;
 
-					TaskbarOptions.SetUseUniqueAppID(
-						DlgCheckBox_IsChecked(hDlg, IDC_OPTIONS_USEUNIQUEAPPID));
-					TaskbarOptions.SetEnableJumpList(
-						DlgCheckBox_IsChecked(hDlg, IDC_OPTIONS_ENABLEJUMPLIST));
-					TaskbarOptions.SetJumpListKeepSingleTask(
-						DlgCheckBox_IsChecked(hDlg, IDC_OPTIONS_JUMPLISTKEEPSINGLETASK));
-					TaskbarOptions.SetChanged();
-				}
+				TaskbarOptions.SetUseUniqueAppID(
+					DlgCheckBox_IsChecked(hDlg, IDC_OPTIONS_USEUNIQUEAPPID));
+				TaskbarOptions.SetEnableJumpList(
+					DlgCheckBox_IsChecked(hDlg, IDC_OPTIONS_ENABLEJUMPLIST));
+				TaskbarOptions.SetJumpListKeepSingleTask(
+					DlgCheckBox_IsChecked(hDlg, IDC_OPTIONS_JUMPLISTKEEPSINGLETASK));
+				TaskbarOptions.SetChanged();
 
 				m_fChanged = true;
 			}

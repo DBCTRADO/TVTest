@@ -5,11 +5,6 @@
 #include "MainWindow.h"
 #include "Common/DebugDef.h"
 
-#ifdef WIN_XP_SUPPORT
-#include <psapi.h>	// for GetModuleFileNameEx
-#pragma comment(lib,"psapi.lib")
-#endif
-
 
 
 
@@ -113,12 +108,8 @@ BOOL CALLBACK CTVTestWindowFinder::FindWindowCallback(HWND hwnd, LPARAM lParam)
 		::GetWindowThreadProcessId(hwnd, &ProcessId);
 		hProcess = ::OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, ProcessId);
 		if (hProcess != NULL) {
-#ifdef WIN_XP_SUPPORT
-			if (::GetModuleFileNameEx(hProcess, NULL, szFileName, lengthof(szFileName)) > 0
-#else
 			DWORD FileNameSize = lengthof(szFileName);
 			if (::QueryFullProcessImageName(hProcess, 0, szFileName, &FileNameSize)
-#endif
 					&& IsEqualFileName(szFileName, pThis->m_szModuleFileName)) {
 				pThis->m_hwndFound = hwnd;
 				::CloseHandle(hProcess);

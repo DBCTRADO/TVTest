@@ -27,13 +27,6 @@ CEpgOptions::CEpgOptions()
 	m_szEDCBDataFolder[0] = '\0';
 #if 0
 	static const TCHAR szEpgDataFolder[] = TEXT("EpgTimerBon\\EpgData");
-#ifdef WIN_XP_SUPPORT
-	TCHAR szPath[MAX_PATH];
-	if (::SHGetSpecialFolderPath(NULL, szPath, CSIDL_PERSONAL, FALSE)
-			&& ::lstrlen(szPath) + lengthof(szEpgDataFolder) < lengthof(m_szEDCBDataFolder)) {
-		::PathAppend(m_szEDCBDataFolder, szEpgDataFolder);
-	}
-#else
 	PWSTR pszPath;
 	if (::SHGetKnownFolderPath(FOLDERID_Documents, 0, NULL, &pszPath) == S_OK) {
 		if (::lstrlen(pszPath) + lengthof(szEpgDataFolder) < lengthof(m_szEDCBDataFolder)) {
@@ -42,7 +35,6 @@ CEpgOptions::CEpgOptions()
 		}
 		::CoTaskMemFree(pszPath);
 	}
-#endif
 #endif
 
 	::lstrcpy(m_szLogoFileName, TEXT("LogoData"));

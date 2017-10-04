@@ -45,55 +45,44 @@ void CTaskbarManager::SetAppID(LPCTSTR pszID)
 bool CTaskbarManager::Initialize(HWND hwnd)
 {
 	if (m_TaskbarButtonCreatedMessage == 0) {
-		if (Util::OS::IsWindows7OrLater()) {
-			m_TaskbarButtonCreatedMessage = ::RegisterWindowMessage(TEXT("TaskbarButtonCreated"));
+		m_TaskbarButtonCreatedMessage = ::RegisterWindowMessage(TEXT("TaskbarButtonCreated"));
 
-			auto pChangeWindowMessageFilterEx =
-				GET_MODULE_FUNCTION(TEXT("user32.dll"), ChangeWindowMessageFilterEx);
-			if (pChangeWindowMessageFilterEx != NULL) {
-				pChangeWindowMessageFilterEx(hwnd, m_TaskbarButtonCreatedMessage, MSGFLT_ALLOW, NULL);
-				pChangeWindowMessageFilterEx(hwnd, WM_COMMAND, MSGFLT_ALLOW, NULL);
+		auto pChangeWindowMessageFilterEx =
+			GET_MODULE_FUNCTION(TEXT("user32.dll"), ChangeWindowMessageFilterEx);
+		if (pChangeWindowMessageFilterEx != NULL) {
+			pChangeWindowMessageFilterEx(hwnd, m_TaskbarButtonCreatedMessage, MSGFLT_ALLOW, NULL);
+			pChangeWindowMessageFilterEx(hwnd, WM_COMMAND, MSGFLT_ALLOW, NULL);
+		} else {
+			::ChangeWindowMessageFilter(m_TaskbarButtonCreatedMessage, MSGFLT_ADD);
+			::ChangeWindowMessageFilter(WM_COMMAND, MSGFLT_ADD);
+		}
+
+		m_hwnd = hwnd;
+
+		CAppMain &App = GetAppClass();
+		HRESULT hr = S_OK;
+
+		if (!m_AppID.empty()) {
+			auto pSetCurrentProcessExplicitAppUserModelID =
+				GET_MODULE_FUNCTION(TEXT("shell32.dll"), SetCurrentProcessExplicitAppUserModelID);
+			if (pSetCurrentProcessExplicitAppUserModelID != NULL) {
+				hr = pSetCurrentProcessExplicitAppUserModelID(m_AppID.c_str());
+				if (FAILED(hr)) {
+					m_fAppIDInvalid = true;
+					App.AddLog(
+						CLogItem::TYPE_ERROR,
+						TEXT("AppID \"%s\" を設定できません。(%08x)"),
+						m_AppID.c_str(), hr);
+				}
+			}
+		}
+		if (SUCCEEDED(hr)) {
+			if (App.TaskbarOptions.IsJumpListEnabled()) {
+				hr = InitializeJumpList();
+				if (SUCCEEDED(hr))
+					m_fJumpListInitialized = true;
 			} else {
-#ifdef WIN_XP_SUPPORT
-				auto pChangeWindowMessageFilter =
-					GET_MODULE_FUNCTION(TEXT("user32.dll"), ChangeWindowMessageFilter);
-				if (pChangeWindowMessageFilter != NULL) {
-					pChangeWindowMessageFilter(m_TaskbarButtonCreatedMessage, MSGFLT_ADD);
-					pChangeWindowMessageFilter(WM_COMMAND, MSGFLT_ADD);
-				}
-#else
-				::ChangeWindowMessageFilter(m_TaskbarButtonCreatedMessage, MSGFLT_ADD);
-				::ChangeWindowMessageFilter(WM_COMMAND, MSGFLT_ADD);
-#endif
-			}
-
-			m_hwnd = hwnd;
-
-			CAppMain &App = GetAppClass();
-			HRESULT hr = S_OK;
-
-			if (!m_AppID.empty()) {
-				auto pSetCurrentProcessExplicitAppUserModelID =
-					GET_MODULE_FUNCTION(TEXT("shell32.dll"), SetCurrentProcessExplicitAppUserModelID);
-				if (pSetCurrentProcessExplicitAppUserModelID != NULL) {
-					hr = pSetCurrentProcessExplicitAppUserModelID(m_AppID.c_str());
-					if (FAILED(hr)) {
-						m_fAppIDInvalid = true;
-						App.AddLog(
-							CLogItem::TYPE_ERROR,
-							TEXT("AppID \"%s\" を設定できません。(%08x)"),
-							m_AppID.c_str(), hr);
-					}
-				}
-			}
-			if (SUCCEEDED(hr)) {
-				if (App.TaskbarOptions.IsJumpListEnabled()) {
-					hr = InitializeJumpList();
-					if (SUCCEEDED(hr))
-						m_fJumpListInitialized = true;
-				} else {
-					ClearJumpList();
-				}
+				ClearJumpList();
 			}
 		}
 	}
