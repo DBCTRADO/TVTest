@@ -40,7 +40,7 @@ public:
 	class CEventHandler
 	{
 	public:
-		virtual ~CEventHandler() {}
+		virtual ~CEventHandler() = default;
 		virtual void OnChannelClick(const CChannelInfo *pChannelInfo) {}
 	};
 

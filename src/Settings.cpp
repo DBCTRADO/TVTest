@@ -398,11 +398,6 @@ CSettingsBase::CSettingsBase(LPCTSTR pszSection)
 }
 
 
-CSettingsBase::~CSettingsBase()
-{
-}
-
-
 bool CSettingsBase::LoadSettings(CSettings &Settings)
 {
 	if (!Settings.SetSection(m_pszSection))

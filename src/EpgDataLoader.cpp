@@ -208,6 +208,4 @@ unsigned int __stdcall CEpgDataLoader::LoadThread(void *pParameter)
 
 
 
-CEpgDataLoader::CEventHandler::~CEventHandler()
-{
-}
+CEpgDataLoader::CEventHandler::~CEventHandler() = default;

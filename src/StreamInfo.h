@@ -12,7 +12,7 @@ public:
 	class CEventHandler
 	{
 	public:
-		virtual ~CEventHandler() {}
+		virtual ~CEventHandler() = default;
 		virtual void OnRestoreSettings() {}
 		virtual bool OnClose() { return true; }
 	};

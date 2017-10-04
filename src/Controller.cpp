@@ -16,11 +16,6 @@ CController::CController()
 }
 
 
-CController::~CController()
-{
-}
-
-
 bool CController::TranslateMessage(HWND hwnd, MSG *pMessage)
 {
 	return false;

@@ -25,7 +25,7 @@ namespace TVTest
 			int Height;
 		};
 
-		virtual ~CTextDrawEngine() {}
+		virtual ~CTextDrawEngine() = default;
 		virtual void Finalize();
 		virtual bool BeginDraw(HDC hdc, const RECT &Rect);
 		virtual bool EndDraw();

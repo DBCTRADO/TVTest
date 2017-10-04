@@ -3870,11 +3870,6 @@ CPlugin::CPluginCommandInfo::CPluginCommandInfo(const TVTest::PluginCommandInfo 
 }
 
 
-CPlugin::CPluginCommandInfo::~CPluginCommandInfo()
-{
-}
-
-
 CPlugin::CProgramGuideCommand::CProgramGuideCommand(const TVTest::ProgramGuideCommandInfo &Info)
 	: CPluginCommandInfo(Info.ID, Info.pszText, Info.pszName)
 	, m_Type(Info.Type)

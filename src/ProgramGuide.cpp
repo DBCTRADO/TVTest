@@ -843,11 +843,6 @@ void CServiceList::Clear()
 
 
 
-CProgramGuideChannelProvider::~CProgramGuideChannelProvider()
-{
-}
-
-
 bool CProgramGuideChannelProvider::Update()
 {
 	return true;
@@ -1030,13 +1025,6 @@ bool CProgramGuideBaseChannelProvider::HasAllChannelGroup() const
 {
 	return m_TuningSpaceList.NumSpaces() > 1
 		&& m_TuningSpaceList.GetAllChannelList()->NumChannels() > 0;
-}
-
-
-
-
-CProgramGuideChannelProviderManager::~CProgramGuideChannelProviderManager()
-{
 }
 
 
@@ -5800,7 +5788,7 @@ class ABSTRACT_CLASS(CStatusBar)
 {
 public:
 	CStatusBar(CProgramGuide * pProgramGuide);
-	virtual ~CStatusBar();
+	virtual ~CStatusBar() = default;
 
 // CProgramGuideBar
 	bool CreateBar(HWND hwndParent, DWORD Style) override;
@@ -5825,11 +5813,6 @@ CStatusBar::CStatusBar(CProgramGuide * pProgramGuide)
 		m_StatusView.SetFont(Font);
 
 	RegisterUIChild(&m_StatusView);
-}
-
-
-CStatusBar::~CStatusBar()
-{
 }
 
 

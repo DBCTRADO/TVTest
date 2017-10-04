@@ -155,9 +155,7 @@ CCapturePreview::CEventHandler::CEventHandler()
 }
 
 
-CCapturePreview::CEventHandler::~CEventHandler()
-{
-}
+CCapturePreview::CEventHandler::~CEventHandler() = default;
 
 
 
@@ -325,9 +323,7 @@ CCaptureWindow::CEventHandler::CEventHandler()
 }
 
 
-CCaptureWindow::CEventHandler::~CEventHandler()
-{
-}
+CCaptureWindow::CEventHandler::~CEventHandler() = default;
 
 
 

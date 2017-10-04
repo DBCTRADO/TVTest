@@ -17,7 +17,7 @@ public:
 	class ABSTRACT_CLASS(CEpgFileLoadEventHandler)
 	{
 	public:
-		virtual ~CEpgFileLoadEventHandler() {}
+		virtual ~CEpgFileLoadEventHandler() = default;
 		virtual void OnBeginLoad() {}
 		virtual void OnEndLoad(bool fSuccess) {}
 	};

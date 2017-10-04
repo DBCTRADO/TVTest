@@ -50,7 +50,7 @@ protected:
 
 public:
 	CUISkin();
-	virtual ~CUISkin();
+	virtual ~CUISkin() = default;
 	virtual HWND GetMainWindow() const = 0;
 	virtual HWND GetFullscreenWindow() const = 0;
 	virtual HWND GetVideoHostWindow() const = 0;

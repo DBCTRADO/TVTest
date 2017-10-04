@@ -22,7 +22,7 @@ public:
 	class ABSTRACT_CLASS(CEventHandler)
 	{
 	public:
-		virtual ~CEventHandler() {}
+		virtual ~CEventHandler() = default;
 		virtual bool OnFloating() { return false; }
 		virtual bool OnClose() { return false; }
 		virtual bool OnEnterSizeMove() { return false; }
@@ -162,7 +162,7 @@ public:
 	class ABSTRACT_CLASS(CEventHandler)
 	{
 	public:
-		virtual ~CEventHandler() {}
+		virtual ~CEventHandler() = default;
 		virtual bool OnClose() { return true; }
 		virtual bool OnMoving(RECT * pRect) { return false; }
 		virtual bool OnEnterSizeMove() { return false; }

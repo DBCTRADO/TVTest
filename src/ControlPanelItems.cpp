@@ -310,10 +310,6 @@ CControlPanelButton::CControlPanelButton(int Command, LPCTSTR pszText, bool fBre
 	m_fBreak = fBreak;
 }
 
-CControlPanelButton::~CControlPanelButton()
-{
-}
-
 void CControlPanelButton::CalcSize(int Width, SIZE *pSize)
 {
 	const TVTest::Style::Margins &Padding = m_pControlPanel->GetItemPadding();

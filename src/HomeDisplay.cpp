@@ -61,7 +61,7 @@ protected:
 	{
 	public:
 		CChannelItemBase(const CChannelInfo & ChannelInfo);
-		virtual ~CChannelItemBase() {}
+		virtual ~CChannelItemBase() = default;
 		void SetSmallLogo(HBITMAP hbm) { m_hbmSmallLogo = hbm; }
 		void SetBigLogo(HBITMAP hbm) { m_hbmBigLogo = hbm; }
 		HBITMAP GetStretchedLogo(int Width, int Height) const;

@@ -109,7 +109,6 @@ protected:
 
 public:
 	CControlPanelButton(int Command, LPCTSTR pszText, bool fBreak = true, int Width = -1);
-	virtual ~CControlPanelButton();
 // CControlPanelItem
 	virtual void CalcSize(int Width, SIZE *pSize);
 	virtual void Draw(HDC hdc, const RECT &Rect);

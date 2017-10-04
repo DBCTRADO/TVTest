@@ -47,7 +47,7 @@ namespace TVTest
 	{
 	public:
 		CRegExpEngine();
-		virtual ~CRegExpEngine();
+		virtual ~CRegExpEngine() = default;
 		virtual bool GetName(LPTSTR pszName, size_t MaxLength) const = 0;
 		virtual bool Initialize() = 0;
 		virtual void Finalize() = 0;

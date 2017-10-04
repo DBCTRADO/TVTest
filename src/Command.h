@@ -22,7 +22,7 @@ public:
 	class ABSTRACT_CLASS(CEventHandler)
 	{
 	public:
-		virtual ~CEventHandler() {}
+		virtual ~CEventHandler() = default;
 		virtual void OnCommandStateChanged(int ID, unsigned int OldState, unsigned int NewState) {}
 		virtual void OnCommandRadioCheckedStateChanged(int FirstID, int LastID, int CheckedID) {}
 	};
@@ -36,7 +36,7 @@ public:
 	public:
 		CCommandCustomizer(int FirstID, int LastID)
 			: m_FirstID(FirstID), m_LastID(LastID) {}
-		virtual ~CCommandCustomizer() {}
+		virtual ~CCommandCustomizer() = default;
 		virtual bool IsCommandValid(int Command) { return Command >= m_FirstID && Command <= m_LastID; }
 		virtual bool GetCommandName(int Command, LPTSTR pszName, int MaxLength) { return false; }
 	};

@@ -22,9 +22,7 @@ CUIBase::CUIBase()
 }
 
 
-CUIBase::~CUIBase()
-{
-}
+CUIBase::~CUIBase() = default;
 
 
 void CUIBase::SetStyle(const Style::CStyleManager *pStyleManager)

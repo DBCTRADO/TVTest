@@ -13,7 +13,7 @@ public:
 	class ABSTRACT_CLASS(CEventHandler)
 	{
 	public:
-		virtual ~CEventHandler() {}
+		virtual ~CEventHandler() = default;
 		virtual bool OnButtonDown(CController * pController, int Index) = 0;
 	};
 
@@ -39,7 +39,7 @@ public:
 	};
 
 	CController();
-	virtual ~CController();
+	virtual ~CController() = default;
 	virtual LPCTSTR GetName() const = 0;
 	virtual LPCTSTR GetText() const = 0;
 	virtual int NumButtons() const = 0;

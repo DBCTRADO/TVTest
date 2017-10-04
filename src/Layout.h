@@ -133,7 +133,7 @@ namespace Layout
 
 		public:
 			CEventHandler();
-			virtual ~CEventHandler() = 0;
+			virtual ~CEventHandler();
 			friend CLayoutBase;
 		};
 

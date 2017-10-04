@@ -21,7 +21,7 @@ namespace TVTest
 		};
 
 		CFavoriteItem(ItemType Type) : m_Type(Type) {}
-		virtual ~CFavoriteItem() {}
+		virtual ~CFavoriteItem() = default;
 		ItemType GetType() const { return m_Type; }
 		virtual CFavoriteItem *Duplicate() const = 0;
 		LPCTSTR GetName() const { return m_Name.c_str(); }

@@ -120,7 +120,7 @@ protected:
 
 public:
 	CControlPanelItem();
-	virtual ~CControlPanelItem() = 0;
+	virtual ~CControlPanelItem() = default;
 	void GetPosition(int *pLeft, int *pTop, int *pWidth, int *pHeight) const;
 	bool SetPosition(int Left, int Top, int Width, int Height);
 	void GetPosition(RECT * pRect) const;

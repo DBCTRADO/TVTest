@@ -34,7 +34,7 @@ public:
 	{
 	public:
 		CItem(CInformationPanel *pPanel, bool fVisible, int PropertyID = 0);
-		virtual ~CItem() {}
+		virtual ~CItem() = default;
 		virtual int GetID() const = 0;
 		virtual LPCTSTR GetName() const = 0;
 		virtual bool IsSingleRow() const { return true; }

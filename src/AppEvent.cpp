@@ -240,9 +240,7 @@ void CAppEventManager::OnVariableChanged()
 
 
 
-CAppEventHandler::~CAppEventHandler()
-{
-}
+CAppEventHandler::~CAppEventHandler() = default;
 
 
 }	// namespace TVTest

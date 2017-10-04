@@ -23,7 +23,7 @@ public:
 	class ABSTRACT_CLASS(CEventHandler)
 	{
 	public:
-		virtual ~CEventHandler() {}
+		virtual ~CEventHandler() = default;
 		virtual bool GetOSDClientInfo(OSDClientInfo * pInfo) = 0;
 		virtual bool SetOSDHideTimer(DWORD Delay) = 0;
 	};

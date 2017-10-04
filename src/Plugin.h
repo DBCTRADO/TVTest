@@ -28,7 +28,7 @@ public:
 		CPluginCommandInfo(int ID, LPCWSTR pszText, LPCWSTR pszName);
 		CPluginCommandInfo(const TVTest::PluginCommandInfo &Info);
 		CPluginCommandInfo(const TVTest::CommandInfo &Info);
-		virtual ~CPluginCommandInfo();
+		virtual ~CPluginCommandInfo() = default;
 		int GetID() const { return m_ID; }
 		int GetCommand() const { return m_Command; }
 		void SetCommand(int Command) { m_Command = Command; }

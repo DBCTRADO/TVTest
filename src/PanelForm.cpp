@@ -820,14 +820,7 @@ CPanelForm::CWindowInfo::~CWindowInfo()
 
 
 
-CPanelForm::CPage::CPage()
-{
-}
-
-
-CPanelForm::CPage::~CPage()
-{
-}
+CPanelForm::CPage::~CPage() = default;
 
 
 bool CPanelForm::CPage::CreateDefaultFont(DrawUtil::CFont *pFont)

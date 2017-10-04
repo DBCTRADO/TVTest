@@ -8,8 +8,7 @@ public:
 	class CEventHandler
 	{
 	public:
-		CEventHandler() {}
-		virtual ~CEventHandler() {}
+		virtual ~CEventHandler() = default;
 		virtual void OnInput(int Type) = 0;
 		virtual void OnUnknownInput(const BYTE *pData, int Size) {}
 	};

@@ -25,7 +25,7 @@ class CChannelInfo
 public:
 	CChannelInfo();
 	CChannelInfo(int Space, int ChannelIndex, int No, LPCTSTR pszName);
-	virtual ~CChannelInfo() {}
+	virtual ~CChannelInfo() = default;
 	int GetSpace() const { return m_Space; }
 	bool SetSpace(int Space);
 	int GetChannelIndex() const { return m_ChannelIndex; }

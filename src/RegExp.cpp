@@ -60,11 +60,6 @@ CRegExpEngine::CRegExpEngine()
 }
 
 
-CRegExpEngine::~CRegExpEngine()
-{
-}
-
-
 void CRegExpEngine::ClearPattern()
 {
 	m_Pattern.clear();

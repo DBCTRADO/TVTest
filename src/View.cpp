@@ -482,9 +482,7 @@ CDisplayView::CDisplayView()
 }
 
 
-CDisplayView::~CDisplayView()
-{
-}
+CDisplayView::~CDisplayView() = default;
 
 
 bool CDisplayView::IsMessageNeed(const MSG *pMsg) const
@@ -705,9 +703,7 @@ LRESULT CDisplayView::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 }
 
 
-CDisplayView::CEventHandler::~CEventHandler()
-{
-}
+CDisplayView::CEventHandler::~CEventHandler() = default;
 
 
 CDisplayView::DisplayViewStyle::DisplayViewStyle()
@@ -877,9 +873,7 @@ void CDisplayBase::SetFocus()
 
 
 
-CDisplayBase::CEventHandler::~CEventHandler()
-{
-}
+CDisplayBase::CEventHandler::~CEventHandler() = default;
 
 
 

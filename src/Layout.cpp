@@ -17,9 +17,7 @@ CContainer::CContainer(int ID)
 }
 
 
-CContainer::~CContainer()
-{
-}
+CContainer::~CContainer() = default;
 
 
 void CContainer::SetPosition(const RECT &Pos)

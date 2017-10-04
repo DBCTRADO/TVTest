@@ -17,11 +17,6 @@ CUISkin::CUISkin()
 }
 
 
-CUISkin::~CUISkin()
-{
-}
-
-
 int CUISkin::ShowMessage(LPCTSTR pszText, LPCTSTR pszCaption, UINT Type) const
 {
 	return ::MessageBox(GetVideoHostWindow(), pszText, pszCaption, Type);

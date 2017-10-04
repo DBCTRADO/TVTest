@@ -611,11 +611,6 @@ CControlPanelItem::CControlPanelItem()
 }
 
 
-CControlPanelItem::~CControlPanelItem()
-{
-}
-
-
 void CControlPanelItem::GetPosition(int *pLeft, int *pTop, int *pWidth, int *pHeight) const
 {
 	if (pLeft)

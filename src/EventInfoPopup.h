@@ -111,7 +111,7 @@ public:
 
 	public:
 		CEventHandler();
-		virtual ~CEventHandler();
+		virtual ~CEventHandler() = default;
 		virtual bool HitTest(int x, int y, LPARAM * pParam) = 0;
 		virtual bool ShowPopup(LPARAM Param, CEventInfoPopup * pPopup) = 0;
 		friend class CEventInfoPopupManager;

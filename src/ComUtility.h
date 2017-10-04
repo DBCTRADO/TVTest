@@ -35,7 +35,7 @@ namespace TVTest
 	protected:
 		LONG m_RefCount;
 
-		virtual ~CIUnknownImpl() {}
+		virtual ~CIUnknownImpl() = default;
 	};
 
 	class CVariant

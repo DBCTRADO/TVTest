@@ -191,8 +191,7 @@ private:
 	class CBarLayout
 	{
 	public:
-		CBarLayout() {}
-		virtual ~CBarLayout() {}
+		virtual ~CBarLayout() = default;
 		virtual void Layout(RECT *pArea, RECT *pBarRect) = 0;
 
 		bool IsSpot(const RECT *pArea, const POINT *pPos);

@@ -50,7 +50,7 @@ public:
 	{
 	public:
 		CCategory(class CHomeDisplay * pHomeDisplay);
-		virtual ~CCategory() {}
+		virtual ~CCategory() = default;
 		virtual int GetID() const = 0;
 		virtual LPCTSTR GetTitle() const = 0;
 		virtual int GetIconIndex() const = 0;

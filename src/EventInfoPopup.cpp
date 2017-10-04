@@ -1043,8 +1043,3 @@ CEventInfoPopupManager::CEventHandler::CEventHandler()
 	: m_pPopup(NULL)
 {
 }
-
-
-CEventInfoPopupManager::CEventHandler::~CEventHandler()
-{
-}

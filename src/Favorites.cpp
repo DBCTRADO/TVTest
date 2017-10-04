@@ -645,7 +645,7 @@ bool CFavoritesManager::IsOrganizeDialogPosSet() const
 class ABSTRACT_CLASS(CFavoritesMenu::CMenuItem)
 {
 public:
-	virtual ~CMenuItem() {}
+	virtual ~CMenuItem() = default;
 };
 
 class CFavoritesMenu::CFolderItem

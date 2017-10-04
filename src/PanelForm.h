@@ -19,7 +19,6 @@ public:
 		, public TVTest::CUIBase
 	{
 	public:
-		CPage();
 		virtual ~CPage() = 0;
 		virtual bool SetFont(const TVTest::Style::Font & Font) { return true; }
 		virtual void OnActivate() {}

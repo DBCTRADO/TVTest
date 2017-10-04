@@ -16,7 +16,7 @@ namespace TVTest
 		class CRenderingTester
 		{
 		public:
-			virtual ~CRenderingTester() {}
+			virtual ~CRenderingTester() = default;
 			virtual void Apply(const CDirectWriteRenderer::RenderingParams &Params) = 0;
 			virtual void Reset() = 0;
 		};

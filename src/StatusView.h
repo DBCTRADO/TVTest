@@ -45,7 +45,7 @@ public:
 	};
 
 	CStatusItem(int ID, const SizeValue &DefaultWidth);
-	virtual ~CStatusItem() {}
+	virtual ~CStatusItem() = default;
 	int GetIndex() const;
 	bool GetRect(RECT *pRect) const;
 	bool GetClientRect(RECT *pRect) const;

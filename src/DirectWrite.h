@@ -32,7 +32,7 @@ namespace TVTest
 	class CDirectWriteResource
 	{
 	public:
-		virtual ~CDirectWriteResource() {}
+		virtual ~CDirectWriteResource() = default;
 		virtual void Destroy() = 0;
 		virtual bool IsCreated() const = 0;
 	};

@@ -9,7 +9,7 @@
 class ABSTRACT_CLASS(COptionFrame)
 {
 public:
-	virtual ~COptionFrame() {}
+	virtual ~COptionFrame() = default;
 	virtual void ActivatePage(class COptions * pOptions) = 0;
 	virtual void OnSettingError(class COptions * pOptions) = 0;
 };

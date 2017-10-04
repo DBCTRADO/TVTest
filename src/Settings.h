@@ -56,7 +56,7 @@ class ABSTRACT_CLASS(CSettingsBase)
 public:
 	CSettingsBase();
 	CSettingsBase(LPCTSTR pszSection);
-	virtual ~CSettingsBase();
+	virtual ~CSettingsBase() = default;
 	virtual bool ReadSettings(CSettings &Settings) { return false; }
 	virtual bool WriteSettings(CSettings &Settings) { return false; }
 	virtual bool LoadSettings(CSettings &Settings);

@@ -103,7 +103,7 @@ namespace ProgramGuide
 class ABSTRACT_CLASS(CProgramGuideChannelProvider)
 {
 public:
-	virtual ~CProgramGuideChannelProvider();
+	virtual ~CProgramGuideChannelProvider() = default;
 	virtual bool Update();
 	virtual bool GetName(LPTSTR pszName, int MaxName) const = 0;
 	virtual size_t GetGroupCount() const = 0;
@@ -149,7 +149,7 @@ protected:
 class ABSTRACT_CLASS(CProgramGuideChannelProviderManager)
 {
 public:
-	virtual ~CProgramGuideChannelProviderManager();
+	virtual ~CProgramGuideChannelProviderManager() = default;
 	virtual size_t GetChannelProviderCount() const = 0;
 	virtual CProgramGuideChannelProvider *GetChannelProvider(size_t Index) const = 0;
 };
@@ -242,7 +242,7 @@ public:
 
 	public:
 		CFrame();
-		virtual ~CFrame() = 0;
+		virtual ~CFrame();
 		virtual void SetCaption(LPCTSTR pszCaption) {}
 		virtual void OnDateChanged() {}
 		virtual void OnSpaceChanged() {}
@@ -729,7 +729,7 @@ public:
 	};
 
 	CProgramGuideFrameBase(CProgramGuide * pProgramGuide, CProgramGuideFrameSettings * pSettings);
-	virtual ~CProgramGuideFrameBase() = 0;
+	virtual ~CProgramGuideFrameBase();
 	bool SetToolbarVisible(int Toolbar, bool fVisible);
 	bool GetToolbarVisible(int Toolbar) const;
 	void SetTheme(const TVTest::Theme::CThemeManager * pThemeManager);
