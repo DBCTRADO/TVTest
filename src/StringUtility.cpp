@@ -4,10 +4,6 @@
 #include "Util.h"
 #include "Common/DebugDef.h"
 
-#if _MSC_VER < 1800 && !defined(va_copy)
-#define va_copy(dst, src) ((void)((dst) = (src)))
-#endif
-
 
 LONGLONG StringToInt64(LPCTSTR pszString)
 {

@@ -640,13 +640,7 @@ bool CTextDrawEngine_DirectWrite::GetFontMetrics(FontMetrics *pMetrics)
 		return false;
 
 	pMetrics->Height = static_cast<int>(std::ceil(Metrics.Ascent + Metrics.Descent));
-	pMetrics->LineGap = static_cast<int>(
-#if _MSC_VER >= 1700
-		std::round(Metrics.LineGap)
-#else
-		(Metrics.LineGap > 0.0f ? Metrics.LineGap + 0.5f : Metrics.LineGap - 0.5f)
-#endif
-		);
+	pMetrics->LineGap = static_cast<int>(std::round(Metrics.LineGap));
 
 	return true;
 }
