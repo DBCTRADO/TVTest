@@ -50,7 +50,7 @@ bool StringIsDigit(LPCTSTR pszString)
 }
 
 
-__declspec(restrict) LPSTR DuplicateString(LPCSTR pszString)
+[[nodiscard]] LPSTR DuplicateString(LPCSTR pszString)
 {
 	if (pszString == NULL)
 		return NULL;
@@ -62,7 +62,7 @@ __declspec(restrict) LPSTR DuplicateString(LPCSTR pszString)
 }
 
 
-__declspec(restrict) LPWSTR DuplicateString(LPCWSTR pszString)
+[[nodiscard]] LPWSTR DuplicateString(LPCWSTR pszString)
 {
 	if (pszString == NULL)
 		return NULL;

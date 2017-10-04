@@ -14,8 +14,8 @@ bool Int64ToString(LONGLONG Value, LPTSTR pszString, int MaxLength, int Radix = 
 bool UInt64ToString(ULONGLONG Value, LPTSTR pszString, int MaxLength, int Radix = 10);
 bool StringIsDigit(LPCTSTR pszString);
 
-__declspec(restrict) LPSTR DuplicateString(LPCSTR pszString);
-__declspec(restrict) LPWSTR DuplicateString(LPCWSTR pszString);
+[[nodiscard]] LPSTR DuplicateString(LPCSTR pszString);
+[[nodiscard]] LPWSTR DuplicateString(LPCWSTR pszString);
 bool ReplaceString(LPSTR *ppszString, LPCSTR pszNewString);
 bool ReplaceString(LPWSTR *ppszString, LPCWSTR pszNewString);
 int RemoveTrailingWhitespace(LPTSTR pszString);
