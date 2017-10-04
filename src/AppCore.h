@@ -37,6 +37,10 @@ public:
 	};
 
 	CAppCore(CAppMain &App);
+
+	CAppCore(const CAppCore &) = delete;
+	CAppCore &operator=(const CAppCore &) = delete;
+
 	bool GetDriverDirectory(LPTSTR pszDirectory, int MaxLength) const;
 	void OnError(LPCTSTR pszText, ...);
 	void OnError(const LibISDB::ErrorHandler *pErrorHandler, LPCTSTR pszTitle = NULL);
@@ -123,10 +127,6 @@ private:
 
 	int GetCorresponding1SegService(int Space, WORD NetworkID, WORD TSID, WORD ServiceID) const;
 	bool GenerateRecordFileName(LPTSTR pszFileName, int MaxFileName);
-
-	// コピー禁止
-	CAppCore(const CAppCore &) /* = delete */;
-	CAppCore &operator=(const CAppCore &) /* = delete */;
 };
 
 

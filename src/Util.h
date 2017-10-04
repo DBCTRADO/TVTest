@@ -201,13 +201,14 @@ class CBasicSecurityAttributes
 {
 public:
 	CBasicSecurityAttributes();
+
+	CBasicSecurityAttributes(const CBasicSecurityAttributes &) = delete;
+	CBasicSecurityAttributes &operator=(const CBasicSecurityAttributes &) = delete;
+
 	bool Initialize();
 
 private:
 	SECURITY_DESCRIPTOR m_SecurityDescriptor;
-
-	CBasicSecurityAttributes(const CBasicSecurityAttributes &) /* = delete */;
-	CBasicSecurityAttributes &operator=(const CBasicSecurityAttributes &) /* = delete */;
 };
 
 namespace Util

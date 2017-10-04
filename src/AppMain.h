@@ -204,6 +204,10 @@ public:
 
 	CAppMain();
 	~CAppMain();
+
+	CAppMain(const CAppMain &) = delete;
+	CAppMain &operator=(const CAppMain &) = delete;
+
 	HINSTANCE GetInstance() const;
 	HINSTANCE GetResourceInstance() const;
 	bool GetAppDirectory(LPTSTR pszDirectory) const;
@@ -323,10 +327,6 @@ private:
 
 	static HICON m_hicoApp;
 	static HICON m_hicoAppSmall;
-
-	// コピー禁止
-	CAppMain(const CAppMain &) /* = delete */;
-	CAppMain &operator=(const CAppMain &) /* = delete */;
 
 	void RegisterCommands();
 	bool IsNoAcceleratorMessage(const MSG *pmsg);
