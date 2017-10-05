@@ -249,17 +249,12 @@ static void InitServiceListView(
 		GROUP_ID_CS
 	};
 	LVGROUP lvg;
-	// LVGROUP_V5_SIZE は x64 で間違った値になっている
-	//lvg.cbSize=LVGROUP_V5_SIZE;
 	lvg.cbSize = sizeof(LVGROUP);
 	lvg.mask = LVGF_HEADER | LVGF_GROUPID;
-	lvg.mask |= LVGF_STATE;
+	lvg.mask |= LVGF_STATE | LVGF_TASK;
 	lvg.stateMask = ~0U;
 	lvg.state = LVGS_COLLAPSIBLE;
-#if _WIN32_WINNT>=0x0600
-	lvg.mask |= LVGF_TASK;
 	lvg.pszTask = TEXT("選択");
-#endif
 	lvg.pszHeader = TEXT("地上");
 	lvg.iGroupId = GROUP_ID_TERRESTRIAL;
 	ListView_InsertGroup(hwndList, -1, &lvg);
@@ -354,8 +349,6 @@ static BOOL ServiceListViewGetInfoTip(
 }
 
 
-#if _WIN32_WINNT >= 0x0600
-
 static BOOL ServiceListViewOnLinkClick(HWND hDlg, NMLVLINK *pLink)
 {
 	HWND hwndList = pLink->hdr.hwndFrom;
@@ -414,8 +407,6 @@ static BOOL ServiceListViewOnLinkClick(HWND hDlg, NMLVLINK *pLink)
 
 	return TRUE;
 }
-
-#endif	// _WIN32_WINNT>=0x0600
 
 
 
@@ -577,14 +568,12 @@ INT_PTR CFeaturedEventsSearchDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam
 				}
 				break;
 
-#if _WIN32_WINNT>=0x0600
 			case LVN_LINKCLICK:
 				if (pnmh->idFrom == IDC_FEATUREDEVENTSSEARCH_SERVICELIST) {
 					return ServiceListViewOnLinkClick(
 						hDlg, reinterpret_cast<NMLVLINK*>(lParam));
 				}
 				break;
-#endif
 			}
 		}
 		break;
@@ -908,14 +897,12 @@ INT_PTR CFeaturedEventsDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPAR
 				}
 				break;
 
-#if _WIN32_WINNT>=0x0600
 			case LVN_LINKCLICK:
 				if (pnmh->idFrom == IDC_FEATUREDEVENTS_SERVICELIST) {
 					return ServiceListViewOnLinkClick(
 						hDlg, reinterpret_cast<NMLVLINK*>(lParam));
 				}
 				break;
-#endif
 
 			case LVN_ITEMCHANGED:
 				if (pnmh->idFrom == IDC_FEATUREDEVENTS_SEARCHSETTINGSLIST) {

@@ -1229,24 +1229,16 @@ INT_PTR CRecordManager::CRecordSettingsDialog::DlgProc(HWND hDlg, UINT uMsg, WPA
 				TCHAR szFileName[MAX_PATH];
 
 				DlgEdit_GetText(hDlg, IDC_RECORD_FILENAME, szFileName, MAX_PATH);
-				ofn.lStructSize = sizeof(OPENFILENAME);
+				InitOpenFileName(&ofn);
 				ofn.hwndOwner = hDlg;
 				ofn.lpstrFilter =
 					TEXT("TSファイル(*.ts)\0*.ts\0すべてのファイル\0*.*\0");
-				ofn.lpstrCustomFilter = NULL;
-				ofn.nFilterIndex = 1;
 				ofn.lpstrFile = szFileName;
 				ofn.nMaxFile = MAX_PATH;
-				ofn.lpstrFileTitle = NULL;
-				ofn.lpstrInitialDir = NULL;
 				ofn.lpstrTitle = TEXT("保存ファイル名");
 				ofn.Flags = OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT;
 				ofn.lpstrDefExt = TEXT("ts");
-#if _WIN32_WINNT >= 0x500
-				ofn.pvReserved = NULL;
-				ofn.dwReserved = 0;
-				ofn.FlagsEx = 0;
-#endif
+
 				if (FileSaveDialog(&ofn))
 					DlgEdit_SetText(hDlg, IDC_RECORD_FILENAME, szFileName);
 			}

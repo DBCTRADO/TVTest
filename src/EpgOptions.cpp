@@ -397,28 +397,19 @@ INT_PTR CEpgOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				::GetDlgItemText(
 					hDlg, IDC_EPGOPTIONS_EPGFILENAME,
 					szFileName, lengthof(szFileName));
-				ofn.lStructSize = sizeof(OPENFILENAME);
+				InitOpenFileName(&ofn);
 				ofn.hwndOwner = hDlg;
 				ofn.lpstrFilter = TEXT("すべてのファイル\0*.*\0");
-				ofn.lpstrCustomFilter = NULL;
-				ofn.nFilterIndex = 1;
 				ofn.lpstrFile = szFileName;
 				ofn.nMaxFile = lengthof(szFileName);
-				ofn.lpstrFileTitle = NULL;
 				if (szFileName[0] == '\0' || ::PathIsFileSpec(szFileName)) {
 					::GetModuleFileName(NULL, szInitialDir, lengthof(szInitialDir));
 					::PathRemoveFileSpec(szInitialDir);
 					ofn.lpstrInitialDir = szInitialDir;
-				} else
-					ofn.lpstrInitialDir = NULL;
+				}
 				ofn.lpstrTitle = TEXT("EPGファイル名");
 				ofn.Flags = OFN_EXPLORER | OFN_HIDEREADONLY;
-				ofn.lpstrDefExt = NULL;
-#if _WIN32_WINNT>=0x500
-				ofn.pvReserved = NULL;
-				ofn.dwReserved = 0;
-				ofn.FlagsEx = 0;
-#endif
+
 				if (FileOpenDialog(&ofn))
 					::SetDlgItemText(hDlg, IDC_EPGOPTIONS_EPGFILENAME, szFileName);
 			}
@@ -456,28 +447,19 @@ INT_PTR CEpgOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				TCHAR szFileName[MAX_PATH], szInitialDir[MAX_PATH];
 
 				::GetDlgItemText(hDlg, IDC_LOGOOPTIONS_DATAFILENAME, szFileName, lengthof(szFileName));
-				ofn.lStructSize = sizeof(OPENFILENAME);
+				InitOpenFileName(&ofn);
 				ofn.hwndOwner = hDlg;
 				ofn.lpstrFilter = TEXT("すべてのファイル\0*.*\0");
-				ofn.lpstrCustomFilter = NULL;
-				ofn.nFilterIndex = 1;
 				ofn.lpstrFile = szFileName;
 				ofn.nMaxFile = lengthof(szFileName);
-				ofn.lpstrFileTitle = NULL;
 				if (szFileName[0] == '\0' || ::PathIsFileSpec(szFileName)) {
 					::GetModuleFileName(NULL, szInitialDir, lengthof(szInitialDir));
 					::PathRemoveFileSpec(szInitialDir);
 					ofn.lpstrInitialDir = szInitialDir;
-				} else
-					ofn.lpstrInitialDir = NULL;
+				}
 				ofn.lpstrTitle = TEXT("ロゴファイル名");
 				ofn.Flags = OFN_EXPLORER | OFN_HIDEREADONLY;
-				ofn.lpstrDefExt = NULL;
-#if _WIN32_WINNT>=0x500
-				ofn.pvReserved = NULL;
-				ofn.dwReserved = 0;
-				ofn.FlagsEx = 0;
-#endif
+
 				if (FileOpenDialog(&ofn))
 					::SetDlgItemText(hDlg, IDC_LOGOOPTIONS_DATAFILENAME, szFileName);
 			}

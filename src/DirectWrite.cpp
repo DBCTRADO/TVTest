@@ -7,11 +7,6 @@
 #include "Common/DebugDef.h"
 
 
-#ifndef _WIN32_WINNT_WIN8
-static const DWRITE_TEXT_ALIGNMENT DWRITE_TEXT_ALIGNMENT_JUSTIFIED = static_cast<DWRITE_TEXT_ALIGNMENT>(3);
-#endif
-
-
 namespace TVTest
 {
 

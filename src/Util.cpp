@@ -422,22 +422,7 @@ TVTest::String FormatMenuString(LPCWSTR pszText)
 
 void InitOpenFileName(OPENFILENAME *pofn)
 {
-#if _WIN32_WINNT >= 0x0500
-	OSVERSIONINFO osvi;
-
-	osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
-	if (GetVersionEx(&osvi)
-			&& (osvi.dwMajorVersion >= 5 || osvi.dwMinorVersion == 90)) {
-		/* Windows 2000/XP/Vista/7 or Me */
-		pofn->lStructSize = sizeof(OPENFILENAME);
-		pofn->pvReserved = NULL;
-		pofn->dwReserved = 0;
-		pofn->FlagsEx = 0;
-	} else
-		pofn->lStructSize = OPENFILENAME_SIZE_VERSION_400;
-#else
 	pofn->lStructSize = sizeof(OPENFILENAME);
-#endif
 	pofn->hwndOwner = NULL;
 	pofn->hInstance = NULL;
 	pofn->lpstrCustomFilter = NULL;
@@ -448,6 +433,9 @@ void InitOpenFileName(OPENFILENAME *pofn)
 	pofn->lpstrTitle = NULL;
 	pofn->Flags = 0;
 	pofn->lpstrDefExt = NULL;
+	pofn->pvReserved = NULL;
+	pofn->dwReserved = 0;
+	pofn->FlagsEx = 0;
 }
 
 
