@@ -391,7 +391,7 @@ bool CAppMain::LoadSettings()
 
 		Settings.Read(TEXT("EnablePlay"), &m_fEnablePlaybackOnStart);
 		if (Settings.Read(TEXT("Volume"), &Value))
-			CoreEngine.SetVolume(CLAMP(Value, 0, CCoreEngine::MAX_VOLUME));
+			CoreEngine.SetVolume(std::clamp(Value, 0, CCoreEngine::MAX_VOLUME));
 		int Gain = 100, SurroundGain;
 		Settings.Read(TEXT("VolumeNormalizeLevel"), &Gain);
 		if (!Settings.Read(TEXT("SurroundGain"), &SurroundGain))

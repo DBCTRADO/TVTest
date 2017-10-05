@@ -176,7 +176,7 @@ bool CStatusOptions::ReadSettings(CSettings &Settings)
 	Settings.Read(TEXT("ShowPopup"), &m_fShowPopup);
 	int Value;
 	if (Settings.Read(TEXT("PopupOpacity"), &Value))
-		m_PopupOpacity = CLAMP(Value, OPACITY_MIN, OPACITY_MAX);
+		m_PopupOpacity = std::clamp(Value, OPACITY_MIN, OPACITY_MAX);
 
 	Settings.Read(TEXT("TOTTime"), &m_fShowTOTTime);
 	Settings.Read(TEXT("InterpolateTOTTime"), &m_fInterpolateTOTTime);
@@ -575,7 +575,7 @@ INT_PTR CStatusOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 				m_fShowPopup = DlgCheckBox_IsChecked(hDlg, IDC_STATUSOPTIONS_SHOWPOPUP);
 				if (Util::OS::IsWindows8OrLater()) {
 					int Opacity = DlgEdit_GetInt(hDlg, IDC_STATUSOPTIONS_OPACITY_INPUT);
-					m_PopupOpacity = CLAMP(Opacity, OPACITY_MIN, OPACITY_MAX);
+					m_PopupOpacity = std::clamp(Opacity, OPACITY_MIN, OPACITY_MAX);
 				}
 
 				m_pStatusView->EnableSizeAdjustment(true);

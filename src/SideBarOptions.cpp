@@ -128,7 +128,7 @@ bool CSideBarOptions::ReadSettings(CSettings &Settings)
 	Settings.Read(TEXT("ShowToolTips"), &m_fShowToolTips);
 	Settings.Read(TEXT("ShowChannelLogo"), &m_fShowChannelLogo);
 	if (Settings.Read(TEXT("PopupOpacity"), &Value))
-		m_PopupOpacity = CLAMP(Value, OPACITY_MIN, OPACITY_MAX);
+		m_PopupOpacity = std::clamp(Value, OPACITY_MIN, OPACITY_MAX);
 	if (Settings.Read(TEXT("Place"), &Value)
 			&& Value >= PLACE_FIRST && Value <= PLACE_LAST)
 		m_Place = (PlaceType)Value;
@@ -708,7 +708,7 @@ INT_PTR CSideBarOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 				m_fShowPopup = DlgCheckBox_IsChecked(hDlg, IDC_SIDEBAR_SHOWPOPUP);
 				if (Util::OS::IsWindows8OrLater()) {
 					int Opacity = DlgEdit_GetInt(hDlg, IDC_SIDEBAR_OPACITY_INPUT);
-					m_PopupOpacity = CLAMP(Opacity, OPACITY_MIN, OPACITY_MAX);
+					m_PopupOpacity = std::clamp(Opacity, OPACITY_MIN, OPACITY_MAX);
 				}
 				m_fShowToolTips = DlgCheckBox_IsChecked(hDlg, IDC_SIDEBAR_SHOWTOOLTIPS);
 				m_pSideBar->ShowToolTips(m_fShowToolTips);

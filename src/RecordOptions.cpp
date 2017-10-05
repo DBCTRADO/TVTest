@@ -110,14 +110,14 @@ bool CRecordOptions::ReadSettings(CSettings &Settings)
 		m_Settings.SetSaveDataCarrousel(f);
 	Settings.Read(TEXT("WritePlugin"), &m_Settings.m_WritePlugin);
 	if (Settings.Read(TEXT("RecordBufferSize"), &Value))
-		m_Settings.m_WriteCacheSize = CLAMP(Value, WRITE_BUFFER_SIZE_MIN, WRITE_BUFFER_SIZE_MAX);
+		m_Settings.m_WriteCacheSize = std::clamp(Value, WRITE_BUFFER_SIZE_MIN, WRITE_BUFFER_SIZE_MAX);
 	Settings.Read(TEXT("AlertLowFreeSpace"), &m_fAlertLowFreeSpace);
 	Settings.Read(TEXT("LowFreeSpaceThreshold"), &m_LowFreeSpaceThreshold);
 	if (Settings.Read(TEXT("TimeShiftRecBufferSize"), &Value))
-		m_Settings.m_TimeShiftBufferSize = CLAMP(Value * MEGA_BYTES, TIMESHIFT_BUFFER_SIZE_MIN, TIMESHIFT_BUFFER_SIZE_MAX);
+		m_Settings.m_TimeShiftBufferSize = std::clamp(Value * MEGA_BYTES, TIMESHIFT_BUFFER_SIZE_MIN, TIMESHIFT_BUFFER_SIZE_MAX);
 	Settings.Read(TEXT("TimeShiftRecording"), &m_Settings.m_fEnableTimeShift);
 	if (Settings.Read(TEXT("RecMaxPendingSize"), &Value))
-		m_Settings.m_MaxPendingSize = CLAMP(Value, MAX_PENDING_SIZE_MIN, MAX_PENDING_SIZE_MAX);
+		m_Settings.m_MaxPendingSize = std::clamp(Value, MAX_PENDING_SIZE_MIN, MAX_PENDING_SIZE_MAX);
 	Settings.Read(TEXT("ShowRecordRemainTime"), &m_fShowRemainTime);
 
 	TCHAR szCommand[CCommandList::MAX_COMMAND_TEXT];
@@ -558,11 +558,11 @@ INT_PTR CRecordOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 				unsigned int BufferSize =
 					::GetDlgItemInt(hDlg, IDC_RECORDOPTIONS_BUFFERSIZE, nullptr, FALSE);
 				if (BufferSize != 0)
-					m_Settings.m_WriteCacheSize = CLAMP(BufferSize * 1024, WRITE_BUFFER_SIZE_MIN, WRITE_BUFFER_SIZE_MAX);
+					m_Settings.m_WriteCacheSize = std::clamp(BufferSize * 1024, WRITE_BUFFER_SIZE_MIN, WRITE_BUFFER_SIZE_MAX);
 
 				BufferSize = ::GetDlgItemInt(hDlg, IDC_RECORDOPTIONS_TIMESHIFTBUFFERSIZE, nullptr, FALSE);
 				if (BufferSize != 0) {
-					BufferSize = CLAMP(BufferSize * MEGA_BYTES, TIMESHIFT_BUFFER_SIZE_MIN, TIMESHIFT_BUFFER_SIZE_MAX);
+					BufferSize = std::clamp(BufferSize * MEGA_BYTES, TIMESHIFT_BUFFER_SIZE_MIN, TIMESHIFT_BUFFER_SIZE_MAX);
 					if (BufferSize != m_Settings.m_TimeShiftBufferSize) {
 						m_Settings.m_TimeShiftBufferSize = BufferSize;
 					}
@@ -570,7 +570,7 @@ INT_PTR CRecordOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 
 				BufferSize = ::GetDlgItemInt(hDlg, IDC_RECORDOPTIONS_MAXPENDINGSIZE, nullptr, FALSE);
 				if (BufferSize != 0)
-					m_Settings.m_MaxPendingSize = CLAMP(BufferSize * MEGA_BYTES, MAX_PENDING_SIZE_MIN, MAX_PENDING_SIZE_MAX);
+					m_Settings.m_MaxPendingSize = std::clamp(BufferSize * MEGA_BYTES, MAX_PENDING_SIZE_MIN, MAX_PENDING_SIZE_MAX);
 
 				SetUpdateFlag(UPDATE_RECORDINGSETTINGS);
 

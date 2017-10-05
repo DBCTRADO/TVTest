@@ -925,7 +925,7 @@ INT_PTR CProgramGuideOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 					fUpdate = true;
 				}
 				Value = ::GetDlgItemInt(hDlg, IDC_PROGRAMGUIDEOPTIONS_VIEWHOURS, nullptr, TRUE);
-				Value = CLAMP(Value, (int)MIN_VIEW_HOURS, (int)MAX_VIEW_HOURS);
+				Value = std::clamp(Value, MIN_VIEW_HOURS, MAX_VIEW_HOURS);
 				if (m_ViewHours != Value) {
 					LibISDB::DateTime First, Last;
 
@@ -939,9 +939,9 @@ INT_PTR CProgramGuideOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 				if (fUpdate)
 					m_pProgramGuide->UpdateProgramGuide();
 				Value = ::GetDlgItemInt(hDlg, IDC_PROGRAMGUIDEOPTIONS_CHANNELWIDTH, nullptr, TRUE);
-				m_ItemWidth = CLAMP(Value, (int)CProgramGuide::MIN_ITEM_WIDTH, (int)CProgramGuide::MAX_ITEM_WIDTH);
+				m_ItemWidth = std::clamp(Value, CProgramGuide::MIN_ITEM_WIDTH, CProgramGuide::MAX_ITEM_WIDTH);
 				Value = ::GetDlgItemInt(hDlg, IDC_PROGRAMGUIDEOPTIONS_LINESPERHOUR, nullptr, TRUE);
-				m_LinesPerHour = CLAMP(Value, (int)CProgramGuide::MIN_LINES_PER_HOUR, (int)CProgramGuide::MAX_LINES_PER_HOUR);
+				m_LinesPerHour = std::clamp(Value, CProgramGuide::MIN_LINES_PER_HOUR, CProgramGuide::MAX_LINES_PER_HOUR);
 				m_pProgramGuide->SetUIOptions(m_LinesPerHour, m_ItemWidth);
 
 				if (m_Font != m_CurSettingFont) {

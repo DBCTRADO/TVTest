@@ -7078,7 +7078,7 @@ bool CProgramGuideFrameSettings::ReadSettings(CSettings &Settings)
 	int Value;
 
 	if (Settings.Read(TEXT("DateBar.ButtonCount"), &Value))
-		m_DateBarButtonCount = CLAMP(Value, 1, DATEBAR_MAXBUTTONCOUNT);
+		m_DateBarButtonCount = std::clamp(Value, 1, DATEBAR_MAXBUTTONCOUNT);
 
 	if (Settings.Read(TEXT("TimeBar.TimeType"), &Value)
 			&& (Value == TimeBarSettings::TIME_INTERVAL

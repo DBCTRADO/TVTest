@@ -83,9 +83,9 @@ bool CPlaybackOptions::ReadSettings(CSettings &Settings)
 	if (Settings.Read(TEXT("PacketBufferLength"), &BufferLength))
 		m_PacketBufferLength = min(BufferLength, (unsigned int)MAX_PACKET_BUFFER_LENGTH);
 	if (Settings.Read(TEXT("PacketBufferPoolPercentage"), &m_PacketBufferPoolPercentage))
-		m_PacketBufferPoolPercentage = CLAMP(m_PacketBufferPoolPercentage, 0, 100);
+		m_PacketBufferPoolPercentage = std::clamp(m_PacketBufferPoolPercentage, 0, 100);
 	if (Settings.Read(TEXT("StreamThreadPriority"), &m_StreamThreadPriority))
-		m_StreamThreadPriority = CLAMP(m_StreamThreadPriority, THREAD_PRIORITY_NORMAL, THREAD_PRIORITY_HIGHEST);
+		m_StreamThreadPriority = std::clamp(m_StreamThreadPriority, THREAD_PRIORITY_NORMAL, THREAD_PRIORITY_HIGHEST);
 	Settings.Read(TEXT("AdjustFrameRate"), &m_fAdjust1SegFrameRate);
 
 	return true;
@@ -234,10 +234,10 @@ INT_PTR CPlaybackOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lP
 				}
 
 				DWORD BufferLength = ::GetDlgItemInt(hDlg, IDC_OPTIONS_BUFFERSIZE, nullptr, FALSE);
-				BufferLength = CLAMP(BufferLength, 0, MAX_PACKET_BUFFER_LENGTH);
+				BufferLength = std::clamp(BufferLength, (DWORD)0, MAX_PACKET_BUFFER_LENGTH);
 				bool fBuffering = DlgCheckBox_IsChecked(hDlg, IDC_OPTIONS_ENABLEBUFFERING);
 				int PoolPercentage = ::GetDlgItemInt(hDlg, IDC_OPTIONS_BUFFERPOOLPERCENTAGE, nullptr, TRUE);
-				PoolPercentage = CLAMP(PoolPercentage, 0, 100);
+				PoolPercentage = std::clamp(PoolPercentage, 0, 100);
 				if (BufferLength != m_PacketBufferLength
 						|| fBuffering != m_fPacketBuffering
 						|| (fBuffering && PoolPercentage != m_PacketBufferPoolPercentage))

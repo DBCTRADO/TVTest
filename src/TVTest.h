@@ -62,11 +62,6 @@ namespace TVTest
 
 #define lengthof _countof
 
-#ifndef CLAMP
-#define CLAMP(val, min, max) \
-	(((val) > (max)) ? (max) : (((val) < (min)) ? (min) : (val)))
-#endif
-
 #ifndef SAFE_DELETE
 //#define SAFE_DELETE(p)       if (p) { delete p; (p) = nullptr; }
 //#define SAFE_DELETE_ARRAY(p) if (p) { delete [] p; (p) = nullptr; }

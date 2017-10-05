@@ -2473,7 +2473,7 @@ void CMainWindow::OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
 				break;
 			}
 
-			pViewer->SetAudioDelay(CLAMP(Delay, -MaxDelay, MaxDelay));
+			pViewer->SetAudioDelay(std::clamp(Delay, -MaxDelay, MaxDelay));
 		}
 		return;
 
