@@ -6,6 +6,10 @@
 #include "StringUtility.h"
 
 
+inline bool operator==(const RECT &rc1, const RECT &rc2) {
+	return rc1.left == rc2.left && rc1.top == rc2.top && rc1.right == rc2.right && rc1.bottom == rc2.bottom;
+}
+inline bool operator!=(const RECT &rc1, const RECT &rc2) { return !(rc1 == rc2); }
 inline bool operator==(const POINT &pt1, const POINT &pt2) { return pt1.x == pt2.x && pt1.y == pt2.y; }
 inline bool operator!=(const POINT &pt1, const POINT &pt2) { return !(pt1 == pt2); }
 

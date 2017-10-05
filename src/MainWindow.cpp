@@ -416,7 +416,7 @@ void CMainWindow::AdjustWindowSize(int Width, int Height, bool fScreenSize)
 		rc.bottom = rc.top + Height;
 	}
 
-	if (::EqualRect(&rc, &rcOld))
+	if (rc == rcOld)
 		return;
 
 	const HMONITOR hMonitor = ::MonitorFromRect(&rcOld, MONITOR_DEFAULTTONEAREST);
@@ -5839,7 +5839,7 @@ void CMainWindow::SetMaximizedRegion(bool fSet)
 		::GetWindowRect(m_hwnd, &rcWindow);
 		::GetClientRect(m_hwnd, &rcClient);
 		MapWindowRect(m_hwnd, nullptr, &rcClient);
-		if (!::EqualRect(&rcWindow, &rcClient)) {
+		if (rcWindow != rcClient) {
 			::OffsetRect(&rcClient, -rcWindow.left, -rcWindow.top);
 			HRGN hrgn = ::CreateRectRgnIndirect(&rcClient);
 			if (::SetWindowRgn(m_hwnd, hrgn, TRUE))

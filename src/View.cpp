@@ -73,7 +73,7 @@ LRESULT CVideoContainerWindow::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LP
 			} else {
 				m_pViewer->RepaintVideo(hwnd, ps.hdc);
 				::GetClientRect(hwnd, &rc);
-				if (!::EqualRect(&rc, &rcDest))
+				if (rc != rcDest)
 					DrawUtil::FillBorder(ps.hdc, &rc, &rcDest, &ps.rcPaint, hbr);
 			}
 			::EndPaint(hwnd, &ps);
