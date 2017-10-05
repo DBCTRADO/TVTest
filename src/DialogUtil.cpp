@@ -29,14 +29,14 @@ void EnableDlgItems(HWND hDlg, int FirstID, int LastID, bool fEnable)
 
 void InvalidateDlgItem(HWND hDlg, int ID, bool fErase)
 {
-	InvalidateDlgItem(hDlg, ID, NULL, fErase);
+	InvalidateDlgItem(hDlg, ID, nullptr, fErase);
 }
 
 
 void InvalidateDlgItem(HWND hDlg, int ID, const RECT *pRect, bool fErase)
 {
 	HWND hwnd = GetDlgItem(hDlg, ID);
-	if (hwnd != NULL)
+	if (hwnd != nullptr)
 		InvalidateRect(hwnd, pRect, fErase);
 }
 
@@ -50,10 +50,10 @@ void ShowDlgItem(HWND hDlg, int ID, bool fShow)
 bool GetDlgItemRect(HWND hDlg, int ID, RECT *pRect)
 {
 	HWND hwnd = ::GetDlgItem(hDlg, ID);
-	if (hwnd == NULL)
+	if (hwnd == nullptr)
 		return false;
 	GetWindowRect(hwnd, pRect);
-	MapWindowRect(NULL, ::GetParent(hwnd), pRect);
+	MapWindowRect(nullptr, ::GetParent(hwnd), pRect);
 	return true;
 }
 
@@ -119,7 +119,7 @@ bool AdjustDialogPos(HWND hwndOwner, HWND hDlg)
 	else if (y + (rcDlg.bottom - rcDlg.top) > rcWork.bottom)
 		y = rcWork.bottom - (rcDlg.bottom - rcDlg.top);
 
-	return ::SetWindowPos(hDlg, NULL, x, y, 0, 0, SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE) != FALSE;
+	return ::SetWindowPos(hDlg, nullptr, x, y, 0, 0, SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE) != FALSE;
 }
 
 
@@ -129,7 +129,7 @@ void SyncTrackBarWithEdit(HWND hDlg, int EditID, int TrackbarID)
 
 	Min = (int)SendDlgItemMessage(hDlg, TrackbarID, TBM_GETRANGEMIN, 0, 0);
 	Max = (int)SendDlgItemMessage(hDlg, TrackbarID, TBM_GETRANGEMAX, 0, 0);
-	Val = GetDlgItemInt(hDlg, EditID, NULL, TRUE);
+	Val = GetDlgItemInt(hDlg, EditID, nullptr, TRUE);
 	SendDlgItemMessage(hDlg, TrackbarID, TBM_SETPOS, TRUE, CLAMP(Val, Min, Max));
 }
 
@@ -166,7 +166,7 @@ bool SetDlgButtonBitmap(HWND hDlg, int ID, HINSTANCE hinst, LPCTSTR pszName)
 	hbm = (HBITMAP)LoadImage(
 		hinst, pszName, IMAGE_BITMAP, 0, 0,
 		LR_DEFAULTSIZE | LR_LOADMAP3DCOLORS);
-	if (hbm == NULL)
+	if (hbm == nullptr)
 		return false;
 	SendDlgItemMessage(hDlg, ID, BM_SETIMAGE, IMAGE_BITMAP, reinterpret_cast<LPARAM>(hbm));
 	return true;
@@ -187,7 +187,7 @@ bool SetListBoxHExtent(HWND hDlg, int ID)
 		SIZE sz;
 
 		hfont = (HFONT)(UINT_PTR)SendMessage(hwnd, WM_GETFONT, 0, 0);
-		if (hfont == NULL || (hdc = GetDC(hwnd)) == NULL)
+		if (hfont == nullptr || (hdc = GetDC(hwnd)) == nullptr)
 			return false;
 		hfontOld = static_cast<HFONT>(SelectObject(hdc, hfont));
 		for (i = 0; i < Count; i++) {
@@ -212,9 +212,9 @@ LPTSTR GetDlgItemString(HWND hDlg, int ID)
 
 	Length = GetDlgItemTextLength(hDlg, ID);
 	if (Length <= 0)
-		return NULL;
+		return nullptr;
 	pszString = new TCHAR[Length + 1];
-	if (pszString != NULL)
+	if (pszString != nullptr)
 		GetDlgItemText(hDlg, ID, pszString, Length + 1);
 	return pszString;
 }
@@ -222,13 +222,13 @@ LPTSTR GetDlgItemString(HWND hDlg, int ID)
 
 bool GetDlgItemString(HWND hDlg, int ID, TVTest::String *pString)
 {
-	if (pString == NULL)
+	if (pString == nullptr)
 		return false;
 	pString->clear();
 	if (GetDlgItemTextLength(hDlg, ID) == 0)
 		return true;
 	LPTSTR pszBuffer = GetDlgItemString(hDlg, ID);
-	if (pszBuffer == NULL)
+	if (pszBuffer == nullptr)
 		return false;
 	pString->assign(pszBuffer);
 	delete [] pszBuffer;
@@ -238,7 +238,7 @@ bool GetDlgItemString(HWND hDlg, int ID, TVTest::String *pString)
 
 bool GetDlgListBoxItemString(HWND hDlg, int ID, int Index, TVTest::String *pString)
 {
-	if (hDlg == NULL || pString == NULL)
+	if (hDlg == nullptr || pString == nullptr)
 		return false;
 
 	pString->clear();
@@ -257,7 +257,7 @@ bool GetDlgListBoxItemString(HWND hDlg, int ID, int Index, TVTest::String *pStri
 
 bool GetDlgComboBoxItemString(HWND hDlg, int ID, int Index, TVTest::String *pString)
 {
-	if (hDlg == NULL || pString == NULL)
+	if (hDlg == nullptr || pString == nullptr)
 		return false;
 
 	pString->clear();
@@ -306,7 +306,7 @@ BOOL SetDlgItemInt64(HWND hDlg, int ID, ULONGLONG Value, BOOL fSigned)
 
 bool UpdateDlgItemInt(HWND hDlg, int ID, int Value)
 {
-	if (GetDlgItemInt(hDlg, ID, NULL, TRUE) != Value) {
+	if (GetDlgItemInt(hDlg, ID, nullptr, TRUE) != Value) {
 		SetDlgItemInt(hDlg, ID, Value, TRUE);
 		return true;
 	}
@@ -319,7 +319,7 @@ ULONGLONG GetDlgItemInt64(HWND hDlg, int ID, BOOL *pfTranslated, BOOL fSigned)
 	TCHAR szText[20];
 	ULONGLONG Value;
 
-	if (pfTranslated != NULL)
+	if (pfTranslated != nullptr)
 		*pfTranslated = FALSE;
 	if (GetDlgItemText(hDlg, ID, szText, lengthof(szText)) == 0)
 		return 0;
@@ -327,7 +327,7 @@ ULONGLONG GetDlgItemInt64(HWND hDlg, int ID, BOOL *pfTranslated, BOOL fSigned)
 		Value = (ULONGLONG)StringToInt64(szText);
 	else
 		Value = StringToUInt64(szText);
-	if (pfTranslated != NULL)
+	if (pfTranslated != nullptr)
 		*pfTranslated = TRUE;
 	return Value;
 }
@@ -342,8 +342,8 @@ HMENU CreatePopupMenuFromControls(HWND hDlg, const int *pIDList, int IDListLengt
 	unsigned int Flags;
 
 	hmenu = CreatePopupMenu();
-	if (hmenu == NULL)
-		return NULL;
+	if (hmenu == nullptr)
+		return nullptr;
 	for (i = 0; i < IDListLength; i++) {
 		if (pIDList[i] != 0) {
 			hwnd = GetDlgItem(hDlg, pIDList[i]);
@@ -353,7 +353,7 @@ HMENU CreatePopupMenuFromControls(HWND hDlg, const int *pIDList, int IDListLengt
 				Flags |= MFS_GRAYED;
 			AppendMenu(hmenu, Flags, pIDList[i], szText);
 		} else {
-			AppendMenu(hmenu, MFT_SEPARATOR, 0, NULL);
+			AppendMenu(hmenu, MFT_SEPARATOR, 0, nullptr);
 		}
 	}
 	return hmenu;
@@ -368,13 +368,13 @@ bool PopupMenuFromControls(
 	POINT pt;
 
 	hmenu = CreatePopupMenuFromControls(hDlg, pIDList, IDListLength);
-	if (hmenu == NULL)
+	if (hmenu == nullptr)
 		return false;
-	if (ppt != NULL)
+	if (ppt != nullptr)
 		pt = *ppt;
 	else
 		GetCursorPos(&pt);
-	TrackPopupMenu(hmenu, Flags, pt.x, pt.y, 0, hDlg, NULL);
+	TrackPopupMenu(hmenu, Flags, pt.x, pt.y, 0, hDlg, nullptr);
 	DestroyMenu(hmenu);
 	return true;
 }
@@ -435,7 +435,7 @@ LRESULT CListBoxSubclass::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM 
 
 bool ExtendListBox(HWND hwndList, unsigned int Flags)
 {
-	if (hwndList == NULL)
+	if (hwndList == nullptr)
 		return false;
 
 	CListBoxSubclass *pSubclass = new CListBoxSubclass;
@@ -451,12 +451,12 @@ bool ExtendListBox(HWND hwndList, unsigned int Flags)
 bool SetListViewSortMark(HWND hwndList, int Column, bool fAscending)
 {
 	HMODULE hLib = ::GetModuleHandle(TEXT("comctl32.dll"));
-	if (hLib == NULL)
+	if (hLib == nullptr)
 		return false;
 
 	DLLGETVERSIONPROC pDllGetVersion = (DLLGETVERSIONPROC)::GetProcAddress(hLib, "DllGetVersion");
 
-	if (pDllGetVersion == NULL)
+	if (pDllGetVersion == nullptr)
 		return false;
 
 	DLLVERSIONINFO dvi;
@@ -492,7 +492,7 @@ bool SetListViewSortMark(HWND hwndList, int Column, bool fAscending)
 
 bool AdjustListViewColumnWidth(HWND hwndList, bool fUseHeader)
 {
-	if (hwndList == NULL)
+	if (hwndList == nullptr)
 		return false;
 
 	int Count = Header_GetItemCount(ListView_GetHeader(hwndList));
@@ -507,7 +507,7 @@ bool AdjustListViewColumnWidth(HWND hwndList, bool fUseHeader)
 bool InitDropDownButton(HWND hDlg, int ID)
 {
 	HWND hwnd = ::GetDlgItem(hDlg, ID);
-	if (hwnd == NULL)
+	if (hwnd == nullptr)
 		return false;
 
 	::SetWindowLong(hwnd, GWL_STYLE, ::GetWindowLong(hwnd, GWL_STYLE) | BS_SPLITBUTTON);
@@ -528,7 +528,7 @@ bool InitDropDownButton(HWND hDlg, int ID)
 bool InitDropDownButtonWithText(HWND hDlg, int ID)
 {
 	HWND hwnd = ::GetDlgItem(hDlg, ID);
-	if (hwnd == NULL)
+	if (hwnd == nullptr)
 		return false;
 
 	::SetWindowLong(hwnd, GWL_STYLE, ::GetWindowLong(hwnd, GWL_STYLE) | BS_SPLITBUTTON);

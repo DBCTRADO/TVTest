@@ -114,7 +114,7 @@ INT_PTR CAboutDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 				int YDiff = Height - rcInfo.bottom;
 
 				::SetWindowPos(
-					hwndInfo, NULL, 0, 0, Width, Height,
+					hwndInfo, nullptr, 0, 0, Width, Height,
 					SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE);
 				::OffsetRect(&rcLink, 0, YDiff);
 				rcLink.right += XDiff;
@@ -122,25 +122,25 @@ INT_PTR CAboutDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 				RECT rcHeader;
 				::GetWindowRect(hwndHeader, &rcHeader);
 				::SetWindowPos(
-					hwndHeader, NULL, 0, 0, Width, rcHeader.bottom - rcHeader.top,
+					hwndHeader, nullptr, 0, 0, Width, rcHeader.bottom - rcHeader.top,
 					SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE);
 				RECT rcDialog;
 				::GetWindowRect(hDlg, &rcDialog);
 				::SetWindowPos(
-					hDlg, NULL, 0, 0,
+					hDlg, nullptr, 0, 0,
 					(rcDialog.right - rcDialog.left) + XDiff,
 					(rcDialog.bottom - rcDialog.top) + YDiff,
 					SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE);
 				RECT rcClient;
 				::GetClientRect(hDlg, &rcClient);
 				::SetWindowPos(
-					hwndLogo, NULL, 0, 0,
+					hwndLogo, nullptr, 0, 0,
 					rcLogo.right - rcLogo.left, rcClient.bottom,
 					SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE);
 			}
 
 			::SetWindowPos(
-				hwndLink, NULL,
+				hwndLink, nullptr,
 				rcLink.left + ((rcLink.right - rcLink.left) - rcLinkText.right) / 2,
 				rcLink.top,
 				rcLinkText.right,
@@ -218,7 +218,7 @@ INT_PTR CAboutDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 				TCHAR szText[MAX_INFO_TEXT];
 
 				if (::GetDlgItemText(hDlg, IDC_ABOUT_LINK, szText, lengthof(szText)) > 0)
-					::ShellExecute(NULL, TEXT("open"), szText, NULL, NULL, SW_SHOW);
+					::ShellExecute(nullptr, TEXT("open"), szText, nullptr, nullptr, SW_SHOW);
 			}
 			return TRUE;
 
@@ -298,9 +298,9 @@ INT_PTR CAboutDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 			HBITMAP hbm = reinterpret_cast<HBITMAP>(
 				::SendDlgItemMessage(
 					hDlg, IDC_ABOUT_LOGO,
-					STM_SETIMAGE, IMAGE_BITMAP, reinterpret_cast<LPARAM>((HBITMAP)NULL)));
+					STM_SETIMAGE, IMAGE_BITMAP, reinterpret_cast<LPARAM>((HBITMAP)nullptr)));
 
-			if (hbm != NULL) {
+			if (hbm != nullptr) {
 				::DeleteObject(hbm);
 			} else {
 				m_LogoImage.Free();
@@ -320,7 +320,7 @@ void CAboutDialog::ApplyStyle()
 {
 	CBasicDialog::ApplyStyle();
 
-	if (m_hDlg != NULL) {
+	if (m_hDlg != nullptr) {
 		TVTest::Style::Font Font;
 		GetSystemFont(DrawUtil::FONT_MESSAGE, &Font);
 		CreateDrawFont(Font, &m_Font);

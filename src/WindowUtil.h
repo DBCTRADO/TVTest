@@ -2,8 +2,8 @@
 #define WINDOW_UTIL_H
 
 
-void SnapWindow(HWND hwnd,RECT *prc,int Margin,HWND hwndExclude=NULL);
-bool IsMessageInQueue(HWND hwnd,UINT Message);
+void SnapWindow(HWND hwnd, RECT *prc, int Margin, HWND hwndExclude = nullptr);
+bool IsMessageInQueue(HWND hwnd, UINT Message);
 
 
 class CMouseLeaveTrack
@@ -15,7 +15,7 @@ public:
 	bool OnMouseLeave();
 	bool OnNcMouseMove();
 	bool OnNcMouseLeave();
-	bool OnMessage(UINT Msg,WPARAM wParam,LPARAM lParam);
+	bool OnMessage(UINT Msg, WPARAM wParam, LPARAM lParam);
 	bool IsClientTrack() const { return m_fClientTrack; }
 	bool IsNonClientTrack() const { return m_fNonClientTrack; }
 
@@ -34,8 +34,8 @@ public:
 	void Reset();
 	void ResetDelta();
 	int OnWheel(int Delta);
-	int OnMouseWheel(WPARAM wParam,int ScrollLines=0);
-	int OnMouseHWheel(WPARAM wParam,int ScrollChars=0);
+	int OnMouseWheel(WPARAM wParam, int ScrollLines = 0);
+	int OnMouseHWheel(WPARAM wParam, int ScrollChars = 0);
 	int GetDeltaSum() const { return m_DeltaSum; }
 	int GetLastDelta() const { return m_LastDelta; }
 	DWORD GetLastTime() const { return m_LastTime; }
@@ -53,7 +53,7 @@ class CWindowTimerManager
 public:
 	CWindowTimerManager();
 	void InitializeTimer(HWND hwnd);
-	bool BeginTimer(unsigned int ID,DWORD Interval);
+	bool BeginTimer(unsigned int ID, DWORD Interval);
 	void EndTimer(unsigned int ID);
 	void EndAllTimers();
 	bool IsTimerEnabled(unsigned int ID) const;
@@ -75,9 +75,9 @@ protected:
 	HWND m_hwnd;
 
 	static LRESULT CALLBACK SubclassProc(
-		HWND hWnd,UINT uMsg,WPARAM wParam,LPARAM lParam,
-		UINT_PTR uIdSubclass,DWORD_PTR dwRefData);
-	virtual LRESULT OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam);
+		HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
+		UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
+	virtual LRESULT OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 	virtual void OnSubclassRemoved() {}
 };
 

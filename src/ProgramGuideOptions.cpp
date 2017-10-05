@@ -185,7 +185,7 @@ bool CProgramGuideOptions::LoadSettings(CSettings &Settings)
 		CBasicDialog::Position Pos;
 		if (Settings.Read(TEXT("SearchLeft"), &Pos.x)
 				&& Settings.Read(TEXT("SearchTop"), &Pos.y)) {
-			pProgramSearch->GetPosition(NULL, NULL, &Pos.Width, &Pos.Height);
+			pProgramSearch->GetPosition(nullptr, nullptr, &Pos.Width, &Pos.Height);
 			Settings.Read(TEXT("SearchWidth"), &Pos.Width);
 			Settings.Read(TEXT("SearchHeight"), &Pos.Height);
 			pProgramSearch->SetPosition(Pos);
@@ -606,7 +606,7 @@ INT_PTR CProgramGuideOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 					lvi.iSubItem = 0;
 					lvi.pszText = const_cast<LPTSTR>(pTool->GetName());
 					lvi.lParam = reinterpret_cast<LPARAM>(pTool);
-					if (pTool->GetIcon() != NULL) {
+					if (pTool->GetIcon() != nullptr) {
 						lvi.iImage = ::ImageList_AddIcon(himl, pTool->GetIcon());
 						if (lvi.iImage >= 0)
 							lvi.mask |= LVIF_IMAGE;
@@ -750,7 +750,7 @@ INT_PTR CProgramGuideOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 					lvi.stateMask = lvi.state;
 					lvi.pszText = const_cast<LPTSTR>(pTool->GetName());
 					lvi.lParam = reinterpret_cast<LPARAM>(pTool);
-					if (pTool->GetIcon() != NULL) {
+					if (pTool->GetIcon() != nullptr) {
 						lvi.iImage = ::ImageList_AddIcon(ListView_GetImageList(hwndList, LVSIL_SMALL), pTool->GetIcon());
 						if (lvi.iImage >= 0)
 							lvi.mask |= LVIF_IMAGE;
@@ -782,7 +782,7 @@ INT_PTR CProgramGuideOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 				if (pTool->ShowDialog(hDlg)) {
 					lvi.mask = LVIF_TEXT;
 					lvi.pszText = const_cast<LPTSTR>(pTool->GetName());
-					if (pTool->GetIcon() != NULL) {
+					if (pTool->GetIcon() != nullptr) {
 						lvi.iImage = ::ImageList_AddIcon(ListView_GetImageList(hwndList, LVSIL_SMALL), pTool->GetIcon());
 						if (lvi.iImage >= 0)
 							lvi.mask |= LVIF_IMAGE;
@@ -924,13 +924,13 @@ INT_PTR CProgramGuideOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 					m_pProgramGuide->SetBeginHour(Value);
 					fUpdate = true;
 				}
-				Value = ::GetDlgItemInt(hDlg, IDC_PROGRAMGUIDEOPTIONS_VIEWHOURS, NULL, TRUE);
+				Value = ::GetDlgItemInt(hDlg, IDC_PROGRAMGUIDEOPTIONS_VIEWHOURS, nullptr, TRUE);
 				Value = CLAMP(Value, (int)MIN_VIEW_HOURS, (int)MAX_VIEW_HOURS);
 				if (m_ViewHours != Value) {
 					LibISDB::DateTime First, Last;
 
 					m_ViewHours = Value;
-					m_pProgramGuide->GetTimeRange(&First, NULL);
+					m_pProgramGuide->GetTimeRange(&First, nullptr);
 					Last = First;
 					Last.OffsetHours(m_ViewHours);
 					m_pProgramGuide->SetTimeRange(First, Last);
@@ -938,9 +938,9 @@ INT_PTR CProgramGuideOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 				}
 				if (fUpdate)
 					m_pProgramGuide->UpdateProgramGuide();
-				Value = ::GetDlgItemInt(hDlg, IDC_PROGRAMGUIDEOPTIONS_CHANNELWIDTH, NULL, TRUE);
+				Value = ::GetDlgItemInt(hDlg, IDC_PROGRAMGUIDEOPTIONS_CHANNELWIDTH, nullptr, TRUE);
 				m_ItemWidth = CLAMP(Value, (int)CProgramGuide::MIN_ITEM_WIDTH, (int)CProgramGuide::MAX_ITEM_WIDTH);
-				Value = ::GetDlgItemInt(hDlg, IDC_PROGRAMGUIDEOPTIONS_LINESPERHOUR, NULL, TRUE);
+				Value = ::GetDlgItemInt(hDlg, IDC_PROGRAMGUIDEOPTIONS_LINESPERHOUR, nullptr, TRUE);
 				m_LinesPerHour = CLAMP(Value, (int)CProgramGuide::MIN_LINES_PER_HOUR, (int)CProgramGuide::MAX_LINES_PER_HOUR);
 				m_pProgramGuide->SetUIOptions(m_LinesPerHour, m_ItemWidth);
 
@@ -970,7 +970,7 @@ INT_PTR CProgramGuideOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 					m_UpdateFlags |= UPDATE_EVENTICONS;
 				}
 
-				m_WheelScrollLines = ::GetDlgItemInt(hDlg, IDC_PROGRAMGUIDEOPTIONS_WHEELSCROLLLINES, NULL, TRUE);
+				m_WheelScrollLines = ::GetDlgItemInt(hDlg, IDC_PROGRAMGUIDEOPTIONS_WHEELSCROLLLINES, nullptr, TRUE);
 				m_pProgramGuide->SetWheelScrollLines(m_WheelScrollLines);
 
 				LRESULT Sel = DlgComboBox_GetCurSel(hDlg, IDC_PROGRAMGUIDEOPTIONS_PROGRAMLDOUBLECLICK);
@@ -1026,8 +1026,8 @@ INT_PTR CProgramGuideOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 					::SendDlgItemMessage(
 						hDlg, IDC_PROGRAMGUIDEOPTIONS_ICON_FIRST + i,
 						BM_SETIMAGE, IMAGE_BITMAP,
-						reinterpret_cast<LPARAM>((HBITMAP)NULL)));
-				if (hbm != NULL)
+						reinterpret_cast<LPARAM>((HBITMAP)nullptr)));
+				if (hbm != nullptr)
 					::DeleteObject(hbm);
 			}
 

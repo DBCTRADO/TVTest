@@ -50,7 +50,7 @@ static void JPEGErrorMessage(j_common_ptr cinfo)
 	char szText[JMSG_LENGTH_MAX];
 
 	(*cinfo->err->format_message)(cinfo, szText);
-	MessageBoxA(NULL, szText, NULL, MB_OK);
+	MessageBoxA(nullptr, szText, nullptr, MB_OK);
 #endif
 }
 
@@ -73,7 +73,7 @@ static boolean JPEGEmptyOutputBuffer(j_compress_ptr cinfo)
 	JPEGDestinationInfo *pInfo = (JPEGDestinationInfo*)cinfo->dest;
 	DWORD Write;
 
-	if (!WriteFile(pInfo->hFile, pInfo->pBuffer, JPEG_OUTPUT_BUFFER_SIZE, &Write, NULL)
+	if (!WriteFile(pInfo->hFile, pInfo->pBuffer, JPEG_OUTPUT_BUFFER_SIZE, &Write, nullptr)
 			|| Write != JPEG_OUTPUT_BUFFER_SIZE)
 		ERREXIT(cinfo, JERR_FILE_WRITE);
 	pInfo->dest.next_output_byte = pInfo->pBuffer;
@@ -90,7 +90,7 @@ static void JPEGTermDestination(j_compress_ptr cinfo)
 	if (Size > 0) {
 		DWORD Write;
 
-		if (!WriteFile(pInfo->hFile, pInfo->pBuffer, Size, &Write, NULL)
+		if (!WriteFile(pInfo->hFile, pInfo->pBuffer, Size, &Write, nullptr)
 				|| Write != Size)
 			ERREXIT(cinfo, JERR_FILE_WRITE);
 	}
@@ -106,13 +106,13 @@ bool SaveJPEGFile(const ImageSaveInfo *pInfo)
 	JPEGErrorInfo jerrinfo;
 	JPEGDestinationInfo *pDstInfo;
 	int Width, Height;
-	volatile JSAMPROW pBuff = NULL;
+	volatile JSAMPROW pBuff = nullptr;
 	int nBytesPerLine, y;
 	const BYTE *p;
 
 	hFile = CreateFile(
-		pInfo->pszFileName, GENERIC_WRITE, 0, NULL,
-		CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+		pInfo->pszFileName, GENERIC_WRITE, 0, nullptr,
+		CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
 	if (hFile == INVALID_HANDLE_VALUE)
 		return false;
 	jcomp.err = jpeg_std_error(&jerrinfo.jerr);
@@ -121,7 +121,7 @@ bool SaveJPEGFile(const ImageSaveInfo *pInfo)
 	if (setjmp(jerrinfo.jmpbuf)) {
 		jpeg_destroy_compress(&jcomp);
 		CloseHandle(hFile);
-		if (pBuff != NULL)
+		if (pBuff != nullptr)
 			delete [] pBuff;
 		return false;
 	}
@@ -145,7 +145,7 @@ bool SaveJPEGFile(const ImageSaveInfo *pInfo)
 	// Progressive
 	//jpeg_simple_progression(&jcomp);
 	jpeg_start_compress(&jcomp, TRUE);
-	if (pInfo->pszComment != NULL) {
+	if (pInfo->pszComment != nullptr) {
 		/* コメントの書き込み */
 #ifndef UNICODE
 		jpeg_write_marker(
@@ -155,9 +155,9 @@ bool SaveJPEGFile(const ImageSaveInfo *pInfo)
 		int Length;
 		LPSTR pszComment;
 
-		Length = WideCharToMultiByte(CP_ACP, 0, pInfo->pszComment, -1, NULL, 0, NULL, NULL);
+		Length = WideCharToMultiByte(CP_ACP, 0, pInfo->pszComment, -1, nullptr, 0, nullptr, nullptr);
 		pszComment = new char[Length];
-		WideCharToMultiByte(CP_ACP, 0, pInfo->pszComment, -1, pszComment, Length, NULL, NULL);
+		WideCharToMultiByte(CP_ACP, 0, pInfo->pszComment, -1, pszComment, Length, nullptr, nullptr);
 		jpeg_write_marker(&jcomp, JPEG_COM, (JOCTET*)pszComment, Length - 1);
 		delete [] pszComment;
 #endif
@@ -173,7 +173,7 @@ bool SaveJPEGFile(const ImageSaveInfo *pInfo)
 		jpeg_write_scanlines(&jcomp, (JSAMPARRAY)&pBuff, 1);
 	}
 	delete [] pBuff;
-	pBuff = NULL;
+	pBuff = nullptr;
 	jpeg_finish_compress(&jcomp);
 	jpeg_destroy_compress(&jcomp);
 	CloseHandle(hFile);

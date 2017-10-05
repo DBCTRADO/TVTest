@@ -45,7 +45,7 @@ public:
 	LPCTSTR GetSaveFolder() const { return m_szSaveFolder; }
 	LPCTSTR GetFileName() const { return m_szFileName; }
 	bool GetFilePath(LPTSTR pszFileName, int MaxLength) const;
-	bool GenerateFilePath(LPTSTR pszFileName, int MaxLength, LPCTSTR *ppszErrorMessage = NULL) const;
+	bool GenerateFilePath(LPTSTR pszFileName, int MaxLength, LPCTSTR *ppszErrorMessage = nullptr) const;
 	bool ConfirmChannelChange(HWND hwndOwner) const;
 	bool ConfirmServiceChange(HWND hwndOwner, const CRecordManager *pRecordManager) const;
 	bool ConfirmStop(HWND hwndOwner) const;

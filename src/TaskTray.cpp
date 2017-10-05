@@ -11,7 +11,7 @@ namespace TVTest
 
 
 CTaskTrayManager::CTaskTrayManager()
-	: m_hwnd(NULL)
+	: m_hwnd(nullptr)
 	, m_TrayIconMessage(0)
 	, m_fResident(false)
 	, m_fMinimizeToTray(true)
@@ -50,12 +50,12 @@ void CTaskTrayManager::Finalize()
 bool CTaskTrayManager::SetResident(bool fResident)
 {
 	if (m_fResident != fResident) {
-		if (m_hwnd != NULL && !NeedTrayIcon() && fResident) {
+		if (m_hwnd != nullptr && !NeedTrayIcon() && fResident) {
 			if (!AddTrayIcon())
 				return false;
 		}
 		m_fResident = fResident;
-		if (m_hwnd != NULL && !NeedTrayIcon())
+		if (m_hwnd != nullptr && !NeedTrayIcon())
 			RemoveTrayIcon();
 	}
 	return true;
@@ -65,7 +65,7 @@ bool CTaskTrayManager::SetResident(bool fResident)
 bool CTaskTrayManager::SetMinimizeToTray(bool fMinimizeToTray)
 {
 	if (m_fMinimizeToTray != fMinimizeToTray) {
-		if (m_hwnd != NULL) {
+		if (m_hwnd != nullptr) {
 			if ((m_Status & STATUS_MINIMIZED) != 0) {
 				if (fMinimizeToTray && !NeedTrayIcon()) {
 					if (!AddTrayIcon())
@@ -75,7 +75,7 @@ bool CTaskTrayManager::SetMinimizeToTray(bool fMinimizeToTray)
 			}
 		}
 		m_fMinimizeToTray = fMinimizeToTray;
-		if (m_hwnd != NULL && !NeedTrayIcon())
+		if (m_hwnd != nullptr && !NeedTrayIcon())
 			RemoveTrayIcon();
 	}
 	return true;
@@ -161,7 +161,7 @@ bool CTaskTrayManager::UpdateTipText()
 
 bool CTaskTrayManager::NeedTrayIcon() const
 {
-	return m_hwnd != NULL
+	return m_hwnd != nullptr
 		&& (m_fResident
 			|| (m_Status & STATUS_STANDBY) != 0
 			|| (m_fMinimizeToTray && (m_Status & STATUS_MINIMIZED) != 0));
@@ -180,7 +180,7 @@ bool CTaskTrayManager::SetStatus(UINT Status, UINT Mask)
 		if ((StatusDiff & STATUS_RECORDING) != 0)
 			fChangeIcon = true;
 		if ((StatusDiff & STATUS_MINIMIZED) != 0) {
-			if (m_hwnd != NULL && m_fMinimizeToTray)
+			if (m_hwnd != nullptr && m_fMinimizeToTray)
 				::ShowWindow(m_hwnd, (NewStatus & STATUS_MINIMIZED) != 0 ? SW_HIDE : SW_SHOW);
 		}
 

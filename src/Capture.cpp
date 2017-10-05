@@ -37,16 +37,16 @@ CCaptureImage::CCaptureImage(const BITMAPINFO *pbmi, const void *pBits)
 	InfoSize = CalcDIBInfoSize(&pbmi->bmiHeader);
 	BitsSize = CalcDIBBitsSize(&pbmi->bmiHeader);
 	m_hData = ::GlobalAlloc(GMEM_MOVEABLE | GMEM_SHARE, InfoSize + BitsSize);
-	if (m_hData != NULL) {
+	if (m_hData != nullptr) {
 		BYTE *pData = static_cast<BYTE*>(::GlobalLock(m_hData));
 
-		if (pData != NULL) {
+		if (pData != nullptr) {
 			::CopyMemory(pData, pbmi, InfoSize);
 			::CopyMemory(pData + InfoSize, pBits, BitsSize);
 			::GlobalUnlock(m_hData);
 		} else {
 			::GlobalFree(m_hData);
-			m_hData = NULL;
+			m_hData = nullptr;
 		}
 	}
 	m_fLocked = false;
@@ -56,7 +56,7 @@ CCaptureImage::CCaptureImage(const BITMAPINFO *pbmi, const void *pBits)
 
 CCaptureImage::~CCaptureImage()
 {
-	if (m_hData != NULL) {
+	if (m_hData != nullptr) {
 		if (m_fLocked)
 			::GlobalUnlock(m_hData);
 		::GlobalFree(m_hData);
@@ -66,7 +66,7 @@ CCaptureImage::~CCaptureImage()
 
 bool CCaptureImage::SetClipboard(HWND hwnd)
 {
-	if (m_hData == NULL || m_fLocked)
+	if (m_hData == nullptr || m_fLocked)
 		return false;
 
 	HGLOBAL hCopy;
@@ -74,7 +74,7 @@ bool CCaptureImage::SetClipboard(HWND hwnd)
 
 	Size = ::GlobalSize(m_hData);
 	hCopy = ::GlobalAlloc(GMEM_MOVEABLE | GMEM_SHARE, Size);
-	if (hCopy == NULL)
+	if (hCopy == nullptr)
 		return false;
 	::CopyMemory(::GlobalLock(hCopy), ::GlobalLock(m_hData), Size);
 	::GlobalUnlock(hCopy);
@@ -84,7 +84,7 @@ bool CCaptureImage::SetClipboard(HWND hwnd)
 		return false;
 	}
 	::EmptyClipboard();
-	bool fOK = ::SetClipboardData(CF_DIB, hCopy) != NULL;
+	bool fOK = ::SetClipboardData(CF_DIB, hCopy) != nullptr;
 	::CloseClipboard();
 	return fOK;
 }
@@ -92,12 +92,12 @@ bool CCaptureImage::SetClipboard(HWND hwnd)
 
 bool CCaptureImage::GetBitmapInfoHeader(BITMAPINFOHEADER *pbmih) const
 {
-	if (m_hData == NULL || m_fLocked)
+	if (m_hData == nullptr || m_fLocked)
 		return false;
 
 	BITMAPINFOHEADER *pbmihSrc = static_cast<BITMAPINFOHEADER*>(::GlobalLock(m_hData));
 
-	if (pbmihSrc == NULL)
+	if (pbmihSrc == nullptr)
 		return false;
 	*pbmih = *pbmihSrc;
 	::GlobalUnlock(m_hData);
@@ -107,18 +107,18 @@ bool CCaptureImage::GetBitmapInfoHeader(BITMAPINFOHEADER *pbmih) const
 
 bool CCaptureImage::LockData(BITMAPINFO **ppbmi, BYTE **ppBits)
 {
-	if (m_hData == NULL || m_fLocked)
+	if (m_hData == nullptr || m_fLocked)
 		return false;
 
 	void *pDib = ::GlobalLock(m_hData);
 	BITMAPINFO *pbmi;
 
-	if (pDib == NULL)
+	if (pDib == nullptr)
 		return false;
 	pbmi = static_cast<BITMAPINFO*>(pDib);
-	if (ppbmi != NULL)
+	if (ppbmi != nullptr)
 		*ppbmi = pbmi;
-	if (ppBits != NULL)
+	if (ppBits != nullptr)
 		*ppBits = static_cast<BYTE*>(pDib) + CalcDIBInfoSize(&pbmi->bmiHeader);
 	m_fLocked = true;
 	return true;
@@ -150,7 +150,7 @@ LPCTSTR CCaptureImage::GetComment() const
 
 
 CCapturePreview::CEventHandler::CEventHandler()
-	: m_pCapturePreview(NULL)
+	: m_pCapturePreview(nullptr)
 {
 }
 
@@ -160,12 +160,12 @@ CCapturePreview::CEventHandler::~CEventHandler() = default;
 
 
 
-HINSTANCE CCapturePreview::m_hinst = NULL;
+HINSTANCE CCapturePreview::m_hinst = nullptr;
 
 
 bool CCapturePreview::Initialize(HINSTANCE hinst)
 {
-	if (m_hinst == NULL) {
+	if (m_hinst == nullptr) {
 		WNDCLASS wc;
 
 		wc.style = CS_HREDRAW | CS_VREDRAW;
@@ -173,10 +173,10 @@ bool CCapturePreview::Initialize(HINSTANCE hinst)
 		wc.cbClsExtra = 0;
 		wc.cbWndExtra = 0;
 		wc.hInstance = hinst;
-		wc.hIcon = NULL;
-		wc.hCursor = LoadCursor(NULL, IDC_ARROW);
-		wc.hbrBackground = NULL;
-		wc.lpszMenuName = NULL;
+		wc.hIcon = nullptr;
+		wc.hCursor = LoadCursor(nullptr, IDC_ARROW);
+		wc.hbrBackground = nullptr;
+		wc.lpszMenuName = nullptr;
 		wc.lpszClassName = CAPTURE_PREVIEW_WINDOW_CLASS;
 		if (::RegisterClass(&wc) == 0)
 			return false;
@@ -187,9 +187,9 @@ bool CCapturePreview::Initialize(HINSTANCE hinst)
 
 
 CCapturePreview::CCapturePreview()
-	: m_pImage(NULL)
+	: m_pImage(nullptr)
 	, m_crBackColor(RGB(0, 0, 0))
-	, m_pEventHandler(NULL)
+	, m_pEventHandler(nullptr)
 {
 }
 
@@ -204,7 +204,7 @@ bool CCapturePreview::Create(HWND hwndParent, DWORD Style, DWORD ExStyle, int ID
 {
 	return CreateBasicWindow(
 		hwndParent, Style, ExStyle, ID,
-		CAPTURE_PREVIEW_WINDOW_CLASS, NULL, m_hinst);
+		CAPTURE_PREVIEW_WINDOW_CLASS, nullptr, m_hinst);
 }
 
 
@@ -212,7 +212,7 @@ bool CCapturePreview::SetImage(CCaptureImage *pImage)
 {
 	ClearImage();
 	m_pImage = pImage;
-	if (m_hwnd != NULL) {
+	if (m_hwnd != nullptr) {
 		Invalidate();
 		Update();
 	}
@@ -222,9 +222,9 @@ bool CCapturePreview::SetImage(CCaptureImage *pImage)
 
 bool CCapturePreview::ClearImage()
 {
-	if (m_pImage != NULL) {
-		m_pImage = NULL;
-		if (m_hwnd != NULL) {
+	if (m_pImage != nullptr) {
+		m_pImage = nullptr;
+		if (m_hwnd != nullptr) {
 			Invalidate();
 		}
 	}
@@ -234,15 +234,15 @@ bool CCapturePreview::ClearImage()
 
 bool CCapturePreview::HasImage() const
 {
-	return m_pImage != NULL;
+	return m_pImage != nullptr;
 }
 
 
 bool CCapturePreview::SetEventHandler(CEventHandler *pEventHandler)
 {
-	if (m_pEventHandler != NULL)
-		m_pEventHandler->m_pCapturePreview = NULL;
-	if (pEventHandler != NULL)
+	if (m_pEventHandler != nullptr)
+		m_pEventHandler->m_pCapturePreview = nullptr;
+	if (pEventHandler != nullptr)
 		pEventHandler->m_pCapturePreview = this;
 	m_pEventHandler = pEventHandler;
 	return true;
@@ -261,7 +261,7 @@ LRESULT CCapturePreview::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 
 			::BeginPaint(hwnd, &ps);
 			GetClientRect(&rc);
-			if (m_pImage != NULL && m_pImage->LockData(&pbmi, &pBits)) {
+			if (m_pImage != nullptr && m_pImage->LockData(&pbmi, &pBits)) {
 				int DstX, DstY, DstWidth, DstHeight;
 				RECT rcDest;
 
@@ -296,17 +296,17 @@ LRESULT CCapturePreview::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 		return 0;
 
 	case WM_LBUTTONDOWN:
-		if (m_pEventHandler != NULL)
+		if (m_pEventHandler != nullptr)
 			m_pEventHandler->OnLButtonDown(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
 		return TRUE;
 
 	case WM_RBUTTONUP:
-		if (m_pEventHandler != NULL)
+		if (m_pEventHandler != nullptr)
 			m_pEventHandler->OnRButtonUp(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
 		return TRUE;
 
 	case WM_KEYDOWN:
-		if (m_pEventHandler != NULL
+		if (m_pEventHandler != nullptr
 				&& m_pEventHandler->OnKeyDown((UINT)wParam, (UINT)lParam))
 			return 0;
 		break;
@@ -318,7 +318,7 @@ LRESULT CCapturePreview::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 
 
 CCaptureWindow::CEventHandler::CEventHandler()
-	: m_pCaptureWindow(NULL)
+	: m_pCaptureWindow(nullptr)
 {
 }
 
@@ -328,12 +328,12 @@ CCaptureWindow::CEventHandler::~CEventHandler() = default;
 
 
 
-HINSTANCE CCaptureWindow::m_hinst = NULL;
+HINSTANCE CCaptureWindow::m_hinst = nullptr;
 
 
 bool CCaptureWindow::Initialize(HINSTANCE hinst)
 {
-	if (m_hinst == NULL) {
+	if (m_hinst == nullptr) {
 		WNDCLASS wc;
 
 		wc.style = 0;
@@ -341,10 +341,10 @@ bool CCaptureWindow::Initialize(HINSTANCE hinst)
 		wc.cbClsExtra = 0;
 		wc.cbWndExtra = 0;
 		wc.hInstance = hinst;
-		wc.hIcon = NULL;
-		wc.hCursor = LoadCursor(NULL, IDC_ARROW);
+		wc.hIcon = nullptr;
+		wc.hCursor = LoadCursor(nullptr, IDC_ARROW);
 		wc.hbrBackground = (HBRUSH)(COLOR_3DFACE + 1);
-		wc.lpszMenuName = NULL;
+		wc.lpszMenuName = nullptr;
 		wc.lpszClassName = CAPTURE_WINDOW_CLASS;
 		if (::RegisterClass(&wc) == 0)
 			return false;
@@ -359,8 +359,8 @@ bool CCaptureWindow::Initialize(HINSTANCE hinst)
 CCaptureWindow::CCaptureWindow()
 	: m_PreviewEventHandler(this)
 	, m_fShowStatusBar(true)
-	, m_pImage(NULL)
-	, m_pEventHandler(NULL)
+	, m_pImage(nullptr)
+	, m_pEventHandler(nullptr)
 	, m_fCreateFirst(true)
 {
 	m_WindowPosition.Width = 320;
@@ -382,7 +382,7 @@ CCaptureWindow::~CCaptureWindow()
 bool CCaptureWindow::Create(HWND hwndParent, DWORD Style, DWORD ExStyle, int ID)
 {
 	if (m_fCreateFirst) {
-		if (m_pEventHandler != NULL)
+		if (m_pEventHandler != nullptr)
 			m_pEventHandler->OnRestoreSettings();
 		m_fCreateFirst = false;
 	}
@@ -403,7 +403,7 @@ bool CCaptureWindow::SetImage(const BITMAPINFO *pbmi, const void *pBits)
 {
 	ClearImage();
 	m_pImage = new CCaptureImage(pbmi, pBits);
-	if (m_hwnd != NULL) {
+	if (m_hwnd != nullptr) {
 		m_Preview.SetImage(m_pImage);
 		SetTitle();
 	}
@@ -415,7 +415,7 @@ bool CCaptureWindow::SetImage(CCaptureImage *pImage)
 {
 	ClearImage();
 	m_pImage = pImage;
-	if (m_hwnd != NULL) {
+	if (m_hwnd != nullptr) {
 		m_Preview.SetImage(m_pImage);
 		SetTitle();
 	}
@@ -425,10 +425,10 @@ bool CCaptureWindow::SetImage(CCaptureImage *pImage)
 
 bool CCaptureWindow::ClearImage()
 {
-	if (m_pImage != NULL) {
+	if (m_pImage != nullptr) {
 		delete m_pImage;
-		m_pImage = NULL;
-		if (m_hwnd != NULL) {
+		m_pImage = nullptr;
+		if (m_hwnd != nullptr) {
 			m_Preview.ClearImage();
 			Invalidate();
 			SetTitle();
@@ -440,15 +440,15 @@ bool CCaptureWindow::ClearImage()
 
 bool CCaptureWindow::HasImage() const
 {
-	return m_pImage != NULL;
+	return m_pImage != nullptr;
 }
 
 
 bool CCaptureWindow::SetEventHandler(CEventHandler *pEventHandler)
 {
-	if (m_pEventHandler != NULL)
-		m_pEventHandler->m_pCaptureWindow = NULL;
-	if (pEventHandler != NULL)
+	if (m_pEventHandler != nullptr)
+		m_pEventHandler->m_pCaptureWindow = nullptr;
+	if (pEventHandler != nullptr)
 		pEventHandler->m_pCaptureWindow = this;
 	m_pEventHandler = pEventHandler;
 	return true;
@@ -459,7 +459,7 @@ void CCaptureWindow::ShowStatusBar(bool fShow)
 {
 	if (m_fShowStatusBar != fShow) {
 		m_fShowStatusBar = fShow;
-		if (m_hwnd != NULL) {
+		if (m_hwnd != nullptr) {
 			SendSizeMessage();
 			m_Status.SetVisible(fShow);
 		}
@@ -469,11 +469,11 @@ void CCaptureWindow::ShowStatusBar(bool fShow)
 
 void CCaptureWindow::SetTitle()
 {
-	if (m_hwnd != NULL) {
+	if (m_hwnd != nullptr) {
 		TCHAR szTitle[64];
 
 		::lstrcpy(szTitle, CAPTURE_TITLE_TEXT);
-		if (m_pImage != NULL) {
+		if (m_pImage != nullptr) {
 			BITMAPINFOHEADER bmih;
 
 			if (m_pImage->GetBitmapInfoHeader(&bmih)) {
@@ -518,7 +518,7 @@ LRESULT CCaptureWindow::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 			m_Status.AddItem(new CSaveStatusItem(this, m_StatusIcons));
 			m_Status.AddItem(new CCopyStatusItem(this, m_StatusIcons));
 		}
-		if (m_pImage != NULL) {
+		if (m_pImage != nullptr) {
 			m_Preview.SetImage(m_pImage);
 			SetTitle();
 		}
@@ -537,13 +537,13 @@ LRESULT CCaptureWindow::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 		return 0;
 
 	case WM_KEYDOWN:
-		if (m_pEventHandler != NULL
+		if (m_pEventHandler != nullptr
 				&& m_pEventHandler->OnKeyDown((UINT)wParam, (UINT)lParam))
 			return 0;
 		break;
 
 	case WM_ACTIVATE:
-		if (m_pEventHandler != NULL
+		if (m_pEventHandler != nullptr
 				&& m_pEventHandler->OnActivate(LOWORD(wParam) != WA_INACTIVE))
 			return 0;
 		break;
@@ -555,20 +555,20 @@ LRESULT CCaptureWindow::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 	case WM_COMMAND:
 		switch (LOWORD(wParam)) {
 		case CM_SAVEIMAGE:
-			if (m_pImage != NULL && m_pEventHandler != NULL) {
+			if (m_pImage != nullptr && m_pEventHandler != nullptr) {
 				if (!m_pEventHandler->OnSave(m_pImage)) {
 					::MessageBox(
-						hwnd, TEXT("画像の保存ができません。"), NULL,
+						hwnd, TEXT("画像の保存ができません。"), nullptr,
 						MB_OK | MB_ICONEXCLAMATION);
 				}
 			}
 			return 0;
 
 		case CM_COPY:
-			if (m_pImage != NULL) {
+			if (m_pImage != nullptr) {
 				if (!m_pImage->SetClipboard(hwnd)) {
 					::MessageBox(
-						hwnd, TEXT("クリップボードにデータを設定できません。"), NULL,
+						hwnd, TEXT("クリップボードにデータを設定できません。"), nullptr,
 						MB_OK | MB_ICONEXCLAMATION);
 				}
 			}
@@ -581,7 +581,7 @@ LRESULT CCaptureWindow::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 		return 0;
 
 	case WM_CLOSE:
-		if (m_pEventHandler != NULL
+		if (m_pEventHandler != nullptr
 				&& !m_pEventHandler->OnClose())
 			return 0;
 		break;
@@ -592,7 +592,7 @@ LRESULT CCaptureWindow::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
 void CCaptureWindow::RealizeStyle()
 {
-	if (m_hwnd != NULL)
+	if (m_hwnd != nullptr)
 		SendSizeMessage();
 }
 

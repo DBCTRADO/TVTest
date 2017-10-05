@@ -1011,7 +1011,7 @@ void CAppCore::ShutDownTuner()
 	m_App.ChannelManager.Reset();
 
 	if (m_App.CoreEngine.IsDriverSpecified()) {
-		m_App.CoreEngine.SetDriverFileName(NULL);
+		m_App.CoreEngine.SetDriverFileName(nullptr);
 		m_App.AppEventManager.OnTunerShutDown();
 	}
 }
@@ -1142,7 +1142,7 @@ bool CAppCore::GenerateRecordFileName(LPTSTR pszFileName, int MaxFileName)
 	GetVariableStringEventInfo(&FormatInfo, 60 * 1000);
 
 	TVTest::String Path;
-	if (!m_App.RecordManager.GenerateFilePath(FormatInfo, NULL, &Path)) {
+	if (!m_App.RecordManager.GenerateFilePath(FormatInfo, nullptr, &Path)) {
 		OnError(TEXT("録画ファイルのパスを作成できません。"));
 		return false;
 	}
@@ -1155,7 +1155,7 @@ bool CAppCore::GenerateRecordFileName(LPTSTR pszFileName, int MaxFileName)
 	::lstrcpy(szDir, pszFileName);
 	::PathRemoveFileSpec(szDir);
 	if (!::PathIsDirectory(szDir)) {
-		int Result = ::SHCreateDirectoryEx(NULL, szDir, NULL);
+		int Result = ::SHCreateDirectoryEx(nullptr, szDir, nullptr);
 		if (Result != ERROR_SUCCESS && Result != ERROR_ALREADY_EXISTS) {
 			OnError(TEXT("録画ファイルの保存先フォルダ \"%s\" を作成できません。"), szDir);
 			return false;
@@ -1375,11 +1375,11 @@ bool CAppCore::CommandLineRecord(LPCTSTR pszFileName, const SYSTEMTIME *pStartTi
 
 	if (pStartTime != nullptr && pStartTime->wYear != 0) {
 		StartTime.Type = CRecordManager::TIME_DATETIME;
-		::TzSpecificLocalTimeToSystemTime(NULL, pStartTime, &StartTime.Time.DateTime);
+		::TzSpecificLocalTimeToSystemTime(nullptr, pStartTime, &StartTime.Time.DateTime);
 		if (Delay != 0)
 			OffsetSystemTime(&StartTime.Time.DateTime, Delay * TimeConsts::SYSTEMTIME_SECOND);
 		SYSTEMTIME st;
-		::SystemTimeToTzSpecificLocalTime(NULL, &StartTime.Time.DateTime, &st);
+		::SystemTimeToTzSpecificLocalTime(nullptr, &StartTime.Time.DateTime, &st);
 		m_App.AddLog(
 			TEXT("コマンドラインから録画指定されました。(%d/%d/%d %d:%02d:%02d 開始)"),
 			st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute, st.wSecond);

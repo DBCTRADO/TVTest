@@ -649,7 +649,7 @@ private:
 	bool GetEventRect(int ListIndex, int EventIndex, RECT *pRect) const;
 	bool RedrawEvent(int ListIndex, int EventIndex);
 	bool RedrawEventByIDs(WORD NetworkID, WORD TSID, WORD ServiceID, WORD EventID);
-	bool EventHitTest(int x, int y, int *pListIndex, int *pEventIndex, RECT *pItemRect = NULL) const;
+	bool EventHitTest(int x, int y, int *pListIndex, int *pEventIndex, RECT *pItemRect = nullptr) const;
 	bool GetEventIndexByIDs(
 		WORD NetworkID, WORD TSID, WORD ServiceID, WORD EventID,
 		int *pListIndex, int *pEventIndex) const;

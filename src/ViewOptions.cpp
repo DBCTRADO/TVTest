@@ -73,7 +73,7 @@ bool CViewOptions::Apply(DWORD Flags)
 	CAppMain &App = GetAppClass();
 
 	if ((Flags & UPDATE_LOGO) != 0) {
-		App.UICore.SetLogo(m_fShowLogo ? m_szLogoFileName : NULL);
+		App.UICore.SetLogo(m_fShowLogo ? m_szLogoFileName : nullptr);
 	}
 
 	return true;
@@ -251,7 +251,7 @@ INT_PTR CViewOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 						hmenu, MF_STRING | MF_ENABLED, i + 1,
 						TitleTextFormatPresets[i].pszDescript);
 				}
-				int Result = ::TrackPopupMenu(hmenu, TPM_RETURNCMD, rc.left, rc.bottom, 0, hDlg, NULL);
+				int Result = ::TrackPopupMenu(hmenu, TPM_RETURNCMD, rc.left, rc.bottom, 0, hDlg, nullptr);
 				if (Result > 0 && Result <= lengthof(TitleTextFormatPresets)) {
 					::SetDlgItemText(
 						hDlg, IDC_OPTIONS_TITLETEXTFORMAT,

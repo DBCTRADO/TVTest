@@ -27,7 +27,7 @@ public:
 			SPACE_NOTSPECIFIED = -2,
 			SPACE_ALL          = -1
 		};
-		CChannelDisplayEventHandler() : m_pChannelDisplay(NULL) {}
+		CChannelDisplayEventHandler() : m_pChannelDisplay(nullptr) {}
 		virtual void OnTunerSelect(LPCTSTR pszDriverFileName, int TuningSpace) = 0;
 		virtual void OnChannelSelect(LPCTSTR pszDriverFileName, const CChannelInfo *pChannelInfo) = 0;
 		virtual void OnClose() = 0;
@@ -75,15 +75,15 @@ private:
 		public:
 			CChannel(const CChannelInfo &Info)
 				: CChannelInfo(Info)
-				, m_hbmSmallLogo(NULL)
-				, m_hbmBigLogo(NULL)
+				, m_hbmSmallLogo(nullptr)
+				, m_hbmBigLogo(nullptr)
 			{
 			}
 			void SetSmallLogo(HBITMAP hbm) { m_hbmSmallLogo = hbm; }
 			HBITMAP GetSmallLogo() const { return m_hbmSmallLogo; }
 			void SetBigLogo(HBITMAP hbm) { m_hbmBigLogo = hbm; }
 			HBITMAP GetBigLogo() const { return m_hbmBigLogo; }
-			bool HasLogo() const { return m_hbmSmallLogo != NULL || m_hbmBigLogo != NULL; }
+			bool HasLogo() const { return m_hbmSmallLogo != nullptr || m_hbmBigLogo != nullptr; }
 			bool SetEvent(int Index, const LibISDB::EventInfo *pEvent);
 			const LibISDB::EventInfo *GetEvent(int Index) const;
 		};
@@ -187,7 +187,7 @@ private:
 	void Layout();
 	const CTuningSpaceInfo *GetTuningSpaceInfo(int Index) const;
 	CTuningSpaceInfo *GetTuningSpaceInfo(int Index);
-	const CTuner *GetTuner(int Index, int *pSpace = NULL) const;
+	const CTuner *GetTuner(int Index, int *pSpace = nullptr) const;
 	void GetTunerItemRect(int Index, RECT *pRect) const;
 	void GetChannelItemRect(int Index, RECT *pRect) const;
 	void UpdateTunerItem(int Index) const;

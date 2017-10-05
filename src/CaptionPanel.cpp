@@ -16,12 +16,12 @@
 
 
 const LPCTSTR CCaptionPanel::m_pszClassName = APP_NAME TEXT(" Caption Panel");
-HINSTANCE CCaptionPanel::m_hinst = NULL;
+HINSTANCE CCaptionPanel::m_hinst = nullptr;
 
 
 bool CCaptionPanel::Initialize(HINSTANCE hinst)
 {
-	if (m_hinst == NULL) {
+	if (m_hinst == nullptr) {
 		WNDCLASS wc;
 
 		wc.style = 0;
@@ -29,10 +29,10 @@ bool CCaptionPanel::Initialize(HINSTANCE hinst)
 		wc.cbClsExtra = 0;
 		wc.cbWndExtra = 0;
 		wc.hInstance = hinst;
-		wc.hIcon = NULL;
-		wc.hCursor = LoadCursor(NULL, IDC_ARROW);
-		wc.hbrBackground = NULL;
-		wc.lpszMenuName = NULL;
+		wc.hIcon = nullptr;
+		wc.hCursor = LoadCursor(nullptr, IDC_ARROW);
+		wc.hbrBackground = nullptr;
+		wc.lpszMenuName = nullptr;
 		wc.lpszClassName = m_pszClassName;
 		if (::RegisterClass(&wc) == 0)
 			return false;
@@ -45,7 +45,7 @@ bool CCaptionPanel::Initialize(HINSTANCE hinst)
 CCaptionPanel::CCaptionPanel()
 	: m_BackColor(RGB(0, 0, 0))
 	, m_TextColor(RGB(255, 255, 255))
-	, m_hwndEdit(NULL)
+	, m_hwndEdit(nullptr)
 	, m_EditSubclass(this)
 	, m_fActive(false)
 	, m_fEnable(true)
@@ -85,7 +85,7 @@ void CCaptionPanel::SetTheme(const TVTest::Theme::CThemeManager *pThemeManager)
 bool CCaptionPanel::SetFont(const TVTest::Style::Font &Font)
 {
 	m_CaptionFont = Font;
-	if (m_hwnd != NULL) {
+	if (m_hwnd != nullptr) {
 		ApplyStyle();
 		RealizeStyle();
 	}
@@ -124,9 +124,9 @@ void CCaptionPanel::SetColor(COLORREF BackColor, COLORREF TextColor)
 	m_BackColor = BackColor;
 	m_TextColor = TextColor;
 	m_BackBrush.Destroy();
-	if (m_hwnd != NULL) {
+	if (m_hwnd != nullptr) {
 		m_BackBrush.Create(BackColor);
-		::InvalidateRect(m_hwndEdit, NULL, TRUE);
+		::InvalidateRect(m_hwndEdit, nullptr, TRUE);
 	}
 }
 
@@ -136,7 +136,7 @@ void CCaptionPanel::Reset()
 	TVTest::BlockLock Lock(m_Lock);
 
 	ClearCaptionList();
-	if (m_hwndEdit != NULL)
+	if (m_hwndEdit != nullptr)
 		::SetWindowText(m_hwndEdit, TEXT(""));
 	m_DRCSMap.Reset();
 }
@@ -328,7 +328,7 @@ void CCaptionPanel::OnCommand(int Command)
 
 					bool fOK = false;
 					HANDLE hFile = ::CreateFile(
-						szFileName, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+						szFileName, GENERIC_WRITE, 0, nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
 
 					if (hFile != INVALID_HANDLE_VALUE) {
 						LPCWSTR pSrcText;
@@ -344,18 +344,18 @@ void CCaptionPanel::OnCommand(int Command)
 						}
 						if (m_SaveCharEncoding == CHARENCODING_UTF16) {
 							const WCHAR BOM = 0xFEFF;
-							fOK = ::WriteFile(hFile, &BOM, sizeof(BOM), &Write, NULL)
+							fOK = ::WriteFile(hFile, &BOM, sizeof(BOM), &Write, nullptr)
 								&& Write == sizeof(BOM)
-								&& ::WriteFile(hFile, pSrcText, SrcLength * sizeof(WCHAR), &Write, NULL)
+								&& ::WriteFile(hFile, pSrcText, SrcLength * sizeof(WCHAR), &Write, nullptr)
 								&& Write == SrcLength * sizeof(WCHAR);
 						} else {
 							const UINT CodePage =
 								m_SaveCharEncoding == CHARENCODING_UTF8 ? CP_UTF8 : 932;
-							int EncodedLen = ::WideCharToMultiByte(CodePage, 0, pSrcText, SrcLength, NULL, 0, NULL, NULL);
+							int EncodedLen = ::WideCharToMultiByte(CodePage, 0, pSrcText, SrcLength, nullptr, 0, nullptr, nullptr);
 							if (EncodedLen > 0) {
 								char *pEncodedText = new char[EncodedLen];
-								::WideCharToMultiByte(CodePage, 0, pSrcText, SrcLength, pEncodedText, EncodedLen, NULL, NULL);
-								fOK = ::WriteFile(hFile, pEncodedText, EncodedLen, &Write, NULL)
+								::WideCharToMultiByte(CodePage, 0, pSrcText, SrcLength, pEncodedText, EncodedLen, nullptr, nullptr);
+								fOK = ::WriteFile(hFile, pEncodedText, EncodedLen, &Write, nullptr)
 									&& Write == (DWORD)EncodedLen;
 								delete [] pEncodedText;
 							}
@@ -366,7 +366,7 @@ void CCaptionPanel::OnCommand(int Command)
 
 					if (!fOK) {
 						::MessageBox(
-							m_hwnd, TEXT("ファイルを保存できません。"), NULL,
+							m_hwnd, TEXT("ファイルを保存できません。"), nullptr,
 							MB_OK | MB_ICONEXCLAMATION);
 					}
 				}
@@ -431,7 +431,7 @@ LRESULT CCaptionPanel::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 				0, TEXT("EDIT"), TEXT(""),
 				WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_VSCROLL |
 					ES_MULTILINE | ES_READONLY | ES_AUTOVSCROLL | ES_NOHIDESEL,
-				0, 0, 0, 0, hwnd, (HMENU)IDC_EDIT, m_hinst, NULL);
+				0, 0, 0, 0, hwnd, (HMENU)IDC_EDIT, m_hinst, nullptr);
 			Edit_LimitText(m_hwndEdit, 8 * 1024 * 1024);
 			SetWindowFont(m_hwndEdit, m_Font.GetHandle(), FALSE);
 			m_EditSubclass.SetSubclass(m_hwndEdit);
@@ -476,7 +476,7 @@ LRESULT CCaptionPanel::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 							::SendMessage(m_hwndEdit, WM_SETREDRAW, FALSE, 0);
 							AppendText(Lang.NextCaption.c_str());
 							::SendMessage(m_hwndEdit, WM_SETREDRAW, TRUE, 0);
-							::InvalidateRect(m_hwndEdit, NULL, TRUE);
+							::InvalidateRect(m_hwndEdit, nullptr, TRUE);
 						} else {
 							// 非アクティブの場合はキューに溜める
 							if (Lang.CaptionList.size() >= MAX_QUEUE_TEXT) {
@@ -501,12 +501,12 @@ LRESULT CCaptionPanel::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 		{
 			LibISDB::CaptionFilter *pCaptionFilter = GetAppClass().CoreEngine.GetFilter<LibISDB::CaptionFilter>();
 			if (pCaptionFilter != nullptr) {
-				pCaptionFilter->SetCaptionHandler(NULL);
-				pCaptionFilter->SetDRCSMap(NULL);
+				pCaptionFilter->SetCaptionHandler(nullptr);
+				pCaptionFilter->SetDRCSMap(nullptr);
 			}
 
 			ClearCaptionList();
-			m_hwndEdit = NULL;
+			m_hwndEdit = nullptr;
 		}
 		return 0;
 	}
@@ -517,14 +517,14 @@ LRESULT CCaptionPanel::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 
 void CCaptionPanel::ApplyStyle()
 {
-	if (m_hwnd != NULL)
+	if (m_hwnd != nullptr)
 		CreateDrawFont(m_CaptionFont, &m_Font);
 }
 
 
 void CCaptionPanel::RealizeStyle()
 {
-	if (m_hwndEdit != NULL)
+	if (m_hwndEdit != nullptr)
 		SetWindowFont(m_hwndEdit, m_Font.GetHandle(), TRUE);
 }
 
@@ -574,7 +574,7 @@ void CCaptionPanel::OnCaption(
 {
 	TVTest::BlockLock Lock(m_Lock);
 
-	if (Language >= m_LanguageList.size() || m_hwnd == NULL || !m_fEnable)
+	if (Language >= m_LanguageList.size() || m_hwnd == nullptr || !m_fEnable)
 		return;
 
 	int Length = ::lstrlen(pText);
@@ -712,7 +712,7 @@ LRESULT CCaptionPanel::CEditSubclass::OnMessage(
 		return 0;
 
 	case WM_NCDESTROY:
-		m_pCaptionPanel->m_hwndEdit = NULL;
+		m_pCaptionPanel->m_hwndEdit = nullptr;
 		break;
 	}
 
@@ -727,7 +727,7 @@ LRESULT CCaptionPanel::CEditSubclass::OnMessage(
 
 
 CCaptionDRCSMap::CCaptionDRCSMap()
-	: m_pBuffer(NULL)
+	: m_pBuffer(nullptr)
 	, m_fSaveBMP(false)
 	, m_fSaveRaw(false)
 {
@@ -748,9 +748,9 @@ void CCaptionDRCSMap::Clear()
 
 	m_HashMap.clear();
 	m_CodeMap.clear();
-	if (m_pBuffer != NULL) {
+	if (m_pBuffer != nullptr) {
 		delete [] m_pBuffer;
-		m_pBuffer = NULL;
+		m_pBuffer = nullptr;
 	}
 }
 
@@ -791,7 +791,7 @@ bool CCaptionDRCSMap::Load(LPCTSTR pszFileName)
 
 	const DWORD BuffLength = 32767;
 	LPTSTR pBuffer = new TCHAR[BuffLength];
-	if (pBuffer == NULL)
+	if (pBuffer == nullptr)
 		return false;
 	DWORD Length = ::GetPrivateProfileSection(TEXT("DRCSMap"), pBuffer, BuffLength, pszFileName);
 	if (Length == 0) {
@@ -851,7 +851,7 @@ LPCTSTR CCaptionDRCSMap::GetString(WORD Code)
 		TRACE(TEXT("DRCS : Code %d %s\n"), Code, itr->second);
 		return itr->second;
 	}
-	return NULL;
+	return nullptr;
 }
 
 
@@ -902,8 +902,8 @@ bool CCaptionDRCSMap::SetDRCS(uint16_t Code, const LibISDB::CaptionParser::DRCSB
 bool CCaptionDRCSMap::SaveBMP(const LibISDB::CaptionParser::DRCSBitmap *pBitmap, LPCTSTR pszFileName)
 {
 	HANDLE hFile = ::CreateFile(
-		pszFileName, GENERIC_WRITE, FILE_SHARE_READ, NULL,
-		CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+		pszFileName, GENERIC_WRITE, FILE_SHARE_READ, nullptr,
+		CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
 	if (hFile == INVALID_HANDLE_VALUE)
 		return false;
 
@@ -917,7 +917,7 @@ bool CCaptionDRCSMap::SaveBMP(const LibISDB::CaptionParser::DRCSBitmap *pBitmap,
 	bmfh.bfSize = bmfh.bfOffBits + BitsSize;
 	bmfh.bfReserved1 = 0;
 	bmfh.bfReserved2 = 0;
-	if (!::WriteFile(hFile, &bmfh, sizeof(bmfh), &Write, NULL) || Write != sizeof(bmfh)) {
+	if (!::WriteFile(hFile, &bmfh, sizeof(bmfh), &Write, nullptr) || Write != sizeof(bmfh)) {
 		::CloseHandle(hFile);
 		return false;
 	}
@@ -934,7 +934,7 @@ bool CCaptionDRCSMap::SaveBMP(const LibISDB::CaptionParser::DRCSBitmap *pBitmap,
 	bmih.biYPelsPerMeter = 0;
 	bmih.biClrUsed = 0;
 	bmih.biClrImportant = 0;
-	if (!::WriteFile(hFile, &bmih, sizeof(bmih), &Write, NULL) || Write != sizeof(bmih)) {
+	if (!::WriteFile(hFile, &bmih, sizeof(bmih), &Write, nullptr) || Write != sizeof(bmih)) {
 		::CloseHandle(hFile);
 		return false;
 	}
@@ -948,7 +948,7 @@ bool CCaptionDRCSMap::SaveBMP(const LibISDB::CaptionParser::DRCSBitmap *pBitmap,
 		Colormap[i].rgbReserved = 0;
 	}
 	DWORD PalSize = (1UL << BitCount) * (DWORD)sizeof(RGBQUAD);
-	if (!::WriteFile(hFile, Colormap, PalSize, &Write, NULL) || Write != PalSize) {
+	if (!::WriteFile(hFile, Colormap, PalSize, &Write, nullptr) || Write != PalSize) {
 		::CloseHandle(hFile);
 		return false;
 	}
@@ -1002,7 +1002,7 @@ bool CCaptionDRCSMap::SaveBMP(const LibISDB::CaptionParser::DRCSBitmap *pBitmap,
 			q -= DIBRowBytes;
 		}
 	}
-	if (!::WriteFile(hFile, pDIBBits, BitsSize, &Write, NULL) || Write != BitsSize) {
+	if (!::WriteFile(hFile, pDIBBits, BitsSize, &Write, nullptr) || Write != BitsSize) {
 		delete [] pDIBBits;
 		::CloseHandle(hFile);
 		return false;
@@ -1017,12 +1017,12 @@ bool CCaptionDRCSMap::SaveBMP(const LibISDB::CaptionParser::DRCSBitmap *pBitmap,
 bool CCaptionDRCSMap::SaveRaw(const LibISDB::CaptionParser::DRCSBitmap *pBitmap, LPCTSTR pszFileName)
 {
 	HANDLE hFile = ::CreateFile(
-		pszFileName, GENERIC_WRITE, FILE_SHARE_READ, NULL,
-		CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+		pszFileName, GENERIC_WRITE, FILE_SHARE_READ, nullptr,
+		CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
 	if (hFile == INVALID_HANDLE_VALUE)
 		return false;
 	DWORD Write;
-	if (!::WriteFile(hFile, pBitmap->pData, pBitmap->DataSize, &Write, NULL)
+	if (!::WriteFile(hFile, pBitmap->pData, pBitmap->DataSize, &Write, nullptr)
 			|| Write != pBitmap->DataSize) {
 		::CloseHandle(hFile);
 		return false;

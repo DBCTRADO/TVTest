@@ -50,11 +50,11 @@ bool CChannelManager::LoadChannelList(LPCTSTR pszFileName)
 		m_fChannelFileHasStreamIDs = true;
 		for (int i = 0; i < m_TuningSpaceList.NumSpaces(); i++) {
 			const CTuningSpaceInfo *pSpace = m_TuningSpaceList.GetTuningSpaceInfo(i);
-			if (pSpace != NULL) {
+			if (pSpace != nullptr) {
 				const int NumChannels = pSpace->NumChannels();
 				for (int j = 0; j < NumChannels; j++) {
 					const CChannelInfo *pChannel = pSpace->GetChannelInfo(j);
-					if (pChannel != NULL) {
+					if (pChannel != nullptr) {
 						if (pChannel->GetServiceID() == 0
 								|| pChannel->GetNetworkID() == 0
 								|| pChannel->GetTransportStreamID() == 0) {
@@ -76,7 +76,7 @@ Break:
 	for (int i = 0; i < m_DriverTuningSpaceList.NumSpaces(); i++) {
 		CTuningSpaceInfo *pTuningSpace = m_TuningSpaceList.GetTuningSpaceInfo(i);
 
-		if (pTuningSpace != NULL) {
+		if (pTuningSpace != nullptr) {
 			const CTuningSpaceInfo *pDriverTuningSpace = m_DriverTuningSpaceList.GetTuningSpaceInfo(i);
 			const CChannelList *pDriverChannelList = pDriverTuningSpace->GetChannelList();
 
@@ -119,7 +119,7 @@ bool CChannelManager::MakeDriverTuningSpaceList(const LibISDB::BonDriverSourceFi
 		CChannelList *pList = m_DriverTuningSpaceList.GetChannelList(i);
 		LPCTSTR pszName;
 
-		for (int j = 0; (pszName = pSrcDecoder->GetChannelName(i, j)) != NULL; j++) {
+		for (int j = 0; (pszName = pSrcDecoder->GetChannelName(i, j)) != nullptr; j++) {
 			CChannelInfo ChInfo(i, j, j + 1, pszName);
 
 			LPCTSTR p = pszName;
@@ -164,7 +164,7 @@ bool CChannelManager::SetCurrentChannel(int Space, int Channel)
 	}
 	if (Space != SPACE_INVALID) {
 		const CChannelList *pList = GetChannelList(Space);
-		if (pList == NULL || Channel < -1 || Channel >= pList->NumChannels())
+		if (pList == nullptr || Channel < -1 || Channel >= pList->NumChannels())
 			return false;
 	} else {
 		Channel = -1;
@@ -193,8 +193,8 @@ const CChannelInfo *CChannelManager::GetCurrentChannelInfo() const
 {
 	const CChannelList *pList = GetCurrentChannelList();
 
-	if (pList == NULL)
-		return NULL;
+	if (pList == nullptr)
+		return nullptr;
 	return pList->GetChannelInfo(m_CurrentChannel);
 }
 
@@ -203,16 +203,16 @@ const CChannelInfo *CChannelManager::GetChangingChannelInfo() const
 {
 	const CChannelList *pList = GetCurrentChannelList();
 
-	if (pList != NULL)
+	if (pList != nullptr)
 		return pList->GetChannelInfo(m_ChangingChannel);
-	return NULL;
+	return nullptr;
 }
 
 
 int CChannelManager::GetNextChannel(int CurChannel, UpDownOrder Order, bool fNext) const
 {
 	const CChannelList *pList = GetCurrentChannelList();
-	if (pList == NULL)
+	if (pList == nullptr)
 		return -1;
 
 	if (CurChannel < 0 || CurChannel >= pList->NumChannels())
@@ -277,7 +277,7 @@ const CChannelList *CChannelManager::GetChannelList(int Space) const
 		return GetAllChannelList();
 	if (!m_fUseDriverChannelList) {
 		const CChannelList *pList = m_TuningSpaceList.GetChannelList(Space);
-		if (pList != NULL && pList->NumChannels() > 0)
+		if (pList != nullptr && pList->NumChannels() > 0)
 			return pList;
 	}
 	return m_DriverTuningSpaceList.GetChannelList(Space);
@@ -338,7 +338,7 @@ int CChannelManager::FindChannelInfo(const CChannelInfo *pInfo) const
 	const CChannelList *pList = GetCurrentChannelList();
 	int i;
 
-	if (pList == NULL)
+	if (pList == nullptr)
 		return -1;
 	for (i = 0; i < pList->NumChannels(); i++) {
 		if (pList->GetChannelInfo(i) == pInfo)
@@ -375,7 +375,7 @@ int CChannelManager::NumSpaces() const
 
 bool CChannelManager::GetChannelFileName(LPTSTR pszFileName, int MaxLength) const
 {
-	if (pszFileName == NULL
+	if (pszFileName == nullptr
 			|| m_ChannelFileName.empty()
 			|| MaxLength <= (int)m_ChannelFileName.length())
 		return false;

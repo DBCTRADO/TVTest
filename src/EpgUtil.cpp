@@ -34,7 +34,7 @@ int FormatEventTime(
 	const LibISDB::EventInfo &EventInfo,
 	LPTSTR pszTime, int MaxLength, unsigned int Flags)
 {
-	if (pszTime == NULL || MaxLength < 1)
+	if (pszTime == nullptr || MaxLength < 1)
 		return 0;
 
 	if (!EventInfo.StartTime.IsValid()) {
@@ -60,7 +60,7 @@ int FormatEventTime(
 	const SYSTEMTIME &StartTime, DWORD Duration,
 	LPTSTR pszTime, int MaxLength, unsigned int Flags)
 {
-	if (pszTime == NULL || MaxLength < 1)
+	if (pszTime == nullptr || MaxLength < 1)
 		return 0;
 
 	SYSTEMTIME stStart;
@@ -125,7 +125,7 @@ int FormatEventTime(
 
 bool EpgTimeToDisplayTime(const SYSTEMTIME &EpgTime, SYSTEMTIME *pDisplayTime)
 {
-	if (pDisplayTime == NULL)
+	if (pDisplayTime == nullptr)
 		return false;
 
 	switch (GetAppClass().EpgOptions.GetEpgTimeMode()) {
@@ -176,7 +176,7 @@ bool EpgTimeToDisplayTime(const SYSTEMTIME &EpgTime, SYSTEMTIME *pDisplayTime)
 
 bool EpgTimeToDisplayTime(const LibISDB::DateTime &EpgTime, LibISDB::DateTime *pDisplayTime)
 {
-	if (pDisplayTime == NULL)
+	if (pDisplayTime == nullptr)
 		return false;
 
 	SYSTEMTIME st;
@@ -192,7 +192,7 @@ bool EpgTimeToDisplayTime(const LibISDB::DateTime &EpgTime, LibISDB::DateTime *p
 
 bool EpgTimeToDisplayTime(SYSTEMTIME *pTime)
 {
-	if (pTime == NULL)
+	if (pTime == nullptr)
 		return false;
 
 	SYSTEMTIME st;
@@ -208,7 +208,7 @@ bool EpgTimeToDisplayTime(SYSTEMTIME *pTime)
 
 bool EpgTimeToDisplayTime(LibISDB::DateTime *pTime)
 {
-	if (pTime == NULL)
+	if (pTime == nullptr)
 		return false;
 
 	LibISDB::DateTime Time;
@@ -224,7 +224,7 @@ bool EpgTimeToDisplayTime(LibISDB::DateTime *pTime)
 
 bool DisplayTimeToEpgTime(const SYSTEMTIME &DisplayTime, SYSTEMTIME *pEpgTime)
 {
-	if (pEpgTime == NULL)
+	if (pEpgTime == nullptr)
 		return false;
 
 	switch (GetAppClass().EpgOptions.GetEpgTimeMode()) {
@@ -253,7 +253,7 @@ bool DisplayTimeToEpgTime(const SYSTEMTIME &DisplayTime, SYSTEMTIME *pEpgTime)
 			SYSTEMTIME st;
 			LibISDB::DateTime From, To;
 
-			if (!::TzSpecificLocalTimeToSystemTime(NULL, &DisplayTime, &st))
+			if (!::TzSpecificLocalTimeToSystemTime(nullptr, &DisplayTime, &st))
 				return false;
 			From.FromSYSTEMTIME(st);
 			if (!LibISDB::UTCTimeToEPGTime(From, &To))
@@ -280,7 +280,7 @@ bool DisplayTimeToEpgTime(const SYSTEMTIME &DisplayTime, SYSTEMTIME *pEpgTime)
 
 bool DisplayTimeToEpgTime(const LibISDB::DateTime &DisplayTime, LibISDB::DateTime *pEpgTime)
 {
-	if (pEpgTime == NULL)
+	if (pEpgTime == nullptr)
 		return false;
 
 	SYSTEMTIME st;
@@ -296,7 +296,7 @@ bool DisplayTimeToEpgTime(const LibISDB::DateTime &DisplayTime, LibISDB::DateTim
 
 bool DisplayTimeToEpgTime(SYSTEMTIME *pTime)
 {
-	if (pTime == NULL)
+	if (pTime == nullptr)
 		return false;
 
 	SYSTEMTIME st;
@@ -312,7 +312,7 @@ bool DisplayTimeToEpgTime(SYSTEMTIME *pTime)
 
 bool DisplayTimeToEpgTime(LibISDB::DateTime *pTime)
 {
-	if (pTime == NULL)
+	if (pTime == nullptr)
 		return false;
 
 	LibISDB::DateTime Time;
@@ -417,10 +417,10 @@ LPCTSTR CEpgGenre::GetText(int Level1, int Level2) const
 				TEXT("報道特番"),
 				TEXT("ローカル・地域"),
 				TEXT("交通"),
-				NULL,
-				NULL,
-				NULL,
-				NULL,
+				nullptr,
+				nullptr,
+				nullptr,
+				nullptr,
 				TEXT("その他")
 			}
 		},
@@ -437,10 +437,10 @@ LPCTSTR CEpgGenre::GetText(int Level1, int Level2) const
 				TEXT("モータースポーツ"),
 				TEXT("マリン・ウィンタースポーツ"),
 				TEXT("競馬・公営競技"),
-				NULL,
-				NULL,
-				NULL,
-				NULL,
+				nullptr,
+				nullptr,
+				nullptr,
+				nullptr,
 				TEXT("その他")
 			}
 		},
@@ -454,13 +454,13 @@ LPCTSTR CEpgGenre::GetText(int Level1, int Level2) const
 				TEXT("グルメ・料理"),
 				TEXT("イベント"),
 				TEXT("番組紹介・お知らせ"),
-				NULL,
-				NULL,
-				NULL,
-				NULL,
-				NULL,
-				NULL,
-				NULL,
+				nullptr,
+				nullptr,
+				nullptr,
+				nullptr,
+				nullptr,
+				nullptr,
+				nullptr,
 				TEXT("その他")
 			}
 		},
@@ -469,18 +469,18 @@ LPCTSTR CEpgGenre::GetText(int Level1, int Level2) const
 				TEXT("国内ドラマ"),
 				TEXT("海外ドラマ"),
 				TEXT("時代劇"),
-				NULL,
-				NULL,
-				NULL,
-				NULL,
-				NULL,
-				NULL,
-				NULL,
-				NULL,
-				NULL,
-				NULL,
-				NULL,
-				NULL,
+				nullptr,
+				nullptr,
+				nullptr,
+				nullptr,
+				nullptr,
+				nullptr,
+				nullptr,
+				nullptr,
+				nullptr,
+				nullptr,
+				nullptr,
+				nullptr,
 				TEXT("その他")
 			}
 		},
@@ -497,10 +497,10 @@ LPCTSTR CEpgGenre::GetText(int Level1, int Level2) const
 				TEXT("民謡・邦楽"),
 				TEXT("童謡・キッズ"),
 				TEXT("民族音楽・ワールドミュージック"),
-				NULL,
-				NULL,
-				NULL,
-				NULL,
+				nullptr,
+				nullptr,
+				nullptr,
+				nullptr,
 				TEXT("その他")
 			}
 		},
@@ -513,14 +513,14 @@ LPCTSTR CEpgGenre::GetText(int Level1, int Level2) const
 				TEXT("音楽バラエティ"),
 				TEXT("旅バラエティ"),
 				TEXT("料理バラエティ"),
-				NULL,
-				NULL,
-				NULL,
-				NULL,
-				NULL,
-				NULL,
-				NULL,
-				NULL,
+				nullptr,
+				nullptr,
+				nullptr,
+				nullptr,
+				nullptr,
+				nullptr,
+				nullptr,
+				nullptr,
 				TEXT("その他")
 			}
 		},
@@ -529,18 +529,18 @@ LPCTSTR CEpgGenre::GetText(int Level1, int Level2) const
 				TEXT("洋画"),
 				TEXT("邦画"),
 				TEXT("アニメ"),
-				NULL,
-				NULL,
-				NULL,
-				NULL,
-				NULL,
-				NULL,
-				NULL,
-				NULL,
-				NULL,
-				NULL,
-				NULL,
-				NULL,
+				nullptr,
+				nullptr,
+				nullptr,
+				nullptr,
+				nullptr,
+				nullptr,
+				nullptr,
+				nullptr,
+				nullptr,
+				nullptr,
+				nullptr,
+				nullptr,
 				TEXT("その他")
 			}
 		},
@@ -549,18 +549,18 @@ LPCTSTR CEpgGenre::GetText(int Level1, int Level2) const
 				TEXT("国内アニメ"),
 				TEXT("海外アニメ"),
 				TEXT("特撮"),
-				NULL,
-				NULL,
-				NULL,
-				NULL,
-				NULL,
-				NULL,
-				NULL,
-				NULL,
-				NULL,
-				NULL,
-				NULL,
-				NULL,
+				nullptr,
+				nullptr,
+				nullptr,
+				nullptr,
+				nullptr,
+				nullptr,
+				nullptr,
+				nullptr,
+				nullptr,
+				nullptr,
+				nullptr,
+				nullptr,
 				TEXT("その他")
 			}
 		},
@@ -575,12 +575,12 @@ LPCTSTR CEpgGenre::GetText(int Level1, int Level2) const
 				TEXT("スポーツ"),
 				TEXT("ドキュメンタリー全般"),
 				TEXT("インタビュー・討論"),
-				NULL,
-				NULL,
-				NULL,
-				NULL,
-				NULL,
-				NULL,
+				nullptr,
+				nullptr,
+				nullptr,
+				nullptr,
+				nullptr,
+				nullptr,
 				TEXT("その他")
 			}
 		},
@@ -591,16 +591,16 @@ LPCTSTR CEpgGenre::GetText(int Level1, int Level2) const
 				TEXT("ダンス・バレエ"),
 				TEXT("落語・演芸"),
 				TEXT("歌舞伎・古典"),
-				NULL,
-				NULL,
-				NULL,
-				NULL,
-				NULL,
-				NULL,
-				NULL,
-				NULL,
-				NULL,
-				NULL,
+				nullptr,
+				nullptr,
+				nullptr,
+				nullptr,
+				nullptr,
+				nullptr,
+				nullptr,
+				nullptr,
+				nullptr,
+				nullptr,
 				TEXT("その他")
 			}
 		},
@@ -619,8 +619,8 @@ LPCTSTR CEpgGenre::GetText(int Level1, int Level2) const
 				TEXT("大学生・受験"),
 				TEXT("生涯学習・資格"),
 				TEXT("教育問題"),
-				NULL,
-				NULL,
+				nullptr,
+				nullptr,
 				TEXT("その他")
 			}
 		},
@@ -633,14 +633,14 @@ LPCTSTR CEpgGenre::GetText(int Level1, int Level2) const
 				TEXT("手話"),
 				TEXT("文字(字幕)"),
 				TEXT("音声解説"),
-				NULL,
-				NULL,
-				NULL,
-				NULL,
-				NULL,
-				NULL,
-				NULL,
-				NULL,
+				nullptr,
+				nullptr,
+				nullptr,
+				nullptr,
+				nullptr,
+				nullptr,
+				nullptr,
+				nullptr,
 				TEXT("その他")
 			}
 		},
@@ -651,20 +651,20 @@ LPCTSTR CEpgGenre::GetText(int Level1, int Level2) const
 			return GenreList[Level1].pszText;
 		if (Level1 == GENRE_OTHER)
 			return TEXT("その他");
-		return NULL;
+		return nullptr;
 	}
 	if (Level1 >= 0 && Level1 < lengthof(GenreList)
 			&& Level2 >= 0 && Level2 < 16)
 		return GenreList[Level1].pszSubText[Level2];
-	return NULL;
+	return nullptr;
 }
 
 
 
 
 CEpgIcons::CEpgIcons()
-	: m_hdc(NULL)
-	, m_hbmOld(NULL)
+	: m_hdc(nullptr)
+	, m_hbmOld(nullptr)
 {
 }
 
@@ -689,7 +689,7 @@ bool CEpgIcons::BeginDraw(HDC hdc, int IconWidth, int IconHeight)
 	EndDraw();
 
 	m_hdc = ::CreateCompatibleDC(hdc);
-	if (m_hdc == NULL)
+	if (m_hdc == nullptr)
 		return false;
 	m_hbmOld = DrawUtil::SelectObject(m_hdc, *this);
 
@@ -708,11 +708,11 @@ bool CEpgIcons::BeginDraw(HDC hdc, int IconWidth, int IconHeight)
 
 void CEpgIcons::EndDraw()
 {
-	if (m_hdc != NULL) {
+	if (m_hdc != nullptr) {
 		::SelectObject(m_hdc, m_hbmOld);
 		::DeleteDC(m_hdc);
-		m_hdc = NULL;
-		m_hbmOld = NULL;
+		m_hdc = nullptr;
+		m_hbmOld = nullptr;
 	}
 	m_StretchBuffer.Destroy();
 }
@@ -722,8 +722,8 @@ bool CEpgIcons::DrawIcon(
 	HDC hdcDst, int DstX, int DstY, int Width, int Height,
 	int Icon, BYTE Opacity, const RECT *pClipping)
 {
-	if (m_hdc == NULL
-			|| hdcDst == NULL
+	if (m_hdc == nullptr
+			|| hdcDst == nullptr
 			|| Width <= 0 || Height <= 0
 			|| Icon < 0 || Icon > ICON_LAST)
 		return false;
@@ -754,7 +754,7 @@ bool CEpgIcons::DrawIcon(
 
 	RECT rcDraw, rcDst;
 
-	if (pClipping != NULL) {
+	if (pClipping != nullptr) {
 		::SetRect(&rcDst, DstX, DstY, DstX + Width, DstY + Height);
 		if (!::IntersectRect(&rcDraw, &rcDst, pClipping))
 			return true;

@@ -91,12 +91,12 @@ HGLOBAL ResizeImage(
 	BYTE *q;
 
 	if (pbmiSrc->bmiHeader.biBitCount != 24 && pbmiSrc->bmiHeader.biBitCount != 32)
-		return NULL;
+		return nullptr;
 	hGlobal = GlobalAlloc(
 		GMEM_MOVEABLE | GMEM_SHARE,
 		sizeof(BITMAPINFOHEADER) + DIB_ROW_BYTES(Width, 24) * Height);
-	if (hGlobal == NULL)
-		return NULL;
+	if (hGlobal == nullptr)
+		return nullptr;
 	pbmihDst = (BITMAPINFOHEADER*)GlobalLock(hGlobal);
 	pbmihDst->biSize = sizeof(BITMAPINFOHEADER);
 	pbmihDst->biWidth = Width;
@@ -110,7 +110,7 @@ HGLOBAL ResizeImage(
 	pbmihDst->biClrUsed = 0;
 	pbmihDst->biClrImportant = 0;
 	pDstData = pbmihDst + 1;
-	if (pSrcRect != NULL) {
+	if (pSrcRect != nullptr) {
 		SrcLeft = pSrcRect->left;
 		SrcTop = pSrcRect->top;
 		SrcWidth = pSrcRect->right - pSrcRect->left;
@@ -184,7 +184,7 @@ HGLOBAL ResizeImage(
 
 CImageCodec::CImageCodec()
 #ifndef TVTEST_IMAGE_STATIC
-	: m_hLib(NULL)
+	: m_hLib(nullptr)
 #endif
 {
 }
@@ -193,7 +193,7 @@ CImageCodec::CImageCodec()
 CImageCodec::~CImageCodec()
 {
 #ifndef TVTEST_IMAGE_STATIC
-	if (m_hLib != NULL)
+	if (m_hLib != nullptr)
 		::FreeLibrary(m_hLib);
 #endif
 }
@@ -202,14 +202,14 @@ CImageCodec::~CImageCodec()
 bool CImageCodec::Init()
 {
 #ifndef TVTEST_IMAGE_STATIC
-	if (m_hLib == NULL) {
+	if (m_hLib == nullptr) {
 		m_hLib = ::LoadLibrary(TEXT("TVTest_Image.dll"));
-		if (m_hLib == NULL)
+		if (m_hLib == nullptr)
 			return false;
 		m_pSaveImage = reinterpret_cast<SaveImageFunc>(::GetProcAddress(m_hLib, "SaveImage"));
-		if (m_pSaveImage == NULL) {
+		if (m_pSaveImage == nullptr) {
 			::FreeLibrary(m_hLib);
-			m_hLib = NULL;
+			m_hLib = nullptr;
 			return false;
 		}
 	}
@@ -223,7 +223,7 @@ bool CImageCodec::SaveImage(
 	const BITMAPINFO *pbmi, const void *pBits, LPCTSTR pszComment)
 {
 #ifndef TVTEST_IMAGE_STATIC
-	if (m_hLib == NULL && !Init())
+	if (m_hLib == nullptr && !Init())
 		return false;
 #endif
 
@@ -251,7 +251,7 @@ LPCTSTR CImageCodec::EnumSaveFormat(int Index) const
 	case 1: return TEXT("JPEG");
 	case 2: return TEXT("PNG");
 	}
-	return NULL;
+	return nullptr;
 }
 
 
@@ -262,7 +262,7 @@ LPCTSTR CImageCodec::GetExtension(int Index) const
 	case 1: return TEXT("jpg");
 	case 2: return TEXT("png");
 	}
-	return NULL;
+	return nullptr;
 }
 
 
@@ -271,7 +271,7 @@ int CImageCodec::FormatNameToIndex(LPCTSTR pszName) const
 	int i;
 	LPCTSTR pszFormat;
 
-	for (i = 0; (pszFormat = EnumSaveFormat(i)) != NULL; i++) {
+	for (i = 0; (pszFormat = EnumSaveFormat(i)) != nullptr; i++) {
 		if (lstrcmpi(pszName, pszFormat) == 0)
 			return i;
 	}
@@ -282,12 +282,12 @@ int CImageCodec::FormatNameToIndex(LPCTSTR pszName) const
 HGLOBAL CImageCodec::LoadAribPngFromMemory(const void *pData, SIZE_T DataSize)
 {
 #ifndef TVTEST_IMAGE_STATIC
-	if (m_hLib == NULL && !Init())
-		return NULL;
+	if (m_hLib == nullptr && !Init())
+		return nullptr;
 	auto pLoadAribPngFromMemory =
 		reinterpret_cast<LoadAribPngFromMemoryFunc>(::GetProcAddress(m_hLib, "LoadAribPngFromMemory"));
-	if (pLoadAribPngFromMemory == NULL)
-		return NULL;
+	if (pLoadAribPngFromMemory == nullptr)
+		return nullptr;
 	return pLoadAribPngFromMemory(pData, DataSize);
 #else
 	return TVTest::ImageLib::LoadAribPngFromMemory(pData, DataSize);
@@ -298,12 +298,12 @@ HGLOBAL CImageCodec::LoadAribPngFromMemory(const void *pData, SIZE_T DataSize)
 HGLOBAL CImageCodec::LoadAribPngFromFile(LPCTSTR pszFileName)
 {
 #ifndef TVTEST_IMAGE_STATIC
-	if (m_hLib == NULL && !Init())
-		return NULL;
+	if (m_hLib == nullptr && !Init())
+		return nullptr;
 	auto pLoadAribPngFromFile =
 		reinterpret_cast<LoadAribPngFromFileFunc>(::GetProcAddress(m_hLib, "LoadAribPngFromFile"));
-	if (pLoadAribPngFromFile == NULL)
-		return NULL;
+	if (pLoadAribPngFromFile == nullptr)
+		return nullptr;
 	return pLoadAribPngFromFile(pszFileName);
 #else
 	return TVTest::ImageLib::LoadAribPngFromFile(pszFileName);

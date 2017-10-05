@@ -77,7 +77,7 @@ public:
 // CChannelPanel
 	bool SetEPGDatabase(LibISDB::EPGDatabase *pEPGDatabase);
 	bool SetChannelList(const CChannelList *pChannelList, bool fSetEvent = true);
-	void ClearChannelList() { SetChannelList(NULL); }
+	void ClearChannelList() { SetChannelList(nullptr); }
 	bool UpdateAllChannels();
 	bool UpdateChannel(int ChannelIndex);
 	bool UpdateChannels(WORD NetworkID, WORD TransportStreamID);
@@ -216,7 +216,7 @@ private:
 	static HINSTANCE m_hinst;
 
 	void ClearChannels();
-	bool UpdateEvents(CChannelEventInfo *pInfo, const LibISDB::DateTime *pTime = NULL);
+	bool UpdateEvents(CChannelEventInfo *pInfo, const LibISDB::DateTime *pTime = nullptr);
 	void Draw(HDC hdc, const RECT *prcPaint);
 	void OnCommand(int ID);
 	void SetScrollPos(int Pos);
@@ -230,7 +230,7 @@ private:
 		HIT_MARGIN,
 		HIT_EVENT1
 	};
-	int HitTest(int x, int y, HitType *pType = NULL) const;
+	int HitTest(int x, int y, HitType *pType = nullptr) const;
 	bool CreateTooltip();
 	void SetTooltipFont();
 	void SetTooltips(bool fRectOnly = false);

@@ -50,7 +50,7 @@ ThemeColor FillStyle::GetSolidColor() const
 
 bool Draw(HDC hdc, const RECT &Rect, const SolidStyle &Style)
 {
-	if (hdc == NULL)
+	if (hdc == nullptr)
 		return false;
 
 	return DrawUtil::Fill(hdc, &Rect, Style.Color);
@@ -59,7 +59,7 @@ bool Draw(HDC hdc, const RECT &Rect, const SolidStyle &Style)
 
 bool Draw(HDC hdc, const RECT &Rect, const GradientStyle &Style)
 {
-	if (hdc == NULL)
+	if (hdc == nullptr)
 		return false;
 
 	switch (Style.Type) {
@@ -85,7 +85,7 @@ bool Draw(HDC hdc, const RECT &Rect, const GradientStyle &Style)
 
 bool Draw(HDC hdc, const RECT &Rect, const FillStyle &Style)
 {
-	if (hdc == NULL)
+	if (hdc == nullptr)
 		return false;
 
 	switch (Style.Type) {
@@ -105,7 +105,7 @@ bool Draw(HDC hdc, const RECT &Rect, const FillStyle &Style)
 
 bool Draw(HDC hdc, const RECT &Rect, const BackgroundStyle &Style)
 {
-	if (hdc == NULL)
+	if (hdc == nullptr)
 		return false;
 
 	RECT rc = Rect;
@@ -120,7 +120,7 @@ bool Draw(HDC hdc, const RECT &Rect, const BackgroundStyle &Style)
 
 bool Draw(HDC hdc, const RECT &Rect, const ForegroundStyle &Style, LPCTSTR pszText, UINT Flags)
 {
-	if (hdc == NULL)
+	if (hdc == nullptr)
 		return false;
 
 	ThemeColor c;
@@ -182,7 +182,7 @@ inline void FillBorder(HDC hdc, const RECT &Area, int Left, int Top, int Right, 
 
 bool Draw(HDC hdc, RECT *pRect, const BorderStyle &Style)
 {
-	if (hdc == NULL || pRect == NULL)
+	if (hdc == nullptr || pRect == nullptr)
 		return false;
 
 	if (Style.Type == BORDER_NONE)
@@ -203,7 +203,7 @@ bool Draw(HDC hdc, RECT *pRect, const BorderStyle &Style)
 
 		case BORDER_SUNKEN:
 			::SetDCPenColor(hdc, GetHighlightColor(Style.Color));
-			::MoveToEx(hdc, rc.left + 1, rc.bottom - 1, NULL);
+			::MoveToEx(hdc, rc.left + 1, rc.bottom - 1, nullptr);
 			::LineTo(hdc, rc.right - 1, rc.bottom - 1);
 			::LineTo(hdc, rc.right - 1, rc.top);
 			::SetDCPenColor(hdc, GetShadowColor(Style.Color));
@@ -213,7 +213,7 @@ bool Draw(HDC hdc, RECT *pRect, const BorderStyle &Style)
 
 		case BORDER_RAISED:
 			::SetDCPenColor(hdc, GetHighlightColor(Style.Color));
-			::MoveToEx(hdc, rc.right - 2, rc.top, NULL);
+			::MoveToEx(hdc, rc.right - 2, rc.top, nullptr);
 			::LineTo(hdc, rc.left, rc.top);
 			::LineTo(hdc, rc.left, rc.bottom - 1);
 			::SetDCPenColor(hdc, GetShadowColor(Style.Color));
@@ -331,7 +331,7 @@ FillStyle MixStyle(const FillStyle &Style1, const FillStyle &Style2, BYTE Ratio)
 
 bool AddBorderRect(const BorderStyle &Style, RECT *pRect)
 {
-	if (pRect == NULL)
+	if (pRect == nullptr)
 		return false;
 	if (Style.Type != BORDER_NONE) {
 		pRect->left -= Style.Width.Left;
@@ -345,7 +345,7 @@ bool AddBorderRect(const BorderStyle &Style, RECT *pRect)
 
 bool SubtractBorderRect(const BorderStyle &Style, RECT *pRect)
 {
-	if (pRect == NULL)
+	if (pRect == nullptr)
 		return false;
 	if (Style.Type != BORDER_NONE) {
 		pRect->left += Style.Width.Left;
@@ -359,7 +359,7 @@ bool SubtractBorderRect(const BorderStyle &Style, RECT *pRect)
 
 bool GetBorderWidths(const BorderStyle &Style, RECT *pRect)
 {
-	if (pRect == NULL)
+	if (pRect == nullptr)
 		return false;
 	if (Style.Type != BORDER_NONE) {
 		pRect->left = Style.Width.Left;

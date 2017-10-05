@@ -898,7 +898,7 @@ void CColorScheme::SetDefault()
 LPCTSTR CColorScheme::GetColorName(int Type)
 {
 	if (Type < 0 || Type >= NUM_COLORS)
-		return NULL;
+		return nullptr;
 	return m_ColorInfoList[Type].pszName;
 }
 
@@ -1020,7 +1020,7 @@ CColorSchemeList::~CColorSchemeList()
 
 bool CColorSchemeList::Add(CColorScheme *pColorScheme)
 {
-	if (pColorScheme == NULL)
+	if (pColorScheme == nullptr)
 		return false;
 	m_List.push_back(pColorScheme);
 	return true;
@@ -1076,14 +1076,14 @@ void CColorSchemeList::Clear()
 CColorScheme *CColorSchemeList::GetColorScheme(int Index)
 {
 	if (Index < 0 || (size_t)Index >= m_List.size())
-		return NULL;
+		return nullptr;
 	return m_List[Index];
 }
 
 
 bool CColorSchemeList::SetColorScheme(int Index, const CColorScheme *pColorScheme)
 {
-	if (Index < 0 || (size_t)Index >= m_List.size() || pColorScheme == NULL)
+	if (Index < 0 || (size_t)Index >= m_List.size() || pColorScheme == nullptr)
 		return false;
 	*m_List[Index] = *pColorScheme;
 	return true;
@@ -1092,7 +1092,7 @@ bool CColorSchemeList::SetColorScheme(int Index, const CColorScheme *pColorSchem
 
 int CColorSchemeList::FindByName(LPCTSTR pszName, int FirstIndex) const
 {
-	if (pszName == NULL)
+	if (pszName == nullptr)
 		return -1;
 
 	for (int i = max(FirstIndex, 0); i < (int)m_List.size(); i++) {

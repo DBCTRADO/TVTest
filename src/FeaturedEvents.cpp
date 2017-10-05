@@ -167,7 +167,7 @@ size_t CFeaturedEventsSearcher::GetEventCount() const
 const LibISDB::EventInfo *CFeaturedEventsSearcher::GetEventInfo(size_t Index) const
 {
 	if (Index >= m_EventList.size())
-		return NULL;
+		return nullptr;
 
 	return m_EventList[Index];
 }
@@ -227,7 +227,7 @@ static void InitServiceListView(
 	const CChannelList &ServiceList,
 	const CEventSearchServiceList &SearchServiceList)
 {
-	::SetWindowTheme(hwndList, L"explorer", NULL);
+	::SetWindowTheme(hwndList, L"explorer", nullptr);
 	ListView_SetExtendedListViewStyle(
 		hwndList, LVS_EX_CHECKBOXES | LVS_EX_FULLROWSELECT | LVS_EX_INFOTIP);
 
@@ -286,7 +286,7 @@ static void InitServiceListView(
 			pChannelInfo->GetNetworkID(),
 			pChannelInfo->GetServiceID(),
 			IconWidth, IconHeight);
-		if (hico != NULL) {
+		if (hico != nullptr) {
 			lvi.iImage = ImageList_AddIcon(himl, hico);
 			::DestroyIcon(hico);
 		} else {
@@ -334,7 +334,7 @@ static BOOL ServiceListViewGetInfoTip(
 		return FALSE;
 
 	const CChannelInfo *pChannelInfo = ServiceList.GetChannelInfo((int)lvi.lParam);
-	if (pChannelInfo == NULL)
+	if (pChannelInfo == nullptr)
 		return FALSE;
 
 	StdUtil::snprintf(
@@ -381,7 +381,7 @@ static BOOL ServiceListViewOnLinkClick(HWND hDlg, NMLVLINK *pLink)
 	::ClientToScreen(hwndList, &pt);
 	int Command = ::TrackPopupMenu(
 		hmenu, TPM_RIGHTALIGN | TPM_RIGHTBUTTON | TPM_RETURNCMD,
-		pt.x, pt.y, 0, hDlg, NULL);
+		pt.x, pt.y, 0, hDlg, nullptr);
 	::DestroyMenu(hmenu);
 	if (Command > 0) {
 		const int ItemCount = ListView_GetItemCount(hwndList);
@@ -538,7 +538,7 @@ INT_PTR CFeaturedEventsSearchDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam
 							lvi.iItem = i;
 							ListView_GetItem(hwndList, &lvi);
 							const CChannelInfo *pChannelInfo = m_ServiceList.GetChannelInfo((int)lvi.lParam);
-							if (pChannelInfo != NULL) {
+							if (pChannelInfo != nullptr) {
 								m_SearchSettings.ServiceList.Add(
 									pChannelInfo->GetNetworkID(),
 									pChannelInfo->GetTransportStreamID(),
@@ -839,7 +839,7 @@ INT_PTR CFeaturedEventsDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPAR
 						lvi.iItem = i;
 						ListView_GetItem(hwndList, &lvi);
 						const CChannelInfo *pChannelInfo = m_ServiceList.GetChannelInfo((int)lvi.lParam);
-						if (pChannelInfo != NULL) {
+						if (pChannelInfo != nullptr) {
 							DefaultServiceList.Add(
 								pChannelInfo->GetNetworkID(),
 								pChannelInfo->GetTransportStreamID(),
@@ -1005,13 +1005,13 @@ void CFeaturedEventsDialog::UpdateSearchSettingsItem(HWND hDlg, int Item)
 	for (int i = 0; i < CEpgGenre::NUM_GENRE; i++) {
 		if ((pSettings->Genre1 & (1 << i)) != 0 || pSettings->Genre2[i] != 0) {
 			LPCTSTR pszText = EpgGenre.GetText(i, -1);
-			if (pszText != NULL) {
+			if (pszText != nullptr) {
 				Genre += pszText;
 				bool fFirst = true;
 				for (int j = 0; j < CEpgGenre::NUM_SUB_GENRE; j++) {
 					if ((pSettings->Genre2[i] & (1 << j)) != 0) {
 						pszText = EpgGenre.GetText(i, j);
-						if (pszText != NULL) {
+						if (pszText != nullptr) {
 							if (fFirst) {
 								Genre += TEXT("（");
 								fFirst = false;

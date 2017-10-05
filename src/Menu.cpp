@@ -11,31 +11,31 @@
 
 
 static int MyTrackPopupMenu(
-	HMENU hmenu, UINT Flags, HWND hwnd, const POINT *pPos = NULL, const RECT *pExcludeRect = NULL)
+	HMENU hmenu, UINT Flags, HWND hwnd, const POINT *pPos = nullptr, const RECT *pExcludeRect = nullptr)
 {
 	POINT pt;
 	TPMPARAMS tpm;
 
-	if (pPos != NULL)
+	if (pPos != nullptr)
 		pt = *pPos;
 	else
 		::GetCursorPos(&pt);
 
-	if (pExcludeRect != NULL) {
+	if (pExcludeRect != nullptr) {
 		tpm.cbSize = sizeof(TPMPARAMS);
 		tpm.rcExclude = *pExcludeRect;
 	}
 
-	return ::TrackPopupMenuEx(hmenu, Flags, pt.x, pt.y, hwnd, pExcludeRect != NULL ? &tpm : NULL);
+	return ::TrackPopupMenuEx(hmenu, Flags, pt.x, pt.y, hwnd, pExcludeRect != nullptr ? &tpm : nullptr);
 }
 
 
 
 
 CMainMenu::CMainMenu()
-	: m_hmenu(NULL)
-	, m_hmenuPopup(NULL)
-	, m_hmenuShow(NULL)
+	: m_hmenu(nullptr)
+	, m_hmenuPopup(nullptr)
+	, m_hmenuShow(nullptr)
 	, m_fPopup(false)
 {
 }
@@ -52,7 +52,7 @@ bool CMainMenu::Create(HINSTANCE hinst)
 	if (m_hmenu)
 		return false;
 	m_hmenu = ::LoadMenu(hinst, MAKEINTRESOURCE(IDM_MENU));
-	if (m_hmenu == NULL)
+	if (m_hmenu == nullptr)
 		return false;
 	m_hmenuPopup = ::GetSubMenu(m_hmenu, 0);
 	return true;
@@ -63,15 +63,15 @@ void CMainMenu::Destroy()
 {
 	if (m_hmenu) {
 		::DestroyMenu(m_hmenu);
-		m_hmenu = NULL;
-		m_hmenuPopup = NULL;
+		m_hmenu = nullptr;
+		m_hmenuPopup = nullptr;
 	}
 }
 
 
 bool CMainMenu::Show(UINT Flags, int x, int y, HWND hwnd, bool fToggle, const std::vector<int> *pItemList)
 {
-	if (m_hmenu == NULL)
+	if (m_hmenu == nullptr)
 		return false;
 
 	if (!m_fPopup || !fToggle || m_PopupMenu >= 0) {
@@ -80,7 +80,7 @@ bool CMainMenu::Show(UINT Flags, int x, int y, HWND hwnd, bool fToggle, const st
 
 		HMENU hmenuCustom = m_hmenuPopup;
 
-		if (pItemList != NULL && !pItemList->empty()) {
+		if (pItemList != nullptr && !pItemList->empty()) {
 			hmenuCustom = ::CreatePopupMenu();
 			int OrigItemCount = ::GetMenuItemCount(m_hmenuPopup);
 			const CCommandList &CommandList = GetAppClass().CommandList;
@@ -96,7 +96,7 @@ bool CMainMenu::Show(UINT Flags, int x, int y, HWND hwnd, bool fToggle, const st
 				int ID = *itr;
 
 				if (ID < 0) {
-					::AppendMenu(hmenuCustom, MF_SEPARATOR, 0, NULL);
+					::AppendMenu(hmenuCustom, MF_SEPARATOR, 0, nullptr);
 				} else if (ID >= CM_COMMAND_FIRST) {
 					// トップレベルの項目にあればコピー
 					int i;
@@ -133,9 +133,9 @@ bool CMainMenu::Show(UINT Flags, int x, int y, HWND hwnd, bool fToggle, const st
 		m_hmenuShow = hmenuCustom;
 		m_fPopup = true;
 		m_PopupMenu = -1;
-		::TrackPopupMenu(hmenuCustom, Flags, x, y, 0, hwnd, NULL);
+		::TrackPopupMenu(hmenuCustom, Flags, x, y, 0, hwnd, nullptr);
 		m_fPopup = false;
-		m_hmenuShow = NULL;
+		m_hmenuShow = nullptr;
 
 		if (hmenuCustom != m_hmenuPopup) {
 			for (int i = ::GetMenuItemCount(hmenuCustom) - 1; i >= 0; i--) {
@@ -157,7 +157,7 @@ bool CMainMenu::PopupSubMenu(
 {
 	HMENU hmenu = GetSubMenu(SubMenu);
 
-	if (hmenu == NULL)
+	if (hmenu == nullptr)
 		return false;
 	if (!m_fPopup || !fToggle || m_PopupMenu != SubMenu) {
 		if (m_fPopup)
@@ -175,9 +175,9 @@ bool CMainMenu::PopupSubMenu(
 
 void CMainMenu::EnableItem(UINT ID, bool fEnable)
 {
-	if (m_hmenuPopup != NULL) {
+	if (m_hmenuPopup != nullptr) {
 		::EnableMenuItem(m_hmenuPopup, ID, MF_BYCOMMAND | (fEnable ? MFS_ENABLED : MFS_GRAYED));
-		if (m_hmenuShow != NULL && m_hmenuShow != m_hmenuPopup)
+		if (m_hmenuShow != nullptr && m_hmenuShow != m_hmenuPopup)
 			::EnableMenuItem(m_hmenuShow, ID, MF_BYCOMMAND | (fEnable ? MFS_ENABLED : MFS_GRAYED));
 	}
 }
@@ -185,9 +185,9 @@ void CMainMenu::EnableItem(UINT ID, bool fEnable)
 
 void CMainMenu::CheckItem(UINT ID, bool fCheck)
 {
-	if (m_hmenuPopup != NULL) {
+	if (m_hmenuPopup != nullptr) {
 		::CheckMenuItem(m_hmenuPopup, ID, MF_BYCOMMAND | (fCheck ? MFS_CHECKED : MFS_UNCHECKED));
-		if (m_hmenuShow != NULL && m_hmenuShow != m_hmenuPopup)
+		if (m_hmenuShow != nullptr && m_hmenuShow != m_hmenuPopup)
 			::CheckMenuItem(m_hmenuShow, ID, MF_BYCOMMAND | (fCheck ? MFS_CHECKED : MFS_UNCHECKED));
 	}
 }
@@ -195,9 +195,9 @@ void CMainMenu::CheckItem(UINT ID, bool fCheck)
 
 void CMainMenu::CheckRadioItem(UINT FirstID, UINT LastID, UINT CheckID)
 {
-	if (m_hmenuPopup != NULL) {
+	if (m_hmenuPopup != nullptr) {
 		::CheckMenuRadioItem(m_hmenuPopup, FirstID, LastID, CheckID, MF_BYCOMMAND);
-		if (m_hmenuShow != NULL && m_hmenuShow != m_hmenuPopup)
+		if (m_hmenuShow != nullptr && m_hmenuShow != m_hmenuPopup)
 			::CheckMenuRadioItem(m_hmenuShow, FirstID, LastID, CheckID, MF_BYCOMMAND);
 	}
 }
@@ -205,22 +205,22 @@ void CMainMenu::CheckRadioItem(UINT FirstID, UINT LastID, UINT CheckID)
 
 bool CMainMenu::IsMainMenu(HMENU hmenu) const
 {
-	return hmenu != NULL
+	return hmenu != nullptr
 		&& hmenu == m_hmenuShow;
 }
 
 
 HMENU CMainMenu::GetSubMenu(int SubMenu) const
 {
-	if (m_hmenuPopup != NULL)
+	if (m_hmenuPopup != nullptr)
 		return ::GetSubMenu(m_hmenuPopup, SubMenu);
-	return NULL;
+	return nullptr;
 }
 
 
 bool CMainMenu::SetAccelerator(CAccelerator *pAccelerator)
 {
-	if (m_hmenu == NULL)
+	if (m_hmenu == nullptr)
 		return false;
 	pAccelerator->SetMenuAccel(m_hmenu);
 	return true;
@@ -342,7 +342,7 @@ void CMenuPainter::GetMargins(MARGINS *pMargins)
 void CMenuPainter::GetBorderSize(SIZE *pSize)
 {
 	if (!m_UxTheme.IsOpen()
-			|| !m_UxTheme.GetPartSize(NULL, MENU_POPUPBORDERS, 0, pSize)) {
+			|| !m_UxTheme.GetPartSize(nullptr, MENU_POPUPBORDERS, 0, pSize)) {
 		pSize->cx = 1;
 		pSize->cy = 1;
 	}
@@ -493,7 +493,7 @@ bool CChannelMenuLogo::DrawLogo(HDC hdc, int x, int y, const CChannelInfo &Chann
 	HBITMAP hbmLogo = GetAppClass().LogoManager.GetAssociatedLogoBitmap(
 		Channel.GetNetworkID(), Channel.GetServiceID(),
 		m_LogoHeight <= 24 ? CLogoManager::LOGOTYPE_SMALL : CLogoManager::LOGOTYPE_BIG);
-	if (hbmLogo == NULL)
+	if (hbmLogo == nullptr)
 		return false;
 
 	if (m_fNoFrame) {
@@ -559,7 +559,7 @@ public:
 	CChannelMenuItem(const CChannelInfo *pChannelInfo)
 		: m_pChannelInfo(pChannelInfo) {}
 	const LibISDB::EventInfo *GetEventInfo(
-		LibISDB::EPGDatabase *pEPGDatabase, int Index, const LibISDB::DateTime *pCurTime = NULL);
+		LibISDB::EPGDatabase *pEPGDatabase, int Index, const LibISDB::DateTime *pCurTime = nullptr);
 	const LibISDB::EventInfo *GetEventInfo(int Index) const;
 	const CChannelInfo *GetChannelInfo() const { return m_pChannelInfo; }
 };
@@ -570,23 +570,23 @@ const LibISDB::EventInfo *CChannelMenuItem::GetEventInfo(
 	if (Index < 0 || Index >= lengthof(m_EventList)
 			|| (Index > 0 && !m_EventList[Index - 1].fValid)
 			|| m_pChannelInfo->GetServiceID() == 0)
-		return NULL;
+		return nullptr;
 
 	if (!m_EventList[Index].fValid) {
 		LibISDB::DateTime Time;
 
 		if (Index == 0) {
-			if (pCurTime != NULL)
+			if (pCurTime != nullptr)
 				Time = *pCurTime;
 			else
 				LibISDB::GetCurrentEPGTime(&Time);
 		} else {
 			if (!m_EventList[Index - 1].EventInfo.GetEndTime(&Time))
-				return NULL;
+				return nullptr;
 		}
 
 		bool fCurrent = false;
-		if (pCurTime == NULL && Index <= 1) {
+		if (pCurTime == nullptr && Index <= 1) {
 			CAppMain &App = GetAppClass();
 			CAppCore::StreamIDInfo StreamID;
 
@@ -597,7 +597,7 @@ const LibISDB::EventInfo *CChannelMenuItem::GetEventInfo(
 							&m_EventList[Index].EventInfo,
 							m_pChannelInfo->GetServiceID(),
 							Index > 0))
-					return NULL;
+					return nullptr;
 				fCurrent = true;
 			}
 		}
@@ -608,7 +608,7 @@ const LibISDB::EventInfo *CChannelMenuItem::GetEventInfo(
 						m_pChannelInfo->GetTransportStreamID(),
 						m_pChannelInfo->GetServiceID(),
 						Time, &m_EventList[Index].EventInfo))
-				return NULL;
+				return nullptr;
 		}
 
 		m_EventList[Index].fValid = true;
@@ -620,15 +620,15 @@ const LibISDB::EventInfo *CChannelMenuItem::GetEventInfo(
 const LibISDB::EventInfo *CChannelMenuItem::GetEventInfo(int Index) const
 {
 	if (!m_EventList[Index].fValid)
-		return NULL;
+		return nullptr;
 	return &m_EventList[Index].EventInfo;
 }
 
 
 CChannelMenu::CChannelMenu()
 	: m_Flags(0)
-	, m_hwnd(NULL)
-	, m_hmenu(NULL)
+	, m_hwnd(nullptr)
+	, m_hmenu(nullptr)
 	, m_TextHeight(0)
 	, m_ChannelNameWidth(0)
 	, m_EventNameWidth(0)
@@ -649,7 +649,7 @@ bool CChannelMenu::Create(
 {
 	Destroy();
 
-	if (pChannelList == NULL)
+	if (pChannelList == nullptr)
 		return false;
 
 	m_ChannelList = *pChannelList;
@@ -678,7 +678,7 @@ bool CChannelMenu::Create(
 		GetBaseTime(&Time);
 	m_ChannelNameWidth = 0;
 	m_EventNameWidth = 0;
-	if (hmenu == NULL) {
+	if (hmenu == nullptr) {
 		m_hmenu = ::CreatePopupMenu();
 	} else {
 		m_hmenu = hmenu;
@@ -724,9 +724,9 @@ bool CChannelMenu::Create(
 		mii.dwItemData = reinterpret_cast<ULONG_PTR>(pItem);
 		if ((Flags & FLAG_SHOWEVENTINFO) != 0) {
 			const LibISDB::EventInfo *pEventInfo =
-				pItem->GetEventInfo(&EPGDatabase, 0, fCurServices ? NULL : &Time);
+				pItem->GetEventInfo(&EPGDatabase, 0, fCurServices ? nullptr : &Time);
 
-			if (pEventInfo != NULL) {
+			if (pEventInfo != nullptr) {
 				GetEventText(pEventInfo, szText, lengthof(szText));
 				/*
 				m_MenuPainter.GetItemTextExtent(
@@ -779,18 +779,18 @@ void CChannelMenu::Destroy()
 			::DestroyMenu(m_hmenu);
 		else
 			ClearMenu(m_hmenu);
-		m_hmenu = NULL;
+		m_hmenu = nullptr;
 	}
 	m_ChannelList.Clear();
 	m_MenuPainter.Finalize();
 	m_Tooltip.Destroy();
-	m_hwnd = NULL;
+	m_hwnd = nullptr;
 }
 
 
 int CChannelMenu::Show(UINT Flags, int x, int y, const RECT *pExcludeRect)
 {
-	if (m_hmenu == NULL)
+	if (m_hmenu == nullptr)
 		return false;
 	POINT pt = {x, y};
 	return MyTrackPopupMenu(m_hmenu, Flags, m_hwnd, &pt, pExcludeRect);
@@ -799,7 +799,7 @@ int CChannelMenu::Show(UINT Flags, int x, int y, const RECT *pExcludeRect)
 
 bool CChannelMenu::SetHighlightedItem(int Index)
 {
-	if (m_hmenu == NULL)
+	if (m_hmenu == nullptr)
 		return false;
 
 	MENUITEMINFO mii;
@@ -817,7 +817,7 @@ bool CChannelMenu::OnMeasureItem(HWND hwnd, WPARAM wParam, LPARAM lParam)
 {
 	LPMEASUREITEMSTRUCT pmis = reinterpret_cast<LPMEASUREITEMSTRUCT>(lParam);
 
-	if (m_hmenu != NULL && pmis->CtlType == ODT_MENU
+	if (m_hmenu != nullptr && pmis->CtlType == ODT_MENU
 			&& pmis->itemID >= m_FirstCommand && pmis->itemID <= m_LastCommand) {
 		pmis->itemWidth =
 			m_ChannelNameWidth + m_Margins.cxLeftWidth + m_Margins.cxRightWidth;
@@ -838,7 +838,7 @@ bool CChannelMenu::OnDrawItem(HWND hwnd, WPARAM wParam, LPARAM lParam)
 {
 	LPDRAWITEMSTRUCT pdis = reinterpret_cast<LPDRAWITEMSTRUCT>(lParam);
 
-	if (m_hmenu == NULL || hwnd != m_hwnd || pdis->CtlType != ODT_MENU
+	if (m_hmenu == nullptr || hwnd != m_hwnd || pdis->CtlType != ODT_MENU
 			|| pdis->itemID < m_FirstCommand || pdis->itemID > m_LastCommand)
 		return false;
 
@@ -878,7 +878,7 @@ bool CChannelMenu::OnDrawItem(HWND hwnd, WPARAM wParam, LPARAM lParam)
 
 	if ((m_Flags & FLAG_SHOWEVENTINFO) != 0) {
 		const LibISDB::EventInfo *pEventInfo = pItem->GetEventInfo(0);
-		if (pEventInfo != NULL) {
+		if (pEventInfo != nullptr) {
 			int Length = GetEventText(pEventInfo, szText, lengthof(szText));
 			rc.left = rc.right + m_TextHeight;
 			rc.right = pdis->rcItem.right - m_Margins.cxRightWidth;
@@ -901,7 +901,7 @@ bool CChannelMenu::OnMenuSelect(HWND hwnd, WPARAM wParam, LPARAM lParam)
 	HMENU hmenu = reinterpret_cast<HMENU>(lParam);
 	UINT Command = LOWORD(wParam);
 
-	if (hmenu == NULL || hmenu != m_hmenu || hwnd != m_hwnd || HIWORD(wParam) == 0xFFFF
+	if (hmenu == nullptr || hmenu != m_hmenu || hwnd != m_hwnd || HIWORD(wParam) == 0xFFFF
 			|| Command < m_FirstCommand || Command > m_LastCommand) {
 		if (m_Tooltip.IsVisible())
 			m_Tooltip.TrackActivate(1, false);
@@ -915,22 +915,22 @@ bool CChannelMenu::OnMenuSelect(HWND hwnd, WPARAM wParam, LPARAM lParam)
 		mii.fMask = MIIM_DATA;
 		if (::GetMenuItemInfo(hmenu, Command, FALSE, &mii)) {
 			CChannelMenuItem *pItem = reinterpret_cast<CChannelMenuItem*>(mii.dwItemData);
-			if (pItem == NULL)
+			if (pItem == nullptr)
 				return false;
 
 			const LibISDB::EventInfo *pEventInfo1, *pEventInfo2;
 			pEventInfo1 = pItem->GetEventInfo(0);
-			if (pEventInfo1 == NULL) {
+			if (pEventInfo1 == nullptr) {
 				pEventInfo1 = pItem->GetEventInfo(&GetAppClass().EPGDatabase, 0);
 			}
-			if (pEventInfo1 != NULL) {
+			if (pEventInfo1 != nullptr) {
 				TCHAR szText[256 * 2 + 1];
 				int Length;
 				POINT pt;
 
 				Length = GetEventText(pEventInfo1, szText, lengthof(szText) / 2);
 				pEventInfo2 = pItem->GetEventInfo(&GetAppClass().EPGDatabase, 1);
-				if (pEventInfo2 != NULL) {
+				if (pEventInfo2 != nullptr) {
 					szText[Length++] = _T('\r');
 					szText[Length++] = _T('\n');
 					GetEventText(pEventInfo2, szText + Length, lengthof(szText) / 2);
@@ -964,7 +964,7 @@ bool CChannelMenu::OnUninitMenuPopup(HWND hwnd, WPARAM wParam, LPARAM lParam)
 
 bool CChannelMenu::HandleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT *pResult)
 {
-	if (m_hwnd == NULL || hwnd != m_hwnd)
+	if (m_hwnd == nullptr || hwnd != m_hwnd)
 		return false;
 
 	switch (uMsg) {
@@ -1025,7 +1025,7 @@ void CChannelMenu::CreateFont(HDC hdc)
 	lf.lfWeight = FW_BOLD;
 	m_FontCurrent.Create(&lf);
 
-	if (hdc != NULL)
+	if (hdc != nullptr)
 		m_TextHeight = m_Font.GetHeight(hdc);
 	else
 		m_TextHeight = abs(lf.lfHeight);
@@ -1042,27 +1042,27 @@ void CChannelMenu::GetBaseTime(LibISDB::DateTime *pTime)
 
 
 CPopupMenu::CPopupMenu()
-	: m_hmenu(NULL)
+	: m_hmenu(nullptr)
 {
 }
 
 
 CPopupMenu::CPopupMenu(HINSTANCE hinst, LPCTSTR pszName)
-	: m_hmenu(NULL)
+	: m_hmenu(nullptr)
 {
 	Load(hinst, pszName);
 }
 
 
 CPopupMenu::CPopupMenu(HINSTANCE hinst, UINT ID)
-	: m_hmenu(NULL)
+	: m_hmenu(nullptr)
 {
 	Load(hinst, ID);
 }
 
 
 CPopupMenu::CPopupMenu(HMENU hmenu)
-	: m_hmenu(NULL)
+	: m_hmenu(nullptr)
 {
 	Attach(hmenu);
 }
@@ -1079,7 +1079,7 @@ bool CPopupMenu::Create()
 	Destroy();
 
 	m_hmenu = ::CreatePopupMenu();
-	if (m_hmenu == NULL)
+	if (m_hmenu == nullptr)
 		return false;
 	m_Type = TYPE_CREATED;
 	return true;
@@ -1091,7 +1091,7 @@ bool CPopupMenu::Load(HINSTANCE hinst, LPCTSTR pszName)
 	Destroy();
 
 	m_hmenu = ::LoadMenu(hinst, pszName);
-	if (m_hmenu == NULL)
+	if (m_hmenu == nullptr)
 		return false;
 	m_Type = TYPE_RESOURCE;
 	return true;
@@ -1100,7 +1100,7 @@ bool CPopupMenu::Load(HINSTANCE hinst, LPCTSTR pszName)
 
 bool CPopupMenu::Attach(HMENU hmenu)
 {
-	if (hmenu == NULL)
+	if (hmenu == nullptr)
 		return false;
 	Destroy();
 	m_hmenu = hmenu;
@@ -1111,17 +1111,17 @@ bool CPopupMenu::Attach(HMENU hmenu)
 
 void CPopupMenu::Destroy()
 {
-	if (m_hmenu != NULL) {
+	if (m_hmenu != nullptr) {
 		if (m_Type != TYPE_ATTACHED)
 			::DestroyMenu(m_hmenu);
-		m_hmenu = NULL;
+		m_hmenu = nullptr;
 	}
 }
 
 
 int CPopupMenu::GetItemCount() const
 {
-	if (m_hmenu == NULL)
+	if (m_hmenu == nullptr)
 		return 0;
 	return ::GetMenuItemCount(GetPopupHandle());
 }
@@ -1129,15 +1129,15 @@ int CPopupMenu::GetItemCount() const
 
 void CPopupMenu::Clear()
 {
-	if (m_hmenu != NULL)
+	if (m_hmenu != nullptr)
 		ClearMenu(GetPopupHandle());
 }
 
 
 HMENU CPopupMenu::GetPopupHandle() const
 {
-	if (m_hmenu == NULL)
-		return NULL;
+	if (m_hmenu == nullptr)
+		return nullptr;
 	if (m_Type == TYPE_RESOURCE)
 		return ::GetSubMenu(m_hmenu, 0);
 	return m_hmenu;
@@ -1146,7 +1146,7 @@ HMENU CPopupMenu::GetPopupHandle() const
 
 bool CPopupMenu::Append(UINT ID, LPCTSTR pszText, UINT Flags)
 {
-	if (m_hmenu == NULL || pszText == NULL)
+	if (m_hmenu == nullptr || pszText == nullptr)
 		return false;
 	return ::AppendMenu(GetPopupHandle(), MF_STRING | Flags, ID, pszText) != FALSE;
 }
@@ -1154,7 +1154,7 @@ bool CPopupMenu::Append(UINT ID, LPCTSTR pszText, UINT Flags)
 
 bool CPopupMenu::AppendUnformatted(UINT ID, LPCTSTR pszText, UINT Flags)
 {
-	if (m_hmenu == NULL || pszText == NULL)
+	if (m_hmenu == nullptr || pszText == nullptr)
 		return false;
 	TCHAR szText[256];
 	CopyToMenuText(pszText, szText, lengthof(szText));
@@ -1164,7 +1164,7 @@ bool CPopupMenu::AppendUnformatted(UINT ID, LPCTSTR pszText, UINT Flags)
 
 bool CPopupMenu::Append(HMENU hmenu, LPCTSTR pszText, UINT Flags)
 {
-	if (m_hmenu == NULL || hmenu == NULL || pszText == NULL)
+	if (m_hmenu == nullptr || hmenu == nullptr || pszText == nullptr)
 		return false;
 	return ::AppendMenu(
 		GetPopupHandle(), MF_POPUP | Flags,
@@ -1174,15 +1174,15 @@ bool CPopupMenu::Append(HMENU hmenu, LPCTSTR pszText, UINT Flags)
 
 bool CPopupMenu::AppendSeparator()
 {
-	if (m_hmenu == NULL)
+	if (m_hmenu == nullptr)
 		return false;
-	return ::AppendMenu(GetPopupHandle(), MF_SEPARATOR, 0, NULL) != FALSE;
+	return ::AppendMenu(GetPopupHandle(), MF_SEPARATOR, 0, nullptr) != FALSE;
 }
 
 
 bool CPopupMenu::EnableItem(UINT ID, bool fEnable)
 {
-	if (m_hmenu == NULL)
+	if (m_hmenu == nullptr)
 		return false;
 	return ::EnableMenuItem(m_hmenu, ID, MF_BYCOMMAND | (fEnable ? MFS_ENABLED : MFS_GRAYED)) >= 0;
 }
@@ -1190,7 +1190,7 @@ bool CPopupMenu::EnableItem(UINT ID, bool fEnable)
 
 bool CPopupMenu::CheckItem(UINT ID, bool fCheck)
 {
-	if (m_hmenu == NULL)
+	if (m_hmenu == nullptr)
 		return false;
 	return ::CheckMenuItem(m_hmenu, ID, MF_BYCOMMAND | (fCheck ? MFS_CHECKED : MFS_UNCHECKED)) >= 0;
 }
@@ -1198,7 +1198,7 @@ bool CPopupMenu::CheckItem(UINT ID, bool fCheck)
 
 bool CPopupMenu::CheckRadioItem(UINT FirstID, UINT LastID, UINT CheckID, UINT Flags)
 {
-	if (m_hmenu == NULL)
+	if (m_hmenu == nullptr)
 		return false;
 	return ::CheckMenuRadioItem(GetPopupHandle(), FirstID, LastID, CheckID, Flags) != FALSE;
 }
@@ -1206,7 +1206,7 @@ bool CPopupMenu::CheckRadioItem(UINT FirstID, UINT LastID, UINT CheckID, UINT Fl
 
 HMENU CPopupMenu::GetSubMenu(int Pos) const
 {
-	if (m_hmenu == NULL)
+	if (m_hmenu == nullptr)
 		return false;
 	return ::GetSubMenu(GetPopupHandle(), Pos);
 }
@@ -1214,7 +1214,7 @@ HMENU CPopupMenu::GetSubMenu(int Pos) const
 
 int CPopupMenu::Show(HWND hwnd, const POINT *pPos, UINT Flags, const RECT *pExcludeRect)
 {
-	if (m_hmenu == NULL)
+	if (m_hmenu == nullptr)
 		return 0;
 
 	return MyTrackPopupMenu(GetPopupHandle(), Flags, hwnd, pPos, pExcludeRect);
@@ -1227,11 +1227,11 @@ int CPopupMenu::Show(
 {
 	int Result;
 
-	if (m_hmenu == NULL) {
+	if (m_hmenu == nullptr) {
 		m_hmenu = hmenu;
 		m_Type = TYPE_ATTACHED;
 		Result = MyTrackPopupMenu(m_hmenu, Flags, hwnd, pPos, pExcludeRect);
-		m_hmenu = NULL;
+		m_hmenu = nullptr;
 	} else {
 		if (fToggle)
 			::EndMenu();
@@ -1248,7 +1248,7 @@ int CPopupMenu::Show(
 {
 	int Result;
 
-	if (m_hmenu == NULL) {
+	if (m_hmenu == nullptr) {
 		if (!Load(hinst, pszName))
 			return 0;
 		Result = MyTrackPopupMenu(GetPopupHandle(), Flags, hwnd, pPos, pExcludeRect);
@@ -1266,7 +1266,7 @@ int CPopupMenu::Show(
 
 
 CIconMenu::CIconMenu()
-	: m_hmenu(NULL)
+	: m_hmenu(nullptr)
 {
 }
 
@@ -1281,13 +1281,13 @@ bool CIconMenu::Initialize(HMENU hmenu, HINSTANCE hinst, const ItemInfo *pItemLi
 {
 	Finalize();
 
-	if (hmenu == NULL || pItemList == NULL || ItemCount < 1)
+	if (hmenu == nullptr || pItemList == nullptr || ItemCount < 1)
 		return false;
 
 	for (int i = 0; i < ItemCount; i++) {
 		HICON hicon = LoadIconStandardSize(hinst, pItemList[i].pszIcon, ICON_SIZE_SMALL);
 
-		if (hicon != NULL) {
+		if (hicon != nullptr) {
 			ICONINFO ii;
 
 			if (::GetIconInfo(hicon, &ii)) {
@@ -1296,7 +1296,7 @@ bool CIconMenu::Initialize(HMENU hmenu, HINSTANCE hinst, const ItemInfo *pItemLi
 					アルファチャンネルが無視されるため、DIB に変換する
 				*/
 				HBITMAP hbm = (HBITMAP)::CopyImage(ii.hbmColor, IMAGE_BITMAP, 0, 0, LR_CREATEDIBSECTION);
-				if (hbm != NULL) {
+				if (hbm != nullptr) {
 					m_BitmapList.push_back(hbm);
 					ItemIconInfo Item;
 					Item.ID = pItemList[i].ID;
@@ -1318,7 +1318,7 @@ bool CIconMenu::Initialize(HMENU hmenu, HINSTANCE hinst, const ItemInfo *pItemLi
 
 void CIconMenu::Finalize()
 {
-	m_hmenu = NULL;
+	m_hmenu = nullptr;
 	m_ItemList.clear();
 	if (!m_BitmapList.empty()) {
 		for (auto i = m_BitmapList.begin(); i != m_BitmapList.end(); i++)
@@ -1372,7 +1372,7 @@ bool CIconMenu::OnDrawItem(HWND hwnd, WPARAM wParam, LPARAM lParam)
 
 bool CIconMenu::CheckItem(UINT ID, bool fCheck)
 {
-	if (m_hmenu == NULL)
+	if (m_hmenu == nullptr)
 		return false;
 
 	MENUITEMINFO mii;
@@ -1394,7 +1394,7 @@ bool CIconMenu::CheckItem(UINT ID, bool fCheck)
 
 bool CIconMenu::CheckRadioItem(UINT FirstID, UINT LastID, UINT CheckID)
 {
-	if (m_hmenu == NULL)
+	if (m_hmenu == nullptr)
 		return false;
 
 	const int ItemCount = ::GetMenuItemCount(m_hmenu);
@@ -1427,12 +1427,12 @@ bool CIconMenu::CheckRadioItem(UINT FirstID, UINT LastID, UINT CheckID)
 #define DROPDOWNMENU_WINDOW_CLASS APP_NAME TEXT(" Drop Down Menu")
 
 
-HINSTANCE CDropDownMenu::m_hinst = NULL;
+HINSTANCE CDropDownMenu::m_hinst = nullptr;
 
 
 bool CDropDownMenu::Initialize(HINSTANCE hinst)
 {
-	if (m_hinst == NULL) {
+	if (m_hinst == nullptr) {
 		WNDCLASS wc;
 
 		wc.style = CS_DROPSHADOW;
@@ -1440,10 +1440,10 @@ bool CDropDownMenu::Initialize(HINSTANCE hinst)
 		wc.cbClsExtra = 0;
 		wc.cbWndExtra = 0;
 		wc.hInstance = hinst;
-		wc.hIcon = NULL;
-		wc.hCursor = LoadCursor(NULL, IDC_ARROW);
-		wc.hbrBackground = NULL;
-		wc.lpszMenuName = NULL;
+		wc.hIcon = nullptr;
+		wc.hCursor = LoadCursor(nullptr, IDC_ARROW);
+		wc.hbrBackground = nullptr;
+		wc.lpszMenuName = nullptr;
 		wc.lpszClassName = DROPDOWNMENU_WINDOW_CLASS;
 		if (::RegisterClass(&wc) == 0)
 			return false;
@@ -1454,8 +1454,8 @@ bool CDropDownMenu::Initialize(HINSTANCE hinst)
 
 
 CDropDownMenu::CDropDownMenu()
-	: m_hwnd(NULL)
-	, m_hwndMessage(NULL)
+	: m_hwnd(nullptr)
+	, m_hwndMessage(nullptr)
 {
 }
 
@@ -1476,7 +1476,7 @@ void CDropDownMenu::Clear()
 
 bool CDropDownMenu::AppendItem(CItem *pItem)
 {
-	if (pItem == NULL)
+	if (pItem == nullptr)
 		return false;
 	m_ItemList.push_back(pItem);
 	return true;
@@ -1485,7 +1485,7 @@ bool CDropDownMenu::AppendItem(CItem *pItem)
 
 bool CDropDownMenu::InsertItem(int Index, CItem *pItem)
 {
-	if (pItem == NULL || Index < 0 || (size_t)Index > m_ItemList.size())
+	if (pItem == nullptr || Index < 0 || (size_t)Index > m_ItemList.size())
 		return false;
 	std::vector<CItem*>::iterator i = m_ItemList.begin();
 	std::advance(i, Index);
@@ -1496,7 +1496,7 @@ bool CDropDownMenu::InsertItem(int Index, CItem *pItem)
 
 bool CDropDownMenu::AppendSeparator()
 {
-	CItem *pItem = new CItem(-1, NULL);
+	CItem *pItem = new CItem(-1, nullptr);
 
 	if (!AppendItem(pItem)) {
 		delete pItem;
@@ -1508,7 +1508,7 @@ bool CDropDownMenu::AppendSeparator()
 
 bool CDropDownMenu::InsertSeparator(int Index)
 {
-	CItem *pItem = new CItem(-1, NULL);
+	CItem *pItem = new CItem(-1, nullptr);
 
 	if (!InsertItem(Index, pItem)) {
 		delete pItem;
@@ -1557,7 +1557,7 @@ int CDropDownMenu::CommandToIndex(int Command) const
 
 bool CDropDownMenu::Show(HWND hwndOwner, HWND hwndMessage, const POINT *pPos, int CurItem, UINT Flags, int DPI)
 {
-	if (m_ItemList.empty() || m_hwnd != NULL)
+	if (m_ItemList.empty() || m_hwnd != nullptr)
 		return false;
 
 	HMONITOR hMonitor = ::MonitorFromPoint(*pPos, MONITOR_DEFAULTTONEAREST);
@@ -1569,8 +1569,8 @@ bool CDropDownMenu::Show(HWND hwndOwner, HWND hwndMessage, const POINT *pPos, in
 
 	HWND hwnd = ::CreateWindowEx(
 		WS_EX_NOACTIVATE | WS_EX_TOPMOST, DROPDOWNMENU_WINDOW_CLASS,
-		NULL, WS_POPUP, 0, 0, 0, 0, hwndOwner, NULL, m_hinst, this);
-	if (hwnd == NULL)
+		nullptr, WS_POPUP, 0, 0, 0, 0, hwndOwner, nullptr, m_hinst, this);
+	if (hwnd == nullptr)
 		return false;
 
 	m_HotItem = CommandToIndex(CurItem);
@@ -1636,7 +1636,7 @@ bool CDropDownMenu::Show(HWND hwndOwner, HWND hwndMessage, const POINT *pPos, in
 
 bool CDropDownMenu::Hide()
 {
-	if (m_hwnd != NULL)
+	if (m_hwnd != nullptr)
 		::DestroyWindow(m_hwnd);
 	return true;
 }
@@ -1644,7 +1644,7 @@ bool CDropDownMenu::Hide()
 
 bool CDropDownMenu::GetPosition(RECT *pRect)
 {
-	if (m_hwnd == NULL)
+	if (m_hwnd == nullptr)
 		return false;
 	return ::GetWindowRect(m_hwnd, pRect) != FALSE;
 }
@@ -1685,7 +1685,7 @@ int CDropDownMenu::HitTest(int x, int y) const
 
 void CDropDownMenu::UpdateItem(int Index) const
 {
-	if (m_hwnd != NULL) {
+	if (m_hwnd != nullptr) {
 		RECT rc;
 		if (GetItemRect(Index, &rc))
 			::InvalidateRect(m_hwnd, &rc, TRUE);
@@ -1829,7 +1829,7 @@ LRESULT CALLBACK CDropDownMenu::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPA
 
 			pThis->m_Font.Destroy();
 			pThis->m_MenuPainter.Finalize();
-			pThis->m_hwnd = NULL;
+			pThis->m_hwnd = nullptr;
 		}
 		return 0;
 	}

@@ -68,7 +68,7 @@ INT_PTR CTSProcessorErrorDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LP
 		{
 			::SendDlgItemMessage(
 				hDlg, IDC_TSPROCESSORERROR_ICON, STM_SETICON,
-				reinterpret_cast<WPARAM>(::LoadIcon(NULL, IDI_WARNING)), 0);
+				reinterpret_cast<WPARAM>(::LoadIcon(nullptr, IDI_WARNING)), 0);
 			if (!m_Message.empty())
 				::SetDlgItemText(hDlg, IDC_TSPROCESSORERROR_MESSAGE, m_Message.c_str());
 
@@ -120,7 +120,7 @@ INT_PTR CTSProcessorErrorDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LP
 				return TRUE;
 		case IDC_TSPROCESSORERROR_SEARCH:
 			{
-				HCURSOR hcurOld = ::SetCursor(::LoadCursor(NULL, IDC_WAIT));
+				HCURSOR hcurOld = ::SetCursor(::LoadCursor(nullptr, IDC_WAIT));
 				bool fFound = SearchFilters();
 				::SetCursor(hcurOld);
 				if (fFound) {

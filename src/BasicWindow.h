@@ -34,7 +34,7 @@ public:
 	CBasicWindow();
 	virtual ~CBasicWindow();
 	virtual bool Create(HWND hwndParent, DWORD Style, DWORD ExStyle = 0, int ID = 0) = 0;
-	bool IsCreated() const { return m_hwnd != NULL; }
+	bool IsCreated() const { return m_hwnd != nullptr; }
 	void Destroy();
 	bool SetPosition(int Left, int Top, int Width, int Height);
 	bool SetPosition(const RECT * pPosition);
@@ -51,7 +51,7 @@ public:
 	bool Invalidate(bool fErase = true);
 	bool Invalidate(const RECT * pRect, bool fErase = true);
 	bool Update();
-	bool Redraw(const RECT *pRect = NULL, UINT Flags = RDW_ERASE | RDW_INVALIDATE | RDW_UPDATENOW);
+	bool Redraw(const RECT *pRect = nullptr, UINT Flags = RDW_ERASE | RDW_INVALIDATE | RDW_UPDATENOW);
 	bool GetClientRect(RECT * pRect) const;
 	bool GetClientSize(SIZE * pSize) const;
 	bool SetParent(HWND hwnd);

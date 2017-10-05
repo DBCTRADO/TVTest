@@ -155,7 +155,7 @@ bool CSettings::Read(LPCTSTR pszValueName, LPTSTR pszData, unsigned int Max)
 	if ((m_OpenFlags & OPEN_READ) == 0)
 		return false;
 
-	if (pszData == NULL)
+	if (pszData == nullptr)
 		return false;
 
 	String Value;
@@ -173,7 +173,7 @@ bool CSettings::Write(LPCTSTR pszValueName, LPCTSTR pszData)
 	if ((m_OpenFlags & OPEN_WRITE) == 0)
 		return false;
 
-	if (pszData == NULL)
+	if (pszData == nullptr)
 		return false;
 
 	// 文字列が ' か " で囲まれていると読み込み時に除去されてしまうので、
@@ -195,7 +195,7 @@ bool CSettings::Read(LPCTSTR pszValueName, TVTest::String *pValue)
 	if ((m_OpenFlags & OPEN_READ) == 0)
 		return false;
 
-	if (pValue == NULL)
+	if (pValue == nullptr)
 		return false;
 
 	TVTest::String Value;
@@ -240,7 +240,7 @@ bool CSettings::Write(LPCTSTR pszValueName, bool fData)
 
 bool CSettings::Read(LPCTSTR pszValueName, double *pData)
 {
-	if (pData == NULL)
+	if (pData == nullptr)
 		return false;
 
 	TVTest::String Value;
@@ -248,7 +248,7 @@ bool CSettings::Read(LPCTSTR pszValueName, double *pData)
 	if (!Read(pszValueName, &Value))
 		return false;
 
-	*pData = std::_tcstod(Value.c_str(), NULL);
+	*pData = std::_tcstod(Value.c_str(), nullptr);
 
 	return true;
 }
@@ -265,7 +265,7 @@ bool CSettings::Write(LPCTSTR pszValueName, double Data, int Digits)
 
 bool CSettings::Read(LPCTSTR pszValueName, float *pData)
 {
-	if (pData == NULL)
+	if (pData == nullptr)
 		return false;
 
 	double Value;

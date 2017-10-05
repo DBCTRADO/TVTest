@@ -102,7 +102,7 @@ CSideBarOptions::CSideBarOptions(CSideBar *pSideBar, const CZoomOptions *pZoomOp
 	, m_fShowChannelLogo(true)
 	, m_PopupOpacity(OPACITY_MAX)
 	, m_Place(PLACE_LEFT)
-	, m_himlIcons(NULL)
+	, m_himlIcons(nullptr)
 {
 	m_AvailItemList.resize(lengthof(ItemList));
 	for (int i = 0; i < lengthof(ItemList); i++)
@@ -252,7 +252,7 @@ HBITMAP CSideBarOptions::CreateImage(IconSizeType SizeType, SIZE *pIconSize)
 		PercentWidth2 = 8;
 	}
 
-	if (pIconSize != NULL) {
+	if (pIconSize != nullptr) {
 		pIconSize->cx = IconWidth;
 		pIconSize->cy = IconHeight;
 	}
@@ -261,15 +261,15 @@ HBITMAP CSideBarOptions::CreateImage(IconSizeType SizeType, SIZE *pIconSize)
 	HBITMAP hbm = (HBITMAP)::LoadImage(
 		hinst, pszImageName, IMAGE_BITMAP, 0, 0, LR_CREATEDIBSECTION);
 
-	if (hbm != NULL) {
+	if (hbm != nullptr) {
 		// 表示倍率のアイコンを描画する
 		HBITMAP hbmZoom = (HBITMAP)::LoadImage(
 			hinst, pszZoomImageName, IMAGE_BITMAP, 0, 0, LR_CREATEDIBSECTION);
 
-		if (hbmZoom != NULL) {
-			HDC hdcDst = ::CreateCompatibleDC(NULL);
+		if (hbmZoom != nullptr) {
+			HDC hdcDst = ::CreateCompatibleDC(nullptr);
 			HBITMAP hbmDstOld = static_cast<HBITMAP>(::SelectObject(hdcDst, hbm));
-			HDC hdcSrc = ::CreateCompatibleDC(NULL);
+			HDC hdcSrc = ::CreateCompatibleDC(nullptr);
 			HBITMAP hbmSrcOld = static_cast<HBITMAP>(::SelectObject(hdcSrc, hbmZoom));
 
 			for (int i = 0; i < CZoomOptions::NUM_ZOOM_COMMANDS; i++) {
@@ -412,7 +412,7 @@ bool CSideBarOptions::SetSideBarImage()
 	HBITMAP hbm = CreateImage(
 		IconSize.Width <= 16 && IconSize.Height <= 16 ? ICON_SIZE_SMALL : ICON_SIZE_BIG,
 		&sz);
-	if (hbm == NULL)
+	if (hbm == nullptr)
 		return false;
 	bool fResult = m_pSideBar->SetIconImage(hbm, sz.cx, sz.cy);
 	::DeleteObject(hbm);
@@ -493,9 +493,9 @@ INT_PTR CSideBarOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 				const int ID = m_AvailItemList[i].Command;
 				if (ID >= CM_PLUGIN_FIRST && ID <= CM_PLUGIN_LAST) {
 					CPlugin *pPlugin = GetAppClass().PluginManager.GetPluginByCommand(ID);
-					if (pPlugin != NULL && pPlugin->GetIcon().IsCreated()) {
+					if (pPlugin != nullptr && pPlugin->GetIcon().IsCreated()) {
 						HICON hIcon = pPlugin->GetIcon().ExtractIcon(IconColor);
-						if (hIcon != NULL) {
+						if (hIcon != nullptr) {
 							int Icon = ImageList_AddIcon(m_himlIcons, hIcon);
 							::DestroyIcon(hIcon);
 							m_IconIDMap.insert(std::pair<int, int>(ID, Icon));
@@ -505,12 +505,12 @@ INT_PTR CSideBarOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 					LPCTSTR pszCommand;
 					CPlugin *pPlugin = GetAppClass().PluginManager.GetPluginByPluginCommand(
 						pCommandList->GetCommandTextByID(ID), &pszCommand);
-					if (pPlugin != NULL) {
+					if (pPlugin != nullptr) {
 						CPlugin::CPluginCommandInfo *pCommandInfo =
 							pPlugin->GetPluginCommandInfo(pszCommand);
-						if (pCommandInfo != NULL && pCommandInfo->GetIcon().IsCreated()) {
+						if (pCommandInfo != nullptr && pCommandInfo->GetIcon().IsCreated()) {
 							HICON hIcon = pCommandInfo->GetIcon().ExtractIcon(IconColor);
-							if (hIcon != NULL) {
+							if (hIcon != nullptr) {
 								int Icon = ImageList_AddIcon(m_himlIcons, hIcon);
 								::DestroyIcon(hIcon);
 								m_IconIDMap.insert(std::pair<int, int>(ID, Icon));
@@ -755,9 +755,9 @@ INT_PTR CSideBarOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 		break;
 
 	case WM_DESTROY:
-		if (m_himlIcons != NULL) {
+		if (m_himlIcons != nullptr) {
 			::ImageList_Destroy(m_himlIcons);
-			m_himlIcons = NULL;
+			m_himlIcons = nullptr;
 		}
 		m_IconIDMap.clear();
 		return TRUE;

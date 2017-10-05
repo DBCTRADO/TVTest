@@ -311,7 +311,7 @@ INT_PTR COSDOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				m_fPseudoOSD = !DlgCheckBox_IsChecked(hDlg, IDC_OSDOPTIONS_COMPOSITE);
 				m_TextColor = m_CurTextColor;
 				m_OSDFont = m_CurOSDFont;
-				m_FadeTime = ::GetDlgItemInt(hDlg, IDC_OSDOPTIONS_FADETIME, NULL, FALSE) * 1000;
+				m_FadeTime = ::GetDlgItemInt(hDlg, IDC_OSDOPTIONS_FADETIME, nullptr, FALSE) * 1000;
 				unsigned int EnabledOSD = 0;
 				if (DlgCheckBox_IsChecked(hDlg, IDC_OSDOPTIONS_SHOW_CHANNEL))
 					EnabledOSD |= OSD_FLAG(OSD_CHANNEL);
@@ -336,7 +336,7 @@ INT_PTR COSDOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 					NOTIFY_TSPROCESSORERROR,
 					DlgCheckBox_IsChecked(hDlg, IDC_NOTIFICATIONBAR_NOTIFYTSPROCESSORERROR));
 				m_NotificationBarDuration =
-					::GetDlgItemInt(hDlg, IDC_NOTIFICATIONBAR_DURATION, NULL, FALSE) * 1000;
+					::GetDlgItemInt(hDlg, IDC_NOTIFICATIONBAR_DURATION, nullptr, FALSE) * 1000;
 				m_NotificationBarFont = m_CurNotificationBarFont;
 
 				m_DisplayFont = m_DisplayFontCur;

@@ -11,7 +11,7 @@ static CMessageDialog MessageDialog;
 
 
 CUISkin::CUISkin()
-	: m_pCore(NULL)
+	: m_pCore(nullptr)
 	, m_fWheelChannelChanging(false)
 {
 }
@@ -51,7 +51,7 @@ void CUISkin::SetWheelChannelChanging(bool fChanging, DWORD Delay)
 {
 	if (fChanging) {
 		if (Delay > 0)
-			::SetTimer(GetMainWindow(), TIMER_ID_WHEELCHANNELCHANGE, Delay, NULL);
+			::SetTimer(GetMainWindow(), TIMER_ID_WHEELCHANNELCHANGE, Delay, nullptr);
 		m_fWheelChannelChanging = true;
 	} else if (m_fWheelChannelChanging) {
 		::KillTimer(GetMainWindow(), TIMER_ID_WHEELCHANNELCHANGE);

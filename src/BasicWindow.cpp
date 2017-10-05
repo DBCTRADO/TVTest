@@ -7,7 +7,7 @@
 
 
 CBasicWindow::CBasicWindow()
-	: m_hwnd(NULL)
+	: m_hwnd(nullptr)
 {
 	m_WindowPosition.Left = 0;
 	m_WindowPosition.Top = 0;
@@ -25,9 +25,9 @@ CBasicWindow::~CBasicWindow()
 
 void CBasicWindow::Destroy()
 {
-	if (m_hwnd != NULL) {
+	if (m_hwnd != nullptr) {
 		::DestroyWindow(m_hwnd);
-		m_hwnd = NULL;
+		m_hwnd = nullptr;
 	}
 }
 
@@ -36,7 +36,7 @@ bool CBasicWindow::SetPosition(int Left, int Top, int Width, int Height)
 {
 	if (Width < 0 || Height < 0)
 		return false;
-	if (m_hwnd != NULL) {
+	if (m_hwnd != nullptr) {
 		if ((GetWindowStyle() & WS_CHILD) != 0
 				|| (!::IsZoomed(m_hwnd) && !::IsIconic(m_hwnd))) {
 			::MoveWindow(m_hwnd, Left, Top, Width, Height, TRUE);
@@ -83,12 +83,12 @@ bool CBasicWindow::SetPosition(const RECT *pPosition)
 
 void CBasicWindow::GetPosition(int *pLeft, int *pTop, int *pWidth, int *pHeight) const
 {
-	if (m_hwnd != NULL) {
+	if (m_hwnd != nullptr) {
 		RECT rc;
 
 		if ((GetWindowStyle() & WS_CHILD) != 0) {
 			::GetWindowRect(m_hwnd, &rc);
-			::MapWindowPoints(NULL, ::GetParent(m_hwnd), reinterpret_cast<POINT*>(&rc), 2);
+			::MapWindowPoints(nullptr, ::GetParent(m_hwnd), reinterpret_cast<POINT*>(&rc), 2);
 			if (pLeft)
 				*pLeft = rc.left;
 			if (pTop)
@@ -158,7 +158,7 @@ int CBasicWindow::GetWidth() const
 {
 	int Width;
 
-	GetPosition(NULL, NULL, &Width, NULL);
+	GetPosition(nullptr, nullptr, &Width, nullptr);
 	return Width;
 }
 
@@ -167,14 +167,14 @@ int CBasicWindow::GetHeight() const
 {
 	int Height;
 
-	GetPosition(NULL, NULL, NULL, &Height);
+	GetPosition(nullptr, nullptr, nullptr, &Height);
 	return Height;
 }
 
 
 bool CBasicWindow::GetScreenPosition(RECT *pPosition) const
 {
-	if (m_hwnd == NULL) {
+	if (m_hwnd == nullptr) {
 		GetPosition(pPosition);
 		return true;
 	}
@@ -184,20 +184,20 @@ bool CBasicWindow::GetScreenPosition(RECT *pPosition) const
 
 void CBasicWindow::SetVisible(bool fVisible)
 {
-	if (m_hwnd != NULL)
+	if (m_hwnd != nullptr)
 		::ShowWindow(m_hwnd, fVisible ? SW_SHOW : SW_HIDE);
 }
 
 
 bool CBasicWindow::GetVisible() const
 {
-	return m_hwnd != NULL && ::IsWindowVisible(m_hwnd);
+	return m_hwnd != nullptr && ::IsWindowVisible(m_hwnd);
 }
 
 
 bool CBasicWindow::SetMaximize(bool fMaximize)
 {
-	if (m_hwnd != NULL) {
+	if (m_hwnd != nullptr) {
 		::ShowWindow(m_hwnd, fMaximize ? SW_MAXIMIZE : SW_RESTORE);
 	} else {
 		m_WindowPosition.fMaximized = fMaximize;
@@ -208,7 +208,7 @@ bool CBasicWindow::SetMaximize(bool fMaximize)
 
 bool CBasicWindow::GetMaximize() const
 {
-	if (m_hwnd != NULL)
+	if (m_hwnd != nullptr)
 		return ::IsZoomed(m_hwnd) != FALSE;
 	return m_WindowPosition.fMaximized;
 }
@@ -216,31 +216,31 @@ bool CBasicWindow::GetMaximize() const
 
 bool CBasicWindow::Invalidate(bool fErase)
 {
-	return m_hwnd != NULL && ::InvalidateRect(m_hwnd, NULL, fErase);
+	return m_hwnd != nullptr && ::InvalidateRect(m_hwnd, nullptr, fErase);
 }
 
 
 bool CBasicWindow::Invalidate(const RECT *pRect, bool fErase)
 {
-	return m_hwnd != NULL && ::InvalidateRect(m_hwnd, pRect, fErase);
+	return m_hwnd != nullptr && ::InvalidateRect(m_hwnd, pRect, fErase);
 }
 
 
 bool CBasicWindow::Update()
 {
-	return m_hwnd != NULL && ::UpdateWindow(m_hwnd);
+	return m_hwnd != nullptr && ::UpdateWindow(m_hwnd);
 }
 
 
 bool CBasicWindow::Redraw(const RECT *pRect, UINT Flags)
 {
-	return m_hwnd != NULL && ::RedrawWindow(m_hwnd, pRect, NULL, Flags);
+	return m_hwnd != nullptr && ::RedrawWindow(m_hwnd, pRect, nullptr, Flags);
 }
 
 
 bool CBasicWindow::GetClientRect(RECT *pRect) const
 {
-	return m_hwnd != NULL && ::GetClientRect(m_hwnd, pRect);
+	return m_hwnd != nullptr && ::GetClientRect(m_hwnd, pRect);
 }
 
 
@@ -248,7 +248,7 @@ bool CBasicWindow::GetClientSize(SIZE *pSize) const
 {
 	RECT rc;
 
-	if (m_hwnd == NULL || !::GetClientRect(m_hwnd, &rc))
+	if (m_hwnd == nullptr || !::GetClientRect(m_hwnd, &rc))
 		return false;
 	pSize->cx = rc.right;
 	pSize->cy = rc.bottom;
@@ -258,20 +258,20 @@ bool CBasicWindow::GetClientSize(SIZE *pSize) const
 
 bool CBasicWindow::SetParent(HWND hwnd)
 {
-	return m_hwnd != NULL && ::SetParent(m_hwnd, hwnd);
+	return m_hwnd != nullptr && ::SetParent(m_hwnd, hwnd);
 }
 
 
 bool CBasicWindow::SetParent(CBasicWindow *pWindow)
 {
-	return m_hwnd != NULL && ::SetParent(m_hwnd, pWindow->m_hwnd);
+	return m_hwnd != nullptr && ::SetParent(m_hwnd, pWindow->m_hwnd);
 }
 
 
 HWND CBasicWindow::GetParent() const
 {
-	if (m_hwnd == NULL)
-		return NULL;
+	if (m_hwnd == nullptr)
+		return nullptr;
 	return ::GetParent(m_hwnd);
 }
 
@@ -308,7 +308,7 @@ bool CBasicWindow::MoveToMonitorInside()
 
 DWORD CBasicWindow::GetWindowStyle() const
 {
-	if (m_hwnd == NULL)
+	if (m_hwnd == nullptr)
 		return 0;
 	return ::GetWindowLong(m_hwnd, GWL_STYLE);
 }
@@ -316,12 +316,12 @@ DWORD CBasicWindow::GetWindowStyle() const
 
 bool CBasicWindow::SetWindowStyle(DWORD Style, bool fFrameChange)
 {
-	if (m_hwnd == NULL)
+	if (m_hwnd == nullptr)
 		return false;
 	::SetWindowLong(m_hwnd, GWL_STYLE, Style);
 	if (fFrameChange)
 		::SetWindowPos(
-			m_hwnd, NULL, 0, 0, 0, 0,
+			m_hwnd, nullptr, 0, 0, 0, 0,
 			SWP_FRAMECHANGED | SWP_DRAWFRAME | SWP_NOZORDER | SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
 	return true;
 }
@@ -329,7 +329,7 @@ bool CBasicWindow::SetWindowStyle(DWORD Style, bool fFrameChange)
 
 DWORD CBasicWindow::GetWindowExStyle() const
 {
-	if (m_hwnd == NULL)
+	if (m_hwnd == nullptr)
 		return 0;
 	return ::GetWindowLong(m_hwnd, GWL_EXSTYLE);
 }
@@ -337,12 +337,12 @@ DWORD CBasicWindow::GetWindowExStyle() const
 
 bool CBasicWindow::SetWindowExStyle(DWORD ExStyle, bool fFrameChange)
 {
-	if (m_hwnd == NULL)
+	if (m_hwnd == nullptr)
 		return false;
 	::SetWindowLong(m_hwnd, GWL_EXSTYLE, ExStyle);
 	if (fFrameChange)
 		::SetWindowPos(
-			m_hwnd, NULL, 0, 0, 0, 0,
+			m_hwnd, nullptr, 0, 0, 0, 0,
 			SWP_FRAMECHANGED | SWP_DRAWFRAME | SWP_NOZORDER | SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
 	return true;
 }
@@ -352,14 +352,14 @@ bool CBasicWindow::CreateBasicWindow(
 	HWND hwndParent, DWORD Style, DWORD ExStyle,
 	int ID, LPCTSTR pszClassName, LPCTSTR pszText, HINSTANCE hinst)
 {
-	if (m_hwnd != NULL)
+	if (m_hwnd != nullptr)
 		return false;
 	m_hwnd = ::CreateWindowEx(
 		ExStyle, pszClassName, pszText, Style,
 		m_WindowPosition.Left, m_WindowPosition.Top,
 		m_WindowPosition.Width, m_WindowPosition.Height,
 		hwndParent, reinterpret_cast<HMENU>(static_cast<INT_PTR>(ID)), hinst, this);
-	return m_hwnd != NULL;
+	return m_hwnd != nullptr;
 }
 
 
@@ -380,8 +380,8 @@ void CBasicWindow::OnDestroy()
 		&m_WindowPosition.Left, &m_WindowPosition.Top,
 		&m_WindowPosition.Width, &m_WindowPosition.Height);
 	m_WindowPosition.fMaximized = ::IsZoomed(m_hwnd) != FALSE;
-	SetWindowLongPtr(m_hwnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>((LPVOID)NULL));
-	m_hwnd = NULL;
+	SetWindowLongPtr(m_hwnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>((LPVOID)nullptr));
+	m_hwnd = nullptr;
 }
 
 
@@ -393,7 +393,7 @@ CBasicWindow *CBasicWindow::GetBasicWindow(HWND hwnd)
 
 LRESULT CBasicWindow::SendMessage(UINT Msg, WPARAM wParam, LPARAM lParam)
 {
-	if (m_hwnd == NULL)
+	if (m_hwnd == nullptr)
 		return 0;
 	return ::SendMessage(m_hwnd, Msg, wParam, lParam);
 }
@@ -401,7 +401,7 @@ LRESULT CBasicWindow::SendMessage(UINT Msg, WPARAM wParam, LPARAM lParam)
 
 bool CBasicWindow::PostMessage(UINT Msg, WPARAM wParam, LPARAM lParam)
 {
-	if (m_hwnd == NULL)
+	if (m_hwnd == nullptr)
 		return false;
 	return ::PostMessage(m_hwnd, Msg, wParam, lParam) != FALSE;
 }
@@ -409,7 +409,7 @@ bool CBasicWindow::PostMessage(UINT Msg, WPARAM wParam, LPARAM lParam)
 
 bool CBasicWindow::SendSizeMessage()
 {
-	if (m_hwnd == NULL)
+	if (m_hwnd == nullptr)
 		return false;
 
 	RECT rc;
@@ -422,7 +422,7 @@ bool CBasicWindow::SendSizeMessage()
 
 bool CBasicWindow::SetOpacity(int Opacity, bool fClearLayered)
 {
-	if (Opacity < 0 || Opacity > 255 || m_hwnd == NULL)
+	if (Opacity < 0 || Opacity > 255 || m_hwnd == nullptr)
 		return false;
 
 	// 子ウィンドウをレイヤードウィンドウにできるのは Windows 8 以降
@@ -440,7 +440,7 @@ bool CBasicWindow::SetOpacity(int Opacity, bool fClearLayered)
 		if ((ExStyle & WS_EX_LAYERED) != 0) {
 			if (fClearLayered) {
 				SetWindowExStyle(ExStyle ^ WS_EX_LAYERED);
-				Redraw(NULL, RDW_ERASE | RDW_INVALIDATE | RDW_FRAME | RDW_ALLCHILDREN);
+				Redraw(nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_FRAME | RDW_ALLCHILDREN);
 			} else {
 				::SetLayeredWindowAttributes(m_hwnd, 0, 255, LWA_ALPHA);
 			}
@@ -471,17 +471,17 @@ LRESULT CALLBACK CCustomWindow::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPA
 	if (uMsg == WM_NCCREATE) {
 		pThis = static_cast<CCustomWindow*>(OnCreate(hwnd, lParam));
 		if (!pThis->OnMessage(hwnd, uMsg, wParam, lParam)) {
-			pThis->m_hwnd = NULL;
+			pThis->m_hwnd = nullptr;
 			return FALSE;
 		}
 		return TRUE;
 	} else {
 		pThis = static_cast<CCustomWindow*>(GetBasicWindow(hwnd));
-		if (pThis == NULL)
+		if (pThis == nullptr)
 			return ::DefWindowProc(hwnd, uMsg, wParam, lParam);
 		if (uMsg == WM_CREATE) {
 			if (pThis->OnMessage(hwnd, uMsg, wParam, lParam) < 0) {
-				pThis->m_hwnd = NULL;
+				pThis->m_hwnd = nullptr;
 				return -1;
 			}
 			return 0;

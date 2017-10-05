@@ -38,7 +38,7 @@ public:
 	virtual const ULONGLONG GetPos(void);
 	virtual const bool SetPos(const ULONGLONG llPos);
 
-	bool GetTime(FILETIME *pCreationTime, FILETIME *pLastAccessTime = NULL, FILETIME *pLastWriteTime = NULL) const;
+	bool GetTime(FILETIME *pCreationTime, FILETIME *pLastAccessTime = nullptr, FILETIME *pLastWriteTime = nullptr) const;
 	LPCTSTR GetFileName(void) const;
 
 	DWORD GetLastError(void) const;

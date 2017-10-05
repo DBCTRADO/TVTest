@@ -37,7 +37,7 @@ public:
 	bool Show(DWORD Time = 0, bool fAnimation = false);
 	bool Hide();
 	bool IsVisible() const;
-	bool SetText(LPCTSTR pszText, HBITMAP hbmIcon = NULL, int IconWidth = 0, int IconHeight = 0, unsigned int ImageEffect = 0);
+	bool SetText(LPCTSTR pszText, HBITMAP hbmIcon = nullptr, int IconWidth = 0, int IconHeight = 0, unsigned int ImageEffect = 0);
 	bool SetPosition(int Left, int Top, int Width, int Height);
 	void GetPosition(int *pLeft, int *pTop, int *pWidth, int *pHeight) const;
 	void SetTextColor(COLORREF crText);

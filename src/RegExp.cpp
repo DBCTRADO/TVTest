@@ -37,7 +37,7 @@ inline bool CharToHalfWidth(WCHAR &Char)
 void StringToHalfWidth(String &Text)
 {
 #if 0
-	int MapLength = ::LCMapString(LOCALE_USER_DEFAULT, LCMAP_HALFWIDTH, Text.data(), (int)Text.length(), NULL, 0);
+	int MapLength = ::LCMapString(LOCALE_USER_DEFAULT, LCMAP_HALFWIDTH, Text.data(), (int)Text.length(), nullptr, 0);
 	if (MapLength > 0) {
 		pMapText = new TCHAR[MapLength];
 		::LCMapString(LOCALE_USER_DEFAULT, LCMAP_HALFWIDTH, Text.data(), (int)Text.length(), pMapText, MapLength);
@@ -147,7 +147,7 @@ CRegExpEngine_ECMAScript::~CRegExpEngine_ECMAScript()
 
 bool CRegExpEngine_ECMAScript::GetName(LPTSTR pszName, size_t MaxLength) const
 {
-	if (pszName == NULL)
+	if (pszName == nullptr)
 		return false;
 
 	StdUtil::strncpy(pszName, MaxLength, TEXT("ECMAScript"));
@@ -208,7 +208,7 @@ bool CRegExpEngine_ECMAScript::Match(LPCTSTR pText, size_t Length, CRegExp::Text
 {
 	if (m_Pattern.empty())
 		return false;
-	if (pText == NULL)
+	if (pText == nullptr)
 		return false;
 
 	String Text(pText, Length);
@@ -219,7 +219,7 @@ bool CRegExpEngine_ECMAScript::Match(LPCTSTR pText, size_t Length, CRegExp::Text
 	if (!std::regex_search(Text, Results, m_RegEx))
 		return false;
 
-	if (pRange != NULL) {
+	if (pRange != nullptr) {
 		pRange->Start = Results.position();
 		pRange->Length = Results.length();
 	}
@@ -269,7 +269,7 @@ CRegExpEngine_VBScript::~CRegExpEngine_VBScript()
 
 bool CRegExpEngine_VBScript::GetName(LPTSTR pszName, size_t MaxLength) const
 {
-	if (pszName == NULL)
+	if (pszName == nullptr)
 		return false;
 
 	StdUtil::strncpy(pszName, MaxLength, TEXT("VBScript"));
@@ -280,7 +280,7 @@ bool CRegExpEngine_VBScript::GetName(LPTSTR pszName, size_t MaxLength) const
 
 bool CRegExpEngine_VBScript::Initialize()
 {
-	if (m_pRegExp == NULL) {
+	if (m_pRegExp == nullptr) {
 		HRESULT hr = m_pRegExp.CreateInstance(CLSID_RegExp);
 		if (FAILED(hr))
 			return false;
@@ -292,20 +292,20 @@ bool CRegExpEngine_VBScript::Initialize()
 
 void CRegExpEngine_VBScript::Finalize()
 {
-	if (m_pRegExp != NULL)
+	if (m_pRegExp != nullptr)
 		m_pRegExp.Release();
 }
 
 
 bool CRegExpEngine_VBScript::IsInitialized() const
 {
-	return m_pRegExp != NULL;
+	return m_pRegExp != nullptr;
 }
 
 
 bool CRegExpEngine_VBScript::SetPattern(LPCTSTR pszPattern, UINT Flags)
 {
-	if (m_pRegExp == NULL)
+	if (m_pRegExp == nullptr)
 		return false;
 	if (IsStringEmpty(pszPattern))
 		return false;
@@ -329,9 +329,9 @@ bool CRegExpEngine_VBScript::SetPattern(LPCTSTR pszPattern, UINT Flags)
 
 bool CRegExpEngine_VBScript::Match(LPCTSTR pText, size_t Length, CRegExp::TextRange *pRange)
 {
-	if (m_pRegExp == NULL || m_Pattern.empty())
+	if (m_pRegExp == nullptr || m_Pattern.empty())
 		return false;
-	if (pText == NULL)
+	if (pText == nullptr)
 		return false;
 
 	String Text(pText, Length);
@@ -345,7 +345,7 @@ bool CRegExpEngine_VBScript::Match(LPCTSTR pText, size_t Length, CRegExp::TextRa
 		if (pMatchCollection->Count < 1)
 			return false;
 
-		if (pRange != NULL) {
+		if (pRange != nullptr) {
 			IMatchPtr pMatch = pMatchCollection->Item[0];
 			pRange->Start = pMatch->FirstIndex;
 			pRange->Length = pMatch->Length;
@@ -407,10 +407,10 @@ private:
 
 
 CRegExpEngine_Bregonig::CRegExpEngine_Bregonig()
-	: m_hLib(NULL)
-	, m_pBRegExp(NULL)
-	, m_pBoMatch(NULL)
-	, m_pBRegFree(NULL)
+	: m_hLib(nullptr)
+	, m_pBRegExp(nullptr)
+	, m_pBoMatch(nullptr)
+	, m_pBRegFree(nullptr)
 {
 }
 
@@ -423,7 +423,7 @@ CRegExpEngine_Bregonig::~CRegExpEngine_Bregonig()
 
 bool CRegExpEngine_Bregonig::GetName(LPTSTR pszName, size_t MaxLength) const
 {
-	if (pszName == NULL)
+	if (pszName == nullptr)
 		return false;
 
 	StdUtil::strncpy(pszName, MaxLength, TEXT("bregonig.dll"));
@@ -434,18 +434,18 @@ bool CRegExpEngine_Bregonig::GetName(LPTSTR pszName, size_t MaxLength) const
 
 bool CRegExpEngine_Bregonig::Initialize()
 {
-	if (m_hLib == NULL) {
+	if (m_hLib == nullptr) {
 		TCHAR szPath[MAX_PATH];
 
 		GetLibraryPath(szPath);
 		m_hLib = ::LoadLibrary(szPath);
-		if (m_hLib == NULL)
+		if (m_hLib == nullptr)
 			return false;
 
 		m_pBoMatch = reinterpret_cast<BoMatchFunc>(::GetProcAddress(m_hLib, "BoMatchW"));
 		m_pBRegFree = reinterpret_cast<BRegFreeFunc>(::GetProcAddress(m_hLib, "BRegfreeW"));
 
-		if (m_pBoMatch == NULL || m_pBRegFree == NULL) {
+		if (m_pBoMatch == nullptr || m_pBRegFree == nullptr) {
 			Finalize();
 			return false;
 		}
@@ -460,26 +460,26 @@ void CRegExpEngine_Bregonig::Finalize()
 	m_Pattern.clear();
 	m_Flags = 0;
 
-	if (m_hLib != NULL) {
+	if (m_hLib != nullptr) {
 		FreeBRegExp();
 
 		::FreeLibrary(m_hLib);
-		m_hLib = NULL;
-		m_pBoMatch = NULL;
-		m_pBRegFree = NULL;
+		m_hLib = nullptr;
+		m_pBoMatch = nullptr;
+		m_pBRegFree = nullptr;
 	}
 }
 
 
 bool CRegExpEngine_Bregonig::IsInitialized() const
 {
-	return m_hLib != NULL;
+	return m_hLib != nullptr;
 }
 
 
 bool CRegExpEngine_Bregonig::SetPattern(LPCTSTR pszPattern, UINT Flags)
 {
-	if (m_hLib == NULL)
+	if (m_hLib == nullptr)
 		return false;
 	if (IsStringEmpty(pszPattern))
 		return false;
@@ -504,9 +504,9 @@ void CRegExpEngine_Bregonig::ClearPattern()
 
 bool CRegExpEngine_Bregonig::Match(LPCTSTR pText, size_t Length, CRegExp::TextRange *pRange)
 {
-	if (m_hLib == NULL || m_Pattern.empty())
+	if (m_hLib == nullptr || m_Pattern.empty())
 		return false;
-	if (pText == NULL)
+	if (pText == nullptr)
 		return false;
 
 	LPCTSTR pSrcText = pText;
@@ -524,13 +524,13 @@ bool CRegExpEngine_Bregonig::Match(LPCTSTR pText, size_t Length, CRegExp::TextRa
 
 	int Result = m_pBoMatch(
 		m_Pattern.c_str(),
-		(m_Flags & CRegExp::FLAG_IGNORE_CASE) ? TEXT("i") : NULL,
+		(m_Flags & CRegExp::FLAG_IGNORE_CASE) ? TEXT("i") : nullptr,
 		pSrcText, pSrcText, pSrcText + SrcLength,
 		FALSE, &m_pBRegExp, szMessage);
 	if (Result <= 0)
 		return false;
 
-	if (pRange != NULL) {
+	if (pRange != nullptr) {
 		pRange->Start = m_pBRegExp->startp[0] - pSrcText;
 		pRange->Length = m_pBRegExp->endp[0] - m_pBRegExp->startp[0];
 	}
@@ -541,9 +541,9 @@ bool CRegExpEngine_Bregonig::Match(LPCTSTR pText, size_t Length, CRegExp::TextRa
 
 void CRegExpEngine_Bregonig::FreeBRegExp()
 {
-	if (m_pBRegExp != NULL) {
+	if (m_pBRegExp != nullptr) {
 		m_pBRegFree(m_pBRegExp);
-		m_pBRegExp = NULL;
+		m_pBRegExp = nullptr;
 	}
 }
 
@@ -559,7 +559,7 @@ bool CRegExpEngine_Bregonig::IsAvailable()
 
 void CRegExpEngine_Bregonig::GetLibraryPath(LPTSTR pszPath)
 {
-	::GetModuleFileName(NULL, pszPath, MAX_PATH);
+	::GetModuleFileName(nullptr, pszPath, MAX_PATH);
 	::lstrcpy(::PathFindFileName(pszPath), TEXT("bregonig.dll"));
 }
 
@@ -569,7 +569,7 @@ void CRegExpEngine_Bregonig::GetLibraryPath(LPTSTR pszPath)
 
 
 CRegExp::CRegExp()
-	: m_pEngine(NULL)
+	: m_pEngine(nullptr)
 {
 }
 
@@ -582,7 +582,7 @@ CRegExp::~CRegExp()
 
 bool CRegExp::Initialize()
 {
-	if (m_pEngine != NULL)
+	if (m_pEngine != nullptr)
 		return true;
 
 #ifdef TVTEST_BREGONIG_SUPPORT
@@ -614,22 +614,22 @@ bool CRegExp::Initialize()
 
 void CRegExp::Finalize()
 {
-	if (m_pEngine != NULL) {
+	if (m_pEngine != nullptr) {
 		delete m_pEngine;
-		m_pEngine = NULL;
+		m_pEngine = nullptr;
 	}
 }
 
 
 bool CRegExp::IsInitialized() const
 {
-	return m_pEngine != NULL;
+	return m_pEngine != nullptr;
 }
 
 
 bool CRegExp::SetPattern(LPCTSTR pszPattern, UINT Flags)
 {
-	if (m_pEngine == NULL)
+	if (m_pEngine == nullptr)
 		return false;
 
 	return m_pEngine->SetPattern(pszPattern, Flags);
@@ -638,14 +638,14 @@ bool CRegExp::SetPattern(LPCTSTR pszPattern, UINT Flags)
 
 void CRegExp::ClearPattern()
 {
-	if (m_pEngine != NULL)
+	if (m_pEngine != nullptr)
 		m_pEngine->ClearPattern();
 }
 
 
 bool CRegExp::Match(LPCTSTR pText, size_t Length, TextRange *pRange)
 {
-	if (m_pEngine == NULL)
+	if (m_pEngine == nullptr)
 		return false;
 
 	return m_pEngine->Match(pText, Length, pRange);
@@ -654,7 +654,7 @@ bool CRegExp::Match(LPCTSTR pText, size_t Length, TextRange *pRange)
 
 bool CRegExp::Match(LPCTSTR pszText, TextRange *pRange)
 {
-	if (pszText == NULL)
+	if (pszText == nullptr)
 		return false;
 
 	return Match(pszText, ::lstrlen(pszText), pRange);
@@ -669,7 +669,7 @@ bool CRegExp::Match(const String &Text, TextRange *pRange)
 
 bool CRegExp::GetEngineName(LPTSTR pszName, size_t MaxLength) const
 {
-	if (m_pEngine == NULL)
+	if (m_pEngine == nullptr)
 		return false;
 
 	return m_pEngine->GetName(pszName, MaxLength);

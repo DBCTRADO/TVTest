@@ -73,7 +73,7 @@ public:
 	void SetItemPos(int Pos) { m_ItemPos = Pos; }
 	int GetItemLines() const { return m_ItemLines; }
 	void SetItemLines(int Lines) { m_ItemLines = Lines; }
-	bool IsNullItem() const { return m_pEventInfo == NULL; }
+	bool IsNullItem() const { return m_pEventInfo == nullptr; }
 	void SetSelected(bool fSelected) { m_fSelected = fSelected; }
 	bool IsSelected() const { return m_fSelected; }
 };
@@ -81,7 +81,7 @@ public:
 
 CEventItem::CEventItem(const LibISDB::EventInfo *pInfo)
 	: m_pEventInfo(pInfo)
-	, m_pCommonEventInfo(NULL)
+	, m_pCommonEventInfo(nullptr)
 	, m_TitleLines(0)
 	, m_ItemPos(-1)
 	, m_ItemLines(0)
@@ -95,8 +95,8 @@ CEventItem::CEventItem(const LibISDB::EventInfo *pInfo)
 
 
 CEventItem::CEventItem(const LibISDB::DateTime &StartTime, DWORD Duration)
-	: m_pEventInfo(NULL)
-	, m_pCommonEventInfo(NULL)
+	: m_pEventInfo(nullptr)
+	, m_pCommonEventInfo(nullptr)
 	, m_StartTime(StartTime)
 	, m_Duration(Duration)
 	, m_TitleLines(0)
@@ -134,12 +134,12 @@ bool CEventItem::SetEndTime(const LibISDB::DateTime &Time)
 
 int CEventItem::GetGenre(int Level) const
 {
-	if (m_pEventInfo != NULL) {
+	if (m_pEventInfo != nullptr) {
 		const LibISDB::EventInfo::ContentNibbleInfo *pContentNibble;
 
 		if (m_pEventInfo->ContentNibble.NibbleCount > 0) {
 			pContentNibble = &m_pEventInfo->ContentNibble;
-		} else if (m_pCommonEventInfo != NULL
+		} else if (m_pCommonEventInfo != nullptr
 				&& m_pCommonEventInfo->ContentNibble.NibbleCount > 0) {
 			pContentNibble = &m_pCommonEventInfo->ContentNibble;
 		} else {
@@ -163,7 +163,7 @@ int CEventItem::GetGenre(int Level) const
 
 bool CEventItem::SetCommonEvent(const LibISDB::EventInfo *pEvent)
 {
-	if (m_pEventInfo == NULL || !m_pEventInfo->IsCommonEvent || pEvent == NULL)
+	if (m_pEventInfo == nullptr || !m_pEventInfo->IsCommonEvent || pEvent == nullptr)
 		return false;
 	m_pCommonEventInfo = pEvent;
 	/*
@@ -179,9 +179,9 @@ int CEventItem::GetTitleText(LPTSTR pszText, int MaxLength) const
 	int Length;
 
 	Length = GetTimeText(pszText, MaxLength);
-	if (m_pEventInfo != NULL) {
+	if (m_pEventInfo != nullptr) {
 		const LibISDB::String *pEventName;
-		if (m_pEventInfo->EventName.empty() && m_pCommonEventInfo != NULL)
+		if (m_pEventInfo->EventName.empty() && m_pCommonEventInfo != nullptr)
 			pEventName = &m_pCommonEventInfo->EventName;
 		else
 			pEventName = &m_pEventInfo->EventName;
@@ -200,11 +200,11 @@ int CEventItem::GetTimeText(LPTSTR pszText, int MaxLength) const
 
 TVTest::String CEventItem::GetEventText() const
 {
-	if (m_pEventInfo == NULL)
+	if (m_pEventInfo == nullptr)
 		return TVTest::String();
 
 #if 0
-	if (m_pCommonEventInfo != NULL
+	if (m_pCommonEventInfo != nullptr
 			&& ((m_pEventInfo->EventText.empty()
 					&& !m_pCommonEventInfo->EventText.empty())
 				|| (m_pEventInfo->ExtendedText.empty()
@@ -313,7 +313,7 @@ bool CEventLayout::InsertItem(size_t Index, CEventItem *pItem)
 CEventItem *CEventLayout::GetItem(size_t Index)
 {
 	if (Index >= m_EventList.size())
-		return NULL;
+		return nullptr;
 	return m_EventList[Index];
 }
 
@@ -321,7 +321,7 @@ CEventItem *CEventLayout::GetItem(size_t Index)
 const CEventItem *CEventLayout::GetItem(size_t Index) const
 {
 	if (Index >= m_EventList.size())
-		return NULL;
+		return nullptr;
 	return m_EventList[Index];
 }
 
@@ -357,7 +357,7 @@ void CEventLayout::InsertNullItems(const LibISDB::DateTime &FirstTime, const Lib
 		PrevTime = EndTime;
 	}
 	if (EmptyCount > 0) {
-		pPrevItem = NULL;
+		pPrevItem = nullptr;
 		PrevTime = FirstTime;
 		for (i = FirstItem; i < LastItem; i++) {
 			pItem = m_EventList[i];
@@ -410,7 +410,7 @@ void CEventLayoutList::Add(CEventLayout *pLayout)
 CEventLayout *CEventLayoutList::operator[](size_t Index)
 {
 	if (Index >= m_LayoutList.size())
-		return NULL;
+		return nullptr;
 	return m_LayoutList[Index];
 }
 
@@ -418,7 +418,7 @@ CEventLayout *CEventLayoutList::operator[](size_t Index)
 const CEventLayout *CEventLayoutList::operator[](size_t Index) const
 {
 	if (Index >= m_LayoutList.size())
-		return NULL;
+		return nullptr;
 	return m_LayoutList[Index];
 }
 
@@ -432,7 +432,7 @@ CServiceInfo::CServiceInfo(const CChannelInfo &ChannelInfo, LPCTSTR pszBonDriver
 		ChannelInfo.GetTransportStreamID(),
 		ChannelInfo.GetServiceID())
 	, m_pszBonDriverFileName(DuplicateString(pszBonDriver))
-	, m_hbmLogo(NULL)
+	, m_hbmLogo(nullptr)
 {
 }
 
@@ -446,8 +446,8 @@ CServiceInfo::~CServiceInfo()
 
 HBITMAP CServiceInfo::GetStretchedLogo(int Width, int Height)
 {
-	if (m_hbmLogo == NULL)
-		return NULL;
+	if (m_hbmLogo == nullptr)
+		return nullptr;
 	// AlphaBlendでリサイズすると汚いので、予めリサイズした画像を作成しておく
 	if (m_StretchedLogo.IsCreated()) {
 		if (m_StretchedLogo.GetWidth() != Width || m_StretchedLogo.GetHeight() != Height)
@@ -455,7 +455,7 @@ HBITMAP CServiceInfo::GetStretchedLogo(int Width, int Height)
 	}
 	if (!m_StretchedLogo.IsCreated()) {
 		HBITMAP hbm = DrawUtil::ResizeBitmap(m_hbmLogo, Width, Height);
-		if (hbm != NULL)
+		if (hbm != nullptr)
 			m_StretchedLogo.Attach(hbm);
 	}
 	return m_StretchedLogo.GetHandle();
@@ -466,7 +466,7 @@ LibISDB::EventInfo *CServiceInfo::GetEvent(int Index)
 {
 	if (Index < 0 || (size_t)Index >= m_EventList.size()) {
 		TRACE(TEXT("CServiceInfo::GetEvent() : Out of range %d\n"), Index);
-		return NULL;
+		return nullptr;
 	}
 	return m_EventList[Index];
 }
@@ -476,7 +476,7 @@ const LibISDB::EventInfo *CServiceInfo::GetEvent(int Index) const
 {
 	if (Index < 0 || (size_t)Index >= m_EventList.size()) {
 		TRACE(TEXT("CServiceInfo::GetEvent() const : Out of range %d\n"), Index);
-		return NULL;
+		return nullptr;
 	}
 	return m_EventList[Index];
 }
@@ -486,7 +486,7 @@ LibISDB::EventInfo *CServiceInfo::GetEventByEventID(WORD EventID)
 {
 	EventIDMap::iterator itr = m_EventIDMap.find(EventID);
 	if (itr == m_EventIDMap.end())
-		return NULL;
+		return nullptr;
 	return itr->second;
 }
 
@@ -495,7 +495,7 @@ const LibISDB::EventInfo *CServiceInfo::GetEventByEventID(WORD EventID) const
 {
 	EventIDMap::const_iterator itr = m_EventIDMap.find(EventID);
 	if (itr == m_EventIDMap.end())
-		return NULL;
+		return nullptr;
 	return itr->second;
 }
 
@@ -545,7 +545,7 @@ void CServiceInfo::CalcLayout(
 						m_ServiceInfo.TransportStreamID,
 						pEvent->CommonEvent.ServiceID,
 						pEvent->CommonEvent.EventID);
-				if (pCommonEvent != NULL)
+				if (pCommonEvent != nullptr)
 					pItem->SetCommonEvent(pCommonEvent);
 			}
 			pEventList->AddItem(pItem);
@@ -656,7 +656,7 @@ void CServiceInfo::CalcLayout(
 
 bool CServiceInfo::SaveiEpgFile(const LibISDB::EventInfo *pEventInfo, LPCTSTR pszFileName, bool fVersion2) const
 {
-	if (pEventInfo == NULL)
+	if (pEventInfo == nullptr)
 		return false;
 
 	HANDLE hFile;
@@ -665,14 +665,14 @@ bool CServiceInfo::SaveiEpgFile(const LibISDB::EventInfo *pEventInfo, LPCTSTR ps
 	DWORD Length, Write;
 
 	hFile = ::CreateFile(
-		pszFileName, GENERIC_WRITE, FILE_SHARE_READ, NULL,
-		CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+		pszFileName, GENERIC_WRITE, FILE_SHARE_READ, nullptr,
+		CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
 	if (hFile == INVALID_HANDLE_VALUE)
 		return false;
 	if (!IsStringEmpty(GetServiceName())) {
 		::WideCharToMultiByte(
 			932, 0, GetServiceName(), -1,
-			szServiceName, sizeof(szServiceName), NULL, NULL);
+			szServiceName, sizeof(szServiceName), nullptr, nullptr);
 	} else {
 		szServiceName[0] = '\0';
 	}
@@ -681,7 +681,7 @@ bool CServiceInfo::SaveiEpgFile(const LibISDB::EventInfo *pEventInfo, LPCTSTR ps
 	if (!pEventInfo->EventName.empty()) {
 		::WideCharToMultiByte(
 			932, 0, pEventInfo->EventName.c_str(), -1,
-			szEventName, sizeof(szEventName), NULL, NULL);
+			szEventName, sizeof(szEventName), nullptr, nullptr);
 	} else {
 		szEventName[0] = '\0';
 	}
@@ -740,7 +740,7 @@ bool CServiceInfo::SaveiEpgFile(const LibISDB::EventInfo *pEventInfo, LPCTSTR ps
 			EndTime.Hour, EndTime.Minute,
 			szEventName);
 	}
-	bool fOK = ::WriteFile(hFile, szText, Length, &Write, NULL) && Write == Length;
+	bool fOK = ::WriteFile(hFile, szText, Length, &Write, nullptr) && Write == Length;
 	::FlushFileBuffers(hFile);
 	::CloseHandle(hFile);
 	return fOK;
@@ -758,7 +758,7 @@ CServiceList::~CServiceList()
 CServiceInfo *CServiceList::GetItem(size_t Index)
 {
 	if (Index >= m_ServiceList.size())
-		return NULL;
+		return nullptr;
 	return m_ServiceList[Index];
 }
 
@@ -766,7 +766,7 @@ CServiceInfo *CServiceList::GetItem(size_t Index)
 const CServiceInfo *CServiceList::GetItem(size_t Index) const
 {
 	if (Index >= m_ServiceList.size())
-		return NULL;
+		return nullptr;
 	return m_ServiceList[Index];
 }
 
@@ -776,7 +776,7 @@ CServiceInfo *CServiceList::GetItemByIDs(WORD TransportStreamID, WORD ServiceID)
 	int Index = FindItemByIDs(TransportStreamID, ServiceID);
 
 	if (Index < 0)
-		return NULL;
+		return nullptr;
 
 	return m_ServiceList[Index];
 }
@@ -787,7 +787,7 @@ const CServiceInfo *CServiceList::GetItemByIDs(WORD TransportStreamID, WORD Serv
 	int Index = FindItemByIDs(TransportStreamID, ServiceID);
 
 	if (Index < 0)
-		return NULL;
+		return nullptr;
 
 	return m_ServiceList[Index];
 }
@@ -809,8 +809,8 @@ int CServiceList::FindItemByIDs(WORD TransportStreamID, WORD ServiceID) const
 LibISDB::EventInfo *CServiceList::GetEventByIDs(WORD TransportStreamID, WORD ServiceID, WORD EventID)
 {
 	CServiceInfo *pService = GetItemByIDs(TransportStreamID, ServiceID);
-	if (pService == NULL)
-		return NULL;
+	if (pService == nullptr)
+		return nullptr;
 	return pService->GetEventByEventID(EventID);
 }
 
@@ -818,8 +818,8 @@ LibISDB::EventInfo *CServiceList::GetEventByIDs(WORD TransportStreamID, WORD Ser
 const LibISDB::EventInfo *CServiceList::GetEventByIDs(WORD TransportStreamID, WORD ServiceID, WORD EventID) const
 {
 	const CServiceInfo *pService = GetItemByIDs(TransportStreamID, ServiceID);
-	if (pService == NULL)
-		return NULL;
+	if (pService == nullptr)
+		return nullptr;
 	return pService->GetEventByEventID(EventID);
 }
 
@@ -870,7 +870,7 @@ CProgramGuideBaseChannelProvider::~CProgramGuideBaseChannelProvider()
 
 bool CProgramGuideBaseChannelProvider::GetName(LPTSTR pszName, int MaxName) const
 {
-	if (pszName == NULL || MaxName < 1)
+	if (pszName == nullptr || MaxName < 1)
 		return false;
 
 	size_t Length = m_BonDriverFileName.length();
@@ -896,7 +896,7 @@ size_t CProgramGuideBaseChannelProvider::GetGroupCount() const
 
 bool CProgramGuideBaseChannelProvider::GetGroupName(size_t Group, LPTSTR pszName, int MaxName) const
 {
-	if (Group >= GetGroupCount() || pszName == NULL || MaxName < 1)
+	if (Group >= GetGroupCount() || pszName == nullptr || MaxName < 1)
 		return false;
 
 	if (HasAllChannelGroup()) {
@@ -919,7 +919,7 @@ bool CProgramGuideBaseChannelProvider::GetGroupName(size_t Group, LPTSTR pszName
 
 bool CProgramGuideBaseChannelProvider::GetGroupID(size_t Group, TVTest::String *pID) const
 {
-	if (Group >= GetGroupCount() || pID == NULL)
+	if (Group >= GetGroupCount() || pID == nullptr)
 		return false;
 
 	TVTest::StringUtility::Format(*pID, TEXT("%u"), static_cast<unsigned int>(Group));
@@ -952,7 +952,7 @@ size_t CProgramGuideBaseChannelProvider::GetChannelCount(size_t Group) const
 	}
 
 	const CTuningSpaceInfo *pSpaceInfo = m_TuningSpaceList.GetTuningSpaceInfo((int)Group);
-	if (pSpaceInfo == NULL)
+	if (pSpaceInfo == nullptr)
 		return 0;
 
 	return pSpaceInfo->NumChannels();
@@ -962,7 +962,7 @@ size_t CProgramGuideBaseChannelProvider::GetChannelCount(size_t Group) const
 const CChannelInfo *CProgramGuideBaseChannelProvider::GetChannelInfo(size_t Group, size_t Channel) const
 {
 	if (Group >= GetGroupCount())
-		return NULL;
+		return nullptr;
 
 	if (HasAllChannelGroup()) {
 		if (Group == 0)
@@ -971,7 +971,7 @@ const CChannelInfo *CProgramGuideBaseChannelProvider::GetChannelInfo(size_t Grou
 	}
 
 	const CTuningSpaceInfo *pSpaceInfo = m_TuningSpaceList.GetTuningSpaceInfo((int)Group);
-	if (pSpaceInfo == NULL)
+	if (pSpaceInfo == nullptr)
 		return false;
 
 	return pSpaceInfo->GetChannelInfo((int)Channel);
@@ -980,7 +980,7 @@ const CChannelInfo *CProgramGuideBaseChannelProvider::GetChannelInfo(size_t Grou
 
 bool CProgramGuideBaseChannelProvider::GetBonDriver(LPTSTR pszFileName, int MaxLength) const
 {
-	if (pszFileName == NULL || MaxLength < 1 || m_BonDriverFileName.empty())
+	if (pszFileName == nullptr || MaxLength < 1 || m_BonDriverFileName.empty())
 		return false;
 
 	const size_t Length = m_BonDriverFileName.length();
@@ -1001,7 +1001,7 @@ bool CProgramGuideBaseChannelProvider::GetBonDriverFileName(size_t Group, size_t
 
 bool CProgramGuideBaseChannelProvider::SetTuningSpaceList(const CTuningSpaceList *pList)
 {
-	if (pList != NULL)
+	if (pList != nullptr)
 		m_TuningSpaceList = *pList;
 	else
 		m_TuningSpaceList.Clear();
@@ -1031,12 +1031,12 @@ bool CProgramGuideBaseChannelProvider::HasAllChannelGroup() const
 
 
 const LPCTSTR CProgramGuide::m_pszWindowClass = APP_NAME TEXT(" Program Guide");
-HINSTANCE CProgramGuide::m_hinst = NULL;
+HINSTANCE CProgramGuide::m_hinst = nullptr;
 
 
 bool CProgramGuide::Initialize(HINSTANCE hinst)
 {
-	if (m_hinst == NULL) {
+	if (m_hinst == nullptr) {
 		WNDCLASS wc;
 
 		wc.style = CS_HREDRAW | CS_DBLCLKS;
@@ -1044,10 +1044,10 @@ bool CProgramGuide::Initialize(HINSTANCE hinst)
 		wc.cbClsExtra = 0;
 		wc.cbWndExtra = 0;
 		wc.hInstance = hinst;
-		wc.hIcon = NULL;
-		wc.hCursor = LoadCursor(NULL, IDC_ARROW);
-		wc.hbrBackground = NULL;
-		wc.lpszMenuName = NULL;
+		wc.hIcon = nullptr;
+		wc.hCursor = LoadCursor(nullptr, IDC_ARROW);
+		wc.hbrBackground = nullptr;
+		wc.lpszMenuName = nullptr;
 		wc.lpszClassName = m_pszWindowClass;
 		if (::RegisterClass(&wc) == 0)
 			return false;
@@ -1058,7 +1058,7 @@ bool CProgramGuide::Initialize(HINSTANCE hinst)
 
 
 CProgramGuide::CProgramGuide(CEventSearchOptions &EventSearchOptions)
-	: m_pEPGDatabase(NULL)
+	: m_pEPGDatabase(nullptr)
 	, m_ListMode(LIST_SERVICES)
 	, m_WeekListService(-1)
 	, m_LinesPerHour(12)
@@ -1069,24 +1069,24 @@ CProgramGuide::CProgramGuide(CEventSearchOptions &EventSearchOptions)
 		m_Style.EventIconMargin.Left + m_Style.EventIconMargin.Right)
 	, m_fDragScroll(false)
 	, m_fScrolling(false)
-	, m_hDragCursor1(NULL)
-	, m_hDragCursor2(NULL)
+	, m_hDragCursor1(nullptr)
+	, m_hDragCursor2(nullptr)
 	, m_VisibleEventIcons(((1 << (CEpgIcons::ICON_LAST + 1)) - 1) ^ CEpgIcons::IconFlag(CEpgIcons::ICON_PAY))
 	, m_fBarShadow(false)
 	, m_EventInfoPopupManager(&m_EventInfoPopup)
 	, m_EventInfoPopupHandler(this)
 	, m_fShowToolTip(true)
 	, m_fKeepTimePos(false)
-	, m_pChannelProviderManager(NULL)
-	, m_pChannelProvider(NULL)
+	, m_pChannelProviderManager(nullptr)
+	, m_pChannelProvider(nullptr)
 	, m_CurrentChannelProvider(-1)
 	, m_CurrentChannelGroup(-1)
 	, m_fExcludeNoEventServices(true)
 	, m_CurrentEventID(0)
 	, m_BeginHour(-1)
-	, m_pEventHandler(NULL)
-	, m_pFrame(NULL)
-	, m_pProgramCustomizer(NULL)
+	, m_pEventHandler(nullptr)
+	, m_pFrame(nullptr)
+	, m_pProgramCustomizer(nullptr)
 	, m_WheelScrollLines(0)
 	, m_ProgramSearchEventHandler(this)
 	, m_Filter(0)
@@ -1121,12 +1121,12 @@ CProgramGuide::~CProgramGuide()
 {
 	Destroy();
 
-	if (m_pEventHandler != NULL)
-		m_pEventHandler->m_pProgramGuide = NULL;
-	if (m_pFrame != NULL)
-		m_pFrame->m_pProgramGuide = NULL;
-	if (m_pProgramCustomizer != NULL)
-		m_pProgramCustomizer->m_pProgramGuide = NULL;
+	if (m_pEventHandler != nullptr)
+		m_pEventHandler->m_pProgramGuide = nullptr;
+	if (m_pFrame != nullptr)
+		m_pFrame->m_pProgramGuide = nullptr;
+	if (m_pProgramCustomizer != nullptr)
+		m_pProgramCustomizer->m_pProgramGuide = nullptr;
 }
 
 
@@ -1186,7 +1186,7 @@ void CProgramGuide::SetTheme(const TVTest::Theme::CThemeManager *pThemeManager)
 
 	m_EpgTheme.SetTheme(pThemeManager);
 
-	if (m_hwnd != NULL)
+	if (m_hwnd != nullptr)
 		Invalidate();
 }
 
@@ -1200,7 +1200,7 @@ bool CProgramGuide::SetEPGDatabase(LibISDB::EPGDatabase *pEPGDatabase)
 
 void CProgramGuide::Clear()
 {
-	m_pChannelProvider = NULL;
+	m_pChannelProvider = nullptr;
 	m_ServiceList.Clear();
 	m_CurrentChannelProvider = -1;
 	m_CurrentChannelGroup = -1;
@@ -1210,7 +1210,7 @@ void CProgramGuide::Clear()
 	m_ScrollPos.x = 0;
 	m_ScrollPos.y = 0;
 	m_OldScrollPos = m_ScrollPos;
-	if (m_hwnd != NULL) {
+	if (m_hwnd != nullptr) {
 		SetCaption();
 		Invalidate();
 	}
@@ -1219,10 +1219,10 @@ void CProgramGuide::Clear()
 
 bool CProgramGuide::Refresh()
 {
-	if (m_hwnd == NULL)
+	if (m_hwnd == nullptr)
 		return false;
 
-	if (m_pEventHandler != NULL
+	if (m_pEventHandler != nullptr
 			&& !m_pEventHandler->OnRefresh())
 		return false;
 
@@ -1232,10 +1232,10 @@ bool CProgramGuide::Refresh()
 
 bool CProgramGuide::UpdateProgramGuide()
 {
-	if (m_hwnd != NULL && m_pChannelProvider != NULL) {
-		HCURSOR hcurOld = ::SetCursor(::LoadCursor(NULL, IDC_WAIT));
+	if (m_hwnd != nullptr && m_pChannelProvider != nullptr) {
+		HCURSOR hcurOld = ::SetCursor(::LoadCursor(nullptr, IDC_WAIT));
 
-		if (m_pFrame != NULL)
+		if (m_pFrame != nullptr)
 			m_pFrame->SetCaption(TITLE_TEXT TEXT(" - 番組表を作成しています..."));
 
 		SetMessage(TEXT("番組表を作成しています..."));
@@ -1246,11 +1246,11 @@ bool CProgramGuide::UpdateProgramGuide()
 			LibISDB::GetCurrentEPGTime(&m_CurTime);
 		}
 
-		SetMessage(NULL, false);
+		SetMessage(nullptr, false);
 		Invalidate();
 		SetCaption();
 
-		if (m_pFrame != NULL) {
+		if (m_pFrame != nullptr) {
 			m_pFrame->OnDateChanged();
 			m_pFrame->OnSpaceChanged();
 		}
@@ -1264,14 +1264,14 @@ bool CProgramGuide::UpdateProgramGuide()
 
 bool CProgramGuide::UpdateList()
 {
-	if (m_pEPGDatabase == NULL
-			|| m_pChannelProvider == NULL)
+	if (m_pEPGDatabase == nullptr
+			|| m_pChannelProvider == nullptr)
 		return false;
 
 	LibISDB::EPGDatabase::ServiceInfo CurServiceInfo;
 	if (m_ListMode == LIST_WEEK) {
 		ProgramGuide::CServiceInfo *pCurService = m_ServiceList.GetItem(m_WeekListService);
-		if (pCurService != NULL)
+		if (pCurService != nullptr)
 			CurServiceInfo = pCurService->GetServiceInfo();
 		m_WeekListService = -1;
 	}
@@ -1280,7 +1280,7 @@ bool CProgramGuide::UpdateList()
 	for (size_t i = 0; i < m_pChannelProvider->GetChannelCount(m_CurrentChannelGroup); i++) {
 		const CChannelInfo *pChannelInfo = m_pChannelProvider->GetChannelInfo(m_CurrentChannelGroup, i);
 
-		if (pChannelInfo == NULL
+		if (pChannelInfo == nullptr
 				|| !pChannelInfo->IsEnabled()
 				|| IsExcludeService(
 					pChannelInfo->GetNetworkID(),
@@ -1292,20 +1292,20 @@ bool CProgramGuide::UpdateList()
 		if (!m_pChannelProvider->GetBonDriverFileName(m_CurrentChannelGroup, i, szBonDriver, lengthof(szBonDriver)))
 			szBonDriver[0] = _T('\0');
 
-		ProgramGuide::CServiceInfo *pService = NULL;
+		ProgramGuide::CServiceInfo *pService = nullptr;
 
 		m_pEPGDatabase->EnumEventsSortedByTime(
 			pChannelInfo->GetNetworkID(),
 			pChannelInfo->GetTransportStreamID(),
 			pChannelInfo->GetServiceID(),
 			[&](const LibISDB::EventInfo & Event) -> bool {
-				if (pService == NULL)
+				if (pService == nullptr)
 					pService = new ProgramGuide::CServiceInfo(*pChannelInfo, szBonDriver);
 				pService->AddEvent(new LibISDB::EventInfo(Event));
 				return true;
 			});
 
-		if (pService == NULL) {
+		if (pService == nullptr) {
 			if (m_fExcludeNoEventServices)
 				continue;
 			pService = new ProgramGuide::CServiceInfo(*pChannelInfo, szBonDriver);
@@ -1313,7 +1313,7 @@ bool CProgramGuide::UpdateList()
 
 		HBITMAP hbmLogo = GetAppClass().LogoManager.GetAssociatedLogoBitmap(
 			pService->GetNetworkID(), pService->GetServiceID(), CLogoManager::LOGOTYPE_SMALL);
-		if (hbmLogo != NULL)
+		if (hbmLogo != nullptr)
 			pService->SetLogo(hbmLogo);
 
 		if (m_ListMode == LIST_WEEK && pService->GetServiceInfo() == CurServiceInfo)
@@ -1324,7 +1324,7 @@ bool CProgramGuide::UpdateList()
 
 	if (m_ListMode == LIST_WEEK && m_WeekListService < 0) {
 		m_ListMode = LIST_SERVICES;
-		if (m_pFrame != NULL)
+		if (m_pFrame != nullptr)
 			m_pFrame->OnListModeChanged();
 	}
 
@@ -1354,7 +1354,7 @@ void CProgramGuide::UpdateServiceList()
 	if (m_ListMode != LIST_SERVICES) {
 		m_ListMode = LIST_SERVICES;
 		m_WeekListService = -1;
-		if (m_pFrame != NULL)
+		if (m_pFrame != nullptr)
 			m_pFrame->OnListModeChanged();
 	}
 
@@ -1385,7 +1385,7 @@ void CProgramGuide::CalcLayout()
 	} else if (m_ListMode == LIST_WEEK) {
 		ProgramGuide::CServiceInfo *pCurService = m_ServiceList.GetItem(m_WeekListService);
 
-		if (pCurService != NULL) {
+		if (pCurService != nullptr) {
 			for (int i = 0; i < 8; i++) {
 				ProgramGuide::CEventLayout *pLayout = new ProgramGuide::CEventLayout(pCurService);
 
@@ -1409,7 +1409,7 @@ unsigned int CProgramGuide::GetEventItemStatus(
 	const LibISDB::EventInfo *pEventInfo = pItem->GetEventInfo();
 	const LibISDB::EventInfo *pOrigEventInfo = pEventInfo;
 	const bool fCommonEvent = pEventInfo->IsCommonEvent;
-	if (fCommonEvent && pItem->GetCommonEventInfo() != NULL)
+	if (fCommonEvent && pItem->GetCommonEventInfo() != nullptr)
 		pEventInfo = pItem->GetCommonEventInfo();
 	unsigned int Status = 0;
 
@@ -1481,7 +1481,7 @@ void CProgramGuide::DrawEventBackground(
 	const LibISDB::EventInfo *pEventInfo = pItem->GetEventInfo();
 	const LibISDB::EventInfo *pOrigEventInfo = pEventInfo;
 	const bool fCommonEvent = pEventInfo->IsCommonEvent;
-	if (fCommonEvent && pItem->GetCommonEventInfo() != NULL)
+	if (fCommonEvent && pItem->GetCommonEventInfo() != nullptr)
 		pEventInfo = pItem->GetCommonEventInfo();
 	const unsigned int ItemStatus =
 		GetEventItemStatus(
@@ -1548,7 +1548,7 @@ void CProgramGuide::DrawEventBackground(
 	rcText.right = Rect.right - m_Style.EventPadding.Right;
 	rcText.bottom = Rect.bottom;
 
-	if (m_pProgramCustomizer != NULL) {
+	if (m_pProgramCustomizer != nullptr) {
 		if (!fCommonEvent) {
 			m_pProgramCustomizer->DrawBackground(*pEventInfo, hdc, Rect, rcTitle, rcText, BackColor);
 		} else {
@@ -1760,7 +1760,7 @@ void CProgramGuide::DrawServiceHeader(
 	TVTest::Style::Subtract(&rc, m_Style.HeaderPadding);
 
 	HBITMAP hbmLogo = pServiceInfo->GetLogo();
-	if (hbmLogo != NULL) {
+	if (hbmLogo != nullptr) {
 		int Height, LogoWidth, LogoHeight;
 		Height = (rc.bottom - rc.top) - m_Style.HeaderIconMargin.Vert();
 		LogoHeight = min(Height, 24);
@@ -1772,7 +1772,7 @@ void CProgramGuide::DrawServiceHeader(
 			rc.left,
 			rc.top + m_Style.HeaderIconMargin.Top + ((rc.bottom - rc.top) - Height) / 2,
 			LogoWidth, LogoHeight,
-			hbmStretched != NULL ? hbmStretched : hbmLogo, NULL, 192);
+			hbmStretched != nullptr ? hbmStretched : hbmLogo, nullptr, 192);
 		rc.left += LogoWidth + m_Style.HeaderIconMargin.Right;
 	}
 
@@ -1789,7 +1789,7 @@ void CProgramGuide::DrawServiceHeader(
 	TVTest::Style::Subtract(&rc, m_Style.HeaderChannelNameMargin);
 	::DrawText(
 		hdc, pServiceInfo->GetServiceName(), -1, &rc,
-		(fLeftAlign || hbmLogo != NULL ? DT_LEFT : DT_CENTER) |
+		(fLeftAlign || hbmLogo != nullptr ? DT_LEFT : DT_CENTER) |
 		DT_SINGLELINE | DT_VCENTER | DT_NOPREFIX | DT_END_ELLIPSIS);
 	::SetTextColor(hdc, OldTextColor);
 	::SelectObject(hdc, hfontOld);
@@ -1799,7 +1799,7 @@ void CProgramGuide::DrawServiceHeader(
 void CProgramGuide::DrawDayHeader(int Day, HDC hdc, const RECT &Rect, TVTest::Theme::CThemeDraw &ThemeDraw) const
 {
 	LibISDB::DateTime Time;
-	GetCurrentTimeRange(&Time, NULL);
+	GetCurrentTimeRange(&Time, nullptr);
 	if (Day > 0)
 		Time.OffsetDays(Day);
 
@@ -1838,7 +1838,7 @@ void CProgramGuide::DrawTimeBar(HDC hdc, const RECT &Rect, TVTest::Theme::CTheme
 	rc.right = Rect.right;
 
 	LibISDB::DateTime Time;
-	GetCurrentTimeRange(&Time, NULL);
+	GetCurrentTimeRange(&Time, nullptr);
 
 	for (int i = 0; i < m_Hours; i++) {
 		LibISDB::DateTime DispTime;
@@ -2048,7 +2048,7 @@ void CProgramGuide::Draw(HDC hdc, const RECT &PaintRect)
 				rc.right = PaintRect.right;
 				ThemeDraw.Draw(m_Theme.ChannelNameBackStyle, rc);
 			}
-			::SelectClipRgn(hdc, NULL);
+			::SelectClipRgn(hdc, nullptr);
 			::DeleteObject(hrgn);
 		}
 
@@ -2115,7 +2115,7 @@ void CProgramGuide::Draw(HDC hdc, const RECT &PaintRect)
 			TextDraw.ResetClipping();
 			TextDraw.End();
 
-			::SelectClipRgn(hdc, NULL);
+			::SelectClipRgn(hdc, nullptr);
 			::DeleteObject(hrgn);
 		}
 	} else {
@@ -2148,7 +2148,7 @@ void CProgramGuide::Draw(HDC hdc, const RECT &PaintRect)
 		rc.right = rcClient.right;
 		DrawTimeBar(hdc, rc, ThemeDraw, true);
 	}
-	::SelectClipRgn(hdc, NULL);
+	::SelectClipRgn(hdc, nullptr);
 	::DeleteObject(hrgn);
 
 	if (rc.bottom < PaintRect.bottom) {
@@ -2244,7 +2244,7 @@ bool CProgramGuide::CreateFonts()
 
 void CProgramGuide::CalcFontMetrics()
 {
-	if (m_hwnd != NULL) {
+	if (m_hwnd != nullptr) {
 		HDC hdc = ::GetDC(m_hwnd);
 
 		m_GDIFontHeight = m_ContentFont.GetHeight(hdc);
@@ -2292,7 +2292,7 @@ int CProgramGuide::GetCurTimeLinePos() const
 	LibISDB::DateTime First;
 	LONGLONG Span;
 
-	GetCurrentTimeRange(&First, NULL);
+	GetCurrentTimeRange(&First, nullptr);
 	Span = m_CurTime.DiffSeconds(First) % (24 * 60 * 60);
 	if (Span < 0)
 		Span += 24 * 60 * 60;
@@ -2376,7 +2376,7 @@ void CProgramGuide::Scroll(int XScroll, int YScroll)
 				&& abs(XScrollSize) < rcClip.right - rcClip.left) {
 			::ScrollWindowEx(
 				m_hwnd, XScrollSize, YScrollSize, &rcGuide, &rcClip,
-				NULL, NULL, SW_INVALIDATE);
+				nullptr, nullptr, SW_INVALIDATE);
 
 			if (m_fBarShadow) {
 				RECT rc;
@@ -2401,17 +2401,17 @@ void CProgramGuide::Scroll(int XScroll, int YScroll)
 				::SetRect(&rcHeader, rcGuide.left, 0, rcGuide.right, rcGuide.top);
 				if (m_ListMode == LIST_WEEK)
 					rcHeader.top += m_HeaderHeight;
-				::ScrollWindowEx(m_hwnd, XScrollSize, 0, &rcHeader, &rcHeader, NULL, NULL, SW_INVALIDATE);
+				::ScrollWindowEx(m_hwnd, XScrollSize, 0, &rcHeader, &rcHeader, nullptr, nullptr, SW_INVALIDATE);
 			}
 
 			if (YScrollSize != 0) {
 				RECT rcTime;
 
 				::SetRect(&rcTime, 0, rcGuide.top, rcGuide.left, rcGuide.bottom);
-				::ScrollWindowEx(m_hwnd, 0, YScrollSize, &rcTime, &rcTime, NULL, NULL, SW_INVALIDATE);
+				::ScrollWindowEx(m_hwnd, 0, YScrollSize, &rcTime, &rcTime, nullptr, nullptr, SW_INVALIDATE);
 				rcTime.left = rcGuide.right;
 				rcTime.right = rcTime.left + m_TimeBarWidth;
-				::ScrollWindowEx(m_hwnd, 0, YScrollSize, &rcTime, &rcTime, NULL, NULL, SW_INVALIDATE);
+				::ScrollWindowEx(m_hwnd, 0, YScrollSize, &rcTime, &rcTime, nullptr, nullptr, SW_INVALIDATE);
 			}
 		} else {
 			Invalidate();
@@ -2455,7 +2455,7 @@ int CProgramGuide::GetTimePos() const
 {
 	LibISDB::DateTime Begin;
 
-	GetCurrentTimeRange(&Begin, NULL);
+	GetCurrentTimeRange(&Begin, nullptr);
 	return Begin.Hour * m_LinesPerHour + m_ScrollPos.y;
 }
 
@@ -2490,8 +2490,8 @@ void CProgramGuide::RestoreTimePos()
 
 void CProgramGuide::SetCaption()
 {
-	if (m_hwnd != NULL && m_pFrame != NULL) {
-		if (m_pEPGDatabase != NULL) {
+	if (m_hwnd != nullptr && m_pFrame != nullptr) {
+		if (m_pEPGDatabase != nullptr) {
 			if (m_fEpgUpdating) {
 				TCHAR szText[256];
 
@@ -2511,8 +2511,8 @@ void CProgramGuide::SetCaption()
 					StdUtil::snprintf(
 						szText, lengthof(szText),
 						TITLE_TEXT TEXT(" - %s%s%d/%d(%s) %d時 〜 %d/%d(%s) %d時"),
-						Info.pszRelativeDayText != NULL ? Info.pszRelativeDayText : TEXT(""),
-						Info.pszRelativeDayText != NULL ? TEXT(" ") : TEXT(""),
+						Info.pszRelativeDayText != nullptr ? Info.pszRelativeDayText : TEXT(""),
+						Info.pszRelativeDayText != nullptr ? TEXT(" ") : TEXT(""),
 						Info.BeginningTime.Month,
 						Info.BeginningTime.Day,
 						GetDayOfWeekText(Info.BeginningTime.DayOfWeek),
@@ -2645,7 +2645,7 @@ bool CProgramGuide::Create(HWND hwndParent, DWORD Style, DWORD ExStyle, int ID)
 {
 	return CreateBasicWindow(
 		hwndParent, Style, ExStyle, ID,
-		m_pszWindowClass, NULL, m_hinst);
+		m_pszWindowClass, nullptr, m_hinst);
 }
 
 
@@ -2659,13 +2659,13 @@ bool CProgramGuide::SetChannelProviderManager(CProgramGuideChannelProviderManage
 
 bool CProgramGuide::EnumChannelProvider(int Index, LPTSTR pszName, int MaxName) const
 {
-	if (m_pChannelProviderManager == NULL
-			|| Index < 0 || pszName == NULL || MaxName < 1)
+	if (m_pChannelProviderManager == nullptr
+			|| Index < 0 || pszName == nullptr || MaxName < 1)
 		return false;
 
 	const CProgramGuideChannelProvider *pChannelProvider =
 		m_pChannelProviderManager->GetChannelProvider(Index);
-	if (pChannelProvider == NULL)
+	if (pChannelProvider == nullptr)
 		return false;
 
 	pChannelProvider->GetName(pszName, MaxName);
@@ -2696,13 +2696,13 @@ bool CProgramGuide::SetChannelProvider(int Provider, LPCTSTR pszGroupID)
 
 bool CProgramGuide::SetCurrentChannelProvider(int Provider, int Group)
 {
-	if (m_pChannelProviderManager == NULL
+	if (m_pChannelProviderManager == nullptr
 			|| Provider < -1 || (size_t)Provider >= m_pChannelProviderManager->GetChannelProviderCount())
 		return false;
 
 	if (Provider >= 0) {
 		m_pChannelProvider = m_pChannelProviderManager->GetChannelProvider(Provider);
-		if (m_pChannelProvider == NULL)
+		if (m_pChannelProvider == nullptr)
 			return false;
 		m_pChannelProvider->Update();
 		m_CurrentChannelProvider = Provider;
@@ -2718,13 +2718,13 @@ bool CProgramGuide::SetCurrentChannelProvider(int Provider, int Group)
 
 bool CProgramGuide::SetCurrentChannelProvider(int Provider, LPCTSTR pszGroupID)
 {
-	if (m_pChannelProviderManager == NULL
+	if (m_pChannelProviderManager == nullptr
 			|| Provider < -1 || (size_t)Provider >= m_pChannelProviderManager->GetChannelProviderCount())
 		return false;
 
 	if (Provider >= 0) {
 		m_pChannelProvider = m_pChannelProviderManager->GetChannelProvider(Provider);
-		if (m_pChannelProvider == NULL)
+		if (m_pChannelProvider == nullptr)
 			return false;
 		m_pChannelProvider->Update();
 		m_CurrentChannelProvider = Provider;
@@ -2740,7 +2740,7 @@ bool CProgramGuide::SetCurrentChannelProvider(int Provider, LPCTSTR pszGroupID)
 
 int CProgramGuide::GetChannelGroupCount() const
 {
-	if (m_pChannelProvider == NULL)
+	if (m_pChannelProvider == nullptr)
 		return 0;
 	return (int)m_pChannelProvider->GetGroupCount();
 }
@@ -2748,7 +2748,7 @@ int CProgramGuide::GetChannelGroupCount() const
 
 bool CProgramGuide::GetChannelGroupName(int Group, LPTSTR pszName, int MaxName) const
 {
-	if (m_pChannelProvider == NULL)
+	if (m_pChannelProvider == nullptr)
 		return false;
 	return m_pChannelProvider->GetGroupName(Group, pszName, MaxName);
 }
@@ -2756,7 +2756,7 @@ bool CProgramGuide::GetChannelGroupName(int Group, LPTSTR pszName, int MaxName) 
 
 int CProgramGuide::ParseChannelGroupID(LPCTSTR pszGroupID) const
 {
-	if (m_pChannelProvider == NULL)
+	if (m_pChannelProvider == nullptr)
 		return false;
 	return m_pChannelProvider->ParseGroupID(pszGroupID);
 }
@@ -2764,7 +2764,7 @@ int CProgramGuide::ParseChannelGroupID(LPCTSTR pszGroupID) const
 
 bool CProgramGuide::SetCurrentChannelGroup(int Group)
 {
-	if (m_pChannelProvider == NULL
+	if (m_pChannelProvider == nullptr
 			|| Group < -1 || (size_t)Group >= m_pChannelProvider->GetGroupCount())
 		return false;
 
@@ -2781,7 +2781,7 @@ bool CProgramGuide::SetCurrentChannelGroup(int Group)
 
 bool CProgramGuide::GetChannelList(CChannelList *pList, bool fVisibleOnly) const
 {
-	if (pList == NULL)
+	if (pList == nullptr)
 		return false;
 
 	pList->Clear();
@@ -2790,12 +2790,12 @@ bool CProgramGuide::GetChannelList(CChannelList *pList, bool fVisibleOnly) const
 		for (size_t i = 0; i < m_ServiceList.NumServices(); i++)
 			pList->AddChannel(m_ServiceList.GetItem(i)->GetChannelInfo());
 	} else {
-		if (m_pChannelProvider == NULL)
+		if (m_pChannelProvider == nullptr)
 			return false;
 		for (size_t i = 0; i < m_pChannelProvider->GetChannelCount(m_CurrentChannelGroup); i++) {
 			const CChannelInfo *pChannelInfo = m_pChannelProvider->GetChannelInfo(m_CurrentChannelGroup, i);
 
-			if (pChannelInfo != NULL
+			if (pChannelInfo != nullptr
 					&& pChannelInfo->IsEnabled())
 				pList->AddChannel(*pChannelInfo);
 		}
@@ -2809,7 +2809,7 @@ void CProgramGuide::SetCurrentService(WORD NetworkID, WORD TSID, WORD ServiceID)
 {
 	bool fRedrawEvent = false;
 	int ListIndex, EventIndex;
-	if (m_CurrentEventID != 0 && m_hwnd != NULL) {
+	if (m_CurrentEventID != 0 && m_hwnd != nullptr) {
 		fRedrawEvent = GetEventIndexByIDs(
 			m_CurrentChannel.NetworkID,
 			m_CurrentChannel.TransportStreamID,
@@ -2823,7 +2823,7 @@ void CProgramGuide::SetCurrentService(WORD NetworkID, WORD TSID, WORD ServiceID)
 	m_CurrentChannel.ServiceID = ServiceID;
 	m_CurrentEventID = 0;
 
-	if (m_hwnd != NULL) {
+	if (m_hwnd != nullptr) {
 		RECT rc;
 
 		GetClientRect(&rc);
@@ -2843,7 +2843,7 @@ void CProgramGuide::SetCurrentEvent(WORD EventID)
 
 		m_CurrentEventID = EventID;
 
-		if (m_hwnd != NULL) {
+		if (m_hwnd != nullptr) {
 			if (OldEventID != 0) {
 				RedrawEventByIDs(
 					m_CurrentChannel.NetworkID,
@@ -2879,7 +2879,7 @@ bool CProgramGuide::SetExcludeServiceList(const ServiceInfoList &List)
 
 bool CProgramGuide::GetExcludeServiceList(ServiceInfoList *pList) const
 {
-	if (pList == NULL)
+	if (pList == nullptr)
 		return false;
 	*pList = m_ExcludeServiceList;
 	return true;
@@ -2923,7 +2923,7 @@ bool CProgramGuide::SetServiceListMode()
 		m_ListMode = LIST_SERVICES;
 		m_WeekListService = -1;
 
-		HCURSOR hcurOld = ::SetCursor(::LoadCursor(NULL, IDC_WAIT));
+		HCURSOR hcurOld = ::SetCursor(::LoadCursor(nullptr, IDC_WAIT));
 
 		m_ScrollPos = m_OldScrollPos;
 		CalcLayout();
@@ -2933,7 +2933,7 @@ bool CProgramGuide::SetServiceListMode()
 
 		RestoreTimePos();
 
-		if (m_pFrame != NULL)
+		if (m_pFrame != nullptr)
 			m_pFrame->OnListModeChanged();
 
 		::SetCursor(hcurOld);
@@ -2947,7 +2947,7 @@ bool CProgramGuide::SetWeekListMode(int Service)
 {
 	ProgramGuide::CServiceInfo *pServiceInfo = m_ServiceList.GetItem(Service);
 
-	if (pServiceInfo == NULL)
+	if (pServiceInfo == nullptr)
 		return false;
 
 	if (m_ListMode != LIST_WEEK || m_WeekListService != Service) {
@@ -2956,7 +2956,7 @@ bool CProgramGuide::SetWeekListMode(int Service)
 		m_ListMode = LIST_WEEK;
 		m_WeekListService = Service;
 
-		HCURSOR hcurOld = ::SetCursor(::LoadCursor(NULL, IDC_WAIT));
+		HCURSOR hcurOld = ::SetCursor(::LoadCursor(nullptr, IDC_WAIT));
 
 		UpdateService(pServiceInfo);
 		m_OldScrollPos = m_ScrollPos;
@@ -2969,7 +2969,7 @@ bool CProgramGuide::SetWeekListMode(int Service)
 
 		RestoreTimePos();
 
-		if (m_pFrame != NULL)
+		if (m_pFrame != nullptr)
 			m_pFrame->OnListModeChanged();
 
 		::SetCursor(hcurOld);
@@ -3005,7 +3005,7 @@ bool CProgramGuide::SetTimeRange(const LibISDB::DateTime &FirstTime, const LibIS
 	m_LastTime = Last;
 	m_Hours = Hours;
 
-	if (m_pFrame != NULL)
+	if (m_pFrame != nullptr)
 		m_pFrame->OnTimeRangeChanged();
 
 	return true;
@@ -3014,9 +3014,9 @@ bool CProgramGuide::SetTimeRange(const LibISDB::DateTime &FirstTime, const LibIS
 
 bool CProgramGuide::GetTimeRange(LibISDB::DateTime *pFirstTime, LibISDB::DateTime *pLastTime) const
 {
-	if (pFirstTime != NULL)
+	if (pFirstTime != nullptr)
 		*pFirstTime = m_FirstTime;
-	if (pLastTime != NULL)
+	if (pLastTime != nullptr)
 		*pLastTime = m_LastTime;
 	return true;
 }
@@ -3026,9 +3026,9 @@ bool CProgramGuide::GetCurrentTimeRange(LibISDB::DateTime *pFirstTime, LibISDB::
 {
 	if (m_ListMode == LIST_WEEK) {
 		GetDayTimeRange(DAY_TOMORROW, pFirstTime, pLastTime);
-		if (pFirstTime != NULL)
+		if (pFirstTime != nullptr)
 			pFirstTime->OffsetDays(-1);
-		if (pLastTime != NULL)
+		if (pLastTime != nullptr)
 			pLastTime->OffsetDays(-1);
 		return true;
 	}
@@ -3107,9 +3107,9 @@ bool CProgramGuide::GetDayTimeRange(int Day, LibISDB::DateTime *pFirstTime, LibI
 		First.OffsetHours(Offset);
 		Last.OffsetHours(Offset);
 	}
-	if (pFirstTime != NULL)
+	if (pFirstTime != nullptr)
 		*pFirstTime = First;
-	if (pLastTime != NULL)
+	if (pLastTime != nullptr)
 		*pLastTime = Last;
 	return true;
 }
@@ -3120,7 +3120,7 @@ bool CProgramGuide::GetCurrentDateInfo(DateInfo *pInfo) const
 	if (m_ListMode == LIST_WEEK) {
 		if (!GetCurrentTimeRange(&pInfo->BeginningTime, &pInfo->EndTime))
 			return false;
-		pInfo->pszRelativeDayText = NULL;
+		pInfo->pszRelativeDayText = nullptr;
 	} else {
 		if (!GetDateInfo(m_Day, pInfo))
 			return false;
@@ -3138,7 +3138,7 @@ bool CProgramGuide::GetDateInfo(int Day, DateInfo *pInfo) const
 			pInfo->pszRelativeDayText = GetRelativeDayText(0);
 		} else {
 			LibISDB::DateTime Time1, Time2;
-			GetDayTimeRange(DAY_TODAY, &Time1, NULL);
+			GetDayTimeRange(DAY_TODAY, &Time1, nullptr);
 			Time1.TruncateToDays();
 			Time2 = pInfo->BeginningTime;
 			Time2.TruncateToDays();
@@ -3146,7 +3146,7 @@ bool CProgramGuide::GetDateInfo(int Day, DateInfo *pInfo) const
 				GetRelativeDayText((int)(Time2.DiffSeconds(Time1) / (24 * 60 * 60)));
 		}
 	} else {
-		pInfo->pszRelativeDayText = NULL;
+		pInfo->pszRelativeDayText = nullptr;
 	}
 	return true;
 }
@@ -3199,14 +3199,14 @@ bool CProgramGuide::SetViewDay(int Day)
 
 		m_Day = Day;
 
-		if (m_pEPGDatabase != NULL) {
-			HCURSOR hcurOld = ::SetCursor(::LoadCursor(NULL, IDC_WAIT));
+		if (m_pEPGDatabase != nullptr) {
+			HCURSOR hcurOld = ::SetCursor(::LoadCursor(nullptr, IDC_WAIT));
 
 			if (m_ListMode != LIST_SERVICES) {
 				m_ListMode = LIST_SERVICES;
 				m_WeekListService = -1;
 				m_ScrollPos.x = m_OldScrollPos.x;
-				if (m_pFrame != NULL)
+				if (m_pFrame != nullptr)
 					m_pFrame->OnListModeChanged();
 			}
 			m_ScrollPos.y = 0;
@@ -3220,7 +3220,7 @@ bool CProgramGuide::SetViewDay(int Day)
 
 			::SetCursor(hcurOld);
 
-			if (m_pFrame != NULL)
+			if (m_pFrame != nullptr)
 				m_pFrame->OnDateChanged();
 		}
 	}
@@ -3237,7 +3237,7 @@ bool CProgramGuide::JumpEvent(WORD NetworkID, WORD TSID, WORD ServiceID, WORD Ev
 		return false;
 	const ProgramGuide::CServiceInfo *pServiceInfo = m_ServiceList.GetItem(ServiceIndex);
 	const LibISDB::EventInfo *pEventInfo = pServiceInfo->GetEventByEventID(EventID);
-	if (pEventInfo == NULL)
+	if (pEventInfo == nullptr)
 		return false;
 
 	LibISDB::DateTime Start, End, First, Last;
@@ -3334,7 +3334,7 @@ bool CProgramGuide::SetUIOptions(int LinesPerHour, int ItemWidth)
 			|| m_ItemWidth != ItemWidth) {
 		m_LinesPerHour = LinesPerHour;
 		m_ItemLogicalWidth = ItemWidth;
-		if (m_hwnd != NULL) {
+		if (m_hwnd != nullptr) {
 			m_ItemWidth = m_pStyleScaling->LogicalPixelsToPhysicalPixels(m_ItemLogicalWidth);
 			m_ScrollPos.x = 0;
 			m_ScrollPos.y = 0;
@@ -3350,7 +3350,7 @@ bool CProgramGuide::SetUIOptions(int LinesPerHour, int ItemWidth)
 
 bool CProgramGuide::SetTextDrawEngine(TVTest::CTextDrawClient::TextDrawEngine Engine)
 {
-	if (m_hwnd != NULL) {
+	if (m_hwnd != nullptr) {
 		if (!m_TextDrawClient.Initialize(Engine, m_hwnd))
 			return false;
 
@@ -3369,7 +3369,7 @@ bool CProgramGuide::SetDirectWriteRenderingParams(
 	if (!m_TextDrawClient.SetDirectWriteRenderingParams(Params))
 		return false;
 
-	if (m_hwnd != NULL && m_TextDrawEngine == TVTest::CTextDrawClient::ENGINE_DIRECTWRITE)
+	if (m_hwnd != nullptr && m_TextDrawEngine == TVTest::CTextDrawClient::ENGINE_DIRECTWRITE)
 		Invalidate();
 
 	return true;
@@ -3380,7 +3380,7 @@ bool CProgramGuide::SetFont(const TVTest::Style::Font &Font)
 {
 	m_Font = Font;
 
-	if (m_hwnd != NULL) {
+	if (m_hwnd != nullptr) {
 		CreateFonts();
 		OnFontChanged();
 		m_Tooltip.SetFont(m_ContentFont.GetHandle());
@@ -3418,7 +3418,7 @@ bool CProgramGuide::SetShowToolTip(bool fShow)
 void CProgramGuide::SetEventHandler(CEventHandler *pEventHandler)
 {
 	if (m_pEventHandler)
-		m_pEventHandler->m_pProgramGuide = NULL;
+		m_pEventHandler->m_pProgramGuide = nullptr;
 	if (pEventHandler)
 		pEventHandler->m_pProgramGuide = this;
 	m_pEventHandler = pEventHandler;
@@ -3428,7 +3428,7 @@ void CProgramGuide::SetEventHandler(CEventHandler *pEventHandler)
 void CProgramGuide::SetFrame(CFrame *pFrame)
 {
 	if (m_pFrame)
-		m_pFrame->m_pProgramGuide = NULL;
+		m_pFrame->m_pProgramGuide = nullptr;
 	if (pFrame)
 		pFrame->m_pProgramGuide = this;
 	m_pFrame = pFrame;
@@ -3438,10 +3438,10 @@ void CProgramGuide::SetFrame(CFrame *pFrame)
 void CProgramGuide::SetProgramCustomizer(CProgramCustomizer *pProgramCustomizer)
 {
 	if (m_pProgramCustomizer)
-		m_pProgramCustomizer->m_pProgramGuide = NULL;
+		m_pProgramCustomizer->m_pProgramGuide = nullptr;
 	if (pProgramCustomizer) {
 		pProgramCustomizer->m_pProgramGuide = this;
-		if (m_hwnd != NULL)
+		if (m_hwnd != nullptr)
 			pProgramCustomizer->Initialize();
 	}
 	m_pProgramCustomizer = pProgramCustomizer;
@@ -3452,7 +3452,7 @@ bool CProgramGuide::SetDragScroll(bool fDragScroll)
 {
 	if (m_fDragScroll != fDragScroll) {
 		m_fDragScroll = fDragScroll;
-		if (m_hwnd != NULL) {
+		if (m_hwnd != nullptr) {
 			POINT pt;
 
 			::GetCursorPos(&pt);
@@ -3471,7 +3471,7 @@ bool CProgramGuide::SetFilter(unsigned int Filter)
 		Filter &= ~(FILTER_ORIGINAL | FILTER_RERUN);
 	if (m_Filter != Filter) {
 		m_Filter = Filter;
-		if (m_hwnd != NULL) {
+		if (m_hwnd != nullptr) {
 			Invalidate();
 		}
 	}
@@ -3483,7 +3483,7 @@ void CProgramGuide::SetVisibleEventIcons(UINT VisibleIcons)
 {
 	if (m_VisibleEventIcons != VisibleIcons) {
 		m_VisibleEventIcons = VisibleIcons;
-		if (m_hwnd != NULL)
+		if (m_hwnd != nullptr)
 			Invalidate();
 	}
 }
@@ -3499,7 +3499,7 @@ void CProgramGuide::SetShowFeaturedMark(bool fShow)
 {
 	if (m_fShowFeaturedMark != fShow) {
 		m_fShowFeaturedMark = fShow;
-		if (m_hwnd != NULL) {
+		if (m_hwnd != nullptr) {
 			if (m_fShowFeaturedMark)
 				m_FeaturedEventsMatcher.BeginMatching(GetAppClass().FeaturedEvents.GetSettings());
 			Invalidate();
@@ -3556,13 +3556,13 @@ void CProgramGuide::SetMessage(LPCTSTR pszMessage, bool fUpdate)
 		m_Message.clear();
 	}
 
-	if (fUpdate && m_hwnd != NULL) {
+	if (fUpdate && m_hwnd != nullptr) {
 		if (m_Message.empty() || fErase) {
 			Redraw();
 		} else {
 			HDC hdc = ::GetDC(m_hwnd);
 
-			if (hdc != NULL) {
+			if (hdc != nullptr) {
 				RECT rc;
 				GetClientRect(&rc);
 				DrawMessage(hdc, rc);
@@ -3599,7 +3599,7 @@ void CProgramGuide::SetEpgCaptureProgress(int Pos, int End, DWORD RemainingTime)
 
 bool CProgramGuide::OnCloseFrame()
 {
-	if (m_pEventHandler != NULL && !m_pEventHandler->OnClose())
+	if (m_pEventHandler != nullptr && !m_pEventHandler->OnClose())
 		return false;
 
 	if (m_fEpgUpdating)
@@ -3632,7 +3632,7 @@ LPCTSTR CProgramGuide::GetRelativeDayText(int Day)
 	};
 
 	if (Day < 0 || Day >= lengthof(DayText))
-		return NULL;
+		return nullptr;
 	return DayText[Day];
 }
 
@@ -3640,7 +3640,7 @@ LPCTSTR CProgramGuide::GetRelativeDayText(int Day)
 ProgramGuide::CEventItem *CProgramGuide::GetEventItem(int ListIndex, int EventIndex)
 {
 	if (ListIndex < 0 || (size_t)ListIndex >= m_EventLayoutList.Length())
-		return NULL;
+		return nullptr;
 	return m_EventLayoutList[ListIndex]->GetItem(EventIndex);
 }
 
@@ -3648,7 +3648,7 @@ ProgramGuide::CEventItem *CProgramGuide::GetEventItem(int ListIndex, int EventIn
 const ProgramGuide::CEventItem *CProgramGuide::GetEventItem(int ListIndex, int EventIndex) const
 {
 	if (ListIndex < 0 || (size_t)ListIndex >= m_EventLayoutList.Length())
-		return NULL;
+		return nullptr;
 	return m_EventLayoutList[ListIndex]->GetItem(EventIndex);
 }
 
@@ -3656,7 +3656,7 @@ const ProgramGuide::CEventItem *CProgramGuide::GetEventItem(int ListIndex, int E
 bool CProgramGuide::GetEventRect(int ListIndex, int EventIndex, RECT *pRect) const
 {
 	const ProgramGuide::CEventItem *pItem = GetEventItem(ListIndex, EventIndex);
-	if (pItem == NULL)
+	if (pItem == nullptr)
 		return false;
 
 	int LineHeight = GetLineHeight();
@@ -3725,11 +3725,11 @@ bool CProgramGuide::EventHitTest(int x, int y, int *pListIndex, int *pEventIndex
 					rc.top = pItem->GetItemPos() * LineHeight;
 					rc.bottom = rc.top + pItem->GetItemLines() * LineHeight;
 					if (y >= rc.top && y < rc.bottom) {
-						if (pListIndex != NULL)
+						if (pListIndex != nullptr)
 							*pListIndex = List;
-						if (pEventIndex != NULL)
+						if (pEventIndex != nullptr)
 							*pEventIndex = (int)i;
-						if (pItemRect != NULL) {
+						if (pItemRect != nullptr) {
 							pItemRect->top = rc.top + YOrigin;
 							pItemRect->bottom = pItemRect->top + (rc.bottom - rc.top);
 							pItemRect->left = List * ServiceWidth - m_ScrollPos.x + m_Style.ColumnMargin;
@@ -3760,16 +3760,16 @@ bool CProgramGuide::GetEventIndexByIDs(
 	}
 
 	const ProgramGuide::CEventLayout *pEventLayout = m_EventLayoutList[ListIndex];
-	if (pEventLayout == NULL)
+	if (pEventLayout == nullptr)
 		return false;
 	const size_t NumItems = pEventLayout->NumItems();
 	for (size_t i = 0; i < NumItems; i++) {
 		const ProgramGuide::CEventItem *pItem = pEventLayout->GetItem(i);
-		if (pItem->GetEventInfo() != NULL
+		if (pItem->GetEventInfo() != nullptr
 				&& pItem->GetEventInfo()->EventID == EventID) {
-			if (pListIndex != NULL)
+			if (pListIndex != nullptr)
 				*pListIndex = ListIndex;
-			if (pEventIndex != NULL)
+			if (pEventIndex != nullptr)
 				*pEventIndex = static_cast<int>(i);
 			return true;
 		}
@@ -3795,7 +3795,7 @@ bool CProgramGuide::SelectEvent(int ListIndex, int EventIndex)
 		if (fSelected && m_CurEventItem.ListIndex == ListIndex && m_CurEventItem.EventIndex == EventIndex)
 			return true;
 		pItem = GetEventItem(m_CurEventItem.ListIndex, m_CurEventItem.EventIndex);
-		if (pItem != NULL) {
+		if (pItem != nullptr) {
 			pItem->SetSelected(false);
 			RedrawEvent(m_CurEventItem.ListIndex, m_CurEventItem.EventIndex);
 		}
@@ -3853,16 +3853,16 @@ LRESULT CProgramGuide::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 
 			InitializeUI();
 
-			if (m_hDragCursor1 == NULL)
+			if (m_hDragCursor1 == nullptr)
 				m_hDragCursor1 = ::LoadCursor(m_hinst, MAKEINTRESOURCE(IDC_GRAB1));
-			if (m_hDragCursor2 == NULL)
+			if (m_hDragCursor2 == nullptr)
 				m_hDragCursor2 = ::LoadCursor(m_hinst, MAKEINTRESOURCE(IDC_GRAB2));
 
 			m_EpgIcons.Load();
 			m_EventInfoPopupManager.Initialize(hwnd, &m_EventInfoPopupHandler);
 			m_Tooltip.Create(hwnd);
 			m_Tooltip.SetFont(m_ContentFont.GetHandle());
-			if (m_pProgramCustomizer != NULL)
+			if (m_pProgramCustomizer != nullptr)
 				m_pProgramCustomizer->Initialize();
 
 			m_fBarShadow = CBufferedPaint::IsSupported();
@@ -3873,7 +3873,7 @@ LRESULT CProgramGuide::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 				m_FeaturedEventsMatcher.BeginMatching(FeaturedEvents.GetSettings());
 
 			LibISDB::GetCurrentEPGTime(&m_CurTime);
-			::SetTimer(hwnd, TIMER_ID_UPDATECURTIME, 1000, NULL);
+			::SetTimer(hwnd, TIMER_ID_UPDATECURTIME, 1000, nullptr);
 		}
 		return 0;
 
@@ -3989,7 +3989,7 @@ LRESULT CProgramGuide::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 							if (m_pEventHandler) {
 								ProgramGuide::CServiceInfo *pServiceInfo = m_ServiceList.GetItem(Service);
 
-								if (pServiceInfo != NULL) {
+								if (pServiceInfo != nullptr) {
 									TVTest::String BonDriver(pServiceInfo->GetBonDriverFileName());
 									LibISDB::EPGDatabase::ServiceInfo ServiceInfo(pServiceInfo->GetServiceInfo());
 
@@ -4049,11 +4049,11 @@ LRESULT CProgramGuide::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 			POINT pt = {GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam)};
 
 			if (SelectEventByPosition(pt.x, pt.y)) {
-				if (m_pProgramCustomizer != NULL) {
+				if (m_pProgramCustomizer != nullptr) {
 					const ProgramGuide::CEventItem *pItem =
 						GetEventItem(m_CurEventItem.ListIndex, m_CurEventItem.EventIndex);
 
-					if (pItem != NULL) {
+					if (pItem != nullptr) {
 						RECT ItemRect;
 
 						GetEventRect(m_CurEventItem.ListIndex, m_CurEventItem.EventIndex, &ItemRect);
@@ -4180,7 +4180,7 @@ LRESULT CProgramGuide::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 				}
 			}
 
-			if (m_pEventHandler != NULL
+			if (m_pEventHandler != nullptr
 					&& m_pEventHandler->OnKeyDown((UINT)wParam, (UINT)lParam))
 				return 0;
 		}
@@ -4223,10 +4223,10 @@ LRESULT CProgramGuide::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 
 	case WM_DESTROY:
 		ShowProgramSearch(false);
-		if (m_pProgramCustomizer != NULL)
+		if (m_pProgramCustomizer != nullptr)
 			m_pProgramCustomizer->Finalize();
 		m_Tooltip.Destroy();
-		if (m_pEventHandler != NULL)
+		if (m_pEventHandler != nullptr)
 			m_pEventHandler->OnDestroy();
 		m_Chevron.Destroy();
 		m_EpgIcons.Destroy();
@@ -4249,8 +4249,8 @@ void CProgramGuide::OnCommand(int id)
 			if (!App.EpgCaptureManager.IsCapturing()) {
 				TCHAR szBonDriver[MAX_PATH];
 
-				if (m_pEventHandler != NULL
-						&& m_pChannelProvider != NULL
+				if (m_pEventHandler != nullptr
+						&& m_pChannelProvider != nullptr
 						&& m_pChannelProvider->GetBonDriver(szBonDriver, lengthof(szBonDriver))) {
 					CChannelList ChannelList;
 
@@ -4281,10 +4281,10 @@ void CProgramGuide::OnCommand(int id)
 		if (m_CurEventItem.fSelected) {
 			const ProgramGuide::CEventLayout *pLayout = m_EventLayoutList[m_CurEventItem.ListIndex];
 
-			if (pLayout != NULL) {
+			if (pLayout != nullptr) {
 				const ProgramGuide::CEventItem *pEvent = pLayout->GetItem(m_CurEventItem.EventIndex);
 
-				if (pEvent != NULL) {
+				if (pEvent != nullptr) {
 					ExecuteiEpgAssociate(pLayout->GetServiceInfo(), pEvent->GetEventInfo());
 				}
 			}
@@ -4309,7 +4309,7 @@ void CProgramGuide::OnCommand(int id)
 		return;
 
 	case CM_PROGRAMGUIDE_ALWAYSONTOP:
-		if (m_pFrame != NULL)
+		if (m_pFrame != nullptr)
 			m_pFrame->SetAlwaysOnTop(!m_pFrame->GetAlwaysOnTop());
 		return;
 
@@ -4326,7 +4326,7 @@ void CProgramGuide::OnCommand(int id)
 		return;
 
 	case CM_PROGRAMGUIDE_ADDTOFAVORITES:
-		if (m_pChannelProvider != NULL
+		if (m_pChannelProvider != nullptr
 				&& m_CurrentChannelGroup >= 0) {
 			CProgramGuideFavorites::FavoriteInfo Info;
 			TCHAR szText[256];
@@ -4342,7 +4342,7 @@ void CProgramGuide::OnCommand(int id)
 			Dialog.AddNewItem(Info);
 			if (Dialog.Show(m_hwnd)) {
 				m_Favorites = Dialog.GetFavorites();
-				if (m_pFrame != NULL)
+				if (m_pFrame != nullptr)
 					m_pFrame->OnFavoritesChanged();
 			}
 		}
@@ -4354,7 +4354,7 @@ void CProgramGuide::OnCommand(int id)
 
 			if (Dialog.Show(m_hwnd)) {
 				m_Favorites = Dialog.GetFavorites();
-				if (m_pFrame != NULL)
+				if (m_pFrame != nullptr)
 					m_pFrame->OnFavoritesChanged();
 			}
 		}
@@ -4407,15 +4407,15 @@ void CProgramGuide::OnCommand(int id)
 		if (id >= CM_PROGRAMGUIDE_CUSTOM_FIRST
 				&& id <= CM_PROGRAMGUIDE_CUSTOM_LAST) {
 			if (m_CurEventItem.fSelected) {
-				if (m_pProgramCustomizer != NULL) {
+				if (m_pProgramCustomizer != nullptr) {
 					const ProgramGuide::CEventItem *pEvent =
 						GetEventItem(m_CurEventItem.ListIndex, m_CurEventItem.EventIndex);
 
-					if (pEvent != NULL)
+					if (pEvent != nullptr)
 						m_pProgramCustomizer->ProcessMenu(*pEvent->GetEventInfo(), id);
 				}
 			} else {
-				if (m_pEventHandler != NULL)
+				if (m_pEventHandler != nullptr)
 					m_pEventHandler->OnMenuSelected(id);
 			}
 			return;
@@ -4426,10 +4426,10 @@ void CProgramGuide::OnCommand(int id)
 			if (m_CurEventItem.fSelected) {
 				const ProgramGuide::CEventLayout *pLayout = m_EventLayoutList[m_CurEventItem.ListIndex];
 
-				if (pLayout != NULL) {
+				if (pLayout != nullptr) {
 					const ProgramGuide::CEventItem *pEvent = pLayout->GetItem(m_CurEventItem.EventIndex);
 
-					if (pEvent != NULL) {
+					if (pEvent != nullptr) {
 						ExecuteTool(
 							id - CM_PROGRAMGUIDETOOL_FIRST,
 							pLayout->GetServiceInfo(), pEvent->GetEventInfo());
@@ -4444,7 +4444,7 @@ void CProgramGuide::OnCommand(int id)
 			const CProgramGuideFavorites::FavoriteInfo *pInfo =
 				m_Favorites.Get(id - CM_PROGRAMGUIDE_FAVORITE_FIRST);
 
-			if (pInfo != NULL) {
+			if (pInfo != nullptr) {
 				TCHAR szName[256];
 
 				for (int i = 0; EnumChannelProvider(i, szName, lengthof(szName)); i++) {
@@ -4463,7 +4463,7 @@ void CProgramGuide::OnCommand(int id)
 		}
 	}
 
-	if (m_pFrame != NULL)
+	if (m_pFrame != nullptr)
 		m_pFrame->OnCommand(id);
 }
 
@@ -4488,7 +4488,7 @@ void CProgramGuide::ShowPopupMenu(int x, int y)
 	for (int i = CM_PROGRAMGUIDE_DAY_FIRST; i <= CM_PROGRAMGUIDE_DAY_LAST; i++) {
 		LibISDB::DateTime Time;
 
-		GetDayTimeRange(i - CM_PROGRAMGUIDE_DAY_FIRST, &Time, NULL);
+		GetDayTimeRange(i - CM_PROGRAMGUIDE_DAY_FIRST, &Time, nullptr);
 		mii.cch = lengthof(szText);
 		::GetMenuItemInfo(hmenu, i, FALSE, &mii);
 		int Length = ::lstrlen(szText);
@@ -4521,12 +4521,12 @@ void CProgramGuide::ShowPopupMenu(int x, int y)
 			CM_PROGRAMGUIDE_CHANNELGROUP_FIRST + m_CurrentChannelGroup,
 			MF_BYCOMMAND);
 	}
-	if (m_pChannelProviderManager != NULL) {
+	if (m_pChannelProviderManager != nullptr) {
 		int ProviderCount = (int)m_pChannelProviderManager->GetChannelProviderCount();
 		if (ProviderCount > 0) {
 			if (ProviderCount > MAX_CHANNEL_PROVIDER_MENU_ITEMS)
 				ProviderCount = MAX_CHANNEL_PROVIDER_MENU_ITEMS;
-			::AppendMenu(hmenuChannelGroup, MFT_SEPARATOR, 0, NULL);
+			::AppendMenu(hmenuChannelGroup, MFT_SEPARATOR, 0, nullptr);
 			for (int i = 0; i < ProviderCount; i++) {
 				if (EnumChannelProvider(i, szText, lengthof(szText))) {
 					CopyToMenuText(szText, szMenu, lengthof(szMenu));
@@ -4561,13 +4561,13 @@ void CProgramGuide::ShowPopupMenu(int x, int y)
 	::EnableMenuItem(
 		hmenu, CM_PROGRAMGUIDE_CHANNELSETTINGS,
 		MF_BYCOMMAND |
-			(m_pChannelProvider != NULL &&
+			(m_pChannelProvider != nullptr &&
 				m_pChannelProvider->GetChannelCount(m_CurrentChannelGroup) > 0 ? MF_ENABLED : MF_GRAYED));
 	::EnableMenuItem(
 		hmenu, CM_PROGRAMGUIDE_UPDATE,
 		MF_BYCOMMAND |
 			(!m_fEpgUpdating
-				&& m_pChannelProvider != NULL
+				&& m_pChannelProvider != nullptr
 				&& m_pChannelProvider->GetBonDriver(szText, lengthof(szText)) ? MF_ENABLED : MF_GRAYED));
 	::EnableMenuItem(
 		hmenu, CM_PROGRAMGUIDE_ENDUPDATE,
@@ -4592,14 +4592,14 @@ void CProgramGuide::ShowPopupMenu(int x, int y)
 		MF_BYCOMMAND | (m_CurEventItem.fSelected ? MF_ENABLED : MF_GRAYED));
 	::EnableMenuItem(
 		hmenu, CM_PROGRAMGUIDE_ADDTOFAVORITES,
-		MF_BYCOMMAND | (m_pChannelProvider != NULL ? MF_ENABLED : MF_GRAYED));
+		MF_BYCOMMAND | (m_pChannelProvider != nullptr ? MF_ENABLED : MF_GRAYED));
 
 	if (m_CurEventItem.fSelected) {
-		if (m_pProgramCustomizer != NULL) {
+		if (m_pProgramCustomizer != nullptr) {
 			const ProgramGuide::CEventItem *pItem =
 				GetEventItem(m_CurEventItem.ListIndex, m_CurEventItem.EventIndex);
 
-			if (pItem != NULL) {
+			if (pItem != nullptr) {
 				RECT ItemRect;
 
 				GetEventRect(m_CurEventItem.ListIndex, m_CurEventItem.EventIndex, &ItemRect);
@@ -4612,16 +4612,16 @@ void CProgramGuide::ShowPopupMenu(int x, int y)
 
 		AppendToolMenu(hmenuPopup);
 	} else {
-		if (m_pEventHandler != NULL) {
+		if (m_pEventHandler != nullptr) {
 			m_pEventHandler->OnMenuInitialize(hmenuPopup, CM_PROGRAMGUIDE_CUSTOM_FIRST);
 		}
 	}
 
-	if (m_pFrame != NULL)
+	if (m_pFrame != nullptr)
 		m_pFrame->OnMenuInitialize(hmenuPopup);
 
 	::ClientToScreen(m_hwnd, &pt);
-	::TrackPopupMenu(hmenuPopup, TPM_RIGHTBUTTON, pt.x, pt.y, 0, m_hwnd, NULL);
+	::TrackPopupMenu(hmenuPopup, TPM_RIGHTBUTTON, pt.x, pt.y, 0, m_hwnd, nullptr);
 	::DestroyMenu(hmenu);
 }
 
@@ -4629,7 +4629,7 @@ void CProgramGuide::ShowPopupMenu(int x, int y)
 void CProgramGuide::AppendToolMenu(HMENU hmenu) const
 {
 	if (m_ToolList.NumTools() > 0) {
-		::AppendMenu(hmenu, MF_SEPARATOR | MF_ENABLED, 0, NULL);
+		::AppendMenu(hmenu, MF_SEPARATOR | MF_ENABLED, 0, nullptr);
 		for (size_t i = 0; i < m_ToolList.NumTools(); i++) {
 			const CProgramGuideTool *pTool = m_ToolList.GetTool(i);
 			TCHAR szText[256];
@@ -4646,7 +4646,7 @@ void CProgramGuide::AppendToolMenu(HMENU hmenu) const
 bool CProgramGuide::ExecuteiEpgAssociate(const ProgramGuide::CServiceInfo *pServiceInfo,
 		const LibISDB::EventInfo *pEventInfo)
 {
-	if (pServiceInfo == NULL || pEventInfo == NULL)
+	if (pServiceInfo == nullptr || pEventInfo == nullptr)
 		return false;
 
 	TCHAR szFileName[MAX_PATH];
@@ -4655,7 +4655,7 @@ bool CProgramGuide::ExecuteiEpgAssociate(const ProgramGuide::CServiceInfo *pServ
 	if (!pServiceInfo->SaveiEpgFile(pEventInfo, szFileName, true))
 		return false;
 
-	return (INT_PTR)::ShellExecute(NULL, NULL, szFileName, NULL, NULL, SW_SHOWNORMAL) > 32;
+	return (INT_PTR)::ShellExecute(nullptr, nullptr, szFileName, nullptr, nullptr, SW_SHOWNORMAL) > 32;
 }
 
 
@@ -4664,11 +4664,11 @@ bool CProgramGuide::ExecuteTool(
 	const ProgramGuide::CServiceInfo *pServiceInfo,
 	const LibISDB::EventInfo *pEventInfo)
 {
-	if (pServiceInfo == NULL || pEventInfo == NULL)
+	if (pServiceInfo == nullptr || pEventInfo == nullptr)
 		return false;
 
 	CProgramGuideTool *pTool = m_ToolList.GetTool(Tool);
-	if (pTool == NULL)
+	if (pTool == nullptr)
 		return false;
 
 	return pTool->Execute(pServiceInfo, pEventInfo, ::GetAncestor(m_hwnd, GA_ROOT));
@@ -4677,7 +4677,7 @@ bool CProgramGuide::ExecuteTool(
 
 void CProgramGuide::ApplyStyle()
 {
-	if (m_hwnd != NULL) {
+	if (m_hwnd != nullptr) {
 		CreateFonts();
 		CalcFontMetrics();
 
@@ -4704,7 +4704,7 @@ void CProgramGuide::ApplyStyle()
 
 void CProgramGuide::RealizeStyle()
 {
-	if (m_hwnd != NULL) {
+	if (m_hwnd != nullptr) {
 		CalcLayout();
 		SetScrollBar();
 		SetTooltip();
@@ -4725,41 +4725,41 @@ void CProgramGuide::OnFeaturedEventsSettingsChanged(CFeaturedEvents &FeaturedEve
 
 
 CProgramGuide::CEventHandler::CEventHandler()
-	: m_pProgramGuide(NULL)
+	: m_pProgramGuide(nullptr)
 {
 }
 
 
 CProgramGuide::CEventHandler::~CEventHandler()
 {
-	if (m_pProgramGuide != NULL)
-		m_pProgramGuide->SetEventHandler(NULL);
+	if (m_pProgramGuide != nullptr)
+		m_pProgramGuide->SetEventHandler(nullptr);
 }
 
 
 CProgramGuide::CFrame::CFrame()
-	: m_pProgramGuide(NULL)
+	: m_pProgramGuide(nullptr)
 {
 }
 
 
 CProgramGuide::CFrame::~CFrame()
 {
-	if (m_pProgramGuide != NULL)
-		m_pProgramGuide->SetFrame(NULL);
+	if (m_pProgramGuide != nullptr)
+		m_pProgramGuide->SetFrame(nullptr);
 }
 
 
 CProgramGuide::CProgramCustomizer::CProgramCustomizer()
-	: m_pProgramGuide(NULL)
+	: m_pProgramGuide(nullptr)
 {
 }
 
 
 CProgramGuide::CProgramCustomizer::~CProgramCustomizer()
 {
-	if (m_pProgramGuide != NULL)
-		m_pProgramGuide->SetEventHandler(NULL);
+	if (m_pProgramGuide != nullptr)
+		m_pProgramGuide->SetEventHandler(nullptr);
 }
 
 
@@ -4787,11 +4787,11 @@ bool CProgramGuide::CEventInfoPopupHandler::ShowPopup(LPARAM Param, CEventInfoPo
 {
 	int List = LOWORD(Param), Event = HIWORD(Param);
 	const ProgramGuide::CEventLayout *pLayout = m_pProgramGuide->m_EventLayoutList[List];
-	if (pLayout != NULL) {
+	if (pLayout != nullptr) {
 		const ProgramGuide::CEventItem *pItem = pLayout->GetItem(Event);
-		if (pItem != NULL) {
+		if (pItem != nullptr) {
 			const LibISDB::EventInfo *pEventInfo;
-			if (pItem->GetCommonEventInfo() != NULL)
+			if (pItem->GetCommonEventInfo() != nullptr)
 				pEventInfo = pItem->GetCommonEventInfo();
 			else
 				pEventInfo = pItem->GetEventInfo();
@@ -4801,7 +4801,7 @@ bool CProgramGuide::CEventInfoPopupHandler::ShowPopup(LPARAM Param, CEventInfoPo
 					pServiceInfo->GetTSID(),
 					pEventInfo->m_CommonEventInfo.ServiceID,
 					pEventInfo->m_CommonEventInfo.EventID);
-				if (pCommonItem != NULL)
+				if (pCommonItem != nullptr)
 					pEventInfo=&pCommonItem->GetEventInfo();
 			}
 			*/
@@ -4830,7 +4830,7 @@ bool CProgramGuide::CEventInfoPopupHandler::ShowPopup(LPARAM Param, CEventInfoPo
 			}
 
 			if (!pPopup->Show(pEventInfo, &rc, hIcon, pServiceInfo->GetServiceName())) {
-				if (hIcon != NULL)
+				if (hIcon != nullptr)
 					::DestroyIcon(hIcon);
 				return false;
 			}
@@ -4845,7 +4845,7 @@ bool CProgramGuide::CEventInfoPopupHandler::ShowPopup(LPARAM Param, CEventInfoPo
 
 bool CProgramGuide::CEventInfoPopupHandler::OnMenuPopup(HMENU hmenu)
 {
-	::AppendMenu(hmenu, MFT_SEPARATOR, 0, NULL);
+	::AppendMenu(hmenu, MFT_SEPARATOR, 0, nullptr);
 	::AppendMenu(
 		hmenu, MFT_STRING | (CEventInfoPopup::CEventHandler::m_pPopup->IsSelected() ? MFS_ENABLED : MFS_GRAYED),
 		COMMAND_FIRST, TEXT("選択文字列を検索(&S)"));
@@ -4856,7 +4856,7 @@ bool CProgramGuide::CEventInfoPopupHandler::OnMenuPopup(HMENU hmenu)
 void CProgramGuide::CEventInfoPopupHandler::OnMenuSelected(int Command)
 {
 	LPTSTR pszText = CEventInfoPopup::CEventHandler::m_pPopup->GetSelectedText();
-	if (pszText != NULL) {
+	if (pszText != nullptr) {
 		if (!m_pProgramGuide->m_ProgramSearch.IsCreated())
 			m_pProgramGuide->SendMessage(WM_COMMAND, CM_PROGRAMGUIDE_SEARCH, 0);
 		m_pProgramGuide->m_ProgramSearch.Search(pszText);
@@ -4878,7 +4878,7 @@ bool CProgramGuide::CProgramSearchEventHandler::OnSearch()
 	// 番組の検索
 
 	LibISDB::DateTime First;
-	m_pProgramGuide->GetDayTimeRange(DAY_TODAY, &First, NULL);
+	m_pProgramGuide->GetDayTimeRange(DAY_TODAY, &First, nullptr);
 
 	for (size_t i = 0; i < m_pProgramGuide->m_ServiceList.NumServices(); i++) {
 		const ProgramGuide::CServiceInfo *pServiceInfo = m_pProgramGuide->m_ServiceList.GetItem(i);
@@ -4918,12 +4918,12 @@ bool CProgramGuide::CProgramSearchEventHandler::OnSearch()
 				static_cast<const CTunerChannelInfo*>(ServiceList.GetChannelInfo(i));
 
 			if (m_pProgramGuide->m_ServiceList.GetItemByIDs(
-						pChInfo->GetTransportStreamID(), pChInfo->GetServiceID()) == NULL) {
+						pChInfo->GetTransportStreamID(), pChInfo->GetServiceID()) == nullptr) {
 				m_pProgramGuide->m_pEPGDatabase->EnumEventsSortedByTime(
 					pChInfo->GetNetworkID(),
 					pChInfo->GetTransportStreamID(),
 					pChInfo->GetServiceID(),
-					&First, NULL,
+					&First, nullptr,
 					[&](const LibISDB::EventInfo & Event) -> bool {
 						if (!Event.IsCommonEvent && Match(&Event))
 							AddSearchResult(new CSearchEventInfo(Event, *pChInfo));
@@ -4979,7 +4979,7 @@ bool CProgramGuide::CProgramSearchEventHandler::OnRButtonClick(
 				pEventInfo->ServiceID))
 		::EnableMenuItem(hmenu, CM_PROGRAMGUIDE_JUMPEVENT, MF_BYCOMMAND | MF_GRAYED);
 
-	if (m_pProgramGuide->m_pProgramCustomizer != NULL) {
+	if (m_pProgramGuide->m_pProgramCustomizer != nullptr) {
 		POINT pt = {50, 50};
 		RECT rc = {0, 0, 100, 100};
 		m_pProgramGuide->m_pProgramCustomizer->InitializeMenu(
@@ -4992,7 +4992,7 @@ bool CProgramGuide::CProgramSearchEventHandler::OnRButtonClick(
 	::GetCursorPos(&pt);
 	int Command = ::TrackPopupMenu(
 		hmenuPopup, TPM_RETURNCMD | TPM_RIGHTBUTTON,
-		pt.x, pt.y, 0, m_pProgramGuide->GetHandle(), NULL);
+		pt.x, pt.y, 0, m_pProgramGuide->GetHandle(), nullptr);
 	::DestroyMenu(hmenu);
 
 	if (Command > 0) {
@@ -5039,10 +5039,10 @@ void CProgramGuide::CProgramSearchEventHandler::DoCommand(
 		m_pProgramGuide->m_ServiceList.GetItemByIDs(pEventInfo->TransportStreamID, pEventInfo->ServiceID);
 
 	if (Command == CM_PROGRAMGUIDE_JUMPEVENT) {
-		if (pServiceInfo != NULL) {
+		if (pServiceInfo != nullptr) {
 			m_pProgramGuide->JumpEvent(*pEventInfo);
-		} else if (m_pProgramGuide->m_pChannelProviderManager != NULL) {
-			if (m_pProgramGuide->m_pChannelProvider != NULL) {
+		} else if (m_pProgramGuide->m_pChannelProviderManager != nullptr) {
+			if (m_pProgramGuide->m_pChannelProvider != nullptr) {
 				const int Group = FindChannelFromChannelProvider(
 					m_pProgramGuide->m_pChannelProvider, pEventInfo->GetChannelInfo());
 				if (Group >= 0) {
@@ -5070,7 +5070,7 @@ void CProgramGuide::CProgramSearchEventHandler::DoCommand(
 			}
 		}
 	} else if (Command == CM_PROGRAMGUIDE_IEPGASSOCIATE) {
-		if (pServiceInfo != NULL) {
+		if (pServiceInfo != nullptr) {
 			m_pProgramGuide->ExecuteiEpgAssociate(pServiceInfo, pEventInfo);
 		} else {
 			ProgramGuide::CServiceInfo ServiceInfo(
@@ -5080,12 +5080,12 @@ void CProgramGuide::CProgramSearchEventHandler::DoCommand(
 		}
 	} else if (Command >= CM_PROGRAMGUIDE_CUSTOM_FIRST
 			&& Command <= CM_PROGRAMGUIDE_CUSTOM_LAST) {
-		if (m_pProgramGuide->m_pProgramCustomizer != NULL)
+		if (m_pProgramGuide->m_pProgramCustomizer != nullptr)
 			m_pProgramGuide->m_pProgramCustomizer->ProcessMenu(*pEventInfo, Command);
 	} else if (Command >= CM_PROGRAMGUIDETOOL_FIRST
 			&& Command <= CM_PROGRAMGUIDETOOL_LAST) {
 		const int Tool = Command - CM_PROGRAMGUIDETOOL_FIRST;
-		if (pServiceInfo != NULL) {
+		if (pServiceInfo != nullptr) {
 			m_pProgramGuide->ExecuteTool(Tool, pServiceInfo, pEventInfo);
 		} else {
 			ProgramGuide::CServiceInfo ServiceInfo(
@@ -5293,7 +5293,7 @@ class CListSelectStatusItem
 		{
 			RECT rc = *pRect;
 
-			if (m_hbmLogo != NULL) {
+			if (m_hbmLogo != nullptr) {
 				DrawUtil::DrawBitmap(
 					hdc,
 					rc.left, rc.top + (rc.bottom - rc.top - m_LogoHeight) / 2,
@@ -5331,8 +5331,8 @@ public:
 			EpgUtil::EpgTimeToDisplayTime(&Info.BeginningTime);
 			StdUtil::snprintf(
 				szText, lengthof(szText), TEXT("%s%s%d/%d(%s) %d時〜"),
-				Info.pszRelativeDayText != NULL ? Info.pszRelativeDayText : TEXT(""),
-				Info.pszRelativeDayText != NULL ? TEXT(" ") : TEXT(""),
+				Info.pszRelativeDayText != nullptr ? Info.pszRelativeDayText : TEXT(""),
+				Info.pszRelativeDayText != nullptr ? TEXT(" ") : TEXT(""),
 				Info.BeginningTime.Month, Info.BeginningTime.Day,
 				GetDayOfWeekText(Info.BeginningTime.DayOfWeek),
 				Info.BeginningTime.Hour);
@@ -5340,7 +5340,7 @@ public:
 		} else {
 			const ProgramGuide::CServiceInfo *pService =
 				m_pProgramGuide->GetServiceList().GetItem(m_pProgramGuide->GetWeekListService());
-			if (pService != NULL)
+			if (pService != nullptr)
 				DrawText(hdc, DrawRect, pService->GetServiceName());
 		}
 	}
@@ -5360,8 +5360,8 @@ public:
 					EpgUtil::EpgTimeToDisplayTime(&Info.BeginningTime);
 					StdUtil::snprintf(
 						szText, lengthof(szText), TEXT("%s%s%d/%d(%s) %d時〜"),
-						Info.pszRelativeDayText != NULL ? Info.pszRelativeDayText : TEXT(""),
-						Info.pszRelativeDayText != NULL ? TEXT(" ") : TEXT(""),
+						Info.pszRelativeDayText != nullptr ? Info.pszRelativeDayText : TEXT(""),
+						Info.pszRelativeDayText != nullptr ? TEXT(" ") : TEXT(""),
 						Info.BeginningTime.Month,
 						Info.BeginningTime.Day,
 						GetDayOfWeekText(Info.BeginningTime.DayOfWeek),
@@ -5576,7 +5576,7 @@ bool CProgramGuideToolbar::Create(HWND hwndParent, DWORD Style, DWORD ExStyle, i
 				Style | TBSTYLE_CUSTOMERASE | TBSTYLE_LIST | TBSTYLE_FLAT
 					| CCS_NODIVIDER | CCS_NORESIZE | CCS_NOPARENTALIGN,
 				ExStyle, ID,
-				TOOLBARCLASSNAME, NULL, GetAppClass().GetInstance()))
+				TOOLBARCLASSNAME, nullptr, GetAppClass().GetInstance()))
 		return false;
 
 	InitializeUI();
@@ -5630,7 +5630,7 @@ bool CProgramGuideToolbar::SetBarVisible(bool fVisible)
 
 void CProgramGuideToolbar::GetBarSize(SIZE *pSize)
 {
-	if (m_hwnd != NULL && (int)::SendMessage(m_hwnd, TB_BUTTONCOUNT, 0, 0) > 0) {
+	if (m_hwnd != nullptr && (int)::SendMessage(m_hwnd, TB_BUTTONCOUNT, 0, 0) > 0) {
 		::SendMessage(m_hwnd, TB_GETMAXSIZE, 0, reinterpret_cast<LPARAM>(pSize));
 	} else {
 		pSize->cx = 0;
@@ -5681,18 +5681,18 @@ bool CProgramGuideToolbar::OnNotify(LPARAM lParam, LRESULT *pResult)
 
 	case CDDS_ITEMPREPAINT:
 		{
-			HDC hdcBuffer = NULL, hdc;
+			HDC hdcBuffer = nullptr, hdc;
 
 			hdc = pnmtb->nmcd.hdc;
 			if (m_fUseBufferedPaint) {
 				hdcBuffer = m_BufferedPaint.Begin(pnmtb->nmcd.hdc, &pnmtb->nmcd.rc);
-				if (hdcBuffer != NULL)
+				if (hdcBuffer != nullptr)
 					hdc = hdcBuffer;
 			}
 
 			OnCustomDraw(pnmtb, hdc);
 
-			if (hdcBuffer != NULL) {
+			if (hdcBuffer != nullptr) {
 				//m_BufferedPaint.SetAlpha(224);
 				m_BufferedPaint.SetOpaque();
 				m_BufferedPaint.End();
@@ -5712,14 +5712,14 @@ bool CProgramGuideToolbar::OnNotify(LPARAM lParam, LRESULT *pResult)
 
 void CProgramGuideToolbar::SelectButton(int Button)
 {
-	if (m_hwnd != NULL)
+	if (m_hwnd != nullptr)
 		::SendMessage(m_hwnd, TB_CHECKBUTTON, Button, TRUE);
 }
 
 
 void CProgramGuideToolbar::UnselectButton()
 {
-	if (m_hwnd != NULL) {
+	if (m_hwnd != nullptr) {
 		const int ButtonCount = (int)::SendMessage(m_hwnd, TB_BUTTONCOUNT, 0, 0);
 
 		for (int i = 0; i < ButtonCount; i++) {
@@ -5744,7 +5744,7 @@ void CProgramGuideToolbar::AdjustSize()
 
 void CProgramGuideToolbar::DeleteAllButtons()
 {
-	if (m_hwnd != NULL) {
+	if (m_hwnd != nullptr) {
 		int ButtonCount = (int)::SendMessage(m_hwnd, TB_BUTTONCOUNT, 0, 0);
 
 		for (int i = ButtonCount - 1; i >= 0; i--)
@@ -5987,7 +5987,7 @@ void CFavoritesToolbar::OnSpaceChanged()
 				if (::SendMessage(m_hwnd, TB_GETBUTTON, i, reinterpret_cast<LPARAM>(&tbb))) {
 					const CProgramGuideFavorites::FavoriteInfo *pInfo = pFavorites->Get(tbb.dwData);
 
-					if (pInfo != NULL
+					if (pInfo != nullptr
 							&& ::lstrcmpi(pInfo->Name.c_str(), szName) == 0
 							&& m_pProgramGuide->ParseChannelGroupID(pInfo->GroupID.c_str()) == CurChannelGroup) {
 						SelButton = tbb.idCommand;
@@ -6066,7 +6066,7 @@ void CFavoritesToolbar::OnCustomDraw(NMTBCUSTOMDRAW *pnmtb, HDC hdc)
 	const CProgramGuideFavorites::FavoriteInfo *pInfo =
 		m_pProgramGuide->GetFavorites()->Get(pnmtb->nmcd.lItemlParam);
 
-	if (pInfo != NULL) {
+	if (pInfo != nullptr) {
 		TVTest::Theme::CThemeDraw ThemeDraw(BeginThemeDraw(hdc));
 		TVTest::Theme::BackgroundStyle Style;
 		COLORREF LightColor = pInfo->BackColor;
@@ -6171,7 +6171,7 @@ void CDateToolbar::OnTimeRangeChanged()
 
 	for (int i = 0; i < m_ButtonCount; i++) {
 		LibISDB::DateTime Time;
-		m_pProgramGuide->GetDayTimeRange(i, &Time, NULL);
+		m_pProgramGuide->GetDayTimeRange(i, &Time, nullptr);
 		EpgUtil::EpgTimeToDisplayTime(Time, &DateList[i]);
 	}
 	SetButtons(DateList, m_ButtonCount, CM_PROGRAMGUIDE_DAY_FIRST);
@@ -6192,7 +6192,7 @@ bool CDateToolbar::SetButtonCount(int Count)
 
 bool CDateToolbar::SetButtons(const LibISDB::DateTime *pDateList, int Days, int FirstCommand)
 {
-	if (m_hwnd == NULL)
+	if (m_hwnd == nullptr)
 		return false;
 
 	DeleteAllButtons();
@@ -6359,8 +6359,8 @@ void CTimeToolbar::SetTheme(const ThemeInfo &Theme)
 	for (int i = 0; i < CProgramGuide::TIME_BAR_BACK_COLORS; i++)
 		m_ButtonStyle[i] = Theme.TimeStyle[i];
 
-	if (m_hwnd != NULL)
-		::InvalidateRect(m_hwnd, NULL, TRUE);
+	if (m_hwnd != nullptr)
+		::InvalidateRect(m_hwnd, nullptr, TRUE);
 }
 
 
@@ -6381,7 +6381,7 @@ bool CTimeToolbar::GetTimeByCommand(int Command, LibISDB::DateTime *pTime) const
 				Command, reinterpret_cast<LPARAM>(&tbbi)) < 0)
 		return false;
 
-	if (!m_pProgramGuide->GetCurrentTimeRange(pTime, NULL))
+	if (!m_pProgramGuide->GetCurrentTimeRange(pTime, nullptr))
 		return false;
 
 	pTime->OffsetHours(HIWORD(tbbi.lParam));
@@ -6476,7 +6476,7 @@ void CTimeToolbar::ChangeTime()
 
 bool CTimeToolbar::SetButtons(const TimeInfo *pTimeList, int TimeListLength)
 {
-	if (m_hwnd == NULL)
+	if (m_hwnd == nullptr)
 		return false;
 
 	DeleteAllButtons();
@@ -6848,7 +6848,7 @@ void CProgramGuideFrameBase::OnWindowDestroy()
 {
 	GetUIBase()->ClearUIChildList();
 
-	m_pProgramGuide->SetFrame(NULL);
+	m_pProgramGuide->SetFrame(nullptr);
 
 	for (int i = 0; i < lengthof(m_ToolbarList); i++)
 		m_ToolbarList[i]->DestroyBar();
@@ -6925,7 +6925,7 @@ LRESULT CProgramGuideFrameBase::DefaultMessageHandler(HWND hwnd, UINT uMsg, WPAR
 			OnMenuInitialize(hmenuPopup);
 			::TrackPopupMenu(
 				hmenuPopup, TPM_RIGHTBUTTON, pt.x, pt.y, 0,
-				m_pProgramGuide->GetHandle(), NULL);
+				m_pProgramGuide->GetHandle(), nullptr);
 			::DestroyMenu(hmenu);
 		}
 		return 0;
@@ -7134,7 +7134,7 @@ bool CProgramGuideFrameSettings::WriteSettings(CSettings &Settings)
 LPCTSTR CProgramGuideFrameSettings::GetToolbarIDText(int Toolbar) const
 {
 	if (Toolbar < 0 || Toolbar >= lengthof(m_ToolbarInfoList))
-		return NULL;
+		return nullptr;
 	return m_ToolbarInfoList[Toolbar].pszIDText;
 }
 
@@ -7142,7 +7142,7 @@ LPCTSTR CProgramGuideFrameSettings::GetToolbarIDText(int Toolbar) const
 LPCTSTR CProgramGuideFrameSettings::GetToolbarName(int Toolbar) const
 {
 	if (Toolbar < 0 || Toolbar >= lengthof(m_ToolbarInfoList))
-		return NULL;
+		return nullptr;
 	return m_ToolbarInfoList[Toolbar].pszName;
 }
 
@@ -7166,7 +7166,7 @@ bool CProgramGuideFrameSettings::GetToolbarVisible(int Toolbar) const
 
 bool CProgramGuideFrameSettings::SetToolbarOrderList(const int *pOrder)
 {
-	if (pOrder == NULL)
+	if (pOrder == nullptr)
 		return false;
 
 	for (int i = 0; i < lengthof(m_ToolbarSettingsList); i++) {
@@ -7190,7 +7190,7 @@ bool CProgramGuideFrameSettings::SetToolbarOrderList(const int *pOrder)
 
 bool CProgramGuideFrameSettings::GetToolbarOrderList(int *pOrder) const
 {
-	if (pOrder == NULL)
+	if (pOrder == nullptr)
 		return false;
 
 	for (int i = 0; i < lengthof(m_ToolbarSettingsList); i++)
@@ -7246,12 +7246,12 @@ CProgramGuideFrameSettings::TimeBarSettings::TimeBarSettings()
 
 
 const LPCTSTR CProgramGuideFrame::m_pszWindowClass = APP_NAME TEXT(" Program Guide Frame");
-HINSTANCE CProgramGuideFrame::m_hinst = NULL;
+HINSTANCE CProgramGuideFrame::m_hinst = nullptr;
 
 
 bool CProgramGuideFrame::Initialize(HINSTANCE hinst)
 {
-	if (m_hinst == NULL) {
+	if (m_hinst == nullptr) {
 		WNDCLASS wc;
 
 		wc.style = 0;
@@ -7260,9 +7260,9 @@ bool CProgramGuideFrame::Initialize(HINSTANCE hinst)
 		wc.cbWndExtra = 0;
 		wc.hInstance = hinst;
 		wc.hIcon = ::LoadIcon(hinst, MAKEINTRESOURCE(IDI_PROGRAMGUIDE));
-		wc.hCursor = ::LoadCursor(NULL, IDC_ARROW);
+		wc.hCursor = ::LoadCursor(nullptr, IDC_ARROW);
 		wc.hbrBackground = ::CreateSolidBrush(0xFF000000);
-		wc.lpszMenuName = NULL;
+		wc.lpszMenuName = nullptr;
 		wc.lpszClassName = m_pszWindowClass;
 		if (::RegisterClass(&wc) == 0)
 			return false;
@@ -7307,7 +7307,7 @@ bool CProgramGuideFrame::SetAlwaysOnTop(bool fTop)
 {
 	if (m_fAlwaysOnTop != fTop) {
 		m_fAlwaysOnTop = fTop;
-		if (m_hwnd != NULL)
+		if (m_hwnd != nullptr)
 			::SetWindowPos(m_hwnd, fTop ? HWND_TOPMOST : HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
 	}
 	return true;
@@ -7336,7 +7336,7 @@ void CProgramGuideFrame::NormalizeStyle(
 
 bool CProgramGuideFrame::Show()
 {
-	if (m_hwnd == NULL)
+	if (m_hwnd == nullptr)
 		return false;
 	::ShowWindow(m_hwnd, m_WindowPosition.fMaximized ? SW_SHOWMAXIMIZED : SW_SHOWNORMAL);
 	return true;
@@ -7403,7 +7403,7 @@ LRESULT CProgramGuideFrame::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARA
 				RECT rc;
 				::GetClientRect(hwnd, &rc);
 				HDC hdc = BufferedPaint.Begin(ps.hdc, &rc);
-				if (hdc != NULL) {
+				if (hdc != nullptr) {
 					::FillRect(hdc, &ps.rcPaint, static_cast<HBRUSH>(::GetStockObject(BLACK_BRUSH)));
 					BufferedPaint.SetAlpha(32);
 					BufferedPaint.End();
@@ -7460,7 +7460,7 @@ void CProgramGuideFrame::RealizeStyle()
 void CProgramGuideFrame::SetAeroGlass()
 {
 	m_fAero = false;
-	if (m_hwnd != NULL && m_FrameStyle.fExtendFrame) {
+	if (m_hwnd != nullptr && m_FrameStyle.fExtendFrame) {
 		RECT rc = {0, 0, 0, 0}, rcPos;
 
 		m_pProgramGuide->GetPosition(&rcPos);
@@ -7497,12 +7497,12 @@ void CProgramGuideFrame::DrawBackground(HDC hdc, bool fActive)
 
 
 const LPCTSTR CProgramGuideDisplay::m_pszWindowClass = APP_NAME TEXT(" Program Guide Display");
-HINSTANCE CProgramGuideDisplay::m_hinst = NULL;
+HINSTANCE CProgramGuideDisplay::m_hinst = nullptr;
 
 
 bool CProgramGuideDisplay::Initialize(HINSTANCE hinst)
 {
-	if (m_hinst == NULL) {
+	if (m_hinst == nullptr) {
 		WNDCLASS wc;
 
 		wc.style = CS_HREDRAW | CS_VREDRAW | CS_DBLCLKS;
@@ -7510,10 +7510,10 @@ bool CProgramGuideDisplay::Initialize(HINSTANCE hinst)
 		wc.cbClsExtra = 0;
 		wc.cbWndExtra = 0;
 		wc.hInstance = hinst;
-		wc.hIcon = NULL;
-		wc.hCursor = ::LoadCursor(NULL, IDC_ARROW);
+		wc.hIcon = nullptr;
+		wc.hCursor = ::LoadCursor(nullptr, IDC_ARROW);
 		wc.hbrBackground = ::CreateSolidBrush(RGB(0, 0, 0));
-		wc.lpszMenuName = NULL;
+		wc.lpszMenuName = nullptr;
 		wc.lpszClassName = m_pszWindowClass;
 		if (::RegisterClass(&wc) == 0)
 			return false;
@@ -7525,7 +7525,7 @@ bool CProgramGuideDisplay::Initialize(HINSTANCE hinst)
 
 CProgramGuideDisplay::CProgramGuideDisplay(CProgramGuide *pProgramGuide, CProgramGuideFrameSettings *pSettings)
 	: CProgramGuideFrameBase(pProgramGuide, pSettings)
-	, m_pProgramGuideDisplayEventHandler(NULL)
+	, m_pProgramGuideDisplayEventHandler(nullptr)
 {
 }
 
@@ -7538,7 +7538,7 @@ CProgramGuideDisplay::~CProgramGuideDisplay()
 
 bool CProgramGuideDisplay::Create(HWND hwndParent, DWORD Style, DWORD ExStyle, int ID)
 {
-	return CreateBasicWindow(hwndParent, Style, ExStyle, ID, m_pszWindowClass, NULL, m_hinst);
+	return CreateBasicWindow(hwndParent, Style, ExStyle, ID, m_pszWindowClass, nullptr, m_hinst);
 }
 
 
@@ -7565,9 +7565,9 @@ void CProgramGuideDisplay::NormalizeStyle(
 
 void CProgramGuideDisplay::SetEventHandler(CProgramGuideDisplayEventHandler *pHandler)
 {
-	if (m_pProgramGuideDisplayEventHandler != NULL)
-		m_pProgramGuideDisplayEventHandler->m_pProgramGuideDisplay = NULL;
-	if (pHandler != NULL)
+	if (m_pProgramGuideDisplayEventHandler != nullptr)
+		m_pProgramGuideDisplayEventHandler->m_pProgramGuideDisplay = nullptr;
+	if (pHandler != nullptr)
 		pHandler->m_pProgramGuideDisplay = this;
 	m_pProgramGuideDisplayEventHandler = pHandler;
 	CDisplayView::SetEventHandler(pHandler);
@@ -7583,7 +7583,7 @@ bool CProgramGuideDisplay::Close()
 
 bool CProgramGuideDisplay::OnVisibleChange(bool fVisible)
 {
-	if (!fVisible && m_pProgramGuideDisplayEventHandler != NULL)
+	if (!fVisible && m_pProgramGuideDisplayEventHandler != nullptr)
 		return m_pProgramGuideDisplayEventHandler->OnHide();
 	return true;
 }
@@ -7591,7 +7591,7 @@ bool CProgramGuideDisplay::OnVisibleChange(bool fVisible)
 
 bool CProgramGuideDisplay::SetAlwaysOnTop(bool fTop)
 {
-	if (m_pProgramGuideDisplayEventHandler == NULL)
+	if (m_pProgramGuideDisplayEventHandler == nullptr)
 		return false;
 	return m_pProgramGuideDisplayEventHandler->SetAlwaysOnTop(fTop);
 }
@@ -7599,7 +7599,7 @@ bool CProgramGuideDisplay::SetAlwaysOnTop(bool fTop)
 
 bool CProgramGuideDisplay::GetAlwaysOnTop() const
 {
-	if (m_pProgramGuideDisplayEventHandler == NULL)
+	if (m_pProgramGuideDisplayEventHandler == nullptr)
 		return false;
 	return m_pProgramGuideDisplayEventHandler->GetAlwaysOnTop();
 }
@@ -7670,6 +7670,6 @@ LRESULT CProgramGuideDisplay::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPA
 
 
 CProgramGuideDisplay::CProgramGuideDisplayEventHandler::CProgramGuideDisplayEventHandler()
-	: m_pProgramGuideDisplay(NULL)
+	: m_pProgramGuideDisplay(nullptr)
 {
 }

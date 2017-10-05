@@ -210,7 +210,7 @@ public:
 		const TVTest::Style::Font &Font, DrawUtil::CFont *pDrawFont) const;
 	bool DrawItemPreview(
 		CStatusItem *pItem, HDC hdc, const RECT &ItemRect,
-		bool fHighlight = false, HFONT hfont = NULL) const;
+		bool fHighlight = false, HFONT hfont = nullptr) const;
 	bool EnableBufferedPaint(bool fEnable);
 	void EnableSizeAdjustment(bool fEnable);
 	int CalcItemPixelSize(const CStatusItem::SizeValue &Size) const;

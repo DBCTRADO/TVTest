@@ -154,7 +154,7 @@ public:
 		LPCTSTR pszTuner;
 		LPCTSTR pszSpace;
 	};
-	bool ShowProgramGuide(bool fShow, unsigned int Flags = 0, const ProgramGuideSpaceInfo *pSpaceInfo = NULL);
+	bool ShowProgramGuide(bool fShow, unsigned int Flags = 0, const ProgramGuideSpaceInfo *pSpaceInfo = nullptr);
 
 	static bool Initialize(HINSTANCE hinst);
 
@@ -539,22 +539,22 @@ private:
 		UINT m_ID;
 
 	public:
-		CTimer(UINT ID) : m_hwnd(NULL), m_ID(ID) {}
+		CTimer(UINT ID) : m_hwnd(nullptr), m_ID(ID) {}
 		bool Begin(HWND hwnd, DWORD Interval) {
-			if (::SetTimer(hwnd, m_ID, Interval, NULL) == 0) {
-				m_hwnd = NULL;
+			if (::SetTimer(hwnd, m_ID, Interval, nullptr) == 0) {
+				m_hwnd = nullptr;
 				return false;
 			}
 			m_hwnd = hwnd;
 			return true;
 		}
 		void End() {
-			if (m_hwnd != NULL) {
+			if (m_hwnd != nullptr) {
 				::KillTimer(m_hwnd, m_ID);
-				m_hwnd = NULL;
+				m_hwnd = nullptr;
 			}
 		}
-		bool IsEnabled() const { return m_hwnd != NULL; }
+		bool IsEnabled() const { return m_hwnd != nullptr; }
 	};
 	CTimer m_ResetErrorCountTimer;
 

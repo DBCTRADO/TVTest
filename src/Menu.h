@@ -44,10 +44,10 @@ public:
 	~CMainMenu();
 	bool Create(HINSTANCE hinst);
 	void Destroy();
-	bool Show(UINT Flags, int x, int y, HWND hwnd, bool fToggle = true, const std::vector<int> *pItemList = NULL);
+	bool Show(UINT Flags, int x, int y, HWND hwnd, bool fToggle = true, const std::vector<int> *pItemList = nullptr);
 	bool PopupSubMenu(
-		int SubMenu, UINT Flags, HWND hwnd, const POINT *pPos = NULL,
-		bool fToggle = true, const RECT *pExcludeRect = NULL);
+		int SubMenu, UINT Flags, HWND hwnd, const POINT *pPos = nullptr,
+		bool fToggle = true, const RECT *pExcludeRect = nullptr);
 	void EnableItem(UINT ID, bool fEnable);
 	void CheckItem(UINT ID, bool fCheck);
 	void CheckRadioItem(UINT FirstID, UINT LastID, UINT CheckID);
@@ -148,7 +148,7 @@ public:
 		const CChannelList *pChannelList, int CurChannel, UINT Command,
 		HMENU hmenu, HWND hwnd, unsigned int Flags, int MaxRows = 0);
 	void Destroy();
-	int Show(UINT Flags, int x, int y, const RECT *pExcludeRect = NULL);
+	int Show(UINT Flags, int x, int y, const RECT *pExcludeRect = nullptr);
 	bool SetHighlightedItem(int Index);
 	bool OnMeasureItem(HWND hwnd, WPARAM wParam, LPARAM lParam);
 	bool OnDrawItem(HWND hwnd, WPARAM wParam, LPARAM lParam);
@@ -175,7 +175,7 @@ public:
 	CPopupMenu(HMENU hmenu);
 	~CPopupMenu();
 	bool Create();
-	bool IsCreated() const { return m_hmenu != NULL; }
+	bool IsCreated() const { return m_hmenu != nullptr; }
 	bool Load(HINSTANCE hinst, LPCTSTR pszName);
 	bool Load(HINSTANCE hinst, UINT ID) { return Load(hinst, MAKEINTRESOURCE(ID)); }
 	bool Attach(HMENU hmenu);
@@ -191,16 +191,16 @@ public:
 	bool CheckItem(UINT ID, bool fCheck);
 	bool CheckRadioItem(UINT FirstID, UINT LastID, UINT CheckID, UINT Flags = MF_BYCOMMAND);
 	HMENU GetSubMenu(int Pos) const;
-	int Show(HWND hwnd, const POINT *pPos = NULL, UINT Flags = TPM_RIGHTBUTTON, const RECT *pExcludeRect = NULL);
+	int Show(HWND hwnd, const POINT *pPos = nullptr, UINT Flags = TPM_RIGHTBUTTON, const RECT *pExcludeRect = nullptr);
 	int Show(
-		HMENU hmenu, HWND hwnd, const POINT *pPos = NULL, UINT Flags = TPM_RIGHTBUTTON,
-		bool fToggle = true, const RECT *pExcludeRect = NULL);
+		HMENU hmenu, HWND hwnd, const POINT *pPos = nullptr, UINT Flags = TPM_RIGHTBUTTON,
+		bool fToggle = true, const RECT *pExcludeRect = nullptr);
 	int Show(
-		HINSTANCE hinst, LPCTSTR pszName, HWND hwnd, const POINT *pPos = NULL,
-		UINT Flags = TPM_RIGHTBUTTON, bool fToggle = true, const RECT *pExcludeRect = NULL);
+		HINSTANCE hinst, LPCTSTR pszName, HWND hwnd, const POINT *pPos = nullptr,
+		UINT Flags = TPM_RIGHTBUTTON, bool fToggle = true, const RECT *pExcludeRect = nullptr);
 	int Show(
-		HINSTANCE hinst, int ID, HWND hwnd, const POINT *pPos = NULL,
-		UINT Flags = TPM_RIGHTBUTTON, bool fToggle = true, const RECT *pExcludeRect = NULL)
+		HINSTANCE hinst, int ID, HWND hwnd, const POINT *pPos = nullptr,
+		UINT Flags = TPM_RIGHTBUTTON, bool fToggle = true, const RECT *pExcludeRect = nullptr)
 	{
 		return Show(hinst, MAKEINTRESOURCE(ID), hwnd, pPos, Flags, fToggle, pExcludeRect);
 	}

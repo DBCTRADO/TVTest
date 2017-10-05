@@ -312,7 +312,7 @@ static CPanAndScanOptions::PanAndScanInfo *GetInfo(HWND hwndList, int Index)
 	lvi.iItem = Index;
 	lvi.iSubItem = 0;
 	if (!ListView_GetItem(hwndList, &lvi))
-		return NULL;
+		return nullptr;
 
 	return reinterpret_cast<CPanAndScanOptions::PanAndScanInfo*>(lvi.lParam);
 }
@@ -420,7 +420,7 @@ INT_PTR CPanAndScanOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM 
 					}
 
 					CPanAndScanOptions::PanAndScanInfo *pInfo = GetInfo(hwndList, From);
-					if (pInfo != NULL) {
+					if (pInfo != nullptr) {
 						m_fStateChanging = true;
 						ListView_DeleteItem(hwndList, From);
 						InsertItem(hwndList, To, pInfo, true);
@@ -438,7 +438,7 @@ INT_PTR CPanAndScanOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM 
 
 				if (Sel >= 0) {
 					CPanAndScanOptions::PanAndScanInfo *pInfo = GetInfo(hwndList, Sel);
-					if (pInfo != NULL) {
+					if (pInfo != nullptr) {
 						ListView_DeleteItem(hwndList, Sel);
 						delete pInfo;
 						SetItemStatus();
@@ -524,7 +524,7 @@ INT_PTR CPanAndScanOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM 
 				if (Sel >= 0) {
 					PanAndScanInfo *pOldInfo = GetInfo(hwndList, Sel);
 
-					if (pOldInfo != NULL) {
+					if (pOldInfo != nullptr) {
 						CPanAndScanOptions::PanAndScanInfo Info;
 
 						if (GetSettings(&Info)) {
@@ -553,7 +553,7 @@ INT_PTR CPanAndScanOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM 
 		case IDC_PANANDSCAN_WIDTH:
 		case IDC_PANANDSCAN_HEIGHT:
 			if (HIWORD(wParam) == EN_CHANGE) {
-				InvalidateDlgItem(hDlg, IDC_PANANDSCAN_PREVIEW, NULL, false);
+				InvalidateDlgItem(hDlg, IDC_PANANDSCAN_PREVIEW, nullptr, false);
 			}
 			return TRUE;
 
@@ -584,7 +584,7 @@ INT_PTR CPanAndScanOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM 
 
 				for (int i = 0; i < ItemCount; i++) {
 					PanAndScanInfo *pInfo = GetInfo(hwndList, i);
-					if (pInfo != NULL)
+					if (pInfo != nullptr)
 						List.push_back(*pInfo);
 				}
 
@@ -609,7 +609,7 @@ INT_PTR CPanAndScanOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM 
 					if ((pnmlv->uNewState & LVIS_SELECTED) != 0) {
 						CPanAndScanOptions::PanAndScanInfo *pInfo = GetInfo(pnmlv->hdr.hwndFrom, pnmlv->iItem);
 
-						if (pInfo != NULL) {
+						if (pInfo != nullptr) {
 							TCHAR szText[32];
 
 							m_fStateChanging = true;
@@ -625,7 +625,7 @@ INT_PTR CPanAndScanOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM 
 							::SetDlgItemInt(hDlg, IDC_PANANDSCAN_XASPECT, pInfo->Info.XAspect, TRUE);
 							::SetDlgItemInt(hDlg, IDC_PANANDSCAN_YASPECT, pInfo->Info.YAspect, TRUE);
 							m_fStateChanging = false;
-							InvalidateDlgItem(hDlg, IDC_PANANDSCAN_PREVIEW, NULL, false);
+							InvalidateDlgItem(hDlg, IDC_PANANDSCAN_PREVIEW, nullptr, false);
 						}
 					}
 
@@ -684,7 +684,7 @@ bool CPanAndScanOptions::GetSettings(CPanAndScanOptions::PanAndScanInfo *pInfo) 
 	::GetDlgItemText(m_hDlg, IDC_PANANDSCAN_NAME, pInfo->szName, MAX_NAME);
 
 	if (!GetPanAndScanSettings(&pInfo->Info)) {
-		::MessageBox(m_hDlg, TEXT("入力された値が正しくありません。"), NULL, MB_OK | MB_ICONINFORMATION);
+		::MessageBox(m_hDlg, TEXT("入力された値が正しくありません。"), nullptr, MB_OK | MB_ICONINFORMATION);
 		return false;
 	}
 
@@ -700,8 +700,8 @@ bool CPanAndScanOptions::GetPanAndScanSettings(CCoreEngine::PanAndScanInfo *pInf
 	pInfo->YPos = GetItemValue(m_hDlg, IDC_PANANDSCAN_YPOS, FACTOR_PERCENTAGE);
 	pInfo->Width = GetItemValue(m_hDlg, IDC_PANANDSCAN_WIDTH, FACTOR_PERCENTAGE);
 	pInfo->Height = GetItemValue(m_hDlg, IDC_PANANDSCAN_HEIGHT, FACTOR_PERCENTAGE);
-	pInfo->XAspect = ::GetDlgItemInt(m_hDlg, IDC_PANANDSCAN_XASPECT, NULL, TRUE);
-	pInfo->YAspect = ::GetDlgItemInt(m_hDlg, IDC_PANANDSCAN_YASPECT, NULL, TRUE);
+	pInfo->XAspect = ::GetDlgItemInt(m_hDlg, IDC_PANANDSCAN_XASPECT, nullptr, TRUE);
+	pInfo->YAspect = ::GetDlgItemInt(m_hDlg, IDC_PANANDSCAN_YASPECT, nullptr, TRUE);
 
 	if (pInfo->XPos < 0 || pInfo->YPos < 0
 			|| pInfo->Width <= 0 || pInfo->Height <= 0
@@ -757,10 +757,10 @@ bool CPanAndScanOptions::Import(LPCTSTR pszFileName)
 bool CPanAndScanOptions::Export(LPCTSTR pszFileName) const
 {
 	HANDLE hFile = ::CreateFile(
-		pszFileName, GENERIC_WRITE, 0, NULL,
-		CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+		pszFileName, GENERIC_WRITE, 0, nullptr,
+		CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
 	if (hFile == INVALID_HANDLE_VALUE) {
-		::MessageBox(m_hDlg, TEXT("ファイルを作成できません。"), NULL, MB_OK | MB_ICONEXCLAMATION);
+		::MessageBox(m_hDlg, TEXT("ファイルを作成できません。"), nullptr, MB_OK | MB_ICONEXCLAMATION);
 		return false;
 	}
 
@@ -768,17 +768,17 @@ bool CPanAndScanOptions::Export(LPCTSTR pszFileName) const
 
 #ifdef UNICODE
 	const WORD BOM = 0xFEFF;
-	::WriteFile(hFile, &BOM, 2, &Write, NULL);
+	::WriteFile(hFile, &BOM, 2, &Write, nullptr);
 #endif
 
 	static const TCHAR szHeader[] = TEXT("; ") APP_NAME TEXT(" Pan&Scan presets\r\n[PanAndScan]\r\n");
-	::WriteFile(hFile, szHeader, sizeof(szHeader) - sizeof(TCHAR), &Write, NULL);
+	::WriteFile(hFile, szHeader, sizeof(szHeader) - sizeof(TCHAR), &Write, nullptr);
 
 	HWND hwndList = ::GetDlgItem(m_hDlg, IDC_PANANDSCAN_LIST);
 	const int ItemCount = ListView_GetItemCount(hwndList);
 	for (int i = 0; i < ItemCount; i++) {
 		const PanAndScanInfo *pInfo = GetInfo(hwndList, i);
-		if (pInfo == NULL)
+		if (pInfo == nullptr)
 			break;
 
 		TCHAR szBuffer[256], szSettings[256];
@@ -788,7 +788,7 @@ bool CPanAndScanOptions::Export(LPCTSTR pszFileName) const
 			szBuffer, lengthof(szBuffer),
 			TEXT("Preset%d.Name=%s\r\nPreset%d=%s\r\n"),
 			i, pInfo->szName, i, szSettings);
-		::WriteFile(hFile, szBuffer, Length * sizeof(TCHAR), &Write, NULL);
+		::WriteFile(hFile, szBuffer, Length * sizeof(TCHAR), &Write, nullptr);
 	}
 
 	::CloseHandle(hFile);

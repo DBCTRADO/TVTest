@@ -156,7 +156,7 @@ bool CRecordOptions::WriteSettings(CSettings &Settings)
 	Settings.Write(TEXT("ShowRecordRemainTime"), m_fShowRemainTime);
 	if (m_StatusBarRecordCommand != 0) {
 		LPCTSTR pszCommand = GetAppClass().CommandList.GetCommandTextByID(m_StatusBarRecordCommand);
-		if (pszCommand != NULL)
+		if (pszCommand != nullptr)
 			Settings.Write(TEXT("StatusBarRecordCommand"), pszCommand);
 	} else {
 		Settings.Write(TEXT("StatusBarRecordCommand"), TEXT(""));
@@ -312,8 +312,8 @@ INT_PTR CRecordOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 #if 0
 			if (m_szSaveFolder[0] == '\0') {
 				PWSTR pszPath;
-				if (::SHGetKnownFolderPath(FOLDERID_Videos, 0, NULL, &pszPath) == S_OK
-						|| ::SHGetKnownFolderPath(FOLDERID_Documents, 0, NULL, &pszPath) == S_OK) {
+				if (::SHGetKnownFolderPath(FOLDERID_Videos, 0, nullptr, &pszPath) == S_OK
+						|| ::SHGetKnownFolderPath(FOLDERID_Documents, 0, nullptr, &pszPath) == S_OK) {
 					if (::lstrlen(pszPath) < lengthof(m_szSaveFolder))
 						::lstrcpy(m_szSaveFolder, pszPath);
 					::CoTaskMemFree(pszPath);
@@ -508,14 +508,14 @@ INT_PTR CRecordOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 						::MessageBox(
 							hDlg,
 							TEXT("録画ファイル名に、ファイル名に使用できない文字が含まれています。"),
-							NULL, MB_OK | MB_ICONEXCLAMATION);
+							nullptr, MB_OK | MB_ICONEXCLAMATION);
 					}
 #else
 					TVTest::String Message;
 					if (!IsValidFileName(szFileName, FILENAME_VALIDATE_ALLOWDELIMITER, &Message)) {
 						SettingError();
 						::SendDlgItemMessage(hDlg, IDC_RECORDOPTIONS_FILENAME, EM_SETSEL, 0, -1);
-						::MessageBox(hDlg, Message.c_str(), NULL, MB_OK | MB_ICONEXCLAMATION);
+						::MessageBox(hDlg, Message.c_str(), nullptr, MB_OK | MB_ICONEXCLAMATION);
 						SetDlgItemFocus(hDlg, IDC_RECORDOPTIONS_FILENAME);
 						return TRUE;
 					}
@@ -543,7 +543,7 @@ INT_PTR CRecordOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 				m_fAlertLowFreeSpace =
 					DlgCheckBox_IsChecked(hDlg, IDC_RECORDOPTIONS_ALERTLOWFREESPACE);
 				m_LowFreeSpaceThreshold =
-					::GetDlgItemInt(hDlg, IDC_RECORDOPTIONS_LOWFREESPACETHRESHOLD, NULL, FALSE);
+					::GetDlgItemInt(hDlg, IDC_RECORDOPTIONS_LOWFREESPACETHRESHOLD, nullptr, FALSE);
 
 				int Sel = (int)DlgComboBox_GetCurSel(hDlg, IDC_RECORDOPTIONS_STATUSBARCOMMAND);
 				if (Sel >= 0 && Sel < lengthof(StatusBarCommandList))
@@ -556,11 +556,11 @@ INT_PTR CRecordOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 					m_Settings.m_WritePlugin.clear();
 
 				unsigned int BufferSize =
-					::GetDlgItemInt(hDlg, IDC_RECORDOPTIONS_BUFFERSIZE, NULL, FALSE);
+					::GetDlgItemInt(hDlg, IDC_RECORDOPTIONS_BUFFERSIZE, nullptr, FALSE);
 				if (BufferSize != 0)
 					m_Settings.m_WriteCacheSize = CLAMP(BufferSize * 1024, WRITE_BUFFER_SIZE_MIN, WRITE_BUFFER_SIZE_MAX);
 
-				BufferSize = ::GetDlgItemInt(hDlg, IDC_RECORDOPTIONS_TIMESHIFTBUFFERSIZE, NULL, FALSE);
+				BufferSize = ::GetDlgItemInt(hDlg, IDC_RECORDOPTIONS_TIMESHIFTBUFFERSIZE, nullptr, FALSE);
 				if (BufferSize != 0) {
 					BufferSize = CLAMP(BufferSize * MEGA_BYTES, TIMESHIFT_BUFFER_SIZE_MIN, TIMESHIFT_BUFFER_SIZE_MAX);
 					if (BufferSize != m_Settings.m_TimeShiftBufferSize) {
@@ -568,7 +568,7 @@ INT_PTR CRecordOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 					}
 				}
 
-				BufferSize = ::GetDlgItemInt(hDlg, IDC_RECORDOPTIONS_MAXPENDINGSIZE, NULL, FALSE);
+				BufferSize = ::GetDlgItemInt(hDlg, IDC_RECORDOPTIONS_MAXPENDINGSIZE, nullptr, FALSE);
 				if (BufferSize != 0)
 					m_Settings.m_MaxPendingSize = CLAMP(BufferSize * MEGA_BYTES, MAX_PENDING_SIZE_MIN, MAX_PENDING_SIZE_MAX);
 

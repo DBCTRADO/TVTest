@@ -21,11 +21,11 @@ void CTunerControlItem::Draw(HDC hdc, const RECT &Rect)
 	const CChannelInfo *pChInfo = ChannelManager.GetCurrentChannelInfo();
 	LPCTSTR pszText;
 
-	if (pChInfo != NULL || ChannelManager.GetCurrentSpace() >= 0) {
+	if (pChInfo != nullptr || ChannelManager.GetCurrentSpace() >= 0) {
 		pszText =
 			ChannelManager.GetTuningSpaceName(
-				pChInfo != NULL ? pChInfo->GetSpace() : ChannelManager.GetCurrentSpace());
-		if (pszText == NULL)
+				pChInfo != nullptr ? pChInfo->GetSpace() : ChannelManager.GetCurrentSpace());
+		if (pszText == nullptr)
 			pszText = TEXT("<チューナー>");
 	} else if (ChannelManager.GetCurrentSpace() == CChannelManager::SPACE_ALL) {
 		pszText = TEXT("すべて");
@@ -77,7 +77,7 @@ void CChannelControlItem::Draw(HDC hdc, const RECT &Rect)
 		::SetTextColor(hdc, MixColor(crText, crBack, 128));
 		pInfo = ChannelManager.GetChangingChannelInfo();
 		::wsprintf(szText, TEXT("%d: %s"), pInfo->GetChannelNo(), pInfo->GetName());
-	} else if ((pInfo = ChannelManager.GetCurrentChannelInfo()) != NULL) {
+	} else if ((pInfo = ChannelManager.GetCurrentChannelInfo()) != nullptr) {
 		::wsprintf(szText, TEXT("%d: %s"), pInfo->GetChannelNo(), pInfo->GetName());
 	} else {
 		::lstrcpy(szText, TEXT("<チャンネル>"));
@@ -168,7 +168,7 @@ void CVolumeControlItem::Draw(HDC hdc, const RECT &Rect)
 	lb.lbHatch = 0;
 	hpen = ::ExtCreatePen(
 		PS_GEOMETRIC | PS_SOLID | PS_INSIDEFRAME | PS_JOIN_MITER,
-		m_Style.BarBorderWidth, &lb, 0, NULL);
+		m_Style.BarBorderWidth, &lb, 0, nullptr);
 	hpenOld = SelectPen(hdc, hpen);
 	hbrOld = SelectBrush(hdc, ::GetStockObject(NULL_BRUSH));
 	rc = Rect;

@@ -24,12 +24,12 @@ static float GetOutlineWidth(int FontSize)
 
 
 const LPCTSTR CPseudoOSD::m_pszWindowClass = APP_NAME TEXT(" Pseudo OSD");
-HINSTANCE CPseudoOSD::m_hinst = NULL;
+HINSTANCE CPseudoOSD::m_hinst = nullptr;
 
 
 bool CPseudoOSD::Initialize(HINSTANCE hinst)
 {
-	if (m_hinst == NULL) {
+	if (m_hinst == nullptr) {
 		WNDCLASS wc;
 
 		wc.style = CS_HREDRAW;
@@ -37,10 +37,10 @@ bool CPseudoOSD::Initialize(HINSTANCE hinst)
 		wc.cbClsExtra = 0;
 		wc.cbWndExtra = 0;
 		wc.hInstance = hinst;
-		wc.hIcon = NULL;
-		wc.hCursor = NULL;
-		wc.hbrBackground = NULL;
-		wc.lpszMenuName = NULL;
+		wc.hIcon = nullptr;
+		wc.hCursor = nullptr;
+		wc.hbrBackground = nullptr;
+		wc.lpszMenuName = nullptr;
 		wc.lpszClassName = m_pszWindowClass;
 		if (::RegisterClass(&wc) == 0)
 			return false;
@@ -60,14 +60,14 @@ bool CPseudoOSD::IsPseudoOSD(HWND hwnd)
 
 
 CPseudoOSD::CPseudoOSD()
-	: m_hwnd(NULL)
+	: m_hwnd(nullptr)
 	, m_crBackColor(RGB(16, 0, 16))
 	, m_crTextColor(RGB(0, 255, 128))
 	, m_TextStyle(TEXT_STYLE_OUTLINE)
-	, m_hbmIcon(NULL)
+	, m_hbmIcon(nullptr)
 	, m_IconWidth(0)
 	, m_IconHeight(0)
-	, m_hbm(NULL)
+	, m_hbm(nullptr)
 	, m_ImageEffect(0)
 {
 	LOGFONT lf;
@@ -89,7 +89,7 @@ CPseudoOSD::~CPseudoOSD()
 
 bool CPseudoOSD::Create(HWND hwndParent, bool fLayeredWindow)
 {
-	if (m_hwnd != NULL) {
+	if (m_hwnd != nullptr) {
 		if (::GetParent(m_hwnd) == hwndParent
 				&& m_fLayeredWindow == fLayeredWindow)
 			return true;
@@ -110,9 +110,9 @@ bool CPseudoOSD::Create(HWND hwndParent, bool fLayeredWindow)
 		::ClientToScreen(hwndParent, &pt);
 		if (::CreateWindowEx(
 					WS_EX_LAYERED | WS_EX_TRANSPARENT | WS_EX_NOACTIVATE,
-					m_pszWindowClass, NULL, WS_POPUP,
+					m_pszWindowClass, nullptr, WS_POPUP,
 					pt.x, pt.y, m_Position.Width, m_Position.Height,
-					hwndParent, NULL, m_hinst, this) == NULL)
+					hwndParent, nullptr, m_hinst, this) == nullptr)
 			return false;
 		::GetWindowRect(hwndParent, &rc);
 		m_ParentPosition.x = rc.left;
@@ -122,16 +122,16 @@ bool CPseudoOSD::Create(HWND hwndParent, bool fLayeredWindow)
 
 	return ::CreateWindowEx(
 		fLayeredWindow ? (WS_EX_LAYERED | WS_EX_TRANSPARENT) : 0,
-		m_pszWindowClass, NULL, WS_CHILD,
+		m_pszWindowClass, nullptr, WS_CHILD,
 		m_Position.Left, m_Position.Top,
 		m_Position.Width, m_Position.Height,
-		hwndParent, NULL, m_hinst, this) != NULL;
+		hwndParent, nullptr, m_hinst, this) != nullptr;
 }
 
 
 bool CPseudoOSD::Destroy()
 {
-	if (m_hwnd != NULL)
+	if (m_hwnd != nullptr)
 		::DestroyWindow(m_hwnd);
 	return true;
 }
@@ -139,7 +139,7 @@ bool CPseudoOSD::Destroy()
 
 bool CPseudoOSD::Show(DWORD Time, bool fAnimation)
 {
-	if (m_hwnd == NULL)
+	if (m_hwnd == nullptr)
 		return false;
 
 	if (m_fPopupLayeredWindow) {
@@ -153,13 +153,13 @@ bool CPseudoOSD::Show(DWORD Time, bool fAnimation)
 			if (fAnimation) {
 				m_AnimationCount = 0;
 				::SetWindowPos(
-					m_hwnd, NULL, pt.x, pt.y,
+					m_hwnd, nullptr, pt.x, pt.y,
 					m_Position.Width / ANIMATION_FRAMES, m_Position.Height,
 					SWP_NOZORDER | SWP_NOACTIVATE);
 				m_Timer.BeginTimer(TIMER_ID_ANIMATION, ANIMATION_INTERVAL);
 			} else {
 				::SetWindowPos(
-					m_hwnd, NULL, pt.x, pt.y,
+					m_hwnd, nullptr, pt.x, pt.y,
 					m_Position.Width, m_Position.Height,
 					SWP_NOZORDER | SWP_NOACTIVATE);
 			}
@@ -196,7 +196,7 @@ bool CPseudoOSD::Show(DWORD Time, bool fAnimation)
 		::UpdateWindow(m_hwnd);
 	} else {
 		if (::IsWindowVisible(m_hwnd)) {
-			::RedrawWindow(m_hwnd, NULL, NULL, RDW_INVALIDATE | RDW_UPDATENOW);
+			::RedrawWindow(m_hwnd, nullptr, nullptr, RDW_INVALIDATE | RDW_UPDATENOW);
 		} else {
 			::ShowWindow(m_hwnd, SW_SHOW);
 			::BringWindowToTop(m_hwnd);
@@ -210,18 +210,18 @@ bool CPseudoOSD::Show(DWORD Time, bool fAnimation)
 
 bool CPseudoOSD::Hide()
 {
-	if (m_hwnd == NULL)
+	if (m_hwnd == nullptr)
 		return false;
 	::ShowWindow(m_hwnd, SW_HIDE);
 	m_Text.clear();
-	m_hbm = NULL;
+	m_hbm = nullptr;
 	return true;
 }
 
 
 bool CPseudoOSD::IsVisible() const
 {
-	if (m_hwnd == NULL)
+	if (m_hwnd == nullptr)
 		return false;
 	return ::IsWindowVisible(m_hwnd) != FALSE;
 }
@@ -231,7 +231,7 @@ bool CPseudoOSD::SetText(LPCTSTR pszText, HBITMAP hbmIcon, int IconWidth, int Ic
 {
 	TVTest::StringUtility::Assign(m_Text, pszText);
 	m_hbmIcon = hbmIcon;
-	if (hbmIcon != NULL) {
+	if (hbmIcon != nullptr) {
 		m_IconWidth = IconWidth;
 		m_IconHeight = IconHeight;
 		m_ImageEffect = ImageEffect;
@@ -239,13 +239,13 @@ bool CPseudoOSD::SetText(LPCTSTR pszText, HBITMAP hbmIcon, int IconWidth, int Ic
 		m_IconWidth = 0;
 		m_IconHeight = 0;
 	}
-	m_hbm = NULL;
+	m_hbm = nullptr;
 	/*
 	if (IsVisible()) {
 		if (m_fLayeredWindow)
 			UpdateLayeredWindow();
 		else
-			::RedrawWindow(m_hwnd, NULL, NULL, RDW_INVALIDATE | RDW_UPDATENOW);
+			::RedrawWindow(m_hwnd, nullptr, nullptr, RDW_INVALIDATE | RDW_UPDATENOW);
 	}
 	*/
 	return true;
@@ -262,7 +262,7 @@ bool CPseudoOSD::SetPosition(int Left, int Top, int Width, int Height)
 	m_Position.Width = Width;
 	m_Position.Height = Height;
 
-	if (m_hwnd != NULL) {
+	if (m_hwnd != nullptr) {
 		if (m_fPopupLayeredWindow) {
 			POINT pt;
 
@@ -270,7 +270,7 @@ bool CPseudoOSD::SetPosition(int Left, int Top, int Width, int Height)
 			pt.y = Top;
 			::ClientToScreen(m_hwndParent, &pt);
 			::SetWindowPos(
-				m_hwnd, NULL, pt.x, pt.y, Width, Height,
+				m_hwnd, nullptr, pt.x, pt.y, Width, Height,
 				SWP_NOZORDER | SWP_NOACTIVATE);
 		} else {
 			::SetWindowPos(m_hwnd, HWND_TOP, Left, Top, Width, Height, 0);
@@ -298,8 +298,8 @@ void CPseudoOSD::SetTextColor(COLORREF crText)
 {
 	m_crTextColor = crText;
 	/*
-	if (m_hwnd != NULL)
-		::InvalidateRect(m_hwnd, NULL, TRUE);
+	if (m_hwnd != nullptr)
+		::InvalidateRect(m_hwnd, nullptr, TRUE);
 	*/
 }
 
@@ -340,10 +340,10 @@ bool CPseudoOSD::CalcTextSize(SIZE *pSize)
 	HDC hdc;
 	bool fResult;
 
-	if (m_hwnd != NULL)
+	if (m_hwnd != nullptr)
 		hdc = ::GetDC(m_hwnd);
 	else
-		hdc = ::CreateCompatibleDC(NULL);
+		hdc = ::CreateCompatibleDC(nullptr);
 
 	if (!m_fLayeredWindow) {
 		HFONT hfontOld = DrawUtil::SelectObject(hdc, m_Font);
@@ -371,7 +371,7 @@ bool CPseudoOSD::CalcTextSize(SIZE *pSize)
 		}
 	}
 
-	if (m_hwnd != NULL)
+	if (m_hwnd != nullptr)
 		::ReleaseDC(m_hwnd, hdc);
 	else
 		::DeleteDC(hdc);
@@ -384,10 +384,10 @@ bool CPseudoOSD::SetImage(HBITMAP hbm, unsigned int ImageEffect)
 {
 	m_hbm = hbm;
 	m_Text.clear();
-	m_hbmIcon = NULL;
+	m_hbmIcon = nullptr;
 	m_ImageEffect = ImageEffect;
 #if 0
-	if (m_hwnd != NULL) {
+	if (m_hwnd != nullptr) {
 		/*
 		BITMAP bm;
 
@@ -399,7 +399,7 @@ bool CPseudoOSD::SetImage(HBITMAP hbm, unsigned int ImageEffect)
 		if (m_fLayeredWindow)
 			UpdateLayeredWindow();
 		else
-			::RedrawWindow(m_hwnd, NULL, NULL, RDW_INVALIDATE | RDW_UPDATENOW);
+			::RedrawWindow(m_hwnd, nullptr, nullptr, RDW_INVALIDATE | RDW_UPDATENOW);
 	}
 #endif
 	return true;
@@ -408,7 +408,7 @@ bool CPseudoOSD::SetImage(HBITMAP hbm, unsigned int ImageEffect)
 
 void CPseudoOSD::OnParentMove()
 {
-	if (m_hwnd != NULL && m_fPopupLayeredWindow) {
+	if (m_hwnd != nullptr && m_fPopupLayeredWindow) {
 		RECT rcParent, rc;
 
 		::GetWindowRect(m_hwndParent, &rcParent);
@@ -418,7 +418,7 @@ void CPseudoOSD::OnParentMove()
 			rcParent.left - m_ParentPosition.x,
 			rcParent.top - m_ParentPosition.y);
 		::SetWindowPos(
-			m_hwnd, NULL, rc.left, rc.top,
+			m_hwnd, nullptr, rc.left, rc.top,
 			rc.right - rc.left, rc.bottom - rc.top,
 			SWP_NOZORDER | SWP_NOACTIVATE);
 		m_ParentPosition.x = rcParent.left;
@@ -438,7 +438,7 @@ void CPseudoOSD::Draw(HDC hdc, const RECT &PaintRect) const
 		int OldBkMode;
 
 		DrawUtil::Fill(hdc, &PaintRect, m_crBackColor);
-		if (m_hbmIcon != NULL) {
+		if (m_hbmIcon != nullptr) {
 			int IconWidth;
 			if (m_Timer.IsTimerEnabled(TIMER_ID_ANIMATION))
 				IconWidth = m_IconWidth * (m_AnimationCount + 1) / ANIMATION_FRAMES;
@@ -466,7 +466,7 @@ void CPseudoOSD::Draw(HDC hdc, const RECT &PaintRect) const
 		::SetBkMode(hdc, OldBkMode);
 		::SetTextColor(hdc, crOldTextColor);
 		::SelectObject(hdc, hfontOld);
-	} else if (m_hbm != NULL) {
+	} else if (m_hbm != nullptr) {
 		BITMAP bm;
 		::GetObject(m_hbm, sizeof(BITMAP), &bm);
 		RECT rcBitmap = {0, 0, bm.bmWidth, bm.bmHeight};
@@ -498,7 +498,7 @@ void CPseudoOSD::UpdateLayeredWindow()
 
 	void *pBits;
 	HBITMAP hbmSurface = DrawUtil::CreateDIB(Width, Height, 32, &pBits);
-	if (hbmSurface == NULL)
+	if (hbmSurface == nullptr)
 		return;
 	::ZeroMemory(pBits, Width * 4 * Height);
 
@@ -512,7 +512,7 @@ void CPseudoOSD::UpdateLayeredWindow()
 		::SetRect(&rc, 0, 0, Width, Height);
 
 		if (!m_Text.empty()) {
-			if (m_hbmIcon != NULL) {
+			if (m_hbmIcon != nullptr) {
 				TVTest::Graphics::CImage Image;
 
 				Image.CreateFromBitmap(m_hbmIcon);
@@ -574,7 +574,7 @@ void CPseudoOSD::UpdateLayeredWindow()
 			} else {
 				Canvas.DrawText(m_Text.c_str(), lf, rc, &TextBrush, DrawTextFlags);
 			}
-		} else if (m_hbm != NULL) {
+		} else if (m_hbm != nullptr) {
 			TVTest::Graphics::CImage Image;
 			if (Image.CreateFromBitmap(m_hbm)) {
 				Canvas.DrawImage(&Image, 0, 0);
@@ -589,7 +589,7 @@ void CPseudoOSD::UpdateLayeredWindow()
 	SIZE sz = {Width, Height};
 	POINT ptSrc = {0, 0};
 	BLENDFUNCTION blend = {AC_SRC_OVER, 0, 255, AC_SRC_ALPHA};
-	::UpdateLayeredWindow(m_hwnd, hdc, NULL, &sz, hdcSrc, &ptSrc, 0, &blend, ULW_ALPHA);
+	::UpdateLayeredWindow(m_hwnd, hdc, nullptr, &sz, hdcSrc, &ptSrc, 0, &blend, ULW_ALPHA);
 
 	::SelectObject(hdcSrc, hbmOld);
 	::DeleteDC(hdcSrc);
@@ -658,7 +658,7 @@ LRESULT CALLBACK CPseudoOSD::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
 
 					::GetWindowRect(hwnd, &rc);
 					::SetWindowPos(
-						hwnd, NULL, rc.left, rc.top,
+						hwnd, nullptr, rc.left, rc.top,
 						pThis->m_Position.Width * (pThis->m_AnimationCount + 1) / ANIMATION_FRAMES,
 						pThis->m_Position.Height,
 						SWP_NOZORDER | SWP_NOACTIVATE);
@@ -713,7 +713,7 @@ LRESULT CALLBACK CPseudoOSD::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
 		{
 			CPseudoOSD *pThis = GetThis(hwnd);
 
-			pThis->m_hwnd = NULL;
+			pThis->m_hwnd = nullptr;
 		}
 		return 0;
 	}

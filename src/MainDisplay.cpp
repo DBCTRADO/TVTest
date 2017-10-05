@@ -198,7 +198,7 @@ void CMainDisplay::CChannelDisplayEventHandler::OnChannelSelect(
 		else
 			Space = pChannelInfo->GetSpace();
 		const CChannelList *pList = m_App.ChannelManager.GetChannelList(Space);
-		if (pList != NULL) {
+		if (pList != nullptr) {
 			int Index = pList->FindByIndex(
 				pChannelInfo->GetSpace(),
 				pChannelInfo->GetChannelIndex(),
@@ -207,7 +207,7 @@ void CMainDisplay::CChannelDisplayEventHandler::OnChannelSelect(
 			if (Index < 0 && Space == CChannelManager::SPACE_ALL) {
 				Space = pChannelInfo->GetSpace();
 				pList = m_App.ChannelManager.GetChannelList(Space);
-				if (pList != NULL)
+				if (pList != nullptr)
 					Index = pList->FindByIndex(
 						-1,
 						pChannelInfo->GetChannelIndex(),

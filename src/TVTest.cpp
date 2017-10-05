@@ -69,7 +69,7 @@ bool CTotTimeAdjuster::AdjustTime()
 
 	LibISDB::AnalyzerFilter *pAnalyzer =
 		GetAppClass().CoreEngine.GetFilter<LibISDB::AnalyzerFilter>();
-	if (pAnalyzer == NULL)
+	if (pAnalyzer == nullptr)
 		return false;
 	LibISDB::DateTime TOTTime;
 	if (!pAnalyzer->GetTOTTime(&TOTTime))
@@ -87,12 +87,12 @@ bool CTotTimeAdjuster::AdjustTime()
 	HANDLE hToken;
 	if (::OpenProcessToken(::GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken)) {
 		LUID luid;
-		if (::LookupPrivilegeValue(NULL, SE_SYSTEMTIME_NAME, &luid)) {
+		if (::LookupPrivilegeValue(nullptr, SE_SYSTEMTIME_NAME, &luid)) {
 			TOKEN_PRIVILEGES tkp;
 			tkp.PrivilegeCount = 1;
 			tkp.Privileges[0].Luid = luid;
 			tkp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
-			if (::AdjustTokenPrivileges(hToken, FALSE, &tkp, sizeof(TOKEN_PRIVILEGES), NULL, 0)
+			if (::AdjustTokenPrivileges(hToken, FALSE, &tkp, sizeof(TOKEN_PRIVILEGES), nullptr, 0)
 					&& ::GetLastError() == ERROR_SUCCESS) {
 				// バッファがあるので少し時刻を戻す
 				OffsetSystemTime(&st, -2 * TimeConsts::SYSTEMTIME_SECOND);
@@ -204,7 +204,7 @@ int APIENTRY _tWinMain(
 		_MSC_FULL_VER / 10000000, (_MSC_FULL_VER / 100000) % 100, _MSC_FULL_VER % 100000, _MSC_BUILD);
 #endif
 
-	CoInitializeEx(NULL, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE | COINIT_SPEED_OVER_MEMORY);
+	CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE | COINIT_SPEED_OVER_MEMORY);
 
 	const int Result = g_App.Main(hInstance, pszCmdLine, nCmdShow);
 

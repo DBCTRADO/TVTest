@@ -100,13 +100,13 @@ public:
 	bool SetAlwaysOnTop(bool fTop);
 	bool PreventDisplaySave(bool fPrevent);
 
-	void PopupMenu(const POINT *pPos = NULL, UINT Flags = 0);
+	void PopupMenu(const POINT *pPos = nullptr, UINT Flags = 0);
 	void PopupSubMenu(
-		int SubMenu, const POINT *pPos = NULL, UINT Flags = 0,
-		const RECT *pExcludeRect = NULL);
+		int SubMenu, const POINT *pPos = nullptr, UINT Flags = 0,
+		const RECT *pExcludeRect = nullptr);
 	bool ShowSpecialMenu(
-		MenuType Menu, const POINT *pPos = NULL, UINT Flags = 0,
-		const RECT *pExcludeRect = NULL);
+		MenuType Menu, const POINT *pPos = nullptr, UINT Flags = 0,
+		const RECT *pExcludeRect = nullptr);
 	void InitChannelMenu(HMENU hmenu);
 	void InitTunerMenu(HMENU hmenu);
 	bool ProcessTunerMenu(int Command);
@@ -156,7 +156,7 @@ private:
 		~CTunerSelectMenu();
 		bool Create(HWND hwnd);
 		void Destroy();
-		int Show(UINT Flags, int x, int y, const RECT *pExcludeRect = NULL);
+		int Show(UINT Flags, int x, int y, const RECT *pExcludeRect = nullptr);
 		bool OnInitMenuPopup(HMENU hmenu);
 
 	private:

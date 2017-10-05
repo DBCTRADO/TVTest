@@ -34,7 +34,7 @@ public:
 	bool Init();
 	bool SaveImage(
 		LPCTSTR pszFileName, int Format, LPCTSTR pszOption,
-		const BITMAPINFO *pbmi, const void *pBits, LPCTSTR pszComment = NULL);
+		const BITMAPINFO *pbmi, const void *pBits, LPCTSTR pszComment = nullptr);
 	LPCTSTR EnumSaveFormat(int Index) const;
 	LPCTSTR GetExtension(int Index) const;
 	int FormatNameToIndex(LPCTSTR pszName) const;

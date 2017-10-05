@@ -17,7 +17,7 @@ public:
 	~CBufferedPaint();
 	HDC Begin(HDC hdc, const RECT *pRect, bool fErase = false);
 	bool End(bool fUpdate = true);
-	bool Clear(const RECT *pRect = NULL);
+	bool Clear(const RECT *pRect = nullptr);
 	bool SetAlpha(BYTE Alpha);
 	bool SetOpaque() { return SetAlpha(255); }
 

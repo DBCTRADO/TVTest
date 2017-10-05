@@ -250,7 +250,7 @@ private:
 		TSProcessorConnectionList *pList,
 		TSProcessorConnectPosition ConnectPosition,
 		LibISDB::FilterGraph::IDType *pFilterID,
-		int *pOutputIndex = NULL);
+		int *pOutputIndex = nullptr);
 
 // TSEngine
 	void OnServiceChanged(uint16_t ServiceID) override;

@@ -14,7 +14,7 @@ static bool IsWindowEdgeVisible(HWND hwnd, HWND hwndTop, const RECT *pRect, HWND
 	RECT rc, rcEdge;
 	HWND hwndNext;
 
-	if (hwndTop == hwnd || hwndTop == NULL)
+	if (hwndTop == hwnd || hwndTop == nullptr)
 		return true;
 	GetWindowRect(hwndTop, &rc);
 	hwndNext = GetNextWindow(hwndTop, GW_HWNDNEXT);
@@ -136,7 +136,7 @@ void SnapWindow(HWND hwnd, RECT *prc, int Margin, HWND hwndExclude)
 	int XOffset, YOffset;
 
 	hMonitor = MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST);
-	if (hMonitor != NULL) {
+	if (hMonitor != nullptr) {
 		MONITORINFO mi;
 
 		mi.cbSize = sizeof(MONITORINFO);
@@ -198,7 +198,7 @@ bool IsMessageInQueue(HWND hwnd, UINT Message)
 
 
 CMouseLeaveTrack::CMouseLeaveTrack()
-	: m_hwnd(NULL)
+	: m_hwnd(nullptr)
 	, m_fClientTrack(false)
 	, m_fNonClientTrack(false)
 {
@@ -372,7 +372,7 @@ int CMouseWheelHandler::GetDefaultScrollChars() const
 
 
 CWindowTimerManager::CWindowTimerManager()
-	: m_hwndTimer(NULL)
+	: m_hwndTimer(nullptr)
 	, m_TimerIDs(0)
 {
 }
@@ -387,8 +387,8 @@ void CWindowTimerManager::InitializeTimer(HWND hwnd)
 
 bool CWindowTimerManager::BeginTimer(unsigned int ID, DWORD Interval)
 {
-	if (m_hwndTimer == NULL
-			|| ::SetTimer(m_hwndTimer, ID, Interval, NULL) == 0)
+	if (m_hwndTimer == nullptr
+			|| ::SetTimer(m_hwndTimer, ID, Interval, nullptr) == 0)
 		return false;
 	m_TimerIDs |= ID;
 	return true;

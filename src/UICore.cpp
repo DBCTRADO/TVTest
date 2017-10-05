@@ -26,7 +26,7 @@ CUICore::CUICore(CAppMain &App)
 
 	, m_TunerSelectMenu(*this)
 
-	, m_pColorScheme(NULL)
+	, m_pColorScheme(nullptr)
 
 	, m_fStatusBarTrace(false)
 {
@@ -584,7 +584,7 @@ int CUICore::FormatCurrentAudioText(LPTSTR pszText, int MaxLength) const
 
 			// [S] などがあれば除去する
 			LPTSTR p = ::StrStrI(szAudio, szFormat);
-			if (p != NULL) {
+			if (p != nullptr) {
 				int Length = ::lstrlen(szFormat);
 				if (p > szAudio && *(p - 1) == _T(' ')) {
 					p--;
@@ -1459,7 +1459,7 @@ COLORREF CUICore::GetColor(LPCTSTR pszText) const
 
 const CColorScheme *CUICore::GetCurrentColorScheme() const
 {
-	if (m_pColorScheme == NULL)
+	if (m_pColorScheme == nullptr)
 		return m_App.ColorSchemeOptions.GetColorScheme();
 	return m_pColorScheme;
 }
@@ -1489,13 +1489,13 @@ bool CUICore::ApplyColorScheme(const CColorScheme *pColorScheme)
 
 HCURSOR CUICore::GetActionCursor() const
 {
-	return ::LoadCursor(NULL, IDC_HAND);
+	return ::LoadCursor(nullptr, IDC_HAND);
 }
 
 
 HCURSOR CUICore::GetLinkCursor() const
 {
-	return ::LoadCursor(NULL, IDC_HAND);
+	return ::LoadCursor(nullptr, IDC_HAND);
 }
 
 
@@ -1522,7 +1522,7 @@ void CUICore::SetStatusBarTrace(bool fStatusBarTrace)
 	if (m_fStatusBarTrace != fStatusBarTrace) {
 		m_fStatusBarTrace = fStatusBarTrace;
 		if (!m_fStatusBarTrace)
-			m_App.StatusView.SetSingleText(NULL);
+			m_App.StatusView.SetSingleText(nullptr);
 	}
 }
 
@@ -1531,7 +1531,7 @@ bool CUICore::CreateChannelMenu(
 	const CChannelList *pChannelList, int CurChannel,
 	UINT Command, HMENU hmenu, HWND hwnd, unsigned int Flags)
 {
-	if (pChannelList == NULL)
+	if (pChannelList == nullptr)
 		return false;
 	const bool fEventInfo =
 		(Flags & CChannelMenu::FLAG_SHOWEVENTINFO) != 0
@@ -1750,7 +1750,7 @@ bool CUICore::CTunerSelectMenu::Create(HWND hwnd)
 
 		const CTuningSpaceList *pTuningSpaceList;
 		if (pDriverInfo->LoadTuningSpaceList(CDriverInfo::LOADTUNINGSPACE_NOLOADDRIVER)
-				&& (pTuningSpaceList = pDriverInfo->GetAvailableTuningSpaceList()) != NULL) {
+				&& (pTuningSpaceList = pDriverInfo->GetAvailableTuningSpaceList()) != nullptr) {
 			HMENU hmenuDriver = ::CreatePopupMenu();
 
 			for (j = 0; j < pTuningSpaceList->NumSpaces(); j++) {
@@ -1809,7 +1809,7 @@ bool CUICore::CTunerSelectMenu::Create(HWND hwnd)
 void CUICore::CTunerSelectMenu::Destroy()
 {
 	m_Menu.Destroy();
-	m_hwnd = NULL;
+	m_hwnd = nullptr;
 	m_PopupList.clear();
 }
 

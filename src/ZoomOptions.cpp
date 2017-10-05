@@ -201,7 +201,7 @@ bool CZoomOptions::SetMenu(HMENU hmenu, const ZoomInfo *pCurZoom) const
 						Info.Rate.Rate, Info.Rate.Factor);
 				}
 				if (!fRateCheck
-						&& pCurZoom != NULL
+						&& pCurZoom != nullptr
 						&& pCurZoom->Rate.GetPercentage() == Info.Rate.GetPercentage()) {
 					Flags |= MF_CHECKED;
 					fRateCheck = true;
@@ -211,7 +211,7 @@ bool CZoomOptions::SetMenu(HMENU hmenu, const ZoomInfo *pCurZoom) const
 					szText, lengthof(szText), TEXT("%d x %d"),
 					Info.Size.Width, Info.Size.Height);
 				if (!fSizeCheck
-						&& pCurZoom != NULL
+						&& pCurZoom != nullptr
 						&& pCurZoom->Size.Width == Info.Size.Width
 						&& pCurZoom->Size.Height == Info.Size.Height) {
 					Flags |= MF_CHECKED;
@@ -369,7 +369,7 @@ INT_PTR CZoomOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 
 		case IDC_ZOOMOPTIONS_RATE:
 			if (HIWORD(wParam) == EN_CHANGE && !m_fChanging) {
-				int Rate = ::GetDlgItemInt(hDlg, IDC_ZOOMOPTIONS_RATE, NULL, TRUE);
+				int Rate = ::GetDlgItemInt(hDlg, IDC_ZOOMOPTIONS_RATE, nullptr, TRUE);
 
 				if (Rate > 0 && Rate <= MAX_RATE) {
 					const int Sel = m_ItemListView.GetSelectedItem();
@@ -394,8 +394,8 @@ INT_PTR CZoomOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 		case IDC_ZOOMOPTIONS_WIDTH:
 		case IDC_ZOOMOPTIONS_HEIGHT:
 			if (HIWORD(wParam) == EN_CHANGE && !m_fChanging) {
-				int Width = ::GetDlgItemInt(hDlg, IDC_ZOOMOPTIONS_WIDTH, NULL, TRUE);
-				int Height = ::GetDlgItemInt(hDlg, IDC_ZOOMOPTIONS_HEIGHT, NULL, TRUE);
+				int Width = ::GetDlgItemInt(hDlg, IDC_ZOOMOPTIONS_WIDTH, nullptr, TRUE);
+				int Height = ::GetDlgItemInt(hDlg, IDC_ZOOMOPTIONS_HEIGHT, nullptr, TRUE);
 
 				if (Width > 0 && Height > 0) {
 					const int Sel = m_ItemListView.GetSelectedItem();
@@ -421,7 +421,7 @@ INT_PTR CZoomOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 			{
 				HWND hwndViewer = GetAppClass().UICore.GetViewerWindow();
 
-				if (hwndViewer != NULL) {
+				if (hwndViewer != nullptr) {
 					RECT rc;
 
 					::GetClientRect(hwndViewer, &rc);

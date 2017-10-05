@@ -112,13 +112,13 @@ wchar_t *StdUtil::strncpy(wchar_t *dest, size_t n, const wchar_t *src)
 char *StdUtil::strdup(const char *s)
 {
 	if (!s)
-		return NULL;
+		return nullptr;
 	size_t length = ::strlen(s) + 1;
 	char *dup;
 	try {
 		dup = new char[length];
 	} catch (std::bad_alloc&) {
-		return NULL;
+		return nullptr;
 	}
 	::strncpy_s(dup, length, s, _TRUNCATE);
 	return dup;
@@ -128,13 +128,13 @@ char *StdUtil::strdup(const char *s)
 wchar_t *StdUtil::strdup(const wchar_t *s)
 {
 	if (!s)
-		return NULL;
+		return nullptr;
 	size_t length = ::wcslen(s) + 1;
 	wchar_t *dup;
 	try {
 		dup = new wchar_t[length];
 	} catch (std::bad_alloc&) {
-		return NULL;
+		return nullptr;
 	}
 	::wcsncpy_s(dup, length, s, _TRUNCATE);
 	return dup;

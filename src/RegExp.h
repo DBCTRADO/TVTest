@@ -34,9 +34,9 @@ namespace TVTest
 		bool IsInitialized() const;
 		bool SetPattern(LPCTSTR pszPattern, UINT Flags = 0);
 		void ClearPattern();
-		bool Match(LPCTSTR pText, size_t Length, TextRange *pRange = NULL);
-		bool Match(LPCTSTR pszText, TextRange *pRange = NULL);
-		bool Match(const String &Text, TextRange *pRange = NULL);
+		bool Match(LPCTSTR pText, size_t Length, TextRange *pRange = nullptr);
+		bool Match(LPCTSTR pszText, TextRange *pRange = nullptr);
+		bool Match(const String &Text, TextRange *pRange = nullptr);
 		bool GetEngineName(LPTSTR pszName, size_t MaxLength) const;
 
 	private:

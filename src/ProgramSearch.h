@@ -167,7 +167,7 @@ public:
 	void Finalize();
 	bool BeginSearch(const CEventSearchSettings &Settings);
 	bool Match(const LibISDB::EventInfo *pEventInfo);
-	int FindKeyword(LPCTSTR pszText, LPCTSTR pKeyword, int KeywordLength, int *pFoundLength = NULL) const;
+	int FindKeyword(LPCTSTR pszText, LPCTSTR pKeyword, int KeywordLength, int *pFoundLength = nullptr) const;
 	bool FindExtendedText(const LibISDB::EventInfo::ExtendedTextInfoList &ExtendedText, LPCTSTR pKeyword, int KeywordLength) const;
 	const CEventSearchSettings &GetSearchSettings() const { return m_Settings; }
 	TVTest::CRegExp &GetRegExp() { return m_RegExp; }

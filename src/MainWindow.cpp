@@ -2116,7 +2116,7 @@ void CMainWindow::OnGetMinMaxInfo(HWND hwnd, LPMINMAXINFO pmmi)
 				RECT rcClient, rcWindow;
 
 				::GetClientRect(hwnd, &rcClient);
-				MapWindowRect(hwnd, NULL, &rcClient);
+				MapWindowRect(hwnd, nullptr, &rcClient);
 				::GetWindowRect(hwnd, &rcWindow);
 				Border.left = rcClient.left - rcWindow.left;
 				Border.top = rcClient.top - rcWindow.top;
@@ -5104,7 +5104,7 @@ void CMainWindow::OnMouseWheel(WPARAM wParam, LPARAM lParam, bool fHorz)
 			if (ItemID >= 0) {
 				CStatusItem *pItem = m_App.StatusView.GetItemByID(ItemID);
 
-				if (pItem != NULL) {
+				if (pItem != nullptr) {
 					POINT ptItem = pt;
 					RECT rcItem;
 
@@ -6386,7 +6386,7 @@ void CMainWindow::SetTheme(const TVTest::Theme::CThemeManager *pThemeManager)
 	pThemeManager->GetBackgroundStyle(TVTest::Theme::CThemeManager::STYLE_WINDOW_FRAME, &m_Theme.FrameStyle);
 	pThemeManager->GetBackgroundStyle(TVTest::Theme::CThemeManager::STYLE_WINDOW_ACTIVEFRAME, &m_Theme.ActiveFrameStyle);
 	if (m_fCustomFrame)
-		Redraw(NULL, RDW_FRAME | RDW_INVALIDATE);
+		Redraw(nullptr, RDW_FRAME | RDW_INVALIDATE);
 
 	m_LayoutBase.SetBackColor(pThemeManager->GetColor(CColorScheme::COLOR_SPLITTER));
 
@@ -7209,7 +7209,7 @@ enum {
 
 bool CMainWindow::CFullscreen::CPanelEventHandler::OnMenuPopup(HMENU hmenu)
 {
-	::AppendMenu(hmenu, MF_SEPARATOR, 0, NULL);
+	::AppendMenu(hmenu, MF_SEPARATOR, 0, nullptr);
 	::AppendMenu(hmenu, MF_STRING | MF_ENABLED, PANEL_MENU_LEFT, TEXT("左へ(&L)"));
 	::AppendMenu(hmenu, MF_STRING | MF_ENABLED, PANEL_MENU_RIGHT, TEXT("右へ(&R)"));
 	::AppendMenu(hmenu, MF_STRING | MF_ENABLED, PANEL_MENU_TOP, TEXT("上へ(&T)"));

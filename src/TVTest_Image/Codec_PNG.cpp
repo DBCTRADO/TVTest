@@ -20,7 +20,7 @@ static void WriteData(png_structp pPNG, png_bytep pbData, png_size_t Length)
 	DWORD dwWrite;
 
 	hFile = (HANDLE)png_get_io_ptr(pPNG);
-	if (!WriteFile(hFile, pbData, (DWORD)Length, &dwWrite, NULL) || dwWrite != Length)
+	if (!WriteFile(hFile, pbData, (DWORD)Length, &dwWrite, nullptr) || dwWrite != Length)
 		png_error(pPNG, "Write Error");
 }
 
@@ -44,27 +44,27 @@ bool SavePNGFile(const ImageSaveInfo *pInfo)
 	int i, nPasses, y;
 	int nSrcRowBytes;
 	png_bytep pbRow;
-	BYTE *pBuff = NULL;
+	BYTE *pBuff = nullptr;
 
 	hFile = CreateFile(
-		pInfo->pszFileName, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS,
-		FILE_ATTRIBUTE_NORMAL, NULL);
+		pInfo->pszFileName, GENERIC_WRITE, 0, nullptr, CREATE_ALWAYS,
+		FILE_ATTRIBUTE_NORMAL, nullptr);
 	if (hFile == INVALID_HANDLE_VALUE)
 		return false;
-	pPNG = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
-	if (pPNG == NULL) {
+	pPNG = png_create_write_struct(PNG_LIBPNG_VER_STRING, nullptr, nullptr, nullptr);
+	if (pPNG == nullptr) {
 		CloseHandle(hFile);
 		return false;
 	}
 	pPNGInfo = png_create_info_struct(pPNG);
-	if (pPNGInfo == NULL) {
-		png_destroy_write_struct(&pPNG, NULL);
+	if (pPNGInfo == nullptr) {
+		png_destroy_write_struct(&pPNG, nullptr);
 		CloseHandle(hFile);
 		return false;
 	}
 	if (setjmp(png_jmpbuf(pPNG))) {
 		png_destroy_write_struct(&pPNG, &pPNGInfo);
-		if (pBuff != NULL)
+		if (pBuff != nullptr)
 			delete [] pBuff;
 		CloseHandle(hFile);
 		return false;
@@ -95,28 +95,28 @@ bool SavePNGFile(const ImageSaveInfo *pInfo)
 		}
 		png_set_PLTE(pPNG, pPNGInfo, PNGPalette, nColors);
 	}
-	if (pInfo->pszComment != NULL) {
+	if (pInfo->pszComment != nullptr) {
 		png_text PNGText;
 
 #ifndef UNICODE
-		int Length = MultiByteToWideChar(CP_ACP, 0, pInfo->pszComment, -1, NULL, 0);
+		int Length = MultiByteToWideChar(CP_ACP, 0, pInfo->pszComment, -1, nullptr, 0);
 		LPWSTR pszComment = new WCHAR[Length];
 		MultiByteToWideChar(CP_ACP, 0, pInfo->pszComment, -1, pszComment, Length);
-		Length = WideCharToMultiByte(CP_UTF8, 0, pszComment, -1, NULL, 0, NULL, NULL);
+		Length = WideCharToMultiByte(CP_UTF8, 0, pszComment, -1, nullptr, 0, nullptr, nullptr);
 		PNGText.text = new char[Length];
-		WideCharToMultiByte(CP_UTF8, 0, pszComment, -1, PNGText.text, Length, NULL, NULL);
+		WideCharToMultiByte(CP_UTF8, 0, pszComment, -1, PNGText.text, Length, nullptr, nullptr);
 		delete [] pszComment;
 #else
-		int Length = WideCharToMultiByte(CP_UTF8, 0, pInfo->pszComment, -1, NULL, 0, NULL, NULL);
+		int Length = WideCharToMultiByte(CP_UTF8, 0, pInfo->pszComment, -1, nullptr, 0, nullptr, nullptr);
 		PNGText.text = new char[Length];
-		WideCharToMultiByte(CP_UTF8, 0, pInfo->pszComment, -1, PNGText.text, Length, NULL, NULL);
+		WideCharToMultiByte(CP_UTF8, 0, pInfo->pszComment, -1, PNGText.text, Length, nullptr, nullptr);
 #endif
 		PNGText.compression = PNG_ITXT_COMPRESSION_NONE;
 		PNGText.key = "Comment";
 		PNGText.text_length = 0;
 		PNGText.itxt_length =::lstrlenA(PNGText.text);
-		PNGText.lang = NULL;
-		PNGText.lang_key = NULL;
+		PNGText.lang = nullptr;
+		PNGText.lang_key = nullptr;
 		png_set_text(pPNG, pPNGInfo, &PNGText, 1);
 		delete [] PNGText.text;
 	}
@@ -137,7 +137,7 @@ bool SavePNGFile(const ImageSaveInfo *pInfo)
 			pbRow =
 				(png_bytep)pInfo->pBits +
 					(pInfo->pbmi->bmiHeader.biHeight > 0 ? (Height - 1 - y) : y) * nSrcRowBytes;
-			if (pBuff != NULL) {
+			if (pBuff != nullptr) {
 				int x;
 				const BYTE *p;
 				BYTE *q;
@@ -155,9 +155,9 @@ bool SavePNGFile(const ImageSaveInfo *pInfo)
 			png_write_rows(pPNG, &pbRow, 1);
 		}
 	}
-	if (pBuff != NULL) {
+	if (pBuff != nullptr) {
 		delete [] pBuff;
-		pBuff = NULL;
+		pBuff = nullptr;
 	}
 	png_write_end(pPNG, pPNGInfo);
 	png_destroy_write_struct(&pPNG, &pPNGInfo);
@@ -339,27 +339,27 @@ HGLOBAL LoadAribPng(const void *pData, SIZE_T DataSize)
 	const BYTE *p;
 	SIZE_T Pos;
 	IHDR ImageHeader;
-	const BYTE *pCompressedImageData = NULL;
+	const BYTE *pCompressedImageData = nullptr;
 	SIZE_T CompressedImageSize = 0;
 
-	if (pData == NULL || DataSize <= 8)
-		return NULL;
+	if (pData == nullptr || DataSize <= 8)
+		return nullptr;
 	p = static_cast<const BYTE*>(pData);
 	if (memcmp(p, "\x89PNG\r\n\x1A\n", 8) != 0)
-		return NULL;
+		return nullptr;
 	Pos = 8;
 	while (Pos + 8 < DataSize) {
 		DWORD ChunkSize = MSBFirst32(&p[Pos]);
 		DWORD ChunkType = MSBFirst32(&p[Pos + 4]);
 		if (Pos + 8 + ChunkSize + 4 > DataSize)
-			return NULL;
+			return nullptr;
 		if (crc32(crc32(0, Z_NULL, 0), &p[Pos + 4], ChunkSize + 4) != MSBFirst32(&p[Pos + 8 + ChunkSize]))
-			return NULL;
+			return nullptr;
 		Pos += 8;
 		switch (ChunkType) {
 		case CHUNK_TYPE('I', 'H', 'D', 'R'):
 			if (ChunkSize != 13)
-				return NULL;
+				return nullptr;
 			ImageHeader.Width = MSBFirst32(&p[Pos]);
 			ImageHeader.Height = MSBFirst32(&p[Pos + 4]);
 			ImageHeader.BitDepth = p[Pos + 8];
@@ -371,12 +371,12 @@ HGLOBAL LoadAribPng(const void *pData, SIZE_T DataSize)
 					|| ImageHeader.ColorType > 6
 					|| ImageHeader.CompressionMethod != 0
 					|| ImageHeader.InterlaceMethod > 1)
-				return NULL;
+				return nullptr;
 			if ((ImageHeader.BitDepth != 1 && ImageHeader.BitDepth != 2
 					&& ImageHeader.BitDepth != 4 && ImageHeader.BitDepth != 8
 					&& ImageHeader.BitDepth != 16)
 					|| (ImageHeader.ColorType == 3 && ImageHeader.BitDepth > 8))
-				return NULL;
+				return nullptr;
 			break;
 
 		case CHUNK_TYPE('I', 'D', 'A', 'T'):
@@ -390,8 +390,8 @@ HGLOBAL LoadAribPng(const void *pData, SIZE_T DataSize)
 		Pos += ChunkSize + 4;
 	}
 Decode:
-	if (pCompressedImageData == NULL)
-		return NULL;
+	if (pCompressedImageData == nullptr)
+		return nullptr;
 
 	int PlanesPerPixel;
 	struct {
@@ -434,14 +434,14 @@ Decode:
 				pImageData, &DecompressSize,
 				pCompressedImageData, (uLongf)CompressedImageSize) != Z_OK) {
 		delete [] pImageData;
-		return NULL;
+		return nullptr;
 	}
 
 	// 常に32ビットDIBに変換する
 	HGLOBAL hDIB =::GlobalAlloc(GMEM_MOVEABLE, sizeof(BITMAPINFOHEADER) + ImageHeader.Width * 4 * ImageHeader.Height);
-	if (hDIB == NULL) {
+	if (hDIB == nullptr) {
 		delete [] pImageData;
-		return NULL;
+		return nullptr;
 	}
 	BITMAPINFOHEADER *pbmih = (BITMAPINFOHEADER*)::GlobalLock(hDIB);
 	pbmih->biSize = sizeof(BITMAPINFOHEADER);
@@ -470,7 +470,7 @@ Decode:
 			if (FilterType > 4) {
 				::GlobalFree(hDIB);
 				delete [] pImageData;
-				return NULL;
+				return nullptr;
 			}
 			for (x = 0; (SIZE_T)x < InterlacedImage[i].BytesPerLine - 1; x++, q++) {
 				int a = (x >= PixelBytes) ? *(q - PixelBytes) : 0;

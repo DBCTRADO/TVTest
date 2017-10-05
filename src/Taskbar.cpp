@@ -20,9 +20,9 @@ const CTaskbarManager::CommandIconInfo CTaskbarManager::m_CommandIconList[] =
 
 
 CTaskbarManager::CTaskbarManager()
-	: m_hwnd(NULL)
+	: m_hwnd(nullptr)
 	, m_TaskbarButtonCreatedMessage(0)
-	, m_pTaskbarList(NULL)
+	, m_pTaskbarList(nullptr)
 	, m_fAppIDInvalid(false)
 	, m_fJumpListInitialized(false)
 	, m_fSaveRecentChannelList(false)
@@ -49,9 +49,9 @@ bool CTaskbarManager::Initialize(HWND hwnd)
 
 		auto pChangeWindowMessageFilterEx =
 			GET_MODULE_FUNCTION(TEXT("user32.dll"), ChangeWindowMessageFilterEx);
-		if (pChangeWindowMessageFilterEx != NULL) {
-			pChangeWindowMessageFilterEx(hwnd, m_TaskbarButtonCreatedMessage, MSGFLT_ALLOW, NULL);
-			pChangeWindowMessageFilterEx(hwnd, WM_COMMAND, MSGFLT_ALLOW, NULL);
+		if (pChangeWindowMessageFilterEx != nullptr) {
+			pChangeWindowMessageFilterEx(hwnd, m_TaskbarButtonCreatedMessage, MSGFLT_ALLOW, nullptr);
+			pChangeWindowMessageFilterEx(hwnd, WM_COMMAND, MSGFLT_ALLOW, nullptr);
 		} else {
 			::ChangeWindowMessageFilter(m_TaskbarButtonCreatedMessage, MSGFLT_ADD);
 			::ChangeWindowMessageFilter(WM_COMMAND, MSGFLT_ADD);
@@ -65,7 +65,7 @@ bool CTaskbarManager::Initialize(HWND hwnd)
 		if (!m_AppID.empty()) {
 			auto pSetCurrentProcessExplicitAppUserModelID =
 				GET_MODULE_FUNCTION(TEXT("shell32.dll"), SetCurrentProcessExplicitAppUserModelID);
-			if (pSetCurrentProcessExplicitAppUserModelID != NULL) {
+			if (pSetCurrentProcessExplicitAppUserModelID != nullptr) {
 				hr = pSetCurrentProcessExplicitAppUserModelID(m_AppID.c_str());
 				if (FAILED(hr)) {
 					m_fAppIDInvalid = true;
@@ -92,9 +92,9 @@ bool CTaskbarManager::Initialize(HWND hwnd)
 
 void CTaskbarManager::Finalize()
 {
-	if (m_pTaskbarList != NULL) {
+	if (m_pTaskbarList != nullptr) {
 		m_pTaskbarList->Release();
-		m_pTaskbarList = NULL;
+		m_pTaskbarList = nullptr;
 	}
 
 	if (m_SharedProperties.IsOpened()) {
@@ -103,16 +103,16 @@ void CTaskbarManager::Finalize()
 		m_SharedProperties.Close();
 	}
 
-	m_hwnd = NULL;
+	m_hwnd = nullptr;
 }
 
 
 bool CTaskbarManager::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	if (uMsg != 0 && uMsg == m_TaskbarButtonCreatedMessage) {
-		if (m_pTaskbarList == NULL) {
+		if (m_pTaskbarList == nullptr) {
 			if (FAILED(::CoCreateInstance(
-						CLSID_TaskbarList, NULL,
+						CLSID_TaskbarList, nullptr,
 						CLSCTX_INPROC_SERVER,
 						IID_ITaskbarList3,
 						reinterpret_cast<void**>(&m_pTaskbarList))))
@@ -149,7 +149,7 @@ bool CTaskbarManager::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 bool CTaskbarManager::SetRecordingStatus(bool fRecording)
 {
-	if (m_pTaskbarList != NULL) {
+	if (m_pTaskbarList != nullptr) {
 		if (fRecording) {
 			HICON hico = static_cast<HICON>(
 				::LoadImage(
@@ -157,12 +157,12 @@ bool CTaskbarManager::SetRecordingStatus(bool fRecording)
 					MAKEINTRESOURCE(IDI_TASKBAR_RECORDING),
 					IMAGE_ICON, 16, 16, LR_DEFAULTCOLOR));
 
-			if (hico == NULL)
+			if (hico == nullptr)
 				return false;
 			m_pTaskbarList->SetOverlayIcon(m_hwnd, hico, TEXT("録画中"));
 			::DestroyIcon(hico);
 		} else {
-			m_pTaskbarList->SetOverlayIcon(m_hwnd, NULL, NULL);
+			m_pTaskbarList->SetOverlayIcon(m_hwnd, nullptr, nullptr);
 		}
 		return true;
 	}
@@ -172,7 +172,7 @@ bool CTaskbarManager::SetRecordingStatus(bool fRecording)
 
 bool CTaskbarManager::SetProgress(int Pos, int Max)
 {
-	if (m_pTaskbarList != NULL) {
+	if (m_pTaskbarList != nullptr) {
 		if (Pos >= Max) {
 			m_pTaskbarList->SetProgressState(m_hwnd, TBPF_NOPROGRESS);
 		} else {
@@ -188,7 +188,7 @@ bool CTaskbarManager::SetProgress(int Pos, int Max)
 
 bool CTaskbarManager::EndProgress()
 {
-	if (m_pTaskbarList != NULL)
+	if (m_pTaskbarList != nullptr)
 		m_pTaskbarList->SetProgressState(m_hwnd, TBPF_NOPROGRESS);
 	return true;
 }
@@ -225,7 +225,7 @@ bool CTaskbarManager::ClearJumpList()
 	ICustomDestinationList *pcdl;
 
 	hr = ::CoCreateInstance(
-		CLSID_DestinationList, NULL,
+		CLSID_DestinationList, nullptr,
 		CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&pcdl));
 	if (FAILED(hr))
 		return false;
@@ -281,7 +281,7 @@ HRESULT CTaskbarManager::InitializeJumpList()
 
 		if (m_AppID.empty()) {
 			TCHAR szAppPath[MAX_PATH];
-			DWORD Length = ::GetModuleFileName(NULL, szAppPath, lengthof(szAppPath));
+			DWORD Length = ::GetModuleFileName(nullptr, szAppPath, lengthof(szAppPath));
 			::CharLowerBuff(szAppPath, Length);
 			LibISDB::MD5Value Hash =
 				LibISDB::CalcMD5(reinterpret_cast<const uint8_t *>(szAppPath), Length * sizeof(TCHAR));
@@ -301,7 +301,7 @@ HRESULT CTaskbarManager::InitializeJumpList()
 	HRESULT hr;
 	ICustomDestinationList *pcdl;
 
-	hr = ::CoCreateInstance(CLSID_DestinationList, NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&pcdl));
+	hr = ::CoCreateInstance(CLSID_DestinationList, nullptr, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&pcdl));
 	if (FAILED(hr))
 		return hr;
 
@@ -346,12 +346,12 @@ HRESULT CTaskbarManager::AddTaskList(ICustomDestinationList *pcdl)
 	IObjectCollection *pCollection;
 
 	hr = ::CoCreateInstance(
-		CLSID_EnumerableObjectCollection, NULL,
+		CLSID_EnumerableObjectCollection, nullptr,
 		CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&pCollection));
 	if (SUCCEEDED(hr)) {
 		WCHAR szIconPath[MAX_PATH];
 
-		::GetModuleFileNameW(NULL, szIconPath, lengthof(szIconPath));
+		::GetModuleFileNameW(nullptr, szIconPath, lengthof(szIconPath));
 
 		for (auto it = TaskList.begin(); it != TaskList.end(); ++it) {
 			const int Command = *it;
@@ -372,7 +372,7 @@ HRESULT CTaskbarManager::AddTaskList(ICustomDestinationList *pcdl)
 				}
 				App.CommandList.GetCommandNameByID(Command, szTitle, lengthof(szTitle));
 				int Icon = GetCommandIcon(Command);
-				hr = CreateAppShellLink(szArgs, szTitle, NULL, Icon != 0 ? szIconPath : NULL, -Icon, &pShellLink);
+				hr = CreateAppShellLink(szArgs, szTitle, nullptr, Icon != 0 ? szIconPath : nullptr, -Icon, &pShellLink);
 			}
 
 			if (SUCCEEDED(hr)) {
@@ -401,7 +401,7 @@ HRESULT CTaskbarManager::CreateAppShellLink(
 	IShellLink **ppShellLink)
 {
 	WCHAR szAppPath[MAX_PATH];
-	DWORD Length = ::GetModuleFileNameW(NULL, szAppPath, lengthof(szAppPath));
+	DWORD Length = ::GetModuleFileNameW(nullptr, szAppPath, lengthof(szAppPath));
 	if (Length == 0 || Length >= lengthof(szAppPath) - 1)
 		return E_FAIL;
 
@@ -409,7 +409,7 @@ HRESULT CTaskbarManager::CreateAppShellLink(
 	IShellLink *pShellLink;
 
 	hr = ::CoCreateInstance(
-		CLSID_ShellLink, NULL, CLSCTX_INPROC_SERVER,
+		CLSID_ShellLink, nullptr, CLSCTX_INPROC_SERVER,
 		IID_PPV_ARGS(&pShellLink));
 	if (SUCCEEDED(hr)) {
 		hr = pShellLink->SetPath(szAppPath);
@@ -456,7 +456,7 @@ HRESULT CTaskbarManager::CreateSeparatorShellLink(IShellLink **ppShellLink)
 	IShellLink *pShellLink;
 
 	hr = ::CoCreateInstance(
-		CLSID_ShellLink, NULL,
+		CLSID_ShellLink, nullptr,
 		CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&pShellLink));
 	if (SUCCEEDED(hr)) {
 		IPropertyStore *pPropStore;
@@ -494,7 +494,7 @@ HRESULT CTaskbarManager::AddJumpListCategory(
 	IObjectCollection *pCollection;
 
 	hr = ::CoCreateInstance(
-		CLSID_EnumerableObjectCollection, NULL,
+		CLSID_EnumerableObjectCollection, nullptr,
 		CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&pCollection));
 	if (SUCCEEDED(hr)) {
 		CAppMain &App = GetAppClass();
@@ -553,7 +553,7 @@ HRESULT CTaskbarManager::AddRecentChannelsCategory(ICustomDestinationList *pcdl)
 					App.TaskbarOptions.GetIconDirectory().c_str(),
 					szIconDir, lengthof(szIconDir) - 13)) {
 			if (!::PathIsDirectory(szIconDir)) {
-				int Result = ::SHCreateDirectoryEx(NULL, szIconDir, NULL);
+				int Result = ::SHCreateDirectoryEx(nullptr, szIconDir, nullptr);
 				if (Result != ERROR_SUCCESS && Result != ERROR_ALREADY_EXISTS) {
 					App.AddLog(
 						CLogItem::TYPE_ERROR,
@@ -584,7 +584,7 @@ HRESULT CTaskbarManager::AddRecentChannelsCategory(ICustomDestinationList *pcdl)
 		WCHAR szTuner[MAX_PATH];
 
 		Item.Title = pChannel->GetName();
-		if (::StrChrW(pszTunerName, L' ') != NULL) {
+		if (::StrChrW(pszTunerName, L' ') != nullptr) {
 			Driver = L'"';
 			Driver += pszTunerName;
 			Driver += L'"';

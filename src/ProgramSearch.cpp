@@ -75,7 +75,7 @@ CEventSearchServiceList::Iterator CEventSearchServiceList::End() const
 
 bool CEventSearchServiceList::ToString(TVTest::String *pString) const
 {
-	if (pString == NULL)
+	if (pString == nullptr)
 		return false;
 
 	pString->clear();
@@ -102,7 +102,7 @@ bool CEventSearchServiceList::ToString(TVTest::String *pString) const
 
 bool CEventSearchServiceList::FromString(LPCTSTR pszString)
 {
-	if (pszString == NULL)
+	if (pszString == nullptr)
 		return false;
 
 	m_ServiceList.clear();
@@ -469,7 +469,7 @@ size_t CEventSearchSettingsList::GetEnabledCount() const
 CEventSearchSettings *CEventSearchSettingsList::Get(size_t Index)
 {
 	if (Index >= m_List.size())
-		return NULL;
+		return nullptr;
 	return m_List[Index];
 }
 
@@ -477,7 +477,7 @@ CEventSearchSettings *CEventSearchSettingsList::Get(size_t Index)
 const CEventSearchSettings *CEventSearchSettingsList::Get(size_t Index) const
 {
 	if (Index >= m_List.size())
-		return NULL;
+		return nullptr;
 	return m_List[Index];
 }
 
@@ -486,7 +486,7 @@ CEventSearchSettings *CEventSearchSettingsList::GetByName(LPCTSTR pszName)
 {
 	int Index = FindByName(pszName);
 	if (Index < 0)
-		return NULL;
+		return nullptr;
 	return m_List[Index];
 }
 
@@ -495,7 +495,7 @@ const CEventSearchSettings *CEventSearchSettingsList::GetByName(LPCTSTR pszName)
 {
 	int Index = FindByName(pszName);
 	if (Index < 0)
-		return NULL;
+		return nullptr;
 	return m_List[Index];
 }
 
@@ -523,7 +523,7 @@ bool CEventSearchSettingsList::Erase(size_t Index)
 
 int CEventSearchSettingsList::FindByName(LPCTSTR pszName) const
 {
-	if (pszName == NULL)
+	if (pszName == nullptr)
 		return -1;
 
 	for (size_t i = 0; i < m_List.size(); i++) {
@@ -838,7 +838,7 @@ CEventSearchOptions::CEventSearchOptions()
 
 bool CEventSearchOptions::SetKeywordHistory(const LPTSTR *pKeywordList, int NumKeywords)
 {
-	if (pKeywordList == NULL)
+	if (pKeywordList == nullptr)
 		return false;
 	m_KeywordHistory.clear();
 	for (int i = 0; i < NumKeywords; i++)
@@ -856,7 +856,7 @@ int CEventSearchOptions::GetKeywordHistoryCount() const
 LPCTSTR CEventSearchOptions::GetKeywordHistory(int Index) const
 {
 	if (Index < 0 || (size_t)Index >= m_KeywordHistory.size())
-		return NULL;
+		return nullptr;
 	return m_KeywordHistory[Index].c_str();
 }
 
@@ -1018,7 +1018,7 @@ static ULONGLONG GetResultMapKey(const LibISDB::EventInfo *pEventInfo)
 
 
 CEventSearchSettingsDialog::CEventSearchSettingsDialog(CEventSearchOptions &Options)
-	: m_pEventHandler(NULL)
+	: m_pEventHandler(nullptr)
 	, m_Options(Options)
 	, m_SearchTarget(0)
 {
@@ -1043,7 +1043,7 @@ bool CEventSearchSettingsDialog::Create(HWND hwndOwner)
 
 bool CEventSearchSettingsDialog::GetSettings(CEventSearchSettings *pSettings) const
 {
-	if (m_hDlg != NULL) {
+	if (m_hDlg != nullptr) {
 		TCHAR szKeyword[CEventSearchSettings::MAX_KEYWORD_LENGTH];
 		::GetDlgItemText(m_hDlg, IDC_EVENTSEARCH_KEYWORD, szKeyword, lengthof(szKeyword));
 		RemoveTrailingWhitespace(szKeyword);
@@ -1114,7 +1114,7 @@ bool CEventSearchSettingsDialog::GetSettings(CEventSearchSettings *pSettings) co
 
 void CEventSearchSettingsDialog::SetSettings(const CEventSearchSettings &Settings)
 {
-	if (m_hDlg != NULL) {
+	if (m_hDlg != nullptr) {
 		// キーワード
 		::SetDlgItemText(m_hDlg, IDC_EVENTSEARCH_KEYWORD, Settings.Keyword.c_str());
 		DlgCheckBox_Check(m_hDlg, IDC_EVENTSEARCH_CASESENSITIVE, !Settings.fIgnoreCase);
@@ -1135,13 +1135,13 @@ void CEventSearchSettingsDialog::SetSettings(const CEventSearchSettings &Setting
 		HTREEITEM hItem = TreeView_GetChild(hwndGenre, TVI_ROOT);
 		TVITEM tvi;
 		tvi.mask = TVIF_PARAM;
-		while (hItem != NULL) {
+		while (hItem != nullptr) {
 			tvi.hItem = hItem;
 			TreeView_GetItem(hwndGenre, &tvi);
 			int Level1 = GENRE_LPARAM_LEVEL1(tvi.lParam);
 			TreeView_SetCheckState(hwndGenre, hItem, (Settings.Genre1 & (1 << Level1)) != 0);
 			HTREEITEM hChild = TreeView_GetChild(hwndGenre, hItem);
-			while (hChild != NULL) {
+			while (hChild != nullptr) {
 				tvi.hItem = hChild;
 				TreeView_GetItem(hwndGenre, &tvi);
 				int Level2 = GENRE_LPARAM_LEVEL2(tvi.lParam);
@@ -1210,7 +1210,7 @@ void CEventSearchSettingsDialog::SetEventHandler(CEventHandler *pEventHandler)
 
 bool CEventSearchSettingsDialog::BeginSearch()
 {
-	if (m_hDlg == NULL)
+	if (m_hDlg == nullptr)
 		return false;
 	::SendMessage(m_hDlg, WM_COMMAND, IDC_EVENTSEARCH_SEARCH, 0);
 	return true;
@@ -1219,9 +1219,9 @@ bool CEventSearchSettingsDialog::BeginSearch()
 
 bool CEventSearchSettingsDialog::SetKeyword(LPCTSTR pszKeyword)
 {
-	if (m_hDlg == NULL)
+	if (m_hDlg == nullptr)
 		return false;
-	::SetDlgItemText(m_hDlg, IDC_EVENTSEARCH_KEYWORD, pszKeyword == NULL ? TEXT("") : pszKeyword);
+	::SetDlgItemText(m_hDlg, IDC_EVENTSEARCH_KEYWORD, pszKeyword == nullptr ? TEXT("") : pszKeyword);
 	::UpdateWindow(::GetDlgItem(m_hDlg, IDC_EVENTSEARCH_KEYWORD));
 	return true;
 }
@@ -1229,7 +1229,7 @@ bool CEventSearchSettingsDialog::SetKeyword(LPCTSTR pszKeyword)
 
 bool CEventSearchSettingsDialog::AddToKeywordHistory(LPCTSTR pszKeyword)
 {
-	if (m_hDlg == NULL || IsStringEmpty(pszKeyword))
+	if (m_hDlg == nullptr || IsStringEmpty(pszKeyword))
 		return false;
 
 	HWND hwndComboBox = ::GetDlgItem(m_hDlg, IDC_EVENTSEARCH_KEYWORD);
@@ -1254,28 +1254,28 @@ bool CEventSearchSettingsDialog::AddToKeywordHistory(LPCTSTR pszKeyword)
 
 void CEventSearchSettingsDialog::ShowButton(int ID, bool fShow)
 {
-	if (m_hDlg != NULL)
+	if (m_hDlg != nullptr)
 		ShowDlgItem(m_hDlg, ID, fShow);
 }
 
 
 void CEventSearchSettingsDialog::CheckButton(int ID, bool fCheck)
 {
-	if (m_hDlg != NULL)
+	if (m_hDlg != nullptr)
 		::CheckDlgButton(m_hDlg, ID, fCheck);
 }
 
 
 void CEventSearchSettingsDialog::SetFocus(int ID)
 {
-	if (m_hDlg != NULL)
+	if (m_hDlg != nullptr)
 		::SetFocus(::GetDlgItem(m_hDlg, ID));
 }
 
 
 void CEventSearchSettingsDialog::SetSearchTargetList(const LPCTSTR *ppszList, int Count)
 {
-	if (ppszList != NULL && Count > 0) {
+	if (ppszList != nullptr && Count > 0) {
 		m_SearchTargetList.resize(Count);
 		for (int i = 0; i < Count; i++)
 			m_SearchTargetList[i] = ppszList[i];
@@ -1311,7 +1311,7 @@ INT_PTR CEventSearchSettingsDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam,
 			DlgComboBox_LimitText(hDlg, IDC_EVENTSEARCH_KEYWORD, CEventSearchSettings::MAX_KEYWORD_LENGTH - 1);
 
 			LPCTSTR pszKeyword;
-			for (int i = 0; (pszKeyword = m_Options.GetKeywordHistory(i)) != NULL; i++)
+			for (int i = 0; (pszKeyword = m_Options.GetKeywordHistory(i)) != nullptr; i++)
 				DlgComboBox_AddString(hDlg, IDC_EVENTSEARCH_KEYWORD, pszKeyword);
 
 			COMBOBOXINFO cbi;
@@ -1351,7 +1351,7 @@ INT_PTR CEventSearchSettingsDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam,
 			tvis.item.stateMask = ~0U;
 			for (int i = 0; i < CEpgGenre::NUM_GENRE; i++) {
 				LPCTSTR pszText = EpgGenre.GetText(i, -1);
-				if (pszText != NULL) {
+				if (pszText != nullptr) {
 					::lstrcpyn(szText, pszText, lengthof(szText));
 					tvis.hParent = TVI_ROOT;
 					tvis.item.state = INDEXTOSTATEIMAGEMASK(1);
@@ -1362,7 +1362,7 @@ INT_PTR CEventSearchSettingsDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam,
 					tvis.hParent = TreeView_InsertItem(hwndGenre, &tvis);
 					for (int j = 0; j < CEpgGenre::NUM_SUB_GENRE; j++) {
 						pszText = EpgGenre.GetText(i, j);
-						if (pszText != NULL) {
+						if (pszText != nullptr) {
 							::lstrcpyn(szText, pszText, lengthof(szText));
 							tvis.item.state = INDEXTOSTATEIMAGEMASK(1);
 							tvis.item.lParam = GENRE_LPARAM_PACK(i, j);
@@ -1428,7 +1428,7 @@ INT_PTR CEventSearchSettingsDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam,
 	case WM_COMMAND:
 		switch (LOWORD(wParam)) {
 		case IDC_EVENTSEARCH_SEARCH:
-			if (m_pEventHandler != NULL) {
+			if (m_pEventHandler != nullptr) {
 				m_pEventHandler->OnSearch();
 			}
 			return TRUE;
@@ -1439,10 +1439,10 @@ INT_PTR CEventSearchSettingsDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam,
 				BOOL fCheck = LOWORD(wParam) == IDC_EVENTSEARCH_GENRE_CHECKALL;
 				HWND hwndGenre = ::GetDlgItem(hDlg, IDC_EVENTSEARCH_GENRE);
 				HTREEITEM hItem = TreeView_GetChild(hwndGenre, TVI_ROOT);
-				while (hItem != NULL) {
+				while (hItem != nullptr) {
 					TreeView_SetCheckState(hwndGenre, hItem, fCheck);
 					HTREEITEM hChild = TreeView_GetChild(hwndGenre, hItem);
-					while (hChild != NULL) {
+					while (hChild != nullptr) {
 						TreeView_SetCheckState(hwndGenre, hChild, fCheck);
 						hChild = TreeView_GetNextSibling(hwndGenre, hChild);
 					}
@@ -1490,7 +1490,7 @@ INT_PTR CEventSearchSettingsDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam,
 			return TRUE;
 
 		case IDC_EVENTSEARCH_HIGHLIGHT:
-			if (m_pEventHandler != NULL) {
+			if (m_pEventHandler != nullptr) {
 				m_pEventHandler->OnHighlightResult(
 					DlgCheckBox_IsChecked(hDlg, IDC_EVENTSEARCH_HIGHLIGHT));
 			}
@@ -1506,7 +1506,7 @@ INT_PTR CEventSearchSettingsDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam,
 					if (DlgComboBox_GetLBString(hDlg, IDC_EVENTSEARCH_SETTINGSLIST, Sel, szName) > 0) {
 						const CEventSearchSettings *pSettings = m_Options.GetSearchSettingsByName(szName);
 
-						if (pSettings != NULL) {
+						if (pSettings != nullptr) {
 							SetSettings(*pSettings);
 						}
 					}
@@ -1527,7 +1527,7 @@ INT_PTR CEventSearchSettingsDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam,
 
 				int Index = ComboBox_FindStringExact(hwndComboBox, -1, szName);
 				CEventSearchSettings *pSettings = m_Options.GetSearchSettingsByName(szName);
-				if (pSettings != NULL) {
+				if (pSettings != nullptr) {
 					GetSettings(pSettings);
 				} else {
 					CEventSearchSettings Settings;
@@ -1543,7 +1543,7 @@ INT_PTR CEventSearchSettingsDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam,
 				TCHAR szText[lengthof(szName) + 64];
 				StdUtil::snprintf(
 					szText, lengthof(szText), TEXT("設定 \"%s\" を%sしました。"),
-					szName, pSettings == NULL ? TEXT("保存") : TEXT("上書き"));
+					szName, pSettings == nullptr ? TEXT("保存") : TEXT("上書き"));
 				::MessageBox(hDlg, szText, TEXT("設定の保存"), MB_OK | MB_ICONINFORMATION);
 			}
 			return TRUE;
@@ -1649,7 +1649,7 @@ INT_PTR CEventSearchSettingsDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam,
 					tvhti.pt.x = GET_X_LPARAM(Pos);
 					tvhti.pt.y = GET_Y_LPARAM(Pos);
 					::ScreenToClient(hwndTree, &tvhti.pt);
-					if (TreeView_HitTest(hwndTree, &tvhti) != NULL
+					if (TreeView_HitTest(hwndTree, &tvhti) != nullptr
 							&& (tvhti.flags & TVHT_ONITEMSTATEICON) != 0) {
 						TreeView_SelectItem(hwndTree, tvhti.hItem);
 						::PostMessage(hDlg, WM_PROGRAM_SEARCH_GENRE_CHANGED, 0, 0);
@@ -1682,7 +1682,7 @@ INT_PTR CEventSearchSettingsDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam,
 			TVITEM tvi;
 			tvi.mask = TVIF_STATE | TVIF_PARAM;
 			tvi.stateMask = ~0U;
-			for (int i = 0; hItem != NULL; i++) {
+			for (int i = 0; hItem != nullptr; i++) {
 				tvi.hItem = hItem;
 				TreeView_GetItem(hwndGenre, &tvi);
 				m_fGenreExpanded[GENRE_LPARAM_LEVEL1(tvi.lParam)] = (tvi.state & TVIS_EXPANDED) != 0;
@@ -1704,7 +1704,7 @@ void CEventSearchSettingsDialog::GetGenreSettings(CEventSearchSettings *pSetting
 	TVITEM tvi;
 	tvi.mask = TVIF_PARAM | TVIF_STATE;
 	tvi.stateMask = TVIS_STATEIMAGEMASK;
-	while (hItem != NULL) {
+	while (hItem != nullptr) {
 		tvi.hItem = hItem;
 		TreeView_GetItem(hwndGenre, &tvi);
 		int Level1 = GENRE_LPARAM_LEVEL1(tvi.lParam);
@@ -1713,7 +1713,7 @@ void CEventSearchSettingsDialog::GetGenreSettings(CEventSearchSettings *pSetting
 			pSettings->fGenre = true;
 		}
 		HTREEITEM hChild = TreeView_GetChild(hwndGenre, hItem);
-		while (hChild != NULL) {
+		while (hChild != nullptr) {
 			tvi.hItem = hChild;
 			TreeView_GetItem(hwndGenre, &tvi);
 			if ((tvi.state & TVIS_STATEIMAGEMASK) >> 12 > 1) {
@@ -1736,13 +1736,13 @@ void CEventSearchSettingsDialog::SetGenreStatus()
 	TVITEM tvi;
 	tvi.mask = TVIF_PARAM | TVIF_STATE;
 	tvi.stateMask = TVIS_STATEIMAGEMASK;
-	while (hItem != NULL) {
+	while (hItem != nullptr) {
 		tvi.hItem = hItem;
 		TreeView_GetItem(hwndGenre, &tvi);
 		if ((tvi.state & TVIS_STATEIMAGEMASK) >> 12 > 1)
 			CheckCount++;
 		HTREEITEM hChild = TreeView_GetChild(hwndGenre, hItem);
-		while (hChild != NULL) {
+		while (hChild != nullptr) {
 			tvi.hItem = hChild;
 			TreeView_GetItem(hwndGenre, &tvi);
 			if ((tvi.state & TVIS_STATEIMAGEMASK) >> 12 > 1)
@@ -1832,7 +1832,7 @@ CSearchEventInfo::CSearchEventInfo(
 
 
 CProgramSearchDialog::CProgramSearchDialog(CEventSearchOptions &Options)
-	: m_pEventHandler(NULL)
+	: m_pEventHandler(nullptr)
 	, m_Options(Options)
 	, m_SearchSettingsDialog(Options)
 	, m_fHighlightResult(true)
@@ -1848,8 +1848,8 @@ CProgramSearchDialog::CProgramSearchDialog(CEventSearchOptions &Options)
 
 CProgramSearchDialog::~CProgramSearchDialog()
 {
-	if (m_pEventHandler != NULL)
-		m_pEventHandler->m_pSearchDialog = NULL;
+	if (m_pEventHandler != nullptr)
+		m_pEventHandler->m_pSearchDialog = nullptr;
 }
 
 
@@ -1862,9 +1862,9 @@ bool CProgramSearchDialog::Create(HWND hwndOwner)
 
 bool CProgramSearchDialog::SetEventHandler(CEventHandler *pHandler)
 {
-	if (m_pEventHandler != NULL)
-		m_pEventHandler->m_pSearchDialog = NULL;
-	if (pHandler != NULL)
+	if (m_pEventHandler != nullptr)
+		m_pEventHandler->m_pSearchDialog = nullptr;
+	if (pHandler != nullptr)
 		pHandler->m_pSearchDialog = this;
 	m_pEventHandler = pHandler;
 	return true;
@@ -1890,7 +1890,7 @@ bool CProgramSearchDialog::SetColumnWidth(int Index, int Width)
 
 bool CProgramSearchDialog::Search(LPTSTR pszKeyword)
 {
-	if (m_hDlg == NULL || pszKeyword == NULL)
+	if (m_hDlg == nullptr || pszKeyword == nullptr)
 		return false;
 	m_SearchSettingsDialog.SetKeyword(pszKeyword);
 	m_SearchSettingsDialog.BeginSearch();
@@ -1902,7 +1902,7 @@ bool CProgramSearchDialog::SetHighlightResult(bool fHighlight)
 {
 	if (m_fHighlightResult != fHighlight) {
 		m_fHighlightResult = fHighlight;
-		if (m_pEventHandler != NULL && !m_ResultMap.empty())
+		if (m_pEventHandler != nullptr && !m_ResultMap.empty())
 			m_pEventHandler->OnHighlightChange(fHighlight);
 	}
 	return true;
@@ -1911,7 +1911,7 @@ bool CProgramSearchDialog::SetHighlightResult(bool fHighlight)
 
 bool CProgramSearchDialog::IsHitEvent(const LibISDB::EventInfo *pEventInfo) const
 {
-	if (pEventInfo == NULL)
+	if (pEventInfo == nullptr)
 		return false;
 	return m_ResultMap.find(GetResultMapKey(pEventInfo)) != m_ResultMap.end();
 }
@@ -2036,7 +2036,7 @@ INT_PTR CProgramSearchDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 			return TRUE;
 
 		case IDCANCEL:
-			if (m_pEventHandler == NULL || m_pEventHandler->OnClose())
+			if (m_pEventHandler == nullptr || m_pEventHandler->OnClose())
 				::DestroyWindow(hDlg);
 			return TRUE;
 		}
@@ -2054,7 +2054,7 @@ INT_PTR CProgramSearchDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 
 	case WM_SETCURSOR:
 		if ((HWND)wParam == hDlg && LOWORD(lParam) == HTCLIENT && m_fSplitterCursor) {
-			::SetCursor(::LoadCursor(NULL, IDC_SIZENS));
+			::SetCursor(::LoadCursor(nullptr, IDC_SIZENS));
 			::SetWindowLongPtr(hDlg, DWLP_MSGRESULT, TRUE);
 			return TRUE;
 		}
@@ -2071,7 +2071,7 @@ INT_PTR CProgramSearchDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 				m_ResultListHeight = rc.bottom - rc.top;
 				m_fSplitterCursor = true;
 				m_SplitterDragPos = y;
-				::SetCursor(::LoadCursor(NULL, IDC_SIZENS));
+				::SetCursor(::LoadCursor(nullptr, IDC_SIZENS));
 				::SetCapture(hDlg);
 			}
 		}
@@ -2101,7 +2101,7 @@ INT_PTR CProgramSearchDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 				LPNMITEMACTIVATE pnmia = reinterpret_cast<LPNMITEMACTIVATE>(lParam);
 
 				if (pnmia->hdr.idFrom == IDC_PROGRAMSEARCH_RESULT
-						&& m_pEventHandler != NULL
+						&& m_pEventHandler != nullptr
 						&& pnmia->iItem >= 0) {
 					LVITEM lvi;
 
@@ -2162,7 +2162,7 @@ INT_PTR CProgramSearchDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 					POINT pt = {0, 0};
 					::SendMessage(hwndInfo, EM_SETSCROLLPOS, 0, reinterpret_cast<LPARAM>(&pt));
 					::SendMessage(hwndInfo, WM_SETREDRAW, TRUE, 0);
-					::InvalidateRect(hwndInfo, NULL, TRUE);
+					::InvalidateRect(hwndInfo, nullptr, TRUE);
 				}
 			}
 			return TRUE;
@@ -2224,7 +2224,7 @@ void CProgramSearchDialog::ApplyStyle()
 {
 	CResizableDialog::ApplyStyle();
 
-	if (m_hDlg != NULL) {
+	if (m_hDlg != nullptr) {
 		HWND hwnd = ::GetDlgItem(m_hDlg, IDC_PROGRAMSEARCH_INFO);
 		HDC hdc = ::GetDC(hwnd);
 		LOGFONT lf;
@@ -2268,7 +2268,7 @@ int CALLBACK CProgramSearchDialog::ResultCompareFunc(LPARAM lParam1, LPARAM lPar
 
 bool CProgramSearchDialog::AddSearchResult(CSearchEventInfo *pEventInfo)
 {
-	if (m_hDlg == NULL || pEventInfo == NULL)
+	if (m_hDlg == nullptr || pEventInfo == nullptr)
 		return false;
 
 	HWND hwndList = ::GetDlgItem(m_hDlg, IDC_PROGRAMSEARCH_RESULT);
@@ -2344,7 +2344,7 @@ void CProgramSearchDialog::SortSearchResult()
 
 int CProgramSearchDialog::FormatEventTimeText(const LibISDB::EventInfo *pEventInfo, LPTSTR pszText, int MaxLength) const
 {
-	if (pEventInfo == NULL) {
+	if (pEventInfo == nullptr) {
 		pszText[0] = '\0';
 		return 0;
 	}
@@ -2374,7 +2374,7 @@ void CProgramSearchDialog::FormatEventInfoText(const LibISDB::EventInfo *pEventI
 {
 	pText->clear();
 
-	if (pEventInfo == NULL)
+	if (pEventInfo == nullptr)
 		return;
 
 	*pText = pEventInfo->EventName;
@@ -2564,7 +2564,7 @@ void CProgramSearchDialog::OnSearch()
 
 		if (Settings.fRegExp) {
 			if (!m_Searcher.InitializeRegExp()) {
-				::MessageBox(m_hDlg, TEXT("正規表現が利用できません。"), NULL, MB_OK | MB_ICONEXCLAMATION);
+				::MessageBox(m_hDlg, TEXT("正規表現が利用できません。"), nullptr, MB_OK | MB_ICONEXCLAMATION);
 				return;
 			}
 		}
@@ -2574,7 +2574,7 @@ void CProgramSearchDialog::OnSearch()
 	if (!m_Searcher.BeginSearch(m_SearchSettings))
 		return;
 
-	HCURSOR hcurOld = ::SetCursor(::LoadCursor(NULL, IDC_WAIT));
+	HCURSOR hcurOld = ::SetCursor(::LoadCursor(nullptr, IDC_WAIT));
 	DWORD StartTime = ::GetTickCount();
 	m_pEventHandler->Search(&m_Searcher);
 	DWORD SearchTime = TickTimeSpan(StartTime, ::GetTickCount());
@@ -2613,16 +2613,16 @@ void CProgramSearchDialog::OnHighlightResult(bool fHighlight)
 
 
 CProgramSearchDialog::CEventHandler::CEventHandler()
-	: m_pSearchDialog(NULL)
-	, m_pSearcher(NULL)
+	: m_pSearchDialog(nullptr)
+	, m_pSearcher(nullptr)
 {
 }
 
 
 CProgramSearchDialog::CEventHandler::~CEventHandler()
 {
-	if (m_pSearchDialog != NULL)
-		m_pSearchDialog->m_pEventHandler = NULL;
+	if (m_pSearchDialog != nullptr)
+		m_pSearchDialog->m_pEventHandler = nullptr;
 }
 
 
@@ -2636,7 +2636,7 @@ bool CProgramSearchDialog::CEventHandler::Search(CEventSearcher *pSearcher)
 
 bool CProgramSearchDialog::CEventHandler::AddSearchResult(CSearchEventInfo *pEventInfo)
 {
-	if (pEventInfo == NULL || m_pSearchDialog == NULL)
+	if (pEventInfo == nullptr || m_pSearchDialog == nullptr)
 		return false;
 	return m_pSearchDialog->AddSearchResult(pEventInfo);
 }

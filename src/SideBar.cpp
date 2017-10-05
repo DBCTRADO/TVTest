@@ -10,12 +10,12 @@
 const int CSideBar::ICON_WIDTH = 16;
 const int CSideBar::ICON_HEIGHT = 16;
 const LPCTSTR CSideBar::CLASS_NAME = APP_NAME TEXT(" Side Bar");
-HINSTANCE CSideBar::m_hinst = NULL;
+HINSTANCE CSideBar::m_hinst = nullptr;
 
 
 bool CSideBar::Initialize(HINSTANCE hinst)
 {
-	if (m_hinst == NULL) {
+	if (m_hinst == nullptr) {
 		WNDCLASS wc;
 
 		wc.style = CS_HREDRAW | CS_VREDRAW;
@@ -23,10 +23,10 @@ bool CSideBar::Initialize(HINSTANCE hinst)
 		wc.cbClsExtra = 0;
 		wc.cbWndExtra = 0;
 		wc.hInstance = hinst;
-		wc.hIcon = NULL;
-		wc.hCursor = ::LoadCursor(NULL, IDC_ARROW);
-		wc.hbrBackground = NULL;
-		wc.lpszMenuName = NULL;
+		wc.hIcon = nullptr;
+		wc.hCursor = ::LoadCursor(nullptr, IDC_ARROW);
+		wc.hbrBackground = nullptr;
+		wc.lpszMenuName = nullptr;
 		wc.lpszClassName = CLASS_NAME;
 		if (::RegisterClass(&wc) == 0)
 			return false;
@@ -41,7 +41,7 @@ CSideBar::CSideBar(const CCommandList *pCommandList)
 	, m_fVertical(true)
 	, m_HotItem(-1)
 	, m_ClickItem(-1)
-	, m_pEventHandler(NULL)
+	, m_pEventHandler(nullptr)
 	, m_pCommandList(pCommandList)
 {
 }
@@ -50,14 +50,14 @@ CSideBar::CSideBar(const CCommandList *pCommandList)
 CSideBar::~CSideBar()
 {
 	Destroy();
-	if (m_pEventHandler != NULL)
-		m_pEventHandler->m_pSideBar = NULL;
+	if (m_pEventHandler != nullptr)
+		m_pEventHandler->m_pSideBar = nullptr;
 }
 
 
 bool CSideBar::Create(HWND hwndParent, DWORD Style, DWORD ExStyle, int ID)
 {
-	return CreateBasicWindow(hwndParent, Style, ExStyle, ID, CLASS_NAME, NULL, m_hinst);
+	return CreateBasicWindow(hwndParent, Style, ExStyle, ID, CLASS_NAME, nullptr, m_hinst);
 }
 
 
@@ -114,11 +114,11 @@ int CSideBar::GetBarWidth() const
 
 bool CSideBar::SetIconImage(HBITMAP hbm, int Width, int Height)
 {
-	if (hbm == NULL)
+	if (hbm == nullptr)
 		return false;
 	if (!m_Icons.Create(hbm, Width, Height))
 		return false;
-	if (m_hwnd != NULL)
+	if (m_hwnd != nullptr)
 		Invalidate();
 	return true;
 }
@@ -139,7 +139,7 @@ bool CSideBar::AddItem(const SideBarItem *pItem)
 
 bool CSideBar::AddItems(const SideBarItem *pItemList, int NumItems)
 {
-	if (pItemList == NULL || NumItems <= 0)
+	if (pItemList == nullptr || NumItems <= 0)
 		return false;
 
 	size_t OldSize = m_ItemList.size();
@@ -298,13 +298,13 @@ bool CSideBar::RedrawItem(int Command)
 bool CSideBar::SetSideBarTheme(const SideBarTheme &Theme)
 {
 	int OldBarWidth;
-	if (m_hwnd != NULL && m_pEventHandler != NULL)
+	if (m_hwnd != nullptr && m_pEventHandler != nullptr)
 		OldBarWidth = GetBarWidth();
 
 	m_Theme = Theme;
 
-	if (m_hwnd != NULL) {
-		if (m_pEventHandler != NULL) {
+	if (m_hwnd != nullptr) {
+		if (m_pEventHandler != nullptr) {
 			int NewBarWidth = GetBarWidth();
 			if (NewBarWidth != OldBarWidth)
 				m_pEventHandler->OnBarWidthChanged(NewBarWidth);
@@ -318,7 +318,7 @@ bool CSideBar::SetSideBarTheme(const SideBarTheme &Theme)
 
 bool CSideBar::GetSideBarTheme(SideBarTheme *pTheme) const
 {
-	if (pTheme == NULL)
+	if (pTheme == nullptr)
 		return false;
 	*pTheme = m_Theme;
 	return true;
@@ -338,7 +338,7 @@ void CSideBar::SetVertical(bool fVertical)
 {
 	if (m_fVertical != fVertical) {
 		m_fVertical = fVertical;
-		if (m_hwnd != NULL) {
+		if (m_hwnd != nullptr) {
 			Invalidate();
 			UpdateTooltipsRect();
 		}
@@ -348,9 +348,9 @@ void CSideBar::SetVertical(bool fVertical)
 
 void CSideBar::SetEventHandler(CEventHandler *pHandler)
 {
-	if (m_pEventHandler != NULL)
-		m_pEventHandler->m_pSideBar = NULL;
-	if (pHandler != NULL)
+	if (m_pEventHandler != nullptr)
+		m_pEventHandler->m_pSideBar = nullptr;
+	if (pHandler != nullptr)
 		pHandler->m_pSideBar = this;
 	m_pEventHandler = pHandler;
 }
@@ -477,14 +477,14 @@ LRESULT CSideBar::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		if (::GetCapture() == hwnd) {
 			::ReleaseCapture();
 			if (m_HotItem >= 0) {
-				if (m_pEventHandler != NULL)
+				if (m_pEventHandler != nullptr)
 					m_pEventHandler->OnCommand(m_ItemList[m_HotItem].Command);
 			}
 		}
 		return 0;
 
 	case WM_RBUTTONUP:
-		if (m_pEventHandler != NULL)
+		if (m_pEventHandler != nullptr)
 			m_pEventHandler->OnRButtonUp(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
 		return 0;
 
@@ -503,7 +503,7 @@ LRESULT CSideBar::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			{
 				LPNMTTDISPINFO pnmttdi = reinterpret_cast<LPNMTTDISPINFO>(lParam);
 
-				if (m_pEventHandler == NULL
+				if (m_pEventHandler == nullptr
 						|| !m_pEventHandler->GetTooltipText(
 							m_ItemList[pnmttdi->hdr.idFrom].Command,
 							pnmttdi->szText, lengthof(pnmttdi->szText))) {
@@ -512,7 +512,7 @@ LRESULT CSideBar::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 						pnmttdi->szText, lengthof(pnmttdi->szText));
 				}
 				pnmttdi->lpszText = pnmttdi->szText;
-				pnmttdi->hinst = NULL;
+				pnmttdi->hinst = nullptr;
 			}
 			return 0;
 
@@ -530,7 +530,7 @@ LRESULT CSideBar::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				x = rcBar.right;
 				y = rcTip.top;
 				HMONITOR hMonitor = ::MonitorFromRect(&rcTip, MONITOR_DEFAULTTONULL);
-				if (hMonitor != NULL) {
+				if (hMonitor != nullptr) {
 					MONITORINFO mi;
 
 					mi.cbSize = sizeof(mi);
@@ -561,7 +561,7 @@ LRESULT CSideBar::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 void CSideBar::RealizeStyle()
 {
-	if (m_hwnd != NULL) {
+	if (m_hwnd != nullptr) {
 		RECT rc;
 		GetPosition(&rc);
 		const int OldBarWidth = m_fVertical ? rc.right - rc.left : rc.bottom - rc.top;
@@ -571,7 +571,7 @@ void CSideBar::RealizeStyle()
 		if (m_Tooltip.IsCreated())
 			SetTooltipFont();
 
-		if (m_pEventHandler != NULL) {
+		if (m_pEventHandler != nullptr) {
 			m_pEventHandler->OnStyleChanged();
 			const int NewBarWidth = GetBarWidth();
 			if (OldBarWidth != NewBarWidth)
@@ -617,7 +617,7 @@ void CSideBar::GetItemRect(int Item, RECT *pRect) const
 
 void CSideBar::UpdateItem(int Item)
 {
-	if (m_hwnd != NULL) {
+	if (m_hwnd != nullptr) {
 		RECT rc;
 
 		GetItemRect(Item, &rc);
@@ -731,7 +731,7 @@ void CSideBar::Draw(HDC hdc, const RECT &PaintRect)
 			rcItem.bottom = rcItem.top + m_Style.IconSize.Height;
 
 			bool fIconDrew = false;
-			if (m_pEventHandler != NULL) {
+			if (m_pEventHandler != nullptr) {
 				DrawIconInfo Info;
 				Info.Command = m_ItemList[i].Command;
 				Info.State = m_ItemList[i].State;
@@ -764,15 +764,15 @@ void CSideBar::Draw(HDC hdc, const RECT &PaintRect)
 
 
 CSideBar::CEventHandler::CEventHandler()
-	: m_pSideBar(NULL)
+	: m_pSideBar(nullptr)
 {
 }
 
 
 CSideBar::CEventHandler::~CEventHandler()
 {
-	if (m_pSideBar != NULL)
-		m_pSideBar->SetEventHandler(NULL);
+	if (m_pSideBar != nullptr)
+		m_pSideBar->SetEventHandler(nullptr);
 }
 
 

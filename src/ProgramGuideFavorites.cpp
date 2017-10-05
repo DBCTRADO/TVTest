@@ -39,7 +39,7 @@ bool CProgramGuideFavorites::Add(const FavoriteInfo &Info)
 
 bool CProgramGuideFavorites::Get(size_t Index, FavoriteInfo *pInfo) const
 {
-	if (Index >= m_List.size() || pInfo == NULL)
+	if (Index >= m_List.size() || pInfo == nullptr)
 		return false;
 
 	*pInfo = m_List[Index];
@@ -51,7 +51,7 @@ bool CProgramGuideFavorites::Get(size_t Index, FavoriteInfo *pInfo) const
 CProgramGuideFavorites::FavoriteInfo *CProgramGuideFavorites::Get(size_t Index)
 {
 	if (Index >= m_List.size())
-		return NULL;
+		return nullptr;
 
 	return &m_List[Index];
 }
@@ -60,7 +60,7 @@ CProgramGuideFavorites::FavoriteInfo *CProgramGuideFavorites::Get(size_t Index)
 const CProgramGuideFavorites::FavoriteInfo *CProgramGuideFavorites::Get(size_t Index) const
 {
 	if (Index >= m_List.size())
-		return NULL;
+		return nullptr;
 
 	return &m_List[Index];
 }
@@ -244,7 +244,7 @@ INT_PTR CProgramGuideFavoritesDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wPara
 			{
 				CProgramGuideFavorites::FavoriteInfo *pInfo = GetCurItemInfo();
 
-				if (pInfo != NULL) {
+				if (pInfo != nullptr) {
 					if (ChooseColorDialog(hDlg, &pInfo->BackColor)) {
 						InvalidateDlgItem(hDlg, IDC_PROGRAMGUIDEFAVORITES_COLORS_PREVIEW);
 					}
@@ -256,7 +256,7 @@ INT_PTR CProgramGuideFavoritesDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wPara
 			{
 				CProgramGuideFavorites::FavoriteInfo *pInfo = GetCurItemInfo();
 
-				if (pInfo != NULL) {
+				if (pInfo != nullptr) {
 					if (ChooseColorDialog(hDlg, &pInfo->TextColor)) {
 						InvalidateDlgItem(hDlg, IDC_PROGRAMGUIDEFAVORITES_COLORS_PREVIEW);
 					}
@@ -342,7 +342,7 @@ INT_PTR CProgramGuideFavoritesDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wPara
 			if (pdis->CtlID == IDC_PROGRAMGUIDEFAVORITES_COLORS_PREVIEW) {
 				const CProgramGuideFavorites::FavoriteInfo *pInfo = GetCurItemInfo();
 
-				if (pInfo != NULL) {
+				if (pInfo != nullptr) {
 					DrawUtil::FillGradient(
 						pdis->hDC, &pdis->rcItem,
 						pInfo->BackColor,
@@ -429,5 +429,5 @@ CProgramGuideFavorites::FavoriteInfo *CProgramGuideFavoritesDialog::GetCurItemIn
 		}
 	}
 
-	return NULL;
+	return nullptr;
 }

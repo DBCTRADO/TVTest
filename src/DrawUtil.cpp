@@ -15,7 +15,7 @@ namespace DrawUtil
 // 単色で塗りつぶす
 bool Fill(HDC hdc, const RECT *pRect, COLORREF Color)
 {
-	if (hdc == NULL || pRect == NULL)
+	if (hdc == nullptr || pRect == nullptr)
 		return false;
 	COLORREF OldColor = ::SetDCBrushColor(hdc, Color);
 	BOOL fResult = ::FillRect(hdc, pRect, static_cast<HBRUSH>(::GetStockObject(DC_BRUSH)));
@@ -29,7 +29,7 @@ bool FillGradient(
 	HDC hdc, const RECT *pRect, COLORREF Color1, COLORREF Color2,
 	FillDirection Direction)
 {
-	if (hdc == NULL || pRect == NULL
+	if (hdc == nullptr || pRect == nullptr
 			|| pRect->left >= pRect->right || pRect->top >= pRect->bottom)
 		return false;
 
@@ -96,7 +96,7 @@ bool FillGradient(
 	HDC hdc, const RECT *pRect, const RGBA &Color1, const RGBA &Color2,
 	FillDirection Direction)
 {
-	if (hdc == NULL || pRect == NULL
+	if (hdc == nullptr || pRect == nullptr
 			|| pRect->left >= pRect->right || pRect->top >= pRect->bottom)
 		return false;
 
@@ -130,7 +130,7 @@ bool FillGradient(
 	const int Width = pRect->right - pRect->left;
 	const int Height = pRect->bottom - pRect->top;
 	HBITMAP hbm = ::CreateCompatibleBitmap(hdc, Width, Height);
-	if (hbm == NULL)
+	if (hbm == nullptr)
 		return false;
 	HDC hdcMem = ::CreateCompatibleDC(hdc);
 	HGDIOBJ hOldBmp = ::SelectObject(hdcMem, hbm);
@@ -220,7 +220,7 @@ bool FillInterlacedGradient(
 	COLORREF Color1, COLORREF Color2, FillDirection Direction,
 	COLORREF LineColor, int LineOpacity)
 {
-	if (hdc == NULL || pRect == NULL)
+	if (hdc == nullptr || pRect == nullptr)
 		return false;
 
 	int Width = pRect->right - pRect->left;
@@ -247,7 +247,7 @@ bool FillInterlacedGradient(
 			if ((x - pRect->left) % 2 == 1)
 				Color = MixColor(LineColor, Color, LineOpacity);
 			::SetDCPenColor(hdc, Color);
-			::MoveToEx(hdc, x, pRect->top, NULL);
+			::MoveToEx(hdc, x, pRect->top, nullptr);
 			::LineTo(hdc, x, pRect->bottom);
 		}
 	} else {
@@ -264,7 +264,7 @@ bool FillInterlacedGradient(
 			if ((y - pRect->top) % 2 == 1)
 				Color = MixColor(LineColor, Color, LineOpacity);
 			::SetDCPenColor(hdc, Color);
-			::MoveToEx(hdc, pRect->left, y, NULL);
+			::MoveToEx(hdc, pRect->left, y, nullptr);
 			::LineTo(hdc, pRect->right, y);
 		}
 	}
@@ -294,8 +294,8 @@ bool GlossOverlay(
 	bmi.bmiHeader.biPlanes = 1;
 	bmi.bmiHeader.biBitCount = 32;
 	void *pBits;
-	HBITMAP hbm = ::CreateDIBSection(NULL, &bmi, DIB_RGB_COLORS, &pBits, NULL, 0);
-	if (hbm == NULL)
+	HBITMAP hbm = ::CreateDIBSection(nullptr, &bmi, DIB_RGB_COLORS, &pBits, nullptr, 0);
+	if (hbm == nullptr)
 		return false;
 
 	const SIZE_T RowBytes = Width * 4;
@@ -316,7 +316,7 @@ bool GlossOverlay(
 	}
 
 	HDC hdcMemory = ::CreateCompatibleDC(hdc);
-	if (hdcMemory == NULL) {
+	if (hdcMemory == nullptr) {
 		::DeleteObject(hbm);
 		return false;
 	}
@@ -348,8 +348,8 @@ bool ColorOverlay(HDC hdc, const RECT *pRect, COLORREF Color, BYTE Opacity)
 	bmi.bmiHeader.biPlanes = 1;
 	bmi.bmiHeader.biBitCount = 32;
 	void *pBits;
-	HBITMAP hbm = ::CreateDIBSection(NULL, &bmi, DIB_RGB_COLORS, &pBits, NULL, 0);
-	if (hbm == NULL)
+	HBITMAP hbm = ::CreateDIBSection(nullptr, &bmi, DIB_RGB_COLORS, &pBits, nullptr, 0);
+	if (hbm == nullptr)
 		return false;
 
 	const DWORD Pixel = 0xFF000000 | ((DWORD)GetRValue(Color) << 16) | ((DWORD)GetGValue(Color) << 8) | (DWORD)GetBValue(Color);
@@ -360,7 +360,7 @@ bool ColorOverlay(HDC hdc, const RECT *pRect, COLORREF Color, BYTE Opacity)
 	} while (p < pEnd);
 
 	HDC hdcMemory = ::CreateCompatibleDC(hdc);
-	if (hdcMemory == NULL) {
+	if (hdcMemory == nullptr) {
 		::DeleteObject(hbm);
 		return false;
 	}
@@ -425,11 +425,11 @@ bool DrawBitmap(
 	HDC hdc, int DstX, int DstY, int DstWidth, int DstHeight,
 	HBITMAP hbm, const RECT *pSrcRect, BYTE Opacity)
 {
-	if (hdc == NULL || hbm == NULL)
+	if (hdc == nullptr || hbm == nullptr)
 		return false;
 
 	int SrcX, SrcY, SrcWidth, SrcHeight;
-	if (pSrcRect != NULL) {
+	if (pSrcRect != nullptr) {
 		SrcX = pSrcRect->left;
 		SrcY = pSrcRect->top;
 		SrcWidth = pSrcRect->right - pSrcRect->left;
@@ -444,7 +444,7 @@ bool DrawBitmap(
 	}
 
 	HDC hdcMemory = ::CreateCompatibleDC(hdc);
-	if (hdcMemory == NULL)
+	if (hdcMemory == nullptr)
 		return false;
 	HBITMAP hbmOld = static_cast<HBITMAP>(::SelectObject(hdcMemory, hbm));
 
@@ -478,7 +478,7 @@ bool DrawMonoColorDIB(
 	HDC hdcDst, int DstX, int DstY,
 	HDC hdcSrc, int SrcX, int SrcY, int Width, int Height, COLORREF Color)
 {
-	if (hdcDst == NULL || hdcSrc == NULL)
+	if (hdcDst == nullptr || hdcSrc == nullptr)
 		return false;
 
 	COLORREF TransColor = Color ^ 0x00FFFFFF;
@@ -504,11 +504,11 @@ bool DrawMonoColorDIB(
 	HDC hdcDst, int DstX, int DstY,
 	HBITMAP hbm, int SrcX, int SrcY, int Width, int Height, COLORREF Color)
 {
-	if (hdcDst == NULL || hbm == NULL)
+	if (hdcDst == nullptr || hbm == nullptr)
 		return false;
 
 	HDC hdcMem = ::CreateCompatibleDC(hdcDst);
-	if (hdcMem == NULL)
+	if (hdcMem == nullptr)
 		return false;
 
 	HBITMAP hbmOld = static_cast<HBITMAP>(::SelectObject(hdcMem, hbm));
@@ -537,10 +537,10 @@ HBITMAP CreateDIB(int Width, int Height, int BitCount, void **ppBits)
 	bmi.bmiHeader.biPlanes = 1;
 	bmi.bmiHeader.biBitCount = BitCount;
 	bmi.bmiHeader.biCompression = BI_RGB;
-	HBITMAP hbm = ::CreateDIBSection(NULL, (BITMAPINFO*)&bmi, DIB_RGB_COLORS, &pBits, NULL, 0);
-	if (hbm == NULL)
-		return NULL;
-	if (ppBits != NULL)
+	HBITMAP hbm = ::CreateDIBSection(nullptr, (BITMAPINFO*)&bmi, DIB_RGB_COLORS, &pBits, nullptr, 0);
+	if (hbm == nullptr)
+		return nullptr;
+	if (ppBits != nullptr)
 		*ppBits = pBits;
 	return hbm;
 }
@@ -548,26 +548,26 @@ HBITMAP CreateDIB(int Width, int Height, int BitCount, void **ppBits)
 
 HBITMAP DuplicateDIB(HBITMAP hbmSrc)
 {
-	if (hbmSrc == NULL)
-		return NULL;
+	if (hbmSrc == nullptr)
+		return nullptr;
 
 	BITMAP bm;
 	if (::GetObject(hbmSrc, sizeof(bm), &bm) != sizeof(bm)
-			|| bm.bmBits == NULL)
-		return NULL;
+			|| bm.bmBits == nullptr)
+		return nullptr;
 
 	void *pBits;
 	HBITMAP hbm = CreateDIB(bm.bmWidth, bm.bmHeight, bm.bmBitsPixel, &pBits);
-	if (hbm == NULL)
-		return NULL;
+	if (hbm == nullptr)
+		return nullptr;
 
 	::CopyMemory(pBits, bm.bmBits, bm.bmHeight * bm.bmWidthBytes);
 
 	if (bm.bmBitsPixel <= 8) {
-		HDC hdc = ::CreateCompatibleDC(NULL);
-		if (hdc == NULL) {
+		HDC hdc = ::CreateCompatibleDC(nullptr);
+		if (hdc == nullptr) {
 			::DeleteObject(hbm);
-			return NULL;
+			return nullptr;
 		}
 		HGDIOBJ hOldBitmap = ::SelectObject(hdc, hbmSrc);
 		RGBQUAD ColorTable[256];
@@ -584,17 +584,17 @@ HBITMAP DuplicateDIB(HBITMAP hbmSrc)
 
 HBITMAP ResizeBitmap(HBITMAP hbmSrc, int Width, int Height, int BitCount, int StretchMode)
 {
-	if (hbmSrc == NULL || Width < 1 || Height == 0)
-		return NULL;
+	if (hbmSrc == nullptr || Width < 1 || Height == 0)
+		return nullptr;
 
 	HBITMAP hbm = CreateDIB(Width, Height, BitCount);
-	if (hbm == NULL)
-		return NULL;
+	if (hbm == nullptr)
+		return nullptr;
 
 	bool fOK = false;
-	HDC hdcSrc = ::CreateCompatibleDC(NULL);
-	HDC hdcDst = ::CreateCompatibleDC(NULL);
-	if (hdcSrc != NULL && hdcDst != NULL) {
+	HDC hdcSrc = ::CreateCompatibleDC(nullptr);
+	HDC hdcDst = ::CreateCompatibleDC(nullptr);
+	if (hdcSrc != nullptr && hdcDst != nullptr) {
 		HBITMAP hbmSrcOld = SelectBitmap(hdcSrc, hbmSrc);
 		HBITMAP hbmDstOld = SelectBitmap(hdcDst, hbm);
 		int OldStretchMode = ::SetStretchBltMode(hdcDst, StretchMode);
@@ -608,14 +608,14 @@ HBITMAP ResizeBitmap(HBITMAP hbmSrc, int Width, int Height, int BitCount, int St
 		::SelectObject(hdcSrc, hbmSrcOld);
 		fOK = true;
 	}
-	if (hdcDst != NULL)
+	if (hdcDst != nullptr)
 		::DeleteDC(hdcDst);
-	if (hdcSrc != NULL)
+	if (hdcSrc != nullptr)
 		::DeleteDC(hdcSrc);
 
 	if (!fOK) {
 		::DeleteObject(hbm);
-		return NULL;
+		return nullptr;
 	}
 
 	return hbm;
@@ -627,7 +627,7 @@ bool DrawText(
 	HDC hdc, LPCTSTR pszText, const RECT &Rect, UINT Format,
 	const CFont *pFont, COLORREF Color)
 {
-	if (hdc == NULL || pszText == NULL)
+	if (hdc == nullptr || pszText == nullptr)
 		return false;
 
 	int OldBkMode;
@@ -637,11 +637,11 @@ bool DrawText(
 	OldBkMode = ::SetBkMode(hdc, TRANSPARENT);
 	if (Color != CLR_INVALID)
 		OldTextColor = ::SetTextColor(hdc, Color);
-	if (pFont != NULL)
+	if (pFont != nullptr)
 		hfontOld = DrawUtil::SelectObject(hdc, *pFont);
 	RECT rc = Rect;
 	::DrawText(hdc, pszText, -1, &rc, Format);
-	if (pFont != NULL)
+	if (pFont != nullptr)
 		::SelectObject(hdc, hfontOld);
 	if (Color != CLR_INVALID)
 		::SetTextColor(hdc, OldTextColor);
@@ -653,7 +653,7 @@ bool DrawText(
 // システムフォントを取得する
 bool GetSystemFont(FontType Type, LOGFONT *pLogFont)
 {
-	if (pLogFont == NULL)
+	if (pLogFont == nullptr)
 		return false;
 	if (Type == FONT_DEFAULT) {
 		return ::GetObject(::GetStockObject(DEFAULT_GUI_FONT), sizeof(LOGFONT), pLogFont) == sizeof(LOGFONT);
@@ -680,7 +680,7 @@ bool GetSystemFont(FontType Type, LOGFONT *pLogFont)
 // UIに使用するデフォルトのフォントを取得する
 bool GetDefaultUIFont(LOGFONT *pFont)
 {
-	if (pFont == NULL)
+	if (pFont == nullptr)
 		return false;
 
 	::ZeroMemory(pFont, sizeof(LOGFONT));
@@ -709,12 +709,12 @@ bool IsFontAvailable(const LOGFONT &Font, HDC hdc)
 {
 	HFONT hfont = ::CreateFontIndirect(&Font);
 
-	if (hfont == NULL)
+	if (hfont == nullptr)
 		return false;
-	HDC hdcMem = NULL;
-	if (hdc == NULL) {
-		hdcMem = ::CreateCompatibleDC(NULL);
-		if (hdcMem == NULL)
+	HDC hdcMem = nullptr;
+	if (hdc == nullptr) {
+		hdcMem = ::CreateCompatibleDC(nullptr);
+		if (hdcMem == nullptr)
 			return false;
 		hdc = hdcMem;
 	}
@@ -724,7 +724,7 @@ bool IsFontAvailable(const LOGFONT &Font, HDC hdc)
 		::GetTextFace(hdc, _countof(szFaceName), szFaceName) > 0
 		&& ::lstrcmpi(szFaceName, Font.lfFaceName) == 0;
 	::SelectObject(hdc, hfontOld);
-	if (hdcMem != NULL)
+	if (hdcMem != nullptr)
 		::DeleteDC(hdcMem);
 
 	return fAvailable;
@@ -748,24 +748,24 @@ bool IsClearTypeEnabled()
 
 
 CFont::CFont()
-	: m_hfont(NULL)
+	: m_hfont(nullptr)
 {
 }
 
 CFont::CFont(const CFont &Font)
-	: m_hfont(NULL)
+	: m_hfont(nullptr)
 {
 	*this = Font;
 }
 
 CFont::CFont(const LOGFONT &Font)
-	: m_hfont(NULL)
+	: m_hfont(nullptr)
 {
 	Create(&Font);
 }
 
 CFont::CFont(FontType Type)
-	: m_hfont(NULL)
+	: m_hfont(nullptr)
 {
 	Create(Type);
 }
@@ -784,17 +784,17 @@ CFont &CFont::operator=(const CFont &Font)
 	} else {
 		if (m_hfont)
 			::DeleteObject(m_hfont);
-		m_hfont = NULL;
+		m_hfont = nullptr;
 	}
 	return *this;
 }
 
 bool CFont::operator==(const CFont &Font) const
 {
-	if (m_hfont == NULL)
-		return Font.m_hfont == NULL;
-	if (Font.m_hfont == NULL)
-		return m_hfont == NULL;
+	if (m_hfont == nullptr)
+		return Font.m_hfont == nullptr;
+	if (Font.m_hfont == nullptr)
+		return m_hfont == nullptr;
 	LOGFONT lf1, lf2;
 	GetLogFont(&lf1);
 	Font.GetLogFont(&lf2);
@@ -808,10 +808,10 @@ bool CFont::operator!=(const CFont &Font) const
 
 bool CFont::Create(const LOGFONT *pLogFont)
 {
-	if (pLogFont == NULL)
+	if (pLogFont == nullptr)
 		return false;
 	HFONT hfont = ::CreateFontIndirect(pLogFont);
-	if (hfont == NULL)
+	if (hfont == nullptr)
 		return false;
 	if (m_hfont)
 		::DeleteObject(m_hfont);
@@ -832,25 +832,25 @@ void CFont::Destroy()
 {
 	if (m_hfont) {
 		::DeleteObject(m_hfont);
-		m_hfont = NULL;
+		m_hfont = nullptr;
 	}
 }
 
 bool CFont::GetLogFont(LOGFONT *pLogFont) const
 {
-	if (m_hfont == NULL || pLogFont == NULL)
+	if (m_hfont == nullptr || pLogFont == nullptr)
 		return false;
 	return ::GetObject(m_hfont, sizeof(LOGFONT), pLogFont) == sizeof(LOGFONT);
 }
 
 int CFont::GetHeight(bool fCell) const
 {
-	if (m_hfont == NULL)
+	if (m_hfont == nullptr)
 		return 0;
 
-	HDC hdc = ::CreateCompatibleDC(NULL);
+	HDC hdc = ::CreateCompatibleDC(nullptr);
 	int Height;
-	if (hdc == NULL) {
+	if (hdc == nullptr) {
 		LOGFONT lf;
 		if (!GetLogFont(&lf))
 			return 0;
@@ -864,7 +864,7 @@ int CFont::GetHeight(bool fCell) const
 
 int CFont::GetHeight(HDC hdc, bool fCell) const
 {
-	if (m_hfont == NULL || hdc == NULL)
+	if (m_hfont == nullptr || hdc == nullptr)
 		return 0;
 	HGDIOBJ hOldFont = ::SelectObject(hdc, m_hfont);
 	TEXTMETRIC tm;
@@ -877,18 +877,18 @@ int CFont::GetHeight(HDC hdc, bool fCell) const
 
 
 CBrush::CBrush()
-	: m_hbr(NULL)
+	: m_hbr(nullptr)
 {
 }
 
 CBrush::CBrush(const CBrush &Brush)
-	: m_hbr(NULL)
+	: m_hbr(nullptr)
 {
 	*this = Brush;
 }
 
 CBrush::CBrush(COLORREF Color)
-	: m_hbr(NULL)
+	: m_hbr(nullptr)
 {
 	Create(Color);
 }
@@ -902,7 +902,7 @@ CBrush &CBrush::operator=(const CBrush &Brush)
 {
 	if (&Brush != this) {
 		Destroy();
-		if (Brush.m_hbr != NULL) {
+		if (Brush.m_hbr != nullptr) {
 			LOGBRUSH lb;
 
 			if (::GetObject(Brush.m_hbr, sizeof(LOGBRUSH), &lb) == sizeof(LOGBRUSH))
@@ -916,7 +916,7 @@ bool CBrush::Create(COLORREF Color)
 {
 	HBRUSH hbr = ::CreateSolidBrush(Color);
 
-	if (hbr == NULL)
+	if (hbr == nullptr)
 		return false;
 	Destroy();
 	m_hbr = hbr;
@@ -925,20 +925,20 @@ bool CBrush::Create(COLORREF Color)
 
 void CBrush::Destroy()
 {
-	if (m_hbr != NULL) {
+	if (m_hbr != nullptr) {
 		::DeleteObject(m_hbr);
-		m_hbr = NULL;
+		m_hbr = nullptr;
 	}
 }
 
 
 CBitmap::CBitmap()
-	: m_hbm(NULL)
+	: m_hbm(nullptr)
 {
 }
 
 CBitmap::CBitmap(const CBitmap &Src)
-	: m_hbm(NULL)
+	: m_hbm(nullptr)
 {
 	*this = Src;
 }
@@ -952,7 +952,7 @@ CBitmap &CBitmap::operator=(const CBitmap &Src)
 {
 	if (&Src != this) {
 		Destroy();
-		if (Src.m_hbm != NULL) {
+		if (Src.m_hbm != nullptr) {
 			if (Src.IsDIB())
 				m_hbm = DuplicateDIB(Src.m_hbm);
 			else
@@ -966,19 +966,19 @@ bool CBitmap::Create(int Width, int Height, int BitCount)
 {
 	Destroy();
 	m_hbm = CreateDIB(Width, Height, BitCount);
-	return m_hbm != NULL;
+	return m_hbm != nullptr;
 }
 
 bool CBitmap::Load(HINSTANCE hinst, LPCTSTR pszName, UINT Flags)
 {
 	Destroy();
 	m_hbm = static_cast<HBITMAP>(::LoadImage(hinst, pszName, IMAGE_BITMAP, 0, 0, Flags));
-	return m_hbm != NULL;
+	return m_hbm != nullptr;
 }
 
 bool CBitmap::Attach(HBITMAP hbm)
 {
-	if (hbm == NULL)
+	if (hbm == nullptr)
 		return false;
 	Destroy();
 	m_hbm = hbm;
@@ -987,15 +987,15 @@ bool CBitmap::Attach(HBITMAP hbm)
 
 void CBitmap::Destroy()
 {
-	if (m_hbm != NULL) {
+	if (m_hbm != nullptr) {
 		::DeleteObject(m_hbm);
-		m_hbm = NULL;
+		m_hbm = nullptr;
 	}
 }
 
 bool CBitmap::IsDIB() const
 {
-	if (m_hbm != NULL) {
+	if (m_hbm != nullptr) {
 		DIBSECTION ds;
 		if (::GetObject(m_hbm, sizeof(ds), &ds) == sizeof(ds))
 			return true;
@@ -1005,7 +1005,7 @@ bool CBitmap::IsDIB() const
 
 int CBitmap::GetWidth() const
 {
-	if (m_hbm != NULL) {
+	if (m_hbm != nullptr) {
 		BITMAP bm;
 		if (::GetObject(m_hbm, sizeof(bm), &bm) == sizeof(bm))
 			return bm.bmWidth;
@@ -1015,7 +1015,7 @@ int CBitmap::GetWidth() const
 
 int CBitmap::GetHeight() const
 {
-	if (m_hbm != NULL) {
+	if (m_hbm != nullptr) {
 		BITMAP bm;
 		if (::GetObject(m_hbm, sizeof(bm), &bm) == sizeof(bm))
 			return bm.bmHeight;
@@ -1025,21 +1025,21 @@ int CBitmap::GetHeight() const
 
 
 CMonoColorBitmap::CMonoColorBitmap()
-	: m_hbm(NULL)
-	, m_hbmPremultiplied(NULL)
+	: m_hbm(nullptr)
+	, m_hbmPremultiplied(nullptr)
 {
 }
 
 CMonoColorBitmap::CMonoColorBitmap(const CMonoColorBitmap &Src)
-	: m_hbm(NULL)
-	, m_hbmPremultiplied(NULL)
+	: m_hbm(nullptr)
+	, m_hbmPremultiplied(nullptr)
 {
 	*this = Src;
 }
 
 CMonoColorBitmap::CMonoColorBitmap(CMonoColorBitmap &&Src)
-	: m_hbm(NULL)
-	, m_hbmPremultiplied(NULL)
+	: m_hbm(nullptr)
+	, m_hbmPremultiplied(nullptr)
 {
 	*this = std::move(Src);
 }
@@ -1054,9 +1054,9 @@ CMonoColorBitmap &CMonoColorBitmap::operator=(const CMonoColorBitmap &Src)
 	if (&Src != this) {
 		Destroy();
 
-		if (Src.m_hbm != NULL)
+		if (Src.m_hbm != nullptr)
 			m_hbm = DuplicateDIB(Src.m_hbm);
-		if (Src.m_hbmPremultiplied != NULL)
+		if (Src.m_hbmPremultiplied != nullptr)
 			m_hbmPremultiplied = DuplicateDIB(Src.m_hbmPremultiplied);
 		m_Color = Src.m_Color;
 		m_fColorImage = Src.m_fColorImage;
@@ -1071,9 +1071,9 @@ CMonoColorBitmap &CMonoColorBitmap::operator=(CMonoColorBitmap &&Src)
 		Destroy();
 
 		m_hbm = Src.m_hbm;
-		Src.m_hbm = NULL;
+		Src.m_hbm = nullptr;
 		m_hbmPremultiplied = Src.m_hbmPremultiplied;
-		Src.m_hbmPremultiplied = NULL;
+		Src.m_hbmPremultiplied = nullptr;
 		m_Color = Src.m_Color;
 		m_fColorImage = Src.m_fColorImage;
 	}
@@ -1084,7 +1084,7 @@ CMonoColorBitmap &CMonoColorBitmap::operator=(CMonoColorBitmap &&Src)
 bool CMonoColorBitmap::Load(HINSTANCE hinst, LPCTSTR pszName)
 {
 	HBITMAP hbmSrc = static_cast<HBITMAP>(::LoadImage(hinst, pszName, IMAGE_BITMAP, 0, 0, LR_CREATEDIBSECTION));
-	if (hbmSrc == NULL)
+	if (hbmSrc == nullptr)
 		return false;
 
 	bool fResult = Create(hbmSrc);
@@ -1098,18 +1098,18 @@ bool CMonoColorBitmap::Create(HBITMAP hbmSrc)
 {
 	Destroy();
 
-	if (hbmSrc == NULL)
+	if (hbmSrc == nullptr)
 		return false;
 
 	BITMAP bm;
 	::GetObject(hbmSrc, sizeof(bm), &bm);
 	if ((bm.bmBitsPixel != 8 && bm.bmBitsPixel != 24 && bm.bmBitsPixel != 32)
-			|| bm.bmBits == NULL)
+			|| bm.bmBits == nullptr)
 		return false;
 
 	void *pBits;
 	m_hbm = CreateDIB(bm.bmWidth, bm.bmHeight, 32, &pBits);
-	if (m_hbm == NULL)
+	if (m_hbm == nullptr)
 		return false;
 
 	if (bm.bmBitsPixel == 32) {
@@ -1118,7 +1118,7 @@ bool CMonoColorBitmap::Create(HBITMAP hbmSrc)
 
 		void *pPremultipliedBits;
 		m_hbmPremultiplied = CreateDIB(bm.bmWidth, bm.bmHeight, 32, &pPremultipliedBits);
-		if (m_hbmPremultiplied == NULL) {
+		if (m_hbmPremultiplied == nullptr) {
 			Destroy();
 			return false;
 		}
@@ -1165,15 +1165,15 @@ bool CMonoColorBitmap::Create(HBITMAP hbmSrc)
 
 void CMonoColorBitmap::Destroy()
 {
-	if (m_hbmPremultiplied != NULL) {
+	if (m_hbmPremultiplied != nullptr) {
 		if (m_hbmPremultiplied != m_hbm)
 			::DeleteObject(m_hbmPremultiplied);
-		m_hbmPremultiplied = NULL;
+		m_hbmPremultiplied = nullptr;
 	}
 
-	if (m_hbm != NULL) {
+	if (m_hbm != nullptr) {
 		::DeleteObject(m_hbm);
-		m_hbm = NULL;
+		m_hbm = nullptr;
 	}
 }
 
@@ -1183,7 +1183,7 @@ bool CMonoColorBitmap::Draw(
 	int SrcX, int SrcY, int SrcWidth, int SrcHeight,
 	COLORREF Color, BYTE Opacity)
 {
-	if (m_hbmPremultiplied == NULL)
+	if (m_hbmPremultiplied == nullptr)
 		return false;
 
 	BITMAP bm;
@@ -1205,7 +1205,7 @@ bool CMonoColorBitmap::Draw(
 		SetColor(Color);
 
 	HDC hdcMemory = ::CreateCompatibleDC(hdc);
-	if (hdcMemory == NULL)
+	if (hdcMemory == nullptr)
 		return false;
 	HBITMAP hbmOld = static_cast<HBITMAP>(::SelectObject(hdcMemory, m_hbmPremultiplied));
 	BLENDFUNCTION bf = {AC_SRC_OVER, 0, Opacity, AC_SRC_ALPHA};
@@ -1227,25 +1227,25 @@ bool CMonoColorBitmap::Draw(
 
 HIMAGELIST CMonoColorBitmap::CreateImageList(int IconWidth, COLORREF Color)
 {
-	if (m_hbm == NULL || IconWidth < 1)
-		return NULL;
+	if (m_hbm == nullptr || IconWidth < 1)
+		return nullptr;
 
 	BITMAP bm;
 	if (::GetObject(m_hbm, sizeof(bm), &bm) != sizeof(bm)
 			|| bm.bmWidth < IconWidth)
-		return NULL;
+		return nullptr;
 
 	HIMAGELIST himl = ::ImageList_Create(IconWidth, bm.bmHeight, ILC_COLOR32, 0, 1);
-	if (himl == NULL)
-		return NULL;
+	if (himl == nullptr)
+		return nullptr;
 
 	HBITMAP hbm = ExtractBitmap(0, 0, bm.bmWidth, bm.bmHeight, Color);
-	if (hbm == NULL) {
+	if (hbm == nullptr) {
 		::ImageList_Destroy(himl);
-		return NULL;
+		return nullptr;
 	}
 
-	::ImageList_Add(himl, hbm, NULL);
+	::ImageList_Add(himl, hbm, nullptr);
 
 	::DeleteObject(hbm);
 
@@ -1254,19 +1254,19 @@ HIMAGELIST CMonoColorBitmap::CreateImageList(int IconWidth, COLORREF Color)
 
 HBITMAP CMonoColorBitmap::ExtractBitmap(int x, int y, int Width, int Height, COLORREF Color)
 {
-	if (m_hbm == NULL || x < 0 || y < 0)
-		return NULL;
+	if (m_hbm == nullptr || x < 0 || y < 0)
+		return nullptr;
 
 	BITMAP bm;
 	if (::GetObject(m_hbm, sizeof(bm), &bm) != sizeof(bm)
 			|| x + Width > bm.bmWidth
 			|| y + Height > bm.bmHeight)
-		return NULL;
+		return nullptr;
 
 	void *pBits;
 	HBITMAP hbm = CreateDIB(Width, Height, 32, &pBits);
-	if (hbm == NULL)
-		return NULL;
+	if (hbm == nullptr)
+		return nullptr;
 
 	const BYTE *p = static_cast<const BYTE*>(bm.bmBits) +
 		(bm.bmHeight - (y + Height)) * bm.bmWidthBytes + x * 4;
@@ -1298,13 +1298,13 @@ HBITMAP CMonoColorBitmap::ExtractBitmap(int x, int y, int Width, int Height, COL
 HICON CMonoColorBitmap::ExtractIcon(int x, int y, int Width, int Height, COLORREF Color)
 {
 	HBITMAP hbmColor = ExtractBitmap(x, y, Width, Height, Color);
-	if (hbmColor == NULL)
-		return NULL;
+	if (hbmColor == nullptr)
+		return nullptr;
 
-	HBITMAP hbmMask = ::CreateBitmap(Width, Height, 1, 1, NULL);
-	if (hbmMask == NULL) {
+	HBITMAP hbmMask = ::CreateBitmap(Width, Height, 1, 1, nullptr);
+	if (hbmMask == nullptr) {
 		::DeleteObject(hbmColor);
-		return NULL;
+		return nullptr;
 	}
 
 	ICONINFO ii;
@@ -1324,12 +1324,12 @@ HICON CMonoColorBitmap::ExtractIcon(int x, int y, int Width, int Height, COLORRE
 
 HICON CMonoColorBitmap::ExtractIcon(COLORREF Color)
 {
-	if (m_hbm == NULL)
-		return NULL;
+	if (m_hbm == nullptr)
+		return nullptr;
 
 	BITMAP bm;
 	if (::GetObject(m_hbm, sizeof(bm), &bm) != sizeof(bm))
-		return NULL;
+		return nullptr;
 
 	return ExtractIcon(0, 0, bm.bmWidth, bm.bmHeight, Color);
 }
@@ -1408,10 +1408,10 @@ bool CMonoColorIconList::Create(HBITMAP hbm, int OrigWidth, int OrigHeight, int 
 	} else {
 		const int IconCount = bm.bmWidth / OrigWidth;
 		HBITMAP hbmStretched = DrawUtil::CreateDIB(Width * IconCount, Height, 24);
-		if (hbmStretched == NULL)
+		if (hbmStretched == nullptr)
 			return false;
-		HDC hdcSrc = ::CreateCompatibleDC(NULL);
-		HDC hdcDst = ::CreateCompatibleDC(NULL);
+		HDC hdcSrc = ::CreateCompatibleDC(nullptr);
+		HDC hdcDst = ::CreateCompatibleDC(nullptr);
 		HBITMAP hbmSrcOld = SelectBitmap(hdcSrc, hbm);
 		HBITMAP hbmDstOld = SelectBitmap(hdcDst, hbmStretched);
 		int OldStretchMode = ::SetStretchBltMode(hdcDst, STRETCH_HALFTONE);
@@ -1453,7 +1453,7 @@ bool CMonoColorIconList::Draw(
 	HDC hdc, int DstX, int DstY, int DstWidth, int DstHeight,
 	int IconIndex, COLORREF Color, BYTE Opacity)
 {
-	if (hdc == NULL || DstWidth <= 0 || DstHeight <= 0)
+	if (hdc == nullptr || DstWidth <= 0 || DstHeight <= 0)
 		return false;
 
 	// GdiAlphaBlend() はリサイズが汚いため、GDI+ を使う
@@ -1461,7 +1461,7 @@ bool CMonoColorIconList::Draw(
 		TVTest::Graphics::CCanvas Canvas(hdc);
 
 		HBITMAP hbm = m_Bitmap.ExtractBitmap(IconIndex * m_IconWidth, 0, m_IconWidth, m_IconHeight, Color);
-		if (hbm != NULL) {
+		if (hbm != nullptr) {
 			{
 				TVTest::Graphics::CImage Image;
 				Image.CreateFromBitmap(hbm);
@@ -1498,12 +1498,12 @@ HICON CMonoColorIconList::ExtractIcon(int Index, COLORREF Color)
 
 
 CMemoryDC::CMemoryDC()
-	: m_hdc(NULL)
+	: m_hdc(nullptr)
 {
 }
 
 CMemoryDC::CMemoryDC(HDC hdc)
-	: m_hdc(NULL)
+	: m_hdc(nullptr)
 {
 	Create(hdc);
 }
@@ -1518,7 +1518,7 @@ bool CMemoryDC::Create(HDC hdc)
 	Delete();
 
 	m_hdc = ::CreateCompatibleDC(hdc);
-	if (m_hdc == NULL)
+	if (m_hdc == nullptr)
 		return false;
 	m_hbmOld = static_cast<HBITMAP>(::GetCurrentObject(m_hdc, OBJ_BITMAP));
 	return true;
@@ -1526,16 +1526,16 @@ bool CMemoryDC::Create(HDC hdc)
 
 void CMemoryDC::Delete()
 {
-	if (m_hdc != NULL) {
+	if (m_hdc != nullptr) {
 		::SelectObject(m_hdc, m_hbmOld);
 		::DeleteDC(m_hdc);
-		m_hdc = NULL;
+		m_hdc = nullptr;
 	}
 }
 
 bool CMemoryDC::SetBitmap(HBITMAP hbm)
 {
-	if (m_hdc == NULL || hbm == NULL)
+	if (m_hdc == nullptr || hbm == nullptr)
 		return false;
 	::SelectObject(m_hdc, hbm);
 	return true;
@@ -1543,7 +1543,7 @@ bool CMemoryDC::SetBitmap(HBITMAP hbm)
 
 bool CMemoryDC::Draw(HDC hdc, int DstX, int DstY, int SrcX, int SrcY, int Width, int Height)
 {
-	if (m_hdc == NULL || hdc == NULL || Width < 1 || Height < 1)
+	if (m_hdc == nullptr || hdc == nullptr || Width < 1 || Height < 1)
 		return false;
 	return ::BitBlt(hdc, DstX, DstY, Width, Height, m_hdc, SrcX, SrcY, SRCCOPY) != FALSE;
 }
@@ -1552,7 +1552,7 @@ bool CMemoryDC::DrawStretch(
 	HDC hdc, int DstX, int DstY, int DstWidth, int DstHeight,
 	int SrcX, int SrcY, int SrcWidth, int SrcHeight, int Mode)
 {
-	if (m_hdc == NULL || hdc == NULL)
+	if (m_hdc == nullptr || hdc == nullptr)
 		return false;
 	int OldStretchMode = ::SetStretchBltMode(hdc, Mode);
 	::StretchBlt(hdc, DstX, DstY, DstWidth, DstHeight, m_hdc, SrcX, SrcY, SrcWidth, SrcHeight, SRCCOPY);
@@ -1562,7 +1562,7 @@ bool CMemoryDC::DrawStretch(
 
 bool CMemoryDC::DrawAlpha(HDC hdc, int DstX, int DstY, int SrcX, int SrcY, int Width, int Height)
 {
-	if (m_hdc == NULL || hdc == NULL)
+	if (m_hdc == nullptr || hdc == nullptr)
 		return false;
 	BLENDFUNCTION bf = {AC_SRC_OVER, 0, 255, AC_SRC_ALPHA};
 	::GdiAlphaBlend(hdc, DstX, DstY, Width, Height, m_hdc, SrcX, SrcY, Width, Height, bf);
@@ -1571,9 +1571,9 @@ bool CMemoryDC::DrawAlpha(HDC hdc, int DstX, int DstY, int SrcX, int SrcY, int W
 
 
 COffscreen::COffscreen()
-	: m_hdc(NULL)
-	, m_hbm(NULL)
-	, m_hbmOld(NULL)
+	: m_hdc(nullptr)
+	, m_hbm(nullptr)
+	, m_hbmOld(nullptr)
 	, m_Width(0)
 	, m_Height(0)
 {
@@ -1590,24 +1590,24 @@ bool COffscreen::Create(int Width, int Height, HDC hdc)
 		return false;
 	Destroy();
 	HDC hdcScreen;
-	if (hdc == NULL) {
-		hdcScreen = ::GetDC(NULL);
-		if (hdcScreen == NULL)
+	if (hdc == nullptr) {
+		hdcScreen = ::GetDC(nullptr);
+		if (hdcScreen == nullptr)
 			return false;
 		hdc = hdcScreen;
 	} else {
-		hdcScreen = NULL;
+		hdcScreen = nullptr;
 	}
 	m_hdc = ::CreateCompatibleDC(hdc);
-	if (m_hdc == NULL) {
-		if (hdcScreen != NULL)
-			::ReleaseDC(NULL, hdcScreen);
+	if (m_hdc == nullptr) {
+		if (hdcScreen != nullptr)
+			::ReleaseDC(nullptr, hdcScreen);
 		return false;
 	}
 	m_hbm = ::CreateCompatibleBitmap(hdc, Width, Height);
-	if (hdcScreen != NULL)
-		::ReleaseDC(NULL, hdcScreen);
-	if (m_hbm == NULL) {
+	if (hdcScreen != nullptr)
+		::ReleaseDC(nullptr, hdcScreen);
+	if (m_hbm == nullptr) {
 		Destroy();
 		return false;
 	}
@@ -1619,17 +1619,17 @@ bool COffscreen::Create(int Width, int Height, HDC hdc)
 
 void COffscreen::Destroy()
 {
-	if (m_hbmOld != NULL) {
+	if (m_hbmOld != nullptr) {
 		::SelectObject(m_hdc, m_hbmOld);
-		m_hbmOld = NULL;
+		m_hbmOld = nullptr;
 	}
-	if (m_hdc != NULL) {
+	if (m_hdc != nullptr) {
 		::DeleteDC(m_hdc);
-		m_hdc = NULL;
+		m_hdc = nullptr;
 	}
-	if (m_hbm != NULL) {
+	if (m_hbm != nullptr) {
 		::DeleteObject(m_hbm);
-		m_hbm = NULL;
+		m_hbm = nullptr;
 		m_Width = 0;
 		m_Height = 0;
 	}
@@ -1639,9 +1639,9 @@ bool COffscreen::CopyTo(HDC hdc, const RECT *pDstRect)
 {
 	int DstX, DstY, Width, Height;
 
-	if (m_hdc == NULL || hdc == NULL)
+	if (m_hdc == nullptr || hdc == nullptr)
 		return false;
-	if (pDstRect != NULL) {
+	if (pDstRect != nullptr) {
 		DstX = pDstRect->left;
 		DstY = pDstRect->top;
 		Width = pDstRect->right - pDstRect->left;
@@ -1671,7 +1671,7 @@ bool COffscreen::CopyTo(HDC hdc, const RECT *pDstRect)
 
 
 CUxTheme::CUxTheme()
-	: m_hTheme(NULL)
+	: m_hTheme(nullptr)
 {
 }
 
@@ -1691,22 +1691,22 @@ bool CUxTheme::Open(HWND hwnd, LPCWSTR pszClassList)
 	if (!Initialize())
 		return false;
 	m_hTheme = ::OpenThemeData(hwnd, pszClassList);
-	if (m_hTheme == NULL)
+	if (m_hTheme == nullptr)
 		return false;
 	return true;
 }
 
 void CUxTheme::Close()
 {
-	if (m_hTheme != NULL) {
+	if (m_hTheme != nullptr) {
 		::CloseThemeData(m_hTheme);
-		m_hTheme = NULL;
+		m_hTheme = nullptr;
 	}
 }
 
 bool CUxTheme::IsOpen() const
 {
-	return m_hTheme != NULL;
+	return m_hTheme != nullptr;
 }
 
 bool CUxTheme::IsActive()
@@ -1716,9 +1716,9 @@ bool CUxTheme::IsActive()
 
 bool CUxTheme::DrawBackground(HDC hdc, int PartID, int StateID, const RECT *pRect)
 {
-	if (m_hTheme == NULL)
+	if (m_hTheme == nullptr)
 		return false;
-	return ::DrawThemeBackground(m_hTheme, hdc, PartID, StateID, pRect, NULL) == S_OK;
+	return ::DrawThemeBackground(m_hTheme, hdc, PartID, StateID, pRect, nullptr) == S_OK;
 }
 
 bool CUxTheme::DrawBackground(
@@ -1726,23 +1726,23 @@ bool CUxTheme::DrawBackground(
 	int BackgroundPartID, int BackgroundStateID,
 	const RECT *pRect)
 {
-	if (m_hTheme == NULL)
+	if (m_hTheme == nullptr)
 		return false;
 	if (::IsThemeBackgroundPartiallyTransparent(m_hTheme, PartID, StateID)) {
 		if (::DrawThemeBackground(
 					m_hTheme, hdc,
 					BackgroundPartID, BackgroundStateID,
-					pRect, NULL) != S_OK)
+					pRect, nullptr) != S_OK)
 			return false;
 	}
-	return ::DrawThemeBackground(m_hTheme, hdc, PartID, StateID, pRect, NULL) == S_OK;
+	return ::DrawThemeBackground(m_hTheme, hdc, PartID, StateID, pRect, nullptr) == S_OK;
 }
 
 bool CUxTheme::DrawText(
 	HDC hdc, int PartID, int StateID, LPCWSTR pszText,
 	DWORD TextFlags, const RECT *pRect)
 {
-	if (m_hTheme == NULL)
+	if (m_hTheme == nullptr)
 		return false;
 	return ::DrawThemeText(
 		m_hTheme, hdc, PartID, StateID, pszText, lstrlenW(pszText),
@@ -1753,38 +1753,38 @@ bool CUxTheme::GetTextExtent(
 	HDC hdc, int PartID, int StateID, LPCWSTR pszText,
 	DWORD TextFlags, RECT *pExtentRect)
 {
-	if (m_hTheme == NULL)
+	if (m_hTheme == nullptr)
 		return false;
 	return ::GetThemeTextExtent(
 		m_hTheme, hdc, PartID, StateID,
 		pszText, lstrlenW(pszText), TextFlags,
-		NULL, pExtentRect) == S_OK;
+		nullptr, pExtentRect) == S_OK;
 }
 
 bool CUxTheme::GetMargins(int PartID, int StateID, int PropID, MARGINS *pMargins)
 {
-	if (m_hTheme == NULL)
+	if (m_hTheme == nullptr)
 		return false;
-	return ::GetThemeMargins(m_hTheme, NULL, PartID, StateID, PropID, NULL, pMargins) == S_OK;
+	return ::GetThemeMargins(m_hTheme, nullptr, PartID, StateID, PropID, nullptr, pMargins) == S_OK;
 }
 
 bool CUxTheme::GetColor(int PartID, int StateID, int PropID, COLORREF *pColor)
 {
-	if (m_hTheme == NULL)
+	if (m_hTheme == nullptr)
 		return false;
 	return ::GetThemeColor(m_hTheme, PartID, StateID, PropID, pColor) == S_OK;
 }
 
 bool CUxTheme::GetFont(int PartID, int StateID, int PropID, LOGFONT *pFont)
 {
-	if (m_hTheme == NULL)
+	if (m_hTheme == nullptr)
 		return false;
-	return ::GetThemeFont(m_hTheme, NULL, PartID, StateID, PropID, pFont) == S_OK;
+	return ::GetThemeFont(m_hTheme, nullptr, PartID, StateID, PropID, pFont) == S_OK;
 }
 
 bool CUxTheme::GetInt(int PartID, int StateID, int PropID, int *pValue)
 {
-	if (m_hTheme == NULL)
+	if (m_hTheme == nullptr)
 		return false;
 	return ::GetThemeInt(m_hTheme, PartID, StateID, PropID, pValue) == S_OK;
 }
@@ -1792,9 +1792,9 @@ bool CUxTheme::GetInt(int PartID, int StateID, int PropID, int *pValue)
 
 bool CUxTheme::GetPartSize(HDC hdc, int PartID, int StateID, SIZE *pSize)
 {
-	if (m_hTheme == NULL)
+	if (m_hTheme == nullptr)
 		return false;
-	return ::GetThemePartSize(m_hTheme, hdc, PartID, StateID, NULL, TS_TRUE, pSize) == S_OK;
+	return ::GetThemePartSize(m_hTheme, hdc, PartID, StateID, nullptr, TS_TRUE, pSize) == S_OK;
 }
 
 

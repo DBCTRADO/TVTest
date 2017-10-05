@@ -14,12 +14,12 @@
 
 
 
-HINSTANCE CPanel::m_hinst = NULL;
+HINSTANCE CPanel::m_hinst = nullptr;
 
 
 bool CPanel::Initialize(HINSTANCE hinst)
 {
-	if (m_hinst == NULL) {
+	if (m_hinst == nullptr) {
 		WNDCLASS wc;
 
 		wc.style = CS_HREDRAW | CS_VREDRAW;
@@ -27,10 +27,10 @@ bool CPanel::Initialize(HINSTANCE hinst)
 		wc.cbClsExtra = 0;
 		wc.cbWndExtra = 0;
 		wc.hInstance = hinst;
-		wc.hIcon = NULL;
-		wc.hCursor = ::LoadCursor(NULL, IDC_ARROW);
-		wc.hbrBackground = NULL;
-		wc.lpszMenuName = NULL;
+		wc.hIcon = nullptr;
+		wc.hCursor = ::LoadCursor(nullptr, IDC_ARROW);
+		wc.hbrBackground = nullptr;
+		wc.lpszMenuName = nullptr;
 		wc.lpszClassName = PANEL_WINDOW_CLASS;
 		if (::RegisterClass(&wc) == 0)
 			return false;
@@ -42,10 +42,10 @@ bool CPanel::Initialize(HINSTANCE hinst)
 
 CPanel::CPanel()
 	: m_TitleHeight(0)
-	, m_pContent(NULL)
+	, m_pContent(nullptr)
 	, m_fShowTitle(false)
 	, m_fEnableFloating(true)
-	, m_pEventHandler(NULL)
+	, m_pEventHandler(nullptr)
 	, m_HotItem(ITEM_NONE)
 {
 	GetSystemFont(DrawUtil::FONT_CAPTION, &m_StyleFont);
@@ -62,7 +62,7 @@ bool CPanel::Create(HWND hwndParent, DWORD Style, DWORD ExStyle, int ID)
 {
 	return CreateBasicWindow(
 		hwndParent, Style, ExStyle, ID,
-		PANEL_WINDOW_CLASS, NULL, m_hinst);
+		PANEL_WINDOW_CLASS, nullptr, m_hinst);
 }
 
 
@@ -102,10 +102,10 @@ bool CPanel::SetWindow(CPanelContent *pContent, LPCTSTR pszTitle)
 {
 	RECT rc;
 
-	if (m_pContent != NULL)
+	if (m_pContent != nullptr)
 		RemoveUIChild(m_pContent);
 	m_pContent = pContent;
-	if (m_pContent != NULL) {
+	if (m_pContent != nullptr) {
 		if (pContent->GetParent() != m_hwnd)
 			pContent->SetParent(m_hwnd);
 		RegisterUIChild(pContent);
@@ -151,7 +151,7 @@ bool CPanel::SetPanelTheme(const PanelTheme &Theme)
 {
 	m_Theme = Theme;
 
-	if (m_hwnd != NULL && m_fShowTitle) {
+	if (m_hwnd != nullptr && m_fShowTitle) {
 		const int OldTitleHeight = m_TitleHeight;
 		RECT rc;
 
@@ -169,7 +169,7 @@ bool CPanel::SetPanelTheme(const PanelTheme &Theme)
 
 bool CPanel::GetPanelTheme(PanelTheme *pTheme) const
 {
-	if (pTheme == NULL)
+	if (pTheme == nullptr)
 		return false;
 	*pTheme = m_Theme;
 	return true;
@@ -178,7 +178,7 @@ bool CPanel::GetPanelTheme(PanelTheme *pTheme) const
 
 bool CPanel::GetTitleRect(RECT *pRect) const
 {
-	if (m_hwnd == NULL)
+	if (m_hwnd == nullptr)
 		return false;
 
 	GetClientRect(pRect);
@@ -189,7 +189,7 @@ bool CPanel::GetTitleRect(RECT *pRect) const
 
 bool CPanel::GetContentRect(RECT *pRect) const
 {
-	if (m_hwnd == NULL)
+	if (m_hwnd == nullptr)
 		return false;
 
 	GetClientRect(pRect);
@@ -205,7 +205,7 @@ bool CPanel::GetContentRect(RECT *pRect) const
 bool CPanel::SetTitleFont(const TVTest::Style::Font &Font)
 {
 	m_StyleFont = Font;
-	if (m_hwnd != NULL) {
+	if (m_hwnd != nullptr) {
 		ApplyStyle();
 		RealizeStyle();
 	}
@@ -265,7 +265,7 @@ void CPanel::Draw(HDC hdc, const RECT &PaintRect) const
 
 void CPanel::OnSize(int Width, int Height)
 {
-	if (m_pContent != NULL) {
+	if (m_pContent != nullptr) {
 		int y;
 
 		if (m_fShowTitle)
@@ -274,7 +274,7 @@ void CPanel::OnSize(int Width, int Height)
 			y = 0;
 		m_pContent->SetPosition(0, y, Width, max(Height - y, 0));
 	}
-	if (m_pEventHandler != NULL)
+	if (m_pEventHandler != nullptr)
 		m_pEventHandler->OnSizeChanged(Width, Height);
 }
 
@@ -377,7 +377,7 @@ LRESULT CPanel::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				pt.y = GET_Y_LPARAM(lParam);
 				GetCloseButtonRect(&rc);
 				if (::PtInRect(&rc, pt)) {
-					if (m_pEventHandler != NULL)
+					if (m_pEventHandler != nullptr)
 						m_pEventHandler->OnClose();
 				}
 			}
@@ -404,7 +404,7 @@ LRESULT CPanel::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 					if (abs(pt.x - m_ptDragStartPos.x) >= 4
 							|| abs(pt.y - m_ptDragStartPos.y) >= 4) {
 						::ReleaseCapture();
-						if (m_pEventHandler != NULL
+						if (m_pEventHandler != nullptr
 								&& m_pEventHandler->OnFloating()) {
 							::SendMessage(GetParent(), WM_NCLBUTTONDOWN, HTCAPTION, MAKELONG(pt.x, pt.y));
 						}
@@ -445,7 +445,7 @@ LRESULT CPanel::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			pt.x = GET_X_LPARAM(lParam);
 			pt.y = GET_Y_LPARAM(lParam);
 			if (m_fShowTitle && pt.y < m_TitleHeight
-					&& m_pEventHandler != NULL) {
+					&& m_pEventHandler != nullptr) {
 				HMENU hmenu = ::CreatePopupMenu();
 
 				::AppendMenu(hmenu, MFT_STRING | MFS_ENABLED, 1, TEXT("閉じる(&C)"));
@@ -454,7 +454,7 @@ LRESULT CPanel::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				m_pEventHandler->OnMenuPopup(hmenu);
 				::ClientToScreen(hwnd, &pt);
 				int Command = ::TrackPopupMenu(
-					hmenu, TPM_RIGHTBUTTON | TPM_RETURNCMD, pt.x, pt.y, 0, hwnd, NULL);
+					hmenu, TPM_RIGHTBUTTON | TPM_RETURNCMD, pt.x, pt.y, 0, hwnd, nullptr);
 				switch (Command) {
 				case 0:
 					break;
@@ -473,7 +473,7 @@ LRESULT CPanel::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		return 0;
 
 	case WM_KEYDOWN:
-		if (m_pEventHandler != NULL
+		if (m_pEventHandler != nullptr
 				&& m_pEventHandler->OnKeyDown((UINT)wParam, (UINT)lParam))
 			return 0;
 		break;
@@ -485,7 +485,7 @@ LRESULT CPanel::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 void CPanel::ApplyStyle()
 {
-	if (m_hwnd != NULL) {
+	if (m_hwnd != nullptr) {
 		CreateDrawFont(m_StyleFont, &m_Font);
 
 		LOGFONT lf = {};
@@ -501,7 +501,7 @@ void CPanel::ApplyStyle()
 
 void CPanel::RealizeStyle()
 {
-	if (m_hwnd != NULL) {
+	if (m_hwnd != nullptr) {
 		SendSizeMessage();
 		Invalidate();
 	}
@@ -543,12 +543,12 @@ void CPanel::PanelStyle::NormalizeStyle(
 
 
 
-HINSTANCE CPanelFrame::m_hinst = NULL;
+HINSTANCE CPanelFrame::m_hinst = nullptr;
 
 
 bool CPanelFrame::Initialize(HINSTANCE hinst)
 {
-	if (m_hinst == NULL) {
+	if (m_hinst == nullptr) {
 		WNDCLASS wc;
 
 		wc.style = 0;
@@ -556,10 +556,10 @@ bool CPanelFrame::Initialize(HINSTANCE hinst)
 		wc.cbClsExtra = 0;
 		wc.cbWndExtra = 0;
 		wc.hInstance = hinst;
-		wc.hIcon = NULL;
-		wc.hCursor = NULL;
-		wc.hbrBackground = NULL;
-		wc.lpszMenuName = NULL;
+		wc.hIcon = nullptr;
+		wc.hCursor = nullptr;
+		wc.hbrBackground = nullptr;
+		wc.lpszMenuName = nullptr;
 		wc.lpszClassName = PANEL_FRAME_WINDOW_CLASS;
 		if (::RegisterClass(&wc) == 0)
 			return false;
@@ -576,7 +576,7 @@ CPanelFrame::CPanelFrame()
 	, m_DockingHeight(-1)
 	, m_Opacity(255)
 	, m_DragDockingTarget(DOCKING_NONE)
-	, m_pEventHandler(NULL)
+	, m_pEventHandler(nullptr)
 {
 	m_WindowPosition.Left = 120;
 	m_WindowPosition.Top = 120;
@@ -669,7 +669,7 @@ bool CPanelFrame::Create(
 bool CPanelFrame::SetFloating(bool fFloating)
 {
 	if (m_fFloating != fFloating) {
-		if (m_hwnd != NULL) {
+		if (m_hwnd != nullptr) {
 			Layout::CWindowContainer *pContainer =
 				dynamic_cast<Layout::CWindowContainer*>(m_pSplitter->GetPaneByID(m_PanelID));
 			RECT rc;
@@ -677,7 +677,7 @@ bool CPanelFrame::SetFloating(bool fFloating)
 			m_fFloatingTransition = true;
 			if (fFloating) {
 				pContainer->SetVisible(false);
-				pContainer->SetWindow(NULL);
+				pContainer->SetWindow(nullptr);
 				RegisterUIChild(&m_Panel);
 				m_Panel.SetParent(this);
 				m_Panel.SetStyleScaling(m_pStyleScaling);
@@ -732,7 +732,7 @@ bool CPanelFrame::SetDockingHeight(int Height)
 
 bool CPanelFrame::SetDockingPlace(DockingPlace Place)
 {
-	if (m_pEventHandler != NULL)
+	if (m_pEventHandler != nullptr)
 		m_pEventHandler->OnDocking(Place);
 
 	return true;
@@ -747,9 +747,9 @@ void CPanelFrame::SetEventHandler(CEventHandler *pHandler)
 
 bool CPanelFrame::SetPanelVisible(bool fVisible, bool fNoActivate)
 {
-	if (m_hwnd == NULL)
+	if (m_hwnd == nullptr)
 		return false;
-	if (m_pEventHandler != NULL)
+	if (m_pEventHandler != nullptr)
 		m_pEventHandler->OnVisibleChange(fVisible);
 	if (m_fFloating) {
 		if (fVisible) {
@@ -794,7 +794,7 @@ bool CPanelFrame::SetPanelOpacity(int Opacity)
 	if (Opacity < 0 || Opacity > 255)
 		return false;
 	if (Opacity != m_Opacity) {
-		if (m_hwnd != NULL) {
+		if (m_hwnd != nullptr) {
 			if (!SetOpacity(Opacity))
 				return false;
 		}
@@ -818,7 +818,7 @@ LRESULT CPanelFrame::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 			m_fDragMoving = false;
 			HMENU hmenu = GetSystemMenu(hwnd, FALSE);
 			InsertMenu(hmenu, 0, MF_BYPOSITION | MFT_STRING | MFS_ENABLED, SC_DOCKING, TEXT("ドッキング(&D)"));
-			InsertMenu(hmenu, 1, MF_BYPOSITION | MFT_SEPARATOR, 0, NULL);
+			InsertMenu(hmenu, 1, MF_BYPOSITION | MFT_SEPARATOR, 0, nullptr);
 		}
 		return 0;
 
@@ -832,25 +832,25 @@ LRESULT CPanelFrame::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 		return 0;
 
 	case WM_KEYDOWN:
-		if (m_pEventHandler != NULL
+		if (m_pEventHandler != nullptr
 				&& m_pEventHandler->OnKeyDown((UINT)wParam, (UINT)lParam))
 			return 0;
 		break;
 
 	case WM_MOUSEWHEEL:
-		if (m_pEventHandler != NULL
+		if (m_pEventHandler != nullptr
 				&& m_pEventHandler->OnMouseWheel(wParam, lParam))
 			return 0;
 		break;
 
 	case WM_ACTIVATE:
-		if (m_pEventHandler != NULL
+		if (m_pEventHandler != nullptr
 				&& m_pEventHandler->OnActivate(LOWORD(wParam) != WA_INACTIVE))
 			return 0;
 		break;
 
 	case WM_MOVING:
-		if (m_pEventHandler != NULL
+		if (m_pEventHandler != nullptr
 				&& m_pEventHandler->OnMoving(reinterpret_cast<LPRECT>(lParam)))
 			return TRUE;
 		break;
@@ -921,7 +921,7 @@ LRESULT CPanelFrame::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 	case WM_EXITSIZEMOVE:
 		if (m_DragDockingTarget != DOCKING_NONE) {
 			m_DropHelper.Hide();
-			if (m_pEventHandler != NULL)
+			if (m_pEventHandler != nullptr)
 				m_pEventHandler->OnDocking(m_DragDockingTarget);
 			::SendMessage(hwnd, WM_SYSCOMMAND, SC_DOCKING, 0);
 		}
@@ -931,7 +931,7 @@ LRESULT CPanelFrame::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 	case WM_ENTERSIZEMOVE:
 		m_DragDockingTarget = DOCKING_NONE;
 		m_fDragMoving = true;
-		if (m_pEventHandler != NULL
+		if (m_pEventHandler != nullptr
 				&& m_pEventHandler->OnEnterSizeMove())
 			return 0;
 		break;
@@ -939,7 +939,7 @@ LRESULT CPanelFrame::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 	case WM_SYSCOMMAND:
 		switch (wParam) {
 		case SC_DOCKING:
-			if (m_pEventHandler != NULL
+			if (m_pEventHandler != nullptr
 					&& !m_pEventHandler->OnFloatingChange(false))
 				return 0;
 			SetFloating(false);
@@ -952,7 +952,7 @@ LRESULT CPanelFrame::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 		break;
 
 	case WM_CLOSE:
-		if (m_pEventHandler != NULL
+		if (m_pEventHandler != nullptr
 				&& !m_pEventHandler->OnClose())
 			return 0;
 		break;
@@ -969,8 +969,8 @@ bool CPanelFrame::OnFloating()
 
 	RECT rc;
 	m_Panel.GetContentRect(&rc);
-	MapWindowRect(m_Panel.GetHandle(), NULL, &rc);
-	if (m_pEventHandler != NULL && !m_pEventHandler->OnFloatingChange(true))
+	MapWindowRect(m_Panel.GetHandle(), nullptr, &rc);
+	if (m_pEventHandler != nullptr && !m_pEventHandler->OnFloatingChange(true))
 		return false;
 	m_pStyleScaling->AdjustWindowRect(m_hwnd, &rc);
 	SetPosition(&rc);
@@ -981,25 +981,25 @@ bool CPanelFrame::OnFloating()
 
 bool CPanelFrame::OnClose()
 {
-	return m_pEventHandler == NULL || m_pEventHandler->OnClose();
+	return m_pEventHandler == nullptr || m_pEventHandler->OnClose();
 }
 
 
 bool CPanelFrame::OnMoving(RECT *pRect)
 {
-	return m_pEventHandler != NULL && m_pEventHandler->OnMoving(pRect);
+	return m_pEventHandler != nullptr && m_pEventHandler->OnMoving(pRect);
 }
 
 
 bool CPanelFrame::OnEnterSizeMove()
 {
-	return m_pEventHandler != NULL && m_pEventHandler->OnEnterSizeMove();
+	return m_pEventHandler != nullptr && m_pEventHandler->OnEnterSizeMove();
 }
 
 
 bool CPanelFrame::OnKeyDown(UINT KeyCode, UINT Flags)
 {
-	return m_pEventHandler != NULL && m_pEventHandler->OnKeyDown(KeyCode, Flags);
+	return m_pEventHandler != nullptr && m_pEventHandler->OnKeyDown(KeyCode, Flags);
 }
 
 
@@ -1023,7 +1023,7 @@ enum {
 
 bool CPanelFrame::OnMenuPopup(HMENU hmenu)
 {
-	::AppendMenu(hmenu, MF_SEPARATOR, 0, NULL);
+	::AppendMenu(hmenu, MF_SEPARATOR, 0, nullptr);
 	::AppendMenu(hmenu, MF_STRING | MF_ENABLED, PANEL_MENU_LEFT, TEXT("左へ(&L)"));
 	::AppendMenu(hmenu, MF_STRING | MF_ENABLED, PANEL_MENU_RIGHT, TEXT("右へ(&R)"));
 	::AppendMenu(hmenu, MF_STRING | MF_ENABLED, PANEL_MENU_TOP, TEXT("上へ(&T)"));
@@ -1062,12 +1062,12 @@ bool CPanelFrame::OnMenuSelected(int Command)
 
 
 
-HINSTANCE CDropHelper::m_hinst = NULL;
+HINSTANCE CDropHelper::m_hinst = nullptr;
 
 
 bool CDropHelper::Initialize(HINSTANCE hinst)
 {
-	if (m_hinst == NULL) {
+	if (m_hinst == nullptr) {
 		WNDCLASS wc;
 
 		wc.style = 0;
@@ -1075,10 +1075,10 @@ bool CDropHelper::Initialize(HINSTANCE hinst)
 		wc.cbClsExtra = 0;
 		wc.cbWndExtra = 0;
 		wc.hInstance = hinst;
-		wc.hIcon = NULL;
-		wc.hCursor = NULL;
-		wc.hbrBackground = NULL;
-		wc.lpszMenuName = NULL;
+		wc.hIcon = nullptr;
+		wc.hCursor = nullptr;
+		wc.hbrBackground = nullptr;
+		wc.lpszMenuName = nullptr;
 		wc.lpszClassName = DROP_HELPER_WINDOW_CLASS;
 		if (::RegisterClass(&wc) == 0)
 			return false;
@@ -1110,9 +1110,9 @@ bool CDropHelper::Create(HWND hwndParent, DWORD Style, DWORD ExStyle, int ID)
 
 bool CDropHelper::Show(const RECT *pRect)
 {
-	if (m_hwnd == NULL) {
+	if (m_hwnd == nullptr) {
 		if (!Create(
-					NULL, WS_POPUP,
+					nullptr, WS_POPUP,
 					WS_EX_LAYERED | WS_EX_TRANSPARENT | WS_EX_TOPMOST | WS_EX_NOACTIVATE))
 			return false;
 		::SetLayeredWindowAttributes(m_hwnd, CLR_INVALID, m_Opacity, LWA_ALPHA);
@@ -1125,7 +1125,7 @@ bool CDropHelper::Show(const RECT *pRect)
 
 bool CDropHelper::Hide()
 {
-	if (m_hwnd != NULL)
+	if (m_hwnd != nullptr)
 		SetVisible(false);
 	return true;
 }

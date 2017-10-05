@@ -68,11 +68,11 @@ namespace TVTest
 #endif
 
 #ifndef SAFE_DELETE
-//#define SAFE_DELETE(p)       if (p) { delete p; (p) = NULL; }
-//#define SAFE_DELETE_ARRAY(p) if (p) { delete [] p; (p) = NULL; }
-// delete NULL でもいいので
-#define SAFE_DELETE(p)       ((void)(delete p, (p) = NULL))
-#define SAFE_DELETE_ARRAY(p) ((void)(delete [] p, (p) = NULL))
+//#define SAFE_DELETE(p)       if (p) { delete p; (p) = nullptr; }
+//#define SAFE_DELETE_ARRAY(p) if (p) { delete [] p; (p) = nullptr; }
+// delete nullptr でもいいので
+#define SAFE_DELETE(p)       ((void)(delete p, (p) = nullptr))
+#define SAFE_DELETE_ARRAY(p) ((void)(delete [] p, (p) = nullptr))
 #endif
 
 #define ABSTRACT_DECL        __declspec(novtable)

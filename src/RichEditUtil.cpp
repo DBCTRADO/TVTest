@@ -19,7 +19,7 @@ const LPCTSTR CRichEditUtil::m_pszURLFullWidthChars =
 
 
 CRichEditUtil::CRichEditUtil()
-	: m_hLib(NULL)
+	: m_hLib(nullptr)
 {
 }
 
@@ -32,9 +32,9 @@ CRichEditUtil::~CRichEditUtil()
 
 bool CRichEditUtil::LoadRichEditLib()
 {
-	if (m_hLib == NULL) {
+	if (m_hLib == nullptr) {
 		m_hLib = Util::LoadSystemLibrary(TEXT("Riched20.dll"));
-		if (m_hLib == NULL)
+		if (m_hLib == nullptr)
 			return false;
 	}
 	return true;
@@ -43,16 +43,16 @@ bool CRichEditUtil::LoadRichEditLib()
 
 void CRichEditUtil::UnloadRichEditLib()
 {
-	if (m_hLib != NULL) {
+	if (m_hLib != nullptr) {
 		::FreeLibrary(m_hLib);
-		m_hLib = NULL;
+		m_hLib = nullptr;
 	}
 }
 
 
 bool CRichEditUtil::LogFontToCharFormat(HDC hdc, const LOGFONT *plf, CHARFORMAT *pcf)
 {
-	if (hdc == NULL || plf == NULL || pcf == NULL)
+	if (hdc == nullptr || plf == nullptr || pcf == nullptr)
 		return false;
 
 	pcf->cbSize = sizeof(CHARFORMAT);
@@ -78,7 +78,7 @@ bool CRichEditUtil::LogFontToCharFormat(HDC hdc, const LOGFONT *plf, CHARFORMAT 
 
 bool CRichEditUtil::LogFontToCharFormat2(HDC hdc, const LOGFONT *plf, CHARFORMAT2 *pcf)
 {
-	if (hdc == NULL || plf == NULL || pcf == NULL)
+	if (hdc == nullptr || plf == nullptr || pcf == nullptr)
 		return false;
 
 	::ZeroMemory(pcf, sizeof(CHARFORMAT2));
@@ -111,7 +111,7 @@ void CRichEditUtil::CharFormatToCharFormat2(const CHARFORMAT *pcf, CHARFORMAT2 *
 
 bool CRichEditUtil::AppendText(HWND hwndEdit, LPCTSTR pszText, const CHARFORMAT *pcf)
 {
-	if (hwndEdit == NULL || pszText == NULL)
+	if (hwndEdit == nullptr || pszText == nullptr)
 		return false;
 
 	CHARRANGE cr, crOld;
@@ -124,13 +124,13 @@ bool CRichEditUtil::AppendText(HWND hwndEdit, LPCTSTR pszText, const CHARFORMAT 
 	::SendMessage(hwndEdit, EM_EXGETSEL, 0, reinterpret_cast<LPARAM>(&cr));
 	cr.cpMin = cr.cpMax;
 	::SendMessage(hwndEdit, EM_EXSETSEL, 0, reinterpret_cast<LPARAM>(&cr));
-	if (pcf != NULL) {
+	if (pcf != nullptr) {
 		::SendMessage(hwndEdit, EM_SETCHARFORMAT, SCF_SELECTION, reinterpret_cast<LPARAM>(pcf));
 	}
 	::SendMessage(hwndEdit, EM_REPLACESEL, 0, reinterpret_cast<LPARAM>(pszText));
 	::SendMessage(hwndEdit, EM_EXSETSEL, 0, reinterpret_cast<LPARAM>(&crOld));
 	::SendMessage(hwndEdit, WM_SETREDRAW, TRUE, 0);
-	::InvalidateRect(hwndEdit, NULL, TRUE);
+	::InvalidateRect(hwndEdit, nullptr, TRUE);
 
 	return true;
 }
@@ -173,14 +173,14 @@ void CRichEditUtil::SelectAll(HWND hwndEdit)
 
 bool CRichEditUtil::IsSelected(HWND hwndEdit)
 {
-	return hwndEdit != NULL
+	return hwndEdit != nullptr
 		&& ::SendMessage(hwndEdit, EM_SELECTIONTYPE, 0, 0) != SEL_EMPTY;
 }
 
 
 LPTSTR CRichEditUtil::GetSelectedText(HWND hwndEdit)
 {
-	if (hwndEdit != NULL) {
+	if (hwndEdit != nullptr) {
 		CHARRANGE cr = {0, 0};
 
 		::SendMessage(hwndEdit, EM_EXGETSEL, 0, reinterpret_cast<LPARAM>(&cr));
@@ -192,7 +192,7 @@ LPTSTR CRichEditUtil::GetSelectedText(HWND hwndEdit)
 			delete [] pszText;
 		}
 	}
-	return NULL;
+	return nullptr;
 }
 
 
@@ -238,7 +238,7 @@ bool CRichEditUtil::DetectURL(
 	CHARRANGE cr, crOld;
 	bool fDetect = false;
 
-	if (pCharRangeList != NULL)
+	if (pCharRangeList != nullptr)
 		pCharRangeList->clear();
 
 	::SendMessage(hwndEdit, WM_SETREDRAW, FALSE, 0);
@@ -285,7 +285,7 @@ bool CRichEditUtil::DetectURL(
 				}
 #endif
 				::SendMessage(hwndEdit, EM_SETCHARFORMAT, SCF_SELECTION, reinterpret_cast<LPARAM>(&cfLink));
-				if (pCharRangeList != NULL)
+				if (pCharRangeList != nullptr)
 					pCharRangeList->push_back(cr);
 				fDetect = true;
 				q += Length;
@@ -296,7 +296,7 @@ bool CRichEditUtil::DetectURL(
 
 	::SendMessage(hwndEdit, EM_EXSETSEL, 0, reinterpret_cast<LPARAM>(&crOld));
 	::SendMessage(hwndEdit, WM_SETREDRAW, TRUE, 0);
-	::InvalidateRect(hwndEdit, NULL, TRUE);
+	::InvalidateRect(hwndEdit, nullptr, TRUE);
 
 	return fDetect;
 }
@@ -324,10 +324,10 @@ bool CRichEditUtil::SearchNextURL(LPCTSTR *ppszText, int *pLength)
 							LOCALE_USER_DEFAULT, NORM_IGNOREWIDTH,
 							&p[i], URLLength, URLPrefixList[j].pszPrefix, URLLength) == CSTR_EQUAL) {
 				if (p[i] < 0x0080) {
-					while (i + URLLength < TextLength && ::StrChr(m_pszURLChars, p[i + URLLength]) != NULL)
+					while (i + URLLength < TextLength && ::StrChr(m_pszURLChars, p[i + URLLength]) != nullptr)
 						URLLength++;
 				} else {
-					while (i + URLLength < TextLength && ::StrChr(m_pszURLFullWidthChars, p[i + URLLength]) != NULL)
+					while (i + URLLength < TextLength && ::StrChr(m_pszURLFullWidthChars, p[i + URLLength]) != nullptr)
 						URLLength++;
 				}
 #ifdef UNICODE
@@ -347,7 +347,7 @@ bool CRichEditUtil::SearchNextURL(LPCTSTR *ppszText, int *pLength)
 
 bool CRichEditUtil::HandleLinkClick(const ENLINK *penl)
 {
-	if (penl == NULL)
+	if (penl == nullptr)
 		return false;
 
 	return OpenLink(penl->nmhdr.hwndFrom, penl->chrg);
@@ -366,7 +366,7 @@ bool CRichEditUtil::HandleLinkClick(HWND hwndEdit, const POINT &Pos, const CharR
 
 int CRichEditUtil::LinkHitTest(HWND hwndEdit, const POINT &Pos, const CharRangeList &LinkList)
 {
-	if (hwndEdit == NULL || LinkList.empty())
+	if (hwndEdit == nullptr || LinkList.empty())
 		return -1;
 
 	POINTL pt = {Pos.x, Pos.y};
@@ -405,7 +405,7 @@ bool CRichEditUtil::OpenLink(HWND hwndEdit, const CHARRANGE &Range)
 		::lstrcpy(szText, szURL);
 		::wsprintf(szURL, TEXT("http://%s"), szText);
 	}
-	::ShellExecute(NULL, TEXT("open"), szURL, NULL, NULL, SW_SHOWNORMAL);
+	::ShellExecute(nullptr, TEXT("open"), szURL, nullptr, nullptr, SW_SHOWNORMAL);
 
 	return true;
 }

@@ -50,7 +50,7 @@ INT_PTR CALLBACK CMessageDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LP
 				hDlg, IDC_ERROR_ICON, STM_SETICON,
 				reinterpret_cast<WPARAM>(
 					::LoadIcon(
-						NULL,
+						nullptr,
 						pThis->m_MessageType == TYPE_INFO ? IDI_INFORMATION :
 						pThis->m_MessageType == TYPE_WARNING ? IDI_WARNING : IDI_ERROR)),
 				0);
@@ -91,17 +91,17 @@ INT_PTR CALLBACK CMessageDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LP
 			if (rcEdit.bottom < rcIcon.bottom)
 				rcEdit.bottom = rcIcon.bottom;
 			::SetWindowPos(
-				hwndEdit, NULL, 0, 0, MaxWidth, rcEdit.bottom, SWP_NOMOVE | SWP_NOZORDER);
+				hwndEdit, nullptr, 0, 0, MaxWidth, rcEdit.bottom, SWP_NOMOVE | SWP_NOZORDER);
 			::GetWindowRect(hDlg, &rcDlg);
 			::GetClientRect(hDlg, &rcClient);
 			GetDlgItemRect(hDlg, IDOK, &rcOK);
 			const int Offset = MaxWidth - rcEdit.right;
 			::SetWindowPos(
-				::GetDlgItem(hDlg, IDOK), NULL,
+				::GetDlgItem(hDlg, IDOK), nullptr,
 				rcOK.left + Offset, rcOK.top, 0, 0,
 				SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);
 			::SetWindowPos(
-				hDlg, NULL, 0, 0, (rcDlg.right - rcDlg.left) + Offset, rcDlg.bottom - rcDlg.top,
+				hDlg, nullptr, 0, 0, (rcDlg.right - rcDlg.left) + Offset, rcDlg.bottom - rcDlg.top,
 				SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE);
 			::SendMessage(hwndEdit, EM_SETEVENTMASK, 0, ENM_REQUESTRESIZE | ENM_MOUSEEVENTS);
 			::SendDlgItemMessage(hDlg, IDC_ERROR_MESSAGE, EM_REQUESTRESIZE, 0, 0);
@@ -124,7 +124,7 @@ INT_PTR CALLBACK CMessageDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LP
 
 			::BeginPaint(hDlg, &ps);
 			::GetWindowRect(::GetDlgItem(hDlg, IDC_ERROR_MESSAGE), &rcEdit);
-			MapWindowRect(NULL, hDlg, &rcEdit);
+			MapWindowRect(nullptr, hDlg, &rcEdit);
 			::GetClientRect(hDlg, &rc);
 			rc.bottom = rcEdit.bottom;
 			::FillRect(ps.hdc, &rc, ::GetSysColorBrush(COLOR_WINDOW));
@@ -165,7 +165,7 @@ INT_PTR CALLBACK CMessageDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LP
 				XOffset = Width - (rcEdit.right - rcEdit.left);
 				YOffset = Height - (rcEdit.bottom - rcEdit.top);
 				::SetWindowPos(
-					prr->nmhdr.hwndFrom, NULL, 0, 0, Width, Height,
+					prr->nmhdr.hwndFrom, nullptr, 0, 0, Width, Height,
 					SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE);
 				::SetRect(&rcEdit, 0, 0, Width, Height);
 				::SendDlgItemMessage(hDlg, IDC_ERROR_MESSAGE, EM_SETRECT, 0, reinterpret_cast<LPARAM>(&rcEdit));
@@ -189,7 +189,7 @@ INT_PTR CALLBACK CMessageDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LP
 				hmenu = ::CreatePopupMenu();
 				::AppendMenu(hmenu, MFT_STRING | MFS_ENABLED, IDC_ERROR_COPY, TEXT("コピー(&C)"));
 				::GetCursorPos(&pt);
-				::TrackPopupMenu(hmenu, TPM_RIGHTBUTTON, pt.x, pt.y, 0, hDlg, NULL);
+				::TrackPopupMenu(hmenu, TPM_RIGHTBUTTON, pt.x, pt.y, 0, hDlg, nullptr);
 				::DestroyMenu(hmenu);
 			}
 			return TRUE;
@@ -225,7 +225,7 @@ INT_PTR CALLBACK CMessageDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LP
 			pThis->m_Title.clear();
 			pThis->m_SystemMessage.clear();
 			pThis->m_Caption.clear();
-			pThis->m_hDlg = NULL;
+			pThis->m_hDlg = nullptr;
 			::RemoveProp(hDlg, TEXT("This"));
 		}
 		return TRUE;
@@ -237,21 +237,21 @@ INT_PTR CALLBACK CMessageDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LP
 
 bool CMessageDialog::Show(HWND hwndOwner, MessageType Type, LPCTSTR pszText, LPCTSTR pszTitle, LPCTSTR pszSystemMessage, LPCTSTR pszCaption)
 {
-	if (pszText == NULL && pszTitle == NULL && pszSystemMessage == NULL)
+	if (pszText == nullptr && pszTitle == nullptr && pszSystemMessage == nullptr)
 		return false;
 
 	if (!m_RichEditUtil.LoadRichEditLib()) {
 		TCHAR szMessage[1024];
 		CStaticStringFormatter Formatter(szMessage, lengthof(szMessage));
 
-		if (pszTitle != NULL)
+		if (pszTitle != nullptr)
 			Formatter.Append(pszTitle);
-		if (pszText != NULL) {
+		if (pszText != nullptr) {
 			if (!Formatter.IsEmpty())
 				Formatter.Append(TEXT("\n"));
 			Formatter.Append(pszText);
 		}
-		if (pszSystemMessage != NULL) {
+		if (pszSystemMessage != nullptr) {
 			if (!Formatter.IsEmpty())
 				Formatter.Append(TEXT("\n\n"));
 			Formatter.Append(TEXT("Windowsのエラーメッセージ:\n"));

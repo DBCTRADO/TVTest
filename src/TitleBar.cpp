@@ -22,12 +22,12 @@ enum {
 
 
 const LPCTSTR CTitleBar::CLASS_NAME = APP_NAME TEXT(" Title Bar");
-HINSTANCE CTitleBar::m_hinst = NULL;
+HINSTANCE CTitleBar::m_hinst = nullptr;
 
 
 bool CTitleBar::Initialize(HINSTANCE hinst)
 {
-	if (m_hinst == NULL) {
+	if (m_hinst == nullptr) {
 		WNDCLASS wc;
 
 		wc.style = CS_HREDRAW | CS_VREDRAW | CS_DBLCLKS;
@@ -35,10 +35,10 @@ bool CTitleBar::Initialize(HINSTANCE hinst)
 		wc.cbClsExtra = 0;
 		wc.cbWndExtra = 0;
 		wc.hInstance = hinst;
-		wc.hIcon = NULL;
-		wc.hCursor = LoadCursor(NULL, IDC_ARROW);
-		wc.hbrBackground = NULL;
-		wc.lpszMenuName = NULL;
+		wc.hIcon = nullptr;
+		wc.hCursor = LoadCursor(nullptr, IDC_ARROW);
+		wc.hbrBackground = nullptr;
+		wc.lpszMenuName = nullptr;
 		wc.lpszClassName = CLASS_NAME;
 		if (RegisterClass(&wc) == 0)
 			return false;
@@ -50,12 +50,12 @@ bool CTitleBar::Initialize(HINSTANCE hinst)
 
 CTitleBar::CTitleBar()
 	: m_FontHeight(0)
-	, m_hIcon(NULL)
+	, m_hIcon(nullptr)
 	, m_HotItem(-1)
 	, m_ClickItem(-1)
 	, m_fMaximized(false)
 	, m_fFullscreen(false)
-	, m_pEventHandler(NULL)
+	, m_pEventHandler(nullptr)
 {
 	GetSystemFont(DrawUtil::FONT_CAPTION, &m_StyleFont);
 }
@@ -64,14 +64,14 @@ CTitleBar::CTitleBar()
 CTitleBar::~CTitleBar()
 {
 	Destroy();
-	if (m_pEventHandler != NULL)
-		m_pEventHandler->m_pTitleBar = NULL;
+	if (m_pEventHandler != nullptr)
+		m_pEventHandler->m_pTitleBar = nullptr;
 }
 
 
 bool CTitleBar::Create(HWND hwndParent, DWORD Style, DWORD ExStyle, int ID)
 {
-	return CreateBasicWindow(hwndParent, Style, ExStyle, ID, CLASS_NAME, NULL, m_hinst);
+	return CreateBasicWindow(hwndParent, Style, ExStyle, ID, CLASS_NAME, nullptr, m_hinst);
 }
 
 
@@ -148,7 +148,7 @@ bool CTitleBar::SetLabel(LPCTSTR pszLabel)
 {
 	if (TVTest::StringUtility::Compare(m_Label, pszLabel) != 0) {
 		TVTest::StringUtility::Assign(m_Label, pszLabel);
-		if (m_hwnd != NULL)
+		if (m_hwnd != nullptr)
 			UpdateItem(ITEM_LABEL);
 	}
 	return true;
@@ -159,7 +159,7 @@ void CTitleBar::SetMaximizeMode(bool fMaximize)
 {
 	if (m_fMaximized != fMaximize) {
 		m_fMaximized = fMaximize;
-		if (m_hwnd != NULL)
+		if (m_hwnd != nullptr)
 			UpdateItem(ITEM_MAXIMIZE);
 	}
 }
@@ -169,7 +169,7 @@ void CTitleBar::SetFullscreenMode(bool fFullscreen)
 {
 	if (m_fFullscreen != fFullscreen) {
 		m_fFullscreen = fFullscreen;
-		if (m_hwnd != NULL)
+		if (m_hwnd != nullptr)
 			UpdateItem(ITEM_FULLSCREEN);
 	}
 }
@@ -177,9 +177,9 @@ void CTitleBar::SetFullscreenMode(bool fFullscreen)
 
 bool CTitleBar::SetEventHandler(CEventHandler *pHandler)
 {
-	if (m_pEventHandler != NULL)
-		m_pEventHandler->m_pTitleBar = NULL;
-	if (pHandler != NULL)
+	if (m_pEventHandler != nullptr)
+		m_pEventHandler->m_pTitleBar = nullptr;
+	if (pHandler != nullptr)
 		pHandler->m_pTitleBar = this;
 	m_pEventHandler = pHandler;
 	return true;
@@ -190,7 +190,7 @@ bool CTitleBar::SetTitleBarTheme(const TitleBarTheme &Theme)
 {
 	m_Theme = Theme;
 
-	if (m_hwnd != NULL)
+	if (m_hwnd != nullptr)
 		AdjustSize();
 
 	return true;
@@ -199,7 +199,7 @@ bool CTitleBar::SetTitleBarTheme(const TitleBarTheme &Theme)
 
 bool CTitleBar::GetTitleBarTheme(TitleBarTheme *pTheme) const
 {
-	if (pTheme == NULL)
+	if (pTheme == nullptr)
 		return false;
 	*pTheme = m_Theme;
 	return true;
@@ -210,7 +210,7 @@ bool CTitleBar::SetFont(const TVTest::Style::Font &Font)
 {
 	m_StyleFont = Font;
 
-	if (m_hwnd != NULL)
+	if (m_hwnd != nullptr)
 		RealizeStyle();
 
 	return true;
@@ -221,7 +221,7 @@ void CTitleBar::SetIcon(HICON hIcon)
 {
 	if (m_hIcon != hIcon) {
 		m_hIcon = hIcon;
-		if (m_hwnd != NULL) {
+		if (m_hwnd != nullptr) {
 			RECT rc;
 
 			GetItemRect(ITEM_LABEL, &rc);
@@ -357,7 +357,7 @@ LRESULT CTitleBar::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	case WM_LBUTTONDOWN:
 		m_ClickItem = m_HotItem;
 		if (m_ClickItem == ITEM_LABEL) {
-			if (m_pEventHandler != NULL) {
+			if (m_pEventHandler != nullptr) {
 				int x = GET_X_LPARAM(lParam), y = GET_Y_LPARAM(lParam);
 
 				if (PtInIcon(x, y))
@@ -372,7 +372,7 @@ LRESULT CTitleBar::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 	case WM_RBUTTONUP:
 		if (m_HotItem == ITEM_LABEL) {
-			if (m_pEventHandler != NULL)
+			if (m_pEventHandler != nullptr)
 				m_pEventHandler->OnLabelRButtonUp(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
 		}
 		return 0;
@@ -381,7 +381,7 @@ LRESULT CTitleBar::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		if (GetCapture() == hwnd) {
 			::ReleaseCapture();
 			if (m_HotItem >= 0) {
-				if (m_pEventHandler != NULL) {
+				if (m_pEventHandler != nullptr) {
 					switch (m_HotItem) {
 					case ITEM_MINIMIZE:
 						m_pEventHandler->OnMinimize();
@@ -408,7 +408,7 @@ LRESULT CTitleBar::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			if (m_HotItem < 0 && HitTest(x, y) == ITEM_LABEL)
 				m_HotItem = ITEM_LABEL;
 			if (m_HotItem == ITEM_LABEL) {
-				if (m_pEventHandler != NULL) {
+				if (m_pEventHandler != nullptr) {
 					if (PtInIcon(x, y))
 						m_pEventHandler->OnIconLButtonDoubleClick(x, y);
 					else
@@ -445,7 +445,7 @@ LRESULT CTitleBar::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 					pnmttdi->lpszText = TEXT("全画面表示解除");
 				else
 					pnmttdi->lpszText = pszToolTip[pnmttdi->hdr.idFrom - ITEM_BUTTON_FIRST];
-				pnmttdi->hinst = NULL;
+				pnmttdi->hinst = nullptr;
 			}
 			return 0;
 		}
@@ -468,7 +468,7 @@ void CTitleBar::AdjustSize()
 	if (NewHeight != rc.bottom - rc.top) {
 		rc.bottom = rc.top + NewHeight;
 		SetPosition(&rc);
-		if (m_pEventHandler != NULL)
+		if (m_pEventHandler != nullptr)
 			m_pEventHandler->OnHeightChanged(NewHeight);
 	} else {
 		SendSizeMessage();
@@ -485,7 +485,7 @@ int CTitleBar::CalcFontHeight() const
 
 bool CTitleBar::GetItemRect(int Item, RECT *pRect) const
 {
-	if (m_hwnd == NULL || Item < 0 || Item > ITEM_LAST)
+	if (m_hwnd == nullptr || Item < 0 || Item > ITEM_LAST)
 		return false;
 
 	RECT rc;
@@ -519,7 +519,7 @@ bool CTitleBar::UpdateItem(int Item)
 {
 	RECT rc;
 
-	if (m_hwnd == NULL)
+	if (m_hwnd == nullptr)
 		return false;
 	if (!GetItemRect(Item, &rc))
 		return false;
@@ -595,7 +595,7 @@ void CTitleBar::Draw(HDC hdc, const RECT &PaintRect)
 			bool fHighlight = i == m_HotItem && i != ITEM_LABEL;
 
 			if (i == ITEM_LABEL) {
-				if (m_hIcon != NULL) {
+				if (m_hIcon != nullptr) {
 					int Height = m_Style.IconSize.Height + m_Style.IconMargin.Vert();
 					rc.left += m_Style.IconMargin.Left;
 					::DrawIconEx(
@@ -604,7 +604,7 @@ void CTitleBar::Draw(HDC hdc, const RECT &PaintRect)
 						rc.top + m_Style.IconMargin.Top + ((rc.bottom - rc.top) - Height) / 2,
 						m_hIcon,
 						m_Style.IconSize.Width, m_Style.IconSize.Height,
-						0, NULL, DI_NORMAL);
+						0, nullptr, DI_NORMAL);
 					rc.left += m_Style.IconSize.Width;
 				}
 				if (!m_Label.empty()) {
@@ -647,7 +647,7 @@ void CTitleBar::Draw(HDC hdc, const RECT &PaintRect)
 
 void CTitleBar::ApplyStyle()
 {
-	if (m_hwnd == NULL)
+	if (m_hwnd == nullptr)
 		return;
 
 	CreateDrawFont(m_StyleFont, &m_Font);
@@ -669,7 +669,7 @@ void CTitleBar::ApplyStyle()
 
 void CTitleBar::RealizeStyle()
 {
-	if (m_hwnd != NULL) {
+	if (m_hwnd != nullptr) {
 		AdjustSize();
 	}
 }
@@ -678,15 +678,15 @@ void CTitleBar::RealizeStyle()
 
 
 CTitleBar::CEventHandler::CEventHandler()
-	: m_pTitleBar(NULL)
+	: m_pTitleBar(nullptr)
 {
 }
 
 
 CTitleBar::CEventHandler::~CEventHandler()
 {
-	if (m_pTitleBar != NULL)
-		m_pTitleBar->SetEventHandler(NULL);
+	if (m_pTitleBar != nullptr)
+		m_pTitleBar->SetEventHandler(nullptr);
 }
 
 

@@ -50,7 +50,7 @@ CAppMutex::CAppMutex(bool fEnable)
 	if (fEnable) {
 		TCHAR szName[MAX_PATH];
 
-		::GetModuleFileName(NULL, szName, lengthof(szName));
+		::GetModuleFileName(nullptr, szName, lengthof(szName));
 		::CharUpperBuff(szName, ::lstrlen(szName));
 		for (int i = 0; szName[i] != '\0'; i++) {
 			if (szName[i] == '\\')
@@ -61,9 +61,9 @@ CAppMutex::CAppMutex(bool fEnable)
 		SecAttributes.Initialize();
 
 		m_hMutex = ::CreateMutex(&SecAttributes, FALSE, szName);
-		m_fAlreadyExists = m_hMutex != NULL && ::GetLastError() == ERROR_ALREADY_EXISTS;
+		m_fAlreadyExists = m_hMutex != nullptr && ::GetLastError() == ERROR_ALREADY_EXISTS;
 	} else {
-		m_hMutex = NULL;
+		m_hMutex = nullptr;
 		m_fAlreadyExists = false;
 	}
 }
@@ -71,7 +71,7 @@ CAppMutex::CAppMutex(bool fEnable)
 
 CAppMutex::~CAppMutex()
 {
-	if (m_hMutex != NULL) {
+	if (m_hMutex != nullptr) {
 		/*
 		if (!m_fAlreadyExists)
 			::ReleaseMutex(m_hMutex);
@@ -85,11 +85,11 @@ CAppMutex::~CAppMutex()
 
 HWND CTVTestWindowFinder::FindCommandLineTarget()
 {
-	::GetModuleFileName(NULL, m_szModuleFileName, lengthof(m_szModuleFileName));
-	m_hwndFirst = NULL;
-	m_hwndFound = NULL;
+	::GetModuleFileName(nullptr, m_szModuleFileName, lengthof(m_szModuleFileName));
+	m_hwndFirst = nullptr;
+	m_hwndFound = nullptr;
 	::EnumWindows(FindWindowCallback, reinterpret_cast<LPARAM>(this));
-	return m_hwndFound != NULL ? m_hwndFound : m_hwndFirst;
+	return m_hwndFound != nullptr ? m_hwndFound : m_hwndFirst;
 }
 
 
@@ -100,14 +100,14 @@ BOOL CALLBACK CTVTestWindowFinder::FindWindowCallback(HWND hwnd, LPARAM lParam)
 
 	if (::GetClassName(hwnd, szClassName, lengthof(szClassName)) > 0
 			&& ::lstrcmpi(szClassName, MAIN_WINDOW_CLASS) == 0) {
-		if (pThis->m_hwndFirst == NULL)
+		if (pThis->m_hwndFirst == nullptr)
 			pThis->m_hwndFirst = hwnd;
 
 		DWORD ProcessId;
 		HANDLE hProcess;
 		::GetWindowThreadProcessId(hwnd, &ProcessId);
 		hProcess = ::OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, ProcessId);
-		if (hProcess != NULL) {
+		if (hProcess != nullptr) {
 			DWORD FileNameSize = lengthof(szFileName);
 			if (::QueryFullProcessImageName(hProcess, 0, szFileName, &FileNameSize)
 					&& IsEqualFileName(szFileName, pThis->m_szModuleFileName)) {

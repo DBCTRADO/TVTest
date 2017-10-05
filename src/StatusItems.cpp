@@ -36,7 +36,7 @@ void CChannelStatusItem::Draw(HDC hdc, const RECT &ItemRect, const RECT &DrawRec
 		StdUtil::snprintf(
 			szText, lengthof(szText), TEXT("%d: %s"),
 			pInfo->GetChannelNo(), pInfo->GetName());
-	} else if ((pInfo = ChannelManager.GetCurrentChannelInfo()) != NULL) {
+	} else if ((pInfo = ChannelManager.GetCurrentChannelInfo()) != nullptr) {
 		TCHAR szService[MAX_CHANNEL_NAME];
 		StdUtil::snprintf(
 			szText, lengthof(szText), TEXT("%d: %s"),
@@ -168,7 +168,7 @@ void CVolumeStatusItem::Draw(HDC hdc, const RECT &ItemRect, const RECT &DrawRect
 	lb.lbHatch = 0;
 	hpen = ::ExtCreatePen(
 		PS_GEOMETRIC | PS_SOLID | PS_INSIDEFRAME | PS_JOIN_MITER,
-		m_Style.BarBorderWidth, &lb, 0, NULL);
+		m_Style.BarBorderWidth, &lb, 0, nullptr);
 	hpenOld = SelectPen(hdc, hpen);
 	hbrOld = SelectBrush(hdc, ::GetStockObject(NULL_BRUSH));
 	rc.left = DrawRect.left;
@@ -512,13 +512,13 @@ LRESULT CRecordStatusItem::OnNotifyMessage(LPNMHDR pnmh)
 			int x, y;
 
 			GetRect(&rc);
-			MapWindowRect(m_pStatus->GetHandle(), NULL, &rc);
+			MapWindowRect(m_pStatus->GetHandle(), nullptr, &rc);
 			::GetWindowRect(pnmh->hwndFrom, &rcTip);
 			x = rc.left + ((rc.right - rc.left) - (rcTip.right - rcTip.left)) / 2;
 			y = rc.top - (rcTip.bottom - rcTip.top);
 			::SendMessage(pnmh->hwndFrom, TTM_TRACKPOSITION, 0, MAKELONG(x, y));
 			::SetWindowPos(
-				pnmh->hwndFrom, NULL, x, y, 0, 0,
+				pnmh->hwndFrom, nullptr, x, y, 0, 0,
 				SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);
 			return TRUE;
 		}
@@ -827,18 +827,18 @@ void CClockStatusItem::FormatTime(const LibISDB::DateTime &Time, LPTSTR pszText,
 		TCHAR szDate[32], szTime[32];
 		if (::GetDateFormat(
 					LOCALE_USER_DEFAULT, DATE_SHORTDATE,
-					&st, NULL, szDate, lengthof(szDate)) == 0)
+					&st, nullptr, szDate, lengthof(szDate)) == 0)
 			szDate[0] = _T('\0');
 		if (::GetTimeFormat(
 					LOCALE_USER_DEFAULT,
 					TIME_FORCE24HOURFORMAT | TIME_NOTIMEMARKER,
-					&st, NULL, szTime, lengthof(szTime)) == 0)
+					&st, nullptr, szTime, lengthof(szTime)) == 0)
 			szTime[0] = _T('\0');
 		StdUtil::snprintf(
 			pszText, MaxLength,
 			TEXT("TOT %s %s"), szDate, szTime);
 	} else {
-		::GetTimeFormat(LOCALE_USER_DEFAULT, 0, &st, NULL, pszText, MaxLength);
+		::GetTimeFormat(LOCALE_USER_DEFAULT, 0, &st, nullptr, pszText, MaxLength);
 	}
 #endif
 }
@@ -1066,7 +1066,7 @@ void CProgramInfoStatusItem::ShowPopupInfo()
 				IconWidth, IconHeight);
 
 			if (!m_EventInfoPopup.Show(&EventInfo, &rc, hIcon, ChInfo.GetName())) {
-				if (hIcon != NULL)
+				if (hIcon != nullptr)
 					::DestroyIcon(hIcon);
 			}
 		}
@@ -1152,11 +1152,11 @@ void CTunerStatusItem::Draw(HDC hdc, const RECT &ItemRect, const RECT &DrawRect,
 	const CChannelInfo *pChInfo = ChannelManager.GetCurrentChannelInfo();
 	LPCTSTR pszText;
 
-	if (pChInfo != NULL || ChannelManager.GetCurrentSpace() >= 0) {
+	if (pChInfo != nullptr || ChannelManager.GetCurrentSpace() >= 0) {
 		pszText =
 			ChannelManager.GetTuningSpaceName(
-				pChInfo != NULL ? pChInfo->GetSpace() : ChannelManager.GetCurrentSpace());
-		if (pszText == NULL)
+				pChInfo != nullptr ? pChInfo->GetSpace() : ChannelManager.GetCurrentSpace());
+		if (pszText == nullptr)
 			pszText = TEXT("<チューナー>");
 	} else if (ChannelManager.GetCurrentSpace() == CChannelManager::SPACE_ALL) {
 		pszText = TEXT("すべて");

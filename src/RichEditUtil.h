@@ -15,7 +15,7 @@ public:
 	~CRichEditUtil();
 	bool LoadRichEditLib();
 	void UnloadRichEditLib();
-	bool IsRichEditLibLoaded() const { return m_hLib != NULL; }
+	bool IsRichEditLibLoaded() const { return m_hLib != nullptr; }
 	LPCTSTR GetWindowClassName() const { return TEXT("RichEdit20W"); }
 	static bool LogFontToCharFormat(HDC hdc, const LOGFONT *plf, CHARFORMAT *pcf);
 	static bool LogFontToCharFormat2(HDC hdc, const LOGFONT *plf, CHARFORMAT2 *pcf);
@@ -33,7 +33,7 @@ public:
 	};
 	static bool DetectURL(
 		HWND hwndEdit, const CHARFORMAT *pcf, int FirstLine = 0, int LastLine = -1,
-		unsigned int Flags = URL_TO_HALF_WIDTH, CharRangeList *pCharRangeList = NULL);
+		unsigned int Flags = URL_TO_HALF_WIDTH, CharRangeList *pCharRangeList = nullptr);
 	static bool HandleLinkClick(const ENLINK *penl);
 	static bool HandleLinkClick(HWND hwndEdit, const POINT &Pos, const CharRangeList &LinkList);
 	static int LinkHitTest(HWND hwndEdit, const POINT &Pos, const CharRangeList &LinkList);

@@ -180,7 +180,7 @@ bool CArgsParser::GetValue(DWORD *pValue) const
 {
 	if (IsEnd())
 		return false;
-	*pValue = wcstoul(m_ppszArgList[m_CurPos], NULL, 0);
+	*pValue = wcstoul(m_ppszArgList[m_CurPos], nullptr, 0);
 	return true;
 }
 
@@ -343,14 +343,14 @@ static bool GetIniEntry(LPCWSTR pszText, CCommandLineOptions::IniEntry *pEntry)
 	if (*p == L'[') {
 		p++;
 		LPCWSTR pEnd = ::StrChrW(p, L']');
-		if (pEnd == NULL)
+		if (pEnd == nullptr)
 			return false;
 		pEntry->Section.assign(p, pEnd - p);
 		p = pEnd + 1;
 	}
 
 	LPCWSTR pEnd = ::StrChrW(p, L'=');
-	if (pEnd == NULL || pEnd - p < 1)
+	if (pEnd == nullptr || pEnd - p < 1)
 		return false;
 	pEntry->Name.assign(p, pEnd - p);
 	p = pEnd + 1;

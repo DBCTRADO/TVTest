@@ -11,9 +11,9 @@
 #define DlgEdit_SetUInt(hwndDlg, ID, Value) \
 	::SetDlgItemInt(hwndDlg, ID, Value, FALSE)
 #define DlgEdit_GetInt(hwndDlg, ID) \
-	((int)::GetDlgItemInt(hwndDlg, ID, NULL, TRUE))
+	((int)::GetDlgItemInt(hwndDlg, ID, nullptr, TRUE))
 #define DlgEdit_GetUInt(hwndDlg, ID) \
-	::GetDlgItemInt(hwndDlg, ID, NULL, FALSE)
+	::GetDlgItemInt(hwndDlg, ID, nullptr, FALSE)
 #define DlgEdit_LimitText(hwndDlg, ID, Limit) \
 	::SendDlgItemMessage(hwndDlg, ID, EM_LIMITTEXT, Limit, 0)
 
@@ -151,7 +151,7 @@ bool UpdateDlgItemInt(HWND hDlg, int ID, int Value);
 HMENU CreatePopupMenuFromControls(HWND hDlg, const int *pIDList, int IDListLength);
 bool PopupMenuFromControls(
 	HWND hDlg, const int *pIDList, int IDListLength, 
-	unsigned int Flags = 0, const POINT *ppt = NULL);
+	unsigned int Flags = 0, const POINT *ppt = nullptr);
 #define LBN_EX_RBUTTONDOWN 0x0100
 #define LBN_EX_RBUTTONUP   0x0101
 bool ExtendListBox(HWND hwndList, unsigned int Flags = 0);

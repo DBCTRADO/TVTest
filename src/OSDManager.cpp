@@ -10,7 +10,7 @@
 
 COSDManager::COSDManager(const COSDOptions *pOptions)
 	: m_pOptions(pOptions)
-	, m_pEventHandler(NULL)
+	, m_pEventHandler(nullptr)
 {
 }
 
@@ -121,7 +121,7 @@ void COSDManager::HideOSD()
 
 bool COSDManager::ShowChannelOSD(const CChannelInfo *pInfo, LPCTSTR pszText, bool fChanging)
 {
-	if (m_pEventHandler == NULL || pInfo == NULL)
+	if (m_pEventHandler == nullptr || pInfo == nullptr)
 		return false;
 
 	CAppMain &App = GetAppClass();
@@ -141,19 +141,19 @@ bool COSDManager::ShowChannelOSD(const CChannelInfo *pInfo, LPCTSTR pszText, boo
 
 	COSDOptions::ChannelChangeType ChangeType = m_pOptions->GetChannelChangeType();
 
-	HBITMAP hbmLogo = NULL;
+	HBITMAP hbmLogo = nullptr;
 	unsigned int ImageEffect = 0;
 	if (ChangeType != COSDOptions::CHANNELCHANGE_TEXTONLY) {
 		hbmLogo = App.LogoManager.GetAssociatedLogoBitmap(
 			pInfo->GetNetworkID(), pInfo->GetServiceID(), CLogoManager::LOGOTYPE_BIG);
-		if (hbmLogo != NULL) {
+		if (hbmLogo != nullptr) {
 			if (fChanging)
 				ImageEffect = CPseudoOSD::IMAGEEFFECT_DARK;
 			else if (TVTest::StringUtility::CompareNoCase(m_Style.LogoEffect, TEXT("gloss")) == 0)
 				ImageEffect = CPseudoOSD::IMAGEEFFECT_GLOSS;
 		}
 
-		if (ChangeType == COSDOptions::CHANNELCHANGE_LOGOONLY && hbmLogo != NULL) {
+		if (ChangeType == COSDOptions::CHANNELCHANGE_LOGOONLY && hbmLogo != nullptr) {
 			m_OSD.Create(ClientInfo.hwndParent, m_pOptions->GetLayeredWindow());
 			m_OSD.SetImage(hbmLogo, ImageEffect);
 			m_OSD.SetPosition(
@@ -167,7 +167,7 @@ bool COSDManager::ShowChannelOSD(const CChannelInfo *pInfo, LPCTSTR pszText, boo
 
 	if (!m_pOptions->GetPseudoOSD() && !ClientInfo.fForcePseudoOSD
 			&& pViewer->IsDrawTextSupported()) {
-		if (hbmLogo != NULL) {
+		if (hbmLogo != nullptr) {
 			m_OSD.Create(ClientInfo.hwndParent, m_pOptions->GetLayeredWindow());
 			m_OSD.SetImage(hbmLogo, ImageEffect);
 			m_OSD.SetPosition(
@@ -178,7 +178,7 @@ bool COSDManager::ShowChannelOSD(const CChannelInfo *pInfo, LPCTSTR pszText, boo
 		}
 
 		if (ChangeType != COSDOptions::CHANNELCHANGE_LOGOONLY && !IsStringEmpty(pszText)) {
-			CompositeText(pszText, ClientInfo.ClientRect, hbmLogo != NULL ? m_Style.LogoSize.Width : 0, m_pOptions->GetFadeTime());
+			CompositeText(pszText, ClientInfo.ClientRect, hbmLogo != nullptr ? m_Style.LogoSize.Width : 0, m_pOptions->GetFadeTime());
 		}
 	} else {
 		int FontSize = max((ClientInfo.ClientRect.right - ClientInfo.ClientRect.left) / m_Style.TextSizeRatio, 12L);
@@ -221,7 +221,7 @@ void COSDManager::HideChannelOSD()
 
 bool COSDManager::ShowVolumeOSD(int Volume)
 {
-	if (m_pEventHandler == NULL)
+	if (m_pEventHandler == nullptr)
 		return false;
 
 	CAppMain &App = GetAppClass();

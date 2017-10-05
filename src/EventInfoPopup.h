@@ -34,8 +34,8 @@ public:
 	CEventInfoPopup();
 	~CEventInfoPopup();
 	bool Show(
-		const LibISDB::EventInfo *pEventInfo, const RECT *pPos = NULL,
-		HICON hIcon = NULL, LPCTSTR pszTitle = NULL);
+		const LibISDB::EventInfo *pEventInfo, const RECT *pPos = nullptr,
+		HICON hIcon = nullptr, LPCTSTR pszTitle = nullptr);
 	bool Hide();
 	bool IsVisible();
 	bool IsOwnWindow(HWND hwnd) const;

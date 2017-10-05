@@ -10,7 +10,7 @@
 
 
 COperationOptions::COperationOptions()
-	: m_pCommandList(NULL)
+	: m_pCommandList(nullptr)
 	, m_fDisplayDragMove(true)
 	, m_VolumeStep(5)
 	, m_AudioDelayStep(50)
@@ -94,7 +94,7 @@ bool COperationOptions::ReadSettings(CSettings &Settings)
 	}
 	Settings.Read(TEXT("WheelZoomStep"), &m_WheelZoomStep);
 
-	if (m_pCommandList != NULL) {
+	if (m_pCommandList != nullptr) {
 		TCHAR szText[CCommandList::MAX_COMMAND_TEXT];
 
 		if (Settings.Read(TEXT("LeftDoubleClickCommand"), szText, lengthof(szText))) {
@@ -142,7 +142,7 @@ bool COperationOptions::WriteSettings(CSettings &Settings)
 	Settings.Write(TEXT("ReverseWheelVolume"), m_fWheelVolumeReverse);
 	Settings.Write(TEXT("WheelChannelDelay"), m_WheelChannelDelay);
 	Settings.Write(TEXT("WheelZoomStep"), m_WheelZoomStep);
-	if (m_pCommandList != NULL) {
+	if (m_pCommandList != nullptr) {
 		Settings.Write(
 			TEXT("LeftDoubleClickCommand"),
 			GetCommandText(m_pCommandList, m_LeftDoubleClickCommand));

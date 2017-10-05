@@ -33,7 +33,7 @@ CChannelInfo::CChannelInfo(int Space, int ChannelIndex, int No, LPCTSTR pszName)
 	, m_ServiceType(0)
 	, m_fEnabled(true)
 {
-	if (pszName != NULL)
+	if (pszName != nullptr)
 		m_Name = pszName;
 }
 
@@ -183,7 +183,7 @@ bool CChannelList::AddChannel(const CChannelInfo &Info)
 
 bool CChannelList::AddChannel(CChannelInfo *pInfo)
 {
-	if (pInfo == NULL)
+	if (pInfo == nullptr)
 		return false;
 	m_ChannelList.push_back(pInfo);
 	return true;
@@ -210,7 +210,7 @@ CChannelInfo *CChannelList::GetChannelInfo(int Index)
 {
 	if (Index < 0 || (size_t)Index >= m_ChannelList.size()) {
 		//TRACE(TEXT("CChannelList::GetChannelInfo Out of range %d\n"), Index);
-		return NULL;
+		return nullptr;
 	}
 	return m_ChannelList[Index];
 }
@@ -220,7 +220,7 @@ const CChannelInfo *CChannelList::GetChannelInfo(int Index) const
 {
 	if (Index < 0 || (size_t)Index >= m_ChannelList.size()) {
 		//TRACE(TEXT("CChannelList::GetChannelInfo Out of range %d\n"), Index);
-		return NULL;
+		return nullptr;
 	}
 	return m_ChannelList[Index];
 }
@@ -261,7 +261,7 @@ int CChannelList::GetPhysicalChannel(int Index) const
 LPCTSTR CChannelList::GetName(int Index) const
 {
 	if (Index < 0 || (size_t)Index >= m_ChannelList.size())
-		//return NULL;
+		//return nullptr;
 		return TEXT("");
 	return m_ChannelList[Index]->GetName();
 }
@@ -397,7 +397,7 @@ int CChannelList::FindByIDs(WORD NetworkID, WORD TransportStreamID, WORD Service
 
 int CChannelList::FindByName(LPCTSTR pszName) const
 {
-	if (pszName == NULL)
+	if (pszName == nullptr)
 		return -1;
 	for (size_t i = 0; i < m_ChannelList.size(); i++) {
 		if (::lstrcmp(m_ChannelList[i]->GetName(), pszName) == 0)
@@ -603,14 +603,14 @@ bool CChannelList::HasMultiService() const
 
 
 CTuningSpaceInfo::CTuningSpaceInfo()
-	: m_pChannelList(NULL)
+	: m_pChannelList(nullptr)
 	, m_Space(SPACE_UNKNOWN)
 {
 }
 
 
 CTuningSpaceInfo::CTuningSpaceInfo(const CTuningSpaceInfo &Info)
-	: m_pChannelList(NULL)
+	: m_pChannelList(nullptr)
 	, m_Space(SPACE_UNKNOWN)
 {
 	Create(Info.m_pChannelList, Info.m_Name.c_str());
@@ -634,7 +634,7 @@ CTuningSpaceInfo &CTuningSpaceInfo::operator=(const CTuningSpaceInfo &Info)
 bool CTuningSpaceInfo::Create(const CChannelList *pList, LPCTSTR pszName)
 {
 	delete m_pChannelList;
-	if (pList != NULL)
+	if (pList != nullptr)
 		m_pChannelList = new CChannelList(*pList);
 	else
 		m_pChannelList = new CChannelList;
@@ -645,16 +645,16 @@ bool CTuningSpaceInfo::Create(const CChannelList *pList, LPCTSTR pszName)
 
 const CChannelInfo *CTuningSpaceInfo::GetChannelInfo(int Index) const
 {
-	if (m_pChannelList == NULL)
-		return NULL;
+	if (m_pChannelList == nullptr)
+		return nullptr;
 	return m_pChannelList->GetChannelInfo(Index);
 }
 
 
 CChannelInfo *CTuningSpaceInfo::GetChannelInfo(int Index)
 {
-	if (m_pChannelList == NULL)
-		return NULL;
+	if (m_pChannelList == nullptr)
+		return nullptr;
 	return m_pChannelList->GetChannelInfo(Index);
 }
 
@@ -666,14 +666,14 @@ bool CTuningSpaceInfo::SetName(LPCTSTR pszName)
 	m_Space = SPACE_UNKNOWN;
 	if (!IsStringEmpty(pszName)) {
 		m_Name = pszName;
-		if (::StrStr(pszName, TEXT("地")) != NULL
-				|| ::StrStrI(pszName, TEXT("VHF")) != NULL
-				|| ::StrStrI(pszName, TEXT("UHF")) != NULL
-				|| ::StrStrI(pszName, TEXT("CATV")) != NULL) {
+		if (::StrStr(pszName, TEXT("地")) != nullptr
+				|| ::StrStrI(pszName, TEXT("VHF")) != nullptr
+				|| ::StrStrI(pszName, TEXT("UHF")) != nullptr
+				|| ::StrStrI(pszName, TEXT("CATV")) != nullptr) {
 			m_Space = SPACE_TERRESTRIAL;
-		} else if (::StrStrI(pszName, TEXT("BS")) != NULL) {
+		} else if (::StrStrI(pszName, TEXT("BS")) != nullptr) {
 			m_Space = SPACE_BS;
-		} else if (::StrStrI(pszName, TEXT("CS")) != NULL) {
+		} else if (::StrStrI(pszName, TEXT("CS")) != nullptr) {
 			m_Space = SPACE_110CS;
 		}
 	} else {
@@ -685,7 +685,7 @@ bool CTuningSpaceInfo::SetName(LPCTSTR pszName)
 
 int CTuningSpaceInfo::NumChannels() const
 {
-	if (m_pChannelList == NULL)
+	if (m_pChannelList == nullptr)
 		return 0;
 	return m_pChannelList->NumChannels();
 }
@@ -728,7 +728,7 @@ CTuningSpaceList &CTuningSpaceList::operator=(const CTuningSpaceList &List)
 CTuningSpaceInfo *CTuningSpaceList::GetTuningSpaceInfo(int Space)
 {
 	if (Space < 0 || Space >= NumSpaces())
-		return NULL;
+		return nullptr;
 	return m_TuningSpaceList[Space];
 }
 
@@ -736,7 +736,7 @@ CTuningSpaceInfo *CTuningSpaceList::GetTuningSpaceInfo(int Space)
 const CTuningSpaceInfo *CTuningSpaceList::GetTuningSpaceInfo(int Space) const
 {
 	if (Space < 0 || Space >= NumSpaces())
-		return NULL;
+		return nullptr;
 	return m_TuningSpaceList[Space];
 }
 
@@ -744,7 +744,7 @@ const CTuningSpaceInfo *CTuningSpaceList::GetTuningSpaceInfo(int Space) const
 CChannelList *CTuningSpaceList::GetChannelList(int Space)
 {
 	if (Space < 0 || Space >= NumSpaces())
-		return NULL;
+		return nullptr;
 	return m_TuningSpaceList[Space]->GetChannelList();
 }
 
@@ -752,7 +752,7 @@ CChannelList *CTuningSpaceList::GetChannelList(int Space)
 const CChannelList *CTuningSpaceList::GetChannelList(int Space) const
 {
 	if (Space < 0 || Space >= NumSpaces())
-		return NULL;
+		return nullptr;
 	return m_TuningSpaceList[Space]->GetChannelList();
 }
 
@@ -760,7 +760,7 @@ const CChannelList *CTuningSpaceList::GetChannelList(int Space) const
 LPCTSTR CTuningSpaceList::GetTuningSpaceName(int Space) const
 {
 	if (Space < 0 || Space >= NumSpaces())
-		return NULL;
+		return nullptr;
 	return m_TuningSpaceList[Space]->GetName();
 }
 
@@ -877,7 +877,7 @@ bool CTuningSpaceList::SaveToFile(LPCTSTR pszFileName) const
 		if (pChannelList->NumChannels() == 0)
 			continue;
 
-		if (GetTuningSpaceName(i) != NULL) {
+		if (GetTuningSpaceName(i) != nullptr) {
 			StdUtil::snprintf(szText, lengthof(szText), TEXT(";#SPACE(%d,%s)\r\n"), i, GetTuningSpaceName(i));
 			Buffer += szText;
 		}
@@ -889,8 +889,8 @@ bool CTuningSpaceList::SaveToFile(LPCTSTR pszFileName) const
 
 			// 必要に応じて " で囲む
 			if (pszName[0] == _T('#') || pszName[0] == _T(';')
-					|| ::StrChr(pszName, _T(',')) != NULL
-					|| ::StrChr(pszName, _T('"')) != NULL) {
+					|| ::StrChr(pszName, _T(',')) != nullptr
+					|| ::StrChr(pszName, _T('"')) != nullptr) {
 				LPCTSTR p = pszName;
 				Name = _T('"');
 				while (*p != _T('\0')) {
@@ -953,8 +953,8 @@ bool CTuningSpaceList::SaveToFile(LPCTSTR pszFileName) const
 	DWORD Write;
 
 	hFile = ::CreateFile(
-		pszFileName, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS,
-		FILE_ATTRIBUTE_NORMAL, NULL);
+		pszFileName, GENERIC_WRITE, 0, nullptr, CREATE_ALWAYS,
+		FILE_ATTRIBUTE_NORMAL, nullptr);
 	if (hFile == INVALID_HANDLE_VALUE)
 		return false;
 
@@ -966,15 +966,15 @@ bool CTuningSpaceList::SaveToFile(LPCTSTR pszFileName) const
 		int Length = ::WideCharToMultiByte(
 			CP_SHIFT_JIS, 0,
 			Buffer.data(), static_cast<int>(Buffer.length()),
-			NULL, 0, NULL, &fUsedDefaultChar);
+			nullptr, 0, nullptr, &fUsedDefaultChar);
 		if (Length > 0 && !fUsedDefaultChar) {
 			char *pMBCSBuffer = new char[Length];
 			Length = ::WideCharToMultiByte(
 				CP_SHIFT_JIS, 0,
 				Buffer.data(), static_cast<int>(Buffer.length()),
-				pMBCSBuffer, Length, NULL, NULL);
+				pMBCSBuffer, Length, nullptr, nullptr);
 			if (Length < 1
-					|| !::WriteFile(hFile, pMBCSBuffer, Length, &Write, NULL)
+					|| !::WriteFile(hFile, pMBCSBuffer, Length, &Write, nullptr)
 					|| Write != static_cast<DWORD>(Length)) {
 				delete [] pMBCSBuffer;
 				::CloseHandle(hFile);
@@ -988,16 +988,16 @@ bool CTuningSpaceList::SaveToFile(LPCTSTR pszFileName) const
 	if (fUnicode) {
 		static const WCHAR BOM = 0xFEFF;
 		const DWORD Size = static_cast<DWORD>(Buffer.length()) * sizeof(WCHAR);
-		if (!::WriteFile(hFile, &BOM, sizeof(BOM), &Write, NULL)
+		if (!::WriteFile(hFile, &BOM, sizeof(BOM), &Write, nullptr)
 				|| Write != sizeof(BOM)
-				|| !::WriteFile(hFile, Buffer.data(), Size, &Write, NULL)
+				|| !::WriteFile(hFile, Buffer.data(), Size, &Write, nullptr)
 				|| Write != Size) {
 			::CloseHandle(hFile);
 			return false;
 		}
 	}
 #else
-	if (!::WriteFile(hFile, Buffer.data(), static_cast<DWORD>(Buffer.length()), &Write, NULL)
+	if (!::WriteFile(hFile, Buffer.data(), static_cast<DWORD>(Buffer.length()), &Write, nullptr)
 			|| Write != static_cast<DWORD>(Buffer.length())) {
 		::CloseHandle(hFile);
 		return false;
@@ -1054,8 +1054,8 @@ bool CTuningSpaceList::LoadFromFile(LPCTSTR pszFileName)
 	DWORD Read;
 
 	hFile = ::CreateFile(
-		pszFileName, GENERIC_READ, FILE_SHARE_READ, NULL,
-		OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+		pszFileName, GENERIC_READ, FILE_SHARE_READ, nullptr,
+		OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
 	if (hFile == INVALID_HANDLE_VALUE)
 		return false;
 	if (!::GetFileSizeEx(hFile, &FileSize)
@@ -1065,13 +1065,13 @@ bool CTuningSpaceList::LoadFromFile(LPCTSTR pszFileName)
 		return false;
 	}
 	BYTE *pFileBuffer = new BYTE[FileSize.LowPart + sizeof(TCHAR)];
-	if (!::ReadFile(hFile, pFileBuffer, FileSize.LowPart, &Read, NULL) || Read != FileSize.LowPart) {
+	if (!::ReadFile(hFile, pFileBuffer, FileSize.LowPart, &Read, nullptr) || Read != FileSize.LowPart) {
 		delete [] pFileBuffer;
 		::CloseHandle(hFile);
 		return false;
 	}
 	::CloseHandle(hFile);
-	LPTSTR pszBuffer = NULL, p;
+	LPTSTR pszBuffer = nullptr, p;
 	if (FileSize.LowPart >= 2 && *reinterpret_cast<LPWSTR>(pFileBuffer) == 0xFEFF) {
 #ifdef UNICODE
 		p = reinterpret_cast<LPWSTR>(pFileBuffer) + 1;
@@ -1080,7 +1080,7 @@ bool CTuningSpaceList::LoadFromFile(LPCTSTR pszFileName)
 		int Length = ::WideCharToMultiByte(
 			CP_ACP, 0,
 			reinterpret_cast<LPCSTR>(pFileBuffer), FileSize.LowPart,
-			NULL, 0, NULL, NULL);
+			nullptr, 0, nullptr, nullptr);
 		if (Length < 1) {
 			delete [] pFileBuffer;
 			return false;
@@ -1089,7 +1089,7 @@ bool CTuningSpaceList::LoadFromFile(LPCTSTR pszFileName)
 		Length = ::WideCharToMultiByte(
 			CP_ACP, 0,
 			reinterpret_cast<LPCWTR>(pFileBuffer) + 1, FileSize.LowPart / 2 - 1,
-			pszBuffer, Length, NULL, NULL);
+			pszBuffer, Length, nullptr, nullptr);
 		pszBuffer[Length] = '\0';
 		p = pszBuffer;
 #endif
@@ -1098,7 +1098,7 @@ bool CTuningSpaceList::LoadFromFile(LPCTSTR pszFileName)
 		int Length = ::MultiByteToWideChar(
 			CP_SHIFT_JIS, 0,
 			reinterpret_cast<LPCSTR>(pFileBuffer), FileSize.LowPart,
-			NULL, 0);
+			nullptr, 0);
 		if (Length < 1) {
 			delete [] pFileBuffer;
 			return false;

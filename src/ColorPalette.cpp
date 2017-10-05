@@ -9,12 +9,12 @@
 
 
 
-HINSTANCE CColorPalette::m_hinst = NULL;
+HINSTANCE CColorPalette::m_hinst = nullptr;
 
 
 bool CColorPalette::Initialize(HINSTANCE hinst)
 {
-	if (m_hinst == NULL) {
+	if (m_hinst == nullptr) {
 		WNDCLASS wc;
 
 		wc.style = CS_HREDRAW | CS_VREDRAW | CS_DBLCLKS;
@@ -22,10 +22,10 @@ bool CColorPalette::Initialize(HINSTANCE hinst)
 		wc.cbClsExtra = 0;
 		wc.cbWndExtra = 0;
 		wc.hInstance = hinst;
-		wc.hIcon = NULL;
-		wc.hCursor = LoadCursor(NULL, IDC_ARROW);
+		wc.hIcon = nullptr;
+		wc.hCursor = LoadCursor(nullptr, IDC_ARROW);
 		wc.hbrBackground = (HBRUSH)(COLOR_3DFACE + 1);
-		wc.lpszMenuName = NULL;
+		wc.lpszMenuName = nullptr;
 		wc.lpszClassName = PALETTE_WINDOW_CLASS;
 		if (RegisterClass(&wc) == 0)
 			return false;
@@ -37,7 +37,7 @@ bool CColorPalette::Initialize(HINSTANCE hinst)
 
 CColorPalette::CColorPalette()
 	: m_NumColors(0)
-	, m_pPalette(NULL)
+	, m_pPalette(nullptr)
 {
 }
 
@@ -52,13 +52,13 @@ bool CColorPalette::Create(HWND hwndParent, DWORD Style, DWORD ExStyle, int ID)
 {
 	return CreateBasicWindow(
 		hwndParent, Style, ExStyle, ID,
-		PALETTE_WINDOW_CLASS, NULL, m_hinst);
+		PALETTE_WINDOW_CLASS, nullptr, m_hinst);
 }
 
 
 bool CColorPalette::GetPalette(RGBQUAD *pPalette)
 {
-	if (m_pPalette == NULL)
+	if (m_pPalette == nullptr)
 		return false;
 	CopyMemory(pPalette, m_pPalette, m_NumColors * sizeof(RGBQUAD));
 	return true;
@@ -77,7 +77,7 @@ bool CColorPalette::SetPalette(const RGBQUAD *pPalette, int NumColors)
 	CopyMemory(m_pPalette, pPalette, NumColors * sizeof(RGBQUAD));
 	m_SelColor = -1;
 	m_HotColor = -1;
-	InvalidateRect(m_hwnd, NULL, TRUE);
+	InvalidateRect(m_hwnd, nullptr, TRUE);
 	SetToolTip();
 	return true;
 }
@@ -114,7 +114,7 @@ int CColorPalette::GetSel() const
 
 bool CColorPalette::SetSel(int Sel)
 {
-	if (m_pPalette == NULL)
+	if (m_pPalette == nullptr)
 		return false;
 	if (Sel < 0 || Sel >= m_NumColors)
 		Sel = -1;
@@ -238,13 +238,13 @@ LRESULT CColorPalette::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 			m_ItemHeight = max(sy / 16, 6);
 			m_Left = (sx - m_ItemWidth * 16) / 2;
 			m_Top = (sy - m_ItemHeight * 16) / 2;
-			if (m_pPalette != NULL)
+			if (m_pPalette != nullptr)
 				SetToolTip();
 		}
 		return 0;
 
 	case WM_PAINT:
-		if (m_pPalette != NULL) {
+		if (m_pPalette != nullptr) {
 			PAINTSTRUCT ps;
 			int x, y;
 			int i;
@@ -273,7 +273,7 @@ LRESULT CColorPalette::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 		break;
 
 	case WM_MOUSEMOVE:
-		if (m_pPalette != NULL) {
+		if (m_pPalette != nullptr) {
 			POINT ptCursor;
 			int Hot;
 
@@ -297,7 +297,7 @@ LRESULT CColorPalette::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 
 	case WM_LBUTTONDOWN:
 	case WM_RBUTTONDOWN:
-		if (m_pPalette != NULL) {
+		if (m_pPalette != nullptr) {
 			POINT ptCursor;
 			int Sel;
 
@@ -333,7 +333,7 @@ LRESULT CColorPalette::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 				int Index = (int)pttdi->hdr.idFrom;
 
 				pttdi->lpszText = pttdi->szText;
-				pttdi->hinst = NULL;
+				pttdi->hinst = nullptr;
 				if (Index >= 0 && Index < m_NumColors) {
 					int r, g, b;
 

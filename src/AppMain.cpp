@@ -21,7 +21,7 @@ static HANDLE GetCurrentThreadHandle()
 				::GetCurrentThread(),
 				::GetCurrentProcess(),
 				&hThread, 0, FALSE, DUPLICATE_SAME_ACCESS))
-		return NULL;
+		return nullptr;
 	return hThread;
 }
 
@@ -158,8 +158,8 @@ DWORD WINAPI CAppTerminator::WatchThread(LPVOID lpParameter)
 
 
 
-HICON CAppMain::m_hicoApp = NULL;
-HICON CAppMain::m_hicoAppSmall = NULL;
+HICON CAppMain::m_hicoApp = nullptr;
+HICON CAppMain::m_hicoAppSmall = nullptr;
 
 
 CAppMain::CAppMain()
@@ -202,13 +202,13 @@ CAppMain::CAppMain()
 
 CAppMain::~CAppMain()
 {
-	if (m_hicoApp != NULL) {
+	if (m_hicoApp != nullptr) {
 		::DestroyIcon(m_hicoApp);
-		m_hicoApp = NULL;
+		m_hicoApp = nullptr;
 	}
-	if (m_hicoAppSmall != NULL) {
+	if (m_hicoAppSmall != nullptr) {
 		::DestroyIcon(m_hicoAppSmall);
-		m_hicoAppSmall = NULL;
+		m_hicoAppSmall = nullptr;
 	}
 }
 
@@ -453,7 +453,7 @@ bool CAppMain::LoadSettings()
 
 		if (Settings.Read(TEXT("StreamInfoLeft"), &Left)
 				&& Settings.Read(TEXT("StreamInfoTop"), &Top)) {
-			StreamInfo.GetPosition(NULL, NULL, &Width, &Height);
+			StreamInfo.GetPosition(nullptr, nullptr, &Width, &Height);
 			Settings.Read(TEXT("StreamInfoWidth"), &Width);
 			Settings.Read(TEXT("StreamInfoHeight"), &Height);
 			StreamInfo.SetPosition(Left, Top, Width, Height);
@@ -1576,7 +1576,7 @@ HICON CAppMain::GetAppIcon()
 {
 	if (m_hicoApp == nullptr) {
 		m_hicoApp = LoadIconStandardSize(
-			::GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_ICON), ICON_SIZE_NORMAL);
+			::GetModuleHandle(nullptr), MAKEINTRESOURCE(IDI_ICON), ICON_SIZE_NORMAL);
 	}
 	return m_hicoApp;
 }
@@ -1586,7 +1586,7 @@ HICON CAppMain::GetAppIconSmall()
 {
 	if (m_hicoAppSmall == nullptr) {
 		m_hicoAppSmall = LoadIconStandardSize(
-			::GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_ICON), ICON_SIZE_SMALL);
+			::GetModuleHandle(nullptr), MAKEINTRESOURCE(IDI_ICON), ICON_SIZE_SMALL);
 	}
 	return m_hicoAppSmall;
 }

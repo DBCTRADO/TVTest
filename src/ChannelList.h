@@ -53,7 +53,7 @@ class CTunerChannelInfo
 {
 public:
 	CTunerChannelInfo();
-	CTunerChannelInfo(const CChannelInfo &ChannelInfo, LPCTSTR pszTunerName = NULL);
+	CTunerChannelInfo(const CChannelInfo &ChannelInfo, LPCTSTR pszTunerName = nullptr);
 	CTunerChannelInfo &operator=(const CChannelInfo &Src);
 	void SetTunerName(LPCTSTR pszName);
 	LPCTSTR GetTunerName() const { return m_TunerName.c_str(); }
@@ -128,7 +128,7 @@ public:
 	CTuningSpaceInfo(const CTuningSpaceInfo &Info);
 	~CTuningSpaceInfo();
 	CTuningSpaceInfo &operator=(const CTuningSpaceInfo &Info);
-	bool Create(const CChannelList *pList = NULL, LPCTSTR pszName = NULL);
+	bool Create(const CChannelList *pList = nullptr, LPCTSTR pszName = nullptr);
 	CChannelList *GetChannelList() { return m_pChannelList; }
 	const CChannelList *GetChannelList() const { return m_pChannelList; }
 	CChannelInfo *GetChannelInfo(int Index);

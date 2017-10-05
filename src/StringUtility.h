@@ -23,16 +23,16 @@ LPTSTR SkipLeadingWhitespace(LPTSTR pszString);
 LPCTSTR SkipLeadingWhitespace(LPCTSTR pszString);
 
 inline bool IsStringEmpty(LPCSTR pszString) {
-	return pszString == NULL || pszString[0] == '\0';
+	return pszString == nullptr || pszString[0] == '\0';
 }
 inline bool IsStringEmpty(LPCWSTR pszString) {
-	return pszString == NULL || pszString[0] == L'\0';
+	return pszString == nullptr || pszString[0] == L'\0';
 }
 inline LPCSTR NullToEmptyString(LPCSTR pszString) {
-	return pszString != NULL ? pszString : "";
+	return pszString != nullptr ? pszString : "";
 }
 inline LPCWSTR NullToEmptyString(LPCWSTR pszString) {
-	return pszString != NULL ? pszString : L"";
+	return pszString != nullptr ? pszString : L"";
 }
 
 inline LPSTR StringNextChar(LPCSTR pszCur)

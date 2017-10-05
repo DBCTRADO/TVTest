@@ -564,7 +564,7 @@ INT_PTR CStatusOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 					m_fMultiRow = fMultiRow;
 					m_pStatusView->SetMultiRow(fMultiRow);
 				}
-				int MaxRows = ::GetDlgItemInt(hDlg, IDC_STATUSOPTIONS_MAXROWS, NULL, TRUE);
+				int MaxRows = ::GetDlgItemInt(hDlg, IDC_STATUSOPTIONS_MAXROWS, nullptr, TRUE);
 				if (MaxRows < 1)
 					MaxRows = 1;
 				if (m_MaxRows != MaxRows) {
@@ -595,7 +595,7 @@ void CStatusOptions::ApplyStyle()
 {
 	CBasicDialog::ApplyStyle();
 
-	if (m_hDlg != NULL) {
+	if (m_hDlg != nullptr) {
 		m_ItemMargin = TVTest::Style::Margins(3);
 		m_pStyleScaling->ToPixels(&m_ItemMargin);
 		m_CheckSize = TVTest::Style::Size(14, 14);
@@ -609,7 +609,7 @@ void CStatusOptions::RealizeStyle()
 {
 	CBasicDialog::RealizeStyle();
 
-	if (m_hDlg != NULL) {
+	if (m_hDlg != nullptr) {
 		if (DlgListBox_GetCount(m_hDlg, IDC_STATUSOPTIONS_ITEMLIST) > 0) {
 			DlgListBox_SetItemHeight(m_hDlg, IDC_STATUSOPTIONS_ITEMLIST, 0, m_ItemHeight);
 			CalcTextWidth();
@@ -631,7 +631,7 @@ void CStatusOptions::CalcTextWidth()
 
 	hwndList = GetDlgItem(m_hDlg, IDC_STATUSOPTIONS_ITEMLIST);
 	hdc = GetDC(hwndList);
-	if (hdc == NULL)
+	if (hdc == nullptr)
 		return;
 	hfontOld = SelectFont(hdc, GetWindowFont(hwndList));
 	Count = ListBox_GetCount(hwndList);
@@ -783,7 +783,7 @@ void CStatusOptions::MakeItemList(StatusItemInfoList *pList) const
 			if (!fFound) {
 				pList->push_back(m_AvailItemList[i]);
 				const CStatusItem *pItem = m_pStatusView->GetItemByID(ID);
-				if (pItem != NULL)
+				if (pItem != nullptr)
 					pList->back().fVisible = pItem->GetVisible();
 			}
 		}
@@ -905,7 +905,7 @@ LRESULT CStatusOptions::CItemListSubclass::OnMessage(
 				m_pStatusOptions->m_DropInsertPos = Insert;
 				if (m_pStatusOptions->m_DropInsertPos >= 0)
 					m_pStatusOptions->DrawInsertMark(hwnd, m_pStatusOptions->m_DropInsertPos);
-				SetCursor(LoadCursor(NULL, IDC_ARROW));
+				SetCursor(LoadCursor(nullptr, IDC_ARROW));
 			} else {
 				UINT TimerID;
 
@@ -920,14 +920,14 @@ LRESULT CStatusOptions::CItemListSubclass::OnMessage(
 				if (TimerID != m_pStatusOptions->m_DragTimerID) {
 					if (m_pStatusOptions->m_DragTimerID != 0)
 						KillTimer(hwnd, m_pStatusOptions->m_DragTimerID);
-					m_pStatusOptions->m_DragTimerID = (UINT)SetTimer(hwnd, TimerID, 100, NULL);
+					m_pStatusOptions->m_DragTimerID = (UINT)SetTimer(hwnd, TimerID, 100, nullptr);
 				}
-				SetCursor(LoadCursor(NULL, IDC_NO));
+				SetCursor(LoadCursor(nullptr, IDC_NO));
 			}
 		} else {
 			int x = GET_X_LPARAM(lParam), y = GET_Y_LPARAM(lParam);
 
-			SetCursor(LoadCursor(NULL, m_pStatusOptions->IsCursorResize(hwnd, x, y) ? IDC_SIZEWE : IDC_ARROW));
+			SetCursor(LoadCursor(nullptr, m_pStatusOptions->IsCursorResize(hwnd, x, y) ? IDC_SIZEWE : IDC_ARROW));
 		}
 		return 0;
 

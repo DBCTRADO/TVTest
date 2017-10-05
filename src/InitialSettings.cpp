@@ -25,8 +25,8 @@ CInitialSettings::CInitialSettings(const CDriverManager *pDriverManager)
 	m_VideoRenderer = LibISDB::DirectShow::VideoRenderer::RendererType::EVR;
 
 	PWSTR pszRecFolder;
-	if (::SHGetKnownFolderPath(FOLDERID_Videos, 0, NULL, &pszRecFolder) == S_OK
-			|| ::SHGetKnownFolderPath(FOLDERID_Documents, 0, NULL, &pszRecFolder) == S_OK) {
+	if (::SHGetKnownFolderPath(FOLDERID_Videos, 0, nullptr, &pszRecFolder) == S_OK
+			|| ::SHGetKnownFolderPath(FOLDERID_Documents, 0, nullptr, &pszRecFolder) == S_OK) {
 		m_RecordFolder = pszRecFolder;
 		::CoTaskMemFree(pszRecFolder);
 	}
@@ -150,7 +150,7 @@ INT_PTR CInitialSettings::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lP
 			::SetDlgItemText(hDlg, IDC_INITIALSETTINGS_RECORDFOLDER, m_RecordFolder.c_str());
 			::SendDlgItemMessage(hDlg, IDC_INITIALSETTINGS_RECORDFOLDER, EM_LIMITTEXT, MAX_PATH - 1, 0);
 
-			AdjustDialogPos(NULL, hDlg);
+			AdjustDialogPos(nullptr, hDlg);
 		}
 		return TRUE;
 
@@ -276,7 +276,7 @@ INT_PTR CInitialSettings::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lP
 				if (!LibISDB::DirectShow::VideoRenderer::IsAvailable(VideoRenderer)) {
 					::MessageBox(
 						hDlg, TEXT("選択されたレンダラはこの環境で利用可能になっていません。"),
-						NULL, MB_OK | MB_ICONEXCLAMATION);
+						nullptr, MB_OK | MB_ICONEXCLAMATION);
 					return TRUE;
 				}
 
@@ -345,9 +345,9 @@ INT_PTR CInitialSettings::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lP
 			HBITMAP hbm = reinterpret_cast<HBITMAP>(
 				::SendDlgItemMessage(
 					hDlg, IDC_INITIALSETTINGS_LOGO,
-					STM_SETIMAGE, IMAGE_BITMAP, reinterpret_cast<LPARAM>((HBITMAP)NULL)));
+					STM_SETIMAGE, IMAGE_BITMAP, reinterpret_cast<LPARAM>((HBITMAP)nullptr)));
 
-			if (hbm != NULL) {
+			if (hbm != nullptr) {
 				::DeleteObject(hbm);
 			} else {
 				m_LogoImage.Free();
@@ -364,7 +364,7 @@ void CInitialSettings::InitDecoderList(int ID, const GUID &SubType, LPCTSTR pszD
 {
 	LPCWSTR pszDefaultDecoderName =
 		LibISDB::DirectShow::KnownDecoderManager::IsDecoderAvailable(SubType) ?
-		LibISDB::DirectShow::KnownDecoderManager::GetDecoderName(SubType) : NULL;
+		LibISDB::DirectShow::KnownDecoderManager::GetDecoderName(SubType) : nullptr;
 	LibISDB::DirectShow::FilterFinder FilterFinder;
 	std::vector<TVTest::String> FilterList;
 	int Sel = 0;
@@ -374,8 +374,8 @@ void CInitialSettings::InitDecoderList(int ID, const GUID &SubType, LPCTSTR pszD
 		for (int i = 0; i < FilterFinder.GetFilterCount(); i++) {
 			TVTest::String FilterName;
 
-			if (FilterFinder.GetFilterInfo(i, NULL, &FilterName)
-					&& (pszDefaultDecoderName == NULL
+			if (FilterFinder.GetFilterInfo(i, nullptr, &FilterName)
+					&& (pszDefaultDecoderName == nullptr
 						|| ::lstrcmpi(FilterName.c_str(), pszDefaultDecoderName) != 0)) {
 				FilterList.push_back(FilterName);
 			}
@@ -396,7 +396,7 @@ void CInitialSettings::InitDecoderList(int ID, const GUID &SubType, LPCTSTR pszD
 		}
 	}
 
-	if (pszDefaultDecoderName != NULL)
+	if (pszDefaultDecoderName != nullptr)
 		DlgComboBox_InsertString(m_hDlg, ID, 0, pszDefaultDecoderName);
 
 	if (!IsStringEmpty(pszDecoderName))
@@ -404,7 +404,7 @@ void CInitialSettings::InitDecoderList(int ID, const GUID &SubType, LPCTSTR pszD
 
 	DlgComboBox_InsertString(
 		m_hDlg, ID,
-		0, !FilterList.empty() || pszDefaultDecoderName != NULL ? TEXT("自動") : TEXT("<デコーダが見付かりません>"));
+		0, !FilterList.empty() || pszDefaultDecoderName != nullptr ? TEXT("自動") : TEXT("<デコーダが見付かりません>"));
 	DlgComboBox_SetCurSel(m_hDlg, ID, Sel);
 }
 

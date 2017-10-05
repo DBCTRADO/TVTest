@@ -43,7 +43,7 @@ public:
 
 	bool GetDriverDirectory(LPTSTR pszDirectory, int MaxLength) const;
 	void OnError(LPCTSTR pszText, ...);
-	void OnError(const LibISDB::ErrorHandler *pErrorHandler, LPCTSTR pszTitle = NULL);
+	void OnError(const LibISDB::ErrorHandler *pErrorHandler, LPCTSTR pszTitle = nullptr);
 	void SetSilent(bool fSilent);
 	bool IsSilent() const { return m_fSilent; }
 	bool SaveCurrentChannel();
@@ -88,15 +88,15 @@ public:
 	void ApplyBonDriverOptions();
 
 	bool StartRecord(
-		LPCTSTR pszFileName = NULL,
-		const CRecordManager::TimeSpecInfo *pStartTime = NULL,
-		const CRecordManager::TimeSpecInfo *pStopTime = NULL,
+		LPCTSTR pszFileName = nullptr,
+		const CRecordManager::TimeSpecInfo *pStartTime = nullptr,
+		const CRecordManager::TimeSpecInfo *pStopTime = nullptr,
 		CRecordManager::RecordClient Client = CRecordManager::CLIENT_USER,
 		bool fTimeShift = false);
 	bool ModifyRecord(
-		LPCTSTR pszFileName = NULL,
-		const CRecordManager::TimeSpecInfo *pStartTime = NULL,
-		const CRecordManager::TimeSpecInfo *pStopTime = NULL,
+		LPCTSTR pszFileName = nullptr,
+		const CRecordManager::TimeSpecInfo *pStartTime = nullptr,
+		const CRecordManager::TimeSpecInfo *pStopTime = nullptr,
 		CRecordManager::RecordClient Client = CRecordManager::CLIENT_USER);
 	bool StartReservedRecord();
 	bool CancelReservedRecord();

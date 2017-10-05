@@ -7,7 +7,7 @@
 
 
 CStatusItem::CStatusItem(int ID, const SizeValue &DefaultWidth)
-	: m_pStatus(NULL)
+	: m_pStatus(nullptr)
 	, m_ID(ID)
 	, m_DefaultWidth(DefaultWidth)
 	, m_Width(-1)
@@ -24,7 +24,7 @@ CStatusItem::CStatusItem(int ID, const SizeValue &DefaultWidth)
 
 int CStatusItem::GetIndex() const
 {
-	if (m_pStatus != NULL) {
+	if (m_pStatus != nullptr) {
 		for (int i = 0; i < m_pStatus->NumItems(); i++) {
 			if (m_pStatus->GetItem(i) == this)
 				return i;
@@ -36,7 +36,7 @@ int CStatusItem::GetIndex() const
 
 bool CStatusItem::GetRect(RECT *pRect) const
 {
-	if (m_pStatus == NULL)
+	if (m_pStatus == nullptr)
 		return false;
 	return m_pStatus->GetItemRect(m_ID, pRect);
 }
@@ -44,7 +44,7 @@ bool CStatusItem::GetRect(RECT *pRect) const
 
 bool CStatusItem::GetClientRect(RECT *pRect) const
 {
-	if (m_pStatus == NULL)
+	if (m_pStatus == nullptr)
 		return false;
 	return m_pStatus->GetItemClientRect(m_ID, pRect);
 }
@@ -87,7 +87,7 @@ void CStatusItem::SetVisible(bool fVisible)
 		m_fVisible = fVisible;
 		OnVisibilityChanged();
 	}
-	OnPresentStatusChange(fVisible && m_pStatus != NULL && m_pStatus->GetVisible());
+	OnPresentStatusChange(fVisible && m_pStatus != nullptr && m_pStatus->GetVisible());
 }
 
 
@@ -105,7 +105,7 @@ void CStatusItem::SetItemStyle(unsigned int Mask, unsigned int Style)
 
 bool CStatusItem::Update()
 {
-	if (m_pStatus == NULL)
+	if (m_pStatus == nullptr)
 		return false;
 	m_pStatus->UpdateItem(m_ID);
 	return true;
@@ -114,14 +114,14 @@ bool CStatusItem::Update()
 
 void CStatusItem::Redraw()
 {
-	if (m_pStatus != NULL)
+	if (m_pStatus != nullptr)
 		m_pStatus->RedrawItem(m_ID);
 }
 
 
 bool CStatusItem::GetMenuPos(POINT *pPos, UINT *pFlags, RECT *pExcludeRect)
 {
-	if (m_pStatus == NULL)
+	if (m_pStatus == nullptr)
 		return false;
 
 	RECT rc;
@@ -129,17 +129,17 @@ bool CStatusItem::GetMenuPos(POINT *pPos, UINT *pFlags, RECT *pExcludeRect)
 	if (!GetRect(&rc))
 		return false;
 
-	MapWindowRect(m_pStatus->GetHandle(), NULL, &rc);
+	MapWindowRect(m_pStatus->GetHandle(), nullptr, &rc);
 
-	if (pFlags != NULL)
+	if (pFlags != nullptr)
 		*pFlags = 0;
 
-	if (pPos != NULL) {
+	if (pPos != nullptr) {
 		pPos->x = rc.left;
 		pPos->y = rc.bottom;
 	}
 
-	if (pExcludeRect != NULL) {
+	if (pExcludeRect != nullptr) {
 		*pExcludeRect = rc;
 		*pFlags |= TPM_VERTICAL;
 	}
@@ -164,7 +164,7 @@ void CStatusItem::DrawIcon(
 	HDC hdc, const RECT &Rect, DrawUtil::CMonoColorIconList &IconList,
 	int IconIndex, bool fEnabled) const
 {
-	if (hdc == NULL)
+	if (hdc == nullptr)
 		return;
 
 	TVTest::Style::Size IconSize = m_pStatus->GetIconSize();
@@ -202,27 +202,27 @@ void CIconStatusItem::NormalizeStyle(
 
 
 CStatusView::CEventHandler::CEventHandler()
-	: m_pStatusView(NULL)
+	: m_pStatusView(nullptr)
 {
 }
 
 
 CStatusView::CEventHandler::~CEventHandler()
 {
-	if (m_pStatusView != NULL)
-		m_pStatusView->SetEventHandler(NULL);
+	if (m_pStatusView != nullptr)
+		m_pStatusView->SetEventHandler(nullptr);
 }
 
 
 
 
 const LPCTSTR CStatusView::CLASS_NAME = APP_NAME TEXT(" Status");
-HINSTANCE CStatusView::m_hinst = NULL;
+HINSTANCE CStatusView::m_hinst = nullptr;
 
 
 bool CStatusView::Initialize(HINSTANCE hinst)
 {
-	if (m_hinst == NULL) {
+	if (m_hinst == nullptr) {
 		WNDCLASS wc;
 
 		wc.style = CS_HREDRAW | CS_VREDRAW | CS_DBLCLKS;
@@ -230,10 +230,10 @@ bool CStatusView::Initialize(HINSTANCE hinst)
 		wc.cbClsExtra = 0;
 		wc.cbWndExtra = 0;
 		wc.hInstance = hinst;
-		wc.hIcon = NULL;
-		wc.hCursor = ::LoadCursor(NULL, IDC_ARROW);
-		wc.hbrBackground = NULL;
-		wc.lpszMenuName = NULL;
+		wc.hIcon = nullptr;
+		wc.hCursor = ::LoadCursor(nullptr, IDC_ARROW);
+		wc.hbrBackground = nullptr;
+		wc.lpszMenuName = nullptr;
 		wc.lpszClassName = CLASS_NAME;
 		if (::RegisterClass(&wc) == 0)
 			return false;
@@ -253,7 +253,7 @@ CStatusView::CStatusView()
 	, m_fSingleMode(false)
 	, m_HotItem(-1)
 	, m_fOnButtonDown(false)
-	, m_pEventHandler(NULL)
+	, m_pEventHandler(nullptr)
 	, m_fBufferedPaint(false)
 	, m_fAdjustSize(true)
 {
@@ -265,8 +265,8 @@ CStatusView::~CStatusView()
 {
 	Destroy();
 
-	if (m_pEventHandler != NULL)
-		m_pEventHandler->m_pStatusView = NULL;
+	if (m_pEventHandler != nullptr)
+		m_pEventHandler->m_pStatusView = nullptr;
 
 	for (size_t i = 0; i < m_ItemList.size(); i++)
 		delete m_ItemList[i];
@@ -275,7 +275,7 @@ CStatusView::~CStatusView()
 
 bool CStatusView::Create(HWND hwndParent, DWORD Style, DWORD ExStyle, int ID)
 {
-	return CreateBasicWindow(hwndParent, Style, ExStyle, ID, CLASS_NAME, NULL, m_hinst);
+	return CreateBasicWindow(hwndParent, Style, ExStyle, ID, CLASS_NAME, nullptr, m_hinst);
 }
 
 
@@ -312,7 +312,7 @@ void CStatusView::SetTheme(const TVTest::Theme::CThemeManager *pThemeManager)
 const CStatusItem *CStatusView::GetItem(int Index) const
 {
 	if (Index < 0 || (size_t)Index >= m_ItemList.size())
-		return NULL;
+		return nullptr;
 	return m_ItemList[Index];
 }
 
@@ -320,7 +320,7 @@ const CStatusItem *CStatusView::GetItem(int Index) const
 CStatusItem *CStatusView::GetItem(int Index)
 {
 	if (Index < 0 || (size_t)Index >= m_ItemList.size())
-		return NULL;
+		return nullptr;
 	return m_ItemList[Index];
 }
 
@@ -330,7 +330,7 @@ const CStatusItem *CStatusView::GetItemByID(int ID) const
 	int Index = IDToIndex(ID);
 
 	if (Index < 0)
-		return NULL;
+		return nullptr;
 	return m_ItemList[Index];
 }
 
@@ -340,14 +340,14 @@ CStatusItem *CStatusView::GetItemByID(int ID)
 	int Index = IDToIndex(ID);
 
 	if (Index < 0)
-		return NULL;
+		return nullptr;
 	return m_ItemList[Index];
 }
 
 
 bool CStatusView::AddItem(CStatusItem *pItem)
 {
-	if (pItem == NULL)
+	if (pItem == nullptr)
 		return false;
 
 	m_ItemList.push_back(pItem);
@@ -356,7 +356,7 @@ bool CStatusView::AddItem(CStatusItem *pItem)
 
 	RegisterUIChild(pItem);
 
-	if (m_hwnd != NULL) {
+	if (m_hwnd != nullptr) {
 		if (pItem->GetWidth() < 0)
 			pItem->SetWidth(CalcItemPixelSize(pItem->GetDefaultWidth()));
 		pItem->SetActualWidth(pItem->GetWidth());
@@ -401,7 +401,7 @@ LRESULT CStatusView::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 			TVTest::Theme::AddBorderRect(Border, &rc);
 			::AdjustWindowRectEx(&rc, pcs->style, FALSE, pcs->dwExStyle);
 			::SetWindowPos(
-				hwnd, NULL, 0, 0, pcs->cx, rc.bottom - rc.top,
+				hwnd, nullptr, 0, 0, pcs->cx, rc.bottom - rc.top,
 				SWP_NOZORDER | SWP_NOMOVE);
 
 			m_HotItem = -1;
@@ -419,7 +419,7 @@ LRESULT CStatusView::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 			if (m_fBufferedPaint) {
 				HDC hdc = m_BufferedPaint.Begin(ps.hdc, &ps.rcPaint, true);
 
-				if (hdc != NULL) {
+				if (hdc != nullptr) {
 					Draw(hdc, &ps.rcPaint);
 					m_BufferedPaint.SetOpaque();
 					m_BufferedPaint.End();
@@ -620,7 +620,7 @@ LRESULT CStatusView::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 			CStatusItem *pItem = GetItem(m_CapturedItem);
 
 			m_CapturedItem = -1;
-			if (pItem != NULL)
+			if (pItem != nullptr)
 				pItem->OnCaptureReleased();
 		}
 		return 0;
@@ -647,7 +647,7 @@ bool CStatusView::UpdateItem(int ID)
 {
 	CStatusItem *pItem = GetItemByID(ID);
 
-	if (pItem == NULL || !pItem->UpdateContent())
+	if (pItem == nullptr || !pItem->UpdateContent())
 		return false;
 
 	RedrawItem(ID);
@@ -658,7 +658,7 @@ bool CStatusView::UpdateItem(int ID)
 
 void CStatusView::RedrawItem(int ID)
 {
-	if (m_hwnd != NULL) {
+	if (m_hwnd != nullptr) {
 		RECT rc;
 
 		GetItemRect(ID, &rc);
@@ -788,7 +788,7 @@ void CStatusView::SetVisible(bool fVisible)
 
 bool CStatusView::AdjustSize()
 {
-	if (m_hwnd == NULL || !m_fAdjustSize)
+	if (m_hwnd == nullptr || !m_fAdjustSize)
 		return false;
 
 	int OldRows = m_Rows;
@@ -805,10 +805,10 @@ bool CStatusView::AdjustSize()
 	int Height = rc.bottom - rc.top;
 	if (Height != rcWindow.bottom - rcWindow.top) {
 		::SetWindowPos(
-			m_hwnd, NULL, 0, 0, rcWindow.right - rcWindow.left, Height,
+			m_hwnd, nullptr, 0, 0, rcWindow.right - rcWindow.left, Height,
 			SWP_NOZORDER | SWP_NOMOVE | SWP_NOACTIVATE);
 		Invalidate();
-		if (m_pEventHandler != NULL)
+		if (m_pEventHandler != nullptr)
 			m_pEventHandler->OnHeightChanged(Height);
 	} else {
 		Invalidate();
@@ -820,7 +820,7 @@ bool CStatusView::AdjustSize()
 
 void CStatusView::SetSingleText(LPCTSTR pszText)
 {
-	if (pszText != NULL) {
+	if (pszText != nullptr) {
 		m_SingleText = pszText;
 		m_fSingleMode = true;
 		SetHotItem(-1);
@@ -830,15 +830,15 @@ void CStatusView::SetSingleText(LPCTSTR pszText)
 		m_SingleText.clear();
 		m_fSingleMode = false;
 	}
-	if (m_hwnd != NULL)
-		Redraw(NULL, RDW_INVALIDATE | RDW_UPDATENOW);
+	if (m_hwnd != nullptr)
+		Redraw(nullptr, RDW_INVALIDATE | RDW_UPDATENOW);
 }
 
 
 bool CStatusView::GetStatusViewThemeFromThemeManager(
 	const TVTest::Theme::CThemeManager *pThemeManager, StatusViewTheme *pTheme)
 {
-	if (pThemeManager == NULL || pTheme == NULL)
+	if (pThemeManager == nullptr || pTheme == nullptr)
 		return false;
 
 	pThemeManager->GetStyle(
@@ -861,7 +861,7 @@ bool CStatusView::GetStatusViewThemeFromThemeManager(
 bool CStatusView::SetStatusViewTheme(const StatusViewTheme &Theme)
 {
 	m_Theme = Theme;
-	if (m_hwnd != NULL) {
+	if (m_hwnd != nullptr) {
 		AdjustSize();
 		Invalidate();
 	}
@@ -871,7 +871,7 @@ bool CStatusView::SetStatusViewTheme(const StatusViewTheme &Theme)
 
 bool CStatusView::GetStatusViewTheme(StatusViewTheme *pTheme) const
 {
-	if (pTheme == NULL)
+	if (pTheme == nullptr)
 		return false;
 	*pTheme = m_Theme;
 	return true;
@@ -890,7 +890,7 @@ bool CStatusView::SetFont(const TVTest::Style::Font &Font)
 	m_Font = Font;
 	m_DrawFont.Destroy();
 
-	if (m_hwnd != NULL) {
+	if (m_hwnd != nullptr) {
 		CreateDrawFont(m_Font, &m_DrawFont);
 		m_TextHeight = CalcTextHeight(&m_FontHeight);
 		m_ItemHeight = CalcItemHeight();
@@ -931,7 +931,7 @@ bool CStatusView::SetMultiRow(bool fMultiRow)
 {
 	if (m_fMultiRow != fMultiRow) {
 		m_fMultiRow = fMultiRow;
-		if (m_hwnd != NULL)
+		if (m_hwnd != nullptr)
 			AdjustSize();
 	}
 	return true;
@@ -944,7 +944,7 @@ bool CStatusView::SetMaxRows(int MaxRows)
 		return false;
 	if (m_MaxRows != MaxRows) {
 		m_MaxRows = MaxRows;
-		if (m_hwnd != NULL)
+		if (m_hwnd != nullptr)
 			AdjustSize();
 	}
 	return true;
@@ -973,9 +973,9 @@ int CStatusView::CalcHeight(int Width) const
 
 bool CStatusView::SetEventHandler(CEventHandler *pEventHandler)
 {
-	if (m_pEventHandler != NULL)
-		m_pEventHandler->m_pStatusView = NULL;
-	if (pEventHandler != NULL)
+	if (m_pEventHandler != nullptr)
+		m_pEventHandler->m_pStatusView = nullptr;
+	if (pEventHandler != nullptr)
 		pEventHandler->m_pStatusView = this;
 	m_pEventHandler = pEventHandler;
 	return true;
@@ -989,7 +989,7 @@ bool CStatusView::SetItemOrder(const int *pOrderList)
 	for (size_t i = 0; i < m_ItemList.size(); i++) {
 		CStatusItem *pItem = GetItem(IDToIndex(pOrderList[i]));
 
-		if (pItem == NULL)
+		if (pItem == nullptr)
 			return false;
 		NewList.push_back(pItem);
 		for (size_t j = 0; j < i; j++) {
@@ -998,7 +998,7 @@ bool CStatusView::SetItemOrder(const int *pOrderList)
 		}
 	}
 	m_ItemList = NewList;
-	if (m_hwnd != NULL && !m_fSingleMode) {
+	if (m_hwnd != nullptr && !m_fSingleMode) {
 		AdjustSize();
 		Invalidate();
 	}
@@ -1017,7 +1017,7 @@ bool CStatusView::DrawItemPreview(
 	CStatusItem *pItem, HDC hdc, const RECT &ItemRect,
 	bool fHighlight, HFONT hfont) const
 {
-	if (pItem == NULL || hdc == NULL)
+	if (pItem == nullptr || hdc == nullptr)
 		return false;
 
 	TVTest::Theme::CThemeDraw ThemeDraw(BeginThemeDraw(hdc));
@@ -1027,7 +1027,7 @@ bool CStatusView::DrawItemPreview(
 	const TVTest::Theme::Style &Style =
 		fHighlight ? m_Theme.HighlightItemStyle : m_Theme.ItemStyle;
 
-	if (hfont != NULL)
+	if (hfont != nullptr)
 		hfontOld = SelectFont(hdc, hfont);
 	else
 		hfontOld = DrawUtil::SelectObject(hdc, m_DrawFont);
@@ -1060,7 +1060,7 @@ void CStatusView::EnableSizeAdjustment(bool fEnable)
 {
 	if (m_fAdjustSize != fEnable) {
 		m_fAdjustSize = fEnable;
-		if (fEnable && m_hwnd != NULL)
+		if (fEnable && m_hwnd != nullptr)
 			AdjustSize();
 	}
 }
@@ -1122,7 +1122,7 @@ void CStatusView::Draw(HDC hdc, const RECT *pPaintRect)
 				|| ItemHeight > m_Offscreen.GetHeight())
 			m_Offscreen.Create(MaxWidth + HorzMargin, ItemHeight);
 		hdcDst = m_Offscreen.GetDC();
-		if (hdcDst == NULL)
+		if (hdcDst == nullptr)
 			hdcDst = hdc;
 	} else {
 		hdcDst = hdc;
@@ -1239,7 +1239,7 @@ void CStatusView::CalcLayout()
 
 	m_Rows = CalcRows(ItemList, MaxRowWidth);
 
-	CStatusItem *pVariableItem = NULL;
+	CStatusItem *pVariableItem = nullptr;
 	int RowWidth = 0;
 	for (size_t i = 0; i < ItemList.size(); i++) {
 		CStatusItem *pItem = ItemList[i];
@@ -1248,12 +1248,12 @@ void CStatusView::CalcLayout()
 			pVariableItem = pItem;
 		RowWidth += pItem->GetActualWidth() + m_Style.ItemPadding.Horz();
 		if (pItem->m_fBreak || i + 1 == ItemList.size()) {
-			if (pVariableItem != NULL) {
+			if (pVariableItem != nullptr) {
 				int Add = MaxRowWidth - RowWidth;
 				if (Add > 0)
 					pVariableItem->SetActualWidth(pVariableItem->GetActualWidth() + Add);
 			}
-			pVariableItem = NULL;
+			pVariableItem = nullptr;
 			RowWidth = 0;
 		}
 	}
@@ -1379,7 +1379,7 @@ int CStatusView::CalcItemPixelSize(const CStatusItem::SizeValue &Size) const
 
 void CStatusView::ApplyStyle()
 {
-	if (m_hwnd == NULL)
+	if (m_hwnd == nullptr)
 		return;
 
 	CreateDrawFont(m_Font, &m_DrawFont);
@@ -1401,8 +1401,8 @@ void CStatusView::ApplyStyle()
 
 void CStatusView::RealizeStyle()
 {
-	if (m_hwnd != NULL) {
-		if (m_pEventHandler != NULL)
+	if (m_hwnd != nullptr) {
+		if (m_pEventHandler != nullptr)
 			m_pEventHandler->OnStyleChanged();
 		AdjustSize();
 	}

@@ -52,7 +52,7 @@ size_t CEpg::CChannelProviderManager::GetChannelProviderCount() const
 CProgramGuideChannelProvider *CEpg::CChannelProviderManager::GetChannelProvider(size_t Index) const
 {
 	if (Index >= m_ChannelProviderList.size())
-		return NULL;
+		return nullptr;
 	return m_ChannelProviderList[Index];
 }
 
@@ -62,18 +62,18 @@ bool CEpg::CChannelProviderManager::Create(LPCTSTR pszDefaultTuner)
 	Clear();
 
 	m_ChannelProviderList.push_back(new CFavoritesChannelProvider);
-	if (pszDefaultTuner != NULL && ::lstrcmpi(pszDefaultTuner, TEXT("favorites")) == 0)
+	if (pszDefaultTuner != nullptr && ::lstrcmpi(pszDefaultTuner, TEXT("favorites")) == 0)
 		m_CurChannelProvider = 0;
 
 	CAppMain &App = GetAppClass();
 
-	CProgramGuideBaseChannelProvider *pCurChannelProvider = NULL;
+	CProgramGuideBaseChannelProvider *pCurChannelProvider = nullptr;
 	String DefaultTuner;
 	if (m_CurChannelProvider < 0) {
 		if (!IsStringEmpty(pszDefaultTuner)) {
 			pCurChannelProvider = new CBonDriverChannelProvider(pszDefaultTuner);
 			DefaultTuner = pszDefaultTuner;
-		} else if (pszDefaultTuner == NULL
+		} else if (pszDefaultTuner == nullptr
 				&& App.CoreEngine.IsDriverSpecified()
 				&& !App.CoreEngine.IsNetworkDriver()) {
 			DefaultTuner = App.CoreEngine.GetDriverFileName();
@@ -86,12 +86,12 @@ bool CEpg::CChannelProviderManager::Create(LPCTSTR pszDefaultTuner)
 	for (int i = 0; i < App.DriverManager.NumDrivers(); i++) {
 		const CDriverInfo *pDriverInfo = App.DriverManager.GetDriverInfo(i);
 
-		if (pDriverInfo != NULL) {
-			if (pCurChannelProvider != NULL
+		if (pDriverInfo != nullptr) {
+			if (pCurChannelProvider != nullptr
 					&& IsEqualFileName(DefaultTuner.c_str(), pDriverInfo->GetFileName())) {
 				m_CurChannelProvider = (int)m_ChannelProviderList.size();
 				m_ChannelProviderList.push_back(pCurChannelProvider);
-				pCurChannelProvider = NULL;
+				pCurChannelProvider = nullptr;
 			} else {
 				CDriverManager::TunerSpec Spec;
 				if (!App.DriverManager.GetTunerSpec(pDriverInfo->GetFileName(), &Spec)
@@ -107,7 +107,7 @@ bool CEpg::CChannelProviderManager::Create(LPCTSTR pszDefaultTuner)
 		}
 	}
 
-	if (pCurChannelProvider != NULL) {
+	if (pCurChannelProvider != nullptr) {
 		auto itr = m_ChannelProviderList.begin();
 		++itr;
 		m_ChannelProviderList.insert(itr, pCurChannelProvider);
@@ -128,7 +128,7 @@ void CEpg::CChannelProviderManager::Clear()
 
 
 CEpg::CChannelProviderManager::CBonDriverChannelProvider::CBonDriverChannelProvider(LPCTSTR pszFileName)
-	: CProgramGuideBaseChannelProvider(NULL, pszFileName)
+	: CProgramGuideBaseChannelProvider(nullptr, pszFileName)
 {
 }
 
@@ -178,7 +178,7 @@ bool CEpg::CChannelProviderManager::CFavoritesChannelProvider::Update()
 bool CEpg::CChannelProviderManager::CFavoritesChannelProvider::GetName(
 	LPTSTR pszName, int MaxName) const
 {
-	if (pszName == NULL || MaxName < 1)
+	if (pszName == nullptr || MaxName < 1)
 		return false;
 
 	::lstrcpyn(pszName, TEXT("お気に入りチャンネル"), MaxName);
@@ -190,7 +190,7 @@ bool CEpg::CChannelProviderManager::CFavoritesChannelProvider::GetName(
 bool CEpg::CChannelProviderManager::CFavoritesChannelProvider::GetGroupID(
 	size_t Group, String *pID) const
 {
-	if (Group >= m_GroupList.size() || pID == NULL)
+	if (Group >= m_GroupList.size() || pID == nullptr)
 		return false;
 	*pID = m_GroupList[Group]->ID;
 	return true;
@@ -219,7 +219,7 @@ int CEpg::CChannelProviderManager::CFavoritesChannelProvider::ParseGroupID(
 bool CEpg::CChannelProviderManager::CFavoritesChannelProvider::GetBonDriver(
 	LPTSTR pszFileName, int MaxLength) const
 {
-	if (pszFileName == NULL || MaxLength < 1
+	if (pszFileName == nullptr || MaxLength < 1
 			|| m_GroupList.empty()
 			|| m_GroupList.front()->ChannelList.empty())
 		return false;
@@ -248,7 +248,7 @@ bool CEpg::CChannelProviderManager::CFavoritesChannelProvider::GetBonDriverFileN
 {
 	if (Group >= m_GroupList.size()
 			|| Channel >= m_GroupList[Group]->ChannelList.size()
-			|| pszFileName == NULL || MaxLength < 1)
+			|| pszFileName == nullptr || MaxLength < 1)
 		return false;
 
 	CAppMain &App = GetAppClass();
@@ -402,7 +402,7 @@ void CEpg::CProgramGuideEventHandler::OnServiceTitleLButtonDown(LPCTSTR pszDrive
 	}
 
 	const CChannelList *pChannelList = App.ChannelManager.GetCurrentChannelList();
-	if (pChannelList != NULL) {
+	if (pChannelList != nullptr) {
 		int Index = FindChannel(pChannelList, pServiceInfo);
 		if (Index >= 0) {
 			App.Core.SetChannel(App.ChannelManager.GetCurrentSpace(), Index);
@@ -411,7 +411,7 @@ void CEpg::CProgramGuideEventHandler::OnServiceTitleLButtonDown(LPCTSTR pszDrive
 	}
 	for (int i = 0; i < App.ChannelManager.NumSpaces(); i++) {
 		pChannelList = App.ChannelManager.GetChannelList(i);
-		if (pChannelList != NULL) {
+		if (pChannelList != nullptr) {
 			int Index = FindChannel(pChannelList, pServiceInfo);
 			if (Index >= 0) {
 				App.Core.SetChannel(i, Index);

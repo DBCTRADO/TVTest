@@ -14,16 +14,16 @@ public:
 	public:
 		virtual ~CEventHandler() = 0;
 		virtual void OnStart() {}
-		virtual void OnEnd(bool fSuccess,LibISDB::EPGDatabase *pEPGDatabase) {}
+		virtual void OnEnd(bool fSuccess, LibISDB::EPGDatabase * pEPGDatabase) {}
 	};
 
 	CEpgDataLoader();
 	~CEpgDataLoader();
-	bool Load(LPCTSTR pszFolder,HANDLE hAbortEvent=NULL);
-	bool LoadAsync(LPCTSTR pszFolder,CEventHandler *pEventHandler=NULL);
+	bool Load(LPCTSTR pszFolder, HANDLE hAbortEvent = nullptr);
+	bool LoadAsync(LPCTSTR pszFolder, CEventHandler *pEventHandler = nullptr);
 	bool IsLoading() const;
-	bool Abort(DWORD Timeout=10000);
-	bool Wait(DWORD Timeout=INFINITE);
+	bool Abort(DWORD Timeout = 10000);
+	bool Wait(DWORD Timeout = INFINITE);
 
 private:
 	LibISDB::EPGDatabase m_EPGDatabase;

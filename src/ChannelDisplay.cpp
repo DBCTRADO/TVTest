@@ -10,12 +10,12 @@
 
 
 const LPCTSTR CChannelDisplay::m_pszWindowClass = APP_NAME TEXT(" Channel Display");
-HINSTANCE CChannelDisplay::m_hinst = NULL;
+HINSTANCE CChannelDisplay::m_hinst = nullptr;
 
 
 bool CChannelDisplay::Initialize(HINSTANCE hinst)
 {
-	if (m_hinst == NULL) {
+	if (m_hinst == nullptr) {
 		WNDCLASS wc;
 
 		wc.style = CS_HREDRAW | CS_VREDRAW | CS_DBLCLKS;
@@ -23,10 +23,10 @@ bool CChannelDisplay::Initialize(HINSTANCE hinst)
 		wc.cbClsExtra = 0;
 		wc.cbWndExtra = 0;
 		wc.hInstance = hinst;
-		wc.hIcon = NULL;
-		wc.hCursor = NULL;
-		wc.hbrBackground = NULL;
-		wc.lpszMenuName = NULL;
+		wc.hIcon = nullptr;
+		wc.hCursor = nullptr;
+		wc.hbrBackground = nullptr;
+		wc.lpszMenuName = nullptr;
 		wc.lpszClassName = m_pszWindowClass;
 		if (::RegisterClass(&wc) == 0)
 			return false;
@@ -38,14 +38,14 @@ bool CChannelDisplay::Initialize(HINSTANCE hinst)
 
 CChannelDisplay::CChannelDisplay(LibISDB::EPGDatabase *pEPGDatabase)
 	: m_fAutoFontSize(true)
-	, m_hwndTunerScroll(NULL)
-	, m_hwndChannelScroll(NULL)
+	, m_hwndTunerScroll(nullptr)
+	, m_hwndChannelScroll(nullptr)
 	, m_TotalTuningSpaces(0)
 	, m_CurTuner(-1)
 	, m_CurChannel(-1)
 	, m_pEPGDatabase(pEPGDatabase)
-	, m_pLogoManager(NULL)
-	, m_pChannelDisplayEventHandler(NULL)
+	, m_pLogoManager(nullptr)
+	, m_pChannelDisplayEventHandler(nullptr)
 {
 	GetBackgroundStyle(BACKGROUND_STYLE_CATEGORIES, &m_TunerAreaBackStyle);
 	GetBackgroundStyle(BACKGROUND_STYLE_CONTENT, &m_ChannelAreaBackStyle);
@@ -75,7 +75,7 @@ CChannelDisplay::~CChannelDisplay()
 
 bool CChannelDisplay::Create(HWND hwndParent, DWORD Style, DWORD ExStyle, int ID)
 {
-	return CreateBasicWindow(hwndParent, Style, ExStyle, ID, m_pszWindowClass, NULL, m_hinst);
+	return CreateBasicWindow(hwndParent, Style, ExStyle, ID, m_pszWindowClass, nullptr, m_hinst);
 }
 
 
@@ -97,7 +97,7 @@ void CChannelDisplay::NormalizeStyle(
 
 bool CChannelDisplay::Close()
 {
-	if (m_pChannelDisplayEventHandler != NULL) {
+	if (m_pChannelDisplayEventHandler != nullptr) {
 		m_pChannelDisplayEventHandler->OnClose();
 		return true;
 	}
@@ -130,7 +130,7 @@ bool CChannelDisplay::IsMessageNeed(const MSG *pMsg) const
 
 bool CChannelDisplay::OnMouseWheel(UINT Msg, WPARAM wParam, LPARAM lParam)
 {
-	if (Msg == WM_MOUSEWHEEL && m_hwnd != NULL) {
+	if (Msg == WM_MOUSEWHEEL && m_hwnd != nullptr) {
 		int Delta = m_MouseWheel.OnMouseWheel(wParam, 1);
 
 		if (Delta != 0) {
@@ -180,7 +180,7 @@ bool CChannelDisplay::SetDriverManager(CDriverManager *pDriverManager)
 	LoadSettings();
 	for (int i = 0; i < pDriverManager->NumDrivers(); i++) {
 		CDriverInfo *pDriverInfo = pDriverManager->GetDriverInfo(i);
-		const TunerInfo *pTunerInfo = NULL;
+		const TunerInfo *pTunerInfo = nullptr;
 
 		LPCTSTR pszFileName = ::PathFindFileName(pDriverInfo->GetFileName());
 		for (size_t j = 0; j < m_TunerInfoList.size(); j++) {
@@ -195,27 +195,27 @@ bool CChannelDisplay::SetDriverManager(CDriverManager *pDriverManager)
 			}
 		}
 End:
-		bool fUseDriverChannel = pTunerInfo != NULL && pTunerInfo->fUseDriverChannel;
+		bool fUseDriverChannel = pTunerInfo != nullptr && pTunerInfo->fUseDriverChannel;
 		pDriverInfo->LoadTuningSpaceList(
 			fUseDriverChannel ?
 			CDriverInfo::LOADTUNINGSPACE_DEFAULT :
 			CDriverInfo::LOADTUNINGSPACE_NOLOADDRIVER);
 		CTuner *pTuner = new CTuner(pDriverInfo);
-		if (pTunerInfo != NULL) {
+		if (pTunerInfo != nullptr) {
 			if (pTunerInfo->szDisplayName[0] != '\0')
 				pTuner->SetDisplayName(pTunerInfo->szDisplayName);
 			if (pTunerInfo->szIconFile[0] != '\0') {
 				HICON hico = ::ExtractIcon(
 					GetAppClass().GetInstance(),
 					pTunerInfo->szIconFile, pTunerInfo->Index);
-				if (hico != NULL && hico != (HICON)1)
+				if (hico != nullptr && hico != (HICON)1)
 					pTuner->SetIcon(hico);
 			}
 		}
 		m_TunerList.push_back(pTuner);
 		m_TotalTuningSpaces += pTuner->NumSpaces();
 	}
-	if (m_hwnd != NULL) {
+	if (m_hwnd != nullptr) {
 		Layout();
 		Invalidate();
 	}
@@ -231,9 +231,9 @@ void CChannelDisplay::SetLogoManager(CLogoManager *pLogoManager)
 
 void CChannelDisplay::SetEventHandler(CChannelDisplayEventHandler *pEventHandler)
 {
-	if (m_pChannelDisplayEventHandler != NULL)
-		m_pChannelDisplayEventHandler->m_pChannelDisplay = NULL;
-	if (pEventHandler != NULL)
+	if (m_pChannelDisplayEventHandler != nullptr)
+		m_pChannelDisplayEventHandler->m_pChannelDisplay = nullptr;
+	if (pEventHandler != nullptr)
 		pEventHandler->m_pChannelDisplay = this;
 	m_pChannelDisplayEventHandler = pEventHandler;
 	CDisplayView::SetEventHandler(pEventHandler);
@@ -247,10 +247,10 @@ bool CChannelDisplay::SetSelect(LPCTSTR pszDriverFileName, const CChannelInfo *p
 		const CTuner *pTuner = m_TunerList[i];
 		if (IsEqualFileName(pTuner->GetDriverFileName(), pszDriverFileName)) {
 			int Space = 0, Channel = -1;
-			if (pChannelInfo != NULL) {
+			if (pChannelInfo != nullptr) {
 				for (int j = 0; j < pTuner->NumSpaces(); j++) {
 					const CChannelList *pChannelList = pTuner->GetTuningSpaceInfo(j)->GetChannelList();
-					if (pChannelList != NULL) {
+					if (pChannelList != nullptr) {
 						Channel = pChannelList->FindByIndex(
 							pChannelInfo->GetSpace(),
 							pChannelInfo->GetChannelIndex(),
@@ -277,7 +277,7 @@ bool CChannelDisplay::SetFont(const TVTest::Style::Font &Font, bool fAutoSize)
 {
 	m_StyleFont = Font;
 	m_fAutoFontSize = fAutoSize;
-	if (m_hwnd != NULL) {
+	if (m_hwnd != nullptr) {
 		ApplyStyle();
 		RealizeStyle();
 	}
@@ -368,7 +368,7 @@ void CChannelDisplay::Layout()
 			::DrawText(hdc, szText, -1, &rc, DT_SINGLELINE | DT_NOPREFIX | DT_CALCRECT);
 			if (TunerNameWidth < rc.right)
 				TunerNameWidth = rc.right;
-			if (pTuner->GetIcon() != NULL)
+			if (pTuner->GetIcon() != nullptr)
 				fTunerIcon = true;
 		}
 	}
@@ -418,7 +418,7 @@ void CChannelDisplay::Layout()
 	int NumChannels = 0;
 	if (m_CurTuner >= 0) {
 		const CTuningSpaceInfo *pTuningSpace = GetTuningSpaceInfo(m_CurTuner);
-		if (pTuningSpace != NULL) {
+		if (pTuningSpace != nullptr) {
 			NumChannels = pTuningSpace->NumChannels();
 			if (NumChannels > 0) {
 				const CChannelList *pChannelList = pTuningSpace->GetChannelList();
@@ -489,7 +489,7 @@ const CTuningSpaceInfo *CChannelDisplay::GetTuningSpaceInfo(int Index) const
 			return pTuner->GetTuningSpaceInfo(Index - TunerIndex);
 		TunerIndex += pTuner->NumSpaces();
 	}
-	return NULL;
+	return nullptr;
 }
 
 
@@ -503,7 +503,7 @@ CTuningSpaceInfo *CChannelDisplay::GetTuningSpaceInfo(int Index)
 			return pTuner->GetTuningSpaceInfo(Index - TunerIndex);
 		TunerIndex += pTuner->NumSpaces();
 	}
-	return NULL;
+	return nullptr;
 }
 
 
@@ -514,13 +514,13 @@ const CChannelDisplay::CTuner *CChannelDisplay::GetTuner(int Index, int *pSpace)
 		const CTuner *pTuner = m_TunerList[i];
 
 		if (Index >= TunerIndex && Index < TunerIndex + pTuner->NumSpaces()) {
-			if (pSpace != NULL)
+			if (pSpace != nullptr)
 				*pSpace = Index - TunerIndex;
 			return pTuner;
 		}
 		TunerIndex += pTuner->NumSpaces();
 	}
-	return NULL;
+	return nullptr;
 }
 
 
@@ -544,7 +544,7 @@ void CChannelDisplay::GetChannelItemRect(int Index, RECT *pRect) const
 
 void CChannelDisplay::UpdateTunerItem(int Index) const
 {
-	if (m_hwnd != NULL) {
+	if (m_hwnd != nullptr) {
 		RECT rc;
 		GetTunerItemRect(Index, &rc);
 		::InvalidateRect(m_hwnd, &rc, TRUE);
@@ -554,7 +554,7 @@ void CChannelDisplay::UpdateTunerItem(int Index) const
 
 void CChannelDisplay::UpdateChannelItem(int Index) const
 {
-	if (m_hwnd != NULL) {
+	if (m_hwnd != nullptr) {
 		RECT rc;
 		GetChannelItemRect(Index, &rc);
 		::InvalidateRect(m_hwnd, &rc, TRUE);
@@ -582,7 +582,7 @@ int CChannelDisplay::ChannelItemHitTest(int x, int y) const
 		const int Index = (y - m_ChannelItemTop) / m_ChannelItemHeight + m_ChannelScrollPos;
 		const CTuningSpaceInfo *pTuningSpace = GetTuningSpaceInfo(m_CurTuner);
 
-		if (pTuningSpace != NULL && Index < pTuningSpace->NumChannels())
+		if (pTuningSpace != nullptr && Index < pTuningSpace->NumChannels())
 			return Index;
 	}
 	return -1;
@@ -620,7 +620,7 @@ bool CChannelDisplay::UpdateChannelInfo(int Index)
 {
 	CTuningSpaceInfo *pTuningSpace = GetTuningSpaceInfo(Index);
 
-	if (pTuningSpace == NULL)
+	if (pTuningSpace == nullptr)
 		return false;
 	CChannelList *pChannelList = pTuningSpace->GetChannelList();
 	for (int i = 0; i < pChannelList->NumChannels(); i++) {
@@ -644,10 +644,10 @@ bool CChannelDisplay::UpdateChannelInfo(int Index)
 						EndTime, &EventInfo)) {
 				pChannel->SetEvent(1, &EventInfo);
 			} else {
-				pChannel->SetEvent(1, NULL);
+				pChannel->SetEvent(1, nullptr);
 			}
 		} else {
-			pChannel->SetEvent(0, NULL);
+			pChannel->SetEvent(0, nullptr);
 			if (m_pEPGDatabase->GetNextEventInfo(
 						pChannel->GetNetworkID(),
 						pChannel->GetTransportStreamID(),
@@ -656,17 +656,17 @@ bool CChannelDisplay::UpdateChannelInfo(int Index)
 					&& EventInfo.StartTime.DiffSeconds(m_EpgBaseTime) < 8 * 60 * 60) {
 				pChannel->SetEvent(1, &EventInfo);
 			} else {
-				pChannel->SetEvent(1, NULL);
+				pChannel->SetEvent(1, nullptr);
 			}
 		}
-		if (m_pLogoManager != NULL) {
+		if (m_pLogoManager != nullptr) {
 			HBITMAP hbmLogo = m_pLogoManager->GetAssociatedLogoBitmap(
 				pChannel->GetNetworkID(), pChannel->GetServiceID(), CLogoManager::LOGOTYPE_SMALL);
-			if (hbmLogo != NULL)
+			if (hbmLogo != nullptr)
 				pChannel->SetSmallLogo(hbmLogo);
 			hbmLogo = m_pLogoManager->GetAssociatedLogoBitmap(
 				pChannel->GetNetworkID(), pChannel->GetServiceID(), CLogoManager::LOGOTYPE_BIG);
-			if (hbmLogo != NULL)
+			if (hbmLogo != nullptr)
 				pChannel->SetBigLogo(hbmLogo);
 		}
 	}
@@ -678,7 +678,7 @@ bool CChannelDisplay::SetCurChannel(int Index)
 {
 	const CTuningSpaceInfo *pTuningSpace = GetTuningSpaceInfo(m_CurTuner);
 
-	if (pTuningSpace == NULL || Index < -1 || Index >= pTuningSpace->NumChannels())
+	if (pTuningSpace == nullptr || Index < -1 || Index >= pTuningSpace->NumChannels())
 		return false;
 	if (Index != m_CurChannel) {
 		if (m_CurChannel >= 0)
@@ -725,7 +725,7 @@ void CChannelDisplay::SetTunerScrollPos(int Pos, bool fScroll)
 				m_TunerItemTop + m_TunerItemHeight * m_VisibleTunerItems);
 			::ScrollWindowEx(
 				m_hwnd, 0, (m_TunerScrollPos - Pos) * m_TunerItemHeight,
-				&rc, &rc, NULL, NULL, SW_INVALIDATE);
+				&rc, &rc, nullptr, nullptr, SW_INVALIDATE);
 		}
 		m_TunerScrollPos = Pos;
 	}
@@ -737,7 +737,7 @@ void CChannelDisplay::SetChannelScrollPos(int Pos, bool fScroll)
 	int NumChannels = 0;
 	if (m_CurTuner >= 0) {
 		const CTuningSpaceInfo *pTuningSpace = GetTuningSpaceInfo(m_CurTuner);
-		if (pTuningSpace != NULL)
+		if (pTuningSpace != nullptr)
 			NumChannels = pTuningSpace->NumChannels();
 	}
 	if (Pos < 0)
@@ -759,7 +759,7 @@ void CChannelDisplay::SetChannelScrollPos(int Pos, bool fScroll)
 				m_ChannelItemTop + m_ChannelItemHeight * m_VisibleChannelItems);
 			::ScrollWindowEx(
 				m_hwnd, 0, (m_ChannelScrollPos - Pos) * m_ChannelItemHeight,
-				&rc, &rc, NULL, NULL, SW_INVALIDATE);
+				&rc, &rc, nullptr, nullptr, SW_INVALIDATE);
 		}
 		m_ChannelScrollPos = Pos;
 	}
@@ -788,7 +788,7 @@ void CChannelDisplay::Draw(HDC hdc, const RECT *pPaintRect)
 
 		bool fTunerIcon = false;
 		for (auto it = m_TunerList.begin(); it != m_TunerList.end(); ++it) {
-			if ((*it)->GetIcon() != NULL) {
+			if ((*it)->GetIcon() != nullptr) {
 				fTunerIcon = true;
 				break;
 			}
@@ -810,7 +810,7 @@ void CChannelDisplay::Draw(HDC hdc, const RECT *pPaintRect)
 					GetTunerItemRect(TunerIndex, &rc);
 					TVTest::Theme::Draw(hdc, rc, pStyle->Back);
 					TVTest::Style::Subtract(&rc, m_ChannelDisplayStyle.TunerItemPadding);
-					if (pTuner->GetIcon() != NULL) {
+					if (pTuner->GetIcon() != nullptr) {
 						::DrawIconEx(
 							hdc,
 							rc.left,
@@ -818,7 +818,7 @@ void CChannelDisplay::Draw(HDC hdc, const RECT *pPaintRect)
 							pTuner->GetIcon(),
 							m_ChannelDisplayStyle.TunerIconSize.Width,
 							m_ChannelDisplayStyle.TunerIconSize.Height,
-							0, NULL, DI_NORMAL);
+							0, nullptr, DI_NORMAL);
 					}
 					if (fTunerIcon)
 						rc.left += m_ChannelDisplayStyle.TunerIconSize.Width + m_ChannelDisplayStyle.TunerIconTextMargin;
@@ -844,7 +844,7 @@ void CChannelDisplay::Draw(HDC hdc, const RECT *pPaintRect)
 		if (m_CurTuner >= 0) {
 			const CTuningSpaceInfo *pTuningSpace = GetTuningSpaceInfo(m_CurTuner);
 
-			if (pTuningSpace != NULL) {
+			if (pTuningSpace != nullptr) {
 				const CChannelList *pChannelList = pTuningSpace->GetChannelList();
 				for (int i = m_ChannelScrollPos; i < pChannelList->NumChannels() && i < m_ChannelScrollPos + m_VisibleChannelItems; i++) {
 					const CTuner::CChannel *pChannel = static_cast<const CTuner::CChannel*>(pChannelList->GetChannelInfo(i));
@@ -865,11 +865,11 @@ void CChannelDisplay::Draw(HDC hdc, const RECT *pPaintRect)
 						LogoHeight = min(m_FontHeight - 4, 36);
 						LogoWidth = LogoHeight * 16 / 9;
 						HBITMAP hbmLogo =
-							LogoHeight <= 14 || pChannel->GetBigLogo() == NULL ?
+							LogoHeight <= 14 || pChannel->GetBigLogo() == nullptr ?
 								pChannel->GetSmallLogo() : pChannel->GetBigLogo();
 						DrawUtil::DrawBitmap(
 							hdc, rc.left, rc.top + (m_FontHeight - LogoHeight) / 2,
-							LogoWidth, LogoHeight, hbmLogo, NULL, 224);
+							LogoWidth, LogoHeight, hbmLogo, nullptr, 224);
 						rc.top += m_FontHeight;
 					}
 					TVTest::Theme::Draw(
@@ -880,7 +880,7 @@ void CChannelDisplay::Draw(HDC hdc, const RECT *pPaintRect)
 					rc.bottom = (rc.top + rc.bottom) / 2;
 					for (int j = 0; j < 2; j++) {
 						const LibISDB::EventInfo *pEventInfo = pChannel->GetEvent(j);
-						if (pEventInfo != NULL) {
+						if (pEventInfo != nullptr) {
 							int Length;
 							Length = EpgUtil::FormatEventTime(
 								*pEventInfo, szText, lengthof(szText),
@@ -944,11 +944,11 @@ void CChannelDisplay::NotifyTunerSelect() const
 {
 	int Space;
 	const CTuner *pTuner = GetTuner(m_CurTuner, &Space);
-	if (pTuner == NULL)
+	if (pTuner == nullptr)
 		return;
 	const CTuningSpaceInfo *pTuningSpace = pTuner->GetTuningSpaceInfo(Space);
 
-	if (pTuningSpace != NULL && pTuningSpace->NumChannels() > 0) {
+	if (pTuningSpace != nullptr && pTuningSpace->NumChannels() > 0) {
 		const CChannelList *pChannelList = pTuningSpace->GetChannelList();
 
 		for (int i = 0; i < pChannelList->NumChannels(); i++) {
@@ -972,7 +972,7 @@ void CChannelDisplay::NotifyTunerSelect() const
 void CChannelDisplay::NotifyChannelSelect() const
 {
 	const CTuner *pTuner = GetTuner(m_CurTuner);
-	if (pTuner == NULL)
+	if (pTuner == nullptr)
 		return;
 	const CTuningSpaceInfo *pTuningSpace = GetTuningSpaceInfo(m_CurTuner);
 
@@ -991,17 +991,17 @@ LRESULT CChannelDisplay::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 
 			m_hwndTunerScroll = ::CreateWindowEx(
 				0, TEXT("SCROLLBAR"), TEXT(""),
-				WS_CHILD | SBS_VERT, 0, 0, 0, 0, hwnd, NULL, m_hinst, NULL);
+				WS_CHILD | SBS_VERT, 0, 0, 0, 0, hwnd, nullptr, m_hinst, nullptr);
 			m_hwndChannelScroll = ::CreateWindowEx(
 				0, TEXT("SCROLLBAR"), TEXT(""),
-				WS_CHILD | SBS_VERT, 0, 0, 0, 0, hwnd, NULL, m_hinst, NULL);
+				WS_CHILD | SBS_VERT, 0, 0, 0, 0, hwnd, nullptr, m_hinst, nullptr);
 			m_TunerScrollPos = 0;
 			m_ChannelScrollPos = 0;
 			m_CurTuner = -1;
 			m_CurChannel = -1;
 			m_LastCursorPos.x = -1;
 			m_LastCursorPos.y = -1;
-			::SetTimer(hwnd, TIMER_CLOCK, 1000, NULL);
+			::SetTimer(hwnd, TIMER_CLOCK, 1000, nullptr);
 			m_ClockTime.NowLocal();
 		}
 		return 0;
@@ -1065,7 +1065,7 @@ LRESULT CChannelDisplay::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 
 	case WM_LBUTTONDOWN:
 		::SetFocus(hwnd);
-		if (m_pChannelDisplayEventHandler != NULL) {
+		if (m_pChannelDisplayEventHandler != nullptr) {
 			int x = GET_X_LPARAM(lParam), y = GET_Y_LPARAM(lParam);
 
 			if (CloseButtonHitTest(x, y)) {
@@ -1123,7 +1123,7 @@ LRESULT CChannelDisplay::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 					|| CloseButtonHitTest(pt.x, pt.y)) {
 				hCursor = GetActionCursor();
 			} else {
-				hCursor = ::LoadCursor(NULL, IDC_ARROW);
+				hCursor = ::LoadCursor(nullptr, IDC_ARROW);
 			}
 			::SetCursor(hCursor);
 			return TRUE;
@@ -1153,7 +1153,7 @@ LRESULT CChannelDisplay::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 			if (m_CurTuner >= 0 && m_CurChannel < 0) {
 				const CTuningSpaceInfo *pTuningSpace = GetTuningSpaceInfo(m_CurTuner);
 
-				if (pTuningSpace != NULL && pTuningSpace->NumChannels() > 0) {
+				if (pTuningSpace != nullptr && pTuningSpace->NumChannels() > 0) {
 					SetCurChannel(0);
 				}
 			}
@@ -1245,7 +1245,7 @@ LRESULT CChannelDisplay::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 
 void CChannelDisplay::ApplyStyle()
 {
-	if (m_hwnd != NULL) {
+	if (m_hwnd != nullptr) {
 		if (!m_fAutoFontSize)
 			CreateDrawFont(m_StyleFont, &m_Font);
 	}
@@ -1254,7 +1254,7 @@ void CChannelDisplay::ApplyStyle()
 
 void CChannelDisplay::RealizeStyle()
 {
-	if (m_hwnd != NULL) {
+	if (m_hwnd != nullptr) {
 		Layout();
 		Invalidate();
 	}
@@ -1269,14 +1269,14 @@ CChannelDisplay::CTuner::CTuner(const CDriverInfo *pDriverInfo)
 {
 	const CTuningSpaceList *pList = pDriverInfo->GetAvailableTuningSpaceList();
 
-	if (pList != NULL) {
+	if (pList != nullptr) {
 		for (int i = 0; i < pList->NumSpaces(); i++) {
 			const CTuningSpaceInfo *pSrcTuningSpace = pList->GetTuningSpaceInfo(i);
-			if (pSrcTuningSpace == NULL)
+			if (pSrcTuningSpace == nullptr)
 				break;
 			const CChannelList *pSrcChannelList = pSrcTuningSpace->GetChannelList();
 
-			if (pSrcChannelList != NULL && pSrcChannelList->NumEnableChannels() > 0) {
+			if (pSrcChannelList != nullptr && pSrcChannelList->NumEnableChannels() > 0) {
 				CTuningSpaceInfo *pTuningSpace;
 
 				if (!m_TuningSpaceList.empty()
@@ -1286,7 +1286,7 @@ CChannelDisplay::CTuner::CTuner(const CDriverInfo *pDriverInfo)
 					pTuningSpace->SetName(TEXT("地上"));
 				} else {
 					pTuningSpace = new CTuningSpaceInfo;
-					pTuningSpace->Create(NULL, pSrcTuningSpace->GetName());
+					pTuningSpace->Create(nullptr, pSrcTuningSpace->GetName());
 					m_TuningSpaceList.push_back(pTuningSpace);
 				}
 				for (int j = 0; j < pSrcChannelList->NumChannels(); j++) {
@@ -1344,7 +1344,7 @@ void CChannelDisplay::CTuner::GetDisplayName(int Space, LPTSTR pszName, int MaxN
 
 	if (m_TuningSpaceList.size() > 1) {
 		const CTuningSpaceInfo *pTuningSpace = GetTuningSpaceInfo(Space);
-		if (pTuningSpace != NULL) {
+		if (pTuningSpace != nullptr) {
 			int Length = ::lstrlen(pszName);
 			if (!IsStringEmpty(pTuningSpace->GetName()))
 				StdUtil::snprintf(pszName + Length, MaxName - Length, TEXT(" [%s]"), pTuningSpace->GetName());
@@ -1370,7 +1370,7 @@ int CChannelDisplay::CTuner::NumSpaces() const
 CTuningSpaceInfo *CChannelDisplay::CTuner::GetTuningSpaceInfo(int Index)
 {
 	if (Index < 0 || (size_t)Index >= m_TuningSpaceList.size())
-		return NULL;
+		return nullptr;
 	return m_TuningSpaceList[Index];
 }
 
@@ -1378,7 +1378,7 @@ CTuningSpaceInfo *CChannelDisplay::CTuner::GetTuningSpaceInfo(int Index)
 const CTuningSpaceInfo *CChannelDisplay::CTuner::GetTuningSpaceInfo(int Index) const
 {
 	if (Index < 0 || (size_t)Index >= m_TuningSpaceList.size())
-		return NULL;
+		return nullptr;
 	return m_TuningSpaceList[Index];
 }
 
@@ -1395,7 +1395,7 @@ bool CChannelDisplay::CTuner::CChannel::SetEvent(int Index, const LibISDB::Event
 {
 	if (Index < 0 || Index > 1)
 		return false;
-	if (pEvent != NULL)
+	if (pEvent != nullptr)
 		m_Event[Index] = *pEvent;
 	else
 		m_Event[Index].EventName.clear();
@@ -1406,9 +1406,9 @@ bool CChannelDisplay::CTuner::CChannel::SetEvent(int Index, const LibISDB::Event
 const LibISDB::EventInfo *CChannelDisplay::CTuner::CChannel::GetEvent(int Index) const
 {
 	if (Index < 0 || Index > 1)
-		return NULL;
+		return nullptr;
 	if (m_Event[Index].EventName.empty())
-		return NULL;
+		return nullptr;
 	return &m_Event[Index];
 }
 

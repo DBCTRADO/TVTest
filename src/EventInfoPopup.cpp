@@ -10,12 +10,12 @@
 
 
 const LPCTSTR CEventInfoPopup::m_pszWindowClass = APP_NAME TEXT(" Event Info");
-HINSTANCE CEventInfoPopup::m_hinst = NULL;
+HINSTANCE CEventInfoPopup::m_hinst = nullptr;
 
 
 bool CEventInfoPopup::Initialize(HINSTANCE hinst)
 {
-	if (m_hinst == NULL) {
+	if (m_hinst == nullptr) {
 		WNDCLASS wc;
 
 		wc.style = CS_HREDRAW;
@@ -23,10 +23,10 @@ bool CEventInfoPopup::Initialize(HINSTANCE hinst)
 		wc.cbClsExtra = 0;
 		wc.cbWndExtra = 0;
 		wc.hInstance = hinst;
-		wc.hIcon = NULL;
-		wc.hCursor = ::LoadCursor(NULL, IDC_ARROW);
-		wc.hbrBackground = NULL;
-		wc.lpszMenuName = NULL;
+		wc.hIcon = nullptr;
+		wc.hCursor = ::LoadCursor(nullptr, IDC_ARROW);
+		wc.hbrBackground = nullptr;
+		wc.lpszMenuName = nullptr;
 		wc.lpszClassName = m_pszWindowClass;
 		if (RegisterClass(&wc) == 0)
 			return false;
@@ -37,7 +37,7 @@ bool CEventInfoPopup::Initialize(HINSTANCE hinst)
 
 
 CEventInfoPopup::CEventInfoPopup()
-	: m_hwndEdit(NULL)
+	: m_hwndEdit(nullptr)
 	, m_BackColor(::GetSysColor(COLOR_WINDOW))
 	, m_TextColor(::GetSysColor(COLOR_WINDOWTEXT))
 	, m_TitleBackColor(RGB(228, 228, 240))
@@ -47,7 +47,7 @@ CEventInfoPopup::CEventInfoPopup()
 	, m_TitleIconTextMargin(4)
 	, m_ButtonSize(14)
 	, m_ButtonMargin(3)
-	, m_pEventHandler(NULL)
+	, m_pEventHandler(nullptr)
 	, m_fDetailInfo(
 #ifdef _DEBUG
 		true
@@ -69,14 +69,14 @@ CEventInfoPopup::CEventInfoPopup()
 CEventInfoPopup::~CEventInfoPopup()
 {
 	Destroy();
-	if (m_pEventHandler != NULL)
-		m_pEventHandler->m_pPopup = NULL;
+	if (m_pEventHandler != nullptr)
+		m_pEventHandler->m_pPopup = nullptr;
 }
 
 
 bool CEventInfoPopup::Create(HWND hwndParent, DWORD Style, DWORD ExStyle, int ID)
 {
-	return CreateBasicWindow(hwndParent, Style, ExStyle, ID, m_pszWindowClass, NULL, m_hinst);
+	return CreateBasicWindow(hwndParent, Style, ExStyle, ID, m_pszWindowClass, nullptr, m_hinst);
 }
 
 
@@ -96,7 +96,7 @@ void CEventInfoPopup::SetEventInfo(const LibISDB::EventInfo *pEventInfo)
 	cf.crTextColor = m_TextColor;
 	::ReleaseDC(m_hwndEdit, hdc);
 	::SendMessage(m_hwndEdit, WM_SETREDRAW, FALSE, 0);
-	::SetWindowText(m_hwndEdit, NULL);
+	::SetWindowText(m_hwndEdit, nullptr);
 
 	TCHAR szText[4096];
 	CStaticStringFormatter Formatter(szText, lengthof(szText));
@@ -145,7 +145,7 @@ void CEventInfoPopup::SetEventInfo(const LibISDB::EventInfo *pEventInfo)
 		LPCTSTR pszVideo = LibISDB::GetComponentTypeText_ja(
 			m_EventInfo.VideoList[0].StreamContent,
 			m_EventInfo.VideoList[0].ComponentType);
-		if (pszVideo != NULL) {
+		if (pszVideo != nullptr) {
 			Formatter.AppendFormat(TEXT("\r\n■ 映像： %s"), pszVideo);
 		}
 	}
@@ -177,10 +177,10 @@ void CEventInfoPopup::SetEventInfo(const LibISDB::EventInfo *pEventInfo)
 	if (EpgUtil::GetEventGenre(m_EventInfo, &Genre1, &Genre2)) {
 		CEpgGenre EpgGenre;
 		LPCTSTR pszGenre = EpgGenre.GetText(Genre1, -1);
-		if (pszGenre != NULL) {
+		if (pszGenre != nullptr) {
 			Formatter.AppendFormat(TEXT("\r\n■ ジャンル： %s"), pszGenre);
 			pszGenre = EpgGenre.GetText(Genre1, Genre2);
-			if (pszGenre != NULL)
+			if (pszGenre != nullptr)
 				Formatter.AppendFormat(TEXT(" - %s"), pszGenre);
 		}
 	}
@@ -201,7 +201,7 @@ void CEventInfoPopup::SetEventInfo(const LibISDB::EventInfo *pEventInfo)
 	POINT pt = {0, 0};
 	::SendMessage(m_hwndEdit, EM_SETSCROLLPOS, 0, reinterpret_cast<LPARAM>(&pt));
 	::SendMessage(m_hwndEdit, WM_SETREDRAW, TRUE, 0);
-	::InvalidateRect(m_hwndEdit, NULL, TRUE);
+	::InvalidateRect(m_hwndEdit, nullptr, TRUE);
 
 	CalcTitleHeight();
 	RECT rc;
@@ -264,7 +264,7 @@ void CEventInfoPopup::FormatAudioInfo(
 
 	StdUtil::snprintf(
 		pszText, MaxLength, TEXT("%s%s"),
-		pszAudio != NULL ? pszAudio : TEXT("?"),
+		pszAudio != nullptr ? pszAudio : TEXT("?"),
 		szAudioComponent);
 }
 
@@ -273,7 +273,7 @@ void CEventInfoPopup::CalcTitleHeight()
 {
 	int FontHeight = 0;
 	HDC hdc = ::GetDC(m_hwnd);
-	if (hdc != NULL) {
+	if (hdc != nullptr) {
 		HFONT hfontOld = DrawUtil::SelectObject(hdc, m_TitleFont);
 		TEXTMETRIC tm;
 		::GetTextMetrics(hdc, &tm);
@@ -295,16 +295,16 @@ bool CEventInfoPopup::Show(
 	const LibISDB::EventInfo *pEventInfo, const RECT *pPos,
 	HICON hIcon, LPCTSTR pszTitle)
 {
-	if (pEventInfo == NULL)
+	if (pEventInfo == nullptr)
 		return false;
 
-	if (m_hwnd == NULL) {
-		if (!Create(NULL, WS_POPUP | WS_CLIPCHILDREN | WS_THICKFRAME, WS_EX_TOPMOST | WS_EX_NOACTIVATE, 0))
+	if (m_hwnd == nullptr) {
+		if (!Create(nullptr, WS_POPUP | WS_CLIPCHILDREN | WS_THICKFRAME, WS_EX_TOPMOST | WS_EX_NOACTIVATE, 0))
 			return false;
 	}
 
 	if (!GetVisible() || m_EventInfo != *pEventInfo) {
-		if (pPos != NULL) {
+		if (pPos != nullptr) {
 			SetPosition(pPos);
 		} else {
 			RECT rc;
@@ -319,7 +319,7 @@ bool CEventInfoPopup::Show(
 
 	SetEventInfo(pEventInfo);
 
-	if (pszTitle != NULL)
+	if (pszTitle != nullptr)
 		m_TitleText = pszTitle;
 	else
 		m_TitleText.clear();
@@ -334,7 +334,7 @@ bool CEventInfoPopup::Show(
 
 bool CEventInfoPopup::Hide()
 {
-	if (m_hwnd != NULL)
+	if (m_hwnd != nullptr)
 		::ShowWindow(m_hwnd, SW_HIDE);
 	return true;
 }
@@ -342,13 +342,13 @@ bool CEventInfoPopup::Hide()
 
 bool CEventInfoPopup::IsVisible()
 {
-	return m_hwnd != NULL && GetVisible();
+	return m_hwnd != nullptr && GetVisible();
 }
 
 
 bool CEventInfoPopup::IsOwnWindow(HWND hwnd) const
 {
-	if (hwnd == NULL)
+	if (hwnd == nullptr)
 		return false;
 	return hwnd == m_hwnd || hwnd == m_hwndEdit;
 }
@@ -359,9 +359,9 @@ void CEventInfoPopup::GetSize(int *pWidth, int *pHeight) const
 	RECT rc;
 
 	GetPosition(&rc);
-	if (pWidth != NULL)
+	if (pWidth != nullptr)
 		*pWidth = rc.right - rc.left;
-	if (pHeight != NULL)
+	if (pHeight != nullptr)
 		*pHeight = rc.bottom - rc.top;
 }
 
@@ -382,9 +382,9 @@ void CEventInfoPopup::SetColor(COLORREF BackColor, COLORREF TextColor)
 {
 	m_BackColor = BackColor;
 	m_TextColor = TextColor;
-	if (m_hwnd != NULL) {
+	if (m_hwnd != nullptr) {
 		::SendMessage(m_hwndEdit, EM_SETBKGNDCOLOR, 0, m_BackColor);
-		//::InvalidateRect(m_hwndEdit, NULL, TRUE);
+		//::InvalidateRect(m_hwndEdit, nullptr, TRUE);
 	}
 }
 
@@ -393,13 +393,13 @@ void CEventInfoPopup::SetTitleColor(COLORREF BackColor, COLORREF TextColor)
 {
 	m_TitleBackColor = BackColor;
 	m_TitleTextColor = TextColor;
-	if (m_hwnd != NULL) {
+	if (m_hwnd != nullptr) {
 		RECT rc;
 
 		GetClientRect(&rc);
 		rc.bottom = m_TitleHeight;
 		::InvalidateRect(m_hwnd, &rc, TRUE);
-		::RedrawWindow(m_hwnd, NULL, NULL, RDW_FRAME | RDW_INVALIDATE);
+		::RedrawWindow(m_hwnd, nullptr, nullptr, RDW_FRAME | RDW_INVALIDATE);
 	}
 }
 
@@ -408,7 +408,7 @@ bool CEventInfoPopup::SetFont(const TVTest::Style::Font &Font)
 {
 	m_StyleFont = Font;
 
-	if (m_hwnd != NULL) {
+	if (m_hwnd != nullptr) {
 		ApplyStyle();
 		RealizeStyle();
 	}
@@ -419,9 +419,9 @@ bool CEventInfoPopup::SetFont(const TVTest::Style::Font &Font)
 
 void CEventInfoPopup::SetEventHandler(CEventHandler *pEventHandler)
 {
-	if (m_pEventHandler != NULL)
-		m_pEventHandler->m_pPopup = NULL;
-	if (pEventHandler != NULL)
+	if (m_pEventHandler != nullptr)
+		m_pEventHandler->m_pPopup = nullptr;
+	if (pEventHandler != nullptr)
 		pEventHandler->m_pPopup = this;
 	m_pEventHandler = pEventHandler;
 }
@@ -441,16 +441,16 @@ LPTSTR CEventInfoPopup::GetSelectedText() const
 
 void CEventInfoPopup::GetPreferredIconSize(int *pWidth, int *pHeight) const
 {
-	if (pWidth != NULL)
+	if (pWidth != nullptr)
 		*pWidth = m_pStyleScaling->GetScaledSystemMetrics(SM_CXSMICON);
-	if (pHeight != NULL)
+	if (pHeight != nullptr)
 		*pHeight = m_pStyleScaling->GetScaledSystemMetrics(SM_CYSMICON);
 }
 
 
 bool CEventInfoPopup::GetPopupPosition(int x, int y, RECT *pPos) const
 {
-	if (pPos == NULL)
+	if (pPos == nullptr)
 		return false;
 
 	RECT rc;
@@ -462,7 +462,7 @@ bool CEventInfoPopup::GetPopupPosition(int x, int y, RECT *pPos) const
 
 	POINT pt = {x, y};
 	HMONITOR hMonitor = ::MonitorFromPoint(pt, MONITOR_DEFAULTTONEAREST);
-	if (hMonitor != NULL) {
+	if (hMonitor != nullptr) {
 		MONITORINFO mi;
 
 		mi.cbSize = sizeof(mi);
@@ -488,7 +488,7 @@ bool CEventInfoPopup::GetPopupPosition(int x, int y, RECT *pPos) const
 
 bool CEventInfoPopup::AdjustPopupPosition(POINT *pPos) const
 {
-	if (pPos == NULL)
+	if (pPos == nullptr)
 		return false;
 
 	RECT rc;
@@ -504,7 +504,7 @@ bool CEventInfoPopup::AdjustPopupPosition(POINT *pPos) const
 
 bool CEventInfoPopup::GetDefaultPopupPosition(RECT *pPos) const
 {
-	if (pPos == NULL)
+	if (pPos == nullptr)
 		return false;
 
 	POINT pt;
@@ -516,7 +516,7 @@ bool CEventInfoPopup::GetDefaultPopupPosition(RECT *pPos) const
 
 bool CEventInfoPopup::GetDefaultPopupPosition(POINT *pPos) const
 {
-	if (pPos == NULL)
+	if (pPos == nullptr)
 		return false;
 
 	RECT rc;
@@ -540,7 +540,7 @@ LRESULT CEventInfoPopup::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 		m_hwndEdit = ::CreateWindowEx(
 			0, m_RichEditUtil.GetWindowClassName(), TEXT(""),
 			WS_CHILD | WS_VISIBLE | WS_VSCROLL | ES_MULTILINE | ES_READONLY | ES_AUTOVSCROLL | ES_NOHIDESEL,
-			0, 0, 0, 0, hwnd, (HMENU)1, m_hinst, NULL);
+			0, 0, 0, 0, hwnd, (HMENU)1, m_hinst, nullptr);
 		SetWindowFont(m_hwndEdit, m_Font.GetHandle(), FALSE);
 		::SendMessage(m_hwndEdit, EM_SETEVENTMASK, 0, ENM_MOUSEEVENTS | ENM_LINK);
 		::SendMessage(m_hwndEdit, EM_SETBKGNDCOLOR, 0, m_BackColor);
@@ -579,7 +579,7 @@ LRESULT CEventInfoPopup::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 				::DrawIconEx(
 					ps.hdc,
 					rc.left, rc.top + (m_TitleHeight - IconHeight) / 2,
-					m_TitleIcon, IconWidth, IconHeight, 0, NULL, DI_NORMAL);
+					m_TitleIcon, IconWidth, IconHeight, 0, nullptr, DI_NORMAL);
 				rc.left += IconWidth + m_TitleIconTextMargin;
 			}
 
@@ -648,7 +648,7 @@ LRESULT CEventInfoPopup::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 			HMENU hmenu = ::CreatePopupMenu();
 
 			::AppendMenu(hmenu, MF_STRING | MF_ENABLED, 1, TEXT("番組名をコピー(&C)"));
-			int Command = ::TrackPopupMenu(hmenu, TPM_RIGHTBUTTON | TPM_RETURNCMD, pt.x, pt.y, 0, hwnd, NULL);
+			int Command = ::TrackPopupMenu(hmenu, TPM_RIGHTBUTTON | TPM_RETURNCMD, pt.x, pt.y, 0, hwnd, nullptr);
 			::DestroyMenu(hmenu);
 			switch (Command) {
 			case 1:
@@ -668,7 +668,7 @@ LRESULT CEventInfoPopup::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 
 	case WM_SHOWWINDOW:
 		if (wParam != 0) {
-			::SetTimer(hwnd, TIMER_ID_HIDE, 200, NULL);
+			::SetTimer(hwnd, TIMER_ID_HIDE, 200, nullptr);
 			m_fCursorInWindow = false;
 		} else {
 			::KillTimer(hwnd, TIMER_ID_HIDE);
@@ -719,7 +719,7 @@ LRESULT CEventInfoPopup::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 
 			::GetWindowRect(hwnd, &rcWindow);
 			::GetClientRect(hwnd, &rcClient);
-			MapWindowRect(hwnd, NULL, &rcClient);
+			MapWindowRect(hwnd, nullptr, &rcClient);
 			::OffsetRect(&rcClient, -rcWindow.left, -rcWindow.top);
 			::OffsetRect(&rcWindow, -rcWindow.left, -rcWindow.top);
 			DrawUtil::FillBorder(hdc, &rcWindow, &rcClient, &rcWindow, m_TitleBackColor);
@@ -758,19 +758,19 @@ LRESULT CEventInfoPopup::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 				::AppendMenu(hmenu, MF_STRING | MF_ENABLED, COMMAND_COPY, TEXT("コピー(&C)"));
 				::AppendMenu(hmenu, MF_STRING | MF_ENABLED, COMMAND_SELECTALL, TEXT("すべて選択(&A)"));
 				::AppendMenu(hmenu, MF_STRING | MF_ENABLED, COMMAND_COPYEVENTNAME, TEXT("番組名をコピー(&E)"));
-				if (m_pEventHandler != NULL)
+				if (m_pEventHandler != nullptr)
 					m_pEventHandler->OnMenuPopup(hmenu);
 				if (CRichEditUtil::IsSelected(m_hwndEdit)) {
 					const TVTest::CKeywordSearch &KeywordSearch = GetAppClass().KeywordSearch;
 					if (KeywordSearch.GetSearchEngineCount() > 0) {
-						::AppendMenu(hmenu, MF_SEPARATOR, 0, NULL);
+						::AppendMenu(hmenu, MF_SEPARATOR, 0, nullptr);
 						KeywordSearch.InitializeMenu(hmenu, COMMAND_SEARCH, CEventHandler::COMMAND_FIRST - COMMAND_SEARCH);
 					}
 				}
 
 				POINT pt;
 				::GetCursorPos(&pt);
-				int Command = ::TrackPopupMenu(hmenu, TPM_RIGHTBUTTON | TPM_RETURNCMD, pt.x, pt.y, 0, hwnd, NULL);
+				int Command = ::TrackPopupMenu(hmenu, TPM_RIGHTBUTTON | TPM_RETURNCMD, pt.x, pt.y, 0, hwnd, nullptr);
 				::DestroyMenu(hmenu);
 
 				switch (Command) {
@@ -795,7 +795,7 @@ LRESULT CEventInfoPopup::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 						m_pEventHandler->OnMenuSelected(Command);
 					} else if (Command >= COMMAND_SEARCH) {
 						LPTSTR pszKeyword = CRichEditUtil::GetSelectedText(m_hwndEdit);
-						if (pszKeyword != NULL) {
+						if (pszKeyword != nullptr) {
 							GetAppClass().KeywordSearch.Search(Command - COMMAND_SEARCH, pszKeyword);
 							delete [] pszKeyword;
 						}
@@ -831,7 +831,7 @@ LRESULT CEventInfoPopup::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 
 void CEventInfoPopup::ApplyStyle()
 {
-	if (m_hwnd != NULL) {
+	if (m_hwnd != nullptr) {
 		CreateDrawFontAndBoldFont(m_StyleFont, &m_Font, &m_TitleFont);
 	}
 }
@@ -839,7 +839,7 @@ void CEventInfoPopup::ApplyStyle()
 
 void CEventInfoPopup::RealizeStyle()
 {
-	if (m_hwnd != NULL) {
+	if (m_hwnd != nullptr) {
 		SendSizeMessage();
 		Invalidate();
 		SetWindowFont(m_hwndEdit, m_Font.GetHandle(), TRUE);
@@ -872,15 +872,15 @@ void CEventInfoPopup::SetNcRendering()
 
 
 CEventInfoPopup::CEventHandler::CEventHandler()
-	: m_pPopup(NULL)
+	: m_pPopup(nullptr)
 {
 }
 
 
 CEventInfoPopup::CEventHandler::~CEventHandler()
 {
-	if (m_pPopup != NULL)
-		m_pPopup->m_pEventHandler = NULL;
+	if (m_pPopup != nullptr)
+		m_pPopup->m_pEventHandler = nullptr;
 }
 
 
@@ -889,7 +889,7 @@ CEventInfoPopup::CEventHandler::~CEventHandler()
 CEventInfoPopupManager::CEventInfoPopupManager(CEventInfoPopup *pPopup)
 	: m_pPopup(pPopup)
 	, m_fEnable(true)
-	, m_pEventHandler(NULL)
+	, m_pEventHandler(nullptr)
 	, m_HitTestParam(-1)
 {
 }
@@ -903,12 +903,12 @@ CEventInfoPopupManager::~CEventInfoPopupManager()
 
 bool CEventInfoPopupManager::Initialize(HWND hwnd, CEventHandler *pEventHandler)
 {
-	if (hwnd == NULL)
+	if (hwnd == nullptr)
 		return false;
 	if (!SetSubclass(hwnd))
 		return false;
 	m_pEventHandler = pEventHandler;
-	if (m_pEventHandler != NULL)
+	if (m_pEventHandler != nullptr)
 		m_pEventHandler->m_pPopup = m_pPopup;
 	m_fTrackMouseEvent = false;
 	return true;
@@ -917,7 +917,7 @@ bool CEventInfoPopupManager::Initialize(HWND hwnd, CEventHandler *pEventHandler)
 
 void CEventInfoPopupManager::Finalize()
 {
-	if (m_hwnd != NULL) {
+	if (m_hwnd != nullptr) {
 		m_pPopup->Hide();
 		RemoveSubclass();
 	}
@@ -935,7 +935,7 @@ bool CEventInfoPopupManager::SetEnable(bool fEnable)
 
 bool CEventInfoPopupManager::Popup(int x, int y)
 {
-	if (m_pEventHandler == NULL)
+	if (m_pEventHandler == nullptr)
 		return false;
 	m_HitTestParam = -1;
 	if (m_pEventHandler->HitTest(x, y, &m_HitTestParam)) {
@@ -961,7 +961,7 @@ LRESULT CEventInfoPopupManager::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, L
 			if (::TrackMouseEvent(&tme))
 				m_fTrackMouseEvent = true;
 		}
-		if (m_pPopup->IsVisible() && m_pEventHandler != NULL) {
+		if (m_pPopup->IsVisible() && m_pEventHandler != nullptr) {
 			LPARAM Param;
 			if (m_pEventHandler->HitTest(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), &Param)) {
 				if (Param != m_HitTestParam) {
@@ -1008,7 +1008,7 @@ LRESULT CEventInfoPopupManager::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, L
 		break;
 
 	case WM_MOUSEHOVER:
-		if (m_pEventHandler != NULL && m_fEnable
+		if (m_pEventHandler != nullptr && m_fEnable
 				&& ::GetActiveWindow() == ::GetForegroundWindow()) {
 			bool fHit = false;
 			m_HitTestParam = -1;
@@ -1040,6 +1040,6 @@ LRESULT CEventInfoPopupManager::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, L
 
 
 CEventInfoPopupManager::CEventHandler::CEventHandler()
-	: m_pPopup(NULL)
+	: m_pPopup(nullptr)
 {
 }

@@ -104,7 +104,7 @@ bool CAudioOptions::ReadSettings(CSettings &Settings)
 		if (TVTest::StringUtility::Split(Buffer, TEXT(","), &List) && List.size() >= 6 * 6) {
 			for (int i = 0; i < 6; i++) {
 				for (int j = 0; j < 6; j++) {
-					double Value = std::_tcstod(List[i * 6 + j].c_str(), NULL);
+					double Value = std::_tcstod(List[i * 6 + j].c_str(), nullptr);
 					if (Value == HUGE_VAL || Value == -HUGE_VAL)
 						Value = 0.0;
 					m_SurroundMixingMatrix.Matrix[i][j] = Value;
@@ -119,7 +119,7 @@ bool CAudioOptions::ReadSettings(CSettings &Settings)
 		if (TVTest::StringUtility::Split(Buffer, TEXT(","), &List) && List.size() >= 2 * 6) {
 			for (int i = 0; i < 2; i++) {
 				for (int j = 0; j < 6; j++) {
-					double Value = std::_tcstod(List[i * 6 + j].c_str(), NULL);
+					double Value = std::_tcstod(List[i * 6 + j].c_str(), nullptr);
 					if (Value == HUGE_VAL || Value == -HUGE_VAL)
 						Value = 0.0;
 					m_DownMixMatrix.Matrix[i][j] = Value;
@@ -221,7 +221,7 @@ bool CAudioOptions::ApplyMediaViewerOptions()
 {
 	LibISDB::ViewerFilter *pViewer = GetAppClass().CoreEngine.GetFilter<LibISDB::ViewerFilter>();
 
-	if (pViewer == NULL)
+	if (pViewer == nullptr)
 		return false;
 
 	pViewer->SetDownMixSurround(m_fDownMixSurround);
@@ -229,9 +229,9 @@ bool CAudioOptions::ApplyMediaViewerOptions()
 	LibISDB::COMPointer<LibISDB::DirectShow::AudioDecoderFilter> AudioFilter(pViewer->GetAudioDecoderFilter());
 	if (AudioFilter) {
 		AudioFilter->SetSurroundMixingMatrix(
-			m_fUseCustomSurroundMixingMatrix ? &m_SurroundMixingMatrix : NULL);
+			m_fUseCustomSurroundMixingMatrix ? &m_SurroundMixingMatrix : nullptr);
 		AudioFilter->SetDownMixMatrix(
-			m_fUseCustomDownMixMatrix ? &m_DownMixMatrix : NULL);
+			m_fUseCustomDownMixMatrix ? &m_DownMixMatrix : nullptr);
 	}
 
 	return true;
@@ -621,7 +621,7 @@ INT_PTR CAudioOptions::CSurroundOptionsDialog::DlgProc(
 					for (int j = 0; j < 6; j++) {
 						TCHAR szText[16];
 						::GetDlgItemText(hDlg, ID, szText, lengthof(szText));
-						double Value = std::_tcstod(szText, NULL);
+						double Value = std::_tcstod(szText, nullptr);
 						if (Value == HUGE_VAL || Value == -HUGE_VAL)
 							Value = 0.0;
 						m_pOptions->m_DownMixMatrix.Matrix[i][j] = Value;
@@ -636,7 +636,7 @@ INT_PTR CAudioOptions::CSurroundOptionsDialog::DlgProc(
 					for (int j = 0; j < 6; j++) {
 						TCHAR szText[16];
 						::GetDlgItemText(hDlg, ID, szText, lengthof(szText));
-						double Value = std::_tcstod(szText, NULL);
+						double Value = std::_tcstod(szText, nullptr);
 						if (Value == HUGE_VAL || Value == -HUGE_VAL)
 							Value = 0.0;
 						m_pOptions->m_SurroundMixingMatrix.Matrix[i][j] = Value;

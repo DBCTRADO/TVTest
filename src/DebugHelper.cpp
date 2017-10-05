@@ -7,15 +7,15 @@
 
 
 #ifdef ENABLE_DEBUG_HELPER
-HMODULE CDebugHelper::m_hDbgHelp = NULL;
-CDebugHelper::SymInitializeFunc CDebugHelper::m_pSymInitialize = NULL;
-CDebugHelper::SymCleanupFunc CDebugHelper::m_pSymCleanup = NULL;
-CDebugHelper::SymFromAddrFunc CDebugHelper::m_pSymFromAddr = NULL;
-CDebugHelper::SymSetOptionsFunc CDebugHelper::m_pSymSetOptions = NULL;
-CDebugHelper::SymLoadModuleFunc CDebugHelper::m_pSymLoadModule = NULL;
-CDebugHelper::StackWalkFunc CDebugHelper::m_pStackWalk = NULL;
-//CDebugHelper::SymGetModuleInfoFunc CDebugHelper::m_pSymGetModuleInfo = NULL;
-//CDebugHelper::SymGetModuleBaseFunc CDebugHelper::m_pSymGetModuleBase = NULL;
+HMODULE CDebugHelper::m_hDbgHelp = nullptr;
+CDebugHelper::SymInitializeFunc CDebugHelper::m_pSymInitialize = nullptr;
+CDebugHelper::SymCleanupFunc CDebugHelper::m_pSymCleanup = nullptr;
+CDebugHelper::SymFromAddrFunc CDebugHelper::m_pSymFromAddr = nullptr;
+CDebugHelper::SymSetOptionsFunc CDebugHelper::m_pSymSetOptions = nullptr;
+CDebugHelper::SymLoadModuleFunc CDebugHelper::m_pSymLoadModule = nullptr;
+CDebugHelper::StackWalkFunc CDebugHelper::m_pStackWalk = nullptr;
+//CDebugHelper::SymGetModuleInfoFunc CDebugHelper::m_pSymGetModuleInfo = nullptr;
+//CDebugHelper::SymGetModuleBaseFunc CDebugHelper::m_pSymGetModuleBase = nullptr;
 #endif
 CDebugHelper::ExceptionFilterMode CDebugHelper::m_ExceptionFilterMode = EXCEPTION_FILTER_DEFAULT;
 
@@ -31,9 +31,9 @@ CDebugHelper::CDebugHelper()
 CDebugHelper::~CDebugHelper()
 {
 #ifdef ENABLE_DEBUG_HELPER
-	if (m_hDbgHelp != NULL) {
+	if (m_hDbgHelp != nullptr) {
 		::FreeLibrary(m_hDbgHelp);
-		m_hDbgHelp = NULL;
+		m_hDbgHelp = nullptr;
 	}
 #endif
 }
@@ -42,9 +42,9 @@ CDebugHelper::~CDebugHelper()
 bool CDebugHelper::Initialize()
 {
 #ifdef ENABLE_DEBUG_HELPER
-	if (m_hDbgHelp == NULL) {
+	if (m_hDbgHelp == nullptr) {
 		m_hDbgHelp = Util::LoadSystemLibrary(TEXT("dbghelp.dll"));
-		if (m_hDbgHelp == NULL)
+		if (m_hDbgHelp == nullptr)
 			return false;
 
 		m_pSymInitialize = reinterpret_cast<SymInitializeFunc>(::GetProcAddress(m_hDbgHelp, "SymInitialize"));
@@ -55,10 +55,10 @@ bool CDebugHelper::Initialize()
 		m_pStackWalk = reinterpret_cast<StackWalkFunc>(::GetProcAddress(m_hDbgHelp, "StackWalk64"));
 		//m_pSymGetModuleBase = reinterpret_cast<SymGetModuleBaseFunc>(::GetProcAddress(m_hDbgHelp, "SymGetModuleBase64"));
 		//m_pSymGetModuleInfo = reinterpret_cast<SymGetModuleInfoFunc>(::GetProcAddress(m_hDbgHelp, "SymGetModuleInfo64"));
-		if (m_pSymInitialize == NULL || m_pSymCleanup == NULL || m_pSymFromAddr == NULL
-				|| m_pSymSetOptions == NULL || m_pStackWalk == NULL) {
+		if (m_pSymInitialize == nullptr || m_pSymCleanup == nullptr || m_pSymFromAddr == nullptr
+				|| m_pSymSetOptions == nullptr || m_pStackWalk == nullptr) {
 			::FreeLibrary(m_hDbgHelp);
-			m_hDbgHelp = NULL;
+			m_hDbgHelp = nullptr;
 			return false;
 		}
 	}
@@ -80,7 +80,7 @@ LONG WINAPI CDebugHelper::ExceptionFilter(EXCEPTION_POINTERS *ExceptionInfo)
 		return EXCEPTION_EXECUTE_HANDLER;
 
 #ifdef ENABLE_DEBUG_HELPER
-	if (m_hDbgHelp != NULL) {
+	if (m_hDbgHelp != nullptr) {
 		static struct {
 			HANDLE hProcess;
 			HANDLE hThread;
@@ -111,7 +111,7 @@ LONG WINAPI CDebugHelper::ExceptionFilter(EXCEPTION_POINTERS *ExceptionInfo)
 		m_pSymSetOptions(SYMOPT_UNDNAME | SYMOPT_DEFERRED_LOADS);
 
 		s.hProcess = ::GetCurrentProcess();
-		if (!m_pSymInitialize(s.hProcess, NULL, FALSE))
+		if (!m_pSymInitialize(s.hProcess, nullptr, FALSE))
 			return EXCEPTION_CONTINUE_SEARCH;
 		s.hThread = ::GetCurrentThread();
 
@@ -175,14 +175,14 @@ LONG WINAPI CDebugHelper::ExceptionFilter(EXCEPTION_POINTERS *ExceptionInfo)
 
 		// モジュールの列挙
 		s.NumModuleEntries = 0;
-		if (m_pSymLoadModule != NULL) {
+		if (m_pSymLoadModule != nullptr) {
 			s.hSnap = ::CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, ::GetCurrentProcessId());
 			if (s.hSnap != INVALID_HANDLE_VALUE) {
 				s.ModuleEntry.dwSize = sizeof(s.ModuleEntry);
 				if (::Module32First(s.hSnap, &s.ModuleEntry)) {
 					do {
 						if ((m_pSymLoadModule(
-									s.hProcess, NULL,
+									s.hProcess, nullptr,
 									s.ModuleEntry.szExePath,
 									s.ModuleEntry.szModule,
 									reinterpret_cast<DWORD64>(s.ModuleEntry.modBaseAddr),
@@ -255,7 +255,7 @@ LONG WINAPI CDebugHelper::ExceptionFilter(EXCEPTION_POINTERS *ExceptionInfo)
 						s.hProcess, s.hThread,
 						&s.Stack.StackFrame,
 						&s.Stack.Context,
-						NULL, NULL, NULL, NULL)
+						nullptr, nullptr, nullptr, nullptr)
 					|| s.Stack.StackFrame.AddrPC.Offset == 0
 					|| s.Stack.StackFrame.AddrReturn.Offset == 0
 					|| s.Stack.StackFrame.AddrPC.Offset == s.Stack.StackFrame.AddrReturn.Offset)
@@ -275,23 +275,23 @@ LONG WINAPI CDebugHelper::ExceptionFilter(EXCEPTION_POINTERS *ExceptionInfo)
 		s.fContinueExecution = false;
 		if (m_ExceptionFilterMode == EXCEPTION_FILTER_DIALOG) {
 			if (ExceptionInfo->ExceptionRecord->ExceptionFlags == EXCEPTION_NONCONTINUABLE) {
-				::MessageBoxA(NULL, s.szText, NULL, MB_OK | MB_ICONSTOP);
+				::MessageBoxA(nullptr, s.szText, nullptr, MB_OK | MB_ICONSTOP);
 			} else {
 				::lstrcpyA(
 					s.szText + s.Length,
 					"\r\n再試行しますか？\r\n"
 					"[いいえ] を選択するとプログラムが終了します。");
-				if (::MessageBoxA(NULL, s.szText, NULL, MB_YESNO | MB_ICONSTOP | MB_DEFBUTTON2) == IDYES)
+				if (::MessageBoxA(nullptr, s.szText, nullptr, MB_YESNO | MB_ICONSTOP | MB_DEFBUTTON2) == IDYES)
 					s.fContinueExecution = true;
 			}
 		}
 
 		// ログ保存
-		::GetModuleFileName(NULL, s.File.szFileName, lengthof(s.File.szFileName));
+		::GetModuleFileName(nullptr, s.File.szFileName, lengthof(s.File.szFileName));
 		::lstrcat(s.File.szFileName, TEXT(".exception.log"));
 		s.File.hFile = ::CreateFile(
-			s.File.szFileName, GENERIC_WRITE, 0, NULL,
-			CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+			s.File.szFileName, GENERIC_WRITE, 0, nullptr,
+			CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
 		if (s.File.hFile != INVALID_HANDLE_VALUE) {
 			static const char szHeader[] = APP_NAME_A " ver." VERSION_TEXT_A
 #if defined(_M_IX86)
@@ -302,8 +302,8 @@ LONG WINAPI CDebugHelper::ExceptionFilter(EXCEPTION_POINTERS *ExceptionInfo)
 				" (IA64)"
 #endif
 				"\r\n\r\n";
-			::WriteFile(s.File.hFile, szHeader, (DWORD)(sizeof(szHeader) - 1), &s.File.WroteSize, NULL);
-			::WriteFile(s.File.hFile, s.szText, s.Length, &s.File.WroteSize, NULL);
+			::WriteFile(s.File.hFile, szHeader, (DWORD)(sizeof(szHeader) - 1), &s.File.WroteSize, nullptr);
+			::WriteFile(s.File.hFile, s.szText, s.Length, &s.File.WroteSize, nullptr);
 			if (s.NumModuleEntries > 0) {
 				s.Length = ::wsprintfA(s.szText, "\r\nModules (%d Modules)\r\n", s.NumModuleEntries);
 				for (s.i = 0; s.i < s.NumModuleEntries; s.i++) {
@@ -313,7 +313,7 @@ LONG WINAPI CDebugHelper::ExceptionFilter(EXCEPTION_POINTERS *ExceptionInfo)
 						s.ModuleEntries[s.i].modBaseAddr,
 						s.ModuleEntries[s.i].modBaseSize);
 				}
-				::WriteFile(s.File.hFile, s.szText, s.Length, &s.File.WroteSize, NULL);
+				::WriteFile(s.File.hFile, s.szText, s.Length, &s.File.WroteSize, nullptr);
 			}
 			::CloseHandle(s.File.hFile);
 		}
@@ -340,7 +340,7 @@ int CDebugHelper::FormatSymbolFromAddress(
 
 	pszModule = "\?\?\?";
 #if 0
-	if (m_pSymGetModuleBase != NULL && m_pSymGetModuleInfo != NULL) {
+	if (m_pSymGetModuleBase != nullptr && m_pSymGetModuleInfo != nullptr) {
 		DWORD64 ModuleBase = m_pSymGetModuleBase(s.hProcess, s.Stack.StackFrame.AddrReturn.Offset);
 		if (ModuleBase != 0) {
 			IMAGEHLP_MODULE64 ModuleInfo;

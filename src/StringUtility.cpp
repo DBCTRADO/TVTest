@@ -52,8 +52,8 @@ bool StringIsDigit(LPCTSTR pszString)
 
 [[nodiscard]] LPSTR DuplicateString(LPCSTR pszString)
 {
-	if (pszString == NULL)
-		return NULL;
+	if (pszString == nullptr)
+		return nullptr;
 
 	const size_t Length = lstrlenA(pszString) + 1;
 	LPSTR pszNewString = new char[Length];
@@ -64,8 +64,8 @@ bool StringIsDigit(LPCTSTR pszString)
 
 [[nodiscard]] LPWSTR DuplicateString(LPCWSTR pszString)
 {
-	if (pszString == NULL)
-		return NULL;
+	if (pszString == nullptr)
+		return nullptr;
 
 	const size_t Length = lstrlenW(pszString) + 1;
 	LPWSTR pszNewString = new WCHAR[Length];
@@ -76,7 +76,7 @@ bool StringIsDigit(LPCTSTR pszString)
 
 bool ReplaceString(LPSTR *ppszString, LPCSTR pszNewString)
 {
-	if (ppszString == NULL)
+	if (ppszString == nullptr)
 		return false;
 	delete [] *ppszString;
 	*ppszString = DuplicateString(pszNewString);
@@ -86,7 +86,7 @@ bool ReplaceString(LPSTR *ppszString, LPCSTR pszNewString)
 
 bool ReplaceString(LPWSTR *ppszString, LPCWSTR pszNewString)
 {
-	if (ppszString == NULL)
+	if (ppszString == nullptr)
 		return false;
 	delete [] *ppszString;
 	*ppszString = DuplicateString(pszNewString);
@@ -102,20 +102,20 @@ static inline bool IsWhitespace(TCHAR c)
 
 int RemoveTrailingWhitespace(LPTSTR pszString)
 {
-	if (pszString == NULL)
+	if (pszString == nullptr)
 		return 0;
-	LPTSTR pSpace = NULL;
+	LPTSTR pSpace = nullptr;
 	LPTSTR p = pszString;
 	while (*p != _T('\0')) {
 		if (IsWhitespace(*p)) {
-			if (pSpace == NULL)
+			if (pSpace == nullptr)
 				pSpace = p;
-		} else if (pSpace != NULL) {
-			pSpace = NULL;
+		} else if (pSpace != nullptr) {
+			pSpace = nullptr;
 		}
 		p++;
 	}
-	if (pSpace == NULL)
+	if (pSpace == nullptr)
 		return 0;
 	*pSpace = _T('\0');
 	return (int)(p - pSpace);
@@ -380,11 +380,11 @@ bool ToAnsi(const String &Src, AnsiString *pDst)
 	pDst->clear();
 
 	if (!Src.empty()) {
-		int Length = ::WideCharToMultiByte(CP_ACP, 0, Src.data(), (int)Src.length(), NULL, 0, NULL, NULL);
+		int Length = ::WideCharToMultiByte(CP_ACP, 0, Src.data(), (int)Src.length(), nullptr, 0, nullptr, nullptr);
 		if (Length < 1)
 			return false;
 		char *pszBuffer = new char[Length + 1];
-		::WideCharToMultiByte(CP_ACP, 0, Src.data(), (int)Src.length(), pszBuffer, Length, NULL, NULL);
+		::WideCharToMultiByte(CP_ACP, 0, Src.data(), (int)Src.length(), pszBuffer, Length, nullptr, nullptr);
 		pszBuffer[Length] = '\0';
 		pDst->assign(pszBuffer);
 		delete [] pszBuffer;

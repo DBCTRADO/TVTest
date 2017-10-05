@@ -31,7 +31,7 @@ void CChannelHistory::Clear()
 
 bool CChannelHistory::SetCurrentChannel(LPCTSTR pszDriverName, const CChannelInfo *pChannelInfo)
 {
-	if (pszDriverName == NULL || pChannelInfo == NULL)
+	if (pszDriverName == nullptr || pChannelInfo == nullptr)
 		return false;
 
 	if (m_CurrentChannel >= 0) {
@@ -66,7 +66,7 @@ bool CChannelHistory::SetCurrentChannel(LPCTSTR pszDriverName, const CChannelInf
 const CTunerChannelInfo *CChannelHistory::Forward()
 {
 	if (m_CurrentChannel + 1 >= (int)m_ChannelList.size())
-		return NULL;
+		return nullptr;
 	return m_ChannelList[++m_CurrentChannel];
 }
 
@@ -74,7 +74,7 @@ const CTunerChannelInfo *CChannelHistory::Forward()
 const CTunerChannelInfo *CChannelHistory::Backward()
 {
 	if (m_CurrentChannel < 1)
-		return NULL;
+		return nullptr;
 	return m_ChannelList[--m_CurrentChannel];
 }
 
@@ -112,14 +112,14 @@ void CRecentChannelList::Clear()
 const CTunerChannelInfo *CRecentChannelList::GetChannelInfo(int Index) const
 {
 	if (Index < 0 || Index >= NumChannels())
-		return NULL;
+		return nullptr;
 	return m_ChannelList[Index];
 }
 
 
 bool CRecentChannelList::Add(LPCTSTR pszDriverName, const CChannelInfo *pChannelInfo)
 {
-	if (pszDriverName == NULL || pChannelInfo == NULL)
+	if (pszDriverName == nullptr || pChannelInfo == nullptr)
 		return false;
 
 	for (auto itr = m_ChannelList.begin(); itr != m_ChannelList.end(); ++itr) {
@@ -159,7 +159,7 @@ bool CRecentChannelList::SetMenu(HMENU hmenu, bool fClear) const
 
 	for (int i = 0; i < m_MaxChannelHistoryMenu; i++) {
 		const CTunerChannelInfo *pChannelInfo = GetChannelInfo(i);
-		if (pChannelInfo == NULL)
+		if (pChannelInfo == nullptr)
 			break;
 
 		TCHAR szText[64];
@@ -173,7 +173,7 @@ bool CRecentChannelList::SetMenu(HMENU hmenu, bool fClear) const
 	}
 
 	if (fClear && NumChannels() > 0) {
-		::AppendMenu(hmenu, MFT_SEPARATOR, 0, NULL);
+		::AppendMenu(hmenu, MFT_SEPARATOR, 0, nullptr);
 		::AppendMenu(hmenu, MFT_STRING | MFS_ENABLED, CM_CHANNELHISTORY_CLEAR, TEXT("履歴をクリア"));
 	}
 

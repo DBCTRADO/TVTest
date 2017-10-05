@@ -44,7 +44,7 @@ public:
 	~CPlugin();
 	bool Load(LPCTSTR pszFileName);
 	void Free();
-	bool IsLoaded() const { return m_hLib != NULL; }
+	bool IsLoaded() const { return m_hLib != nullptr; }
 	bool IsEnabled() const { return m_fEnabled; }
 	bool Enable(bool fEnable);
 	HMODULE GetModuleHandle() { return m_hLib; }
@@ -374,7 +374,7 @@ class CPluginManager
 public:
 	CPluginManager();
 	~CPluginManager();
-	bool LoadPlugins(LPCTSTR pszDirectory, const std::vector<LPCTSTR> *pExcludePlugins = NULL);
+	bool LoadPlugins(LPCTSTR pszDirectory, const std::vector<LPCTSTR> *pExcludePlugins = nullptr);
 	void FreePlugins();
 	int NumPlugins() const { return (int)m_PluginList.size(); }
 	CPlugin *GetPlugin(int Index);
@@ -384,13 +384,13 @@ public:
 	int FindPluginByFileName(LPCTSTR pszFileName) const;
 	int FindPluginByCommand(int Command) const;
 	CPlugin *GetPluginByCommand(int Command);
-	CPlugin *GetPluginByPluginCommand(LPCTSTR pszCommand, LPCTSTR *ppszCommandText = NULL);
+	CPlugin *GetPluginByPluginCommand(LPCTSTR pszCommand, LPCTSTR *ppszCommandText = nullptr);
 	bool DeletePlugin(int Index);
 	bool SetMenu(HMENU hmenu) const;
 	bool OnPluginCommand(LPCTSTR pszCommand);
 	bool OnProgramGuideCommand(
-		LPCTSTR pszCommand, UINT Action, const LibISDB::EventInfo *pEvent = NULL,
-		const POINT *pCursorPos = NULL, const RECT *pItemRect = NULL);
+		LPCTSTR pszCommand, UINT Action, const LibISDB::EventInfo *pEvent = nullptr,
+		const POINT *pCursorPos = nullptr, const RECT *pItemRect = nullptr);
 	bool SendProgramGuideInitializeEvent(HWND hwnd);
 	bool SendProgramGuideFinalizeEvent(HWND hwnd);
 	bool SendProgramGuideInitializeMenuEvent(HMENU hmenu, UINT *pCommand);

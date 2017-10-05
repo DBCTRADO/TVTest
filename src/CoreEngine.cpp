@@ -168,7 +168,7 @@ void CCoreEngine::ConnectTSProcessor(
 		return;
 
 	LibISDB::FilterGraph::IDType FilterID = *pFilterID;
-	int OutputIndex = pOutputIndex != NULL ? *pOutputIndex : 0;
+	int OutputIndex = pOutputIndex != nullptr ? *pOutputIndex : 0;
 
 	for (auto it = m_TSProcessorList.begin(); it != m_TSProcessorList.end(); ++it) {
 		if (it->ConnectPosition == ConnectPosition) {
@@ -179,7 +179,7 @@ void CCoreEngine::ConnectTSProcessor(
 	}
 
 	*pFilterID = FilterID;
-	if (pOutputIndex != NULL)
+	if (pOutputIndex != nullptr)
 		*pOutputIndex = OutputIndex;
 }
 
@@ -187,7 +187,7 @@ void CCoreEngine::ConnectTSProcessor(
 TVTest::CTSProcessor *CCoreEngine::GetTSProcessorByIndex(size_t Index)
 {
 	if (Index >= m_TSProcessorList.size())
-		return NULL;
+		return nullptr;
 	return m_TSProcessorList[Index].pTSProcessor;
 }
 
@@ -196,7 +196,7 @@ bool CCoreEngine::RegisterTSProcessor(
 	TVTest::CTSProcessor *pTSProcessor,
 	TSProcessorConnectPosition ConnectPosition)
 {
-	if (pTSProcessor == NULL)
+	if (pTSProcessor == nullptr)
 		return false;
 
 	TSProcessorInfo Info;
@@ -274,7 +274,7 @@ bool CCoreEngine::RemoveEventListener(EventListener *pEventListener)
 
 bool CCoreEngine::GetDriverDirectory(LPTSTR pszDirectory, int MaxLength) const
 {
-	if (pszDirectory == NULL || MaxLength < 1)
+	if (pszDirectory == nullptr || MaxLength < 1)
 		return false;
 
 	pszDirectory[0] = '\0';
@@ -283,9 +283,9 @@ bool CCoreEngine::GetDriverDirectory(LPTSTR pszDirectory, int MaxLength) const
 		if (::PathIsRelative(m_szDriverDirectory)) {
 			TCHAR szBaseDir[MAX_PATH], szPath[MAX_PATH];
 
-			::GetModuleFileName(NULL, szBaseDir, lengthof(szBaseDir));
+			::GetModuleFileName(nullptr, szBaseDir, lengthof(szBaseDir));
 			::PathRemoveFileSpec(szBaseDir);
-			if (::PathCombine(szPath, szBaseDir, m_szDriverDirectory) == NULL
+			if (::PathCombine(szPath, szBaseDir, m_szDriverDirectory) == nullptr
 					|| ::lstrlen(szPath) >= MaxLength)
 				return false;
 			::lstrcpy(pszDirectory, szPath);
@@ -295,7 +295,7 @@ bool CCoreEngine::GetDriverDirectory(LPTSTR pszDirectory, int MaxLength) const
 			::lstrcpy(pszDirectory, m_szDriverDirectory);
 		}
 	} else {
-		DWORD Length = ::GetModuleFileName(NULL, pszDirectory, MaxLength);
+		DWORD Length = ::GetModuleFileName(nullptr, pszDirectory, MaxLength);
 		if (Length == 0 || Length >= (DWORD)(MaxLength - 1))
 			return false;
 		::PathRemoveFileSpec(pszDirectory);
@@ -307,7 +307,7 @@ bool CCoreEngine::GetDriverDirectory(LPTSTR pszDirectory, int MaxLength) const
 
 bool CCoreEngine::SetDriverDirectory(LPCTSTR pszDirectory)
 {
-	if (pszDirectory == NULL) {
+	if (pszDirectory == nullptr) {
 		m_szDriverDirectory[0] = '\0';
 	} else {
 		if (::lstrlen(pszDirectory) >= MAX_PATH)
@@ -333,7 +333,7 @@ bool CCoreEngine::SetDriverFileName(LPCTSTR pszFileName)
 
 bool CCoreEngine::GetDriverPath(LPTSTR pszPath, int MaxLength) const
 {
-	if (pszPath == NULL || MaxLength < 1)
+	if (pszPath == nullptr || MaxLength < 1)
 		return false;
 
 	pszPath[0] = '\0';
@@ -345,7 +345,7 @@ bool CCoreEngine::GetDriverPath(LPTSTR pszPath, int MaxLength) const
 		TCHAR szDir[MAX_PATH], szPath[MAX_PATH];
 
 		if (!GetDriverDirectory(szDir, lengthof(szDir))
-				|| ::PathCombine(szPath, szDir, m_szDriverFileName) == NULL
+				|| ::PathCombine(szPath, szDir, m_szDriverFileName) == nullptr
 				|| ::lstrlen(szPath) >= MaxLength)
 			return false;
 		::lstrcpy(pszPath, szPath);
@@ -380,7 +380,7 @@ bool CCoreEngine::OpenTuner()
 
 	LPCWSTR pszName = static_cast<LibISDB::BonDriverSourceFilter*>(m_pSource)->GetTunerName();
 	m_DriverType = DRIVER_UNKNOWN;
-	if (pszName != NULL) {
+	if (pszName != nullptr) {
 		if (std::wcsncmp(pszName, L"UDP/", 4) == 0)
 			m_DriverType = DRIVER_UDP;
 		else if (std::wcsncmp(pszName, L"TCP", 3) == 0)
@@ -574,7 +574,7 @@ bool CCoreEngine::SetSPDIFOptions(const LibISDB::DirectShow::AudioDecoderFilter:
 
 bool CCoreEngine::GetSPDIFOptions(LibISDB::DirectShow::AudioDecoderFilter::SPDIFOptions *pOptions) const
 {
-	if (pOptions == NULL)
+	if (pOptions == nullptr)
 		return false;
 	*pOptions = m_SPDIFOptions;
 	return true;

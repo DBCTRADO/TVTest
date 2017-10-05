@@ -185,7 +185,7 @@ LibISDB::DirectShow::VideoRenderer::RendererType CVideoOptions::GetVideoRenderer
 
 bool CVideoOptions::SetVideoRendererType(LibISDB::DirectShow::VideoRenderer::RendererType Renderer)
 {
-	if (LibISDB::DirectShow::VideoRenderer::EnumRendererName(Renderer) == NULL)
+	if (LibISDB::DirectShow::VideoRenderer::EnumRendererName(Renderer) == nullptr)
 		return false;
 	m_VideoRendererType = Renderer;
 	return true;
@@ -266,7 +266,7 @@ INT_PTR CVideoOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 						SettingError();
 						::MessageBox(
 							hDlg, TEXT("選択されたレンダラはこの環境で利用可能になっていません。"),
-							NULL, MB_OK | MB_ICONEXCLAMATION);
+							nullptr, MB_OK | MB_ICONEXCLAMATION);
 						return TRUE;
 					}
 					m_VideoRendererType = Renderer;
@@ -335,7 +335,7 @@ void CVideoOptions::SetVideoDecoderList(
 {
 	LPCWSTR pszDefaultDecoderName =
 		LibISDB::DirectShow::KnownDecoderManager::IsDecoderAvailable(SubType) ?
-		LibISDB::DirectShow::KnownDecoderManager::GetDecoderName(SubType) : NULL;
+		LibISDB::DirectShow::KnownDecoderManager::GetDecoderName(SubType) : nullptr;
 
 	LibISDB::DirectShow::FilterFinder FilterFinder;
 	std::vector<TVTest::String> FilterList;
@@ -344,8 +344,8 @@ void CVideoOptions::SetVideoDecoderList(
 		for (int i = 0; i < FilterFinder.GetFilterCount(); i++) {
 			TVTest::String FilterName;
 
-			if (FilterFinder.GetFilterInfo(i, NULL, &FilterName)
-					&& (pszDefaultDecoderName == NULL
+			if (FilterFinder.GetFilterInfo(i, nullptr, &FilterName)
+					&& (pszDefaultDecoderName == nullptr
 						|| ::lstrcmpi(FilterName.c_str(), pszDefaultDecoderName) != 0)) {
 				FilterList.push_back(FilterName);
 			}
@@ -355,11 +355,11 @@ void CVideoOptions::SetVideoDecoderList(
 	if (FilterList.empty()) {
 		DlgComboBox_AddString(
 			m_hDlg, ID,
-			pszDefaultDecoderName != NULL ?
+			pszDefaultDecoderName != nullptr ?
 			pszDefaultDecoderName :
 			TEXT("<デコーダが見付かりません>"));
 	} else {
-		if (pszDefaultDecoderName != NULL)
+		if (pszDefaultDecoderName != nullptr)
 			DlgComboBox_AddString(m_hDlg, ID, pszDefaultDecoderName);
 		if (FilterList.size() > 1) {
 			std::sort(

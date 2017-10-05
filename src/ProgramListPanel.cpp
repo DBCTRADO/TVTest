@@ -153,7 +153,7 @@ CProgramItemList::~CProgramItemList()
 CProgramItemInfo *CProgramItemList::GetItem(int Index)
 {
 	if ((unsigned int)Index >= m_ItemList.size())
-		return NULL;
+		return nullptr;
 	return m_ItemList[Index];
 }
 
@@ -161,7 +161,7 @@ CProgramItemInfo *CProgramItemList::GetItem(int Index)
 const CProgramItemInfo *CProgramItemList::GetItem(int Index) const
 {
 	if ((unsigned int)Index >= m_ItemList.size())
-		return NULL;
+		return nullptr;
 	return m_ItemList[Index];
 }
 
@@ -193,12 +193,12 @@ void CProgramItemList::Attach(CProgramItemList *pList)
 
 
 const LPCTSTR CProgramListPanel::m_pszClassName = APP_NAME TEXT(" Program List Panel");
-HINSTANCE CProgramListPanel::m_hinst = NULL;
+HINSTANCE CProgramListPanel::m_hinst = nullptr;
 
 
 bool CProgramListPanel::Initialize(HINSTANCE hinst)
 {
-	if (m_hinst == NULL) {
+	if (m_hinst == nullptr) {
 		WNDCLASS wc;
 
 		wc.style = CS_HREDRAW;
@@ -206,10 +206,10 @@ bool CProgramListPanel::Initialize(HINSTANCE hinst)
 		wc.cbClsExtra = 0;
 		wc.cbWndExtra = 0;
 		wc.hInstance = hinst;
-		wc.hIcon = NULL;
-		wc.hCursor = NULL;
-		wc.hbrBackground = NULL;
-		wc.lpszMenuName = NULL;
+		wc.hIcon = nullptr;
+		wc.hCursor = nullptr;
+		wc.hbrBackground = nullptr;
+		wc.lpszMenuName = nullptr;
 		wc.lpszClassName = m_pszClassName;
 		if (::RegisterClass(&wc) == 0)
 			return false;
@@ -222,7 +222,7 @@ bool CProgramListPanel::Initialize(HINSTANCE hinst)
 CProgramListPanel::CProgramListPanel()
 	: m_EventInfoPopupManager(&m_EventInfoPopup)
 	, m_EventInfoPopupHandler(this)
-	, m_pEPGDatabase(NULL)
+	, m_pEPGDatabase(nullptr)
 	, m_FontHeight(0)
 	, m_fMouseOverEventInfo(true)
 	, m_fUseEpgColorScheme(false)
@@ -231,7 +231,7 @@ CProgramListPanel::CProgramListPanel()
 	, m_ChannelHeight(0)
 	, m_CurEventID(-1)
 	, m_ScrollPos(0)
-	//, m_hwndToolTip(NULL)
+	//, m_hwndToolTip(nullptr)
 	, m_fShowRetrievingMessage(false)
 {
 	GetDefaultFont(&m_StyleFont);
@@ -313,7 +313,7 @@ bool CProgramListPanel::SetFont(const TVTest::Style::Font &Font)
 {
 	m_StyleFont = Font;
 
-	if (m_hwnd != NULL) {
+	if (m_hwnd != nullptr) {
 		ApplyStyle();
 		RealizeStyle();
 	}
@@ -354,9 +354,9 @@ bool CProgramListPanel::WriteSettings(CSettings &Settings)
 
 bool CProgramListPanel::UpdateProgramList(const CChannelInfo *pChannelInfo)
 {
-	if (m_pEPGDatabase == NULL || pChannelInfo == NULL)
+	if (m_pEPGDatabase == nullptr || pChannelInfo == nullptr)
 		return false;
-	if (m_hwnd != NULL
+	if (m_hwnd != nullptr
 			&& m_SelectedChannel.GetNetworkID() == pChannelInfo->GetNetworkID()
 			&& m_SelectedChannel.GetTransportStreamID() == pChannelInfo->GetTransportStreamID()
 			&& m_SelectedChannel.GetServiceID() == pChannelInfo->GetServiceID()) {
@@ -380,7 +380,7 @@ bool CProgramListPanel::UpdateProgramList(const CChannelInfo *pChannelInfo)
 
 bool CProgramListPanel::UpdateListInfo(const CChannelInfo *pChannelInfo)
 {
-	if (m_pEPGDatabase == NULL || pChannelInfo == NULL)
+	if (m_pEPGDatabase == nullptr || pChannelInfo == nullptr)
 		return false;
 
 	LibISDB::DateTime Earliest;
@@ -435,7 +435,7 @@ void CProgramListPanel::ClearProgramList()
 		m_ItemList.Clear();
 		m_ScrollPos = 0;
 		m_TotalLines = 0;
-		if (m_hwnd != NULL) {
+		if (m_hwnd != nullptr) {
 			SetScrollBar();
 			//SetToolTip();
 			Invalidate();
@@ -447,7 +447,7 @@ void CProgramListPanel::ClearProgramList()
 void CProgramListPanel::SelectChannel(const CChannelInfo *pChannelInfo, bool fUpdate)
 {
 	ClearProgramList();
-	if (pChannelInfo != NULL) {
+	if (pChannelInfo != nullptr) {
 		m_SelectedChannel = *pChannelInfo;
 		if (fUpdate)
 			UpdateProgramList(pChannelInfo);
@@ -459,7 +459,7 @@ void CProgramListPanel::SelectChannel(const CChannelInfo *pChannelInfo, bool fUp
 
 void CProgramListPanel::SetCurrentChannel(const CChannelInfo *pChannelInfo)
 {
-	if (pChannelInfo != NULL)
+	if (pChannelInfo != nullptr)
 		m_CurChannel = *pChannelInfo;
 	else
 		m_CurChannel = CChannelInfo();
@@ -471,7 +471,7 @@ void CProgramListPanel::SetCurrentChannel(const CChannelInfo *pChannelInfo)
 void CProgramListPanel::SetCurrentEventID(int EventID)
 {
 	m_CurEventID = EventID;
-	if (m_hwnd != NULL)
+	if (m_hwnd != nullptr)
 		Invalidate();
 }
 
@@ -563,7 +563,7 @@ void CProgramListPanel::SetScrollPos(int Pos)
 		si.nPos = Pos;
 		::SetScrollInfo(m_hwnd, SB_VERT, &si, TRUE);
 		if (abs(Offset) < Page) {
-			::ScrollWindowEx(m_hwnd, 0, -Offset, &rc, &rc, NULL, NULL, SW_ERASE | SW_INVALIDATE);
+			::ScrollWindowEx(m_hwnd, 0, -Offset, &rc, &rc, nullptr, nullptr, SW_ERASE | SW_INVALIDATE);
 		} else {
 			Invalidate(&rc);
 		}
@@ -594,7 +594,7 @@ void CProgramListPanel::SetScrollBar()
 bool CProgramListPanel::SetProgramListPanelTheme(const ProgramListPanelTheme &Theme)
 {
 	m_Theme = Theme;
-	if (m_hwnd != NULL)
+	if (m_hwnd != nullptr)
 		Invalidate();
 	return true;
 }
@@ -602,7 +602,7 @@ bool CProgramListPanel::SetProgramListPanelTheme(const ProgramListPanelTheme &Th
 
 bool CProgramListPanel::GetProgramListPanelTheme(ProgramListPanelTheme *pTheme) const
 {
-	if (pTheme == NULL)
+	if (pTheme == nullptr)
 		return false;
 	*pTheme = m_Theme;
 	return true;
@@ -620,7 +620,7 @@ void CProgramListPanel::CalcFontHeight()
 	HDC hdc;
 
 	hdc = ::GetDC(m_hwnd);
-	if (hdc == NULL)
+	if (hdc == nullptr)
 		return;
 	m_FontHeight = m_Font.GetHeight();
 	::ReleaseDC(m_hwnd, hdc);
@@ -637,7 +637,7 @@ void CProgramListPanel::ShowRetrievingMessage(bool fShow)
 {
 	if (m_fShowRetrievingMessage != fShow) {
 		m_fShowRetrievingMessage = fShow;
-		if (m_hwnd != NULL)
+		if (m_hwnd != nullptr)
 			Invalidate();
 	}
 }
@@ -647,7 +647,7 @@ void CProgramListPanel::SetVisibleEventIcons(UINT VisibleIcons)
 {
 	if (m_VisibleEventIcons != VisibleIcons) {
 		m_VisibleEventIcons = VisibleIcons;
-		if (m_hwnd != NULL)
+		if (m_hwnd != nullptr)
 			Invalidate();
 	}
 }
@@ -666,7 +666,7 @@ void CProgramListPanel::SetUseEpgColorScheme(bool fUseEpgColorScheme)
 {
 	if (m_fUseEpgColorScheme != fUseEpgColorScheme) {
 		m_fUseEpgColorScheme = fUseEpgColorScheme;
-		if (m_hwnd != NULL)
+		if (m_hwnd != nullptr)
 			Invalidate();
 	}
 }
@@ -676,7 +676,7 @@ void CProgramListPanel::SetShowFeaturedMark(bool fShowFeaturedMark)
 {
 	if (m_fShowFeaturedMark != fShowFeaturedMark) {
 		m_fShowFeaturedMark = fShowFeaturedMark;
-		if (m_hwnd != NULL) {
+		if (m_hwnd != nullptr) {
 			if (m_fShowFeaturedMark)
 				m_FeaturedEventsMatcher.BeginMatching(GetAppClass().FeaturedEvents.GetSettings());
 			Invalidate();
@@ -772,7 +772,7 @@ void CProgramListPanel::ShowChannelListMenu()
 {
 	const CChannelList *pChannelList =
 		GetAppClass().ChannelManager.GetCurrentChannelList();
-	if (pChannelList == NULL)
+	if (pChannelList == nullptr)
 		return;
 
 	CChannelList ChannelList;
@@ -804,7 +804,7 @@ void CProgramListPanel::ShowChannelListMenu()
 		return;
 
 	m_ChannelMenu.Create(
-		&ChannelList, CurChannel, 1, NULL, m_hwnd,
+		&ChannelList, CurChannel, 1, nullptr, m_hwnd,
 		CChannelMenu::FLAG_SHOWLOGO | CChannelMenu::FLAG_SPACEBREAK,
 		GetAppClass().MenuOptions.GetMaxChannelMenuRows());
 	if (SelectedChannel >= 0)
@@ -813,7 +813,7 @@ void CProgramListPanel::ShowChannelListMenu()
 	RECT rc;
 
 	GetHeaderRect(&rc);
-	MapWindowRect(m_hwnd, NULL, &rc);
+	MapWindowRect(m_hwnd, nullptr, &rc);
 
 	int Result = m_ChannelMenu.Show(
 		TPM_RIGHTBUTTON | TPM_RETURNCMD | TPM_VERTICAL,
@@ -823,7 +823,7 @@ void CProgramListPanel::ShowChannelListMenu()
 	if (Result > 0) {
 		const CChannelInfo *pChannelInfo = ChannelList.GetChannelInfo(Result - 1);
 
-		if (pChannelInfo != NULL) {
+		if (pChannelInfo != nullptr) {
 			SelectChannel(pChannelInfo);
 		}
 	}
@@ -833,7 +833,7 @@ void CProgramListPanel::ShowChannelListMenu()
 /*
 void CProgramListPanel::SetToolTip()
 {
-	if (m_hwndToolTip != NULL) {
+	if (m_hwndToolTip != nullptr) {
 		int NumTools = ::SendMessage(m_hwndToolTip, TTM_GETTOOLCOUNT, 0, 0);
 		int NumItems = m_ItemList.NumItems();
 		TOOLINFO ti;
@@ -842,7 +842,7 @@ void CProgramListPanel::SetToolTip()
 		ti.hwnd = m_hwnd;
 		if (NumTools < NumItems) {
 			ti.uFlags = TTF_SUBCLASS;
-			ti.hinst = NULL;
+			ti.hinst = nullptr;
 			ti.lpszText = LPSTR_TEXTCALLBACK;
 			::SetRect(&ti.rect, 0, 0, 0, 0);
 			for (int i = NumTools; i < NumItems; i++) {
@@ -886,9 +886,9 @@ LRESULT CProgramListPanel::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
 			m_EpgIcons.Load();
 			/*
 			m_hwndToolTip = ::CreateWindowEx(
-				WS_EX_TOPMOST, TOOLTIPS_CLASS, NULL,
+				WS_EX_TOPMOST, TOOLTIPS_CLASS, nullptr,
 				WS_POPUP | TTS_NOPREFIX | TTS_ALWAYSTIP, 0, 0, 0, 0,
-				hwnd, NULL, m_hinst, NULL);
+				hwnd, nullptr, m_hinst, nullptr);
 			::SendMessage(m_hwndToolTip, TTM_SETMAXTIPWIDTH, 0, 320);
 			::SendMessage(m_hwndToolTip, TTM_SETDELAYTIME, TTDT_AUTOPOP, 30000);
 			*/
@@ -1031,7 +1031,7 @@ LRESULT CProgramListPanel::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
 			if (LOWORD(lParam) == HTCLIENT && m_HotItem >= 0)
 				::SetCursor(GetActionCursor());
 			else
-				::SetCursor(::LoadCursor(NULL, IDC_ARROW));
+				::SetCursor(::LoadCursor(nullptr, IDC_ARROW));
 			return TRUE;
 		}
 		break;
@@ -1060,7 +1060,7 @@ LRESULT CProgramListPanel::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
 				LPNMTTDISPINFO pnmtdi = reinterpret_cast<LPNMTTDISPINFO>(lParam);
 				const CProgramItemInfo *pItem = m_ItemList.GetItem((int)pnmtdi->lParam);
 
-				if (pItem != NULL) {
+				if (pItem != nullptr) {
 					static TCHAR szText[1024];
 					const LibISDB::EventInfo &EventInfo = pItem->GetEventInfo();
 					TCHAR szEndTime[16];
@@ -1091,7 +1091,7 @@ LRESULT CProgramListPanel::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
 					pnmtdi->lpszText = TEXT("");
 				}
 				pnmtdi->szText[0] = '\0';
-				pnmtdi->hinst = NULL;
+				pnmtdi->hinst = nullptr;
 			}
 			return 0;
 
@@ -1107,7 +1107,7 @@ LRESULT CProgramListPanel::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
 				::GetCursorPos(&pt);
 				if (::PtInRect(&rcTip, pt)) {
 					HMONITOR hMonitor = ::MonitorFromRect(&rcTip, MONITOR_DEFAULTTONEAREST);
-					if (hMonitor != NULL) {
+					if (hMonitor != nullptr) {
 						MONITORINFO mi;
 
 						mi.cbSize = sizeof(mi);
@@ -1134,7 +1134,7 @@ LRESULT CProgramListPanel::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
 
 	case WM_DESTROY:
 		m_EpgIcons.Destroy();
-		//m_hwndToolTip = NULL;
+		//m_hwndToolTip = nullptr;
 		return 0;
 
 	default:
@@ -1153,7 +1153,7 @@ LRESULT CProgramListPanel::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
 
 void CProgramListPanel::ApplyStyle()
 {
-	if (m_hwnd != NULL) {
+	if (m_hwnd != nullptr) {
 		CreateDrawFontAndBoldFont(m_StyleFont, &m_Font, &m_TitleFont);
 
 		LOGFONT lf;
@@ -1171,8 +1171,8 @@ void CProgramListPanel::ApplyStyle()
 
 void CProgramListPanel::RealizeStyle()
 {
-	if (m_hwnd != NULL) {
-		if (m_pStyleScaling != NULL) {
+	if (m_hwnd != nullptr) {
+		if (m_pStyleScaling != nullptr) {
 			const int NewDPI = m_pStyleScaling->GetDPI();
 			if (m_OldDPI != 0)
 				m_ScrollPos = ::MulDiv(m_ScrollPos, NewDPI, m_OldDPI);
@@ -1220,7 +1220,7 @@ void CProgramListPanel::Draw(HDC hdc, const RECT *prcPaint)
 			HBITMAP hbmLogo = GetAppClass().LogoManager.GetAssociatedLogoBitmap(
 				m_SelectedChannel.GetNetworkID(), m_SelectedChannel.GetServiceID(),
 				CLogoManager::LOGOTYPE_SMALL);
-			if (hbmLogo != NULL) {
+			if (hbmLogo != nullptr) {
 				int LogoHeight = (rc.bottom - rc.top) - m_Style.ChannelLogoMargin.Vert();
 				int LogoWidth = LogoHeight * 16 / 9;
 				rc.left += m_Style.ChannelLogoMargin.Left;
@@ -1374,7 +1374,7 @@ void CProgramListPanel::Draw(HDC hdc, const RECT *prcPaint)
 
 		m_EpgIcons.EndDraw();
 
-		::SelectClipRgn(hdc, NULL);
+		::SelectClipRgn(hdc, nullptr);
 		::DeleteObject(hrgn);
 	}
 
@@ -1417,7 +1417,7 @@ bool CProgramListPanel::CEventInfoPopupHandler::ShowPopup(LPARAM Param, CEventIn
 {
 	const int ItemIndex = static_cast<int>(Param);
 	const CProgramItemInfo *pItem = m_pPanel->m_ItemList.GetItem(ItemIndex);
-	if (pItem == NULL)
+	if (pItem == nullptr)
 		return false;
 
 	pPopup->SetTitleColor(
@@ -1446,7 +1446,7 @@ bool CProgramListPanel::CEventInfoPopupHandler::ShowPopup(LPARAM Param, CEventIn
 	if (!pPopup->Show(
 				&pItem->GetEventInfo(), &rc,
 				hIcon, m_pPanel->m_SelectedChannel.GetName())) {
-		if (hIcon != NULL)
+		if (hIcon != nullptr)
 			::DestroyIcon(hIcon);
 		return false;
 	}

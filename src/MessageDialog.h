@@ -16,7 +16,7 @@ public:
 
 	CMessageDialog();
 	~CMessageDialog();
-	bool Show(HWND hwndOwner,MessageType Type,LPCTSTR pszText,LPCTSTR pszTitle=NULL,LPCTSTR pszSystemMessage=NULL,LPCTSTR pszCaption=NULL);
+	bool Show(HWND hwndOwner, MessageType Type, LPCTSTR pszText, LPCTSTR pszTitle = nullptr, LPCTSTR pszSystemMessage = nullptr, LPCTSTR pszCaption = nullptr);
 
 private:
 	CRichEditUtil m_RichEditUtil;
@@ -27,9 +27,9 @@ private:
 	MessageType m_MessageType;
 	HWND m_hDlg;
 
-	void LogFontToCharFormat(const LOGFONT *plf,CHARFORMAT *pcf);
+	void LogFontToCharFormat(const LOGFONT *plf, CHARFORMAT *pcf);
 	static CMessageDialog *GetThis(HWND hDlg);
-	static INT_PTR CALLBACK DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam);
+	static INT_PTR CALLBACK DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 };
 
 

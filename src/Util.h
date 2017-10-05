@@ -10,7 +10,7 @@ inline bool operator==(const POINT &pt1, const POINT &pt2) { return pt1.x == pt2
 inline bool operator!=(const POINT &pt1, const POINT &pt2) { return !(pt1 == pt2); }
 
 int HexCharToInt(TCHAR Code);
-unsigned int HexStringToUInt(LPCTSTR pszString, int Length, LPCTSTR *ppszEnd = NULL);
+unsigned int HexStringToUInt(LPCTSTR pszString, int Length, LPCTSTR *ppszEnd = nullptr);
 
 bool IsRectIntersect(const RECT *pRect1, const RECT *pRect2);
 
@@ -79,10 +79,10 @@ enum {
 	FILENAME_VALIDATE_WILDCARD       = 0x0001U,
 	FILENAME_VALIDATE_ALLOWDELIMITER = 0x0002U
 };
-bool IsValidFileName(LPCTSTR pszFileName, unsigned int Flags = 0, TVTest::String *pMessage = NULL);
+bool IsValidFileName(LPCTSTR pszFileName, unsigned int Flags = 0, TVTest::String *pMessage = nullptr);
 bool MakeUniqueFileName(
 	TVTest::String *pFileName, size_t MaxLength = MAX_PATH - 1,
-	LPCTSTR pszNumberFormat = NULL);
+	LPCTSTR pszNumberFormat = nullptr);
 bool GetAbsolutePath(LPCTSTR pszFilePath, LPTSTR pszAbsolutePath, int MaxLength);
 
 HICON CreateIconFromBitmap(HBITMAP hbm, int IconWidth, int IconHeight, int ImageWidth = 0, int ImageHeight = 0);
@@ -328,7 +328,7 @@ namespace Util
 	{
 	public:
 		CWaitCursor()
-			: m_hcurOld(::SetCursor(::LoadCursor(NULL, IDC_WAIT)))
+			: m_hcurOld(::SetCursor(::LoadCursor(nullptr, IDC_WAIT)))
 		{
 		}
 

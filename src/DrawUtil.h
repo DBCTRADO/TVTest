@@ -59,14 +59,14 @@ namespace DrawUtil
 
 	bool DrawBitmap(
 		HDC hdc, int DstX, int DstY, int DstWidth, int DstHeight,
-		HBITMAP hbm, const RECT *pSrcRect = NULL, BYTE Opacity = 255);
+		HBITMAP hbm, const RECT *pSrcRect = nullptr, BYTE Opacity = 255);
 	bool DrawMonoColorDIB(
 		HDC hdcDst, int DstX, int DstY,
 		HDC hdcSrc, int SrcX, int SrcY, int Width, int Height, COLORREF Color);
 	bool DrawMonoColorDIB(
 		HDC hdcDst, int DstX, int DstY,
 		HBITMAP hbm, int SrcX, int SrcY, int Width, int Height, COLORREF Color);
-	HBITMAP CreateDIB(int Width, int Height, int BitCount, void **ppBits = NULL);
+	HBITMAP CreateDIB(int Width, int Height, int BitCount, void **ppBits = nullptr);
 	HBITMAP DuplicateDIB(HBITMAP hbmSrc);
 	HBITMAP ResizeBitmap(HBITMAP hbmSrc, int Width, int Height, int BitCount = 24, int StretchMode = STRETCH_HALFTONE);
 
@@ -81,7 +81,7 @@ namespace DrawUtil
 
 	bool GetSystemFont(FontType Type, LOGFONT *pLogFont);
 	bool GetDefaultUIFont(LOGFONT *pFont);
-	bool IsFontAvailable(const LOGFONT &Font, HDC hdc = NULL);
+	bool IsFontAvailable(const LOGFONT &Font, HDC hdc = nullptr);
 	bool IsFontSmoothingEnabled();
 	bool IsClearTypeEnabled();
 
@@ -100,7 +100,7 @@ namespace DrawUtil
 		bool operator!=(const CFont &Font) const;
 		bool Create(const LOGFONT *pLogFont);
 		bool Create(FontType Type);
-		bool IsCreated() const { return m_hfont != NULL; }
+		bool IsCreated() const { return m_hfont != nullptr; }
 		void Destroy();
 		bool GetLogFont(LOGFONT *pLogFont) const;
 		HFONT GetHandle() const { return m_hfont; }
@@ -110,7 +110,7 @@ namespace DrawUtil
 
 	bool DrawText(
 		HDC hdc, LPCTSTR pszText, const RECT &Rect, UINT Format,
-		const CFont *pFont = NULL, COLORREF Color = CLR_INVALID);
+		const CFont *pFont = nullptr, COLORREF Color = CLR_INVALID);
 
 	class CBrush
 	{
@@ -123,7 +123,7 @@ namespace DrawUtil
 		~CBrush();
 		CBrush &operator=(const CBrush &Brush);
 		bool Create(COLORREF Color);
-		bool IsCreated() const { return m_hbr != NULL; }
+		bool IsCreated() const { return m_hbr != nullptr; }
 		void Destroy();
 		HBRUSH GetHandle() const { return m_hbr; }
 	};
@@ -143,7 +143,7 @@ namespace DrawUtil
 			return Load(hinst, MAKEINTRESOURCE(ID), Flags);
 		}
 		bool Attach(HBITMAP hbm);
-		bool IsCreated() const { return m_hbm != NULL; }
+		bool IsCreated() const { return m_hbm != nullptr; }
 		void Destroy();
 		HBITMAP GetHandle() const { return m_hbm; }
 		bool IsDIB() const;
@@ -175,7 +175,7 @@ namespace DrawUtil
 		bool Create(HBITMAP hbm);
 		void Destroy();
 		HBITMAP GetHandle() const { return m_hbm; }
-		bool IsCreated() const { return m_hbm != NULL; }
+		bool IsCreated() const { return m_hbm != nullptr; }
 		bool Draw(
 			HDC hdc,
 			int DstX, int DstY, int DstWidth, int DstHeight,
@@ -241,9 +241,9 @@ namespace DrawUtil
 		CMemoryDC();
 		CMemoryDC(HDC hdc);
 		~CMemoryDC();
-		bool Create(HDC hdc = NULL);
+		bool Create(HDC hdc = nullptr);
 		void Delete();
-		bool IsCreated() const { return m_hdc != NULL; }
+		bool IsCreated() const { return m_hdc != nullptr; }
 		bool SetBitmap(HBITMAP hbmSrc);
 		bool SetBitmap(CBitmap &Bitmap) { return SetBitmap(Bitmap.GetHandle()); }
 		bool Draw(HDC hdc, int DstX, int DstY, int SrcX, int SrcY, int Width, int Height);
@@ -268,13 +268,13 @@ namespace DrawUtil
 	public:
 		COffscreen();
 		~COffscreen();
-		bool Create(int Width, int Height, HDC hdc = NULL);
+		bool Create(int Width, int Height, HDC hdc = nullptr);
 		void Destroy();
-		bool IsCreated() const { return m_hdc != NULL; }
+		bool IsCreated() const { return m_hdc != nullptr; }
 		HDC GetDC() const { return m_hdc; }
 		int GetWidth() const { return m_Width; }
 		int GetHeight() const { return m_Height; }
-		bool CopyTo(HDC hdc, const RECT *pDstRect = NULL);
+		bool CopyTo(HDC hdc, const RECT *pDstRect = nullptr);
 	};
 
 }	// namespace DrawUtil

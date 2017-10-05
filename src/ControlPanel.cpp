@@ -8,12 +8,12 @@
 
 
 const LPCTSTR CControlPanel::m_pszClassName = APP_NAME TEXT(" Control Panel");
-HINSTANCE CControlPanel::m_hinst = NULL;
+HINSTANCE CControlPanel::m_hinst = nullptr;
 
 
 bool CControlPanel::Initialize(HINSTANCE hinst)
 {
-	if (m_hinst == NULL) {
+	if (m_hinst == nullptr) {
 		WNDCLASS wc;
 
 		wc.style = CS_HREDRAW;
@@ -21,10 +21,10 @@ bool CControlPanel::Initialize(HINSTANCE hinst)
 		wc.cbClsExtra = 0;
 		wc.cbWndExtra = 0;
 		wc.hInstance = hinst;
-		wc.hIcon = NULL;
-		wc.hCursor = ::LoadCursor(NULL, IDC_ARROW);
-		wc.hbrBackground = NULL;
-		wc.lpszMenuName = NULL;
+		wc.hIcon = nullptr;
+		wc.hCursor = ::LoadCursor(nullptr, IDC_ARROW);
+		wc.hbrBackground = nullptr;
+		wc.lpszMenuName = nullptr;
 		wc.lpszClassName = m_pszClassName;
 		if (::RegisterClass(&wc) == 0)
 			return false;
@@ -36,7 +36,7 @@ bool CControlPanel::Initialize(HINSTANCE hinst)
 
 CControlPanel::CControlPanel()
 	: m_FontHeight(0)
-	, m_hwndMessage(NULL)
+	, m_hwndMessage(nullptr)
 	, m_HotItem(-1)
 {
 }
@@ -101,7 +101,7 @@ void CControlPanel::SetTheme(const TVTest::Theme::CThemeManager *pThemeManager)
 bool CControlPanel::SetFont(const TVTest::Style::Font &Font)
 {
 	m_StyleFont = Font;
-	if (m_hwnd != NULL) {
+	if (m_hwnd != nullptr) {
 		ApplyStyle();
 		RealizeStyle();
 	}
@@ -111,7 +111,7 @@ bool CControlPanel::SetFont(const TVTest::Style::Font &Font)
 
 bool CControlPanel::AddItem(CControlPanelItem *pItem)
 {
-	if (pItem == NULL)
+	if (pItem == nullptr)
 		return false;
 	m_ItemList.push_back(pItem);
 	pItem->m_pControlPanel = this;
@@ -123,7 +123,7 @@ bool CControlPanel::AddItem(CControlPanelItem *pItem)
 CControlPanelItem *CControlPanel::GetItem(int Index) const
 {
 	if (Index < 0 || Index >= (int)m_ItemList.size())
-		return NULL;
+		return nullptr;
 	return m_ItemList[Index];
 }
 
@@ -132,7 +132,7 @@ bool CControlPanel::UpdateItem(int Index)
 {
 	RECT rc;
 
-	if (Index < 0 || Index >= (int)m_ItemList.size() || m_hwnd == NULL)
+	if (Index < 0 || Index >= (int)m_ItemList.size() || m_hwnd == nullptr)
 		return false;
 	m_ItemList[Index]->GetPosition(&rc);
 	Invalidate(&rc);
@@ -189,7 +189,7 @@ void CControlPanel::UpdateLayout()
 bool CControlPanel::SetControlPanelTheme(const ControlPanelTheme &Theme)
 {
 	m_Theme = Theme;
-	if (m_hwnd != NULL)
+	if (m_hwnd != nullptr)
 		Invalidate();
 	return true;
 }
@@ -197,7 +197,7 @@ bool CControlPanel::SetControlPanelTheme(const ControlPanelTheme &Theme)
 
 bool CControlPanel::GetControlPanelTheme(ControlPanelTheme *pTheme) const
 {
-	if (pTheme == NULL)
+	if (pTheme == nullptr)
 		return false;
 	*pTheme = m_Theme;
 	return true;
@@ -212,7 +212,7 @@ void CControlPanel::SetSendMessageWindow(HWND hwnd)
 
 void CControlPanel::SendCommand(int Command)
 {
-	if (m_hwndMessage != NULL)
+	if (m_hwndMessage != nullptr)
 		::SendMessage(m_hwndMessage, WM_COMMAND, Command, (LPARAM)GetHandle());
 }
 
@@ -225,7 +225,7 @@ bool CControlPanel::CheckRadioItem(int FirstID, int LastID, int CheckID)
 		if (pItem->m_Command >= FirstID && pItem->m_Command <= LastID)
 			pItem->m_fCheck = pItem->m_Command == CheckID;
 	}
-	if (m_hwnd != NULL)
+	if (m_hwnd != nullptr)
 		Invalidate();
 	return true;
 }
@@ -248,11 +248,11 @@ bool CControlPanel::CalcTextSize(LPCTSTR pszText, SIZE *pSize)
 	pSize->cx = 0;
 	pSize->cy = 0;
 
-	if (m_hwnd == NULL || pszText == NULL)
+	if (m_hwnd == nullptr || pszText == nullptr)
 		return false;
 
 	HDC hdc = ::GetDC(m_hwnd);
-	if (hdc == NULL)
+	if (hdc == nullptr)
 		return false;
 	HFONT hfontOld = DrawUtil::SelectObject(hdc, m_Font);
 	RECT rc = {0, 0, 0, 0};
@@ -549,7 +549,7 @@ LRESULT CControlPanel::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 
 void CControlPanel::ApplyStyle()
 {
-	if (m_hwnd != NULL) {
+	if (m_hwnd != nullptr) {
 		CreateDrawFont(m_StyleFont, &m_Font);
 		m_FontHeight = CalcFontHeight();
 	}
@@ -558,7 +558,7 @@ void CControlPanel::ApplyStyle()
 
 void CControlPanel::RealizeStyle()
 {
-	if (m_hwnd != NULL) {
+	if (m_hwnd != nullptr) {
 		UpdateLayout();
 		Invalidate();
 	}
@@ -605,7 +605,7 @@ CControlPanelItem::CControlPanelItem()
 	, m_fEnable(true)
 	, m_fCheck(false)
 	, m_fBreak(true)
-	, m_pControlPanel(NULL)
+	, m_pControlPanel(nullptr)
 {
 	::SetRectEmpty(&m_Position);
 }
@@ -681,7 +681,7 @@ void CControlPanelItem::OnLButtonDown(int x, int y)
 
 bool CControlPanelItem::CalcTextSize(LPCTSTR pszText, SIZE *pSize) const
 {
-	if (m_pControlPanel == NULL || pszText == NULL) {
+	if (m_pControlPanel == nullptr || pszText == nullptr) {
 		pSize->cx = 0;
 		pSize->cy = 0;
 		return false;
@@ -692,7 +692,7 @@ bool CControlPanelItem::CalcTextSize(LPCTSTR pszText, SIZE *pSize) const
 
 int CControlPanelItem::GetTextItemHeight() const
 {
-	if (m_pControlPanel == NULL)
+	if (m_pControlPanel == nullptr)
 		return 0;
 	return m_pControlPanel->GetTextItemHeight();
 }
@@ -700,7 +700,7 @@ int CControlPanelItem::GetTextItemHeight() const
 
 void CControlPanelItem::GetMenuPos(POINT *pPos) const
 {
-	if (m_pControlPanel == NULL) {
+	if (m_pControlPanel == nullptr) {
 		::GetCursorPos(pPos);
 		return;
 	}

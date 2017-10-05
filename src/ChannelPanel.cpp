@@ -9,12 +9,12 @@
 
 
 const LPCTSTR CChannelPanel::m_pszClassName = APP_NAME TEXT(" Channel Panel");
-HINSTANCE CChannelPanel::m_hinst = NULL;
+HINSTANCE CChannelPanel::m_hinst = nullptr;
 
 
 bool CChannelPanel::Initialize(HINSTANCE hinst)
 {
-	if (m_hinst == NULL) {
+	if (m_hinst == nullptr) {
 		WNDCLASS wc;
 
 		wc.style = CS_HREDRAW;
@@ -22,10 +22,10 @@ bool CChannelPanel::Initialize(HINSTANCE hinst)
 		wc.cbClsExtra = 0;
 		wc.cbWndExtra = 0;
 		wc.hInstance = hinst;
-		wc.hIcon = NULL;
-		wc.hCursor = NULL;
-		wc.hbrBackground = NULL;
-		wc.lpszMenuName = NULL;
+		wc.hIcon = nullptr;
+		wc.hCursor = nullptr;
+		wc.hbrBackground = nullptr;
+		wc.lpszMenuName = nullptr;
 		wc.lpszClassName = m_pszClassName;
 		if (::RegisterClass(&wc) == 0)
 			return false;
@@ -38,7 +38,7 @@ bool CChannelPanel::Initialize(HINSTANCE hinst)
 CChannelPanel::CChannelPanel()
 	: m_EventInfoPopupManager(&m_EventInfoPopup)
 	, m_EventInfoPopupHandler(this)
-	, m_pEPGDatabase(NULL)
+	, m_pEPGDatabase(nullptr)
 	, m_FontHeight(0)
 	, m_EventNameLines(2)
 	, m_ChannelNameHeight(0)
@@ -57,9 +57,9 @@ CChannelPanel::CChannelPanel()
 	, m_ScrollPos(0)
 	, m_CurChannel(-1)
 	, m_fScrollToCurChannel(false)
-	, m_pEventHandler(NULL)
+	, m_pEventHandler(nullptr)
 	, m_fDetailToolTip(false)
-	, m_pLogoManager(NULL)
+	, m_pLogoManager(nullptr)
 {
 	GetDefaultFont(&m_StyleFont);
 
@@ -143,7 +143,7 @@ bool CChannelPanel::SetFont(const TVTest::Style::Font &Font)
 {
 	m_StyleFont = Font;
 
-	if (m_hwnd != NULL) {
+	if (m_hwnd != nullptr) {
 		ApplyStyle();
 		RealizeStyle();
 	}
@@ -227,7 +227,7 @@ bool CChannelPanel::UpdateEvents(CChannelEventInfo *pInfo, const LibISDB::DateTi
 	LibISDB::EventInfo EventInfo;
 	bool fChanged = false;
 
-	if (pTime != NULL)
+	if (pTime != nullptr)
 		Time = *pTime;
 	else
 		LibISDB::GetCurrentEPGTime(&Time);
@@ -238,7 +238,7 @@ bool CChannelPanel::UpdateEvents(CChannelEventInfo *pInfo, const LibISDB::DateTi
 				fChanged = true;
 		} else {
 			if (i == 0) {
-				if (pInfo->SetEventInfo(0, NULL))
+				if (pInfo->SetEventInfo(0, nullptr))
 					fChanged = true;
 				if (NumEvents == 1)
 					break;
@@ -250,7 +250,7 @@ bool CChannelPanel::UpdateEvents(CChannelEventInfo *pInfo, const LibISDB::DateTi
 					fChanged = true;
 			} else {
 				for (; i < m_EventsPerChannel; i++) {
-					if (pInfo->SetEventInfo(i, NULL))
+					if (pInfo->SetEventInfo(i, nullptr))
 						fChanged = true;
 				}
 				break;
@@ -269,7 +269,7 @@ bool CChannelPanel::SetChannelList(const CChannelList *pChannelList, bool fSetEv
 	m_ScrollPos = 0;
 	m_CurChannel = -1;
 
-	if (pChannelList != NULL) {
+	if (pChannelList != nullptr) {
 		LibISDB::DateTime Current;
 
 		LibISDB::GetCurrentEPGTime(&Current);
@@ -281,20 +281,20 @@ bool CChannelPanel::SetChannelList(const CChannelList *pChannelList, bool fSetEv
 
 			CChannelEventInfo *pEventInfo = new CChannelEventInfo(pChInfo, i);
 
-			if (fSetEvent && m_pEPGDatabase != NULL)
+			if (fSetEvent && m_pEPGDatabase != nullptr)
 				UpdateEvents(pEventInfo, &Current);
-			if (m_pLogoManager != NULL) {
+			if (m_pLogoManager != nullptr) {
 				HBITMAP hbmLogo = m_pLogoManager->GetAssociatedLogoBitmap(
 					pEventInfo->GetNetworkID(), pEventInfo->GetServiceID(),
 					CLogoManager::LOGOTYPE_SMALL);
-				if (hbmLogo != NULL)
+				if (hbmLogo != nullptr)
 					pEventInfo->SetLogo(hbmLogo);
 			}
 			m_ChannelList.push_back(pEventInfo);
 		}
 	}
 
-	if (m_hwnd != NULL) {
+	if (m_hwnd != nullptr) {
 		SetScrollBar();
 		SetTooltips();
 		Invalidate();
@@ -307,7 +307,7 @@ bool CChannelPanel::SetChannelList(const CChannelList *pChannelList, bool fSetEv
 
 bool CChannelPanel::UpdateAllChannels()
 {
-	if (m_pEPGDatabase != NULL && !m_ChannelList.empty()) {
+	if (m_pEPGDatabase != nullptr && !m_ChannelList.empty()) {
 		bool fChanged = false;
 
 		LibISDB::GetCurrentEPGTime(&m_UpdatedTime);
@@ -317,7 +317,7 @@ bool CChannelPanel::UpdateAllChannels()
 			if (UpdateEvents(pInfo, &m_UpdatedTime))
 				fChanged = true;
 		}
-		if (m_hwnd != NULL && fChanged) {
+		if (m_hwnd != nullptr && fChanged) {
 			Redraw();
 		}
 	}
@@ -327,12 +327,12 @@ bool CChannelPanel::UpdateAllChannels()
 
 bool CChannelPanel::UpdateChannel(int ChannelIndex)
 {
-	if (m_pEPGDatabase != NULL) {
+	if (m_pEPGDatabase != nullptr) {
 		for (int i = 0; i < (int)m_ChannelList.size(); i++) {
 			CChannelEventInfo *pEventInfo = m_ChannelList[i];
 
 			if (pEventInfo->GetOriginalChannelIndex() == ChannelIndex) {
-				if (UpdateEvents(pEventInfo) && m_hwnd != NULL) {
+				if (UpdateEvents(pEventInfo) && m_hwnd != nullptr) {
 					RECT rc;
 
 					GetItemRect(i, &rc);
@@ -351,7 +351,7 @@ bool CChannelPanel::UpdateChannels(WORD NetworkID, WORD TransportStreamID)
 {
 	if (NetworkID == 0 && TransportStreamID == 0)
 		return false;
-	if (m_pEPGDatabase == NULL)
+	if (m_pEPGDatabase == nullptr)
 		return false;
 
 	LibISDB::DateTime Time;
@@ -367,7 +367,7 @@ bool CChannelPanel::UpdateChannels(WORD NetworkID, WORD TransportStreamID)
 				fChanged = true;
 		}
 	}
-	if (m_hwnd != NULL && fChanged) {
+	if (m_hwnd != nullptr && fChanged) {
 		Redraw();
 	}
 	return true;
@@ -387,7 +387,7 @@ bool CChannelPanel::SetCurrentChannel(int CurChannel)
 
 	m_CurChannel = CurChannel;
 
-	if (m_hwnd != NULL) {
+	if (m_hwnd != nullptr) {
 		if (m_fScrollToCurChannel && m_CurChannel >= 0)
 			ScrollToCurrentChannel();
 		Invalidate();
@@ -443,7 +443,7 @@ void CChannelPanel::SetEventHandler(CEventHandler *pEventHandler)
 bool CChannelPanel::SetChannelPanelTheme(const ChannelPanelTheme &Theme)
 {
 	m_Theme = Theme;
-	if (m_hwnd != NULL)
+	if (m_hwnd != nullptr)
 		Invalidate();
 	return true;
 }
@@ -451,7 +451,7 @@ bool CChannelPanel::SetChannelPanelTheme(const ChannelPanelTheme &Theme)
 
 bool CChannelPanel::GetChannelPanelTheme(ChannelPanelTheme *pTheme) const
 {
-	if (pTheme == NULL)
+	if (pTheme == nullptr)
 		return false;
 	*pTheme = m_Theme;
 	return true;
@@ -468,7 +468,7 @@ void CChannelPanel::SetDetailToolTip(bool fDetail)
 {
 	if (m_fDetailToolTip != fDetail) {
 		m_fDetailToolTip = fDetail;
-		if (m_hwnd != NULL) {
+		if (m_hwnd != nullptr) {
 			if (fDetail) {
 				m_Tooltip.Destroy();
 				m_EventInfoPopupManager.Initialize(m_hwnd, &m_EventInfoPopupHandler);
@@ -499,10 +499,10 @@ bool CChannelPanel::SetEventsPerChannel(int Events, int Expand)
 
 			pInfo->SetMaxEvents(pInfo->IsExpanded() ? m_ExpandEvents : m_EventsPerChannel);
 		}
-		if (m_hwnd != NULL)
+		if (m_hwnd != nullptr)
 			CalcItemHeight();
 		UpdateAllChannels();
-		if (m_hwnd != NULL) {
+		if (m_hwnd != nullptr) {
 			m_ScrollPos = 0;
 			SetScrollBar();
 			Invalidate();
@@ -522,7 +522,7 @@ bool CChannelPanel::ExpandChannel(int Channel, bool fExpand)
 		pInfo->Expand(fExpand);
 		pInfo->SetMaxEvents(fExpand ? m_ExpandEvents : m_EventsPerChannel);
 		UpdateEvents(pInfo);
-		if (m_hwnd != NULL) {
+		if (m_hwnd != nullptr) {
 			RECT rcClient, rc;
 
 			GetClientRect(&rcClient);
@@ -559,7 +559,7 @@ void CChannelPanel::SetUseEpgColorScheme(bool fUseEpgColorScheme)
 {
 	if (m_fUseEpgColorScheme != fUseEpgColorScheme) {
 		m_fUseEpgColorScheme = fUseEpgColorScheme;
-		if (m_hwnd != NULL)
+		if (m_hwnd != nullptr)
 			Invalidate();
 	}
 }
@@ -569,7 +569,7 @@ void CChannelPanel::SetShowGenreColor(bool fShowGenreColor)
 {
 	if (m_fShowGenreColor != fShowGenreColor) {
 		m_fShowGenreColor = fShowGenreColor;
-		if (!m_fUseEpgColorScheme && m_hwnd != NULL)
+		if (!m_fUseEpgColorScheme && m_hwnd != nullptr)
 			Invalidate();
 	}
 }
@@ -579,7 +579,7 @@ void CChannelPanel::SetShowFeaturedMark(bool fShowFeaturedMark)
 {
 	if (m_fShowFeaturedMark != fShowFeaturedMark) {
 		m_fShowFeaturedMark = fShowFeaturedMark;
-		if (m_hwnd != NULL) {
+		if (m_hwnd != nullptr) {
 			if (m_fShowFeaturedMark)
 				m_FeaturedEventsMatcher.BeginMatching(GetAppClass().FeaturedEvents.GetSettings());
 			Invalidate();
@@ -592,7 +592,7 @@ void CChannelPanel::SetShowProgressBar(bool fShowProgressBar)
 {
 	if (m_fShowProgressBar != fShowProgressBar) {
 		m_fShowProgressBar = fShowProgressBar;
-		if (m_hwnd != NULL) {
+		if (m_hwnd != nullptr) {
 			if (m_fShowProgressBar)
 				LibISDB::GetCurrentEPGTime(&m_CurTime);
 			Invalidate();
@@ -605,7 +605,7 @@ void CChannelPanel::SetProgressBarStyle(ProgressBarStyle Style)
 {
 	if (m_ProgressBarStyle != Style) {
 		m_ProgressBarStyle = Style;
-		if (m_fShowProgressBar && m_hwnd != NULL)
+		if (m_fShowProgressBar && m_hwnd != nullptr)
 			Invalidate();
 	}
 }
@@ -613,7 +613,7 @@ void CChannelPanel::SetProgressBarStyle(ProgressBarStyle Style)
 
 bool CChannelPanel::QueryUpdateProgress()
 {
-	if (m_fShowProgressBar && m_hwnd != NULL) {
+	if (m_fShowProgressBar && m_hwnd != nullptr) {
 		LibISDB::DateTime Time;
 		LibISDB::GetCurrentEPGTime(&Time);
 		return m_CurTime.Second / 10 != Time.Second / 10
@@ -629,7 +629,7 @@ bool CChannelPanel::QueryUpdateProgress()
 
 void CChannelPanel::UpdateProgress()
 {
-	if (m_fShowProgressBar && m_hwnd != NULL) {
+	if (m_fShowProgressBar && m_hwnd != nullptr) {
 		LibISDB::GetCurrentEPGTime(&m_CurTime);
 		Invalidate();
 	}
@@ -749,7 +749,7 @@ LRESULT CChannelPanel::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 				if (Type == HIT_CHEVRON)
 					ExpandChannel(Channel, !m_ChannelList[Channel]->IsExpanded());
 				else if (Type != HIT_MARGIN
-						&& m_pEventHandler != NULL)
+						&& m_pEventHandler != nullptr)
 					m_pEventHandler->OnChannelClick(&m_ChannelList[Channel]->GetChannelInfo());
 			}
 		}
@@ -775,7 +775,7 @@ LRESULT CChannelPanel::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 			if (Channel >= 0 && Type != HIT_MARGIN)
 				::SetCursor(GetActionCursor());
 			else
-				::SetCursor(::LoadCursor(NULL, IDC_ARROW));
+				::SetCursor(::LoadCursor(nullptr, IDC_ARROW));
 		}
 		return 0;
 
@@ -800,7 +800,7 @@ LRESULT CChannelPanel::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 					pnmtdi->lpszText = TEXT("");
 				}
 				pnmtdi->szText[0] = '\0';
-				pnmtdi->hinst = NULL;
+				pnmtdi->hinst = nullptr;
 			}
 			return 0;
 
@@ -816,7 +816,7 @@ LRESULT CChannelPanel::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 				::GetCursorPos(&pt);
 				if (::PtInRect(&rcTip, pt)) {
 					HMONITOR hMonitor = ::MonitorFromRect(&rcTip, MONITOR_DEFAULTTONEAREST);
-					if (hMonitor != NULL) {
+					if (hMonitor != nullptr) {
 						MONITORINFO mi;
 
 						mi.cbSize = sizeof(mi);
@@ -859,7 +859,7 @@ LRESULT CChannelPanel::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 
 void CChannelPanel::ApplyStyle()
 {
-	if (m_hwnd != NULL) {
+	if (m_hwnd != nullptr) {
 		CreateDrawFontAndBoldFont(m_StyleFont, &m_Font, &m_ChannelFont);
 
 		CalcItemHeight();
@@ -882,8 +882,8 @@ void CChannelPanel::ApplyStyle()
 
 void CChannelPanel::RealizeStyle()
 {
-	if (m_hwnd != NULL) {
-		if (m_pStyleScaling != NULL) {
+	if (m_hwnd != nullptr) {
+		if (m_pStyleScaling != nullptr) {
 			const int NewDPI = m_pStyleScaling->GetDPI();
 			if (m_OldDPI != 0)
 				m_ScrollPos = ::MulDiv(m_ScrollPos, NewDPI, m_OldDPI);
@@ -906,7 +906,7 @@ void CChannelPanel::Draw(HDC hdc, const RECT *prcPaint)
 			|| m_Offscreen.GetHeight() < m_ChannelNameHeight + m_EventNameHeight * m_ExpandEvents)
 		m_Offscreen.Create(rcClient.right, m_ChannelNameHeight + m_EventNameHeight * m_ExpandEvents, hdc);
 	HDC hdcDst = m_Offscreen.GetDC();
-	if (hdcDst == NULL)
+	if (hdcDst == nullptr)
 		hdcDst = hdc;
 
 	HFONT hfontOld = static_cast<HFONT>(::GetCurrentObject(hdcDst, OBJ_FONT));
@@ -1136,7 +1136,7 @@ void CChannelPanel::SetScrollPos(int Pos)
 		if (abs(Offset) < rc.bottom) {
 			::ScrollWindowEx(
 				m_hwnd, 0, -Offset,
-				NULL, NULL, NULL, NULL, SW_ERASE | SW_INVALIDATE);
+				nullptr, nullptr, nullptr, nullptr, SW_ERASE | SW_INVALIDATE);
 		} else {
 			Invalidate();
 		}
@@ -1167,7 +1167,7 @@ void CChannelPanel::CalcItemHeight()
 	HDC hdc;
 
 	hdc = ::GetDC(m_hwnd);
-	if (hdc == NULL)
+	if (hdc == nullptr)
 		return;
 	m_FontHeight = m_Font.GetHeight(hdc);
 	m_ChannelNameHeight =
@@ -1222,7 +1222,7 @@ int CChannelPanel::HitTest(int x, int y, HitType *pType) const
 	for (int i = 0; i < (int)m_ChannelList.size(); i++) {
 		rc.bottom = rc.top + m_ChannelNameHeight;
 		if (::PtInRect(&rc, pt)) {
-			if (pType != NULL) {
+			if (pType != nullptr) {
 				if (x < rc.right - (m_Style.ChannelChevronMargin + m_Style.ChannelChevronSize.Width + m_Style.ChannelNameMargin.Right))
 					*pType = HIT_CHANNELNAME;
 				else if (x >= rc.right - (m_Style.ChannelChevronSize.Width + m_Style.ChannelNameMargin.Right))
@@ -1238,7 +1238,7 @@ int CChannelPanel::HitTest(int x, int y, HitType *pType) const
 			rc.top = rc.bottom;
 			rc.bottom = rc.top + m_EventNameHeight;
 			if (::PtInRect(&rc, pt)) {
-				if (pType != NULL)
+				if (pType != nullptr)
 					*pType = (HitType)(HIT_EVENT1 + j);
 				return i;
 			}
@@ -1337,8 +1337,8 @@ bool CChannelPanel::ShowEventInfoPopup(LPARAM Param, CEventInfoPopup *pPopup)
 		m_EpgTheme.GetGenreColor(pChEventInfo->GetEventInfo(Event)),
 		m_EpgTheme.GetColor(CEpgTheme::COLOR_EVENTNAME));
 
-	HICON hIcon = NULL;
-	if (m_pLogoManager != NULL) {
+	HICON hIcon = nullptr;
+	if (m_pLogoManager != nullptr) {
 		int IconWidth, IconHeight;
 		pPopup->GetPreferredIconSize(&IconWidth, &IconHeight);
 		hIcon = m_pLogoManager->CreateLogoIcon(
@@ -1363,7 +1363,7 @@ bool CChannelPanel::ShowEventInfoPopup(LPARAM Param, CEventInfoPopup *pPopup)
 	if (!pPopup->Show(
 				&pChEventInfo->GetEventInfo(Event), &rc,
 				hIcon, pChEventInfo->GetChannelInfo().GetName())) {
-		if (hIcon != NULL)
+		if (hIcon != nullptr)
 			::DestroyIcon(hIcon);
 		return false;
 	}
@@ -1433,7 +1433,7 @@ bool CChannelPanel::CEventInfoPopupHandler::ShowPopup(LPARAM Param, CEventInfoPo
 CChannelPanel::CChannelEventInfo::CChannelEventInfo(const CChannelInfo *pInfo, int OriginalIndex)
 	: m_ChannelInfo(*pInfo)
 	, m_OriginalChannelIndex(OriginalIndex)
-	, m_hbmLogo(NULL)
+	, m_hbmLogo(nullptr)
 	, m_fExpanded(false)
 {
 }
@@ -1449,7 +1449,7 @@ bool CChannelPanel::CChannelEventInfo::SetEventInfo(int Index, const LibISDB::Ev
 	if (Index < 0)
 		return false;
 	bool fChanged = false;
-	if (pInfo != NULL) {
+	if (pInfo != nullptr) {
 		if ((int)m_EventList.size() <= Index)
 			m_EventList.resize(Index + 1);
 		if (!m_EventList[Index].IsEqual(*pInfo)) {
@@ -1506,7 +1506,7 @@ void CChannelPanel::CChannelEventInfo::DrawChannelName(
 {
 	RECT rc = *pRect;
 
-	if (m_hbmLogo != NULL) {
+	if (m_hbmLogo != nullptr) {
 		int LogoWidth, LogoHeight;
 
 		LogoHeight = (rc.bottom - rc.top) - (LogoMargins.Top + LogoMargins.Bottom);
@@ -1519,14 +1519,14 @@ void CChannelPanel::CChannelEventInfo::DrawChannelName(
 			}
 			if (!m_StretchedLogo.IsCreated()) {
 				HBITMAP hbm = DrawUtil::ResizeBitmap(m_hbmLogo, LogoWidth, LogoHeight);
-				if (hbm != NULL)
+				if (hbm != nullptr)
 					m_StretchedLogo.Attach(hbm);
 			}
 			rc.left += LogoMargins.Left;
 			DrawUtil::DrawBitmap(
 				hdc, rc.left, rc.top + LogoMargins.Top,
 				LogoWidth, LogoHeight,
-				m_StretchedLogo.IsCreated() ? m_StretchedLogo.GetHandle() : m_hbmLogo, NULL, 192);
+				m_StretchedLogo.IsCreated() ? m_StretchedLogo.GetHandle() : m_hbmLogo, nullptr, 192);
 			rc.left += LogoWidth + LogoMargins.Right;
 		}
 	}

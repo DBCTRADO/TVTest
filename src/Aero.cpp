@@ -81,7 +81,7 @@ static CBufferedPaintInitializer BufferedPaintInitializer;
 
 
 CBufferedPaint::CBufferedPaint()
-	: m_hPaintBuffer(NULL)
+	: m_hPaintBuffer(nullptr)
 {
 }
 
@@ -95,29 +95,29 @@ CBufferedPaint::~CBufferedPaint()
 HDC CBufferedPaint::Begin(HDC hdc, const RECT *pRect, bool fErase)
 {
 	if (!BufferedPaintInitializer.IsInitialized())
-		return NULL;
+		return nullptr;
 
-	if (m_hPaintBuffer != NULL) {
+	if (m_hPaintBuffer != nullptr) {
 		if (!End(false))
-			return NULL;
+			return nullptr;
 	}
 
-	BP_PAINTPARAMS Params = {sizeof(BP_PAINTPARAMS), 0, NULL, NULL};
+	BP_PAINTPARAMS Params = {sizeof(BP_PAINTPARAMS), 0, nullptr, nullptr};
 	if (fErase)
 		Params.dwFlags |= BPPF_ERASE;
 	HDC hdcBuffer;
 	m_hPaintBuffer = ::BeginBufferedPaint(hdc, pRect, BPBF_TOPDOWNDIB, &Params, &hdcBuffer);
-	if (m_hPaintBuffer == NULL)
-		return NULL;
+	if (m_hPaintBuffer == nullptr)
+		return nullptr;
 	return hdcBuffer;
 }
 
 
 bool CBufferedPaint::End(bool fUpdate)
 {
-	if (m_hPaintBuffer != NULL) {
+	if (m_hPaintBuffer != nullptr) {
 		::EndBufferedPaint(m_hPaintBuffer, fUpdate);
-		m_hPaintBuffer = NULL;
+		m_hPaintBuffer = nullptr;
 	}
 	return true;
 }
@@ -125,7 +125,7 @@ bool CBufferedPaint::End(bool fUpdate)
 
 bool CBufferedPaint::Clear(const RECT *pRect)
 {
-	if (m_hPaintBuffer == NULL)
+	if (m_hPaintBuffer == nullptr)
 		return false;
 	return ::BufferedPaintClear(m_hPaintBuffer, pRect) == S_OK;
 }
@@ -133,9 +133,9 @@ bool CBufferedPaint::Clear(const RECT *pRect)
 
 bool CBufferedPaint::SetAlpha(BYTE Alpha)
 {
-	if (m_hPaintBuffer == NULL)
+	if (m_hPaintBuffer == nullptr)
 		return false;
-	return ::BufferedPaintSetAlpha(m_hPaintBuffer, NULL, Alpha) == S_OK;
+	return ::BufferedPaintSetAlpha(m_hPaintBuffer, nullptr, Alpha) == S_OK;
 }
 
 
@@ -162,7 +162,7 @@ void CDoubleBufferingDraw::OnPaint(HWND hwnd)
 		RECT rc;
 		::GetClientRect(hwnd, &rc);
 		HDC hdc = BufferedPaint.Begin(ps.hdc, &rc);
-		if (hdc != NULL) {
+		if (hdc != nullptr) {
 			Draw(hdc, ps.rcPaint);
 			BufferedPaint.End();
 		} else {

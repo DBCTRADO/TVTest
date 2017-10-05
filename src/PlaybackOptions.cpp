@@ -233,10 +233,10 @@ INT_PTR CPlaybackOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lP
 					SetGeneralUpdateFlag(UPDATE_GENERAL_BUILDMEDIAVIEWER);
 				}
 
-				DWORD BufferLength = ::GetDlgItemInt(hDlg, IDC_OPTIONS_BUFFERSIZE, NULL, FALSE);
+				DWORD BufferLength = ::GetDlgItemInt(hDlg, IDC_OPTIONS_BUFFERSIZE, nullptr, FALSE);
 				BufferLength = CLAMP(BufferLength, 0, MAX_PACKET_BUFFER_LENGTH);
 				bool fBuffering = DlgCheckBox_IsChecked(hDlg, IDC_OPTIONS_ENABLEBUFFERING);
-				int PoolPercentage = ::GetDlgItemInt(hDlg, IDC_OPTIONS_BUFFERPOOLPERCENTAGE, NULL, TRUE);
+				int PoolPercentage = ::GetDlgItemInt(hDlg, IDC_OPTIONS_BUFFERPOOLPERCENTAGE, nullptr, TRUE);
 				PoolPercentage = CLAMP(PoolPercentage, 0, 100);
 				if (BufferLength != m_PacketBufferLength
 						|| fBuffering != m_fPacketBuffering

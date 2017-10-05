@@ -22,7 +22,7 @@ namespace TVTest
 			size_t GetChannelProviderCount() const override;
 			CProgramGuideChannelProvider *GetChannelProvider(size_t Index) const override;
 			// CChannelProviderManager
-			bool Create(LPCTSTR pszDefaultTuner = NULL);
+			bool Create(LPCTSTR pszDefaultTuner = nullptr);
 			void Clear();
 			int GetCurChannelProvider() const { return m_CurChannelProvider; }
 
@@ -73,7 +73,7 @@ namespace TVTest
 		bool fShowProgramGuide;
 
 		CEpg(LibISDB::EPGDatabase &EPGDatabase, CEventSearchOptions &EventSearchOptions);
-		CChannelProviderManager *CreateChannelProviderManager(LPCTSTR pszDefaultTuner = NULL);
+		CChannelProviderManager *CreateChannelProviderManager(LPCTSTR pszDefaultTuner = nullptr);
 
 	private:
 		class CProgramGuideEventHandler

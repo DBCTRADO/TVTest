@@ -13,7 +13,7 @@
 
 CNFile::CNFile()
 	: m_hFile(INVALID_HANDLE_VALUE)
-	, m_pszFileName(NULL)
+	, m_pszFileName(nullptr)
 	, m_LastError(ERROR_SUCCESS)
 {
 }
@@ -32,7 +32,7 @@ const bool CNFile::Open(LPCTSTR lpszName, const UINT Flags)
 		return false;
 	}
 
-	if (lpszName == NULL) {
+	if (lpszName == nullptr) {
 		m_LastError = ERROR_INVALID_PARAMETER;	// 「パラメータが正しくありません。」
 		return false;
 	}
@@ -75,7 +75,7 @@ const bool CNFile::Open(LPCTSTR lpszName, const UINT Flags)
 		dwAttributes |= FILE_FLAG_RANDOM_ACCESS;
 
 	// 長いパス対応
-	LPTSTR pszPath = NULL;
+	LPTSTR pszPath = nullptr;
 	const int PathLength = ::lstrlen(lpszName);
 	if (PathLength >= MAX_PATH && ::StrCmpN(lpszName, TEXT("\\\\?"), 3) != 0) {
 		if (lpszName[0] == _T('\\') && lpszName[1] == _T('\\')) {
@@ -93,7 +93,7 @@ const bool CNFile::Open(LPCTSTR lpszName, const UINT Flags)
 	TRACE(TEXT("CNFile::Open() : Open file \"%s\"\n"), pszPath ? pszPath : lpszName);
 	m_hFile = ::CreateFile(
 		pszPath ? pszPath : lpszName,
-		dwAccess, dwShare, NULL, dwCreate, dwAttributes, NULL);
+		dwAccess, dwShare, nullptr, dwCreate, dwAttributes, nullptr);
 	delete [] pszPath;
 	if (m_hFile == INVALID_HANDLE_VALUE) {
 		m_LastError = ::GetLastError();
@@ -139,7 +139,7 @@ const bool CNFile::Close(void)
 			m_LastError = ::GetLastError();
 		m_hFile = INVALID_HANDLE_VALUE;
 		delete [] m_pszFileName;
-		m_pszFileName = NULL;
+		m_pszFileName = nullptr;
 	}
 
 	return m_LastError == ERROR_SUCCESS;
@@ -159,7 +159,7 @@ const DWORD CNFile::Read(void *pBuff, const DWORD dwLen)
 		return 0;
 	}
 
-	if (pBuff == NULL || dwLen == 0) {
+	if (pBuff == nullptr || dwLen == 0) {
 		m_LastError = ERROR_INVALID_PARAMETER;
 		return 0;
 	}
@@ -167,7 +167,7 @@ const DWORD CNFile::Read(void *pBuff, const DWORD dwLen)
 	// ファイルリード
 	DWORD dwRead = 0;
 
-	if (!::ReadFile(m_hFile, pBuff, dwLen, &dwRead, NULL)) {
+	if (!::ReadFile(m_hFile, pBuff, dwLen, &dwRead, nullptr)) {
 		m_LastError = ::GetLastError();
 		return 0;
 	}
@@ -195,7 +195,7 @@ const bool CNFile::Write(const void *pBuff, const DWORD dwLen)
 		return false;
 	}
 
-	if (pBuff == NULL || dwLen == 0) {
+	if (pBuff == nullptr || dwLen == 0) {
 		m_LastError = ERROR_INVALID_PARAMETER;
 		return false;
 	}
@@ -203,7 +203,7 @@ const bool CNFile::Write(const void *pBuff, const DWORD dwLen)
 	// ファイルライト
 	DWORD dwWritten = 0UL;
 
-	if (!::WriteFile(m_hFile, pBuff, dwLen, &dwWritten, NULL)) {
+	if (!::WriteFile(m_hFile, pBuff, dwLen, &dwWritten, nullptr)) {
 		m_LastError = ::GetLastError();
 		return false;
 	}
@@ -298,7 +298,7 @@ const bool CNFile::SetPos(const ULONGLONG llPos)
 	// ファイルシーク
 	LARGE_INTEGER DistanceToMove;
 	DistanceToMove.QuadPart = llPos;
-	if (!::SetFilePointerEx(m_hFile, DistanceToMove, NULL, FILE_BEGIN)) {
+	if (!::SetFilePointerEx(m_hFile, DistanceToMove, nullptr, FILE_BEGIN)) {
 		m_LastError = ::GetLastError();
 		return false;
 	}
@@ -331,13 +331,13 @@ DWORD CNFile::GetLastError(void) const
 
 DWORD CNFile::GetLastErrorMessage(LPTSTR pszMessage, const DWORD MaxLength) const
 {
-	if (pszMessage == NULL || MaxLength == 0)
+	if (pszMessage == nullptr || MaxLength == 0)
 		return 0;
 
 	DWORD Length = ::FormatMessage(
-		FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, NULL,
+		FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, nullptr,
 		m_LastError, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-		pszMessage, MaxLength, NULL);
+		pszMessage, MaxLength, nullptr);
 	if (Length == 0)
 		pszMessage[0] = _T('\0');
 	return Length;

@@ -202,7 +202,7 @@ bool CVariableStringMap::InputParameter(HWND hDlg, int EditID, const POINT &Menu
 		}
 	}
 
-	int Command = ::TrackPopupMenu(hmenuRoot, TPM_RETURNCMD, MenuPos.x, MenuPos.y, 0, hDlg, NULL);
+	int Command = ::TrackPopupMenu(hmenuRoot, TPM_RETURNCMD, MenuPos.x, MenuPos.y, 0, hDlg, nullptr);
 	::DestroyMenu(hmenuRoot);
 	if (Command <= 0)
 		return false;

@@ -30,8 +30,8 @@ bool SaveBMPFile(const ImageSaveInfo *pInfo)
 	RowBytes = DIB_ROW_BYTES(Width, BitsPerPixel);
 	BitsBytes = RowBytes * Height;
 	hFile = CreateFile(
-		pInfo->pszFileName, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS,
-		FILE_ATTRIBUTE_NORMAL, NULL);
+		pInfo->pszFileName, GENERIC_WRITE, 0, nullptr, CREATE_ALWAYS,
+		FILE_ATTRIBUTE_NORMAL, nullptr);
 	if (hFile == INVALID_HANDLE_VALUE) {
 		return false;
 	}
@@ -42,7 +42,7 @@ bool SaveBMPFile(const ImageSaveInfo *pInfo)
 	bmfh.bfSize = (DWORD)(sizeof(BITMAPFILEHEADER) + InfoBytes + BitsBytes);
 	bmfh.bfReserved1 = bmfh.bfReserved2 = 0;
 	bmfh.bfOffBits = (DWORD)(sizeof(BITMAPFILEHEADER) + InfoBytes);
-	if (!WriteFile(hFile, &bmfh, sizeof(BITMAPFILEHEADER), &dwWrite, NULL)
+	if (!WriteFile(hFile, &bmfh, sizeof(BITMAPFILEHEADER), &dwWrite, nullptr)
 			|| dwWrite != sizeof(BITMAPFILEHEADER)) {
 		CloseHandle(hFile);
 		return false;
@@ -63,7 +63,7 @@ bool SaveBMPFile(const ImageSaveInfo *pInfo)
 	bmih.biYPelsPerMeter = 0;
 	bmih.biClrUsed = 0;
 	bmih.biClrImportant = 0;
-	if (!WriteFile(hFile, &bmih, sizeof(BITMAPINFOHEADER), &dwWrite, NULL)
+	if (!WriteFile(hFile, &bmih, sizeof(BITMAPINFOHEADER), &dwWrite, nullptr)
 			|| dwWrite != sizeof(BITMAPINFOHEADER)) {
 		CloseHandle(hFile);
 		return false;
@@ -73,14 +73,14 @@ bool SaveBMPFile(const ImageSaveInfo *pInfo)
 
 		if (!WriteFile(
 					hFile, pInfo->pbmi->bmiColors, PalBytes,
-					&dwWrite, NULL) || dwWrite != PalBytes) {
+					&dwWrite, nullptr) || dwWrite != PalBytes) {
 			CloseHandle(hFile);
 			return false;
 		}
 	}
 	/* ビットデータを書き込む */
 	if (pInfo->pbmi->bmiHeader.biHeight > 0) {
-		if (!WriteFile(hFile, pInfo->pBits, (DWORD)BitsBytes, &dwWrite, NULL)
+		if (!WriteFile(hFile, pInfo->pBits, (DWORD)BitsBytes, &dwWrite, nullptr)
 				|| dwWrite != BitsBytes) {
 			CloseHandle(hFile);
 			return false;
@@ -91,7 +91,7 @@ bool SaveBMPFile(const ImageSaveInfo *pInfo)
 
 		p = static_cast<const BYTE*>(pInfo->pBits) + (Height - 1) * RowBytes;
 		for (y = 0; y < Height; y++) {
-			if (!WriteFile(hFile, p, (DWORD)RowBytes, &dwWrite, NULL)
+			if (!WriteFile(hFile, p, (DWORD)RowBytes, &dwWrite, nullptr)
 					|| dwWrite != RowBytes) {
 				CloseHandle(hFile);
 				return false;

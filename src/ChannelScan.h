@@ -27,9 +27,9 @@ public:
 // CChannelScan
 	bool SetTuningSpaceList(const CTuningSpaceList *pTuningSpaceList);
 	const CTuningSpaceList *GetTuningSpaceList() const { return &m_TuningSpaceList; }
-	bool IsScanning() const { return m_hScanThread != NULL; }
+	bool IsScanning() const { return m_hScanThread != nullptr; }
 
-	bool AutoUpdateChannelList(CTuningSpaceList *pTuningSpaceList, std::vector<TVTest::String> *pMessageList = NULL);
+	bool AutoUpdateChannelList(CTuningSpaceList *pTuningSpaceList, std::vector<TVTest::String> *pMessageList = nullptr);
 
 private:
 	enum {

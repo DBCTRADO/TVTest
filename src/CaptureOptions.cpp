@@ -294,7 +294,7 @@ bool CCaptureOptions::GetCustomSize(int *pWidth, int *pHeight) const
 bool CCaptureOptions::GenerateFileName(
 	TVTest::String *pFileName, const CCaptureImage *pImage) const
 {
-	if (pFileName == NULL)
+	if (pFileName == nullptr)
 		return false;
 
 	TCHAR szSaveFolder[MAX_PATH];
@@ -324,7 +324,7 @@ bool CCaptureOptions::GenerateFileName(
 	::lstrcpy(szSaveFolder, szPath);
 	::PathRemoveFileSpec(szSaveFolder);
 	if (!::PathIsDirectory(szSaveFolder)) {
-		int Result = ::SHCreateDirectoryEx(NULL, szSaveFolder, NULL);
+		int Result = ::SHCreateDirectoryEx(nullptr, szSaveFolder, nullptr);
 		if (Result != ERROR_SUCCESS && Result != ERROR_ALREADY_EXISTS) {
 			GetAppClass().AddLog(
 				CLogItem::TYPE_ERROR,
@@ -369,7 +369,7 @@ bool CCaptureOptions::GetOptionText(LPTSTR pszOption, int MaxLength) const
 bool CCaptureOptions::GetCommentText(
 	TVTest::String *pComment, const CCaptureImage *pImage) const
 {
-	if (pComment == NULL || pImage == NULL)
+	if (pComment == nullptr || pImage == nullptr)
 		return false;
 
 	TVTest::CEventVariableStringMap::EventInfo EventInfo;
@@ -397,7 +397,7 @@ bool CCaptureOptions::SaveImage(CCaptureImage *pImage)
 		return false;
 	fOK = m_ImageCodec.SaveImage(
 		FileName.c_str(), m_SaveFormat, szOption,
-		pbmi, pBits, m_fSetComment ? pImage->GetComment() : NULL);
+		pbmi, pBits, m_fSetComment ? pImage->GetComment() : nullptr);
 	pImage->UnlockData();
 	return fOK;
 }
@@ -422,7 +422,7 @@ bool CCaptureOptions::OpenSaveFolder() const
 		if (!GetAppClass().GetAppDirectory(szFolder))
 			return false;
 	}
-	return (ULONG_PTR)::ShellExecute(NULL, TEXT("open"), szFolder, NULL, NULL, SW_SHOWNORMAL) > 32;
+	return (ULONG_PTR)::ShellExecute(nullptr, TEXT("open"), szFolder, nullptr, nullptr, SW_SHOWNORMAL) > 32;
 }
 
 
@@ -479,7 +479,7 @@ INT_PTR CCaptureOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 			DlgComboBox_SetCurSel(hDlg, IDC_CAPTUREOPTIONS_SIZE, Sel);
 
 			LPCTSTR pszFormat;
-			for (i = 0; (pszFormat = m_ImageCodec.EnumSaveFormat(i)) != NULL; i++)
+			for (i = 0; (pszFormat = m_ImageCodec.EnumSaveFormat(i)) != nullptr; i++)
 				DlgComboBox_AddString(hDlg, IDC_CAPTUREOPTIONS_FORMAT, pszFormat);
 			DlgComboBox_SetCurSel(hDlg, IDC_CAPTUREOPTIONS_FORMAT, m_SaveFormat);
 
@@ -612,7 +612,7 @@ INT_PTR CCaptureOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 				if (!IsValidFileName(FileName.c_str(), FILENAME_VALIDATE_ALLOWDELIMITER, &Message)) {
 					SettingError();
 					::SendDlgItemMessage(hDlg, IDC_CAPTUREOPTIONS_FILENAME, EM_SETSEL, 0, -1);
-					::MessageBox(hDlg, Message.c_str(), NULL, MB_OK | MB_ICONEXCLAMATION);
+					::MessageBox(hDlg, Message.c_str(), nullptr, MB_OK | MB_ICONEXCLAMATION);
 					SetDlgItemFocus(hDlg, IDC_CAPTUREOPTIONS_FILENAME);
 					return TRUE;
 				}

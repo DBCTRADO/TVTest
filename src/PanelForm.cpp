@@ -7,12 +7,12 @@
 
 
 const LPCTSTR CPanelForm::m_pszClassName = APP_NAME TEXT(" Panel Form");
-HINSTANCE CPanelForm::m_hinst = NULL;
+HINSTANCE CPanelForm::m_hinst = nullptr;
 
 
 bool CPanelForm::Initialize(HINSTANCE hinst)
 {
-	if (m_hinst == NULL) {
+	if (m_hinst == nullptr) {
 		WNDCLASS wc;
 
 		wc.style = 0;
@@ -20,10 +20,10 @@ bool CPanelForm::Initialize(HINSTANCE hinst)
 		wc.cbClsExtra = 0;
 		wc.cbWndExtra = 0;
 		wc.hInstance = hinst;
-		wc.hIcon = NULL;
-		wc.hCursor = LoadCursor(NULL, IDC_ARROW);
-		wc.hbrBackground = NULL;
-		wc.lpszMenuName = NULL;
+		wc.hIcon = nullptr;
+		wc.hCursor = LoadCursor(nullptr, IDC_ARROW);
+		wc.hbrBackground = nullptr;
+		wc.lpszMenuName = nullptr;
 		wc.lpszClassName = m_pszClassName;
 		if (::RegisterClass(&wc) == 0)
 			return false;
@@ -41,7 +41,7 @@ CPanelForm::CPanelForm()
 	, m_fFitTabWidth(true)
 	, m_CurTab(-1)
 	, m_PrevActivePageID(-1)
-	, m_pEventHandler(NULL)
+	, m_pEventHandler(nullptr)
 	, m_fEnableTooltip(true)
 {
 	m_WindowPosition.Width = 200;
@@ -70,7 +70,7 @@ bool CPanelForm::Create(HWND hwndParent, DWORD Style, DWORD ExStyle, int ID)
 
 void CPanelForm::SetVisible(bool fVisible)
 {
-	if (m_pEventHandler != NULL)
+	if (m_pEventHandler != nullptr)
 		m_pEventHandler->OnVisibleChange(fVisible);
 	CBasicWindow::SetVisible(fVisible);
 }
@@ -117,7 +117,7 @@ bool CPanelForm::AddPage(const PageInfo &Info)
 	m_WindowList.push_back(new CWindowInfo(Info));
 	m_TabOrder.push_back((int)m_WindowList.size() - 1);
 	RegisterUIChild(Info.pPage);
-	if (m_hwnd != NULL) {
+	if (m_hwnd != nullptr) {
 		CalcTabSize();
 		Invalidate();
 		UpdateTooltip();
@@ -129,7 +129,7 @@ bool CPanelForm::AddPage(const PageInfo &Info)
 CPanelForm::CPage *CPanelForm::GetPageByIndex(int Index)
 {
 	if (Index < 0 || (size_t)Index >= m_WindowList.size())
-		return NULL;
+		return nullptr;
 	return m_WindowList[Index]->m_pWindow;
 }
 
@@ -139,7 +139,7 @@ CPanelForm::CPage *CPanelForm::GetPageByID(int ID)
 	int Index = IDToIndex(ID);
 
 	if (Index < 0)
-		return NULL;
+		return nullptr;
 	return m_WindowList[Index]->m_pWindow;
 }
 
@@ -177,7 +177,7 @@ bool CPanelForm::SetCurTab(int Index)
 		Invalidate();
 		//Update();
 
-		if (m_pEventHandler != NULL)
+		if (m_pEventHandler != nullptr)
 			m_pEventHandler->OnSelChange();
 	}
 
@@ -243,7 +243,7 @@ bool CPanelForm::SetTabVisible(int ID, bool fVisible)
 			SetCurTab(CurTab);
 		}
 
-		if (m_hwnd != NULL) {
+		if (m_hwnd != nullptr) {
 			CalcTabSize();
 			Invalidate();
 			UpdateTooltip();
@@ -266,7 +266,7 @@ bool CPanelForm::GetTabVisible(int ID) const
 
 bool CPanelForm::SetTabOrder(const int *pOrder, int Count)
 {
-	if (pOrder == NULL || Count < 0)
+	if (pOrder == nullptr || Count < 0)
 		return false;
 
 	std::vector<int> TabOrder;
@@ -284,7 +284,7 @@ bool CPanelForm::SetTabOrder(const int *pOrder, int Count)
 
 	m_TabOrder = TabOrder;
 
-	if (m_hwnd != NULL) {
+	if (m_hwnd != nullptr) {
 		Invalidate();
 		UpdateTooltip();
 	}
@@ -295,7 +295,7 @@ bool CPanelForm::SetTabOrder(const int *pOrder, int Count)
 
 bool CPanelForm::GetTabInfo(int Index, TabInfo *pInfo) const
 {
-	if (Index < 0 || (size_t)Index >= m_TabOrder.size() || pInfo == NULL)
+	if (Index < 0 || (size_t)Index >= m_TabOrder.size() || pInfo == nullptr)
 		return false;
 	const CWindowInfo *pWindowInfo = m_WindowList[m_TabOrder[Index]];
 	pInfo->ID = pWindowInfo->m_ID;
@@ -314,7 +314,7 @@ int CPanelForm::GetTabID(int Index) const
 
 bool CPanelForm::GetTabTitle(int ID, TVTest::String *pTitle) const
 {
-	if (pTitle == NULL)
+	if (pTitle == nullptr)
 		return false;
 
 	int Index = IDToIndex(ID);
@@ -338,7 +338,7 @@ void CPanelForm::SetEventHandler(CEventHandler *pHandler)
 bool CPanelForm::SetPanelFormTheme(const PanelFormTheme &Theme)
 {
 	m_Theme = Theme;
-	if (m_hwnd != NULL)
+	if (m_hwnd != nullptr)
 		Invalidate();
 	return true;
 }
@@ -346,7 +346,7 @@ bool CPanelForm::SetPanelFormTheme(const PanelFormTheme &Theme)
 
 bool CPanelForm::GetPanelFormTheme(PanelFormTheme *pTheme) const
 {
-	if (pTheme == NULL)
+	if (pTheme == nullptr)
 		return false;
 	*pTheme = m_Theme;
 	return true;
@@ -356,7 +356,7 @@ bool CPanelForm::GetPanelFormTheme(PanelFormTheme *pTheme) const
 bool CPanelForm::SetTabFont(const TVTest::Style::Font &Font)
 {
 	m_StyleFont = Font;
-	if (m_hwnd != NULL) {
+	if (m_hwnd != nullptr) {
 		ApplyStyle();
 		RealizeStyle();
 	}
@@ -374,7 +374,7 @@ bool CPanelForm::SetPageFont(const TVTest::Style::Font &Font)
 
 bool CPanelForm::GetPageClientRect(RECT *pRect) const
 {
-	if (pRect == NULL)
+	if (pRect == nullptr)
 		return false;
 	if (!GetClientRect(pRect))
 		return false;
@@ -388,7 +388,7 @@ bool CPanelForm::SetTabStyle(TabStyle Style)
 {
 	if (m_TabStyle != Style) {
 		m_TabStyle = Style;
-		if (m_hwnd != NULL) {
+		if (m_hwnd != nullptr) {
 			CalcTabSize();
 			SendSizeMessage();
 			Invalidate();
@@ -400,11 +400,11 @@ bool CPanelForm::SetTabStyle(TabStyle Style)
 
 bool CPanelForm::SetIconImage(HBITMAP hbm, int Width, int Height)
 {
-	if (hbm == NULL)
+	if (hbm == nullptr)
 		return false;
 	if (!m_Icons.Create(hbm, Width, Height))
 		return false;
-	if (m_hwnd != NULL)
+	if (m_hwnd != nullptr)
 		Invalidate();
 	return true;
 }
@@ -423,7 +423,7 @@ bool CPanelForm::EnableTooltip(bool fEnable)
 {
 	if (m_fEnableTooltip != fEnable) {
 		m_fEnableTooltip = fEnable;
-		if (m_hwnd != NULL)
+		if (m_hwnd != nullptr)
 			UpdateTooltip();
 	}
 	return true;
@@ -485,7 +485,7 @@ LRESULT CPanelForm::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 		return 0;
 
 	case WM_RBUTTONUP:
-		if (m_pEventHandler != NULL) {
+		if (m_pEventHandler != nullptr) {
 			POINT pt;
 			RECT rc;
 
@@ -517,7 +517,7 @@ LRESULT CPanelForm::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 		break;
 
 	case WM_KEYDOWN:
-		if (m_pEventHandler != NULL
+		if (m_pEventHandler != nullptr
 				&& m_pEventHandler->OnKeyDown((UINT)wParam, (UINT)lParam))
 			return 0;
 		break;
@@ -533,7 +533,7 @@ LRESULT CPanelForm::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 
 void CPanelForm::ApplyStyle()
 {
-	if (m_hwnd != NULL) {
+	if (m_hwnd != nullptr) {
 		CreateDrawFont(m_StyleFont, &m_Font);
 		CalcTabSize();
 	}
@@ -542,7 +542,7 @@ void CPanelForm::ApplyStyle()
 
 void CPanelForm::RealizeStyle()
 {
-	if (m_hwnd != NULL) {
+	if (m_hwnd != nullptr) {
 		SendSizeMessage();
 		UpdateTooltip();
 		Invalidate();

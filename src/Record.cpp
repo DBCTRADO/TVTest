@@ -105,8 +105,8 @@ bool CRecordTime::IsValid() const
 
 CRecordTask::CRecordTask()
 	: m_State(STATE_STOP)
-	, m_pTSEngine(NULL)
-	, m_pRecorderFilter(NULL)
+	, m_pTSEngine(nullptr)
+	, m_pRecorderFilter(nullptr)
 {
 }
 
@@ -150,7 +150,7 @@ bool CRecordTask::Start(LPCTSTR pszFileName, const CRecordingSettings &Settings)
 		SetError(std::errc::operation_not_permitted, TEXT("呼び出しが不正です。"));
 		return false;
 	}
-	if (m_pTSEngine == NULL || m_pRecorderFilter == NULL) {
+	if (m_pTSEngine == nullptr || m_pRecorderFilter == nullptr) {
 		SetError(std::errc::operation_not_permitted, TEXT("呼び出しが不正です。"));
 		return false;
 	}
@@ -163,9 +163,9 @@ bool CRecordTask::Start(LPCTSTR pszFileName, const CRecordingSettings &Settings)
 	RecOptions.StreamFlags = Settings.m_SaveStream;
 	RecOptions.WriteCacheSize = Settings.m_WriteCacheSize;
 
-	LibISDB::StreamWriter *pWriter = NULL;
+	LibISDB::StreamWriter *pWriter = nullptr;
 
-	if (pszFileName != NULL) {
+	if (pszFileName != nullptr) {
 		// ファイルへの保存を開始
 
 		RecOptions.MaxPendingSize = Settings.m_MaxPendingSize;
@@ -197,7 +197,7 @@ bool CRecordTask::Start(LPCTSTR pszFileName, const CRecordingSettings &Settings)
 			}
 		}
 
-		if (pWriter == NULL) {
+		if (pWriter == nullptr) {
 			pWriter = new LibISDB::FileStreamWriter;
 		}
 
@@ -233,7 +233,7 @@ bool CRecordTask::Start(LPCTSTR pszFileName, const CRecordingSettings &Settings)
 		}
 	}
 
-	if (pWriter != NULL)
+	if (pWriter != nullptr)
 		m_State = STATE_RECORDING;
 	m_StartTime.SetCurrentTime();
 	m_TotalPauseTime = 0;
@@ -344,7 +344,7 @@ LONGLONG CRecordTask::GetWroteSize() const
 bool CRecordTask::GetFileName(TVTest::String *pFileName) const
 {
 	if (!m_RecordingTask) {
-		if (pFileName != NULL)
+		if (pFileName != nullptr)
 			pFileName->clear();
 		return false;
 	}
@@ -354,7 +354,7 @@ bool CRecordTask::GetFileName(TVTest::String *pFileName) const
 
 bool CRecordTask::GetStatistics(LibISDB::RecorderFilter::RecordingStatistics *pStats) const
 {
-	if (pStats == NULL)
+	if (pStats == nullptr)
 		return false;
 	if (!m_RecordingTask) {
 		*pStats = m_Statistics;
@@ -385,7 +385,7 @@ LONGLONG CRecordTask::GetFreeSpace() const
 		return -1;
 	FileName.resize(Pos + 1);
 	ULARGE_INTEGER FreeSpace;
-	if (!::GetDiskFreeSpaceEx(FileName.c_str(), &FreeSpace, NULL, NULL))
+	if (!::GetDiskFreeSpaceEx(FileName.c_str(), &FreeSpace, nullptr, nullptr))
 		return -1;
 	return (LONGLONG)FreeSpace.QuadPart;
 }
@@ -398,8 +398,8 @@ CRecordManager::CRecordManager()
 	, m_fReserved(false)
 	, m_fStopOnEventEnd(false)
 	, m_Client(CLIENT_USER)
-	, m_pTSEngine(NULL)
-	, m_pRecorderFilter(NULL)
+	, m_pTSEngine(nullptr)
+	, m_pRecorderFilter(nullptr)
 	//, m_ExistsOperation(EXISTS_CONFIRM)
 {
 	m_StartTimeSpec.Type = TIME_NOTSPECIFIED;
@@ -477,7 +477,7 @@ bool CRecordManager::SetStartTimeSpec(const TimeSpecInfo *pInfo)
 {
 	if (m_fRecording)
 		return false;
-	if (pInfo != NULL && pInfo->Type != TIME_NOTSPECIFIED) {
+	if (pInfo != nullptr && pInfo->Type != TIME_NOTSPECIFIED) {
 		m_fReserved = true;
 		m_ReserveTime.SetCurrentTime();
 		m_StartTimeSpec = *pInfo;
@@ -498,7 +498,7 @@ bool CRecordManager::GetStartTimeSpec(TimeSpecInfo *pInfo) const
 
 bool CRecordManager::SetStopTimeSpec(const TimeSpecInfo *pInfo)
 {
-	if (pInfo != NULL)
+	if (pInfo != nullptr)
 		m_StopTimeSpec = *pInfo;
 	else
 		m_StopTimeSpec.Type = TIME_NOTSPECIFIED;
@@ -535,7 +535,7 @@ bool CRecordManager::SetRecordingSettings(const CRecordingSettings &Settings)
 	if (!m_fRecording) {
 		if (Settings.m_fEnableTimeShift != m_Settings.m_fEnableTimeShift) {
 			if (Settings.m_fEnableTimeShift) {
-				if (!m_RecordTask.Start(NULL, Settings))
+				if (!m_RecordTask.Start(nullptr, Settings))
 					return false;
 			} else {
 				m_RecordTask.Stop();
@@ -558,7 +558,7 @@ bool CRecordManager::StartRecord(LPCTSTR pszFileName, bool fTimeShift, bool fRes
 		return false;
 	}
 
-	if (m_pTSEngine == NULL || m_pRecorderFilter == NULL) {
+	if (m_pTSEngine == nullptr || m_pRecorderFilter == nullptr) {
 		SetError(std::errc::operation_not_permitted, TEXT("呼び出しが不正です。"));
 		return false;
 	}
@@ -590,7 +590,7 @@ void CRecordManager::StopRecord()
 		//m_FileName.clear();
 
 		if (m_Settings.m_fEnableTimeShift) {
-			m_RecordTask.Start(NULL, m_Settings);
+			m_RecordTask.Start(nullptr, m_Settings);
 		}
 	}
 }
@@ -803,7 +803,7 @@ INT_PTR CALLBACK CRecordManager::StopTimeDlgProc(HWND hDlg, UINT uMsg, WPARAM wP
 					if (DateTime_GetSystemtime(
 								GetDlgItem(hDlg, IDC_RECORDSTOPTIME_TIME), &st) != GDT_VALID) {
 						MessageBox(
-							hDlg, TEXT("時間の取得エラー。"), NULL,
+							hDlg, TEXT("時間の取得エラー。"), nullptr,
 							MB_OK | MB_ICONEXCLAMATION);
 						return TRUE;
 					}
@@ -814,7 +814,7 @@ INT_PTR CALLBACK CRecordManager::StopTimeDlgProc(HWND hDlg, UINT uMsg, WPARAM wP
 						MessageBox(
 							hDlg,
 							TEXT("指定された停止時間を既に過ぎています。"),
-							NULL, MB_OK | MB_ICONEXCLAMATION);
+							nullptr, MB_OK | MB_ICONEXCLAMATION);
 						SetFocus(GetDlgItem(hDlg, IDC_RECORDSTOPTIME_TIME));
 						return TRUE;
 					}
@@ -822,7 +822,7 @@ INT_PTR CALLBACK CRecordManager::StopTimeDlgProc(HWND hDlg, UINT uMsg, WPARAM wP
 					TimeSpec.Time.DateTime = ft;
 					pThis->SetStopTimeSpec(&TimeSpec);
 				} else {
-					pThis->SetStopTimeSpec(NULL);
+					pThis->SetStopTimeSpec(nullptr);
 				}
 			}
 		case IDCANCEL:
@@ -854,12 +854,12 @@ bool CRecordManager::GenerateFilePath(
 	const FileNameFormatInfo &FormatInfo, LPCWSTR pszFormat,
 	TVTest::String *pFilePath) const
 {
-	if (pFilePath == NULL)
+	if (pFilePath == nullptr)
 		return false;
 
 	pFilePath->clear();
 
-	if (pszFormat == NULL) {
+	if (pszFormat == nullptr) {
 		if (m_FileName.empty())
 			return false;
 	}
@@ -869,14 +869,14 @@ bool CRecordManager::GenerateFilePath(
 
 	if (m_fReserved && m_StartTimeSpec.Type == TIME_DATETIME) {
 		SYSTEMTIME st;
-		::SystemTimeToTzSpecificLocalTime(NULL, &m_StartTimeSpec.Time.DateTime, &st);
+		::SystemTimeToTzSpecificLocalTime(nullptr, &m_StartTimeSpec.Time.DateTime, &st);
 		LibISDB::DateTime Time;
 		Time.FromSYSTEMTIME(st);
 		VarStrMap.SetCurrentTime(&Time);
 	}
 
 	if (!TVTest::FormatVariableString(
-				&VarStrMap, pszFormat != NULL ? pszFormat : m_FileName.c_str(),
+				&VarStrMap, pszFormat != nullptr ? pszFormat : m_FileName.c_str(),
 				&FileName)
 			|| FileName.empty())
 		return false;
@@ -975,10 +975,10 @@ bool CRecordManager::ShowWritePluginSetting(HWND hwndOwner, LPCTSTR pszPlugin)
 
 	bool fOK = false;
 	HMODULE hLib = ::LoadLibrary(pszPlugin);
-	if (hLib != NULL) {
+	if (hLib != nullptr) {
 		typedef void (WINAPI * Setting)(HWND parentWnd);
 		Setting pSetting = (Setting)::GetProcAddress(hLib, "Setting");
-		if (pSetting != NULL) {
+		if (pSetting != nullptr) {
 			pSetting(hwndOwner);
 			fOK = true;
 		}
@@ -1057,7 +1057,7 @@ INT_PTR CRecordManager::CRecordSettingsDialog::DlgProc(HWND hDlg, UINT uMsg, WPA
 					SYSTEMTIME st;
 
 					::SystemTimeToTzSpecificLocalTime(
-						NULL, &m_pRecManager->m_StartTimeSpec.Time.DateTime, &stStart);
+						nullptr, &m_pRecManager->m_StartTimeSpec.Time.DateTime, &stStart);
 					::GetSystemTime(&st);
 					LONGLONG Diff = DiffSystemTime(&m_pRecManager->m_StartTimeSpec.Time.DateTime, &st);
 					if (Diff > 0) {
@@ -1120,7 +1120,7 @@ INT_PTR CRecordManager::CRecordSettingsDialog::DlgProc(HWND hDlg, UINT uMsg, WPA
 					SYSTEMTIME st;
 
 					::SystemTimeToTzSpecificLocalTime(
-						NULL, &m_pRecManager->m_StopTimeSpec.Time.DateTime, &stStop);
+						nullptr, &m_pRecManager->m_StopTimeSpec.Time.DateTime, &stStop);
 					::GetSystemTime(&st);
 					LONGLONG Diff = DiffSystemTime(&st, &m_pRecManager->m_StopTimeSpec.Time.DateTime);
 					if (Diff > 0)
@@ -1162,7 +1162,7 @@ INT_PTR CRecordManager::CRecordSettingsDialog::DlgProc(HWND hDlg, UINT uMsg, WPA
 #if 0
 				if (m_pRecManager->m_fRecording
 						&& m_pRecManager->m_StopTimeSpec.Type == TIME_DURATION)
-					::SetTimer(hDlg, 1, 500, NULL);
+					::SetTimer(hDlg, 1, 500, nullptr);
 #endif
 			}
 
@@ -1352,12 +1352,12 @@ INT_PTR CRecordManager::CRecordSettingsDialog::DlgProc(HWND hDlg, UINT uMsg, WPA
 						SYSTEMTIME st;
 						DateTime_GetSystemtime(
 							::GetDlgItem(hDlg, IDC_RECORD_STARTTIME_TIME), &st);
-						::TzSpecificLocalTimeToSystemTime(NULL, &st, &stStart);
+						::TzSpecificLocalTimeToSystemTime(nullptr, &st, &stStart);
 						if (CompareSystemTime(&stStart, &stCur) <= 0) {
 							::MessageBox(
 								hDlg,
 								TEXT("指定された開始時刻を既に過ぎています。"),
-								NULL, MB_OK | MB_ICONEXCLAMATION);
+								nullptr, MB_OK | MB_ICONEXCLAMATION);
 							SetDlgItemFocus(hDlg, IDC_RECORD_STARTTIME_TIME);
 							return TRUE;
 						}
@@ -1369,12 +1369,12 @@ INT_PTR CRecordManager::CRecordSettingsDialog::DlgProc(HWND hDlg, UINT uMsg, WPA
 					SYSTEMTIME st;
 					DateTime_GetSystemtime(
 						::GetDlgItem(hDlg, IDC_RECORD_STOPTIME_TIME), &st);
-					::TzSpecificLocalTimeToSystemTime(NULL, &st, &stStop);
+					::TzSpecificLocalTimeToSystemTime(nullptr, &st, &stStop);
 					if (CompareSystemTime(&stStop, &stCur) <= 0) {
 						::MessageBox(
 							hDlg,
 							TEXT("指定された停止時刻を既に過ぎています。"),
-							NULL, MB_OK | MB_ICONEXCLAMATION);
+							nullptr, MB_OK | MB_ICONEXCLAMATION);
 						SetDlgItemFocus(hDlg, IDC_RECORD_STOPTIME_TIME);
 						return TRUE;
 					}
@@ -1389,7 +1389,7 @@ INT_PTR CRecordManager::CRecordSettingsDialog::DlgProc(HWND hDlg, UINT uMsg, WPA
 						::MessageBox(
 							hDlg,
 							TEXT("ファイル名を入力してください。"),
-							NULL, MB_OK | MB_ICONEXCLAMATION);
+							nullptr, MB_OK | MB_ICONEXCLAMATION);
 						SetDlgItemFocus(hDlg, IDC_RECORD_FILENAME);
 						return TRUE;
 					}
@@ -1398,14 +1398,14 @@ INT_PTR CRecordManager::CRecordSettingsDialog::DlgProc(HWND hDlg, UINT uMsg, WPA
 						::MessageBox(
 							hDlg,
 							TEXT("ファイル名に使用できない文字が含まれています。"),
-							NULL, MB_OK | MB_ICONEXCLAMATION);
+							nullptr, MB_OK | MB_ICONEXCLAMATION);
 						SetDlgItemFocus(hDlg, IDC_RECORD_FILENAME);
 						return TRUE;
 					}
 #else
 					TVTest::String Message;
 					if (!IsValidFileName(FilePath.GetFileName(), 0, &Message)) {
-						::MessageBox(hDlg, Message.c_str(), NULL, MB_OK | MB_ICONEXCLAMATION);
+						::MessageBox(hDlg, Message.c_str(), nullptr, MB_OK | MB_ICONEXCLAMATION);
 						SetDlgItemFocus(hDlg, IDC_RECORD_FILENAME);
 						return TRUE;
 					}
@@ -1414,7 +1414,7 @@ INT_PTR CRecordManager::CRecordSettingsDialog::DlgProc(HWND hDlg, UINT uMsg, WPA
 						::MessageBox(
 							hDlg,
 							TEXT("保存先フォルダを入力してください。"),
-							NULL, MB_OK | MB_ICONEXCLAMATION);
+							nullptr, MB_OK | MB_ICONEXCLAMATION);
 						SetDlgItemFocus(hDlg, IDC_RECORD_FILENAME);
 						return TRUE;
 					}
@@ -1435,7 +1435,7 @@ INT_PTR CRecordManager::CRecordSettingsDialog::DlgProc(HWND hDlg, UINT uMsg, WPA
 					switch (StartTimeChecked) {
 					case IDC_RECORD_START_NOW:
 					default:
-						m_pRecManager->SetStartTimeSpec(NULL);
+						m_pRecManager->SetStartTimeSpec(nullptr);
 						break;
 					case IDC_RECORD_START_DATETIME:
 						{
@@ -1452,9 +1452,9 @@ INT_PTR CRecordManager::CRecordSettingsDialog::DlgProc(HWND hDlg, UINT uMsg, WPA
 							unsigned int Hour, Minute, Second;
 
 							TimeSpec.Type = TIME_DURATION;
-							Hour = ::GetDlgItemInt(hDlg, IDC_RECORD_STARTTIME_HOUR, NULL, FALSE);
-							Minute = ::GetDlgItemInt(hDlg, IDC_RECORD_STARTTIME_MINUTE, NULL, FALSE);
-							Second = ::GetDlgItemInt(hDlg, IDC_RECORD_STARTTIME_SECOND, NULL, FALSE);
+							Hour = ::GetDlgItemInt(hDlg, IDC_RECORD_STARTTIME_HOUR, nullptr, FALSE);
+							Minute = ::GetDlgItemInt(hDlg, IDC_RECORD_STARTTIME_MINUTE, nullptr, FALSE);
+							Second = ::GetDlgItemInt(hDlg, IDC_RECORD_STARTTIME_SECOND, nullptr, FALSE);
 							TimeSpec.Time.Duration = (Hour * (60 * 60) + Minute * 60 + Second) * 1000;
 							m_pRecManager->SetStartTimeSpec(&TimeSpec);
 						}
@@ -1485,14 +1485,14 @@ INT_PTR CRecordManager::CRecordSettingsDialog::DlgProc(HWND hDlg, UINT uMsg, WPA
 						unsigned int Hour, Minute, Second;
 
 						TimeSpec.Type = TIME_DURATION;
-						Hour = ::GetDlgItemInt(hDlg, IDC_RECORD_STOPTIME_HOUR, NULL, FALSE);
-						Minute = ::GetDlgItemInt(hDlg, IDC_RECORD_STOPTIME_MINUTE, NULL, FALSE);
-						Second = ::GetDlgItemInt(hDlg, IDC_RECORD_STOPTIME_SECOND, NULL, FALSE);
+						Hour = ::GetDlgItemInt(hDlg, IDC_RECORD_STOPTIME_HOUR, nullptr, FALSE);
+						Minute = ::GetDlgItemInt(hDlg, IDC_RECORD_STOPTIME_MINUTE, nullptr, FALSE);
+						Second = ::GetDlgItemInt(hDlg, IDC_RECORD_STOPTIME_SECOND, nullptr, FALSE);
 						TimeSpec.Time.Duration = (Hour * (60 * 60) + Minute * 60 + Second) * 1000;
 					}
 					m_pRecManager->SetStopTimeSpec(&TimeSpec);
 				} else {
-					m_pRecManager->SetStopTimeSpec(NULL);
+					m_pRecManager->SetStopTimeSpec(nullptr);
 				}
 			}
 		case IDCANCEL:

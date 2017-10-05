@@ -59,7 +59,7 @@ bool CPanelOptions::InitializePanelForm(CPanelForm *pPanelForm)
 	pPanelForm->SetPageFont(m_Font);
 	if (m_fSpecCaptionFont) {
 		CPanelForm::CPage *pCaptionPanel = pPanelForm->GetPageByID(PANEL_ID_CAPTION);
-		if (pCaptionPanel != NULL)
+		if (pCaptionPanel != nullptr)
 			pCaptionPanel->SetFont(m_CaptionFont);
 	}
 	int InitialTab = GetInitialTab();
@@ -298,7 +298,7 @@ bool CPanelOptions::GetPanelItemVisibility(int ID) const
 
 bool CPanelOptions::ApplyItemList(CPanelForm *pPanelForm) const
 {
-	if (pPanelForm == NULL)
+	if (pPanelForm == nullptr)
 		return false;
 
 	std::vector<int> TabOrder;
@@ -484,7 +484,7 @@ INT_PTR CPanelOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 					DlgCheckBox_IsChecked(hDlg, IDC_PANELOPTIONS_SNAPATMAINWINDOW);
 				m_fAttachToMainWindow =
 					DlgCheckBox_IsChecked(hDlg, IDC_PANELOPTIONS_ATTACHTOMAINWINDOW);
-				m_Opacity = ::GetDlgItemInt(hDlg, IDC_PANELOPTIONS_OPACITY_EDIT, NULL, TRUE);
+				m_Opacity = ::GetDlgItemInt(hDlg, IDC_PANELOPTIONS_OPACITY_EDIT, nullptr, TRUE);
 				Panel.Frame.SetPanelOpacity(m_Opacity * 255 / 100);
 
 				bool fFontChanged = m_Font != m_CurSettingFont;
@@ -509,7 +509,7 @@ INT_PTR CPanelOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 				}
 				if (fChangeCaptionFont) {
 					CPanelForm::CPage *pCaptionPanel = Panel.Form.GetPageByID(PANEL_ID_CAPTION);
-					if (pCaptionPanel != NULL)
+					if (pCaptionPanel != nullptr)
 						pCaptionPanel->SetFont(m_fSpecCaptionFont ? m_CaptionFont : m_Font);
 				}
 

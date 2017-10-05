@@ -47,9 +47,9 @@ static const struct {
 
 
 CRawInput::CRawInput()
-	: m_pRegisterRawInputDevices(NULL)
-	, m_pGetRawInputData(NULL)
-	, m_pEventHandler(NULL)
+	: m_pRegisterRawInputDevices(nullptr)
+	, m_pGetRawInputData(nullptr)
+	, m_pEventHandler(nullptr)
 {
 }
 
@@ -61,18 +61,18 @@ CRawInput::~CRawInput()
 
 bool CRawInput::Initialize(HWND hwnd)
 {
-	if (m_pRegisterRawInputDevices == NULL || m_pGetRawInputData == NULL) {
+	if (m_pRegisterRawInputDevices == nullptr || m_pGetRawInputData == nullptr) {
 		HMODULE hLib = ::GetModuleHandle(TEXT("user32.dll"));
-		if (hLib == NULL)
+		if (hLib == nullptr)
 			return false;
 
 		m_pRegisterRawInputDevices =
 			reinterpret_cast<RegisterRawInputDevicesFunc>(::GetProcAddress(hLib, "RegisterRawInputDevices"));
 		m_pGetRawInputData =
 			reinterpret_cast<GetRawInputDataFunc>(::GetProcAddress(hLib, "GetRawInputData"));
-		if (m_pRegisterRawInputDevices == NULL || m_pGetRawInputData == NULL) {
-			m_pRegisterRawInputDevices = NULL;
-			m_pGetRawInputData = NULL;
+		if (m_pRegisterRawInputDevices == nullptr || m_pGetRawInputData == nullptr) {
+			m_pRegisterRawInputDevices = nullptr;
+			m_pGetRawInputData = nullptr;
 			return false;
 		}
 	}
@@ -97,9 +97,9 @@ LRESULT CRawInput::OnInput(HWND hwnd, WPARAM wParam, LPARAM lParam)
 	UINT Size = 0;
 	BYTE *pData;
 
-	if (m_pGetRawInputData == NULL || m_pEventHandler == NULL)
+	if (m_pGetRawInputData == nullptr || m_pEventHandler == nullptr)
 		return 0;
-	m_pGetRawInputData(hRawInput, RID_INPUT, NULL, &Size, sizeof(RAWINPUTHEADER));
+	m_pGetRawInputData(hRawInput, RID_INPUT, nullptr, &Size, sizeof(RAWINPUTHEADER));
 	if (Size == 0)
 		return 0;
 	pData = new BYTE[Size];
@@ -140,7 +140,7 @@ int CRawInput::NumKeyTypes() const
 LPCTSTR CRawInput::GetKeyText(int Key) const
 {
 	if (Key < 0 || Key >= lengthof(KeyList))
-		return NULL;
+		return nullptr;
 	return KeyList[Key].pszText;
 }
 

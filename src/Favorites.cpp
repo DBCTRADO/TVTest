@@ -684,7 +684,7 @@ class CFavoritesMenu::CChannelItem
 public:
 	CChannelItem(const CFavoriteChannel *pChannel);
 	const LibISDB::EventInfo *GetEventInfo(
-		LibISDB::EPGDatabase *pEPGDatabase, int Index, const LibISDB::DateTime *pCurTime = NULL);
+		LibISDB::EPGDatabase *pEPGDatabase, int Index, const LibISDB::DateTime *pCurTime = nullptr);
 	const LibISDB::EventInfo *GetEventInfo(int Index) const;
 	LPCTSTR GetName() const { return m_pChannel->GetName(); }
 	const CChannelInfo &GetChannelInfo() const { return m_pChannel->GetChannelInfo(); }
@@ -707,19 +707,19 @@ const LibISDB::EventInfo *CFavoritesMenu::CChannelItem::GetEventInfo(
 	if (Index < 0 || Index >= lengthof(m_EventList)
 			|| (Index > 0 && !m_EventList[Index - 1].fValid)
 			|| m_pChannel->GetChannelInfo().GetServiceID() == 0)
-		return NULL;
+		return nullptr;
 
 	if (!m_EventList[Index].fValid) {
 		LibISDB::DateTime Time;
 
 		if (Index == 0) {
-			if (pCurTime != NULL)
+			if (pCurTime != nullptr)
 				Time = *pCurTime;
 			else
 				LibISDB::GetCurrentEPGTime(&Time);
 		} else {
 			if (!m_EventList[Index - 1].EventInfo.GetEndTime(&Time))
-				return NULL;
+				return nullptr;
 		}
 		const CChannelInfo &ChannelInfo = GetChannelInfo();
 		if (!pEPGDatabase->GetEventInfo(
@@ -727,7 +727,7 @@ const LibISDB::EventInfo *CFavoritesMenu::CChannelItem::GetEventInfo(
 					ChannelInfo.GetTransportStreamID(),
 					ChannelInfo.GetServiceID(),
 					Time, &m_EventList[Index].EventInfo))
-			return NULL;
+			return nullptr;
 		m_EventList[Index].fValid = true;
 	}
 
@@ -737,21 +737,21 @@ const LibISDB::EventInfo *CFavoritesMenu::CChannelItem::GetEventInfo(
 const LibISDB::EventInfo *CFavoritesMenu::CChannelItem::GetEventInfo(int Index) const
 {
 	if (Index < 0 || Index >= lengthof(m_EventList) || !m_EventList[Index].fValid)
-		return NULL;
+		return nullptr;
 	return &m_EventList[Index].EventInfo;
 }
 
 
 CFavoritesMenu::CFavoritesMenu()
 	: m_Flags(0)
-	, m_hwnd(NULL)
-	, m_hmenu(NULL)
+	, m_hwnd(nullptr)
+	, m_hmenu(nullptr)
 	, m_TextHeight(0)
 	, m_TextWidth(0)
 	, m_IconWidth(16)
 	, m_IconHeight(16)
 	, m_MenuLogoMargin(3)
-	, m_himlIcons(NULL)
+	, m_himlIcons(nullptr)
 {
 }
 
@@ -799,7 +799,7 @@ bool CFavoritesMenu::Create(
 	m_TextWidth = 0;
 
 	GetBaseTime(&m_BaseTime);
-	if (hmenu == NULL) {
+	if (hmenu == nullptr) {
 		m_hmenu = ::CreatePopupMenu();
 	} else {
 		m_hmenu = hmenu;
@@ -952,7 +952,7 @@ void CFavoritesMenu::SetFolderMenu(HMENU hmenu, int MenuPos, HDC hdc, UINT *pCom
 					if ((m_Flags & FLAG_SHOWEVENTINFO) != 0) {
 						const LibISDB::EventInfo *pEventInfo =
 							pMenuItem->GetEventInfo(&GetAppClass().EPGDatabase, 0, &m_BaseTime);
-						if (pEventInfo != NULL) {
+						if (pEventInfo != nullptr) {
 							TCHAR szText[256];
 							GetEventText(pEventInfo, szText, lengthof(szText));
 							m_MenuPainter.GetItemTextExtent(
@@ -975,12 +975,12 @@ void CFavoritesMenu::Destroy()
 			::DestroyMenu(m_hmenu);
 		else
 			ClearMenu(m_hmenu);
-		m_hmenu = NULL;
+		m_hmenu = nullptr;
 	}
 
 	m_MenuPainter.Finalize();
 	m_Tooltip.Destroy();
-	m_hwnd = NULL;
+	m_hwnd = nullptr;
 
 	if (!m_ItemList.empty()) {
 		for (auto i = m_ItemList.begin(); i != m_ItemList.end(); i++)
@@ -988,17 +988,17 @@ void CFavoritesMenu::Destroy()
 		m_ItemList.clear();
 	}
 
-	if (m_himlIcons != NULL) {
+	if (m_himlIcons != nullptr) {
 		::ImageList_Destroy(m_himlIcons);
-		m_himlIcons = NULL;
+		m_himlIcons = nullptr;
 	}
 }
 
 bool CFavoritesMenu::Show(UINT Flags, int x, int y)
 {
-	if (m_hmenu == NULL)
+	if (m_hmenu == nullptr)
 		return false;
-	::TrackPopupMenu(m_hmenu, Flags, x, y, 0, m_hwnd, NULL);
+	::TrackPopupMenu(m_hmenu, Flags, x, y, 0, m_hwnd, nullptr);
 	return true;
 }
 
@@ -1006,7 +1006,7 @@ bool CFavoritesMenu::OnMeasureItem(HWND hwnd, WPARAM wParam, LPARAM lParam)
 {
 	LPMEASUREITEMSTRUCT pmis = reinterpret_cast<LPMEASUREITEMSTRUCT>(lParam);
 
-	if (m_hmenu != NULL && pmis->CtlType == ODT_MENU) {
+	if (m_hmenu != nullptr && pmis->CtlType == ODT_MENU) {
 		if (pmis->itemID >= m_FirstCommand && pmis->itemID <= m_LastCommand) {
 			if (pmis->itemData == 0)
 				return false;
@@ -1043,7 +1043,7 @@ bool CFavoritesMenu::OnDrawItem(HWND hwnd, WPARAM wParam, LPARAM lParam)
 {
 	LPDRAWITEMSTRUCT pdis = reinterpret_cast<LPDRAWITEMSTRUCT>(lParam);
 
-	if (m_hmenu == NULL || hwnd != m_hwnd || pdis->CtlType != ODT_MENU
+	if (m_hmenu == nullptr || hwnd != m_hwnd || pdis->CtlType != ODT_MENU
 			|| ((pdis->itemID < m_FirstCommand || pdis->itemID > m_LastCommand)
 				&& pdis->itemID != CM_ADDTOFAVORITES
 				&& pdis->itemID != CM_ORGANIZEFAVORITES
@@ -1085,7 +1085,7 @@ bool CFavoritesMenu::OnDrawItem(HWND hwnd, WPARAM wParam, LPARAM lParam)
 
 		if ((m_Flags & FLAG_SHOWEVENTINFO) != 0) {
 			const LibISDB::EventInfo *pEventInfo = pItem->GetEventInfo(0);
-			if (pEventInfo != NULL) {
+			if (pEventInfo != nullptr) {
 				GetEventText(pEventInfo, szText, lengthof(szText));
 				rc.left = rc.right + m_TextHeight;
 				rc.right = pdis->rcItem.right - m_Margins.cxRightWidth;
@@ -1139,7 +1139,7 @@ bool CFavoritesMenu::OnMenuSelect(HWND hwnd, WPARAM wParam, LPARAM lParam)
 	HMENU hmenu = reinterpret_cast<HMENU>(lParam);
 	UINT Command = LOWORD(wParam);
 
-	if (hmenu == NULL || hmenu != m_hmenu || hwnd != m_hwnd || HIWORD(wParam) == 0xFFFF
+	if (hmenu == nullptr || hmenu != m_hmenu || hwnd != m_hwnd || HIWORD(wParam) == 0xFFFF
 			|| Command < m_FirstCommand || Command > m_LastCommand) {
 		if (m_Tooltip.IsVisible())
 			m_Tooltip.TrackActivate(1, false);
@@ -1153,22 +1153,22 @@ bool CFavoritesMenu::OnMenuSelect(HWND hwnd, WPARAM wParam, LPARAM lParam)
 		mii.fMask = MIIM_DATA;
 		if (::GetMenuItemInfo(hmenu, Command, FALSE, &mii)) {
 			CChannelItem *pItem = reinterpret_cast<CChannelItem*>(mii.dwItemData);
-			if (pItem == NULL)
+			if (pItem == nullptr)
 				return false;
 
 			const LibISDB::EventInfo *pEventInfo1, *pEventInfo2;
 			pEventInfo1 = pItem->GetEventInfo(0);
-			if (pEventInfo1 == NULL) {
+			if (pEventInfo1 == nullptr) {
 				pEventInfo1 = pItem->GetEventInfo(&GetAppClass().EPGDatabase, 0);
 			}
-			if (pEventInfo1 != NULL) {
+			if (pEventInfo1 != nullptr) {
 				TCHAR szText[256 * 2 + 1];
 				int Length;
 				POINT pt;
 
 				Length = GetEventText(pEventInfo1, szText, lengthof(szText) / 2);
 				pEventInfo2 = pItem->GetEventInfo(&GetAppClass().EPGDatabase, 1);
-				if (pEventInfo2 != NULL) {
+				if (pEventInfo2 != nullptr) {
 					szText[Length++] = _T('\r');
 					szText[Length++] = _T('\n');
 					GetEventText(pEventInfo2, szText + Length, lengthof(szText) / 2);
@@ -1219,7 +1219,7 @@ void CFavoritesMenu::CreateFont(HDC hdc)
 	m_MenuPainter.GetFont(&lf);
 	m_Font.Create(&lf);
 
-	if (hdc != NULL)
+	if (hdc != nullptr)
 		m_TextHeight = m_Font.GetHeight(hdc);
 	else
 		m_TextHeight = abs(lf.lfHeight);

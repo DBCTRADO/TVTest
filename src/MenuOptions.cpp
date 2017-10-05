@@ -164,7 +164,7 @@ bool CMenuOptions::WriteSettings(CSettings &Settings)
 
 bool CMenuOptions::GetMenuItemList(std::vector<int> *pItemList)
 {
-	if (pItemList == NULL)
+	if (pItemList == nullptr)
 		return false;
 
 	if (m_MenuItemList.empty()) {
@@ -429,11 +429,11 @@ INT_PTR CMenuOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 			{
 				int Value;
 
-				Value = ::GetDlgItemInt(hDlg, IDC_MENUOPTIONS_MAXCHANNELMENUROWS, NULL, TRUE);
+				Value = ::GetDlgItemInt(hDlg, IDC_MENUOPTIONS_MAXCHANNELMENUROWS, nullptr, TRUE);
 				if (Value > 0)
 					m_MaxChannelMenuRows = Value;
 
-				Value = ::GetDlgItemInt(hDlg, IDC_MENUOPTIONS_MAXCHANNELMENUEVENTINFO, NULL, TRUE);
+				Value = ::GetDlgItemInt(hDlg, IDC_MENUOPTIONS_MAXCHANNELMENUEVENTINFO, nullptr, TRUE);
 				m_MaxChannelMenuEventInfo = Value;
 			}
 

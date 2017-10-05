@@ -2,13 +2,6 @@
 #include "Graphics.h"
 #include "DrawUtil.h"
 #include "Util.h"
-
-// GDI+のヘッダで整数型の引数にNULLを渡しているので
-// #define NULL nullptr にするとエラーが出る
-#ifndef NO_NULLPTR
-#undef NULL
-#define NULL 0
-#endif
 #include <gdiplus.h>
 
 #pragma comment(lib, "gdiplus.lib")
@@ -65,10 +58,10 @@ bool CGraphicsCore::Initialize()
 	if (!m_fInitialized) {
 		Gdiplus::GdiplusStartupInput si;
 		si.GdiplusVersion = 1;
-		si.DebugEventCallback = NULL;
+		si.DebugEventCallback = nullptr;
 		si.SuppressBackgroundThread = FALSE;
 		si.SuppressExternalCodecs = FALSE;
-		if (Gdiplus::GdiplusStartup(&m_Token, &si, NULL) != Gdiplus::Ok)
+		if (Gdiplus::GdiplusStartup(&m_Token, &si, nullptr) != Gdiplus::Ok)
 			return false;
 		m_fInitialized = true;
 	}
@@ -88,13 +81,13 @@ void CGraphicsCore::Finalize()
 
 
 CImage::CImage()
-	: m_pBitmap(NULL)
+	: m_pBitmap(nullptr)
 {
 }
 
 
 CImage::CImage(const CImage &Src)
-	: m_pBitmap(NULL)
+	: m_pBitmap(nullptr)
 {
 	*this = Src;
 }
@@ -110,7 +103,7 @@ CImage &CImage::operator=(const CImage &Src)
 {
 	if (&Src != this) {
 		Free();
-		if (Src.m_pBitmap != NULL)
+		if (Src.m_pBitmap != nullptr)
 			m_pBitmap = Src.m_pBitmap->Clone(0, 0, Src.m_pBitmap->GetWidth(), Src.m_pBitmap->GetHeight(), Src.m_pBitmap->GetPixelFormat());
 	}
 	return *this;
@@ -119,9 +112,9 @@ CImage &CImage::operator=(const CImage &Src)
 
 void CImage::Free()
 {
-	if (m_pBitmap != NULL) {
+	if (m_pBitmap != nullptr) {
 		delete m_pBitmap;
-		m_pBitmap = NULL;
+		m_pBitmap = nullptr;
 	}
 }
 
@@ -130,7 +123,7 @@ bool CImage::LoadFromFile(LPCWSTR pszFileName)
 {
 	Free();
 	m_pBitmap = Gdiplus::Bitmap::FromFile(pszFileName);
-	return m_pBitmap != NULL;
+	return m_pBitmap != nullptr;
 }
 
 
@@ -138,7 +131,7 @@ bool CImage::LoadFromResource(HINSTANCE hinst, LPCWSTR pszName)
 {
 	Free();
 	m_pBitmap = Gdiplus::Bitmap::FromResource(hinst, pszName);
-	return m_pBitmap != NULL;
+	return m_pBitmap != nullptr;
 }
 
 
@@ -147,20 +140,20 @@ bool CImage::LoadFromResource(HINSTANCE hinst, LPCTSTR pszName, LPCTSTR pszType)
 	Free();
 
 	HRSRC hRes = ::FindResource(hinst, pszName, pszType);
-	if (hRes == NULL)
+	if (hRes == nullptr)
 		return false;
 	DWORD Size = ::SizeofResource(hinst, hRes);
 	if (Size == 0)
 		return false;
 	HGLOBAL hData = ::LoadResource(hinst, hRes);
 	const void *pData = ::LockResource(hData);
-	if (pData == NULL)
+	if (pData == nullptr)
 		return false;
 	HGLOBAL hBuffer = ::GlobalAlloc(GMEM_MOVEABLE, Size);
-	if (hBuffer == NULL)
+	if (hBuffer == nullptr)
 		return false;
 	void *pBuffer = ::GlobalLock(hBuffer);
-	if (pBuffer == NULL) {
+	if (pBuffer == nullptr) {
 		::GlobalFree(hBuffer);
 		return false;
 	}
@@ -173,7 +166,7 @@ bool CImage::LoadFromResource(HINSTANCE hinst, LPCTSTR pszName, LPCTSTR pszType)
 	}
 	m_pBitmap = Gdiplus::Bitmap::FromStream(pStream);
 	pStream->Release();
-	return m_pBitmap != NULL;
+	return m_pBitmap != nullptr;
 }
 
 
@@ -192,7 +185,7 @@ bool CImage::Create(int Width, int Height, int BitsPerPixel)
 	default: return false;
 	}
 	m_pBitmap = new Gdiplus::Bitmap(Width, Height, Format);
-	if (m_pBitmap == NULL)
+	if (m_pBitmap == nullptr)
 		return false;
 	Clear();
 	return true;
@@ -233,7 +226,7 @@ bool CImage::CreateFromBitmap(HBITMAP hbm, HPALETTE hpal)
 		m_pBitmap = Gdiplus::Bitmap::FromHBITMAP(hbm, hpal);
 	}
 
-	return m_pBitmap != NULL;
+	return m_pBitmap != nullptr;
 }
 
 
@@ -241,19 +234,19 @@ bool CImage::CreateFromDIB(const BITMAPINFO *pbmi, const void *pBits)
 {
 	Free();
 	m_pBitmap = new Gdiplus::Bitmap(pbmi, const_cast<void*>(pBits));
-	return m_pBitmap != NULL;
+	return m_pBitmap != nullptr;
 }
 
 
 bool CImage::IsCreated() const
 {
-	return m_pBitmap != NULL;
+	return m_pBitmap != nullptr;
 }
 
 
 int CImage::GetWidth() const
 {
-	if (m_pBitmap == NULL)
+	if (m_pBitmap == nullptr)
 		return 0;
 	return m_pBitmap->GetWidth();
 }
@@ -261,7 +254,7 @@ int CImage::GetWidth() const
 
 int CImage::GetHeight() const
 {
-	if (m_pBitmap == NULL)
+	if (m_pBitmap == nullptr)
 		return 0;
 	return m_pBitmap->GetHeight();
 }
@@ -269,7 +262,7 @@ int CImage::GetHeight() const
 
 void CImage::Clear()
 {
-	if (m_pBitmap != NULL) {
+	if (m_pBitmap != nullptr) {
 		Gdiplus::Rect rc(0, 0, m_pBitmap->GetWidth(), m_pBitmap->GetHeight());
 		Gdiplus::BitmapData Data;
 
@@ -290,7 +283,7 @@ void CImage::Clear()
 
 
 CBrush::CBrush()
-	: m_pBrush(NULL)
+	: m_pBrush(nullptr)
 {
 }
 
@@ -315,9 +308,9 @@ CBrush::~CBrush()
 
 void CBrush::Free()
 {
-	if (m_pBrush != NULL) {
+	if (m_pBrush != nullptr) {
 		delete m_pBrush;
-		m_pBrush = NULL;
+		m_pBrush = nullptr;
 	}
 }
 
@@ -326,11 +319,11 @@ bool CBrush::CreateSolidBrush(BYTE r, BYTE g, BYTE b, BYTE a)
 {
 	Gdiplus::Color Color(a, r, g, b);
 
-	if (m_pBrush != NULL) {
+	if (m_pBrush != nullptr) {
 		m_pBrush->SetColor(Color);
 	} else {
 		m_pBrush = new Gdiplus::SolidBrush(Color);
-		if (m_pBrush == NULL)
+		if (m_pBrush == nullptr)
 			return false;
 	}
 	return true;
@@ -346,7 +339,7 @@ bool CBrush::CreateSolidBrush(const CColor &Color)
 
 
 CFont::CFont()
-	: m_pFont(NULL)
+	: m_pFont(nullptr)
 {
 }
 
@@ -378,9 +371,9 @@ CFont::~CFont()
 
 void CFont::Free()
 {
-	if (m_pFont != NULL) {
+	if (m_pFont != nullptr) {
 		delete m_pFont;
-		m_pFont = NULL;
+		m_pFont = nullptr;
 	}
 }
 
@@ -388,31 +381,31 @@ void CFont::Free()
 
 
 CCanvas::CCanvas(HDC hdc)
-	: m_pGraphics(NULL)
+	: m_pGraphics(nullptr)
 {
-	if (hdc != NULL)
+	if (hdc != nullptr)
 		m_pGraphics = new Gdiplus::Graphics(hdc);
 }
 
 
 CCanvas::CCanvas(CImage *pImage)
-	: m_pGraphics(NULL)
+	: m_pGraphics(nullptr)
 {
-	if (pImage != NULL)
+	if (pImage != nullptr)
 		m_pGraphics = new Gdiplus::Graphics(pImage->m_pBitmap);
 }
 
 
 CCanvas::~CCanvas()
 {
-	if (m_pGraphics != NULL)
+	if (m_pGraphics != nullptr)
 		delete m_pGraphics;
 }
 
 
 bool CCanvas::Clear(BYTE r, BYTE g, BYTE b, BYTE a)
 {
-	if (m_pGraphics == NULL)
+	if (m_pGraphics == nullptr)
 		return false;
 	return m_pGraphics->Clear(Gdiplus::Color(a, r, g, b)) == Gdiplus::Ok;
 }
@@ -420,7 +413,7 @@ bool CCanvas::Clear(BYTE r, BYTE g, BYTE b, BYTE a)
 
 bool CCanvas::SetComposition(bool fComposite)
 {
-	if (m_pGraphics == NULL)
+	if (m_pGraphics == nullptr)
 		return false;
 	return m_pGraphics->SetCompositingMode(
 		fComposite ?
@@ -431,8 +424,8 @@ bool CCanvas::SetComposition(bool fComposite)
 
 bool CCanvas::DrawImage(CImage *pImage, int x, int y)
 {
-	if (m_pGraphics == NULL
-			|| pImage == NULL || pImage->m_pBitmap == NULL)
+	if (m_pGraphics == nullptr
+			|| pImage == nullptr || pImage->m_pBitmap == nullptr)
 		return false;
 	return m_pGraphics->DrawImage(
 		pImage->m_pBitmap, x, y,
@@ -445,8 +438,8 @@ bool CCanvas::DrawImage(
 	int DstX, int DstY, int DstWidth, int DstHeight,
 	CImage *pImage, int SrcX, int SrcY, int SrcWidth, int SrcHeight, float Opacity)
 {
-	if (m_pGraphics != NULL
-			&& pImage != NULL && pImage->m_pBitmap != NULL) {
+	if (m_pGraphics != nullptr
+			&& pImage != nullptr && pImage->m_pBitmap != nullptr) {
 		Gdiplus::ImageAttributes Attributes;
 		Gdiplus::ColorMatrix Matrix = {
 			1.0f, 0.0f, 0.0f, 0.0f, 0.0f,
@@ -469,8 +462,8 @@ bool CCanvas::DrawImage(
 
 bool CCanvas::FillRect(CBrush *pBrush, const RECT &Rect)
 {
-	if (m_pGraphics != NULL
-			&& pBrush != NULL && pBrush->m_pBrush != NULL) {
+	if (m_pGraphics != nullptr
+			&& pBrush != nullptr && pBrush->m_pBrush != nullptr) {
 		return m_pGraphics->FillRectangle(
 			pBrush->m_pBrush,
 			Rect.left, Rect.top,
@@ -485,7 +478,7 @@ bool CCanvas::FillGradient(
 	const CColor &Color1, const CColor &Color2,
 	const RECT &Rect, GradientDirection Direction)
 {
-	if (m_pGraphics != NULL) {
+	if (m_pGraphics != nullptr) {
 		Gdiplus::RectF rect(
 			Gdiplus::REAL(Rect.left) - 0.1f,
 			Gdiplus::REAL(Rect.top) - 0.1f,
@@ -507,9 +500,9 @@ bool CCanvas::DrawText(
 	LPCTSTR pszText, const LOGFONT &lf,
 	const RECT &Rect, CBrush *pBrush, UINT Flags)
 {
-	if (m_pGraphics == NULL
+	if (m_pGraphics == nullptr
 			|| IsStringEmpty(pszText)
-			|| pBrush == NULL || pBrush->m_pBrush == NULL)
+			|| pBrush == nullptr || pBrush->m_pBrush == nullptr)
 		return false;
 
 	CFont Font(lf);
@@ -556,13 +549,13 @@ bool CCanvas::DrawText(
 bool CCanvas::GetTextSize(
 	LPCTSTR pszText, const LOGFONT &lf, UINT Flags, SIZE *pSize)
 {
-	if (pSize == NULL)
+	if (pSize == nullptr)
 		return false;
 
 	pSize->cx = 0;
 	pSize->cy = 0;
 
-	if (m_pGraphics == NULL)
+	if (m_pGraphics == nullptr)
 		return false;
 
 	if (IsStringEmpty(pszText))
@@ -615,9 +608,9 @@ bool CCanvas::DrawOutlineText(
 	const CColor &OutlineColor, float OutlineWidth,
 	UINT Flags)
 {
-	if (m_pGraphics == NULL
+	if (m_pGraphics == nullptr
 			|| IsStringEmpty(pszText)
-			|| pBrush == NULL || pBrush->m_pBrush == NULL)
+			|| pBrush == nullptr || pBrush->m_pBrush == nullptr)
 		return false;
 
 	CFont Font(lf);
@@ -655,13 +648,13 @@ bool CCanvas::DrawOutlineText(
 bool CCanvas::GetOutlineTextSize(
 	LPCTSTR pszText, const LOGFONT &lf, float OutlineWidth, UINT Flags, SIZE *pSize)
 {
-	if (pSize == NULL)
+	if (pSize == nullptr)
 		return false;
 
 	pSize->cx = 0;
 	pSize->cy = 0;
 
-	if (m_pGraphics == NULL)
+	if (m_pGraphics == nullptr)
 		return false;
 
 	if (IsStringEmpty(pszText))
@@ -690,7 +683,7 @@ bool CCanvas::GetOutlineTextSize(
 	Pen.SetLineJoin(Gdiplus::LineJoinRound);
 
 	Gdiplus::RectF Bounds;
-	if (Path.GetBounds(&Bounds, NULL, &Pen) != Gdiplus::Ok)
+	if (Path.GetBounds(&Bounds, nullptr, &Pen) != Gdiplus::Ok)
 		return false;
 
 #if 0

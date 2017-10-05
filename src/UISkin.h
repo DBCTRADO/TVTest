@@ -57,12 +57,12 @@ public:
 	virtual const TVTest::CUIBase * GetUIBase() const = 0;
 	virtual const TVTest::CUIBase * GetFullscreenUIBase() const = 0;
 	virtual int ShowMessage(
-		LPCTSTR pszText, LPCTSTR pszCaption = NULL,
+		LPCTSTR pszText, LPCTSTR pszCaption = nullptr,
 		UINT Type = MB_OK | MB_ICONEXCLAMATION) const;
 	virtual void ShowErrorMessage(LPCTSTR pszText) const;
 	virtual void ShowErrorMessage(
 		const LibISDB::ErrorHandler * pErrorHandler,
-		LPCTSTR pszTitle = NULL) const;
+		LPCTSTR pszTitle = nullptr) const;
 	virtual void ShowNotificationBar(
 		LPCTSTR pszText,
 		CNotificationBar::MessageType Type = CNotificationBar::MESSAGE_INFO,

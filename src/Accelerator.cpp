@@ -222,7 +222,7 @@ const CAccelerator::AppCommandInfo CAccelerator::m_DefaultAppCommandList[] = {
 
 CAccelerator::CAccelerator()
 {
-	m_hAccel = NULL;
+	m_hAccel = nullptr;
 	m_KeyList.resize(lengthof(m_DefaultAccelList));
 	for (size_t i = 0; i < lengthof(m_DefaultAccelList); i++)
 		m_KeyList[i] = m_DefaultAccelList[i];
@@ -243,9 +243,9 @@ CAccelerator::CAccelerator()
 	m_AppCommandList.resize(lengthof(m_DefaultAppCommandList));
 	for (size_t i = 0; i < lengthof(m_DefaultAppCommandList); i++)
 		m_AppCommandList[i] = m_DefaultAppCommandList[i];
-	m_hwndHotKey = NULL;
-	m_pMainMenu = NULL;
-	m_pCommandList = NULL;
+	m_hwndHotKey = nullptr;
+	m_pMainMenu = nullptr;
+	m_pCommandList = nullptr;
 	m_fRegisterHotKey = false;
 }
 
@@ -281,7 +281,7 @@ void CAccelerator::SetMenuAccelText(HMENU hmenu, int Command)
 {
 	TCHAR szText[128], *p;
 	size_t i;
-	const KeyInfo *pKey = NULL;
+	const KeyInfo *pKey = nullptr;
 
 	GetMenuString(hmenu, Command, szText, lengthof(szText), MF_BYCOMMAND);
 	for (i = 0; i < m_KeyList.size(); i++) {
@@ -293,13 +293,13 @@ void CAccelerator::SetMenuAccelText(HMENU hmenu, int Command)
 	p = szText;
 	while (*p != '\t') {
 		if (*p == '\0') {
-			if (pKey == NULL)
+			if (pKey == nullptr)
 				return;
 			break;
 		}
 		p++;
 	}
-	if (pKey != NULL) {
+	if (pKey != nullptr) {
 		p[0] = '\t';
 		FormatAccelText(p + 1, pKey->KeyCode, pKey->Modifiers);
 	} else
@@ -314,7 +314,7 @@ void CAccelerator::SetMenuAccelText(HMENU hmenu, int Command)
 HACCEL CAccelerator::CreateAccel()
 {
 	if (m_KeyList.size() == 0)
-		return NULL;
+		return nullptr;
 
 	LPACCEL paccl;
 	int j;
@@ -335,7 +335,7 @@ HACCEL CAccelerator::CreateAccel()
 			j++;
 		}
 	}
-	HACCEL hAccel = NULL;
+	HACCEL hAccel = nullptr;
 	if (j > 0)
 		hAccel = ::CreateAcceleratorTable(paccl, j);
 	delete [] paccl;
@@ -418,7 +418,7 @@ bool CAccelerator::LoadSettings(CSettings &Settings)
 		Settings.Read(TEXT("ChInputKeyTimeoutCancel"), &m_ChannelInputOptions.fKeyTimeoutCancel);
 	}
 
-	if (m_pCommandList == NULL)
+	if (m_pCommandList == nullptr)
 		return true;
 
 	if (Settings.SetSection(TEXT("Accelerator"))) {
@@ -507,7 +507,7 @@ bool CAccelerator::SaveSettings(CSettings &Settings)
 		Settings.Write(TEXT("ChInputKeyTimeoutCancel"), m_ChannelInputOptions.fKeyTimeoutCancel);
 	}
 
-	if (m_pCommandList == NULL)
+	if (m_pCommandList == nullptr)
 		return true;
 
 	if (Settings.SetSection(TEXT("Accelerator"))) {
@@ -606,7 +606,7 @@ bool CAccelerator::Initialize(
 {
 	m_pCommandList = pCommandList;
 	LoadSettings(Settings);
-	if (m_hAccel == NULL)
+	if (m_hAccel == nullptr)
 		m_hAccel = CreateAccel();
 	m_pMainMenu = pMainMenu;
 	m_pMainMenu->SetAccelerator(this);
@@ -622,7 +622,7 @@ void CAccelerator::Finalize()
 {
 	if (m_hAccel) {
 		::DestroyAcceleratorTable(m_hAccel);
-		m_hAccel = NULL;
+		m_hAccel = nullptr;
 	}
 	if (m_fRegisterHotKey)
 		UnregisterHotKey();
@@ -631,7 +631,7 @@ void CAccelerator::Finalize()
 
 bool CAccelerator::TranslateMessage(HWND hwnd, LPMSG pmsg)
 {
-	if (m_hAccel != NULL)
+	if (m_hAccel != nullptr)
 		return ::TranslateAccelerator(hwnd, m_hAccel, pmsg) != FALSE;
 	return false;
 }
@@ -770,7 +770,7 @@ INT_PTR CAccelerator::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 
 			for (int i = 0; i < m_pCommandList->NumCommands(); i++) {
 				int Command = m_pCommandList->GetCommandID(i);
-				const KeyInfo *pKey = NULL;
+				const KeyInfo *pKey = nullptr;
 				int AppCommand = 0;
 				TCHAR szText[CCommandList::MAX_COMMAND_NAME];
 
@@ -794,12 +794,12 @@ INT_PTR CAccelerator::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 				}
 				m_pCommandList->GetCommandName(i, szText, lengthof(szText));
 				LPARAM Param;
-				if (pKey != NULL)
+				if (pKey != nullptr)
 					Param = MAKE_ACCEL_PARAM(pKey->KeyCode, pKey->Modifiers, pKey->fGlobal, AppCommand);
 				else
 					Param = MAKE_ACCEL_PARAM(0, 0, false, AppCommand);
 				int Index = m_ListView.InsertItem(i, szText, Param);
-				if (pKey != NULL) {
+				if (pKey != nullptr) {
 					FormatAccelText(szText, pKey->KeyCode, pKey->Modifiers, pKey->fGlobal);
 					m_ListView.SetItemText(Index, COLUMN_KEY, szText);
 				}
@@ -1093,7 +1093,7 @@ INT_PTR CAccelerator::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 					}
 				}
 				HACCEL hAccel = CreateAccel();
-				if (m_hAccel != NULL)
+				if (m_hAccel != nullptr)
 					::DestroyAcceleratorTable(m_hAccel);
 				m_hAccel = hAccel;
 				m_pMainMenu->SetAccelerator(this);
@@ -1118,7 +1118,7 @@ void CAccelerator::RealizeStyle()
 {
 	CBasicDialog::RealizeStyle();
 
-	if (m_hDlg != NULL) {
+	if (m_hDlg != nullptr) {
 		m_ListView.AdjustColumnWidth(true);
 	}
 }
@@ -1129,7 +1129,7 @@ void CAccelerator::OnInput(int Type)
 {
 	int Data = m_RawInput.GetKeyData(Type);
 
-	if (m_hDlg == NULL || !::IsWindowVisible(m_hDlg)) {
+	if (m_hDlg == nullptr || !::IsWindowVisible(m_hDlg)) {
 		for (size_t i = 0; i < m_AppCommandList.size(); i++) {
 			if (m_AppCommandList[i].Type == MEDIAKEY_RAWINPUT
 					&& m_AppCommandList[i].AppCommand == Data) {
@@ -1146,7 +1146,7 @@ void CAccelerator::OnInput(int Type)
 void CAccelerator::OnUnknownInput(const BYTE *pData, int Size)
 {
 	/*
-	if (m_hDlg != NULL && ::IsWindowVisible(m_hDlg) && ::IsWindowEnabled(m_hDlg)) {
+	if (m_hDlg != nullptr && ::IsWindowVisible(m_hDlg) && ::IsWindowEnabled(m_hDlg)) {
 		static const LPCTSTR pszHex = TEXT("0123456789ABCDEF");
 		TCHAR szText[256];
 
@@ -1164,7 +1164,7 @@ void CAccelerator::OnUnknownInput(const BYTE *pData, int Size)
 		CMessageDialog MessageDialog;
 		MessageDialog.Show(
 			m_hDlg, CMessageDialog::TYPE_INFO, szText,
-			TEXT("対応していないキーが押されました。"), NULL, TEXT("ごめん"));
+			TEXT("対応していないキーが押されました。"), nullptr, TEXT("ごめん"));
 	}
 	*/
 }

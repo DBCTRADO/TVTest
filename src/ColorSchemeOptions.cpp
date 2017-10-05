@@ -83,8 +83,8 @@ const LPCTSTR CColorSchemeOptions::m_pszExtension = TEXT(".httheme");
 
 CColorSchemeOptions::CColorSchemeOptions()
 	: m_pColorScheme(new CColorScheme)
-	, m_pPreviewColorScheme(NULL)
-	, m_pEventHandler(NULL)
+	, m_pPreviewColorScheme(nullptr)
+	, m_pEventHandler(nullptr)
 {
 }
 
@@ -153,7 +153,7 @@ bool CColorSchemeOptions::ApplyColorScheme() const
 
 bool CColorSchemeOptions::Apply(const CColorScheme *pColorScheme) const
 {
-	if (m_pEventHandler == NULL)
+	if (m_pEventHandler == nullptr)
 		return false;
 	return m_pEventHandler->ApplyColorScheme(pColorScheme);
 }
@@ -161,7 +161,7 @@ bool CColorSchemeOptions::Apply(const CColorScheme *pColorScheme) const
 
 COLORREF CColorSchemeOptions::GetColor(int Type) const
 {
-	if (m_pPreviewColorScheme != NULL)
+	if (m_pPreviewColorScheme != nullptr)
 		return m_pPreviewColorScheme->GetColor(Type);
 	return m_pColorScheme->GetColor(Type);
 }
@@ -169,7 +169,7 @@ COLORREF CColorSchemeOptions::GetColor(int Type) const
 
 COLORREF CColorSchemeOptions::GetColor(LPCTSTR pszText) const
 {
-	if (m_pPreviewColorScheme != NULL)
+	if (m_pPreviewColorScheme != nullptr)
 		return m_pPreviewColorScheme->GetColor(pszText);
 	return m_pColorScheme->GetColor(pszText);
 }
@@ -191,7 +191,7 @@ bool CColorSchemeOptions::GetThemesDirectory(LPTSTR pszDirectory, int MaxLength,
 	GetAppClass().GetAppDirectory(pszDirectory);
 	::PathAppend(pszDirectory, TEXT("Themes"));
 	if (fCreate && !::PathIsDirectory(pszDirectory))
-		::CreateDirectory(pszDirectory, NULL);
+		::CreateDirectory(pszDirectory, nullptr);
 	return true;
 }
 
@@ -268,7 +268,7 @@ INT_PTR CColorSchemeOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM
 			m_ColorPalette.Create(hDlg, WS_CHILD | WS_VISIBLE, 0, IDC_COLORSCHEME_PALETTE);
 			m_ColorPalette.SetTooltipFont(GetWindowFont(hDlg));
 			GetWindowRect(GetDlgItem(hDlg, IDC_COLORSCHEME_PALETTEPLACE), &rc);
-			MapWindowPoints(NULL, hDlg, (LPPOINT)&rc, 2);
+			MapWindowPoints(nullptr, hDlg, (LPPOINT)&rc, 2);
 			m_ColorPalette.SetPosition(&rc);
 			for (int i = 0; i < lengthof(BaseColors); i++) {
 				RGBQUAD Color = BaseColors[i % 2 * (lengthof(BaseColors) / 2) + i / 2];
@@ -325,7 +325,7 @@ INT_PTR CColorSchemeOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM
 						::FillRect(pdis->hDC, &pdis->rcItem, reinterpret_cast<HBRUSH>(COLOR_WINDOW + 1));
 					} else {
 						const CColorScheme *pColorScheme = m_PresetList.GetColorScheme((int)pdis->itemData);
-						if (pColorScheme == NULL)
+						if (pColorScheme == nullptr)
 							break;
 						bool fSelected =
 							(pdis->itemState & ODS_SELECTED) != 0
@@ -354,7 +354,7 @@ INT_PTR CColorSchemeOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM
 								hfont = ::CreateFontIndirect(&lf);
 								SelectFont(pdis->hDC, hfont);
 							} else {
-								hfont = NULL;
+								hfont = nullptr;
 							}
 							OldBkMode = ::SetBkMode(pdis->hDC, TRANSPARENT);
 							rc = pdis->rcItem;
@@ -363,7 +363,7 @@ INT_PTR CColorSchemeOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM
 								Style.Fore, rc, pColorScheme->GetName(),
 								DT_LEFT | DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX | DT_END_ELLIPSIS);
 							::SetBkMode(pdis->hDC, OldBkMode);
-							if (hfont != NULL) {
+							if (hfont != nullptr) {
 								::SelectObject(pdis->hDC, hfontOld);
 								::DeleteObject(hfont);
 							}
@@ -444,7 +444,7 @@ INT_PTR CColorSchemeOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM
 			if (pcis->CtlID == IDC_COLORSCHEME_PRESET) {
 				const CColorScheme *pColorScheme1 = m_PresetList.GetColorScheme((int)pcis->itemData1);
 				const CColorScheme *pColorScheme2 = m_PresetList.GetColorScheme((int)pcis->itemData2);
-				if (pColorScheme1 == NULL || pColorScheme2 == NULL)
+				if (pColorScheme1 == nullptr || pColorScheme2 == nullptr)
 					return 0;
 				if (!pColorScheme1->IsLoadedFromFile() || !pColorScheme2->IsLoadedFromFile())
 					return (int)pcis->itemData1 - (int)pcis->itemData2;
@@ -464,13 +464,13 @@ INT_PTR CColorSchemeOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM
 		case IDC_COLORSCHEME_PRESET:
 			if (HIWORD(wParam) == CBN_SELCHANGE) {
 				int Sel = (int)DlgComboBox_GetCurSel(hDlg, IDC_COLORSCHEME_PRESET);
-				const CColorScheme *pColorScheme = NULL;
+				const CColorScheme *pColorScheme = nullptr;
 
 				if (Sel >= 0) {
 					int Index = (int)DlgComboBox_GetItemData(hDlg, IDC_COLORSCHEME_PRESET, Sel);
 
 					pColorScheme = m_PresetList.GetColorScheme(Index);
-					if (pColorScheme != NULL) {
+					if (pColorScheme != nullptr) {
 						for (int i = 0; i < CColorScheme::NUM_COLORS; i++) {
 							if (pColorScheme->IsLoaded(i))
 								SendDlgItemMessage(
@@ -492,7 +492,7 @@ INT_PTR CColorSchemeOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM
 
 				EnableDlgItem(
 					hDlg, IDC_COLORSCHEME_DELETE,
-					pColorScheme != NULL && pColorScheme->IsLoadedFromFile());
+					pColorScheme != nullptr && pColorScheme->IsLoadedFromFile());
 			}
 			return TRUE;
 
@@ -504,26 +504,26 @@ INT_PTR CColorSchemeOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM
 				LRESULT Sel = DlgComboBox_GetCurSel(hDlg, IDC_COLORSCHEME_PRESET);
 				pColorScheme = m_PresetList.GetColorScheme(
 					(int)DlgComboBox_GetItemData(hDlg, IDC_COLORSCHEME_PRESET, Sel));
-				if (pColorScheme != NULL && pColorScheme->IsLoadedFromFile())
+				if (pColorScheme != nullptr && pColorScheme->IsLoadedFromFile())
 					::lstrcpyn(szName, pColorScheme->GetName(), lengthof(szName));
 				CColorSchemeSaveDialog SaveDlg(szName);
 				if (!SaveDlg.Show(hDlg))
 					return TRUE;
 
-				pColorScheme = NULL;
+				pColorScheme = nullptr;
 				int Index = m_PresetList.FindByName(szName);
 				if (Index >= 0) {
 					pColorScheme = m_PresetList.GetColorScheme(Index);
 				}
 				bool fNewColorScheme;
 				TCHAR szFileName[MAX_PATH];
-				if (pColorScheme != NULL && pColorScheme->IsLoadedFromFile()) {
+				if (pColorScheme != nullptr && pColorScheme->IsLoadedFromFile()) {
 					::lstrcpy(szFileName, pColorScheme->GetFileName());
 					fNewColorScheme = false;
 				} else {
 					GetThemesDirectory(szFileName, lengthof(szFileName), true);
 					if (::lstrlen(szFileName) + 1 + ::lstrlen(szName) + ::lstrlen(m_pszExtension) >= MAX_PATH) {
-						MessageBox(hDlg, TEXT("名前が長すぎます。"), NULL, MB_OK | MB_ICONEXCLAMATION);
+						MessageBox(hDlg, TEXT("名前が長すぎます。"), nullptr, MB_OK | MB_ICONEXCLAMATION);
 						break;
 					}
 					::PathAppend(szFileName, szName);
@@ -539,7 +539,7 @@ INT_PTR CColorSchemeOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM
 				if (!pColorScheme->Save(szFileName)) {
 					if (fNewColorScheme)
 						delete pColorScheme;
-					::MessageBox(hDlg, TEXT("保存ができません。"), NULL, MB_OK | MB_ICONEXCLAMATION);
+					::MessageBox(hDlg, TEXT("保存ができません。"), nullptr, MB_OK | MB_ICONEXCLAMATION);
 					break;
 				}
 
@@ -567,14 +567,14 @@ INT_PTR CColorSchemeOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM
 				LRESULT Sel = DlgComboBox_GetCurSel(hDlg, IDC_COLORSCHEME_PRESET);
 				CColorScheme *pColorScheme = m_PresetList.GetColorScheme(
 					(int)DlgComboBox_GetItemData(hDlg, IDC_COLORSCHEME_PRESET, Sel));
-				if (pColorScheme == NULL || !pColorScheme->IsLoadedFromFile())
+				if (pColorScheme == nullptr || !pColorScheme->IsLoadedFromFile())
 					break;
 				if (::MessageBox(
 							hDlg, TEXT("選択されたテーマを削除しますか?"), TEXT("削除の確認"),
 							MB_OKCANCEL | MB_ICONQUESTION) != IDOK)
 					break;
 				if (!::DeleteFile(pColorScheme->GetFileName())) {
-					::MessageBox(hDlg, TEXT("ファイルを削除できません。"), NULL, MB_OK | MB_ICONEXCLAMATION);
+					::MessageBox(hDlg, TEXT("ファイルを削除できません。"), nullptr, MB_OK | MB_ICONEXCLAMATION);
 					break;
 				}
 				DlgComboBox_DeleteItem(hDlg, IDC_COLORSCHEME_PRESET, Sel);
@@ -668,7 +668,7 @@ INT_PTR CColorSchemeOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM
 						}
 					}
 					::GetCursorPos(&pt);
-					::TrackPopupMenu(::GetSubMenu(hmenu, 0), TPM_RIGHTBUTTON, pt.x, pt.y, 0, hDlg, NULL);
+					::TrackPopupMenu(::GetSubMenu(hmenu, 0), TPM_RIGHTBUTTON, pt.x, pt.y, 0, hDlg, nullptr);
 					::DestroyMenu(hmenu);
 				}
 				break;
@@ -710,7 +710,7 @@ INT_PTR CColorSchemeOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM
 			return TRUE;
 
 		case IDC_COLORSCHEME_PREVIEW:
-			if (m_pPreviewColorScheme == NULL)
+			if (m_pPreviewColorScheme == nullptr)
 				m_pPreviewColorScheme = new CColorScheme;
 			GetCurrentSettings(m_pPreviewColorScheme);
 			Apply(m_pPreviewColorScheme);
@@ -800,7 +800,7 @@ INT_PTR CColorSchemeOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM
 			break;
 
 		case PSN_RESET:
-			if (m_pPreviewColorScheme != NULL)
+			if (m_pPreviewColorScheme != nullptr)
 				Apply(m_pColorScheme);
 			break;
 		}
@@ -817,7 +817,7 @@ INT_PTR CColorSchemeOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM
 			POINT pt = {GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam)};
 			::ClientToScreen(hDlg, &pt);
 
-			switch (::TrackPopupMenu(hmenu, TPM_RETURNCMD | TPM_RIGHTBUTTON, pt.x, pt.y, 0, hDlg, NULL)) {
+			switch (::TrackPopupMenu(hmenu, TPM_RETURNCMD | TPM_RIGHTBUTTON, pt.x, pt.y, 0, hDlg, nullptr)) {
 			case 1:
 				{
 					TVTest::String Buffer;
@@ -879,7 +879,7 @@ void CColorSchemeOptions::ApplyStyle()
 {
 	CBasicDialog::ApplyStyle();
 
-	if (m_hDlg != NULL) {
+	if (m_hDlg != nullptr) {
 		m_ColorListMargin = m_pStyleScaling->LogicalPixelsToPhysicalPixels(2);
 	}
 }
@@ -889,7 +889,7 @@ void CColorSchemeOptions::RealizeStyle()
 {
 	CBasicDialog::RealizeStyle();
 
-	if (m_hDlg != NULL) {
+	if (m_hDlg != nullptr) {
 		SetListItemSize();
 
 		if (m_ColorPalette.IsCreated())

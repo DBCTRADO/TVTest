@@ -20,7 +20,7 @@ CEpgOptions::CEpgOptions()
 	, m_EpgTimeMode(EPGTIME_JST)
 	, m_fSaveLogoFile(true)
 
-	, m_pEpgDataLoader(NULL)
+	, m_pEpgDataLoader(nullptr)
 {
 	::lstrcpy(m_szEpgFileName, TEXT("EpgData"));
 
@@ -28,7 +28,7 @@ CEpgOptions::CEpgOptions()
 #if 0
 	static const TCHAR szEpgDataFolder[] = TEXT("EpgTimerBon\\EpgData");
 	PWSTR pszPath;
-	if (::SHGetKnownFolderPath(FOLDERID_Documents, 0, NULL, &pszPath) == S_OK) {
+	if (::SHGetKnownFolderPath(FOLDERID_Documents, 0, nullptr, &pszPath) == S_OK) {
 		if (::lstrlen(pszPath) + lengthof(szEpgDataFolder) < lengthof(m_szEDCBDataFolder)) {
 			::lstrcpy(m_szEDCBDataFolder, pszPath);
 			::PathAppend(m_szEDCBDataFolder, szEpgDataFolder);
@@ -261,14 +261,14 @@ bool CEpgOptions::AsyncLoadEDCBData(CEDCBDataLoadEventHandler *pEventHandler)
 
 bool CEpgOptions::IsEDCBDataLoading() const
 {
-	return m_pEpgDataLoader != NULL
+	return m_pEpgDataLoader != nullptr
 		&& m_pEpgDataLoader->IsLoading();
 }
 
 
 bool CEpgOptions::WaitEDCBDataLoad(DWORD Timeout)
 {
-	return m_pEpgDataLoader == NULL
+	return m_pEpgDataLoader == nullptr
 		|| m_pEpgDataLoader->Wait(Timeout);
 }
 
@@ -293,7 +293,7 @@ bool CEpgOptions::LoadLogoFile()
 			::lstrcat(szFileName, TEXT(".ini"));
 			if (!::PathFileExists(szFileName)) {
 				// 以前のバージョンとの互換用
-				::GetModuleFileName(NULL, szFileName, lengthof(szFileName));
+				::GetModuleFileName(nullptr, szFileName, lengthof(szFileName));
 				::PathRenameExtension(szFileName, TEXT(".logo.ini"));
 				if (!::PathFileExists(szFileName))
 					return false;
@@ -403,7 +403,7 @@ INT_PTR CEpgOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				ofn.lpstrFile = szFileName;
 				ofn.nMaxFile = lengthof(szFileName);
 				if (szFileName[0] == '\0' || ::PathIsFileSpec(szFileName)) {
-					::GetModuleFileName(NULL, szInitialDir, lengthof(szInitialDir));
+					::GetModuleFileName(nullptr, szInitialDir, lengthof(szInitialDir));
 					::PathRemoveFileSpec(szInitialDir);
 					ofn.lpstrInitialDir = szInitialDir;
 				}
@@ -453,7 +453,7 @@ INT_PTR CEpgOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				ofn.lpstrFile = szFileName;
 				ofn.nMaxFile = lengthof(szFileName);
 				if (szFileName[0] == '\0' || ::PathIsFileSpec(szFileName)) {
-					::GetModuleFileName(NULL, szInitialDir, lengthof(szInitialDir));
+					::GetModuleFileName(nullptr, szInitialDir, lengthof(szInitialDir));
 					::PathRemoveFileSpec(szInitialDir);
 					ofn.lpstrInitialDir = szInitialDir;
 				}

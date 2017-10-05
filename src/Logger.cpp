@@ -37,7 +37,7 @@ void CLogItem::GetTime(SYSTEMTIME *pTime) const
 	SYSTEMTIME stUTC;
 
 	::FileTimeToSystemTime(&m_Time, &stUTC);
-	::SystemTimeToTzSpecificLocalTime(NULL, &stUTC, pTime);
+	::SystemTimeToTzSpecificLocalTime(nullptr, &stUTC, pTime);
 }
 
 
@@ -49,7 +49,7 @@ int CLogItem::Format(char *pszText, int MaxLength) const
 	pszText[Length++] = '>';
 	Length += ::WideCharToMultiByte(
 		CP_ACP, 0, m_Text.data(), (int)m_Text.length(),
-		pszText + Length, MaxLength - Length - 1, NULL, NULL);
+		pszText + Length, MaxLength - Length - 1, nullptr, nullptr);
 	pszText[Length] = '\0';
 	return Length;
 }
@@ -75,11 +75,11 @@ int CLogItem::FormatTime(char *pszText, int MaxLength) const
 	GetTime(&st);
 	Length = ::GetDateFormatA(
 		LOCALE_USER_DEFAULT, DATE_SHORTDATE,
-		&st, NULL, pszText, MaxLength - 1);
+		&st, nullptr, pszText, MaxLength - 1);
 	pszText[Length - 1] = ' ';
 	Length += ::GetTimeFormatA(
 		LOCALE_USER_DEFAULT, TIME_FORCE24HOURFORMAT,
-		&st, NULL, pszText + Length, MaxLength - Length);
+		&st, nullptr, pszText + Length, MaxLength - Length);
 	return Length - 1;
 }
 
@@ -92,11 +92,11 @@ int CLogItem::FormatTime(WCHAR *pszText, int MaxLength) const
 	GetTime(&st);
 	Length = ::GetDateFormatW(
 		LOCALE_USER_DEFAULT, DATE_SHORTDATE,
-		&st, NULL, pszText, MaxLength - 1);
+		&st, nullptr, pszText, MaxLength - 1);
 	pszText[Length - 1] = L' ';
 	Length += ::GetTimeFormatW(
 		LOCALE_USER_DEFAULT, TIME_FORCE24HOURFORMAT,
-		&st, NULL, pszText + Length, MaxLength - Length);
+		&st, nullptr, pszText + Length, MaxLength - Length);
 	return Length - 1;
 }
 
@@ -149,7 +149,7 @@ bool CLogger::Create(HWND hwndOwner)
 
 bool CLogger::AddLog(CLogItem::LogType Type, LPCTSTR pszText, ...)
 {
-	if (pszText == NULL)
+	if (pszText == nullptr)
 		return false;
 
 	va_list Args;
@@ -162,7 +162,7 @@ bool CLogger::AddLog(CLogItem::LogType Type, LPCTSTR pszText, ...)
 
 bool CLogger::AddLogV(CLogItem::LogType Type, LPCTSTR pszText, va_list Args)
 {
-	if (pszText == NULL)
+	if (pszText == nullptr)
 		return false;
 
 	TCHAR szText[MAX_LOG_TEXT_LENGTH];
@@ -175,7 +175,7 @@ bool CLogger::AddLogV(CLogItem::LogType Type, LPCTSTR pszText, va_list Args)
 
 bool CLogger::AddLogRaw(CLogItem::LogType Type, LPCTSTR pszText)
 {
-	if (pszText == NULL)
+	if (pszText == nullptr)
 		return false;
 
 	TVTest::BlockLock Lock(m_Lock);
@@ -191,8 +191,8 @@ bool CLogger::AddLogRaw(CLogItem::LogType Type, LPCTSTR pszText)
 			HANDLE hFile;
 
 			hFile = ::CreateFile(
-				szFileName, GENERIC_WRITE, FILE_SHARE_READ, NULL,
-				OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+				szFileName, GENERIC_WRITE, FILE_SHARE_READ, nullptr,
+				OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
 			if (hFile != INVALID_HANDLE_VALUE) {
 				static const LARGE_INTEGER Zero = {};
 				LARGE_INTEGER Pos;
@@ -201,7 +201,7 @@ bool CLogger::AddLogRaw(CLogItem::LogType Type, LPCTSTR pszText)
 				if (::SetFilePointerEx(hFile, Zero, &Pos, FILE_END) && Pos.QuadPart == 0) {
 					static const WORD BOM = 0xFEFF;
 
-					::WriteFile(hFile, &BOM, 2, &Size, NULL);
+					::WriteFile(hFile, &BOM, 2, &Size, nullptr);
 				}
 
 				WCHAR szText[MAX_LOG_TEXT_LENGTH];
@@ -210,7 +210,7 @@ bool CLogger::AddLogRaw(CLogItem::LogType Type, LPCTSTR pszText)
 				Length = pLogItem->Format(szText, lengthof(szText) - 1);
 				szText[Length++] = L'\r';
 				szText[Length++] = L'\n';
-				::WriteFile(hFile, szText, Length * sizeof(WCHAR), &Size, NULL);
+				::WriteFile(hFile, szText, Length * sizeof(WCHAR), &Size, nullptr);
 
 				::CloseHandle(hFile);
 			}
@@ -241,7 +241,7 @@ std::size_t CLogger::GetLogCount() const
 
 bool CLogger::GetLog(std::size_t Index, CLogItem *pItem) const
 {
-	if (pItem == NULL)
+	if (pItem == nullptr)
 		return false;
 
 	TVTest::BlockLock Lock(m_Lock);
@@ -257,7 +257,7 @@ bool CLogger::GetLog(std::size_t Index, CLogItem *pItem) const
 
 bool CLogger::GetLogBySerialNumber(DWORD SerialNumber, CLogItem *pItem) const
 {
-	if (pItem == NULL)
+	if (pItem == nullptr)
 		return false;
 
 	TVTest::BlockLock Lock(m_Lock);
@@ -289,9 +289,9 @@ bool CLogger::SaveToFile(LPCTSTR pszFileName, bool fAppend)
 	HANDLE hFile;
 
 	hFile = ::CreateFile(
-		pszFileName, GENERIC_WRITE, FILE_SHARE_READ, NULL,
+		pszFileName, GENERIC_WRITE, FILE_SHARE_READ, nullptr,
 		fAppend ? OPEN_ALWAYS : CREATE_ALWAYS,
-		FILE_ATTRIBUTE_NORMAL, NULL);
+		FILE_ATTRIBUTE_NORMAL, nullptr);
 	if (hFile == INVALID_HANDLE_VALUE)
 		return false;
 
@@ -309,13 +309,13 @@ bool CLogger::SaveToFile(LPCTSTR pszFileName, bool fAppend)
 	if (fBOM) {
 		static const WORD BOM = 0xFEFF;
 
-		::WriteFile(hFile, &BOM, 2, &Size, NULL);
+		::WriteFile(hFile, &BOM, 2, &Size, nullptr);
 	}
 
 	TVTest::String Text;
 
 	GetLogText(&Text);
-	::WriteFile(hFile, Text.data(), (DWORD)(Text.length() * sizeof(WCHAR)), &Size, NULL);
+	::WriteFile(hFile, Text.data(), (DWORD)(Text.length() * sizeof(WCHAR)), &Size, nullptr);
 
 	::CloseHandle(hFile);
 
@@ -325,7 +325,7 @@ bool CLogger::SaveToFile(LPCTSTR pszFileName, bool fAppend)
 
 bool CLogger::GetDefaultLogFileName(LPTSTR pszFileName, DWORD MaxLength) const
 {
-	DWORD Result = ::GetModuleFileName(NULL, pszFileName, MaxLength);
+	DWORD Result = ::GetModuleFileName(nullptr, pszFileName, MaxLength);
 	if (Result == 0 || Result + 4 >= MaxLength)
 		return false;
 	::lstrcat(pszFileName, TEXT(".log"));
@@ -465,7 +465,7 @@ INT_PTR CLogger::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 				if (!GetDefaultLogFileName(szFileName, lengthof(szFileName))
 						|| !SaveToFile(szFileName, false)) {
-					::MessageBox(hDlg, TEXT("保存ができません。"), NULL, MB_OK | MB_ICONEXCLAMATION);
+					::MessageBox(hDlg, TEXT("保存ができません。"), nullptr, MB_OK | MB_ICONEXCLAMATION);
 				} else {
 					TCHAR szMessage[MAX_PATH + 64];
 
@@ -541,7 +541,7 @@ void CLogger::RealizeStyle()
 {
 	CBasicDialog::RealizeStyle();
 
-	if (m_hDlg != NULL) {
+	if (m_hDlg != nullptr) {
 		HWND hwndList = ::GetDlgItem(m_hDlg, IDC_LOG_LIST);
 
 		for (int i = 1; i < NUM_COLUMNS; i++)

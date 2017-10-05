@@ -53,7 +53,7 @@ bool CDriverInfo::LoadTuningSpaceList(LoadTuningSpaceListMode Mode)
 				const int NumSpaces = m_TuningSpaceList.NumSpaces();
 				int i;
 				for (i = 0; i < NumSpaces; i++) {
-					if (m_TuningSpaceList.GetTuningSpaceName(i) == NULL
+					if (m_TuningSpaceList.GetTuningSpaceName(i) == nullptr
 							|| m_TuningSpaceList.GetChannelList(i)->NumChannels() == 0)
 						break;
 				}
@@ -84,7 +84,7 @@ bool CDriverInfo::LoadTuningSpaceList(LoadTuningSpaceListMode Mode)
 		}
 
 		HMODULE hLib = ::GetModuleHandle(szFilePath);
-		if (hLib != NULL) {
+		if (hLib != nullptr) {
 			TCHAR szCurDriverPath[MAX_PATH];
 
 			if (App.CoreEngine.GetDriverPath(szCurDriverPath, lengthof(szCurDriverPath))
@@ -92,18 +92,18 @@ bool CDriverInfo::LoadTuningSpaceList(LoadTuningSpaceListMode Mode)
 				m_DriverSpaceList = *App.ChannelManager.GetDriverTuningSpaceList();
 				m_fDriverSpaceLoaded = true;
 			}
-		} else if ((hLib = ::LoadLibrary(szFilePath)) != NULL) {
+		} else if ((hLib = ::LoadLibrary(szFilePath)) != nullptr) {
 			CreateBonDriverFunc pCreate =
 				reinterpret_cast<CreateBonDriverFunc>(::GetProcAddress(hLib, "CreateBonDriver"));
 			IBonDriver *pBonDriver;
 
-			if (pCreate != NULL && (pBonDriver = pCreate()) != NULL) {
+			if (pCreate != nullptr && (pBonDriver = pCreate()) != nullptr) {
 				IBonDriver2 *pBonDriver2 = dynamic_cast<IBonDriver2*>(pBonDriver);
 
-				if (pBonDriver2 != NULL) {
+				if (pBonDriver2 != nullptr) {
 					int NumSpaces;
 
-					for (NumSpaces = 0; pBonDriver2->EnumTuningSpace(NumSpaces) != NULL; NumSpaces++);
+					for (NumSpaces = 0; pBonDriver2->EnumTuningSpace(NumSpaces) != nullptr; NumSpaces++);
 					m_DriverSpaceList.Reserve(NumSpaces);
 					TVTest::StringUtility::Assign(m_TunerName, pBonDriver2->GetTunerName());
 					for (int i = 0; i < NumSpaces; i++) {
@@ -112,7 +112,7 @@ bool CDriverInfo::LoadTuningSpaceList(LoadTuningSpaceListMode Mode)
 
 						pTuningSpaceInfo->SetName(pszName);
 						CChannelList *pChannelList = pTuningSpaceInfo->GetChannelList();
-						for (int j = 0; (pszName = pBonDriver2->EnumChannelName(i, j)) != NULL; j++) {
+						for (int j = 0; (pszName = pBonDriver2->EnumChannelName(i, j)) != nullptr; j++) {
 							pChannelList->AddChannel(CChannelInfo(i, j, j + 1, pszName));
 						}
 					}
@@ -123,7 +123,7 @@ bool CDriverInfo::LoadTuningSpaceList(LoadTuningSpaceListMode Mode)
 			::FreeLibrary(hLib);
 		}
 		for (int i = 0; i < m_TuningSpaceList.NumSpaces(); i++) {
-			if (m_TuningSpaceList.GetTuningSpaceName(i) == NULL)
+			if (m_TuningSpaceList.GetTuningSpaceName(i) == nullptr)
 				m_TuningSpaceList.GetTuningSpaceInfo(i)->SetName(m_DriverSpaceList.GetTuningSpaceName(i));
 		}
 	}
@@ -148,7 +148,7 @@ const CTuningSpaceList *CDriverInfo::GetAvailableTuningSpaceList() const
 		return &m_TuningSpaceList;
 	if (m_fDriverSpaceLoaded)
 		return &m_DriverSpaceList;
-	return NULL;
+	return nullptr;
 }
 
 
@@ -157,12 +157,12 @@ const CChannelList *CDriverInfo::GetChannelList(int Space) const
 	const CChannelList *pChannelList;
 
 	pChannelList = m_TuningSpaceList.GetChannelList(Space);
-	if (pChannelList == NULL) {
+	if (pChannelList == nullptr) {
 		pChannelList = m_DriverSpaceList.GetChannelList(Space);
 	} else if (pChannelList->NumChannels() == 0) {
 		const CChannelList *pDriverChannelList = m_DriverSpaceList.GetChannelList(Space);
 
-		if (pDriverChannelList != NULL && pDriverChannelList->NumChannels() > 0)
+		if (pDriverChannelList != nullptr && pDriverChannelList->NumChannels() > 0)
 			pChannelList = pDriverChannelList;
 	}
 	return pChannelList;
@@ -192,7 +192,7 @@ void CDriverManager::Clear()
 
 bool CDriverManager::Find(LPCTSTR pszDirectory)
 {
-	if (pszDirectory == NULL)
+	if (pszDirectory == nullptr)
 		return false;
 
 	Clear();
@@ -229,7 +229,7 @@ bool CDriverManager::Find(LPCTSTR pszDirectory)
 CDriverInfo *CDriverManager::GetDriverInfo(int Index)
 {
 	if (Index < 0 || (size_t)Index >= m_DriverList.size())
-		return NULL;
+		return nullptr;
 	return m_DriverList[Index];
 }
 
@@ -237,7 +237,7 @@ CDriverInfo *CDriverManager::GetDriverInfo(int Index)
 const CDriverInfo *CDriverManager::GetDriverInfo(int Index) const
 {
 	if (Index < 0 || (size_t)Index >= m_DriverList.size())
-		return NULL;
+		return nullptr;
 	return m_DriverList[Index];
 }
 
@@ -256,7 +256,7 @@ int CDriverManager::FindByFileName(LPCTSTR pszFileName) const
 
 bool CDriverManager::GetAllServiceList(CChannelList *pList) const
 {
-	if (pList == NULL)
+	if (pList == nullptr)
 		return false;
 
 	pList->Clear();

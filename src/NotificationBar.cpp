@@ -10,12 +10,12 @@
 
 
 
-HINSTANCE CNotificationBar::m_hinst = NULL;
+HINSTANCE CNotificationBar::m_hinst = nullptr;
 
 
 bool CNotificationBar::Initialize(HINSTANCE hinst)
 {
-	if (m_hinst == NULL) {
+	if (m_hinst == nullptr) {
 		WNDCLASS wc;
 
 		wc.style = CS_HREDRAW | CS_VREDRAW | CS_DBLCLKS;
@@ -23,10 +23,10 @@ bool CNotificationBar::Initialize(HINSTANCE hinst)
 		wc.cbClsExtra = 0;
 		wc.cbWndExtra = 0;
 		wc.hInstance = hinst;
-		wc.hIcon = NULL;
-		wc.hCursor = LoadCursor(NULL, IDC_ARROW);
-		wc.hbrBackground = NULL;
-		wc.lpszMenuName = NULL;
+		wc.hIcon = nullptr;
+		wc.hCursor = LoadCursor(nullptr, IDC_ARROW);
+		wc.hbrBackground = nullptr;
+		wc.lpszMenuName = nullptr;
 		wc.lpszClassName = NOTIFICATION_BAR_WINDOW_CLASS;
 		if (RegisterClass(&wc) == 0)
 			return false;
@@ -56,7 +56,7 @@ bool CNotificationBar::Create(HWND hwndParent, DWORD Style, DWORD ExStyle, int I
 {
 	return CreateBasicWindow(
 		hwndParent, Style, ExStyle, ID,
-		NOTIFICATION_BAR_WINDOW_CLASS, NULL, m_hinst);
+		NOTIFICATION_BAR_WINDOW_CLASS, nullptr, m_hinst);
 }
 
 
@@ -85,14 +85,14 @@ void CNotificationBar::SetTheme(const TVTest::Theme::CThemeManager *pThemeManage
 	m_TextColor[MESSAGE_ERROR] =
 		pThemeManager->GetColor(CColorScheme::COLOR_NOTIFICATIONBARERRORTEXT);
 
-	if (m_hwnd != NULL)
+	if (m_hwnd != nullptr)
 		Invalidate();
 }
 
 
 bool CNotificationBar::Show(LPCTSTR pszText, MessageType Type, DWORD Timeout, bool fSkippable)
 {
-	if (m_hwnd == NULL || pszText == NULL)
+	if (m_hwnd == nullptr || pszText == nullptr)
 		return false;
 
 	MessageInfo Info;
@@ -145,7 +145,7 @@ bool CNotificationBar::Show(LPCTSTR pszText, MessageType Type, DWORD Timeout, bo
 
 bool CNotificationBar::Hide()
 {
-	if (m_hwnd == NULL)
+	if (m_hwnd == nullptr)
 		return false;
 
 	EndAllTimers();
@@ -171,7 +171,7 @@ bool CNotificationBar::Hide()
 bool CNotificationBar::SetFont(const TVTest::Style::Font &Font)
 {
 	m_StyleFont = Font;
-	if (m_hwnd != NULL)
+	if (m_hwnd != nullptr)
 		ApplyStyle();
 	return true;
 }
@@ -254,7 +254,7 @@ LRESULT CNotificationBar::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM 
 							((rc.bottom - rc.top) - m_Style.IconMargin.Vert() - m_Style.IconSize.Height) / 2,
 							m_Icons[Info.Type],
 							m_Style.IconSize.Width, m_Style.IconSize.Height,
-							0, NULL, DI_NORMAL);
+							0, nullptr, DI_NORMAL);
 						rc.left += m_Style.IconSize.Width + m_Style.IconMargin.Right;
 					}
 					TVTest::Style::Subtract(&rc, m_Style.TextMargin);
@@ -345,7 +345,7 @@ LRESULT CNotificationBar::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM 
 
 void CNotificationBar::ApplyStyle()
 {
-	if (m_hwnd == NULL)
+	if (m_hwnd == nullptr)
 		return;
 
 	CreateDrawFont(m_StyleFont, &m_Font);

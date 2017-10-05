@@ -12,13 +12,13 @@
 
 
 
-HINSTANCE CVideoContainerWindow::m_hinst = NULL;
+HINSTANCE CVideoContainerWindow::m_hinst = nullptr;
 
 
 CVideoContainerWindow::CVideoContainerWindow()
-	: m_pViewer(NULL)
-	, m_pDisplayBase(NULL)
-	, m_pEventHandler(NULL)
+	: m_pViewer(nullptr)
+	, m_pDisplayBase(nullptr)
+	, m_pEventHandler(nullptr)
 {
 	m_ClientSize.cx = 0;
 	m_ClientSize.cy = 0;
@@ -28,14 +28,14 @@ CVideoContainerWindow::CVideoContainerWindow()
 CVideoContainerWindow::~CVideoContainerWindow()
 {
 	Destroy();
-	if (m_pEventHandler != NULL)
-		m_pEventHandler->m_pVideoContainer = NULL;
+	if (m_pEventHandler != nullptr)
+		m_pEventHandler->m_pVideoContainer = nullptr;
 }
 
 
 bool CVideoContainerWindow::Initialize(HINSTANCE hinst)
 {
-	if (m_hinst == NULL) {
+	if (m_hinst == nullptr) {
 		WNDCLASS wc;
 
 		wc.style = CS_DBLCLKS;
@@ -43,10 +43,10 @@ bool CVideoContainerWindow::Initialize(HINSTANCE hinst)
 		wc.cbClsExtra = 0;
 		wc.cbWndExtra = 0;
 		wc.hInstance = hinst;
-		wc.hIcon = NULL;
-		wc.hCursor = NULL;
-		wc.hbrBackground = NULL;
-		wc.lpszMenuName = NULL;
+		wc.hIcon = nullptr;
+		wc.hCursor = nullptr;
+		wc.hbrBackground = nullptr;
+		wc.lpszMenuName = nullptr;
 		wc.lpszClassName = VIDEO_CONTAINER_WINDOW_CLASS;
 		if (::RegisterClass(&wc) == 0)
 			return false;
@@ -94,11 +94,11 @@ LRESULT CVideoContainerWindow::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LP
 			int Width = LOWORD(lParam), Height = HIWORD(lParam);
 
 			m_pViewer->SetViewSize(Width, Height);
-			if (m_pDisplayBase != NULL)
+			if (m_pDisplayBase != nullptr)
 				m_pDisplayBase->AdjustPosition();
 			if (uMsg == WM_SIZE
 					&& (Width != m_ClientSize.cx || Height != m_ClientSize.cy)) {
-				if (m_pEventHandler != NULL)
+				if (m_pEventHandler != nullptr)
 					m_pEventHandler->OnSizeChanged(Width, Height);
 				m_ClientSize.cx = Width;
 				m_ClientSize.cy = Height;
@@ -142,7 +142,7 @@ bool CVideoContainerWindow::Create(HWND hwndParent, DWORD Style, DWORD ExStyle, 
 {
 	return CreateBasicWindow(
 		hwndParent, Style, ExStyle, ID,
-		VIDEO_CONTAINER_WINDOW_CLASS, NULL, m_hinst);
+		VIDEO_CONTAINER_WINDOW_CLASS, nullptr, m_hinst);
 }
 
 
@@ -151,7 +151,7 @@ bool CVideoContainerWindow::Create(
 {
 	m_pViewer = pViewer;
 	if (!Create(hwndParent, Style, ExStyle, ID)) {
-		m_pViewer = NULL;
+		m_pViewer = nullptr;
 		return false;
 	}
 	return true;
@@ -166,9 +166,9 @@ void CVideoContainerWindow::SetDisplayBase(CDisplayBase *pDisplayBase)
 
 void CVideoContainerWindow::SetEventHandler(CEventHandler *pEventHandler)
 {
-	if (m_pEventHandler != NULL)
-		m_pEventHandler->m_pVideoContainer = NULL;
-	if (pEventHandler != NULL)
+	if (m_pEventHandler != nullptr)
+		m_pEventHandler->m_pVideoContainer = nullptr;
+	if (pEventHandler != nullptr)
 		pEventHandler->m_pVideoContainer = this;
 	m_pEventHandler = pEventHandler;
 }
@@ -177,26 +177,26 @@ void CVideoContainerWindow::SetEventHandler(CEventHandler *pEventHandler)
 
 
 CVideoContainerWindow::CEventHandler::CEventHandler()
-	: m_pVideoContainer(NULL)
+	: m_pVideoContainer(nullptr)
 {
 }
 
 
 CVideoContainerWindow::CEventHandler::~CEventHandler()
 {
-	if (m_pVideoContainer != NULL)
-		m_pVideoContainer->SetEventHandler(NULL);
+	if (m_pVideoContainer != nullptr)
+		m_pVideoContainer->SetEventHandler(nullptr);
 }
 
 
 
 
-HINSTANCE CViewWindow::m_hinst = NULL;
+HINSTANCE CViewWindow::m_hinst = nullptr;
 
 
 bool CViewWindow::Initialize(HINSTANCE hinst)
 {
-	if (m_hinst == NULL) {
+	if (m_hinst == nullptr) {
 		WNDCLASS wc;
 
 		wc.style = CS_DBLCLKS | CS_HREDRAW | CS_VREDRAW;
@@ -204,10 +204,10 @@ bool CViewWindow::Initialize(HINSTANCE hinst)
 		wc.cbClsExtra = 0;
 		wc.cbWndExtra = 0;
 		wc.hInstance = hinst;
-		wc.hIcon = NULL;
-		wc.hCursor = NULL;
-		wc.hbrBackground = NULL;
-		wc.lpszMenuName = NULL;
+		wc.hIcon = nullptr;
+		wc.hCursor = nullptr;
+		wc.hbrBackground = nullptr;
+		wc.lpszMenuName = nullptr;
 		wc.lpszClassName = VIEW_WINDOW_CLASS;
 		if (::RegisterClass(&wc) == 0)
 			return false;
@@ -218,10 +218,10 @@ bool CViewWindow::Initialize(HINSTANCE hinst)
 
 
 CViewWindow::CViewWindow()
-	: m_pVideoContainer(NULL)
-	, m_hwndMessage(NULL)
-	, m_pEventHandler(NULL)
-	, m_hbmLogo(NULL)
+	: m_pVideoContainer(nullptr)
+	, m_hwndMessage(nullptr)
+	, m_pEventHandler(nullptr)
+	, m_hbmLogo(nullptr)
 	, m_BorderStyle(TVTest::Theme::BORDER_NONE, RGB(128, 128, 128))
 	, m_fShowCursor(true)
 {
@@ -231,9 +231,9 @@ CViewWindow::CViewWindow()
 CViewWindow::~CViewWindow()
 {
 	Destroy();
-	if (m_pEventHandler != NULL)
-		m_pEventHandler->m_pView = NULL;
-	if (m_hbmLogo != NULL)
+	if (m_pEventHandler != nullptr)
+		m_pEventHandler->m_pView = nullptr;
+	if (m_hbmLogo != nullptr)
 		::DeleteObject(m_hbmLogo);
 }
 
@@ -242,14 +242,14 @@ bool CViewWindow::Create(HWND hwndParent, DWORD Style, DWORD ExStyle, int ID)
 {
 	return CreateBasicWindow(
 		hwndParent, Style, ExStyle, ID,
-		VIEW_WINDOW_CLASS, NULL, m_hinst);
+		VIEW_WINDOW_CLASS, nullptr, m_hinst);
 }
 
 
 void CViewWindow::SetVideoContainer(CVideoContainerWindow *pVideoContainer)
 {
 	m_pVideoContainer = pVideoContainer;
-	if (pVideoContainer != NULL && m_hwnd != NULL
+	if (pVideoContainer != nullptr && m_hwnd != nullptr
 			&& m_pVideoContainer->GetParent() == m_hwnd) {
 		RECT rc;
 
@@ -268,9 +268,9 @@ void CViewWindow::SetMessageWindow(HWND hwnd)
 
 void CViewWindow::SetEventHandler(CEventHandler *pEventHandler)
 {
-	if (m_pEventHandler != NULL)
-		m_pEventHandler->m_pView = NULL;
-	if (pEventHandler != NULL)
+	if (m_pEventHandler != nullptr)
+		m_pEventHandler->m_pView = nullptr;
+	if (pEventHandler != nullptr)
 		pEventHandler->m_pView = this;
 	m_pEventHandler = pEventHandler;
 }
@@ -278,7 +278,7 @@ void CViewWindow::SetEventHandler(CEventHandler *pEventHandler)
 
 bool CViewWindow::SetLogo(HBITMAP hbm)
 {
-	if (hbm == NULL && m_hbmLogo == NULL)
+	if (hbm == nullptr && m_hbmLogo == nullptr)
 		return true;
 	if (m_hbmLogo)
 		::DeleteObject(m_hbmLogo);
@@ -318,7 +318,7 @@ void CViewWindow::ShowCursor(bool fShow)
 {
 	if (m_fShowCursor != fShow) {
 		m_fShowCursor = fShow;
-		if (m_hwnd != NULL) {
+		if (m_hwnd != nullptr) {
 			POINT pt;
 			HWND hwnd;
 
@@ -326,9 +326,9 @@ void CViewWindow::ShowCursor(bool fShow)
 			::ScreenToClient(m_hwnd, &pt);
 			hwnd = ::ChildWindowFromPointEx(m_hwnd, pt, CWP_SKIPINVISIBLE);
 			if (hwnd == m_hwnd
-					|| (m_pVideoContainer != NULL
+					|| (m_pVideoContainer != nullptr
 						&& hwnd == m_pVideoContainer->GetHandle()))
-				::SetCursor(fShow ?::LoadCursor(NULL, IDC_ARROW) : NULL);
+				::SetCursor(fShow ?::LoadCursor(nullptr, IDC_ARROW) : nullptr);
 		}
 	}
 }
@@ -367,7 +367,7 @@ LRESULT CViewWindow::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 		{
 			const int Width = LOWORD(lParam), Height = HIWORD(lParam);
 
-			if (m_pVideoContainer != NULL
+			if (m_pVideoContainer != nullptr
 					&& m_pVideoContainer->GetParent() == hwnd) {
 				RECT rc;
 
@@ -375,7 +375,7 @@ LRESULT CViewWindow::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 				CalcClientRect(&rc);
 				m_pVideoContainer->SetPosition(&rc);
 			}
-			if (m_pEventHandler != NULL)
+			if (m_pEventHandler != nullptr)
 				m_pEventHandler->OnSizeChanged(Width, Height);
 		}
 		return 0;
@@ -423,7 +423,7 @@ LRESULT CViewWindow::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 	case WM_MBUTTONUP:
 	case WM_MBUTTONDBLCLK:
 	case WM_MOUSEMOVE:
-		if (m_hwndMessage != NULL) {
+		if (m_hwndMessage != nullptr) {
 			POINT pt;
 
 			pt.x = GET_X_LPARAM(lParam);
@@ -437,7 +437,7 @@ LRESULT CViewWindow::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 	case WM_KEYUP:
 	case WM_SYSKEYDOWN:
 	case WM_SYSKEYUP:
-		if (m_hwndMessage != NULL)
+		if (m_hwndMessage != nullptr)
 			return ::SendMessage(m_hwndMessage, uMsg, wParam, lParam);
 		break;
 
@@ -446,9 +446,9 @@ LRESULT CViewWindow::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 			HWND hwndCursor = reinterpret_cast<HWND>(wParam);
 
 			if (hwndCursor == hwnd
-					|| (m_pVideoContainer != NULL
+					|| (m_pVideoContainer != nullptr
 						&& hwndCursor == m_pVideoContainer->GetHandle())) {
-				::SetCursor(m_fShowCursor ?::LoadCursor(NULL, IDC_ARROW) : NULL);
+				::SetCursor(m_fShowCursor ?::LoadCursor(nullptr, IDC_ARROW) : nullptr);
 				return TRUE;
 			}
 		}
@@ -461,23 +461,23 @@ LRESULT CViewWindow::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 
 
 CViewWindow::CEventHandler::CEventHandler()
-	: m_pView(NULL)
+	: m_pView(nullptr)
 {
 }
 
 
 CViewWindow::CEventHandler::~CEventHandler()
 {
-	if (m_pView != NULL)
-		m_pView->SetEventHandler(NULL);
+	if (m_pView != nullptr)
+		m_pView->SetEventHandler(nullptr);
 }
 
 
 
 
 CDisplayView::CDisplayView()
-	: m_pDisplayBase(NULL)
-	, m_pEventHandler(NULL)
+	: m_pDisplayBase(nullptr)
+	, m_pEventHandler(nullptr)
 {
 }
 
@@ -493,7 +493,7 @@ bool CDisplayView::IsMessageNeed(const MSG *pMsg) const
 
 void CDisplayView::SetVisible(bool fVisible)
 {
-	if (m_pDisplayBase != NULL)
+	if (m_pDisplayBase != nullptr)
 		m_pDisplayBase->SetVisible(fVisible);
 }
 
@@ -676,7 +676,7 @@ bool CDisplayView::HandleMessage(HWND hwnd, UINT Msg, WPARAM wParam, LPARAM lPar
 {
 	*pResult = 0;
 
-	if (m_pEventHandler == NULL)
+	if (m_pEventHandler == nullptr)
 		return false;
 
 	switch (Msg) {
@@ -755,9 +755,9 @@ void CDisplayView::DisplayViewStyle::NormalizeStyle(
 
 
 CDisplayBase::CDisplayBase()
-	: m_pParentWindow(NULL)
-	, m_pDisplayView(NULL)
-	, m_pEventHandler(NULL)
+	: m_pParentWindow(nullptr)
+	, m_pDisplayView(nullptr)
+	, m_pEventHandler(nullptr)
 	, m_fVisible(false)
 {
 }
@@ -784,12 +784,12 @@ void CDisplayBase::SetDisplayView(CDisplayView *pView)
 {
 	if (m_pDisplayView == pView)
 		return;
-	if (m_pDisplayView != NULL) {
+	if (m_pDisplayView != nullptr) {
 		SetVisible(false);
-		m_pDisplayView->m_pDisplayBase = NULL;
+		m_pDisplayView->m_pDisplayBase = nullptr;
 	}
 	m_pDisplayView = pView;
-	if (pView != NULL)
+	if (pView != nullptr)
 		pView->m_pDisplayBase = this;
 	m_fVisible = false;
 }
@@ -797,18 +797,18 @@ void CDisplayBase::SetDisplayView(CDisplayView *pView)
 
 bool CDisplayBase::SetVisible(bool fVisible)
 {
-	if (m_pDisplayView == NULL)
+	if (m_pDisplayView == nullptr)
 		return false;
 	if (m_fVisible == fVisible)
 		return true;
 
 	bool fFocus = !fVisible && m_pDisplayView->GetHandle() == ::GetFocus();
 
-	if (m_pEventHandler != NULL && !m_pEventHandler->OnVisibleChange(fVisible))
+	if (m_pEventHandler != nullptr && !m_pEventHandler->OnVisibleChange(fVisible))
 		return false;
 
 	if (fVisible) {
-		if (m_pParentWindow != NULL) {
+		if (m_pParentWindow != nullptr) {
 			RECT rc;
 			m_pParentWindow->GetClientRect(&rc);
 			m_pDisplayView->SetPosition(&rc);
@@ -823,7 +823,7 @@ bool CDisplayBase::SetVisible(bool fVisible)
 
 	m_fVisible = fVisible;
 
-	if (fFocus && m_pParentWindow != NULL) {
+	if (fFocus && m_pParentWindow != nullptr) {
 		if (m_pParentWindow->GetVisible())
 			::SetFocus(m_pParentWindow->GetHandle());
 		else
@@ -836,13 +836,13 @@ bool CDisplayBase::SetVisible(bool fVisible)
 
 bool CDisplayBase::IsVisible() const
 {
-	return m_pDisplayView != NULL && m_fVisible;
+	return m_pDisplayView != nullptr && m_fVisible;
 }
 
 
 void CDisplayBase::AdjustPosition()
 {
-	if (m_pParentWindow != NULL && m_pDisplayView != NULL && m_fVisible) {
+	if (m_pParentWindow != nullptr && m_pDisplayView != nullptr && m_fVisible) {
 		RECT rc;
 		m_pParentWindow->GetClientRect(&rc);
 		m_pDisplayView->SetPosition(&rc);
@@ -852,21 +852,21 @@ void CDisplayBase::AdjustPosition()
 
 void CDisplayBase::SetPosition(int Left, int Top, int Width, int Height)
 {
-	if (m_pDisplayView != NULL)
+	if (m_pDisplayView != nullptr)
 		m_pDisplayView->SetPosition(Left, Top, Width, Height);
 }
 
 
 void CDisplayBase::SetPosition(const RECT *pRect)
 {
-	if (m_pDisplayView != NULL)
+	if (m_pDisplayView != nullptr)
 		m_pDisplayView->SetPosition(pRect);
 }
 
 
 void CDisplayBase::SetFocus()
 {
-	if (m_pDisplayView != NULL && m_pDisplayView->GetVisible())
+	if (m_pDisplayView != nullptr && m_pDisplayView->GetVisible())
 		::SetFocus(m_pDisplayView->GetHandle());
 }
 

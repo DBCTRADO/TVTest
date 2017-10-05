@@ -109,7 +109,7 @@ LPCTSTR CGeneralOptions::GetDefaultDriverName() const
 
 bool CGeneralOptions::SetDefaultDriverName(LPCTSTR pszDriverName)
 {
-	if (pszDriverName == NULL)
+	if (pszDriverName == nullptr)
 		m_DefaultBonDriverName.clear();
 	else
 		m_DefaultBonDriverName = pszDriverName;

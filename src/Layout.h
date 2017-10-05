@@ -58,7 +58,7 @@ namespace Layout
 		void GetMinSize(SIZE *pSize) const override;
 		void SetVisible(bool fVisible) override;
 // CWindowContainer
-		void SetWindow(CBasicWindow *pWindow, TVTest::CUIBase *pUIBase = NULL);
+		void SetWindow(CBasicWindow *pWindow, TVTest::CUIBase *pUIBase = nullptr);
 		CBasicWindow *GetWindow() const { return m_pWindow; }
 		bool SetMinSize(int Width, int Height);
 	};
@@ -71,7 +71,7 @@ namespace Layout
 			CContainer *pContainer;
 			int FixedSize;
 
-			PaneInfo() : pContainer(NULL), FixedSize(-1) {}
+			PaneInfo() : pContainer(nullptr), FixedSize(-1) {}
 		};
 		PaneInfo m_PaneList[2];
 		unsigned int m_Style;

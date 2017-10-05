@@ -10,7 +10,7 @@ namespace TVTest
 
 
 CListView::CListView()
-	: m_hwnd(NULL)
+	: m_hwnd(nullptr)
 {
 }
 
@@ -22,7 +22,7 @@ CListView::~CListView()
 
 bool CListView::Attach(HWND hwnd)
 {
-	if (hwnd == NULL)
+	if (hwnd == nullptr)
 		return false;
 
 	m_hwnd = hwnd;
@@ -33,20 +33,20 @@ bool CListView::Attach(HWND hwnd)
 
 void CListView::Detach()
 {
-	m_hwnd = NULL;
+	m_hwnd = nullptr;
 }
 
 
 void CListView::SetExtendedStyle(DWORD Style)
 {
-	if (m_hwnd != NULL)
+	if (m_hwnd != nullptr)
 		ListView_SetExtendedListViewStyle(m_hwnd, Style);
 }
 
 
 bool CListView::InitCheckList()
 {
-	if (m_hwnd == NULL)
+	if (m_hwnd == nullptr)
 		return false;
 
 	ListView_SetExtendedListViewStyle(
@@ -68,7 +68,7 @@ bool CListView::InitCheckList()
 
 int CListView::InsertItem(int Index, LPCTSTR pszText, LPARAM Param)
 {
-	if (m_hwnd == NULL)
+	if (m_hwnd == nullptr)
 		return -1;
 
 	if (Index < 0)
@@ -88,7 +88,7 @@ int CListView::InsertItem(int Index, LPCTSTR pszText, LPARAM Param)
 
 bool CListView::DeleteItem(int Index)
 {
-	if (m_hwnd == NULL)
+	if (m_hwnd == nullptr)
 		return false;
 	return ListView_DeleteItem(m_hwnd, Index) != FALSE;
 }
@@ -96,14 +96,14 @@ bool CListView::DeleteItem(int Index)
 
 void CListView::DeleteAllItems()
 {
-	if (m_hwnd != NULL)
+	if (m_hwnd != nullptr)
 		ListView_DeleteAllItems(m_hwnd);
 }
 
 
 bool CListView::SetItemText(int Index, LPCTSTR pszText)
 {
-	if (m_hwnd == NULL)
+	if (m_hwnd == nullptr)
 		return false;
 
 	ListView_SetItemText(m_hwnd, Index, 0, const_cast<LPTSTR>(pszText));
@@ -114,7 +114,7 @@ bool CListView::SetItemText(int Index, LPCTSTR pszText)
 
 bool CListView::SetItemText(int Index, int SubItem, LPCTSTR pszText)
 {
-	if (m_hwnd == NULL)
+	if (m_hwnd == nullptr)
 		return false;
 
 	LVITEM lvi;
@@ -129,7 +129,7 @@ bool CListView::SetItemText(int Index, int SubItem, LPCTSTR pszText)
 
 bool CListView::SetItemState(int Index, UINT State, UINT Mask)
 {
-	if (m_hwnd == NULL)
+	if (m_hwnd == nullptr)
 		return false;
 
 	ListView_SetItemState(m_hwnd, Index, State, Mask);
@@ -140,7 +140,7 @@ bool CListView::SetItemState(int Index, UINT State, UINT Mask)
 
 bool CListView::CheckItem(int Index, bool fCheck)
 {
-	if (m_hwnd == NULL)
+	if (m_hwnd == nullptr)
 		return false;
 
 	ListView_SetCheckState(m_hwnd, Index, fCheck);
@@ -151,7 +151,7 @@ bool CListView::CheckItem(int Index, bool fCheck)
 
 bool CListView::IsItemChecked(int Index) const
 {
-	if (m_hwnd == NULL)
+	if (m_hwnd == nullptr)
 		return false;
 
 	return ListView_GetCheckState(m_hwnd, Index) != FALSE;
@@ -160,7 +160,7 @@ bool CListView::IsItemChecked(int Index) const
 
 bool CListView::SetItemParam(int Index, LPARAM Param)
 {
-	if (m_hwnd == NULL)
+	if (m_hwnd == nullptr)
 		return false;
 
 	LVITEM lvi;
@@ -176,7 +176,7 @@ bool CListView::SetItemParam(int Index, LPARAM Param)
 
 LPARAM CListView::GetItemParam(int Index) const
 {
-	if (m_hwnd == NULL)
+	if (m_hwnd == nullptr)
 		return 0;
 
 	LVITEM lvi;
@@ -194,7 +194,7 @@ LPARAM CListView::GetItemParam(int Index) const
 
 int CListView::GetItemCount() const
 {
-	if (m_hwnd == NULL)
+	if (m_hwnd == nullptr)
 		return 0;
 
 	return ListView_GetItemCount(m_hwnd);
@@ -203,7 +203,7 @@ int CListView::GetItemCount() const
 
 int CListView::GetSelectedItem() const
 {
-	if (m_hwnd == NULL)
+	if (m_hwnd == nullptr)
 		return -1;
 
 	return ListView_GetNextItem(m_hwnd, -1, LVNI_SELECTED);
@@ -212,7 +212,7 @@ int CListView::GetSelectedItem() const
 
 bool CListView::MoveItem(int From, int To)
 {
-	if (m_hwnd == NULL)
+	if (m_hwnd == nullptr)
 		return false;
 
 	LVITEM lvi;
@@ -237,7 +237,7 @@ bool CListView::MoveItem(int From, int To)
 
 bool CListView::EnsureItemVisible(int Index, bool fPartialOK)
 {
-	if (m_hwnd == NULL)
+	if (m_hwnd == nullptr)
 		return false;
 
 	return ListView_EnsureVisible(m_hwnd, Index, fPartialOK) != FALSE;
@@ -246,7 +246,7 @@ bool CListView::EnsureItemVisible(int Index, bool fPartialOK)
 
 int CListView::InsertColumn(int Index, LPCTSTR pszText, int Format)
 {
-	if (m_hwnd == NULL)
+	if (m_hwnd == nullptr)
 		return false;
 
 	LVCOLUMN lvc;
@@ -262,7 +262,7 @@ int CListView::InsertColumn(int Index, LPCTSTR pszText, int Format)
 
 void CListView::AdjustColumnWidth(bool fUseHeader)
 {
-	if (m_hwnd != NULL)
+	if (m_hwnd != nullptr)
 		AdjustListViewColumnWidth(m_hwnd, fUseHeader);
 }
 

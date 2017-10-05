@@ -12,7 +12,7 @@
 
 COptionDialog::COptionDialog()
 	: m_CurrentPage(0)
-	, m_himlIcons(NULL)
+	, m_himlIcons(nullptr)
 {
 	for (int i = 0; i < NUM_PAGES; i++) {
 		COptions *pOptions = m_PageList[i].pOptions;
@@ -31,7 +31,7 @@ COptionDialog::~COptionDialog()
 
 bool COptionDialog::Show(HWND hwndOwner, int StartPage)
 {
-	if (m_hDlg != NULL)
+	if (m_hDlg != nullptr)
 		return false;
 	COptions::SetFrame(this);
 	for (int i = 0; i < NUM_PAGES; i++)
@@ -40,8 +40,8 @@ bool COptionDialog::Show(HWND hwndOwner, int StartPage)
 	if (ShowDialog(hwndOwner, GetAppClass().GetResourceInstance(), MAKEINTRESOURCE(IDD_OPTIONS)) != IDOK) {
 		return false;
 	}
-	if (hwndOwner != NULL)
-		::RedrawWindow(hwndOwner, NULL, NULL, RDW_UPDATENOW | RDW_ALLCHILDREN);
+	if (hwndOwner != nullptr)
+		::RedrawWindow(hwndOwner, nullptr, nullptr, RDW_UPDATENOW | RDW_ALLCHILDREN);
 	for (int i = 0; i < NUM_PAGES; i++) {
 		DWORD Flags = m_PageList[i].pOptions->GetUpdateFlags();
 
@@ -57,7 +57,7 @@ bool COptionDialog::SetCurrentPage(int Page)
 	if (Page < 0 || Page >= NUM_PAGES)
 		return false;
 	if (Page != m_CurrentPage) {
-		if (m_hDlg != NULL) {
+		if (m_hDlg != nullptr) {
 			SetPage(Page);
 		} else {
 			m_CurrentPage = Page;
@@ -169,11 +169,11 @@ INT_PTR COptionDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 					if (fSelected)
 						::ImageList_Draw(m_himlIcons, (int)pdis->itemData, pdis->hDC, rc.left, y, ILD_TRANSPARENT);
 				} else {
-					HICON hicon = ::ImageList_ExtractIcon(NULL, m_himlIcons, (int)pdis->itemData);
+					HICON hicon = ::ImageList_ExtractIcon(nullptr, m_himlIcons, (int)pdis->itemData);
 #if 0				// DrawIconEx で描画すると汚い
-					::DrawIconEx(pdis->hDC, rc.left, y, hicon, m_IconWidth, m_IconHeight, 0, NULL, DI_NORMAL);
+					::DrawIconEx(pdis->hDC, rc.left, y, hicon, m_IconWidth, m_IconHeight, 0, nullptr, DI_NORMAL);
 					if (fSelected)
-						::DrawIconEx(pdis->hDC, rc.left, y, hicon, m_IconWidth, m_IconHeight, 0, NULL, DI_NORMAL);
+						::DrawIconEx(pdis->hDC, rc.left, y, hicon, m_IconWidth, m_IconHeight, 0, nullptr, DI_NORMAL);
 #else
 					ICONINFO ii;
 					if (::GetIconInfo(hicon, &ii)) {
@@ -253,7 +253,7 @@ INT_PTR COptionDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 				NMHDR nmh;
 				int i;
 
-				hcurOld = ::SetCursor(::LoadCursor(NULL, IDC_WAIT));
+				hcurOld = ::SetCursor(::LoadCursor(nullptr, IDC_WAIT));
 				nmh.code = LOWORD(wParam) == IDOK ? PSN_APPLY : PSN_RESET;
 				m_fSettingError = false;
 				for (i = 0; i < NUM_PAGES; i++) {
@@ -275,9 +275,9 @@ INT_PTR COptionDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 		return TRUE;
 
 	case WM_DESTROY:
-		if (m_himlIcons != NULL) {
+		if (m_himlIcons != nullptr) {
 			::ImageList_Destroy(m_himlIcons);
-			m_himlIcons = NULL;
+			m_himlIcons = nullptr;
 		}
 		m_TitleFont.Destroy();
 		return TRUE;
@@ -291,7 +291,7 @@ void COptionDialog::ApplyStyle()
 {
 	CBasicDialog::ApplyStyle();
 
-	if (m_hDlg != NULL) {
+	if (m_hDlg != nullptr) {
 		m_IconWidth = m_pStyleScaling->GetScaledSystemMetrics(SM_CXSMICON);
 		m_IconHeight = m_pStyleScaling->GetScaledSystemMetrics(SM_CYSMICON);
 		m_ListMargin = m_pStyleScaling->LogicalPixelsToPhysicalPixels(1);
@@ -302,7 +302,7 @@ void COptionDialog::ApplyStyle()
 		lf.lfWeight = FW_BOLD;
 		m_TitleFont.Create(&lf);
 
-		if (m_himlIcons != NULL)
+		if (m_himlIcons != nullptr)
 			::ImageList_Destroy(m_himlIcons);
 		m_himlIcons = ::ImageList_LoadImage(
 			GetAppClass().GetResourceInstance(),
@@ -317,7 +317,7 @@ void COptionDialog::RealizeStyle()
 {
 	CBasicDialog::RealizeStyle();
 
-	if (m_hDlg != NULL) {
+	if (m_hDlg != nullptr) {
 		HDC hdc = ::GetDC(m_hDlg);
 		int FontHeight = m_Font.GetHeight(hdc, false);
 		::ReleaseDC(m_hDlg, hdc);

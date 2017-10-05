@@ -568,7 +568,7 @@ inline bool MsgQueryMessage(PluginParam *pParam, UINT Message)
 }
 
 // メモリ再確保
-// pData が NULL で新しい領域を確保
+// pData が nullptr で新しい領域を確保
 // Size が0で領域を解放
 inline void *MsgMemoryReAlloc(PluginParam *pParam, void *pData, DWORD Size)
 {
@@ -578,7 +578,7 @@ inline void *MsgMemoryReAlloc(PluginParam *pParam, void *pData, DWORD Size)
 // メモリ確保
 inline void *MsgMemoryAlloc(PluginParam *pParam, DWORD Size)
 {
-	return (void*)(*pParam->Callback)(pParam, MESSAGE_MEMORYALLOC, (LPARAM)(void*)NULL, Size);
+	return (void*)(*pParam->Callback)(pParam, MESSAGE_MEMORYALLOC, (LPARAM)(void*)nullptr, Size);
 }
 
 // メモリ開放
@@ -590,11 +590,11 @@ inline void MsgMemoryFree(PluginParam *pParam, void *pData)
 // 文字列複製
 inline LPWSTR MsgStringDuplicate(PluginParam *pParam, LPCWSTR pszString)
 {
-	if (pszString == NULL)
-		return NULL;
+	if (pszString == nullptr)
+		return nullptr;
 	DWORD Size = (::lstrlenW(pszString) + 1) * sizeof(WCHAR);
 	LPWSTR pszDup = (LPWSTR)MsgMemoryAlloc(pParam, Size);
-	if (pszDup != NULL)
+	if (pszDup != nullptr)
 		::CopyMemory(pszDup, pszString, Size);
 	return pszDup;
 }
@@ -602,8 +602,8 @@ inline LPWSTR MsgStringDuplicate(PluginParam *pParam, LPCWSTR pszString)
 // イベントハンドル用コールバックの設定
 // pClientData はコールバックの呼び出し時に渡されます。
 // 一つのプラグインで設定できるコールバック関数は一つだけです。
-// Callback に NULL を渡すと設定が解除されます。
-inline bool MsgSetEventCallback(PluginParam *pParam, EventCallbackFunc Callback, void *pClientData = NULL)
+// Callback に nullptr を渡すと設定が解除されます。
+inline bool MsgSetEventCallback(PluginParam *pParam, EventCallbackFunc Callback, void *pClientData = nullptr)
 {
 	return (*pParam->Callback)(pParam, MESSAGE_SETEVENTCALLBACK, (LPARAM)Callback, (LPARAM)pClientData) != 0;
 }
@@ -672,8 +672,8 @@ inline bool MsgSetChannel(PluginParam *pParam, int Space, int Channel, WORD Serv
 
 // 現在のサービス及びサービス数を取得する
 // サービスのインデックスが返る。エラー時は-1が返ります。
-// pNumServices が NULL でない場合は、サービスの数が返されます。
-inline int MsgGetService(PluginParam *pParam, int *pNumServices = NULL)
+// pNumServices が nullptr でない場合は、サービスの数が返されます。
+inline int MsgGetService(PluginParam *pParam, int *pNumServices = nullptr)
 {
 	return (int)(*pParam->Callback)(pParam, MESSAGE_GETSERVICE, (LPARAM)pNumServices, 0);
 }
@@ -687,7 +687,7 @@ inline bool MsgSetService(PluginParam *pParam, int Service, bool fByID = false)
 
 // チューニング空間名を取得する
 // チューニング空間名の長さが返ります。Indexが範囲外の場合は0が返ります。
-// pszName を NULL で呼べば長さだけを取得できます。
+// pszName を nullptr で呼べば長さだけを取得できます。
 // MaxLength には pszName の先に格納できる最大の要素数(終端の空文字を含む)を指定します。
 inline int MsgGetTuningSpaceName(PluginParam *pParam, int Index, LPWSTR pszName, int MaxLength)
 {
@@ -734,7 +734,7 @@ inline bool MsgGetServiceInfo(PluginParam *pParam, int Index, ServiceInfo *pInfo
 
 // BonDriverのファイル名を取得する
 // 戻り値はファイル名の長さ(終端のNullを除く)が返ります。
-// pszName を NULL で呼べば長さだけを取得できます。
+// pszName を nullptr で呼べば長さだけを取得できます。
 // 取得されるのは、ディレクトリを含まないファイル名のみか、相対パスの場合もあります。
 // フルパスを取得したい場合は MsgGetDriverFullPathName を使用してください。
 inline int MsgGetDriverName(PluginParam *pParam, LPWSTR pszName, int MaxLength)
@@ -744,7 +744,7 @@ inline int MsgGetDriverName(PluginParam *pParam, LPWSTR pszName, int MaxLength)
 
 // BonDriverを設定する
 // ファイル名のみか相対パスを指定すると、BonDriver 検索フォルダの設定が使用されます。
-// NULL を指定すると現在の BonDriver が解放されます(ver.0.0.14 以降)。
+// nullptr を指定すると現在の BonDriver が解放されます(ver.0.0.14 以降)。
 inline bool MsgSetDriverName(PluginParam *pParam, LPCWSTR pszName)
 {
 	return (*pParam->Callback)(pParam, MESSAGE_SETDRIVERNAME, (LPARAM)pszName, 0) != 0;
@@ -786,7 +786,7 @@ struct RecordInfo
 	DWORD Size;             // 構造体のサイズ
 	DWORD Mask;             // マスク(RECORD_MASK_???)
 	DWORD Flags;            // フラグ(RECORD_FLAG_???)
-	LPWSTR pszFileName;     // ファイル名(NULLでデフォルト)
+	LPWSTR pszFileName;     // ファイル名(nullptrでデフォルト)
 	                        // %〜% で囲まれた置換キーワードを使用できます
 	int MaxFileName;        // ファイル名の最大長(MESSAGE_GETRECORDのみで使用)
 	FILETIME ReserveTime;   // 録画予約された時刻(MESSAGE_GETRECORDのみで使用)
@@ -808,8 +808,8 @@ struct RecordInfo
 };
 
 // 録画を開始する
-// pInfo が NULL で即時録画開始します。
-inline bool MsgStartRecord(PluginParam *pParam, const RecordInfo *pInfo = NULL)
+// pInfo が nullptr で即時録画開始します。
+inline bool MsgStartRecord(PluginParam *pParam, const RecordInfo *pInfo = nullptr)
 {
 	return (*pParam->Callback)(pParam, MESSAGE_STARTRECORD, (LPARAM)pInfo, 0) != 0;
 }
@@ -934,7 +934,7 @@ struct RecordStatusInfo
 #if TVTEST_PLUGIN_VERSION >= TVTEST_PLUGIN_VERSION_(0, 0, 10)
 	LPWSTR pszFileName;     // ファイルパス
 	int MaxFileName;        // ファイルパスの最大長
-	RecordStatusInfo() : pszFileName(NULL), MaxFileName(0) {}
+	RecordStatusInfo() : pszFileName(nullptr), MaxFileName(0) {}
 #endif
 };
 
@@ -1072,7 +1072,7 @@ inline bool MsgSetAlwaysOnTop(PluginParam *pParam, bool fAlwaysOnTop)
 // 画像をキャプチャする
 // 戻り値はパック DIB データ(BITMAPINFOHEADER + ピクセルデータ)へのポインタです。
 // 不要になった場合は MsgMemoryFree で開放します。
-// キャプチャできなかった場合は NULL が返ります。
+// キャプチャできなかった場合は nullptr が返ります。
 inline void *MsgCaptureImage(PluginParam *pParam, DWORD Flags = 0)
 {
 	return (void*)(*pParam->Callback)(pParam, MESSAGE_CAPTUREIMAGE, Flags, 0);
@@ -1140,7 +1140,7 @@ struct StreamCallbackInfo
 // 時間が掛かる処理は別スレッドで行うなどしてください。
 inline bool MsgSetStreamCallback(
 	PluginParam *pParam, DWORD Flags,
-	StreamCallbackFunc Callback, void *pClientData = NULL)
+	StreamCallbackFunc Callback, void *pClientData = nullptr)
 {
 	StreamCallbackInfo Info;
 	Info.Size = sizeof(StreamCallbackInfo);
@@ -1210,7 +1210,7 @@ struct ProgramInfo
 // 事前に Size メンバに構造体のサイズを設定します。
 // また、pszEventName / pszEventText / pszEventExtText メンバに取得先のバッファへのポインタを、
 // MaxEventName / MaxEventText / MaxEventExtText メンバにバッファの長さ(要素数)を設定します。
-// 必要のない情報は、ポインタを NULL にすると取得されません。
+// 必要のない情報は、ポインタを nullptr にすると取得されません。
 // MsgGetEpgEventInfo で、より詳しい番組情報を取得することもできます。
 inline bool MsgGetCurrentProgramInfo(PluginParam *pParam, ProgramInfo *pInfo, bool fNext = false)
 {
@@ -1226,7 +1226,7 @@ inline bool MsgQueryEvent(PluginParam *pParam, UINT Event)
 }
 
 // 現在のチューニング空間及びチューニング空間数を取得する
-inline int MsgGetTuningSpace(PluginParam *pParam, int *pNumSpaces = NULL)
+inline int MsgGetTuningSpace(PluginParam *pParam, int *pNumSpaces = nullptr)
 {
 	return (int)(*pParam->Callback)(pParam, MESSAGE_GETTUNINGSPACE, (LPARAM)pNumSpaces, 0);
 }
@@ -1368,8 +1368,8 @@ typedef LRESULT (CALLBACK *AudioCallbackFunc)(short *pData, DWORD Samples, int C
 // 音声のサンプルを取得するコールバック関数を設定する
 // 一つのプラグインで設定できるコールバック関数は一つだけです。
 // pClinetData はコールバック関数に渡されます。
-// pCallback に NULL を指定すると、設定が解除されます。
-inline bool MsgSetAudioCallback(PluginParam *pParam, AudioCallbackFunc pCallback, void *pClientData = NULL)
+// pCallback に nullptr を指定すると、設定が解除されます。
+inline bool MsgSetAudioCallback(PluginParam *pParam, AudioCallbackFunc pCallback, void *pClientData = nullptr)
 {
 	return (*pParam->Callback)(pParam, MESSAGE_SETAUDIOCALLBACK, (LPARAM)pCallback, (LPARAM)pClientData) != 0;
 }
@@ -1501,7 +1501,7 @@ inline bool MsgGetSetting(PluginParam *pParam, LPCWSTR pszName, unsigned int *pV
 
 // 文字列の設定を取得する
 // 戻り値は取得した文字列の長さ(終端のNullを含む)です。
-// pszString を NULL にすると、必要なバッファの長さ(終端のNullを含む)が返ります。
+// pszString を nullptr にすると、必要なバッファの長さ(終端のNullを含む)が返ります。
 // 設定が取得できなかった場合は 0 が返ります。
 /*
 	// 例
@@ -1524,7 +1524,7 @@ inline DWORD MsgGetSetting(PluginParam *pParam, LPCWSTR pszName, LPWSTR pszStrin
 
 // BonDriverのフルパス名を取得する
 // 戻り値はパスの長さ(終端のNullを除く)が返ります。
-// pszPathをNULLで呼べば長さだけを取得できます。
+// pszPathをnullptrで呼べば長さだけを取得できます。
 inline int MsgGetDriverFullPathName(PluginParam *pParam, LPWSTR pszPath, int MaxLength)
 {
 	return (int)(*pParam->Callback)(pParam, MESSAGE_GETDRIVERFULLPATHNAME, (LPARAM)pszPath, MaxLength);
@@ -1539,7 +1539,7 @@ inline int MsgGetDriverFullPathName(PluginParam *pParam, LPWSTR pszPath, int Max
 // 0 = 48x24 / 1 = 36x24 / 2 = 48x27 / 3 = 72x36 / 4 = 54x36 / 5 = 64x36
 // いずれのロゴも16:9で表示すると本来の比率になります。
 // 画像が取得できた場合はビットマップ(DIBセクション)のハンドルが返ります。
-// 画像が取得できない場合はNULLが返ります。
+// 画像が取得できない場合はnullptrが返ります。
 // ビットマップは不要になった時にDeleteObject()で破棄してください。
 inline HBITMAP MsgGetLogo(PluginParam *pParam, WORD NetworkID, WORD ServiceID, BYTE LogoType)
 {
@@ -1641,8 +1641,8 @@ typedef BOOL (CALLBACK *WindowMessageCallbackFunc)(HWND hwnd, UINT uMsg, WPARAM 
 // ウィンドウメッセージコールバックの設定
 // pClientData はコールバックの呼び出し時に渡されます。
 // 一つのプラグインで設定できるコールバック関数は一つだけです。
-// Callback に NULL を渡すと設定が解除されます。
-inline bool MsgSetWindowMessageCallback(PluginParam *pParam, WindowMessageCallbackFunc Callback, void *pClientData = NULL)
+// Callback に nullptr を渡すと設定が解除されます。
+inline bool MsgSetWindowMessageCallback(PluginParam *pParam, WindowMessageCallbackFunc Callback, void *pClientData = nullptr)
 {
 	return (*pParam->Callback)(pParam, MESSAGE_SETWINDOWMESSAGECALLBACK, (LPARAM)Callback, (LPARAM)pClientData) != 0;
 }
@@ -1659,7 +1659,7 @@ struct ControllerButtonInfo
 {
 	LPCWSTR pszName;                   // ボタンの名称("音声切替" など)
 	LPCWSTR pszDefaultCommand;         // デフォルトのコマンド(MsgDoCommand と同じもの)
-	// 指定しない場合はNULL
+	// 指定しない場合はnullptr
 	struct {
 		WORD Left, Top, Width, Height; // 画像のボタンの位置(画像が無い場合は無視される)
 	} ButtonRect;
@@ -1678,12 +1678,12 @@ struct ControllerInfo
 	LPCWSTR pszText;                            // コントローラの名称("HDUSリモコン" など)
 	int NumButtons;                             // ボタンの数
 	const ControllerButtonInfo *pButtonList;    // ボタンのリスト
-	LPCWSTR pszIniFileName;                     // 設定ファイル名(NULL にすると TVTest の Ini ファイル)
+	LPCWSTR pszIniFileName;                     // 設定ファイル名(nullptr にすると TVTest の Ini ファイル)
 	LPCWSTR pszSectionName;                     // 設定のセクション名
 	UINT ControllerImageID;                     // コントローラの画像の識別子(無い場合は0)
 	UINT SelButtonsImageID;                     // 選択ボタン画像の識別子(無い場合は0)
 	typedef BOOL (CALLBACK *TranslateMessageCallback)(HWND hwnd, MSG *pMessage, void *pClientData);
-	TranslateMessageCallback pTranslateMessage; // メッセージの変換コールバック(必要無ければ NULL)
+	TranslateMessageCallback pTranslateMessage; // メッセージの変換コールバック(必要無ければ nullptr)
 	void *pClientData;                          // コールバックに渡すパラメータ
 };
 
@@ -1770,7 +1770,7 @@ struct EpgEventVideoInfo
 	BYTE ComponentTag;  // component_tag
 	BYTE Reserved;      // 予約
 	DWORD LanguageCode; // 言語コード
-	LPCWSTR pszText;    // テキスト(無い場合はNULL)
+	LPCWSTR pszText;    // テキスト(無い場合はnullptr)
 };
 
 // 音声の情報
@@ -1786,7 +1786,7 @@ struct EpgEventAudioInfo
 	BYTE Reserved;          // 予約
 	DWORD LanguageCode;     // 言語コード(主音声)
 	DWORD LanguageCode2;    // 言語コード(副音声)
-	LPCWSTR pszText;        // テキスト(無い場合は NULL)
+	LPCWSTR pszText;        // テキスト(無い場合は nullptr)
 };
 
 // 音声のフラグ
@@ -1836,13 +1836,13 @@ struct EpgEventInfo
 	BYTE AudioListLength;               // 音声の情報の数
 	BYTE ContentListLength;             // ジャンルの情報の数
 	BYTE EventGroupListLength;          // イベントグループの情報の数
-	LPCWSTR pszEventName;               // イベント名(無い場合はNULL)
-	LPCWSTR pszEventText;               // テキスト(無い場合はNULL)
-	LPCWSTR pszEventExtendedText;       // 拡張テキスト(無い場合はNULL)
-	EpgEventVideoInfo **VideoList;      // 映像の情報のリスト(無い場合はNULL)
-	EpgEventAudioInfo **AudioList;      // 音声の情報のリスト(無い場合はNULL)
-	EpgEventContentInfo *ContentList;   // ジャンルの情報(無い場合はNULL)
-	EpgEventGroupInfo **EventGroupList; // イベントグループ情報(無い場合はNULL)
+	LPCWSTR pszEventName;               // イベント名(無い場合はnullptr)
+	LPCWSTR pszEventText;               // テキスト(無い場合はnullptr)
+	LPCWSTR pszEventExtendedText;       // 拡張テキスト(無い場合はnullptr)
+	EpgEventVideoInfo **VideoList;      // 映像の情報のリスト(無い場合はnullptr)
+	EpgEventAudioInfo **AudioList;      // 音声の情報のリスト(無い場合はnullptr)
+	EpgEventContentInfo *ContentList;   // ジャンルの情報(無い場合はnullptr)
+	EpgEventGroupInfo **EventGroupList; // イベントグループ情報(無い場合はnullptr)
 };
 
 // イベントのリスト
@@ -1858,7 +1858,7 @@ struct EpgEventList
 // イベントの情報の取得
 // EpgEventQueryInfo で、取得したいイベントを指定します。
 // 取得した情報が不要になった場合、MsgFreeEventInfo で解放します。
-// 情報が取得できなかった場合は NULL が返ります。
+// 情報が取得できなかった場合は nullptr が返ります。
 /*
 	// 現在のチャンネルの現在の番組を取得する例
 	ChannelInfo ChInfo;
@@ -1872,7 +1872,7 @@ struct EpgEventList
 		QueryInfo.Flags             = 0;
 		GetSystemTimeAsFileTime(&QueryInfo.Time);
 		EpgEventInfo *pEvent = MsgGetEpgEventInfo(pParam, &QueryInfo);
-		if (pEvent != NULL) {
+		if (pEvent != nullptr) {
 			...
 			MsgFreeEpgEventInfo(pParam, pEvent);
 		}
@@ -2306,8 +2306,8 @@ struct AppCommandInfo
 
 // コマンドの情報を取得する
 // TVTInitialize 内で呼ぶと、プラグインのコマンドなどが取得できませんので注意してください。
-// pszText に NULL を指定すると、必要なバッファ長(終端のNull文字を含む)が MaxText に返ります。
-// pszName に NULL を指定すると、必要なバッファ長(終端のNull文字を含む)が MaxName に返ります。
+// pszText に nullptr を指定すると、必要なバッファ長(終端のNull文字を含む)が MaxText に返ります。
+// pszName に nullptr を指定すると、必要なバッファ長(終端のNull文字を含む)が MaxName に返ります。
 // pszText に取得されたコマンド文字列を MsgDoCommand に指定して実行できます。
 /*
 	// 例
@@ -2375,7 +2375,7 @@ enum {
 };
 
 // ログを取得する
-// GetLogInfo の pszText に NULL を指定すると、
+// GetLogInfo の pszText に nullptr を指定すると、
 // 必要なバッファ長(終端のNull文字を含む)が MaxText に返ります。
 /*
 	// 例
@@ -2385,7 +2385,7 @@ enum {
 	Info.Size = sizeof(Info);
 	Info.Flags = 0;
 	Info.Index = 0;
-	Info.pszText = NULL;
+	Info.pszText = nullptr;
 	if (MsgGetLog(pParam, &Info)) {
 		// シリアルから順番にログを取得
 		WCHAR szText[256];
@@ -2899,7 +2899,7 @@ struct ChannelSelectInfo
 {
 	DWORD Size;             // 構造体のサイズ
 	DWORD Flags;            // 各種フラグ(CHANNEL_SELECT_FLAG_* の組み合わせ)
-	LPCWSTR pszTuner;       // チューナー名(NULL で指定なし)
+	LPCWSTR pszTuner;       // チューナー名(nullptr で指定なし)
 	int Space;              // チューニング空間(-1 で指定なし)
 	int Channel;            // チャンネル(-1 で指定なし)
 	WORD NetworkID;         // ネットワークID(0 で指定なし)
@@ -3209,8 +3209,8 @@ typedef LRESULT (CALLBACK *VideoStreamCallbackFunc)(
 // 映像ストリームを取得するコールバック関数を設定する
 // 一つのプラグインで設定できるコールバック関数は一つだけです。
 // pClinetData はコールバック関数に渡されます。
-// pCallback に NULL を指定すると、設定が解除されます。
-inline bool MsgSetVideoStreamCallback(PluginParam *pParam, VideoStreamCallbackFunc pCallback, void *pClientData = NULL)
+// pCallback に nullptr を指定すると、設定が解除されます。
+inline bool MsgSetVideoStreamCallback(PluginParam *pParam, VideoStreamCallbackFunc pCallback, void *pClientData = nullptr)
 {
 	return (*pParam->Callback)(pParam, MESSAGE_SETVIDEOSTREAMCALLBACK, (LPARAM)pCallback, (LPARAM)pClientData) != 0;
 }
@@ -3246,8 +3246,8 @@ struct VarStringFormatInfo
 	DWORD Size;                       // 構造体のサイズ
 	DWORD Flags;                      // 各種フラグ(VAR_STRING_FORMAT_FLAG_*)
 	LPCWSTR pszFormat;                // フォーマット文字列
-	const VarStringContext *pContext; // コンテキスト(NULL で現在のコンテキスト)
-	VarStringMapFunc pMapFunc;        // マップ関数(必要なければ NULL)
+	const VarStringContext *pContext; // コンテキスト(nullptr で現在のコンテキスト)
+	VarStringMapFunc pMapFunc;        // マップ関数(必要なければ nullptr)
 	void *pClientData;                // マップ関数に渡す任意データ
 	LPWSTR pszResult;                 // 変換結果の文字列
 };
@@ -3260,7 +3260,7 @@ struct VarStringFormatInfo
 /*
 	// 現在のコンテキストを取得
 	// (ここでは例のために取得していますが、現在の情報を使うのであれば
-	//  VarStringFormatInfo.pContext を NULL にすればよいです)
+	//  VarStringFormatInfo.pContext を nullptr にすればよいです)
 	VarStringContext *pContext = MsgGetVarStringContext(pParam);
 
 	// 文字列をフォーマットする
@@ -3269,8 +3269,8 @@ struct VarStringFormatInfo
 	Info.Flags = 0;
 	Info.pszFormat = L"%event-name% %tot-date% %tot-time%";
 	Info.pContext = pContext;
-	Info.pMapFunc = NULL;
-	Info.pClientData = NULL;
+	Info.pMapFunc = nullptr;
+	Info.pClientData = nullptr;
 
 	if (MsgFormatVarString(pParam, &Info)) {
 		// Info.pszResult に結果の文字列が返される
@@ -3316,7 +3316,7 @@ struct RegisterVariableInfo
 	DWORD Flags;            // フラグ(REGISTER_VARIABLE_FLAG_*)
 	LPCWSTR pszKeyword;     // 識別子
 	LPCWSTR pszDescription; // 説明文
-	LPCWSTR pszValue;       // 変数の値(NULL で動的に取得)
+	LPCWSTR pszValue;       // 変数の値(nullptr で動的に取得)
 };
 
 // 変数取得の情報
@@ -3346,7 +3346,7 @@ struct GetVariableInfo
 	MsgRegisterVariable(pParam, &Info);
 */
 // 変数の値が頻繁に変わるような場合は、動的に取得されるようにします。
-// pszValue に NULL を指定すると、変数が必要になった段階で
+// pszValue に nullptr を指定すると、変数が必要になった段階で
 // EVENT_GETVARIABLE が呼ばれるので、そこで値を返します。
 /*
 	// 変数の値が動的に取得されるようにする例
@@ -3355,7 +3355,7 @@ struct GetVariableInfo
 	Info.Flags          = 0;
 	Info.pszKeyword     = L"tick-count";
 	Info.pszDescription = L"Tick count";
-	Info.pszValue       = NULL;
+	Info.pszValue       = nullptr;
 	MsgRegisterVariable(pParam, &Info);
 
 	// EVENT_GETVARIABLE で値を返します。
@@ -3431,7 +3431,7 @@ public:
 		return MsgStringDuplicate(m_pParam, pszString);
 	}
 
-	bool SetEventCallback(EventCallbackFunc Callback, void *pClientData = NULL)
+	bool SetEventCallback(EventCallbackFunc Callback, void *pClientData = nullptr)
 	{
 		return MsgSetEventCallback(m_pParam, Callback, pClientData);
 	}
@@ -3454,7 +3454,7 @@ public:
 	}
 #endif
 
-	int GetService(int *pNumServices = NULL)
+	int GetService(int *pNumServices = nullptr)
 	{
 		return MsgGetService(m_pParam, pNumServices);
 	}
@@ -3491,9 +3491,9 @@ public:
 		return MsgSetDriverName(m_pParam, pszName);
 	}
 
-	bool StartRecord(RecordInfo *pInfo = NULL)
+	bool StartRecord(RecordInfo *pInfo = nullptr)
 	{
-		if (pInfo != NULL)
+		if (pInfo != nullptr)
 			pInfo->Size = sizeof(RecordInfo);
 		return MsgStartRecord(m_pParam, pInfo);
 	}
@@ -3553,7 +3553,7 @@ public:
 #if TVTEST_PLUGIN_VERSION < TVTEST_PLUGIN_VERSION_(0, 0, 10)
 		pInfo->Size = sizeof(RecordStatusInfo);
 #else
-		if (pInfo->pszFileName != NULL)
+		if (pInfo->pszFileName != nullptr)
 			pInfo->Size = sizeof(RecordStatusInfo);
 		else
 			pInfo->Size = RECORDSTATUSINFO_SIZE_V1;
@@ -3672,7 +3672,7 @@ public:
 		return MsgClose(m_pParam, Flags);
 	}
 
-	bool SetStreamCallback(DWORD Flags, StreamCallbackFunc Callback, void *pClientData = NULL)
+	bool SetStreamCallback(DWORD Flags, StreamCallbackFunc Callback, void *pClientData = nullptr)
 	{
 		return MsgSetStreamCallback(m_pParam, Flags, Callback, pClientData);
 	}
@@ -3706,7 +3706,7 @@ public:
 		return MsgQueryEvent(m_pParam, Event);
 	}
 
-	int GetTuningSpace(int *pNumSpaces = NULL)
+	int GetTuningSpace(int *pNumSpaces = nullptr)
 	{
 		return MsgGetTuningSpace(m_pParam, pNumSpaces);
 	}
@@ -3772,7 +3772,7 @@ public:
 #endif
 
 #if TVTEST_PLUGIN_VERSION >= TVTEST_PLUGIN_VERSION_(0, 0, 6)
-	bool SetAudioCallback(AudioCallbackFunc pCallback, void *pClientData = NULL)
+	bool SetAudioCallback(AudioCallbackFunc pCallback, void *pClientData = nullptr)
 	{
 		return MsgSetAudioCallback(m_pParam, pCallback, pClientData);
 	}
@@ -3848,7 +3848,7 @@ public:
 #endif
 
 #if TVTEST_PLUGIN_VERSION >= TVTEST_PLUGIN_VERSION_(0, 0, 11)
-	bool SetWindowMessageCallback(WindowMessageCallbackFunc Callback, void *pClientData = NULL)
+	bool SetWindowMessageCallback(WindowMessageCallbackFunc Callback, void *pClientData = nullptr)
 	{
 		return MsgSetWindowMessageCallback(m_pParam, Callback, pClientData);
 	}
@@ -4191,7 +4191,7 @@ public:
 		return MsgConvertEpgTimeTo(m_pParam, EpgTime, Type, pDstTime);
 	}
 
-	bool SetVideoStreamCallback(VideoStreamCallbackFunc pCallback, void *pClientData = NULL)
+	bool SetVideoStreamCallback(VideoStreamCallbackFunc pCallback, void *pClientData = nullptr)
 	{
 		return MsgSetVideoStreamCallback(m_pParam, pCallback, pClientData);
 	}
@@ -4234,7 +4234,7 @@ protected:
 	CTVTestApp *m_pApp;
 
 public:
-	CTVTestPlugin() : m_pPluginParam(NULL), m_pApp(NULL) {}
+	CTVTestPlugin() : m_pPluginParam(nullptr), m_pApp(nullptr) {}
 	void SetPluginParam(PluginParam *pParam)
 	{
 		m_pPluginParam = pParam;
@@ -4263,7 +4263,7 @@ public:
 		virtual bool OnPluginEnable(bool fEnable)
 		{
 			if (fEnable) {
-				if (MessageBox(NULL, TEXT("有効にするよ"), TEXT("イベント"), MB_OKCANCEL) != IDOK) {
+				if (MessageBox(nullptr, TEXT("有効にするよ"), TEXT("イベント"), MB_OKCANCEL) != IDOK) {
 					return false;
 				}
 			}
@@ -4554,13 +4554,13 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 	case DLL_PROCESS_ATTACH:
 		g_hinstDLL = hinstDLL;
 		g_pPlugin = CreatePluginClass();
-		if (g_pPlugin == NULL)
+		if (g_pPlugin == nullptr)
 			return FALSE;
 		break;
 	case DLL_PROCESS_DETACH:
 		if (g_pPlugin) {
 			delete g_pPlugin;
-			g_pPlugin = NULL;
+			g_pPlugin = nullptr;
 		}
 		break;
 	}
@@ -4599,7 +4599,7 @@ TVTEST_EXPORT(BOOL) TVTFinalize()
 {
 	bool fOK = g_pPlugin->Finalize();
 	delete g_pPlugin;
-	g_pPlugin = NULL;
+	g_pPlugin = nullptr;
 	return fOK;
 }
 

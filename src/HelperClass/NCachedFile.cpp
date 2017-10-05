@@ -14,7 +14,7 @@
 CNCachedFile::CNCachedFile()
 	: CNFile()
 	, m_bIsWritable(false)
-	, m_pBuff(NULL)
+	, m_pBuff(nullptr)
 	, m_BuffSize(0UL)
 	, m_DataSize(0UL)
 	, m_FilePos(0)
@@ -103,7 +103,7 @@ const bool CNCachedFile::Close(void)
 
 		if (m_pBuff) {
 			delete [] m_pBuff;
-			m_pBuff = NULL;
+			m_pBuff = nullptr;
 		}
 	}
 
@@ -146,7 +146,7 @@ const bool CNCachedFile::Write(const void *pBuff, const DWORD dwLen)
 		return false;
 	}
 
-	if (pBuff == NULL || dwLen == 0) {
+	if (pBuff == nullptr || dwLen == 0) {
 		m_LastError = ERROR_INVALID_PARAMETER;
 		return false;
 	}

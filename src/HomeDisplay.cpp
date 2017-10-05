@@ -157,10 +157,10 @@ void CChannelListCategoryBase::Draw(
 		rc.right = rc.left + m_ChannelNameWidth;
 		rc.bottom -= Style.ItemMargins.Bottom;
 		HBITMAP hbmLogo = pItem->GetStretchedLogo(m_LogoWidth, m_LogoHeight);
-		if (hbmLogo != NULL) {
+		if (hbmLogo != nullptr) {
 			DrawUtil::DrawBitmap(
 				hdc, rc.left, rc.top + (Style.FontHeight - m_LogoHeight) / 2,
-				m_LogoWidth, m_LogoHeight, hbmLogo, NULL,
+				m_LogoWidth, m_LogoHeight, hbmLogo, nullptr,
 				i == m_HotItem ? 255 : 224);
 			rc.top += Style.FontHeight;
 		}
@@ -176,7 +176,7 @@ void CChannelListCategoryBase::Draw(
 		for (int j = 0; j < 2; j++) {
 			const LibISDB::EventInfo *pEventInfo = pItem->GetEvent(j);
 
-			if (pEventInfo != NULL) {
+			if (pEventInfo != nullptr) {
 				TCHAR szText[1024];
 				int Length;
 
@@ -331,10 +331,10 @@ void CChannelListCategoryBase::UpdateChannelInfo()
 						EndTime, &EventInfo)) {
 				pItem->SetEvent(1, &EventInfo);
 			} else {
-				pItem->SetEvent(1, NULL);
+				pItem->SetEvent(1, nullptr);
 			}
 		} else {
-			pItem->SetEvent(0, NULL);
+			pItem->SetEvent(0, nullptr);
 			if (EPGDatabase.GetNextEventInfo(
 						pItem->GetNetworkID(),
 						pItem->GetTransportStreamID(),
@@ -343,17 +343,17 @@ void CChannelListCategoryBase::UpdateChannelInfo()
 					&& EventInfo.StartTime.DiffSeconds(CurTime) < 8 * 60 * 60) {
 				pItem->SetEvent(1, &EventInfo);
 			} else {
-				pItem->SetEvent(1, NULL);
+				pItem->SetEvent(1, nullptr);
 			}
 		}
 
 		HBITMAP hbmLogo = LogoManager.GetAssociatedLogoBitmap(
 			pItem->GetNetworkID(), pItem->GetServiceID(), CLogoManager::LOGOTYPE_SMALL);
-		if (hbmLogo != NULL)
+		if (hbmLogo != nullptr)
 			pItem->SetSmallLogo(hbmLogo);
 		hbmLogo = LogoManager.GetAssociatedLogoBitmap(
 			pItem->GetNetworkID(), pItem->GetServiceID(), CLogoManager::LOGOTYPE_BIG);
-		if (hbmLogo != NULL)
+		if (hbmLogo != nullptr)
 			pItem->SetBigLogo(hbmLogo);
 	}
 }
@@ -423,8 +423,8 @@ bool CChannelListCategoryBase::SetHotItem(int Item)
 
 CChannelListCategoryBase::CChannelItemBase::CChannelItemBase(const CChannelInfo &ChannelInfo)
 	: CChannelInfo(ChannelInfo)
-	, m_hbmSmallLogo(NULL)
-	, m_hbmBigLogo(NULL)
+	, m_hbmSmallLogo(nullptr)
+	, m_hbmBigLogo(nullptr)
 {
 }
 
@@ -432,9 +432,9 @@ CChannelListCategoryBase::CChannelItemBase::CChannelItemBase(const CChannelInfo 
 HBITMAP CChannelListCategoryBase::CChannelItemBase::GetStretchedLogo(int Width, int Height) const
 {
 	HBITMAP hbmLogo =
-		(Height <= 14 || m_hbmBigLogo == NULL) ? m_hbmSmallLogo : m_hbmBigLogo;
-	if (hbmLogo == NULL)
-		return NULL;
+		(Height <= 14 || m_hbmBigLogo == nullptr) ? m_hbmSmallLogo : m_hbmBigLogo;
+	if (hbmLogo == nullptr)
+		return nullptr;
 
 	// AlphaBlendでリサイズすると汚いので、予めリサイズした画像を作成しておく
 	if (m_StretchedLogo.IsCreated()) {
@@ -443,7 +443,7 @@ HBITMAP CChannelListCategoryBase::CChannelItemBase::GetStretchedLogo(int Width, 
 	}
 	if (!m_StretchedLogo.IsCreated()) {
 		HBITMAP hbm = DrawUtil::ResizeBitmap(hbmLogo, Width, Height);
-		if (hbm != NULL)
+		if (hbm != nullptr)
 			m_StretchedLogo.Attach(hbm);
 	}
 	return m_StretchedLogo.GetHandle();
@@ -454,7 +454,7 @@ bool CChannelListCategoryBase::CChannelItemBase::SetEvent(int Index, const LibIS
 {
 	if (Index < 0 || Index > 1)
 		return false;
-	if (pEvent != NULL)
+	if (pEvent != nullptr)
 		m_Event[Index] = *pEvent;
 	else
 		m_Event[Index].EventName.clear();
@@ -465,9 +465,9 @@ bool CChannelListCategoryBase::CChannelItemBase::SetEvent(int Index, const LibIS
 const LibISDB::EventInfo *CChannelListCategoryBase::CChannelItemBase::GetEvent(int Index) const
 {
 	if (Index < 0 || Index > 1)
-		return NULL;
+		return nullptr;
 	if (m_Event[Index].EventName.empty())
-		return NULL;
+		return nullptr;
 	return &m_Event[Index];
 }
 
@@ -887,10 +887,10 @@ void CFeaturedEventsCategory::Draw(
 		rc.top += Style.ItemMargins.Top;
 		rc.bottom = rc.top + Style.FontHeight;
 		HBITMAP hbmLogo = pItem->GetStretchedLogo(m_LogoWidth, m_LogoHeight);
-		if (hbmLogo != NULL) {
+		if (hbmLogo != nullptr) {
 			DrawUtil::DrawBitmap(
 				hdc, rc.left, rc.top + (Style.FontHeight - m_LogoHeight) / 2,
-				m_LogoWidth, m_LogoHeight, hbmLogo, NULL,
+				m_LogoWidth, m_LogoHeight, hbmLogo, nullptr,
 				i == m_HotItem ? 255 : 224);
 		}
 		rc.left += m_LogoWidth + Style.ItemMargins.Left;
@@ -1035,7 +1035,7 @@ bool CFeaturedEventsCategory::OnRButtonUp(int x, int y)
 	::GetCursorPos(&pt);
 	int Result = ::TrackPopupMenu(
 		::GetSubMenu(hmenu, 0), TPM_RIGHTBUTTON | TPM_RETURNCMD,
-		pt.x, pt.y, 0, m_pHomeDisplay->GetHandle(), NULL);
+		pt.x, pt.y, 0, m_pHomeDisplay->GetHandle(), nullptr);
 	::DestroyMenu(hmenu);
 
 	switch (Result) {
@@ -1177,14 +1177,14 @@ void CFeaturedEventsCategory::SortItems(CFeaturedEventsSettings::SortType SortTy
 
 void CFeaturedEventsCategory::ExpandItem(int Item)
 {
-	CEventItem *pCurItem = NULL;
+	CEventItem *pCurItem = nullptr;
 
 	if (Item >= 0 && (size_t)Item < m_ItemList.size())
 		pCurItem = m_ItemList[Item];
 
 	int ScrollPos = m_pHomeDisplay->GetScrollPos();
 
-	if (pCurItem != NULL && pCurItem->IsExpanded()) {
+	if (pCurItem != nullptr && pCurItem->IsExpanded()) {
 		pCurItem->SetExpanded(false);
 		m_Height -= pCurItem->GetExpandedHeight() - m_ItemHeight;
 	} else {
@@ -1193,13 +1193,13 @@ void CFeaturedEventsCategory::ExpandItem(int Item)
 			if (pItem->IsExpanded()) {
 				pItem->SetExpanded(false);
 				int ExtendedHeight = pItem->GetExpandedHeight() - m_ItemHeight;
-				if (pCurItem != NULL && i < (size_t)Item) {
+				if (pCurItem != nullptr && i < (size_t)Item) {
 					ScrollPos -= ExtendedHeight;
 				}
 				m_Height -= ExtendedHeight;
 			}
 		}
-		if (pCurItem != NULL) {
+		if (pCurItem != nullptr) {
 			pCurItem->SetExpanded(true);
 			m_Height += pCurItem->GetExpandedHeight() - m_ItemHeight;
 		}
@@ -1305,7 +1305,7 @@ CFeaturedEventsCategory::CEventItem::CEventItem(const CChannelInfo &ChannelInfo,
 	, m_EventInfo(EventInfo)
 	, m_ExpandedHeight(0)
 	, m_fExpanded(false)
-	, m_hbmLogo(NULL)
+	, m_hbmLogo(nullptr)
 {
 }
 
@@ -1321,8 +1321,8 @@ void CFeaturedEventsCategory::CEventItem::SetLogo(HBITMAP hbm)
 
 HBITMAP CFeaturedEventsCategory::CEventItem::GetStretchedLogo(int Width, int Height) const
 {
-	if (m_hbmLogo == NULL)
-		return NULL;
+	if (m_hbmLogo == nullptr)
+		return nullptr;
 	// AlphaBlendでリサイズすると汚いので、予めリサイズした画像を作成しておく
 	if (m_StretchedLogo.IsCreated()) {
 		if (m_StretchedLogo.GetWidth() != Width || m_StretchedLogo.GetHeight() != Height)
@@ -1330,7 +1330,7 @@ HBITMAP CFeaturedEventsCategory::CEventItem::GetStretchedLogo(int Width, int Hei
 	}
 	if (!m_StretchedLogo.IsCreated()) {
 		HBITMAP hbm = DrawUtil::ResizeBitmap(m_hbmLogo, Width, Height);
-		if (hbm != NULL)
+		if (hbm != nullptr)
 			m_StretchedLogo.Attach(hbm);
 	}
 	return m_StretchedLogo.GetHandle();
@@ -1389,12 +1389,12 @@ void CFeaturedEventsCategory::CEventItem::AppendEventText(TVTest::String *pStrin
 
 
 const LPCTSTR CHomeDisplay::m_pszWindowClass = APP_NAME TEXT(" Home Display");
-HINSTANCE CHomeDisplay::m_hinst = NULL;
+HINSTANCE CHomeDisplay::m_hinst = nullptr;
 
 
 bool CHomeDisplay::Initialize(HINSTANCE hinst)
 {
-	if (m_hinst == NULL) {
+	if (m_hinst == nullptr) {
 		WNDCLASS wc;
 
 		wc.style = CS_HREDRAW | CS_VREDRAW | CS_DBLCLKS;
@@ -1402,10 +1402,10 @@ bool CHomeDisplay::Initialize(HINSTANCE hinst)
 		wc.cbClsExtra = 0;
 		wc.cbWndExtra = 0;
 		wc.hInstance = hinst;
-		wc.hIcon = NULL;
-		wc.hCursor = NULL;
-		wc.hbrBackground = NULL;
-		wc.lpszMenuName = NULL;
+		wc.hIcon = nullptr;
+		wc.hCursor = nullptr;
+		wc.hbrBackground = nullptr;
+		wc.lpszMenuName = nullptr;
 		wc.lpszClassName = m_pszWindowClass;
 		if (::RegisterClass(&wc) == 0)
 			return false;
@@ -1418,11 +1418,11 @@ bool CHomeDisplay::Initialize(HINSTANCE hinst)
 CHomeDisplay::CHomeDisplay()
 	: m_fAutoFontSize(true)
 	, m_ContentHeight(0)
-	, m_pHomeDisplayEventHandler(NULL)
+	, m_pHomeDisplayEventHandler(nullptr)
 	, m_CurCategory(0)
-	, m_hwndScroll(NULL)
+	, m_hwndScroll(nullptr)
 	, m_ScrollPos(0)
-	, m_himlIcons(NULL)
+	, m_himlIcons(nullptr)
 {
 	GetDefaultFont(&m_StyleFont);
 
@@ -1462,13 +1462,13 @@ CHomeDisplay::~CHomeDisplay()
 
 bool CHomeDisplay::Create(HWND hwndParent, DWORD Style, DWORD ExStyle, int ID)
 {
-	return CreateBasicWindow(hwndParent, Style, ExStyle, ID, m_pszWindowClass, NULL, m_hinst);
+	return CreateBasicWindow(hwndParent, Style, ExStyle, ID, m_pszWindowClass, nullptr, m_hinst);
 }
 
 
 bool CHomeDisplay::Close()
 {
-	if (m_pHomeDisplayEventHandler != NULL) {
+	if (m_pHomeDisplayEventHandler != nullptr) {
 		m_pHomeDisplayEventHandler->OnClose();
 		return true;
 	}
@@ -1501,7 +1501,7 @@ bool CHomeDisplay::IsMessageNeed(const MSG *pMsg) const
 
 bool CHomeDisplay::OnMouseWheel(UINT Msg, WPARAM wParam, LPARAM lParam)
 {
-	if (Msg == WM_MOUSEWHEEL && m_hwnd != NULL) {
+	if (Msg == WM_MOUSEWHEEL && m_hwnd != nullptr) {
 		int Delta = m_MouseWheel.OnMouseWheel(
 			wParam, m_HomeDisplayStyle.FontHeight * m_MouseWheel.GetDefaultScrollLines());
 		if (Delta != 0)
@@ -1609,7 +1609,7 @@ bool CHomeDisplay::UpdateContents()
 	for (size_t i = 0; i < m_CategoryList.size(); i++)
 		m_CategoryList[i]->Create();
 
-	if (m_hwnd != NULL) {
+	if (m_hwnd != nullptr) {
 		LayOut();
 		Invalidate();
 	}
@@ -1620,9 +1620,9 @@ bool CHomeDisplay::UpdateContents()
 
 void CHomeDisplay::SetEventHandler(CHomeDisplayEventHandler *pEventHandler)
 {
-	if (m_pHomeDisplayEventHandler != NULL)
-		m_pHomeDisplayEventHandler->m_pHomeDisplay = NULL;
-	if (pEventHandler != NULL)
+	if (m_pHomeDisplayEventHandler != nullptr)
+		m_pHomeDisplayEventHandler->m_pHomeDisplay = nullptr;
+	if (pEventHandler != nullptr)
 		pEventHandler->m_pHomeDisplay = this;
 	m_pHomeDisplayEventHandler = pEventHandler;
 	CDisplayView::SetEventHandler(pEventHandler);
@@ -1633,7 +1633,7 @@ bool CHomeDisplay::SetFont(const TVTest::Style::Font &Font, bool fAutoSize)
 {
 	m_StyleFont = Font;
 	m_fAutoFontSize = fAutoSize;
-	if (m_hwnd != NULL) {
+	if (m_hwnd != nullptr) {
 		ApplyStyle();
 		RealizeStyle();
 	}
@@ -1643,7 +1643,7 @@ bool CHomeDisplay::SetFont(const TVTest::Style::Font &Font, bool fAutoSize)
 
 bool CHomeDisplay::SetScrollPos(int Pos, bool fScroll)
 {
-	if (m_hwnd == NULL)
+	if (m_hwnd == nullptr)
 		return false;
 
 	RECT rcContent;
@@ -1666,7 +1666,7 @@ bool CHomeDisplay::SetScrollPos(int Pos, bool fScroll)
 			Update();
 			::ScrollWindowEx(
 				m_hwnd, 0, m_ScrollPos - Pos,
-				&rcContent, &rcContent, NULL, NULL, SW_INVALIDATE);
+				&rcContent, &rcContent, nullptr, nullptr, SW_INVALIDATE);
 		}
 		m_ScrollPos = Pos;
 	}
@@ -1687,7 +1687,7 @@ bool CHomeDisplay::SetCurCategory(int Category)
 		m_CurCategory = Category;
 
 		m_ScrollPos = 0;
-		if (m_hwnd != NULL) {
+		if (m_hwnd != nullptr) {
 			LayOut();
 			Invalidate();
 		}
@@ -1712,7 +1712,7 @@ bool CHomeDisplay::UpdateCurContent()
 
 	m_CategoryList[m_CurCategory]->Create();
 
-	if (m_hwnd != NULL) {
+	if (m_hwnd != nullptr) {
 		m_ScrollPos = 0;
 		LayOut();
 		RECT rc;
@@ -1731,7 +1731,7 @@ bool CHomeDisplay::OnContentChanged()
 
 	m_ContentHeight = m_CategoryList[m_CurCategory]->GetHeight();
 
-	if (m_hwnd != NULL) {
+	if (m_hwnd != nullptr) {
 		SetScrollBar();
 		RECT rc;
 		GetContentAreaRect(&rc);
@@ -1750,7 +1750,7 @@ LRESULT CHomeDisplay::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 
 		m_hwndScroll = ::CreateWindowEx(
 			0, TEXT("SCROLLBAR"), TEXT(""),
-			WS_CHILD | SBS_VERT, 0, 0, 0, 0, hwnd, NULL, m_hinst, NULL);
+			WS_CHILD | SBS_VERT, 0, 0, 0, 0, hwnd, nullptr, m_hinst, nullptr);
 		m_ScrollPos = 0;
 		m_fHitCloseButton = false;
 		m_CursorPart = PART_MARGIN;
@@ -1873,7 +1873,7 @@ LRESULT CHomeDisplay::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 				if (m_CategoryList[m_CurCategory]->OnSetCursor())
 					return TRUE;
 			}
-			::SetCursor(::LoadCursor(NULL, IDC_ARROW));
+			::SetCursor(::LoadCursor(nullptr, IDC_ARROW));
 			return TRUE;
 		}
 		break;
@@ -2004,9 +2004,9 @@ LRESULT CHomeDisplay::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 		for (auto itr = m_CategoryList.begin(); itr != m_CategoryList.end(); ++itr)
 			(*itr)->OnWindowDestroy();
 
-		if (m_himlIcons != NULL) {
+		if (m_himlIcons != nullptr) {
 			::ImageList_Destroy(m_himlIcons);
-			m_himlIcons = NULL;
+			m_himlIcons = nullptr;
 		}
 		return 0;
 	}
@@ -2017,7 +2017,7 @@ LRESULT CHomeDisplay::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 
 void CHomeDisplay::ApplyStyle()
 {
-	if (m_hwnd != NULL) {
+	if (m_hwnd != nullptr) {
 		if (!m_fAutoFontSize)
 			CreateDrawFont(m_StyleFont, &m_Font);
 	}
@@ -2026,7 +2026,7 @@ void CHomeDisplay::ApplyStyle()
 
 void CHomeDisplay::RealizeStyle()
 {
-	if (m_hwnd != NULL) {
+	if (m_hwnd != nullptr) {
 		LayOut();
 		Invalidate();
 	}
@@ -2042,7 +2042,7 @@ void CHomeDisplay::Draw(HDC hdc, const RECT &PaintRect)
 	COLORREF OldTextColor = ::GetTextColor(hdc);
 	HFONT hfontOld = DrawUtil::SelectObject(hdc, m_Font);
 
-	const CCategory *pCategory = NULL;
+	const CCategory *pCategory = nullptr;
 	if (m_CurCategory >= 0)
 		pCategory = m_CategoryList[m_CurCategory];
 
@@ -2085,7 +2085,7 @@ void CHomeDisplay::Draw(HDC hdc, const RECT &PaintRect)
 		rcContent.left = m_CategoriesAreaWidth;
 		ThemeDraw.Draw(m_HomeDisplayStyle.ContentBackStyle, rcContent);
 
-		if (pCategory != NULL) {
+		if (pCategory != nullptr) {
 			TVTest::Style::Subtract(&rcContent, m_Style.ContentMargin);
 			if (rcContent.left < rcContent.right) {
 				HRGN hrgn = ::CreateRectRgnIndirect(&rcContent);
@@ -2094,7 +2094,7 @@ void CHomeDisplay::Draw(HDC hdc, const RECT &PaintRect)
 				::OffsetRect(&rcContent, 0, -m_ScrollPos);
 				pCategory->Draw(hdc, m_HomeDisplayStyle, rcContent, PaintRect, ThemeDraw);
 
-				::SelectClipRgn(hdc, NULL);
+				::SelectClipRgn(hdc, nullptr);
 				::DeleteObject(hrgn);
 			}
 		}
@@ -2207,7 +2207,7 @@ CHomeDisplay::PartType CHomeDisplay::HitTest(int x, int y, int *pCategoryIndex) 
 	rcCategories.right = rcCategories.left + m_CategoriesAreaWidth;
 	rcCategories.bottom = rcCategories.top + m_CategoryItemHeight * (int)m_CategoryList.size();
 	if (::PtInRect(&rcCategories, pt)) {
-		if (pCategoryIndex != NULL)
+		if (pCategoryIndex != nullptr)
 			*pCategoryIndex = (pt.y - rcCategories.top) / m_CategoryItemHeight;
 		return PART_CATEGORY;
 	}
@@ -2277,7 +2277,7 @@ bool CHomeDisplay::RedrawCategoryItem(int Category)
 
 
 CHomeDisplay::CHomeDisplayEventHandler::CHomeDisplayEventHandler()
-	: m_pHomeDisplay(NULL)
+	: m_pHomeDisplay(nullptr)
 {
 }
 

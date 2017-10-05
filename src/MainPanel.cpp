@@ -287,7 +287,7 @@ bool CMainPanel::CFrameEventHandler::OnEnterSizeMove()
 
 	::GetCursorPos(&m_ptDragStartCursorPos);
 	int x, y;
-	m_pFrame->GetPosition(&x, &y, NULL, NULL);
+	m_pFrame->GetPosition(&x, &y, nullptr, nullptr);
 	m_ptStartPos.x = x;
 	m_ptStartPos.y = y;
 
@@ -451,7 +451,7 @@ void CMainPanel::CChannelPanelEventHandler::OnChannelClick(const CChannelInfo *p
 	CAppMain &App = GetAppClass();
 	const CChannelList *pList = App.ChannelManager.GetCurrentChannelList();
 
-	if (pList != NULL) {
+	if (pList != nullptr) {
 		int Index = pList->FindByIndex(
 			pChannelInfo->GetSpace(),
 			pChannelInfo->GetChannelIndex(),

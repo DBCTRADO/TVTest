@@ -11,7 +11,7 @@
 
 
 CStreamInfo::CStreamInfo()
-	: m_pEventHandler(NULL)
+	: m_pEventHandler(nullptr)
 	, m_fCreateFirst(true)
 {
 }
@@ -25,7 +25,7 @@ CStreamInfo::~CStreamInfo()
 bool CStreamInfo::Create(HWND hwndOwner)
 {
 	if (m_fCreateFirst) {
-		if (m_pEventHandler != NULL)
+		if (m_pEventHandler != nullptr)
 			m_pEventHandler->OnRestoreSettings();
 		m_fCreateFirst = false;
 	}
@@ -88,7 +88,7 @@ INT_PTR CStreamInfo::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 		case IDOK:
 		case IDCANCEL:
-			if (m_pEventHandler == NULL || m_pEventHandler->OnClose())
+			if (m_pEventHandler == nullptr || m_pEventHandler->OnClose())
 				::DestroyWindow(hDlg);
 			return TRUE;
 		}
@@ -106,12 +106,12 @@ INT_PTR CStreamInfo::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				tvhti.pt.y = (SHORT)HIWORD(Pos);
 				::ScreenToClient(pnmhdr->hwndFrom, &tvhti.pt);
 				HTREEITEM hItem = TreeView_HitTest(pnmhdr->hwndFrom, &tvhti);
-				if (hItem != NULL) {
+				if (hItem != nullptr) {
 					HMENU hmenu = ::CreatePopupMenu();
 					::AppendMenu(hmenu, MFT_STRING | MFS_ENABLED, 1, TEXT("コピー(&C)"));
 					POINT pt;
 					::GetCursorPos(&pt);
-					switch (::TrackPopupMenu(hmenu, TPM_RIGHTBUTTON | TPM_RETURNCMD, pt.x, pt.y, 0, hDlg, NULL)) {
+					switch (::TrackPopupMenu(hmenu, TPM_RIGHTBUTTON | TPM_RETURNCMD, pt.x, pt.y, 0, hDlg, nullptr)) {
 					case 1:
 						{
 							int Length = 0x8000;
@@ -145,7 +145,7 @@ static void FormatEsInfo(
 		pszName, Index + 1,
 		Es.PID, Es.PID,
 		Es.StreamType,
-		pszStreamType != NULL ? pszStreamType : TEXT("?"),
+		pszStreamType != nullptr ? pszStreamType : TEXT("?"),
 		Es.ComponentTag);
 }
 
@@ -201,7 +201,7 @@ void CStreamInfo::SetService()
 	tvis.item.pszText = TEXT("サービス");
 	tvis.item.cChildren = !ServiceList.empty() ? 1 : 0;
 	hItem = TreeView_InsertItem(hwndTree, &tvis);
-	if (hItem != NULL) {
+	if (hItem != nullptr) {
 		for (int i = 0; i < (int)ServiceList.size(); i++) {
 			const LibISDB::AnalyzerFilter::ServiceInfo &ServiceInfo = ServiceList[i];
 			WORD ServiceID, PID;
@@ -295,7 +295,7 @@ void CStreamInfo::SetService()
 
 	// チャンネルファイル用フォーマット一覧
 	const CChannelInfo *pChannelInfo = GetAppClass().ChannelManager.GetCurrentChannelInfo();
-	if (pChannelInfo != NULL) {
+	if (pChannelInfo != nullptr) {
 		tvis.hParent = TVI_ROOT;
 		tvis.hInsertAfter = TVI_LAST;
 		tvis.item.mask = TVIF_STATE | TVIF_TEXT | TVIF_CHILDREN;
@@ -304,7 +304,7 @@ void CStreamInfo::SetService()
 		tvis.item.pszText = TEXT("チャンネルファイル用フォーマット");
 		tvis.item.cChildren = !ServiceList.empty() ? 1 : 0;;
 		hItem = TreeView_InsertItem(hwndTree, &tvis);
-		if (hItem != NULL) {
+		if (hItem != nullptr) {
 			const int RemoteControlKeyID = pAnalyzer->GetRemoteControlKeyID();
 
 			for (int i = 0; i < (int)ServiceList.size(); i++) {
@@ -342,7 +342,7 @@ void CStreamInfo::SetService()
 		tvis.item.pszText = TEXT("ネットワークTS (NIT)");
 		tvis.item.cChildren = 1;
 		hItem = TreeView_InsertItem(hwndTree, &tvis);
-		if (hItem != NULL) {
+		if (hItem != nullptr) {
 			for (size_t i = 0; i < TsList.size(); i++) {
 				const LibISDB::AnalyzerFilter::NetworkStreamInfo &TsInfo = TsList[i];
 
@@ -384,7 +384,7 @@ void CStreamInfo::SetService()
 		tvis.item.pszText = TEXT("ネットワークサービス (SDT)");
 		tvis.item.cChildren = 1;
 		hItem = TreeView_InsertItem(hwndTree, &tvis);
-		if (hItem != NULL) {
+		if (hItem != nullptr) {
 			for (size_t i = 0; i < SdtList.size(); i++) {
 				const LibISDB::AnalyzerFilter::SDTStreamInfo &TsInfo = SdtList[i];
 
@@ -428,7 +428,7 @@ void CStreamInfo::SetService()
 		tvis.item.pszText = TEXT("地上分配システム");
 		tvis.item.cChildren = !TerrestrialList.empty() ? 1 : 0;
 		hItem = TreeView_InsertItem(hwndTree, &tvis);
-		if (hItem != NULL) {
+		if (hItem != nullptr) {
 			for (int i = 0; i < (int)TerrestrialList.size(); i++) {
 				const LibISDB::AnalyzerFilter::TerrestrialDeliverySystemInfo &Info = TerrestrialList[i];
 				LPCTSTR pszArea = LibISDB::GetAreaText_ja(Info.AreaCode);
@@ -438,7 +438,7 @@ void CStreamInfo::SetService()
 					TEXT("TSID 0x%04x (%d) / エリア %s / ガードインターバル %s / 伝送モード %s"),
 					Info.TransportStreamID,
 					Info.TransportStreamID,
-					pszArea != NULL ? pszArea : TEXT("?"),
+					pszArea != nullptr ? pszArea : TEXT("?"),
 					Info.GuardInterval == 0 ? TEXT("1/32") :
 					Info.GuardInterval == 1 ? TEXT("1/16") :
 					Info.GuardInterval == 2 ? TEXT("1/8") :
@@ -471,7 +471,7 @@ void CStreamInfo::SetService()
 			tvis.item.pszText = TEXT("衛星分配システム");
 			tvis.item.cChildren = !SatelliteList.empty() ? 1 : 0;
 			hItem = TreeView_InsertItem(hwndTree, &tvis);
-			if (hItem != NULL) {
+			if (hItem != nullptr) {
 				for (int i = 0; i < (int)SatelliteList.size(); i++) {
 					const LibISDB::AnalyzerFilter::SatelliteDeliverySystemInfo &Info = SatelliteList[i];
 
@@ -505,7 +505,7 @@ int CStreamInfo::GetTreeViewText(HWND hwndTree, HTREEITEM hItem, bool fSiblings,
 
 	tvi.mask = TVIF_TEXT;
 	tvi.hItem = hItem;
-	while (tvi.hItem != NULL && MaxText > 2) {
+	while (tvi.hItem != nullptr && MaxText > 2) {
 		if (Level > 0) {
 			if (MaxText <= Level)
 				break;
@@ -523,7 +523,7 @@ int CStreamInfo::GetTreeViewText(HWND hwndTree, HTREEITEM hItem, bool fSiblings,
 			MaxText -= Len + 2;
 		}
 		HTREEITEM hChild = TreeView_GetChild(hwndTree, tvi.hItem);
-		if (hChild != NULL) {
+		if (hChild != nullptr) {
 			int Length = GetTreeViewText(hwndTree, hChild, true, p, MaxText, Level + 1);
 			p += Length;
 			MaxText -= Length;
