@@ -906,14 +906,13 @@ bool CRecordManager::DoFileExistsOperation(HWND hwndOwner, LPTSTR pszFileName)
 		break;
 	case EXISTS_SEQUENCIALNUMBER:
 		if (PathFileExists(m_FileName.c_str())) {
-			int i;
 			TCHAR szFileName[MAX_PATH];
 			LPTSTR pszExtension, p;
 
 			pszExtension=PathFindExtension(m_FileName.c_str());
 			lstrcpy(szFileName, m_FileName.c_str());
 			p = PathFindExtension(szFileName);
-			for (i = 0;; i++) {
+			for (int i = 0;; i++) {
 				wsprintf(p, TEXT("%d%s"), i + 1, pszExtension);
 				if (!PathFileExists(szFileName))
 					break;

@@ -329,7 +329,6 @@ const CEventItem *CEventLayout::GetItem(size_t Index) const
 void CEventLayout::InsertNullItems(const LibISDB::DateTime &FirstTime, const LibISDB::DateTime &LastTime)
 {
 	int FirstItem, LastItem;
-	int i;
 	CEventItem *pItem, *pPrevItem;
 	LibISDB::DateTime PrevTime, StartTime, EndTime;
 	int EmptyCount;
@@ -338,7 +337,7 @@ void CEventLayout::InsertNullItems(const LibISDB::DateTime &FirstTime, const Lib
 	LastItem = -1;
 	EmptyCount = 0;
 	PrevTime = FirstTime;
-	for (i = 0; i < (int)m_EventList.size(); i++) {
+	for (int i = 0; i < (int)m_EventList.size(); i++) {
 		pItem = m_EventList[i];
 		StartTime = pItem->GetStartTime();
 		EndTime = pItem->GetEndTime();
@@ -359,7 +358,7 @@ void CEventLayout::InsertNullItems(const LibISDB::DateTime &FirstTime, const Lib
 	if (EmptyCount > 0) {
 		pPrevItem = nullptr;
 		PrevTime = FirstTime;
-		for (i = FirstItem; i < LastItem; i++) {
+		for (int i = FirstItem; i < LastItem; i++) {
 			pItem = m_EventList[i];
 			StartTime = pItem->GetStartTime();
 			int Cmp = PrevTime.Compare(StartTime);

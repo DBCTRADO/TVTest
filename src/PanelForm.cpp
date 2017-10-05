@@ -648,7 +648,6 @@ void CPanelForm::Draw(HDC hdc, const RECT &PaintRect)
 		COLORREF crOldTextColor;
 		int OldBkMode;
 		HFONT hfontOld;
-		int i;
 		RECT rc;
 		HBRUSH hbrOld;
 
@@ -661,7 +660,7 @@ void CPanelForm::Draw(HDC hdc, const RECT &PaintRect)
 		rc.right = TabWidth;
 		rc.bottom = m_TabHeight;
 
-		for (i = 0; i < (int)m_TabOrder.size(); i++) {
+		for (int i = 0; i < (int)m_TabOrder.size(); i++) {
 			int Index = m_TabOrder[i];
 			const CWindowInfo *pWindow = m_WindowList[Index];
 

@@ -925,23 +925,23 @@ INT_PTR CAccelerator::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 
 		case IDC_ACCELERATOR_DEFAULT:
 			{
-				int NumCommands, i, j;
+				int NumCommands;
 
 				NumCommands = m_pCommandList->NumCommands();
-				for (i = 0; i < NumCommands; i++) {
+				for (int i = 0; i < NumCommands; i++) {
 					int Command = m_pCommandList->GetCommandID(i);
 					WORD Key = 0;
 					BYTE Mod = 0;
 					int AppCommand = 0;
 
-					for (j = 0; j < lengthof(m_DefaultAccelList); j++) {
+					for (int j = 0; j < lengthof(m_DefaultAccelList); j++) {
 						if (m_DefaultAccelList[j].Command == Command) {
 							Key = m_DefaultAccelList[j].KeyCode;
 							Mod = m_DefaultAccelList[j].Modifiers;
 							break;
 						}
 					}
-					for (j = 0; j < lengthof(m_DefaultAppCommandList); j++) {
+					for (int j = 0; j < lengthof(m_DefaultAppCommandList); j++) {
 						if (m_DefaultAppCommandList[j].Command == Command) {
 							for (size_t k = 0; k < m_MediaKeyList.size(); k++) {
 								if (m_MediaKeyList[k].Type == MEDIAKEY_APPCOMMAND

@@ -1061,7 +1061,6 @@ void CUICore::InitTunerMenu(HMENU hmenu)
 
 	TCHAR szText[256];
 	int Length;
-	int i;
 
 	// 各チューニング空間のメニューを追加する
 	// 実際のメニューの設定は WM_INITMENUPOPUP で行っている
@@ -1073,7 +1072,7 @@ void CUICore::InitTunerMenu(HMENU hmenu)
 			hmenuSpace = ::CreatePopupMenu();
 			Menu.Append(hmenuSpace, TEXT("&A: すべて"));
 		}
-		for (i = 0; i < m_App.ChannelManager.NumSpaces(); i++) {
+		for (int i = 0; i < m_App.ChannelManager.NumSpaces(); i++) {
 			const CChannelList *pChannelList = m_App.ChannelManager.GetChannelList(i);
 
 			hmenuSpace = ::CreatePopupMenu();
@@ -1100,6 +1099,7 @@ void CUICore::InitTunerMenu(HMENU hmenu)
 		MF_ENABLED | (m_App.ChannelDisplay.GetVisible() ? MF_CHECKED : MF_UNCHECKED));
 	::AppendMenu(hmenu, MF_SEPARATOR, 0, nullptr);
 	int CurDriver = -1;
+	int i;
 	for (i = 0; i < m_App.DriverManager.NumDrivers(); i++) {
 		const CDriverInfo *pDriverInfo = m_App.DriverManager.GetDriverInfo(i);
 		::lstrcpyn(szText, pDriverInfo->GetFileName(), lengthof(szText));
@@ -1137,7 +1137,6 @@ bool CUICore::ProcessTunerMenu(int Command)
 
 	const CChannelList *pChannelList;
 	int CommandBase;
-	int i, j;
 
 	CommandBase = CM_SPACE_CHANNEL_FIRST;
 	pChannelList = m_App.ChannelManager.GetAllChannelList();
@@ -1152,7 +1151,7 @@ bool CUICore::ProcessTunerMenu(int Command)
 			return m_App.Core.SetChannel(i, Command - CommandBase);
 		CommandBase += pChannelList->NumChannels();
 	}
-	for (i = 0; i < m_App.DriverManager.NumDrivers(); i++) {
+	for (int i = 0; i < m_App.DriverManager.NumDrivers(); i++) {
 		const CDriverInfo *pDriverInfo = m_App.DriverManager.GetDriverInfo(i);
 
 		if (IsEqualFileName(pDriverInfo->GetFileName(), m_App.CoreEngine.GetDriverFileName()))
@@ -1160,7 +1159,7 @@ bool CUICore::ProcessTunerMenu(int Command)
 		if (pDriverInfo->IsTuningSpaceListLoaded()) {
 			const CTuningSpaceList *pTuningSpaceList = pDriverInfo->GetAvailableTuningSpaceList();
 
-			for (j = 0; j < pTuningSpaceList->NumSpaces(); j++) {
+			for (int j = 0; j < pTuningSpaceList->NumSpaces(); j++) {
 				pChannelList = pTuningSpaceList->GetChannelList(j);
 				if (Command - CommandBase < pChannelList->NumChannels()) {
 					if (!m_App.Core.OpenTuner(pDriverInfo->GetFileName()))
@@ -1704,7 +1703,6 @@ bool CUICore::CTunerSelectMenu::Create(HWND hwnd)
 	HMENU hmenuSpace;
 	const CChannelList *pChannelList;
 	int Command;
-	int i, j;
 	LPCTSTR pszName;
 	TCHAR szText[MAX_PATH * 2];
 	int Length;
@@ -1716,7 +1714,7 @@ bool CUICore::CTunerSelectMenu::Create(HWND hwnd)
 		m_Menu.Append(hmenuSpace, TEXT("&A: すべて"));
 	}
 	Command += pChannelList->NumChannels();
-	for (i = 0; i < ChannelManager.NumSpaces(); i++) {
+	for (int i = 0; i < ChannelManager.NumSpaces(); i++) {
 		pChannelList = ChannelManager.GetChannelList(i);
 		hmenuSpace = ::CreatePopupMenu();
 		Length = StdUtil::snprintf(szText, lengthof(szText), TEXT("&%d: "), i);
@@ -1736,7 +1734,7 @@ bool CUICore::CTunerSelectMenu::Create(HWND hwnd)
 
 	CDriverManager &DriverManager = m_UICore.m_App.DriverManager;
 
-	for (i = 0; i < DriverManager.NumDrivers(); i++) {
+	for (int i = 0; i < DriverManager.NumDrivers(); i++) {
 		CDriverInfo *pDriverInfo = DriverManager.GetDriverInfo(i);
 
 		if (IsEqualFileName(
@@ -1753,7 +1751,7 @@ bool CUICore::CTunerSelectMenu::Create(HWND hwnd)
 				&& (pTuningSpaceList = pDriverInfo->GetAvailableTuningSpaceList()) != nullptr) {
 			HMENU hmenuDriver = ::CreatePopupMenu();
 
-			for (j = 0; j < pTuningSpaceList->NumSpaces(); j++) {
+			for (int j = 0; j < pTuningSpaceList->NumSpaces(); j++) {
 				pChannelList = pTuningSpaceList->GetChannelList(j);
 				if (pChannelList->NumEnableChannels() == 0) {
 					Command += pChannelList->NumChannels();
@@ -1831,7 +1829,7 @@ bool CUICore::CTunerSelectMenu::OnInitMenuPopup(HMENU hmenu)
 
 	bool fChannelMenu = false;
 	int Count = m_Menu.GetItemCount();
-	int i, j;
+	int i;
 	i = m_UICore.m_App.ChannelManager.NumSpaces();
 	if (i > 1)
 		i++;
@@ -1846,6 +1844,7 @@ bool CUICore::CTunerSelectMenu::OnInitMenuPopup(HMENU hmenu)
 			break;
 		}
 		if (Items > 0) {
+			int j;
 			for (j = 0; j < Items; j++) {
 				if (::GetSubMenu(hmenuChannel, j) == hmenu)
 					break;

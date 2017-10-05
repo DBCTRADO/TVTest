@@ -720,13 +720,13 @@ INT_PTR CSideBarOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 
 				HWND hwndList = ::GetDlgItem(hDlg, IDC_SIDEBAR_ITEMLIST);
 				std::vector<int> ItemList;
-				int i, Count;
+				int Count;
 				LVITEM lvi;
 
 				Count = ListView_GetItemCount(hwndList);
 				lvi.mask = LVIF_PARAM;
 				lvi.iSubItem = 0;
-				for (i = 0; i < Count; i++) {
+				for (int i = 0; i < Count; i++) {
 					lvi.iItem = i;
 					ListView_GetItem(hwndList, &lvi);
 					ItemList.push_back((int)lvi.lParam);

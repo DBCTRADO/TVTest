@@ -431,8 +431,6 @@ INT_PTR CCaptureOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 	switch (uMsg) {
 	case WM_INITDIALOG:
 		{
-			int i;
-
 			SendDlgItemMessage(hDlg, IDC_CAPTUREOPTIONS_SAVEFOLDER, EM_LIMITTEXT, MAX_PATH - 1, 0);
 			SetDlgItemText(hDlg, IDC_CAPTUREOPTIONS_SAVEFOLDER, m_szSaveFolder);
 			SetDlgItemText(hDlg, IDC_CAPTUREOPTIONS_FILENAME, m_FileName.c_str());
@@ -443,9 +441,9 @@ INT_PTR CCaptureOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 				TEXT("表示されている大きさ"),
 			};
 			TCHAR szText[32];
-			for (i = 0; i < lengthof(SizeTypeText); i++)
+			for (int i = 0; i < lengthof(SizeTypeText); i++)
 				DlgComboBox_AddString(hDlg, IDC_CAPTUREOPTIONS_SIZE, SizeTypeText[i]);
-			for (i = 0; i <= PERCENTAGE_LAST; i++) {
+			for (int i = 0; i <= PERCENTAGE_LAST; i++) {
 				const PercentageType &Ratio = m_PercentageList[i];
 				int Length = StdUtil::snprintf(
 					szText, lengthof(szText), TEXT("%d %%"),
@@ -457,7 +455,7 @@ INT_PTR CCaptureOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 				}
 				DlgComboBox_AddString(hDlg, IDC_CAPTUREOPTIONS_SIZE, szText);
 			}
-			for (i = 0; i <= SIZE_LAST; i++) {
+			for (int i = 0; i <= SIZE_LAST; i++) {
 				StdUtil::snprintf(
 					szText, lengthof(szText), TEXT("%ld x %ld"),
 					m_SizeList[i].cx, m_SizeList[i].cy);
@@ -479,7 +477,7 @@ INT_PTR CCaptureOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 			DlgComboBox_SetCurSel(hDlg, IDC_CAPTUREOPTIONS_SIZE, Sel);
 
 			LPCTSTR pszFormat;
-			for (i = 0; (pszFormat = m_ImageCodec.EnumSaveFormat(i)) != nullptr; i++)
+			for (int i = 0; (pszFormat = m_ImageCodec.EnumSaveFormat(i)) != nullptr; i++)
 				DlgComboBox_AddString(hDlg, IDC_CAPTUREOPTIONS_FORMAT, pszFormat);
 			DlgComboBox_SetCurSel(hDlg, IDC_CAPTUREOPTIONS_FORMAT, m_SaveFormat);
 

@@ -776,10 +776,9 @@ CTuningSpaceInfo::TuningSpaceType CTuningSpaceList::GetTuningSpaceType(int Space
 
 bool CTuningSpaceList::MakeTuningSpaceList(const CChannelList *pList, int Spaces)
 {
-	int i;
 	int Space;
 
-	for (i = 0; i < pList->NumChannels(); i++) {
+	for (int i = 0; i < pList->NumChannels(); i++) {
 		Space = pList->GetSpace(i);
 		if (Space + 1 > Spaces)
 			Spaces = Space + 1;
@@ -788,7 +787,7 @@ bool CTuningSpaceList::MakeTuningSpaceList(const CChannelList *pList, int Spaces
 		return false;
 	if (!Reserve(Spaces))
 		return false;
-	for (i = 0; i < pList->NumChannels(); i++) {
+	for (int i = 0; i < pList->NumChannels(); i++) {
 		const CChannelInfo *pChInfo = pList->GetChannelInfo(i);
 
 		m_TuningSpaceList[pChInfo->GetSpace()]->GetChannelList()->AddChannel(*pChInfo);
@@ -809,8 +808,6 @@ bool CTuningSpaceList::Create(const CChannelList *pList, int Spaces)
 
 bool CTuningSpaceList::Reserve(int Spaces)
 {
-	int i;
-
 	if (Spaces < 0)
 		return false;
 	if (Spaces == NumSpaces())
@@ -820,11 +817,11 @@ bool CTuningSpaceList::Reserve(int Spaces)
 		return true;
 	}
 	if (Spaces < NumSpaces()) {
-		for (i = NumSpaces() - 1; i >= Spaces; i--)
+		for (int i = NumSpaces() - 1; i >= Spaces; i--)
 			delete m_TuningSpaceList[i];
 		m_TuningSpaceList.resize(Spaces);
 	} else {
-		for (i = NumSpaces(); i < Spaces; i++) {
+		for (int i = NumSpaces(); i < Spaces; i++) {
 			CTuningSpaceInfo *pInfo = new CTuningSpaceInfo;
 
 			pInfo->Create();

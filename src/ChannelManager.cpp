@@ -336,11 +336,10 @@ LPCTSTR CChannelManager::GetTuningSpaceName(int Space) const
 int CChannelManager::FindChannelInfo(const CChannelInfo *pInfo) const
 {
 	const CChannelList *pList = GetCurrentChannelList();
-	int i;
 
 	if (pList == nullptr)
 		return -1;
-	for (i = 0; i < pList->NumChannels(); i++) {
+	for (int i = 0; i < pList->NumChannels(); i++) {
 		if (pList->GetChannelInfo(i) == pInfo)
 			return i;
 	}

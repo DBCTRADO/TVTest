@@ -352,8 +352,7 @@ int CDebugHelper::FormatSymbolFromAddress(
 		}
 	}
 #else
-	int i;
-	for (i = 0; i < NumModuleEntries; i++) {
+	for (int i = 0; i < NumModuleEntries; i++) {
 		if (Address >= (DWORD64)pModuleEntries[i].modBaseAddr
 				&& Address < (DWORD64)pModuleEntries[i].modBaseAddr + pModuleEntries[i].modBaseSize) {
 			pszModule = pModuleEntries[i].szModule;

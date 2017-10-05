@@ -767,11 +767,10 @@ void CChannelMenu::Destroy()
 {
 	if (m_hmenu) {
 		MENUITEMINFO mii;
-		int i;
 
 		mii.cbSize = sizeof(MENUITEMINFO);
 		mii.fMask = MIIM_DATA;
-		for (i = ::GetMenuItemCount(m_hmenu) - 1; i >= 0; i--) {
+		for (int i = ::GetMenuItemCount(m_hmenu) - 1; i >= 0; i--) {
 			if (::GetMenuItemInfo(m_hmenu, i, TRUE, &mii))
 				delete reinterpret_cast<CChannelMenuItem*>(mii.dwItemData);
 		}

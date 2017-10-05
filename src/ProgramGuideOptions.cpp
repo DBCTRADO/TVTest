@@ -1070,12 +1070,11 @@ void CProgramGuideOptions::DeleteAllTools()
 	Items = ListView_GetItemCount(hwndList);
 	if (Items > 0) {
 		LV_ITEM lvi;
-		int i;
 		CProgramGuideTool *pTool;
 
 		lvi.mask = LVIF_PARAM;
 		lvi.iSubItem = 0;
-		for (i = Items - 1; i >= 0; i--) {
+		for (int i = Items - 1; i >= 0; i--) {
 			lvi.iItem = i;
 			ListView_GetItem(hwndList, &lvi);
 			pTool = reinterpret_cast<CProgramGuideTool*>(lvi.lParam);

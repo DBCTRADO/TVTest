@@ -268,10 +268,9 @@ LPCTSTR CImageCodec::GetExtension(int Index) const
 
 int CImageCodec::FormatNameToIndex(LPCTSTR pszName) const
 {
-	int i;
 	LPCTSTR pszFormat;
 
-	for (i = 0; (pszFormat = EnumSaveFormat(i)) != nullptr; i++) {
+	for (int i = 0; (pszFormat = EnumSaveFormat(i)) != nullptr; i++) {
 		if (lstrcmpi(pszName, pszFormat) == 0)
 			return i;
 	}

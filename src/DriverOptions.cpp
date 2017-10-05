@@ -603,7 +603,6 @@ void CDriverOptions::SetChannelList(int Driver)
 		pSettings->GetFileName(),
 		::PathFindFileName(GetAppClass().CoreEngine.GetDriverFileName()));
 	const CDriverInfo *pDriverInfo;
-	int i;
 
 	if (!fCur) {
 		pDriverInfo = m_pDriverManager->GetDriverInfo(Driver);
@@ -611,7 +610,7 @@ void CDriverOptions::SetChannelList(int Driver)
 	if (pSettings->GetAllChannels()) {
 		DlgComboBox_AddString(m_hDlg, IDC_DRIVEROPTIONS_INITCHANNEL_CHANNEL, TEXT("指定なし"));
 		DlgComboBox_SetItemData(m_hDlg, IDC_DRIVEROPTIONS_INITCHANNEL_CHANNEL, 0, -1);
-		for (i = 0;; i++) {
+		for (int i = 0;; i++) {
 			const CChannelList *pChannelList;
 
 			if (fCur)
@@ -623,7 +622,7 @@ void CDriverOptions::SetChannelList(int Driver)
 			AddChannelList(pChannelList);
 		}
 	} else {
-		i = pSettings->GetInitialSpace();
+		const int i = pSettings->GetInitialSpace();
 		if (i >= 0) {
 			const CChannelList *pChannelList;
 

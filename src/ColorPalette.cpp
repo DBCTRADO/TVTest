@@ -134,9 +134,7 @@ int CColorPalette::GetHot() const
 
 int CColorPalette::FindColor(COLORREF Color) const
 {
-	int i;
-
-	for (i = 0; i < m_NumColors; i++) {
+	for (int i = 0; i < m_NumColors; i++) {
 		if (RGB(m_pPalette[i].rgbRed, m_pPalette[i].rgbGreen, m_pPalette[i].rgbBlue) == Color)
 			return i;
 	}
@@ -247,11 +245,10 @@ LRESULT CColorPalette::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 		if (m_pPalette != nullptr) {
 			PAINTSTRUCT ps;
 			int x, y;
-			int i;
 			RECT rc;
 
 			::BeginPaint(hwnd, &ps);
-			for (i = 0; i < m_NumColors; i++) {
+			for (int i = 0; i < m_NumColors; i++) {
 				x = i % 16;
 				y = i / 16;
 				rc.left = m_Left + x * m_ItemWidth + 2;

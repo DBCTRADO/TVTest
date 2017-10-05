@@ -15,14 +15,10 @@ void EnableDlgItem(HWND hDlg, int ID, bool fEnable)
 
 void EnableDlgItems(HWND hDlg, int FirstID, int LastID, bool fEnable)
 {
-	int i;
+	if (FirstID > LastID)
+		std::swap(FirstID, LastID);
 
-	if (FirstID > LastID) {
-		i = FirstID;
-		FirstID = LastID;
-		LastID = i;
-	}
-	for (i = FirstID; i <= LastID; i++)
+	for (int i = FirstID; i <= LastID; i++)
 		EnableDlgItem(hDlg, i, fEnable);
 }
 
@@ -72,14 +68,10 @@ void SetDlgItemFocus(HWND hDlg, int ID)
 
 int GetCheckedRadioButton(HWND hDlg, int FirstID, int LastID)
 {
-	int i;
+	if (LastID < FirstID)
+		std::swap(FirstID, LastID);
 
-	if (LastID < FirstID) {
-		i = FirstID;
-		FirstID = LastID;
-		LastID = i;
-	}
-	for (i = FirstID; i <= LastID; i++) {
+	for (int i = FirstID; i <= LastID; i++) {
 		if (IsDlgButtonChecked(hDlg, i) == BST_CHECKED)
 			return i;
 	}
@@ -182,7 +174,6 @@ bool SetListBoxHExtent(HWND hDlg, int ID)
 	if (Count >= 1) {
 		HFONT hfont, hfontOld;
 		HDC hdc;
-		int i;
 		TCHAR szText[MAX_PATH];
 		SIZE sz;
 
@@ -190,7 +181,7 @@ bool SetListBoxHExtent(HWND hDlg, int ID)
 		if (hfont == nullptr || (hdc = GetDC(hwnd)) == nullptr)
 			return false;
 		hfontOld = static_cast<HFONT>(SelectObject(hdc, hfont));
-		for (i = 0; i < Count; i++) {
+		for (int i = 0; i < Count; i++) {
 			SendMessage(hwnd, LB_GETTEXT, i, (LPARAM)szText);
 			GetTextExtentPoint32(hdc, szText, lstrlen(szText), &sz);
 			if (sz.cx > MaxWidth)
@@ -336,7 +327,6 @@ ULONGLONG GetDlgItemInt64(HWND hDlg, int ID, BOOL *pfTranslated, BOOL fSigned)
 HMENU CreatePopupMenuFromControls(HWND hDlg, const int *pIDList, int IDListLength)
 {
 	HMENU hmenu;
-	int i;
 	TCHAR szText[256];
 	HWND hwnd;
 	unsigned int Flags;
@@ -344,7 +334,7 @@ HMENU CreatePopupMenuFromControls(HWND hDlg, const int *pIDList, int IDListLengt
 	hmenu = CreatePopupMenu();
 	if (hmenu == nullptr)
 		return nullptr;
-	for (i = 0; i < IDListLength; i++) {
+	for (int i = 0; i < IDListLength; i++) {
 		if (pIDList[i] != 0) {
 			hwnd = GetDlgItem(hDlg, pIDList[i]);
 			GetWindowText(hwnd, szText, lengthof(szText));

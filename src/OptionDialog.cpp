@@ -251,12 +251,11 @@ INT_PTR COptionDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 			{
 				HCURSOR hcurOld;
 				NMHDR nmh;
-				int i;
 
 				hcurOld = ::SetCursor(::LoadCursor(nullptr, IDC_WAIT));
 				nmh.code = LOWORD(wParam) == IDOK ? PSN_APPLY : PSN_RESET;
 				m_fSettingError = false;
-				for (i = 0; i < NUM_PAGES; i++) {
+				for (int i = 0; i < NUM_PAGES; i++) {
 					if (m_PageList[i].pOptions->IsCreated()) {
 						m_PageList[i].pOptions->SendMessage(WM_NOTIFY, 0, reinterpret_cast<LPARAM>(&nmh));
 						if (m_fSettingError) {

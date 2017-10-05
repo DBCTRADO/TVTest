@@ -5365,7 +5365,6 @@ INT_PTR CPluginOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 		{
 			HWND hwndList = GetDlgItem(hDlg, IDC_PLUGIN_LIST);
 			LV_COLUMN lvc;
-			int i;
 
 			ListView_SetExtendedListViewStyle(hwndList, LVS_EX_FULLROWSELECT | LVS_EX_LABELTIP);
 			lvc.mask = LVCF_FMT | LVCF_WIDTH | LVCF_TEXT;
@@ -5380,7 +5379,7 @@ INT_PTR CPluginOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 			lvc.pszText = TEXT("著作権");
 			ListView_InsertColumn(hwndList, COLUMN_COPYRIGHT, &lvc);
 
-			for (i = 0; i < m_pPluginManager->NumPlugins(); i++) {
+			for (int i = 0; i < m_pPluginManager->NumPlugins(); i++) {
 				const CPlugin *pPlugin = m_pPluginManager->GetPlugin(i);
 				LV_ITEM lvi;
 
@@ -5402,7 +5401,7 @@ INT_PTR CPluginOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 				ListView_SetItem(hwndList, &lvi);
 			}
 
-			for (i = 0; i < NUM_COLUMNS; i++)
+			for (int i = 0; i < NUM_COLUMNS; i++)
 				ListView_SetColumnWidth(hwndList, i, LVSCW_AUTOSIZE_USEHEADER);
 		}
 		return TRUE;
