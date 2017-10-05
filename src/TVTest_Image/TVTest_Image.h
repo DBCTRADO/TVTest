@@ -6,7 +6,7 @@
 
 
 typedef BOOL (WINAPI *SaveImageFunc)(const TVTest::ImageLib::ImageSaveInfo *pInfo);
-typedef HGLOBAL (WINAPI *LoadAribPngFromMemoryFunc)(const void *pData,SIZE_T DataSize);
+typedef HGLOBAL (WINAPI *LoadAribPngFromMemoryFunc)(const void *pData, SIZE_T DataSize);
 typedef HGLOBAL (WINAPI *LoadAribPngFromFileFunc)(LPCTSTR pszFileName);
 
 

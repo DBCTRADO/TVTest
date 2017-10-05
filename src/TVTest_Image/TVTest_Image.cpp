@@ -13,10 +13,10 @@ static HINSTANCE hInst;
 
 
 
-BOOL WINAPI DllMain(HINSTANCE hInstance,DWORD dwReason,LPVOID pvReserved)
+BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID pvReserved)
 {
-	if (dwReason==DLL_PROCESS_ATTACH) {
-		hInst=hInstance;
+	if (dwReason == DLL_PROCESS_ATTACH) {
+		hInst = hInstance;
 	}
 	return TRUE;
 }
@@ -28,9 +28,9 @@ extern "C" __declspec(dllexport) BOOL WINAPI SaveImage(const TVTest::ImageLib::I
 }
 
 
-extern "C" __declspec(dllexport) HGLOBAL WINAPI LoadAribPngFromMemory(const void *pData,SIZE_T DataSize)
+extern "C" __declspec(dllexport) HGLOBAL WINAPI LoadAribPngFromMemory(const void *pData, SIZE_T DataSize)
 {
-	return TVTest::ImageLib::LoadAribPngFromMemory(pData,DataSize);
+	return TVTest::ImageLib::LoadAribPngFromMemory(pData, DataSize);
 }
 
 

@@ -8,7 +8,7 @@ namespace TVTest
 	{
 
 		bool SavePNGFile(const ImageSaveInfo *pInfo);
-		HGLOBAL LoadAribPng(const void *pData,SIZE_T DataSize);
+		HGLOBAL LoadAribPng(const void *pData, SIZE_T DataSize);
 
 	}
 }
