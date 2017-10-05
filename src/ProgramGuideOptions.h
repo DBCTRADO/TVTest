@@ -36,10 +36,8 @@ public:
 	int ParseCommand(LPCTSTR pszCommand) const;
 
 private:
-	enum {
-		MIN_VIEW_HOURS = 1,
-		MAX_VIEW_HOURS = 24 * 8
-	};
+	static constexpr int MIN_VIEW_HOURS = 1;
+	static constexpr int MAX_VIEW_HOURS = 24 * 8;
 
 	CProgramGuide *m_pProgramGuide;
 	CPluginManager *m_pPluginManager;

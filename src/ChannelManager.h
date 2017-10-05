@@ -20,10 +20,8 @@ class CChannelManager
 	TVTest::String m_ChannelFileName;
 
 public:
-	enum {
-		SPACE_INVALID = -2,
-		SPACE_ALL = -1
-	};
+	static constexpr int SPACE_INVALID = -2;
+	static constexpr int SPACE_ALL     = -1;
 
 	enum UpDownOrder {
 		UP_DOWN_ORDER_INDEX,

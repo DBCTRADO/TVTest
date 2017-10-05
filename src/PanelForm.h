@@ -118,8 +118,6 @@ public:
 	bool EnableTooltip(bool fEnable);
 
 private:
-	enum {MAX_WINDOWS = 8};
-
 	class CWindowInfo
 	{
 	public:

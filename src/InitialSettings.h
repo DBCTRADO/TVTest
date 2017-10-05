@@ -13,7 +13,7 @@ class CInitialSettings
 	: public CBasicDialog
 {
 public:
-	enum { MAX_DECODER_NAME = 128 };
+	static constexpr size_t MAX_DECODER_NAME = 128;
 
 	CInitialSettings(const CDriverManager *pDriverManager);
 	~CInitialSettings();

@@ -63,7 +63,7 @@ class CMainWindow
 	, public COSDManager::CEventHandler
 {
 public:
-	enum { COMMAND_FROM_MOUSE = 8 };
+	static constexpr WORD COMMAND_FROM_MOUSE = 8;
 	static const DWORD HIDE_CURSOR_DELAY = 1000UL;
 
 	struct ResumeInfo
@@ -420,7 +420,7 @@ private:
 		void OnCommandRadioCheckedStateChanged(int FirstID, int LastID, int CheckedID) override;
 	};
 
-	enum { UPDATE_TIMER_INTERVAL = 500 };
+	static constexpr DWORD UPDATE_TIMER_INTERVAL = 500;
 
 	CAppMain &m_App;
 	TVTest::Style::CStyleScaling m_StyleScaling;

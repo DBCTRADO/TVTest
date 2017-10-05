@@ -45,7 +45,7 @@ public:
 	bool SetCurrentPage(int Page);
 
 private:
-	enum { NUM_PAGES = PAGE_LAST + 1 };
+	static constexpr int NUM_PAGES = PAGE_LAST + 1;
 
 	struct PageInfo
 	{

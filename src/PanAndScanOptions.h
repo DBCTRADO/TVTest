@@ -15,7 +15,7 @@ class CPanAndScanOptions
 	, public CCommandList::CCommandCustomizer
 {
 public:
-	enum { MAX_NAME = 64 };
+	static constexpr size_t MAX_NAME = 64;
 
 	struct PanAndScanInfo
 	{

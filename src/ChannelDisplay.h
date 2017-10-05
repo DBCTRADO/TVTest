@@ -23,10 +23,9 @@ public:
 	protected:
 		class CChannelDisplay * m_pChannelDisplay;
 	public:
-		enum {
-			SPACE_NOTSPECIFIED = -2,
-			SPACE_ALL          = -1
-		};
+		static constexpr int SPACE_NOTSPECIFIED = -2;
+		static constexpr int SPACE_ALL          = -1;
+
 		CChannelDisplayEventHandler() : m_pChannelDisplay(nullptr) {}
 		virtual void OnTunerSelect(LPCTSTR pszDriverFileName, int TuningSpace) = 0;
 		virtual void OnChannelSelect(LPCTSTR pszDriverFileName, const CChannelInfo *pChannelInfo) = 0;
@@ -159,7 +158,7 @@ private:
 	CMouseWheelHandler m_MouseWheel;
 	LibISDB::DateTime m_EpgBaseTime;
 	LibISDB::DateTime m_ClockTime;
-	enum { TIMER_CLOCK = 1 };
+	static constexpr UINT TIMER_CLOCK = 1;
 
 	std::vector<CTuner*> m_TunerList;
 	int m_TotalTuningSpaces;

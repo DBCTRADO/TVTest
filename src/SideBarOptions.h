@@ -47,7 +47,7 @@ public:
 	bool GetShowChannelLogo() const { return m_fShowChannelLogo; }
 
 protected:
-	enum { ITEM_SEPARATOR = 0 };
+	static constexpr int ITEM_SEPARATOR = 0;
 
 	enum IconSizeType {
 		ICON_SIZE_SMALL,

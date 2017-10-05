@@ -33,7 +33,7 @@ public:
 		virtual bool OnMenuSelected(int Command) { return false; }
 	};
 
-	enum { MENU_USER = 100 };
+	static constexpr int MENU_USER = 100;
 
 	struct PanelTheme
 	{

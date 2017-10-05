@@ -44,10 +44,8 @@ public:
 		virtual void OnChannelClick(const CChannelInfo *pChannelInfo) {}
 	};
 
-	enum {
-		MAX_EVENTS_PER_CHANNEL = 4,
-		MAX_EXPAND_EVENTS      = 10
-	};
+	static constexpr int MAX_EVENTS_PER_CHANNEL = 4;
+	static constexpr int MAX_EXPAND_EVENTS      = 10;
 
 	enum ProgressBarStyle {
 		PROGRESSBAR_STYLE_ELAPSED,

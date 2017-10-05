@@ -191,9 +191,12 @@ public:
 		NUM_COLORS,
 		COLOR_LAST = NUM_COLORS - 1
 	};
-	enum { MIN_LINES_PER_HOUR = 8, MAX_LINES_PER_HOUR = 60 };
-	enum { MIN_ITEM_WIDTH = 100, MAX_ITEM_WIDTH = 500 };
-	enum { TIME_BAR_BACK_COLORS = 8 };
+
+	static constexpr int MIN_LINES_PER_HOUR = 8;
+	static constexpr int MAX_LINES_PER_HOUR = 60;
+	static constexpr int MIN_ITEM_WIDTH = 100;
+	static constexpr int MAX_ITEM_WIDTH = 500;
+	static constexpr int TIME_BAR_BACK_COLORS = 8;
 
 	enum {
 		FILTER_FREE         = 0x00000001U,
@@ -778,11 +781,9 @@ class CProgramGuideFrameSettings
 	: public CSettingsBase
 {
 public:
-	enum {
-		TOOLBAR_NUM = CProgramGuideFrameBase::TOOLBAR_NUM,
-		DATEBAR_MAXBUTTONCOUNT = 8,
-		DATEBAR_DEFAULTBUTTONCOUNT = 8
-	};
+	static constexpr int TOOLBAR_NUM = CProgramGuideFrameBase::TOOLBAR_NUM;
+	static constexpr int DATEBAR_MAXBUTTONCOUNT = 8;
+	static constexpr int DATEBAR_DEFAULTBUTTONCOUNT = 8;
 
 	struct TimeBarSettings
 	{
@@ -791,12 +792,10 @@ public:
 			TIME_CUSTOM
 		};
 
-		enum {
-			INTERVAL_MIN    = 2,
-			INTERVAL_MAX    = 12,
-			BUTTONCOUNT_MIN = 1,
-			BUTTONCOUNT_MAX = 20
-		};
+		static constexpr int INTERVAL_MIN    = 2;
+		static constexpr int INTERVAL_MAX    = 12;
+		static constexpr int BUTTONCOUNT_MIN = 1;
+		static constexpr int BUTTONCOUNT_MAX = 20;
 
 		TimeType Time;
 		int Interval;

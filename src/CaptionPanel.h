@@ -97,7 +97,7 @@ private:
 		bool fClearLast;
 		bool fContinue;
 	};
-	enum { MAX_QUEUE_TEXT = 10000 };
+	static constexpr size_t MAX_QUEUE_TEXT = 10000;
 
 	enum CharEncoding
 	{

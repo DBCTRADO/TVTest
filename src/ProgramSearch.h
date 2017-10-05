@@ -65,10 +65,8 @@ private:
 class CEventSearchSettings
 {
 public:
-	enum {
-		MAX_NAME_LENGTH = 256,
-		MAX_KEYWORD_LENGTH = 1024
-	};
+	static constexpr size_t MAX_NAME_LENGTH = 256;
+	static constexpr size_t MAX_KEYWORD_LENGTH = 1024;
 
 	struct TimeInfo {
 		int Hour;
@@ -291,9 +289,8 @@ class CProgramSearchDialog
 	, public CEventSearchSettingsDialog::CEventHandler
 {
 public:
-	enum {
-		MAX_KEYWORD_HISTORY = 50
-	};
+	static constexpr int MAX_KEYWORD_HISTORY = 50;
+
 	enum {
 		COLUMN_CHANNEL,
 		COLUMN_TIME,

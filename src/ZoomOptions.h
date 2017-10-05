@@ -41,8 +41,8 @@ public:
 		bool fVisible;
 	};
 
-	enum { NUM_ZOOM_COMMANDS = 11 + 10 };
-	enum { MAX_RATE = 1000 };
+	static constexpr int NUM_ZOOM_COMMANDS = 11 + 10;
+	static constexpr int MAX_RATE = 1000;
 
 	CZoomOptions();
 	~CZoomOptions();

@@ -28,9 +28,8 @@ namespace EpgUtil
 		EVENT_TIME_UNDECIDED_TEXT = 0x0010U,
 		EVENT_TIME_NO_CONVERT     = 0x0020U
 	};
-	enum {
-		MAX_EVENT_TIME_LENGTH = 64
-	};
+
+	static constexpr int MAX_EVENT_TIME_LENGTH = 64;
 
 	int FormatEventTime(
 		const LibISDB::EventInfo &EventInfo,
@@ -84,10 +83,9 @@ public:
 		GENRE_OTHER,
 		GENRE_LAST = GENRE_WELFARE
 	};
-	enum {
-		NUM_GENRE = 16,
-		NUM_SUB_GENRE = 16
-	};
+
+	static constexpr int NUM_GENRE     = 16;
+	static constexpr int NUM_SUB_GENRE = 16;
 
 	LPCTSTR GetText(int Level1, int Level2) const;
 };
@@ -96,12 +94,10 @@ class CEpgIcons
 	: public DrawUtil::CBitmap
 {
 public:
-	enum {
-		ICON_WIDTH  = 22,
-		ICON_HEIGHT = 22,
-		DEFAULT_ICON_WIDTH  = 11,
-		DEFAULT_ICON_HEIGHT = 11
-	};
+	static constexpr int ICON_WIDTH  = 22;
+	static constexpr int ICON_HEIGHT = 22;
+	static constexpr int DEFAULT_ICON_WIDTH  = 11;
+	static constexpr int DEFAULT_ICON_HEIGHT = 11;
 
 	enum {
 		ICON_HD,

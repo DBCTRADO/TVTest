@@ -22,7 +22,7 @@ public:
 		CEventInfoPopup *m_pPopup;
 
 	public:
-		enum { COMMAND_FIRST = 100 };
+		static constexpr int COMMAND_FIRST = 100;
 
 		CEventHandler();
 		virtual ~CEventHandler();

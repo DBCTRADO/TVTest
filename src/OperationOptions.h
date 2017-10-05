@@ -12,9 +12,7 @@ class COperationOptions
 	: public COptions
 {
 public:
-	enum {
-		WHEEL_CHANNEL_DELAY_MIN = 100
-	};
+	static constexpr int WHEEL_CHANNEL_DELAY_MIN = 100;
 
 	COperationOptions();
 	~COperationOptions();

@@ -1011,10 +1011,6 @@ bool CFeaturedEventsCategory::OnLButtonUp(int x, int y)
 
 bool CFeaturedEventsCategory::OnRButtonUp(int x, int y)
 {
-	enum {
-		ID_SETTINGS = 1
-	};
-
 	CFeaturedEvents &FeaturedEvents = GetAppClass().FeaturedEvents;
 	CFeaturedEventsSettings &Settings = FeaturedEvents.GetSettings();
 	HMENU hmenu = ::LoadMenu(

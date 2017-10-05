@@ -57,10 +57,8 @@ private:
 		int Last;
 	};
 
-	enum {
-		MENU_ID_SEPARATOR = -1,
-		MENU_ID_INVALID   = -2
-	};
+	static constexpr int MENU_ID_SEPARATOR = -1;
+	static constexpr int MENU_ID_INVALID   = -2;
 
 	static const MenuInfo m_DefaultMenuItemList[];
 	static const AdditionalItemInfo m_AdditionalItemList[];

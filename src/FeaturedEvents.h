@@ -20,9 +20,7 @@ public:
 		SORT_LAST = SORT_SERVICE
 	};
 
-	enum {
-		MAX_EVENT_TEXT_LINES = 10
-	};
+	static constexpr int MAX_EVENT_TEXT_LINES = 10;
 
 	CFeaturedEventsSettings();
 	~CFeaturedEventsSettings();

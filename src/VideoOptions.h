@@ -63,9 +63,8 @@ private:
 		UPDATE_IGNOREDISPLAYEXTENSION = 0x00000008UL,
 		UPDATE_CLIPTODEVICE           = 0x00000010UL
 	};
-	enum {
-		MAX_VIDEO_DECODER_NAME = 128
-	};
+
+	static constexpr size_t MAX_VIDEO_DECODER_NAME = 128;
 
 	static const RendererInfo m_RendererList[];
 

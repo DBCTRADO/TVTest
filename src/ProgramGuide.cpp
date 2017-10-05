@@ -6122,9 +6122,7 @@ class CDateToolbar
 	: public CProgramGuideToolbar
 {
 public:
-	enum {
-		MAX_BUTTON_COUNT = CProgramGuideFrameSettings::DATEBAR_MAXBUTTONCOUNT
-	};
+	static constexpr int MAX_BUTTON_COUNT = CProgramGuideFrameSettings::DATEBAR_MAXBUTTONCOUNT;
 
 	CDateToolbar(CProgramGuide *pProgramGuide);
 	~CDateToolbar();

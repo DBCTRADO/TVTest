@@ -17,9 +17,7 @@ class CSideBar
 	, public TVTest::CUIBase
 {
 public:
-	enum {
-		ITEM_SEPARATOR = 0
-	};
+	static constexpr int ITEM_SEPARATOR = 0;
 
 	enum {
 		ITEM_STATE_DISABLED = 0x0001U,

@@ -9,10 +9,8 @@
 class CCommandList
 {
 public:
-	enum {
-		MAX_COMMAND_TEXT = MAX_PATH,
-		MAX_COMMAND_NAME = MAX_PATH + 16
-	};
+	static constexpr size_t MAX_COMMAND_TEXT = MAX_PATH;
+	static constexpr size_t MAX_COMMAND_NAME = MAX_PATH + 16;
 
 	enum {
 		COMMAND_STATE_DISABLED = 0x00000001U,
