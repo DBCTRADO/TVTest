@@ -560,7 +560,7 @@ void CCommandLineOptions::Parse(LPCWSTR pszCmdLine)
 					if (Args.Next()) {
 						TCHAR szPlugin[MAX_PATH];
 						if (Args.GetText(szPlugin, MAX_PATH))
-							m_NoLoadPlugins.push_back(TVTest::String(szPlugin));
+							m_NoLoadPlugins.emplace_back(szPlugin);
 					}
 				} else if (Args.IsOption(TEXT("did"))) {
 					if (Args.Next()) {

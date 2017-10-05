@@ -107,7 +107,7 @@ bool CControllerManager::AddController(CController *pController)
 {
 	if (pController == nullptr || FindController(pController->GetName()) >= 0)
 		return false;
-	m_ControllerList.push_back(ControllerInfo(pController));
+	m_ControllerList.emplace_back(pController);
 	pController->SetEventHandler(this);
 	ControllerInfo &Info = m_ControllerList[m_ControllerList.size() - 1];
 	int NumButtons = pController->NumButtons();

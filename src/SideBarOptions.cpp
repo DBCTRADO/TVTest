@@ -150,9 +150,9 @@ bool CSideBarOptions::ReadSettings(CSettings &Settings)
 				m_ItemNameList.push_back(Command);
 				/*
 				if (szCommand[0] == '\0') {
-					m_ItemNameList.push_back(TVTest::String());
+					m_ItemNameList.emplace_back();
 				} else {
-					m_ItemNameList.push_back(TVTest::String(szCommand));
+					m_ItemNameList.emplace_back(szCommand);
 					int Command=m_pSideBar->GetCommandList()->ParseText(szCommand);
 
 					if (Command != 0) {
@@ -739,9 +739,9 @@ INT_PTR CSideBarOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 					for (int i = 0; i < Count; i++) {
 						const int ID = m_ItemList[i];
 						if (ID == ITEM_SEPARATOR) {
-							m_ItemNameList.push_back(TVTest::String());
+							m_ItemNameList.emplace_back();
 						} else {
-							m_ItemNameList.push_back(TVTest::String(pCommandList->GetCommandTextByID(ID)));
+							m_ItemNameList.emplace_back(pCommandList->GetCommandTextByID(ID));
 						}
 					}
 

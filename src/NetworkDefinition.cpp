@@ -30,10 +30,10 @@ const CNetworkDefinition::RemoteControlKeyIDAssignInfo CNetworkDefinition::m_Def
 
 CNetworkDefinition::CNetworkDefinition()
 {
-	m_NetworkInfoList.push_back(NetworkInfo(4, TEXT("BS"), NETWORK_BS));
-	m_NetworkInfoList.push_back(NetworkInfo(6, TEXT("CS.SP-Basic"), NETWORK_CS));
-	m_NetworkInfoList.push_back(NetworkInfo(7, TEXT("CS.SP-Basic"), NETWORK_CS));
-	m_NetworkInfoList.push_back(NetworkInfo(10, TEXT("CS.SP-Premium"), NETWORK_CS));
+	m_NetworkInfoList.emplace_back(4, TEXT("BS"), NETWORK_BS);
+	m_NetworkInfoList.emplace_back(6, TEXT("CS.SP-Basic"), NETWORK_CS);
+	m_NetworkInfoList.emplace_back(7, TEXT("CS.SP-Basic"), NETWORK_CS);
+	m_NetworkInfoList.emplace_back(10, TEXT("CS.SP-Premium"), NETWORK_CS);
 
 	m_KeyIDAssignList.reserve(lengthof(m_DefaultKeyIDAssignList));
 	for (int i = 0; i < lengthof(m_DefaultKeyIDAssignList); i++)

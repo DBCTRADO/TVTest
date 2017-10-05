@@ -329,7 +329,7 @@ bool CTSProcessor::GetModuleList(std::vector<String> *pList) const
 
 	BSTR bstrName;
 	while (pEnumModule->Next(&bstrName) == S_OK) {
-		pList->push_back(String(bstrName));
+		pList->emplace_back(bstrName);
 		::SysFreeString(bstrName);
 	}
 
@@ -474,7 +474,7 @@ bool CTSProcessor::GetModuleInfo(LPCWSTR pszModule, ModuleInfo *pInfo) const
 							hr = pDevice->GetFilterName(j, &Name);
 							if (FAILED(hr))
 								break;
-							Info.FilterList.push_back(String(Name));
+							Info.FilterList.emplace_back(Name);
 							::SysFreeString(Name);
 						}
 					}
@@ -605,7 +605,7 @@ bool CTSProcessor::GetDeviceFilterList(int Device, std::vector<String> *pList) c
 					hr = pDevice->GetFilterName(i, &bstrName);
 					if (FAILED(hr))
 						break;
-					pList->push_back(String(bstrName));
+					pList->emplace_back(bstrName);
 					::SysFreeString(bstrName);
 				}
 			}

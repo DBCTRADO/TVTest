@@ -1694,7 +1694,7 @@ LRESULT CPlugin::OnCallback(TVTest::PluginParam *pParam, UINT Message, LPARAM lP
 			if (pCommandList == nullptr || NumCommands <= 0)
 				return FALSE;
 			for (int i = 0; i < NumCommands; i++) {
-				m_CommandList.push_back(CPluginCommandInfo(pCommandList[i]));
+				m_CommandList.emplace_back(pCommandList[i]);
 			}
 		}
 		return TRUE;
@@ -1735,7 +1735,7 @@ LRESULT CPlugin::OnCallback(TVTest::PluginParam *pParam, UINT Message, LPARAM lP
 						}
 					}
 				}
-				m_AudioStreamCallbackList.push_back(CAudioStreamCallbackInfo(this, pCallback, reinterpret_cast<void*>(lParam2)));
+				m_AudioStreamCallbackList.emplace_back(this, pCallback, reinterpret_cast<void*>(lParam2));
 				m_AudioStreamLock.Unlock();
 			} else {
 				bool fFound = false;
@@ -1836,7 +1836,7 @@ LRESULT CPlugin::OnCallback(TVTest::PluginParam *pParam, UINT Message, LPARAM lP
 				delete pController;
 				return FALSE;
 			}
-			m_ControllerList.push_back(TVTest::String(pInfo->pszName));
+			m_ControllerList.emplace_back(pInfo->pszName);
 			if (m_fEnabled)
 				pControllerManager->LoadControllerSettings(pInfo->pszName);
 		}
@@ -2075,7 +2075,7 @@ LRESULT CPlugin::OnCallback(TVTest::PluginParam *pParam, UINT Message, LPARAM lP
 			if (pCommandList == nullptr || NumCommands < 1)
 				return FALSE;
 			for (int i = 0; i < NumCommands; i++) {
-				m_ProgramGuideCommandList.push_back(CProgramGuideCommand(pCommandList[i]));
+				m_ProgramGuideCommandList.emplace_back(pCommandList[i]);
 			}
 		}
 		return TRUE;
@@ -2352,7 +2352,7 @@ LRESULT CPlugin::OnCallback(TVTest::PluginParam *pParam, UINT Message, LPARAM lP
 			if (pInfo == nullptr || pInfo->Size != sizeof(TVTest::PluginCommandInfo))
 				return FALSE;
 
-			m_CommandList.push_back(CPluginCommandInfo(*pInfo));
+			m_CommandList.emplace_back(*pInfo);
 		}
 		return TRUE;
 
@@ -2874,8 +2874,7 @@ LRESULT CPlugin::OnCallback(TVTest::PluginParam *pParam, UINT Message, LPARAM lP
 						}
 					}
 				}
-				m_VideoStreamCallbackList.push_back(
-					CVideoStreamCallbackInfo(this, pCallback, reinterpret_cast<void*>(lParam2)));
+				m_VideoStreamCallbackList.emplace_back(this, pCallback, reinterpret_cast<void*>(lParam2));
 			} else {
 				bool fFound = false;
 				for (auto it = m_VideoStreamCallbackList.begin(); it != m_VideoStreamCallbackList.end(); ++it) {

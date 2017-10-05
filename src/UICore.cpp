@@ -1668,7 +1668,7 @@ bool CUICore::CTitleStringMap::GetParameterList(ParameterGroupList *pList) const
 		{TEXT("rec-circle"), TEXT("録画●")},
 	};
 
-	pList->push_back(ParameterGroup());
+	pList->emplace_back();
 	pList->back().ParameterList.insert(
 		pList->back().ParameterList.end(),
 		ParameterList,
@@ -1761,7 +1761,7 @@ bool CUICore::CTunerSelectMenu::Create(HWND hwnd)
 					hmenuSpace = ::CreatePopupMenu();
 				else
 					hmenuSpace = hmenuDriver;
-				m_PopupList.push_back(PopupInfo(pChannelList, Command));
+				m_PopupList.emplace_back(pChannelList, Command);
 				MENUINFO mi;
 				mi.cbSize = sizeof(mi);
 				mi.fMask = MIM_MENUDATA;

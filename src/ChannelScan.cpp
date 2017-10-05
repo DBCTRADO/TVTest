@@ -639,7 +639,7 @@ bool CChannelScan::LoadPreset(LPCTSTR pszFileName, CChannelList *pChannelList, i
 	std::vector<TVTest::String> BonDriverChannelList;
 	LPCTSTR pszName;
 	for (int i = 0; (pszName = pSourceFilter->GetChannelName(Space, i)) != nullptr; i++) {
-		BonDriverChannelList.push_back(TVTest::String(pszName));
+		BonDriverChannelList.emplace_back(pszName);
 	}
 	if (BonDriverChannelList.empty())
 		return false;
@@ -1285,7 +1285,7 @@ INT_PTR CChannelScan::ScanDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lP
 				m_BonDriverChannelList.resize(m_ScanChannel);
 			LPCTSTR pszName;
 			for (int i = m_ScanChannel; (pszName = pSourceFilter->GetChannelName(m_ScanSpace, i)) != nullptr; i++) {
-				m_BonDriverChannelList.push_back(TVTest::String(pszName));
+				m_BonDriverChannelList.emplace_back(pszName);
 			}
 
 			m_ChannelSignalLevel.clear();

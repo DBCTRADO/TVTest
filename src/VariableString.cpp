@@ -46,11 +46,11 @@ bool FormatVariableString(CVariableStringMap *pVariableMap, LPCWSTR pszFormat, S
 				if (*p == L'%') {
 					p++;
 					if (::lstrcmpiW(Keyword.c_str(), L"sep-hyphen") == 0) {
-						SeparatorList.push_back(SeparatorInfo(pString->size(), L"-"));
+						SeparatorList.emplace_back(pString->size(), L"-");
 					} else if (::lstrcmpiW(Keyword.c_str(), L"sep-slash") == 0) {
-						SeparatorList.push_back(SeparatorInfo(pString->size(), L"/"));
+						SeparatorList.emplace_back(pString->size(), L"/");
 					} else if (::lstrcmpiW(Keyword.c_str(), L"sep-backslash") == 0) {
-						SeparatorList.push_back(SeparatorInfo(pString->size(), L"\\"));
+						SeparatorList.emplace_back(pString->size(), L"\\");
 					} else if (pVariableMap->GetString(Keyword.c_str(), &Text)) {
 						pVariableMap->NormalizeString(&Text);
 						pString->append(Text);
@@ -136,7 +136,7 @@ bool CBasicVariableStringMap::GetParameterList(ParameterGroupList *pList) const
 	if (VarList.empty())
 		return true;
 
-	pList->push_back(ParameterGroup());
+	pList->emplace_back();
 	ParameterGroup &Group = pList->back();
 
 	Group.ParameterList.reserve(VarList.size());
@@ -586,7 +586,7 @@ bool CEventVariableStringMap::GetParameterList(ParameterGroupList *pList) const
 
 	for (int i = 0; i < lengthof(GroupList); i++) {
 		if ((GroupList[i].Flags & m_Flags) == 0) {
-			pList->push_back(ParameterGroup());
+			pList->emplace_back();
 			ParameterGroup &Group = pList->back();
 
 			if (GroupList[i].pszText != nullptr)

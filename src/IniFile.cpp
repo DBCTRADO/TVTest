@@ -400,7 +400,7 @@ bool CIniFile::Parse(LPCWSTR pszBuffer)
 			//TRACE(L"%4d : %s\n", LineCount + 1, Line.c_str());
 			if (m_SectionList.empty())
 				CreateSection(L"");
-			m_SectionList.back().Entries.push_back(CEntry(Line));
+			m_SectionList.back().Entries.emplace_back(Line);
 		}
 
 		LineCount++;
@@ -464,7 +464,7 @@ bool CIniFile::CreateSection(LPCWSTR pszName)
 {
 	//TRACE(L"INIセクション作成 : [%s]\n", pszName);
 
-	m_SectionList.push_back(CSectionData(pszName));
+	m_SectionList.emplace_back(pszName);
 
 	if (!IsStringEmpty(pszName)
 			&& m_SectionList.size() > 1) {
@@ -474,7 +474,7 @@ bool CIniFile::CreateSection(LPCWSTR pszName)
 				&& (i->Entries.empty()
 					|| !i->Entries.back().Name.empty()
 					|| !i->Entries.back().Value.empty())) {
-			i->Entries.push_back(CEntry());
+			i->Entries.emplace_back();
 		}
 	}
 

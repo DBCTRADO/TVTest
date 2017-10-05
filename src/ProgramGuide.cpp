@@ -2909,7 +2909,7 @@ bool CProgramGuide::SetExcludeService(WORD NetworkID, WORD TransportStreamID, WO
 		}
 	}
 	if (fExclude)
-		m_ExcludeServiceList.push_back(ServiceInfo(NetworkID, TransportStreamID, ServiceID));
+		m_ExcludeServiceList.emplace_back(NetworkID, TransportStreamID, ServiceID);
 	return true;
 }
 
