@@ -215,14 +215,15 @@ bool GetDlgItemString(HWND hDlg, int ID, TVTest::String *pString)
 {
 	if (pString == nullptr)
 		return false;
-	pString->clear();
-	if (GetDlgItemTextLength(hDlg, ID) == 0)
-		return true;
-	LPTSTR pszBuffer = GetDlgItemString(hDlg, ID);
-	if (pszBuffer == nullptr)
-		return false;
-	pString->assign(pszBuffer);
-	delete [] pszBuffer;
+
+	const int Length = GetDlgItemTextLength(hDlg, ID);
+	if (Length > 0) {
+		pString->resize(Length + 1);
+		pString->resize(GetDlgItemText(hDlg, ID, pString->data(), Length + 1));
+	} else {
+		pString->clear();
+	}
+
 	return true;
 }
 
@@ -232,14 +233,13 @@ bool GetDlgListBoxItemString(HWND hDlg, int ID, int Index, TVTest::String *pStri
 	if (hDlg == nullptr || pString == nullptr)
 		return false;
 
-	pString->clear();
-
 	int Length = (int)DlgListBox_GetStringLength(hDlg, ID, Index);
 	if (Length > 0) {
-		LPTSTR pszBuffer = new TCHAR[Length + 1];
-		if (DlgListBox_GetString(hDlg, ID, Index, pszBuffer) > 0)
-			pString->assign(pszBuffer);
-		delete [] pszBuffer;
+		pString->resize(Length + 1);
+		Length = (int)DlgListBox_GetString(hDlg, ID, Index, pString->data());
+		pString->resize(std::max(Length, 0));
+	} else {
+		pString->clear();
 	}
 
 	return true;
@@ -251,14 +251,13 @@ bool GetDlgComboBoxItemString(HWND hDlg, int ID, int Index, TVTest::String *pStr
 	if (hDlg == nullptr || pString == nullptr)
 		return false;
 
-	pString->clear();
-
 	int Length = (int)DlgComboBox_GetLBStringLength(hDlg, ID, Index);
 	if (Length > 0) {
-		LPTSTR pszBuffer = new TCHAR[Length + 1];
-		if (DlgComboBox_GetLBString(hDlg, ID, Index, pszBuffer) > 0)
-			pString->assign(pszBuffer);
-		delete [] pszBuffer;
+		pString->resize(Length + 1);
+		Length = (int)DlgComboBox_GetLBString(hDlg, ID, Index, pString->data());
+		pString->resize(std::max(Length, 0));
+	} else {
+		pString->clear();
 	}
 
 	return true;
