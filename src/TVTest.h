@@ -62,14 +62,6 @@ namespace TVTest
 
 #define lengthof _countof
 
-#ifndef SAFE_DELETE
-//#define SAFE_DELETE(p)       if (p) { delete p; (p) = nullptr; }
-//#define SAFE_DELETE_ARRAY(p) if (p) { delete [] p; (p) = nullptr; }
-// delete nullptr でもいいので
-#define SAFE_DELETE(p)       ((void)(delete p, (p) = nullptr))
-#define SAFE_DELETE_ARRAY(p) ((void)(delete [] p, (p) = nullptr))
-#endif
-
 #define ABSTRACT_DECL        __declspec(novtable)
 #define ABSTRACT_CLASS(name) ABSTRACT_DECL name abstract
 

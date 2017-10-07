@@ -53,7 +53,6 @@ class CProgramGuideToolList
 public:
 	CProgramGuideToolList();
 	CProgramGuideToolList(const CProgramGuideToolList &Src);
-	~CProgramGuideToolList();
 	CProgramGuideToolList &operator=(const CProgramGuideToolList &Src);
 	void Clear();
 	bool Add(CProgramGuideTool *pTool);
@@ -62,7 +61,7 @@ public:
 	size_t NumTools() const { return m_ToolList.size(); }
 
 private:
-	std::vector<CProgramGuideTool*> m_ToolList;
+	std::vector<std::unique_ptr<CProgramGuideTool>> m_ToolList;
 };
 
 

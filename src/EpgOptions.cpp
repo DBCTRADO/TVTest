@@ -19,8 +19,6 @@ CEpgOptions::CEpgOptions()
 	, m_fUseEDCBData(false)
 	, m_EpgTimeMode(EPGTIME_JST)
 	, m_fSaveLogoFile(true)
-
-	, m_pEpgDataLoader(nullptr)
 {
 	::lstrcpy(m_szEpgFileName, TEXT("EpgData"));
 
@@ -54,7 +52,7 @@ void CEpgOptions::Finalize()
 {
 	m_EpgDataStore.Close();
 
-	SAFE_DELETE(m_pEpgDataLoader);
+	m_EpgDataLoader.reset();
 }
 
 
@@ -250,10 +248,9 @@ bool CEpgOptions::AsyncLoadEDCBData(CEDCBDataLoadEventHandler *pEventHandler)
 		if (!GetAbsolutePath(m_szEDCBDataFolder, szPath, lengthof(szPath)))
 			return false;
 
-		delete m_pEpgDataLoader;
-		m_pEpgDataLoader = new CEpgDataLoader;
+		m_EpgDataLoader = std::make_unique<CEpgDataLoader>();
 
-		fOK = m_pEpgDataLoader->LoadAsync(szPath, pEventHandler);
+		fOK = m_EpgDataLoader->LoadAsync(szPath, pEventHandler);
 	}
 	return fOK;
 }
@@ -261,15 +258,15 @@ bool CEpgOptions::AsyncLoadEDCBData(CEDCBDataLoadEventHandler *pEventHandler)
 
 bool CEpgOptions::IsEDCBDataLoading() const
 {
-	return m_pEpgDataLoader != nullptr
-		&& m_pEpgDataLoader->IsLoading();
+	return m_EpgDataLoader
+		&& m_EpgDataLoader->IsLoading();
 }
 
 
 bool CEpgOptions::WaitEDCBDataLoad(DWORD Timeout)
 {
-	return m_pEpgDataLoader == nullptr
-		|| m_pEpgDataLoader->Wait(Timeout);
+	return !m_EpgDataLoader
+		|| m_EpgDataLoader->Wait(Timeout);
 }
 
 

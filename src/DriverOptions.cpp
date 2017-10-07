@@ -127,12 +127,6 @@ CDriverSettingList::CDriverSettingList(const CDriverSettingList &Src)
 }
 
 
-CDriverSettingList::~CDriverSettingList()
-{
-	Clear();
-}
-
-
 CDriverSettingList &CDriverSettingList::operator=(const CDriverSettingList &Src)
 {
 	if (&Src != this) {
@@ -140,7 +134,7 @@ CDriverSettingList &CDriverSettingList::operator=(const CDriverSettingList &Src)
 		if (Src.m_SettingList.size() > 0) {
 			m_SettingList.resize(Src.m_SettingList.size());
 			for (size_t i = 0; i < Src.m_SettingList.size(); i++)
-				m_SettingList[i] = new CDriverSettings(*Src.m_SettingList[i]);
+				m_SettingList[i].reset(new CDriverSettings(*Src.m_SettingList[i]));
 		}
 	}
 	return *this;
@@ -149,8 +143,6 @@ CDriverSettingList &CDriverSettingList::operator=(const CDriverSettingList &Src)
 
 void CDriverSettingList::Clear()
 {
-	for (size_t i = 0; i < m_SettingList.size(); i++)
-		delete m_SettingList[i];
 	m_SettingList.clear();
 }
 
@@ -159,7 +151,7 @@ bool CDriverSettingList::Add(CDriverSettings *pSettings)
 {
 	if (pSettings == nullptr)
 		return false;
-	m_SettingList.push_back(pSettings);
+	m_SettingList.emplace_back(pSettings);
 	return true;
 }
 
@@ -168,7 +160,7 @@ CDriverSettings *CDriverSettingList::GetDriverSettings(size_t Index)
 {
 	if (Index >= m_SettingList.size())
 		return nullptr;
-	return m_SettingList[Index];
+	return m_SettingList[Index].get();
 }
 
 
@@ -176,7 +168,7 @@ const CDriverSettings *CDriverSettingList::GetDriverSettings(size_t Index) const
 {
 	if (Index >= m_SettingList.size())
 		return nullptr;
-	return m_SettingList[Index];
+	return m_SettingList[Index].get();
 }
 
 

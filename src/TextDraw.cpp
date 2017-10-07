@@ -580,7 +580,7 @@ bool CTextDrawEngine_DirectWrite::SetFont(HFONT hfont)
 		LOGFONT lfCache;
 
 		if ((*it)->GetLogFont(&lfCache) && CompareLogFont(&lf, &lfCache)) {
-			m_pFont = *it;
+			m_pFont = it->get();
 			return true;
 		}
 	}
@@ -592,11 +592,10 @@ bool CTextDrawEngine_DirectWrite::SetFont(HFONT hfont)
 	}
 
 	if (m_FontCache.size() >= m_MaxFontCache) {
-		delete m_FontCache.back();
 		m_FontCache.pop_back();
 	}
 
-	m_FontCache.push_front(pFont);
+	m_FontCache.emplace_front(pFont);
 	m_pFont = pFont;
 
 	return true;
@@ -683,8 +682,6 @@ bool CTextDrawEngine_DirectWrite::OnWindowPosChanged()
 
 void CTextDrawEngine_DirectWrite::ClearFontCache()
 {
-	for (auto it = m_FontCache.begin(); it != m_FontCache.end(); ++it)
-		delete *it;
 	m_FontCache.clear();
 }
 
@@ -695,7 +692,6 @@ bool CTextDrawEngine_DirectWrite::SetMaxFontCache(std::size_t MaxCache)
 		return false;
 
 	while (m_FontCache.size() > MaxCache) {
-		delete m_FontCache.back();
 		m_FontCache.pop_back();
 	}
 

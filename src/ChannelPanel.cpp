@@ -212,8 +212,6 @@ bool CChannelPanel::SetEPGDatabase(LibISDB::EPGDatabase *pEPGDatabase)
 
 void CChannelPanel::ClearChannels()
 {
-	for (auto it = m_ChannelList.begin(); it != m_ChannelList.end(); ++it)
-		delete *it;
 	m_ChannelList.clear();
 }
 
@@ -290,7 +288,7 @@ bool CChannelPanel::SetChannelList(const CChannelList *pChannelList, bool fSetEv
 				if (hbmLogo != nullptr)
 					pEventInfo->SetLogo(hbmLogo);
 			}
-			m_ChannelList.push_back(pEventInfo);
+			m_ChannelList.emplace_back(pEventInfo);
 		}
 	}
 
@@ -312,7 +310,7 @@ bool CChannelPanel::UpdateAllChannels()
 
 		LibISDB::GetCurrentEPGTime(&m_UpdatedTime);
 		for (size_t i = 0; i < m_ChannelList.size(); i++) {
-			CChannelEventInfo *pInfo = m_ChannelList[i];
+			CChannelEventInfo *pInfo = m_ChannelList[i].get();
 
 			if (UpdateEvents(pInfo, &m_UpdatedTime))
 				fChanged = true;
@@ -329,7 +327,7 @@ bool CChannelPanel::UpdateChannel(int ChannelIndex)
 {
 	if (m_pEPGDatabase != nullptr) {
 		for (int i = 0; i < (int)m_ChannelList.size(); i++) {
-			CChannelEventInfo *pEventInfo = m_ChannelList[i];
+			CChannelEventInfo *pEventInfo = m_ChannelList[i].get();
 
 			if (pEventInfo->GetOriginalChannelIndex() == ChannelIndex) {
 				if (UpdateEvents(pEventInfo) && m_hwnd != nullptr) {
@@ -359,7 +357,7 @@ bool CChannelPanel::UpdateChannels(WORD NetworkID, WORD TransportStreamID)
 
 	LibISDB::GetCurrentEPGTime(&Time);
 	for (size_t i = 0; i < m_ChannelList.size(); i++) {
-		CChannelEventInfo *pInfo = m_ChannelList[i];
+		CChannelEventInfo *pInfo = m_ChannelList[i].get();
 
 		if ((NetworkID == 0 || pInfo->GetNetworkID() == NetworkID)
 				&& (TransportStreamID == 0 || pInfo->GetTransportStreamID() == TransportStreamID)) {
@@ -495,7 +493,7 @@ bool CChannelPanel::SetEventsPerChannel(int Events, int Expand)
 			m_ExpandAdditionalEvents = Expand;
 		m_ExpandEvents = m_EventsPerChannel + m_ExpandAdditionalEvents;
 		for (size_t i = 0; i < m_ChannelList.size(); i++) {
-			CChannelEventInfo *pInfo = m_ChannelList[i];
+			CChannelEventInfo *pInfo = m_ChannelList[i].get();
 
 			pInfo->SetMaxEvents(pInfo->IsExpanded() ? m_ExpandEvents : m_EventsPerChannel);
 		}
@@ -517,7 +515,7 @@ bool CChannelPanel::ExpandChannel(int Channel, bool fExpand)
 {
 	if (Channel < 0 || (size_t)Channel >= m_ChannelList.size())
 		return false;
-	CChannelEventInfo *pInfo = m_ChannelList[Channel];
+	CChannelEventInfo *pInfo = m_ChannelList[Channel].get();
 	if (pInfo->IsExpanded() != fExpand) {
 		pInfo->Expand(fExpand);
 		pInfo->SetMaxEvents(fExpand ? m_ExpandEvents : m_EventsPerChannel);
@@ -927,7 +925,7 @@ void CChannelPanel::Draw(HDC hdc, const RECT *prcPaint)
 	rcItem.top = -m_ScrollPos;
 
 	for (int i = 0; i < (int)m_ChannelList.size() && rcItem.top < prcPaint->bottom; i++) {
-		CChannelEventInfo *pChannelInfo = m_ChannelList[i];
+		CChannelEventInfo *pChannelInfo = m_ChannelList[i].get();
 		const int NumEvents = pChannelInfo->IsExpanded() ? m_ExpandEvents : m_EventsPerChannel;
 		const int ItemHeight = m_ChannelNameHeight + m_EventNameHeight * NumEvents;
 
@@ -1329,7 +1327,7 @@ bool CChannelPanel::ShowEventInfoPopup(LPARAM Param, CEventInfoPopup *pPopup)
 
 	if (Channel < 0 || (size_t)Channel >= m_ChannelList.size())
 		return false;
-	const CChannelEventInfo *pChEventInfo = m_ChannelList[Channel];
+	const CChannelEventInfo *pChEventInfo = m_ChannelList[Channel].get();
 	if (!pChEventInfo->IsEventEnabled(Event))
 		return false;
 

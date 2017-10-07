@@ -31,10 +31,10 @@ namespace ProgramGuide
 
 	class CEventLayoutList
 	{
-		std::vector<CEventLayout*> m_LayoutList;
+		struct EventLayoutDeleter { void operator()(CEventLayout *p) const; };
+		std::vector<std::unique_ptr<CEventLayout, EventLayoutDeleter>> m_LayoutList;
 
 	public:
-		~CEventLayoutList();
 		void Clear();
 		size_t Length() const { return m_LayoutList.size(); }
 		void Add(CEventLayout *pLayout);
@@ -49,7 +49,7 @@ namespace ProgramGuide
 		LPTSTR m_pszBonDriverFileName;
 		HBITMAP m_hbmLogo;
 		DrawUtil::CBitmap m_StretchedLogo;
-		std::vector<LibISDB::EventInfo*> m_EventList;
+		std::vector<std::unique_ptr<LibISDB::EventInfo>> m_EventList;
 		typedef std::map<WORD, LibISDB::EventInfo*> EventIDMap;
 		EventIDMap m_EventIDMap;
 
@@ -81,10 +81,9 @@ namespace ProgramGuide
 
 	class CServiceList
 	{
-		std::vector<CServiceInfo*> m_ServiceList;
+		std::vector<std::unique_ptr<CServiceInfo>> m_ServiceList;
 
 	public:
-		~CServiceList();
 		size_t NumServices() const { return m_ServiceList.size(); }
 		CServiceInfo *GetItem(size_t Index);
 		const CServiceInfo *GetItem(size_t Index) const;

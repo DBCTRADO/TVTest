@@ -3,6 +3,7 @@
 
 
 #include <vector>
+#include <memory>
 #include "View.h"
 #include "DriverManager.h"
 #include "LogoManager.h"
@@ -88,7 +89,6 @@ private:
 		};
 
 		CTuner(const CDriverInfo *pDriverInfo);
-		~CTuner();
 		void Clear();
 		LPCTSTR GetDriverFileName() const { return m_DriverFileName.c_str(); }
 		LPCTSTR GetTunerName() const { return m_TunerName.c_str(); }
@@ -102,7 +102,7 @@ private:
 		HICON GetIcon() const { return m_Icon; }
 
 	private:
-		std::vector<CTuningSpaceInfo*> m_TuningSpaceList;
+		std::vector<std::unique_ptr<CTuningSpaceInfo>> m_TuningSpaceList;
 		TVTest::String m_DriverFileName;
 		TVTest::String m_TunerName;
 		TVTest::String m_DisplayName;
@@ -160,7 +160,7 @@ private:
 	LibISDB::DateTime m_ClockTime;
 	static constexpr UINT TIMER_CLOCK = 1;
 
-	std::vector<CTuner*> m_TunerList;
+	std::vector<std::unique_ptr<CTuner>> m_TunerList;
 	int m_TotalTuningSpaces;
 	int m_CurTuner;
 	int m_CurChannel;

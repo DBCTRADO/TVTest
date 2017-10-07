@@ -155,7 +155,7 @@ CChannelList &CChannelList::operator=(const CChannelList &Src)
 		if (!Src.m_ChannelList.empty()) {
 			m_ChannelList.reserve(Src.m_ChannelList.size());
 			for (auto i = Src.m_ChannelList.begin(); i != Src.m_ChannelList.end(); i++) {
-				m_ChannelList.push_back(new CChannelInfo(**i));
+				m_ChannelList.emplace_back(new CChannelInfo(**i));
 			}
 		}
 	}
@@ -185,7 +185,7 @@ bool CChannelList::AddChannel(CChannelInfo *pInfo)
 {
 	if (pInfo == nullptr)
 		return false;
-	m_ChannelList.push_back(pInfo);
+	m_ChannelList.emplace_back(pInfo);
 	return true;
 }
 
@@ -200,7 +200,7 @@ bool CChannelList::InsertChannel(int Index, const CChannelInfo &Info)
 	auto itr = m_ChannelList.begin();
 	if (Index > 0)
 		std::advance(itr, Index);
-	m_ChannelList.insert(itr, new CChannelInfo(Info));
+	m_ChannelList.emplace(itr, new CChannelInfo(Info));
 
 	return true;
 }
@@ -212,7 +212,7 @@ CChannelInfo *CChannelList::GetChannelInfo(int Index)
 		//TRACE(TEXT("CChannelList::GetChannelInfo Out of range %d\n"), Index);
 		return nullptr;
 	}
-	return m_ChannelList[Index];
+	return m_ChannelList[Index].get();
 }
 
 
@@ -222,7 +222,7 @@ const CChannelInfo *CChannelList::GetChannelInfo(int Index) const
 		//TRACE(TEXT("CChannelList::GetChannelInfo Out of range %d\n"), Index);
 		return nullptr;
 	}
-	return m_ChannelList[Index];
+	return m_ChannelList[Index].get();
 }
 
 
@@ -283,7 +283,6 @@ bool CChannelList::DeleteChannel(int Index)
 	auto itr = m_ChannelList.begin();
 	if (Index > 0)
 		std::advance(itr, Index);
-	delete *itr;
 	m_ChannelList.erase(itr);
 
 	return true;
@@ -292,8 +291,6 @@ bool CChannelList::DeleteChannel(int Index)
 
 void CChannelList::Clear()
 {
-	for (auto i = m_ChannelList.begin(); i != m_ChannelList.end(); i++)
-		delete *i;
 	m_ChannelList.clear();
 }
 
@@ -301,7 +298,7 @@ void CChannelList::Clear()
 int CChannelList::Find(const CChannelInfo *pInfo) const
 {
 	for (size_t i = 0; i < m_ChannelList.size(); i++) {
-		if (m_ChannelList[i] == pInfo)
+		if (m_ChannelList[i].get() == pInfo)
 			return (int)i;
 	}
 	return -1;
@@ -311,7 +308,7 @@ int CChannelList::Find(const CChannelInfo *pInfo) const
 int CChannelList::Find(const CChannelInfo &Info, bool fEnabledOnly) const
 {
 	for (size_t i = 0; i < m_ChannelList.size(); i++) {
-		const CChannelInfo *pChInfo = m_ChannelList[i];
+		const CChannelInfo *pChInfo = m_ChannelList[i].get();
 
 		if ((!fEnabledOnly || pChInfo->IsEnabled())
 				&& (Info.GetSpace() < 0
@@ -337,7 +334,7 @@ int CChannelList::Find(const CChannelInfo &Info, bool fEnabledOnly) const
 int CChannelList::FindByIndex(int Space, int ChannelIndex, int ServiceID, bool fEnabledOnly) const
 {
 	for (size_t i = 0; i < m_ChannelList.size(); i++) {
-		const CChannelInfo *pChInfo = m_ChannelList[i];
+		const CChannelInfo *pChInfo = m_ChannelList[i].get();
 
 		if ((!fEnabledOnly || pChInfo->IsEnabled())
 				&& (Space < 0 || pChInfo->GetSpace() == Space)
@@ -362,7 +359,7 @@ int CChannelList::FindPhysicalChannel(int Channel) const
 int CChannelList::FindChannelNo(int No, bool fEnabledOnly) const
 {
 	for (size_t i = 0; i < m_ChannelList.size(); i++) {
-		const CChannelInfo *pChInfo = m_ChannelList[i];
+		const CChannelInfo *pChInfo = m_ChannelList[i].get();
 		if (pChInfo->GetChannelNo() == No
 				&& (!fEnabledOnly || pChInfo->IsEnabled()))
 			return (int)i;
@@ -384,7 +381,7 @@ int CChannelList::FindServiceID(WORD ServiceID) const
 int CChannelList::FindByIDs(WORD NetworkID, WORD TransportStreamID, WORD ServiceID, bool fEnabledOnly) const
 {
 	for (size_t i = 0; i < m_ChannelList.size(); i++) {
-		const CChannelInfo *pChannelInfo = m_ChannelList[i];
+		const CChannelInfo *pChannelInfo = m_ChannelList[i].get();
 		if ((!fEnabledOnly || pChannelInfo->IsEnabled())
 				&& (NetworkID == 0 || pChannelInfo->GetNetworkID() == NetworkID)
 				&& (TransportStreamID == 0 || pChannelInfo->GetTransportStreamID() == TransportStreamID)
@@ -415,7 +412,7 @@ int CChannelList::GetNextChannel(int Index, bool fWrap) const
 	const int ChannelNo = GetChannelNo(Index);
 
 	for (int i = Index + 1; i < (int)m_ChannelList.size(); i++) {
-		const CChannelInfo *pChInfo = m_ChannelList[i];
+		const CChannelInfo *pChInfo = m_ChannelList[i].get();
 
 		if (pChInfo->IsEnabled() && pChInfo->GetChannelNo() == ChannelNo)
 			return i;
@@ -426,7 +423,7 @@ int CChannelList::GetNextChannel(int Index, bool fWrap) const
 	Channel = INT_MAX;
 	Min = INT_MAX;
 	for (auto i = m_ChannelList.begin(); i != m_ChannelList.end(); ++i) {
-		const CChannelInfo *pChInfo = *i;
+		const CChannelInfo *pChInfo = i->get();
 
 		if (pChInfo->IsEnabled()) {
 			No = pChInfo->GetChannelNo();
@@ -455,7 +452,7 @@ int CChannelList::GetPrevChannel(int Index, bool fWrap) const
 	const int ChannelNo = GetChannelNo(Index);
 
 	for (int i = Index - 1; i >= 0; i--) {
-		const CChannelInfo *pChInfo = m_ChannelList[i];
+		const CChannelInfo *pChInfo = m_ChannelList[i].get();
 
 		if (pChInfo->IsEnabled() && pChInfo->GetChannelNo() == ChannelNo)
 			return i;
@@ -466,7 +463,7 @@ int CChannelList::GetPrevChannel(int Index, bool fWrap) const
 	Channel = 0;
 	Max = 0;
 	for (auto i = m_ChannelList.begin(); i != m_ChannelList.end(); ++i) {
-		const CChannelInfo *pChInfo = *i;
+		const CChannelInfo *pChInfo = i->get();
 
 		if (pChInfo->IsEnabled()) {
 			No = pChInfo->GetChannelNo();
@@ -485,7 +482,7 @@ int CChannelList::GetPrevChannel(int Index, bool fWrap) const
 	}
 
 	for (int i = (int)m_ChannelList.size() - 1; i >= 0; i--) {
-		const CChannelInfo *pChInfo = m_ChannelList[i];
+		const CChannelInfo *pChInfo = m_ChannelList[i].get();
 
 		if (pChInfo->IsEnabled() && pChInfo->GetChannelNo() == Channel)
 			return i;
@@ -527,33 +524,35 @@ bool CChannelList::Sort(SortType Type, bool fDescending)
 			{
 			}
 
-			bool operator()(const CChannelInfo *pChannel1, const CChannelInfo *pChannel2)
+			bool operator()(
+				const std::unique_ptr<CChannelInfo> &Channel1,
+				const std::unique_ptr<CChannelInfo> &Channel2)
 			{
 				int Cmp;
 
 				switch (m_Type) {
 				case SORT_SPACE:
-					Cmp = pChannel1->GetSpace() - pChannel2->GetSpace();
+					Cmp = Channel1->GetSpace() - Channel2->GetSpace();
 					break;
 				case SORT_CHANNELINDEX:
-					Cmp = pChannel1->GetChannelIndex() - pChannel2->GetChannelIndex();
+					Cmp = Channel1->GetChannelIndex() - Channel2->GetChannelIndex();
 					break;
 				case SORT_CHANNELNO:
-					Cmp = pChannel1->GetChannelNo() - pChannel2->GetChannelNo();
+					Cmp = Channel1->GetChannelNo() - Channel2->GetChannelNo();
 					break;
 				case SORT_PHYSICALCHANNEL:
-					Cmp = pChannel1->GetPhysicalChannel() - pChannel2->GetPhysicalChannel();
+					Cmp = Channel1->GetPhysicalChannel() - Channel2->GetPhysicalChannel();
 					break;
 				case SORT_NAME:
-					Cmp = ::lstrcmpi(pChannel1->GetName(), pChannel2->GetName());
+					Cmp = ::lstrcmpi(Channel1->GetName(), Channel2->GetName());
 					if (Cmp == 0)
-						Cmp = ::lstrcmp(pChannel1->GetName(), pChannel2->GetName());
+						Cmp = ::lstrcmp(Channel1->GetName(), Channel2->GetName());
 					break;
 				case SORT_NETWORKID:
-					Cmp = pChannel1->GetNetworkID() - pChannel2->GetNetworkID();
+					Cmp = Channel1->GetNetworkID() - Channel2->GetNetworkID();
 					break;
 				case SORT_SERVICEID:
-					Cmp = pChannel1->GetServiceID() - pChannel2->GetServiceID();
+					Cmp = Channel1->GetServiceID() - Channel2->GetServiceID();
 					break;
 				default:
 					__assume(0);
@@ -585,10 +584,10 @@ bool CChannelList::HasRemoteControlKeyID() const
 bool CChannelList::HasMultiService() const
 {
 	for (size_t i = 0; i + 1 < m_ChannelList.size(); i++) {
-		const CChannelInfo *pChannelInfo1 = m_ChannelList[i];
+		const CChannelInfo *pChannelInfo1 = m_ChannelList[i].get();
 
 		for (size_t j = i + 1; j < m_ChannelList.size(); j++) {
-			const CChannelInfo *pChannelInfo2 = m_ChannelList[j];
+			const CChannelInfo *pChannelInfo2 = m_ChannelList[j].get();
 
 			if (pChannelInfo1->GetNetworkID() == pChannelInfo2->GetNetworkID()
 					&& pChannelInfo1->GetTransportStreamID() == pChannelInfo2->GetTransportStreamID()
@@ -603,41 +602,32 @@ bool CChannelList::HasMultiService() const
 
 
 CTuningSpaceInfo::CTuningSpaceInfo()
-	: m_pChannelList(nullptr)
-	, m_Space(SPACE_UNKNOWN)
+	: m_Space(SPACE_UNKNOWN)
 {
 }
 
 
 CTuningSpaceInfo::CTuningSpaceInfo(const CTuningSpaceInfo &Info)
-	: m_pChannelList(nullptr)
-	, m_Space(SPACE_UNKNOWN)
+	: m_Space(SPACE_UNKNOWN)
 {
-	Create(Info.m_pChannelList, Info.m_Name.c_str());
-}
-
-
-CTuningSpaceInfo::~CTuningSpaceInfo()
-{
-	delete m_pChannelList;
+	Create(Info.m_ChannelList.get(), Info.m_Name.c_str());
 }
 
 
 CTuningSpaceInfo &CTuningSpaceInfo::operator=(const CTuningSpaceInfo &Info)
 {
 	if (&Info != this)
-		Create(Info.m_pChannelList, Info.m_Name.c_str());
+		Create(Info.m_ChannelList.get(), Info.m_Name.c_str());
 	return *this;
 }
 
 
 bool CTuningSpaceInfo::Create(const CChannelList *pList, LPCTSTR pszName)
 {
-	delete m_pChannelList;
 	if (pList != nullptr)
-		m_pChannelList = new CChannelList(*pList);
+		m_ChannelList = std::make_unique<CChannelList>(*pList);
 	else
-		m_pChannelList = new CChannelList;
+		m_ChannelList = std::make_unique<CChannelList>();
 	SetName(pszName);
 	return true;
 }
@@ -645,17 +635,17 @@ bool CTuningSpaceInfo::Create(const CChannelList *pList, LPCTSTR pszName)
 
 const CChannelInfo *CTuningSpaceInfo::GetChannelInfo(int Index) const
 {
-	if (m_pChannelList == nullptr)
+	if (!m_ChannelList)
 		return nullptr;
-	return m_pChannelList->GetChannelInfo(Index);
+	return m_ChannelList->GetChannelInfo(Index);
 }
 
 
 CChannelInfo *CTuningSpaceInfo::GetChannelInfo(int Index)
 {
-	if (m_pChannelList == nullptr)
+	if (!m_ChannelList)
 		return nullptr;
-	return m_pChannelList->GetChannelInfo(Index);
+	return m_ChannelList->GetChannelInfo(Index);
 }
 
 
@@ -685,9 +675,9 @@ bool CTuningSpaceInfo::SetName(LPCTSTR pszName)
 
 int CTuningSpaceInfo::NumChannels() const
 {
-	if (m_pChannelList == nullptr)
+	if (!m_ChannelList)
 		return 0;
-	return m_pChannelList->NumChannels();
+	return m_ChannelList->NumChannels();
 }
 
 
@@ -704,12 +694,6 @@ CTuningSpaceList::CTuningSpaceList(const CTuningSpaceList &List)
 }
 
 
-CTuningSpaceList::~CTuningSpaceList()
-{
-	Clear();
-}
-
-
 CTuningSpaceList &CTuningSpaceList::operator=(const CTuningSpaceList &List)
 {
 	if (&List != this) {
@@ -717,7 +701,7 @@ CTuningSpaceList &CTuningSpaceList::operator=(const CTuningSpaceList &List)
 		if (List.NumSpaces() > 0) {
 			m_TuningSpaceList.resize(List.m_TuningSpaceList.size());
 			for (size_t i = 0; i < List.m_TuningSpaceList.size(); i++)
-				m_TuningSpaceList[i] = new CTuningSpaceInfo(*List.m_TuningSpaceList[i]);
+				m_TuningSpaceList[i].reset(new CTuningSpaceInfo(*List.m_TuningSpaceList[i]));
 		}
 		m_AllChannelList = List.m_AllChannelList;
 	}
@@ -729,7 +713,7 @@ CTuningSpaceInfo *CTuningSpaceList::GetTuningSpaceInfo(int Space)
 {
 	if (Space < 0 || Space >= NumSpaces())
 		return nullptr;
-	return m_TuningSpaceList[Space];
+	return m_TuningSpaceList[Space].get();
 }
 
 
@@ -737,7 +721,7 @@ const CTuningSpaceInfo *CTuningSpaceList::GetTuningSpaceInfo(int Space) const
 {
 	if (Space < 0 || Space >= NumSpaces())
 		return nullptr;
-	return m_TuningSpaceList[Space];
+	return m_TuningSpaceList[Space].get();
 }
 
 
@@ -817,15 +801,13 @@ bool CTuningSpaceList::Reserve(int Spaces)
 		return true;
 	}
 	if (Spaces < NumSpaces()) {
-		for (int i = NumSpaces() - 1; i >= Spaces; i--)
-			delete m_TuningSpaceList[i];
 		m_TuningSpaceList.resize(Spaces);
 	} else {
 		for (int i = NumSpaces(); i < Spaces; i++) {
 			CTuningSpaceInfo *pInfo = new CTuningSpaceInfo;
 
 			pInfo->Create();
-			m_TuningSpaceList.push_back(pInfo);
+			m_TuningSpaceList.emplace_back(pInfo);
 		}
 	}
 	return true;
@@ -834,8 +816,6 @@ bool CTuningSpaceList::Reserve(int Spaces)
 
 void CTuningSpaceList::Clear()
 {
-	for (size_t i = 0; i < m_TuningSpaceList.size(); i++)
-		delete m_TuningSpaceList[i];
 	m_TuningSpaceList.clear();
 	m_AllChannelList.Clear();
 }

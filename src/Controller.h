@@ -3,6 +3,7 @@
 
 
 #include <vector>
+#include <memory>
 #include "Options.h"
 #include "Tooltip.h"
 
@@ -98,13 +99,13 @@ public:
 private:
 	struct ControllerInfo
 	{
-		CController *pController;
+		std::unique_ptr<CController> Controller;
 		bool fSettingsLoaded;
 		bool fSettingsChanged;
 		ControllerSettings Settings;
 
 		ControllerInfo(CController *p)
-			: pController(p)
+			: Controller(p)
 			, fSettingsLoaded(false)
 			, fSettingsChanged(false)
 		{

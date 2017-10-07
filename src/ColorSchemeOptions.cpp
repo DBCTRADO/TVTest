@@ -82,8 +82,7 @@ const LPCTSTR CColorSchemeOptions::m_pszExtension = TEXT(".httheme");
 
 
 CColorSchemeOptions::CColorSchemeOptions()
-	: m_pColorScheme(new CColorScheme)
-	, m_pPreviewColorScheme(nullptr)
+	: m_ColorScheme(std::make_unique<CColorScheme>())
 	, m_pEventHandler(nullptr)
 {
 }
@@ -92,23 +91,21 @@ CColorSchemeOptions::CColorSchemeOptions()
 CColorSchemeOptions::~CColorSchemeOptions()
 {
 	Destroy();
-	delete m_pColorScheme;
-	delete m_pPreviewColorScheme;
 }
 
 
 bool CColorSchemeOptions::LoadSettings(CSettings &Settings)
 {
-	if (!m_pColorScheme->Load(Settings))
+	if (!m_ColorScheme->Load(Settings))
 		return false;
 
 	// ver.0.9.0より前にあった「映像表示部の枠」の設定を反映させる
-	if (m_pColorScheme->GetBorderType(CColorScheme::BORDER_SCREEN) == TVTest::Theme::BORDER_SUNKEN
+	if (m_ColorScheme->GetBorderType(CColorScheme::BORDER_SCREEN) == TVTest::Theme::BORDER_SUNKEN
 			&& Settings.SetSection(TEXT("Settings"))) {
 		bool fClientEdge;
 
 		if (Settings.Read(TEXT("ClientEdge"), &fClientEdge) && !fClientEdge)
-			m_pColorScheme->SetBorderType(CColorScheme::BORDER_SCREEN, TVTest::Theme::BORDER_NONE);
+			m_ColorScheme->SetBorderType(CColorScheme::BORDER_SCREEN, TVTest::Theme::BORDER_NONE);
 	}
 
 	return true;
@@ -117,7 +114,7 @@ bool CColorSchemeOptions::LoadSettings(CSettings &Settings)
 
 bool CColorSchemeOptions::SaveSettings(CSettings &Settings)
 {
-	if (!m_pColorScheme->Save(
+	if (!m_ColorScheme->Save(
 				Settings,
 				CColorScheme::SAVE_NODEFAULT |
 				CColorScheme::SAVE_NONAME))
@@ -147,7 +144,7 @@ bool CColorSchemeOptions::SetEventHandler(CEventHandler *pEventHandler)
 
 bool CColorSchemeOptions::ApplyColorScheme() const
 {
-	return Apply(m_pColorScheme);
+	return Apply(m_ColorScheme.get());
 }
 
 
@@ -161,17 +158,17 @@ bool CColorSchemeOptions::Apply(const CColorScheme *pColorScheme) const
 
 COLORREF CColorSchemeOptions::GetColor(int Type) const
 {
-	if (m_pPreviewColorScheme != nullptr)
-		return m_pPreviewColorScheme->GetColor(Type);
-	return m_pColorScheme->GetColor(Type);
+	if (m_PreviewColorScheme)
+		return m_PreviewColorScheme->GetColor(Type);
+	return m_ColorScheme->GetColor(Type);
 }
 
 
 COLORREF CColorSchemeOptions::GetColor(LPCTSTR pszText) const
 {
-	if (m_pPreviewColorScheme != nullptr)
-		return m_pPreviewColorScheme->GetColor(pszText);
-	return m_pColorScheme->GetColor(pszText);
+	if (m_PreviewColorScheme)
+		return m_PreviewColorScheme->GetColor(pszText);
+	return m_ColorScheme->GetColor(pszText);
 }
 
 
@@ -212,13 +209,13 @@ INT_PTR CColorSchemeOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM
 			m_PresetList.Insert(0, pDefaultColorScheme);
 			int CurPreset = -1;
 			for (int i = 0; i < m_PresetList.NumColorSchemes(); i++) {
-				if (m_pColorScheme->CompareScheme(*m_PresetList.GetColorScheme(i))) {
+				if (m_ColorScheme->CompareScheme(*m_PresetList.GetColorScheme(i))) {
 					CurPreset = i;
 					break;
 				}
 			}
 			if (CurPreset < 0) {
-				CColorScheme *pColorScheme = new CColorScheme(*m_pColorScheme);
+				CColorScheme *pColorScheme = new CColorScheme(*m_ColorScheme.get());
 				pColorScheme->SetName(TEXT("現在のテーマ"));
 				pColorScheme->SetLoaded();
 				m_PresetList.Insert(0, pColorScheme);
@@ -230,16 +227,16 @@ INT_PTR CColorSchemeOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM
 			EnableDlgItem(hDlg, IDC_COLORSCHEME_DELETE, CurPreset > 0);
 
 			for (int i = 0; i < CColorScheme::NUM_COLORS; i++) {
-				DlgListBox_AddItem(hDlg, IDC_COLORSCHEME_LIST, m_pColorScheme->GetColor(i));
+				DlgListBox_AddItem(hDlg, IDC_COLORSCHEME_LIST, m_ColorScheme->GetColor(i));
 			}
 			ExtendListBox(GetDlgItem(hDlg, IDC_COLORSCHEME_LIST));
 
 			SetListItemSize();
 
 			for (int i = 0; i < CColorScheme::NUM_GRADIENTS; i++)
-				m_pColorScheme->GetGradientStyle(i, &m_GradientList[i]);
+				m_ColorScheme->GetGradientStyle(i, &m_GradientList[i]);
 			for (int i = 0; i < CColorScheme::NUM_BORDERS; i++)
-				m_BorderList[i] = m_pColorScheme->GetBorderType(i);
+				m_BorderList[i] = m_ColorScheme->GetBorderType(i);
 
 			RECT rc;
 			static const RGBQUAD BaseColors[18] = {
@@ -293,7 +290,7 @@ INT_PTR CColorSchemeOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM
 				i++;
 			}
 			for (int j = 0; j < CColorScheme::NUM_COLORS; j++) {
-				COLORREF cr = m_pColorScheme->GetColor(j);
+				COLORREF cr = m_ColorScheme->GetColor(j);
 				int k;
 
 				for (k = 0; k < i; k++) {
@@ -710,10 +707,10 @@ INT_PTR CColorSchemeOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM
 			return TRUE;
 
 		case IDC_COLORSCHEME_PREVIEW:
-			if (m_pPreviewColorScheme == nullptr)
-				m_pPreviewColorScheme = new CColorScheme;
-			GetCurrentSettings(m_pPreviewColorScheme);
-			Apply(m_pPreviewColorScheme);
+			if (!m_PreviewColorScheme)
+				m_PreviewColorScheme = std::make_unique<CColorScheme>();
+			GetCurrentSettings(m_PreviewColorScheme.get());
+			Apply(m_PreviewColorScheme.get());
 			return TRUE;
 
 		case IDC_COLORSCHEME_SELECTSAMECOLOR:
@@ -794,14 +791,14 @@ INT_PTR CColorSchemeOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM
 	case WM_NOTIFY:
 		switch (((LPNMHDR)lParam)->code) {
 		case PSN_APPLY:
-			GetCurrentSettings(m_pColorScheme);
-			Apply(m_pColorScheme);
+			GetCurrentSettings(m_ColorScheme.get());
+			Apply(m_ColorScheme.get());
 			m_fChanged = true;
 			break;
 
 		case PSN_RESET:
-			if (m_pPreviewColorScheme != nullptr)
-				Apply(m_pColorScheme);
+			if (m_PreviewColorScheme)
+				Apply(m_ColorScheme.get());
 			break;
 		}
 		break;
@@ -866,7 +863,7 @@ INT_PTR CColorSchemeOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM
 #endif
 
 	case WM_DESTROY:
-		SAFE_DELETE(m_pPreviewColorScheme);
+		m_PreviewColorScheme.reset();
 		m_PresetList.Clear();
 		break;
 	}

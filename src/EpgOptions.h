@@ -84,7 +84,7 @@ private:
 	TCHAR m_szLogoFileName[MAX_PATH];
 
 	TVTest::CEpgDataStore m_EpgDataStore;
-	CEpgDataLoader *m_pEpgDataLoader;
+	std::unique_ptr<CEpgDataLoader> m_EpgDataLoader;
 
 	TVTest::Style::Font m_EventInfoFont;
 	TVTest::Style::Font m_CurEventInfoFont;

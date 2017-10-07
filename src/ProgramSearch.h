@@ -6,6 +6,7 @@
 #include <set>
 #include <deque>
 #include <map>
+#include <memory>
 #include "Dialog.h"
 #include "ChannelList.h"
 #include "RichEditUtil.h"
@@ -139,7 +140,6 @@ class CEventSearchSettingsList
 public:
 	CEventSearchSettingsList();
 	CEventSearchSettingsList(const CEventSearchSettingsList &Src);
-	~CEventSearchSettingsList();
 	CEventSearchSettingsList &operator=(const CEventSearchSettingsList &Src);
 	void Clear();
 	size_t GetCount() const;
@@ -155,7 +155,7 @@ public:
 	bool Save(CSettings &Settings, LPCTSTR pszPrefix) const;
 
 private:
-	std::vector<CEventSearchSettings*> m_List;
+	std::vector<std::unique_ptr<CEventSearchSettings>> m_List;
 };
 
 class CEventSearcher

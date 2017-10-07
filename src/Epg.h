@@ -17,7 +17,6 @@ namespace TVTest
 		{
 		public:
 			CChannelProviderManager();
-			~CChannelProviderManager();
 			// CProgramGuideChannelProviderManager
 			size_t GetChannelProviderCount() const override;
 			CProgramGuideChannelProvider *GetChannelProvider(size_t Index) const override;
@@ -39,7 +38,6 @@ namespace TVTest
 				: public CProgramGuideBaseChannelProvider
 			{
 			public:
-				~CFavoritesChannelProvider();
 				bool Update() override;
 				bool GetName(LPTSTR pszName, int MaxName) const override;
 				bool GetGroupID(size_t Group, String *pID) const override;
@@ -55,14 +53,14 @@ namespace TVTest
 					std::vector<CFavoriteChannel> ChannelList;
 				};
 
-				std::vector<GroupInfo*> m_GroupList;
+				std::vector<std::unique_ptr<GroupInfo>> m_GroupList;
 
 				void ClearGroupList();
 				void AddFavoritesChannels(const CFavoriteFolder &Folder, const String &Path);
 				void AddSubItems(GroupInfo *pGroup, const CFavoriteFolder &Folder);
 			};
 
-			std::vector<CProgramGuideChannelProvider*> m_ChannelProviderList;
+			std::vector<std::unique_ptr<CProgramGuideChannelProvider>> m_ChannelProviderList;
 			int m_CurChannelProvider;
 		};
 

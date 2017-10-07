@@ -7,6 +7,7 @@
 #include "ListView.h"
 #include <vector>
 #include <map>
+#include <memory>
 
 
 namespace TVTest
@@ -48,7 +49,7 @@ namespace TVTest
 		static const UINT WM_APP_UPDATEDEVICEFILTERLIST = WM_APP;
 
 		CTSProcessorManager &m_TSProcessorManager;
-		std::vector<CTSProcessorManager::CTSProcessorSettings*> m_SettingsList;
+		std::vector<std::unique_ptr<CTSProcessorManager::CTSProcessorSettings>> m_SettingsList;
 		CTSProcessorManager::CTSProcessorSettings *m_pCurSettings;
 		CListView m_TunerMapListView;
 		std::vector<String> m_ModuleList;

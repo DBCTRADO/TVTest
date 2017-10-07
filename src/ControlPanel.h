@@ -3,6 +3,7 @@
 
 
 #include <vector>
+#include <memory>
 #include "PanelForm.h"
 #include "UIBase.h"
 #include "DrawUtil.h"
@@ -72,7 +73,7 @@ private:
 			const TVTest::Style::CStyleScaling *pStyleScaling);
 	};
 
-	std::vector<CControlPanelItem*> m_ItemList;
+	std::vector<std::unique_ptr<CControlPanelItem>> m_ItemList;
 	TVTest::Style::Font m_StyleFont;
 	DrawUtil::CFont m_Font;
 	int m_FontHeight;

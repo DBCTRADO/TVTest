@@ -3,6 +3,7 @@
 
 
 #include <vector>
+#include <memory>
 #include "Options.h"
 #include "DriverManager.h"
 #include "ChannelManager.h"
@@ -12,12 +13,11 @@ class CDriverSettings;
 
 class CDriverSettingList
 {
-	std::vector<CDriverSettings*> m_SettingList;
+	std::vector<std::unique_ptr<CDriverSettings>> m_SettingList;
 
 public:
 	CDriverSettingList();
 	CDriverSettingList(const CDriverSettingList &Src);
-	~CDriverSettingList();
 	CDriverSettingList &operator=(const CDriverSettingList &Src);
 	void Clear();
 	size_t NumDrivers() const { return m_SettingList.size(); }

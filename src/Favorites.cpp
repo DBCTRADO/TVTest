@@ -58,11 +58,6 @@ CFavoriteFolder::CFavoriteFolder(const CFavoriteFolder &Src)
 	*this = Src;
 }
 
-CFavoriteFolder::~CFavoriteFolder()
-{
-	Clear();
-}
-
 CFavoriteFolder &CFavoriteFolder::operator=(const CFavoriteFolder &Src)
 {
 	if (&Src != this) {
@@ -71,7 +66,7 @@ CFavoriteFolder &CFavoriteFolder::operator=(const CFavoriteFolder &Src)
 		if (!Src.m_Children.empty()) {
 			m_Children.reserve(Src.m_Children.size());
 			for (auto i = Src.m_Children.begin(); i != Src.m_Children.end(); i++)
-				m_Children.push_back((*i)->Duplicate());
+				m_Children.emplace_back((*i)->Duplicate());
 		}
 	}
 
@@ -86,8 +81,6 @@ CFavoriteFolder *CFavoriteFolder::Duplicate() const
 void CFavoriteFolder::Clear()
 {
 	m_Name.clear();
-	for (auto i = m_Children.begin(); i != m_Children.end(); i++)
-		delete *i;
 	m_Children.clear();
 }
 
@@ -102,7 +95,7 @@ size_t CFavoriteFolder::GetSubItemCount() const
 
 	for (auto i = m_Children.begin(); i != m_Children.end(); i++) {
 		if ((*i)->GetType() == ITEM_FOLDER) {
-			const CFavoriteFolder *pFolder = dynamic_cast<CFavoriteFolder*>(*i);
+			const CFavoriteFolder *pFolder = dynamic_cast<CFavoriteFolder*>(i->get());
 			if (pFolder != nullptr)
 				Count += pFolder->GetSubItemCount();
 		}
@@ -116,7 +109,7 @@ CFavoriteItem *CFavoriteFolder::GetItem(size_t Index)
 	if (Index >= m_Children.size())
 		return nullptr;
 
-	return m_Children[Index];
+	return m_Children[Index].get();
 }
 
 const CFavoriteItem *CFavoriteFolder::GetItem(size_t Index) const
@@ -124,7 +117,7 @@ const CFavoriteItem *CFavoriteFolder::GetItem(size_t Index) const
 	if (Index >= m_Children.size())
 		return nullptr;
 
-	return m_Children[Index];
+	return m_Children[Index].get();
 }
 
 bool CFavoriteFolder::AddItem(CFavoriteItem *pItem)
@@ -132,7 +125,7 @@ bool CFavoriteFolder::AddItem(CFavoriteItem *pItem)
 	if (pItem == nullptr)
 		return false;
 
-	m_Children.push_back(pItem);
+	m_Children.emplace_back(pItem);
 
 	return true;
 }
@@ -142,9 +135,9 @@ bool CFavoriteFolder::AddItem(size_t Pos, CFavoriteItem *pItem)
 	if (Pos > m_Children.size())
 		return false;
 
-	auto i = m_Children.begin();
-	std::advance(i, Pos);
-	m_Children.insert(i, pItem);
+	auto it = m_Children.begin();
+	std::advance(it, Pos);
+	m_Children.emplace(it, pItem);
 
 	return true;
 }
@@ -156,7 +149,6 @@ bool CFavoriteFolder::DeleteItem(size_t Index)
 
 	auto i = m_Children.begin();
 	std::advance(i, Index);
-	delete *i;
 	m_Children.erase(i);
 
 	return true;
@@ -169,7 +161,7 @@ CFavoriteItem *CFavoriteFolder::RemoveItem(size_t Index)
 
 	auto i = m_Children.begin();
 	std::advance(i, Index);
-	CFavoriteItem *pItem = *i;
+	CFavoriteItem *pItem = i->release();
 	m_Children.erase(i);
 
 	return pItem;
@@ -183,11 +175,11 @@ bool CFavoriteFolder::MoveItem(size_t From, size_t To)
 	if (From != To) {
 		auto i = m_Children.begin();
 		std::advance(i, From);
-		CFavoriteItem *pItem = *i;
+		CFavoriteItem *pItem = i->release();
 		m_Children.erase(i);
 		i = m_Children.begin();
 		std::advance(i, To);
-		m_Children.insert(i, pItem);
+		m_Children.emplace(i, pItem);
 	}
 
 	return true;
@@ -200,7 +192,7 @@ CFavoriteFolder *CFavoriteFolder::FindSubFolder(LPCTSTR pszName)
 
 	for (auto i = m_Children.begin(); i != m_Children.end(); i++) {
 		if ((*i)->GetType() == ITEM_FOLDER) {
-			CFavoriteFolder *pFolder = dynamic_cast<CFavoriteFolder*>(*i);
+			CFavoriteFolder *pFolder = dynamic_cast<CFavoriteFolder*>(i->get());
 			if (pFolder != nullptr && pFolder->m_Name.compare(pszName) == 0)
 				return pFolder;
 		}
@@ -642,12 +634,6 @@ bool CFavoritesManager::IsOrganizeDialogPosSet() const
 }
 
 
-class ABSTRACT_CLASS(CFavoritesMenu::CMenuItem)
-{
-public:
-	virtual ~CMenuItem() = default;
-};
-
 class CFavoritesMenu::CFolderItem
 	: public CFavoritesMenu::CMenuItem
 {
@@ -912,7 +898,7 @@ void CFavoritesMenu::SetFolderMenu(HMENU hmenu, int MenuPos, HDC hdc, UINT *pCom
 
 				if (pSubFolder != nullptr) {
 					CFolderItem *pMenuItem = new CFolderItem(pSubFolder);
-					m_ItemList.push_back(pMenuItem);
+					m_ItemList.emplace_back(pMenuItem);
 
 					HMENU hmenuSub = ::CreatePopupMenu();
 					mii.fMask = MIIM_FTYPE | MIIM_STATE | MIIM_ID | MIIM_SUBMENU | MIIM_DATA;
@@ -940,7 +926,7 @@ void CFavoritesMenu::SetFolderMenu(HMENU hmenu, int MenuPos, HDC hdc, UINT *pCom
 				if (pChannel != nullptr) {
 					CChannelItem *pMenuItem = new CChannelItem(pChannel);
 					pMenuItem->SetNameWidth(ChannelNameWidth);
-					m_ItemList.push_back(pMenuItem);
+					m_ItemList.emplace_back(pMenuItem);
 
 					mii.fMask = MIIM_FTYPE | MIIM_STATE | MIIM_ID | MIIM_DATA;
 					mii.wID = *pCommand;
@@ -982,11 +968,7 @@ void CFavoritesMenu::Destroy()
 	m_Tooltip.Destroy();
 	m_hwnd = nullptr;
 
-	if (!m_ItemList.empty()) {
-		for (auto i = m_ItemList.begin(); i != m_ItemList.end(); i++)
-			delete *i;
-		m_ItemList.clear();
-	}
+	m_ItemList.clear();
 
 	if (m_himlIcons != nullptr) {
 		::ImageList_Destroy(m_himlIcons);

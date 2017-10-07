@@ -568,42 +568,30 @@ void CRegExpEngine_Bregonig::GetLibraryPath(LPTSTR pszPath)
 
 
 
-CRegExp::CRegExp()
-	: m_pEngine(nullptr)
-{
-}
-
-
-CRegExp::~CRegExp()
-{
-	Finalize();
-}
-
-
 bool CRegExp::Initialize()
 {
-	if (m_pEngine != nullptr)
+	if (m_Engine)
 		return true;
 
 #ifdef TVTEST_BREGONIG_SUPPORT
 	if (CRegExpEngine_Bregonig::IsAvailable()) {
-		m_pEngine = new CRegExpEngine_Bregonig;
-		if (m_pEngine->Initialize())
+		m_Engine.reset(new CRegExpEngine_Bregonig);
+		if (m_Engine->Initialize())
 			return true;
 		Finalize();
 	}
 #endif
 
 #ifdef TVTEST_VBSCRIPT_REGEXP_SUPPORT
-	m_pEngine = new CRegExpEngine_VBScript;
-	if (m_pEngine->Initialize())
+	m_Engine.reset(new CRegExpEngine_VBScript);
+	if (m_Engine->Initialize())
 		return true;
 	Finalize();
 #endif
 
 #ifdef TVTEST_STD_REGEX_SUPPORT
-	m_pEngine = new CRegExpEngine_ECMAScript;
-	if (m_pEngine->Initialize())
+	m_Engine.reset(new CRegExpEngine_ECMAScript);
+	if (m_Engine->Initialize())
 		return true;
 	Finalize();
 #endif
@@ -614,41 +602,38 @@ bool CRegExp::Initialize()
 
 void CRegExp::Finalize()
 {
-	if (m_pEngine != nullptr) {
-		delete m_pEngine;
-		m_pEngine = nullptr;
-	}
+	m_Engine.reset();
 }
 
 
 bool CRegExp::IsInitialized() const
 {
-	return m_pEngine != nullptr;
+	return static_cast<bool>(m_Engine);
 }
 
 
 bool CRegExp::SetPattern(LPCTSTR pszPattern, UINT Flags)
 {
-	if (m_pEngine == nullptr)
+	if (!m_Engine)
 		return false;
 
-	return m_pEngine->SetPattern(pszPattern, Flags);
+	return m_Engine->SetPattern(pszPattern, Flags);
 }
 
 
 void CRegExp::ClearPattern()
 {
-	if (m_pEngine != nullptr)
-		m_pEngine->ClearPattern();
+	if (m_Engine)
+		m_Engine->ClearPattern();
 }
 
 
 bool CRegExp::Match(LPCTSTR pText, size_t Length, TextRange *pRange)
 {
-	if (m_pEngine == nullptr)
+	if (!m_Engine)
 		return false;
 
-	return m_pEngine->Match(pText, Length, pRange);
+	return m_Engine->Match(pText, Length, pRange);
 }
 
 
@@ -669,10 +654,16 @@ bool CRegExp::Match(const String &Text, TextRange *pRange)
 
 bool CRegExp::GetEngineName(LPTSTR pszName, size_t MaxLength) const
 {
-	if (m_pEngine == nullptr)
+	if (!m_Engine)
 		return false;
 
-	return m_pEngine->GetName(pszName, MaxLength);
+	return m_Engine->GetName(pszName, MaxLength);
+}
+
+
+void CRegExp::RegExpEngineDeleter::operator()(CRegExpEngine *p) const
+{
+	delete p;
 }
 
 

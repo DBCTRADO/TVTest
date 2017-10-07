@@ -5,6 +5,7 @@
 #include "ColorScheme.h"
 #include "Options.h"
 #include "ColorPalette.h"
+#include <memory>
 
 
 class CColorSchemeOptions
@@ -27,17 +28,17 @@ public:
 // CColorSchemeOptions
 	bool SetEventHandler(CEventHandler *pEventHandler);
 	bool ApplyColorScheme() const;
-	const CColorScheme *GetColorScheme() const { return m_pColorScheme; }
+	const CColorScheme *GetColorScheme() const { return m_ColorScheme.get(); }
 	COLORREF GetColor(int Type) const;
 	COLORREF GetColor(LPCTSTR pszText) const;
 	static bool GetThemesDirectory(LPTSTR pszDirectory, int MaxLength, bool fCreate = false);
 
 private:
-	CColorScheme *m_pColorScheme;
+	std::unique_ptr<CColorScheme> m_ColorScheme;
 	CColorSchemeList m_PresetList;
 	CColorScheme::GradientStyle m_GradientList[CColorScheme::NUM_GRADIENTS];
 	TVTest::Theme::BorderType m_BorderList[CColorScheme::NUM_BORDERS];
-	CColorScheme *m_pPreviewColorScheme;
+	std::unique_ptr<CColorScheme> m_PreviewColorScheme;
 	bool m_fPreview;
 	CEventHandler *m_pEventHandler;
 	CColorPalette m_ColorPalette;

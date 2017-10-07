@@ -3,6 +3,7 @@
 
 
 #include <map>
+#include <memory>
 #include "LibISDB/LibISDB/Filters/LogoDownloaderFilter.hpp"
 #include "Graphics.h"
 #include "Image.h"
@@ -22,7 +23,6 @@ public:
 	};
 
 	CLogoManager();
-	~CLogoManager();
 	void Clear();
 	bool SetLogoDirectory(LPCTSTR pszDirectory);
 	LPCTSTR GetLogoDirectory() const { return m_szLogoDirectory; }
@@ -70,7 +70,7 @@ private:
 		WORD m_LogoVersion;
 		BYTE m_LogoType;
 		WORD m_DataSize;
-		BYTE *m_pData;
+		std::unique_ptr<BYTE[]> m_Data;
 		LibISDB::DateTime m_Time;
 		HBITMAP m_hbm;
 		TVTest::Graphics::CImage m_Image;
@@ -86,7 +86,7 @@ private:
 		void SetLogoVersion(WORD Version) { m_LogoVersion = Version; }
 		BYTE GetLogoType() const { return m_LogoType; }
 		WORD GetDataSize() const { return m_DataSize; }
-		const BYTE *GetData() const { return m_pData; }
+		const BYTE *GetData() const { return m_Data.get(); }
 		const LibISDB::DateTime &GetTime() const { return m_Time; }
 		HBITMAP GetBitmap(CImageCodec *pCodec);
 		const TVTest::Graphics::CImage *GetImage(CImageCodec *pCodec);
@@ -97,7 +97,7 @@ private:
 	static inline ULONGLONG GetMapKey(WORD NID, WORD LogoID, BYTE LogoType) {
 		return ((ULONGLONG)NID << 24) | ((ULONGLONG)LogoID << 8) | LogoType;
 	}
-	typedef std::map<ULONGLONG, CLogoData*> LogoMap;
+	typedef std::map<ULONGLONG, std::unique_ptr<CLogoData>> LogoMap;
 	static inline DWORD GetIDMapKey(WORD NID, WORD SID) {
 		return ((DWORD)NID << 16) | (DWORD)SID;
 	}

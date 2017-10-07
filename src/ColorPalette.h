@@ -2,6 +2,7 @@
 #define COLOR_PALETTE_H
 
 
+#include <memory>
 #include "BasicWindow.h"
 #include "Tooltip.h"
 
@@ -10,7 +11,7 @@ class CColorPalette
 	: public CCustomWindow
 {
 	int m_NumColors;
-	RGBQUAD *m_pPalette;
+	std::unique_ptr<RGBQUAD[]> m_Palette;
 	int m_SelColor;
 	int m_HotColor;
 	int m_Left;

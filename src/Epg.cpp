@@ -37,12 +37,6 @@ CEpg::CChannelProviderManager::CChannelProviderManager()
 }
 
 
-CEpg::CChannelProviderManager::~CChannelProviderManager()
-{
-	Clear();
-}
-
-
 size_t CEpg::CChannelProviderManager::GetChannelProviderCount() const
 {
 	return m_ChannelProviderList.size();
@@ -53,7 +47,7 @@ CProgramGuideChannelProvider *CEpg::CChannelProviderManager::GetChannelProvider(
 {
 	if (Index >= m_ChannelProviderList.size())
 		return nullptr;
-	return m_ChannelProviderList[Index];
+	return m_ChannelProviderList[Index].get();
 }
 
 
@@ -61,7 +55,7 @@ bool CEpg::CChannelProviderManager::Create(LPCTSTR pszDefaultTuner)
 {
 	Clear();
 
-	m_ChannelProviderList.push_back(new CFavoritesChannelProvider);
+	m_ChannelProviderList.emplace_back(new CFavoritesChannelProvider);
 	if (pszDefaultTuner != nullptr && ::lstrcmpi(pszDefaultTuner, TEXT("favorites")) == 0)
 		m_CurChannelProvider = 0;
 
@@ -90,7 +84,7 @@ bool CEpg::CChannelProviderManager::Create(LPCTSTR pszDefaultTuner)
 			if (pCurChannelProvider != nullptr
 					&& IsEqualFileName(DefaultTuner.c_str(), pDriverInfo->GetFileName())) {
 				m_CurChannelProvider = (int)m_ChannelProviderList.size();
-				m_ChannelProviderList.push_back(pCurChannelProvider);
+				m_ChannelProviderList.emplace_back(pCurChannelProvider);
 				pCurChannelProvider = nullptr;
 			} else {
 				CDriverManager::TunerSpec Spec;
@@ -101,7 +95,7 @@ bool CEpg::CChannelProviderManager::Create(LPCTSTR pszDefaultTuner)
 					CBonDriverChannelProvider *pDriverChannelProvider =
 						new CBonDriverChannelProvider(pDriverInfo->GetFileName());
 
-					m_ChannelProviderList.push_back(pDriverChannelProvider);
+					m_ChannelProviderList.emplace_back(pDriverChannelProvider);
 				}
 			}
 		}
@@ -110,7 +104,7 @@ bool CEpg::CChannelProviderManager::Create(LPCTSTR pszDefaultTuner)
 	if (pCurChannelProvider != nullptr) {
 		auto itr = m_ChannelProviderList.begin();
 		++itr;
-		m_ChannelProviderList.insert(itr, pCurChannelProvider);
+		m_ChannelProviderList.emplace(itr, pCurChannelProvider);
 		m_CurChannelProvider = 1;
 	}
 
@@ -120,8 +114,6 @@ bool CEpg::CChannelProviderManager::Create(LPCTSTR pszDefaultTuner)
 
 void CEpg::CChannelProviderManager::Clear()
 {
-	for (size_t i = 0; i < m_ChannelProviderList.size(); i++)
-		delete m_ChannelProviderList[i];
 	m_ChannelProviderList.clear();
 	m_CurChannelProvider = -1;
 }
@@ -146,12 +138,6 @@ bool CEpg::CChannelProviderManager::CBonDriverChannelProvider::Update()
 }
 
 
-CEpg::CChannelProviderManager::CFavoritesChannelProvider::~CFavoritesChannelProvider()
-{
-	ClearGroupList();
-}
-
-
 bool CEpg::CChannelProviderManager::CFavoritesChannelProvider::Update()
 {
 	ClearGroupList();
@@ -162,7 +148,7 @@ bool CEpg::CChannelProviderManager::CFavoritesChannelProvider::Update()
 	m_TuningSpaceList.Clear();
 	m_TuningSpaceList.Reserve(NumSpaces);
 	for (int i = 0; i < NumSpaces; i++) {
-		const GroupInfo *pGroup = m_GroupList[i];
+		const GroupInfo *pGroup = m_GroupList[i].get();
 		CTuningSpaceInfo *pTuningSpace = m_TuningSpaceList.GetTuningSpaceInfo(i);
 		pTuningSpace->SetName(pGroup->Name.c_str());
 		CChannelList *pChannelList = pTuningSpace->GetChannelList();
@@ -229,7 +215,7 @@ bool CEpg::CChannelProviderManager::CFavoritesChannelProvider::GetBonDriver(
 		return false;
 
 	for (size_t i = 0; i < m_GroupList.size(); i++) {
-		const GroupInfo *pGroup = m_GroupList[i];
+		const GroupInfo *pGroup = m_GroupList[i].get();
 		for (auto itr = pGroup->ChannelList.begin();
 				itr != pGroup->ChannelList.end(); ++itr) {
 			if (!IsEqualFileName(itr->GetBonDriverFileName(), pszBonDriver))
@@ -290,11 +276,7 @@ bool CEpg::CChannelProviderManager::CFavoritesChannelProvider::GetBonDriverFileN
 
 void CEpg::CChannelProviderManager::CFavoritesChannelProvider::ClearGroupList()
 {
-	if (!m_GroupList.empty()) {
-		for (auto itr = m_GroupList.begin(); itr != m_GroupList.end(); ++itr)
-			delete *itr;
-		m_GroupList.clear();
-	}
+	m_GroupList.clear();
 }
 
 
@@ -307,7 +289,7 @@ void CEpg::CChannelProviderManager::CFavoritesChannelProvider::AddFavoritesChann
 		pGroup->ID = TEXT("\\");
 	else
 		pGroup->ID = Path;
-	m_GroupList.push_back(pGroup);
+	m_GroupList.emplace_back(pGroup);
 
 	for (size_t i = 0; i < Folder.GetItemCount(); i++) {
 		const CFavoriteItem *pItem = Folder.GetItem(i);

@@ -2,14 +2,9 @@
 #define TVTEST_GRAPHICS_H
 
 
-namespace Gdiplus
-{
-	class Graphics;
-	class Bitmap;
-	class SolidBrush;
-	class Font;
-	class StringFormat;
-}
+#include <gdiplus.h>
+#include <memory>
+
 
 namespace TVTest
 {
@@ -59,9 +54,8 @@ namespace TVTest
 		class CImage
 		{
 		public:
-			CImage();
+			CImage() = default;
 			CImage(const CImage &Src);
-			~CImage();
 			CImage &operator=(const CImage &Src);
 			void Free();
 			bool LoadFromFile(LPCWSTR pszFileName);
@@ -76,7 +70,7 @@ namespace TVTest
 			void Clear();
 
 		private:
-			Gdiplus::Bitmap *m_pBitmap;
+			std::unique_ptr<Gdiplus::Bitmap> m_Bitmap;
 
 			friend class CCanvas;
 		};
@@ -84,16 +78,15 @@ namespace TVTest
 		class CBrush
 		{
 		public:
-			CBrush();
+			CBrush() = default;
 			CBrush(BYTE r, BYTE g, BYTE b, BYTE a = 255);
 			CBrush(const CColor &Color);
-			~CBrush();
 			void Free();
 			bool CreateSolidBrush(BYTE r, BYTE g, BYTE b, BYTE a = 255);
 			bool CreateSolidBrush(const CColor &Color);
 
 		private:
-			Gdiplus::SolidBrush *m_pBrush;
+			std::unique_ptr<Gdiplus::SolidBrush> m_Brush;
 
 			friend class CCanvas;
 		};
@@ -101,13 +94,12 @@ namespace TVTest
 		class CFont
 		{
 		public:
-			CFont();
+			CFont() = default;
 			CFont(const LOGFONT &lf);
-			~CFont();
 			void Free();
 
 		private:
-			Gdiplus::Font *m_pFont;
+			std::unique_ptr<Gdiplus::Font> m_Font;
 
 			friend class CCanvas;
 		};
@@ -117,7 +109,6 @@ namespace TVTest
 		public:
 			CCanvas(HDC hdc);
 			CCanvas(CImage *pImage);
-			~CCanvas();
 			bool Clear(BYTE r, BYTE g, BYTE b, BYTE a = 255);
 			bool SetComposition(bool fComposite);
 			bool DrawImage(CImage *pImage, int x, int y);
@@ -143,7 +134,7 @@ namespace TVTest
 				float OutlineWidth, UINT Flags, SIZE *pSize);
 
 		private:
-			Gdiplus::Graphics *m_pGraphics;
+			std::unique_ptr<Gdiplus::Graphics> m_Graphics;
 
 			void SetStringFormat(Gdiplus::StringFormat *pFormat, UINT Flags);
 			void SetTextRenderingHint(UINT Flags);

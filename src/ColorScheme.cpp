@@ -1007,22 +1007,11 @@ void CColorScheme::SetLoadedFlag(int Color)
 
 
 
-CColorSchemeList::CColorSchemeList()
-{
-}
-
-
-CColorSchemeList::~CColorSchemeList()
-{
-	Clear();
-}
-
-
 bool CColorSchemeList::Add(CColorScheme *pColorScheme)
 {
 	if (pColorScheme == nullptr)
 		return false;
-	m_List.push_back(pColorScheme);
+	m_List.emplace_back(pColorScheme);
 	return true;
 }
 
@@ -1035,7 +1024,7 @@ bool CColorSchemeList::Insert(int Index, CColorScheme *pColorScheme)
 		return Add(pColorScheme);
 	auto i = m_List.begin();
 	std::advance(i, Index);
-	m_List.insert(i, pColorScheme);
+	m_List.emplace(i, pColorScheme);
 	return true;
 }
 
@@ -1067,8 +1056,6 @@ bool CColorSchemeList::Load(LPCTSTR pszDirectory)
 
 void CColorSchemeList::Clear()
 {
-	for (auto i = m_List.begin(); i != m_List.end(); i++)
-		delete *i;
 	m_List.clear();
 }
 
@@ -1077,7 +1064,7 @@ CColorScheme *CColorSchemeList::GetColorScheme(int Index)
 {
 	if (Index < 0 || (size_t)Index >= m_List.size())
 		return nullptr;
-	return m_List[Index];
+	return m_List[Index].get();
 }
 
 
@@ -1109,8 +1096,9 @@ void CColorSchemeList::SortByName()
 	if (m_List.size() > 1) {
 		std::sort(
 			m_List.begin(), m_List.end(),
-			[](const CColorScheme * pColorScheme1, const CColorScheme * pColorScheme2) -> bool {
-				return ::lstrcmpi(pColorScheme1->GetName(), pColorScheme2->GetName()) < 0;
+			[](const std::unique_ptr<CColorScheme> &ColorScheme1,
+			   const std::unique_ptr<CColorScheme> &ColorScheme2) -> bool {
+				return ::lstrcmpi(ColorScheme1->GetName(), ColorScheme2->GetName()) < 0;
 			});
 	}
 }

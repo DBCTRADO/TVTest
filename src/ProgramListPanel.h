@@ -19,11 +19,9 @@ class CProgramItemInfo;
 
 class CProgramItemList
 {
-	std::vector<CProgramItemInfo *> m_ItemList;
+	std::vector<std::unique_ptr<CProgramItemInfo>> m_ItemList;
 
 public:
-	CProgramItemList();
-	~CProgramItemList();
 	int NumItems() const { return (int)m_ItemList.size(); }
 	CProgramItemInfo *GetItem(int Index);
 	const CProgramItemInfo *GetItem(int Index) const;

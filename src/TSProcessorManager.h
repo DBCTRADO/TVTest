@@ -5,6 +5,7 @@
 #include "TSProcessor.h"
 #include "Settings.h"
 #include <vector>
+#include <memory>
 
 
 namespace TVTest
@@ -96,8 +97,6 @@ namespace TVTest
 			FILTER_OPEN_NOTIFY_ERROR = 0x0004U
 		};
 
-		CTSProcessorManager();
-		~CTSProcessorManager();
 		bool ReadSettings(CSettings &Settings);
 		bool WriteSettings(CSettings &Settings) const;
 		CTSProcessorSettings *GetTSProcessorSettings(const GUID &guid);
@@ -123,7 +122,7 @@ namespace TVTest
 			unsigned int FilterOpenFlags = 0);
 
 	private:
-		std::vector<CTSProcessorSettings*> m_SettingsList;
+		std::vector<std::unique_ptr<CTSProcessorSettings>> m_SettingsList;
 
 		bool ApplyTSProcessorSettings(CTSProcessor *pTSProcessor, const GUID &guid, bool fSetProperties = true);
 		void OpenFilter(

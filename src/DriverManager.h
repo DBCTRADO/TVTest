@@ -3,6 +3,7 @@
 
 
 #include <vector>
+#include <memory>
 #include "ChannelList.h"
 
 
@@ -19,7 +20,7 @@ public:
 		LOADTUNINGSPACE_USEDRIVER,
 		LOADTUNINGSPACE_USEDRIVER_NOOPEN,
 	};
-	bool LoadTuningSpaceList(LoadTuningSpaceListMode Mode=LOADTUNINGSPACE_DEFAULT);
+	bool LoadTuningSpaceList(LoadTuningSpaceListMode Mode = LOADTUNINGSPACE_DEFAULT);
 	void ClearTuningSpaceList();
 	bool IsChannelFileLoaded() const { return m_fChannelFileLoaded; }
 	bool IsDriverChannelLoaded() const { return m_fDriverSpaceLoaded; }
@@ -57,8 +58,6 @@ public:
 		unsigned int Flags;
 	};
 
-	CDriverManager();
-	~CDriverManager();
 	void Clear();
 	bool Find(LPCTSTR pszDirectory);
 	LPCTSTR GetBaseDirectory() const { return m_BaseDirectory.c_str(); }
@@ -69,7 +68,7 @@ public:
 	bool GetAllServiceList(CChannelList *pList) const;
 
 	bool LoadTunerSpec(LPCTSTR pszFileName);
-	bool GetTunerSpec(LPCTSTR pszTunerName,TunerSpec *pSpec) const;
+	bool GetTunerSpec(LPCTSTR pszTunerName, TunerSpec *pSpec) const;
 
 private:
 	struct TunerSpecInfo
@@ -78,7 +77,7 @@ private:
 		TunerSpec Spec;
 	};
 
-	std::vector<CDriverInfo*> m_DriverList;
+	std::vector<std::unique_ptr<CDriverInfo>> m_DriverList;
 	TVTest::String m_BaseDirectory;
 	std::vector<TunerSpecInfo> m_TunerSpecList;
 };

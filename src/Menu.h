@@ -3,6 +3,7 @@
 
 
 #include <vector>
+#include <memory>
 #include "Accelerator.h"
 #include "ChannelList.h"
 #include "Theme.h"
@@ -271,7 +272,6 @@ public:
 	static bool Initialize(HINSTANCE hinst);
 
 	CDropDownMenu();
-	~CDropDownMenu();
 	void Clear();
 	bool AppendItem(CItem *pItem);
 	bool InsertItem(int Index, CItem *pItem);
@@ -285,7 +285,7 @@ public:
 	bool GetPosition(RECT *pRect);
 
 private:
-	std::vector<CItem*> m_ItemList;
+	std::vector<std::unique_ptr<CItem>> m_ItemList;
 	HWND m_hwnd;
 	HWND m_hwndMessage;
 	MARGINS m_ItemMargin;

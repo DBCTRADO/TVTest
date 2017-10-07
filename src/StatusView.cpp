@@ -267,9 +267,6 @@ CStatusView::~CStatusView()
 
 	if (m_pEventHandler != nullptr)
 		m_pEventHandler->m_pStatusView = nullptr;
-
-	for (size_t i = 0; i < m_ItemList.size(); i++)
-		delete m_ItemList[i];
 }
 
 
@@ -313,7 +310,7 @@ const CStatusItem *CStatusView::GetItem(int Index) const
 {
 	if (Index < 0 || (size_t)Index >= m_ItemList.size())
 		return nullptr;
-	return m_ItemList[Index];
+	return m_ItemList[Index].get();
 }
 
 
@@ -321,7 +318,7 @@ CStatusItem *CStatusView::GetItem(int Index)
 {
 	if (Index < 0 || (size_t)Index >= m_ItemList.size())
 		return nullptr;
-	return m_ItemList[Index];
+	return m_ItemList[Index].get();
 }
 
 
@@ -331,7 +328,7 @@ const CStatusItem *CStatusView::GetItemByID(int ID) const
 
 	if (Index < 0)
 		return nullptr;
-	return m_ItemList[Index];
+	return m_ItemList[Index].get();
 }
 
 
@@ -341,7 +338,7 @@ CStatusItem *CStatusView::GetItemByID(int ID)
 
 	if (Index < 0)
 		return nullptr;
-	return m_ItemList[Index];
+	return m_ItemList[Index].get();
 }
 
 
@@ -350,7 +347,7 @@ bool CStatusView::AddItem(CStatusItem *pItem)
 	if (pItem == nullptr)
 		return false;
 
-	m_ItemList.push_back(pItem);
+	m_ItemList.emplace_back(pItem);
 
 	pItem->m_pStatus = this;
 
@@ -503,7 +500,7 @@ LRESULT CStatusView::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 	case WM_MBUTTONDOWN:
 	case WM_MBUTTONDBLCLK:
 		if (m_HotItem >= 0) {
-			CStatusItem *pItem = m_ItemList[m_HotItem];
+			CStatusItem *pItem = m_ItemList[m_HotItem].get();
 			int x = GET_X_LPARAM(lParam), y = GET_Y_LPARAM(lParam);
 			RECT rc;
 
@@ -562,7 +559,7 @@ LRESULT CStatusView::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 	case WM_RBUTTONUP:
 	case WM_MBUTTONUP:
 		if (m_HotItem >= 0) {
-			CStatusItem *pItem = m_ItemList[m_HotItem];
+			CStatusItem *pItem = m_ItemList[m_HotItem].get();
 			int x = GET_X_LPARAM(lParam), y = GET_Y_LPARAM(lParam);
 			RECT rc;
 
@@ -695,7 +692,7 @@ bool CStatusView::GetItemRectByIndex(int Index, RECT *pRect) const
 	int Left = rc.left;
 	const CStatusItem *pItem;
 	for (int i = 0; i < Index; i++) {
-		pItem = m_ItemList[i];
+		pItem = m_ItemList[i].get();
 		if (pItem->m_fBreak) {
 			rc.left = Left;
 			rc.top = rc.bottom;
@@ -705,7 +702,7 @@ bool CStatusView::GetItemRectByIndex(int Index, RECT *pRect) const
 		}
 	}
 	rc.right = rc.left;
-	pItem = m_ItemList[Index];
+	pItem = m_ItemList[Index].get();
 	if (pItem->GetVisible())
 		rc.right += pItem->GetActualWidth() + HorzMargin;
 	*pRect = rc;
@@ -956,7 +953,7 @@ int CStatusView::CalcHeight(int Width) const
 	std::vector<const CStatusItem*> ItemList;
 	ItemList.reserve(m_ItemList.size());
 	for (auto itr = m_ItemList.begin(); itr != m_ItemList.end(); ++itr) {
-		const CStatusItem *pItem = *itr;
+		const CStatusItem *pItem = itr->get();
 
 		if (pItem->GetVisible())
 			ItemList.push_back(pItem);
@@ -984,20 +981,25 @@ bool CStatusView::SetEventHandler(CEventHandler *pEventHandler)
 
 bool CStatusView::SetItemOrder(const int *pOrderList)
 {
-	std::vector<CStatusItem*> NewList;
+	std::vector<CStatusItem*> NewList(m_ItemList.size());
 
 	for (size_t i = 0; i < m_ItemList.size(); i++) {
 		CStatusItem *pItem = GetItem(IDToIndex(pOrderList[i]));
 
 		if (pItem == nullptr)
 			return false;
-		NewList.push_back(pItem);
 		for (size_t j = 0; j < i; j++) {
-			if (NewList[i] == NewList[j])
+			if (NewList[j] == pItem)
 				return false;
 		}
+		NewList[i] = pItem;
 	}
-	m_ItemList = NewList;
+
+	for (size_t i = 0; i < m_ItemList.size(); i++) {
+		m_ItemList[i].release();
+		m_ItemList[i].reset(NewList[i]);
+	}
+
 	if (m_hwnd != nullptr && !m_fSingleMode) {
 		AdjustSize();
 		Invalidate();
@@ -1114,7 +1116,7 @@ void CStatusView::Draw(HDC hdc, const RECT *pPaintRect)
 	if (!m_fSingleMode) {
 		int MaxWidth = 0;
 		for (size_t i = 0; i < m_ItemList.size(); i++) {
-			const CStatusItem *pItem = m_ItemList[i];
+			const CStatusItem *pItem = m_ItemList[i].get();
 			if (pItem->GetVisible() && pItem->GetActualWidth() > MaxWidth)
 				MaxWidth = pItem->GetActualWidth();
 		}
@@ -1160,7 +1162,7 @@ void CStatusView::Draw(HDC hdc, const RECT *pPaintRect)
 
 		rc.right = Left;
 		for (int i = 0; i < (int)m_ItemList.size(); i++) {
-			CStatusItem *pItem = m_ItemList[i];
+			CStatusItem *pItem = m_ItemList[i].get();
 
 			if (pItem->GetVisible()) {
 				rc.left = rc.right;
@@ -1221,7 +1223,7 @@ void CStatusView::CalcLayout()
 	std::vector<CStatusItem*> ItemList;
 	ItemList.reserve(m_ItemList.size());
 	for (auto itr = m_ItemList.begin(); itr != m_ItemList.end(); ++itr) {
-		CStatusItem *pItem = *itr;
+		CStatusItem *pItem = itr->get();
 
 		pItem->m_fBreak = false;
 		pItem->SetActualWidth(pItem->GetWidth());
@@ -1388,7 +1390,7 @@ void CStatusView::ApplyStyle()
 	m_ItemHeight = CalcItemHeight();
 
 	for (auto itr = m_ItemList.begin(); itr != m_ItemList.end(); ++itr) {
-		CStatusItem *pItem = *itr;
+		CStatusItem *pItem = itr->get();
 
 		if (pItem->GetWidth() < 0)
 			pItem->SetWidth(CalcItemPixelSize(pItem->GetDefaultWidth()));

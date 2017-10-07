@@ -3,6 +3,7 @@
 
 
 #include <vector>
+#include <memory>
 
 
 #define FIRST_UHF_CHANNEL 13
@@ -110,7 +111,7 @@ public:
 	bool HasMultiService() const;
 
 private:
-	std::vector<CChannelInfo*> m_ChannelList;
+	std::vector<std::unique_ptr<CChannelInfo>> m_ChannelList;
 };
 
 class CTuningSpaceInfo
@@ -126,11 +127,10 @@ public:
 
 	CTuningSpaceInfo();
 	CTuningSpaceInfo(const CTuningSpaceInfo &Info);
-	~CTuningSpaceInfo();
 	CTuningSpaceInfo &operator=(const CTuningSpaceInfo &Info);
 	bool Create(const CChannelList *pList = nullptr, LPCTSTR pszName = nullptr);
-	CChannelList *GetChannelList() { return m_pChannelList; }
-	const CChannelList *GetChannelList() const { return m_pChannelList; }
+	CChannelList *GetChannelList() { return m_ChannelList.get(); }
+	const CChannelList *GetChannelList() const { return m_ChannelList.get(); }
 	CChannelInfo *GetChannelInfo(int Index);
 	const CChannelInfo *GetChannelInfo(int Index) const;
 	LPCTSTR GetName() const { return m_Name.c_str(); }
@@ -139,7 +139,7 @@ public:
 	int NumChannels() const;
 
 private:
-	CChannelList *m_pChannelList;
+	std::unique_ptr<CChannelList> m_ChannelList;
 	TVTest::String m_Name;
 	TuningSpaceType m_Space;
 };
@@ -149,7 +149,6 @@ class CTuningSpaceList
 public:
 	CTuningSpaceList();
 	CTuningSpaceList(const CTuningSpaceList &List);
-	~CTuningSpaceList();
 	CTuningSpaceList &operator=(const CTuningSpaceList &List);
 	int NumSpaces() const { return (int)m_TuningSpaceList.size(); }
 	bool IsEmpty() const { return m_TuningSpaceList.empty(); }
@@ -169,7 +168,7 @@ public:
 	bool LoadFromFile(LPCTSTR pszFileName);
 
 private:
-	std::vector<CTuningSpaceInfo*> m_TuningSpaceList;
+	std::vector<std::unique_ptr<CTuningSpaceInfo>> m_TuningSpaceList;
 	CChannelList m_AllChannelList;
 	bool MakeTuningSpaceList(const CChannelList *pList, int Spaces = 0);
 };

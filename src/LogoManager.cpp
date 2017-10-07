@@ -118,16 +118,8 @@ CLogoManager::CLogoManager()
 }
 
 
-CLogoManager::~CLogoManager()
-{
-	Clear();
-}
-
-
 void CLogoManager::Clear()
 {
-	for (LogoMap::iterator itr = m_LogoMap.begin(); itr != m_LogoMap.end(); ++itr)
-		delete itr->second;
 	m_LogoMap.clear();
 }
 
@@ -288,16 +280,12 @@ bool CLogoManager::LoadLogoFile(LPCTSTR pszFileName)
 
 		ULONGLONG Key = GetMapKey(Data.NetworkID, Data.LogoID, Data.LogoType);
 		LogoMap::iterator itr = m_LogoMap.find(Key);
-		CLogoData *pLogoData;
 		if (itr != m_LogoMap.end()) {
 			if (CompareLogoVersion(itr->second->GetLogoVersion(), Data.LogoVersion) < 0) {
-				delete itr->second;
-				pLogoData = new CLogoData(&Data);
-				m_LogoMap[Key] = pLogoData;
+				itr->second.reset(new CLogoData(&Data));
 			}
 		} else {
-			pLogoData = new CLogoData(&Data);
-			m_LogoMap.insert(std::pair<ULONGLONG, CLogoData*>(Key, pLogoData));
+			m_LogoMap.emplace(Key, new CLogoData(&Data));
 		}
 	}
 
@@ -405,7 +393,7 @@ HBITMAP CLogoManager::GetLogoBitmap(WORD NetworkID, WORD LogoID, BYTE LogoType)
 	if (itr == m_LogoMap.end()) {
 		CLogoData *pLogoData = LoadLogoData(NetworkID, LogoID, LogoType);
 		if (pLogoData != nullptr) {
-			m_LogoMap.insert(std::pair<ULONGLONG, CLogoData*>(Key, pLogoData));
+			m_LogoMap.emplace(Key, pLogoData);
 			m_fLogoUpdated = true;
 			return pLogoData->GetBitmap(&m_ImageCodec);
 		}
@@ -527,7 +515,7 @@ bool CLogoManager::GetLogoInfo(WORD NetworkID, WORD ServiceID, BYTE LogoType, Lo
 	if (itrLogo == m_LogoMap.end())
 		return false;
 
-	const CLogoData *pLogoData = itrLogo->second;
+	const CLogoData *pLogoData = itrLogo->second.get();
 
 	pInfo->NetworkID = NetworkID;
 	pInfo->LogoID = pLogoData->GetLogoID();
@@ -563,8 +551,7 @@ void CLogoManager::OnLogoDownloaded(const LibISDB::LogoDownloaderFilter::LogoDat
 			if (Data.DataSize != itr->second->GetDataSize()
 					|| std::memcmp(Data.pData, itr->second->GetData(), Data.DataSize) != 0) {
 				pLogoData = new CLogoData(&Data);
-				delete itr->second;
-				itr->second = pLogoData;
+				itr->second.reset(pLogoData);
 				fUpdated = true;
 				fDataUpdated = true;
 			} else if (VerCmp < 0) {
@@ -574,7 +561,7 @@ void CLogoManager::OnLogoDownloaded(const LibISDB::LogoDownloaderFilter::LogoDat
 		}
 	} else {
 		pLogoData = new CLogoData(&Data);
-		m_LogoMap.insert(std::pair<ULONGLONG, CLogoData*>(Key, pLogoData));
+		m_LogoMap.emplace(Key, pLogoData);
 		fUpdated = true;
 		fDataUpdated = true;
 	}
@@ -722,14 +709,13 @@ CLogoManager::CLogoData::CLogoData(const LibISDB::LogoDownloaderFilter::LogoData
 	, m_Time(pData->Time)
 	, m_hbm(nullptr)
 {
-	m_pData = new BYTE[pData->DataSize];
-	::CopyMemory(m_pData, pData->pData, pData->DataSize);
+	m_Data.reset(new BYTE[pData->DataSize]);
+	::CopyMemory(m_Data.get(), pData->pData, pData->DataSize);
 }
 
 
 CLogoManager::CLogoData::CLogoData(const CLogoData &Src)
-	: m_pData(nullptr)
-	, m_hbm(nullptr)
+	: m_hbm(nullptr)
 {
 	*this = Src;
 }
@@ -737,7 +723,6 @@ CLogoManager::CLogoData::CLogoData(const CLogoData &Src)
 
 CLogoManager::CLogoData::~CLogoData()
 {
-	delete [] m_pData;
 	if (m_hbm != nullptr)
 		::DeleteObject(m_hbm);
 }
@@ -756,8 +741,8 @@ CLogoManager::CLogoData &CLogoManager::CLogoData::operator=(const CLogoData &Src
 		m_LogoVersion = Src.m_LogoVersion;
 		m_LogoType = Src.m_LogoType;
 		m_DataSize = Src.m_DataSize;
-		m_pData = new BYTE[Src.m_DataSize];
-		::CopyMemory(m_pData, Src.m_pData, Src.m_DataSize);
+		m_Data.reset(new BYTE[Src.m_DataSize]);
+		::CopyMemory(m_Data.get(), Src.m_Data.get(), Src.m_DataSize);
 		m_Time = Src.m_Time;
 	}
 	return *this;
@@ -767,7 +752,7 @@ CLogoManager::CLogoData &CLogoManager::CLogoData::operator=(const CLogoData &Src
 HBITMAP CLogoManager::CLogoData::GetBitmap(CImageCodec *pCodec)
 {
 	if (m_hbm == nullptr) {
-		HGLOBAL hDIB = pCodec->LoadAribPngFromMemory(m_pData, m_DataSize);
+		HGLOBAL hDIB = pCodec->LoadAribPngFromMemory(m_Data.get(), m_DataSize);
 		if (hDIB == nullptr)
 			return nullptr;
 		BITMAPINFO *pbmi = (BITMAPINFO*)::GlobalLock(hDIB);
@@ -788,7 +773,7 @@ HBITMAP CLogoManager::CLogoData::GetBitmap(CImageCodec *pCodec)
 const TVTest::Graphics::CImage *CLogoManager::CLogoData::GetImage(CImageCodec *pCodec)
 {
 	if (!m_Image.IsCreated()) {
-		HGLOBAL hDIB = pCodec->LoadAribPngFromMemory(m_pData, m_DataSize);
+		HGLOBAL hDIB = pCodec->LoadAribPngFromMemory(m_Data.get(), m_DataSize);
 		if (hDIB == nullptr)
 			return nullptr;
 		BITMAPINFO *pbmi = (BITMAPINFO*)::GlobalLock(hDIB);
@@ -810,7 +795,7 @@ bool CLogoManager::CLogoData::SaveToFile(LPCTSTR pszFileName) const
 	if (hFile == INVALID_HANDLE_VALUE)
 		return false;
 	DWORD Write;
-	if (!WriteFile(hFile, m_pData, m_DataSize, &Write, nullptr) || Write != m_DataSize) {
+	if (!WriteFile(hFile, m_Data.get(), m_DataSize, &Write, nullptr) || Write != m_DataSize) {
 		::CloseHandle(hFile);
 		return false;
 	}
@@ -821,7 +806,7 @@ bool CLogoManager::CLogoData::SaveToFile(LPCTSTR pszFileName) const
 
 bool CLogoManager::CLogoData::SaveBmpToFile(CImageCodec *pCodec, LPCTSTR pszFileName) const
 {
-	HGLOBAL hDIB = pCodec->LoadAribPngFromMemory(m_pData, m_DataSize);
+	HGLOBAL hDIB = pCodec->LoadAribPngFromMemory(m_Data.get(), m_DataSize);
 	if (hDIB == nullptr)
 		return false;
 	HANDLE hFile = ::CreateFile(pszFileName, GENERIC_WRITE, 0, nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);

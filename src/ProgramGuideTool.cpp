@@ -355,12 +355,6 @@ CProgramGuideToolList::CProgramGuideToolList(const CProgramGuideToolList &Src)
 }
 
 
-CProgramGuideToolList::~CProgramGuideToolList()
-{
-	Clear();
-}
-
-
 CProgramGuideToolList &CProgramGuideToolList::operator=(const CProgramGuideToolList &Src)
 {
 	if (&Src != this) {
@@ -368,7 +362,7 @@ CProgramGuideToolList &CProgramGuideToolList::operator=(const CProgramGuideToolL
 		if (!Src.m_ToolList.empty()) {
 			m_ToolList.resize(Src.m_ToolList.size());
 			for (size_t i = 0; i < Src.m_ToolList.size(); i++)
-				m_ToolList[i] = new CProgramGuideTool(*Src.m_ToolList[i]);
+				m_ToolList[i].reset(new CProgramGuideTool(*Src.m_ToolList[i]));
 		}
 	}
 	return *this;
@@ -377,8 +371,6 @@ CProgramGuideToolList &CProgramGuideToolList::operator=(const CProgramGuideToolL
 
 void CProgramGuideToolList::Clear()
 {
-	for (size_t i = 0; i < m_ToolList.size(); i++)
-		delete m_ToolList[i];
 	m_ToolList.clear();
 }
 
@@ -387,7 +379,7 @@ bool CProgramGuideToolList::Add(CProgramGuideTool *pTool)
 {
 	if (pTool == nullptr)
 		return false;
-	m_ToolList.push_back(pTool);
+	m_ToolList.emplace_back(pTool);
 	return true;
 }
 
@@ -396,7 +388,7 @@ CProgramGuideTool *CProgramGuideToolList::GetTool(size_t Index)
 {
 	if (Index >= m_ToolList.size())
 		return nullptr;
-	return m_ToolList[Index];
+	return m_ToolList[Index].get();
 }
 
 
@@ -404,5 +396,5 @@ const CProgramGuideTool *CProgramGuideToolList::GetTool(size_t Index) const
 {
 	if (Index >= m_ToolList.size())
 		return nullptr;
-	return m_ToolList[Index];
+	return m_ToolList[Index].get();
 }

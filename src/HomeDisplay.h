@@ -3,6 +3,7 @@
 
 
 #include <vector>
+#include <memory>
 #include "View.h"
 #include "DrawUtil.h"
 #include "Theme.h"
@@ -125,7 +126,7 @@ private:
 	int m_CategoryItemHeight;
 	int m_ContentHeight;
 
-	std::vector<CCategory*> m_CategoryList;
+	std::vector<std::unique_ptr<CCategory>> m_CategoryList;
 	CHomeDisplayEventHandler *m_pHomeDisplayEventHandler;
 	int m_CurCategory;
 	HWND m_hwndScroll;

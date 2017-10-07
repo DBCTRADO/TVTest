@@ -417,12 +417,6 @@ CEventSearchSettingsList::CEventSearchSettingsList(const CEventSearchSettingsLis
 }
 
 
-CEventSearchSettingsList::~CEventSearchSettingsList()
-{
-	Clear();
-}
-
-
 CEventSearchSettingsList &CEventSearchSettingsList::operator=(const CEventSearchSettingsList &Src)
 {
 	if (&Src != this) {
@@ -432,7 +426,7 @@ CEventSearchSettingsList &CEventSearchSettingsList::operator=(const CEventSearch
 			m_List.reserve(Src.m_List.size());
 
 			for (auto it = Src.m_List.begin(); it != Src.m_List.end(); ++it) {
-				m_List.push_back(new CEventSearchSettings(**it));
+				m_List.emplace_back(new CEventSearchSettings(**it));
 			}
 		}
 	}
@@ -443,8 +437,6 @@ CEventSearchSettingsList &CEventSearchSettingsList::operator=(const CEventSearch
 
 void CEventSearchSettingsList::Clear()
 {
-	for (auto it = m_List.begin(); it != m_List.end(); ++it)
-		delete *it;
 	m_List.clear();
 }
 
@@ -470,7 +462,7 @@ CEventSearchSettings *CEventSearchSettingsList::Get(size_t Index)
 {
 	if (Index >= m_List.size())
 		return nullptr;
-	return m_List[Index];
+	return m_List[Index].get();
 }
 
 
@@ -478,7 +470,7 @@ const CEventSearchSettings *CEventSearchSettingsList::Get(size_t Index) const
 {
 	if (Index >= m_List.size())
 		return nullptr;
-	return m_List[Index];
+	return m_List[Index].get();
 }
 
 
@@ -487,7 +479,7 @@ CEventSearchSettings *CEventSearchSettingsList::GetByName(LPCTSTR pszName)
 	int Index = FindByName(pszName);
 	if (Index < 0)
 		return nullptr;
-	return m_List[Index];
+	return m_List[Index].get();
 }
 
 
@@ -496,13 +488,13 @@ const CEventSearchSettings *CEventSearchSettingsList::GetByName(LPCTSTR pszName)
 	int Index = FindByName(pszName);
 	if (Index < 0)
 		return nullptr;
-	return m_List[Index];
+	return m_List[Index].get();
 }
 
 
 bool CEventSearchSettingsList::Add(const CEventSearchSettings &Settings)
 {
-	m_List.push_back(new CEventSearchSettings(Settings));
+	m_List.emplace_back(new CEventSearchSettings(Settings));
 	return true;
 }
 
@@ -514,7 +506,6 @@ bool CEventSearchSettingsList::Erase(size_t Index)
 
 	auto it = m_List.begin();
 	std::advance(it, Index);
-	delete *it;
 	m_List.erase(it);
 
 	return true;
@@ -548,7 +539,7 @@ bool CEventSearchSettingsList::Load(CSettings &Settings, LPCTSTR pszPrefix)
 			break;
 		CEventSearchSettings SearchSettings;
 		if (SearchSettings.FromString(Value.c_str())) {
-			m_List.push_back(new CEventSearchSettings(SearchSettings));
+			m_List.emplace_back(new CEventSearchSettings(SearchSettings));
 		}
 	}
 

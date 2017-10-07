@@ -3,6 +3,7 @@
 
 
 #include <vector>
+#include <memory>
 #include "ChannelList.h"
 #include "ProgramSearch.h"
 #include "Settings.h"
@@ -56,7 +57,6 @@ class CFeaturedEventsSearcher
 {
 public:
 	CFeaturedEventsSearcher(const CFeaturedEventsSettings &Settings);
-	~CFeaturedEventsSearcher();
 	void Clear();
 	bool Update();
 	size_t GetEventCount() const;
@@ -64,7 +64,7 @@ public:
 
 private:
 	const CFeaturedEventsSettings &m_Settings;
-	std::vector<LibISDB::EventInfo*> m_EventList;
+	std::vector<std::unique_ptr<LibISDB::EventInfo>> m_EventList;
 };
 
 class CFeaturedEventsMatcher

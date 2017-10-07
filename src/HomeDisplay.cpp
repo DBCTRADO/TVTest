@@ -37,7 +37,6 @@ class ABSTRACT_CLASS(CChannelListCategoryBase)
 {
 public:
 	CChannelListCategoryBase(CHomeDisplay * pHomeDisplay);
-	virtual ~CChannelListCategoryBase();
 
 // CHomeDisplay::CCategory
 	int GetHeight() const override { return m_Height; }
@@ -75,7 +74,7 @@ protected:
 		LibISDB::EventInfo m_Event[2];
 	};
 
-	typedef std::vector<CChannelItemBase*> ItemList;
+	typedef std::vector<std::unique_ptr<CChannelItemBase>> ItemList;
 
 	RECT m_Rect;
 	int m_Height;
@@ -105,12 +104,6 @@ CChannelListCategoryBase::CChannelListCategoryBase(CHomeDisplay *pHomeDisplay)
 }
 
 
-CChannelListCategoryBase::~CChannelListCategoryBase()
-{
-	Clear();
-}
-
-
 void CChannelListCategoryBase::LayOut(const CHomeDisplay::StyleInfo &Style, HDC hdc, const RECT &ContentRect)
 {
 	m_ItemHeight = Style.FontHeight * 2 + Style.ItemMargins.Vert();
@@ -122,7 +115,7 @@ void CChannelListCategoryBase::LayOut(const CHomeDisplay::StyleInfo &Style, HDC 
 
 	m_ChannelNameWidth = Style.FontHeight * 8;
 	for (size_t i = 0; i < m_ItemList.size(); i++) {
-		const CChannelItemBase *pItem = m_ItemList[i];
+		const CChannelItemBase *pItem = m_ItemList[i].get();
 		LPCTSTR pszName = pItem->GetName();
 		SIZE sz;
 
@@ -143,7 +136,7 @@ void CChannelListCategoryBase::Draw(
 		GetItemRect(i, &rcItem);
 		if (!IsRectIntersect(&rcItem, &PaintRect))
 			continue;
-		const CChannelItemBase *pItem = m_ItemList[i];
+		const CChannelItemBase *pItem = m_ItemList[i].get();
 		const TVTest::Theme::Style *pItemStyle;
 		if (i == m_HotItem) {
 			pItemStyle = &Style.ItemHotStyle;
@@ -292,8 +285,6 @@ bool CChannelListCategoryBase::OnCursorKey(WPARAM KeyCode)
 
 void CChannelListCategoryBase::Clear()
 {
-	for (auto it = m_ItemList.begin(); it != m_ItemList.end(); ++it)
-		delete *it;
 	m_ItemList.clear();
 
 	m_Height = 0;
@@ -311,7 +302,7 @@ void CChannelListCategoryBase::UpdateChannelInfo()
 	LibISDB::GetCurrentEPGTime(&CurTime);
 
 	for (size_t i = 0; i < m_ItemList.size(); i++) {
-		CChannelItemBase *pItem = m_ItemList[i];
+		CChannelItemBase *pItem = m_ItemList[i].get();
 		LibISDB::EventInfo EventInfo;
 
 		if (EPGDatabase.GetEventInfo(
@@ -523,7 +514,7 @@ bool CFavoritesCategory::Create()
 
 		bool ChannelItem(TVTest::CFavoriteFolder &Folder, TVTest::CFavoriteChannel &Channel) override
 		{
-			m_ItemList.push_back(new CChannelItem(Channel));
+			m_ItemList.emplace_back(new CChannelItem(Channel));
 			return true;
 		}
 
@@ -549,7 +540,7 @@ bool CFavoritesCategory::Create()
 bool CFavoritesCategory::OnDecide()
 {
 	if (m_HotItem >= 0) {
-		const CChannelItem *pItem = static_cast<CChannelItem*>(m_ItemList[m_HotItem]);
+		const CChannelItem *pItem = static_cast<CChannelItem*>(m_ItemList[m_HotItem].get());
 
 		return GetAppClass().Core.SelectChannel(
 			pItem->GetBonDriverFileName(),
@@ -614,7 +605,7 @@ bool CRecentChannelsCategory::Create()
 	if (NumChannels > m_MaxChannels)
 		NumChannels = m_MaxChannels;
 	for (int i = 0; i < NumChannels; i++) {
-		m_ItemList.push_back(new CChannelItem(RecentChannelList.GetChannelInfo(i)));
+		m_ItemList.emplace_back(new CChannelItem(RecentChannelList.GetChannelInfo(i)));
 	}
 
 	UpdateChannelInfo();
@@ -636,7 +627,7 @@ void CRecentChannelsCategory::ReadSettings(CSettings &Settings)
 bool CRecentChannelsCategory::OnDecide()
 {
 	if (m_HotItem >= 0) {
-		const CChannelItem *pItem = static_cast<CChannelItem*>(m_ItemList[m_HotItem]);
+		const CChannelItem *pItem = static_cast<CChannelItem*>(m_ItemList[m_HotItem].get());
 
 		return GetAppClass().Core.SelectChannel(
 			pItem->GetBonDriverFileName(),
@@ -655,7 +646,6 @@ class CFeaturedEventsCategory
 {
 public:
 	CFeaturedEventsCategory(CHomeDisplay *pHomeDisplay);
-	~CFeaturedEventsCategory();
 
 // CHomeDisplay::CCategory
 	int GetID() const override { return CATEGORY_ID_FEATURED_EVENTS; }
@@ -715,7 +705,7 @@ private:
 	int m_LogoHeight;
 	int m_HotItem;
 	int m_ClickingItem;
-	std::vector<CEventItem*> m_ItemList;
+	std::vector<std::unique_ptr<CEventItem>> m_ItemList;
 
 	void Clear();
 	void SortItems(CFeaturedEventsSettings::SortType SortType);
@@ -739,12 +729,6 @@ CFeaturedEventsCategory::CFeaturedEventsCategory(CHomeDisplay *pHomeDisplay)
 }
 
 
-CFeaturedEventsCategory::~CFeaturedEventsCategory()
-{
-	Clear();
-}
-
-
 bool CFeaturedEventsCategory::Create()
 {
 	Clear();
@@ -765,7 +749,7 @@ bool CFeaturedEventsCategory::Create()
 			pEventInfo->NetworkID, pEventInfo->TransportStreamID, pEventInfo->ServiceID);
 
 		if (Index >= 0)
-			m_ItemList.push_back(new CEventItem(*ServiceList.GetChannelInfo(Index), *pEventInfo));
+			m_ItemList.emplace_back(new CEventItem(*ServiceList.GetChannelInfo(Index), *pEventInfo));
 	}
 
 	SortItems(Settings.GetSortType());
@@ -800,7 +784,7 @@ void CFeaturedEventsCategory::LayOut(const CHomeDisplay::StyleInfo &Style, HDC h
 	m_ChannelNameWidth = 0;
 
 	for (size_t i = 0; i < m_ItemList.size(); i++) {
-		CEventItem *pItem = m_ItemList[i];
+		CEventItem *pItem = m_ItemList[i].get();
 
 		LPCTSTR pszName = pItem->GetChannelInfo().GetName();
 		SIZE sz;
@@ -872,7 +856,7 @@ void CFeaturedEventsCategory::Draw(
 		GetItemRect(i, &rcItem);
 		if (!IsRectIntersect(&rcItem, &PaintRect))
 			continue;
-		const CEventItem *pItem = m_ItemList[i];
+		const CEventItem *pItem = m_ItemList[i].get();
 		const CChannelInfo &ChannelInfo = pItem->GetChannelInfo();
 		const TVTest::Theme::Style *pItemStyle;
 		if (i == m_HotItem) {
@@ -1093,8 +1077,6 @@ bool CFeaturedEventsCategory::OnCursorKey(WPARAM KeyCode)
 
 void CFeaturedEventsCategory::Clear()
 {
-	for (auto it = m_ItemList.begin(); it != m_ItemList.end(); ++it)
-		delete *it;
 	m_ItemList.clear();
 
 	m_Height = 0;
@@ -1110,21 +1092,23 @@ void CFeaturedEventsCategory::SortItems(CFeaturedEventsSettings::SortType SortTy
 	public:
 		CItemCompare(CFeaturedEventsSettings::SortType SortType) : m_SortType(SortType) {}
 
-		bool operator()(const CEventItem *pItem1, const CEventItem *pItem2) const
+		bool operator()(
+			const std::unique_ptr<CEventItem> &Item1,
+			const std::unique_ptr<CEventItem> &Item2) const
 		{
 			int Cmp = 0;
 
 			switch (m_SortType) {
 			case CFeaturedEventsSettings::SORT_TIME:
-				Cmp = CompareTime(pItem1, pItem2);
+				Cmp = CompareTime(*Item1, *Item2);
 				if (Cmp == 0)
-					Cmp = CompareService(pItem1, pItem2);
+					Cmp = CompareService(*Item1, *Item2);
 				break;
 
 			case CFeaturedEventsSettings::SORT_SERVICE:
-				Cmp = CompareService(pItem1, pItem2);
+				Cmp = CompareService(*Item1, *Item2);
 				if (Cmp == 0)
-					Cmp = CompareTime(pItem1, pItem2);
+					Cmp = CompareTime(*Item1, *Item2);
 				break;
 			}
 
@@ -1134,23 +1118,23 @@ void CFeaturedEventsCategory::SortItems(CFeaturedEventsSettings::SortType SortTy
 	private:
 		CFeaturedEventsSettings::SortType m_SortType;
 
-		int CompareTime(const CEventItem *pItem1, const CEventItem *pItem2) const
+		int CompareTime(const CEventItem &Item1, const CEventItem &Item2) const
 		{
 			int Cmp;
 
-			Cmp = pItem1->GetEventInfo().StartTime.Compare(pItem2->GetEventInfo().StartTime);
+			Cmp = Item1.GetEventInfo().StartTime.Compare(Item2.GetEventInfo().StartTime);
 			if (Cmp == 0) {
 				Cmp =
-					(int)pItem1->GetEventInfo().Duration -
-					(int)pItem2->GetEventInfo().Duration;
+					(int)Item1.GetEventInfo().Duration -
+					(int)Item2.GetEventInfo().Duration;
 			}
 			return Cmp;
 		}
 
-		int CompareService(const CEventItem *pItem1, const CEventItem *pItem2) const
+		int CompareService(const CEventItem &Item1, const CEventItem &Item2) const
 		{
-			const CChannelInfo &ChannelInfo1 = pItem1->GetChannelInfo();
-			const CChannelInfo &ChannelInfo2 = pItem2->GetChannelInfo();
+			const CChannelInfo &ChannelInfo1 = Item1.GetChannelInfo();
+			const CChannelInfo &ChannelInfo2 = Item2.GetChannelInfo();
 			int Cmp;
 			Cmp = GetAppClass().NetworkDefinition.GetNetworkTypeOrder(
 				ChannelInfo1.GetNetworkID(), ChannelInfo2.GetNetworkID());
@@ -1176,7 +1160,7 @@ void CFeaturedEventsCategory::ExpandItem(int Item)
 	CEventItem *pCurItem = nullptr;
 
 	if (Item >= 0 && (size_t)Item < m_ItemList.size())
-		pCurItem = m_ItemList[Item];
+		pCurItem = m_ItemList[Item].get();
 
 	int ScrollPos = m_pHomeDisplay->GetScrollPos();
 
@@ -1185,7 +1169,7 @@ void CFeaturedEventsCategory::ExpandItem(int Item)
 		m_Height -= pCurItem->GetExpandedHeight() - m_ItemHeight;
 	} else {
 		for (size_t i = 0; i < m_ItemList.size(); i++) {
-			CEventItem *pItem = m_ItemList[i];
+			CEventItem *pItem = m_ItemList[i].get();
 			if (pItem->IsExpanded()) {
 				pItem->SetExpanded(false);
 				int ExtendedHeight = pItem->GetExpandedHeight() - m_ItemHeight;
@@ -1215,7 +1199,7 @@ bool CFeaturedEventsCategory::GetItemRect(size_t Item, RECT *pRect) const
 	rc.bottom = m_Rect.top - m_pHomeDisplay->GetScrollPos();
 	rc.right = m_Rect.right;
 	for (size_t i = 0; i <= Item; i++) {
-		const CEventItem *pItem = m_ItemList[i];
+		const CEventItem *pItem = m_ItemList[i].get();
 		rc.top = rc.bottom;
 		if (pItem->IsExpanded()) {
 			rc.bottom += pItem->GetExpandedHeight();
@@ -1240,7 +1224,7 @@ int CFeaturedEventsCategory::GetItemByPosition(int x, int y) const
 	int Top, Bottom;
 	Bottom = m_Rect.top - m_pHomeDisplay->GetScrollPos();
 	for (size_t i = 0; i < m_ItemList.size(); i++) {
-		const CEventItem *pItem = m_ItemList[i];
+		const CEventItem *pItem = m_ItemList[i].get();
 		Top = Bottom;
 		if (pItem->IsExpanded()) {
 			Bottom = Top + pItem->GetExpandedHeight();
@@ -1443,16 +1427,15 @@ CHomeDisplay::CHomeDisplay()
 	m_HomeDisplayStyle.CategoryIconMargin = 6;
 
 	m_CategoryList.reserve(3);
-	m_CategoryList.push_back(new CFavoritesCategory(this));
-	m_CategoryList.push_back(new CRecentChannelsCategory(this));
-	m_CategoryList.push_back(new CFeaturedEventsCategory(this));
+	m_CategoryList.emplace_back(new CFavoritesCategory(this));
+	m_CategoryList.emplace_back(new CRecentChannelsCategory(this));
+	m_CategoryList.emplace_back(new CFeaturedEventsCategory(this));
 }
 
 
 CHomeDisplay::~CHomeDisplay()
 {
 	Destroy();
-	Clear();
 }
 
 
@@ -1515,45 +1498,52 @@ bool CHomeDisplay::LoadSettings(CSettings &Settings)
 		int CategoryCount;
 		if (Settings.Read(TEXT("CategoryCount"), &CategoryCount)
 				&& CategoryCount > 0 && (size_t)CategoryCount <= m_CategoryList.size()) {
-			decltype(m_CategoryList) Categories;
+			std::vector<CCategory*> CategoryOrder;
 
-			Categories.reserve(CategoryCount);
-			for (int i = 0; i < CategoryCount; i++) {
+			CategoryOrder.reserve(m_CategoryList.size());
+
+			for (size_t i = 0; i < (size_t)CategoryCount; i++) {
 				TCHAR szKey[32];
 				int ID;
 
 				::wsprintf(szKey, TEXT("Category%d_ID"), i);
 				if (Settings.Read(szKey, &ID)) {
 					size_t j;
-					for (j = 0; j < Categories.size(); j++) {
-						if (Categories[j]->GetID() == ID)
+					for (j = 0; j < i; j++) {
+						if (CategoryOrder[j]->GetID() == ID)
 							break;
 					}
-					if (j == Categories.size()) {
-						for (j = 0; j < m_CategoryList.size(); j++) {
-							CCategory *pCategory = m_CategoryList[j];
-
+					if (j == i) {
+						for (; j < m_CategoryList.size(); j++) {
+							CCategory *pCategory = m_CategoryList[j].get();
 							if (pCategory->GetID() == ID) {
-								Categories.push_back(pCategory);
+								CategoryOrder.push_back(pCategory);
 								break;
 							}
 						}
 					}
 				}
 			}
-			if (Categories.size() < m_CategoryList.size()) {
+
+			if (CategoryOrder.size() < m_CategoryList.size()) {
 				for (size_t i = 0; i < m_CategoryList.size(); i++) {
-					CCategory *pCategory = m_CategoryList[i];
+					CCategory *pCategory = m_CategoryList[i].get();
 					size_t j;
-					for (j = 0; j < Categories.size(); j++) {
-						if (Categories[j]->GetID() == pCategory->GetID())
+					for (j = 0; j < CategoryOrder.size(); j++) {
+						if (CategoryOrder[j]->GetID() == pCategory->GetID())
 							break;
 					}
-					if (j == Categories.size())
-						Categories.push_back(pCategory);
+					if (j == CategoryOrder.size())
+						CategoryOrder.push_back(pCategory);
 				}
 			}
-			m_CategoryList = std::move(Categories);
+
+			_ASSERT(CategoryOrder.size() == m_CategoryList.size());
+
+			for (size_t i = 0; i < m_CategoryList.size(); i++) {
+				m_CategoryList[i].release();
+				m_CategoryList[i].reset(CategoryOrder[i]);
+			}
 		}
 
 		int CurCategory;
@@ -1574,7 +1564,7 @@ bool CHomeDisplay::SaveSettings(CSettings &Settings)
 	if (Settings.SetSection(TEXT("HomeDisplay"))) {
 		if (Settings.Write(TEXT("CategoryCount"), (int)m_CategoryList.size())) {
 			for (int i = 0; i < (int)m_CategoryList.size(); i++) {
-				const CCategory *pCategory = m_CategoryList[i];
+				const CCategory *pCategory = m_CategoryList[i].get();
 				TCHAR szKey[32];
 
 				::wsprintf(szKey, TEXT("Category%d_ID"), i);
@@ -1594,8 +1584,6 @@ bool CHomeDisplay::SaveSettings(CSettings &Settings)
 
 void CHomeDisplay::Clear()
 {
-	for (size_t i = 0; i < m_CategoryList.size(); i++)
-		delete m_CategoryList[i];
 	m_CategoryList.clear();
 }
 
@@ -1793,7 +1781,7 @@ LRESULT CHomeDisplay::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 			m_CursorPart = Part;
 			if (Part == PART_CONTENT) {
 				if (m_CurCategory >= 0) {
-					CCategory *pCategory = m_CategoryList[m_CurCategory];
+					CCategory *pCategory = m_CategoryList[m_CurCategory].get();
 					bool fFocused = pCategory->IsFocused();
 					if (uMsg == WM_LBUTTONDOWN)
 						pCategory->OnLButtonDown(x, y);
@@ -1805,7 +1793,7 @@ LRESULT CHomeDisplay::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 			} else {
 				/*
 				if (m_CurCategory >= 0) {
-					CCategory *pCategory = m_CategoryList[m_CurCategory];
+					CCategory *pCategory = m_CategoryList[m_CurCategory].get();
 					bool fFocused = pCategory->IsFocused();
 					pCategory->OnCursorLeave();
 					if (pCategory->IsFocused() != fFocused)
@@ -1921,7 +1909,7 @@ LRESULT CHomeDisplay::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 		case VK_UP:
 		case VK_DOWN:
 			{
-				CCategory *pCategory = m_CategoryList[m_CurCategory];
+				CCategory *pCategory = m_CategoryList[m_CurCategory].get();
 
 				if (pCategory->IsFocused()) {
 					if (pCategory->OnCursorKey(wParam)) {
@@ -1945,7 +1933,7 @@ LRESULT CHomeDisplay::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 		case VK_RETURN:
 		case VK_SPACE:
 			{
-				CCategory *pCategory = m_CategoryList[m_CurCategory];
+				CCategory *pCategory = m_CategoryList[m_CurCategory].get();
 
 				if (pCategory->IsFocused()) {
 					if (pCategory->OnDecide()) {
@@ -2040,7 +2028,7 @@ void CHomeDisplay::Draw(HDC hdc, const RECT &PaintRect)
 
 	const CCategory *pCategory = nullptr;
 	if (m_CurCategory >= 0)
-		pCategory = m_CategoryList[m_CurCategory];
+		pCategory = m_CategoryList[m_CurCategory].get();
 
 	TVTest::Theme::CThemeDraw ThemeDraw(BeginThemeDraw(hdc));
 
@@ -2055,7 +2043,7 @@ void CHomeDisplay::Draw(HDC hdc, const RECT &PaintRect)
 		rcItem.top = rcCategories.top + m_Style.CategoriesMargin.Top;
 
 		for (size_t i = 0; i < m_CategoryList.size(); i++) {
-			const CCategory *pCategory = m_CategoryList[i];
+			const CCategory *pCategory = m_CategoryList[i].get();
 			const TVTest::Theme::Style *pStyle =
 				((int)i == m_CurCategory) ?
 					(pCategory->IsFocused() ? &m_HomeDisplayStyle.CategoryItemSelStyle : &m_HomeDisplayStyle.CategoryItemCurStyle) :
@@ -2136,7 +2124,7 @@ void CHomeDisplay::LayOut()
 		m_HomeDisplayStyle.CategoryItemMargins.Vert();
 	m_CategoriesAreaWidth = m_CategoryItemWidth + m_Style.CategoriesMargin.Horz();
 
-	CCategory *pCategory = m_CategoryList[m_CurCategory];
+	CCategory *pCategory = m_CategoryList[m_CurCategory].get();
 	RECT rcContent;
 	GetContentAreaRect(&rcContent);
 	pCategory->LayOut(m_HomeDisplayStyle, hdc, rcContent);

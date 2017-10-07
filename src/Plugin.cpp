@@ -66,8 +66,8 @@ class CControllerPlugin
 	TVTest::String m_Name;
 	TVTest::String m_Text;
 	int m_NumButtons;
-	CController::ButtonInfo *m_pButtonList;
-	LPTSTR m_pButtonNameList;
+	std::unique_ptr<CController::ButtonInfo[]> m_ButtonList;
+	std::unique_ptr<TCHAR[]> m_ButtonNameList;
 	TVTest::String m_IniFileName;
 	TVTest::String m_SectionName;
 	UINT m_ControllerImageID;
@@ -77,7 +77,6 @@ class CControllerPlugin
 
 public:
 	CControllerPlugin(CPlugin *pPlugin, const TVTest::ControllerInfo *pInfo);
-	~CControllerPlugin();
 	LPCTSTR GetName() const { return m_Name.c_str(); }
 	LPCTSTR GetText() const { return m_Text.c_str(); }
 	int NumButtons() const { return m_NumButtons; }
@@ -113,33 +112,26 @@ CControllerPlugin::CControllerPlugin(CPlugin *pPlugin, const TVTest::ControllerI
 	int Length = m_NumButtons + 1;
 	for (int i = 0; i < m_NumButtons; i++)
 		Length += ::lstrlen(pInfo->pButtonList[i].pszName);
-	m_pButtonNameList = new TCHAR[Length];
-	LPTSTR pszName = m_pButtonNameList;
+	m_ButtonNameList.reset(new TCHAR[Length]);
+	LPTSTR pszName = m_ButtonNameList.get();
 
-	m_pButtonList = new CController::ButtonInfo[m_NumButtons];
+	m_ButtonList.reset(new CController::ButtonInfo[m_NumButtons]);
 	for (int i = 0; i < m_NumButtons; i++) {
 		const TVTest::ControllerButtonInfo &ButtonInfo = pInfo->pButtonList[i];
 
 		::lstrcpy(pszName, ButtonInfo.pszName);
-		m_pButtonList[i].pszName = pszName;
-		m_pButtonList[i].DefaultCommand =
+		m_ButtonList[i].pszName = pszName;
+		m_ButtonList[i].DefaultCommand =
 			ButtonInfo.pszDefaultCommand != nullptr ?
 				CommandList.ParseText(ButtonInfo.pszDefaultCommand) : 0;
-		m_pButtonList[i].ImageButtonRect.Left = ButtonInfo.ButtonRect.Left;
-		m_pButtonList[i].ImageButtonRect.Top = ButtonInfo.ButtonRect.Top;
-		m_pButtonList[i].ImageButtonRect.Width = ButtonInfo.ButtonRect.Width;
-		m_pButtonList[i].ImageButtonRect.Height = ButtonInfo.ButtonRect.Height;
-		m_pButtonList[i].ImageSelButtonPos.Left = ButtonInfo.SelButtonPos.Left;
-		m_pButtonList[i].ImageSelButtonPos.Top = ButtonInfo.SelButtonPos.Top;
+		m_ButtonList[i].ImageButtonRect.Left = ButtonInfo.ButtonRect.Left;
+		m_ButtonList[i].ImageButtonRect.Top = ButtonInfo.ButtonRect.Top;
+		m_ButtonList[i].ImageButtonRect.Width = ButtonInfo.ButtonRect.Width;
+		m_ButtonList[i].ImageButtonRect.Height = ButtonInfo.ButtonRect.Height;
+		m_ButtonList[i].ImageSelButtonPos.Left = ButtonInfo.SelButtonPos.Left;
+		m_ButtonList[i].ImageSelButtonPos.Top = ButtonInfo.SelButtonPos.Top;
 		pszName += ::lstrlen(pszName) + 1;
 	}
-}
-
-
-CControllerPlugin::~CControllerPlugin()
-{
-	delete [] m_pButtonList;
-	delete [] m_pButtonNameList;
 }
 
 
@@ -147,7 +139,7 @@ bool CControllerPlugin::GetButtonInfo(int Index, ButtonInfo *pInfo) const
 {
 	if (Index < 0 || Index >= m_NumButtons)
 		return false;
-	*pInfo = m_pButtonList[Index];
+	*pInfo = m_ButtonList[Index];
 	return true;
 }
 
@@ -794,8 +786,7 @@ void CPlugin::Free()
 			App.CoreEngine.GetFilter<LibISDB::GrabberFilter>();
 		for (auto it = m_StreamGrabberList.begin(); it != m_StreamGrabberList.end(); ++it) {
 			if (pGrabberFilter != nullptr)
-				pGrabberFilter->RemoveGrabber(*it);
-			delete *it;
+				pGrabberFilter->RemoveGrabber(it->get());
 		}
 		m_StreamGrabberList.clear();
 	}
@@ -848,18 +839,16 @@ void CPlugin::Free()
 	}
 
 	for (auto itr = m_StatusItemList.begin(); itr != m_StatusItemList.end(); ++itr) {
-		StatusItem *pItem = *itr;
+		StatusItem *pItem = itr->get();
 		if (pItem->pItem != nullptr)
 			pItem->pItem->DetachItem();
-		delete pItem;
 	}
 	m_StatusItemList.clear();
 
 	for (auto itr = m_PanelItemList.begin(); itr != m_PanelItemList.end(); ++itr) {
-		PanelItem *pItem = *itr;
+		PanelItem *pItem = itr->get();
 		if (pItem->pItem != nullptr)
 			pItem->pItem->DetachItem();
-		delete pItem;
 	}
 	m_PanelItemList.clear();
 
@@ -1058,7 +1047,7 @@ void CPlugin::RegisterStatusItems()
 	CAppMain &App = GetAppClass();
 
 	for (auto itr = m_StatusItemList.begin(); itr != m_StatusItemList.end(); ++itr) {
-		StatusItem *pItem = *itr;
+		StatusItem *pItem = itr->get();
 		TVTest::String IDText;
 
 		IDText = ::PathFindFileName(GetFileName());
@@ -1077,7 +1066,7 @@ void CPlugin::RegisterStatusItems()
 void CPlugin::SendStatusItemCreatedEvent()
 {
 	for (auto itr = m_StatusItemList.begin(); itr != m_StatusItemList.end(); ++itr) {
-		const StatusItem *pItem = *itr;
+		const StatusItem *pItem = itr->get();
 
 		if (pItem->pItem != nullptr) {
 			TVTest::StatusItemEventInfo Info;
@@ -1095,7 +1084,7 @@ void CPlugin::SendStatusItemCreatedEvent()
 void CPlugin::SendStatusItemUpdateTimerEvent()
 {
 	for (auto itr = m_StatusItemList.begin(); itr != m_StatusItemList.end(); ++itr) {
-		const StatusItem *pItem = *itr;
+		const StatusItem *pItem = itr->get();
 
 		if ((pItem->Flags & TVTest::STATUS_ITEM_FLAG_TIMERUPDATE) != 0
 				&& pItem->pItem != nullptr) {
@@ -1120,7 +1109,7 @@ void CPlugin::RegisterPanelItems()
 	CAppMain &App = GetAppClass();
 
 	for (auto itr = m_PanelItemList.begin(); itr != m_PanelItemList.end(); ++itr) {
-		PanelItem *pItem = *itr;
+		PanelItem *pItem = itr->get();
 		TVTest::String IDText;
 
 		IDText = ::PathFindFileName(GetFileName());
@@ -1571,7 +1560,7 @@ LRESULT CPlugin::OnCallback(TVTest::PluginParam *pParam, UINT Message, LPARAM lP
 				// コールバック登録
 				if (!m_StreamGrabberList.empty()) {
 					for (auto it = m_StreamGrabberList.begin(); it != m_StreamGrabberList.end(); ++it) {
-						CStreamGrabber *pGrabber = *it;
+						CStreamGrabber *pGrabber = it->get();
 						if (pGrabber->GetCallbackFunc() == pInfo->Callback) {
 							pGrabber->SetClientData(pInfo->pClientData);
 							return TRUE;
@@ -1579,16 +1568,15 @@ LRESULT CPlugin::OnCallback(TVTest::PluginParam *pParam, UINT Message, LPARAM lP
 					}
 				}
 				CStreamGrabber *pGrabber = new CStreamGrabber(pInfo->Callback, pInfo->pClientData);
-				m_StreamGrabberList.push_back(pGrabber);
+				m_StreamGrabberList.emplace_back(pGrabber);
 				pGrabberFilter->AddGrabber(pGrabber);
 			} else {
 				// コールバック削除
 				for (auto it = m_StreamGrabberList.begin(); it != m_StreamGrabberList.end(); ++it) {
-					CStreamGrabber *pGrabber = *it;
+					CStreamGrabber *pGrabber = it->get();
 					if (pGrabber->GetCallbackFunc() == pInfo->Callback) {
 						pGrabberFilter->RemoveGrabber(pGrabber);
 						m_StreamGrabberList.erase(it);
-						delete pGrabber;
 						return TRUE;
 					}
 				}
@@ -2442,7 +2430,7 @@ LRESULT CPlugin::OnCallback(TVTest::PluginParam *pParam, UINT Message, LPARAM lP
 			pItem->State = 0;
 			pItem->pItem = nullptr;
 
-			m_StatusItemList.push_back(pItem);
+			m_StatusItemList.emplace_back(pItem);
 		}
 		return TRUE;
 
@@ -2455,7 +2443,7 @@ LRESULT CPlugin::OnCallback(TVTest::PluginParam *pParam, UINT Message, LPARAM lP
 				return FALSE;
 
 			for (auto itr = m_StatusItemList.begin(); itr != m_StatusItemList.end(); ++itr) {
-				StatusItem *pItem = *itr;
+				StatusItem *pItem = itr->get();
 				if (pItem->ID == pInfo->ID) {
 					if ((pInfo->Mask & TVTest::STATUS_ITEM_SET_INFO_MASK_STATE) != 0) {
 						DWORD OldState = pItem->State;
@@ -2497,7 +2485,7 @@ LRESULT CPlugin::OnCallback(TVTest::PluginParam *pParam, UINT Message, LPARAM lP
 				return FALSE;
 
 			for (auto itr = m_StatusItemList.begin(); itr != m_StatusItemList.end(); ++itr) {
-				StatusItem *pItem = *itr;
+				StatusItem *pItem = itr->get();
 
 				if (pItem->ID == pInfo->ID) {
 					if ((pInfo->Mask & TVTest::STATUS_ITEM_GET_INFO_MASK_STATE) != 0)
@@ -2531,7 +2519,7 @@ LRESULT CPlugin::OnCallback(TVTest::PluginParam *pParam, UINT Message, LPARAM lP
 
 	case TVTest::MESSAGE_STATUSITEMNOTIFY:
 		for (auto itr = m_StatusItemList.begin(); itr != m_StatusItemList.end(); ++itr) {
-			StatusItem *pItem = *itr;
+			StatusItem *pItem = itr->get();
 
 			if (pItem->ID == lParam1) {
 				switch (lParam2) {
@@ -2593,7 +2581,7 @@ LRESULT CPlugin::OnCallback(TVTest::PluginParam *pParam, UINT Message, LPARAM lP
 			if (pInfo->hbmIcon != nullptr)
 				pItem->Icon.Create(pInfo->hbmIcon);
 
-			m_PanelItemList.push_back(pItem);
+			m_PanelItemList.emplace_back(pItem);
 		}
 		return TRUE;
 
@@ -2606,7 +2594,7 @@ LRESULT CPlugin::OnCallback(TVTest::PluginParam *pParam, UINT Message, LPARAM lP
 				return FALSE;
 
 			for (auto itr = m_PanelItemList.begin(); itr != m_PanelItemList.end(); ++itr) {
-				PanelItem *pItem = *itr;
+				PanelItem *pItem = itr->get();
 				if (pItem->ID == pInfo->ID) {
 					if ((pInfo->Mask & TVTest::PANEL_ITEM_SET_INFO_MASK_STATE) != 0) {
 						if (pItem->pItem == nullptr || pItem->pItem->GetItemHandle() == nullptr) {
@@ -2647,11 +2635,11 @@ LRESULT CPlugin::OnCallback(TVTest::PluginParam *pParam, UINT Message, LPARAM lP
 
 			auto it = std::find_if(
 				m_PanelItemList.begin(), m_PanelItemList.end(),
-				[&](const PanelItem * pItem) -> bool { return pItem->ID == pInfo->ID; });
+				[&](const std::unique_ptr<PanelItem> &Item) -> bool { return Item->ID == pInfo->ID; });
 			if (it == m_PanelItemList.end())
 				return FALSE;
 
-			const PanelItem *pItem = *it;
+			const PanelItem *pItem = it->get();
 
 			if ((pInfo->Mask & TVTest::PANEL_ITEM_GET_INFO_MASK_STATE) != 0) {
 				pInfo->State = pItem->State;
@@ -4459,13 +4447,15 @@ void CPluginManager::SortPluginsByName()
 }
 
 
-bool CPluginManager::CompareName(const CPlugin *pPlugin1, const CPlugin *pPlugin2)
+bool CPluginManager::CompareName(
+	const std::unique_ptr<CPlugin> &Plugin1,
+	const std::unique_ptr<CPlugin> &Plugin2)
 {
 	int Cmp;
 
-	Cmp = ::lstrcmpi(pPlugin1->GetPluginName(), pPlugin2->GetPluginName());
+	Cmp = ::lstrcmpi(Plugin1->GetPluginName(), Plugin2->GetPluginName());
 	if (Cmp == 0)
-		Cmp = ::lstrcmpi(pPlugin1->GetFileName(), pPlugin2->GetFileName());
+		Cmp = ::lstrcmpi(Plugin1->GetFileName(), Plugin2->GetFileName());
 	return Cmp < 0;
 }
 
@@ -4513,7 +4503,7 @@ bool CPluginManager::LoadPlugins(LPCTSTR pszDirectory, const std::vector<LPCTSTR
 			::PathCombine(szFileName, pszDirectory, wfd.cFileName);
 			if (pPlugin->Load(szFileName)) {
 				App.AddLog(TEXT("%s を読み込みました。"), wfd.cFileName);
-				m_PluginList.push_back(pPlugin);
+				m_PluginList.emplace_back(pPlugin);
 			} else {
 				App.AddLog(
 					CLogItem::TYPE_ERROR,
@@ -4538,9 +4528,8 @@ bool CPluginManager::LoadPlugins(LPCTSTR pszDirectory, const std::vector<LPCTSTR
 
 void CPluginManager::FreePlugins()
 {
-	for (std::vector<CPlugin*>::iterator i = m_PluginList.begin(); i != m_PluginList.end();) {
-		delete *i;
-		i = m_PluginList.erase(i);
+	while (!m_PluginList.empty()) {
+		m_PluginList.pop_back();
 	}
 }
 
@@ -4549,7 +4538,7 @@ CPlugin *CPluginManager::GetPlugin(int Index)
 {
 	if (Index < 0 || (size_t)Index >= m_PluginList.size())
 		return nullptr;
-	return m_PluginList[Index];
+	return m_PluginList[Index].get();
 }
 
 
@@ -4557,7 +4546,7 @@ const CPlugin *CPluginManager::GetPlugin(int Index) const
 {
 	if (Index < 0 || (size_t)Index >= m_PluginList.size())
 		return nullptr;
-	return m_PluginList[Index];
+	return m_PluginList[Index].get();
 }
 
 
@@ -4573,7 +4562,7 @@ bool CPluginManager::EnablePlugins(bool fEnable)
 int CPluginManager::FindPlugin(const CPlugin *pPlugin) const
 {
 	for (size_t i = 0; i < m_PluginList.size(); i++) {
-		if (m_PluginList[i] == pPlugin)
+		if (m_PluginList[i].get() == pPlugin)
 			return (int)i;
 	}
 	return -1;
@@ -4630,7 +4619,7 @@ CPlugin *CPluginManager::GetPluginByPluginCommand(LPCTSTR pszCommand, LPCTSTR *p
 	if (ppszCommandText != nullptr)
 		*ppszCommandText = pDelimiter + 1;
 
-	return m_PluginList[PluginIndex];
+	return m_PluginList[PluginIndex].get();
 }
 
 
@@ -4638,10 +4627,9 @@ bool CPluginManager::DeletePlugin(int Index)
 {
 	if (Index < 0 || (size_t)Index >= m_PluginList.size())
 		return false;
-	std::vector<CPlugin*>::iterator i = m_PluginList.begin();
-	std::advance(i, Index);
-	delete *i;
-	m_PluginList.erase(i);
+	auto it = m_PluginList.begin();
+	std::advance(it, Index);
+	m_PluginList.erase(it);
 	return true;
 }
 
@@ -4651,7 +4639,7 @@ bool CPluginManager::SetMenu(HMENU hmenu) const
 	ClearMenu(hmenu);
 	if (NumPlugins() > 0) {
 		for (size_t i = 0; i < m_PluginList.size(); i++) {
-			const CPlugin *pPlugin = m_PluginList[i];
+			const CPlugin *pPlugin = m_PluginList[i].get();
 
 			if (!pPlugin->IsNoEnabledDisabled()) {
 				::AppendMenu(
@@ -4695,7 +4683,7 @@ bool CPluginManager::OnProgramGuideCommand(LPCTSTR pszCommand, UINT Action, cons
 	int PluginIndex = FindPluginByFileName(szFileName);
 	if (PluginIndex < 0)
 		return false;
-	CPlugin *pPlugin = m_PluginList[PluginIndex];
+	CPlugin *pPlugin = m_PluginList[PluginIndex].get();
 	if (!pPlugin->IsEnabled()
 			|| !pPlugin->IsProgramGuideEventEnabled(TVTest::PROGRAMGUIDE_EVENT_GENERAL))
 		return false;
@@ -4717,7 +4705,7 @@ bool CPluginManager::SendProgramGuideEvent(UINT Event, LPARAM Param1, LPARAM Par
 	bool fSent = false;
 
 	for (size_t i = 0; i < m_PluginList.size(); i++) {
-		CPlugin *pPlugin = m_PluginList[i];
+		CPlugin *pPlugin = m_PluginList[i].get();
 
 		if (pPlugin->IsProgramGuideEventEnabled(TVTest::PROGRAMGUIDE_EVENT_GENERAL)
 				&& pPlugin->SendEvent(Event, Param1, Param2))
@@ -4735,7 +4723,7 @@ bool CPluginManager::SendProgramGuideProgramEvent(UINT Event, const LibISDB::Eve
 	bool fSent = false;
 
 	for (size_t i = 0; i < m_PluginList.size(); i++) {
-		CPlugin *pPlugin = m_PluginList[i];
+		CPlugin *pPlugin = m_PluginList[i].get();
 
 		if (pPlugin->IsProgramGuideEventEnabled(TVTest::PROGRAMGUIDE_EVENT_PROGRAM)
 				&& pPlugin->SendEvent(Event, reinterpret_cast<LPARAM>(&ProgramInfo), Param))
@@ -5048,7 +5036,7 @@ bool CPluginManager::SendProgramGuideInitializeMenuEvent(HMENU hmenu, UINT *pCom
 	m_ProgramGuideMenuList.clear();
 
 	for (size_t i = 0; i < m_PluginList.size(); i++) {
-		CPlugin *pPlugin = m_PluginList[i];
+		CPlugin *pPlugin = m_PluginList[i].get();
 
 		if (pPlugin->IsProgramGuideEventEnabled(TVTest::PROGRAMGUIDE_EVENT_GENERAL)) {
 			MenuCommandInfo CommandInfo;
@@ -5129,7 +5117,7 @@ bool CPluginManager::SendProgramGuideProgramInitializeMenuEvent(
 	m_ProgramGuideMenuList.clear();
 
 	for (size_t i = 0; i < m_PluginList.size(); i++) {
-		CPlugin *pPlugin = m_PluginList[i];
+		CPlugin *pPlugin = m_PluginList[i].get();
 
 		if (pPlugin->IsProgramGuideEventEnabled(TVTest::PROGRAMGUIDE_EVENT_PROGRAM)) {
 			MenuCommandInfo CommandInfo;
@@ -5259,7 +5247,6 @@ CPluginOptions::CPluginOptions(CPluginManager *pPluginManager)
 CPluginOptions::~CPluginOptions()
 {
 	Destroy();
-	ClearList();
 }
 
 
@@ -5280,7 +5267,7 @@ bool CPluginOptions::LoadSettings(CSettings &Settings)
 
 					::wsprintf(szName, TEXT("Plugin%d_Enable"), i);
 					if (Settings.Read(szName, &fEnable) && fEnable) {
-						m_EnablePluginList.push_back(DuplicateString(szFileName));
+						m_EnablePluginList.emplace_back(szFileName);
 					}
 				}
 			}
@@ -5326,7 +5313,7 @@ bool CPluginOptions::RestorePluginOptions()
 			CPlugin *pPlugin = m_pPluginManager->GetPlugin(j);
 
 			if (!pPlugin->IsDisableOnStart()
-					&& IsEqualFileName(m_EnablePluginList[i], ::PathFindFileName(pPlugin->GetFileName())))
+					&& IsEqualFileName(m_EnablePluginList[i].c_str(), ::PathFindFileName(pPlugin->GetFileName())))
 				pPlugin->Enable(true);
 		}
 	}
@@ -5341,7 +5328,7 @@ bool CPluginOptions::StorePluginOptions()
 		const CPlugin *pPlugin = m_pPluginManager->GetPlugin(i);
 
 		if (pPlugin->IsEnabled()) {
-			m_EnablePluginList.push_back(DuplicateString(::PathFindFileName(pPlugin->GetFileName())));
+			m_EnablePluginList.emplace_back(::PathFindFileName(pPlugin->GetFileName()));
 		}
 	}
 	return true;
@@ -5350,9 +5337,6 @@ bool CPluginOptions::StorePluginOptions()
 
 void CPluginOptions::ClearList()
 {
-	for (size_t i = 0; i < m_EnablePluginList.size(); i++) {
-		delete [] m_EnablePluginList[i];
-	}
 	m_EnablePluginList.clear();
 }
 

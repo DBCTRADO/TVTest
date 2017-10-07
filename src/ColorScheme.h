@@ -3,6 +3,7 @@
 
 
 #include <vector>
+#include <memory>
 #include "Theme.h"
 #include "Settings.h"
 
@@ -432,8 +433,6 @@ private:
 class CColorSchemeList
 {
 public:
-	CColorSchemeList();
-	~CColorSchemeList();
 	int NumColorSchemes() const { return (int)m_List.size(); }
 	bool Add(CColorScheme *pColorScheme);
 	bool Insert(int Index, CColorScheme *pColorScheme);
@@ -445,7 +444,7 @@ public:
 	void SortByName();
 
 private:
-	std::vector<CColorScheme*> m_List;
+	std::vector<std::unique_ptr<CColorScheme>> m_List;
 };
 
 

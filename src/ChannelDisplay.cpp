@@ -165,8 +165,6 @@ bool CChannelDisplay::OnMouseWheel(UINT Msg, WPARAM wParam, LPARAM lParam)
 
 void CChannelDisplay::Clear()
 {
-	for (size_t i = 0; i < m_TunerList.size(); i++)
-		delete m_TunerList[i];
 	m_TunerList.clear();
 	m_TotalTuningSpaces = 0;
 	m_CurTuner = -1;
@@ -212,7 +210,7 @@ End:
 					pTuner->SetIcon(hico);
 			}
 		}
-		m_TunerList.push_back(pTuner);
+		m_TunerList.emplace_back(pTuner);
 		m_TotalTuningSpaces += pTuner->NumSpaces();
 	}
 	if (m_hwnd != nullptr) {
@@ -244,7 +242,7 @@ bool CChannelDisplay::SetSelect(LPCTSTR pszDriverFileName, const CChannelInfo *p
 {
 	int TunerIndex = 0;
 	for (size_t i = 0; i < m_TunerList.size(); i++) {
-		const CTuner *pTuner = m_TunerList[i];
+		const CTuner *pTuner = m_TunerList[i].get();
 		if (IsEqualFileName(pTuner->GetDriverFileName(), pszDriverFileName)) {
 			int Space = 0, Channel = -1;
 			if (pChannelInfo != nullptr) {
@@ -360,7 +358,7 @@ void CChannelDisplay::Layout()
 	int TunerNameWidth = 0;
 	bool fTunerIcon = false;
 	for (auto it = m_TunerList.begin(); it != m_TunerList.end(); ++it) {
-		const CTuner *pTuner = *it;
+		const CTuner *pTuner = it->get();
 		for (int j = 0; j < pTuner->NumSpaces(); j++) {
 			TCHAR szText[256];
 			pTuner->GetDisplayName(j, szText, lengthof(szText));
@@ -483,7 +481,7 @@ const CTuningSpaceInfo *CChannelDisplay::GetTuningSpaceInfo(int Index) const
 {
 	int TunerIndex = 0;
 	for (size_t i = 0; i < m_TunerList.size(); i++) {
-		const CTuner *pTuner = m_TunerList[i];
+		const CTuner *pTuner = m_TunerList[i].get();
 
 		if (Index >= TunerIndex && Index < TunerIndex + pTuner->NumSpaces())
 			return pTuner->GetTuningSpaceInfo(Index - TunerIndex);
@@ -497,7 +495,7 @@ CTuningSpaceInfo *CChannelDisplay::GetTuningSpaceInfo(int Index)
 {
 	int TunerIndex = 0;
 	for (size_t i = 0; i < m_TunerList.size(); i++) {
-		CTuner *pTuner = m_TunerList[i];
+		CTuner *pTuner = m_TunerList[i].get();
 
 		if (Index >= TunerIndex && Index < TunerIndex + pTuner->NumSpaces())
 			return pTuner->GetTuningSpaceInfo(Index - TunerIndex);
@@ -511,7 +509,7 @@ const CChannelDisplay::CTuner *CChannelDisplay::GetTuner(int Index, int *pSpace)
 {
 	int TunerIndex = 0;
 	for (size_t i = 0; i < m_TunerList.size(); i++) {
-		const CTuner *pTuner = m_TunerList[i];
+		const CTuner *pTuner = m_TunerList[i].get();
 
 		if (Index >= TunerIndex && Index < TunerIndex + pTuner->NumSpaces()) {
 			if (pSpace != nullptr)
@@ -796,7 +794,7 @@ void CChannelDisplay::Draw(HDC hdc, const RECT *pPaintRect)
 
 		int TunerIndex = 0;
 		for (size_t i = 0; i < m_TunerList.size(); i++) {
-			const CTuner *pTuner = m_TunerList[i];
+			const CTuner *pTuner = m_TunerList[i].get();
 
 			for (int j = 0; j < pTuner->NumSpaces(); j++) {
 				if (TunerIndex >= m_TunerScrollPos
@@ -1282,12 +1280,12 @@ CChannelDisplay::CTuner::CTuner(const CDriverInfo *pDriverInfo)
 				if (!m_TuningSpaceList.empty()
 						&& pSrcTuningSpace->GetType() == CTuningSpaceInfo::SPACE_TERRESTRIAL
 						&& m_TuningSpaceList[m_TuningSpaceList.size() - 1]->GetType() == CTuningSpaceInfo::SPACE_TERRESTRIAL) {
-					pTuningSpace = m_TuningSpaceList[m_TuningSpaceList.size() - 1];
+					pTuningSpace = m_TuningSpaceList[m_TuningSpaceList.size() - 1].get();
 					pTuningSpace->SetName(TEXT("地上"));
 				} else {
 					pTuningSpace = new CTuningSpaceInfo;
 					pTuningSpace->Create(nullptr, pSrcTuningSpace->GetName());
-					m_TuningSpaceList.push_back(pTuningSpace);
+					m_TuningSpaceList.emplace_back(pTuningSpace);
 				}
 				for (int j = 0; j < pSrcChannelList->NumChannels(); j++) {
 					const CChannelInfo *pChannelInfo = pSrcChannelList->GetChannelInfo(j);
@@ -1303,21 +1301,13 @@ CChannelDisplay::CTuner::CTuner(const CDriverInfo *pDriverInfo)
 		CTuningSpaceInfo *pTuningSpace = new CTuningSpaceInfo;
 
 		pTuningSpace->Create();
-		m_TuningSpaceList.push_back(pTuningSpace);
+		m_TuningSpaceList.emplace_back(pTuningSpace);
 	}
-}
-
-
-CChannelDisplay::CTuner::~CTuner()
-{
-	Clear();
 }
 
 
 void CChannelDisplay::CTuner::Clear()
 {
-	for (size_t i = 0; i < m_TuningSpaceList.size(); i++)
-		delete m_TuningSpaceList[i];
 	m_TuningSpaceList.clear();
 }
 
@@ -1371,7 +1361,7 @@ CTuningSpaceInfo *CChannelDisplay::CTuner::GetTuningSpaceInfo(int Index)
 {
 	if (Index < 0 || (size_t)Index >= m_TuningSpaceList.size())
 		return nullptr;
-	return m_TuningSpaceList[Index];
+	return m_TuningSpaceList[Index].get();
 }
 
 
@@ -1379,7 +1369,7 @@ const CTuningSpaceInfo *CChannelDisplay::CTuner::GetTuningSpaceInfo(int Index) c
 {
 	if (Index < 0 || (size_t)Index >= m_TuningSpaceList.size())
 		return nullptr;
-	return m_TuningSpaceList[Index];
+	return m_TuningSpaceList[Index].get();
 }
 
 

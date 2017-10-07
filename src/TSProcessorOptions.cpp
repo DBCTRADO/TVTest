@@ -97,7 +97,7 @@ INT_PTR CTSProcessorOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM
 						DlgComboBox_SetItemData(
 							hDlg, IDC_TSPROCESSOR_TSPROCESSORLIST, i,
 							reinterpret_cast<LPARAM>(pSettings));
-						m_SettingsList.push_back(pSettings);
+						m_SettingsList.emplace_back(pSettings);
 					}
 				}
 
@@ -226,7 +226,7 @@ INT_PTR CTSProcessorOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM
 
 				for (auto it = m_SettingsList.begin(); it != m_SettingsList.end(); ++it) {
 					GUID guid = (*it)->m_guid;
-					m_TSProcessorManager.SetTSProcessorSettings(*it);
+					m_TSProcessorManager.SetTSProcessorSettings(it->release());
 					m_TSProcessorManager.ApplyTSProcessorSettings(guid, false);
 				}
 				m_SettingsList.clear();
@@ -304,8 +304,6 @@ INT_PTR CTSProcessorOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM
 		break;
 
 	case WM_DESTROY:
-		for (auto it = m_SettingsList.begin(); it != m_SettingsList.end(); ++it)
-			delete *it;
 		m_SettingsList.clear();
 		m_pCurSettings = nullptr;
 		m_ModuleList.clear();

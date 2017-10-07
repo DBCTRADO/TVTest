@@ -3,6 +3,7 @@
 
 
 #include <vector>
+#include <memory>
 #include "BasicWindow.h"
 #include "UIBase.h"
 #include "Theme.h"
@@ -242,7 +243,7 @@ private:
 	int m_MaxRows;
 	int m_Rows;
 	StatusViewTheme m_Theme;
-	std::vector<CStatusItem*> m_ItemList;
+	std::vector<std::unique_ptr<CStatusItem>> m_ItemList;
 	bool m_fSingleMode;
 	TVTest::String m_SingleText;
 	int m_HotItem;

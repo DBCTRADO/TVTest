@@ -12,18 +12,6 @@ namespace TVTest
 {
 
 
-CTSProcessorManager::CTSProcessorManager()
-{
-}
-
-
-CTSProcessorManager::~CTSProcessorManager()
-{
-	for (auto it = m_SettingsList.begin(); it != m_SettingsList.end(); ++it)
-		delete *it;
-}
-
-
 bool CTSProcessorManager::ReadSettings(CSettings &Settings)
 {
 	int Count;
@@ -139,7 +127,7 @@ bool CTSProcessorManager::WriteSettings(CSettings &Settings) const
 	Settings.Write(TEXT("SettingsCount"), (int)m_SettingsList.size());
 
 	for (int i = 0; i < (int)m_SettingsList.size(); i++) {
-		const CTSProcessorSettings *pTSProcessorSettings = m_SettingsList[i];
+		const CTSProcessorSettings *pTSProcessorSettings = m_SettingsList[i].get();
 		TCHAR szKey[64], szBuffer[256];
 
 		StdUtil::snprintf(szKey, lengthof(szKey), TEXT("Processor%d.GUID"), i);
@@ -207,7 +195,7 @@ CTSProcessorManager::CTSProcessorSettings *CTSProcessorManager::GetTSProcessorSe
 {
 	for (auto it = m_SettingsList.begin(); it != m_SettingsList.end(); ++it) {
 		if ((*it)->m_guid == guid)
-			return *it;
+			return it->get();
 	}
 	return nullptr;
 }
@@ -217,7 +205,7 @@ const CTSProcessorManager::CTSProcessorSettings *CTSProcessorManager::GetTSProce
 {
 	for (auto it = m_SettingsList.begin(); it != m_SettingsList.end(); ++it) {
 		if ((*it)->m_guid == guid)
-			return *it;
+			return it->get();
 	}
 	return nullptr;
 }
@@ -233,7 +221,7 @@ bool CTSProcessorManager::SetTSProcessorSettings(CTSProcessorSettings *pSettings
 		*pCurSettings = std::move(*pSettings);
 		delete pSettings;
 	} else {
-		m_SettingsList.push_back(pSettings);
+		m_SettingsList.emplace_back(pSettings);
 	}
 
 	return true;
@@ -337,7 +325,7 @@ bool CTSProcessorManager::RegisterTSProcessor(
 			if (pTSProcessor->GetModuleList(&List) && List.size() == 1) {
 				CTSProcessorSettings *pSettings = new CTSProcessorSettings(guid);
 				pSettings->m_DefaultFilter.Module = std::move(List.front());
-				m_SettingsList.push_back(pSettings);
+				m_SettingsList.emplace_back(pSettings);
 			}
 		}
 	}

@@ -2,6 +2,7 @@
 #define CAPTURE_H
 
 
+#include <memory>
 #include "BasicWindow.h"
 #include "StatusView.h"
 
@@ -51,7 +52,7 @@ public:
 // CBasicWindow
 	bool Create(HWND hwndParent, DWORD Style, DWORD ExStyle = 0, int ID = 0) override;
 // CCapturePreview
-	bool SetImage(CCaptureImage *pImage);
+	bool SetImage(const std::shared_ptr<CCaptureImage> &Image);
 	bool ClearImage();
 	bool HasImage() const;
 	bool SetEventHandler(CEventHandler *pEventHandler);
@@ -59,7 +60,7 @@ public:
 private:
 	static HINSTANCE m_hinst;
 
-	CCaptureImage *m_pImage;
+	std::shared_ptr<CCaptureImage> m_Image;
 	COLORREF m_crBackColor;
 	CEventHandler *m_pEventHandler;
 
@@ -178,7 +179,7 @@ private:
 	CStatusView m_Status;
 	bool m_fShowStatusBar;
 	TVTest::Theme::IconList m_StatusIcons;
-	CCaptureImage *m_pImage;
+	std::shared_ptr<CCaptureImage> m_Image;
 	CEventHandler *m_pEventHandler;
 	bool m_fCreateFirst;
 

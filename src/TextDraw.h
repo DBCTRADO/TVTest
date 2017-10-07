@@ -4,6 +4,7 @@
 
 #include <vector>
 #include <deque>
+#include <memory>
 #include "DirectWrite.h"
 
 
@@ -91,7 +92,7 @@ namespace TVTest
 	private:
 		CDirectWriteRenderer &m_Renderer;
 		CDirectWriteFont *m_pFont;
-		std::deque<CDirectWriteFont*> m_FontCache;
+		std::deque<std::unique_ptr<CDirectWriteFont>> m_FontCache;
 		std::size_t m_MaxFontCache;
 		CDirectWriteBrush m_Brush;
 	};

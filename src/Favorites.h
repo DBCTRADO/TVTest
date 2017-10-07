@@ -38,7 +38,6 @@ namespace TVTest
 	public:
 		CFavoriteFolder();
 		CFavoriteFolder(const CFavoriteFolder &Src);
-		~CFavoriteFolder();
 		CFavoriteFolder &operator=(const CFavoriteFolder &Src);
 		CFavoriteFolder *Duplicate() const override;
 		void Clear();
@@ -54,7 +53,7 @@ namespace TVTest
 		CFavoriteFolder *FindSubFolder(LPCTSTR pszName);
 
 	private:
-		std::vector<CFavoriteItem*> m_Children;
+		std::vector<std::unique_ptr<CFavoriteItem>> m_Children;
 	};
 
 	class CFavoriteChannel
@@ -109,7 +108,12 @@ namespace TVTest
 		bool OnUninitMenuPopup(HWND hwnd, WPARAM wParam, LPARAM lParam);
 
 	private:
-		class CMenuItem;
+		class ABSTRACT_CLASS(CMenuItem)
+		{
+		public:
+			virtual ~CMenuItem() = default;
+		};
+
 		class CFolderItem;
 		class CChannelItem;
 
@@ -131,7 +135,7 @@ namespace TVTest
 		int m_MenuLogoMargin;
 		CTooltip m_Tooltip;
 		LibISDB::DateTime m_BaseTime;
-		std::vector<CMenuItem*> m_ItemList;
+		std::vector<std::unique_ptr<CMenuItem>> m_ItemList;
 		HIMAGELIST m_himlIcons;
 		CChannelMenuLogo m_Logo;
 

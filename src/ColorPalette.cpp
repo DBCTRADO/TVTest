@@ -37,14 +37,12 @@ bool CColorPalette::Initialize(HINSTANCE hinst)
 
 CColorPalette::CColorPalette()
 	: m_NumColors(0)
-	, m_pPalette(nullptr)
 {
 }
 
 
 CColorPalette::~CColorPalette()
 {
-	delete [] m_pPalette;
 }
 
 
@@ -58,9 +56,9 @@ bool CColorPalette::Create(HWND hwndParent, DWORD Style, DWORD ExStyle, int ID)
 
 bool CColorPalette::GetPalette(RGBQUAD *pPalette)
 {
-	if (m_pPalette == nullptr)
+	if (!m_Palette)
 		return false;
-	CopyMemory(pPalette, m_pPalette, m_NumColors * sizeof(RGBQUAD));
+	CopyMemory(pPalette, m_Palette.get(), m_NumColors * sizeof(RGBQUAD));
 	return true;
 }
 
@@ -70,11 +68,10 @@ bool CColorPalette::SetPalette(const RGBQUAD *pPalette, int NumColors)
 	if (NumColors < 1 || NumColors > 256)
 		return false;
 	if (NumColors != m_NumColors) {
-		delete [] m_pPalette;
-		m_pPalette = new RGBQUAD[NumColors];
+		m_Palette.reset(new RGBQUAD[NumColors]);
 		m_NumColors = NumColors;
 	}
-	CopyMemory(m_pPalette, pPalette, NumColors * sizeof(RGBQUAD));
+	CopyMemory(m_Palette.get(), pPalette, NumColors * sizeof(RGBQUAD));
 	m_SelColor = -1;
 	m_HotColor = -1;
 	InvalidateRect(m_hwnd, nullptr, TRUE);
@@ -87,7 +84,7 @@ COLORREF CColorPalette::GetColor(int Index) const
 {
 	if (Index < 0 || Index >= m_NumColors)
 		return CLR_INVALID;
-	return RGB(m_pPalette[Index].rgbRed, m_pPalette[Index].rgbGreen, m_pPalette[Index].rgbBlue);
+	return RGB(m_Palette[Index].rgbRed, m_Palette[Index].rgbGreen, m_Palette[Index].rgbBlue);
 }
 
 
@@ -97,9 +94,9 @@ bool CColorPalette::SetColor(int Index, COLORREF Color)
 
 	if (Index < 0 || Index >= m_NumColors)
 		return false;
-	m_pPalette[Index].rgbBlue = GetBValue(Color);
-	m_pPalette[Index].rgbGreen = GetGValue(Color);
-	m_pPalette[Index].rgbRed = GetRValue(Color);
+	m_Palette[Index].rgbBlue = GetBValue(Color);
+	m_Palette[Index].rgbGreen = GetGValue(Color);
+	m_Palette[Index].rgbRed = GetRValue(Color);
 	GetItemRect(Index, &rc);
 	InvalidateRect(m_hwnd, &rc, TRUE);
 	return true;
@@ -114,7 +111,7 @@ int CColorPalette::GetSel() const
 
 bool CColorPalette::SetSel(int Sel)
 {
-	if (m_pPalette == nullptr)
+	if (!m_Palette)
 		return false;
 	if (Sel < 0 || Sel >= m_NumColors)
 		Sel = -1;
@@ -135,7 +132,7 @@ int CColorPalette::GetHot() const
 int CColorPalette::FindColor(COLORREF Color) const
 {
 	for (int i = 0; i < m_NumColors; i++) {
-		if (RGB(m_pPalette[i].rgbRed, m_pPalette[i].rgbGreen, m_pPalette[i].rgbBlue) == Color)
+		if (RGB(m_Palette[i].rgbRed, m_Palette[i].rgbGreen, m_Palette[i].rgbBlue) == Color)
 			return i;
 	}
 	return -1;
@@ -236,13 +233,13 @@ LRESULT CColorPalette::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 			m_ItemHeight = max(sy / 16, 6);
 			m_Left = (sx - m_ItemWidth * 16) / 2;
 			m_Top = (sy - m_ItemHeight * 16) / 2;
-			if (m_pPalette != nullptr)
+			if (m_Palette)
 				SetToolTip();
 		}
 		return 0;
 
 	case WM_PAINT:
-		if (m_pPalette != nullptr) {
+		if (m_Palette) {
 			PAINTSTRUCT ps;
 			int x, y;
 			RECT rc;
@@ -259,7 +256,7 @@ LRESULT CColorPalette::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 						&& rc.right > ps.rcPaint.left && rc.bottom > ps.rcPaint.top) {
 					DrawUtil::Fill(
 						ps.hdc, &rc,
-						RGB(m_pPalette[i].rgbRed, m_pPalette[i].rgbGreen, m_pPalette[i].rgbBlue));
+						RGB(m_Palette[i].rgbRed, m_Palette[i].rgbGreen, m_Palette[i].rgbBlue));
 				}
 			}
 			if (m_SelColor >= 0)
@@ -270,7 +267,7 @@ LRESULT CColorPalette::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 		break;
 
 	case WM_MOUSEMOVE:
-		if (m_pPalette != nullptr) {
+		if (m_Palette) {
 			POINT ptCursor;
 			int Hot;
 
@@ -294,7 +291,7 @@ LRESULT CColorPalette::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 
 	case WM_LBUTTONDOWN:
 	case WM_RBUTTONDOWN:
-		if (m_pPalette != nullptr) {
+		if (m_Palette) {
 			POINT ptCursor;
 			int Sel;
 
@@ -334,9 +331,9 @@ LRESULT CColorPalette::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 				if (Index >= 0 && Index < m_NumColors) {
 					int r, g, b;
 
-					r = m_pPalette[Index].rgbRed;
-					g = m_pPalette[Index].rgbGreen;
-					b = m_pPalette[Index].rgbBlue;
+					r = m_Palette[Index].rgbRed;
+					g = m_Palette[Index].rgbGreen;
+					b = m_Palette[Index].rgbBlue;
 					::wsprintf(pttdi->szText, TEXT("%d,%d,%d #%02X%02X%02X"), r, g, b, r, g, b);
 				} else {
 					pttdi->szText[0] = '\0';

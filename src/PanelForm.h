@@ -8,6 +8,7 @@
 #include "DrawUtil.h"
 #include "Tooltip.h"
 #include <vector>
+#include <memory>
 
 
 class CPanelForm
@@ -146,7 +147,7 @@ private:
 			const TVTest::Style::CStyleScaling *pStyleScaling);
 	};
 
-	std::vector<CWindowInfo*> m_WindowList;
+	std::vector<std::unique_ptr<CWindowInfo>> m_WindowList;
 	std::vector<int> m_TabOrder;
 	PanelFormStyle m_Style;
 	PanelFormTheme m_Theme;

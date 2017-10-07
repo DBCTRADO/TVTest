@@ -79,16 +79,8 @@ CFeaturedEventsSearcher::CFeaturedEventsSearcher(const CFeaturedEventsSettings &
 }
 
 
-CFeaturedEventsSearcher::~CFeaturedEventsSearcher()
-{
-	Clear();
-}
-
-
 void CFeaturedEventsSearcher::Clear()
 {
-	for (auto it = m_EventList.begin(); it != m_EventList.end(); ++it)
-		delete *it;
 	m_EventList.clear();
 }
 
@@ -145,7 +137,7 @@ bool CFeaturedEventsSearcher::Update()
 							continue;
 					}
 					if (itSearcher->Match(&Event)) {
-						m_EventList.push_back(new LibISDB::EventInfo(Event));
+						m_EventList.emplace_back(new LibISDB::EventInfo(Event));
 						break;
 					}
 				}
@@ -169,7 +161,7 @@ const LibISDB::EventInfo *CFeaturedEventsSearcher::GetEventInfo(size_t Index) co
 	if (Index >= m_EventList.size())
 		return nullptr;
 
-	return m_EventList[Index];
+	return m_EventList[Index].get();
 }
 
 

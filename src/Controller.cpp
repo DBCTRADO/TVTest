@@ -130,10 +130,9 @@ bool CControllerManager::DeleteController(LPCTSTR pszName)
 		return false;
 	for (std::vector<ControllerInfo>::iterator itr = m_ControllerList.begin();
 			itr != m_ControllerList.end(); ++itr) {
-		if (::lstrcmpi(itr->pController->GetName(), pszName) == 0) {
+		if (::lstrcmpi(itr->Controller->GetName(), pszName) == 0) {
 			if (itr->fSettingsChanged)
 				SaveControllerSettings(pszName);
-			delete itr->pController;
 			m_ControllerList.erase(itr);
 			return true;
 		}
@@ -146,10 +145,8 @@ void CControllerManager::DeleteAllControllers()
 {
 	for (size_t i = 0; i < m_ControllerList.size(); i++) {
 		if (m_ControllerList[i].fSettingsChanged)
-			SaveControllerSettings(m_ControllerList[i].pController->GetName());
+			SaveControllerSettings(m_ControllerList[i].Controller->GetName());
 	}
-	for (size_t i = 0; i < m_ControllerList.size(); i++)
-		delete m_ControllerList[i].pController;
 	m_ControllerList.clear();
 }
 
@@ -159,7 +156,7 @@ bool CControllerManager::IsControllerEnabled(LPCTSTR pszName) const
 	int Index = FindController(pszName);
 	if (Index < 0)
 		return false;
-	return m_ControllerList[Index].pController->IsEnabled();
+	return m_ControllerList[Index].Controller->IsEnabled();
 }
 
 
@@ -177,11 +174,11 @@ bool CControllerManager::LoadControllerSettings(LPCTSTR pszName)
 	CSettings Settings;
 	TCHAR szFileName[MAX_PATH];
 
-	if (!Info.pController->GetIniFileName(szFileName, lengthof(szFileName)))
+	if (!Info.Controller->GetIniFileName(szFileName, lengthof(szFileName)))
 		return false;
 	if (Settings.Open(szFileName, CSettings::OPEN_READ)
-			&& Settings.SetSection(Info.pController->GetIniFileSection())) {
-		const int NumButtons = Info.pController->NumButtons();
+			&& Settings.SetSection(Info.Controller->GetIniFileSection())) {
+		const int NumButtons = Info.Controller->NumButtons();
 		const CCommandList &CommandList = GetAppClass().CommandList;
 
 		for (int i = 0; i < NumButtons; i++) {
@@ -193,7 +190,7 @@ bool CControllerManager::LoadControllerSettings(LPCTSTR pszName)
 				Info.Settings.AssignList[i] = CommandList.ParseText(szCommand);
 			}
 		}
-		if (!Info.pController->IsActiveOnly())
+		if (!Info.Controller->IsActiveOnly())
 			Settings.Read(TEXT("ActiveOnly"), &Info.Settings.fActiveOnly);
 		Info.fSettingsLoaded = true;
 	}
@@ -214,11 +211,11 @@ bool CControllerManager::SaveControllerSettings(LPCTSTR pszName) const
 	CSettings Settings;
 	TCHAR szFileName[MAX_PATH];
 
-	if (!Info.pController->GetIniFileName(szFileName, lengthof(szFileName)))
+	if (!Info.Controller->GetIniFileName(szFileName, lengthof(szFileName)))
 		return false;
 	if (Settings.Open(szFileName, CSettings::OPEN_WRITE)
-			&& Settings.SetSection(Info.pController->GetIniFileSection())) {
-		const int NumButtons = Info.pController->NumButtons();
+			&& Settings.SetSection(Info.Controller->GetIniFileSection())) {
+		const int NumButtons = Info.Controller->NumButtons();
 		const CCommandList &CommandList = GetAppClass().CommandList;
 
 		for (int i = 0; i < NumButtons; i++) {
@@ -230,7 +227,7 @@ bool CControllerManager::SaveControllerSettings(LPCTSTR pszName) const
 				pszText = CommandList.GetCommandTextByID(Info.Settings.AssignList[i]);
 			Settings.Write(szName, pszText != nullptr ? pszText : TEXT(""));
 		}
-		if (!Info.pController->IsActiveOnly())
+		if (!Info.Controller->IsActiveOnly())
 			Settings.Write(TEXT("ActiveOnly"), Info.Settings.fActiveOnly);
 	}
 	return true;
@@ -240,8 +237,8 @@ bool CControllerManager::SaveControllerSettings(LPCTSTR pszName) const
 bool CControllerManager::TranslateMessage(HWND hwnd, MSG *pMessage)
 {
 	for (size_t i = 0; i < m_ControllerList.size(); i++) {
-		if (m_ControllerList[i].pController->IsEnabled()) {
-			if (m_ControllerList[i].pController->TranslateMessage(hwnd, pMessage))
+		if (m_ControllerList[i].Controller->IsEnabled()) {
+			if (m_ControllerList[i].Controller->TranslateMessage(hwnd, pMessage))
 				return true;
 		}
 	}
@@ -263,7 +260,7 @@ bool CControllerManager::OnFocusChange(HWND hwnd, bool fFocus)
 	m_fFocus = fFocus;
 	if (fFocus) {
 		for (size_t i = 0; i < m_ControllerList.size(); i++)
-			m_ControllerList[i].pController->SetTargetWindow(hwnd);
+			m_ControllerList[i].Controller->SetTargetWindow(hwnd);
 	}
 	return true;
 }
@@ -297,7 +294,7 @@ bool CControllerManager::OnButtonDown(CController *pController, int Index)
 	for (size_t i = 0; i < m_ControllerList.size(); i++) {
 		const ControllerInfo &Info = m_ControllerList[Index];
 
-		if (Info.pController == pController) {
+		if (Info.Controller.get() == pController) {
 			if (Index >= (int)Info.Settings.AssignList.size())
 				return false;
 			const WORD Command = Info.Settings.AssignList[Index];
@@ -325,7 +322,7 @@ int CControllerManager::FindController(LPCTSTR pszName) const
 	if (pszName == nullptr)
 		return -1;
 	for (size_t i = 0; i < m_ControllerList.size(); i++) {
-		if (::lstrcmpi(m_ControllerList[i].pController->GetName(), pszName) == 0)
+		if (::lstrcmpi(m_ControllerList[i].Controller->GetName(), pszName) == 0)
 			return (int)i;
 	}
 	return -1;
@@ -351,7 +348,7 @@ void CControllerManager::InitDlgItems()
 	if (Sel >= 0) {
 		const CCommandList &CommandList = GetAppClass().CommandList;
 		const ControllerInfo &Info = m_ControllerList[Sel];
-		const CController *pController = Info.pController;
+		const CController *pController = Info.Controller.get();
 		const int NumButtons = pController->NumButtons();
 
 		if (!Info.fSettingsLoaded) {
@@ -486,7 +483,7 @@ CController *CControllerManager::GetCurController() const
 
 	if (Sel < 0 || Sel >= (int)m_ControllerList.size())
 		return nullptr;
-	return m_ControllerList[Sel].pController;
+	return m_ControllerList[Sel].Controller.get();
 }
 
 
@@ -502,9 +499,9 @@ INT_PTR CControllerManager::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM 
 				for (size_t i = 0; i < NumControllers; i++) {
 					const ControllerInfo &Info = m_ControllerList[i];
 
-					DlgComboBox_AddString(hDlg, IDC_CONTROLLER_LIST, Info.pController->GetText());
+					DlgComboBox_AddString(hDlg, IDC_CONTROLLER_LIST, Info.Controller->GetText());
 					if (!m_CurController.empty()
-							&& ::lstrcmpi(m_CurController.c_str(), Info.pController->GetName()) == 0)
+							&& ::lstrcmpi(m_CurController.c_str(), Info.Controller->GetName()) == 0)
 						Sel = (int)i;
 					m_CurSettingsList[i] = Info.Settings;
 				}
@@ -750,11 +747,11 @@ INT_PTR CControllerManager::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM 
 					ControllerSettings &CurSettings = m_CurSettingsList[i];
 
 					if (Info.Settings != CurSettings) {
-						if (Info.pController->IsEnabled()) {
+						if (Info.Controller->IsEnabled()) {
 							if (CurSettings.fActiveOnly != Info.Settings.fActiveOnly) {
-								Info.pController->Enable(false);
+								Info.Controller->Enable(false);
 								Info.Settings.fActiveOnly = CurSettings.fActiveOnly;
-								Info.pController->Enable(true);
+								Info.Controller->Enable(true);
 							}
 						}
 						Info.Settings = CurSettings;

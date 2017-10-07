@@ -45,8 +45,6 @@ CControlPanel::CControlPanel()
 CControlPanel::~CControlPanel()
 {
 	Destroy();
-	for (size_t i = 0; i < m_ItemList.size(); i++)
-		delete m_ItemList[i];
 }
 
 
@@ -113,7 +111,7 @@ bool CControlPanel::AddItem(CControlPanelItem *pItem)
 {
 	if (pItem == nullptr)
 		return false;
-	m_ItemList.push_back(pItem);
+	m_ItemList.emplace_back(pItem);
 	pItem->m_pControlPanel = this;
 	RegisterUIChild(pItem);
 	return true;
@@ -124,7 +122,7 @@ CControlPanelItem *CControlPanel::GetItem(int Index) const
 {
 	if (Index < 0 || Index >= (int)m_ItemList.size())
 		return nullptr;
-	return m_ItemList[Index];
+	return m_ItemList[Index].get();
 }
 
 
@@ -162,7 +160,7 @@ void CControlPanel::UpdateLayout()
 	y = m_Style.Padding.Top;
 
 	for (size_t i = 0; i < m_ItemList.size(); i++) {
-		CControlPanelItem *pItem = m_ItemList[i];
+		CControlPanelItem *pItem = m_ItemList[i].get();
 
 		if (!pItem->GetVisible())
 			continue;
@@ -220,7 +218,7 @@ void CControlPanel::SendCommand(int Command)
 bool CControlPanel::CheckRadioItem(int FirstID, int LastID, int CheckID)
 {
 	for (size_t i = 0; i < m_ItemList.size(); i++) {
-		CControlPanelItem *pItem = m_ItemList[i];
+		CControlPanelItem *pItem = m_ItemList[i].get();
 
 		if (pItem->m_Command >= FirstID && pItem->m_Command <= LastID)
 			pItem->m_fCheck = pItem->m_Command == CheckID;
@@ -287,7 +285,7 @@ void CControlPanel::Draw(HDC hdc, const RECT &PaintRect)
 	int MaxHeight;
 	MaxHeight = 0;
 	for (int i = 0; i < (int)m_ItemList.size(); i++) {
-		CControlPanelItem *pItem = m_ItemList[i];
+		CControlPanelItem *pItem = m_ItemList[i].get();
 
 		if (pItem->GetVisible()) {
 			int Height = pItem->m_Position.bottom - pItem->m_Position.top;
@@ -326,7 +324,7 @@ void CControlPanel::Draw(HDC hdc, const RECT &PaintRect)
 	TVTest::Theme::CThemeDraw ThemeDraw(BeginThemeDraw(hdcOffscreen));
 
 	for (int i = 0; i < (int)m_ItemList.size(); i++) {
-		CControlPanelItem *pItem = m_ItemList[i];
+		CControlPanelItem *pItem = m_ItemList[i].get();
 
 		if (!pItem->GetVisible())
 			continue;
@@ -424,7 +422,7 @@ LRESULT CControlPanel::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 				pt.x = x;
 				pt.y = y;
 				for (i = (int)m_ItemList.size() - 1; i >= 0; i--) {
-					const CControlPanelItem *pItem = m_ItemList[i];
+					const CControlPanelItem *pItem = m_ItemList[i].get();
 
 					if (pItem->GetVisible() && pItem->GetEnable()) {
 						pItem->GetPosition(&rc);

@@ -3,6 +3,7 @@
 
 
 #include <vector>
+#include <memory>
 #include "TVTestPlugin.h"
 #include "AppEvent.h"
 #include "Options.h"
@@ -249,13 +250,13 @@ private:
 	UINT m_ProgramGuideEventFlags;
 	TVTest::WindowMessageCallbackFunc m_pMessageCallback;
 	void *m_pMessageCallbackClientData;
-	std::vector<CStreamGrabber*> m_StreamGrabberList;
+	std::vector<std::unique_ptr<CStreamGrabber>> m_StreamGrabberList;
 	TVTest::MutexLock m_GrabberLock;
 	std::vector<CPluginCommandInfo> m_CommandList;
 	std::vector<CProgramGuideCommand> m_ProgramGuideCommandList;
 	std::vector<TVTest::String> m_ControllerList;
-	std::vector<StatusItem*> m_StatusItemList;
-	std::vector<PanelItem*> m_PanelItemList;
+	std::vector<std::unique_ptr<StatusItem>> m_StatusItemList;
+	std::vector<std::unique_ptr<PanelItem>> m_PanelItemList;
 	CGetVariable m_GetVariable;
 
 	static HWND m_hwndMessage;
@@ -329,11 +330,13 @@ class CPluginManager
 		UINT CommandEnd;
 	};
 
-	std::vector<CPlugin*> m_PluginList;
+	std::vector<std::unique_ptr<CPlugin>> m_PluginList;
 	std::vector<MenuCommandInfo> m_ProgramGuideMenuList;
 
 	void SortPluginsByName();
-	static bool CompareName(const CPlugin *pPlugin1, const CPlugin *pPlugin2);
+	static bool CompareName(
+		const std::unique_ptr<CPlugin> &Plugin1,
+		const std::unique_ptr<CPlugin> &Plugin2);
 	bool SendEvent(UINT Event, LPARAM lParam1 = 0, LPARAM lParam2 = 0);
 	bool SendProgramGuideEvent(UINT Event, LPARAM Param1 = 0, LPARAM Param2 = 0);
 	bool SendProgramGuideProgramEvent(UINT Event, const LibISDB::EventInfo &EventInfo, LPARAM Param);
@@ -425,7 +428,7 @@ class CPluginOptions
 	};
 
 	CPluginManager *m_pPluginManager;
-	std::vector<LPTSTR> m_EnablePluginList;
+	std::vector<TVTest::String> m_EnablePluginList;
 
 // CBasicDialog
 	INT_PTR DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) override;

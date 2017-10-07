@@ -1459,16 +1459,8 @@ CDropDownMenu::CDropDownMenu()
 }
 
 
-CDropDownMenu::~CDropDownMenu()
-{
-	Clear();
-}
-
-
 void CDropDownMenu::Clear()
 {
-	for (size_t i = 0; i < m_ItemList.size(); i++)
-		delete m_ItemList[i];
 	m_ItemList.clear();
 }
 
@@ -1477,7 +1469,7 @@ bool CDropDownMenu::AppendItem(CItem *pItem)
 {
 	if (pItem == nullptr)
 		return false;
-	m_ItemList.push_back(pItem);
+	m_ItemList.emplace_back(pItem);
 	return true;
 }
 
@@ -1486,9 +1478,9 @@ bool CDropDownMenu::InsertItem(int Index, CItem *pItem)
 {
 	if (pItem == nullptr || Index < 0 || (size_t)Index > m_ItemList.size())
 		return false;
-	std::vector<CItem*>::iterator i = m_ItemList.begin();
-	std::advance(i, Index);
-	m_ItemList.insert(i, pItem);
+	auto it = m_ItemList.begin();
+	std::advance(it, Index);
+	m_ItemList.emplace(it, pItem);
 	return true;
 }
 
@@ -1523,10 +1515,9 @@ bool CDropDownMenu::DeleteItem(int Command)
 
 	if (Index < 0)
 		return false;
-	std::vector<CItem*>::iterator i = m_ItemList.begin();
-	std::advance(i, Index);
-	delete *i;
-	m_ItemList.erase(i);
+	auto it = m_ItemList.begin();
+	std::advance(it, Index);
+	m_ItemList.erase(it);
 	return true;
 }
 
@@ -1706,7 +1697,7 @@ void CDropDownMenu::Draw(HDC hdc, const RECT *pPaintRect)
 	for (int i = 0; i < (int)m_ItemList.size(); i++) {
 		GetItemRect(i, &rc);
 		if (rc.bottom > pPaintRect->top && rc.top < pPaintRect->bottom) {
-			CItem *pItem = m_ItemList[i];
+			CItem *pItem = m_ItemList[i].get();
 
 			if (pItem->IsSeparator()) {
 				m_MenuPainter.DrawSeparator(hdc, rc);

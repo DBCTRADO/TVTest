@@ -171,21 +171,8 @@ const CChannelList *CDriverInfo::GetChannelList(int Space) const
 
 
 
-CDriverManager::CDriverManager()
-{
-}
-
-
-CDriverManager::~CDriverManager()
-{
-	Clear();
-}
-
-
 void CDriverManager::Clear()
 {
-	for (size_t i = 0; i < m_DriverList.size(); i++)
-		delete m_DriverList[i];
 	m_DriverList.clear();
 }
 
@@ -206,7 +193,7 @@ bool CDriverManager::Find(LPCTSTR pszDirectory)
 	if (hFind != INVALID_HANDLE_VALUE) {
 		do {
 			if ((wfd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) == 0) {
-				m_DriverList.push_back(new CDriverInfo(wfd.cFileName));
+				m_DriverList.emplace_back(new CDriverInfo(wfd.cFileName));
 			}
 		} while (::FindNextFile(hFind, &wfd));
 		::FindClose(hFind);
@@ -215,8 +202,9 @@ bool CDriverManager::Find(LPCTSTR pszDirectory)
 	if (m_DriverList.size() > 1) {
 		std::sort(
 			m_DriverList.begin(), m_DriverList.end(),
-			[](const CDriverInfo * pDriver1, const CDriverInfo * pDriver2) {
-				return ::lstrcmpi(pDriver1->GetFileName(), pDriver2->GetFileName()) < 0;
+			[](const std::unique_ptr<CDriverInfo> &Driver1,
+			   const std::unique_ptr<CDriverInfo> &Driver2) {
+				return ::lstrcmpi(Driver1->GetFileName(), Driver2->GetFileName()) < 0;
 			});
 	}
 
@@ -230,7 +218,7 @@ CDriverInfo *CDriverManager::GetDriverInfo(int Index)
 {
 	if (Index < 0 || (size_t)Index >= m_DriverList.size())
 		return nullptr;
-	return m_DriverList[Index];
+	return m_DriverList[Index].get();
 }
 
 
@@ -238,7 +226,7 @@ const CDriverInfo *CDriverManager::GetDriverInfo(int Index) const
 {
 	if (Index < 0 || (size_t)Index >= m_DriverList.size())
 		return nullptr;
-	return m_DriverList[Index];
+	return m_DriverList[Index].get();
 }
 
 

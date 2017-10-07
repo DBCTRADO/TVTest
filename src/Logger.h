@@ -3,6 +3,7 @@
 
 
 #include <vector>
+#include <memory>
 #include "Options.h"
 
 
@@ -16,16 +17,16 @@ public:
 	};
 
 	CLogItem();
-	CLogItem(LogType Type,LPCTSTR pszText,DWORD SerialNumber);
+	CLogItem(LogType Type, LPCTSTR pszText, DWORD SerialNumber);
 	~CLogItem();
 	LPCTSTR GetText() const { return m_Text.c_str(); }
 	void GetTime(SYSTEMTIME *pTime) const;
 	LogType GetType() const { return m_Type; }
 	DWORD GetSerialNumber() const { return m_SerialNumber; }
-	int Format(char *pszText,int MaxLength) const;
-	int Format(WCHAR *pszText,int MaxLength) const;
-	int FormatTime(char *pszText,int MaxLength) const;
-	int FormatTime(WCHAR *pszText,int MaxLength) const;
+	int Format(char *pszText, int MaxLength) const;
+	int Format(WCHAR *pszText, int MaxLength) const;
+	int FormatTime(char *pszText, int MaxLength) const;
+	int FormatTime(WCHAR *pszText, int MaxLength) const;
 
 private:
 	FILETIME m_Time;
@@ -49,17 +50,17 @@ public:
 	bool Create(HWND hwndOwner) override;
 
 // CLogger
-	bool AddLog(CLogItem::LogType Type,LPCTSTR pszText, ...);
-	bool AddLogV(CLogItem::LogType Type,LPCTSTR pszText,va_list Args);
-	bool AddLogRaw(CLogItem::LogType Type,LPCTSTR pszText);
+	bool AddLog(CLogItem::LogType Type, LPCTSTR pszText, ...);
+	bool AddLogV(CLogItem::LogType Type, LPCTSTR pszText, va_list Args);
+	bool AddLogRaw(CLogItem::LogType Type, LPCTSTR pszText);
 	void Clear();
 	std::size_t GetLogCount() const;
-	bool GetLog(std::size_t Index,CLogItem *pItem) const;
-	bool GetLogBySerialNumber(DWORD SerialNumber,CLogItem *pItem) const;
+	bool GetLog(std::size_t Index, CLogItem *pItem) const;
+	bool GetLogBySerialNumber(DWORD SerialNumber, CLogItem *pItem) const;
 	bool SetOutputToFile(bool fOutput);
 	bool GetOutputToFile() const { return m_fOutputToFile; }
-	bool SaveToFile(LPCTSTR pszFileName,bool fAppend);
-	bool GetDefaultLogFileName(LPTSTR pszFileName,DWORD MaxLength) const;
+	bool SaveToFile(LPCTSTR pszFileName, bool fAppend);
+	bool GetDefaultLogFileName(LPTSTR pszFileName, DWORD MaxLength) const;
 	void GetLogText(TVTest::String *pText) const;
 	void GetLogText(TVTest::AnsiString *pText) const;
 	bool CopyToClipboard(HWND hwnd);
@@ -73,12 +74,12 @@ private:
 	};
 
 // CBasicDialog
-	INT_PTR DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
+	INT_PTR DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
 
 // CUIBase
 	void RealizeStyle() override;
 
-	std::vector<CLogItem*> m_LogList;
+	std::vector<std::unique_ptr<CLogItem>> m_LogList;
 	DWORD m_SerialNumber;
 	bool m_fOutputToFile;
 	mutable TVTest::MutexLock m_Lock;

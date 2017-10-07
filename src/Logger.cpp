@@ -113,7 +113,6 @@ CLogger::CLogger()
 CLogger::~CLogger()
 {
 	Destroy();
-	Clear();
 }
 
 
@@ -181,7 +180,7 @@ bool CLogger::AddLogRaw(CLogItem::LogType Type, LPCTSTR pszText)
 	TVTest::BlockLock Lock(m_Lock);
 
 	CLogItem *pLogItem = new CLogItem(Type, pszText, m_SerialNumber++);
-	m_LogList.push_back(pLogItem);
+	m_LogList.emplace_back(pLogItem);
 	TRACE(TEXT("Log : %s\n"), pszText);
 
 	if (m_fOutputToFile) {
@@ -225,8 +224,6 @@ void CLogger::Clear()
 {
 	TVTest::BlockLock Lock(m_Lock);
 
-	for (auto itr = m_LogList.begin(); itr != m_LogList.end(); ++itr)
-		delete *itr;
 	m_LogList.clear();
 }
 
@@ -416,7 +413,7 @@ INT_PTR CLogger::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			m_Lock.Lock();
 			ListView_SetItemCount(hwndList, (int)m_LogList.size());
 			for (auto itr = m_LogList.begin(); itr != m_LogList.end(); ++itr) {
-				const CLogItem *pLogItem = *itr;
+				const CLogItem *pLogItem = itr->get();
 				TCHAR szTime[64];
 
 				lvi.mask = LVIF_TEXT;

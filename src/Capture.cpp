@@ -187,8 +187,7 @@ bool CCapturePreview::Initialize(HINSTANCE hinst)
 
 
 CCapturePreview::CCapturePreview()
-	: m_pImage(nullptr)
-	, m_crBackColor(RGB(0, 0, 0))
+	: m_crBackColor(RGB(0, 0, 0))
 	, m_pEventHandler(nullptr)
 {
 }
@@ -208,10 +207,10 @@ bool CCapturePreview::Create(HWND hwndParent, DWORD Style, DWORD ExStyle, int ID
 }
 
 
-bool CCapturePreview::SetImage(CCaptureImage *pImage)
+bool CCapturePreview::SetImage(const std::shared_ptr<CCaptureImage> &Image)
 {
 	ClearImage();
-	m_pImage = pImage;
+	m_Image = Image;
 	if (m_hwnd != nullptr) {
 		Invalidate();
 		Update();
@@ -222,8 +221,8 @@ bool CCapturePreview::SetImage(CCaptureImage *pImage)
 
 bool CCapturePreview::ClearImage()
 {
-	if (m_pImage != nullptr) {
-		m_pImage = nullptr;
+	if (m_Image) {
+		m_Image.reset();
 		if (m_hwnd != nullptr) {
 			Invalidate();
 		}
@@ -234,7 +233,7 @@ bool CCapturePreview::ClearImage()
 
 bool CCapturePreview::HasImage() const
 {
-	return m_pImage != nullptr;
+	return static_cast<bool>(m_Image);
 }
 
 
@@ -261,7 +260,7 @@ LRESULT CCapturePreview::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 
 			::BeginPaint(hwnd, &ps);
 			GetClientRect(&rc);
-			if (m_pImage != nullptr && m_pImage->LockData(&pbmi, &pBits)) {
+			if (m_Image && m_Image->LockData(&pbmi, &pBits)) {
 				int DstX, DstY, DstWidth, DstHeight;
 				RECT rcDest;
 
@@ -282,7 +281,7 @@ LRESULT CCapturePreview::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 									pBits, pbmi, DIB_RGB_COLORS, SRCCOPY);
 					::SetStretchBltMode(ps.hdc, OldStretchBltMode);
 				}
-				m_pImage->UnlockData();
+				m_Image->UnlockData();
 				rcDest.left = DstX;
 				rcDest.top = DstY;
 				rcDest.right = DstX + DstWidth;
@@ -359,7 +358,6 @@ bool CCaptureWindow::Initialize(HINSTANCE hinst)
 CCaptureWindow::CCaptureWindow()
 	: m_PreviewEventHandler(this)
 	, m_fShowStatusBar(true)
-	, m_pImage(nullptr)
 	, m_pEventHandler(nullptr)
 	, m_fCreateFirst(true)
 {
@@ -374,8 +372,6 @@ CCaptureWindow::CCaptureWindow()
 CCaptureWindow::~CCaptureWindow()
 {
 	Destroy();
-
-	delete m_pImage;
 }
 
 
@@ -402,9 +398,9 @@ void CCaptureWindow::SetTheme(const TVTest::Theme::CThemeManager *pThemeManager)
 bool CCaptureWindow::SetImage(const BITMAPINFO *pbmi, const void *pBits)
 {
 	ClearImage();
-	m_pImage = new CCaptureImage(pbmi, pBits);
+	m_Image = std::make_shared<CCaptureImage>(pbmi, pBits);
 	if (m_hwnd != nullptr) {
-		m_Preview.SetImage(m_pImage);
+		m_Preview.SetImage(m_Image);
 		SetTitle();
 	}
 	return true;
@@ -414,9 +410,9 @@ bool CCaptureWindow::SetImage(const BITMAPINFO *pbmi, const void *pBits)
 bool CCaptureWindow::SetImage(CCaptureImage *pImage)
 {
 	ClearImage();
-	m_pImage = pImage;
+	m_Image.reset(pImage);
 	if (m_hwnd != nullptr) {
-		m_Preview.SetImage(m_pImage);
+		m_Preview.SetImage(m_Image);
 		SetTitle();
 	}
 	return true;
@@ -425,9 +421,8 @@ bool CCaptureWindow::SetImage(CCaptureImage *pImage)
 
 bool CCaptureWindow::ClearImage()
 {
-	if (m_pImage != nullptr) {
-		delete m_pImage;
-		m_pImage = nullptr;
+	if (m_Image) {
+		m_Image.reset();
 		if (m_hwnd != nullptr) {
 			m_Preview.ClearImage();
 			Invalidate();
@@ -440,7 +435,7 @@ bool CCaptureWindow::ClearImage()
 
 bool CCaptureWindow::HasImage() const
 {
-	return m_pImage != nullptr;
+	return static_cast<bool>(m_Image);
 }
 
 
@@ -473,10 +468,10 @@ void CCaptureWindow::SetTitle()
 		TCHAR szTitle[64];
 
 		::lstrcpy(szTitle, CAPTURE_TITLE_TEXT);
-		if (m_pImage != nullptr) {
+		if (m_Image) {
 			BITMAPINFOHEADER bmih;
 
-			if (m_pImage->GetBitmapInfoHeader(&bmih)) {
+			if (m_Image->GetBitmapInfoHeader(&bmih)) {
 				StdUtil::snprintf(
 					szTitle, lengthof(szTitle),
 					CAPTURE_TITLE_TEXT TEXT(" - %d x %d (%d bpp)"),
@@ -518,8 +513,8 @@ LRESULT CCaptureWindow::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 			m_Status.AddItem(new CSaveStatusItem(this, m_StatusIcons));
 			m_Status.AddItem(new CCopyStatusItem(this, m_StatusIcons));
 		}
-		if (m_pImage != nullptr) {
-			m_Preview.SetImage(m_pImage);
+		if (m_Image) {
+			m_Preview.SetImage(m_Image);
 			SetTitle();
 		}
 		return 0;
@@ -555,8 +550,8 @@ LRESULT CCaptureWindow::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 	case WM_COMMAND:
 		switch (LOWORD(wParam)) {
 		case CM_SAVEIMAGE:
-			if (m_pImage != nullptr && m_pEventHandler != nullptr) {
-				if (!m_pEventHandler->OnSave(m_pImage)) {
+			if (m_Image && m_pEventHandler != nullptr) {
+				if (!m_pEventHandler->OnSave(m_Image.get())) {
 					::MessageBox(
 						hwnd, TEXT("画像の保存ができません。"), nullptr,
 						MB_OK | MB_ICONEXCLAMATION);
@@ -565,8 +560,8 @@ LRESULT CCaptureWindow::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 			return 0;
 
 		case CM_COPY:
-			if (m_pImage != nullptr) {
-				if (!m_pImage->SetClipboard(hwnd)) {
+			if (m_Image) {
+				if (!m_Image->SetClipboard(hwnd)) {
 					::MessageBox(
 						hwnd, TEXT("クリップボードにデータを設定できません。"), nullptr,
 						MB_OK | MB_ICONEXCLAMATION);

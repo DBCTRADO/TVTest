@@ -265,15 +265,14 @@ void CEventItem::GetTimeSize(TVTest::CTextDraw &TextDraw, SIZE *pSize) const
 class CEventLayout
 {
 	const CServiceInfo *m_pServiceInfo;
-	std::vector<CEventItem*> m_EventList;
+	std::vector<std::unique_ptr<CEventItem>> m_EventList;
 
 public:
 	CEventLayout(const CServiceInfo *pServiceInfo);
-	~CEventLayout();
 	const CServiceInfo *GetServiceInfo() const { return m_pServiceInfo; }
 	void Clear();
 	size_t NumItems() const { return m_EventList.size(); }
-	void AddItem(CEventItem *pItem) { m_EventList.push_back(pItem); }
+	void AddItem(CEventItem *pItem) { m_EventList.emplace_back(pItem); }
 	bool InsertItem(size_t Index, CEventItem *pItem);
 	CEventItem *GetItem(size_t Index);
 	const CEventItem *GetItem(size_t Index) const;
@@ -287,16 +286,8 @@ CEventLayout::CEventLayout(const CServiceInfo *pServiceInfo)
 }
 
 
-CEventLayout::~CEventLayout()
-{
-	Clear();
-}
-
-
 void CEventLayout::Clear()
 {
-	for (size_t i = 0; i < m_EventList.size(); i++)
-		delete m_EventList[i];
 	m_EventList.clear();
 }
 
@@ -305,7 +296,7 @@ bool CEventLayout::InsertItem(size_t Index, CEventItem *pItem)
 {
 	if (Index > m_EventList.size())
 		return false;
-	m_EventList.insert(m_EventList.begin() + Index, pItem);
+	m_EventList.emplace(m_EventList.begin() + Index, pItem);
 	return true;
 }
 
@@ -314,7 +305,7 @@ CEventItem *CEventLayout::GetItem(size_t Index)
 {
 	if (Index >= m_EventList.size())
 		return nullptr;
-	return m_EventList[Index];
+	return m_EventList[Index].get();
 }
 
 
@@ -322,7 +313,7 @@ const CEventItem *CEventLayout::GetItem(size_t Index) const
 {
 	if (Index >= m_EventList.size())
 		return nullptr;
-	return m_EventList[Index];
+	return m_EventList[Index].get();
 }
 
 
@@ -338,7 +329,7 @@ void CEventLayout::InsertNullItems(const LibISDB::DateTime &FirstTime, const Lib
 	EmptyCount = 0;
 	PrevTime = FirstTime;
 	for (int i = 0; i < (int)m_EventList.size(); i++) {
-		pItem = m_EventList[i];
+		pItem = m_EventList[i].get();
 		StartTime = pItem->GetStartTime();
 		EndTime = pItem->GetEndTime();
 		if (StartTime < LastTime && EndTime > FirstTime) {
@@ -359,7 +350,7 @@ void CEventLayout::InsertNullItems(const LibISDB::DateTime &FirstTime, const Lib
 		pPrevItem = nullptr;
 		PrevTime = FirstTime;
 		for (int i = FirstItem; i < LastItem; i++) {
-			pItem = m_EventList[i];
+			pItem = m_EventList[i].get();
 			StartTime = pItem->GetStartTime();
 			int Cmp = PrevTime.Compare(StartTime);
 			if (Cmp > 0) {
@@ -386,23 +377,15 @@ void CEventLayout::InsertNullItems(const LibISDB::DateTime &FirstTime, const Lib
 
 
 
-CEventLayoutList::~CEventLayoutList()
-{
-	Clear();
-}
-
-
 void CEventLayoutList::Clear()
 {
-	for (size_t i = 0; i < m_LayoutList.size(); i++)
-		delete m_LayoutList[i];
 	m_LayoutList.clear();
 }
 
 
 void CEventLayoutList::Add(CEventLayout *pLayout)
 {
-	m_LayoutList.push_back(pLayout);
+	m_LayoutList.emplace_back(pLayout);
 }
 
 
@@ -410,7 +393,7 @@ CEventLayout *CEventLayoutList::operator[](size_t Index)
 {
 	if (Index >= m_LayoutList.size())
 		return nullptr;
-	return m_LayoutList[Index];
+	return m_LayoutList[Index].get();
 }
 
 
@@ -418,7 +401,13 @@ const CEventLayout *CEventLayoutList::operator[](size_t Index) const
 {
 	if (Index >= m_LayoutList.size())
 		return nullptr;
-	return m_LayoutList[Index];
+	return m_LayoutList[Index].get();
+}
+
+
+void CEventLayoutList::EventLayoutDeleter::operator()(CEventLayout *p) const
+{
+	delete p;
 }
 
 
@@ -467,7 +456,7 @@ LibISDB::EventInfo *CServiceInfo::GetEvent(int Index)
 		TRACE(TEXT("CServiceInfo::GetEvent() : Out of range %d\n"), Index);
 		return nullptr;
 	}
-	return m_EventList[Index];
+	return m_EventList[Index].get();
 }
 
 
@@ -477,7 +466,7 @@ const LibISDB::EventInfo *CServiceInfo::GetEvent(int Index) const
 		TRACE(TEXT("CServiceInfo::GetEvent() const : Out of range %d\n"), Index);
 		return nullptr;
 	}
-	return m_EventList[Index];
+	return m_EventList[Index].get();
 }
 
 
@@ -501,7 +490,7 @@ const LibISDB::EventInfo *CServiceInfo::GetEventByEventID(WORD EventID) const
 
 bool CServiceInfo::AddEvent(LibISDB::EventInfo *pEvent)
 {
-	m_EventList.push_back(pEvent);
+	m_EventList.emplace_back(pEvent);
 	m_EventIDMap[pEvent->EventID] = pEvent;
 	return true;
 }
@@ -509,8 +498,6 @@ bool CServiceInfo::AddEvent(LibISDB::EventInfo *pEvent)
 
 void CServiceInfo::ClearEvents()
 {
-	for (size_t i = 0; i < m_EventList.size(); i++)
-		delete m_EventList[i];
 	m_EventList.clear();
 	m_EventIDMap.clear();
 }
@@ -524,7 +511,7 @@ void CServiceInfo::CalcLayout(
 
 	int FirstItem = -1, LastItem = -1;
 	for (int i = 0; i < (int)m_EventList.size(); i++) {
-		LibISDB::EventInfo *pEvent = m_EventList[i];
+		LibISDB::EventInfo *pEvent = m_EventList[i].get();
 		LibISDB::DateTime StartTime, EndTime;
 		pEvent->GetStartTime(&StartTime);
 		pEvent->GetEndTime(&EndTime);
@@ -748,17 +735,11 @@ bool CServiceInfo::SaveiEpgFile(const LibISDB::EventInfo *pEventInfo, LPCTSTR ps
 
 
 
-CServiceList::~CServiceList()
-{
-	Clear();
-}
-
-
 CServiceInfo *CServiceList::GetItem(size_t Index)
 {
 	if (Index >= m_ServiceList.size())
 		return nullptr;
-	return m_ServiceList[Index];
+	return m_ServiceList[Index].get();
 }
 
 
@@ -766,7 +747,7 @@ const CServiceInfo *CServiceList::GetItem(size_t Index) const
 {
 	if (Index >= m_ServiceList.size())
 		return nullptr;
-	return m_ServiceList[Index];
+	return m_ServiceList[Index].get();
 }
 
 
@@ -777,7 +758,7 @@ CServiceInfo *CServiceList::GetItemByIDs(WORD TransportStreamID, WORD ServiceID)
 	if (Index < 0)
 		return nullptr;
 
-	return m_ServiceList[Index];
+	return m_ServiceList[Index].get();
 }
 
 
@@ -788,14 +769,14 @@ const CServiceInfo *CServiceList::GetItemByIDs(WORD TransportStreamID, WORD Serv
 	if (Index < 0)
 		return nullptr;
 
-	return m_ServiceList[Index];
+	return m_ServiceList[Index].get();
 }
 
 
 int CServiceList::FindItemByIDs(WORD TransportStreamID, WORD ServiceID) const
 {
 	for (size_t i = 0; i < m_ServiceList.size(); i++) {
-		const CServiceInfo *pInfo = m_ServiceList[i];
+		const CServiceInfo *pInfo = m_ServiceList[i].get();
 
 		if (pInfo->GetTSID() == TransportStreamID
 				&& pInfo->GetServiceID() == ServiceID)
@@ -825,14 +806,12 @@ const LibISDB::EventInfo *CServiceList::GetEventByIDs(WORD TransportStreamID, WO
 
 void CServiceList::Add(CServiceInfo *pInfo)
 {
-	m_ServiceList.push_back(pInfo);
+	m_ServiceList.emplace_back(pInfo);
 }
 
 
 void CServiceList::Clear()
 {
-	for (size_t i = 0; i < m_ServiceList.size(); i++)
-		delete m_ServiceList[i];
 	m_ServiceList.clear();
 }
 

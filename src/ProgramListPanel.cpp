@@ -139,22 +139,11 @@ void CProgramItemInfo::GetEventTimeText(LPTSTR pszText, int MaxLength) const
 
 
 
-CProgramItemList::CProgramItemList()
-{
-}
-
-
-CProgramItemList::~CProgramItemList()
-{
-	Clear();
-}
-
-
 CProgramItemInfo *CProgramItemList::GetItem(int Index)
 {
 	if ((unsigned int)Index >= m_ItemList.size())
 		return nullptr;
-	return m_ItemList[Index];
+	return m_ItemList[Index].get();
 }
 
 
@@ -162,24 +151,20 @@ const CProgramItemInfo *CProgramItemList::GetItem(int Index) const
 {
 	if ((unsigned int)Index >= m_ItemList.size())
 		return nullptr;
-	return m_ItemList[Index];
+	return m_ItemList[Index].get();
 }
 
 
 bool CProgramItemList::Add(CProgramItemInfo *pItem)
 {
-	m_ItemList.push_back(pItem);
+	m_ItemList.emplace_back(pItem);
 	return true;
 }
 
 
 void CProgramItemList::Clear()
 {
-	if (!m_ItemList.empty()) {
-		for (CProgramItemInfo *pItem : m_ItemList)
-			delete pItem;
-		m_ItemList.clear();
-	}
+	m_ItemList.clear();
 }
 
 

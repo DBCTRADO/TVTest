@@ -10,8 +10,13 @@
 #define TVTEST_BREGONIG_SUPPORT
 
 
+#include <memory>
+
+
 namespace TVTest
 {
+
+	class CRegExpEngine;
 
 	class CRegExp
 	{
@@ -27,8 +32,6 @@ namespace TVTest
 			size_t Length;
 		};
 
-		CRegExp();
-		~CRegExp();
 		bool Initialize();
 		void Finalize();
 		bool IsInitialized() const;
@@ -40,7 +43,8 @@ namespace TVTest
 		bool GetEngineName(LPTSTR pszName, size_t MaxLength) const;
 
 	private:
-		class CRegExpEngine *m_pEngine;
+		struct RegExpEngineDeleter { void operator()(CRegExpEngine *p) const; };
+		std::unique_ptr<CRegExpEngine, RegExpEngineDeleter> m_Engine;
 	};
 
 	class ABSTRACT_CLASS(CRegExpEngine)

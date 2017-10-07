@@ -57,7 +57,6 @@ CPanelForm::~CPanelForm()
 
 	for (auto it = m_WindowList.begin(); it != m_WindowList.end(); ++it) {
 		(*it)->m_pWindow->OnFormDelete();
-		delete *it;
 	}
 }
 
@@ -114,7 +113,7 @@ void CPanelForm::SetTheme(const TVTest::Theme::CThemeManager *pThemeManager)
 
 bool CPanelForm::AddPage(const PageInfo &Info)
 {
-	m_WindowList.push_back(new CWindowInfo(Info));
+	m_WindowList.emplace_back(new CWindowInfo(Info));
 	m_TabOrder.push_back((int)m_WindowList.size() - 1);
 	RegisterUIChild(Info.pPage);
 	if (m_hwnd != nullptr) {
@@ -154,14 +153,14 @@ bool CPanelForm::SetCurTab(int Index)
 
 	if (m_CurTab != Index) {
 		if (m_CurTab >= 0) {
-			CWindowInfo *pWindow = m_WindowList[m_CurTab];
+			CWindowInfo *pWindow = m_WindowList[m_CurTab].get();
 			m_PrevActivePageID = pWindow->m_ID;
 			pWindow->m_pWindow->OnDeactivate();
 			pWindow->m_pWindow->SetVisible(false);
 		}
 
 		if (Index >= 0) {
-			CWindowInfo *pWindow = m_WindowList[Index];
+			CWindowInfo *pWindow = m_WindowList[Index].get();
 			RECT rc;
 
 			GetClientRect(&rc);
@@ -220,7 +219,7 @@ bool CPanelForm::SetTabVisible(int ID, bool fVisible)
 	if (Index < 0)
 		return false;
 
-	CWindowInfo *pWindow = m_WindowList[Index];
+	CWindowInfo *pWindow = m_WindowList[Index].get();
 	if (pWindow->m_fVisible != fVisible) {
 		pWindow->m_fVisible = fVisible;
 		pWindow->m_pWindow->OnVisibilityChanged(fVisible);
@@ -297,7 +296,7 @@ bool CPanelForm::GetTabInfo(int Index, TabInfo *pInfo) const
 {
 	if (Index < 0 || (size_t)Index >= m_TabOrder.size() || pInfo == nullptr)
 		return false;
-	const CWindowInfo *pWindowInfo = m_WindowList[m_TabOrder[Index]];
+	const CWindowInfo *pWindowInfo = m_WindowList[m_TabOrder[Index]].get();
 	pInfo->ID = pWindowInfo->m_ID;
 	pInfo->fVisible = pWindowInfo->m_fVisible;
 	return true;
@@ -571,7 +570,7 @@ void CPanelForm::CalcTabSize()
 		SIZE sz;
 
 		for (size_t i = 0; i < m_WindowList.size(); i++) {
-			const CWindowInfo *pWindow = m_WindowList[i];
+			const CWindowInfo *pWindow = m_WindowList[i].get();
 			if (pWindow->m_fVisible) {
 				::GetTextExtentPoint32(hdc, pWindow->m_Title.data(), (int)pWindow->m_Title.length(), &sz);
 				if (sz.cx > MaxWidth)
@@ -662,7 +661,7 @@ void CPanelForm::Draw(HDC hdc, const RECT &PaintRect)
 
 		for (int i = 0; i < (int)m_TabOrder.size(); i++) {
 			int Index = m_TabOrder[i];
-			const CWindowInfo *pWindow = m_WindowList[Index];
+			const CWindowInfo *pWindow = m_WindowList[Index].get();
 
 			if (!pWindow->m_fVisible)
 				continue;
@@ -776,7 +775,7 @@ void CPanelForm::UpdateTooltip()
 	rc.bottom = m_TabHeight;
 
 	for (size_t i = 0; i < m_TabOrder.size(); i++) {
-		const CWindowInfo *pInfo = m_WindowList[m_TabOrder[i]];
+		const CWindowInfo *pInfo = m_WindowList[m_TabOrder[i]].get();
 
 		if (pInfo->m_fVisible) {
 			rc.right = rc.left + TabWidth;

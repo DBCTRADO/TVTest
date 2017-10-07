@@ -3,6 +3,7 @@
 
 
 #include <vector>
+#include <memory>
 #include "PanelForm.h"
 #include "UIBase.h"
 #include "ChannelList.h"
@@ -188,7 +189,7 @@ private:
 	int m_OldDPI;
 	CMouseWheelHandler m_MouseWheel;
 	bool m_fScrollToCurChannel;
-	std::vector<CChannelEventInfo*> m_ChannelList;
+	std::vector<std::unique_ptr<CChannelEventInfo>> m_ChannelList;
 	int m_CurChannel;
 	CEventHandler *m_pEventHandler;
 	CTooltip m_Tooltip;
