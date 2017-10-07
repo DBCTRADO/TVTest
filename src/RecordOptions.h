@@ -9,8 +9,8 @@
 class CRecordOptions
 	: public COptions
 {
-	TCHAR m_szSaveFolder[MAX_PATH];
-	TCHAR m_szFileName[MAX_PATH];
+	TVTest::CFilePath m_SaveFolder;
+	TVTest::CFilePath m_FileName;
 	bool m_fConfirmChannelChange;
 	bool m_fConfirmExit;
 	bool m_fConfirmStop;
@@ -42,8 +42,8 @@ public:
 	bool Create(HWND hwndOwner) override;
 // CRecordOptions
 	bool SetSaveFolder(LPCTSTR pszFolder);
-	LPCTSTR GetSaveFolder() const { return m_szSaveFolder; }
-	LPCTSTR GetFileName() const { return m_szFileName; }
+	LPCTSTR GetSaveFolder() const { return m_SaveFolder.c_str(); }
+	LPCTSTR GetFileName() const { return m_FileName.c_str(); }
 	bool GetFilePath(LPTSTR pszFileName, int MaxLength) const;
 	bool GenerateFilePath(LPTSTR pszFileName, int MaxLength, LPCTSTR *ppszErrorMessage = nullptr) const;
 	bool ConfirmChannelChange(HWND hwndOwner) const;

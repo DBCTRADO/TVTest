@@ -34,7 +34,8 @@ static const int StatusBarCommandList[] = {
 
 
 CRecordOptions::CRecordOptions()
-	: m_fConfirmChannelChange(true)
+	: m_FileName(TEXT("Record_%date%-%time%.ts"))
+	, m_fConfirmChannelChange(true)
 	, m_fConfirmExit(true)
 	, m_fConfirmStop(false)
 	, m_fConfirmStopStatusBarOnly(false)
@@ -43,8 +44,6 @@ CRecordOptions::CRecordOptions()
 	, m_fShowRemainTime(false)
 	, m_StatusBarRecordCommand(CM_RECORD_START)
 {
-	m_szSaveFolder[0] = _T('\0');
-	::lstrcpy(m_szFileName, TEXT("Record_%date%-%time%.ts"));
 }
 
 
@@ -66,6 +65,7 @@ bool CRecordOptions::Apply(DWORD Flags)
 bool CRecordOptions::ReadSettings(CSettings &Settings)
 {
 	TCHAR szPath[MAX_PATH];
+	TVTest::String Path;
 	unsigned int Value;
 
 	// 古いバージョンの互換用
@@ -75,27 +75,25 @@ bool CRecordOptions::ReadSettings(CSettings &Settings)
 
 		if (pszFileName != szPath) {
 			*(pszFileName - 1) = '\0';
-			::lstrcpy(m_szSaveFolder, szPath);
-			::lstrcpy(m_szFileName, pszFileName);
+			m_SaveFolder = szPath;
+			m_FileName = pszFileName;
 		}
 	}
-	if (Settings.Read(TEXT("RecordFolder"), szPath, lengthof(szPath))
-			&& szPath[0] != '\0')
-		::lstrcpy(m_szSaveFolder, szPath);
-	if (Settings.Read(TEXT("RecordFileName"), szPath, lengthof(szPath))
-			&& szPath[0] != '\0')
-		::lstrcpy(m_szFileName, szPath);
+	if (Settings.Read(TEXT("RecordFolder"), &Path)
+			&& !Path.empty())
+		m_SaveFolder = Path;
+	if (Settings.Read(TEXT("RecordFileName"), &Path)
+			&& !Path.empty())
+		m_FileName = Path;
 #if 0
 	// 古いバージョンの互換用
 	bool fAddTime;
 	if (Settings.Read(TEXT("AddRecordTime"), &fAddTime) && fAddTime) {
-		TCHAR szFormat[] = TEXT("%date%_%time%");
-		if (::lstrlen(m_szFileName) + lengthof(szFormat) <= lengthof(m_szFileName)) {
-			LPTSTR pszExt = ::PathFindExtension(m_szFileName);
-			TCHAR szExtension[MAX_PATH];
-			::lstrcpy(szExtension, pszExt);
-			::wsprintf(pszExt, TEXT("%s%s"), szFormat, szExtension);
-		}
+		TVTest::String Extension;
+		m_FileName.GetExtension(&Extension);
+		m_FileName.RemoveExtension();
+		m_FileName += TEXT("%date%_%time%");
+		m_FileName += Extension;
 	}
 #endif
 	Settings.Read(TEXT("ConfirmRecChChange"), &m_fConfirmChannelChange);
@@ -137,8 +135,8 @@ bool CRecordOptions::ReadSettings(CSettings &Settings)
 
 bool CRecordOptions::WriteSettings(CSettings &Settings)
 {
-	Settings.Write(TEXT("RecordFolder"), m_szSaveFolder);
-	Settings.Write(TEXT("RecordFileName"), m_szFileName);
+	Settings.Write(TEXT("RecordFolder"), m_SaveFolder);
+	Settings.Write(TEXT("RecordFileName"), m_FileName);
 	Settings.Write(TEXT("ConfirmRecChChange"), m_fConfirmChannelChange);
 	Settings.Write(TEXT("ConfrimRecordingExit"), m_fConfirmExit);
 	Settings.Write(TEXT("ConfrimRecordStop"), m_fConfirmStop);
@@ -175,42 +173,42 @@ bool CRecordOptions::Create(HWND hwndOwner)
 
 bool CRecordOptions::SetSaveFolder(LPCTSTR pszFolder)
 {
-	::lstrcpy(m_szSaveFolder, pszFolder);
+	m_SaveFolder = pszFolder;
 	return true;
 }
 
 
 bool CRecordOptions::GetFilePath(LPTSTR pszFileName, int MaxLength) const
 {
-	if (m_szSaveFolder[0] == '\0' || m_szFileName[0] == '\0')
+	if (m_SaveFolder.empty() || m_FileName.empty())
 		return false;
-	if (::lstrlen(m_szSaveFolder) + 1 + ::lstrlen(m_szFileName) >= MaxLength)
+	if (m_SaveFolder.length() + 1 + m_FileName.length() >= static_cast<size_t>(MaxLength))
 		return false;
-	::PathCombine(pszFileName, m_szSaveFolder, m_szFileName);
+	::PathCombine(pszFileName, m_SaveFolder.c_str(), m_FileName.c_str());
 	return true;
 }
 
 
 bool CRecordOptions::GenerateFilePath(LPTSTR pszFileName, int MaxLength, LPCTSTR *ppszErrorMessage) const
 {
-	if (m_szSaveFolder[0] == '\0') {
+	if (m_SaveFolder.empty()) {
 		if (ppszErrorMessage)
 			*ppszErrorMessage = TEXT("設定で保存先フォルダを指定してください。");
 		return false;
 	}
-	if (m_szFileName[0] == '\0') {
+	if (m_FileName.empty()) {
 		if (ppszErrorMessage)
 			*ppszErrorMessage = TEXT("設定でファイル名を指定してください。");
 		return false;
 	}
-	if (::lstrlen(m_szSaveFolder) + 1 + ::lstrlen(m_szFileName) >= MaxLength) {
+	if (m_SaveFolder.length() + 1 + m_FileName.length() >= static_cast<size_t>(MaxLength)) {
 		if (ppszErrorMessage)
 			*ppszErrorMessage = TEXT("ファイルパスが長すぎます。");
 		return false;
 	}
-	::lstrcpy(pszFileName, m_szSaveFolder);
+	::lstrcpy(pszFileName, m_SaveFolder.c_str());
 	::PathAddBackslash(pszFileName);
-	::lstrcat(pszFileName, m_szFileName);
+	::lstrcat(pszFileName, m_FileName.c_str());
 	return true;
 }
 
@@ -310,20 +308,19 @@ INT_PTR CRecordOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 	case WM_INITDIALOG:
 		{
 #if 0
-			if (m_szSaveFolder[0] == '\0') {
+			if (m_SaveFolder.empty()) {
 				PWSTR pszPath;
 				if (::SHGetKnownFolderPath(FOLDERID_Videos, 0, nullptr, &pszPath) == S_OK
 						|| ::SHGetKnownFolderPath(FOLDERID_Documents, 0, nullptr, &pszPath) == S_OK) {
-					if (::lstrlen(pszPath) < lengthof(m_szSaveFolder))
-						::lstrcpy(m_szSaveFolder, pszPath);
+					m_SaveFolder = pszPath;
 					::CoTaskMemFree(pszPath);
 				}
 			}
 #endif
 			::SendDlgItemMessage(hDlg, IDC_RECORDOPTIONS_SAVEFOLDER, EM_LIMITTEXT, MAX_PATH - 1, 0);
-			::SetDlgItemText(hDlg, IDC_RECORDOPTIONS_SAVEFOLDER, m_szSaveFolder);
+			::SetDlgItemText(hDlg, IDC_RECORDOPTIONS_SAVEFOLDER, m_SaveFolder.c_str());
 			::SendDlgItemMessage(hDlg, IDC_RECORDOPTIONS_FILENAME, EM_LIMITTEXT, MAX_PATH - 1, 0);
-			::SetDlgItemText(hDlg, IDC_RECORDOPTIONS_FILENAME, m_szFileName);
+			::SetDlgItemText(hDlg, IDC_RECORDOPTIONS_FILENAME, m_FileName.c_str());
 			InitDropDownButton(hDlg, IDC_RECORDOPTIONS_FILENAMEFORMAT);
 			DlgCheckBox_Check(
 				hDlg, IDC_RECORDOPTIONS_CONFIRMCHANNELCHANGE,
@@ -486,12 +483,12 @@ INT_PTR CRecordOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 		switch (((LPNMHDR)lParam)->code) {
 		case PSN_APPLY:
 			{
-				TCHAR szSaveFolder[MAX_PATH], szFileName[MAX_PATH];
+				TVTest::String SaveFolder, FileName;
 
-				::GetDlgItemText(hDlg, IDC_RECORDOPTIONS_SAVEFOLDER, szSaveFolder, MAX_PATH);
+				GetDlgItemString(hDlg, IDC_RECORDOPTIONS_SAVEFOLDER, &SaveFolder);
 				CAppMain::CreateDirectoryResult CreateDirResult =
 					GetAppClass().CreateDirectory(
-						hDlg, szSaveFolder,
+						hDlg, SaveFolder.c_str(),
 						TEXT("録画ファイルの保存先フォルダ \"%s\" がありません。\n")
 						TEXT("作成しますか?"));
 				if (CreateDirResult == CAppMain::CREATEDIRECTORY_RESULT_ERROR) {
@@ -500,29 +497,20 @@ INT_PTR CRecordOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 					return TRUE;
 				}
 
-				::GetDlgItemText(hDlg, IDC_RECORDOPTIONS_FILENAME, szFileName, lengthof(szFileName));
-				if (szFileName[0] != '\0') {
-#if 0
-					CFilePath FilePath(szFileName);
-					if (!FilePath.IsValid()) {
-						::MessageBox(
-							hDlg,
-							TEXT("録画ファイル名に、ファイル名に使用できない文字が含まれています。"),
-							nullptr, MB_OK | MB_ICONEXCLAMATION);
-					}
-#else
+				GetDlgItemString(hDlg, IDC_RECORDOPTIONS_FILENAME, &FileName);
+				if (!FileName.empty()) {
 					TVTest::String Message;
-					if (!IsValidFileName(szFileName, FILENAME_VALIDATE_ALLOWDELIMITER, &Message)) {
+					if (!IsValidFileName(FileName.c_str(), FILENAME_VALIDATE_ALLOWDELIMITER, &Message)) {
 						SettingError();
 						::SendDlgItemMessage(hDlg, IDC_RECORDOPTIONS_FILENAME, EM_SETSEL, 0, -1);
 						::MessageBox(hDlg, Message.c_str(), nullptr, MB_OK | MB_ICONEXCLAMATION);
 						SetDlgItemFocus(hDlg, IDC_RECORDOPTIONS_FILENAME);
 						return TRUE;
 					}
-#endif
 				}
-				::lstrcpy(m_szSaveFolder, szSaveFolder);
-				::lstrcpy(m_szFileName, szFileName);
+
+				m_SaveFolder = SaveFolder;
+				m_FileName = FileName;
 
 				m_fConfirmChannelChange =
 					DlgCheckBox_IsChecked(hDlg, IDC_RECORDOPTIONS_CONFIRMCHANNELCHANGE);

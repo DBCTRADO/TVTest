@@ -210,9 +210,11 @@ public:
 
 	HINSTANCE GetInstance() const;
 	HINSTANCE GetResourceInstance() const;
+	bool GetAppFilePath(TVTest::String *pPath) const;
+	bool GetAppDirectory(TVTest::String *pDirectory) const;
 	bool GetAppDirectory(LPTSTR pszDirectory) const;
-	LPCTSTR GetIniFileName() const { return m_szIniFileName; }
-	LPCTSTR GetFavoritesFileName() const { return m_szFavoritesFileName; }
+	LPCTSTR GetIniFileName() const { return m_IniFileName.c_str(); }
+	LPCTSTR GetFavoritesFileName() const { return m_FavoritesFileName.c_str(); }
 	void AddLog(CLogItem::LogType Type, LPCTSTR pszText, ...);
 	void AddLog(LPCTSTR pszText, ...);
 	bool IsFirstExecute() const;
@@ -312,8 +314,8 @@ private:
 	};
 
 	HINSTANCE m_hInst;
-	TCHAR m_szIniFileName[MAX_PATH];
-	TCHAR m_szFavoritesFileName[MAX_PATH];
+	TVTest::CFilePath m_IniFileName;
+	TVTest::CFilePath m_FavoritesFileName;
 	CSettings m_Settings;
 	bool m_fFirstExecute;
 	bool m_fInitialSettings;

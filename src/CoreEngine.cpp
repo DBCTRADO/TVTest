@@ -41,8 +41,6 @@ CCoreEngine::CCoreEngine()
 
 	, m_AsyncStatusUpdatedFlags(0)
 {
-	m_szDriverDirectory[0] = '\0';
-	m_szDriverFileName[0] = '\0';
 }
 
 
@@ -272,48 +270,40 @@ bool CCoreEngine::RemoveEventListener(EventListener *pEventListener)
 }
 
 
-bool CCoreEngine::GetDriverDirectory(LPTSTR pszDirectory, int MaxLength) const
+bool CCoreEngine::SetDriverDirectory(LPCTSTR pszDirectory)
 {
-	if (pszDirectory == nullptr || MaxLength < 1)
-		return false;
-
-	pszDirectory[0] = '\0';
-
-	if (m_szDriverDirectory[0] != '\0') {
-		if (::PathIsRelative(m_szDriverDirectory)) {
-			TCHAR szBaseDir[MAX_PATH], szPath[MAX_PATH];
-
-			::GetModuleFileName(nullptr, szBaseDir, lengthof(szBaseDir));
-			::PathRemoveFileSpec(szBaseDir);
-			if (::PathCombine(szPath, szBaseDir, m_szDriverDirectory) == nullptr
-					|| ::lstrlen(szPath) >= MaxLength)
-				return false;
-			::lstrcpy(pszDirectory, szPath);
-		} else {
-			if (::lstrlen(m_szDriverDirectory) >= MaxLength)
-				return false;
-			::lstrcpy(pszDirectory, m_szDriverDirectory);
-		}
+	if (IsStringEmpty(pszDirectory)) {
+		m_DriverDirectory.clear();
 	} else {
-		DWORD Length = ::GetModuleFileName(nullptr, pszDirectory, MaxLength);
-		if (Length == 0 || Length >= (DWORD)(MaxLength - 1))
-			return false;
-		::PathRemoveFileSpec(pszDirectory);
+		m_DriverDirectory = pszDirectory;
 	}
-
 	return true;
 }
 
 
-bool CCoreEngine::SetDriverDirectory(LPCTSTR pszDirectory)
+bool CCoreEngine::GetDriverDirectoryPath(TVTest::String *pDirectory) const
 {
-	if (pszDirectory == nullptr) {
-		m_szDriverDirectory[0] = '\0';
+	if (pDirectory == nullptr)
+		return false;
+
+	pDirectory->clear();
+
+	if (!m_DriverDirectory.empty()) {
+		if (m_DriverDirectory.IsRelative()) {
+			if (!GetAbsolutePath(m_DriverDirectory, pDirectory))
+				return false;
+		} else {
+			*pDirectory = m_DriverDirectory;
+		}
 	} else {
-		if (::lstrlen(pszDirectory) >= MAX_PATH)
+		TCHAR szDir[MAX_PATH];
+		DWORD Length = ::GetModuleFileName(nullptr, szDir, lengthof(szDir));
+		if (Length == 0 || Length >= lengthof(szDir) - 1)
 			return false;
-		::lstrcpy(m_szDriverDirectory, pszDirectory);
+		::PathRemoveFileSpec(szDir);
+		*pDirectory = szDir;
 	}
+
 	return true;
 }
 
@@ -321,39 +311,50 @@ bool CCoreEngine::SetDriverDirectory(LPCTSTR pszDirectory)
 bool CCoreEngine::SetDriverFileName(LPCTSTR pszFileName)
 {
 	if (IsStringEmpty(pszFileName)) {
-		m_szDriverFileName[0] = '\0';
+		m_DriverFileName.clear();
 	} else {
-		if (::lstrlen(pszFileName) >= MAX_PATH)
-			return false;
-		::lstrcpy(m_szDriverFileName, pszFileName);
+		m_DriverFileName = pszFileName;
 	}
+	return true;
+}
+
+
+bool CCoreEngine::GetDriverPath(TVTest::String *pPath) const
+{
+	if (pPath == nullptr)
+		return false;
+
+	pPath->clear();
+
+	if (m_DriverFileName.empty())
+		return false;
+
+	if (m_DriverFileName.IsRelative()) {
+		TVTest::String Dir;
+
+		if (!GetDriverDirectoryPath(&Dir)
+				|| !m_DriverFileName.GetAbsolute(pPath, Dir))
+			return false;
+	} else {
+		*pPath = m_DriverFileName;
+	}
+
 	return true;
 }
 
 
 bool CCoreEngine::GetDriverPath(LPTSTR pszPath, int MaxLength) const
 {
-	if (pszPath == nullptr || MaxLength < 1)
+	if ((pszPath == nullptr) || (MaxLength < 1))
 		return false;
 
-	pszPath[0] = '\0';
-
-	if (m_szDriverFileName[0] == '\0')
+	TVTest::String Path;
+	if (!GetDriverPath(&Path) || (Path.length() >= static_cast<size_t>(MaxLength))) {
+		pszPath[0] = _T('\0');
 		return false;
-
-	if (::PathIsRelative(m_szDriverFileName)) {
-		TCHAR szDir[MAX_PATH], szPath[MAX_PATH];
-
-		if (!GetDriverDirectory(szDir, lengthof(szDir))
-				|| ::PathCombine(szPath, szDir, m_szDriverFileName) == nullptr
-				|| ::lstrlen(szPath) >= MaxLength)
-			return false;
-		::lstrcpy(pszPath, szPath);
-	} else {
-		if (::lstrlen(m_szDriverFileName) >= MaxLength)
-			return false;
-		::lstrcpy(pszPath, m_szDriverFileName);
 	}
+
+	::lstrcpy(pszPath, Path.c_str());
 
 	return true;
 }
@@ -368,13 +369,13 @@ bool CCoreEngine::OpenTuner()
 		return false;
 	}
 
-	TCHAR szDriverPath[MAX_PATH];
-	if (!GetDriverPath(szDriverPath, lengthof(szDriverPath))) {
+	TVTest::String DriverPath;
+	if (!GetDriverPath(&DriverPath)) {
 		SetError(std::errc::operation_not_permitted, TEXT("BonDriverのパスを取得できません。"));
 		return false;
 	}
 
-	if (!OpenSource(szDriverPath)) {
+	if (!OpenSource(DriverPath.c_str())) {
 		return false;
 	}
 

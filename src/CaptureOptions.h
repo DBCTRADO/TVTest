@@ -54,7 +54,7 @@ public:
 // CBasicDialog
 	bool Create(HWND hwndOwner) override;
 // CCaptureOptions
-	LPCTSTR GetSaveFolder() const { return m_szSaveFolder; }
+	LPCTSTR GetSaveFolder() const { return m_SaveFolder.c_str(); }
 	LPCTSTR GetFileName() const { return m_FileName.c_str(); }
 	int GetSaveFormat() const { return m_SaveFormat; }
 	bool GetWriteComment() const { return m_fSetComment; }
@@ -71,7 +71,7 @@ public:
 	bool OpenSaveFolder() const;
 
 private:
-	TCHAR m_szSaveFolder[MAX_PATH];
+	TVTest::String m_SaveFolder;
 	TVTest::String m_FileName;
 	int m_SaveFormat;
 	int m_JPEGQuality;

@@ -29,7 +29,7 @@ class CCaptionDRCSMap
 	LPTSTR m_pBuffer;
 	bool m_fSaveBMP;
 	bool m_fSaveRaw;
-	TCHAR m_szSaveDirectory[MAX_PATH];
+	TVTest::CFilePath m_SaveDirectory;
 	TVTest::MutexLock m_Lock;
 
 	static bool SaveBMP(const LibISDB::CaptionParser::DRCSBitmap *pBitmap, LPCTSTR pszFileName);

@@ -51,14 +51,13 @@ CViewOptions::CViewOptions()
 	, m_TitleTextFormat(TitleTextFormatPresets[0].pszFormat)
 	, m_fEnableTitleBarFont(false)
 	, m_fShowLogo(true)
+	, m_LogoFileName(APP_NAME TEXT("_Logo.bmp"))
 
 	, m_fNoScreenSaver(false)
 	, m_fNoMonitorLowPower(false)
 	, m_fNoMonitorLowPowerActiveOnly(false)
 {
 	TVTest::StyleUtil::GetSystemFont(DrawUtil::FONT_CAPTION, &m_TitleBarFont);
-
-	::lstrcpy(m_szLogoFileName, APP_NAME TEXT("_Logo.bmp"));
 }
 
 
@@ -73,7 +72,7 @@ bool CViewOptions::Apply(DWORD Flags)
 	CAppMain &App = GetAppClass();
 
 	if ((Flags & UPDATE_LOGO) != 0) {
-		App.UICore.SetLogo(m_fShowLogo ? m_szLogoFileName : nullptr);
+		App.UICore.SetLogo(m_fShowLogo ? m_LogoFileName.c_str() : nullptr);
 	}
 
 	return true;
@@ -113,7 +112,7 @@ bool CViewOptions::ReadSettings(CSettings &Settings)
 	Settings.Read(TEXT("EnableTitleBarFont"), &m_fEnableTitleBarFont);
 	TVTest::StyleUtil::ReadFontSettings(Settings, TEXT("TitleBarFont"), &m_TitleBarFont);
 	Settings.Read(TEXT("ShowLogo"), &m_fShowLogo);
-	Settings.Read(TEXT("LogoFileName"), m_szLogoFileName, lengthof(m_szLogoFileName));
+	Settings.Read(TEXT("LogoFileName"), &m_LogoFileName);
 	Settings.Read(TEXT("NoScreenSaver"), &m_fNoScreenSaver);
 	Settings.Read(TEXT("NoMonitorLowPower"), &m_fNoMonitorLowPower);
 	Settings.Read(TEXT("NoMonitorLowPowerActiveOnly"), &m_fNoMonitorLowPowerActiveOnly);
@@ -145,7 +144,7 @@ bool CViewOptions::WriteSettings(CSettings &Settings)
 	Settings.Write(TEXT("EnableTitleBarFont"), m_fEnableTitleBarFont);
 	TVTest::StyleUtil::WriteFontSettings(Settings, TEXT("TitleBarFont"), m_TitleBarFont);
 	Settings.Write(TEXT("ShowLogo"), m_fShowLogo);
-	Settings.Write(TEXT("LogoFileName"), m_szLogoFileName);
+	Settings.Write(TEXT("LogoFileName"), m_LogoFileName);
 	Settings.Write(TEXT("NoScreenSaver"), m_fNoScreenSaver);
 	Settings.Write(TEXT("NoMonitorLowPower"), m_fNoMonitorLowPower);
 	Settings.Write(TEXT("NoMonitorLowPowerActiveOnly"), m_fNoMonitorLowPowerActiveOnly);
@@ -212,7 +211,7 @@ INT_PTR CViewOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 				m_fEnableTitleBarFont);
 
 			DlgCheckBox_Check(hDlg, IDC_OPTIONS_SHOWLOGO, m_fShowLogo);
-			::SetDlgItemText(hDlg, IDC_OPTIONS_LOGOFILENAME, m_szLogoFileName);
+			::SetDlgItemText(hDlg, IDC_OPTIONS_LOGOFILENAME, m_LogoFileName.c_str());
 			::SendDlgItemMessage(hDlg, IDC_OPTIONS_LOGOFILENAME, EM_LIMITTEXT, MAX_PATH - 1, 0);
 			::EnableDlgItems(
 				hDlg, IDC_OPTIONS_LOGOFILENAME, IDC_OPTIONS_LOGOFILENAME_BROWSE,
@@ -282,15 +281,14 @@ INT_PTR CViewOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 		case IDC_OPTIONS_LOGOFILENAME_BROWSE:
 			{
 				OPENFILENAME ofn;
-				TCHAR szFileName[MAX_PATH], szInitDir[MAX_PATH];
-				CFilePath FilePath;
+				TCHAR szFileName[MAX_PATH];
+				TVTest::String FileName, InitDir;
 
 				::GetDlgItemText(hDlg, IDC_OPTIONS_LOGOFILENAME, szFileName, lengthof(szFileName));
-				FilePath.SetPath(szFileName);
-				if (FilePath.GetDirectory(szInitDir)) {
-					::lstrcpy(szFileName, FilePath.GetFileName());
+				if (TVTest::PathUtil::Split(szFileName, &InitDir, &FileName)) {
+					::lstrcpyn(szFileName, FileName.c_str(), MAX_PATH);
 				} else {
-					GetAppClass().GetAppDirectory(szInitDir);
+					GetAppClass().GetAppDirectory(&InitDir);
 				}
 				InitOpenFileName(&ofn);
 				ofn.hwndOwner = hDlg;
@@ -299,7 +297,7 @@ INT_PTR CViewOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 					TEXT("すべてのファイル\0*.*\0");
 				ofn.lpstrFile = szFileName;
 				ofn.nMaxFile = lengthof(szFileName);
-				ofn.lpstrInitialDir = szInitDir;
+				ofn.lpstrInitialDir = InitDir.c_str();
 				ofn.lpstrTitle = TEXT("ロゴ画像の選択");
 				ofn.Flags = OFN_HIDEREADONLY | OFN_FILEMUSTEXIST | OFN_EXPLORER;
 				if (FileOpenDialog(&ofn)) {
@@ -356,13 +354,12 @@ INT_PTR CViewOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 				}
 				{
 					bool fLogo = DlgCheckBox_IsChecked(hDlg, IDC_OPTIONS_SHOWLOGO);
-					TCHAR szFileName[MAX_PATH];
+					TVTest::String FileName;
 
-					::GetDlgItemText(hDlg, IDC_OPTIONS_LOGOFILENAME, szFileName, MAX_PATH);
-					if (fLogo != m_fShowLogo
-							|| ::lstrcmp(szFileName, m_szLogoFileName) != 0) {
+					GetDlgItemString(hDlg, IDC_OPTIONS_LOGOFILENAME, &FileName);
+					if ((fLogo != m_fShowLogo) || (m_LogoFileName != FileName)) {
 						m_fShowLogo = fLogo;
-						::lstrcpy(m_szLogoFileName, szFileName);
+						m_LogoFileName = FileName;
 						SetUpdateFlag(UPDATE_LOGO);
 					}
 				}

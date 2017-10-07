@@ -4,6 +4,7 @@
 
 #include "HelperClass/StdUtil.h"
 #include "StringUtility.h"
+#include "PathUtil.h"
 
 
 inline bool operator==(const RECT &rc1, const RECT &rc2) {
@@ -88,6 +89,7 @@ bool MakeUniqueFileName(
 	TVTest::String *pFileName, size_t MaxLength = MAX_PATH - 1,
 	LPCTSTR pszNumberFormat = nullptr);
 bool GetAbsolutePath(LPCTSTR pszFilePath, LPTSTR pszAbsolutePath, int MaxLength);
+bool GetAbsolutePath(const TVTest::String &FilePath, TVTest::String *pAbsolutePath);
 
 HICON CreateIconFromBitmap(HBITMAP hbm, int IconWidth, int IconHeight, int ImageWidth = 0, int ImageHeight = 0);
 bool SaveIconFromBitmap(
@@ -120,38 +122,6 @@ private:
 	const LPTSTR m_pBuffer;
 	const size_t m_BufferLength;
 	size_t m_Length;
-};
-
-class CFilePath
-{
-	TCHAR m_szPath[MAX_PATH];
-
-public:
-	CFilePath();
-	CFilePath(const CFilePath &Path);
-	explicit CFilePath(LPCTSTR pszPath);
-	~CFilePath();
-	bool IsEmpty() const { return m_szPath[0] == _T('\0'); }
-	bool SetPath(LPCTSTR pszPath);
-	LPCTSTR GetPath() const { return m_szPath; }
-	void GetPath(LPTSTR pszPath) const;
-	int GetLength() const { return ::lstrlen(m_szPath); }
-	LPCTSTR GetFileName() const;
-	bool SetFileName(LPCTSTR pszFileName);
-	bool RemoveFileName();
-	LPCTSTR GetExtension() const;
-	bool SetExtension(LPCTSTR pszExtension);
-	bool RemoveExtension();
-	bool AppendExtension(LPCTSTR pszExtension);
-	bool Make(LPCTSTR pszDirectory, LPCTSTR pszFileName);
-	bool Append(LPCTSTR pszMore);
-	bool GetDirectory(LPTSTR pszDirectory) const;
-	bool SetDirectory(LPCTSTR pszDirectory);
-	bool RemoveDirectory();
-	bool HasDirectory() const;
-	bool IsRelative() const;
-	bool IsExists() const;
-	bool IsValid(bool fWildcard = false) const;
 };
 
 class CLocalTime

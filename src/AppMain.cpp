@@ -225,13 +225,57 @@ HINSTANCE CAppMain::GetResourceInstance() const
 }
 
 
+bool CAppMain::GetAppFilePath(TVTest::String *pPath) const
+{
+	if (pPath == nullptr)
+		return false;
+
+	TCHAR szPath[MAX_PATH];
+	DWORD Length = ::GetModuleFileName(nullptr, szPath, MAX_PATH);
+	if ((Length == 0) || (Length >= MAX_PATH)) {
+		pPath->clear();
+		return false;
+	}
+
+	pPath->assign(szPath);
+
+	return true;
+}
+
+
+bool CAppMain::GetAppDirectory(TVTest::String *pDirectory) const
+{
+	if (pDirectory == nullptr)
+		return false;
+
+	TCHAR szDir[MAX_PATH];
+	DWORD Length = ::GetModuleFileName(nullptr, szDir, MAX_PATH);
+	if ((Length == 0) || (Length >= MAX_PATH)) {
+		pDirectory->clear();
+		return false;
+	}
+
+	::PathRemoveFileSpec(szDir);
+
+	pDirectory->assign(szDir);
+
+	return true;
+}
+
+
 bool CAppMain::GetAppDirectory(LPTSTR pszDirectory) const
 {
-	if (::GetModuleFileName(nullptr, pszDirectory, MAX_PATH) == 0)
+	if (pszDirectory == nullptr)
 		return false;
-	CFilePath FilePath(pszDirectory);
-	FilePath.RemoveFileName();
-	FilePath.GetPath(pszDirectory);
+
+	DWORD Length = ::GetModuleFileName(nullptr, pszDirectory, MAX_PATH);
+	if ((Length == 0) || (Length >= MAX_PATH)) {
+		pszDirectory[0] = _T('\0');
+		return false;
+	}
+
+	::PathRemoveFileSpec(pszDirectory);
+
 	return true;
 }
 
@@ -267,24 +311,25 @@ void CAppMain::Initialize()
 	TCHAR szModuleFileName[MAX_PATH];
 
 	::GetModuleFileName(nullptr, szModuleFileName, MAX_PATH);
+
 	if (CmdLineOptions.m_IniFileName.empty()) {
-		::lstrcpy(m_szIniFileName, szModuleFileName);
-		::PathRenameExtension(m_szIniFileName, TEXT(".ini"));
+		m_IniFileName = szModuleFileName;
+		m_IniFileName.RenameExtension(TEXT(".ini"));
 	} else {
-		LPCTSTR pszIniFileName = CmdLineOptions.m_IniFileName.c_str();
-		if (::PathIsRelative(pszIniFileName)) {
-			TCHAR szTemp[MAX_PATH];
-			::lstrcpy(szTemp, szModuleFileName);
-			::lstrcpy(::PathFindFileName(szTemp), pszIniFileName);
-			::PathCanonicalize(m_szIniFileName, szTemp);
+		if (TVTest::PathUtil::IsRelative(CmdLineOptions.m_IniFileName)) {
+			TVTest::CFilePath Dir(szModuleFileName);
+			Dir.RemoveFileName();
+			TVTest::PathUtil::RelativeToAbsolute(
+				&m_IniFileName, Dir, CmdLineOptions.m_IniFileName);
 		} else {
-			::lstrcpy(m_szIniFileName, pszIniFileName);
+			m_IniFileName = CmdLineOptions.m_IniFileName;
 		}
 	}
-	::lstrcpy(m_szFavoritesFileName, szModuleFileName);
-	::PathRenameExtension(m_szFavoritesFileName, TEXT(".tvfavorites"));
 
-	bool fExists = ::PathFileExists(m_szIniFileName) != FALSE;
+	m_FavoritesFileName = szModuleFileName;
+	m_FavoritesFileName.RenameExtension(TEXT(".tvfavorites"));
+
+	bool fExists = m_IniFileName.IsFileExists();
 	m_fFirstExecute = !fExists && CmdLineOptions.m_IniFileName.empty();
 	if (fExists) {
 		AddLog(TEXT("設定を読み込んでいます..."));
@@ -348,7 +393,7 @@ void CAppMain::Finalize()
 #endif
 
 	if (FavoritesManager.GetModified())
-		FavoritesManager.Save(m_szFavoritesFileName);
+		FavoritesManager.Save(m_FavoritesFileName.c_str());
 
 	AddLog(TEXT("設定を保存しています..."));
 	SaveSettings(SETTINGS_SAVE_STATUS | (m_fInitialSettings ? SETTINGS_SAVE_OPTIONS : 0));
@@ -365,8 +410,8 @@ bool CAppMain::LoadSettings()
 {
 	CSettings &Settings = m_Settings;
 
-	if (!Settings.Open(m_szIniFileName, CSettings::OPEN_READ | CSettings::OPEN_WRITE_VOLATILE)) {
-		AddLog(CLogItem::TYPE_ERROR, TEXT("設定ファイル \"%s\" を開けません。"), m_szIniFileName);
+	if (!Settings.Open(m_IniFileName.c_str(), CSettings::OPEN_READ | CSettings::OPEN_WRITE_VOLATILE)) {
+		AddLog(CLogItem::TYPE_ERROR, TEXT("設定ファイル \"%s\" を開けません。"), m_IniFileName.c_str());
 		return false;
 	}
 
@@ -520,12 +565,12 @@ bool CAppMain::LoadSettings()
 bool CAppMain::SaveSettings(unsigned int Flags)
 {
 	CSettings Settings;
-	if (!Settings.Open(m_szIniFileName, CSettings::OPEN_WRITE)) {
+	if (!Settings.Open(m_IniFileName.c_str(), CSettings::OPEN_WRITE)) {
 		TCHAR szMessage[64 + MAX_PATH];
 		StdUtil::snprintf(
 			szMessage, lengthof(szMessage),
 			TEXT("設定ファイル \"%s\" を開けません。"),
-			m_szIniFileName);
+			m_IniFileName.c_str());
 		AddLog(CLogItem::TYPE_ERROR, TEXT("%s"), szMessage);
 		if (!Core.IsSilent())
 			UICore.GetSkin()->ShowErrorMessage(szMessage);
@@ -741,9 +786,9 @@ int CAppMain::Main(HINSTANCE hInstance, LPCTSTR pszCmdLine, int nCmdShow)
 
 	// BonDriver の検索
 	{
-		TCHAR szDirectory[MAX_PATH];
-		CoreEngine.GetDriverDirectory(szDirectory, lengthof(szDirectory));
-		DriverManager.Find(szDirectory);
+		TVTest::String Directory;
+		CoreEngine.GetDriverDirectoryPath(&Directory);
+		DriverManager.Find(Directory.c_str());
 	}
 	// チューナー仕様定義の読み込み
 	{
@@ -764,7 +809,7 @@ int CAppMain::Main(HINSTANCE hInstance, LPCTSTR pszCmdLine, int nCmdShow)
 
 	GraphicsCore.Initialize();
 
-	TCHAR szDriverFileName[MAX_PATH];
+	TVTest::String DriverFileName;
 
 	// 初期設定ダイアログの表示
 	if (m_fInitialSettings) {
@@ -772,8 +817,8 @@ int CAppMain::Main(HINSTANCE hInstance, LPCTSTR pszCmdLine, int nCmdShow)
 
 		if (!InitialSettings.Show(nullptr))
 			return 0;
-		InitialSettings.GetDriverFileName(szDriverFileName, lengthof(szDriverFileName));
-		GeneralOptions.SetDefaultDriverName(szDriverFileName);
+		DriverFileName = InitialSettings.GetDriverFileName();
+		GeneralOptions.SetDefaultDriverName(DriverFileName.c_str());
 		GeneralOptions.SetChanged();
 		VideoOptions.SetMpeg2DecoderName(InitialSettings.GetMpeg2DecoderName());
 		VideoOptions.SetH264DecoderName(InitialSettings.GetH264DecoderName());
@@ -783,11 +828,9 @@ int CAppMain::Main(HINSTANCE hInstance, LPCTSTR pszCmdLine, int nCmdShow)
 		RecordOptions.SetSaveFolder(InitialSettings.GetRecordFolder());
 		RecordOptions.SetChanged();
 	} else if (!CmdLineOptions.m_DriverName.empty()) {
-		::lstrcpy(szDriverFileName, CmdLineOptions.m_DriverName.c_str());
-	} else if (CmdLineOptions.m_fNoDriver) {
-		szDriverFileName[0] = _T('\0');
-	} else {
-		GeneralOptions.GetFirstDriverName(szDriverFileName);
+		DriverFileName = CmdLineOptions.m_DriverName;
+	} else if (!CmdLineOptions.m_fNoDriver) {
+		GeneralOptions.GetFirstDriverName(&DriverFileName);
 	}
 
 	// スタイル設定の読み込み
@@ -962,7 +1005,7 @@ int CAppMain::Main(HINSTANCE hInstance, LPCTSTR pszCmdLine, int nCmdShow)
 	TSProcessorManager.OpenDefaultFilters();
 
 	// BonDriver の読み込み
-	CoreEngine.SetDriverFileName(szDriverFileName);
+	CoreEngine.SetDriverFileName(DriverFileName.c_str());
 	if (!CmdLineOptions.m_fNoDriver && !CmdLineOptions.m_fStandby) {
 		if (CoreEngine.IsDriverSpecified()) {
 			StatusView.SetSingleText(TEXT("BonDriverの読み込み中..."));
@@ -1143,7 +1186,7 @@ int CAppMain::Main(HINSTANCE hInstance, LPCTSTR pszCmdLine, int nCmdShow)
 
 	m_Settings.Close();
 
-	FavoritesManager.Load(m_szFavoritesFileName);
+	FavoritesManager.Load(m_FavoritesFileName.c_str());
 
 	// EPG番組表の表示
 	if (CmdLineOptions.m_fShowProgramGuide)

@@ -41,7 +41,6 @@ public:
 	CAppCore(const CAppCore &) = delete;
 	CAppCore &operator=(const CAppCore &) = delete;
 
-	bool GetDriverDirectory(LPTSTR pszDirectory, int MaxLength) const;
 	void OnError(LPCTSTR pszText, ...);
 	void OnError(const LibISDB::ErrorHandler *pErrorHandler, LPCTSTR pszTitle = nullptr);
 	void SetSilent(bool fSilent);
@@ -49,7 +48,7 @@ public:
 	bool SaveCurrentChannel();
 
 	bool InitializeChannel();
-	bool GetChannelFileName(LPCTSTR pszDriverFileName, LPTSTR pszChannelFileName, int MaxChannelFileName);
+	bool GetChannelFileName(LPCTSTR pszDriverFileName, TVTest::String *pChannelFileName);
 	bool RestoreChannel();
 	bool UpdateCurrentChannelList(const CTuningSpaceList *pList);
 	bool UpdateChannelList(LPCTSTR pszBonDriverName, const CTuningSpaceList *pList);

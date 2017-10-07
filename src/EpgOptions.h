@@ -46,7 +46,7 @@ public:
 // CEpgOptions
 	void Finalize();
 
-	LPCTSTR GetEpgFileName() const { return m_szEpgFileName; }
+	LPCTSTR GetEpgFileName() const { return m_EpgFileName.c_str(); }
 	bool GetUpdateWhenStandby() const { return m_fUpdateWhenStandby; }
 	bool GetUpdateBSExtended() const { return m_fUpdateBSExtended; }
 	bool GetUpdateCSExtended() const { return m_fUpdateCSExtended; }
@@ -73,15 +73,15 @@ public:
 
 private:
 	bool m_fSaveEpgFile;
-	TCHAR m_szEpgFileName[MAX_PATH];
+	TVTest::CFilePath m_EpgFileName;
 	bool m_fUpdateWhenStandby;
 	bool m_fUpdateBSExtended;
 	bool m_fUpdateCSExtended;
 	bool m_fUseEDCBData;
-	TCHAR m_szEDCBDataFolder[MAX_PATH];
+	TVTest::CFilePath m_EDCBDataFolder;
 	EpgTimeMode m_EpgTimeMode;
 	bool m_fSaveLogoFile;
-	TCHAR m_szLogoFileName[MAX_PATH];
+	TVTest::CFilePath m_LogoFileName;
 
 	TVTest::CEpgDataStore m_EpgDataStore;
 	std::unique_ptr<CEpgDataLoader> m_EpgDataLoader;

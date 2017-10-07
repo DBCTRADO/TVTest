@@ -44,10 +44,10 @@ bool CDriverInfo::LoadTuningSpaceList(LoadTuningSpaceListMode Mode)
 	}
 
 	if (!m_fChannelFileLoaded) {
-		TCHAR szChannelFileName[MAX_PATH];
+		TVTest::String ChannelFileName;
 
-		App.Core.GetChannelFileName(pszFileName, szChannelFileName, lengthof(szChannelFileName));
-		if (m_TuningSpaceList.LoadFromFile(szChannelFileName)) {
+		App.Core.GetChannelFileName(pszFileName, &ChannelFileName);
+		if (m_TuningSpaceList.LoadFromFile(ChannelFileName.c_str())) {
 #if 0
 			if (fUseDriver && Mode == LOADTUNINGSPACE_DEFAULT) {
 				const int NumSpaces = m_TuningSpaceList.NumSpaces();
@@ -72,27 +72,26 @@ bool CDriverInfo::LoadTuningSpaceList(LoadTuningSpaceListMode Mode)
 	}
 
 	if (fUseDriver && !m_fDriverSpaceLoaded) {
-		TCHAR szFilePath[MAX_PATH];
+		TVTest::CFilePath FilePath;
 
 		if (::PathIsRelative(pszFileName)) {
-			TCHAR szTemp[MAX_PATH];
-			App.Core.GetDriverDirectory(szTemp, lengthof(szTemp));
-			::PathAppend(szTemp, pszFileName);
-			::PathCanonicalize(szFilePath, szTemp);
+			App.CoreEngine.GetDriverDirectoryPath(&FilePath);
+			FilePath.Append(pszFileName);
+			FilePath.Canonicalize();
 		} else {
-			::lstrcpy(szFilePath, pszFileName);
+			FilePath = pszFileName;
 		}
 
-		HMODULE hLib = ::GetModuleHandle(szFilePath);
+		HMODULE hLib = ::GetModuleHandle(FilePath.c_str());
 		if (hLib != nullptr) {
-			TCHAR szCurDriverPath[MAX_PATH];
+			TVTest::String CurDriverPath;
 
-			if (App.CoreEngine.GetDriverPath(szCurDriverPath, lengthof(szCurDriverPath))
-					&& IsEqualFileName(szFilePath, szCurDriverPath)) {
+			if (App.CoreEngine.GetDriverPath(&CurDriverPath)
+					&& IsEqualFileName(FilePath.c_str(), CurDriverPath.c_str())) {
 				m_DriverSpaceList = *App.ChannelManager.GetDriverTuningSpaceList();
 				m_fDriverSpaceLoaded = true;
 			}
-		} else if ((hLib = ::LoadLibrary(szFilePath)) != nullptr) {
+		} else if ((hLib = ::LoadLibrary(FilePath.c_str())) != nullptr) {
 			CreateBonDriverFunc pCreate =
 				reinterpret_cast<CreateBonDriverFunc>(::GetProcAddress(hLib, "CreateBonDriver"));
 			IBonDriver *pBonDriver;

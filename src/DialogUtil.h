@@ -62,6 +62,17 @@ inline LRESULT DlgListBox_GetString(HWND hDlg, int ID, WPARAM Index, LPTSTR pszS
 inline LRESULT DlgListBox_GetStringLength(HWND hDlg, int ID, WPARAM Index) {
 	return ::SendDlgItemMessage(hDlg, ID, LB_GETTEXTLEN, Index, 0);
 }
+inline LRESULT DlgListBox_GetString(HWND hDlg, int ID, WPARAM Index, TVTest::String *pString) {
+	LRESULT Length = DlgListBox_GetStringLength(hDlg, ID, Index);
+	if (Length > 0) {
+		pString->resize(Length + 1);
+		Length = DlgListBox_GetString(hDlg, ID, Index, pString->data());
+		pString->resize(max(Length, (LRESULT)0));
+	} else {
+		pString->clear();
+	}
+	return Length;
+}
 inline LPARAM DlgListBox_GetItemData(HWND hDlg, int ID, WPARAM Index) {
 	return ::SendDlgItemMessage(hDlg, ID, LB_GETITEMDATA, Index, 0);
 }
@@ -152,6 +163,17 @@ inline LRESULT DlgComboBox_GetLBString(HWND hDlg, int ID, WPARAM Index, LPTSTR p
 }
 inline LRESULT DlgComboBox_GetLBStringLength(HWND hDlg, int ID, WPARAM Index) {
 	return ::SendDlgItemMessage(hDlg, ID, CB_GETLBTEXTLEN, Index, 0);
+}
+inline LRESULT DlgComboBox_GetLBString(HWND hDlg, int ID, WPARAM Index, TVTest::String *pString) {
+	LRESULT Length = DlgComboBox_GetLBStringLength(hDlg, ID, Index);
+	if (Length > 0) {
+		pString->resize(Length + 1);
+		Length = DlgComboBox_GetLBString(hDlg, ID, Index, pString->data());
+		pString->resize(max(Length, (LRESULT)0));
+	} else {
+		pString->clear();
+	}
+	return Length;
 }
 inline void DlgComboBox_Clear(HWND hDlg, int ID) {
 	::SendDlgItemMessage(hDlg, ID, CB_RESETCONTENT, 0, 0);

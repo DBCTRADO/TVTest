@@ -21,12 +21,6 @@ CAppCore::CAppCore(CAppMain &App)
 }
 
 
-bool CAppCore::GetDriverDirectory(LPTSTR pszDirectory, int MaxLength) const
-{
-	return m_App.CoreEngine.GetDriverDirectory(pszDirectory, MaxLength);
-}
-
-
 void CAppCore::OnError(LPCTSTR pszText, ...)
 {
 	va_list Args;
@@ -78,22 +72,20 @@ void CAppCore::SetSilent(bool fSilent)
 bool CAppCore::InitializeChannel()
 {
 	const bool fNetworkDriver = m_App.CoreEngine.IsNetworkDriver();
-	CFilePath ChannelFilePath;
+	TVTest::String ChannelFilePath;
 
 	m_App.ChannelManager.Reset();
 	m_App.ChannelManager.MakeDriverTuningSpaceList(m_App.CoreEngine.GetFilter<LibISDB::BonDriverSourceFilter>());
 
 	if (!fNetworkDriver) {
-		TCHAR szPath[MAX_PATH];
-		GetChannelFileName(m_App.CoreEngine.GetDriverFileName(), szPath, MAX_PATH);
-		ChannelFilePath.SetPath(szPath);
+		GetChannelFileName(m_App.CoreEngine.GetDriverFileName(), &ChannelFilePath);
 	}
 
-	if (!ChannelFilePath.IsEmpty()) {
-		if (m_App.ChannelManager.LoadChannelList(ChannelFilePath.GetPath())) {
+	if (!ChannelFilePath.empty()) {
+		if (m_App.ChannelManager.LoadChannelList(ChannelFilePath.c_str())) {
 			m_App.AddLog(
 				TEXT("チャンネル設定を \"%s\" から読み込みました。"),
-				ChannelFilePath.GetPath());
+				ChannelFilePath.c_str());
 			if (!m_App.ChannelManager.ChannelFileHasStreamIDs())
 				m_App.AddLog(CLogItem::TYPE_WARNING, TEXT("チャンネルファイルが古いので再スキャンをお薦めします。"));
 		}
@@ -125,51 +117,55 @@ bool CAppCore::InitializeChannel()
 }
 
 
-bool CAppCore::GetChannelFileName(LPCTSTR pszDriverFileName, LPTSTR pszChannelFileName, int MaxChannelFileName)
+bool CAppCore::GetChannelFileName(LPCTSTR pszDriverFileName, TVTest::String *pChannelFileName)
 {
-	if (IsStringEmpty(pszDriverFileName) || pszChannelFileName == nullptr)
+	if (pChannelFileName == nullptr)
+		return false;
+	pChannelFileName->clear();
+	if (IsStringEmpty(pszDriverFileName))
 		return false;
 
 	const bool fRelative = ::PathIsRelative(pszDriverFileName) != FALSE;
-	TCHAR szPath[MAX_PATH], szPath2[MAX_PATH], szDir[MAX_PATH];
+	TVTest::CFilePath Path, Path2, Dir;
+
 	if (fRelative) {
-		if (!m_App.CoreEngine.GetDriverDirectory(szDir, lengthof(szDir)))
+		if (!m_App.CoreEngine.GetDriverDirectoryPath(&Dir))
 			return false;
-		if (::PathCombine(szPath, szDir, pszDriverFileName) == nullptr)
-			return false;
+		Path = Dir;
+		Path.Append(pszDriverFileName);
 	} else {
-		if (::lstrlen(pszDriverFileName) >= lengthof(szPath))
-			return false;
-		::lstrcpy(szPath, pszDriverFileName);
+		Path = pszDriverFileName;
 	}
-	::PathRenameExtension(szPath, CHANNEL_FILE_EXTENSION);
+	Path.RenameExtension(CHANNEL_FILE_EXTENSION);
+
 #ifdef DEFERRED_CHANNEL_FILE_EXTENSION
-	if (!::PathFileExists(szPath)) {
-		::lstrcpy(szPath2, szPath);
-		::PathRenameExtension(szPath2, DEFERRED_CHANNEL_FILE_EXTENSION);
-		if (::PathFileExists(szPath2))
-			::lstrcpy(szPath, szPath2);
+	if (!Path.IsFileExists()) {
+		Path2 = Path;
+		Path2.RenameExtension(DEFERRED_CHANNEL_FILE_EXTENSION);
+		if (Path2.IsFileExists())
+			Path = Path2;
 	}
 #endif
-	if (fRelative && !::PathFileExists(szPath)) {
-		m_App.GetAppDirectory(szDir);
-		if (::PathCombine(szPath2, szDir, pszDriverFileName) != nullptr) {
-			::PathRenameExtension(szPath2, CHANNEL_FILE_EXTENSION);
-			if (::PathFileExists(szPath2)) {
-				::lstrcpy(szPath, szPath2);
-			}
+
+	if (fRelative && !Path.IsFileExists()) {
+		m_App.GetAppDirectory(&Dir);
+		Path2 = Dir;
+		Path2.Append(pszDriverFileName);
+		Path2.RenameExtension(CHANNEL_FILE_EXTENSION);
+		if (Path2.IsFileExists()) {
+			Path = Path2;
+		}
 #ifdef DEFERRED_CHANNEL_FILE_EXTENSION
-			else {
-				::PathRenameExtension(szPath2, DEFERRED_CHANNEL_FILE_EXTENSION);
-				if (::PathFileExists(szPath2))
-					::lstrcpy(szPath, szPath2);
-			}
+		else {
+			Path2.RenameExtension(DEFERRED_CHANNEL_FILE_EXTENSION);
+			if (Path2.IsFileExists())
+				Path = Path2;
 #endif
 		}
 	}
-	if (::lstrlen(szPath) >= MaxChannelFileName)
-		return false;
-	::lstrcpy(pszChannelFileName, szPath);
+
+	*pChannelFileName = Path;
+
 	return true;
 }
 

@@ -274,7 +274,8 @@ INT_PTR CProgramGuideTool::CProgramGuideToolDialog::DlgProc(HWND hDlg, UINT uMsg
 			{
 				OPENFILENAME ofn;
 				TVTest::String Command;
-				TCHAR szFileName[MAX_PATH], szDirectory[MAX_PATH];
+				TCHAR szFileName[MAX_PATH];
+				TVTest::String Directory;
 
 				GetDlgItemString(hDlg, IDC_PROGRAMGUIDETOOL_COMMAND, &Command);
 				if (!Command.empty()) {
@@ -292,10 +293,11 @@ INT_PTR CProgramGuideTool::CProgramGuideToolDialog::DlgProc(HWND hDlg, UINT uMsg
 				ofn.lpstrFile = szFileName;
 				ofn.nMaxFile = MAX_PATH;
 				if (szFileName[0] != '\0') {
-					CFilePath Path(szFileName);
-					Path.GetDirectory(szDirectory);
-					ofn.lpstrInitialDir = szDirectory;
-					::lstrcpy(szFileName, Path.GetFileName());
+					TVTest::String Name;
+					if (TVTest::PathUtil::Split(szFileName, &Directory, &Name)) {
+						ofn.lpstrInitialDir = Directory.c_str();
+						::lstrcpy(szFileName, Name.c_str());
+					}
 				}
 				ofn.Flags = OFN_FILEMUSTEXIST | OFN_HIDEREADONLY | OFN_EXPLORER;
 				if (FileOpenDialog(&ofn)) {

@@ -731,8 +731,8 @@ CCaptionDRCSMap::CCaptionDRCSMap()
 	, m_fSaveBMP(false)
 	, m_fSaveRaw(false)
 {
-	GetAppClass().GetAppDirectory(m_szSaveDirectory);
-	::PathAppend(m_szSaveDirectory, TEXT("DRCS"));
+	GetAppClass().GetAppDirectory(&m_SaveDirectory);
+	m_SaveDirectory.Append(TEXT("DRCS"));
 }
 
 
@@ -774,16 +774,9 @@ bool CCaptionDRCSMap::Load(LPCTSTR pszFileName)
 		if (Settings.SetSection(TEXT("Settings"))) {
 			Settings.Read(TEXT("SaveBMP"), &m_fSaveBMP);
 			Settings.Read(TEXT("SaveRaw"), &m_fSaveRaw);
-			TCHAR szDir[MAX_PATH];
-			if (Settings.Read(TEXT("SaveDirectory"), szDir, MAX_PATH) && szDir[0] != '\0') {
-				if (::PathIsRelative(szDir)) {
-					TCHAR szTmp[MAX_PATH];
-					GetAppClass().GetAppDirectory(szTmp);
-					::PathAppend(szTmp, szDir);
-					::PathCanonicalize(m_szSaveDirectory, szTmp);
-				} else {
-					::lstrcpy(m_szSaveDirectory, szDir);
-				}
+			TVTest::String Dir;
+			if (Settings.Read(TEXT("SaveDirectory"), &Dir) && !Dir.empty()) {
+				GetAbsolutePath(Dir, &m_SaveDirectory);
 			}
 		}
 		Settings.Close();
@@ -882,18 +875,20 @@ bool CCaptionDRCSMap::SetDRCS(uint16_t Code, const LibISDB::CaptionParser::DRCSB
 			m_CodeMap[Code] = itr->second;
 	}
 	if (m_fSaveBMP) {
-		TCHAR szFileName[40], szFilePath[MAX_PATH];
+		TCHAR szFileName[40];
 		MakeSaveFileName(MD5.Value, szFileName, TEXT(".bmp"));
-		::PathCombine(szFilePath, m_szSaveDirectory, szFileName);
-		if (!::PathFileExists(szFilePath))
-			SaveBMP(pBitmap, szFilePath);
+		TVTest::CFilePath FilePath(m_SaveDirectory);
+		FilePath.Append(szFileName);
+		if (!FilePath.IsExists())
+			SaveBMP(pBitmap, FilePath.c_str());
 	}
 	if (m_fSaveRaw) {
-		TCHAR szFileName[40], szFilePath[MAX_PATH];
+		TCHAR szFileName[40];
 		MakeSaveFileName(MD5.Value, szFileName, TEXT(".drcs"));
-		::PathCombine(szFilePath, m_szSaveDirectory, szFileName);
-		if (!::PathFileExists(szFilePath))
-			SaveRaw(pBitmap, szFilePath);
+		TVTest::CFilePath FilePath(m_SaveDirectory);
+		FilePath.Append(szFileName);
+		if (!FilePath.IsExists())
+			SaveRaw(pBitmap, FilePath.c_str());
 	}
 	return true;
 }

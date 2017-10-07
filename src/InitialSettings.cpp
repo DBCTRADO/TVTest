@@ -19,8 +19,6 @@ CInitialSettings::CInitialSettings(const CDriverManager *pDriverManager)
 	: m_pDriverManager(pDriverManager)
 	, m_fDrawLogo(false)
 {
-	m_szDriverFileName[0] = '\0';
-
 	// ビデオレンダラのデフォルトをEVRにする
 	m_VideoRenderer = LibISDB::DirectShow::VideoRenderer::RendererType::EVR;
 
@@ -45,15 +43,6 @@ bool CInitialSettings::Show(HWND hwndOwner)
 		hwndOwner,
 		GetAppClass().GetResourceInstance(),
 		MAKEINTRESOURCE(IDD_INITIALSETTINGS)) == IDOK;
-}
-
-
-bool CInitialSettings::GetDriverFileName(LPTSTR pszFileName, int MaxLength) const
-{
-	if (::lstrlen(m_szDriverFileName) >= MaxLength)
-		return false;
-	::lstrcpy(pszFileName, m_szDriverFileName);
-	return true;
 }
 
 
@@ -113,8 +102,8 @@ INT_PTR CInitialSettings::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lP
 				if (m_pDriverManager->NumDrivers() > 0) {
 					DlgComboBox_GetLBString(
 						hDlg, IDC_INITIALSETTINGS_DRIVER,
-						0, m_szDriverFileName);
-					::SetDlgItemText(hDlg, IDC_INITIALSETTINGS_DRIVER, m_szDriverFileName);
+						0, &m_DriverFileName);
+					::SetDlgItemText(hDlg, IDC_INITIALSETTINGS_DRIVER, m_DriverFileName.c_str());
 				}
 			}
 
@@ -159,15 +148,14 @@ INT_PTR CInitialSettings::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lP
 		case IDC_INITIALSETTINGS_DRIVER_BROWSE:
 			{
 				OPENFILENAME ofn;
-				TCHAR szFileName[MAX_PATH], szInitDir[MAX_PATH];
-				CFilePath FilePath;
+				TCHAR szFileName[MAX_PATH];
+				TVTest::String FileName, InitDir;
 
 				::GetDlgItemText(hDlg, IDC_INITIALSETTINGS_DRIVER, szFileName, lengthof(szFileName));
-				FilePath.SetPath(szFileName);
-				if (FilePath.GetDirectory(szInitDir)) {
-					::lstrcpy(szFileName, FilePath.GetFileName());
+				if (TVTest::PathUtil::Split(szFileName, &InitDir, &FileName)) {
+					::lstrcpy(szFileName, FileName.c_str());
 				} else {
-					GetAppClass().GetAppDirectory(szInitDir);
+					GetAppClass().GetAppDirectory(&InitDir);
 				}
 				InitOpenFileName(&ofn);
 				ofn.hwndOwner = hDlg;
@@ -176,7 +164,7 @@ INT_PTR CInitialSettings::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lP
 					TEXT("すべてのファイル\0*.*\0");
 				ofn.lpstrFile = szFileName;
 				ofn.nMaxFile = lengthof(szFileName);
-				ofn.lpstrInitialDir = szInitDir;
+				ofn.lpstrInitialDir = InitDir.c_str();
 				ofn.lpstrTitle = TEXT("BonDriverの選択");
 				ofn.Flags = OFN_HIDEREADONLY | OFN_FILEMUSTEXIST | OFN_EXPLORER;
 				if (FileOpenDialog(&ofn)) {
@@ -280,7 +268,7 @@ INT_PTR CInitialSettings::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lP
 					return TRUE;
 				}
 
-				::GetDlgItemText(hDlg, IDC_INITIALSETTINGS_DRIVER, m_szDriverFileName, MAX_PATH);
+				GetDlgItemString(hDlg, IDC_INITIALSETTINGS_DRIVER, &m_DriverFileName);
 
 				m_Mpeg2DecoderName = Mpeg2DecoderName;
 				m_H264DecoderName = H264DecoderName;

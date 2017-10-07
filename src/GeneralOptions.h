@@ -32,7 +32,7 @@ public:
 	DefaultDriverType GetDefaultDriverType() const;
 	LPCTSTR GetDefaultDriverName() const;
 	bool SetDefaultDriverName(LPCTSTR pszDriverName);
-	bool GetFirstDriverName(LPTSTR pszDriverName) const;
+	bool GetFirstDriverName(TVTest::String *pDriverName) const;
 	bool GetResident() const;
 	bool GetKeepSingleTask() const;
 	bool GetStandaloneProgramGuide() const { return m_fStandaloneProgramGuide; }

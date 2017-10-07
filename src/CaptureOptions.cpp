@@ -141,7 +141,6 @@ CCaptureOptions::CCaptureOptions()
 		)
 	, m_CapturePercentage(PERCENTAGE_50)
 {
-	GetAppClass().GetAppDirectory(m_szSaveFolder);
 }
 
 
@@ -153,7 +152,7 @@ CCaptureOptions::~CCaptureOptions()
 
 bool CCaptureOptions::ReadSettings(CSettings &Settings)
 {
-	Settings.Read(TEXT("CaptureFolder"), m_szSaveFolder, lengthof(m_szSaveFolder));
+	Settings.Read(TEXT("CaptureFolder"), &m_SaveFolder);
 	if (!Settings.Read(TEXT("CaptureFileNameFormat"), &m_FileName)) {
 		// ver.0.9.0 より前との互換用
 		if (Settings.Read(TEXT("CaptureFileName"), &m_FileName))
@@ -207,7 +206,7 @@ bool CCaptureOptions::ReadSettings(CSettings &Settings)
 
 bool CCaptureOptions::WriteSettings(CSettings &Settings)
 {
-	Settings.Write(TEXT("CaptureFolder"), m_szSaveFolder);
+	Settings.Write(TEXT("CaptureFolder"), m_SaveFolder);
 	Settings.Write(TEXT("CaptureFileNameFormat"), m_FileName);
 	Settings.Write(TEXT("CaptureSaveFormat"), m_ImageCodec.EnumSaveFormat(m_SaveFormat));
 	Settings.Write(TEXT("CaptureIconSaveFile"), m_fCaptureSaveToFile);
@@ -297,13 +296,13 @@ bool CCaptureOptions::GenerateFileName(
 	if (pFileName == nullptr)
 		return false;
 
-	TCHAR szSaveFolder[MAX_PATH];
+	TVTest::CFilePath SaveFolder;
 
-	if (m_szSaveFolder[0] != '\0') {
-		if (!GetAbsolutePath(m_szSaveFolder, szSaveFolder, lengthof(szSaveFolder)))
+	if (!m_SaveFolder.empty()) {
+		if (!GetAbsolutePath(m_SaveFolder, &SaveFolder))
 			return false;
 	} else {
-		if (!GetAppClass().GetAppDirectory(szSaveFolder))
+		if (!GetAppClass().GetAppDirectory(&SaveFolder))
 			return false;
 	}
 
@@ -311,30 +310,28 @@ bool CCaptureOptions::GenerateFileName(
 	GetAppClass().Core.GetVariableStringEventInfo(&EventInfo);
 	TVTest::CCaptureVariableStringMap VarStrMap(EventInfo, pImage);
 	TVTest::String FileName;
-	TCHAR szPath[MAX_PATH];
 
 	VarStrMap.SetCurrentTime(&pImage->GetCaptureTime());
 
 	if (!TVTest::FormatVariableString(&VarStrMap, m_FileName.c_str(), &FileName)
 			|| FileName.empty())
 		return false;
-	if (::lstrlen(szSaveFolder) + 1 + (int)FileName.length() >= MAX_PATH)
+	SaveFolder.Append(FileName);
+	FileName = SaveFolder;
+	SaveFolder.RemoveFileName();
+	if (SaveFolder.length() >= MAX_PATH)
 		return false;
-	::PathCombine(szPath, szSaveFolder, FileName.c_str());
-	::lstrcpy(szSaveFolder, szPath);
-	::PathRemoveFileSpec(szSaveFolder);
-	if (!::PathIsDirectory(szSaveFolder)) {
-		int Result = ::SHCreateDirectoryEx(nullptr, szSaveFolder, nullptr);
+	if (!::PathIsDirectory(SaveFolder.c_str())) {
+		int Result = ::SHCreateDirectoryEx(nullptr, SaveFolder.c_str(), nullptr);
 		if (Result != ERROR_SUCCESS && Result != ERROR_ALREADY_EXISTS) {
 			GetAppClass().AddLog(
 				CLogItem::TYPE_ERROR,
 				TEXT("キャプチャの保存先フォルダ \"%s\" を作成できません。"),
-				szSaveFolder);
+				SaveFolder.c_str());
 			return false;
 		}
 	}
 
-	FileName = szPath;
 	FileName += _T('.');
 	FileName += m_ImageCodec.GetExtension(m_SaveFormat);
 	if (!MakeUniqueFileName(&FileName))
@@ -413,16 +410,16 @@ int CCaptureOptions::TranslateCommand(int Command)
 
 bool CCaptureOptions::OpenSaveFolder() const
 {
-	TCHAR szFolder[MAX_PATH];
+	TVTest::String Folder;
 
-	if (m_szSaveFolder[0] != '\0') {
-		if (!GetAbsolutePath(m_szSaveFolder, szFolder, lengthof(szFolder)))
+	if (!m_SaveFolder.empty()) {
+		if (!GetAbsolutePath(m_SaveFolder, &Folder))
 			return false;
 	} else {
-		if (!GetAppClass().GetAppDirectory(szFolder))
+		if (!GetAppClass().GetAppDirectory(&Folder))
 			return false;
 	}
-	return (ULONG_PTR)::ShellExecute(nullptr, TEXT("open"), szFolder, nullptr, nullptr, SW_SHOWNORMAL) > 32;
+	return (ULONG_PTR)::ShellExecute(nullptr, TEXT("open"), Folder.c_str(), nullptr, nullptr, SW_SHOWNORMAL) > 32;
 }
 
 
@@ -432,7 +429,7 @@ INT_PTR CCaptureOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 	case WM_INITDIALOG:
 		{
 			SendDlgItemMessage(hDlg, IDC_CAPTUREOPTIONS_SAVEFOLDER, EM_LIMITTEXT, MAX_PATH - 1, 0);
-			SetDlgItemText(hDlg, IDC_CAPTUREOPTIONS_SAVEFOLDER, m_szSaveFolder);
+			SetDlgItemText(hDlg, IDC_CAPTUREOPTIONS_SAVEFOLDER, m_SaveFolder.c_str());
 			SetDlgItemText(hDlg, IDC_CAPTUREOPTIONS_FILENAME, m_FileName.c_str());
 			InitDropDownButton(hDlg, IDC_CAPTUREOPTIONS_FILENAME_PARAMETERS);
 
@@ -591,12 +588,11 @@ INT_PTR CCaptureOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 		switch (((LPNMHDR)lParam)->code) {
 		case PSN_APPLY:
 			{
-				TCHAR szSaveFolder[MAX_PATH];
-
-				GetDlgItemText(hDlg, IDC_CAPTUREOPTIONS_SAVEFOLDER, szSaveFolder, lengthof(szSaveFolder));
+				TVTest::String SaveFolder;
+				GetDlgItemString(hDlg, IDC_CAPTUREOPTIONS_SAVEFOLDER, &SaveFolder);
 				CAppMain::CreateDirectoryResult CreateDirResult =
 					GetAppClass().CreateDirectory(
-						hDlg, szSaveFolder,
+						hDlg, SaveFolder.c_str(),
 						TEXT("キャプチャ画像の保存先フォルダ \"%s\" がありません。\n")
 						TEXT("作成しますか?"));
 				if (CreateDirResult == CAppMain::CREATEDIRECTORY_RESULT_ERROR) {
@@ -615,7 +611,7 @@ INT_PTR CCaptureOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 					return TRUE;
 				}
 
-				lstrcpy(m_szSaveFolder, szSaveFolder);
+				m_SaveFolder = SaveFolder;
 				m_FileName = FileName;
 
 				SetPresetCaptureSize(

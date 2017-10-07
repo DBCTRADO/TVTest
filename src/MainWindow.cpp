@@ -3271,14 +3271,14 @@ void CMainWindow::OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
 	case CM_DRIVER_BROWSE:
 		{
 			OPENFILENAME ofn;
-			TCHAR szFileName[MAX_PATH], szInitDir[MAX_PATH];
-			CFilePath FilePath;
+			TCHAR szFileName[MAX_PATH];
+			TVTest::String Path, Name, InitDir;
 
-			FilePath.SetPath(m_App.CoreEngine.GetDriverFileName());
-			if (FilePath.GetDirectory(szInitDir)) {
-				::lstrcpy(szFileName, FilePath.GetFileName());
+			m_App.CoreEngine.GetDriverPath(&Path);
+			if (TVTest::PathUtil::Split(Path, &InitDir, &Name)) {
+				::lstrcpyn(szFileName, Name.c_str(), MAX_PATH);
 			} else {
-				m_App.GetAppDirectory(szInitDir);
+				m_App.GetAppDirectory(&InitDir);
 				szFileName[0] = '\0';
 			}
 			InitOpenFileName(&ofn);
@@ -3288,7 +3288,7 @@ void CMainWindow::OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
 				TEXT("すべてのファイル\0*.*\0");
 			ofn.lpstrFile = szFileName;
 			ofn.nMaxFile = lengthof(szFileName);
-			ofn.lpstrInitialDir = szInitDir;
+			ofn.lpstrInitialDir = InitDir.c_str();
 			ofn.lpstrTitle = TEXT("BonDriverの選択");
 			ofn.Flags = OFN_HIDEREADONLY | OFN_FILEMUSTEXIST | OFN_EXPLORER;
 			if (FileOpenDialog(&ofn)) {

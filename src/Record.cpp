@@ -1380,11 +1380,13 @@ INT_PTR CRecordManager::CRecordSettingsDialog::DlgProc(HWND hDlg, UINT uMsg, WPA
 				}
 
 				if (!m_pRecManager->m_fRecording) {
-					TCHAR szFileName[MAX_PATH];
+					TCHAR szFile[MAX_PATH];
 
-					GetDlgItemText(hDlg, IDC_RECORD_FILENAME, szFileName, MAX_PATH);
-					CFilePath FilePath(szFileName);
-					if (szFileName[0] == '\0' || *FilePath.GetFileName() == '\0') {
+					GetDlgItemText(hDlg, IDC_RECORD_FILENAME, szFile, MAX_PATH);
+					TVTest::CFilePath FilePath(szFile);
+					TVTest::String Dir, FileName;
+					FilePath.Split(&Dir, &FileName);
+					if (FilePath.empty() || FileName.empty()) {
 						::MessageBox(
 							hDlg,
 							TEXT("ファイル名を入力してください。"),
@@ -1392,24 +1394,15 @@ INT_PTR CRecordManager::CRecordSettingsDialog::DlgProc(HWND hDlg, UINT uMsg, WPA
 						SetDlgItemFocus(hDlg, IDC_RECORD_FILENAME);
 						return TRUE;
 					}
-#if 0
-					if (!FilePath.IsValid()) {
-						::MessageBox(
-							hDlg,
-							TEXT("ファイル名に使用できない文字が含まれています。"),
-							nullptr, MB_OK | MB_ICONEXCLAMATION);
-						SetDlgItemFocus(hDlg, IDC_RECORD_FILENAME);
-						return TRUE;
-					}
-#else
+
 					TVTest::String Message;
-					if (!IsValidFileName(FilePath.GetFileName(), 0, &Message)) {
+					if (!IsValidFileName(FileName.c_str(), 0, &Message)) {
 						::MessageBox(hDlg, Message.c_str(), nullptr, MB_OK | MB_ICONEXCLAMATION);
 						SetDlgItemFocus(hDlg, IDC_RECORD_FILENAME);
 						return TRUE;
 					}
-#endif
-					if (!FilePath.HasDirectory()) {
+
+					if (Dir.empty()) {
 						::MessageBox(
 							hDlg,
 							TEXT("保存先フォルダを入力してください。"),
@@ -1417,11 +1410,11 @@ INT_PTR CRecordManager::CRecordSettingsDialog::DlgProc(HWND hDlg, UINT uMsg, WPA
 						SetDlgItemFocus(hDlg, IDC_RECORD_FILENAME);
 						return TRUE;
 					}
+
 					if (StartTimeChecked != IDC_RECORD_START_NOW) {
-						FilePath.GetDirectory(szFileName);
 						CAppMain::CreateDirectoryResult CreateDirResult =
 							GetAppClass().CreateDirectory(
-								hDlg, szFileName,
+								hDlg, Dir.c_str(),
 								TEXT("録画ファイルの保存先フォルダ \"%s\" がありません。\n")
 								TEXT("作成しますか?"));
 						if (CreateDirResult == CAppMain::CREATEDIRECTORY_RESULT_ERROR) {
@@ -1429,7 +1422,8 @@ INT_PTR CRecordManager::CRecordSettingsDialog::DlgProc(HWND hDlg, UINT uMsg, WPA
 							return TRUE;
 						}
 					}
-					m_pRecManager->SetFileName(FilePath.GetPath());
+
+					m_pRecManager->SetFileName(FilePath.c_str());
 
 					switch (StartTimeChecked) {
 					case IDC_RECORD_START_NOW:

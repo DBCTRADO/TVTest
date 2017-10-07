@@ -55,7 +55,7 @@ public:
 	bool GetTitleBarFontEnabled() const { return m_fEnableTitleBarFont; }
 	const TVTest::Style::Font &GetTitleBarFont() const { return m_TitleBarFont; }
 	bool GetShowLogo() const { return m_fShowLogo; }
-	LPCTSTR GetLogoFileName() const { return m_szLogoFileName; }
+	LPCTSTR GetLogoFileName() const { return m_LogoFileName.c_str(); }
 	bool GetNoScreenSaver() const { return m_fNoScreenSaver; }
 	bool GetNoMonitorLowPower() const { return m_fNoMonitorLowPower; }
 	bool GetNoMonitorLowPowerActiveOnly() const { return m_fNoMonitorLowPowerActiveOnly; }
@@ -82,7 +82,7 @@ private:
 	bool m_fEnableTitleBarFont;
 	TVTest::Style::Font m_TitleBarFont;
 	bool m_fShowLogo;
-	TCHAR m_szLogoFileName[MAX_PATH];
+	TVTest::String m_LogoFileName;
 
 	bool m_fNoScreenSaver;
 	bool m_fNoMonitorLowPower;

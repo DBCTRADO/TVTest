@@ -93,13 +93,14 @@ public:
 	bool AddEventListener(EventListener *pEventListener);
 	bool RemoveEventListener(EventListener *pEventListener);
 
-	LPCTSTR GetDriverDirectory() const { return m_szDriverDirectory; }
-	bool GetDriverDirectory(LPTSTR pszDirectory, int MaxLength) const;
 	bool SetDriverDirectory(LPCTSTR pszDirectory);
+	LPCTSTR GetDriverDirectory() const { return m_DriverDirectory.c_str(); }
+	bool GetDriverDirectoryPath(TVTest::String *pDirectory) const;
 	bool SetDriverFileName(LPCTSTR pszFileName);
-	LPCTSTR GetDriverFileName() const { return m_szDriverFileName; }
+	LPCTSTR GetDriverFileName() const { return m_DriverFileName.c_str(); }
+	bool GetDriverPath(TVTest::String *pPath) const;
 	bool GetDriverPath(LPTSTR pszPath, int MaxLength) const;
-	bool IsDriverSpecified() const { return m_szDriverFileName[0] != '\0'; }
+	bool IsDriverSpecified() const { return !m_DriverFileName.empty(); }
 	bool OpenTuner();
 	bool CloseTuner();
 	bool IsTunerOpen() const;
@@ -205,8 +206,8 @@ private:
 
 	LibISDB::EventListenerList<EventListener> m_EventListenerList;
 
-	TCHAR m_szDriverDirectory[MAX_PATH];
-	TCHAR m_szDriverFileName[MAX_PATH];
+	TVTest::CFilePath m_DriverDirectory;
+	TVTest::CFilePath m_DriverFileName;
 	DriverType m_DriverType;
 
 	std::vector<TSProcessorInfo> m_TSProcessorList;

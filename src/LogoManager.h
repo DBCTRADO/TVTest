@@ -25,7 +25,7 @@ public:
 	CLogoManager();
 	void Clear();
 	bool SetLogoDirectory(LPCTSTR pszDirectory);
-	LPCTSTR GetLogoDirectory() const { return m_szLogoDirectory; }
+	LPCTSTR GetLogoDirectory() const { return m_LogoDirectory.c_str(); }
 	bool SetSaveLogo(bool fSave);
 	bool GetSaveLogo() const { return m_fSaveLogo; }
 	bool SetSaveLogoBmp(bool fSave);
@@ -103,7 +103,7 @@ private:
 	}
 	typedef std::map<DWORD, WORD> LogoIDMap;
 
-	TCHAR m_szLogoDirectory[MAX_PATH];
+	TVTest::CFilePath m_LogoDirectory;
 	bool m_fSaveLogo;
 	bool m_fSaveBmp;
 	LogoMap m_LogoMap;

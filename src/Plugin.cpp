@@ -3789,9 +3789,9 @@ bool CPlugin::OnGetSetting(TVTest::SettingInfo *pSetting) const
 	CAppMain &App = GetAppClass();
 
 	if (::lstrcmpiW(pSetting->pszName, L"DriverDirectory") == 0) {
-		TCHAR szDirectory[MAX_PATH];
-		App.Core.GetDriverDirectory(szDirectory, lengthof(szDirectory));
-		return GetSettingString(pSetting, szDirectory);
+		TVTest::String Directory;
+		App.CoreEngine.GetDriverDirectoryPath(&Directory);
+		return GetSettingString(pSetting, Directory.c_str());
 	} else if (::lstrcmpiW(pSetting->pszName, L"IniFilePath") == 0) {
 		return GetSettingString(pSetting, App.GetIniFileName());
 	} else if (::lstrcmpiW(pSetting->pszName, L"RecordFolder") == 0) {

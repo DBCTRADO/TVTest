@@ -117,21 +117,17 @@ bool CGeneralOptions::SetDefaultDriverName(LPCTSTR pszDriverName)
 }
 
 
-bool CGeneralOptions::GetFirstDriverName(LPTSTR pszDriverName) const
+bool CGeneralOptions::GetFirstDriverName(TVTest::String *pDriverName) const
 {
 	switch (m_DefaultDriverType) {
 	case DEFAULT_DRIVER_NONE:
-		pszDriverName[0] = '\0';
+		pDriverName->clear();
 		break;
 	case DEFAULT_DRIVER_LAST:
-		if (m_LastBonDriverName.length() >= MAX_PATH)
-			return false;
-		::lstrcpy(pszDriverName, m_LastBonDriverName.c_str());
+		*pDriverName = m_LastBonDriverName;
 		break;
 	case DEFAULT_DRIVER_CUSTOM:
-		if (m_DefaultBonDriverName.length() >= MAX_PATH)
-			return false;
-		::lstrcpy(pszDriverName, m_DefaultBonDriverName.c_str());
+		*pDriverName = m_DefaultBonDriverName;
 		break;
 	default:
 		return false;
@@ -235,15 +231,14 @@ INT_PTR CGeneralOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 		case IDC_OPTIONS_DEFAULTDRIVER_BROWSE:
 			{
 				OPENFILENAME ofn;
-				TCHAR szFileName[MAX_PATH], szInitDir[MAX_PATH];
-				CFilePath FilePath;
+				TCHAR szFileName[MAX_PATH];
+				TVTest::String FileName, InitDir;
 
 				::GetDlgItemText(hDlg, IDC_OPTIONS_DEFAULTDRIVER, szFileName, lengthof(szFileName));
-				FilePath.SetPath(szFileName);
-				if (FilePath.GetDirectory(szInitDir)) {
-					::lstrcpy(szFileName, FilePath.GetFileName());
+				if (TVTest::PathUtil::Split(szFileName, &InitDir, &FileName)) {
+					::lstrcpy(szFileName, FileName.c_str());
 				} else {
-					GetAppClass().GetAppDirectory(szInitDir);
+					GetAppClass().GetAppDirectory(&InitDir);
 				}
 				InitOpenFileName(&ofn);
 				ofn.hwndOwner = hDlg;
@@ -252,7 +247,7 @@ INT_PTR CGeneralOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 					TEXT("すべてのファイル\0*.*\0");
 				ofn.lpstrFile = szFileName;
 				ofn.nMaxFile = lengthof(szFileName);
-				ofn.lpstrInitialDir = szInitDir;
+				ofn.lpstrInitialDir = InitDir.c_str();
 				ofn.lpstrTitle = TEXT("BonDriverの選択");
 				ofn.Flags = OFN_HIDEREADONLY | OFN_FILEMUSTEXIST | OFN_EXPLORER;
 				if (FileOpenDialog(&ofn))

@@ -21,8 +21,7 @@ public:
 // CBasicDialog
 	bool Show(HWND hwndOwner) override;
 
-	LPCTSTR GetDriverFileName() const { return m_szDriverFileName; }
-	bool GetDriverFileName(LPTSTR pszFileName, int MaxLength) const;
+	LPCTSTR GetDriverFileName() const { return m_DriverFileName.c_str(); }
 	LPCTSTR GetMpeg2DecoderName() const { return m_Mpeg2DecoderName.c_str(); }
 	LPCTSTR GetH264DecoderName() const { return m_H264DecoderName.c_str(); }
 	LPCTSTR GetH265DecoderName() const { return m_H265DecoderName.c_str(); }
@@ -31,7 +30,7 @@ public:
 
 private:
 	const CDriverManager *m_pDriverManager;
-	TCHAR m_szDriverFileName[MAX_PATH];
+	TVTest::CFilePath m_DriverFileName;
 	TVTest::String m_Mpeg2DecoderName;
 	TVTest::String m_H264DecoderName;
 	TVTest::String m_H265DecoderName;

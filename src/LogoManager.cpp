@@ -107,14 +107,14 @@ static SYSTEMTIME UInt64ToSystemTime(ULONGLONG Time)
 
 
 CLogoManager::CLogoManager()
-	: m_fSaveLogo(false)
+	: m_LogoDirectory(TEXT(".\\Logo"))
+	, m_fSaveLogo(false)
 	, m_fSaveBmp(false)
 	, m_fLogoUpdated(false)
 	, m_fLogoIDMapUpdated(false)
 	, m_LogoFileLastWriteTime(FILETIME_NULL)
 	, m_LogoIDMapFileLastWriteTime(FILETIME_NULL)
 {
-	::lstrcpy(m_szLogoDirectory, TEXT(".\\Logo"));
 }
 
 
@@ -128,7 +128,7 @@ bool CLogoManager::SetLogoDirectory(LPCTSTR pszDirectory)
 {
 	TVTest::BlockLock Lock(m_Lock);
 
-	::lstrcpy(m_szLogoDirectory, pszDirectory);
+	m_LogoDirectory = pszDirectory;
 	return true;
 }
 
@@ -577,9 +577,10 @@ void CLogoManager::OnLogoDownloaded(const LibISDB::LogoDownloaderFilter::LogoDat
 	}
 
 	if (fDataUpdated && (m_fSaveLogo || m_fSaveBmp)) {
-		TCHAR szFilePath[MAX_PATH], szDirectory[MAX_PATH], szFileName[MAX_PATH];
+		TCHAR szDirectory[MAX_PATH], szFileName[MAX_PATH];
+		TVTest::CFilePath FilePath;
 
-		if (!GetAbsolutePath(m_szLogoDirectory, szDirectory, lengthof(szDirectory)))
+		if (!GetAbsolutePath(m_LogoDirectory.c_str(), szDirectory, lengthof(szDirectory)))
 			return;
 		if (!::PathIsDirectory(szDirectory)) {
 			// 一階層のみ自動的に作成
@@ -591,17 +592,19 @@ void CLogoManager::OnLogoDownloaded(const LibISDB::LogoDownloaderFilter::LogoDat
 			::wsprintf(
 				szFileName, TEXT("%04X_%03X_%03X_%02X"),
 				Data.NetworkID, Data.LogoID, Data.LogoVersion, Data.LogoType);
-			::PathCombine(szFilePath, szDirectory, szFileName);
-			if (!::PathFileExists(szFilePath))
-				pLogoData->SaveToFile(szFilePath);
+			FilePath = szDirectory;
+			FilePath.Append(szFileName);
+			if (!FilePath.IsFileExists())
+				pLogoData->SaveToFile(FilePath.c_str());
 		}
 		if (m_fSaveBmp) {
 			::wsprintf(
 				szFileName, TEXT("%04X_%03X_%03X_%02X.bmp"),
 				Data.NetworkID, Data.LogoID, Data.LogoVersion, Data.LogoType);
-			::PathCombine(szFilePath, szDirectory, szFileName);
-			if (!::PathFileExists(szFilePath))
-				pLogoData->SaveBmpToFile(&m_ImageCodec, szFilePath);
+			FilePath = szDirectory;
+			FilePath.Append(szFileName);
+			if (!FilePath.IsFileExists())
+				pLogoData->SaveBmpToFile(&m_ImageCodec, FilePath.c_str());
 		}
 	}
 }
@@ -635,7 +638,7 @@ CLogoManager::CLogoData *CLogoManager::LoadLogoData(WORD NetworkID, WORD LogoID,
 {
 	TCHAR szDirectory[MAX_PATH], szFileName[MAX_PATH], szMask[32];
 
-	if (!GetAbsolutePath(m_szLogoDirectory, szDirectory, lengthof(szDirectory)))
+	if (!GetAbsolutePath(m_LogoDirectory.c_str(), szDirectory, lengthof(szDirectory)))
 		return false;
 	// 最もバージョンが新しいロゴを探す
 	::wsprintf(szMask, TEXT("%04X_%03X_\?\?\?_%02X"), NetworkID, LogoID, LogoType);

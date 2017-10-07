@@ -822,6 +822,31 @@ bool GetAbsolutePath(LPCTSTR pszFilePath, LPTSTR pszAbsolutePath, int MaxLength)
 }
 
 
+bool GetAbsolutePath(const TVTest::String &FilePath, TVTest::String *pAbsolutePath)
+{
+	if (pAbsolutePath == nullptr)
+		return false;
+
+	pAbsolutePath->clear();
+
+	if (FilePath.empty())
+		return false;
+
+	if (TVTest::PathUtil::IsRelative(FilePath)) {
+		TCHAR szDir[MAX_PATH];
+		::GetModuleFileName(nullptr, szDir, _countof(szDir));
+		::PathRemoveFileSpec(szDir);
+
+		if (!TVTest::PathUtil::RelativeToAbsolute(pAbsolutePath, TVTest::String(szDir), FilePath))
+			return false;
+	} else {
+		pAbsolutePath->assign(FilePath);
+	}
+
+	return true;
+}
+
+
 static HBITMAP CreateIconMaskBitmap(
 	int IconWidth, int IconHeight, int ImageWidth, int ImageHeight)
 {
@@ -1297,215 +1322,6 @@ void CStaticStringFormatter::RemoveTrailingWhitespace()
 	if (m_Length > 0) {
 		m_Length -= ::RemoveTrailingWhitespace(m_pBuffer);
 	}
-}
-
-
-
-
-CFilePath::CFilePath()
-{
-	m_szPath[0] = '\0';
-}
-
-
-CFilePath::CFilePath(const CFilePath &Path)
-{
-	::lstrcpy(m_szPath, Path.m_szPath);
-}
-
-
-CFilePath::CFilePath(LPCTSTR pszPath)
-{
-	if (pszPath)
-		::lstrcpy(m_szPath, pszPath);
-	else
-		m_szPath[0] = '\0';
-}
-
-
-CFilePath::~CFilePath()
-{
-}
-
-
-bool CFilePath::SetPath(LPCTSTR pszPath)
-{
-	if (::lstrlen(pszPath) >= MAX_PATH)
-		return false;
-	::lstrcpy(m_szPath, pszPath);
-	return true;
-}
-
-
-void CFilePath::GetPath(LPTSTR pszPath) const
-{
-	::lstrcpy(pszPath, m_szPath);
-}
-
-
-LPCTSTR CFilePath::GetFileName() const
-{
-	if (m_szPath[0] == '\0')
-		return m_szPath;
-	return ::PathFindFileName(m_szPath);
-}
-
-
-bool CFilePath::SetFileName(LPCTSTR pszFileName)
-{
-	::lstrcpy(::PathFindFileName(m_szPath), pszFileName);
-	return true;
-}
-
-
-bool CFilePath::RemoveFileName()
-{
-	LPTSTR pszFileName = ::PathFindFileName(m_szPath);
-
-	if (pszFileName > m_szPath) {
-		*pszFileName = '\0';
-		::PathRemoveBackslash(m_szPath);
-	}
-	return true;
-}
-
-
-LPCTSTR CFilePath::GetExtension() const
-{
-	return ::PathFindExtension(m_szPath);
-}
-
-
-bool CFilePath::SetExtension(LPCTSTR pszExtension)
-{
-	return ::PathRenameExtension(m_szPath, pszExtension) != FALSE;
-}
-
-
-bool CFilePath::RemoveExtension()
-{
-	if (m_szPath[0] != '\0')
-		::PathRemoveExtension(m_szPath);
-	return true;
-}
-
-
-bool CFilePath::AppendExtension(LPCTSTR pszExtension)
-{
-	if (::lstrlen(m_szPath) + ::lstrlen(pszExtension) >= MAX_PATH)
-		return false;
-	::lstrcat(m_szPath, pszExtension);
-	return true;
-}
-
-
-bool CFilePath::Make(LPCTSTR pszDirectory, LPCTSTR pszFileName)
-{
-	::PathCombine(m_szPath, pszDirectory, pszFileName);
-	return true;
-}
-
-
-bool CFilePath::Append(LPCTSTR pszMore)
-{
-	return ::PathAppend(m_szPath, pszMore) != FALSE;
-}
-
-
-bool CFilePath::GetDirectory(LPTSTR pszDirectory) const
-{
-	LPCTSTR pszFileName = GetFileName();
-
-	if (pszFileName == m_szPath) {
-		pszDirectory[0] = '\0';
-		return false;
-	}
-	::lstrcpyn(pszDirectory, m_szPath, (int)(pszFileName - m_szPath));
-	::PathRemoveBackslash(pszDirectory);
-	return true;
-}
-
-
-bool CFilePath::SetDirectory(LPCTSTR pszDirectory)
-{
-	if (IsStringEmpty(pszDirectory)) {
-		RemoveDirectory();
-	} else {
-		TCHAR szPath[MAX_PATH];
-
-		if (IsRelative()) {
-			if (::PathCombine(szPath, pszDirectory, m_szPath) == nullptr
-					|| !::PathCanonicalize(m_szPath, szPath))
-				return false;
-		} else {
-			if (::PathCombine(szPath, pszDirectory, GetFileName()) == nullptr)
-				return false;
-			::lstrcpy(m_szPath, szPath);
-		}
-	}
-	return true;
-}
-
-
-bool CFilePath::RemoveDirectory()
-{
-	LPTSTR pszFileName = ::PathFindFileName(m_szPath);
-
-	if (pszFileName > m_szPath)
-		::MoveMemory(m_szPath, pszFileName, (::lstrlen(pszFileName) + 1) * sizeof(TCHAR));
-	return true;
-}
-
-
-bool CFilePath::HasDirectory() const
-{
-	if (m_szPath[0] == '\0')
-		return false;
-	return !::PathIsFileSpec(m_szPath);
-}
-
-
-bool CFilePath::IsRelative() const
-{
-	if (m_szPath[0] == '\0')
-		return false;
-	return ::PathIsRelative(m_szPath) != 0;
-}
-
-
-bool CFilePath::IsExists() const
-{
-	if (m_szPath[0] == '\0')
-		return false;
-	return ::PathFileExists(m_szPath) != FALSE;
-}
-
-
-bool CFilePath::IsValid(bool fWildcard) const
-{
-	UINT Mask;
-	LPCTSTR p;
-
-	if (m_szPath[0] == '\0')
-		return false;
-	Mask = GCT_INVALID;
-	if (!fWildcard)
-		Mask |= GCT_WILD;
-	p = m_szPath;
-	while (*p != '\0') {
-#ifndef UNICODE
-		if (::IsDBCSLeadByteEx(CP_ACP, *p)) {
-			if (*(p + 1) != '\0')
-				p++;
-			p++;
-			continue;
-		}
-#endif
-		if ((::PathGetCharType(*p)&Mask) != 0)
-			return false;
-		p++;
-	}
-	return true;
 }
 
 
