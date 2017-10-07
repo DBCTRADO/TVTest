@@ -121,7 +121,7 @@ INT_PTR COptionDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 			COptions::ClearGeneralUpdateFlags();
 			for (int i = 0; i < NUM_PAGES; i++) {
 				m_PageList[i].pOptions->ClearUpdateFlags();
-				DlgListBox_AddString(hDlg, IDC_OPTIONS_LIST, i);
+				DlgListBox_AddItem(hDlg, IDC_OPTIONS_LIST, i);
 			}
 			if (m_StartPage >= 0 && m_StartPage < NUM_PAGES)
 				m_CurrentPage = m_StartPage;

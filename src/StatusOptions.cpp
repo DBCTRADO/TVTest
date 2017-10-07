@@ -328,7 +328,7 @@ bool CStatusOptions::SetItemVisibility(int ID, bool fVisible)
 void CStatusOptions::InitListBox()
 {
 	for (size_t i = 0; i < m_ItemListCur.size(); i++)
-		DlgListBox_AddString(m_hDlg, IDC_STATUSOPTIONS_ITEMLIST, &m_ItemListCur[i]);
+		DlgListBox_AddItem(m_hDlg, IDC_STATUSOPTIONS_ITEMLIST, reinterpret_cast<LPARAM>(&m_ItemListCur[i]));
 }
 
 
