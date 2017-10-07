@@ -47,15 +47,8 @@ bool CTaskbarManager::Initialize(HWND hwnd)
 	if (m_TaskbarButtonCreatedMessage == 0) {
 		m_TaskbarButtonCreatedMessage = ::RegisterWindowMessage(TEXT("TaskbarButtonCreated"));
 
-		auto pChangeWindowMessageFilterEx =
-			GET_MODULE_FUNCTION(TEXT("user32.dll"), ChangeWindowMessageFilterEx);
-		if (pChangeWindowMessageFilterEx != nullptr) {
-			pChangeWindowMessageFilterEx(hwnd, m_TaskbarButtonCreatedMessage, MSGFLT_ALLOW, nullptr);
-			pChangeWindowMessageFilterEx(hwnd, WM_COMMAND, MSGFLT_ALLOW, nullptr);
-		} else {
-			::ChangeWindowMessageFilter(m_TaskbarButtonCreatedMessage, MSGFLT_ADD);
-			::ChangeWindowMessageFilter(WM_COMMAND, MSGFLT_ADD);
-		}
+		::ChangeWindowMessageFilterEx(hwnd, m_TaskbarButtonCreatedMessage, MSGFLT_ALLOW, nullptr);
+		::ChangeWindowMessageFilterEx(hwnd, WM_COMMAND, MSGFLT_ALLOW, nullptr);
 
 		m_hwnd = hwnd;
 
@@ -63,17 +56,13 @@ bool CTaskbarManager::Initialize(HWND hwnd)
 		HRESULT hr = S_OK;
 
 		if (!m_AppID.empty()) {
-			auto pSetCurrentProcessExplicitAppUserModelID =
-				GET_MODULE_FUNCTION(TEXT("shell32.dll"), SetCurrentProcessExplicitAppUserModelID);
-			if (pSetCurrentProcessExplicitAppUserModelID != nullptr) {
-				hr = pSetCurrentProcessExplicitAppUserModelID(m_AppID.c_str());
-				if (FAILED(hr)) {
-					m_fAppIDInvalid = true;
-					App.AddLog(
-						CLogItem::TYPE_ERROR,
-						TEXT("AppID \"%s\" を設定できません。(%08x)"),
-						m_AppID.c_str(), hr);
-				}
+			hr = ::SetCurrentProcessExplicitAppUserModelID(m_AppID.c_str());
+			if (FAILED(hr)) {
+				m_fAppIDInvalid = true;
+				App.AddLog(
+					CLogItem::TYPE_ERROR,
+					TEXT("AppID \"%s\" を設定できません。(%08x)"),
+					m_AppID.c_str(), hr);
 			}
 		}
 		if (SUCCEEDED(hr)) {
