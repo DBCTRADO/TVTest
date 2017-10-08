@@ -25,14 +25,14 @@ public:
 		POPUPMENU_DEFAULT = 0x0001U
 	};
 
-	enum MenuType {
-		MENU_TUNERSELECT,
-		MENU_RECORD,
-		MENU_CAPTURE,
-		MENU_BUFFERING,
-		MENU_STREAMERROR,
-		MENU_CLOCK,
-		MENU_PROGRAMINFO
+	enum class MenuType {
+		TunerSelect,
+		Record,
+		Capture,
+		Buffering,
+		StreamError,
+		Clock,
+		ProgramInfo,
 	};
 
 	class CTitleStringMap

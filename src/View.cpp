@@ -222,7 +222,7 @@ CViewWindow::CViewWindow()
 	, m_hwndMessage(nullptr)
 	, m_pEventHandler(nullptr)
 	, m_hbmLogo(nullptr)
-	, m_BorderStyle(TVTest::Theme::BORDER_NONE, RGB(128, 128, 128))
+	, m_BorderStyle(TVTest::Theme::BorderType::None, RGB(128, 128, 128))
 	, m_fShowCursor(true)
 {
 }
@@ -294,7 +294,7 @@ void CViewWindow::SetBorder(const TVTest::Theme::BorderStyle &Style)
 	if (m_BorderStyle != Style) {
 		const bool fResize =
 			m_BorderStyle.Type != Style.Type
-			&& (m_BorderStyle.Type == TVTest::Theme::BORDER_NONE || Style.Type == TVTest::Theme::BORDER_NONE);
+			&& (m_BorderStyle.Type == TVTest::Theme::BorderType::None || Style.Type == TVTest::Theme::BorderType::None);
 		m_BorderStyle = Style;
 		if (m_hwnd) {
 			if (fResize)
@@ -567,46 +567,46 @@ void CDisplayView::DrawCloseButton(HDC hdc) const
 bool CDisplayView::GetItemStyle(ItemType Type, TVTest::Theme::Style *pStyle) const
 {
 	switch (Type) {
-	case ITEM_STYLE_NORMAL:
-	case ITEM_STYLE_NORMAL_1:
-	case ITEM_STYLE_NORMAL_2:
-		pStyle->Back.Fill.Type = TVTest::Theme::FILL_SOLID;
-		if (Type != ITEM_STYLE_NORMAL_2) {
+	case ItemType::Normal:
+	case ItemType::Normal1:
+	case ItemType::Normal2:
+		pStyle->Back.Fill.Type = TVTest::Theme::FillType::Solid;
+		if (Type != ItemType::Normal2) {
 			pStyle->Back.Fill.Solid.Color.Set(48, 48, 48);
 		} else {
 			pStyle->Back.Fill.Solid.Color.Set(24, 24, 24);
 		}
-		pStyle->Back.Border.Type = TVTest::Theme::BORDER_NONE;
-		pStyle->Fore.Fill.Type = TVTest::Theme::FILL_SOLID;
+		pStyle->Back.Border.Type = TVTest::Theme::BorderType::None;
+		pStyle->Fore.Fill.Type = TVTest::Theme::FillType::Solid;
 		pStyle->Fore.Fill.Solid.Color.Set(255, 255, 255);
 		break;
 
-	case ITEM_STYLE_HOT:
-		pStyle->Back.Fill.Type = TVTest::Theme::FILL_GRADIENT;
-		pStyle->Back.Fill.Gradient.Type = TVTest::Theme::GRADIENT_NORMAL;
-		pStyle->Back.Fill.Gradient.Direction = TVTest::Theme::DIRECTION_VERT;
+	case ItemType::Hot:
+		pStyle->Back.Fill.Type = TVTest::Theme::FillType::Gradient;
+		pStyle->Back.Fill.Gradient.Type = TVTest::Theme::GradientType::Normal;
+		pStyle->Back.Fill.Gradient.Direction = TVTest::Theme::GradientDirection::Vert;
 		pStyle->Back.Fill.Gradient.Color1.Set(128, 128, 128);
 		pStyle->Back.Fill.Gradient.Color2.Set(96, 96, 96);
-		pStyle->Back.Border.Type = TVTest::Theme::BORDER_SOLID;
+		pStyle->Back.Border.Type = TVTest::Theme::BorderType::Solid;
 		pStyle->Back.Border.Color.Set(144, 144, 144);
-		pStyle->Fore.Fill.Type = TVTest::Theme::FILL_SOLID;
+		pStyle->Fore.Fill.Type = TVTest::Theme::FillType::Solid;
 		pStyle->Fore.Fill.Solid.Color.Set(255, 255, 255);
 		break;
 
-	case ITEM_STYLE_SELECTED:
-	case ITEM_STYLE_CURRENT:
-		pStyle->Back.Fill.Type = TVTest::Theme::FILL_GRADIENT;
-		pStyle->Back.Fill.Gradient.Type = TVTest::Theme::GRADIENT_NORMAL;
-		pStyle->Back.Fill.Gradient.Direction = TVTest::Theme::DIRECTION_VERT;
+	case ItemType::Selected:
+	case ItemType::Current:
+		pStyle->Back.Fill.Type = TVTest::Theme::FillType::Gradient;
+		pStyle->Back.Fill.Gradient.Type = TVTest::Theme::GradientType::Normal;
+		pStyle->Back.Fill.Gradient.Direction = TVTest::Theme::GradientDirection::Vert;
 		pStyle->Back.Fill.Gradient.Color1.Set(96, 96, 96);
 		pStyle->Back.Fill.Gradient.Color2.Set(128, 128, 128);
-		if (Type == ITEM_STYLE_CURRENT) {
-			pStyle->Back.Border.Type = TVTest::Theme::BORDER_SOLID;
+		if (Type == ItemType::Current) {
+			pStyle->Back.Border.Type = TVTest::Theme::BorderType::Solid;
 			pStyle->Back.Border.Color.Set(144, 144, 144);
 		} else {
-			pStyle->Back.Border.Type = TVTest::Theme::BORDER_NONE;
+			pStyle->Back.Border.Type = TVTest::Theme::BorderType::None;
 		}
-		pStyle->Fore.Fill.Type = TVTest::Theme::FILL_SOLID;
+		pStyle->Fore.Fill.Type = TVTest::Theme::FillType::Solid;
 		pStyle->Fore.Fill.Solid.Color.Set(255, 255, 255);
 		break;
 
@@ -621,20 +621,20 @@ bool CDisplayView::GetItemStyle(ItemType Type, TVTest::Theme::Style *pStyle) con
 bool CDisplayView::GetBackgroundStyle(BackgroundType Type, TVTest::Theme::BackgroundStyle *pStyle) const
 {
 	switch (Type) {
-	case BACKGROUND_STYLE_CONTENT:
-		pStyle->Fill.Type = TVTest::Theme::FILL_GRADIENT;
-		pStyle->Fill.Gradient.Direction = TVTest::Theme::DIRECTION_HORZ;
+	case BackgroundType::Content:
+		pStyle->Fill.Type = TVTest::Theme::FillType::Gradient;
+		pStyle->Fill.Gradient.Direction = TVTest::Theme::GradientDirection::Horz;
 		pStyle->Fill.Gradient.Color1.Set(36, 36, 36);
 		pStyle->Fill.Gradient.Color2.Set(16, 16, 16);
-		pStyle->Border.Type = TVTest::Theme::BORDER_NONE;
+		pStyle->Border.Type = TVTest::Theme::BorderType::None;
 		break;
 
-	case BACKGROUND_STYLE_CATEGORIES:
-		pStyle->Fill.Type = TVTest::Theme::FILL_GRADIENT;
-		pStyle->Fill.Gradient.Direction = TVTest::Theme::DIRECTION_HORZ;
+	case BackgroundType::Categories:
+		pStyle->Fill.Type = TVTest::Theme::FillType::Gradient;
+		pStyle->Fill.Gradient.Direction = TVTest::Theme::GradientDirection::Horz;
 		pStyle->Fill.Gradient.Color1.Set(24, 24, 80);
 		pStyle->Fill.Gradient.Color2.Set(24, 24, 32);
-		pStyle->Border.Type = TVTest::Theme::BORDER_NONE;
+		pStyle->Border.Type = TVTest::Theme::BorderType::None;
 		break;
 
 	default:

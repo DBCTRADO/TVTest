@@ -60,7 +60,7 @@ bool CTaskbarManager::Initialize(HWND hwnd)
 			if (FAILED(hr)) {
 				m_fAppIDInvalid = true;
 				App.AddLog(
-					CLogItem::TYPE_ERROR,
+					CLogItem::LogType::Error,
 					TEXT("AppID \"%s\" を設定できません。(%08x)"),
 					m_AppID.c_str(), hr);
 			}
@@ -545,13 +545,13 @@ HRESULT CTaskbarManager::AddRecentChannelsCategory(ICustomDestinationList *pcdl)
 				int Result = ::SHCreateDirectoryEx(nullptr, szIconDir, nullptr);
 				if (Result != ERROR_SUCCESS && Result != ERROR_ALREADY_EXISTS) {
 					App.AddLog(
-						CLogItem::TYPE_ERROR,
+						CLogItem::LogType::Error,
 						TEXT("ジャンプリストアイコンフォルダ \"%s\" が作成できません。"),
 						szIconDir);
 					fShowIcon = false;
 				} else if (Result == ERROR_SUCCESS) {
 					App.AddLog(
-						CLogItem::TYPE_INFORMATION,
+						CLogItem::LogType::Information,
 						TEXT("ジャンプリストアイコンフォルダ \"%s\" を作成しました。"),
 						szIconDir);
 				}

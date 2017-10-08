@@ -17,10 +17,10 @@ class CNotificationBar
 	, protected CWindowTimerManager
 {
 public:
-	enum MessageType {
-		MESSAGE_INFO,
-		MESSAGE_WARNING,
-		MESSAGE_ERROR
+	enum class MessageType {
+		Info,
+		Warning,
+		Error,
 	};
 
 	CNotificationBar();

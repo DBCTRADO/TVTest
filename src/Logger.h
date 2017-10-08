@@ -10,10 +10,10 @@
 class CLogItem
 {
 public:
-	enum LogType {
-		TYPE_INFORMATION,
-		TYPE_WARNING,
-		TYPE_ERROR
+	enum class LogType {
+		Information,
+		Warning,
+		Error,
 	};
 
 	CLogItem();

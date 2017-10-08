@@ -12,11 +12,11 @@ namespace TVTest
 	class CNetworkDefinition
 	{
 	public:
-		enum NetworkType {
-			NETWORK_UNKNOWN,
-			NETWORK_TERRESTRIAL,
-			NETWORK_BS,
-			NETWORK_CS
+		enum class NetworkType {
+			Unknown,
+			Terrestrial,
+			BS,
+			CS,
 		};
 
 		struct NetworkInfo
@@ -26,7 +26,7 @@ namespace TVTest
 			NetworkType Type;
 
 			NetworkInfo();
-			NetworkInfo(WORD nid,LPCTSTR name,NetworkType type);
+			NetworkInfo(WORD nid, LPCTSTR name, NetworkType type);
 		};
 
 		typedef std::vector<NetworkInfo> NetworkInfoList;
@@ -48,8 +48,8 @@ namespace TVTest
 		bool IsBSNetworkID(WORD NetworkID) const;
 		bool IsCSNetworkID(WORD NetworkID) const;
 		bool IsSatelliteNetworkID(WORD NetworkID) const;
-		int GetNetworkTypeOrder(WORD NetworkID1,WORD NetworkID2) const;
-		int GetRemoteControlKeyID(WORD NetworkID,WORD ServiceID) const;
+		int GetNetworkTypeOrder(WORD NetworkID1, WORD NetworkID2) const;
+		int GetRemoteControlKeyID(WORD NetworkID, WORD ServiceID) const;
 
 	private:
 		NetworkInfoList::iterator FindNetworkInfoByID(WORD NetworkID);

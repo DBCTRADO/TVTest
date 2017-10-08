@@ -50,7 +50,7 @@ CChannelPanel::CChannelPanel()
 	, m_fShowGenreColor(false)
 	, m_fShowFeaturedMark(true)
 	, m_fShowProgressBar(false)
-	, m_ProgressBarStyle(PROGRESSBAR_STYLE_ELAPSED)
+	, m_ProgressBarStyle(ProgressBarStyle::Elapsed)
 	, m_EventsPerChannel(2)
 	, m_ExpandAdditionalEvents(4)
 	, m_ExpandEvents(m_EventsPerChannel + m_ExpandAdditionalEvents)
@@ -1010,7 +1010,7 @@ void CChannelPanel::Draw(HDC hdc, const RECT *prcPaint)
 								::MulDiv(
 									rcProgress.right - rcProgress.left,
 									static_cast<int>(Elapsed), EventInfo.Duration);
-							if (m_ProgressBarStyle == PROGRESSBAR_STYLE_ELAPSED)
+							if (m_ProgressBarStyle == ProgressBarStyle::Elapsed)
 								rcProgress.right = rcProgress.left + Width;
 							else
 								rcProgress.left += Width;
@@ -1106,8 +1106,8 @@ void CChannelPanel::OnCommand(int ID)
 	case CM_CHANNELPANEL_PROGRESSBAR_REMAINING:
 		SetProgressBarStyle(
 			ID == CM_CHANNELPANEL_PROGRESSBAR_ELAPSED ?
-			PROGRESSBAR_STYLE_ELAPSED :
-			PROGRESSBAR_STYLE_REMAINING);
+				ProgressBarStyle::Elapsed :
+				ProgressBarStyle::Remaining);
 		SetShowProgressBar(true);
 		return;
 	}
@@ -1389,10 +1389,10 @@ void CChannelPanel::ShowMenu(int x, int y)
 	Menu.CheckRadioItem(
 		CM_CHANNELPANEL_PROGRESSBAR_NONE, CM_CHANNELPANEL_PROGRESSBAR_REMAINING,
 		!m_fShowProgressBar ?
-		CM_CHANNELPANEL_PROGRESSBAR_NONE :
-		m_ProgressBarStyle == PROGRESSBAR_STYLE_ELAPSED ?
-		CM_CHANNELPANEL_PROGRESSBAR_ELAPSED :
-		CM_CHANNELPANEL_PROGRESSBAR_REMAINING);
+			CM_CHANNELPANEL_PROGRESSBAR_NONE :
+		m_ProgressBarStyle == ProgressBarStyle::Elapsed ?
+			CM_CHANNELPANEL_PROGRESSBAR_ELAPSED :
+			CM_CHANNELPANEL_PROGRESSBAR_REMAINING);
 
 	POINT pt = {x, y};
 	Menu.Show(m_hwnd, &pt);

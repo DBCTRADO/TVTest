@@ -96,10 +96,10 @@ CMainWindow::CMainWindow(CAppMain &App)
 	, m_fStandbyInit(false)
 	, m_fMinimizeInit(false)
 
-	, m_WindowState(WINDOW_STATE_NORMAL)
+	, m_WindowState(WindowState::Normal)
 	, m_fWindowRegionSet(false)
 	, m_fWindowFrameChanged(false)
-	, m_WindowSizeMode(WINDOW_SIZE_HD)
+	, m_WindowSizeMode(WindowSizeMode::HD)
 
 	, m_fLockLayout(false)
 	, m_fStatusBarInitialized(false)
@@ -468,9 +468,9 @@ bool CMainWindow::ReadSettings(CSettings &Settings)
 	Settings.Read(TEXT("WindowSize.1Seg.Width"), &m_1SegWindowSize.Width);
 	Settings.Read(TEXT("WindowSize.1Seg.Height"), &m_1SegWindowSize.Height);
 	if (m_HDWindowSize.Width == Width && m_HDWindowSize.Height == Height)
-		m_WindowSizeMode = WINDOW_SIZE_HD;
+		m_WindowSizeMode = WindowSizeMode::HD;
 	else if (m_1SegWindowSize.Width == Width && m_1SegWindowSize.Height == Height)
-		m_WindowSizeMode = WINDOW_SIZE_1SEG;
+		m_WindowSizeMode = WindowSizeMode::OneSeg;
 
 	if (Settings.Read(TEXT("AlwaysOnTop"), &f))
 		m_pCore->SetAlwaysOnTop(f);
@@ -663,7 +663,7 @@ bool CMainWindow::ShowStatusBarItem(int ID, bool fShow)
 		// ポップアップ表示されたサイドバーの位置の調整
 		if (((!m_fShowSideBar && m_App.SideBar.GetVisible())
 					|| (m_pCore->GetFullscreen() && m_Fullscreen.IsSideBarVisible()))
-				&& m_App.SideBarOptions.GetPlace() == CSideBarOptions::PLACE_BOTTOM) {
+				&& m_App.SideBarOptions.GetPlace() == CSideBarOptions::PlaceType::Bottom) {
 			m_App.SideBar.GetPosition(&rc);
 			::OffsetRect(&rc, 0, -Offset);
 			m_App.SideBar.SetPosition(&rc);
@@ -843,7 +843,7 @@ bool CMainWindow::OnBarMouseLeave(HWND hwnd)
 	if (hwnd == m_TitleBar.GetHandle()) {
 		if (!m_fShowTitleBar) {
 			if (!m_fShowSideBar && m_App.SideBar.GetVisible()
-					&& m_App.SideBarOptions.GetPlace() == CSideBarOptions::PLACE_TOP) {
+					&& m_App.SideBarOptions.GetPlace() == CSideBarOptions::PlaceType::Top) {
 				if (::RealChildWindowFromPoint(m_App.SideBar.GetParent(), pt) == m_App.SideBar.GetHandle())
 					return false;
 			}
@@ -855,7 +855,7 @@ bool CMainWindow::OnBarMouseLeave(HWND hwnd)
 	} else if (hwnd == m_App.StatusView.GetHandle()) {
 		if (!m_fShowStatusBar) {
 			if (!m_fShowSideBar && m_App.SideBar.GetVisible()
-					&& m_App.SideBarOptions.GetPlace() == CSideBarOptions::PLACE_BOTTOM) {
+					&& m_App.SideBarOptions.GetPlace() == CSideBarOptions::PlaceType::Bottom) {
 				if (::RealChildWindowFromPoint(m_App.SideBar.GetParent(), pt) == m_App.SideBar.GetHandle())
 					return false;
 			}
@@ -928,7 +928,7 @@ void CMainWindow::OnPanelDocking(CPanelFrame::DockingPlace Place)
 	}
 
 	m_fPanelVerticalAlign =
-		Place == CPanelFrame::DOCKING_TOP || Place == CPanelFrame::DOCKING_BOTTOM;
+		Place == CPanelFrame::DockingPlace::Top || Place == CPanelFrame::DockingPlace::Bottom;
 
 	UpdateLayoutStructure();
 
@@ -936,7 +936,7 @@ void CMainWindow::OnPanelDocking(CPanelFrame::DockingPlace Place)
 		m_LayoutBase.GetContainerByID(CONTAINER_ID_PANELSPLITTER));
 
 	const int Index =
-		(Place == CPanelFrame::DOCKING_LEFT || Place == CPanelFrame::DOCKING_TOP) ? 0 : 1;
+		(Place == CPanelFrame::DockingPlace::Left || Place == CPanelFrame::DockingPlace::Top) ? 0 : 1;
 	if (pPanelSplitter->IDToIndex(CONTAINER_ID_PANEL) != Index)
 		pPanelSplitter->SwapPane();
 
@@ -1351,7 +1351,7 @@ LRESULT CMainWindow::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 					&& !m_App.EpgCaptureManager.IsCapturing()) {
 				ShowNotificationBar(
 					TEXT("このチャンネルは放送休止中です"),
-					CNotificationBar::MESSAGE_INFO);
+					CNotificationBar::MessageType::Info);
 			}
 
 			delete pInfo;
@@ -1641,11 +1641,11 @@ bool CMainWindow::OnCreate(const CREATESTRUCT *pcs)
 	InitializeUI();
 
 	if ((pcs->style & WS_MINIMIZE) != 0)
-		m_WindowState = WINDOW_STATE_MINIMIZED;
+		m_WindowState = WindowState::Minimized;
 	else if ((pcs->style & WS_MAXIMIZE) != 0)
-		m_WindowState = WINDOW_STATE_MAXIMIZED;
+		m_WindowState = WindowState::Maximized;
 	else
-		m_WindowState = WINDOW_STATE_NORMAL;
+		m_WindowState = WindowState::Normal;
 
 	RECT rc;
 	GetClientRect(&rc);
@@ -1720,8 +1720,8 @@ bool CMainWindow::OnCreate(const CREATESTRUCT *pcs)
 	Layout::CSplitter *pSideBarSplitter = new Layout::CSplitter(CONTAINER_ID_SIDEBARSPLITTER);
 	CSideBarOptions::PlaceType SideBarPlace = m_App.SideBarOptions.GetPlace();
 	bool fSideBarVertical =
-		SideBarPlace == CSideBarOptions::PLACE_LEFT ||
-		SideBarPlace == CSideBarOptions::PLACE_RIGHT;
+		SideBarPlace == CSideBarOptions::PlaceType::Left ||
+		SideBarPlace == CSideBarOptions::PlaceType::Right;
 	int SideBarWidth = m_App.SideBar.GetBarWidth();
 	pSideBarSplitter->SetStyle(
 		Layout::CSplitter::STYLE_FIXED |
@@ -1739,8 +1739,8 @@ bool CMainWindow::OnCreate(const CREATESTRUCT *pcs)
 	pWindowContainer->SetVisible(/*m_fShowSideBar*/false);
 	pSideBarSplitter->SetPane(1, pWindowContainer);
 	pSideBarSplitter->SetPaneSize(CONTAINER_ID_SIDEBAR, SideBarWidth);
-	if (SideBarPlace == CSideBarOptions::PLACE_LEFT
-			|| SideBarPlace == CSideBarOptions::PLACE_TOP)
+	if (SideBarPlace == CSideBarOptions::PlaceType::Left
+			|| SideBarPlace == CSideBarOptions::PlaceType::Top)
 		pSideBarSplitter->SwapPane();
 
 	Layout::CSplitter *pTitleBarSplitter = new Layout::CSplitter(CONTAINER_ID_TITLEBARSPLITTER);
@@ -1906,7 +1906,7 @@ void CMainWindow::OnDestroy()
 
 	RECT rc;
 	GetPosition(&rc);
-	if (m_WindowSizeMode == WINDOW_SIZE_1SEG)
+	if (m_WindowSizeMode == WindowSizeMode::OneSeg)
 		m_1SegWindowSize = rc;
 	else
 		m_HDWindowSize = rc;
@@ -1944,11 +1944,11 @@ void CMainWindow::OnSizeChanged(UINT State, int Width, int Height)
 	const bool fMaximized = State == SIZE_MAXIMIZED;
 	WindowState NewState;
 	if (fMinimized)
-		NewState = WINDOW_STATE_MINIMIZED;
+		NewState = WindowState::Minimized;
 	else if (fMaximized)
-		NewState = WINDOW_STATE_MAXIMIZED;
+		NewState = WindowState::Maximized;
 	else
-		NewState = WINDOW_STATE_NORMAL;
+		NewState = WindowState::Normal;
 
 	if (fMinimized) {
 		m_App.OSDManager.ClearOSD();
@@ -1965,7 +1965,7 @@ void CMainWindow::OnSizeChanged(UINT State, int Width, int Height)
 
 	if ((m_fCustomFrame && fMaximized) || m_fWindowRegionSet)
 		SetMaximizedRegion(fMaximized);
-	if (m_fWindowFrameChanged && !fMaximized && m_WindowState == WINDOW_STATE_MAXIMIZED)
+	if (m_fWindowFrameChanged && !fMaximized && m_WindowState == WindowState::Maximized)
 		UpdateWindowFrame();
 
 	if (m_WindowState != NewState)
@@ -2195,15 +2195,15 @@ void CMainWindow::OnMouseMove(int x, int y)
 		}
 		if (!m_fShowSideBar && m_App.SideBarOptions.ShowPopup()) {
 			switch (m_App.SideBarOptions.GetPlace()) {
-			case CSideBarOptions::PLACE_LEFT:
-			case CSideBarOptions::PLACE_RIGHT:
+			case CSideBarOptions::PlaceType::Left:
+			case CSideBarOptions::PlaceType::Right:
 				if (!fShowStatusBar && !fShowTitleBar) {
 					m_SideBarManager.Layout(&rcClient, &rcSideBar);
 					if (::PtInRect(&rcSideBar, pt))
 						fShowSideBar = true;
 				}
 				break;
-			case CSideBarOptions::PLACE_TOP:
+			case CSideBarOptions::PlaceType::Top:
 				if (!m_fShowTitleBar && m_fPopupTitleBar)
 					rcClient.top = rcTitle.bottom;
 				m_SideBarManager.Layout(&rcClient, &rcSideBar);
@@ -2213,7 +2213,7 @@ void CMainWindow::OnMouseMove(int x, int y)
 						fShowTitleBar = true;
 				}
 				break;
-			case CSideBarOptions::PLACE_BOTTOM:
+			case CSideBarOptions::PlaceType::Bottom:
 				if (!m_fShowStatusBar && m_App.StatusOptions.GetShowPopup())
 					rcClient.bottom = rcStatus.top;
 				m_SideBarManager.Layout(&rcClient, &rcSideBar);
@@ -2284,18 +2284,18 @@ bool CMainWindow::OnKeyDown(WPARAM KeyCode)
 {
 	CChannelInput::KeyDownResult Result = m_ChannelInput.OnKeyDown(KeyCode);
 
-	if (Result != CChannelInput::KEYDOWN_NOTPROCESSED) {
+	if (Result != CChannelInput::KeyDownResult::NotProcessed) {
 		switch (Result) {
-		case CChannelInput::KEYDOWN_COMPLETED:
+		case CChannelInput::KeyDownResult::Completed:
 			EndChannelNoInput(true);
 			break;
 
-		case CChannelInput::KEYDOWN_CANCELLED:
+		case CChannelInput::KeyDownResult::Cancelled:
 			EndChannelNoInput(false);
 			break;
 
-		case CChannelInput::KEYDOWN_BEGIN:
-		case CChannelInput::KEYDOWN_CONTINUE:
+		case CChannelInput::KeyDownResult::Begin:
+		case CChannelInput::KeyDownResult::Continue:
 			OnChannelNoInput();
 			break;
 		}
@@ -2743,7 +2743,7 @@ void CMainWindow::OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
 						m_App.RecordManager.SetFileName(szFileName);
 				}
 				if (m_App.RecordManager.RecordDialog(GetVideoHostWindow())) {
-					m_App.RecordManager.SetClient(CRecordManager::CLIENT_USER);
+					m_App.RecordManager.SetClient(CRecordManager::RecordClient::User);
 					if (m_App.RecordManager.IsReserved()) {
 						m_App.StatusView.UpdateItem(STATUS_ITEM_RECORD);
 					} else {
@@ -2788,7 +2788,7 @@ void CMainWindow::OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
 					return;
 				}
 			}
-			m_App.Core.StartRecord(nullptr, nullptr, nullptr, CRecordManager::CLIENT_USER, true);
+			m_App.Core.StartRecord(nullptr, nullptr, nullptr, CRecordManager::RecordClient::User, true);
 		}
 		return;
 
@@ -3001,7 +3001,7 @@ void CMainWindow::OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
 				if (TuningSpaceList.SaveToFile(szFileName))
 					m_App.AddLog(TEXT("チャンネルファイルを \"%s\" に保存しました。"), szFileName);
 				else
-					m_App.AddLog(CLogItem::TYPE_ERROR, TEXT("チャンネルファイル \"%s\" を保存できません。"), szFileName);
+					m_App.AddLog(CLogItem::LogType::Error, TEXT("チャンネルファイル \"%s\" を保存できません。"), szFileName);
 			}
 		}
 		return;
@@ -3244,9 +3244,9 @@ void CMainWindow::OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
 
 			if (Place != m_App.SideBarOptions.GetPlace()) {
 				bool fVertical =
-					Place == CSideBarOptions::PLACE_LEFT || Place == CSideBarOptions::PLACE_RIGHT;
+					Place == CSideBarOptions::PlaceType::Left || Place == CSideBarOptions::PlaceType::Right;
 				int Pane =
-					Place == CSideBarOptions::PLACE_LEFT || Place == CSideBarOptions::PLACE_TOP ? 0 : 1;
+					Place == CSideBarOptions::PlaceType::Left || Place == CSideBarOptions::PlaceType::Top ? 0 : 1;
 
 				m_App.SideBarOptions.SetPlace(Place);
 				m_App.SideBar.SetVertical(fVertical);
@@ -3384,9 +3384,9 @@ void CMainWindow::OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
 			if (::IsZoomed(hwnd))
 				::ShowWindow(hwnd, SW_RESTORE);
 			if (m_App.ZoomOptions.GetZoomInfoByCommand(id, &Info)) {
-				if (Info.Type == CZoomOptions::ZOOM_RATE)
+				if (Info.Type == CZoomOptions::ZoomType::Rate)
 					SetZoomRate(Info.Rate.Rate, Info.Rate.Factor);
-				else if (Info.Type == CZoomOptions::ZOOM_SIZE)
+				else if (Info.Type == CZoomOptions::ZoomType::Size)
 					AdjustWindowSize(Info.Size.Width, Info.Size.Height);
 			}
 			return;
@@ -3763,7 +3763,7 @@ void CMainWindow::OnTimer(HWND hwnd, UINT id)
 					::SetTimer(m_hwnd, TIMER_ID_HIDETOOLTIP, 10000, nullptr);
 					ShowNotificationBar(
 						TEXT("録画ファイルの保存先の空き容量が少なくなっています"),
-						CNotificationBar::MESSAGE_WARNING, 6000);
+						CNotificationBar::MessageType::Warning, 6000);
 					m_fAlertedLowFreeSpace = true;
 				}
 			}
@@ -3838,18 +3838,18 @@ void CMainWindow::OnTimer(HWND hwnd, UINT id)
 			if (m_App.CoreEngine.GetVideoViewSize(&Width, &Height)
 					&& Width > 0 && Height > 0) {
 				WindowSizeMode Mode =
-					Height <= 240 ? WINDOW_SIZE_1SEG : WINDOW_SIZE_HD;
+					Height <= 240 ? WindowSizeMode::OneSeg : WindowSizeMode::HD;
 
 				if (m_WindowSizeMode != Mode) {
 					RECT rc;
 					GetPosition(&rc);
-					if (m_WindowSizeMode == WINDOW_SIZE_1SEG)
+					if (m_WindowSizeMode == WindowSizeMode::OneSeg)
 						m_1SegWindowSize = rc;
 					else
 						m_HDWindowSize = rc;
 					m_WindowSizeMode = Mode;
 					const WindowSize *pSize;
-					if (m_WindowSizeMode == WINDOW_SIZE_1SEG)
+					if (m_WindowSizeMode == WindowSizeMode::OneSeg)
 						pSize = &m_1SegWindowSize;
 					else
 						pSize = &m_HDWindowSize;
@@ -4051,7 +4051,7 @@ bool CMainWindow::OnInitMenuPopup(HMENU hmenu)
 					} else if (Info.Language != 0 && (!Info.IsDualMono() || Info.fMultiLingual)) {
 						LibISDB::GetLanguageText_ja(Info.Language, pszText, MaxText);
 						Length = ::lstrlen(pszText);
-						if (Info.DualMono == CAudioManager::DUALMONO_BOTH) {
+						if (Info.DualMono == CAudioManager::DualMonoMode::Both) {
 							TCHAR szLang2[LibISDB::MAX_LANGUAGE_TEXT_LENGTH];
 							LibISDB::GetLanguageText_ja(Info.Language2, szLang2, lengthof(szLang2));
 							Length += StdUtil::snprintf(pszText + Length, MaxText - Length, TEXT("+%s"), szLang2);
@@ -4059,9 +4059,9 @@ bool CMainWindow::OnInitMenuPopup(HMENU hmenu)
 					} else if (Info.IsDualMono()) {
 						Length = StdUtil::snprintf(
 							pszText, MaxText,
-							Info.DualMono == CAudioManager::DUALMONO_MAIN ?
+							Info.DualMono == CAudioManager::DualMonoMode::Main ?
 								TEXT("主音声") :
-							Info.DualMono == CAudioManager::DUALMONO_SUB ?
+							Info.DualMono == CAudioManager::DualMonoMode::Sub ?
 								TEXT("副音声") :
 								TEXT("主+副音声"));
 					} else {
@@ -4112,7 +4112,7 @@ bool CMainWindow::OnInitMenuPopup(HMENU hmenu)
 											Length = StdUtil::snprintf(szText, lengthof(szText), TEXT("サブ%d"), SubGroupCount + 1);
 									}
 
-									if (!AudioInfo.IsDualMono() || AudioInfo.DualMono == CAudioManager::DUALMONO_MAIN)
+									if (!AudioInfo.IsDualMono() || AudioInfo.DualMono == CAudioManager::DualMonoMode::Main)
 										StreamNumber++;
 
 									TCHAR szAudio[64];
@@ -4125,13 +4125,13 @@ bool CMainWindow::OnInitMenuPopup(HMENU hmenu)
 
 									if (AudioInfo.IsDualMono()) {
 										if (CurDualMonoMode == LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode::Main) {
-											if (AudioInfo.DualMono == CAudioManager::DUALMONO_MAIN)
+											if (AudioInfo.DualMono == CAudioManager::DualMonoMode::Main)
 												Sel = AudioIndex;
 										} else if (CurDualMonoMode == LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode::Sub) {
-											if (AudioInfo.DualMono == CAudioManager::DUALMONO_SUB)
+											if (AudioInfo.DualMono == CAudioManager::DualMonoMode::Sub)
 												Sel = AudioIndex;
 										} else {
-											if (AudioInfo.DualMono == CAudioManager::DUALMONO_BOTH)
+											if (AudioInfo.DualMono == CAudioManager::DualMonoMode::Both)
 												Sel = AudioIndex;
 										}
 										fDualMono = true;
@@ -4160,7 +4160,7 @@ bool CMainWindow::OnInitMenuPopup(HMENU hmenu)
 				if (AudioInfo.ID == CAudioManager::ID_INVALID)
 					continue;
 
-				if (!AudioInfo.IsDualMono() || AudioInfo.DualMono == CAudioManager::DUALMONO_MAIN)
+				if (!AudioInfo.IsDualMono() || AudioInfo.DualMono == CAudioManager::DualMonoMode::Main)
 					StreamNumber++;
 
 				TCHAR szText[80];
@@ -4175,13 +4175,13 @@ bool CMainWindow::OnInitMenuPopup(HMENU hmenu)
 				if (AudioInfo.ID == CurAudioID) {
 					if (AudioInfo.IsDualMono()) {
 						if (CurDualMonoMode == LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode::Main) {
-							if (AudioInfo.DualMono == CAudioManager::DUALMONO_MAIN)
+							if (AudioInfo.DualMono == CAudioManager::DualMonoMode::Main)
 								Sel = i;
 						} else if (CurDualMonoMode == LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode::Sub) {
-							if (AudioInfo.DualMono == CAudioManager::DUALMONO_SUB)
+							if (AudioInfo.DualMono == CAudioManager::DualMonoMode::Sub)
 								Sel = i;
 						} else {
-							if (AudioInfo.DualMono == CAudioManager::DUALMONO_BOTH)
+							if (AudioInfo.DualMono == CAudioManager::DualMonoMode::Both)
 								Sel = i;
 						}
 						fDualMono = true;
@@ -4571,7 +4571,7 @@ void CMainWindow::OnChannelChanged(unsigned int Status)
 	m_App.StatusView.UpdateItem(STATUS_ITEM_TUNER);
 	m_App.Panel.ControlPanel.UpdateItem(CONTROLPANEL_ITEM_CHANNEL);
 	m_App.Panel.ControlPanel.UpdateItem(CONTROLPANEL_ITEM_TUNER);
-	if (pCurChannel != nullptr && m_App.OSDOptions.IsOSDEnabled(COSDOptions::OSD_CHANNEL))
+	if (pCurChannel != nullptr && m_App.OSDOptions.IsOSDEnabled(COSDOptions::OSDType::Channel))
 		ShowChannelOSD();
 	const bool fEpgLoading =
 		m_App.EpgOptions.IsEpgFileLoading() || m_App.EpgOptions.IsEDCBDataLoading();
@@ -4884,7 +4884,7 @@ void CMainWindow::ShowChannelOSD()
 		if (pInfo != nullptr) {
 			TVTest::String Text;
 
-			if (m_App.OSDOptions.GetChannelChangeType() != COSDOptions::CHANNELCHANGE_LOGOONLY) {
+			if (m_App.OSDOptions.GetChannelChangeType() != COSDOptions::ChannelChangeType::LogoOnly) {
 				TVTest::CEventVariableStringMap::EventInfo Event;
 
 				m_App.Core.GetVariableStringEventInfo(&Event);
@@ -4958,7 +4958,7 @@ void CMainWindow::OnEventChanged()
 				}
 			}
 			Text += EventInfo.EventName;
-			ShowNotificationBar(Text.c_str(), CNotificationBar::MESSAGE_INFO, 0, true);
+			ShowNotificationBar(Text.c_str(), CNotificationBar::MessageType::Info, 0, true);
 		}
 	}
 
@@ -5012,7 +5012,7 @@ void CMainWindow::OnRecordingStarted()
 
 	m_ResetErrorCountTimer.End();
 	m_fAlertedLowFreeSpace = false;
-	if (m_App.OSDOptions.IsOSDEnabled(COSDOptions::OSD_RECORDING))
+	if (m_App.OSDOptions.IsOSDEnabled(COSDOptions::OSDType::Recording))
 		m_App.OSDManager.ShowOSD(TEXT("●録画"));
 
 	m_pCore->UpdateTitle();
@@ -5027,7 +5027,7 @@ void CMainWindow::OnRecordingStopped()
 	//m_App.MainMenu.EnableItem(CM_RECORDSTOPTIME, false);
 	m_App.TaskbarManager.SetRecordingStatus(false);
 	m_App.RecordManager.SetStopOnEventEnd(false);
-	if (m_App.OSDOptions.IsOSDEnabled(COSDOptions::OSD_RECORDING))
+	if (m_App.OSDOptions.IsOSDEnabled(COSDOptions::OSDType::Recording))
 		m_App.OSDManager.ShowOSD(TEXT("■録画停止"));
 	if (m_pCore->GetStandby())
 		m_App.Core.CloseTuner();
@@ -5166,7 +5166,7 @@ void CMainWindow::OnMouseWheel(WPARAM wParam, LPARAM lParam, bool fHorz)
 				SetWheelChannelChanging(true, m_App.OperationOptions.GetWheelChannelDelay());
 				m_App.ChannelManager.SetChangingChannel(Channel);
 				m_App.StatusView.UpdateItem(STATUS_ITEM_CHANNEL);
-				if (m_App.OSDOptions.IsOSDEnabled(COSDOptions::OSD_CHANNEL))
+				if (m_App.OSDOptions.IsOSDEnabled(COSDOptions::OSDType::Channel))
 					ShowChannelOSD();
 			}
 			fProcessed = true;
@@ -5271,7 +5271,7 @@ HWND CMainWindow::GetViewerWindow() const
 
 bool CMainWindow::ShowVolumeOSD()
 {
-	if (m_App.OSDOptions.IsOSDEnabled(COSDOptions::OSD_VOLUME)
+	if (m_App.OSDOptions.IsOSDEnabled(COSDOptions::OSDType::Volume)
 			&& GetVisible() && !::IsIconic(m_hwnd)) {
 		m_App.OSDManager.ShowVolumeOSD(m_pCore->GetVolume());
 		return true;
@@ -5333,7 +5333,7 @@ void CMainWindow::OnVariableChanged()
 
 void CMainWindow::ShowAudioOSD()
 {
-	if (m_App.OSDOptions.IsOSDEnabled(COSDOptions::OSD_AUDIO)) {
+	if (m_App.OSDOptions.IsOSDEnabled(COSDOptions::OSDType::Audio)) {
 		TCHAR szText[128];
 
 		if (m_pCore->GetSelectedAudioText(szText, lengthof(szText)))
@@ -5426,7 +5426,7 @@ void CMainWindow::OnPanAndScanChanged()
 {
 	if (!m_pCore->GetFullscreen()) {
 		switch (m_App.ViewOptions.GetPanScanAdjustWindowMode()) {
-		case CViewOptions::ADJUSTWINDOW_FIT:
+		case CViewOptions::AdjustWindowMode::Fit:
 			{
 				int ZoomRate, ZoomFactor;
 				int Width, Height;
@@ -5446,7 +5446,7 @@ void CMainWindow::OnPanAndScanChanged()
 			}
 			break;
 
-		case CViewOptions::ADJUSTWINDOW_WIDTH:
+		case CViewOptions::AdjustWindowMode::Width:
 			{
 				SIZE sz;
 				int Width, Height;
@@ -6216,7 +6216,7 @@ void CMainWindow::EndChannelNoInput(bool fDetermine)
 
 void CMainWindow::OnChannelNoInput()
 {
-	if (m_App.OSDOptions.IsOSDEnabled(COSDOptions::OSD_CHANNELNOINPUT)) {
+	if (m_App.OSDOptions.IsOSDEnabled(COSDOptions::OSDType::ChannelNoInput)) {
 		TCHAR szText[16];
 		int MaxDigits = m_ChannelInput.GetMaxDigits();
 		int Number = m_ChannelInput.GetNumber();
@@ -6474,7 +6474,7 @@ CMainWindow::CFullscreen::CFullscreen(CMainWindow &MainWindow)
 	, m_PanelEventHandler(*this)
 	, m_PanelWidth(-1)
 	, m_PanelHeight(-1)
-	, m_PanelPlace(CPanelFrame::DOCKING_NONE)
+	, m_PanelPlace(CPanelFrame::DockingPlace::None)
 {
 	RegisterUIChild(&m_LayoutBase);
 	RegisterUIChild(&m_TitleBar);
@@ -6729,17 +6729,17 @@ bool CMainWindow::CFullscreen::OnCreate()
 
 	Layout::CSplitter *pSplitter = new Layout::CSplitter(CONTAINER_ID_PANELSPLITTER);
 	pSplitter->SetVisible(true);
-	if (m_PanelPlace == CPanelFrame::DOCKING_NONE) {
+	if (m_PanelPlace == CPanelFrame::DockingPlace::None) {
 		if (!m_App.Panel.Frame.IsDockingVertical()) {
 			m_PanelPlace =
 				m_MainWindow.GetPanelPaneIndex() == 0 ?
-					CPanelFrame::DOCKING_LEFT : CPanelFrame::DOCKING_RIGHT;
+					CPanelFrame::DockingPlace::Left : CPanelFrame::DockingPlace::Right;
 		} else {
-			m_PanelPlace = CPanelFrame::DOCKING_RIGHT;
+			m_PanelPlace = CPanelFrame::DockingPlace::Right;
 		}
 	}
 	int PanelPaneIndex =
-		m_PanelPlace == CPanelFrame::DOCKING_LEFT || m_PanelPlace == CPanelFrame::DOCKING_TOP ? 0 : 1;
+		m_PanelPlace == CPanelFrame::DockingPlace::Left || m_PanelPlace == CPanelFrame::DockingPlace::Top ? 0 : 1;
 	Layout::CWindowContainer *pViewContainer = new Layout::CWindowContainer(CONTAINER_ID_VIEW);
 	pViewContainer->SetWindow(&m_ViewWindow);
 	pViewContainer->SetMinSize(32, 32);
@@ -6806,8 +6806,8 @@ void CMainWindow::CFullscreen::ShowPanel(bool fShow)
 		Layout::CSplitter *pSplitter =
 			dynamic_cast<Layout::CSplitter*>(m_LayoutBase.GetContainerByID(CONTAINER_ID_PANELSPLITTER));
 		const bool fVertical =
-			m_PanelPlace == CPanelFrame::DOCKING_TOP ||
-			m_PanelPlace == CPanelFrame::DOCKING_BOTTOM;
+			m_PanelPlace == CPanelFrame::DockingPlace::Top ||
+			m_PanelPlace == CPanelFrame::DockingPlace::Bottom;
 
 		if (fShow) {
 			if (m_Panel.GetWindow() == nullptr) {
@@ -6906,14 +6906,14 @@ bool CMainWindow::CFullscreen::SetPanelPlace(CPanelFrame::DockingPlace Place)
 		Layout::CSplitter *pSplitter = dynamic_cast<Layout::CSplitter*>(
 			m_LayoutBase.GetContainerByID(CONTAINER_ID_PANELSPLITTER));
 		const bool fVerticalOld =
-			m_PanelPlace == CPanelFrame::DOCKING_TOP ||
-			m_PanelPlace == CPanelFrame::DOCKING_BOTTOM;
+			m_PanelPlace == CPanelFrame::DockingPlace::Top ||
+			m_PanelPlace == CPanelFrame::DockingPlace::Bottom;
 		const bool fVerticalNew =
-			Place == CPanelFrame::DOCKING_TOP ||
-			Place == CPanelFrame::DOCKING_BOTTOM;
+			Place == CPanelFrame::DockingPlace::Top ||
+			Place == CPanelFrame::DockingPlace::Bottom;
 		const int Index =
-			Place == CPanelFrame::DOCKING_LEFT ||
-			Place == CPanelFrame::DOCKING_TOP ? 0 : 1;
+			Place == CPanelFrame::DockingPlace::Left ||
+			Place == CPanelFrame::DockingPlace::Top ? 0 : 1;
 
 		if (fVerticalOld)
 			m_PanelHeight = pSplitter->GetPaneSize(CONTAINER_ID_PANEL);
@@ -7019,15 +7019,15 @@ void CMainWindow::CFullscreen::OnMouseMove()
 	if (m_App.SideBarOptions.ShowPopup()) {
 		RECT rcSideBar;
 		switch (m_App.SideBarOptions.GetPlace()) {
-		case CSideBarOptions::PLACE_LEFT:
-		case CSideBarOptions::PLACE_RIGHT:
+		case CSideBarOptions::PlaceType::Left:
+		case CSideBarOptions::PlaceType::Right:
 			if (!fShowStatusView && !fShowTitleBar) {
 				m_MainWindow.m_SideBarManager.Layout(&rcClient, &rcSideBar);
 				if (::PtInRect(&rcSideBar, pt))
 					fShowSideBar = true;
 			}
 			break;
-		case CSideBarOptions::PLACE_TOP:
+		case CSideBarOptions::PlaceType::Top:
 			rcClient.top = rcTitle.bottom;
 			m_MainWindow.m_SideBarManager.Layout(&rcClient, &rcSideBar);
 			if (::PtInRect(&rcSideBar, pt)) {
@@ -7035,7 +7035,7 @@ void CMainWindow::CFullscreen::OnMouseMove()
 				fShowTitleBar = true;
 			}
 			break;
-		case CSideBarOptions::PLACE_BOTTOM:
+		case CSideBarOptions::PlaceType::Bottom:
 			rcClient.bottom = rcStatus.top;
 			m_MainWindow.m_SideBarManager.Layout(&rcClient, &rcSideBar);
 			if (::PtInRect(&rcSideBar, pt)) {
@@ -7216,9 +7216,9 @@ bool CMainWindow::CFullscreen::CPanelEventHandler::OnMenuPopup(HMENU hmenu)
 	::AppendMenu(hmenu, MF_STRING | MF_ENABLED, PANEL_MENU_BOTTOM, TEXT("下へ(&B)"));
 	::EnableMenuItem(
 		hmenu,
-		m_Fullscreen.m_PanelPlace == CPanelFrame::DOCKING_LEFT ? PANEL_MENU_LEFT :
-		m_Fullscreen.m_PanelPlace == CPanelFrame::DOCKING_RIGHT ? PANEL_MENU_RIGHT :
-		m_Fullscreen.m_PanelPlace == CPanelFrame::DOCKING_TOP ? PANEL_MENU_TOP : PANEL_MENU_BOTTOM,
+		m_Fullscreen.m_PanelPlace == CPanelFrame::DockingPlace::Left ? PANEL_MENU_LEFT :
+		m_Fullscreen.m_PanelPlace == CPanelFrame::DockingPlace::Right ? PANEL_MENU_RIGHT :
+		m_Fullscreen.m_PanelPlace == CPanelFrame::DockingPlace::Top ? PANEL_MENU_TOP : PANEL_MENU_BOTTOM,
 		MF_BYCOMMAND | MF_GRAYED);
 	return true;
 }
@@ -7228,16 +7228,16 @@ bool CMainWindow::CFullscreen::CPanelEventHandler::OnMenuSelected(int Command)
 {
 	switch (Command) {
 	case PANEL_MENU_LEFT:
-		m_Fullscreen.SetPanelPlace(CPanelFrame::DOCKING_LEFT);
+		m_Fullscreen.SetPanelPlace(CPanelFrame::DockingPlace::Left);
 		return true;
 	case PANEL_MENU_RIGHT:
-		m_Fullscreen.SetPanelPlace(CPanelFrame::DOCKING_RIGHT);
+		m_Fullscreen.SetPanelPlace(CPanelFrame::DockingPlace::Right);
 		return true;
 	case PANEL_MENU_TOP:
-		m_Fullscreen.SetPanelPlace(CPanelFrame::DOCKING_TOP);
+		m_Fullscreen.SetPanelPlace(CPanelFrame::DockingPlace::Top);
 		return true;
 	case PANEL_MENU_BOTTOM:
-		m_Fullscreen.SetPanelPlace(CPanelFrame::DOCKING_BOTTOM);
+		m_Fullscreen.SetPanelPlace(CPanelFrame::DockingPlace::Bottom);
 		return true;
 	}
 
@@ -7446,7 +7446,7 @@ void CMainWindow::CSideBarManager::Layout(RECT *pArea, RECT *pBarRect)
 	const int BarWidth = m_pSideBar->GetBarWidth();
 
 	switch (m_pMainWindow->m_App.SideBarOptions.GetPlace()) {
-	case CSideBarOptions::PLACE_LEFT:
+	case CSideBarOptions::PlaceType::Left:
 		pBarRect->left = pArea->left;
 		pBarRect->top = pArea->top;
 		pBarRect->right = pBarRect->left + BarWidth;
@@ -7454,7 +7454,7 @@ void CMainWindow::CSideBarManager::Layout(RECT *pArea, RECT *pBarRect)
 		pArea->left += BarWidth;
 		break;
 
-	case CSideBarOptions::PLACE_RIGHT:
+	case CSideBarOptions::PlaceType::Right:
 		pBarRect->left = pArea->right - BarWidth;
 		pBarRect->top = pArea->top;
 		pBarRect->right = pArea->right;
@@ -7462,7 +7462,7 @@ void CMainWindow::CSideBarManager::Layout(RECT *pArea, RECT *pBarRect)
 		pArea->right -= BarWidth;
 		break;
 
-	case CSideBarOptions::PLACE_TOP:
+	case CSideBarOptions::PlaceType::Top:
 		pBarRect->left = pArea->left;
 		pBarRect->top = pArea->top;
 		pBarRect->right = pArea->right;
@@ -7470,7 +7470,7 @@ void CMainWindow::CSideBarManager::Layout(RECT *pArea, RECT *pBarRect)
 		pArea->top += BarWidth;
 		break;
 
-	case CSideBarOptions::PLACE_BOTTOM:
+	case CSideBarOptions::PlaceType::Bottom:
 		pBarRect->left = pArea->left;
 		pBarRect->top = pArea->bottom - BarWidth;
 		pBarRect->right = pArea->right;

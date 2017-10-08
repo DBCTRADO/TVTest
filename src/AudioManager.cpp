@@ -83,10 +83,10 @@ int CAudioManager::GetDefaultAudio(AudioSelectInfo *pSelectInfo) const
 			for (auto itPriority = PriorityList.begin(); itPriority != PriorityList.end(); ++itPriority) {
 				for (auto itAudio = m_AudioList.begin(); itAudio != m_AudioList.end(); ++itAudio) {
 					if (itAudio->Language == itPriority->Language
-							&& itAudio->DualMono != DUALMONO_BOTH) {
+							&& itAudio->DualMono != DualMonoMode::Both) {
 						if (!itPriority->fSub
 								|| itAudio != m_AudioList.begin()
-								|| itAudio->DualMono == CAudioManager::DUALMONO_SUB) {
+								|| itAudio->DualMono == CAudioManager::DualMonoMode::Sub) {
 							if (pSelectInfo != nullptr) {
 								pSelectInfo->ID = itAudio->ID;
 								pSelectInfo->DualMono = itAudio->DualMono;
@@ -104,12 +104,12 @@ int CAudioManager::GetDefaultAudio(AudioSelectInfo *pSelectInfo) const
 
 		pSelectInfo->ID = Info.ID;
 		if (Info.IsDualMono()) {
-			if (m_SelectedAudio.DualMono != DUALMONO_INVALID)
+			if (m_SelectedAudio.DualMono != DualMonoMode::Invalid)
 				pSelectInfo->DualMono = m_SelectedAudio.DualMono;
 			else
-				pSelectInfo->DualMono = DUALMONO_MAIN;
+				pSelectInfo->DualMono = DualMonoMode::Main;
 		} else {
-			pSelectInfo->DualMono = DUALMONO_INVALID;
+			pSelectInfo->DualMono = DualMonoMode::Invalid;
 		}
 	}
 
@@ -133,12 +133,12 @@ bool CAudioManager::GetAudioSelectInfoByID(
 
 	pSelectInfo->ID = ID;
 	if (Info.IsDualMono()) {
-		if (m_SelectedAudio.DualMono != DUALMONO_INVALID)
+		if (m_SelectedAudio.DualMono != DualMonoMode::Invalid)
 			pSelectInfo->DualMono = m_SelectedAudio.DualMono;
 		else
-			pSelectInfo->DualMono = DUALMONO_MAIN;
+			pSelectInfo->DualMono = DualMonoMode::Main;
 	} else {
-		pSelectInfo->DualMono = DUALMONO_INVALID;
+		pSelectInfo->DualMono = DualMonoMode::Invalid;
 	}
 
 	return true;
@@ -202,7 +202,7 @@ CAudioManager::IDType CAudioManager::GetSelectedID() const
 
 bool CAudioManager::SetSelectedDualMonoMode(DualMonoMode Mode)
 {
-	if (Mode < DUALMONO_INVALID || Mode > DUALMONO_BOTH)
+	if (!CheckEnumRange(Mode))
 		return false;
 
 	LibISDB::BlockLock Lock(m_Lock);
@@ -313,12 +313,12 @@ bool CAudioManager::OnEventUpdated()
 			Audio1.ComponentType = EventAudio.ComponentType;
 			Audio1.ComponentTag = EventAudio.ComponentTag;
 			if (Audio1.IsDualMono()) {
-				Audio1.DualMono = DUALMONO_MAIN;
+				Audio1.DualMono = DualMonoMode::Main;
 				Audio1.fMultiLingual =
 					EventAudio.ESMultiLingualFlag &&
 					EventAudio.LanguageCode != EventAudio.LanguageCode2;
 			} else {
-				Audio1.DualMono = DUALMONO_INVALID;
+				Audio1.DualMono = DualMonoMode::Invalid;
 				Audio1.fMultiLingual = false;
 			}
 			Audio1.Language = EventAudio.LanguageCode;
@@ -336,7 +336,7 @@ bool CAudioManager::OnEventUpdated()
 
 				Audio2.ComponentType = EventAudio.ComponentType;
 				Audio2.ComponentTag = EventAudio.ComponentTag;
-				Audio2.DualMono = DUALMONO_SUB;
+				Audio2.DualMono = DualMonoMode::Sub;
 				Audio2.fMultiLingual = Audio1.fMultiLingual;
 				Audio2.Language =
 					EventAudio.ESMultiLingualFlag ?
@@ -352,7 +352,7 @@ bool CAudioManager::OnEventUpdated()
 
 				EventAudioList.push_back(Audio2);
 
-				Audio1.DualMono = DUALMONO_BOTH;
+				Audio1.DualMono = DualMonoMode::Both;
 				Audio1.Language2 = Audio2.Language;
 				if (DelimiterPos != String::npos) {
 					Audio1.Text += TEXT('+');
@@ -422,7 +422,7 @@ void CAudioManager::MakeAudioList()
 			Info.ID = ID;
 			Info.ComponentTag = ComponentTag;
 			Info.ComponentType = LibISDB::COMPONENT_TYPE_INVALID;
-			Info.DualMono = DUALMONO_INVALID;
+			Info.DualMono = DualMonoMode::Invalid;
 			Info.fMultiLingual = false;
 			Info.Language = 0;
 			Info.Language2 = 0;

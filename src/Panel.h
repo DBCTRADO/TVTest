@@ -86,9 +86,9 @@ private:
 			const TVTest::Style::CStyleScaling *pStyleScaling);
 	};
 
-	enum ItemType {
-		ITEM_NONE,
-		ITEM_CLOSE
+	enum class ItemType {
+		None,
+		Close,
 	};
 
 	TVTest::Style::Font m_StyleFont;
@@ -151,12 +151,12 @@ class CPanelFrame
 	, public CPanel::CEventHandler
 {
 public:
-	enum DockingPlace {
-		DOCKING_NONE,
-		DOCKING_LEFT,
-		DOCKING_RIGHT,
-		DOCKING_TOP,
-		DOCKING_BOTTOM
+	enum class DockingPlace {
+		None,
+		Left,
+		Right,
+		Top,
+		Bottom,
 	};
 
 	class ABSTRACT_CLASS(CEventHandler)

@@ -124,12 +124,12 @@ bool CStyleManager::Set(LPCTSTR pszName, const IntValue &Value)
 	Style.Name = pszName;
 	auto itr = m_StyleMap.find(Style.Name);
 	if (itr == m_StyleMap.end()) {
-		Style.Type = TYPE_INT;
+		Style.Type = ValueType::Int;
 		Style.Value.Int = Value.Value;
 		Style.Unit = Value.Unit;
 		m_StyleMap.insert(std::pair<String, StyleInfo>(Style.Name, Style));
 	} else {
-		itr->second.Type = TYPE_INT;
+		itr->second.Type = ValueType::Int;
 		itr->second.Value.Int = Value.Value;
 		itr->second.Unit = Value.Unit;
 	}
@@ -144,7 +144,7 @@ bool CStyleManager::Get(LPCTSTR pszName, IntValue *pValue) const
 		return false;
 
 	auto itr = m_StyleMap.find(String(pszName));
-	if (itr == m_StyleMap.end() || itr->second.Type != TYPE_INT)
+	if (itr == m_StyleMap.end() || itr->second.Type != ValueType::Int)
 		return false;
 
 	pValue->Value = itr->second.Value.Int;
@@ -163,11 +163,11 @@ bool CStyleManager::Set(LPCTSTR pszName, bool fValue)
 	Style.Name = pszName;
 	auto itr = m_StyleMap.find(Style.Name);
 	if (itr == m_StyleMap.end()) {
-		Style.Type = TYPE_BOOL;
+		Style.Type = ValueType::Bool;
 		Style.Value.Bool = fValue;
 		m_StyleMap.insert(std::pair<String, StyleInfo>(Style.Name, Style));
 	} else {
-		itr->second.Type = TYPE_BOOL;
+		itr->second.Type = ValueType::Bool;
 		itr->second.Value.Bool = fValue;
 	}
 
@@ -181,7 +181,7 @@ bool CStyleManager::Get(LPCTSTR pszName, bool *pfValue) const
 		return false;
 
 	auto itr = m_StyleMap.find(String(pszName));
-	if (itr == m_StyleMap.end() || itr->second.Type != TYPE_BOOL)
+	if (itr == m_StyleMap.end() || itr->second.Type != ValueType::Bool)
 		return false;
 
 	*pfValue = itr->second.Value.Bool;
@@ -199,11 +199,11 @@ bool CStyleManager::Set(LPCTSTR pszName, const String &Value)
 	Style.Name = pszName;
 	auto itr = m_StyleMap.find(Style.Name);
 	if (itr == m_StyleMap.end()) {
-		Style.Type = TYPE_STRING;
+		Style.Type = ValueType::String;
 		Style.Value.String = Value;
 		m_StyleMap.insert(std::pair<String, StyleInfo>(Style.Name, Style));
 	} else {
-		itr->second.Type = TYPE_STRING;
+		itr->second.Type = ValueType::String;
 		itr->second.Value.String = Value;
 	}
 
@@ -217,7 +217,7 @@ bool CStyleManager::Get(LPCTSTR pszName, String *pValue) const
 		return false;
 
 	auto itr = m_StyleMap.find(String(pszName));
-	if (itr == m_StyleMap.end() || itr->second.Type != TYPE_STRING)
+	if (itr == m_StyleMap.end() || itr->second.Type != ValueType::String)
 		return false;
 
 	*pValue = itr->second.Value.String;
@@ -396,9 +396,9 @@ bool CStyleManager::AssignFontSizeFromLogFont(Font *pFont)
 
 	pFont->Size.Value = ::MulDiv(abs(pFont->LogFont.lfHeight), 72, TVTest::GetSystemDPI());
 	if (pFont->Size.Value != 0)
-		pFont->Size.Unit = TVTest::Style::UNIT_POINT;
+		pFont->Size.Unit = TVTest::Style::UnitType::Point;
 	else
-		pFont->Size.Unit = TVTest::Style::UNIT_UNDEFINED;
+		pFont->Size.Unit = TVTest::Style::UnitType::Undefined;
 
 	return true;
 }
@@ -415,7 +415,7 @@ bool CStyleManager::ParseValue(LPCTSTR pszText, IntValue *pValue)
 	LPTSTR pEnd;
 	int Value = static_cast<int>(std::_tcstol(pszText, &pEnd, 10));
 	UnitType Unit = ParseUnit(pEnd);
-	if (Unit == UNIT_UNDEFINED)
+	if (Unit == UnitType::Undefined)
 		return false;
 
 	*pValue = IntValue(Value, Unit);
@@ -427,15 +427,15 @@ bool CStyleManager::ParseValue(LPCTSTR pszText, IntValue *pValue)
 UnitType CStyleManager::ParseUnit(LPCTSTR pszUnit)
 {
 	if (IsStringEmpty(pszUnit))
-		return UNIT_LOGICAL_PIXEL;
+		return UnitType::LogicalPixel;
 	if (::lstrcmpi(pszUnit, TEXT("px")) == 0)
-		return UNIT_PHYSICAL_PIXEL;
+		return UnitType::PhysicalPixel;
 	if (::lstrcmpi(pszUnit, TEXT("pt")) == 0)
-		return UNIT_POINT;
+		return UnitType::Point;
 	if (::lstrcmpi(pszUnit, TEXT("dp")) == 0)
-		return UNIT_DIP;
+		return UnitType::DIP;
 
-	return UNIT_UNDEFINED;
+	return UnitType::Undefined;
 }
 
 
@@ -495,18 +495,18 @@ bool CStyleScaling::ToPixels(IntValue *pValue) const
 		return false;
 
 	switch (pValue->Unit) {
-	case UNIT_LOGICAL_PIXEL:
+	case UnitType::LogicalPixel:
 		pValue->Value = LogicalPixelsToPhysicalPixels(pValue->Value);
 		break;
 
-	case UNIT_PHYSICAL_PIXEL:
+	case UnitType::PhysicalPixel:
 		return true;
 
-	case UNIT_POINT:
+	case UnitType::Point:
 		pValue->Value = PointsToPixels(pValue->Value);
 		break;
 
-	case UNIT_DIP:
+	case UnitType::DIP:
 		pValue->Value = DipToPixels(pValue->Value);
 		break;
 
@@ -514,7 +514,7 @@ bool CStyleScaling::ToPixels(IntValue *pValue) const
 		return false;
 	}
 
-	pValue->Unit = UNIT_PHYSICAL_PIXEL;
+	pValue->Unit = UnitType::PhysicalPixel;
 
 	return true;
 }
@@ -549,16 +549,16 @@ bool CStyleScaling::ToPixels(Margins *pValue) const
 int CStyleScaling::ToPixels(int Value, UnitType Unit) const
 {
 	switch (Unit) {
-	case UNIT_LOGICAL_PIXEL:
+	case UnitType::LogicalPixel:
 		return LogicalPixelsToPhysicalPixels(Value);
 
-	case UNIT_PHYSICAL_PIXEL:
+	case UnitType::PhysicalPixel:
 		return Value;
 
-	case UNIT_POINT:
+	case UnitType::Point:
 		return PointsToPixels(Value);
 
-	case UNIT_DIP:
+	case UnitType::DIP:
 		return DipToPixels(Value);
 	}
 
@@ -589,16 +589,16 @@ int CStyleScaling::DipToPixels(int Dip) const
 int CStyleScaling::ConvertUnit(int Value, UnitType SrcUnit, UnitType DstUnit) const
 {
 	switch (DstUnit) {
-	case UNIT_LOGICAL_PIXEL:
+	case UnitType::LogicalPixel:
 		return ::MulDiv(ToPixels(Value, SrcUnit), 96, m_DPI);
 
-	case UNIT_PHYSICAL_PIXEL:
+	case UnitType::PhysicalPixel:
 		return ToPixels(Value, SrcUnit);
 
-	case UNIT_POINT:
+	case UnitType::Point:
 		return ::MulDiv(ToPixels(Value, SrcUnit), 72, m_DPI);
 
-	case UNIT_DIP:
+	case UnitType::DIP:
 		return ::MulDiv(ToPixels(Value, SrcUnit), 160, m_DPI);
 	}
 

@@ -107,7 +107,7 @@ INT_PTR CDirectWriteOptionsDialog::DlgProc(
 
 			ShowDlgItem(hDlg, IDC_DIRECTWRITEOPTIONS_TEST, m_pRenderingTester != nullptr);
 
-			m_TextDrawClient.Initialize(CTextDrawClient::ENGINE_DIRECTWRITE, hDlg);
+			m_TextDrawClient.Initialize(CTextDrawClient::TextDrawEngine::DirectWrite, hDlg);
 		}
 		return TRUE;
 

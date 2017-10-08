@@ -46,9 +46,9 @@ CPanel::CPanel()
 	, m_fShowTitle(false)
 	, m_fEnableFloating(true)
 	, m_pEventHandler(nullptr)
-	, m_HotItem(ITEM_NONE)
+	, m_HotItem(ItemType::None)
 {
-	GetSystemFont(DrawUtil::FONT_CAPTION, &m_StyleFont);
+	GetSystemFont(DrawUtil::FontType::Caption, &m_StyleFont);
 }
 
 
@@ -252,8 +252,8 @@ void CPanel::Draw(HDC hdc, const RECT &PaintRect) const
 
 		GetCloseButtonRect(&rc);
 		const TVTest::Theme::Style &Style =
-			m_HotItem == ITEM_CLOSE ? m_Theme.TitleIconHighlightStyle : m_Theme.TitleIconStyle;
-		if (Style.Back.Border.Type != TVTest::Theme::BORDER_NONE
+			m_HotItem == ItemType::Close ? m_Theme.TitleIconHighlightStyle : m_Theme.TitleIconStyle;
+		if (Style.Back.Border.Type != TVTest::Theme::BorderType::None
 				|| Style.Back.Fill != m_Theme.TitleStyle.Back.Fill)
 			ThemeDraw.Draw(Style.Back, rc);
 		DrawUtil::DrawText(
@@ -318,7 +318,7 @@ LRESULT CPanel::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		{
 			InitializeUI();
 
-			m_HotItem = ITEM_NONE;
+			m_HotItem = ItemType::None;
 			m_fCloseButtonPushed = false;
 		}
 		return 0;
@@ -348,11 +348,11 @@ LRESULT CPanel::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 				GetCloseButtonRect(&rc);
 				if (::PtInRect(&rc, pt)) {
-					SetHotItem(ITEM_CLOSE);
+					SetHotItem(ItemType::Close);
 					m_fCloseButtonPushed = true;
 					::SetCapture(hwnd);
 				} else {
-					SetHotItem(ITEM_NONE);
+					SetHotItem(ItemType::None);
 					if (m_fEnableFloating) {
 						::ClientToScreen(hwnd, &pt);
 						m_fCloseButtonPushed = false;
@@ -394,9 +394,9 @@ LRESULT CPanel::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			RECT rc;
 			GetCloseButtonRect(&rc);
 			if (::PtInRect(&rc, pt))
-				SetHotItem(ITEM_CLOSE);
+				SetHotItem(ItemType::Close);
 			else
-				SetHotItem(ITEM_NONE);
+				SetHotItem(ItemType::None);
 
 			if (::GetCapture() == hwnd) {
 				if (!m_fCloseButtonPushed) {
@@ -421,11 +421,11 @@ LRESULT CPanel::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		return 0;
 
 	case WM_MOUSELEAVE:
-		SetHotItem(ITEM_NONE);
+		SetHotItem(ItemType::None);
 		return 0;
 
 	case WM_SETCURSOR:
-		if ((HWND)wParam == hwnd && LOWORD(lParam) == HTCLIENT && m_HotItem != ITEM_NONE) {
+		if ((HWND)wParam == hwnd && LOWORD(lParam) == HTCLIENT && m_HotItem != ItemType::None) {
 			::SetCursor(GetActionCursor());
 			return TRUE;
 		}
@@ -433,7 +433,7 @@ LRESULT CPanel::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 	case WM_CAPTURECHANGED:
 		if (m_fCloseButtonPushed) {
-			SetHotItem(ITEM_NONE);
+			SetHotItem(ItemType::None);
 			m_fCloseButtonPushed = false;
 		}
 		return 0;
@@ -575,7 +575,7 @@ CPanelFrame::CPanelFrame()
 	, m_DockingWidth(-1)
 	, m_DockingHeight(-1)
 	, m_Opacity(255)
-	, m_DragDockingTarget(DOCKING_NONE)
+	, m_DragDockingTarget(DockingPlace::None)
 	, m_pEventHandler(nullptr)
 {
 	m_WindowPosition.Left = 120;
@@ -864,49 +864,49 @@ LRESULT CPanelFrame::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 
 			::GetCursorPos(&pt);
 			m_pSplitter->GetLayoutBase()->GetScreenPosition(&rcTarget);
-			Target = DOCKING_NONE;
+			Target = DockingPlace::None;
 			rc = rcTarget;
 			rc.right = rc.left + Margin;
 			if (::PtInRect(&rc, pt)) {
-				Target = DOCKING_LEFT;
+				Target = DockingPlace::Left;
 			} else {
 				rc.right = rcTarget.right;
 				rc.left = rc.right - Margin;
 				if (::PtInRect(&rc, pt)) {
-					Target = DOCKING_RIGHT;
+					Target = DockingPlace::Right;
 				} else {
 					rc.left = rcTarget.left;
 					rc.right = rcTarget.right;
 					rc.top = rcTarget.top;
 					rc.bottom = rc.top + Margin;
 					if (::PtInRect(&rc, pt)) {
-						Target = DOCKING_TOP;
+						Target = DockingPlace::Top;
 					} else {
 						rc.bottom = rcTarget.bottom;
 						rc.top = rc.bottom - Margin;
 						if (::PtInRect(&rc, pt))
-							Target = DOCKING_BOTTOM;
+							Target = DockingPlace::Bottom;
 					}
 				}
 			}
 			if (Target != m_DragDockingTarget) {
-				if (Target == DOCKING_NONE) {
+				if (Target == DockingPlace::None) {
 					m_DropHelper.Hide();
 				} else {
 					switch (Target) {
-					case DOCKING_LEFT:
+					case DockingPlace::Left:
 						rc.right = rcTarget.left;
 						rc.left = rc.right - m_DockingWidth;
 						break;
-					case DOCKING_RIGHT:
+					case DockingPlace::Right:
 						rc.left = rcTarget.right;
 						rc.right = rc.left + m_DockingWidth;
 						break;
-					case DOCKING_TOP:
+					case DockingPlace::Top:
 						rc.bottom = rcTarget.top;
 						rc.top = rc.bottom - m_DockingHeight;
 						break;
-					case DOCKING_BOTTOM:
+					case DockingPlace::Bottom:
 						rc.top = rcTarget.bottom;
 						rc.bottom = rc.top + m_DockingHeight;
 						break;
@@ -919,7 +919,7 @@ LRESULT CPanelFrame::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 		break;
 
 	case WM_EXITSIZEMOVE:
-		if (m_DragDockingTarget != DOCKING_NONE) {
+		if (m_DragDockingTarget != DockingPlace::None) {
 			m_DropHelper.Hide();
 			if (m_pEventHandler != nullptr)
 				m_pEventHandler->OnDocking(m_DragDockingTarget);
@@ -929,7 +929,7 @@ LRESULT CPanelFrame::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 		return 0;
 
 	case WM_ENTERSIZEMOVE:
-		m_DragDockingTarget = DOCKING_NONE;
+		m_DragDockingTarget = DockingPlace::None;
 		m_fDragMoving = true;
 		if (m_pEventHandler != nullptr
 				&& m_pEventHandler->OnEnterSizeMove())
@@ -1043,16 +1043,16 @@ bool CPanelFrame::OnMenuSelected(int Command)
 {
 	switch (Command) {
 	case PANEL_MENU_LEFT:
-		SetDockingPlace(DOCKING_LEFT);
+		SetDockingPlace(DockingPlace::Left);
 		return true;
 	case PANEL_MENU_RIGHT:
-		SetDockingPlace(DOCKING_RIGHT);
+		SetDockingPlace(DockingPlace::Right);
 		return true;
 	case PANEL_MENU_TOP:
-		SetDockingPlace(DOCKING_TOP);
+		SetDockingPlace(DockingPlace::Top);
 		return true;
 	case PANEL_MENU_BOTTOM:
-		SetDockingPlace(DOCKING_BOTTOM);
+		SetDockingPlace(DockingPlace::Bottom);
 		return true;
 	}
 

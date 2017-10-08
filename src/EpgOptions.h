@@ -24,14 +24,13 @@ public:
 
 	typedef CEpgDataLoader::CEventHandler CEDCBDataLoadEventHandler;
 
-	enum EpgTimeMode {
-		EPGTIME_RAW,
-		EPGTIME_JST,
-		EPGTIME_LOCAL,
-		EPGTIME_UTC
+	enum class EpgTimeMode {
+		Raw,
+		JST,
+		Local,
+		UTC,
+		TVTEST_ENUM_CLASS_TRAILER
 	};
-	static const EpgTimeMode EPGTIME_FIRST = EPGTIME_RAW;
-	static const EpgTimeMode EPGTIME_LAST  = EPGTIME_UTC;
 
 	CEpgOptions();
 	~CEpgOptions();

@@ -142,7 +142,7 @@ HICON CTaskTrayManager::LoadTrayIcon() const
 	return LoadIconStandardSize(
 		GetAppClass().GetResourceInstance(),
 		MAKEINTRESOURCE((m_Status & STATUS_RECORDING) != 0 ? IDI_TRAY_RECORDING : IDI_TRAY),
-		ICON_SIZE_SMALL);
+		IconSizeType::Small);
 }
 
 

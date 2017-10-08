@@ -55,7 +55,7 @@ void CEpgDataStore::Close()
 			GetAppClass().AddLog(TEXT("EPGデータ読み込みスレッドの終了を待っています..."));
 			::CancelSynchronousIo(m_hThread);
 			if (::WaitForSingleObject(m_hThread, 10000) == WAIT_TIMEOUT) {
-				GetAppClass().AddLog(CLogItem::TYPE_WARNING, TEXT("EPGデータ読み込みスレッドを強制終了します。"));
+				GetAppClass().AddLog(CLogItem::LogType::Warning, TEXT("EPGデータ読み込みスレッドを強制終了します。"));
 				::TerminateThread(m_hThread, -1);
 			}
 		}
@@ -135,7 +135,7 @@ bool CEpgDataStore::Save()
 	CGlobalLock GlobalLock;
 	if (GlobalLock.Create(LockName.c_str())) {
 		if (!GlobalLock.Wait(10000)) {
-			App.AddLog(CLogItem::TYPE_ERROR, TEXT("EPGファイルがロックされているため保存できません。"));
+			App.AddLog(CLogItem::LogType::Error, TEXT("EPGファイルがロックされているため保存できません。"));
 			return false;
 		}
 	}

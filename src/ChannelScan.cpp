@@ -16,12 +16,11 @@
 #define WM_APP_ENDSCAN      (WM_APP + 3)
 
 // スキャン結果
-enum ScanResult
-{
-	SCAN_RESULT_SUCCEEDED,
-	SCAN_RESULT_CANCELLED,
-	SCAN_RESULT_SET_CHANNEL_PARTIALLY_FAILED,
-	SCAN_RESULT_SET_CHANNEL_TIMEOUT
+enum class ScanResult {
+	Succeeded,
+	Cancelled,
+	SetChannelPartiallyFailed,
+	SetChannelTimeout,
 };
 
 
@@ -1151,7 +1150,7 @@ INT_PTR CChannelScan::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 						StdUtil::snprintf(
 							szText, lengthof(szText),
 							TEXT("チャンネルファイル \"%s\" を保存できません。"), szFileName);
-						App.AddLog(CLogItem::TYPE_ERROR, TEXT("%s"), szText);
+						App.AddLog(CLogItem::LogType::Error, TEXT("%s"), szText);
 						::MessageBox(hDlg, szText, nullptr, MB_OK | MB_ICONEXCLAMATION);
 					}
 					SetUpdateFlag(UPDATE_CHANNELLIST);
@@ -1192,7 +1191,7 @@ INT_PTR CChannelScan::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 												StdUtil::snprintf(
 													szText, lengthof(szText),
 													TEXT("チャンネルファイル \"%s\" を保存できません。"), szFileName);
-												App.AddLog(CLogItem::TYPE_ERROR, TEXT("%s"), szText);
+												App.AddLog(CLogItem::LogType::Error, TEXT("%s"), szText);
 												if (::MessageBox(hDlg, szText, nullptr, MB_OKCANCEL | MB_ICONEXCLAMATION) != IDOK)
 													break;
 											}
@@ -1435,7 +1434,7 @@ INT_PTR CChannelScan::ScanDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lP
 			} else {
 				CMessageDialog Dialog;
 
-				if (Result == SCAN_RESULT_SET_CHANNEL_PARTIALLY_FAILED) {
+				if (Result == ScanResult::SetChannelPartiallyFailed) {
 					const int ChannelCount = LOWORD(lParam);
 					const int ErrorCount = HIWORD(lParam);
 					TVTest::String Message;
@@ -1445,15 +1444,15 @@ INT_PTR CChannelScan::ScanDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lP
 							TEXT("%dチャンネルのうち、%d回のチャンネル変更が BonDriver に受け付けられませんでした。\n")
 							TEXT("(受信できるチャンネルが全てスキャンできていれば問題はありません)"),
 							ChannelCount, ErrorCount);
-						Dialog.Show(hDlg, CMessageDialog::TYPE_INFO, Message.c_str(), nullptr, nullptr, TEXT("お知らせ"));
+						Dialog.Show(hDlg, CMessageDialog::MessageType::Info, Message.c_str(), nullptr, nullptr, TEXT("お知らせ"));
 					} else {
 						Dialog.Show(
-							hDlg, CMessageDialog::TYPE_WARNING,
+							hDlg, CMessageDialog::MessageType::Warning,
 							TEXT("チャンネル変更の要求が BonDriver に受け付けられないため、スキャンを行えませんでした。"));
 					}
-				} else if (Result == SCAN_RESULT_SET_CHANNEL_TIMEOUT) {
+				} else if (Result == ScanResult::SetChannelTimeout) {
 					Dialog.Show(
-						hDlg, CMessageDialog::TYPE_WARNING,
+						hDlg, CMessageDialog::MessageType::Warning,
 						TEXT("タイムアウトのためチャンネル変更ができません。"));
 				}
 
@@ -1467,7 +1466,7 @@ INT_PTR CChannelScan::ScanDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lP
 			if (m_hScanThread != nullptr) {
 				::SetEvent(m_hCancelEvent);
 				if (::WaitForSingleObject(m_hScanThread, 30000) == WAIT_TIMEOUT) {
-					GetAppClass().AddLog(CLogItem::TYPE_WARNING, TEXT("チャンネルスキャンスレッドを強制終了します。"));
+					GetAppClass().AddLog(CLogItem::LogType::Warning, TEXT("チャンネルスキャンスレッドを強制終了します。"));
 					::TerminateThread(m_hScanThread, -1);
 				}
 				::CloseHandle(m_hScanThread);
@@ -1503,7 +1502,7 @@ void CChannelScan::Scan()
 	LibISDB::BonDriverSourceFilter *pSource =
 		App.CoreEngine.GetFilter<LibISDB::BonDriverSourceFilter>();
 
-	ScanResult Result = SCAN_RESULT_CANCELLED;
+	ScanResult Result = ScanResult::Cancelled;
 	int SetChannelCount = 0, SetChannelErrorCount = 0;
 
 	m_ScanningChannelList.Clear();
@@ -1517,8 +1516,8 @@ void CChannelScan::Scan()
 
 	for (;; m_ScanChannel++) {
 		if (m_ScanChannel >= (int)m_BonDriverChannelList.size()) {
-			if (Result == SCAN_RESULT_CANCELLED)
-				Result = SCAN_RESULT_SUCCEEDED;
+			if (Result == ScanResult::Cancelled)
+				Result = ScanResult::Succeeded;
 			break;
 		}
 
@@ -1530,10 +1529,10 @@ void CChannelScan::Scan()
 			SetChannelErrorCount++;
 			if (pSource->GetLastErrorCode().category() == std::generic_category()
 					&& (std::errc)pSource->GetLastErrorCode().value() == std::errc::timed_out) {
-				Result = SCAN_RESULT_SET_CHANNEL_TIMEOUT;
+				Result = ScanResult::SetChannelTimeout;
 				break;
 			} else {
-				Result = SCAN_RESULT_SET_CHANNEL_PARTIALLY_FAILED;
+				Result = ScanResult::SetChannelPartiallyFailed;
 			}
 			if (::WaitForSingleObject(m_hCancelEvent, 0) != WAIT_TIMEOUT)
 				break;

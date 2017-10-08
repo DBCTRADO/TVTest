@@ -9,10 +9,11 @@ class CGeneralOptions
 	: public COptions
 {
 public:
-	enum DefaultDriverType {
-		DEFAULT_DRIVER_NONE,
-		DEFAULT_DRIVER_LAST,
-		DEFAULT_DRIVER_CUSTOM
+	enum class DefaultDriverType {
+		None,
+		Last,
+		Custom,
+		TVTEST_ENUM_CLASS_TRAILER
 	};
 
 	CGeneralOptions();

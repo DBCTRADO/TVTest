@@ -241,154 +241,154 @@ const CColorScheme::ColorInfo CColorScheme::m_ColorInfoList[NUM_COLORS] = {
 };
 
 const CColorScheme::GradientInfo CColorScheme::m_GradientInfoList[NUM_GRADIENTS] = {
-	{TEXT("StatusBackGradient"),                      Theme::DIRECTION_VERT, false, COLOR_STATUSBACK1,                            COLOR_STATUSBACK2},
-	{TEXT("StatusBottomItemBackGradient"),            Theme::DIRECTION_VERT, false, COLOR_STATUSBOTTOMITEMBACK1,                  COLOR_STATUSBOTTOMITEMBACK2},
-	{TEXT("StatusHighlightBackGradient"),             Theme::DIRECTION_VERT, true,  COLOR_STATUSHIGHLIGHTBACK1,                   COLOR_STATUSHIGHLIGHTBACK2},
-	{TEXT("StatusEventProgressBackGradient"),         Theme::DIRECTION_VERT, true,  COLOR_STATUSEVENTPROGRESSBACK1,               COLOR_STATUSEVENTPROGRESSBACK2},
-	{TEXT("StatusEventProgressElapsedGradient"),      Theme::DIRECTION_VERT, true,  COLOR_STATUSEVENTPROGRESSELAPSED1,            COLOR_STATUSEVENTPROGRESSELAPSED2},
-	{TEXT("PanelTabBackGradient"),                    Theme::DIRECTION_VERT, true,  COLOR_PANELTABBACK1,                          COLOR_PANELTABBACK2},
-	{TEXT("PanelCurTabBackGradient"),                 Theme::DIRECTION_VERT, true,  COLOR_PANELCURTABBACK1,                       COLOR_PANELCURTABBACK2},
-	{TEXT("PanelTabMarginGradient"),                  Theme::DIRECTION_VERT, false, COLOR_PANELTABMARGIN1,                        COLOR_PANELTABMARGIN2},
-	{TEXT("PanelTitleBackGradient"),                  Theme::DIRECTION_VERT, true,  COLOR_PANELTITLEBACK1,                        COLOR_PANELTITLEBACK2},
-	{TEXT("InformationPanelButtonBackGradient"),      Theme::DIRECTION_VERT, true,  COLOR_INFORMATIONPANEL_BUTTONBACK1,           COLOR_INFORMATIONPANEL_BUTTONBACK2},
-	{TEXT("InformationPanelHotButtonBackGradient"),   Theme::DIRECTION_VERT, true,  COLOR_INFORMATIONPANEL_HOTBUTTONBACK1,        COLOR_INFORMATIONPANEL_HOTBUTTONBACK2},
-	{TEXT("ProgramListChannelBackGradient"),          Theme::DIRECTION_VERT, true,  COLOR_PROGRAMLISTPANEL_CHANNELBACK1,          COLOR_PROGRAMLISTPANEL_CHANNELBACK2},
-	{TEXT("ProgramListCurChannelBackGradient"),       Theme::DIRECTION_VERT, true,  COLOR_PROGRAMLISTPANEL_CURCHANNELBACK1,       COLOR_PROGRAMLISTPANEL_CURCHANNELBACK2},
-	{TEXT("ProgramListChannelButtonBackGradient"),    Theme::DIRECTION_VERT, true,  COLOR_PROGRAMLISTPANEL_CHANNELBUTTONBACK1,    COLOR_PROGRAMLISTPANEL_CHANNELBUTTONBACK2},
-	{TEXT("ProgramListChannelButtonHotBackGradient"), Theme::DIRECTION_VERT, true,  COLOR_PROGRAMLISTPANEL_CHANNELBUTTONHOTBACK1, COLOR_PROGRAMLISTPANEL_CHANNELBUTTONHOTBACK2},
-	{TEXT("ProgramListBackGradient"),                 Theme::DIRECTION_VERT, true,  COLOR_PROGRAMLISTPANEL_EVENTBACK1,            COLOR_PROGRAMLISTPANEL_EVENTBACK2},
-	{TEXT("ProgramListCurBackGradient"),              Theme::DIRECTION_VERT, true,  COLOR_PROGRAMLISTPANEL_CUREVENTBACK1,         COLOR_PROGRAMLISTPANEL_CUREVENTBACK2},
-	{TEXT("ProgramListTitleBackGradient"),            Theme::DIRECTION_VERT, true,  COLOR_PROGRAMLISTPANEL_TITLEBACK1,            COLOR_PROGRAMLISTPANEL_TITLEBACK2},
-	{TEXT("ProgramListCurTitleBackGradient"),         Theme::DIRECTION_VERT, true,  COLOR_PROGRAMLISTPANEL_CURTITLEBACK1,         COLOR_PROGRAMLISTPANEL_CURTITLEBACK2},
-	{TEXT("ChannelPanelChannelNameBackGradient"),     Theme::DIRECTION_VERT, true,  COLOR_CHANNELPANEL_CHANNELNAMEBACK1,          COLOR_CHANNELPANEL_CHANNELNAMEBACK2},
-	{TEXT("ChannelPanelCurChannelNameBackGradient"),  Theme::DIRECTION_VERT, true,  COLOR_CHANNELPANEL_CURCHANNELNAMEBACK1,       COLOR_CHANNELPANEL_CURCHANNELNAMEBACK2},
-	{TEXT("ChannelPanelEventNameBackGradient"),       Theme::DIRECTION_VERT, true,  COLOR_CHANNELPANEL_EVENTNAME1BACK1,           COLOR_CHANNELPANEL_EVENTNAME1BACK2},
-	{TEXT("ChannelPanelEventName2BackGradient"),      Theme::DIRECTION_VERT, true,  COLOR_CHANNELPANEL_EVENTNAME2BACK1,           COLOR_CHANNELPANEL_EVENTNAME2BACK2},
-	{TEXT("ChannelPanelCurEventNameBackGradient"),    Theme::DIRECTION_VERT, true,  COLOR_CHANNELPANEL_CUREVENTNAME1BACK1,        COLOR_CHANNELPANEL_CUREVENTNAME1BACK2},
-	{TEXT("ChannelPanelCurEventName2BackGradient"),   Theme::DIRECTION_VERT, true,  COLOR_CHANNELPANEL_CUREVENTNAME2BACK1,        COLOR_CHANNELPANEL_CUREVENTNAME2BACK2},
-	{TEXT("ChannelPanelFeaturedMarkGradient"),        Theme::DIRECTION_VERT, true,  COLOR_CHANNELPANEL_FEATUREDMARK1,             COLOR_CHANNELPANEL_FEATUREDMARK2},
-	{TEXT("ChannelPanelProgressGradient"),            Theme::DIRECTION_VERT, true,  COLOR_CHANNELPANEL_PROGRESS1,                 COLOR_CHANNELPANEL_PROGRESS2},
-	{TEXT("ChannelPanelCurProgressGradient"),         Theme::DIRECTION_VERT, true,  COLOR_CHANNELPANEL_CURPROGRESS1,              COLOR_CHANNELPANEL_CURPROGRESS2},
-	{TEXT("ControlPanelBackGradient"),                Theme::DIRECTION_VERT, true,  COLOR_CONTROLPANELBACK1,                      COLOR_CONTROLPANELBACK2},
-	{TEXT("ControlPanelHighlightBackGradient"),       Theme::DIRECTION_VERT, true,  COLOR_CONTROLPANELHIGHLIGHTBACK1,             COLOR_CONTROLPANELHIGHLIGHTBACK2},
-	{TEXT("ControlPanelCheckedBackGradient"),         Theme::DIRECTION_VERT, true,  COLOR_CONTROLPANELCHECKEDBACK1,               COLOR_CONTROLPANELCHECKEDBACK2},
-	{TEXT("TitleBarBackGradient"),                    Theme::DIRECTION_VERT, true,  COLOR_TITLEBARBACK1,                          COLOR_TITLEBARBACK2},
-	{TEXT("TitleBarIconBackGradient"),                Theme::DIRECTION_VERT, true,  COLOR_TITLEBARICONBACK1,                      COLOR_TITLEBARICONBACK2},
-	{TEXT("TitleBarHighlightBackGradient"),           Theme::DIRECTION_VERT, true,  COLOR_TITLEBARHIGHLIGHTBACK1,                 COLOR_TITLEBARHIGHLIGHTBACK2},
-	{TEXT("SideBarBackGradient"),                     Theme::DIRECTION_HORZ, true,  COLOR_SIDEBARBACK1,                           COLOR_SIDEBARBACK2},
-	{TEXT("SideBarHighlightBackGradient"),            Theme::DIRECTION_HORZ, true,  COLOR_SIDEBARHIGHLIGHTBACK1,                  COLOR_SIDEBARHIGHLIGHTBACK2},
-	{TEXT("SideBarCheckBackGradient"),                Theme::DIRECTION_HORZ, true,  COLOR_SIDEBARCHECKBACK1,                      COLOR_SIDEBARCHECKBACK2},
-	{TEXT("NotificationBarBackGradient"),             Theme::DIRECTION_VERT, true,  COLOR_NOTIFICATIONBARBACK1,                   COLOR_NOTIFICATIONBARBACK2},
-	{TEXT("ProgramGuideFeaturedMarkGradient"),        Theme::DIRECTION_HORZ, true,  COLOR_PROGRAMGUIDE_FEATUREDMARK1,             COLOR_PROGRAMGUIDE_FEATUREDMARK2},
-	{TEXT("ProgramGuideChannelBackGradient"),         Theme::DIRECTION_VERT, true,  COLOR_PROGRAMGUIDE_CHANNELBACK1,              COLOR_PROGRAMGUIDE_CHANNELBACK2},
-	{TEXT("ProgramGuideCurChannelBackGradient"),      Theme::DIRECTION_VERT, true,  COLOR_PROGRAMGUIDE_CURCHANNELBACK1,           COLOR_PROGRAMGUIDE_CURCHANNELBACK2},
-	{TEXT("ProgramGuideTimeBackGradient"),            Theme::DIRECTION_HORZ, true,  COLOR_PROGRAMGUIDE_TIMEBACK1,                 COLOR_PROGRAMGUIDE_TIMEBACK2},
-	{TEXT("ProgramGuideTime0To2BackGradient"),        Theme::DIRECTION_HORZ, true,  COLOR_PROGRAMGUIDE_TIMEBACK_0TO2_1,           COLOR_PROGRAMGUIDE_TIMEBACK_0TO2_2},
-	{TEXT("ProgramGuideTime3To5BackGradient"),        Theme::DIRECTION_HORZ, true,  COLOR_PROGRAMGUIDE_TIMEBACK_3TO5_1,           COLOR_PROGRAMGUIDE_TIMEBACK_3TO5_2},
-	{TEXT("ProgramGuideTime6To8BackGradient"),        Theme::DIRECTION_HORZ, true,  COLOR_PROGRAMGUIDE_TIMEBACK_6TO8_1,           COLOR_PROGRAMGUIDE_TIMEBACK_6TO8_2},
-	{TEXT("ProgramGuideTime9To11BackGradient"),       Theme::DIRECTION_HORZ, true,  COLOR_PROGRAMGUIDE_TIMEBACK_9TO11_1,          COLOR_PROGRAMGUIDE_TIMEBACK_9TO11_2},
-	{TEXT("ProgramGuideTime12To14BackGradient"),      Theme::DIRECTION_HORZ, true,  COLOR_PROGRAMGUIDE_TIMEBACK_12TO14_1,         COLOR_PROGRAMGUIDE_TIMEBACK_12TO14_2},
-	{TEXT("ProgramGuideTime15To17BackGradient"),      Theme::DIRECTION_HORZ, true,  COLOR_PROGRAMGUIDE_TIMEBACK_15TO17_1,         COLOR_PROGRAMGUIDE_TIMEBACK_15TO17_2},
-	{TEXT("ProgramGuideTime18To20BackGradient"),      Theme::DIRECTION_HORZ, true,  COLOR_PROGRAMGUIDE_TIMEBACK_18TO20_1,         COLOR_PROGRAMGUIDE_TIMEBACK_18TO20_2},
-	{TEXT("ProgramGuideTime21To23BackGradient"),      Theme::DIRECTION_HORZ, true,  COLOR_PROGRAMGUIDE_TIMEBACK_21TO23_1,         COLOR_PROGRAMGUIDE_TIMEBACK_21TO23_2},
+	{TEXT("StatusBackGradient"),                      Theme::GradientDirection::Vert, false, COLOR_STATUSBACK1,                            COLOR_STATUSBACK2},
+	{TEXT("StatusBottomItemBackGradient"),            Theme::GradientDirection::Vert, false, COLOR_STATUSBOTTOMITEMBACK1,                  COLOR_STATUSBOTTOMITEMBACK2},
+	{TEXT("StatusHighlightBackGradient"),             Theme::GradientDirection::Vert, true,  COLOR_STATUSHIGHLIGHTBACK1,                   COLOR_STATUSHIGHLIGHTBACK2},
+	{TEXT("StatusEventProgressBackGradient"),         Theme::GradientDirection::Vert, true,  COLOR_STATUSEVENTPROGRESSBACK1,               COLOR_STATUSEVENTPROGRESSBACK2},
+	{TEXT("StatusEventProgressElapsedGradient"),      Theme::GradientDirection::Vert, true,  COLOR_STATUSEVENTPROGRESSELAPSED1,            COLOR_STATUSEVENTPROGRESSELAPSED2},
+	{TEXT("PanelTabBackGradient"),                    Theme::GradientDirection::Vert, true,  COLOR_PANELTABBACK1,                          COLOR_PANELTABBACK2},
+	{TEXT("PanelCurTabBackGradient"),                 Theme::GradientDirection::Vert, true,  COLOR_PANELCURTABBACK1,                       COLOR_PANELCURTABBACK2},
+	{TEXT("PanelTabMarginGradient"),                  Theme::GradientDirection::Vert, false, COLOR_PANELTABMARGIN1,                        COLOR_PANELTABMARGIN2},
+	{TEXT("PanelTitleBackGradient"),                  Theme::GradientDirection::Vert, true,  COLOR_PANELTITLEBACK1,                        COLOR_PANELTITLEBACK2},
+	{TEXT("InformationPanelButtonBackGradient"),      Theme::GradientDirection::Vert, true,  COLOR_INFORMATIONPANEL_BUTTONBACK1,           COLOR_INFORMATIONPANEL_BUTTONBACK2},
+	{TEXT("InformationPanelHotButtonBackGradient"),   Theme::GradientDirection::Vert, true,  COLOR_INFORMATIONPANEL_HOTBUTTONBACK1,        COLOR_INFORMATIONPANEL_HOTBUTTONBACK2},
+	{TEXT("ProgramListChannelBackGradient"),          Theme::GradientDirection::Vert, true,  COLOR_PROGRAMLISTPANEL_CHANNELBACK1,          COLOR_PROGRAMLISTPANEL_CHANNELBACK2},
+	{TEXT("ProgramListCurChannelBackGradient"),       Theme::GradientDirection::Vert, true,  COLOR_PROGRAMLISTPANEL_CURCHANNELBACK1,       COLOR_PROGRAMLISTPANEL_CURCHANNELBACK2},
+	{TEXT("ProgramListChannelButtonBackGradient"),    Theme::GradientDirection::Vert, true,  COLOR_PROGRAMLISTPANEL_CHANNELBUTTONBACK1,    COLOR_PROGRAMLISTPANEL_CHANNELBUTTONBACK2},
+	{TEXT("ProgramListChannelButtonHotBackGradient"), Theme::GradientDirection::Vert, true,  COLOR_PROGRAMLISTPANEL_CHANNELBUTTONHOTBACK1, COLOR_PROGRAMLISTPANEL_CHANNELBUTTONHOTBACK2},
+	{TEXT("ProgramListBackGradient"),                 Theme::GradientDirection::Vert, true,  COLOR_PROGRAMLISTPANEL_EVENTBACK1,            COLOR_PROGRAMLISTPANEL_EVENTBACK2},
+	{TEXT("ProgramListCurBackGradient"),              Theme::GradientDirection::Vert, true,  COLOR_PROGRAMLISTPANEL_CUREVENTBACK1,         COLOR_PROGRAMLISTPANEL_CUREVENTBACK2},
+	{TEXT("ProgramListTitleBackGradient"),            Theme::GradientDirection::Vert, true,  COLOR_PROGRAMLISTPANEL_TITLEBACK1,            COLOR_PROGRAMLISTPANEL_TITLEBACK2},
+	{TEXT("ProgramListCurTitleBackGradient"),         Theme::GradientDirection::Vert, true,  COLOR_PROGRAMLISTPANEL_CURTITLEBACK1,         COLOR_PROGRAMLISTPANEL_CURTITLEBACK2},
+	{TEXT("ChannelPanelChannelNameBackGradient"),     Theme::GradientDirection::Vert, true,  COLOR_CHANNELPANEL_CHANNELNAMEBACK1,          COLOR_CHANNELPANEL_CHANNELNAMEBACK2},
+	{TEXT("ChannelPanelCurChannelNameBackGradient"),  Theme::GradientDirection::Vert, true,  COLOR_CHANNELPANEL_CURCHANNELNAMEBACK1,       COLOR_CHANNELPANEL_CURCHANNELNAMEBACK2},
+	{TEXT("ChannelPanelEventNameBackGradient"),       Theme::GradientDirection::Vert, true,  COLOR_CHANNELPANEL_EVENTNAME1BACK1,           COLOR_CHANNELPANEL_EVENTNAME1BACK2},
+	{TEXT("ChannelPanelEventName2BackGradient"),      Theme::GradientDirection::Vert, true,  COLOR_CHANNELPANEL_EVENTNAME2BACK1,           COLOR_CHANNELPANEL_EVENTNAME2BACK2},
+	{TEXT("ChannelPanelCurEventNameBackGradient"),    Theme::GradientDirection::Vert, true,  COLOR_CHANNELPANEL_CUREVENTNAME1BACK1,        COLOR_CHANNELPANEL_CUREVENTNAME1BACK2},
+	{TEXT("ChannelPanelCurEventName2BackGradient"),   Theme::GradientDirection::Vert, true,  COLOR_CHANNELPANEL_CUREVENTNAME2BACK1,        COLOR_CHANNELPANEL_CUREVENTNAME2BACK2},
+	{TEXT("ChannelPanelFeaturedMarkGradient"),        Theme::GradientDirection::Vert, true,  COLOR_CHANNELPANEL_FEATUREDMARK1,             COLOR_CHANNELPANEL_FEATUREDMARK2},
+	{TEXT("ChannelPanelProgressGradient"),            Theme::GradientDirection::Vert, true,  COLOR_CHANNELPANEL_PROGRESS1,                 COLOR_CHANNELPANEL_PROGRESS2},
+	{TEXT("ChannelPanelCurProgressGradient"),         Theme::GradientDirection::Vert, true,  COLOR_CHANNELPANEL_CURPROGRESS1,              COLOR_CHANNELPANEL_CURPROGRESS2},
+	{TEXT("ControlPanelBackGradient"),                Theme::GradientDirection::Vert, true,  COLOR_CONTROLPANELBACK1,                      COLOR_CONTROLPANELBACK2},
+	{TEXT("ControlPanelHighlightBackGradient"),       Theme::GradientDirection::Vert, true,  COLOR_CONTROLPANELHIGHLIGHTBACK1,             COLOR_CONTROLPANELHIGHLIGHTBACK2},
+	{TEXT("ControlPanelCheckedBackGradient"),         Theme::GradientDirection::Vert, true,  COLOR_CONTROLPANELCHECKEDBACK1,               COLOR_CONTROLPANELCHECKEDBACK2},
+	{TEXT("TitleBarBackGradient"),                    Theme::GradientDirection::Vert, true,  COLOR_TITLEBARBACK1,                          COLOR_TITLEBARBACK2},
+	{TEXT("TitleBarIconBackGradient"),                Theme::GradientDirection::Vert, true,  COLOR_TITLEBARICONBACK1,                      COLOR_TITLEBARICONBACK2},
+	{TEXT("TitleBarHighlightBackGradient"),           Theme::GradientDirection::Vert, true,  COLOR_TITLEBARHIGHLIGHTBACK1,                 COLOR_TITLEBARHIGHLIGHTBACK2},
+	{TEXT("SideBarBackGradient"),                     Theme::GradientDirection::Horz, true,  COLOR_SIDEBARBACK1,                           COLOR_SIDEBARBACK2},
+	{TEXT("SideBarHighlightBackGradient"),            Theme::GradientDirection::Horz, true,  COLOR_SIDEBARHIGHLIGHTBACK1,                  COLOR_SIDEBARHIGHLIGHTBACK2},
+	{TEXT("SideBarCheckBackGradient"),                Theme::GradientDirection::Horz, true,  COLOR_SIDEBARCHECKBACK1,                      COLOR_SIDEBARCHECKBACK2},
+	{TEXT("NotificationBarBackGradient"),             Theme::GradientDirection::Vert, true,  COLOR_NOTIFICATIONBARBACK1,                   COLOR_NOTIFICATIONBARBACK2},
+	{TEXT("ProgramGuideFeaturedMarkGradient"),        Theme::GradientDirection::Horz, true,  COLOR_PROGRAMGUIDE_FEATUREDMARK1,             COLOR_PROGRAMGUIDE_FEATUREDMARK2},
+	{TEXT("ProgramGuideChannelBackGradient"),         Theme::GradientDirection::Vert, true,  COLOR_PROGRAMGUIDE_CHANNELBACK1,              COLOR_PROGRAMGUIDE_CHANNELBACK2},
+	{TEXT("ProgramGuideCurChannelBackGradient"),      Theme::GradientDirection::Vert, true,  COLOR_PROGRAMGUIDE_CURCHANNELBACK1,           COLOR_PROGRAMGUIDE_CURCHANNELBACK2},
+	{TEXT("ProgramGuideTimeBackGradient"),            Theme::GradientDirection::Horz, true,  COLOR_PROGRAMGUIDE_TIMEBACK1,                 COLOR_PROGRAMGUIDE_TIMEBACK2},
+	{TEXT("ProgramGuideTime0To2BackGradient"),        Theme::GradientDirection::Horz, true,  COLOR_PROGRAMGUIDE_TIMEBACK_0TO2_1,           COLOR_PROGRAMGUIDE_TIMEBACK_0TO2_2},
+	{TEXT("ProgramGuideTime3To5BackGradient"),        Theme::GradientDirection::Horz, true,  COLOR_PROGRAMGUIDE_TIMEBACK_3TO5_1,           COLOR_PROGRAMGUIDE_TIMEBACK_3TO5_2},
+	{TEXT("ProgramGuideTime6To8BackGradient"),        Theme::GradientDirection::Horz, true,  COLOR_PROGRAMGUIDE_TIMEBACK_6TO8_1,           COLOR_PROGRAMGUIDE_TIMEBACK_6TO8_2},
+	{TEXT("ProgramGuideTime9To11BackGradient"),       Theme::GradientDirection::Horz, true,  COLOR_PROGRAMGUIDE_TIMEBACK_9TO11_1,          COLOR_PROGRAMGUIDE_TIMEBACK_9TO11_2},
+	{TEXT("ProgramGuideTime12To14BackGradient"),      Theme::GradientDirection::Horz, true,  COLOR_PROGRAMGUIDE_TIMEBACK_12TO14_1,         COLOR_PROGRAMGUIDE_TIMEBACK_12TO14_2},
+	{TEXT("ProgramGuideTime15To17BackGradient"),      Theme::GradientDirection::Horz, true,  COLOR_PROGRAMGUIDE_TIMEBACK_15TO17_1,         COLOR_PROGRAMGUIDE_TIMEBACK_15TO17_2},
+	{TEXT("ProgramGuideTime18To20BackGradient"),      Theme::GradientDirection::Horz, true,  COLOR_PROGRAMGUIDE_TIMEBACK_18TO20_1,         COLOR_PROGRAMGUIDE_TIMEBACK_18TO20_2},
+	{TEXT("ProgramGuideTime21To23BackGradient"),      Theme::GradientDirection::Horz, true,  COLOR_PROGRAMGUIDE_TIMEBACK_21TO23_1,         COLOR_PROGRAMGUIDE_TIMEBACK_21TO23_2},
 };
 
 const CColorScheme::BorderInfo CColorScheme::m_BorderInfoList[NUM_BORDERS] = {
-	{TEXT("ScreenBorder"),                           Theme::BORDER_NONE,   COLOR_SCREENBORDER},
-	{TEXT("WindowFrameBorder"),                      Theme::BORDER_NONE,   COLOR_WINDOWFRAMEBORDER},
-	{TEXT("WindowActiveFrameBorder"),                Theme::BORDER_NONE,   COLOR_WINDOWACTIVEFRAMEBORDER},
-	{TEXT("StatusBorder"),                           Theme::BORDER_RAISED, COLOR_STATUSBORDER},
-	{TEXT("StatusItemBorder"),                       Theme::BORDER_NONE,   COLOR_STATUSITEMBORDER},
-	{TEXT("StatusBottomItemBorder"),                 Theme::BORDER_NONE,   COLOR_STATUSBOTTOMITEMBORDER},
-	{TEXT("StatusHighlightBorder"),                  Theme::BORDER_NONE,   COLOR_STATUSHIGHLIGHTBORDER},
-	{TEXT("StatusEventProgressBorder"),              Theme::BORDER_NONE,   COLOR_STATUSEVENTPROGRESSBORDER},
-	{TEXT("StatusEventProgressElapsedBorder"),       Theme::BORDER_NONE,   COLOR_STATUSEVENTPROGRESSELAPSEDBORDER},
-	{TEXT("TitleBarBorder"),                         Theme::BORDER_RAISED, COLOR_TITLEBARBORDER},
-	{TEXT("TitleBarCaptionBorder"),                  Theme::BORDER_NONE,   COLOR_TITLEBARTEXTBORDER},
-	{TEXT("TitleBarIconBorder"),                     Theme::BORDER_NONE,   COLOR_TITLEBARICONBORDER},
-	{TEXT("TitleBarHighlightBorder"),                Theme::BORDER_NONE,   COLOR_TITLEBARHIGHLIGHTBORDER},
-	{TEXT("SideBarBorder"),                          Theme::BORDER_RAISED, COLOR_SIDEBARBORDER},
-	{TEXT("SideBarItemBorder"),                      Theme::BORDER_NONE,   COLOR_SIDEBARITEMBORDER},
-	{TEXT("SideBarHighlightBorder"),                 Theme::BORDER_NONE,   COLOR_SIDEBARHIGHLIGHTBORDER},
-	{TEXT("SideBarCheckBorder"),                     Theme::BORDER_SUNKEN, COLOR_SIDEBARCHECKBORDER},
-	{TEXT("ProgramGuideStatusBorder"),               Theme::BORDER_SUNKEN, COLOR_STATUSBORDER},
-	{TEXT("PanelTabBorder"),                         Theme::BORDER_SOLID,  COLOR_PANELTABBORDER},
-	{TEXT("PanelCurTabBorder"),                      Theme::BORDER_SOLID,  COLOR_PANELCURTABBORDER},
-	{TEXT("PanelTabMarginBorder"),                   Theme::BORDER_NONE,   COLOR_PANELTABMARGINBORDER},
-	{TEXT("PanelTitleBorder"),                       Theme::BORDER_RAISED, COLOR_PANELTITLEBORDER},
-	{TEXT("InformationPanelEventInfoBorder"),        Theme::BORDER_NONE,   COLOR_INFORMATIONPANEL_EVENTINFOBORDER},
-	{TEXT("InformationPanelButtonBorder"),           Theme::BORDER_NONE,   COLOR_INFORMATIONPANEL_BUTTONBORDER},
-	{TEXT("InformationPanelHotButtonBorder"),        Theme::BORDER_NONE,   COLOR_INFORMATIONPANEL_HOTBUTTONBORDER},
-	{TEXT("ProgramListPanelChannelBorder"),          Theme::BORDER_NONE,   COLOR_PROGRAMLISTPANEL_CHANNELBORDER},
-	{TEXT("ProgramListPanelCurChannelBorder"),       Theme::BORDER_NONE,   COLOR_PROGRAMLISTPANEL_CURCHANNELBORDER},
-	{TEXT("ProgramListPanelChannelButtonBorder"),    Theme::BORDER_NONE,   COLOR_PROGRAMLISTPANEL_CHANNELBUTTONBORDER},
-	{TEXT("ProgramListPanelChannelButtonHotBorder"), Theme::BORDER_NONE,   COLOR_PROGRAMLISTPANEL_CHANNELBUTTONHOTBORDER},
-	{TEXT("ProgramListPanelEventBorder"),            Theme::BORDER_NONE,   COLOR_PROGRAMLISTPANEL_EVENTBORDER},
-	{TEXT("ProgramListPanelCurEventBorder"),         Theme::BORDER_NONE,   COLOR_PROGRAMLISTPANEL_CUREVENTBORDER},
-	{TEXT("ProgramListPanelTitleBorder"),            Theme::BORDER_NONE,   COLOR_PROGRAMLISTPANEL_TITLEBORDER},
-	{TEXT("ProgramListPanelCurTitleBorder"),         Theme::BORDER_NONE,   COLOR_PROGRAMLISTPANEL_CURTITLEBORDER},
-	{TEXT("ChannelPanelChannelNameBorder"),          Theme::BORDER_NONE,   COLOR_CHANNELPANEL_CHANNELNAMEBORDER},
-	{TEXT("ChannelPanelCurChannelNameBorder"),       Theme::BORDER_NONE,   COLOR_CHANNELPANEL_CURCHANNELNAMEBORDER},
-	{TEXT("ChannelPanelEventNameBorder"),            Theme::BORDER_NONE,   COLOR_CHANNELPANEL_EVENTNAME1BORDER},
-	{TEXT("ChannelPanelEventName2Border"),           Theme::BORDER_NONE,   COLOR_CHANNELPANEL_EVENTNAME2BORDER},
-	{TEXT("ChannelPanelCurEventNameBorder"),         Theme::BORDER_NONE,   COLOR_CHANNELPANEL_CUREVENTNAME1BORDER},
-	{TEXT("ChannelPanelCurEventName2Border"),        Theme::BORDER_NONE,   COLOR_CHANNELPANEL_CUREVENTNAME2BORDER},
-	{TEXT("ChannelPanelFeaturedMarkBorder"),         Theme::BORDER_SOLID,  COLOR_CHANNELPANEL_FEATUREDMARKBORDER},
-	{TEXT("ChannelPanelProgressBorder"),             Theme::BORDER_NONE,   COLOR_CHANNELPANEL_PROGRESSBORDER},
-	{TEXT("ChannelPanelCurProgressBorder"),          Theme::BORDER_NONE,   COLOR_CHANNELPANEL_CURPROGRESSBORDER},
-	{TEXT("ControlPanelItemBorder"),                 Theme::BORDER_NONE,   COLOR_CONTROLPANELITEMBORDER},
-	{TEXT("ControlPanelHighlightBorder"),            Theme::BORDER_NONE,   COLOR_CONTROLPANELHIGHLIGHTBORDER},
-	{TEXT("ControlPanelCheckedBorder"),              Theme::BORDER_NONE,   COLOR_CONTROLPANELCHECKEDBORDER},
-	{TEXT("ProgramGuideFeaturedMarkBorder"),         Theme::BORDER_SOLID,  COLOR_PROGRAMGUIDE_FEATUREDMARKBORDER},
+	{TEXT("ScreenBorder"),                           Theme::BorderType::None,   COLOR_SCREENBORDER},
+	{TEXT("WindowFrameBorder"),                      Theme::BorderType::None,   COLOR_WINDOWFRAMEBORDER},
+	{TEXT("WindowActiveFrameBorder"),                Theme::BorderType::None,   COLOR_WINDOWACTIVEFRAMEBORDER},
+	{TEXT("StatusBorder"),                           Theme::BorderType::Raised, COLOR_STATUSBORDER},
+	{TEXT("StatusItemBorder"),                       Theme::BorderType::None,   COLOR_STATUSITEMBORDER},
+	{TEXT("StatusBottomItemBorder"),                 Theme::BorderType::None,   COLOR_STATUSBOTTOMITEMBORDER},
+	{TEXT("StatusHighlightBorder"),                  Theme::BorderType::None,   COLOR_STATUSHIGHLIGHTBORDER},
+	{TEXT("StatusEventProgressBorder"),              Theme::BorderType::None,   COLOR_STATUSEVENTPROGRESSBORDER},
+	{TEXT("StatusEventProgressElapsedBorder"),       Theme::BorderType::None,   COLOR_STATUSEVENTPROGRESSELAPSEDBORDER},
+	{TEXT("TitleBarBorder"),                         Theme::BorderType::Raised, COLOR_TITLEBARBORDER},
+	{TEXT("TitleBarCaptionBorder"),                  Theme::BorderType::None,   COLOR_TITLEBARTEXTBORDER},
+	{TEXT("TitleBarIconBorder"),                     Theme::BorderType::None,   COLOR_TITLEBARICONBORDER},
+	{TEXT("TitleBarHighlightBorder"),                Theme::BorderType::None,   COLOR_TITLEBARHIGHLIGHTBORDER},
+	{TEXT("SideBarBorder"),                          Theme::BorderType::Raised, COLOR_SIDEBARBORDER},
+	{TEXT("SideBarItemBorder"),                      Theme::BorderType::None,   COLOR_SIDEBARITEMBORDER},
+	{TEXT("SideBarHighlightBorder"),                 Theme::BorderType::None,   COLOR_SIDEBARHIGHLIGHTBORDER},
+	{TEXT("SideBarCheckBorder"),                     Theme::BorderType::Sunken, COLOR_SIDEBARCHECKBORDER},
+	{TEXT("ProgramGuideStatusBorder"),               Theme::BorderType::Sunken, COLOR_STATUSBORDER},
+	{TEXT("PanelTabBorder"),                         Theme::BorderType::Solid,  COLOR_PANELTABBORDER},
+	{TEXT("PanelCurTabBorder"),                      Theme::BorderType::Solid,  COLOR_PANELCURTABBORDER},
+	{TEXT("PanelTabMarginBorder"),                   Theme::BorderType::None,   COLOR_PANELTABMARGINBORDER},
+	{TEXT("PanelTitleBorder"),                       Theme::BorderType::Raised, COLOR_PANELTITLEBORDER},
+	{TEXT("InformationPanelEventInfoBorder"),        Theme::BorderType::None,   COLOR_INFORMATIONPANEL_EVENTINFOBORDER},
+	{TEXT("InformationPanelButtonBorder"),           Theme::BorderType::None,   COLOR_INFORMATIONPANEL_BUTTONBORDER},
+	{TEXT("InformationPanelHotButtonBorder"),        Theme::BorderType::None,   COLOR_INFORMATIONPANEL_HOTBUTTONBORDER},
+	{TEXT("ProgramListPanelChannelBorder"),          Theme::BorderType::None,   COLOR_PROGRAMLISTPANEL_CHANNELBORDER},
+	{TEXT("ProgramListPanelCurChannelBorder"),       Theme::BorderType::None,   COLOR_PROGRAMLISTPANEL_CURCHANNELBORDER},
+	{TEXT("ProgramListPanelChannelButtonBorder"),    Theme::BorderType::None,   COLOR_PROGRAMLISTPANEL_CHANNELBUTTONBORDER},
+	{TEXT("ProgramListPanelChannelButtonHotBorder"), Theme::BorderType::None,   COLOR_PROGRAMLISTPANEL_CHANNELBUTTONHOTBORDER},
+	{TEXT("ProgramListPanelEventBorder"),            Theme::BorderType::None,   COLOR_PROGRAMLISTPANEL_EVENTBORDER},
+	{TEXT("ProgramListPanelCurEventBorder"),         Theme::BorderType::None,   COLOR_PROGRAMLISTPANEL_CUREVENTBORDER},
+	{TEXT("ProgramListPanelTitleBorder"),            Theme::BorderType::None,   COLOR_PROGRAMLISTPANEL_TITLEBORDER},
+	{TEXT("ProgramListPanelCurTitleBorder"),         Theme::BorderType::None,   COLOR_PROGRAMLISTPANEL_CURTITLEBORDER},
+	{TEXT("ChannelPanelChannelNameBorder"),          Theme::BorderType::None,   COLOR_CHANNELPANEL_CHANNELNAMEBORDER},
+	{TEXT("ChannelPanelCurChannelNameBorder"),       Theme::BorderType::None,   COLOR_CHANNELPANEL_CURCHANNELNAMEBORDER},
+	{TEXT("ChannelPanelEventNameBorder"),            Theme::BorderType::None,   COLOR_CHANNELPANEL_EVENTNAME1BORDER},
+	{TEXT("ChannelPanelEventName2Border"),           Theme::BorderType::None,   COLOR_CHANNELPANEL_EVENTNAME2BORDER},
+	{TEXT("ChannelPanelCurEventNameBorder"),         Theme::BorderType::None,   COLOR_CHANNELPANEL_CUREVENTNAME1BORDER},
+	{TEXT("ChannelPanelCurEventName2Border"),        Theme::BorderType::None,   COLOR_CHANNELPANEL_CUREVENTNAME2BORDER},
+	{TEXT("ChannelPanelFeaturedMarkBorder"),         Theme::BorderType::Solid,  COLOR_CHANNELPANEL_FEATUREDMARKBORDER},
+	{TEXT("ChannelPanelProgressBorder"),             Theme::BorderType::None,   COLOR_CHANNELPANEL_PROGRESSBORDER},
+	{TEXT("ChannelPanelCurProgressBorder"),          Theme::BorderType::None,   COLOR_CHANNELPANEL_CURPROGRESSBORDER},
+	{TEXT("ControlPanelItemBorder"),                 Theme::BorderType::None,   COLOR_CONTROLPANELITEMBORDER},
+	{TEXT("ControlPanelHighlightBorder"),            Theme::BorderType::None,   COLOR_CONTROLPANELHIGHLIGHTBORDER},
+	{TEXT("ControlPanelCheckedBorder"),              Theme::BorderType::None,   COLOR_CONTROLPANELCHECKEDBORDER},
+	{TEXT("ProgramGuideFeaturedMarkBorder"),         Theme::BorderType::Solid,  COLOR_PROGRAMGUIDE_FEATUREDMARKBORDER},
 };
 
 const Theme::BorderType CColorScheme::m_CustomDefaultBorderList[NUM_BORDERS] = {
-	Theme::BORDER_NONE,
-	Theme::BORDER_NONE,
-	Theme::BORDER_NONE,
-	Theme::BORDER_RAISED,
-	Theme::BORDER_NONE,
-	Theme::BORDER_NONE,
-	Theme::BORDER_SUNKEN,
-	Theme::BORDER_NONE,
-	Theme::BORDER_NONE,
-	Theme::BORDER_RAISED,
-	Theme::BORDER_NONE,
-	Theme::BORDER_NONE,
-	Theme::BORDER_SUNKEN,
-	Theme::BORDER_RAISED,
-	Theme::BORDER_NONE,
-	Theme::BORDER_SUNKEN,
-	Theme::BORDER_SUNKEN,
-	Theme::BORDER_SUNKEN,
-	Theme::BORDER_NONE,
-	Theme::BORDER_SOLID,
-	Theme::BORDER_NONE,
-	Theme::BORDER_RAISED,
-	Theme::BORDER_NONE,
-	Theme::BORDER_NONE,
-	Theme::BORDER_SUNKEN,
-	Theme::BORDER_SOLID,
-	Theme::BORDER_SOLID,
-	Theme::BORDER_NONE,
-	Theme::BORDER_SUNKEN,
-	Theme::BORDER_SOLID,
-	Theme::BORDER_SOLID,
-	Theme::BORDER_SOLID,
-	Theme::BORDER_SOLID,
-	Theme::BORDER_SOLID,
-	Theme::BORDER_SOLID,
-	Theme::BORDER_SOLID,
-	Theme::BORDER_SOLID,
-	Theme::BORDER_SOLID,
-	Theme::BORDER_SOLID,
-	Theme::BORDER_SOLID,
-	Theme::BORDER_NONE,
-	Theme::BORDER_NONE,
-	Theme::BORDER_NONE,
-	Theme::BORDER_SUNKEN,
-	Theme::BORDER_SUNKEN,
-	Theme::BORDER_SOLID,
+	Theme::BorderType::None,
+	Theme::BorderType::None,
+	Theme::BorderType::None,
+	Theme::BorderType::Raised,
+	Theme::BorderType::None,
+	Theme::BorderType::None,
+	Theme::BorderType::Sunken,
+	Theme::BorderType::None,
+	Theme::BorderType::None,
+	Theme::BorderType::Raised,
+	Theme::BorderType::None,
+	Theme::BorderType::None,
+	Theme::BorderType::Sunken,
+	Theme::BorderType::Raised,
+	Theme::BorderType::None,
+	Theme::BorderType::Sunken,
+	Theme::BorderType::Sunken,
+	Theme::BorderType::Sunken,
+	Theme::BorderType::None,
+	Theme::BorderType::Solid,
+	Theme::BorderType::None,
+	Theme::BorderType::Raised,
+	Theme::BorderType::None,
+	Theme::BorderType::None,
+	Theme::BorderType::Sunken,
+	Theme::BorderType::Solid,
+	Theme::BorderType::Solid,
+	Theme::BorderType::None,
+	Theme::BorderType::Sunken,
+	Theme::BorderType::Solid,
+	Theme::BorderType::Solid,
+	Theme::BorderType::Solid,
+	Theme::BorderType::Solid,
+	Theme::BorderType::Solid,
+	Theme::BorderType::Solid,
+	Theme::BorderType::Solid,
+	Theme::BorderType::Solid,
+	Theme::BorderType::Solid,
+	Theme::BorderType::Solid,
+	Theme::BorderType::Solid,
+	Theme::BorderType::None,
+	Theme::BorderType::None,
+	Theme::BorderType::None,
+	Theme::BorderType::Sunken,
+	Theme::BorderType::Sunken,
+	Theme::BorderType::Solid,
 };
 
 
@@ -454,7 +454,7 @@ bool CColorScheme::SetColor(int Type, COLORREF Color)
 Theme::GradientType CColorScheme::GetGradientType(int Gradient) const
 {
 	if (Gradient < 0 || Gradient >= NUM_GRADIENTS)
-		return Theme::GRADIENT_NORMAL;
+		return Theme::GradientType::Normal;
 	return m_GradientList[Gradient].Type;
 }
 
@@ -465,7 +465,7 @@ Theme::GradientType CColorScheme::GetGradientType(LPCTSTR pszText) const
 		if (::lstrcmpi(m_GradientInfoList[i].pszText, pszText) == 0)
 			return m_GradientList[i].Type;
 	}
-	return Theme::GRADIENT_NORMAL;
+	return Theme::GradientType::Normal;
 }
 
 
@@ -503,7 +503,7 @@ bool CColorScheme::GetGradientStyle(int Gradient, Theme::GradientStyle *pStyle) 
 Theme::BorderType CColorScheme::GetBorderType(int Border) const
 {
 	if (Border < 0 || Border >= NUM_BORDERS)
-		return Theme::BORDER_NONE;
+		return Theme::BorderType::None;
 	return m_BorderList[Border];
 }
 
@@ -511,7 +511,7 @@ Theme::BorderType CColorScheme::GetBorderType(int Border) const
 bool CColorScheme::SetBorderType(int Border, Theme::BorderType Type)
 {
 	if (Border < 0 || Border >= NUM_BORDERS
-			|| Type < Theme::BORDER_NONE || Type > Theme::BORDER_RAISED)
+			|| Type < Theme::BorderType::None || Type > Theme::BorderType::Raised)
 		return false;
 	m_BorderList[Border] = Type;
 	return true;
@@ -553,7 +553,7 @@ bool CColorScheme::Load(CSettings &Settings)
 				&& !IsLoaded(m_GradientInfoList[i].Color2)) {
 			m_ColorList[m_GradientInfoList[i].Color2] = m_ColorList[m_GradientInfoList[i].Color1];
 			SetLoadedFlag(m_GradientInfoList[i].Color2);
-			m_GradientList[i].Type = Theme::GRADIENT_NORMAL;
+			m_GradientList[i].Type = Theme::GradientType::Normal;
 		}
 	}
 
@@ -643,11 +643,11 @@ bool CColorScheme::Load(CSettings &Settings)
 	for (int i = 0; i < NUM_GRADIENTS; i++) {
 		if (Settings.Read(m_GradientInfoList[i].pszText, szText, lengthof(szText))) {
 			if (szText[0] == '\0' || ::lstrcmpi(szText, TEXT("normal")) == 0)
-				m_GradientList[i].Type = Theme::GRADIENT_NORMAL;
+				m_GradientList[i].Type = Theme::GradientType::Normal;
 			else if (::lstrcmpi(szText, TEXT("glossy")) == 0)
-				m_GradientList[i].Type = Theme::GRADIENT_GLOSSY;
+				m_GradientList[i].Type = Theme::GradientType::Glossy;
 			else if (::lstrcmpi(szText, TEXT("interlaced")) == 0)
-				m_GradientList[i].Type = Theme::GRADIENT_INTERLACED;
+				m_GradientList[i].Type = Theme::GradientType::Interlaced;
 		} else {
 			switch (i) {
 			case GRADIENT_TITLEBARICON:
@@ -730,13 +730,13 @@ bool CColorScheme::Load(CSettings &Settings)
 			if (Settings.Read(m_BorderInfoList[i].pszText, szText, lengthof(szText))) {
 				bool fLoaded = true;
 				if (::lstrcmpi(szText, TEXT("none")) == 0) {
-					m_BorderList[i] = Theme::BORDER_NONE;
+					m_BorderList[i] = Theme::BorderType::None;
 				} else if (::lstrcmpi(szText, TEXT("solid")) == 0)
-					m_BorderList[i] = Theme::BORDER_SOLID;
+					m_BorderList[i] = Theme::BorderType::Solid;
 				else if (::lstrcmpi(szText, TEXT("sunken")) == 0)
-					m_BorderList[i] = Theme::BORDER_SUNKEN;
+					m_BorderList[i] = Theme::BorderType::Sunken;
 				else if (::lstrcmpi(szText, TEXT("raised")) == 0)
-					m_BorderList[i] = Theme::BORDER_RAISED;
+					m_BorderList[i] = Theme::BorderType::Raised;
 				else
 					fLoaded = false;
 				BorderLoaded[i] = fLoaded;
@@ -822,9 +822,9 @@ bool CColorScheme::Save(CSettings &Settings, unsigned int Flags) const
 			};
 			TCHAR szName[128];
 
-			Settings.Write(m_GradientInfoList[i].pszText, pszTypeName[m_GradientList[i].Type]);
+			Settings.Write(m_GradientInfoList[i].pszText, pszTypeName[(int)m_GradientList[i].Type]);
 			::wsprintf(szName, TEXT("%sDirection"), m_GradientInfoList[i].pszText);
-			Settings.Write(szName, GradientDirectionList[m_GradientList[i].Direction]);
+			Settings.Write(szName, GradientDirectionList[(int)m_GradientList[i].Direction]);
 		}
 	}
 
@@ -834,7 +834,7 @@ bool CColorScheme::Save(CSettings &Settings, unsigned int Flags) const
 		};
 
 		for (int i = 0; i < NUM_BORDERS; i++)
-			Settings.Write(m_BorderInfoList[i].pszText, pszTypeName[m_BorderList[i]]);
+			Settings.Write(m_BorderInfoList[i].pszText, pszTypeName[(int)m_BorderList[i]]);
 	}
 
 	return true;
@@ -887,7 +887,7 @@ void CColorScheme::SetDefault()
 	for (int i = 0; i < NUM_COLORS; i++)
 		m_ColorList[i] = m_ColorInfoList[i].DefaultColor;
 	for (int i = 0; i < NUM_GRADIENTS; i++) {
-		m_GradientList[i].Type = Theme::GRADIENT_NORMAL;
+		m_GradientList[i].Type = Theme::GradientType::Normal;
 		m_GradientList[i].Direction = m_GradientInfoList[i].Direction;
 	}
 	for (int i = 0; i < NUM_BORDERS; i++)
@@ -913,7 +913,7 @@ COLORREF CColorScheme::GetDefaultColor(int Type)
 
 Theme::GradientType CColorScheme::GetDefaultGradientType(int Gradient)
 {
-	return Theme::GRADIENT_NORMAL;
+	return Theme::GradientType::Normal;
 }
 
 
@@ -921,7 +921,7 @@ bool CColorScheme::GetDefaultGradientStyle(int Gradient, GradientStyle *pStyle)
 {
 	if (Gradient < 0 || Gradient >= NUM_GRADIENTS)
 		return false;
-	pStyle->Type = Theme::GRADIENT_NORMAL;
+	pStyle->Type = Theme::GradientType::Normal;
 	pStyle->Direction = m_GradientInfoList[Gradient].Direction;
 	return true;
 }
@@ -938,7 +938,7 @@ bool CColorScheme::IsGradientDirectionEnabled(int Gradient)
 Theme::BorderType CColorScheme::GetDefaultBorderType(int Border)
 {
 	if (Border < 0 || Border >= NUM_BORDERS)
-		return Theme::BORDER_NONE;
+		return Theme::BorderType::None;
 	return m_BorderInfoList[Border].DefaultType;
 }
 

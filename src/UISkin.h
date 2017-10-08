@@ -65,7 +65,7 @@ public:
 		LPCTSTR pszTitle = nullptr) const;
 	virtual void ShowNotificationBar(
 		LPCTSTR pszText,
-		CNotificationBar::MessageType Type = CNotificationBar::MESSAGE_INFO,
+		CNotificationBar::MessageType Type = CNotificationBar::MessageType::Info,
 		DWORD Duration = 0, bool fSkippable = false) = 0;
 	bool IsWheelChannelChanging() const { return m_fWheelChannelChanging; }
 

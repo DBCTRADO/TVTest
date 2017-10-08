@@ -230,11 +230,11 @@ public:
 	};
 	bool SaveSettings(unsigned int Flags);
 	bool ShowOptionDialog(HWND hwndOwner, int StartPage = -1);
-	enum CreateDirectoryResult {
-		CREATEDIRECTORY_RESULT_SUCCESS,
-		CREATEDIRECTORY_RESULT_ERROR,
-		CREATEDIRECTORY_RESULT_CANCELLED,
-		CREATEDIRECTORY_RESULT_NOPATH
+	enum class CreateDirectoryResult {
+		Success,
+		Error,
+		Cancelled,
+		NoPath,
 	};
 	CreateDirectoryResult CreateDirectory(HWND hwnd, LPCTSTR pszDirectory, LPCTSTR pszMessage);
 	bool SendInterprocessMessage(HWND hwnd, UINT Message, const void *pParam, DWORD ParamSize);

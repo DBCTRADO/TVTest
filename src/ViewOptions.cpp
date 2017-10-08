@@ -42,7 +42,7 @@ CViewOptions::CViewOptions()
 	, m_SnapAtWindowEdgeMargin(8)
 	, m_fNearCornerResizeOrigin(false)
 	, m_fZoomKeepAspectRatio(false)
-	, m_PanScanAdjustWindowMode(ADJUSTWINDOW_WIDTH)
+	, m_PanScanAdjustWindowMode(AdjustWindowMode::Width)
 	, m_fRemember1SegWindowSize(true)
 	, m_fMinimizeToTray(false)
 	, m_fDisablePreviewWhenMinimized(false)
@@ -57,7 +57,7 @@ CViewOptions::CViewOptions()
 	, m_fNoMonitorLowPower(false)
 	, m_fNoMonitorLowPowerActiveOnly(false)
 {
-	TVTest::StyleUtil::GetSystemFont(DrawUtil::FONT_CAPTION, &m_TitleBarFont);
+	TVTest::StyleUtil::GetSystemFont(DrawUtil::FontType::Caption, &m_TitleBarFont);
 }
 
 
@@ -88,13 +88,13 @@ bool CViewOptions::ReadSettings(CSettings &Settings)
 	Settings.Read(TEXT("NearCornerResizeOrigin"), &m_fNearCornerResizeOrigin);
 	Settings.Read(TEXT("ZoomKeepAspectRatio"), &m_fZoomKeepAspectRatio);
 	if (Settings.Read(TEXT("PanScanAdjustWindow"), &Value)
-			&& Value >= ADJUSTWINDOW_FIRST && Value <= ADJUSTWINDOW_LAST) {
-		m_PanScanAdjustWindowMode = (AdjustWindowMode)Value;
+			&& CheckEnumRange(static_cast<AdjustWindowMode>(Value))) {
+		m_PanScanAdjustWindowMode = static_cast<AdjustWindowMode>(Value);
 	} else {
 		// 以前のバージョンとの互換用
 		bool f;
 		if (Settings.Read(TEXT("PanScanNoResizeWindow"), &f))
-			m_PanScanAdjustWindowMode = f ? ADJUSTWINDOW_WIDTH : ADJUSTWINDOW_FIT;
+			m_PanScanAdjustWindowMode = f ? AdjustWindowMode::Width : AdjustWindowMode::Fit;
 	}
 	Settings.Read(TEXT("Remember1SegWindowSize"), &m_fRemember1SegWindowSize);
 	Settings.Read(TEXT("MinimizeToTray"), &m_fMinimizeToTray);
@@ -190,7 +190,7 @@ INT_PTR CViewOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 				}
 				DlgComboBox_SetCurSel(
 					hDlg, IDC_OPTIONS_PANSCANADJUSTWINDOW,
-					m_PanScanAdjustWindowMode);
+					static_cast<int>(m_PanScanAdjustWindowMode));
 			}
 			DlgCheckBox_Check(hDlg, IDC_OPTIONS_REMEMBER1SEGWINDOWSIZE, m_fRemember1SegWindowSize);
 			DlgCheckBox_Check(hDlg, IDC_OPTIONS_MINIMIZETOTRAY, m_fMinimizeToTray);
@@ -381,7 +381,7 @@ INT_PTR CViewOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 					if (m_fEnableTitleBarFont)
 						Font = m_TitleBarFont;
 					else
-						TVTest::StyleUtil::GetSystemFont(DrawUtil::FONT_CAPTION, &Font);
+						TVTest::StyleUtil::GetSystemFont(DrawUtil::FontType::Caption, &Font);
 					App.UICore.SetTitleFont(Font);
 					App.Panel.Frame.GetPanel()->SetTitleFont(Font);
 				}

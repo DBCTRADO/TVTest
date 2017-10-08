@@ -10,7 +10,7 @@ namespace TVTest
 
 
 CTextDrawClient::CTextDrawClient()
-	: m_Engine(ENGINE_UNDEFINED)
+	: m_Engine(TextDrawEngine::Undefined)
 	, m_DirectWriteRenderer(GetAppClass().DirectWriteSystem)
 	, m_DirectWriteEngine(m_DirectWriteRenderer)
 {
@@ -23,7 +23,7 @@ CTextDrawClient::~CTextDrawClient()
 }
 
 
-bool CTextDrawClient::Initialize(TextDrawEngine Engine,HWND hwnd)
+bool CTextDrawClient::Initialize(TextDrawEngine Engine, HWND hwnd)
 {
 	Finalize();
 
@@ -31,12 +31,12 @@ bool CTextDrawClient::Initialize(TextDrawEngine Engine,HWND hwnd)
 		return false;
 
 	switch (Engine) {
-	case ENGINE_GDI:
+	case TextDrawEngine::GDI:
 		break;
 
-	case ENGINE_DIRECTWRITE:
+	case TextDrawEngine::DirectWrite:
 		if (!m_DirectWriteRenderer.GetSystem().Initialize()) {
-			GetAppClass().AddLog(CLogItem::TYPE_ERROR,TEXT("DirectWrite の初期化ができません。"));
+			GetAppClass().AddLog(CLogItem::LogType::Error, TEXT("DirectWrite の初期化ができません。"));
 			return false;
 		}
 		if (!m_DirectWriteRenderer.Initialize(hwnd))
@@ -56,13 +56,13 @@ bool CTextDrawClient::Initialize(TextDrawEngine Engine,HWND hwnd)
 void CTextDrawClient::Finalize()
 {
 	switch (m_Engine) {
-	case ENGINE_DIRECTWRITE:
+	case TextDrawEngine::DirectWrite:
 		m_DirectWriteEngine.Finalize();
 		m_DirectWriteRenderer.Finalize();
 		break;
 	}
 
-	m_Engine = ENGINE_UNDEFINED;
+	m_Engine = TextDrawEngine::Undefined;
 }
 
 
@@ -72,11 +72,11 @@ bool CTextDrawClient::InitializeTextDraw(CTextDraw *pTextDraw)
 		return false;
 
 	switch (m_Engine) {
-	case ENGINE_GDI:
+	case TextDrawEngine::GDI:
 		pTextDraw->SetEngine(nullptr);
 		break;
 
-	case ENGINE_DIRECTWRITE:
+	case TextDrawEngine::DirectWrite:
 		pTextDraw->SetEngine(&m_DirectWriteEngine);
 		break;
 

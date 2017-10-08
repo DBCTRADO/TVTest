@@ -264,7 +264,7 @@ void CMenuPainter::GetFont(LOGFONT *pFont)
 {
 	if (!m_UxTheme.IsActive()
 			|| !m_UxTheme.GetFont(MENU_POPUPITEM, 0, TMT_GLYPHFONT, pFont))
-		DrawUtil::GetSystemFont(DrawUtil::FONT_MENU, pFont);
+		DrawUtil::GetSystemFont(DrawUtil::FontType::Menu, pFont);
 }
 
 
@@ -1080,7 +1080,7 @@ bool CPopupMenu::Create()
 	m_hmenu = ::CreatePopupMenu();
 	if (m_hmenu == nullptr)
 		return false;
-	m_Type = TYPE_CREATED;
+	m_Type = PopupMenuType::Created;
 	return true;
 }
 
@@ -1092,7 +1092,7 @@ bool CPopupMenu::Load(HINSTANCE hinst, LPCTSTR pszName)
 	m_hmenu = ::LoadMenu(hinst, pszName);
 	if (m_hmenu == nullptr)
 		return false;
-	m_Type = TYPE_RESOURCE;
+	m_Type = PopupMenuType::Resource;
 	return true;
 }
 
@@ -1103,7 +1103,7 @@ bool CPopupMenu::Attach(HMENU hmenu)
 		return false;
 	Destroy();
 	m_hmenu = hmenu;
-	m_Type = TYPE_ATTACHED;
+	m_Type = PopupMenuType::Attached;
 	return true;
 }
 
@@ -1111,7 +1111,7 @@ bool CPopupMenu::Attach(HMENU hmenu)
 void CPopupMenu::Destroy()
 {
 	if (m_hmenu != nullptr) {
-		if (m_Type != TYPE_ATTACHED)
+		if (m_Type != PopupMenuType::Attached)
 			::DestroyMenu(m_hmenu);
 		m_hmenu = nullptr;
 	}
@@ -1137,7 +1137,7 @@ HMENU CPopupMenu::GetPopupHandle() const
 {
 	if (m_hmenu == nullptr)
 		return nullptr;
-	if (m_Type == TYPE_RESOURCE)
+	if (m_Type == PopupMenuType::Resource)
 		return ::GetSubMenu(m_hmenu, 0);
 	return m_hmenu;
 }
@@ -1228,7 +1228,7 @@ int CPopupMenu::Show(
 
 	if (m_hmenu == nullptr) {
 		m_hmenu = hmenu;
-		m_Type = TYPE_ATTACHED;
+		m_Type = PopupMenuType::Attached;
 		Result = MyTrackPopupMenu(m_hmenu, Flags, hwnd, pPos, pExcludeRect);
 		m_hmenu = nullptr;
 	} else {
@@ -1284,7 +1284,7 @@ bool CIconMenu::Initialize(HMENU hmenu, HINSTANCE hinst, const ItemInfo *pItemLi
 		return false;
 
 	for (int i = 0; i < ItemCount; i++) {
-		HICON hicon = LoadIconStandardSize(hinst, pItemList[i].pszIcon, ICON_SIZE_SMALL);
+		HICON hicon = LoadIconStandardSize(hinst, pItemList[i].pszIcon, IconSizeType::Small);
 
 		if (hicon != nullptr) {
 			ICONINFO ii;

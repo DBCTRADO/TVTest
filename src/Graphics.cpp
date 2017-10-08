@@ -435,9 +435,9 @@ bool CCanvas::FillGradient(
 		Gdiplus::LinearGradientBrush Brush(
 			rect,
 			GdiplusColor(Color1), GdiplusColor(Color2),
-			Direction == GRADIENT_DIRECTION_HORZ ?
-			Gdiplus::LinearGradientModeHorizontal :
-			Gdiplus::LinearGradientModeVertical);
+			Direction == GradientDirection::Horz ?
+				Gdiplus::LinearGradientModeHorizontal :
+				Gdiplus::LinearGradientModeVertical);
 		return m_Graphics->FillRectangle(&Brush, rect) == Gdiplus::Ok;
 	}
 	return false;

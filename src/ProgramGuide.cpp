@@ -676,13 +676,13 @@ bool CServiceInfo::SaveiEpgFile(const LibISDB::EventInfo *pEventInfo, LPCTSTR ps
 		const char *pszStationFormat;
 		switch (GetAppClass().NetworkDefinition.GetNetworkType(m_ServiceInfo.NetworkID)) {
 		default:
-		case TVTest::CNetworkDefinition::NETWORK_TERRESTRIAL:
+		case TVTest::CNetworkDefinition::NetworkType::Terrestrial:
 			pszStationFormat = "DFS%05x";
 			break;
-		case TVTest::CNetworkDefinition::NETWORK_BS:
+		case TVTest::CNetworkDefinition::NetworkType::BS:
 			pszStationFormat = "BSDT%03d";
 			break;
-		case TVTest::CNetworkDefinition::NETWORK_CS:
+		case TVTest::CNetworkDefinition::NetworkType::CS:
 			pszStationFormat = "CSDT%03d";
 			break;
 		}
@@ -1037,10 +1037,10 @@ bool CProgramGuide::Initialize(HINSTANCE hinst)
 
 CProgramGuide::CProgramGuide(CEventSearchOptions &EventSearchOptions)
 	: m_pEPGDatabase(nullptr)
-	, m_ListMode(LIST_SERVICES)
+	, m_ListMode(ListMode::Services)
 	, m_WeekListService(-1)
 	, m_LinesPerHour(12)
-	, m_TextDrawEngine(TVTest::CTextDrawClient::ENGINE_GDI)
+	, m_TextDrawEngine(TVTest::CTextDrawClient::TextDrawEngine::GDI)
 	, m_ItemLogicalWidth(140)
 	, m_TextLeftMargin(
 		m_Style.EventIconSize.Width +
@@ -1247,7 +1247,7 @@ bool CProgramGuide::UpdateList()
 		return false;
 
 	LibISDB::EPGDatabase::ServiceInfo CurServiceInfo;
-	if (m_ListMode == LIST_WEEK) {
+	if (m_ListMode == ListMode::Week) {
 		ProgramGuide::CServiceInfo *pCurService = m_ServiceList.GetItem(m_WeekListService);
 		if (pCurService != nullptr)
 			CurServiceInfo = pCurService->GetServiceInfo();
@@ -1294,14 +1294,14 @@ bool CProgramGuide::UpdateList()
 		if (hbmLogo != nullptr)
 			pService->SetLogo(hbmLogo);
 
-		if (m_ListMode == LIST_WEEK && pService->GetServiceInfo() == CurServiceInfo)
+		if (m_ListMode == ListMode::Week && pService->GetServiceInfo() == CurServiceInfo)
 			m_WeekListService = (int)m_ServiceList.NumServices();
 
 		m_ServiceList.Add(pService);
 	}
 
-	if (m_ListMode == LIST_WEEK && m_WeekListService < 0) {
-		m_ListMode = LIST_SERVICES;
+	if (m_ListMode == ListMode::Week && m_WeekListService < 0) {
+		m_ListMode = ListMode::Services;
 		if (m_pFrame != nullptr)
 			m_pFrame->OnListModeChanged();
 	}
@@ -1329,8 +1329,8 @@ bool CProgramGuide::UpdateService(ProgramGuide::CServiceInfo *pService)
 
 void CProgramGuide::UpdateServiceList()
 {
-	if (m_ListMode != LIST_SERVICES) {
-		m_ListMode = LIST_SERVICES;
+	if (m_ListMode != ListMode::Services) {
+		m_ListMode = ListMode::Services;
 		m_WeekListService = -1;
 		if (m_pFrame != nullptr)
 			m_pFrame->OnListModeChanged();
@@ -1350,7 +1350,7 @@ void CProgramGuide::CalcLayout()
 	m_EventLayoutList.Clear();
 	m_CurEventItem.fSelected = false;
 
-	if (m_ListMode == LIST_SERVICES) {
+	if (m_ListMode == ListMode::Services) {
 		for (size_t i = 0; i < m_ServiceList.NumServices(); i++) {
 			ProgramGuide::CServiceInfo *pService = m_ServiceList.GetItem(i);
 			ProgramGuide::CEventLayout *pLayout = new ProgramGuide::CEventLayout(pService);
@@ -1360,7 +1360,7 @@ void CProgramGuide::CalcLayout()
 				First, Last, m_LinesPerHour);
 			m_EventLayoutList.Add(pLayout);
 		}
-	} else if (m_ListMode == LIST_WEEK) {
+	} else if (m_ListMode == ListMode::Week) {
 		ProgramGuide::CServiceInfo *pCurService = m_ServiceList.GetItem(m_WeekListService);
 
 		if (pCurService != nullptr) {
@@ -1487,7 +1487,7 @@ void CProgramGuide::DrawEventBackground(
 			hdc, &Rect,
 			MixColor(m_Theme.ColorList[COLOR_HIGHLIGHT_BACK], BackColor, 128),
 			BackColor,
-			DrawUtil::DIRECTION_VERT);
+			DrawUtil::FillDirection::Vert);
 	} else if (fCurrent) {
 		m_EpgTheme.DrawContentBackground(
 			hdc, ThemeDraw, Rect, *pEventInfo,
@@ -1503,7 +1503,7 @@ void CProgramGuide::DrawEventBackground(
 		MixColor(BackColor, RGB(0, 0, 0), pItem->GetStartTime().Minute == 0 ? 192 : 224));
 
 	// 現在時刻の線
-	if (((m_ListMode == LIST_SERVICES && m_Day == DAY_TODAY) || m_ListMode == LIST_WEEK)
+	if (((m_ListMode == ListMode::Services && m_Day == DAY_TODAY) || m_ListMode == ListMode::Week)
 			&& CurTimePos >= Rect.top && CurTimePos < Rect.bottom) {
 		RECT rcCurTime;
 
@@ -1698,11 +1698,11 @@ void CProgramGuide::DrawHeaderBackground(TVTest::Theme::CThemeDraw &ThemeDraw, c
 	ThemeDraw.Draw(Style, rc);
 
 	TVTest::Theme::FillStyle Border;
-	Border.Type = TVTest::Theme::FILL_GRADIENT;
+	Border.Type = TVTest::Theme::FillType::Gradient;
 	Border.Gradient.Type =
-		Style.Type == TVTest::Theme::FILL_GRADIENT ?
-			Style.Gradient.Type : TVTest::Theme::GRADIENT_NORMAL;
-	Border.Gradient.Direction = TVTest::Theme::DIRECTION_VERT;
+		Style.Type == TVTest::Theme::FillType::Gradient ?
+			Style.Gradient.Type : TVTest::Theme::GradientType::Normal;
+	Border.Gradient.Direction = TVTest::Theme::GradientDirection::Vert;
 	Border.Gradient.Color1.Set(255, 255, 255);
 	Border.Gradient.Color2.Set(255, 255, 255);
 	rc = Rect;
@@ -1832,7 +1832,7 @@ void CProgramGuide::DrawTimeBar(HDC hdc, const RECT &Rect, TVTest::Theme::CTheme
 		rcLine.bottom = rcLine.top + LineWidth;
 		DrawUtil::Fill(hdc, &rcLine, m_Theme.ColorList[COLOR_TIMETEXT]);
 
-		if (((m_ListMode == LIST_SERVICES && m_Day == DAY_TODAY) || m_ListMode == LIST_WEEK)
+		if (((m_ListMode == ListMode::Services && m_Day == DAY_TODAY) || m_ListMode == ListMode::Week)
 				&& CurTimePos >= rc.top && CurTimePos < rc.bottom) {
 			const int TriangleHeight = m_GDIFontHeight * 2 / 3;
 			const int TriangleWidth = TriangleHeight * 8 / 10;
@@ -1865,7 +1865,7 @@ void CProgramGuide::DrawTimeBar(HDC hdc, const RECT &Rect, TVTest::Theme::CTheme
 		}
 
 		TCHAR szText[64];
-		if (m_ListMode == LIST_SERVICES && (i == 0 || DispTime.Hour % 3 == 0)) {
+		if (m_ListMode == ListMode::Services && (i == 0 || DispTime.Hour % 3 == 0)) {
 			TVTest::StringPrintf(
 				szText, lengthof(szText), TEXT("%d/%d(%s) %d時"),
 				DispTime.Month, DispTime.Day,
@@ -1882,7 +1882,7 @@ void CProgramGuide::DrawTimeBar(HDC hdc, const RECT &Rect, TVTest::Theme::CTheme
 		rc.top = rc.bottom;
 	}
 
-	if (m_ListMode == LIST_SERVICES && m_Day < DAY_LAST) {
+	if (m_ListMode == ListMode::Services && m_Day < DAY_LAST) {
 		// ▼
 		RECT rcClient;
 
@@ -1948,7 +1948,7 @@ void CProgramGuide::DrawMessage(HDC hdc, const RECT &ClientRect) const
 			hdc, &rcBack,
 			DrawUtil::RGBA(255, 255, 255, 224),
 			DrawUtil::RGBA(255, 255, 255, 255),
-			DrawUtil::DIRECTION_VERT);
+			DrawUtil::FillDirection::Vert);
 		HGDIOBJ hOldBrush = ::SelectObject(hdc, ::GetStockObject(NULL_BRUSH));
 		HPEN hpen = ::CreatePen(PS_INSIDEFRAME, 2, RGB(208, 208, 208));
 		HGDIOBJ hOldPen = ::SelectObject(hdc, hpen);
@@ -1962,7 +1962,7 @@ void CProgramGuide::DrawMessage(HDC hdc, const RECT &ClientRect) const
 			hdc, &rcBack,
 			DrawUtil::RGBA(0, 0, 0, 32),
 			DrawUtil::RGBA(0, 0, 0, 0),
-			DrawUtil::DIRECTION_VERT);
+			DrawUtil::FillDirection::Vert);
 		COLORREF OldTextColor = ::SetTextColor(hdc, RGB(0, 0, 0));
 #endif
 		int OldBkMode = ::SetBkMode(hdc, TRANSPARENT);
@@ -1990,7 +1990,7 @@ void CProgramGuide::Draw(HDC hdc, const RECT &PaintRect)
 	int OldBkMode = ::SetBkMode(hdc, TRANSPARENT);
 
 	int HeaderHeight = m_HeaderHeight;
-	if (m_ListMode == LIST_WEEK)
+	if (m_ListMode == ListMode::Week)
 		HeaderHeight += m_HeaderHeight;
 
 	if (m_EventLayoutList.Length() > 0) {
@@ -2001,7 +2001,7 @@ void CProgramGuide::Draw(HDC hdc, const RECT &PaintRect)
 			rc.bottom = HeaderHeight;
 			hrgn = ::CreateRectRgnIndirect(&rc);
 			::SelectClipRgn(hdc, hrgn);
-			if (m_ListMode == LIST_SERVICES) {
+			if (m_ListMode == ListMode::Services) {
 				rc.left = m_TimeBarWidth - m_ScrollPos.x;
 				for (size_t i = 0; i < m_ServiceList.NumServices(); i++) {
 					rc.right = rc.left + (m_ItemWidth + m_Style.ColumnMargin * 2);
@@ -2009,7 +2009,7 @@ void CProgramGuide::Draw(HDC hdc, const RECT &PaintRect)
 						DrawServiceHeader(m_ServiceList.GetItem(i), hdc, rc, ThemeDraw, 2);
 					rc.left = rc.right;
 				}
-			} else if (m_ListMode == LIST_WEEK) {
+			} else if (m_ListMode == ListMode::Week) {
 				rc.bottom = m_HeaderHeight;
 				DrawServiceHeader(m_ServiceList.GetItem(m_WeekListService), hdc, rc, ThemeDraw, 3, true);
 				rc.left = m_TimeBarWidth - m_ScrollPos.x;
@@ -2059,7 +2059,7 @@ void CProgramGuide::Draw(HDC hdc, const RECT &PaintRect)
 						rcLine.bottom = y + TimeLineWidth;
 						DrawUtil::Fill(hdc, &rcLine, m_Theme.ColorList[COLOR_TIMELINE]);
 					}
-					if (((m_ListMode == LIST_SERVICES && m_Day == DAY_TODAY) || m_ListMode == LIST_WEEK)
+					if (((m_ListMode == ListMode::Services && m_Day == DAY_TODAY) || m_ListMode == ListMode::Week)
 							&& CurTimePos >= y && CurTimePos < y + PixelsPerHour) {
 						RECT rcCurTime;
 
@@ -2142,7 +2142,7 @@ void CProgramGuide::Draw(HDC hdc, const RECT &PaintRect)
 		ThemeDraw.Draw(m_Theme.TimeBarMarginStyle, rc);
 	}
 
-	if (m_ListMode == LIST_SERVICES && m_Day != DAY_TODAY
+	if (m_ListMode == ListMode::Services && m_Day != DAY_TODAY
 			&& PaintRect.top < m_HeaderHeight) {
 		// ▲
 		const int TriangleWidth = m_GDIFontHeight * 2 / 3;
@@ -2178,7 +2178,7 @@ void CProgramGuide::Draw(HDC hdc, const RECT &PaintRect)
 			rc.bottom = rc.top + m_Style.HeaderShadowHeight;
 			DrawUtil::FillGradient(
 				hdc, &rc, DrawUtil::RGBA(0, 0, 0, 80), DrawUtil::RGBA(0, 0, 0, 0),
-				DrawUtil::DIRECTION_VERT);
+				DrawUtil::FillDirection::Vert);
 		}
 
 		if (m_Style.TimeBarShadowWidth > 0) {
@@ -2188,12 +2188,12 @@ void CProgramGuide::Draw(HDC hdc, const RECT &PaintRect)
 			rc.right = min(rc.left + m_Style.TimeBarShadowWidth, rcGuide.right);
 			DrawUtil::FillGradient(
 				hdc, &rc, DrawUtil::RGBA(0, 0, 0, 64), DrawUtil::RGBA(0, 0, 0, 0),
-				DrawUtil::DIRECTION_HORZ);
+				DrawUtil::FillDirection::Horz);
 			rc.right = rcGuide.right;
 			rc.left = max(rc.right - m_Style.TimeBarShadowWidth, rcGuide.left);
 			DrawUtil::FillGradient(
 				hdc, &rc, DrawUtil::RGBA(0, 0, 0, 0), DrawUtil::RGBA(0, 0, 0, 48),
-				DrawUtil::DIRECTION_HORZ);
+				DrawUtil::FillDirection::Horz);
 		}
 	}
 
@@ -2284,7 +2284,7 @@ void CProgramGuide::GetProgramGuideRect(RECT *pRect) const
 	pRect->left += m_TimeBarWidth;
 	pRect->right -= m_TimeBarWidth;
 	pRect->top += m_HeaderHeight;
-	if (m_ListMode == LIST_WEEK)
+	if (m_ListMode == ListMode::Week)
 		pRect->top += m_HeaderHeight;
 }
 
@@ -2377,7 +2377,7 @@ void CProgramGuide::Scroll(int XScroll, int YScroll)
 				RECT rcHeader;
 
 				::SetRect(&rcHeader, rcGuide.left, 0, rcGuide.right, rcGuide.top);
-				if (m_ListMode == LIST_WEEK)
+				if (m_ListMode == ListMode::Week)
 					rcHeader.top += m_HeaderHeight;
 				::ScrollWindowEx(m_hwnd, XScrollSize, 0, &rcHeader, &rcHeader, nullptr, nullptr, SW_INVALIDATE);
 			}
@@ -2484,7 +2484,7 @@ void CProgramGuide::SetCaption()
 				TCHAR szText[256];
 
 				GetCurrentDateInfo(&Info);
-				if (m_ListMode == LIST_SERVICES) {
+				if (m_ListMode == ListMode::Services) {
 					Info.EndTime.OffsetHours(-1);
 					StdUtil::snprintf(
 						szText, lengthof(szText),
@@ -2526,7 +2526,7 @@ void CProgramGuide::SetTooltip()
 {
 	RECT rc;
 
-	if (m_ListMode == LIST_SERVICES) {
+	if (m_ListMode == ListMode::Services) {
 		int NumTools = m_Tooltip.NumTools();
 		int NumServices = (int)m_ServiceList.NumServices();
 
@@ -2586,7 +2586,7 @@ void CProgramGuide::SetTooltip()
 			rc.right = rcClient.right;
 			m_Tooltip.AddTool(ToolCount, rc, TEXT("一日後へ"));
 		}
-	} else if (m_ListMode == LIST_WEEK) {
+	} else if (m_ListMode == ListMode::Week) {
 		m_Tooltip.DeleteAllTools();
 		GetClientRect(&rc);
 		rc.left += m_TimeBarWidth;
@@ -2895,10 +2895,10 @@ bool CProgramGuide::SetExcludeService(WORD NetworkID, WORD TransportStreamID, WO
 
 bool CProgramGuide::SetServiceListMode()
 {
-	if (m_ListMode != LIST_SERVICES) {
+	if (m_ListMode != ListMode::Services) {
 		StoreTimePos();
 
-		m_ListMode = LIST_SERVICES;
+		m_ListMode = ListMode::Services;
 		m_WeekListService = -1;
 
 		HCURSOR hcurOld = ::SetCursor(::LoadCursor(nullptr, IDC_WAIT));
@@ -2928,10 +2928,10 @@ bool CProgramGuide::SetWeekListMode(int Service)
 	if (pServiceInfo == nullptr)
 		return false;
 
-	if (m_ListMode != LIST_WEEK || m_WeekListService != Service) {
+	if (m_ListMode != ListMode::Week || m_WeekListService != Service) {
 		StoreTimePos();
 
-		m_ListMode = LIST_WEEK;
+		m_ListMode = ListMode::Week;
 		m_WeekListService = Service;
 
 		HCURSOR hcurOld = ::SetCursor(::LoadCursor(nullptr, IDC_WAIT));
@@ -3002,7 +3002,7 @@ bool CProgramGuide::GetTimeRange(LibISDB::DateTime *pFirstTime, LibISDB::DateTim
 
 bool CProgramGuide::GetCurrentTimeRange(LibISDB::DateTime *pFirstTime, LibISDB::DateTime *pLastTime) const
 {
-	if (m_ListMode == LIST_WEEK) {
+	if (m_ListMode == ListMode::Week) {
 		GetDayTimeRange(DAY_TOMORROW, pFirstTime, pLastTime);
 		if (pFirstTime != nullptr)
 			pFirstTime->OffsetDays(-1);
@@ -3030,7 +3030,7 @@ bool CProgramGuide::GetDayTimeRange(int Day, LibISDB::DateTime *pFirstTime, LibI
 			bool fUTC = false;
 
 			switch (TimeMode) {
-			case CEpgOptions::EPGTIME_LOCAL:
+			case CEpgOptions::EpgTimeMode::Local:
 				{
 					TIME_ZONE_INFORMATION tzi;
 					DWORD Result = ::GetTimeZoneInformation(&tzi);
@@ -3051,7 +3051,7 @@ bool CProgramGuide::GetDayTimeRange(int Day, LibISDB::DateTime *pFirstTime, LibI
 				}
 				break;
 
-			case CEpgOptions::EPGTIME_JST:
+			case CEpgOptions::EpgTimeMode::JST:
 				{
 					TIME_ZONE_INFORMATION tzi;
 
@@ -3067,7 +3067,7 @@ bool CProgramGuide::GetDayTimeRange(int Day, LibISDB::DateTime *pFirstTime, LibI
 				}
 				break;
 
-			case CEpgOptions::EPGTIME_UTC:
+			case CEpgOptions::EpgTimeMode::UTC:
 				fUTC = true;
 				break;
 			}
@@ -3095,7 +3095,7 @@ bool CProgramGuide::GetDayTimeRange(int Day, LibISDB::DateTime *pFirstTime, LibI
 
 bool CProgramGuide::GetCurrentDateInfo(DateInfo *pInfo) const
 {
-	if (m_ListMode == LIST_WEEK) {
+	if (m_ListMode == ListMode::Week) {
 		if (!GetCurrentTimeRange(&pInfo->BeginningTime, &pInfo->EndTime))
 			return false;
 		pInfo->pszRelativeDayText = nullptr;
@@ -3111,7 +3111,7 @@ bool CProgramGuide::GetDateInfo(int Day, DateInfo *pInfo) const
 {
 	if (!GetDayTimeRange(Day, &pInfo->BeginningTime, &pInfo->EndTime))
 		return false;
-	if (m_ListMode == LIST_SERVICES) {
+	if (m_ListMode == ListMode::Services) {
 		if (Day == DAY_TODAY) {
 			pInfo->pszRelativeDayText = GetRelativeDayText(0);
 		} else {
@@ -3137,10 +3137,10 @@ bool CProgramGuide::ScrollToTime(const LibISDB::DateTime &Time, bool fHour)
 		return false;
 
 	LibISDB::DateTime t = Time;
-	if (m_ListMode == LIST_SERVICES) {
+	if (m_ListMode == ListMode::Services) {
 		if (t < First || t >= Last)
 			return false;
-	} else if (m_ListMode == LIST_WEEK) {
+	} else if (m_ListMode == ListMode::Week) {
 		t.Year = First.Year;
 		t.Month = First.Month;
 		t.Day = First.Day;
@@ -3172,7 +3172,7 @@ bool CProgramGuide::SetViewDay(int Day)
 	if (Day < DAY_FIRST || Day > DAY_LAST)
 		return false;
 
-	if (m_Day != Day || m_ListMode != LIST_SERVICES) {
+	if (m_Day != Day || m_ListMode != ListMode::Services) {
 		StoreTimePos();
 
 		m_Day = Day;
@@ -3180,8 +3180,8 @@ bool CProgramGuide::SetViewDay(int Day)
 		if (m_pEPGDatabase != nullptr) {
 			HCURSOR hcurOld = ::SetCursor(::LoadCursor(nullptr, IDC_WAIT));
 
-			if (m_ListMode != LIST_SERVICES) {
-				m_ListMode = LIST_SERVICES;
+			if (m_ListMode != ListMode::Services) {
+				m_ListMode = ListMode::Services;
 				m_WeekListService = -1;
 				m_ScrollPos.x = m_OldScrollPos.x;
 				if (m_pFrame != nullptr)
@@ -3224,7 +3224,7 @@ bool CProgramGuide::JumpEvent(WORD NetworkID, WORD TSID, WORD ServiceID, WORD Ev
 	pEventInfo->GetEndTime(&End);
 
 	bool fChangeDate = true;
-	if (m_ListMode == LIST_SERVICES) {
+	if (m_ListMode == ListMode::Services) {
 		GetCurrentTimeRange(&First, &Last);
 		if (First <= Start && Last >= End)
 			fChangeDate = false;
@@ -3276,7 +3276,7 @@ bool CProgramGuide::JumpEvent(const LibISDB::EventInfo &EventInfo)
 
 bool CProgramGuide::ScrollToCurrentService()
 {
-	if (m_ListMode != LIST_SERVICES)
+	if (m_ListMode != ListMode::Services)
 		return false;
 	if (m_CurrentChannel.ServiceID == 0)
 		return false;
@@ -3347,7 +3347,7 @@ bool CProgramGuide::SetDirectWriteRenderingParams(
 	if (!m_TextDrawClient.SetDirectWriteRenderingParams(Params))
 		return false;
 
-	if (m_hwnd != nullptr && m_TextDrawEngine == TVTest::CTextDrawClient::ENGINE_DIRECTWRITE)
+	if (m_hwnd != nullptr && m_TextDrawEngine == TVTest::CTextDrawClient::TextDrawEngine::DirectWrite)
 		Invalidate();
 
 	return true;
@@ -3729,7 +3729,7 @@ bool CProgramGuide::GetEventIndexByIDs(
 {
 	int ListIndex;
 
-	if (m_ListMode == LIST_SERVICES) {
+	if (m_ListMode == ListMode::Services) {
 		ListIndex = m_ServiceList.FindItemByIDs(TSID, ServiceID);
 		if (ListIndex < 0)
 			return false;
@@ -3822,8 +3822,8 @@ LRESULT CProgramGuide::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 	case WM_CREATE:
 		{
 			if (!m_TextDrawClient.Initialize(m_TextDrawEngine, hwnd)) {
-				if (m_TextDrawEngine != TVTest::CTextDrawClient::ENGINE_GDI) {
-					m_TextDrawEngine = TVTest::CTextDrawClient::ENGINE_GDI;
+				if (m_TextDrawEngine != TVTest::CTextDrawClient::TextDrawEngine::GDI) {
+					m_TextDrawEngine = TVTest::CTextDrawClient::TextDrawEngine::GDI;
 					m_TextDrawClient.Initialize(m_TextDrawEngine, hwnd);
 				}
 			}
@@ -3953,7 +3953,7 @@ LRESULT CProgramGuide::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 			::GetClientRect(hwnd, &rc);
 			if (pt.y < m_HeaderHeight
 					&& pt.x >= m_TimeBarWidth && pt.x < rc.right - m_TimeBarWidth) {
-				if (m_ListMode == LIST_SERVICES) {
+				if (m_ListMode == ListMode::Services) {
 					const int HeaderWidth = m_ItemWidth + m_Style.ColumnMargin * 2;
 					int x = pt.x + m_ScrollPos.x - m_TimeBarWidth;
 
@@ -3979,11 +3979,11 @@ LRESULT CProgramGuide::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 							SetWeekListMode(Service);
 						}
 					}
-				} else if (m_ListMode == LIST_WEEK) {
+				} else if (m_ListMode == ListMode::Week) {
 					SetServiceListMode();
 				}
 			} else if (pt.x < m_TimeBarWidth || pt.x >= rc.right - m_TimeBarWidth) {
-				if (m_ListMode == LIST_SERVICES) {
+				if (m_ListMode == ListMode::Services) {
 					if (m_Day > DAY_FIRST && pt.y < m_HeaderHeight) {
 						::SendMessage(hwnd, WM_COMMAND, CM_PROGRAMGUIDE_DAY_FIRST + (m_Day - 1), 0);
 					} else if (m_Day < DAY_LAST) {
@@ -4087,7 +4087,7 @@ LRESULT CProgramGuide::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 			if (pt.y < m_HeaderHeight
 					&& pt.x >= m_TimeBarWidth
 					&& pt.x < rc.right - m_TimeBarWidth) {
-				if (m_ListMode == LIST_SERVICES) {
+				if (m_ListMode == ListMode::Services) {
 					const int HeaderWidth = m_ItemWidth + m_Style.ColumnMargin * 2;
 					const int ChevronArea =
 						m_Style.HeaderChevronSize.Width +
@@ -4099,13 +4099,13 @@ LRESULT CProgramGuide::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 						::SetCursor(GetActionCursor());
 						return TRUE;
 					}
-				} else if (m_ListMode == LIST_WEEK) {
+				} else if (m_ListMode == ListMode::Week) {
 					::SetCursor(GetActionCursor());
 					return TRUE;
 				}
 			} else if (pt.x < m_TimeBarWidth
 					|| pt.x >= rc.right - m_TimeBarWidth) {
-				if (m_ListMode == LIST_SERVICES) {
+				if (m_ListMode == ListMode::Services) {
 					if (m_Day > DAY_FIRST
 							&& pt.y < m_HeaderHeight) {
 						::SetCursor(GetActionCursor());
@@ -5193,7 +5193,7 @@ class CProgramGuideTunerStatusItem
 
 public:
 	CProgramGuideTunerStatusItem::CProgramGuideTunerStatusItem(CProgramGuide *pProgramGuide)
-		: CStatusItemBase(STATUS_ITEM_TUNER, SizeValue(14 * EM_FACTOR, SIZE_EM))
+		: CStatusItemBase(STATUS_ITEM_TUNER, SizeValue(14 * EM_FACTOR, SizeUnit::EM))
 		, m_pProgramGuide(pProgramGuide)
 	{
 	}
@@ -5291,7 +5291,7 @@ class CListSelectStatusItem
 
 public:
 	CListSelectStatusItem::CListSelectStatusItem(CProgramGuide *pProgramGuide)
-		: CStatusItemBase(STATUS_ITEM_DATE, SizeValue(14 * EM_FACTOR, SIZE_EM))
+		: CStatusItemBase(STATUS_ITEM_DATE, SizeValue(14 * EM_FACTOR, SizeUnit::EM))
 		, m_pProgramGuide(pProgramGuide)
 	{
 	}
@@ -5301,7 +5301,7 @@ public:
 
 	void Draw(HDC hdc, const RECT &ItemRect, const RECT &DrawRect, unsigned int Flags) override
 	{
-		if (m_pProgramGuide->GetListMode() == CProgramGuide::LIST_SERVICES) {
+		if (m_pProgramGuide->GetListMode() == CProgramGuide::ListMode::Services) {
 			CProgramGuide::DateInfo Info;
 			TCHAR szText[256];
 
@@ -5329,7 +5329,7 @@ public:
 			int CurItem;
 
 			m_Menu.Clear();
-			if (m_pProgramGuide->GetListMode() == CProgramGuide::LIST_SERVICES) {
+			if (m_pProgramGuide->GetListMode() == CProgramGuide::ListMode::Services) {
 				for (int i = CProgramGuide::DAY_FIRST; i <= CProgramGuide::DAY_LAST; i++) {
 					CProgramGuide::DateInfo Info;
 					TCHAR szText[256];
@@ -5388,7 +5388,7 @@ class CListPrevStatusItem
 
 public:
 	CListPrevStatusItem::CListPrevStatusItem(CProgramGuide *pProgramGuide)
-		: CStatusItemBase(STATUS_ITEM_DATEPREV, SizeValue(1 * EM_FACTOR, SIZE_EM))
+		: CStatusItemBase(STATUS_ITEM_DATEPREV, SizeValue(1 * EM_FACTOR, SizeUnit::EM))
 		, m_pProgramGuide(pProgramGuide)
 	{
 	}
@@ -5400,7 +5400,7 @@ public:
 	{
 		bool fEnabled;
 
-		if (m_pProgramGuide->GetListMode() == CProgramGuide::LIST_SERVICES)
+		if (m_pProgramGuide->GetListMode() == CProgramGuide::ListMode::Services)
 			fEnabled = m_pProgramGuide->GetViewDay() > CProgramGuide::DAY_FIRST;
 		else
 			fEnabled = m_pProgramGuide->GetWeekListService() > 0;
@@ -5415,7 +5415,7 @@ public:
 
 	void OnLButtonDown(int x, int y) override
 	{
-		if (m_pProgramGuide->GetListMode() == CProgramGuide::LIST_SERVICES) {
+		if (m_pProgramGuide->GetListMode() == CProgramGuide::ListMode::Services) {
 			int Day = m_pProgramGuide->GetViewDay();
 			if (Day > CProgramGuide::DAY_FIRST)
 				m_pProgramGuide->SendMessage(WM_COMMAND, CM_PROGRAMGUIDE_DAY_FIRST + Day - 1, 0);
@@ -5432,7 +5432,7 @@ class CListNextStatusItem
 
 public:
 	CListNextStatusItem::CListNextStatusItem(CProgramGuide *pProgramGuide)
-		: CStatusItemBase(STATUS_ITEM_DATENEXT, SizeValue(1 * EM_FACTOR, SIZE_EM))
+		: CStatusItemBase(STATUS_ITEM_DATENEXT, SizeValue(1 * EM_FACTOR, SizeUnit::EM))
 		, m_pProgramGuide(pProgramGuide)
 	{
 	}
@@ -5444,7 +5444,7 @@ public:
 	{
 		bool fEnabled;
 
-		if (m_pProgramGuide->GetListMode() == CProgramGuide::LIST_SERVICES)
+		if (m_pProgramGuide->GetListMode() == CProgramGuide::ListMode::Services)
 			fEnabled = m_pProgramGuide->GetViewDay() < CProgramGuide::DAY_LAST;
 		else
 			fEnabled = m_pProgramGuide->GetWeekListService() + 1 < (int)m_pProgramGuide->GetServiceList().NumServices();
@@ -5459,7 +5459,7 @@ public:
 
 	void OnLButtonDown(int x, int y) override
 	{
-		if (m_pProgramGuide->GetListMode() == CProgramGuide::LIST_SERVICES) {
+		if (m_pProgramGuide->GetListMode() == CProgramGuide::ListMode::Services) {
 			int Day = m_pProgramGuide->GetViewDay();
 			if (Day < CProgramGuide::DAY_LAST)
 				m_pProgramGuide->SendMessage(WM_COMMAND, CM_PROGRAMGUIDE_DAY_FIRST + Day + 1, 0);
@@ -5744,7 +5744,7 @@ void CProgramGuideToolbar::ApplyStyle()
 {
 	TVTest::Style::Font Font;
 
-	GetSystemFont(DrawUtil::FONT_MENU, &Font);
+	GetSystemFont(DrawUtil::FontType::Menu, &Font);
 	CreateDrawFont(Font, &m_Font);
 	HDC hdc = ::GetDC(m_hwnd);
 	m_FontHeight = m_Font.GetHeight(hdc, false);
@@ -5787,7 +5787,7 @@ CStatusBar::CStatusBar(CProgramGuide * pProgramGuide)
 	: CProgramGuideBar(pProgramGuide)
 {
 	TVTest::Style::Font Font;
-	if (GetSystemFont(DrawUtil::FONT_MENU, &Font))
+	if (GetSystemFont(DrawUtil::FontType::Menu, &Font))
 		m_StatusView.SetFont(Font);
 
 	RegisterUIChild(&m_StatusView);
@@ -6050,9 +6050,9 @@ void CFavoritesToolbar::OnCustomDraw(NMTBCUSTOMDRAW *pnmtb, HDC hdc)
 		COLORREF LightColor = pInfo->BackColor;
 		COLORREF DarkColor = MixColor(LightColor, RGB(0, 0, 0), 220);
 
-		Style.Fill.Type = TVTest::Theme::FILL_GRADIENT;
-		Style.Fill.Gradient.Type = TVTest::Theme::GRADIENT_NORMAL;
-		Style.Fill.Gradient.Direction = TVTest::Theme::DIRECTION_VERT;
+		Style.Fill.Type = TVTest::Theme::FillType::Gradient;
+		Style.Fill.Gradient.Type = TVTest::Theme::GradientType::Normal;
+		Style.Fill.Gradient.Direction = TVTest::Theme::GradientDirection::Vert;
 		if ((pnmtb->nmcd.uItemState & (CDIS_CHECKED | CDIS_HOT)) != 0) {
 			Style.Fill.Gradient.Color1 = DarkColor;
 			Style.Fill.Gradient.Color2 = LightColor;
@@ -6061,10 +6061,10 @@ void CFavoritesToolbar::OnCustomDraw(NMTBCUSTOMDRAW *pnmtb, HDC hdc)
 			Style.Fill.Gradient.Color2 = DarkColor;
 		}
 		if ((pnmtb->nmcd.uItemState & (CDIS_CHECKED | CDIS_SELECTED)) != 0) {
-			Style.Border.Type = TVTest::Theme::BORDER_SUNKEN;
+			Style.Border.Type = TVTest::Theme::BorderType::Sunken;
 			Style.Border.Color = DarkColor;
 		} else {
-			Style.Border.Type = TVTest::Theme::BORDER_RAISED;
+			Style.Border.Type = TVTest::Theme::BorderType::Raised;
 			Style.Border.Color = LightColor;
 		}
 		ThemeDraw.Draw(Style, pnmtb->nmcd.rc);
@@ -6136,7 +6136,7 @@ CDateToolbar::~CDateToolbar()
 void CDateToolbar::OnDateChanged()
 {
 	UnselectButton();
-	if (m_pProgramGuide->GetListMode() == CProgramGuide::LIST_SERVICES)
+	if (m_pProgramGuide->GetListMode() == CProgramGuide::ListMode::Services)
 		SelectButton(CM_PROGRAMGUIDE_DAY_FIRST + m_pProgramGuide->GetViewDay());
 }
 
@@ -6228,9 +6228,9 @@ void CDateToolbar::OnCustomDraw(NMTBCUSTOMDRAW *pnmtb, HDC hdc)
 	TVTest::Theme::CThemeDraw ThemeDraw(BeginThemeDraw(hdc));
 
 	TVTest::Theme::BackgroundStyle Style;
-	Style.Fill.Type = TVTest::Theme::FILL_GRADIENT;
-	Style.Fill.Gradient.Type = TVTest::Theme::GRADIENT_NORMAL;
-	Style.Fill.Gradient.Direction = TVTest::Theme::DIRECTION_VERT;
+	Style.Fill.Type = TVTest::Theme::FillType::Gradient;
+	Style.Fill.Gradient.Type = TVTest::Theme::GradientType::Normal;
+	Style.Fill.Gradient.Direction = TVTest::Theme::GradientDirection::Vert;
 	if ((pnmtb->nmcd.uItemState & (CDIS_CHECKED | CDIS_HOT)) != 0) {
 		Style.Fill.Gradient.Color1.Set(220, 220, 220);
 		Style.Fill.Gradient.Color2.Set(255, 255, 255);
@@ -6239,10 +6239,10 @@ void CDateToolbar::OnCustomDraw(NMTBCUSTOMDRAW *pnmtb, HDC hdc)
 		Style.Fill.Gradient.Color2.Set(220, 220, 220);
 	}
 	if ((pnmtb->nmcd.uItemState & CDIS_CHECKED) != 0) {
-		Style.Border.Type = TVTest::Theme::BORDER_SUNKEN;
+		Style.Border.Type = TVTest::Theme::BorderType::Sunken;
 		Style.Border.Color.Set(220, 220, 220);
 	} else {
-		Style.Border.Type = TVTest::Theme::BORDER_RAISED;
+		Style.Border.Type = TVTest::Theme::BorderType::Raised;
 		Style.Border.Color.Set(255, 255, 255);
 	}
 	ThemeDraw.Draw(Style, pnmtb->nmcd.rc);
@@ -6378,7 +6378,7 @@ void CTimeToolbar::ChangeTime()
 
 		int i = 1;
 
-		if (m_Settings.Time == TimeBarSettings::TIME_INTERVAL) {
+		if (m_Settings.Time == TimeBarSettings::TimeType::Interval) {
 			LibISDB::DateTime Time = First;
 
 			for (; i < lengthof(TimeList) && i - 1 < m_Settings.MaxButtonCount && Time < Last; i++) {
@@ -6390,7 +6390,7 @@ void CTimeToolbar::ChangeTime()
 				TimeList[i].Command = CM_PROGRAMGUIDE_TIME_FIRST + (i - 1);
 				Time.OffsetHours(m_Settings.Interval);
 			}
-		} else if (m_Settings.Time == TimeBarSettings::TIME_CUSTOM) {
+		} else if (m_Settings.Time == TimeBarSettings::TimeType::Custom) {
 			std::vector<TVTest::String> Times;
 			TVTest::StringUtility::Split(m_Settings.CustomTime, _T(","), &Times);
 			if (!Times.empty()) {
@@ -6514,27 +6514,27 @@ void CTimeToolbar::OnCustomDraw(NMTBCUSTOMDRAW *pnmtb, HDC hdc)
 	int Hour;
 
 	if (fCurrent) {
-		Style.Back.Fill.Type = TVTest::Theme::FILL_GRADIENT;
+		Style.Back.Fill.Type = TVTest::Theme::FillType::Gradient;
 		Style.Back.Fill.Gradient = TVTest::Theme::GradientStyle(
-			TVTest::Theme::GRADIENT_NORMAL,
-			TVTest::Theme::DIRECTION_VERT,
+			TVTest::Theme::GradientType::Normal,
+			TVTest::Theme::GradientDirection::Vert,
 			TVTest::Theme::ThemeColor(255, 255, 255),
 			TVTest::Theme::ThemeColor(220, 220, 220));
-		Style.Fore.Fill.Type = TVTest::Theme::FILL_SOLID;
+		Style.Fore.Fill.Type = TVTest::Theme::FillType::Solid;
 		Style.Fore.Fill.Solid.Color.Set(0, 0, 0);
 	} else {
 		Hour = LOWORD(pnmtb->nmcd.lItemlParam);
 		Style = m_ButtonStyle[Hour / 3];
-		if (Style.Back.Fill.Type == TVTest::Theme::FILL_GRADIENT)
-			Style.Back.Fill.Gradient.Rotate(TVTest::Theme::GradientStyle::ROTATE_RIGHT);
+		if (Style.Back.Fill.Type == TVTest::Theme::FillType::Gradient)
+			Style.Back.Fill.Gradient.Rotate(TVTest::Theme::GradientStyle::RotateType::Right);
 	}
 	Style.Back.Border.Type =
 		(pnmtb->nmcd.uItemState & (CDIS_CHECKED | CDIS_SELECTED)) != 0 ?
-		TVTest::Theme::BORDER_SUNKEN :
-		TVTest::Theme::BORDER_RAISED;
+		TVTest::Theme::BorderType::Sunken :
+		TVTest::Theme::BorderType::Raised;
 	Style.Back.Border.Color = Style.Back.Fill.GetSolidColor();
 	if ((pnmtb->nmcd.uItemState & (CDIS_CHECKED | CDIS_HOT)) != 0
-			&& Style.Back.Fill.Type == TVTest::Theme::FILL_GRADIENT) {
+			&& Style.Back.Fill.Type == TVTest::Theme::FillType::Gradient) {
 		std::swap(
 			Style.Back.Fill.Gradient.Color1,
 			Style.Back.Fill.Gradient.Color2);
@@ -6609,7 +6609,7 @@ void CProgramGuideFrameBase::SetTheme(const TVTest::Theme::CThemeManager *pTheme
 		pThemeManager->GetFillStyle(
 			TVTest::Theme::CThemeManager::STYLE_PROGRAMGUIDE_TIMEBAR_0_2 + i,
 			&Theme.TimeStyle[i].Back.Fill);
-		Theme.TimeStyle[i].Fore.Fill.Type = TVTest::Theme::FILL_SOLID;
+		Theme.TimeStyle[i].Fore.Fill.Type = TVTest::Theme::FillType::Solid;
 		Theme.TimeStyle[i].Fore.Fill.Solid.Color = TimeTextColor;
 	}
 
@@ -6718,7 +6718,7 @@ bool CProgramGuideFrameBase::OnCommand(int Command)
 		return true;
 
 	case CM_PROGRAMGUIDE_TIME_CURRENT:
-		if (m_pProgramGuide->GetListMode() == CProgramGuide::LIST_SERVICES)
+		if (m_pProgramGuide->GetListMode() == CProgramGuide::ListMode::Services)
 			m_pProgramGuide->SetViewDay(CProgramGuide::DAY_TODAY);
 		m_pProgramGuide->ScrollToCurrentTime();
 		return true;
@@ -7059,8 +7059,7 @@ bool CProgramGuideFrameSettings::ReadSettings(CSettings &Settings)
 		m_DateBarButtonCount = std::clamp(Value, 1, DATEBAR_MAXBUTTONCOUNT);
 
 	if (Settings.Read(TEXT("TimeBar.TimeType"), &Value)
-			&& (Value == TimeBarSettings::TIME_INTERVAL
-				|| Value == TimeBarSettings::TIME_CUSTOM))
+			&& CheckEnumRange(static_cast<TimeBarSettings::TimeType>(Value)))
 		m_TimeBarSettings.Time = static_cast<TimeBarSettings::TimeType>(Value);
 	if (Settings.Read(TEXT("TimeBar.Interval"), &Value)
 			&& Value >= TimeBarSettings::INTERVAL_MIN
@@ -7211,7 +7210,7 @@ int CProgramGuideFrameSettings::ParseIDText(LPCTSTR pszID) const
 
 
 CProgramGuideFrameSettings::TimeBarSettings::TimeBarSettings()
-	: Time(TIME_INTERVAL)
+	: Time(TimeType::Interval)
 	, Interval(4)
 	, CustomTime(TEXT("0,3,6,9,12,15,18,21"))
 	, MaxButtonCount(10)

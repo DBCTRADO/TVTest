@@ -18,7 +18,7 @@ CEpgOptions::CEpgOptions()
 	, m_fUpdateBSExtended(false)
 	, m_fUpdateCSExtended(false)
 	, m_fUseEDCBData(false)
-	, m_EpgTimeMode(EPGTIME_JST)
+	, m_EpgTimeMode(EpgTimeMode::JST)
 	, m_fSaveLogoFile(true)
 	, m_LogoFileName(TEXT("LogoData"))
 {
@@ -32,7 +32,7 @@ CEpgOptions::CEpgOptions()
 	}
 #endif
 
-	TVTest::StyleUtil::GetSystemFont(DrawUtil::FONT_MESSAGE, &m_EventInfoFont);
+	TVTest::StyleUtil::GetSystemFont(DrawUtil::FontType::Message, &m_EventInfoFont);
 }
 
 
@@ -63,8 +63,8 @@ bool CEpgOptions::ReadSettings(CSettings &Settings)
 
 	int Value;
 	if (Settings.Read(TEXT("EpgTimeMode"), &Value)
-			&& Value >= EPGTIME_FIRST && Value <= EPGTIME_LAST)
-		m_EpgTimeMode = (EpgTimeMode)Value;
+			&& CheckEnumRange(static_cast<EpgTimeMode>(Value)))
+		m_EpgTimeMode = static_cast<EpgTimeMode>(Value);
 
 	Settings.Read(TEXT("SaveLogoData"), &m_fSaveLogoFile);
 	Settings.Read(TEXT("LogoDataFileName"), &m_LogoFileName);
@@ -277,7 +277,7 @@ bool CEpgOptions::LoadLogoFile()
 		if (FilePath.IsFileExists()) {
 			App.AddLog(TEXT("ロゴデータを \"%s\" から読み込みます..."), FilePath.c_str());
 			if (!LogoManager.LoadLogoFile(FilePath.c_str())) {
-				App.AddLog(CLogItem::TYPE_ERROR, TEXT("ロゴファイルの読み込みでエラーが発生しました。"));
+				App.AddLog(CLogItem::LogType::Error, TEXT("ロゴファイルの読み込みでエラーが発生しました。"));
 				return false;
 			}
 		}
@@ -310,7 +310,7 @@ bool CEpgOptions::SaveLogoFile()
 		if (!FilePath.IsFileExists() || LogoManager.IsLogoDataUpdated()) {
 			App.AddLog(TEXT("ロゴデータを \"%s\" に保存します..."), FilePath.c_str());
 			if (!LogoManager.SaveLogoFile(FilePath.c_str())) {
-				App.AddLog(CLogItem::TYPE_ERROR, TEXT("ロゴファイルの保存でエラーが発生しました。"));
+				App.AddLog(CLogItem::LogType::Error, TEXT("ロゴファイルの保存でエラーが発生しました。"));
 				return false;
 			}
 		}

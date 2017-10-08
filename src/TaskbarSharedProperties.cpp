@@ -31,7 +31,7 @@ bool CTaskbarSharedProperties::Open(LPCTSTR pszName, const CRecentChannelList *p
 				sizeof(SharedInfoHeader) + sizeof(RecentChannelInfo) * MAX_RECENT_CHANNELS,
 				&fExists)) {
 		GetAppClass().AddLog(
-			CLogItem::TYPE_ERROR,
+			CLogItem::LogType::Error,
 			TEXT("共有メモリ(%s)を作成できません。"),
 			pszName);
 		return false;

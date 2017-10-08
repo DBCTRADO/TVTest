@@ -380,7 +380,7 @@ INT_PTR CPanAndScanOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM 
 					HBRUSH hbr = ::CreateSolidBrush(RGB(128, 128, 128));
 					HPEN hpen = ::CreatePen(
 						PS_INSIDEFRAME,
-						m_pStyleScaling->ToPixels(1, TVTest::Style::UNIT_LOGICAL_PIXEL),
+						m_pStyleScaling->ToPixels(1, TVTest::Style::UnitType::LogicalPixel),
 						RGB(160, 160, 160));
 					HGDIOBJ hOldBrush = ::SelectObject(pdis->hDC, hbr);
 					HGDIOBJ hOldPen = ::SelectObject(pdis->hDC, hpen);

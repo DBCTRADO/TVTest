@@ -347,7 +347,7 @@ INT_PTR CProgramGuideFavoritesDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wPara
 						pdis->hDC, &pdis->rcItem,
 						pInfo->BackColor,
 						MixColor(pInfo->BackColor, RGB(0, 0, 0), 220),
-						DrawUtil::DIRECTION_VERT);
+						DrawUtil::FillDirection::Vert);
 					COLORREF OldTextColor = ::SetTextColor(pdis->hDC, pInfo->TextColor);
 					int OldBkMode = ::SetBkMode(pdis->hDC, TRANSPARENT);
 					::DrawText(

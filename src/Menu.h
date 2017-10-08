@@ -160,10 +160,10 @@ public:
 
 class CPopupMenu
 {
-	enum PopupMenuType {
-		TYPE_RESOURCE,
-		TYPE_CREATED,
-		TYPE_ATTACHED
+	enum class PopupMenuType {
+		Resource,
+		Created,
+		Attached,
 	};
 
 	HMENU m_hmenu;

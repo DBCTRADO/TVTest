@@ -96,9 +96,9 @@ bool SaveIconFromBitmap(
 	LPCTSTR pszFileName, HBITMAP hbm,
 	int IconWidth, int IconHeight, int ImageWidth = 0, int ImageHeight = 0);
 HICON CreateEmptyIcon(int Width, int Height, int BitsPerPixel = 1);
-enum IconSizeType {
-	ICON_SIZE_SMALL,
-	ICON_SIZE_NORMAL
+enum class IconSizeType {
+	Small,
+	Normal,
 };
 bool GetStandardIconSize(IconSizeType Size, int *pWidth, int *pHeight);
 HICON LoadIconStandardSize(HINSTANCE hinst, LPCTSTR pszName, IconSizeType Size);

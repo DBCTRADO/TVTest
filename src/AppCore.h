@@ -90,13 +90,13 @@ public:
 		LPCTSTR pszFileName = nullptr,
 		const CRecordManager::TimeSpecInfo *pStartTime = nullptr,
 		const CRecordManager::TimeSpecInfo *pStopTime = nullptr,
-		CRecordManager::RecordClient Client = CRecordManager::CLIENT_USER,
+		CRecordManager::RecordClient Client = CRecordManager::RecordClient::User,
 		bool fTimeShift = false);
 	bool ModifyRecord(
 		LPCTSTR pszFileName = nullptr,
 		const CRecordManager::TimeSpecInfo *pStartTime = nullptr,
 		const CRecordManager::TimeSpecInfo *pStopTime = nullptr,
-		CRecordManager::RecordClient Client = CRecordManager::CLIENT_USER);
+		CRecordManager::RecordClient Client = CRecordManager::RecordClient::User);
 	bool StartReservedRecord();
 	bool CancelReservedRecord();
 	bool StopRecord();

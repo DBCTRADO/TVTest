@@ -111,10 +111,10 @@ public:
 	static bool Initialize(HINSTANCE hinst);
 
 private:
-	enum PartType {
-		PART_MARGIN,
-		PART_CATEGORY,
-		PART_CONTENT
+	enum class PartType {
+		Margin,
+		Category,
+		Content,
 	};
 
 	TVTest::Style::Font m_StyleFont;

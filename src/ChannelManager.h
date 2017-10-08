@@ -23,9 +23,9 @@ public:
 	static constexpr int SPACE_INVALID = -2;
 	static constexpr int SPACE_ALL     = -1;
 
-	enum UpDownOrder {
-		UP_DOWN_ORDER_INDEX,
-		UP_DOWN_ORDER_ID
+	enum class UpDownOrder {
+		Index,
+		ID,
 	};
 
 	CChannelManager();

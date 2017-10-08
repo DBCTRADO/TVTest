@@ -143,7 +143,7 @@ bool COSDManager::ShowChannelOSD(const CChannelInfo *pInfo, LPCTSTR pszText, boo
 
 	HBITMAP hbmLogo = nullptr;
 	unsigned int ImageEffect = 0;
-	if (ChangeType != COSDOptions::CHANNELCHANGE_TEXTONLY) {
+	if (ChangeType != COSDOptions::ChannelChangeType::TextOnly) {
 		hbmLogo = App.LogoManager.GetAssociatedLogoBitmap(
 			pInfo->GetNetworkID(), pInfo->GetServiceID(), CLogoManager::LOGOTYPE_BIG);
 		if (hbmLogo != nullptr) {
@@ -153,7 +153,7 @@ bool COSDManager::ShowChannelOSD(const CChannelInfo *pInfo, LPCTSTR pszText, boo
 				ImageEffect = CPseudoOSD::IMAGEEFFECT_GLOSS;
 		}
 
-		if (ChangeType == COSDOptions::CHANNELCHANGE_LOGOONLY && hbmLogo != nullptr) {
+		if (ChangeType == COSDOptions::ChannelChangeType::LogoOnly && hbmLogo != nullptr) {
 			m_OSD.Create(ClientInfo.hwndParent, m_pOptions->GetLayeredWindow());
 			m_OSD.SetImage(hbmLogo, ImageEffect);
 			m_OSD.SetPosition(
@@ -177,7 +177,7 @@ bool COSDManager::ShowChannelOSD(const CChannelInfo *pInfo, LPCTSTR pszText, boo
 			m_OSD.Show(m_pOptions->GetFadeTime(), ClientInfo.fAnimation);
 		}
 
-		if (ChangeType != COSDOptions::CHANNELCHANGE_LOGOONLY && !IsStringEmpty(pszText)) {
+		if (ChangeType != COSDOptions::ChannelChangeType::LogoOnly && !IsStringEmpty(pszText)) {
 			CompositeText(pszText, ClientInfo.ClientRect, hbmLogo != nullptr ? m_Style.LogoSize.Width : 0, m_pOptions->GetFadeTime());
 		}
 	} else {

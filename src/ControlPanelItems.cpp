@@ -52,7 +52,7 @@ void CTunerControlItem::OnRButtonDown(int x, int y)
 	POINT pt;
 
 	GetMenuPos(&pt);
-	GetAppClass().UICore.ShowSpecialMenu(CUICore::MENU_TUNERSELECT, &pt, TPM_RIGHTBUTTON);
+	GetAppClass().UICore.ShowSpecialMenu(CUICore::MenuType::TunerSelect, &pt, TPM_RIGHTBUTTON);
 }
 
 

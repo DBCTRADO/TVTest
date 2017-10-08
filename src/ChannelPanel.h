@@ -48,9 +48,9 @@ public:
 	static constexpr int MAX_EVENTS_PER_CHANNEL = 4;
 	static constexpr int MAX_EXPAND_EVENTS      = 10;
 
-	enum ProgressBarStyle {
-		PROGRESSBAR_STYLE_ELAPSED,
-		PROGRESSBAR_STYLE_REMAINING
+	enum class ProgressBarStyle {
+		Elapsed,
+		Remaining,
 	};
 
 	CChannelPanel();

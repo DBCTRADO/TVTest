@@ -508,7 +508,7 @@ int CChannelList::GetMaxChannelNo() const
 
 bool CChannelList::Sort(SortType Type, bool fDescending)
 {
-	if (Type < 0 || Type >= SORT_TRAILER)
+	if (!CheckEnumRange(Type))
 		return false;
 
 	if (m_ChannelList.size() > 1) {
@@ -531,27 +531,27 @@ bool CChannelList::Sort(SortType Type, bool fDescending)
 				int Cmp;
 
 				switch (m_Type) {
-				case SORT_SPACE:
+				case SortType::Space:
 					Cmp = Channel1->GetSpace() - Channel2->GetSpace();
 					break;
-				case SORT_CHANNELINDEX:
+				case SortType::ChannelIndex:
 					Cmp = Channel1->GetChannelIndex() - Channel2->GetChannelIndex();
 					break;
-				case SORT_CHANNELNO:
+				case SortType::ChannelNo:
 					Cmp = Channel1->GetChannelNo() - Channel2->GetChannelNo();
 					break;
-				case SORT_PHYSICALCHANNEL:
+				case SortType::PhysicalChannel:
 					Cmp = Channel1->GetPhysicalChannel() - Channel2->GetPhysicalChannel();
 					break;
-				case SORT_NAME:
+				case SortType::Name:
 					Cmp = ::lstrcmpi(Channel1->GetName(), Channel2->GetName());
 					if (Cmp == 0)
 						Cmp = ::lstrcmp(Channel1->GetName(), Channel2->GetName());
 					break;
-				case SORT_NETWORKID:
+				case SortType::NetworkID:
 					Cmp = Channel1->GetNetworkID() - Channel2->GetNetworkID();
 					break;
-				case SORT_SERVICEID:
+				case SortType::ServiceID:
 					Cmp = Channel1->GetServiceID() - Channel2->GetServiceID();
 					break;
 				default:
@@ -602,13 +602,13 @@ bool CChannelList::HasMultiService() const
 
 
 CTuningSpaceInfo::CTuningSpaceInfo()
-	: m_Space(SPACE_UNKNOWN)
+	: m_Space(TuningSpaceType::Unknown)
 {
 }
 
 
 CTuningSpaceInfo::CTuningSpaceInfo(const CTuningSpaceInfo &Info)
-	: m_Space(SPACE_UNKNOWN)
+	: m_Space(TuningSpaceType::Unknown)
 {
 	Create(Info.m_ChannelList.get(), Info.m_Name.c_str());
 }
@@ -653,18 +653,18 @@ bool CTuningSpaceInfo::SetName(LPCTSTR pszName)
 {
 	// チューニング空間の種類を判定する
 	// BonDriverから取得できないので苦肉の策
-	m_Space = SPACE_UNKNOWN;
+	m_Space = TuningSpaceType::Unknown;
 	if (!IsStringEmpty(pszName)) {
 		m_Name = pszName;
 		if (::StrStr(pszName, TEXT("地")) != nullptr
 				|| ::StrStrI(pszName, TEXT("VHF")) != nullptr
 				|| ::StrStrI(pszName, TEXT("UHF")) != nullptr
 				|| ::StrStrI(pszName, TEXT("CATV")) != nullptr) {
-			m_Space = SPACE_TERRESTRIAL;
+			m_Space = TuningSpaceType::Terrestrial;
 		} else if (::StrStrI(pszName, TEXT("BS")) != nullptr) {
-			m_Space = SPACE_BS;
+			m_Space = TuningSpaceType::BS;
 		} else if (::StrStrI(pszName, TEXT("CS")) != nullptr) {
-			m_Space = SPACE_110CS;
+			m_Space = TuningSpaceType::CS110;
 		}
 	} else {
 		m_Name.clear();
@@ -752,7 +752,7 @@ LPCTSTR CTuningSpaceList::GetTuningSpaceName(int Space) const
 CTuningSpaceInfo::TuningSpaceType CTuningSpaceList::GetTuningSpaceType(int Space) const
 {
 	if (Space < 0 || Space >= NumSpaces()) {
-		return CTuningSpaceInfo::SPACE_ERROR;
+		return CTuningSpaceInfo::TuningSpaceType::Error;
 	}
 	return m_TuningSpaceList[Space]->GetType();
 }

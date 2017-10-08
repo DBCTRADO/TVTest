@@ -199,24 +199,24 @@ const CAccelerator::KeyInfo CAccelerator::m_DefaultAccelList[] = {
 };
 
 const CAccelerator::AppCommandInfo CAccelerator::m_DefaultAppCommandList[] = {
-	{CM_VOLUME_UP,        MEDIAKEY_APPCOMMAND, APPCOMMAND_VOLUME_UP},
-	{CM_VOLUME_DOWN,      MEDIAKEY_APPCOMMAND, APPCOMMAND_VOLUME_DOWN},
-	{CM_VOLUME_MUTE,      MEDIAKEY_APPCOMMAND, APPCOMMAND_VOLUME_MUTE},
-	{CM_RECORD_STOP,      MEDIAKEY_APPCOMMAND, APPCOMMAND_MEDIA_STOP},
-	{CM_RECORD_PAUSE,     MEDIAKEY_APPCOMMAND, APPCOMMAND_MEDIA_PAUSE},
-	{CM_RECORD_START,     MEDIAKEY_APPCOMMAND, APPCOMMAND_MEDIA_RECORD},
-	{CM_CHANNEL_UP,       MEDIAKEY_APPCOMMAND, APPCOMMAND_MEDIA_CHANNEL_UP},
-	{CM_CHANNEL_DOWN,     MEDIAKEY_APPCOMMAND, APPCOMMAND_MEDIA_CHANNEL_DOWN},
+	{CM_VOLUME_UP,        MediaKeyType::AppCommand, APPCOMMAND_VOLUME_UP},
+	{CM_VOLUME_DOWN,      MediaKeyType::AppCommand, APPCOMMAND_VOLUME_DOWN},
+	{CM_VOLUME_MUTE,      MediaKeyType::AppCommand, APPCOMMAND_VOLUME_MUTE},
+	{CM_RECORD_STOP,      MediaKeyType::AppCommand, APPCOMMAND_MEDIA_STOP},
+	{CM_RECORD_PAUSE,     MediaKeyType::AppCommand, APPCOMMAND_MEDIA_PAUSE},
+	{CM_RECORD_START,     MediaKeyType::AppCommand, APPCOMMAND_MEDIA_RECORD},
+	{CM_CHANNEL_UP,       MediaKeyType::AppCommand, APPCOMMAND_MEDIA_CHANNEL_UP},
+	{CM_CHANNEL_DOWN,     MediaKeyType::AppCommand, APPCOMMAND_MEDIA_CHANNEL_DOWN},
 	/*
-	{CM_CHANNEL_UP,       MEDIAKEY_APPCOMMAND, APPCOMMAND_MEDIA_NEXTTRACK},
-	{CM_CHANNEL_DOWN,     MEDIAKEY_APPCOMMAND, APPCOMMAND_MEDIA_PREVIOUSTRACK},
+	{CM_CHANNEL_UP,       MediaKeyType::AppCommand, APPCOMMAND_MEDIA_NEXTTRACK},
+	{CM_CHANNEL_DOWN,     MediaKeyType::AppCommand, APPCOMMAND_MEDIA_PREVIOUSTRACK},
 	*/
-	{CM_CHANNEL_BACKWARD, MEDIAKEY_APPCOMMAND, APPCOMMAND_BROWSER_BACKWARD},
-	{CM_CHANNEL_FORWARD,  MEDIAKEY_APPCOMMAND, APPCOMMAND_BROWSER_FORWARD},
-	{CM_HOMEDISPLAY,      MEDIAKEY_APPCOMMAND, APPCOMMAND_BROWSER_HOME},
-	{CM_CLOSE,            MEDIAKEY_APPCOMMAND, APPCOMMAND_CLOSE},
-	{CM_SAVEIMAGE,        MEDIAKEY_APPCOMMAND, APPCOMMAND_SAVE},
-	{CM_COPY,             MEDIAKEY_APPCOMMAND, APPCOMMAND_COPY},
+	{CM_CHANNEL_BACKWARD, MediaKeyType::AppCommand, APPCOMMAND_BROWSER_BACKWARD},
+	{CM_CHANNEL_FORWARD,  MediaKeyType::AppCommand, APPCOMMAND_BROWSER_FORWARD},
+	{CM_HOMEDISPLAY,      MediaKeyType::AppCommand, APPCOMMAND_BROWSER_HOME},
+	{CM_CLOSE,            MediaKeyType::AppCommand, APPCOMMAND_CLOSE},
+	{CM_SAVEIMAGE,        MediaKeyType::AppCommand, APPCOMMAND_SAVE},
+	{CM_COPY,             MediaKeyType::AppCommand, APPCOMMAND_COPY},
 };
 
 
@@ -228,13 +228,13 @@ CAccelerator::CAccelerator()
 		m_KeyList[i] = m_DefaultAccelList[i];
 	m_MediaKeyList.resize(lengthof(AppCommandList) + m_RawInput.NumKeyTypes());
 	MediaKeyInfo Info;
-	Info.Type = MEDIAKEY_APPCOMMAND;
+	Info.Type = MediaKeyType::AppCommand;
 	for (size_t i = 0; i < lengthof(AppCommandList); i++) {
 		Info.Command = AppCommandList[i].Command;
 		Info.pszText = AppCommandList[i].pszText;
 		m_MediaKeyList[i] = Info;
 	}
-	Info.Type = MEDIAKEY_RAWINPUT;
+	Info.Type = MediaKeyType::RawInput;
 	for (int i = 0; i < m_RawInput.NumKeyTypes(); i++) {
 		Info.Command = m_RawInput.GetKeyData(i);
 		Info.pszText = m_RawInput.GetKeyText(i);
@@ -389,7 +389,7 @@ bool CAccelerator::UnregisterHotKey()
 bool CAccelerator::LoadSettings(CSettings &Settings)
 {
 	if (Settings.SetSection(TEXT("Settings"))) {
-		for (int i = 0; i <= TVTest::CChannelInputOptions::KEY_LAST; i++) {
+		for (int i = 0; i <= static_cast<int>(TVTest::CChannelInputOptions::KeyType::Last_); i++) {
 			TCHAR szKey[32];
 			int Value;
 
@@ -408,8 +408,8 @@ bool CAccelerator::LoadSettings(CSettings &Settings)
 
 				if (Settings.Read(KeyList[i], &f)) {
 					m_ChannelInputOptions.KeyInputMode[i] =
-						f ? TVTest::CChannelInputOptions::KEYINPUTMODE_SINGLEKEY :
-						    TVTest::CChannelInputOptions::KEYINPUTMODE_DISABLED;
+						f ? TVTest::CChannelInputOptions::KeyInputModeType::SingleKey :
+						    TVTest::CChannelInputOptions::KeyInputModeType::Disabled;
 				}
 			}
 		}
@@ -498,7 +498,7 @@ bool CAccelerator::LoadSettings(CSettings &Settings)
 bool CAccelerator::SaveSettings(CSettings &Settings)
 {
 	if (Settings.SetSection(TEXT("Settings"))) {
-		for (int i = 0; i <= TVTest::CChannelInputOptions::KEY_LAST; i++) {
+		for (int i = 0; i <= static_cast<int>(TVTest::CChannelInputOptions::KeyType::Last_); i++) {
 			TCHAR szKey[32];
 			StdUtil::snprintf(szKey, lengthof(szKey), TEXT("ChInputKeyMode%d"), i);
 			Settings.Write(szKey, (int)m_ChannelInputOptions.KeyInputMode[i]);
@@ -653,7 +653,7 @@ int CAccelerator::TranslateAppCommand(WPARAM wParam, LPARAM lParam) const
 	const WORD Command = GET_APPCOMMAND_LPARAM(lParam);
 
 	for (size_t i = 0; i < m_AppCommandList.size(); i++) {
-		if (m_AppCommandList[i].Type == MEDIAKEY_APPCOMMAND
+		if (m_AppCommandList[i].Type == MediaKeyType::AppCommand
 				&& m_AppCommandList[i].AppCommand == Command)
 			return m_AppCommandList[i].Command;
 	}
@@ -944,7 +944,7 @@ INT_PTR CAccelerator::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 					for (int j = 0; j < lengthof(m_DefaultAppCommandList); j++) {
 						if (m_DefaultAppCommandList[j].Command == Command) {
 							for (size_t k = 0; k < m_MediaKeyList.size(); k++) {
-								if (m_MediaKeyList[k].Type == MEDIAKEY_APPCOMMAND
+								if (m_MediaKeyList[k].Type == MediaKeyType::AppCommand
 										&& m_MediaKeyList[k].Command == m_DefaultAppCommandList[j].AppCommand) {
 									AppCommand = (int)(k + 1);
 									break;
@@ -1131,7 +1131,7 @@ void CAccelerator::OnInput(int Type)
 
 	if (m_hDlg == nullptr || !::IsWindowVisible(m_hDlg)) {
 		for (size_t i = 0; i < m_AppCommandList.size(); i++) {
-			if (m_AppCommandList[i].Type == MEDIAKEY_RAWINPUT
+			if (m_AppCommandList[i].Type == MediaKeyType::RawInput
 					&& m_AppCommandList[i].AppCommand == Data) {
 				::PostMessage(m_hwndHotKey, WM_COMMAND, m_AppCommandList[i].Command, 0);
 				return;
@@ -1163,7 +1163,7 @@ void CAccelerator::OnUnknownInput(const BYTE *pData, int Size)
 		::lstrcpy(szText + i, TEXT("\n(押したキーとデータを教えてもらえれば対応できるかも知れません。)"));
 		CMessageDialog MessageDialog;
 		MessageDialog.Show(
-			m_hDlg, CMessageDialog::TYPE_INFO, szText,
+			m_hDlg, CMessageDialog::MessageType::Info, szText,
 			TEXT("対応していないキーが押されました。"), nullptr, TEXT("ごめん"));
 	}
 	*/

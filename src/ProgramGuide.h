@@ -160,9 +160,9 @@ class CProgramGuide
 	, protected CFeaturedEvents::CEventHandler
 {
 public:
-	enum ListMode {
-		LIST_SERVICES,
-		LIST_WEEK
+	enum class ListMode {
+		Services,
+		Week,
 	};
 	enum {
 		DAY_TODAY,
@@ -786,9 +786,10 @@ public:
 
 	struct TimeBarSettings
 	{
-		enum TimeType {
-			TIME_INTERVAL,
-			TIME_CUSTOM
+		enum class TimeType {
+			Interval,
+			Custom,
+			TVTEST_ENUM_CLASS_TRAILER
 		};
 
 		static constexpr int INTERVAL_MIN    = 2;

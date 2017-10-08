@@ -29,7 +29,7 @@ void CAppCore::OnError(LPCTSTR pszText, ...)
 	va_start(Args, pszText);
 	StdUtil::vsnprintf(szText, lengthof(szText), pszText, Args);
 	va_end(Args);
-	m_App.AddLog(CLogItem::TYPE_ERROR, TEXT("%s"), szText);
+	m_App.AddLog(CLogItem::LogType::Error, TEXT("%s"), szText);
 	if (!m_fSilent)
 		m_App.UICore.GetSkin()->ShowErrorMessage(szText);
 }
@@ -41,17 +41,17 @@ void CAppCore::OnError(const LibISDB::ErrorHandler *pErrorHandler, LPCTSTR pszTi
 		return;
 
 	if (!IsStringEmpty(pErrorHandler->GetLastErrorText())) {
-		m_App.AddLog(CLogItem::TYPE_ERROR, TEXT("%s"), pErrorHandler->GetLastErrorText());
+		m_App.AddLog(CLogItem::LogType::Error, TEXT("%s"), pErrorHandler->GetLastErrorText());
 	} else if (pErrorHandler->GetLastErrorCode()) {
 		std::string Message = pErrorHandler->GetLastErrorCode().message();
 		if (!Message.empty()) {
 			int Length = ::MultiByteToWideChar(CP_ACP, 0, Message.data(), (int)Message.length(), nullptr, 0);
 			TVTest::String Text(Length, TEXT('\0'));
 			::MultiByteToWideChar(CP_ACP, 0, Message.data(), (int)Message.length(), &Text[0], Length);
-			m_App.AddLog(CLogItem::TYPE_ERROR, TEXT("%s"), Text.c_str());
+			m_App.AddLog(CLogItem::LogType::Error, TEXT("%s"), Text.c_str());
 		}
 	} else {
-		m_App.AddLog(CLogItem::TYPE_ERROR, TEXT("Unknown error"));
+		m_App.AddLog(CLogItem::LogType::Error, TEXT("Unknown error"));
 	}
 
 	if (!m_fSilent)
@@ -87,7 +87,7 @@ bool CAppCore::InitializeChannel()
 				TEXT("チャンネル設定を \"%s\" から読み込みました。"),
 				ChannelFilePath.c_str());
 			if (!m_App.ChannelManager.ChannelFileHasStreamIDs())
-				m_App.AddLog(CLogItem::TYPE_WARNING, TEXT("チャンネルファイルが古いので再スキャンをお薦めします。"));
+				m_App.AddLog(CLogItem::LogType::Warning, TEXT("チャンネルファイルが古いので再スキャンをお薦めします。"));
 		}
 	}
 
@@ -216,7 +216,7 @@ bool CAppCore::UpdateCurrentChannelList(const CTuningSpaceList *pList)
 	int Space = -1;
 	bool fAllChannels = false;
 	for (int i = 0; i < pList->NumSpaces(); i++) {
-		if (pList->GetTuningSpaceType(i) != CTuningSpaceInfo::SPACE_TERRESTRIAL) {
+		if (pList->GetTuningSpaceType(i) != CTuningSpaceInfo::TuningSpaceType::Terrestrial) {
 			fAllChannels = false;
 			break;
 		}
@@ -390,7 +390,7 @@ bool CAppCore::SetChannel(int Space, int Channel, int ServiceID/* = -1*/, bool f
 		m_App.CoreEngine.SetServiceSelectInfo(&ServiceSel);
 
 		if (!pSourceFilter->SetChannelAndPlay(pChInfo->GetSpace(), pChInfo->GetChannelIndex())) {
-			m_App.AddLog(CLogItem::TYPE_ERROR, TEXT("%s"), pSourceFilter->GetLastErrorText());
+			m_App.AddLog(CLogItem::LogType::Error, TEXT("%s"), pSourceFilter->GetLastErrorText());
 			m_App.ChannelManager.SetCurrentChannel(OldSpace, OldChannel);
 			return false;
 		}
@@ -634,7 +634,7 @@ bool CAppCore::SetCommandLineChannel(const CCommandLineOptions *pCmdLine)
 		}
 	}
 
-	m_App.AddLog(CLogItem::TYPE_ERROR, TEXT("コマンドラインで指定されたチャンネルが見付かりません。"));
+	m_App.AddLog(CLogItem::LogType::Error, TEXT("コマンドラインで指定されたチャンネルが見付かりません。"));
 
 	return false;
 }
@@ -735,7 +735,7 @@ bool CAppCore::SetServiceByID(WORD ServiceID, unsigned int Flags)
 		fResult = m_App.CoreEngine.SetService(ServiceSel);
 	}
 	if (!fResult) {
-		m_App.AddLog(CLogItem::TYPE_ERROR, TEXT("サービスを選択できません。"));
+		m_App.AddLog(CLogItem::LogType::Error, TEXT("サービスを選択できません。"));
 		return false;
 	}
 
@@ -1370,7 +1370,7 @@ bool CAppCore::CommandLineRecord(LPCTSTR pszFileName, const SYSTEMTIME *pStartTi
 	CRecordManager::TimeSpecInfo StartTime, StopTime;
 
 	if (pStartTime != nullptr && pStartTime->wYear != 0) {
-		StartTime.Type = CRecordManager::TIME_DATETIME;
+		StartTime.Type = CRecordManager::TimeSpecType::DateTime;
 		::TzSpecificLocalTimeToSystemTime(nullptr, pStartTime, &StartTime.Time.DateTime);
 		if (Delay != 0)
 			OffsetSystemTime(&StartTime.Time.DateTime, Delay * TimeConsts::SYSTEMTIME_SECOND);
@@ -1380,24 +1380,24 @@ bool CAppCore::CommandLineRecord(LPCTSTR pszFileName, const SYSTEMTIME *pStartTi
 			TEXT("コマンドラインから録画指定されました。(%d/%d/%d %d:%02d:%02d 開始)"),
 			st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute, st.wSecond);
 	} else if (Delay > 0) {
-		StartTime.Type = CRecordManager::TIME_DURATION;
+		StartTime.Type = CRecordManager::TimeSpecType::Duration;
 		StartTime.Time.Duration = Delay * 1000;
 		m_App.AddLog(TEXT("コマンドラインから録画指定されました。(%d 秒後開始)"), Delay);
 	} else {
-		StartTime.Type = CRecordManager::TIME_NOTSPECIFIED;
+		StartTime.Type = CRecordManager::TimeSpecType::NotSpecified;
 		m_App.AddLog(TEXT("コマンドラインから録画指定されました。"));
 	}
 	if (Duration > 0) {
-		StopTime.Type = CRecordManager::TIME_DURATION;
+		StopTime.Type = CRecordManager::TimeSpecType::Duration;
 		StopTime.Time.Duration = Duration * 1000;
 	} else {
-		StopTime.Type = CRecordManager::TIME_NOTSPECIFIED;
+		StopTime.Type = CRecordManager::TimeSpecType::NotSpecified;
 	}
 
 	return StartRecord(
 		IsStringEmpty(pszFileName) ? nullptr : pszFileName,
 		&StartTime, &StopTime,
-		CRecordManager::CLIENT_COMMANDLINE);
+		CRecordManager::RecordClient::CommandLine);
 }
 
 

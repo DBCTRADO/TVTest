@@ -14,13 +14,13 @@ public:
 	~CDriverInfo();
 	LPCTSTR GetFileName() const { return m_FileName.c_str(); }
 	LPCTSTR GetTunerName() const { return m_TunerName.c_str(); }
-	enum LoadTuningSpaceListMode {
-		LOADTUNINGSPACE_DEFAULT,
-		LOADTUNINGSPACE_NOLOADDRIVER,
-		LOADTUNINGSPACE_USEDRIVER,
-		LOADTUNINGSPACE_USEDRIVER_NOOPEN,
+	enum class LoadTuningSpaceListMode {
+		Default,
+		NoLoadDriver,
+		UseDriver,
+		UseDriverNoOpen,
 	};
-	bool LoadTuningSpaceList(LoadTuningSpaceListMode Mode = LOADTUNINGSPACE_DEFAULT);
+	bool LoadTuningSpaceList(LoadTuningSpaceListMode Mode = LoadTuningSpaceListMode::Default);
 	void ClearTuningSpaceList();
 	bool IsChannelFileLoaded() const { return m_fChannelFileLoaded; }
 	bool IsDriverChannelLoaded() const { return m_fDriverSpaceLoaded; }

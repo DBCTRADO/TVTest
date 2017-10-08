@@ -252,33 +252,33 @@ INT_PTR CAboutDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 				rc.bottom = rcHeader.bottom;
 				Canvas.FillGradient(
 					Colors.Header1, Colors.Header2, rc,
-					TVTest::Graphics::GRADIENT_DIRECTION_VERT);
+					TVTest::Graphics::GradientDirection::Vert);
 				rc.top = rc.bottom;
 				rc.bottom = rc.top + 8;
 				Canvas.FillGradient(
 					Colors.HeaderShadow, Colors.Info1, rc,
-					TVTest::Graphics::GRADIENT_DIRECTION_VERT);
+					TVTest::Graphics::GradientDirection::Vert);
 				rc.top = rc.bottom;
 				rc.bottom = rcClient.bottom;
 				Canvas.FillGradient(
 					Colors.Info1, Colors.Info2, rc,
-					TVTest::Graphics::GRADIENT_DIRECTION_VERT);
+					TVTest::Graphics::GradientDirection::Vert);
 			} else {
 				rc = rcClient;
 				rc.bottom = rcHeader.bottom;
 				DrawUtil::FillGradient(
 					ps.hdc, &rc, Colors.Header1, Colors.Header2,
-					DrawUtil::DIRECTION_VERT);
+					DrawUtil::FillDirection::Vert);
 				rc.top = rc.bottom;
 				rc.bottom = rc.top + 8;
 				DrawUtil::FillGradient(
 					ps.hdc, &rc, Colors.HeaderShadow, Colors.Info1,
-					DrawUtil::DIRECTION_VERT);
+					DrawUtil::FillDirection::Vert);
 				rc.top = rc.bottom;
 				rc.bottom = rcClient.bottom;
 				DrawUtil::FillGradient(
 					ps.hdc, &rc, Colors.Info1, Colors.Info2,
-					DrawUtil::DIRECTION_VERT);
+					DrawUtil::FillDirection::Vert);
 			}
 
 			::EndPaint(hDlg, &ps);
@@ -322,7 +322,7 @@ void CAboutDialog::ApplyStyle()
 
 	if (m_hDlg != nullptr) {
 		TVTest::Style::Font Font;
-		GetSystemFont(DrawUtil::FONT_MESSAGE, &Font);
+		GetSystemFont(DrawUtil::FontType::Message, &Font);
 		CreateDrawFont(Font, &m_Font);
 		LOGFONT lf;
 		m_Font.GetLogFont(&lf);

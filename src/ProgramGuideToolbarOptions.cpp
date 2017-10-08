@@ -63,16 +63,16 @@ INT_PTR CProgramGuideToolbarOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam
 				hDlg,
 				IDC_PROGRAMGUIDETOOLBAR_TIMEBAR_TIME_INTERVAL,
 				IDC_PROGRAMGUIDETOOLBAR_TIMEBAR_TIME_CUSTOM,
-				IDC_PROGRAMGUIDETOOLBAR_TIMEBAR_TIME_INTERVAL + TimeBarSettings.Time);
+				IDC_PROGRAMGUIDETOOLBAR_TIMEBAR_TIME_INTERVAL + (int)TimeBarSettings.Time);
 			EnableDlgItems(
 				hDlg,
 				IDC_PROGRAMGUIDETOOLBAR_TIMEBAR_INTERVAL,
 				IDC_PROGRAMGUIDETOOLBAR_TIMEBAR_INTERVAL_UNIT,
-				TimeBarSettings.Time == CProgramGuideFrameSettings::TimeBarSettings::TIME_INTERVAL);
+				TimeBarSettings.Time == CProgramGuideFrameSettings::TimeBarSettings::TimeType::Interval);
 			EnableDlgItem(
 				hDlg,
 				IDC_PROGRAMGUIDETOOLBAR_TIMEBAR_CUSTOMTIME,
-				TimeBarSettings.Time == CProgramGuideFrameSettings::TimeBarSettings::TIME_CUSTOM);
+				TimeBarSettings.Time == CProgramGuideFrameSettings::TimeBarSettings::TimeType::Custom);
 
 			for (int i = CProgramGuideFrameSettings::TimeBarSettings::INTERVAL_MIN;
 					i <= CProgramGuideFrameSettings::TimeBarSettings::INTERVAL_MAX;
@@ -158,9 +158,9 @@ INT_PTR CProgramGuideToolbarOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam
 
 				CProgramGuideFrameSettings::TimeBarSettings TimeBarSettings;
 				if (DlgRadioButton_IsChecked(hDlg, IDC_PROGRAMGUIDETOOLBAR_TIMEBAR_TIME_INTERVAL))
-					TimeBarSettings.Time = CProgramGuideFrameSettings::TimeBarSettings::TIME_INTERVAL;
+					TimeBarSettings.Time = CProgramGuideFrameSettings::TimeBarSettings::TimeType::Interval;
 				else if (DlgRadioButton_IsChecked(hDlg, IDC_PROGRAMGUIDETOOLBAR_TIMEBAR_TIME_CUSTOM))
-					TimeBarSettings.Time = CProgramGuideFrameSettings::TimeBarSettings::TIME_CUSTOM;
+					TimeBarSettings.Time = CProgramGuideFrameSettings::TimeBarSettings::TimeType::Custom;
 				TimeBarSettings.Interval =
 					(int)DlgComboBox_GetCurSel(hDlg, IDC_PROGRAMGUIDETOOLBAR_TIMEBAR_INTERVAL) +
 					CProgramGuideFrameSettings::TimeBarSettings::INTERVAL_MIN;

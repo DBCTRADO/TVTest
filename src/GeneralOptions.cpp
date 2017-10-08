@@ -12,7 +12,7 @@
 
 
 CGeneralOptions::CGeneralOptions()
-	: m_DefaultDriverType(DEFAULT_DRIVER_LAST)
+	: m_DefaultDriverType(DefaultDriverType::Last)
 	, m_fResident(false)
 	, m_fKeepSingleTask(false)
 	, m_fStandaloneProgramGuide(false)
@@ -58,8 +58,8 @@ bool CGeneralOptions::ReadSettings(CSettings &Settings)
 	}
 
 	if (Settings.Read(TEXT("DefaultDriverType"), &Value)
-			&& Value >= DEFAULT_DRIVER_NONE && Value <= DEFAULT_DRIVER_CUSTOM)
-		m_DefaultDriverType = (DefaultDriverType)Value;
+			&& CheckEnumRange(static_cast<DefaultDriverType>(Value)))
+		m_DefaultDriverType = static_cast<DefaultDriverType>(Value);
 	Settings.Read(TEXT("DefaultDriver"), &m_DefaultBonDriverName);
 	Settings.Read(TEXT("Driver"), &m_LastBonDriverName);
 
@@ -120,13 +120,13 @@ bool CGeneralOptions::SetDefaultDriverName(LPCTSTR pszDriverName)
 bool CGeneralOptions::GetFirstDriverName(TVTest::String *pDriverName) const
 {
 	switch (m_DefaultDriverType) {
-	case DEFAULT_DRIVER_NONE:
+	case DefaultDriverType::None:
 		pDriverName->clear();
 		break;
-	case DEFAULT_DRIVER_LAST:
+	case DefaultDriverType::Last:
 		*pDriverName = m_LastBonDriverName;
 		break;
-	case DEFAULT_DRIVER_CUSTOM:
+	case DefaultDriverType::Custom:
 		*pDriverName = m_DefaultBonDriverName;
 		break;
 	default:
@@ -166,7 +166,7 @@ INT_PTR CGeneralOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 			EnableDlgItems(
 				hDlg, IDC_OPTIONS_DEFAULTDRIVER,
 				IDC_OPTIONS_DEFAULTDRIVER_BROWSE,
-				m_DefaultDriverType == DEFAULT_DRIVER_CUSTOM);
+				m_DefaultDriverType == DefaultDriverType::Custom);
 
 			const CDriverManager &DriverManager = App.DriverManager;
 			DlgComboBox_LimitText(hDlg, IDC_OPTIONS_DEFAULTDRIVER, MAX_PATH - 1);

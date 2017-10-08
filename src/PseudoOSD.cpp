@@ -71,7 +71,7 @@ CPseudoOSD::CPseudoOSD()
 	, m_ImageEffect(0)
 {
 	LOGFONT lf;
-	DrawUtil::GetSystemFont(DrawUtil::FONT_DEFAULT, &lf);
+	DrawUtil::GetSystemFont(DrawUtil::FontType::Default, &lf);
 	m_Font.Create(&lf);
 
 	m_Position.Left = 0;

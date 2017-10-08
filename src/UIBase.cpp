@@ -247,11 +247,11 @@ int CUIBase::GetHairlineWidth() const
 	int Width;
 
 	if (m_pStyleScaling != nullptr) {
-		Width = m_pStyleScaling->ToPixels(1, Style::UNIT_LOGICAL_PIXEL);
+		Width = m_pStyleScaling->ToPixels(1, Style::UnitType::LogicalPixel);
 	} else {
 		Style::CStyleScaling StyleScaling;
 		GetStyleManager()->InitStyleScaling(&StyleScaling);
-		Width = StyleScaling.ToPixels(1, Style::UNIT_LOGICAL_PIXEL);
+		Width = StyleScaling.ToPixels(1, Style::UnitType::LogicalPixel);
 	}
 
 	return max(Width, 1);

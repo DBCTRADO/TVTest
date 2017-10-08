@@ -12,7 +12,7 @@
 #include "Common/DebugDef.h"
 
 
-#define OSD_FLAG(type) (1U<<(type))
+#define OSD_FLAG(type) (1U << static_cast<int>(type))
 
 
 
@@ -23,9 +23,9 @@ COSDOptions::COSDOptions()
 	, m_TextColor(RGB(0, 255, 0))
 	, m_Opacity(80)
 	, m_FadeTime(3000)
-	, m_ChannelChangeType(CHANNELCHANGE_LOGOANDTEXT)
+	, m_ChannelChangeType(ChannelChangeType::LogoAndText)
 	, m_ChannelChangeText(TEXT("%channel-no% %channel-name%"))
-	, m_EnabledOSD(OSD_FLAG(OSD_CHANNEL) | OSD_FLAG(OSD_VOLUME) | OSD_FLAG(OSD_CHANNELNOINPUT))
+	, m_EnabledOSD(OSD_FLAG(OSDType::Channel) | OSD_FLAG(OSDType::Volume) | OSD_FLAG(OSDType::ChannelNoInput))
 
 	, m_fLayeredWindow(true)
 	, m_fCompositionEnabled(false)
@@ -39,10 +39,10 @@ COSDOptions::COSDOptions()
 	if (Aero.IsEnabled())
 		m_fCompositionEnabled = true;
 
-	DrawUtil::GetSystemFont(DrawUtil::FONT_DEFAULT, &m_OSDFont);
+	DrawUtil::GetSystemFont(DrawUtil::FontType::Default, &m_OSDFont);
 
 	LOGFONT lf;
-	DrawUtil::GetSystemFont(DrawUtil::FONT_MESSAGE, &lf);
+	DrawUtil::GetSystemFont(DrawUtil::FontType::Message, &lf);
 
 	m_NotificationBarFont.LogFont = lf;
 #ifndef TVTEST_FOR_1SEG
@@ -77,15 +77,15 @@ bool COSDOptions::ReadSettings(CSettings &Settings)
 		unsigned int EnabledOSDMask;
 		if (!Settings.Read(TEXT("EnabledOSDMask"), &EnabledOSDMask)
 				|| EnabledOSDMask == 0)
-			EnabledOSDMask = OSD_FLAG(OSD_CHANNELNOINPUT) - 1;
+			EnabledOSDMask = OSD_FLAG(OSDType::ChannelNoInput) - 1;
 		if ((EnabledOSD & ~EnabledOSDMask) == 0)
 			m_EnabledOSD = (EnabledOSD & EnabledOSDMask) | (m_EnabledOSD & ~EnabledOSDMask);
 		else
 			m_EnabledOSD = EnabledOSD;
 	}
 	if (Settings.Read(TEXT("ChannelOSDType"), &Value)
-			&& Value >= CHANNELCHANGE_FIRST && Value <= CHANNELCHANGE_LAST)
-		m_ChannelChangeType = (ChannelChangeType)Value;
+			&& CheckEnumRange(static_cast<ChannelChangeType>(Value)))
+		m_ChannelChangeType = static_cast<ChannelChangeType>(Value);
 	Settings.Read(TEXT("ChannelOSDText"), &m_ChannelChangeText);
 
 	Settings.Read(TEXT("EnableNotificationBar"), &m_fEnableNotificationBar);
@@ -123,7 +123,7 @@ bool COSDOptions::WriteSettings(CSettings &Settings)
 	Settings.Write(TEXT("OSDFont"), &m_OSDFont);
 	Settings.Write(TEXT("OSDFadeTime"), m_FadeTime);
 	Settings.Write(TEXT("EnabledOSD"), m_EnabledOSD);
-	Settings.Write(TEXT("EnabledOSDMask"), OSD_FLAG(OSD_TRAILER_) - 1);
+	Settings.Write(TEXT("EnabledOSDMask"), OSD_FLAG(OSDType::Trailer_) - 1);
 	Settings.Write(TEXT("ChannelOSDType"), (int)m_ChannelChangeType);
 	Settings.Write(TEXT("ChannelOSDText"), m_ChannelChangeText);
 
@@ -195,11 +195,11 @@ INT_PTR COSDOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			::SetDlgItemText(hDlg, IDC_OSDOPTIONS_OSDFONT_INFO, m_OSDFont.lfFaceName);
 			::SetDlgItemInt(hDlg, IDC_OSDOPTIONS_FADETIME, m_FadeTime / 1000, TRUE);
 			DlgUpDown_SetRange(hDlg, IDC_OSDOPTIONS_FADETIME_UD, 1, UD_MAXVAL);
-			DlgCheckBox_Check(hDlg, IDC_OSDOPTIONS_SHOW_CHANNEL, (m_EnabledOSD & OSD_FLAG(OSD_CHANNEL)) != 0);
-			DlgCheckBox_Check(hDlg, IDC_OSDOPTIONS_SHOW_VOLUME, (m_EnabledOSD & OSD_FLAG(OSD_VOLUME)) != 0);
-			DlgCheckBox_Check(hDlg, IDC_OSDOPTIONS_SHOW_AUDIO, (m_EnabledOSD & OSD_FLAG(OSD_AUDIO)) != 0);
-			DlgCheckBox_Check(hDlg, IDC_OSDOPTIONS_SHOW_RECORDING, (m_EnabledOSD & OSD_FLAG(OSD_RECORDING)) != 0);
-			DlgCheckBox_Check(hDlg, IDC_OSDOPTIONS_SHOW_CHANNELNOINPUT, (m_EnabledOSD & OSD_FLAG(OSD_CHANNELNOINPUT)) != 0);
+			DlgCheckBox_Check(hDlg, IDC_OSDOPTIONS_SHOW_CHANNEL, (m_EnabledOSD & OSD_FLAG(OSDType::Channel)) != 0);
+			DlgCheckBox_Check(hDlg, IDC_OSDOPTIONS_SHOW_VOLUME, (m_EnabledOSD & OSD_FLAG(OSDType::Volume)) != 0);
+			DlgCheckBox_Check(hDlg, IDC_OSDOPTIONS_SHOW_AUDIO, (m_EnabledOSD & OSD_FLAG(OSDType::Audio)) != 0);
+			DlgCheckBox_Check(hDlg, IDC_OSDOPTIONS_SHOW_RECORDING, (m_EnabledOSD & OSD_FLAG(OSDType::Recording)) != 0);
+			DlgCheckBox_Check(hDlg, IDC_OSDOPTIONS_SHOW_CHANNELNOINPUT, (m_EnabledOSD & OSD_FLAG(OSDType::ChannelNoInput)) != 0);
 			static const LPCTSTR ChannelChangeModeText[] = {
 				TEXT("ロゴとテキスト"),
 				TEXT("テキストのみ"),
@@ -314,15 +314,15 @@ INT_PTR COSDOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				m_FadeTime = ::GetDlgItemInt(hDlg, IDC_OSDOPTIONS_FADETIME, nullptr, FALSE) * 1000;
 				unsigned int EnabledOSD = 0;
 				if (DlgCheckBox_IsChecked(hDlg, IDC_OSDOPTIONS_SHOW_CHANNEL))
-					EnabledOSD |= OSD_FLAG(OSD_CHANNEL);
+					EnabledOSD |= OSD_FLAG(OSDType::Channel);
 				if (DlgCheckBox_IsChecked(hDlg, IDC_OSDOPTIONS_SHOW_VOLUME))
-					EnabledOSD |= OSD_FLAG(OSD_VOLUME);
+					EnabledOSD |= OSD_FLAG(OSDType::Volume);
 				if (DlgCheckBox_IsChecked(hDlg, IDC_OSDOPTIONS_SHOW_AUDIO))
-					EnabledOSD |= OSD_FLAG(OSD_AUDIO);
+					EnabledOSD |= OSD_FLAG(OSDType::Audio);
 				if (DlgCheckBox_IsChecked(hDlg, IDC_OSDOPTIONS_SHOW_RECORDING))
-					EnabledOSD |= OSD_FLAG(OSD_RECORDING);
+					EnabledOSD |= OSD_FLAG(OSDType::Recording);
 				if (DlgCheckBox_IsChecked(hDlg, IDC_OSDOPTIONS_SHOW_CHANNELNOINPUT))
-					EnabledOSD |= OSD_FLAG(OSD_CHANNELNOINPUT);
+					EnabledOSD |= OSD_FLAG(OSDType::ChannelNoInput);
 				m_EnabledOSD = EnabledOSD;
 				m_ChannelChangeType = (ChannelChangeType)DlgComboBox_GetCurSel(hDlg, IDC_OSDOPTIONS_CHANNELCHANGE_TYPE);
 				GetDlgItemString(hDlg, IDC_OSDOPTIONS_CHANNELCHANGE_TEXT, &m_ChannelChangeText);

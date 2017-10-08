@@ -21,18 +21,18 @@ class CCoreEngine
 	, protected LibISDB::RecorderFilter::EventListener
 {
 public:
-	enum TSProcessorConnectPosition {
-		TSPROCESSOR_CONNECTPOSITION_SOURCE,
-		TSPROCESSOR_CONNECTPOSITION_PREPROCESSING,
-		TSPROCESSOR_CONNECTPOSITION_POSTPROCESSING,
-		TSPROCESSOR_CONNECTPOSITION_VIEWER,
-		TSPROCESSOR_CONNECTPOSITION_RECORDER
+	enum class TSProcessorConnectPosition {
+		Source,
+		Preprocessing,
+		Postprocessing,
+		Viewer,
+		Recorder,
 	};
 
-	enum DriverType {
-		DRIVER_UNKNOWN,
-		DRIVER_UDP,
-		DRIVER_TCP
+	enum class DriverType {
+		Unknown,
+		UDP,
+		TCP,
 	};
 
 	static constexpr int MAX_VOLUME = 100;
@@ -105,8 +105,8 @@ public:
 	bool CloseTuner();
 	bool IsTunerOpen() const;
 	DriverType GetDriverType() const { return m_DriverType; }
-	bool IsUDPDriver() const { return m_DriverType == DRIVER_UDP; }
-	bool IsTCPDriver() const { return m_DriverType == DRIVER_TCP; }
+	bool IsUDPDriver() const { return m_DriverType == DriverType::UDP; }
+	bool IsTCPDriver() const { return m_DriverType == DriverType::TCP; }
 	bool IsNetworkDriver() const { return IsUDPDriver() || IsTCPDriver(); }
 
 	bool SetPacketBufferLength(DWORD BufferLength);

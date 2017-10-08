@@ -30,10 +30,10 @@ const CNetworkDefinition::RemoteControlKeyIDAssignInfo CNetworkDefinition::m_Def
 
 CNetworkDefinition::CNetworkDefinition()
 {
-	m_NetworkInfoList.emplace_back(4, TEXT("BS"), NETWORK_BS);
-	m_NetworkInfoList.emplace_back(6, TEXT("CS.SP-Basic"), NETWORK_CS);
-	m_NetworkInfoList.emplace_back(7, TEXT("CS.SP-Basic"), NETWORK_CS);
-	m_NetworkInfoList.emplace_back(10, TEXT("CS.SP-Premium"), NETWORK_CS);
+	m_NetworkInfoList.emplace_back(4, TEXT("BS"), NetworkType::BS);
+	m_NetworkInfoList.emplace_back(6, TEXT("CS.SP-Basic"), NetworkType::CS);
+	m_NetworkInfoList.emplace_back(7, TEXT("CS.SP-Basic"), NetworkType::CS);
+	m_NetworkInfoList.emplace_back(10, TEXT("CS.SP-Premium"), NetworkType::CS);
 
 	m_KeyIDAssignList.reserve(lengthof(m_DefaultKeyIDAssignList));
 	for (int i = 0; i < lengthof(m_DefaultKeyIDAssignList); i++)
@@ -131,33 +131,33 @@ CNetworkDefinition::NetworkType CNetworkDefinition::GetNetworkType(WORD NetworkI
 {
 	const NetworkInfo *pInfo = GetNetworkInfoByID(NetworkID);
 	if (pInfo == nullptr)
-		return NETWORK_TERRESTRIAL;
+		return NetworkType::Terrestrial;
 	return pInfo->Type;
 }
 
 
 bool CNetworkDefinition::IsTerrestrialNetworkID(WORD NetworkID) const
 {
-	return GetNetworkType(NetworkID) == NETWORK_TERRESTRIAL;
+	return GetNetworkType(NetworkID) == NetworkType::Terrestrial;
 }
 
 
 bool CNetworkDefinition::IsBSNetworkID(WORD NetworkID) const
 {
-	return GetNetworkType(NetworkID) == NETWORK_BS;
+	return GetNetworkType(NetworkID) == NetworkType::BS;
 }
 
 
 bool CNetworkDefinition::IsCSNetworkID(WORD NetworkID) const
 {
-	return GetNetworkType(NetworkID) == NETWORK_CS;
+	return GetNetworkType(NetworkID) == NetworkType::CS;
 }
 
 
 bool CNetworkDefinition::IsSatelliteNetworkID(WORD NetworkID) const
 {
 	NetworkType Type = GetNetworkType(NetworkID);
-	return Type == NETWORK_BS || Type == NETWORK_CS;
+	return Type == NetworkType::BS || Type == NetworkType::CS;
 }
 
 
@@ -170,9 +170,9 @@ int CNetworkDefinition::GetNetworkTypeOrder(WORD NetworkID1, WORD NetworkID2) co
 	int Order;
 	if (Network1 == Network2)
 		Order = 0;
-	else if (Network1 == NETWORK_UNKNOWN)
+	else if (Network1 == NetworkType::Unknown)
 		Order = 1;
-	else if (Network2 == NETWORK_UNKNOWN)
+	else if (Network2 == NetworkType::Unknown)
 		Order = -1;
 	else
 		Order = static_cast<int>(Network1) - static_cast<int>(Network2);
@@ -223,9 +223,9 @@ CNetworkDefinition::NetworkType CNetworkDefinition::GetNetworkTypeFromName(LPCTS
 		LPCTSTR pszName;
 		int Length;
 	} NetworkTypeList [] = {
-		{NETWORK_TERRESTRIAL, TEXT("T"),  1},
-		{NETWORK_BS,          TEXT("BS"), 2},
-		{NETWORK_CS,          TEXT("CS"), 2},
+		{NetworkType::Terrestrial, TEXT("T"),  1},
+		{NetworkType::BS,          TEXT("BS"), 2},
+		{NetworkType::CS,          TEXT("CS"), 2},
 	};
 
 	for (int i = 0; i < lengthof(NetworkTypeList); i++) {
@@ -236,7 +236,7 @@ CNetworkDefinition::NetworkType CNetworkDefinition::GetNetworkTypeFromName(LPCTS
 		}
 	}
 
-	return NETWORK_UNKNOWN;
+	return NetworkType::Unknown;
 }
 
 
@@ -244,7 +244,7 @@ CNetworkDefinition::NetworkType CNetworkDefinition::GetNetworkTypeFromName(LPCTS
 
 CNetworkDefinition::NetworkInfo::NetworkInfo()
 	: NetworkID(0)
-	, Type(NETWORK_UNKNOWN)
+	, Type(NetworkType::Unknown)
 {
 }
 

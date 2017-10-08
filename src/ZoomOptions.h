@@ -14,9 +14,10 @@ class CZoomOptions
 	, public CCommandList::CCommandCustomizer
 {
 public:
-	enum ZoomType {
-		ZOOM_RATE,
-		ZOOM_SIZE
+	enum class ZoomType {
+		Rate,
+		Size,
+		TVTEST_ENUM_CLASS_TRAILER
 	};
 
 	struct ZoomRate

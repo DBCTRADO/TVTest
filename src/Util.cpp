@@ -1179,12 +1179,12 @@ bool GetStandardIconSize(IconSizeType Size, int *pWidth, int *pHeight)
 	int Width, Height;
 
 	switch (Size) {
-	case ICON_SIZE_SMALL:
+	case IconSizeType::Small:
 		Width = ::GetSystemMetrics(SM_CXSMICON);
 		Height = ::GetSystemMetrics(SM_CYSMICON);
 		break;
 
-	case ICON_SIZE_NORMAL:
+	case IconSizeType::Normal:
 		Width = ::GetSystemMetrics(SM_CXICON);
 		Height = ::GetSystemMetrics(SM_CYICON);
 		break;
@@ -1208,8 +1208,8 @@ HICON LoadIconStandardSize(HINSTANCE hinst, LPCTSTR pszName, IconSizeType Size)
 	HICON hico;
 
 	switch (Size) {
-	case ICON_SIZE_SMALL:  Metric = LIM_SMALL; break;
-	case ICON_SIZE_NORMAL: Metric = LIM_LARGE; break;
+	case IconSizeType::Small:  Metric = LIM_SMALL; break;
+	case IconSizeType::Normal: Metric = LIM_LARGE; break;
 	default:
 		return nullptr;
 	}
@@ -1231,8 +1231,8 @@ HICON LoadSystemIcon(LPCTSTR pszName, IconSizeType Size)
 	HICON hico;
 
 	switch (Size) {
-	case ICON_SIZE_SMALL:  Metric = LIM_SMALL; break;
-	case ICON_SIZE_NORMAL: Metric = LIM_LARGE; break;
+	case IconSizeType::Small:  Metric = LIM_SMALL; break;
+	case IconSizeType::Normal: Metric = LIM_LARGE; break;
 	default:
 		return nullptr;
 	}
@@ -1262,9 +1262,9 @@ HICON LoadSystemIcon(LPCTSTR pszName, int Width, int Height)
 		return hico;
 
 	if (Width == ::GetSystemMetrics(SM_CXICON) && Height == ::GetSystemMetrics(SM_CYICON))
-		return LoadSystemIcon(pszName, ICON_SIZE_NORMAL);
+		return LoadSystemIcon(pszName, IconSizeType::Normal);
 	if (Width == ::GetSystemMetrics(SM_CXSMICON) && Height == ::GetSystemMetrics(SM_CYSMICON))
-		return LoadSystemIcon(pszName, ICON_SIZE_SMALL);
+		return LoadSystemIcon(pszName, IconSizeType::Small);
 
 	hico = ::LoadIcon(nullptr, pszName);
 	if (hico != nullptr)

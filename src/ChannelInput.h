@@ -11,23 +11,21 @@ namespace TVTest
 	class CChannelInputOptions
 	{
 	public:
-		enum KeyInputModeType {
-			KEYINPUTMODE_DISABLED,
-			KEYINPUTMODE_SINGLEKEY,
-			KEYINPUTMODE_MULTIPLEKEYS
+		enum class KeyInputModeType {
+			Disabled,
+			SingleKey,
+			MultipleKeys,
+			TVTEST_ENUM_CLASS_TRAILER
 		};
-		static const KeyInputModeType KEYINPUTMODE_FIRST = KEYINPUTMODE_DISABLED;
-		static const KeyInputModeType KEYINPUTMODE_LAST  = KEYINPUTMODE_MULTIPLEKEYS;
 
-		enum KeyType {
-			KEY_DIGIT,
-			KEY_NUMPAD,
-			KEY_FUNCTION
+		enum class KeyType {
+			Digit,
+			NumPad,
+			Function,
+			TVTEST_ENUM_CLASS_TRAILER
 		};
-		static const KeyType KEY_FIRST = KEY_DIGIT;
-		static const KeyType KEY_LAST  = KEY_FUNCTION;
 
-		KeyInputModeType KeyInputMode[KEY_LAST + 1];
+		KeyInputModeType KeyInputMode[static_cast<size_t>(KeyType::Trailer_)];
 		unsigned int KeyTimeout;
 		bool fKeyTimeoutCancel;
 
@@ -38,11 +36,11 @@ namespace TVTest
 	{
 	public:
 		enum KeyDownResult {
-			KEYDOWN_NOTPROCESSED,
-			KEYDOWN_BEGIN,
-			KEYDOWN_COMPLETED,
-			KEYDOWN_CANCELLED,
-			KEYDOWN_CONTINUE
+			NotProcessed,
+			Begin,
+			Completed,
+			Cancelled,
+			Continue,
 		};
 
 		CChannelInput(const CChannelInputOptions &Options);

@@ -26,7 +26,7 @@ COperationOptions::COperationOptions()
 	, m_LeftDoubleClickCommand(CM_FULLSCREEN)
 	, m_RightClickCommand(CM_MENU)
 	, m_MiddleClickCommand(0)
-	, m_ChannelUpDownOrder(CChannelManager::UP_DOWN_ORDER_INDEX)
+	, m_ChannelUpDownOrder(CChannelManager::UpDownOrder::Index)
 	, m_fChannelUpDownSkipSubChannel(true)
 {
 }

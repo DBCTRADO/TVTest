@@ -25,29 +25,29 @@ namespace DrawUtil
 	};
 
 	// 塗りつぶしの方向
-	enum FillDirection {
-		DIRECTION_HORZ,			// 水平方向
-		DIRECTION_VERT,			// 垂直方向
-		DIRECTION_HORZMIRROR,	// 左右対称
-		DIRECTION_VERTMIRROR	// 上下対称
+	enum class FillDirection {
+		Horz,       // 水平方向
+		Vert,       // 垂直方向
+		HorzMirror, // 左右対称
+		VertMirror, // 上下対称
 	};
 
 	bool Fill(HDC hdc, const RECT *pRect, COLORREF Color);
 	bool FillGradient(
 		HDC hdc, const RECT *pRect, COLORREF Color1, COLORREF Color2,
-		FillDirection Direction = DIRECTION_HORZ);
+		FillDirection Direction = FillDirection::Horz);
 	bool FillGradient(
 		HDC hdc, const RECT *pRect, const RGBA &Color1, const RGBA &Color2,
-		FillDirection Direction = DIRECTION_HORZ);
+		FillDirection Direction = FillDirection::Horz);
 	bool FillGlossyGradient(
 		HDC hdc, const RECT *pRect,
 		COLORREF Color1, COLORREF Color2,
-		FillDirection Direction = DIRECTION_HORZ,
+		FillDirection Direction = FillDirection::Horz,
 		int GlossRatio1 = 96, int GlossRatio2 = 48);
 	bool FillInterlacedGradient(
 		HDC hdc, const RECT *pRect,
 		COLORREF Color1, COLORREF Color2,
-		FillDirection Direction = DIRECTION_HORZ,
+		FillDirection Direction = FillDirection::Horz,
 		COLORREF LineColor = RGB(0, 0, 0), int LineOpacity = 48);
 	bool GlossOverlay(
 		HDC hdc, const RECT *pRect,
@@ -70,13 +70,13 @@ namespace DrawUtil
 	HBITMAP DuplicateDIB(HBITMAP hbmSrc);
 	HBITMAP ResizeBitmap(HBITMAP hbmSrc, int Width, int Height, int BitCount = 24, int StretchMode = STRETCH_HALFTONE);
 
-	enum FontType {
-		FONT_DEFAULT,
-		FONT_MESSAGE,
-		FONT_MENU,
-		FONT_CAPTION,
-		FONT_SMALLCAPTION,
-		FONT_STATUS
+	enum class FontType {
+		Default,
+		Message,
+		Menu,
+		Caption,
+		SmallCaption,
+		Status,
 	};
 
 	bool GetSystemFont(FontType Type, LOGFONT *pLogFont);

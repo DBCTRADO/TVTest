@@ -657,7 +657,7 @@ void CSideBar::SetTooltipFont()
 {
 	TVTest::Style::Font Font;
 
-	GetSystemFont(DrawUtil::FONT_STATUS, &Font);
+	GetSystemFont(DrawUtil::FontType::Status, &Font);
 	CreateDrawFont(Font, &m_TooltipFont);
 	m_Tooltip.SetFont(m_TooltipFont.GetHandle());
 }
@@ -681,8 +681,8 @@ void CSideBar::Draw(HDC hdc, const RECT &PaintRect)
 
 	TVTest::Theme::BackgroundStyle BackStyle;
 	BackStyle = m_Theme.ItemStyle.Back;
-	if (!m_fVertical && BackStyle.Fill.Type == TVTest::Theme::FILL_GRADIENT)
-		BackStyle.Fill.Gradient.Rotate(TVTest::Theme::GradientStyle::ROTATE_RIGHT);
+	if (!m_fVertical && BackStyle.Fill.Type == TVTest::Theme::FillType::Gradient)
+		BackStyle.Fill.Gradient.Rotate(TVTest::Theme::GradientStyle::RotateType::Right);
 	ThemeDraw.Draw(BackStyle, rc);
 
 	HDC hdcMemory = ::CreateCompatibleDC(hdc);
@@ -700,8 +700,8 @@ void CSideBar::Draw(HDC hdc, const RECT &PaintRect)
 
 			if (fHot) {
 				TVTest::Theme::Style Style = m_Theme.HighlightItemStyle;
-				if (!m_fVertical && Style.Back.Fill.Type == TVTest::Theme::FILL_GRADIENT)
-					Style.Back.Fill.Gradient.Rotate(TVTest::Theme::GradientStyle::ROTATE_RIGHT);
+				if (!m_fVertical && Style.Back.Fill.Type == TVTest::Theme::FillType::Gradient)
+					Style.Back.Fill.Gradient.Rotate(TVTest::Theme::GradientStyle::RotateType::Right);
 				if (m_ItemList[i].IsChecked())
 					Style.Back.Border = m_Theme.CheckItemStyle.Back.Border;
 				ThemeDraw.Draw(Style.Back, rc);
@@ -709,8 +709,8 @@ void CSideBar::Draw(HDC hdc, const RECT &PaintRect)
 			} else {
 				if (m_ItemList[i].IsChecked()) {
 					TVTest::Theme::Style Style = m_Theme.CheckItemStyle;
-					if (!m_fVertical && Style.Back.Fill.Type == TVTest::Theme::FILL_GRADIENT)
-						Style.Back.Fill.Gradient.Rotate(TVTest::Theme::GradientStyle::ROTATE_RIGHT);
+					if (!m_fVertical && Style.Back.Fill.Type == TVTest::Theme::FillType::Gradient)
+						Style.Back.Fill.Gradient.Rotate(TVTest::Theme::GradientStyle::RotateType::Right);
 					ThemeDraw.Draw(Style.Back, rc);
 					ForeColor = m_Theme.CheckItemStyle.Fore.Fill.GetSolidColor();
 				} else {

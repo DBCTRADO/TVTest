@@ -388,7 +388,7 @@ INT_PTR CLogger::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				::GetSystemMetrics(SM_CYSMICON),
 				ILC_COLOR32, lengthof(IconList), 1);
 			for (int i = 0; i < lengthof(IconList); i++) {
-				HICON hico = LoadSystemIcon(IconList[i], ICON_SIZE_SMALL);
+				HICON hico = LoadSystemIcon(IconList[i], IconSizeType::Small);
 				::ImageList_AddIcon(himl, hico);
 				::DestroyIcon(hico);
 			}

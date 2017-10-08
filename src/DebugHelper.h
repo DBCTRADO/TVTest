@@ -24,9 +24,9 @@ class CDebugHelper
 {
 public:
 	enum ExceptionFilterMode {
-		EXCEPTION_FILTER_DEFAULT,
-		EXCEPTION_FILTER_NONE,
-		EXCEPTION_FILTER_DIALOG
+		Default,
+		None,
+		Dialog,
 	};
 
 	CDebugHelper();

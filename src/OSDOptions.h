@@ -10,21 +10,20 @@ class COSDOptions
 	: public COptions
 {
 public:
-	enum ChannelChangeType {
-		CHANNELCHANGE_LOGOANDTEXT,
-		CHANNELCHANGE_TEXTONLY,
-		CHANNELCHANGE_LOGOONLY,
-		CHANNELCHANGE_FIRST = CHANNELCHANGE_LOGOANDTEXT,
-		CHANNELCHANGE_LAST  = CHANNELCHANGE_LOGOONLY
+	enum class ChannelChangeType {
+		LogoAndText,
+		TextOnly,
+		LogoOnly,
+		TVTEST_ENUM_CLASS_TRAILER
 	};
 
-	enum OSDType {
-		OSD_CHANNEL,
-		OSD_VOLUME,
-		OSD_AUDIO,
-		OSD_RECORDING,
-		OSD_CHANNELNOINPUT,
-		OSD_TRAILER_
+	enum class OSDType {
+		Channel,
+		Volume,
+		Audio,
+		Recording,
+		ChannelNoInput,
+		TVTEST_ENUM_CLASS_TRAILER
 	};
 
 	enum {

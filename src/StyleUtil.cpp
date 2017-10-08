@@ -47,7 +47,7 @@ void SetFontInfoItem(HWND hDlg, int ID, const Style::Font &Font)
 	int Size;
 	TCHAR szText[LF_FACESIZE+16];
 
-	if (Font.Size.Unit == Style::UNIT_POINT && Font.Size.Value != 0) {
+	if (Font.Size.Unit == Style::UnitType::Point && Font.Size.Value != 0) {
 		Size = Font.Size.Value;
 	} else {
 		HDC hdc = ::GetDC(hDlg);
@@ -70,7 +70,7 @@ bool ChooseStyleFont(HWND hwndOwner, Style::Font *pFont)
 		return false;
 
 	pFont->Size.Value /= 10;
-	pFont->Size.Unit = Style::UNIT_POINT;
+	pFont->Size.Unit = Style::UnitType::Point;
 
 	return true;
 }
@@ -162,9 +162,9 @@ bool ReadPointSize(CSettings &Settings, LPCTSTR pszValueName, Style::Font *pFont
 		return false;
 
 	if (pFont->Size.Value != 0)
-		pFont->Size.Unit = Style::UNIT_POINT;
+		pFont->Size.Unit = Style::UnitType::Point;
 	else
-		pFont->Size.Unit = Style::UNIT_UNDEFINED;
+		pFont->Size.Unit = Style::UnitType::Undefined;
 
 	return true;
 }
@@ -172,7 +172,7 @@ bool ReadPointSize(CSettings &Settings, LPCTSTR pszValueName, Style::Font *pFont
 
 bool WritePointSize(CSettings &Settings, LPCTSTR pszValueName, const Style::Font &Font)
 {
-	return Settings.Write(pszValueName, Font.Size.Unit == Style::UNIT_POINT ? Font.Size.Value : 0);
+	return Settings.Write(pszValueName, Font.Size.Unit == Style::UnitType::Point ? Font.Size.Value : 0);
 }
 
 

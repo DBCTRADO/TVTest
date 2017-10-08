@@ -16,16 +16,16 @@ namespace Theme
 
 void GradientStyle::Rotate(RotateType Rotate)
 {
-	if (Rotate == ROTATE_LEFT || Rotate == ROTATE_RIGHT) {
+	if (Rotate == RotateType::Left || Rotate == RotateType::Right) {
 		switch (Direction) {
-		case DIRECTION_HORZ:       Direction = DIRECTION_VERT;       break;
-		case DIRECTION_VERT:       Direction = DIRECTION_HORZ;       break;
-		case DIRECTION_HORZMIRROR: Direction = DIRECTION_VERTMIRROR; break;
-		case DIRECTION_VERTMIRROR: Direction = DIRECTION_HORZMIRROR; break;
+		case GradientDirection::Horz:       Direction = GradientDirection::Vert;       break;
+		case GradientDirection::Vert:       Direction = GradientDirection::Horz;       break;
+		case GradientDirection::HorzMirror: Direction = GradientDirection::VertMirror; break;
+		case GradientDirection::VertMirror: Direction = GradientDirection::HorzMirror; break;
 		}
 	}
-	if ((Rotate == ROTATE_LEFT || Rotate == ROTATE_180)
-			&& (Direction == DIRECTION_HORZ || Direction == DIRECTION_VERT))
+	if ((Rotate == RotateType::Left || Rotate == RotateType::OneEighty)
+			&& (Direction == GradientDirection::Horz || Direction == GradientDirection::Vert))
 		std::swap(Color1, Color2);
 }
 
@@ -35,10 +35,10 @@ void GradientStyle::Rotate(RotateType Rotate)
 ThemeColor FillStyle::GetSolidColor() const
 {
 	switch (Type) {
-	case FILL_SOLID:
+	case FillType::Solid:
 		return Solid.Color;
 
-	case FILL_GRADIENT:
+	case FillType::Gradient:
 		return MixColor(Gradient.Color1, Gradient.Color2);
 	}
 
@@ -63,17 +63,17 @@ bool Draw(HDC hdc, const RECT &Rect, const GradientStyle &Style)
 		return false;
 
 	switch (Style.Type) {
-	case GRADIENT_NORMAL:
+	case GradientType::Normal:
 		return DrawUtil::FillGradient(
 			hdc, &Rect, Style.Color1, Style.Color2,
 			(DrawUtil::FillDirection)Style.Direction);
 
-	case GRADIENT_GLOSSY:
+	case GradientType::Glossy:
 		return DrawUtil::FillGlossyGradient(
 			hdc, &Rect, Style.Color1, Style.Color2,
 			(DrawUtil::FillDirection)Style.Direction);
 
-	case GRADIENT_INTERLACED:
+	case GradientType::Interlaced:
 		return DrawUtil::FillInterlacedGradient(
 			hdc, &Rect, Style.Color1, Style.Color2,
 			(DrawUtil::FillDirection)Style.Direction);
@@ -89,13 +89,13 @@ bool Draw(HDC hdc, const RECT &Rect, const FillStyle &Style)
 		return false;
 
 	switch (Style.Type) {
-	case FILL_NONE:
+	case FillType::None:
 		return true;
 
-	case FILL_SOLID:
+	case FillType::Solid:
 		return Draw(hdc, Rect, Style.Solid);
 
-	case FILL_GRADIENT:
+	case FillType::Gradient:
 		return Draw(hdc, Rect, Style.Gradient);
 	}
 
@@ -110,7 +110,7 @@ bool Draw(HDC hdc, const RECT &Rect, const BackgroundStyle &Style)
 
 	RECT rc = Rect;
 
-	if (Style.Border.Type != BORDER_NONE)
+	if (Style.Border.Type != BorderType::None)
 		Draw(hdc, &rc, Style.Border);
 	Draw(hdc, rc, Style.Fill);
 
@@ -125,12 +125,12 @@ bool Draw(HDC hdc, const RECT &Rect, const ForegroundStyle &Style, LPCTSTR pszTe
 
 	ThemeColor c;
 	switch (Style.Fill.Type) {
-	case FILL_NONE:
+	case FillType::None:
 		return true;
-	case FILL_SOLID:
+	case FillType::Solid:
 		c = Style.Fill.Solid.Color;
 		break;
-	case FILL_GRADIENT:
+	case FillType::Gradient:
 		c = MixColor(Style.Fill.Gradient.Color1, Style.Fill.Gradient.Color2);
 		break;
 	default:
@@ -185,7 +185,7 @@ bool Draw(HDC hdc, RECT *pRect, const BorderStyle &Style)
 	if (hdc == nullptr || pRect == nullptr)
 		return false;
 
-	if (Style.Type == BORDER_NONE)
+	if (Style.Type == BorderType::None)
 		return true;
 
 	RECT rc = *pRect;
@@ -196,12 +196,12 @@ bool Draw(HDC hdc, RECT *pRect, const BorderStyle &Style)
 		HBRUSH hbrOld = static_cast<HBRUSH>(::SelectObject(hdc, ::GetStockObject(NULL_BRUSH)));
 
 		switch (Style.Type) {
-		case BORDER_SOLID:
+		case BorderType::Solid:
 			::SetDCPenColor(hdc, Style.Color);
 			::Rectangle(hdc, rc.left, rc.top, rc.right, rc.bottom);
 			break;
 
-		case BORDER_SUNKEN:
+		case BorderType::Sunken:
 			::SetDCPenColor(hdc, GetHighlightColor(Style.Color));
 			::MoveToEx(hdc, rc.left + 1, rc.bottom - 1, nullptr);
 			::LineTo(hdc, rc.right - 1, rc.bottom - 1);
@@ -211,7 +211,7 @@ bool Draw(HDC hdc, RECT *pRect, const BorderStyle &Style)
 			::LineTo(hdc, rc.left, rc.bottom);
 			break;
 
-		case BORDER_RAISED:
+		case BorderType::Raised:
 			::SetDCPenColor(hdc, GetHighlightColor(Style.Color));
 			::MoveToEx(hdc, rc.right - 2, rc.top, nullptr);
 			::LineTo(hdc, rc.left, rc.top);
@@ -234,17 +234,17 @@ bool Draw(HDC hdc, RECT *pRect, const BorderStyle &Style)
 		ThemeColor Color1, Color2;
 
 		switch (Style.Type) {
-		case BORDER_SOLID:
+		case BorderType::Solid:
 			Color1 = Style.Color;
 			Color2 = Style.Color;
 			break;
 
-		case BORDER_SUNKEN:
+		case BorderType::Sunken:
 			Color1 = GetShadowColor(Style.Color);
 			Color2 = GetHighlightColor(Style.Color);
 			break;
 
-		case BORDER_RAISED:
+		case BorderType::Raised:
 			Color1 = GetHighlightColor(Style.Color);
 			Color2 = GetShadowColor(Style.Color);
 			break;
@@ -288,17 +288,17 @@ ThemeColor MixColor(const ThemeColor &Color1, const ThemeColor &Color2, BYTE Rat
 
 FillStyle MixStyle(const FillStyle &Style1, const FillStyle &Style2, BYTE Ratio)
 {
-	if (Ratio == 0 || Style1.Type == FILL_NONE)
+	if (Ratio == 0 || Style1.Type == FillType::None)
 		return Style2;
-	if (Ratio == 255 || Style2.Type == FILL_NONE)
+	if (Ratio == 255 || Style2.Type == FillType::None)
 		return Style1;
 
 	if (Style1.Type == Style2.Type) {
 		switch (Style1.Type) {
-		case FILL_SOLID:
+		case FillType::Solid:
 			return FillStyle(SolidStyle(MixColor(Style1.Solid.Color, Style2.Solid.Color, Ratio)));
 
-		case FILL_GRADIENT:
+		case FillType::Gradient:
 			if (Style1.Gradient.Type == Style2.Gradient.Type
 					&& Style1.Gradient.Direction == Style2.Gradient.Direction) {
 				return FillStyle(
@@ -312,13 +312,13 @@ FillStyle MixStyle(const FillStyle &Style1, const FillStyle &Style2, BYTE Ratio)
 		}
 	}
 
-	if (Style1.Type == FILL_GRADIENT && Style2.Type == FILL_SOLID) {
+	if (Style1.Type == FillType::Gradient && Style2.Type == FillType::Solid) {
 		FillStyle Style(Style1);
 		Style.Gradient.Color1 = MixColor(Style1.Gradient.Color1, Style2.Solid.Color, Ratio);
 		Style.Gradient.Color2 = MixColor(Style1.Gradient.Color2, Style2.Solid.Color, Ratio);
 		return Style;
 	}
-	if (Style1.Type == FILL_SOLID && Style2.Type == FILL_GRADIENT) {
+	if (Style1.Type == FillType::Solid && Style2.Type == FillType::Gradient) {
 		FillStyle Style(Style2);
 		Style.Gradient.Color1 = MixColor(Style1.Solid.Color, Style2.Gradient.Color1, Ratio);
 		Style.Gradient.Color2 = MixColor(Style1.Solid.Color, Style2.Gradient.Color2, Ratio);
@@ -333,7 +333,7 @@ bool AddBorderRect(const BorderStyle &Style, RECT *pRect)
 {
 	if (pRect == nullptr)
 		return false;
-	if (Style.Type != BORDER_NONE) {
+	if (Style.Type != BorderType::None) {
 		pRect->left -= Style.Width.Left;
 		pRect->top -= Style.Width.Top;
 		pRect->right += Style.Width.Right;
@@ -347,7 +347,7 @@ bool SubtractBorderRect(const BorderStyle &Style, RECT *pRect)
 {
 	if (pRect == nullptr)
 		return false;
-	if (Style.Type != BORDER_NONE) {
+	if (Style.Type != BorderType::None) {
 		pRect->left += Style.Width.Left;
 		pRect->top += Style.Width.Top;
 		pRect->right -= Style.Width.Right;
@@ -361,7 +361,7 @@ bool GetBorderWidths(const BorderStyle &Style, RECT *pRect)
 {
 	if (pRect == nullptr)
 		return false;
-	if (Style.Type != BORDER_NONE) {
+	if (Style.Type != BorderType::None) {
 		pRect->left = Style.Width.Left;
 		pRect->top = Style.Width.Top;
 		pRect->right = Style.Width.Right;

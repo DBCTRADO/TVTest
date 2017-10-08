@@ -25,7 +25,7 @@ int CUISkin::ShowMessage(LPCTSTR pszText, LPCTSTR pszCaption, UINT Type) const
 
 void CUISkin::ShowErrorMessage(LPCTSTR pszText) const
 {
-	MessageDialog.Show(GetVideoHostWindow(), CMessageDialog::TYPE_WARNING, pszText);
+	MessageDialog.Show(GetVideoHostWindow(), CMessageDialog::MessageType::Warning, pszText);
 }
 
 
@@ -42,7 +42,7 @@ void CUISkin::ShowErrorMessage(
 	}
 
 	MessageDialog.Show(
-		GetVideoHostWindow(), CMessageDialog::TYPE_WARNING, Text.c_str(),
+		GetVideoHostWindow(), CMessageDialog::MessageType::Warning, Text.c_str(),
 		pszTitle, pErrorHandler->GetLastErrorSystemMessage());
 }
 

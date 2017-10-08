@@ -369,13 +369,13 @@ bool CUICore::SelectAudio(const TVTest::CAudioManager::AudioSelectInfo &Info, bo
 			LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode::Invalid;
 
 		switch (Info.DualMono) {
-		case TVTest::CAudioManager::DUALMONO_MAIN:
+		case TVTest::CAudioManager::DualMonoMode::Main:
 			DualMonoMode = LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode::Main;
 			break;
-		case TVTest::CAudioManager::DUALMONO_SUB:
+		case TVTest::CAudioManager::DualMonoMode::Sub:
 			DualMonoMode = LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode::Sub;
 			break;
-		case TVTest::CAudioManager::DUALMONO_BOTH:
+		case TVTest::CAudioManager::DualMonoMode::Both:
 			DualMonoMode = LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode::Both;
 			break;
 		}
@@ -412,12 +412,12 @@ bool CUICore::SelectDualMonoMode(LibISDB::DirectShow::AudioDecoderFilter::DualMo
 	if (fUpdate) {
 		m_App.AudioManager.SetSelectedDualMonoMode(
 			Mode == LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode::Main ?
-				TVTest::CAudioManager::DUALMONO_MAIN :
+				TVTest::CAudioManager::DualMonoMode::Main :
 			Mode == LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode::Sub ?
-				TVTest::CAudioManager::DUALMONO_SUB :
+				TVTest::CAudioManager::DualMonoMode::Sub :
 			Mode == LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode::Both ?
-				TVTest::CAudioManager::DUALMONO_BOTH :
-				TVTest::CAudioManager::DUALMONO_INVALID);
+				TVTest::CAudioManager::DualMonoMode::Both :
+				TVTest::CAudioManager::DualMonoMode::Invalid);
 	}
 	m_App.AppEventManager.OnDualMonoModeChanged(Mode);
 	return true;
@@ -920,13 +920,13 @@ bool CUICore::ShowSpecialMenu(MenuType Menu, const POINT *pPos, UINT Flags, cons
 		::GetCursorPos(&pt);
 
 	switch (Menu) {
-	case MENU_TUNERSELECT:
+	case MenuType::TunerSelect:
 		m_TunerSelectMenu.Create(GetMainWindow());
 		m_TunerSelectMenu.Show(Flags, pt.x, pt.y, pExcludeRect);
 		m_TunerSelectMenu.Destroy();
 		break;
 
-	case MENU_RECORD:
+	case MenuType::Record:
 		{
 			CPopupMenu Menu(m_App.GetResourceInstance(), IDM_RECORD);
 
@@ -946,7 +946,7 @@ bool CUICore::ShowSpecialMenu(MenuType Menu, const POINT *pPos, UINT Flags, cons
 		}
 		break;
 
-	case MENU_CAPTURE:
+	case MenuType::Capture:
 		{
 			CPopupMenu Menu(m_App.GetResourceInstance(), IDM_CAPTURE);
 
@@ -959,7 +959,7 @@ bool CUICore::ShowSpecialMenu(MenuType Menu, const POINT *pPos, UINT Flags, cons
 		}
 		break;
 
-	case MENU_BUFFERING:
+	case MenuType::Buffering:
 		{
 			CPopupMenu Menu(m_App.GetResourceInstance(), IDM_BUFFERING);
 
@@ -968,7 +968,7 @@ bool CUICore::ShowSpecialMenu(MenuType Menu, const POINT *pPos, UINT Flags, cons
 		}
 		break;
 
-	case MENU_STREAMERROR:
+	case MenuType::StreamError:
 		{
 			CPopupMenu Menu(m_App.GetResourceInstance(), IDM_ERROR);
 
@@ -976,7 +976,7 @@ bool CUICore::ShowSpecialMenu(MenuType Menu, const POINT *pPos, UINT Flags, cons
 		}
 		break;
 
-	case MENU_CLOCK:
+	case MenuType::Clock:
 		{
 			CPopupMenu Menu(m_App.GetResourceInstance(), IDM_TIME);
 
@@ -987,7 +987,7 @@ bool CUICore::ShowSpecialMenu(MenuType Menu, const POINT *pPos, UINT Flags, cons
 		}
 		break;
 
-	case MENU_PROGRAMINFO:
+	case MenuType::ProgramInfo:
 		{
 			CPopupMenu Menu(m_App.GetResourceInstance(), IDM_PROGRAMINFOSTATUS);
 
@@ -1608,19 +1608,19 @@ void CUICore::OnLog(LibISDB::Logger::LogType Type, LPCTSTR pszOutput)
 	switch (Type) {
 	case LibISDB::Logger::LogType::Verbose:
 	case LibISDB::Logger::LogType::Information:
-		LogType = CLogItem::TYPE_INFORMATION;
+		LogType = CLogItem::LogType::Information;
 		break;
 	case LibISDB::Logger::LogType::Warning:
-		LogType = CLogItem::TYPE_WARNING;
+		LogType = CLogItem::LogType::Warning;
 		break;
 	case LibISDB::Logger::LogType::Error:
-		LogType = CLogItem::TYPE_ERROR;
+		LogType = CLogItem::LogType::Error;
 		break;
 	default:
 		return;
 	}
 
-	if (m_fStatusBarTrace && LogType == CLogItem::TYPE_INFORMATION)
+	if (m_fStatusBarTrace && LogType == CLogItem::LogType::Information)
 		m_App.StatusView.SetSingleText(pszOutput);
 	else
 		m_App.Logger.AddLogRaw(LogType, pszOutput);
@@ -1747,7 +1747,7 @@ bool CUICore::CTunerSelectMenu::Create(HWND hwnd)
 		::PathRemoveExtension(szFileName);
 
 		const CTuningSpaceList *pTuningSpaceList;
-		if (pDriverInfo->LoadTuningSpaceList(CDriverInfo::LOADTUNINGSPACE_NOLOADDRIVER)
+		if (pDriverInfo->LoadTuningSpaceList(CDriverInfo::LoadTuningSpaceListMode::NoLoadDriver)
 				&& (pTuningSpaceList = pDriverInfo->GetAvailableTuningSpaceList()) != nullptr) {
 			HMENU hmenuDriver = ::CreatePopupMenu();
 

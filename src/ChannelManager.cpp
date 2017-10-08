@@ -220,7 +220,7 @@ int CChannelManager::GetNextChannel(int CurChannel, UpDownOrder Order, bool fNex
 
 	int Channel = CurChannel;
 
-	if (Order == UP_DOWN_ORDER_ID && pList->GetChannelNo(Channel) > 0) {
+	if (Order == UpDownOrder::ID && pList->GetChannelNo(Channel) > 0) {
 		if (fNext)
 			Channel = pList->GetNextChannel(Channel, true);
 		else

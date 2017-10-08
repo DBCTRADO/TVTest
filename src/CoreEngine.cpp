@@ -9,7 +9,7 @@
 
 
 CCoreEngine::CCoreEngine()
-	: m_DriverType(DRIVER_UNKNOWN)
+	: m_DriverType(DriverType::Unknown)
 
 	, m_fEnableTSProcessor(true)
 
@@ -115,23 +115,23 @@ bool CCoreEngine::BuildEngine()
 	int OutputIndex;
 
 	FilterID = m_FilterGraph.GetFilterID<LibISDB::BonDriverSourceFilter>();
-	ConnectTSProcessor(&ConnectionList, TSPROCESSOR_CONNECTPOSITION_SOURCE, &FilterID);
+	ConnectTSProcessor(&ConnectionList, TSProcessorConnectPosition::Source, &FilterID);
 	ConnectFilter(&ConnectionList, m_FilterGraph.GetFilterID<LibISDB::TSPacketParserFilter>(), &FilterID);
-	ConnectTSProcessor(&ConnectionList, TSPROCESSOR_CONNECTPOSITION_PREPROCESSING, &FilterID);
+	ConnectTSProcessor(&ConnectionList, TSProcessorConnectPosition::Preprocessing, &FilterID);
 	ConnectFilter(&ConnectionList, m_FilterGraph.GetFilterID<LibISDB::AnalyzerFilter>(), &FilterID);
-	ConnectTSProcessor(&ConnectionList, TSPROCESSOR_CONNECTPOSITION_POSTPROCESSING, &FilterID);
+	ConnectTSProcessor(&ConnectionList, TSProcessorConnectPosition::Postprocessing, &FilterID);
 	ConnectFilter(&ConnectionList, m_FilterGraph.GetFilterID<LibISDB::TeeFilter>(), &FilterID);
 	LibISDB::FilterGraph::IDType TeeFilterID = FilterID;
 	if (!m_fNoEpg) {
 		ConnectFilter(&ConnectionList, m_FilterGraph.GetFilterID<LibISDB::EPGDatabaseFilter>(), &FilterID, 0);
 	}
 	ConnectFilter(&ConnectionList, m_FilterGraph.GetFilterID<LibISDB::LogoDownloaderFilter>(), &FilterID, 0);
-	ConnectTSProcessor(&ConnectionList, TSPROCESSOR_CONNECTPOSITION_RECORDER, &FilterID);
+	ConnectTSProcessor(&ConnectionList, TSProcessorConnectPosition::Recorder, &FilterID);
 	ConnectFilter(&ConnectionList, m_FilterGraph.GetFilterID<LibISDB::GrabberFilter>(), &FilterID);
 	ConnectFilter(&ConnectionList, m_FilterGraph.GetFilterID<LibISDB::RecorderFilter>(), &FilterID);
 	FilterID = TeeFilterID;
 	OutputIndex = 1;
-	ConnectTSProcessor(&ConnectionList, TSPROCESSOR_CONNECTPOSITION_VIEWER, &FilterID, &OutputIndex);
+	ConnectTSProcessor(&ConnectionList, TSProcessorConnectPosition::Viewer, &FilterID, &OutputIndex);
 	ConnectFilter(&ConnectionList, m_FilterGraph.GetFilterID<LibISDB::TSPacketCounterFilter>(), &FilterID, OutputIndex);
 	ConnectFilter(&ConnectionList, m_FilterGraph.GetFilterID<LibISDB::CaptionFilter>(), &FilterID);
 	ConnectFilter(&ConnectionList, m_FilterGraph.GetFilterID<LibISDB::ViewerFilter>(), &FilterID);
@@ -203,7 +203,7 @@ bool CCoreEngine::RegisterTSProcessor(
 	Info.ConnectPosition = ConnectPosition;
 	Info.FilterID = RegisterFilter(pTSProcessor);
 
-	if (ConnectPosition == TSPROCESSOR_CONNECTPOSITION_SOURCE)
+	if (ConnectPosition == TSProcessorConnectPosition::Source)
 		pTSProcessor->SetSourceProcessor(true);
 
 	m_TSProcessorList.push_back(Info);
@@ -380,12 +380,12 @@ bool CCoreEngine::OpenTuner()
 	}
 
 	LPCWSTR pszName = static_cast<LibISDB::BonDriverSourceFilter*>(m_pSource)->GetTunerName();
-	m_DriverType = DRIVER_UNKNOWN;
+	m_DriverType = DriverType::Unknown;
 	if (pszName != nullptr) {
 		if (std::wcsncmp(pszName, L"UDP/", 4) == 0)
-			m_DriverType = DRIVER_UDP;
+			m_DriverType = DriverType::UDP;
 		else if (std::wcsncmp(pszName, L"TCP", 3) == 0)
-			m_DriverType = DRIVER_TCP;
+			m_DriverType = DriverType::TCP;
 	}
 
 	return true;

@@ -51,8 +51,8 @@ INT_PTR CALLBACK CMessageDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LP
 				reinterpret_cast<WPARAM>(
 					::LoadIcon(
 						nullptr,
-						pThis->m_MessageType == TYPE_INFO ? IDI_INFORMATION :
-						pThis->m_MessageType == TYPE_WARNING ? IDI_WARNING : IDI_ERROR)),
+						pThis->m_MessageType == MessageType::Info ? IDI_INFORMATION :
+						pThis->m_MessageType == MessageType::Warning ? IDI_WARNING : IDI_ERROR)),
 				0);
 			::SendDlgItemMessage(hDlg, IDC_ERROR_MESSAGE, EM_SETBKGNDCOLOR, 0, ::GetSysColor(COLOR_WINDOW));
 
@@ -260,9 +260,9 @@ bool CMessageDialog::Show(HWND hwndOwner, MessageType Type, LPCTSTR pszText, LPC
 		return ::MessageBox(
 			hwndOwner, Formatter.GetString(), pszCaption,
 			MB_OK |
-				(Type == TYPE_INFO ? MB_ICONINFORMATION :
-				 Type == TYPE_WARNING ? MB_ICONEXCLAMATION :
-				 Type == TYPE_ERROR ? MB_ICONSTOP : 0)) == IDOK;
+				(Type == MessageType::Info ? MB_ICONINFORMATION :
+				 Type == MessageType::Warning ? MB_ICONEXCLAMATION :
+				 Type == MessageType::Error ? MB_ICONSTOP : 0)) == IDOK;
 	}
 
 	TVTest::StringUtility::Assign(m_Text, pszText);

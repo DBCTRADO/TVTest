@@ -285,7 +285,7 @@ INT_PTR CInitialSettings::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lP
 						hDlg, szRecordFolder,
 						TEXT("録画ファイルの保存先フォルダ \"%s\" がありません。\n")
 						TEXT("作成しますか?"));
-				if (CreateDirResult == CAppMain::CREATEDIRECTORY_RESULT_ERROR) {
+				if (CreateDirResult == CAppMain::CreateDirectoryResult::Error) {
 					SetDlgItemFocus(hDlg, IDC_INITIALSETTINGS_RECORDFOLDER);
 					return TRUE;
 				}

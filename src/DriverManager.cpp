@@ -30,9 +30,9 @@ bool CDriverInfo::LoadTuningSpaceList(LoadTuningSpaceListMode Mode)
 	LPCTSTR pszFileName = m_FileName.c_str();
 
 	bool fUseDriver;
-	if (Mode == LOADTUNINGSPACE_NOLOADDRIVER) {
+	if (Mode == LoadTuningSpaceListMode::NoLoadDriver) {
 		fUseDriver = false;
-	} else if (Mode == LOADTUNINGSPACE_USEDRIVER) {
+	} else if (Mode == LoadTuningSpaceListMode::UseDriver) {
 		fUseDriver = true;
 	} else {
 		CDriverManager::TunerSpec Spec;
@@ -49,7 +49,7 @@ bool CDriverInfo::LoadTuningSpaceList(LoadTuningSpaceListMode Mode)
 		App.Core.GetChannelFileName(pszFileName, &ChannelFileName);
 		if (m_TuningSpaceList.LoadFromFile(ChannelFileName.c_str())) {
 #if 0
-			if (fUseDriver && Mode == LOADTUNINGSPACE_DEFAULT) {
+			if (fUseDriver && Mode == LoadTuningSpaceListMode::Default) {
 				const int NumSpaces = m_TuningSpaceList.NumSpaces();
 				int i;
 				for (i = 0; i < NumSpaces; i++) {
@@ -61,7 +61,7 @@ bool CDriverInfo::LoadTuningSpaceList(LoadTuningSpaceListMode Mode)
 					fUseDriver = false;
 			}
 #else
-			if (Mode == LOADTUNINGSPACE_DEFAULT)
+			if (Mode == LoadTuningSpaceListMode::Default)
 				fUseDriver = false;
 #endif
 			m_fChannelFileLoaded = true;
@@ -260,7 +260,7 @@ bool CDriverManager::GetAllServiceList(CChannelList *pList) const
 				continue;
 		}
 
-		if ((*it)->LoadTuningSpaceList(CDriverInfo::LOADTUNINGSPACE_NOLOADDRIVER)) {
+		if ((*it)->LoadTuningSpaceList(CDriverInfo::LoadTuningSpaceListMode::NoLoadDriver)) {
 			const CTuningSpaceList *pTuningSpaceList = (*it)->GetTuningSpaceList();
 			const CChannelList *pChannelList = pTuningSpaceList->GetAllChannelList();
 			const int NumChannels = pChannelList->NumChannels();

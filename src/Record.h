@@ -53,10 +53,10 @@ class CRecordTask
 	: public LibISDB::ErrorHandler
 {
 public:
-	enum State {
-		STATE_STOP,
-		STATE_RECORDING,
-		STATE_PAUSE
+	enum class State {
+		Stop,
+		Recording,
+		Pause,
 	};
 
 	typedef Util::TickCountType DurationType;
@@ -82,9 +82,9 @@ public:
 	bool Stop();
 	bool Pause();
 	State GetState() const;
-	bool IsStopped() const { return m_State == STATE_STOP; }
-	bool IsRecording() const { return m_State == STATE_RECORDING; }
-	bool IsPaused() const { return m_State == STATE_PAUSE; }
+	bool IsStopped() const { return m_State == State::Stop; }
+	bool IsRecording() const { return m_State == State::Recording; }
+	bool IsPaused() const { return m_State == State::Pause; }
 	DurationType GetStartTime() const;
 	bool GetStartTime(SYSTEMTIME *pTime) const;
 	bool GetStartTime(CRecordTime *pTime) const;
@@ -102,10 +102,10 @@ class CRecordManager
 	: public LibISDB::ErrorHandler
 {
 public:
-	enum TimeSpecType {
-		TIME_NOTSPECIFIED,
-		TIME_DATETIME,
-		TIME_DURATION
+	enum class TimeSpecType {
+		NotSpecified,
+		DateTime,
+		Duration,
 	};
 
 	struct TimeSpecInfo
@@ -117,10 +117,10 @@ public:
 		} Time;
 	};
 
-	enum RecordClient {
-		CLIENT_USER,
-		CLIENT_COMMANDLINE,
-		CLIENT_PLUGIN
+	enum class RecordClient {
+		User,
+		CommandLine,
+		Plugin,
 	};
 
 	/*

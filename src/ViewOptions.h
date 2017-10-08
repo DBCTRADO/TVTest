@@ -17,12 +17,11 @@ public:
 		UPDATE_LOGO                   = 0x00000004UL
 	};
 
-	enum AdjustWindowMode {
-		ADJUSTWINDOW_NONE,
-		ADJUSTWINDOW_FIT,
-		ADJUSTWINDOW_WIDTH,
-		ADJUSTWINDOW_FIRST = ADJUSTWINDOW_NONE,
-		ADJUSTWINDOW_LAST  = ADJUSTWINDOW_WIDTH
+	enum class AdjustWindowMode {
+		None,
+		Fit,
+		Width,
+		TVTEST_ENUM_CLASS_TRAILER
 	};
 
 	CViewOptions();

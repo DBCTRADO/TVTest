@@ -18,15 +18,15 @@ VideoType GetVideoType(BYTE ComponentType)
 		case 0xA:
 		case 0xD:
 		case 0xF:
-			return VIDEO_TYPE_SD;
+			return VideoType::SD;
 		case 0x9:
 		case 0xB:
 		case 0xC:
 		case 0xE:
-			return VIDEO_TYPE_HD;
+			return VideoType::HD;
 		}
 	}
-	return VIDEO_TYPE_UNKNOWN;
+	return VideoType::Unknown;
 }
 
 
@@ -129,11 +129,11 @@ bool EpgTimeToDisplayTime(const SYSTEMTIME &EpgTime, SYSTEMTIME *pDisplayTime)
 		return false;
 
 	switch (GetAppClass().EpgOptions.GetEpgTimeMode()) {
-	case CEpgOptions::EPGTIME_RAW:
+	case CEpgOptions::EpgTimeMode::Raw:
 		*pDisplayTime = EpgTime;
 		return true;
 
-	case CEpgOptions::EPGTIME_JST:
+	case CEpgOptions::EpgTimeMode::JST:
 		{
 			LibISDB::DateTime From, To;
 			SYSTEMTIME st;
@@ -147,7 +147,7 @@ bool EpgTimeToDisplayTime(const SYSTEMTIME &EpgTime, SYSTEMTIME *pDisplayTime)
 				&& ::SystemTimeToTzSpecificLocalTime(&tzi, &st, pDisplayTime);
 		}
 
-	case CEpgOptions::EPGTIME_LOCAL:
+	case CEpgOptions::EpgTimeMode::Local:
 		{
 			LibISDB::DateTime From, To;
 
@@ -158,7 +158,7 @@ bool EpgTimeToDisplayTime(const SYSTEMTIME &EpgTime, SYSTEMTIME *pDisplayTime)
 		}
 		return true;
 
-	case CEpgOptions::EPGTIME_UTC:
+	case CEpgOptions::EpgTimeMode::UTC:
 		{
 			LibISDB::DateTime From, To;
 
@@ -228,11 +228,11 @@ bool DisplayTimeToEpgTime(const SYSTEMTIME &DisplayTime, SYSTEMTIME *pEpgTime)
 		return false;
 
 	switch (GetAppClass().EpgOptions.GetEpgTimeMode()) {
-	case CEpgOptions::EPGTIME_RAW:
+	case CEpgOptions::EpgTimeMode::Raw:
 		*pEpgTime = DisplayTime;
 		return true;
 
-	case CEpgOptions::EPGTIME_JST:
+	case CEpgOptions::EpgTimeMode::JST:
 		{
 			SYSTEMTIME st;
 			TIME_ZONE_INFORMATION tzi;
@@ -248,7 +248,7 @@ bool DisplayTimeToEpgTime(const SYSTEMTIME &DisplayTime, SYSTEMTIME *pEpgTime)
 		}
 		return true;
 
-	case CEpgOptions::EPGTIME_LOCAL:
+	case CEpgOptions::EpgTimeMode::Local:
 		{
 			SYSTEMTIME st;
 			LibISDB::DateTime From, To;
@@ -262,7 +262,7 @@ bool DisplayTimeToEpgTime(const SYSTEMTIME &DisplayTime, SYSTEMTIME *pEpgTime)
 		}
 		return true;
 
-	case CEpgOptions::EPGTIME_UTC:
+	case CEpgOptions::EpgTimeMode::UTC:
 		{
 			LibISDB::DateTime From, To;
 
@@ -832,9 +832,9 @@ unsigned int CEpgIcons::GetEventIcons(const LibISDB::EventInfo *pEventInfo)
 
 	if (!pEventInfo->VideoList.empty()) {
 		EpgUtil::VideoType Video = EpgUtil::GetVideoType(pEventInfo->VideoList[0].ComponentType);
-		if (Video == EpgUtil::VIDEO_TYPE_HD)
+		if (Video == EpgUtil::VideoType::HD)
 			ShowIcons |= IconFlag(ICON_HD);
-		else if (Video == EpgUtil::VIDEO_TYPE_SD)
+		else if (Video == EpgUtil::VideoType::SD)
 			ShowIcons |= IconFlag(ICON_SD);
 	}
 
@@ -975,7 +975,7 @@ bool CEpgTheme::DrawContentBackground(
 
 	if ((Flags & DRAW_CONTENT_BACKGROUND_SEPARATOR) != 0) {
 		RECT rc = Rect;
-		rc.bottom = rc.top + ThemeDraw.GetStyleScaling()->ToPixels(1, TVTest::Style::UNIT_LOGICAL_PIXEL);
+		rc.bottom = rc.top + ThemeDraw.GetStyleScaling()->ToPixels(1, TVTest::Style::UnitType::LogicalPixel);
 		DrawUtil::Fill(hdc, &rc, MixColor(GetGenreColor(EventInfo), RGB(0, 0, 0), 224));
 	}
 
@@ -989,7 +989,7 @@ TVTest::Theme::BackgroundStyle CEpgTheme::GetContentBackgroundStyle(
 	TVTest::Theme::BackgroundStyle BackStyle;
 
 	if ((Flags & CONTENT_STYLE_CURRENT) == 0) {
-		BackStyle.Fill.Type = TVTest::Theme::FILL_SOLID;
+		BackStyle.Fill.Type = TVTest::Theme::FillType::Solid;
 		BackStyle.Fill.Solid = TVTest::Theme::SolidStyle(Color);
 	} else {
 		double h, s, v, s1, v1;
@@ -1019,16 +1019,16 @@ TVTest::Theme::BackgroundStyle CEpgTheme::GetContentBackgroundStyle(
 				v1 = 0.0;
 		}
 		Color2 = HSVToRGB(h, s1, v1);
-		BackStyle.Fill.Type = TVTest::Theme::FILL_GRADIENT;
+		BackStyle.Fill.Type = TVTest::Theme::FillType::Gradient;
 		BackStyle.Fill.Gradient = TVTest::Theme::GradientStyle(
-			TVTest::Theme::GRADIENT_NORMAL,
-			TVTest::Theme::DIRECTION_VERT,
+			TVTest::Theme::GradientType::Normal,
+			TVTest::Theme::GradientDirection::Vert,
 			Color1, Color2);
 	}
 
 #if 0
 	if ((Flags & CONTENT_STYLE_NOBORDER) != 0)
-		BackStyle.Border.Type = TVTest::Theme::BORDER_NONE;
+		BackStyle.Border.Type = TVTest::Theme::BorderType::None;
 #endif
 
 	return BackStyle;

@@ -60,9 +60,9 @@ private:
 		}
 	};
 	std::vector<KeyInfo> m_KeyList;
-	enum MediaKeyType {
-		MEDIAKEY_APPCOMMAND,
-		MEDIAKEY_RAWINPUT
+	enum class MediaKeyType {
+		AppCommand,
+		RawInput,
 	};
 	struct MediaKeyInfo {
 		MediaKeyType Type;

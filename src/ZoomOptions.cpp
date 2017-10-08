@@ -22,27 +22,27 @@
 #endif
 
 const CZoomOptions::ZoomCommandInfo CZoomOptions::m_DefaultZoomList[NUM_ZOOM_COMMANDS] = {
-	{CM_ZOOM_20,              {ZOOM_RATE, {  1,   5}, {BASE_WIDTH / 5,     BASE_HEIGHT / 5},     !f1Seg}},
-	{CM_ZOOM_25,              {ZOOM_RATE, {  1,   4}, {BASE_WIDTH / 4,     BASE_HEIGHT / 4},     !f1Seg}},
-	{CM_ZOOM_33,              {ZOOM_RATE, {  1,   3}, {BASE_WIDTH / 3,     BASE_HEIGHT / 3},     !f1Seg}},
-	{CM_ZOOM_50,              {ZOOM_RATE, {  1,   2}, {BASE_WIDTH / 2,     BASE_HEIGHT / 2},     true}},
-	{CM_ZOOM_66,              {ZOOM_RATE, {  2,   3}, {BASE_WIDTH * 2 / 3, BASE_HEIGHT * 2 / 3}, true}},
-	{CM_ZOOM_75,              {ZOOM_RATE, {  3,   4}, {BASE_WIDTH * 3 / 4, BASE_HEIGHT * 3 / 4}, true}},
-	{CM_ZOOM_100,             {ZOOM_RATE, {  1,   1}, {BASE_WIDTH,         BASE_HEIGHT},         true}},
-	{CM_ZOOM_150,             {ZOOM_RATE, {  3,   2}, {BASE_WIDTH * 3 / 2, BASE_HEIGHT * 3 / 2}, true}},
-	{CM_ZOOM_200,             {ZOOM_RATE, {  2,   1}, {BASE_WIDTH * 2,     BASE_HEIGHT * 2},     true}},
-	{CM_ZOOM_250,             {ZOOM_RATE, {  5,   2}, {BASE_WIDTH * 5 / 2, BASE_HEIGHT * 5 / 2}, f1Seg}},
-	{CM_ZOOM_300,             {ZOOM_RATE, {  3,   1}, {BASE_WIDTH * 3,     BASE_HEIGHT * 3},     f1Seg}},
-	{CM_CUSTOMZOOM_FIRST + 0, {ZOOM_RATE, {100, 100}, {BASE_WIDTH,         BASE_HEIGHT},         false}},
-	{CM_CUSTOMZOOM_FIRST + 1, {ZOOM_RATE, {100, 100}, {BASE_WIDTH,         BASE_HEIGHT},         false}},
-	{CM_CUSTOMZOOM_FIRST + 2, {ZOOM_RATE, {100, 100}, {BASE_WIDTH,         BASE_HEIGHT},         false}},
-	{CM_CUSTOMZOOM_FIRST + 3, {ZOOM_RATE, {100, 100}, {BASE_WIDTH,         BASE_HEIGHT},         false}},
-	{CM_CUSTOMZOOM_FIRST + 4, {ZOOM_RATE, {100, 100}, {BASE_WIDTH,         BASE_HEIGHT},         false}},
-	{CM_CUSTOMZOOM_FIRST + 5, {ZOOM_RATE, {100, 100}, {BASE_WIDTH,         BASE_HEIGHT},         false}},
-	{CM_CUSTOMZOOM_FIRST + 6, {ZOOM_RATE, {100, 100}, {BASE_WIDTH,         BASE_HEIGHT},         false}},
-	{CM_CUSTOMZOOM_FIRST + 7, {ZOOM_RATE, {100, 100}, {BASE_WIDTH,         BASE_HEIGHT},         false}},
-	{CM_CUSTOMZOOM_FIRST + 8, {ZOOM_RATE, {100, 100}, {BASE_WIDTH,         BASE_HEIGHT},         false}},
-	{CM_CUSTOMZOOM_FIRST + 9, {ZOOM_RATE, {100, 100}, {BASE_WIDTH,         BASE_HEIGHT},         false}},
+	{CM_ZOOM_20,              {ZoomType::Rate, {  1,   5}, {BASE_WIDTH / 5,     BASE_HEIGHT / 5},     !f1Seg}},
+	{CM_ZOOM_25,              {ZoomType::Rate, {  1,   4}, {BASE_WIDTH / 4,     BASE_HEIGHT / 4},     !f1Seg}},
+	{CM_ZOOM_33,              {ZoomType::Rate, {  1,   3}, {BASE_WIDTH / 3,     BASE_HEIGHT / 3},     !f1Seg}},
+	{CM_ZOOM_50,              {ZoomType::Rate, {  1,   2}, {BASE_WIDTH / 2,     BASE_HEIGHT / 2},     true}},
+	{CM_ZOOM_66,              {ZoomType::Rate, {  2,   3}, {BASE_WIDTH * 2 / 3, BASE_HEIGHT * 2 / 3}, true}},
+	{CM_ZOOM_75,              {ZoomType::Rate, {  3,   4}, {BASE_WIDTH * 3 / 4, BASE_HEIGHT * 3 / 4}, true}},
+	{CM_ZOOM_100,             {ZoomType::Rate, {  1,   1}, {BASE_WIDTH,         BASE_HEIGHT},         true}},
+	{CM_ZOOM_150,             {ZoomType::Rate, {  3,   2}, {BASE_WIDTH * 3 / 2, BASE_HEIGHT * 3 / 2}, true}},
+	{CM_ZOOM_200,             {ZoomType::Rate, {  2,   1}, {BASE_WIDTH * 2,     BASE_HEIGHT * 2},     true}},
+	{CM_ZOOM_250,             {ZoomType::Rate, {  5,   2}, {BASE_WIDTH * 5 / 2, BASE_HEIGHT * 5 / 2}, f1Seg}},
+	{CM_ZOOM_300,             {ZoomType::Rate, {  3,   1}, {BASE_WIDTH * 3,     BASE_HEIGHT * 3},     f1Seg}},
+	{CM_CUSTOMZOOM_FIRST + 0, {ZoomType::Rate, {100, 100}, {BASE_WIDTH,         BASE_HEIGHT},         false}},
+	{CM_CUSTOMZOOM_FIRST + 1, {ZoomType::Rate, {100, 100}, {BASE_WIDTH,         BASE_HEIGHT},         false}},
+	{CM_CUSTOMZOOM_FIRST + 2, {ZoomType::Rate, {100, 100}, {BASE_WIDTH,         BASE_HEIGHT},         false}},
+	{CM_CUSTOMZOOM_FIRST + 3, {ZoomType::Rate, {100, 100}, {BASE_WIDTH,         BASE_HEIGHT},         false}},
+	{CM_CUSTOMZOOM_FIRST + 4, {ZoomType::Rate, {100, 100}, {BASE_WIDTH,         BASE_HEIGHT},         false}},
+	{CM_CUSTOMZOOM_FIRST + 5, {ZoomType::Rate, {100, 100}, {BASE_WIDTH,         BASE_HEIGHT},         false}},
+	{CM_CUSTOMZOOM_FIRST + 6, {ZoomType::Rate, {100, 100}, {BASE_WIDTH,         BASE_HEIGHT},         false}},
+	{CM_CUSTOMZOOM_FIRST + 7, {ZoomType::Rate, {100, 100}, {BASE_WIDTH,         BASE_HEIGHT},         false}},
+	{CM_CUSTOMZOOM_FIRST + 8, {ZoomType::Rate, {100, 100}, {BASE_WIDTH,         BASE_HEIGHT},         false}},
+	{CM_CUSTOMZOOM_FIRST + 9, {ZoomType::Rate, {100, 100}, {BASE_WIDTH,         BASE_HEIGHT},         false}},
 };
 
 
@@ -81,8 +81,8 @@ bool CZoomOptions::ReadSettings(CSettings &Settings)
 		if (Settings.Read(szText, &Rate) && Rate > 0 && Rate <= MAX_RATE)
 			m_ZoomList[j].Rate.Rate = Rate;
 		::wsprintf(szText, TEXT("CustomZoom%d_Type"), i + 1);
-		if (Settings.Read(szText, &Type) && Type >= ZOOM_RATE && Type <= ZOOM_SIZE)
-			m_ZoomList[j].Type = (ZoomType)Type;
+		if (Settings.Read(szText, &Type) && CheckEnumRange(static_cast<ZoomType>(Type)))
+			m_ZoomList[j].Type = static_cast<ZoomType>(Type);
 		::wsprintf(szText, TEXT("CustomZoom%d_Width"), i + 1);
 		if (Settings.Read(szText, &Width) && Width > 0)
 			m_ZoomList[j].Size.Width = Width;
@@ -191,7 +191,7 @@ bool CZoomOptions::SetMenu(HMENU hmenu, const ZoomInfo *pCurZoom) const
 			TCHAR szText[MAX_ZOOM_TEXT];
 			UINT Flags = MF_BYPOSITION | MF_STRING | MF_ENABLED;
 
-			if (Info.Type == ZOOM_RATE) {
+			if (Info.Type == ZoomType::Rate) {
 				int Length = StdUtil::snprintf(
 					szText, lengthof(szText), TEXT("%d%%"),
 					Info.Rate.GetPercentage());
@@ -251,9 +251,9 @@ void CZoomOptions::FormatCommandText(int Command, const ZoomInfo &Info, LPTSTR p
 {
 	int Length = ::LoadString(GetAppClass().GetResourceInstance(), Command, pszText, MaxLength);
 	if (Command >= CM_CUSTOMZOOM_FIRST && Command <= CM_CUSTOMZOOM_LAST) {
-		if (Info.Type == ZOOM_RATE)
+		if (Info.Type == ZoomType::Rate)
 			StdUtil::snprintf(pszText + Length, MaxLength - Length, TEXT(" : %d%%"), Info.Rate.GetPercentage());
-		else if (Info.Type == ZOOM_SIZE)
+		else if (Info.Type == ZoomType::Size)
 			StdUtil::snprintf(pszText + Length, MaxLength - Length, TEXT(" : %d x %d"), Info.Size.Width, Info.Size.Height);
 	}
 }
@@ -271,17 +271,17 @@ void CZoomOptions::SetItemState(HWND hDlg)
 			m_DefaultZoomList[Index].Command <= CM_CUSTOMZOOM_LAST;
 		::CheckRadioButton(
 			hDlg, IDC_ZOOMOPTIONS_TYPE_RATE, IDC_ZOOMOPTIONS_TYPE_SIZE,
-			IDC_ZOOMOPTIONS_TYPE_RATE + Info.Type);
+			IDC_ZOOMOPTIONS_TYPE_RATE + static_cast<int>(Info.Type));
 		::EnableDlgItems(hDlg, IDC_ZOOMOPTIONS_TYPE_RATE, IDC_ZOOMOPTIONS_TYPE_SIZE, fCustom);
 		::SetDlgItemInt(hDlg, IDC_ZOOMOPTIONS_RATE, Info.Rate.GetPercentage(), TRUE);
 		::SetDlgItemInt(hDlg, IDC_ZOOMOPTIONS_WIDTH, Info.Size.Width, TRUE);
 		::SetDlgItemInt(hDlg, IDC_ZOOMOPTIONS_HEIGHT, Info.Size.Height, TRUE);
-		::EnableDlgItems(hDlg, IDC_ZOOMOPTIONS_RATE_LABEL, IDC_ZOOMOPTIONS_RATE_UNIT, Info.Type == ZOOM_RATE);
-		::EnableDlgItem(hDlg, IDC_ZOOMOPTIONS_RATE, Info.Type == ZOOM_RATE && fCustom);
-		::EnableDlgItems(hDlg, IDC_ZOOMOPTIONS_WIDTH_LABEL, IDC_ZOOMOPTIONS_GETCURSIZE, Info.Type == ZOOM_SIZE);
-		::EnableDlgItem(hDlg, IDC_ZOOMOPTIONS_WIDTH, Info.Type == ZOOM_SIZE && fCustom);
-		::EnableDlgItem(hDlg, IDC_ZOOMOPTIONS_HEIGHT, Info.Type == ZOOM_SIZE && fCustom);
-		::EnableDlgItem(hDlg, IDC_ZOOMOPTIONS_GETCURSIZE, Info.Type == ZOOM_SIZE && fCustom);
+		::EnableDlgItems(hDlg, IDC_ZOOMOPTIONS_RATE_LABEL, IDC_ZOOMOPTIONS_RATE_UNIT, Info.Type == ZoomType::Rate);
+		::EnableDlgItem(hDlg, IDC_ZOOMOPTIONS_RATE, Info.Type == ZoomType::Rate && fCustom);
+		::EnableDlgItems(hDlg, IDC_ZOOMOPTIONS_WIDTH_LABEL, IDC_ZOOMOPTIONS_GETCURSIZE, Info.Type == ZoomType::Size);
+		::EnableDlgItem(hDlg, IDC_ZOOMOPTIONS_WIDTH, Info.Type == ZoomType::Size && fCustom);
+		::EnableDlgItem(hDlg, IDC_ZOOMOPTIONS_HEIGHT, Info.Type == ZoomType::Size && fCustom);
+		::EnableDlgItem(hDlg, IDC_ZOOMOPTIONS_GETCURSIZE, Info.Type == ZoomType::Size && fCustom);
 		::EnableDlgItem(hDlg, IDC_ZOOMOPTIONS_UP, Sel > 0);
 		::EnableDlgItem(hDlg, IDC_ZOOMOPTIONS_DOWN, Sel + 1 < NUM_ZOOM_COMMANDS);
 	} else {
@@ -352,7 +352,7 @@ INT_PTR CZoomOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 					const int Command = m_DefaultZoomList[Index].Command;
 
 					if (Command >= CM_CUSTOMZOOM_FIRST && Command <= CM_CUSTOMZOOM_LAST) {
-						ZoomType Type = ::IsDlgButtonChecked(hDlg, IDC_ZOOMOPTIONS_TYPE_RATE) ? ZOOM_RATE : ZOOM_SIZE;
+						ZoomType Type = ::IsDlgButtonChecked(hDlg, IDC_ZOOMOPTIONS_TYPE_RATE) ? ZoomType::Rate : ZoomType::Size;
 						ZoomInfo &Info = m_ZoomSettingList[Index];
 
 						if (Type != Info.Type) {

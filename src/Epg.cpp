@@ -294,7 +294,7 @@ void CEpg::CChannelProviderManager::CFavoritesChannelProvider::AddFavoritesChann
 	for (size_t i = 0; i < Folder.GetItemCount(); i++) {
 		const CFavoriteItem *pItem = Folder.GetItem(i);
 
-		if (pItem->GetType() == CFavoriteItem::ITEM_FOLDER) {
+		if (pItem->GetType() == CFavoriteItem::ItemType::Folder) {
 			const CFavoriteFolder *pFolder = static_cast<const CFavoriteFolder*>(pItem);
 			String FolderPath, Name;
 			StringUtility::Encode(pItem->GetName(), &Name);
@@ -303,7 +303,7 @@ void CEpg::CChannelProviderManager::CFavoritesChannelProvider::AddFavoritesChann
 			FolderPath += Name;
 			AddSubItems(pGroup, *pFolder);
 			AddFavoritesChannels(*pFolder, FolderPath);
-		} else if (pItem->GetType() == CFavoriteItem::ITEM_CHANNEL) {
+		} else if (pItem->GetType() == CFavoriteItem::ItemType::Channel) {
 			const CFavoriteChannel *pChannel = static_cast<const CFavoriteChannel*>(pItem);
 			pGroup->ChannelList.push_back(*pChannel);
 		}
@@ -317,9 +317,9 @@ void CEpg::CChannelProviderManager::CFavoritesChannelProvider::AddSubItems(
 	for (size_t i = 0; i < Folder.GetItemCount(); i++) {
 		const CFavoriteItem *pItem = Folder.GetItem(i);
 
-		if (pItem->GetType() == CFavoriteItem::ITEM_FOLDER) {
+		if (pItem->GetType() == CFavoriteItem::ItemType::Folder) {
 			AddSubItems(pGroup, *static_cast<const CFavoriteFolder*>(pItem));
-		} else if (pItem->GetType() == CFavoriteItem::ITEM_CHANNEL) {
+		} else if (pItem->GetType() == CFavoriteItem::ItemType::Channel) {
 			pGroup->ChannelList.push_back(*static_cast<const CFavoriteChannel*>(pItem));
 		}
 	}

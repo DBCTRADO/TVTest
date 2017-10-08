@@ -34,9 +34,9 @@ public:
 		} ImageSelButtonPos;
 	};
 
-	enum ImageType {
-		IMAGE_CONTROLLER,
-		IMAGE_SELBUTTONS
+	enum class ImageType {
+		Controller,
+		SelButtons,
 	};
 
 	CController();

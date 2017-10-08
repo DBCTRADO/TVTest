@@ -17,12 +17,12 @@ CPanelOptions::CPanelOptions()
 	, m_fAttachToMainWindow(true)
 	, m_Opacity(100)
 	, m_fSpecCaptionFont(true)
-	, m_TabStyle(CPanelForm::TABSTYLE_TEXT_ONLY)
+	, m_TabStyle(CPanelForm::TabStyle::TextOnly)
 	, m_fTabTooltip(true)
 	, m_fProgramInfoUseRichEdit(true)
 {
 	TVTest::StyleUtil::GetDefaultUIFont(&m_Font);
-	TVTest::StyleUtil::GetSystemFont(DrawUtil::FONT_MESSAGE, &m_CaptionFont);
+	TVTest::StyleUtil::GetSystemFont(DrawUtil::FontType::Message, &m_CaptionFont);
 
 	static const struct {
 		LPCTSTR pszID;
@@ -95,7 +95,7 @@ bool CPanelOptions::ReadSettings(CSettings &Settings)
 	Settings.Read(TEXT("CaptionPanelFontSpec"), &m_fSpecCaptionFont);
 
 	if (Settings.Read(TEXT("PanelTabStyle"), &Value)
-			&& Value >= CPanelForm::TABSTYLE_FIRST && Value <= CPanelForm::TABSTYLE_LAST)
+			&& CheckEnumRange(static_cast<CPanelForm::TabStyle>(Value)))
 		m_TabStyle = static_cast<CPanelForm::TabStyle>(Value);
 
 	Settings.Read(TEXT("PanelTabTooltip"), &m_fTabTooltip);

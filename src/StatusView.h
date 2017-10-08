@@ -24,9 +24,9 @@ public:
 		STYLE_FORCEFULLROW  = 0x00000004U
 	};
 
-	enum SizeUnit {
-		SIZE_PIXEL,
-		SIZE_EM
+	enum class SizeUnit {
+		Pixel,
+		EM,
 	};
 
 	static const int EM_FACTOR = 1000;

@@ -1099,13 +1099,13 @@ void CFeaturedEventsCategory::SortItems(CFeaturedEventsSettings::SortType SortTy
 			int Cmp = 0;
 
 			switch (m_SortType) {
-			case CFeaturedEventsSettings::SORT_TIME:
+			case CFeaturedEventsSettings::SortType::Time:
 				Cmp = CompareTime(*Item1, *Item2);
 				if (Cmp == 0)
 					Cmp = CompareService(*Item1, *Item2);
 				break;
 
-			case CFeaturedEventsSettings::SORT_SERVICE:
+			case CFeaturedEventsSettings::SortType::Service:
 				Cmp = CompareService(*Item1, *Item2);
 				if (Cmp == 0)
 					Cmp = CompareTime(*Item1, *Item2);
@@ -1406,14 +1406,14 @@ CHomeDisplay::CHomeDisplay()
 {
 	GetDefaultFont(&m_StyleFont);
 
-	GetBackgroundStyle(BACKGROUND_STYLE_CATEGORIES, &m_HomeDisplayStyle.CategoriesBackStyle);
-	GetBackgroundStyle(BACKGROUND_STYLE_CONTENT, &m_HomeDisplayStyle.ContentBackStyle);
-	GetItemStyle(ITEM_STYLE_NORMAL, &m_HomeDisplayStyle.CategoryItemStyle);
-	GetItemStyle(ITEM_STYLE_SELECTED, &m_HomeDisplayStyle.CategoryItemSelStyle);
-	GetItemStyle(ITEM_STYLE_CURRENT, &m_HomeDisplayStyle.CategoryItemCurStyle);
-	GetItemStyle(ITEM_STYLE_NORMAL_1, &m_HomeDisplayStyle.ItemStyle[0]);
-	GetItemStyle(ITEM_STYLE_NORMAL_2, &m_HomeDisplayStyle.ItemStyle[1]);
-	GetItemStyle(ITEM_STYLE_HOT, &m_HomeDisplayStyle.ItemHotStyle);
+	GetBackgroundStyle(BackgroundType::Categories, &m_HomeDisplayStyle.CategoriesBackStyle);
+	GetBackgroundStyle(BackgroundType::Content, &m_HomeDisplayStyle.ContentBackStyle);
+	GetItemStyle(ItemType::Normal, &m_HomeDisplayStyle.CategoryItemStyle);
+	GetItemStyle(ItemType::Selected, &m_HomeDisplayStyle.CategoryItemSelStyle);
+	GetItemStyle(ItemType::Current, &m_HomeDisplayStyle.CategoryItemCurStyle);
+	GetItemStyle(ItemType::Normal1, &m_HomeDisplayStyle.ItemStyle[0]);
+	GetItemStyle(ItemType::Normal2, &m_HomeDisplayStyle.ItemStyle[1]);
+	GetItemStyle(ItemType::Hot, &m_HomeDisplayStyle.ItemHotStyle);
 	m_HomeDisplayStyle.BannerTextColor = RGB(255, 255, 255);
 
 	m_HomeDisplayStyle.ItemMargins.Left = 4;
@@ -1737,7 +1737,7 @@ LRESULT CHomeDisplay::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 			WS_CHILD | SBS_VERT, 0, 0, 0, 0, hwnd, nullptr, m_hinst, nullptr);
 		m_ScrollPos = 0;
 		m_fHitCloseButton = false;
-		m_CursorPart = PART_MARGIN;
+		m_CursorPart = PartType::Margin;
 		m_himlIcons = ::ImageList_LoadImage(
 			m_hinst, MAKEINTRESOURCE(IDB_HOME),
 			CATEGORY_ICON_WIDTH, 1, 0, IMAGE_BITMAP, LR_CREATEDIBSECTION);
@@ -1779,7 +1779,7 @@ LRESULT CHomeDisplay::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 			PartType Part = HitTest(x, y, &CategoryIndex);
 
 			m_CursorPart = Part;
-			if (Part == PART_CONTENT) {
+			if (Part == PartType::Content) {
 				if (m_CurCategory >= 0) {
 					CCategory *pCategory = m_CategoryList[m_CurCategory].get();
 					bool fFocused = pCategory->IsFocused();
@@ -1800,7 +1800,7 @@ LRESULT CHomeDisplay::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 						RedrawCategoryItem(m_CurCategory);
 				}
 				*/
-				if (Part == PART_CATEGORY) {
+				if (Part == PartType::Category) {
 					if (m_CurCategory != CategoryIndex) {
 						SetCurCategory(CategoryIndex);
 					}
@@ -1822,11 +1822,11 @@ LRESULT CHomeDisplay::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 				PartType Part = HitTest(x, y, &Category);
 
 				switch (Part) {
-				case PART_CATEGORY:
+				case PartType::Category:
 					SetCurCategory(Category);
 					break;
 
-				case PART_CONTENT:
+				case PartType::Content:
 					if (m_CategoryList[m_CurCategory]->OnLButtonUp(x, y)) {
 						Close();
 					}
@@ -1853,7 +1853,7 @@ LRESULT CHomeDisplay::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 	case WM_SETCURSOR:
 		if (reinterpret_cast<HWND>(wParam) == hwnd
 				&& LOWORD(lParam) == HTCLIENT) {
-			if (m_CursorPart == PART_CONTENT && m_CurCategory >= 0) {
+			if (m_CursorPart == PartType::Content && m_CurCategory >= 0) {
 				if (m_CategoryList[m_CurCategory]->OnSetCursor())
 					return TRUE;
 			}
@@ -2193,7 +2193,7 @@ CHomeDisplay::PartType CHomeDisplay::HitTest(int x, int y, int *pCategoryIndex) 
 	if (::PtInRect(&rcCategories, pt)) {
 		if (pCategoryIndex != nullptr)
 			*pCategoryIndex = (pt.y - rcCategories.top) / m_CategoryItemHeight;
-		return PART_CATEGORY;
+		return PartType::Category;
 	}
 
 	RECT rcContent;
@@ -2201,10 +2201,10 @@ CHomeDisplay::PartType CHomeDisplay::HitTest(int x, int y, int *pCategoryIndex) 
 	if (rcContent.bottom - rcContent.top > m_ContentHeight)
 		rcContent.bottom = rcContent.top + m_ContentHeight;
 	if (::PtInRect(&rcContent, pt)) {
-		return PART_CONTENT;
+		return PartType::Content;
 	}
 
-	return PART_MARGIN;
+	return PartType::Margin;
 }
 
 

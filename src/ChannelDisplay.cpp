@@ -47,19 +47,19 @@ CChannelDisplay::CChannelDisplay(LibISDB::EPGDatabase *pEPGDatabase)
 	, m_pLogoManager(nullptr)
 	, m_pChannelDisplayEventHandler(nullptr)
 {
-	GetBackgroundStyle(BACKGROUND_STYLE_CATEGORIES, &m_TunerAreaBackStyle);
-	GetBackgroundStyle(BACKGROUND_STYLE_CONTENT, &m_ChannelAreaBackStyle);
-	GetItemStyle(ITEM_STYLE_NORMAL, &m_TunerItemStyle);
-	GetItemStyle(ITEM_STYLE_SELECTED, &m_TunerItemSelStyle);
-	GetItemStyle(ITEM_STYLE_CURRENT, &m_TunerItemCurStyle);
-	GetItemStyle(ITEM_STYLE_NORMAL_1, &m_ChannelItemStyle[0]);
-	GetItemStyle(ITEM_STYLE_NORMAL_2, &m_ChannelItemStyle[1]);
-	GetItemStyle(ITEM_STYLE_HOT, &m_ChannelItemCurStyle);
+	GetBackgroundStyle(BackgroundType::Categories, &m_TunerAreaBackStyle);
+	GetBackgroundStyle(BackgroundType::Content, &m_ChannelAreaBackStyle);
+	GetItemStyle(ItemType::Normal, &m_TunerItemStyle);
+	GetItemStyle(ItemType::Selected, &m_TunerItemSelStyle);
+	GetItemStyle(ItemType::Current, &m_TunerItemCurStyle);
+	GetItemStyle(ItemType::Normal1, &m_ChannelItemStyle[0]);
+	GetItemStyle(ItemType::Normal2, &m_ChannelItemStyle[1]);
+	GetItemStyle(ItemType::Hot, &m_ChannelItemCurStyle);
 
-	m_ClockStyle.Back.Fill.Type = TVTest::Theme::FILL_SOLID;
+	m_ClockStyle.Back.Fill.Type = TVTest::Theme::FillType::Solid;
 	m_ClockStyle.Back.Fill.Solid.Color.Set(16, 16, 16);
-	m_ClockStyle.Back.Border.Type = TVTest::Theme::BORDER_NONE;
-	m_ClockStyle.Fore.Fill.Type = TVTest::Theme::FILL_SOLID;
+	m_ClockStyle.Back.Border.Type = TVTest::Theme::BorderType::None;
+	m_ClockStyle.Fore.Fill.Type = TVTest::Theme::FillType::Solid;
 	m_ClockStyle.Fore.Fill.Solid.Color.Set(255, 255, 255);
 
 	GetDefaultFont(&m_StyleFont);
@@ -196,8 +196,8 @@ End:
 		bool fUseDriverChannel = pTunerInfo != nullptr && pTunerInfo->fUseDriverChannel;
 		pDriverInfo->LoadTuningSpaceList(
 			fUseDriverChannel ?
-			CDriverInfo::LOADTUNINGSPACE_DEFAULT :
-			CDriverInfo::LOADTUNINGSPACE_NOLOADDRIVER);
+				CDriverInfo::LoadTuningSpaceListMode::Default :
+				CDriverInfo::LoadTuningSpaceListMode::NoLoadDriver);
 		CTuner *pTuner = new CTuner(pDriverInfo);
 		if (pTunerInfo != nullptr) {
 			if (pTunerInfo->szDisplayName[0] != '\0')
@@ -1278,8 +1278,8 @@ CChannelDisplay::CTuner::CTuner(const CDriverInfo *pDriverInfo)
 				CTuningSpaceInfo *pTuningSpace;
 
 				if (!m_TuningSpaceList.empty()
-						&& pSrcTuningSpace->GetType() == CTuningSpaceInfo::SPACE_TERRESTRIAL
-						&& m_TuningSpaceList[m_TuningSpaceList.size() - 1]->GetType() == CTuningSpaceInfo::SPACE_TERRESTRIAL) {
+						&& pSrcTuningSpace->GetType() == CTuningSpaceInfo::TuningSpaceType::Terrestrial
+						&& m_TuningSpaceList[m_TuningSpaceList.size() - 1]->GetType() == CTuningSpaceInfo::TuningSpaceType::Terrestrial) {
 					pTuningSpace = m_TuningSpaceList[m_TuningSpaceList.size() - 1].get();
 					pTuningSpace->SetName(TEXT("地上"));
 				} else {

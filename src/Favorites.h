@@ -15,9 +15,9 @@ namespace TVTest
 	class ABSTRACT_CLASS(CFavoriteItem)
 	{
 	public:
-		enum ItemType {
-			ITEM_FOLDER,
-			ITEM_CHANNEL
+		enum class ItemType {
+			Folder,
+			Channel,
 		};
 
 		CFavoriteItem(ItemType Type) : m_Type(Type) {}

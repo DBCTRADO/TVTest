@@ -66,6 +66,17 @@ protected:
 class CChannelList
 {
 public:
+	enum class SortType {
+		Space,
+		ChannelIndex,
+		ChannelNo,
+		PhysicalChannel,
+		Name,
+		NetworkID,
+		ServiceID,
+		TVTEST_ENUM_CLASS_TRAILER
+	};
+
 	CChannelList();
 	CChannelList(const CChannelList &Src);
 	~CChannelList();
@@ -96,16 +107,6 @@ public:
 	int GetNextChannel(int Index, bool fWrap = false) const;
 	int GetPrevChannel(int Index, bool fWrap = false) const;
 	int GetMaxChannelNo() const;
-	enum SortType {
-		SORT_SPACE,
-		SORT_CHANNELINDEX,
-		SORT_CHANNELNO,
-		SORT_PHYSICALCHANNEL,
-		SORT_NAME,
-		SORT_NETWORKID,
-		SORT_SERVICEID,
-		SORT_TRAILER
-	};
 	bool Sort(SortType Type, bool fDescending = false);
 	bool HasRemoteControlKeyID() const;
 	bool HasMultiService() const;
@@ -117,12 +118,12 @@ private:
 class CTuningSpaceInfo
 {
 public:
-	enum TuningSpaceType {
-		SPACE_ERROR = -1,
-		SPACE_UNKNOWN = 0,
-		SPACE_TERRESTRIAL,
-		SPACE_BS,
-		SPACE_110CS
+	enum class TuningSpaceType {
+		Error = -1,
+		Unknown = 0,
+		Terrestrial,
+		BS,
+		CS110,
 	};
 
 	CTuningSpaceInfo();

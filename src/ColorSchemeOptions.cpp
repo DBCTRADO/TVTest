@@ -100,12 +100,12 @@ bool CColorSchemeOptions::LoadSettings(CSettings &Settings)
 		return false;
 
 	// ver.0.9.0より前にあった「映像表示部の枠」の設定を反映させる
-	if (m_ColorScheme->GetBorderType(CColorScheme::BORDER_SCREEN) == TVTest::Theme::BORDER_SUNKEN
+	if (m_ColorScheme->GetBorderType(CColorScheme::BORDER_SCREEN) == TVTest::Theme::BorderType::Sunken
 			&& Settings.SetSection(TEXT("Settings"))) {
 		bool fClientEdge;
 
 		if (Settings.Read(TEXT("ClientEdge"), &fClientEdge) && !fClientEdge)
-			m_ColorScheme->SetBorderType(CColorScheme::BORDER_SCREEN, TVTest::Theme::BORDER_NONE);
+			m_ColorScheme->SetBorderType(CColorScheme::BORDER_SCREEN, TVTest::Theme::BorderType::None);
 	}
 
 	return true;
@@ -395,7 +395,7 @@ INT_PTR CColorSchemeOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM
 						}
 						BackColor = ::GetSysColor(BackSysColor);
 						int Border = CColorScheme::GetColorBorder((int)pdis->itemID);
-						if (Border >= 0 && m_BorderList[Border] == Theme::BORDER_NONE)
+						if (Border >= 0 && m_BorderList[Border] == Theme::BorderType::None)
 							TextColor = MixColor(TextColor, BackColor);
 						::FillRect(
 							pdis->hDC, &pdis->rcItem,
@@ -644,8 +644,8 @@ INT_PTR CColorSchemeOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM
 								IDC_COLORSCHEME_DIRECTION_HORZ + (int)m_GradientList[Gradient].Direction,
 								MF_BYCOMMAND);
 							if (!CColorScheme::IsGradientDirectionEnabled(Gradient)) {
-								if (m_GradientList[Gradient].Direction == Theme::DIRECTION_HORZ
-										|| m_GradientList[Gradient].Direction == Theme::DIRECTION_HORZMIRROR) {
+								if (m_GradientList[Gradient].Direction == Theme::GradientDirection::Horz
+										|| m_GradientList[Gradient].Direction == Theme::GradientDirection::HorzMirror) {
 									::EnableMenuItem(hmenu, IDC_COLORSCHEME_DIRECTION_VERT, MF_BYCOMMAND | MFS_GRAYED);
 									::EnableMenuItem(hmenu, IDC_COLORSCHEME_DIRECTION_VERTMIRROR, MF_BYCOMMAND | MFS_GRAYED);
 								} else {
@@ -839,17 +839,17 @@ INT_PTR CColorSchemeOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM
 
 					for (int i = 0; i < CColorScheme::NUM_BORDERS; i++) {
 						switch (m_BorderList[i]) {
-						case Theme::BORDER_NONE:
-							Buffer += TEXT("Theme::BORDER_NONE,\r\n");
+						case Theme::BorderType::None:
+							Buffer += TEXT("Theme::BorderType::None,\r\n");
 							break;
-						case Theme::BORDER_SOLID:
-							Buffer += TEXT("Theme::BORDER_SOLID,\r\n");
+						case Theme::BorderType::Solid:
+							Buffer += TEXT("Theme::BorderType::Solid,\r\n");
 							break;
-						case Theme::BORDER_SUNKEN:
-							Buffer += TEXT("Theme::BORDER_SUNKEN,\r\n");
+						case Theme::BorderType::Sunken:
+							Buffer += TEXT("Theme::BorderType::Sunken,\r\n");
 							break;
-						case Theme::BORDER_RAISED:
-							Buffer += TEXT("Theme::BORDER_RAISED,\r\n");
+						case Theme::BorderType::Raised:
+							Buffer += TEXT("Theme::BorderType::Raised,\r\n");
 							break;
 						}
 					}

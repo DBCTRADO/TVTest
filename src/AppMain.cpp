@@ -137,7 +137,7 @@ DWORD WINAPI CAppTerminator::WatchThread(LPVOID lpParameter)
 
 		if (Result == WAIT_TIMEOUT) {
 			pThis->m_App.AddLog(
-				CLogItem::TYPE_WARNING,
+				CLogItem::LogType::Warning,
 				TEXT("終了処理がタイムアウトしました(%ums)。プロセスを強制的に終了させます。"),
 				pThis->m_Timeout);
 
@@ -295,7 +295,7 @@ void CAppMain::AddLog(LPCTSTR pszText, ...)
 	va_list Args;
 
 	va_start(Args, pszText);
-	Logger.AddLogV(CLogItem::TYPE_INFORMATION, pszText, Args);
+	Logger.AddLogV(CLogItem::LogType::Information, pszText, Args);
 	va_end(Args);
 }
 
@@ -411,7 +411,7 @@ bool CAppMain::LoadSettings()
 	CSettings &Settings = m_Settings;
 
 	if (!Settings.Open(m_IniFileName.c_str(), CSettings::OPEN_READ | CSettings::OPEN_WRITE_VOLATILE)) {
-		AddLog(CLogItem::TYPE_ERROR, TEXT("設定ファイル \"%s\" を開けません。"), m_IniFileName.c_str());
+		AddLog(CLogItem::LogType::Error, TEXT("設定ファイル \"%s\" を開けません。"), m_IniFileName.c_str());
 		return false;
 	}
 
@@ -571,7 +571,7 @@ bool CAppMain::SaveSettings(unsigned int Flags)
 			szMessage, lengthof(szMessage),
 			TEXT("設定ファイル \"%s\" を開けません。"),
 			m_IniFileName.c_str());
-		AddLog(CLogItem::TYPE_ERROR, TEXT("%s"), szMessage);
+		AddLog(CLogItem::LogType::Error, TEXT("%s"), szMessage);
 		if (!Core.IsSilent())
 			UICore.GetSkin()->ShowErrorMessage(szMessage);
 		return false;
@@ -754,7 +754,7 @@ int CAppMain::Main(HINSTANCE hInstance, LPCTSTR pszCmdLine, int nCmdShow)
 			if (!SendInterprocessMessage(
 						hwnd, PROCESS_MESSAGE_EXECUTE,
 						pszCmdLine, (::lstrlen(pszCmdLine) + 1) * sizeof(TCHAR))) {
-				AddLog(CLogItem::TYPE_ERROR, TEXT("既存のプロセスにメッセージを送信できません。"));
+				AddLog(CLogItem::LogType::Error, TEXT("既存のプロセスにメッセージを送信できません。"));
 			}
 			return 0;
 		}
@@ -906,7 +906,7 @@ int CAppMain::Main(HINSTANCE hInstance, LPCTSTR pszCmdLine, int nCmdShow)
 
 	// ウィンドウの作成
 	if (!MainWindow.Create(nullptr, WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN)) {
-		AddLog(CLogItem::TYPE_ERROR, TEXT("ウィンドウが作成できません。"));
+		AddLog(CLogItem::LogType::Error, TEXT("ウィンドウが作成できません。"));
 		if (!Core.IsSilent())
 			MessageBox(nullptr, TEXT("ウィンドウが作成できません。"), nullptr, MB_OK | MB_ICONSTOP);
 		return 0;
@@ -1303,7 +1303,7 @@ CAppMain::CreateDirectoryResult CAppMain::CreateDirectory(
 	HWND hwnd, LPCTSTR pszDirectory, LPCTSTR pszMessage)
 {
 	if (IsStringEmpty(pszDirectory))
-		return CREATEDIRECTORY_RESULT_NOPATH;
+		return CreateDirectoryResult::NoPath;
 
 	TCHAR szPath[MAX_PATH];
 	TCHAR szMessage[MAX_PATH + 80];
@@ -1313,7 +1313,7 @@ CAppMain::CreateDirectoryResult CAppMain::CreateDirectory(
 			szMessage, lengthof(szMessage),
 			TEXT("フォルダ \"%s\" のパスが長過ぎます。"), szPath);
 		::MessageBox(hwnd, szMessage, nullptr, MB_OK | MB_ICONEXCLAMATION);
-		return CREATEDIRECTORY_RESULT_ERROR;
+		return CreateDirectoryResult::Error;
 	}
 
 	if (!::PathIsDirectory(szPath)) {
@@ -1321,22 +1321,22 @@ CAppMain::CreateDirectoryResult CAppMain::CreateDirectory(
 		if (::MessageBox(
 					hwnd, szMessage, TEXT("フォルダ作成の確認"),
 					MB_YESNO | MB_ICONQUESTION) != IDYES)
-			return CREATEDIRECTORY_RESULT_CANCELLED;
+			return CreateDirectoryResult::Cancelled;
 
 		int Result = ::SHCreateDirectoryEx(hwnd, szPath, nullptr);
 		if (Result != ERROR_SUCCESS && Result != ERROR_ALREADY_EXISTS) {
 			StdUtil::snprintf(
 				szMessage, lengthof(szMessage),
 				TEXT("フォルダ \"%s\" を作成できません。(エラーコード %#x)"), szPath, Result);
-			AddLog(CLogItem::TYPE_ERROR, szMessage);
+			AddLog(CLogItem::LogType::Error, szMessage);
 			::MessageBox(hwnd, szMessage, nullptr, MB_OK | MB_ICONEXCLAMATION);
-			return CREATEDIRECTORY_RESULT_ERROR;
+			return CreateDirectoryResult::Error;
 		}
 
-		AddLog(CLogItem::TYPE_INFORMATION, TEXT("フォルダ \"%s\" を作成しました。"), szPath);
+		AddLog(CLogItem::LogType::Information, TEXT("フォルダ \"%s\" を作成しました。"), szPath);
 	}
 
-	return CREATEDIRECTORY_RESULT_SUCCESS;
+	return CreateDirectoryResult::Success;
 }
 
 
@@ -1371,7 +1371,7 @@ LRESULT CAppMain::ReceiveInterprocessMessage(HWND hwnd, WPARAM wParam, LPARAM lP
 		break;
 
 	default:
-		AddLog(CLogItem::TYPE_WARNING, TEXT("未知のメッセージ %Ix を受信しました。"), pcds->dwData);
+		AddLog(CLogItem::LogType::Warning, TEXT("未知のメッセージ %Ix を受信しました。"), pcds->dwData);
 		break;
 	}
 
@@ -1585,7 +1585,7 @@ bool CAppMain::ProcessCommandLine(LPCTSTR pszCmdLine)
 			UICore.DoCommand(Command);
 		} else {
 			AddLog(
-				CLogItem::TYPE_ERROR,
+				CLogItem::LogType::Error,
 				TEXT("指定されたコマンド \"%s\" は無効です。"),
 				CmdLine.m_Command.c_str());
 		}
@@ -1619,7 +1619,7 @@ HICON CAppMain::GetAppIcon()
 {
 	if (m_hicoApp == nullptr) {
 		m_hicoApp = LoadIconStandardSize(
-			::GetModuleHandle(nullptr), MAKEINTRESOURCE(IDI_ICON), ICON_SIZE_NORMAL);
+			::GetModuleHandle(nullptr), MAKEINTRESOURCE(IDI_ICON), IconSizeType::Normal);
 	}
 	return m_hicoApp;
 }
@@ -1629,7 +1629,7 @@ HICON CAppMain::GetAppIconSmall()
 {
 	if (m_hicoAppSmall == nullptr) {
 		m_hicoAppSmall = LoadIconStandardSize(
-			::GetModuleHandle(nullptr), MAKEINTRESOURCE(IDI_ICON), ICON_SIZE_SMALL);
+			::GetModuleHandle(nullptr), MAKEINTRESOURCE(IDI_ICON), IconSizeType::Small);
 	}
 	return m_hicoAppSmall;
 }

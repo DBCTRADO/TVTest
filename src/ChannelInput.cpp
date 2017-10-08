@@ -17,7 +17,7 @@ CChannelInputOptions::CChannelInputOptions()
 	, fKeyTimeoutCancel(false)
 {
 	for (int i = 0; i < lengthof(KeyInputMode); i++)
-		KeyInputMode[i] = KEYINPUTMODE_SINGLEKEY;
+		KeyInputMode[i] = KeyInputModeType::SingleKey;
 }
 
 
@@ -55,27 +55,27 @@ CChannelInput::KeyDownResult CChannelInput::OnKeyDown(WPARAM wParam)
 	int Number = -1;
 
 	if (wParam >= '0' && wParam <= '9') {
-		KeyType = CChannelInputOptions::KEY_DIGIT;
+		KeyType = CChannelInputOptions::KeyType::Digit;
 		Number = (int)wParam - '0';
 	} else if (wParam >= VK_NUMPAD0 && wParam <= VK_NUMPAD9) {
-		KeyType = CChannelInputOptions::KEY_NUMPAD;
+		KeyType = CChannelInputOptions::KeyType::NumPad;
 		Number = (int)wParam - VK_NUMPAD0;
 	} else if (wParam >= VK_F1 && wParam <= VK_F12) {
-		KeyType = CChannelInputOptions::KEY_FUNCTION;
+		KeyType = CChannelInputOptions::KeyType::Function;
 		Number = ((int)wParam - VK_F1) + 1;
 	}
 
 	if (Number >= 0) {
-		if (m_Options.KeyInputMode[KeyType] == CChannelInputOptions::KEYINPUTMODE_DISABLED)
-			return KEYDOWN_NOTPROCESSED;
+		if (m_Options.KeyInputMode[(int)KeyType] == CChannelInputOptions::KeyInputModeType::Disabled)
+			return KeyDownResult::NotProcessed;
 
 		if (!m_fInputting) {
-			if (m_Options.KeyInputMode[KeyType] == CChannelInputOptions::KEYINPUTMODE_SINGLEKEY) {
+			if (m_Options.KeyInputMode[(int)KeyType] == CChannelInputOptions::KeyInputModeType::SingleKey) {
 				m_fInputting = true;
 				m_Number = Number == 0 ? 10 : Number;
 				m_MaxDigits = m_Number <= 9 ? 1 : 2;
 				m_CurDigits = m_MaxDigits;
-				return KEYDOWN_COMPLETED;
+				return KeyDownResult::Completed;
 			}
 
 			m_fInputting = true;
@@ -85,34 +85,34 @@ CChannelInput::KeyDownResult CChannelInput::OnKeyDown(WPARAM wParam)
 			else
 				m_Number = Number;
 			m_CurDigits = m_Number <= 9 ? 1 : 2;
-			return KEYDOWN_BEGIN;
+			return KeyDownResult::Begin;
 		}
 
 		m_Number = m_Number * 10 + Number;
 		m_CurDigits++;
 		if (m_MaxDigits > 0 && m_CurDigits >= m_MaxDigits)
-			return KEYDOWN_COMPLETED;
-		return KEYDOWN_CONTINUE;
+			return KeyDownResult::Completed;
+		return KeyDownResult::Continue;
 	} else if (m_fInputting) {
 		switch (wParam) {
 		case VK_ESCAPE:
-			return KEYDOWN_CANCELLED;
+			return KeyDownResult::Cancelled;
 
 		case VK_RETURN:
 			if (m_CurDigits < 1)
-				return KEYDOWN_CANCELLED;
-			return KEYDOWN_COMPLETED;
+				return KeyDownResult::Cancelled;
+			return KeyDownResult::Completed;
 
 		case VK_BACK:
 			if (m_CurDigits < 2)
-				return KEYDOWN_CANCELLED;
+				return KeyDownResult::Cancelled;
 			m_CurDigits--;
 			m_Number /= 10;
-			return KEYDOWN_CONTINUE;
+			return KeyDownResult::Continue;
 		}
 	}
 
-	return KEYDOWN_NOTPROCESSED;
+	return KeyDownResult::NotProcessed;
 }
 
 
@@ -158,11 +158,11 @@ INT_PTR CChannelInputOptionsDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam,
 				TEXT("連続入力"),
 			};
 
-			for (int i = 0; i <= CChannelInputOptions::KEY_LAST; i++) {
+			for (int i = 0; i <= static_cast<int>(CChannelInputOptions::KeyType::Last_); i++) {
 				int ID = IDC_CHANNELINPUT_DIGITKEYMODE + i;
 				for (int j = 0; j < lengthof(KeyModeList); j++)
 					DlgComboBox_AddString(hDlg, ID, KeyModeList[j]);
-				DlgComboBox_SetCurSel(hDlg, ID, m_Options.KeyInputMode[i]);
+				DlgComboBox_SetCurSel(hDlg, ID, static_cast<int>(m_Options.KeyInputMode[i]));
 			}
 
 			DlgEdit_SetUInt(hDlg, IDC_CHANNELINPUT_TIMEOUT, m_Options.KeyTimeout);
@@ -181,7 +181,7 @@ INT_PTR CChannelInputOptionsDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam,
 
 		case IDOK:
 			{
-				for (int i = 0; i <= CChannelInputOptions::KEY_LAST; i++) {
+				for (int i = 0; i <= static_cast<int>(CChannelInputOptions::KeyType::Last_); i++) {
 					int Sel = (int)DlgComboBox_GetCurSel(hDlg, IDC_CHANNELINPUT_DIGITKEYMODE + i);
 					if (Sel >= 0) {
 						m_Options.KeyInputMode[i] =

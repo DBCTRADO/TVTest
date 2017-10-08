@@ -16,11 +16,12 @@ namespace TVTest
 
 		static const IDType ID_INVALID = 0xFFFF;
 
-		enum DualMonoMode {
-			DUALMONO_INVALID,
-			DUALMONO_MAIN,
-			DUALMONO_SUB,
-			DUALMONO_BOTH
+		enum class DualMonoMode {
+			Invalid,
+			Main,
+			Sub,
+			Both,
+			TVTEST_ENUM_CLASS_TRAILER
 		};
 
 		struct AudioInfo
@@ -58,7 +59,7 @@ namespace TVTest
 
 			AudioSelectInfo()
 				: ID(ID_INVALID)
-				, DualMono(DUALMONO_INVALID)
+				, DualMono(DualMonoMode::Invalid)
 			{
 			}
 

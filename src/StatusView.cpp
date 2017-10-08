@@ -183,7 +183,7 @@ void CStatusItem::DrawIcon(
 
 
 CIconStatusItem::CIconStatusItem(int ID, int DefaultWidth)
-	: CStatusItem(ID, SizeValue(DefaultWidth, SIZE_PIXEL))
+	: CStatusItem(ID, SizeValue(DefaultWidth, SizeUnit::Pixel))
 {
 	m_MinWidth = DefaultWidth;
 }
@@ -1368,10 +1368,10 @@ int CStatusView::CalcItemHeight() const
 int CStatusView::CalcItemPixelSize(const CStatusItem::SizeValue &Size) const
 {
 	switch (Size.Unit) {
-	case CStatusItem::SIZE_PIXEL:
+	case CStatusItem::SizeUnit::Pixel:
 		return ::MulDiv(Size.Value, m_pStyleScaling->GetDPI(), 96);
 
-	case CStatusItem::SIZE_EM:
+	case CStatusItem::SizeUnit::EM:
 		return ::MulDiv(Size.Value, m_FontHeight, CStatusItem::EM_FACTOR);
 	}
 

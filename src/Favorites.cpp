@@ -30,7 +30,7 @@ static HIMAGELIST CreateFavoritesIconImageList(HINSTANCE hinst)
 		MAKEINTRESOURCE(IDI_FAVORITES),
 	};
 
-	return CreateImageListFromIcons(hinst, Icons, lengthof(Icons), ICON_SIZE_SMALL);
+	return CreateImageListFromIcons(hinst, Icons, lengthof(Icons), IconSizeType::Small);
 }
 
 
@@ -48,12 +48,12 @@ bool CFavoriteItem::SetName(LPCTSTR pszName)
 
 
 CFavoriteFolder::CFavoriteFolder()
-	: CFavoriteItem(ITEM_FOLDER)
+	: CFavoriteItem(ItemType::Folder)
 {
 }
 
 CFavoriteFolder::CFavoriteFolder(const CFavoriteFolder &Src)
-	: CFavoriteItem(ITEM_FOLDER)
+	: CFavoriteItem(ItemType::Folder)
 {
 	*this = Src;
 }
@@ -94,7 +94,7 @@ size_t CFavoriteFolder::GetSubItemCount() const
 	size_t Count = m_Children.size();
 
 	for (auto i = m_Children.begin(); i != m_Children.end(); i++) {
-		if ((*i)->GetType() == ITEM_FOLDER) {
+		if ((*i)->GetType() == ItemType::Folder) {
 			const CFavoriteFolder *pFolder = dynamic_cast<CFavoriteFolder*>(i->get());
 			if (pFolder != nullptr)
 				Count += pFolder->GetSubItemCount();
@@ -191,7 +191,7 @@ CFavoriteFolder *CFavoriteFolder::FindSubFolder(LPCTSTR pszName)
 		return false;
 
 	for (auto i = m_Children.begin(); i != m_Children.end(); i++) {
-		if ((*i)->GetType() == ITEM_FOLDER) {
+		if ((*i)->GetType() == ItemType::Folder) {
 			CFavoriteFolder *pFolder = dynamic_cast<CFavoriteFolder*>(i->get());
 			if (pFolder != nullptr && pFolder->m_Name.compare(pszName) == 0)
 				return pFolder;
@@ -203,7 +203,7 @@ CFavoriteFolder *CFavoriteFolder::FindSubFolder(LPCTSTR pszName)
 
 
 CFavoriteChannel::CFavoriteChannel(const CChannelInfo &ChannelInfo)
-	: CFavoriteItem(ITEM_CHANNEL)
+	: CFavoriteItem(ItemType::Channel)
 	, m_ChannelInfo(ChannelInfo)
 	, m_fForceBonDriverChange(false)
 {
@@ -245,7 +245,7 @@ bool CFavoriteItemEnumerator::EnumItems(CFavoriteFolder &Folder)
 		CFavoriteItem *pItem = Folder.GetItem(i);
 
 		switch (pItem->GetType()) {
-		case CFavoriteItem::ITEM_FOLDER:
+		case CFavoriteItem::ItemType::Folder:
 			{
 				CFavoriteFolder *pFolder = dynamic_cast<CFavoriteFolder*>(pItem);
 
@@ -258,7 +258,7 @@ bool CFavoriteItemEnumerator::EnumItems(CFavoriteFolder &Folder)
 			}
 			break;
 
-		case CFavoriteItem::ITEM_CHANNEL:
+		case CFavoriteItem::ItemType::Channel:
 			{
 				CFavoriteChannel *pChannel = dynamic_cast<CFavoriteChannel*>(pItem);
 
@@ -327,7 +327,7 @@ void CFavoritesManager::SetFolderMenu(HMENU hmenu, int MenuPos, int *pCommand, c
 		const CFavoriteItem *pItem = pFolder->GetItem(i);
 
 		switch (pItem->GetType()) {
-		case CFavoriteItem::ITEM_FOLDER:
+		case CFavoriteItem::ItemType::Folder:
 			{
 				const CFavoriteFolder *pSubFolder =
 					dynamic_cast<const CFavoriteFolder*>(pItem);
@@ -345,7 +345,7 @@ void CFavoritesManager::SetFolderMenu(HMENU hmenu, int MenuPos, int *pCommand, c
 			}
 			break;
 
-		case CFavoriteItem::ITEM_CHANNEL:
+		case CFavoriteItem::ItemType::Channel:
 			{
 				const CFavoriteChannel *pChannel =
 					dynamic_cast<const CFavoriteChannel*>(pItem);
@@ -381,7 +381,7 @@ bool CFavoritesManager::GetChannelByCommandSub(
 		const CFavoriteItem *pItem = pFolder->GetItem(i);
 
 		switch (pItem->GetType()) {
-		case CFavoriteItem::ITEM_FOLDER:
+		case CFavoriteItem::ItemType::Folder:
 			{
 				const CFavoriteFolder *pSubFolder = dynamic_cast<const CFavoriteFolder*>(pItem);
 				if (pSubFolder != nullptr) {
@@ -391,7 +391,7 @@ bool CFavoritesManager::GetChannelByCommandSub(
 			}
 			break;
 
-		case CFavoriteItem::ITEM_CHANNEL:
+		case CFavoriteItem::ItemType::Channel:
 			{
 				const CFavoriteChannel *pChannel =
 					dynamic_cast<const CFavoriteChannel*>(pItem);
@@ -563,7 +563,7 @@ void CFavoritesManager::SaveFolder(const CFavoriteFolder *pFolder, const String 
 		const CFavoriteItem *pItem = pFolder->GetItem(i);
 
 		switch (pItem->GetType()) {
-		case CFavoriteItem::ITEM_FOLDER:
+		case CFavoriteItem::ItemType::Folder:
 			{
 				const CFavoriteFolder *pFolder = dynamic_cast<const CFavoriteFolder*>(pItem);
 				if (pFolder != nullptr) {
@@ -581,7 +581,7 @@ void CFavoritesManager::SaveFolder(const CFavoriteFolder *pFolder, const String 
 			}
 			break;
 
-		case CFavoriteItem::ITEM_CHANNEL:
+		case CFavoriteItem::ItemType::Channel:
 			{
 				const CFavoriteChannel *pChannel = dynamic_cast<const CFavoriteChannel*>(pItem);
 				if (pChannel != nullptr) {
@@ -868,7 +868,7 @@ void CFavoritesMenu::SetFolderMenu(HMENU hmenu, int MenuPos, HDC hdc, UINT *pCom
 	for (size_t i = 0; i < pFolder->GetItemCount(); i++) {
 		const CFavoriteItem *pItem = pFolder->GetItem(i);
 
-		if (pItem->GetType() == CFavoriteItem::ITEM_CHANNEL) {
+		if (pItem->GetType() == CFavoriteItem::ItemType::Channel) {
 			const CFavoriteChannel *pChannel = dynamic_cast<const CFavoriteChannel*>(pItem);
 
 			if (pChannel != nullptr) {
@@ -891,7 +891,7 @@ void CFavoritesMenu::SetFolderMenu(HMENU hmenu, int MenuPos, HDC hdc, UINT *pCom
 		const CFavoriteItem *pItem = pFolder->GetItem(i);
 
 		switch (pItem->GetType()) {
-		case CFavoriteItem::ITEM_FOLDER:
+		case CFavoriteItem::ItemType::Folder:
 			{
 				const CFavoriteFolder *pSubFolder =
 					dynamic_cast<const CFavoriteFolder*>(pItem);
@@ -918,7 +918,7 @@ void CFavoritesMenu::SetFolderMenu(HMENU hmenu, int MenuPos, HDC hdc, UINT *pCom
 			}
 			break;
 
-		case CFavoriteItem::ITEM_CHANNEL:
+		case CFavoriteItem::ItemType::Channel:
 			{
 				const CFavoriteChannel *pChannel =
 					dynamic_cast<const CFavoriteChannel*>(pItem);
@@ -1389,7 +1389,7 @@ INT_PTR COrganizeFavoritesDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, L
 					RECT rc;
 					TreeView_GetItemRect(hwndTree, hItem, &rc, TRUE);
 					const CFavoriteItem *pItem = reinterpret_cast<const CFavoriteItem*>(tvi.lParam);
-					if (pItem->GetType() == CFavoriteItem::ITEM_FOLDER) {
+					if (pItem->GetType() == CFavoriteItem::ItemType::Folder) {
 						m_fDropInsertAfter = tvhti.pt.y >= rc.bottom - (rc.bottom - rc.top) / 3;
 						m_fDropToFolder = !m_fDropInsertAfter && tvhti.pt.y >= rc.top + (rc.bottom - rc.top) / 3;
 						if (m_fDropToFolder) {
@@ -1512,14 +1512,14 @@ INT_PTR COrganizeFavoritesDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, L
 					if (pnmtvdi->item.pszText[0] != _T('\0')) {
 						CFavoriteItem *pItem = reinterpret_cast<CFavoriteItem*>(pnmtvdi->item.lParam);
 						switch (pItem->GetType()) {
-						case CFavoriteItem::ITEM_FOLDER:
+						case CFavoriteItem::ItemType::Folder:
 							{
 								CFavoriteFolder *pFolder = dynamic_cast<CFavoriteFolder*>(pItem);
 								if (pFolder != nullptr)
 									pFolder->SetName(pnmtvdi->item.pszText);
 							}
 							break;
-						case CFavoriteItem::ITEM_CHANNEL:
+						case CFavoriteItem::ItemType::Channel:
 							{
 								CFavoriteChannel *pChannel = dynamic_cast<CFavoriteChannel*>(pItem);
 								if (pChannel != nullptr)
@@ -1551,7 +1551,7 @@ INT_PTR COrganizeFavoritesDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, L
 					HMENU hmenu = ::CreatePopupMenu();
 					::AppendMenu(hmenu, MF_STRING | MF_ENABLED, IDC_FAVORITES_DELETE, TEXT("削除(&D)"));
 					::AppendMenu(hmenu, MF_STRING | MF_ENABLED, IDC_FAVORITES_RENAME, TEXT("名前の変更(&R)"));
-					if (pItem->GetType() == CFavoriteItem::ITEM_CHANNEL)
+					if (pItem->GetType() == CFavoriteItem::ItemType::Channel)
 						::AppendMenu(hmenu, MF_STRING | MF_ENABLED, IDC_FAVORITES_PROPERTIES, TEXT("プロパティ(&P)..."));
 					int Result = ::TrackPopupMenu(hmenu, TPM_RIGHTBUTTON | TPM_RETURNCMD, pt.x, pt.y, 0, hDlg, nullptr);
 					::DestroyMenu(hmenu);
@@ -1590,7 +1590,7 @@ INT_PTR COrganizeFavoritesDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, L
 					CFavoriteItem *pItem = GetItem(pnmh->hwndFrom, hItem);
 					if (pItem != nullptr) {
 						TreeView_SelectItem(pnmh->hwndFrom, hItem);
-						if (pItem->GetType() == CFavoriteItem::ITEM_CHANNEL) {
+						if (pItem->GetType() == CFavoriteItem::ItemType::Channel) {
 							CFavoritePropertiesDialog Dialog(static_cast<CFavoriteChannel*>(pItem));
 							Dialog.Show(hDlg);
 						}
@@ -1676,7 +1676,7 @@ void COrganizeFavoritesDialog::InsertTreeItems(HWND hwndTree, HTREEITEM hParent,
 		const CFavoriteItem *pItem = pFolder->GetItem(i);
 
 		switch (pItem->GetType()) {
-		case CFavoriteItem::ITEM_FOLDER:
+		case CFavoriteItem::ItemType::Folder:
 			{
 				const CFavoriteFolder *pSubFolder = dynamic_cast<const CFavoriteFolder*>(pItem);
 				if (pSubFolder != nullptr) {
@@ -1699,7 +1699,7 @@ void COrganizeFavoritesDialog::InsertTreeItems(HWND hwndTree, HTREEITEM hParent,
 			}
 			break;
 
-		case CFavoriteItem::ITEM_CHANNEL:
+		case CFavoriteItem::ItemType::Channel:
 			{
 				const CFavoriteChannel *pChannel = dynamic_cast<const CFavoriteChannel*>(pItem);
 				if (pChannel != nullptr) {
@@ -1776,7 +1776,7 @@ void COrganizeFavoritesDialog::GetTreeItems(HWND hwndTree, HTREEITEM hParent, CF
 		const CFavoriteItem *pItem = reinterpret_cast<const CFavoriteItem*>(tvi.lParam);
 		CFavoriteItem *pNewItem = pItem->Duplicate();
 		pFolder->AddItem(pNewItem);
-		if (pNewItem->GetType() == CFavoriteItem::ITEM_FOLDER) {
+		if (pNewItem->GetType() == CFavoriteItem::ItemType::Folder) {
 			CFavoriteFolder *pSubFolder = dynamic_cast<CFavoriteFolder*>(pNewItem);
 			if (pSubFolder != nullptr)
 				GetTreeItems(hwndTree, tvi.hItem, pSubFolder);

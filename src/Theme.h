@@ -26,25 +26,25 @@ namespace TVTest
 			bool operator!=(const SolidStyle &Op) const { return Color != Op.Color; }
 		};
 
-		enum GradientType {
-			GRADIENT_NORMAL,
-			GRADIENT_GLOSSY,
-			GRADIENT_INTERLACED
+		enum class GradientType {
+			Normal,
+			Glossy,
+			Interlaced,
 		};
 
-		enum GradientDirection {
-			DIRECTION_HORZ,
-			DIRECTION_VERT,
-			DIRECTION_HORZMIRROR,
-			DIRECTION_VERTMIRROR
+		enum class GradientDirection {
+			Horz,
+			Vert,
+			HorzMirror,
+			VertMirror,
 		};
 
 		struct GradientStyle
 		{
-			enum RotateType {
-				ROTATE_LEFT,
-				ROTATE_RIGHT,
-				ROTATE_180
+			enum class RotateType {
+				Left,
+				Right,
+				OneEighty,
 			};
 
 			GradientType Type;
@@ -53,8 +53,8 @@ namespace TVTest
 			ThemeColor Color2;
 
 			GradientStyle()
-				: Type(GRADIENT_NORMAL)
-				, Direction(DIRECTION_HORZ)
+				: Type(GradientType::Normal)
+				, Direction(GradientDirection::Horz)
 			{
 			}
 			GradientStyle(
@@ -72,14 +72,14 @@ namespace TVTest
 					&& Color1 == Op.Color1 && Color2 == Op.Color2;
 			}
 			bool operator!=(const GradientStyle &Op) const { return !(*this == Op); }
-			bool IsSolid() const { return Type == GRADIENT_NORMAL && Color1 == Color2; }
+			bool IsSolid() const { return Type == GradientType::Normal && Color1 == Color2; }
 			void Rotate(RotateType Rotate);
 		};
 
-		enum FillType {
-			FILL_NONE,
-			FILL_SOLID,
-			FILL_GRADIENT
+		enum class FillType {
+			None,
+			Solid,
+			Gradient,
 		};
 
 		struct FillStyle
@@ -88,9 +88,9 @@ namespace TVTest
 			SolidStyle Solid;
 			GradientStyle Gradient;
 
-			FillStyle() : Type(FILL_NONE) {}
-			FillStyle(const SolidStyle &solid) : Type(FILL_SOLID), Solid(solid) {}
-			FillStyle(const GradientStyle &gradient) : Type(FILL_GRADIENT), Gradient(gradient) {}
+			FillStyle() : Type(FillType::None) {}
+			FillStyle(const SolidStyle &solid) : Type(FillType::Solid), Solid(solid) {}
+			FillStyle(const GradientStyle &gradient) : Type(FillType::Gradient), Gradient(gradient) {}
 			bool operator==(const FillStyle &Op) const {
 				return Type == Op.Type && Solid == Op.Solid && Gradient == Op.Gradient;
 			}
@@ -98,11 +98,11 @@ namespace TVTest
 			ThemeColor GetSolidColor() const;
 		};
 
-		enum BorderType {
-			BORDER_NONE,
-			BORDER_SOLID,
-			BORDER_SUNKEN,
-			BORDER_RAISED
+		enum class BorderType {
+			None,
+			Solid,
+			Sunken,
+			Raised,
 		};
 
 		struct BorderWidth
@@ -126,7 +126,7 @@ namespace TVTest
 			ThemeColor Color;
 			BorderWidth Width;
 
-			BorderStyle() : Type(BORDER_NONE) {}
+			BorderStyle() : Type(BorderType::None) {}
 			BorderStyle(BorderType type, const ThemeColor &color) : Type(type), Color(color) {}
 			bool operator==(const BorderStyle &Op) const {
 				return Type == Op.Type && Color == Op.Color && Width == Op.Width;

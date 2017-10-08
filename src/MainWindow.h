@@ -461,19 +461,18 @@ private:
 	bool m_fMinimizeInit;
 	ResumeInfo m_Resume;
 
-	enum WindowState
-	{
-		WINDOW_STATE_NORMAL,
-		WINDOW_STATE_MINIMIZED,
-		WINDOW_STATE_MAXIMIZED
+	enum class WindowState {
+		Normal,
+		Minimized,
+		Maximized,
 	};
 	WindowState m_WindowState;
 	bool m_fWindowRegionSet;
 	bool m_fWindowFrameChanged;
 
-	enum WindowSizeMode {
-		WINDOW_SIZE_HD,
-		WINDOW_SIZE_1SEG
+	enum class WindowSizeMode {
+		HD,
+		OneSeg,
 	};
 	struct WindowSize
 	{
@@ -603,7 +602,7 @@ private:
 	const TVTest::CUIBase *GetFullscreenUIBase() const override { return &m_Fullscreen; }
 	void ShowNotificationBar(
 		LPCTSTR pszText,
-		CNotificationBar::MessageType Type = CNotificationBar::MESSAGE_INFO,
+		CNotificationBar::MessageType Type = CNotificationBar::MessageType::Info,
 		DWORD Duration = 0, bool fSkippable = false) override;
 	bool InitializeViewer(BYTE VideoStreamType = 0) override;
 	bool FinalizeViewer() override;

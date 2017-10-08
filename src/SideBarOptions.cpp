@@ -101,7 +101,7 @@ CSideBarOptions::CSideBarOptions(CSideBar *pSideBar, const CZoomOptions *pZoomOp
 	, m_fShowToolTips(true)
 	, m_fShowChannelLogo(true)
 	, m_PopupOpacity(OPACITY_MAX)
-	, m_Place(PLACE_LEFT)
+	, m_Place(PlaceType::Left)
 	, m_himlIcons(nullptr)
 {
 	m_AvailItemList.resize(lengthof(ItemList));
@@ -130,8 +130,8 @@ bool CSideBarOptions::ReadSettings(CSettings &Settings)
 	if (Settings.Read(TEXT("PopupOpacity"), &Value))
 		m_PopupOpacity = std::clamp(Value, OPACITY_MIN, OPACITY_MAX);
 	if (Settings.Read(TEXT("Place"), &Value)
-			&& Value >= PLACE_FIRST && Value <= PLACE_LAST)
-		m_Place = (PlaceType)Value;
+			&& CheckEnumRange(static_cast<PlaceType>(Value)))
+		m_Place = static_cast<PlaceType>(Value);
 
 	if (Settings.Read(TEXT("ItemCount"), &NumItems) && NumItems > 0) {
 		// はまるのを防ぐために、200を上限にしておく
@@ -222,7 +222,7 @@ HBITMAP CSideBarOptions::CreateImage(IconSizeType SizeType, SIZE *pIconSize)
 	int NumMargin1, NumMargin2, NumMargin3;
 	int PercentWidth1, PercentWidth2;
 
-	if (SizeType == ICON_SIZE_SMALL) {
+	if (SizeType == IconSizeType::Small) {
 		pszImageName = MAKEINTRESOURCE(IDB_SIDEBAR16);
 		pszZoomImageName = MAKEINTRESOURCE(IDB_SIDEBARZOOM16);
 		IconWidth = 16;
@@ -280,7 +280,7 @@ HBITMAP CSideBarOptions::CreateImage(IconSizeType SizeType, SIZE *pIconSize)
 					rc.top = 0;
 					rc.right = rc.left + IconWidth;
 					rc.bottom = IconHeight;
-					if (Zoom.Type == CZoomOptions::ZOOM_RATE) {
+					if (Zoom.Type == CZoomOptions::ZoomType::Rate) {
 						int Percentage = Zoom.Rate.GetPercentage();
 						if (Percentage < 1000) {
 							::FillRect(hdcDst, &rc, static_cast<HBRUSH>(::GetStockObject(BLACK_BRUSH)));
@@ -316,7 +316,7 @@ HBITMAP CSideBarOptions::CreateImage(IconSizeType SizeType, SIZE *pIconSize)
 									hdcSrc, NumWidth2 * 10, IconHeight, SRCCOPY);
 							}
 						}
-					} else if (Zoom.Type == CZoomOptions::ZOOM_SIZE) {
+					} else if (Zoom.Type == CZoomOptions::ZoomType::Size) {
 						if (Zoom.Size.Width < 10000 && Zoom.Size.Height < 10000) {
 							::FillRect(hdcDst, &rc, static_cast<HBRUSH>(::GetStockObject(BLACK_BRUSH)));
 							for (int j = 0; j < 2; j++) {
@@ -350,7 +350,7 @@ HBITMAP CSideBarOptions::CreateImage(IconSizeType SizeType, SIZE *pIconSize)
 bool CSideBarOptions::ApplySideBarOptions()
 {
 	m_pSideBar->ShowToolTips(m_fShowToolTips);
-	m_pSideBar->SetVertical(m_Place == PLACE_LEFT || m_Place == PLACE_RIGHT);
+	m_pSideBar->SetVertical(m_Place == PlaceType::Left || m_Place == PlaceType::Right);
 	return true;
 }
 
@@ -410,7 +410,7 @@ bool CSideBarOptions::SetSideBarImage()
 	TVTest::Style::Size IconSize = m_pSideBar->GetIconDrawSize();
 	SIZE sz;
 	HBITMAP hbm = CreateImage(
-		IconSize.Width <= 16 && IconSize.Height <= 16 ? ICON_SIZE_SMALL : ICON_SIZE_BIG,
+		IconSize.Width <= 16 && IconSize.Height <= 16 ? IconSizeType::Small : IconSizeType::Big,
 		&sz);
 	if (hbm == nullptr)
 		return false;
@@ -439,7 +439,7 @@ bool CSideBarOptions::RegisterCommand(int ID)
 
 bool CSideBarOptions::SetPlace(PlaceType Place)
 {
-	if (Place < PLACE_FIRST || Place > PLACE_LAST)
+	if (!CheckEnumRange(Place))
 		return false;
 	m_Place = Place;
 	return true;
@@ -478,7 +478,7 @@ INT_PTR CSideBarOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 			const int IconWidth = ::GetSystemMetrics(SM_CXSMICON);
 			const int IconHeight = ::GetSystemMetrics(SM_CYSMICON);
 			SIZE sz;
-			HBITMAP hbmIcons = CreateImage(IconWidth <= 16 && IconHeight <= 16 ? ICON_SIZE_SMALL : ICON_SIZE_BIG, &sz);
+			HBITMAP hbmIcons = CreateImage(IconWidth <= 16 && IconHeight <= 16 ? IconSizeType::Small : IconSizeType::Big, &sz);
 			TVTest::Theme::IconList Bitmap;
 			Bitmap.Create(hbmIcons, sz.cx, sz.cy, IconWidth, IconHeight);
 			::DeleteObject(hbmIcons);

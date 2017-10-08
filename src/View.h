@@ -36,18 +36,18 @@ public:
 		const TVTest::Style::CStyleScaling *pStyleScaling) override;
 
 protected:
-	enum ItemType {
-		ITEM_STYLE_NORMAL,
-		ITEM_STYLE_NORMAL_1,
-		ITEM_STYLE_NORMAL_2,
-		ITEM_STYLE_HOT,
-		ITEM_STYLE_SELECTED,
-		ITEM_STYLE_CURRENT
+	enum class ItemType {
+		Normal,
+		Normal1,
+		Normal2,
+		Hot,
+		Selected,
+		Current,
 	};
 
-	enum BackgroundType {
-		BACKGROUND_STYLE_CONTENT,
-		BACKGROUND_STYLE_CATEGORIES
+	enum class BackgroundType {
+		Content,
+		Categories,
 	};
 
 	struct DisplayViewStyle

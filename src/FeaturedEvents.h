@@ -14,11 +14,10 @@ class CFeaturedEventsSettings
 	: public CSettingsBase
 {
 public:
-	enum SortType {
-		SORT_TIME,
-		SORT_SERVICE,
-		SORT_FIRST = SORT_TIME,
-		SORT_LAST = SORT_SERVICE
+	enum class SortType {
+		Time,
+		Service,
+		TVTEST_ENUM_CLASS_TRAILER
 	};
 
 	static constexpr int MAX_EVENT_TEXT_LINES = 10;

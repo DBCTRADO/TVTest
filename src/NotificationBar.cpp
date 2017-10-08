@@ -41,7 +41,7 @@ CNotificationBar::CNotificationBar()
 	, m_BarHeight(0)
 	, m_TimerCount(0)
 {
-	GetSystemFont(DrawUtil::FONT_MESSAGE, &m_StyleFont);
+	GetSystemFont(DrawUtil::FontType::Message, &m_StyleFont);
 	m_StyleFont.LogFont.lfHeight = ::MulDiv(m_StyleFont.LogFont.lfHeight, 12, 10);
 	m_StyleFont.Size.Value = ::MulDiv(m_StyleFont.Size.Value, 12, 10);
 }
@@ -78,11 +78,11 @@ void CNotificationBar::SetTheme(const TVTest::Theme::CThemeManager *pThemeManage
 {
 	pThemeManager->GetBackgroundStyle(TVTest::Theme::CThemeManager::STYLE_NOTIFICATIONBAR, &m_BackStyle);
 
-	m_TextColor[MESSAGE_INFO] =
+	m_TextColor[(int)MessageType::Info] =
 		pThemeManager->GetColor(CColorScheme::COLOR_NOTIFICATIONBARTEXT);
-	m_TextColor[MESSAGE_WARNING] =
+	m_TextColor[(int)MessageType::Warning] =
 		pThemeManager->GetColor(CColorScheme::COLOR_NOTIFICATIONBARWARNINGTEXT);
-	m_TextColor[MESSAGE_ERROR] =
+	m_TextColor[(int)MessageType::Error] =
 		pThemeManager->GetColor(CColorScheme::COLOR_NOTIFICATIONBARERRORTEXT);
 
 	if (m_hwnd != nullptr)
@@ -245,14 +245,16 @@ LRESULT CNotificationBar::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM 
 
 				TVTest::Style::Subtract(&rc, m_Style.Padding);
 				if (rc.left < rc.right) {
-					if (Info.Type >= 0 && Info.Type < lengthof(m_Icons) && m_Icons[Info.Type]) {
+					const int TypeIndex = static_cast<int>(Info.Type);
+
+					if (TypeIndex >= 0 && TypeIndex < lengthof(m_Icons) && m_Icons[TypeIndex]) {
 						rc.left += m_Style.IconMargin.Left;
 						::DrawIconEx(
 							ps.hdc,
 							rc.left,
 							rc.top + m_Style.IconMargin.Top +
 							((rc.bottom - rc.top) - m_Style.IconMargin.Vert() - m_Style.IconSize.Height) / 2,
-							m_Icons[Info.Type],
+							m_Icons[TypeIndex],
 							m_Style.IconSize.Width, m_Style.IconSize.Height,
 							0, nullptr, DI_NORMAL);
 						rc.left += m_Style.IconSize.Width + m_Style.IconMargin.Right;
@@ -261,7 +263,7 @@ LRESULT CNotificationBar::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM 
 					DrawUtil::DrawText(
 						ps.hdc, Info.Text.c_str(), rc,
 						DT_SINGLELINE | DT_LEFT | DT_VCENTER | DT_NOPREFIX | DT_END_ELLIPSIS,
-						&m_Font, m_TextColor[Info.Type]);
+						&m_Font, m_TextColor[TypeIndex]);
 				}
 			}
 
@@ -351,12 +353,12 @@ void CNotificationBar::ApplyStyle()
 	CreateDrawFont(m_StyleFont, &m_Font);
 
 	/*
-	m_Icons[MESSAGE_INFO].Attach(
+	m_Icons[(int)MessageType::Info].Attach(
 		LoadSystemIcon(IDI_INFORMATION, m_Style.IconSize.Width, m_Style.IconSize.Height));
 	*/
-	m_Icons[MESSAGE_WARNING].Attach(
+	m_Icons[(int)MessageType::Warning].Attach(
 		LoadSystemIcon(IDI_WARNING, m_Style.IconSize.Width, m_Style.IconSize.Height));
-	m_Icons[MESSAGE_ERROR].Attach(
+	m_Icons[(int)MessageType::Error].Attach(
 		LoadSystemIcon(IDI_ERROR, m_Style.IconSize.Width, m_Style.IconSize.Height));
 
 	CalcBarHeight();

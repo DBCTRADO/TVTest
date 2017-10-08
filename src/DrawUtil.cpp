@@ -34,31 +34,31 @@ bool FillGradient(
 		return false;
 
 	if ((pRect->right - pRect->left == 1
-				&& (Direction == DIRECTION_HORZ || Direction == DIRECTION_HORZMIRROR))
+				&& (Direction == FillDirection::Horz || Direction == FillDirection::HorzMirror))
 			|| (pRect->bottom - pRect->top == 1
-				&& (Direction == DIRECTION_VERT || Direction == DIRECTION_VERTMIRROR)))
+				&& (Direction == FillDirection::Vert || Direction == FillDirection::VertMirror)))
 		return Fill(hdc, pRect, MixColor(Color1, Color2));
 
-	if (Direction == DIRECTION_HORZMIRROR || Direction == DIRECTION_VERTMIRROR) {
+	if (Direction == FillDirection::HorzMirror || Direction == FillDirection::VertMirror) {
 		RECT rc;
 
 		rc = *pRect;
-		if (Direction == DIRECTION_HORZMIRROR) {
+		if (Direction == FillDirection::HorzMirror) {
 			rc.right = (pRect->left + pRect->right) / 2;
 			if (rc.right > rc.left) {
-				FillGradient(hdc, &rc, Color1, Color2, DIRECTION_HORZ);
+				FillGradient(hdc, &rc, Color1, Color2, FillDirection::Horz);
 				rc.left = rc.right;
 			}
 			rc.right = pRect->right;
-			FillGradient(hdc, &rc, Color2, Color1, DIRECTION_HORZ);
+			FillGradient(hdc, &rc, Color2, Color1, FillDirection::Horz);
 		} else {
 			rc.bottom = (pRect->top + pRect->bottom) / 2;
 			if (rc.bottom > rc.top) {
-				FillGradient(hdc, &rc, Color1, Color2, DIRECTION_VERT);
+				FillGradient(hdc, &rc, Color1, Color2, FillDirection::Vert);
 				rc.top = rc.bottom;
 			}
 			rc.bottom = pRect->bottom;
-			FillGradient(hdc, &rc, Color2, Color1, DIRECTION_VERT);
+			FillGradient(hdc, &rc, Color2, Color1, FillDirection::Vert);
 		}
 		return true;
 	}
@@ -80,7 +80,7 @@ bool FillGradient(
 	vert[1].Alpha = 0x0000;
 	return ::GdiGradientFill(
 		hdc, vert, 2, &rect, 1,
-		Direction == DIRECTION_HORZ ? GRADIENT_FILL_RECT_H : GRADIENT_FILL_RECT_V) != FALSE;
+		Direction == FillDirection::Horz ? GRADIENT_FILL_RECT_H : GRADIENT_FILL_RECT_V) != FALSE;
 }
 
 
@@ -103,26 +103,26 @@ bool FillGradient(
 	if (Color1.Alpha == 255 && Color2.Alpha == 255)
 		return FillGradient(hdc, pRect, Color1.GetCOLORREF(), Color2.GetCOLORREF(), Direction);
 
-	if (Direction == DIRECTION_HORZMIRROR || Direction == DIRECTION_VERTMIRROR) {
+	if (Direction == FillDirection::HorzMirror || Direction == FillDirection::VertMirror) {
 		RECT rc;
 
 		rc = *pRect;
-		if (Direction == DIRECTION_HORZMIRROR) {
+		if (Direction == FillDirection::HorzMirror) {
 			rc.right = (pRect->left + pRect->right) / 2;
 			if (rc.right > rc.left) {
-				FillGradient(hdc, &rc, Color1, Color2, DIRECTION_HORZ);
+				FillGradient(hdc, &rc, Color1, Color2, FillDirection::Horz);
 				rc.left = rc.right;
 			}
 			rc.right = pRect->right;
-			FillGradient(hdc, &rc, Color2, Color1, DIRECTION_HORZ);
+			FillGradient(hdc, &rc, Color2, Color1, FillDirection::Horz);
 		} else {
 			rc.bottom = (pRect->top + pRect->bottom) / 2;
 			if (rc.bottom > rc.top) {
-				FillGradient(hdc, &rc, Color1, Color2, DIRECTION_VERT);
+				FillGradient(hdc, &rc, Color1, Color2, FillDirection::Vert);
 				rc.top = rc.bottom;
 			}
 			rc.bottom = pRect->bottom;
-			FillGradient(hdc, &rc, Color2, Color1, DIRECTION_VERT);
+			FillGradient(hdc, &rc, Color2, Color1, FillDirection::Vert);
 		}
 		return true;
 	}
@@ -139,7 +139,7 @@ bool FillGradient(
 	FillGradient(hdcMem, &rc, Color1.GetCOLORREF(), Color2.GetCOLORREF(), Direction);
 
 	BLENDFUNCTION BlendFunc = {AC_SRC_OVER, 0, 0, 0};
-	if (Direction == DIRECTION_HORZ) {
+	if (Direction == FillDirection::Horz) {
 		for (int x = 0; x < Width; x++) {
 			BlendFunc.SourceConstantAlpha =
 				BlendAlpha(Color1.Alpha, Color2.Alpha, x, Width - 1);
@@ -181,16 +181,16 @@ bool FillGlossyGradient(
 
 	rc.left = pRect->left;
 	rc.top = pRect->top;
-	if (Direction == DIRECTION_HORZ || Direction == DIRECTION_HORZMIRROR) {
+	if (Direction == FillDirection::Horz || Direction == FillDirection::HorzMirror) {
 		rc.right = (rc.left + pRect->right) / 2;
 		rc.bottom = pRect->bottom;
-		Dir = DIRECTION_HORZ;
+		Dir = FillDirection::Horz;
 	} else {
 		rc.right = pRect->right;
 		rc.bottom = (rc.top + pRect->bottom) / 2;
-		Dir = DIRECTION_VERT;
+		Dir = FillDirection::Vert;
 	}
-	if (Direction == DIRECTION_HORZ || Direction == DIRECTION_VERT) {
+	if (Direction == FillDirection::Horz || Direction == FillDirection::Vert) {
 		crCenter = MixColor(Color1, Color2, 128);
 		crEnd = Color2;
 	} else {
@@ -202,7 +202,7 @@ bool FillGlossyGradient(
 		MixColor(RGB(255, 255, 255), Color1, GlossRatio1),
 		MixColor(RGB(255, 255, 255), crCenter, GlossRatio2),
 		Dir);
-	if (Direction == DIRECTION_HORZ || Direction == DIRECTION_HORZMIRROR) {
+	if (Direction == FillDirection::Horz || Direction == FillDirection::HorzMirror) {
 		rc.left = rc.right;
 		rc.right = pRect->right;
 	} else {
@@ -233,7 +233,7 @@ bool FillInterlacedGradient(
 	HPEN hpenOld = static_cast<HPEN>(::SelectObject(hdc, ::GetStockObject(DC_PEN)));
 	COLORREF OldPenColor = ::GetDCPenColor(hdc);
 
-	if (Direction == DIRECTION_HORZ || Direction == DIRECTION_HORZMIRROR) {
+	if (Direction == FillDirection::Horz || Direction == FillDirection::HorzMirror) {
 		int Center = pRect->left * 2 + Width - 1;
 
 		for (int x = pRect->left; x < pRect->right; x++) {
@@ -241,7 +241,7 @@ bool FillInterlacedGradient(
 
 			Color = MixColor(
 				Color1, Color2,
-				(BYTE)(Direction == DIRECTION_HORZ ?
+				(BYTE)(Direction == FillDirection::Horz ?
 					(pRect->right - 1 - x) * 255 / (Width - 1) :
 					abs(Center - x * 2) * 255 / (Width - 1)));
 			if ((x - pRect->left) % 2 == 1)
@@ -258,7 +258,7 @@ bool FillInterlacedGradient(
 
 			Color = MixColor(
 				Color1, Color2,
-				(BYTE)(Direction == DIRECTION_VERT ?
+				(BYTE)(Direction == FillDirection::Vert ?
 					(pRect->bottom - 1 - y) * 255 / (Height - 1) :
 					abs(Center - y * 2) * 255 / (Height - 1)));
 			if ((y - pRect->top) % 2 == 1)
@@ -655,7 +655,7 @@ bool GetSystemFont(FontType Type, LOGFONT *pLogFont)
 {
 	if (pLogFont == nullptr)
 		return false;
-	if (Type == FONT_DEFAULT) {
+	if (Type == FontType::Default) {
 		return ::GetObject(::GetStockObject(DEFAULT_GUI_FONT), sizeof(LOGFONT), pLogFont) == sizeof(LOGFONT);
 	} else {
 		NONCLIENTMETRICS ncm;
@@ -663,11 +663,11 @@ bool GetSystemFont(FontType Type, LOGFONT *pLogFont)
 		ncm.cbSize = CCSIZEOF_STRUCT(NONCLIENTMETRICS, lfMessageFont);
 		::SystemParametersInfo(SPI_GETNONCLIENTMETRICS, ncm.cbSize, &ncm, 0);
 		switch (Type) {
-		case FONT_MESSAGE:      plf = &ncm.lfMessageFont;   break;
-		case FONT_MENU:         plf = &ncm.lfMenuFont;      break;
-		case FONT_CAPTION:      plf = &ncm.lfCaptionFont;   break;
-		case FONT_SMALLCAPTION: plf = &ncm.lfSmCaptionFont; break;
-		case FONT_STATUS:       plf = &ncm.lfStatusFont;    break;
+		case FontType::Message:      plf = &ncm.lfMessageFont;   break;
+		case FontType::Menu:         plf = &ncm.lfMenuFont;      break;
+		case FontType::Caption:      plf = &ncm.lfCaptionFont;   break;
+		case FontType::SmallCaption: plf = &ncm.lfSmCaptionFont; break;
+		case FontType::Status:       plf = &ncm.lfStatusFont;    break;
 		default:
 			return false;
 		}
@@ -686,7 +686,7 @@ bool GetDefaultUIFont(LOGFONT *pFont)
 	::ZeroMemory(pFont, sizeof(LOGFONT));
 
 	LOGFONT MessageFont;
-	if (GetSystemFont(FONT_MESSAGE, &MessageFont)) {
+	if (GetSystemFont(FontType::Message, &MessageFont)) {
 		// メイリオだと行間が空きすぎるのが…
 		if (::lstrcmp(MessageFont.lfFaceName, TEXT("メイリオ")) == 0
 				|| ::lstrcmpi(MessageFont.lfFaceName, TEXT("Meiryo")) == 0) {
@@ -701,7 +701,7 @@ bool GetDefaultUIFont(LOGFONT *pFont)
 		}
 	}
 
-	return GetSystemFont(FONT_DEFAULT, pFont);
+	return GetSystemFont(FontType::Default, pFont);
 }
 
 

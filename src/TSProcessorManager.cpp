@@ -557,7 +557,7 @@ void CTSProcessorManager::OpenFilter(
 					|| !IsEqualFileName(pTSProcessor->GetModuleName().c_str(), Filter.Module.c_str())) {
 				if (!pTSProcessor->LoadModule(Filter.Module.c_str())) {
 					pSettings->m_fLastOpenFailed = true;
-					App.AddLog(CLogItem::TYPE_ERROR, TEXT("\"%s\" を読み込めません。"), Filter.Module.c_str());
+					App.AddLog(CLogItem::LogType::Error, TEXT("\"%s\" を読み込めません。"), Filter.Module.c_str());
 					return;
 				}
 
@@ -578,7 +578,7 @@ void CTSProcessorManager::OpenFilter(
 	if (DeviceName.empty()) {
 		int DeviceNo = pTSProcessor->GetDefaultDevice();
 		if (DeviceNo < 0) {
-			App.AddLog(CLogItem::TYPE_ERROR, TEXT("TSフィルターのデフォルトデバイスがありません。"));
+			App.AddLog(CLogItem::LogType::Error, TEXT("TSフィルターのデフォルトデバイスがありません。"));
 			return;
 		}
 		pTSProcessor->GetDeviceName(DeviceNo, &DeviceName);
@@ -588,9 +588,9 @@ void CTSProcessorManager::OpenFilter(
 	pSettings->m_fLastOpenFailed = !fResult;
 	if (!fResult) {
 		if (!Filter.Filter.empty())
-			App.AddLog(CLogItem::TYPE_ERROR, TEXT("TSフィルター \"%s\" : \"%s\" をオープンできません。"), DeviceName.c_str(), Filter.Filter.c_str());
+			App.AddLog(CLogItem::LogType::Error, TEXT("TSフィルター \"%s\" : \"%s\" をオープンできません。"), DeviceName.c_str(), Filter.Filter.c_str());
 		else
-			App.AddLog(CLogItem::TYPE_ERROR, TEXT("TSフィルター \"%s\" をオープンできません。"), DeviceName.c_str());
+			App.AddLog(CLogItem::LogType::Error, TEXT("TSフィルター \"%s\" をオープンできません。"), DeviceName.c_str());
 
 		if ((FilterOpenFlags & FILTER_OPEN_RETRY_DIALOG) != 0) {
 			String Message;
@@ -625,7 +625,7 @@ void CTSProcessorManager::OpenFilter(
 			if ((FilterOpenFlags & FILTER_OPEN_NOTIFY_ERROR) != 0) {
 				App.UICore.GetSkin()->ShowNotificationBar(
 					TEXT("TSフィルターをオープンできません。"),
-					CNotificationBar::MESSAGE_ERROR, 6000);
+					CNotificationBar::MessageType::Error, 6000);
 			}
 
 			if ((FilterOpenFlags & FILTER_OPEN_NO_UI) == 0) {

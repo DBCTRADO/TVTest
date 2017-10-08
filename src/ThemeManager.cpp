@@ -383,8 +383,8 @@ CThemeManager::CThemeManager(const CColorScheme *pColorScheme)
 
 ThemeColor CThemeManager::GetColor(int Type) const
 {
-	COLORREF cr=m_pColorScheme->GetColor(Type);
-	if (cr==CLR_INVALID)
+	COLORREF cr = m_pColorScheme->GetColor(Type);
+	if (cr == CLR_INVALID)
 		return ThemeColor();
 	return ThemeColor(cr);
 }
@@ -392,92 +392,92 @@ ThemeColor CThemeManager::GetColor(int Type) const
 
 ThemeColor CThemeManager::GetColor(LPCTSTR pszName) const
 {
-	COLORREF cr=m_pColorScheme->GetColor(pszName);
-	if (cr==CLR_INVALID)
+	COLORREF cr = m_pColorScheme->GetColor(pszName);
+	if (cr == CLR_INVALID)
 		return ThemeColor();
 	return ThemeColor(cr);
 }
 
 
-bool CThemeManager::GetStyle(int Type,Style *pStyle) const
+bool CThemeManager::GetStyle(int Type, Style *pStyle) const
 {
-	if (Type<0 || Type>=NUM_STYLES || pStyle==nullptr)
+	if (Type < 0 || Type >= NUM_STYLES || pStyle == nullptr)
 		return false;
 
-	GetBackgroundStyle(Type,&pStyle->Back);
-	GetForegroundStyle(Type,&pStyle->Fore);
+	GetBackgroundStyle(Type, &pStyle->Back);
+	GetForegroundStyle(Type, &pStyle->Fore);
 
 	return true;
 }
 
 
-bool CThemeManager::GetFillStyle(int Type,FillStyle *pStyle) const
+bool CThemeManager::GetFillStyle(int Type, FillStyle *pStyle) const
 {
-	if (Type<0 || Type>=NUM_STYLES || pStyle==nullptr)
+	if (Type < 0 || Type >= NUM_STYLES || pStyle == nullptr)
 		return false;
 
-	const StyleInfo &Info=m_StyleList[Type];
+	const StyleInfo &Info = m_StyleList[Type];
 
-	if (Info.Gradient>=0) {
+	if (Info.Gradient >= 0) {
 		if (GRADIENT_IS_SOLID(Info.Gradient)) {
-			pStyle->Type=FILL_SOLID;
-			pStyle->Solid.Color=ThemeColor(m_pColorScheme->GetColor(GRADIENT_GET_SOLID(Info.Gradient)));
+			pStyle->Type = FillType::Solid;
+			pStyle->Solid.Color = ThemeColor(m_pColorScheme->GetColor(GRADIENT_GET_SOLID(Info.Gradient)));
 		} else {
-			pStyle->Type=FILL_GRADIENT;
-			m_pColorScheme->GetGradientStyle(Info.Gradient,&pStyle->Gradient);
+			pStyle->Type = FillType::Gradient;
+			m_pColorScheme->GetGradientStyle(Info.Gradient, &pStyle->Gradient);
 			if (pStyle->Gradient.IsSolid()) {
-				pStyle->Type=FILL_SOLID;
-				pStyle->Solid.Color=pStyle->Gradient.Color1;
+				pStyle->Type = FillType::Solid;
+				pStyle->Solid.Color = pStyle->Gradient.Color1;
 			}
 		}
 	} else {
-		pStyle->Type=FILL_NONE;
+		pStyle->Type = FillType::None;
 	}
 
 	return true;
 }
 
 
-bool CThemeManager::GetBorderStyle(int Type,BorderStyle *pStyle) const
+bool CThemeManager::GetBorderStyle(int Type, BorderStyle *pStyle) const
 {
-	if (Type<0 || Type>=NUM_STYLES || pStyle==nullptr)
+	if (Type < 0 || Type >= NUM_STYLES || pStyle == nullptr)
 		return false;
 
-	const StyleInfo &Info=m_StyleList[Type];
+	const StyleInfo &Info = m_StyleList[Type];
 
-	if (Info.Border>=0)
-		m_pColorScheme->GetBorderStyle(Info.Border,pStyle);
+	if (Info.Border >= 0)
+		m_pColorScheme->GetBorderStyle(Info.Border, pStyle);
 	else
-		pStyle->Type=BORDER_NONE;
+		pStyle->Type = BorderType::None;
 
 	return true;
 }
 
 
-bool CThemeManager::GetBackgroundStyle(int Type,BackgroundStyle *pStyle) const
+bool CThemeManager::GetBackgroundStyle(int Type, BackgroundStyle *pStyle) const
 {
-	if (Type<0 || Type>=NUM_STYLES || pStyle==nullptr)
+	if (Type < 0 || Type >= NUM_STYLES || pStyle == nullptr)
 		return false;
 
-	GetFillStyle(Type,&pStyle->Fill);
-	GetBorderStyle(Type,&pStyle->Border);
+	GetFillStyle(Type, &pStyle->Fill);
+	GetBorderStyle(Type, &pStyle->Border);
 
 	return true;
 }
 
 
-bool CThemeManager::GetForegroundStyle(int Type,ForegroundStyle *pStyle) const
+bool CThemeManager::GetForegroundStyle(int Type, ForegroundStyle *pStyle) const
 {
-	if (Type<0 || Type>=NUM_STYLES || pStyle==nullptr)
+	if (Type < 0 || Type >= NUM_STYLES || pStyle == nullptr)
 		return false;
 
-	const StyleInfo &Info=m_StyleList[Type];
+	const StyleInfo &Info = m_StyleList[Type];
 
-	if (Info.ForeColor>=0) {
-		pStyle->Fill.Type=FILL_SOLID;
-		pStyle->Fill.Solid.Color=GetColor(Info.ForeColor);
+	if (Info.ForeColor >= 0) {
+		pStyle->Fill.Type = FillType::Solid;
+		pStyle->Fill.Solid.Color = GetColor(Info.ForeColor);
 	} else {
-		pStyle->Fill.Type=FILL_NONE;
+		pStyle->Fill.Type = FillType::None;
 	}
 
 	return true;
@@ -486,7 +486,7 @@ bool CThemeManager::GetForegroundStyle(int Type,ForegroundStyle *pStyle) const
 
 LPCTSTR CThemeManager::GetStyleName(int Type) const
 {
-	if (Type<0 || Type>=NUM_STYLES)
+	if (Type < 0 || Type >= NUM_STYLES)
 		return nullptr;
 	return m_StyleList[Type].pszName;
 }
@@ -497,8 +497,8 @@ int CThemeManager::ParseStyleName(LPCTSTR pszName) const
 	if (IsStringEmpty(pszName))
 		return -1;
 
-	for (int i=0;i<lengthof(m_StyleList);i++) {
-		if (::lstrcmpi(m_StyleList[i].pszName,pszName)==0)
+	for (int i = 0; i < lengthof(m_StyleList); i++) {
+		if (::lstrcmpi(m_StyleList[i].pszName, pszName) == 0)
 			return i;
 	}
 

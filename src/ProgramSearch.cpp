@@ -210,9 +210,9 @@ void CEventSearchSettings::Clear()
 	DurationShortest = 10 * 60;
 	DurationLongest = 0;
 	fCA = false;
-	CA = CA_FREE;
+	CA = CAType::Free;
 	fVideo = false;
-	Video = VIDEO_HD;
+	Video = VideoType::HD;
 	fServiceList = false;
 	ServiceList.Clear();
 }
@@ -658,11 +658,11 @@ bool CEventSearcher::Match(const LibISDB::EventInfo *pEventInfo)
 
 	if (m_Settings.fCA) {
 		switch (m_Settings.CA) {
-		case CEventSearchSettings::CA_FREE:
+		case CEventSearchSettings::CAType::Free:
 			if (pEventInfo->FreeCAMode)
 				return false;
 			break;
-		case CEventSearchSettings::CA_CHARGEABLE:
+		case CEventSearchSettings::CAType::Chargeable:
 			if (!pEventInfo->FreeCAMode)
 				return false;
 			break;
@@ -672,12 +672,12 @@ bool CEventSearcher::Match(const LibISDB::EventInfo *pEventInfo)
 	if (m_Settings.fVideo
 			&& !pEventInfo->VideoList.empty()) {
 		switch (m_Settings.Video) {
-		case CEventSearchSettings::VIDEO_HD:
-			if (EpgUtil::GetVideoType(pEventInfo->VideoList[0].ComponentType) != EpgUtil::VIDEO_TYPE_HD)
+		case CEventSearchSettings::VideoType::HD:
+			if (EpgUtil::GetVideoType(pEventInfo->VideoList[0].ComponentType) != EpgUtil::VideoType::HD)
 				return false;
 			break;
-		case CEventSearchSettings::VIDEO_SD:
-			if (EpgUtil::GetVideoType(pEventInfo->VideoList[0].ComponentType) != EpgUtil::VIDEO_TYPE_SD)
+		case CEventSearchSettings::VideoType::SD:
+			if (EpgUtil::GetVideoType(pEventInfo->VideoList[0].ComponentType) != EpgUtil::VideoType::SD)
 				return false;
 			break;
 		}

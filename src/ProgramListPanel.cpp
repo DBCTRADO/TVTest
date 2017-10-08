@@ -1232,7 +1232,7 @@ void CProgramListPanel::Draw(HDC hdc, const RECT *prcPaint)
 		const TVTest::Theme::Style &ButtonStyle =
 			m_HotItem == ITEM_CHANNELLISTBUTTON ?
 			m_Theme.ChannelButtonHotStyle : m_Theme.ChannelButtonStyle;
-		if (ButtonStyle.Back.Border.Type != TVTest::Theme::BORDER_NONE
+		if (ButtonStyle.Back.Border.Type != TVTest::Theme::BorderType::None
 				|| ButtonStyle.Back.Fill != ChannelStyle.Back.Fill)
 			ThemeDraw.Draw(ButtonStyle.Back, rc);
 		TVTest::Style::Subtract(&rc, m_Style.ChannelButtonPadding);

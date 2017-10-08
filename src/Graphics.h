@@ -12,9 +12,9 @@ namespace TVTest
 	namespace Graphics
 	{
 
-		enum GradientDirection {
-			GRADIENT_DIRECTION_HORZ,
-			GRADIENT_DIRECTION_VERT
+		enum class GradientDirection {
+			Horz,
+			Vert,
 		};
 
 		enum {

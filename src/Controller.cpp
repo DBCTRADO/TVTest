@@ -387,7 +387,7 @@ void CControllerManager::InitDlgItems()
 		for (int i = 0; i < 2; i++)
 			ListView_SetColumnWidth(hwndList, i, LVSCW_AUTOSIZE_USEHEADER);
 
-		m_hbmController = pController->GetImage(CController::IMAGE_CONTROLLER);
+		m_hbmController = pController->GetImage(CController::ImageType::Controller);
 		if (m_hbmController != nullptr) {
 			RECT rc;
 
@@ -400,7 +400,7 @@ void CControllerManager::InitDlgItems()
 			m_ImageRect.right = m_ImageRect.left + bm.bmWidth;
 			m_ImageRect.bottom = m_ImageRect.top + bm.bmHeight;
 
-			m_hbmSelButtons = pController->GetImage(CController::IMAGE_SELBUTTONS);
+			m_hbmSelButtons = pController->GetImage(CController::ImageType::SelButtons);
 
 			if (m_hbmSelButtons != nullptr) {
 				for (int i = 0; i < NumButtons; i++) {

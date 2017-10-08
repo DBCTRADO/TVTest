@@ -57,7 +57,7 @@ CTitleBar::CTitleBar()
 	, m_fFullscreen(false)
 	, m_pEventHandler(nullptr)
 {
-	GetSystemFont(DrawUtil::FONT_CAPTION, &m_StyleFont);
+	GetSystemFont(DrawUtil::FontType::Caption, &m_StyleFont);
 }
 
 
@@ -619,7 +619,7 @@ void CTitleBar::Draw(HDC hdc, const RECT &PaintRect)
 
 				// とりあえず変にならないようにする。
 				// 背景を透過指定できるようにした方が良い。
-				if (Style.Back.Border.Type != TVTest::Theme::BORDER_NONE
+				if (Style.Back.Border.Type != TVTest::Theme::BorderType::None
 						|| Style.Back.Fill != m_Theme.CaptionStyle.Back.Fill)
 					ThemeDraw.Draw(Style.Back, rc);
 				m_ButtonIcons.Draw(

@@ -716,7 +716,7 @@ void CInformationPanel::Draw(HDC hdc, const RECT &PaintRect)
 	}
 
 	if (IsItemVisible(ITEM_PROGRAMINFO)) {
-		if (m_Theme.ProgramInfoStyle.Back.Border.Type != TVTest::Theme::BORDER_NONE) {
+		if (m_Theme.ProgramInfoStyle.Back.Border.Type != TVTest::Theme::BorderType::None) {
 			TVTest::Theme::CThemeDraw ThemeDraw(BeginThemeDraw(hdc));
 
 			GetItemRect(ITEM_PROGRAMINFO, &rc);

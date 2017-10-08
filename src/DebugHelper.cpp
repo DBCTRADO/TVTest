@@ -17,7 +17,7 @@ CDebugHelper::StackWalkFunc CDebugHelper::m_pStackWalk = nullptr;
 //CDebugHelper::SymGetModuleInfoFunc CDebugHelper::m_pSymGetModuleInfo = nullptr;
 //CDebugHelper::SymGetModuleBaseFunc CDebugHelper::m_pSymGetModuleBase = nullptr;
 #endif
-CDebugHelper::ExceptionFilterMode CDebugHelper::m_ExceptionFilterMode = EXCEPTION_FILTER_DEFAULT;
+CDebugHelper::ExceptionFilterMode CDebugHelper::m_ExceptionFilterMode = ExceptionFilterMode::Default;
 
 
 CDebugHelper::CDebugHelper()
@@ -76,7 +76,7 @@ bool CDebugHelper::SetExceptionFilterMode(ExceptionFilterMode Mode)
 
 LONG WINAPI CDebugHelper::ExceptionFilter(EXCEPTION_POINTERS *ExceptionInfo)
 {
-	if (m_ExceptionFilterMode == EXCEPTION_FILTER_NONE)
+	if (m_ExceptionFilterMode == ExceptionFilterMode::None)
 		return EXCEPTION_EXECUTE_HANDLER;
 
 #ifdef ENABLE_DEBUG_HELPER
@@ -273,7 +273,7 @@ LONG WINAPI CDebugHelper::ExceptionFilter(EXCEPTION_POINTERS *ExceptionInfo)
 
 		// メッセージ表示
 		s.fContinueExecution = false;
-		if (m_ExceptionFilterMode == EXCEPTION_FILTER_DIALOG) {
+		if (m_ExceptionFilterMode == ExceptionFilterMode::Dialog) {
 			if (ExceptionInfo->ExceptionRecord->ExceptionFlags == EXCEPTION_NONCONTINUABLE) {
 				::MessageBoxA(nullptr, s.szText, nullptr, MB_OK | MB_ICONSTOP);
 			} else {

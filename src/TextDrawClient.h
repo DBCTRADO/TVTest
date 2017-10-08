@@ -11,15 +11,15 @@ namespace TVTest
 	class CTextDrawClient
 	{
 	public:
-		enum TextDrawEngine {
-			ENGINE_UNDEFINED,
-			ENGINE_GDI,
-			ENGINE_DIRECTWRITE
+		enum class TextDrawEngine {
+			Undefined,
+			GDI,
+			DirectWrite,
 		};
 
 		CTextDrawClient();
 		~CTextDrawClient();
-		bool Initialize(TextDrawEngine Engine,HWND hwnd);
+		bool Initialize(TextDrawEngine Engine, HWND hwnd);
 		void Finalize();
 		bool InitializeTextDraw(CTextDraw *pTextDraw);
 		bool SetMaxFontCache(std::size_t MaxCache);

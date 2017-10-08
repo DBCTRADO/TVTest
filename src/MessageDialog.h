@@ -8,10 +8,10 @@
 class CMessageDialog
 {
 public:
-	enum MessageType {
-		TYPE_INFO,
-		TYPE_WARNING,
-		TYPE_ERROR
+	enum class MessageType {
+		Info,
+		Warning,
+		Error,
 	};
 
 	CMessageDialog();

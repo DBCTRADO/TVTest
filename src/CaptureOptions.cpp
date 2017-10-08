@@ -325,7 +325,7 @@ bool CCaptureOptions::GenerateFileName(
 		int Result = ::SHCreateDirectoryEx(nullptr, SaveFolder.c_str(), nullptr);
 		if (Result != ERROR_SUCCESS && Result != ERROR_ALREADY_EXISTS) {
 			GetAppClass().AddLog(
-				CLogItem::TYPE_ERROR,
+				CLogItem::LogType::Error,
 				TEXT("キャプチャの保存先フォルダ \"%s\" を作成できません。"),
 				SaveFolder.c_str());
 			return false;
@@ -595,7 +595,7 @@ INT_PTR CCaptureOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 						hDlg, SaveFolder.c_str(),
 						TEXT("キャプチャ画像の保存先フォルダ \"%s\" がありません。\n")
 						TEXT("作成しますか?"));
-				if (CreateDirResult == CAppMain::CREATEDIRECTORY_RESULT_ERROR) {
+				if (CreateDirResult == CAppMain::CreateDirectoryResult::Error) {
 					SettingError();
 					SetDlgItemFocus(hDlg, IDC_CAPTUREOPTIONS_SAVEFOLDER);
 					return TRUE;

@@ -14,7 +14,7 @@
 
 CFeaturedEventsSettings::CFeaturedEventsSettings()
 	: CSettingsBase(TEXT("FeaturedEvents"))
-	, m_SortType(SORT_TIME)
+	, m_SortType(SortType::Time)
 	, m_PeriodSeconds(24 * 60 * 60)
 	, m_fShowEventText(true)
 	, m_EventTextLines(2)
@@ -37,8 +37,8 @@ bool CFeaturedEventsSettings::ReadSettings(CSettings &Settings)
 
 	int Sort;
 	if (Settings.Read(TEXT("Sort"), &Sort)
-			&& Sort >= SORT_FIRST && Sort <= SORT_LAST)
-		m_SortType = (SortType)Sort;
+			&& CheckEnumRange(static_cast<SortType>(Sort)))
+		m_SortType = static_cast<SortType>(Sort);
 
 	Settings.Read(TEXT("Period"), &m_PeriodSeconds);
 	Settings.Read(TEXT("ShowEventText"), &m_fShowEventText);
@@ -289,13 +289,13 @@ static void InitServiceListView(
 
 		switch (App.NetworkDefinition.GetNetworkType(pChannelInfo->GetNetworkID())) {
 		default:
-		case TVTest::CNetworkDefinition::NETWORK_TERRESTRIAL:
+		case TVTest::CNetworkDefinition::NetworkType::Terrestrial:
 			lvi.iGroupId = GROUP_ID_TERRESTRIAL;
 			break;
-		case TVTest::CNetworkDefinition::NETWORK_BS:
+		case TVTest::CNetworkDefinition::NetworkType::BS:
 			lvi.iGroupId = GROUP_ID_BS;
 			break;
-		case TVTest::CNetworkDefinition::NETWORK_CS:
+		case TVTest::CNetworkDefinition::NetworkType::CS:
 			lvi.iGroupId = GROUP_ID_CS;
 			break;
 		}

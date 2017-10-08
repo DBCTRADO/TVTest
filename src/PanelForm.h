@@ -69,13 +69,12 @@ public:
 		TVTest::Theme::ThemeColor BorderColor;
 	};
 
-	enum TabStyle {
-		TABSTYLE_TEXT_ONLY,
-		TABSTYLE_ICON_ONLY,
-		TABSTYLE_ICON_AND_TEXT
+	enum class TabStyle {
+		TextOnly,
+		IconOnly,
+		IconAndText,
+		TVTEST_ENUM_CLASS_TRAILER
 	};
-	static const TabStyle TABSTYLE_FIRST = TABSTYLE_TEXT_ONLY;
-	static const TabStyle TABSTYLE_LAST  = TABSTYLE_ICON_AND_TEXT;
 
 	static bool Initialize(HINSTANCE hinst);
 

@@ -11,19 +11,19 @@ namespace TVTest
 	namespace Style
 	{
 
-		enum ValueType {
-			TYPE_VOID,
-			TYPE_INT,
-			TYPE_BOOL,
-			TYPE_STRING
+		enum class ValueType {
+			Void,
+			Int,
+			Bool,
+			String,
 		};
 
-		enum UnitType {
-			UNIT_UNDEFINED,
-			UNIT_LOGICAL_PIXEL,
-			UNIT_PHYSICAL_PIXEL,
-			UNIT_POINT,
-			UNIT_DIP
+		enum class UnitType {
+			Undefined,
+			LogicalPixel,
+			PhysicalPixel,
+			Point,
+			DIP,
 		};
 
 		struct StyleInfo
@@ -39,7 +39,7 @@ namespace TVTest
 			} Value;
 			UnitType Unit;
 
-			StyleInfo() : Type(TYPE_VOID), Unit(UNIT_UNDEFINED) {}
+			StyleInfo() : Type(ValueType::Void), Unit(UnitType::Undefined) {}
 		};
 
 		template<typename T> struct ValueTemplate
@@ -47,8 +47,8 @@ namespace TVTest
 			T Value;
 			UnitType Unit;
 
-			ValueTemplate() : Value(0), Unit(UNIT_UNDEFINED) {}
-			ValueTemplate(T v, UnitType u = UNIT_LOGICAL_PIXEL) : Value(v), Unit(u) {}
+			ValueTemplate() : Value(0), Unit(UnitType::Undefined) {}
+			ValueTemplate(T v, UnitType u = UnitType::LogicalPixel) : Value(v), Unit(u) {}
 			operator T() const { return Value; }
 			ValueTemplate<T> &operator=(T v) { Value = v; return *this; }
 			bool operator==(const ValueTemplate<T> &o) const { return Value == o.Value && Unit == o.Unit; }
@@ -65,7 +65,7 @@ namespace TVTest
 			IntValue Height;
 
 			Size() {}
-			Size(int w, int h, UnitType u = UNIT_LOGICAL_PIXEL) : Width(w, u), Height(h, u) {}
+			Size(int w, int h, UnitType u = UnitType::LogicalPixel) : Width(w, u), Height(h, u) {}
 			Size(int w, UnitType wu, int h, UnitType hu) : Width(w, wu), Height(h, hu) {}
 			bool operator==(const Size &o) const { return Width == o.Width && Height == o.Height; }
 			bool operator!=(const Size &o) const { return !(*this == o); }
@@ -79,11 +79,11 @@ namespace TVTest
 			IntValue Bottom;
 
 			Margins() {}
-			Margins(int l, int t, int r, int b, UnitType u = UNIT_LOGICAL_PIXEL)
+			Margins(int l, int t, int r, int b, UnitType u = UnitType::LogicalPixel)
 				: Left(l, u), Top(t, u), Right(r, u), Bottom(b, u) {}
 			Margins(int l, UnitType lu, int t, UnitType tu, int r, UnitType ru, int b, UnitType bu)
 				: Left(l, lu), Top(t, tu), Right(r, ru), Bottom(b, bu) {}
-			Margins(int m, UnitType u = UNIT_LOGICAL_PIXEL)
+			Margins(int m, UnitType u = UnitType::LogicalPixel)
 				: Left(m, u), Top(m, u), Right(m, u), Bottom(m, u) {}
 			bool operator==(const Margins &o) const {
 				return Left == o.Left && Top == o.Top && Right == o.Right && Bottom == o.Bottom;
@@ -100,7 +100,7 @@ namespace TVTest
 			IntValue Size;
 
 			Font() : LogFont() {}
-			Font(const LOGFONT &lf, int s, UnitType u = UNIT_POINT)
+			Font(const LOGFONT &lf, int s, UnitType u = UnitType::Point)
 				: LogFont(lf), Size(s, u) {}
 			bool operator==(const Font &o) const {
 				return CompareLogFont(&LogFont, &o.LogFont) && Size == o.Size;

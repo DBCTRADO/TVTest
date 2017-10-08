@@ -34,7 +34,7 @@ bool CPanelForm::Initialize(HINSTANCE hinst)
 
 
 CPanelForm::CPanelForm()
-	: m_TabStyle(TABSTYLE_TEXT_ONLY)
+	: m_TabStyle(TabStyle::TextOnly)
 	, m_TabHeight(0)
 	, m_TabWidth(0)
 	, m_TabLineWidth(1)
@@ -565,7 +565,7 @@ void CPanelForm::CalcTabSize()
 
 	m_TabWidth = m_Style.TabPadding.Horz();
 
-	if (m_TabStyle != TABSTYLE_ICON_ONLY) {
+	if (m_TabStyle != TabStyle::IconOnly) {
 		int MaxWidth = 0;
 		SIZE sz;
 
@@ -580,9 +580,9 @@ void CPanelForm::CalcTabSize()
 		m_TabWidth += MaxWidth + m_Style.TabLabelMargin.Horz();
 	}
 
-	if (m_TabStyle != TABSTYLE_TEXT_ONLY) {
+	if (m_TabStyle != TabStyle::TextOnly) {
 		m_TabWidth += m_Style.TabIconSize.Width + m_Style.TabIconMargin.Horz();
-		if (m_TabStyle == TABSTYLE_ICON_AND_TEXT)
+		if (m_TabStyle == TabStyle::IconAndText)
 			m_TabWidth += m_Style.TabIconLabelMargin;
 	}
 
@@ -604,7 +604,7 @@ int CPanelForm::GetRealTabWidth() const
 		if (NumVisibleTabs * m_TabWidth > rc.right) {
 			int Width = rc.right / NumVisibleTabs;
 			int MinWidth = m_Style.TabPadding.Horz();
-			if (m_TabStyle != TABSTYLE_TEXT_ONLY)
+			if (m_TabStyle != TabStyle::TextOnly)
 				MinWidth += m_Style.TabIconSize.Width;
 			else
 				MinWidth += 16;
@@ -687,12 +687,12 @@ void CPanelForm::Draw(HDC hdc, const RECT &PaintRect)
 			TVTest::Style::Subtract(&rcContent, m_Style.TabPadding);
 			rcText = rcContent;
 
-			if (m_TabStyle != TABSTYLE_TEXT_ONLY) {
+			if (m_TabStyle != TabStyle::TextOnly) {
 				RECT rcIcon = rcContent;
 				TVTest::Style::Subtract(&rcIcon, m_Style.TabIconMargin);
 				int x = rcIcon.left;
 				int y = rcIcon.top + ((rcIcon.bottom - rcIcon.top) - m_Style.TabIconSize.Height) / 2;
-				if (m_TabStyle == TABSTYLE_ICON_ONLY)
+				if (m_TabStyle == TabStyle::IconOnly)
 					x += ((rcIcon.right - rcIcon.left) - m_Style.TabIconSize.Width) / 2;
 				bool fIcon;
 				if (pWindow->m_Icon >= 0) {
@@ -717,11 +717,11 @@ void CPanelForm::Draw(HDC hdc, const RECT &PaintRect)
 				}
 			}
 
-			if (m_TabStyle != TABSTYLE_ICON_ONLY) {
+			if (m_TabStyle != TabStyle::IconOnly) {
 				TVTest::Style::Subtract(&rcText, m_Style.TabLabelMargin);
 				ThemeDraw.Draw(
 					Style.Fore, rcText, pWindow->m_Title.c_str(),
-					(m_TabStyle != TABSTYLE_TEXT_ONLY ? DT_LEFT : DT_CENTER)
+					(m_TabStyle != TabStyle::TextOnly ? DT_LEFT : DT_CENTER)
 						| DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX | DT_END_ELLIPSIS);
 			}
 
@@ -761,7 +761,7 @@ void CPanelForm::UpdateTooltip()
 	const int TabWidth = GetRealTabWidth();
 
 	if (!m_fEnableTooltip || !m_fFitTabWidth
-			|| (m_TabStyle != TABSTYLE_ICON_ONLY && TabWidth >= m_TabWidth)) {
+			|| (m_TabStyle != TabStyle::IconOnly && TabWidth >= m_TabWidth)) {
 		m_Tooltip.Enable(false);
 		return;
 	}

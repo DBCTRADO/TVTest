@@ -74,14 +74,14 @@ public:
 		int Minute;
 	};
 
-	enum CAType {
-		CA_FREE,
-		CA_CHARGEABLE
+	enum class CAType {
+		Free,
+		Chargeable,
 	};
 
-	enum VideoType {
-		VIDEO_HD,
-		VIDEO_SD
+	enum class VideoType {
+		HD,
+		SD,
 	};
 
 	bool fDisabled;

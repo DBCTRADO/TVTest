@@ -491,7 +491,7 @@ void CDriverOptions::InitDlgItem(int Driver)
 		bool fCur = IsEqualFileName(
 			pszFileName,
 			::PathFindFileName(GetAppClass().CoreEngine.GetDriverFileName()));
-		if (fCur || pDriverInfo->LoadTuningSpaceList(CDriverInfo::LOADTUNINGSPACE_USEDRIVER_NOOPEN)) {
+		if (fCur || pDriverInfo->LoadTuningSpaceList(CDriverInfo::LoadTuningSpaceListMode::UseDriverNoOpen)) {
 			const CTuningSpaceList *pTuningSpaceList;
 			int NumSpaces, i;
 

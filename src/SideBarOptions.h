@@ -16,13 +16,12 @@ public:
 	static const int OPACITY_MIN = 20;
 	static const int OPACITY_MAX = 100;
 
-	enum PlaceType {
-		PLACE_LEFT,
-		PLACE_RIGHT,
-		PLACE_TOP,
-		PLACE_BOTTOM,
-		PLACE_FIRST = PLACE_LEFT,
-		PLACE_LAST = PLACE_BOTTOM
+	enum class PlaceType {
+		Left,
+		Right,
+		Top,
+		Bottom,
+		TVTEST_ENUM_CLASS_TRAILER
 	};
 
 	CSideBarOptions(CSideBar *pSideBar, const CZoomOptions *pZoomOptions);
@@ -49,9 +48,9 @@ public:
 protected:
 	static constexpr int ITEM_SEPARATOR = 0;
 
-	enum IconSizeType {
-		ICON_SIZE_SMALL,
-		ICON_SIZE_BIG
+	enum class IconSizeType {
+		Small,
+		Big,
 	};
 
 	CSideBar *m_pSideBar;

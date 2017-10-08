@@ -12,10 +12,10 @@
 namespace EpgUtil
 {
 
-	enum VideoType {
-		VIDEO_TYPE_UNKNOWN,
-		VIDEO_TYPE_HD,
-		VIDEO_TYPE_SD
+	enum class VideoType {
+		Unknown,
+		HD,
+		SD,
 	};
 
 	VideoType GetVideoType(BYTE ComponentType);

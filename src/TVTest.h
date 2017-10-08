@@ -65,6 +65,16 @@ namespace TVTest
 #define ABSTRACT_DECL        __declspec(novtable)
 #define ABSTRACT_CLASS(name) ABSTRACT_DECL name abstract
 
+#define TVTEST_ENUM_CLASS_TRAILER_(first) \
+	Trailer_, \
+	First_ = first, \
+	Last_ = Trailer_ - 1
+#define TVTEST_ENUM_CLASS_TRAILER \
+	TVTEST_ENUM_CLASS_TRAILER_(0)
+template<typename T> constexpr bool CheckEnumRange(T val) {
+	return (val >= T::First_) && (val <= T::Last_);
+}
+
 #define CHANNEL_FILE_EXTENSION          TEXT(".ch2")
 #define DEFERRED_CHANNEL_FILE_EXTENSION TEXT(".ch1")
 
