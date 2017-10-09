@@ -181,7 +181,7 @@ int APIENTRY _tWinMain(
 	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF/* | _CRTDBG_CHECK_ALWAYS_DF*/);
 #else
 	CDebugHelper::Initialize();
-	CDebugHelper::SetExceptionFilterMode(CDebugHelper::EXCEPTION_FILTER_DIALOG);
+	CDebugHelper::SetExceptionFilterMode(CDebugHelper::ExceptionFilterMode::Dialog);
 #endif
 
 	SetErrorMode(SEM_FAILCRITICALERRORS | SEM_NOOPENFILEERRORBOX);

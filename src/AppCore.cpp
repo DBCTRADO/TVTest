@@ -64,7 +64,7 @@ void CAppCore::SetSilent(bool fSilent)
 	m_fSilent = fSilent;
 #ifndef _DEBUG
 	m_App.DebugHelper.SetExceptionFilterMode(
-		fSilent ? CDebugHelper::EXCEPTION_FILTER_NONE : CDebugHelper::EXCEPTION_FILTER_DIALOG);
+		fSilent ? CDebugHelper::ExceptionFilterMode::None : CDebugHelper::ExceptionFilterMode::Dialog);
 #endif
 }
 
