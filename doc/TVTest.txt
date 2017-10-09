@@ -48,10 +48,12 @@
   まずソースファイルを GitHub からダウンロードするか、または clone を行います。
   clone する場合、サブモジュールを含むために --recursive を指定します。
 
-    git clone --recursive git@github.com:DBCTRADO/TVTest.git
+    git clone --recursive https://github.com/DBCTRADO/TVTest.git
 
   GitHub から Zip ファイルをダウンロードする場合、サブモジュールは含まれないので
   src/LibISDB フォルダに LibISDB のファイルを展開する必要があります。
+  その場合、サブモジュールの参照先として指定されているコミット以外のソースツリー
+  を利用した場合、ビルドできない、もしくは正常に動作しない可能性があります。
 
   Visual Studio 2017 Update 3 のプロジェクトファイルが付属しています。
   C++17 の機能を利用しているため、2017 Update 3 より前の Visual Studio ではビル
