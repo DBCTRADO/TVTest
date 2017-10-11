@@ -15,8 +15,12 @@
 namespace TVTest
 {
 
+namespace
+{
 
-#define OSD_FLAG(type) (1U << static_cast<int>(type))
+constexpr unsigned int OSD_FLAG(COSDOptions::OSDType type) { return 1U << static_cast<int>(type); }
+
+}
 
 
 

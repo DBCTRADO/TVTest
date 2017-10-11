@@ -19,8 +19,10 @@
 namespace TVTest
 {
 
+namespace
+{
 
-#define MAIN_TITLE_TEXT APP_NAME
+const LPCTSTR MAIN_TITLE_TEXT = APP_NAME;
 
 
 static int CalcZoomSize(int Size, int Rate, int Factor)
@@ -29,6 +31,14 @@ static int CalcZoomSize(int Size, int Rate, int Factor)
 		return 0;
 	return ::MulDiv(Size, Rate, Factor);
 }
+
+}
+
+
+
+
+const LPCTSTR MAIN_WINDOW_CLASS       = APP_NAME TEXT(" Window");
+const LPCTSTR FULLSCREEN_WINDOW_CLASS = APP_NAME TEXT(" Fullscreen");
 
 
 
@@ -5698,7 +5708,7 @@ void CMainWindow::HookWindows(HWND hwnd)
 }
 
 
-#define CHILD_PROP_THIS APP_NAME TEXT("ChildThis")
+const LPCTSTR CHILD_PROP_THIS = APP_NAME TEXT("ChildThis");
 
 void CMainWindow::HookChildWindow(HWND hwnd)
 {

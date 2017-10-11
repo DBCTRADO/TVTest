@@ -980,24 +980,14 @@ bool CEventSearchOptions::SaveSearchSettings(CSettings &Settings, LPCTSTR pszPre
 
 
 
-#ifndef LVN_GETEMPTYMARKUP
-#include <pshpack1.h>
-#define LVN_GETEMPTYMARKUP	(LVN_FIRST-87)
-#define EMF_CENTERED	0x00000001
-typedef struct tagNMLVEMPTYMARKUP {
-	NMHDR hdr;
-	DWORD dwFlags;
-	WCHAR szMarkup[L_MAX_URL_LENGTH];
-} NMLVEMPTYMARKUP;
-#include <poppack.h>
-#endif
+namespace
+{
 
+constexpr UINT WM_PROGRAM_SEARCH_GENRE_CHANGED = WM_APP;
 
-#define WM_PROGRAM_SEARCH_GENRE_CHANGED WM_APP
-
-#define GENRE_LPARAM_PACK(Level1, Level2) (((Level1) << 16) | (WORD)(SHORT)(Level2))
-#define GENRE_LPARAM_LEVEL1(lParam) ((int)((lParam) >> 16))
-#define GENRE_LPARAM_LEVEL2(lParam) ((SHORT)(WORD)((lParam) & 0xFFFF))
+constexpr LPARAM GENRE_LPARAM_PACK(int Level1, int Level2) { return (Level1 << 16) | (WORD)(SHORT)(Level2); }
+constexpr int GENRE_LPARAM_LEVEL1(LPARAM lParam) { return (int)(lParam >> 16); }
+constexpr int GENRE_LPARAM_LEVEL2(LPARAM lParam) { return (SHORT)(WORD)(lParam & 0xFFFF); }
 
 
 static ULONGLONG GetResultMapKey(const LibISDB::EventInfo *pEventInfo)
@@ -1006,6 +996,8 @@ static ULONGLONG GetResultMapKey(const LibISDB::EventInfo *pEventInfo)
 		| ((ULONGLONG)pEventInfo->TransportStreamID << 32)
 		| ((DWORD)pEventInfo->ServiceID << 16)
 		| pEventInfo->EventID;
+}
+
 }
 
 

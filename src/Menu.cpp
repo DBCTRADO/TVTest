@@ -1425,7 +1425,7 @@ bool CIconMenu::CheckRadioItem(UINT FirstID, UINT LastID, UINT CheckID)
 
 
 
-#define DROPDOWNMENU_WINDOW_CLASS APP_NAME TEXT(" Drop Down Menu")
+const LPCTSTR DROPDOWNMENU_WINDOW_CLASS = APP_NAME TEXT(" Drop Down Menu");
 
 
 HINSTANCE CDropDownMenu::m_hinst = nullptr;

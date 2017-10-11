@@ -306,9 +306,12 @@ bool CSettings::WriteColor(LPCTSTR pszValueName, COLORREF crData)
 }
 
 
-#define FONT_FLAG_ITALIC    0x0001U
-#define FONT_FLAG_UNDERLINE 0x0002U
-#define FONT_FLAG_STRIKEOUT 0x0004U
+namespace
+{
+constexpr unsigned int FONT_FLAG_ITALIC    = 0x0001U;
+constexpr unsigned int FONT_FLAG_UNDERLINE = 0x0002U;
+constexpr unsigned int FONT_FLAG_STRIKEOUT = 0x0004U;
+}
 
 bool CSettings::Read(LPCTSTR pszValueName, LOGFONT *pFont)
 {

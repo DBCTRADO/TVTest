@@ -13,8 +13,12 @@
 namespace TVTest
 {
 
+namespace
+{
 
-#define ITEM_STATE_VISIBLE 0x0001
+constexpr int ITEM_STATE_VISIBLE = 0x0001;
+
+}
 
 
 const CMenuOptions::MenuInfo CMenuOptions::m_DefaultMenuItemList[] =

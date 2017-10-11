@@ -11,8 +11,12 @@
 namespace TVTest
 {
 
+namespace
+{
 
-#define MAX_LOG_TEXT_LENGTH 1024
+constexpr std::size_t MAX_LOG_TEXT_LENGTH = 1024;
+
+}
 
 
 

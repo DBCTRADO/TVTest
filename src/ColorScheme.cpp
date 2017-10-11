@@ -12,6 +12,8 @@
 namespace TVTest
 {
 
+namespace
+{
 
 static const LPCTSTR GradientDirectionList[] = {
 	TEXT("horizontal"),
@@ -21,7 +23,10 @@ static const LPCTSTR GradientDirectionList[] = {
 };
 
 
-#define HEXRGB(hex) RGB((hex)>>16,((hex)>>8)&0xFF,(hex)&0xFF)
+constexpr COLORREF HEXRGB(DWORD hex) { return RGB(hex >> 16, (hex >> 8) & 0xFF, hex & 0xFF); }
+
+}
+
 
 const CColorScheme::ColorInfo CColorScheme::m_ColorInfoList[NUM_COLORS] = {
 	{HEXRGB(0x333333),  TEXT("StatusBack"),                        TEXT("ステータスバー 背景1")},

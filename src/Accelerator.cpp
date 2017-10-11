@@ -13,12 +13,16 @@ namespace TVTest
 {
 
 
-#define MAKE_ACCEL_PARAM(key, mod, global, appcommand) \
-	(((key) << 16) | ((mod) << 8) | ((global) ? 0x80 : 0x00) | (appcommand))
-#define GET_ACCEL_KEY(param)        ((WORD)((param) >> 16))
-#define GET_ACCEL_MOD(param)        ((BYTE)(((param) >> 8) & 0xFF))
-#define GET_ACCEL_GLOBAL(param)     (((param) & 0x80) != 0)
-#define GET_ACCEL_APPCOMMAND(param) ((BYTE)((param) & 0x7F))
+namespace
+{
+
+constexpr LPARAM MAKE_ACCEL_PARAM(WORD key, BYTE mod, bool global, BYTE appcommand) {
+	return (key << 16) | (mod << 8) | (global ? 0x80 : 0x00) | appcommand;
+}
+constexpr WORD GET_ACCEL_KEY(LPARAM param) { return (WORD)(param >> 16); }
+constexpr BYTE GET_ACCEL_MOD(LPARAM param) { return (BYTE)((param >> 8) & 0xFF); }
+constexpr bool GET_ACCEL_GLOBAL(LPARAM param) { return (param & 0x80) != 0; }
+constexpr BYTE GET_ACCEL_APPCOMMAND(LPARAM param) { return (BYTE)(param & 0x7F); }
 
 
 static const struct {
@@ -180,6 +184,8 @@ static const struct {
 	{APPCOMMAND_REPLY_TO_MAIL,                     TEXT("Reply to mail")},
 	{APPCOMMAND_DICTATE_OR_COMMAND_CONTROL_TOGGLE, TEXT("Dictate or Command/Control")},
 };
+
+}	// namespace
 
 
 const CAccelerator::KeyInfo CAccelerator::m_DefaultAccelList[] = {

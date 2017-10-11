@@ -275,7 +275,7 @@ bool CFavoriteItemEnumerator::EnumItems(CFavoriteFolder &Folder)
 }
 
 
-#define CHANNEL_FLAG_FORCEBONDRIVERCHANGE	0x0001U
+constexpr unsigned int CHANNEL_FLAG_FORCEBONDRIVERCHANGE = 0x0001U;
 
 CFavoritesManager::CFavoritesManager()
 	: m_fModified(false)

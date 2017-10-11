@@ -657,7 +657,7 @@ bool CEventVariableStringMap::GetSampleEventInfo(EventInfo *pInfo)
 }
 
 
-#define MAX_MARK_LENGTH 3
+constexpr std::size_t MAX_MARK_LENGTH = 3;
 
 void CEventVariableStringMap::GetEventTitle(const String &EventName, String *pTitle)
 {

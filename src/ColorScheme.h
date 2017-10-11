@@ -11,7 +11,7 @@
 namespace TVTest
 {
 
-#define MAX_COLORSCHEME_NAME 128
+	constexpr std::size_t MAX_COLORSCHEME_NAME = 128;
 
 
 	class CColorScheme

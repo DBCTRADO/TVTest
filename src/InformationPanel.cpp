@@ -11,13 +11,17 @@
 namespace TVTest
 {
 
+namespace
+{
 
-#define IDC_PROGRAMINFO		1000
+constexpr int IDC_PROGRAMINFO = 1000;
 
 
-static inline UINT GetTooltipID(int Item, int Button)
+constexpr UINT GetTooltipID(int Item, int Button)
 {
 	return ((Item + 1) << 8) | Button;
+}
+
 }
 
 
@@ -351,7 +355,7 @@ bool CInformationPanel::CreateProgramInfoEdit()
 			0, m_RichEditUtil.GetWindowClassName(), TEXT(""),
 			WS_CHILD | WS_CLIPSIBLINGS | WS_VSCROLL
 				| ES_MULTILINE | ES_READONLY | ES_AUTOVSCROLL | ES_NOHIDESEL,
-			0, 0, 0, 0, m_hwnd, reinterpret_cast<HMENU>(IDC_PROGRAMINFO), m_hinst, nullptr);
+			0, 0, 0, 0, m_hwnd, reinterpret_cast<HMENU>(static_cast<INT_PTR>(IDC_PROGRAMINFO)), m_hinst, nullptr);
 		if (m_hwndProgramInfo == nullptr)
 			return false;
 		::SendMessage(m_hwndProgramInfo, EM_SETEVENTMASK, 0, ENM_MOUSEEVENTS | ENM_LINK);
@@ -364,7 +368,7 @@ bool CInformationPanel::CreateProgramInfoEdit()
 			0, TEXT("EDIT"), TEXT(""),
 			WS_CHILD | WS_CLIPSIBLINGS | WS_VSCROLL
 				| ES_MULTILINE | ES_READONLY | ES_AUTOVSCROLL,
-			0, 0, 0, 0, m_hwnd, reinterpret_cast<HMENU>(IDC_PROGRAMINFO), m_hinst, nullptr);
+			0, 0, 0, 0, m_hwnd, reinterpret_cast<HMENU>(static_cast<INT_PTR>(IDC_PROGRAMINFO)), m_hinst, nullptr);
 		if (m_hwndProgramInfo == nullptr)
 			return false;
 		m_ProgramInfoSubclass.SetSubclass(m_hwndProgramInfo);

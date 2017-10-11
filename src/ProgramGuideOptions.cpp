@@ -12,8 +12,12 @@
 namespace TVTest
 {
 
+namespace
+{
 
-#define IEPG_ASSOCIATE_COMMAND TEXT("iEpgAssociate")
+const LPCTSTR IEPG_ASSOCIATE_COMMAND = TEXT("iEpgAssociate");
+
+}
 
 
 

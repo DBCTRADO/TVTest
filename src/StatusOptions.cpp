@@ -12,8 +12,10 @@
 namespace TVTest
 {
 
+namespace
+{
 
-static const bool IS_HD =
+constexpr bool IS_HD =
 #ifndef TVTEST_FOR_1SEG
 	true
 #else
@@ -21,8 +23,10 @@ static const bool IS_HD =
 #endif
 	;
 
-#define TIMER_ID_UP   1
-#define TIMER_ID_DOWN 2
+constexpr UINT TIMER_ID_UP   = 1;
+constexpr UINT TIMER_ID_DOWN = 2;
+
+}
 
 
 

@@ -10,10 +10,14 @@
 namespace TVTest
 {
 
+namespace
+{
 
-#define PANEL_WINDOW_CLASS       APP_NAME TEXT(" Panel")
-#define PANEL_FRAME_WINDOW_CLASS APP_NAME TEXT(" Panel Frame")
-#define DROP_HELPER_WINDOW_CLASS APP_NAME TEXT(" Drop Helper")
+const LPCTSTR PANEL_WINDOW_CLASS       = APP_NAME TEXT(" Panel");
+const LPCTSTR PANEL_FRAME_WINDOW_CLASS = APP_NAME TEXT(" Panel Frame");
+const LPCTSTR DROP_HELPER_WINDOW_CLASS = APP_NAME TEXT(" Drop Helper");
+
+}
 
 
 

@@ -14,7 +14,7 @@ bool IsTVTestWindow(HWND hwnd)
 {
 	TCHAR szClass[64];
 
-	return ::GetClassName(hwnd, szClass, lengthof(szClass)) == lengthof(MAIN_WINDOW_CLASS) - 1
+	return ::GetClassName(hwnd, szClass, lengthof(szClass)) > 0
 		&& ::lstrcmpi(szClass, MAIN_WINDOW_CLASS) == 0;
 }
 

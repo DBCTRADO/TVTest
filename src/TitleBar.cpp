@@ -10,8 +10,10 @@
 namespace TVTest
 {
 
+namespace
+{
 
-#define NUM_BUTTONS 4
+constexpr int NUM_BUTTONS = 4;
 
 enum {
 	ICON_MINIMIZE,
@@ -21,6 +23,8 @@ enum {
 	ICON_RESTORE,
 	ICON_FULLSCREENCLOSE
 };
+
+}
 
 
 

@@ -23,26 +23,26 @@
 namespace TVTest
 {
 
-#define MAIN_WINDOW_CLASS       APP_NAME TEXT(" Window")
-#define FULLSCREEN_WINDOW_CLASS APP_NAME TEXT(" Fullscreen")
+	extern const LPCTSTR MAIN_WINDOW_CLASS;
+	extern const LPCTSTR FULLSCREEN_WINDOW_CLASS;
 
 // (*) が付いたものは、変えると異なるバージョン間での互換性が無くなるので注意
-#define WM_APP_SERVICEUPDATE          (WM_APP + 0)
-#define WM_APP_IMAGESAVE              (WM_APP + 2)
-#define WM_APP_TRAYICON               (WM_APP + 3)
-#define WM_APP_QUERYPORT              (WM_APP + 5)  // (*)
-#define WM_APP_FILEWRITEERROR         (WM_APP + 6)
-#define WM_APP_VIDEOSIZECHANGED       (WM_APP + 7)
-#define WM_APP_CONTROLLERFOCUS        (WM_APP + 11) // (*)
-#define WM_APP_EPGLOADED              (WM_APP + 12)
-#define WM_APP_PLUGINMESSAGE          (WM_APP + 13)
-#define WM_APP_SHOWNOTIFICATIONBAR    (WM_APP + 14)
-#define WM_APP_SERVICECHANGED         (WM_APP + 15)
-#define WM_APP_VIDEOSTREAMTYPECHANGED (WM_APP + 16)
-#define WM_APP_SERVICEINFOUPDATED     (WM_APP + 17)
-#define WM_APP_AUDIOLISTCHANGED       (WM_APP + 18)
-#define WM_APP_SPDIFPASSTHROUGHERROR  (WM_APP + 19)
-#define WM_APP_UPDATECLOCK            (WM_APP + 20)
+	constexpr UINT WM_APP_SERVICEUPDATE          = WM_APP + 0;
+	constexpr UINT WM_APP_IMAGESAVE              = WM_APP + 2;
+	constexpr UINT WM_APP_TRAYICON               = WM_APP + 3;
+	constexpr UINT WM_APP_QUERYPORT              = WM_APP + 5;  // (*)
+	constexpr UINT WM_APP_FILEWRITEERROR         = WM_APP + 6;
+	constexpr UINT WM_APP_VIDEOSIZECHANGED       = WM_APP + 7;
+	constexpr UINT WM_APP_CONTROLLERFOCUS        = WM_APP + 11; // (*)
+	constexpr UINT WM_APP_EPGLOADED              = WM_APP + 12;
+	constexpr UINT WM_APP_PLUGINMESSAGE          = WM_APP + 13;
+	constexpr UINT WM_APP_SHOWNOTIFICATIONBAR    = WM_APP + 14;
+	constexpr UINT WM_APP_SERVICECHANGED         = WM_APP + 15;
+	constexpr UINT WM_APP_VIDEOSTREAMTYPECHANGED = WM_APP + 16;
+	constexpr UINT WM_APP_SERVICEINFOUPDATED     = WM_APP + 17;
+	constexpr UINT WM_APP_AUDIOLISTCHANGED       = WM_APP + 18;
+	constexpr UINT WM_APP_SPDIFPASSTHROUGHERROR  = WM_APP + 19;
+	constexpr UINT WM_APP_UPDATECLOCK            = WM_APP + 20;
 
 	enum {
 		CONTAINER_ID_VIEW = 1,

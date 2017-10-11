@@ -13,10 +13,14 @@
 namespace TVTest
 {
 
+namespace
+{
 
-#define WM_APP_ADD_CAPTION WM_APP
+constexpr UINT WM_APP_ADD_CAPTION = WM_APP;
 
-#define IDC_EDIT	1000
+constexpr int IDC_EDIT = 1000;
+
+}
 
 
 
@@ -437,7 +441,7 @@ LRESULT CCaptionPanel::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 				0, TEXT("EDIT"), TEXT(""),
 				WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_VSCROLL |
 					ES_MULTILINE | ES_READONLY | ES_AUTOVSCROLL | ES_NOHIDESEL,
-				0, 0, 0, 0, hwnd, (HMENU)IDC_EDIT, m_hinst, nullptr);
+				0, 0, 0, 0, hwnd, reinterpret_cast<HMENU>(static_cast<INT_PTR>(IDC_EDIT)), m_hinst, nullptr);
 			Edit_LimitText(m_hwndEdit, 8 * 1024 * 1024);
 			SetWindowFont(m_hwndEdit, m_Font.GetHandle(), FALSE);
 			m_EditSubclass.SetSubclass(m_hwndEdit);

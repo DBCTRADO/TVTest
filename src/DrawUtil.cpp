@@ -9,8 +9,12 @@
 namespace TVTest
 {
 
+namespace
+{
 
-#define DIVIDE_BY_255(v) ((((v) + 1) * 257) >> 16)
+constexpr BYTE DIVIDE_BY_255(UINT v) { return static_cast<BYTE>(((v + 1) * 257) >> 16); }
+
+}
 
 
 namespace DrawUtil
@@ -1132,9 +1136,9 @@ bool CMonoColorBitmap::Create(HBITMAP hbmSrc)
 		for (int y = 0; y < bm.bmHeight; y++) {
 			for (int x = 0; x < bm.bmWidth; x++) {
 				UINT Alpha = p[3];
-				q[0] = (BYTE)DIVIDE_BY_255(p[0] * Alpha);
-				q[1] = (BYTE)DIVIDE_BY_255(p[1] * Alpha);
-				q[2] = (BYTE)DIVIDE_BY_255(p[2] * Alpha);
+				q[0] = DIVIDE_BY_255(p[0] * Alpha);
+				q[1] = DIVIDE_BY_255(p[1] * Alpha);
+				q[2] = DIVIDE_BY_255(p[2] * Alpha);
 				q[3] = (BYTE)Alpha;
 				p += 4;
 				q += 4;
@@ -1351,9 +1355,9 @@ void CMonoColorBitmap::SetColor(COLORREF Color)
 		for (int y = 0; y < bm.bmHeight; y++) {
 			for (int x = 0; x < bm.bmWidth; x++) {
 				UINT Alpha = p[3];
-				p[0] = (BYTE)DIVIDE_BY_255(Blue * Alpha);
-				p[1] = (BYTE)DIVIDE_BY_255(Green * Alpha);
-				p[2] = (BYTE)DIVIDE_BY_255(Red * Alpha);
+				p[0] = DIVIDE_BY_255(Blue * Alpha);
+				p[1] = DIVIDE_BY_255(Green * Alpha);
+				p[2] = DIVIDE_BY_255(Red * Alpha);
 				p += 4;
 			}
 		}

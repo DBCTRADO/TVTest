@@ -11,19 +11,24 @@
 namespace TVTest
 {
 
+namespace
+{
 
-#define MAX_ZOOM_TEXT 64
+constexpr std::size_t MAX_ZOOM_TEXT = 64;
 
 
 #ifdef TVTEST_FOR_1SEG
-#define f1Seg true
-#define BASE_WIDTH 320
-#define BASE_HEIGHT 180
+constexpr bool f1Seg = true;
+constexpr int BASE_WIDTH  = 320;
+constexpr int BASE_HEIGHT = 180;
 #else
-#define f1Seg false
-#define BASE_WIDTH 1920
-#define BASE_HEIGHT 1080
+constexpr bool f1Seg = false;
+constexpr int BASE_WIDTH  = 1920;
+constexpr int BASE_HEIGHT = 1080;
 #endif
+
+}
+
 
 const CZoomOptions::ZoomCommandInfo CZoomOptions::m_DefaultZoomList[NUM_ZOOM_COMMANDS] = {
 	{CM_ZOOM_20,              {ZoomType::Rate, {  1,   5}, {BASE_WIDTH / 5,     BASE_HEIGHT / 5},     !f1Seg}},

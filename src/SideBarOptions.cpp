@@ -10,8 +10,13 @@
 namespace TVTest
 {
 
+namespace
+{
 
-#define ZOOM_ICON_FIRST 37
+constexpr int ZOOM_ICON_FIRST = 37;
+
+}
+
 
 static const CSideBar::SideBarItem ItemList[] = {
 	{CM_ZOOM_20,                ZOOM_ICON_FIRST + 0},

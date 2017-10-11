@@ -10,11 +10,15 @@ namespace TVTest
 namespace Theme
 {
 
+namespace
+{
 
-#define GRADIENT_SOLID_FLAG 0x1000
-#define GRADIENT_SOLID(Color) ((Color) | GRADIENT_SOLID_FLAG)
-#define GRADIENT_IS_SOLID(Gradient) (((Gradient) & GRADIENT_SOLID_FLAG)!=0)
-#define GRADIENT_GET_SOLID(Gradient) ((Gradient) & 0x0FFF)
+constexpr int GRADIENT_SOLID_FLAG = 0x1000;
+constexpr int GRADIENT_SOLID(int Color) { return Color | GRADIENT_SOLID_FLAG; }
+constexpr bool GRADIENT_IS_SOLID(int Gradient) { return (Gradient & GRADIENT_SOLID_FLAG) != 0; }
+constexpr int GRADIENT_GET_SOLID(int Gradient) { return Gradient & 0x0FFF; }
+
+}
 
 
 const CThemeManager::StyleInfo CThemeManager::m_StyleList[NUM_STYLES] = {

@@ -46,7 +46,7 @@ static void CropImage(
 	int Left, int Top, int Width, int Height, void *pDstData)
 {
 	int x, y;
-	int SrcRowBytes, DstRowBytes;
+	std::size_t SrcRowBytes, DstRowBytes;
 	const BYTE *p;
 	BYTE *q;
 
@@ -87,9 +87,10 @@ HGLOBAL ResizeImage(
 	int *pnSrcPos;
 	int SrcLeft, SrcTop, SrcWidth, SrcHeight;
 	int SrcPlanes, SrcXCenter, SrcYCenter, DstXCenter, DstYCenter;
-	int x, y, x1, y1, dx1, dy1, dx2, dy2, YOffset;
+	int x, y, x1, y1, dx1, dy1, dx2, dy2;
+	std::size_t YOffset;
 	int b, g, r;
-	int SrcRowBytes, DstPadBytes;
+	std::size_t SrcRowBytes, DstPadBytes;
 	const BYTE *p, *p1;
 	BYTE *q;
 

@@ -9,8 +9,8 @@
 namespace TVTest
 {
 
-#define FIRST_UHF_CHANNEL 13
-#define MAX_CHANNEL_NAME 64
+	constexpr int FIRST_UHF_CHANNEL = 13;
+	constexpr std::size_t MAX_CHANNEL_NAME = 64;
 
 
 	class CChannelInfo

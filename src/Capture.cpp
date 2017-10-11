@@ -12,16 +12,20 @@
 namespace TVTest
 {
 
+namespace
+{
 
-#define CAPTURE_WINDOW_CLASS			APP_NAME TEXT(" Capture Window")
-#define CAPTURE_PREVIEW_WINDOW_CLASS	APP_NAME TEXT(" Capture Preview")
-#define CAPTURE_TITLE_TEXT TEXT("キャプチャ")
+const LPCTSTR CAPTURE_WINDOW_CLASS         = APP_NAME TEXT(" Capture Window");
+const LPCTSTR CAPTURE_PREVIEW_WINDOW_CLASS = APP_NAME TEXT(" Capture Preview");
+const LPCTSTR CAPTURE_TITLE_TEXT = TEXT("キャプチャ");
 
 enum {
 	CAPTURE_ICON_CAPTURE,
 	CAPTURE_ICON_SAVE,
 	CAPTURE_ICON_COPY
 };
+
+}
 
 
 
@@ -478,8 +482,8 @@ void CCaptureWindow::SetTitle()
 			if (m_Image->GetBitmapInfoHeader(&bmih)) {
 				StdUtil::snprintf(
 					szTitle, lengthof(szTitle),
-					CAPTURE_TITLE_TEXT TEXT(" - %d x %d (%d bpp)"),
-					bmih.biWidth, abs(bmih.biHeight), bmih.biBitCount);
+					TEXT("%s - %d x %d (%d bpp)"),
+					CAPTURE_TITLE_TEXT, bmih.biWidth, abs(bmih.biHeight), bmih.biBitCount);
 			}
 		}
 		::SetWindowText(m_hwnd, szTitle);

@@ -9,9 +9,13 @@
 namespace TVTest
 {
 
+namespace
+{
 
-#define VIEW_WINDOW_CLASS            APP_NAME TEXT(" View")
-#define VIDEO_CONTAINER_WINDOW_CLASS APP_NAME TEXT(" Video Container")
+const LPCTSTR VIEW_WINDOW_CLASS            = APP_NAME TEXT(" View");
+const LPCTSTR VIDEO_CONTAINER_WINDOW_CLASS = APP_NAME TEXT(" Video Container");
+
+}
 
 
 

@@ -10,11 +10,14 @@
 namespace TVTest
 {
 
+namespace
+{
 
-#define MAX_LOGO_BYTES 1296
 
-#define PNG_SIGNATURE		"\x89PNG\r\n\x1A\n"
-#define PNG_SIGNATURE_BYTES	8
+constexpr std::size_t MAX_LOGO_BYTES = 1296;
+
+const char PNG_SIGNATURE[] = "\x89PNG\r\n\x1A\n";
+constexpr std::size_t PNG_SIGNATURE_BYTES = 8;
 
 
 #include <pshpack1.h>
@@ -42,8 +45,8 @@ struct LogoFileHeader
 	DWORD NumImages;
 };
 
-#define LOGOFILEHEADER_TYPE		"LogoData"
-#define LOGOFILEHEADER_VERSION	1
+const char LOGOFILEHEADER_TYPE[] = "LogoData";
+constexpr DWORD LOGOFILEHEADER_VERSION = 1;
 
 struct LogoImageHeader
 {
@@ -105,6 +108,9 @@ static SYSTEMTIME UInt64ToSystemTime(ULONGLONG Time)
 		::FileTimeToSystemTime(&ft, &st);
 	}
 	return st;
+}
+
+
 }
 
 

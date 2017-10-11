@@ -6,8 +6,12 @@
 namespace TVTest
 {
 
+namespace
+{
 
-#define MAX_MODULE_ENTRIES 128
+constexpr std::size_t MAX_MODULE_ENTRIES = 128;
+
+}
 
 
 #ifdef ENABLE_DEBUG_HELPER

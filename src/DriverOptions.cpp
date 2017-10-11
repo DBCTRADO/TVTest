@@ -10,16 +10,20 @@
 namespace TVTest
 {
 
+namespace
+{
 
-#define DRIVER_FLAG_NOSIGNALLEVEL                0x00000001
-#define DRIVER_FLAG_PURGESTREAMONCHANNELCHANGE   0x00000004
-#define DRIVER_FLAG_ALLCHANNELS                  0x00000008
-#define DRIVER_FLAG_RESETCHANNELCHANGEERRORCOUNT 0x00000010
-#define DRIVER_FLAG_NOTIGNOREINITIALSTREAM       0x00000020
-#define DRIVER_FLAG_PUMPSTREAMSYNCPLAYBACK       0x00000040
+constexpr unsigned int DRIVER_FLAG_NOSIGNALLEVEL                = 0x00000001;
+constexpr unsigned int DRIVER_FLAG_PURGESTREAMONCHANNELCHANGE   = 0x00000004;
+constexpr unsigned int DRIVER_FLAG_ALLCHANNELS                  = 0x00000008;
+constexpr unsigned int DRIVER_FLAG_RESETCHANNELCHANGEERRORCOUNT = 0x00000010;
+constexpr unsigned int DRIVER_FLAG_NOTIGNOREINITIALSTREAM       = 0x00000020;
+constexpr unsigned int DRIVER_FLAG_PUMPSTREAMSYNCPLAYBACK       = 0x00000040;
 
-#define DRIVER_FLAG_MASK                         0x0000007F
-#define DRIVER_FLAG_DEFAULTMASK                  0x0000003F
+constexpr unsigned int DRIVER_FLAG_MASK                         = 0x0000007F;
+constexpr unsigned int DRIVER_FLAG_DEFAULTMASK                  = 0x0000003F;
+
+}
 
 
 

@@ -457,10 +457,6 @@ bool SetListViewSortMark(HWND hwndList, int Column, bool fAscending)
 
 	HWND hwndHeader = ListView_GetHeader(hwndList);
 	HDITEM hdi;
-#ifndef HDF_SORTUP
-#define HDF_SORTUP   0x0400
-#define HDF_SORTDOWN 0x0200
-#endif
 
 	hdi.mask = HDI_FORMAT;
 	int Count = Header_GetItemCount(hwndHeader);

@@ -7,8 +7,12 @@
 namespace TVTest
 {
 
+namespace
+{
 
-#define PALETTE_WINDOW_CLASS APP_NAME TEXT(" Color Palette")
+const LPCTSTR PALETTE_WINDOW_CLASS = APP_NAME TEXT(" Color Palette");
+
+}
 
 
 

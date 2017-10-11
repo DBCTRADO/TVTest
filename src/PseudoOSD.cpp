@@ -8,13 +8,17 @@
 namespace TVTest
 {
 
+namespace
+{
 
 // タイマーの識別子
-#define TIMER_ID_HIDE      0x0001U
-#define TIMER_ID_ANIMATION 0x0002U
+constexpr UINT TIMER_ID_HIDE      = 0x0001U;
+constexpr UINT TIMER_ID_ANIMATION = 0x0002U;
 
-#define ANIMATION_FRAMES   4  // アニメーションの段階数
-#define ANIMATION_INTERVAL 50 // アニメーションの間隔
+constexpr int ANIMATION_FRAMES = 4;      // アニメーションの段階数
+constexpr DWORD ANIMATION_INTERVAL = 50; // アニメーションの間隔
+
+}
 
 
 

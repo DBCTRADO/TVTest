@@ -12,12 +12,14 @@
 namespace TVTest
 {
 
+namespace
+{
 
 // スキャンスレッドから送られるメッセージ
-#define WM_APP_BEGINSCAN    (WM_APP + 0)
-#define WM_APP_CHANNELFOUND (WM_APP + 1)
-#define WM_APP_ENDCHANNEL   (WM_APP + 2)
-#define WM_APP_ENDSCAN      (WM_APP + 3)
+constexpr UINT WM_APP_BEGINSCAN    = WM_APP + 0;
+constexpr UINT WM_APP_CHANNELFOUND = WM_APP + 1;
+constexpr UINT WM_APP_ENDCHANNEL   = WM_APP + 2;
+constexpr UINT WM_APP_ENDSCAN      = WM_APP + 3;
 
 // スキャン結果
 enum class ScanResult {
@@ -26,6 +28,8 @@ enum class ScanResult {
 	SetChannelPartiallyFailed,
 	SetChannelTimeout,
 };
+
+}
 
 
 

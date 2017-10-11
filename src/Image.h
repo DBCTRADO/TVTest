@@ -17,9 +17,9 @@ namespace TVTest
 {
 
 /*
-#define DIB_ROW_BYTES(width, bpp) (((width) * (bpp) + 31) / 32 * 4)
+	constexpr std::size_t DIB_ROW_BYTES(int width, int bpp) { return ((width * bpp) + 31) / 32 * 4; }
 */
-#define DIB_ROW_BYTES(width, bpp) ((((width) * (bpp) + 31) >> 5) << 2)
+	constexpr std::size_t DIB_ROW_BYTES(int width, int bpp) { return ((width * bpp + 31) >> 5) << 2; }
 
 
 	SIZE_T CalcDIBInfoSize(const BITMAPINFOHEADER *pbmih);

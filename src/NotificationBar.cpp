@@ -8,8 +8,12 @@
 namespace TVTest
 {
 
+namespace
+{
 
-#define NOTIFICATION_BAR_WINDOW_CLASS APP_NAME TEXT(" Notification Bar")
+const LPCTSTR NOTIFICATION_BAR_WINDOW_CLASS = APP_NAME TEXT(" Notification Bar");
+
+}
 
 
 
