@@ -1,4 +1,5 @@
 #include "stdafx.h"
+#include "TVTest.h"
 #include "Image.h"
 #include "Util.h"
 #include "Common/DebugDef.h"

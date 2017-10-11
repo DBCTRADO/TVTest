@@ -772,16 +772,16 @@ bool CColorScheme::Load(CSettings &Settings)
 }
 
 
-bool CColorScheme::Save(CSettings &Settings, unsigned int Flags) const
+bool CColorScheme::Save(CSettings &Settings, SaveFlag Flags) const
 {
 	if (!Settings.SetSection(TEXT("ColorScheme")))
 		return false;
 
 	bool fSaveAllColors = true, fSaveGradients = true;
 
-	if ((Flags & SAVE_NODEFAULT) != 0) {
+	if (!!(Flags & SaveFlag::NoDefault)) {
 		/*
-			SAVE_NODEFAULT が指定されている場合、デフォルトから変更されていない時のみ設定を保存する。
+			SaveFlag::NoDefault が指定されている場合、デフォルトから変更されていない時のみ設定を保存する。
 			Loadの処理が複雑なので、単純に変更されているもののみ保存すればいいという訳ではないため、
 			デフォルトから変更されている場合は全ての設定を保存する。
 		*/
@@ -807,7 +807,7 @@ bool CColorScheme::Save(CSettings &Settings, unsigned int Flags) const
 			Settings.Clear();
 	}
 
-	if ((Flags & SAVE_NONAME) == 0)
+	if (!(Flags & SaveFlag::NoName))
 		Settings.Write(TEXT("Name"), m_Name);
 
 	for (int i = 0; i < NUM_COLORS; i++) {
@@ -845,7 +845,7 @@ bool CColorScheme::Load(LPCTSTR pszFileName)
 {
 	CSettings Settings;
 
-	if (!Settings.Open(pszFileName, CSettings::OPEN_READ))
+	if (!Settings.Open(pszFileName, CSettings::OpenFlag::Read))
 		return false;
 
 	if (!Load(Settings))
@@ -864,11 +864,11 @@ bool CColorScheme::Load(LPCTSTR pszFileName)
 }
 
 
-bool CColorScheme::Save(LPCTSTR pszFileName, unsigned int Flags) const
+bool CColorScheme::Save(LPCTSTR pszFileName, SaveFlag Flags) const
 {
 	CSettings Settings;
 
-	if (!Settings.Open(pszFileName, CSettings::OPEN_WRITE))
+	if (!Settings.Open(pszFileName, CSettings::OpenFlag::Write))
 		return false;
 
 	return Save(Settings, Flags);

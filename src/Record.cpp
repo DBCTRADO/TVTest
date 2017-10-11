@@ -1396,7 +1396,7 @@ INT_PTR CRecordManager::CRecordSettingsDialog::DlgProc(HWND hDlg, UINT uMsg, WPA
 					}
 
 					TVTest::String Message;
-					if (!IsValidFileName(FileName.c_str(), 0, &Message)) {
+					if (!IsValidFileName(FileName.c_str(), FileNameValidateFlag::None, &Message)) {
 						::MessageBox(hDlg, Message.c_str(), nullptr, MB_OK | MB_ICONEXCLAMATION);
 						SetDlgItemFocus(hDlg, IDC_RECORD_FILENAME);
 						return TRUE;

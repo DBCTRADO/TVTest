@@ -127,7 +127,7 @@ bool CWindowContainer::SetMinSize(int Width, int Height)
 
 CSplitter::CSplitter(int ID)
 	: CContainer(ID)
-	, m_Style(0)
+	, m_Style(StyleFlag::None)
 	, m_AdjustPane(0)
 	, m_BarPos(0)
 	, m_BarWidth(4)
@@ -147,13 +147,13 @@ void CSplitter::SetPosition(const RECT &Pos)
 	if (m_PaneList[0].pContainer != nullptr && m_PaneList[0].pContainer->GetVisible()
 			&& m_PaneList[1].pContainer != nullptr
 			&& m_AdjustPane == m_PaneList[0].pContainer->GetID()) {
-		if ((m_Style & STYLE_FIXED) == 0 || m_PaneList[1].FixedSize < 0) {
-			if ((m_Style & STYLE_VERT) == 0)
+		if (!(m_Style & StyleFlag::Fixed) || m_PaneList[1].FixedSize < 0) {
+			if (!(m_Style & StyleFlag::Vert))
 				m_BarPos += (Pos.right - Pos.left) - (m_Position.right - m_Position.left);
 			else
 				m_BarPos += (Pos.bottom - Pos.top) - (m_Position.bottom - m_Position.top);
 		} else {
-			if ((m_Style & STYLE_VERT) == 0)
+			if (!(m_Style & StyleFlag::Vert))
 				m_BarPos = (Pos.right - Pos.left) - m_PaneList[1].FixedSize;
 			else
 				m_BarPos = (Pos.bottom - Pos.top) - m_PaneList[1].FixedSize;
@@ -174,17 +174,17 @@ void CSplitter::GetMinSize(SIZE *pSize) const
 			SIZE sz;
 
 			m_PaneList[1].pContainer->GetMinSize(&sz);
-			if ((m_Style & STYLE_VERT) == 0) {
+			if (!(m_Style & StyleFlag::Vert)) {
 				pSize->cx += sz.cx;
 				if (pSize->cy < sz.cy)
 					pSize->cy = sz.cy;
-				if ((m_Style & STYLE_FIXED) == 0)
+				if (!(m_Style & StyleFlag::Fixed))
 					pSize->cx += m_BarWidth;
 			} else {
 				pSize->cy += sz.cy;
 				if (pSize->cx < sz.cx)
 					pSize->cx = sz.cx;
-				if ((m_Style & STYLE_FIXED) == 0)
+				if (!(m_Style & StyleFlag::Fixed))
 					pSize->cy += m_BarWidth;
 			}
 		}
@@ -230,7 +230,7 @@ void CSplitter::OnLButtonDown(int x, int y)
 	POINT pt = {x, y};
 	RECT rc;
 
-	if ((m_Style & STYLE_FIXED) == 0
+	if (!(m_Style & StyleFlag::Fixed)
 			&& m_PaneList[0].pContainer != nullptr && m_PaneList[0].pContainer->GetVisible()
 			&& m_PaneList[1].pContainer != nullptr && m_PaneList[1].pContainer->GetVisible()
 			&& GetBarRect(&rc) && ::PtInRect(&rc, pt))
@@ -257,7 +257,7 @@ void CSplitter::OnMouseMove(int x, int y)
 
 		m_PaneList[0].pContainer->GetMinSize(&MinSize1);
 		m_PaneList[1].pContainer->GetMinSize(&MinSize2);
-		if ((m_Style & STYLE_VERT) == 0) {
+		if (!(m_Style & StyleFlag::Vert)) {
 			BarPos = x - m_Position.left;
 			if ((m_Position.right - m_Position.left) - BarPos - m_BarWidth < MinSize2.cx)
 				BarPos = (m_Position.right - m_Position.left) - m_BarWidth - MinSize2.cx;
@@ -274,13 +274,13 @@ void CSplitter::OnMouseMove(int x, int y)
 			m_BarPos = BarPos;
 			Adjust();
 		}
-		pszCursor = (m_Style & STYLE_VERT) != 0 ? IDC_SIZENS : IDC_SIZEWE;
+		pszCursor = !!(m_Style & StyleFlag::Vert) ? IDC_SIZENS : IDC_SIZEWE;
 	} else {
-		if ((m_Style & STYLE_FIXED) == 0
+		if (!(m_Style & StyleFlag::Fixed)
 				&& m_PaneList[0].pContainer != nullptr && m_PaneList[0].pContainer->GetVisible()
 				&& m_PaneList[1].pContainer != nullptr && m_PaneList[1].pContainer->GetVisible()
 				&& GetBarRect(&rc) && ::PtInRect(&rc, pt))
-			pszCursor = (m_Style & STYLE_VERT) != 0 ? IDC_SIZENS : IDC_SIZEWE;
+			pszCursor = !!(m_Style & StyleFlag::Vert) ? IDC_SIZENS : IDC_SIZEWE;
 		else
 			pszCursor = IDC_ARROW;
 	}
@@ -337,7 +337,7 @@ void CSplitter::SwapPane()
 	Temp = m_PaneList[0];
 	m_PaneList[0] = m_PaneList[1];
 	m_PaneList[1] = Temp;
-	if ((m_Style & STYLE_VERT) == 0)
+	if (!(m_Style & StyleFlag::Vert))
 		m_BarPos = (m_Position.right - m_Position.left) - (m_BarPos + m_BarWidth);
 	else
 		m_BarPos = (m_Position.bottom - m_Position.top) - (m_BarPos + m_BarWidth);
@@ -353,12 +353,12 @@ bool CSplitter::SetPaneSize(int ID, int Size)
 
 	if (Index < 0)
 		return false;
-	if ((m_Style & STYLE_VERT) == 0) {
+	if (!(m_Style & StyleFlag::Vert)) {
 		if (Index == 0) {
 			m_BarPos = Size;
 		} else {
 			m_BarPos = (m_Position.right - m_Position.left) - Size;
-			if ((m_Style & STYLE_FIXED) == 0)
+			if (!(m_Style & StyleFlag::Fixed))
 				m_BarPos -= m_BarWidth;
 			if (m_BarPos < 0)
 				m_BarPos = 0;
@@ -368,7 +368,7 @@ bool CSplitter::SetPaneSize(int ID, int Size)
 			m_BarPos = Size;
 		} else {
 			m_BarPos = (m_Position.bottom - m_Position.top) - Size;
-			if ((m_Style & STYLE_FIXED) == 0)
+			if (!(m_Style & StyleFlag::Fixed))
 				m_BarPos -= m_BarWidth;
 			if (m_BarPos < 0)
 				m_BarPos = 0;
@@ -389,7 +389,7 @@ int CSplitter::GetPaneSize(int ID)
 	if (Index == 0)
 		return m_BarPos;
 	int Size;
-	if ((m_Style & STYLE_VERT) == 0)
+	if (!(m_Style & StyleFlag::Vert))
 		Size = m_Position.right - m_Position.left;
 	else
 		Size = m_Position.bottom - m_Position.top;
@@ -408,14 +408,14 @@ int CSplitter::IDToIndex(int ID) const
 }
 
 
-bool CSplitter::SetStyle(unsigned int Style, bool fAdjust)
+bool CSplitter::SetStyle(StyleFlag Style, bool fAdjust)
 {
 	if (m_Style != Style) {
-		if ((m_Style & STYLE_VERT) != (Style & STYLE_VERT)) {
-			if ((Style & STYLE_FIXED) != 0
+		if ((m_Style & StyleFlag::Vert) != (Style & StyleFlag::Vert)) {
+			if (!!(Style & StyleFlag::Fixed)
 					&& m_PaneList[1].pContainer != nullptr
 					&& m_PaneList[1].FixedSize >= 0) {
-				if ((Style & STYLE_VERT) != 0) {
+				if (!!(Style & StyleFlag::Vert)) {
 					m_BarPos = (m_Position.bottom - m_Position.top) - m_PaneList[1].FixedSize;
 				} else {
 					m_BarPos = (m_Position.right - m_Position.left) - m_PaneList[1].FixedSize;
@@ -461,7 +461,7 @@ void CSplitter::Adjust()
 
 		GetBarRect(&rcBar);
 		m_PaneList[1].pContainer->GetMinSize(&MinSize);
-		if ((m_Style & STYLE_VERT) == 0) {
+		if (!(m_Style & StyleFlag::Vert)) {
 			rc = m_Position;
 			rc.right = rcBar.left;
 			m_PaneList[0].pContainer->SetPosition(rc);
@@ -498,12 +498,12 @@ bool CSplitter::GetBarRect(RECT *pRect) const
 	m_PaneList[0].pContainer->GetMinSize(&MinSize1);
 	m_PaneList[1].pContainer->GetMinSize(&MinSize2);
 	rc = m_Position;
-	if ((m_Style & STYLE_VERT) == 0) {
+	if (!(m_Style & StyleFlag::Vert)) {
 		int Width;
 
-		if ((m_Style & STYLE_FIXED) == 0 || m_PaneList[1].FixedSize < 0) {
+		if (!(m_Style & StyleFlag::Fixed) || m_PaneList[1].FixedSize < 0) {
 			Width = (m_Position.right - m_Position.left) - BarPos;
-			if ((m_Style & STYLE_FIXED) == 0)
+			if (!(m_Style & StyleFlag::Fixed))
 				Width -= m_BarWidth;
 			if (Width < MinSize2.cx)
 				Width = MinSize2.cx;
@@ -511,20 +511,20 @@ bool CSplitter::GetBarRect(RECT *pRect) const
 			Width = m_PaneList[1].FixedSize;
 		}
 		BarPos = (m_Position.right - m_Position.left) - Width;
-		if ((m_Style & STYLE_FIXED) == 0)
+		if (!(m_Style & StyleFlag::Fixed))
 			BarPos -= m_BarWidth;
 		if (BarPos < MinSize1.cx)
 			BarPos = MinSize1.cx;
 		rc.left = m_Position.left + BarPos;
 		rc.right = rc.left;
-		if ((m_Style & STYLE_FIXED) == 0)
+		if (!(m_Style & StyleFlag::Fixed))
 			rc.right += m_BarWidth;
 	} else {
 		int Height;
 
-		if ((m_Style & STYLE_FIXED) == 0 || m_PaneList[1].FixedSize < 0) {
+		if (!(m_Style & StyleFlag::Fixed) || m_PaneList[1].FixedSize < 0) {
 			Height = (m_Position.bottom - m_Position.top) - BarPos;
-			if ((m_Style & STYLE_FIXED) == 0)
+			if (!(m_Style & StyleFlag::Fixed))
 				Height -= m_BarWidth;
 			if (Height < MinSize2.cy)
 				Height = MinSize2.cy;
@@ -532,13 +532,13 @@ bool CSplitter::GetBarRect(RECT *pRect) const
 			Height = m_PaneList[1].FixedSize;
 		}
 		BarPos = (m_Position.bottom - m_Position.top) - Height;
-		if ((m_Style & STYLE_FIXED) == 0)
+		if (!(m_Style & StyleFlag::Fixed))
 			BarPos -= m_BarWidth;
 		if (BarPos < MinSize1.cy)
 			BarPos = MinSize1.cy;
 		rc.top = m_Position.top + BarPos;
 		rc.bottom = rc.top;
-		if ((m_Style & STYLE_FIXED) == 0)
+		if (!(m_Style & StyleFlag::Fixed))
 			rc.bottom += m_BarWidth;
 	}
 	*pRect = rc;

@@ -1,4 +1,5 @@
 #include "stdafx.h"
+#include "TVTest.h"
 #include "DrawUtil.h"
 #include "Graphics.h"
 #include "Util.h"

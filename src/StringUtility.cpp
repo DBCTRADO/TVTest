@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include <cwctype>
+#include "TVTest.h"
 #include "StringUtility.h"
 #include "Util.h"
 #include "Common/DebugDef.h"

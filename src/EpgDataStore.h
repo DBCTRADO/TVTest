@@ -50,7 +50,7 @@ namespace TVTest
 		uint64_t m_UpdateCount;
 	};
 
-	LIBISDB_ENUM_FLAGS(CEpgDataStore::OpenFlag)
+	TVTEST_ENUM_FLAGS(CEpgDataStore::OpenFlag)
 
 }	// namespace TVTest
 

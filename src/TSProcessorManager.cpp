@@ -373,7 +373,7 @@ bool CTSProcessorManager::GetTSProcessorList(std::vector<CTSProcessor*> *pList) 
 }
 
 
-void CTSProcessorManager::OpenDefaultFilters(unsigned int FilterOpenFlags)
+void CTSProcessorManager::OpenDefaultFilters(FilterOpenFlag FilterOpenFlags)
 {
 	CCoreEngine &CoreEngine = GetAppClass().CoreEngine;
 	const size_t TSFilterCount = CoreEngine.GetTSProcessorCount();
@@ -459,7 +459,7 @@ void CTSProcessorManager::OnTunerChange(LPCTSTR pszOldTuner, LPCTSTR pszNewTuner
 }
 
 
-void CTSProcessorManager::OnTunerOpened(LPCTSTR pszTuner, unsigned int FilterOpenFlags)
+void CTSProcessorManager::OnTunerOpened(LPCTSTR pszTuner, FilterOpenFlag FilterOpenFlags)
 {
 	CAppMain &App = GetAppClass();
 	CCoreEngine &CoreEngine = App.CoreEngine;
@@ -497,7 +497,7 @@ void CTSProcessorManager::OnTunerOpened(LPCTSTR pszTuner, unsigned int FilterOpe
 
 
 void CTSProcessorManager::OnNetworkChanged(
-	LPCTSTR pszTuner, WORD NetworkID, WORD TransportStreamID, WORD ServiceID, unsigned int FilterOpenFlags)
+	LPCTSTR pszTuner, WORD NetworkID, WORD TransportStreamID, WORD ServiceID, FilterOpenFlag FilterOpenFlags)
 {
 	CAppMain &App = GetAppClass();
 	CCoreEngine &CoreEngine = App.CoreEngine;
@@ -537,7 +537,7 @@ void CTSProcessorManager::OnNetworkChanged(
 
 void CTSProcessorManager::OpenFilter(
 	CTSProcessor *pTSProcessor, CTSProcessorSettings *pSettings,
-	const FilterInfo &Filter, unsigned int FilterOpenFlags)
+	const FilterInfo &Filter, FilterOpenFlag FilterOpenFlags)
 {
 	TRACE(
 		TEXT("CTSProcessorManager::OpenFilter() : %s %s %s\n"),
@@ -592,7 +592,7 @@ void CTSProcessorManager::OpenFilter(
 		else
 			App.AddLog(CLogItem::LogType::Error, TEXT("TSフィルター \"%s\" をオープンできません。"), DeviceName.c_str());
 
-		if ((FilterOpenFlags & FILTER_OPEN_RETRY_DIALOG) != 0) {
+		if (!!(FilterOpenFlags & FilterOpenFlag::RetryDialog)) {
 			String Message;
 			CTSProcessorErrorDialog Dialog(pTSProcessor);
 
@@ -622,13 +622,13 @@ void CTSProcessorManager::OpenFilter(
 				}
 			}
 		} else {
-			if ((FilterOpenFlags & FILTER_OPEN_NOTIFY_ERROR) != 0) {
+			if (!!(FilterOpenFlags & FilterOpenFlag::NotifyError)) {
 				App.UICore.GetSkin()->ShowNotificationBar(
 					TEXT("TSフィルターをオープンできません。"),
 					CNotificationBar::MessageType::Error, 6000);
 			}
 
-			if ((FilterOpenFlags & FILTER_OPEN_NO_UI) == 0) {
+			if (!(FilterOpenFlags & FilterOpenFlag::NoUI)) {
 				App.UICore.GetSkin()->ShowErrorMessage(pTSProcessor);
 			}
 		}

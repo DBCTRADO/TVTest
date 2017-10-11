@@ -770,7 +770,7 @@ bool CCaptionDRCSMap::Load(LPCTSTR pszFileName)
 	Clear();
 
 	CSettings Settings;
-	if (Settings.Open(pszFileName, CSettings::OPEN_READ)) {
+	if (Settings.Open(pszFileName, CSettings::OpenFlag::Read)) {
 		if (Settings.SetSection(TEXT("Settings"))) {
 			Settings.Read(TEXT("SaveBMP"), &m_fSaveBMP);
 			Settings.Read(TEXT("SaveRaw"), &m_fSaveRaw);

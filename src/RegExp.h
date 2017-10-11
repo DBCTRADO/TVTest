@@ -21,9 +21,10 @@ namespace TVTest
 	class CRegExp
 	{
 	public:
-		enum {
-			FLAG_IGNORE_CASE  = 0x0001U,
-			FLAG_IGNORE_WIDTH = 0x0002U
+		enum class PatternFlag : unsigned int {
+			None        = 0x0000U,
+			IgnoreCase  = 0x0001U,
+			IgnoreWidth = 0x0002U,
 		};
 
 		struct TextRange
@@ -35,7 +36,7 @@ namespace TVTest
 		bool Initialize();
 		void Finalize();
 		bool IsInitialized() const;
-		bool SetPattern(LPCTSTR pszPattern, UINT Flags = 0);
+		bool SetPattern(LPCTSTR pszPattern, PatternFlag Flags = PatternFlag::None);
 		void ClearPattern();
 		bool Match(LPCTSTR pText, size_t Length, TextRange *pRange = nullptr);
 		bool Match(LPCTSTR pszText, TextRange *pRange = nullptr);
@@ -47,6 +48,8 @@ namespace TVTest
 		std::unique_ptr<CRegExpEngine, RegExpEngineDeleter> m_Engine;
 	};
 
+	TVTEST_ENUM_FLAGS(CRegExp::PatternFlag)
+
 	class ABSTRACT_CLASS(CRegExpEngine)
 	{
 	public:
@@ -56,7 +59,7 @@ namespace TVTest
 		virtual bool Initialize() = 0;
 		virtual void Finalize() = 0;
 		virtual bool IsInitialized() const = 0;
-		virtual bool SetPattern(LPCTSTR pszPattern, UINT Flags) = 0;
+		virtual bool SetPattern(LPCTSTR pszPattern, CRegExp::PatternFlag Flags) = 0;
 		virtual void ClearPattern();
 		virtual bool Match(LPCTSTR pText, size_t Length, CRegExp::TextRange *pRange) = 0;
 
@@ -66,7 +69,7 @@ namespace TVTest
 		void MapTargetString(String &Text) const;
 
 		String m_Pattern;
-		UINT m_Flags;
+		CRegExp::PatternFlag m_Flags;
 	};
 
 }

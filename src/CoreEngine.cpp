@@ -6,6 +6,8 @@
 #include "Common/DebugDef.h"
 
 
+namespace TVTest
+{
 
 
 CCoreEngine::CCoreEngine()
@@ -39,7 +41,7 @@ CCoreEngine::CCoreEngine()
 	, m_TimerResolution(0)
 	, m_fNoEpg(false)
 
-	, m_AsyncStatusUpdatedFlags(0)
+	, m_AsyncStatusUpdatedFlags(StatusFlag::None)
 {
 }
 
@@ -182,7 +184,7 @@ void CCoreEngine::ConnectTSProcessor(
 }
 
 
-TVTest::CTSProcessor *CCoreEngine::GetTSProcessorByIndex(size_t Index)
+CTSProcessor *CCoreEngine::GetTSProcessorByIndex(size_t Index)
 {
 	if (Index >= m_TSProcessorList.size())
 		return nullptr;
@@ -191,7 +193,7 @@ TVTest::CTSProcessor *CCoreEngine::GetTSProcessorByIndex(size_t Index)
 
 
 bool CCoreEngine::RegisterTSProcessor(
-	TVTest::CTSProcessor *pTSProcessor,
+	CTSProcessor *pTSProcessor,
 	TSProcessorConnectPosition ConnectPosition)
 {
 	if (pTSProcessor == nullptr)
@@ -281,7 +283,7 @@ bool CCoreEngine::SetDriverDirectory(LPCTSTR pszDirectory)
 }
 
 
-bool CCoreEngine::GetDriverDirectoryPath(TVTest::String *pDirectory) const
+bool CCoreEngine::GetDriverDirectoryPath(String *pDirectory) const
 {
 	if (pDirectory == nullptr)
 		return false;
@@ -319,7 +321,7 @@ bool CCoreEngine::SetDriverFileName(LPCTSTR pszFileName)
 }
 
 
-bool CCoreEngine::GetDriverPath(TVTest::String *pPath) const
+bool CCoreEngine::GetDriverPath(String *pPath) const
 {
 	if (pPath == nullptr)
 		return false;
@@ -330,7 +332,7 @@ bool CCoreEngine::GetDriverPath(TVTest::String *pPath) const
 		return false;
 
 	if (m_DriverFileName.IsRelative()) {
-		TVTest::String Dir;
+		String Dir;
 
 		if (!GetDriverDirectoryPath(&Dir)
 				|| !m_DriverFileName.GetAbsolute(pPath, Dir))
@@ -348,7 +350,7 @@ bool CCoreEngine::GetDriverPath(LPTSTR pszPath, int MaxLength) const
 	if ((pszPath == nullptr) || (MaxLength < 1))
 		return false;
 
-	TVTest::String Path;
+	String Path;
 	if (!GetDriverPath(&Path) || (Path.length() >= static_cast<size_t>(MaxLength))) {
 		pszPath[0] = _T('\0');
 		return false;
@@ -369,7 +371,7 @@ bool CCoreEngine::OpenTuner()
 		return false;
 	}
 
-	TVTest::String DriverPath;
+	String DriverPath;
 	if (!GetDriverPath(&DriverPath)) {
 		SetError(std::errc::operation_not_permitted, TEXT("BonDriverのパスを取得できません。"));
 		return false;
@@ -591,9 +593,9 @@ bool CCoreEngine::IsSPDIFPassthroughEnabled() const
 
 
 // TODO: 変化があった場合 DtvEngine 側から通知するようにする
-DWORD CCoreEngine::UpdateAsyncStatus()
+CCoreEngine::StatusFlag CCoreEngine::UpdateAsyncStatus()
 {
-	DWORD Updated = 0;
+	StatusFlag Updated = StatusFlag::None;
 
 	if (m_pViewer != nullptr) {
 		int Width, Height;
@@ -602,7 +604,7 @@ DWORD CCoreEngine::UpdateAsyncStatus()
 			if (Width != m_OriginalVideoWidth || Height != m_OriginalVideoHeight) {
 				m_OriginalVideoWidth = Width;
 				m_OriginalVideoHeight = Height;
-				Updated |= STATUS_VIDEOSIZE;
+				Updated |= StatusFlag::VideoSize;
 			}
 		}
 
@@ -610,21 +612,21 @@ DWORD CCoreEngine::UpdateAsyncStatus()
 			if (Width != m_DisplayVideoWidth || Height != m_DisplayVideoHeight) {
 				m_DisplayVideoWidth = Width;
 				m_DisplayVideoHeight = Height;
-				Updated |= STATUS_VIDEOSIZE;
+				Updated |= StatusFlag::VideoSize;
 			}
 		}
 
 		int NumAudioChannels = m_pViewer->GetAudioChannelCount();
 		if (NumAudioChannels != m_NumAudioChannels) {
 			m_NumAudioChannels = NumAudioChannels;
-			Updated |= STATUS_AUDIOCHANNELS;
+			Updated |= StatusFlag::AudioChannels;
 			TRACE(TEXT("Audio channels = %dch\n"), NumAudioChannels);
 		}
 
 		bool fSPDIFPassthrough = m_pViewer->IsSPDIFPassthrough();
 		if (fSPDIFPassthrough != m_fSPDIFPassthrough) {
 			m_fSPDIFPassthrough = fSPDIFPassthrough;
-			Updated |= STATUS_SPDIFPASSTHROUGH;
+			Updated |= StatusFlag::SPDIFPassthrough;
 			TRACE(TEXT("S/PDIF passthrough %s\n"), fSPDIFPassthrough ? TEXT("ON") : TEXT("OFF"));
 		}
 	}
@@ -632,7 +634,7 @@ DWORD CCoreEngine::UpdateAsyncStatus()
 	int NumAudioStreams = GetAudioStreamCount();
 	if (NumAudioStreams != m_NumAudioStreams) {
 		m_NumAudioStreams = NumAudioStreams;
-		Updated |= STATUS_AUDIOSTREAMS;
+		Updated |= StatusFlag::AudioStreams;
 		TRACE(TEXT("Audio streams = %dch\n"), NumAudioStreams);
 	}
 
@@ -641,39 +643,41 @@ DWORD CCoreEngine::UpdateAsyncStatus()
 			m_pAnalyzer->GetServiceIndexByID(m_CurServiceID), m_CurAudioStream);
 		if (AudioComponentType != m_AudioComponentType) {
 			m_AudioComponentType = AudioComponentType;
-			Updated |= STATUS_AUDIOCOMPONENTTYPE;
+			Updated |= StatusFlag::AudioComponentType;
 			TRACE(TEXT("AudioComponentType = %x\n"), AudioComponentType);
 		}
 	}
 
-	if (m_AsyncStatusUpdatedFlags != 0) {
-		Updated |= ::InterlockedExchange(reinterpret_cast<LONG*>(&m_AsyncStatusUpdatedFlags), 0);
+	if (m_AsyncStatusUpdatedFlags != StatusFlag::None) {
+		static_assert(sizeof(m_AsyncStatusUpdatedFlags) == sizeof(LONG));
+		Updated |= static_cast<StatusFlag>(::InterlockedExchange(reinterpret_cast<LONG*>(&m_AsyncStatusUpdatedFlags), 0));
 	}
 
 	return Updated;
 }
 
 
-void CCoreEngine::SetAsyncStatusUpdatedFlag(DWORD Status)
+void CCoreEngine::SetAsyncStatusUpdatedFlag(StatusFlag Status)
 {
-	_InterlockedOr(reinterpret_cast<long*>(&m_AsyncStatusUpdatedFlags), Status);
+	static_assert(sizeof(StatusFlag) == sizeof(long));
+	_InterlockedOr(reinterpret_cast<long*>(&m_AsyncStatusUpdatedFlags), static_cast<long>(Status));
 }
 
 
-DWORD CCoreEngine::UpdateStatistics()
+CCoreEngine::StatisticsFlag CCoreEngine::UpdateStatistics()
 {
-	DWORD Updated = 0;
+	StatisticsFlag Updated = StatisticsFlag::None;
 
 	const LibISDB::TSPacketParserFilter *pParser = GetFilter<LibISDB::TSPacketParserFilter>();
 	if (pParser != nullptr) {
 		const LibISDB::TSPacketParserFilter::PacketCountInfo Count = pParser->GetPacketCount();
 		if (Count.TransportError + Count.FormatError != m_ErrorPacketCount) {
 			m_ErrorPacketCount = Count.TransportError + Count.FormatError;
-			Updated |= STATISTIC_ERRORPACKETCOUNT;
+			Updated |= StatisticsFlag::ErrorPacketCount;
 		}
 		if (Count.ContinuityError != m_ContinuityErrorPacketCount) {
 			m_ContinuityErrorPacketCount = Count.ContinuityError;
-			Updated |= STATISTIC_CONTINUITYERRORPACKETCOUNT;
+			Updated |= StatisticsFlag::ContinuityErrorPacketCount;
 		}
 	}
 
@@ -682,7 +686,7 @@ DWORD CCoreEngine::UpdateStatistics()
 		unsigned long long ScrambledCount = pCounter->GetScrambledPacketCount();
 		if (ScrambledCount != m_ScrambledPacketCount) {
 			m_ScrambledPacketCount = ScrambledCount;
-			Updated |= STATISTIC_SCRAMBLEPACKETCOUNT;
+			Updated |= StatisticsFlag::ScrambledPacketCount;
 		}
 	}
 
@@ -701,15 +705,15 @@ DWORD CCoreEngine::UpdateStatistics()
 	}
 	if (SignalLevel != m_SignalLevel) {
 		m_SignalLevel = SignalLevel;
-		Updated |= STATISTIC_SIGNALLEVEL;
+		Updated |= StatisticsFlag::SignalLevel;
 	}
 	if (BitRate != m_BitRate) {
 		m_BitRate = BitRate;
-		Updated |= STATISTIC_BITRATE;
+		Updated |= StatisticsFlag::BitRate;
 	}
 	if (StreamRemain != m_StreamRemain) {
 		m_StreamRemain = StreamRemain;
-		Updated |= STATISTIC_STREAMREMAIN;
+		Updated |= StatisticsFlag::StreamRemain;
 	}
 
 	int BufferFillPercentage;
@@ -719,7 +723,7 @@ DWORD CCoreEngine::UpdateStatistics()
 		BufferFillPercentage = 0;
 	if (BufferFillPercentage != m_PacketBufferFillPercentage) {
 		m_PacketBufferFillPercentage = BufferFillPercentage;
-		Updated |= STATISTIC_PACKETBUFFERRATE;
+		Updated |= StatisticsFlag::PacketBufferRate;
 	}
 
 	return Updated;
@@ -748,7 +752,7 @@ int CCoreEngine::GetSignalLevelText(LPTSTR pszText, int MaxLength) const
 
 int CCoreEngine::GetSignalLevelText(float SignalLevel, LPTSTR pszText, int MaxLength) const
 {
-	return TVTest::StringPrintf(pszText, MaxLength, TEXT("%.2f dB"), SignalLevel);
+	return StringPrintf(pszText, MaxLength, TEXT("%.2f dB"), SignalLevel);
 }
 
 
@@ -766,7 +770,7 @@ int CCoreEngine::GetBitRateText(unsigned long BitRate, LPTSTR pszText, int MaxLe
 
 int CCoreEngine::GetBitRateText(float BitRate, LPTSTR pszText, int MaxLength, int Precision) const
 {
-	return TVTest::StringPrintf(pszText, MaxLength, TEXT("%.*f Mbps"), Precision, BitRate);
+	return StringPrintf(pszText, MaxLength, TEXT("%.*f Mbps"), Precision, BitRate);
 }
 
 
@@ -929,3 +933,6 @@ void CCoreEngine::OnWriteError(LibISDB::RecorderFilter *pRecorder, LibISDB::Reco
 {
 	m_EventListenerList.CallEventListener(&CCoreEngine::EventListener::OnWriteError, pRecorder);
 }
+
+
+}	// namespace TVTest

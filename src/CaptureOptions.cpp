@@ -603,7 +603,7 @@ INT_PTR CCaptureOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 
 				TVTest::String FileName, Message;
 				GetDlgItemString(hDlg, IDC_CAPTUREOPTIONS_FILENAME, &FileName);
-				if (!IsValidFileName(FileName.c_str(), FILENAME_VALIDATE_ALLOWDELIMITER, &Message)) {
+				if (!IsValidFileName(FileName.c_str(), FileNameValidateFlag::AllowDelimiter, &Message)) {
 					SettingError();
 					::SendDlgItemMessage(hDlg, IDC_CAPTUREOPTIONS_FILENAME, EM_SETSEL, 0, -1);
 					::MessageBox(hDlg, Message.c_str(), nullptr, MB_OK | MB_ICONEXCLAMATION);

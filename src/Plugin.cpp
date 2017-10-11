@@ -621,7 +621,7 @@ public:
 		, m_pInfo(pInfo)
 		, m_pContext(pContext)
 	{
-		m_Flags = (pInfo->Flags & VAR_STRING_FORMAT_FLAG_FILENAME) == 0 ? FLAG_NO_NORMALIZE : 0;
+		m_Flags = (pInfo->Flags & VAR_STRING_FORMAT_FLAG_FILENAME) == 0 ? Flag::NoNormalize : Flag::None;
 	}
 
 	bool GetLocalString(LPCWSTR pszKeyword, String *pString) override
@@ -880,8 +880,8 @@ bool CPlugin::Enable(bool fEnable)
 		if (m_Command > 0) {
 			GetAppClass().CommandList.SetCommandStateByID(
 				m_Command,
-				CCommandList::COMMAND_STATE_CHECKED,
-				fEnable ? CCommandList::COMMAND_STATE_CHECKED : 0);
+				CCommandList::CommandState::Checked,
+				fEnable ? CCommandList::CommandState::Checked : CCommandList::CommandState::None);
 		}
 
 		if (fEnable) {
@@ -2354,15 +2354,15 @@ LRESULT CPlugin::OnCallback(TVTest::PluginParam *pParam, UINT Message, LPARAM lP
 
 					itr->SetState(State);
 
-					unsigned int CommandState = 0;
+					CCommandList::CommandState CommandState = CCommandList::CommandState::None;
 					if ((State & TVTest::PLUGIN_COMMAND_STATE_DISABLED) != 0)
-						CommandState |= CCommandList::COMMAND_STATE_DISABLED;
+						CommandState |= CCommandList::CommandState::Disabled;
 					if ((State & TVTest::PLUGIN_COMMAND_STATE_CHECKED) != 0)
-						CommandState |= CCommandList::COMMAND_STATE_CHECKED;
+						CommandState |= CCommandList::CommandState::Checked;
 					GetAppClass().CommandList.SetCommandStateByID(
 						itr->GetCommand(),
-						CCommandList::COMMAND_STATE_DISABLED |
-						CCommandList::COMMAND_STATE_CHECKED,
+						CCommandList::CommandState::Disabled |
+						CCommandList::CommandState::Checked,
 						CommandState);
 
 					return TRUE;
@@ -2948,9 +2948,9 @@ LRESULT CPlugin::OnCallback(TVTest::PluginParam *pParam, UINT Message, LPARAM lP
 				return FALSE;
 
 			CAppMain &App = GetAppClass();
-			unsigned int Flags = 0;
+			TVTest::CVariableManager::VariableFlag Flags = TVTest::CVariableManager::VariableFlag::None;
 			if ((pInfo->Flags & TVTest::REGISTER_VARIABLE_FLAG_OVERRIDE) != 0)
-				Flags |= TVTest::CVariableManager::FLAG_OVERRIDE;
+				Flags |= TVTest::CVariableManager::VariableFlag::Override;
 
 			if (!App.VariableManager.RegisterVariable(
 						pInfo->pszKeyword, pInfo->pszValue,
@@ -3041,8 +3041,8 @@ LRESULT CPlugin::OnPluginMessage(WPARAM wParam, LPARAM lParam)
 	case TVTest::MESSAGE_SETSERVICE:
 		{
 			if (pParam->lParam2 == 0)
-				return GetAppClass().Core.SetServiceByIndex((int)pParam->lParam1, CAppCore::SET_SERVICE_STRICT_ID);
-			return GetAppClass().Core.SetServiceByID((WORD)pParam->lParam1, CAppCore::SET_SERVICE_STRICT_ID);
+				return GetAppClass().Core.SetServiceByIndex((int)pParam->lParam1, CAppCore::SetServiceFlag::StrictID);
+			return GetAppClass().Core.SetServiceByID((WORD)pParam->lParam1, CAppCore::SetServiceFlag::StrictID);
 		}
 
 	case TVTest::MESSAGE_GETTUNINGSPACENAME:
@@ -3532,18 +3532,17 @@ LRESULT CPlugin::OnPluginMessage(WPARAM wParam, LPARAM lParam)
 				return FALSE;
 
 			CChannelInfo Channel;
-			unsigned int Flags;
+			CAppCore::SelectChannelFlag Flags = CAppCore::SelectChannelFlag::None;
 
 			Channel.SetSpace(pInfo->Space);
 			Channel.SetChannelIndex(pInfo->Channel);
 			Channel.SetNetworkID(pInfo->NetworkID);
 			Channel.SetTransportStreamID(pInfo->TransportStreamID);
 			Channel.SetServiceID(pInfo->ServiceID);
-			Flags = 0;
 			if (pInfo->pszTuner == nullptr)
-				Flags |= CAppCore::SELECT_CHANNEL_USE_CUR_TUNER;
+				Flags |= CAppCore::SelectChannelFlag::UseCurrentTuner;
 			if ((pInfo->Flags & TVTest::CHANNEL_SELECT_FLAG_STRICTSERVICE) != 0)
-				Flags |= CAppCore::SELECT_CHANNEL_STRICT_SERVICE;
+				Flags |= CAppCore::SelectChannelFlag::StrictService;
 
 			return GetAppClass().Core.SelectChannel(pInfo->pszTuner, Channel, Flags);
 		}
@@ -4100,13 +4099,13 @@ void CPlugin::CPluginStatusItem::RealizeStyle()
 void CPlugin::CPluginStatusItem::ApplyItemStyle()
 {
 	if (m_pItem != nullptr) {
-		m_Style = 0;
+		m_Style = StyleFlag::None;
 		if ((m_pItem->Style & TVTest::STATUS_ITEM_STYLE_VARIABLEWIDTH) != 0)
-			m_Style |= STYLE_VARIABLEWIDTH;
+			m_Style |= StyleFlag::VariableWidth;
 		if ((m_pItem->Style & TVTest::STATUS_ITEM_STYLE_FULLROW) != 0)
-			m_Style |= STYLE_FULLROW;
+			m_Style |= StyleFlag::FullRow;
 		if ((m_pItem->Style & TVTest::STATUS_ITEM_STYLE_FORCEFULLROW) != 0)
-			m_Style |= STYLE_FULLROW | STYLE_FORCEFULLROW;
+			m_Style |= StyleFlag::FullRow | StyleFlag::ForceFullRow;
 	}
 }
 
@@ -4758,7 +4757,7 @@ void CPluginManager::OnTunerShutDown()
 }
 
 
-void CPluginManager::OnChannelChanged(unsigned int Status)
+void CPluginManager::OnChannelChanged(TVTest::AppEvent::ChannelChangeStatus Status)
 {
 	SendEvent(TVTest::EVENT_CHANNELCHANGE);
 }

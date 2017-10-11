@@ -583,11 +583,11 @@ bool CEventSearcher::BeginSearch(const CEventSearchSettings &Settings)
 	if (Settings.fRegExp && !Settings.Keyword.empty()) {
 		if (!m_RegExp.Initialize())
 			return false;
-		UINT Flags = 0;
+		TVTest::CRegExp::PatternFlag Flags = TVTest::CRegExp::PatternFlag::None;
 		if (Settings.fIgnoreCase)
-			Flags |= TVTest::CRegExp::FLAG_IGNORE_CASE;
+			Flags |= TVTest::CRegExp::PatternFlag::IgnoreCase;
 		if (Settings.fIgnoreWidth)
-			Flags |= TVTest::CRegExp::FLAG_IGNORE_WIDTH;
+			Flags |= TVTest::CRegExp::PatternFlag::IgnoreWidth;
 		if (!m_RegExp.SetPattern(Settings.Keyword.c_str(), Flags))
 			return false;
 	}
@@ -1289,13 +1289,13 @@ INT_PTR CEventSearchSettingsDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam,
 {
 	switch (uMsg) {
 	case WM_INITDIALOG:
-		AddControl(IDC_EVENTSEARCH_KEYWORD, ALIGN_HORZ);
-		AddControl(IDC_EVENTSEARCH_KEYWORDMENU, ALIGN_RIGHT);
-		AddControl(IDC_EVENTSEARCH_SETTINGSLIST, ALIGN_HORZ);
-		AddControl(IDC_EVENTSEARCH_SETTINGSLIST_SAVE, ALIGN_RIGHT);
-		AddControl(IDC_EVENTSEARCH_SETTINGSLIST_DELETE, ALIGN_RIGHT);
-		AddControl(IDC_EVENTSEARCH_SEARCHTARGET, ALIGN_RIGHT);
-		AddControl(IDC_EVENTSEARCH_SEARCH, ALIGN_RIGHT);
+		AddControl(IDC_EVENTSEARCH_KEYWORD, AlignFlag::Horz);
+		AddControl(IDC_EVENTSEARCH_KEYWORDMENU, AlignFlag::Right);
+		AddControl(IDC_EVENTSEARCH_SETTINGSLIST, AlignFlag::Horz);
+		AddControl(IDC_EVENTSEARCH_SETTINGSLIST_SAVE, AlignFlag::Right);
+		AddControl(IDC_EVENTSEARCH_SETTINGSLIST_DELETE, AlignFlag::Right);
+		AddControl(IDC_EVENTSEARCH_SEARCHTARGET, AlignFlag::Right);
+		AddControl(IDC_EVENTSEARCH_SEARCH, AlignFlag::Right);
 
 		// キーワード
 		{
@@ -1936,9 +1936,9 @@ INT_PTR CProgramSearchDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 {
 	switch (uMsg) {
 	case WM_INITDIALOG:
-		AddControl(IDC_PROGRAMSEARCH_SETTINGSPLACE, ALIGN_HORZ);
-		AddControl(IDC_PROGRAMSEARCH_STATUS, ALIGN_HORZ);
-		AddControl(IDC_PROGRAMSEARCH_RESULTPANE, ALIGN_ALL);
+		AddControl(IDC_PROGRAMSEARCH_SETTINGSPLACE, AlignFlag::Horz);
+		AddControl(IDC_PROGRAMSEARCH_STATUS, AlignFlag::Horz);
+		AddControl(IDC_PROGRAMSEARCH_RESULTPANE, AlignFlag::All);
 
 		m_SearchSettingsDialog.SetEventHandler(this);
 		m_SearchSettings.Keyword.clear();

@@ -1290,11 +1290,11 @@ LRESULT CMainWindow::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 		if (wParam == PBT_APMSUSPEND) {
 			m_App.AddLog(TEXT("サスペンドへの移行通知を受けました。"));
 			if (m_App.EpgCaptureManager.IsCapturing()) {
-				m_App.EpgCaptureManager.EndCapture(0);
+				m_App.EpgCaptureManager.EndCapture(CEpgCaptureManager::EndFlag::None);
 			} else if (!m_pCore->GetStandby()) {
 				StoreTunerResumeInfo();
 			}
-			SuspendViewer(ResumeInfo::VIEWERSUSPEND_SUSPEND);
+			SuspendViewer(ResumeInfo::ViewerSuspendFlag::Suspend);
 			m_App.Core.CloseTuner();
 			FinalizeViewer();
 		} else if (wParam == PBT_APMRESUMESUSPEND) {
@@ -1303,7 +1303,7 @@ LRESULT CMainWindow::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 				// 遅延させた方がいいかも?
 				ResumeTuner();
 			}
-			ResumeViewer(ResumeInfo::VIEWERSUSPEND_SUSPEND);
+			ResumeViewer(ResumeInfo::ViewerSuspendFlag::Suspend);
 		}
 		break;
 
@@ -1376,8 +1376,8 @@ LRESULT CMainWindow::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 
 		if (!IsMessageInQueue(hwnd, WM_APP_SERVICECHANGED)) {
 			m_App.Core.NotifyTSProcessorNetworkChanged(
-				CTSProcessorManager::FILTER_OPEN_NOTIFY_ERROR |
-				CTSProcessorManager::FILTER_OPEN_NO_UI);
+				CTSProcessorManager::FilterOpenFlag::NotifyError |
+				CTSProcessorManager::FilterOpenFlag::NoUI);
 		}
 		return 0;
 
@@ -1388,8 +1388,8 @@ LRESULT CMainWindow::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 
 		if (!IsMessageInQueue(hwnd, WM_APP_SERVICEINFOUPDATED)) {
 			m_App.Core.NotifyTSProcessorNetworkChanged(
-				CTSProcessorManager::FILTER_OPEN_NOTIFY_ERROR |
-				CTSProcessorManager::FILTER_OPEN_NO_UI);
+				CTSProcessorManager::FilterOpenFlag::NotifyError |
+				CTSProcessorManager::FilterOpenFlag::NoUI);
 		}
 		return 0;
 
@@ -1724,8 +1724,8 @@ bool CMainWindow::OnCreate(const CREATESTRUCT *pcs)
 		SideBarPlace == CSideBarOptions::PlaceType::Right;
 	int SideBarWidth = m_App.SideBar.GetBarWidth();
 	pSideBarSplitter->SetStyle(
-		Layout::CSplitter::STYLE_FIXED |
-			(fSideBarVertical ? Layout::CSplitter::STYLE_HORZ : Layout::CSplitter::STYLE_VERT));
+		Layout::CSplitter::StyleFlag::Fixed |
+			(fSideBarVertical ? Layout::CSplitter::StyleFlag::Horz : Layout::CSplitter::StyleFlag::Vert));
 	pSideBarSplitter->SetVisible(true);
 	pWindowContainer = new Layout::CWindowContainer(CONTAINER_ID_VIEW);
 	pWindowContainer->SetWindow(&m_Display.GetViewWindow());
@@ -1744,7 +1744,7 @@ bool CMainWindow::OnCreate(const CREATESTRUCT *pcs)
 		pSideBarSplitter->SwapPane();
 
 	Layout::CSplitter *pTitleBarSplitter = new Layout::CSplitter(CONTAINER_ID_TITLEBARSPLITTER);
-	pTitleBarSplitter->SetStyle(Layout::CSplitter::STYLE_VERT | Layout::CSplitter::STYLE_FIXED);
+	pTitleBarSplitter->SetStyle(Layout::CSplitter::StyleFlag::Vert | Layout::CSplitter::StyleFlag::Fixed);
 	pTitleBarSplitter->SetVisible(true);
 	Layout::CWindowContainer *pTitleBarContainer = new Layout::CWindowContainer(CONTAINER_ID_TITLEBAR);
 	pTitleBarContainer->SetWindow(&m_TitleBar);
@@ -1755,7 +1755,7 @@ bool CMainWindow::OnCreate(const CREATESTRUCT *pcs)
 
 	Layout::CSplitter *pPanelSplitter = new Layout::CSplitter(CONTAINER_ID_PANELSPLITTER);
 	pPanelSplitter->SetStyle(
-		m_fPanelVerticalAlign ? Layout::CSplitter::STYLE_VERT : Layout::CSplitter::STYLE_HORZ);
+		m_fPanelVerticalAlign ? Layout::CSplitter::StyleFlag::Vert : Layout::CSplitter::StyleFlag::Horz);
 	pPanelSplitter->SetVisible(true);
 	Layout::CWindowContainer *pPanelContainer = new Layout::CWindowContainer(CONTAINER_ID_PANEL);
 	pPanelContainer->SetMinSize(32, 32);
@@ -1766,7 +1766,7 @@ bool CMainWindow::OnCreate(const CREATESTRUCT *pcs)
 	pTitleBarSplitter->SetAdjustPane(CONTAINER_ID_PANELSPLITTER);
 
 	Layout::CSplitter *pStatusSplitter = new Layout::CSplitter(CONTAINER_ID_STATUSSPLITTER);
-	pStatusSplitter->SetStyle(Layout::CSplitter::STYLE_VERT | Layout::CSplitter::STYLE_FIXED);
+	pStatusSplitter->SetStyle(Layout::CSplitter::StyleFlag::Vert | Layout::CSplitter::StyleFlag::Fixed);
 	pStatusSplitter->SetVisible(true);
 	pStatusSplitter->SetPane(0, pTitleBarSplitter);
 	pStatusSplitter->SetAdjustPane(CONTAINER_ID_TITLEBARSPLITTER);
@@ -1954,12 +1954,12 @@ void CMainWindow::OnSizeChanged(UINT State, int Width, int Height)
 		m_App.OSDManager.ClearOSD();
 		m_App.OSDManager.Reset();
 		m_App.TaskTrayManager.SetStatus(
-			CTaskTrayManager::STATUS_MINIMIZED,
-			CTaskTrayManager::STATUS_MINIMIZED);
+			CTaskTrayManager::StatusFlag::Minimized,
+			CTaskTrayManager::StatusFlag::Minimized);
 		if (m_App.ViewOptions.GetDisablePreviewWhenMinimized()) {
-			SuspendViewer(ResumeInfo::VIEWERSUSPEND_MINIMIZE);
+			SuspendViewer(ResumeInfo::ViewerSuspendFlag::Minimize);
 		}
-	} else if ((m_App.TaskTrayManager.GetStatus() & CTaskTrayManager::STATUS_MINIMIZED) != 0) {
+	} else if (!!(m_App.TaskTrayManager.GetStatus() & CTaskTrayManager::StatusFlag::Minimized)) {
 		SetWindowVisible();
 	}
 
@@ -3021,7 +3021,7 @@ void CMainWindow::OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
 				pt.y = 0;
 				::ClientToScreen(GetCurrentViewWindow().GetHandle(), &pt);
 			}
-			m_pCore->PopupMenu(&pt, fDefault ? CUICore::POPUPMENU_DEFAULT : 0);
+			m_pCore->PopupMenu(&pt, fDefault ? CUICore::PopupMenuFlag::Default : CUICore::PopupMenuFlag::None);
 		}
 		return;
 
@@ -3254,8 +3254,8 @@ void CMainWindow::OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
 					dynamic_cast<Layout::CSplitter*>(m_LayoutBase.GetContainerByID(CONTAINER_ID_SIDEBARSPLITTER));
 				bool fSwap = pSplitter->IDToIndex(CONTAINER_ID_SIDEBAR) != Pane;
 				pSplitter->SetStyle(
-					(fVertical ? Layout::CSplitter::STYLE_HORZ : Layout::CSplitter::STYLE_VERT) |
-						Layout::CSplitter::STYLE_FIXED,
+					(fVertical ? Layout::CSplitter::StyleFlag::Horz : Layout::CSplitter::StyleFlag::Vert) |
+						Layout::CSplitter::StyleFlag::Fixed,
 					!fSwap);
 				if (fSwap)
 					pSplitter->SwapPane();
@@ -3416,7 +3416,7 @@ void CMainWindow::OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
 							GetVideoHostWindow(), &m_App.RecordManager))
 					return;
 			}
-			m_App.Core.SetServiceByIndex(id - CM_SERVICE_FIRST, CAppCore::SET_SERVICE_STRICT_ID);
+			m_App.Core.SetServiceByIndex(id - CM_SERVICE_FIRST, CAppCore::SetServiceFlag::StrictID);
 			return;
 		}
 
@@ -3483,7 +3483,8 @@ void CMainWindow::OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
 					ChannelInfo.BonDriverFileName.c_str(),
 					ChannelInfo.Channel,
 					ChannelInfo.fForceBonDriverChange ?
-						0 : CAppCore::SELECT_CHANNEL_USE_CUR_TUNER);
+						CAppCore::SelectChannelFlag::None :
+						CAppCore::SelectChannelFlag::UseCurrentTuner);
 			}
 			return;
 		}
@@ -3602,25 +3603,25 @@ void CMainWindow::OnTimer(HWND hwnd, UINT id)
 	case TIMER_ID_UPDATE:
 		// 情報更新
 		{
-			DWORD UpdateStatus = m_App.CoreEngine.UpdateAsyncStatus();
-			DWORD UpdateStatistics = m_App.CoreEngine.UpdateStatistics();
+			CCoreEngine::StatusFlag UpdateStatus = m_App.CoreEngine.UpdateAsyncStatus();
+			CCoreEngine::StatisticsFlag UpdateStatistics = m_App.CoreEngine.UpdateStatistics();
 
 			// 映像サイズの変化
-			if ((UpdateStatus & CCoreEngine::STATUS_VIDEOSIZE) != 0) {
+			if (!!(UpdateStatus & CCoreEngine::StatusFlag::VideoSize)) {
 				m_App.StatusView.UpdateItem(STATUS_ITEM_VIDEOSIZE);
 				m_App.Panel.InfoPanel.UpdateItem(CInformationPanel::ITEM_VIDEOINFO);
 				m_App.Panel.ControlPanel.UpdateItem(CONTROLPANEL_ITEM_VIDEO);
 			}
 
 			// 音声形式の変化
-			if ((UpdateStatus &
-					(CCoreEngine::STATUS_AUDIOCHANNELS |
-					 CCoreEngine::STATUS_AUDIOSTREAMS |
-					 CCoreEngine::STATUS_AUDIOCOMPONENTTYPE |
-					 CCoreEngine::STATUS_SPDIFPASSTHROUGH)) != 0) {
+			if (!!(UpdateStatus &
+					(CCoreEngine::StatusFlag::AudioChannels |
+					 CCoreEngine::StatusFlag::AudioStreams |
+					 CCoreEngine::StatusFlag::AudioComponentType |
+					 CCoreEngine::StatusFlag::SPDIFPassthrough))) {
 				TRACE(TEXT("Audio status changed.\n"));
 				/*
-				if ((UpdateStatus & CCoreEngine::STATUS_SPDIFPASSTHROUGH) == 0)
+				if ((UpdateStatus & CCoreEngine::StatusFlag::SPDIFPassthrough) == 0)
 					AutoSelectStereoMode();
 				*/
 				m_App.StatusView.UpdateItem(STATUS_ITEM_AUDIOCHANNEL);
@@ -3631,10 +3632,10 @@ void CMainWindow::OnTimer(HWND hwnd, UINT id)
 
 			bool fUpdateEventInfo = false;
 
-			if ((UpdateStatus & CCoreEngine::STATUS_EVENTID) != 0) {
+			if (!!(UpdateStatus & CCoreEngine::StatusFlag::EventID)) {
 				// 番組の切り替わり
 				OnEventChanged();
-			} else if ((UpdateStatus & CCoreEngine::STATUS_EVENTINFO) != 0) {
+			} else if (!!(UpdateStatus & CCoreEngine::StatusFlag::EventInfo)) {
 				// 番組情報が更新された
 				fUpdateEventInfo = true;
 
@@ -3648,7 +3649,7 @@ void CMainWindow::OnTimer(HWND hwnd, UINT id)
 				if (fUpdateEventInfo) {
 					pProgramInfoStatusItem->Update();
 				} else if (pProgramInfoStatusItem->GetShowProgress()
-						&& (UpdateStatus & CCoreEngine::STATUS_TOT) != 0) {
+						&& !!(UpdateStatus & CCoreEngine::StatusFlag::TOT)) {
 					if (pProgramInfoStatusItem->UpdateProgress())
 						pProgramInfoStatusItem->Redraw();
 				}
@@ -3665,32 +3666,32 @@ void CMainWindow::OnTimer(HWND hwnd, UINT id)
 					m_App.Core.StartReservedRecord();
 			}
 
-			if ((UpdateStatistics &
-					(CCoreEngine::STATISTIC_ERRORPACKETCOUNT |
-					 CCoreEngine::STATISTIC_CONTINUITYERRORPACKETCOUNT |
-					 CCoreEngine::STATISTIC_SCRAMBLEPACKETCOUNT)) != 0) {
+			if (!!(UpdateStatistics &
+					(CCoreEngine::StatisticsFlag::ErrorPacketCount |
+					 CCoreEngine::StatisticsFlag::ContinuityErrorPacketCount |
+					 CCoreEngine::StatisticsFlag::ScrambledPacketCount))) {
 				m_App.StatusView.UpdateItem(STATUS_ITEM_ERROR);
 			}
 
-			if ((UpdateStatistics &
-					(CCoreEngine::STATISTIC_SIGNALLEVEL |
-					 CCoreEngine::STATISTIC_BITRATE)) != 0)
+			if (!!(UpdateStatistics &
+					(CCoreEngine::StatisticsFlag::SignalLevel |
+					 CCoreEngine::StatisticsFlag::BitRate)))
 				m_App.StatusView.UpdateItem(STATUS_ITEM_SIGNALLEVEL);
 
-			if ((UpdateStatistics &
-					(CCoreEngine::STATISTIC_STREAMREMAIN |
-					 CCoreEngine::STATISTIC_PACKETBUFFERRATE)) != 0)
+			if (!!(UpdateStatistics &
+					(CCoreEngine::StatisticsFlag::StreamRemain |
+					 CCoreEngine::StatisticsFlag::PacketBufferRate)))
 				m_App.StatusView.UpdateItem(STATUS_ITEM_BUFFERING);
 
 			CClockStatusItem *pClockStatusItem =
 				dynamic_cast<CClockStatusItem*>(m_App.StatusView.GetItemByID(STATUS_ITEM_CLOCK));
 			if (pClockStatusItem != nullptr
 					&& (!pClockStatusItem->IsTOT()
-						|| (pClockStatusItem->IsInterpolateTOT() || (UpdateStatus & CCoreEngine::STATUS_TOT) != 0))) {
+						|| (pClockStatusItem->IsInterpolateTOT() || !!(UpdateStatus & CCoreEngine::StatusFlag::TOT)))) {
 				pClockStatusItem->Update();
 			}
 
-			if ((UpdateStatus & CCoreEngine::STATUS_TOT) != 0)
+			if (!!(UpdateStatus & CCoreEngine::StatusFlag::TOT))
 				m_App.TotTimeAdjuster.AdjustTime();
 
 			m_App.StatusView.UpdateItem(STATUS_ITEM_MEDIABITRATE);
@@ -3702,18 +3703,18 @@ void CMainWindow::OnTimer(HWND hwnd, UINT id)
 					// 情報タブ更新
 					m_App.Panel.InfoPanel.UpdateItem(CInformationPanel::ITEM_VIDEOINFO);
 
-					if ((UpdateStatistics &
-							(CCoreEngine::STATISTIC_SIGNALLEVEL |
-							 CCoreEngine::STATISTIC_BITRATE)) != 0) {
+					if (!!(UpdateStatistics &
+							(CCoreEngine::StatisticsFlag::SignalLevel |
+							 CCoreEngine::StatisticsFlag::BitRate))) {
 						m_App.Panel.InfoPanel.UpdateItem(CInformationPanel::ITEM_SIGNALLEVEL);
 					}
 
 					m_App.Panel.InfoPanel.UpdateItem(CInformationPanel::ITEM_MEDIABITRATE);
 
-					if ((UpdateStatistics &
-							(CCoreEngine::STATISTIC_ERRORPACKETCOUNT |
-							 CCoreEngine::STATISTIC_CONTINUITYERRORPACKETCOUNT |
-							 CCoreEngine::STATISTIC_SCRAMBLEPACKETCOUNT)) != 0) {
+					if (!!(UpdateStatistics &
+							(CCoreEngine::StatisticsFlag::ErrorPacketCount |
+							 CCoreEngine::StatisticsFlag::ContinuityErrorPacketCount |
+							 CCoreEngine::StatisticsFlag::ScrambledPacketCount))) {
 						m_App.Panel.InfoPanel.UpdateItem(CInformationPanel::ITEM_ERROR);
 					}
 
@@ -3951,7 +3952,7 @@ bool CMainWindow::OnInitMenuPopup(HMENU hmenu)
 		m_App.FavoritesMenu.Create(
 			&m_App.FavoritesManager.GetRootFolder(),
 			CM_FAVORITECHANNEL_FIRST, hmenu, m_hwnd,
-			CFavoritesMenu::FLAG_SHOWEVENTINFO | CFavoritesMenu::FLAG_SHOWLOGO);
+			CFavoritesMenu::CreateFlag::ShowEventInfo | CFavoritesMenu::CreateFlag::ShowLogo);
 		::EnableMenuItem(
 			hmenu, CM_ADDTOFAVORITES,
 			MF_BYCOMMAND | (m_App.ChannelManager.GetCurrentChannelInfo() != nullptr ? MF_ENABLED : MF_GRAYED));
@@ -4027,9 +4028,9 @@ bool CMainWindow::OnInitMenuPopup(HMENU hmenu)
 
 			m_App.ChannelMenu.Create(
 				&ChList, CurService, CM_SERVICE_FIRST, hmenu, m_hwnd,
-				CChannelMenu::FLAG_SHOWLOGO |
-				CChannelMenu::FLAG_SHOWEVENTINFO |
-				CChannelMenu::FLAG_CURSERVICES);
+				CChannelMenu::CreateFlag::ShowLogo |
+				CChannelMenu::CreateFlag::ShowEventInfo |
+				CChannelMenu::CreateFlag::CurrentServices);
 		}
 	} else if (hmenu == m_App.MainMenu.GetSubMenu(CMainMenu::SUBMENU_AUDIO)) {
 		CPopupMenu Menu(hmenu);
@@ -4468,7 +4469,7 @@ void CMainWindow::OnTunerChanged()
 	SetWheelChannelChanging(false);
 
 	if (m_App.EpgCaptureManager.IsCapturing())
-		m_App.EpgCaptureManager.EndCapture(0);
+		m_App.EpgCaptureManager.EndCapture(CEpgCaptureManager::EndFlag::None);
 
 	m_App.Panel.ProgramListPanel.ClearProgramList();
 	m_App.Panel.ProgramListPanel.ShowRetrievingMessage(false);
@@ -4512,7 +4513,7 @@ void CMainWindow::OnTunerChanged()
 void CMainWindow::OnTunerOpened()
 {
 	if (m_App.EpgCaptureManager.IsCapturing())
-		m_App.EpgCaptureManager.EndCapture(0);
+		m_App.EpgCaptureManager.EndCapture(CEpgCaptureManager::EndFlag::None);
 
 	m_pCore->UpdateTitle();
 	m_pCore->UpdateIcon();
@@ -4549,9 +4550,9 @@ void CMainWindow::OnChannelListChanged()
 }
 
 
-void CMainWindow::OnChannelChanged(unsigned int Status)
+void CMainWindow::OnChannelChanged(AppEvent::ChannelChangeStatus Status)
 {
-	const bool fSpaceChanged = (Status & AppEvent::CHANNEL_CHANGED_STATUS_SPACE_CHANGED) != 0;
+	const bool fSpaceChanged = !!(Status & AppEvent::ChannelChangeStatus::SpaceChanged);
 	const int CurSpace = m_App.ChannelManager.GetCurrentSpace();
 	const CChannelInfo *pCurChannel = m_App.ChannelManager.GetCurrentChannelInfo();
 
@@ -4559,8 +4560,8 @@ void CMainWindow::OnChannelChanged(unsigned int Status)
 
 	if (m_App.EpgCaptureManager.IsCapturing()
 			&& !m_App.EpgCaptureManager.IsChannelChanging()
-			&& (Status & AppEvent::CHANNEL_CHANGED_STATUS_DETECTED) == 0)
-		m_App.EpgCaptureManager.EndCapture(0);
+			&& !(Status & AppEvent::ChannelChangeStatus::Detected))
+		m_App.EpgCaptureManager.EndCapture(CEpgCaptureManager::EndFlag::None);
 
 	if (CurSpace > CChannelManager::SPACE_INVALID)
 		m_App.MainMenu.CheckRadioItem(
@@ -4681,7 +4682,7 @@ void CMainWindow::UpdateLayoutStructure()
 	Layout::CSplitter *pRoot;
 
 	pPanelSplitter->SetStyle(
-		m_fPanelVerticalAlign ? Layout::CSplitter::STYLE_VERT : Layout::CSplitter::STYLE_HORZ,
+		m_fPanelVerticalAlign ? Layout::CSplitter::StyleFlag::Vert : Layout::CSplitter::StyleFlag::Horz,
 		false);
 	pPanelSplitter->ReplacePane(PanelPane, m_LayoutBase.GetContainerByID(CONTAINER_ID_PANEL));
 
@@ -4804,7 +4805,7 @@ void CMainWindow::SetFixedPaneSize(int SplitterID, int ContainerID, int Width, i
 		if (pSplitter != nullptr) {
 			pSplitter->SetPaneSize(
 				ContainerID,
-				(pSplitter->GetStyle() & Layout::CSplitter::STYLE_VERT) != 0 ? Height : Width);
+				!!(pSplitter->GetStyle() & Layout::CSplitter::StyleFlag::Vert) ? Height : Width);
 		}
 	}
 }
@@ -5002,7 +5003,7 @@ void CMainWindow::OnEventChanged()
 void CMainWindow::OnRecordingStarted()
 {
 	if (m_App.EpgCaptureManager.IsCapturing())
-		m_App.EpgCaptureManager.EndCapture(0);
+		m_App.EpgCaptureManager.EndCapture(CEpgCaptureManager::EndFlag::None);
 
 	m_App.StatusView.UpdateItem(STATUS_ITEM_RECORD);
 	m_App.StatusView.UpdateItem(STATUS_ITEM_ERROR);
@@ -5871,8 +5872,10 @@ void CMainWindow::SetWindowVisible()
 {
 	bool fRestore = false, fShow = false;
 
-	if ((m_App.TaskTrayManager.GetStatus() & CTaskTrayManager::STATUS_MINIMIZED) != 0) {
-		m_App.TaskTrayManager.SetStatus(0, CTaskTrayManager::STATUS_MINIMIZED);
+	if (!!(m_App.TaskTrayManager.GetStatus() & CTaskTrayManager::StatusFlag::Minimized)) {
+		m_App.TaskTrayManager.SetStatus(
+			CTaskTrayManager::StatusFlag::None,
+			CTaskTrayManager::StatusFlag::Minimized);
 		m_App.TaskTrayManager.SetMinimizeToTray(m_App.ViewOptions.GetMinimizeToTray());
 		fRestore = true;
 	}
@@ -5901,7 +5904,7 @@ void CMainWindow::SetWindowVisible()
 		m_fMinimizeInit = false;
 	}
 	if (fRestore) {
-		ResumeViewer(ResumeInfo::VIEWERSUSPEND_MINIMIZE);
+		ResumeViewer(ResumeInfo::ViewerSuspendFlag::Minimize);
 	}
 }
 
@@ -5956,7 +5959,7 @@ bool CMainWindow::SetStandby(bool fStandby)
 		if (m_fStandbyInit)
 			return true;
 		m_App.AddLog(TEXT("待機状態に移行します。"));
-		SuspendViewer(ResumeInfo::VIEWERSUSPEND_STANDBY);
+		SuspendViewer(ResumeInfo::ViewerSuspendFlag::Standby);
 		//FinalizeViewer();
 		m_Resume.fFullscreen = m_pCore->GetFullscreen();
 		if (m_Resume.fFullscreen)
@@ -5974,7 +5977,7 @@ bool CMainWindow::SetStandby(bool fStandby)
 					&& !m_App.CmdLineOptions.m_fNoEpg) {
 				m_App.EpgCaptureManager.BeginCapture(
 					nullptr, nullptr,
-					CEpgCaptureManager::BEGIN_STANDBY | CEpgCaptureManager::BEGIN_NO_UI);
+					CEpgCaptureManager::BeginFlag::Standby | CEpgCaptureManager::BeginFlag::NoUI);
 			}
 
 			if (!m_App.RecordManager.IsRecording()
@@ -5999,7 +6002,7 @@ bool CMainWindow::SetStandby(bool fStandby)
 		ShowFloatingWindows(true);
 		ForegroundWindow(m_hwnd);
 		ResumeTuner();
-		ResumeViewer(ResumeInfo::VIEWERSUSPEND_STANDBY);
+		ResumeViewer(ResumeInfo::ViewerSuspendFlag::Standby);
 	}
 
 	return true;
@@ -6021,7 +6024,7 @@ bool CMainWindow::InitStandby()
 	if (!m_App.CmdLineOptions.m_fNoDirectShow && !m_App.CmdLineOptions.m_fNoView
 			&& (!m_App.PlaybackOptions.GetRestorePlayStatus() || m_App.GetEnablePlaybackOnStart())) {
 		m_Resume.fEnableViewer = true;
-		m_Resume.ViewerSuspendFlags = ResumeInfo::VIEWERSUSPEND_STANDBY;
+		m_Resume.ViewerSuspendFlags = ResumeInfo::ViewerSuspendFlag::Standby;
 	}
 	m_Resume.fFullscreen = m_App.CmdLineOptions.m_fFullscreen;
 
@@ -6057,12 +6060,12 @@ bool CMainWindow::InitMinimize()
 	if (!m_App.CmdLineOptions.m_fNoDirectShow && !m_App.CmdLineOptions.m_fNoView
 			&& (!m_App.PlaybackOptions.GetRestorePlayStatus() || m_App.GetEnablePlaybackOnStart())) {
 		m_Resume.fEnableViewer = true;
-		m_Resume.ViewerSuspendFlags = ResumeInfo::VIEWERSUSPEND_MINIMIZE;
+		m_Resume.ViewerSuspendFlags = ResumeInfo::ViewerSuspendFlag::Minimize;
 	}
 
 	m_App.TaskTrayManager.SetStatus(
-		CTaskTrayManager::STATUS_MINIMIZED,
-		CTaskTrayManager::STATUS_MINIMIZED);
+		CTaskTrayManager::StatusFlag::Minimized,
+		CTaskTrayManager::StatusFlag::Minimized);
 
 	if (!m_App.TaskTrayManager.GetMinimizeToTray())
 		Show(SW_SHOWMINNOACTIVE, true);
@@ -6076,7 +6079,7 @@ bool CMainWindow::InitMinimize()
 bool CMainWindow::IsMinimizeToTray() const
 {
 	return m_App.TaskTrayManager.GetMinimizeToTray()
-		&& (m_App.TaskTrayManager.GetStatus() & CTaskTrayManager::STATUS_MINIMIZED) != 0;
+		&& !!(m_App.TaskTrayManager.GetStatus() & CTaskTrayManager::StatusFlag::Minimized);
 }
 
 
@@ -6091,7 +6094,7 @@ void CMainWindow::StoreTunerResumeInfo()
 bool CMainWindow::ResumeTuner()
 {
 	if (m_App.EpgCaptureManager.IsCapturing())
-		m_App.EpgCaptureManager.EndCapture(0);
+		m_App.EpgCaptureManager.EndCapture(CEpgCaptureManager::EndFlag::None);
 
 	if (m_Resume.fOpenTuner) {
 		m_Resume.fOpenTuner = false;
@@ -6122,7 +6125,7 @@ void CMainWindow::ResumeChannel()
 }
 
 
-void CMainWindow::SuspendViewer(unsigned int Flags)
+void CMainWindow::SuspendViewer(ResumeInfo::ViewerSuspendFlag Flags)
 {
 	if (IsViewerEnabled()) {
 		TRACE(TEXT("Suspend viewer\n"));
@@ -6133,11 +6136,11 @@ void CMainWindow::SuspendViewer(unsigned int Flags)
 }
 
 
-void CMainWindow::ResumeViewer(unsigned int Flags)
+void CMainWindow::ResumeViewer(ResumeInfo::ViewerSuspendFlag Flags)
 {
-	if ((m_Resume.ViewerSuspendFlags & Flags) != 0) {
+	if (!!(m_Resume.ViewerSuspendFlags & Flags)) {
 		m_Resume.ViewerSuspendFlags &= ~Flags;
-		if (m_Resume.ViewerSuspendFlags == 0) {
+		if (!m_Resume.ViewerSuspendFlags) {
 			if (m_Resume.fEnableViewer) {
 				TRACE(TEXT("Resume viewer\n"));
 				m_pCore->EnableViewer(true);
@@ -6233,7 +6236,7 @@ void CMainWindow::OnChannelNoInput()
 		} else {
 			StdUtil::snprintf(szText, lengthof(szText), TEXT("%d"), Number);
 		}
-		m_App.OSDManager.ShowOSD(szText, COSDManager::SHOW_NO_FADE);
+		m_App.OSDManager.ShowOSD(szText, COSDManager::ShowFlag::NoFade);
 	}
 
 	const DWORD Timeout = m_App.Accelerator.GetChannelInputOptions().KeyTimeout;
@@ -6819,7 +6822,7 @@ void CMainWindow::CFullscreen::ShowPanel(bool fShow)
 				m_App.Panel.Frame.GetPanel()->SetWindow(nullptr, nullptr);
 				m_Panel.SetWindow(&m_App.Panel.Form, TEXT("パネル"));
 				pSplitter->SetStyle(
-					fVertical ? Layout::CSplitter::STYLE_VERT : Layout::CSplitter::STYLE_HORZ);
+					fVertical ? Layout::CSplitter::StyleFlag::Vert : Layout::CSplitter::StyleFlag::Horz);
 				pSplitter->SetPaneSize(
 					CONTAINER_ID_PANEL,
 					fVertical ? m_PanelHeight : m_PanelWidth);
@@ -6922,7 +6925,7 @@ bool CMainWindow::CFullscreen::SetPanelPlace(CPanelFrame::DockingPlace Place)
 		m_LayoutBase.LockLayout();
 		if (fVerticalNew != fVerticalOld) {
 			pSplitter->SetStyle(
-				fVerticalNew ? Layout::CSplitter::STYLE_VERT : Layout::CSplitter::STYLE_HORZ);
+				fVerticalNew ? Layout::CSplitter::StyleFlag::Vert : Layout::CSplitter::StyleFlag::Horz);
 		}
 		pSplitter->SetPaneSize(
 			CONTAINER_ID_PANEL, fVerticalNew ? m_PanelHeight : m_PanelWidth);
@@ -7608,11 +7611,11 @@ bool CMainWindow::CSideBarManager::DrawIcon(const CSideBar::DrawIconInfo *pInfo)
 					Info.ID = pCommandInfo->GetID();
 					Info.Flags = 0;
 					Info.State = 0;
-					if ((pInfo->State & CSideBar::ITEM_STATE_DISABLED) != 0)
+					if (!!(pInfo->State & CSideBar::ItemState::Disabled))
 						Info.State |= TVTest::COMMAND_ICON_STATE_DISABLED;
-					if ((pInfo->State & CSideBar::ITEM_STATE_CHECKED) != 0)
+					if (!!(pInfo->State & CSideBar::ItemState::Checked))
 						Info.State |= TVTest::COMMAND_ICON_STATE_CHECKED;
-					if ((pInfo->State & CSideBar::ITEM_STATE_HOT) != 0)
+					if (!!(pInfo->State & CSideBar::ItemState::Hot))
 						Info.State |= TVTest::COMMAND_ICON_STATE_HOT;
 					if ((Info.State & TVTest::COMMAND_ICON_STATE_HOT) != 0)
 						Info.pszStyle = L"side-bar.item.hot";
@@ -7792,20 +7795,21 @@ CMainWindow::CEpgCaptureEventHandler::CEpgCaptureEventHandler(CMainWindow *pMain
 {
 }
 
-void CMainWindow::CEpgCaptureEventHandler::OnBeginCapture(unsigned int Flags, unsigned int Status)
+void CMainWindow::CEpgCaptureEventHandler::OnBeginCapture(
+	TVTest::CEpgCaptureManager::BeginFlag Flags, TVTest::CEpgCaptureManager::BeginStatus Status)
 {
-	if ((Status & CEpgCaptureManager::BEGIN_STATUS_STANDBY) == 0) {
+	if (!(Status & CEpgCaptureManager::BeginStatus::Standby)) {
 		m_pMainWindow->StoreTunerResumeInfo();
 		m_pMainWindow->m_Resume.fOpenTuner =
-			(Status & CEpgCaptureManager::BEGIN_STATUS_TUNER_ALREADY_OPENED) != 0;
+			!!(Status & CEpgCaptureManager::BeginStatus::TunerAlreadyOpened);
 	}
 
-	m_pMainWindow->SuspendViewer(ResumeInfo::VIEWERSUSPEND_EPGUPDATE);
+	m_pMainWindow->SuspendViewer(ResumeInfo::ViewerSuspendFlag::EPGUpdate);
 
 	m_pMainWindow->m_App.Epg.ProgramGuide.OnEpgCaptureBegin();
 }
 
-void CMainWindow::CEpgCaptureEventHandler::OnEndCapture(unsigned int Flags)
+void CMainWindow::CEpgCaptureEventHandler::OnEndCapture(TVTest::CEpgCaptureManager::EndFlag Flags)
 {
 	CAppMain &App = m_pMainWindow->m_App;
 	HANDLE hThread;
@@ -7825,18 +7829,18 @@ void CMainWindow::CEpgCaptureEventHandler::OnEndCapture(unsigned int Flags)
 	if (m_pMainWindow->m_pCore->GetStandby()) {
 		App.Epg.ProgramGuide.Refresh();
 		::SetThreadPriority(hThread, OldPriority);
-		if ((Flags & CEpgCaptureManager::END_CLOSE_TUNER) != 0)
+		if (!!(Flags & CEpgCaptureManager::EndFlag::CloseTuner))
 			App.Core.CloseTuner();
 	} else {
 		::SetCursor(::LoadCursor(nullptr, IDC_ARROW));
-		if ((Flags & CEpgCaptureManager::END_RESUME) != 0)
+		if (!!(Flags & CEpgCaptureManager::EndFlag::Resume))
 			m_pMainWindow->ResumeChannel();
 		if (m_pMainWindow->IsPanelVisible()
 				&& App.Panel.Form.GetCurPageID() == PANEL_ID_CHANNEL)
 			App.Panel.ChannelPanel.UpdateAllChannels();
 	}
 
-	m_pMainWindow->ResumeViewer(ResumeInfo::VIEWERSUSPEND_EPGUPDATE);
+	m_pMainWindow->ResumeViewer(ResumeInfo::ViewerSuspendFlag::EPGUpdate);
 }
 
 void CMainWindow::CEpgCaptureEventHandler::OnChannelChanged()
@@ -7864,16 +7868,16 @@ CMainWindow::CCommandEventHandler::CCommandEventHandler(CMainWindow *pMainWindow
 }
 
 void CMainWindow::CCommandEventHandler::OnCommandStateChanged(
-	int ID, unsigned int OldState, unsigned int NewState)
+	int ID, CCommandList::CommandState OldState, CCommandList::CommandState NewState)
 {
-	if (((OldState ^ NewState) & CCommandList::COMMAND_STATE_CHECKED) != 0) {
-		const bool fChecked = (NewState & CCommandList::COMMAND_STATE_CHECKED) != 0;
+	if (!!((OldState ^ NewState) & CCommandList::CommandState::Checked)) {
+		const bool fChecked = !!(NewState & CCommandList::CommandState::Checked);
 		m_pMainWindow->m_App.MainMenu.CheckItem(ID, fChecked);
 		m_pMainWindow->m_App.SideBar.CheckItem(ID, fChecked);
 	}
 
-	if (((OldState ^ NewState) & CCommandList::COMMAND_STATE_DISABLED) != 0) {
-		const bool fEnabled = (NewState & CCommandList::COMMAND_STATE_DISABLED) == 0;
+	if (!!((OldState ^ NewState) & CCommandList::CommandState::Disabled)) {
+		const bool fEnabled = !(NewState & CCommandList::CommandState::Disabled);
 		m_pMainWindow->m_App.MainMenu.EnableItem(ID, fEnabled);
 		m_pMainWindow->m_App.SideBar.EnableItem(ID, fEnabled);
 	}

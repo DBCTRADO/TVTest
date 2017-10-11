@@ -20,26 +20,28 @@ namespace EpgUtil
 
 	VideoType GetVideoType(BYTE ComponentType);
 
-	enum {
-		EVENT_TIME_HOUR_2DIGITS   = 0x0001U,
-		EVENT_TIME_START_ONLY     = 0x0002U,
-		EVENT_TIME_DATE           = 0x0004U,
-		EVENT_TIME_YEAR           = 0x0008U,
-		EVENT_TIME_UNDECIDED_TEXT = 0x0010U,
-		EVENT_TIME_NO_CONVERT     = 0x0020U
+	enum class FormatEventTimeFlag : unsigned int {
+		None          = 0x0000U,
+		Hour2Digits   = 0x0001U,
+		StartOnly     = 0x0002U,
+		Date          = 0x0004U,
+		Year          = 0x0008U,
+		UndecidedText = 0x0010U,
+		NoConvert     = 0x0020U,
 	};
+	TVTEST_ENUM_FLAGS(FormatEventTimeFlag)
 
 	static constexpr int MAX_EVENT_TIME_LENGTH = 64;
 
 	int FormatEventTime(
 		const LibISDB::EventInfo &EventInfo,
-		LPTSTR pszTime, int MaxLength, unsigned int Flags = 0);
+		LPTSTR pszTime, int MaxLength, FormatEventTimeFlag Flags = FormatEventTimeFlag::None);
 	int FormatEventTime(
 		const LibISDB::DateTime &StartTime, DWORD Duration,
-		LPTSTR pszTime, int MaxLength, unsigned int Flags = 0);
+		LPTSTR pszTime, int MaxLength, FormatEventTimeFlag Flags = FormatEventTimeFlag::None);
 	int FormatEventTime(
 		const SYSTEMTIME &StartTime, DWORD Duration,
-		LPTSTR pszTime, int MaxLength, unsigned int Flags = 0);
+		LPTSTR pszTime, int MaxLength, FormatEventTimeFlag Flags = FormatEventTimeFlag::None);
 	bool EpgTimeToDisplayTime(const SYSTEMTIME &EpgTime, SYSTEMTIME *pDisplayTime);
 	bool EpgTimeToDisplayTime(const LibISDB::DateTime &EpgTime, LibISDB::DateTime *pDisplayTime);
 	bool EpgTimeToDisplayTime(SYSTEMTIME *pTime);
@@ -162,14 +164,17 @@ public:
 		NUM_COLORS = COLOR_LAST + 1
 	};
 
-	enum {
-		CONTENT_STYLE_CURRENT	= 0x0001U,
-		CONTENT_STYLE_NOBORDER	= 0x0002U
+	enum class ContentStyleFlag : unsigned int {
+		None     = 0x0000U,
+		Current  = 0x0001U,
+		NoBorder = 0x0002U,
 	};
-	enum {
-		DRAW_CONTENT_BACKGROUND_CURRENT		= 0x0001U,
-		DRAW_CONTENT_BACKGROUND_SEPARATOR	= 0x0002U,
-		DRAW_CONTENT_BACKGROUND_NOBORDER	= 0x0004U
+
+	enum class DrawContentBackgroundFlag : unsigned int {
+		None      = 0x0000U,
+		Current   = 0x0001U,
+		Separator = 0x0002U,
+		NoBorder  = 0x0004U,
 	};
 
 	CEpgTheme();
@@ -179,19 +184,23 @@ public:
 	TVTest::Theme::ThemeColor GetGenreColor(int Genre) const;
 	TVTest::Theme::ThemeColor GetGenreColor(const LibISDB::EventInfo &EventInfo) const;
 	TVTest::Theme::BackgroundStyle GetContentBackgroundStyle(
-		int Genre, unsigned int Flags = 0) const;
+		int Genre, ContentStyleFlag Flags = ContentStyleFlag::None) const;
 	TVTest::Theme::BackgroundStyle GetContentBackgroundStyle(
-		const LibISDB::EventInfo &EventInfo, unsigned int Flags = 0) const;
+		const LibISDB::EventInfo &EventInfo, ContentStyleFlag Flags = ContentStyleFlag::None) const;
 	bool DrawContentBackground(
 		HDC hdc, TVTest::Theme::CThemeDraw &ThemeDraw, const RECT &Rect,
-		const LibISDB::EventInfo &EventInfo, unsigned int Flags = 0) const;
+		const LibISDB::EventInfo &EventInfo,
+		DrawContentBackgroundFlag Flags = DrawContentBackgroundFlag::None) const;
 
 private:
 	TVTest::Theme::BackgroundStyle GetContentBackgroundStyle(
-		const TVTest::Theme::ThemeColor &Color, unsigned int Flags) const;
+		const TVTest::Theme::ThemeColor &Color, ContentStyleFlag Flags) const;
 
 	TVTest::Theme::ThemeColor m_ColorList[NUM_COLORS];
 };
+
+TVTEST_ENUM_FLAGS(CEpgTheme::ContentStyleFlag)
+TVTEST_ENUM_FLAGS(CEpgTheme::DrawContentBackgroundFlag)
 
 
 #endif

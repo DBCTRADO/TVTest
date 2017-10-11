@@ -67,7 +67,7 @@ public:
 	void CalcTitleLines(TVTest::CTextDraw &TextDraw, int Width);
 	void ResetTitleLines() { m_TitleLines = 0; }
 	void DrawTitle(TVTest::CTextDraw &TextDraw, const RECT &Rect, int LineHeight) const;
-	void DrawText(TVTest::CTextDraw &TextDraw, const RECT &Rect, int LineHeight, unsigned int TextDrawFlags) const;
+	void DrawText(TVTest::CTextDraw &TextDraw, const RECT &Rect, int LineHeight, TVTest::CTextDraw::DrawFlag TextDrawFlags) const;
 	void GetTimeSize(TVTest::CTextDraw &TextDraw, SIZE *pSize) const;
 	int GetItemPos() const { return m_ItemPos; }
 	void SetItemPos(int Pos) { m_ItemPos = Pos; }
@@ -194,7 +194,7 @@ int CEventItem::GetTitleText(LPTSTR pszText, int MaxLength) const
 
 int CEventItem::GetTimeText(LPTSTR pszText, int MaxLength) const
 {
-	return EpgUtil::FormatEventTime(m_StartTime, 0, pszText, MaxLength, EpgUtil::EVENT_TIME_START_ONLY);
+	return EpgUtil::FormatEventTime(m_StartTime, 0, pszText, MaxLength, EpgUtil::FormatEventTimeFlag::StartOnly);
 }
 
 
@@ -235,7 +235,7 @@ void CEventItem::DrawTitle(TVTest::CTextDraw &TextDraw, const RECT &Rect, int Li
 }
 
 
-void CEventItem::DrawText(TVTest::CTextDraw &TextDraw, const RECT &Rect, int LineHeight, unsigned int TextDrawFlags) const
+void CEventItem::DrawText(TVTest::CTextDraw &TextDraw, const RECT &Rect, int LineHeight, TVTest::CTextDraw::DrawFlag TextDrawFlags) const
 {
 	TVTest::String Text = GetEventText();
 	if (!Text.empty())
@@ -1491,7 +1491,7 @@ void CProgramGuide::DrawEventBackground(
 	} else if (fCurrent) {
 		m_EpgTheme.DrawContentBackground(
 			hdc, ThemeDraw, Rect, *pEventInfo,
-			CEpgTheme::DRAW_CONTENT_BACKGROUND_CURRENT);
+			CEpgTheme::DrawContentBackgroundFlag::Current);
 	} else {
 		DrawUtil::Fill(hdc, &Rect, BackColor);
 	}
@@ -1636,7 +1636,9 @@ void CProgramGuide::DrawEventText(
 		TextDraw.SetTextColor(TextColor);
 		pItem->DrawText(
 			TextDraw, rc, LineHeight,
-			m_Style.fEventJustify ? TVTest::CTextDraw::DRAW_FLAG_JUSTIFY_MULTI_LINE : 0);
+			m_Style.fEventJustify ?
+				TVTest::CTextDraw::DrawFlag::JustifyMultiLine :
+				TVTest::CTextDraw::DrawFlag::None);
 	}
 }
 
@@ -2078,8 +2080,8 @@ void CProgramGuide::Draw(HDC hdc, const RECT &PaintRect)
 			// 番組テキストの描画
 			TextDraw.Begin(
 				hdc, rcClient,
-				TVTest::CTextDraw::FLAG_END_ELLIPSIS |
-				TVTest::CTextDraw::FLAG_JAPANESE_HYPHNATION);
+				TVTest::CTextDraw::Flag::EndEllipsis |
+				TVTest::CTextDraw::Flag::JapaneseHyphnation);
 			TextDraw.SetClippingRect(rcGuide);
 
 			rc.left = XOrigin;

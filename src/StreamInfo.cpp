@@ -46,11 +46,11 @@ INT_PTR CStreamInfo::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	case WM_INITDIALOG:
 		SetService();
 
-		AddControl(IDC_STREAMINFO_STREAM, ALIGN_HORZ);
-		AddControl(IDC_STREAMINFO_NETWORK, ALIGN_HORZ);
-		AddControl(IDC_STREAMINFO_SERVICE, ALIGN_ALL);
-		AddControl(IDC_STREAMINFO_UPDATE, ALIGN_BOTTOM_RIGHT);
-		AddControl(IDC_STREAMINFO_COPY, ALIGN_BOTTOM_RIGHT);
+		AddControl(IDC_STREAMINFO_STREAM, AlignFlag::Horz);
+		AddControl(IDC_STREAMINFO_NETWORK, AlignFlag::Horz);
+		AddControl(IDC_STREAMINFO_SERVICE, AlignFlag::All);
+		AddControl(IDC_STREAMINFO_UPDATE, AlignFlag::BottomRight);
+		AddControl(IDC_STREAMINFO_COPY, AlignFlag::BottomRight);
 
 		ApplyPosition();
 		return TRUE;

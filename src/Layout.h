@@ -66,6 +66,15 @@ namespace Layout
 	class CSplitter
 		: public CContainer
 	{
+	public:
+		enum class StyleFlag : unsigned int {
+			None  = 0x0000U,
+			Horz  = 0x0000U,
+			Vert  = 0x0001U,
+			Fixed = 0x0002U,
+		};
+
+	private:
 		struct PaneInfo
 		{
 			CContainer *pContainer;
@@ -74,7 +83,7 @@ namespace Layout
 			PaneInfo() : pContainer(nullptr), FixedSize(-1) {}
 		};
 		PaneInfo m_PaneList[2];
-		unsigned int m_Style;
+		StyleFlag m_Style;
 		int m_AdjustPane;
 		int m_BarPos;
 		int m_BarWidth;
@@ -87,12 +96,6 @@ namespace Layout
 		bool GetBarRect(RECT *pRect) const;
 
 	public:
-		enum {
-			STYLE_HORZ	= 0x0000,
-			STYLE_VERT	= 0x0001,
-			STYLE_FIXED	= 0x0002
-		};
-
 		CSplitter(int ID);
 		~CSplitter();
 // CContainer
@@ -112,13 +115,15 @@ namespace Layout
 		bool SetPaneSize(int ID, int Size);
 		int GetPaneSize(int ID);
 		int IDToIndex(int ID) const;
-		bool SetStyle(unsigned int Style, bool fAdjust = true);
-		unsigned int GetStyle() const { return m_Style; }
+		bool SetStyle(StyleFlag Style, bool fAdjust = true);
+		StyleFlag GetStyle() const { return m_Style; }
 		bool SetAdjustPane(int ID);
 		bool SetBarPos(int Pos);
 		int GetBarPos() const { return m_BarPos; }
 		int GetBarWidth() const { return m_BarWidth; }
 	};
+
+	TVTEST_ENUM_FLAGS(CSplitter::StyleFlag)
 
 
 	class CLayoutBase

@@ -396,7 +396,7 @@ void CAppMain::Finalize()
 		FavoritesManager.Save(m_FavoritesFileName.c_str());
 
 	AddLog(TEXT("設定を保存しています..."));
-	SaveSettings(SETTINGS_SAVE_STATUS | (m_fInitialSettings ? SETTINGS_SAVE_OPTIONS : 0));
+	SaveSettings(SaveSettingsFlag::Status | (m_fInitialSettings ? SaveSettingsFlag::Options : SaveSettingsFlag::None));
 }
 
 
@@ -410,7 +410,7 @@ bool CAppMain::LoadSettings()
 {
 	CSettings &Settings = m_Settings;
 
-	if (!Settings.Open(m_IniFileName.c_str(), CSettings::OPEN_READ | CSettings::OPEN_WRITE_VOLATILE)) {
+	if (!Settings.Open(m_IniFileName.c_str(), CSettings::OpenFlag::Read | CSettings::OpenFlag::WriteVolatile)) {
 		AddLog(CLogItem::LogType::Error, TEXT("設定ファイル \"%s\" を開けません。"), m_IniFileName.c_str());
 		return false;
 	}
@@ -562,10 +562,10 @@ bool CAppMain::LoadSettings()
 }
 
 
-bool CAppMain::SaveSettings(unsigned int Flags)
+bool CAppMain::SaveSettings(SaveSettingsFlag Flags)
 {
 	CSettings Settings;
-	if (!Settings.Open(m_IniFileName.c_str(), CSettings::OPEN_WRITE)) {
+	if (!Settings.Open(m_IniFileName.c_str(), CSettings::OpenFlag::Write)) {
 		TCHAR szMessage[64 + MAX_PATH];
 		StdUtil::snprintf(
 			szMessage, lengthof(szMessage),
@@ -580,7 +580,7 @@ bool CAppMain::SaveSettings(unsigned int Flags)
 	if (Settings.SetSection(TEXT("Settings"))) {
 		Settings.Write(TEXT("Version"), VERSION_TEXT);
 
-		if ((Flags & SETTINGS_SAVE_STATUS) != 0) {
+		if (!!(Flags & SaveSettingsFlag::Status)) {
 			int Left, Top, Width, Height;
 			CBasicDialog::Position Pos;
 
@@ -694,14 +694,14 @@ bool CAppMain::SaveSettings(unsigned int Flags)
 
 	for (size_t i = 0; i < lengthof(SettingsList); i++) {
 		CSettingsBase *pSettings = SettingsList[i].pSettings;
-		if (((Flags & SETTINGS_SAVE_OPTIONS) != 0 && pSettings->IsChanged())
-				|| ((Flags & SETTINGS_SAVE_STATUS) != 0 && SettingsList[i].fHasStatus)) {
+		if ((!!(Flags & SaveSettingsFlag::Options) && pSettings->IsChanged())
+				|| (!!(Flags & SaveSettingsFlag::Status) && SettingsList[i].fHasStatus)) {
 			if (pSettings->SaveSettings(Settings))
 				pSettings->ClearChanged();
 		}
 	}
 
-	if ((Flags & SETTINGS_SAVE_STATUS) != 0) {
+	if (!!(Flags & SaveSettingsFlag::Status)) {
 		RecentChannelList.SaveSettings(Settings);
 		Panel.InfoPanel.SaveSettings(Settings);
 		Panel.ProgramListPanel.SaveSettings(Settings);
@@ -1011,8 +1011,8 @@ int CAppMain::Main(HINSTANCE hInstance, LPCTSTR pszCmdLine, int nCmdShow)
 			StatusView.SetSingleText(TEXT("BonDriverの読み込み中..."));
 			if (Core.OpenAndInitializeTuner(
 						Core.IsSilent() ?
-							CAppCore::OPENTUNER_NO_UI :
-							CAppCore::OPENTUNER_RETRY_DIALOG)) {
+							CAppCore::OpenTunerFlag::NoUI :
+							CAppCore::OpenTunerFlag::RetryDialog)) {
 				AppEventManager.OnTunerChanged();
 			} else {
 				Core.OnError(&CoreEngine, TEXT("BonDriverの初期化ができません。"));
@@ -1291,7 +1291,7 @@ bool CAppMain::ShowOptionDialog(HWND hwndOwner, int StartPage)
 		Panel.ProgramListPanel.SetVisibleEventIcons(ProgramGuideOptions.GetVisibleEventIcons());
 	TaskTrayManager.SetMinimizeToTray(ViewOptions.GetMinimizeToTray());
 
-	SaveSettings(SETTINGS_SAVE_OPTIONS);
+	SaveSettings(SaveSettingsFlag::Options);
 
 	AppEventManager.OnSettingsChanged();
 
@@ -1460,11 +1460,11 @@ void CAppMain::RegisterCommands()
 				szName, lengthof(szName), TEXT("%s : %s"),
 				pPlugin->GetPluginName(), pInfo->GetName());
 
-			unsigned int State = 0;
+			CCommandList::CommandState State = CCommandList::CommandState::None;
 			if ((pInfo->GetState() & TVTest::PLUGIN_COMMAND_STATE_DISABLED) != 0)
-				State |= CCommandList::COMMAND_STATE_DISABLED;
+				State |= CCommandList::CommandState::Disabled;
 			if ((pInfo->GetState() & TVTest::PLUGIN_COMMAND_STATE_CHECKED) != 0)
-				State |= CCommandList::COMMAND_STATE_CHECKED;
+				State |= CCommandList::CommandState::Checked;
 
 			CommandList.RegisterCommand(ID, Text.c_str(), szName, pInfo->GetName(), State);
 
@@ -1703,7 +1703,7 @@ void CAppMain::CEngineEventListener::OnEventChanged(LibISDB::AnalyzerFilter *pAn
 {
 	TRACE(TEXT("CEngineEventListener::OnEventChanged() : event_id %#04x\n"), EventID);
 	if (EventID != LibISDB::EVENT_ID_INVALID) {
-		m_App.CoreEngine.SetAsyncStatusUpdatedFlag(CCoreEngine::STATUS_EVENTID);
+		m_App.CoreEngine.SetAsyncStatusUpdatedFlag(CCoreEngine::StatusFlag::EventID);
 		if (m_App.AudioManager.OnEventUpdated())
 			m_App.MainWindow.PostMessage(WM_APP_AUDIOLISTCHANGED, 0, 0);
 	}
@@ -1711,14 +1711,14 @@ void CAppMain::CEngineEventListener::OnEventChanged(LibISDB::AnalyzerFilter *pAn
 
 void CAppMain::CEngineEventListener::OnEventUpdated(LibISDB::AnalyzerFilter *pAnalyzer)
 {
-	m_App.CoreEngine.SetAsyncStatusUpdatedFlag(CCoreEngine::STATUS_EVENTINFO);
+	m_App.CoreEngine.SetAsyncStatusUpdatedFlag(CCoreEngine::StatusFlag::EventInfo);
 	if (m_App.AudioManager.OnEventUpdated())
 		m_App.MainWindow.PostMessage(WM_APP_AUDIOLISTCHANGED, 0, 0);
 }
 
 void CAppMain::CEngineEventListener::OnTOTUpdated(LibISDB::AnalyzerFilter *pAnalyzer)
 {
-	m_App.CoreEngine.SetAsyncStatusUpdatedFlag(CCoreEngine::STATUS_TOT);
+	m_App.CoreEngine.SetAsyncStatusUpdatedFlag(CCoreEngine::StatusFlag::TOT);
 }
 
 void CAppMain::CEngineEventListener::OnFilterGraphInitialize(

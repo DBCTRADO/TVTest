@@ -20,7 +20,7 @@ const LPCWSTR CTextDraw::m_pszEndProhibitChars =
 
 CTextDraw::CTextDraw()
 	: m_pEngine(nullptr)
-	, m_Flags(0)
+	, m_Flags(Flag::None)
 {
 }
 
@@ -32,18 +32,21 @@ CTextDraw::~CTextDraw()
 
 bool CTextDraw::SetEngine(CTextDrawEngine *pEngine)
 {
-	if (pEngine != nullptr)
+	if (pEngine != nullptr) {
 		m_pEngine = pEngine;
-	else
-		m_pEngine = &m_DefaultEngine;
+	} else {
+		if (!m_DefaultEngine)
+			m_DefaultEngine = std::make_unique<CTextDrawEngine_GDI>();
+		m_pEngine = m_DefaultEngine.get();
+	}
 	return true;
 }
 
 
-bool CTextDraw::Begin(HDC hdc, const RECT &Rect, unsigned int Flags)
+bool CTextDraw::Begin(HDC hdc, const RECT &Rect, Flag Flags)
 {
 	if (m_pEngine == nullptr)
-		m_pEngine = &m_DefaultEngine;
+		SetEngine(nullptr);
 	m_Flags = Flags;
 	return m_pEngine->BeginDraw(hdc, Rect);
 }
@@ -139,7 +142,7 @@ int CTextDraw::CalcLineCount(LPCWSTR pszText, int Width)
 }
 
 
-bool CTextDraw::Draw(LPCWSTR pszText, const RECT &Rect, int LineHeight, unsigned int Flags)
+bool CTextDraw::Draw(LPCWSTR pszText, const RECT &Rect, int LineHeight, DrawFlag Flags)
 {
 	if (m_pEngine == nullptr || pszText == nullptr
 			|| Rect.left >= Rect.right || Rect.top >= Rect.bottom)
@@ -165,7 +168,7 @@ bool CTextDraw::Draw(LPCWSTR pszText, const RECT &Rect, int LineHeight, unsigned
 
 		int Fit = GetFitCharCount(p, Length, Width);
 
-		if ((m_Flags & FLAG_END_ELLIPSIS) != 0 && Fit < Length && y + LineHeight >= Rect.bottom) {
+		if (!!(m_Flags & Flag::EndEllipsis) && Fit < Length && y + LineHeight >= Rect.bottom) {
 			static const WCHAR szEllipses[] = L"...";
 			const size_t BufferLength = Fit + lengthof(szEllipses);
 			m_StringBuffer.clear();
@@ -188,10 +191,10 @@ bool CTextDraw::Draw(LPCWSTR pszText, const RECT &Rect, int LineHeight, unsigned
 
 		Fit = AdjustLineLength(p, Fit);
 		RECT rc = {Rect.left, y, Rect.right, y + LineHeight};
-		unsigned int LineFlags = Flags;
-		if ((Flags & DRAW_FLAG_JUSTIFY_MULTI_LINE) != 0) {
+		DrawFlag LineFlags = Flags;
+		if (!!(Flags & DrawFlag::JustifyMultiLine)) {
 			if (p[Fit] != L'\0' && p[Fit] != L'\r' && p[Fit] != L'\n')
-				LineFlags |= DRAW_FLAG_ALIGN_JUSTIFIED;
+				LineFlags |= DrawFlag::Align_Justified;
 		}
 		m_pEngine->DrawText(p, Fit, rc, LineFlags);
 		Length -= Fit;
@@ -259,7 +262,7 @@ int CTextDraw::AdjustLineLength(LPCWSTR pszText, int Length)
 		Length = StringCharLength(pszText);
 		if (Length < 1)
 			Length = 1;
-	} else if ((m_Flags & FLAG_JAPANESE_HYPHNATION) != 0 && Length > 1) {
+	} else if (!!(m_Flags & Flag::JapaneseHyphnation) && Length > 1) {
 		LPCWSTR p = pszText + Length - 1;
 		if (IsEndProhibitChar(*p)) {
 			p--;
@@ -434,12 +437,12 @@ bool CTextDrawEngine_GDI::SetTextColor(COLORREF Color)
 }
 
 
-bool CTextDrawEngine_GDI::DrawText(LPCWSTR pText, int Length, const RECT &Rect, unsigned int Flags)
+bool CTextDrawEngine_GDI::DrawText(LPCWSTR pText, int Length, const RECT &Rect, CTextDraw::DrawFlag Flags)
 {
 	if (m_hdc == nullptr)
 		return false;
 
-	if ((Flags & CTextDraw::DRAW_FLAG_ALIGN_JUSTIFIED) != 0) {
+	if (!!(Flags & CTextDraw::DrawFlag::Align_Justified)) {
 		Util::CTempBuffer<int, 256> CharPos(Length);
 		SIZE sz;
 
@@ -610,12 +613,24 @@ bool CTextDrawEngine_DirectWrite::SetTextColor(COLORREF Color)
 }
 
 
-bool CTextDrawEngine_DirectWrite::DrawText(LPCWSTR pText, int Length, const RECT &Rect, unsigned int Flags)
+bool CTextDrawEngine_DirectWrite::DrawText(LPCWSTR pText, int Length, const RECT &Rect, CTextDraw::DrawFlag Flags)
 {
 	if (m_pFont == nullptr)
 		return false;
 
-	return m_Renderer.DrawText(pText, Length, Rect, *m_pFont, m_Brush, Flags);
+	CDirectWriteRenderer::DrawTextFlag DrawTextFlags = CDirectWriteRenderer::DrawTextFlag::None;
+	if (!!(Flags & CTextDraw::DrawFlag::Align_HorzCenter))
+		DrawTextFlags |= CDirectWriteRenderer::DrawTextFlag::Align_HorzCenter;
+	if (!!(Flags & CTextDraw::DrawFlag::Align_Right))
+		DrawTextFlags |= CDirectWriteRenderer::DrawTextFlag::Align_Right;
+	if (!!(Flags & CTextDraw::DrawFlag::Align_Justified))
+		DrawTextFlags |= CDirectWriteRenderer::DrawTextFlag::Align_Justified;
+	if (!!(Flags & CTextDraw::DrawFlag::Align_VertCenter))
+		DrawTextFlags |= CDirectWriteRenderer::DrawTextFlag::Align_VertCenter;
+	if (!!(Flags & CTextDraw::DrawFlag::Align_Bottom))
+		DrawTextFlags |= CDirectWriteRenderer::DrawTextFlag::Align_Bottom;
+
+	return m_Renderer.DrawText(pText, Length, Rect, *m_pFont, m_Brush, DrawTextFlags);
 }
 
 

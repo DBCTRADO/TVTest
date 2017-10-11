@@ -884,16 +884,16 @@ CDriverOptions::BonDriverOptions::BonDriverOptions(LPCTSTR pszBonDriverName)
 
 	CDriverManager::TunerSpec Spec;
 	if (GetAppClass().DriverManager.GetTunerSpec(pszBonDriverName, &Spec)) {
-		if ((Spec.Flags &
-				(CDriverManager::TunerSpec::FLAG_NETWORK |
-				 CDriverManager::TunerSpec::FLAG_FILE)) != 0)
+		if (!!(Spec.Flags &
+				(CDriverManager::TunerSpec::Flag::Network |
+				 CDriverManager::TunerSpec::Flag::File)))
 			fNoSignalLevel = true;
-		if ((Spec.Flags &
-				(CDriverManager::TunerSpec::FLAG_NETWORK |
-				 CDriverManager::TunerSpec::FLAG_FILE |
-				 CDriverManager::TunerSpec::FLAG_VOLATILE)) != 0)
+		if (!!(Spec.Flags &
+				(CDriverManager::TunerSpec::Flag::Network |
+				 CDriverManager::TunerSpec::Flag::File |
+				 CDriverManager::TunerSpec::Flag::Volatile)))
 			fIgnoreInitialStream = false;
-		if ((Spec.Flags & CDriverManager::TunerSpec::FLAG_FILE) != 0)
+		if (!!(Spec.Flags & CDriverManager::TunerSpec::Flag::File))
 			fPumpStreamSyncPlayback = true;
 	}
 }

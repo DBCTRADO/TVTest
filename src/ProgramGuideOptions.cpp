@@ -105,7 +105,9 @@ bool CProgramGuideOptions::LoadSettings(CSettings &Settings)
 				TVTest::CTextDrawClient::TextDrawEngine::DirectWrite :
 				TVTest::CTextDrawClient::TextDrawEngine::GDI);
 
-		Settings.Read(TEXT("DirectWriteRenderingParamsMask"), &m_DirectWriteRenderingParams.Mask);
+		unsigned int Mask;
+		if (Settings.Read(TEXT("DirectWriteRenderingParamsMask"), &Mask))
+			m_DirectWriteRenderingParams.Mask = static_cast<TVTest::CDirectWriteRenderer::RenderingParams::ParamFlag>(Mask);
 		Settings.Read(TEXT("DirectWriteGamma"), &m_DirectWriteRenderingParams.Gamma);
 		Settings.Read(TEXT("DirectWriteEnhancedContrast"), &m_DirectWriteRenderingParams.EnhancedContrast);
 		Settings.Read(TEXT("DirectWriteClearTypeLevel"), &m_DirectWriteRenderingParams.ClearTypeLevel);
@@ -315,7 +317,7 @@ bool CProgramGuideOptions::SaveSettings(CSettings &Settings)
 		TVTest::StyleUtil::WriteFontSettings(Settings, TEXT("Font"), m_Font);
 
 		Settings.Write(TEXT("UseDirectWrite"), m_fUseDirectWrite);
-		Settings.Write(TEXT("DirectWriteRenderingParamsMask"), m_DirectWriteRenderingParams.Mask);
+		Settings.Write(TEXT("DirectWriteRenderingParamsMask"), static_cast<unsigned int>(m_DirectWriteRenderingParams.Mask));
 		Settings.Write(TEXT("DirectWriteGamma"), m_DirectWriteRenderingParams.Gamma, 2);
 		Settings.Write(TEXT("DirectWriteEnhancedContrast"), m_DirectWriteRenderingParams.EnhancedContrast, 2);
 		Settings.Write(TEXT("DirectWriteClearTypeLevel"), m_DirectWriteRenderingParams.ClearTypeLevel, 2);

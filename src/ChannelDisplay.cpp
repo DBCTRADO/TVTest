@@ -290,7 +290,7 @@ void CChannelDisplay::LoadSettings()
 
 	GetAppClass().GetAppDirectory(szIniFileName);
 	::PathAppend(szIniFileName, TEXT("Tuner.ini"));
-	if (Settings.Open(szIniFileName, CSettings::OPEN_READ)
+	if (Settings.Open(szIniFileName, CSettings::OpenFlag::Read)
 			&& Settings.SetSection(TEXT("TunerSettings"))) {
 		m_TunerInfoList.clear();
 		for (int i = 0;; i++) {
@@ -882,7 +882,7 @@ void CChannelDisplay::Draw(HDC hdc, const RECT *pPaintRect)
 							int Length;
 							Length = EpgUtil::FormatEventTime(
 								*pEventInfo, szText, lengthof(szText),
-								EpgUtil::EVENT_TIME_HOUR_2DIGITS | EpgUtil::EVENT_TIME_START_ONLY);
+								EpgUtil::FormatEventTimeFlag::Hour2Digits | EpgUtil::FormatEventTimeFlag::StartOnly);
 							if (!pEventInfo->EventName.empty()) {
 								Length += StdUtil::snprintf(
 									szText + Length, lengthof(szText) - Length,

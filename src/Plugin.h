@@ -346,7 +346,7 @@ class CPluginManager
 // CAppEventHandler
 	void OnTunerChanged() override;
 	void OnTunerShutDown() override;
-	void OnChannelChanged(unsigned int Status) override;
+	void OnChannelChanged(TVTest::AppEvent::ChannelChangeStatus Status) override;
 	void OnServiceChanged() override;
 	void OnServiceInfoUpdated() override;
 	void OnServiceListUpdated() override;

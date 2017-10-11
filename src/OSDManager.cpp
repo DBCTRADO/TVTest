@@ -58,7 +58,7 @@ void COSDManager::OnParentMove()
 }
 
 
-bool COSDManager::ShowOSD(LPCTSTR pszText, unsigned int Flags)
+bool COSDManager::ShowOSD(LPCTSTR pszText, ShowFlag Flags)
 {
 	if (IsStringEmpty(pszText))
 		return false;
@@ -74,11 +74,11 @@ bool COSDManager::ShowOSD(LPCTSTR pszText, unsigned int Flags)
 	ClientInfo.fForcePseudoOSD = false;
 	if (!m_pEventHandler->GetOSDClientInfo(&ClientInfo))
 		return false;
-	if ((Flags & SHOW_PSEUDO) != 0)
+	if (!!(Flags & ShowFlag::Pseudo))
 		ClientInfo.fForcePseudoOSD = true;
 
 	DWORD FadeTime;
-	if ((Flags & SHOW_NO_FADE) != 0)
+	if (!!(Flags & ShowFlag::NoFade))
 		FadeTime = 0;
 	else
 		FadeTime = m_pOptions->GetFadeTime();
@@ -103,8 +103,8 @@ bool COSDManager::ShowOSD(LPCTSTR pszText, unsigned int Flags)
 			ClientInfo.ClientRect.top + m_Style.Margin.Top,
 			sz.cx + FontSize / 4, sz.cy);
 		m_OSD.SetTextStyle(
-			CPseudoOSD::TEXT_STYLE_HORZ_CENTER | CPseudoOSD::TEXT_STYLE_VERT_CENTER |
-			CPseudoOSD::TEXT_STYLE_OUTLINE | CPseudoOSD::TEXT_STYLE_FILL_BACKGROUND);
+			CPseudoOSD::TextStyle::HorzCenter | CPseudoOSD::TextStyle::VertCenter |
+			CPseudoOSD::TextStyle::Outline | CPseudoOSD::TextStyle::FillBackground);
 		m_OSD.SetTextColor(m_pOptions->GetTextColor());
 		m_OSD.Show(FadeTime, false);
 	}
@@ -142,15 +142,15 @@ bool COSDManager::ShowChannelOSD(const CChannelInfo *pInfo, LPCTSTR pszText, boo
 	COSDOptions::ChannelChangeType ChangeType = m_pOptions->GetChannelChangeType();
 
 	HBITMAP hbmLogo = nullptr;
-	unsigned int ImageEffect = 0;
+	CPseudoOSD::ImageEffect ImageEffect = CPseudoOSD::ImageEffect::None;
 	if (ChangeType != COSDOptions::ChannelChangeType::TextOnly) {
 		hbmLogo = App.LogoManager.GetAssociatedLogoBitmap(
 			pInfo->GetNetworkID(), pInfo->GetServiceID(), CLogoManager::LOGOTYPE_BIG);
 		if (hbmLogo != nullptr) {
 			if (fChanging)
-				ImageEffect = CPseudoOSD::IMAGEEFFECT_DARK;
+				ImageEffect = CPseudoOSD::ImageEffect::Dark;
 			else if (TVTest::StringUtility::CompareNoCase(m_Style.LogoEffect, TEXT("gloss")) == 0)
-				ImageEffect = CPseudoOSD::IMAGEEFFECT_GLOSS;
+				ImageEffect = CPseudoOSD::ImageEffect::Gloss;
 		}
 
 		if (ChangeType == COSDOptions::ChannelChangeType::LogoOnly && hbmLogo != nullptr) {
@@ -199,8 +199,8 @@ bool COSDManager::ShowChannelOSD(const CChannelInfo *pInfo, LPCTSTR pszText, boo
 			sz.cx + FontSize / 4 + m_Style.LogoSize.Width,
 			max(sz.cy, (LONG)m_Style.LogoSize.Height));
 		m_OSD.SetTextStyle(
-			CPseudoOSD::TEXT_STYLE_HORZ_CENTER | CPseudoOSD::TEXT_STYLE_VERT_CENTER |
-			CPseudoOSD::TEXT_STYLE_OUTLINE | CPseudoOSD::TEXT_STYLE_FILL_BACKGROUND);
+			CPseudoOSD::TextStyle::HorzCenter | CPseudoOSD::TextStyle::VertCenter |
+			CPseudoOSD::TextStyle::Outline | CPseudoOSD::TextStyle::FillBackground);
 		if (fChanging)
 			cr = MixColor(m_pOptions->GetTextColor(), RGB(0, 0, 0), 160);
 		else
@@ -297,8 +297,8 @@ bool COSDManager::ShowVolumeOSD(int Volume)
 			ClientInfo.ClientRect.bottom - sz.cy - m_Style.VolumeMargin.Bottom,
 			sz.cx + FontSize / 4, sz.cy);
 		m_VolumeOSD.SetTextStyle(
-			CPseudoOSD::TEXT_STYLE_LEFT | CPseudoOSD::TEXT_STYLE_VERT_CENTER |
-			CPseudoOSD::TEXT_STYLE_FILL_BACKGROUND);
+			CPseudoOSD::TextStyle::Left | CPseudoOSD::TextStyle::VertCenter |
+			CPseudoOSD::TextStyle::FillBackground);
 		m_VolumeOSD.SetTextColor(m_pOptions->GetTextColor());
 		m_VolumeOSD.Show(m_pOptions->GetFadeTime());
 	}

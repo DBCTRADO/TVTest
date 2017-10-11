@@ -322,7 +322,7 @@ void CInformationPanel::UpdateProgramInfoText()
 				CRichEditUtil::AppendText(m_hwndProgramInfo, InfoText.c_str(), &cf);
 				CRichEditUtil::DetectURL(
 					m_hwndProgramInfo, &cf, 0, -1,
-					CRichEditUtil::URL_NO_LINK | CRichEditUtil::URL_TO_HALF_WIDTH,
+					CRichEditUtil::DetectURLFlag::NoLink | CRichEditUtil::DetectURLFlag::ToHalfWidth,
 					&m_ProgramInfoLinkList);
 				POINT pt = {0, 0};
 				::SendMessage(m_hwndProgramInfo, EM_SETSCROLLPOS, 0, reinterpret_cast<LPARAM>(&pt));
@@ -1566,9 +1566,9 @@ bool CInformationPanel::CProgramInfoItem::Update()
 	if (CoreEngine.GetCurrentEventInfo(&EventInfo, m_fNext)) {
 		if (EpgUtil::FormatEventTime(
 					EventInfo, szTemp, lengthof(szTemp),
-					EpgUtil::EVENT_TIME_DATE |
-					EpgUtil::EVENT_TIME_YEAR |
-					EpgUtil::EVENT_TIME_UNDECIDED_TEXT) > 0) {
+					EpgUtil::FormatEventTimeFlag::Date |
+					EpgUtil::FormatEventTimeFlag::Year |
+					EpgUtil::FormatEventTimeFlag::UndecidedText) > 0) {
 			Formatter.Append(szTemp);
 			Formatter.Append(TEXT("\r\n"));
 		}

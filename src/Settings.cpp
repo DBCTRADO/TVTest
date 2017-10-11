@@ -14,7 +14,7 @@ static unsigned int StrToUInt(LPCTSTR pszValue)
 
 
 CSettings::CSettings()
-	: m_OpenFlags(0)
+	: m_OpenFlags(OpenFlag::None)
 {
 }
 
@@ -25,28 +25,28 @@ CSettings::~CSettings()
 }
 
 
-bool CSettings::Open(LPCTSTR pszFileName, unsigned int Flags)
+bool CSettings::Open(LPCTSTR pszFileName, OpenFlag Flags)
 {
 	Close();
 
 	if (IsStringEmpty(pszFileName) || ::lstrlen(pszFileName) >= MAX_PATH
-			|| (Flags & (OPEN_READ | OPEN_WRITE)) == 0
-			|| (Flags & (OPEN_WRITE | OPEN_WRITE_VOLATILE)) == (OPEN_WRITE | OPEN_WRITE_VOLATILE))
+			|| !(Flags & (OpenFlag::Read | OpenFlag::Write))
+			|| (Flags & (OpenFlag::Write | OpenFlag::WriteVolatile)) == (OpenFlag::Write | OpenFlag::WriteVolatile))
 		return false;
 
 	UINT IniFlags = 0;
-	if ((Flags & OPEN_READ) != 0)
+	if (!!(Flags & OpenFlag::Read))
 		IniFlags |= CIniFile::OPEN_READ;
-	if ((Flags & OPEN_WRITE) != 0)
+	if (!!(Flags & OpenFlag::Write))
 		IniFlags |= CIniFile::OPEN_WRITE;
-	if ((Flags & OPEN_WRITE_VOLATILE) != 0)
+	if (!!(Flags & OpenFlag::WriteVolatile))
 		IniFlags |= CIniFile::OPEN_WRITE_VOLATILE;
 	if (!m_IniFile.Open(pszFileName, IniFlags))
 		return false;
 
 	m_OpenFlags = Flags;
-	if ((Flags & OPEN_WRITE_VOLATILE) != 0)
-		m_OpenFlags |= OPEN_WRITE;
+	if (!!(Flags & OpenFlag::WriteVolatile))
+		m_OpenFlags |= OpenFlag::Write;
 
 	return true;
 }
@@ -55,19 +55,19 @@ bool CSettings::Open(LPCTSTR pszFileName, unsigned int Flags)
 void CSettings::Close()
 {
 	m_IniFile.Close();
-	m_OpenFlags = 0;
+	m_OpenFlags = OpenFlag::None;
 }
 
 
 bool CSettings::IsOpened() const
 {
-	return m_OpenFlags != 0;
+	return !!m_OpenFlags;
 }
 
 
 bool CSettings::Clear()
 {
-	if ((m_OpenFlags & OPEN_WRITE) == 0)
+	if (!(m_OpenFlags & OpenFlag::Write))
 		return false;
 
 	return m_IniFile.ClearSection();
@@ -76,7 +76,7 @@ bool CSettings::Clear()
 
 bool CSettings::SetSection(LPCTSTR pszSection)
 {
-	if (m_OpenFlags == 0)
+	if (!m_OpenFlags)
 		return false;
 
 	return m_IniFile.SelectSection(pszSection);
@@ -103,7 +103,7 @@ bool CSettings::IsValueExists(LPCTSTR pszValueName)
 
 bool CSettings::DeleteValue(LPCTSTR pszValueName)
 {
-	if ((m_OpenFlags & OPEN_WRITE) == 0)
+	if (!(m_OpenFlags & OpenFlag::Write))
 		return false;
 
 	return m_IniFile.DeleteValue(pszValueName);
@@ -152,7 +152,7 @@ bool CSettings::Write(LPCTSTR pszValueName, unsigned int Data)
 
 bool CSettings::Read(LPCTSTR pszValueName, LPTSTR pszData, unsigned int Max)
 {
-	if ((m_OpenFlags & OPEN_READ) == 0)
+	if (!(m_OpenFlags & OpenFlag::Read))
 		return false;
 
 	if (pszData == nullptr)
@@ -170,7 +170,7 @@ bool CSettings::Read(LPCTSTR pszValueName, LPTSTR pszData, unsigned int Max)
 
 bool CSettings::Write(LPCTSTR pszValueName, LPCTSTR pszData)
 {
-	if ((m_OpenFlags & OPEN_WRITE) == 0)
+	if (!(m_OpenFlags & OpenFlag::Write))
 		return false;
 
 	if (pszData == nullptr)
@@ -192,7 +192,7 @@ bool CSettings::Write(LPCTSTR pszValueName, LPCTSTR pszData)
 
 bool CSettings::Read(LPCTSTR pszValueName, TVTest::String *pValue)
 {
-	if ((m_OpenFlags & OPEN_READ) == 0)
+	if (!(m_OpenFlags & OpenFlag::Read))
 		return false;
 
 	if (pValue == nullptr)
@@ -418,7 +418,7 @@ bool CSettingsBase::LoadSettings(LPCTSTR pszFileName)
 {
 	CSettings Settings;
 
-	if (!Settings.Open(pszFileName, CSettings::OPEN_READ))
+	if (!Settings.Open(pszFileName, CSettings::OpenFlag::Read))
 		return false;
 	return LoadSettings(Settings);
 }
@@ -428,7 +428,7 @@ bool CSettingsBase::SaveSettings(LPCTSTR pszFileName)
 {
 	CSettings Settings;
 
-	if (!Settings.Open(pszFileName, CSettings::OPEN_WRITE))
+	if (!Settings.Open(pszFileName, CSettings::OpenFlag::Write))
 		return false;
 	return SaveSettings(Settings);
 }

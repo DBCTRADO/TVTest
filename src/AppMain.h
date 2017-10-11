@@ -223,12 +223,13 @@ public:
 	void Finalize();
 	void Exit();
 	bool LoadSettings();
-	enum {
-		SETTINGS_SAVE_STATUS  = 0x0001U,
-		SETTINGS_SAVE_OPTIONS = 0x0002U,
-		SETTINGS_SAVE_ALL     = SETTINGS_SAVE_STATUS | SETTINGS_SAVE_OPTIONS
+	enum class SaveSettingsFlag : unsigned int {
+		None    = 0x0000U,
+		Status  = 0x0001U,
+		Options = 0x0002U,
+		All     = Status | Options,
 	};
-	bool SaveSettings(unsigned int Flags);
+	bool SaveSettings(SaveSettingsFlag Flags);
 	bool ShowOptionDialog(HWND hwndOwner, int StartPage = -1);
 	enum class CreateDirectoryResult {
 		Success,
@@ -338,6 +339,8 @@ private:
 	void ShowProgramGuideByCommandLine(const CCommandLineOptions &CmdLine);
 	static BOOL CALLBACK ControllerFocusCallback(HWND hwnd, LPARAM Param);
 };
+
+TVTEST_ENUM_FLAGS(CAppMain::SaveSettingsFlag)
 
 
 CAppMain &GetAppClass();

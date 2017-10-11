@@ -32,7 +32,7 @@ VideoType GetVideoType(BYTE ComponentType)
 
 int FormatEventTime(
 	const LibISDB::EventInfo &EventInfo,
-	LPTSTR pszTime, int MaxLength, unsigned int Flags)
+	LPTSTR pszTime, int MaxLength, FormatEventTimeFlag Flags)
 {
 	if (pszTime == nullptr || MaxLength < 1)
 		return 0;
@@ -50,7 +50,7 @@ int FormatEventTime(
 
 int FormatEventTime(
 	const LibISDB::DateTime &StartTime, DWORD Duration,
-	LPTSTR pszTime, int MaxLength, unsigned int Flags)
+	LPTSTR pszTime, int MaxLength, FormatEventTimeFlag Flags)
 {
 	return FormatEventTime(StartTime.ToSYSTEMTIME(), Duration, pszTime, MaxLength, Flags);
 }
@@ -58,23 +58,23 @@ int FormatEventTime(
 
 int FormatEventTime(
 	const SYSTEMTIME &StartTime, DWORD Duration,
-	LPTSTR pszTime, int MaxLength, unsigned int Flags)
+	LPTSTR pszTime, int MaxLength, FormatEventTimeFlag Flags)
 {
 	if (pszTime == nullptr || MaxLength < 1)
 		return 0;
 
 	SYSTEMTIME stStart;
 
-	if ((Flags & EVENT_TIME_NO_CONVERT) != 0) {
+	if (!!(Flags & FormatEventTimeFlag::NoConvert)) {
 		stStart = StartTime;
 	} else {
 		EpgTimeToDisplayTime(StartTime, &stStart);
 	}
 
 	TCHAR szDate[32];
-	if ((Flags & EVENT_TIME_DATE) != 0) {
+	if (!!(Flags & FormatEventTimeFlag::Date)) {
 		int Length = 0;
-		if ((Flags & EVENT_TIME_YEAR) != 0) {
+		if (!!(Flags & FormatEventTimeFlag::Year)) {
 			Length = StdUtil::snprintf(
 				szDate, lengthof(szDate), TEXT("%d/"),
 				stStart.wYear);
@@ -90,7 +90,7 @@ int FormatEventTime(
 	}
 
 	LPCTSTR pszTimeFormat =
-		(Flags & EVENT_TIME_HOUR_2DIGITS) != 0 ? TEXT("%02d:%02d") : TEXT("%d:%02d");
+		!!(Flags & FormatEventTimeFlag::Hour2Digits) ? TEXT("%02d:%02d") : TEXT("%d:%02d");
 	TCHAR szStartTime[32], szEndTime[32];
 
 	StdUtil::snprintf(
@@ -100,7 +100,7 @@ int FormatEventTime(
 		stStart.wMinute);
 
 	szEndTime[0] = _T('\0');
-	if ((Flags & EVENT_TIME_START_ONLY) == 0) {
+	if (!(Flags & FormatEventTimeFlag::StartOnly)) {
 		if (Duration > 0) {
 			SYSTEMTIME EndTime = stStart;
 			if (OffsetSystemTime(&EndTime, Duration * TimeConsts::SYSTEMTIME_SECOND)) {
@@ -109,7 +109,7 @@ int FormatEventTime(
 					EndTime.wHour, EndTime.wMinute);
 			}
 		} else {
-			if ((Flags & EVENT_TIME_UNDECIDED_TEXT) != 0)
+			if (!!(Flags & FormatEventTimeFlag::UndecidedText))
 				::lstrcpy(szEndTime, TEXT("(終了未定)"));
 		}
 	}
@@ -118,7 +118,7 @@ int FormatEventTime(
 		pszTime, MaxLength, TEXT("%s%s%s%s"),
 		szDate,
 		szStartTime,
-		(Flags & EVENT_TIME_START_ONLY) == 0 ? TEXT("～") : TEXT(""),
+		!(Flags & FormatEventTimeFlag::StartOnly) ? TEXT("～") : TEXT(""),
 		szEndTime);
 }
 
@@ -946,14 +946,14 @@ TVTest::Theme::ThemeColor CEpgTheme::GetGenreColor(const LibISDB::EventInfo &Eve
 
 
 TVTest::Theme::BackgroundStyle CEpgTheme::GetContentBackgroundStyle(
-	int Genre, unsigned int Flags) const
+	int Genre, ContentStyleFlag Flags) const
 {
 	return GetContentBackgroundStyle(GetGenreColor(Genre), Flags);
 }
 
 
 TVTest::Theme::BackgroundStyle CEpgTheme::GetContentBackgroundStyle(
-	const LibISDB::EventInfo &EventInfo, unsigned int Flags) const
+	const LibISDB::EventInfo &EventInfo, ContentStyleFlag Flags) const
 {
 	return GetContentBackgroundStyle(GetGenreColor(EventInfo), Flags);
 }
@@ -961,19 +961,19 @@ TVTest::Theme::BackgroundStyle CEpgTheme::GetContentBackgroundStyle(
 
 bool CEpgTheme::DrawContentBackground(
 	HDC hdc, TVTest::Theme::CThemeDraw &ThemeDraw, const RECT &Rect,
-	const LibISDB::EventInfo &EventInfo, unsigned int Flags) const
+	const LibISDB::EventInfo &EventInfo, DrawContentBackgroundFlag Flags) const
 {
 	if (hdc == nullptr)
 		return false;
 
-	unsigned int StyleFlags = 0;
-	if ((Flags & DRAW_CONTENT_BACKGROUND_CURRENT) != 0)
-		StyleFlags |= CONTENT_STYLE_CURRENT;
-	if ((Flags & DRAW_CONTENT_BACKGROUND_NOBORDER) != 0)
-		StyleFlags |= CONTENT_STYLE_NOBORDER;
+	ContentStyleFlag StyleFlags = ContentStyleFlag::None;
+	if (!!(Flags & DrawContentBackgroundFlag::Current))
+		StyleFlags |= ContentStyleFlag::Current;
+	if (!!(Flags & DrawContentBackgroundFlag::NoBorder))
+		StyleFlags |= ContentStyleFlag::NoBorder;
 	ThemeDraw.Draw(GetContentBackgroundStyle(EventInfo, StyleFlags), Rect);
 
-	if ((Flags & DRAW_CONTENT_BACKGROUND_SEPARATOR) != 0) {
+	if (!!(Flags & DrawContentBackgroundFlag::Separator)) {
 		RECT rc = Rect;
 		rc.bottom = rc.top + ThemeDraw.GetStyleScaling()->ToPixels(1, TVTest::Style::UnitType::LogicalPixel);
 		DrawUtil::Fill(hdc, &rc, MixColor(GetGenreColor(EventInfo), RGB(0, 0, 0), 224));
@@ -984,11 +984,11 @@ bool CEpgTheme::DrawContentBackground(
 
 
 TVTest::Theme::BackgroundStyle CEpgTheme::GetContentBackgroundStyle(
-	const TVTest::Theme::ThemeColor &Color, unsigned int Flags) const
+	const TVTest::Theme::ThemeColor &Color, ContentStyleFlag Flags) const
 {
 	TVTest::Theme::BackgroundStyle BackStyle;
 
-	if ((Flags & CONTENT_STYLE_CURRENT) == 0) {
+	if (!(Flags & ContentStyleFlag::Current)) {
 		BackStyle.Fill.Type = TVTest::Theme::FillType::Solid;
 		BackStyle.Fill.Solid = TVTest::Theme::SolidStyle(Color);
 	} else {
@@ -1027,7 +1027,7 @@ TVTest::Theme::BackgroundStyle CEpgTheme::GetContentBackgroundStyle(
 	}
 
 #if 0
-	if ((Flags & CONTENT_STYLE_NOBORDER) != 0)
+	if (!!(Flags & ContentStyleFlag::NoBorder))
 		BackStyle.Border.Type = TVTest::Theme::BorderType::None;
 #endif
 

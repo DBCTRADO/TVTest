@@ -89,17 +89,18 @@ namespace TVTest
 	class CFavoritesMenu
 	{
 	public:
-		enum {
-			FLAG_SHOWEVENTINFO	= 0x0001,
-			FLAG_SHOWLOGO		= 0x0002,
-			FLAG_SHOWTOOLTIP	= 0x0004,
-			FLAG_SHARED			= 0x1000
+		enum class CreateFlag : unsigned int {
+			None          = 0x0000U,
+			ShowEventInfo = 0x0001U,
+			ShowLogo      = 0x0002U,
+			ShowToolTip   = 0x0004U,
+			Shared        = 0x1000U,
 		};
 
 		CFavoritesMenu();
 		~CFavoritesMenu();
 		bool Create(const CFavoriteFolder *pFolder, UINT Command,
-					HMENU hmenu, HWND hwnd, unsigned int Flags);
+					HMENU hmenu, HWND hwnd, CreateFlag Flags);
 		void Destroy();
 		bool Show(UINT Flags, int x, int y);
 		bool OnMeasureItem(HWND hwnd, WPARAM wParam, LPARAM lParam);
@@ -117,7 +118,7 @@ namespace TVTest
 		class CFolderItem;
 		class CChannelItem;
 
-		unsigned int m_Flags;
+		CreateFlag m_Flags;
 		HWND m_hwnd;
 		HMENU m_hmenu;
 		UINT m_FirstCommand;
@@ -144,6 +145,8 @@ namespace TVTest
 		void CreateFont(HDC hdc);
 		static void GetBaseTime(LibISDB::DateTime *pTime);
 	};
+
+	TVTEST_ENUM_FLAGS(CFavoritesMenu::CreateFlag)
 
 	class COrganizeFavoritesDialog
 		: public CResizableDialog

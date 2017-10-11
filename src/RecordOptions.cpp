@@ -500,7 +500,7 @@ INT_PTR CRecordOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 				GetDlgItemString(hDlg, IDC_RECORDOPTIONS_FILENAME, &FileName);
 				if (!FileName.empty()) {
 					TVTest::String Message;
-					if (!IsValidFileName(FileName.c_str(), FILENAME_VALIDATE_ALLOWDELIMITER, &Message)) {
+					if (!IsValidFileName(FileName.c_str(), FileNameValidateFlag::AllowDelimiter, &Message)) {
 						SettingError();
 						::SendDlgItemMessage(hDlg, IDC_RECORDOPTIONS_FILENAME, EM_SETSEL, 0, -1);
 						::MessageBox(hDlg, Message.c_str(), nullptr, MB_OK | MB_ICONEXCLAMATION);

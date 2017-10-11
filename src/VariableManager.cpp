@@ -11,7 +11,7 @@ namespace TVTest
 
 bool CVariableManager::RegisterVariable(
 	LPCWSTR pszKeyword, LPCWSTR pszValue, IGetVariable *pGetVariable,
-	LPCWSTR pszDescription, unsigned int Flags)
+	LPCWSTR pszDescription, VariableFlag Flags)
 {
 	if (IsStringEmpty(pszKeyword))
 		return false;
@@ -73,7 +73,7 @@ bool CVariableManager::GetPreferredVariable(LPCWSTR pszKeyword, String *pValue) 
 	StringUtility::ToLower(Entry.Keyword);
 
 	auto it = m_VariableList.find(Entry);
-	if (it == m_VariableList.end() || (it->Flags & FLAG_OVERRIDE) == 0)
+	if (it == m_VariableList.end() || !(it->Flags & VariableFlag::Override))
 		return false;
 
 	if (it->pGetVariable != nullptr) {

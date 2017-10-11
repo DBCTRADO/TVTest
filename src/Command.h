@@ -12,16 +12,17 @@ public:
 	static constexpr size_t MAX_COMMAND_TEXT = MAX_PATH;
 	static constexpr size_t MAX_COMMAND_NAME = MAX_PATH + 16;
 
-	enum {
-		COMMAND_STATE_DISABLED = 0x00000001U,
-		COMMAND_STATE_CHECKED  = 0x00000002U
+	enum class CommandState : unsigned int {
+		None     = 0x0000U,
+		Disabled = 0x0001U,
+		Checked  = 0x0002U,
 	};
 
 	class ABSTRACT_CLASS(CEventHandler)
 	{
 	public:
 		virtual ~CEventHandler() = default;
-		virtual void OnCommandStateChanged(int ID, unsigned int OldState, unsigned int NewState) {}
+		virtual void OnCommandStateChanged(int ID, CommandState OldState, CommandState NewState) {}
 		virtual void OnCommandRadioCheckedStateChanged(int FirstID, int LastID, int CheckedID) {}
 	};
 
@@ -54,12 +55,12 @@ public:
 	bool RegisterCommand(
 		int ID, LPCTSTR pszText,
 		LPCTSTR pszName = nullptr, LPCTSTR pszShortName = nullptr,
-		unsigned int State = 0);
+		CommandState State = CommandState::None);
 	bool AddCommandCustomizer(CCommandCustomizer *pCustomizer);
 	void SetEventHandler(CEventHandler *pEventHandler);
-	bool SetCommandStateByID(int ID, unsigned int State);
-	bool SetCommandStateByID(int ID, unsigned int Mask, unsigned int State);
-	unsigned int GetCommandStateByID(int ID) const;
+	bool SetCommandStateByID(int ID, CommandState State);
+	bool SetCommandStateByID(int ID, CommandState Mask, CommandState State);
+	CommandState GetCommandStateByID(int ID) const;
 	bool SetCommandRadioCheckedState(int FirstID, int LastID, int CheckedID);
 
 private:
@@ -68,7 +69,7 @@ private:
 	struct CommandInfo
 	{
 		int ID;
-		unsigned int State;
+		CommandState State;
 		TVTest::String Text;
 		TVTest::String Name;
 		TVTest::String ShortName;
@@ -82,6 +83,8 @@ private:
 	std::vector<CCommandCustomizer*> m_CustomizerList;
 	CEventHandler *m_pEventHandler;
 };
+
+TVTEST_ENUM_FLAGS(CCommandList::CommandState)
 
 
 #endif

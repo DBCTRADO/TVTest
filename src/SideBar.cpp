@@ -166,7 +166,7 @@ bool CSideBar::AddSeparator()
 
 	Item.Command = ITEM_SEPARATOR;
 	Item.Icon = -1;
-	Item.State = 0;
+	Item.State = ItemState::None;
 
 	return AddItem(&Item);
 }
@@ -203,7 +203,7 @@ bool CSideBar::EnableItem(int Command, bool fEnable)
 	if (Index < 0)
 		return false;
 	if (m_ItemList[Index].IsEnabled() != fEnable) {
-		m_ItemList[Index].State ^= ITEM_STATE_DISABLED;
+		m_ItemList[Index].State ^= ItemState::Disabled;
 		if (!fEnable && m_HotItem == Index)
 			m_HotItem = -1;
 		UpdateItem(Index);
@@ -217,7 +217,7 @@ bool CSideBar::EnableItemByIndex(int Index, bool fEnable)
 	if (Index < 0 || (size_t)Index >= m_ItemList.size())
 		return false;
 	if (m_ItemList[Index].IsEnabled() != fEnable) {
-		m_ItemList[Index].State ^= ITEM_STATE_DISABLED;
+		m_ItemList[Index].State ^= ItemState::Disabled;
 		if (!fEnable && m_HotItem == Index)
 			m_HotItem = -1;
 		UpdateItem(Index);
@@ -243,7 +243,7 @@ bool CSideBar::CheckItem(int Command, bool fCheck)
 	if (Index < 0)
 		return false;
 	if (m_ItemList[Index].IsChecked() != fCheck) {
-		m_ItemList[Index].State ^= ITEM_STATE_CHECKED;
+		m_ItemList[Index].State ^= ItemState::Checked;
 		UpdateItem(Index);
 	}
 	return true;
@@ -255,7 +255,7 @@ bool CSideBar::CheckItemByIndex(int Index, bool fCheck)
 	if (Index < 0 || (size_t)Index >= m_ItemList.size())
 		return false;
 	if (m_ItemList[Index].IsChecked() != fCheck) {
-		m_ItemList[Index].State ^= ITEM_STATE_CHECKED;
+		m_ItemList[Index].State ^= ItemState::Checked;
 		UpdateItem(Index);
 	}
 	return true;
@@ -736,7 +736,7 @@ void CSideBar::Draw(HDC hdc, const RECT &PaintRect)
 				Info.Command = m_ItemList[i].Command;
 				Info.State = m_ItemList[i].State;
 				if (fHot)
-					Info.State |= ITEM_STATE_HOT;
+					Info.State |= ItemState::Hot;
 				Info.hdc = hdc;
 				Info.IconRect = rcItem;
 				Info.Color = ForeColor;

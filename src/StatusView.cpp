@@ -17,7 +17,7 @@ CStatusItem::CStatusItem(int ID, const SizeValue &DefaultWidth)
 	, m_MinHeight(0)
 	, m_fVisible(true)
 	, m_fBreak(false)
-	, m_Style(0)
+	, m_Style(StyleFlag::None)
 {
 }
 
@@ -91,13 +91,13 @@ void CStatusItem::SetVisible(bool fVisible)
 }
 
 
-void CStatusItem::SetItemStyle(unsigned int Style)
+void CStatusItem::SetItemStyle(StyleFlag Style)
 {
 	m_Style = Style;
 }
 
 
-void CStatusItem::SetItemStyle(unsigned int Mask, unsigned int Style)
+void CStatusItem::SetItemStyle(StyleFlag Mask, StyleFlag Style)
 {
 	m_Style = (m_Style & ~Mask) | (Style & Mask);
 }

@@ -12,25 +12,30 @@ namespace TVTest
 	class CEpgCaptureManager
 	{
 	public:
-		enum {
-			BEGIN_NO_UI     = 0x0001U,
-			BEGIN_STANDBY   = 0x0002U
+		enum class BeginFlag : unsigned int {
+			None    = 0x0000U,
+			NoUI    = 0x0001U,
+			Standby = 0x0002U,
 		};
-		enum {
-			BEGIN_STATUS_STANDBY              = 0x0001U,
-			BEGIN_STATUS_TUNER_ALREADY_OPENED = 0x0002U
+
+		enum class BeginStatus : unsigned int {
+			None               = 0x0000U,
+			Standby            = 0x0001U,
+			TunerAlreadyOpened = 0x0002U,
 		};
-		enum {
-			END_CLOSE_TUNER = 0x0001U,
-			END_RESUME      = 0x0002U,
-			END_DEFAULT     = END_CLOSE_TUNER | END_RESUME
+
+		enum class EndFlag : unsigned int  {
+			None       = 0x0000U,
+			CloseTuner = 0x0001U,
+			Resume     = 0x0002U,
+			Default    = CloseTuner | Resume,
 		};
 
 		class ABSTRACT_CLASS(CEventHandler)
 		{
 		public:
-			virtual void OnBeginCapture(unsigned int Flags, unsigned int Status) {}
-			virtual void OnEndCapture(unsigned int Flags) {}
+			virtual void OnBeginCapture(BeginFlag Flags, BeginStatus Status) {}
+			virtual void OnEndCapture(EndFlag Flags) {}
 			virtual void OnChannelChanged() {}
 			virtual void OnChannelEnd(bool fComplete) {}
 		};
@@ -40,8 +45,8 @@ namespace TVTest
 		bool BeginCapture(
 			LPCTSTR pszTuner = nullptr,
 			const CChannelList *pChannelList = nullptr,
-			unsigned int Flags = 0);
-		void EndCapture(unsigned int Flags = END_DEFAULT);
+			BeginFlag Flags = BeginFlag::None);
+		void EndCapture(EndFlag Flags = EndFlag::Default);
 		bool IsCapturing() const { return m_fCapturing; }
 		bool ProcessCapture();
 		void SetEventHandler(CEventHandler *pEventHandler);
@@ -68,6 +73,10 @@ namespace TVTest
 		bool m_fChannelChanging;
 		CEventHandler *m_pEventHandler;
 	};
+
+	TVTEST_ENUM_FLAGS(CEpgCaptureManager::BeginFlag)
+	TVTEST_ENUM_FLAGS(CEpgCaptureManager::BeginStatus)
+	TVTEST_ENUM_FLAGS(CEpgCaptureManager::EndFlag)
 
 }	// namespace TVTest
 

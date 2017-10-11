@@ -729,7 +729,7 @@ const LibISDB::EventInfo *CFavoritesMenu::CChannelItem::GetEventInfo(int Index) 
 
 
 CFavoritesMenu::CFavoritesMenu()
-	: m_Flags(0)
+	: m_Flags(CreateFlag::None)
 	, m_hwnd(nullptr)
 	, m_hmenu(nullptr)
 	, m_TextHeight(0)
@@ -748,7 +748,7 @@ CFavoritesMenu::~CFavoritesMenu()
 
 bool CFavoritesMenu::Create(
 	const CFavoriteFolder *pFolder, UINT Command,
-	HMENU hmenu, HWND hwnd, unsigned int Flags)
+	HMENU hmenu, HWND hwnd, CreateFlag Flags)
 {
 	if (pFolder == nullptr)
 		return false;
@@ -775,7 +775,7 @@ bool CFavoritesMenu::Create(
 	HFONT hfontOld = DrawUtil::SelectObject(hdc, m_Font);
 
 	m_ItemHeight = m_TextHeight;
-	if ((Flags & FLAG_SHOWLOGO) != 0) {
+	if (!!(Flags & CreateFlag::ShowLogo)) {
 		m_Logo.Initialize(m_IconHeight);
 		int Height = max(m_Logo.GetLogoHeight(), m_IconHeight);
 		if (Height > m_ItemHeight)
@@ -789,7 +789,7 @@ bool CFavoritesMenu::Create(
 		m_hmenu = ::CreatePopupMenu();
 	} else {
 		m_hmenu = hmenu;
-		m_Flags |= FLAG_SHARED;
+		m_Flags |= CreateFlag::Shared;
 		ClearMenu(hmenu);
 	}
 
@@ -849,7 +849,7 @@ bool CFavoritesMenu::Create(
 	::SelectObject(hdc, hfontOld);
 	::ReleaseDC(hwnd, hdc);
 
-	if ((Flags & FLAG_SHOWTOOLTIP) != 0) {
+	if (!!(Flags & CreateFlag::ShowToolTip)) {
 		m_Tooltip.Create(hwnd);
 		m_Tooltip.SetFont(m_Font.GetHandle());
 		m_Tooltip.SetMaxWidth(m_TextHeight * 40);
@@ -935,7 +935,7 @@ void CFavoritesMenu::SetFolderMenu(HMENU hmenu, int MenuPos, HDC hdc, UINT *pCom
 					(*pCommand)++;
 					MenuPos++;
 
-					if ((m_Flags & FLAG_SHOWEVENTINFO) != 0) {
+					if (!!(m_Flags & CreateFlag::ShowEventInfo)) {
 						const LibISDB::EventInfo *pEventInfo =
 							pMenuItem->GetEventInfo(&GetAppClass().EPGDatabase, 0, &m_BaseTime);
 						if (pEventInfo != nullptr) {
@@ -957,7 +957,7 @@ void CFavoritesMenu::SetFolderMenu(HMENU hmenu, int MenuPos, HDC hdc, UINT *pCom
 void CFavoritesMenu::Destroy()
 {
 	if (m_hmenu) {
-		if ((m_Flags & FLAG_SHARED) == 0)
+		if (!(m_Flags & CreateFlag::Shared))
 			::DestroyMenu(m_hmenu);
 		else
 			ClearMenu(m_hmenu);
@@ -994,9 +994,9 @@ bool CFavoritesMenu::OnMeasureItem(HWND hwnd, WPARAM wParam, LPARAM lParam)
 				return false;
 			const CChannelItem *pItem = reinterpret_cast<const CChannelItem*>(pmis->itemData);
 			pmis->itemWidth = pItem->GetNameWidth() + m_Margins.cxLeftWidth + m_Margins.cxRightWidth;
-			if ((m_Flags & FLAG_SHOWLOGO) != 0)
+			if (!!(m_Flags & CreateFlag::ShowLogo))
 				pmis->itemWidth += m_Logo.GetLogoWidth() + m_MenuLogoMargin;
-			if ((m_Flags & FLAG_SHOWEVENTINFO) != 0)
+			if (!!(m_Flags & CreateFlag::ShowEventInfo))
 				pmis->itemWidth += m_TextHeight + pItem->GetEventWidth();
 			pmis->itemHeight = m_ItemHeight;
 			return true;
@@ -1005,14 +1005,14 @@ bool CFavoritesMenu::OnMeasureItem(HWND hwnd, WPARAM wParam, LPARAM lParam)
 			if (pItem == nullptr)
 				return false;
 			pmis->itemWidth = pItem->GetTextWidth() + m_Margins.cxLeftWidth + m_Margins.cxRightWidth;
-			if ((m_Flags & FLAG_SHOWLOGO) != 0)
+			if (!!(m_Flags & CreateFlag::ShowLogo))
 				pmis->itemWidth += m_Logo.GetLogoWidth() + m_MenuLogoMargin;
 			pmis->itemHeight = m_ItemHeight;
 			return true;
 		} else if (pmis->itemID == CM_ADDTOFAVORITES
 				|| pmis->itemID == CM_ORGANIZEFAVORITES) {
 			pmis->itemWidth = m_TextWidth + m_Margins.cxLeftWidth + m_Margins.cxRightWidth;
-			if ((m_Flags & FLAG_SHOWLOGO) != 0)
+			if (!!(m_Flags & CreateFlag::ShowLogo))
 				pmis->itemWidth += m_Logo.GetLogoWidth() + m_MenuLogoMargin;
 			pmis->itemHeight = m_ItemHeight;
 			return true;
@@ -1051,7 +1051,7 @@ bool CFavoritesMenu::OnDrawItem(HWND hwnd, WPARAM wParam, LPARAM lParam)
 			return false;
 		const CChannelItem *pItem = reinterpret_cast<const CChannelItem*>(pdis->itemData);
 
-		if ((m_Flags & FLAG_SHOWLOGO) != 0) {
+		if (!!(m_Flags & CreateFlag::ShowLogo)) {
 			m_Logo.DrawLogo(
 				pdis->hDC,
 				rc.left,
@@ -1065,7 +1065,7 @@ bool CFavoritesMenu::OnDrawItem(HWND hwnd, WPARAM wParam, LPARAM lParam)
 			pdis->hDC, pdis->itemState, pItem->GetName(), rc,
 			DT_LEFT | DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX);
 
-		if ((m_Flags & FLAG_SHOWEVENTINFO) != 0) {
+		if (!!(m_Flags & CreateFlag::ShowEventInfo)) {
 			const LibISDB::EventInfo *pEventInfo = pItem->GetEventInfo(0);
 			if (pEventInfo != nullptr) {
 				GetEventText(pEventInfo, szText, lengthof(szText));
@@ -1078,7 +1078,7 @@ bool CFavoritesMenu::OnDrawItem(HWND hwnd, WPARAM wParam, LPARAM lParam)
 		}
 	} else {
 		if (pdis->itemID == CM_ADDTOFAVORITES || pdis->itemID == CM_ORGANIZEFAVORITES) {
-			if ((m_Flags & FLAG_SHOWLOGO) != 0) {
+			if (!!(m_Flags & CreateFlag::ShowLogo)) {
 				m_MenuPainter.DrawIcon(
 					m_himlIcons,
 					pdis->itemID == CM_ADDTOFAVORITES ? FAVORITES_ICON_ADD : FAVORITES_ICON_ORGANIZE,
@@ -1095,7 +1095,7 @@ bool CFavoritesMenu::OnDrawItem(HWND hwnd, WPARAM wParam, LPARAM lParam)
 			m_MenuPainter.DrawItemText(pdis->hDC, pdis->itemState, szText, rc);
 		} else if (pdis->itemID == CM_FAVORITESSUBMENU) {
 			const CFolderItem *pItem = reinterpret_cast<const CFolderItem*>(pdis->itemData);
-			if ((m_Flags & FLAG_SHOWLOGO) != 0) {
+			if (!!(m_Flags & CreateFlag::ShowLogo)) {
 				m_MenuPainter.DrawIcon(
 					m_himlIcons, FAVORITES_ICON_FOLDER, pdis->hDC,
 					rc.left + (m_Logo.GetLogoWidth() - m_IconWidth) / 2,
@@ -1128,7 +1128,7 @@ bool CFavoritesMenu::OnMenuSelect(HWND hwnd, WPARAM wParam, LPARAM lParam)
 		return false;
 	}
 
-	if ((m_Flags & FLAG_SHOWTOOLTIP) != 0) {
+	if (!!(m_Flags & CreateFlag::ShowToolTip)) {
 		MENUITEMINFO mii;
 
 		mii.cbSize = sizeof(mii);
@@ -1185,7 +1185,7 @@ int CFavoritesMenu::GetEventText(
 	TCHAR szTime[EpgUtil::MAX_EVENT_TIME_LENGTH];
 
 	EpgUtil::FormatEventTime(
-		*pEventInfo, szTime, lengthof(szTime), EpgUtil::EVENT_TIME_HOUR_2DIGITS);
+		*pEventInfo, szTime, lengthof(szTime), EpgUtil::FormatEventTimeFlag::Hour2Digits);
 
 	return StdUtil::snprintf(
 		pszText, MaxLength, TEXT("%s %s"),
@@ -1341,10 +1341,10 @@ INT_PTR COrganizeFavoritesDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, L
 			if (m_pManager->GetRootFolder().GetItemCount() > 0)
 				InsertTreeItems(hwndTree, TVI_ROOT, &m_pManager->GetRootFolder());
 
-			AddControl(IDC_FAVORITES_FOLDERTREE, ALIGN_ALL);
-			AddControl(IDC_FAVORITES_NEWFOLDER, ALIGN_BOTTOM);
-			AddControl(IDOK, ALIGN_BOTTOM_RIGHT);
-			AddControl(IDCANCEL, ALIGN_BOTTOM_RIGHT);
+			AddControl(IDC_FAVORITES_FOLDERTREE, AlignFlag::All);
+			AddControl(IDC_FAVORITES_NEWFOLDER, AlignFlag::Bottom);
+			AddControl(IDOK, AlignFlag::BottomRight);
+			AddControl(IDCANCEL, AlignFlag::BottomRight);
 
 			m_fItemDragging = false;
 			m_himlDrag = nullptr;

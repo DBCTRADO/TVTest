@@ -88,9 +88,9 @@ INT_PTR CInitialSettings::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lP
 
 					// ネットワークやファイル再生用の特殊なBonDriverは後になるようにする
 					if (m_pDriverManager->GetTunerSpec(pDriverInfo->GetFileName(), &Spec)
-							&& (Spec.Flags &
-								(CDriverManager::TunerSpec::FLAG_NETWORK |
-								 CDriverManager::TunerSpec::FLAG_FILE)) != 0) {
+						&& !!(Spec.Flags &
+							(CDriverManager::TunerSpec::Flag::Network |
+							 CDriverManager::TunerSpec::Flag::File))) {
 						Index = i;
 					} else {
 						Index = NormalDriverCount++;

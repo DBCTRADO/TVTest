@@ -338,7 +338,7 @@ int CCommandList::ParseText(LPCTSTR pszText) const
 
 
 bool CCommandList::RegisterCommand(
-	int ID, LPCTSTR pszText, LPCTSTR pszName, LPCTSTR pszShortName, unsigned int State)
+	int ID, LPCTSTR pszText, LPCTSTR pszName, LPCTSTR pszShortName, CommandState State)
 {
 	if (IsStringEmpty(pszText))
 		return false;
@@ -384,20 +384,20 @@ void CCommandList::SetEventHandler(CEventHandler *pEventHandler)
 }
 
 
-bool CCommandList::SetCommandStateByID(int ID, unsigned int State)
+bool CCommandList::SetCommandStateByID(int ID, CommandState State)
 {
-	return SetCommandStateByID(ID, ~0U, State);
+	return SetCommandStateByID(ID, ~CommandState::None, State);
 }
 
 
-bool CCommandList::SetCommandStateByID(int ID, unsigned int Mask, unsigned int State)
+bool CCommandList::SetCommandStateByID(int ID, CommandState Mask, CommandState State)
 {
 	int Index = IDToIndex(ID);
 	if (Index < 0)
 		return false;
 
-	unsigned int OldState = m_CommandList[Index].State;
-	unsigned int NewState = (OldState & ~Mask) | (State & Mask);
+	CommandState OldState = m_CommandList[Index].State;
+	CommandState NewState = (OldState & ~Mask) | (State & Mask);
 	if (OldState != NewState) {
 		m_CommandList[Index].State = NewState;
 		if (m_pEventHandler != nullptr)
@@ -408,11 +408,11 @@ bool CCommandList::SetCommandStateByID(int ID, unsigned int Mask, unsigned int S
 }
 
 
-unsigned int CCommandList::GetCommandStateByID(int ID) const
+CCommandList::CommandState CCommandList::GetCommandStateByID(int ID) const
 {
 	int Index = IDToIndex(ID);
 	if (Index < 0)
-		return 0;
+		return CommandState::None;
 	return m_CommandList[Index].State;
 }
 
@@ -427,9 +427,9 @@ bool CCommandList::SetCommandRadioCheckedState(int FirstID, int LastID, int Chec
 
 		if (Index >= 0) {
 			if (i == CheckedID)
-				m_CommandList[Index].State |= COMMAND_STATE_CHECKED;
+				m_CommandList[Index].State |= CommandState::Checked;
 			else
-				m_CommandList[Index].State &= ~COMMAND_STATE_CHECKED;
+				m_CommandList[Index].State &= ~CommandState::Checked;
 		}
 	}
 

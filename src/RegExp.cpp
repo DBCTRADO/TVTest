@@ -55,7 +55,7 @@ void StringToHalfWidth(String &Text)
 
 
 CRegExpEngine::CRegExpEngine()
-	: m_Flags(0)
+	: m_Flags(CRegExp::PatternFlag::None)
 {
 }
 
@@ -63,19 +63,19 @@ CRegExpEngine::CRegExpEngine()
 void CRegExpEngine::ClearPattern()
 {
 	m_Pattern.clear();
-	m_Flags = 0;
+	m_Flags = CRegExp::PatternFlag::None;
 }
 
 
 bool CRegExpEngine::NeedMap() const
 {
-	return (m_Flags & CRegExp::FLAG_IGNORE_WIDTH) != 0;
+	return !!(m_Flags & CRegExp::PatternFlag::IgnoreWidth);
 }
 
 
 void CRegExpEngine::MapPatternString()
 {
-	if ((m_Flags & CRegExp::FLAG_IGNORE_WIDTH) != 0) {
+	if (!!(m_Flags & CRegExp::PatternFlag::IgnoreWidth)) {
 		for (size_t i = 0; i < m_Pattern.length(); i++) {
 			if (m_Pattern[i] == L'\\') {
 				i++;
@@ -100,7 +100,7 @@ void CRegExpEngine::MapTargetString(String &Text) const
 	if (Text.empty())
 		return;
 
-	if ((m_Flags & CRegExp::FLAG_IGNORE_WIDTH) != 0)
+	if (!!(m_Flags & CRegExp::PatternFlag::IgnoreWidth))
 		StringToHalfWidth(Text);
 }
 
@@ -123,7 +123,7 @@ public:
 	bool Initialize() override;
 	void Finalize() override;
 	bool IsInitialized() const override;
-	bool SetPattern(LPCTSTR pszPattern, UINT Flags) override;
+	bool SetPattern(LPCTSTR pszPattern, CRegExp::PatternFlag Flags) override;
 	bool Match(LPCTSTR pText, size_t Length, CRegExp::TextRange *pRange) override;
 
 private:
@@ -176,7 +176,7 @@ bool CRegExpEngine_ECMAScript::IsInitialized() const
 }
 
 
-bool CRegExpEngine_ECMAScript::SetPattern(LPCTSTR pszPattern, UINT Flags)
+bool CRegExpEngine_ECMAScript::SetPattern(LPCTSTR pszPattern, CRegExp::PatternFlag Flags)
 {
 	if (IsStringEmpty(pszPattern))
 		return false;
@@ -186,7 +186,7 @@ bool CRegExpEngine_ECMAScript::SetPattern(LPCTSTR pszPattern, UINT Flags)
 	MapPatternString();
 
 	RegEx::flag_type RegExFlags = std::regex_constants::ECMAScript;
-	if (Flags & CRegExp::FLAG_IGNORE_CASE)
+	if (!!(Flags & CRegExp::PatternFlag::IgnoreCase))
 		RegExFlags |= std::regex_constants::icase;
 
 	try {
@@ -248,7 +248,7 @@ public:
 	bool Initialize() override;
 	void Finalize() override;
 	bool IsInitialized() const override;
-	bool SetPattern(LPCTSTR pszPattern, UINT Flags) override;
+	bool SetPattern(LPCTSTR pszPattern, CRegExp::PatternFlag Flags) override;
 	bool Match(LPCTSTR pText, size_t Length, CRegExp::TextRange *pRange) override;
 
 private:
@@ -303,7 +303,7 @@ bool CRegExpEngine_VBScript::IsInitialized() const
 }
 
 
-bool CRegExpEngine_VBScript::SetPattern(LPCTSTR pszPattern, UINT Flags)
+bool CRegExpEngine_VBScript::SetPattern(LPCTSTR pszPattern, CRegExp::PatternFlag Flags)
 {
 	if (m_pRegExp == nullptr)
 		return false;
@@ -318,7 +318,7 @@ bool CRegExpEngine_VBScript::SetPattern(LPCTSTR pszPattern, UINT Flags)
 		_bstr_t Pattern(m_Pattern.c_str());
 		m_pRegExp->put_Pattern(Pattern);
 		m_pRegExp->put_Global(VARIANT_TRUE);
-		m_pRegExp->put_IgnoreCase((Flags & CRegExp::FLAG_IGNORE_CASE) ? VARIANT_TRUE : VARIANT_FALSE);
+		m_pRegExp->put_IgnoreCase(!!(Flags & CRegExp::PatternFlag::IgnoreCase) ? VARIANT_TRUE : VARIANT_FALSE);
 	} catch (...) {
 		return false;
 	}
@@ -380,7 +380,7 @@ public:
 	bool Initialize() override;
 	void Finalize() override;
 	bool IsInitialized() const override;
-	bool SetPattern(LPCTSTR pszPattern, UINT Flags) override;
+	bool SetPattern(LPCTSTR pszPattern, CRegExp::PatternFlag Flags) override;
 	void ClearPattern() override;
 	bool Match(LPCTSTR pText, size_t Length, CRegExp::TextRange *pRange) override;
 
@@ -458,7 +458,7 @@ bool CRegExpEngine_Bregonig::Initialize()
 void CRegExpEngine_Bregonig::Finalize()
 {
 	m_Pattern.clear();
-	m_Flags = 0;
+	m_Flags = CRegExp::PatternFlag::None;
 
 	if (m_hLib != nullptr) {
 		FreeBRegExp();
@@ -477,7 +477,7 @@ bool CRegExpEngine_Bregonig::IsInitialized() const
 }
 
 
-bool CRegExpEngine_Bregonig::SetPattern(LPCTSTR pszPattern, UINT Flags)
+bool CRegExpEngine_Bregonig::SetPattern(LPCTSTR pszPattern, CRegExp::PatternFlag Flags)
 {
 	if (m_hLib == nullptr)
 		return false;
@@ -524,7 +524,7 @@ bool CRegExpEngine_Bregonig::Match(LPCTSTR pText, size_t Length, CRegExp::TextRa
 
 	int Result = m_pBoMatch(
 		m_Pattern.c_str(),
-		(m_Flags & CRegExp::FLAG_IGNORE_CASE) ? TEXT("i") : nullptr,
+		!!(m_Flags & CRegExp::PatternFlag::IgnoreCase) ? TEXT("i") : nullptr,
 		pSrcText, pSrcText, pSrcText + SrcLength,
 		FALSE, &m_pBRegExp, szMessage);
 	if (Result <= 0)
@@ -612,7 +612,7 @@ bool CRegExp::IsInitialized() const
 }
 
 
-bool CRegExp::SetPattern(LPCTSTR pszPattern, UINT Flags)
+bool CRegExp::SetPattern(LPCTSTR pszPattern, CRegExp::PatternFlag Flags)
 {
 	if (!m_Engine)
 		return false;

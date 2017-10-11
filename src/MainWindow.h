@@ -68,7 +68,13 @@ public:
 
 	struct ResumeInfo
 	{
-		enum {
+		enum class ViewerSuspendFlag : unsigned int {
+			None      = 0x0000U,
+			Minimize  = 0x0001U,
+			Standby   = 0x0002U,
+			Suspend   = 0x0004U,
+			EPGUpdate = 0x0008U,
+
 			VIEWERSUSPEND_MINIMIZE	= 0x0001U,
 			VIEWERSUSPEND_STANDBY	= 0x0002U,
 			VIEWERSUSPEND_SUSPEND	= 0x0004U,
@@ -79,14 +85,14 @@ public:
 		bool fOpenTuner;
 		bool fSetChannel;
 		bool fEnableViewer;
-		unsigned int ViewerSuspendFlags;
+		ViewerSuspendFlag ViewerSuspendFlags;
 		bool fFullscreen;
 
 		ResumeInfo()
 			: fOpenTuner(false)
 			, fSetChannel(false)
 			, fEnableViewer(false)
-			, ViewerSuspendFlags(0)
+			, ViewerSuspendFlags(ViewerSuspendFlag::None)
 			, fFullscreen(false)
 		{
 		}
@@ -401,8 +407,8 @@ private:
 	private:
 		CMainWindow *m_pMainWindow;
 
-		void OnBeginCapture(unsigned int Flags, unsigned int Status) override;
-		void OnEndCapture(unsigned int Flags) override;
+		void OnBeginCapture(TVTest::CEpgCaptureManager::BeginFlag Flags, TVTest::CEpgCaptureManager::BeginStatus Status) override;
+		void OnEndCapture(TVTest::CEpgCaptureManager::EndFlag Flags) override;
 		void OnChannelChanged() override;
 		void OnChannelEnd(bool fComplete) override;
 	};
@@ -416,7 +422,7 @@ private:
 	private:
 		CMainWindow *m_pMainWindow;
 
-		void OnCommandStateChanged(int ID, unsigned int OldState, unsigned int NewState) override;
+		void OnCommandStateChanged(int ID, CCommandList::CommandState OldState, CCommandList::CommandState NewState) override;
 		void OnCommandRadioCheckedStateChanged(int FirstID, int LastID, int CheckedID) override;
 	};
 
@@ -624,7 +630,7 @@ private:
 	void OnTunerOpened() override;
 	void OnTunerClosed() override;
 	void OnTunerShutDown() override;
-	void OnChannelChanged(unsigned int Status) override;
+	void OnChannelChanged(TVTest::AppEvent::ChannelChangeStatus Status) override;
 	void OnServiceChanged() override;
 	void OnChannelListChanged() override;
 	void OnRecordingStarted() override;
@@ -684,8 +690,8 @@ private:
 	void StoreTunerResumeInfo();
 	bool ResumeTuner();
 	void ResumeChannel();
-	void SuspendViewer(unsigned int Flags);
-	void ResumeViewer(unsigned int Flags);
+	void SuspendViewer(ResumeInfo::ViewerSuspendFlag Flags);
+	void ResumeViewer(ResumeInfo::ViewerSuspendFlag Flags);
 	void OnChannelNoInput();
 	int GetNextChannel(bool fUp);
 	void HookWindows(HWND hwnd);
@@ -698,6 +704,8 @@ private:
 	static LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 	static LRESULT CALLBACK ChildHookProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 };
+
+TVTEST_ENUM_FLAGS(CMainWindow::ResumeInfo::ViewerSuspendFlag)
 
 
 #endif

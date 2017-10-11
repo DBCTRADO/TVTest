@@ -136,28 +136,30 @@ public:
 	bool GetSPDIFOptions(LibISDB::DirectShow::AudioDecoderFilter::SPDIFOptions *pOptions) const;
 	bool IsSPDIFPassthroughEnabled() const;
 
-	enum {
-		STATUS_VIDEOSIZE			= 0x00000001UL,
-		STATUS_AUDIOCHANNELS		= 0x00000002UL,
-		STATUS_AUDIOSTREAMS			= 0x00000004UL,
-		STATUS_AUDIOCOMPONENTTYPE	= 0x00000008UL,
-		STATUS_SPDIFPASSTHROUGH		= 0x00000010UL,
-		STATUS_EVENTINFO			= 0x00000020UL,
-		STATUS_EVENTID				= 0x00000040UL,
-		STATUS_TOT					= 0x00000080UL
+	enum class StatusFlag : unsigned int {
+		None               = 0x0000U,
+		VideoSize          = 0x0001U,
+		AudioChannels      = 0x0002U,
+		AudioStreams       = 0x0004U,
+		AudioComponentType = 0x0008U,
+		SPDIFPassthrough   = 0x0010U,
+		EventInfo          = 0x0020U,
+		EventID            = 0x0040U,
+		TOT                = 0x0080U,
 	};
-	DWORD UpdateAsyncStatus();
-	void SetAsyncStatusUpdatedFlag(DWORD Status);
-	enum {
-		STATISTIC_ERRORPACKETCOUNT				= 0x00000001UL,
-		STATISTIC_CONTINUITYERRORPACKETCOUNT	= 0x00000002UL,
-		STATISTIC_SCRAMBLEPACKETCOUNT			= 0x00000004UL,
-		STATISTIC_SIGNALLEVEL					= 0x00000008UL,
-		STATISTIC_BITRATE						= 0x00000010UL,
-		STATISTIC_STREAMREMAIN					= 0x00000020UL,
-		STATISTIC_PACKETBUFFERRATE				= 0x00000040UL
+	StatusFlag UpdateAsyncStatus();
+	void SetAsyncStatusUpdatedFlag(StatusFlag Status);
+	enum class StatisticsFlag : unsigned int {
+		None                       = 0x0000U,
+		ErrorPacketCount           = 0x0001U,
+		ContinuityErrorPacketCount = 0x0002U,
+		ScrambledPacketCount       = 0x0004U,
+		SignalLevel                = 0x0008U,
+		BitRate                    = 0x0010U,
+		StreamRemain               = 0x0020U,
+		PacketBufferRate           = 0x0040U,
 	};
-	DWORD UpdateStatistics();
+	StatisticsFlag UpdateStatistics();
 	unsigned long long GetErrorPacketCount() const { return m_ErrorPacketCount; }
 	unsigned long long GetContinuityErrorPacketCount() const { return m_ContinuityErrorPacketCount; }
 	unsigned long long GetScramblePacketCount() const { return m_ScrambledPacketCount; }
@@ -240,7 +242,7 @@ private:
 	UINT m_TimerResolution;
 	bool m_fNoEpg;
 
-	DWORD m_AsyncStatusUpdatedFlags;
+	StatusFlag m_AsyncStatusUpdatedFlags;
 
 	void ConnectFilter(
 		TSProcessorConnectionList *pList,
@@ -276,6 +278,9 @@ private:
 // RecorderFilter::EventListener
 	void OnWriteError(LibISDB::RecorderFilter *pRecorder, LibISDB::RecorderFilter::RecordingTask *pTask) override;
 };
+
+TVTEST_ENUM_FLAGS(CCoreEngine::StatusFlag)
+TVTEST_ENUM_FLAGS(CCoreEngine::StatisticsFlag)
 
 
 #endif

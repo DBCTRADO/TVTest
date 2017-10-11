@@ -12,14 +12,15 @@ namespace TVTest
 	class CVariableManager
 	{
 	public:
-		enum {
-			FLAG_OVERRIDE = 0x0001
+		enum class VariableFlag : unsigned int {
+			None     = 0x0000U,
+			Override = 0x0001U,
 		};
 
 		struct VariableInfo
 		{
 			LPCWSTR pszKeyword;
-			unsigned int Flags;
+			VariableFlag Flags;
 			LPCWSTR pszDescription;
 		};
 
@@ -32,7 +33,7 @@ namespace TVTest
 		bool RegisterVariable(
 			LPCWSTR pszKeyword,
 			LPCWSTR pszValue, IGetVariable *pGetVariable,
-			LPCWSTR pszDescription, unsigned int Flags = 0);
+			LPCWSTR pszDescription, VariableFlag Flags = VariableFlag::None);
 		bool GetVariable(LPCWSTR pszKeyword, String *pValue) const;
 		bool GetPreferredVariable(LPCWSTR pszKeyword, String *pValue) const;
 		bool GetVariableList(std::vector<VariableInfo> *pList) const;
@@ -44,7 +45,7 @@ namespace TVTest
 			String Value;
 			IGetVariable *pGetVariable;
 			String Description;
-			unsigned int Flags;
+			VariableFlag Flags;
 
 			bool operator<(const VariableEntry &rhs) const
 			{
@@ -54,6 +55,8 @@ namespace TVTest
 
 		std::set<VariableEntry> m_VariableList;
 	};
+
+	TVTEST_ENUM_FLAGS(CVariableManager::VariableFlag)
 
 }
 

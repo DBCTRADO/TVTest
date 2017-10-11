@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include <math.h>
+#include "TVTest.h"
 #include "Util.h"
 #include "DPIUtil.h"
 #include "Common/DebugDef.h"
@@ -649,7 +650,7 @@ bool IsEqualFileName(LPCWSTR pszFileName1, LPCWSTR pszFileName2)
 }
 
 
-bool IsValidFileName(LPCTSTR pszFileName, unsigned int Flags, TVTest::String *pMessage)
+bool IsValidFileName(LPCTSTR pszFileName, FileNameValidateFlag Flags, TVTest::String *pMessage)
 {
 	if (pszFileName == nullptr || pszFileName[0] == _T('\0')) {
 		if (pMessage != nullptr)
@@ -694,8 +695,8 @@ bool IsValidFileName(LPCTSTR pszFileName, unsigned int Flags, TVTest::String *pM
 		}
 	}
 
-	const bool fWildcard = (Flags & FILENAME_VALIDATE_WILDCARD) != 0;
-	const bool fAllowDelimiter = (Flags & FILENAME_VALIDATE_ALLOWDELIMITER) != 0;
+	const bool fWildcard = !!(Flags & FileNameValidateFlag::Wildcard);
+	const bool fAllowDelimiter = !!(Flags & FileNameValidateFlag::AllowDelimiter);
 	LPCTSTR p = pszFileName;
 
 	while (*p != _T('\0')) {

@@ -397,7 +397,9 @@ bool CAppCore::SetChannel(int Space, int Channel, int ServiceID/* = -1*/, bool f
 
 		m_App.ChannelManager.SetCurrentServiceID(ServiceID);
 		m_App.AppEventManager.OnChannelChanged(
-			Space != OldSpace ? AppEvent::CHANNEL_CHANGED_STATUS_SPACE_CHANGED : 0);
+			Space != OldSpace ?
+				AppEvent::ChannelChangeStatus::SpaceChanged :
+				AppEvent::ChannelChangeStatus::None);
 	} else {
 		if (ServiceID <= 0) {
 			if (pChInfo->GetServiceID() > 0)
@@ -405,7 +407,7 @@ bool CAppCore::SetChannel(int Space, int Channel, int ServiceID/* = -1*/, bool f
 			else
 				return false;
 		}
-		if (!SetServiceByID(ServiceID, fStrictService ? SET_SERVICE_STRICT_ID : 0))
+		if (!SetServiceByID(ServiceID, fStrictService ? SetServiceFlag::StrictID : SetServiceFlag::None))
 			return false;
 	}
 
@@ -431,9 +433,9 @@ bool CAppCore::SetChannelByIndex(int Space, int Channel, int ServiceID)
 }
 
 
-bool CAppCore::SelectChannel(LPCTSTR pszTunerName, const CChannelInfo &ChannelInfo, unsigned int Flags)
+bool CAppCore::SelectChannel(LPCTSTR pszTunerName, const CChannelInfo &ChannelInfo, SelectChannelFlag Flags)
 {
-	if ((Flags & SELECT_CHANNEL_USE_CUR_TUNER) != 0
+	if (!!(Flags & SelectChannelFlag::UseCurrentTuner)
 			&& m_App.CoreEngine.IsTunerOpen()) {
 		int Space = m_App.ChannelManager.GetCurrentSpace();
 		if (Space != CChannelManager::SPACE_INVALID) {
@@ -456,7 +458,7 @@ bool CAppCore::SelectChannel(LPCTSTR pszTunerName, const CChannelInfo &ChannelIn
 			if (Index >= 0) {
 				if (!m_App.UICore.ConfirmChannelChange())
 					return false;
-				return SetChannel(Space, Index, -1, (Flags & SELECT_CHANNEL_STRICT_SERVICE) != 0);
+				return SetChannel(Space, Index, -1, !!(Flags & SelectChannelFlag::StrictService));
 			}
 		}
 	}
@@ -521,7 +523,7 @@ bool CAppCore::SelectChannel(LPCTSTR pszTunerName, const CChannelInfo &ChannelIn
 		Space = ChannelInfo.GetSpace();
 	}
 
-	return SetChannel(Space, Channel, -1, (Flags & SELECT_CHANNEL_STRICT_SERVICE) != 0);
+	return SetChannel(Space, Channel, -1, !!(Flags & SelectChannelFlag::StrictService));
 }
 
 
@@ -676,18 +678,20 @@ bool CAppCore::FollowChannelChange(WORD TransportStreamID, WORD ServiceID)
 	if (!m_App.ChannelManager.SetCurrentChannel(Space, Channel))
 		return false;
 	m_App.ChannelManager.SetCurrentServiceID(0);
-	m_App.AppEventManager.OnChannelChanged(
-		AppEvent::CHANNEL_CHANGED_STATUS_DETECTED
-		| (fSpaceChanged ? AppEvent::CHANNEL_CHANGED_STATUS_SPACE_CHANGED : 0));
+
+	AppEvent::ChannelChangeStatus Status = AppEvent::ChannelChangeStatus::Detected;
+	if (fSpaceChanged)
+		Status |= AppEvent::ChannelChangeStatus::SpaceChanged;
+	m_App.AppEventManager.OnChannelChanged(Status);
 	return true;
 }
 
 
-bool CAppCore::SetServiceByID(WORD ServiceID, unsigned int Flags)
+bool CAppCore::SetServiceByID(WORD ServiceID, SetServiceFlag Flags)
 {
 	TRACE(TEXT("CAppCore::SetServiceByID(%04x,%x)\n"), ServiceID, Flags);
 
-	const bool fStrict = (Flags & SET_SERVICE_STRICT_ID) != 0;
+	const bool fStrict = !!(Flags & SetServiceFlag::StrictID);
 	const CChannelInfo *pCurChInfo = m_App.ChannelManager.GetCurrentChannelInfo();
 	const LibISDB::AnalyzerFilter *pAnalyzer =
 		m_App.CoreEngine.GetFilter<LibISDB::AnalyzerFilter>();
@@ -739,7 +743,7 @@ bool CAppCore::SetServiceByID(WORD ServiceID, unsigned int Flags)
 		return false;
 	}
 
-	if ((Flags & SET_SERVICE_NO_CHANGE_CUR_SERVICE_ID) == 0)
+	if (!(Flags & SetServiceFlag::NoChangeCurrentServiceID))
 		m_App.ChannelManager.SetCurrentServiceID(ServiceID);
 
 	if (ServiceID != LibISDB::SERVICE_ID_INVALID) {
@@ -765,7 +769,7 @@ bool CAppCore::SetServiceByID(WORD ServiceID, unsigned int Flags)
 		int Index = pChList->FindByIndex(pCurChInfo->GetSpace(), pCurChInfo->GetChannelIndex(), ServiceID);
 		if (Index >= 0) {
 			m_App.ChannelManager.SetCurrentChannel(m_App.ChannelManager.GetCurrentSpace(), Index);
-			m_App.AppEventManager.OnChannelChanged(0);
+			m_App.AppEventManager.OnChannelChanged(AppEvent::ChannelChangeStatus::None);
 			fChannelChanged = true;
 		}
 	}
@@ -777,7 +781,7 @@ bool CAppCore::SetServiceByID(WORD ServiceID, unsigned int Flags)
 }
 
 
-bool CAppCore::SetServiceByIndex(int Service, unsigned int Flags)
+bool CAppCore::SetServiceByIndex(int Service, SetServiceFlag Flags)
 {
 	if (Service < 0)
 		return false;
@@ -941,7 +945,7 @@ bool CAppCore::OpenTuner()
 	bool fOK = true;
 
 	if (!m_App.CoreEngine.IsTunerOpen()) {
-		if (OpenAndInitializeTuner(OPENTUNER_NO_UI)) {
+		if (OpenAndInitializeTuner(OpenTunerFlag::NoUI)) {
 			m_App.AppEventManager.OnTunerOpened();
 		} else {
 			OnError(&m_App.CoreEngine, TEXT("BonDriverの初期化ができません。"));
@@ -955,7 +959,7 @@ bool CAppCore::OpenTuner()
 }
 
 
-bool CAppCore::OpenAndInitializeTuner(unsigned int OpenFlags)
+bool CAppCore::OpenAndInitializeTuner(OpenTunerFlag OpenFlags)
 {
 	CDriverOptions::BonDriverOptions Options(m_App.CoreEngine.GetDriverFileName());
 	m_App.DriverOptions.GetBonDriverOptions(m_App.CoreEngine.GetDriverFileName(), &Options);
@@ -969,13 +973,13 @@ bool CAppCore::OpenAndInitializeTuner(unsigned int OpenFlags)
 
 	ApplyBonDriverOptions();
 
-	unsigned int DecoderOpenFlags = 0;
-	if ((OpenFlags & OPENTUNER_NO_NOTIFY) == 0)
-		DecoderOpenFlags |= CTSProcessorManager::FILTER_OPEN_NOTIFY_ERROR;
-	if (m_fSilent || (OpenFlags & OPENTUNER_NO_UI) != 0)
-		DecoderOpenFlags |= CTSProcessorManager::FILTER_OPEN_NO_UI;
-	else if ((OpenFlags & OPENTUNER_RETRY_DIALOG) != 0)
-		DecoderOpenFlags |= CTSProcessorManager::FILTER_OPEN_RETRY_DIALOG;
+	CTSProcessorManager::FilterOpenFlag DecoderOpenFlags = CTSProcessorManager::FilterOpenFlag::None;
+	if (!(OpenFlags & OpenTunerFlag::NoNotify))
+		DecoderOpenFlags |= CTSProcessorManager::FilterOpenFlag::NotifyError;
+	if (m_fSilent || !!(OpenFlags & OpenTunerFlag::NoUI))
+		DecoderOpenFlags |= CTSProcessorManager::FilterOpenFlag::NoUI;
+	else if (!!(OpenFlags & OpenTunerFlag::RetryDialog))
+		DecoderOpenFlags |= CTSProcessorManager::FilterOpenFlag::RetryDialog;
 	m_App.TSProcessorManager.OnTunerOpened(m_App.CoreEngine.GetDriverFileName(), DecoderOpenFlags);
 
 	return true;
@@ -1045,7 +1049,7 @@ bool CAppCore::Set1SegMode(bool f1Seg, bool fServiceChange)
 						ServiceID = pAnalyzer->Get1SegServiceIDByIndex(Index);
 					}
 
-					SetServiceByID(ServiceID, SET_SERVICE_NO_CHANGE_CUR_SERVICE_ID);
+					SetServiceByID(ServiceID, SetServiceFlag::NoChangeCurrentServiceID);
 				} else {
 					m_App.CoreEngine.SetOneSegSelectType(
 						LibISDB::TSEngine::OneSegSelectType::HighPriority);
@@ -1054,7 +1058,7 @@ bool CAppCore::Set1SegMode(bool f1Seg, bool fServiceChange)
 				SetServiceByID(
 					m_App.ChannelManager.GetCurrentServiceID() > 0 ?
 					m_App.ChannelManager.GetCurrentServiceID() : LibISDB::SERVICE_ID_INVALID,
-					SET_SERVICE_NO_CHANGE_CUR_SERVICE_ID);
+					SetServiceFlag::NoChangeCurrentServiceID);
 			}
 		}
 
@@ -1209,8 +1213,8 @@ bool CAppCore::StartRecord(
 		return false;
 	}
 	m_App.TaskTrayManager.SetStatus(
-		CTaskTrayManager::STATUS_RECORDING,
-		CTaskTrayManager::STATUS_RECORDING);
+		CTaskTrayManager::StatusFlag::Recording,
+		CTaskTrayManager::StatusFlag::Recording);
 	m_App.AddLog(TEXT("録画開始 %s"), szFileName);
 	m_App.AppEventManager.OnRecordingStarted();
 	return true;
@@ -1276,8 +1280,8 @@ bool CAppCore::StartReservedRecord()
 	m_App.AddLog(TEXT("録画開始 %s"), ActualFileName.c_str());
 
 	m_App.TaskTrayManager.SetStatus(
-		CTaskTrayManager::STATUS_RECORDING,
-		CTaskTrayManager::STATUS_RECORDING);
+		CTaskTrayManager::StatusFlag::Recording,
+		CTaskTrayManager::StatusFlag::Recording);
 	m_App.AppEventManager.OnRecordingStarted();
 
 	return true;
@@ -1310,7 +1314,7 @@ bool CAppCore::StopRecord()
 		TEXT("録画停止 %s (出力TSサイズ %llu Bytes / 書き出しエラー回数 %lu)"),
 		FileName.c_str(), Stats.OutputBytes, Stats.WriteErrorCount);
 
-	m_App.TaskTrayManager.SetStatus(0, CTaskTrayManager::STATUS_RECORDING);
+	m_App.TaskTrayManager.SetStatus(CTaskTrayManager::StatusFlag::None, CTaskTrayManager::StatusFlag::Recording);
 	m_App.AppEventManager.OnRecordingStopped();
 	if (m_fExitOnRecordingStop)
 		m_App.Exit();
@@ -1410,7 +1414,7 @@ LPCTSTR CAppCore::GetDefaultRecordFolder() const
 void CAppCore::BeginChannelScan(int Space)
 {
 	m_App.ChannelManager.SetCurrentChannel(Space, -1);
-	m_App.AppEventManager.OnChannelChanged(AppEvent::CHANNEL_CHANGED_STATUS_SPACE_CHANGED);
+	m_App.AppEventManager.OnChannelChanged(AppEvent::ChannelChangeStatus::SpaceChanged);
 }
 
 
@@ -1426,7 +1430,7 @@ bool CAppCore::IsDriverNoSignalLevel(LPCTSTR pszFileName) const
 }
 
 
-void CAppCore::NotifyTSProcessorNetworkChanged(unsigned int FilterOpenFlags)
+void CAppCore::NotifyTSProcessorNetworkChanged(TVTest::CTSProcessorManager::FilterOpenFlag FilterOpenFlags)
 {
 	StreamIDInfo StreamID;
 

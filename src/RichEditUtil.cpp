@@ -217,7 +217,7 @@ int CRichEditUtil::GetMaxLineWidth(HWND hwndEdit)
 
 bool CRichEditUtil::DetectURL(
 	HWND hwndEdit, const CHARFORMAT *pcf, int FirstLine, int LastLine,
-	unsigned int Flags, CharRangeList *pCharRangeList)
+	DetectURLFlag Flags, CharRangeList *pCharRangeList)
 {
 	const int LineCount = (int)::SendMessage(hwndEdit, EM_GETLINECOUNT, 0, 0);
 	if (LastLine < 0 || LastLine > LineCount)
@@ -225,7 +225,7 @@ bool CRichEditUtil::DetectURL(
 
 	CHARFORMAT2 cfLink;
 	CharFormatToCharFormat2(pcf, &cfLink);
-	if ((Flags & URL_NO_LINK) == 0) {
+	if (!(Flags & DetectURLFlag::NoLink)) {
 		// リンクの文字色は設定できない模様
 		cfLink.dwMask |= CFM_UNDERLINE | CFM_LINK/* | CFM_COLOR*/;
 		cfLink.dwEffects |= CFE_UNDERLINE | CFE_LINK;
@@ -274,7 +274,7 @@ bool CRichEditUtil::DetectURL(
 				cr.cpMax = cr.cpMin + Length;
 				::SendMessage(hwndEdit, EM_EXSETSEL, 0, reinterpret_cast<LPARAM>(&cr));
 #ifdef UNICODE
-				if ((Flags & URL_TO_HALF_WIDTH) != 0 && *q >= 0xFF01) {
+				if (!!(Flags & DetectURLFlag::ToHalfWidth) && *q >= 0xFF01) {
 					LPWSTR pszURL = new WCHAR[Length + 1];
 					for (int j = 0; j < Length; j++)
 						pszURL[j] = q[j] - 0xFEE0;

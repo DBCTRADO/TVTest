@@ -21,8 +21,9 @@ class CUICore
 	, public LibISDB::Logger
 {
 public:
-	enum {
-		POPUPMENU_DEFAULT = 0x0001U
+	enum class PopupMenuFlag : unsigned int {
+		None    = 0x0000U,
+		Default = 0x0001U,
 	};
 
 	enum class MenuType {
@@ -100,7 +101,7 @@ public:
 	bool SetAlwaysOnTop(bool fTop);
 	bool PreventDisplaySave(bool fPrevent);
 
-	void PopupMenu(const POINT *pPos = nullptr, UINT Flags = 0);
+	void PopupMenu(const POINT *pPos = nullptr, PopupMenuFlag Flags = PopupMenuFlag::None);
 	void PopupSubMenu(
 		int SubMenu, const POINT *pPos = nullptr, UINT Flags = 0,
 		const RECT *pExcludeRect = nullptr);
@@ -210,7 +211,7 @@ private:
 
 	bool CreateChannelMenu(
 		const CChannelList *pChannelList, int CurChannel,
-		UINT Command, HMENU hmenu, HWND hwnd, unsigned int Flags = 0);
+		UINT Command, HMENU hmenu, HWND hwnd, CChannelMenu::CreateFlag Flags = CChannelMenu::CreateFlag::None);
 	bool InitChannelMenuPopup(HMENU hmenuParent, HMENU hmenu);
 
 // CColorSchemeOptions::CEventHandler
@@ -219,6 +220,8 @@ private:
 // LibISDB::Logger
 	void OnLog(LibISDB::Logger::LogType Type, LPCTSTR pszOutput) override;
 };
+
+TVTEST_ENUM_FLAGS(CUICore::PopupMenuFlag)
 
 
 #endif

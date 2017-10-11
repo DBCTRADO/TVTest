@@ -89,9 +89,9 @@ bool CEpg::CChannelProviderManager::Create(LPCTSTR pszDefaultTuner)
 			} else {
 				CDriverManager::TunerSpec Spec;
 				if (!App.DriverManager.GetTunerSpec(pDriverInfo->GetFileName(), &Spec)
-						|| (Spec.Flags &
-							(CDriverManager::TunerSpec::FLAG_NETWORK |
-							 CDriverManager::TunerSpec::FLAG_FILE)) == 0) {
+						|| !(Spec.Flags &
+							(CDriverManager::TunerSpec::Flag::Network |
+							 CDriverManager::TunerSpec::Flag::File))) {
 					CBonDriverChannelProvider *pDriverChannelProvider =
 						new CBonDriverChannelProvider(pDriverInfo->GetFileName());
 

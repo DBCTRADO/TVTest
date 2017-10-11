@@ -63,12 +63,12 @@ CPseudoOSD::CPseudoOSD()
 	: m_hwnd(nullptr)
 	, m_crBackColor(RGB(16, 0, 16))
 	, m_crTextColor(RGB(0, 255, 128))
-	, m_TextStyle(TEXT_STYLE_OUTLINE)
+	, m_TextStyle(TextStyle::Outline)
 	, m_hbmIcon(nullptr)
 	, m_IconWidth(0)
 	, m_IconHeight(0)
 	, m_hbm(nullptr)
-	, m_ImageEffect(0)
+	, m_ImageEffect(ImageEffect::None)
 {
 	LOGFONT lf;
 	DrawUtil::GetSystemFont(DrawUtil::FontType::Default, &lf);
@@ -227,14 +227,14 @@ bool CPseudoOSD::IsVisible() const
 }
 
 
-bool CPseudoOSD::SetText(LPCTSTR pszText, HBITMAP hbmIcon, int IconWidth, int IconHeight, unsigned int ImageEffect)
+bool CPseudoOSD::SetText(LPCTSTR pszText, HBITMAP hbmIcon, int IconWidth, int IconHeight, ImageEffect Effect)
 {
 	TVTest::StringUtility::Assign(m_Text, pszText);
 	m_hbmIcon = hbmIcon;
 	if (hbmIcon != nullptr) {
 		m_IconWidth = IconWidth;
 		m_IconHeight = IconHeight;
-		m_ImageEffect = ImageEffect;
+		m_ImageEffect = Effect;
 	} else {
 		m_IconWidth = 0;
 		m_IconHeight = 0;
@@ -316,7 +316,7 @@ bool CPseudoOSD::SetTextHeight(int Height)
 }
 
 
-bool CPseudoOSD::SetTextStyle(unsigned int Style)
+bool CPseudoOSD::SetTextStyle(TextStyle Style)
 {
 	m_TextStyle = Style;
 	return true;
@@ -358,15 +358,15 @@ bool CPseudoOSD::CalcTextSize(SIZE *pSize)
 		TVTest::Graphics::CCanvas Canvas(hdc);
 		LOGFONT lf;
 		m_Font.GetLogFont(&lf);
-		if ((m_TextStyle & TEXT_STYLE_OUTLINE) != 0) {
+		if (!!(m_TextStyle & TextStyle::Outline)) {
 			fResult = Canvas.GetOutlineTextSize(
 				m_Text.c_str(), lf, GetOutlineWidth(abs(lf.lfHeight)),
-				TVTest::Graphics::TEXT_DRAW_ANTIALIAS | TVTest::Graphics::TEXT_DRAW_HINTING,
+				TVTest::Graphics::TextFlag::Draw_Antialias | TVTest::Graphics::TextFlag::Draw_Hinting,
 				pSize);
 		} else {
 			fResult = Canvas.GetTextSize(
 				m_Text.c_str(), lf,
-				TVTest::Graphics::TEXT_DRAW_ANTIALIAS | TVTest::Graphics::TEXT_DRAW_HINTING,
+				TVTest::Graphics::TextFlag::Draw_Antialias | TVTest::Graphics::TextFlag::Draw_Hinting,
 				pSize);
 		}
 	}
@@ -380,12 +380,12 @@ bool CPseudoOSD::CalcTextSize(SIZE *pSize)
 }
 
 
-bool CPseudoOSD::SetImage(HBITMAP hbm, unsigned int ImageEffect)
+bool CPseudoOSD::SetImage(HBITMAP hbm, ImageEffect Effect)
 {
 	m_hbm = hbm;
 	m_Text.clear();
 	m_hbmIcon = nullptr;
-	m_ImageEffect = ImageEffect;
+	m_ImageEffect = Effect;
 #if 0
 	if (m_hwnd != nullptr) {
 		/*
@@ -478,9 +478,9 @@ void CPseudoOSD::Draw(HDC hdc, const RECT &PaintRect) const
 
 void CPseudoOSD::DrawImageEffect(HDC hdc, const RECT *pRect) const
 {
-	if ((m_ImageEffect & IMAGEEFFECT_GLOSS) != 0)
+	if (!!(m_ImageEffect & ImageEffect::Gloss))
 		DrawUtil::GlossOverlay(hdc, pRect);
-	if ((m_ImageEffect & IMAGEEFFECT_DARK) != 0)
+	if (!!(m_ImageEffect & ImageEffect::Dark))
 		DrawUtil::ColorOverlay(hdc, pRect, RGB(0, 0, 0), 64);
 }
 
@@ -540,7 +540,7 @@ void CPseudoOSD::UpdateLayeredWindow()
 				rc.left += IconWidth;
 			}
 
-			if ((m_TextStyle & TEXT_STYLE_FILL_BACKGROUND) != 0) {
+			if (!!(m_TextStyle & TextStyle::FillBackground)) {
 				TVTest::Graphics::CBrush BackBrush(0, 0, 0, 128);
 				Canvas.FillRect(&BackBrush, rc);
 			}
@@ -553,19 +553,19 @@ void CPseudoOSD::UpdateLayeredWindow()
 			LOGFONT lf;
 			m_Font.GetLogFont(&lf);
 
-			UINT DrawTextFlags =
-				TVTest::Graphics::TEXT_FORMAT_NO_WRAP |
-				TVTest::Graphics::TEXT_DRAW_ANTIALIAS | TVTest::Graphics::TEXT_DRAW_HINTING;
-			if ((m_TextStyle & TEXT_STYLE_RIGHT) != 0)
-				DrawTextFlags |= TVTest::Graphics::TEXT_FORMAT_RIGHT;
-			else if ((m_TextStyle & TEXT_STYLE_HORZ_CENTER) != 0)
-				DrawTextFlags |= TVTest::Graphics::TEXT_FORMAT_HORZ_CENTER;
-			if ((m_TextStyle & TEXT_STYLE_BOTTOM) != 0)
-				DrawTextFlags |= TVTest::Graphics::TEXT_FORMAT_BOTTOM;
-			if ((m_TextStyle & TEXT_STYLE_VERT_CENTER) != 0)
-				DrawTextFlags |= TVTest::Graphics::TEXT_FORMAT_VERT_CENTER;
+			TVTest::Graphics::TextFlag DrawTextFlags =
+				TVTest::Graphics::TextFlag::Format_NoWrap |
+				TVTest::Graphics::TextFlag::Draw_Antialias | TVTest::Graphics::TextFlag::Draw_Hinting;
+			if (!!(m_TextStyle & TextStyle::Right))
+				DrawTextFlags |= TVTest::Graphics::TextFlag::Format_Right;
+			else if (!!(m_TextStyle & TextStyle::HorzCenter))
+				DrawTextFlags |= TVTest::Graphics::TextFlag::Format_HorzCenter;
+			if (!!(m_TextStyle & TextStyle::Bottom))
+				DrawTextFlags |= TVTest::Graphics::TextFlag::Format_Bottom;
+			if (!!(m_TextStyle & TextStyle::VertCenter))
+				DrawTextFlags |= TVTest::Graphics::TextFlag::Format_VertCenter;
 
-			if ((m_TextStyle & TEXT_STYLE_OUTLINE) != 0) {
+			if (!!(m_TextStyle & TextStyle::Outline)) {
 				Canvas.DrawOutlineText(
 					m_Text.c_str(), lf, rc, &TextBrush,
 					TVTest::Graphics::CColor(0, 0, 0, 160),

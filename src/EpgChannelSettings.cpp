@@ -96,14 +96,14 @@ INT_PTR CEpgChannelSettings::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM
 				hDlg, IDC_EPGCHANNELSETTINGS_EXCLUDENOEVENT,
 				m_pProgramGuide->GetExcludeNoEventServices());
 
-			AddControl(IDC_EPGCHANNELSETTINGS_CHANNELLIST, ALIGN_ALL);
+			AddControl(IDC_EPGCHANNELSETTINGS_CHANNELLIST, AlignFlag::All);
 			AddControls(
 				IDC_EPGCHANNELSETTINGS_CHECKALL,
 				IDC_EPGCHANNELSETTINGS_INVERTCHECK,
-				ALIGN_RIGHT);
-			AddControl(IDC_EPGCHANNELSETTINGS_EXCLUDENOEVENT, ALIGN_BOTTOM);
-			AddControl(IDOK, ALIGN_BOTTOM_RIGHT);
-			AddControl(IDCANCEL, ALIGN_BOTTOM_RIGHT);
+				AlignFlag::Right);
+			AddControl(IDC_EPGCHANNELSETTINGS_EXCLUDENOEVENT, AlignFlag::Bottom);
+			AddControl(IDOK, AlignFlag::BottomRight);
+			AddControl(IDCANCEL, AlignFlag::BottomRight);
 
 			ApplyPosition();
 		}

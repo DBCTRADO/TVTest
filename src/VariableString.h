@@ -58,11 +58,12 @@ namespace TVTest
 		: public CBasicVariableStringMap
 	{
 	public:
-		enum {
-			FLAG_NO_NORMALIZE    = 0x0001U,
-			FLAG_NO_CURRENT_TIME = 0x0002U,
-			FLAG_NO_TOT_TIME     = 0x0004U,
-			FLAG_NO_SEPARATOR    = 0x0008U
+		enum class Flag : unsigned int {
+			None          = 0x0000U,
+			NoNormalize   = 0x0001U,
+			NoCurrentTime = 0x0002U,
+			NoTOTTime     = 0x0004U,
+			NoSeparator   = 0x0008U,
 		};
 
 		struct EventInfo
@@ -89,11 +90,13 @@ namespace TVTest
 		static void GetEventTitle(const String &EventName, String *pTitle);
 		static void GetEventMark(const String &EventName, String *pMarks);
 
-		unsigned int m_Flags;
+		Flag m_Flags;
 		EventInfo m_EventInfo;
 		bool m_fCurrentTimeSet;
 		LibISDB::DateTime m_CurrentTime;
 	};
+
+	TVTEST_ENUM_FLAGS(CEventVariableStringMap::Flag)
 
 }
 

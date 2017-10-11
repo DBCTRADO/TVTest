@@ -20,7 +20,7 @@ bool CKeywordSearch::Load(LPCTSTR pszFileName)
 
 	CSettings Settings;
 
-	if (!Settings.Open(pszFileName, CSettings::OPEN_READ))
+	if (!Settings.Open(pszFileName, CSettings::OpenFlag::Read))
 		return false;
 
 	if (!Settings.SetSection(TEXT("SearchEngineList")))

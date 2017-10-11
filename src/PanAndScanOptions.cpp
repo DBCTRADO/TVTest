@@ -725,7 +725,7 @@ bool CPanAndScanOptions::Import(LPCTSTR pszFileName)
 {
 	CSettings Settings;
 
-	if (!Settings.Open(pszFileName, CSettings::OPEN_READ)
+	if (!Settings.Open(pszFileName, CSettings::OpenFlag::Read)
 			|| !Settings.SetSection(TEXT("PanAndScan")))
 		return false;
 

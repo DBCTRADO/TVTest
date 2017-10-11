@@ -17,26 +17,29 @@ namespace TVTest
 			Vert,
 		};
 
-		enum {
-			TEXT_FORMAT_LEFT            = 0x00000000U,
-			TEXT_FORMAT_RIGHT           = 0x00000001U,
-			TEXT_FORMAT_HORZ_CENTER     = 0x00000002U,
-			TEXT_FORMAT_HORZ_ALIGN_MASK = 0x00000003U,
-			TEXT_FORMAT_TOP             = 0x00000000U,
-			TEXT_FORMAT_BOTTOM          = 0x00000004U,
-			TEXT_FORMAT_VERT_CENTER     = 0x00000008U,
-			TEXT_FORMAT_VERT_ALIGN_MASK = 0x0000000CU,
-			TEXT_FORMAT_NO_WRAP         = 0x00000010U,
-			TEXT_FORMAT_NO_CLIP         = 0x00000020U,
-			TEXT_FORMAT_END_ELLIPSIS    = 0x00000040U,
-			TEXT_FORMAT_WORD_ELLIPSIS   = 0x00000080U,
-			TEXT_FORMAT_TRIM_CHAR       = 0x00000100U,
-			TEXT_DRAW_ANTIALIAS         = 0x00001000U,
-			TEXT_DRAW_NO_ANTIALIAS      = 0x00002000U,
-			TEXT_DRAW_CLEARTYPE         = 0x00004000U,
-			TEXT_DRAW_HINTING           = 0x00008000U,
-			TEXT_DRAW_PATH              = 0x00010000U
+		enum class TextFlag : unsigned long {
+			None                 = 0x00000000UL,
+			Format_Left          = 0x00000000UL,
+			Format_Right         = 0x00000001UL,
+			Format_HorzCenter    = 0x00000002UL,
+			Format_HorzAlignMask = 0x00000003UL,
+			Format_Top           = 0x00000000UL,
+			Format_Bottom        = 0x00000004UL,
+			Format_VertCenter    = 0x00000008UL,
+			Format_VertAlignMask = 0x0000000CUL,
+			Format_NoWrap        = 0x00000010UL,
+			Format_NoClip        = 0x00000020UL,
+			Format_EndEllipsis   = 0x00000040UL,
+			Format_WordEllipsis  = 0x00000080UL,
+			Format_TrimChar      = 0x00000100UL,
+			Draw_Antialias       = 0x00001000UL,
+			Draw_NoAntialias     = 0x00002000UL,
+			Draw_ClearType       = 0x00004000UL,
+			Draw_Hinting         = 0x00008000UL,
+			Draw_Path            = 0x00010000UL,
 		};
+
+		TVTEST_ENUM_FLAGS(TextFlag)
 
 		class CColor
 		{
@@ -121,23 +124,23 @@ namespace TVTest
 				const RECT &Rect, GradientDirection Direction);
 			bool DrawText(
 				LPCTSTR pszText, const LOGFONT &lf,
-				const RECT &Rect, CBrush *pBrush, UINT Flags);
+				const RECT &Rect, CBrush *pBrush, TextFlag Flags);
 			bool GetTextSize(
-				LPCTSTR pszText, const LOGFONT &lf, UINT Flags, SIZE *pSize);
+				LPCTSTR pszText, const LOGFONT &lf, TextFlag Flags, SIZE *pSize);
 			bool DrawOutlineText(
 				LPCTSTR pszText, const LOGFONT &lf,
 				const RECT &Rect, CBrush *pBrush,
 				const CColor &OutlineColor, float OutlineWidth,
-				UINT Flags);
+				TextFlag Flags);
 			bool GetOutlineTextSize(
 				LPCTSTR pszText, const LOGFONT &lf,
-				float OutlineWidth, UINT Flags, SIZE *pSize);
+				float OutlineWidth, TextFlag Flags, SIZE *pSize);
 
 		private:
 			std::unique_ptr<Gdiplus::Graphics> m_Graphics;
 
-			void SetStringFormat(Gdiplus::StringFormat *pFormat, UINT Flags);
-			void SetTextRenderingHint(UINT Flags);
+			void SetStringFormat(Gdiplus::StringFormat *pFormat, TextFlag Flags);
+			void SetTextRenderingHint(TextFlag Flags);
 		};
 
 		class CGraphicsCore

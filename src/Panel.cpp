@@ -773,7 +773,7 @@ bool CPanelFrame::SetPanelVisible(bool fVisible, bool fNoActivate)
 
 bool CPanelFrame::IsDockingVertical() const
 {
-	return (m_pSplitter->GetStyle() & Layout::CSplitter::STYLE_VERT) != 0;
+	return !!(m_pSplitter->GetStyle() & Layout::CSplitter::StyleFlag::Vert);
 }
 
 

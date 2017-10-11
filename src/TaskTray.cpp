@@ -15,7 +15,7 @@ CTaskTrayManager::CTaskTrayManager()
 	, m_TrayIconMessage(0)
 	, m_fResident(false)
 	, m_fMinimizeToTray(true)
-	, m_Status(0)
+	, m_Status(StatusFlag::None)
 	, m_TaskbarCreatedMessage(0)
 {
 }
@@ -66,7 +66,7 @@ bool CTaskTrayManager::SetMinimizeToTray(bool fMinimizeToTray)
 {
 	if (m_fMinimizeToTray != fMinimizeToTray) {
 		if (m_hwnd != nullptr) {
-			if ((m_Status & STATUS_MINIMIZED) != 0) {
+			if (!!(m_Status & StatusFlag::Minimized)) {
 				if (fMinimizeToTray && !NeedTrayIcon()) {
 					if (!AddTrayIcon())
 						return false;
@@ -141,7 +141,7 @@ HICON CTaskTrayManager::LoadTrayIcon() const
 {
 	return LoadIconStandardSize(
 		GetAppClass().GetResourceInstance(),
-		MAKEINTRESOURCE((m_Status & STATUS_RECORDING) != 0 ? IDI_TRAY_RECORDING : IDI_TRAY),
+		MAKEINTRESOURCE(!!(m_Status & StatusFlag::Recording) ? IDI_TRAY_RECORDING : IDI_TRAY),
 		IconSizeType::Small);
 }
 
@@ -163,25 +163,25 @@ bool CTaskTrayManager::NeedTrayIcon() const
 {
 	return m_hwnd != nullptr
 		&& (m_fResident
-			|| (m_Status & STATUS_STANDBY) != 0
-			|| (m_fMinimizeToTray && (m_Status & STATUS_MINIMIZED) != 0));
+			|| !!(m_Status & StatusFlag::Standby)
+			|| (m_fMinimizeToTray && !!(m_Status & StatusFlag::Minimized)));
 }
 
 
-bool CTaskTrayManager::SetStatus(UINT Status, UINT Mask)
+bool CTaskTrayManager::SetStatus(StatusFlag Status, StatusFlag Mask)
 {
-	const UINT NewStatus = (m_Status & ~Mask) | (Status & Mask);
+	const StatusFlag NewStatus = (m_Status & ~Mask) | (Status & Mask);
 
 	if (m_Status != NewStatus) {
-		const UINT StatusDiff = m_Status ^ NewStatus;
+		const StatusFlag StatusDiff = m_Status ^ NewStatus;
 		const bool fNeedTrayIconOld = NeedTrayIcon();
 		bool fChangeIcon = false;
 
-		if ((StatusDiff & STATUS_RECORDING) != 0)
+		if (!!(StatusDiff & StatusFlag::Recording))
 			fChangeIcon = true;
-		if ((StatusDiff & STATUS_MINIMIZED) != 0) {
+		if (!!(StatusDiff & StatusFlag::Minimized)) {
 			if (m_hwnd != nullptr && m_fMinimizeToTray)
-				::ShowWindow(m_hwnd, (NewStatus & STATUS_MINIMIZED) != 0 ? SW_HIDE : SW_SHOW);
+				::ShowWindow(m_hwnd, !!(NewStatus & StatusFlag::Minimized) ? SW_HIDE : SW_SHOW);
 		}
 
 		m_Status = NewStatus;

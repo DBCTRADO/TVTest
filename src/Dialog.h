@@ -89,6 +89,22 @@ class CResizableDialog
 	: public CBasicDialog
 {
 public:
+	enum class AlignFlag : unsigned int {
+		None        = 0x0000U,
+		Left        = 0x0001U,
+		Top         = 0x0002U,
+		Right       = 0x0004U,
+		Bottom      = 0x0008U,
+		BottomRight = Right | Bottom,
+		Horz        = Left | Right,
+		Vert        = Top | Bottom,
+		HorzTop     = Horz | Top,
+		HorzBottom  = Horz | Bottom,
+		VertLeft    = Vert | Left,
+		VertRight   = Vert | Right,
+		All         = Horz | Vert,
+	};
+
 	CResizableDialog();
 	virtual ~CResizableDialog();
 
@@ -98,23 +114,7 @@ protected:
 		int ID;
 		RECT rcOriginal;
 		int DPI;
-		unsigned int Align;
-	};
-
-	enum {
-		ALIGN_NONE		= 0x00000000,
-		ALIGN_LEFT		= 0x00000001,
-		ALIGN_TOP		= 0x00000002,
-		ALIGN_RIGHT		= 0x00000004,
-		ALIGN_BOTTOM	= 0x00000008,
-		ALIGN_BOTTOM_RIGHT	= ALIGN_RIGHT | ALIGN_BOTTOM,
-		ALIGN_HORZ			= ALIGN_LEFT | ALIGN_RIGHT,
-		ALIGN_VERT			= ALIGN_TOP | ALIGN_BOTTOM,
-		ALIGN_HORZ_TOP		= ALIGN_HORZ | ALIGN_TOP,
-		ALIGN_HORZ_BOTTOM	= ALIGN_HORZ | ALIGN_BOTTOM,
-		ALIGN_VERT_LEFT		= ALIGN_LEFT | ALIGN_VERT,
-		ALIGN_VERT_RIGHT	= ALIGN_RIGHT | ALIGN_VERT,
-		ALIGN_ALL			= ALIGN_HORZ | ALIGN_VERT
+		AlignFlag Align;
 	};
 
 	SIZE m_MinSize;
@@ -127,14 +127,16 @@ protected:
 	INT_PTR HandleMessage(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
 	bool ApplyPosition() override;
 	void DoLayout();
-	bool AddControl(int ID, unsigned int Align);
-	bool AddControls(int FirstID, int LastID, unsigned int Align);
+	bool AddControl(int ID, AlignFlag Align);
+	bool AddControls(int FirstID, int LastID, AlignFlag Align);
 	bool UpdateControlPosition(int ID);
 
 // CUIBase
 	void ApplyStyle() override;
 	void RealizeStyle() override;
 };
+
+TVTEST_ENUM_FLAGS(CResizableDialog::AlignFlag)
 
 
 #endif

@@ -478,39 +478,39 @@ bool CDirectWriteRenderer::ResetClipping()
 
 bool CDirectWriteRenderer::SetRenderingParams(const RenderingParams &Params)
 {
-	m_RenderingParams.Mask = 0;
+	m_RenderingParams.Mask = RenderingParams::ParamFlag::None;
 
-	if ((Params.Mask & RenderingParams::PARAM_GAMMA) != 0
+	if (!!(Params.Mask & RenderingParams::ParamFlag::Gamma)
 			&& Params.Gamma > 0.0f
 			&& Params.Gamma <= 256.0f) {
-		m_RenderingParams.Mask |= RenderingParams::PARAM_GAMMA;
+		m_RenderingParams.Mask |= RenderingParams::ParamFlag::Gamma;
 		m_RenderingParams.Gamma = Params.Gamma;
 	}
 
-	if ((Params.Mask & RenderingParams::PARAM_ENHANCED_CONTRAST) != 0
+	if (!!(Params.Mask & RenderingParams::ParamFlag::EnhancedContrast)
 			&& Params.EnhancedContrast >= 0.0f) {
-		m_RenderingParams.Mask |= RenderingParams::PARAM_ENHANCED_CONTRAST;
+		m_RenderingParams.Mask |= RenderingParams::ParamFlag::EnhancedContrast;
 		m_RenderingParams.EnhancedContrast = Params.EnhancedContrast;
 	}
 
-	if ((Params.Mask & RenderingParams::PARAM_CLEARTYPE_LEVEL) != 0
+	if (!!(Params.Mask & RenderingParams::ParamFlag::ClearTypeLevel)
 			&& Params.ClearTypeLevel >= 0.0f
 			&& Params.ClearTypeLevel <= 1.0f) {
-		m_RenderingParams.Mask |= RenderingParams::PARAM_CLEARTYPE_LEVEL;
+		m_RenderingParams.Mask |= RenderingParams::ParamFlag::ClearTypeLevel;
 		m_RenderingParams.ClearTypeLevel = Params.ClearTypeLevel;
 	}
 
-	if ((Params.Mask & RenderingParams::PARAM_PIXEL_GEOMETRY) != 0
+	if (!!(Params.Mask & RenderingParams::ParamFlag::PixelGeometry)
 			&& Params.PixelGeometry >= DWRITE_PIXEL_GEOMETRY_FLAT
 			&& Params.PixelGeometry <= DWRITE_PIXEL_GEOMETRY_BGR) {
-		m_RenderingParams.Mask |= RenderingParams::PARAM_PIXEL_GEOMETRY;
+		m_RenderingParams.Mask |= RenderingParams::ParamFlag::PixelGeometry;
 		m_RenderingParams.PixelGeometry = Params.PixelGeometry;
 	}
 
-	if ((Params.Mask & RenderingParams::PARAM_RENDERING_MODE) != 0
+	if (!!(Params.Mask & RenderingParams::ParamFlag::RenderingMode)
 			&& Params.RenderingMode >= DWRITE_RENDERING_MODE_ALIASED
 			&& Params.RenderingMode <= DWRITE_RENDERING_MODE_OUTLINE) {
-		m_RenderingParams.Mask |= RenderingParams::PARAM_RENDERING_MODE;
+		m_RenderingParams.Mask |= RenderingParams::ParamFlag::RenderingMode;
 		m_RenderingParams.RenderingMode = Params.RenderingMode;
 	}
 
@@ -541,7 +541,7 @@ bool CDirectWriteRenderer::OnWindowPosChanged()
 
 bool CDirectWriteRenderer::DrawText(
 	LPCWSTR pText, int Length, const RECT &Rect,
-	CDirectWriteFont &Font, CDirectWriteBrush &Brush, unsigned int Flags)
+	CDirectWriteFont &Font, CDirectWriteBrush &Brush, DrawTextFlag Flags)
 {
 	if (pText == nullptr)
 		return false;
@@ -557,17 +557,17 @@ bool CDirectWriteRenderer::DrawText(
 
 		if (pBrush != nullptr) {
 			pTextFormat->SetTextAlignment(
-				(Flags & DRAW_TEXT_ALIGN_HORZ_CENTER) != 0 ?
+				!!(Flags & DrawTextFlag::Align_HorzCenter) ?
 					DWRITE_TEXT_ALIGNMENT_CENTER :
-				(Flags & DRAW_TEXT_ALIGN_RIGHT) != 0 ?
+				!!(Flags & DrawTextFlag::Align_Right) ?
 					DWRITE_TEXT_ALIGNMENT_TRAILING :
-				((Flags & DRAW_TEXT_ALIGN_JUSTIFIED) != 0 && Util::OS::IsWindows8OrLater()) ?
+				(!!(Flags & DrawTextFlag::Align_Justified) && Util::OS::IsWindows8OrLater()) ?
 					DWRITE_TEXT_ALIGNMENT_JUSTIFIED :
 					DWRITE_TEXT_ALIGNMENT_LEADING);
 			pTextFormat->SetParagraphAlignment(
-				(Flags & DRAW_TEXT_ALIGN_VERT_CENTER) != 0 ?
+				!!(Flags & DrawTextFlag::Align_VertCenter) ?
 					DWRITE_PARAGRAPH_ALIGNMENT_CENTER :
-				(Flags & DRAW_TEXT_ALIGN_BOTTOM) != 0 ?
+				!!(Flags & DrawTextFlag::Align_Bottom) ?
 					DWRITE_PARAGRAPH_ALIGNMENT_FAR :
 					DWRITE_PARAGRAPH_ALIGNMENT_NEAR);
 			pTextFormat->SetWordWrapping(DWRITE_WORD_WRAPPING_NO_WRAP);
@@ -775,18 +775,18 @@ bool CDirectWriteRenderer::UpdateRenderingParams()
 
 		HRESULT hr = pFactory->CreateMonitorRenderingParams(m_hMonitor, &pRenderingParams);
 		if (SUCCEEDED(hr)) {
-			if (m_RenderingParams.Mask != 0) {
+			if (m_RenderingParams.Mask != RenderingParams::ParamFlag::None) {
 				IDWriteRenderingParams *pCustomRenderingParams;
 				hr = pFactory->CreateCustomRenderingParams(
-					(m_RenderingParams.Mask & RenderingParams::PARAM_GAMMA) != 0 ?
+					!!(m_RenderingParams.Mask & RenderingParams::ParamFlag::Gamma) ?
 						m_RenderingParams.Gamma : pRenderingParams->GetGamma(),
-					(m_RenderingParams.Mask & RenderingParams::PARAM_ENHANCED_CONTRAST) != 0 ?
+					!!(m_RenderingParams.Mask & RenderingParams::ParamFlag::EnhancedContrast) ?
 						m_RenderingParams.EnhancedContrast : pRenderingParams->GetEnhancedContrast(),
-					(m_RenderingParams.Mask & RenderingParams::PARAM_CLEARTYPE_LEVEL) != 0 ?
+					!!(m_RenderingParams.Mask & RenderingParams::ParamFlag::ClearTypeLevel) ?
 						m_RenderingParams.ClearTypeLevel : pRenderingParams->GetClearTypeLevel(),
-					(m_RenderingParams.Mask & RenderingParams::PARAM_PIXEL_GEOMETRY) != 0 ?
+					!!(m_RenderingParams.Mask & RenderingParams::ParamFlag::PixelGeometry) ?
 						m_RenderingParams.PixelGeometry : pRenderingParams->GetPixelGeometry(),
-					(m_RenderingParams.Mask & RenderingParams::PARAM_RENDERING_MODE) != 0 ?
+					!!(m_RenderingParams.Mask & RenderingParams::ParamFlag::RenderingMode) ?
 						m_RenderingParams.RenderingMode : pRenderingParams->GetRenderingMode(),
 					&pCustomRenderingParams);
 				if (SUCCEEDED(hr)) {

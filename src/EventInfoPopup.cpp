@@ -105,7 +105,7 @@ void CEventInfoPopup::SetEventInfo(const LibISDB::EventInfo *pEventInfo)
 		TCHAR szBuf[EpgUtil::MAX_EVENT_TIME_LENGTH];
 		if (EpgUtil::FormatEventTime(
 					*pEventInfo, szBuf, lengthof(szBuf),
-					EpgUtil::EVENT_TIME_DATE | EpgUtil::EVENT_TIME_YEAR) > 0) {
+					EpgUtil::FormatEventTimeFlag::Date | EpgUtil::FormatEventTimeFlag::Year) > 0) {
 			Formatter.Append(szBuf);
 			Formatter.Append(TEXT("\r\n"));
 		}

@@ -75,22 +75,23 @@ namespace TVTest
 	public:
 		struct RenderingParams
 		{
-			enum {
-				PARAM_GAMMA             = 0x01U,
-				PARAM_ENHANCED_CONTRAST = 0x02U,
-				PARAM_CLEARTYPE_LEVEL   = 0x04U,
-				PARAM_PIXEL_GEOMETRY    = 0x08U,
-				PARAM_RENDERING_MODE    = 0x10U
+			enum class ParamFlag : unsigned int {
+				None             = 0x0000U,
+				Gamma            = 0x0001U,
+				EnhancedContrast = 0x0002U,
+				ClearTypeLevel   = 0x0004U,
+				PixelGeometry    = 0x0008U,
+				RenderingMode    = 0x0010U,
 			};
 
-			unsigned int Mask;
+			ParamFlag Mask;
 			float Gamma;
 			float EnhancedContrast;
 			float ClearTypeLevel;
 			DWRITE_PIXEL_GEOMETRY PixelGeometry;
 			DWRITE_RENDERING_MODE RenderingMode;
 
-			RenderingParams() : Mask(0) {}
+			RenderingParams() : Mask(ParamFlag::None) {}
 		};
 
 		struct FontMetrics
@@ -107,12 +108,13 @@ namespace TVTest
 			float Height;
 		};
 
-		enum {
-			DRAW_TEXT_ALIGN_HORZ_CENTER = 0x0001U,
-			DRAW_TEXT_ALIGN_RIGHT       = 0x0002U,
-			DRAW_TEXT_ALIGN_JUSTIFIED   = 0x0004U,
-			DRAW_TEXT_ALIGN_VERT_CENTER = 0x0008U,
-			DRAW_TEXT_ALIGN_BOTTOM      = 0x0010U
+		enum class DrawTextFlag : unsigned int {
+			None             = 0x0000U,
+			Align_HorzCenter = 0x0001U,
+			Align_Right      = 0x0002U,
+			Align_Justified  = 0x0004U,
+			Align_VertCenter = 0x0008U,
+			Align_Bottom     = 0x0010U,
 		};
 
 		CDirectWriteRenderer(CDirectWriteSystem &System);
@@ -133,7 +135,7 @@ namespace TVTest
 		bool OnWindowPosChanged();
 		bool DrawText(
 			LPCWSTR pText, int Length, const RECT &Rect,
-			CDirectWriteFont &Font, CDirectWriteBrush &Brush, unsigned int Flags = 0);
+			CDirectWriteFont &Font, CDirectWriteBrush &Brush, DrawTextFlag Flags = DrawTextFlag::None);
 		int GetFitCharCount(LPCWSTR pText, int Length, int Width, CDirectWriteFont &Font);
 		bool IsNeedRecreate() const { return m_fNeedRecreate; }
 		bool GetFontMetrics(CDirectWriteFont &Font, FontMetrics *pMetrics);
@@ -150,6 +152,9 @@ namespace TVTest
 		RenderingParams m_RenderingParams;
 		bool m_fNeedRecreate;
 	};
+
+	TVTEST_ENUM_FLAGS(CDirectWriteRenderer::DrawTextFlag)
+	TVTEST_ENUM_FLAGS(CDirectWriteRenderer::RenderingParams::ParamFlag)
 
 }	// namespace TVTest
 

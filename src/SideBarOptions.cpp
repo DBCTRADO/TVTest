@@ -387,12 +387,12 @@ void CSideBarOptions::ApplyItemList()
 
 					Item.Command = Command;
 					Item.Icon = m_AvailItemList[j].Icon;
-					Item.State = 0;
-					unsigned int State = pCommandList->GetCommandStateByID(Command);
-					if ((State & CCommandList::COMMAND_STATE_DISABLED) != 0)
-						Item.State |= CSideBar::ITEM_STATE_DISABLED;
-					if ((State & CCommandList::COMMAND_STATE_CHECKED) != 0)
-						Item.State |= CSideBar::ITEM_STATE_CHECKED;
+					Item.State = CSideBar::ItemState::None;
+					CCommandList::CommandState State = pCommandList->GetCommandStateByID(Command);
+					if (!!(State & CCommandList::CommandState::Disabled))
+						Item.State |= CSideBar::ItemState::Disabled;
+					if (!!(State & CCommandList::CommandState::Checked))
+						Item.State |= CSideBar::ItemState::Checked;
 
 					m_pSideBar->AddItem(&Item);
 					break;
@@ -429,7 +429,7 @@ bool CSideBarOptions::RegisterCommand(int ID)
 
 	Item.Command = ID;
 	Item.Icon = -1;
-	Item.State = 0;
+	Item.State = CSideBar::ItemState::None;
 
 	m_AvailItemList.push_back(Item);
 

@@ -722,8 +722,10 @@ bool CUICore::SetStandby(bool fStandby, bool fTransient)
 		m_fStandby = fStandby;
 		m_fTransientStandby = fStandby && fTransient;
 		m_App.TaskTrayManager.SetStatus(
-			fStandby ? TVTest::CTaskTrayManager::STATUS_STANDBY : 0,
-			TVTest::CTaskTrayManager::STATUS_STANDBY);
+			fStandby ?
+				TVTest::CTaskTrayManager::StatusFlag::Standby :
+				TVTest::CTaskTrayManager::StatusFlag::None,
+			TVTest::CTaskTrayManager::StatusFlag::Standby);
 		m_App.AppEventManager.OnStandbyChanged(fStandby);
 	}
 	return true;
@@ -884,7 +886,7 @@ bool CUICore::PreventDisplaySave(bool fPrevent)
 }
 
 
-void CUICore::PopupMenu(const POINT *pPos, unsigned int Flags)
+void CUICore::PopupMenu(const POINT *pPos, PopupMenuFlag Flags)
 {
 	POINT pt;
 
@@ -893,7 +895,7 @@ void CUICore::PopupMenu(const POINT *pPos, unsigned int Flags)
 	else
 		::GetCursorPos(&pt);
 
-	const bool fDefault = (Flags & POPUPMENU_DEFAULT) != 0;
+	const bool fDefault = !!(Flags & PopupMenuFlag::Default);
 	std::vector<int> ItemList;
 	if (!fDefault)
 		m_App.MenuOptions.GetMenuItemList(&ItemList);
@@ -1230,14 +1232,14 @@ bool CUICore::SetCommandEnabledState(int Command, bool fEnabled)
 {
 	return m_App.CommandList.SetCommandStateByID(
 		Command,
-		CCommandList::COMMAND_STATE_DISABLED,
-		fEnabled ? 0 : CCommandList::COMMAND_STATE_DISABLED);
+		CCommandList::CommandState::Disabled,
+		fEnabled ? CCommandList::CommandState::None : CCommandList::CommandState::Disabled);
 }
 
 
 bool CUICore::GetCommandEnabledState(int Command) const
 {
-	return (m_App.CommandList.GetCommandStateByID(Command) & CCommandList::COMMAND_STATE_DISABLED) == 0;
+	return !(m_App.CommandList.GetCommandStateByID(Command) & CCommandList::CommandState::Disabled);
 }
 
 
@@ -1245,14 +1247,14 @@ bool CUICore::SetCommandCheckedState(int Command, bool fChecked)
 {
 	return m_App.CommandList.SetCommandStateByID(
 		Command,
-		CCommandList::COMMAND_STATE_CHECKED,
-		fChecked ? CCommandList::COMMAND_STATE_CHECKED : 0);
+		CCommandList::CommandState::Checked,
+		fChecked ? CCommandList::CommandState::Checked : CCommandList::CommandState::None);
 }
 
 
 bool CUICore::GetCommandCheckedState(int Command) const
 {
-	return (m_App.CommandList.GetCommandStateByID(Command) & CCommandList::COMMAND_STATE_CHECKED) != 0;
+	return !!(m_App.CommandList.GetCommandStateByID(Command) & CCommandList::CommandState::Checked);
 }
 
 
@@ -1528,18 +1530,18 @@ void CUICore::SetStatusBarTrace(bool fStatusBarTrace)
 
 bool CUICore::CreateChannelMenu(
 	const CChannelList *pChannelList, int CurChannel,
-	UINT Command, HMENU hmenu, HWND hwnd, unsigned int Flags)
+	UINT Command, HMENU hmenu, HWND hwnd, CChannelMenu::CreateFlag Flags)
 {
 	if (pChannelList == nullptr)
 		return false;
 	const bool fEventInfo =
-		(Flags & CChannelMenu::FLAG_SHOWEVENTINFO) != 0
+		!!(Flags & CChannelMenu::CreateFlag::ShowEventInfo)
 		|| pChannelList->NumEnableChannels() <= m_App.MenuOptions.GetMaxChannelMenuEventInfo();
-	unsigned int MenuFlags = CChannelMenu::FLAG_SHOWLOGO | Flags;
+	CChannelMenu::CreateFlag MenuFlags = CChannelMenu::CreateFlag::ShowLogo | Flags;
 	if (fEventInfo)
-		MenuFlags |= CChannelMenu::FLAG_SHOWEVENTINFO;
+		MenuFlags |= CChannelMenu::CreateFlag::ShowEventInfo;
 	else
-		MenuFlags |= CChannelMenu::FLAG_SHOWTOOLTIP;
+		MenuFlags |= CChannelMenu::CreateFlag::ShowToolTip;
 	return m_App.ChannelMenu.Create(
 		pChannelList, CurChannel,
 		Command, hmenu, hwnd, MenuFlags,
@@ -1576,7 +1578,7 @@ bool CUICore::InitChannelMenuPopup(HMENU hmenuParent, HMENU hmenu)
 				ChannelManager.GetCurrentSpace() == CChannelManager::SPACE_ALL ?
 				ChannelManager.GetCurrentChannel() : -1,
 				Command, hmenu, GetMainWindow(),
-				CChannelMenu::FLAG_SPACEBREAK);
+				CChannelMenu::CreateFlag::SpaceBreak);
 			return true;
 		}
 		i--;
@@ -1632,7 +1634,7 @@ void CUICore::OnLog(LibISDB::Logger::LogType Type, LPCTSTR pszOutput)
 CUICore::CTitleStringMap::CTitleStringMap(CAppMain &App, const EventInfo *pInfo)
 	: m_App(App)
 {
-	m_Flags = FLAG_NO_NORMALIZE | FLAG_NO_CURRENT_TIME | FLAG_NO_TOT_TIME;
+	m_Flags = Flag::NoNormalize | Flag::NoCurrentTime | Flag::NoTOTTime;
 
 	if (pInfo)
 		m_EventInfo = *pInfo;

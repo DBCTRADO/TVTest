@@ -80,11 +80,13 @@ int CalcFontPointHeight(HDC hdc, const LOGFONT *pFont);
 int GetErrorText(DWORD ErrorCode, LPTSTR pszText, int MaxLength);
 
 bool IsEqualFileName(LPCWSTR pszFileName1, LPCWSTR pszFileName2);
-enum {
-	FILENAME_VALIDATE_WILDCARD       = 0x0001U,
-	FILENAME_VALIDATE_ALLOWDELIMITER = 0x0002U
+enum class FileNameValidateFlag : unsigned int {
+	None           = 0x0000U,
+	Wildcard       = 0x0001U,
+	AllowDelimiter = 0x0002U,
 };
-bool IsValidFileName(LPCTSTR pszFileName, unsigned int Flags = 0, TVTest::String *pMessage = nullptr);
+TVTEST_ENUM_FLAGS(FileNameValidateFlag)
+bool IsValidFileName(LPCTSTR pszFileName, FileNameValidateFlag Flags = FileNameValidateFlag::None, TVTest::String *pMessage = nullptr);
 bool MakeUniqueFileName(
 	TVTest::String *pFileName, size_t MaxLength = MAX_PATH - 1,
 	LPCTSTR pszNumberFormat = nullptr);

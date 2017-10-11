@@ -7,6 +7,7 @@
 #include "Record.h"
 #include "Settings.h"
 #include "CommandLine.h"
+#include "TSProcessorManager.h"
 
 
 class CAppMain;
@@ -30,10 +31,23 @@ public:
 		WORD ServiceID;
 	};
 
-	enum {
-		OPENTUNER_NO_UI        = 0x0001U,
-		OPENTUNER_NO_NOTIFY    = 0x0002U,
-		OPENTUNER_RETRY_DIALOG = 0x0004U
+	enum class OpenTunerFlag : unsigned int {
+		None        = 0x0000U,
+		NoUI        = 0x0001U,
+		NoNotify    = 0x0002U,
+		RetryDialog = 0x0004U,
+	};
+
+	enum class SelectChannelFlag : unsigned int {
+		None            = 0x0000U,
+		UseCurrentTuner = 0x0001U,
+		StrictService   = 0x0002U,
+	};
+
+	enum class SetServiceFlag : unsigned int {
+		None                     = 0x0000U,
+		StrictID                 = 0x0001U,
+		NoChangeCurrentServiceID = 0x0002U,
 	};
 
 	CAppCore(CAppMain &App);
@@ -55,28 +69,22 @@ public:
 	const CChannelInfo *GetCurrentChannelInfo() const;
 	bool SetChannel(int Space, int Channel, int ServiceID = -1, bool fStrictService = false);
 	bool SetChannelByIndex(int Space, int Channel, int ServiceID = -1);
-	enum {
-		SELECT_CHANNEL_USE_CUR_TUNER  = 0x0001U,
-		SELECT_CHANNEL_STRICT_SERVICE = 0x0002U
-	};
-	bool SelectChannel(LPCTSTR pszTunerName, const CChannelInfo &ChannelInfo, unsigned int Flags = 0);
+	bool SelectChannel(
+		LPCTSTR pszTunerName, const CChannelInfo &ChannelInfo,
+		SelectChannelFlag Flags = SelectChannelFlag::None);
 	bool SwitchChannel(int Channel);
 	bool SwitchChannelByNo(int ChannelNo, bool fSwitchService);
 	bool SetCommandLineChannel(const CCommandLineOptions *pCmdLine);
 	bool FollowChannelChange(WORD TransportStreamID, WORD ServiceID);
-	enum {
-		SET_SERVICE_STRICT_ID                = 0x0001U,
-		SET_SERVICE_NO_CHANGE_CUR_SERVICE_ID = 0x0002U
-	};
-	bool SetServiceByID(WORD ServiceID, unsigned int Flags = 0);
-	bool SetServiceByIndex(int Service, unsigned int Flags = 0);
+	bool SetServiceByID(WORD ServiceID, SetServiceFlag Flags = SetServiceFlag::None);
+	bool SetServiceByIndex(int Service, SetServiceFlag Flags = SetServiceFlag::None);
 	bool GetCurrentStreamIDInfo(StreamIDInfo *pInfo) const;
 	bool GetCurrentStreamChannelInfo(CChannelInfo *pInfo) const;
 	bool GetCurrentServiceName(LPTSTR pszName, int MaxLength, bool fUseChannelName = true);
 
 	bool OpenTuner(LPCTSTR pszFileName);
 	bool OpenTuner();
-	bool OpenAndInitializeTuner(unsigned int OpenFlags = 0);
+	bool OpenAndInitializeTuner(OpenTunerFlag OpenFlags = OpenTunerFlag::None);
 	bool CloseTuner();
 	void ShutDownTuner();
 	void ResetEngine();
@@ -112,7 +120,7 @@ public:
 	bool IsChannelScanning() const;
 	bool IsDriverNoSignalLevel(LPCTSTR pszFileName) const;
 
-	void NotifyTSProcessorNetworkChanged(unsigned int FilterOpenFlags);
+	void NotifyTSProcessorNetworkChanged(TVTest::CTSProcessorManager::FilterOpenFlag FilterOpenFlags);
 
 	bool GetVariableStringEventInfo(
 		TVTest::CEventVariableStringMap::EventInfo *pInfo,
@@ -127,6 +135,10 @@ private:
 	int GetCorresponding1SegService(int Space, WORD NetworkID, WORD TSID, WORD ServiceID) const;
 	bool GenerateRecordFileName(LPTSTR pszFileName, int MaxFileName);
 };
+
+TVTEST_ENUM_FLAGS(CAppCore::OpenTunerFlag)
+TVTEST_ENUM_FLAGS(CAppCore::SelectChannelFlag)
+TVTEST_ENUM_FLAGS(CAppCore::SetServiceFlag)
 
 
 #endif

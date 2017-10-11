@@ -176,7 +176,7 @@ bool CControllerManager::LoadControllerSettings(LPCTSTR pszName)
 
 	if (!Info.Controller->GetIniFileName(szFileName, lengthof(szFileName)))
 		return false;
-	if (Settings.Open(szFileName, CSettings::OPEN_READ)
+	if (Settings.Open(szFileName, CSettings::OpenFlag::Read)
 			&& Settings.SetSection(Info.Controller->GetIniFileSection())) {
 		const int NumButtons = Info.Controller->NumButtons();
 		const CCommandList &CommandList = GetAppClass().CommandList;
@@ -213,7 +213,7 @@ bool CControllerManager::SaveControllerSettings(LPCTSTR pszName) const
 
 	if (!Info.Controller->GetIniFileName(szFileName, lengthof(szFileName)))
 		return false;
-	if (Settings.Open(szFileName, CSettings::OPEN_WRITE)
+	if (Settings.Open(szFileName, CSettings::OpenFlag::Write)
 			&& Settings.SetSection(Info.Controller->GetIniFileSection())) {
 		const int NumButtons = Info.Controller->NumButtons();
 		const CCommandList &CommandList = GetAppClass().CommandList;

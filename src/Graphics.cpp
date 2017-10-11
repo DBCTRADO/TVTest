@@ -1,4 +1,5 @@
 #include "stdafx.h"
+#include "TVTest.h"
 #include "Graphics.h"
 #include "DrawUtil.h"
 #include "Util.h"
@@ -446,7 +447,7 @@ bool CCanvas::FillGradient(
 
 bool CCanvas::DrawText(
 	LPCTSTR pszText, const LOGFONT &lf,
-	const RECT &Rect, CBrush *pBrush, UINT Flags)
+	const RECT &Rect, CBrush *pBrush, TextFlag Flags)
 {
 	if (!m_Graphics
 			|| IsStringEmpty(pszText)
@@ -460,7 +461,7 @@ bool CCanvas::DrawText(
 
 	SetTextRenderingHint(Flags);
 
-	if ((Flags & TEXT_DRAW_PATH) != 0) {
+	if (!!(Flags & TextFlag::Draw_Path)) {
 		Gdiplus::GraphicsPath Path;
 		Gdiplus::FontFamily FontFamily;
 
@@ -495,7 +496,7 @@ bool CCanvas::DrawText(
 
 
 bool CCanvas::GetTextSize(
-	LPCTSTR pszText, const LOGFONT &lf, UINT Flags, SIZE *pSize)
+	LPCTSTR pszText, const LOGFONT &lf, TextFlag Flags, SIZE *pSize)
 {
 	if (pSize == nullptr)
 		return false;
@@ -554,7 +555,7 @@ bool CCanvas::DrawOutlineText(
 	LPCTSTR pszText, const LOGFONT &lf,
 	const RECT &Rect, CBrush *pBrush,
 	const CColor &OutlineColor, float OutlineWidth,
-	UINT Flags)
+	TextFlag Flags)
 {
 	if (!m_Graphics
 			|| IsStringEmpty(pszText)
@@ -594,7 +595,7 @@ bool CCanvas::DrawOutlineText(
 
 
 bool CCanvas::GetOutlineTextSize(
-	LPCTSTR pszText, const LOGFONT &lf, float OutlineWidth, UINT Flags, SIZE *pSize)
+	LPCTSTR pszText, const LOGFONT &lf, float OutlineWidth, TextFlag Flags, SIZE *pSize)
 {
 	if (pSize == nullptr)
 		return false;
@@ -647,47 +648,47 @@ bool CCanvas::GetOutlineTextSize(
 }
 
 
-void CCanvas::SetStringFormat(Gdiplus::StringFormat *pFormat, UINT Flags)
+void CCanvas::SetStringFormat(Gdiplus::StringFormat *pFormat, TextFlag Flags)
 {
 	INT FormatFlags = pFormat->GetFormatFlags();
-	if ((Flags & TEXT_FORMAT_NO_WRAP) != 0)
+	if (!!(Flags & TextFlag::Format_NoWrap))
 		FormatFlags |= Gdiplus::StringFormatFlagsNoWrap;
-	if ((Flags & TEXT_FORMAT_NO_CLIP) != 0)
+	if (!!(Flags & TextFlag::Format_NoClip))
 		FormatFlags |= Gdiplus::StringFormatFlagsNoClip;
 	pFormat->SetFormatFlags(FormatFlags);
 
-	switch (Flags & TEXT_FORMAT_HORZ_ALIGN_MASK) {
-	case TEXT_FORMAT_LEFT:        pFormat->SetAlignment(Gdiplus::StringAlignmentNear);   break;
-	case TEXT_FORMAT_RIGHT:       pFormat->SetAlignment(Gdiplus::StringAlignmentFar);    break;
-	case TEXT_FORMAT_HORZ_CENTER: pFormat->SetAlignment(Gdiplus::StringAlignmentCenter); break;
+	switch (Flags & TextFlag::Format_HorzAlignMask) {
+	case TextFlag::Format_Left:       pFormat->SetAlignment(Gdiplus::StringAlignmentNear);   break;
+	case TextFlag::Format_Right:      pFormat->SetAlignment(Gdiplus::StringAlignmentFar);    break;
+	case TextFlag::Format_HorzCenter: pFormat->SetAlignment(Gdiplus::StringAlignmentCenter); break;
 	}
 
-	switch (Flags & TEXT_FORMAT_VERT_ALIGN_MASK) {
-	case TEXT_FORMAT_TOP:         pFormat->SetLineAlignment(Gdiplus::StringAlignmentNear);   break;
-	case TEXT_FORMAT_BOTTOM:      pFormat->SetLineAlignment(Gdiplus::StringAlignmentFar);    break;
-	case TEXT_FORMAT_VERT_CENTER: pFormat->SetLineAlignment(Gdiplus::StringAlignmentCenter); break;
+	switch (Flags & TextFlag::Format_VertAlignMask) {
+	case TextFlag::Format_Top:        pFormat->SetLineAlignment(Gdiplus::StringAlignmentNear);   break;
+	case TextFlag::Format_Bottom:     pFormat->SetLineAlignment(Gdiplus::StringAlignmentFar);    break;
+	case TextFlag::Format_VertCenter: pFormat->SetLineAlignment(Gdiplus::StringAlignmentCenter); break;
 	}
 
 	pFormat->SetTrimming(
-		(Flags & TEXT_FORMAT_END_ELLIPSIS ) != 0 ? Gdiplus::StringTrimmingEllipsisCharacter :
-		(Flags & TEXT_FORMAT_WORD_ELLIPSIS) != 0 ? Gdiplus::StringTrimmingEllipsisWord :
-		(Flags & TEXT_FORMAT_TRIM_CHAR    ) != 0 ? Gdiplus::StringTrimmingCharacter :
+		!!(Flags & TextFlag::Format_EndEllipsis ) ? Gdiplus::StringTrimmingEllipsisCharacter :
+		!!(Flags & TextFlag::Format_WordEllipsis) ? Gdiplus::StringTrimmingEllipsisWord :
+		!!(Flags & TextFlag::Format_TrimChar    ) ? Gdiplus::StringTrimmingCharacter :
 		Gdiplus::StringTrimmingNone);
 }
 
 
-void CCanvas::SetTextRenderingHint(UINT Flags)
+void CCanvas::SetTextRenderingHint(TextFlag Flags)
 {
 	m_Graphics->SetTextRenderingHint(
-		(Flags & TEXT_DRAW_ANTIALIAS) != 0 ?
-			((Flags & TEXT_DRAW_HINTING) != 0 ?
+		!!(Flags & TextFlag::Draw_Antialias) ?
+			(!!(Flags & TextFlag::Draw_Hinting) ?
 				Gdiplus::TextRenderingHintAntiAliasGridFit :
 				Gdiplus::TextRenderingHintAntiAlias) :
-		(Flags & TEXT_DRAW_NO_ANTIALIAS) != 0 ?
-			((Flags & TEXT_DRAW_HINTING) != 0 ?
+		!!(Flags & TextFlag::Draw_NoAntialias) ?
+			(!!(Flags & TextFlag::Draw_Hinting) ?
 				Gdiplus::TextRenderingHintSingleBitPerPixelGridFit :
 				Gdiplus::TextRenderingHintSingleBitPerPixel) :
-		(Flags & TEXT_DRAW_CLEARTYPE) != 0 ?
+		!!(Flags & TextFlag::Draw_ClearType) ?
 			Gdiplus::TextRenderingHintClearTypeGridFit :
 			Gdiplus::TextRenderingHintSystemDefault);
 }

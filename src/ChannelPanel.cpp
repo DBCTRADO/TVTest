@@ -916,8 +916,8 @@ void CChannelPanel::Draw(HDC hdc, const RECT *prcPaint)
 	TVTest::CTextDraw TextDraw;
 	TextDraw.Begin(
 		hdcDst, rcClient,
-		TVTest::CTextDraw::FLAG_JAPANESE_HYPHNATION |
-		TVTest::CTextDraw::FLAG_END_ELLIPSIS);
+		TVTest::CTextDraw::Flag::JapaneseHyphnation |
+		TVTest::CTextDraw::Flag::EndEllipsis);
 
 	RECT rcItem;
 	rcItem.left = 0;
@@ -966,7 +966,7 @@ void CChannelPanel::Draw(HDC hdc, const RECT *prcPaint)
 				if (m_fUseEpgColorScheme && pChannelInfo->IsEventEnabled(j)) {
 					m_EpgTheme.DrawContentBackground(
 						hdcDst, ThemeDraw, rc, pChannelInfo->GetEventInfo(j),
-						CEpgTheme::DRAW_CONTENT_BACKGROUND_SEPARATOR);
+						CEpgTheme::DrawContentBackgroundFlag::Separator);
 					::SetTextColor(hdcDst, m_EpgTheme.GetColor(CEpgTheme::COLOR_EVENTNAME));
 				} else {
 					const TVTest::Theme::Style &Style =
@@ -975,9 +975,9 @@ void CChannelPanel::Draw(HDC hdc, const RECT *prcPaint)
 					if (m_fShowGenreColor && pChannelInfo->IsEventEnabled(j)) {
 						RECT rcBar = rcContent;
 						rcBar.right = m_Style.EventNameMargin.Left;
-						unsigned int Flags = CEpgTheme::DRAW_CONTENT_BACKGROUND_NOBORDER;
+						CEpgTheme::DrawContentBackgroundFlag Flags = CEpgTheme::DrawContentBackgroundFlag::NoBorder;
 						if (rcBar.top == rc.top && rcBar.bottom == rc.bottom)
-							Flags |= CEpgTheme::DRAW_CONTENT_BACKGROUND_SEPARATOR;
+							Flags |= CEpgTheme::DrawContentBackgroundFlag::Separator;
 						m_EpgTheme.DrawContentBackground(
 							hdcDst, ThemeDraw, rcBar, pChannelInfo->GetEventInfo(j), Flags);
 					}
@@ -1549,7 +1549,7 @@ void CChannelPanel::CChannelEventInfo::DrawEventName(
 		const LibISDB::EventInfo &Info = m_EventList[Index];
 		TCHAR szText[256], szTime[EpgUtil::MAX_EVENT_TIME_LENGTH];
 
-		EpgUtil::FormatEventTime(Info, szTime, lengthof(szTime), EpgUtil::EVENT_TIME_HOUR_2DIGITS);
+		EpgUtil::FormatEventTime(Info, szTime, lengthof(szTime), EpgUtil::FormatEventTimeFlag::Hour2Digits);
 		StdUtil::snprintf(szText, lengthof(szText), TEXT("%s %s"), szTime, Info.EventName.c_str());
 		TextDraw.Draw(szText, Rect, LineHeight);
 	}

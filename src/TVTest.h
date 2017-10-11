@@ -51,14 +51,19 @@
 
 
 #include "LibISDB/LibISDB/LibISDB.hpp"
-#include "Util.h"
 
 
 namespace TVTest
 {
 	using namespace LibISDB::Literals;
-	using namespace LibISDB::EnumFlags;
 }
+using namespace LibISDB::EnumFlags;
+
+#define TVTEST_ENUM_FLAGS LIBISDB_ENUM_FLAGS
+
+
+#include "Util.h"
+
 
 #define lengthof _countof
 

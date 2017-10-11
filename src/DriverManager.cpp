@@ -37,7 +37,7 @@ bool CDriverInfo::LoadTuningSpaceList(LoadTuningSpaceListMode Mode)
 	} else {
 		CDriverManager::TunerSpec Spec;
 		if (App.DriverManager.GetTunerSpec(pszFileName, &Spec)
-				&& (Spec.Flags & CDriverManager::TunerSpec::FLAG_NOENUMCHANNEL) != 0)
+				&& !!(Spec.Flags & CDriverManager::TunerSpec::Flag::NoEnumChannel))
 			fUseDriver = false;
 		else
 			fUseDriver = true;
@@ -290,7 +290,7 @@ bool CDriverManager::LoadTunerSpec(LPCTSTR pszFileName)
 {
 	CSettings Settings;
 
-	if (!Settings.Open(pszFileName, CSettings::OPEN_READ)
+	if (!Settings.Open(pszFileName, CSettings::OpenFlag::Read)
 			|| !Settings.SetSection(TEXT("TunerSpec")))
 		return false;
 
@@ -302,19 +302,19 @@ bool CDriverManager::LoadTunerSpec(LPCTSTR pszFileName)
 		TunerSpecInfo Info;
 
 		Info.TunerMask = it->Name;
-		Info.Spec.Flags = 0;
+		Info.Spec.Flags = TunerSpec::Flag::None;
 
 		std::vector<TVTest::String> Attributes;
 		if (TVTest::StringUtility::Split(it->Value, TEXT("|"), &Attributes)) {
 			static const struct {
 				LPCTSTR pszName;
-				unsigned int Flag;
+				TunerSpec::Flag Flag;
 			} FlagList[] = {
-				{TEXT("network"),         TunerSpec::FLAG_NETWORK},
-				{TEXT("file"),            TunerSpec::FLAG_FILE},
-				{TEXT("virtual"),         TunerSpec::FLAG_VIRTUAL},
-				{TEXT("volatile"),        TunerSpec::FLAG_VOLATILE},
-				{TEXT("no-enum-channel"), TunerSpec::FLAG_NOENUMCHANNEL},
+				{TEXT("network"),         TunerSpec::Flag::Network},
+				{TEXT("file"),            TunerSpec::Flag::File},
+				{TEXT("virtual"),         TunerSpec::Flag::Virtual},
+				{TEXT("volatile"),        TunerSpec::Flag::Volatile},
+				{TEXT("no-enum-channel"), TunerSpec::Flag::NoEnumChannel},
 			};
 			for (int i = 0; i < lengthof(FlagList); i++) {
 				for (auto itAttr = Attributes.begin(); itAttr != Attributes.end(); ++itAttr) {

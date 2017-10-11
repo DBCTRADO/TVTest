@@ -307,14 +307,14 @@ bool CVariableStringMap::IsDateTimeParameter(LPCTSTR pszKeyword)
 
 
 CEventVariableStringMap::CEventVariableStringMap()
-	: m_Flags(0)
+	: m_Flags(Flag::None)
 	, m_fCurrentTimeSet(false)
 {
 }
 
 
 CEventVariableStringMap::CEventVariableStringMap(const EventInfo &Info)
-	: m_Flags(0)
+	: m_Flags(Flag::None)
 	, m_EventInfo(Info)
 	, m_fCurrentTimeSet(false)
 {
@@ -390,7 +390,7 @@ bool CEventVariableStringMap::GetLocalString(LPCWSTR pszKeyword, String *pString
 			*pString, TEXT("%02d"),
 			(int)(m_EventInfo.Event.Duration % 60));
 	} else if (IsDateTimeParameter(pszKeyword)) {
-		if ((m_Flags & FLAG_NO_CURRENT_TIME) != 0)
+		if (!!(m_Flags & Flag::NoCurrentTime))
 			return false;
 		return GetTimeString(pszKeyword, m_CurrentTime, pString);
 	} else if (::StrCmpNI(pszKeyword, TEXT("start-"), 6) == 0
@@ -410,7 +410,7 @@ bool CEventVariableStringMap::GetLocalString(LPCWSTR pszKeyword, String *pString
 		return GetTimeString(pszKeyword + 4, EndTime, pString);
 	} else if (::StrCmpNI(pszKeyword, TEXT("tot-"), 4) == 0
 			&& IsDateTimeParameter(pszKeyword + 4)) {
-		if ((m_Flags & FLAG_NO_TOT_TIME) != 0)
+		if (!!(m_Flags & Flag::NoTOTTime))
 			return false;
 		return GetTimeString(pszKeyword + 4, m_EventInfo.TOTTime, pString);
 	} else {
@@ -423,7 +423,7 @@ bool CEventVariableStringMap::GetLocalString(LPCWSTR pszKeyword, String *pString
 
 bool CEventVariableStringMap::NormalizeString(String *pString) const
 {
-	if ((m_Flags & FLAG_NO_NORMALIZE) != 0)
+	if (!!(m_Flags & Flag::NoNormalize))
 		return false;
 
 	// ファイル名に使用できない文字を置き換える
@@ -573,19 +573,19 @@ bool CEventVariableStringMap::GetParameterList(ParameterGroupList *pList) const
 		LPCTSTR pszText;
 		const ParameterInfo *pList;
 		int ListLength;
-		unsigned int Flags;
+		Flag Flags;
 	} GroupList[] = {
-		{TEXT("現在日時"),     DateTimeParams,      lengthof(DateTimeParams),      FLAG_NO_CURRENT_TIME},
-		{TEXT("番組開始日時"), StartTimeParams,     lengthof(StartTimeParams),     0},
-		{TEXT("番組終了日時"), EndTimeParams,       lengthof(EndTimeParams),       0},
-		{TEXT("TOT日時"),      TotTimeParams,       lengthof(TotTimeParams),       FLAG_NO_TOT_TIME},
-		{TEXT("番組の長さ"),   EventDurationParams, lengthof(EventDurationParams), 0},
-		{TEXT("区切り"),       SeparatorParams,     lengthof(SeparatorParams),     FLAG_NO_SEPARATOR},
-		{nullptr,              EventParams,         lengthof(EventParams),         0},
+		{TEXT("現在日時"),     DateTimeParams,      lengthof(DateTimeParams),      Flag::NoCurrentTime},
+		{TEXT("番組開始日時"), StartTimeParams,     lengthof(StartTimeParams),     Flag::None},
+		{TEXT("番組終了日時"), EndTimeParams,       lengthof(EndTimeParams),       Flag::None},
+		{TEXT("TOT日時"),      TotTimeParams,       lengthof(TotTimeParams),       Flag::NoTOTTime},
+		{TEXT("番組の長さ"),   EventDurationParams, lengthof(EventDurationParams), Flag::None},
+		{TEXT("区切り"),       SeparatorParams,     lengthof(SeparatorParams),     Flag::NoSeparator},
+		{nullptr,              EventParams,         lengthof(EventParams),         Flag::None},
 	};
 
 	for (int i = 0; i < lengthof(GroupList); i++) {
-		if ((GroupList[i].Flags & m_Flags) == 0) {
+		if (!(GroupList[i].Flags & m_Flags)) {
 			pList->emplace_back();
 			ParameterGroup &Group = pList->back();
 

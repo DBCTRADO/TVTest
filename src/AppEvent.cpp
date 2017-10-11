@@ -58,7 +58,7 @@ void CAppEventManager::OnTunerShutDown()
 }
 
 
-void CAppEventManager::OnChannelChanged(unsigned int Status)
+void CAppEventManager::OnChannelChanged(AppEvent::ChannelChangeStatus Status)
 {
 	CALL_HANDLERS(OnChannelChanged(Status));
 }

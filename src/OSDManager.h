@@ -28,9 +28,10 @@ public:
 		virtual bool SetOSDHideTimer(DWORD Delay) = 0;
 	};
 
-	enum {
-		SHOW_NO_FADE = 0x0001U,
-		SHOW_PSEUDO  = 0x0002U
+	enum class ShowFlag : unsigned int {
+		None   = 0x0000U,
+		NoFade = 0x0001U,
+		Pseudo = 0x0002U,
 	};
 
 	COSDManager(const COSDOptions *pOptions);
@@ -40,7 +41,7 @@ public:
 	void Reset();
 	void ClearOSD();
 	void OnParentMove();
-	bool ShowOSD(LPCTSTR pszText, unsigned int Flags = 0);
+	bool ShowOSD(LPCTSTR pszText, ShowFlag Flags = ShowFlag::None);
 	void HideOSD();
 	bool ShowChannelOSD(const CChannelInfo *pInfo, LPCTSTR pszText, bool fChanging = false);
 	void HideChannelOSD();
@@ -80,6 +81,8 @@ private:
 		const TVTest::Style::CStyleManager *pStyleManager,
 		const TVTest::Style::CStyleScaling *pStyleScaling) override;
 };
+
+TVTEST_ENUM_FLAGS(COSDManager::ShowFlag)
 
 
 #endif

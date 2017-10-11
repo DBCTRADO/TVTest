@@ -19,21 +19,22 @@ class CSideBar
 public:
 	static constexpr int ITEM_SEPARATOR = 0;
 
-	enum {
-		ITEM_STATE_DISABLED = 0x0001U,
-		ITEM_STATE_CHECKED  = 0x0002U,
-		ITEM_STATE_HOT      = 0x0004U
+	enum class ItemState : unsigned int {
+		None     = 0x0000U,
+		Disabled = 0x0001U,
+		Checked  = 0x0002U,
+		Hot      = 0x0004U,
 	};
 
 	struct SideBarItem
 	{
 		int Command;
 		int Icon;
-		unsigned int State;
+		ItemState State;
 
-		bool IsDisabled() const { return (State & ITEM_STATE_DISABLED) != 0; }
+		bool IsDisabled() const { return EnumAnd(State, ItemState::Disabled) == ItemState::Disabled; }
 		bool IsEnabled() const { return !IsDisabled(); }
-		bool IsChecked() const { return (State & ITEM_STATE_CHECKED) != 0; }
+		bool IsChecked() const { return EnumAnd(State, ItemState::Checked) == ItemState::Checked; }
 	};
 
 	struct SideBarTheme
@@ -47,7 +48,7 @@ public:
 	struct DrawIconInfo
 	{
 		int Command;
-		unsigned int State;
+		ItemState State;
 		HDC hdc;
 		RECT IconRect;
 		COLORREF Color;
@@ -161,6 +162,8 @@ protected:
 // CUIBase
 	void RealizeStyle() override;
 };
+
+TVTEST_ENUM_FLAGS(CSideBar::ItemState)
 
 
 #endif

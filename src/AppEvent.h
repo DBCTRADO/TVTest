@@ -12,10 +12,12 @@ namespace TVTest
 	namespace AppEvent
 	{
 
-		enum {
-			CHANNEL_CHANGED_STATUS_SPACE_CHANGED = 0x0001U,
-			CHANNEL_CHANGED_STATUS_DETECTED      = 0x0002U
+		enum class ChannelChangeStatus : unsigned int {
+			None         = 0x0000U,
+			SpaceChanged = 0x0001U,
+			Detected     = 0x0002U,
 		};
+		TVTEST_ENUM_FLAGS(ChannelChangeStatus)
 
 		struct RecordingStartInfo
 		{
@@ -34,12 +36,12 @@ namespace TVTest
 		virtual void OnTunerOpened() {}
 		virtual void OnTunerClosed() {}
 		virtual void OnTunerShutDown() {}
-		virtual void OnChannelChanged(unsigned int Status) {}
+		virtual void OnChannelChanged(AppEvent::ChannelChangeStatus Status) {}
 		virtual void OnServiceChanged() {}
 		virtual void OnServiceInfoUpdated() {}
 		virtual void OnServiceListUpdated() {}
 		virtual void OnChannelListChanged() {}
-		virtual void OnRecordingStart(AppEvent::RecordingStartInfo *pInfo) {}
+		virtual void OnRecordingStart(AppEvent::RecordingStartInfo * pInfo) {}
 		virtual void OnRecordingStarted() {}
 		virtual void OnRecordingStopped() {}
 		virtual void OnRecordingPaused() {}
@@ -76,7 +78,7 @@ namespace TVTest
 		void OnTunerOpened();
 		void OnTunerClosed();
 		void OnTunerShutDown();
-		void OnChannelChanged(unsigned int Status);
+		void OnChannelChanged(AppEvent::ChannelChangeStatus Status);
 		void OnServiceChanged();
 		void OnServiceInfoUpdated();
 		void OnServiceListUpdated();
@@ -111,7 +113,7 @@ namespace TVTest
 		std::vector<CAppEventHandler*> m_HandlerList;
 
 		template<typename T> void EnumHandlers(T Pred) {
-			for (auto i=m_HandlerList.begin();i!=m_HandlerList.end();++i)
+			for (auto i = m_HandlerList.begin(); i != m_HandlerList.end(); ++i)
 				Pred(*i);
 		}
 	};

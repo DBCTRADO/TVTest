@@ -90,12 +90,13 @@ public:
 class CChannelMenuLogo
 {
 public:
-	enum {
-		FLAG_NOFRAME = 0x0001
+	enum class InitializeFlag : unsigned int {
+		None    = 0x0000U,
+		NoFrame = 0x0001U,
 	};
 
 	CChannelMenuLogo();
-	bool Initialize(int IconHeight, unsigned int Flags = 0);
+	bool Initialize(int IconHeight, InitializeFlag Flags = InitializeFlag::None);
 	bool DrawLogo(HDC hdc, int x, int y, const CChannelInfo &Channel);
 	int GetLogoWidth() const { return m_LogoWidth; }
 	int GetLogoHeight() const { return m_LogoHeight; }
@@ -107,9 +108,23 @@ private:
 	TVTest::Graphics::CImage m_FrameImage;
 };
 
+TVTEST_ENUM_FLAGS(CChannelMenuLogo::InitializeFlag)
+
 class CChannelMenu
 {
-	unsigned int m_Flags;
+public:
+	enum class CreateFlag : unsigned int {
+		None            = 0x0000U,
+		ShowEventInfo   = 0x0001U,
+		ShowLogo        = 0x0002U,
+		ShowToolTip     = 0x0004U,
+		SpaceBreak      = 0x0008U,
+		CurrentServices = 0x0010U,
+		Shared          = 0x1000U,
+	};
+
+private:
+	CreateFlag m_Flags;
 	HWND m_hwnd;
 	HMENU m_hmenu;
 	CChannelList m_ChannelList;
@@ -134,20 +149,11 @@ class CChannelMenu
 	static void GetBaseTime(LibISDB::DateTime *pTime);
 
 public:
-	enum {
-		FLAG_SHOWEVENTINFO	= 0x0001,
-		FLAG_SHOWLOGO		= 0x0002,
-		FLAG_SHOWTOOLTIP	= 0x0004,
-		FLAG_SPACEBREAK		= 0x0008,
-		FLAG_CURSERVICES	= 0x0010,
-		FLAG_SHARED			= 0x1000
-	};
-
 	CChannelMenu();
 	~CChannelMenu();
 	bool Create(
 		const CChannelList *pChannelList, int CurChannel, UINT Command,
-		HMENU hmenu, HWND hwnd, unsigned int Flags, int MaxRows = 0);
+		HMENU hmenu, HWND hwnd, CreateFlag Flags, int MaxRows = 0);
 	void Destroy();
 	int Show(UINT Flags, int x, int y, const RECT *pExcludeRect = nullptr);
 	bool SetHighlightedItem(int Index);
@@ -157,6 +163,8 @@ public:
 	bool OnUninitMenuPopup(HWND hwnd, WPARAM wParam, LPARAM lParam);
 	bool HandleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT *pResult);
 };
+
+TVTEST_ENUM_FLAGS(CChannelMenu::CreateFlag)
 
 class CPopupMenu
 {

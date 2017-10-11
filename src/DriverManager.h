@@ -47,15 +47,16 @@ class CDriverManager
 public:
 	struct TunerSpec
 	{
-		enum {
-			FLAG_NETWORK       = 0x00000001U,
-			FLAG_FILE          = 0x00000002U,
-			FLAG_VIRTUAL       = 0x00000004U,
-			FLAG_VOLATILE      = 0x00000008U,
-			FLAG_NOENUMCHANNEL = 0x00000010U
+		enum class Flag : unsigned int {
+			None          = 0x0000U,
+			Network       = 0x0001U,
+			File          = 0x0002U,
+			Virtual       = 0x0004U,
+			Volatile      = 0x0008U,
+			NoEnumChannel = 0x0010U,
 		};
 
-		unsigned int Flags;
+		Flag Flags;
 	};
 
 	void Clear();
@@ -81,6 +82,8 @@ private:
 	TVTest::String m_BaseDirectory;
 	std::vector<TunerSpecInfo> m_TunerSpecList;
 };
+
+TVTEST_ENUM_FLAGS(CDriverManager::TunerSpec::Flag)
 
 
 #endif

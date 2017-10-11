@@ -18,10 +18,11 @@ class ABSTRACT_CLASS(CStatusItem)
 	: public TVTest::CUIBase
 {
 public:
-	enum {
-		STYLE_VARIABLEWIDTH = 0x00000001U,
-		STYLE_FULLROW       = 0x00000002U,
-		STYLE_FORCEFULLROW  = 0x00000004U
+	enum class StyleFlag : unsigned int {
+		None          = 0x0000U,
+		VariableWidth = 0x0001U,
+		FullRow       = 0x0002U,
+		ForceFullRow  = 0x0004U,
 	};
 
 	enum class SizeUnit {
@@ -61,12 +62,12 @@ public:
 	int GetMinHeight() const { return m_MinHeight; }
 	void SetVisible(bool fVisible);
 	bool GetVisible() const { return m_fVisible; }
-	void SetItemStyle(unsigned int Style);
-	void SetItemStyle(unsigned int Mask, unsigned int Style);
-	unsigned int GetItemStyle() const { return m_Style; }
-	bool IsVariableWidth() const { return (m_Style & STYLE_VARIABLEWIDTH) != 0; }
-	bool IsFullRow() const { return (m_Style & STYLE_FULLROW) != 0; }
-	bool IsForceFullRow() const { return (m_Style & STYLE_FORCEFULLROW) != 0; }
+	void SetItemStyle(StyleFlag Style);
+	void SetItemStyle(StyleFlag Mask, StyleFlag Style);
+	StyleFlag GetItemStyle() const { return m_Style; }
+	bool IsVariableWidth() const { return EnumAnd(m_Style, StyleFlag::VariableWidth) == StyleFlag::VariableWidth; }
+	bool IsFullRow() const { return EnumAnd(m_Style, StyleFlag::FullRow) == StyleFlag::FullRow; }
+	bool IsForceFullRow() const { return EnumAnd(m_Style, StyleFlag::ForceFullRow) == StyleFlag::ForceFullRow; }
 	bool Update();
 	void Redraw();
 	virtual LPCTSTR GetIDText() const = 0;
@@ -106,7 +107,7 @@ protected:
 	int m_MinHeight;
 	bool m_fVisible;
 	bool m_fBreak;
-	unsigned int m_Style;
+	StyleFlag m_Style;
 
 	bool GetMenuPos(POINT *pPos, UINT *pFlags, RECT *pExcludeRect);
 	enum {
@@ -118,6 +119,8 @@ protected:
 		HDC hdc, const RECT &Rect, DrawUtil::CMonoColorIconList &IconList,
 		int IconIndex = 0, bool fEnabled = true) const;
 };
+
+TVTEST_ENUM_FLAGS(CStatusItem::StyleFlag)
 
 class CIconStatusItem
 	: public CStatusItem

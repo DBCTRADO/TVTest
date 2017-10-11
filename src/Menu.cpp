@@ -109,11 +109,11 @@ bool CMainMenu::Show(UINT Flags, int x, int y, HWND hwnd, bool fToggle, const st
 						if (::GetMenuItemInfo(m_hmenuPopup, i, TRUE, &mii))
 							::InsertMenuItem(hmenuCustom, ::GetMenuItemCount(hmenuCustom), TRUE, &mii);
 					} else if (CommandList.GetCommandShortNameByID(ID, szText, lengthof(szText)) > 0) {
-						unsigned int State = CommandList.GetCommandStateByID(ID);
+						CCommandList::CommandState State = CommandList.GetCommandStateByID(ID);
 						UINT Flags = MF_STRING;
-						if ((State & CCommandList::COMMAND_STATE_DISABLED) != 0)
+						if (!!(State & CCommandList::CommandState::Disabled))
 							Flags |= MF_GRAYED;
-						if ((State & CCommandList::COMMAND_STATE_CHECKED) != 0)
+						if (!!(State & CCommandList::CommandState::Checked))
 							Flags |= MF_CHECKED;
 						::AppendMenu(hmenuCustom, Flags, ID, FormatMenuString(szText).c_str());
 					}
@@ -464,7 +464,7 @@ CChannelMenuLogo::CChannelMenuLogo()
 }
 
 
-bool CChannelMenuLogo::Initialize(int IconHeight, unsigned int Flags)
+bool CChannelMenuLogo::Initialize(int IconHeight, InitializeFlag Flags)
 {
 	if (IconHeight <= 16) {
 		m_LogoHeight = 16;
@@ -474,7 +474,7 @@ bool CChannelMenuLogo::Initialize(int IconHeight, unsigned int Flags)
 		m_LogoWidth = ::MulDiv(52, m_LogoHeight, 32);
 	}
 
-	m_fNoFrame = (Flags & FLAG_NOFRAME) != 0;
+	m_fNoFrame = !!(Flags & InitializeFlag::NoFrame);
 
 	if (!m_fNoFrame) {
 		DrawUtil::CBitmap FrameImage;
@@ -626,7 +626,7 @@ const LibISDB::EventInfo *CChannelMenuItem::GetEventInfo(int Index) const
 
 
 CChannelMenu::CChannelMenu()
-	: m_Flags(0)
+	: m_Flags(CreateFlag::None)
 	, m_hwnd(nullptr)
 	, m_hmenu(nullptr)
 	, m_TextHeight(0)
@@ -645,7 +645,7 @@ CChannelMenu::~CChannelMenu()
 
 bool CChannelMenu::Create(
 	const CChannelList *pChannelList, int CurChannel, UINT Command,
-	HMENU hmenu, HWND hwnd, unsigned int Flags, int MaxRows)
+	HMENU hmenu, HWND hwnd, CreateFlag Flags, int MaxRows)
 {
 	Destroy();
 
@@ -672,7 +672,7 @@ bool CChannelMenu::Create(
 	HFONT hfontOld = DrawUtil::SelectObject(hdc, m_Font);
 
 	LibISDB::EPGDatabase &EPGDatabase = GetAppClass().EPGDatabase;
-	const bool fCurServices = (Flags & FLAG_CURSERVICES) != 0;
+	const bool fCurServices = !!(Flags & CreateFlag::CurrentServices);
 	LibISDB::DateTime Time;
 	if (!fCurServices)
 		GetBaseTime(&Time);
@@ -682,7 +682,7 @@ bool CChannelMenu::Create(
 		m_hmenu = ::CreatePopupMenu();
 	} else {
 		m_hmenu = hmenu;
-		m_Flags |= FLAG_SHARED;
+		m_Flags |= CreateFlag::Shared;
 		ClearMenu(hmenu);
 	}
 	MENUITEMINFO mii;
@@ -713,7 +713,7 @@ bool CChannelMenu::Create(
 		mii.wID = m_FirstCommand + i;
 		mii.fType = MFT_OWNERDRAW;
 		if ((MaxRows > 0 && j == MaxRows)
-				|| ((Flags & FLAG_SPACEBREAK) != 0 && pChInfo->GetSpace() != PrevSpace)) {
+				|| (!!(Flags & CreateFlag::SpaceBreak) && pChInfo->GetSpace() != PrevSpace)) {
 			mii.fType |= MFT_MENUBREAK;
 			j = 0;
 		}
@@ -722,7 +722,7 @@ bool CChannelMenu::Create(
 			mii.fState |= MFS_CHECKED;
 		CChannelMenuItem *pItem = new CChannelMenuItem(pChInfo);
 		mii.dwItemData = reinterpret_cast<ULONG_PTR>(pItem);
-		if ((Flags & FLAG_SHOWEVENTINFO) != 0) {
+		if (!!(Flags & CreateFlag::ShowEventInfo)) {
 			const LibISDB::EventInfo *pEventInfo =
 				pItem->GetEventInfo(&EPGDatabase, 0, fCurServices ? nullptr : &Time);
 
@@ -747,7 +747,7 @@ bool CChannelMenu::Create(
 	::SelectObject(hdc, hfontOld);
 	::ReleaseDC(hwnd, hdc);
 
-	if ((Flags & FLAG_SHOWTOOLTIP) != 0) {
+	if (!!(Flags & CreateFlag::ShowToolTip)) {
 		m_Tooltip.Create(hwnd);
 		m_Tooltip.SetFont(m_Font.GetHandle());
 		m_Tooltip.SetMaxWidth(m_TextHeight * 40);
@@ -755,7 +755,7 @@ bool CChannelMenu::Create(
 		m_Tooltip.AddTrackingTip(1, TEXT(""));
 	}
 
-	if ((Flags & FLAG_SHOWLOGO) != 0) {
+	if (!!(Flags & CreateFlag::ShowLogo)) {
 		m_Logo.Initialize(::GetSystemMetrics(SM_CYSMICON));
 	}
 
@@ -774,7 +774,7 @@ void CChannelMenu::Destroy()
 			if (::GetMenuItemInfo(m_hmenu, i, TRUE, &mii))
 				delete reinterpret_cast<CChannelMenuItem*>(mii.dwItemData);
 		}
-		if ((m_Flags & FLAG_SHARED) == 0)
+		if (!(m_Flags & CreateFlag::Shared))
 			::DestroyMenu(m_hmenu);
 		else
 			ClearMenu(m_hmenu);
@@ -820,7 +820,7 @@ bool CChannelMenu::OnMeasureItem(HWND hwnd, WPARAM wParam, LPARAM lParam)
 			&& pmis->itemID >= m_FirstCommand && pmis->itemID <= m_LastCommand) {
 		pmis->itemWidth =
 			m_ChannelNameWidth + m_Margins.cxLeftWidth + m_Margins.cxRightWidth;
-		if ((m_Flags & FLAG_SHOWLOGO) != 0)
+		if (!!(m_Flags & CreateFlag::ShowLogo))
 			pmis->itemWidth += m_Logo.GetLogoWidth() + m_MenuLogoMargin;
 		if (m_EventNameWidth > 0)
 			pmis->itemWidth += m_TextHeight + m_EventNameWidth;
@@ -858,7 +858,7 @@ bool CChannelMenu::OnDrawItem(HWND hwnd, WPARAM wParam, LPARAM lParam)
 	rc.top = pdis->rcItem.top + m_Margins.cyTopHeight;
 	rc.bottom = pdis->rcItem.bottom - m_Margins.cyBottomHeight;
 
-	if ((m_Flags & FLAG_SHOWLOGO) != 0) {
+	if (!!(m_Flags & CreateFlag::ShowLogo)) {
 		m_Logo.DrawLogo(
 			pdis->hDC,
 			rc.left,
@@ -875,7 +875,7 @@ bool CChannelMenu::OnDrawItem(HWND hwnd, WPARAM wParam, LPARAM lParam)
 		pdis->hDC, szText, -1, &rc,
 		DT_LEFT | DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX);
 
-	if ((m_Flags & FLAG_SHOWEVENTINFO) != 0) {
+	if (!!(m_Flags & CreateFlag::ShowEventInfo)) {
 		const LibISDB::EventInfo *pEventInfo = pItem->GetEventInfo(0);
 		if (pEventInfo != nullptr) {
 			int Length = GetEventText(pEventInfo, szText, lengthof(szText));
@@ -907,7 +907,7 @@ bool CChannelMenu::OnMenuSelect(HWND hwnd, WPARAM wParam, LPARAM lParam)
 		return false;
 	}
 
-	if ((m_Flags & FLAG_SHOWTOOLTIP) != 0) {
+	if (!!(m_Flags & CreateFlag::ShowToolTip)) {
 		MENUITEMINFO mii;
 
 		mii.cbSize = sizeof(mii);
@@ -1006,7 +1006,7 @@ int CChannelMenu::GetEventText(
 	TCHAR szTime[EpgUtil::MAX_EVENT_TIME_LENGTH];
 
 	EpgUtil::FormatEventTime(
-		*pEventInfo, szTime, lengthof(szTime), EpgUtil::EVENT_TIME_HOUR_2DIGITS);
+		*pEventInfo, szTime, lengthof(szTime), EpgUtil::FormatEventTimeFlag::Hour2Digits);
 
 	return StdUtil::snprintf(
 		pszText, MaxLength, TEXT("%s %s"), szTime, pEventInfo->EventName.c_str());

@@ -352,9 +352,10 @@ public:
 		}
 	};
 
-	enum {
-		SAVE_NODEFAULT	= 0x0001U,	// デフォルトと同じ設定を保存しない
-		SAVE_NONAME		= 0x0002U	// 名前を保存しない
+	enum class SaveFlag : unsigned int {
+		None      = 0x0000U,
+		NoDefault = 0x0001U,	// デフォルトと同じ設定を保存しない
+		NoName    = 0x0002U,	// 名前を保存しない
 	};
 
 	CColorScheme();
@@ -377,9 +378,9 @@ public:
 	LPCTSTR GetFileName() const { return m_FileName.c_str(); }
 	bool IsLoadedFromFile() const { return !m_FileName.empty(); }
 	bool Load(CSettings &Settings);
-	bool Save(CSettings &Settings, unsigned int Flags = 0) const;
+	bool Save(CSettings &Settings, SaveFlag Flags = SaveFlag::None) const;
 	bool Load(LPCTSTR pszFileName);
-	bool Save(LPCTSTR pszFileName, unsigned int Flags = 0) const;
+	bool Save(LPCTSTR pszFileName, SaveFlag Flags = SaveFlag::None) const;
 	bool SetFileName(LPCTSTR pszFileName);
 	void SetDefault();
 	bool IsLoaded(int Type) const;
@@ -429,6 +430,8 @@ private:
 	static const BorderInfo m_BorderInfoList[NUM_BORDERS];
 	static const TVTest::Theme::BorderType m_CustomDefaultBorderList[NUM_BORDERS];
 };
+
+TVTEST_ENUM_FLAGS(CColorScheme::SaveFlag)
 
 class CColorSchemeList
 {

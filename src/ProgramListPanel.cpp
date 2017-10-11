@@ -133,7 +133,7 @@ void CProgramItemInfo::GetEventTimeText(LPTSTR pszText, int MaxLength) const
 {
 	EpgUtil::FormatEventTime(
 		m_EventInfo, pszText, MaxLength,
-		EpgUtil::EVENT_TIME_HOUR_2DIGITS);
+		EpgUtil::FormatEventTimeFlag::Hour2Digits);
 }
 
 
@@ -503,7 +503,7 @@ void CProgramListPanel::CalcDimensions()
 	TVTest::CTextDraw DrawText;
 	RECT rc;
 	GetClientRect(&rc);
-	DrawText.Begin(hdc, rc, TVTest::CTextDraw::FLAG_JAPANESE_HYPHNATION);
+	DrawText.Begin(hdc, rc, TVTest::CTextDraw::Flag::JapaneseHyphnation);
 	GetProgramListRect(&rc);
 	HFONT hfontOld = static_cast<HFONT>(::GetCurrentObject(hdc, OBJ_FONT));
 	m_TotalLines = 0;
@@ -790,7 +790,7 @@ void CProgramListPanel::ShowChannelListMenu()
 
 	m_ChannelMenu.Create(
 		&ChannelList, CurChannel, 1, nullptr, m_hwnd,
-		CChannelMenu::FLAG_SHOWLOGO | CChannelMenu::FLAG_SPACEBREAK,
+		CChannelMenu::CreateFlag::ShowLogo | CChannelMenu::CreateFlag::SpaceBreak,
 		GetAppClass().MenuOptions.GetMaxChannelMenuRows());
 	if (SelectedChannel >= 0)
 		m_ChannelMenu.SetHighlightedItem(SelectedChannel);
@@ -979,7 +979,7 @@ LRESULT CProgramListPanel::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
 				case ITEM_CHANNEL:
 					if (!IsStringEmpty(m_SelectedChannel.GetName())) {
 						GetAppClass().Core.SelectChannel(
-							nullptr, m_SelectedChannel, CAppCore::SELECT_CHANNEL_USE_CUR_TUNER);
+							nullptr, m_SelectedChannel, CAppCore::SelectChannelFlag::UseCurrentTuner);
 					}
 					break;
 
@@ -1178,7 +1178,7 @@ void CProgramListPanel::Draw(HDC hdc, const RECT *prcPaint)
 	TVTest::Theme::CThemeDraw ThemeDraw(BeginThemeDraw(hdc));
 
 	TVTest::CTextDraw DrawText;
-	DrawText.Begin(hdc, rc, TVTest::CTextDraw::FLAG_JAPANESE_HYPHNATION);
+	DrawText.Begin(hdc, rc, TVTest::CTextDraw::Flag::JapaneseHyphnation);
 
 	const int LineHeight = m_FontHeight + m_Style.LineSpacing;
 
@@ -1272,9 +1272,9 @@ void CProgramListPanel::Draw(HDC hdc, const RECT *prcPaint)
 				rcContent.right = rc.right;
 				rcContent.bottom = rc.bottom + EventTextHeight;
 				if (rcContent.bottom > prcPaint->top) {
-					unsigned int Flags = CEpgTheme::DRAW_CONTENT_BACKGROUND_SEPARATOR;
+					CEpgTheme::DrawContentBackgroundFlag Flags = CEpgTheme::DrawContentBackgroundFlag::Separator;
 					if (fCur)
-						Flags |= CEpgTheme::DRAW_CONTENT_BACKGROUND_CURRENT;
+						Flags |= CEpgTheme::DrawContentBackgroundFlag::Current;
 					m_EpgTheme.DrawContentBackground(hdc, ThemeDraw, rcContent, pItem->GetEventInfo(), Flags);
 				}
 			}

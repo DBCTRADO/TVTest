@@ -91,10 +91,11 @@ namespace TVTest
 			bool IsTunerFilterMapEnabled() const;
 		};
 
-		enum {
-			FILTER_OPEN_RETRY_DIALOG = 0x0001U,
-			FILTER_OPEN_NO_UI        = 0x0002U,
-			FILTER_OPEN_NOTIFY_ERROR = 0x0004U
+		enum class FilterOpenFlag : unsigned int {
+			None        = 0x0000U,
+			RetryDialog = 0x0001U,
+			NoUI        = 0x0002U,
+			NotifyError = 0x0004U,
 		};
 
 		bool ReadSettings(CSettings &Settings);
@@ -110,16 +111,16 @@ namespace TVTest
 			CCoreEngine::TSProcessorConnectPosition ConnectPosition);
 		CTSProcessor *GetTSProcessor(const GUID &guid) const;
 		bool GetTSProcessorList(std::vector<CTSProcessor*> *pList) const;
-		void OpenDefaultFilters(unsigned int FilterOpenFlags = 0);
+		void OpenDefaultFilters(FilterOpenFlag FilterOpenFlags = FilterOpenFlag::None);
 		void CloseAllFilters();
 		void OnTunerChange(LPCTSTR pszOldTuner, LPCTSTR pszNewTuner);
-		void OnTunerOpened(LPCTSTR pszTuner, unsigned int FilterOpenFlags = 0);
+		void OnTunerOpened(LPCTSTR pszTuner, FilterOpenFlag FilterOpenFlags = FilterOpenFlag::None);
 		void OnNetworkChanged(
 			LPCTSTR pszTuner,
 			WORD NetworkID = TunerFilterInfo::NID_INVALID,
 			WORD TransportStreamID = TunerFilterInfo::TSID_INVALID,
 			WORD ServiceID = TunerFilterInfo::SID_INVALID,
-			unsigned int FilterOpenFlags = 0);
+			FilterOpenFlag FilterOpenFlags = FilterOpenFlag::None);
 
 	private:
 		std::vector<std::unique_ptr<CTSProcessorSettings>> m_SettingsList;
@@ -127,7 +128,7 @@ namespace TVTest
 		bool ApplyTSProcessorSettings(CTSProcessor *pTSProcessor, const GUID &guid, bool fSetProperties = true);
 		void OpenFilter(
 			CTSProcessor *pTSProcessor, CTSProcessorSettings *pSettings,
-			const FilterInfo &Filter, unsigned int FilterOpenFlags);
+			const FilterInfo &Filter, FilterOpenFlag FilterOpenFlags);
 		void CloseFilter(CTSProcessor *pTSProcessor);
 
 		// CTSProcessor::CEventHandler
@@ -136,6 +137,8 @@ namespace TVTest
 			CTSProcessor *pTSProcessor,
 			Interface::NotifyType Type, LPCWSTR pszMessage) override;
 	};
+
+	TVTEST_ENUM_FLAGS(CTSProcessorManager::FilterOpenFlag)
 
 }	// namespace TVTest
 

@@ -8,14 +8,12 @@
 
 class CSettings
 {
-	TVTest::CIniFile m_IniFile;
-	unsigned int m_OpenFlags;
-
 public:
-	enum {
-		OPEN_READ           = 0x00000001U,
-		OPEN_WRITE          = 0x00000002U,
-		OPEN_WRITE_VOLATILE = 0x00000004U
+	enum class OpenFlag : unsigned int {
+		None          = 0x0000U,
+		Read          = 0x0001U,
+		Write         = 0x0002U,
+		WriteVolatile = 0x0004U,
 	};
 
 	typedef TVTest::CIniFile::CEntry CEntry;
@@ -23,7 +21,7 @@ public:
 
 	CSettings();
 	~CSettings();
-	bool Open(LPCTSTR pszFileName, unsigned int Flags);
+	bool Open(LPCTSTR pszFileName, OpenFlag Flags);
 	void Close();
 	bool IsOpened() const;
 	bool Clear();
@@ -49,7 +47,13 @@ public:
 	bool WriteColor(LPCTSTR pszValueName, COLORREF crData);
 	bool Read(LPCTSTR pszValueName, LOGFONT *pFont);
 	bool Write(LPCTSTR pszValueName, const LOGFONT *pFont);
+
+private:
+	TVTest::CIniFile m_IniFile;
+	OpenFlag m_OpenFlags;
 };
+
+TVTEST_ENUM_FLAGS(CSettings::OpenFlag)
 
 class ABSTRACT_CLASS(CSettingsBase)
 {

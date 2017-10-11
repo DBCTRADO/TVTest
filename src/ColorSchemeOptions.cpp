@@ -116,8 +116,8 @@ bool CColorSchemeOptions::SaveSettings(CSettings &Settings)
 {
 	if (!m_ColorScheme->Save(
 				Settings,
-				CColorScheme::SAVE_NODEFAULT |
-				CColorScheme::SAVE_NONAME))
+				CColorScheme::SaveFlag::NoDefault |
+				CColorScheme::SaveFlag::NoName))
 		return false;
 
 	if (Settings.SetSection(TEXT("Settings")))

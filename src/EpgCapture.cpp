@@ -23,13 +23,13 @@ CEpgCaptureManager::~CEpgCaptureManager()
 
 
 bool CEpgCaptureManager::BeginCapture(
-	LPCTSTR pszTuner, const CChannelList *pChannelList, unsigned int Flags)
+	LPCTSTR pszTuner, const CChannelList *pChannelList, BeginFlag Flags)
 {
 	if (m_fCapturing)
 		return false;
 
 	CAppMain &App = GetAppClass();
-	const bool fNoUI = (Flags & BEGIN_NO_UI) != 0;
+	const bool fNoUI = !!(Flags & BeginFlag::NoUI);
 
 	if (App.CmdLineOptions.m_fNoEpg) {
 		if (!fNoUI) {
@@ -50,9 +50,9 @@ bool CEpgCaptureManager::BeginCapture(
 	if (!IsStringEmpty(pszTuner)) {
 		CDriverManager::TunerSpec Spec;
 		if (App.DriverManager.GetTunerSpec(pszTuner, &Spec)
-				&& (Spec.Flags &
-					(CDriverManager::TunerSpec::FLAG_NETWORK |
-					 CDriverManager::TunerSpec::FLAG_FILE)) != 0) {
+				&& !!(Spec.Flags &
+					(CDriverManager::TunerSpec::Flag::Network |
+					 CDriverManager::TunerSpec::Flag::File))) {
 			if (!fNoUI) {
 				App.UICore.GetSkin()->ShowMessage(
 					TEXT("ネットワーク再生及びファイル再生では番組表の取得はできません。"),
@@ -113,19 +113,19 @@ bool CEpgCaptureManager::BeginCapture(
 		return false;
 	}
 
-	unsigned int Status = 0;
+	BeginStatus Status = BeginStatus::None;
 	if (fTunerAlreadyOpened)
-		Status |= BEGIN_STATUS_TUNER_ALREADY_OPENED;
+		Status |= BeginStatus::TunerAlreadyOpened;
 
 	if (App.UICore.GetStandby()) {
 		if (!App.Core.OpenTuner())
 			return false;
-		Status |= BEGIN_STATUS_STANDBY;
+		Status |= BeginStatus::Standby;
 	} else {
 		if (!App.CoreEngine.IsTunerOpen())
 			return false;
-		if ((Flags & BEGIN_STANDBY) != 0)
-			Status |= BEGIN_STATUS_STANDBY;
+		if (!!(Flags & BeginFlag::Standby))
+			Status |= BeginStatus::Standby;
 	}
 
 	m_fCapturing = true;
@@ -142,7 +142,7 @@ bool CEpgCaptureManager::BeginCapture(
 }
 
 
-void CEpgCaptureManager::EndCapture(unsigned int Flags)
+void CEpgCaptureManager::EndCapture(EndFlag Flags)
 {
 	if (!m_fCapturing)
 		return;

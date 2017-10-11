@@ -533,16 +533,16 @@ void CResizableDialog::DoLayout()
 			rc.bottom = ::MulDiv(rc.bottom, m_CurrentDPI, DPI);
 		}
 
-		if ((m_ControlList[i].Align & ALIGN_RIGHT) != 0) {
+		if (!!(m_ControlList[i].Align & AlignFlag::Right)) {
 			rc.right += Width - m_ScaledClientSize.cx;
-			if ((m_ControlList[i].Align & ALIGN_LEFT) == 0)
+			if (!(m_ControlList[i].Align & AlignFlag::Left))
 				rc.left += Width - m_ScaledClientSize.cx;
 			if (rc.right < rc.left)
 				rc.right = rc.left;
 		}
-		if ((m_ControlList[i].Align & ALIGN_BOTTOM) != 0) {
+		if (!!(m_ControlList[i].Align & AlignFlag::Bottom)) {
 			rc.bottom += Height - m_ScaledClientSize.cy;
-			if ((m_ControlList[i].Align & ALIGN_TOP) == 0)
+			if (!(m_ControlList[i].Align & AlignFlag::Top))
 				rc.top += Height - m_ScaledClientSize.cy;
 			if (rc.bottom < rc.top)
 				rc.bottom = rc.top;
@@ -574,7 +574,7 @@ void CResizableDialog::DoLayout()
 }
 
 
-bool CResizableDialog::AddControl(int ID, unsigned int Align)
+bool CResizableDialog::AddControl(int ID, AlignFlag Align)
 {
 	HWND hwnd = ::GetDlgItem(m_hDlg, ID);
 	if (hwnd == nullptr)
@@ -592,7 +592,7 @@ bool CResizableDialog::AddControl(int ID, unsigned int Align)
 }
 
 
-bool CResizableDialog::AddControls(int FirstID, int LastID, unsigned int Align)
+bool CResizableDialog::AddControls(int FirstID, int LastID, AlignFlag Align)
 {
 	if (FirstID > LastID)
 		return false;

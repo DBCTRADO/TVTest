@@ -175,7 +175,7 @@ void CChannelListCategoryBase::Draw(
 
 				Length = EpgUtil::FormatEventTime(
 					*pEventInfo, szText, lengthof(szText),
-					EpgUtil::EVENT_TIME_HOUR_2DIGITS | EpgUtil::EVENT_TIME_START_ONLY);
+					EpgUtil::FormatEventTimeFlag::Hour2Digits | EpgUtil::FormatEventTimeFlag::StartOnly);
 				if (!pEventInfo->EventName.empty()) {
 					Length += StdUtil::snprintf(
 						szText + Length, lengthof(szText) - Length,
@@ -546,7 +546,8 @@ bool CFavoritesCategory::OnDecide()
 			pItem->GetBonDriverFileName(),
 			*static_cast<const CChannelInfo*>(pItem),
 			pItem->GetForceBonDriverChange() ?
-			0 : CAppCore::SELECT_CHANNEL_USE_CUR_TUNER);
+				CAppCore::SelectChannelFlag::None :
+				CAppCore::SelectChannelFlag::UseCurrentTuner);
 	}
 
 	return false;
@@ -763,7 +764,7 @@ void CFeaturedEventsCategory::LayOut(const CHomeDisplay::StyleInfo &Style, HDC h
 	TVTest::CTextDraw DrawText;
 	RECT rc;
 	m_pHomeDisplay->GetClientRect(&rc);
-	DrawText.Begin(hdc, rc, TVTest::CTextDraw::FLAG_JAPANESE_HYPHNATION);
+	DrawText.Begin(hdc, rc, TVTest::CTextDraw::Flag::JapaneseHyphnation);
 
 	const CFeaturedEventsSettings &Settings = GetAppClass().FeaturedEvents.GetSettings();
 	int ItemBaseHeight = 2 * Style.FontHeight + Style.ItemMargins.Vert();
@@ -841,8 +842,8 @@ void CFeaturedEventsCategory::Draw(
 	m_pHomeDisplay->GetClientRect(&rcClient);
 	DrawText.Begin(
 		hdc, rcClient,
-		TVTest::CTextDraw::FLAG_END_ELLIPSIS |
-		TVTest::CTextDraw::FLAG_JAPANESE_HYPHNATION);
+		TVTest::CTextDraw::Flag::EndEllipsis |
+		TVTest::CTextDraw::Flag::JapaneseHyphnation);
 
 	HFONT hfontText = static_cast<HFONT>(::GetCurrentObject(hdc, OBJ_FONT));
 	LOGFONT lf;
@@ -889,7 +890,7 @@ void CFeaturedEventsCategory::Draw(
 		const LibISDB::EventInfo &EventInfo = pItem->GetEventInfo();
 		TCHAR szText[1024];
 		int Length = EpgUtil::FormatEventTime(
-			EventInfo, szText, lengthof(szText), EpgUtil::EVENT_TIME_DATE);
+			EventInfo, szText, lengthof(szText), EpgUtil::FormatEventTimeFlag::Date);
 		if (Length > 0) {
 			::DrawText(
 				hdc, szText, Length, &rc,

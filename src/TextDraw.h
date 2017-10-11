@@ -11,9 +11,27 @@
 namespace TVTest
 {
 
-	class CTextDrawEngine
+	class CTextDrawEngine;
+
+	class CTextDraw
 	{
 	public:
+		enum class Flag : unsigned int {
+			None               = 0x0000U,
+			EndEllipsis        = 0x0001U,	// 収まりきらない場合省略記号を付加
+			JapaneseHyphnation = 0x0002U,	// 禁則処理
+		};
+
+		enum class DrawFlag : unsigned int {
+			None             = 0x0000U,
+			Align_HorzCenter = 0x0001U,
+			Align_Right      = 0x0002U,
+			Align_Justified  = 0x0004U,
+			Align_VertCenter = 0x0008U,
+			Align_Bottom     = 0x0010U,
+			JustifyMultiLine = 0x0020U,
+		};
+
 		struct FontMetrics
 		{
 			int Height;
@@ -26,6 +44,50 @@ namespace TVTest
 			int Height;
 		};
 
+		CTextDraw();
+		~CTextDraw();
+		bool SetEngine(CTextDrawEngine *pEngine);
+		bool Begin(HDC hdc, const RECT &Rect, Flag Flags = Flag::None);
+		void End();
+		bool BindDC(HDC hdc, const RECT &Rect);
+		void SetFlags(Flag Flags) { m_Flags = Flags; }
+		Flag GetFlags() const { return m_Flags; }
+		bool SetFont(HFONT hfont);
+		bool SetFont(const LOGFONT &Font);
+		bool SetTextColor(COLORREF Color);
+		int CalcLineCount(LPCWSTR pszText, int Width);
+		bool Draw(LPCWSTR pszText, const RECT &Rect, int LineHeight, DrawFlag Flags = DrawFlag::None);
+		bool GetFontMetrics(FontMetrics *pMetrics);
+		bool GetTextMetrics(LPCWSTR pText, int Length, TextMetrics *pMetrics);
+		bool SetClippingRect(const RECT &Rect);
+		bool ResetClipping();
+
+	private:
+		CTextDrawEngine *m_pEngine;
+		std::unique_ptr<CTextDrawEngine> m_DefaultEngine;
+		Flag m_Flags;
+		std::vector<WCHAR> m_StringBuffer;
+
+		int GetLineLength(LPCWSTR pszText);
+		int AdjustLineLength(LPCWSTR pszText, int Length);
+		int GetFitCharCount(LPCWSTR pText, int Length, int Width);
+
+		static const LPCWSTR m_pszStartProhibitChars;
+		static const LPCWSTR m_pszEndProhibitChars;
+
+		static bool IsStartProhibitChar(WCHAR Char);
+		static bool IsEndProhibitChar(WCHAR Char);
+	};
+
+	TVTEST_ENUM_FLAGS(CTextDraw::Flag)
+	TVTEST_ENUM_FLAGS(CTextDraw::DrawFlag)
+
+	class CTextDrawEngine
+	{
+	public:
+		typedef CTextDraw::FontMetrics FontMetrics;
+		typedef CTextDraw::TextMetrics TextMetrics;
+
 		virtual ~CTextDrawEngine() = default;
 		virtual void Finalize();
 		virtual bool BeginDraw(HDC hdc, const RECT &Rect);
@@ -33,7 +95,7 @@ namespace TVTest
 		virtual bool BindDC(HDC hdc, const RECT &Rect);
 		virtual bool SetFont(HFONT hfont) = 0;
 		virtual bool SetTextColor(COLORREF Color) = 0;
-		virtual bool DrawText(LPCWSTR pText, int Length, const RECT &Rect, unsigned int Flags) = 0;
+		virtual bool DrawText(LPCWSTR pText, int Length, const RECT &Rect, CTextDraw::DrawFlag Flags) = 0;
 		virtual int GetFitCharCount(LPCWSTR pText, int Length, int Width) = 0;
 		virtual bool GetFontMetrics(FontMetrics *pMetrics) = 0;
 		virtual bool GetTextMetrics(LPCWSTR pText, int Length, TextMetrics *pMetrics) = 0;
@@ -54,7 +116,7 @@ namespace TVTest
 		bool BindDC(HDC hdc, const RECT &Rect) override;
 		bool SetFont(HFONT hfont) override;
 		bool SetTextColor(COLORREF Color) override;
-		bool DrawText(LPCWSTR pText, int Length, const RECT &Rect, unsigned int Flags) override;
+		bool DrawText(LPCWSTR pText, int Length, const RECT &Rect, CTextDraw::DrawFlag Flags) override;
 		int GetFitCharCount(LPCWSTR pText, int Length, int Width) override;
 		bool GetFontMetrics(FontMetrics *pMetrics) override;
 		bool GetTextMetrics(LPCWSTR pText, int Length, TextMetrics *pMetrics) override;
@@ -79,7 +141,7 @@ namespace TVTest
 		bool BindDC(HDC hdc, const RECT &Rect) override;
 		bool SetFont(HFONT hfont) override;
 		bool SetTextColor(COLORREF Color) override;
-		bool DrawText(LPCWSTR pText, int Length, const RECT &Rect, unsigned int Flags) override;
+		bool DrawText(LPCWSTR pText, int Length, const RECT &Rect, CTextDraw::DrawFlag Flags) override;
 		int GetFitCharCount(LPCWSTR pText, int Length, int Width) override;
 		bool GetFontMetrics(FontMetrics *pMetrics) override;
 		bool GetTextMetrics(LPCWSTR pText, int Length, TextMetrics *pMetrics) override;
@@ -95,61 +157,6 @@ namespace TVTest
 		std::deque<std::unique_ptr<CDirectWriteFont>> m_FontCache;
 		std::size_t m_MaxFontCache;
 		CDirectWriteBrush m_Brush;
-	};
-
-	class CTextDraw
-	{
-	public:
-		enum {
-			FLAG_END_ELLIPSIS        = 0x0001U,	// 収まりきらない場合省略記号を付加
-			FLAG_JAPANESE_HYPHNATION = 0x0002U	// 禁則処理
-		};
-
-		enum {
-			DRAW_FLAG_ALIGN_HORZ_CENTER  = 0x0001U,
-			DRAW_FLAG_ALIGN_RIGHT        = 0x0002U,
-			DRAW_FLAG_ALIGN_JUSTIFIED    = 0x0004U,
-			DRAW_FLAG_ALIGN_VERT_CENTER  = 0x0008U,
-			DRAW_FLAG_ALIGN_BOTTOM       = 0x0010U,
-			DRAW_FLAG_JUSTIFY_MULTI_LINE = 0x0020U
-		};
-
-		typedef CTextDrawEngine::FontMetrics FontMetrics;
-		typedef CTextDrawEngine::TextMetrics TextMetrics;
-
-		CTextDraw();
-		~CTextDraw();
-		bool SetEngine(CTextDrawEngine *pEngine);
-		bool Begin(HDC hdc, const RECT &Rect, unsigned int Flags = 0);
-		void End();
-		bool BindDC(HDC hdc, const RECT &Rect);
-		void SetFlags(unsigned int Flags) { m_Flags = Flags; }
-		unsigned int GetFlags() const { return m_Flags; }
-		bool SetFont(HFONT hfont);
-		bool SetFont(const LOGFONT &Font);
-		bool SetTextColor(COLORREF Color);
-		int CalcLineCount(LPCWSTR pszText, int Width);
-		bool Draw(LPCWSTR pszText, const RECT &Rect, int LineHeight, unsigned int Flags = 0);
-		bool GetFontMetrics(FontMetrics *pMetrics);
-		bool GetTextMetrics(LPCWSTR pText, int Length, TextMetrics *pMetrics);
-		bool SetClippingRect(const RECT &Rect);
-		bool ResetClipping();
-
-	private:
-		CTextDrawEngine *m_pEngine;
-		CTextDrawEngine_GDI m_DefaultEngine;
-		unsigned int m_Flags;
-		std::vector<WCHAR> m_StringBuffer;
-
-		int GetLineLength(LPCWSTR pszText);
-		int AdjustLineLength(LPCWSTR pszText, int Length);
-		int GetFitCharCount(LPCWSTR pText, int Length, int Width);
-
-		static const LPCWSTR m_pszStartProhibitChars;
-		static const LPCWSTR m_pszEndProhibitChars;
-
-		static bool IsStartProhibitChar(WCHAR Char);
-		static bool IsEndProhibitChar(WCHAR Char);
 	};
 
 }	// namespace TVTest
